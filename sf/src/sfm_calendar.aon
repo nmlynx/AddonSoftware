@@ -127,9 +127,6 @@ rem --- Get SysGUI Object
     SysGUI!=bbjAPI().getSysGui()
     HdrColor!=SysGUI!.makeColor(255,252,215)
     DayColor!=SysGUI!.makeColor(240,240,240)
-    HdrText!=SysGUI!.makeColor(160,160,160)
-    ClosedColor!=SysGUI!.makeColor(153,153,153)
-    HolidayColor!=SysGUI!.makeColor(182,214,245)
     
     DayVect!=SysGUI!.makeVector()
     
@@ -177,7 +174,6 @@ rem --- get application record in order to get form icon
 
 rem --- Main Process
 
-rem    gosub find_gaps1;rem "jpb
     gosub find_gaps
     gosub get_calendar_boundaries
     gosub disp_win
@@ -212,18 +208,18 @@ event_ctl:rem --- Event Control
     BtnCurrMo!.setCallback(BtnCurrMo!.ON_TOOL_BUTTON_PUSH,"adjust_date")
     LstGaps!.setCallback(LstGaps!.ON_LIST_SELECT,"find_gap")
 	OpCodes!.setCallback(OpCodes!.ON_LIST_SELECT,"change_op_code")
-	gridCal!.setCallback(gridCal!.ON_GRID_DOUBLE_CLICK,"adjust_Status")
-
+	gridCal!.setCallback(gridCal!.ON_GRID_EDIT_STOP,"adjust_status")
     SysGUI!.flushEvents()
 
     process_events,err=*same
 
 change_op_code: rem Change Op Code and retrieve record
-
+rem maybe okay
 	op_code$=OpCodes!.getItemAt(num(OpCodes!.getSelectedIndex()))
 	op_code$=op_code$(1,pos(" - "=op_code$)-1)
 	try_yr=curr_yr
 	try_mo=curr_mo
+	gosub find_gaps
 	gosub validate_date
 	gosub display_date
 	gosub display_calendar
@@ -273,9 +269,10 @@ adjust_date:rem --- Adjust Date
         case default
         break
     swend
-        
+
     gosub validate_date 
     gosub display_date
+	gosub find_gaps
     gosub display_calendar
     gosub display_data
 
@@ -326,8 +323,13 @@ display_calendar:rem --- Calculate And Display Calendar
         for y=0 to 6
 			if mod(x,2)=0
 				GridCal!.setCellBackColor(x,y,HdrColor!)
-			else
-				GridCal!.setCellBackColor(x,y,DayColor!)
+				if GridCal!.getCellText(x,y)<>""
+					GridCal!.setCellStyle(x+1,y,GRID_STYLE_INPUTN)
+					GridCal!.setCellMask(x+1,y,"#,##0")
+					GridCal!.setCellBackColor(x+1,y,DayColor!)
+				else
+					GridCal!.setCellBackColor(x+1,y,HdrColor!)
+				endif
 			endif
         next y
     next x
@@ -344,10 +346,8 @@ display_data:rem --- Display Data For Selected Op Code
         day_hrs=nfield(sfm_calendar$,"HRS_PER_DAY_"+str(curr_day:"00"))
 		if day_hrs=-1
 			useText$=""
-			useColor!=HdrColor!
 		else
 			useText$=str(day_hrs)
-			useColor!=DayColor!
 		endif
         gosub set_Color_and_Text
     next curr_day
@@ -360,8 +360,6 @@ set_Color_and_Text:
     if wpos>=0
         grid_row=int(wpos/7)
         grid_col=mod(wpos,7)
-        GridCal!.setCellBackColor(grid_row+1,grid_col,useColor!)
-rem        GridCal!.setCellText(grid_row,grid_col,GridCal!.getCellText(grid_row,grid_col)+useText$)
 		GridCal!.setCellText(grid_row+1,grid_col,useText$)
     endif
     return
@@ -369,16 +367,12 @@ rem        GridCal!.setCellText(grid_row,grid_col,GridCal!.getCellText(grid_row,
 adjust_status:
 
     Event!=SysGUI!.getLastEvent()
-    gridCal!.setSelectedCell(Event!.getRow(),Event!.getColumn())
 	
     gui_event$=SysGUI!.getLastEventString()
 
 	row=Event!.getRow()
 	col=Event!.getColumn()
 	curr_day=num(gridCal!.getCellText(row-1,col))
-	gridCal!.setCellEditable(Event!.getRow(),Event!.getColumn(),1)
-	gridCal!.setCellText(row, col, "123")
-rem	inputn col, row, "##0", "##0", $01$, 99, 5
 
     sel_rows!=GridCal!.getSelectedRows()
     sel_cols!=GridCal!.getSelectedColumns()
@@ -388,7 +382,6 @@ rem	inputn col, row, "##0", "##0", $01$, 99, 5
             for y=0 to sel_cols!.size()-1
                 useText$=gridCal!.getCellText(sel_rows!.get(x),sel_cols!.get(y))
                 if useText$<>""
-                    GridCal!.setCellBackColor(sel_rows!.get(x),sel_cols!.get(y),useColor!)
                     GridCal!.setCellText(sel_rows!.get(x),sel_cols!.get(y),useText$)
                     gosub update_sfm_calendar
                 endif
@@ -410,7 +403,7 @@ update_sfm_calendar:
     return
 
 find_gap:
-escape;rem --- What's the op_code$?    
+  
     gap_date$=LstGaps!.getItemAt(num(LstGaps!.getSelectedIndex()))
     curr_yr=num(gap_date$(7,4))
     curr_mo=num(gap_date$(1,2))
@@ -442,103 +435,6 @@ get_calendar_boundaries:
         last_date$=Translate!.getTranslation("AON_NONE")
     else
         last_date$=sfm_calendar.month$+"/"+sfm_calendar.year$
-    endif
-
-    return
-
-find_gaps1: rem " --- Display Unscheduled Gaps in Calendar
-escape;rem shouldn't ever get here! jpb
-    gap$=""
-    GapVect!=SysGUI!.makeVector()  
-    dim sfm_calendar$:fattr(sfm_calendar$)
-    read(sfm_calendar_dev,key=firm_id$,dom=*next)
-
-    while 1
-        readrecord(sfm_calendar_dev,end=*break)sfm_calendar$
-        if sfm_calendar.firm_id$<>firm_id$ then break
-        day_status$=""
-        for x=1 to sfm_calendar.days_in_mth
-            if field(sfm_calendar$,"day_status_"+str(x:"00"))="" field sfm_calendar$,"day_status_"+str(x:"00")=" "
-            day_status$=day_status$+field(sfm_calendar$,"day_status_"+str(x:"00"))
-        next x
-        last_month$=sfm_calendar.year$+sfm_calendar.month$+str(sfm_calendar.days_in_mth:"00")
-        if sfm_calendar.month$="02"
-            nxt_date$=""
-            call stbl("+DIR_PGM")+"adc_daydates.aon",last_month$(1,4)+"0301",nxt_date$,-1
-            last_month$=nxt_date$
-            sfm_calendar.days_in_mth=num(last_month$(7,2))
-        endif
-        x0=pos(" "<>day_status$)
-l6150:
-        x1=pos(" "=day_status$(x0,sfm_calendar.days_in_mth+1-x0))
-        if x1=0 goto rem_months
-        gap$=gap$+sfm_calendar.year$+sfm_calendar.month$+str(x0+x1-1:"00")
-        x2=pos(" "<>day_status$(x0+x1-1,sfm_calendar.days_in_mth+1-(x0+x1)))
-        if x2=0 goto rem_months
-        gap$=gap$+sfm_calendar.year$+sfm_calendar.month$+str(x0+x1+x2-3:"00")
-        x0=x0+x1+x2-2
-        goto l6150
-
-rem_months: rem " --- Process remaining months
-        k$=key(sfm_calendar_dev,end=*break)
-        if pos(firm_id$=k$)<>1 break
-        if sfm_calendar.month$="02"
-            nxt_date$=""
-            call stbl("+DIR_PGM")+"adc_daydates.aon",last_month$(1,4)+"0301",nxt_date$,-1
-            last_month$=nxt_date$
-            sfm_calendar.days_in_mth=num(last_month$(7,2))
-        endif
-        nxt_date$=""
-        call stbl("+DIR_PGM")+"adc_daydates.aon",last_month$,nxt_date$,1
-        if len(nxt_date$)<>8 break
-        if nxt_date$(1,6)<>k$(3,6)
-            if mod(len(gap$),16)=0 gap$=gap$+nxt_date$
-        endif
-        readrecord (sfm_calendar_dev,key=k$)sfm_calendar$
-        day_status$=""
-        for x=1 to sfm_calendar.days_in_mth
-            if field(sfm_calendar$,"day_status_"+str(x:"00"))="" field sfm_calendar$,"day_status_"+str(x:"00")=" "
-            day_status$=day_status$+field(sfm_calendar$,"day_status_"+str(x:"00"))
-        next x
-        last_month$=sfm_calendar.year$+sfm_calendar.month$+str(sfm_calendar.days_in_mth:"00")
-        if mod(len(gap$),16)>0 goto l6290
-        if sfm_calendar.day_status_01$<>" " goto l6340
-        gap$=gap$+sfm_calendar.year$+sfm_calendar.month$+"01"+sfm_calendar.year$+sfm_calendar_month$+str(pos(" "<>day_status$)-1:"00")
-        x0=pos(" "<>day_status$)
-        goto l6350
-l6290:
-        if sfm_calendar.day_status_01$=" " goto l6330
-        nxt_mnth$=""
-        call stbl("+DIR_PGM")+"adc_daydates.aon",sfm_calendar.year$+sfm_calendar.month$+"01",nxt_mnth$,-1
-        if len(nxt_mnth$)<>8 break
-        gap$=gap$+nxt_mnth$
-        x0=1
-        goto l6350
-l6330:
-        gap$=gap$+sfm_calendar.year$+sfm_calendar.month$+str(pos(" "<>day_status$)-1:"00")
-        x0=pos(" "<>day_status$)
-        goto l6350
-l6340:
-        x0=1
-l6350:
-        if x0=0 x0=1
-        x1=pos(" "=day_status$(x0,sfm_calendar.days_in_mth+1-x0))
-        if x1=0 goto rem_months
-        gap$=gap$+sfm_calendar.year$+sfm_calendar.month$+str(x0+x1-1:"00")
-        x2=pos(" "<>day_status$(x0+x1-1,sfm_calendar.days_in_mth+1-(x0+x1)))
-        if x2=0 goto rem_months
-        gap$=gap$+sfm_calendar.year$+sfm_calendar.month$+str(x0+x1+x2-3:"00")
-        x0=x0+x1+x2-2
-        goto l6350
-    wend
-
-    if mod(len(gap$),16)<>0 gap$=gap$(1,len(gap$)-8)
-    if len(gap$)<>0
-        for x=1 to len(gap$) step 16
-            gap_start$=gap$(x+4,2)+"/"+gap$(x+6,2)+"/"+gap$(x,4)
-            gap_stop$=gap$(x+12,2)+"/"+gap$(x+14,2)+"/"+gap$(x+8,4)
-            gosub load_GapVect
-        next x
     endif
 
     return
@@ -638,7 +534,7 @@ rem --- see if curr_mo/curr_yr is in calendar; option to create if not
 
     dim sfm_calendar$:fattr(sfm_calendar$)
 
-    read record(sfm_calendar_dev,key=firm_id$+str(try_yr:"0000")+str(try_mo:"00"),dom=*next)sfm_calendar$
+    read record(sfm_calendar_dev,key=firm_id$+op_code$+str(try_yr:"0000")+str(try_mo:"00"),dom=*next)sfm_calendar$
     if cvs(sfm_calendar.year$,3)=""
 rem        msg_id$="PO_NO_CAL"
 rem        msg_opt$=""
@@ -764,7 +660,7 @@ resize_win:rem --- Resize Window Contents
 				GridCal!.setRowHeight(rows,(GridCal!.getHeight()-GridCal!.getColumnHeaderHeight())/num_rows-18)
 				GridCal!.setRowEditable(rows, 0)
 			else
-				GridCal!.setRowHeight(rows,(GridCal!.getHeight()-GridCal!.getColumnHeaderHeight())/num_rows+18)
+				GridCal!.setRowHeight(rows,(GridCal!.getHeight()-GridCal!.getColumnHeaderHeight())/num_rows+16)
 				GridCal!.setRowEditable(rows, 1)
 			endif
 		next rows
@@ -790,9 +686,7 @@ def_grids:rem --- Define Grid
     call dir_syp$+"bam_grid_init.bbj",gui_dev,GridCal!,"NOSCROLL-COLH-LINES-VTOP-EDIT",num_rows,attr_def_col$[all],attr_col$[0,1],attr_col$[all]
     GridCal!.setFitToGrid(GridCal!.AUTO_RESIZE_LAST_COLUMN)
     GridCal!.setRowHeight(int((childGrid!.getHeight()-GridCal!.getColumnHeaderHeight())/num_rows))
-rem    for x=1 to num_rows
-rem        GridCal!.setRowHeaderCellText(x-1,weeks$[x])
-rem    next x
+
     GridCal!.setSelectionMode(GridCal!.GRID_SELECT_CELL)
     GridCal!.setEditable(1)
     GridCal!.setMultipleSelection(GridCal!.FALSE)

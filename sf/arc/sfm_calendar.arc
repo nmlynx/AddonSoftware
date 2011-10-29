@@ -96,12 +96,13 @@ BEGIN
         NAME "txtGaps"
     END
 
-	LISTBUTTON 113 "Op Codes", 240, 20, 140, 19
-	BEGIN
-		NAME "lstOpCodes"
-		SELECTIONHEIGHT 19
-		CLIENTEDGE
-	END
+    LISTBUTTON 113, "Op Codes\n", 240, 20, 140, 100
+    BEGIN
+        CLIENTEDGE
+        NAME "lstOpCodes"
+        SELECTIONHEIGHT 19
+    END
+
 END
 
 CHILD-WINDOW 1110 0 0 442 362
@@ -112,7 +113,7 @@ BEGIN
     GRID 100, "", 7, 9, 428, 374
     BEGIN
         CLIENTEDGE
-        COLUMNHEAD 20, 5001
+        COLUMNHEAD 120, 5001
         COLUMNS 7
         GRIDROWDEFAULTHEIGHT 40
         HORIZLINES
@@ -120,6 +121,7 @@ BEGIN
         NAME "grd_calendar"
         ROWHEAD 20, 5000
         ROWS 6
+        USERSIZE
         VERTLINES
     END
 
