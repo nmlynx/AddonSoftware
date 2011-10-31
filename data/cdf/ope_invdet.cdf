@@ -58,6 +58,7 @@ rem --- Setup a templated string to pass information back and forth from form
 	declare BBjTemplatedString a!
 
 	tmpl$ =  "LINE_TYPE:C(1)," +
+:				"LINE_DROPSHIP:C(1)," +
 :				"INVOICE_TYPE:C(1)," +
 :				"COMMIT_FLAG:C(1)," +
 :				"MAN_PRICE:C(1)," +
@@ -85,6 +86,7 @@ rem --- Setup a templated string to pass information back and forth from form
 	dflt_data$[7,1] = callpoint!.getColumnData("OPE_INVDET.PICK_FLAG")
 	
 	a!.setFieldValue("LINE_TYPE",    user_tpl.line_type$)
+	a!.setFieldValue("LINE_DROPSHIP",user_tpl.line_dropship$)
 	a!.setFieldValue("INVOICE_TYPE", callpoint!.getHeaderColumnData("OPE_INVHDR.INVOICE_TYPE"))
 	a!.setFieldValue("STD_LIST_PRC", callpoint!.getColumnData("OPE_INVDET.STD_LIST_PRC"))
 	a!.setFieldValue("DISC_PERCENT", callpoint!.getColumnData("OPE_INVDET.DISC_PERCENT"))
@@ -122,7 +124,7 @@ rem --- Write back here
 
 rem --- Need to commit?
 
-	if callpoint!.getHeaderColumnData("OPE_INVHDR.INVOICE_TYPE") <> "P" then
+	if callpoint!.getHeaderColumnData("OPE_INVHDR.INVOICE_TYPE") <> "P" and user_tpl.line_dropship$ = "N" then
 		if orig_commit$ = "Y" and callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "N" then
 			if user_tpl.line_type$ <> "O" then
 				callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD", "0")
@@ -450,6 +452,10 @@ rem --- Get current and prior values
 	prior_qty   = num(callpoint!.getColumnUndoData("OPE_INVDET.QTY_ORDERED"))
 	prior_commit$=callpoint!.getColumnUndoData("OPE_INVDET.COMMIT_FLAG")
 
+rem --- Don't commit/uncommit Quotes or DropShips
+
+	if user_tpl.line_dropship$ = "Y" or callpoint!.getHeaderColumnData("OPE_INVHDR.INVOICE_TYPE") = "P" goto awri_update_hdr
+
 rem --- Has there been any change?
 
 	if	(curr_whse$ <> prior_whse$ or 
@@ -572,8 +578,6 @@ rem --- Update header
 	if opc_linecode.line_type$<>"M"
 		callpoint!.setDevObject("details_changed","Y")
 	endif
-
-rem input "Det:Done with AWRI: ", *; rem debug
 [[OPE_INVDET.BDGX]]
 rem --- Disable detail-only buttons
 
@@ -741,8 +745,6 @@ rem --- add and recommit Lot/Serial records (if any) and detail lines if not
 
 	gosub calculate_discount
 [[OPE_INVDET.AREC]]
-print "Det:AREC"; rem debug
-
 rem --- Backorder is zero and disabled on a new record
 
 	rem user_tpl.new_detail = 1
@@ -758,8 +760,14 @@ rem --- Set defaults for new record
 
 	callpoint!.setColumnData("OPE_INVDET.MAN_PRICE", "N")
 	callpoint!.setColumnData("OPE_INVDET.EST_SHP_DATE", ship_date$)
-	
-	if inv_type$ = "P" or ship_date$ > user_tpl.def_commit$ then
+
+	rem --- Is the default line code for dropships?
+	file$ = "OPC_LINECODE"
+	dim opc_linecode$:fnget_tpl$(file$)
+	opc_linecode.dropship$ = "N"
+	find record (fnget_dev(file$), key=firm_id$+callpoint!.getColumnData("OPE_INVDET.LINE_CODE"), dom=*next) opc_linecode$
+
+	if opc_linecode.dropship$ = "Y" or inv_type$ = "P" or ship_date$ > user_tpl.def_commit$ then
  		callpoint!.setColumnData("OPE_INVDET.COMMIT_FLAG", "N")
 		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_INVDET.QTY_SHIPPED", 0)
 	else
@@ -1448,8 +1456,6 @@ uncommit_iv: rem --- Uncommit Inventory
 rem              --- Make sure action$ is set before entry
 rem ==========================================================================
 
-print "Det: in uncommit_iv"; rem deebug
-
 	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
 	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
 
@@ -1464,7 +1470,7 @@ print "Det: in uncommit_iv"; rem deebug
 	item$    = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
 	ord_qty  = num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
 
-	if cvs(item$, 2)<>"" and cvs(wh$, 2)<>"" and ord_qty then
+	if cvs(item$, 2)<>"" and cvs(wh$, 2)<>"" and ord_qty and ord_type$<>"P" and user_tpl.line_dropship = "N" then
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 		read record (ivm_itemmast_dev, key=firm_id$+item$, dom=*next) ivm_itemmast$
 
@@ -1818,8 +1824,6 @@ rem ==========================================================================
 
 	use ::ado_util.src::util
 [[OPE_INVDET.LINE_CODE.AVAL]]
-print "Det:LINE_CODE:AVAL"; rem debug
-
 rem --- Set enable/disable based on line type
 
 	line_code$ = callpoint!.getUserInput()
@@ -1835,12 +1839,11 @@ rem --- Has line code changed?
 		callpoint!.setColumnData("OPE_INVDET.ITEM_ID", "")
 		callpoint!.setColumnData("OPE_INVDET.ORDER_MEMO", "")
 		callpoint!.setColumnData("OPE_INVDET.EST_SHP_DATE", callpoint!.getHeaderColumnData("OPE_INVHDR.SHIPMNT_DATE"))
-		callpoint!.setColumnData("OPE_INVDET.COMMIT_FLAG", "Y")
 		callpoint!.setColumnData("OPE_INVDET.PICK_FLAG", "")
 		callpoint!.setColumnData("OPE_INVDET.VENDOR_ID", "")
 		callpoint!.setColumnData("OPE_INVDET.DROPSHIP", "")
 
-		if inv_type$ = "P" or callpoint!.getHeaderColumnData("OPE_INVHDR.SHIPMNT_DATE") > user_tpl.def_commit$ then
+		if user_tpl.line_dropship$ = "Y" or inv_type$ = "P" or callpoint!.getHeaderColumnData("OPE_INVHDR.SHIPMNT_DATE") > user_tpl.def_commit$ then
  			callpoint!.setColumnData("OPE_INVDET.COMMIT_FLAG", "N")
 		else
 			callpoint!.setColumnData("OPE_INVDET.COMMIT_FLAG", "Y")
