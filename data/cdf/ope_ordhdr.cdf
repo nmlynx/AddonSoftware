@@ -103,8 +103,6 @@ rem --- Clear availability information
 
 	gosub init_msgs
 [[OPE_ORDHDR.ARAR]]
-print "Hdr:ARAR"; rem debug
-
 rem --- Set data
 
 	user_tpl.order_date$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_DATE")
@@ -120,8 +118,6 @@ rem --- Set data
 	callpoint!.setDevObject("new_rec","N")
 
 rem --- Set flags
-
-	user_tpl.user_entry$ = "N"; rem user entered an order (not navigated)
 
 	callpoint!.setDevObject("credit_status_done", "N")
 	callpoint!.setDevObject("credit_action_done", "N")
@@ -584,7 +580,23 @@ rem --- Position the file at the correct record
 		endif
 	wend
 [[OPE_ORDHDR.ADIS]]
-print "Hdr:ADIS"; rem debug
+rem --- Check for void
+
+	if callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE") = "V" then
+		msg_id$="OP_ORDINV_VOID"
+		gosub disp_message
+		callpoint!.setStatus("NEWREC")
+		break; rem --- exit from callpoint			
+	endif
+
+rem --- Check for invoice
+		
+	if callpoint!.getColumnData("OPE_ORDHDR.ORDINV_FLAG") = "I" then
+		msg_id$ = "OP_IS_INVOICE"
+		gosub disp_message
+		callpoint!.setStatus("NEWREC")
+		break; rem --- exit from callpoint			
+	endif		
 
 rem --- Check locked status
 
@@ -929,12 +941,9 @@ rem --- Display Ship to information
 	ship_to_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
 	gosub ship_to_info
 [[OPE_ORDHDR.ORDER_NO.AVAL]]
-print "ORDER_NO:AVAL"; rem debug
-
 rem --- Do we need to create a new order number?
 
 	new_seq$ = "N"
-	user_tpl.user_entry$ = "N"
 	order_no$ = callpoint!.getUserInput()
 
 	if cvs(order_no$, 2) = "" then 
@@ -950,14 +959,7 @@ rem --- Do we need to create a new order number?
 			callpoint!.setUserInput(order_no$)
 			new_seq$ = "Y"
 		endif
-	else
-		user_tpl.user_entry$ = "Y"
 	endif
-
-	rem debug
-	rem print "   new_seq: ", new_seq$
-	rem print "  order_no: ", order_no$
-	rem print "user_entry: ", user_tpl.user_entry$
 
 rem --- Does order exist?
 
