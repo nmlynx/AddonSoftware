@@ -187,8 +187,9 @@ rem --- when re-entering primary form, enable GL button
 rem --- only enable invoice detail button if we've already written some poe_invdet records
 rem --- also re-initialize the "deleted" flag
 
-callpoint!.setOptionEnabled("GDIS",1)
-callpoint!.setDevObject("deleted","")
+if cvs(callpoint!.getColumnData("POE_INVHDR.AP_INV_NO"),2)<>""then
+	callpoint!.setOptionEnabled("GDIS",1)
+endif
 
 poe_invdet=fnget_dev("POE_INVDET")
 
@@ -204,6 +205,8 @@ if pos(invdet_key$=k$)=1
 else
 	callpoint!.setOptionEnabled("INVD",0)
 endif
+
+callpoint!.setDevObject("deleted","")
 [[POE_INVHDR.BPFX]]
 callpoint!.setOptionEnabled("INVD",0)
 callpoint!.setOptionEnabled("GDIS",0)
