@@ -283,7 +283,7 @@ vendor_id$ = callpoint!.getUserInput()
 gosub disp_vendor_comments
 gosub get_vendor_history
 if vend_hist$="" and user_tpl.multi_types$="Y"
-	msg_id$="AP_NOHIST"
+	msg_id$="AP_VEND_BAD_APTYPE"
 	gosub disp_message
 	callpoint!.setStatus("CLEAR;NEWREC;ABORT")
 endif
