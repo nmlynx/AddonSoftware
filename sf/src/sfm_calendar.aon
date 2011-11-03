@@ -209,10 +209,37 @@ event_ctl:rem --- Event Control
     LstGaps!.setCallback(LstGaps!.ON_LIST_SELECT,"find_gap")
 	OpCodes!.setCallback(OpCodes!.ON_LIST_SELECT,"change_op_code")
 	gridCal!.setCallback(gridCal!.ON_GRID_EDIT_STOP,"adjust_status")
+	gridcal!.setCallback(gridCal!.ON_GRID_KEYPRESS,"start_stop_edit")
     SysGUI!.flushEvents()
 
     process_events,err=*same
 
+
+start_stop_edit:
+
+	dim gui_event$:tmpl(gui_dev)
+	dim notify_base$:noticetpl(0,0)
+	gui_event!=SysGUI!.getLastEvent()
+	c=gui_event!.getKeyCode()
+	row=gui_event!.getRow()
+	col=gui_event!.getColumn()
+
+	switch c
+		case 10; rem --- Pressed <Enter>
+			gridCal!.startEdit(row, col)
+			break
+		case 27; rem --- Pressed <ESC>
+			gridCal!.endEdit() 
+			break
+		case 332; rem --- Pressed <F2>
+			gridCal!.startEdit(row, col)
+			break
+		default;
+			break
+	swend
+	
+	return
+	
 change_op_code: rem Change Op Code and retrieve record
 rem maybe okay
 	op_code$=OpCodes!.getItemAt(num(OpCodes!.getSelectedIndex()))
@@ -662,6 +689,9 @@ resize_win:rem --- Resize Window Contents
 			else
 				GridCal!.setRowHeight(rows,(GridCal!.getHeight()-GridCal!.getColumnHeaderHeight())/num_rows+16)
 				GridCal!.setRowEditable(rows, 1)
+				for col=0 to 6
+					GridCal!.setCellAlignment(rows, col, SysGUI!.GRID_ALIGN_RIGHT)
+				next col
 			endif
 		next rows
     return
