@@ -189,7 +189,7 @@ rem Create params for the report
     report!.putParams(params!)
 
 rem Fill the report with content
-    report!.fill()
+    report!.fill(1)
 
     ScreenSize!   = bbjAPI().getSysGui().getSystemMetrics().getScreenSize()
     screen_width  = ScreenSize!.width - 50; rem -50 keeps it in the MDI w/ no scroll bars
