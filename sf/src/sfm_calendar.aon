@@ -174,7 +174,11 @@ rem --- get application record in order to get form icon
 
 rem --- Main Process
 
-    gosub find_gaps
+	dim ctl_misc$[20]
+	form_id$=file_base$+"arc/sfm_calendar.arc"
+	call dir_syp$+"bam_controls.bbj",gui_dev,SysGUI!,form_id$,win_coord[all],Window!,"DISPLAY",open_chan$[all],ctl_misc$[all]
+	
+	gosub find_gaps1
     gosub get_calendar_boundaries
     gosub disp_win
     gosub get_user_settings
@@ -246,7 +250,7 @@ rem maybe okay
 	op_code$=op_code$(1,pos(" - "=op_code$)-1)
 	try_yr=curr_yr
 	try_mo=curr_mo
-	gosub find_gaps
+	gosub find_gaps1
 	gosub validate_date
 	gosub display_date
 	gosub display_calendar
@@ -299,7 +303,8 @@ adjust_date:rem --- Adjust Date
 
     gosub validate_date 
     gosub display_date
-	gosub find_gaps
+rem	gosub find_gaps
+	gosub find_gaps1
     gosub display_calendar
     gosub display_data
 
@@ -548,13 +553,149 @@ rem --- the start of gap date, and need set stop dates until we hit a non-space 
     return
 
 load_GapVect:
-    if cvs(gap_start$,3)<>"" and cvs(gap_stop$,3)<>""
-        GapVect!.addItem(fndate$(gap_start$)+" - "+fndate$(gap_stop$))
-    endif
+
+	gap_size=GapVect!.size()
+	if gap_size>0
+		prev_date$=GapVect!.getItem(gap_size-1)
+	endif
+	if gap_size=0 or (gap_size>1 and prev_date$(20,4)+prev_date$(14,2)+prev_date$(17,2) <= gap_start$)
+		if cvs(gap_start$,3)<>"" and cvs(gap_stop$,3)<>""
+			GapVect!.addItem(fndate$(gap_start$)+" - "+fndate$(gap_stop$))
+		endif
+	endif
     gap_start$=""
     gap_stop$=""
 
     return
+
+find_gaps1: rem --- Display Unscheduled Gaps in Calendar
+	read record(sfm_calendar_dev,key=firm_id$+op_code$,dom=*next)
+	gap$=""
+	GapVect!=SysGUI!.makeVector()
+	call dir_syp$+"bac_key_template.bbj","SFM_OPCALNDR","PRIMARY",sfm_key$,table_chans$[all],status$
+
+	dim sfm_key$:sfm_key$
+rem --- Process First Month
+	sfm_key$=key(sfm_calendar_dev,end=line_5500)
+	if pos(firm_id$+op_code$=sfm_key$)<>1 goto line_5500
+	read record (sfm_calendar_dev,key=sfm_key$)sfm_calendar$
+	last_month$=sfm_calendar.year$+sfm_calendar.month$+str(sfm_calendar.days_in_mth:"00")
+	for x0=1 to sfm_calendar.days_in_mth
+		day_hrs=nfield(sfm_calendar$,"HRS_PER_DAY_"+str(curr_day:"00"))
+		if day_hrs>=0 exitto line_5150
+	next x0
+	
+line_5150:
+	for x1=x0 to sfm_calendar.days_in_mth
+			if nfield(sfm_calendar$,"HRS_PER_DAY_"+str(x1:"00"))<0 exitto line_5170
+	next x1
+	goto line_5200
+	
+line_5170:
+	gap$=gap$+k$(6,6)+str(x1:"00")
+	for x2=x1 to sfm_calendar.days_in_mth
+		if nfield(sfm_calendar$,"HRS_PER_DAY_"+str(x2:"00"))>=0 exitto line_5195
+	next x2
+	goto line_5200
+	
+line_5195:
+	gap$=gap$+sfm_calendar.year$_sfm_calendar.month$+str(x2-1:"00")
+	x0=x2
+	goto line_5150
+	
+line_5200: rem --- Process remaining months
+
+	dim sfm_key$:fattr(sfm_key$)
+	sfm_key$=key(sfm_calendar_dev,end=line_5400)
+	if pos(firm_id$+op_code$=sfm_key$)<>1 goto line_5400
+	x$=""
+	call "adc_daydates.aon",last_month$,x$,1
+	if x$(1,6)=sfm_key.year$+sfm_key.month$ goto line_5250
+	if mod(len(gap$),16)=0 gap$=gap$+x$
+	
+line_5250:
+	read record (sfm_calendar_dev,key=sfm_key$)sfm_calendar$
+	last_month$=sfm_calendar.year$+sfm_calendar.month$+str(sfm_calendar.days_in_mth:"00")
+	if mod(len(gap$),16)=0 and sfm_calendar.hrs_per_day_01=-1
+		gap$=gap$+sfm_calendar.year$+sfm_calendar.month$+"01"
+	else
+		goto line_5275
+	endif
+	for x=1 to sfm_calendar.days_in_mth
+		if nfield(sfm_calendar$,"HRS_PER_DAY_"+str(x:"00"))>=0 exitto line_5270
+	next x
+
+line_5270:
+	gap$=gap$+sfm_calendar.year$+sfm_calendar.month$+str(x-1:"00")
+	x0=x
+	goto line_5310
+ 
+line_5275:
+	if mod(len(gap$),16)<>0 and sfm_calendar.hrs_per_day_01>=0 
+		x$=""
+		call "adc_daydates.aon",sfm_calendar.year$+sfm_calendar.month$+"01",x$,-1
+		gap$=gap$+x$
+		x0=1
+		goto line_5310
+	endif
+	if mod(len(gap$),16)<>0 and sfm_calendar.hrs_per_day_01=-1 
+		gap$=gap$+sfm_calendar.year$+sfm_calendar.month$
+	else
+		goto line_5300
+	endif
+	for x=1 to sfm_calendar.days_in_mth
+		if nfield(sfm_calendar$,"HRS_PER_DAY_"+str(x:"00"))>=0 exitto line_5295
+	next x
+line_5295:
+	gap$=gap$+str(x-1:"00")
+	x0=x
+	goto line_5310
+
+line_5300:
+	x0=1
+	
+line_5310:
+	for x1=x0 to sfm_calendar.days_in_mth
+		if nfield(sfm_calendar$,"HRS_PER_DAY_"+str(x1:"00"))=-1 exitto line_5330
+	next x1
+	goto line_5200
+	
+line_5330:
+	gap$=gap$+sfm_calendar.year$+sfm_calendar.month$+str(x1:"00")
+	for x2=x1 to sfm_calendar.days_in_mth
+		if nfield(sfm_calendar$,"HRS_PER_DAY_"+str(x2:"00"))>=0 exitto line_5355
+	next x2
+	goto line_5200
+	
+line_5355:
+	gap$=gap$+sfm_calendar.year$+sfm_calendar.month$+str(x2-1:"00")
+	x0=x2
+	goto line_5310
+
+line_5400: rem --- Now Prepare To Display Gaps"
+	if mod(len(gap$),16)<>0 
+		gap$=gap$(1,len(gap$)-8)
+	endif
+	if len(gap$)=0 goto line_5690
+
+line_5500: rem --- Display Gaps
+	if len(gap$)=0 goto line_5690
+	GapVect!.addItem(fndate$(gap$(1,8))+" - "+fndate$(gap$(9,8)))
+	gap$=gap$(17)
+	goto line_5500
+
+line_5690:
+
+    LstGaps!=Window!.getControl(111)
+	LstGaps!.removeAllItems()
+    if GapVect!.size()
+        LstGaps!.insertItems(0,GapVect!)
+    else
+        LstGaps!.addItem(Translate!.getTranslation("AON_NONE"))
+    endif
+	LstGaps!.deselect()
+    LstGaps!.selectIndex(0)
+	return
 
 validate_date:
 rem --- see if curr_mo/curr_yr is in calendar; option to create if not
@@ -632,12 +773,6 @@ disp_message:rem --- Display Message Dialog
 
 disp_win:rem --- Display Window
 
-    dim ctl_misc$[20]
-
-    form_id$=file_base$+"arc/sfm_calendar.arc"
-
-    call dir_syp$+"bam_controls.bbj",       gui_dev,        SysGUI!,        form_id$,       win_coord[all],     Window!,        "DISPLAY",      open_chan$[all],        ctl_misc$[all]
-
     childGrid!=Window!.getControl(100)
 
     BtnPrevYr!=Window!.getControl(101)
@@ -651,6 +786,7 @@ disp_win:rem --- Display Window
     LastDate!=Window!.getControl(110)
 
     LstGaps!=Window!.getControl(111)
+	LstGaps!.removeAllItems()
     if GapVect!.size()
         LstGaps!.insertItems(0,GapVect!)
     else
