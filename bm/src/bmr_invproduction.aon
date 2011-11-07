@@ -1,5 +1,5 @@
 rem --- Inventory Production Register
-rem --- Program bmr_ha v8.0.0 15Jan2008 (bmr_ha)
+rem --- Program bmr_invproduction.aon v8.0.0 15Jan2008 (bmr_ha)
 rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/15/2008 01:44:23)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -79,15 +79,15 @@ rem --- Dimension string templates
 	dim ivm01a$:open_tpls$[7],ivm02a$:open_tpls$[8],ivm10c$:open_tpls$[9]
 	dim ivs01a$:open_tpls$[10],gls01a$:open_tpls$[11]
 
-	template$[0]=open_tpls$[2]
-	template$[1]=open_tpls$[4]
-	template$[3]=open_tpls$[5]
-	template$[4]=open_tpls$[7]
-	template$[5]=open_tpls$[8]
-	template$[6]=open_tpls$[10]
-	template$[7]=open_tpls$[6]
-	template$[15]=open_tpls$[3]
-	template$[16]=open_tpls$[11]
+	template$[0]=open_tpls$[2]; rem bmm01a
+	template$[1]=open_tpls$[4]; rem bmm03a
+	template$[3]=open_tpls$[5]; rem bmm08a
+	template$[4]=open_tpls$[7]; rem ivm01a
+	template$[5]=open_tpls$[8]; rem ivm02a
+	template$[6]=open_tpls$[10]; rem ivs01a
+	template$[7]=open_tpls$[6]; rem bms01a
+	template$[15]=open_tpls$[3]; rem bmm02a
+	template$[16]=open_tpls$[11]; rem gls01a
 
 rem --- Retrieve parameter records
 
@@ -135,7 +135,7 @@ initial:
 	p[3]=ivs01a.ls_no_len
 	lf$="N"
 	if pos(ivs01a.lifofifo$="LF")>0 then lf$="Y"
-	dim iv_chans[10]
+
 	g[0]=num(gls01a.total_pers$)
 	g[1]=num(gls01a.current_per$)
 	g[2]=num(gls01a.current_year$)
@@ -189,7 +189,8 @@ rem --- Open Additional Files
         bmm05_dev=num(open_chans$[1])
 		dim bmm05a$:open_tpls$[1]
 		template$[2]=open_tpls$[1]
-    endif    
+    endif  
+	
     if lf$="Y" then 
 		num_files=3
 		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
@@ -202,11 +203,11 @@ rem --- Open Additional Files
         ivm04_dev=num(open_chans$[1])
 		ivw04_dev=num(open_chans$[2])
 		ivw05_dev=num(open_chans$[3])
-        dim ivm04a$:open_tpls$[1],ivw04a$:open_tpls$[2],ivw05a$:open_tpls$[16]
-		template$[12]=open_tpls$[1]
-		template$[13]=open_tpls$[2]
-		template$[14]=open_tpls$[3]
-     endif   
+        dim ivm04a$:open_tpls$[1],ivw04a$:open_tpls$[2],ivw05a$:open_tpls$[3]
+		template$[12]=open_tpls$[1]; rem ivm04 IVM_ITEMTIER
+		template$[13]=open_tpls$[2]; rem ivw04 IVW_LFDET
+		template$[14]=open_tpls$[3]; rem ivw05 IVW_LFCOST
+    endif   
 
     gl$="N"
     status=0
@@ -523,31 +524,43 @@ subcontracts: rem --- Subcontracts
 
 lifo_fifo: rem --- LIFO/FIFO
 
+		dim iv_tmpls$[10]
+		iv_tmpls$[1]=template$[5];  rem ivm-02
+		iv_tmpls$[2]=template$[12]; rem ivm04 IVM_ITEMTIER
+		iv_tmpls$[3]=template$[13]; rem ivw04 IVW_LFDET
+	
+		dim iv_chans[10]
+		iv_chans[1]=ivm02_dev
+		iv_chans[2]=ivm04_dev
+		iv_chans[3]=ivw04_dev
+		
         dim item$[10]
         item$[0]=firm_id$
-        item$[1]=bme01a.warehouse_id$,item$[2]=bmm02a.item_id$,type$="R",lf_date$=bme01a.prod_date$
-        iv_chans[0]=ivm04_dev
-        iv_chans[1]=ivw04_dev
-        iv_chans[2]=ivm02_dev
-        action$=ivs01a.lifofifo$+"I"
+        item$[1]=bme01a.warehouse_id$
+		item$[2]=bmm02a.item_id$
+		
+		type$="R"
+		lf_date$=bme01a.prod_date$
+		action$=ivs01a.lifofifo$+"I"
+		
         qty=abs(fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered)
         cost=unitcost
         ivw05a.unit_cost=0
-        if fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered<0 then 
-
+        
 rem --- Inquires For Tier Cost For Returned Items
-        action$(2,1)="R"
-        type$="I"
-        call pgmdir$+"ivc_lifofifo.aon",action$,type$,lf_date$,iv_chans[all],iv_tmpls$[all],item$[all],places,qty,cost,ret_cost,status
-        if ret_cost<>0 then cost=ret_cost
-            type$="R"
-        endif       
+		if fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor)*bme01a.qty_ordered<0 then 
+			action$(2,1)="R"
+			type$="I"
+			call pgmdir$+"ivc_lifofifo.aon",action$,type$,lf_date$,iv_chans[all],iv_tmpls$[all],item$[all],places,qty,cost,ret_cost,status
+			if ret_cost<>0 then cost=ret_cost
+			type$="R"
+		endif       
 
-         call pgmdir$+"ivc_lifofifo.aon",action$,type$,lf_date$,iv_chans[all],iv_tmpls$[all],item$[all],places,qty,cost,ret_cost,status
-         if ret_cost<>0 then ivw05a.unit_cost=ret_cost
-         w9$=fill(17)+bmm02a.item_id$+bmmo2a.material_seq$
-         write record (ivw05_dev,key=w9$) ivw05a$
-         return
+		call pgmdir$+"ivc_lifofifo.aon",action$,type$,lf_date$,iv_chans[all],iv_tmpls$[all],item$[all],places,qty,cost,ret_cost,status
+		if ret_cost<>0 then ivw05a.unit_cost=ret_cost
+		w9$=fill(17)+bmm02a.item_id$+bmm02a.material_seq$
+        write record (ivw05_dev,key=w9$) ivw05a$
+        return
 
 warehouse: rem --- Warehouse
 
