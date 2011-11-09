@@ -1,3 +1,18 @@
+[[BME_PRODUCT.ARAR]]
+rem --- Get Unit of Sale
+
+	item$=callpoint!.getColumnData("BME_PRODUCT.ITEM_ID")
+	ivm01_dev=fnget_dev("IVM_ITEMMAST")
+	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+
+	while 1
+		read record (ivm01_dev,key=firm_id$+item$,dom=*break)ivm01a$
+		callpoint!.setColumnData("<<DISPLAY>>.UNIT_OF_SALE",ivm01a.unit_of_sale$,1)
+		break
+	wend
+
+	bill_no$=item$
+	gosub disp_bill_comments
 [[BME_PRODUCT.BWRI]]
 rem --- Validate Quantity
 
