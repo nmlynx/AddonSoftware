@@ -48,6 +48,8 @@ rem --- Open/Lock files
     files$[5]="sas_params",options$[5]="R",ids$[5]="SAS_PARAMS"
     files$[6]="adm_modules.dat",options$[6]="S",ids$[6]="ADM_MODULES";rem "S"=System file
 	files$[7]="bms_params",options$[7]="R",ids$[7]="BMS_PARAMS"
+    rem --- NOTE: Must use adc_fileopen here instead of bac_open_tables in order to avoid
+    rem --- license nags when checking on modules that aren't installed.
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
