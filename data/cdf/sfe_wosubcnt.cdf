@@ -1,4 +1,4 @@
-[[SFE_WOMATL.BSHO]]
+[[SFE_WOSUBCNT.BSHO]]
 rem --- Disable grid if Closed Work Order
 
 	if callpoint!.getDevObject("wo_status")="C"
@@ -11,7 +11,3 @@ rem --- Disable grid if Closed Work Order
 			callpoint!.setTableColumnAttribute(cvs(x$(x,40),2),"OPTS",o$+"C"); rem - makes cells read only
 		next x
 	endif
-[[SFE_WOMATL.ITEM_ID.AINV]]
-rem --- Item synonym processing
-
-	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::grid_entry"

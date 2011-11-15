@@ -19,6 +19,7 @@ disable_ctls:rem --- disable selected control
 rem --- Set new record flag
 
 	callpoint!.setDevObject("new_rec","N")
+	callpoint!.setDevObject("wo_status",callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS"))
 
 rem --- Disable fields not allowed to be changed
 
@@ -57,6 +58,7 @@ rem --- Disable fields not allowed to be changed
 rem --- Set new record flag
 
 	callpoint!.setDevObject("new_rec","Y")
+	callpoint!.setDevObject("wo_status","")
 
 rem --- set defaults
 
@@ -100,11 +102,47 @@ rem --- Set new record flag
 
 rem --- Open tables
 
-	num_files=1
+	num_files=2
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
+	open_tables$[2]="SFS_PARAMS",open_opts$[2]="OTA"
 	gosub open_tables
 
+	sfs_params=num(open_chans$[2])
+	dim sfs_params$:open_tpls$[2]
+	read record (sfs_params,dom=std_missing_params) sfs_params$
+
+	bm$=sfs_params.bm_interface$
+	ap$=sfs_params.ap_interface$
+	po$=sfs_params.po_interface$
+	pr$=sfs_params.pr_interface$
+
+	if bm$<>"Y"
+		call stbl("+DIR_PGM")+"adc_application.aon","BM",info$[all]
+		bm$=info$[20]
+	endif
+	callpoint!.setDevObject("bm",bm$)
+
+	if ap$<>"Y"
+		call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
+		ap$=info$[20]
+	endif
+	callpoint!.setDevObject("ap",ap$)
+
+	if po$<>"Y"
+		call stbl("+DIR_PGM")+"adc_application.aon","PO",info$[all]
+		po$=info$[20]
+	endif
+	callpoint!.setDevObject("po",po$)
+
+	if pr$<>"Y"
+		call stbl("+DIR_PGM")+"adc_application.aon","PR",info$[all]
+		pr$=info$[20]
+	endif
+	callpoint!.setDevObject("pr",pr$)
+
+	call stbl("+DIR_PGM")+"adc_application.aon","MP",info$[all]
+	callpoint!.setDevObject("mp",info$[20])
 [[SFE_WOMASTR.ITEM_ID.AINV]]
 rem --- Item synonym processing
 
