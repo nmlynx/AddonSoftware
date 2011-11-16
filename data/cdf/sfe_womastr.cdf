@@ -113,7 +113,7 @@ rem --- Open tables
 	read record (sfs_params,dom=std_missing_params) sfs_params$
 
 	bm$=sfs_params.bm_interface$
-	ap$=sfs_params.ap_interface$
+	op$=sfs_params.ar_interface$
 	po$=sfs_params.po_interface$
 	pr$=sfs_params.pr_interface$
 
@@ -123,11 +123,11 @@ rem --- Open tables
 	endif
 	callpoint!.setDevObject("bm",bm$)
 
-	if ap$<>"Y"
-		call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
-		ap$=info$[20]
+	if op$<>"Y"
+		call stbl("+DIR_PGM")+"adc_application.aon","AR",info$[all]
+		op$=info$[20]
 	endif
-	callpoint!.setDevObject("ap",ap$)
+	callpoint!.setDevObject("op",op$)
 
 	if po$<>"Y"
 		call stbl("+DIR_PGM")+"adc_application.aon","PO",info$[all]
