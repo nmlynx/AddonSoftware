@@ -12,6 +12,7 @@
 	<parameter name="DATE_REP" class="java.lang.String"/>
 	<parameter name="BARISTA_WD" class="java.lang.String"/>
 	<parameter name="OP_CODE" class="java.lang.String"/>
+	<parameter name="OP_CODE_DESC" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[CALL SFCALENDAR($P{FIRM_ID}, $P{OP_CODE}, $P{BEGINNING_YEAR}, $P{BEGINNING_MONTH}, $P{ENDING_YEAR}, $P{ENDING_MONTH}, $P{BARISTA_WD})]]>
 	</queryString>
@@ -193,7 +194,7 @@
 				<textFieldExpression class="java.lang.String"><![CDATA["Recs Reported: "+$V{REPORT_COUNT}.toString()]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement key="staticText-2" x="0" y="0" width="173" height="9" forecolor="#000000" backcolor="#FFFFFF"/>
+				<reportElement key="staticText-2" x="0" y="0" width="129" height="9" forecolor="#000000" backcolor="#FFFFFF"/>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -213,7 +214,7 @@
 				<textFieldExpression class="java.lang.String"><![CDATA["Document ID: "+$P{DOC_NO}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement key="staticText-1" x="0" y="9" width="173" height="9" forecolor="#000000" backcolor="#FFFFFF"/>
+				<reportElement key="staticText-1" x="0" y="9" width="129" height="9" forecolor="#000000" backcolor="#FFFFFF"/>
 				<box>
 					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -223,7 +224,7 @@
 				<textElement textAlignment="Left">
 					<font fontName="SansSerif" size="7"/>
 				</textElement>
-				<text><![CDATA[Purchase Calendar]]></text>
+				<text><![CDATA[Shop Floor Calendar]]></text>
 			</staticText>
 			<textField pattern="" isBlankWhenNull="false">
 				<reportElement key="textField-4" x="477" y="18" width="77" height="10" forecolor="#000000" backcolor="#FFFFFF"/>
@@ -245,6 +246,13 @@
 				</textElement>
 				<textFieldExpression class="java.lang.String"><![CDATA["Date: "+$P{DATE_REP}]]></textFieldExpression>
 			</textField>
+			<textField>
+				<reportElement x="147" y="9" width="261" height="20"/>
+				<textElement textAlignment="Center">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{OP_CODE} + " " + $P{OP_CODE_DESC}]]></textFieldExpression>
+			</textField>
 		</band>
 	</pageHeader>
 	<columnHeader>
@@ -252,7 +260,7 @@
 			<textField>
 				<reportElement x="197" y="0" width="162" height="30"/>
 				<textElement textAlignment="Center">
-					<font size="16" isBold="true" isUnderline="true"/>
+					<font size="14" isBold="true" isUnderline="true"/>
 				</textElement>
 				<textFieldExpression class="java.lang.String"><![CDATA[$F{MONTH}+"  "+$F{YEAR}]]></textFieldExpression>
 			</textField>
