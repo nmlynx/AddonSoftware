@@ -129,7 +129,7 @@ rem --- Now find all sub-bills within the main bill
 rem --- Populate data set with all sub-bills
 		if len(bill_numbers$)>0
 			for x=1 to len(bill_numbers$) step bill_len+1
-				readrecord (bmm_billmast_dev,key=firm_id$+bill_numbers$(x+1,bill_len)) bmm_billmast$
+				readrecord (bmm_billmast_dev1,key=firm_id$+bill_numbers$(x+1,bill_len)) bmm_billmast$
 				gosub output_bill
 			next x
 		endif
