@@ -108,8 +108,9 @@ rem --- Retrieve parameter records
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,0
     m0=len(m0$)
     m1=len(m1$)
-    acct_length=num(gls01a.acct_length$)
-    g0$=gls01a.acct_output$
+    call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,acct_length
+    rem acct_length=num(gls01a.acct_length$)
+    rem g0$=gls01a.acct_output$
     g0=len(g0$)
     application$="AR"
     findrecord(ars_mtdcash_dev,key=firm_id$+"C") ars_mtdcash$
