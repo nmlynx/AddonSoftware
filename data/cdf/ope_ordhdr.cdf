@@ -225,8 +225,12 @@ rem --- Is flag down?
 
 rem --- Credit action
 
-	if ordHelp!.calcOverCreditLimit() and callpoint!.getDevObject("credit_action_done") <> "Y" then
-		gosub do_credit_action
+	rem --- Temporay work around to avoid error 11 when no record exists re Barista bug 5743
+	rem --- Header record will exist if at least one detail line has been entered.
+	if GridVect!.getItem(0).size()>0 then
+		if ordHelp!.calcOverCreditLimit() and callpoint!.getDevObject("credit_action_done") <> "Y" then
+			gosub do_credit_action
+		endif
 	endif
 [[OPE_ORDHDR.AOPT-PRNT]]
 rem --- Print a counter Picking Slip
