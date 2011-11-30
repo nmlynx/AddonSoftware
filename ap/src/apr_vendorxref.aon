@@ -44,9 +44,7 @@ rem --- Retrieve parameter records
 
     aps01a_key$=firm_id$+"AP00"
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
-    vendor_size=num(aps01a.vendor_size$)
-    m0$=aps01a.vendor_output$
-    m0=len(m0$)
+	call pgmdir$+"adc_getmask.aon","","AP","I","",m0$,0,vendor_size
 
 rem --- Initializations
 
