@@ -130,8 +130,7 @@ rem --- Parameters
         if status goto std_exit
         apm01a_dev=channels[14]
         dim apm01a$:templates$[14]
-        m0$=aps01a.vendor_output$
-        m0=i[0]
+		call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,m0
     endif
     if ap$="N" sequence$="B"
 
