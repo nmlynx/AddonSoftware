@@ -93,8 +93,7 @@ rem --- Parameters
     p[5]=num(ivs01a.desc_len_01$)
     p[6]=num(ivs01a.desc_len_01$)
     p[7]=num(ivs01a.desc_len_02$)
-    g2$=gls01a.max_acct_len$
-    g5$=gls01a.acct_output$
+	call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",g5$,0,account_length
 
 rem --- Check for vendor masterfile
 

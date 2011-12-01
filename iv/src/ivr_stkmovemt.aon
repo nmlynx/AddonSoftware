@@ -76,8 +76,7 @@ rem --- Assign form input values to local variables
 rem --- Retrieve parameter records
     
     find record (gls01_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
-    g2$=gls01a.max_acct_len$
-    g5$=gls01a.acct_output$
+	call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",g5$,0,account_length
 
 rem --- Parameters
 

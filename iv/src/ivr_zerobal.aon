@@ -91,7 +91,6 @@ rem --- Parameters
     
     if ap$<>"N" then
         find record (aps01a_dev,key=firm_id$+"AP00",dom=std_missing_params) aps01a$
-        i[0]=num(aps01a.vendor_size$)
         
         files$[10]="apm-01",ids$[10]="APM_VENDMAST"
         call pgmdir$+"adc_fileopen.aon",action,10,endfile,files$[all],options$[all],
@@ -99,8 +98,8 @@ rem --- Parameters
         if status goto std_exit
         apm01_dev=channels[10]
         dim apm01a$:templates$[10]
-        m0$=aps01a.vendor_output$
-        m0=i[0]
+		call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,m0
+		i[0]=m0
     endif
 
 rem --- Resize masks
