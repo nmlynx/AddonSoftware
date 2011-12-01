@@ -104,12 +104,14 @@ rem --- Validate old barista install location
 	callpoint!.setColumnData("ADX_UPGRADEWIZ.OLD_BAR_LOC",old_bar_loc$)
 	if abort then break
 
-rem --- Validate sync backup directory
+rem --- Validate sync backup directory when not doing Create Sync File Backup
 
-	sync_backup_dir$ = callpoint!.getColumnData("ADX_UPGRADEWIZ.SYNC_BACKUP_DIR")
-	gosub validate_sync_backup_dir
-	callpoint!.setColumnData("ADX_UPGRADEWIZ.SYNC_BACKUP_DIR",sync_backup_dir$)
-	if abort then break
+	if callpoint!.getDevObject("do_sync_backup")=0 then
+		sync_backup_dir$ = callpoint!.getColumnData("ADX_UPGRADEWIZ.SYNC_BACKUP_DIR")
+		gosub validate_sync_backup_dir
+		callpoint!.setColumnData("ADX_UPGRADEWIZ.SYNC_BACKUP_DIR",sync_backup_dir$)
+		if abort then break
+	endif
 
 rem --- Make sure we get all entries in the grid by setting focus on some control besides the grid
 
@@ -183,24 +185,19 @@ rem --- Validate old aon install location
 	gosub validate_old_aon_loc
 	callpoint!.setUserInput(old_aon_loc$)
 	if abort then break
-
-rem --- Initialize old Barista install location as needed
-
-	if cvs(callpoint!.getColumnData("ADX_UPGRADEWIZ.OLD_BAR_LOC"),3)="" then
-		old_bar_loc$=old_aon_loc$
-		gosub able_old_bar_loc
-	endif
-
-rem --- Initialize old Barista admin_backup as needed
-	if cvs(callpoint!.getColumnData("ADX_UPGRADEWIZ.SYNC_BACKUP_DIR"),3)="" then
-		bar_dir$=cvs(callpoint!.getColumnData("ADX_UPGRADEWIZ.OLD_BAR_LOC"),3)+"/barista"
-		gosub able_backup_sync_dir
-	endif
 	
-rem --- Set defaults for data STBLs
+rem --- Initializations when old aon install location changes
 	if cvs(old_aon_loc$,3)<>cvs(callpoint!.getDevObject("prev_old_aon_loc"),3) then
 		rem --- Capture old aon location value so can tell later if it's been changed
 		callpoint!.setDevObject("prev_old_aon_loc",old_aon_loc$)
+
+		rem --- Initialize old Barista install location
+		old_bar_loc$=old_aon_loc$
+		gosub able_old_bar_loc
+
+		rem --- Initialize old Barista admin_backup
+		bar_dir$=cvs(callpoint!.getColumnData("ADX_UPGRADEWIZ.OLD_BAR_LOC"),3)+"/barista"
+		gosub able_backup_sync_dir
 
 		rem --- Initialize aon directory from new aon location
 		filePath$=callpoint!.getDevObject("prev_new_aon_loc")
@@ -210,7 +207,7 @@ rem --- Set defaults for data STBLs
 		rem --- Use addon.syn file from old aon location
 		synFile$=old_aon_loc$+"/aon/config/addon.syn"
 		
-		rem --- Initialize grid
+		rem --- Initialize grid, i.e. set defaults for data STBLs
 		gosub create_reports_vector
 		callpoint!.setDevObject("oldSynRows",vectRows!)
 		if cvs(callpoint!.getDevObject("prev_new_aon_loc"),3)<>"" then
@@ -411,20 +408,20 @@ dir_missing: rem --- Directory doesn't exist
 
 able_old_bar_loc: rem --- Enable/disable input field for old Barista location
 
-		rem --- Check for old Barista barista.cfg file
-		bar_found=0
-		testChan=unt 
-		open(testChan, err=*next)old_bar_loc$ + "/barista/sys/config/enu/barista.cfg"; bar_found=1
-		close(testChan)
+	rem --- Check for old Barista barista.cfg file
+	bar_found=0
+	testChan=unt 
+	open(testChan, err=*next)old_bar_loc$ + "/barista/sys/config/enu/barista.cfg"; bar_found=1
+	close(testChan)
 
-		if bar_found then
-			rem --- Initialize and disable old Barista location
-			callpoint!.setColumnEnabled("ADX_UPGRADEWIZ.OLD_BAR_LOC",0)
-			callpoint!.setColumnData("ADX_UPGRADEWIZ.OLD_BAR_LOC",old_bar_loc$)
-		else
-			rem --- Enable old Barista location
-			callpoint!.setColumnEnabled("ADX_UPGRADEWIZ.OLD_BAR_LOC",1)
-		endif
+	if bar_found then
+		rem --- Initialize and disable old Barista location
+		callpoint!.setColumnEnabled("ADX_UPGRADEWIZ.OLD_BAR_LOC",0)
+		callpoint!.setColumnData("ADX_UPGRADEWIZ.OLD_BAR_LOC",old_bar_loc$)
+	else
+		rem --- Enable old Barista location
+		callpoint!.setColumnEnabled("ADX_UPGRADEWIZ.OLD_BAR_LOC",1)
+	endif
 
 	callpoint!.setStatus("REFRESH")
 
@@ -432,20 +429,57 @@ able_old_bar_loc: rem --- Enable/disable input field for old Barista location
 
 able_backup_sync_dir: rem --- Enable/disable input field for sync backup directory
 
-		rem --- Check for old Barista admin_backup
-		backup_found=0
-		testChan=unt 
-		open(testChan, err=*next)bar_dir$ + "/admin_backup"; backup_found=1
-		close(testChan)
+	rem --- Check for old Barista admin_backup
+	backup_found=0
+	testChan=unt 
+	open(testChan, err=*next)bar_dir$ + "/admin_backup"; backup_found=1
+	close(testChan)
 
-		if backup_found then
-			rem --- Initialize and disable sync backup directory
-			callpoint!.setColumnEnabled("ADX_UPGRADEWIZ.SYNC_BACKUP_DIR",0)
-			callpoint!.setColumnData("ADX_UPGRADEWIZ.SYNC_BACKUP_DIR",bar_dir$ + "/admin_backup")
-		else
-			rem --- Enable sync backup directory
-			callpoint!.setColumnEnabled("ADX_UPGRADEWIZ.SYNC_BACKUP_DIR",1)
+	rem --- Check version of old Barista (will automatically do Create Sync File Backup if at least version 12)
+	rem --- Locate the database for old Barista
+	dbname$ = ""
+	oldBarDir$=bar_dir$
+	if pos(":"=oldBarDir$)=0 then oldBarDir$=dsk("")+oldBarDir$
+	sourceChan=unt
+	open(sourceChan,isz=-1)oldBarDir$+"/sys/config/enu/barista.cfg"
+	while 1
+		read(sourceChan,end=*break)record$
+		rem --- get database from SET +DBNAME line
+		if pos("SET +DBNAME="=record$)=1 then
+			dbname$=record$(pos("="=record$)+1)
+			break
 		endif
+	wend
+	close(sourceChan)
+
+	rem --- Query old ADM_MODULES for Barista Administration version
+	sql_chan=sqlunt
+	sqlopen(sql_chan)dbname$
+	sql_prep$="SELECT version_id FROM adm_modules where asc_comp_id='01007514' and asc_prod_id='ADB'"
+	sqlprep(sql_chan)sql_prep$
+	dim select_tpl$:sqltmpl(sql_chan)
+	sqlexec(sql_chan)
+	select_tpl$=sqlfetch(sql_chan,err=*break) 
+	adb_version$=cvs(select_tpl.version_id$,3)
+	sqlclose(sql_chan)
+
+	rem --- Automatically do Create Sync File Backup if old Barista is at least version 12
+	if num(adb_version$)>=12 then
+		do_sync_backup=1
+	else
+		do_sync_backup=0
+	endif
+	callpoint!.setDevObject("do_sync_backup",do_sync_backup)
+
+	if backup_found or do_sync_backup then
+		rem --- Initialize and disable sync backup directory
+		callpoint!.setColumnEnabled("ADX_UPGRADEWIZ.SYNC_BACKUP_DIR",0)
+		callpoint!.setColumnData("ADX_UPGRADEWIZ.SYNC_BACKUP_DIR",bar_dir$ + "/admin_backup")
+	else
+		rem --- Enable sync backup directory
+		callpoint!.setColumnEnabled("ADX_UPGRADEWIZ.SYNC_BACKUP_DIR",1)
+		callpoint!.setColumnData("ADX_UPGRADEWIZ.SYNC_BACKUP_DIR","")
+	endif
 
 	callpoint!.setStatus("REFRESH")
 

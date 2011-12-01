@@ -32,6 +32,7 @@ rem --- Get user inputs
     oldAonLoc$=Option!.getOptionData("OLD_AON_LOC")
     oldBarLoc$=Option!.getOptionData("OLD_BAR_LOC")
     syncBackupDir$=Option!.getOptionData("SYNC_BACKUP_DIR")
+    doSyncBackup%=cast(BBjInt, callpoint!.getDevObject("do_sync_backup"))
     stblMap!=cast(HashMap, callpoint!.getDevObject("stblMap"))
     pfxList!=cast(ArrayList, callpoint!.getDevObject("pfxList"))
     rdAdmin!=cast(BBjAdminBase, callpoint!.getDevObject("rdAdmin"))
@@ -61,6 +62,24 @@ rem --- Get user inputs
     newBarDir$=newAonLoc$ + "/barista"
     oldAonDir$=oldAonLoc$ + "/aon"
     oldBarDir$=oldBarLoc$ + "/barista"
+
+rem --- Launch Create Sync File Backup utility in OLD barista
+rem --- Run bax_sync_backup.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the OLD barista
+    if doSyncBackup% then
+        bar_dir$=oldBarDir$
+        if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
+        run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
+:       +" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
+:       +" "+$22$+bar_dir$+"/sys/prog/bax_launch_task.bbj"+$22$
+        user_arg$=" - "
+:       +" -u"+rdAdmin!.getUser()
+:       +" -p"+rdAdmin!.getPassword()
+:       +" -t"+"DDM_TABLES"
+:       +" -y"+"A"
+:       +" -a" +"bax_sync_backup.bbj"+$22$+" - "+" -b"+$22$
+:       +" -w"
+        scall_result=scall(run_arg$+user_arg$,err=*next)
+    endif
    
 rem --- Recursively copy oldLocation to newAonDir
 
