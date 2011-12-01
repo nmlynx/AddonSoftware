@@ -913,11 +913,7 @@ rem --- Sale order number disabled in BSHO when OP is not installed
 if callpoint!.getDevObject("dtl_posted")="Y"
 	callpoint!.setColumnEnabled("POE_POHDR.WAREHOUSE_ID",0)
 	callpoint!.setColumnEnabled("POE_POHDR.DROPSHIP",0)
-	if callpoint!.getDevObject("AR_installed")="Y" and callpoint!.getDevObject("OP_installed")<>"Y" then
-		callpoint!.setColumnEnabled("POE_POHDR.CUSTOMER_ID",1)
-	else
-		callpoint!.setColumnEnabled("POE_POHDR.CUSTOMER_ID",0)
-	endif
+	callpoint!.setColumnEnabled("POE_POHDR.CUSTOMER_ID",0)
 	callpoint!.setColumnEnabled("POE_POHDR.ORDER_NO",0)			
 else
 	callpoint!.setColumnEnabled("POE_POHDR.WAREHOUSE_ID",1)
