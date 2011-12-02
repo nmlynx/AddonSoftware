@@ -77,6 +77,10 @@ rem --- Start progress meter
     meter_action$="WIN-LST-OK"
     gosub disp_meter
 
+rem --- Open log file
+    location$ = newAonDir$
+    gosub open_log
+
 rem --- Launch Create Sync File Backup utility in OLD barista
 rem --- Run bax_sync_backup.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the OLD barista
     if doSyncBackup% then
@@ -85,6 +89,7 @@ rem --- Run bax_sync_backup.bbj program via bax_launch_task.bbj to bypass bar_lo
         meter_proc_recs=meter_proc_recs+1
         meter_action$="MTR-LST"
         gosub disp_meter
+        print(log_dev)meter_text$
 
     bar_dir$=oldBarDir$
         if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
@@ -108,6 +113,7 @@ rem --- Recursively copy oldLocation to newAonDir
     meter_proc_recs=meter_proc_recs+1
     meter_action$="MTR-LST"
     gosub disp_meter
+    print(log_dev)meter_text$
 
 	rem --- Set oldLocation to aon directory under the current download directory
     sep$ = java.io.File.separator
@@ -127,6 +133,7 @@ rem --- Update new addon.syn file
     meter_proc_recs=meter_proc_recs+1
     meter_action$="MTR-LST"
     gosub disp_meter
+    print(log_dev)meter_text$
 
 	rem --- Set newSynFile to addon.syn at the new aon location
     newSynFile$=newAonDir$+"/config/addon.syn"
@@ -145,6 +152,7 @@ rem --- Run BIM bai_install_manager.bbj program via synchronous system call beca
     meter_proc_recs=meter_proc_recs+1
     meter_action$="MTR-LST"
     gosub disp_meter
+    print(log_dev)meter_text$
 
 	bar_dir$=dir("")
 	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
@@ -166,6 +174,7 @@ rem --- BIM clears barista/settings dir, so must do this step after BIMing and b
     meter_proc_recs=meter_proc_recs+1
     meter_action$="MTR-LST"
     gosub disp_meter
+    print(log_dev)meter_text$
 
 	rem --- Set newSyncLoc to sync directory at the new aon location
     newSyncLoc$=newAonDir$+"/data/sync"
@@ -185,6 +194,7 @@ rem --- to standard menus, thus no logging or progress meter.
         meter_proc_recs=meter_proc_recs+1
         meter_action$="MTR-LST"
         gosub disp_meter
+        print(log_dev)meter_text$
 
         declare File oldMenuFile!
         declare File newMenuFile!
@@ -229,6 +239,7 @@ rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to b
     meter_proc_recs=meter_proc_recs+1
     meter_action$="MTR-LST"
     gosub disp_meter
+    print(log_dev)meter_text$
 
 	bar_dir$=newBarDir$
 	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
@@ -251,6 +262,9 @@ done: rem --- All done
     meter_proc_recs=meter_total_recs
     meter_action$="LST-END"
     gosub disp_meter
+    print(log_dev)
+    print(log_dev)"Upgradewiz log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
+    close(log_dev)
 
     goto std_exit
 
@@ -292,6 +306,57 @@ disp_meter:rem --- Display Progress Meter
 :       meter_proc_recs,
 :       meter_text$,
 :       meter_action$
+
+    return
+
+open_log:rem --- Open log file
+            
+    rem --- create logs directory at location
+    filePath$ = location$ + "/logs"
+    gosub fix_path
+    logDir$ = filePath$
+    FileObject.makeDirs(new File(logDir$))
+
+    rem --- create and open log file
+    log$ = logDir$+"/upgradewiz_"+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")+".txt"
+    erase log$,err=*next
+    string log$
+    log_dev=unt
+    open(log_dev)log$
+    
+    rem --- write log header info
+    print(log_dev)"Upgradewiz log started: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
+    print(log_dev)
+    print(log_dev)"New Database Name: " + dbName$
+    print(log_dev)"New Description: " + appDesc$
+    print(log_dev)"New aon Locatoin: " + newAonLoc$
+    print(log_dev)"Old aon Location: " + oldAonLoc$
+    print(log_dev)"Old barista Location: " + oldBarLoc$
+    print(log_dev)"Old sync Backup Dir: " + syncBackupDir$
+    if useOldMenu% then
+        print(log_dev)"Use old modified menus."
+    else
+        print(log_dev)"Do not use old menus."
+    endif
+	rem --- write STBL info
+    keys! = stblMap!.keySet()
+    iter! = keys!.iterator()
+    while(iter!.hasNext())
+        key$ = cast(BBjString, iter!.next())
+		aList! = cast(ArrayList, stblMap!.get(key$))
+		source$=cast(BBjString, aList!.get(0))
+		target$=cast(BBjString, aList!.get(1))
+		print(log_dev)"["+key$+"] source="+source$+"  target="+target$
+    wend
+	rem --- write PREFIX info
+	iter!=pfxList!.iterator()
+	while iter!.hasNext()
+		aList! = cast(ArrayList, iter!.next())
+		source$=cast(BBjString, aList!.get(0))
+		target$=cast(BBjString, aList!.get(1))
+		print(log_dev)"PREFIX source="+source$+"  target="+target$
+	wend
+    print(log_dev)
 
     return
     
