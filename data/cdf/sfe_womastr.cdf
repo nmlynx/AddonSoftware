@@ -110,7 +110,7 @@ rem --- Open tables
 
 	sfs_params=num(open_chans$[2])
 	dim sfs_params$:open_tpls$[2]
-	read record (sfs_params,dom=std_missing_params) sfs_params$
+	read record (sfs_params,key=firm_id$+"SF00",dom=std_missing_params) sfs_params$
 
 	bm$=sfs_params.bm_interface$
 	op$=sfs_params.ar_interface$
