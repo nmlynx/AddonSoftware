@@ -10,10 +10,9 @@ rem ==========================================================================
     use java.io.File
     use java.util.ArrayList
     use java.util.HashMap
+    use java.util.Vector
+    use ::bbtranslator.bbj::BBTranslator
     use ::ado_file.src::FileObject
-
-	declare ArrayList pfxList!
-    declare HashMap stblMap!
 
     setesc std_error
     seterr std_error
@@ -21,8 +20,9 @@ rem ==========================================================================
 rem --- Initializations
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
+    dir_syp$=stbl("+DIR_SYP")
+    sysGUI! = BBjAPI().getSysGui()
     BLOCKSIZE = 2^20
-
 
 rem --- Get user inputs
 
@@ -33,7 +33,9 @@ rem --- Get user inputs
     oldBarLoc$=Option!.getOptionData("OLD_BAR_LOC")
     syncBackupDir$=Option!.getOptionData("SYNC_BACKUP_DIR")
     doSyncBackup%=cast(BBjInt, callpoint!.getDevObject("do_sync_backup"))
+    declare HashMap stblMap!
     stblMap!=cast(HashMap, callpoint!.getDevObject("stblMap"))
+	declare ArrayList pfxList!
     pfxList!=cast(ArrayList, callpoint!.getDevObject("pfxList"))
     rdAdmin!=cast(BBjAdminBase, callpoint!.getDevObject("rdAdmin"))
     useOldMenu%=int(num(Option!.getOptionData("USE_OLD_MENU")))
@@ -62,11 +64,29 @@ rem --- Get user inputs
     newBarDir$=newAonLoc$ + "/barista"
     oldAonDir$=oldAonLoc$ + "/aon"
     oldBarDir$=oldBarLoc$ + "/barista"
+    
+rem --- Start progress meter
+    declare BBTranslator Translator!
+    Translator! = BBTranslator.getInstance( stbl("+PROPS_NAME"), stbl("+USER_LOCALE"), null(), stbl("+PROPS_PATH") )
+    meter_title$=Translator!.getTranslation("AON_UPDATE_WIZ")
+    meter_total_recs=6
+    if doSyncBackup% then meter_total_recs=meter_total_recs+1
+    if useOldMenu% then meter_total_recs=meter_total_recs+1
+    meter_proc_recs=0
+    meter_text$=""
+    meter_action$="WIN-LST-OK"
+    gosub disp_meter
 
 rem --- Launch Create Sync File Backup utility in OLD barista
 rem --- Run bax_sync_backup.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the OLD barista
     if doSyncBackup% then
-        bar_dir$=oldBarDir$
+        rem --- Increment progress meter
+        meter_text$=Translator!.getTranslation("AON_SYNC_BACKUP")
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+
+    bar_dir$=oldBarDir$
         if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
         run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
 :       +" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
@@ -80,8 +100,14 @@ rem --- Run bax_sync_backup.bbj program via bax_launch_task.bbj to bypass bar_lo
 :       +" -w"
         scall_result=scall(run_arg$+user_arg$,err=*next)
     endif
-   
+    
 rem --- Recursively copy oldLocation to newAonDir
+
+    rem --- Increment progress meter
+    meter_text$=Translator!.getTranslation("AON_COPY_AON")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
 
 	rem --- Set oldLocation to aon directory under the current download directory
     sep$ = java.io.File.separator
@@ -96,6 +122,12 @@ rem --- Recursively copy oldLocation to newAonDir
     
 rem --- Update new addon.syn file
 
+    rem --- Increment progress meter
+    meter_text$=Translator!.getTranslation("AON_UPDATE_SYN")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+
 	rem --- Set newSynFile to addon.syn at the new aon location
     newSynFile$=newAonDir$+"/config/addon.syn"
 
@@ -106,7 +138,14 @@ rem --- Update new addon.syn file
     call pgmdir$+"adc_updatesynfile.aon",newSynFile$,oldSynFile$,upgrade%,stblMap!,pfxList!,rdForm!,0,status
 
 rem --- Add new application to Barista Installation Manager
-	rem --- Run BIM bai_install_manager.bbj program via synchronous system call because of it's terminating release
+rem --- Run BIM bai_install_manager.bbj program via synchronous system call because of it's terminating release
+
+    rem --- Increment progress meter
+    meter_text$=Translator!.getTranslation("AON_BIM_CREATE")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+
 	bar_dir$=dir("")
 	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
 	run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
@@ -122,6 +161,12 @@ rem --- Add new application to Barista Installation Manager
 rem --- Update new sync XML files (and copy old barista/settings dir)
 rem --- BIM clears barista/settings dir, so must do this step after BIMing and before auto-sync
 
+    rem --- Increment progress meter
+    meter_text$=Translator!.getTranslation("AON_UPDATE_XML")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+
 	rem --- Set newSyncLoc to sync directory at the new aon location
     newSyncLoc$=newAonDir$+"/data/sync"
 
@@ -134,7 +179,13 @@ rem --- BIM clears barista/settings dir, so must do this step after BIMing and b
 rem --- Use old modified menus instead of new standard menus.
 rem --- Temporary "fix" until Barista enhancement 5658 can be implemented to preserve customizations
 rem --- to standard menus, thus no logging or progress meter.
-   if useOldMenu% then
+    if useOldMenu% then
+        rem --- Increment progress meter
+        meter_text$=Translator!.getTranslation("AON_COPY_MENUS")
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+
         declare File oldMenuFile!
         declare File newMenuFile!
         declare File newMenuDir!
@@ -172,6 +223,13 @@ rem --- to standard menus, thus no logging or progress meter.
 
 rem --- Launch auto-sync in new barista for the new addon.syn
 rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the new barista
+
+    rem --- Increment progress meter
+    meter_text$=Translator!.getTranslation("AON_AUTO_SYNC")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+
 	bar_dir$=newBarDir$
 	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
 	run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
@@ -187,6 +245,12 @@ rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to b
 	scall_result=scall(run_arg$+user_arg$,err=*next)
     
 done: rem --- All done
+    
+    rem --- Stop progress meter
+    meter_text$=""
+    meter_proc_recs=meter_total_recs
+    meter_action$="LST-END"
+    gosub disp_meter
 
     goto std_exit
 
@@ -206,6 +270,29 @@ search_replace: rem --- Search record$ for search$, and replace with replace$
 	if(pos) then
 		record$ = record$(1, pos - 1) + replace$ + record$(pos + len(search$))
 	endif
+    return
+	
+disp_meter:rem --- Display Progress Meter
+
+    rem --- sysGUI! is not declared in bam_prog_bar.bbj, so can't declare it here
+    rem declare BBjSysGui sysGUI!
+
+    rem --- rdForm! is not declared in bam_prog_bar.bbj, so can't declare it here
+    rem declare BBjTopLevelWindow rdForm!
+
+    rem --- meterWin! is not declared in bam_prog_bar.bbj, so can't declare it here
+    rem declare BBjTopLevelWindow meterWin!
+
+    call dir_syp$+"bam_prog_bar.bbj",
+:       sysGUI!,
+:       rdForm!,
+:       meterWin!,
+:       meter_title$,
+:       meter_total_recs,
+:       meter_proc_recs,
+:       meter_text$,
+:       meter_action$
+
     return
     
 rem #include std_error.src
@@ -240,5 +327,46 @@ std_exit: rem --- Standard program end (01Mar2006)
     release
 
 rem #endinclude std_end.src
+
+rem /**
+rem  * Utility Class for getting all descendent applications for a given parent application.
+rem  */
+    class public AppHeritage
+        rem --- The appMap! HashMap is keyed by the parent app, and holds a Vector of all the child apps for that parent.
+        field private HashMap appMap! = new HashMap()
+        field private Vector descendentVect! = new Vector()
+
+        rem /**
+        rem  * Constructor.
+        rem  *
+        rem  * @param HashMap appMap! - keyed by the parent app, and holds a Vector of all the child apps for that parent
+        rem  */
+        method public AppHeritage(HashMap map!)
+            #appMap! = map!
+        methodend
+
+        rem /**
+        rem  * Get all descendents of given parent.
+        rem  *
+        rem  * @param BBjString parent$
+        rem  * @return Vector of all descendents of parent$
+        rem  */
+        method public Vector getDescendents(BBjString parent$)
+            declare Vector childVect!
+            
+            if #appMap!.containsKey(parent$) then
+                childVect! = cast(Vector, #appMap!.get(parent$))
+                if childVect!<>null() and childVect!.size()>0 then
+                    for i=0 to childVect!.size()-1
+                        #descendentVect!.add(childVect!.get(i))
+                        propertyMap! = cast(HashMap, childVect!.get(i))
+                        #getDescendents(cast(BBjString, propertyMap!.get("mount_sys_id")))
+                    next i
+                endif
+            endif
+            methodret #descendentVect!
+        methodend
+        
+    classend
     
     end
