@@ -177,12 +177,9 @@ rem --- Process Transactions
                     if pos("O"=transtype$)>0 then xwk=fnblank(10) else xwk=fnblank(8)
                     OutVect!.addItem(fill(20)+"Cust: "+fnmask$(sfe01a.customer_id$,c1$)+"  Order: "+sfe01a.order_no$+"-"+sfe01a.line_no$)
                 endif
-                rem escape caj if pos("O"=transtype$)>0 then xwk=fnblank(7) else xwk=fnblank(5)
 				xwk=fnblank(columns-4)
             endif 
-
-rem ==================>>> caj escape you are here adding 2 to xwk and adjusting cols sent to outvect  <<<<===========================
-			
+		
 rem --- Now Print It
 
             if sfm07a_key.record_id$="O" then 
@@ -200,7 +197,7 @@ rem --- Now Print It
                 OutVect!.addItem(sftran.record_id_m$)
                 OutVect!.addItem(sftran.material_seq$)
                 gosub material_details
-                if pos("O"=transtype$)>0 then xwk=fnblank(2);rem escape caj I did not add 2 to this
+                if pos("O"=transtype$)>0 then xwk=fnblank(2)
                 OutVect!.addItem(str(sftran.units))
                 OutVect!.addItem(str(sftran.unit_cost))
                 OutVect!.addItem(str(sftran.ext_cost))
@@ -212,7 +209,7 @@ rem --- Now Print It
                 OutVect!.addItem(sftran.record_id_s$)
                 OutVect!.addItem(sftran.subcont_seq$)
                 gosub subcontract_details
-                if pos("O"=transtype$)>0 then xwk=fnblank(2);rem escape caj I did not add 2 to this
+                if pos("O"=transtype$)>0 then xwk=fnblank(2)
                 OutVect!.addItem(str(sftran.units))
                 OutVect!.addItem(str(sftran.unit_cost))
                 OutVect!.addItem(str(sftran.ext_cost))
@@ -246,7 +243,6 @@ done: rem --- End
 
         t9$="U"
         if sequence$<>"W" then gosub sub_total
-        rem escape caj if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
 		xwk=fnblank(columns)
         xwk=fnblank(1)
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
@@ -284,13 +280,11 @@ sub_head:rem --- Sub Heading
 sub_total: rem --- First Sub Total
 
         if t0$<>"" and l0>=1 then 
-            rem eacape caj if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
             xwk=fnblank(columns)
 			xwk=fnblank(1)
             TotVect!.addItem(str(OutVect!.size()/(columns+1)))
             xwk=fnblank(1)
             OutVect!.addItem(h9$+" "+cvs(t0$,2)+"   "+"Total: "+$00$+"B")
-            rem eacape caj if pos("O"=transtype$)>0 then xwk=fnblank(6) else xwk=fnblank(4)
             xwk=fnblank(columns-2)
 			OutVect!.addItem(str(t[1]))
             if pos("O"=transtype$)>0 then xwk=fnblank(9) else xwk=fnblank(7)
@@ -318,10 +312,8 @@ sub_total: rem --- First Sub Total
 
 date_subtot:rem --- Date Subtotal
         if t1$<>"" then 
-            rem escape caj if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
             xwk=fnblank(columns)
 			xwk=fnblank(1)
-rem escape; rem caj ?OutVect!.size()/(columns+1)
             TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
             xwk=fnblank(1)
             OutVect!.addItem("Month "+fnh$(t1$)+"   "+"Total: ")
@@ -346,7 +338,6 @@ wo_subtot: rem --- W/O Subtotal
         if t9$="" then let t9$="B"
         gosub date_subtot
         if t9$="B" then let t9$=""
-        rem eacape caj if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
         xwk=fnblank(columns)
 		xwk=fnblank(1)
         TotVect!.addItem(str(OutVect!.size()/(columns+1)))
@@ -360,8 +351,7 @@ wo_subtot: rem --- W/O Subtotal
             xwk=fnblank(6)
         endif
         OutVect!.addItem(str(s[1]))
-        rem eacape caj if pos("O"=transtype$)>0 then xwk=fnblank(11) else xwk=fnblank(9)
-		xwk=fnblank(columns+1)
+        xwk=fnblank(columns+1)
     return
 
 material_details: rem --- Materials Here
