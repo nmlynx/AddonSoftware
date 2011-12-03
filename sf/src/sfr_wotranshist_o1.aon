@@ -50,27 +50,31 @@ rem --- Retrieve key templates
 rem --- Column Headings
 
     if pos("O"=transtype$)>0 then
-        dim columns$[8,10]
-        columns = 8
-        columns$[0,0]="Date",                                             columns$[0,1]="C",columns$[0,2]="8"
-        columns$[1,0]="Src",                                              columns$[1,1]="C",columns$[1,2]="20"
-        columns$[2,0]="Seq",                                              columns$[2,1]="C",columns$[2,2]="3"
-        columns$[3,0]="Item/Description - Op Code/Employee - Vendor/P.O.",columns$[3,1]="C",columns$[3,2]="45"
-        columns$[4,0]="Cmplt Qty",                                        columns$[4,1]="N",columns$[4,2]="8",columns$[4,3]=m2$
-        columns$[5,0]="SetUp hrs",                                        columns$[5,1]="N",columns$[5,2]="8",columns$[5,3]=m2$
-        columns$[6,0]="Total Units",                                      columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m2$
-        columns$[7,0]="Rate",                                             columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m3$
-        columns$[8,0]="Amount",                                           columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m1$,columns$[8,10]="T"
+        columns = 10
+        dim columns$[columns,10]
+		columns$[0,0]="WO/Date",             columns$[0,1]="C",columns$[0,2]="8"
+        columns$[1,0]="Src",                 columns$[1,1]="C",columns$[1,2]="8"
+        columns$[2,0]="Seq",                 columns$[2,1]="C",columns$[2,2]="3"
+        columns$[3,0]="Item/Vendor/OpCd",    columns$[3,1]="C",columns$[3,2]="20"
+		columns$[4,0]="Item Desc/Employee",	 columns$[4,1]="C",columns$[4,2]="20"
+		columns$[5,0]="P.O.",	        	 columns$[5,1]="C",columns$[5,2]="15"
+        columns$[6,0]="Cmplt Qty",           columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m2$
+        columns$[7,0]="SetUp hrs",           columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m2$
+        columns$[8,0]="Total Units",         columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m2$
+        columns$[9,0]="Rate",                columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=m3$
+        columns$[10,0]="Amount",             columns$[10,1]="N",columns$[10,2]="8",columns$[10,3]=m1$,columns$[10,10]="T"
     else
-        dim columns$[6,10]
-        columns = 6
-        columns$[0,0]="Date",                                             columns$[0,1]="C",columns$[0,2]="8"
-        columns$[1,0]="Src",                                              columns$[1,1]="C",columns$[1,2]="20"
-        columns$[2,0]="Seq",                                              columns$[2,1]="C",columns$[2,2]="3"
-        columns$[3,0]="Item/Description - Op Code/Employee - Vendor/P.O.",columns$[3,1]="C",columns$[3,2]="45"
-        columns$[4,0]="Units",                                            columns$[4,1]="N",columns$[4,2]="8",columns$[4,3]=m2$
-        columns$[5,0]="Rate",                                             columns$[5,1]="N",columns$[5,2]="8",columns$[5,3]=m3$
-        columns$[6,0]="Amount",                                           columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m1$,columns$[6,10]="T"
+        columns = 8
+        dim columns$[columns,10]
+		columns$[0,0]="WO/Date",             columns$[0,1]="C",columns$[0,2]="8"
+        columns$[1,0]="Src",                 columns$[1,1]="C",columns$[1,2]="8"
+        columns$[2,0]="Seq",                 columns$[2,1]="C",columns$[2,2]="3"
+        columns$[3,0]="Item/Vendor/OpCd",    columns$[3,1]="C",columns$[3,2]="20"
+		columns$[4,0]="Item Desc/Employee",	 columns$[4,1]="C",columns$[4,2]="20"
+		columns$[5,0]="Vendor/P.O.",		 columns$[5,1]="C",columns$[5,2]="15"
+        columns$[6,0]="Units",               columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m2$
+        columns$[7,0]="Rate",                columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m3$
+        columns$[8,0]="Amount",              columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m1$,columns$[8,10]="T"
     endif
 
 rem --- Background
@@ -111,9 +115,6 @@ rem --- Main Read
             find record (ivm01a_dev,key=firm_id$+ivm01a.item_id$,dom=init_data) ivm01a$
             sfe01a.description_01$=ivm01a.item_desc$(1,min(desc[1],30))
         endif
-
-if cvs(sfe01a.wo_no$,2)= "0001023" escape; rem caj
-
 
 init_data: rem --- Init Data
         dim s[2]
@@ -170,15 +171,18 @@ rem --- Process Transactions
                 else
                     OutVect!.addItem(sfe01a.description_01$)
                 endif  
-                OutVect!.addItem("")
+                xwk=fnblank(2)
                 OutVect!.addItem(fill(20)+"Type: "+sfe01a.wo_type$+" Cat: "+sfe01a.wo_category$+"  Stat: "+sfe01a.wo_status$+"  Whse: "+sfe01a.warehouse_id$+"  Sched Prod: "+str(sfe01a.sch_prod_qty:m2$))
                 if pos("0"<sfe01a.customer_id$)>0 then
-                    if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
+                    if pos("O"=transtype$)>0 then xwk=fnblank(10) else xwk=fnblank(8)
                     OutVect!.addItem(fill(20)+"Cust: "+fnmask$(sfe01a.customer_id$,c1$)+"  Order: "+sfe01a.order_no$+"-"+sfe01a.line_no$)
                 endif
-                if pos("O"=transtype$)>0 then xwk=fnblank(5) else xwk=fnblank(3)
+                rem escape caj if pos("O"=transtype$)>0 then xwk=fnblank(7) else xwk=fnblank(5)
+				xwk=fnblank(columns-4)
             endif 
 
+rem ==================>>> caj escape you are here adding 2 to xwk and adjusting cols sent to outvect  <<<<===========================
+			
 rem --- Now Print It
 
             if sfm07a_key.record_id$="O" then 
@@ -196,7 +200,7 @@ rem --- Now Print It
                 OutVect!.addItem(sftran.record_id_m$)
                 OutVect!.addItem(sftran.material_seq$)
                 gosub material_details
-                if pos("O"=transtype$)>0 then xwk=fnblank(2)
+                if pos("O"=transtype$)>0 then xwk=fnblank(2);rem escape caj I did not add 2 to this
                 OutVect!.addItem(str(sftran.units))
                 OutVect!.addItem(str(sftran.unit_cost))
                 OutVect!.addItem(str(sftran.ext_cost))
@@ -208,7 +212,7 @@ rem --- Now Print It
                 OutVect!.addItem(sftran.record_id_s$)
                 OutVect!.addItem(sftran.subcont_seq$)
                 gosub subcontract_details
-                if pos("O"=transtype$)>0 then xwk=fnblank(2)
+                if pos("O"=transtype$)>0 then xwk=fnblank(2);rem escape caj I did not add 2 to this
                 OutVect!.addItem(str(sftran.units))
                 OutVect!.addItem(str(sftran.unit_cost))
                 OutVect!.addItem(str(sftran.ext_cost))
@@ -242,11 +246,12 @@ done: rem --- End
 
         t9$="U"
         if sequence$<>"W" then gosub sub_total
-        if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
+        rem escape caj if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
+		xwk=fnblank(columns)
         xwk=fnblank(1)
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
         xwk=fnblank(1)
-        OutVect!.addItem("Grand Total: "+$00$+"B")
+        OutVect!.addItem("Grand Total: ")
         if pos("O"=transtype$)>0 then 
             xwk=fnblank(1)
             OutVect!.addItem("Total Hours: "+str(u[0]:m2$)+" Setup Hours: "+str(u[2]:m2$))
@@ -279,14 +284,17 @@ sub_head:rem --- Sub Heading
 sub_total: rem --- First Sub Total
 
         if t0$<>"" and l0>=1 then 
-            if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
-            xwk=fnblank(1)
+            rem eacape caj if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
+            xwk=fnblank(columns)
+			xwk=fnblank(1)
             TotVect!.addItem(str(OutVect!.size()/(columns+1)))
             xwk=fnblank(1)
             OutVect!.addItem(h9$+" "+cvs(t0$,2)+"   "+"Total: "+$00$+"B")
-            if pos("O"=transtype$)>0 then xwk=fnblank(6) else xwk=fnblank(4)
-            OutVect!.addItem(str(t[1]))
+            rem eacape caj if pos("O"=transtype$)>0 then xwk=fnblank(6) else xwk=fnblank(4)
+            xwk=fnblank(columns-2)
+			OutVect!.addItem(str(t[1]))
             if pos("O"=transtype$)>0 then xwk=fnblank(9) else xwk=fnblank(7)
+			xwk=fnblank(columns+1)
         endif
 
         if t9$<>"" then return
@@ -310,17 +318,19 @@ sub_total: rem --- First Sub Total
 
 date_subtot:rem --- Date Subtotal
         if t1$<>"" then 
-            if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
-            xwk=fnblank(1)
+            rem escape caj if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
+            xwk=fnblank(columns)
+			xwk=fnblank(1)
+rem escape; rem caj ?OutVect!.size()/(columns+1)
             TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
             xwk=fnblank(1)
-            OutVect!.addItem("Month "+fnh$(t1$)+"   "+"Total: "+$00$+"B")
+            OutVect!.addItem("Month "+fnh$(t1$)+"   "+"Total: ")
             if pos("O"=transtype$)>0 then 
-                xwk=fnblank(1)
+                xwk=fnblank(2)
                 OutVect!.addItem("Total Hours: "+str(d[0]:m2$)+" Setup Hours: "+str(d[2]:m2$))
-                xwk=fnblank(4)
+                xwk=fnblank(5)
             else
-                xwk=fnblank(4)
+                xwk=fnblank(6)
             endif
             OutVect!.addItem(str(d[1]))
         endif
@@ -336,20 +346,22 @@ wo_subtot: rem --- W/O Subtotal
         if t9$="" then let t9$="B"
         gosub date_subtot
         if t9$="B" then let t9$=""
-        if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
-        xwk=fnblank(1)
+        rem eacape caj if pos("O"=transtype$)>0 then xwk=fnblank(8) else xwk=fnblank(6)
+        xwk=fnblank(columns)
+		xwk=fnblank(1)
         TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         xwk=fnblank(1)
-        OutVect!.addItem("Work Order "+sfe01a.wo_no$+" Total: "+$00$+"B")
+        OutVect!.addItem("Work Order "+sfe01a.wo_no$+" Total: ")
         if pos("O"=transtype$)>0 then 
-            xwk=fnblank(1)
+            xwk=fnblank(2)
             OutVect!.addItem("Total Hours: "+str(s[0]:m2$)+" Setup Hours: "+str(s[2]:m2$))
-            xwk=fnblank(4)
+            xwk=fnblank(5)
         else
-            xwk=fnblank(4)
+            xwk=fnblank(6)
         endif
         OutVect!.addItem(str(s[1]))
-        if pos("O"=transtype$)>0 then xwk=fnblank(9) else xwk=fnblank(7)
+        rem eacape caj if pos("O"=transtype$)>0 then xwk=fnblank(11) else xwk=fnblank(9)
+		xwk=fnblank(columns+1)
     return
 
 material_details: rem --- Materials Here
@@ -358,7 +370,11 @@ material_details: rem --- Materials Here
    
     if record_id_field$="M"
         find record (ivm01a_dev,key=firm_id$+sftran.item_id$,dom=*next) ivm01a$
-        OutVect!.addItem(pad(cvs(sftran.item_id$,2),20)+"UM: "+sftran.unit_measure$+fill(5)+ivm01a.item_desc$)
+        
+		rem -- Columns$[3,x]-[5,x]
+		OutVect!.addItem(pad(cvs(sftran.item_id$,2),20))
+		OutVect!.addItem("UM: "+sftran.unit_measure$+fill(5)+ivm01a.item_desc$)
+		OutVect!.addItem("")
     endif
 	return
 
@@ -382,10 +398,17 @@ rem --- Serial Numbers Here
                     read record (lstran_dev) lstran$ 
 rem --- Print It Here
                     if ivs01a.lotser_flag$="S" then lotser$="Serial: " else lotser$="Lot: "
-                    xwk=fnblank(2)
-                    if lstran_dev=sft11a_dev then OutVect!.addItem(lotser$+lstran.lotser_no$+"  Issued:"+str(lstran.cls_inp_qty:m2$)+"  Cost:"+str(lstran.closed_cost:m3$)+"  Amount: "+str(lstran.ext_cost:m1$))
-                    if lstran_dev=sft12a_dev then OutVect!.addItem(lotser$+lstran.lotser_no$+"  Issued:"+str(lstran.qty_closed:m2$)+"  Cost:"+str(lstran.unit_cost:m3$)+"  Amount: "+str(lstran.ext_cost:m1$))
-					xwk=fnblank(6)
+                    xwk=fnblank(3)
+                    
+					rem -- Columns$[3,x]
+					if lstran_dev=sft11a_dev then 
+						OutVect!.addItem(lotser$+lstran.lotser_no$+"  Issued:"+str(lstran.cls_inp_qty:m2$)+"  Cost:"+str(lstran.closed_cost:m3$)+"  Amount: "+str(lstran.ext_cost:m1$))
+                    endif
+					
+					if lstran_dev=sft12a_dev then 
+						OutVect!.addItem(lotser$+lstran.lotser_no$+"  Issued:"+str(lstran.qty_closed:m2$)+"  Cost:"+str(lstran.unit_cost:m3$)+"  Amount: "+str(lstran.ext_cost:m1$))
+					endif
+					xwk=fnblank(columns-3)
                 else
 					break
 				endif
@@ -399,7 +422,11 @@ subcontract_details: rem --- Subcontracts Here
         dim x0$(30),x1$(20),x2$(30); let x0$(1)="*** Not On File ***",x1$(1)=x0$
         if record_id_field$="S"
             if po$="Y" then find record (apm01a_dev,key=firm_id$+sftran.vendor_id$,dom=*next) apm01a$
-            OutVect!.addItem(fnmask$(sftran.vendor_id$,c3$)+"  "+apm01a.vendor_name$+fill(32-len(apm01a.vendor_name$))+"PO #: "+sftran.po_no$+sftran.po_line_no$)
+            
+			rem -- Columns$[3,x]-[5,x]
+			OutVect!.addItem(fnmask$(sftran.vendor_id$,c3$)+"  "+apm01a.vendor_name$)
+			OutVect!.addItem("")
+			OutVect!.addItem("PO #: "+sftran.po_no$+sftran.po_line_no$)
         endif
         return
 
@@ -411,8 +438,14 @@ operation_details: rem --- Operations Here
             x1$=opcode.code_desc$
             label3:
             find record (empcode_dev,key=firm_id$+sftran.employee_no$,dom=*next) empcode$
-            OutVect!.addItem(sftran.op_code$+"  "+x1$+fnmask$(sftran.employee_no$,c5$)+" "+empcode.empl_surname$+empcode.empl_givname$)
-            OutVect!.addItem(str(sftran.complete_qty))
+            
+			rem -- Columns$[3,x]-[5,x]
+			OutVect!.addItem(sftran.op_code$+"  "+x1$)
+            OutVect!.addItem(fnmask$(sftran.employee_no$,c5$)+" "+empcode.empl_surname$+empcode.empl_givname$)
+			OutVect!.addItem("")
+			
+			rem -- Columns$[6,x]-[7,x]
+			OutVect!.addItem(str(sftran.complete_qty))
             OutVect!.addItem(str(sftran.setup_time))
         endif
         return

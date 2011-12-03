@@ -168,8 +168,7 @@ rem --- Dimension string templates & retrieve params (Add'l files)
 			dim ars01a$:open_tpls$[2]
 			
 			find record (ars01a_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
-            rem escape caj call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",c1$,0,c1
-			call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",c1$,0,c1
+            call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",c1$,0,c1
         endif
 
 		if po$="Y" then
