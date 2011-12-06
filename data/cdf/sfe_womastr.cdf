@@ -1,3 +1,22 @@
+[[SFE_WOMASTR.WO_TYPE.AVAL]]
+rem --- Only allow change to Type if it's the same Category
+
+	typecode_dev=fnget_dev("SFC_WOTYPECD")
+	dim typecode$:fnget_tpl$("SFC_WOTYPECD")
+
+	cat$=callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")
+	if callpoint!.getDevObject("new_rec")="N"
+		readrecord(typecode_dev,key=firm_id$+"A"+callpoint!.getUserInput())typecode$
+		if cvs(cat$,3)<>"" and cat$<>typecode.wo_category$
+			msg_id$="WO_NO_CAT_CHG"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
+[[SFE_WOMASTR.AWRI]]
+rem --- Set new_rec to N
+
+	callpoint!.setDevObject("new_rec","N")
 [[SFE_WOMASTR.<CUSTOM>]]
 disable_ctls:rem --- disable selected control
 	for dctl=1 to looper
@@ -23,7 +42,7 @@ rem --- Set new record flag
 
 rem --- Disable fields not allowed to be changed
 
-	dim dctl$[21],dmap$[21]
+	dim dctl$[20],dmap$[20]
 	dctl$[1]="SFE_WOMASTR.ITEM_ID"
 	dctl$[2]="SFE_WOMASTR.BILL_REV"
 	dctl$[3]="SFE_WOMASTR.CUSTOMER_ID"
@@ -43,9 +62,8 @@ rem --- Disable fields not allowed to be changed
 	dctl$[17]="SFE_WOMASTR.WAREHOUSE_ID"
 	dctl$[18]="SFE_WOMASTR.WO_CATEGORY"
 	dctl$[19]="SFE_WOMASTR.WO_NO"
-	dctl$[20]="SFE_WOMASTR.WO_STATUS"
-	dctl$[21]="SFE_WOMASTR.WO_TYPE"
-	looper=21
+	dctl$[20]="SFE_WOMASTR.WO_TYPE"
+	looper=20
 	for x=1 to looper
 		if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C"
 			dmap$[x]="I"
@@ -71,7 +89,7 @@ rem --- set defaults
 
 rem --- enable all enterable fields
 
-	dim dctl$[21],dmap$[21]
+	dim dctl$[20],dmap$[20]
 	dctl$[1]="SFE_WOMASTR.ITEM_ID"
 	dctl$[2]="SFE_WOMASTR.BILL_REV"
 	dctl$[3]="SFE_WOMASTR.CUSTOMER_ID"
@@ -91,9 +109,8 @@ rem --- enable all enterable fields
 	dctl$[17]="SFE_WOMASTR.WAREHOUSE_ID"
 	dctl$[18]="SFE_WOMASTR.WO_CATEGORY"
 	dctl$[19]="SFE_WOMASTR.WO_NO"
-	dctl$[20]="SFE_WOMASTR.WO_STATUS"
-	dctl$[21]="SFE_WOMASTR.WO_TYPE"
-	looper=21
+	dctl$[20]="SFE_WOMASTR.WO_TYPE"
+	looper=20
 	gosub disable_ctls
 [[SFE_WOMASTR.BSHO]]
 rem --- Set new record flag
@@ -102,10 +119,11 @@ rem --- Set new record flag
 
 rem --- Open tables
 
-	num_files=2
+	num_files=3
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="SFS_PARAMS",open_opts$[2]="OTA"
+	open_tables$[3]="SFC_WOTYPECD",open_opts$[3]="OTA"
 	gosub open_tables
 
 	sfs_params=num(open_chans$[2])
