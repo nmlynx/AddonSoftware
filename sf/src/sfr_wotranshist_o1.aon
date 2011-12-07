@@ -45,7 +45,6 @@ rem --- Init Data
 rem --- Retrieve key templates
 
         call stbl("+DIR_SYP")+"bac_key_template.bbj","SFX_WOTRANXR","PRIMARY",sfm07a_key_tpl$,rd_table_chans$[all],status$
-        call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMASTR","PRIMARY",sfe01a_key_tpl$,rd_table_chans$[all],status$
 
 rem --- Column Headings
 
@@ -62,7 +61,7 @@ rem --- Column Headings
         columns$[7,0]="SetUp hrs",           columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m2$
         columns$[8,0]="Total Units",         columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m2$
         columns$[9,0]="Rate",                columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=m3$
-        columns$[10,0]="Amount",             columns$[10,1]="N",columns$[10,2]="8",columns$[10,3]=m1$,columns$[10,10]="T"
+        columns$[10,0]="Amount",             columns$[10,1]="N",columns$[10,2]="12",columns$[10,3]=m1$,columns$[10,10]="T"
     else
         columns = 8
         dim columns$[columns,10]
@@ -74,7 +73,7 @@ rem --- Column Headings
 		columns$[5,0]="Vendor/P.O.",		 columns$[5,1]="C",columns$[5,2]="15"
         columns$[6,0]="Units",               columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m2$
         columns$[7,0]="Rate",                columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m3$
-        columns$[8,0]="Amount",              columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m1$,columns$[8,10]="T"
+        columns$[8,0]="Amount",              columns$[8,1]="N",columns$[8,2]="12",columns$[8,3]=m1$,columns$[8,10]="T"
     endif
 
 rem --- Background
@@ -87,28 +86,31 @@ rem --- Init Read
 
 rem --- Main Read
     while more
-        sfkey$=key(sfe01a_dev,knum=keynum$,end=*break)
-        if pos(firm_id$=sfkey$)<>1 break
+        sfe01_key$=key(sfe01a_dev,knum=keynum$,end=*break)
+        if pos(firm_id$=sfe01_key$)<>1 break
 
         if ending$<>"" 
-            if sequence$="W" and sfkey.firm_id$+sfkey.wo_location$+sfkey.wo_no$>firm_id$+sfkey.wo_location$+ending$ break
-            if sequence$="B" and sfkey.firm_id$+sfkey.warehouse_id$+sfkey.item_id$>firm_id$+ending$ break
-            if sequence$="C" and sfkey.firm_id$+sfkey.customer_id$>firm_id$+ending$ break
-            if sequence$="T" and sfkey.firm_id$+sfkey.wo_type$>firm_id$+ending$ break   
+            if sequence$="W" and sfe01_key.firm_id$+sfe01_key.wo_location$+sfe01_key.wo_no$>firm_id$+sfe01_key.wo_location$+ending$ break
+            if sequence$="B" and sfe01_key.firm_id$+sfe01_key.warehouse_id$+sfe01_key.item_id$>firm_id$+ending$ break
+            if sequence$="C" and sfe01_key.firm_id$+sfe01_key.customer_id$>firm_id$+ending$ break
+            if sequence$="T" and sfe01_key.firm_id$+sfe01_key.wo_type$>firm_id$+ending$ break   
         else
-            if sequence$="B" and whse$<>"" then if sfkey.warehouse_id$>whse$ break
-        endif
+            if sequence$="B" and whse$<>"" then if sfe01_key.warehouse_id$>whse$ break
+		endif
 
+		if sequence$="C" and cvs(sfe01_key.customer_id$,2)="" read (sfe01a_dev); continue
+		
         if sequence$<>"W" then 
-            if sequence$="T" data1$=sfkey.wo_type$
-            if sequence$="C" data1$=sfkey.customer_id$
-            if sequence$="B" data1$=sfkey.item_id$
+            if sequence$="T" data1$=sfe01_key.wo_type$
+            if sequence$="C" data1$=sfe01_key.customer_id$
+            if sequence$="B" data1$=sfe01_key.item_id$
             if data1$<>t0$ then gosub sub_total
+
             read (sfe01a_dev,knum=keynum$)
         endif
 
-        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        read record (sfe01a_dev,key=sfkey$,knum=keynum$,dom=*continue) sfe01a$
+rem escape caj REMOVE REM!!        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        read record (sfe01a_dev,key=sfe01_key$,knum=keynum$,dom=*continue) sfe01a$
         if wotype$="C" and sfe01a.wo_status$<>"C" then continue
         if wotype$="O" and sfe01a.wo_status$="C" then continue
         if sfe01a.wo_category$="I" 
@@ -163,21 +165,28 @@ rem --- Process Transactions
             if transtype$<>"" then if pos(record_id_field$=transtype$)=0 then continue
             if sfm07a_key.trans_date$(1,6)<>t1$ then gosub date_subtot
             if l2<=0 
-                OutVect!.addItem(sfe01a.wo_no$)
+                OutVect!.addItem(sfe01a.wo_no$); rem columns$[0
                 if sfe01a.wo_category$="I"
                     x0$=sfe01a.item_id$
                     x0$=x0$(1,pos("   "=x0$+"   ")-1)+" "+sfe01a.description_01$,x0$=x0$(1,30)
-                    OutVect!.addItem(x0$)
+                    OutVect!.addItem(x0$); rem columns$[1
                 else
-                    OutVect!.addItem(sfe01a.description_01$)
+                    OutVect!.addItem(sfe01a.description_01$); rem columns$[1
                 endif  
                 xwk=fnblank(2)
-                OutVect!.addItem(fill(20)+"Type: "+sfe01a.wo_type$+" Cat: "+sfe01a.wo_category$+"  Stat: "+sfe01a.wo_status$+"  Whse: "+sfe01a.warehouse_id$+"  Sched Prod: "+str(sfe01a.sch_prod_qty:m2$))
-                if pos("0"<sfe01a.customer_id$)>0 then
-                    if pos("O"=transtype$)>0 then xwk=fnblank(10) else xwk=fnblank(8)
-                    OutVect!.addItem(fill(20)+"Cust: "+fnmask$(sfe01a.customer_id$,c1$)+"  Order: "+sfe01a.order_no$+"-"+sfe01a.line_no$)
-                endif
-				xwk=fnblank(columns-4)
+                OutVect!.addItem(fill(20)+"Type: "+sfe01a.wo_type$+" Cat: "
+:								 +sfe01a.wo_category$+"  Stat: "+sfe01a.wo_status$
+:								 +"  Whse: "+sfe01a.warehouse_id$+"  Sched Prod: "
+:								 +str(sfe01a.sch_prod_qty:m2$)); rem columns$[4
+                xwk=fnblank(columns-4); rem "finish the row
+				if pos("0"<sfe01a.customer_id$)>0 then
+                    rem NOTE: in v6 Cust/Ord info is flush right, but those are numeric cols in DocOut, so I moved left w/indent
+					OutVect!.addItem(fill(5)+"Cust: "+fnmask$(sfe01a.customer_id$,c1$)+"  Order: "+sfe01a.order_no$+"-"+sfe01a.line_no$); rem columns$[0
+					xwk=fnblank(columns); rem "finish the row
+				else
+					rem xwk=fnblank(columns+1); rem "blank row
+				endif
+					
             endif 
 		
 rem --- Now Print It
@@ -243,20 +252,17 @@ done: rem --- End
 
         t9$="U"
         if sequence$<>"W" then gosub sub_total
-		xwk=fnblank(columns)
-        xwk=fnblank(1)
+		xwk=fnblank(columns+1); rem "blank row
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
         xwk=fnblank(1)
         OutVect!.addItem("Grand Total: ")
         if pos("O"=transtype$)>0 then 
-            xwk=fnblank(1)
-            OutVect!.addItem("Total Hours: "+str(u[0]:m2$)+" Setup Hours: "+str(u[2]:m2$))
-            xwk=fnblank(4)
-        else
-            xwk=fnblank(4)
+            xwk=fnblank(2)
+            OutVect!.addItem("Total Hours: "+str(u[0]:m2$)+" Setup Hours: "+str(u[2]:m2$)); rem columns$[4
         endif
-        OutVect!.addItem(str(u[1]:m1$))
-        if pos("O"=transtype$)>0 then xwk=fnblank(9) else xwk=fnblank(7)
+        xwk=fnblank(columns-5)
+		OutVect!.addItem(str(u[1]:m1$))
+        xwk=fnblank(columns)
 		
 		out_action$="FORMAT"
 		
@@ -264,31 +270,28 @@ done: rem --- End
 
 
 sub_head:rem --- Sub Heading
-
         if sequence$="T" then
             OutVect!.addItem(t0$)
             OutVect!.addItem(h5$)
-            if pos("O"=transtype$)>0 then xwk=fnblank(7) else xwk=fnblank(5)
+            xwk=fnblank(columns-1)
         endif
         if sequence$="C" then
-            OutVect!.addItem(fnmask$(t0$,c1$))
-            OutVect!.addItem(h5$)
-            if pos("O"=transtype$)>0 then xwk=fnblank(7) else xwk=fnblank(5)
+			OutVect!.addItem(fnmask$(t0$,c1$))
+            OutVect!.addItem(h5$)            
+			xwk=fnblank(columns-1)
         endif
     return
 
 sub_total: rem --- First Sub Total
-
-        if t0$<>"" and l0>=1 then 
-            xwk=fnblank(columns)
-			xwk=fnblank(1)
-            TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+        if t0$<>"" and l0>1 then 
+            rem xwk=fnblank(columns+1); rem "blank row
+			TotVect!.addItem(str(OutVect!.size()/(columns+1)))
             xwk=fnblank(1)
-            OutVect!.addItem(h9$+" "+cvs(t0$,2)+"   "+"Total: "+$00$+"B")
-            xwk=fnblank(columns-2)
-			OutVect!.addItem(str(t[1]))
-            if pos("O"=transtype$)>0 then xwk=fnblank(9) else xwk=fnblank(7)
-			xwk=fnblank(columns+1)
+            OutVect!.addItem(h9$+" "+cvs(t0$,2)+"   "+"Total: ")
+            xwk=fnblank(columns-2); rem "finish the row
+			OutVect!.addItem(str(t[1]))            
+			xwk=fnblank(columns+1); rem "blank row
+			
         endif
 
         if t9$<>"" then return
@@ -311,20 +314,19 @@ sub_total: rem --- First Sub Total
     return
 
 date_subtot:rem --- Date Subtotal
-        if t1$<>"" then 
-            xwk=fnblank(columns)
-			xwk=fnblank(1)
+        if t1$<>"" then             
             TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
             xwk=fnblank(1)
             OutVect!.addItem("Month "+fnh$(t1$)+"   "+"Total: ")
             if pos("O"=transtype$)>0 then 
                 xwk=fnblank(2)
                 OutVect!.addItem("Total Hours: "+str(d[0]:m2$)+" Setup Hours: "+str(d[2]:m2$))
-                xwk=fnblank(5)
+                xwk=fnblank(5); rem "finish row
             else
-                xwk=fnblank(6)
+                xwk=fnblank(6); rem "finish row
             endif
             OutVect!.addItem(str(d[1]))
+			xwk=fnblank(columns+1); rem "blank row
         endif
 
         if t9$<>"" then return
@@ -338,20 +340,19 @@ wo_subtot: rem --- W/O Subtotal
         if t9$="" then let t9$="B"
         gosub date_subtot
         if t9$="B" then let t9$=""
-        xwk=fnblank(columns)
-		xwk=fnblank(1)
+        
         TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         xwk=fnblank(1)
         OutVect!.addItem("Work Order "+sfe01a.wo_no$+" Total: ")
         if pos("O"=transtype$)>0 then 
             xwk=fnblank(2)
             OutVect!.addItem("Total Hours: "+str(s[0]:m2$)+" Setup Hours: "+str(s[2]:m2$))
-            xwk=fnblank(5)
+            xwk=fnblank(5); rem "finish row
         else
-            xwk=fnblank(6)
+            xwk=fnblank(6); rem "finish row
         endif
         OutVect!.addItem(str(s[1]))
-        xwk=fnblank(columns+1)
+        xwk=fnblank(columns+1); rem "blank row
     return
 
 material_details: rem --- Materials Here

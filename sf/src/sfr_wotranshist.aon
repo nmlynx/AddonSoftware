@@ -29,8 +29,8 @@ rem --- Open/Lock files
 	open_tables$[2]	="IVS_PARAMS",   open_opts$[2] = "OTA"
 	open_tables$[3]	="SFS_PARAMS",   open_opts$[3] = "OTA"
 	open_tables$[4]	="SFE_WOMASTR",  open_opts$[4] = "OTA"
-	open_tables$[5]	="SFX_WOTRANXR", open_opts$[5] = "OTA"; rem escape caj ?????
-	open_tables$[6]	="SFC_WOTYPECD", open_opts$[6] = "OTA"; rem escape caj ?????
+	open_tables$[5]	="SFX_WOTRANXR", open_opts$[5] = "OTA"
+	open_tables$[6]	="SFC_WOTYPECD", open_opts$[6] = "OTA"
 	open_tables$[7]	="SFT_OPNOPRTR", open_opts$[7] = "OTA"
 	open_tables$[8]	="SFT_CLSOPRTR", open_opts$[8] = "OTA"
 	open_tables$[9]	="SFT_OPNMATTR", open_opts$[9] = "OTA"
@@ -46,8 +46,8 @@ rem --- Open/Lock files
     ivs01a_dev = num(open_chans$[2])
     sfs01a_dev = num(open_chans$[3])
     sfe01a_dev = num(open_chans$[4])
-	sfm07a_dev = num(open_chans$[5]); rem escape caj ?????
-	sfm10a_dev = num(open_chans$[6]); rem escape caj ?????
+	sfm07a_dev = num(open_chans$[5])
+	sfm10a_dev = num(open_chans$[6])
 	sft01a_dev = num(open_chans$[7])
 	sft03a_dev = num(open_chans$[8])
 	sft21a_dev = num(open_chans$[9])
@@ -63,14 +63,14 @@ rem --- Dimension string templates
     dim ivs01a$:open_tpls$[2]
     dim sfs01a$:open_tpls$[3]
     dim sfe01a$:open_tpls$[4]
-    dim sfm07a$:open_tpls$[5]; rem escape caj ?????
-    dim sfm10a$:open_tpls$[6]; rem escape caj ?????
-    sft01_tpls$=open_tpls$[7]; dim sft01a$:sft01_tpls$; rem Save tmpl for next o'lay
-	sft03_tpls$=open_tpls$[8]; dim sft03a$:sft03_tpls$; rem Save tmpl for next o'lay
-    sft21_tpls$=open_tpls$[9]; dim sft21a$:sft21_tpls$; rem Save tmpl for next o'lay
-    sft23_tpls$=open_tpls$[10]; dim sft23a$:sft23_tpls$; rem Save tmpl for next o'lay
-    sft31_tpls$=open_tpls$[11]; dim sft31a$:sft31_tpls$; rem Save tmpl for next o'lay
-    sft33_tpls$=open_tpls$[12]; dim sft33a$:sft33_tpls$; rem Save tmpl for next o'lay
+    dim sfm07a$:open_tpls$[5]
+    dim sfm10a$:open_tpls$[6]
+    sft01_tpls$=open_tpls$[7]; dim sft01a$:sft01_tpls$; rem Save template for next o'lay
+	sft03_tpls$=open_tpls$[8]; dim sft03a$:sft03_tpls$; rem Save template for next o'lay
+    sft21_tpls$=open_tpls$[9]; dim sft21a$:sft21_tpls$; rem Save template for next o'lay
+    sft23_tpls$=open_tpls$[10]; dim sft23a$:sft23_tpls$; rem Save template for next o'lay
+    sft31_tpls$=open_tpls$[11]; dim sft31a$:sft31_tpls$; rem Save template for next o'lay
+    sft33_tpls$=open_tpls$[12]; dim sft33a$:sft33_tpls$; rem Save template for next o'lay
     dim ivm01a$:open_tpls$[13]
     dim ivm10a$:open_tpls$[14]
 	
@@ -239,7 +239,7 @@ rem --- Options
         h3$="Work Order Sequence"
         beging$=wofrom$
         ending$=wothru$
-        dim key_tpl$:sfe01a_key_tpl$
+        dim sfe01_key$:sfe01a_key_tpl$
         begin_key$=firm_id$+sfe01a.wo_location$+beging$
         keynum$="PRIMARY"
     endif
@@ -247,7 +247,7 @@ rem --- Options
         h3$="Bill Number Sequence"
         beging$=billfrom$
         ending$=billthru$
-        dim key_tpl$:sfe03c_key_tpl$
+        dim sfe01_key$:sfe03c_key_tpl$
         begin_key$=firm_id$+whse$+beging$
         keynum$="AO_WH_ITM_LOC_WO"
     endif
@@ -255,7 +255,7 @@ rem --- Options
         h3$="Customer Sequence"
         beging$=custfrom$
         ending$=custthru$
-        dim key_tpl$:sfe03b_key_tpl$
+        dim sfe01_key$:sfe03b_key_tpl$
         begin_key$=firm_id$+beging$
         keynum$="AO_CST_ORD_LINE"
     endif
@@ -263,7 +263,7 @@ rem --- Options
         h3$="Work Order Type Sequence"
         beging$=wotfrom$
         ending$=wotthru$
-        dim key_tpl$:sfe03a_key_tpl$
+        dim sfe01_key$:sfe03a_key_tpl$
         begin_key$=firm_id$+beging$
         keynum$="AO_TYP_LOC_WO"
     endif

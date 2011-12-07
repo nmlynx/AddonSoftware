@@ -1,3 +1,5 @@
+[[SFR_WOTRANSHIST.<CUSTOM>]]
+
 [[SFR_WOTRANSHIST.BSHO]]
 rem --- Open needed tables
 	num_files=2
@@ -10,7 +12,10 @@ rem --- Open needed tables
 	dim ivs01a$:open_tpls$[1]
 
 	read record (ivs01_dev,key=firm_id$+"IV00")ivs01a$
+
+	callpoint!.setDevObject("multi_wh",ivs01a.multi_whse$)	
 	callpoint!.setDevObject("dflt_whse",ivs01a.warehouse_id$)
+
 [[SFR_WOTRANSHIST.AREC]]
 rem --- Set default Warehouse
 
@@ -29,14 +34,14 @@ rem --- Set descriptions
 	item$=callpoint!.getUserInput()
 	read record (ivm_itemmast,key=firm_id$+item$,dom=*next) ivm_itemmast$
 
-	if num(callpoint!.getControlID()) = num(callpoint!.getControl("BILL_NO_1").getID()) then
+	if num(callpoint!.getControlID()) = num(callpoint!.getControl("RPT_BILL_NO_1").getID()) then
 		if cvs(item$,2)<>""
 			callpoint!.setColumnData("<<DISPLAY>>.BEG_DESC",ivm_itemmast.item_desc$,1)
 		else
 			callpoint!.setColumnData("<<DISPLAY>>.BEG_DESC","First",1)
 		endif
 	endif
-	if num(callpoint!.getControlID()) = num(callpoint!.getControl("BILL_NO_2").getID()) then
+	if num(callpoint!.getControlID()) = num(callpoint!.getControl("RPT_BILL_NO_2").getID()) then
 		if cvs(item$,2)<>""
 			callpoint!.setColumnData("<<DISPLAY>>.END_DESC",ivm_itemmast.item_desc$,1)
 		else
