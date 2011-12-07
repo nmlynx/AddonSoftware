@@ -129,7 +129,7 @@ rem --- Print packing list
         
         action$="B"
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        call pgmdir$+"bmc_packinglist.aon",action$,printer_dev,bmm01a.bill_no$,h,pdate$,OutVect!,status
+        call pgmdir$+"bmc_packinglist.aon",action$,printer_dev,bmm01a.bill_no$,h,pdate$,OutVect!,Translate!,status
         if status then goto std_exit
 
 rem while/wend -- gets an error after the CALL to bmc_packinglist.aon , so use GOTO for loop

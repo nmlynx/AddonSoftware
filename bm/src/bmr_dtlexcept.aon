@@ -49,12 +49,12 @@ rem --- Assign form input values to local variables
     billfrom$=Option!.getOptionData("BILL_NO_1")
     billthru$=Option!.getOptionData("BILL_NO_2")
 	if cvs(billfrom$,3)=""
-		bill_from$="First"
+		bill_from$=Translate!.getTranslation("AON_FIRST")
 	else
 		bill_from$=cvs(billfrom$,3)
 	endif
 	if cvs(billthru$,3)=""
-		bill_thru$="Last"
+		bill_thru$=Translate!.getTranslation("AON_LAST")
 	else
 		bill_thru$=cvs(billthru$,3)
 	endif

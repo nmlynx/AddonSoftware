@@ -240,7 +240,7 @@ check_circular_ref: rem --- Circular Reference
             return
         endif
         dim message$[1]
-        message$[0]="Circular Reference Found For This Bill Number"
+        message$[0]=Translate!.getTranslation("AON_CIRCULAR_REFERENCE_FOUND_FOR_THIS_BILL_NUMBER")
         call pgmdir$+"adc_stdmessage.aon",2,message$[all],1,22,-1,v$,v3
 
         if v3=4 then exitto std_exit
