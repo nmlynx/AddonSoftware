@@ -18,9 +18,9 @@
 			<ASC_LICENSE_ID id="ddm_tables.sfe_womastr">FF7A0932600DAAA0B007689A4A08435B</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.sfe_womastr">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.sfe_womastr">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.sfe_womastr">20111206</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.sfe_womastr">20111206</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.sfe_womastr">125650</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.sfe_womastr">20111207</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.sfe_womastr">20111207</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.sfe_womastr">225304</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.sfe_womastr">C:/Apps/aon/;/apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_FTYP id="ddm_tables.sfe_womastr">T</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV id="ddm_tables.sfe_womastr">zzzz</DD_ATTR_SLEV>
@@ -325,6 +325,7 @@
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_womastr006">N</DD_FIELD_DELIM>
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_womastr006">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womastr006">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_CPGM id="ddm_table_cols.sfe_womastr006">C:/Apps/aon/;/apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_CTLW id="ddm_table_cols.sfe_womastr006">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_cols.sfe_womastr006">0</DD_ATTR_CTLH>
 			<DD_ATTR_DFLT id="ddm_table_cols.sfe_womastr006">P</DD_ATTR_DFLT>
@@ -911,10 +912,20 @@
 			<DD_DVAR_NAME id="ddm_column_cpro.sfe_womastrwo_typeaval">WO_TYPE         </DD_DVAR_NAME>
 			<DD_ATTR_CPRO id="ddm_column_cpro.sfe_womastrwo_typeaval">AVAL</DD_ATTR_CPRO>
 		</RECORD>
+		<RECORD id="ddm_column_cpro.sfe_womastrwo_statusaval">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.sfe_womastrwo_statusaval">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.sfe_womastrwo_statusaval">WO_STATUS       </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.sfe_womastrwo_statusaval">AVAL</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_column_cpro.sfe_womastritem_idainv">
 			<DD_TABLE_ALIAS id="ddm_column_cpro.sfe_womastritem_idainv">SFE_WOMASTR     </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_cpro.sfe_womastritem_idainv">ITEM_ID         </DD_DVAR_NAME>
 			<DD_ATTR_CPRO id="ddm_column_cpro.sfe_womastritem_idainv">AINV</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.sfe_womastritem_idaval">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.sfe_womastritem_idaval">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.sfe_womastritem_idaval">ITEM_ID         </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.sfe_womastritem_idaval">AVAL</DD_ATTR_CPRO>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_opts">
@@ -954,10 +965,10 @@
 			<DD_DVAR_NAME id="ddm_column_opts.sfe_womastrwo_typeu">WO_TYPE         </DD_DVAR_NAME>
 			<DD_ATTR_OPTS id="ddm_column_opts.sfe_womastrwo_typeu">u</DD_ATTR_OPTS>
 		</RECORD>
-		<RECORD id="ddm_column_opts.sfe_womastrwo_statusc">
-			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_womastrwo_statusc">SFE_WOMASTR     </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_opts.sfe_womastrwo_statusc">WO_STATUS       </DD_DVAR_NAME>
-			<DD_ATTR_OPTS id="ddm_column_opts.sfe_womastrwo_statusc">C</DD_ATTR_OPTS>
+		<RECORD id="ddm_column_opts.sfe_womastrwo_categoryc">
+			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_womastrwo_categoryc">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.sfe_womastrwo_categoryc">WO_CATEGORY     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.sfe_womastrwo_categoryc">C</DD_ATTR_OPTS>
 		</RECORD>
 		<RECORD id="ddm_column_opts.sfe_womastrcustomer_idu">
 			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_womastrcustomer_idu">SFE_WOMASTR     </DD_TABLE_ALIAS>
@@ -1135,7 +1146,7 @@
 			<ASC_COMP_ID id="ddm_elements.wo_type">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_elements.wo_type">AD </ASC_PROD_ID>
 			<DD_CREATE_DATE id="ddm_elements.wo_type">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.wo_type">20111202</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.wo_type">20111207</DD_LSTREV_DATE>
 			<DD_AUTO_COMP id="ddm_elements.wo_type">N</DD_AUTO_COMP>
 			<DD_ATTR_CTLW id="ddm_elements.wo_type">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_elements.wo_type">0</DD_ATTR_CTLH>
@@ -1151,6 +1162,7 @@
 			<DD_ATTR_MAXL id="ddm_elements.wo_type">0</DD_ATTR_MAXL>
 			<DD_ATTR_MAXR id="ddm_elements.wo_type">0</DD_ATTR_MAXR>
 			<DD_ATTR_MINL id="ddm_elements.wo_type">0</DD_ATTR_MINL>
+			<DD_ATTR_MSKI id="ddm_elements.wo_type">UU</DD_ATTR_MSKI>
 			<DD_ATTR_PREC id="ddm_elements.wo_type">0</DD_ATTR_PREC>
 		</RECORD>
 		<RECORD id="ddm_elements.wo_category">
@@ -1753,19 +1765,25 @@
 		</RECORD>
 		<RECORD id="ddm_elements.est_yield">
 			<DD_DATA_NAME id="ddm_elements.est_yield">EST_YIELD       </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.est_yield">Estimated Yield Percent       </DD_DESCRIPTION>
+			<DD_DESCRIPTION id="ddm_elements.est_yield">Estimated Yield Percent</DD_DESCRIPTION>
 			<DD_DATA_TYPE id="ddm_elements.est_yield">N</DD_DATA_TYPE>
 			<DD_DATA_LENGTH id="ddm_elements.est_yield">5</DD_DATA_LENGTH>
-			<DD_MASK_TYPE id="ddm_elements.est_yield"> </DD_MASK_TYPE>
 			<ASC_COMP_ID id="ddm_elements.est_yield">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_elements.est_yield">AD </ASC_PROD_ID>
 			<DD_CREATE_DATE id="ddm_elements.est_yield">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.est_yield">20060119</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.est_yield">20111207</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW id="ddm_elements.est_yield">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.est_yield">0</DD_ATTR_CTLH>
 			<DD_ATTR_CTYP id="ddm_elements.est_yield">N</DD_ATTR_CTYP>
 			<DD_ATTR_DCOM id="ddm_elements.est_yield">            </DD_ATTR_DCOM>
-			<DD_ATTR_DEXP id="ddm_elements.est_yield">            </DD_ATTR_DEXP>
 			<DD_ATTR_LABL id="ddm_elements.est_yield">Estimated Yield Percent</DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_elements.est_yield">Est Yield %</DD_ATTR_LABS>
+			<DD_ATTR_MAXL id="ddm_elements.est_yield">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.est_yield">0</DD_ATTR_MAXR>
+			<DD_ATTR_MAXV id="ddm_elements.est_yield">100</DD_ATTR_MAXV>
+			<DD_ATTR_MINL id="ddm_elements.est_yield">0</DD_ATTR_MINL>
+			<DD_ATTR_MINV id="ddm_elements.est_yield">1</DD_ATTR_MINV>
+			<DD_ATTR_PREC id="ddm_elements.est_yield">0</DD_ATTR_PREC>
 		</RECORD>
 		<RECORD id="ddm_elements.dealer_num">
 			<DD_DATA_NAME id="ddm_elements.dealer_num">DEALER_NUM      </DD_DATA_NAME>
