@@ -1,3 +1,41 @@
+[[SFE_WOMASTR.ORDER_NO.AVAL]]
+rem --- Validate Open Sales Order
+
+	ope_ordhdr=fnget_dev("OPE_ORDHDR")
+	dim ope_ordhdr$:fnget_tpl$("OPE_ORDHDR")
+	cust$=callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID")
+	order$=callpoint!.getUserInput()
+	found_ord$="N"
+	while 1
+		read (ope_ordhdr,key=firm_id$+ope_ordhdr.ar_type$+cust$+order$,dom=*break)
+		found_ord$="Y"
+		break
+	wend
+
+	if found_ord$="N"
+		msg_id$="SF_INVALID_SO_ORD"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
+[[SFE_WOMASTR.CUSTOMER_ID.AVAL]]
+rem --- Disable Order info if Customer not entered
+
+	dim dctl$[2],dmap$[2]
+	dctl$[1]="SFE_WOMASTR.ORDER_NO"
+	dctl$[2]="SFE_WOMASTR.LINE_NO"
+	looper=2
+	for x=1 to 2
+		if cvs(callpoint!.getUserInput(),3)=""
+			dmap$[x]="I"
+		else
+			dmap$[x]=""
+		endif
+	next x
+	gosub disable_ctls
+	if cvs(callpoint!.getUserInput(),3)=""
+		callpoint!.setColumnData("SFE_WOMASTR.ORDER_NO","",1)
+		callpoint!.setColumnData("SFE_WOMASTR.LINE_NO","",1)
+	endif
 [[SFE_WOMASTR.ITEM_ID.AVAL]]
 rem --- Set default values
 
@@ -113,28 +151,30 @@ rem --- Set new record flag
 
 rem --- Disable fields not allowed to be changed
 
-	dim dctl$[20],dmap$[20]
+	dim dctl$[18],dmap$[18]
 	dctl$[1]="SFE_WOMASTR.ITEM_ID"
 	dctl$[2]="SFE_WOMASTR.BILL_REV"
-	dctl$[3]="SFE_WOMASTR.CUSTOMER_ID"
+	if callpoint!.getDevObject("op")="Y"
+		dctl$[3]="SFE_WOMASTR.CUSTOMER_ID"
+	endif
 	dctl$[4]="SFE_WOMASTR.DESCRIPTION_01"
 	dctl$[5]="SFE_WOMASTR.DESCRIPTION_02"
 	dctl$[6]="SFE_WOMASTR.DRAWING_NO"
 	dctl$[7]="SFE_WOMASTR.DRAWING_REV"
-	dctl$[8]="SFE_WOMASTR.ESTCMP_DATE"
-	dctl$[9]="SFE_WOMASTR.ESTSTT_DATE"
-	dctl$[10]="SFE_WOMASTR.EST_YIELD"
-	dctl$[11]="SFE_WOMASTR.FORECAST"
-	dctl$[12]="SFE_WOMASTR.LINE_NO"
-	dctl$[13]="SFE_WOMASTR.ORDER_NO"
-	dctl$[14]="SFE_WOMASTR.PRIORITY"
-	dctl$[15]="SFE_WOMASTR.SCH_PROD_QTY"
-	dctl$[16]="SFE_WOMASTR.UNIT_MEASURE"
-	dctl$[17]="SFE_WOMASTR.WAREHOUSE_ID"
-	dctl$[18]="SFE_WOMASTR.WO_NO"
-	dctl$[19]="SFE_WOMASTR.WO_TYPE"
-	dctl$[20]="SFE_WOMASTR.WO_STATUS"
-	looper=20
+	dctl$[8]="SFE_WOMASTR.EST_YIELD"
+	dctl$[9]="SFE_WOMASTR.FORECAST"
+	if callpoint!.getDevObject("op")="Y"
+		dctl$[10]="SFE_WOMASTR.LINE_NO"
+		dctl$[11]="SFE_WOMASTR.ORDER_NO"
+	endif
+	dctl$[12]="SFE_WOMASTR.PRIORITY"
+	dctl$[13]="SFE_WOMASTR.SCH_PROD_QTY"
+	dctl$[14]="SFE_WOMASTR.UNIT_MEASURE"
+	dctl$[15]="SFE_WOMASTR.WAREHOUSE_ID"
+	dctl$[16]="SFE_WOMASTR.WO_NO"
+	dctl$[17]="SFE_WOMASTR.WO_TYPE"
+	dctl$[18]="SFE_WOMASTR.WO_STATUS"
+	looper=18
 	for x=1 to looper
 		if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C"
 			dmap$[x]="I"
@@ -236,7 +276,7 @@ rem --- set defaults
 
 rem --- enable all enterable fields
 
-	dim dctl$[20],dmap$[20]
+	dim dctl$[18],dmap$[18]
 	dctl$[1]="SFE_WOMASTR.ITEM_ID"
 	dctl$[2]="SFE_WOMASTR.BILL_REV"
 	dctl$[3]="SFE_WOMASTR.CUSTOMER_ID"
@@ -244,20 +284,18 @@ rem --- enable all enterable fields
 	dctl$[5]="SFE_WOMASTR.DESCRIPTION_02"
 	dctl$[6]="SFE_WOMASTR.DRAWING_NO"
 	dctl$[7]="SFE_WOMASTR.DRAWING_REV"
-	dctl$[8]="SFE_WOMASTR.ESTCMP_DATE"
-	dctl$[9]="SFE_WOMASTR.ESTSTT_DATE"
-	dctl$[10]="SFE_WOMASTR.EST_YIELD"
-	dctl$[11]="SFE_WOMASTR.FORECAST"
-	dctl$[12]="SFE_WOMASTR.LINE_NO"
-	dctl$[13]="SFE_WOMASTR.ORDER_NO"
-	dctl$[14]="SFE_WOMASTR.PRIORITY"
-	dctl$[15]="SFE_WOMASTR.SCH_PROD_QTY"
-	dctl$[16]="SFE_WOMASTR.UNIT_MEASURE"
-	dctl$[17]="SFE_WOMASTR.WAREHOUSE_ID"
-	dctl$[18]="SFE_WOMASTR.WO_NO"
-	dctl$[19]="SFE_WOMASTR.WO_TYPE"
-	dctl$[20]="SFE_WOMASTR.WO_STATUS"
-	looper=20
+	dctl$[8]="SFE_WOMASTR.EST_YIELD"
+	dctl$[9]="SFE_WOMASTR.FORECAST"
+	dctl$[10]="SFE_WOMASTR.LINE_NO"
+	dctl$[11]="SFE_WOMASTR.ORDER_NO"
+	dctl$[12]="SFE_WOMASTR.PRIORITY"
+	dctl$[13]="SFE_WOMASTR.SCH_PROD_QTY"
+	dctl$[14]="SFE_WOMASTR.UNIT_MEASURE"
+	dctl$[15]="SFE_WOMASTR.WAREHOUSE_ID"
+	dctl$[16]="SFE_WOMASTR.WO_NO"
+	dctl$[17]="SFE_WOMASTR.WO_TYPE"
+	dctl$[18]="SFE_WOMASTR.WO_STATUS"
+	looper=18
 	gosub disable_ctls
 [[SFE_WOMASTR.BSHO]]
 rem --- Set new record flag
@@ -266,7 +304,7 @@ rem --- Set new record flag
 
 rem --- Open tables
 
-	num_files=7
+	num_files=9
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="SFS_PARAMS",open_opts$[2]="OTA"
@@ -275,6 +313,8 @@ rem --- Open tables
 	open_tables$[5]="SFT_OPNOPRTR",open_opts$[5]="OTA"
 	open_tables$[6]="SFT_OPNSUBTR",open_opts$[6]="OTA"
 	open_tables$[7]="BMM_BILLMAST",open_opts$[7]="OTA"
+	open_tables$[8]="OPE_ORDHDR",open_opts$[8]="OTA"
+	open_tables$[9]="OPE_ORDDET",open_opts$[9]="OTA"
 	gosub open_tables
 
 	sfs_params=num(open_chans$[2])
@@ -312,6 +352,20 @@ rem --- Open tables
 
 	call stbl("+DIR_PGM")+"adc_application.aon","MP",info$[all]
 	callpoint!.setDevObject("mp",info$[20])
+
+rem --- Disable Customer info if AR not installed
+
+	if op$<>"Y"
+		dim dctl$[3],dmap$[3]
+		dctl$[1]="SFE_WOMASTR.CUSTOMER_ID"
+		dctl$[2]="SFE_WOMASTR.ORDER_NO"
+		dctl$[3]="SFE_WOMASTR.LINE_NO"
+		looper=3
+		for x=1 to 3
+			dmap$[x]="I"
+		next x
+		gosub disable_ctls
+	endif
 [[SFE_WOMASTR.ITEM_ID.AINV]]
 rem --- Item synonym processing
 
