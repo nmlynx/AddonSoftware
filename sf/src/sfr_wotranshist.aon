@@ -206,7 +206,6 @@ rem --- Init Data
         l=l9+1
         dim desc[3]
 
-
 		Rem --- Find end date of SF's PREVIOUS period
         sf_prevper=num(sfs01a.current_per$)-1
         sf_prevper_yr=num(sfs01a.current_year$)
@@ -237,6 +236,7 @@ rem --- Options
     rem --- Assign Title, Record, and keys
     if sequence$="W" 
         h3$="Work Order Sequence"
+		h3_short$="WO "
         beging$=wofrom$
         ending$=wothru$
         dim sfe01_key$:sfe01a_key_tpl$
@@ -245,7 +245,8 @@ rem --- Options
     endif
     if sequence$="B"
         h3$="Bill Number Sequence"
-        beging$=billfrom$
+        h3_short$="Whse/Bill "
+		beging$=billfrom$
         ending$=billthru$
         dim sfe01_key$:sfe03c_key_tpl$
         begin_key$=firm_id$+whse$+beging$
@@ -253,7 +254,8 @@ rem --- Options
     endif
     if sequence$="C"
         h3$="Customer Sequence"
-        beging$=custfrom$
+        h3_short$="Customer "
+		beging$=custfrom$
         ending$=custthru$
         dim sfe01_key$:sfe03b_key_tpl$
         begin_key$=firm_id$+beging$
@@ -261,7 +263,8 @@ rem --- Options
     endif
     if sequence$="T"
         h3$="Work Order Type Sequence"
-        beging$=wotfrom$
+        h3_short$="WO Type "
+		beging$=wotfrom$
         ending$=wotthru$
         dim sfe01_key$:sfe03a_key_tpl$
         begin_key$=firm_id$+beging$
@@ -273,7 +276,7 @@ rem --- Options
         if category$="B" then h4$="All Work Orders"
         if sequence$="B" beging$=whse$+beging$; if ending$<>"" ending$=whse$+ending$
         h4$=h4$+" Beginning With "
-        if beging$<>"" h4$=h4$+beging$ else h4$=h4$+"The First"
+        if beging$<>"" h4$=h4$+h3_short$+beging$ else h4$=h4$+"The First"+" "+h3_short$
         h4$=h4$(1,pos("   "=h4$+"   ")-1)
         h4$=h4$+" And Ending With "
         if ending$<>"" h4$=h4$+ending$ else h4$=h4$+"The Last"
