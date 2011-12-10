@@ -16,7 +16,54 @@ rem --- Validate Open Sales Order
 		msg_id$="SF_INVALID_SO_ORD"
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
+		break
 	endif
+
+rem --- Build Sequence list button
+
+	ope11_dev=fnget_dev("OPE_ORDDET")
+	dim ope11a$:fnget_tpl$("OPE_ORDDET")
+	opc_linecode=fnget_dev("OPC_LINECODE")
+	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
+	ivm01_dev=fnget_dev("IVM_ITEMMAST")
+	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+
+	ops_lines!=SysGUI!.makeVector()
+	ops_items!=SysGUI!.makeVector()
+	ops_list!=SysGUI!.makeVector()
+	ops_lines!.addItem("000000000000")
+	ops_items!.addItem("")
+	ops_list!.addItem("")
+
+	read(ope11_dev,key=firm_id$+ope_ordhdr.ar_type$+cust$+order$,dom=*next)
+	while 1
+		read record (ope11_dev,end=*break) ope11a$
+		if pos(firm_id$+ope_ordhdr.ar_type$+cust$+order$=ope11a$)<>1 break
+		dim opc_linecode$:fattr(opc_linecode$)
+		read record (opc_linecode,key=firm_id$+ope11a.line_code$,dom=*next)opc_linecode$
+		if pos(opc_linecode.line_type$="SP")=0 continue
+		dim ivm01a$:fattr(ivm01a$)
+		read record (ivm01_dev,key=firm_id$+ope11a.item_id$,dom=*next)ivm01a$
+		ops_lines!.addItem(ope11a.internal_seq_no$)
+		ops_items!.addItem(ope11a.item_id$)
+		ops_list!.addItem(ope11a.item_id$+" - "+ivm01a.item_desc$)
+	wend
+
+	if ops_lines!.size()>0
+		ldat$=""
+		for x=0 to ops_lines!.size()-1
+			ldat$=ldat$+ops_items!.getItem(x)+"~"+ops_lines!.getItem(x)+";"
+		next x
+	endif
+
+	callpoint!.setTableColumnAttribute("SFE_WOMASTR.OP_INT_SEQ_REF","LDAT",ldat$)
+
+rem	my_grid!=Form!.getControl(5000)
+rem	ListColumn=5
+rem	my_control!=my_grid!.getColumnListControl(ListColumn)
+rem	my_control!.removeAllItems()
+rem	my_control!.insertItems(0,ops_list!)
+rem	my_grid!.setColumnListControl(ListColumn,my_control!)
 [[SFE_WOMASTR.CUSTOMER_ID.AVAL]]
 rem --- Disable Order info if Customer not entered
 
@@ -304,7 +351,7 @@ rem --- Set new record flag
 
 rem --- Open tables
 
-	num_files=9
+	num_files=11
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="SFS_PARAMS",open_opts$[2]="OTA"
@@ -315,6 +362,8 @@ rem --- Open tables
 	open_tables$[7]="BMM_BILLMAST",open_opts$[7]="OTA"
 	open_tables$[8]="OPE_ORDHDR",open_opts$[8]="OTA"
 	open_tables$[9]="OPE_ORDDET",open_opts$[9]="OTA"
+	open_tables$[10]="IVM_ITEMMAST",open_opts$[10]="OTA"
+	open_tables$[11]="OPC_LINECODE",open_opts$[11]="OTA"
 	gosub open_tables
 
 	sfs_params=num(open_chans$[2])
