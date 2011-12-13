@@ -1,3 +1,24 @@
+[[SFE_WOMASTR.AOPT-SCHD]]
+rem --- Schedule the Work Order
+
+	callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WOMASTR.WO_NO"))
+	callpoint!.setDevObject("order_no",callpoint!.getColumnData("SFE_WOMASTR.ORDER_NO"))
+
+	dim dflt_data$[3,1]
+	dflt_data$[1,0]="SCHED_FLAG"
+	dflt_data$[1,1]=callpoint!.getColumnData("SFE_WOMASTR.SCHED_FLAG")
+	dflt_data$[2,0]="ESTSTT_DATE"
+	dflt_data$[2,1]=callpoint!.getColumnData("SFE_WOMASTR.ESTSTT_DATE")
+	dflt_data$[3,0]="ESTCMP_DATE"
+	dflt_data$[3,1]=callpoint!.getColumnData("SFE_WOMASTR.ESTCMP_DATE")
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"SFR_SCHEDWO",
+:		stbl("+USER_ID"),
+:		"MNT",
+:		"",
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
 [[SFE_WOMASTR.ORDER_NO.AVAL]]
 rem --- Validate Open Sales Order
 
@@ -57,6 +78,7 @@ rem --- Build Sequence list button
 	endif
 
 	callpoint!.setTableColumnAttribute("SFE_WOMASTR.OP_INT_SEQ_REF","LDAT",ldat$)
+	callpoint!.setStatus("REFRESH")
 
 rem	my_grid!=Form!.getControl(5000)
 rem	ListColumn=5
