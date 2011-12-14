@@ -19,6 +19,10 @@ rem --- Schedule the Work Order
 :		table_chans$[all],
 :		"",
 :		dflt_data$[all]
+
+	start_date$=callpoint!.getDevObject("start_date")
+	comp_date$=callpoint!.getDevObject("comp_date")
+rem escape;rem ? start_date$, comp_date$
 [[SFE_WOMASTR.ORDER_NO.AVAL]]
 rem --- Validate Open Sales Order
 
@@ -386,6 +390,7 @@ rem --- Open tables
 	open_tables$[9]="OPE_ORDDET",open_opts$[9]="OTA"
 	open_tables$[10]="IVM_ITEMMAST",open_opts$[10]="OTA"
 	open_tables$[11]="OPC_LINECODE",open_opts$[11]="OTA"
+
 	gosub open_tables
 
 	sfs_params=num(open_chans$[2])
@@ -397,11 +402,24 @@ rem --- Open tables
 	po$=sfs_params.po_interface$
 	pr$=sfs_params.pr_interface$
 
+	num_files=1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+
 	if bm$<>"Y"
 		call stbl("+DIR_PGM")+"adc_application.aon","BM",info$[all]
 		bm$=info$[20]
+		open_tables$[1]="SFC_OPRTNCOD",open_opts$[1]="OTA"
+	else
+		open_tables$[1]="BMC_OPCODES",open_opts$[1]="OTA"
 	endif
 	callpoint!.setDevObject("bm",bm$)
+
+	gosub open_tables
+
+	callpoint!.setDevObject("opcode_chan",num(open_chans$[1]))
+	callpoint!.setDevObject("opcode_tpl",open_tpls$[1])
+
+	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 
 	if op$<>"Y"
 		call stbl("+DIR_PGM")+"adc_application.aon","AR",info$[all]
