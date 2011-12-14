@@ -33,10 +33,10 @@ rem --- Get user inputs
     oldBarLoc$=Option!.getOptionData("OLD_BAR_LOC")
     syncBackupDir$=Option!.getOptionData("SYNC_BACKUP_DIR")
     doSyncBackup%=cast(BBjInt, callpoint!.getDevObject("do_sync_backup"))
-    declare HashMap stblMap!
-    stblMap!=cast(HashMap, callpoint!.getDevObject("stblMap"))
-	declare ArrayList pfxList!
-    pfxList!=cast(ArrayList, callpoint!.getDevObject("pfxList"))
+    declare Vector appVect!
+    appVect!=cast(Vector, callpoint!.getDevObject("appVect"))
+    declare HashMap appStblMap!
+    appStblMap!=cast(HashMap, callpoint!.getDevObject("appStblMap"))
     rdAdmin!=cast(BBjAdminBase, callpoint!.getDevObject("rdAdmin"))
     useOldMenu%=int(num(Option!.getOptionData("USE_OLD_MENU")))
 
@@ -69,7 +69,7 @@ rem --- Start progress meter
     declare BBTranslator Translator!
     Translator! = BBTranslator.getInstance( stbl("+PROPS_NAME"), stbl("+USER_LOCALE"), null(), stbl("+PROPS_PATH") )
     meter_title$=Translator!.getTranslation("AON_UPDATE_WIZ")
-    meter_total_recs=6
+    meter_total_recs=8
     if doSyncBackup% then meter_total_recs=meter_total_recs+1
     if useOldMenu% then meter_total_recs=meter_total_recs+1
     meter_proc_recs=0
@@ -91,7 +91,8 @@ rem --- Run bax_sync_backup.bbj program via bax_launch_task.bbj to bypass bar_lo
         gosub disp_meter
         print(log_dev)meter_text$
 
-    bar_dir$=oldBarDir$
+        rem --- Launch bax_sync_backup.bbj
+        bar_dir$=oldBarDir$
         if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
         run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
 :       +" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
@@ -124,6 +125,7 @@ rem --- Recursively copy oldLocation to newAonDir
 	copyData%=0
 	help%=0
 	
+    rem --- Launch adc_copyaon.aon
     call pgmdir$+"adc_copyaon.aon",oldLocation$,newAonDir$,copyData%,help%,rdForm!,0,status
     
 rem --- Update new addon.syn file
@@ -142,6 +144,11 @@ rem --- Update new addon.syn file
     upgrade%=1
     oldSynFile$=oldAonDir$+"/config/addon.syn"
 
+    rem --- Build stblMap! and pfxList! for adc_updatesynfile.aon
+    app$="ADDON"
+    gosub build_stblMap_pfxList
+
+    rem --- Launch adc_updatesynfile.aon
     call pgmdir$+"adc_updatesynfile.aon",newSynFile$,oldSynFile$,upgrade%,stblMap!,pfxList!,rdForm!,0,status
 
 rem --- Add new application to Barista Installation Manager
@@ -154,6 +161,7 @@ rem --- Run BIM bai_install_manager.bbj program via synchronous system call beca
     gosub disp_meter
     print(log_dev)meter_text$
 
+    rem --- Launch bai_install_manager.bbj
 	bar_dir$=dir("")
 	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
 	run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
@@ -183,6 +191,7 @@ rem --- BIM clears barista/settings dir, so must do this step after BIMing and b
     upgrade%=1
     oldSyncLoc$=oldAonDir$+"/data/sync"
 
+    rem --- Launch adc_updatexmlfiles.aon
     call pgmdir$+"adc_updatexmlfiles.aon",newSyncLoc$,oldSyncLoc$,syncBackupDir$,upgrade%,rdForm!,0,status
 
 rem --- Use old modified menus instead of new standard menus.
@@ -241,6 +250,7 @@ rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to b
     gosub disp_meter
     print(log_dev)meter_text$
 
+    rem --- Launch bax_dd_synch_auto.bbj
 	bar_dir$=newBarDir$
 	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
 	run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
@@ -254,6 +264,72 @@ rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to b
 :	+" -a" +"bax_dd_synch_auto.bbj"+$22$+" - "+" -f"+"../aon/config/addon.syn"+" -b"+$22$
 :	+" -w"
 	scall_result=scall(run_arg$+user_arg$,err=*next)
+
+rem --- Run Copy Application utility for applications being copied
+
+    rem --- Increment progress meter
+    meter_text$=Translator!.getTranslation("AON_COPY_APP")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+
+	appIter!=appVect!.iterator()
+	while appIter!.hasNext()
+		appList! = cast(ArrayList, appIter!.next())
+        
+        rem --- Skip application if it's not being copied
+		copy$=appList!.get(3)
+        if copy$<>"y" then continue
+
+        app$=appList!.get(0); rem --- application
+        sourceSyn$=appList!.get(4)+"config/"+cvs(app$,8)+".syn"
+        synFound=0
+        sourceChan=unt
+        open(sourceChan,isz=-1,err=*next)sourceSyn$; synFound=1
+        close(sourceChan,err=*next)
+        if !synFound then
+            rem --- Log this app skipped
+            print(log_dev)meter_text$+": ***skipped*** "+app$+" -- cannot find "+sourceSyn$
+            continue
+        endif
+
+        rem --- Log this app being copied
+        print(log_dev)meter_text$+": "+app$
+
+        rem --- Remove trailing slashes (/ and \) from targetDir$
+        targetDir$=appList!.get(5)
+        while len(targetDir$) and pos(targetDir$(len(targetDir$),1)="/\")
+            targetDir$ = targetDir$(1, len(targetDir$)-1)
+        wend
+
+        rem --- Build stblMap! and pfxList! for adc_copymods.aon
+        gosub build_stblMap_pfxList
+        
+        rem --- Launch adc_copymods.aon
+        call pgmdir$+"adc_copymods.aon",sourceSyn$,targetDir$,stblMap!,pfxList!,rdForm!,0,status
+    wend
+
+rem --- Run Install Application Wizard for applications being installed
+goto done; rem --- this feature not available yet
+    rem --- Increment progress meter
+    meter_text$=Translator!.getTranslation("AON_INSTALL_APP")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+
+	iter!=appVect!.iterator()
+	while iter!.hasNext()
+		appList! = cast(ArrayList, iter!.next())
+        
+        rem --- Skip application if it's not being installed
+		install$=appList!.get(2)
+        if install$<>"y" then continue
+
+        rem --- Log this app being installed
+        print(log_dev)meter_text$+": "+app$
+
+        rem --- Launch baw_install_app.bbj
+    wend
     
 done: rem --- All done
     
@@ -267,6 +343,31 @@ done: rem --- All done
     close(log_dev)
 
     goto std_exit
+
+build_stblMap_pfxList: rem --- Build stblMap! and pfxList! for adc_copymods.aon for a app$
+
+    stblMap! = new HashMap()
+    pfxList! = new ArrayList()
+    if appStblMap!.containsKey(app$) then
+        stblVect! = cast(Vector, appStblMap!.get(app$))
+        stblIter!=stblVect!.iterator()
+        while stblIter!.hasNext()
+            stblList! = cast(ArrayList, stblIter!.next())
+            stbl$=stblList!.get(1); rem --- STBL or <prefix>
+            if stbl$="<prefix>" then
+                aList!=new ArrayList()
+                aList!.add(stblList!.get(2)); rem --- source
+                aList!.add(stblList!.get(3)); rem --- target
+                pfxList!.add(aList!)
+            else
+                aList!=new ArrayList()
+                aList!.add(stblList!.get(2)); rem --- source
+                aList!.add(stblList!.get(3)); rem --- target
+                stblMap!.put(stbl$, aList!)
+            endif
+        wend
+    endif
+    return
 
 fix_path: rem --- Flip directory path separators
 
@@ -338,24 +439,40 @@ open_log:rem --- Open log file
     else
         print(log_dev)"Do not use old menus."
     endif
-	rem --- write STBL info
-    keys! = stblMap!.keySet()
-    iter! = keys!.iterator()
-    while(iter!.hasNext())
-        key$ = cast(BBjString, iter!.next())
-		aList! = cast(ArrayList, stblMap!.get(key$))
-		source$=cast(BBjString, aList!.get(0))
-		target$=cast(BBjString, aList!.get(1))
-		print(log_dev)"["+key$+"] source="+source$+"  target="+target$
-    wend
-	rem --- write PREFIX info
-	iter!=pfxList!.iterator()
+    print(log_dev)
+
+	rem --- write application grid info
+    print(log_dev)"Application grid info:"
+	iter!=appVect!.iterator()
 	while iter!.hasNext()
 		aList! = cast(ArrayList, iter!.next())
-		source$=cast(BBjString, aList!.get(0))
-		target$=cast(BBjString, aList!.get(1))
-		print(log_dev)"PREFIX source="+source$+"  target="+target$
+		app$=cast(BBjString, aList!.get(0))
+		parent$=cast(BBjString, aList!.get(1))
+		install$=cast(BBjString, aList!.get(2))
+		copy$=cast(BBjString, aList!.get(3))
+		source$=cast(BBjString, aList!.get(4))
+		target$=cast(BBjString, aList!.get(5))
+		print(log_dev)"app="+app$+"  parent="+parent$+"  install="+install$+"  copy="+copy$+"  source="+source$+"  target="+target$
 	wend
+    print(log_dev)
+
+	rem --- write STBL grid info
+    print(log_dev)"STBL grid info:"
+    keys! = appStblMap!.keySet()
+    iter! = keys!.iterator()
+    while iter!.hasNext()
+        key$ = cast(BBjString, iter!.next())
+ 		stblVect! = cast(Vector, appStblMap!.get(key$))
+        vectIter! = stblVect!.iterator()
+        while vectIter!.hasNext()
+            aList! = cast(ArrayList, vectIter!.next())
+            app$=cast(BBjString, aList!.get(0))
+            stbl_prefix$=cast(BBjString, aList!.get(1))
+            source$=cast(BBjString, aList!.get(2))
+            target$=cast(BBjString, aList!.get(3))
+		print(log_dev)"app="+app$+"  stbl="+stbl_prefix$+"  source="+source$+"  target="+target$
+        wend
+    wend
     print(log_dev)
 
     return
