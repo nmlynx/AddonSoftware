@@ -86,7 +86,7 @@ rem --- Assign form input values to local variables
         custthru$=Option!.getOptionData("customer_id_2")
         wotfrom$=Option!.getOptionData("wo_type_1")
         wotthru$=Option!.getOptionData("wo_type_2")
-        category$=Option!.getOptionData("report_option")
+        wo_status$=Option!.getOptionData("wo_status")
         datefrom$=Option!.getOptionData("trans_date_1")
         datethru$=Option!.getOptionData("trans_date_2")
         mat$=Option!.getOptionData("sf_transtype_m")
@@ -245,7 +245,7 @@ rem --- Options
     endif
     if sequence$="B"
         h3$="Bill Number Sequence"
-        h3_short$="Whse/Bill "
+        h3_short$="Bill "
 		beging$=billfrom$
         ending$=billthru$
         dim sfe01_key$:sfe03c_key_tpl$
@@ -271,11 +271,12 @@ rem --- Options
         keynum$="AO_TYP_LOC_WO"
     endif
         h9$=h3$(1,pos("Seq"=h3$)-2)
-        if category$="O" then h4$="Open Work Orders"
-        if category$="C" then h4$="Closed Work Orders"
-        if category$="B" then h4$="All Work Orders"
-        if sequence$="B" beging$=whse$+beging$; if ending$<>"" ending$=whse$+ending$
-        h4$=h4$+" Beginning With "
+        if wo_status$="O" then h4$="Open Work Orders"
+        if wo_status$="C" then h4$="Closed Work Orders"
+        if wo_status$="B" then h4$="All Work Orders"
+        rem if sequence$="B" beging$=whse$+beging$; if ending$<>"" ending$=whse$+ending$
+        if sequence$="B" h4$=h4$+" For Whse "+whse$
+		h4$=h4$+" Beginning With "
         if beging$<>"" h4$=h4$+h3_short$+beging$ else h4$=h4$+"The First"+" "+h3_short$
         h4$=h4$(1,pos("   "=h4$+"   ")-1)
         h4$=h4$+" And Ending With "
