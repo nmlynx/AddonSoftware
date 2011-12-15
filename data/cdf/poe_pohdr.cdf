@@ -1,3 +1,23 @@
+[[POE_POHDR.SHIPTO_NO.AVAL]]
+rem --- if dropshipping, retrieve/display specified shipto address
+
+	shipto$=cvs(callpoint!.getUserInput(),3)
+	tmp_customer_id$=cvs(callpoint!.getColumnData("POE_POHDR.CUSTOMER_ID"),3)
+	
+	if shipto$="" then
+		rem --- no shipto, so use customer's address
+		gosub shipto_cust
+	else
+		arm_custship_dev=fnget_dev("ARM_CUSTSHIP")
+		dim arm_custship$:fnget_tpl$("ARM_CUSTSHIP")
+		read record (arm_custship_dev,key=firm_id$+tmp_customer_id$+shipto$,dom=*next)arm_custship$
+		dim rec$:fattr(arm_custship$)
+		rec$=arm_custship$
+		gosub fill_dropship_address
+		callpoint!.setColumnData("POE_POHDR.DS_NAME",rec.name$)
+	endif
+
+	callpoint!.setStatus("REFRESH")
 [[POE_POHDR.PO_NO.AINP]]
 rem --- enable Create PO from Req button
 
