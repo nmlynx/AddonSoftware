@@ -392,17 +392,20 @@ if callpoint!.getDevObject("dtl_posted")="Y"
 	callpoint!.setColumnEnabled("POE_REQHDR.DROPSHIP",0)
 	callpoint!.setColumnEnabled("POE_REQHDR.CUSTOMER_ID",0)
 	callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",0)			
+	callpoint!.setColumnEnabled("POE_REQHDR.SHIPTO_NO",0)			
 else
 	callpoint!.setColumnEnabled("POE_REQHDR.WAREHOUSE_ID",1)
-	rem --- disable customer number and sales order number if not a dropship
+	rem --- disable customer number, sales order number and shipto number if not a dropship
 	if callpoint!.getColumnData("POE_REQHDR.DROPSHIP")="Y"
 		callpoint!.setColumnEnabled("POE_REQHDR.CUSTOMER_ID",1)
 		if callpoint!.getDevObject("OP_installed")="Y" then
 			callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",1)
 		endif
+		callpoint!.setColumnEnabled("POE_REQHDR.SHIPTO_NO",1)			
 	else
 		callpoint!.setColumnEnabled("POE_REQHDR.CUSTOMER_ID",0)
 		callpoint!.setColumnEnabled("POE_REQHDR.ORDER_NO",0)
+		callpoint!.setColumnEnabled("POE_REQHDR.SHIPTO_NO",0)			
 	endif
 endif
 
