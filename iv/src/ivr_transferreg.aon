@@ -514,7 +514,7 @@ get_item_data: rem --- Get item data
     ivm01a$=""
     ivm10c.short_name$=Translate!.getTranslation("AON_UNKNOWN_WAREHOUSE")
     find record (ivm01_dev,key=firm_id$+ive02a.item_id$,dom=*next) ivm01a$
-    find record (ivm10c_dev,key=firm_id$+"C"+ive02a.warehouse_id$,dom=*next) ivm10c$
+    find record (ivm10c_dev,key=firm_id$+"C"+ive02a.warehouse_id_to$,dom=*next) ivm10c$
 
     if ivm01a$<>"" then 
         item_desc$ = fnitem$(ivm01a.item_desc$, p[3], p[4], p[5])
