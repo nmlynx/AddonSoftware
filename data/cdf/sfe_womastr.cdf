@@ -26,6 +26,10 @@ rem escape;rem ? start_date$, comp_date$
 [[SFE_WOMASTR.ORDER_NO.AVAL]]
 rem --- Validate Open Sales Order
 
+	if callpoint!.getUserInput()<>callpoint!.getColumnData("SFE_WOMASTR.ORDER_NO")
+		callpoint!.setColumnData("SFE_WOMASTR.OP_INT_SEQ_REF","",1)
+	endif
+
 	ope_ordhdr=fnget_dev("OPE_ORDHDR")
 	dim ope_ordhdr$:fnget_tpl$("OPE_ORDHDR")
 	cust$=callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID")
@@ -44,52 +48,7 @@ rem --- Validate Open Sales Order
 		break
 	endif
 
-rem --- Build Sequence list button
-
-	ope11_dev=fnget_dev("OPE_ORDDET")
-	dim ope11a$:fnget_tpl$("OPE_ORDDET")
-	opc_linecode=fnget_dev("OPC_LINECODE")
-	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
-	ivm01_dev=fnget_dev("IVM_ITEMMAST")
-	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
-
-	ops_lines!=SysGUI!.makeVector()
-	ops_items!=SysGUI!.makeVector()
-	ops_list!=SysGUI!.makeVector()
-	ops_lines!.addItem("000000000000")
-	ops_items!.addItem("")
-	ops_list!.addItem("")
-
-	read(ope11_dev,key=firm_id$+ope_ordhdr.ar_type$+cust$+order$,dom=*next)
-	while 1
-		read record (ope11_dev,end=*break) ope11a$
-		if pos(firm_id$+ope_ordhdr.ar_type$+cust$+order$=ope11a$)<>1 break
-		dim opc_linecode$:fattr(opc_linecode$)
-		read record (opc_linecode,key=firm_id$+ope11a.line_code$,dom=*next)opc_linecode$
-		if pos(opc_linecode.line_type$="SP")=0 continue
-		dim ivm01a$:fattr(ivm01a$)
-		read record (ivm01_dev,key=firm_id$+ope11a.item_id$,dom=*next)ivm01a$
-		ops_lines!.addItem(ope11a.internal_seq_no$)
-		ops_items!.addItem(ope11a.item_id$)
-		ops_list!.addItem(ope11a.item_id$+" - "+ivm01a.item_desc$)
-	wend
-
-	if ops_lines!.size()>0
-		ldat$=""
-		for x=0 to ops_lines!.size()-1
-			ldat$=ldat$+ops_items!.getItem(x)+"~"+ops_lines!.getItem(x)+";"
-		next x
-	endif
-
-	callpoint!.setTableColumnAttribute("SFE_WOMASTR.OP_INT_SEQ_REF","LDAT",ldat$)
-	callpoint!.setStatus("REFRESH")
-
-rem	my_grid!=Form!.getControl(5000)
-rem	ListColumn=5
-rem	my_control!=my_grid!.getColumnListControl(ListColumn)
-rem	my_control!.removeAllItems()
-rem	my_control!.insertItems(0,ops_list!)
-rem	my_grid!.setColumnListControl(ListColumn,my_control!)
+	gosub build_ord_line
 [[SFE_WOMASTR.CUSTOMER_ID.AVAL]]
 rem --- Disable Order info if Customer not entered
 
@@ -108,6 +67,11 @@ rem --- Disable Order info if Customer not entered
 	if cvs(callpoint!.getUserInput(),3)=""
 		callpoint!.setColumnData("SFE_WOMASTR.ORDER_NO","",1)
 		callpoint!.setColumnData("SFE_WOMASTR.LINE_NO","",1)
+	endif
+
+	if callpoint!.getUserInput()<>callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID")
+		callpoint!.setColumnData("SFE_WOMASTR.ORDER_NO","",1)
+		callpoint!.setColumnData("SFE_WOMASTR.OP_INT_SEQ_REF","",1)
 	endif
 [[SFE_WOMASTR.ITEM_ID.AVAL]]
 rem --- Set default values
@@ -200,7 +164,9 @@ rem --- Set new_rec to N
 
 	callpoint!.setDevObject("new_rec","N")
 [[SFE_WOMASTR.<CUSTOM>]]
+rem =========================================================
 disable_ctls:rem --- disable selected control
+rem =========================================================
 	for dctl=1 to looper
 		dctl$=dctl$[dctl]
 		if dctl$<>""
@@ -212,6 +178,59 @@ disable_ctls:rem --- disable selected control
 			callpoint!.setStatus("ABLEMAP")
 		endif
 	next dctl
+
+	return
+
+rem =========================================================
+build_ord_line:
+rem 	cust$		input
+rem	order_no$	input
+rem	validate_ord$	input
+rem =========================================================
+
+rem --- Build Sequence list button
+
+	ope11_dev=fnget_dev("OPE_ORDDET")
+	dim ope11a$:fnget_tpl$("OPE_ORDDET")
+	opc_linecode=fnget_dev("OPC_LINECODE")
+	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
+	ivm01_dev=fnget_dev("IVM_ITEMMAST")
+	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+
+	ops_lines!=SysGUI!.makeVector()
+	ops_items!=SysGUI!.makeVector()
+	ops_list!=SysGUI!.makeVector()
+	ops_lines!.addItem("000000000000")
+	ops_items!.addItem("")
+	ops_list!.addItem("")
+
+	ctlSeqRef!=callpoint!.getControl("SFE_WOMASTR.OP_INT_SEQ_REF")
+	ctlSeqRef!.removeAllItems()
+
+	read(ope11_dev,key=firm_id$+ope_ordhdr.ar_type$+cust$+order$,dom=*next)
+	while 1
+		read record (ope11_dev,end=*break) ope11a$
+		if pos(firm_id$+ope_ordhdr.ar_type$+cust$+order$=ope11a$)<>1 break
+		dim opc_linecode$:fattr(opc_linecode$)
+		read record (opc_linecode,key=firm_id$+ope11a.line_code$,dom=*next)opc_linecode$
+		if pos(opc_linecode.line_type$="SP")=0 continue
+		dim ivm01a$:fattr(ivm01a$)
+		read record (ivm01_dev,key=firm_id$+ope11a.item_id$,dom=*next)ivm01a$
+		ops_lines!.addItem(ope11a.internal_seq_no$)
+		ops_items!.addItem(ope11a.item_id$)
+		ops_list!.addItem(cvs(ope11a.item_id$,3)+" - "+ivm01a.item_desc$)
+	wend
+
+	if ops_lines!.size()>0
+		ldat$=""
+		for x=0 to ops_lines!.size()-1
+			ldat$=ldat$+ops_items!.getItem(x)+"~"+ops_lines!.getItem(x)+";"
+		next x
+	endif
+
+	ctlSeqRef!.insertItems(0,ops_list!)
+	callpoint!.setTableColumnAttribute("SFE_WOMASTR.OP_INT_SEQ_REF","LDAT",ldat$)
+	callpoint!.setStatus("REFRESH")
 
 	return
 
@@ -332,6 +351,13 @@ rem --- Disable WO Status if Open or Closed"
 		dmap$[1]=""
 		gosub disable_ctls
 	endif
+
+rem --- Validate Open Sales Order
+
+	order$=callpoint!.getColumnData("SFE_WOMASTR.ORDER_NO")
+	cust$=callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID")
+	dim ope_ordhdr$:fnget_tpl$("OPE_ORDHDR")
+	gosub build_ord_line
 [[SFE_WOMASTR.AREC]]
 rem --- Set new record flag
 
