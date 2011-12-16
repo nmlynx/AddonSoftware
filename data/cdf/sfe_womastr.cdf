@@ -22,7 +22,8 @@ rem --- Schedule the Work Order
 
 	start_date$=callpoint!.getDevObject("start_date")
 	comp_date$=callpoint!.getDevObject("comp_date")
-rem escape;rem ? start_date$, comp_date$
+	callpoint!.setColumnData("SFE_WOMASTR.ESTSTT_DATE",start_date$,1)
+	callpoint!.setColumnData("SFE_WOMASTR.ESTCMP_DATE",comp_date$,1)
 [[SFE_WOMASTR.ORDER_NO.AVAL]]
 rem --- Validate Open Sales Order
 
@@ -263,7 +264,7 @@ rem --- Disable fields not allowed to be changed
 	dctl$[13]="SFE_WOMASTR.SCH_PROD_QTY"
 	dctl$[14]="SFE_WOMASTR.UNIT_MEASURE"
 	dctl$[15]="SFE_WOMASTR.WAREHOUSE_ID"
-	dctl$[16]="SFE_WOMASTR.WO_NO"
+rem	dctl$[16]="SFE_WOMASTR.WO_NO"
 	dctl$[17]="SFE_WOMASTR.WO_TYPE"
 	dctl$[18]="SFE_WOMASTR.WO_STATUS"
 	looper=18
@@ -275,6 +276,14 @@ rem --- Disable fields not allowed to be changed
 		endif
 	next x
 	gosub disable_ctls
+
+rem --- Disable Options (buttons) for a Closed Work Order
+
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C"
+		callpoint!.setOptionEnabled("SCHD",0)
+	else
+		callpoint!.setOptionEnabled("SCHD",1)
+	endif
 
 rem --- Always disable these fields for an existing record
 
@@ -391,7 +400,7 @@ rem --- enable all enterable fields
 	dctl$[13]="SFE_WOMASTR.SCH_PROD_QTY"
 	dctl$[14]="SFE_WOMASTR.UNIT_MEASURE"
 	dctl$[15]="SFE_WOMASTR.WAREHOUSE_ID"
-	dctl$[16]="SFE_WOMASTR.WO_NO"
+rem	dctl$[16]="SFE_WOMASTR.WO_NO"
 	dctl$[17]="SFE_WOMASTR.WO_TYPE"
 	dctl$[18]="SFE_WOMASTR.WO_STATUS"
 	looper=18
