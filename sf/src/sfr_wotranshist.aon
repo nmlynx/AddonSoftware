@@ -198,7 +198,7 @@ rem --- Dimension string templates & retrieve params (Add'l files)
 rem --- Init Data
 
         h0=132
-        headings=4,h=0,when$=sysinfo.system_date$,clock$=""
+        headings=5,h=0,when$=sysinfo.system_date$,clock$=""
         dim headings$[headings]
         headings$[0]=sysinfo.firm_name$
         headings$[1]=sysinfo.task_desc$
@@ -274,16 +274,35 @@ rem --- Options
         if wo_status$="O" then h4$="Open Work Orders"
         if wo_status$="C" then h4$="Closed Work Orders"
         if wo_status$="B" then h4$="All Work Orders"
-        rem if sequence$="B" beging$=whse$+beging$; if ending$<>"" ending$=whse$+ending$
-        if sequence$="B" h4$=h4$+" For Whse "+whse$
-		h4$=h4$+" Beginning With "
-        if beging$<>"" h4$=h4$+h3_short$+beging$ else h4$=h4$+"The First"+" "+h3_short$
+        if sequence$="B" h4$=h4$+" for Whse "+whse$
+		h4$=h4$+" beginning with "
+        if beging$<>"" h4$=h4$+h3_short$+beging$ else h4$=h4$+"the First"+" "+h3_short$
         h4$=h4$(1,pos("   "=h4$+"   ")-1)
-        h4$=h4$+" And Ending With "
-        if ending$<>"" h4$=h4$+ending$ else h4$=h4$+"The Last"
+        h4$=h4$+" and ending with "
+        if ending$<>"" h4$=h4$+ending$ else h4$=h4$+"the Last"
         h4$=h4$(1,pos("   "=h4$+"   ")-1)
-        h7$="With A Transaction Type Of "+transtype$
-
+        h7$="with a Transaction Type of "+transtype$
+		
+		if datefrom$="" and datethru$="" then 
+			hdaterange$="for All Transaction Dates"
+		else
+			datefrom_hdr$="for Transaction Dates between"
+			if datefrom$="" then 
+				datefrom_hdr$=datefrom_hdr$+" "+"the First "
+			else 
+				datefrom_hdr$=datefrom_hdr$+" "+fndate$(datefrom$)
+			endif
+			
+			datethru_hdr$="and"
+			if datethru$="" then 
+				datethru_hdr$=datethru_hdr$+" "+"the Last "
+			else 
+				datethru_hdr$=datethru_hdr$+" "+fndate$(datethru$)
+			endif
+			
+			hdaterange$=datefrom_hdr$+" "+datethru_hdr$
+		endif
+		
 done: rem --- Overlay
 
         run pgmdir$+"sfr_wotranshist_o1.aon"
@@ -309,9 +328,17 @@ rem --- Format inventory item description
 
 rem --- Date/time handling functions
 
+    def fndate$(q$)
+        q1$=""
+        q1$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        if q1$="" q1$=q$
+        return q1$
+    fnend
+    
     def fnyy$(q$)=q$(3,2)
     def fnclock$(q$)=date(0:"%hz:%mz %p")
     def fntime$(q$)=date(0:"%Hz%mz")
+    def fnh$(q1$)=q1$(5,2)+"/"+q1$(1,4)
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 

@@ -39,13 +39,15 @@ rem --- Init Data
         dim t[2],u[2]
         headings$[2]=h3$
         headings$[3]=h4$
-        headings$[4]=h7$
+		headings$[4]=hdaterange$
+        headings$[5]=h7$
         more=1
 
 rem --- Retrieve key templates
 
         call stbl("+DIR_SYP")+"bac_key_template.bbj","SFX_WOTRANXR","PRIMARY",sfm07a_key_tpl$,rd_table_chans$[all],status$
-
+		dim sfm07a_key$:sfm07a_key_tpl$
+		
 rem --- Column Headings
 
     if pos("O"=transtype$)>0 then
@@ -91,7 +93,7 @@ rem --- Main Read
 
         if ending$<>"" 
             if sequence$="W" and sfe01_key.firm_id$+sfe01_key.wo_location$+sfe01_key.wo_no$>firm_id$+sfe01_key.wo_location$+ending$ break
-            if sequence$="B" and sfe01_key.firm_id$+sfe01_key.warehouse_id$+sfe01_key.item_id$>firm_id$+ending$ break
+            if sequence$="B" and sfe01_key.firm_id$+sfe01_key.warehouse_id$+sfe01_key.item_id$>firm_id$+whse$+ending$ break
             if sequence$="C" and sfe01_key.firm_id$+sfe01_key.customer_id$>firm_id$+ending$ break
             if sequence$="T" and sfe01_key.firm_id$+sfe01_key.wo_type$>firm_id$+ending$ break   
         else
@@ -110,7 +112,7 @@ rem --- Main Read
             read (sfe01a_dev,knum=keynum$)
         endif
 
-rem escape caj REMOVE REM!!        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
         read record (sfe01a_dev,key=sfe01_key$,knum=keynum$,dom=*continue) sfe01a$
 
         if wo_status$="C" and sfe01a.wo_status$<>"C" then continue
@@ -139,11 +141,10 @@ rem --- Process Transactions
 
         read (sfm07a_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$+datefrom$,dom=*next)
         while more
-            dim sfm07a_key$:sfm07a_key_tpl$
             
 			sfm07a_key$=key(sfm07a_dev,end=*break)
-            if sfm07a_key.firm_id$+"  "+sfm07a_key.wo_no$<>sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$ then break
-            if datethru$<>"" then if sfm07a.trans_date$>datethru$ then break
+            if sfm07a_key.firm_id$+sfm07a.wo_location$+sfm07a_key.wo_no$<>sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$ then break
+            if datethru$<>"" then if sfm07a_key.trans_date$>datethru$ then break
             if pos(sfm07a_key.record_id$="OMS")=0 then continue
             
 			read (sfm07a_dev,key=sfm07a_key$)
@@ -261,7 +262,9 @@ done: rem --- End
         if pos("O"=transtype$)>0 then 
             xwk=fnblank(2)
             OutVect!.addItem("Total Hours: "+str(u[0]:m2$)+" Setup Hours: "+str(u[2]:m2$)); rem columns$[4
-        endif
+        else
+            xwk=fnblank(3)
+		endif
         xwk=fnblank(columns-5)
 		OutVect!.addItem(str(u[1]:m1$))
         xwk=fnblank(columns)
@@ -373,11 +376,11 @@ material_details: rem --- Materials Here
 
 
 lotserial_details: rem --- Lot/Serial Here
-  
+
     if record_id_field$="M"
         if ivm01a.lotser_item$+ivm01a.inventoried$="YY" and pos(ivs01a.lotser_flag$="LS")<>0 then 
 rem --- Serial Numbers Here
-            if sfe01a.wo_status$<>"C" and sfe01a.closed_date$>sf_prevper_enddate$ then 
+            if sfe01a.wo_status$<>"C" or sfe01a.closed_date$>sf_prevper_enddate$ then 
                 lstran_dev=sft11a_dev
                 dim lstran$:sft11_tpls$
             else
