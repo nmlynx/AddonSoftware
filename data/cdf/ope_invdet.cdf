@@ -1460,7 +1460,7 @@ rem ==========================================================================
 	item$    = callpoint!.getColumnData("OPE_INVDET.ITEM_ID")
 	ord_qty  = num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED"))
 
-	if cvs(item$, 2)<>"" and cvs(wh$, 2)<>"" and ord_qty and ord_type$<>"P" and user_tpl.line_dropship = "N" then
+	if cvs(item$, 2)<>"" and cvs(wh$, 2)<>"" and ord_qty and ord_type$<>"P" and user_tpl.line_dropship$ = "N" then
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 		read record (ivm_itemmast_dev, key=firm_id$+item$, dom=*next) ivm_itemmast$
 
