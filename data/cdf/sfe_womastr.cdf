@@ -1,3 +1,16 @@
+[[SFE_WOMASTR.AOPT-RELS]]
+rem --- Schedule the Work Order
+
+	callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WOMASTR.WO_NO"))
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"SFE_RELEASEWO",
+:		stbl("+USER_ID"),
+:		"MNT",
+:		"",
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
 [[SFE_WOMASTR.AOPT-SCHD]]
 rem --- Schedule the Work Order
 
@@ -53,26 +66,21 @@ rem --- Validate Open Sales Order
 [[SFE_WOMASTR.CUSTOMER_ID.AVAL]]
 rem --- Disable Order info if Customer not entered
 
-	dim dctl$[2],dmap$[2]
-	dctl$[1]="SFE_WOMASTR.ORDER_NO"
-	dctl$[2]="SFE_WOMASTR.LINE_NO"
-	looper=2
-	for x=1 to 2
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")<>"C"
 		if cvs(callpoint!.getUserInput(),3)=""
-			dmap$[x]="I"
+			callpoint!.setColumnEnabled("SFE_WOMASTR.ORDER_NO",0)
+			callpoint!.setColumnEnabled("SFE_WOMASTR.LINE_NO",0)
+			callpoint!.setColumnData("SFE_WOMASTR.ORDER_NO","",1)
+			callpoint!.setColumnData("SFE_WOMASTR.LINE_NO","",1)
 		else
-			dmap$[x]=""
+			callpoint!.setColumnEnabled("SFE_WOMASTR.ORDER_NO",1)
+			callpoint!.setColumnEnabled("SFE_WOMASTR.LINE_NO",1)
 		endif
-	next x
-	gosub disable_ctls
-	if cvs(callpoint!.getUserInput(),3)=""
-		callpoint!.setColumnData("SFE_WOMASTR.ORDER_NO","",1)
-		callpoint!.setColumnData("SFE_WOMASTR.LINE_NO","",1)
-	endif
 
-	if callpoint!.getUserInput()<>callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID")
-		callpoint!.setColumnData("SFE_WOMASTR.ORDER_NO","",1)
-		callpoint!.setColumnData("SFE_WOMASTR.OP_INT_SEQ_REF","",1)
+		if callpoint!.getUserInput()<>callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID")
+			callpoint!.setColumnData("SFE_WOMASTR.ORDER_NO","",1)
+			callpoint!.setColumnData("SFE_WOMASTR.OP_INT_SEQ_REF","",1)
+		endif
 	endif
 [[SFE_WOMASTR.ITEM_ID.AVAL]]
 rem --- Set default values
@@ -131,57 +139,23 @@ rem --- If new order, check for type of Work Order and disable Item or Descripti
 		callpoint!.setColumnData("SFE_WOMASTR.WO_CATEGORY",typecode.wo_category$,1)
 	endif
 	if typecode.wo_category$<>"I"
-		dim dctl$[1],dmap$[1]
-		dctl$[1]="SFE_WOMASTR.ITEM_ID"
-		looper=1
-		for x=1 to looper
-			dmap$[x]="I"
-		next x
-		gosub disable_ctls
+		callpoint!.setColumnEnabled("SFE_WOMASTR.ITEM_ID",0)
 	else
-		dim dctl$[2],dmap$[2]
-		dctl$[1]="SFE_WOMASTR.DESCRIPTION_01"
-		dctl$[2]="SFE_WOMASTR.DESCRIPTION_02"
-		looper=2
-		for x=1 to looper
-			dmap$[x]="I"
-		next x
-		gosub disable_ctls
+		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_01",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_02",0)
 	endif
 
 rem --- Disable Drawing and Revision Number if Recurring type
 
 	if typecode.wo_category$="R"
-		dim dctl$[2],dmap$[2]
-		dctl$[1]="SFE_WOMASTR.DRAWING_NO"
-		dctl$[2]="SFE_WOMASTR.DRAWING_REV"
-		looper=2
-		dmap$[1]="I"
-		dmap$[2]="I"
-		gosub disable_ctls
+		callpoint!.setColumnEnabled("SFE_WOMASTR.DRAWING_NO",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.DRAWING_REV",0)
 	endif
 [[SFE_WOMASTR.AWRI]]
 rem --- Set new_rec to N
 
 	callpoint!.setDevObject("new_rec","N")
 [[SFE_WOMASTR.<CUSTOM>]]
-rem =========================================================
-disable_ctls:rem --- disable selected control
-rem =========================================================
-	for dctl=1 to looper
-		dctl$=dctl$[dctl]
-		if dctl$<>""
-			wctl$=str(num(callpoint!.getTableColumnAttribute(dctl$,"CTLI")):"00000")
-			wmap$=callpoint!.getAbleMap()
-			wpos=pos(wctl$=wmap$,8)
-			wmap$(wpos+6,1)=dmap$[dctl]
-			callpoint!.setAbleMap(wmap$)
-			callpoint!.setStatus("ABLEMAP")
-		endif
-	next dctl
-
-	return
-
 rem =========================================================
 build_ord_line:
 rem 	cust$		input
@@ -244,58 +218,65 @@ rem --- Set new record flag
 
 rem --- Disable fields not allowed to be changed
 
-	dim dctl$[18],dmap$[18]
-	dctl$[1]="SFE_WOMASTR.ITEM_ID"
-	dctl$[2]="SFE_WOMASTR.BILL_REV"
-	if callpoint!.getDevObject("op")="Y"
-		dctl$[3]="SFE_WOMASTR.CUSTOMER_ID"
-	endif
-	dctl$[4]="SFE_WOMASTR.DESCRIPTION_01"
-	dctl$[5]="SFE_WOMASTR.DESCRIPTION_02"
-	dctl$[6]="SFE_WOMASTR.DRAWING_NO"
-	dctl$[7]="SFE_WOMASTR.DRAWING_REV"
-	dctl$[8]="SFE_WOMASTR.EST_YIELD"
-	dctl$[9]="SFE_WOMASTR.FORECAST"
-	if callpoint!.getDevObject("op")="Y"
-		dctl$[10]="SFE_WOMASTR.LINE_NO"
-		dctl$[11]="SFE_WOMASTR.ORDER_NO"
-	endif
-	dctl$[12]="SFE_WOMASTR.PRIORITY"
-	dctl$[13]="SFE_WOMASTR.SCH_PROD_QTY"
-	dctl$[14]="SFE_WOMASTR.UNIT_MEASURE"
-	dctl$[15]="SFE_WOMASTR.WAREHOUSE_ID"
-rem	dctl$[16]="SFE_WOMASTR.WO_NO"
-	dctl$[17]="SFE_WOMASTR.WO_TYPE"
-	dctl$[18]="SFE_WOMASTR.WO_STATUS"
-	looper=18
-	for x=1 to looper
-		if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C"
-			dmap$[x]="I"
-		else
-			dmap$[x]=""
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C"
+		callpoint!.setColumnEnabled("SFE_WOMASTR.ITEM_ID",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.BILL_REV",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.CUSTOMER_ID",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_01",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_02",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.DRAWING_NO",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.DRAWING_REV",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.EST_YIELD",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.FORECAST",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.LINE_NO",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.ORDER_NO",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.OP_INT_SEQ_NO",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.PRIORITY",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.SCH_PROD_QTY",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.UNIT_MEASURE",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.WAREHOUSE_ID",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.WO_TYPE",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.WO_STATUS",0)
+	else
+		callpoint!.setColumnEnabled("SFE_WOMASTR.ITEM_ID",1)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.BILL_REV",1)
+		if callpoint!.getDevObject("op")="Y"
+			callpoint!.setColumnEnabled("SFE_WOMASTR.CUSTOMER_ID",1)
 		endif
-	next x
-	gosub disable_ctls
+		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_01",1)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_02",1)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.DRAWING_NO",1)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.DRAWING_REV",1)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.EST_YIELD",1)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.FORECAST",1)
+		if callpoint!.getDevObject("op")="Y"
+			callpoint!.setColumnEnabled("SFE_WOMASTR.LINE_NO",1)
+			callpoint!.setColumnEnabled("SFE_WOMASTR.ORDER_NO",1)
+			callpoint!.setColumnEnabled("SFE_WOMASTR.OP_INT_SEQ_NO",1)
+		endif
+		callpoint!.setColumnEnabled("SFE_WOMASTR.PRIORITY",1)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.SCH_PROD_QTY",1)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.UNIT_MEASURE",1)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.WAREHOUSE_ID",1)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.WO_TYPE",1)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.WO_STATUS",1)
+	endif
 
 rem --- Disable Options (buttons) for a Closed Work Order
 
 	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C"
 		callpoint!.setOptionEnabled("SCHD",0)
+		callpoint!.setOptionEnabled("RELS",0)
 	else
 		callpoint!.setOptionEnabled("SCHD",1)
+		callpoint!.setOptionEnabled("RELS",1)
 	endif
 
 rem --- Always disable these fields for an existing record
 
-	dim dctl$[3],dmap$[3]
-	dctl$[1]="SFE_WOMASTR.ITEM_ID"
-	dctl$[2]="SFE_WOMASTR.DESCRIPTION_01"
-	dctl$[3]="SFE_WOMASTR.DESCRIPTION_02"
-	looper=3
-	for x=1 to looper
-		dmap$[x]="I"
-	next x
-	gosub disable_ctls
+	callpoint!.setColumnEnabled("SFE_WOMASTR.ITEM_ID",0)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_01",0)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_02",0)
 
 rem --- See if any transactions exist - disable WO Type if there are
 
@@ -343,22 +324,14 @@ rem --- See if any transactions exist - disable WO Type if there are
 	endif
 
 	if tran$="Y"
-		dim dctl$[1],dmap$[1]
-		dctl$[1]="SFE_WOMASTR.WO_TYPE"
-		looper=1
-		dmap$[1]="I"
-		gosub disable_ctls
+		callpoint!.setColumnEnabled("SFE_WOMASTR.WO_TYPE",0)
 	endif
 
 rem --- Disable WO Status if Open or Closed"
 
 	status$=callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")
 	if pos(status$="OC")=0
-		dim dctl$[1],dmap$[1]
-		dctl$[1]="SFE_WOMASTR.WO_STATUS"
-		looper=1
-		dmap$[1]=""
-		gosub disable_ctls
+		callpoint!.setColumnEnabled("SFE_WOMASTR.WO_STATUS",1)
 	endif
 
 rem --- Validate Open Sales Order
@@ -384,27 +357,23 @@ rem --- set defaults
 
 rem --- enable all enterable fields
 
-	dim dctl$[18],dmap$[18]
-	dctl$[1]="SFE_WOMASTR.ITEM_ID"
-	dctl$[2]="SFE_WOMASTR.BILL_REV"
-	dctl$[3]="SFE_WOMASTR.CUSTOMER_ID"
-	dctl$[4]="SFE_WOMASTR.DESCRIPTION_01"
-	dctl$[5]="SFE_WOMASTR.DESCRIPTION_02"
-	dctl$[6]="SFE_WOMASTR.DRAWING_NO"
-	dctl$[7]="SFE_WOMASTR.DRAWING_REV"
-	dctl$[8]="SFE_WOMASTR.EST_YIELD"
-	dctl$[9]="SFE_WOMASTR.FORECAST"
-	dctl$[10]="SFE_WOMASTR.LINE_NO"
-	dctl$[11]="SFE_WOMASTR.ORDER_NO"
-	dctl$[12]="SFE_WOMASTR.PRIORITY"
-	dctl$[13]="SFE_WOMASTR.SCH_PROD_QTY"
-	dctl$[14]="SFE_WOMASTR.UNIT_MEASURE"
-	dctl$[15]="SFE_WOMASTR.WAREHOUSE_ID"
-rem	dctl$[16]="SFE_WOMASTR.WO_NO"
-	dctl$[17]="SFE_WOMASTR.WO_TYPE"
-	dctl$[18]="SFE_WOMASTR.WO_STATUS"
-	looper=18
-	gosub disable_ctls
+	callpoint!.setColumnEnabled("SFE_WOMASTR.ITEM_ID",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.BILL_REV",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.CUSTOMER_ID",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_01",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_02",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.DRAWING_NO",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.DRAWING_REV",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.EST_YIELD",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.FORECAST",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.LINE_NO",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.ORDER_NO",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.PRIORITY",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.SCH_PROD_QTY",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.UNIT_MEASURE",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.WAREHOUSE_ID",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.WO_TYPE",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.WO_STATUS",1)
 [[SFE_WOMASTR.BSHO]]
 rem --- Set new record flag
 
@@ -480,15 +449,9 @@ rem --- Open tables
 rem --- Disable Customer info if AR not installed
 
 	if op$<>"Y"
-		dim dctl$[3],dmap$[3]
-		dctl$[1]="SFE_WOMASTR.CUSTOMER_ID"
-		dctl$[2]="SFE_WOMASTR.ORDER_NO"
-		dctl$[3]="SFE_WOMASTR.LINE_NO"
-		looper=3
-		for x=1 to 3
-			dmap$[x]="I"
-		next x
-		gosub disable_ctls
+		callpoint!.setColumnEnabled("SFE_WOMASTR.CUSTOMER_ID",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.ORDER_NO",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.LINE_NO",0)
 	endif
 [[SFE_WOMASTR.ITEM_ID.AINV]]
 rem --- Item synonym processing
