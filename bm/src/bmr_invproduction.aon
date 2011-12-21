@@ -35,8 +35,9 @@ rem --- Retrieve sysinfo data
 
 rem --- see if batching
 
+	call stbl("+DIR_PGM")+"adc_getbatch.aon","",pgm(-2),rd_table_chans$[all]
     batch_no$=stbl("+BATCH_NO")
-    process_id$=stbl("+PROCESS_ID") 
+    process_id$=stbl("+PROCESS_ID")
 
 rem --- Prepare for call to bmc_explodephantoms.aon
 
@@ -57,6 +58,8 @@ rem --- Open/Lock files
 	open_tables$[9]="IVC_WHSECODE",open_opts$[9]="OTA"
 	open_tables$[10]="IVS_PARAMS",open_opts$[10]="OTA"
 	open_tables$[11]="GLS_PARAMS",open_opts$[11]="OTA"
+
+	if num(batch_no$)=0 options$[1]="L";rem lock if not batching
 	
 	gosub open_tables
 	
@@ -88,6 +91,40 @@ rem --- Dimension string templates
 	template$[7]=open_tpls$[6]; rem bms01a
 	template$[15]=open_tpls$[3]; rem bmm02a
 	template$[16]=open_tpls$[11]; rem gls01a
+
+rem --- Is General Ledger installed and being used?
+ 
+	application$="BM"
+	gl$="N"
+	status=0
+	source$=pgm(-2)
+	call pgmdir$+"glc_ctlcreate.aon",err=*next,
+:				source$,application$,glw11$,gl$,status
+	if status 
+		goto std_exit
+	endif
+
+rem --- Additional file opens
+
+	num_files=3
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="GLM_ACCT",open_opts$[1]="OTA"
+	open_tables$[2]="GLE_DAILYDETAIL",open_opts$[2]="OTA"
+	open_tables$[3]="GLW_DAILYDETAIL",open_opts$[3]="OTA"
+
+	if gl$="Y" gosub open_tables
+	if status goto std_exit
+
+	glm01_dev=num(open_chans[1])
+	glt04_dev=num(open_chans[2])
+	glw11_dev=num(open_chans[3])
+ 
+rem --- Clear trans for this firm/process/batch from glw-11 work file (if not batching, batch_no$ is zero, and will clear all recs this firm/process)
+ 
+if gl$="Y"
+    rec_pfx$=firm_id$+process_id$+batch_no$
+    call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",glw11_dev,rec_pfx$,status
+endif
 
 rem --- Retrieve parameter records
 
@@ -154,6 +191,8 @@ rem --- Init Data
 	dim a[1],s[10],k[11],lx[11],sub[9],b1$(60),c1$(64)
 	headings$[0]=h1$
 	headings$[1]=h2$,errors=0
+	if num(batch_no$)<>0 then headings$[1]=headings$[1]+ " (Batch: "+batch_no$+")"
+
 	call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,m1
 	call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,m2
 	call pgmdir$+"adc_getmask.aon","","IV","C",imask$,m3$,0,m3
@@ -266,7 +305,7 @@ rem ---  column heading
 
 rem --- Initial Read
 
-        read (bme01_dev,key=firm_id$,dom=*next)
+        read (bme01_dev,key=firm_id$+batch_no$,knum=1,dom=*next)
         bme01a_key$=key(bme01_dev,end=no_data)
         if pos(firm_id$=bme01a_key$)<>1 then goto no_data
 
@@ -279,6 +318,7 @@ rem --- Heading Read
 rem --- Breaks
 
         if bme01a.firm_id$<>firm_id$ then break; rem " --- Company"
+		if bme01a.batch_no$<>batch_no$ then break; rem "--- Batch Number"
         if bme01a.warehouse_id$<>t0$ then gosub warehouse; rem " --- Warehouse"
         if bme01a.prod_date$<>t1$ then gosub date_sub; rem " --- Production Date"
         if bme01a.bm_reference$<>t2$ then gosub reference; rem " --- Reference Number"
