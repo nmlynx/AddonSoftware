@@ -115,9 +115,9 @@ rem --- Additional file opens
 	if gl$="Y" gosub open_tables
 	if status goto std_exit
 
-	glm01_dev=num(open_chans[1])
-	glt04_dev=num(open_chans[2])
-	glw11_dev=num(open_chans[3])
+	glm01_dev=num(open_chans$[1])
+	glt04_dev=num(open_chans$[2])
+	glw11_dev=num(open_chans$[3])
  
 rem --- Clear trans for this firm/process/batch from glw-11 work file (if not batching, batch_no$ is zero, and will clear all recs this firm/process)
  

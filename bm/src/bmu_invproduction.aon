@@ -341,7 +341,7 @@ rem --- Update Inventory for Finished Goods
 
 remove_record: rem --- Remove Record
 
-		remove (bme01_dev,key=k0$,dom=*continue)
+		remove (bme01_dev,key=firm_id$+bme01a.warehouse_id$+bme01a.prod_date$+bme01a.bm_reference$+bme01a.item_id$,dom=*continue)
     wend
    
 done: rem --- End
