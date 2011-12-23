@@ -305,7 +305,7 @@ rem ---  column heading
 
 rem --- Initial Read
 
-        read (bme01_dev,key=firm_id$+batch_no$,knum=1,dom=*next)
+        read (bme01_dev,key=firm_id$+batch_no$,knum="BATCH_KEY",dom=*next)
         bme01a_key$=key(bme01_dev,end=no_data)
         if pos(firm_id$=bme01a_key$)<>1 then goto no_data
 

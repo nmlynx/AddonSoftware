@@ -164,11 +164,10 @@ rem --- Initial Read
     call pgmdir$+"ivc_itemupdt.aon::init",files[all],ivs01a$,item$[all],refs$[all],refs[all],rd_table_chans$[all],ignore_status
 	call pgmdir$+"adc_progress.aon","N","","","","",0,bme01_dev,1,meter_num,status
 	
-	read (bme01_dev,key=firm_id$+batch_no$,knum=1,dom=*next)
-
-rem --- Main Loop
+	rem --- Main Loop
 
     while more 
+		read (bme01_dev,key=firm_id$+batch_no$,knum="BATCH_KEY",dom=*next)
         value=0
         k0$=key(bme01_dev,end=*break)
         if pos(firm_id$=k0$)<>1 then break
@@ -640,7 +639,7 @@ std_exit_no_update:
 		unlock_key$=firm_id$+stbl("+PROCESS_ID")+stbl("+BATCH_NO")
 		lock_status$=""
 		call stbl("+DIR_SYP")+"bac_lock_record.bbj",
-:			"ADM_PROCBATCHES",unlock_key$,"U",
+:			"ADM_PROCBATCHES",unlock_key$,"U","",rd_table_chan,
 :			rd_table_chans$[all],lock_status$
 	endif
 
