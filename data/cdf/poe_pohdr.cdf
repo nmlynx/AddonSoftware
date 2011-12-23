@@ -923,8 +923,11 @@ else
 		callpoint!.setColumnEnabled("POE_POHDR.CUSTOMER_ID",1)
 		if callpoint!.getDevObject("OP_installed")="Y" then
 			callpoint!.setColumnEnabled("POE_POHDR.ORDER_NO",1)
+			callpoint!.setColumnEnabled("POE_POHDR.SHIPTO_NO",0)
+		else
+			callpoint!.setColumnEnabled("POE_POHDR.ORDER_NO",0)
+			callpoint!.setColumnEnabled("POE_POHDR.SHIPTO_NO",1)
 		endif
-		callpoint!.setColumnEnabled("POE_POHDR.SHIPTO_NO",1)
 	else
 		callpoint!.setColumnEnabled("POE_POHDR.CUSTOMER_ID",0)
 		callpoint!.setColumnEnabled("POE_POHDR.ORDER_NO",0)
