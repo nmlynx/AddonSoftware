@@ -1,3 +1,23 @@
+[[POE_REQHDR.SHIPTO_NO.AVAL]]
+rem --- if dropshipping, retrieve/display specified shipto address
+
+	shipto$=cvs(callpoint!.getUserInput(),3)
+	tmp_customer_id$=cvs(callpoint!.getColumnData("POE_REQHDR.CUSTOMER_ID"),3)
+	
+	if shipto$="" then
+		rem --- no shipto, so use customer's address
+		gosub shipto_cust
+	else
+		arm_custship_dev=fnget_dev("ARM_CUSTSHIP")
+		dim arm_custship$:fnget_tpl$("ARM_CUSTSHIP")
+		read record (arm_custship_dev,key=firm_id$+tmp_customer_id$+shipto$,dom=*next)arm_custship$
+		dim rec$:fattr(arm_custship$)
+		rec$=arm_custship$
+		gosub fill_dropship_address
+		callpoint!.setColumnData("POE_REQHDR.DS_NAME",rec.name$)
+	endif
+
+	callpoint!.setStatus("REFRESH")
 [[POE_REQHDR.REQ_NO.AVAL]]
 rem --- don't allow user to assign new req# -- use Barista seq#
 rem --- if user made null entry (to assign next seq automatically) then getRawUserInput() will be empty
