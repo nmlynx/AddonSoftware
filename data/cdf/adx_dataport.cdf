@@ -190,6 +190,7 @@ rem --- confirm ready to port selected files?
 			callpoint!.setDevObject("source_folder",callpoint!.getColumnData("ADX_DATAPORT.SOURCE_DIR"))
 			callpoint!.setDevObject("destin_folder",callpoint!.getColumnData("ADX_DATAPORT.TARGET_DIR"))
 			callpoint!.setDevObject("vectPort",vectPort!)
+			callpoint!.setDevObject("port_masks",callpoint!.getColumnData("<<DISPLAY>>.PORT_MASKS"))
 		else
 			callpoint!.setStatus("ABORT")
 		endif
@@ -333,7 +334,7 @@ rem --- set valid/invalid background colors for source/target dir ctls
 	
 rem --- create grid 
 
-	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
+	nxt_ctlID = util.getNextControlID()
 	callpoint!.setDevObject("grid_ctlID",str(nxt_ctlID))
 	gridFiles!=Form!.addGrid(nxt_ctlID,50,100,500,300)
 	
