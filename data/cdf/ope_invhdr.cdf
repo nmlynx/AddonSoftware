@@ -526,8 +526,12 @@ rem --- Calculate taxes and write it back
 
 rem --- Credit action
 
-	if ordHelp!.calcOverCreditLimit() and callpoint!.getDevObject("credit_action_done") <> "Y" then
-		gosub do_credit_action
+	rem --- Temporay work around to avoid error 11 when no record exists re Barista bug 5743
+	rem --- Header record will exist if at least one detail line has been entered.
+	if GridVect!.getItem(0).size()>0 then
+		if ordHelp!.calcOverCreditLimit() and callpoint!.getDevObject("credit_action_done") <> "Y" then
+			gosub do_credit_action
+		endif
 	endif
 
 rem --- Does the total of lot/serial# match the qty shipped for each detail line?
