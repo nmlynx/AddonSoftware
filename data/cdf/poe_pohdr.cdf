@@ -887,16 +887,20 @@ return
 
 
 form_inits:
-
 rem --- setting up for new rec or nav to diff rec
 
 callpoint!.setDevObject("ds_orders","")
 callpoint!.setDevObject("so_ldat","")
 callpoint!.setDevObject("so_lines_list","")
 callpoint!.setDevObject("qty_received","")
-
 callpoint!.setDevObject("total_amt","0")
 callpoint!.setDevObject("dtl_posted","")
+
+rem --- dropship not allowed without AR
+if callpoint!.getDevObject("AR_installed")<>"Y"
+	callpoint!.setTableColumnAttribute("POE_POHDR.DROPSHIP","DFLT", "N")
+	callpoint!.setColumnEnabled("POE_POHDR.DROPSHIP",-1)
+endif
 
 return
 
@@ -908,11 +912,10 @@ rem --- Dropship disabled and set to 'N' in BSHO when AR is not installed
 rem --- Sale order number disabled in BSHO when OP is not installed
 if callpoint!.getDevObject("dtl_posted")="Y"
 	callpoint!.setColumnEnabled("POE_POHDR.WAREHOUSE_ID",0)
+	callpoint!.setColumnEnabled("POE_POHDR.DROPSHIP",0)
 	if callpoint!.getDevObject("AR_installed")="Y" and callpoint!.getDevObject("OP_installed")<>"Y" then
-		callpoint!.setColumnEnabled("POE_POHDR.DROPSHIP",1)
 		callpoint!.setColumnEnabled("POE_POHDR.CUSTOMER_ID",1)
 	else
-		callpoint!.setColumnEnabled("POE_POHDR.DROPSHIP",0)
 		callpoint!.setColumnEnabled("POE_POHDR.CUSTOMER_ID",0)
 	endif
 	callpoint!.setColumnEnabled("POE_POHDR.ORDER_NO",0)			
