@@ -313,6 +313,7 @@ rem --- Declare Java classes used
 	use java.util.HashMap
 	use java.util.Iterator
 	use java.util.Vector
+	use ::ado_file.src::FileObject
 	use ::adx_upgradewiz.aon::AppHeritage
 
 rem --- Initialize location values so can tell later if they have changed
@@ -430,13 +431,28 @@ validate_new_aon_loc: rem --- Validate new aon install location
 		return
 	endif
 
+	rem --- Read-Write-Execute directory permissions are required
+
+	if !FileObject.isDirWritable(new_aon_loc$)
+		msg_id$="AD_DIR_NOT_WRITABLE"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=new_aon_loc$
+		gosub disp_message
+
+		callpoint!.setColumnData("ADX_COPYAON.NEW_INSTALL_LOC", new_aon_loc$)
+		callpoint!.setFocus("ADX_COPYAON.NEW_INSTALL_LOC")
+		callpoint!.setStatus("ABORT")
+		abort=1
+		return
+	endif
+
 	rem --- Cannot be currently used by Addon
 
 	testChan=unt
-	open(testChan, err=*return)new_aon_loc$ + "/aon/data"
+	open(testChan, err=*return)new_aon_loc$ + "/aon/data"; rem --- successful return here
 	close(testChan)
 
-	rem --- Addon already at this location
+	rem --- Location is used by Addon
 	msg_id$="AD_INSTALL_LOC_USED"
 	gosub disp_message
 
