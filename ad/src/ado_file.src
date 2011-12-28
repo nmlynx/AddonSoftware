@@ -524,7 +524,7 @@ rem ==========================================================================
         method public static boolean isDirWritable(BBjString path$)
 
             rem --- Flip slashes in path$ to / and remove trailing slash
-            dir$=FileObject.fixPath(path$, "/", "-")
+            dir$=FileObject.fixPath(path$, "/")
             dir$=FileObject.removeEndSlash(dir$, "/")
 
             rem --- Make sure this isn't an existing file
