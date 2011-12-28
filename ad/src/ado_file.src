@@ -456,11 +456,17 @@ rem ==========================================================================
             sep$=iff(pos(pathSep$="/\"),pathSep$,"")
 
             rem --- add trailing slash as needed
-            if end$="+" then
+            if len(newPath$)>0 then
                 if sep$="" then 
                     if newPath$(len(newPath$))<>"/" and  newPath$(len(newPath$))<>"\" then newPath$=newPath$+File.separator
                 else
                     if newPath$(len(newPath$))<>sep$ then newPath$=newPath$+sep$
+                endif
+            else
+                if sep$="" then 
+                    newPath$=File.separator
+                else
+                    newPath$=sep$
                 endif
             endif
                  
@@ -490,10 +496,9 @@ rem ==========================================================================
         method public static BBjString removeEndSlash(BBjString oldPath$, BBjString pathSep$)
             newPath$=oldPath$
             sep$=iff(pos(pathSep$="/\"),pathSep$,"")
-            end$=iff(pos(endSlash$="/\"),endSlash$,"")
 
             rem --- remove trailing slash as needed
-            if end$="-" then
+            if len(newPath$)>0 then
                 if sep$="" then
                     if newPath$(len(newPath$))="/" or newPath$(len(newPath$))="\" then newPath$=newPath$(1,len(newPath$)-1)
                 else
