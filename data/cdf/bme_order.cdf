@@ -1,3 +1,8 @@
+[[BME_ORDER.BTBL]]
+rem --- Get Batch information
+
+	call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]
+	callpoint!.setTableColumnAttribute("BME_ORDER.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
 [[BME_ORDER.AREC]]
 rem --- Clear Order Date
 
