@@ -40,25 +40,11 @@ rem --- Get user inputs
     rdAdmin!=cast(BBjAdminBase, callpoint!.getDevObject("rdAdmin"))
     useOldMenu%=int(num(Option!.getOptionData("USE_OLD_MENU")))
 
-	rem --- Flip directory path separators for newAonLoc
-	filePath$=newAonLoc$
-	gosub fix_path
-	newAonLoc$=filePath$
-
-	rem --- Flip directory path separators for oldAonLoc
-	filePath$=oldAonLoc$
-	gosub fix_path
-	oldAonLoc$=filePath$
-
-	rem --- Flip directory path separators for oldBarLoc
-	filePath$=oldBarLoc$
-	gosub fix_path
-	oldBarLoc$=filePath$
-
-	rem --- Flip directory path separators for syncBackupDir
-	filePath$=syncBackupDir$
-	gosub fix_path
-	syncBackupDir$=filePath$
+	rem --- Flip directory path separators
+	newAonLoc$=FileObject.fixPath(newAonLoc$, "/")
+	oldAonLoc$=FileObject.fixPath(oldAonLoc$, "/")
+	oldBarLoc$=FileObject.fixPath(oldBarLoc$, "/")
+	syncBackupDir$=FileObject.fixPath(syncBackupDir$, "/")
 
     newAonDir$=newAonLoc$ + "/aon"
     newBarDir$=newAonLoc$ + "/barista"
@@ -80,7 +66,7 @@ rem --- Start progress meter
 rem --- Open log file
     location$ = newAonDir$
     gosub open_log
-
+    
 rem --- Launch Create Sync File Backup utility in OLD barista
 rem --- Run bax_sync_backup.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the OLD barista
     if doSyncBackup% then
@@ -268,10 +254,9 @@ rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to b
 rem --- Run Copy Application utility for applications being copied
 
     rem --- Increment progress meter
-    meter_text$=Translator!.getTranslation("AON_COPY_APP")
+    trans_text$=Translator!.getTranslation("AON_COPY_APP")
     meter_proc_recs=meter_proc_recs+1
     meter_action$="MTR-LST"
-    gosub disp_meter
 
 	appIter!=appVect!.iterator()
 	while appIter!.hasNext()
@@ -281,6 +266,7 @@ rem --- Run Copy Application utility for applications being copied
 		copy$=appList!.get(3)
         if copy$<>"y" then continue
 
+        rem --- Get source syn file
         app$=appList!.get(0); rem --- application
         sourceSyn$=appList!.get(4)+"config/"+cvs(app$,8)+".syn"
         synFound=0
@@ -289,18 +275,19 @@ rem --- Run Copy Application utility for applications being copied
         close(sourceChan,err=*next)
         if !synFound then
             rem --- Log this app skipped
-            print(log_dev)meter_text$+": ***skipped*** "+app$+" -- cannot find "+sourceSyn$
+            meter_text$=trans_text$+": ***skipped*** "+app$
+            gosub disp_meter
+            print(log_dev)meter_text$+" -- cannot find "+sourceSyn$
             continue
         endif
 
         rem --- Log this app being copied
-        print(log_dev)meter_text$+": "+app$
+        meter_text$=trans_text$+": "+app$
+        gosub disp_meter
+        print(log_dev)meter_text$
 
         rem --- Remove trailing slashes (/ and \) from targetDir$
-        targetDir$=appList!.get(5)
-        while len(targetDir$) and pos(targetDir$(len(targetDir$),1)="/\")
-            targetDir$ = targetDir$(1, len(targetDir$)-1)
-        wend
+        targetDir$=FileObject.removeEndSlash(appList!.get(5))
 
         rem --- Build stblMap! and pfxList! for adc_copymods.aon
         gosub build_stblMap_pfxList
@@ -310,12 +297,11 @@ rem --- Run Copy Application utility for applications being copied
     wend
 
 rem --- Run Install Application Wizard for applications being installed
-goto done; rem --- this feature not available yet
+
     rem --- Increment progress meter
-    meter_text$=Translator!.getTranslation("AON_INSTALL_APP")
+    trans_text$=Translator!.getTranslation("AON_INSTALL_APP")
     meter_proc_recs=meter_proc_recs+1
     meter_action$="MTR-LST"
-    gosub disp_meter
 
 	iter!=appVect!.iterator()
 	while iter!.hasNext()
@@ -325,10 +311,46 @@ goto done; rem --- this feature not available yet
 		install$=appList!.get(2)
         if install$<>"y" then continue
 
-        rem --- Log this app being installed
-        print(log_dev)meter_text$+": "+app$
+        rem --- Get syn file for application
+        app$=appList!.get(0); rem --- application
+        if appList!.get(3)="y" then
+            rem --- App was copied, so use target syn file
+            sourceSyn$=appList!.get(5)+"config/"+cvs(app$,8)+".syn"
+        else
+            rem --- App was not copied, so use source syn file
+            sourceSyn$=appList!.get(4)+"config/"+cvs(app$,8)+".syn"
+        endif
+        synFound=0
+        sourceChan=unt
+        open(sourceChan,isz=-1,err=*next)sourceSyn$; synFound=1
+        close(sourceChan,err=*next)
+        if !synFound then
+            rem --- Log this app skipped
+            meter_text$=trans_text$+": ***skipped*** "+app$
+            gosub disp_meter
+            print(log_dev)meter_text$+" -- cannot find "+sourceSyn$
+            continue
+        endif
 
+        rem --- Log this app being installed
+        meter_text$=trans_text$+": "+app$
+        gosub disp_meter
+        print(log_dev)meter_text$
+        
         rem --- Launch baw_install_app.bbj
+        bar_dir$=newBarDir$
+        if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
+        run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
+:	    +" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
+:	    +" "+$22$+bar_dir$+"/sys/prog/bax_launch_task.bbj"+$22$
+        user_arg$=" - "
+:	    +" -u"+rdAdmin!.getUser()
+:	    +" -p"+rdAdmin!.getPassword()
+:	    +" -t"+"DDM_TABLES"
+:	    +" -y"+"A"
+:       +" -a" +"baw_install_app.bbj"+$22$+" - "+" -f"+sourceSyn$+$22$
+:	    +" -w"
+        scall_result=scall(run_arg$+user_arg$,err=*next)
     wend
     
 done: rem --- All done
@@ -368,15 +390,6 @@ build_stblMap_pfxList: rem --- Build stblMap! and pfxList! for adc_copymods.aon 
         wend
     endif
     return
-
-fix_path: rem --- Flip directory path separators
-
-    pos=pos("\"=filePath$)
-    while pos
-        filePath$=filePath$(1, pos-1)+"/"+filePath$(pos+1)
-        pos=pos("\"=filePath$)
-    wend
-	return
     
 search_replace: rem --- Search record$ for search$, and replace with replace$
 	rem --- Assumes only one occurrence of search$ per line so don't have 
@@ -413,9 +426,7 @@ disp_meter:rem --- Display Progress Meter
 open_log:rem --- Open log file
             
     rem --- create logs directory at location
-    filePath$ = location$ + "/logs"
-    gosub fix_path
-    logDir$ = filePath$
+    logDir$ = FileObject.fixPath(location$ + "/logs", "/")
     FileObject.makeDirs(new File(logDir$))
 
     rem --- create and open log file

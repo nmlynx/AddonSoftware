@@ -1046,48 +1046,45 @@ merge_vect_rows: rem --- Merge new and old syn row vectors into a single vector 
 		rem     OUT: stblRowVect!
 rem ==========================================================================
 
-	stblRowVect!=newSynRows!
-	if oldSynRows!.size()>0
+	stblRowVect!=oldSynRows!
+	if newSynRows!.size()>0
 		numCols=num(callpoint!.getDevObject("stbl_grid_def_cols"))
 
-		for i=0 to oldSynRows!.size()-1 step numCols
-			type$=oldSynRows!.getItem(i+0)
+		for i=0 to newSynRows!.size()-1 step numCols
+			type$=newSynRows!.getItem(i+1)
 			addLine=0
 
-			rem --- replace target value of STBL and SYSSTBL lines with target value from OLD syn file
-			if type$="STBL" or type$="SYSSTBL"
-				stbl$=oldSynRows!.getItem(i+1)
+			rem --- replace updated target value of old STBL lines as needed
+			if type$<>"<prefix>"
+				stbl$=newSynRows!.getItem(i+1)
 				addLine=1
 				for j=0 to stblRowVect!.size()-1 step numCols
 					if stblRowVect!.getItem(j+1)<>stbl$ then continue
 					if stbl$="+MDI_TITLE" then
 						stblRowVect!.setItem(j+3, callpoint!.getColumnData("ADX_UPGRADEWIZ.APP_DESC"))
-					else
-						stblRowVect!.setItem(j+3, oldSynRows!.getItem(i+3))
 					endif
 					addLine=0
 					break
 				next j
 			endif
 
-			rem --- replace target value of PREFIX and SYSPFX lines with target value from OLD syn file
-			if type$="PREFIX" or type$="SYSPFX"
-				source$=oldSynRows!.getItem(i+2)
+			rem --- replace updated target value of old PREFIX lines as needed
+			if type$="<prefix>"
+				source$=newSynRows!.getItem(i+2)
 				addLine=1
 				for j=0 to stblRowVect!.size()-1 step numCols
-					if stblRowVect!.getItem(j+1)<>source$ then continue
-					stblRowVect!.setItem(j+3, oldSynRows!.getItem(i+3))
+					if stblRowVect!.getItem(j+2)<>source$ then continue
 					addLine=0
 					break
 				next j
 			endif
 				
-			rem --- if STBL/SYSSTBL or PREFIX/SYSPFX not found, add it
+			rem --- if new STBL or new PREFIX not found, add it
 			if addLine then
-				stblRowVect!.addItem(oldSynRows!.getItem(i+0)); rem App
-				stblRowVect!.addItem(oldSynRows!.getItem(i+1)); rem STBL or PRFIX
-				stblRowVect!.addItem(oldSynRows!.getItem(i+2)); rem Source
-				stblRowVect!.addItem(oldSynRows!.getItem(i+3)); rem Target
+				stblRowVect!.addItem(newSynRows!.getItem(i+0)); rem App
+				stblRowVect!.addItem(newSynRows!.getItem(i+1)); rem STBL or PRFIX
+				stblRowVect!.addItem(newSynRows!.getItem(i+2)); rem Source
+				stblRowVect!.addItem(newSynRows!.getItem(i+3)); rem Target
 			endif
 		next i
 	endif
