@@ -59,7 +59,7 @@ rem --- Open/Lock files
 	open_tables$[10]="IVS_PARAMS",open_opts$[10]="OTA"
 	open_tables$[11]="GLS_PARAMS",open_opts$[11]="OTA"
 
-	if num(batch_no$)=0 options$[1]="L";rem lock if not batching
+	if num(batch_no$)=0 open_opts$[1]="L";rem lock if not batching
 	
 	gosub open_tables
 	
