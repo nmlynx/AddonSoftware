@@ -1,3 +1,32 @@
+[[BME_PRODUCT.ITEM_ID.BINQ]]
+rem --- Do custom query
+
+	query_id$="BOM_ITEMS"
+	query_mode$="DEFAULT"
+	dim filter_defs$[1,1]
+	filter_defs$[1,0] = "IVM_ITEMWHSE.WAREHOUSE_ID"
+	filter_defs$[1,1] = "='"+callpoint!.getColumnData("BME_PRODUCT.WAREHOUSE_ID")+"'"
+
+	call stbl("+DIR_SYP")+"bax_query.bbj",
+:		gui_dev,
+:		form!,
+:		query_id$,
+:		query_mode$,
+:		table_chans$[all],
+:		sel_key$,filter_defs$[all]
+
+	if sel_key$<>""
+		call stbl("+DIR_SYP")+"bac_key_template.bbj",
+:			"IVM_ITEMWHSE",
+:			"PRIMARY",
+:			ivm_whse_key$,
+:			table_chans$[all],
+:			status$
+		dim ivm_whse_key$:ivm_whse_key$
+		ivm_whse_key$=sel_key$
+		callpoint!.setColumnData("BME_PRODUCT.ITEM_ID",ivm_whse_key.item_id$,1)
+	endif
+	callpoint!.setStatus("ACTIVATE-ABORT")
 [[BME_PRODUCT.BTBL]]
 rem --- Get Batch information
 
