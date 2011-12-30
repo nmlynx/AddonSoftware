@@ -191,6 +191,8 @@ rem --- Init Data
 	dim a[1],s[10],k[11],lx[11],sub[9],b1$(60),c1$(64)
 	headings$[0]=h1$
 	headings$[1]=h2$,errors=0
+	headings$[2]="[HEADER]"
+	
 	if num(batch_no$)<>0 then headings$[1]=headings$[1]+ " (Batch: "+batch_no$+")"
 
 	call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,m1
@@ -446,6 +448,7 @@ done: rem --- Totals
         gosub warehouse
         if o1<>0 or o2$<>"" or div0<>0 then 
             BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+			HdrVect!.addItem(Translate!.getTranslation("AON_FOR_WAREHOUSE_")+h3$)
             if o1<>0 then
                 xwk=fnblank(21)
                 OutVect!.addItem(Translate!.getTranslation("AON_***_MISSING_WAREHOUSE_RECORDS,_CAN_NOT_PROCEED_WITH_UPDATE_AT_THIS_TIME"))
@@ -468,6 +471,7 @@ done: rem --- Totals
 
         if short<>0 then
             BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+			HdrVect!.addItem(Translate!.getTranslation("AON_FOR_WAREHOUSE_")+h3$)
             xwk=fnblank(11)
             OutVect!.addItem(Translate!.getTranslation("AON_***_WARNING_-_AMOUNTS_IN_THE_SHORTAGE_COLUMN_WILL_CREATE_NEGATIVE_ON_HAND_BALANCES_IN_INVENTORY."))
             xwk=fnblank(8)
@@ -499,6 +503,7 @@ no_data: rem --- No Data
 date_heading: rem --- Date Heading
 
         BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+		HdrVect!.addItem(Translate!.getTranslation("AON_FOR_WAREHOUSE_")+h3$)
         OutVect!.addItem(Translate!.getTranslation("AON_PRODUCTION_DATE:_")+fndate$(t1$))
         xwk=fnblank(19)
         if glstatus then call pgmdir$+"glc_datewarn.aon",printer_dev,t1$,glstatus,l,errors,status   
@@ -623,7 +628,9 @@ warehouse: rem --- Warehouse
         h3$=Translate!.getTranslation("AON_NOT_ON_FILE"),t2$=bme01a.bm_reference$
         find record (ivm10c_dev,key=firm_id$+"C"+bme01a.warehouse_id$,dom=call_pgm) ivm10c$
         h3$=cvs((ivm10c.warehouse_id$)+" "+ivm10c.short_name$(1,20),2)
-        headings$[2]=Translate!.getTranslation("AON_FOR_WAREHOUSE_")+h3$
+		BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+		HdrVect!.addItem(Translate!.getTranslation("AON_FOR_WAREHOUSE_")+h3$)
+
 call_pgm:
         if gl$="Y" then call pgmdir$+"glc_datecheck.aon",t1$,"N",period$,year$,glstatus
         return
