@@ -58,13 +58,6 @@ rem --- Validate Quantity
 [[BME_PRODUCT.ADIS]]
 rem --- set comments
 
-	if callpoint!.getDevObject("multi_wh")<>"Y"
-		gosub disable_wh
-	else
-		wh$=callpoint!.getDevObject("def_wh")
-		callpoint!.setColumnData("BME_PRODUCT.WAREHOUSE_ID",wh$)
-	endif
-
 	bill_no$=callpoint!.getColumnData("BME_PRODUCT.ITEM_ID")
 	gosub disp_bill_comments
 [[BME_PRODUCT.AREC]]
