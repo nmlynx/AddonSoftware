@@ -1,3 +1,11 @@
+[[SFE_WOMASTR.AOPT-JOBS]]
+rem --- Display Job Status
+
+	callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WOMASTR.WO_NO"))
+	callpoint!.setDevObject("wo_status",callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS"))
+	callpoint!.setDevObject("closed_date",callpoint!.getColumnData("SFE_WOMASTR.CLOSED_DATE"))
+
+	run stbl("+DIR_PGM")+"sfe_jobstat.aon"
 [[SFE_WOMASTR.AOPT-RELS]]
 rem --- Schedule the Work Order
 
@@ -381,7 +389,7 @@ rem --- Set new record flag
 
 rem --- Open tables
 
-	num_files=11
+	num_files=15
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="SFS_PARAMS",open_opts$[2]="OTA"
@@ -394,12 +402,20 @@ rem --- Open tables
 	open_tables$[9]="OPE_ORDDET",open_opts$[9]="OTA"
 	open_tables$[10]="IVM_ITEMMAST",open_opts$[10]="OTA"
 	open_tables$[11]="OPC_LINECODE",open_opts$[11]="OTA"
+	open_tables$[12]="GLS_PARAMS",open_opts$[12]="OTA"
+	open_tables$[13]="SFT_OPNMATTR",open_opts$[13]="OTA"
+	open_tables$[14]="SFT_OPNOPRTR",open_opts$[14]="OTA"
+	open_tables$[15]="SFT_OPNSUBTR",open_opts$[15]="OTA"
 
 	gosub open_tables
 
 	sfs_params=num(open_chans$[2])
 	dim sfs_params$:open_tpls$[2]
 	read record (sfs_params,key=firm_id$+"SF00",dom=std_missing_params) sfs_params$
+
+	gls_params=num(open_chans$[12])
+	call stbl("+DIR_PGM")+"adc_perioddates.aon",num(sfs_params.current_per$),num(sfs_params.current_year$),beg_date$,end_date$,status
+	callpoint!.setDevObject("gl_end_date",end_date$)
 
 	bm$=sfs_params.bm_interface$
 	op$=sfs_params.ar_interface$
