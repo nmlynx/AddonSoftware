@@ -403,9 +403,9 @@ rem --- Open tables
 	open_tables$[10]="IVM_ITEMMAST",open_opts$[10]="OTA"
 	open_tables$[11]="OPC_LINECODE",open_opts$[11]="OTA"
 	open_tables$[12]="GLS_PARAMS",open_opts$[12]="OTA"
-	open_tables$[13]="SFT_OPNMATTR",open_opts$[13]="OTA"
-	open_tables$[14]="SFT_OPNOPRTR",open_opts$[14]="OTA"
-	open_tables$[15]="SFT_OPNSUBTR",open_opts$[15]="OTA"
+	open_tables$[13]="SFT_CLSMATTR",open_opts$[13]="OTA"
+	open_tables$[14]="SFT_CLSOPRTR",open_opts$[14]="OTA"
+	open_tables$[15]="SFT_CLSSUBTR",open_opts$[15]="OTA"
 
 	gosub open_tables
 
@@ -414,7 +414,7 @@ rem --- Open tables
 	read record (sfs_params,key=firm_id$+"SF00",dom=std_missing_params) sfs_params$
 
 	gls_params=num(open_chans$[12])
-	call stbl("+DIR_PGM")+"adc_perioddates.aon",num(sfs_params.current_per$),num(sfs_params.current_year$),beg_date$,end_date$,status
+	call stbl("+DIR_PGM")+"adc_perioddates.aon",gls_params,num(sfs_params.current_per$),num(sfs_params.current_year$),beg_date$,end_date$,status
 	callpoint!.setDevObject("gl_end_date",end_date$)
 
 	bm$=sfs_params.bm_interface$

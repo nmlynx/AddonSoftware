@@ -34,7 +34,7 @@ rem --- Document initializations
 rem --- Initializations
 
 	wo_no$=callpoint!.getDevObject("wo_no")
-	wo_status$=callpoint!.getDevObject("wo_status")
+	wo_stat$=callpoint!.getDevObject("wo_status")
 	closed_date$=callpoint!.getDevObject("closed_date")
 	gl_end_date$=callpoint!.getDevObject("gl_end_date")
 	
@@ -42,8 +42,8 @@ rem --- Initializations
 	dim sfe02a$:fnget_tpl$("SFE_WOOPRTN")
 	
     tran_pass$="0"
-    if wo_status$="C" and closed_date$<=gl_end_date$ wo_status$="0"
-    if wo_status$<>"C" or closed_date$>gl_end_date$ wo_status$="1"
+    if wo_stat$="C" and closed_date$<=gl_end_date$ wo_status$="0"
+    if wo_stat$<>"C" or closed_date$>gl_end_date$ wo_status$="1"
 
     i9=999
 
@@ -141,21 +141,21 @@ rem --- Now Display Units
 		outVect!.addItem(x2$(op_len*y-(op_len-1),op_len))
 		outVect!.addItem(x1$(20*y-19,20))
 		outVect!.addItem(fndate$(x3$(x*8+1,8)))
-		outVect!.addItem(str(z0[x]))
-		outVect!.addItem(str(x1[x]))
-		outVect!.addItem(str(z1[x]))
-		outVect!.addItem(str(x3[x]))
+		outVect!.addItem(str(z0[y-1]))
+		outVect!.addItem(str(x1[y-1]))
+		outVect!.addItem(str(z1[y-1]))
+		outVect!.addItem(str(x3[y-1]))
+        if z0[y-1]+x1[y-1]<>0
+			y0=(z0[y-1]+x1[y-1]-(z1[y-1]+x3[y-1]))*100/(z0[y-1]+x1[y-1])
+		else
+			y0=0
+		endif
 		outVect!.addItem(str(y0))
-		outVect!.addItem(str(z2[x]))
+		outVect!.addItem(str(z2[y-1]))
 		
 rem		print @(2,l),x2$(op_len*y-(op_len-1),op_len)," ",x1$(20*y-19,20),
         x=int((op_len*y-(op_len-1))/op_len)
 rem     print @(80-m6*5-m9-11),fndate$(x3$(x*8+1,8)),@(80-m6*5-m9),z0[x]:m6$,x1[x]:m6$,z1[x]:m6$,x3[x]:m6$,
-        if z0[x]+x1[x]<>0
-			y0=(z0[x]+x1[x]-(z1[x]+x3[x]))*100/(z0[x]+x1[x])
-		else
-			y0=0
-		endif
 rem        print @(80-m6-m9),y0:m9$,z2[x]:m6$,
         l=l+1
         t0=t0+x0[x]
@@ -208,7 +208,7 @@ l5630:
 			if pos(firm_id$+sfe02a.wo_location$+wo_no$=wotran$)<>1 break
 
 			if wotran_dev=fnget_dev("SFT_OPNOPRTR") or wotran_dev=fnget_dev("SFT_CLSOPRTR")
-				y=pos(wotran.op_code$=curr_oplines$,op_len)
+				y=pos(wotran.op_seq$=curr_oplines$,op_len)
 				y=int(y/op_len)
 				x2[y]=x2[y]+wotran.ext_cost
 				x3[y]=x3[y]+wotran.units
@@ -236,20 +236,22 @@ select_transaction_file: rem --- Select Transaction File
 	
 closed_wo:
 
-	if trans_pass$="0"
+	if tran_pass$="0"
 		wotran_dev=fnget_dev("SFT_CLSOPRTR")
 		dim wotran$:fnget_tpl$("SFT_CLSOPRTR")
 		tran_pass$="1"
-	endif
-	if trans_pass$="1"
-		wotran_dev=fnget_dev("SFT_CLSMATTR")
-		dim wotran$:fnget_tpl$("SFT_CLSMATTR")
-		tran_pass$="2"
-	endif
-	if trans_pass$="2"
-		wotran_dev=fnget_dev("SFT_CLSSUBTR")
-		dim wotran$:fnget_tpl$("SFT_CLSSUBTR")
-		tran_pass$="3"
+	else
+		if tran_pass$="1"
+			wotran_dev=fnget_dev("SFT_CLSMATTR")
+			dim wotran$:fnget_tpl$("SFT_CLSMATTR")
+			tran_pass$="2"
+		else
+			if tran_pass$="2"
+				wotran_dev=fnget_dev("SFT_CLSSUBTR")
+				dim wotran$:fnget_tpl$("SFT_CLSSUBTR")
+				tran_pass$="3"
+			endif
+		endif
 	endif
 
     return
@@ -260,19 +262,18 @@ open_wo:
 		wotran_dev=fnget_dev("SFT_OPNOPRTR")
 		dim wotran$:fnget_tpl$("SFT_OPNOPRTR")
 		tran_pass$="1"
-	endif
-    if tran_pass$="1"
-		wotran_dev=fnget_dev("SFT_OPNMATTR")
-		dim wotran$:fnget_tpl$("SFT_OPNMATTR")
-		tran_pass$="2"
-	endif
-	if tran_pass$="2"
-		wotran_dev=fnget_dev("SFT_OPNSUBTR")
-		dim wotran$:fnget_tpl$("SFT_OPNSUBTR")
-		tran_pass$="3"
-	endif
-	if tran_pass$="3"
-		tran_pass$="4"
+	else
+		if tran_pass$="1"
+			wotran_dev=fnget_dev("SFT_OPNMATTR")
+			dim wotran$:fnget_tpl$("SFT_OPNMATTR")
+			tran_pass$="2"
+		else
+			if tran_pass$="2"
+				wotran_dev=fnget_dev("SFT_OPNSUBTR")
+				dim wotran$:fnget_tpl$("SFT_OPNSUBTR")
+				tran_pass$="3"
+			endif
+		endif
 	endif
 	
     return                                                  
