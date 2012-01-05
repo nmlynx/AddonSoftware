@@ -606,6 +606,23 @@ rem --- check for specific values that can't be found any other way
 		if new_fieldlist.name$[field]="OP_INT_SEQ_REF"
 			if cvs(value$,3)<>"" then value$=str(num(value$):"000000000000")
 		endif
+
+rem --- GLM-32 sequence numbers need to start at '001', not '000' in Barista/Addon
+        if cvs(datafile$,8)="glm-32" then
+            rem --- if sequence numbers start with '000' for a firm+report,
+            rem --- then increment all sequence numbers (except '999') for that firm+report
+             if old_rec$(1,4)<>glm32_rpt$
+                glm32_rpt$=old_rec$(1,4)
+                if old_rec$(5,3)="000"
+                    glm32_inc=1
+                else
+                    glm32_inc=0
+                endif
+            endif
+            if new_fieldlist.name$[field]="SEQUENCE_NO"
+                if cvs(value$,3)<>"999" then value$=str(num(value$)+glm32_inc:"000")
+            endif
+        endif
 		
 rem --- Check for Temp Vendor
 
