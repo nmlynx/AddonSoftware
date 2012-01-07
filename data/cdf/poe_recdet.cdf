@@ -320,6 +320,10 @@ rem --- set default line code based on param file
 callpoint!.setTableColumnAttribute("POE_RECDET.PO_LINE_CODE","DFLT",str(callpoint!.getDevObject("dflt_po_line_code")))
 
 callpoint!.setDevObject("po_rows","")
+
+rem --- set preset val for batch_no
+
+	callpoint!.setTableColumnAttribute("POE_RECDET.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
 [[POE_RECDET.ITEM_ID.AINV]]
 rem --- Item synonym processing
 

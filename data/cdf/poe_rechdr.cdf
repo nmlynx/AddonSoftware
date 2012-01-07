@@ -1,3 +1,8 @@
+[[POE_RECHDR.BTBL]]
+rem --- Get Batch information
+
+	call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]
+	callpoint!.setTableColumnAttribute("POE_RECHDR.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
 [[POE_RECHDR.BDEL]]
 rem --- custom delete message
 	msg_id$="PO_DELETE_REC"
@@ -24,7 +29,7 @@ if cvs(callpoint!.getRawUserInput(),3)<>""
 	find_receiver$=str(num(callpoint!.getRawUserInput()):msk$)
 	poe_rechdr_dev=fnget_dev("POE_RECHDR")
 	dim poe_rechdr$:fnget_tpl$("POE_RECHDR")
-	read record (poe_rechdr_dev,key=firm_id$+find_receiver$,dom=*next)poe_rechdr$
+	read record (poe_rechdr_dev,key=firm_id$+stbl("+BATCH_NO")+find_receiver$,knum="BATCH_KEY",dom=*next)poe_rechdr$
 	if poe_rechdr.firm_id$<>firm_id$ or  poe_rechdr.receiver_no$<>find_receiver$
 		msg_id$="PO_INVAL_RECVR"
 		gosub disp_message
@@ -73,6 +78,7 @@ if cvs(callpoint!.getUserInput(),3)<>""
 			poe_rechdr.receiver_no$=receiver_no$
 			poe_rechdr.recpt_date$=sysinfo.system_date$
 			poe_rechdr.rec_complete$=callpoint!.getDevObject("rec_complete")
+			poe_rechdr.batch_no$=stbl("+BATCH_NO",err=*next)
 			write record (poe_rechdr_dev) poe_rechdr$
 
 			read record(poe_podet_dev,key=firm_id$+po_no$,dom=*next)
@@ -99,11 +105,12 @@ if cvs(callpoint!.getUserInput(),3)<>""
 				if callpoint!.getDevObject("dflt_rec_qty")="Y"
 					poe_recdet.qty_received=poe_recdet.qty_ordered-poe_recdet.qty_prev_rec
 				endif
+				poe_recdet.batch_no$=stbl("+BATCH_NO",err=*next)
 				write record (poe_recdet_dev) poe_recdet$
 
 			wend
 
-			callpoint!.setStatus("RECORD:["+firm_id$+receiver_no$+"]")
+			callpoint!.setStatus("RECORD:["+firm_id$+stbl("+BATCH_NO")+receiver_no$+"]")
 
 		else
 
@@ -447,14 +454,14 @@ rem --- store dtlGrid! and column for sales order line# reference listbutton (wi
 
 rem --- call glc_ctlcreate
 
-gl$="N"
-status=0
-source$=""
-glw11$=""
-call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"PO",glw11$,gl$,status
-if status<>0 then release
+	gl$="N"
+	status=0
+	source$=pgm(-2)
+	glw11$=""
+	call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"PO",glw11$,gl$,status
+	if status<>0 then release
 
-callpoint!.setDevObject("gl_installed",gl$)
+	callpoint!.setDevObject("gl_installed",gl$)
 
 rem --- Set up Lot/Serial button properly
 
