@@ -99,11 +99,11 @@ rem --- Headings and print positions
 
 rem --- Calc Standards - Operations
 
-    read (sfe02_dev,key=firm_id$+sfe02a.wo_location$+wo_no$+"A",dom=*next)
+    read (sfe02_dev,key=firm_id$+sfe02a.wo_location$+wo_no$,dom=*next)
 
 	while 1
 		read record (sfe02_dev,end=*break) sfe02a$
-		if pos(firm_id$+sfe02a.wo_location$+wo_no$+"A"=sfe02a$)<>1 break
+		if pos(firm_id$+sfe02a.wo_location$+wo_no$=sfe02a$)<>1 break
 		if sfe02a.line_type$<>"S" continue
 
 		y=pos(sfe02a.op_seq$=curr_oplines$,op_len)
