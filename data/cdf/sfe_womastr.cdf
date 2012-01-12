@@ -1,3 +1,28 @@
+[[SFE_WOMASTR.AOPT-TRNS]]
+rem --- Work Order Transaction History report
+
+	callpoint!.setDevObject("closed_date",callpoint!.getColumnData("SFE_WOMASTR.CLOSED_DATE"))
+
+	dim dflt_data$[5,1]
+	dflt_data$[1,0]="WO_NO"
+	dflt_data$[1,1]=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+	dflt_data$[2,0]="WO_STATUS"
+	dflt_data$[2,1]=callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")
+	dflt_data$[3,0]="CLOSED_DATE"
+	dflt_data$[3,1]=callpoint!.getColumnData("SFE_WOMASTR.CLOSED_DATE")
+	dflt_data$[4,0]="GL_END_DATE"
+	dflt_data$[4,1]=callpoint!.getDevObject("gl_end_date")
+	dflt_data$[5,0]="WO_LOCATION"
+	dflt_data$[5,1]=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"SFE_TRANSHIST",
+:		stbl("+USER_ID"),
+:		"MNT",
+:		"",
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
 [[SFE_WOMASTR.AOPT-JOBS]]
 rem --- Display Job Status
 
@@ -389,7 +414,7 @@ rem --- Set new record flag
 
 rem --- Open tables
 
-	num_files=15
+	num_files=17
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="SFS_PARAMS",open_opts$[2]="OTA"
@@ -406,6 +431,8 @@ rem --- Open tables
 	open_tables$[13]="SFT_CLSMATTR",open_opts$[13]="OTA"
 	open_tables$[14]="SFT_CLSOPRTR",open_opts$[14]="OTA"
 	open_tables$[15]="SFT_CLSSUBTR",open_opts$[15]="OTA"
+	open_tables$[16]="SFT_CLSLSTRN",open_opts$[16]="OTA"
+	open_tables$[17]="SFT_OPNLSTRN",open_opts$[17]="OTA"
 
 	gosub open_tables
 
@@ -433,6 +460,7 @@ rem --- Open tables
 		open_tables$[1]="BMC_OPCODES",open_opts$[1]="OTA"
 	endif
 	callpoint!.setDevObject("bm",bm$)
+	x$=stbl("bm",bm$)
 
 	gosub open_tables
 
@@ -458,6 +486,7 @@ rem --- Open tables
 		pr$=info$[20]
 	endif
 	callpoint!.setDevObject("pr",pr$)
+	x$=stbl("pr",pr$)
 
 	call stbl("+DIR_PGM")+"adc_application.aon","MP",info$[all]
 	callpoint!.setDevObject("mp",info$[20])
