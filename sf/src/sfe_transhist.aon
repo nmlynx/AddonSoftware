@@ -97,7 +97,8 @@ rem --- Headings and print positions
 
 	dim headings$[2]
 	headings$[0]=sysinfo.firm_name$
-	headings$[1]=sysinfo.task_desc$
+	headings$[1]=sysinfo.task_desc$+" - "+Translate!.getTranslation("AON_WORK_ORDER")+": "+wo_no$
+	headings$[2]=Translate!.getTranslation("AON_TRANSACTION HISTORY")
 	
     columns = 8
     dim columns$[columns,10]

@@ -379,6 +379,11 @@ rem --- Set new record flag
 	callpoint!.setDevObject("new_rec","Y")
 	callpoint!.setDevObject("wo_status","")
 
+rem --- Disable Additional Options
+
+	callpoint!.setOptionEnabled("SCHD",0)
+	callpoint!.setOptionEnabled("RELS",0)
+
 rem --- set defaults
 
 	ivs01_dev=fnget_dev("IVS_PARAMS")
