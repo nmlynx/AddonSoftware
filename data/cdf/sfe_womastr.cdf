@@ -1,3 +1,11 @@
+[[SFE_WOMASTR.AOPT-CSTS]]
+rem --- Display Cost Summary
+
+	callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WOMASTR.WO_NO"))
+	callpoint!.setDevObject("wo_status",callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS"))
+	callpoint!.setDevObject("closed_date",callpoint!.getColumnData("SFE_WOMASTR.CLOSED_DATE"))
+
+	run stbl("+DIR_PGM")+"sfe_costsumm.aon"
 [[SFE_WOMASTR.AOPT-TRNS]]
 rem --- Work Order Transaction History report
 
@@ -485,6 +493,7 @@ rem --- Open tables
 		po$=info$[20]
 	endif
 	callpoint!.setDevObject("po",po$)
+	x$=stbl("po",po$)
 
 	if pr$<>"Y"
 		call stbl("+DIR_PGM")+"adc_application.aon","PR",info$[all]
