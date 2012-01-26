@@ -1,3 +1,68 @@
+[[SFE_WOMASTR.AOPT-COPY]]
+rem --- Copy from other Work Order
+
+rem --- Check to make sure there aren't existing requirements
+
+	woe02_dev=fnget_dev("SFE_WOOPRTN")
+	woe22_dev=fnget_dev("SFE_WOMATL")
+	woe32_dev=fnget_dev("SFE_WOSUBCNT")
+
+	wo_loc$=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
+	wo_no$=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+
+	found_reqs=0
+
+	read(woe02_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
+	while 1
+		k$=key(woe02_dev,end=*break)
+		if pos(firm_id$+wo_loc$+wo_no$=k$)=0 break
+		found_reqs=1
+		break
+	wend
+
+	read(woe22_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
+	while 1
+		k$=key(woe22_dev,end=*break)
+		if pos(firm_id$+wo_loc$+wo_no$=k$)=0 break
+		found_reqs=1
+		break
+	wend
+
+	read(woe32_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
+	while 1
+		k$=key(woe32_dev,end=*break)
+		if pos(firm_id$+wo_loc$+wo_no$=k$)=0 break
+		found_reqs=1
+		break
+	wend
+
+	if found_reqs=1
+		msg_id$="REQS_EXIST"
+		gosub disp_message
+		break
+	endif
+
+rem --- Schedule the Work Order
+
+	callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WOMASTR.WO_NO"))
+	callpoint!.setDevObject("wo_loc",callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION"))
+	callpoint!.setDevObject("prod_qty",callpoint!.getColumnData("SFE_WOMASTR.SCH_PROD_QTY"))
+	callpoint!.setDevObject("category",callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY"))
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"SFE_WOCOPY",
+:		stbl("+USER_ID"),
+:		"MNT",
+:		"",
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+[[SFE_WOMASTR.SCH_PROD_QTY.AVAL]]
+rem --- Enable Copy Button
+
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")="N" and num(callpoint!.getUserInput())>0
+		callpoint!.setOptionEnabled("COPY",1)
+	endif
 [[SFE_WOMASTR.AOPT-CSTS]]
 rem --- Display Cost Summary
 
@@ -179,11 +244,18 @@ rem --- If new order, check for type of Work Order and disable Item or Descripti
 	if callpoint!.getDevObject("new_rec")="Y"
 		callpoint!.setColumnData("SFE_WOMASTR.WO_CATEGORY",typecode.wo_category$,1)
 	endif
+
 	if typecode.wo_category$<>"I"
 		callpoint!.setColumnEnabled("SFE_WOMASTR.ITEM_ID",0)
 	else
 		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_01",0)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_02",0)
+	endif
+
+rem --- Enable Copy Button
+
+	if typecode.wo_category$="N" and num(callpoint!.getColumnData("SFE_WOMASTR.SCH_PROD_QTY"))>0
+		callpoint!.setOptionEnabled("COPY",1)
 	endif
 
 rem --- Disable Drawing and Revision Number if Recurring type
@@ -318,6 +390,7 @@ rem --- Always disable these fields for an existing record
 	callpoint!.setColumnEnabled("SFE_WOMASTR.ITEM_ID",0)
 	callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_01",0)
 	callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_02",0)
+	callpoint!.setOptionEnabled("COPY",0)
 
 rem --- See if any transactions exist - disable WO Type if there are
 
@@ -391,6 +464,7 @@ rem --- Disable Additional Options
 
 	callpoint!.setOptionEnabled("SCHD",0)
 	callpoint!.setOptionEnabled("RELS",0)
+	callpoint!.setOptionEnabled("COPY",0)
 
 rem --- set defaults
 
