@@ -1,3 +1,7 @@
+[[SFS_PARAMS.AREC]]
+rem --- Init new record
+	gl_installed$=callpoint!.getDevObject("gl_installed")
+	if gl_installed$="Y" then callpoint!.setColumnData("SFS_PARAMS.POST_TO_GL","Y")
 [[SFS_PARAMS.ADIS]]
 rem --- Save changes made based on Applications installed
 
@@ -6,6 +10,13 @@ rem --- Save changes made based on Applications installed
 rem --- Set defaults
 
 	gosub set_defaults
+
+rem --- Update post_to_gl if GL is uninstalled
+	gl_installed$=callpoint!.getDevObject("gl_installed")
+	if gl_installed$<>"Y" and callpoint!.getColumnData("SFS_PARAMS.POST_TO_GL")="Y" then
+		callpoint!.setColumnData("SFS_PARAMS.POST_TO_GL","N",1)
+		callpoint!.setStatus("MODIFIED")
+	endif
 [[SFS_PARAMS.ARER]]
 rem --- Set defaults
 
@@ -130,3 +141,9 @@ rem --- Retrieve parameter data
 	callpoint!.setDevObject("po",info$[20])
 	call stbl("+DIR_PGM")+"adc_application.aon","PR",info$[all]
 	callpoint!.setDevObject("pr",info$[20])
+
+	call stbl("+DIR_PGM")+"adc_application.aon","GL",info$[all]
+	gl_installed$=info$[20]
+	callpoint!.setDevObject("gl_installed",gl_installed$)
+
+	if gl_installed$<>"Y" then callpoint!.setColumnEnabled("SFS_PARAMS.POST_TO_GL",-1)
