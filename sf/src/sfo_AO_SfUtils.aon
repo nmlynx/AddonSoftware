@@ -1,0 +1,67 @@
+rem ==========================================================================
+rem --- sfo_AO_SfUtils.aon 
+rem --- AO_SfUtils class (SfUtils superclass)
+rem --- SF helper superclass for collection of utilities.
+rem --- 
+rem --- AddonSoftware Version 11.0
+rem --- Copyrights 1981-2012, BASIS International Ltd.  All Rights Reserved.
+rem --- All Rights Reserved
+rem ==========================================================================
+
+class public AO_SfUtils
+
+	rem /**
+	rem  * Calculates Actual Subcontract Quantity Required (was fnsub)
+	rem  *
+	rem  * @param BBjNumber Quantity Required
+	rem  * @param BBjNumber Alternate Factor
+	rem  * @param BBjNumber Divisor
+	rem  * @return BBjNumber
+	rem  */
+	method public static BBjNumber netSubQuantityRequired(BBjNumber qntyRequired,
+:                                                         BBjNumber altFactor,
+:                                                         BBjNumber divisor)
+		if divisor = 0
+			methodret 0
+		else
+			methodret qntyRequired*altFactor/divisor
+		endif
+	methodend
+
+	rem /**
+	rem  * Calculates Operation Units (was fnopnoset)
+	rem  * @param BBjNumber Hours per Piece (from Op Code Maintenance)
+	rem  * @param BBjNumber Pieces per Hour (from Op Code Maintenance
+	rem  * @param BBjNumber Estimated Yield (From WO Header)
+	rem  * @return
+	rem  */
+	method public static BBjNumber opUnits(BBjNumber hrsPerPiece,
+:										   BBjNumber pcsPerHour,
+:										   BbjNumber yield)
+		if yield = 0
+			methodret 0
+		else
+			methodret 100 * (hrsPerPiece / pcsPerHour) / yield
+	methodend
+
+	rem /**
+	rem  * Calculates Operation Dollars (was fnopnosetdol)
+	rem  * @param BBjNumber Hours per Piece (from Op Code Maintenance)
+	rem  * @param BBjNumber Direct Rate (from Operation Requirement record)
+	rem  * @param BBjNumber Overhead Rate (from Operation Requirement record)
+	rem  * @param BBjNumber Pieces per Hour (from Op Code Maintenance
+	rem  * @param BBjNumber Estimated Yield (From WO Header)
+	rem  * @return
+	rem  */
+	method public static BBjNumber opUnitsDollars(BBjNumber hrsPerPiece,
+:												  BBjNumber dirRate,
+:												  BBjNumber overheadRate,
+:												  BBjNumber pcsPerHour,
+:												  BbjNumber yield)
+		if pcsPerHour = 0 or yield = 0
+			methodret 0
+		else
+			methodret 100 * (hrsPerPiece * (dirRate + overheadRate) / pcsPerHour) / yield
+	methodend
+
+classend
