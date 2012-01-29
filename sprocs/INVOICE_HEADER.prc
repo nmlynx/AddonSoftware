@@ -21,6 +21,7 @@ rem Get the IN parameters used by the procedure
 firm_id$ = sp!.getParameter("FIRM_ID")
 customer_id$ = sp!.getParameter("CUSTOMER_ID")
 order_no$ = sp!.getParameter("ORDER_NO")
+invoice_no$ = sp!.getParameter("INVOICE_NO")
 store_master_id$ = sp!.getParameter("STORE_MASTER_ID")
 vat_01$ = sp!.getParameter("VAT_01")
 vat_02$ = sp!.getParameter("VAT_02")
@@ -133,7 +134,8 @@ sql$="SELECT INVOICE_DATE, AR_INV_NO, ORDER_DATE, SLSPSN_CODE, CUSTOMER_PO_NO, A
 sqlRs! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
 sqlRd! = sqlRs!.getCurrentRecordData()
 
-data!.setFieldValue("INVOICE_NO", sqlRd!.getFieldValue("AR_INV_NO"))
+rem data!.setFieldValue("INVOICE_NO", sqlRd!.getFieldValue("AR_INV_NO"))
+data!.setFieldValue("INVOICE_NO", invoice_no$)
 data!.setFieldValue("DISCOUNT", "-"+sqlRd!.getFieldValue("DISCOUNT_AMT"))
 data!.setFieldValue("FREIGHT", sqlRd!.getFieldValue("FREIGHT_AMT"))
 shipto_type$=sqlRd!.getFieldValue("SHIPTO_TYPE")

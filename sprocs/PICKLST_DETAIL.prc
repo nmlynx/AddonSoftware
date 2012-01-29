@@ -10,193 +10,101 @@ rem Get the IN and IN/OUT parameters used by the procedure
 firm_id$ = sp!.getParameter("FIRM_ID")
 customer_id$ = sp!.getParameter("CUSTOMER_ID")
 order_no$ = sp!.getParameter("ORDER_NO")
-
-sypdir$=""
-sypdir$=stbl("+DIR_SYP",err=*next)
+store_master_id$ = sp!.getParameter("STORE_MASTER_ID")
 
 rem Create a memory record set to hold sample results.
 rem Columns for the record set are defined using a string template
-rs! = BBJAPI().createMemoryRecordSet("ORDER:C(7), SHIP:C(7), BACKORD:C(7), ITEM_ID:C(40), ITEM_DESC:C(60), LOTSER_NO:C(57*), WH:C(2), LOCATION:C(10), PRICE:N(7), CARTON:C(7)")
+rs! = BBJAPI().createMemoryRecordSet("POSITION:C(7), ITEM_ID:C(40), ITEM_DESC:C(60), QTY_ORDERED:N(7), QTY_SHIPPED:C(7)")
 
-rem Open Files    
-num_files = 7
-dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
+erver$=stbl("+DBSERVER",err=*next)
+dbsqlport$=":"+stbl("+DBSQLPORT",err=*next)
+dbssl=num(stbl("+DBSSL",err=*next))
+dbtimeout$="&socket_timeout="+stbl("+DBTIMEOUT")
 
-open_tables$[1] = "OPE_ORDDET", open_opts$[1] = "OTA"
-open_tables$[2] = "OPC_LINECODE", open_opts$[2] = "OTA"
-open_tables$[3] = "IVM_ITEMWHSE", open_opts$[3] = "OTA"
-open_tables$[4] = "OPE_ORDLSDET", open_opts$[4] = "OTA"
-open_tables$[5] = "IVS_PARAMS", open_opts$[5] = "OTA"
-open_tables$[6] = "OPE_ORDHDR", open_opts$[6] = "OTA"
-open_tables$[7] = "IVM_ITEMMAST", open_opts$[7] = "OTA"
+if dbssl
+	dbssl$="&ssl=true"
+else
+	dbssl$="&ssl=false"
+endif
 
-call sypdir$+"bac_open_tables.bbj",
-:       open_beg,
-:		open_end,
-:		open_tables$[all],
-:		open_opts$[all],
-:		open_chans$[all],
-:		open_tpls$[all],
-:		table_chans$[all],
-:		open_batch,
-:		open_status$
+url_user$="&user=guest"
+if stbl("!DSUDDB",err=*endif)<>"" then
+	url_user$=""
+endif
 
-ope_orddet_chan = num(open_chans$[1])
-opc_linecode_chan = num(open_chans$[2])
-ivm_itemwhse_chan = num(open_chans$[3])
-ope_ordlsdet_chan = num(open_chans$[4])
-ivs_params_chan = num(open_chans$[5])
-ope_ordhdr_chan = num(open_chans$[6])
-ivm_itemmast_chan = num(open_chans$[7])
+dbname$ = stbl("+DBNAME",err=*next)
+dbname_api$ = stbl("+DBNAME_API",err=*next)
+if pos("jdbc:apache"=cvs(dbname$,8))=1 then
+	url$ = dbname$
+else
+	if pos("jdbc:"=cvs(dbname$,8))=1 then			
+		url$=dbname$+url_user$
+	else
+		url$ = "jdbc:basis:"+dbserver$+dbsqlport$+"?database="+dbname_api$+url_user$+dbssl$+dbtimeout$
+	endif
+endif
+mode$="mode=PROCEDURE"
 
-dim ope_orddet$:open_tpls$[1]
-dim opc_linecode$:open_tpls$[2]
-dim ivm_itemwhse$:open_tpls$[3]
-dim ope_ordlsdet$:open_tpls$[4]
-dim ivs_params$:open_tpls$[5]
-dim ope_ordhdr$:open_tpls$[6]
-dim ivm_itemmast$:open_tpls$[7]
-
-total = 0
+rem url$="jdbc:basis:localhost?DATABASE=S1000&SSL=false&USER=admin&PASSWORD=admin123"
 
 data! = rs!.getEmptyRecordData()
 
-find record (ope_ordhdr_chan, key=firm_id$+"  "+customer_id$+order_no$, dom=*continue) ope_ordhdr$
+sql$ = "SELECT ITEM_ID, QTY_ORDERED, QTY_SHIPPED, LINE_CODE, ORDER_MEMO FROM OPE_ORDDET WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND ORDER_NO='" + order_no$ + "'"
+sqlRs! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
+sql$ = "SELECT QTY_CHARGED FROM STO_ORDDET WHERE FIRM_ID='" + firm_id$ + "' AND ORDER_NO='" + order_no$ + "'"
+sqlRs5! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
 
-find record (ivs_params_chan, key=firm_id$+"IV00") ivs_params$
-read (ope_orddet_chan, key=firm_id$+"  "+customer_id$+order_no$, knum="AO_CUST_ORD_LINE", dom=*next)
+num_item = sqlRs!.getRecordCount()
 
-while BBjAPI().TRUE
-    read record (ope_orddet_chan, end=*break)ope_orddet$
-    if ope_orddet.firm_id$<>firm_id$ then break
-    if ope_orddet.customer_id$<>customer_id$ then break
-    if ope_orddet.order_no$<>order_no$ then break
+for i=1 to num_item
+    sqlRd! = sqlRs!.getCurrentRecordData()
+    sqlRd5! = sqlRs5!.getCurrentRecordData()
 
-    find record (opc_linecode_chan, key=firm_id$+ope_orddet.line_code$, dom=*endif)opc_linecode$
+    item_id$ = sqlRd!.getFieldValue("ITEM_ID")
+    qty_ordered = num(sqlRd!.getFieldValue("QTY_ORDERED"))
+    qty_shipped = num(sqlRd!.getFieldValue("QTY_SHIPPED"))
+    qty_charged = num(sqlRd5!.getFieldValue("QTY_CHARGED"))
+    line_code$ = sqlRd!.getFieldValue("LINE_CODE")
+    order_memo$ = sqlRd!.getFieldValue("ORDER_MEMO")
 
-    if pos(opc_linecode.line_type$="MO")=0 then
-        data!.setFieldValue("ORDER", str(ope_orddet.qty_ordered))
-        if ope_orddet.commit_flag$="N" then
-            data!.setFieldValue("SHIP", func.formatDate(ope_orddet.est_shp_date$))
-        else
-            data!.setFieldValue("SHIP", "_______")
-        endif
-        data!.setFieldValue("BACKORD", "_______")
-    endif
+    if qty_shipped - qty_charged then
+    rem if 1 then
+        data!.setFieldValue("POSITION",str(i:"00"))
+        data!.setFieldValue("QTY_ORDERED", str(qty_shipped-qty_charged))
+rem goto end_block
+        sql$="SELECT LINE_TYPE FROM OPC_LINECODE WHERE FIRM_ID='" + firm_id$ + "' AND LINE_CODE='" + line_code$ + "'"
+        sqlRs2! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
+        sqlRd2! = sqlRs2!.getCurrentRecordData()
 
-    if pos(opc_linecode.line_type$="MO")<>0
-        data!.setFieldValue("ITEM_ID", ope_orddet.order_memo$)
-    endif  
-
-    if opc_linecode.line_type$="N"
-        data!.setFieldValue("ITEM_ID", "Non-Stock")
-    endif
-
-    if pos(opc_linecode.line_type$=" SRDP")<>0
-        data!.setFieldValue("ITEM_ID", ope_orddet.item_id$)
-    endif
-
-    if pos(opc_linecode.line_type$=" SRDP")<>0
-        find record (ivm_itemmast_chan, key=firm_id$+ope_orddet.item_id$, dom=*next)ivm_itemmast$
-        data!.setFieldValue("ITEM_DESC", ivm_itemmast.item_desc$)
-    endif
-
-    if opc_linecode.line_type$="N"
-        data!.setFieldValue("ITEM_DESC", ope_orddet.order_memo$)
-    endif
-
-    total_ls = 0
-    read (ope_ordlsdet_chan, key=firm_id$+"  "+customer_id$+order_no$+ope_orddet.internal_seq_no$, dom=*next)
-
-    tmp$=""
-    while BBjAPI().TRUE
-        read record (ope_ordlsdet_chan, end=*break) ope_ordlsdet$
-        if ope_ordlsdet.firm_id$ <> firm_id$        then break
-        if ope_ordlsdet.customer_id$ <> customer_id$    then break
-        if ope_ordlsdet.order_no$ <> order_no$       then break
-        if ope_ordlsdet.internal_seq_no$ <> ope_orddet.orddet_seq_ref$ then break
-
-        if ope_ordlsdet.qty_ordered then
-            if ivs_params.lotser_flag$<>"L" then
-                tmp$ = tmp$+"S/N: "+ope_ordlsdet.lotser_no$+fill(32," ")
-            else
-                if ope_ordlsdet.qty_shipped then 
-                    amount$ = str(ope_ordlsdet.qty_shipped:"                    ")
-                else 
-                    amount$ = fill(20,"_")
-                endif
-                tmp$ = tmp$+"Lot: "+ope_ordlsdet.lotser_no$+"   Shipped: "+amount$
-            endif
-            total_ls=total_ls+ope_ordlsdet.qty_shipped
-        endif
-    wend
-
-tmp$=""
-    if total_ls < ope_orddet.qty_ordered then
-       ope_ordlsdet.lotser_no$ = fill(20, "_")
-       ope_ordlsdet.qty_ordered = 0
-       ope_ordlsdet.qty_shipped = 0
-       ope_ordlsdet.unit_cost   = 0
-
-        if ivs_params.lotser_flag$="L" then 
-            y9=3
-        else
-            y9=ope_orddet.qty_ordered-total_ls
-        endif
-        rem for y=1 to ope_orddet.qty_shipped - total_ls
-        for y=1 to y9
-            if ivs_params.lotser_flag$<>"L" then
-                tmp$ = tmp$+"S/N: "+ope_ordlsdet.lotser_no$+fill(32," ")
-            else
-                if ope_ordlsdet.qty_shipped then 
-                    amount$ = str(ope_ordlsdet.qty_shipped:"                    ")
-                else 
-                    amount$ = fill(20,"_")
-                endif
-                tmp$ = tmp$+"Lot: "+ope_ordlsdet.lotser_no$+"   Shipped: "+amount$
-            endif
-            if ivs_params.lotser_flag$="L" then break
-        next y
-    endif
-
-    data!.setFieldValue("LOTSER_NO", tmp$)
-
-    if ope_ordhdr.invoice_type$<>"P"
-        if pos(opc_linecode.line_type$=" SRDPN")<>0 then
-            data!.setFieldValue("WH", ope_orddet.warehouse_id$)
+        if pos(sqlRd2!.getFieldValue("LINE_TYPE")=" SP") then
+            sql$="SELECT item_desc FROM IVM_ITEMMAST WHERE FIRM_ID='" + firm_id$ + "' AND ITEM_ID='" + item_id$ + "'"
+            sqlRs3! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
+            sqlRd3! = sqlRs3!.getCurrentRecordData()
+            item_desc$ = sqlRd3!.getFieldValue("ITEM_DESC")
         endif
 
-        if opc_linecode.dropship$="Y"
-            data!.setFieldValue("LOCATION", "*Dropship")
-        else   
-            if pos(opc_linecode.line_type$=" SRDP")<>0
-                find record (ivm_itemwhse_chan, key=firm_id$+ope_orddet.warehouse_id$+ope_orddet.item_id$, dom=*next)ivm_itemwhse$
-                data!.setFieldValue("LOCATION", ivm_itemwhse.location$)
-            endif
-        endif  
+        if pos(sqlRd2!.getFieldValue("LINE_TYPE")="MNO") then
+            data!.setFieldValue("ITEM_ID", order_memo$)
+        endif
+
+        if pos(sqlRd2!.getFieldValue("LINE_TYPE")=" SRDP") then
+            data!.setFieldValue("ITEM_ID", item_id$)
+        endif
+
+        if pos(sqlRd2!.getFieldValue("LINE_TYPE")="SP") then
+            data!.setFieldValue("ITEM_DESC", item_desc$)
+        endif
+rem goto end_block
+        data!.setFieldValue("QTY_SHIPPED", "_______")
+rem end_block:
+
+        rs!.insert(data!)
     endif
 
-    if pos(opc_linecode.line_type$=" SRDPN")<>0
-        data!.setFieldValue("PRICE", str(ope_orddet.qty_ordered*ope_orddet.unit_price))
-        total=total+(ope_orddet.qty_ordered*ope_orddet.unit_price)
-    endif 
-
-    if pos(opc_linecode.line_type$="O")<>0
-        data!.setFieldValue("PRICE", str(ope_orddet.qty_ordered*ope_orddet.ext_price))
-        total=total+(ope_orddet.qty_ordered*ope_orddet.ext_price)
-    endif
-
-    data!.setFieldValue("CARTON", "_______")
-
-    rs!.insert(data!)
-wend
-
-data! = rs!.getEmptyRecordData()
-
-data!.setFieldValue("LOCATION", fill(10," ")+"Total:")
-data!.setFieldValue("PRICE", str(total))
-
-rs!.insert(data!)
+    if i<num_item then
+            sqlRs!.next()
+        endif
+next i
 
 rem Tell the stored procedure to return the result set.
 sp!.setRecordSet(rs!)
