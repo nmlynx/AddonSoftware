@@ -5,7 +5,7 @@ rem
 rem Author(s): S. Birster
 rem Revised: 02.23.2011
 rem ----------------------------------------------------------------------------
-
+ 
 rem Set of utility methods
 use ::ado_func.src::func
 

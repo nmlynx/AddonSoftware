@@ -11,7 +11,7 @@ firm_id$ = sp!.getParameter("FIRM_ID")
 customer_id$ = sp!.getParameter("CUSTOMER_ID")
 order_no$ = sp!.getParameter("ORDER_NO")
 store_master_id$ = sp!.getParameter("STORE_MASTER_ID")
-
+ 
 rem Create a memory record set to hold sample results.
 rem Columns for the record set are defined using a string template
 rs! = BBJAPI().createMemoryRecordSet("POSITION:C(7), ITEM_ID:C(40), ITEM_DESC:C(60), QTY_ORDERED:N(7), QTY_SHIPPED:C(7)")

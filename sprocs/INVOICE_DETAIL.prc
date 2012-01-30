@@ -2,7 +2,8 @@ rem Declare some variables ahead of time
 declare BBjStoredProcedureData sp!
 declare BBjRecordSet rs!
 declare BBjRecordData data!
-
+ 
+ 
 rem Get the infomation object for the Stored Procedure
 sp! = BBjAPI().getFileSystem().getStoredProcedureData()
 

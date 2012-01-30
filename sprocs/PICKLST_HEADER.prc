@@ -2,7 +2,7 @@ rem ----------------------------------------------------------------------------
 rem Program: INVOICE_HEADER.prc
 rem Description: Stored Procedure to get the header and footer informations to print on the invoices
 rem
-rem Author(s): S. Birster
+rem Author(s): S. Birster 
 rem Revised: 02.23.2011
 rem ----------------------------------------------------------------------------
 
