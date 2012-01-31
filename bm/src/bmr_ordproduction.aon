@@ -407,17 +407,23 @@ rem --- #endinclude std_missing_params.src
 
 rem --- #include std_end.src
 
+std_exit_no_report:
+
+    OutVect!=null();rem nothing to print, or some other err such that no report
+
+std_exit_no_update:
+
+    if num(batch_no$)<>0
+        unlock_key$=firm_id$+stbl("+PROCESS_ID")+stbl("+BATCH_NO")
+        lock_status$=""
+        call stbl("+DIR_SYP")+"bac_lock_record.bbj","ADM_PROCBATCHES",unlock_key$,"X","",rd_table_chan,rd_table_chans$[all],lock_status$
+    endif
+
 std_exit: rem --- Standard program end (01Mar2006)
 	
 	call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
 	run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
 	release
 rem --- #endinclude std_end.src
-
-std_exit_no_report:
-
-	OutVect!=null()
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-    release
-
+	
 	end
