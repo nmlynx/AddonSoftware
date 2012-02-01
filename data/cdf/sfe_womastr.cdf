@@ -1,3 +1,7 @@
+[[SFE_WOMASTR.EST_YIELD.AVAL]]
+rem --- Set DevObject
+
+	callpoint!.setDevObject("wo_est_yield",callpoint!.getUserInput())
 [[SFE_WOMASTR.AOPT-COPY]]
 rem --- Copy from other Work Order
 
@@ -46,7 +50,6 @@ rem --- Schedule the Work Order
 
 	callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WOMASTR.WO_NO"))
 	callpoint!.setDevObject("wo_loc",callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION"))
-	callpoint!.setDevObject("prod_qty",callpoint!.getColumnData("SFE_WOMASTR.SCH_PROD_QTY"))
 	callpoint!.setDevObject("category",callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY"))
 
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
@@ -63,6 +66,8 @@ rem --- Enable Copy Button
 	if callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")="N" and num(callpoint!.getUserInput())>0
 		callpoint!.setOptionEnabled("COPY",1)
 	endif
+
+	callpoint!.setDevObject("prod_qty",callpoint!.getUserInput())
 [[SFE_WOMASTR.AOPT-CSTS]]
 rem --- Display Cost Summary
 
@@ -454,6 +459,11 @@ rem --- Validate Open Sales Order
 	cust$=callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID")
 	dim ope_ordhdr$:fnget_tpl$("OPE_ORDHDR")
 	gosub build_ord_line
+
+rem --- set DevObjects
+
+	callpoint!.setDevObject("prod_qty",callpoint!.getColumnData("SFE_WOMASTR.SCH_PROD_QTY"))
+	callpoint!.setDevObject("wo_est_yield",callpoint!.getColumnData("SFE_WOMASTR.EST_YIELD"))
 [[SFE_WOMASTR.AREC]]
 rem --- Set new record flag
 
@@ -471,9 +481,12 @@ rem --- set defaults
 	ivs01_dev=fnget_dev("IVS_PARAMS")
 	dim ivs01$:fnget_tpl$("IVS_PARAMS")
 	read record (ivs01_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01$
+	callpoint!.setDevObject("default_wh",ivs01.warehouse_id$)
 	callpoint!.setColumnData("SFE_WOMASTR.WAREHOUSE_ID",ivs01.warehouse_id$)
 	callpoint!.setColumnData("SFE_WOMASTR.OPENED_DATE",stbl("+SYSTEM_DATE"))
 	callpoint!.setColumnData("SFE_WOMASTR.ESTSTT_DATE",stbl("+SYSTEM_DATE"))
+	callpoint!.setDevObject("prod_qty","0")
+	callpoint!.setDevObject("wo_est_yield","0")
 
 rem --- enable all enterable fields
 
@@ -501,7 +514,7 @@ rem --- Set new record flag
 
 rem --- Open tables
 
-	num_files=17
+	num_files=18
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="SFS_PARAMS",open_opts$[2]="OTA"
@@ -520,6 +533,7 @@ rem --- Open tables
 	open_tables$[15]="SFT_CLSSUBTR",open_opts$[15]="OTA"
 	open_tables$[16]="SFT_CLSLSTRN",open_opts$[16]="OTA"
 	open_tables$[17]="SFT_OPNLSTRN",open_opts$[17]="OTA"
+	open_tables$[18]="IVM_ITEMWHSE",open_opts$[18]="OTA"
 
 	gosub open_tables
 
