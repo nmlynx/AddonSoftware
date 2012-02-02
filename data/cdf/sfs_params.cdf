@@ -30,7 +30,7 @@ rem ==========================================================
 		callpoint!.setColumnData("SFS_PARAMS.BM_INTERFACE","N",1)
 		callpoint!.setColumnEnabled("SFS_PARAMS.BM_INTERFACE",0)
 	endif
-	if callpoint!.getDevObject("ap")<>"Y"
+	if callpoint!.getDevObject("ar")<>"Y"
 		callpoint!.setColumnData("SFS_PARAMS.AR_INTERFACE","N",1)
 		callpoint!.setColumnEnabled("SFS_PARAMS.AR_INTERFACE",0)
 	endif
@@ -134,8 +134,9 @@ rem --- Retrieve parameter data
 	dim info$[20]
 	call stbl("+DIR_PGM")+"adc_application.aon","BM",info$[all]
 	callpoint!.setDevObject("bm",info$[20])
+	call stbl("+DIR_PGM")+"adc_application.aon","AR",info$[all]
+	callpoint!.setDevObject("ar",info$[20])
 	call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
-	callpoint!.setDevObject("ap",info$[20])
 	callpoint!.setDevObject("br",info$[9])
 	call stbl("+DIR_PGM")+"adc_application.aon","PO",info$[all]
 	callpoint!.setDevObject("po",info$[20])

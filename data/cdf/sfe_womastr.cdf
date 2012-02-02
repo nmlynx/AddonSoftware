@@ -333,6 +333,7 @@ rem --- Set new record flag
 
 	callpoint!.setDevObject("new_rec","N")
 	callpoint!.setDevObject("wo_status",callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS"))
+	callpoint!.setDevObject("wo_category",callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY"))
 
 rem --- Disable fields not allowed to be changed
 
@@ -570,20 +571,20 @@ rem --- Open tables
 
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 
-	if op$<>"Y"
+	if op$="Y"
 		call stbl("+DIR_PGM")+"adc_application.aon","AR",info$[all]
 		op$=info$[20]
 	endif
 	callpoint!.setDevObject("op",op$)
 
-	if po$<>"Y"
+	if po$="Y"
 		call stbl("+DIR_PGM")+"adc_application.aon","PO",info$[all]
 		po$=info$[20]
 	endif
 	callpoint!.setDevObject("po",po$)
 	x$=stbl("po",po$)
 
-	if pr$<>"Y"
+	if pr$="Y"
 		call stbl("+DIR_PGM")+"adc_application.aon","PR",info$[all]
 		pr$=info$[20]
 	endif

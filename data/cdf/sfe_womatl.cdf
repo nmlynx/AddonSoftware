@@ -69,9 +69,9 @@ rem --- Set default Unit Cost
 use ::sfo_SfUtils.aon::SfUtils
 declare SfUtils sfUtils!
 
-rem --- Disable grid if Closed Work Order
-
-	if callpoint!.getDevObject("wo_status")="C"
+rem --- Disable grid if Closed Work Order or Recurring
+	
+	if callpoint!.getDevObject("wo_status")="C" or callpoint!.getDevObject("wo_category")="R"
 		opts$=callpoint!.getTableAttribute("OPTS")
 		callpoint!.setTableAttribute("OPTS",opts$+"BID")
 

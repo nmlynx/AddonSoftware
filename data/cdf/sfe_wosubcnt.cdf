@@ -1,7 +1,7 @@
 [[SFE_WOSUBCNT.BSHO]]
-rem --- Disable grid if Closed Work Order
+rem --- Disable grid if Closed Work Order or Recurring
 
-	if callpoint!.getDevObject("wo_status")="C"
+	if callpoint!.getDevObject("wo_status")="C" or callpoint!.getDevObject("wo_category")="R"
 		opts$=callpoint!.getTableAttribute("OPTS")
 		callpoint!.setTableAttribute("OPTS",opts$+"BID")
 
