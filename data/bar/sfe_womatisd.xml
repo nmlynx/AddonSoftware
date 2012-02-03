@@ -14,17 +14,24 @@
 			<DD_SYSTEM_REC id="ddm_tables.sfe_womatisd">N</DD_SYSTEM_REC>
 			<ASC_COMP_ID id="ddm_tables.sfe_womatisd">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_tables.sfe_womatisd">SF </ASC_PROD_ID>
-			<ASC_VERSION_ID id="ddm_tables.sfe_womatisd">11.0      </ASC_VERSION_ID>
+			<ASC_VERSION_ID id="ddm_tables.sfe_womatisd">11.0</ASC_VERSION_ID>
 			<ASC_LICENSE_ID id="ddm_tables.sfe_womatisd">224167E0BD2C8848576DC4411D1F9004</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.sfe_womatisd">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.sfe_womatisd">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.sfe_womatisd">20100611</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.sfe_womatisd">20111117</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.sfe_womatisd">095710</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.sfe_womatisd">20120203</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.sfe_womatisd">20120203</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.sfe_womatisd">105212</DD_LSTSYNC_TIME>
 			<DD_ATTR_FTYP id="ddm_tables.sfe_womatisd">G</DD_ATTR_FTYP>
 			<DD_ATTR_PTAB id="ddm_tables.sfe_womatisd">SFE_WOMATISH    </DD_ATTR_PTAB>
 			<DD_ATTR_SLEV id="ddm_tables.sfe_womatisd">zzzz</DD_ATTR_SLEV>
-			<DD_ATTR_WINT id="ddm_tables.sfe_womatisd">Material Issues Detail</DD_ATTR_WINT>
+			<DD_ATTR_WINT id="ddm_tables.sfe_womatisd">Material Issues Entry Detail</DD_ATTR_WINT>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_table_opts">
+		<ID id="ddm_table_opts">DDM_TABLE_OPTS</ID>
+		<RECORD id="ddm_table_opts.sfe_womatisds">
+			<DD_TABLE_ALIAS id="ddm_table_opts.sfe_womatisds">SFE_WOMATISD    </DD_TABLE_ALIAS>
+			<DD_ATTR_OPTS id="ddm_table_opts.sfe_womatisds">S</DD_ATTR_OPTS>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_tpls">
@@ -32,7 +39,7 @@
 		<RECORD id="ddm_table_tpls.sfe_womatisd">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.sfe_womatisd">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.sfe_womatisd">sfe-25</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.sfe_womatisd">firm_id:c(2),wo_location:c(2),wo_no:c(7),material_seq:c(3*),unit_measure:c(2),reserved_str:c(4),step_no:c(3),reserved_str_02:c(9),warehouse_id:c(2),item_id:c(20),require_date:c(8*),qty_ordered:n(7*),tot_qty_iss:n(7*),unit_cost:n(7*),qty_issued:n(7*),issue_cost:n(7*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.sfe_womatisd">firm_id:c(2),wo_location:c(2),wo_no:c(7),material_seq:c(3*),unit_measure:c(2),reserved_str:c(4),step_no:c(3),reserved_str_02:c(9),warehouse_id:c(2),item_id:c(20),require_date:c(8),internal_seq_no:c(12*),qty_ordered:n(7*),tot_qty_iss:n(7*),unit_cost:n(7*),qty_issued:n(7*),issue_cost:n(7*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -77,10 +84,13 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womatisd0004">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womatisd0004">00</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womatisd0004">04</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womatisd0004">MATERIAL_SEQ    </DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womatisd0004">INTERNAL_SEQ_NO</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womatisd0004">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womatisd0004">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womatisd0004">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womatisd0004">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womatisd0004">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womatisd0004">N</DD_SEGMENT_MATH>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cols">
@@ -98,6 +108,7 @@
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd001">2</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd001">Firm ID</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd001">1</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd001">FIRM_ID</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_womatisd002">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd002">SFE_WOMATISD    </DD_TABLE_ALIAS>
@@ -111,9 +122,11 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womatisd002">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_CTLX id="ddm_table_cols.sfe_womatisd002">+5</DD_ATTR_CTLX>
 			<DD_ATTR_CTLW id="ddm_table_cols.sfe_womatisd002">35</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_table_cols.sfe_womatisd002">0</DD_ATTR_CTLH>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd002">2</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd002">Work Order Location [Not Used]</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd002">2</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd002">WO_LOCATION</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_womatisd003">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd003">SFE_WOMATISD    </DD_TABLE_ALIAS>
@@ -126,9 +139,11 @@
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_womatisd003">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womatisd003">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_CTLW id="ddm_table_cols.sfe_womatisd003">70</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_table_cols.sfe_womatisd003">0</DD_ATTR_CTLH>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd003">7</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd003">Work Order Number</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd003">3</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd003">WO_NO</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_womatisd004">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd004">SFE_WOMATISD    </DD_TABLE_ALIAS>
@@ -142,9 +157,11 @@
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_womatisd004">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womatisd004">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_CTLW id="ddm_table_cols.sfe_womatisd004">35</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_table_cols.sfe_womatisd004">0</DD_ATTR_CTLH>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd004">3</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd004">Materials Sequence Number</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd004">4</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd004">MATERIAL_SEQ</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_womatisd005">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd005">SFE_WOMATISD    </DD_TABLE_ALIAS>
@@ -160,6 +177,7 @@
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd005">2</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd005">Unit of Measure</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd005">5</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd005">UNIT_MEASURE</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_womatisd006">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd006">SFE_WOMATISD    </DD_TABLE_ALIAS>
@@ -174,6 +192,7 @@
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd006">1</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd006">Reserved For Addon Use</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd006">15</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd006">RESERVED_STR</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_womatisd007">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd007">SFE_WOMATISD    </DD_TABLE_ALIAS>
@@ -189,6 +208,7 @@
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd007">3</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd007">Step Number</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd007">6</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd007">STEP_NO</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_womatisd008">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd008">SFE_WOMATISD    </DD_TABLE_ALIAS>
@@ -203,6 +223,7 @@
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd008">1</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd008">Reserved For Addon Use</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd008">16</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd008">RESERVED_STR</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_womatisd009">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd009">SFE_WOMATISD    </DD_TABLE_ALIAS>
@@ -219,6 +240,7 @@
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd009">2</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd009">Warehouse ID</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd009">7</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd009">WAREHOUSE_ID</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_womatisd010">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd010">SFE_WOMATISD    </DD_TABLE_ALIAS>
@@ -236,6 +258,7 @@
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd010">20</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd010">Inventory Item Number</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd010">8</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd010">ITEM_ID</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_womatisd011">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd011">SFE_WOMATISD    </DD_TABLE_ALIAS>
@@ -244,7 +267,7 @@
 			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatisd011">REQUIRE_DATE    </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.sfe_womatisd011">1</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_womatisd011">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.sfe_womatisd011">Y</DD_FIELD_DELIM>
+			<DD_FIELD_DELIM id="ddm_table_cols.sfe_womatisd011">N</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_womatisd011">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_womatisd011">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womatisd011">20060119</DD_LSTREV_DATE>
@@ -252,29 +275,33 @@
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd011">8</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd011">Date Required</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd011">9</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd011">REQUIRE_DATE</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_womatisd012">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd012">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_womatisd012">012</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.sfe_womatisd012">QTY_ORDERED     </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatisd012">QTY_ORDERED     </DD_DVAR_NAME>
-			<DD_COL_REPEATS id="ddm_table_cols.sfe_womatisd012">1</DD_COL_REPEATS>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_womatisd012">INTERNAL_SEQ_NO </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatisd012">INTERNAL_SEQ_NO </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.sfe_womatisd012">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_womatisd012">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_womatisd012">Y</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_womatisd012">0A</DD_DELIM_CHAR>
-			<DD_CREATE_DATE id="ddm_table_cols.sfe_womatisd012">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womatisd012">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_CTLW id="ddm_table_cols.sfe_womatisd012">56</DD_ATTR_CTLW>
+			<DD_CREATE_DATE id="ddm_table_cols.sfe_womatisd012">20120203</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womatisd012">20120203</DD_LSTREV_DATE>
+			<DD_ATTR_COLW id="ddm_table_cols.sfe_womatisd012">0</DD_ATTR_COLW>
+			<DD_ATTR_CTLX id="ddm_table_cols.sfe_womatisd012">0</DD_ATTR_CTLX>
+			<DD_ATTR_CTLY id="ddm_table_cols.sfe_womatisd012">0</DD_ATTR_CTLY>
+			<DD_ATTR_CTLW id="ddm_table_cols.sfe_womatisd012">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_cols.sfe_womatisd012">0</DD_ATTR_CTLH>
-			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd012">7</DD_ATTR_MAXL>
-			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd012">Quantity Ordered</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd012">10</DD_ATTR_TIND>
+			<DD_ATTR_MLAN id="ddm_table_cols.sfe_womatisd012">N</DD_ATTR_MLAN>
+			<DD_ATTR_MINL id="ddm_table_cols.sfe_womatisd012">0</DD_ATTR_MINL>
+			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd012">0</DD_ATTR_MAXL>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_womatisd013">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd013">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_womatisd013">013</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.sfe_womatisd013">TOT_QTY_ISS     </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatisd013">TOT_QTY_ISS     </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_womatisd013">QTY_ORDERED     </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatisd013">QTY_ORDERED     </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.sfe_womatisd013">1</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_womatisd013">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_womatisd013">Y</DD_FIELD_DELIM>
@@ -282,16 +309,18 @@
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_womatisd013">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womatisd013">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_CTLW id="ddm_table_cols.sfe_womatisd013">56</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_table_cols.sfe_womatisd013">0</DD_ATTR_CTLH>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd013">7</DD_ATTR_MAXL>
-			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd013">Total Quantity Issued To Date</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd013">11</DD_ATTR_TIND>
+			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd013">Quantity Ordered</DD_ATTR_PROM>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd013">10</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd013">QTY_ORDERED</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_womatisd014">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd014">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_womatisd014">014</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.sfe_womatisd014">UNIT_COST       </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatisd014">UNIT_COST       </DD_DVAR_NAME>
-			<DD_COL_REPEATS id="ddm_table_cols.sfe_womatisd014">0</DD_COL_REPEATS>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_womatisd014">TOT_QTY_ISS     </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatisd014">TOT_QTY_ISS     </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.sfe_womatisd014">1</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_womatisd014">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_womatisd014">Y</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_womatisd014">0A</DD_DELIM_CHAR>
@@ -299,15 +328,16 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womatisd014">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_CTLW id="ddm_table_cols.sfe_womatisd014">56</DD_ATTR_CTLW>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd014">7</DD_ATTR_MAXL>
-			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd014">Unit Cost</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd014">12</DD_ATTR_TIND>
+			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd014">Total Quantity Issued To Date</DD_ATTR_PROM>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd014">11</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd014">TOT_QTY_ISS</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_womatisd015">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd015">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_womatisd015">015</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.sfe_womatisd015">QTY_ISSUED      </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatisd015">QTY_ISSUED      </DD_DVAR_NAME>
-			<DD_COL_REPEATS id="ddm_table_cols.sfe_womatisd015">1</DD_COL_REPEATS>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_womatisd015">UNIT_COST       </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatisd015">UNIT_COST       </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.sfe_womatisd015">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_womatisd015">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_womatisd015">Y</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_womatisd015">0A</DD_DELIM_CHAR>
@@ -315,15 +345,16 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womatisd015">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_CTLW id="ddm_table_cols.sfe_womatisd015">56</DD_ATTR_CTLW>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd015">7</DD_ATTR_MAXL>
-			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd015">Quantity Issued</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd015">13</DD_ATTR_TIND>
+			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd015">Unit Cost</DD_ATTR_PROM>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd015">12</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd015">UNIT_COST</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_womatisd016">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd016">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_womatisd016">016</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.sfe_womatisd016">ISSUE_COST      </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatisd016">ISSUE_COST      </DD_DVAR_NAME>
-			<DD_COL_REPEATS id="ddm_table_cols.sfe_womatisd016">0</DD_COL_REPEATS>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_womatisd016">QTY_ISSUED      </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatisd016">QTY_ISSUED      </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.sfe_womatisd016">1</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_womatisd016">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_womatisd016">Y</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_womatisd016">0A</DD_DELIM_CHAR>
@@ -331,8 +362,26 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womatisd016">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_CTLW id="ddm_table_cols.sfe_womatisd016">56</DD_ATTR_CTLW>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd016">7</DD_ATTR_MAXL>
-			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd016">Unit Cost When Issued</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd016">14</DD_ATTR_TIND>
+			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd016">Quantity Issued</DD_ATTR_PROM>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd016">13</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd016">QTY_ISSUED</SQL_COLUMN_NAME>
+		</RECORD>
+		<RECORD id="ddm_table_cols.sfe_womatisd017">
+			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd017">SFE_WOMATISD    </DD_TABLE_ALIAS>
+			<DD_SEQUENCE id="ddm_table_cols.sfe_womatisd017">017</DD_SEQUENCE>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_womatisd017">ISSUE_COST      </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatisd017">ISSUE_COST      </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.sfe_womatisd017">0</DD_COL_REPEATS>
+			<DD_COL_OCCURS id="ddm_table_cols.sfe_womatisd017">0</DD_COL_OCCURS>
+			<DD_FIELD_DELIM id="ddm_table_cols.sfe_womatisd017">Y</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.sfe_womatisd017">0A</DD_DELIM_CHAR>
+			<DD_CREATE_DATE id="ddm_table_cols.sfe_womatisd017">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womatisd017">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW id="ddm_table_cols.sfe_womatisd017">56</DD_ATTR_CTLW>
+			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd017">7</DD_ATTR_MAXL>
+			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd017">Unit Cost When Issued</DD_ATTR_PROM>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd017">14</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd017">ISSUE_COST</SQL_COLUMN_NAME>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_cmts">
@@ -358,6 +407,11 @@
 			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_womatisdfirm_ido">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_opts.sfe_womatisdfirm_ido">FIRM_ID         </DD_DVAR_NAME>
 			<DD_ATTR_OPTS id="ddm_column_opts.sfe_womatisdfirm_ido">O</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.sfe_womatisdwo_locationo">
+			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_womatisdwo_locationo">SFE_WOMATISD    </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.sfe_womatisdwo_locationo">WO_LOCATION     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.sfe_womatisdwo_locationo">O</DD_ATTR_OPTS>
 		</RECORD>
 		<RECORD id="ddm_column_opts.sfe_womatisdwarehouse_idu">
 			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_womatisdwarehouse_idu">SFE_WOMATISD    </DD_TABLE_ALIAS>
@@ -594,6 +648,30 @@
 			<DD_ATTR_LABL id="ddm_elements.require_date">Date Required</DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_elements.require_date">Date Req</DD_ATTR_LABS>
 			<DD_ATTR_STYP id="ddm_elements.require_date">1</DD_ATTR_STYP>
+		</RECORD>
+		<RECORD id="ddm_elements.internal_seq_no">
+			<DD_DATA_NAME id="ddm_elements.internal_seq_no">INTERNAL_SEQ_NO </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.internal_seq_no">Internal Sequence Number</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.internal_seq_no">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.internal_seq_no">12</DD_DATA_LENGTH>
+			<ASC_COMP_ID id="ddm_elements.internal_seq_no">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.internal_seq_no">AD </ASC_PROD_ID>
+			<LOCALIZATION_EX id="ddm_elements.internal_seq_no">N</LOCALIZATION_EX>
+			<DD_CREATE_DATE id="ddm_elements.internal_seq_no">20081120</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.internal_seq_no">20090330</DD_LSTREV_DATE>
+			<DD_ATTR_BLNK id="ddm_elements.internal_seq_no">N</DD_ATTR_BLNK>
+			<DD_ATTR_CTLW id="ddm_elements.internal_seq_no">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.internal_seq_no">0</DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.internal_seq_no">E</DD_ATTR_CTYP>
+			<DD_ATTR_DFLT id="ddm_elements.internal_seq_no">[SEQ:INTERNAL_SEQ_NO]</DD_ATTR_DFLT>
+			<DD_ATTR_LABL id="ddm_elements.internal_seq_no">Internal Sequence Number</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.internal_seq_no">Internal Seq No</DD_ATTR_LABS>
+			<DD_ATTR_MAXL id="ddm_elements.internal_seq_no">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.internal_seq_no">0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL id="ddm_elements.internal_seq_no">0</DD_ATTR_MINL>
+			<DD_ATTR_PADC id="ddm_elements.internal_seq_no">30</DD_ATTR_PADC>
+			<DD_ATTR_PADJ id="ddm_elements.internal_seq_no">R</DD_ATTR_PADJ>
+			<DD_ATTR_PREC id="ddm_elements.internal_seq_no">0</DD_ATTR_PREC>
 		</RECORD>
 		<RECORD id="ddm_elements.qty_ordered">
 			<DD_DATA_NAME id="ddm_elements.qty_ordered">QTY_ORDERED     </DD_DATA_NAME>
