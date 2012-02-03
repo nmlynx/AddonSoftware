@@ -172,6 +172,10 @@ rem --- get application record in order to get form icon
     prog_path$=adm_modules.dd_attr_icon$
     gosub resolve_path
     form_icon$=prog_path$
+    
+rem --- get mask for hrs_per_day
+
+    call pgmdir$+"adc_getmask.aon","","SF","H","",hr_mask$,0,hr_mask    
 
 rem --- Main Process
 
@@ -179,7 +183,8 @@ rem --- Main Process
 	form_id$=file_base$+"arc/sfm_calendar.arc"
 	call dir_syp$+"bam_controls.bbj",gui_dev,SysGUI!,form_id$,win_coord[all],Window!,"DISPLAY",open_chan$[all],ctl_misc$[all]
 	
-	gosub find_gaps1
+rem	gosub find_gaps1
+    gosub find_gaps
     gosub get_calendar_boundaries
     gosub disp_win
     gosub get_user_settings
@@ -214,6 +219,7 @@ event_ctl:rem --- Event Control
     LstGaps!.setCallback(LstGaps!.ON_LIST_SELECT,"find_gap")
 	OpCodes!.setCallback(OpCodes!.ON_LIST_SELECT,"change_op_code")
 	gridCal!.setCallback(gridCal!.ON_GRID_EDIT_STOP,"adjust_status")
+    gridCal!.setCallback(gridCal!.ON_GRID_DRAG_DROP,"adjust_status")
 	gridcal!.setCallback(gridCal!.ON_GRID_KEYPRESS,"start_stop_edit")
     SysGUI!.flushEvents()
 
@@ -229,18 +235,16 @@ start_stop_edit:
 	row=gui_event!.getRow()
 	col=gui_event!.getColumn()
 
-	switch c
+	switch c    
 		case 10; rem --- Pressed <Enter>
-			gridCal!.startEdit(row, col)
+        case 332; rem --- Pressed <F2>
+			gridCal!.startEdit(row, col)            
 			break
-		case 27; rem --- Pressed <ESC>
+		case 27; rem --- Pressed <ESC>       
 			gridCal!.endEdit() 
 			break
-		case 332; rem --- Pressed <F2>
-			gridCal!.startEdit(row, col)
-			break
-		default;
-			break
+		case default       
+            break
 	swend
 	
 	return
@@ -251,7 +255,18 @@ rem maybe okay
 	op_code$=op_code$(1,pos(" - "=op_code$)-1)
 	try_yr=curr_yr
 	try_mo=curr_mo
-	gosub find_gaps1
+rem	gosub find_gaps1
+    gosub find_gaps
+
+    LstGaps!=Window!.getControl(111)
+	LstGaps!.removeAllItems()
+    if GapVect!.size()
+        LstGaps!.insertItems(0,GapVect!)
+    else
+        LstGaps!.addItem(Translate!.getTranslation("AON_NONE"))
+    endif
+    LstGaps!.selectIndex(0)    
+    
 	gosub validate_date
 	gosub display_date
 	gosub display_calendar
@@ -304,8 +319,6 @@ adjust_date:rem --- Adjust Date
 
     gosub validate_date 
     gosub display_date
-rem	gosub find_gaps
-	gosub find_gaps1
     gosub display_calendar
     gosub display_data
 
@@ -352,18 +365,21 @@ display_calendar:rem --- Calculate And Display Calendar
     next curr_day
 
     GridCal!.setCellText(0,0,DayVect!)
+
     for x=0 to 11
         for y=0 to 6
 			if mod(x,2)=0
 				GridCal!.setCellBackColor(x,y,HdrColor!)
 				if GridCal!.getCellText(x,y)<>""
-					GridCal!.setCellStyle(x+1,y,GRID_STYLE_INPUTN)
-					GridCal!.setCellMask(x+1,y,"#,##0")
+					GridCal!.setCellStyle(x+1,y,GRID_STYLE_INPUTE)
+					rem GridCal!.setCellMask(x+1,y,hr_mask$)
 					GridCal!.setCellBackColor(x+1,y,DayColor!)
 				else
 					GridCal!.setCellBackColor(x+1,y,HdrColor!)
+                    GridCal!.setCellEditable(x,y,0)
+                    GridCal!.setCellEditable(x+1,y,0)
 				endif
-			endif
+            endif
         next y
     next x
     return
@@ -380,7 +396,7 @@ display_data:rem --- Display Data For Selected Op Code
 		if day_hrs=-1
 			useText$=""
 		else
-			useText$=str(day_hrs)
+			useText$=str(day_hrs:hr_mask$)+" hrs"
 		endif
         gosub set_Color_and_Text
     next curr_day
@@ -399,38 +415,42 @@ set_Color_and_Text:
 
 adjust_status:
 
-    Event!=SysGUI!.getLastEvent()
-	
+    Event!=SysGUI!.getLastEvent()	
     gui_event$=SysGUI!.getLastEventString()
-
 	row=Event!.getRow()
 	col=Event!.getColumn()
-	curr_day=num(gridCal!.getCellText(row-1,col))
-
-    sel_rows!=GridCal!.getSelectedRows()
-    sel_cols!=GridCal!.getSelectedColumns()
-
-    if sel_rows!.size()
-        for x=0 to sel_rows!.size()-1
-            for y=0 to sel_cols!.size()-1
-                useText$=gridCal!.getCellText(sel_rows!.get(x),sel_cols!.get(y))
-                if useText$<>""
-                    GridCal!.setCellText(sel_rows!.get(x),sel_cols!.get(y),useText$)
-                    gosub update_sfm_calendar
+    curr_day=num(gridCal!.getCellText(row-1,col))
+    gotNum=0
+    if curr_day<>0 
+        useText$=gridCal!.getCellText(row,col)
+        tlen=len(useText$)      
+        while 1
+            useText=num(useText$(1,tlen),err=*next);gotNum=1
+            if gotNum
+                useText$=str(useText:hr_mask$,err=err43)+" hrs"
+                break
+            else
+err43:            
+                tlen=tlen-1
+                if tlen<=1
+                    useText=0
+                    useText$="0.0 hrs"
+                    break
                 endif
-            next y
-        next x
-
+            endif
+        wend
+        gosub update_sfm_calendar
+        gridCal!.setCellText(row,col,useText$)
     endif
-
-    return
+  
+    return  
 
 update_sfm_calendar:
 
     dim sfm_calendar$:fattr(sfm_calendar$)
 
     extractrecord(sfm_calendar_dev,key=firm_id$+op_code$+str(curr_yr:"0000")+str(curr_mo:"00"))sfm_calendar$
-    field sfm_calendar$,"HRS_PER_DAY_"+str(curr_day:"00")=num(useText$)
+    field sfm_calendar$,"HRS_PER_DAY_"+str(curr_day:"00")=useText
     sfm_calendar$=field(sfm_calendar$)
     write record(sfm_calendar_dev)sfm_calendar$
     return
@@ -554,7 +574,16 @@ rem --- the start of gap date, and need set stop dates until we hit a non-space 
     return
 
 load_GapVect:
+    if cvs(gap_start$,3)<>"" and cvs(gap_stop$,3)<>""
+        GapVect!.addItem(fndate$(gap_start$)+" - "+fndate$(gap_stop$))
+    endif
+    gap_start$=""
+    gap_stop$=""
 
+    return
+    
+load_GapVect2:rem --- this doesn't give me multiple gaps, so using same load_gapVect routine (above) as PO Calendar
+              rem --- could be it was trying to solve some other problem that I'm not aware of (1/31/12 CAH)
 	gap_size=GapVect!.size()
 	if gap_size>0
 		prev_date$=GapVect!.getItem(gap_size-1)
@@ -567,7 +596,7 @@ load_GapVect:
     gap_start$=""
     gap_stop$=""
 
-    return
+    return    
 
 find_gaps1: rem --- Display Unscheduled Gaps in Calendar
 	read record(sfm_calendar_dev,key=firm_id$+op_code$,dom=*next)
@@ -754,7 +783,7 @@ save_user_settings:rem --- Save Windows Coordinates
 
 open_tables:rem -----<Open Tables
 
-    call dir_syp$+"bac_open_tables.bbj",        open_beg,       open_end,       open_tables$[all],      open_opts$[all],        open_chans$[all],       open_tpls$[all],        table_chans$[all],      open_batch,     open_status$
+    call dir_syp$+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],table_chans$[all],open_batch,open_status$
 
     if open_status$<>""
         msg_id$="ENTRY_OPEN_ERROR"
@@ -768,7 +797,7 @@ open_tables:rem -----<Open Tables
 
 disp_message:rem --- Display Message Dialog
 
-    call dir_syp$+"bac_message.bbj",        msg_id$,        msg_tokens$[all],       msg_opt$,       table_chans$[all]
+    call dir_syp$+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
 
     return
 
@@ -822,10 +851,10 @@ resize_win:rem --- Resize Window Contents
 		for rows=0 to 11
 			if mod(rows,2)=0
 				GridCal!.setRowHeight(rows,(GridCal!.getHeight()-GridCal!.getColumnHeaderHeight())/num_rows-18)
-				GridCal!.setRowEditable(rows, 0)
+				rem GridCal!.setRowEditable(rows, 0)
 			else
 				GridCal!.setRowHeight(rows,(GridCal!.getHeight()-GridCal!.getColumnHeaderHeight())/num_rows+16)
-				GridCal!.setRowEditable(rows, 1)
+				rem GridCal!.setRowEditable(rows, 1)
 				for col=0 to 6
 					GridCal!.setCellAlignment(rows, col, SysGUI!.GRID_ALIGN_RIGHT)
 				next col
@@ -840,17 +869,17 @@ def_grids:rem --- Define Grid
 
     col_size=int(childGrid!.getWidth()/7)
 
-    for curr_column=1 to no_columns
+    for curr_column=1 to def_output_cols
 
         attr_col$[curr_column,fnstr_pos("DVAR",attr_def_col$[0,0],5)]="COL_"+str(curr_column+1:"0")
         attr_col$[curr_column,fnstr_pos("LABS",attr_def_col$[0,0],5)]=columns$[curr_column]
         attr_col$[curr_column,fnstr_pos("DTYP",attr_def_col$[0,0],5)]="C"
         attr_col$[curr_column,fnstr_pos("CTLW",attr_def_col$[0,0],5)]=str(col_size)
-        attr_col$[0,1]=attr_col$[0,1]+pad("SUMMARY."+attr_col$[curr_column,fnstr_pos("DVAR",attr_def_col$[0,0],5)],40)
+        attr_col$[0,1]=attr_col$[0,1]+pad("SUMMARY."+attr_col$[curr_column,fnstr_pos("DVAR",attr_def_col$[0,0],5)],40)        
 
     next curr_column
 
-    call dir_syp$+"bam_grid_init.bbj",gui_dev,GridCal!,"NOSCROLL-COLH-LINES-VTOP-EDIT",num_rows,attr_def_col$[all],attr_col$[0,1],attr_col$[all]
+    call dir_syp$+"bam_grid_init.bbj",gui_dev,GridCal!,"NOSCROLL-COLH-LINES-VTOP-CELL-EDIT",num_rows,attr_def_col$[all],attr_col$[0,1],attr_col$[all]
     GridCal!.setFitToGrid(GridCal!.AUTO_RESIZE_LAST_COLUMN)
     GridCal!.setRowHeight(int((childGrid!.getHeight()-GridCal!.getColumnHeaderHeight())/num_rows))
 
@@ -858,6 +887,7 @@ def_grids:rem --- Define Grid
     GridCal!.setEditable(1)
     GridCal!.setMultipleSelection(GridCal!.FALSE)
     GridCal!.setHighlightMethod(GridCal!.GRID_HIGHLIGHT_OUTLINE)
+    GridCal!.setDragAccept(1)
 
     return
 
@@ -948,7 +978,7 @@ std_error: rem --- Standard error handler (01Apr2006)
     err_text$=""
     if tcb(5)<>0 and pgm(-1)=pgm(-2) err_text$=pgm(tcb(5))
     pgmdir$=stbl("+DIR_SYP",err=std_error_exit)
-    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),                                str(err:"000"),err_text$,err_act$
+    call pgmdir$+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5):"00000"),str(err:"000"),err_text$,err_act$
     if pos("EXIT"=err_act$) goto std_error_exit
     if pos("ESCAPE"=err_act$) seterr 0;setesc 0
     if pos("RETRY"=err_act$) retry
