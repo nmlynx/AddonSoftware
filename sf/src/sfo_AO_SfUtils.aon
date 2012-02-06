@@ -90,6 +90,29 @@ class public AO_SfUtils
 	methodend
 	
 	rem /**
+	rem  * Calculate Total Standard Cost (was fnopdol)
+	rem  * @param BBjNumber Scheduled Production Quantity (from WO Header)
+	rem  * @param BBjNumber Hours per Piece (from Op Code Requirements)
+	rem  * @param BBjNumber Direct Rate (from Op Code Requirements)
+	rem  * @param BBjNumber Overhead Rate (from Op Code Requirements)
+	rem  * @param BBjNumber Pieces per Hour (from Op Code Requirements)
+	rem  * @param BBjNumber Estimated Yield (From WO Header)
+	rem  * @param BBjNumber Setup Time (from Op Code Requirements)
+	rem /**
+	method public static BBjNumber opTotStdCost(BBjNumber qntyRequired,
+:												BBjNumber hrsPerPiece,
+:												BBjNumber dirRate,
+:												BBjNumber overheadRate,
+:												BBjNumber pcsPerHour,
+:												BBjNumber yieldPct,
+:												BBjNumber setupTime)
+		if pcsPerHour = 0 or yieldPct = 0
+			methodret 0
+		else
+			methodret 100 * (qntyRequired * hrsPerPiece * (dirRate + overheadRate) / pcsPerHour) / yieldPct + setupTime * (dirRate + overheadRate)
+		endif
+	methodend
+	
 	rem  * Calculate Material Units From BOM (was fnqty)
 	rem  * @param Quantity Required (from BOM Materials)
 	rem  * @param Alternamte Factor (from BOM Materials)
