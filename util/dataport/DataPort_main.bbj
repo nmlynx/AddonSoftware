@@ -1634,6 +1634,7 @@ init_params_post_gl: rem --- Initialize *s_params.post_to_gl with SYM-04's post_
             key$=key(param_dev,end=*break)
             readrecord(param_dev)param$
             param.post_to_gl$=r1$(46,1)
+            param$=field(param$)
             writerecord(param_dev,key=key$)param$
             endif
         wend
