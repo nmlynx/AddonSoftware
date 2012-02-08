@@ -18,9 +18,9 @@
 			<ASC_LICENSE_ID id="ddm_tables.sfe_wooprtn">19017BBD5289F5EBEE147791683FB3B7</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.sfe_wooprtn">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.sfe_wooprtn">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.sfe_wooprtn">20120203</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.sfe_wooprtn">20120201</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.sfe_wooprtn">223506</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.sfe_wooprtn">20120207</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.sfe_wooprtn">20120207</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.sfe_wooprtn">223442</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.sfe_wooprtn">C:/Apps/aon/;/apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.sfe_wooprtn">AO_DISP_SEQ</DD_ATTR_DKNM>
 			<DD_ATTR_FTYP id="ddm_tables.sfe_wooprtn">G</DD_ATTR_FTYP>
@@ -364,6 +364,7 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_wooprtn009">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.sfe_wooprtn009">SFE_WOOPRTN.LINE_TYPE</DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.sfe_wooprtn009">S</DD_ATTR_ABLV>
+			<DD_ATTR_CPGM id="ddm_table_cols.sfe_wooprtn009">C:/Apps/aon/;/apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DFLT id="ddm_table_cols.sfe_wooprtn009">[+SYSTEM_DATE]</DD_ATTR_DFLT>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_wooprtn009">8</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_wooprtn009">Date Required</DD_ATTR_PROM>
@@ -472,6 +473,7 @@
 			<DD_ATTR_CTLW id="ddm_table_cols.sfe_wooprtn015">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_cols.sfe_wooprtn015">0</DD_ATTR_CTLH>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_wooprtn015">7</DD_ATTR_MAXL>
+			<DD_ATTR_MINV id="ddm_table_cols.sfe_wooprtn015">.0001</DD_ATTR_MINV>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_wooprtn015">Pieces Per Hour</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_wooprtn015">13</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_wooprtn015">PCS_PER_HOUR</SQL_COLUMN_NAME>
@@ -615,6 +617,11 @@
 			<DD_DVAR_NAME id="ddm_column_cpro.sfe_wooprtnop_codeaval">OP_CODE         </DD_DVAR_NAME>
 			<DD_ATTR_CPRO id="ddm_column_cpro.sfe_wooprtnop_codeaval">AVAL</DD_ATTR_CPRO>
 		</RECORD>
+		<RECORD id="ddm_column_cpro.sfe_wooprtnrequire_dateaval">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.sfe_wooprtnrequire_dateaval">SFE_WOOPRTN     </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.sfe_wooprtnrequire_dateaval">REQUIRE_DATE    </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.sfe_wooprtnrequire_dateaval">AVAL</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_column_cpro.sfe_wooprtnhrs_per_pceaval">
 			<DD_TABLE_ALIAS id="ddm_column_cpro.sfe_wooprtnhrs_per_pceaval">SFE_WOOPRTN     </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_cpro.sfe_wooprtnhrs_per_pceaval">HRS_PER_PCE     </DD_DVAR_NAME>
@@ -698,10 +705,20 @@
 			<DD_DVAR_NAME id="ddm_column_opts.sfe_wooprtndirect_ratec">DIRECT_RATE     </DD_DVAR_NAME>
 			<DD_ATTR_OPTS id="ddm_column_opts.sfe_wooprtndirect_ratec">C</DD_ATTR_OPTS>
 		</RECORD>
+		<RECORD id="ddm_column_opts.sfe_wooprtndirect_rateg">
+			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_wooprtndirect_rateg">SFE_WOOPRTN     </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.sfe_wooprtndirect_rateg">DIRECT_RATE     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.sfe_wooprtndirect_rateg">G</DD_ATTR_OPTS>
+		</RECORD>
 		<RECORD id="ddm_column_opts.sfe_wooprtnovhd_ratec">
 			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_wooprtnovhd_ratec">SFE_WOOPRTN     </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_opts.sfe_wooprtnovhd_ratec">OVHD_RATE       </DD_DVAR_NAME>
 			<DD_ATTR_OPTS id="ddm_column_opts.sfe_wooprtnovhd_ratec">C</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.sfe_wooprtnovhd_rateg">
+			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_wooprtnovhd_rateg">SFE_WOOPRTN     </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.sfe_wooprtnovhd_rateg">OVHD_RATE       </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.sfe_wooprtnovhd_rateg">G</DD_ATTR_OPTS>
 		</RECORD>
 		<RECORD id="ddm_column_opts.sfe_wooprtninternal_seq_noo">
 			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_wooprtninternal_seq_noo">SFE_WOOPRTN     </DD_TABLE_ALIAS>

@@ -1,4 +1,32 @@
+[[SFE_WOOPRTN.REQUIRE_DATE.AVAL]]
+rem --- Deal with Schedule Records
+
+	if callpoint!.getUserInput()<>callpoint!.getColumnData("SFE_WOOPRTN.REQUIRE_DATE")
+		gosub remove_sched
+		setup_time=num(callpoint!.getColumnData("SFE_WOOPRTN.SETUP_TIME"))
+		hrs_per_pc=num(callpoint!.getColumnData("SFE_WOOPRTN.HRS_PER_PCE"))
+		pcs_per_hr=num(callpoint!.getColumnData("SFE_WOOPRTN.PCS_PER_HOUR"))
+		yield=num(callpoint!.getDevObject("wo_est_yield"))
+		run_time=SfUtils.opUnits(hrs_per_pc,pcs_per_hr,yield)
+		move_time=num(callpoint!.getColumnData("SFE_WOOPRTN.MOVE_TIME"))
+		add_date$=callpoint!.getUserInput()
+		gosub add_sched
+	endif
 [[SFE_WOOPRTN.MOVE_TIME.AVAL]]
+rem --- Deal with Schedule Records
+
+	setup_time=num(callpoint!.getColumnData("SFE_WOOPRTN.SETUP_TIME"))
+	hrs_per_pc=num(callpoint!.getColumnData("SFE_WOOPRTN.HRS_PER_PCE"))
+	pcs_per_hr=num(callpoint!.getColumnData("SFE_WOOPRTN.PCS_PER_HOUR"))
+	yield=num(callpoint!.getDevObject("wo_est_yield"))
+	run_time=SfUtils.opUnits(hrs_per_pc,pcs_per_hr,yield)
+	move_time=num(callpoint!.getUserInput())
+	add_date$=callpoint!.getColumnData("SFE_WOOPRTN.REQUIRE_DATE")
+	if callpoint!.getUserInput()<>callpoint!.getColumnData("SFE_WOOPRTN.MOVE_TIME")
+		gosub remove_sched
+		gosub add_sched
+	endif
+
 rem --- Calculate totals
 
 	hrs_per_pc=num(callpoint!.getColumnData("SFE_WOOPRTN.HRS_PER_PCE"))
@@ -8,6 +36,20 @@ rem --- Calculate totals
 	setup=num(callpoint!.getColumnData("SFE_WOOPRTN.SETUP_TIME"))
 	gosub calc_totals
 [[SFE_WOOPRTN.SETUP_TIME.AVAL]]
+rem --- Deal with Schedule Records
+
+	setup_time=num(callpoint!.getUserInput())
+	hrs_per_pc=num(callpoint!.getColumnData("SFE_WOOPRTN.HRS_PER_PCE"))
+	pcs_per_hr=num(callpoint!.getColumnData("SFE_WOOPRTN.PCS_PER_HOUR"))
+	yield=num(callpoint!.getDevObject("wo_est_yield"))
+	run_time=SfUtils.opUnits(hrs_per_pc,pcs_per_hr,yield)
+	move_time=num(callpoint!.getColumnData("SFE_WOOPRTN.MOVE_TIME"))
+	add_date$=callpoint!.getColumnData("SFE_WOOPRTN.REQUIRE_DATE")
+	if callpoint!.getUserInput()<>callpoint!.getColumnData("SFE_WOOPRTN.SETUP_TIME")
+		gosub remove_sched
+		gosub add_sched
+	endif
+
 rem --- Calculate totals
 
 	hrs_per_pc=num(callpoint!.getColumnData("SFE_WOOPRTN.HRS_PER_PCE"))
@@ -68,11 +110,11 @@ rem ===============================================================
 		callpoint!.setColumnData("SFE_WOOPRTN.PCS_PER_HOUR",opcode.pcs_per_hour$,1)
 	endif
 	if num(callpoint!.getColumnData("SFE_WOOPRTN.DIRECT_RATE"))=0
-		callpoint!.setColumnData("SFE_WOOPRTN.DIRECT_RATE",opcode.direct_rate$,1)
+		callpoint!.setColumnData("SFE_WOOPRTN.DIRECT_RATE",opcode.direct_rate$)
 	endif
 	if num(callpoint!.getColumnData("SFE_WOOPRTN.OVHD_RATE"))=0
 		dir_rate=num(callpoint!.getColumnData("SFE_WOOPRTN.DIRECT_RATE"))
-		callpoint!.setColumnData("SFE_WOOPRTN.OVHD_RATE",str(dir_rate*opcode.ovhd_factor),1)
+		callpoint!.setColumnData("SFE_WOOPRTN.OVHD_RATE",str(dir_rate*opcode.ovhd_factor))
 	endif
 	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y"
 		callpoint!.setColumnData("SFE_WOOPRTN.SETUP_TIME",opcode.setup_time$,1)
@@ -102,20 +144,24 @@ rem ===============================================================
 
 	run_time=SfUtils.opUnits(hrs_per_pc,pcs_per_hr,yield)
 	unit_cost=SfUtils.opUnitsDollars(hrs_per_pc,dir_rate,ovhd_rate,pcs_per_hr,yield)
-	callpoint!.setColumnData("SFE_WOOPRTN.RUNTIME_HRS",str(run_time),1)
+	callpoint!.setColumnData("SFE_WOOPRTN.RUNTIME_HRS",str(run_time))
 	callpoint!.setColumnData("SFE_WOOPRTN.UNIT_COST",str(unit_cost),1)
 
 	old_tot_time=num(callpoint!.getColumnData("SFE_WOOPRTN.TOTAL_TIME"))
 	new_tot_time=SfUtils.opTime(run_time,sched_qty,hrs_per_pc,pcs_per_hr,yield,setup)
 	new_tot_dols=SfUtils.opTotStdCost(sched_qty,hrs_per_pc,dir_rate,ovhd_rate,pcs_per_hr,yield,setup)
-
+	callpoint!.setColumnData("SFE_WOOPRTN.TOTAL_TIME",str(new_tot_time))
+	callpoint!.setColumnData("SFE_WOOPRTN.TOT_STD_COST",str(new_tot_dols))
 	if old_tot_time<>new_tot_time
+		gosub remove_sched
+		gosub add_sched
 	endif
 
 	return
 
 rem ===============================================================
 remove_sched:
+rem remove_date$:	input
 rem ===============================================================
 
 	sfm05_dev=fnget_dev("SFE_WOSCHDL")
@@ -134,22 +180,24 @@ rem ===============================================================
 
 rem ===============================================================
 add_sched:
-rem queue_time:	input
 rem setup_time:	input
-rem runtime_hrs:	input
+rem run_time:		input
 rem move_time:	input
+rem add_date$:	input
 rem ===============================================================
 
 	sfm05_dev=fnget_dev("SFE_WOSCHDL")
 	dim sfm05a$:fnget_tpl$("SFE_WOSCHDL")
+	queue_time=num(callpoint!.getColumnData("<<DISPLAY>>.QUEUE_TIME"))
+
 	sfm05a.firm_id$=firm_id$
 	sfm05a.op_code$=callpoint!.getColumnData("SFE_WOOPRTN.OP_CODE")
-	sfm05a.sched$=callpoint!.getColumnData("SFE_WOOPRTN.REQUIRE_DATE")
+	sfm05a.sched_date$=add_date$
 	sfm05a.wo_no$=callpoint!.getColumnData("SFE_WOOPRTN.WO_NO")
 	sfm05a.internal_seq_no$=callpoint!.getColumnData("SFE_WOOPRTN.INTERNAL_SEQ_NO")
 	sfm05a.queue_time=queue_time
 	sfm05a.setup_time=setup_time
-	sfm05a.runtime_hrs=runtime_hrs
+	sfm05a.runtime_hrs=run_time
 	sfm05a.move_time=move_time
 	sfm05a$=field(sfm05a$)
 	write record (sfm05_dev) sfm05a$
@@ -160,6 +208,7 @@ rem --- Display Queue time
 
 	op_code$=callpoint!.getColumnData("SFE_WOOPRTN.OP_CODE")
 	gosub disp_queue
+
 [[SFE_WOOPRTN.BSHO]]
 use ::sfo_SfUtils.aon::SfUtils
 declare SfUtils sfUtils!

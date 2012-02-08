@@ -515,7 +515,7 @@ rem --- Set new record flag
 
 rem --- Open tables
 
-	num_files=18
+	num_files=19
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="SFS_PARAMS",open_opts$[2]="OTA"
@@ -535,6 +535,7 @@ rem --- Open tables
 	open_tables$[16]="SFT_CLSLSTRN",open_opts$[16]="OTA"
 	open_tables$[17]="SFT_OPNLSTRN",open_opts$[17]="OTA"
 	open_tables$[18]="IVM_ITEMWHSE",open_opts$[18]="OTA"
+	open_tables$[19]="SFE_WOSCHDL",open_opts$[19]="OTA"
 
 	gosub open_tables
 
