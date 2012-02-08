@@ -28,8 +28,8 @@ rem --- Get program aurgements
 
 rem --- Initializations
 
-    modules$="ADAPARBMGLIVMPOPPOPRSASF"
     process_complete=0
+    modules$="ADAPARBMGLIVMPOPPOPRSASF"
     pgmdir$=stbl("+DIR_PGM",err=*next)
     installMap!=new HashMap()
     devMap!=new HashMap()
@@ -51,11 +51,45 @@ rem --- Determine which modules are installed
     next i
 
 rem --- If nothing installed, then don't complete this auto-launch process
-rem --- Following an upgrade, user may launch Addon before "copying" the data.
     if !process_complete then goto done
 
-rem --- Open File(s)
+rem --- Following an upgrade, user may launch Addon before "copying" the data.
+rem --- If required files aren't present, then don't complete this auto-launch process
+    adm_rptctl=0,adm09=0,glm03=0,glm06=0
+    test_dev=unt
+    open(test_dev,err=*next)stbl("+ADDATA")+"adm_rptctl"; adm_rptctl=1
+    close(test_dev,err=*next)
+    open(test_dev,err=*next)stbl("+ADDATA")+"adm-09"; adm09=1
+    close(test_dev,err=*next)
+    open(test_dev,err=*next)stbl("+GLDATA")+"glm-03"; glm03=1
+    close(test_dev,err=*next)
+    open(test_dev,err=*next)stbl("+GLDATA")+"glm-06"; glm06=1
+    close(test_dev,err=*next)
+    if !adm_rptctl or !adm09 or !glm03 or !glm06 then
+        process_complete=0
+        goto done
+    endif
 
+rem --- For v12.00, adm_modules.post_gl was moved to *s_params.post_to_gl. Following an upgrade,
+rem --- *s_params.post_to_gl must be intialized with old adm_modules.post_gl when GL is installed.
+	if installMap!.get("GL")="Y" then gosub init_post_to_gl
+	
+done:rem --- Update AutoLaunch Status
+
+    extractrecord(autolaunch_dev,key="INIT_DATA")autolaunch_tpl$
+    if process_complete then autolaunch_tpl.process_status$="C"
+    autolaunch_tpl.trans_date$=date(0:"%Yl%Mz%Dz")
+    autolaunch_tpl.trans_time$=date(0:"%Hz%mz%sz")
+    autolaunch_tpl$ = field(autolaunch_tpl$)
+    writerecord(autolaunch_dev)autolaunch_tpl$
+
+	goto std_exit
+
+rem --- For v12.00, adm_modules.post_gl was moved to *s_params.post_to_gl. Following an upgrade,
+rem --- *s_params.post_to_gl must be intialized with old adm_modules.post_gl when GL is installed.
+init_post_to_gl:
+
+    rem --- Open File(s)
 	num_files=2+len(modules$)/2
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ADS_AUTOLAUNCH", open_opts$[1]="OTA"
@@ -64,7 +98,7 @@ rem --- Open File(s)
     for i=1 to len(modules$) step 2
         j=j+1
         mod$=modules$(i,2)
-        rem --- Skip modules where *PS_PARAMS table doesn't exist
+        rem --- Skip modules where *S_PARAMS table doesn't exist
         if pos(mod$="ADMP",2) then continue
         
         open_tables$[j]=mod$+"S_PARAMS", open_opts$[j]="OTA"
@@ -83,58 +117,47 @@ rem --- Open File(s)
         tplMap!.put(mod$,open_tpls$[j])
     next i
 
-rem --- Verify modules_tpl still includes post_gl in case it was dropped
+    rem --- Verify modules_tpl still includes post_gl in case it was dropped
     use_post_gl=0
     if pos("post_gl"=cvs(open_tpls$[2],8)) then use_post_gl=1
 
-rem --- For v12.00, adm_modules.post_gl was moved to *s_params.post_to_gl. Following an upgrade,
-rem --- *s_params.post_to_gl must be intialized with old adm_modules.post_gl when GL is installed.
-	if installMap!.get("GL")="Y" then
-        rem --- As necessary, initialize *s_params.post_to_gl for all firms
-        for i=1 to len(modules$) step 2
-            mod$=modules$(i,2)
-            rem --- Skip module if *s_params not found
-            dev=devMap!.get(mod$)
-            if dev=0 then continue
-            rem --- Skip modules that don't post to GL
-            if pos(mod$="ADMPSA",2) then continue
+    rem --- As necessary, initialize *s_params.post_to_gl for all firms
+    for i=1 to len(modules$) step 2
+        mod$=modules$(i,2)
+        rem --- Skip module if *s_params not found
+        dev=devMap!.get(mod$)
+        if dev=0 then continue
+        rem --- Skip modules that don't post to GL
+        if pos(mod$="ADMPSA",2) then continue
+        rem --- Skip modules that don't have post_to_gl in *s_params template
+        if pos("post_to_gl"=cvs(tplMap!.get(mod$),8))=0 then continue
 
-            dim tpl$:tplMap!.get(mod$)
-            read(dev,key="",dom=*next)
-            while 1
-                key$=key(dev,end=*break)
-                readrecord(dev)tpl$
+        dim tpl$:tplMap!.get(mod$)
+        read(dev,key="",dom=*next)
+        while 1
+            key$=key(dev,end=*break)
+            readrecord(dev)tpl$
 
-                if cvs(tpl.post_to_gl$,2)="" then
-                    tpl.post_to_gl$="Y"
+            if cvs(tpl.post_to_gl$,2)="" then
+                tpl.post_to_gl$="Y"
 
-                    rem --- Override with pre-v12 adm_modules.post_gl if still available
-                    if use_post_gl then
-                        modules_tpl.post_gl$=""
-                        find record (modules_dev,key=stbl("+AON_APPCOMPANY",err=*next)+pad(mod$,3),dom=*next)modules_tpl$
-                        if pos(modules_tpl.post_gl$="YN") then
-                            tpl.post_to_gl$=modules_tpl.post_gl$
-                        endif
+                rem --- Override with pre-v12 adm_modules.post_gl if still available
+                if use_post_gl then
+                    modules_tpl.post_gl$=""
+                    find record (modules_dev,key=stbl("+AON_APPCOMPANY",err=*next)+pad(mod$,3),dom=*next)modules_tpl$
+                    if pos(modules_tpl.post_gl$="YN") then
+                        tpl.post_to_gl$=modules_tpl.post_gl$
                     endif
-
-                    tpl$=field(tpl$)
-                    writerecord(dev,key=key$)tpl$
                 endif
-            wend
-        next i
-	endif
-	
-done:rem --- Update AutoLaunch Status
 
-    extractrecord(autolaunch_dev,key="INIT_DATA")autolaunch_tpl$
-    if process_complete then autolaunch_tpl.process_status$="C"
-    autolaunch_tpl.trans_date$=date(0:"%Yl%Mz%Dz")
-    autolaunch_tpl.trans_time$=date(0:"%Hz%mz%sz")
-    autolaunch_tpl$ = field(autolaunch_tpl$)
-    writerecord(autolaunch_dev)autolaunch_tpl$
+                tpl$=field(tpl$)
+                writerecord(dev,key=key$)tpl$
+            endif
+        wend
+    next i
 
-	goto std_exit
-
+    return
+    
 open_tables:rem -----<Open Tables
 
     call stbl("+DIR_SYP")+"bac_open_tables.bbj",
