@@ -18,9 +18,10 @@
 			<ASC_LICENSE_ID id="ddm_tables.sfe_womatisd">224167E0BD2C8848576DC4411D1F9004</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.sfe_womatisd">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.sfe_womatisd">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.sfe_womatisd">20120203</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.sfe_womatisd">20120203</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.sfe_womatisd">105212</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.sfe_womatisd">20120207</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.sfe_womatisd">20120207</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.sfe_womatisd">172946</DD_LSTSYNC_TIME>
+			<DD_ATTR_DKNM id="ddm_tables.sfe_womatisd">AO_WO_LINE</DD_ATTR_DKNM>
 			<DD_ATTR_FTYP id="ddm_tables.sfe_womatisd">G</DD_ATTR_FTYP>
 			<DD_ATTR_PTAB id="ddm_tables.sfe_womatisd">SFE_WOMATISH    </DD_ATTR_PTAB>
 			<DD_ATTR_SLEV id="ddm_tables.sfe_womatisd">zzzz</DD_ATTR_SLEV>
@@ -39,7 +40,7 @@
 		<RECORD id="ddm_table_tpls.sfe_womatisd">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.sfe_womatisd">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.sfe_womatisd">sfe-25</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.sfe_womatisd">firm_id:c(2),wo_location:c(2),wo_no:c(7),material_seq:c(3*),unit_measure:c(2),reserved_str:c(4),step_no:c(3),reserved_str_02:c(9),warehouse_id:c(2),item_id:c(20),require_date:c(8),internal_seq_no:c(12*),qty_ordered:n(7*),tot_qty_iss:n(7*),unit_cost:n(7*),qty_issued:n(7*),issue_cost:n(7*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.sfe_womatisd">firm_id:c(2),wo_location:c(2),wo_no:c(7),material_seq:c(3*),unit_measure:c(2),reserved_str:c(4),step_no:c(3),reserved_str_02:c(9),warehouse_id:c(2),item_id:c(20),require_date:c(8),wo_matdtl_seq_no:c(12*),qty_ordered:n(7*),tot_qty_iss:n(7*),unit_cost:n(7*),qty_issued:n(7*),issue_cost:n(7*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -49,6 +50,12 @@
 			<DD_KEY_NUMBER id="ddm_keys.sfe_womatisd00">00</DD_KEY_NUMBER>
 			<DD_KEY_DESC id="ddm_keys.sfe_womatisd00">Primary</DD_KEY_DESC>
 			<DD_KEY_ID id="ddm_keys.sfe_womatisd00">PRIMARY         </DD_KEY_ID>
+		</RECORD>
+		<RECORD id="ddm_keys.sfe_womatisd01">
+			<DD_TABLE_ALIAS id="ddm_keys.sfe_womatisd01">SFE_WOMATISD    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.sfe_womatisd01">01</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.sfe_womatisd01">Display Sequence</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.sfe_womatisd01">AO_WO_LINE      </DD_KEY_ID>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_key_segs">
@@ -84,13 +91,61 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womatisd0004">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womatisd0004">00</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womatisd0004">04</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womatisd0004">INTERNAL_SEQ_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womatisd0004">WO_MATDTL_SEQ_NO</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womatisd0004">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womatisd0004">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womatisd0004">0</DD_SEGMENT_LEN>
 			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womatisd0004">N</DD_SEGMENT_SORT>
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womatisd0004">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womatisd0004">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womatisd0101">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womatisd0101">SFE_WOMATISD    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womatisd0101">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womatisd0101">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womatisd0101">FIRM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womatisd0101">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womatisd0101">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womatisd0101">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womatisd0101">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womatisd0101">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womatisd0101">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womatisd0102">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womatisd0102">SFE_WOMATISD    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womatisd0102">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womatisd0102">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womatisd0102">WO_LOCATION</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womatisd0102">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womatisd0102">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womatisd0102">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womatisd0102">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womatisd0102">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womatisd0102">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womatisd0103">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womatisd0103">SFE_WOMATISD    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womatisd0103">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womatisd0103">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womatisd0103">WO_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womatisd0103">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womatisd0103">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womatisd0103">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womatisd0103">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womatisd0103">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womatisd0103">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womatisd0104">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womatisd0104">SFE_WOMATISD    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womatisd0104">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womatisd0104">04</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womatisd0104">MATERIAL_SEQ</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womatisd0104">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womatisd0104">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womatisd0104">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womatisd0104">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womatisd0104">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womatisd0104">N</DD_SEGMENT_MATH>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cols">
@@ -281,7 +336,7 @@
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd012">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_womatisd012">012</DD_SEQUENCE>
 			<DD_DATA_NAME id="ddm_table_cols.sfe_womatisd012">INTERNAL_SEQ_NO </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatisd012">INTERNAL_SEQ_NO </DD_DVAR_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatisd012">WO_MATDTL_SEQ_NO</DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.sfe_womatisd012">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_womatisd012">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_womatisd012">Y</DD_FIELD_DELIM>
@@ -294,8 +349,9 @@
 			<DD_ATTR_CTLW id="ddm_table_cols.sfe_womatisd012">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_cols.sfe_womatisd012">0</DD_ATTR_CTLH>
 			<DD_ATTR_MLAN id="ddm_table_cols.sfe_womatisd012">N</DD_ATTR_MLAN>
-			<DD_ATTR_MINL id="ddm_table_cols.sfe_womatisd012">0</DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd012">0</DD_ATTR_MAXL>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatisd012">17</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatisd012">INTERNAL_SEQ_NO</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_womatisd013">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd013">SFE_WOMATISD    </DD_TABLE_ALIAS>
