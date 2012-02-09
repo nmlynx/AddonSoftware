@@ -58,9 +58,10 @@ rem --- fill listbox for use with Op Sequence
 
 	sfe02_dev=fnget_dev("SFE_WOOPRTN")
 	dim sfe02a$:fnget_tpl$("SFE_WOOPRTN")
-	bmm08_dev=fnget_dev("BMC_OPCODES")
-	dim bmm08a$:fnget_tpl$("BMC_OPCODES")
-	bill_no$=callpoint!.getDevObject("master_bill")
+	op_code=callpoint!.getDevObject("opcode_chan")
+	dim op_code$:callpoint!.getDevObject("opcode_tpl")
+	wo_no$=callpoint!.getDevObject("wo_no")
+	wo_loc$=callpoint!.getDevObject("wo_loc")
 
 	ops_lines!=SysGUI!.makeVector()
 	ops_items!=SysGUI!.makeVector()
@@ -69,16 +70,16 @@ rem --- fill listbox for use with Op Sequence
 	ops_items!.addItem("")
 	ops_list!.addItem("")
 
-	read(sfe02_dev,key=firm_id$+bill_no$,dom=*next)
+	read(sfe02_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
 	while 1
 		read record (sfe02_dev,end=*break) sfe02a$
-		if pos(firm_id$+bill_no$=sfe02a$)<>1 break
+		if pos(firm_id$+wo_loc$+wo_no$=sfe02a$)<>1 break
 		if sfe02a.line_type$<>"S" continue
-		dim bmm08a$:fattr(bmm08a$)
-		read record (bmm08_dev,key=firm_id$+sfe02a.op_code$,dom=*next)bmm08a$
+		dim op_code$:fattr(op_code$)
+		read record (op_code,key=firm_id$+sfe02a.op_code$,dom=*next)op_code$
 		ops_lines!.addItem(sfe02a.internal_seq_no$)
 		ops_items!.addItem(sfe02a.op_code$)
-		ops_list!.addItem(sfe02a.op_code$+" - "+bmm08a.code_desc$)
+		ops_list!.addItem(sfe02a.op_code$+" - "+op_code.code_desc$)
 	wend
 
 	if ops_lines!.size()>0
@@ -90,7 +91,7 @@ rem --- fill listbox for use with Op Sequence
 
 	callpoint!.setTableColumnAttribute("SFE_WOSUBCNT.OP_INT_SEQ_REF","LDAT",ldat$)
 	my_grid!=Form!.getControl(5000)
-	ListColumn=5
+	ListColumn=10
 	my_control!=my_grid!.getColumnListControl(ListColumn)
 	my_control!.removeAllItems()
 	my_control!.insertItems(0,ops_list!)

@@ -48,8 +48,6 @@ rem --- Check to make sure there aren't existing requirements
 
 rem --- Schedule the Work Order
 
-	callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WOMASTR.WO_NO"))
-	callpoint!.setDevObject("wo_loc",callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION"))
 	callpoint!.setDevObject("category",callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY"))
 
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
@@ -71,7 +69,6 @@ rem --- Enable Copy Button
 [[SFE_WOMASTR.AOPT-CSTS]]
 rem --- Display Cost Summary
 
-	callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WOMASTR.WO_NO"))
 	callpoint!.setDevObject("wo_status",callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS"))
 	callpoint!.setDevObject("closed_date",callpoint!.getColumnData("SFE_WOMASTR.CLOSED_DATE"))
 
@@ -104,15 +101,12 @@ rem --- Work Order Transaction History report
 [[SFE_WOMASTR.AOPT-JOBS]]
 rem --- Display Job Status
 
-	callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WOMASTR.WO_NO"))
 	callpoint!.setDevObject("wo_status",callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS"))
 	callpoint!.setDevObject("closed_date",callpoint!.getColumnData("SFE_WOMASTR.CLOSED_DATE"))
 
 	run stbl("+DIR_PGM")+"sfe_jobstat.aon"
 [[SFE_WOMASTR.AOPT-RELS]]
 rem --- Schedule the Work Order
-
-	callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WOMASTR.WO_NO"))
 
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :		"SFE_RELEASEWO",
@@ -125,7 +119,6 @@ rem --- Schedule the Work Order
 [[SFE_WOMASTR.AOPT-SCHD]]
 rem --- Schedule the Work Order
 
-	callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WOMASTR.WO_NO"))
 	callpoint!.setDevObject("order_no",callpoint!.getColumnData("SFE_WOMASTR.ORDER_NO"))
 
 	dim dflt_data$[3,1]
@@ -334,6 +327,8 @@ rem --- Set new record flag
 	callpoint!.setDevObject("new_rec","N")
 	callpoint!.setDevObject("wo_status",callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS"))
 	callpoint!.setDevObject("wo_category",callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY"))
+	callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WOMASTR.WO_NO"))
+	callpoint!.setDevObject("wo_loc",callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION"))
 
 rem --- Disable fields not allowed to be changed
 
@@ -470,6 +465,8 @@ rem --- Set new record flag
 
 	callpoint!.setDevObject("new_rec","Y")
 	callpoint!.setDevObject("wo_status","")
+	callpoint!.setDevObject("wo_no","")
+	callpoint!.setDevObject("wo_loc","")
 
 rem --- Disable Additional Options
 
