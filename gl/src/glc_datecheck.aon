@@ -264,9 +264,8 @@ message: rem --- Display warning/error message if verification requested
             part2$=part2$+Translate!.getTranslation("AON_OCCURS_AFTER_THE_NEXT_PERIOD.")
             break
         case 3 
-rem wgh
             part1$=Translate!.getTranslation("AON_THE_CURRENT_GL_PERIOD_IS_")+str(glperiod)+" ("+fndate$(glcontrol.gl_per_beg$)+
-:               Translate!.getTranslation("AON__TO_")+fndate$(glcontrol,gl_per_end$)+")."
+:               Translate!.getTranslation("AON__TO_")+fndate$(glcontrol.gl_per_end$)+")."
             part2$=part2$+Translate!.getTranslation("AON_FALLS_INTO_A_PRIOR_GL_PERIOD.")
             break
         case 101 
