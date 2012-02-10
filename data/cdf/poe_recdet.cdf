@@ -719,8 +719,8 @@ old_price=round(num(callpoint!.getDevObject("qty_this_row"))*num(callpoint!.getD
 new_price=round(new_qty*new_cost,2)
 new_total=total_amt-old_price+new_price
 callpoint!.setDevObject("total_amt",new_total)
-tamt!=callpoint!.getDevObject("tamt")
-tamt!.setValue(new_total)
+poe_rechdr_tamt!=callpoint!.getDevObject("poe_rechdr_tamt")
+poe_rechdr_tamt!.setValue(new_total)
 callpoint!.setHeaderColumnData("<<DISPLAY>>.ORDER_TOTAL",str(new_total))
 
 rem print "amts:"

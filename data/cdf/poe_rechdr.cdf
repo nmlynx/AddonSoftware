@@ -211,8 +211,8 @@ rem --- set total order amt
 
 total_amt=num(callpoint!.getDevObject("total_amt"))
 callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOTAL",str(total_amt))
-tamt!=callpoint!.getDevObject("tamt")
-tamt!.setValue(total_amt)
+poe_rechdr_tamt!=callpoint!.getDevObject("poe_rechdr_tamt")
+poe_rechdr_tamt!.setValue(total_amt)
 
 rem --- check dtl_posted flag to see if dropship fields should be disabled
 
@@ -440,8 +440,8 @@ rem --- AP Params
 
 rem --- store total amount control in devObject
 
-	tamt!=util.getControl(callpoint!,"<<DISPLAY>>.ORDER_TOTAL")
-	callpoint!.setDevObject("tamt",tamt!)
+	poe_rechdr_tamt!=util.getControl(callpoint!,"<<DISPLAY>>.ORDER_TOTAL")
+	callpoint!.setDevObject("poe_rechdr_tamt",poe_rechdr_tamt!)
 
 rem --- store default PO Line Code from POS_PARAMS
 	
