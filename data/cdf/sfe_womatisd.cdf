@@ -1,3 +1,6 @@
+[[SFE_WOMATISD.ADGE]]
+rem --- Set precision
+	precision num(callpoint!.getDevObject("precision"))
 [[SFE_WOMATISD.ITEM_ID.AINV]]
 rem --- Item synonym processing
 
