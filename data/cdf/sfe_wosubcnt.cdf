@@ -1,3 +1,13 @@
+[[SFE_WOSUBCNT.PO_STATUS.AVAL]]
+rem --- Disable PO Number and Sequence?
+
+	if cvs(callpoint!.getUserInput(),2)=""
+		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_LINE_NO",0)
+		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_NO",0)
+	else
+		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_LINE_NO",1)
+		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_NO",1)
+	endif
 [[SFE_WOSUBCNT.AREC]]
 rem --- Check for PO Installed
 

@@ -19,8 +19,8 @@
 			<DD_EXPORT_DATA id="ddm_tables.sfe_womatl">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.sfe_womatl">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_tables.sfe_womatl">20120201</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.sfe_womatl">20120131</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.sfe_womatl">225454</DD_LSTSYNC_TIME>
+			<DD_LSTSYNC_DATE id="ddm_tables.sfe_womatl">20120209</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.sfe_womatl">221434</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.sfe_womatl">C:/Apps/aon/;/apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.sfe_womatl">AO_DISP_SEQ</DD_ATTR_DKNM>
 			<DD_ATTR_FTYP id="ddm_tables.sfe_womatl">G</DD_ATTR_FTYP>
@@ -1077,19 +1077,25 @@
 		</RECORD>
 		<RECORD id="ddm_elements.po_status">
 			<DD_DATA_NAME id="ddm_elements.po_status">PO_STATUS       </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.po_status">Purchase Order Status Flag    </DD_DESCRIPTION>
+			<DD_DESCRIPTION id="ddm_elements.po_status">Purchase Order Status Flag</DD_DESCRIPTION>
 			<DD_DATA_TYPE id="ddm_elements.po_status">C</DD_DATA_TYPE>
 			<DD_DATA_LENGTH id="ddm_elements.po_status">1</DD_DATA_LENGTH>
-			<DD_MASK_TYPE id="ddm_elements.po_status"> </DD_MASK_TYPE>
 			<ASC_COMP_ID id="ddm_elements.po_status">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_elements.po_status">SF </ASC_PROD_ID>
 			<DD_CREATE_DATE id="ddm_elements.po_status">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.po_status">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_CTYP id="ddm_elements.po_status">E</DD_ATTR_CTYP>
+			<DD_LSTREV_DATE id="ddm_elements.po_status">20120209</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW id="ddm_elements.po_status">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.po_status">0</DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.po_status">L</DD_ATTR_CTYP>
 			<DD_ATTR_DCOM id="ddm_elements.po_status">            </DD_ATTR_DCOM>
 			<DD_ATTR_DEXP id="ddm_elements.po_status">            </DD_ATTR_DEXP>
 			<DD_ATTR_LABL id="ddm_elements.po_status">Purchase Order Status Flag</DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_elements.po_status">PO Stat Flag</DD_ATTR_LABS>
+			<DD_ATTR_LDIS id="ddm_elements.po_status">C</DD_ATTR_LDIS>
+			<DD_ATTR_MAXL id="ddm_elements.po_status">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.po_status">0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL id="ddm_elements.po_status">0</DD_ATTR_MINL>
+			<DD_ATTR_PREC id="ddm_elements.po_status">0</DD_ATTR_PREC>
 		</RECORD>
 		<RECORD id="ddm_elements.line_type">
 			<DD_DATA_NAME id="ddm_elements.line_type">LINE_TYPE       </DD_DATA_NAME>
@@ -1314,6 +1320,29 @@
 	</ALIAS>
 	<ALIAS id="ddm_element_ldat">
 		<ID id="ddm_element_ldat">DDM_ELEMENT_LDAT</ID>
+		<RECORD id="ddm_element_ldat.po_status01">
+			<DD_DATA_NAME id="ddm_element_ldat.po_status01">PO_STATUS       </DD_DATA_NAME>
+			<DD_ATTR_SEQ id="ddm_element_ldat.po_status01">01</DD_ATTR_SEQ>
+			<DD_ATTR_LDAT_DS id="ddm_element_ldat.po_status01">None</DD_ATTR_LDAT_DS>
+		</RECORD>
+		<RECORD id="ddm_element_ldat.po_status02">
+			<DD_DATA_NAME id="ddm_element_ldat.po_status02">PO_STATUS       </DD_DATA_NAME>
+			<DD_ATTR_SEQ id="ddm_element_ldat.po_status02">02</DD_ATTR_SEQ>
+			<DD_ATTR_LDAT id="ddm_element_ldat.po_status02">R</DD_ATTR_LDAT>
+			<DD_ATTR_LDAT_DS id="ddm_element_ldat.po_status02">Requisition</DD_ATTR_LDAT_DS>
+		</RECORD>
+		<RECORD id="ddm_element_ldat.po_status03">
+			<DD_DATA_NAME id="ddm_element_ldat.po_status03">PO_STATUS       </DD_DATA_NAME>
+			<DD_ATTR_SEQ id="ddm_element_ldat.po_status03">03</DD_ATTR_SEQ>
+			<DD_ATTR_LDAT id="ddm_element_ldat.po_status03">P</DD_ATTR_LDAT>
+			<DD_ATTR_LDAT_DS id="ddm_element_ldat.po_status03">Purchase Order</DD_ATTR_LDAT_DS>
+		</RECORD>
+		<RECORD id="ddm_element_ldat.po_status04">
+			<DD_DATA_NAME id="ddm_element_ldat.po_status04">PO_STATUS       </DD_DATA_NAME>
+			<DD_ATTR_SEQ id="ddm_element_ldat.po_status04">04</DD_ATTR_SEQ>
+			<DD_ATTR_LDAT id="ddm_element_ldat.po_status04">C</DD_ATTR_LDAT>
+			<DD_ATTR_LDAT_DS id="ddm_element_ldat.po_status04">Received</DD_ATTR_LDAT_DS>
+		</RECORD>
 		<RECORD id="ddm_element_ldat.line_type01">
 			<DD_DATA_NAME id="ddm_element_ldat.line_type01">LINE_TYPE       </DD_DATA_NAME>
 			<DD_ATTR_SEQ id="ddm_element_ldat.line_type01">01</DD_ATTR_SEQ>
