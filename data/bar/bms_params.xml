@@ -18,9 +18,9 @@
 			<ASC_LICENSE_ID id="ddm_tables.bms_params">88705C93650889BECB2673BBD78492E3</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.bms_params">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.bms_params">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.bms_params">20120126</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE id="ddm_tables.bms_params">20120210</DD_LSTREV_DATE>
 			<DD_LSTSYNC_DATE id="ddm_tables.bms_params">20120126</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.bms_params">112426</DD_LSTSYNC_TIME>
+			<DD_LSTSYNC_TIME id="ddm_tables.bms_params">170704</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.bms_params">C:/aon_dev/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_FTYP id="ddm_tables.bms_params">T</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV id="ddm_tables.bms_params">zzzz</DD_ATTR_SLEV>
@@ -47,7 +47,7 @@
 		<RECORD id="ddm_table_tpls.bms_params">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.bms_params">BMS_PARAMS      </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.bms_params">bms_params</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.bms_params">firm_id:c(2),bm:c(2),sequence_00:c(2),post_to_gl:c(1),gl_wip_acct:c(10),gl_pur_acct:c(10),gl_prd_var:c(10*),reserved_num:n(1*),bm_precision:n(1*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.bms_params">firm_id:c(2),bm:c(2),sequence_00:c(2),post_to_gl:c(1),gl_wip_acct:c(10),gl_pur_acct:c(10),gl_prd_var:c(10),bm_precision:n(1*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -157,6 +157,7 @@
 			<DD_ATTR_MLAN id="ddm_table_cols.bms_params004">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.bms_params004">0</DD_ATTR_MAXL>
 			<DD_ATTR_TIND id="ddm_table_cols.bms_params004">4</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.bms_params004">POST_TO_GL</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.bms_params005">
 			<DD_TABLE_ALIAS id="ddm_table_cols.bms_params005">BMS_PARAMS      </DD_TABLE_ALIAS>
@@ -205,7 +206,7 @@
 			<DD_DVAR_NAME id="ddm_table_cols.bms_params007">GL_PRD_VAR      </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.bms_params007">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.bms_params007">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.bms_params007">Y</DD_FIELD_DELIM>
+			<DD_FIELD_DELIM id="ddm_table_cols.bms_params007">N</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.bms_params007">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.bms_params007">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.bms_params007">20060119</DD_LSTREV_DATE>
@@ -222,37 +223,21 @@
 		<RECORD id="ddm_table_cols.bms_params008">
 			<DD_TABLE_ALIAS id="ddm_table_cols.bms_params008">BMS_PARAMS      </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.bms_params008">008</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.bms_params008">RESERVED_NUM    </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.bms_params008">RESERVED_NUM    </DD_DVAR_NAME>
-			<DD_COL_REPEATS id="ddm_table_cols.bms_params008">1</DD_COL_REPEATS>
+			<DD_DATA_NAME id="ddm_table_cols.bms_params008">BM_PRECISION    </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.bms_params008">BM_PRECISION    </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.bms_params008">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.bms_params008">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.bms_params008">Y</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.bms_params008">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.bms_params008">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.bms_params008">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_LABL id="ddm_table_cols.bms_params008">Hour Precision</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.bms_params008">Hour Precision</DD_ATTR_LABS>
 			<DD_ATTR_MAXL id="ddm_table_cols.bms_params008">1</DD_ATTR_MAXL>
-			<DD_ATTR_PROM id="ddm_table_cols.bms_params008">Reserved For Addon Use</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.bms_params008">9</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.bms_params008">RESERVED_NUM</SQL_COLUMN_NAME>
-		</RECORD>
-		<RECORD id="ddm_table_cols.bms_params009">
-			<DD_TABLE_ALIAS id="ddm_table_cols.bms_params009">BMS_PARAMS      </DD_TABLE_ALIAS>
-			<DD_SEQUENCE id="ddm_table_cols.bms_params009">009</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.bms_params009">BM_PRECISION    </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.bms_params009">BM_PRECISION    </DD_DVAR_NAME>
-			<DD_COL_REPEATS id="ddm_table_cols.bms_params009">0</DD_COL_REPEATS>
-			<DD_COL_OCCURS id="ddm_table_cols.bms_params009">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.bms_params009">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.bms_params009">0A</DD_DELIM_CHAR>
-			<DD_CREATE_DATE id="ddm_table_cols.bms_params009">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.bms_params009">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_LABL id="ddm_table_cols.bms_params009">Hour Precision</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.bms_params009">Hour Precision</DD_ATTR_LABS>
-			<DD_ATTR_MAXL id="ddm_table_cols.bms_params009">1</DD_ATTR_MAXL>
-			<DD_ATTR_MAXV id="ddm_table_cols.bms_params009">9</DD_ATTR_MAXV>
-			<DD_ATTR_PROM id="ddm_table_cols.bms_params009">Hour/Quantity Precision</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.bms_params009">8</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.bms_params009">BM_PRECISION</SQL_COLUMN_NAME>
+			<DD_ATTR_MAXV id="ddm_table_cols.bms_params008">9</DD_ATTR_MAXV>
+			<DD_ATTR_PROM id="ddm_table_cols.bms_params008">Hour/Quantity Precision</DD_ATTR_PROM>
+			<DD_ATTR_TIND id="ddm_table_cols.bms_params008">8</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.bms_params008">BM_PRECISION</SQL_COLUMN_NAME>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_opts">
@@ -460,23 +445,6 @@
 			<DD_ATTR_PADC id="ddm_elements.gl_prd_var">30</DD_ATTR_PADC>
 			<DD_ATTR_PADJ id="ddm_elements.gl_prd_var">L</DD_ATTR_PADJ>
 			<DD_ATTR_PREC id="ddm_elements.gl_prd_var">0</DD_ATTR_PREC>
-		</RECORD>
-		<RECORD id="ddm_elements.reserved_num">
-			<DD_DATA_NAME id="ddm_elements.reserved_num">RESERVED_NUM    </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.reserved_num">Reserved For Addon Use        </DD_DESCRIPTION>
-			<DD_DATA_TYPE id="ddm_elements.reserved_num">N</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.reserved_num">1</DD_DATA_LENGTH>
-			<DD_MASK_TYPE id="ddm_elements.reserved_num"> </DD_MASK_TYPE>
-			<DD_SYSTEM_REC id="ddm_elements.reserved_num">Y</DD_SYSTEM_REC>
-			<ASC_COMP_ID id="ddm_elements.reserved_num">01007514</ASC_COMP_ID>
-			<ASC_PROD_ID id="ddm_elements.reserved_num">AD </ASC_PROD_ID>
-			<DD_CREATE_DATE id="ddm_elements.reserved_num">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.reserved_num">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_CTYP id="ddm_elements.reserved_num">X</DD_ATTR_CTYP>
-			<DD_ATTR_DCOM id="ddm_elements.reserved_num">            </DD_ATTR_DCOM>
-			<DD_ATTR_DEXP id="ddm_elements.reserved_num">            </DD_ATTR_DEXP>
-			<DD_ATTR_LABL id="ddm_elements.reserved_num">Reserved For Addon Use</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_elements.reserved_num">Res For Addon Use</DD_ATTR_LABS>
 		</RECORD>
 		<RECORD id="ddm_elements.bm_precision">
 			<DD_DATA_NAME id="ddm_elements.bm_precision">BM_PRECISION    </DD_DATA_NAME>
