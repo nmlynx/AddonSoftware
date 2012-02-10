@@ -1,7 +1,3 @@
-[[ADM_PROCBATCHES.DESCRIPTION.BINP]]
-rem --- Save the record
-
-	callpoint!.setStatus("SAVE")
 [[ADM_PROCBATCHES.BATCH_NO.AVAL]]
 rem --- don't allow user to assign new batch# -- use Barista seq# (BATCH_NO)
 rem --- if user made null entry (to assign next seq automatically) then getRawUserInput() will be empty
