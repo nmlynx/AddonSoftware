@@ -173,7 +173,7 @@ rem --- Headings
             if begdate$<>"" h7$=fndate$(begdate$)
             if enddate$<>"" h8$=fndate$(enddate$)
             headings$[3] = Translate!.getTranslation("AON_BEGINNING_CUSTOMER:_")+h5$ +Translate!.getTranslation("AON__--_ENDING_CUSTOMER:_")+h6$
-            headings$[4] = Translate!.getTranslation("AON_BEGINNING_RECEIPT_DATE_:_")+h5$ +Translate!.getTranslation("AON__--_ENDING_RECEIPT_DATE:_")+h8$
+            headings$[4] = Translate!.getTranslation("AON_BEGINNING_RECEIPT_DATE_:_")+h7$ +Translate!.getTranslation("AON__--_ENDING_RECEIPT_DATE:_")+h8$
             p=(width-max(len(h7$),len(h8$)))+1
             h9$=Translate!.getTranslation("AON_CASH_RECEIPTS_CODE:")
             if cashcode$="" h9$=h9$+Translate!.getTranslation("AON__ALL") else h9$=h9$+r5$
