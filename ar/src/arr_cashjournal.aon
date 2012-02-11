@@ -249,7 +249,6 @@ rem --- Read next Customer Master (arm-01) record
           if mod(total_recs,milestone)=0 then call pgmdir$+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
           if sequence$="C" if endvalue$<>"" if arm01a.customer_id$>endvalue$ break
           if sequence$="A" if endvalue$<>"" if arm01a.alt_sequence$>endvalue$ break
-          printed=0
 
 rem --- Position Cash Receipts History Header (art-06) file
 
