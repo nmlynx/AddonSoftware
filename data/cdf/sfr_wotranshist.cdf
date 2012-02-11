@@ -1,3 +1,15 @@
+[[SFR_WOTRANSHIST.REPORT_SEQ.AVAL]]
+rem ---- If By Bill and a whse hasn't been entered, default whse
+
+whse_columndat$=callpoint!.getColumnData("SFR_WOTRANSHIST.WAREHOUSE_ID")
+
+if callpoint!.getUserInput()="B"
+	if cvs(whse_columndat$,2)="" then 
+		whse$=callpoint!.getDevObject("dflt_whse")
+		callpoint!.setColumnData("SFR_WOTRANSHIST.WAREHOUSE_ID",whse$,1)
+	endif
+endif
+
 [[SFR_WOTRANSHIST.<CUSTOM>]]
 
 [[SFR_WOTRANSHIST.BSHO]]
@@ -15,7 +27,6 @@ rem --- Open needed tables
 
 	callpoint!.setDevObject("multi_wh",ivs01a.multi_whse$)	
 	callpoint!.setDevObject("dflt_whse",ivs01a.warehouse_id$)
-
 [[SFR_WOTRANSHIST.AREC]]
 rem --- Set default Warehouse
 
