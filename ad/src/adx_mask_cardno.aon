@@ -1,13 +1,16 @@
 rem ==========================================================================
 rem --- adx_mask_cardno.aon
-rem --- Utility to process Cash Sale file (ope-41) and mask any existing  
+rem --- Utility to process Cash Sale files (ope/opt-41) and mask any existing  
 rem --- credit card numbers so only final digits are visible. 
 rem --- 
 rem --- AddonSoftware
 rem --- Copyrights 1981-2012, BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 rem ==========================================================================
-    
+
+    begin
+    rem -- remove begin if hooking up to menu in future
+ 
     setesc std_error
     seterr std_error
 
@@ -38,28 +41,41 @@ rem --- Get user approval to proceed
 
 rem --- Open File(s)
 
-	num_files=2
+	num_files=3
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="OPE_INVCASH", open_opts$[1]="OTA"
-    open_tables$[2]="ARC_CASHCODE", open_opts$[2]="OTA"
+	open_tables$[2]="OPT_INVCASH", open_opts$[2]="OTA"    
+    open_tables$[3]="ARC_CASHCODE", open_opts$[3]="OTA"
 
 	gosub open_tables
 
     ope_invcash_dev=num(open_chans$[1]);dim ope_invcash$:open_tpls$[1]
-    arc_cashcode_dev=num(open_chans$[2]);dim arc_cashcode$:open_tpls$[2]
+    opt_invcash_dev=num(open_chans$[2]);dim opt_invcash$:open_tpls$[2]    
+    arc_cashcode_dev=num(open_chans$[3]);dim arc_cashcode$:open_tpls$[3]
 
 rem --- Process credit card type records
 
-    call pgmdir$+"adc_progress.aon","NC","","","","",0,ope_invcash_dev,1,meter_num,status
+    proc_dev=ope_invcash_dev
+    dim proc_rec$:fattr(ope_invcash$)
+    gosub process_file
+    proc_dev=opt_invcash_dev
+    dim proc_rec$:fattr(opt_invcash$)
+    gosub process_file
+    
+    goto std_exit
+
+process_file:
+rem --- process ope/opt-41    
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,proc_dev,1,meter_num,status
 
     while 1   
-        readrecord (ope_invcash_dev,end=*break)ope_invcash$
+        readrecord (proc_dev,end=*break)proc_rec$
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        readrecord(arc_cashcode_dev,key=firm_id$+"C"+ope_invcash.cash_rec_cd$,dom=*next)arc_cashcode$
+        readrecord(arc_cashcode_dev,key=firm_id$+"C"+proc_rec.cash_rec_cd$,dom=*next)arc_cashcode$
         if arc_cashcode.trans_type$="P"
             cc_status$=""
             cc_card$=""
-            cc_card_raw$=cvs(ope_invcash.payment_id$,3)
+            cc_card_raw$=cvs(proc_rec.payment_id$,3)
             for x=1 to len(cc_card_raw$)
                 if cc_card_raw$(x,1)>="0" and cc_card_raw$(x,1)<="9"
                     cc_card$=cc_card$+cc_card_raw$(x,1)
@@ -69,14 +85,16 @@ rem --- Process credit card type records
                 gosub mod10_check              
                 if cc_status$=""
                     cc_card_raw$(1,len(cc_card_raw$)-4)=fill(len(cc_card_raw$)-4,"X")
-                    ope_invcash.payment_id$=cc_card_raw$                
-                    writerecord(ope_invcash_dev)ope_invcash$
+                    proc_rec.payment_id$=cc_card_raw$                
+                    writerecord(proc_dev)proc_rec$
                 endif
             endif
         endif
     wend
+    
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
 
-	goto std_exit
+	return
 
 mod10_check:
 
