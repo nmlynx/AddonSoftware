@@ -588,6 +588,13 @@ rem     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     overlay$=update$
     if gl overlay$=pgmdir$+"glr_recap.aon"
     
+	if bal_errors
+		gosub Display_Message
+		update$=""
+		gl_overlay$=""
+		overlay$=""
+	endif
+	
     next_overlay$=overlay$
     out_action$="PRT"
     if update$=""
@@ -620,6 +627,11 @@ print_totals: rem --- Print date or receipt code totals
     OutVect!.addItem(Translate!.getTranslation("AON_CASH"))
     OutVect!.addItem(str(pt[5]))
 
+	if pt[2]+pt[3]<>pt[6]
+		bal_errors=bal_errors+1
+		OutVect!.addItem("*** "+Translate!.getTranslation("ERROR")+" ***")
+		xwk=fnblank(10)
+	endif
     return
 
 register_totals: rem --- Print register, MTD and next MTD totals
