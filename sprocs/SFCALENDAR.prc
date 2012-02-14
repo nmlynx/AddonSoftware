@@ -1,5 +1,9 @@
 rem --- SFCALENDAR -- sproc to return specified records from SF Calendar for display in Jasper
 rem --- Nov 16.JPB
+rem
+rem --- AddonSoftware
+rem --- Copyright BASIS International Ltd.
+
 seterr error_routine
 
 use java.util.Calendar
