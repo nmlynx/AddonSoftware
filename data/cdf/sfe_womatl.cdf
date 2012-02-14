@@ -15,6 +15,15 @@ rem --- Calc Totals
 	scrap_factor=num(callpoint!.getColumnData("SFE_WOMATL.SCRAP_FACTOR"))
 	gosub calculate_totals
 [[SFE_WOMATL.QTY_REQUIRED.AVAL]]
+rem --- Verify minimum quantity > 0
+
+	if num(callpoint!.getUserInput())<=0
+		msg_id$="IV_QTY_GT_ZERO"
+		gosub disp_message
+		callpoint!.setColumnData("SFE_WOMATL.QTY_REQUIRED",callpoint!.getColumnData("SFE_WOMATL.QTY_REQUIRED"),1)
+		callpoint!.setStatus("ABORT")
+	endif
+
 rem --- Calc Totals
 
 	qty_required=num(callpoint!.getUserInput())

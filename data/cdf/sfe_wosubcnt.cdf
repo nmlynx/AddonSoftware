@@ -25,6 +25,15 @@ rem --- Check for PO Installed
 		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.LEAD_TIME",-1)
 	endif
 [[SFE_WOSUBCNT.UNITS.AVAL]]
+rem --- Verify minimum quantity > 0
+
+	if num(callpoint!.getUserInput())<=0
+		msg_id$="IV_QTY_GT_ZERO"
+		gosub disp_message
+		callpoint!.setColumnData("SFE_WOSUBCNT.UNITS",callpoint!.getColumnData("SFE_WOSUBCNT.UNITS"),1)
+		callpoint!.setStatus("ABORT")
+	endif
+
 rem --- Calc numbers
 
 	units=num(callpoint!.getUserInput())

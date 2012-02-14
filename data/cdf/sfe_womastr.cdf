@@ -59,6 +59,15 @@ rem --- Schedule the Work Order
 :		"",
 :		dflt_data$[all]
 [[SFE_WOMASTR.SCH_PROD_QTY.AVAL]]
+rem --- Verify minimum quantity > 0
+
+	if num(callpoint!.getUserInput())<=0
+		msg_id$="IV_QTY_GT_ZERO"
+		gosub disp_message
+		callpoint!.setColumnData("SFE_WOMASTR.SCH_PROD_QTY",callpoint!.getColumnData("SFE_WOMASTR.SCH_PROD_QTY"),1)
+		callpoint!.setStatus("ABORT")
+	endif
+
 rem --- Enable Copy Button
 
 	if callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")="N" and num(callpoint!.getUserInput())>0
