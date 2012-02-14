@@ -354,6 +354,7 @@ rem --- Disable fields not allowed to be changed
 		callpoint!.setColumnEnabled("SFE_WOMASTR.LINE_NO",0)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.ORDER_NO",0)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.OP_INT_SEQ_NO",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.OPENED_DATE",0)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.PRIORITY",0)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.SCH_PROD_QTY",0)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.UNIT_MEASURE",0)
@@ -372,6 +373,7 @@ rem --- Disable fields not allowed to be changed
 		callpoint!.setColumnEnabled("SFE_WOMASTR.DRAWING_REV",1)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.EST_YIELD",1)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.FORECAST",1)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.OPENED_DATE",1)
 		if callpoint!.getDevObject("op")="Y"
 			callpoint!.setColumnEnabled("SFE_WOMASTR.LINE_NO",1)
 			callpoint!.setColumnEnabled("SFE_WOMASTR.ORDER_NO",1)
@@ -508,6 +510,7 @@ rem --- enable all enterable fields
 	callpoint!.setColumnEnabled("SFE_WOMASTR.FORECAST",1)
 	callpoint!.setColumnEnabled("SFE_WOMASTR.LINE_NO",1)
 	callpoint!.setColumnEnabled("SFE_WOMASTR.ORDER_NO",1)
+	callpoint!.setColumnEnabled("SFE_WOMASTR.OPENED_DATE",1)
 	callpoint!.setColumnEnabled("SFE_WOMASTR.PRIORITY",1)
 	callpoint!.setColumnEnabled("SFE_WOMASTR.SCH_PROD_QTY",1)
 	callpoint!.setColumnEnabled("SFE_WOMASTR.UNIT_MEASURE",1)
