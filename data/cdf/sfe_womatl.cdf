@@ -90,6 +90,49 @@ rem --- Disable grid if Closed Work Order or Recurring
 			callpoint!.setTableColumnAttribute(cvs(x$(x,40),2),"OPTS",o$+"C"); rem - makes cells read only
 		next x
 	endif
+
+rem --- fill listbox for use with Op Sequence
+
+	sfe02_dev=fnget_dev("SFE_WOOPRTN")
+	dim sfe02a$:fnget_tpl$("SFE_WOOPRTN")
+	op_code=callpoint!.getDevObject("opcode_chan")
+	dim op_code$:callpoint!.getDevObject("opcode_tpl")
+	wo_no$=callpoint!.getDevObject("wo_no")
+	wo_loc$=callpoint!.getDevObject("wo_loc")
+
+	ops_lines!=SysGUI!.makeVector()
+	ops_items!=SysGUI!.makeVector()
+	ops_list!=SysGUI!.makeVector()
+	ops_lines!.addItem("000000000000")
+	ops_items!.addItem("")
+	ops_list!.addItem("")
+
+	read(sfe02_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
+	while 1
+		read record (sfe02_dev,end=*break) sfe02a$
+		if pos(firm_id$+wo_loc$+wo_no$=sfe02a$)<>1 break
+		if sfe02a.line_type$<>"S" continue
+		dim op_code$:fattr(op_code$)
+		read record (op_code,key=firm_id$+sfe02a.op_code$,dom=*next)op_code$
+		ops_lines!.addItem(sfe02a.internal_seq_no$)
+		ops_items!.addItem(sfe02a.op_code$)
+		ops_list!.addItem(sfe02a.op_code$+" - "+op_code.code_desc$)
+	wend
+
+	if ops_lines!.size()>0
+		ldat$=""
+		for x=0 to ops_lines!.size()-1
+			ldat$=ldat$+ops_items!.getItem(x)+"~"+ops_lines!.getItem(x)+";"
+		next x
+	endif
+
+	callpoint!.setTableColumnAttribute("SFE_WOMATL.OP_INT_SEQ_REF","LDAT",ldat$)
+	my_grid!=Form!.getControl(5000)
+	ListColumn=6
+	my_control!=my_grid!.getColumnListControl(ListColumn)
+	my_control!.removeAllItems()
+	my_control!.insertItems(0,ops_list!)
+	my_grid!.setColumnListControl(ListColumn,my_control!)
 [[SFE_WOMATL.ITEM_ID.AINV]]
 rem --- Item synonym processing
 
