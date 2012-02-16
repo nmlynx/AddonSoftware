@@ -55,7 +55,7 @@ rem --- Assign Title, Record, and keys
             keynum$="PRIMARY"
         endif
         if sequence$="B"
-            h3$="Bill Number Sequence"
+            h3$="Bill Number Sequence for Warehouse "+whse$
             beging$=billfrom$
             ending$=billthru$
             dim key_tpl$:sfe03c_key_tpl$
@@ -86,7 +86,7 @@ rem --- Assign Title, Record, and keys
         if pos("P"=option$)>0 then let h4$=h4$+"Planned/"
         if pos("Q"=option$)>0 then let h4$=h4$+"Quoted/"
         h4$=h4$(1,len(h4$)-1)
-        if beging$<> "" h4$=h4$+" Beginning With "+cvs(beging$,2) else h4$=h4$+" Beginning With First "
+        if beging$<> "" h4$=h4$+" Beginning With "+cvs(beging$,2) else h4$=h4$+" Beginning With First"
         if ending$<> "" h4$=h4$+" and Ending With "+ending$ else h4$=h4$+" and Ending with Last "
 
         if closedate$<>"" then let h6$="Work In Process As Of "+fndate$(closedate$) else let h6$=""
@@ -138,7 +138,12 @@ rem --- Main Read
             if sequence$="B" and whse$<>"" then if key_tpl.warehouse_id$>whse$ break
         endif
 
-        if sequence$<>"W" then 
+		if sequence$="C" and (cvs(key_tpl.customer_id$,2))="" then
+			read (sfe01a_dev)
+			continue
+		endif
+        
+		if sequence$<>"W" then 
             if sequence$="T" data1$=key_tpl.wo_type$
             if sequence$="C" data1$=key_tpl.customer_id$
             if sequence$="B" data1$=key_tpl.item_id$
@@ -268,12 +273,12 @@ sub_total: rem --- First Sub Total
             TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
             OutVect!.addItem(h9$)
             OutVect!.addItem(t0$)
+			xwk=fnblank(4)
             OutVect!.addItem("Total: ")
             if sequence$="B" then 
-                xwk=fnblank(4)
                 OutVect!.addItem(str(t[0]))
             else
-                xwk=fnblank(5)
+                xwk=fnblank(1)
             endif
             OutVect!.addItem(str(t[1]))
             xwk=fnblank(17)
