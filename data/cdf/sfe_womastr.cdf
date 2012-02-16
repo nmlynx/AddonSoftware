@@ -250,6 +250,7 @@ rem --- If new order, check for type of Work Order and disable Item or Descripti
 
 	if callpoint!.getDevObject("new_rec")="Y"
 		callpoint!.setColumnData("SFE_WOMASTR.WO_CATEGORY",typecode.wo_category$,1)
+		callpoint!.setDevObject("wo_category",typecode.wo_category$)
 	endif
 
 	if typecode.wo_category$<>"I"
