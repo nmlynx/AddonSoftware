@@ -17,7 +17,7 @@ rem ==========================================================================
     setesc std_error
     seterr std_error
 
-rem --- Get program aurgements
+rem --- Get program arguments
 
     if argc>1
         for curr_argv=1 to argc-1
@@ -39,6 +39,10 @@ rem --- Initializations
     need_stbls=1
     x$=stbl("+SYSINFO_TPL",err=*next); need_stbls=0
     if need_stbls then call stbl("+DIR_SYP")+"bas_process_beg.bbj",user_id$,rd_table_chans$[all]
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    firm_id$=sysinfo.firm_id$
     
 rem --- Determine which modules are installed
 
@@ -73,6 +77,11 @@ rem --- If required files aren't present, then don't complete this auto-launch p
 rem --- For v12.00, adm_modules.post_gl was moved to *s_params.post_to_gl. Following an upgrade,
 rem --- *s_params.post_to_gl must be intialized with old adm_modules.post_gl when GL is installed.
 	if installMap!.get("GL")="Y" then gosub init_post_to_gl
+
+rem --- for v12, if OP is installed, process Cash Sale entry and history files (ope-41, opt-41)
+rem --- if credit-card transaction type, encrypt credit card# and move it to new credit card field
+
+    if installMap!.get("OP")="Y" then gosub convert_credit_cards
 	
 done:rem --- Update AutoLaunch Status
 
@@ -155,6 +164,92 @@ init_post_to_gl:
             endif
         wend
     next i
+
+    return
+
+rem --- for v12, if OP is installed, process Cash Sale entry and history files (ope-41, opt-41)
+rem --- if credit-card transaction type, encrypt credit card# and move it to new credit card field
+convert_credit_cards:
+
+    rem --- Open File(s)
+	num_files=3
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="OPE_INVCASH", open_opts$[1]="OTA"
+	open_tables$[2]="OPT_INVCASH", open_opts$[2]="OTA"
+    open_tables$[3]="ARC_CASHCODE", open_opts$[3]="OTA"
+
+	gosub open_tables
+
+    ope_invcash_dev=num(open_chans$[1]);dim ope_invcash$:open_tpls$[1]
+    opt_invcash_dev=num(open_chans$[2]);dim opt_invcash$:open_tpls$[2]
+    arc_cashcode_dev=num(open_chans$[3]);dim arc_cashcode$:open_tpls$[3]
+    
+    use ::sys/prog/bao_valid_card.bbj::CreditCard
+    declare CreditCard credCard!
+    credCard!=new CreditCard()
+    cc_config$="BAR_CREDIT_CARD"
+            
+rem --- Process credit card type records
+
+    proc_dev=ope_invcash_dev
+    dim proc_rec$:fattr(ope_invcash$)
+    gosub process_file
+    proc_dev=opt_invcash_dev
+    dim proc_rec$:fattr(opt_invcash$)
+    gosub process_file
+    
+    return
+
+process_file:
+rem --- process ope/opt-41    
+    call pgmdir$+"adc_progress.aon","NC","","","","",0,proc_dev,1,meter_num,status
+ 
+    while 1   
+        readrecord (proc_dev,end=*break)proc_rec$
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        readrecord(arc_cashcode_dev,key=firm_id$+"C"+proc_rec.cash_rec_cd$,dom=*next)arc_cashcode$
+        if arc_cashcode.trans_type$="P" and cvs(proc_rec.payment_id$,3)<>""
+            cc_status$=""
+            cc_card$=""
+            cc_card_raw$=cvs(proc_rec.payment_id$,3)
+            for x=1 to len(cc_card_raw$)
+                if cc_card_raw$(x,1)>="0" and cc_card_raw$(x,1)<="9"
+                    cc_card$=cc_card$+cc_card_raw$(x,1)
+                endif
+            next x           
+            if len(cc_card$)>4
+                gosub mod10_check              
+                if cc_status$=""
+                    proc_rec.credit_card_no$=credCard!.encryptCard(cc_card$,cc_config$)
+                    proc_rec.payment_id$="" 
+                    proc_rec$=field(proc_rec$)               
+                    writerecord(proc_dev)proc_rec$
+                endif
+            endif
+        endif
+    wend
+    
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status    
+
+    return
+
+mod10_check:
+
+    cc_digits$ = ""
+    cc_curr_digit = 0
+
+    for cc_temp = len(cc_card$) to 1 step -1
+        cc_curr_digit = cc_curr_digit + 1
+        cc_no = num(cc_card$(cc_temp,1)) * iff(mod(cc_curr_digit,2)=0, 2, 1)
+        cc_digits$ = str(cc_no) + cc_digits$
+    next cc_temp
+
+    cc_total = 0
+    for cc_temp = 1 to len(cc_digits$)
+        cc_total = cc_total + num(cc_digits$(cc_temp, 1))
+    next cc_temp
+
+    if mod(cc_total, 10) <> 0 then cc_status$ = "INVALID"
 
     return
     
