@@ -15,6 +15,7 @@ rem --- Existing materials issues?
 	sfe_wotrans_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMATISH.WO_NO")
 	find(sfe_wotrans_dev,key=sfe_wotrans_key$,dom=*next); wotrans=1
 
+rem wgh ... stopped
 	if wotrans then
 rem wgh ... O9$ affects 4100 processing in issue_date aval at 4150
 rem wgh ... 1320 LET O9$="1" ... this is like callpoint!.getRecordMode()<>"A"
@@ -77,6 +78,7 @@ rem --- New materials issues entry
 			sfe_womatisd.wo_location$=sfe_womatdtl.wo_location$
 			sfe_womatisd.wo_no$=sfe_womatdtl.wo_no$
 			sfe_womatisd.material_seq$=sfe_womatdtl.material_seq$
+			sfe_womatisd.womatisd_seq_no$=sfe_womatdtl.womatdtl_seq_no$
 			sfe_womatisd.unit_measure$=sfe_womatdtl.unit_measure$
 			sfe_womatisd.womatdtl_seq_ref$=sfe_womatdtl.womatdtl_seq_no$
 			sfe_womatisd.warehouse_id$=sfe_womatdtl.warehouse_id$
@@ -92,20 +94,21 @@ rem --- New materials issues entry
 		wend
 
 		rem --- Issue all?
+		ivm_itemwhse_dev=fnget_dev("IVM_ITEMWHSE")
+		ivm_itemwhse_tpl$=fnget_tpl$("IVM_ITEMWHSE")
+
 		msg_id$="WO_PULLED_COMPLETE"
 		gosub disp_message
 		if msg_opt$="Y" then
 
 			rem --- Pull complete
-			ivm_itemwhse_dev=fnget_dev("IVM_ITEMWHSE")
-			dim ivm_itemwhse$:fnget_tpl$("IVM_ITEMWHSE")
 			read(sfe_womatisd_dev,key=sfe_womatish_key$,dom=*next)
 			while 1
 				sfe_womatisd_key$=key(sfe_womatisd_dev,end=*break)
 				if pos(sfe_womatish_key$=sfe_womatisd_key$)<>1 then break
 				readrecord(sfe_womatisd_dev)sfe_womatisd$
 
-				dim ivm_itemwhse$:fnget_tpl$("IVM_ITEMWHSE")
+				dim ivm_itemwhse$:ivm_itemwhse_tpl$
 				findrecord(ivm_itemwhse_dev,key=firm_id$+sfe_womatisd.warehouse_id$+sfe_womatisd.item_id$,dom=*next)ivm_itemwhse$
 
 				sfe_womatisd.qty_issued=sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss
@@ -119,68 +122,83 @@ rem --- New materials issues entry
 			rem --- Partial issue
 			rem --- Launch form to get operation sequence and production quantity
 			call stbl("+DIR_SYP")+"bam_run_prog.bbj", "SFE_WOMATISO", stbl("+USER_ID"), "MNT", "", table_chans$[all]
-escape; rem wgh
-rem wgh ... stopped here
+			qty_to_issue=callpoint!.getDevObject("qty_to_issue")
+			selected_ops!=callpoint!.getDevObject("selected_ops")
+			rem --- Check if all operations were selected
+			all_selected=1
+			iter!=selected_ops!.values().iterator()
+			while iter!.hasNext()
+				op$=iter!.next()
+				if op$="" then
+					all_selected=0
+					break
+				endif
+			wend
 
+			rem --- Calculate quantities     
+			if qty_to_issue<>0 then
+				sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
+				dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")
+				sfe_womatl_dev=fnget_dev("SFE_WOMATL")
 
-rem wgh ... 3300 REM " --- Partial Issue "    
-rem wgh ... 3305 GOSUB 6000
+				findrecord(sfe_womastr_dev,key=firm_id$+"  "+callpoint!.getColumnData("SFE_WOMATISH.WO_NO"))sfe_womastr$
 
-rem wgh ... 6000 REM " --- Get Operation Sequence to Issue"
-rem wgh ... 6005 LET V0$="Z",V1$="CE",V2$="",V3$="",V4$="Enter Operation Sequence To Issue (<F1>=All/<F3>=Lookup/<F4>=None)",V0=3,V1=FNV(V4$),V2=22
-rem wgh ... 6010 GOSUB 7000
-rem wgh ... 6015 ON V3 GOTO 6055,6035,6000,6020,6045
-rem wgh ... 6020 LET V$=A0$(5,7)
-rem wgh ... 6025 CALL "WOC.DA",V$,SYS01_DEV,OPCODE_DEV,WOE02_DEV
-rem wgh ... 6030 GOTO 6055
-rem wgh ... 6035 LET OPSEQ$=""
-rem wgh ... 6040 GOTO 6065
-rem wgh ... 6045 LET OPSEQ$="NONE"
-rem wgh ... 6050 GOTO 6065
-rem wgh ... 6055 FIND (WOE02_DEV,KEY=N0$+"  "+A0$(5,7)+"A"+V$,DOM=6000)
-rem wgh ... 6060 LET OPSEQ$=V$
-rem wgh ... 6065 RETURN 
+				read(sfe_womatisd_dev,key=sfe_womatish_key$,dom=*next)
+				while 1
+					sfe_womatisd_key$=key(sfe_womatisd_dev,end=*break)
+					if pos(sfe_womatish_key$=sfe_womatisd_key$)<>1 then break
+					readrecord(sfe_womatisd_dev)sfe_womatisd$
 
-rem wgh ... 3310 IF OPSEQ$="NONE" THEN GOTO 3530
-rem wgh ... 3315 IF D[0]-D[2]=0 THEN GOTO 3530
-rem wgh ... 3320 LET V4$="Enter Portion Of Scheduled Production Quantity Issued (<F3>="+STR(D[0]-D[2])+"):"
-rem wgh ... 3325 LET V0$="S",V1$="C",V2$="",V3$="",V0=6,V1=FNV(V4$),V2=22
-rem wgh ... 3330 GOSUB 7000
-rem wgh ... 3335 IF V3=3 THEN LET V$=STR(D[0]-D[2])
-rem wgh ... 3340 LET I=NUM(V$,ERR=3320)
-rem wgh ... 3345 IF I=0 THEN GOTO 3530
-rem wgh ... 3350 IF I<=D[0]-D[2] THEN GOTO 3400
-rem wgh ... 3355 PRINT @(5,22),'RB',"Are You Sure ",I," Is Right?  Only ",D[0]-D[2]," Are In Production? (Y/N): "
-rem wgh ... 3360 LET V0$="Y",V1$="C",V2$="Y",V3$="",V4$="",V0=1,V1=65+LEN(STR(I))+LEN(STR(D[0]-D[2])),V2=22
-rem wgh ... 3365 GOSUB 7000
-rem wgh ... 3370 IF V$="N" THEN GOTO 3315
-rem wgh ... 3400 REM " --- Calculate Quantities     
-rem wgh ... 3410 LET K$=KEY(WOE25_DEV,END=3530)
-rem wgh ... 3420 IF K$(1,11)<>A0$(1,11) THEN GOTO 3530
-rem wgh ... 3430 READ (WOE25_DEV)IOL=WOE25A
-rem wgh ... 3435 DIM C[20]
-rem wgh ... 3440 FIND (IVM02_DEV,KEY=N0$+W1$(19,22),DOM=3450)IOL=IVM02A
-rem wgh ... 3450 IF OPSEQ$="" THEN GOTO 3480
-rem wgh ... 3460 FIND (WOE22_DEV,KEY=N0$+"  "+A0$(5,7)+"B"+W1$(7,3),DOM=3400)IOL=WOE22A
-rem wgh ... 3470 IF MAT1$(47,3)<>OPSEQ$ THEN GOTO 3400
-rem wgh ... 3480 IF D[0]=0 THEN LET D[0]=1
-rem wgh ... 3490 LET W[3]=W[0]*I/D[0],W[4]=C[11]
-rem wgh ... 3500 PRINT @(30,22),"Now Issuing Step ",W0$(12,3)
-rem wgh ... 3510 WRITE (WOE25_DEV,KEY=W0$)IOL=WOE25A
-rem wgh ... 3520 GOTO 3400
+					dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
+					findrecord(sfe_womatl_dev,key=sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$,dom=*next)sfe_womatl$
+					if sfe_womatl.oprtn_int_seq$="" then continue
+
+					rem --- Was this operation selected?
+					if !all_selected then
+						oprtn_selected=0
+						iter!=selected_ops!.keySet().iterator()
+						while iter!.hasNext()
+							op_seq$=iter!.next()
+							if selected_ops!.get(op_seq$)="" then continue
+							if selected_ops!.get(op_seq$)=sfe_womatl.oprtn_int_seq$ then
+								oprtn_selected=1
+								break
+							endif
+						wend
+						if !oprtn_selected then continue
+					endif
+
+					dim ivm_itemwhse$:ivm_itemwhse_tpl$
+					findrecord(ivm_itemwhse_dev,key=firm_id$+sfe_womatisd.warehouse_id$+sfe_womatisd.item_id$,dom=*next)ivm_itemwhse$
+
+					if sfe_womastr.sch_prod_qty=0 then sfe_womastr.sch_prod_qty=1
+					sfe_womatisd.qty_issued=sfe_womatisd.qty_ordered*qty_to_issue/sfe_womastr.sch_prod_qty
+					sfe_womatisd.issue_cost=ivm_itemwhse.unit_cost
+
+					writerecord(sfe_womatisd_dev)sfe_womatisd$
+				wend
+            		endif
 
 		endif
 
-rem wgh ... 3530 READ (WOE25_DEV,KEY=A0$,DOM=3540)
-rem wgh ... 3540 RETURN 
+		sfe_wotrans_dev=fnget_dev("SFE_WOTRANS")
+		dim sfe_wotrans$:fnget_tpl$("SFE_WOTRANS")
+		sfe_wotrans.firm_id$=firm_id$
+		sfe_wotrans.wo_location$=sfe_womatish.wo_location$
+		sfe_wotrans.wo_no$=sfe_womatish.wo_no$
+		writerecord(sfe_wotrans_dev)sfe_wotrans$
 
-rem wgh ... 4170 LET S0$=A0$(1,4)+"D"+A0$(5,7)
-rem wgh ... 4180 WRITE (WOE04_DEV,KEY=S0$)IOL=WOE04D
-
-rem wgh ... reload and display with new detail
-callpoint!.setStatus("RECORD:["+sfe_womatish_key$+"]")
-
+	        rem --- Reload and display with new detail
+	        callpoint!.setStatus("RECORD:["+sfe_womatish_key$+"]")
 	endif
+
+rem wgh ... stopped
+rem wgh ... need to use display mask for qty_to_issue???
+rem wgh ... v6 displays int, but doesn't force int entry
+
+rem wgh ... stopped
+rem wgh ... need to finish ADIS
+rem wgh ... when should issued_date be disabled ???
 
 rem wgh ... 4190 IF O0=0 THEN GOTO 4900 <<<< need to be careful here
 rem wgh ... 4200 REM " --- Check For More Issues"
@@ -227,8 +245,13 @@ verify_wo_status: rem -- Verify WO status
 [[SFE_WOMATISH.BSHO]]
 rem escape; rem wgh ... this is a BATCHED process
 
+rem --- Init Java classes
+
+	use java.util.HashMap
+	use java.util.Iterator
+
 rem --- Open Files
-	num_files=13
+	num_files=14
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="SFS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="IVS_PARAMS",open_opts$[2]="OTA"
@@ -240,15 +263,18 @@ rem --- Open Files
 	open_tables$[8]="SFE_WOMATHDR",open_opts$[8]="OTA"
 	open_tables$[9]="SFE_WOMATDTL",open_opts$[9]="OTA"
 	open_tables$[10]="SFE_WOMATL",open_opts$[10]="OTA"
-	open_tables$[11]="SFC_WOTYPECD",open_opts$[11]="OTA"
-	open_tables$[12]="IVM_ITEMMAST",open_opts$[12]="OTA"
-	open_tables$[13]="IVM_ITEMWHSE",open_opts$[13]="OTA"
+	open_tables$[11]="SFC_OPRTNCOD",open_opts$[11]="OTA"
+	open_tables$[12]="SFC_WOTYPECD",open_opts$[12]="OTA"
+	open_tables$[13]="IVM_ITEMMAST",open_opts$[13]="OTA"
+	open_tables$[14]="IVM_ITEMWHSE",open_opts$[14]="OTA"
 
 	gosub open_tables
 
 	sfs_params_dev=num(open_chans$[1]),sfs_params_tpl$=open_tpls$[1]
 	ivs_params_dev=num(open_chans$[2]),ivs_params_tpl$=open_tpls$[2]
 	sfe_womastr_dev=num(open_chans$[3]),sfe_womastr_tpl$=open_tpls$[3]
+	callpoint!.setDevObject("opcode_dev",num(open_chans$[11]))
+	callpoint!.setDevObject("opcode_tpl",open_tpls$[11])
 
 rem --- Get SF parameters
 	dim sfs_params$:sfs_params_tpl$
@@ -320,11 +346,9 @@ rem wgh ... may not be needed, verify actually used
 
 	gosub open_tables
 
-rem --- Get additional parameters
-	callpoint!.setDevObject("opcode_chan",num(open_chans$[1]))
-	callpoint!.setDevObject("opcode_tpl",open_tpls$[1])
-
 	if bm$="Y" then
+		callpoint!.setDevObject("opcode_dev",num(open_chans$[1]))
+		callpoint!.setDevObject("opcode_tpl",open_tpls$[1])
 rem wgh ... may not be needed, verify actually used
 		bms_params_dev=num(open_chans$[2]),bms_params_tpl$=open_tpls$[2]
 	endif

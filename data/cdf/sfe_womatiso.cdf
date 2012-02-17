@@ -1,5 +1,63 @@
+[[SFE_WOMATISO.BEND]]
+rem --- Clear qty_to_issue and girdOps! if did not push OK button, i.e. hit Cancel or Exit
+
+	if callpoint!.getDevObject("did_asva")<>"y" then
+		callpoint!.setDevObject("qty_to_issue",0)
+
+		selected_ops!=callpoint!.getDevObject("selected_ops")
+		iter!=selected_ops!.keySet().iterator()
+		while iter!.hasNext()
+			op_seq$=iter!.next()
+			selected_ops!.put(op_seq$,"")
+		wend
+		callpoint!.setDevObject("selected_ops",selected_ops!)
+	endif
+[[SFE_WOMATISO.ASVA]]
+rem --- Validate qty_to_issue
+
+	qty_to_issue=num(callpoint!.getColumnData("SFE_WOMATISO.QTY_TO_ISSUE"))
+	gosub validate_qty_to_issue
+	if !issue_qty_ok then
+		callpoint!.setFocus("SFE_WOMATISO.QTY_TO_ISSUE")
+		break
+	endif
+
+	callpoint!.setDevObject("did_asva","y")
+	callpoint!.setStatus("EXIT")
 [[SFE_WOMATISO.QTY_TO_ISSUE.AVAL]]
-rem wgh ... add display field to show how many left to be issued
+rem --- Validate qty_to_issue
+
+	qty_to_issue=num(callpoint!.getUserInput())
+	gosub validate_qty_to_issue
+	if !issue_qty_ok then
+		break
+	endif
+
+	callpoint!.setDevObject("qty_to_issue",qty_to_issue)
+
+rem wgh ... need to use display mask for qty_to_issue???
+rem wgh ... v6 displays int, but doesn't force int entry
+[[SFE_WOMATISO.AREC]]
+rem --- Intialize qty_remain and qty_to_issue fields
+
+	qty_remain=callpoint!.getDevObject("qty_remain")
+	callpoint!.setColumnData("<<DISPLAY>>.QTY_REMAIN",str(qty_remain),1)
+	callpoint!.setColumnData("SFE_WOMATISO.QTY_TO_ISSUE",str(qty_remain),1)
+	callpoint!.setDevObject("qty_to_issue",qty_remain)
+
+rem --- Set flag to capture when OK button is pushed
+
+	callpoint!.setDevObject("did_asva","n")
+[[SFE_WOMATISO.BSHO]]
+rem --- Initialize remaining quantity that can be issued
+
+	sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
+	dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")
+
+	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
+	findrecord(sfe_womastr_dev,key=sfe_womatish_key$,dom=*next)sfe_womastr$
+
+	callpoint!.setDevObject("qty_remain",sfe_womastr.sch_prod_qty-sfe_womastr.qty_cls_todt)
 [[SFE_WOMATISO.ACUS]]
 rem --- Process custom event
 
@@ -12,7 +70,7 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 	gui_event$=SysGUI!.getLastEventString()
 	ctl_ID=dec(gui_event.ID$)
 
-	if ctl_ID <> num(callpoint!.getDevObject("stbl_grid_id")) then break; rem --- exit callpoint
+	if ctl_ID <> num(callpoint!.getDevObject("ops_grid_id")) then break; rem --- exit callpoint
 
 	if gui_event.code$="N"
 		notify_base$=notice(gui_dev,gui_event.x%)
@@ -37,7 +95,6 @@ format_grid: rem --- Format grid
 	dim attr_def_col_str$[0,0]
 	attr_def_col_str$[0,0]=callpoint!.getColumnAttributeTypes()
 
-rem wgh ... where does check mark come from?
 	dim attr_rpts_col$[def_rpts_cols,len(attr_def_col_str$[0,0])/5]
 	attr_rpts_col$[1,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="SELECT"
 	attr_rpts_col$[1,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=""
@@ -45,25 +102,21 @@ rem wgh ... where does check mark come from?
 	attr_rpts_col$[1,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]="1"
 	attr_rpts_col$[1,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="C"
 
-rem wgh ... Seq
-	attr_rpts_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="STBL"
-	attr_rpts_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="STBL"
-	attr_rpts_col$[2,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="100"
+	attr_rpts_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="OP_SEQ"
+	attr_rpts_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_SEQ")
+	attr_rpts_col$[2,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="35"
 
-rem wgh ... Op Code
-	attr_rpts_col$[3,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="STBL_SOURCE"
-	attr_rpts_col$[3,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_SOURCE")
-	attr_rpts_col$[3,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="100"
+	attr_rpts_col$[3,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="OP_CODE"
+	attr_rpts_col$[3,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_OP_CODE")
+	attr_rpts_col$[3,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="40"
 
-rem wgh ... Description
-	attr_rpts_col$[4,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="STBL_TARGET"
-	attr_rpts_col$[4,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_TARGET")
+	attr_rpts_col$[4,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="CODE_DESC"
+	attr_rpts_col$[4,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_DESCRIPTION")
 	attr_rpts_col$[4,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="300"
 
-rem wgh ... Internal Seq Num ... don't display it
 	attr_rpts_col$[5,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="INTERNAL_SEQ_NO"
-	attr_rpts_col$[5,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Internal Seq Num"
-	attr_rpts_col$[5,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="150"
+	attr_rpts_col$[5,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=""
+	attr_rpts_col$[5,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="1"
 
 	for curr_attr=1 to def_rpts_cols
 		attr_rpts_col$[0,1]=attr_rpts_col$[0,1]+pad("OPS."+attr_rpts_col$[curr_attr,
@@ -72,7 +125,7 @@ rem wgh ... Internal Seq Num ... don't display it
 
 	attr_disp_col$=attr_rpts_col$[0,1]
 
-	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridOps!,"COLH-LINES-LIGHT-AUTO-MULTI-SIZEC",num_rpts_rows,
+	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridOps!,"COLH-LINES-LIGHT-AUTO-MULTI-SIZEC-DATES-CHECKS",num_rpts_rows,
 :		attr_def_col_str$[all],attr_disp_col$,attr_rpts_col$[all]
 
 	return
@@ -83,11 +136,14 @@ switch_value: rem --- Switch checkbox values
 	gridOps!=callpoint!.getDevObject("gridOps")
 	TempRows!=gridOps!.getSelectedRows()
 	if TempRows!.size()>0
+		selected_ops!=callpoint!.getDevObject("selected_ops")
 		for curr_row=1 to TempRows!.size()
 			if gridOps!.getCellState(TempRows!.getItem(curr_row-1),0)=0
 				gridOps!.setCellState(TempRows!.getItem(curr_row-1),0,1)
+				selected_ops!.put(gridOps!.getCellText(TempRows!.getItem(curr_row-1),1),gridOps!.getCellText(TempRows!.getItem(curr_row-1),4))
 			else
 				gridOps!.setCellState(num(TempRows!.getItem(curr_row-1)),0,0)
+				selected_ops!.put(gridOps!.getCellText(TempRows!.getItem(curr_row-1),1),"")
 			endif
 		next curr_row
 	endif
@@ -100,51 +156,92 @@ fill_grid: rem --- Fill the grid with data
 
 	sfe_wooprtn_dev=fnget_dev("SFE_WOOPRTN")
 	dim sfe_wooprtn$:fnget_tpl$("SFE_WOOPRTN")
+	opcode_dev=callpoint!.getDevObject("opcode_dev")
+	opcode_tpl$=callpoint!.getDevObject("opcode_tpl")
+	selected_ops!=callpoint!.getDevObject("selected_ops")
 
 	vectRows!=SysGUI!.makeVector()
-rem wgh ... stopped here
-rem wgh ... this needs to be sorted by op_seq
 	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
 	read(sfe_wooprtn_dev,key=sfe_womatish_key$,knum="AO_DISP_SEQ",dom=*next)
 	while 1
 		sfe_wooprtn_key$=key(sfe_wooprtn_dev,knum="AO_DISP_SEQ",end=*break)
 		if pos(sfe_womatish_key$=sfe_wooprtn_key$)<>1 then break
+
 		readrecord(sfe_wooprtn_dev,key=sfe_wooprtn_key$,knum="AO_DISP_SEQ")sfe_wooprtn$
+		if sfe_wooprtn.line_type$="M" then continue
+
+		dim opcode$:opcode_tpl$
+		findrecord(opcode_dev,key=firm_id$+sfe_wooprtn.op_code$,dom=*next)opcode$
 
 		vectRows!.addItem("")
 		vectRows!.addItem(sfe_wooprtn.op_seq$)
 		vectRows!.addItem(sfe_wooprtn.op_code$)
-		vectRows!.addItem(sfe_wooprtn.code_desc$)
+		if cvs(opcode.code_desc$,2)<>"" then
+			vectRows!.addItem(opcode.code_desc$)
+		else
+			vectRows!.addItem(sfe_wooprtn.code_desc$)
+		endif
 		vectRows!.addItem(sfe_wooprtn.internal_seq_no$)
+
+		selected_ops!.put(sfe_wooprtn.op_seq$,"")
 	wend
 
 	SysGUI!.setRepaintEnabled(0)
-	gridStbls!=callpoint!.getDevObject("gridStbls")
+	gridOps!=callpoint!.getDevObject("gridOps")
 	if vectRows!.size()
-		numrow=vectRows!.size()/gridStbls!.getNumColumns()
-		gridStbls!.clearMainGrid()
-		gridStbls!.setNumRows(numrow)
-		gridStbls!.setCellText(0,0,vectRows!)
-		gridStbls!.resort()
-		gridStbls!.setSelectedRow(0)
+		numrow=vectRows!.size()/gridOps!.getNumColumns()
+		gridOps!.clearMainGrid()
+		gridOps!.setNumRows(numrow)
+		gridOps!.setCellText(0,0,vectRows!)
+		gridOps!.resort()
+		gridOps!.setSelectedRow(0)
 	endif
 	SysGUI!.setRepaintEnabled(1)
+
+	return
+
+validate_qty_to_issue: rem --- Validate qty_to_issue
+
+	issue_qty_ok=1
+	qty_remain=callpoint!.getDevObject("qty_remain")
+
+	if qty_to_issue>qty_remain then
+		msg_id$="SF_ISS_QTY_RIGHT"
+		dim msg_tokens$[2]
+		msg_tokens$[1]=str(qty_remain)
+		msg_tokens$[2]=str(qty_to_issue)
+		gosub disp_message
+		if msg_opt$="N" then
+			issue_qty_ok=0
+			callpoint!.setColumnData("SFE_WOMATISO.QTY_TO_ISSUE",str(callpoint!.getDevObject("qty_to_issue")),1)
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
 
 	return
 [[SFE_WOMATISO.AWIN]]
 rem --- Add grid to form for selecting Operations
 
+	use java.util.Iterator
+	use java.util.HashMap
 	use ::ado_util.src::util
 
 	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
-	gridOps!=Form!.addGrid(nxt_ctlID,10,40,500,260); rem --- ID, x, y, width, height
+	gridOps!=Form!.addGrid(nxt_ctlID,10,60,400,200); rem --- ID, x, y, width, height
 	callpoint!.setDevObject("gridOps",gridOps!)
 	callpoint!.setDevObject("ops_grid_id",str(nxt_ctlID))
 
 	gosub format_grid
+	gridOps!.setColumnStyle(0,SysGUI!.GRID_STYLE_UNCHECKED)
+	gridOps!.setColumnEditable(0,1)
 
+	rem --- HashMap to hold internal_seq_no for selected grid rows
+	selected_ops!=new HashMap()
+	callpoint!.setDevObject("selected_ops",selected_ops!)
+
+	gosub fill_grid
 	util.resizeWindow(Form!, SysGui!)
 
-	rem --- set callbacks - processed in ACUS callpoint
+	rem --- Set callbacks - processed in ACUS callpoint
 	gridOps!.setCallback(gridOps!.ON_GRID_KEY_PRESS,"custom_event")		
 	gridOps!.setCallback(gridOps!.ON_GRID_MOUSE_UP,"custom_event")
