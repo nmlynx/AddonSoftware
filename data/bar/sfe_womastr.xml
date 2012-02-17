@@ -19,8 +19,8 @@
 			<DD_EXPORT_DATA id="ddm_tables.sfe_womastr">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.sfe_womastr">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_tables.sfe_womastr">20120216</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.sfe_womastr">20120213</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.sfe_womastr">223504</DD_LSTSYNC_TIME>
+			<DD_LSTSYNC_DATE id="ddm_tables.sfe_womastr">20120216</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.sfe_womastr">225144</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.sfe_womastr">C:/Apps/aon/;/apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_FTYP id="ddm_tables.sfe_womastr">T</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV id="ddm_tables.sfe_womastr">zzzz</DD_ATTR_SLEV>
@@ -132,7 +132,7 @@
 		<RECORD id="ddm_table_tpls.sfe_womastr">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.sfe_womastr">SFE_WOMASTR     </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.sfe_womastr">sfe-01</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.sfe_womastr">firm_id:c(2),wo_location:c(2),wo_no:c(7),wo_type:c(2),wo_category:c(1),wo_status:c(1),customer_id:c(6),order_no:c(7),line_no:c(3),unit_measure:c(2),bill_rev:c(2),warehouse_id:c(2),item_id:c(20),opened_date:c(8),eststt_date:c(8),estcmp_date:c(8),act_st_date:c(8),lstact_date:c(8),closed_date:c(8*),description_01:c(30),description_02:c(30),drawing_no:c(25),drawing_rev:c(5),complete_flg:c(1),recalc_flag:c(1),lotser_item:c(1),priority:c(1),sched_flag:c(1),forecast:c(3),cls_inp_date:c(8),sch_prod_qty:n(7*),qty_cls_todt:n(7*),cls_cst_todt:n(7*),cls_inp_qty:n(7*),closed_cost:n(7*),est_yield:n(5*),op_int_seq_ref:c(12)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.sfe_womastr">firm_id:c(2),wo_location:c(2),wo_no:c(7),wo_type:c(2),wo_category:c(1),wo_status:c(1),customer_id:c(6),order_no:c(7),line_no:c(3),unit_measure:c(2),bill_rev:c(2),warehouse_id:c(2),item_id:c(20),opened_date:c(8),eststt_date:c(8),estcmp_date:c(8),act_st_date:c(8),lstact_date:c(8),closed_date:c(8),description_01:c(30),description_02:c(30),drawing_no:c(25),drawing_rev:c(5),complete_flg:c(1),recalc_flag:c(1),lotser_item:c(1),priority:c(1),sched_flag:c(1),forecast:c(3),cls_inp_date:c(8),sch_prod_qty:n(7*),qty_cls_todt:n(7*),cls_cst_todt:n(7*),cls_inp_qty:n(7*),closed_cost:n(7*),est_yield:n(5*),op_int_seq_ref:c(12)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -160,6 +160,42 @@
 			<DD_KEY_NUMBER id="ddm_keys.sfe_womastr03">03</DD_KEY_NUMBER>
 			<DD_KEY_DESC id="ddm_keys.sfe_womastr03">Warehouse/Item/WO</DD_KEY_DESC>
 			<DD_KEY_ID id="ddm_keys.sfe_womastr03">AO_WH_ITM_LOC_WO</DD_KEY_ID>
+		</RECORD>
+		<RECORD id="ddm_keys.sfe_womastr04">
+			<DD_TABLE_ALIAS id="ddm_keys.sfe_womastr04">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.sfe_womastr04">04</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.sfe_womastr04">Open Date, WO</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.sfe_womastr04">AO_OPEN_DATE    </DD_KEY_ID>
+		</RECORD>
+		<RECORD id="ddm_keys.sfe_womastr05">
+			<DD_TABLE_ALIAS id="ddm_keys.sfe_womastr05">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.sfe_womastr05">05</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.sfe_womastr05">Estimated Start Date, WO</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.sfe_womastr05">AO_ESTSTART_DATE</DD_KEY_ID>
+		</RECORD>
+		<RECORD id="ddm_keys.sfe_womastr06">
+			<DD_TABLE_ALIAS id="ddm_keys.sfe_womastr06">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.sfe_womastr06">06</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.sfe_womastr06">Estimated Complete Date</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.sfe_womastr06">AO_ESTCMPLT_DATE</DD_KEY_ID>
+		</RECORD>
+		<RECORD id="ddm_keys.sfe_womastr07">
+			<DD_TABLE_ALIAS id="ddm_keys.sfe_womastr07">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.sfe_womastr07">07</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.sfe_womastr07">Actual Start Date, WO</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.sfe_womastr07">AO_ACTSTART_DATE</DD_KEY_ID>
+		</RECORD>
+		<RECORD id="ddm_keys.sfe_womastr08">
+			<DD_TABLE_ALIAS id="ddm_keys.sfe_womastr08">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.sfe_womastr08">08</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.sfe_womastr08">Last Active Date, WO</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.sfe_womastr08">AO_LSTACTIVE_DAT</DD_KEY_ID>
+		</RECORD>
+		<RECORD id="ddm_keys.sfe_womastr09">
+			<DD_TABLE_ALIAS id="ddm_keys.sfe_womastr09">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.sfe_womastr09">09</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.sfe_womastr09">Closed Date, WO</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.sfe_womastr09">AO_CLOSED_DATE  </DD_KEY_ID>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_key_segs">
@@ -280,6 +316,294 @@
 			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0305">03</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0305">05</DD_SEGMENT_SEQ>
 			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0305">WO_NO           </DD_SEGMENT_COL>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0401">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0401">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0401">04</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0401">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0401">FIRM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0401">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0401">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0401">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0401">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0401">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0401">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0402">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0402">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0402">04</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0402">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0402">OPENED_DATE</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0402">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0402">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0402">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0402">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0402">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0402">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0403">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0403">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0403">04</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0403">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0403">WO_LOCATION</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0403">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0403">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0403">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0403">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0403">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0403">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0404">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0404">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0404">04</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0404">04</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0404">WO_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0404">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0404">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0404">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0404">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0404">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0404">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0501">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0501">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0501">05</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0501">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0501">FIRM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0501">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0501">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0501">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0501">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0501">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0501">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0502">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0502">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0502">05</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0502">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0502">ESTSTT_DATE</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0502">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0502">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0502">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0502">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0502">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0502">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0503">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0503">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0503">05</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0503">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0503">WO_LOCATION</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0503">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0503">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0503">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0503">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0503">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0503">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0504">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0504">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0504">05</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0504">04</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0504">WO_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0504">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0504">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0504">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0504">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0504">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0504">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0601">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0601">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0601">06</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0601">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0601">FIRM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0601">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0601">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0601">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0601">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0601">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0601">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0602">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0602">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0602">06</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0602">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0602">ESTCMP_DATE</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0602">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0602">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0602">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0602">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0602">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0602">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0603">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0603">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0603">06</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0603">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0603">WO_LOCATION</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0603">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0603">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0603">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0603">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0603">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0603">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0604">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0604">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0604">06</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0604">04</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0604">WO_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0604">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0604">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0604">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0604">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0604">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0604">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0701">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0701">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0701">07</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0701">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0701">FIRM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0701">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0701">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0701">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0701">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0701">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0701">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0702">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0702">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0702">07</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0702">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0702">ACT_ST_DATE</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0702">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0702">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0702">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0702">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0702">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0702">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0703">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0703">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0703">07</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0703">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0703">WO_LOCATION</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0703">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0703">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0703">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0703">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0703">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0703">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0704">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0704">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0704">07</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0704">04</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0704">WO_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0704">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0704">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0704">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0704">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0704">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0704">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0801">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0801">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0801">08</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0801">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0801">FIRM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0801">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0801">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0801">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0801">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0801">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0801">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0802">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0802">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0802">08</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0802">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0802">LSTACT_DATE</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0802">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0802">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0802">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0802">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0802">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0802">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0803">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0803">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0803">08</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0803">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0803">WO_LOCATION</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0803">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0803">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0803">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0803">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0803">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0803">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0804">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0804">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0804">08</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0804">04</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0804">WO_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0804">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0804">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0804">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0804">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0804">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0804">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0901">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0901">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0901">09</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0901">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0901">FIRM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0901">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0901">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0901">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0901">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0901">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0901">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0902">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0902">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0902">09</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0902">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0902">CLOSED_DATE</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0902">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0902">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0902">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0902">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0902">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0902">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0903">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0903">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0903">09</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0903">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0903">WO_LOCATION</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0903">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0903">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0903">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0903">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0903">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0903">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_womastr0904">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womastr0904">SFE_WOMASTR     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womastr0904">09</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womastr0904">04</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womastr0904">WO_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womastr0904">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womastr0904">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womastr0904">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_womastr0904">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_womastr0904">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_womastr0904">N</DD_SEGMENT_MATH>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cols">
@@ -597,7 +921,7 @@
 			<DD_DVAR_NAME id="ddm_table_cols.sfe_womastr019">CLOSED_DATE     </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.sfe_womastr019">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_womastr019">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.sfe_womastr019">Y</DD_FIELD_DELIM>
+			<DD_FIELD_DELIM id="ddm_table_cols.sfe_womastr019">N</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_womastr019">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_womastr019">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womastr019">20060119</DD_LSTREV_DATE>
@@ -895,6 +1219,7 @@
 			<DD_ATTR_MLAN id="ddm_table_cols.sfe_womastr036">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womastr036">0</DD_ATTR_MAXL>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_womastr036">21</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womastr036">SEQ_REF_LIST</SQL_COLUMN_NAME>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_cmts">
