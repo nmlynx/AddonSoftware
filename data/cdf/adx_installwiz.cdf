@@ -26,6 +26,13 @@ rem -- Validate new firm ID with demo data
 rem -- Validate new firm ID with demo data
 
 	firm_id$=callpoint!.getUserInput()
+
+	rem --- Update status of checkboxes (work around for Barista bug 5616)
+	copy! = callpoint!.getControl("ADX_INSTALLWIZ.COPY_DATA")
+	callpoint!.setColumnData("ADX_INSTALLWIZ.COPY_DATA",str(copy!.isSelected()))
+	help! = callpoint!.getControl("ADX_INSTALLWIZ.APP_HELP")
+	callpoint!.setColumnData("ADX_INSTALLWIZ.APP_HELP",str(help!.isSelected()))
+
 	copy_data=num(callpoint!.getColumnData("ADX_INSTALLWIZ.COPY_DATA"))
 	focus$="ADX_INSTALLWIZ.NEW_FIRM_ID"
 	gosub validate_firm_id
@@ -160,6 +167,12 @@ rem --- Validate directory for aon new install location
 	if abort then break
 
 rem -- Validate new firm ID with demo data
+
+	rem --- Update status of checkboxes (work around for Barista bug 5616)
+	copy! = callpoint!.getControl("ADX_INSTALLWIZ.COPY_DATA")
+	callpoint!.setColumnData("ADX_INSTALLWIZ.COPY_DATA",str(copy!.isSelected()))
+	help! = callpoint!.getControl("ADX_INSTALLWIZ.APP_HELP")
+	callpoint!.setColumnData("ADX_INSTALLWIZ.APP_HELP",str(help!.isSelected()))
 
 	firm_id$=callpoint!.getColumnData("ADX_INSTALLWIZ.NEW_FIRM_ID")
 	copy_data=num(callpoint!.getColumnData("ADX_INSTALLWIZ.COPY_DATA"))
