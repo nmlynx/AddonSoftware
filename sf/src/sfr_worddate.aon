@@ -104,23 +104,6 @@ rem        call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMASTR","PRIMARY",
 
 done: rem --- Overlay
 
-rem --- Now Sort It...
-
-rem        call pgmdir$+"adc_progress.aon","N","","","","",0,sfe01_dev,1,meter_num,status
-rem        k$=firm_id$+"  "+wofrom$
-rem        flag=0
-rem        read record (sfe01_dev,key=k$,dom=*next) sfe01a$
-rem        dim sfe01a_key$:sfe01a_key_pritpl$
-rem        while more
-rem            if flag= 1 then
-rem                sfe01a_key$=key(sfe01_dev,end=*break)
-rem                if pos(firm_id$=sfe01a_key$)<>1 then break
-rem                if wothru$<>"" then if sfe01a_key.wo_no$>wothru$ then break
-rem                read record (sfe01_dev,key=sfe01a_key$) sfe01a$
-rem            endif
-rem            flag=1
-rem            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-rem            if sfe01a.wo_status$="C" then sfe01a.estcmp_date$=sfe01a.closed_date$
 	if dateseq$="O" then 
 		k_name$="AO_OPEN_DATE"
 	else 
@@ -143,53 +126,34 @@ rem            if sfe01a.wo_status$="C" then sfe01a.estcmp_date$=sfe01a.closed_d
 		endif
 	endif
 
-rem        if datefrom$<>"" and d$<datefrom$ then continue
-rem        if datethru$<>"" and d$>datethru$ then continue
-rem        if wofrom$<>"" and sfe01a.wo_no$<wofrom$ then continue
-rem        if wothru$<>"" and sfe01a.wo_no$>wothru$ then continue
-rem        if sfe01a.wo_status$="P" and pos("P"=wostatus$)=0 then continue
-rem        if sfe01a.wo_status$="Q" and pos("Q"=wostatus$)=0 then continue
-rem        if sfe01a.wo_status$="O" and pos("O"=wostatus$)=0 then continue
-rem        if sfe01a.wo_status$="C" and pos("C"=wostatus$)=0 then continue
-rem        sort$=sfe01a_key.firm_id$+d$+sfe01a_key.wo_location$+sfe01a_key.wo_no$
-rem        if cvs(sfe01a_key.firm_id$,3)="" then continue
-rem        sfw04a.firm_id$=sfe01a_key.firm_id$
-rem        sfw04a.select_date$=d$
-rem        sfw04a.wo_location$=sfe01a_key.wo_location$
-rem        sfw04a.wo_no$=sfe01a_key.wo_no$
-rem        sfw04a$=field(sfw04a$)
-rem        write record (sfw04a_dev,key=sort$) sfw04a$
-
-rem    wend
-
 	if dateseq$="O" then 
-		h9$="Date Opened" 
+		h9$=Translator!.getTranslation("Date_Opened") 
 	else 
 		if dateseq$="S" then 
-			h9$="Estimated Start Date" 
+			h9$=Translator!.getTranslation("Estimated_Start_Date") 
 		else 
 			if dateseq$="C" then 
-				h9$="Estimated Complete Date" 
+				h9$=Translator!.getTranslation("Estimated_Complete_Date") 
 			else 
 				if dateseq$="A" then 
-					h9$="Actual Start Date" 
+					h9$=Translator!.getTranslation("Actual_Start_Date") 
 				else 
 					if dateseq$="L" then 
-						h9$="Last Activity Date" 
+						h9$=Translator!.getTranslation("Last_Activity_Date") 
 					else 
-						if dateseq$="X" then let h9$="Closed Date"
+						if dateseq$="X" then let h9$=Translator!.getTranslation("Closed_Date")
 					endif
 				endif
 			endif
 		endif
 	endif
-	h9$=h9$+" Sequence Selected"
-	h8$="From: "
-	if datefrom$="" then let h8$=h8$+"The First Date" else let h8$=h8$+fndate$(datefrom$)
-	h8$=h8$+" Through: "
-	if datethru$="" then let h8$=h8$+"The Last Date" else let h8$=h8$+fndate$(datethru$)
-	if wofrom$="" then let h7$="From W.O.#: First" else let h7$="From W.O.#: "+wofrom$
-	if wothru$="" then let h7$=h7$+" To W.O.#: Last" else let h7$=h7$+" To W.O.#: "+wothru$
+	h9$=h9$+Translator!.getTranslation("_Sequence_Selected")
+	h8$=Translator!.getTranslation("From:_")
+	if datefrom$="" then let h8$=h8$+Translator!.getTranslation("The_First_Date") else let h8$=h8$+fndate$(datefrom$)
+	h8$=h8$+Translator!.getTranslation("_Through:_")
+	if datethru$="" then let h8$=h8$+Translator!.getTranslation("The_Last_Date") else let h8$=h8$+fndate$(datethru$)
+	if wofrom$="" then let h7$=Translator!.getTranslation("From_W.O.#:_First") else let h7$=Translator!.getTranslation("From_W.O.#:_")+wofrom$
+	if wothru$="" then let h7$=h7$+Translator!.getTranslation("_To_W.O.#:_Last") else let h7$=h7$+Translator!.getTranslation("_To_W.O.#:_")+wothru$
 
     run pgmdir$+"sfr_worddate_o1.aon"
 
