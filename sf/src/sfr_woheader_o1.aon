@@ -142,6 +142,11 @@ rem --- Main Read
 			read (sfe01a_dev)
 			continue
 		endif
+
+		if sequence$="B" and (cvs(key_tpl.item_id$,2))="" then
+			read (sfe01a_dev)
+			continue
+		endif
         
 		if sequence$<>"W" then 
             if sequence$="T" data1$=key_tpl.wo_type$
@@ -240,9 +245,9 @@ done: rem --- End
         if sequence$<>"W" then gosub sub_total
         xwk=fnblank(13)
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
-        xwk=fnblank(5)
+        xwk=fnblank(6)
         OutVect!.addItem("Grand Total: ")
-        xwk=fnblank(2)
+        xwk=fnblank(1)
         OutVect!.addItem(str(u[1]))
         xwk=fnblank(4)
         goto std_exit
