@@ -270,7 +270,7 @@ process_work_order: rem --- Process Work Order
 
 rem --- Calc Standards - Operations
 
-        read (sfe02_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$+"A",dom=*next)
+        read (sfe02_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
 
         dim sfe02a_key$:sfe02_key_tpl$
         while more
@@ -301,12 +301,11 @@ rem --- Calc Standards - Materials
 
         totsmat=0
         read (sfe22_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
-
         dim sfe22a_key$:sfe22_key_tpl$
         while more
-            sfe22_key$=key(sfe22_dev,end=*break)
-            if pos((sfe22a.firm_id$+sfe22a.wo_location$+sfe22a.wo_no$)=(sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$))<>1 then break
-            read record (sfe22_dev,key=sfe22_key$) sfe22a$
+            sfe22a_key$=key(sfe22_dev,end=*break)
+            if pos((sfe22a_key.firm_id$+sfe22a_key.wo_location$+sfe22a_key.wo_no$)=(sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$))<>1 then break
+            read record (sfe22_dev,key=sfe22a_key$) sfe22a$
             if sfe22a.line_type$<>"S" then continue
             totsmat=totsmat+sfe22a.total_cost
         wend
@@ -339,6 +338,7 @@ rem --- Print
         break_flag=0
 
 print_unit_info: rem --- Print Unit Information
+
         if how$<>"U" or break_flag=1 then
             if how$<>"D" or break_flag=1 then
                 ldate$="00/00/00"
