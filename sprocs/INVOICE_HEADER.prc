@@ -77,12 +77,12 @@ rem url$="jdbc:basis:localhost?DATABASE=S1000&SSL=false&USER=admin&PASSWORD=admi
 
 data! = rs!.getEmptyRecordData()
 
-data!.setFieldValue("LOGO",html_path$+"own\images\emaillogo.jpg")
+data!.setFieldValue("LOGO","D:/usr2/s1000/store/html/own/images/emaillogo.jpg")
 
-sql$ = "SELECT SHPMETH_COSTS FROM STO_ORDHDR WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND ORDER_NO='" + order_no$ + "'"
+sql$ = "SELECT FREIGHT_AMT FROM OPE_ORDHDR WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND ORDER_NO='" + order_no$ + "'"
 sqlRs! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
 sqlRd! = sqlRs!.getCurrentRecordData()
-express = num(sqlRd!.getFieldValue("SHPMETH_COSTS"))
+express = num(sqlRd!.getFieldValue("FREIGHT_AMT"))
 data!.setFieldValue("EXPRESS", str(express))
 
 sub_total=0
@@ -285,35 +285,14 @@ if shipto_type$="S" then
     countryId$ = cvs(sqlRd!.getFieldValue("CNTRY_ID"),3)
 endif
 
-international=0
-if countryId$<>storeCountryId$ then
-    sql$="SELECT SHIPCOSTS FROM STO_COUNTRY WHERE LANGUAGE_ID='" + storeCountryId$ + "' AND COUNTRY_ID='" + countryId$ + "'"
-    sqlRs! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
-    sqlRd! = sqlRs!.getCurrentRecordData()
-    international=num(sqlRd!.getFieldValue("SHIPCOSTS"))
-endif
-data!.setFieldValue("INTERNATIONAL", str(international))
+
 
 rem Calculates Total Due
 total = sub_total + num(data!.getFieldValue("VAT_01")) + num(data!.getFieldValue("VAT_02")) - num(data!.getFieldValue("DISCOUNT")) + num(data!.getFieldValue("FREIGHT")) + express + international
 
 data!.setFieldValue("TOTAL", str(total))
 
-sql$="SELECT MESSAGE_TEXT FROM OPC_MSG_DET WHERE FIRM_ID='" + firm_id$ + "' AND MESSAGE_CODE='" + message_code$ + "'"
-sqlRs! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
 
-message$ = ""
-if !(sqlRs!.isEmpty()) then
-    num_line = sqlRs!.getRecordCount()
-    for i=1 to num_line-1
-        sqlRd! = sqlRs!.getCurrentRecordData()
-        message$ = message$ + sqlRd!.getFieldValue("MESSAGE_TEXT") + $0D$
-        sqlRs!.next()
-    next i
-    sqlRd! = sqlRs!.getCurrentRecordData()
-    message$ = message$ + sqlRd!.getFieldValue("MESSAGE_TEXT") + $0D$
-endif
-data!.setFieldValue("MESSAGE", message$)
 
 rs!.insert(data!)
 

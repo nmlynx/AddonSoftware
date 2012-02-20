@@ -85,7 +85,7 @@ message_code$=sqlRd!.getFieldValue("MESSAGE_CODE")
 slspsn_code$=sqlRd!.getFieldValue("SLSPSN_CODE")
 terms_code$=sqlRd!.getFieldValue("TERMS_CODE")
 
-url2$="jdbc:basis:localhost?DATABASE=storeadmin&SSL=false&USER=admin&PASSWORD=admin123"
+url2$="jdbc:basis:localhost?DATABASE=ADMIN_STORE&SSL=false&USER=admin&PASSWORD=admin123"
 
 sql$="SELECT NAME, ADDR_LINE_1, ADDR_LINE_2, ZIP_CODE, CITY, PHONE, FAX, EMAIL, WEBSITE, CNTRY_ID FROM STA_STOREMASTER WHERE MASTER_ID='"+store_master_id$+"'"
 sqlRs! = BBJAPI().createSQLRecordSet(url2$,mode$,sql$)
@@ -169,32 +169,6 @@ endif
 data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), cvs(sqlRd!.getFieldValue("ZIP_CODE"),3)+" "+cvs(sqlRd!.getFieldValue("CITY"),3))
 countryId$ = cvs(sqlRd!.getFieldValue("COUNTRY"),3)
 
-rem Get Ship To address from Manual Ship To table
-if shipto_type$="M" then
-    sql$="SELECT CUSTOMER_ID, CUSTOMER_NAME, ADDR_LINE_1, ADDR_LINE_2, ADDR_LINE_3, CITY, ZIP_CODE, CNTRY_ID FROM OPE_ORDSHIP WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND ORDER_NO'"+ order_no$ +"'"
-    sqlRs! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
-    sqlRd! = sqlRs!.getCurrentRecordData()
-
-    i=1
-    if cvs(sqlRd!.getFieldValue("CUSTOMER_NAME"),3)<>"" then
-        data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), sqlRd!.getFieldValue("CUSTOMER_NAME"))
-        i=i+1
-    endif
-    if cvs(sqlRd!.getFieldValue("ADDR_LINE_1"),3)<>"" then
-        data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), sqlRd!.getFieldValue("ADDR_LINE_1"))
-        i=i+1
-    endif
-    if cvs(sqlRd!.getFieldValue("ADDR_LINE_2"),3)<>"" then
-        data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), sqlRd!.getFieldValue("ADDR_LINE_2"))
-        i=i+1
-    endif
-    if cvs(sqlRd!.getFieldValue("ADDR_LINE_3"),3)<>"" then
-        data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), sqlRd!.getFieldValue("ADDR_LINE_3"))
-        i=i+1
-    endif
-    data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), cvs(sqlRd!.getFieldValue("ZIP_CODE"),3)+" "+cvs(sqlRd!.getFieldValue("CITY"),3))
-    countryId$ = cvs(sqlRd!.getFieldValue("CNTRY_ID"),3)
-endif
 
 rem Get Ship To address from Customer Ship To table
 if shipto_type$="S" then
