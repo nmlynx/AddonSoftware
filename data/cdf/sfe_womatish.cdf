@@ -1,3 +1,8 @@
+[[SFE_WOMATISH.AREC]]
+rem --- Init no existing materials issues
+	wotrans=0
+	callpoint!.setDevObject("wotrans",wotrans)
+	
 [[SFE_WOMATISH.ADIS]]
 rem --- Init <<DISPLAY>> fields
 	sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
@@ -14,14 +19,9 @@ rem --- Existing materials issues?
 	sfe_wotrans_dev=fnget_dev("SFE_WOTRANS")
 	sfe_wotrans_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMATISH.WO_NO")
 	find(sfe_wotrans_dev,key=sfe_wotrans_key$,dom=*next); wotrans=1
+	callpoint!.setDevObject("wotrans",wotrans)
 
-rem wgh ... stopped
-	if wotrans then
-rem wgh ... O9$ affects 4100 processing in issue_date aval at 4150
-rem wgh ... 1320 LET O9$="1" ... this is like callpoint!.getRecordMode()<>"A"
-	else
-rem wgh ... O9$ affects 4100 processing in issue_date aval at 4150
-rem wgh ... O9$="0" ... this is like callpoint!.getRecordMode()="A"
+	if !wotrans then
 		rem --- Materials already commited?
 		wocommit=0
 		sfe_wocommit_dev=fnget_dev("SFE_WOCOMMIT")
@@ -42,8 +42,8 @@ rem --- When GL installed, verify date is in an open period.
 		break
 	endif
 
-rem --- New materials issues entry
-	if callpoint!.getRecordMode()="A" then
+rem --- New materials issues entry or no existing materials issues
+		if callpoint!.getRecordMode()="A" or !callpoint!.getDevObject("wotrans") then
 
 		rem --- Write SFE_WOMATISH and SFE_WOMATISD so can be reloaded to display new detail in grid
 		sfe_womatish_dev=fnget_dev("SFE_WOMATISH")
@@ -191,23 +191,6 @@ rem --- New materials issues entry
 	        rem --- Reload and display with new detail
 	        callpoint!.setStatus("RECORD:["+sfe_womatish_key$+"]")
 	endif
-
-rem wgh ... stopped
-rem wgh ... need to use display mask for qty_to_issue???
-rem wgh ... v6 displays int, but doesn't force int entry
-
-rem wgh ... stopped
-rem wgh ... need to finish ADIS
-rem wgh ... when should issued_date be disabled ???
-
-rem wgh ... 4190 IF O0=0 THEN GOTO 4900 <<<< need to be careful here
-rem wgh ... 4200 REM " --- Check For More Issues"
-rem wgh ... 4210 GOSUB 6100
-rem wgh ... 4220 IF ISS$<>"Y" THEN GOTO 4900
-rem wgh ... 4230 GOSUB 6000
-rem wgh ... 4240 IF OPSEQ$="NONE" THEN GOTO 4900
-rem wgh ... 4250 GOSUB 3400
-rem wgh ... 4900 RUN "WOE.DB"
 [[SFE_WOMATISH.ISSUED_DATE.BINP]]
 rem -- Verify WO status
 	gosub verify_wo_status

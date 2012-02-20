@@ -35,8 +35,6 @@ rem --- Validate qty_to_issue
 
 	callpoint!.setDevObject("qty_to_issue",qty_to_issue)
 
-rem wgh ... need to use display mask for qty_to_issue???
-rem wgh ... v6 displays int, but doesn't force int entry
 [[SFE_WOMATISO.AREC]]
 rem --- Intialize qty_remain and qty_to_issue fields
 
