@@ -35,7 +35,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Init Data
 
-    dim dashes$(m9,"-"),h9$(m1*2+m2,"-"),h7$(m1*2+m2),r[7],s[7],t[7],u[7],a[5]
+    dim dashes$(m9,"-"),h9$(m1*2+m2,"-"),h7$(m1*2+m2),r[7],s[7],t[7],u[7]
 
     if category$="IRN" then
         h3$="All Categories"
@@ -87,8 +87,8 @@ rem --- Retrieve key templates
 rem --- Headings and print positions
 
       
-    dim columns$[11,10]
-    columns = 11
+    dim columns$[12,10]
+    columns = 12
     columns$[0,0]="WO #",                           columns$[0,1]="C",columns$[0,2]="25"
     columns$[1,0]="Type",                           columns$[1,1]="C",columns$[1,2]="6"
     columns$[2,0]="Begin^Date",                     columns$[2,1]="C",columns$[2,2]="8"
@@ -100,8 +100,8 @@ rem --- Headings and print positions
     columns$[8,0]="Direct^Total",                   columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m1$,columns$[8,10]="T"
     columns$[9,0]="Overhead^Total",                 columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=m1$,columns$[9,10]="T"
     columns$[10,0]="Labor^Hours^Vnce",              columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m2$,columns$[10,10]="T"
-    columns$[11,0]="Efficiency^Variance^Percent",   columns$[11,1]="C",columns$[11,2]="12"
-    
+    columns$[11,0]="Efficiency^Variance^Percent",   columns$[11,1]="C",columns$[11,2]="10"
+    columns$[12,0]="Stat",							columns$[12,1]="C",columns$[12,2]="4"
 rem --- Background
 
     call pgmdir$+"adc_progress.aon","N","","","","",0,sfw05a_dev,1,meter_num,status
@@ -156,24 +156,28 @@ label1: rem --- PRINT
 
         if sfe01a.cls_cst_todt<>0 then 
             if sfe01a.wo_status$="C" then 
-                OutVect!.addItem(str(variance:"#####.00%")+" *Cmp*")         
+                OutVect!.addItem(str(variance:"#####.00%")+$00$+"R")
+				OutVect!.addItem("*Cmp*")
             else 
-                OutVect!.addItem(""+"*Cmp*")         
+                OutVect!.addItem("")
+				OutVect!.addItem("*Cmp*")
             endif
         else 
             if sfe01a.wo_status$="C" then 
-                OutVect!.addItem("*Cmp*"+"********")         
+                OutVect!.addItem("********"+$00$+"R")
+				OutVect!.addItem("")
             else 
-                OutVect!.addItem(""+"********")         
+                OutVect!.addItem("********"+$00$+"R")
+				OutVect!.addItem("")
             endif
         endif
 
         if sfe01a.wo_category$<>"I" then 
             OutVect!.addItem(sfe01a.description_01$)  
-            blank=fnblank(11)
+            blank=fnblank(12)
         else
             OutVect!.addItem(ivm01a.item_desc$)  
-            blank=fnblank(11)
+            blank=fnblank(12)
         endif
         l=l+2
         l0=l0+1,l1=l1+1,l2=l2+1
@@ -182,10 +186,10 @@ label1: rem --- PRINT
         xtotal$=total_field$(pos("std_hrs"=cvs(total_field$,8)))
         while xtotal$<>""
            total_field$=xtotal$(1,pos($0A$=xtotal$)-1)
-           r[x]=r[x]+num(FIELD(sfw05a$,total_field$))
-           s[x]=s[x]+num(FIELD(sfw05a$,total_field$))
-           t[x]=t[x]+num(FIELD(sfw05a$,total_field$))
-           u[x]=u[x]+num(FIELD(sfw05a$,total_field$))
+           r[x]=r[x]+num(field(sfw05a$,total_field$))
+           s[x]=s[x]+num(field(sfw05a$,total_field$))
+           t[x]=t[x]+num(field(sfw05a$,total_field$))
+           u[x]=u[x]+num(field(sfw05a$,total_field$))
            xtotal$=xtotal$(pos($0A$=xtotal$)+1)
            x=x+1
         wend
@@ -201,7 +205,7 @@ done: rem --- End
         u[6]=0
     endif
 
-    blank=fnblank(12)
+    blank=fnblank(13)
     TotVect!.addItem(str(OutVect!.size()/(columns+1)))
     OutVect!.addItem("Report Total: ")
     blank=fnblank(3)
@@ -212,7 +216,8 @@ done: rem --- End
     OutVect!.addItem(str(u[4]))
     OutVect!.addItem(str(u[5]))
     OutVect!.addItem(str(u[0]-u[3]))
-    OutVect!.addItem(str(u[6]:"#######.00%"))
+    OutVect!.addItem(str(u[6]:"#######.00%")+$00$+"R")
+	OutVect!.addItem("")
 
 rem --- All Done!!
 
@@ -221,16 +226,16 @@ rem --- All Done!!
 sub_head: rem --- Sub Heading
 
     l=l+3
-    blank=fnblank(12)
+    blank=fnblank(13)
     OutVect!.addItem("Operation: "+t1$+"  "+opdesc$)
-    blank=fnblank(11)
     blank=fnblank(12)
+    blank=fnblank(13)
     return
 
 label2: rem --- Sub/Sub Heading
 
     OutVect!.addItem("WO Type: " + t2$+"  "+typedesc$)
-    blank=fnblank(11)
+    blank=fnblank(12)
     l=l+1
     return
 
@@ -243,7 +248,7 @@ rem --- W/O Op Code Subtotals Here
         if l+2>l9 then gosub sub_head
         if t[3]<>0 then t[6]=t[0]*100/t[3] else t[6]=0
 
-        blank=fnblank(12)
+        blank=fnblank(13)
         TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         OutVect!.addItem("Department: "+t0$)
         OutVect!.addItem("Totals: ")
@@ -255,7 +260,8 @@ rem --- W/O Op Code Subtotals Here
         OutVect!.addItem(str(t[4]))
         OutVect!.addItem(str(t[5]))
         OutVect!.addItem(str(t[0]-t[3]))
-        OutVect!.addItem(str(t[6]))
+        OutVect!.addItem(str(t[6])+$00$+"R")
+		OutVect!.addItem("")
         l=l+2
     endif
 
@@ -277,7 +283,7 @@ op_code_subtot: rem --- Op Codes Subtotals Here
         if l1>1 then
             if s[3]<>0 then s[6]=s[0]*100/s[3] else s[6]=0
 
-            blank=fnblank(12)
+            blank=fnblank(13)
             TotVect!.addItem(str(OutVect!.size()/(columns+1)))
             OutVect!.addItem("Op Code: "+t1$+" Totals: ")
             blank=fnblank(3)
@@ -288,8 +294,9 @@ op_code_subtot: rem --- Op Codes Subtotals Here
             OutVect!.addItem(str(s[4]))
             OutVect!.addItem(str(s[5]))
             OutVect!.addItem(str(s[0]-s[3]))
-            OutVect!.addItem(str(s[6]:"#######.00%"))
-            blank=fnblank(12)
+            OutVect!.addItem(str(s[6]:"#######.00%")+$00$+"R")
+			OutVect!.addItem("")
+            blank=fnblank(13)
             l=l+2
         endif 
         l1=0
@@ -318,7 +325,7 @@ wo_type_code:  rem --- W/O Type Codes Here
 
             if r[3]<>0 then r[6]=r[0]*100/r[3] else r[6]=0
 
-            blank=fnblank(12)
+            blank=fnblank(13)
             TotVect!.addItem(str(OutVect!.size()/(columns+1)))
             OutVect!.addItem("WO Type: "+t2$+" Totals: ")
             blank=fnblank(3)
@@ -329,8 +336,9 @@ wo_type_code:  rem --- W/O Type Codes Here
             OutVect!.addItem(str(r[4]))
             OutVect!.addItem(str(r[5]))
             OutVect!.addItem(str(r[0]-r[3]))
-            OutVect!.addItem(str(r[6]:"#######.00%"))
-            blank=fnblank(12)
+            OutVect!.addItem(str(r[6]:"#######.00%")+$00$+"R")
+			OutVect!.addItem("")
+            blank=fnblank(13)
             l=l+3
         endif 
         l2=0
@@ -478,6 +486,7 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+	out_action$="FORMAT"
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
