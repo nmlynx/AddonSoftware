@@ -174,7 +174,7 @@ rem --- Include It This Time
         if wotype$="Y" then 
             sfw05a.wo_type$=cvs(sfe01a.wo_type$,3)
         endif
-rem        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
         
 rem --- Standards Here
         read (sfe02_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
@@ -203,7 +203,7 @@ rem --- Actuals Here
             if datethru$<>"" then 
                 if trans_key.trans_date$>datethru$ then break
             endif
-rem            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
+            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
             read record (trans_dev,key=trans_key$) wot0103a$
             sfw05a.op_code$=wot0103a.op_code$
             find record (sfw05a_dev,key=sfw05a.firm_id$+sfw05a.op_code$+sfw05a.wo_type$+sfw05a.wo_no$,dom=*next) sfw05a$
@@ -226,8 +226,6 @@ rem --- Done..
 rem --- All Done
 
     run pgmdir$+"sfr_labeffanarep_o1.aon"
-    
-
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
