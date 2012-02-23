@@ -159,6 +159,7 @@ rem --- Main Read
         check_status:
 			accum_cost=0
             read record (sfe01a_dev,key=key_tpl$,knum=keynum$,dom=*continue) sfe01a$
+			
             if closedate$<>"" and sfe01a.opened_date$>closedate$ then continue
             if pos("P"=option$)<=0 or sfe01a.wo_status$<>"P"
                 if pos("Q"=option$)<=0 or sfe01a.wo_status$<>"Q"
