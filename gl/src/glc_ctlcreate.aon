@@ -170,7 +170,6 @@ rem --- Remaining initializations
         if module$="IV" dim rec$:fattr(ivs01a$);param_dev=ivs01_dev
         if module$="PR" dim rec$:fattr(prs01a$);param_dev=prs01_dev
         if module$="SF" dim rec$:fattr(sfs01a$);param_dev=sfs01_dev
-        if cvs(rec$,2)="" break
         k$=firm_id$+module$+"00"
         find record (param_dev,key=k$,dom=*break) rec$
         period$=rec.current_per$
