@@ -1,4 +1,4 @@
-[[SFR_WOVARIANCE.BSHO]]
+[[SFR_CLSDWOVAR.BSHO]]
 rem --- will open and read shop floor param to see if BOM and/or OP are installed
 rem --- then will build list for the report sequence listbutton accordingly
 
@@ -14,13 +14,13 @@ readrecord(sfs01_dev,key=firm_id$+"SF00",dom=std_missing_params)sfs01a$
 bm$=sfs01a.bm_interface$
 op$=sfs01a.ar_interface$
 
-seq_list$=callpoint!.getTableColumnAttribute("SFR_WOVARIANCE.REPORT_SEQ","LDAT")
+seq_list$=callpoint!.getTableColumnAttribute("SFR_CLSDWOVAR.REPORT_SEQ","LDAT")
 desc_len=pos("~"=seq_list$)
 code_len=pos(";"=seq_list$)
 bill_no$=""
 cust_no$=""
 
-listID=num(callpoint!.getTableColumnAttribute("SFR_WOVARIANCE.REPORT_SEQ","CTLI"))
+listID=num(callpoint!.getTableColumnAttribute("SFR_CLSDWOVAR.REPORT_SEQ","CTLI"))
 list!=Form!.getControl(listID)
 
 if bm$="Y"
@@ -42,6 +42,6 @@ if op$="Y"
 endif
 
 seq_list$=seq_list$+bill_no$+cust_no$
-callpoint!.setTableColumnAttribute("SFR_WOVARIANCE.REPORT_SEQ","LDAT",seq_list$)
-[[SFR_WOVARIANCE.<CUSTOM>]]
+callpoint!.setTableColumnAttribute("SFR_CLSDWOVAR.REPORT_SEQ","LDAT",seq_list$)
+[[SFR_CLSDWOVAR.<CUSTOM>]]
 #include std_missing_params.src
