@@ -67,7 +67,7 @@ rem --- Retrieve key templates
                 dim key_tpl$:sfe01c_key_alt03$
                 beginning$=billfrom$
                 ending$=billthru$
-                begin_key$=firm_id$+whse$+beging$
+                begin_key$=firm_id$+whse$+beginning$
                 keynum$="AO_WH_ITM_LOC_WO"
                 break
             case 3; rem -- report_sequence$="C"    
@@ -75,7 +75,7 @@ rem --- Retrieve key templates
                 dim key_tpl$:sfe01b_key_alt02$
                 beginning$=custfrom$
                 ending$=custthru$
-                begin_key$=firm_id$+beging$
+                begin_key$=firm_id$+beginning$
                 keynum$="AO_CST_ORD_LINE"
                 break
             case 4; rem -- report_sequence$="T"    
@@ -83,7 +83,7 @@ rem --- Retrieve key templates
                 dim key_tpl$:sfe01a_key_alt01$
                 beginning$=wotfrom$
                 ending$=wotthru$
-                begin_key$=firm_id$+beging$
+                begin_key$=firm_id$+beginning$
                 keynum$="AO_TYP_LOC_WO"
                 break
          swend
@@ -476,10 +476,18 @@ rem ------- Summary Totals
             xwk = fnblank(4)
             OutVect!.addItem("Per Unit:")
             xwk = fnblank(2)
-            OutVect!.addItem(str(totslab/cqty:m9$))
+			if cqty=0
+				OutVect!.addItem("")
+			else
+				OutVect!.addItem(str(totslab/cqty:m9$))
+			endif
             xwk = fnblank(1)
-            OutVect!.addItem(str(totalab/cqty:m9$))
-            OutVect!.addItem(str((totslab-totalab)/cqty:m6$))
+			if cqty=0
+				xwk=fnblank(2)
+			else
+				OutVect!.addItem(str(totalab/cqty:m9$))
+				OutVect!.addItem(str((totslab-totalab)/cqty:m6$))
+			endif
             xwk = fnblank(1)
 
             xwk = fnblank(4)
@@ -499,10 +507,18 @@ rem ------- Summary Totals
             xwk = fnblank(4)
             OutVect!.addItem("Per Unit:")
             xwk = fnblank(2)
-            OutVect!.addItem(str(totsmat/cqty:m9$))
+			if cqty=0
+				OutVect!.addItem("")
+			else
+				OutVect!.addItem(str(totsmat/cqty:m9$))
+			endif
             xwk = fnblank(1)
-            OutVect!.addItem(str(totamat/cqty:m9$))
-            OutVect!.addItem(str((totsmat-totamat)/cqty:m6$))
+			if cqty=0
+				xwk=fnblank(2)
+			else
+				OutVect!.addItem(str(totamat/cqty:m9$))
+				OutVect!.addItem(str((totsmat-totamat)/cqty:m6$))
+			endif
             xwk = fnblank(1)
 
             xwk = fnblank(12)
@@ -517,16 +533,30 @@ rem ------- Summary Totals
 
             if totslab+totsmat<>0 then 
                 OutVect!.addItem(str(((totslab+totsmat)-(totalab+totamat))*100/(totslab+totsmat):m6$))
+			else
+				OutVect!.addItem("")
             endif
 
             xwk = fnblank(4)
             OutVect!.addItem("Per Unit Totals:")
             xwk = fnblank(2)
-            OutVect!.addItem(str((totslab+totsmat)/cqty:m9$))
+			if cqty=0
+				OutVect!.addItem("")
+			else
+				OutVect!.addItem(str((totslab+totsmat)/cqty:m9$))
+			endif
             xwk = fnblank(1)
-            OutVect!.addItem(str((totalab+totamat)/cqty:m9$))
-            OutVect!.addItem(str(((totslab+totsmat)-(totalab+totamat))/cqty:m6$))
-            OutVect!.addItem(str((((totslab+totsmat)/cqty)-((totalab+totamat)/cqty))*100/((totslab+totsmat)/cqty):m6$))
+			if cqty=0
+				xwk=fnblank(2)
+			else
+				OutVect!.addItem(str((totalab+totamat)/cqty:m9$))
+				OutVect!.addItem(str(((totslab+totsmat)-(totalab+totamat))/cqty:m6$))
+			endif
+			if (totslab+totsmat)=0 or cqty=0
+				OutVect!.addItem("")
+			else
+				OutVect!.addItem(str((((totslab+totsmat)/cqty)-((totalab+totamat)/cqty))*100/((totslab+totsmat)/cqty):m6$))
+			endif
             xwk = fnblank(12)
 
             totslab=0
