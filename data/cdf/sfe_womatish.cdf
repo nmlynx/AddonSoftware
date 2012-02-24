@@ -1,3 +1,103 @@
+[[SFE_WOMATISH.WO_NO.AVAL]]
+rem --- Hold on to sfe_womatish key
+
+	wo_no$=callpoint!.getUserInput()
+	sfe_womatish_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+wo_no$
+	callpoint!.setDevObject("sfe_womatish_key",sfe_womatish_key$)
+[[SFE_WOMATISH.BDEQ]]
+rem --- Suppress Barista's default delete message
+
+	callpoint!.setStatus("QUIET")
+[[SFE_WOMATISH.BDEL]]
+rem --- Retain commitment on delete?
+	msg_id$="SF_DELETE_ISSUE"
+	gosub disp_message
+	if msg_opt$="C" then
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+	del_issue_only$=msg_opt$
+	callpoint!.setDevObject("del_issue_only",msg_opt$)
+
+rem --- Initialize inventory item update
+	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+rem --- Delete inventory issues and commitments. Must do this before sfe_womatisd records are removed.
+	sfe_womatisd_dev=fnget_dev("SFE_WOMATISD")
+	dim sfe_womatisd$:fnget_tpl$("SFE_WOMATISD")
+	sfe_womatdtl_dev=fnget_dev("SFE_WOMATDTL")
+	dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
+	sfe_wolsissu_dev=fnget_dev("SFE_WOLSISSU")
+	dim sfe_wolsissu$:fnget_tpl$("SFE_WOLSISSU")
+
+	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
+	read(sfe_womatisd_dev,key=sfe_womatish_key$,dom=*next)
+	while 1
+		sfe_womatisd_key$=key(sfe_womatisd_dev,end=*break)
+		if pos(sfe_womatish_key$=sfe_womatisd_key$)<>1 then break
+		readrecord(sfe_womatisd_dev)sfe_womatisd$
+
+		rem --- Delete lot/serial commitments, but keep inventory commitments (for now)
+		if pos(callpoint!.getDevObject("lotser")="LS") then
+			read(sfe_wolsissu_dev,key=sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$,dom=*next)
+			while 1
+				sfe_wolsissu_key$=key(sfe_wolsissu_dev,end=*break)
+				if pos(sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$=sfe_wolsissu_key$)<>1 then break
+				readrecord(sfe_wolsissu_dev)sfe_wolsissu$
+
+				rem --- Delete lot/serial commitments
+				items$[1]=sfe_womatisd.warehouse_id$
+				items$[2]=sfe_womatisd.item_id$
+				items$[3]=sfe_wolsissu.lotser_no$
+				refs[0]=sfe_wolsissu.qty_issued
+				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+				rem --- Keep inventory commitments (for now)
+				items$[3]=" "
+				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+				remove(sfe_wolsissu_dev,key=sfe_wolsissu_key$)
+			wend
+rem wgh ... test lot/serial uncommit ... use item 300 (serialized and inventoried)
+		endif
+
+		rem --- Delete inventory commitments if not being retained
+		if del_issue_only$="N" then
+			items$[1]=sfe_womatisd.warehouse_id$
+			items$[2]=sfe_womatisd.item_id$
+			refs[0]=sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss
+			call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+			found=0
+			sfe_womatdtl_key$=sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$
+			readrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next)sfe_womatdtl$; found=1
+			if found then
+				sfe_womatdtl.qty_ordered=0
+				writerecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$)sfe_womatdtl$
+			endif
+		endif
+	wend
+[[SFE_WOMATISH.ADEL]]
+rem ---  Delete work order transactions
+
+	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
+
+	rem --- Delete work order issues transactions
+	remove(fnget_dev("SFE_WOTRANS"),key=sfe_womatish_key$,dom=*next)
+
+
+	rem --- Delete work order commit transactions if not being retained
+	if callpoint!.getDevObject("del_issue_only")="N" then
+		remove(fnget_dev("SFE_WOCOMMIT"),key=sfe_womatish_key$,dom=*next)
+	endif
+[[SFE_WOMATISH.BEND]]
+rem --- Remove software lock on batch when batching
+
+rem escape; rem wgh ... this is a BATCHED process
+[[SFE_WOMATISH.BTBL]]
+rem --- Get Batch information when batching
+
+rem escape; rem wgh ... this is a BATCHED process
 [[SFE_WOMATISH.AREC]]
 rem --- Init no existing materials issues
 	wotrans=0
@@ -13,6 +113,10 @@ rem --- Init <<DISPLAY>> fields
 	callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_01",sfe_womastr.description_01$,1)
 	callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_02",sfe_womastr.description_02$,1)
 	callpoint!.setColumnData("<<DISPLAY>>.WO_STATUS",sfe_womastr.wo_status$,1)
+
+rem --- Hold on to the Warehouse ID and Issued Date
+	callpoint!.setDevObject("warehouse_id",callpoint!.getColumnData("SFE_WOMATISH.WAREHOUSE_ID"))
+	callpoint!.setDevObject("issued_date",callpoint!.getColumnData("SFE_WOMATISH.ISSUED_DATE"))
 
 rem --- Existing materials issues?
 	wotrans=0
@@ -41,9 +145,11 @@ rem --- When GL installed, verify date is in an open period.
 		if status>99 then callpoint!.setStatus("ABORT")
 		break
 	endif
+	callpoint!.setDevObject("issued_date",issue_date$)
+
 
 rem --- New materials issues entry or no existing materials issues
-		if callpoint!.getRecordMode()="A" or !callpoint!.getDevObject("wotrans") then
+	if callpoint!.getRecordMode()="A" or !callpoint!.getDevObject("wotrans") then
 
 		rem --- Write SFE_WOMATISH and SFE_WOMATISD so can be reloaded to display new detail in grid
 		sfe_womatish_dev=fnget_dev("SFE_WOMATISH")
@@ -58,7 +164,7 @@ rem --- New materials issues entry or no existing materials issues
 		sfe_womatish.item_id$=callpoint!.getColumnData("SFE_WOMATISH.ITEM_ID")
 		sfe_womatish.issued_date$=callpoint!.getColumnData("SFE_WOMATISH.ISSUED_DATE")
 
-		sfe_womatish_key$=sfe_womatish.firm_id$+sfe_womatish.wo_location$+sfe_womatish.wo_no$
+		sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
 		callpoint!.setDevObject("sfe_womatish_key",sfe_womatish_key$)
 		writerecord(sfe_womatish_dev)sfe_womatish$
 
@@ -195,14 +301,6 @@ rem --- New materials issues entry or no existing materials issues
 rem -- Verify WO status
 	gosub verify_wo_status
 	if bad_wo then break
-
-rem --- Default issued_date to today
-	if callpoint!.getColumnData("SFE_WOMATISH.ISSUED_DATE")="" then
-		dim sysinfo$:stbl("+SYSINFO_TPL")
-		sysinfo$=stbl("+SYSINFO")
-		callpoint!.setColumnData("SFE_WOMATISH.ISSUED_DATE",sysinfo.system_date$,1)
-		callpoint!.setStatus("MODIFIED")
-	endif
 [[SFE_WOMATISH.<CUSTOM>]]
 #include std_missing_params.src
 
@@ -226,8 +324,6 @@ verify_wo_status: rem -- Verify WO status
 
 	return
 [[SFE_WOMATISH.BSHO]]
-rem escape; rem wgh ... this is a BATCHED process
-
 rem --- Init Java classes
 
 	use java.util.HashMap
@@ -321,7 +417,7 @@ rem wgh ... may not be needed, verify actually used
 rem wgh ... may not be needed, verify actually used
 		open_tables$[4]="POS_PARAMS",open_opts$[4]="OTA"
 	endif
-	if lotser$="Y" then
+	if pos(lotser$="LS") then
 		open_tables$[5]="SFE_WOLSISSU",open_opts$[5]="OTA"
 		open_tables$[6]="IVM_LSMASTER",open_opts$[6]="OTA"
 		open_tables$[7]="IVM_LSACT",open_opts$[7]="OTA"
@@ -346,7 +442,7 @@ rem wgh ... may not be needed, verify actually used
 		pos_params_dev=num(open_chans$[4]),pos_params_tpl$=open_tpls$[4]
 	endif
 
-	if lotser$="Y" then
+	if pos(lotser$="LS") then
 		sfe_wolsissu_dev=num(open_chans$[5]),sfe_wolsissu_tpl$=open_tpls$[5]
 		ivm_lsmaster_dev=num(open_chans$[6]),ivm_lsmaster_tpl$=open_tpls$[6]
 		ivm_lsact_dev=num(open_chans$[7]),ivm_lsact_tpl$=open_tpls$[7]
@@ -367,3 +463,13 @@ rem --- Init new Materials Issues Entry record
 	callpoint!.setColumnData("SFE_WOMATISH.WAREHOUSE_ID",sfe_womastr.warehouse_id$,1)
 	callpoint!.setColumnData("SFE_WOMATISH.UNIT_MEASURE",sfe_womastr.unit_measure$,1)
 	callpoint!.setColumnData("SFE_WOMATISH.ISSUED_DATE","",1)
+
+	rem --- Default issued_date to today
+	dim sysinfo$:stbl("+SYSINFO_TPL")
+	sysinfo$=stbl("+SYSINFO")
+	callpoint!.setColumnData("SFE_WOMATISH.ISSUED_DATE",sysinfo.system_date$,1)
+	callpoint!.setStatus("MODIFIED")
+
+rem --- Hold on to the Warehouse ID and Issued Date
+	callpoint!.setDevObject("warehouse_id",sfe_womastr.warehouse_id$)
+	callpoint!.setDevObject("issued_date",sysinfo.system_date$)
