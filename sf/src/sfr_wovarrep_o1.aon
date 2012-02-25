@@ -37,6 +37,7 @@ rem --- retrieve masks
         call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,m1
         call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","U","",m2$,0,m2
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","R","",m3$,0,m3
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",c1$,0,custmask
         m4$="#,###,##0.00"
 
 rem --- Check & Adjust Masks
@@ -66,6 +67,8 @@ rem --- Init Data
         more=1
         flag=0
 
+		dim standards[5]; rem v6 used a[] implying a non-existant relation to sfe-01, so changed here
+		dim actuals[5]; rem v6 used a[] implying a non-existant relation to sfe-01, so changed here
 
 rem --- Column Headings 
  
@@ -90,7 +93,7 @@ rem --- Column Headings
 
 rem --- Background
 
-            call pgmdir$+"adc_progress.aon","N","","","","",0,sfe01a_dev,1,meter_num,status
+rem escape caj UNREM!!            call pgmdir$+"adc_progress.aon","N","","","","",0,sfe01a_dev,1,meter_num,status
            
 rem --- Init Read
 
@@ -100,6 +103,9 @@ rem --- Init Read
 main: rem --- Main Read
 
     while more
+
+		dim standards[5]; rem v6 used a[] implying a non-existant relation to sfe-01, so changed here
+		dim actuals[5]; rem v6 used a[] implying a non-existant relation to sfe-01, so changed here
 
         if (!flag)
             key_tpl$=key(sfe01a_dev,knum=keynum$,end=done)
@@ -135,6 +141,11 @@ reset_flg:
 
         flag=0
         read record (sfe01a_dev,key=key_tpl$,knum=keynum$,dom=*continue) sfe01a$
+		
+		rem --- assign a[8] to standards[]
+		actuals[]=sfe01a.cls_cst_todt
+		
+		
         if pos(sfe01a.wo_status$="PQ")>0 then continue
         if sfe01a.wo_category$="I"
             find record (ivm01a_dev,key=firm_id$+sfe01a.item_id$,dom=label2) ivm01a$
@@ -147,35 +158,35 @@ label2:
         if wostatus$="O" and sfe01a.wo_status$="C" and closedate$="" then continue
         if wostatus$="O" and sfe01a.wo_status$="C" and sfe01a.closed_date$<=closedate$ then continue
         if wostatus$="C" and sfe01a.closed_date$>closedate$ then continue
-        if sfe01a.wo_status$="C" then sfe01a.dealer_num_02=0
+        if sfe01a.wo_status$="C" then sfe01a.cls_cst_todt=0
         if closedate$<>"" then 
-            if sfe01a.closed_date$>closedate$ then sfe01a.dealer_num_02=0
+            if sfe01a.closed_date$>closedate$ then sfe01a.cls_cst_todt=0
         endif
 
 rem --- Calculate Standards
-
+escape; rem caj step thru
         sfreq_dev=sfe02a_dev
         dim sfreq_key$:sfe02a_key_tpl$
-        dim sfreqa$:templates$[8]
+        dim sfreqa$:sfe02_tpls$
         record_id$="A"
         while more
             read (sfreq_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
-            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+rem escape caj UNREM!!            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
             while more
                 sfreq_key$=key(sfreq_dev,end=*break)
                 if sfreq_key.firm_id$+sfreq_key.wo_location$+sfreq_key.wo_no$<>sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$ then break
                 read record (sfreq_dev) sfreqa$
                 action=pos(record_id$="ABC")
                 switch action
-                    case 1
+                    case 1; REM processing sfe02
                         sfe01a.cls_cst_todt=sfe01a.cls_cst_todt+sfreqa.total_time
                         sfe01a.cls_inp_qty=sfe01a.cls_inp_qty+sfreqa.total_time*sfreqa.direct_rate
                         rate=rate+sfreqa.tot_std_cost-sfreqa.total_time*sfreqa.direct_rate
                         break
-                    case 2
+                    case 2; REM processing sfe22
                         sfe01a.closed_cost=sfe01a.closed_cost+sfreqa.total_cost
                         break
-                    case 3
+                    case 3; REM processing sfe32
                         sfe01a.est_yield=sfe01a.est_yield+sfreqa.total_cost
                         break
                     case default
@@ -186,13 +197,13 @@ rem --- Calculate Standards
             if sfreq_dev=sfe02a_dev
                sfreq_dev=sfe22a_dev 
                dim sfreq_key$:sfe22a_key_tpl$
-               dim sfreqa$:templates$[9]
+               dim sfreqa$:sfe22_tpls$
                record_id$="B"
             else
                 if sfreq_dev=sfe22a_dev 
                    sfreq_dev=sfe32a_dev
                    dim sfreq_key$:sfe32a_key_tpl$
-                   dim sfreqa$:templates$[10]
+                   dim sfreqa$:sfe32_tpls$
                    record_id$="C"
                 else
                    break
@@ -224,28 +235,28 @@ rem --- Calculate Actuals
         while more
 
             if sftran_dev=sft01a_dev then 
-                dim sftran$:templates$[13] 
-                dim sftran_key$:templates$[13] 
+                dim sftran$:sft01_tpls$ 
+                dim sftran_key$:sft01a_key_tpl$ 
             else 
                 if sftran_dev=sft03a_dev then 
-                    dim sftran$:templates$[14] 
-                    dim sftran_key$:templates$[14] 
+                    dim sftran$:sft03_tpls$ 
+                    dim sftran_key$:sft03a_key_tpl$ 
                 else     
                     if sftran_dev=sft21a_dev then 
-                        dim sftran$:templates$[15] 
-                        dim sftran_key$:templates$[15] 
+                        dim sftran$:sft21_tpls$ 
+                        dim sftran_key$:sft21a_key_tpl$ 
                     else     
                         if sftran_dev=sft23a_dev then 
-                            dim sftran$:templates$[16] 
-                            dim sftran_key$:templates$[16] 
+                            dim sftran$:sft23_tpls$ 
+                            dim sftran_key$:sft23a_key_tpl$ 
                         else    
                             if sftran_dev=sft31a_dev then 
-                                dim sftran$:templates$[17] 
-                                dim sftran_key$:templates$[17] 
+                                dim sftran$:sft31_tpls$ 
+                                dim sftran_key$:sft31a_key_tpl$ 
                             else 
                                 if sftran_dec=sft33a_dev then 
-                                    dim sftran$:templates$[18] 
-                                    dim sftran_key$:templates$[18] 
+                                    dim sftran$:sft33_tpls$ 
+                                    dim sftran_key$:sft33a_key_tpl$ 
                                 endif
                             endif
                         endif
@@ -267,16 +278,16 @@ rem --- Calculate Actuals
 
                 switch pos(record_id1$="OMS")
                     case 1
-                        sfe01a.reserved_num=sfe01a.reserved_num+sftran.units
+rem escape caj                        sfe01a.reserved_num=sfe01a.reserved_num+sftran.units
                         x=(sftran.units+sftran.setup_time)*sftran.direct_rate
-                        sfe01a.reserved_num_02=sfe01a.reserved_num_02+x
+rem escape caj                        sfe01a.reserved_num_02=sfe01a.reserved_num_02+x
                         extra_cost=extra_cost+sftran.ext_cost-x
                         break
                     case 2
-                        sfe01a.dealer_num_01=sfe01a.dealer_num_01+sftran.ext_cost
+rem escape caj                        sfe01a.dealer_num_01=sfe01a.dealer_num_01+sftran.ext_cost
                         break
                     case 3
-                        sfe01a.dealer_num_02=sfe01a.dealer_num_02+sftran.ext_cost
+rem escape caj                        sfe01a.dealer_num_02=sfe01a.dealer_num_02+sftran.ext_cost
                         break
                     case default
                 swend
@@ -300,8 +311,8 @@ rem --- Calculate Actuals
 
 rem --- Calc Totals, Variance, Etc.
 
-        a0=sfe01a.cls_inp_qty+sfe01a.closed_cost+ sfe01a.est_yield+rate
-        a1=sfe01a.reserved_num_02+sfe01a.dealer_num_01+sfe01a.dealer_num_02+extra_cost
+rem escape caj        a0=sfe01a.cls_inp_qty+sfe01a.closed_cost+ sfe01a.est_yield+rate
+rem escape caj        a1=sfe01a.reserved_num_02+sfe01a.dealer_num_01+sfe01a.dealer_num_02+extra_cost
         a2=a0-a1
         if a0<>0 then 
             a3=(a0-a1)*100/a0 
@@ -338,27 +349,41 @@ rem --- Print
         OutVect!.addItem(str(sfe01a.closed_cost))
         OutVect!.addItem(str(sfe01a.est_yield))
         OutVect!.addItem(str(a0))
-        OutVect!.addItem(str(sfe01a.reserved_num))
-        OutVect!.addItem(str(sfe01a.reserved_num_02))
+rem escape caj        OutVect!.addItem(str(sfe01a.reserved_num))
+        OutVect!.addItem(str(sfe01a.cls_cst_todt))
         OutVect!.addItem(str(extra_cost))
-        OutVect!.addItem(str(sfe01a.dealer_num_01))
-        OutVect!.addItem(str(sfe01a.dealer_num_02))
+rem escape caj        OutVect!.addItem(str(sfe01a.dealer_num_01))
+        OutVect!.addItem(str(sfe01a.cls_cst_todt))
         OutVect!.addItem(str(a1))
         OutVect!.addItem(str(a2))
         OutVect!.addItem(str(a3$))
        
-        if sfe01a.dealer_num_03<>0 then 
+        if sfe01a.cls_cst_todt<>0 then 
             blank=fnblank(12)
             OutVect!.addItem("Closed: ")
-            OutVect!.addItem(str(-sfe01a.dealer_num_03))
+            OutVect!.addItem(str(-sfe01a.cls_cst_todt))
             blank=fnblank(2)
             blank=fnblank(12)
             OutVect!.addItem("Net Open: ")
-            OutVect!.addItem(str(a1-sfe01a.dealer_num_03))
+            OutVect!.addItem(str(a1-sfe01a.cls_cst_todt))
             blank=fnblank(2)
             
         endif
-        
+
+escape; rem caj SFW02 assigns/write  FIX THE REMs
+REM --- T[0] = Tot Closed Cost to-Date
+REM --- T[1] = Tot Closed    
+  
+rem --- a[0] = Tot Time Required in Hrs                 W[2]
+rem --- a[1] = Tot Time Required in Hrs * Direct Rate   W[2]*W[6]
+rem --- a[2] = Tot Std Cost                             W[3]??
+rem --- a[3] = 
+rem --- a[4] =
+rem --- a[5] =
+rem --- a[6] =
+rem --- a[7] =
+rem --- a[8] = Closed cost to date
+   
         l0=l0+1
         dim b[10] 
         sfw02a.firm_id$=sfe01a.firm_id$
@@ -383,6 +408,16 @@ rem --- Print
         t[x]=t[x]+extra_cost
         u[x]=u[x]+extra_cost
         b[x]=b[x]+extra_cost
+		
+		sfw02a.std_hrs=accum_std_hrs
+		sfw02a.std_ops_tot=accum_std_ops
+		sfw02a.std_mat_tot=accum_std_mat
+		sfw02a.std_sub_tot=accum_std_sub
+		sfw02a.actual_hrs=accum_act_hrs
+		sfw02a.act_ops_tot=accum_act_ops
+		sfw02a.act_mat_tot=accum_act_mat
+		sfw02a.act_sub_tot=accum_act_sub
+		
         write record (sfw02a_dev,key=sfw02a.firm_id$+sfw02a.wo_location$+sfw02a.wo_type$) sfw02a$
 
    wend

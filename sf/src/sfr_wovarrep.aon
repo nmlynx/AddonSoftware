@@ -65,10 +65,10 @@ rem  		open_tables$[16]="IVC_WHSECODE",open_opts$[16] = "OTA"; rem "ivm-10c"
         sft31a_dev = num(open_chans$[14])
         sft33a_dev = num(open_chans$[15])
 rem 		ivm10c_dev = num(open_chans$[16])
-		sfe02_dev = num(open_chans$[17])
-		sfe22_dev = num(open_chans$[18])
-		sfe32_dev = num(open_chans$[19])
-		sfw02_dev = num(open_chans$[20])
+		sfe02a_dev = num(open_chans$[17])
+		sfe22a_dev = num(open_chans$[18])
+		sfe32a_dev = num(open_chans$[19])
+		sfw02a_dev = num(open_chans$[20])
 
 rem --- Clear the work file
 
@@ -139,7 +139,7 @@ rem --- Parameters
         if op$<>"N"
             find record (ars01a_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
             c0=num(ars01a.customer_size$)
-            c1=len(ars01a.customer_input$)
+
         endif
 
         g0=num(gls01a.acct_length$)
