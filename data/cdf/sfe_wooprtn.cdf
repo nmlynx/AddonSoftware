@@ -59,6 +59,15 @@ rem --- Calculate totals
 	setup=num(callpoint!.getUserInput())
 	gosub calc_totals
 [[SFE_WOOPRTN.PCS_PER_HOUR.AVAL]]
+rem --- Check for valid quantity
+
+	if num(callpoint!.getUserInput())=0
+		msg_id$="VALUE_GT_ZERO"
+		gosub disp_message
+		callpoint!.setColumnData("SFE_WOOPRTN.PCS_PER_HOUR","1",1)
+		callpoint!.setFocus(callpoint!.getValidationRow(),"SFE_WOOPRTN.PCS_PER_HOUR")
+	endif
+
 rem --- Calculate totals
 
 	hrs_per_pc=num(callpoint!.getColumnData("SFE_WOOPRTN.HRS_PER_PCE"))
