@@ -78,7 +78,7 @@ rem --- Query ddm_elements table to get elements of the desired types
     next i
     sqlclose(sql_chan)
     
-rem --- The DAYS_IN_MTH element type requires special handling for leap and non-leap years
+rem --- The DAYS_IN_MTH element type requires special handling for leap and non-leap years.
 rem --- NOTE: The DAYS_IN_MTH processing is skipped unless the table includes both year and month. 
 
     declare HashMap daysInMth_map!
@@ -288,11 +288,11 @@ rem			endif
             table_dev = num(open_chans$[1])
             dim table_tpl$:open_tpls$[1]
 
-            rem --- Does template include DAYS_IN_MTH?
-            hasDaysInMth=iff(pos("days_in_mth"=cvs(open_tpls$[1],8)),1,0)
-
             rem --- Does template include MONTH?
             hasMonth=iff(pos("month"=cvs(open_tpls$[1],8)),1,0)
+
+            rem --- Does template include DAYS_IN_MTH element type?
+            hasDaysInMth=iff(daysInMth_map!.containsKey(filename$),1,0)
             
             rem --- Log progress
             meter_text$=cvs(dataName$,3)+": "+cvs(tableAlias$,3)+"."+cvs(dvarName$,3)
@@ -329,6 +329,7 @@ rem			endif
                                 newDate$=str(yyyy+incYr)+oldDate$(5)
                                 
                                 rem --- If present, adjust DAYS_IN_MTH for February
+                                rem --- Assumes only one YYYYMM and one DAYS_IN_MTH element in record.
                                 if hasDaysInMth and oldDate$(5,2)="02" then
                                     rem --- Get number of days in February this year
                                     daysInFeb=iff(gCalendar!.isLeapYear(yyyy+incYr),29,28)
@@ -345,6 +346,7 @@ rem			endif
                                 newDate$=str(yyyy+incYr)
                                 
                                 rem --- If present, adjust DAYS_IN_MTH for February
+                                rem --- Assumes only one MONTH and one DAYS_IN_MTH element in record.
                                 if hasDaysInMth and hasMonth and table_tpl.month$="02" then
                                     rem --- Get number of days in February this year
                                     daysInFeb=iff(gCalendar!.isLeapYear(yyyy+incYr),29,28)
