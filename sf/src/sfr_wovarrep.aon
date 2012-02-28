@@ -114,7 +114,7 @@ rem --- Assign form input values to local variables
         wostatus$=""
         if wo_open$="Y" then wostatus$=wostatus$+"O"
         if wo_closed$="Y" then wostatus$=wostatus$+"C"
-        variance$=Option!.getOptionData("min_variance")
+        min_variance=num(Option!.getOptionData("min_variance"))
         includecost$=Option!.getOptionData("inc_cost_ovrun")
 
 rem --- Retrieve parameter records
