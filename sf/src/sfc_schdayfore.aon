@@ -29,7 +29,7 @@ rem --- : OPCODE$ : Template of sfm-02 or bmm-08
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
-    status$="03"
+    status$="00"
 
 rem --- Retrieve sysinfo data
 
@@ -41,34 +41,35 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=9,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ivs_params",ids$[1]="IVS_PARAMS"
-    files$[3]="pom-01",ids$[3]="POM_CALENDAR"
-    files$[4]="sfe-02",ids$[4]="SFE_WOOPRTN"
-    files$[5]="sfe-01",ids$[5]="SFE_WOMASTR"
-    files$[6]="sfe-32",ids$[6]="SFE_WOSUBCNT"
-    files$[7]="sfm-04",ids$[7]="SFM_OPCALNDR"
-    files$[8]="sfm-05",ids$[8]="SFE_WOSCHDL"
-    files$[9]="sfs_params",ids$[9]="SFS_PARAMS"
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
+    num_files=9
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
+    open_tables$[3]="POM_CALENDAR",open_opts$[3]="OTA"
+    open_tables$[4]="SFE_WOOPRTN",open_opts$[4]="OTA"
+    open_tables$[5]="SFE_WOMASTR",open_opts$[5]="OTA"
+    open_tables$[6]="SFE_WOSUBCNT",open_opts$[6]="OTA"
+    open_tables$[7]="SFM_OPCALNDR",open_opts$[7]="OTA"
+    open_tables$[8]="SFE_WOSCHDL",open_opts$[8]="OTA"
+    open_tables$[9]="SFS_PARAMS",open_opts$[9]="OTA"
+    
+	gosub open_tables
+	
     if status goto std_exit
-    ivs01a_dev=channels[1]
-    pom01_dev=channels[3]
-    sfe02_dev=channels[4]
-    sfe03_dev=channels[5]
-    sfe32_dev=channels[6]
-    sfm04_dev=channels[7]
-    sfm05_dev=channels[8]
-    sfs01a_dev=channels[9]
+    ivs01a_dev=num(open_chans$[1])
+    pom01_dev=num(open_chans$[3])
+    sfe02_dev=num(open_chans$[4])
+    sfe03_dev=num(open_chans$[5])
+    sfe32_dev=num(open_chans$[6])
+    sfm04_dev=num(open_chans$[7])
+    sfm05_dev=num(open_chans$[8])
+    sfs01a_dev=num(open_chans$[9])
 
 rem --- Dimension string templates
 
-    dim ivs01a$:templates$[1],pom01a$:templates$[3],
-:       sfe02a$:templates$[4],sfe03d$:templates$[5],sfe32a$:templates$[6],
-:       sfm04a$:templates$[7],sfm05a$:templates$[8],
-:       sfs01a$:templates$[9]
+    dim ivs01a$:open_tpls$[1],pom01a$:open_tpls$[3]
+	dim sfe02a$:open_tpls$[4],sfe03d$:open_tpls$[5],sfe32a$:open_tpls$[6]
+	dim	sfm04a$:open_tpls$[7],sfm05a$:open_tpls$[8]
+	dim	sfs01a$:open_tpls$[9]
 
 	dim opcode$:opcode$
 	
@@ -87,16 +88,14 @@ rem --- Init Data
     v$=v0$
     pass=1
     orig_date$=v0$
-    endif
     if method$="B" then end_date$=orig_date$
     more=1
 
 rem --- Retrieve key templates
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOSUBCNT","PRIMARY",sfe32a_key_tpl$,rd_table_chans$[all],status1$
+    
     call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOOPRTN","PRIMARY",sfe02a_key_tpl$,rd_table_chans$[all],status1$
 rem --- Fix Data
 
-    dim sfe32a_key$:sfe32a_key_tpl$
     dim sfe02a_key$:sfe02a_key_tpl$
     dim daystat$[31]
 
@@ -121,8 +120,8 @@ rem --- Clear Schedule Detail Files
         while more
 			read (sfm05_dev,key=firm_id$+wo_num$,knum="AON_WONUM",dom=*next)
 			read record (sfm05_dev,end=*break) sfm05a$
-            if pos(firm_id$+wo_num$=sfm05a$)<>1 then break
-            remove (sfm05_dev,key=sfm05a.firm_id$+sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+sfm05a.op_seq$)
+            if pos(firm_id$+wo_num$=sfm05a.firm_id$+sfm05a.wo_no$)<>1 then break
+            remove (sfm05_dev,key=sfm05a.firm_id$+sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+sfm05a.internal_seq_no$)
         wend
 
 rem --- Capture Subcontract Lead Time information
@@ -199,9 +198,8 @@ rem --- Get Operation record from woe-02
         if direction$="F" then 
             read (sfe02_dev,key=firm_id$+"  "+wo_num$,dom=*next)
         else
-            read (sfe02_dev,key=firm_id$+"  "+wo_num$+"B",dom=*next)
+            read (sfe02_dev,key=firm_id$+"  "+wo_num$+$ff$,dom=*next)
         endif
-
 
 rem --- Read Loop
 
@@ -217,8 +215,8 @@ rem --- Read Loop
                 sfe02a_key$=keyp(sfe02_dev,end=*break)
             endif
             if pos(firm_id$+"  "+wo_num$=sfe02a_key$)<>1 then break
-            record_id_field$=field(sfe02a_key$,xfield_record_id$,err=*break); rem value of record_id_* field
-            if record_id_field$<>"A" then break
+rem jpb          record_id_field$=field(sfe02a_key$,xfield_record_id$,err=*break); rem value of record_id_* field
+rem jpb           if record_id_field$<>"A" then break
             gosub read_back
 
             if sfe02a.line_type$<>"M"
@@ -351,6 +349,7 @@ rem --- Rewrite Subcontract records with operation sequences
             endif
         endif
 done: rem --- Done - Successful
+
         if len(v1$)=0 then v1$=v0$
 
         if direction$="B" then 
@@ -499,7 +498,6 @@ purdate_not_scehduled: rem --- Purchase Date Not Scheduled
 
 calc_fut_date: rem --- Calculate Future Date
 
-
     f_yr=num(v$(1,4))
     f_mth=num(v$(5,2))
     f_day=num(v$(7,2))
@@ -550,8 +548,7 @@ calc_fut_date_2:
                 used_hrs=0
                 first_time$="N"
             next x
-            if(break_flag)
-                break
+            if(break_flag) break
             f_mth=f_mth+1
             f_day=1
             if f_mth>12 then 
@@ -559,6 +556,7 @@ calc_fut_date_2:
                 f_mth=1
             endif
         wend
+
         if(break_flag)
             break_flag=0
             status$(2,1)="1"
@@ -571,6 +569,7 @@ rem --- Do Subcontracts
     break_flag=0
     if !(sfs01a.po_interface$<>"Y" or ele<>3)
         while more
+
             leadpos=pos(sfe02a_key.op_seq$=subs$,15,occ)
 
             if leadpos<>0
@@ -595,8 +594,7 @@ rem --- Do Subcontracts
                     endif
                 wend
                 
-                if(break_flag)
-                    break
+                if(break_flag) break
 rem --- Save Date for Subcontracts and try again
 
                 subs$(leadpos+9,6)=str(f_mth:"00")+str(f_day:"00")+str(f_yr)
@@ -637,13 +635,43 @@ wrt_scheduled_detail_files: rem --- Write Schedule Detail Files
         next i
     endif
     sfm05_ele_field$=xsfm05$(1,pos($0a$=xsfm05$)-1)
-    FIELD sfm05a$,sfm05_ele_field$=num(field(sfm05a$,sfm05_ele_field$))+z
+    field sfm05a$,sfm05_ele_field$=num(field(sfm05a$,sfm05_ele_field$))+z
 
     rem w[ele]=w[ele]+z
 
     write record (sfm05_dev,key=sfm05a_key$) sfm05a$
     return
 
+open_tables: rem --- Open Tables
+
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>"" then
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=open_status$
+		gosub disp_message
+		rdFuncSpace!=bbjAPI().getGroupNamespace().setValue("+build_task","OFF")
+		release
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
+	
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
@@ -763,6 +791,19 @@ rem #endinclude std_missing_params.src
 rem #include std_exit.src
 
 std_exit: rem --- Standard called program exit (01Mar2006)
+
+    num_files=9
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="IVS_PARAMS",open_opts$[1]="C"
+    open_tables$[3]="POM_CALENDAR",open_opts$[3]="C"
+    open_tables$[4]="SFE_WOOPRTN",open_opts$[4]="C"
+    open_tables$[5]="SFE_WOMASTR",open_opts$[5]="C"
+    open_tables$[6]="SFE_WOSUBCNT",open_opts$[6]="C"
+    open_tables$[7]="SFM_OPCALNDR",open_opts$[7]="C"
+    open_tables$[8]="SFE_WOSCHDL",open_opts$[8]="C"
+    open_tables$[9]="SFS_PARAMS",open_opts$[9]="C"
+
+	gosub open_tables
 
     exit
 rem #endinclude std_exit.src

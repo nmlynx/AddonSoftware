@@ -10,6 +10,7 @@ rem --- Calculate dates
 
 	callpoint!.setDevObject("start_date",callpoint!.getColumnData("SFR_SCHEDWO.ESTSTT_DATE"))
 	callpoint!.setDevObject("comp_date",callpoint!.getColumnData("SFR_SCHEDWO.ESTCMP_DATE"))
+	callpoint!.setDevObject("sched_method",callpoint!.getColumnData("SFR_SCHEDWO.SCHED_FLAG"))
 [[SFR_SCHEDWO.<CUSTOM>]]
 rem --- Calculate Estimated Start/Completion Date"
 rem ========================================================

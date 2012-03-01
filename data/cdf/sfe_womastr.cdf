@@ -148,8 +148,11 @@ rem --- Schedule the Work Order
 
 	start_date$=callpoint!.getDevObject("start_date")
 	comp_date$=callpoint!.getDevObject("comp_date")
+	sched_method$=callpoint!.getDevObject("sched_method")
 	callpoint!.setColumnData("SFE_WOMASTR.ESTSTT_DATE",start_date$,1)
 	callpoint!.setColumnData("SFE_WOMASTR.ESTCMP_DATE",comp_date$,1)
+	callpoint!.setColumnData("SFE_WOMASTR.SCHED_FLAG",sched_method$,1)
+	callpoint!.setStatus("MODIFIED")
 [[SFE_WOMASTR.ORDER_NO.AVAL]]
 rem --- Validate Open Sales Order
 
