@@ -56,9 +56,12 @@ rem --- Delete inventory issues and commitments. Must do this before sfe_womatis
 				items$[3]=" "
 				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 
+rem wgh ... test if remove is needed with cascaded deletes
 				remove(sfe_wolsissu_dev,key=sfe_wolsissu_key$)
 			wend
-rem wgh ... test lot/serial uncommit ... use item 300 (serialized and inventoried)
+rem wgh ... test with item 1000 - non-inventoried
+rem wgh ... test with item 350 - inventoried
+rem wgh ... test with item 300 - inventoried and serialized
 		endif
 
 		rem --- Delete inventory commitments if not being retained
@@ -84,7 +87,6 @@ rem ---  Delete work order transactions
 
 	rem --- Delete work order issues transactions
 	remove(fnget_dev("SFE_WOTRANS"),key=sfe_womatish_key$,dom=*next)
-
 
 	rem --- Delete work order commit transactions if not being retained
 	if callpoint!.getDevObject("del_issue_only")="N" then
@@ -165,7 +167,6 @@ rem --- New materials issues entry or no existing materials issues
 		sfe_womatish.issued_date$=callpoint!.getColumnData("SFE_WOMATISH.ISSUED_DATE")
 
 		sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-		callpoint!.setDevObject("sfe_womatish_key",sfe_womatish_key$)
 		writerecord(sfe_womatish_dev)sfe_womatish$
 
 		rem --- Initialize SFE_WOMATISD Material Issues from SFE_WOMATDTL Material Detail
