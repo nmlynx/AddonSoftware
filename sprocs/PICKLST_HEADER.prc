@@ -33,7 +33,9 @@ rs! = BBJAPI().createMemoryRecordSet("LOGO:C(128), COMP_LINE_01:C(30), COMP_LINE
 :                                     COMP_LINE_07:C(30), COMP_LINE_08:C(30), COMP_LINE_09:C(30), COMP_LINE_10:C(30), COMP_LINE_11:C(30), COMP_LINE_12:C(30),
 :                                     COMP_LINE_13:C(30), COMP_LINE_14:C(30), COMP_LINE_15:C(30), COMP_LINE_16:C(30), COMP_LINE_17:C(30), COMP_LINE_18:C(30),
 :                                     BILL_ADDR_LINE_1:C(30), BILL_ADDR_LINE_2:C(30), BILL_ADDR_LINE_3:C(30), BILL_ADDR_LINE_4:C(30), BILL_ADDR_LINE_5:C(30),
-:                                     SHIP_ADDR_LINE_1:C(30), SHIP_ADDR_LINE_2:C(30), SHIP_ADDR_LINE_3:C(30), SHIP_ADDR_LINE_4:C(30), SHIP_ADDR_LINE_5:C(30)")
+:                                     SHIP_ADDR_LINE_1:C(30), SHIP_ADDR_LINE_2:C(30), SHIP_ADDR_LINE_3:C(30), SHIP_ADDR_LINE_4:C(30), SHIP_ADDR_LINE_5:C(30),
+:                                     OWN_ADR1:C(30), OWN_ADR2:C(30), OWN_ADR3:C(30), OWN_ADR4:C(30), OWN_COM1:C(30), OWN_COM2:C(30), OWN_COM3:C(30), OWN_COM4:C(30),
+:                                     OWN_LEGAL1:C(30),OWN_LEGAL2:C(30),OWN_LEGAL3:C(30),OWN_LEGAL4:C(30)")
 
 line_width = 30
 
@@ -73,10 +75,13 @@ rem url$="jdbc:basis:localhost?DATABASE=S1000&SSL=false&USER=admin&PASSWORD=admi
 
 data! = rs!.getEmptyRecordData()
 
-data!.setFieldValue("LOGO",html_path$+"own\images\emaillogo.jpg")
+data!.setFieldValue("LOGO",html_path$+"own/gfx/header.png")
 
 sql$="SELECT INVOICE_DATE, AR_INV_NO, ORDER_DATE, SLSPSN_CODE, CUSTOMER_PO_NO, AR_SHIP_VIA, SHIPMNT_DATE, TERMS_CODE, DISCOUNT_AMT, TAX_AMOUNT, FREIGHT_AMT, SHIPTO_TYPE, SHIPTO_NO, MESSAGE_CODE FROM OPE_ORDHDR WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND ORDER_NO='" + order_no$ + "'"
 sqlRs! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
+if sqlRs!.isEmpty() then
+    goto sp_end
+endif
 sqlRd! = sqlRs!.getCurrentRecordData()
 
 shipto_type$=sqlRd!.getFieldValue("SHIPTO_TYPE")
@@ -197,8 +202,10 @@ if shipto_type$="S" then
     countryId$ = cvs(sqlRd!.getFieldValue("CNTRY_ID"),3)
 endif
 
+
 rs!.insert(data!)
 
+sp_end:
 rem Tell the stored procedure to return the result set.
 sp!.setRecordSet(rs!)
 

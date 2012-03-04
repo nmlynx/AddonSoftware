@@ -19,9 +19,9 @@ store_master_id$ = sp!.getParameter("STORE_MASTER_ID")
  
 rem Create a memory record set to hold sample results.
 rem Columns for the record set are defined using a string template
-rs! = BBJAPI().createMemoryRecordSet("POSITION:C(7), ITEM_ID:C(40), ITEM_DESC:C(60), QTY_ORDERED:N(7), QTY_SHIPPED:C(7)")
+rs! = BBJAPI().createMemoryRecordSet("POSITION:C(7), ITEM_ID:C(40), ITEM_DESC:C(60), QTY_ORDERED:N(7), QTY_SHIPPED:C(7), UNIT_PRICE:N(7)")
 
-erver$=stbl("+DBSERVER",err=*next)
+dbserver$=stbl("+DBSERVER",err=*next)
 dbsqlport$=":"+stbl("+DBSQLPORT",err=*next)
 dbssl=num(stbl("+DBSSL",err=*next))
 dbtimeout$="&socket_timeout="+stbl("+DBTIMEOUT")
@@ -52,64 +52,39 @@ mode$="mode=PROCEDURE"
 
 rem url$="jdbc:basis:localhost?DATABASE=S1000&SSL=false&USER=admin&PASSWORD=admin123"
 
-data! = rs!.getEmptyRecordData()
-
-sql$ = "SELECT ITEM_ID, QTY_ORDERED, QTY_SHIPPED, LINE_CODE, ORDER_MEMO FROM OPE_ORDDET WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND ORDER_NO='" + order_no$ + "'"
+rem sql$ = "SELECT sto_orddet.item_desc_man,sto_orddet.LINE_NO,sto_orddet.ITEM_ID, ope_orddet.QTY_ORDERED, ope_orddet.LINE_CODE FROM OPE_ORDDET,STO_ORDDET WHERE FIRM_ID='" + firm_id$ + "'  AND ORDER_NO='" + order_no$ + "'"
+sql$ = "SELECT SOD.ITEM_DESC_MAN, SOD.LINE_NO, SOD.ITEM_ID, OOD.QTY_ORDERED, OOD.LINE_CODE, OOD.UNIT_PRICE FROM OPE_ORDDET OOD INNER JOIN STO_ORDDET SOD ON OOD.FIRM_ID = SOD.FIRM_ID AND OOD.ORDER_NO = SOD.ORDER_NO AND OOD.LINE_NO = SOD.LINE_NO WHERE OOD.FIRM_ID='" + firm_id$ + "' AND OOD.ORDER_NO='" + order_no$ + "'"
 sqlRs! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
-sql$ = "SELECT QTY_CHARGED FROM STO_ORDDET WHERE FIRM_ID='" + firm_id$ + "' AND ORDER_NO='" + order_no$ + "'"
-sqlRs5! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
 
-num_item = sqlRs!.getRecordCount()
 
-for i=1 to num_item
+while 1
     sqlRd! = sqlRs!.getCurrentRecordData()
-    sqlRd5! = sqlRs5!.getCurrentRecordData()
 
     item_id$ = sqlRd!.getFieldValue("ITEM_ID")
     qty_ordered = num(sqlRd!.getFieldValue("QTY_ORDERED"))
-    qty_shipped = num(sqlRd!.getFieldValue("QTY_SHIPPED"))
-    qty_charged = num(sqlRd5!.getFieldValue("QTY_CHARGED"))
     line_code$ = sqlRd!.getFieldValue("LINE_CODE")
-    order_memo$ = sqlRd!.getFieldValue("ORDER_MEMO")
+    item_desc$=sqlRd!.getFieldValue("ITEM_DESC_MAN")
+    line_no$=sqlRd!.getFieldValue("LINE_NO")
+    unit_price=num(sqlRd!.getFieldValue("UNIT_PRICE"))
 
-    if qty_shipped - qty_charged then
-    rem if 1 then
-        data!.setFieldValue("POSITION",str(i:"00"))
-        data!.setFieldValue("QTY_ORDERED", str(qty_shipped-qty_charged))
-rem goto end_block
-        sql$="SELECT LINE_TYPE FROM OPC_LINECODE WHERE FIRM_ID='" + firm_id$ + "' AND LINE_CODE='" + line_code$ + "'"
-        sqlRs2! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
-        sqlRd2! = sqlRs2!.getCurrentRecordData()
+    data! = rs!.getEmptyRecordData()
+    data!.setFieldValue("POSITION",line_no$)
+    data!.setFieldValue("ITEM_ID",item_id$)
+    data!.setFieldValue("QTY_ORDERED", str(qty_ordered))
+    data!.setFieldValue("ITEM_DESC", item_desc$)
+    data!.setFieldValue("UNIT_PRICE",str(unit_price))
 
-        if pos(sqlRd2!.getFieldValue("LINE_TYPE")=" SP") then
-            sql$="SELECT item_desc FROM IVM_ITEMMAST WHERE FIRM_ID='" + firm_id$ + "' AND ITEM_ID='" + item_id$ + "'"
-            sqlRs3! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
-            sqlRd3! = sqlRs3!.getCurrentRecordData()
-            item_desc$ = sqlRd3!.getFieldValue("ITEM_DESC")
-        endif
 
-        if pos(sqlRd2!.getFieldValue("LINE_TYPE")="MNO") then
-            data!.setFieldValue("ITEM_ID", order_memo$)
-        endif
-
-        if pos(sqlRd2!.getFieldValue("LINE_TYPE")=" SRDP") then
-            data!.setFieldValue("ITEM_ID", item_id$)
-        endif
-
-        if pos(sqlRd2!.getFieldValue("LINE_TYPE")="SP") then
-            data!.setFieldValue("ITEM_DESC", item_desc$)
-        endif
-rem goto end_block
-        data!.setFieldValue("QTY_SHIPPED", "_______")
-rem end_block:
-
-        rs!.insert(data!)
+    if line_code$="D" then
+        data!.setFieldValue("QTY_SHIPPED", "Direktlieferung")
+    else
+        data!.setFieldValue("QTY_SHIPPED", sqlRd!.getFieldValue("QTY_ORDERED"))
     endif
 
-    if i<num_item then
-            sqlRs!.next()
-        endif
-next i
+    rs!.insert(data!)
+
+    sqlRs!.next(err=*break)
+wend
 
 rem Tell the stored procedure to return the result set.
 sp!.setRecordSet(rs!)
