@@ -1,3 +1,12 @@
+[[SFR_WOVARREP.ASVA]]
+rem --- Ensure that at least one status option (Open/Closed) is checked
+
+if callpoint!.getColumnData("SFR_WOVARREP.OPEN")="N" AND callpoint!.getColumnData("SFR_WOVARREP.CLOSED")="N"
+	msg_id$="SF_STATUS_REQUIRED"
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
+	callpoint!.setFocus("SFR_WOVARREP.OPEN")
+endif
 [[SFR_WOVARREP.REPORT_SEQ.AVAL]]
 rem ---- If By Bill and a whse hasn't been entered, default whse
 

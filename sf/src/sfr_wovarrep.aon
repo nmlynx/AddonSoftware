@@ -95,7 +95,7 @@ rem 		dim ivm10c$:open_tpls$[16]
 		sfe02_tpls$=open_tpls$[17]; dim sfe02a$:sfe02_tpls$; rem Save template for next o'lay
 		sfe22_tpls$=open_tpls$[18]; dim sfe22a$:sfe22_tpls$; rem Save template for next o'lay
 		sfe32_tpls$=open_tpls$[19]; dim sfe32a$:sfe32_tpls$; rem Save template for next o'lay
-		dim sfw02a$:open_tpls$[20]
+		sfw02_tpls$=open_tpls$[20]; dim sfw02a$:sfw02_tpls$; rem Save template for next o'lay
 
 rem --- Assign form input values to local variables
 
@@ -109,7 +109,8 @@ rem --- Assign form input values to local variables
         billthru$=Option!.getOptionData("bill_no_2")
         custfrom$=Option!.getOptionData("customer_ID_1")
         custthru$=Option!.getOptionData("customer_ID_2")
-        wo_open$=Option!.getOptionData("open")
+        as_of_date$=Option!.getOptionData("as_of_date")
+		wo_open$=Option!.getOptionData("open")
         wo_closed$=Option!.getOptionData("closed")
         wostatus$=""
         if wo_open$="Y" then wostatus$=wostatus$+"O"
@@ -189,47 +190,6 @@ rem --- Retrieve key templates
         call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_CLSOPRTR","PRIMARY",sft03a_key_tpl$,rd_table_chans$[all],status$
         call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNMATTR","PRIMARY",sft23a_key_tpl$,rd_table_chans$[all],status$
         call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNSUBTR","PRIMARY",sft33a_key_tpl$,rd_table_chans$[all],status$
-
-rem --- Options
-
-        action=pos(sequence$="WBCT")-1
-        switch action
-            case 0
-                h3$="Work Order Sequence"
-                beging$=wofrom$
-                ending$=wothru$
-                dim key_tpl$:sfe01a_key_tpl$
-                begin_key$=firm_id$+sfe01a.wo_location$+beging$
-                keynum$="PRIMARY"
-                break
-            case 1
-                h3$="Bill Number Sequence"
-                beging$=billfrom$
-                ending$=billthru$
-                dim key_tpl$:sfe01a_key_alt3$
-                begin_key$=firm_id$+whse$+beging$
-                keynum$="AO_WH_ITM_LOC_WO"
-                break
-            case 2
-                h3$="Customer Sequence"
-                beging$=custfrom$
-                ending$=custthru$
-                dim key_tpl$:sfe01a_key_alt2$
-                begin_key$=firm_id$+beging$
-                keynum$="AO_CST_ORD_LINE"
-                break
-            case 3
-                h3$="Work Order Type Sequence"
-                beging$=wotfrom$
-                ending$=wotthru$
-                dim key_tpl$:sfe01a_key_alt1$
-                begin_key$=firm_id$+beging$
-                keynum$="AO_TYP_LOC_WO"
-                break
-            case default
-                break
-        swend
-
 
 done: rem --- Overlay
 
