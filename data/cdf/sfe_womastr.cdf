@@ -402,7 +402,7 @@ rem --- Schedule the Work Order
 rem --- Validate Open Sales Order
 
 	if callpoint!.getUserInput()<>callpoint!.getColumnData("SFE_WOMASTR.ORDER_NO")
-		callpoint!.setColumnData("SFE_WOMASTR.OP_INT_SEQ_REF","",1)
+		callpoint!.setColumnData("SFE_WOMASTR.SLS_ORD_SEQ_REF","",1)
 	endif
 
 	ope_ordhdr=fnget_dev("OPE_ORDHDR")
@@ -430,17 +430,17 @@ rem --- Disable Order info if Customer not entered
 	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")<>"C"
 		if cvs(callpoint!.getUserInput(),3)=""
 			callpoint!.setColumnEnabled("SFE_WOMASTR.ORDER_NO",0)
-			callpoint!.setColumnEnabled("SFE_WOMASTR.OP_INT_SEQ_REF",0)
+			callpoint!.setColumnEnabled("SFE_WOMASTR.SLS_ORD_SEQ_REF",0)
 			callpoint!.setColumnData("SFE_WOMASTR.ORDER_NO","",1)
-			callpoint!.setColumnData("SFE_WOMASTR.OP_INT_SEQ_REF","",1)
+			callpoint!.setColumnData("SFE_WOMASTR.SLS_ORD_SEQ_REF","",1)
 		else
 			callpoint!.setColumnEnabled("SFE_WOMASTR.ORDER_NO",1)
-			callpoint!.setColumnEnabled("SFE_WOMASTR.OP_INT_SEQ_REF",1)
+			callpoint!.setColumnEnabled("SFE_WOMASTR.SLS_ORD_SEQ_REF",1)
 		endif
 
 		if callpoint!.getUserInput()<>callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID")
 			callpoint!.setColumnData("SFE_WOMASTR.ORDER_NO","",1)
-			callpoint!.setColumnData("SFE_WOMASTR.OP_INT_SEQ_REF","",1)
+			callpoint!.setColumnData("SFE_WOMASTR.SLS_ORD_SEQ_REF","",1)
 		endif
 	endif
 [[SFE_WOMASTR.ITEM_ID.AVAL]]
@@ -550,7 +550,7 @@ rem --- Build Sequence list button
 	ops_items!.addItem("")
 	ops_list!.addItem("")
 
-	ctlSeqRef!=callpoint!.getControl("SFE_WOMASTR.OP_INT_SEQ_REF")
+	ctlSeqRef!=callpoint!.getControl("SFE_WOMASTR.SLS_ORD_SEQ_REF")
 	ctlSeqRef!.removeAllItems()
 
 	read(ope11_dev,key=firm_id$+ope_ordhdr.ar_type$+cust$+order$,dom=*next)
@@ -575,7 +575,7 @@ rem --- Build Sequence list button
 	endif
 
 	ctlSeqRef!.insertItems(0,ops_list!)
-	callpoint!.setTableColumnAttribute("SFE_WOMASTR.OP_INT_SEQ_REF","LDAT",ldat$)
+	callpoint!.setTableColumnAttribute("SFE_WOMASTR.SLS_ORD_SEQ_REF","LDAT",ldat$)
 	callpoint!.setStatus("REFRESH")
 
 	return
@@ -627,10 +627,10 @@ rem --- enable all enterable fields
 		callpoint!.setColumnEnabled("SFE_WOMASTR.FORECAST",0)
 	endif
 	if callpoint!.getDevObject("op")="Y"
-		callpoint!.setColumnEnabled("SFE_WOMASTR.OP_INT_SEQ_REF",1)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.SLS_ORD_SEQ_REF",1)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.ORDER_NO",1)
 	else
-		callpoint!.setColumnEnabled("SFE_WOMASTR.OP_INT_SEQ_REF",0)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.SLS_ORD_SEQ_REF",0)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.ORDER_NO",0)
 	endif
 	callpoint!.setColumnEnabled("SFE_WOMASTR.OPENED_DATE",1)
