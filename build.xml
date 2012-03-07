@@ -46,6 +46,17 @@
     <property name="port.SOLARISS" value="2179"/>
     <property name="port.AIX"      value="2184"/>
 
+    <!-- Default addon languages to english only if not already set
+         Example settings:
+            "ENU"            - English only
+            "ENU\;ESP\;FRA"  - English, Spanish, French
+    -->
+    <condition property="addon.langs" value="ENU">
+        <not>
+            <isset  property="addon.langs"/>
+        </not>
+    </condition>
+
     <!-- End of Properties -->
     <!-- ====================================== -->
 
@@ -234,6 +245,7 @@
     <!-- ====================================== -->
     <!-- Addon sync -->
     <target name="syncAddon" depends="sleep15">
+
         <!-- Run BBj session to sync AddonSoftware -->
         <exec executable="${install.dir}/bin/bbj">
             <env key="DISPLAY" value=":99.0"/>
@@ -243,9 +255,10 @@
             <arg value="${barista.bbj.dir}/sys/prog/bax_build_sync.bbj"/>
             <arg value="-"/>
             <arg value="-s../apps/aon/config/addon.syn"/>
-            <arg value="-locENU\;ESP\;FRA"/>
+            <arg value="-loc${addon.langs}"/>
             <arg value="-log${log.bbj.dir}/addon_sync.log"/>
         </exec>
+
     </target>
     <!-- End of syncAddon -->
     <!-- ====================================== -->
