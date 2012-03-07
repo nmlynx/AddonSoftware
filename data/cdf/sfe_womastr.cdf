@@ -1,3 +1,59 @@
+[[SFE_WOMASTR.OPENED_DATE.AVAL]]
+rem --- need to see if date has been changed; if so, prompt to change in sfe-02/22 as well
+
+	prev_dt$=cvs(callpoint!.getColumnUndoData("SFE_WOMASTR.OPENED_DATE"),3)
+	new_dt$=callpoint!.getUserInput()
+	if prev_dt$<>"" and prev_dt$<>new_dt$
+		msg_id$="SF_CHANGE_DTS"
+		gosub disp_message
+escape
+		if msg_opt$="Y"
+			sfe02_dev=fnget_dev("SFE_WOOPRTN")
+			sfe22_dev=fnget_dev("SFE_WOMATL")
+			sfe23_dev=fnget_dev("SFE_WOMATDTL")
+
+			dim sfe_wooprtn$:fnget_tpl$("SFE_WOOPRTN")
+			dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
+			dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
+
+			wo_loc$=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
+			wo_no$=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+
+			rem --- operations requirements - 6500 in sfe_ab
+			read (sfe02_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
+			while 1
+				k$=key(sfe02_dev,end=*break)
+				readrecord(sfe02_dev)sfe_wooprtn$
+				if sfe_wooprtn.firm_id$+sfe_wooprtn.wo_location$+sfe_wooprtn.wo_no$<>firm_id$+wo_loc$+wo_no$ then break
+				sfe_wooprtn.require_date$=new_dt$
+				sfe_wooprtn$=field(sfe_wooprtn$)
+				writerecord(sfe02_dev)sfe_wooprtn$
+			wend
+	
+			rem --- materials requirements - 6600 in sfe_ab
+			read (sfe22_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
+			while 1
+				k$=key(sfe22_dev,end=*break)
+				readrecord(sfe22_dev)sfe_womatl$
+				if sfe_womatl.firm_id$+sfe_womatl.wo_location$+sfe_womatl.wo_no$<>firm_id$+wo_loc$+wo_no$ then break
+				sfe_womatl.require_date$=new_dt$
+				sfe_womatl$=field(sfe_womatl$)
+				writerecord(sfe22_dev)sfe_womatl$
+			wend
+
+			rem --- materials commitments - 6800 in sfe_ab
+			read (sfe23_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
+			while 1
+				k$=key(sfe23_dev,end=*break)
+				readrecord(sfe23_dev)sfe_womatdtl$
+				if sfe_womatdtl.firm_id$+sfe_womatdtl.wo_location$+sfe_womatdtl.wo_no$<>firm_id$+wo_loc$+wo_no$ then break
+				sfe_womatdtl.require_date$=new_dt$
+				sfe_womatdtl$=field(sfe_womatdtl$)
+				writerecord(sfe23_dev)sfe_womatdtl$
+			wend
+
+		endif
+	endif
 [[SFE_WOMASTR.ADIS]]
 rem --- Set new record flag
 
@@ -7,7 +63,7 @@ rem --- Set new record flag
 	callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WOMASTR.WO_NO"))
 	callpoint!.setDevObject("wo_loc",callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION"))
 
-rem --- Disable fields not allowed to be changed
+rem --- Disable/enable based on status of closed/open
 
 	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C"
 		callpoint!.setColumnEnabled("SFE_WOMASTR.ITEM_ID",0)
@@ -72,7 +128,7 @@ rem --- Always disable these fields for an existing record
 	callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_02",0)
 	callpoint!.setOptionEnabled("COPY",0)
 
-rem --- See if any transactions exist - disable WO Type if there are
+rem --- See if any transactions exist - disable WO Type if so
 
 	loc$=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
 	wo_no$=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
@@ -126,6 +182,8 @@ rem --- Disable WO Status if Open or Closed
 	status$=callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")
 	if pos(status$="OC")=0
 		callpoint!.setColumnEnabled("SFE_WOMASTR.WO_STATUS",1)
+	else
+		callpoint!.setColumnEnabled("SFE_WOMASTR.WO_STATUS",0)
 	endif
 
 rem --- Validate Open Sales Order
@@ -134,6 +192,33 @@ rem --- Validate Open Sales Order
 	cust$=callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID")
 	dim ope_ordhdr$:fnget_tpl$("OPE_ORDHDR")
 	gosub build_ord_line
+
+rem --- Disable qty/yield if data exists in sfe_womatl (sfe-22) and provide explanatory message
+
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")<>"C"
+
+		sfe_womatl_dev=fnget_dev("SFE_WOMATL")
+		dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
+
+		read (sfe_womatl_dev,key=firm_id$+loc$+wo_no$,dom=*next)
+		while 1
+			read record (sfe_womatl_dev,end=*break)sfe_womatl$
+			if sfe_womatl$.firm_id$+sfe_womatl.wo_location$+sfe_womatl.wo_no$=firm_id$+loc$+wo_no$
+				callpoint!.setColumnEnabled("SFE_WOMASTR.SCH_PROD_QTY",0)
+				callpoint!.setColumnEnabled("SFE_WOMASTR.EST_YIELD",0)
+				callpoint!.setMessage("SF_MATS_EXIST")
+			endif
+			break
+		wend
+	endif
+
+rem --- Information warning for category N WO's - requirements may need to be adjusted if qty/yield is changed
+
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")<>"C"
+		if callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")="N"
+			callpoint!.setMessage("SF_ADJ_REQS")
+		endif
+	endif
 
 rem --- set DevObjects
 
@@ -187,9 +272,26 @@ rem --- Check to make sure there aren't existing requirements
 		break
 	endif
 
-rem --- Schedule the Work Order
+rem --- Check for mandatory data
+
+	if callpoint!.getDevObject("wo_category")<>"N" or
+:		num(callpoint!.getColumnData("SFE_WOMASTR.EST_YIELD"))=0 or
+:		cvs(callpoint!.getColumnData("SFE_WOMASTR.OPENED_DATE"),3)="" or
+:		num(callpoint!.getColumnData("SFE_WOMASTR.SCH_PROD_QTY"))=0 or
+:		cvs(callpoint!.getColumnData("SFE_WOMASTR.UNIT_MEASURE"),3)="" or
+:		cvs(callpoint!.getColumnData("SFE_WOMASTR.WAREHOUSE_ID"),3)="" or
+:		pos(callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="QP")=0 
+		
+		msg_id$="SF_MISSING_INFO"
+		gosub disp_message
+		break
+	endif
+	
+rem --- Copy the Work Order
 
 	callpoint!.setDevObject("category",callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY"))
+	callpoint!.setDevObject("wo_loc",callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION"))
+	callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WOMASTR.WO_NO"))
 
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :		"SFE_WOCOPY",
@@ -199,6 +301,8 @@ rem --- Schedule the Work Order
 :		table_chans$[all],
 :		"",
 :		dflt_data$[all]
+
+rem	callpoint!.setStatus("RECORD:["+firm_id$+wo_loc$+wo_no$+"]")
 [[SFE_WOMASTR.SCH_PROD_QTY.AVAL]]
 rem --- Verify minimum quantity > 0
 
@@ -408,6 +512,8 @@ rem --- Enable Copy Button
 
 	if typecode.wo_category$="N" and num(callpoint!.getColumnData("SFE_WOMASTR.SCH_PROD_QTY"))>0
 		callpoint!.setOptionEnabled("COPY",1)
+	else
+		callpoint!.setOptionEnabled("COPY",0)
 	endif
 
 rem --- Disable Drawing and Revision Number if Recurring type
@@ -541,7 +647,7 @@ rem --- Set new record flag
 
 rem --- Open tables
 
-	num_files=19
+	num_files=20
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="SFS_PARAMS",open_opts$[2]="OTA"
@@ -562,6 +668,7 @@ rem --- Open tables
 	open_tables$[17]="SFT_OPNLSTRN",open_opts$[17]="OTA"
 	open_tables$[18]="IVM_ITEMWHSE",open_opts$[18]="OTA"
 	open_tables$[19]="SFE_WOSCHDL",open_opts$[19]="OTA"
+	open_tables$[20]="SFE_WOMATDTL",open_opts$[20]="OTA"
 
 	gosub open_tables
 

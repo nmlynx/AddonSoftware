@@ -69,6 +69,7 @@ rem --- Copy Comments
 		wocomm$=field(wocomm$)
 		write record (wocomm_devout) wocomm$
 	wend
+
 [[SFE_WOCOPY.BEND]]
 rem --- Close copy channel
 
