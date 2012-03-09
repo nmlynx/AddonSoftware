@@ -142,7 +142,7 @@ creat_xref: rem --- Create Cross Reference File
 
         if sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.record_id_c$=firm_id$+"  "+"C"
 
-            read (sfe13a_dev,key=sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.wo_no$+"000",dom=creat_xref)
+            read (sfe13a_dev,key=sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.wo_no$,dom=creat_xref)
             read (sfe23a_dev,key=sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.wo_no$+"000",dom=*next)
 
             while more

@@ -306,7 +306,7 @@ rem --- Post ope-01 (Completed)
             sfe01a.cls_inp_qty=0
             sfe01a.closed_cost=0
 rem --- Check on WOE-15/25 and WOE-13/23 (Materials)
-            remove(sfe13_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$+"000",dom=*next)
+            remove(sfe13_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
             read (sfe23_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
             dim sfe23_key$:sfe23_key_tpl$    
             while more

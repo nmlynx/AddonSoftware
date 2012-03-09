@@ -525,7 +525,7 @@ custom_order_complete:
 
 rem --- Reset ivm-02 Committed If All Is Not Issued
 
-                 remove (sfe13_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$+"000",dom=*next)
+                 remove (sfe13_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
                  read (sfe23_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
                  while more
                     sfe23_key$=key(sfe23_dev,end=*break)
