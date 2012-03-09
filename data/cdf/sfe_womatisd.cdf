@@ -64,6 +64,9 @@ rem --- (For new records qty_ordered=qty_issued and tot_qty_iss=0)
 	endif
 
 rem wgh ... stopped
+rem wgh ... may need to update qty_issued
+rem wgh ... what if more entered than qty_ordered?
+rem wgh ... maybe do lot/serial before commits? ... depends on how committments are handled in sfe_wolsissu
 	rem --- Lot/serial entry needed?
 	if pos(callpoint!.getDevObject("lotser")="LS") then
 
@@ -91,13 +94,33 @@ rem wgh ... stopped
 
 rem wgh ... stopped
 rem wgh ... rethink this for AGRE needs ... don't commit unless qty_issued has changed!!!!
+rem wgh ... make sure this plays well with lookup via AOPT-LENT
 			if tot_ls_qty_issued<>qty_issued+num(callpoint!.getColumnData("SFE_WOMATISD.TOT_QTY_ISS")) then
+				sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
+				sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.WOMATISD_SEQ_NO")
+				callpoint!.setDevObject("sfe_womatisd_key",sfe_womatisd_key$)
+				callpoint!.setDevObject("womatisd_seq_ref",callpoint!.getColumnData("SFE_WOMATISD.WOMATISD_SEQ_NO"))
 				callpoint!.setDevObject("item_id",callpoint!.getColumnData("SFE_WOMATISD.ITEM_ID"))
+				callpoint!.setDevObject("womatisd_qty_issued",qty_issued)
 				call stbl("+DIR_SYP")+"bam_run_prog.bbj","SFE_WOLSISSU",stbl("+USER_ID"),"","",table_chans$[all],"",dflt_data$[all]
-rem wgh ... stopped
+rem wgh ... stopped here
 rem wgh ... may need to update qty_issued
 rem wgh ... what if more entered than qty_ordered?
-rem wgh ... maybe do lot/serial before commits
+rem wgh ... maybe do lot/serial before commits? ... depends on how committments are handled in sfe_wolsissu
+qty_issued=num(callpoint!.setDevObject("tot_ls_qty_issued"))
+callpoint!.setColumnData("SFE_WOMATISD.QTY_ISSUED",str(qty_issued),1)
+if qty_issued<>0 then
+	issue_cost=num(callpoint!.setDevObject("tot_ls_issue_cost"))/qty_issued
+	unit_cost=issue_cost
+	callpoint!.setColumnData("SFE_WOMATISD.UNIT_COST",str(unit_cost),0)
+	callpoint!.setColumnData("SFE_WOMATISD.ISSUE_COST",str(issue_cost),1)
+endif
+rem wgh ... 4185 IF T0<>W[3] THEN LET W[3]=T0,O0=2,I0=5
+rem wgh ... 4187 IF T0<>0 THEN IF W[4]<>T1/T0 THEN LET W[4]=T1/T0,O0=2,I0=5
+rem wgh ... 4188 IF T0<>0 THEN LET W[2]=T1/T0,C[11]=W[2]
+
+rem wgh ... 2570 IF W[2]=0 THEN LET W[2]=C[11]
+rem wgh ... 2580 LET W[4]=C[11]
 			endif
 		endif
 	endif
@@ -109,10 +132,28 @@ rem --- Init DISPLAY columns
 [[SFE_WOMATISD.AOPT-LENT]]
 rem wgh ... stopped
 rem wgh ... need to enable/disable LENT option
+rem wgh ... disable unless ... ivm_itemmast.lotser_item$="Y" and ivm_itemmast.inventoried$="Y"
+
 
 rem --- Lot/serial entry
+	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
+	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.WOMATISD_SEQ_NO")
+	callpoint!.setDevObject("sfe_womatisd_key",sfe_womatisd_key$)
+	callpoint!.setDevObject("womatisd_seq_ref",callpoint!.getColumnData("SFE_WOMATISD.WOMATISD_SEQ_NO"))
 	callpoint!.setDevObject("item_id",callpoint!.getColumnData("SFE_WOMATISD.ITEM_ID"))
+	callpoint!.setDevObject("womatisd_qty_issued",callpoint!.getColumnData("SFE_WOMATISD.QTY_ISSUED"))
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj","SFE_WOLSISSU",stbl("+USER_ID"),"","",table_chans$[all],"",dflt_data$[all]
+rem wgh ... stopped
+rem wgh ... may need to update qty_issued
+rem wgh ... what if more entered than qty_ordered?
+rem wgh ... maybe do lot/serial before commits
+rem wgh ... callpoint!.setDevObject("tot_ls_qty_issued",tot_ls_qty_issued)
+rem wgh ... callpoint!.setDevObject("tot_ls_issue_cost",tot_ls_issue_cost)
+rem wgh ... 4185 IF T0<>W[3] THEN LET W[3]=T0,O0=2,I0=5
+rem wgh ... 4187 IF T0<>0 THEN IF W[4]<>T1/T0 THEN LET W[4]=T1/T0,O0=2,I0=5
+rem wgh ... 4188 IF T0<>0 THEN LET W[2]=T1/T0,C[11]=W[2]
+rem wgh ... 2570 IF W[2]=0 THEN LET W[2]=C[11]
+rem wgh ... 2580 LET W[4]=C[11]
 [[SFE_WOMATISD.BGDS]]
 rem --- Init Java classes
 	use ::sfo_SfUtils.aon::SfUtils
@@ -163,10 +204,10 @@ rem --- Delete lot/serial and inventory commitments. Must do this before sfe_wom
 
 	rem --- Delete lot/serial commitments, but keep inventory commitments (for now)
 	if pos(callpoint!.getDevObject("lotser")="LS") then
-		read(sfe_wolsissu_dev,key=sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$,dom=*next)
+		read(sfe_wolsissu_dev,key=sfe_womatish_key$+sfe_womatisd.womatisd_seq_no$,dom=*next)
 		while 1
 			sfe_wolsissu_key$=key(sfe_wolsissu_dev,end=*break)
-			if pos(sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$=sfe_wolsissu_key$)<>1 then break
+			if pos(sfe_womatish_key$+sfe_womatisd.womatisd_seq_no$=sfe_wolsissu_key$)<>1 then break
 			readrecord(sfe_wolsissu_dev)sfe_wolsissu$
 
 			rem --- Delete lot/serial commitments
@@ -255,6 +296,10 @@ rem wgh ... test with item 300 - inventoried and serialized
 [[SFE_WOMATISD.ITEM_ID.AVAL]]
 rem --- Item ID is disabled except for a new row, so can init entire new row here.
 	item_id$=callpoint!.getUserInput()
+	if item_id$=callpoint!.getColumnData("SFE_WOMATISD.ITEM_ID") then
+		rem --- Do not re-init if user returns to item_id field on a new row
+		break
+	endif
 
 	rem --- Get Warehouse ID and Issued Date from header
 	warehouse_id$=callpoint!.getDevObject("warehouse_id")
@@ -300,7 +345,7 @@ rem --- Item ID is disabled except for a new row, so can init entire new row her
 	callpoint!.setColumnData("SFE_WOMATISD.UNIT_MEASURE",unit_measure$,1)
 	callpoint!.setColumnData("SFE_WOMATISD.WOMATDTL_SEQ_REF",womatdtl_seq_ref$,0)
 	callpoint!.setColumnData("SFE_WOMATISD.WAREHOUSE_ID",warehouse_id$,0)
-	callpoint!.setColumnData("SFE_WOMATISD.ITEM_ID",item_id$,0)
+	callpoint!.setColumnData("SFE_WOMATISD.ITEM_ID",item_id$,1)
 	callpoint!.setColumnData("SFE_WOMATISD.REQUIRE_DATE",required_date$,1)
 	callpoint!.setColumnData("SFE_WOMATISD.QTY_ORDERED",str(qty_ordered),1)
 	callpoint!.setColumnData("SFE_WOMATISD.TOT_QTY_ISS",str(tot_qty_iss),0)
@@ -337,10 +382,6 @@ init_display_cols: rem --- Init DISPLAY columns
 	return
 
 disable_by_item: rem --- Set enable/disable based on item ID
-	rem --- <<CALLPOINT>> enable in Unit Of Measure on form handles enable/disable based strictly on whether or not
-	rem --- the item is inventoried, via the callpoint!.setStatus("ENABLE:"+ivm_itemmast.inventoried$) command.
-	rem --- IN: item_id$
-
 	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
 	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
 	findrecord(ivm_itemmast_dev,key=firm_id$+item_id$,dom=*next)ivm_itemmast$

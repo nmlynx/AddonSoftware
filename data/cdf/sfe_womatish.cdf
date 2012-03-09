@@ -4,6 +4,8 @@ rem --- Hold on to sfe_womatish key
 	wo_no$=callpoint!.getUserInput()
 	sfe_womatish_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+wo_no$
 	callpoint!.setDevObject("sfe_womatish_key",sfe_womatish_key$)
+	callpoint!.setDevObject("wo_location",callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION"))
+	callpoint!.setDevObject("wo_no",wo_no$)
 [[SFE_WOMATISH.BDEQ]]
 rem --- Suppress Barista's default delete message
 
@@ -39,10 +41,10 @@ rem --- Delete inventory issues and commitments. Must do this before sfe_womatis
 
 		rem --- Delete lot/serial commitments, but keep inventory commitments (for now)
 		if pos(callpoint!.getDevObject("lotser")="LS") then
-			read(sfe_wolsissu_dev,key=sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$,dom=*next)
+			read(sfe_wolsissu_dev,key=sfe_womatish_key$+sfe_womatisd.womatisd_seq_no$,dom=*next)
 			while 1
 				sfe_wolsissu_key$=key(sfe_wolsissu_dev,end=*break)
-				if pos(sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$=sfe_wolsissu_key$)<>1 then break
+				if pos(sfe_womatish_key$+sfe_womatisd.womatisd_seq_no$=sfe_wolsissu_key$)<>1 then break
 				readrecord(sfe_wolsissu_dev)sfe_wolsissu$
 
 				rem --- Delete lot/serial commitments
@@ -298,6 +300,7 @@ rem --- New materials issues entry or no existing materials issues
 	        rem --- Reload and display with new detail
 	        callpoint!.setStatus("RECORD:["+sfe_womatish_key$+"]")
 	endif
+
 [[SFE_WOMATISH.ISSUED_DATE.BINP]]
 rem -- Verify WO status
 	gosub verify_wo_status

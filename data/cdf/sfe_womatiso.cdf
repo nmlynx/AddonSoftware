@@ -193,9 +193,15 @@ fill_grid: rem --- Fill the grid with data
 		gridOps!.setCellText(0,0,vectRows!)
 		gridOps!.resort()
 		gridOps!.setSelectedRow(0)
+
+		rem --- Initialize all operations selected
+		for row=0 to numrow-1
+			rem --- Set selected checkbox
+			gridOps!.setCellState(row,0,1)
+			selected_ops!.put(gridOps!.getCellText(row,1),gridOps!.getCellText(row,4))
+		next row
 	endif
 	SysGUI!.setRepaintEnabled(1)
-
 	return
 
 validate_qty_to_issue: rem --- Validate qty_to_issue
