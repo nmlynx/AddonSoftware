@@ -22,7 +22,7 @@ complete_bill = num(sp!.getParameter("COMPLETE_BILL"))
 
 rem Create a memory record set to hold sample results.
 rem Columns for the record set are defined using a string template
-rs! = BBJAPI().createMemoryRecordSet("POSITION:C(7), ITEM_ID:C(40), ITEM_DESC:C(60), AMOUNT:C(7), VAT:C(7), SINGLE_PRICE:N(7), SUB_TOTAL:N(7)")
+rs! = BBJAPI().createMemoryRecordSet("POSITION:C(7), ITEM_ID:C(40), ITEM_DESC:C(60), AMOUNT:N(7), VAT:N(7), SINGLE_PRICE:N(7), SUB_TOTAL:N(7)")
 
 dbserver$=stbl("+DBSERVER",err=*next)
 dbsqlport$=":"+stbl("+DBSQLPORT",err=*next)

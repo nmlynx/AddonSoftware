@@ -9,9 +9,6 @@ rem AddonSoftware
 rem Copyright BASIS International Ltd.
 rem ----------------------------------------------------------------------------
  
-rem Set of utility methods
-use ::ado_func.src::func
-
 rem Declare some variables ahead of time
 declare BBjStoredProcedureData sp!
 declare BBjRecordSet rs!
@@ -97,7 +94,6 @@ if !sqlRs!.isEmpty() then
         i=i+1
         sqlRd! = sqlRs!.getCurrentRecordData()
         sub_total=sub_total+ROUND(num(sqlRd!.getFieldValue("SUM_BRUT")),2)
-        rem sum_net=sum_net+num(sqlRd!.getFieldValue("SUM_NET"))
         sum_vat=sum_vat+num(sqlRd!.getFieldValue("SUM_VAT"))
         sqlRs!.next(err=*break)
     wend
