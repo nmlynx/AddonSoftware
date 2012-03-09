@@ -181,8 +181,8 @@ rem ===============================================================
 	while 1
 		read (sfm05_dev,key=firm_id$+wo_no$+isn$,knum="AON_WONUM",dom=*next)
 		read record (sfm05_dev,end=*break) sfm05a$
-		if pos(firm_id$+wo_no$+isn$=sfm05a.firm_id$+sfm05a.wo_no$+sfm05a.internal_seq_no$)<>1 break
-		remove (sfm05_dev,key=firm_id$+sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+sfm05a.internal_seq_no$)
+		if pos(firm_id$+wo_no$+isn$=sfm05a.firm_id$+sfm05a.wo_no$+sfm05a.oper_seq_ref$)<>1 break
+		remove (sfm05_dev,key=firm_id$+sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+sfm05a.oper_seq_ref$)
 	wend
 
 	return
@@ -203,7 +203,7 @@ rem ===============================================================
 	sfm05a.op_code$=callpoint!.getColumnData("SFE_WOOPRTN.OP_CODE")
 	sfm05a.sched_date$=add_date$
 	sfm05a.wo_no$=callpoint!.getColumnData("SFE_WOOPRTN.WO_NO")
-	sfm05a.internal_seq_no$=callpoint!.getColumnData("SFE_WOOPRTN.INTERNAL_SEQ_NO")
+	sfm05a.oper_seq_ref$=callpoint!.getColumnData("SFE_WOOPRTN.INTERNAL_SEQ_NO")
 	sfm05a.queue_time=queue_time
 	sfm05a.setup_time=setup_time
 	sfm05a.runtime_hrs=run_time

@@ -72,65 +72,11 @@ rem --- Dimension string templates
 
 	dim opcode$:opcode$
 
-rem --- Open/Lock files
-
-rem    files=9,begfile=1,endfile=files
-rem    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-rem    files$[1]="opc-od",ids$[1]=""
-rem    files$[2]="pom-01",ids$[2]="POM_CALENDAR"
-rem    files$[3]="sfe-02",ids$[3]=""
-rem    files$[4]="sfe-03",ids$[4]=""
-rem    files$[5]="sfe-32",ids$[5]=""
-rem    files$[6]="sfm-04",ids$[6]=""
-rem    files$[7]="sfm-05",ids$[7]=""
-rem    files$[8]="wom-06",ids$[8]=""
-rem    files$[9]="wos-01a",ids$[9]=""
-rem    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-rem :                                   ids$[all],templates$[all],channels[all],batch,status
-rem    if status goto std_exit
-rem    opcod_dev=channels[1]
-rem    pom01_dev=channels[2]
-rem    sfe02_dev=channels[3]
-rem    woe03_dev=channels[4]
-rem    sfe32_dev=channels[5]
-rem    sfm04_dev=channels[6]
-rem    sfm05_dev=channels[7]
-rem    wom06_dev=channels[8]
-rem    wos01a_dev=channels[9]
-
-rem --- Dimension string templates
-
-rem    dim opcoda$:templates$[1],pom01a$:templates$[2],sfe02a$:templates$[3],
-rem :       woe03a$:templates$[4],sfe32a$:templates$[5],sfm04a$:templates$[6],
-rem :       sfm05a$:templates$[7],wom06a$:templates$[8],wos01a$:templates$[9]
-
 rem --- Retrieve parameter records
 
     sfs01a_key$=firm_id$+"SF00"
     find record (sfs01a_dev,key=sfs01a_key$,err=std_missing_params) sfs01a$
     find record (sfs01a_dev,key=sfs01a_key$,err=std_missing_params) sfs01a$
-
-rem --- Open/Lock Files
-
-rem    files=8
-rem    dim files$[files],options$[files],channels[files]
-rem    files$[1]="wom-04"
-rem    files$[2]="sys-01"
-rem    files$[3]="woe-02"
-rem    files$[4]="woe-32"
-rem    files$[5]="woe-03"
-rem    files$[6]="wom-05"
-rem    files$[7]="wom-06"
-rem    files$[8]="pom-01"
-rem    call pgmdir$+"adc_fileopen.aon",1,1,7,files$[all],options$[all],channels[all],batch,status
-rem    if status goto std_exit
-rem    sfm04_dev=channels[1]
-rem    sys01_dev=channels[2]
-rem    sfe02_dev=channels[3]
-rem    sfe32_dev=channels[4]
-rem    woe03_dev=channels[5]
-rem    sfm05_dev=channels[6]
-rem    wom06_dev=channels[7]
 
 rem --- Initializations
 
@@ -143,14 +89,6 @@ rem --- Initializations
     orig_date$=v0$
     if method$="B" end_date$=orig_date$
 
-rem --- Open Additional Files
-
-rem    if p9$(3,1)="Y"
-rem		call pgmdir$+"adc_fileopen.aon",1,8,8,files$[all],options$[all],channels[all],batch,status
-rem		if status goto std_exit
-rem		pom01_dev=channels[8]
-rem	endif
-
 l800: rem --- Check Validity of Data
 
     x$=""
@@ -161,11 +99,11 @@ l800: rem --- Check Validity of Data
 
 rem --- Clear Schedule Detail Files
 
-	while more
+	while 1
 		read (sfm05_dev,key=firm_id$+wo_num$,knum="AON_WONUM",dom=*next)
 		read record (sfm05_dev,end=*break) sfm05a$
 		if pos(firm_id$+wo_num$=sfm05a.firm_id$+sfm05a.wo_no$)<>1 then break
-		remove (sfm05_dev,key=sfm05a.firm_id$+sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+sfm05a.internal_seq_no$)
+		remove (sfm05_dev,key=sfm05a.firm_id$+sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+sfm05a.oper_seq_ref$)
 	wend
 
 l1000: rem --- Capture Subcontract Lead Time information
@@ -211,7 +149,7 @@ l1260:
 
 l1500: rem --- Save date for Subcontracts without op seq and try again
 
-    subs$(leadpos+9,8)=str(f_mth:"00")+str(f_day:"00")+str(f_yr:"0000")
+    subs$(leadpos+9,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
     v1$=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
     v$=v1$
     occ=occ+1
@@ -234,7 +172,6 @@ l1840: rem --- Read Loop
 		k$=keyp(sfe02_dev,end=l2300)
 	endif
     if pos(firm_id$+"  "+wo_num$=k$)<>1 goto l2300
-rem    if k$(12,1)<>"A" goto l2300
     gosub l4500
     if sfe02a.line_type$="M" goto l2070
     op_code$=sfe02a.op_code$
@@ -276,11 +213,7 @@ rem --- Calculate Date
     v1$=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
     v$=v1$
     if status$(2,1)<>"0" goto l4100
-rem	opnssort$=b0$(1,2)+"D"+b0$(3,2)+b1$(1,3)+odate$+b0$(5,7)+b0$(13,3)
-rem	remove (woe03_dev,key=opnssort$,dom=l2050)
 
-rem	opnssort$=b0$(1,2)+"D"+b0$(3,2)+b1$(1,6)+b0$(5,7)+b0$(13,3)
-rem	write record (woe03_dev,key=opnssort$) woe03d$
 l2070:
     write record (sfe02_dev) sfe02a$
     if direction$="B" gosub l4500
@@ -317,7 +250,7 @@ l2450:
 
 l2700: rem --- Save date for Subcontracts without op seq and try again
 
-    subs$(leadpos+9,8)=str(f_mth:"00")+str(f_day:"00")+str(f_yr:"0000")
+    subs$(leadpos+9,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
     v1$=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
     v$=v1$
     occ=occ+1
@@ -332,8 +265,8 @@ l3000: rem --- Rewrite Subcontract records with operation sequences
     if len(subs$)=0 or direction$="B" goto done
     for x=1 to len(subs$) step 17
         extract record (sfe32_dev,key=firm_id$+"  "+wo_num$+subs$(x+3,3),dom=l3080) sfe32a$
-        if num(sfe32a.require_date$)<>0 and fndate$(subs$(x+9,8))<>sfe32a.require_date$ and pos(sfe32a.po_status$="RP")>0 status$(1,1)="1"
-        sfe32a.require_date$=fndate$(subs$(x+9,8))
+        if num(sfe32a.require_date$)<>0 and subs$(x+9,8)<>sfe32a.require_date$ and pos(sfe32a.po_status$="RP")>0 status$(1,1)="1"
+        sfe32a.require_date$=subs$(x+9,8)
         write record (sfe32_dev) sfe32a$
     l3080:
     next x
@@ -386,7 +319,7 @@ l5000:
 l5030:
     leadpos=pos(sfe02a.op_seq$=subs$,-17,occ)
     if leadpos=0 goto l5300
-    subs$(leadpos+9,8)=str(f_mth:"00")+str(f_day:"00")+str(f_yr:"0000")
+    subs$(leadpos+9,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
     lead=num(subs$(leadpos+6,3))
 l5060:
     find record (pom01_dev,key=firm_id$+str(f_yr:"0000")+str(f_mth:"00"),dom=l5950) pom01a$
@@ -480,7 +413,7 @@ l6020:
         sfe02a.require_date$=v$
         if v<=0
 			f_day=x
-			sfe02a.require_date$=fndate$(str(f_mth:"00")+str(f_day:"00")+str(f_yr:"0000"))
+			sfe02a.require_date$=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
 			exitto l6200
 		endif
         used_hrs=0
@@ -516,8 +449,8 @@ l6250:
 
 l6400: rem --- Save Date for Subcontracts and try again
 
-    let subs$(leadpos+9,8)=str(f_mth:"00")+str(f_day:"00")+str(f_yr:"0000")
-    let occ=occ+1                                                  
+    subs$(leadpos+9,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
+    occ=occ+1                                                  
     goto l6220                                                  
 l6490: return                                                  
 
@@ -529,7 +462,7 @@ l6550: rem " --- Purchase Date Not Scheduled"
     status$(2,1)="5"
     return                                                  
 l6600: rem " --- Write Schedule Detail Files
-    w0$=firm_id$+op_code$+str(f_yr:"0000")+str(f_mth:"00")+str(x:"00")+wo_num$+sfe02a.op_seq$
+    w0$=firm_id$+op_code$+str(f_yr:"0000")+str(f_mth:"00")+str(x:"00")+wo_num$+sfe02a.internal_seq_no$
     if used_hrs+v>nfield(sfm04a$,"hrs_per_day_"+str(x:"00"))
 		z=nfield(sfm04a$,"hrs_per_day_"+str(x:"00"))-used_hrs
 	else
