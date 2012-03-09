@@ -373,7 +373,8 @@ rem --- Return Taxable Amount from detail line vector
 		
             BBjFileSystem!=BBjAPI().getFileSystem();rem 5949
             saved_key_name$=BBjFileSystem!.getFileInfo(#ordDetailDev%).getCurrentKeyName(); rem 5949
-            saved_key$=key(#ordDetailDev%); rem 5949
+            saved_key$="ZZ"; rem 5949, init key to EOF
+            saved_key$=key(#ordDetailDev%, end=*next); rem 5949
 
         rem --- Begin loop
 
@@ -446,7 +447,7 @@ rem --- Return Taxable Amount from detail line vector
         rem --- Need to use PRIMARY key to read thru ope_orddet/ope_invdet to avoid possible infinite loop
         rem --- if/when line sequence numbers are duplicated, re Barista bug 5949. 
 		
-			read (#ordDetailDev%,knum=saved_key_name$, key=saved_key$, dir=0);rem 5949
+			read (#ordDetailDev%,knum=saved_key_name$, key=saved_key$, dir=0, dom=*next);rem 5949
 
         methodend
 
