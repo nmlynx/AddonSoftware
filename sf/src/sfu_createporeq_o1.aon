@@ -8,6 +8,8 @@ rem --- All Rights Reserved
 
 escape; rem caj at TOP of 2nd Olay
 
+==================escape; rem CAJ Figure out the sequence nums and info$[9] etc
+
     setesc std_error
     seterr std_error
 
@@ -67,8 +69,8 @@ rem escape caj UNREM            call pgmdir$+"adc_progress.aon","S","","","","",
 				rem --- process sfe-32/SFE_WOSUBCNT, subcontracts
                 if sfreqa.line_type$<>"I" then 
 				escape ; rem caj step thru subcontracts
-				    k$=sfreq_key.firm_id$+sfreq_key.wo_location$+sfreq_key.wo_no$     ;rem escape caj ?????       
-					find record (sfe01a_dev,key=(sfreq_key.firm_id$+sfreq_key.wo_location$+sfreq_key.wo_no$),dom=*continue) sfe01a$
+				    sfe01_readk$=sfreq_key.firm_id$+sfreq_key.wo_location$+sfreq_key.wo_no$  ;rem escape caj ?????       
+					find record (sfe01a_dev,key=sfe01_readk$,dom=*continue) sfe01a$
 					if pos(sfe01a.wo_status$=wostatus$)=0 then  continue
 					if sfe01a.wo_category$="R" then  continue; rem skip recurring WOs
 					if cur_wo_no$<>sfreqa.wo_no$ and sfreqa.line_type$<>"S" then continue
@@ -78,8 +80,7 @@ rem --- Breaks
 						gosub write_message_record
 					endif
 					if cur_wo_no$<>sfreqa.wo_no$ then 
-						cur_wo_no$=sfreqa.wo_no$
-						sequence_no$=sfreqa.subcont_seq$					
+						cur_wo_no$=sfreqa.wo_no$				
 						process$="N"
 					endif
 
@@ -102,7 +103,6 @@ rem --- Process Subcontracts
 						message$=message$+cvs(sfreqa.ext_comments$,2)+" "
 						continue
 					endif
-					date_reqd$=fnyy_yy21$(fndate$(fndate$(sfreqa.require_date$)))
 
 rem --- Process Non-Stock Items
 
@@ -111,11 +111,11 @@ rem --- Process Non-Stock Items
 					info$[1]=sfreqa.vendor_id$
 					info$[2]="N"
 					info$[3]=sfe01a.warehouse_id$
-					info$[4]=f0$(18,6)
-					info$[5]=date_reqd$
+					info$[4]=sysinfo.system_date$
+					info$[5]=sfreqa.require_date$ 
 					info$[6]=sfreqa.unit_measure$
 					info$[7]="W"
-					info$[9]=sfreqa.wo_no$+sequence_no$
+					info$[9]=sfreqa.wo_no$+sfreqa.subcont_seq$
 					info$[10]=sfe01a.customer_id$
 					info$[14]=sfreqa.description$
 					info[1]=sfreqa.rate
@@ -135,8 +135,8 @@ rem escape caj UNREM	                write record (sfreq_dev,key=sfreq_key$) sfr
 			
 				if cvs(sfreqa.po_no$+sfreqa.po_int_seq_ref$,2)<>"" then continue; rem "Skip if already assoc'd w/a PO
 				find record (ivm02a_dev,key=firm_id$+sfreqa.warehouse_id$+sfreqa.item_id$,dom=*continue) ivm02a$
-				if ivm01a.special_ord$<>"Y" then continue
-				vendor$=ivm01a.vendor_id$
+				if ivm02a.special_ord$<>"Y" then continue
+				vendor$=ivm02a.vendor_id$
 				cost=ivm02a.unit_cost
 			
 				find record (ivm01a_dev,key=firm_id$+sfreqa.item_id$,dom=*continue) ivm01a$
@@ -147,11 +147,11 @@ rem escape caj UNREM	                write record (sfreq_dev,key=sfreq_key$) sfr
 				info$[1]=vendor$
 				info$[2]="S"
 				info$[3]=sfreqa.warehouse_id$
-				info$[4]=f0$(18,6)
-				info$[5]=fnyy_yy21$(fndate$(fndate$(sfreqa.po_status$)))
+				info$[4]=sysinfo.system_date$
+				info$[5]=sfreqa.require_date$
 				info$[6]=sfreqa.unit_measure$
 				info$[7]="W"
-				info$[9]=sfreqa.wo_no$+sequence_no$
+				info$[9]=sfreqa.wo_no$+sfreqa.material_seq$
 				info$[13]=sfreqa.item_id$
 				info[0]=ivm01a.conv_factor
 				info[2]=sfreqa.total_units
@@ -210,10 +210,10 @@ escape; rem caj top of write_message_record ==> VARIABLES LOOK WRONG
 	info$[2]="M"
 	info$[3]=sfe01a.warehouse_id$
     info$[4]=f0$(18,6)
-    info$[5]=date_reqd$
+    info$[5]=sfreqa.require_date$
 	info$[7]="W"
 	info$[8]="W"
-    info$[9]=cur_wo_no$+sequence_no$
+    info$[9]=cur_wo_no$+sfreqa.subcont_seq$
     info$[14]=cvs(message$,2)
     
 	gosub create_requisition
