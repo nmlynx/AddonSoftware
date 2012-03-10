@@ -128,9 +128,9 @@ rem --- fill listbox for use with Op Sequence
 		next x
 	endif
 
-	callpoint!.setTableColumnAttribute("SFE_WOMATL.OP_INT_SEQ_REF","LDAT",ldat$)
+	callpoint!.setTableColumnAttribute("SFE_WOMATL.OPER_SEQ_REF","LDAT",ldat$)
 	my_grid!=Form!.getControl(5000)
-	ListColumn=6
+	ListColumn=5
 	my_control!=my_grid!.getColumnListControl(ListColumn)
 	my_control!.removeAllItems()
 	my_control!.insertItems(0,ops_list!)
