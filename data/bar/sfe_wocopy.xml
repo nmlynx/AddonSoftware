@@ -19,9 +19,9 @@
 			<ASC_VERSION_ID id="ddm_tables.sfe_wocopy">1.0</ASC_VERSION_ID>
 			<DD_EXPORT_DATA id="ddm_tables.sfe_wocopy">N</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.sfe_wocopy">20120120</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.sfe_wocopy">20120305</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.sfe_wocopy">20120305</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.sfe_wocopy">120628</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.sfe_wocopy">20120309</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.sfe_wocopy">20120309</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.sfe_wocopy">161312</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.sfe_wocopy">/dev_addon/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_FTYP id="ddm_tables.sfe_wocopy">S</DD_ATTR_FTYP>
 			<DD_ATTR_PCAL id="ddm_tables.sfe_wocopy">[+DIR_PGM]adx_dummy.aon</DD_ATTR_PCAL>
@@ -130,6 +130,17 @@
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_wocopy003">0</DD_ATTR_CTLH>
 			<DD_ATTR_TIND id="ddm_table_disp.sfe_wocopy003">4</DD_ATTR_TIND>
 		</RECORD>
+		<RECORD id="ddm_table_disp.sfe_wocopy004">
+			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_wocopy004">SFE_WOCOPY      </DD_TABLE_ALIAS>
+			<DD_SEQUENCE id="ddm_table_disp.sfe_wocopy004">004</DD_SEQUENCE>
+			<DD_DATA_NAME id="ddm_table_disp.sfe_wocopy004">WO_CATEGORY     </DD_DATA_NAME>
+			<DD_CTRL_NAME id="ddm_table_disp.sfe_wocopy004">WO_CATEGORY     </DD_CTRL_NAME>
+			<DD_ATTR_LABL id="ddm_table_disp.sfe_wocopy004">Category</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_disp.sfe_wocopy004">Category</DD_ATTR_LABS>
+			<DD_ATTR_CTLX id="ddm_table_disp.sfe_wocopy004">0</DD_ATTR_CTLX>
+			<DD_ATTR_CTLY id="ddm_table_disp.sfe_wocopy004">0</DD_ATTR_CTLY>
+			<DD_ATTR_CTLH id="ddm_table_disp.sfe_wocopy004">0</DD_ATTR_CTLH>
+		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_cpro">
 		<ID id="ddm_column_cpro">DDM_COLUMN_CPRO</ID>
@@ -155,6 +166,11 @@
 			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_wocopyclosed_datec">SFE_WOCOPY      </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_opts.sfe_wocopyclosed_datec">CLOSED_DATE     </DD_DVAR_NAME>
 			<DD_ATTR_OPTS id="ddm_column_opts.sfe_wocopyclosed_datec">C</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.sfe_wocopywo_categoryw">
+			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_wocopywo_categoryw">SFE_WOCOPY      </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.sfe_wocopywo_categoryw">WO_CATEGORY     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.sfe_wocopywo_categoryw">W</DD_ATTR_OPTS>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_elements">
@@ -236,6 +252,43 @@
 			<DD_ATTR_LABL id="ddm_elements.closed_date">Date Closed</DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_elements.closed_date">Date Closed</DD_ATTR_LABS>
 			<DD_ATTR_STYP id="ddm_elements.closed_date">1</DD_ATTR_STYP>
+		</RECORD>
+		<RECORD id="ddm_elements.wo_category">
+			<DD_DATA_NAME id="ddm_elements.wo_category">WO_CATEGORY     </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.wo_category">Work Order Category [I/N/R]   </DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.wo_category">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.wo_category">1</DD_DATA_LENGTH>
+			<DD_MASK_TYPE id="ddm_elements.wo_category"> </DD_MASK_TYPE>
+			<ASC_COMP_ID id="ddm_elements.wo_category">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.wo_category">SF </ASC_PROD_ID>
+			<DD_CREATE_DATE id="ddm_elements.wo_category">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.wo_category">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_CTYP id="ddm_elements.wo_category">L</DD_ATTR_CTYP>
+			<DD_ATTR_DCOM id="ddm_elements.wo_category">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.wo_category">            </DD_ATTR_DEXP>
+			<DD_ATTR_LABL id="ddm_elements.wo_category">Work Order Category</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.wo_category">WO Category</DD_ATTR_LABS>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_element_ldat">
+		<ID id="ddm_element_ldat">DDM_ELEMENT_LDAT</ID>
+		<RECORD id="ddm_element_ldat.wo_category01">
+			<DD_DATA_NAME id="ddm_element_ldat.wo_category01">WO_CATEGORY     </DD_DATA_NAME>
+			<DD_ATTR_SEQ id="ddm_element_ldat.wo_category01">01</DD_ATTR_SEQ>
+			<DD_ATTR_LDAT id="ddm_element_ldat.wo_category01">I</DD_ATTR_LDAT>
+			<DD_ATTR_LDAT_DS id="ddm_element_ldat.wo_category01">Inventory Item</DD_ATTR_LDAT_DS>
+		</RECORD>
+		<RECORD id="ddm_element_ldat.wo_category02">
+			<DD_DATA_NAME id="ddm_element_ldat.wo_category02">WO_CATEGORY     </DD_DATA_NAME>
+			<DD_ATTR_SEQ id="ddm_element_ldat.wo_category02">02</DD_ATTR_SEQ>
+			<DD_ATTR_LDAT id="ddm_element_ldat.wo_category02">N</DD_ATTR_LDAT>
+			<DD_ATTR_LDAT_DS id="ddm_element_ldat.wo_category02">Non-Stock Item</DD_ATTR_LDAT_DS>
+		</RECORD>
+		<RECORD id="ddm_element_ldat.wo_category03">
+			<DD_DATA_NAME id="ddm_element_ldat.wo_category03">WO_CATEGORY     </DD_DATA_NAME>
+			<DD_ATTR_SEQ id="ddm_element_ldat.wo_category03">03</DD_ATTR_SEQ>
+			<DD_ATTR_LDAT id="ddm_element_ldat.wo_category03">R</DD_ATTR_LDAT>
+			<DD_ATTR_LDAT_DS id="ddm_element_ldat.wo_category03">Recurring/Permanent</DD_ATTR_LDAT_DS>
 		</RECORD>
 	</ALIAS>
 </SFE_WOCOPY>

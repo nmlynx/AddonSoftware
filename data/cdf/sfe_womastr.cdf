@@ -193,9 +193,9 @@ rem --- Validate Open Sales Order
 	dim ope_ordhdr$:fnget_tpl$("OPE_ORDHDR")
 	gosub build_ord_line
 
-rem --- Disable qty/yield if data exists in sfe_womatl (sfe-22) and provide explanatory message
+rem --- Disable qty/yield if data exists in sfe_womatl (sfe-22)
 
-	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")<>"C"
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")<>"C" and callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")="I"
 
 		sfe_womatl_dev=fnget_dev("SFE_WOMATL")
 		dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
@@ -206,18 +206,10 @@ rem --- Disable qty/yield if data exists in sfe_womatl (sfe-22) and provide expl
 			if sfe_womatl$.firm_id$+sfe_womatl.wo_location$+sfe_womatl.wo_no$=firm_id$+loc$+wo_no$
 				callpoint!.setColumnEnabled("SFE_WOMASTR.SCH_PROD_QTY",0)
 				callpoint!.setColumnEnabled("SFE_WOMASTR.EST_YIELD",0)
-				callpoint!.setMessage("SF_MATS_EXIST")
+				rem - this gets to be annoying - callpoint!.setMessage("SF_MATS_EXIST")
 			endif
 			break
 		wend
-	endif
-
-rem --- Information warning for category N WO's - requirements may need to be adjusted if qty/yield is changed
-
-	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")<>"C"
-		if callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")="N"
-			callpoint!.setMessage("SF_ADJ_REQS")
-		endif
 	endif
 
 rem --- set DevObjects
@@ -228,6 +220,14 @@ rem --- set DevObjects
 rem --- Set DevObject
 
 	callpoint!.setDevObject("wo_est_yield",callpoint!.getUserInput())
+
+rem --- Informational warning for category N WO's - requirements may need to be adjusted if qty/yield is changed
+
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")<>"C" and callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")="N"
+		if callpoint!.getRecordMode()="C" and callpoint!.getColumnUndoData("SFE_WOMASTR.EST_YIELD")<>callpoint!.getUserInput()
+			callpoint!.setMessage("SF_ADJ_REQS")
+		endif
+	endif
 [[SFE_WOMASTR.AOPT-COPY]]
 rem --- Copy from other Work Order
 
@@ -302,7 +302,7 @@ rem --- Copy the Work Order
 :		"",
 :		dflt_data$[all]
 
-rem	callpoint!.setStatus("RECORD:["+firm_id$+wo_loc$+wo_no$+"]")
+	callpoint!.setStatus("SAVE")
 [[SFE_WOMASTR.SCH_PROD_QTY.AVAL]]
 rem --- Verify minimum quantity > 0
 
@@ -320,6 +320,14 @@ rem --- Enable Copy Button
 	endif
 
 	callpoint!.setDevObject("prod_qty",callpoint!.getUserInput())
+
+rem --- Informational warning for category N WO's - requirements may need to be adjusted if qty/yield is changed
+
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")<>"C" and callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")="N"
+		if callpoint!.getRecordMode()="C" and callpoint!.getColumnUndoData("SFE_WOMASTR.SCH_PROD_QTY")<>callpoint!.getUserInput()
+			callpoint!.setMessage("SF_ADJ_REQS")
+		endif
+	endif
 [[SFE_WOMASTR.AOPT-CSTS]]
 rem --- Display Cost Summary
 

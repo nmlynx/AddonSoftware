@@ -1,4 +1,28 @@
 [[SFE_WOCOPY.ASVA]]
+rem --- Check to make sure the category is the same
+
+	if callpoint!.getDevObject("category")<>callpoint!.getColumnData("<<DISPLAY>>.WO_CATEGORY")
+		dim msg_tokens$[1]
+		msg_id$="SF_DIFF_CAT"
+		gosub disp_message
+		if msg_opt$="Y"
+			callpoint!.setStatus("CLEAR")
+			break
+		endif
+	endif
+
+rem --- Check for quantity difference
+
+	callpoint!.setDevObject("adjust","N")
+	callpoint!.setDevObject("adj_div",0)
+	if num(callpoint!.getDevObject("prod_qty"))<>num(callpoint!.getColumnData("<<DISPLAY>>.SCH_PROD_QTY"))
+		dim msg_tokens$[1]
+		msg_id$="SF_ADJUST_QTY";rem --- this is just an informational message at present, until we decide what formula should be for doing an adjustment.CAH
+		gosub disp_message
+		callpoint!.setDevObject("adj_div",old_qty)
+		callpoint!.setDevObject("adjust",msg_opt$)
+	endif
+
 rem --- Now populate data from the old WO to the new
 
 	wo_loc$=callpoint!.getDevObject("wo_loc")
@@ -6,7 +30,8 @@ rem --- Now populate data from the old WO to the new
 	from_wo$=callpoint!.getColumnData("SFE_WOCOPY.WO_NO")
 	adjust$=callpoint!.getDevObject("adjust")
 	adjust_divisor=callpoint!.getDevObject("adj_div")
-	if adjust_divisor=0 adjust_divisor=num(callpoint!.getDevObject("prod_qty"))
+	new_prod_qty=num(callpoint!.getDevObject("prod_qty"))
+	if adjust_divisor=0 adjust_divisor=new_prod_qty
 	for files=1 to 3
 		if files=1
 			woreq_dev=fnget_dev("SFE_WOOPRTN")
@@ -29,23 +54,25 @@ rem --- Now populate data from the old WO to the new
 			read record (woreq_dev,end=*break)woreq$
 			if pos(firm_id$+wo_loc$+from_wo$=woreq$)<>1 break
 			woreq.wo_no$=to_wo$
+goto bypass_adjust; rem bypassing until we figure out what adjusting really means. CAH
 			if adjust$="N"
 				if files=1
-					woreq.runtime_hrs=woreq.total_time/adjust_divisor
-					woreq.unit_cost=woreq.tot_std_cost/adjust_divisor
+					woreq.runtime_hrs=woreq.total_time/new_prod_qty
+					woreq.unit_cost=woreq.tot_std_cost/new_prod_qty
 				else
-					woreq.units=woreq.total_units/adjust_divisor
-					woreq.unit_cost=woreq.total_cost/adjust_divisor
+					woreq.units=woreq.total_units/new_prod_qty
+					woreq.unit_cost=woreq.total_cost/new_prod_qty
 				endif
 			else
 				if files=1
-					woreq.total_time=woreq.total_time*adjust_divisor/adjust_divisor
-					woreq.tot_std_cost=adjust_divisor*woreq.unit_cost
+					woreq.total_time=woreq.total_time*new_prod_qty/adjust_divisor
+					woreq.tot_std_cost=new_prod_qty*woreq.unit_cost
 				else
-					woreq.total_units=woreq.total_units*adjust_divisor/adjust_divisor
-					woreq.total_cost=adjust_divisor*woreq.unit_cost
+					woreq.total_units=woreq.total_units*new_prod_qty/adjust_divisor
+					woreq.total_cost=new_prod_qty*woreq.unit_cost
 				endif
 			endif
+bypass_adjust:
 			if files=3
 				woreq.po_no$=""
 				woreq_po_line_no$=""
@@ -69,7 +96,6 @@ rem --- Copy Comments
 		wocomm$=field(wocomm$)
 		write record (wocomm_devout) wocomm$
 	wend
-
 [[SFE_WOCOPY.BEND]]
 rem --- Close copy channel
 
@@ -111,36 +137,11 @@ rem --- Populate display fields
 
 	callpoint!.setColumnData("<<DISPLAY>>.CLOSED_DATE",wo_mastr.closed_date$,1)
 	callpoint!.setColumnData("<<DISPLAY>>.OPENED_DATE",wo_mastr.opened_date$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.WO_CATEGORY",wo_mastr.wo_category$)
+
 	if wo_mastr.wo_status$="C"
 		old_qty=wo_mastr.qty_cls_todt
 	else
 		old_qty=wo_mastr.sch_prod_qty
 	endif
 	callpoint!.setColumnData("<<DISPLAY>>.SCH_PROD_QTY",str(old_qty),1)
-
-rem --- Check to make sure the category is the same
-
-	if callpoint!.getDevObject("category")<>wo_mastr.wo_category$
-		dim msg_tokens$[1]
-		msg_id$="SF_DIFF_CAT"
-		if msg_opt$="N"
-			callpoint!.setUserInput("")
-			break
-		endif
-	endif
-
-rem --- Check for quantity difference
-
-	callpoint!.setDevObject("adjust","N")
-	callpoint!.setDevObject("adj_div",0)
-	if num(callpoint!.getDevObject("prod_qty"))<>old_qty
-		dim msg_tokens$[1]
-		msg_id$="SF_ADJUST_QTY"
-		if msg_opt$="N"
-			adjust_divisor=num(callpoint!.getDevObject("prod_qty"))
-		else
-			adjust_divisor=old_qty
-		endif
-		callpoint!.setDevObject("adj_div",adjust_divisor)
-		callpoint!.setDevObject("adjust",msg_opt$)
-	endif
