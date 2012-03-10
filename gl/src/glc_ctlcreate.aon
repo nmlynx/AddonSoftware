@@ -18,6 +18,8 @@ rem --- table$      : Transaction work table AON (glw-11) name (Returned)
 rem --- gl$         : Post to GL (Y/N)? (Returned)
 rem --- status      : 0=No Error (Returned)
 
+use java.util.GregorianCalendar
+
     seterr std_error
     setesc std_error
     enter caller$,application$,table$,gl$,status
@@ -80,6 +82,7 @@ rem --- Remaining initializations
     action=0
     message$=""
     app_comp$=stbl("+AON_APPCOMPANY")
+    Calendar! = new GregorianCalendar()
 
     while more
 
@@ -391,6 +394,15 @@ rem --- or returned.
                 call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,begdate$,enddate$,status
                 if status=0 
                     dates$[period,index]=begdate$
+                    if len(enddate$)>7 then
+                        yyyy$=enddate$(1,4)
+                        mm$=enddate$(5,2)
+                        dd$=enddate$(7,2)
+                        rem --- Adjust last day of February for leap year
+                        if mm$="02" and (dd$="28" or dd$="29") then
+                            enddate$(7,2)=str(iff(Calendar!.isLeapYear(num(yyyy$)),29,28))
+                        endif
+                    endif
                     dates$[period,index+1]=enddate$
                 endif
             next period

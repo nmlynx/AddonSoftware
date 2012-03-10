@@ -280,7 +280,9 @@ display_date:rem --- Display Current Date
     if start_day<=0 start_day=start_day+7
 
     no_days=num(day_str$(curr_mo*2-1,2))
-    if mod(curr_yr,4)=0 and curr_mo=2 then no_days=29
+    if mod(curr_yr,4)=0 and curr_mo=2 then 
+        no_days=iff(Calendar!.isLeapYear(curr_yr),29,28)
+    endif
 
     FirstDate!.setText(first_date$)
     LastDate!.setText(last_date$)
