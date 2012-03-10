@@ -94,6 +94,7 @@ l800: rem --- Check Validity of Data
     x$=""
     x0=0
     call pgmdir$+"adc_daydates.aon",v$,x$,x0
+	escape;rem jpb v$ sh/be 04/12
     if v$="N" status$(2,1)="2"; goto l4100
     if pos(direction$="BF")=0 status$(2,1)="4"; goto l4100
 
@@ -117,20 +118,21 @@ l1030: rem --- Read Loop
     if pos(firm_id$+"  "+wo_num$=k$)<>1 goto l1200
     read record (sfe32_dev) sfe32a$
     if sfe32a.line_type$<>"S" goto l1030
-    subs$=subs$+sfe32a.op_seq$+sfe32a.subcont_seq$+str(sfe32a.lead_time:"000")+"        "
+    subs$=subs$+sfe32a.op_int_seq_ref$+sfe32a.subcont_seq$+str(sfe32a.lead_time:"000")+"        "
     goto l1030
 
 l1200: rem --- Set Required Date in Subcontracts for Forward method
 
     if direction$<>"F" goto l1800
+escape;rem jpb1 v$ sh/be 04/12	
     f_yr=num(v$(1,4))
     f_mth=num(v$(5,2))
     f_day=num(v$(7,2))
     occ=1
 l1230:
-    leadpos=pos("   "=subs$,17,occ)
+    leadpos=pos("   "=subs$,26,occ)
     if leadpos=0 goto l1800
-    lead=num(subs$(leadpos+6,3))
+    lead=num(subs$(leadpos+15,3))
 l1260:
     find record (pom01_dev,key=firm_id$+str(f_yr:"0000")+str(f_mth:"00"),dom=l1550) pom01a$
     for x=f_day to pom01a.days_in_mth
@@ -149,7 +151,7 @@ l1260:
 
 l1500: rem --- Save date for Subcontracts without op seq and try again
 
-    subs$(leadpos+9,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
+    subs$(leadpos+18,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
     v1$=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
     v$=v1$
     occ=occ+1
@@ -165,7 +167,7 @@ l1800: rem --- Get Operation record from woe-02
     if direction$<>"F" read (sfe02_dev,key=firm_id$+"  "+wo_num$+$ff$,dom=*next)
 
 l1840: rem --- Read Loop
-
+escape
     if direction$="F"
 		k$=key(sfe02_dev,end=l2300)
 	else
@@ -227,9 +229,9 @@ l2300: rem --- Set Required Date in Subcontracts for Backward method
     f_day=num(v$(7,2))
     occ=1
 l2330:
-    leadpos=pos("   "=subs$,-17,occ)
+    leadpos=pos("   "=subs$,-26,occ)
     if leadpos=0 goto l3000
-    lead=num(subs$(leadpos+6,3))
+    lead=num(subs$(leadpos+15,3))
 l2360:
     find record (pom01_dev,key=firm_id$+str(f_yr:"0000")+str(f_mth:"00"),dom=l2750) pom01a$
     if f_day<1 goto l2450
@@ -250,7 +252,7 @@ l2450:
 
 l2700: rem --- Save date for Subcontracts without op seq and try again
 
-    subs$(leadpos+9,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
+    subs$(leadpos+18,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
     v1$=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
     v$=v1$
     occ=occ+1
@@ -263,10 +265,10 @@ l3000: rem --- Rewrite Subcontract records with operation sequences
 
     if sfs01a.po_interface$<>"Y" goto done
     if len(subs$)=0 or direction$="B" goto done
-    for x=1 to len(subs$) step 17
-        extract record (sfe32_dev,key=firm_id$+"  "+wo_num$+subs$(x+3,3),dom=l3080) sfe32a$
-        if num(sfe32a.require_date$)<>0 and subs$(x+9,8)<>sfe32a.require_date$ and pos(sfe32a.po_status$="RP")>0 status$(1,1)="1"
-        sfe32a.require_date$=subs$(x+9,8)
+    for x=1 to len(subs$) step 26
+        extract record (sfe32_dev,key=firm_id$+"  "+wo_num$+subs$(x+12,3),dom=l3080) sfe32a$
+        if num(sfe32a.require_date$)<>0 and subs$(x+18,8)<>sfe32a.require_date$ and pos(sfe32a.po_status$="RP")>0 status$(1,1)="1"
+        sfe32a.require_date$=subs$(x+18,8)
         write record (sfe32_dev) sfe32a$
     l3080:
     next x
@@ -317,10 +319,10 @@ l5000:
     occ=1
     if sfs01a.po_interface$<>"Y" goto l5300
 l5030:
-    leadpos=pos(sfe02a.op_seq$=subs$,-17,occ)
+    leadpos=pos(sfe02a.op_seq$=subs$,-26,occ)
     if leadpos=0 goto l5300
-    subs$(leadpos+9,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
-    lead=num(subs$(leadpos+6,3))
+    subs$(leadpos+18,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
+    lead=num(subs$(leadpos+15,3))
 l5060:
     find record (pom01_dev,key=firm_id$+str(f_yr:"0000")+str(f_mth:"00"),dom=l5950) pom01a$
     if f_day>pom01a.days_in_mth f_day=pom01a.days_in_mth
@@ -428,9 +430,9 @@ l6200: rem --- Do Subcontracts
 
     if sfs01a.po_interface$<>"Y" or ele<>3 goto l6490
 l6220:
-    leadpos=pos(sfe02a.op_seq$=subs$,17,occ)
+    leadpos=pos(sfe02a.op_seq$=subs$,26,occ)
     if leadpos=0 goto l6490
-    lead=num(subs$(leadpos+6,3))
+    lead=num(subs$(leadpos+15,3))
 l6250:
     find record (pom01_dev,key=firm_id$+str(f_yr:"0000")+str(f_mth:"00"),dom=l6550) pom01a$
     for x=f_day to pom01a.days_in_mth
@@ -449,7 +451,7 @@ l6250:
 
 l6400: rem --- Save Date for Subcontracts and try again
 
-    subs$(leadpos+9,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
+    subs$(leadpos+18,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
     occ=occ+1                                                  
     goto l6220                                                  
 l6490: return                                                  
@@ -462,13 +464,19 @@ l6550: rem " --- Purchase Date Not Scheduled"
     status$(2,1)="5"
     return                                                  
 l6600: rem " --- Write Schedule Detail Files
-    w0$=firm_id$+op_code$+str(f_yr:"0000")+str(f_mth:"00")+str(x:"00")+wo_num$+sfe02a.internal_seq_no$
+
+	dim sfm05a$:fattr(sfm05a$)
+	sfm05a.firm_id$=firm_id$
+	sfm05a.op_code$=op_code$
+	sfm05a.sched_date$=str(f_yr:"0000")+str(f_mth:"00")+str(x:"00")
+	sfm05a.wo_no$=wo_num$
+	sfm05a.oper_seq_ref$=sfe02a.internal_seq_no$
     if used_hrs+v>nfield(sfm04a$,"hrs_per_day_"+str(x:"00"))
 		z=nfield(sfm04a$,"hrs_per_day_"+str(x:"00"))-used_hrs
 	else
 		z=v
 	endif
-    extract record (sfm05_dev,key=w0$,dom=*next) sfm05a$
+    extract record (sfm05_dev,key=firm_id$+sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+sfm05a.oper_seq_ref$,dom=*next) sfm05a$
 	if ele=0 sfm05a.queue_time=sfm05a.queue_time+z
 	if ele=1 sfm05a.setup_time=sfm05a.setup_time+z
 	if ele=2 sfm05a.runtime_hrs=sfm05a.runtime_hrs+z
