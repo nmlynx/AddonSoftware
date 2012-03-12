@@ -9,7 +9,7 @@ rem --- Do not commit unless quantity issued has changed!
 	sfe_womatisd_dev=fnget_dev("SFE_WOMATISD")
 	dim sfe_womatisd$:fnget_tpl$("SFE_WOMATISD")
 	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.WOMATISD_SEQ_NO")
+	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
 	readrecord(sfe_womatisd_dev,key=sfe_womatisd_key$,dom=*next)sfe_womatisd$
 	start_qty_issued=sfe_womatisd.qty_issued
 	qty_issued=num(callpoint!.getColumnData("SFE_WOMATISD.QTY_ISSUED"))
@@ -83,7 +83,7 @@ rem wgh ... maybe do lot/serial before commits? ... depends on how committments 
 			dim sfe_wolsissu$:fnget_tpl$("SFE_WOLSISSU")
 			tot_ls_qty_issued=0
 			sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-			sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.WOMATISD_SEQ_NO")
+			sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
 			read(sfe_wolsissu_dev,key=sfe_womatisd_key$,dom=*next)
 			while 1
 				sfe_wolsissu_key$=key(sfe_wolsissu_dev,end=*break)
@@ -97,9 +97,9 @@ rem wgh ... rethink this for AGRE needs ... don't commit unless qty_issued has c
 rem wgh ... make sure this plays well with lookup via AOPT-LENT
 			if tot_ls_qty_issued<>qty_issued+num(callpoint!.getColumnData("SFE_WOMATISD.TOT_QTY_ISS")) then
 				sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-				sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.WOMATISD_SEQ_NO")
+				sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
 				callpoint!.setDevObject("sfe_womatisd_key",sfe_womatisd_key$)
-				callpoint!.setDevObject("womatisd_seq_ref",callpoint!.getColumnData("SFE_WOMATISD.WOMATISD_SEQ_NO"))
+				callpoint!.setDevObject("womatisd_seq_ref",callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO"))
 				callpoint!.setDevObject("item_id",callpoint!.getColumnData("SFE_WOMATISD.ITEM_ID"))
 				callpoint!.setDevObject("womatisd_qty_issued",qty_issued)
 				call stbl("+DIR_SYP")+"bam_run_prog.bbj","SFE_WOLSISSU",stbl("+USER_ID"),"","",table_chans$[all],"",dflt_data$[all]
@@ -137,9 +137,9 @@ rem wgh ... disable unless ... ivm_itemmast.lotser_item$="Y" and ivm_itemmast.in
 
 rem --- Lot/serial entry
 	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.WOMATISD_SEQ_NO")
+	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
 	callpoint!.setDevObject("sfe_womatisd_key",sfe_womatisd_key$)
-	callpoint!.setDevObject("womatisd_seq_ref",callpoint!.getColumnData("SFE_WOMATISD.WOMATISD_SEQ_NO"))
+	callpoint!.setDevObject("womatisd_seq_ref",callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO"))
 	callpoint!.setDevObject("item_id",callpoint!.getColumnData("SFE_WOMATISD.ITEM_ID"))
 	callpoint!.setDevObject("womatisd_qty_issued",callpoint!.getColumnData("SFE_WOMATISD.QTY_ISSUED"))
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj","SFE_WOLSISSU",stbl("+USER_ID"),"","",table_chans$[all],"",dflt_data$[all]
@@ -175,7 +175,7 @@ rem --- Has record been written yet?
 	sfe_womatisd_dev=fnget_dev("SFE_WOMATISD")
 	dim sfe_womatisd$:fnget_tpl$("SFE_WOMATISD")
 	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.WOMATISD_SEQ_NO")
+	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
 	found=0
 	readrecord(sfe_womatisd_dev,key=sfe_womatisd_key$,dom=*next)sfe_womatisd$; found=1
 	if !found then
@@ -204,10 +204,10 @@ rem --- Delete lot/serial and inventory commitments. Must do this before sfe_wom
 
 	rem --- Delete lot/serial commitments, but keep inventory commitments (for now)
 	if pos(callpoint!.getDevObject("lotser")="LS") then
-		read(sfe_wolsissu_dev,key=sfe_womatish_key$+sfe_womatisd.womatisd_seq_no$,dom=*next)
+		read(sfe_wolsissu_dev,key=sfe_womatish_key$+sfe_womatisd.internal_seq_no$,dom=*next)
 		while 1
 			sfe_wolsissu_key$=key(sfe_wolsissu_dev,end=*break)
-			if pos(sfe_womatish_key$+sfe_womatisd.womatisd_seq_no$=sfe_wolsissu_key$)<>1 then break
+			if pos(sfe_womatish_key$+sfe_womatisd.internal_seq_no$=sfe_wolsissu_key$)<>1 then break
 			readrecord(sfe_wolsissu_dev)sfe_wolsissu$
 
 			rem --- Delete lot/serial commitments
@@ -251,7 +251,7 @@ rem --- Was record written?
 	sfe_womatisd_dev=fnget_dev("SFE_WOMATISD")
 	dim sfe_womatisd$:fnget_tpl$("SFE_WOMATISD")
 	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.WOMATISD_SEQ_NO")
+	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
 	found=0
 	readrecord(sfe_womatisd_dev,key=sfe_womatisd_key$,dom=*next)sfe_womatisd$; found=1
 	if !found then

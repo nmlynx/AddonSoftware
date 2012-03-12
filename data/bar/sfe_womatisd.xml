@@ -19,8 +19,8 @@
 			<DD_EXPORT_DATA id="ddm_tables.sfe_womatisd">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.sfe_womatisd">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_tables.sfe_womatisd">20120312</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.sfe_womatisd">20120309</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.sfe_womatisd">084232</DD_LSTSYNC_TIME>
+			<DD_LSTSYNC_DATE id="ddm_tables.sfe_womatisd">20120312</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.sfe_womatisd">085632</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.sfe_womatisd">C:/aon_dev/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.sfe_womatisd">AO_DISP_SEQ</DD_ATTR_DKNM>
 			<DD_ATTR_FTYP id="ddm_tables.sfe_womatisd">G</DD_ATTR_FTYP>
@@ -97,7 +97,7 @@
 		<RECORD id="ddm_table_tpls.sfe_womatisd">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.sfe_womatisd">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.sfe_womatisd">sfe-25</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.sfe_womatisd">firm_id:c(2),wo_location:c(2),wo_no:c(7),material_seq:c(3),womatisd_seq_no:c(12),unit_measure:c(2),womatdtl_seq_ref:c(12),warehouse_id:c(2),item_id:c(20),require_date:c(8),qty_ordered:n(7*),tot_qty_iss:n(7*),unit_cost:n(7*),qty_issued:n(7*),issue_cost:n(7*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.sfe_womatisd">firm_id:c(2),wo_location:c(2),wo_no:c(7),material_seq:c(3),internal_seq_no:c(12),unit_measure:c(2),womatdtl_seq_ref:c(12),warehouse_id:c(2),item_id:c(20),require_date:c(8),qty_ordered:n(7*),tot_qty_iss:n(7*),unit_cost:n(7*),qty_issued:n(7*),issue_cost:n(7*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -148,7 +148,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_womatisd0004">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.sfe_womatisd0004">00</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_womatisd0004">04</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womatisd0004">WOMATISD_SEQ_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_womatisd0004">INTERNAL_SEQ_NO</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.sfe_womatisd0004">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_womatisd0004">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_womatisd0004">0</DD_SEGMENT_LEN>
@@ -279,7 +279,7 @@
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatisd005">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_womatisd005">005</DD_SEQUENCE>
 			<DD_DATA_NAME id="ddm_table_cols.sfe_womatisd005">INTERNAL_SEQ_NO </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatisd005">WOMATISD_SEQ_NO </DD_DVAR_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatisd005">INTERNAL_SEQ_NO </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.sfe_womatisd005">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_womatisd005">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_womatisd005">N</DD_FIELD_DELIM>
@@ -544,11 +544,6 @@
 			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_womatisdmaterial_seqo">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_opts.sfe_womatisdmaterial_seqo">MATERIAL_SEQ    </DD_DVAR_NAME>
 			<DD_ATTR_OPTS id="ddm_column_opts.sfe_womatisdmaterial_seqo">O</DD_ATTR_OPTS>
-		</RECORD>
-		<RECORD id="ddm_column_opts.sfe_womatisdwomatisd_seq_noo">
-			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_womatisdwomatisd_seq_noo">SFE_WOMATISD    </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_opts.sfe_womatisdwomatisd_seq_noo">WOMATISD_SEQ_NO </DD_DVAR_NAME>
-			<DD_ATTR_OPTS id="ddm_column_opts.sfe_womatisdwomatisd_seq_noo">O</DD_ATTR_OPTS>
 		</RECORD>
 		<RECORD id="ddm_column_opts.sfe_womatisdwomatdtl_seq_refo">
 			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_womatisdwomatdtl_seq_refo">SFE_WOMATISD    </DD_TABLE_ALIAS>

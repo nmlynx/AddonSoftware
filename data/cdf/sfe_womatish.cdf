@@ -41,10 +41,10 @@ rem --- Delete inventory issues and commitments. Must do this before sfe_womatis
 
 		rem --- Delete lot/serial commitments, but keep inventory commitments (for now)
 		if pos(callpoint!.getDevObject("lotser")="LS") then
-			read(sfe_wolsissu_dev,key=sfe_womatish_key$+sfe_womatisd.womatisd_seq_no$,dom=*next)
+			read(sfe_wolsissu_dev,key=sfe_womatish_key$+sfe_womatisd.internal_seq_no$,dom=*next)
 			while 1
 				sfe_wolsissu_key$=key(sfe_wolsissu_dev,end=*break)
-				if pos(sfe_womatish_key$+sfe_womatisd.womatisd_seq_no$=sfe_wolsissu_key$)<>1 then break
+				if pos(sfe_womatish_key$+sfe_womatisd.internal_seq_no$=sfe_wolsissu_key$)<>1 then break
 				readrecord(sfe_wolsissu_dev)sfe_wolsissu$
 
 				rem --- Delete lot/serial commitments
@@ -187,7 +187,7 @@ rem --- New materials issues entry or no existing materials issues
 			sfe_womatisd.wo_location$=sfe_womatdtl.wo_location$
 			sfe_womatisd.wo_no$=sfe_womatdtl.wo_no$
 			sfe_womatisd.material_seq$=sfe_womatdtl.material_seq$
-			sfe_womatisd.womatisd_seq_no$=sfe_womatdtl.internal_seq_no$
+			sfe_womatisd.internal_seq_no$=sfe_womatdtl.internal_seq_no$
 			sfe_womatisd.unit_measure$=sfe_womatdtl.unit_measure$
 			sfe_womatisd.womatdtl_seq_ref$=sfe_womatdtl.internal_seq_no$
 			sfe_womatisd.warehouse_id$=sfe_womatdtl.warehouse_id$
