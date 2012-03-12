@@ -206,8 +206,8 @@ rem --- Now Print It
 
             if sfm07a_key.record_id$="M" then 
                 OutVect!.addItem(fndate$(sftran.trans_date$))
-                OutVect!.addItem(sftran.record_id_m$)
-                OutVect!.addItem(sftran.material_seq$)
+                OutVect!.addItem("M")
+                OutVect!.addItem(sftran.material_seq_ref$)
                 gosub material_details
                 if pos("O"=transtype$)>0 then xwk=fnblank(2)
                 OutVect!.addItem(str(sftran.units))
@@ -422,7 +422,7 @@ subcontract_details: rem --- Subcontracts Here
 			rem -- Columns$[3,x]-[5,x]
 			OutVect!.addItem(fnmask$(sftran.vendor_id$,c3$)+"  "+apm01a.vendor_name$)
 			OutVect!.addItem("")
-			OutVect!.addItem("PO #: "+sftran.po_no$+sftran.po_line_no$)
+			OutVect!.addItem("PO #: "+sftran.po_no$+sftran.pur_ord_seq_ref$)
         endif
         return
 

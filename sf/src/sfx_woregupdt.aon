@@ -153,9 +153,10 @@ rem --- Materials
                 sft21a.wo_location$=sfe05a.wo_location$;sftran_key.wo_location$=sfe05a.wo_location$
                 sft21a.wo_no$=sfe05a.wo_no$;sftran_key.wo_no$=sfe05a.wo_no$
                 sft21a.trans_date$=p9$;sftran_key.trans_date$=p9$
-                sft21a.record_id_m$="M";sftran_key.record_id_m$="M"
+rem                sft21a.record_id_m$="M";sftran_key.record_id_m$="M"
                 sft21a.trans_seq$="001";sftran_key.trans_seq$="001"
-                sft21a.material_seq$="001"
+escape; rem ... this needs to be a reference to an internal sequence number
+                sft21a.material_seq_ref$="001"
                 sft21a.unit_measure$="CV"
                 sft21a.warehouse_id$=ivs01a.warehouse_id$
                 sft21a.item_id$="CNVERSION"
