@@ -328,7 +328,7 @@ rem --- Item ID is disabled except for a new row, so can init entire new row her
 		rem --- Looking for matching warehouse and item
 		if sfe_womatdtl.warehouse_id$+sfe_womatdtl.item_id$=warehouse_id$+item_id$ then
 			unit_measure$=sfe_womatdtl.unit_measure$
-			womatdtl_seq_ref$=sfe_womatdtl.womatdtl_seq_no$
+			womatdtl_seq_ref$=sfe_womatdtl.internal_seq_no$
 			warehouse_id$=sfe_womatdtl.warehouse_id$
 			item_id$=sfe_womatdtl.item_id$
 			require_date$=sfe_womatdtl.require_date$

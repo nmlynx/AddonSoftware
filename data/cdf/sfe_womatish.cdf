@@ -187,9 +187,9 @@ rem --- New materials issues entry or no existing materials issues
 			sfe_womatisd.wo_location$=sfe_womatdtl.wo_location$
 			sfe_womatisd.wo_no$=sfe_womatdtl.wo_no$
 			sfe_womatisd.material_seq$=sfe_womatdtl.material_seq$
-			sfe_womatisd.womatisd_seq_no$=sfe_womatdtl.womatdtl_seq_no$
+			sfe_womatisd.womatisd_seq_no$=sfe_womatdtl.internal_seq_no$
 			sfe_womatisd.unit_measure$=sfe_womatdtl.unit_measure$
-			sfe_womatisd.womatdtl_seq_ref$=sfe_womatdtl.womatdtl_seq_no$
+			sfe_womatisd.womatdtl_seq_ref$=sfe_womatdtl.internal_seq_no$
 			sfe_womatisd.warehouse_id$=sfe_womatdtl.warehouse_id$
 			sfe_womatisd.item_id$=sfe_womatdtl.item_id$
 			sfe_womatisd.require_date$=sfe_womatdtl.require_date$
