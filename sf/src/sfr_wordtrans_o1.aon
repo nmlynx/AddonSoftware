@@ -352,7 +352,7 @@ rem --- Serial Numbers Here
 
             while more
                 k1$=key(lstran_dev,end=*break)
-                if pos(sftran.firm_id$+sftran.wo_location$+sftran.wo_no$+sftran.trans_date$+sftran.record_id_m$+sftran.trans_seq$=k1$)=1 then
+                if pos(sftran.firm_id$+sftran.wo_location$+sftran.wo_no$+sftran.trans_date$+sftran.trans_seq_ref$=k1$)=1 then
                     read record (lstran_dev) lstran$ 
 rem --- Print It Here
                     if ivs01a.lotser_flag$="S" then lotser$="Serial: " else lotser$="Lot: "

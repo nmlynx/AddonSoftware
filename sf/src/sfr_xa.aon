@@ -316,8 +316,8 @@ rem --- Transactions Here
                             read record (wotranm_dev,key=sfm07a_key$,dom=*continue) wot0m$
                             wotran_dev=wotranm_dev
                             dim wotran$:tmpl(wotran_dev)
-                            record_id$=wotran.record_id_m$
-                            key1$=wotran.firm_id$+wotran.wo_location$+wotran.wo_no$+wotran.trans_date$+wotran.record_id_m$+wotran.trans_seq$
+                            record_id$="M"
+                            key1$=wotran.firm_id$+wotran.wo_location$+wotran.wo_no$+wotran.trans_date$+wotran.trans_seq_ref$
                             break
                         case 1
                             read record (wotrano_dev,key=sfm07a_key$,dom=*continue) wot0o$

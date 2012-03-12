@@ -402,7 +402,7 @@ rem --- Transactions Here
                             endif
                             record_id$="M"
                             key1$=wotran.firm_id$+wotran.wo_location$+wotran.wo_no$+wotran.trans_date$+
-:                                 wotran.record_id_m$+wotran.trans_seq$
+:                                 wotran.trans_seq$
                             break
                         case 1
                             read record (wotrano_dev,key=sfm07a_key$,dom=*continue) wot0o$

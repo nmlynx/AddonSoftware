@@ -355,7 +355,7 @@ rem --- Print It Here
             OutVect!.addItem(sfe01a.wo_category$)
             OutVect!.addItem(str(fndate$(sfex2.trans_date$)))
             OutVect!.addItem(rec_id_x$)
-            OutVect!.addItem(sfex2.trans_seq$)
+            OutVect!.addItem(sfex2.trans_seq_ref$)
      
         if rec_id$="O" then 
             OutVect!.addItem(str(sftx1a.complete_qty))
@@ -463,7 +463,7 @@ rem --- Back Out The Distribution
         account$=sfm10a.gl_wip_acct$
         gldate$=sfex2.trans_date$,amount=-sftx1a.ext_cost,units=0
         ref1$="WO "+sfex2.wo_no$
-        ref2$="Seq "+sfex2.trans_seq$,ref3$=fndate$(sfex2a.new_trn_date$)
+        ref2$="Seq "+sfex2.trans_seq_ref$,ref3$=fndate$(sfex2a.new_trn_date$)
         memo$=cm$
         gosub glrecap
 
@@ -489,7 +489,7 @@ rem --- Add It Back In With New Information
         gldate$=sfex2a.new_trn_date$
         amount=round((sfex2a.new_units+sfex2a.new_set_hrs)*sfex2a.new_dir_rate,2)+round((sfex2a.new_units+sfex2a.new_set_hrs)*sfex2a.new_ovr_rate,2)
         ref1$="WO "+sfe01a.wo_no$
-        ref2$="Seq "+sfex2.trans_seq$,ref3$=fndate$(sfex2.trans_date$)
+        ref2$="Seq "+sfex2.trans_seq_ref$,ref3$=fndate$(sfex2.trans_date$)
         memo$=cm$
         gosub glrecap
 
