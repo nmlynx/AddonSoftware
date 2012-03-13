@@ -621,15 +621,10 @@ cal_actual1:
                 continue
             endif
             read record (wotran_dev,key=wotran_key$) sftran$
-            xfer$=fattr(sftran$,"")
-            xfer$=xfer$(pos("trans_date"=cvs(xfer$,8)))
-            xfer$=xfer$(pos($0A$=xfer$)+1)
-            xfield$=xfer$(1,pos($0A$=xfer$)-1)
-            record_id$=field(sftran$,xfield$)
 
-            switch pos(record_id$="OMS")
-                case 0; continue
-                case 1
+            switch wotran_dev                      
+                case sft01_dev
+                case sft03_dev
 rem ------- Actual Operations
                     y=pos(sftran.op_seq$=x0$,3)
                     y=int(y/3)
@@ -646,11 +641,16 @@ rem ------- Actual Operations
                     else
                             last_date$=last_date$+sftran.trans_date$
                     endif
-                    continue
-                case 2; totamat=totamat+sftran.ext_cost; continue
-                case 3; t7=t7+sftran.ext_cost; continue
+                break
+                case sft21_dev
+                case sft23_dev
+                    totamat=totamat+sftran.ext_cost
+                break
+                case sft31_dev
+                case sft33_dev
+                    t7=t7+sftran.ext_cost
+                break
             swend
-            break
         wend 
         return
 

@@ -132,40 +132,38 @@ calc_std: rem --- Calculate Standards
         sfreq_dev=sfe02a_dev
         dim sfreq_key$:sfe02a_key_tpl$
         dim sfreqa$:templates$[9]
-        record_id_field$="A"    
+  
         while more       
             read (sfreq_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
-            print @(50,11),'cl',"Standards",
+            rem print @(50,11),'cl',"Standards",; rem'd 3/2012 CAH; will "Standards" need to be in OutVect! somewhere? 
             while more
                 sfreq_key$=key(sfreq_dev,end=*break)
                 if sfreq_key.firm_id$+sfreq_key.wo_location$+sfreq_key.wo_no$<>sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$ then break
                 read record (sfreq_dev,key=sfreq_key$) sfreqa$
-                switch pos(record_id_field$="ABC")
-                    case 1
+                switch sfreq_dev
+                    case sfe02a_dev              
                         a[0]=a[0]+sfreqa.total_time
                         a[1]=a[1]+sfreqa.total_time*sfreqa.direct_rate
                         a[9]=a[9]+sfreqa.tot_std_cost-sfreqa.total_time*sfreqa.direct_rate
-                        break
-                    case 2
+                    break
+                    case sfe22a_dev
                         a[2]=a[2]+sfreqa.total_cost
-                        break
-                    case 3
+                    break
+                    case sfe32a_dev
                         a[3]=a[3]+sfreqa.total_cost 
-                        break
+                    break
                 swend
             wend
             if sfreq_dev=sfe02a_dev then
                 sfreq_dev=sfe22a_dev 
                 dim sfreq_key$:sfe22a_key_tpl$
                 dim sfreqa$:templates$[10]
-                record_id_field$="B"
                 continue
             endif
             if sfreq_dev=sfe22a_dev then
                 sfreq_dev=sfe32a_dev
                 dim sfreq_key$:sfe32a_key_tpl$
                 dim sfreqa$:templates$[11]
-                record_id_field$="C"
                 continue
             endif      
             break
@@ -176,27 +174,27 @@ rem --- Calculate Actuals
         sftran_dev=tran01_dev
         dim sftran_key$:tran01a_key$
         dim sftran$:tran01a$
-        record_id_field$="O"
+
         while more
             read (sftran_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
-            print @(50,11),'cl',"Actuals",
+            rem print @(50,11),'cl',"Actuals",; rem'd 3/2012 CAH; will "Actuals" need to be in OutVect! somewhere?
             while more
                 sftran_key$=key(sftran_dev,end=*break)
                 if sftran_key.firm_id$+sftran_key.wo_location$+sftran_key.wo_no$<>sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$ then break
                 if period$<>"" then if sftran_key.trans_date$>enddate$ then break
                 read record (sftran_dev,key=sftran_key$) sftran$
-                switch pos(record_id_field$="OMS")
-                    case 1
+                switch sftran_dev
+                    case tran01_dev
                         a[4]=a[4]+sftran.units+sftran.setup_time
                         a[5]=a[5]+sftran.units*sftran.direct_rate
                         a[10]=a[10]+sftran.ext_cost-sftran.units*sftran.direct_rate
-                        break
-                    case 2
+                    break
+                    case tran02_dev
                         a[6]=a[6]+sftran.ext_cost
-                        break
-                    case 3
+                    break
+                    case tran03_dev
                         a[7]=a[7]+sftran.ext_cost
-                        break
+                    break
                 swend
             wend
 
@@ -204,13 +202,11 @@ rem --- Calculate Actuals
                 sftran_dev=tran02_dev
                 dim sftran_key$:tran02a_key$
                 dim sftran$:tran02a$
-                record_id_field$="M" 
                 continue
             endif
-            if sftran_dev=tran02_dev
+            if sftran_dev=tran02_dev then
                 sftran_dev=tran03_dev
                 dim sftran_key$:tran03a_key$
-                record_id_field$="S"
                 dim sftran$:tran03a$
                 continue
             endif

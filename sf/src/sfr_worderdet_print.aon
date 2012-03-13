@@ -268,17 +268,16 @@ init_woreq:
                      endif
 
                     read record (sfreq_dev,key=sfreqa_key$) sfreqa$
-                    if record_id$="A" then
+                    switch sfreq_dev
+                    case sfe02_dev
                         opseq$=sfreqa.op_seq$
-                    else
-                        if record_id$="B" then
-                            opseq$=sfreqa.material_seq$
-                        else
-                            if record_id$="C" then
-                                opseq$=sfreqa.subcont_seq$
-                            endif
-                        endif
-                    endif
+                    break
+                    case sfe22_dev
+                        opseq$=sfreqa.material_seq$
+                    break
+                    case sfe32_dev
+                        opseq$=sfreqa.subcont_seq$                                                  
+                    break
                     if z6$="Y" then 
                         gosub calc_standard_totals
                         if z1$<>"Y" then continue

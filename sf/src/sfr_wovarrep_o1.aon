@@ -259,7 +259,7 @@ rem --- Calculate Standards
         sfreq_dev=sfe02a_dev
         dim sfreq_key$:sfe02a_key_tpl$
         dim sfreqa$:sfe02_tpls$
-        record_id$="A"
+
         while more
             read (sfreq_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
             call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
@@ -269,17 +269,16 @@ rem --- Calculate Standards
                 if sfreq_key.firm_id$+sfreq_key.wo_location$+sfreq_key.wo_no$<>sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$ then break
                 read record (sfreq_dev) sfreqa$
 
-                action=pos(record_id$="ABC")
-                switch action
-                    case 1; REM processing sfe02
+                switch sfreq_dev
+                    case sfe02a_dev; REM processing sfe02
                         a_standards[0]=a_standards[0]+sfreqa.total_time
                         a_standards[1]=a_standards[1]+sfreqa.total_time*sfreqa.direct_rate
                         a_standards[2]=a_standards[2]+sfreqa.tot_std_cost-sfreqa.total_time*sfreqa.direct_rate
                         break
-                    case 2; REM processing sfe22
+                    case sfe22a_dev; REM processing sfe22
                         a_standards[3]=a_standards[3]+sfreqa.total_cost
                         break
-                    case 3; REM processing sfe32
+                    case sfe23a_dev; REM processing sfe32
                         a_standards[4]=a_standards[4]+sfreqa.total_cost
                         break
                     case default
@@ -291,13 +290,11 @@ rem --- Calculate Standards
 				sfreq_dev=sfe22a_dev 
 				dim sfreq_key$:sfe22a_key_tpl$
 				dim sfreqa$:sfe22_tpls$
-				record_id$="B"
             else
                 if sfreq_dev=sfe22a_dev 
                    sfreq_dev=sfe32a_dev
                    dim sfreq_key$:sfe32a_key_tpl$
                    dim sfreqa$:sfe32_tpls$
-                   record_id$="C"
                 else
                    break
                 endif
@@ -323,7 +320,6 @@ rem --- Calculate Actuals
         endif
 
         sftran_dev=tran01_dev
-        record_id1$="O"
         
         while more
 
@@ -369,32 +365,33 @@ rem --- Calculate Actuals
                 endif
                 read record (sftran_dev) sftran$
 
-                switch pos(record_id1$="OMS")
-                    case 1
+                switch sftran_dev
+                    case sft01_dev
+                    case sft03_dev
                         a_actuals[0]=a_actuals[0]+sftran.units
                         x=(sftran.units+sftran.setup_time)*sftran.direct_rate
                         a_actuals[1]=a_actuals[1]+x
                         a_actuals[2]=a_actuals[2]+sftran.ext_cost-x
-                        break
-                    case 2
+                    break
+                    case sft21_dev
+                    case sft23_dev
                         a_actuals[3]=a_actuals[3]+sftran.ext_cost
-                        break
-                    case 3
+                    break
+                    case sft31_dev
+                    case sft33_dev
                         a_actuals[4]=a_actuals[4]+sftran.ext_cost
-                        break
+                    break
                     case default
+                    break
                 swend
-                continue
 
             wend
 
             if sftran_dev=tran01_dev
                 sftran_dev=tran02_dev
-                record_id1$="M"
             else
                 if sftran_dev=tran02_dev
                     sftran_dev=tran03_dev
-                    record_id1$="S"
                 else
                     break
                 endif
