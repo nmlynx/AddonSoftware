@@ -70,6 +70,16 @@ endif
 mode$="mode=PROCEDURE"
 
 
+bill_exists=0
+
+rem bill exists?
+sql$ = "SELECT AR_INV_NO FROM OPT_INVHDR WHERE FIRM_ID='"+firm_id$+"' AND CUSTOMER_ID='"+customer_id$+"' AND AR_INV_NO='"+invoice_no$+"'"
+sqlRs! = BBjAPI().createSQLRecordSet(url$,mode$,sql$)
+if !sqlRs!.isEmpty() then
+    bill_exists = 1
+endif
+
+
 data! = rs!.getEmptyRecordData()
 data!.setFieldValue("LOGO",html_path$ + "own/gfx/header.png")
 data!.setFieldValue("INVOICE_NO", invoice_no$)
@@ -81,10 +91,14 @@ sub_total=0
 sum_net=0
 sum_vat=0
 
-if complete_bill = 1 then
-    sql$ = "SELECT ROUND(SUM(OOD.UNIT_PRICE*OOD.QTY_ORDERED),2) AS SUM_NET, ROUND(SUM(ROUND((OOD.UNIT_PRICE+SOD.VAT_AMOUNT)*OOD.QTY_ORDERED,2)),2) AS SUM_BRUT, ROUND(SOD.VAT_PERCENT,2) AS VAT_PERCENT, ROUND(SUM(ROUND(SOD.VAT_AMOUNT*OOD.QTY_ORDERED,2)),2) AS SUM_VAT FROM OPE_ORDDET OOD INNER JOIN STO_ORDDET SOD ON OOD.FIRM_ID = SOD.FIRM_ID AND OOD.LINE_NO = SOD.LINE_NO AND OOD.ORDER_NO = SOD.ORDER_NO WHERE OOD.FIRM_ID='"+firm_id$+"' AND OOD.CUSTOMER_ID='"+customer_id$+"' AND OOD.ORDER_NO='"+order_no$+"' GROUP BY SOD.VAT_PERCENT"
+if bill_exists then
+    sql$ = "SELECT ROUND(SUM(OOD.UNIT_PRICE*OOD.QTY_ORDERED),2) AS SUM_NET, ROUND(SUM(ROUND((OOD.UNIT_PRICE+SOD.VAT_AMOUNT)*OOD.QTY_ORDERED,2)),2) AS SUM_BRUT, ROUND(SOD.VAT_PERCENT,2) AS VAT_PERCENT, ROUND(SUM(ROUND(SOD.VAT_AMOUNT*OOD.QTY_ORDERED,2)),2) AS SUM_VAT FROM OPT_INVDET OOD INNER JOIN STO_INVDET SOD ON OOD.FIRM_ID = SOD.FIRM_ID AND OOD.ORDDET_SEQ_REF = SOD.LINE_NO AND OOD.AR_INV_NO = SOD.AR_INV_NO WHERE OOD.FIRM_ID='"+firm_id$+"' AND OOD.CUSTOMER_ID='"+customer_id$+"' AND OOD.AR_INV_NO='"+invoice_no$+"' GROUP BY SOD.VAT_PERCENT"
 else
-    sql$ = "SELECT ROUND(SUM(OOD.UNIT_PRICE*(OOD.QTY_SHIPPED-SOD.QTY_CHARGED)),2) AS SUM_NET, ROUND(SUM(ROUND((OOD.UNIT_PRICE+SOD.VAT_AMOUNT)*(OOD.QTY_SHIPPED-SOD.QTY_CHARGED),2)),2) AS SUM_BRUT, ROUND(SOD.VAT_PERCENT,2) AS VAT_PERCENT, ROUND(SUM(ROUND(SOD.VAT_AMOUNT*(OOD.QTY_SHIPPED-SOD.QTY_CHARGED),2)),2) AS SUM_VAT FROM OPE_ORDDET OOD INNER JOIN STO_ORDDET SOD ON OOD.FIRM_ID = SOD.FIRM_ID AND OOD.LINE_NO = SOD.LINE_NO AND OOD.ORDER_NO = SOD.ORDER_NO WHERE OOD.FIRM_ID='"+firm_id$+"' AND OOD.CUSTOMER_ID='"+customer_id$+"' AND OOD.ORDER_NO='"+order_no$+"' AND OOD.QTY_SHIPPED-SOD.QTY_CHARGED > 0 GROUP BY SOD.VAT_PERCENT"
+    if complete_bill = 1 then
+        sql$ = "SELECT ROUND(SUM(OOD.UNIT_PRICE*OOD.QTY_ORDERED),2) AS SUM_NET, ROUND(SUM(ROUND((OOD.UNIT_PRICE+SOD.VAT_AMOUNT)*OOD.QTY_ORDERED,2)),2) AS SUM_BRUT, ROUND(SOD.VAT_PERCENT,2) AS VAT_PERCENT, ROUND(SUM(ROUND(SOD.VAT_AMOUNT*OOD.QTY_ORDERED,2)),2) AS SUM_VAT FROM OPE_ORDDET OOD INNER JOIN STO_ORDDET SOD ON OOD.FIRM_ID = SOD.FIRM_ID AND OOD.LINE_NO = SOD.LINE_NO AND OOD.ORDER_NO = SOD.ORDER_NO WHERE OOD.FIRM_ID='"+firm_id$+"' AND OOD.CUSTOMER_ID='"+customer_id$+"' AND OOD.ORDER_NO='"+order_no$+"' GROUP BY SOD.VAT_PERCENT"
+    else
+        sql$ = "SELECT ROUND(SUM(OOD.UNIT_PRICE*(OOD.QTY_SHIPPED-SOD.QTY_CHARGED)),2) AS SUM_NET, ROUND(SUM(ROUND((OOD.UNIT_PRICE+SOD.VAT_AMOUNT)*(OOD.QTY_SHIPPED-SOD.QTY_CHARGED),2)),2) AS SUM_BRUT, ROUND(SOD.VAT_PERCENT,2) AS VAT_PERCENT, ROUND(SUM(ROUND(SOD.VAT_AMOUNT*(OOD.QTY_SHIPPED-SOD.QTY_CHARGED),2)),2) AS SUM_VAT FROM OPE_ORDDET OOD INNER JOIN STO_ORDDET SOD ON OOD.FIRM_ID = SOD.FIRM_ID AND OOD.LINE_NO = SOD.LINE_NO AND OOD.ORDER_NO = SOD.ORDER_NO WHERE OOD.FIRM_ID='"+firm_id$+"' AND OOD.CUSTOMER_ID='"+customer_id$+"' AND OOD.ORDER_NO='"+order_no$+"' AND OOD.QTY_SHIPPED-SOD.QTY_CHARGED > 0 GROUP BY SOD.VAT_PERCENT"
+    endif
 endif
 
 sqlRs! = BBjAPI().createSQLRecordSet(url$,mode$,sql$)
@@ -106,7 +120,11 @@ endif
 
 
 paym_fee=0
-sql$ = "SELECT OH.PAYM_TERMS_TXT, OH.PAYM_AMOUNT, SC.SHIP_COST_AMT FROM STO_ORDHDR OH INNER JOIN STO_SHIP_COSTS SC ON OH.SHIP_CODE=SC.SHIP_CODE AND SC.SHIP_FROM_AMT <= " + str(sum_total) + " AND SC.SHIP_TO_AMT >= " + str(sum_total) + " WHERE OH.FIRM_ID='" + firm_id$ + "' AND OH.CUSTOMER_ID='" + customer_id$ + "' AND OH.ORDER_NO='" + order_no$ + "'"
+if bill_exists then
+    sql$ = "SELECT OH.PAYM_TERMS_TXT, OH.PAYM_AMOUNT, SC.SHIP_COST_AMT FROM STO_INVHDR OH INNER JOIN STO_SHIP_COSTS SC ON OH.SHIP_CODE=SC.SHIP_CODE AND SC.SHIP_FROM_AMT <= " + str(sum_total) + " AND SC.SHIP_TO_AMT >= " + str(sum_total) + " WHERE OH.FIRM_ID='" + firm_id$ + "' AND OH.CUSTOMER_ID='" + customer_id$ + "' AND OH.AR_INV_NO='" + invoice_no$ + "'"
+else
+    sql$ = "SELECT OH.PAYM_TERMS_TXT, OH.PAYM_AMOUNT, SC.SHIP_COST_AMT FROM STO_ORDHDR OH INNER JOIN STO_SHIP_COSTS SC ON OH.SHIP_CODE=SC.SHIP_CODE AND SC.SHIP_FROM_AMT <= " + str(sum_total) + " AND SC.SHIP_TO_AMT >= " + str(sum_total) + " WHERE OH.FIRM_ID='" + firm_id$ + "' AND OH.CUSTOMER_ID='" + customer_id$ + "' AND OH.ORDER_NO='" + order_no$ + "'"
+endif
 sqlRs! = BBjAPI().createSQLRecordSet(url$,mode$,sql$)
 if !sqlRs!.isEmpty() then
     sqlRd! = sqlRs!.getCurrentRecordData()
@@ -116,11 +134,14 @@ if !sqlRs!.isEmpty() then
     data!.setFieldValue("PAYM_FEE",str(paym_fee))
 endif
 
-sql$="SELECT FREIGHT_AMT, SHIPTO_TYPE, SHIPTO_NO FROM OPE_ORDHDR WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND ORDER_NO='" + order_no$ + "'"
+if bill_exists then
+    sql$="SELECT FREIGHT_AMT, SHIPTO_TYPE, SHIPTO_NO FROM OPT_INVHDR WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND AR_INV_NO='" + invoice_no$ + "'"
+else
+    sql$="SELECT FREIGHT_AMT, SHIPTO_TYPE, SHIPTO_NO FROM OPE_ORDHDR WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND ORDER_NO='" + order_no$ + "'"
+endif
 sqlRs! = BBjAPI().createSQLRecordSet(url$,mode$,sql$)
 if !sqlRs!.isEmpty() then
     sqlRd! = sqlRs!.getCurrentRecordData()
-    rem data!.setFieldValue("FREIGHT_AMT", sqlRd!.getFieldValue("FREIGHT_AMT"))
     shipto_type$=sqlRd!.getFieldValue("SHIPTO_TYPE")
     shipto_no$=sqlRd!.getFieldValue("SHIPTO_NO")
 endif
@@ -223,7 +244,11 @@ countryId$ = cvs(sqlRd!.getFieldValue("COUNTRY"),3)
 
 rem Get Ship To address from Manual Ship To table
 if shipto_type$="M" then
-    sql$="SELECT CUSTOMER_ID, NAME AS CUSTOMER_NAME, ADDR_LINE_1, ADDR_LINE_2, ADDR_LINE_3, ADDR_LINE_4, CITY, ZIP_CODE, CNTRY_ID FROM OPE_ORDSHIP WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND ORDER_NO'"+ order_no$ +"'"
+    if bill_exists then
+        sql$="SELECT CUSTOMER_ID, NAME AS CUSTOMER_NAME, ADDR_LINE_1, ADDR_LINE_2, ADDR_LINE_3, ADDR_LINE_4, CITY, ZIP_CODE --, CNTRY_ID FROM OPT_INVSHIP WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND AR_INV_NO='"+ invoice_no$ +"'"
+    else
+        sql$="SELECT CUSTOMER_ID, NAME AS CUSTOMER_NAME, ADDR_LINE_1, ADDR_LINE_2, ADDR_LINE_3, ADDR_LINE_4, CITY, ZIP_CODE, CNTRY_ID FROM OPE_ORDSHIP WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND ORDER_NO='"+ order_no$ +"'"
+    endif
     sqlRs! = BBjAPI().createSQLRecordSet(url$,mode$,sql$)
     sqlRd! = sqlRs!.getCurrentRecordData()
 
