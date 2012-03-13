@@ -94,7 +94,7 @@ l800: rem --- Check Validity of Data
     x$=""
     x0=0
     call pgmdir$+"adc_daydates.aon",v$,x$,x0
-	escape;rem jpb v$ sh/be 04/12
+    if v$="N" status$(2,1)="2"; goto l4100
     if v$="N" status$(2,1)="2"; goto l4100
     if pos(direction$="BF")=0 status$(2,1)="4"; goto l4100
 
@@ -118,13 +118,13 @@ l1030: rem --- Read Loop
     if pos(firm_id$+"  "+wo_num$=k$)<>1 goto l1200
     read record (sfe32_dev) sfe32a$
     if sfe32a.line_type$<>"S" goto l1030
-    subs$=subs$+sfe32a.op_int_seq_ref$+sfe32a.subcont_seq$+str(sfe32a.lead_time:"000")+"        "
+    subs$=subs$+sfe32a.oper_seq_ref$+sfe32a.subcont_seq$+str(sfe32a.lead_time:"000")+"        "
     goto l1030
 
 l1200: rem --- Set Required Date in Subcontracts for Forward method
 
     if direction$<>"F" goto l1800
-escape;rem jpb1 v$ sh/be 04/12	
+
     f_yr=num(v$(1,4))
     f_mth=num(v$(5,2))
     f_day=num(v$(7,2))
@@ -167,7 +167,7 @@ l1800: rem --- Get Operation record from woe-02
     if direction$<>"F" read (sfe02_dev,key=firm_id$+"  "+wo_num$+$ff$,dom=*next)
 
 l1840: rem --- Read Loop
-escape
+
     if direction$="F"
 		k$=key(sfe02_dev,end=l2300)
 	else
