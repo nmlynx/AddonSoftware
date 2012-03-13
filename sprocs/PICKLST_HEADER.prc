@@ -131,74 +131,99 @@ if !(sqlRs!.isEmpty()) then
 endif
 
 rem url$="jdbc:basis:localhost?DATABASE=S1000&SSL=false&USER=admin&PASSWORD=admin123"
-sql$="SELECT CUSTOMER_ID, CUSTOMER_NAME, ADDR_LINE_1, ADDR_LINE_2, ADDR_LINE_3, CITY, ZIP_CODE, COUNTRY FROM ARM_CUSTMAST WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "'"
+sql$="SELECT CUSTOMER_ID, CUSTOMER_NAME, ADDR_LINE_1, ADDR_LINE_2, ADDR_LINE_3, ADDR_LINE_4, CITY, ZIP_CODE, COUNTRY FROM ARM_CUSTMAST WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "'"
 sqlRs! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
 sqlRd! = sqlRs!.getCurrentRecordData()
 
-i=1
-if cvs(sqlRd!.getFieldValue("CUSTOMER_NAME"),3)<>"" then
-    data!.setFieldValue("BILL_ADDR_LINE_"+str(i), sqlRd!.getFieldValue("CUSTOMER_NAME"))
-    i=i+1
+salutation$ = cvs(sqlRd!.getFieldValue("ADDR_LINE_4"),3)
+addr_line1$ = iff(salutation$>"",salutation$+" ","") + cvs(sqlRd!.getFieldValue("CUSTOMER_NAME"),3)
+if salutation$ = "HERR" OR salutation$ = "FRAU" then
+    addr_line1$ = addr_line1$ + " " + cvs(sqlRd!.getFieldValue("ADDR_LINE_1"),3)
+else
+    addr_line2$ = cvs(sqlRd!.getFieldValue("ADDR_LINE_1"),3)
 endif
-if cvs(sqlRd!.getFieldValue("ADDR_LINE_1"),3)<>"" then
-    data!.setFieldValue("BILL_ADDR_LINE_"+str(i), sqlRd!.getFieldValue("ADDR_LINE_1"))
-    i=i+1
-endif
-if cvs(sqlRd!.getFieldValue("ADDR_LINE_2"),3)<>"" then
-    data!.setFieldValue("BILL_ADDR_LINE_"+str(i), sqlRd!.getFieldValue("ADDR_LINE_2"))
-    i=i+1
-endif
-if cvs(sqlRd!.getFieldValue("ADDR_LINE_3"),3)<>"" then
-    data!.setFieldValue("BILL_ADDR_LINE_"+str(i), sqlRd!.getFieldValue("ADDR_LINE_3"))
-    i=i+1
-endif
-data!.setFieldValue("BILL_ADDR_LINE_"+str(i), cvs(sqlRd!.getFieldValue("ZIP_CODE"),3)+" "+cvs(sqlRd!.getFieldValue("CITY"),3))
+addr_line3$ = cvs(sqlRd!.getFieldValue("ADDR_LINE_2"),3)
+addr_line4$ = cvs(sqlRd!.getFieldValue("ADDR_LINE_3"),3)
+addr_line5$ = cvs(sqlRd!.getFieldValue("ZIP_CODE"),3)+" "+cvs(sqlRd!.getFieldValue("CITY"),3)
 
 i=1
-if cvs(sqlRd!.getFieldValue("CUSTOMER_NAME"),3)<>"" then
-    data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), sqlRd!.getFieldValue("CUSTOMER_NAME"))
+if addr_line1$ > "" then
+    data!.setFieldValue("BILL_ADDR_LINE_"+str(i), addr_line1$)
     i=i+1
 endif
-if cvs(sqlRd!.getFieldValue("ADDR_LINE_1"),3)<>"" then
-    data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), sqlRd!.getFieldValue("ADDR_LINE_1"))
+if addr_line2$ > "" then
+    data!.setFieldValue("BILL_ADDR_LINE_"+str(i), addr_line2$)
     i=i+1
 endif
-if cvs(sqlRd!.getFieldValue("ADDR_LINE_2"),3)<>"" then
-    data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), sqlRd!.getFieldValue("ADDR_LINE_2"))
+if addr_line3$ > "" then
+    data!.setFieldValue("BILL_ADDR_LINE_"+str(i), addr_line3$)
     i=i+1
 endif
-if cvs(sqlRd!.getFieldValue("ADDR_LINE_3"),3)<>"" then
-    data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), sqlRd!.getFieldValue("ADDR_LINE_3"))
+if addr_line4$ > "" then
+    data!.setFieldValue("BILL_ADDR_LINE_"+str(i), addr_line4$)
     i=i+1
 endif
-data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), cvs(sqlRd!.getFieldValue("ZIP_CODE"),3)+" "+cvs(sqlRd!.getFieldValue("CITY"),3))
+data!.setFieldValue("BILL_ADDR_LINE_"+str(i), addr_line5$)
+
+i=1
+if addr_line1$ > "" then
+    data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), addr_line1$)
+    i=i+1
+endif
+if addr_line2$ > "" then
+    data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), addr_line2$)
+    i=i+1
+endif
+if addr_line3$ > "" then
+    data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), addr_line3$)
+    i=i+1
+endif
+if addr_line4$ > "" then
+    data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), addr_line4$)
+    i=i+1
+endif
+data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), addr_line5$)
+
 countryId$ = cvs(sqlRd!.getFieldValue("COUNTRY"),3)
 
 
 rem Get Ship To address from Customer Ship To table
 if shipto_type$="S" then
-    sql$="SELECT CUSTOMER_ID, CUSTOMER_NAME, ADDR_LINE_1, ADDR_LINE_2, ADDR_LINE_3, CITY, STATE_CODE, ZIP_CODE, CNTRY_ID FROM ARM_CUSTSHIP WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND SHIPTO_NO='"+ shipto_no$ +"'"
+    sql$="SELECT CUSTOMER_ID, NAME AS CUSTOMER_NAME, ADDR_LINE_1, ADDR_LINE_2, ADDR_LINE_3, ADDR_LINE_4, CITY, STATE_CODE, ZIP_CODE, CNTRY_ID FROM ARM_CUSTSHIP WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND SHIPTO_NO='"+ shipto_no$ +"'"
     sqlRs! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
     sqlRd! = sqlRs!.getCurrentRecordData()
 
+    salutation$ = cvs(sqlRd!.getFieldValue("ADDR_LINE_4"),3)
+    addr_line1$ = iff(salutation$>"",salutation$+" ","") + cvs(sqlRd!.getFieldValue("CUSTOMER_NAME"),3)
+    if salutation$ = "HERR" OR salutation$ = "FRAU" then
+        addr_line1$ = addr_line1$ + " " + cvs(sqlRd!.getFieldValue("ADDR_LINE_1"),3)
+    else
+        addr_line2$ = cvs(sqlRd!.getFieldValue("ADDR_LINE_1"),3)
+    endif
+    addr_line3$ = cvs(sqlRd!.getFieldValue("ADDR_LINE_2"),3)
+    addr_line4$ = cvs(sqlRd!.getFieldValue("ADDR_LINE_3"),3)
+    addr_line5$ = cvs(sqlRd!.getFieldValue("ZIP_CODE"),3)+" "+cvs(sqlRd!.getFieldValue("CITY"),3)
+
+
     i=1
-    if cvs(sqlRd!.getFieldValue("CUSTOMER_NAME"),3)<>"" then
-        data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), sqlRd!.getFieldValue("CUSTOMER_NAME"))
+    if addr_line1$ > "" then
+        data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), addr_line1$)
         i=i+1
     endif
-    if cvs(sqlRd!.getFieldValue("ADDR_LINE_1"),3)<>"" then
-        data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), sqlRd!.getFieldValue("ADDR_LINE_1"))
+    if addr_line2$ > "" then
+        data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), addr_line2$)
         i=i+1
     endif
-    if cvs(sqlRd!.getFieldValue("ADDR_LINE_2"),3)<>"" then
-        data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), sqlRd!.getFieldValue("ADDR_LINE_2"))
+    if addr_line3$ > "" then
+        data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), addr_line3$)
         i=i+1
     endif
-    if cvs(sqlRd!.getFieldValue("ADDR_LINE_3"),3)<>"" then
-        data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), sqlRd!.getFieldValue("ADDR_LINE_3"))
+    if addr_line4$ > "" then
+        data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), addr_line4$)
         i=i+1
     endif
-    data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), cvs(sqlRd!.getFieldValue("ZIP_CODE"),3)+" "+cvs(sqlRd!.getFieldValue("CITY"),3))
+    data!.setFieldValue("SHIP_ADDR_LINE_"+str(i), addr_line5$)
+
     countryId$ = cvs(sqlRd!.getFieldValue("CNTRY_ID"),3)
 endif
 
