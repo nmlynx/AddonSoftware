@@ -1,3 +1,8 @@
+[[SFE_WOMASTR.WO_NO.AVAL]]
+rem --- put WO number and loc in DevObject
+
+	callpoint!.setDevObject("wo_no",callpoint!.getUserInput())
+	callpoint!.setDevObject("wo_loc",callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION"))
 [[SFE_WOMASTR.OPENED_DATE.AVAL]]
 rem --- need to see if date has been changed; if so, prompt to change in sfe-02/22 as well
 
