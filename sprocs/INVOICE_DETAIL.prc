@@ -15,10 +15,6 @@ sp! = BBjAPI().getFileSystem().getStoredProcedureData()
 
 rem Get the IN and IN/OUT parameters used by the procedure
 firm_id$ = sp!.getParameter("FIRM_ID")
-customer_id$ = sp!.getParameter("CUSTOMER_ID")
-order_no$ = sp!.getParameter("ORDER_NO")
-store_master_id$ = sp!.getParameter("STORE_MASTER_ID")
-complete_bill = num(sp!.getParameter("COMPLETE_BILL"))
 invoice_no$ = sp!.getParameter("INVOICE_NO")
 
 rem Create a memory record set to hold sample results.
@@ -55,26 +51,7 @@ endif
 mode$="mode=PROCEDURE"
 
 
-bill_exists=0
-
-rem bill exists?
-sql$ = "SELECT AR_INV_NO FROM OPT_INVHDR WHERE FIRM_ID='"+firm_id$+"' AND CUSTOMER_ID='"+customer_id$+"' AND AR_INV_NO='"+invoice_no$+"'"
-sqlRs! = BBjAPI().createSQLRecordSet(url$,mode$,sql$)
-if !sqlRs!.isEmpty() then
-    bill_exists = 1
-endif
-
-
-if bill_exists then
-    sql$ = "SELECT OOD.ORDDET_SEQ_REF AS INTERNAL_SEQ_NO, OOD.ITEM_ID, SOD.ITEM_DESC_MAN, OOD.QTY_ORDERED, OOD.QTY_SHIPPED, SOD.QTY_CHARGED, OOD.LINE_CODE, OOD.ORDER_MEMO, OOD.UNIT_PRICE, SOD.VAT_PERCENT, ROUND(OOD.UNIT_PRICE * (1 + SOD.VAT_PERCENT/100),2) AS BRUTO_PRICE, ROUND(ROUND(OOD.UNIT_PRICE * (1 + SOD.VAT_PERCENT/100),2) * OOD.QTY_ORDERED,2) AS ROW_PRICE FROM OPT_INVDET OOD INNER JOIN STO_INVDET SOD ON OOD.FIRM_ID = SOD.FIRM_ID AND OOD.AR_INV_NO = SOD.AR_INV_NO AND OOD.ORDDET_SEQ_REF = SOD.LINE_NO WHERE OOD.FIRM_ID='"+firm_id$+"' AND OOD.CUSTOMER_ID='"+customer_id$+"' AND OOD.AR_INV_NO='"+invoice_no$+"'"
-else
-    if complete_bill = 1 then
-        sql$ = "SELECT OOD.INTERNAL_SEQ_NO, OOD.ITEM_ID, SOD.ITEM_DESC_MAN, OOD.QTY_ORDERED, OOD.QTY_SHIPPED, SOD.QTY_CHARGED, OOD.LINE_CODE, OOD.ORDER_MEMO, OOD.UNIT_PRICE, SOD.VAT_PERCENT, ROUND(OOD.UNIT_PRICE * (1 + SOD.VAT_PERCENT/100),2) AS BRUTO_PRICE, ROUND(ROUND(OOD.UNIT_PRICE * (1 + SOD.VAT_PERCENT/100),2) * OOD.QTY_ORDERED,2) AS ROW_PRICE FROM OPE_ORDDET OOD INNER JOIN STO_ORDDET SOD ON OOD.FIRM_ID = SOD.FIRM_ID AND OOD.ORDER_NO = SOD.ORDER_NO AND OOD.LINE_NO = SOD.LINE_NO WHERE OOD.FIRM_ID='"+firm_id$+"' AND OOD.CUSTOMER_ID='"+customer_id$+"' AND OOD.ORDER_NO='"+order_no$+"'"
-    else
-        sql$ = "SELECT OOD.INTERNAL_SEQ_NO, OOD.ITEM_ID, SOD.ITEM_DESC_MAN, OOD.QTY_ORDERED, OOD.QTY_SHIPPED, SOD.QTY_CHARGED, OOD.LINE_CODE, OOD.ORDER_MEMO, OOD.UNIT_PRICE, SOD.VAT_PERCENT, ROUND(OOD.UNIT_PRICE * (1 + SOD.VAT_PERCENT/100),2) AS BRUTO_PRICE, ROUND(ROUND(OOD.UNIT_PRICE * (1 + SOD.VAT_PERCENT/100),2) * (OOD.QTY_SHIPPED-SOD.QTY_CHARGED),2) AS ROW_PRICE FROM OPE_ORDDET OOD INNER JOIN STO_ORDDET SOD ON OOD.FIRM_ID = SOD.FIRM_ID AND OOD.ORDER_NO = SOD.ORDER_NO AND OOD.LINE_NO = SOD.LINE_NO WHERE OOD.FIRM_ID='"+firm_id$+"' AND OOD.CUSTOMER_ID='"+customer_id$+"' AND OOD.ORDER_NO='"+order_no$+"' AND OOD.QTY_SHIPPED-SOD.QTY_CHARGED > 0"
-    endif
-endif
-
+sql$ = "SELECT OOD.ITEM_ID, SOD.ITEM_DESC_MAN, SOD.QTY_CHARGED, OOD.LINE_CODE, OOD.UNIT_PRICE, SOD.VAT_PERCENT, ROUND(OOD.UNIT_PRICE * (1 + SOD.VAT_PERCENT/100),2) AS BRUTO_PRICE, ROUND(ROUND(OOD.UNIT_PRICE * (1 + SOD.VAT_PERCENT/100),2) * SOD.QTY_CHARGED,2) AS ROW_PRICE FROM OPT_INVDET OOD INNER JOIN STO_INVDET SOD ON OOD.FIRM_ID = SOD.FIRM_ID AND OOD.AR_INV_NO = SOD.AR_INV_NO AND OOD.ORDDET_SEQ_REF = SOD.LINE_NO WHERE OOD.FIRM_ID='"+firm_id$+"' AND OOD.AR_INV_NO='"+invoice_no$+"'"
 sqlRs! = BBjAPI().createSQLRecordSet(url$,mode$,sql$)
 
 if sqlRs!.isEmpty() then
@@ -87,34 +64,20 @@ while 1
     sqlRd! = sqlRs!.getCurrentRecordData()
 
     item_id$ = sqlRd!.getFieldValue("ITEM_ID")
-    qty_ordered = num(sqlRd!.getFieldValue("QTY_ORDERED"))
-    qty_shipped = num(sqlRd!.getFieldValue("QTY_SHIPPED"))
     qty_charged = num(sqlRd!.getFieldValue("QTY_CHARGED"))
     vat = num(sqlRd!.getFieldValue("VAT_PERCENT"))
     line_code$ = sqlRd!.getFieldValue("LINE_CODE")
-    order_memo$ = sqlRd!.getFieldValue("ORDER_MEMO")
-    internal_seq_no$ = sqlRd!.getFieldValue("INTERNAL_SEQ_NO")
-    unit_price = num(sqlRd!.getFieldValue("UNIT_PRICE"))
-
+    price_net = num(sqlRd!.getFieldValue("UNIT_PRICE"))
+    price_brut = num(sqlRd!.getFieldValue("BRUTO_PRICE"))
+    row_price = num(sqlRd!.getFieldValue("ROW_PRICE"))
 
     data!.setFieldValue("POSITION",str(i:"000"))
-    if complete_bill or bill_exists then
-        data!.setFieldValue("AMOUNT", str(qty_ordered))
-    else
-        data!.setFieldValue("AMOUNT", str(qty_shipped-qty_charged))
-    endif
+    data!.setFieldValue("AMOUNT", str(qty_charged))
     data!.setFieldValue("ITEM_ID", sqlRd!.getFieldValue("ITEM_ID"))
     data!.setFieldValue("ITEM_DESC", sqlRd!.getFieldValue("ITEM_DESC_MAN"))
-    data!.setFieldValue("SINGLE_PRICE", str(num(sqlRd!.getFieldValue("BRUTO_PRICE")):"#,##0.00"))
-    data!.setFieldValue("SUB_TOTAL", str(num(sqlRd!.getFieldValue("ROW_PRICE")):"#,##0.00"))
-
-    data!.setFieldValue("VAT",str(vat))
-
-    rem if pos(sqlRd2!.getFieldValue("LINE_TYPE")=" SRDNP") then
-    rem     data!.setFieldValue("SINGLE_PRICE", str(unit_price))
-    rem endif
-    rem 
-    rem data!.setFieldValue("SUB_TOTAL", str(unit_price*(qty_shipped-qty_charged)))
+    data!.setFieldValue("SINGLE_PRICE", str(price_brut))
+    data!.setFieldValue("SUB_TOTAL", str(row_price))
+    data!.setFieldValue("VAT", str(vat))
 
     rs!.insert(data!)
 

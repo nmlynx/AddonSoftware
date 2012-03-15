@@ -20,11 +20,9 @@ sp! = BBjAPI().getFileSystem().getStoredProcedureData()
 rem Get the IN parameters used by the procedure
 firm_id$ = sp!.getParameter("FIRM_ID")
 customer_id$ = sp!.getParameter("CUSTOMER_ID")
-order_no$ = sp!.getParameter("ORDER_NO")
 invoice_no$ = sp!.getParameter("INVOICE_NO")
 store_master_id$ = sp!.getParameter("STORE_MASTER_ID")
 html_path$ = sp!.getParameter("HTML_PATH")
-complete_bill = sp!.getParameter("COMPLETE_BILL")
 
 rem Create a memory record set to hold results.
 rem Columns for the record set are defined using a string template
@@ -32,8 +30,8 @@ rs! = BBjAPI().createMemoryRecordSet("LOGO:C(128), COMP_LINE_01:C(30), COMP_LINE
 :                                     COMP_LINE_06:C(30), COMP_LINE_07:C(30), COMP_LINE_08:C(30), COMP_LINE_09:C(30), COMP_LINE_10:C(30),
 :                                     BILL_ADDR_LINE_1:C(30), BILL_ADDR_LINE_2:C(30), BILL_ADDR_LINE_3:C(30), BILL_ADDR_LINE_4:C(30), BILL_ADDR_LINE_5:C(30),
 :                                     SHIP_ADDR_LINE_1:C(30), SHIP_ADDR_LINE_2:C(30), SHIP_ADDR_LINE_3:C(30), SHIP_ADDR_LINE_4:C(30), SHIP_ADDR_LINE_5:C(30),
-:                                     INVOICE_NO:C(7), SUB_TOTAL:N(7), FREIGHT_TYPE:C(39), FREIGHT_AMT:N(7), PAYM_FEE:N(7), TOTAL:N(7), SUB_TOTAL2:N(7),
-:                                     MESSAGE:C(40*), SHOW_VAT_TABLE:N(1)")
+:                                     INVOICE_NO:C(7), INVOICE_DATE:C(10), ORDER_NO:C(7), SUB_TOTAL:N(7), FREIGHT_TYPE:C(39), FREIGHT_AMT:N(7), PAYM_FEE:N(7),
+:                                     TOTAL:N(7), SUB_TOTAL2:N(7), MESSAGE:C(40*), SHOW_VAT_TABLE:N(1)")
 
 
 dbserver$=stbl("+DBSERVER",err=*next)
@@ -70,15 +68,6 @@ endif
 mode$="mode=PROCEDURE"
 
 
-bill_exists=0
-
-rem bill exists?
-sql$ = "SELECT AR_INV_NO FROM OPT_INVHDR WHERE FIRM_ID='"+firm_id$+"' AND CUSTOMER_ID='"+customer_id$+"' AND AR_INV_NO='"+invoice_no$+"'"
-sqlRs! = BBjAPI().createSQLRecordSet(url$,mode$,sql$)
-if !sqlRs!.isEmpty() then
-    bill_exists = 1
-endif
-
 
 data! = rs!.getEmptyRecordData()
 data!.setFieldValue("LOGO",html_path$ + "own/gfx/header.png")
@@ -91,59 +80,48 @@ sub_total=0
 sum_net=0
 sum_vat=0
 
-if bill_exists then
-    sql$ = "SELECT ROUND(SUM(OOD.UNIT_PRICE*OOD.QTY_ORDERED),2) AS SUM_NET, ROUND(SUM(ROUND((OOD.UNIT_PRICE+SOD.VAT_AMOUNT)*OOD.QTY_ORDERED,2)),2) AS SUM_BRUT, ROUND(SOD.VAT_PERCENT,2) AS VAT_PERCENT, ROUND(SUM(ROUND(SOD.VAT_AMOUNT*OOD.QTY_ORDERED,2)),2) AS SUM_VAT FROM OPT_INVDET OOD INNER JOIN STO_INVDET SOD ON OOD.FIRM_ID = SOD.FIRM_ID AND OOD.ORDDET_SEQ_REF = SOD.LINE_NO AND OOD.AR_INV_NO = SOD.AR_INV_NO WHERE OOD.FIRM_ID='"+firm_id$+"' AND OOD.CUSTOMER_ID='"+customer_id$+"' AND OOD.AR_INV_NO='"+invoice_no$+"' GROUP BY SOD.VAT_PERCENT"
-else
-    if complete_bill = 1 then
-        sql$ = "SELECT ROUND(SUM(OOD.UNIT_PRICE*OOD.QTY_ORDERED),2) AS SUM_NET, ROUND(SUM(ROUND((OOD.UNIT_PRICE+SOD.VAT_AMOUNT)*OOD.QTY_ORDERED,2)),2) AS SUM_BRUT, ROUND(SOD.VAT_PERCENT,2) AS VAT_PERCENT, ROUND(SUM(ROUND(SOD.VAT_AMOUNT*OOD.QTY_ORDERED,2)),2) AS SUM_VAT FROM OPE_ORDDET OOD INNER JOIN STO_ORDDET SOD ON OOD.FIRM_ID = SOD.FIRM_ID AND OOD.LINE_NO = SOD.LINE_NO AND OOD.ORDER_NO = SOD.ORDER_NO WHERE OOD.FIRM_ID='"+firm_id$+"' AND OOD.CUSTOMER_ID='"+customer_id$+"' AND OOD.ORDER_NO='"+order_no$+"' GROUP BY SOD.VAT_PERCENT"
-    else
-        sql$ = "SELECT ROUND(SUM(OOD.UNIT_PRICE*(OOD.QTY_SHIPPED-SOD.QTY_CHARGED)),2) AS SUM_NET, ROUND(SUM(ROUND((OOD.UNIT_PRICE+SOD.VAT_AMOUNT)*(OOD.QTY_SHIPPED-SOD.QTY_CHARGED),2)),2) AS SUM_BRUT, ROUND(SOD.VAT_PERCENT,2) AS VAT_PERCENT, ROUND(SUM(ROUND(SOD.VAT_AMOUNT*(OOD.QTY_SHIPPED-SOD.QTY_CHARGED),2)),2) AS SUM_VAT FROM OPE_ORDDET OOD INNER JOIN STO_ORDDET SOD ON OOD.FIRM_ID = SOD.FIRM_ID AND OOD.LINE_NO = SOD.LINE_NO AND OOD.ORDER_NO = SOD.ORDER_NO WHERE OOD.FIRM_ID='"+firm_id$+"' AND OOD.CUSTOMER_ID='"+customer_id$+"' AND OOD.ORDER_NO='"+order_no$+"' AND OOD.QTY_SHIPPED-SOD.QTY_CHARGED > 0 GROUP BY SOD.VAT_PERCENT"
-    endif
+sql$ = "SELECT ROUND(SUM(OOD.UNIT_PRICE*SOD.QTY_CHARGED),2) AS SUM_NET, ROUND(SUM(ROUND((OOD.UNIT_PRICE+SOD.VAT_AMOUNT)*SOD.QTY_CHARGED,2)),2) AS SUM_BRUT, ROUND(SOD.VAT_PERCENT,2) AS VAT_PERCENT, ROUND(SUM(ROUND(SOD.VAT_AMOUNT*SOD.QTY_CHARGED,2)),2) AS SUM_VAT FROM OPT_INVDET OOD INNER JOIN STO_INVDET SOD ON OOD.FIRM_ID = SOD.FIRM_ID AND OOD.ORDDET_SEQ_REF = SOD.LINE_NO AND OOD.AR_INV_NO = SOD.AR_INV_NO WHERE OOD.FIRM_ID='"+firm_id$+"' AND OOD.AR_INV_NO='"+invoice_no$+"' GROUP BY SOD.VAT_PERCENT"
+sqlRs! = BBjAPI().createSQLRecordSet(url$,mode$,sql$)
+
+rem if no positions, then nothing to print
+if sqlRs!.isEmpty() then
+    goto sp_end
 endif
 
-sqlRs! = BBjAPI().createSQLRecordSet(url$,mode$,sql$)
 i=0
-if !sqlRs!.isEmpty() then
-    while 1
-        i=i+1
-        sqlRd! = sqlRs!.getCurrentRecordData()
-        sub_total=sub_total+ROUND(num(sqlRd!.getFieldValue("SUM_BRUT")),2)
-        sum_vat=sum_vat+num(sqlRd!.getFieldValue("SUM_VAT"))
-        sqlRs!.next(err=*break)
-    wend
-endif
-data!.setFieldValue("SUB_TOTAL",str(sub_total))
+while 1
+    i=i+1
+    sqlRd! = sqlRs!.getCurrentRecordData()
+    sub_total=sub_total+ROUND(num(sqlRd!.getFieldValue("SUM_BRUT")),2)
+    sum_vat=sum_vat+num(sqlRd!.getFieldValue("SUM_VAT"))
+    sqlRs!.next(err=*break)
+wend
 
 if i > 1 then
     data!.setFieldValue("SHOW_VAT_TABLE","1")
 endif
 
+data!.setFieldValue("SUB_TOTAL",str(sub_total))
+
 
 paym_fee=0
-if bill_exists then
-    sql$ = "SELECT OH.PAYM_TERMS_TXT, OH.PAYM_AMOUNT, SC.SHIP_COST_AMT FROM STO_INVHDR OH INNER JOIN STO_SHIP_COSTS SC ON OH.SHIP_CODE=SC.SHIP_CODE AND SC.SHIP_FROM_AMT <= " + str(sum_total) + " AND SC.SHIP_TO_AMT >= " + str(sum_total) + " WHERE OH.FIRM_ID='" + firm_id$ + "' AND OH.CUSTOMER_ID='" + customer_id$ + "' AND OH.AR_INV_NO='" + invoice_no$ + "'"
-else
-    sql$ = "SELECT OH.PAYM_TERMS_TXT, OH.PAYM_AMOUNT, SC.SHIP_COST_AMT FROM STO_ORDHDR OH INNER JOIN STO_SHIP_COSTS SC ON OH.SHIP_CODE=SC.SHIP_CODE AND SC.SHIP_FROM_AMT <= " + str(sum_total) + " AND SC.SHIP_TO_AMT >= " + str(sum_total) + " WHERE OH.FIRM_ID='" + firm_id$ + "' AND OH.CUSTOMER_ID='" + customer_id$ + "' AND OH.ORDER_NO='" + order_no$ + "'"
-endif
+sql$ = "SELECT OH.PAYM_TERMS_TXT, OH.PAYM_AMOUNT FROM STO_INVHDR OH WHERE OH.FIRM_ID='" + firm_id$ + "' AND OH.AR_INV_NO='" + invoice_no$ + "'"
 sqlRs! = BBjAPI().createSQLRecordSet(url$,mode$,sql$)
 if !sqlRs!.isEmpty() then
     sqlRd! = sqlRs!.getCurrentRecordData()
     paym_fee=num(sqlRd!.getFieldValue("PAYM_AMOUNT"))
-    data!.setFieldValue("FREIGHT_TYPE",cvs(sqlRd!.getFieldValue("PAYM_TERMS_TXT"),3))
-    data!.setFieldValue("FREIGHT_AMT",sqlRd!.getFieldValue("SHIP_COST_AMT"))
     data!.setFieldValue("PAYM_FEE",str(paym_fee))
+    data!.setFieldValue("FREIGHT_TYPE",cvs(sqlRd!.getFieldValue("PAYM_TERMS_TXT"),3))
 endif
 
-if bill_exists then
-    sql$="SELECT FREIGHT_AMT, SHIPTO_TYPE, SHIPTO_NO FROM OPT_INVHDR WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND AR_INV_NO='" + invoice_no$ + "'"
-else
-    sql$="SELECT FREIGHT_AMT, SHIPTO_TYPE, SHIPTO_NO FROM OPE_ORDHDR WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND ORDER_NO='" + order_no$ + "'"
-endif
+sql$="SELECT INVOICE_DATE, FREIGHT_AMT, SHIPTO_TYPE, SHIPTO_NO FROM OPT_INVHDR WHERE FIRM_ID='" + firm_id$ + "' AND AR_INV_NO='" + invoice_no$ + "'"
 sqlRs! = BBjAPI().createSQLRecordSet(url$,mode$,sql$)
 if !sqlRs!.isEmpty() then
     sqlRd! = sqlRs!.getCurrentRecordData()
     shipto_type$=sqlRd!.getFieldValue("SHIPTO_TYPE")
     shipto_no$=sqlRd!.getFieldValue("SHIPTO_NO")
+    data!.setFieldValue("FREIGHT_AMT",sqlRd!.getFieldValue("FREIGHT_AMT"))
+    data!.setFieldValue("INVOICE_DATE", date(jul(sqlRd!.getFieldValue("INVOICE_DATE"),"%Yl%Mz%Dz"):"%Dz.%Mz.%Yl"))
 endif
 
 
@@ -192,7 +170,7 @@ sqlRs! = BBjAPI().createSQLRecordSet(url$,mode$,sql$)
 sqlRd! = sqlRs!.getCurrentRecordData()
 
 salutation$ = cvs(sqlRd!.getFieldValue("ADDR_LINE_4"),3)
-addr_line1$ = iff(salutation$>"",salutation$+" ","") + cvs(sqlRd!.getFieldValue("CUSTOMER_NAME"),3)
+addr_line1$ = cvs(sqlRd!.getFieldValue("CUSTOMER_NAME"),3)
 if salutation$ = "HERR" OR salutation$ = "FRAU" then
     addr_line1$ = addr_line1$ + " " + cvs(sqlRd!.getFieldValue("ADDR_LINE_1"),3)
 else
@@ -244,16 +222,16 @@ countryId$ = cvs(sqlRd!.getFieldValue("COUNTRY"),3)
 
 rem Get Ship To address from Manual Ship To table
 if shipto_type$="M" then
-    if bill_exists then
-        sql$="SELECT CUSTOMER_ID, NAME AS CUSTOMER_NAME, ADDR_LINE_1, ADDR_LINE_2, ADDR_LINE_3, ADDR_LINE_4, CITY, ZIP_CODE --, CNTRY_ID FROM OPT_INVSHIP WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND AR_INV_NO='"+ invoice_no$ +"'"
-    else
-        sql$="SELECT CUSTOMER_ID, NAME AS CUSTOMER_NAME, ADDR_LINE_1, ADDR_LINE_2, ADDR_LINE_3, ADDR_LINE_4, CITY, ZIP_CODE, CNTRY_ID FROM OPE_ORDSHIP WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND ORDER_NO='"+ order_no$ +"'"
-    endif
+rem     if bill_exists then
+        sql$="SELECT CUSTOMER_ID, NAME AS CUSTOMER_NAME, ADDR_LINE_1, ADDR_LINE_2, ADDR_LINE_3, ADDR_LINE_4, CITY, ZIP_CODE --, CNTRY_ID FROM OPT_INVSHIP WHERE FIRM_ID='" + firm_id$ + "' AND AR_INV_NO='"+ invoice_no$ +"'"
+rem     else
+rem         sql$="SELECT CUSTOMER_ID, NAME AS CUSTOMER_NAME, ADDR_LINE_1, ADDR_LINE_2, ADDR_LINE_3, ADDR_LINE_4, CITY, ZIP_CODE, CNTRY_ID FROM OPE_ORDSHIP WHERE FIRM_ID='" + firm_id$ + "' AND CUSTOMER_ID='" + customer_id$ + "' AND ORDER_NO='"+ order_no$ +"'"
+rem     endif
     sqlRs! = BBjAPI().createSQLRecordSet(url$,mode$,sql$)
     sqlRd! = sqlRs!.getCurrentRecordData()
 
     salutation$ = cvs(sqlRd!.getFieldValue("ADDR_LINE_4"),3)
-    addr_line1$ = iff(salutation$>"",salutation$+" ","") + cvs(sqlRd!.getFieldValue("CUSTOMER_NAME"),3)
+    addr_line1$ = cvs(sqlRd!.getFieldValue("CUSTOMER_NAME"),3)
     if salutation$ = "HERR" OR salutation$ = "FRAU" then
         addr_line1$ = addr_line1$ + " " + cvs(sqlRd!.getFieldValue("ADDR_LINE_1"),3)
     else
@@ -292,7 +270,7 @@ if shipto_type$="S" then
     sqlRd! = sqlRs!.getCurrentRecordData()
 
     salutation$ = cvs(sqlRd!.getFieldValue("ADDR_LINE_4"),3)
-    addr_line1$ = iff(salutation$>"",salutation$+" ","") + cvs(sqlRd!.getFieldValue("CUSTOMER_NAME"),3)
+    addr_line1$ = cvs(sqlRd!.getFieldValue("CUSTOMER_NAME"),3)
     if salutation$ = "HERR" OR salutation$ = "FRAU" then
         addr_line1$ = addr_line1$ + " " + cvs(sqlRd!.getFieldValue("ADDR_LINE_1"),3)
     else
@@ -327,16 +305,14 @@ endif
 
 
 rem Calculates Total Due
-rem total = sub_total + num(data!.getFieldValue("VAT_01")) + num(data!.getFieldValue("VAT_02")) + num(data!.getFieldValue("FREIGHT")) + international
 total = sub_total + num(data!.getFieldValue("FREIGHT_AMT")) + paym_fee
 
 data!.setFieldValue("TOTAL", str(total))
 
 
-
 rs!.insert(data!)
+
 
 sp_end:
 rem Tell the stored procedure to return the result set.
 sp!.setRecordSet(rs!)
-

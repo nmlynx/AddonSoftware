@@ -136,7 +136,7 @@ sqlRs! = BBJAPI().createSQLRecordSet(url$,mode$,sql$)
 sqlRd! = sqlRs!.getCurrentRecordData()
 
 salutation$ = cvs(sqlRd!.getFieldValue("ADDR_LINE_4"),3)
-addr_line1$ = iff(salutation$>"",salutation$+" ","") + cvs(sqlRd!.getFieldValue("CUSTOMER_NAME"),3)
+addr_line1$ = cvs(sqlRd!.getFieldValue("CUSTOMER_NAME"),3)
 if salutation$ = "HERR" OR salutation$ = "FRAU" then
     addr_line1$ = addr_line1$ + " " + cvs(sqlRd!.getFieldValue("ADDR_LINE_1"),3)
 else
@@ -194,7 +194,7 @@ if shipto_type$="S" then
     sqlRd! = sqlRs!.getCurrentRecordData()
 
     salutation$ = cvs(sqlRd!.getFieldValue("ADDR_LINE_4"),3)
-    addr_line1$ = iff(salutation$>"",salutation$+" ","") + cvs(sqlRd!.getFieldValue("CUSTOMER_NAME"),3)
+    addr_line1$ = cvs(sqlRd!.getFieldValue("CUSTOMER_NAME"),3)
     if salutation$ = "HERR" OR salutation$ = "FRAU" then
         addr_line1$ = addr_line1$ + " " + cvs(sqlRd!.getFieldValue("ADDR_LINE_1"),3)
     else
