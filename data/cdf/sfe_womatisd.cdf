@@ -49,7 +49,7 @@ rem --- Do initial commit if nothing previously ordered or issued
 
 		items$[1]=warehouse_id$
 		items$[2]=item_id$
-		refs[0]=qty_ordered-tot_qty_iss
+		refs[0]=max(0,qty_ordered-tot_qty_iss)
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 	endif
 
@@ -107,7 +107,7 @@ rem --- (For new records qty_ordered=qty_issued and tot_qty_iss=0)
 		comit_qty=qty_issued+tot_qty_iss-qty_ordered
 		items$[1]=warehouse_id$
 		items$[2]=item_id$
-		refs[0]=qty_issued+tot_qty_iss-qty_ordered
+		refs[0]=max(0,qty_issued+tot_qty_iss-qty_ordered)
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 
 		rem --- Update order quantity with adjusted committed quantity
@@ -221,7 +221,7 @@ rem --- Delete lot/serial and inventory commitments. Must do this before sfe_wom
 	items$[2]=sfe_womatisd.item_id$
 	if del_issue_only$="N" then
 		rem --- Not retaining committments, so delete all of them
-		refs[0]=sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss
+		refs[0]=max(0,sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss)
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 
 		found=0
@@ -235,7 +235,7 @@ rem --- Delete lot/serial and inventory commitments. Must do this before sfe_wom
 		rem --- Retaining committments, so only delete additional committments made after WO was released
 		if cvs(sfe_womatisd.womatdtl_seq_ref$,2)="" then
 			rem --- Not part of released WO, so uncommit all
-			refs[0]=sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss
+			refs[0]=max(0,sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss)
 			call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 		else
 			rem --- Only uncommit portion of issue's qty_issued that is greater than released WO's qty_ordered
@@ -243,8 +243,8 @@ rem --- Delete lot/serial and inventory commitments. Must do this before sfe_wom
 			sfe_womatdtl_key$=sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$
 			readrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next)sfe_womatdtl$; found=1
 			if found then
-				if sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss > sfe_womatdtl.qty_ordered-sfe_womatdtl.tot_qty_iss then
-					refs[0]=(sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss)-(sfe_womatdtl.qty_ordered-sfe_womatdtl.tot_qty_iss)
+				if max(0,sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss)>max(0,sfe_womatdtl.qty_ordered-sfe_womatdtl.tot_qty_iss) then
+					refs[0]=max(0,sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss)-max(0,sfe_womatdtl.qty_ordered-sfe_womatdtl.tot_qty_iss)
 					call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				endif
 			endif
@@ -293,7 +293,7 @@ rem --- Were commitments retained during delete? No if sfe_womatdtl.qty_ordered=
 
 		items$[1]=sfe_womatisd.warehouse_id$
 		items$[2]=sfe_womatisd.item_id$
-		refs[0]=sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss
+		refs[0]=max(0,sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss)
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 	endif
 
