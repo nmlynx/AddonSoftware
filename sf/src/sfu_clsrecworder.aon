@@ -97,7 +97,8 @@ rem --- Initial Read
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
 rem --- Calculate Actuals
-
+rem --- I think all of the field1, field2, field3, etc. stuff in the routines below are a misinterpretation during post CodePort work
+rem --- I think they need to go, and the switch/case routines need to use rate, units, etc. from the sftran$ or sfreqa$ records. 3/2012 CAH
         wotran_dev=sft01_dev
         dim sftran$:tmpl(wohist_dev)
         dim wotran_key$:sft01_key_tpl$

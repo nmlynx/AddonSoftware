@@ -54,7 +54,9 @@ rem --- Now populate data from the old WO to the new
 			read record (woreq_dev,end=*break)woreq$
 			if pos(firm_id$+wo_loc$+from_wo$=woreq$)<>1 break
 			woreq.wo_no$=to_wo$
-goto bypass_adjust; rem bypassing until we figure out what adjusting really means. CAH
+goto bypass_adjust; rem --- bypassing until we figure out what adjusting really means. CAH
+				 rem --- for now, just warns user - if qty on new order <> qty on copied one, they may need to adjust requirements
+                                  rem --- need to decide if dates should be initialized as well, and need to get new ISN's, i.e., don't use the old ones !
 			if adjust$="N"
 				if files=1
 					woreq.runtime_hrs=woreq.total_time/new_prod_qty

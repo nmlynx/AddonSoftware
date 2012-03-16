@@ -108,10 +108,17 @@ rem --- fill listbox for use with Op Sequence
 		next x
 	endif
 
-	callpoint!.setTableColumnAttribute("SFE_WOSUBCNT.OP_INT_SEQ_REF","LDAT",ldat$)
+	callpoint!.setTableColumnAttribute("SFE_WOSUBCNT.OPER_SEQ_REF","LDAT",ldat$)
+	col_hdr$=callpoint!.getTableColumnAttribute("SFE_WOSUBCNT.OPER_SEQ_REF","LABS")
 	my_grid!=Form!.getControl(5000)
-	ListColumn=10
-	my_control!=my_grid!.getColumnListControl(ListColumn)
-	my_control!.removeAllItems()
-	my_control!.insertItems(0,ops_list!)
-	my_grid!.setColumnListControl(ListColumn,my_control!)
+	num_grid_cols=my_grid!.getNumColumns()
+	ListColumn=-1
+	for xwk=0 to num_grid_cols-1
+		if my_grid!.getColumnHeaderCellText(xwk)=col_hdr$ then ListColumn=xwk
+	next xwk
+	if ListColumn>=0
+		my_control!=my_grid!.getColumnListControl(ListColumn)
+		my_control!.removeAllItems()
+		my_control!.insertItems(0,ops_list!)
+		my_grid!.setColumnListControl(ListColumn,my_control!)
+	endif

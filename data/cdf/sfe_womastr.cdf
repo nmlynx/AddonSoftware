@@ -1,17 +1,174 @@
+[[SFE_WOMASTR.BDEL]]
+rem --- cascade delete will take care of removing requirements (sfe_wooprtn, sfe_womatl, sfe_wosubcnt) and comments (sfe_wocomnt)
+rem --- otherwise, need code to:
+rem --- 1. remove sfe_womathdr/sfe_womatdtl (sfe-13/23) recs and uncommit inventory
+rem --- 2. **remove lot/serial recs from sfe_wolotser (sfe-06) if doing LS param is set
+rem --- 3. remove sfe_womatish/sfe_womatisd (sfe-15/25) recs
+rem --- 4. **remove sfe_closedwo, sfe_openedwo, sfe_wocommit, sfe_wotrans (the old sfe-04 A/B/C/D recs)
+rem --- 5. **remove sft_clsoprtr, sft_clsmattr, sft_clssubtr (sft-03/23/33) recs
+rem --- 6. **remove sfe_woschdl (sfm-05) recs
+rem --- 7. reduce on-order if it's an inventory-category work order that's not planned/quoted, and isn't new
+
+rem --- ** set SFE_WOMASTR as primary table for these files so they can be handled via cascade delete
+rem --- what about removing sft_clslstrn (sft-12) along w/ other sft_cls* files? v6/7 didn't.
+
+
+[[SFE_WOMASTR.BDEQ]]
+rem --- prior to deleting a work order, need to check for open transactions; if any exist, can't delete
+
+	wo_loc$=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
+	wo_no$=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+	can_delete$="YES"
+
+	for files=1 to 3
+		if files=1
+			wotran_dev=fnget_dev("SFT_OPNOPRTR")
+			dim wotran$:fnget_tpl$("SFT_OPNOPRTR")
+		endif
+		if files=2
+			wotran_dev=fnget_dev("SFT_OPNMATTR")
+			dim wotran$:fnget_tpl$("SFT_OPNMATTR")
+		endif
+		if files=3
+			wotran_dev=fnget_dev("SFT_OPNSUBTR")
+			dim wotran$:fnget_tpl$("SFT_OPNSUBTR")
+		endif
+		read(wotran_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
+
+		while 1
+			wotran_key$=key(wotran_dev,end=*break)
+			if pos(firm_id$+wo_loc$+wo_no$=wotran_key$)=1 then can_delete$="NO"
+			break
+		wend
+	next files
+
+	if can_delete$="NO"
+		callpoint!.setMessage("SF_OPEN_TRANS")
+		callpoint!.setStatus("ABORT")
+	endif
+	
+[[SFE_WOMASTR.AFMC]]
+rem --- The type of code seen below is often done in BSHO, but the code at the end that changes the prompt for the Bill/Item control
+rem --- won't work there (too late).
+
+rem --- Set new record flag
+
+	callpoint!.setDevObject("new_rec","Y")
+
+rem --- Open tables
+
+	num_files=20
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
+	open_tables$[2]="SFS_PARAMS",open_opts$[2]="OTA"
+	open_tables$[3]="SFC_WOTYPECD",open_opts$[3]="OTA"
+	open_tables$[4]="SFT_OPNMATTR",open_opts$[4]="OTA"
+	open_tables$[5]="SFT_OPNOPRTR",open_opts$[5]="OTA"
+	open_tables$[6]="SFT_OPNSUBTR",open_opts$[6]="OTA"
+	open_tables$[7]="BMM_BILLMAST",open_opts$[7]="OTA"
+	open_tables$[8]="OPE_ORDHDR",open_opts$[8]="OTA"
+	open_tables$[9]="OPE_ORDDET",open_opts$[9]="OTA"
+	open_tables$[10]="IVM_ITEMMAST",open_opts$[10]="OTA"
+	open_tables$[11]="OPC_LINECODE",open_opts$[11]="OTA"
+	open_tables$[12]="GLS_PARAMS",open_opts$[12]="OTA"
+	open_tables$[13]="SFT_CLSMATTR",open_opts$[13]="OTA"
+	open_tables$[14]="SFT_CLSOPRTR",open_opts$[14]="OTA"
+	open_tables$[15]="SFT_CLSSUBTR",open_opts$[15]="OTA"
+	open_tables$[16]="SFT_CLSLSTRN",open_opts$[16]="OTA"
+	open_tables$[17]="SFT_OPNLSTRN",open_opts$[17]="OTA"
+	open_tables$[18]="IVM_ITEMWHSE",open_opts$[18]="OTA"
+	open_tables$[19]="SFE_WOSCHDL",open_opts$[19]="OTA"
+	open_tables$[20]="SFE_WOMATDTL",open_opts$[20]="OTA"
+
+	gosub open_tables
+
+	sfs_params=num(open_chans$[2])
+	dim sfs_params$:open_tpls$[2]
+	read record (sfs_params,key=firm_id$+"SF00",dom=std_missing_params) sfs_params$
+
+	gls_params=num(open_chans$[12])
+	call stbl("+DIR_PGM")+"adc_perioddates.aon",gls_params,num(sfs_params.current_per$),num(sfs_params.current_year$),beg_date$,end_date$,status
+	callpoint!.setDevObject("gl_end_date",end_date$)
+
+	bm$=sfs_params.bm_interface$
+	op$=sfs_params.ar_interface$
+	po$=sfs_params.po_interface$
+	pr$=sfs_params.pr_interface$
+
+	num_files=1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+
+	if bm$<>"Y"
+		call stbl("+DIR_PGM")+"adc_application.aon","BM",info$[all]
+		bm$=info$[20]
+		open_tables$[1]="SFC_OPRTNCOD",open_opts$[1]="OTA"
+	else
+		open_tables$[1]="BMC_OPCODES",open_opts$[1]="OTA"
+	endif
+	callpoint!.setDevObject("bm",bm$)
+	x$=stbl("bm",bm$)
+
+	gosub open_tables
+
+	callpoint!.setDevObject("opcode_chan",num(open_chans$[1]))
+	callpoint!.setDevObject("opcode_tpl",open_tpls$[1])
+
+	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
+
+	if op$="Y"
+		call stbl("+DIR_PGM")+"adc_application.aon","AR",info$[all]
+		ar$=info$[20]
+		call stbl("+DIR_PGM")+"adc_application.aon","OP",info$[all]
+		op$=info$[20]
+	endif
+	callpoint!.setDevObject("ar",ar$)
+	callpoint!.setDevObject("op",op$)
+
+	if po$="Y"
+		call stbl("+DIR_PGM")+"adc_application.aon","PO",info$[all]
+		po$=info$[20]
+	endif
+	callpoint!.setDevObject("po",po$)
+	x$=stbl("po",po$)
+
+	if pr$="Y"
+		call stbl("+DIR_PGM")+"adc_application.aon","PR",info$[all]
+		pr$=info$[20]
+	endif
+	callpoint!.setDevObject("pr",pr$)
+	x$=stbl("pr",pr$)
+
+	call stbl("+DIR_PGM")+"adc_application.aon","MP",info$[all]
+	callpoint!.setDevObject("mp",info$[20])
+	mp$=info$[20]
+
+rem --- alter control label and prompt for Bill No vs. Item ID depending on whether or not bm$=Y
+	
+	wctl!=callpoint!.getControl("ITEM_ID")
+	wctl_id=wctl!.getID()-1000
+	wcontext=num(callpoint!.getTableColumnAttribute("SFE_WOMASTR.ITEM_ID","CTLC"))
+	lbl_ctl!=SysGUI!.getWindow(wcontext).getControl(wctl_id)
+	if bm$="Y"
+		lbl_ctl!.setText(Translate!.getTranslation("AON_BILL_NUMBER:","Bill Number:",1))
+		callpoint!.setTableColumnAttribute("SFE_WOMASTR.ITEM_ID","PROM",Translate!.getTranslation("AON_ENTER_BILL_NUMBER","Enter a valid Bill of Materials number",1))
+	else
+		lbl_ctl!.setText(Translate!.getTranslation("AON_INVENTORY_ITEM_ID:","Inventory Item ID:",1))
+		callpoint!.setTableColumnAttribute("SFE_WOMASTR.ITEM_ID","PROM",Translate!.getTranslation("AON_ENTER_INVENTORY_ITEM_ID","Enter a valid Inventory Item ID",1))
+	endif
 [[SFE_WOMASTR.WO_NO.AVAL]]
 rem --- put WO number and loc in DevObject
 
 	callpoint!.setDevObject("wo_no",callpoint!.getUserInput())
 	callpoint!.setDevObject("wo_loc",callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION"))
 [[SFE_WOMASTR.OPENED_DATE.AVAL]]
-rem --- need to see if date has been changed; if so, prompt to change in sfe-02/22 as well
+rem --- need to see if date has been changed; if so, prompt to change in sfe-02/22/23 as well
 
 	prev_dt$=cvs(callpoint!.getColumnUndoData("SFE_WOMASTR.OPENED_DATE"),3)
 	new_dt$=callpoint!.getUserInput()
 	if prev_dt$<>"" and prev_dt$<>new_dt$
 		msg_id$="SF_CHANGE_DTS"
 		gosub disp_message
-escape
+
 		if msg_opt$="Y"
 			sfe02_dev=fnget_dev("SFE_WOOPRTN")
 			sfe22_dev=fnget_dev("SFE_WOMATL")
@@ -653,97 +810,6 @@ rem --- enable all enterable fields
 	callpoint!.setColumnEnabled("SFE_WOMASTR.WAREHOUSE_ID",1)
 	callpoint!.setColumnEnabled("SFE_WOMASTR.WO_TYPE",1)
 	callpoint!.setColumnEnabled("SFE_WOMASTR.WO_STATUS",1)
-[[SFE_WOMASTR.BSHO]]
-rem --- Set new record flag
-
-	callpoint!.setDevObject("new_rec","Y")
-
-rem --- Open tables
-
-	num_files=20
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
-	open_tables$[2]="SFS_PARAMS",open_opts$[2]="OTA"
-	open_tables$[3]="SFC_WOTYPECD",open_opts$[3]="OTA"
-	open_tables$[4]="SFT_OPNMATTR",open_opts$[4]="OTA"
-	open_tables$[5]="SFT_OPNOPRTR",open_opts$[5]="OTA"
-	open_tables$[6]="SFT_OPNSUBTR",open_opts$[6]="OTA"
-	open_tables$[7]="BMM_BILLMAST",open_opts$[7]="OTA"
-	open_tables$[8]="OPE_ORDHDR",open_opts$[8]="OTA"
-	open_tables$[9]="OPE_ORDDET",open_opts$[9]="OTA"
-	open_tables$[10]="IVM_ITEMMAST",open_opts$[10]="OTA"
-	open_tables$[11]="OPC_LINECODE",open_opts$[11]="OTA"
-	open_tables$[12]="GLS_PARAMS",open_opts$[12]="OTA"
-	open_tables$[13]="SFT_CLSMATTR",open_opts$[13]="OTA"
-	open_tables$[14]="SFT_CLSOPRTR",open_opts$[14]="OTA"
-	open_tables$[15]="SFT_CLSSUBTR",open_opts$[15]="OTA"
-	open_tables$[16]="SFT_CLSLSTRN",open_opts$[16]="OTA"
-	open_tables$[17]="SFT_OPNLSTRN",open_opts$[17]="OTA"
-	open_tables$[18]="IVM_ITEMWHSE",open_opts$[18]="OTA"
-	open_tables$[19]="SFE_WOSCHDL",open_opts$[19]="OTA"
-	open_tables$[20]="SFE_WOMATDTL",open_opts$[20]="OTA"
-
-	gosub open_tables
-
-	sfs_params=num(open_chans$[2])
-	dim sfs_params$:open_tpls$[2]
-	read record (sfs_params,key=firm_id$+"SF00",dom=std_missing_params) sfs_params$
-
-	gls_params=num(open_chans$[12])
-	call stbl("+DIR_PGM")+"adc_perioddates.aon",gls_params,num(sfs_params.current_per$),num(sfs_params.current_year$),beg_date$,end_date$,status
-	callpoint!.setDevObject("gl_end_date",end_date$)
-
-	bm$=sfs_params.bm_interface$
-	op$=sfs_params.ar_interface$
-	po$=sfs_params.po_interface$
-	pr$=sfs_params.pr_interface$
-
-	num_files=1
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-
-	if bm$<>"Y"
-		call stbl("+DIR_PGM")+"adc_application.aon","BM",info$[all]
-		bm$=info$[20]
-		open_tables$[1]="SFC_OPRTNCOD",open_opts$[1]="OTA"
-	else
-		open_tables$[1]="BMC_OPCODES",open_opts$[1]="OTA"
-	endif
-	callpoint!.setDevObject("bm",bm$)
-	x$=stbl("bm",bm$)
-
-	gosub open_tables
-
-	callpoint!.setDevObject("opcode_chan",num(open_chans$[1]))
-	callpoint!.setDevObject("opcode_tpl",open_tpls$[1])
-
-	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
-
-	if op$="Y"
-		call stbl("+DIR_PGM")+"adc_application.aon","AR",info$[all]
-		ar$=info$[20]
-		call stbl("+DIR_PGM")+"adc_application.aon","OP",info$[all]
-		op$=info$[20]
-	endif
-	callpoint!.setDevObject("ar",ar$)
-	callpoint!.setDevObject("op",op$)
-
-	if po$="Y"
-		call stbl("+DIR_PGM")+"adc_application.aon","PO",info$[all]
-		po$=info$[20]
-	endif
-	callpoint!.setDevObject("po",po$)
-	x$=stbl("po",po$)
-
-	if pr$="Y"
-		call stbl("+DIR_PGM")+"adc_application.aon","PR",info$[all]
-		pr$=info$[20]
-	endif
-	callpoint!.setDevObject("pr",pr$)
-	x$=stbl("pr",pr$)
-
-	call stbl("+DIR_PGM")+"adc_application.aon","MP",info$[all]
-	callpoint!.setDevObject("mp",info$[20])
-	mp$=info$[20]
 [[SFE_WOMASTR.ITEM_ID.AINV]]
 rem --- Item synonym processing
 

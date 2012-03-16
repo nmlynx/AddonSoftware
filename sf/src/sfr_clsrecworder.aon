@@ -231,9 +231,13 @@ rem --- Breaks
         dim b[4],c[4],t[7]
 
 rem --- Additional Reads
-
+rem --- note to whomever comes in here to get this working...
+rem --- In the code where it's setting up the channel/template for the desired requirements file,
+rem --- I think the lines setting total_units, total_cost and rate are a mis-interpretation of the old code made during post CodePort work.
+rem --- I think these should go away, and where it's accumulating the b[ ] array, it should be using units, rate, cost, etc., from the sfreqa$ record
+rem --- 3/2012 CAH 
         sfreq_dev=sfe02_dev
-        total_units=sfe02.total_time
+        total_units=sfe02.total_time;rem --- I think these three lines should go
         total_cost=sfe02.tot_std_cost
         rate=sfe02.direct_rate
 
@@ -260,7 +264,7 @@ calculate_standards: rem --- Calculate Standards
                     read record (sfreq_dev,key=sfreqa_key$) sfreqa$
                     switch sfreq_dev                                                
                         case sfe02_dev
-                            b[1]=b[1]+total_units*rate
+                            b[1]=b[1]+total_units*rate;rem --- I think this should be using sfreq.total_time*sfreq.direct_rate... analogous mods to the rest of these lines. CAH
                             b[4]=b[4]+total_cost-total_units*rate; rem "Split Direct & OH
                         break
                         case sfe22_dev
@@ -297,6 +301,7 @@ calculate_standards: rem --- Calculate Standards
          wend
    
 rem --- Calculate Actuals
+rem --- see comments in the routine above. I think setting rate here is misinterpretation during post CodePort work
         wotran_dev=sft01_dev
         dim sftran$:templates$[13]
         dim sftran_key$:sft01_key_tpl$
