@@ -5,24 +5,28 @@ rem --- Do not commit if row has been deleted
 		break
 	endif
 
-rem --- Do not commit unless quantity issued has changed!
+rem --- Init things for later
+	warehouse_id$=callpoint!.getColumnData("SFE_WOMATISD.WAREHOUSE_ID")
+	item_id$=callpoint!.getColumnData("SFE_WOMATISD.ITEM_ID")
+	qty_ordered=num(callpoint!.getColumnData("SFE_WOMATISD.QTY_ORDERED"))
+	tot_qty_iss=num(callpoint!.getColumnData("SFE_WOMATISD.TOT_QTY_ISS"))
+	qty_issued=num(callpoint!.getColumnData("SFE_WOMATISD.QTY_ISSUED"))
+
+rem --- Adjust committed if issue qty exceeds ordered qty 
+rem --- (For new records qty_ordered=qty_issued and tot_qty_iss=0)
+	if qty_issued+tot_qty_iss>qty_ordered then
+
+rem --- Do not commit unless quantity issued has changed, or quantity issued exeeds quantity ordered
 	sfe_womatisd_dev=fnget_dev("SFE_WOMATISD")
 	dim sfe_womatisd$:fnget_tpl$("SFE_WOMATISD")
 	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
 	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
 	readrecord(sfe_womatisd_dev,key=sfe_womatisd_key$,dom=*next)sfe_womatisd$
 	start_qty_issued=sfe_womatisd.qty_issued
-	qty_issued=num(callpoint!.getColumnData("SFE_WOMATISD.QTY_ISSUED"))
-	if qty_issued=start_qty_issued then
-		rem --- qty_issued has not changed, so do not commit inventory
+	if qty_issued=start_qty_issued and qty_issued+tot_qty_iss<=qty_ordered then
+		rem --- qty_issued has not changed and less than qty_ordered, so do not commit inventory
 		break
 	endif
-
-rem --- Init things for later
-	warehouse_id$=callpoint!.getColumnData("SFE_WOMATISD.WAREHOUSE_ID")
-	item_id$=callpoint!.getColumnData("SFE_WOMATISD.ITEM_ID")
-	qty_ordered=num(callpoint!.getColumnData("SFE_WOMATISD.QTY_ORDERED"))
-	tot_qty_iss=num(callpoint!.getColumnData("SFE_WOMATISD.TOT_QTY_ISS"))
 
 rem --- Inform user when item quantity is recommitted
 rem --- Actually, nothing is recommitted. In the update less will be uncommitted since qty_issued has decreased.
@@ -49,24 +53,6 @@ rem --- Do initial commit if nothing previously ordered or issued
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 	endif
 
-rem --- Adjust committed if issue qty exceeds ordered qty 
-rem --- (For new records qty_ordered=qty_issued and tot_qty_iss=0)
-	if qty_issued+tot_qty_iss>qty_ordered then
-		comit_qty=qty_issued+tot_qty_iss-qty_ordered
-		items$[1]=warehouse_id$
-		items$[2]=item_id$
-		refs[0]=qty_issued+tot_qty_iss-qty_ordered
-		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-
-		rem --- Update order quantity with adjusted committed quantity
-		qty_ordered=qty_issued+tot_qty_iss
-		callpoint!.setColumnData("SFE_WOMATISD.QTY_ORDERED",str(qty_ordered),1)
-	endif
-
-rem wgh ... stopped
-rem wgh ... may need to update qty_issued
-rem wgh ... what if more entered than qty_ordered?
-rem wgh ... maybe do lot/serial before commits? ... depends on how committments are handled in sfe_wolsissu
 	rem --- Lot/serial entry needed?
 	if pos(callpoint!.getDevObject("lotser")="LS") then
 
@@ -93,7 +79,6 @@ rem wgh ... maybe do lot/serial before commits? ... depends on how committments 
 			wend
 
 rem wgh ... stopped
-rem wgh ... rethink this for AGRE needs ... don't commit unless qty_issued has changed!!!!
 rem wgh ... make sure this plays well with lookup via AOPT-LENT
 			if tot_ls_qty_issued<>qty_issued+num(callpoint!.getColumnData("SFE_WOMATISD.TOT_QTY_ISS")) then
 				sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
@@ -103,29 +88,32 @@ rem wgh ... make sure this plays well with lookup via AOPT-LENT
 				callpoint!.setDevObject("item_id",callpoint!.getColumnData("SFE_WOMATISD.ITEM_ID"))
 				callpoint!.setDevObject("womatisd_qty_issued",qty_issued)
 				call stbl("+DIR_SYP")+"bam_run_prog.bbj","SFE_WOLSISSU",stbl("+USER_ID"),"","",table_chans$[all],"",dflt_data$[all]
-rem wgh ... stopped here
-rem wgh ... may need to update qty_issued
-rem wgh ... what if more entered than qty_ordered?
-rem wgh ... maybe do lot/serial before commits? ... depends on how committments are handled in sfe_wolsissu
-qty_issued=num(callpoint!.setDevObject("tot_ls_qty_issued"))
-callpoint!.setColumnData("SFE_WOMATISD.QTY_ISSUED",str(qty_issued),1)
-if qty_issued<>0 then
-	issue_cost=num(callpoint!.setDevObject("tot_ls_issue_cost"))/qty_issued
-	unit_cost=issue_cost
-	callpoint!.setColumnData("SFE_WOMATISD.UNIT_COST",str(unit_cost),0)
-	callpoint!.setColumnData("SFE_WOMATISD.ISSUE_COST",str(issue_cost),1)
-endif
-rem wgh ... 4185 IF T0<>W[3] THEN LET W[3]=T0,O0=2,I0=5
-rem wgh ... 4187 IF T0<>0 THEN IF W[4]<>T1/T0 THEN LET W[4]=T1/T0,O0=2,I0=5
-rem wgh ... 4188 IF T0<>0 THEN LET W[2]=T1/T0,C[11]=W[2]
 
-rem wgh ... 2570 IF W[2]=0 THEN LET W[2]=C[11]
-rem wgh ... 2580 LET W[4]=C[11]
+				qty_issued=num(callpoint!.getDevObject("tot_ls_qty_issued"))
+				callpoint!.setColumnData("SFE_WOMATISD.QTY_ISSUED",str(qty_issued),1)
+				if qty_issued<>0 then
+					issue_cost=num(callpoint!.getDevObject("tot_ls_issue_cost"))/qty_issued
+					unit_cost=issue_cost
+					callpoint!.setColumnData("SFE_WOMATISD.UNIT_COST",str(unit_cost),0)
+					callpoint!.setColumnData("SFE_WOMATISD.ISSUE_COST",str(issue_cost),1)
+				endif
 			endif
 		endif
 	endif
-rem wgh ... stopped
-rem wgh ... test with item 300 - inventoried and serialized
+
+rem --- Adjust committed if issue qty exceeds ordered qty 
+rem --- (For new records qty_ordered=qty_issued and tot_qty_iss=0)
+	if qty_issued+tot_qty_iss>qty_ordered then
+		comit_qty=qty_issued+tot_qty_iss-qty_ordered
+		items$[1]=warehouse_id$
+		items$[2]=item_id$
+		refs[0]=qty_issued+tot_qty_iss-qty_ordered
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+		rem --- Update order quantity with adjusted committed quantity
+		qty_ordered=qty_issued+tot_qty_iss
+		callpoint!.setColumnData("SFE_WOMATISD.QTY_ORDERED",str(qty_ordered),1)
+	endif
 
 rem --- Init DISPLAY columns
 	gosub init_display_cols
@@ -143,7 +131,7 @@ rem --- Lot/serial entry
 	callpoint!.setDevObject("item_id",callpoint!.getColumnData("SFE_WOMATISD.ITEM_ID"))
 	callpoint!.setDevObject("womatisd_qty_issued",callpoint!.getColumnData("SFE_WOMATISD.QTY_ISSUED"))
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj","SFE_WOLSISSU",stbl("+USER_ID"),"","",table_chans$[all],"",dflt_data$[all]
-rem wgh ... stopped
+rem wgh ... stopped ... this should be similar to how AGRE handles after lookup
 rem wgh ... may need to update qty_issued
 rem wgh ... what if more entered than qty_ordered?
 rem wgh ... maybe do lot/serial before commits
@@ -171,6 +159,9 @@ rem --- Init lot/serial additional option
 			break
 	swend
 [[SFE_WOMATISD.BDEL]]
+rem wgh ... stopped ... what if they change item and delete before exiting the row? -- ??
+rem wgh ... stopped ... what if they change qty_issued and delete before exiting the row? -- ??
+
 rem --- Has record been written yet?
 	sfe_womatisd_dev=fnget_dev("SFE_WOMATISD")
 	dim sfe_womatisd$:fnget_tpl$("SFE_WOMATISD")
@@ -220,16 +211,16 @@ rem --- Delete lot/serial and inventory commitments. Must do this before sfe_wom
 			rem --- Keep inventory commitments (for now)
 			items$[3]=" "
 			call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-rem wgh ... stopped
-rem wgh ... test if remove is needed with cascaded deletes
+
 			remove(sfe_wolsissu_dev,key=sfe_wolsissu_key$)
 		wend
 	endif
 
-	rem --- Delete inventory commitments if not being retained
+	rem --- Delete inventory commitments
+	items$[1]=sfe_womatisd.warehouse_id$
+	items$[2]=sfe_womatisd.item_id$
 	if del_issue_only$="N" then
-		items$[1]=sfe_womatisd.warehouse_id$
-		items$[2]=sfe_womatisd.item_id$
+		rem --- Not retaining committments, so delete all of them
 		refs[0]=sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 
@@ -240,11 +231,29 @@ rem wgh ... test if remove is needed with cascaded deletes
 			sfe_womatdtl.qty_ordered=0
 			writerecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$)sfe_womatdtl$
 		endif
+	else
+		rem --- Retaining committments, so only delete additional committments made after WO was released
+		if cvs(sfe_womatisd.womatdtl_seq_ref$,2)="" then
+			rem --- Not part of released WO, so uncommit all
+			refs[0]=sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss
+			call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		else
+			rem --- Only uncommit portion of issue's qty_issued that is greater than released WO's qty_ordered
+			found=0
+			sfe_womatdtl_key$=sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$
+			readrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next)sfe_womatdtl$; found=1
+			if found then
+				if sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss > sfe_womatdtl.qty_ordered-sfe_womatdtl.tot_qty_iss then
+					refs[0]=(sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss)-(sfe_womatdtl.qty_ordered-sfe_womatdtl.tot_qty_iss)
+					call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				endif
+			endif
+		endif
 	endif
-
-rem wgh ... stopped
-rem wgh ... test with item 300 - inventoried and serialized
 [[SFE_WOMATISD.AUDE]]
+rem --- Make sure undeleted row gets written to file
+	callpoint!.setStatus("MODIFIED")
+
 rem --- It is "safer" to use qty_issued from what was restored to disk rather than the grid row
 rem --- even though they "should" be the same. 
 rem --- Was record written?
@@ -290,9 +299,6 @@ rem --- Were commitments retained during delete? No if sfe_womatdtl.qty_ordered=
 
 rem --- Init DISPLAY columns
 	gosub init_display_cols
-
-rem wgh ... stopped
-rem wgh ... test with item 300 - inventoried and serialized
 [[SFE_WOMATISD.ITEM_ID.AVAL]]
 rem --- Item ID is disabled except for a new row, so can init entire new row here.
 	item_id$=callpoint!.getUserInput()
@@ -353,7 +359,6 @@ rem --- Item ID is disabled except for a new row, so can init entire new row her
 	callpoint!.setColumnData("SFE_WOMATISD.QTY_ISSUED",str(qty_issued),1)
 	callpoint!.setColumnData("SFE_WOMATISD.ISSUE_COST",str(issue_cost),1)
 	gosub init_display_cols; rem --- Init DISPLAY columns
-	gosub disable_by_item; rem --- Enable/disable unit of measure
 [[SFE_WOMATISD.QTY_ISSUED.AVAL]]
 rem --- Can't un-issue (negative issue) more than have already been issued.
 	qty_issued=num(callpoint!.getUserInput())
@@ -380,25 +385,9 @@ init_display_cols: rem --- Init DISPLAY columns
 	issue_cost=num(callpoint!.getColumnData("SFE_WOMATISD.ISSUE_COST"))
 	callpoint!.setColumnData("<<DISPLAY>>.VALUE",str(qty_issued*issue_cost),1)
 	return
-
-disable_by_item: rem --- Set enable/disable based on item ID
-	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
-	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
-	findrecord(ivm_itemmast_dev,key=firm_id$+item_id$,dom=*next)ivm_itemmast$
-	if ivm_itemmast.inventoried$="Y" then
-		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"SFE_WOMATISD.UNIT_MEASURE",0)
-
-	else
-		callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"SFE_WOMATISD.UNIT_MEASURE",1)
-	endif
-	return
 [[SFE_WOMATISD.AGDR]]
 rem --- Init DISPLAY columns
 	gosub init_display_cols
-
-rem --- Enable/disable unit of measure
-	item_id$=callpoint!.getColumnData("SFE_WOMATISD.ITEM_ID")
-	gosub disable_by_item
 [[SFE_WOMATISD.BGDR]]
 rem --- Init DISPLAY columns
 

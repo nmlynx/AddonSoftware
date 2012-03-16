@@ -8,7 +8,6 @@ rem --- Hold on to sfe_womatish key
 	callpoint!.setDevObject("wo_no",wo_no$)
 [[SFE_WOMATISH.BDEQ]]
 rem --- Suppress Barista's default delete message
-
 	callpoint!.setStatus("QUIET")
 [[SFE_WOMATISH.BDEL]]
 rem --- Retain commitment on delete?
@@ -58,18 +57,15 @@ rem --- Delete inventory issues and commitments. Must do this before sfe_womatis
 				items$[3]=" "
 				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 
-rem wgh ... test if remove is needed with cascaded deletes
 				remove(sfe_wolsissu_dev,key=sfe_wolsissu_key$)
 			wend
-rem wgh ... test with item 1000 - non-inventoried
-rem wgh ... test with item 350 - inventoried
-rem wgh ... test with item 300 - inventoried and serialized
 		endif
 
-		rem --- Delete inventory commitments if not being retained
+        rem --- Delete inventory commitments
+		items$[1]=sfe_womatisd.warehouse_id$
+		items$[2]=sfe_womatisd.item_id$
 		if del_issue_only$="N" then
-			items$[1]=sfe_womatisd.warehouse_id$
-			items$[2]=sfe_womatisd.item_id$
+            rem --- Not retaining committments, so delete all of them
 			refs[0]=sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss
 			call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 
@@ -79,6 +75,24 @@ rem wgh ... test with item 300 - inventoried and serialized
 			if found then
 				sfe_womatdtl.qty_ordered=0
 				writerecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$)sfe_womatdtl$
+			endif
+		else
+			rem --- Retaining committments, so only delete additional committments made after WO was released
+			if cvs(sfe_womatisd.womatdtl_seq_ref$,2)="" then
+				rem --- Not part of released WO, so uncommit all
+				refs[0]=sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss
+				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			else
+				rem --- Only uncommit portion of issue's qty_issued that is greater than released WO's qty_ordered
+				found=0
+				sfe_womatdtl_key$=sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$
+				readrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next)sfe_womatdtl$; found=1
+				if found then
+					if sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss > sfe_womatdtl.qty_ordered-sfe_womatdtl.tot_qty_iss then
+						refs[0]=(sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss)-(sfe_womatdtl.qty_ordered-sfe_womatdtl.tot_qty_iss)
+						call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+					endif
+				endif
 			endif
 		endif
 	wend
@@ -97,11 +111,11 @@ rem ---  Delete work order transactions
 [[SFE_WOMATISH.BEND]]
 rem --- Remove software lock on batch when batching
 
-rem escape; rem wgh ... this is a BATCHED process
+rem wgh ... stopped ... this is a BATCHED process
 [[SFE_WOMATISH.BTBL]]
 rem --- Get Batch information when batching
 
-rem escape; rem wgh ... this is a BATCHED process
+rem wgh ... stopped ... this is a BATCHED process
 [[SFE_WOMATISH.AREC]]
 rem --- Init no existing materials issues
 	wotrans=0
@@ -259,8 +273,8 @@ rem --- New materials issues entry or no existing materials issues
 					readrecord(sfe_womatisd_dev)sfe_womatisd$
 
 					dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
-					findrecord(sfe_womatl_dev,key=sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$,dom=*next)sfe_womatl$
-					if sfe_womatl.oprtn_int_seq$="" then continue
+					findrecord(sfe_womatl_dev,key=sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$,knum="AO_MAT_SEQ",dom=*next)sfe_womatl$
+					if sfe_womatl.oper_seq_ref$="" then continue
 
 					rem --- Was this operation selected?
 					if !all_selected then
@@ -269,7 +283,7 @@ rem --- New materials issues entry or no existing materials issues
 						while iter!.hasNext()
 							op_seq$=iter!.next()
 							if selected_ops!.get(op_seq$)="" then continue
-							if selected_ops!.get(op_seq$)=sfe_womatl.oprtn_int_seq$ then
+							if selected_ops!.get(op_seq$)=sfe_womatl.oper_seq_ref$ then
 								oprtn_selected=1
 								break
 							endif
@@ -300,7 +314,6 @@ rem --- New materials issues entry or no existing materials issues
 	        rem --- Reload and display with new detail
 	        callpoint!.setStatus("RECORD:["+sfe_womatish_key$+"]")
 	endif
-
 [[SFE_WOMATISH.ISSUED_DATE.BINP]]
 rem -- Verify WO status
 	gosub verify_wo_status
@@ -363,8 +376,6 @@ rem --- Get SF parameters
 	dim sfs_params$:sfs_params_tpl$
 	read record (sfs_params_dev,key=firm_id$+"SF00",dom=std_missing_params) sfs_params$
 	bm$=sfs_params.bm_interface$
-	op$=sfs_params.ar_interface$
-	po$=sfs_params.po_interface$
 	gl$=sfs_params.post_to_gl$
 
 	if bm$="Y"
@@ -372,18 +383,6 @@ rem --- Get SF parameters
 		bm$=info$[20]
 	endif
 	callpoint!.setDevObject("bm",bm$)
-
-	if op$="Y"
-		call stbl("+DIR_PGM")+"adc_application.aon","OP",info$[all]
-		op$=info$[20]
-	endif
-	callpoint!.setDevObject("op",op$)
-
-	if po$="Y"
-		call stbl("+DIR_PGM")+"adc_application.aon","PO",info$[all]
-		po$=info$[20]
-	endif
-	callpoint!.setDevObject("po",po$)
 
 	if gl$="Y"
 		gl$="N"
@@ -404,27 +403,17 @@ rem --- Get IV parameters
 	precision num(precision$)
 
 rem --- Additional file opens
-	num_files=7
+	num_files=4
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	if bm$="Y" then
 		open_tables$[1]="BMC_OPCODES",open_opts$[1]="OTA"
-rem wgh ... may not be needed, verify actually used
-		open_tables$[2]="BMS_PARAMS",open_opts$[2]="OTA"
 	else
 		open_tables$[1]="SFC_OPRTNCOD",open_opts$[1]="OTA"
 	endif
-	if op$="Y" then
-rem wgh ... may not be needed, verify actually used
-		open_tables$[3]="OPS_PARAMS",open_opts$[3]="OTA"
-	endif
-	if po$="Y" then
-rem wgh ... may not be needed, verify actually used
-		open_tables$[4]="POS_PARAMS",open_opts$[4]="OTA"
-	endif
 	if pos(lotser$="LS") then
-		open_tables$[5]="SFE_WOLSISSU",open_opts$[5]="OTA"
-		open_tables$[6]="IVM_LSMASTER",open_opts$[6]="OTA"
-		open_tables$[7]="IVM_LSACT",open_opts$[7]="OTA"
+		open_tables$[2]="SFE_WOLSISSU",open_opts$[2]="OTA"
+		open_tables$[3]="IVM_LSMASTER",open_opts$[3]="OTA"
+		open_tables$[4]="IVM_LSACT",open_opts$[4]="OTA"
 	endif
 
 	gosub open_tables
@@ -432,24 +421,11 @@ rem wgh ... may not be needed, verify actually used
 	if bm$="Y" then
 		callpoint!.setDevObject("opcode_dev",num(open_chans$[1]))
 		callpoint!.setDevObject("opcode_tpl",open_tpls$[1])
-rem wgh ... may not be needed, verify actually used
-		bms_params_dev=num(open_chans$[2]),bms_params_tpl$=open_tpls$[2]
 	endif
-
-	if op$="Y" then
-rem wgh ... may not be needed, verify actually used
-		ops_params_dev=num(open_chans$[3]),ops_params_tpl$=open_tpls$[3]
-	endif
-
-	if po$="Y" then
-rem wgh ... may not be needed, verify actually used
-		pos_params_dev=num(open_chans$[4]),pos_params_tpl$=open_tpls$[4]
-	endif
-
 	if pos(lotser$="LS") then
-		sfe_wolsissu_dev=num(open_chans$[5]),sfe_wolsissu_tpl$=open_tpls$[5]
-		ivm_lsmaster_dev=num(open_chans$[6]),ivm_lsmaster_tpl$=open_tpls$[6]
-		ivm_lsact_dev=num(open_chans$[7]),ivm_lsact_tpl$=open_tpls$[7]
+		sfe_wolsissu_dev=num(open_chans$[2]),sfe_wolsissu_tpl$=open_tpls$[2]
+		ivm_lsmaster_dev=num(open_chans$[3]),ivm_lsmaster_tpl$=open_tpls$[3]
+		ivm_lsact_dev=num(open_chans$[4]),ivm_lsact_tpl$=open_tpls$[4]
 	endif
 [[SFE_WOMATISH.ARNF]]
 rem --- Init new Materials Issues Entry record

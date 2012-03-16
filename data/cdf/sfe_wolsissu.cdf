@@ -1,3 +1,49 @@
+[[SFE_WOLSISSU.AGRE]]
+rem --- Do not commit if row has been deleted
+	if callpoint!.getGridRowDeleteStatus(callpoint!.getValidationRow())="Y" then
+		rem --- row has been deleted, so do not commit inventory
+		break
+	endif
+
+rem --- Do not commit unless lot/serial number or quantity issued has changed!
+rem --- sfe_wolsissu only gets written on save (Barista bug 4419), so can exit row multiple times before sfe_wolsissu gets written.
+	start_lotser_no$=callpoint!.getDevObject("start_lotser_no")
+	start_qty_issued=num(callpoint!.getDevObject("start_qty_issued"))
+ 	lotser_no$=callpoint!.getColumnData("SFE_WOLSISSU.LOTSER_NO")
+ 	qty_issued=num(callpoint!.getColumnData("SFE_WOLSISSU.QTY_ISSUED"))
+	if lotser_no$=start_lotser_no$ and qty_issued=start_qty_issued then
+		rem --- lotser_no and qty_issued have not changed, so do not commit inventory
+		break
+	endif
+    
+rem --- Initialize inventory item update
+	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+rem --- Backout starting commitments unless none
+	if cvs(start_lotser_no$,2)<>"" then
+		rem --- Uncommit starting lot/serial
+		items$[1]=callpoint!.getDevObject("warehouse_id")
+		items$[2]=callpoint!.getDevObject("item_id")
+		items$[3]=start_lotser_no$
+		refs[0]=start_qty_issued
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+		rem --- Recommit item since got uncommitted with lot/serial
+		items$[3]=" "
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	endif
+
+rem --- Make new commitments
+	rem --- Commit lot/serial
+	items$[1]=callpoint!.getDevObject("warehouse_id")
+	items$[2]=callpoint!.getDevObject("item_id")
+	items$[3]=lotser_no$
+	refs[0]=qty_issued
+	call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+	rem --- Uncommit item since got recommitted with lot/serial
+	items$[3]=" "
+	call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 [[SFE_WOLSISSU.<CUSTOM>]]
 init_cols: rem ---  Init grid columns
 	rem --- Init the Item ID
@@ -42,67 +88,6 @@ rem --- Init how many lot/serial items are left to issue
 
 rem ---  Init grid columns
 	gosub init_cols
-[[SFE_WOLSISSU.AWRI]]
-rem wgh ... stopped
-rem wgh ... sfe_wolsissu only written on save ... but update inventory on row exit
-rem wgh ... 3400 REM " --- Write
-rem wgh ... 3410 IF O9$=T1$ AND O9=T[0] THEN GOTO 3460
-rem wgh ... 3415 IF O9$="" THEN GOTO 3440
-rem wgh ... 3420 LET O$=O9$,O8=O9,I=-1
-rem wgh ... 3430 GOSUB 3600
-
-rem wgh ... 3600 REM " --- IVM-02 Commit / Uncommit to Offset IVM-07 Process Below "
-rem wgh ... 3602 REM " --- IVC.UA commits/ Uncomits IVM-02 again when committing IVM-07
-rem wgh ... 3604 REM " --- This pass negates the IVM-02 update "
-rem wgh ... 3605 DIM PARAMS[0],PARAMS$[4],ITEMS$[3],REFS$[11],REFS[5],IVFILES[44]
-rem wgh ... 3606 LET PARAMS$[0]=F0$(7,3),PARAMS$[1]=F0$(4,3),PARAMS$[2]=P2$,PARAMS$[3]=P3$
-rem wgh ... 3607 LET PARAMS$[4]=P4$
-rem wgh ... 3610 LET IVFILES[1]=IVM01_DEV,IVFILES[2]=IVM02_DEV,IVFILES[7]=IVM07_DEV
-rem wgh ... 3620 LET IVFILES[17]=IVM17_DEV
-rem wgh ... 3625 IF I=1 THEN LET ACTION$="UC" ELSE IF I=(-1) THEN LET ACTION$="CO"
-rem wgh ... 3630 LET ITEMS$[0]=T0$(1,2),ITEMS$[1]=W1$(19,2),ITEMS$[2]=W1$(21,20)
-rem wgh ... 3640 LET ITEMS$[3]=" ",REFS[0]=O8
-rem wgh ... 3660 CALL "IVC.UA",ACTION$,IVFILES[ALL],PARAMS[ALL],PARAMS$[ALL],ITEMS$[ALL],REFS$[ALL],REFS[ALL],STATUS
-rem wgh ... 3700 REM " --- IVM-07 Commit / Uncommit / Total
-rem wgh ... 3710 LET IVFILES[1]=IVM01_DEV,IVFILES[2]=IVM02_DEV,IVFILES[7]=IVM07_DEV
-rem wgh ... 3720 LET IVFILES[17]=IVM17_DEV
-rem wgh ... 3730 IF I=1 THEN LET ACTION$="CO" ELSE IF I=(-1) THEN LET ACTION$="UC"
-rem wgh ... 3740 LET ITEMS$[0]=T0$(1,2),ITEMS$[1]=W1$(19,2),ITEMS$[2]=W1$(21,20)
-rem wgh ... 3750 LET ITEMS$[3]=O$,REFS[0]=O8
-rem wgh ... 3760 CALL "IVC.UA",ACTION$,IVFILES[ALL],PARAMS[ALL],PARAMS$[ALL],ITEMS$[ALL],REFS$[ALL],REFS[ALL],STATUS
-rem wgh ... 3780 LET O7=O7+O8*I
-rem wgh ... 3790 RETURN 
-
-rem wgh ... 3440 LET O$=T1$,O8=T[0],I=1
-rem wgh ... 3450 GOSUB 3600
-
-rem wgh ... 3600 REM " --- IVM-02 Commit / Uncommit to Offset IVM-07 Process Below "
-rem wgh ... 3602 REM " --- IVC.UA commits/ Uncomits IVM-02 again when committing IVM-07
-rem wgh ... 3604 REM " --- This pass negates the IVM-02 update "
-rem wgh ... 3605 DIM PARAMS[0],PARAMS$[4],ITEMS$[3],REFS$[11],REFS[5],IVFILES[44]
-rem wgh ... 3606 LET PARAMS$[0]=F0$(7,3),PARAMS$[1]=F0$(4,3),PARAMS$[2]=P2$,PARAMS$[3]=P3$
-rem wgh ... 3607 LET PARAMS$[4]=P4$
-rem wgh ... 3610 LET IVFILES[1]=IVM01_DEV,IVFILES[2]=IVM02_DEV,IVFILES[7]=IVM07_DEV
-rem wgh ... 3620 LET IVFILES[17]=IVM17_DEV
-rem wgh ... 3625 IF I=1 THEN LET ACTION$="UC" ELSE IF I=(-1) THEN LET ACTION$="CO"
-rem wgh ... 3630 LET ITEMS$[0]=T0$(1,2),ITEMS$[1]=W1$(19,2),ITEMS$[2]=W1$(21,20)
-rem wgh ... 3640 LET ITEMS$[3]=" ",REFS[0]=O8
-rem wgh ... 3660 CALL "IVC.UA",ACTION$,IVFILES[ALL],PARAMS[ALL],PARAMS$[ALL],ITEMS$[ALL],REFS$[ALL],REFS[ALL],STATUS
-rem wgh ... 3700 REM " --- IVM-07 Commit / Uncommit / Total
-rem wgh ... 3710 LET IVFILES[1]=IVM01_DEV,IVFILES[2]=IVM02_DEV,IVFILES[7]=IVM07_DEV
-rem wgh ... 3720 LET IVFILES[17]=IVM17_DEV
-rem wgh ... 3730 IF I=1 THEN LET ACTION$="CO" ELSE IF I=(-1) THEN LET ACTION$="UC"
-rem wgh ... 3740 LET ITEMS$[0]=T0$(1,2),ITEMS$[1]=W1$(19,2),ITEMS$[2]=W1$(21,20)
-rem wgh ... 3750 LET ITEMS$[3]=O$,REFS[0]=O8
-rem wgh ... 3760 CALL "IVC.UA",ACTION$,IVFILES[ALL],PARAMS[ALL],PARAMS$[ALL],ITEMS$[ALL],REFS$[ALL],REFS[ALL],STATUS
-rem wgh ... 3780 LET O7=O7+O8*I
-rem wgh ... 3790 RETURN 
-
-rem wgh ... 3455 LET O9$=T1$,O9=T[0]
-rem wgh ... 3460 LET L=L+1; PRINT @(0,21),'LD','LD'
-rem wgh ... 3480 WRITE (WOE14_DEV,KEY=T0$(1,17))IOL=WOE14A ... sfe_wolsissu
-rem wgh ... 3485 IF V3=4 THEN GOTO 4000
-rem wgh ... 3490 GOTO 1000
 [[SFE_WOLSISSU.LOTSER_NO.AVAL]]
 rem --- lotser_no is disabled except for a new row, so can init entire new row here.
 	lotser_no$=callpoint!.getUserInput()
@@ -110,6 +95,13 @@ rem --- lotser_no is disabled except for a new row, so can init entire new row h
 		rem --- Do not re-init if user returns to lotser_no field on a new row
 		break
 	endif
+
+rem --- Reset quantity left_to_issue and tot_ls_qty_issued if lotser_no changed on new row
+	qty_issued=num(callpoint!.getColumnData("SFE_WOLSISSU.QTY_ISSUED"))
+	left_to_issue=num(callpoint!.getDevObject("left_to_issue"))
+	tot_ls_qty_issued=num(callpoint!.getDevObject("tot_ls_qty_issued"))
+	callpoint!.setDevObject("left_to_issue",left_to_issue+qty_issued)
+	callpoint!.setDevObject("tot_ls_qty_issued",tot_ls_qty_issued-qty_issued)
 
 rem --- Get data for this lot/serial number
 	item_id$=callpoint!.getDevObject("item_id")
@@ -128,7 +120,7 @@ rem --- Init issued quantity to quantity left to issue
 			wolsissu_qty_issued=1
 		endif
 	else
-		wolsissu_qty_issued=womatisd_qty-tot_ls_qty_issued
+		wolsissu_qty_issued=womatisd_qty_issued-tot_ls_qty_issued
 	endif
 
 rem --- Can't return serialized item if it's already on hand.
@@ -153,17 +145,13 @@ rem --- Don't issue more than are available
 	endif
 
 rem --- Set issue cost and quantity issued
-	callpoint!.setColumnData("SFE_WOLSISSU.ISSUE_COST",str(ivm_lsmaster.unit_cost))
-	callpoint!.setColumnData("SFE_WOLSISSU.QTY_ISSUED",str(wolsissu_qty_issued))
+	callpoint!.setColumnData("SFE_WOLSISSU.ISSUE_COST",str(ivm_lsmaster.unit_cost),1)
+	callpoint!.setColumnData("SFE_WOLSISSU.QTY_ISSUED",str(wolsissu_qty_issued),1)
 
 rem --- Update quantity left_to_issue and tot_ls_qty_issued
 	left_to_issue=num(callpoint!.getDevObject("left_to_issue"))
 	callpoint!.setDevObject("left_to_issue",left_to_issue-wolsissu_qty_issued)
 	callpoint!.setDevObject("tot_ls_qty_issued",tot_ls_qty_issued+wolsissu_qty_issued)
-
-print "ls AVAL: tot_ls_qty_issued="+str(tot_ls_qty_issued)
-print "ls AVAL: left_to_issue="+str(left_to_issue)
-rem wgh
 [[SFE_WOLSISSU.AOPT-LLOK]]
 rem --- Do lot/serial lookup
 	warehouse_id$     = callpoint!.getDevObject("warehouse_id")
@@ -230,6 +218,7 @@ rem --- Nothing to do if qty_issued hasn't changed
 		break
 	endif
 
+
 rem --- Get data for this lot/serial number
 	lotser_no$=callpoint!.getColumnData("SFE_WOLSISSU.LOTSER_NO")
 	item_id$=callpoint!.getDevObject("item_id")
@@ -251,23 +240,61 @@ rem --- Update quantity left_to_issue and tot_ls_qty_issued
 	tot_ls_qty_issued=num(callpoint!.getDevObject("tot_ls_qty_issued"))
 	callpoint!.setDevObject("left_to_issue",left_to_issue+prev_qty_issued-qty_issued)
 	callpoint!.setDevObject("tot_ls_qty_issued",tot_ls_qty_issued-prev_qty_issued+qty_issued)
-
-print "qty AVAL: tot_ls_qty_issued="+str(tot_ls_qty_issued)
-print "qty AVAL: left_to_issue="+str(left_to_issue)
-rem wgh
 [[SFE_WOLSISSU.AGRN]]
+rem --- Hold on to starting lotser_no and qty_issued for this line so we can determine if committments are needed.
+rem --- sfe_wolsissu only gets written on save (Barista bug 4419), so can exit row multiple times before sfe_wolsissu gets written.
+	start_lotser_no$=callpoint!.getColumnData("SFE_WOLSISSU.LOTSER_NO")
+	start_qty_issued=num(callpoint!.getColumnData("SFE_WOLSISSU.QTY_ISSUED"))
+	callpoint!.setDevObject("start_lotser_no",start_lotser_no$)
+	callpoint!.setDevObject("start_qty_issued",start_qty_issued)
+
 rem -- Init hidden key fields
 	callpoint!.setColumnData("SFE_WOLSISSU.WO_LOCATION",str(callpoint!.getDevObject("wo_location")))
 	callpoint!.setColumnData("SFE_WOLSISSU.WO_NO",str(callpoint!.getDevObject("wo_no")))
 	callpoint!.setColumnData("SFE_WOLSISSU.WOMATISD_SEQ_REF",str(callpoint!.getDevObject("womatisd_seq_ref")))
 
-rem --- Set focus on lotser_no
-	callpoint!.setFocus(num(callpoint!.getValidationRow()),"SFE_WOLSISSU.LOTSER_NO")
+rem --- Set focus on lotser_no unless lotted and an existing row (i.e. previously saved)
+	if callpoint!.getDevObject("lotser")="L" and callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())<>"Y" then
+		rem --- Set focus on qty_issued
+		callpoint!.setFocus(num(callpoint!.getValidationRow()),"SFE_WOLSISSU.QTY_ISSUED")
+	else
+		rem --- Set focus on lotser_no
+		callpoint!.setFocus(num(callpoint!.getValidationRow()),"SFE_WOLSISSU.LOTSER_NO")
+	endif
 [[SFE_WOLSISSU.AUDE]]
-rem wgh ... stopped
-rem wgh ... need to handle commits
-rem wgh ... sfe_wolsissu only written on save ... but update inventory on row exit
+rem --- NOTE: sfe_wolsissu row only gets written on save (Barista bug 4419), but AGRE updates inventory on row exit
+
+rem --- Make sure undeleted row gets written to file
+	callpoint!.setStatus("MODIFIED")
+
+rem --- Commit starting lot/serial and quantity issued unless none
+	start_lotser_no$=callpoint!.getDevObject("start_lotser_no")
+	start_qty_issued=num(callpoint!.getDevObject("start_qty_issued"))
+	if cvs(start_lotser_no$,2)<>"" then
+		rem --- Initialize inventory item update
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+		rem --- Commit starting lot/serial
+		items$[1]=callpoint!.getDevObject("warehouse_id")
+		items$[2]=callpoint!.getDevObject("item_id")
+		items$[3]=start_lotser_no$
+		refs[0]=start_qty_issued
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+		rem --- Uncommit item since got recommitted with lot/serial
+		items$[3]=" "
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	endif
+
+rem --- Update quantity left_to_issue and tot_ls_qty_issued
+	left_to_issue=num(callpoint!.getDevObject("left_to_issue"))
+	tot_ls_qty_issued=num(callpoint!.getDevObject("tot_ls_qty_issued"))
+	callpoint!.setDevObject("left_to_issue",left_to_issue-start_qty_issued)
+	callpoint!.setDevObject("tot_ls_qty_issued",tot_ls_qty_issued+start_qty_issued)
 [[SFE_WOLSISSU.BEND]]
+rem wgh ... stopped ... when exit from a new line, the last line is repeated in the new line
+rem wgh ... stopped ... this results in the qty_issued getting doubled!!!!
+
 rem --- Have enough lot/serials been entered?
 	tot_ls_qty_issued=num(callpoint!.getDevObject("tot_ls_qty_issued"))
 	womatisd_qty_issued=num(callpoint!.getDevObject("womatisd_qty_issued"))
@@ -284,8 +311,6 @@ rem --- Have enough lot/serials been entered?
 		msg_tokens$[3] = str(womatisd_qty_issued)
 		gosub disp_message
 		if msg_opt$="C"
-rem wgh ... stopped
-rem wgh ... may be repeating last line when aborting
 			callpoint!.setStatus("ABORT")
 			break
 		endif
@@ -305,7 +330,6 @@ rem --- Have too many lot/serials been entered?
 		msg_tokens$[3] = str(womatisd_qty_issued)
 		gosub disp_message
 		if msg_opt$="C"
-rem wgh ... may be repeating last line when aborting
 			callpoint!.setStatus("ABORT")
 			break
 		endif
@@ -314,36 +338,33 @@ rem wgh ... may be repeating last line when aborting
 rem --- Set total lot/serial issued quantity and total issue cost
 	gosub get_tot_ls_qty_issued
 [[SFE_WOLSISSU.BDEL]]
-rem wgh ... stopped
-rem wgh ... sfe_wolsissu only written on save ... but update inventory on row exit
-rem wgh ... 3500 REM " --- Delete"
-rem wgh ... 3510 REMOVE (WOE14_DEV,KEY=T0$(1,17),DOM=3520) ... sfe_wolsissu
-rem wgh ... 3520 PRINT @(0,L),'CL',@(0,21),'LD','LD',
-rem wgh ... 3540 IF O9$="" THEN GOTO 3590
-rem wgh ... 3550 LET O$=O9$,O8=O9,I=-1
-rem wgh ... 3570 GOSUB 3600
+rem --- NOTE: sfe_wolsissu row only gets written on save (Barista bug 4419), but AGRE updates inventory on row exit
 
-rem wgh ... 3600 REM " --- IVM-02 Commit / Uncommit to Offset IVM-07 Process Below "
-rem wgh ... 3602 REM " --- IVC.UA commits/ Uncomits IVM-02 again when committing IVM-07
-rem wgh ... 3604 REM " --- This pass negates the IVM-02 update "
-rem wgh ... 3605 DIM PARAMS[0],PARAMS$[4],ITEMS$[3],REFS$[11],REFS[5],IVFILES[44]
-rem wgh ... 3606 LET PARAMS$[0]=F0$(7,3),PARAMS$[1]=F0$(4,3),PARAMS$[2]=P2$,PARAMS$[3]=P3$
-rem wgh ... 3607 LET PARAMS$[4]=P4$
-rem wgh ... 3610 LET IVFILES[1]=IVM01_DEV,IVFILES[2]=IVM02_DEV,IVFILES[7]=IVM07_DEV
-rem wgh ... 3620 LET IVFILES[17]=IVM17_DEV
-rem wgh ... 3625 IF I=1 THEN LET ACTION$="UC" ELSE IF I=(-1) THEN LET ACTION$="CO"
-rem wgh ... 3630 LET ITEMS$[0]=T0$(1,2),ITEMS$[1]=W1$(19,2),ITEMS$[2]=W1$(21,20)
-rem wgh ... 3640 LET ITEMS$[3]=" ",REFS[0]=O8
-rem wgh ... 3660 CALL "IVC.UA",ACTION$,IVFILES[ALL],PARAMS[ALL],PARAMS$[ALL],ITEMS$[ALL],REFS$[ALL],REFS[ALL],STATUS
-rem wgh ... 3700 REM " --- IVM-07 Commit / Uncommit / Total
-rem wgh ... 3710 LET IVFILES[1]=IVM01_DEV,IVFILES[2]=IVM02_DEV,IVFILES[7]=IVM07_DEV
-rem wgh ... 3720 LET IVFILES[17]=IVM17_DEV
-rem wgh ... 3730 IF I=1 THEN LET ACTION$="CO" ELSE IF I=(-1) THEN LET ACTION$="UC"
-rem wgh ... 3740 LET ITEMS$[0]=T0$(1,2),ITEMS$[1]=W1$(19,2),ITEMS$[2]=W1$(21,20)
-rem wgh ... 3750 LET ITEMS$[3]=O$,REFS[0]=O8
-rem wgh ... 3760 CALL "IVC.UA",ACTION$,IVFILES[ALL],PARAMS[ALL],PARAMS$[ALL],ITEMS$[ALL],REFS$[ALL],REFS[ALL],STATUS
-rem wgh ... 3780 LET O7=O7+O8*I
-rem wgh ... 3790 RETURN 
+rem --- Backout starting commitments unless none
+	start_lotser_no$=callpoint!.getDevObject("start_lotser_no")
+	start_qty_issued=num(callpoint!.getDevObject("start_qty_issued"))
+if cvs(start_lotser_no$,2)<>"" then
+		rem --- Initialize inventory item update
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+		rem --- Uncommit starting lot/serial
+		items$[1]=callpoint!.getDevObject("warehouse_id")
+		items$[2]=callpoint!.getDevObject("item_id")
+		items$[3]=start_lotser_no$
+		refs[0]=start_qty_issued
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+		rem --- Recommit item since got uncommitted with lot/serial
+		items$[3]=" "
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+endif
+
+rem --- Update quantity left_to_issue and tot_ls_qty_issued
+	qty_issued=num(callpoint!.getColumnData("SFE_WOLSISSU.QTY_ISSUED"))
+	left_to_issue=num(callpoint!.getDevObject("left_to_issue"))
+	tot_ls_qty_issued=num(callpoint!.getDevObject("tot_ls_qty_issued"))
+	callpoint!.setDevObject("left_to_issue",left_to_issue+qty_issued)
+	callpoint!.setDevObject("tot_ls_qty_issued",tot_ls_qty_issued-qty_issued)
 [[SFE_WOLSISSU.BSHO]]
 rem --- Set STBLs needed for lot/serial file validation
 	x$=stbl("+WAREHOUSE_ID",callpoint!.getDevObject("warehouse_id"))
