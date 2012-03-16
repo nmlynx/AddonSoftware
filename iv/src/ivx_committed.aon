@@ -237,7 +237,7 @@ rem --- Rebuild From sfe-23 Committed
                 remove (sfe23_dev,key=sfe23a.firm_id$+sfe23a.work_location$+sfe23a.work_no$+sfe23a.material_seq$,dom=*continue)
             else
                 if sfe01a.work_status$<>"C" then
-                    read record (ivm02_dev,key=firm_id$+sfe23a.warehouse_id$,dom=*continue) ivm02a$
+                    read record (ivm02_dev,key=firm_id$+sfe23a.warehouse_id$+sfe23a.item_id$,dom=*continue) ivm02a$
                     ivm02a.qty_commit=ivm02a.qty_commit+max(0,sfe23a.qty_ordered-sfe23a.tot_qty_iss)
                     ivm02a$=field(ivm02a$)
                     write record (ivm02_dev) ivm02a$                    
