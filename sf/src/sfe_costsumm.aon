@@ -58,7 +58,7 @@ rem --- Calc
 
     curr_oplines$=""
 	op_len$=fattr(sfe02a$)
-	op_len$=op_len$(pos("OP_CODE:C("=op_len$)+10)
+	op_len$=op_len$(pos("OP_SEQ:C("=op_len$)+9)
 	op_len$=op_len$(1,pos("),"=op_len$)-1)
 	op_len=num(op_len$)
 
