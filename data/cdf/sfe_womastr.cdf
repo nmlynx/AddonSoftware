@@ -1,50 +1,98 @@
+[[SFE_WOMASTR.AOPT-LSNO]]
+rem --- launch sfe_wolotser if on an inventory type WO, if item is lotted/serialized, and if params have LS set.
+rem --- tests not in place yet, form hooked up, but no design, callpoint code, etc., done on it yet
+rem --- also, if on a closed WO, allow access? v6 not only allows access, but mods to lot/ser; I'm thinking access, but grid disabled if it's a closed WO
+
+	key_pfx$=firm_id$+callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+
+	dim dflt_data$[3,1]
+	dflt_data$[1,0]="FIRM_ID"
+	dflt_data$[1,1]=firm_id$
+	dflt_data$[2,0]="WO_LOCATION"
+	dflt_data$[2,1]=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
+	dflt_data$[3,0]="WO_NO"
+	dflt_data$[3,1]=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"SFE_WOLOTSER",
+:		stbl("+USER_ID"),
+:		access$,
+:		key_pfx$,
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
 [[SFE_WOMASTR.BDEL]]
-rem --- cascade delete will take care of removing requirements (sfe_wooprtn, sfe_womatl, sfe_wosubcnt) and comments (sfe_wocomnt)
-rem --- otherwise, need code to:
-rem --- 1. remove sfe_womathdr/sfe_womatdtl (sfe-13/23) recs and uncommit inventory
-rem --- 2. **remove lot/serial recs from sfe_wolotser (sfe-06) if doing LS param is set
-rem --- 3. remove sfe_womatish/sfe_womatisd (sfe-15/25) recs
-rem --- 4. **remove sfe_closedwo, sfe_openedwo, sfe_wocommit, sfe_wotrans (the old sfe-04 A/B/C/D recs)
-rem --- 5. **remove sft_clsoprtr, sft_clsmattr, sft_clssubtr (sft-03/23/33) recs
-rem --- 6. **remove sfe_woschdl (sfm-05) recs
-rem --- 7. reduce on-order if it's an inventory-category work order that's not planned/quoted, and isn't new
+rem --- cascade delete will take care of removing:
+rem ---   requirements (sfe_wooprtn/sfe-02, sfe_womatl/sfe-22, sfe_wosubcnt/sfe-32) and comments (sfe_wocomnt/sfe-07)
+rem ---   sfe_closedwo, sfe_openedwo, sfe_wocommit, sfe_wotrans (the old sfe-04 A/B/C/D recs)
+rem ---   closed transactions (sft_clsoprtr/sft-03, sft_clsmattr/sft-23, sft_clssubtr/sft-33)
+rem ---   I'm not sure I understand why the sft-03/23/33's are deleted, so may disconnect the primary table and not delete these.CAH
+rem ---   schedule detail (sfe_woschdl/sfm-05)
+rem --- otherwise, need to:
+rem --- 1. remove sfe_womatish/sfe-15, sfe_womatisd/sfe-25, sfe_wolsissu/sfe-14 and uncommit qtys that are over and above or not in sfe-23
+rem --- 2. remove sfe_womathdr/sfe_womatdtl (sfe-13/23) recs and uncommit inventory (i.e. uncommit what's left after processing sfe15/25)
+rem --- 3. reduce on-order if it's an inventory-category work order that's not planned/quoted, and isn't new
+rem --- 4. what about removing sft_clslstrn (sft-12) along w/ other sft_cls* files? v6/7 didn't.
+rem --- 5. remove lot/serial recs (sfe_wolotser/sfe-06) if LS flag is set
 
-rem --- ** set SFE_WOMASTR as primary table for these files so they can be handled via cascade delete
-rem --- what about removing sft_clslstrn (sft-12) along w/ other sft_cls* files? v6/7 didn't.
+	wo_location$=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
+	wo_no$=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
 
+	sfe13_dev=fnget_dev("SFE_WOMATHDR")
+	dim sfe_womathdr$:fnget_tpl$("SFE_WOMATHDR")
+	sfe23_dev=fnget_dev("SFE_WOMATDTL")
+	dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
+	sfe14_dev=fnget_dev("SFE_WOLSISSU")
+	dim sfe_wolsissu$:fnget_tpl$("SFE_WOLSISSU")
+	sfe15_dev=fnget_dev("SFE_WOMATISH")
+	dim sfe_womatish$:fnget_tpl$("SFE_WOMATISH")
+	sfe25_dev=fnget_dev("SFE_WOMATISD")
+	dim sfe_womatisd$:fnget_tpl$("SFE_WOMATISD")
+	
+rem --- Initialize inventory item update
+	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 
+rem --- process sfe-15/25/14 (issues) and sfe-13/23 (commit/issues)
+rem --- LEFT OFF HERE
 [[SFE_WOMASTR.BDEQ]]
+rem --- cannot delete closed work order
+
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C"
+		callpoint!.setMessage("SF_NO_DELETE")
+		callpoint!.setStatus("ABORT")
+	else
 rem --- prior to deleting a work order, need to check for open transactions; if any exist, can't delete
 
-	wo_loc$=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
-	wo_no$=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
-	can_delete$="YES"
+		wo_loc$=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
+		wo_no$=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+		can_delete$="YES"
 
-	for files=1 to 3
-		if files=1
-			wotran_dev=fnget_dev("SFT_OPNOPRTR")
-			dim wotran$:fnget_tpl$("SFT_OPNOPRTR")
-		endif
-		if files=2
-			wotran_dev=fnget_dev("SFT_OPNMATTR")
-			dim wotran$:fnget_tpl$("SFT_OPNMATTR")
-		endif
-		if files=3
-			wotran_dev=fnget_dev("SFT_OPNSUBTR")
-			dim wotran$:fnget_tpl$("SFT_OPNSUBTR")
-		endif
-		read(wotran_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
+		for files=1 to 3
+			if files=1
+				wotran_dev=fnget_dev("SFT_OPNOPRTR")
+				dim wotran$:fnget_tpl$("SFT_OPNOPRTR")
+			endif
+			if files=2
+				wotran_dev=fnget_dev("SFT_OPNMATTR")
+				dim wotran$:fnget_tpl$("SFT_OPNMATTR")
+			endif
+			if files=3
+				wotran_dev=fnget_dev("SFT_OPNSUBTR")
+				dim wotran$:fnget_tpl$("SFT_OPNSUBTR")
+			endif
+			read(wotran_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
 
-		while 1
-			wotran_key$=key(wotran_dev,end=*break)
-			if pos(firm_id$+wo_loc$+wo_no$=wotran_key$)=1 then can_delete$="NO"
-			break
-		wend
-	next files
+			while 1
+				wotran_key$=key(wotran_dev,end=*break)
+				if pos(firm_id$+wo_loc$+wo_no$=wotran_key$)=1 then can_delete$="NO"
+				break
+			wend
+		next files
 
-	if can_delete$="NO"
-		callpoint!.setMessage("SF_OPEN_TRANS")
-		callpoint!.setStatus("ABORT")
+		if can_delete$="NO"
+			callpoint!.setMessage("SF_OPEN_TRANS")
+			callpoint!.setStatus("ABORT")
+		endif
 	endif
 	
 [[SFE_WOMASTR.AFMC]]
@@ -57,7 +105,7 @@ rem --- Set new record flag
 
 rem --- Open tables
 
-	num_files=20
+	num_files=25
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="SFS_PARAMS",open_opts$[2]="OTA"
@@ -78,7 +126,12 @@ rem --- Open tables
 	open_tables$[17]="SFT_OPNLSTRN",open_opts$[17]="OTA"
 	open_tables$[18]="IVM_ITEMWHSE",open_opts$[18]="OTA"
 	open_tables$[19]="SFE_WOSCHDL",open_opts$[19]="OTA"
-	open_tables$[20]="SFE_WOMATDTL",open_opts$[20]="OTA"
+	open_tables$[20]="SFE_WOMATHDR",open_opts$[20]="OTA"
+	open_tables$[21]="SFE_WOMATDTL",open_opts$[21]="OTA"
+	open_tables$[22]="SFE_WOMATISH",open_opts$[22]="OTA"
+	open_tables$[23]="SFE_WOMATISD",open_opts$[23]="OTA"
+	open_tables$[24]="SFE_WOLSISSU",open_opts$[24]="OTA"
+	open_tables$[25]="SFE_WOLOTSER",open_opts$[25]="OTA"
 
 	gosub open_tables
 
@@ -89,6 +142,12 @@ rem --- Open tables
 	gls_params=num(open_chans$[12])
 	call stbl("+DIR_PGM")+"adc_perioddates.aon",gls_params,num(sfs_params.current_per$),num(sfs_params.current_year$),beg_date$,end_date$,status
 	callpoint!.setDevObject("gl_end_date",end_date$)
+
+	ivs_params=num(open_chans$[1])
+	dim ivs_params$:open_tpls$[1]
+	read record (ivs_params,key=firm_id$+"IV00",dom=std_missing_params) ivs_params$
+	callpoint!.setDevObject("default_wh",ivs_params.warehouse_id$)
+	callpoint!.setDevObject("lotser",ivs_params.lotser_flag$)
 
 	bm$=sfs_params.bm_interface$
 	op$=sfs_params.ar_interface$
@@ -112,8 +171,6 @@ rem --- Open tables
 
 	callpoint!.setDevObject("opcode_chan",num(open_chans$[1]))
 	callpoint!.setDevObject("opcode_tpl",open_tpls$[1])
-
-	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 
 	if op$="Y"
 		call stbl("+DIR_PGM")+"adc_application.aon","AR",info$[all]
@@ -281,6 +338,14 @@ rem --- Disable Options (buttons) for a Closed Work Order
 	else
 		callpoint!.setOptionEnabled("SCHD",1)
 		callpoint!.setOptionEnabled("RELS",1)
+	endif
+
+rem -- Disable Lot/Serial button if no LS
+
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")="I" and callpoint!.getColumnData("SFE_WOMASTR.LOTSER_ITEM")="Y" and callpoint!.getDevObject("lotser")<>"N"
+		callpoint!.setOptionEnabled("LSNO",1)
+	else
+		callpoint!.setOptionEnabled("LSNO",0)
 	endif
 
 rem --- Always disable these fields for an existing record
@@ -616,6 +681,19 @@ rem --- Disable Order info if Customer not entered
 [[SFE_WOMASTR.ITEM_ID.AVAL]]
 rem --- Set default values
 
+	ivm_itemmast=fnget_dev("IVM_ITEMMAST")
+	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
+
+	read record (ivm_itemmast,key=firm_id$+callpoint!.getUserInput(),dom=*break)ivm_itemmast$
+	if cvs(callpoint!.getColumnData("SFE_WOMASTR.UNIT_MEASURE"),3)=""
+		callpoint!.setColumnData("SFE_WOMASTR.UNIT_MEASURE",ivm_itemmast.unit_of_sale$,1)
+	endif
+	if callpoint!.getDevObject("lotser")<>"N" and ivm_itemmast.lotser_item$+ivm_itemmast.inventoried$="YY"
+		callpoint!.setColumnData("SFE_WOMASTR.LOTSER_ITEM","Y",1)
+	else
+		callpoint!.setColumnData("SFE_WOMASTR.LOTSER_ITEM","N",1)
+	endif
+
 	if callpoint!.getDevObject("bm")="Y"
 		bmm_billmast=fnget_dev("BMM_BILLMAST")
 		dim bmm_billmast$:fnget_tpl$("BMM_BILLMAST")
@@ -767,11 +845,7 @@ rem --- Disable Additional Options
 
 rem --- set defaults
 
-	ivs01_dev=fnget_dev("IVS_PARAMS")
-	dim ivs01$:fnget_tpl$("IVS_PARAMS")
-	read record (ivs01_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01$
-	callpoint!.setDevObject("default_wh",ivs01.warehouse_id$)
-	callpoint!.setColumnData("SFE_WOMASTR.WAREHOUSE_ID",ivs01.warehouse_id$)
+	callpoint!.setColumnData("SFE_WOMASTR.WAREHOUSE_ID",str(callpoint!.getDevObject("default_wh")))
 	callpoint!.setColumnData("SFE_WOMASTR.OPENED_DATE",stbl("+SYSTEM_DATE"))
 	callpoint!.setColumnData("SFE_WOMASTR.ESTSTT_DATE",stbl("+SYSTEM_DATE"))
 	callpoint!.setDevObject("prod_qty","0")
