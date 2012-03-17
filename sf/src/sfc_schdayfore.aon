@@ -89,6 +89,11 @@ rem --- Initializations
     orig_date$=v0$
     if method$="B" end_date$=orig_date$
 
+	tmp_field$=fattr(sfe32a$,"OPER_SEQ_REF")
+	oper_seq_ref_len=dec(tmp_field$(10,2))
+	tmp_field$=fattr(sfe32a$,"SUBCONT_SEQ")
+	subcont_seq_len=dec(tmp_field$(10,2))
+
 l800: rem --- Check Validity of Data
 
     x$=""
@@ -130,9 +135,9 @@ l1200: rem --- Set Required Date in Subcontracts for Forward method
     f_day=num(v$(7,2))
     occ=1
 l1230:
-    leadpos=pos("   "=subs$,26,occ)
+    leadpos=pos("   "=subs$,oper_seq_ref_len+subcont_seq_len+11,occ)
     if leadpos=0 goto l1800
-    lead=num(subs$(leadpos+15,3))
+    lead=num(subs$(leadpos+oper_seq_ref_len+subcont_seq_len,3))
 l1260:
     find record (pom01_dev,key=firm_id$+str(f_yr:"0000")+str(f_mth:"00"),dom=l1550) pom01a$
     for x=f_day to pom01a.days_in_mth
@@ -151,7 +156,7 @@ l1260:
 
 l1500: rem --- Save date for Subcontracts without op seq and try again
 
-    subs$(leadpos+18,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
+    subs$(leadpos+oper_seq_ref_len+subcont_seq_len+3,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
     v1$=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
     v$=v1$
     occ=occ+1
@@ -229,9 +234,9 @@ l2300: rem --- Set Required Date in Subcontracts for Backward method
     f_day=num(v$(7,2))
     occ=1
 l2330:
-    leadpos=pos("   "=subs$,-26,occ)
+    leadpos=pos("   "=subs$,-(oper_seq_ref_len+subcont_seq_len+11),occ)
     if leadpos=0 goto l3000
-    lead=num(subs$(leadpos+15,3))
+    lead=num(subs$(leadpos+oper_seq_ref_len+subcont_seq_len,3))
 l2360:
     find record (pom01_dev,key=firm_id$+str(f_yr:"0000")+str(f_mth:"00"),dom=l2750) pom01a$
     if f_day<1 goto l2450
@@ -252,7 +257,7 @@ l2450:
 
 l2700: rem --- Save date for Subcontracts without op seq and try again
 
-    subs$(leadpos+18,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
+    subs$(leadpos+oper_seq_ref_len+subcont_seq_len+3,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
     v1$=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
     v$=v1$
     occ=occ+1
@@ -265,10 +270,10 @@ l3000: rem --- Rewrite Subcontract records with operation sequences
 
     if sfs01a.po_interface$<>"Y" goto done
     if len(subs$)=0 or direction$="B" goto done
-    for x=1 to len(subs$) step 26
-        extract record (sfe32_dev,key=firm_id$+"  "+wo_num$+subs$(x+12,3),dom=l3080) sfe32a$
-        if num(sfe32a.require_date$)<>0 and subs$(x+18,8)<>sfe32a.require_date$ and pos(sfe32a.po_status$="RP")>0 status$(1,1)="1"
-        sfe32a.require_date$=subs$(x+18,8)
+    for x=1 to len(subs$) step oper_seq_ref_len+subcont_seq_len+11
+        extract record (sfe32_dev,key=firm_id$+"  "+wo_num$+subs$(x+oper_seq_ref_len,3),dom=l3080) sfe32a$
+        if num(sfe32a.require_date$)<>0 and subs$(x+oper_seq_ref_len+subcont_seq_len+3,8)<>sfe32a.require_date$ and pos(sfe32a.po_status$="RP")>0 status$(1,1)="1"
+        sfe32a.require_date$=subs$(x+oper_seq_ref_len+subcont_seq_len+3,8)
         write record (sfe32_dev) sfe32a$
     l3080:
     next x
@@ -319,10 +324,10 @@ l5000:
     occ=1
     if sfs01a.po_interface$<>"Y" goto l5300
 l5030:
-    leadpos=pos(sfe02a.op_seq$=subs$,-26,occ)
+    leadpos=pos(sfe02a.op_seq$=subs$,-(oper_seq_ref_len+subcont_seq_len+11),occ)
     if leadpos=0 goto l5300
-    subs$(leadpos+18,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
-    lead=num(subs$(leadpos+15,3))
+    subs$(leadpos+oper_seq_ref_len+subcont_seq_len+3,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
+    lead=num(subs$(leadpos+oper_seq_ref_len+subcont_seq_len,3))
 l5060:
     find record (pom01_dev,key=firm_id$+str(f_yr:"0000")+str(f_mth:"00"),dom=l5950) pom01a$
     if f_day>pom01a.days_in_mth f_day=pom01a.days_in_mth
@@ -431,9 +436,9 @@ l6200: rem --- Do Subcontracts
 
     if sfs01a.po_interface$<>"Y" or ele<>3 goto l6490
 l6220:
-    leadpos=pos(sfe02a.op_seq$=subs$,26,occ)
+    leadpos=pos(sfe02a.op_seq$=subs$,oper_seq_ref_len+subcont_seq_len+11,occ)
     if leadpos=0 goto l6490
-    lead=num(subs$(leadpos+15,3))
+    lead=num(subs$(leadpos+oper_seq_ref_len+subcont_seq_len,3))
 l6250:
     find record (pom01_dev,key=firm_id$+str(f_yr:"0000")+str(f_mth:"00"),dom=l6550) pom01a$
     for x=f_day to pom01a.days_in_mth
@@ -452,7 +457,7 @@ l6250:
 
 l6400: rem --- Save Date for Subcontracts and try again
 
-    subs$(leadpos+18,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
+    subs$(leadpos+oper_seq_ref_len+subcont_seq_len+3,8)=str(f_yr:"0000")+str(f_mth:"00")+str(f_day:"00")
     occ=occ+1                                                  
     goto l6220                                                  
 l6490: return                                                  
