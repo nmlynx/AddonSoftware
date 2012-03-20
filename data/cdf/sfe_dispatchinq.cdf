@@ -12,7 +12,7 @@ rem --- Open/Lock files
 
 	use ::ado_util.src::util
 
-	num_files=6
+	num_files=7
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 	open_tables$[1]="SFE_WOMASTR",open_opts$[1]="OTA"
@@ -21,6 +21,7 @@ rem --- Open/Lock files
 	open_tables$[4]="SFM_OPCALNDR",open_opts$[4]="OTA"
 	open_tables$[5]="SFT_OPNOPRTR",open_opts$[5]="OTA"
 	open_tables$[6]="SFS_PARAMS",open_opts$[6]="OTA"
+	open_tables$[7]="IVM_ITEMMAST",open_opts$[7]="OTA"
 
 	gosub open_tables
 
@@ -30,7 +31,7 @@ rem --- Open/Lock files
 	sfm04_dev=num(open_chans$[4]),sfm04_tpl$=open_tpls$[4]
 	sft01_dev=num(open_chans$[5]),sft01_tpl$=open_tpls$[5]
 	sfs_params=num(open_chans$[6]),sfs_params_tpl$=open_tpls$[6]
-
+	ivm01_dev=num(open_chans$[7])
 rem --- Dimension string templates
 
 	dim sfe01a$:sfe01_tpl$,sfe02a$:sfe02_tpl$,sfm05a$:sfm05_tpl$
@@ -197,87 +198,193 @@ return
 
 rem ==========================================================================
 create_reports_vector: rem --- Create a vector from the file to fill the grid
+rem op_code$:		input
+rem status$:		input
+rem pri_code$:		input
+rem begdate$:		input
+rem enddate$:		input
 rem ==========================================================================
 return
-	call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_len
+	woe02_dev=fnget_dev("SFE_WOOPRTN")
+	dim woe02a$:fnget_tpl$("SFE_WOOPRTN")
+	wot01_dev=fnget_dev("SFT_OPNOPRTR")
+	dim wot01a$:fnget_tpl$("SFT_OPNOPRTR")
+	wom05_dev=fnget_dev("SFE_WOSCHDL")
+	dim wom05a$:fnget_tpl$("SFE_WOSCHDL")
+	woe01a_dev=fnget_dev("SFE_WOMASTR")
+	dim woe01a$:fnget_tpl$("SFE_WOMASTR")
+	ivm01a_dev=fnget_dev("IVM_ITEMMAST")
+	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","H","",m1$,0,0
 	more=1
-	read (apt01_dev,key=firm_id$,dom=*next)
+	read (woe02_dev,key=firm_id$+woe02a.wo_location$+op_code$,knum="AO_LOC_CD_DT_WO",dom=*next)
 	rows=0
 
 	while more
-		read record (apt01_dev, end=*break) apt01a$
-		if pos(firm_id$=apt01a$)<>1 then break
-		read (ape01_dev, key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$, dom=*next); continue
-		dim apm01a$:fattr(apm01a$)
-		read record(apm01_dev, key=firm_id$+apt01a.vendor_id$, dom=*next) apm01a$
-		read record(apt11_dev, key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$, dom=*next)
+		read record (woe02_dev, end=*break) woe02a$
+		if pos(firm_id$+woe02a.wo_location$=woe02a$)<>1 then break
+		if woe02a.op_code$<>op_code$ break
 
-		while more
-			readrecord(apt11_dev,end=*break)apt11a$
-
-			if pos(firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$ =
-:				    firm_id$+apt11a.ap_type$+apt11a.vendor_id$+apt11a.ap_inv_no$) <> 1 
-:			then 
-				break
-			endif
-
-			apt01a.invoice_amt = apt01a.invoice_amt + apt11a.trans_amt
-			apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
+		read(wot01_dev,key=firm_id$+woe02a.wo_location$+woe02a.wo_no$,dom=*next)
+		while 1
+			read record (wot01_dev,end=*break) wot01a$
+			if pos(firm_id$+woe02a.wo_location$+woe02a.wo_no$=wot01a$)<>1 break
+			if wot01a.op_code$<>op_code$ continue
+			units=units+wot01a.units
+			setup=setup+wot01a.setup_time
 		wend
-		if apt01a.discount_amt<0 then apt01a.discount_amt=0
 
-	rem --- override discount and payment amounts if already in ape04 (computer checks)
-
-		disc_amt=apt01a.discount_amt
-		pymnt_amt=0
-		dim ape04a$:fattr(ape04a$)
-		read record(ape04_dev, key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$, dom=*next) ape04a$
-
-		if cvs(ape04a.firm_id$,2)<>""
-			disc_amt  = ape04a.discount_amt
-			pymnt_amt = ape04a.invoice_amt
-		endif
-
-	rem --- Now fill vectors
-	rem --- Items 1 thru n+1 in DispatchMaster must equal items 0 thru n in Dispatch
-
-		if apt01a.invoice_amt<>0 then
-			vectDispatch!.addItem(apt01a.selected_for_pay$); rem 0
-			vectDispatch!.addItem(apt01a.payment_grp$); rem 1
-			vectDispatch!.addItem(apt01a.ap_type$); rem 2
-			vectDispatch!.addItem(func.alphaMask(apt01a.vendor_id$(1,vendor_len),m0$)); rem 3
-			vectDispatch!.addItem(apm01a.vendor_name$); rem 4
-			vectDispatch!.addItem(apt01a.ap_inv_no$); rem 5
-			vectDispatch!.addItem(date(jul(apt01a.inv_due_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID"))); rem 6
-			vectDispatch!.addItem(date(jul(apt01a.disc_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID"))); rem 7
-			vectDispatch!.addItem(str(apt01a.invoice_amt - apt01a.retention - disc_amt - pymnt_amt)); rem 8
-			vectDispatch!.addItem(str(disc_amt)); rem 9
-			vectDispatch!.addItem(str(pymnt_amt)); rem 10
-			vectDispatch!.addItem(apt01a.retention$); rem 11
-
-			vectDispatchMaster!.addItem("Y"); rem 0
-			vectDispatchMaster!.addItem(apt01a.selected_for_pay$); rem 1
-			vectDispatchMaster!.addItem(apt01a.payment_grp$); rem 2
-			vectDispatchMaster!.addItem(apt01a.ap_type$); rem 3
-			vectDispatchMaster!.addItem(func.alphaMask(apt01a.vendor_id$(1,vendor_len),m0$)); rem 4
-			vectDispatchMaster!.addItem(apm01a.vendor_name$); rem 5
-			vectDispatchMaster!.addItem(apt01a.ap_inv_no$); rem 6
-			vectDispatchMaster!.addItem(date(jul(apt01a.inv_due_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID"))); rem 7
-			vectDispatchMaster!.addItem(date(jul(apt01a.disc_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID"))); rem 8
-			vectDispatchMaster!.addItem(str(apt01a.invoice_amt - apt01a.retention - disc_amt - pymnt_amt)); rem 9
-			vectDispatchMaster!.addItem(str(disc_amt)); rem 10
-			vectDispatchMaster!.addItem(str(pymnt_amt)); rem 11
-			vectDispatchMaster!.addItem(apt01a.retention$); rem 12
-			vectDispatchMaster!.addItem(apt01a.inv_due_date$); rem 13
-			vectDispatchMaster!.addItem(apt01a.vendor_id$); rem 14
-			vectDispatchMaster!.addItem(apt01a.disc_date$); rem 15
-			vectDispatchMaster!.addItem(apt01a.invoice_amt$); rem 16
-			rows=rows+1
-		endif
+		if units=0 and setup=0 continue
+		wostr$=wostr$+woe02a.wo_no$+str(units:m1$)+str(setup:m1$)
+		units=0
+		setup=0
 	wend
+
+rem --- Position Schedul Detail file
+	totset=0
+	totrun=0
+	dim woe01a$:fattr(woe01a$)
+	read (wom05_dev,key=firm_id$+op_code$,dom=*next)
+	while 1
+		runtime=0
+		setup=0
+		movetime=0
+		read record (wom05_dev,end=*break) wom05a$
+		if pos(firm_id$+op_code$=wom05a$)<>1 break
+		this_seq$=wom05a.oper_seq_ref$
+		this_wo$=wom05a.wo_no$
+
+rem --- Retrieve sfe-02 operations record
+
+		read record (sfe02_dev,key=firm_id$+sfe02a.wo_location$+wom05a.wo_no$+wom05a.internal_seq_no$,knum="AO_OP_SEQ",dom=*continue)sfe02a$
+		this_code$=sfe02a.op_code$
+
+rem --- Work order still open?
+
+		if sfe02a.wo_no$<>sfe01a.wo_no$
+			movetime=0
+			find record(sfe01_dev,key=firm_id$+sfe02a.wo_location$+sfe02a.wo_no$,dom=*continue) woe01a$
+		endif
+		if woe01a.wo_status$="P" and pos("P"=status$)>0 goto include_it
+		if woe01a.wo_status$="Q" and pos("Q"=status$)>0 goto include_it
+		if woe01a.wo_status$="O" and pos("O"=status$)>0 goto include_it
+		continue
+
+include_it:
+
+rem jpb wazzup with the next lines???
+		desc$=cvs(ivm01a.item_desc$,2)
+		if woe01a.wo_category$="I" desc$=cvs(woe01a.item_id$,2)+" "+desc$
+		movetime=wom05a.move_time
+rem --- Shall we print it?
+		gosub  calc_actual
+		gosub calc_remaining
+		if runtime=0 and setup=0 and movetime=0 continue
+		if woe01a.priority$>pri_code$ continue
+		if cvs(begdate$,2)<>"" if wom05a.sched_date$<begdate$ continue
+		if cvs(enddate$,2)<>"" if wom05a.sched_date$>enddate$ continue
+		v3=0
+rem --- Add to vector
+		vectDispatch!.addItem(wom05a.sched_date$)
+		vectDispatch!.addItem(sfe01a.priority$)
+		vectDispatch!.addItem(sfe01a.wo_category$)
+		vectDispatch!.addItem(sfe01a.wo_no$)
+		vectDispatch!.addItem(desc$)
+		vectDispatch!.addItem(at$)
+		vectDispatch!.addItem(from$)
+		vectDispatch!.addItem(str(setup))
+		vectDispatch!.addItem(str(runtime))
+		vectDispatch!.addItem(str(movetime))
+
+		totset=totset+setup
+		totrun=totrun+runtime
+
+	wend
+
+rem jpb now grab paragraph 3000
 
 	callpoint!.setStatus("REFRESH")
 	
+	return
+
+rem ==========================================================================
+calc_actual:
+rem ==========================================================================
+return
+rem --- Initialize WO ---
+	DIM RUNTIM[OPNMAX],SETUP[OPNMAX],ACTRUN[OPNMAX],ACTSET[OPNMAX]
+	opnseq$=""
+	opncod$=""
+	x0=0
+	now=0
+	at$=""
+	from$=""
+	setup=0
+	runtime=0
+	read (sfe02_dev,key=firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
+rem jpb
+	while 1
+		read record (sfe02a_dev,end=*break) sfe02a$
+		if pos(firm_id$+sfe01a.wo_location$+sfe01a.wo_no$=sfe02a$)<>1 break
+		if sfe02a.line_type$<>"S" continue
+		opnseq$=opnseq$+B0$(13,3)
+		opncod$=opncod$+B1$(1,3)
+		runtim[X0]=L[2]
+		setup[X0]=L[1]
+		x0=x0+1
+	wend
+
+6400 REM " --- Calculate Actual ---"
+6405 DIM W0$(18),W1$(40),W[11]
+6410 READ (WOT01_DEV,KEY=A0$(1,11),DOM=6420)
+6420 LET WOTKEY$=KEY(WOT01_DEV,END=6600)
+6430 IF POS(A0$(1,11)=WOTKEY$)<>1 THEN GOTO 6600
+6440 READ (WOT01_DEV)IOL=WOT01A
+6450 IF W0$(15,1)<>"O" THEN GOTO 6420
+6460 LET SEQ$=W1$(1,3),COD$=W1$(4,3),INDX=POS(SEQ$=OPNSEQ$,3)
+6470 IF INDX=0 THEN LET OPNSEQ$=OPNSEQ$+SEQ$,OPNCOD$=OPNCOD$+COD$; GOTO 6460
+6480 LET INDX=INT(INDX/3),ACTSET[INDX]=ACTSET[INDX]+W[6],ACTRUN[INDX]=ACTRUN[INDX]+W[0]
+6490 IF NOW<INDX THEN LET NOW=INDX
+6500 GOTO 6420
+6600 REM "---- This operation? ---"
+6610 LET AT$=OPNCOD$(NOW*3+1,3)
+6620 LET THISINDX=POS(THISSEQ$=OPNSEQ$,3)
+6630 IF THISINDX=0 THEN GOTO 6700
+6640 LET THISINDX=INT(THISINDX/3),XFROM=THISINDX-1; IF XFROM<0 THEN LET XFROM=0
+6650 LET FROM$=OPNCOD$(XFROM*3+1,3)
+6660 LET RUNT=RUNTIM[THISINDX],SET=SETUP[THISINDX]
+	return
+
+rem ==========================================================================
+calc_remaining:
+rem ==========================================================================
+
+rem --- Calculate Remaining Units
+rem --- umask$ = PARAMETER UNIT MASK, UMASK = LEN(UMASK$)
+	unitrun=0
+	unitset=0
+	wopos=pos(woe01a.wo_no$=wostr$)
+	if wopos<>0
+		unitrun=num(wostr$(wopos+7,umask))
+		unitset=num(wostr$(wopos+7+umask,umask))
+		runtime=runtime-unitrun
+		setup=setup-unitset
+		if runtime>=0
+			wostr$(wopos+7,umask)=str(0:umask$)
+		else
+			unitrun=-runtime
+			wostr$(wopos+7,umask)=str(unitrun:umask$)
+			runtime=0
+		endif
+		if setup>=0
+			wostr$(wopos+7+umask,umask)=str(0:umask$)
+		else
+			unitset=-unitset
+			wostr$(wopos+7+umask,umask)=str(unitset:umask$)
+			setup=0
+		endif
+	endif
 	return
 
 rem ==========================================================================
