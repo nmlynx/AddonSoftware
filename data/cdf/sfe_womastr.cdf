@@ -23,17 +23,13 @@ rem --- also, if on a closed WO, allow access? v6 not only allows access, but mo
 :		dflt_data$[all]
 [[SFE_WOMASTR.BDEL]]
 rem --- cascade delete will take care of removing:
-rem ---   requirements (sfe_wooprtn/sfe-02, sfe_womatl/sfe-22, sfe_wosubcnt/sfe-32) and comments (sfe_wocomnt/sfe-07)
+rem ---   requirements (sfe_wooprtn/sfe-02, sfe_womatl/sfe-22, sfe_wosubcnt/sfe-32)
+rem ---   comments (sfe_wocomnt/sfe-07)
 rem ---   sfe_closedwo, sfe_openedwo, sfe_wocommit, sfe_wotrans (the old sfe-04 A/B/C/D recs)
-rem ---   closed transactions (sft_clsoprtr/sft-03, sft_clsmattr/sft-23, sft_clssubtr/sft-33)
-rem ---   I'm not sure I understand why the sft-03/23/33's are deleted, so may disconnect the primary table and not delete these.CAH
-rem ---   schedule detail (sfe_woschdl/sfm-05)
 rem --- otherwise, need to:
-rem --- 1. remove sfe_womatish/sfe-15, sfe_womatisd/sfe-25, sfe_wolsissu/sfe-14 and uncommit qtys that are over and above or not in sfe-23
-rem --- 2. remove sfe_womathdr/sfe_womatdtl (sfe-13/23) recs and uncommit inventory (i.e. uncommit what's left after processing sfe15/25)
-rem --- 3. reduce on-order if it's an inventory-category work order that's not planned/quoted, and isn't new
-rem --- 4. what about removing sft_clslstrn (sft-12) along w/ other sft_cls* files? v6/7 didn't.
-rem --- 5. remove lot/serial recs (sfe_wolotser/sfe-06) if LS flag is set
+rem --- 1. remove sfe_womathdr/sfe_womatdtl (sfe-13/23) and uncommit inventory
+rem --- 2. reduce on-order if it's an inventory-category work order that's in "open" status
+rem --- 3. remove schedule detail (sfe_woschdl/sfm-05)
 
 	wo_location$=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
 	wo_no$=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
@@ -42,18 +38,63 @@ rem --- 5. remove lot/serial recs (sfe_wolotser/sfe-06) if LS flag is set
 	dim sfe_womathdr$:fnget_tpl$("SFE_WOMATHDR")
 	sfe23_dev=fnget_dev("SFE_WOMATDTL")
 	dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
-	sfe14_dev=fnget_dev("SFE_WOLSISSU")
-	dim sfe_wolsissu$:fnget_tpl$("SFE_WOLSISSU")
-	sfe15_dev=fnget_dev("SFE_WOMATISH")
-	dim sfe_womatish$:fnget_tpl$("SFE_WOMATISH")
-	sfe25_dev=fnget_dev("SFE_WOMATISD")
-	dim sfe_womatisd$:fnget_tpl$("SFE_WOMATISD")
 	
 rem --- Initialize inventory item update
 	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 
-rem --- process sfe-15/25/14 (issues) and sfe-13/23 (commit/issues)
-rem --- LEFT OFF HERE
+rem --- Loop thru materials detail - uncommit lot/serial only (i.e. atamo uncommits both item and lot/serial, so re-commit item and uncommit that qty later)
+
+	read (sfe13_dev,key=firm_id$+wo_location$+wo_no$,dom=*next)
+	while 1
+		sfe13_key$=key(sfe13_dev,end=*break)
+		read record (sfe13_dev)sfe_womathdr$
+		if pos(firm_id$+wo_location$+wo_no$=sfe13_key$)<>1 then break
+
+		read (sfe23_dev,key=firm_id$+wo_location$+wo_no$,dom=*next)
+		while 1
+			sfe23_key$=key(sfe23_dev,end=*break)
+			read record(sfe23_dev)sfe_womatdtl$
+			if pos(firm_id$+wo_location$+wo_no$=sfe23_key$)<>1 then break
+					
+			rem --- Uncommit inventory
+			items$[1]=sfe_womatdtl.warehouse_id$
+			items$[2]=sfe_womatdtl.item_id$
+			items$[3]=""
+			refs[0]=max(0,sfe_womatdtl.qty_ordered-sfe_womatdtl.tot_qty_iss)
+			call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+			remove(sfe23_dev,key=sfe23_key$)
+		wend
+
+		remove (sfe13_dev,key=sfe13_key$);rem bottom of 13/23 loop
+		break; rem should only be one sfe-13 per work order
+	wend
+
+rem --- Remove sfm-05 (sfe_woschdl)
+
+	sfm05_dev=fnget_dev("SFE_WOSCHDL")
+	dim sfe_woschdl$:fnget_tpl$("SFE_WOSCHDL")
+	
+	read (sfm05_dev,key=firm_id$+wo_no$,knum=AO_WONUM,dom=*next)
+
+	while 1
+		read record(sfm05_dev,end=*break)sfe_woschdl$
+		if sfe_woschdl.firm_id$+sfe_woschdl.wo_no$<>firm_id$+wo_no$ then continue
+		remove (sfm05_dev,key=sfe_woschdl.firm_id$+sfe_woschdl.op_code$+sfe_woschdl.sched_date$+sfe_woschdl.wo_no$+sfe_woschdl.oper_seq_ref$,dom=*next)
+	wend
+
+	read (sfm05_dev,key="",knum=0,dom=*next);rem --- reset knum to primary
+
+rem --- Reduce on order for scheduled prod qty
+
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="O" and callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")="I"
+		items$[1]=callpoint!.getColumnData("SFE_WOMASTR.WAREHOUSE_ID")
+		items$[2]=callpoint!.getColumnData("SFE_WOMASTR.ITEM_ID")
+		refs[0]=-(num(callpoint!.getColumnData("SFE_WOMASTR.SCH_PROD_QTY"))-num(callpoint!.getColumnData("SFE_WOMASTR.QTY_CLS_TODT")))
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	endif
+
+
 [[SFE_WOMASTR.BDEQ]]
 rem --- cannot delete closed work order
 
@@ -61,6 +102,7 @@ rem --- cannot delete closed work order
 		callpoint!.setMessage("SF_NO_DELETE")
 		callpoint!.setStatus("ABORT")
 	else
+
 rem --- prior to deleting a work order, need to check for open transactions; if any exist, can't delete
 
 		wo_loc$=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
@@ -88,6 +130,14 @@ rem --- prior to deleting a work order, need to check for open transactions; if 
 				break
 			wend
 		next files
+
+		sfe15_dev=fnget_dev("SFE_WOMATISH")
+		read (sfe15_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
+		while 1
+			sfe15_key$=key(sfe15_dev,end=*break)
+			if pos(firm_id$+wo_loc$+wo_no$=sfe15_key$)=1 then can_delete$="NO"
+			break
+		wend
 
 		if can_delete$="NO"
 			callpoint!.setMessage("SF_OPEN_TRANS")
