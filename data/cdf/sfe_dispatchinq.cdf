@@ -1,3 +1,36 @@
+[[SFE_DISPATCHINQ.WO_STATUS.AVAL]]
+rem --- Populate grid
+
+	op_code$=callpoint!.getColumnData("SFE_DISPATCHINQ.OP_CODE")
+	status$=callpoint!.getUserInput()
+	pri_code$=callpoint!.getColumnData("SFE_DISPATCHINQ.PRIORITY")
+	begdate$=callpoint!.getColumnData("SFE_DISPATCHINQ.DATE_OPENED_1")
+	enddate$=callpoint!.getColumnData("SFE_DISPATCHINQ.DATE_OPENED_2")
+
+	gosub create_reports_vector
+	gosub fill_grid
+[[SFE_DISPATCHINQ.PRIORITY.AVAL]]
+rem --- Populate grid
+
+	op_code$=callpoint!.getColumnData("SFE_DISPATCHINQ.OP_CODE")
+	status$=callpoint!.getColumnData("SFE_DISPATCHINQ.WO_STATUS")
+	pri_code$=callpoint!.getUserInput()
+	begdate$=callpoint!.getColumnData("SFE_DISPATCHINQ.DATE_OPENED_1")
+	enddate$=callpoint!.getColumnData("SFE_DISPATCHINQ.DATE_OPENED_2")
+
+	gosub create_reports_vector
+	gosub fill_grid
+[[SFE_DISPATCHINQ.DATE_OPENED.AVAL]]
+rem --- Populate grid
+
+	op_code$=callpoint!.getColumnData("SFE_DISPATCHINQ.OP_CODE")
+	status$=callpoint!.getColumnData("SFE_DISPATCHINQ.WO_STATUS")
+	pri_code$=callpoint!.getColumnData("SFE_DISPATCHINQ.PRIORITY")
+	begdate$=callpoint!.getColumnData("SFE_DISPATCHINQ.DATE_OPENED_1")
+	enddate$=callpoint!.getColumnData("SFE_DISPATCHINQ.DATE_OPENED_2")
+
+	gosub create_reports_vector
+	gosub fill_grid
 [[SFE_DISPATCHINQ.OP_CODE.AVAL]]
 rem --- Get Queue Time and Pieces per Hour
 
@@ -6,7 +39,16 @@ rem --- Get Queue Time and Pieces per Hour
 
 	read record (opcode,key=firm_id$+callpoint!.getUserInput(),dom=*next) opcode$
 	callpoint!.setColumnData("<<DISPLAY>>.PCS_PER_HOUR",str(opcode.pcs_per_hour),1)
-	callpoint!.setColumnData("<<DISPLAY>>.QUEUE_TIME",str(opcode_queue_time),1)
+	callpoint!.setColumnData("<<DISPLAY>>.QUEUE_TIME",str(opcode.queue_time),1)
+
+	op_code$=callpoint!.getUserInput()
+	status$=callpoint!.getColumnData("SFE_DISPATCHINQ.WO_STATUS")
+	pri_code$=callpoint!.getColumnData("SFE_DISPATCHINQ.PRIORITY")
+	begdate$=callpoint!.getColumnData("SFE_DISPATCHINQ.DATE_OPENED_1")
+	enddate$=callpoint!.getColumnData("SFE_DISPATCHINQ.DATE_OPENED_2")
+
+	gosub create_reports_vector
+	gosub fill_grid
 [[SFE_DISPATCHINQ.AWIN]]
 rem --- Open/Lock files
 
@@ -88,9 +130,6 @@ rem --- Add grid to show Dispatch records
 
 	UserObj!.addItem(vectDispatch!); rem --- vector of filtered recs
 	user_tpl.vectDispatchOffset$="1"
-
-	gosub create_reports_vector
-	gosub fill_grid
 [[SFE_DISPATCHINQ.<CUSTOM>]]
 rem ==========================================================================
 format_grid: rem --- Use Barista program to format the grid
@@ -166,10 +205,11 @@ rem ==========================================================================
 rem ==========================================================================
 fill_grid: rem --- Fill the grid with data in vectDispatch!
 rem ==========================================================================
-return
+
 	SysGUI!.setRepaintEnabled(0)
 	gridDispatch! = UserObj!.getItem(num(user_tpl.gridDispatchOffset$))
 	minrows = num(user_tpl.gridDispatchRows$)
+	vectDispatch!=UserObj!.getItem(num(user_tpl.vectDispatchOffset$))
 
 	if vectDispatch!.size() then
 		numrow = vectDispatch!.size() / gridDispatch!.getNumColumns()
@@ -204,39 +244,48 @@ rem pri_code$:		input
 rem begdate$:		input
 rem enddate$:		input
 rem ==========================================================================
-return
-	woe02_dev=fnget_dev("SFE_WOOPRTN")
-	dim woe02a$:fnget_tpl$("SFE_WOOPRTN")
-	wot01_dev=fnget_dev("SFT_OPNOPRTR")
-	dim wot01a$:fnget_tpl$("SFT_OPNOPRTR")
-	wom05_dev=fnget_dev("SFE_WOSCHDL")
-	dim wom05a$:fnget_tpl$("SFE_WOSCHDL")
-	woe01a_dev=fnget_dev("SFE_WOMASTR")
-	dim woe01a$:fnget_tpl$("SFE_WOMASTR")
-	ivm01a_dev=fnget_dev("IVM_ITEMMAST")
+
+	sfe02_dev=fnget_dev("SFE_WOOPRTN")
+	dim sfe02a$:fnget_tpl$("SFE_WOOPRTN")
+	sft01_dev=fnget_dev("SFT_OPNOPRTR")
+	dim sft01a$:fnget_tpl$("SFT_OPNOPRTR")
+	sfm05_dev=fnget_dev("SFE_WOSCHDL")
+	dim sfm05a$:fnget_tpl$("SFE_WOSCHDL")
+	sfe01_dev=fnget_dev("SFE_WOMASTR")
+	dim sfe01a$:fnget_tpl$("SFE_WOMASTR")
+	ivm01_dev=fnget_dev("IVM_ITEMMAST")
 	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+	sft01_dev=fnget_dev("SFT_OPNOPRTR")
+	dim sft01a$:fnget_tpl$("SFT_OPNOPRTR")
+
+rem --- Get lengths
+
+	tmp_field$=fattr(sft01a$,"OPER_SEQ_REF")
+	op_seq_len=dec(tmp_field$(10,2))
+	tmp_field$=fattr(sft01a$,"OP_CODE")
+	op_cod_len=dec(tmp_field$(10,2))
 
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","H","",m1$,0,0
 	more=1
-	read (woe02_dev,key=firm_id$+woe02a.wo_location$+op_code$,knum="AO_LOC_CD_DT_WO",dom=*next)
+	read (sfe02_dev,key=firm_id$+sfe02a.wo_location$+op_code$,knum="AO_LOC_CD_DT_WO",dom=*next)
 	rows=0
 
 	while more
-		read record (woe02_dev, end=*break) woe02a$
-		if pos(firm_id$+woe02a.wo_location$=woe02a$)<>1 then break
-		if woe02a.op_code$<>op_code$ break
+		read record (sfe02_dev, end=*break) sfe02a$
+		if pos(firm_id$+sfe02a.wo_location$=sfe02a$)<>1 then break
+		if sfe02a.op_code$<>op_code$ break
 
-		read(wot01_dev,key=firm_id$+woe02a.wo_location$+woe02a.wo_no$,dom=*next)
+		read(sft01_dev,key=firm_id$+sfe02a.wo_location$+sfe02a.wo_no$,dom=*next)
 		while 1
-			read record (wot01_dev,end=*break) wot01a$
-			if pos(firm_id$+woe02a.wo_location$+woe02a.wo_no$=wot01a$)<>1 break
-			if wot01a.op_code$<>op_code$ continue
-			units=units+wot01a.units
-			setup=setup+wot01a.setup_time
+			read record (sft01_dev,end=*break) sft01a$
+			if pos(firm_id$+sfe02a.wo_location$+sfe02a.wo_no$=sft01a$)<>1 break
+			if sft01a.op_code$<>op_code$ continue
+			units=units+sft01a.units
+			setup=setup+sft01a.setup_time
 		wend
 
 		if units=0 and setup=0 continue
-		wostr$=wostr$+woe02a.wo_no$+str(units:m1$)+str(setup:m1$)
+		wostr$=wostr$+sfe02a.wo_no$+str(units:m1$)+str(setup:m1$)
 		units=0
 		setup=0
 	wend
@@ -244,49 +293,50 @@ return
 rem --- Position Schedul Detail file
 	totset=0
 	totrun=0
-	dim woe01a$:fattr(woe01a$)
-	read (wom05_dev,key=firm_id$+op_code$,dom=*next)
+	dim sfe01a$:fattr(sfe01a$)
+	read (sfm05_dev,key=firm_id$+op_code$,dom=*next)
 	while 1
 		runtime=0
 		setup=0
 		movetime=0
-		read record (wom05_dev,end=*break) wom05a$
-		if pos(firm_id$+op_code$=wom05a$)<>1 break
-		this_seq$=wom05a.oper_seq_ref$
-		this_wo$=wom05a.wo_no$
+		read record (sfm05_dev,end=*break) sfm05a$
+		if pos(firm_id$+op_code$=sfm05a$)<>1 break
+		this_seq$=sfm05a.oper_seq_ref$
+		this_wo$=sfm05a.wo_no$
 
 rem --- Retrieve sfe-02 operations record
 
-		read record (sfe02_dev,key=firm_id$+sfe02a.wo_location$+wom05a.wo_no$+wom05a.internal_seq_no$,knum="AO_OP_SEQ",dom=*continue)sfe02a$
+		read record (sfe02_dev,key=firm_id$+sfe02a.wo_location$+sfm05a.wo_no$+sfm05a.oper_seq_ref$,knum="AO_OP_SEQ",dom=*continue)sfe02a$
 		this_code$=sfe02a.op_code$
 
 rem --- Work order still open?
 
 		if sfe02a.wo_no$<>sfe01a.wo_no$
 			movetime=0
-			find record(sfe01_dev,key=firm_id$+sfe02a.wo_location$+sfe02a.wo_no$,dom=*continue) woe01a$
+			find record(sfe01_dev,key=firm_id$+sfe02a.wo_location$+sfe02a.wo_no$,dom=*continue) sfe01a$
 		endif
-		if woe01a.wo_status$="P" and pos("P"=status$)>0 goto include_it
-		if woe01a.wo_status$="Q" and pos("Q"=status$)>0 goto include_it
-		if woe01a.wo_status$="O" and pos("O"=status$)>0 goto include_it
+		if sfe01a.wo_status$="P" and pos("P"=status$)>0 goto include_it
+		if sfe01a.wo_status$="Q" and pos("Q"=status$)>0 goto include_it
+		if sfe01a.wo_status$="O" and pos("O"=status$)>0 goto include_it
 		continue
 
 include_it:
 
-rem jpb wazzup with the next lines???
 		desc$=cvs(ivm01a.item_desc$,2)
-		if woe01a.wo_category$="I" desc$=cvs(woe01a.item_id$,2)+" "+desc$
-		movetime=wom05a.move_time
+		if sfe01a.wo_category$="I" desc$=cvs(sfe01a.item_id$,2)+" "+desc$
+		movetime=sfm05a.move_time
+
 rem --- Shall we print it?
+
 		gosub  calc_actual
 		gosub calc_remaining
 		if runtime=0 and setup=0 and movetime=0 continue
-		if woe01a.priority$>pri_code$ continue
-		if cvs(begdate$,2)<>"" if wom05a.sched_date$<begdate$ continue
-		if cvs(enddate$,2)<>"" if wom05a.sched_date$>enddate$ continue
+		if sfe01a.priority$>pri_code$ continue
+		if cvs(begdate$,2)<>"" if sfm05a.sched_date$<begdate$ continue
+		if cvs(enddate$,2)<>"" if sfm05a.sched_date$>enddate$ continue
 		v3=0
 rem --- Add to vector
-		vectDispatch!.addItem(wom05a.sched_date$)
+		vectDispatch!.addItem(sfm05a.sched_date$)
 		vectDispatch!.addItem(sfe01a.priority$)
 		vectDispatch!.addItem(sfe01a.wo_category$)
 		vectDispatch!.addItem(sfe01a.wo_no$)
@@ -302,7 +352,7 @@ rem --- Add to vector
 
 	wend
 
-rem jpb now grab paragraph 3000
+rem jpb now grab paragraph 3000 for totals
 
 	callpoint!.setStatus("REFRESH")
 	
@@ -313,7 +363,8 @@ calc_actual:
 rem ==========================================================================
 return
 rem --- Initialize WO ---
-	DIM RUNTIM[OPNMAX],SETUP[OPNMAX],ACTRUN[OPNMAX],ACTSET[OPNMAX]
+	opnmax=999
+	dim runtim[opnmax],setup[opnmax],actrun[opnmax],actset[opnmax]
 	opnseq$=""
 	opncod$=""
 	x0=0
@@ -323,37 +374,52 @@ rem --- Initialize WO ---
 	setup=0
 	runtime=0
 	read (sfe02_dev,key=firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
-rem jpb
+
 	while 1
-		read record (sfe02a_dev,end=*break) sfe02a$
+		read record (sfe02_dev,end=*break) sfe02a$
 		if pos(firm_id$+sfe01a.wo_location$+sfe01a.wo_no$=sfe02a$)<>1 break
 		if sfe02a.line_type$<>"S" continue
-		opnseq$=opnseq$+B0$(13,3)
-		opncod$=opncod$+B1$(1,3)
-		runtim[X0]=L[2]
-		setup[X0]=L[1]
+		opnseq$=opnseq$+sfe02a.op_seq$
+		opncod$=opncod$+sfe02a.op_code$
+		runtim[x0]=sfm05.runtime_hrs
+		setup[x0]=sfm05a.setup_time
 		x0=x0+1
 	wend
 
-6400 REM " --- Calculate Actual ---"
-6405 DIM W0$(18),W1$(40),W[11]
-6410 READ (WOT01_DEV,KEY=A0$(1,11),DOM=6420)
-6420 LET WOTKEY$=KEY(WOT01_DEV,END=6600)
-6430 IF POS(A0$(1,11)=WOTKEY$)<>1 THEN GOTO 6600
-6440 READ (WOT01_DEV)IOL=WOT01A
-6450 IF W0$(15,1)<>"O" THEN GOTO 6420
-6460 LET SEQ$=W1$(1,3),COD$=W1$(4,3),INDX=POS(SEQ$=OPNSEQ$,3)
-6470 IF INDX=0 THEN LET OPNSEQ$=OPNSEQ$+SEQ$,OPNCOD$=OPNCOD$+COD$; GOTO 6460
-6480 LET INDX=INT(INDX/3),ACTSET[INDX]=ACTSET[INDX]+W[6],ACTRUN[INDX]=ACTRUN[INDX]+W[0]
-6490 IF NOW<INDX THEN LET NOW=INDX
-6500 GOTO 6420
-6600 REM "---- This operation? ---"
-6610 LET AT$=OPNCOD$(NOW*3+1,3)
-6620 LET THISINDX=POS(THISSEQ$=OPNSEQ$,3)
-6630 IF THISINDX=0 THEN GOTO 6700
-6640 LET THISINDX=INT(THISINDX/3),XFROM=THISINDX-1; IF XFROM<0 THEN LET XFROM=0
-6650 LET FROM$=OPNCOD$(XFROM*3+1,3)
-6660 LET RUNT=RUNTIM[THISINDX],SET=SETUP[THISINDX]
+rem --- Calculate Actual
+
+	read (sft01_dev,key=firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
+	while 1
+		readrecord (sft01_dev,end=*break) sft01a$
+		if pos(firm_id$+sfe01a.wo_location$+sfe01a.wo_no$=sft01a$)<>1 break
+		seq$=sft01a.oper_seq_ref$
+		cod$=sft01a.op_code$
+get_indx:
+		indx=pos(seq$=opnseq$,op_seq_len)
+		if indx=0 
+			opnseq$=opnseq$+seq$
+			opncod$=opncod$+cod$
+			goto get_indx
+		endif
+		indx=int(indx/op_seq_len)
+		actset[indx]=actset[indx]+sft01a.setup_time
+		actrun[indx]=actrun[indx]+sft01a.units
+		if now<indx now=indx
+	wend
+
+rem --- This operation?
+
+	at$=opncod$(now*op_cod_len+1,op_cod_len)
+	thisindx=pos(thisseq$=opnseq$,op_seq_len)
+	if thisindx<>0
+		thisindx=int(thisindx/op_seq_len)
+		xfrom=thisindx-1
+		if xfrom<0 xfrom=0
+		from$=opncod$(xfrom*op_seq_len+1,op_seq_len)
+		runtime=runtim[thisindx]
+		setup=setup[thisindx]
+	endif
+
 	return
 
 rem ==========================================================================
@@ -362,9 +428,11 @@ rem ==========================================================================
 
 rem --- Calculate Remaining Units
 rem --- umask$ = PARAMETER UNIT MASK, UMASK = LEN(UMASK$)
+	umask$="-#####0.000"
+	umask=len(umask$)
 	unitrun=0
 	unitset=0
-	wopos=pos(woe01a.wo_no$=wostr$)
+	wopos=pos(sfe01a.wo_no$=wostr$)
 	if wopos<>0
 		unitrun=num(wostr$(wopos+7,umask))
 		unitset=num(wostr$(wopos+7+umask,umask))
