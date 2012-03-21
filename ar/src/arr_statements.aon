@@ -224,7 +224,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
 
     rem --- Does this customer meet the selection criteria?
 
-        if arm02a.statements$<>"Y" continue
+        if option$<>"S" then if arm02a.statements$<>"Y" continue
 
         if territory$<>"" if arm02a.territory$<>territory$ continue
         if cycle$<>"" if arm02a.ar_cyclecode$<>cycle$ continue
