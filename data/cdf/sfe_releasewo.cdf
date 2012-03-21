@@ -9,7 +9,7 @@ rem --- Process information
 
 	wo_no$=callpoint!.getDevObject("wo_no")
 
-	if callpoint!.getColumnData("SFE_RELEASEWO.PRINT_TRAVEL")
+	if callpoint!.getColumnData("SFE_RELEASEWO.PRINT_TRAVEL")="Y"
 		opened_wo=fnget_dev("SFE_OPENEDWO")
 		dim opened_wo$:fnget_tpl$("SFE_OPENEDWO")
 		opened_wo.firm_id$=firm_id$

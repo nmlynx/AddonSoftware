@@ -1,3 +1,5 @@
+[[SFE_WOOPRTN.BDEL]]
+rem --- v6 didn't do this, but before deleting, check to make sure the op isn't used in a material or subcontract line
 [[SFE_WOOPRTN.REQUIRE_DATE.AVAL]]
 rem --- Deal with Schedule Records
 
