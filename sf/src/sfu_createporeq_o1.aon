@@ -197,18 +197,16 @@ done: rem --- End
     
 	wend
 	
-    if requisition_lines_created=0
-        msg_id$="AON_NO_RECORDS"
-        gosub disp_message
-	else
-        msg_id$="AON_TOTAL_RECORDS:_"+STR(requisition_lines_created)
-        gosub disp_message
-    endif
+
+    msg_id$="PO_REQ_RECS_CREATED"
+    dim msg_tokens$[1]
+    msg_tokens$[1]=str(requisition_lines_created)
+    gosub disp_message
 
 	goto std_exit
 
 create_requisition: rem --- Create Requisition Record
-rem --- poc_ba now called poc_updprereq.aon
+                    rem --- (poc_updprereq.aon was poc_ba pre-Barista)
 
     call pgmdir$+"poc_updpurreq.aon",info$[all],info[all],detail_key$,status
 	requisition_lines_created=requisition_lines_created+1
