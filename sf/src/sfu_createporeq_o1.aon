@@ -6,10 +6,6 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 
-escape; rem caj at TOP of 2nd Olay
-
-==================escape; rem CAJ Figure out the sequence nums and info$[9] etc
-
     setesc std_error
     seterr std_error
 
@@ -37,10 +33,13 @@ rem --- Additional File Opens
     sfreq_dev=sfe22a_dev
     dim sfreqa$:sfe22_tpls$
     dim sfreq_key$:sfe22_key_tpl$
+	
+	tmp_field$=fattr(sfreqa$,"pur_ord_seq_ref")
+    pur_ord_seq_ref_len=dec(tmp_field$(10,2))
 
 rem --- Background
 
-rem escape caj UNREM    call pgmdir$+"adc_progress.aon","N","","","","",0,sfreq_dev,1,meter_num,ignore_status 
+    call pgmdir$+"adc_progress.aon","N","","","","",0,sfreq_dev,1,meter_num,ignore_status 
 
 rem --- Disallow 'M'enu option in error routine
 
@@ -52,27 +51,29 @@ rem --- Init Read
         read (sfreq_dev,key=firm_id$+"  "+wofrom$,dom=*next)
 
 rem --- Main Read
+
         while more 
             sfreq_key$=key(sfreq_dev,end=*break)
             if pos(firm_id$=sfreq_key$)<>1 then break
             if len(wothru$)>0 then 
-                if firm_id$<sfreq_key.firm_id$ 
-:				   and "  "<sfreq_key.wo_location$ 
-:                  and wothru$<sfreq_key.wo_no$ then break  
-                
+                if sfreq_key.wo_location$+sfreq_key.wo_no$ > "  "+wothru$
+:                  then break                  
             endif
-rem escape caj UNREM            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
-            
+			
+            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
+
+            t1$=""
+			
             read record (sfreq_dev,key=sfreq_key$) sfreqa$
-            
+
+			sfe01_readk$=sfreq_key.firm_id$+sfreq_key.wo_location$+sfreq_key.wo_no$      
+			find record (sfe01a_dev,key=sfe01_readk$,dom=*continue) sfe01a$
+			if pos(sfe01a.wo_status$=wostatus$)=0 then  continue
+			if sfe01a.wo_category$="R" then  continue; rem skip recurring WOs
+					
 			if sfreq_dev<>sfe22a_dev then 
 				rem --- process sfe-32/SFE_WOSUBCNT, subcontracts
                 if sfreqa.line_type$<>"I" then 
-				escape ; rem caj step thru subcontracts
-				    sfe01_readk$=sfreq_key.firm_id$+sfreq_key.wo_location$+sfreq_key.wo_no$  ;rem escape caj ?????       
-					find record (sfe01a_dev,key=sfe01_readk$,dom=*continue) sfe01a$
-					if pos(sfe01a.wo_status$=wostatus$)=0 then  continue
-					if sfe01a.wo_category$="R" then  continue; rem skip recurring WOs
 					if cur_wo_no$<>sfreqa.wo_no$ and sfreqa.line_type$<>"S" then continue
 
 rem --- Breaks
@@ -115,25 +116,26 @@ rem --- Process Non-Stock Items
 					info$[5]=sfreqa.require_date$ 
 					info$[6]=sfreqa.unit_measure$
 					info$[7]="W"
-					info$[9]=sfreqa.wo_no$+sfreqa.subcont_seq$
+					info$[9]=sfreqa.wo_no$+sfreqa.internal_seq_no$
 					info$[10]=sfe01a.customer_id$
 					info$[14]=sfreqa.description$
 					info[1]=sfreqa.rate
 					info[2]=sfreqa.total_units
                 
-					gosub create_requisition
-                
-					sfreqa.po_no$=detail_key$(9,7)
-					sfreqa.po_int_seq_ref=detail_key$(16,3)
+					gosub create_requisition; rem Subcontracts
+					                
+					sfreqa.po_no$=detail_key$(3,7)
+					sfreqa.pur_ord_seq_ref$=detail_key$(10,pur_ord_seq_ref_len)
 					sfreqa.po_status$="R"; rem R=requisition
-rem escape caj UNREM	                write record (sfreq_dev,key=sfreq_key$) sfreqa$
-                rem continue
+				
+	                write record (sfreq_dev,key=sfreq_key$) sfreqa$; rem Subcontracts
 				endif
             else
 				rem --- Process Special Order Material Requirements (sfe-22/SFE_WOMATL, materials)
+		
 				dim info$[15],info[2]
 			
-				if cvs(sfreqa.po_no$+sfreqa.po_int_seq_ref$,2)<>"" then continue; rem "Skip if already assoc'd w/a PO
+				if cvs(sfreqa.po_no$+sfreqa.pur_ord_seq_ref$,2)<>"" then continue; rem "Skip if already assoc'd w/a PO
 				find record (ivm02a_dev,key=firm_id$+sfreqa.warehouse_id$+sfreqa.item_id$,dom=*continue) ivm02a$
 				if ivm02a.special_ord$<>"Y" then continue
 				vendor$=ivm02a.vendor_id$
@@ -151,7 +153,7 @@ rem escape caj UNREM	                write record (sfreq_dev,key=sfreq_key$) sfr
 				info$[5]=sfreqa.require_date$
 				info$[6]=sfreqa.unit_measure$
 				info$[7]="W"
-				info$[9]=sfreqa.wo_no$+sfreqa.material_seq$
+				info$[9]=sfreqa.wo_no$+sfreqa.internal_seq_no$
 				info$[13]=sfreqa.item_id$
 				info[0]=ivm01a.conv_factor
 				info[2]=sfreqa.total_units
@@ -168,13 +170,14 @@ create_req_and_log: rem --- Create PO Requisition And Log It In Work Order Detai
 
 				info[1]=cost
 			
-				gosub create_requisition
+				gosub create_requisition; rem for Materials
 			
-				sfreqa.po_no$=detail_key$(9,7)
-				sfreqa.line_no$=detail_key$(16,3)
+				sfreqa.po_no$=detail_key$(3,7)
+				sfreqa.pur_ord_seq_ref$ =detail_key$(10,pur_ord_seq_ref_len)
 				sfreqa.po_status$="R"; rem R=requisition
-				sfreq_key$=key(sfreq_dev,end=*break); escape; rem ?sfreq_key$ 
-rem escape caj UNREM            	write record (sfreq_dev,key=sfreq_key$) sfreqa$
+				sfreq_key$=key(sfreq_dev,end=*break)
+				
+				write record (sfreq_dev,key=sfreq_key$) sfreqa$; rem Materials
 			endif
 rem --- Loop Back For Next Work Order Detail Record
 
@@ -191,18 +194,28 @@ done: rem --- End
             continue
         endif    
         break
-    wend
+    
+	wend
 	
-    goto std_exit
+    if requisition_lines_created=0
+        msg_id$="AON_NO_RECORDS"
+        gosub disp_message
+	else
+        msg_id$="AON_TOTAL_RECORDS:_"+STR(requisition_lines_created)
+        gosub disp_message
+    endif
+
+	goto std_exit
 
 create_requisition: rem --- Create Requisition Record
-rem --- poc_ba now called poc_updprereq.aon, and no longer needs chans[ ]
-escape; rem about to call poc_ba caj
+rem --- poc_ba now called poc_updprereq.aon
+
     call pgmdir$+"poc_updpurreq.aon",info$[all],info[all],detail_key$,status
+	requisition_lines_created=requisition_lines_created+1
+	
     return
 
 write_message_record: rem --- Write The Message Record
-escape; rem caj top of write_message_record ==> VARIABLES LOOK WRONG
 
     dim info$[15],info[2]
     info$[0]=firm_id$
@@ -212,14 +225,23 @@ escape; rem caj top of write_message_record ==> VARIABLES LOOK WRONG
     info$[4]=f0$(18,6)
     info$[5]=sfreqa.require_date$
 	info$[7]="W"
-	info$[8]="W"
-    info$[9]=cur_wo_no$+sfreqa.subcont_seq$
+    info$[9]=cur_wo_no$+sfreqa.internal_seq_no$
     info$[14]=cvs(message$,2)
     
-	gosub create_requisition
+	gosub create_requisition; rem Messages
     message$=""
     return
 
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",
+:		msg_id$,
+:		msg_tokens$[all],
+:		msg_opt$,
+:		rd_table_chans$[all]
+
+	return
+	
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
 rem --- Functions used to retrieve form values
