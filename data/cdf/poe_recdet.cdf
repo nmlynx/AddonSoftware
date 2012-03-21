@@ -603,10 +603,9 @@ rem if cvs(callpoint!.getColumnData("POE_RECDET.WAREHOUSE_ID"),3)="" or cvs(call
 		callpoint!.setColumnData("POE_RECDET.UNIT_MEASURE","")
 		callpoint!.setColumnData("POE_RECDET.WAREHOUSE_ID",callpoint!.getHeaderColumnData("POE_RECHDR.WAREHOUSE_ID"))
 		callpoint!.setColumnData("POE_RECDET.WO_NO","")
-		callpoint!.setColumnData("POE_RECDET.WO_SEQ_REF","")
+		callpoint!.setColumnData("POE_RECDET.WK_ORD_SEQ_REF","")
 
 endif
-
 
 [[POE_RECDET.ITEM_ID.AVAL]]
 rem --- Item ID - After Column Validataion
