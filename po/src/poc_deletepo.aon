@@ -140,7 +140,7 @@ escape;rem not yet exercised; poc_wa.bbx not renamed/debugged
         if pos(type$="RP")=0 then continue
         if cvs(poe_det.wo_no$,2)="" then continue
         po$=(poe_det.po_no$ + poe_det.internal_seq_no$)
-        oldwo$=(poe_det.wo_no$ + poe_det.wo_seq_ref$),newwo$=""
+        oldwo$=(poe_det.wo_no$ + poe_det.wk_ord_seq_ref$),newwo$=""
         poc_linecode_tpl$=fattr(poc_linecode$)
         call pgmdir$+"poc_wa.bbx",sfe_womatl_dev,sfe_wosubcnt_dev,firm_id$,po$,type$,poc_linecode$,poc_linecode_tpl$,oldwo$,newwo$,places,status
 
