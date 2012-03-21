@@ -19,8 +19,8 @@
 			<DD_EXPORT_DATA id="ddm_tables.sft_opnoprtr">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.sft_opnoprtr">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_tables.sft_opnoprtr">20120314</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.sft_opnoprtr">20120314</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.sft_opnoprtr">164236</DD_LSTSYNC_TIME>
+			<DD_LSTSYNC_DATE id="ddm_tables.sft_opnoprtr">20120321</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.sft_opnoprtr">125724</DD_LSTSYNC_TIME>
 			<DD_ATTR_FTYP id="ddm_tables.sft_opnoprtr">T</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV id="ddm_tables.sft_opnoprtr">zzzz</DD_ATTR_SLEV>
 			<DD_ATTR_WINT id="ddm_tables.sft_opnoprtr">Open WO Operation Transactions</DD_ATTR_WINT>
@@ -41,6 +41,12 @@
 			<DD_KEY_NUMBER id="ddm_keys.sft_opnoprtr00">00</DD_KEY_NUMBER>
 			<DD_KEY_DESC id="ddm_keys.sft_opnoprtr00">Primary</DD_KEY_DESC>
 			<DD_KEY_ID id="ddm_keys.sft_opnoprtr00">PRIMARY         </DD_KEY_ID>
+		</RECORD>
+		<RECORD id="ddm_keys.sft_opnoprtr01">
+			<DD_TABLE_ALIAS id="ddm_keys.sft_opnoprtr01">SFT_OPNOPRTR    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.sft_opnoprtr01">01</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.sft_opnoprtr01">Op Code, Work Order</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.sft_opnoprtr01">AO_OPCOD_WO     </DD_KEY_ID>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_key_segs">
@@ -89,6 +95,54 @@
 			<DD_SEGMENT_POS id="ddm_key_segs.sft_opnoprtr0005">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.sft_opnoprtr0005">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.sft_opnoprtr0005">0</DD_SEGMENT_LEN>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sft_opnoprtr0101">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sft_opnoprtr0101">SFT_OPNOPRTR    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sft_opnoprtr0101">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sft_opnoprtr0101">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sft_opnoprtr0101">FIRM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sft_opnoprtr0101">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sft_opnoprtr0101">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sft_opnoprtr0101">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sft_opnoprtr0101">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sft_opnoprtr0101">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sft_opnoprtr0101">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sft_opnoprtr0102">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sft_opnoprtr0102">SFT_OPNOPRTR    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sft_opnoprtr0102">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sft_opnoprtr0102">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sft_opnoprtr0102">WO_LOCATION</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sft_opnoprtr0102">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sft_opnoprtr0102">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sft_opnoprtr0102">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sft_opnoprtr0102">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sft_opnoprtr0102">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sft_opnoprtr0102">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sft_opnoprtr0103">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sft_opnoprtr0103">SFT_OPNOPRTR    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sft_opnoprtr0103">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sft_opnoprtr0103">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sft_opnoprtr0103">OP_CODE</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sft_opnoprtr0103">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sft_opnoprtr0103">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sft_opnoprtr0103">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sft_opnoprtr0103">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sft_opnoprtr0103">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sft_opnoprtr0103">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sft_opnoprtr0104">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sft_opnoprtr0104">SFT_OPNOPRTR    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sft_opnoprtr0104">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sft_opnoprtr0104">04</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sft_opnoprtr0104">WO_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sft_opnoprtr0104">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sft_opnoprtr0104">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sft_opnoprtr0104">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sft_opnoprtr0104">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sft_opnoprtr0104">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sft_opnoprtr0104">N</DD_SEGMENT_MATH>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cols">
