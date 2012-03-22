@@ -18,9 +18,9 @@
 			<ASC_LICENSE_ID id="ddm_tables.sfe_womatisd">224167E0BD2C8848576DC4411D1F9004</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.sfe_womatisd">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.sfe_womatisd">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.sfe_womatisd">20120316</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.sfe_womatisd">20120316</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.sfe_womatisd">102124</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.sfe_womatisd">20120322</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.sfe_womatisd">20120321</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.sfe_womatisd">125338</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.sfe_womatisd">C:/aon_dev/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.sfe_womatisd">AO_DISP_SEQ</DD_ATTR_DKNM>
 			<DD_ATTR_FTYP id="ddm_tables.sfe_womatisd">G</DD_ATTR_FTYP>
@@ -36,7 +36,7 @@
 			<DD_ATTR_SEQ id="ddm_table_aopt.sfe_womatisd01">01</DD_ATTR_SEQ>
 			<DD_ATTR_AOPT id="ddm_table_aopt.sfe_womatisd01">Lot/Serial Entry</DD_ATTR_AOPT>
 			<DD_ATTR_AOPT_CD id="ddm_table_aopt.sfe_womatisd01">LENT</DD_ATTR_AOPT_CD>
-			<DD_ATTR_AOPT_FM id="ddm_table_aopt.sfe_womatisd01">M</DD_ATTR_AOPT_FM>
+			<DD_ATTR_AOPT_FM id="ddm_table_aopt.sfe_womatisd01">B</DD_ATTR_AOPT_FM>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cpro">
@@ -68,6 +68,10 @@
 		<RECORD id="ddm_table_cpro.sfe_womatisdbdel">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_womatisdbdel">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.sfe_womatisdbdel">BDEL</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.sfe_womatisdbdgx">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_womatisdbdgx">SFE_WOMATISD    </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.sfe_womatisdbdgx">BDGX</DD_ATTR_CPRO>
 		</RECORD>
 		<RECORD id="ddm_table_cpro.sfe_womatisdbgdr">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_womatisdbgdr">SFE_WOMATISD    </DD_TABLE_ALIAS>
@@ -460,6 +464,7 @@
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_womatisd010">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_womatisd010">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womatisd010">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_CPGM id="ddm_table_cols.sfe_womatisd010">C:/aon_dev/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_CTLW id="ddm_table_cols.sfe_womatisd010">80</DD_ATTR_CTLW>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatisd010">8</DD_ATTR_MAXL>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatisd010">Date Required</DD_ATTR_PROM>
@@ -595,10 +600,25 @@
 			<DD_DVAR_NAME id="ddm_column_cpro.sfe_womatisditem_idaval">ITEM_ID         </DD_DVAR_NAME>
 			<DD_ATTR_CPRO id="ddm_column_cpro.sfe_womatisditem_idaval">AVAL</DD_ATTR_CPRO>
 		</RECORD>
+		<RECORD id="ddm_column_cpro.sfe_womatisditem_idavec">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.sfe_womatisditem_idavec">SFE_WOMATISD    </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.sfe_womatisditem_idavec">ITEM_ID         </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.sfe_womatisditem_idavec">AVEC</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.sfe_womatisdrequire_datebinp">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.sfe_womatisdrequire_datebinp">SFE_WOMATISD    </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.sfe_womatisdrequire_datebinp">REQUIRE_DATE    </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.sfe_womatisdrequire_datebinp">BINP</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_column_cpro.sfe_womatisdqty_issuedaval">
 			<DD_TABLE_ALIAS id="ddm_column_cpro.sfe_womatisdqty_issuedaval">SFE_WOMATISD    </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_cpro.sfe_womatisdqty_issuedaval">QTY_ISSUED      </DD_DVAR_NAME>
 			<DD_ATTR_CPRO id="ddm_column_cpro.sfe_womatisdqty_issuedaval">AVAL</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.sfe_womatisdqty_issuedbinp">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.sfe_womatisdqty_issuedbinp">SFE_WOMATISD    </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.sfe_womatisdqty_issuedbinp">QTY_ISSUED      </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.sfe_womatisdqty_issuedbinp">BINP</DD_ATTR_CPRO>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_opts">

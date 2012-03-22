@@ -1,3 +1,6 @@
+[[SFE_WOLSISSU.QTY_ISSUED.BINP]]
+rem --- Disable lot/serial lookup except in lotser_no field
+	callpoint!.setOptionEnabled("LLOK",0)
 [[SFE_WOLSISSU.AGRE]]
 rem --- Do not commit if row has been deleted
 	if callpoint!.getGridRowDeleteStatus(callpoint!.getValidationRow())="Y" then
@@ -77,10 +80,24 @@ get_tot_ls_qty_issued: rem --- Get total lot/serial issued quantity and total is
 [[SFE_WOLSISSU.LOTSER_NO.BINP]]
 rem --- Init the Item ID
 	callpoint!.setColumnData("<<DISPLAY>>.ITEM_ID",str(callpoint!.getDevObject("item_id")),1)
+
+rem --- Enable lookup for new lot/serials
+	if cvs(callpoint!.getColumnData("SFE_WOLSISSU.LOTSER_NO"),2)="" then
+		callpoint!.setOptionEnabled("LLOK",1)
+	else
+		callpoint!.setOptionEnabled("LLOK",0)
+	endif
 [[SFE_WOLSISSU.AGDR]]
 rem ---  Init grid columns
 	gosub init_cols
 [[SFE_WOLSISSU.AREC]]
+rem --- Hold on to starting lotser_no and qty_issued for this line so we can determine if committments are needed.
+rem --- sfe_wolsissu only gets written on save (Barista bug 4419), so can exit row multiple times before sfe_wolsissu gets written.
+	start_lotser_no$=callpoint!.getColumnData("SFE_WOLSISSU.LOTSER_NO")
+	start_qty_issued=num(callpoint!.getColumnData("SFE_WOLSISSU.QTY_ISSUED"))
+	callpoint!.setDevObject("start_lotser_no",start_lotser_no$)
+	callpoint!.setDevObject("start_qty_issued",start_qty_issued)
+
 rem --- Init how many lot/serial items are left to issue
 	tot_ls_qty_issued=num(callpoint!.getDevObject("tot_ls_qty_issued"))
 	womatisd_qty_issued=num(callpoint!.getDevObject("womatisd_qty_issued"))
@@ -164,7 +181,7 @@ rem --- Do lot/serial lookup
 	dflt_data$[2,0] = "WAREHOUSE_ID"
 	dflt_data$[2,1] = warehouse_id$
 	dflt_data$[3,0] = "LOTS_TO_DISP"
-	if womatisd_qty_issued > 0 then
+	if womatisd_qty_issued >= 0 then
 		dflt_data$[3,1] = "O"; rem --- open lots for issues
 	else
 		dflt_data$[3,1] = "C"; rem --- closed lots for returns 
@@ -201,12 +218,12 @@ rem --- Verify lot/serial available qty
 		qty_issued=min( abs(selected_lot_avail), abs(left_to_issue) ) * sgn(womatisd_qty_issued)
 		callpoint!.setDevObject("left_to_issue",left_to_issue-qty_issued)
 		callpoint!.setDevObject("tot_ls_qty_issued",tot_ls_qty_issued+qty_issued)
-		callpoint!.setColumnData("SFE_WOLSISSU.WO_LOCATION",str(callpoint!.getDevObject("wo_location")))
-		callpoint!.setColumnData("SFE_WOLSISSU.WO_NO",str(callpoint!.getDevObject("wo_no")))
-		callpoint!.setColumnData("SFE_WOLSISSU.WOMATISD_SEQ_REF",str(callpoint!.getDevObject("womatisd_seq_ref")))
 		callpoint!.setColumnData( "SFE_WOLSISSU.LOTSER_NO", selected_lot$,1)
 		callpoint!.setColumnData("SFE_WOLSISSU.QTY_ISSUED", str(qty_issued),1)
 		callpoint!.setColumnData("SFE_WOLSISSU.ISSUE_COST", str(selected_lot_cost),1)
+
+		rem --- setFocus back on lotser_no field
+		callpoint!.setFocus("SFE_WOLSISSU.LOTSER_NO")
 		callpoint!.setStatus("MODIFIED")
 	endif
 [[SFE_WOLSISSU.QTY_ISSUED.AVAL]]
@@ -248,10 +265,10 @@ rem --- sfe_wolsissu only gets written on save (Barista bug 4419), so can exit r
 	callpoint!.setDevObject("start_lotser_no",start_lotser_no$)
 	callpoint!.setDevObject("start_qty_issued",start_qty_issued)
 
-rem -- Init hidden key fields
-	callpoint!.setColumnData("SFE_WOLSISSU.WO_LOCATION",str(callpoint!.getDevObject("wo_location")))
-	callpoint!.setColumnData("SFE_WOLSISSU.WO_NO",str(callpoint!.getDevObject("wo_no")))
-	callpoint!.setColumnData("SFE_WOLSISSU.WOMATISD_SEQ_REF",str(callpoint!.getDevObject("womatisd_seq_ref")))
+rem --- Init how many lot/serial items are left to issue
+	tot_ls_qty_issued=num(callpoint!.getDevObject("tot_ls_qty_issued"))
+	womatisd_qty_issued=num(callpoint!.getDevObject("womatisd_qty_issued"))
+	callpoint!.setDevObject("left_to_issue",womatisd_qty_issued-tot_ls_qty_issued)
 
 rem --- Set focus on lotser_no unless lotted and an existing row (i.e. previously saved)
 	if callpoint!.getDevObject("lotser")="L" and callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())<>"Y" then
@@ -292,8 +309,9 @@ rem --- Update quantity left_to_issue and tot_ls_qty_issued
 	callpoint!.setDevObject("left_to_issue",left_to_issue-start_qty_issued)
 	callpoint!.setDevObject("tot_ls_qty_issued",tot_ls_qty_issued+start_qty_issued)
 [[SFE_WOLSISSU.BEND]]
-rem wgh ... stopped ... when exit from a new line, the last line is repeated in the new line
-rem wgh ... stopped ... this results in the qty_issued getting doubled!!!!
+rem wgh ... When exit from a new line, the last line is repeated in the new line.
+rem wgh ... This results in the qty_issued getting doubled!!!!
+rem wgh ... Requires fix for Barista bug 5982.
 
 rem --- Have enough lot/serials been entered?
 	tot_ls_qty_issued=num(callpoint!.getDevObject("tot_ls_qty_issued"))

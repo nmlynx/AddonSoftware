@@ -1,4 +1,19 @@
+[[SFE_WOMATISD.REQUIRE_DATE.BINP]]
+rem --- Enable lot/serial button
+	gosub able_lot_button
+[[SFE_WOMATISD.QTY_ISSUED.BINP]]
+rem --- Enable lot/serial button
+	gosub able_lot_button
+[[SFE_WOMATISD.ITEM_ID.AVEC]]
+rem --- Enable lot/serial button
+	gosub able_lot_button
+[[SFE_WOMATISD.BDGX]]
+rem --- Disable detail-only buttons
+	callpoint!.setOptionEnabled("LENT",0)
 [[SFE_WOMATISD.AGRE]]
+rem --- Start lot/serial button disabled
+	callpoint!.setOptionEnabled("LENT",0)
+
 rem --- Do not commit if row has been deleted
 	if callpoint!.getGridRowDeleteStatus(callpoint!.getValidationRow())="Y" then
 		rem --- row has been deleted, so do not commit inventory
@@ -78,16 +93,22 @@ rem --- Do initial commit if nothing previously ordered or issued
 				tot_ls_qty_issued=tot_ls_qty_issued+sfe_wolsissu.qty_issued
 			wend
 
-rem wgh ... stopped
-rem wgh ... make sure this plays well with lookup via AOPT-LENT
 			if tot_ls_qty_issued<>qty_issued+num(callpoint!.getColumnData("SFE_WOMATISD.TOT_QTY_ISS")) then
 				sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
 				sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
 				callpoint!.setDevObject("sfe_womatisd_key",sfe_womatisd_key$)
-				callpoint!.setDevObject("womatisd_seq_ref",callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO"))
 				callpoint!.setDevObject("item_id",callpoint!.getColumnData("SFE_WOMATISD.ITEM_ID"))
 				callpoint!.setDevObject("womatisd_qty_issued",qty_issued)
-				call stbl("+DIR_SYP")+"bam_run_prog.bbj","SFE_WOLSISSU",stbl("+USER_ID"),"","",table_chans$[all],"",dflt_data$[all]
+
+				dim dflt_data$[3,1]
+				dflt_data$[1,0] = "WO_LOCATION"
+				dflt_data$[1,1] = callpoint!.getDevObject("wo_location")
+				dflt_data$[2,0] = "WO_NO"
+				dflt_data$[2,1] = callpoint!.getDevObject("wo_no")
+				dflt_data$[3,0] = "WOMATISD_SEQ_REF"
+				dflt_data$[3,1] = callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
+
+				call stbl("+DIR_SYP")+"bam_run_prog.bbj","SFE_WOLSISSU",stbl("+USER_ID"),"MNT",sfe_womatisd_key$,table_chans$[all],"",dflt_data$[all]
 
 				qty_issued=num(callpoint!.getDevObject("tot_ls_qty_issued"))
 				callpoint!.setColumnData("SFE_WOMATISD.QTY_ISSUED",str(qty_issued),1)
@@ -118,30 +139,40 @@ rem --- (For new records qty_ordered=qty_issued and tot_qty_iss=0)
 rem --- Init DISPLAY columns
 	gosub init_display_cols
 [[SFE_WOMATISD.AOPT-LENT]]
-rem wgh ... stopped
-rem wgh ... need to enable/disable LENT option
-rem wgh ... disable unless ... ivm_itemmast.lotser_item$="Y" and ivm_itemmast.inventoried$="Y"
-
-
 rem --- Lot/serial entry
 	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
 	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
 	callpoint!.setDevObject("sfe_womatisd_key",sfe_womatisd_key$)
-	callpoint!.setDevObject("womatisd_seq_ref",callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO"))
 	callpoint!.setDevObject("item_id",callpoint!.getColumnData("SFE_WOMATISD.ITEM_ID"))
 	callpoint!.setDevObject("womatisd_qty_issued",callpoint!.getColumnData("SFE_WOMATISD.QTY_ISSUED"))
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj","SFE_WOLSISSU",stbl("+USER_ID"),"","",table_chans$[all],"",dflt_data$[all]
-rem wgh ... stopped ... this should be similar to how AGRE handles after lookup
-rem wgh ... may need to update qty_issued
-rem wgh ... what if more entered than qty_ordered?
-rem wgh ... maybe do lot/serial before commits
-rem wgh ... callpoint!.setDevObject("tot_ls_qty_issued",tot_ls_qty_issued)
-rem wgh ... callpoint!.setDevObject("tot_ls_issue_cost",tot_ls_issue_cost)
-rem wgh ... 4185 IF T0<>W[3] THEN LET W[3]=T0,O0=2,I0=5
-rem wgh ... 4187 IF T0<>0 THEN IF W[4]<>T1/T0 THEN LET W[4]=T1/T0,O0=2,I0=5
-rem wgh ... 4188 IF T0<>0 THEN LET W[2]=T1/T0,C[11]=W[2]
-rem wgh ... 2570 IF W[2]=0 THEN LET W[2]=C[11]
-rem wgh ... 2580 LET W[4]=C[11]
+
+	dim dflt_data$[3,1]
+	dflt_data$[1,0] = "WO_LOCATION"
+	dflt_data$[1,1] = callpoint!.getDevObject("wo_location")
+	dflt_data$[2,0] = "WO_NO"
+	dflt_data$[2,1] = callpoint!.getDevObject("wo_no")
+	dflt_data$[3,0] = "WOMATISD_SEQ_REF"
+	dflt_data$[3,1] = callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj","SFE_WOLSISSU",stbl("+USER_ID"),"MNT",sfe_womatisd_key$,table_chans$[all],"",dflt_data$[all]
+
+	qty_issued=num(callpoint!.getDevObject("tot_ls_qty_issued"))
+	if qty_issued<>num(callpoint!.getColumnData("SFE_WOMATISD.QTY_ISSUED")) then
+		rem --- Update detail row with new values
+		callpoint!.setColumnData("SFE_WOMATISD.QTY_ISSUED",str(qty_issued),1)
+		if qty_issued<>0 then
+			issue_cost=num(callpoint!.getDevObject("tot_ls_issue_cost"))/qty_issued
+			unit_cost=issue_cost
+			callpoint!.setColumnData("SFE_WOMATISD.UNIT_COST",str(unit_cost),0)
+			callpoint!.setColumnData("SFE_WOMATISD.ISSUE_COST",str(issue_cost),1)
+		endif
+
+		rem --- Force writing record with new values
+		callpoint!.setStatus("MODIFIED")
+
+		rem --- Reset focus on this detail row
+		callpoint!.setDevObject("ls_lookup_row",num(callpoint!.getValidationRow()))
+	endif
 [[SFE_WOMATISD.BGDS]]
 rem --- Init Java classes
 	use ::sfo_SfUtils.aon::SfUtils
@@ -158,10 +189,10 @@ rem --- Init lot/serial additional option
 			callpoint!.setOptionEnabled("LENT",0)
 			break
 	swend
-[[SFE_WOMATISD.BDEL]]
-rem wgh ... stopped ... what if they change item and delete before exiting the row? -- ??
-rem wgh ... stopped ... what if they change qty_issued and delete before exiting the row? -- ??
 
+rem --- Other inits
+	callpoint!.setDevObject("ls_lookup_row",-1)
+[[SFE_WOMATISD.BDEL]]
 rem --- Has record been written yet?
 	sfe_womatisd_dev=fnget_dev("SFE_WOMATISD")
 	dim sfe_womatisd$:fnget_tpl$("SFE_WOMATISD")
@@ -212,6 +243,7 @@ rem --- Delete lot/serial and inventory commitments. Must do this before sfe_wom
 			items$[3]=" "
 			call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 
+			rem --- Barista isn't currently cascading this delete, re Barista bug 5979
 			remove(sfe_wolsissu_dev,key=sfe_wolsissu_key$)
 		wend
 	endif
@@ -277,8 +309,6 @@ rem --- Do not undelete (recommit) if order quantity is zero
 
 rem --- Initialize inventory item update
 	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-
-rem --- Can't undelete lot/serial commitments (recommit) because that info has been lost for good. They'll have to re-enter it.
 
 rem --- Were commitments retained during delete? No if sfe_womatdtl.qty_ordered=0
 	sfe_womatdtl_dev=fnget_dev("SFE_WOMATDTL")
@@ -385,6 +415,20 @@ init_display_cols: rem --- Init DISPLAY columns
 	issue_cost=num(callpoint!.getColumnData("SFE_WOMATISD.ISSUE_COST"))
 	callpoint!.setColumnData("<<DISPLAY>>.VALUE",str(qty_issued*issue_cost),1)
 	return
+
+able_lot_button: rem --- Enable/disable Lot/Serial button
+	if pos(callpoint!.getDevObject("lotser")="LS") then
+		ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
+		dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
+		item_id$=callpoint!.getColumnData("SFE_WOMATISD.ITEM_ID")
+		findrecord(ivm_itemmast_dev,key=firm_id$+item_id$,dom=*next)ivm_itemmast$
+		if ivm_itemmast.lotser_item$="Y" and ivm_itemmast.inventoried$="Y" then 
+			callpoint!.setOptionEnabled("LENT",1)
+		else
+			callpoint!.setOptionEnabled("LENT",0)
+		endif
+	endif
+	return
 [[SFE_WOMATISD.AGDR]]
 rem --- Init DISPLAY columns
 	gosub init_display_cols
@@ -402,8 +446,17 @@ rem --- Init DISPLAY columns
 rem --- Init DISPLAY columns
 	gosub init_display_cols
 [[SFE_WOMATISD.ADGE]]
+
 rem --- Set precision
 	precision num(callpoint!.getDevObject("precision"))
+
+rem --- Reset focus on detail row where lot/serial lookup was executed
+rem --- Can't use forceEdit per bug 5587, but can use new setFocus method when Barista bug 4794 is fixed
+	if callpoint!.getDevObject("ls_lookup_row")>=0 then
+		rem --- Old setFocus method requires fix to Barista bug 5586
+		callpoint!.setFocus(num(callpoint!.getDevObject("ls_lookup_row")),"SFE_WOMATISD.QTY_ISSUED")
+		callpoint!.setDevObject("ls_lookup_row",-1)
+	endif
 [[SFE_WOMATISD.ITEM_ID.AINV]]
 rem --- Item synonym processing
 	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::grid_entry"

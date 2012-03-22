@@ -57,6 +57,7 @@ rem --- Delete inventory issues and commitments. Must do this before sfe_womatis
 				items$[3]=" "
 				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 
+				rem --- Barista currently cascades deletes only one level, re Bug 3963
 				remove(sfe_wolsissu_dev,key=sfe_wolsissu_key$)
 			wend
 		endif
@@ -110,12 +111,8 @@ rem ---  Delete work order transactions
 	endif
 [[SFE_WOMATISH.BEND]]
 rem --- Remove software lock on batch when batching
-
-rem wgh ... stopped ... this is a BATCHED process
 [[SFE_WOMATISH.BTBL]]
 rem --- Get Batch information when batching
-
-rem wgh ... stopped ... this is a BATCHED process
 [[SFE_WOMATISH.AREC]]
 rem --- Init no existing materials issues
 	wotrans=0
@@ -427,6 +424,10 @@ rem --- Additional file opens
 		ivm_lsmaster_dev=num(open_chans$[3]),ivm_lsmaster_tpl$=open_tpls$[3]
 		ivm_lsact_dev=num(open_chans$[4]),ivm_lsact_tpl$=open_tpls$[4]
 	endif
+
+
+rem --- Other inits for sfe_womatisd
+	callpoint!.setDevObject("ls_lookup_row",-1)
 [[SFE_WOMATISH.ARNF]]
 rem --- Init new Materials Issues Entry record
 	sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
