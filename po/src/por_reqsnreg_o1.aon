@@ -234,9 +234,8 @@ rem --- Initialize detail line fields
 rem --- Work order?
 
             if sf$<>"N" 
-                if cvs(poe_reqdet.wo_no$+poe_reqdet.wk_ord_seq_ref$,2)<>""
+                if cvs(poe_reqdet.wo_no$,2)<>""
                     wo$=" WO: "+poe_reqdet.wo_no$
-                    if cvs(poe_reqdet.wk_ord_seq_ref$,2)<>"" then wo$=wo$+"-"+poe_reqdet.wk_ord_seq_ref$
                 endif
             endif
 
