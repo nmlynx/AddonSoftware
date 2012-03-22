@@ -635,7 +635,7 @@ l3500: rem --- Write sort records
             pow08a.firm_id$=firm_id$
             pow08a.warehouse_id$=poe14a.warehouse_id$
             pow08a.wo_no$=poe14a.wo_no$
-            pow08a.wo_seq_ref$=poe14a.wo_seq_ref$
+            pow08a.wk_ord_seq_ref$=poe14a.wk_ord_seq_ref$
             pow08a.vendor_id$=poe04a.vendor_id$
             pow08a.receiver_no$=poe14a.receiver_no$
             pow08a.po_no$=poe14a.po_no$
@@ -651,14 +651,21 @@ l3500: rem --- Write sort records
             pow09a.po_no$=poe14a.po_no$
             pow09a.po_int_seq_ref$=poe14a.internal_seq_no$
 
-            if pos(pom02a.line_type$="NO") write record (pow05_dev,key=pow05a.firm_id$+pow05a.warehouse_id$+       pow05a.recpt_date$+pow05a.item_id$+pow05a.order_memo$+pow05a.vendor_id$+pow05a.receiver_no$+       pow05a.po_no$+pow05a.po_int_seq_ref$) pow05a$
-            if cvs(pow08a.wo_no$+pow08a.wo_seq_ref$,3)<>"" write record (pow08_dev,key=pow08a.firm_id$+pow08a.warehouse_id$+       pow08a.wo_no$+pow08a.wo_seq_ref$+pow08a.vendor_id$+pow08a.receiver_no$+pow08a.po_no$+pow08a.po_int_seq_ref$) pow08a$
-            if cvs(pow09a.customer_id$+pow09a.order_no$+pow09a.so_int_seq_ref$,3)<>"" write record (pow09_dev,key=pow09a.firm_id$+       pow09a.warehouse_id$+pow09a.customer_id$+pow09a.order_no$+pow09a.so_int_seq_ref$+pow09a.vendor_id$+       pow09a.receiver_no$+pow09a.po_no$+pow09a.po_int_seq_ref$) pow09a$
+            if pos(pom02a.line_type$="NO") then 
+				write record (pow05_dev) pow05a$
+			endif
+            if cvs(pow08a.wo_no$+pow08a.wk_ord_seq_ref$,3)<>"" then 
+				write record (pow08_dev) pow08a$
+			endif
+            if cvs(pow09a.customer_id$+pow09a.order_no$+pow09a.so_int_seq_ref$,3)<>"" 
+				write record (pow09_dev) pow09a$
+			endif
+			
             if pom02a.line_type$<>"S" goto l3600
             find record (pow03_dev,key=pow03a.firm_id$+pow03a.warehouse_id$+pow03a.item_id$,dom=*next) pow03a$
             pow03a.qty_received=pow03a.qty_received+(poe14a.qty_received*poe14a.conv_factor)
-            write record (pow03_dev,key=pow03a.firm_id$+pow03a.warehouse_id$+pow03a.item_id$) pow03a$
-            write record (pow04_dev,key=pow04a.firm_id$+pow04a.warehouse_id$+pow04a.recpt_date$+pow04a.item_id$+       pow04a.vendor_id$+pow04a.receiver_no$+pow04a.po_no$+pow04a.po_int_seq_ref$) pow04a$
+            write record (pow03_dev) pow03a$
+            write record (pow04_dev) pow04a$
 
 l3600: rem --- Accumulate totals
 
