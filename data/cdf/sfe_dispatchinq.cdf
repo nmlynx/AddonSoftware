@@ -26,8 +26,18 @@ rem --- Populate grid
 	op_code$=callpoint!.getColumnData("SFE_DISPATCHINQ.OP_CODE")
 	status$=callpoint!.getColumnData("SFE_DISPATCHINQ.WO_STATUS")
 	pri_code$=callpoint!.getColumnData("SFE_DISPATCHINQ.PRIORITY")
-	begdate$=callpoint!.getColumnData("SFE_DISPATCHINQ.DATE_OPENED_1")
-	enddate$=callpoint!.getColumnData("SFE_DISPATCHINQ.DATE_OPENED_2")
+	v$ = callpoint!.getVariableName()
+	attr_ctli = num(callpoint!.getTableColumnAttribute(v$ + "_1", "CTLI"))
+	ctl_id = num(callpoint!.getControlID())
+	if ctl_id = attr_ctli then
+		rem --- From control
+		begdate$=callpoint!.getUserInput()
+		enddate$=callpoint!.getColumnData("SFE_DISPATCHINQ.DATE_OPENED_2")
+	else
+		rem --- To control
+		begdate$=callpoint!.getColumnData("SFE_DISPATCHINQ.DATE_OPENED_1")
+		enddate$=callpoint!.getUserInput()
+	endif
 
 	gosub create_reports_vector
 	gosub fill_grid
@@ -146,11 +156,9 @@ rem ==========================================================================
 	attr_inv_col$[1,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="DATE_REQ"
 	attr_inv_col$[1,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Date Req'd"
 	attr_inv_col$[1,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
-	attr_inv_col$[1,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="5"
-	attr_inv_col$[1,fnstr_pos("STYP",attr_def_col_str$[0,0],5)]="1"
 
 	attr_inv_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="PRI_CODE"
-	attr_inv_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Priority Code"
+	attr_inv_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Priority"
 	attr_inv_col$[2,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="10"
 
 	attr_inv_col$[3,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="WO_STAT"
@@ -197,14 +205,17 @@ rem ==========================================================================
 
 	attr_disp_col$=attr_inv_col$[0,1]
 
-	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridDispatch!,"COLH-LINES-LIGHT-AUTO-MULTI-SIZEC-CHECKS-DATES",num_rpts_rows,
+	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridDispatch!,"COLH-LINES-LIGHT-SIZEC-DATES",num_rpts_rows,
 :		attr_def_col_str$[all],attr_disp_col$,attr_inv_col$[all]
 
 	return
 
 rem ==========================================================================
 fill_grid: rem --- Fill the grid with data in vectDispatch!
+rem op_code$:		input
 rem ==========================================================================
+
+	if cvs(op_code$,3)="" return
 
 	SysGUI!.setRepaintEnabled(0)
 	gridDispatch! = UserObj!.getItem(num(user_tpl.gridDispatchOffset$))
@@ -214,18 +225,8 @@ rem ==========================================================================
 	if vectDispatch!.size() then
 		numrow = vectDispatch!.size() / gridDispatch!.getNumColumns()
 		gridDispatch!.clearMainGrid()
-		gridDispatch!.setColumnStyle(0,SysGUI!.GRID_STYLE_UNCHECKED)
 		gridDispatch!.setNumRows(numrow)
 		gridDispatch!.setCellText(0,0,vectDispatch!)
-
-		for wk=0 to vectDispatch!.size()-1 step gridDispatch!.getNumColumns()
-			if vectDispatch!.getItem(wk) = "Y" then 
-				gridDispatch!.setCellStyle(wk / gridDispatch!.getNumColumns(), 0, SysGUI!.GRID_STYLE_CHECKED)
-			endif
-			gridDispatch!.setCellText(wk / gridDispatch!.getNumColumns(), 0, "")
-		next wk
-
-		gridDispatch!.resort()
 	else
 		gridDispatch!.clearMainGrid()
 		gridDispatch!.setColumnStyle(0, SysGUI!.GRID_STYLE_UNCHECKED)
@@ -244,6 +245,11 @@ rem pri_code$:		input
 rem begdate$:		input
 rem enddate$:		input
 rem ==========================================================================
+
+	if cvs(op_code$,3)="" return
+
+	vectDispatch!=UserObj!.getItem(num(user_tpl.vectDispatchOffset$))
+	vectDispatch!.clear()
 
 	sfe02_dev=fnget_dev("SFE_WOOPRTN")
 	dim sfe02a$:fnget_tpl$("SFE_WOOPRTN")
@@ -274,12 +280,10 @@ rem --- Get lengths
 		read record (sfe02_dev, end=*break) sfe02a$
 		if pos(firm_id$+sfe02a.wo_location$=sfe02a$)<>1 then break
 		if sfe02a.op_code$<>op_code$ break
-
-		read(sft01_dev,key=firm_id$+sfe02a.wo_location$+sfe02a.wo_no$,dom=*next)
+		read(sft01_dev,key=firm_id$+sfe02a.wo_location$+op_code$+sfe02a.wo_no$,knum="AO_OPCOD_WO",dom=*next)
 		while 1
 			read record (sft01_dev,end=*break) sft01a$
-			if pos(firm_id$+sfe02a.wo_location$+sfe02a.wo_no$=sft01a$)<>1 break
-			if sft01a.op_code$<>op_code$ continue
+			if pos(firm_id$+sfe02a.wo_location$+op_code$+sfe02a.wo_no$=sft01a.firm_id$+sft01a.wo_location$+sft01a.op_code$+sft01a.wo_no$)<>1 break
 			units=units+sft01a.units
 			setup=setup+sft01a.setup_time
 		wend
@@ -315,6 +319,7 @@ rem --- Work order still open?
 			movetime=0
 			find record(sfe01_dev,key=firm_id$+sfe02a.wo_location$+sfe02a.wo_no$,dom=*continue) sfe01a$
 		endif
+		if status$="A" goto include_it
 		if sfe01a.wo_status$="P" and pos("P"=status$)>0 goto include_it
 		if sfe01a.wo_status$="Q" and pos("Q"=status$)>0 goto include_it
 		if sfe01a.wo_status$="O" and pos("O"=status$)>0 goto include_it
@@ -336,7 +341,7 @@ rem --- Shall we print it?
 		if cvs(enddate$,2)<>"" if sfm05a.sched_date$>enddate$ continue
 		v3=0
 rem --- Add to vector
-		vectDispatch!.addItem(sfm05a.sched_date$)
+		vectDispatch!.addItem(fndate$(sfm05a.sched_date$))
 		vectDispatch!.addItem(sfe01a.priority$)
 		vectDispatch!.addItem(sfe01a.wo_category$)
 		vectDispatch!.addItem(sfe01a.wo_no$)
@@ -353,8 +358,7 @@ rem --- Add to vector
 	wend
 
 rem jpb now grab paragraph 3000 for totals
-
-	callpoint!.setStatus("REFRESH")
+	vectDispatch!=UserObj!.setItem(num(user_tpl.vectDispatchOffset$),vectDispatch!)
 	
 	return
 
@@ -430,6 +434,10 @@ rem --- Calculate Remaining Units
 rem --- umask$ = PARAMETER UNIT MASK, UMASK = LEN(UMASK$)
 	umask$="-#####0.000"
 	umask=len(umask$)
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","H","",m1$,0,0
+	umask$=m1$
+	umask=len(umask$)
+
 	unitrun=0
 	unitset=0
 	wopos=pos(sfe01a.wo_no$=wostr$)
