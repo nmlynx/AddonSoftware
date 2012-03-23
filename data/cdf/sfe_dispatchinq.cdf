@@ -140,6 +140,10 @@ rem --- Add grid to show Dispatch records
 
 	UserObj!.addItem(vectDispatch!); rem --- vector of filtered recs
 	user_tpl.vectDispatchOffset$="1"
+
+rem --- Set mask for tracking
+
+	callpoint!.setDevObject("umask","-#####0.000")
 [[SFE_DISPATCHINQ.<CUSTOM>]]
 rem ==========================================================================
 format_grid: rem --- Use Barista program to format the grid
@@ -154,15 +158,15 @@ rem ==========================================================================
 	dim attr_inv_col$[def_inv_cols,len(attr_def_col_str$[0,0])/5]
 
 	attr_inv_col$[1,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="DATE_REQ"
-	attr_inv_col$[1,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Date Req'd"
+	attr_inv_col$[1,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_DATE_REQ'D")
 	attr_inv_col$[1,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 
 	attr_inv_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="PRI_CODE"
-	attr_inv_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="Priority"
+	attr_inv_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_PRIORITY")
 	attr_inv_col$[2,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="10"
 
 	attr_inv_col$[3,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="WO_STAT"
-	attr_inv_col$[3,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="WO Status"
+	attr_inv_col$[3,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_WO_STATUS")
 	attr_inv_col$[3,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="10"
 
 	attr_inv_col$[4,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="WO_NO"
@@ -174,28 +178,29 @@ rem ==========================================================================
 	attr_inv_col$[5,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="150"
 
 	attr_inv_col$[6,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="AT_OP"
-	attr_inv_col$[6,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="At Oper"
+	attr_inv_col$[6,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_AT_OP")
 	attr_inv_col$[6,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="10"
 
 	attr_inv_col$[7,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="FROM_OP"
-	attr_inv_col$[7,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]="From Op"
+	attr_inv_col$[7,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_FROM_OP")
 	attr_inv_col$[7,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="10"
 
 	attr_inv_col$[8,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="SETUP_TIME"
-	attr_inv_col$[8,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_SETUP")+"^"+Translate!.getTranslation("AON_TIME")
-	attr_inv_col$[8,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="25"
+	attr_inv_col$[8,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_SETUP")+" "+Translate!.getTranslation("AON_TIME")
+	attr_inv_col$[8,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
+	attr_inv_col$[8,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="20"
 	attr_inv_col$[8,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
 	attr_inv_col$[9,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="RUN_TIME"
-	attr_inv_col$[9,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_RUN")+"^"+Translate!.getTranslation("AON_TIME")
+	attr_inv_col$[9,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_RUN")+" "+Translate!.getTranslation("AON_TIME")
 	attr_inv_col$[9,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
-	attr_inv_col$[9,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="25"
+	attr_inv_col$[9,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="20"
 	attr_inv_col$[9,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
 	attr_inv_col$[10,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="MOVE_TIME"
-	attr_inv_col$[10,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_MOVE")+"^"+Translate!.getTranslation("AON_TIME")
+	attr_inv_col$[10,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_MOVE")+" "+Translate!.getTranslation("AON_TIME")
 	attr_inv_col$[10,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
-	attr_inv_col$[10,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="25"
+	attr_inv_col$[10,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="20"
 	attr_inv_col$[10,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
 	for curr_attr=1 to def_inv_cols
@@ -205,7 +210,7 @@ rem ==========================================================================
 
 	attr_disp_col$=attr_inv_col$[0,1]
 
-	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridDispatch!,"COLH-LINES-LIGHT-SIZEC-DATES",num_rpts_rows,
+	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridDispatch!,"AUTO-COLH-LINES-LIGHT-DATES",num_rpts_rows,
 :		attr_def_col_str$[all],attr_disp_col$,attr_inv_col$[all]
 
 	return
@@ -289,7 +294,7 @@ rem --- Get lengths
 		wend
 
 		if units=0 and setup=0 continue
-		wostr$=wostr$+sfe02a.wo_no$+str(units:m1$)+str(setup:m1$)
+		wostr$=wostr$+sfe02a.wo_no$+str(units:callpoint!.getDevObject("umask"))+str(setup:callpoint!.getDevObject("umask"))
 		units=0
 		setup=0
 	wend
@@ -305,7 +310,7 @@ rem --- Position Schedul Detail file
 		movetime=0
 		read record (sfm05_dev,end=*break) sfm05a$
 		if pos(firm_id$+op_code$=sfm05a$)<>1 break
-		this_seq$=sfm05a.oper_seq_ref$
+		thisseq$=sfm05a.oper_seq_ref$
 		this_wo$=sfm05a.wo_no$
 
 rem --- Retrieve sfe-02 operations record
@@ -357,7 +362,8 @@ rem --- Add to vector
 
 	wend
 
-rem jpb now grab paragraph 3000 for totals
+	callpoint!.setColumnData("<<DISPLAY>>.RUNTIME_HRS",str(totrun),1)
+	callpoint!.setColumnData("<<DISPLAY>>.SETUP_TIME",str(totset),1)
 	vectDispatch!=UserObj!.setItem(num(user_tpl.vectDispatchOffset$),vectDispatch!)
 	
 	return
@@ -365,7 +371,7 @@ rem jpb now grab paragraph 3000 for totals
 rem ==========================================================================
 calc_actual:
 rem ==========================================================================
-return
+
 rem --- Initialize WO ---
 	opnmax=999
 	dim runtim[opnmax],setup[opnmax],actrun[opnmax],actset[opnmax]
@@ -383,9 +389,9 @@ rem --- Initialize WO ---
 		read record (sfe02_dev,end=*break) sfe02a$
 		if pos(firm_id$+sfe01a.wo_location$+sfe01a.wo_no$=sfe02a$)<>1 break
 		if sfe02a.line_type$<>"S" continue
-		opnseq$=opnseq$+sfe02a.op_seq$
+		opnseq$=opnseq$+sfe02a.internal_seq_no$
 		opncod$=opncod$+sfe02a.op_code$
-		runtim[x0]=sfm05.runtime_hrs
+		runtim[x0]=sfm05a.runtime_hrs
 		setup[x0]=sfm05a.setup_time
 		x0=x0+1
 	wend
@@ -419,7 +425,7 @@ rem --- This operation?
 		thisindx=int(thisindx/op_seq_len)
 		xfrom=thisindx-1
 		if xfrom<0 xfrom=0
-		from$=opncod$(xfrom*op_seq_len+1,op_seq_len)
+		from$=opncod$(xfrom*op_cod_len+1,op_cod_len)
 		runtime=runtim[thisindx]
 		setup=setup[thisindx]
 	endif
@@ -431,11 +437,8 @@ calc_remaining:
 rem ==========================================================================
 
 rem --- Calculate Remaining Units
-rem --- umask$ = PARAMETER UNIT MASK, UMASK = LEN(UMASK$)
-	umask$="-#####0.000"
-	umask=len(umask$)
-	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","H","",m1$,0,0
-	umask$=m1$
+
+	umask$=callpoint!.getDevObject("umask")
 	umask=len(umask$)
 
 	unitrun=0
