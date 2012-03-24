@@ -210,7 +210,7 @@ rem ==========================================================================
 
 	attr_disp_col$=attr_inv_col$[0,1]
 
-	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridDispatch!,"AUTO-COLH-LINES-LIGHT-DATES",num_rpts_rows,
+	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridDispatch!,"AUTO-COLH-LINES-LIGHT-DATES-MULTI",num_rpts_rows,
 :		attr_def_col_str$[all],attr_disp_col$,attr_inv_col$[all]
 
 	return
@@ -324,6 +324,7 @@ rem --- Work order still open?
 			movetime=0
 			find record(sfe01_dev,key=firm_id$+sfe02a.wo_location$+sfe02a.wo_no$,dom=*continue) sfe01a$
 		endif
+		if sfe01a.wo_status$="C" continue
 		if status$="A" goto include_it
 		if sfe01a.wo_status$="P" and pos("P"=status$)>0 goto include_it
 		if sfe01a.wo_status$="Q" and pos("Q"=status$)>0 goto include_it
@@ -348,7 +349,7 @@ rem --- Shall we print it?
 rem --- Add to vector
 		vectDispatch!.addItem(fndate$(sfm05a.sched_date$))
 		vectDispatch!.addItem(sfe01a.priority$)
-		vectDispatch!.addItem(sfe01a.wo_category$)
+		vectDispatch!.addItem(sfe01a.wo_status$)
 		vectDispatch!.addItem(sfe01a.wo_no$)
 		vectDispatch!.addItem(desc$)
 		vectDispatch!.addItem(at$)
@@ -474,8 +475,6 @@ rem --- Resize the grid
 
 	if UserObj!<>null() then
 		gridDispatch!=UserObj!.getItem(num(user_tpl.gridDispatchOffset$))
-		gridDispatch!.setColumnWidth(0,25)
-		gridDispatch!.setColumnWidth(1,50)
 		gridDispatch!.setSize(Form!.getWidth()-(gridDispatch!.getX()*2),Form!.getHeight()-(gridDispatch!.getY()+10))
 		gridDispatch!.setFitToGrid(1)
 	endif
