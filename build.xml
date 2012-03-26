@@ -145,13 +145,6 @@
         </copy>
 
         <!-- Addon Docs -->
-        <mkdir  dir="${docpub.dir}"/>
-        <ant dir="${bbj.src.dir}/install"
-             antfile="build-artifacts.xml"
-             target="help_addon">
-             <property name="doc.dir" value="${docpub.dir}"/>
-        </ant>
-
         <mkdir  dir="${addon.bbj.dir}/help/WebHelp"/>
         <untar src="${docpub.dir}/docaddonhtml.tar.gz"
                compression="gzip"
