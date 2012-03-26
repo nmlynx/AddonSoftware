@@ -399,9 +399,8 @@ rem --- or returned.
                         mm$=enddate$(5,2)
                         dd$=enddate$(7,2)
                         rem --- Adjust last day of February for leap year
-                        if mm$="02" and (dd$="28" or dd$="29") then
-                            rem --- This should NOT be part of standard Addon per 3/13/2012 VAR co-op meeting.
-                            rem enddate$(7,2)=str(iff(Calendar!.isLeapYear(num(yyyy$)),29,28))
+                        if gls01a.adjust_february and mm$="02" and (dd$="28" or dd$="29") then
+                            enddate$(7,2)=str(iff(Calendar!.isLeapYear(num(yyyy$)),29,28))
                         endif
                     endif
                     dates$[period,index+1]=enddate$
