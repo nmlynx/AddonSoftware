@@ -309,10 +309,6 @@ rem --- Update quantity left_to_issue and tot_ls_qty_issued
 	callpoint!.setDevObject("left_to_issue",left_to_issue-start_qty_issued)
 	callpoint!.setDevObject("tot_ls_qty_issued",tot_ls_qty_issued+start_qty_issued)
 [[SFE_WOLSISSU.BEND]]
-rem wgh ... When exit from a new line, the last line is repeated in the new line.
-rem wgh ... This results in the qty_issued getting doubled!!!!
-rem wgh ... Requires fix for Barista bug 5982.
-
 rem --- Have enough lot/serials been entered?
 	tot_ls_qty_issued=num(callpoint!.getDevObject("tot_ls_qty_issued"))
 	womatisd_qty_issued=num(callpoint!.getDevObject("womatisd_qty_issued"))
