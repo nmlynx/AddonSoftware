@@ -350,7 +350,7 @@ rem --- Do Operations
 		while 1
 			read record (wotran_dev,end=*break)wotran$
 			if pos(firm_id$+sfe_womastr.wo_location$+wo_no$=wotran$)<>1 break
-			y=pos(wotran.op_seq$=curr_oplines$,op_len)
+			y=pos(wotran.trans_seq$=curr_oplines$,op_len)
 			y=int(y/op_len)
 			x2[y]=x2[y]+wotran.ext_cost
 			x6[y]=x6[y]+(wotran.units+wotran.setup_time)*wotran.direct_rate

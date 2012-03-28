@@ -39,7 +39,7 @@ rem --- 3. remove schedule detail (sfe_woschdl/sfm-05)
 	sfe23_dev=fnget_dev("SFE_WOMATDTL")
 	dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
 	
-rem --- Initialize inventory item update
+	rem --- Initialize inventory item update
 	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 
 rem --- Loop thru materials detail - uncommit lot/serial only (i.e. atamo uncommits both item and lot/serial, so re-commit item and uncommit that qty later)
@@ -62,10 +62,10 @@ rem --- Loop thru materials detail - uncommit lot/serial only (i.e. atamo uncomm
 			items$[3]=""
 			refs[0]=max(0,sfe_womatdtl.qty_ordered-sfe_womatdtl.tot_qty_iss)
 			call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-
+rem escape;rem have uncommitted IV, now removing sfe23 - temp; remove after testing CAH
 			remove(sfe23_dev,key=sfe23_key$)
 		wend
-
+rem escape;rem have processed sfe23's and uncommitted, now removing sfe13 - temp; remove after testing CAH
 		remove (sfe13_dev,key=sfe13_key$);rem bottom of 13/23 loop
 		break; rem should only be one sfe-13 per work order
 	wend
@@ -88,13 +88,12 @@ rem --- Remove sfm-05 (sfe_woschdl)
 rem --- Reduce on order for scheduled prod qty
 
 	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="O" and callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")="I"
+rem escape;rem reduce OO - temp; remove after testing CAH 	
 		items$[1]=callpoint!.getColumnData("SFE_WOMASTR.WAREHOUSE_ID")
 		items$[2]=callpoint!.getColumnData("SFE_WOMASTR.ITEM_ID")
 		refs[0]=-(num(callpoint!.getColumnData("SFE_WOMASTR.SCH_PROD_QTY"))-num(callpoint!.getColumnData("SFE_WOMASTR.QTY_CLS_TODT")))
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 	endif
-
-
 [[SFE_WOMASTR.BDEQ]]
 rem --- cannot delete closed work order
 
@@ -155,7 +154,7 @@ rem --- Set new record flag
 
 rem --- Open tables
 
-	num_files=25
+	num_files=27
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="SFS_PARAMS",open_opts$[2]="OTA"
@@ -182,6 +181,8 @@ rem --- Open tables
 	open_tables$[23]="SFE_WOMATISD",open_opts$[23]="OTA"
 	open_tables$[24]="SFE_WOLSISSU",open_opts$[24]="OTA"
 	open_tables$[25]="SFE_WOLOTSER",open_opts$[25]="OTA"
+	open_tables$[26]="BMM_BILLCMTS",open_opts$[26]="OTA"
+	open_tables$[27]="BMM_BILLMAT",open_opts$[27]="OTA"
 
 	gosub open_tables
 
@@ -198,6 +199,7 @@ rem --- Open tables
 	read record (ivs_params,key=firm_id$+"IV00",dom=std_missing_params) ivs_params$
 	callpoint!.setDevObject("default_wh",ivs_params.warehouse_id$)
 	callpoint!.setDevObject("lotser",ivs_params.lotser_flag$)
+	callpoint!.setDevObject("iv_precision",ivs_params.precision$)
 
 	bm$=sfs_params.bm_interface$
 	op$=sfs_params.ar_interface$
@@ -493,6 +495,7 @@ rem --- set DevObjects
 
 	callpoint!.setDevObject("prod_qty",callpoint!.getColumnData("SFE_WOMASTR.SCH_PROD_QTY"))
 	callpoint!.setDevObject("wo_est_yield",callpoint!.getColumnData("SFE_WOMASTR.EST_YIELD"))
+	callpoint!.setDevObject("wo_category",callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY"))
 [[SFE_WOMASTR.EST_YIELD.AVAL]]
 rem --- Set DevObject
 
@@ -821,9 +824,169 @@ rem --- Disable Drawing and Revision Number if Recurring type
 		callpoint!.setColumnEnabled("SFE_WOMASTR.DRAWING_REV",0)
 	endif
 [[SFE_WOMASTR.AWRI]]
+rem --- create WO comments from BOM comments
+
+	if callpoint!.getDevObject("bm")="Y" and callpoint!.getDevObject("new_rec")="Y"
+	
+		bmm09_dev=fnget_dev("BMM_BILLCMTS")
+		dim bmm_billcmts$:fnget_tpl$("BMM_BILLCMTS")
+		sfe07_dev=fnget_dev("SFE_WOCOMNT")
+		dim sfe_wocomnt$:fnget_tpl$("SFE_WOCOMNT")
+
+		sfe_wocomnt.firm_id$=firm_id$
+		sfe_wocomnt.wo_location$=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
+		sfe_wocomnt.wo_no$=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+
+		read (bmm09_dev,key=firm_id$+callpoint!.getColumnData("SFE_WOMASTR.ITEM_ID"),dom=*next)
+
+		while 1
+			read record (bmm09_dev,end=*break)bmm_billcmts$
+			if bmm_billcmts.firm_id$+bmm_billcmts.bill_no$<>firm_id$+callpoint!.getColumnData("SFE_WOMASTR.ITEM_ID") then break
+			wk$=fattr(sfe_wocomnt$,"SEQUENCE_NO")
+			seq_mask$=fill(dec(wk$(10,2)),"0")
+			sfe_wocomnt.sequence_no$=str(num(bmm_billcmts.sequence_num$):seq_mask$)
+			sfe_wocomnt.ext_comments$=bmm_billcmts.std_comments$
+			sfe_wocomnt$=field(sfe_wocomnt$)
+			write record (sfe07_dev)sfe_wocomnts$
+		wend
+
+	endif
+
+rem --- adjust OO if qty has changed on an open WO
+rem --- as far as I can see, this can only happen if BOM not installed, otherwise can't change qty on an open WO
+
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="O" and callpoint!.getDevObject("new_rec")="N"
+
+		new_prod_qty=num(callpoint!.getColumnData("SFE_WOMASTR.SCH_PROD_QTY"))
+		old_prod_qty=num(callpoint!.getDevObject("prod_qty"))
+		wo_category$=callpoint!.getDevObject("wo_category")
+
+		if old_prod_qty<>new_prod_qty and wo_category$="I"
+rem escape;rem watch - temp; remove after testing CAH
+			rem --- initialize atamo
+			call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			items$[1]=callpoint!.getColumnData("SFE_WOMASTR.WAREHOUSE_ID")
+			items$[2]=callpoint!.getColumnData("SFE_WOMASTR.ITEM_ID")
+
+			rem --- update OO w/ delta of new_prod_qty-old_prod_qty
+			refs[0]=new_prod_qty-old_prod_qty
+			call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status		
+		endif
+	endif
+
+rem --- launch other form(s) based on WO category
+
+	if callpoint!.getDevObject("new_rec")="Y"
+		switch pos(callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")="INR")
+			case 1;rem --- if on a regular stock WO, explode, then show mats grid
+
+				key_pfx$=firm_id$+callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+
+				dim dflt_data$[3,1]
+				dflt_data$[1,0]="FIRM_ID"
+				dflt_data$[1,1]=firm_id$
+				dflt_data$[2,0]="WO_LOCATION"
+				dflt_data$[2,1]=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
+				dflt_data$[3,0]="WO_NO"
+				dflt_data$[3,1]=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+
+				call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:					"SFE_WOMATL",
+:					stbl("+USER_ID"),
+:					"MNT",
+:					key_pfx$,
+:					table_chans$[all],
+:					"",
+:					dflt_data$[all]
+
+				callpoint!.setStatus("ACTIVATE")
+
+			break
+
+			case 2;rem --- if on non-stock, launch ops, then mats, then subs grids
+				   rem --- note: if user closes each form w/ mouse-click on red X, this works, but there are (it looks like) timing issues
+				   rem --- if using ctl-F4 -- it will close one form, then launch and immediately close another one
+
+				key_pfx$=firm_id$+callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+
+				dim dflt_data$[3,1]
+				dflt_data$[1,0]="FIRM_ID"
+				dflt_data$[1,1]=firm_id$
+				dflt_data$[2,0]="WO_LOCATION"
+				dflt_data$[2,1]=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
+				dflt_data$[3,0]="WO_NO"
+				dflt_data$[3,1]=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+
+				call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:					"SFE_WOOPRTN",
+:					stbl("+USER_ID"),
+:					"MNT",
+:					key_pfx$,
+:					table_chans$[all],
+:					"",
+:					dflt_data$[all]
+
+				call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:					"SFE_WOMATL",
+:					stbl("+USER_ID"),
+:					"MNT",
+:					key_pfx$,
+:					table_chans$[all],
+:					"",
+:					dflt_data$[all]
+
+				call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:					"SFE_WOSUBCNT",
+:					stbl("+USER_ID"),
+:					"MNT",
+:					key_pfx$,
+:					table_chans$[all],
+:					"",
+:					dflt_data$[all]
+
+				callpoint!.setStatus("ACTIVATE")
+
+			break
+
+			case 3;rem --- if recurring, launch ops grid
+
+
+				key_pfx$=firm_id$+callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+
+				dim dflt_data$[3,1]
+				dflt_data$[1,0]="FIRM_ID"
+				dflt_data$[1,1]=firm_id$
+				dflt_data$[2,0]="WO_LOCATION"
+				dflt_data$[2,1]=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
+				dflt_data$[3,0]="WO_NO"
+				dflt_data$[3,1]=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+
+				call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:					"SFE_WOOPRTN",
+:					stbl("+USER_ID"),
+:					"MNT",
+:					key_pfx$,
+:					table_chans$[all],
+:					"",
+:					dflt_data$[all]
+
+				callpoint!.setStatus("ACTIVATE")
+
+			break
+
+			case default
+			break
+
+		swend
+	endif
+
 rem --- Set new_rec to N
 
 	callpoint!.setDevObject("new_rec","N")
+
+rem --- disable Copy button
+
+	callpoint!.setOptionEnabled("COPY",0)
 [[SFE_WOMASTR.<CUSTOM>]]
 rem =========================================================
 build_ord_line:
@@ -892,6 +1055,7 @@ rem --- Disable Additional Options
 	callpoint!.setOptionEnabled("SCHD",0)
 	callpoint!.setOptionEnabled("RELS",0)
 	callpoint!.setOptionEnabled("COPY",0)
+	callpoint!.setOptionEnabled("LSNO",0)
 
 rem --- set defaults
 
