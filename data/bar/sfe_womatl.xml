@@ -18,9 +18,9 @@
 			<ASC_LICENSE_ID id="ddm_tables.sfe_womatl">A6CFA5FBE9DCAA1CD3B29E4265BAD2C4</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.sfe_womatl">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.sfe_womatl">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.sfe_womatl">20120327</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE id="ddm_tables.sfe_womatl">20120328</DD_LSTREV_DATE>
 			<DD_LSTSYNC_DATE id="ddm_tables.sfe_womatl">20120327</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.sfe_womatl">150324</DD_LSTSYNC_TIME>
+			<DD_LSTSYNC_TIME id="ddm_tables.sfe_womatl">180802</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.sfe_womatl">/dev_addon/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.sfe_womatl">PRIMARY</DD_ATTR_DKNM>
 			<DD_ATTR_FTYP id="ddm_tables.sfe_womatl">G</DD_ATTR_FTYP>
@@ -41,7 +41,7 @@
 		<RECORD id="ddm_table_tpls.sfe_womatl">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.sfe_womatl">SFE_WOMATL      </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.sfe_womatl">sfe-22</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.sfe_womatl">firm_id:c(2),wo_location:c(2),wo_no:c(7),material_seq:c(3),internal_seq_no:c(12),unit_measure:c(2),warehouse_id:c(2),item_id:c(20),oper_seq_ref:c(12),po_no:c(7),pur_ord_seq_ref:c(12),po_status:c(1),line_type:c(1),ext_comments:c(60),require_date:c(8),units:n(7*),unit_cost:n(7*),total_units:n(7*),total_cost:n(7*),divisor:n(7*),qty_required:n(7*),alt_factor:n(7*),scrap_factor:n(5*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.sfe_womatl">firm_id:c(2),wo_location:c(2),wo_no:c(7),material_seq:c(3),internal_seq_no:c(12),unit_measure:c(2),warehouse_id:c(2),item_id:c(20),oper_seq_ref:c(12),po_no:c(7),pur_ord_seq_ref:c(12),po_status:c(1),line_type:c(1),ext_comments:c(60),require_date:c(8),units:n(7*),unit_cost:n(7*),total_units:n(7*),total_cost:n(7*),divisor:n(7*),qty_required:n(7*),alt_factor:n(7*),iv_unit_cost:n(7*),scrap_factor:n(5*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -601,20 +601,40 @@
 		<RECORD id="ddm_table_cols.sfe_womatl023">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatl023">SFE_WOMATL      </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_womatl023">023</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.sfe_womatl023">SCRAP_FACTOR    </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatl023">SCRAP_FACTOR    </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_womatl023">UNIT_COST       </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatl023">IV_UNIT_COST    </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.sfe_womatl023">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_womatl023">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_womatl023">Y</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_womatl023">0A</DD_DELIM_CHAR>
-			<DD_CREATE_DATE id="ddm_table_cols.sfe_womatl023">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womatl023">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_ABLC id="ddm_table_cols.sfe_womatl023">SFE_WOMATL.LINE_TYPE</DD_ATTR_ABLC>
-			<DD_ATTR_ABLV id="ddm_table_cols.sfe_womatl023">S</DD_ATTR_ABLV>
-			<DD_ATTR_CPGM id="ddm_table_cols.sfe_womatl023">/dev_addon/aon/;</DD_ATTR_CPGM>
-			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatl023">Scrap Factor Percent</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatl023">12</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatl023">SCRAP_FACTOR</SQL_COLUMN_NAME>
+			<DD_CREATE_DATE id="ddm_table_cols.sfe_womatl023">20120328</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womatl023">20120328</DD_LSTREV_DATE>
+			<DD_ATTR_COLW id="ddm_table_cols.sfe_womatl023">0</DD_ATTR_COLW>
+			<DD_ATTR_CTLX id="ddm_table_cols.sfe_womatl023">0</DD_ATTR_CTLX>
+			<DD_ATTR_CTLY id="ddm_table_cols.sfe_womatl023">0</DD_ATTR_CTLY>
+			<DD_ATTR_CTLW id="ddm_table_cols.sfe_womatl023">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_table_cols.sfe_womatl023">0</DD_ATTR_CTLH>
+			<DD_ATTR_MLAN id="ddm_table_cols.sfe_womatl023">N</DD_ATTR_MLAN>
+			<DD_ATTR_MINL id="ddm_table_cols.sfe_womatl023">0</DD_ATTR_MINL>
+			<DD_ATTR_MAXL id="ddm_table_cols.sfe_womatl023">0</DD_ATTR_MAXL>
+		</RECORD>
+		<RECORD id="ddm_table_cols.sfe_womatl024">
+			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_womatl024">SFE_WOMATL      </DD_TABLE_ALIAS>
+			<DD_SEQUENCE id="ddm_table_cols.sfe_womatl024">024</DD_SEQUENCE>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_womatl024">SCRAP_FACTOR    </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_womatl024">SCRAP_FACTOR    </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.sfe_womatl024">0</DD_COL_REPEATS>
+			<DD_COL_OCCURS id="ddm_table_cols.sfe_womatl024">0</DD_COL_OCCURS>
+			<DD_FIELD_DELIM id="ddm_table_cols.sfe_womatl024">Y</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.sfe_womatl024">0A</DD_DELIM_CHAR>
+			<DD_CREATE_DATE id="ddm_table_cols.sfe_womatl024">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.sfe_womatl024">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_ABLC id="ddm_table_cols.sfe_womatl024">SFE_WOMATL.LINE_TYPE</DD_ATTR_ABLC>
+			<DD_ATTR_ABLV id="ddm_table_cols.sfe_womatl024">S</DD_ATTR_ABLV>
+			<DD_ATTR_CPGM id="ddm_table_cols.sfe_womatl024">/dev_addon/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_PROM id="ddm_table_cols.sfe_womatl024">Scrap Factor Percent</DD_ATTR_PROM>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_womatl024">12</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_womatl024">SCRAP_FACTOR</SQL_COLUMN_NAME>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_cmts">
