@@ -154,7 +154,7 @@ rem --- Set new record flag
 
 rem --- Open tables
 
-	num_files=27
+	num_files=25
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="SFS_PARAMS",open_opts$[2]="OTA"
@@ -162,7 +162,7 @@ rem --- Open tables
 	open_tables$[4]="SFT_OPNMATTR",open_opts$[4]="OTA"
 	open_tables$[5]="SFT_OPNOPRTR",open_opts$[5]="OTA"
 	open_tables$[6]="SFT_OPNSUBTR",open_opts$[6]="OTA"
-	open_tables$[7]="BMM_BILLMAST",open_opts$[7]="OTA"
+	
 	open_tables$[8]="OPE_ORDHDR",open_opts$[8]="OTA"
 	open_tables$[9]="OPE_ORDDET",open_opts$[9]="OTA"
 	open_tables$[10]="IVM_ITEMMAST",open_opts$[10]="OTA"
@@ -181,8 +181,6 @@ rem --- Open tables
 	open_tables$[23]="SFE_WOMATISD",open_opts$[23]="OTA"
 	open_tables$[24]="SFE_WOLSISSU",open_opts$[24]="OTA"
 	open_tables$[25]="SFE_WOLOTSER",open_opts$[25]="OTA"
-	open_tables$[26]="BMM_BILLCMTS",open_opts$[26]="OTA"
-	open_tables$[27]="BMM_BILLMAT",open_opts$[27]="OTA"
 
 	gosub open_tables
 
@@ -206,7 +204,7 @@ rem --- Open tables
 	po$=sfs_params.po_interface$
 	pr$=sfs_params.pr_interface$
 
-	num_files=1
+	num_files=6
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 	if bm$<>"Y"
@@ -215,6 +213,11 @@ rem --- Open tables
 		open_tables$[1]="SFC_OPRTNCOD",open_opts$[1]="OTA"
 	else
 		open_tables$[1]="BMC_OPCODES",open_opts$[1]="OTA"
+		open_tables$[2]="BMM_BILLMAST",open_opts$[2]="OTA"
+		open_tables$[3]="BMM_BILLCMTS",open_opts$[3]="OTA"
+		open_tables$[4]="BMM_BILLMAT",open_opts$[4]="OTA"
+		open_tables$[5]="BMM_BILLOPER",open_opts$[5]="OTA"
+		open_tables$[6]="BMM_BILLSUB",open_opts$[6]="OTA"
 	endif
 	callpoint!.setDevObject("bm",bm$)
 	x$=stbl("bm",bm$)
