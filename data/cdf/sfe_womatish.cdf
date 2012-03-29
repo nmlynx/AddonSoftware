@@ -111,8 +111,19 @@ rem ---  Delete work order transactions
 	endif
 [[SFE_WOMATISH.BEND]]
 rem --- Remove software lock on batch when batching
+	batch$=stbl("+BATCH_NO",err=*next)
+	if num(batch$)<>0
+		lock_table$="ADM_PROCBATCHES"
+		lock_record$=firm_id$+stbl("+PROCESS_ID")+batch$
+		lock_type$="X"
+		lock_status$=""
+		lock_disp$=""
+		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+	endif
 [[SFE_WOMATISH.BTBL]]
-rem --- Get Batch information when batching
+rem --- Get Batch information
+	call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]
+	callpoint!.setTableColumnAttribute("SFE_WOMATISH.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
 [[SFE_WOMATISH.AREC]]
 rem --- Init no existing materials issues
 	wotrans=0
@@ -424,7 +435,6 @@ rem --- Additional file opens
 		ivm_lsmaster_dev=num(open_chans$[3]),ivm_lsmaster_tpl$=open_tpls$[3]
 		ivm_lsact_dev=num(open_chans$[4]),ivm_lsact_tpl$=open_tpls$[4]
 	endif
-
 
 rem --- Other inits for sfe_womatisd
 	callpoint!.setDevObject("ls_lookup_row",-1)

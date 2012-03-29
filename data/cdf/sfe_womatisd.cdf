@@ -1,3 +1,6 @@
+[[SFE_WOMATISD.AGCL]]
+rem --- set preset val for batch_no
+	callpoint!.setTableColumnAttribute("SFE_WOMATISD.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
 [[SFE_WOMATISD.REQUIRE_DATE.BINP]]
 rem --- Enable lot/serial button
 	gosub able_lot_button
