@@ -165,6 +165,8 @@ rem ===============================================================
 	callpoint!.setColumnData("SFE_WOOPRTN.TOT_STD_COST",str(new_tot_dols))
 	if old_tot_time<>new_tot_time
 		gosub remove_sched
+rem jpb need to add the correct records back in - not happening right now.
+rem jpb None of the input variables are being sent in
 		gosub add_sched
 	endif
 
@@ -172,7 +174,6 @@ rem ===============================================================
 
 rem ===============================================================
 remove_sched:
-rem remove_date$:	input
 rem ===============================================================
 
 	sfm05_dev=fnget_dev("SFE_WOSCHDL")
