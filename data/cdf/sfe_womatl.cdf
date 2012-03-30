@@ -128,7 +128,6 @@ mats_loop:
 		sfe_womatl.firm_id$=firm_id$
 		sfe_womatl.wo_location$=wo_loc$
 		sfe_womatl.wo_no$=wo_no$
-		phantom_bill$="N"
 
 		bmm02_key$=key(bmm02_dev,end=*break)
 		read record (bmm02_dev)bmm_billmat$
@@ -185,26 +184,25 @@ mats_loop:
 			rem --- is this material line a phantom bill? (6200)
 			dim bmm_billmast$:fattr(bmm_billmast$)
 			dim sfe22_prev_key$:sfe22_key_tpl$
-			phantom_bill$="N"
 			read record(bmm01_dev,key=firm_id$+bmm_billmat.item_id$,dom=*next)bmm_billmast$
 			phantom_bill$=bmm_billmast.phantom_bill$
 		endif
 
-		if phantom_bill$="N"
+		if phantom_bill$<>"Y"
 			rem --- now write materials rec
 			rem --- not phantom, or not a bill, or just a message line (6400)
 			read (sfe22_dev,key=firm_id$+wo_loc$+wo_no$+$FF$,dom=*next)
 			sfe_womatl.material_seq$=fill(material_seq_len,"0")
 			dim sfe22_prev_key$:fattr(sfe22_prev_key$)
 			sfe22_prev_key$=keyp(sfe22_dev,end=no_prev_mats_key)
-			if pos(firm_id$+wo_loc$+wo_no$=prev_sfe22key$)=1 then sfe_womatl.material_seq$=sfe22_prev_key.material_seq$
+			if pos(firm_id$+wo_loc$+wo_no$=sfe22_prev_key$)=1 then sfe_womatl.material_seq$=sfe22_prev_key.material_seq$
 			if pos("9"<>sfe22_prev_key.material_seq$)=0 
 				msg_id$="SF_NO_MORE_SEQ"
 				gosub disp_message
 				exitto back_up_levels
 			endif
 no_prev_mats_key:
-			sfe_womatl.material_seq$=str(num(sfe22_prev_key.material_seq$)+1:mat_seq_mask$)
+			sfe_womatl.material_seq$=str(num(sfe_womatl.material_seq$)+1:mat_seq_mask$)
 			internal_seq_no$=""
 			call stbl("+DIR_SYP")+"bas_sequences.bbj","INTERNAL_SEQ_NO",internal_seq_no$,table_chans$[all],"QUIET"
 			sfe_womatl.internal_seq_no$=internal_seq_no$
@@ -256,7 +254,7 @@ next_bill_level:
 		curr_bill$=all_bills$(x*item_len+1,item_len)
 		t=allbills[x,0]
 		rem --- now re-position back to the bmm_billmat line we were on before doing phantom explode
-		read (bmm02_dev,key=firm_id$+curr_bill$+str(allbills[x,1]:seq_mask$),dom=next_bill_level)
+		read (bmm02_dev,key=firm_id$+curr_bill$+str(allbills[x,1]:mat_seq_mask$),dom=next_bill_level)
 		goto mats_loop
 	else
 		curr_bill$=all_bills$
@@ -293,7 +291,7 @@ do_operations:
 		if ok$="N" then continue
 
 		dim op_code$:callpoint!.getDevObject("opcode_tpl")
-		sfe_wooprtn.op_code=bmm_billoper.op_code$
+		sfe_wooprtn.op_code$=bmm_billoper.op_code$
 		sfe_wooprtn.require_date$=sfe_womastr.opened_date$
 		sfe_wooprtn.line_type$=bmm_billoper.line_type$
 
@@ -314,9 +312,9 @@ do_operations:
 
 			sfe_wooprtn.runtime_hrs=SfUtils.opUnits(bmm_billoper.hrs_per_pce,bmm_billoper.pcs_per_hour,yld)*t
 			sfe_wooprtn.unit_cost=SfUtils.opUnitsDollars(bmm_billoper.hrs_per_pce,sfe_wooprtn.direct_rate,sfe_wooprtn.ovhd_rate,bmm_billoper.pcs_per_hour,yld)*t
-			sfe_wooprtn.total_time=SFUtils.opTime(t,sfe_womastr.sch_prod_qty,bmm_billoper.hrs_per_pce,bmm_billoper.pcs_per_hour,yld,bmm_billoper.setup_time)
+			sfe_wooprtn.total_time=SfUtils.opTime(t,sfe_womastr.sch_prod_qty,bmm_billoper.hrs_per_pce,bmm_billoper.pcs_per_hour,yld,bmm_billoper.setup_time)
 			
-			tot_units=SFUtils.opTime(t,sfe_womastr.sch_prod_qty,bmm_billoper.hrs_per_pce,bmm_billoper.pcs_per_hour,yld,bmm_billoper.setup_time)
+			tot_units=SfUtils.opTime(t,sfe_womastr.sch_prod_qty,bmm_billoper.hrs_per_pce,bmm_billoper.pcs_per_hour,yld,bmm_billoper.setup_time)
 			tot_cost=sfe_wooprtn.direct_rate+sfe_wooprtn.ovhd_rate
 			sfe_wooprtn.tot_std_cost=tot_units*tot_cost
 			precision 2
@@ -339,7 +337,7 @@ do_operations:
 			exitto back_up_levels
 		endif
 no_prev_ops_key:
-		sfe_wooprtn.op_seq$=str(num(sfe02_prev_key.op_seq$)+1:op_seq_mask$)
+		sfe_wooprtn.op_seq$=str(num(sfe_wooprtn.op_seq$)+1:op_seq_mask$)
 		internal_seq_no$=""
 		call stbl("+DIR_SYP")+"bas_sequences.bbj","INTERNAL_SEQ_NO",internal_seq_no$,table_chans$[all],"QUIET"
 		sfe_wooprtn.internal_seq_no$=internal_seq_no$
@@ -424,7 +422,7 @@ do_subcontracts:
 			exitto back_up_levels
 		endif
 no_prev_subs_key:
-		sfe_wosubcnt.subcont_seq$=str(num(sfe32_prev_key.subcont_seq$)+1:sub_seq_mask$)
+		sfe_wosubcnt.subcont_seq$=str(num(sfe_wosubcnt.subcont_seq$)+1:sub_seq_mask$)
 		internal_seq_no$=""
 		call stbl("+DIR_SYP")+"bas_sequences.bbj","INTERNAL_SEQ_NO",internal_seq_no$,table_chans$[all],"QUIET"
 		sfe_wosubcnt.internal_seq_no$=internal_seq_no$
