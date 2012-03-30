@@ -88,7 +88,8 @@ rem --- Initializations
     pass=1
     orig_date$=v0$
     if method$="B" end_date$=orig_date$
-
+	v1$=v$
+	
 	tmp_field$=fattr(sfe32a$,"OPER_SEQ_REF")
 	oper_seq_ref_len=dec(tmp_field$(10,2))
 	tmp_field$=fattr(sfe32a$,"SUBCONT_SEQ")
@@ -99,7 +100,6 @@ l800: rem --- Check Validity of Data
     x$=""
     x0=0
     call pgmdir$+"adc_daydates.aon",v$,x$,x0
-    if v$="N" status$(2,1)="2"; goto l4100
     if v$="N" status$(2,1)="2"; goto l4100
     if pos(direction$="BF")=0 status$(2,1)="4"; goto l4100
 
@@ -115,12 +115,12 @@ rem --- Clear Schedule Detail Files
 l1000: rem --- Capture Subcontract Lead Time information
 
     if sfs01a.po_interface$<>"Y" goto l1800
-    read (sfe32_dev,key=firm_id$+"  "+wo_num$,dom=*next)
+    read (sfe32_dev,key=firm_id$+sfe32a.wo_location$+wo_num$,dom=*next)
 
 l1030: rem --- Read Loop
 
     k$=key(sfe32_dev,end=l1200)
-    if pos(firm_id$+"  "+wo_num$=k$)<>1 goto l1200
+    if pos(firm_id$+sfe32a.wo_location$+wo_num$=k$)<>1 goto l1200
     read record (sfe32_dev) sfe32a$
     if sfe32a.line_type$<>"S" goto l1030
     subs$=subs$+sfe32a.oper_seq_ref$+sfe32a.subcont_seq$+str(sfe32a.lead_time:"000")+"        "
@@ -135,7 +135,7 @@ l1200: rem --- Set Required Date in Subcontracts for Forward method
     f_day=num(v$(7,2))
     occ=1
 l1230:
-    leadpos=pos("   "=subs$,oper_seq_ref_len+subcont_seq_len+11,occ)
+    leadpos=pos(fill(oper_seq_ref_len)=subs$,oper_seq_ref_len+subcont_seq_len+11,occ)
     if leadpos=0 goto l1800
     lead=num(subs$(leadpos+oper_seq_ref_len+subcont_seq_len,3))
 l1260:
@@ -168,8 +168,8 @@ l1550:
 l1800: rem --- Get Operation record from woe-02
 
     first_time$="Y"
-    if direction$="F" read (sfe02_dev,key=firm_id$+"  "+wo_num$,dom=*next)
-    if direction$<>"F" read (sfe02_dev,key=firm_id$+"  "+wo_num$+$ff$,dom=*next)
+    if direction$="F" read (sfe02_dev,key=firm_id$+sfe02a.wo_location$+wo_num$,dom=*next)
+    if direction$<>"F" read (sfe02_dev,key=firm_id$+sfe02a.wo_location$+wo_num$+$ff$,dom=*next)
 
 l1840: rem --- Read Loop
 
@@ -178,7 +178,7 @@ l1840: rem --- Read Loop
 	else
 		k$=keyp(sfe02_dev,end=l2300)
 	endif
-    if pos(firm_id$+"  "+wo_num$=k$)<>1 goto l2300
+    if pos(firm_id$+sfe02a.wo_location$+wo_num$=k$)<>1 goto l2300
     gosub l4500
     if sfe02a.line_type$="M" goto l2070
     op_code$=sfe02a.op_code$
@@ -234,7 +234,7 @@ l2300: rem --- Set Required Date in Subcontracts for Backward method
     f_day=num(v$(7,2))
     occ=1
 l2330:
-    leadpos=pos("   "=subs$,-(oper_seq_ref_len+subcont_seq_len+11),occ)
+    leadpos=pos(fill(oper_seq_ref_len)=subs$,-(oper_seq_ref_len+subcont_seq_len+11),occ)
     if leadpos=0 goto l3000
     lead=num(subs$(leadpos+oper_seq_ref_len+subcont_seq_len,3))
 l2360:
@@ -271,7 +271,7 @@ l3000: rem --- Rewrite Subcontract records with operation sequences
     if sfs01a.po_interface$<>"Y" goto done
     if len(subs$)=0 or direction$="B" goto done
     for x=1 to len(subs$) step oper_seq_ref_len+subcont_seq_len+11
-        extract record (sfe32_dev,key=firm_id$+"  "+wo_num$+subs$(x+oper_seq_ref_len,3),dom=l3080) sfe32a$
+        extract record (sfe32_dev,key=firm_id$+sfe32a.wo_location$+wo_num$+subs$(x+oper_seq_ref_len,3),dom=l3080) sfe32a$
         if num(sfe32a.require_date$)<>0 and subs$(x+oper_seq_ref_len+subcont_seq_len+3,8)<>sfe32a.require_date$ and pos(sfe32a.po_status$="RP")>0 status$(1,1)="1"
         sfe32a.require_date$=subs$(x+oper_seq_ref_len+subcont_seq_len+3,8)
         write record (sfe32_dev) sfe32a$
@@ -299,7 +299,6 @@ done:rem " --- Done - Successful"
     end_date$=v0$
     pass=pass+1
     if pass>99 status$(2,1)="6"; goto std_exit
-rem    if pass=2 call pgmdir$+"syc_wa.bbx",0,12,3,35,18,"",pass_name$
     goto l800
 l4065:
     v1$=ret_date$
@@ -482,7 +481,7 @@ l6600: rem " --- Write Schedule Detail Files
 	else
 		z=v
 	endif
-    extract record (sfm05_dev,key=firm_id$+sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+sfm05a.oper_seq_ref$,dom=*next) sfm05a$
+    extract record (sfm05_dev,key=firm_id$+sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+sfm05a.oper_seq_ref$,knum="PRIMARY",dom=*next) sfm05a$
 	if ele=0 sfm05a.queue_time=sfm05a.queue_time+z
 	if ele=1 sfm05a.setup_time=sfm05a.setup_time+z
 	if ele=2 sfm05a.runtime_hrs=sfm05a.runtime_hrs+z
