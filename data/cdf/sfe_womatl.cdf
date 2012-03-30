@@ -95,13 +95,25 @@ rem =========================================================
 	curr_bill$=new_bill$
 	subs$=""
 	mats$=""
+	mats_offset=0
 	dim yld[99]
 	yld[0]=num(sfe_womastr.est_yield$)
 	yld=yld[0]
 
 	wfattr$=fattr(sfe_womatl$,"MATERIAL_SEQ")
 	material_seq_len=dec(wfattr$(10,2))
-	seq_mask$=fill(material_seq_len,"0")
+	mat_seq_mask$=fill(material_seq_len,"0")
+
+	wfattr$=fattr(sfe_wooprtn$,"OP_SEQ")
+	op_seq_len=dec(wfattr$(10,2))
+	op_seq_mask$=fill(op_seq_len,"0")
+
+	wfattr$=fattr(sfe_wooprtn$,"INTERNAL_SEQ_NO")
+	op_isn_len=dec(wfattr$(10,2))
+
+	wfattr$=fattr(sfe_wosubcnt$,"SUBCONT_SEQ")
+	sub_seq_len=dec(wfattr$(10,2))
+	sub_seq_mask$=fill(sub_seq_len,"0")
 
 	wfattr$=fattr(bmm_billmat$,"ITEM_ID")
 	item_len=dec(wfattr$(10,2))
@@ -127,9 +139,12 @@ mats_loop:
 		dim ivm_itemwhse$:fattr(ivm_itemwhse$)
 		read record (ivm01_dev,key=firm_id$+bmm_billmat.item_id$,dom=*next)ivm_itemmast$
 		w_cost=num(ivm_itemmast.maximum_qty$)
+
 		read record(ivm02_dev,key=firm_id$+sfe_womastr.warehouse_id$+bmm_billmat.item_id$,dom=*next)ivm_itemwhse$
 		w_cost=num(ivm_itemwhse.unit_cost$)		
-		read record (bmm01_dev,key=firm_id$+new_bill$,dom=*next)bmm_billmast$
+
+		read record (bmm01_dev,key=firm_id$+new_bill$,dom=*next)bmm_billmast$; rem - don't know why this is needed
+	
 		eff_date$=bmm_billmat.effect_date$
 		obs_date$=bmm_billmat.obsolt_date$
 		gosub verify_dates
@@ -153,7 +168,6 @@ mats_loop:
 			sfe_womatl.divisor=bmm_billmat.divisor
 			sfe_womatl.qty_required=bmm_billmat.qty_required*t
 			sfe_womatl.alt_factor=bmm_billmat.alt_factor
-			rem --- old record had 2 unit cost fields, I think the one below should be 2nd one... need investigation/fix
 			sfe_womatl.iv_unit_cost=w_cost
 			sfe_womatl.scrap_factor=bmm_billmat.scrap_factor
 
@@ -177,24 +191,32 @@ mats_loop:
 		endif
 
 		if phantom_bill$="N"
-			rem -- not phantom, or not a bill, or just a message line (6400)
+			rem --- now write materials rec
+			rem --- not phantom, or not a bill, or just a message line (6400)
 			read (sfe22_dev,key=firm_id$+wo_loc$+wo_no$+$FF$,dom=*next)
 			sfe_womatl.material_seq$=fill(material_seq_len,"0")
-			sfe22_prev_key$=keyp(sfe22_dev,end=no_prev_key)
+			dim sfe22_prev_key$:fattr(sfe22_prev_key$)
+			sfe22_prev_key$=keyp(sfe22_dev,end=no_prev_mats_key)
 			if pos(firm_id$+wo_loc$+wo_no$=prev_sfe22key$)=1 then sfe_womatl.material_seq$=sfe22_prev_key.material_seq$
 			if pos("9"<>sfe22_prev_key.material_seq$)=0 
 				msg_id$="SF_NO_MORE_SEQ"
 				gosub disp_message
 				exitto back_up_levels
 			endif
-no_prev_key:
-			sfe_womatl.material_seq$=str(num(sfe22_prev_key.material_seq$)+1:seq_mask$)
-			call stbl("+DIR_SYP")+"bas_sequences.bbj","INTERNAL_SEQ_NO",sfe_womatl.internal_seq_no$,rd_table_chans$[all],"QUIET"
+no_prev_mats_key:
+			sfe_womatl.material_seq$=str(num(sfe22_prev_key.material_seq$)+1:mat_seq_mask$)
+			internal_seq_no$=""
+			call stbl("+DIR_SYP")+"bas_sequences.bbj","INTERNAL_SEQ_NO",internal_seq_no$,table_chans$[all],"QUIET"
+			sfe_womatl.internal_seq_no$=internal_seq_no$
+
 			if ivm_itemwhse.special_ord$="Y" then sfe_womatl.po_status$="S"
+
 			sfe_womatl$=field(sfe_womatl$)
 			writerecord (sfe22_dev)sfe_womatl$
-			if cvs(bmm_billmat.op_int_seq_ref$,3)<>""
-				mats$=mats$+bmm_billmat.bill_no$+bmm_billmat.op_int_seq_ref$+sfe_womatl.internal_seq_no$
+
+			if cvs(bmm_billmat.op_int_seq_ref$,3)<>""			
+				if mats$="" mats_offset=len(bmm_billmat.bill_no$+bmm_billmat.op_int_seq_ref$)
+				mats$=mats$+bmm_billmat.bill_no$+bmm_billmat.op_int_seq_ref$+sfe_womatl.material_seq$
 			endif
 		else
 			rem --- down one level; then exitto mats_next_bill
@@ -221,11 +243,11 @@ no_prev_key:
 
 	wend
 
-back_up_levels: rem --- this should be the 6900 part - move on to operations and subcontracts for phantom/subassemblies, or final
+back_up_levels: rem --- this is the 6900 part - move on to ops and subs for phantoms, or do final ops/subs
 
 	if all_bills$<>new_bill$
 		gosub do_operations
-		gosub do_subcontracts
+		if callpoint!.getDevObject("po")="Y" then gosub do_subcontracts
 		allbills[x,0]=0
 		allbills[x,1]=0
 next_bill_level:
@@ -239,7 +261,7 @@ next_bill_level:
 	else
 		curr_bill$=all_bills$
 		gosub do_operations
-		gosub do_subcontracts
+		if callpoint!.getDevObject("po")="Y" then gosub do_subcontracts
 		rem all done... should now be ready to display what's just been added to mats grid
 	endif
 	return
@@ -247,11 +269,14 @@ next_bill_level:
 rem =========================================================
 do_operations:
 
-	return;rem temp for checkin - routine still WIP CAH
-
-	yld[0]=num(sfe_womastr.est_yield$)
+	yld=num(sfe_womastr.est_yield$)
 	dim bmm_billoper$:fattr(bmm_billoper$)
 	dim sfe_wooprtn$:fattr(sfe_wooprtn$)
+	dim sfe02_prev_key$:sfe02_key_tpl$
+
+	sfe_wooprtn.firm_id$=firm_id$
+	sfe_wooprtn.wo_location$=wo_loc$
+	sfe_wooprtn.wo_no$=wo_no$
 
 	read (bmm03_dev,key=firm_id$+curr_bill$,dom=*next)
 
@@ -259,9 +284,11 @@ do_operations:
 		bmm03_key$=key(bmm03_dev,end=*break)
 		read record (bmm03_dev)bmm_billoper$
 		if pos(firm_id$+curr_bill$=bmm03_key$)<>1 then break
-		read record (bmm01_dev,key=firm_id$+new_bill$,dom=*next)bmm_billmast$
-		eff_date$=bmm_billmat.effect_date$
-		obs_date$=bmm_billmat.obsolt_date$
+
+		read record (bmm01_dev,key=firm_id$+new_bill$,dom=*next)bmm_billmast$;rem - don't know why this is needed
+
+		eff_date$=bmm_billoper.effect_date$
+		obs_date$=bmm_billoper.obsolt_date$
 		gosub verify_dates
 		if ok$="N" then continue
 
@@ -275,19 +302,137 @@ do_operations:
 		else
 			read record (op_code_dev,key=firm_id$+bmm_billoper.op_code$,dom=*next)op_code$
 			sfe_wooprtn.code_desc$=op_code.code_desc$
-rem LEFT OFF HERE... 6680
+			if bmm_billoper.pcs_per_hour=0
+				bmm_billoper.pcs_per_hour=iff(op_code.pcs_per_hour=0,1,op_code.pcs_per_hour)
+			endif
+			sfe_wooprtn.hrs_per_pce=bmm_billoper.hrs_per_pce*t/yld*100
+			sfe_wooprtn.pcs_per_hour=bmm_billoper.pcs_per_hour
+			sfe_wooprtn.direct_rate=op_code.direct_rate
+			sfe_wooprtn.ovhd_rate=sfe_wooprtn.direct_rate*op_code.ovhd_factor
+			sfe_wooprtn.setup_time=bmm_billoper.setup_time
+			sfe_wooprtn.move_time=bmm_billoper.move_time
+
+			sfe_wooprtn.runtime_hrs=SfUtils.opUnits(bmm_billoper.hrs_per_pce,bmm_billoper.pcs_per_hour,yld)*t
+			sfe_wooprtn.unit_cost=SfUtils.opUnitsDollars(bmm_billoper.hrs_per_pce,sfe_wooprtn.direct_rate,sfe_wooprtn.ovhd_rate,bmm_billoper.pcs_per_hour,yld)*t
+			sfe_wooprtn.total_time=SFUtils.opTime(t,sfe_womastr.sch_prod_qty,bmm_billoper.hrs_per_pce,bmm_billoper.pcs_per_hour,yld,bmm_billoper.setup_time)
+			
+			tot_units=SFUtils.opTime(t,sfe_womastr.sch_prod_qty,bmm_billoper.hrs_per_pce,bmm_billoper.pcs_per_hour,yld,bmm_billoper.setup_time)
+			tot_cost=sfe_wooprtn.direct_rate+sfe_wooprtn.ovhd_rate
+			sfe_wooprtn.tot_std_cost=tot_units*tot_cost
+			precision 2
+			sfe_wooprtn.tot_std_cost=sfe_wooprtn.tot_std_cost*1
+			precision num(callpoint!.getDevObject("iv_precision"))
 		endif
-		rem write ops
-		
+
+		rem --- now write ops rec
+
+		read (sfe02_dev,key=firm_id$+wo_loc$+wo_no$+$FF$,dom=*next)
+		sfe_wooprtn.op_seq$=fill(op_seq_len,"0")
+		occ=1
+	
+		dim sfe02_prev_key$:fattr(sfe02_prev_key$)
+		sfe02_prev_key$=keyp(sfe02_dev,end=no_prev_ops_key)
+		if pos(firm_id$+wo_loc$+wo_no$=sfe02_prev_key$)=1 then sfe_wooprtn.op_seq$=sfe02_prev_key.op_seq$
+		if pos("9"<>sfe02_prev_key.op_seq$)=0 
+			msg_id$="SF_NO_MORE_SEQ"
+			gosub disp_message
+			exitto back_up_levels
+		endif
+no_prev_ops_key:
+		sfe_wooprtn.op_seq$=str(num(sfe02_prev_key.op_seq$)+1:op_seq_mask$)
+		internal_seq_no$=""
+		call stbl("+DIR_SYP")+"bas_sequences.bbj","INTERNAL_SEQ_NO",internal_seq_no$,table_chans$[all],"QUIET"
+		sfe_wooprtn.internal_seq_no$=internal_seq_no$
+
+		sfe_wooprtn$=field(sfe_wooprtn$)
+		writerecord (sfe02_dev)sfe_wooprtn$
+
+		if subs$="" subs_offset=len(curr_bill$+bmm_billoper.internal_seq_no$)
+		subs$=subs$+curr_bill$+bmm_billoper.internal_seq_no$+sfe_wooprtn.internal_seq_no$
+	
+		while 1
+			mats_pos=pos(bmm_billoper.bill_no$+bmm_billoper.internal_seq_no$=mats$,mats_offset+material_seq_len,occ)
+			if mats_pos=0 then break
+			dim sfe_womatl2$:fattr(sfe_womatl$)
+			extract record (sfe22_dev,key=firm_id$+wo_loc$+wo_no$+mats$(mats_pos+mats_offset,material_seq_len),dom=*break)sfe_womatl2$
+			sfe_womatl2.oper_seq_ref$=sfe_wooprtn.internal_seq_no$
+			sfe_womatl2$=field(sfe_womatl2$)
+			write record (sfe22_dev)sfe_womatl2$
+			occ=occ+1
+		wend
+	
 	wend
-
-
 
 	return
 
 rem =========================================================
 do_subcontracts:
 
+	dim bmm_billsub$:fattr(bmm_billsub$)
+	dim sfe_wosubcnt$:fattr(sfe_wosubcnt$)
+	dim sfe32_prev_key$:sfe32_key_tpl$
+
+	sfe_wosubcnt.firm_id$=firm_id$
+	sfe_wosubcnt.wo_location$=wo_loc$
+	sfe_wosubcnt.wo_no$=wo_no$
+
+	read (bmm05_dev,key=firm_id$+curr_bill$,dom=*next)
+
+	while 1
+		bmm05_key$=key(bmm05_dev,end=*break)
+		read record (bmm05_dev)bmm_billsub$
+		if pos(firm_id$+curr_bill$=bmm05_key$)<>1 then break
+
+		eff_date$=bmm_billsub.effect_date$
+		obs_date$=bmm_billsub.obsolt_date$
+		gosub verify_dates
+		if ok$="N" then continue
+
+		sfe_wosubcnt.required_date$=sfe_womastr.opened_date$
+		sfe_wosubcnt.vendor_id$=bmm_billsub.vendor_id$
+		sfe_wosubcnt.line_type$=bmm_billsub.line_type$
+
+		if sfe_wosubcnt.line_type$="S"
+			sfe_wosubcnt.unit_measure$=bmm_billsub.unit_measure	
+			sfe_wosubcnt.description$=bmm_billsub.description$(10,len(sfe_wosubcnt.description$))
+			sfe_wosubcnt.oper_seq_ref$=""
+			sfe_wosubcnt.units=SfUtils.netSubQuantityRequired(bmm_billsub.qty_required,bmm_billsub.alt_factor,bmm_billsub.divisor)
+			sfe_wosubcnt.unit_cost=sfe_wosubcnt.units*bmm_billsub.unit_cost
+			sfe_wosubcnt.total_units=sfe_wosubcnt.units*sfe_womastr.sch_prod_qty
+			sfe_wosubcnt.total_cost=sfe_wosubcnt.unit_cost*sfe_womastr.sch_prod_qty
+			sfe_wosubcnt.rate=bmm_billsub.unit_cost
+			sfe_wosubcnt.lead_time=bmm_billsub.lead_time
+		else
+			sfe_wosubcnt.unit_measure$=""
+			sfe_wosubcnt.description$=""
+			sfe_wosubcnt.ext_comments$=bill_billsub.ext_comments$
+		endif
+
+		subs_pos=pos(bmm_billsub.bill_no$+bmm_billsub.op_int_seq_ref$=subs$,subs_offset+op_isn_len)
+		if subs_pos>0 then sfe_wosubcnt.oper_seq_ref$=subs$(subs_pos+subs_offset,op_isn_len)
+
+		rem --- now write subcontract rec
+
+		read (sfe32_dev,key=firm_id$+wo_loc$+wo_no$+$FF$,dom=*next)
+		sfe_wosubcnt.subcont_seq$=fill(sub_seq_len,"0")
+		dim sfe32_prev_key$:fattr(sfe32_prev_key$)
+		sfe32_prev_key$=keyp(sfe32_dev,end=no_prev_subs_key)
+		if pos(firm_id$+wo_loc$+wo_no$=sfe32_prev_key$)=1 then sfe_wosubcnt.subcont_seq$=sfe32_prev_key.subcont_seq$
+		if pos("9"<>sfe32_prev_key.op_seq$)=0 
+			msg_id$="SF_NO_MORE_SEQ"
+			gosub disp_message
+			exitto back_up_levels
+		endif
+no_prev_subs_key:
+		sfe_wosubcnt.subcont_seq$=str(num(sfe32_prev_key.subcont_seq$)+1:sub_seq_mask$)
+		internal_seq_no$=""
+		call stbl("+DIR_SYP")+"bas_sequences.bbj","INTERNAL_SEQ_NO",internal_seq_no$,table_chans$[all],"QUIET"
+		sfe_wosubcnt.internal_seq_no$=internal_seq_no$
+
+		sfe_wosubcnt$=field(sfe_wosubcnt$)
+		writerecord (sfe32_dev)sfe_wosubcnt$
+		
+	wend
 
 	return
 
@@ -348,6 +493,8 @@ rem 0600 LET X=0,T[X,0]=1,T[X,1]=1,T=1
 	allbills[x,1]=1
 
 	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMATL","PRIMARY",sfe22_key_tpl$,rd_table_chans$[all],status$
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOOPRTN","PRIMARY",sfe02_key_tpl$,rd_table_chans$[all],status$
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOSUBCNT","PRIMARY",sfe32_key_tpl$,rd_table_chans$[all],status$
 
 rem --- if coming in from the AWRI of the header form (vs. launching manually from the Addt'l Opts)
 rem --- see if we're on a new WO that's for an I-category bill, and if so explode mats/ops/subs before displaying mats
