@@ -60,8 +60,9 @@ rem --- Get default warehouse from IV params
 	callpoint!.setDevObject("multi_wh",ivs01a.multi_whse$)	
 	callpoint!.setDevObject("dflt_whse",ivs01a.warehouse_id$)
 
-rem --- open and read shop floor param to see if BOM and/or OP are installed
-rem --- then add Bill and/or Cust to report sequence listbutton accordingly
+rem --- Open and read shop floor param to see if BOM and/or OP are installed
+rem --- Then remove Bill and/or Cust from listbutton based on installed? status
+rem           (form builds list w/o regards to the params)
 
 num_files=1
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
@@ -75,33 +76,28 @@ readrecord(sfs01_dev,key=firm_id$+"SF00",dom=std_missing_params)sfs01a$
 bm$=sfs01a.bm_interface$
 op$=sfs01a.ar_interface$
 
-seq_list$=callpoint!.getTableColumnAttribute("SFR_WOHEADER.REPORT_SEQ","LDAT")
-desc_len=pos("~"=seq_list$)
-code_len=pos(";"=seq_list$)
-bill_no$=""
-cust_no$=""
+rem --  Potentially remove list options based on module installed? status
 
-listID=num(callpoint!.getTableColumnAttribute("SFR_WOHEADER.REPORT_SEQ","CTLI"))
-list!=Form!.getControl(listID)
+	if op$<>"Y" or bm$<>"Y"
+		listID=num(callpoint!.getTableColumnAttribute("SFR_WOHEADER.REPORT_SEQ","CTLI"))
+		list!=Form!.getControl(listID)
 
-
-if op$="Y"
-	dim cust_no$(code_len)
-	cust_no$(1)=Translate!.getTranslation("AON_CUSTOMER_ID")
-	cust_no$(desc_len,1)="~"
-	cust_no$(desc_len+1,1)="C"
-	cust_no$(code_len,1)=";"
-	list!.addItem(cust_no$(1,desc_len-1))
-endif
-
-if bm$="Y"
-	dim bill_no$(code_len)
-	bill_no$(1)=Translate!.getTranslation("AON_BILL_NUMBER")
-	bill_no$(desc_len,1)="~"
-	bill_no$(desc_len+1,1)="B"
-	bill_no$(code_len,1)=";"
-	list!.addItem(bill_no$(1,desc_len-1))
-endif
-
-seq_list$=seq_list$+cust_no$+bill_no$
-callpoint!.setTableColumnAttribute("SFR_WOHEADER.REPORT_SEQ","LDAT",seq_list$)
+		tmpVector! = list!.getAllItems()
+		tmpVectSize = num(tmpVector!.size())
+		indx = tmpVectSize-1
+		
+		rem -- Work backwards thru vector so index stays aligned with shrinking list!
+		while indx >=0
+			if bm$<>"Y"
+				if pos("B - B"= tmpVector!.getItem(indx))
+					list!.removeItemAt(indx)
+				endif
+			endif
+			if op$<>"Y"
+				if pos("C - C"= tmpVector!.getItem(indx))
+					list!.removeItemAt(indx)
+	   			endif
+			endif
+			indx=indx-1
+		wend
+	endif
