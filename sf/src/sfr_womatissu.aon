@@ -6,24 +6,6 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 
-rem -------------- Errors, Warnings and Conversion Information ---------------------
-rem --- The following IOLIST's were removed from this program:
-rem --- arm01a: iolist *,custname$(1)
-rem --- arm10a: iolist *,q8$(1)
-rem --- ars01a: iolist x$,x$,c1$,c3$,x$,c$
-rem --- gls01a: iolist x$,x$,g2$,x$,x$,g5$
-rem --- ivm01a: iolist d0$,d1$(1),d2$,d3$,d4$,d5$,d6$
-rem --- ivm02a: iolist c0$,c1$
-rem --- ivs01a: iolist p0$,p1$,p2$,p3$,p4$,m0$,m1$,m2$,m3$
-rem --- ivw05a: iolist w9$,icost
-rem --- woe01a: iolist b0$,b1$,b[all]
-rem --- woe14a: iolist ser0$,ser1$,ser2$,f[all]
-rem --- woe15a: iolist a0$,a1$
-rem --- woe25a: iolist w0$,w1$,w[all]
-rem --- wom10a: iolist *,z1$(1)
-rem --- wow01a: iolist t0$,t[0]
-rem --------------------------------------------------------------------------------
-
     setesc std_error
     seterr std_error
 
@@ -74,7 +56,7 @@ rem --- Open/Lock Files
 	open_tables$[8] ="SFX_WOTRANXR",  open_opts$[8] = "OTA"
 	open_tables$[9] ="SFC_WOTYPECD",  open_opts$[9] = "OTA"
 	open_tables$[10]="SFT_OPNMATTR",  open_opts$[10] = "OTA"
-	open_tables$[11]="SFW_ISSUXTYP",  open_opts$[11] = "OTA"
+	open_tables$[11]="SFW_ISSUXTYP",  open_opts$[11] = "OTAL"
 	open_tables$[12]="IVS_PARAMS",    open_opts$[12] = "OTA"
 	open_tables$[13]="IVM_ITEMMAST",  open_opts$[13] = "OTA"
 	open_tables$[14]="IVM_ITEMWHSE",  open_opts$[14] = "OTA"
@@ -118,16 +100,16 @@ rem --- Dimension string templates
 rem --- Parameters
 
     find record (ivs01_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
-    dim p[2]
+    dim p[2],desc[3]
     p[0]=ivs01a.item_id_len
     ivs01_precision=num(ivs01a.precision$)
     p[2]=ivs01a.ls_no_len
     lf$=iff(pos(ivs01a.lifofifo$="LF"),"Y","N")
     p9$=ivs01a.lotser_flag$
-rem wgh ... stopped here
-rem wgh ... do item desc
     dim desc[3]
-    for x=1 to 3; let desc[x]=num(p2$((x-1)*2+9,2)),desclen=desclen+desc[x]; next x
+    desc[1]=num(ivs01a.desc_len_01$)
+    desc[2]=num(ivs01a.desc_len_02$)
+    desc[3]=num(ivs01a.desc_len_03$)
     
     find record (sfs01_dev,key=firm_id$+"SF00",dom=std_missing_params) sfs01a$
     ar$=sfs01a.ar_interface$
@@ -142,132 +124,234 @@ rem wgh ... do item desc
     call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,"SF",glw11$,gl$,status
     if status goto std_exit_no_report
 
-rem wgh ... move additional file opens here
 rem --- Additional File Opens
-escape; rem wgh ... stop!!!
+
+	num_files=14
+	dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
+
+    if ar$="Y" then
+        open_tables$[1] ="ARS_PARAMS",      open_opts$[1] = "OTA"
+        open_tables$[2] ="ARM_CUSTMAST",    open_opts$[2] = "OTA"
+        open_tables$[3] ="ARC_DISTCODE",    open_opts$[3] = "OTA"
+    endif
+
+    if pos(p9$="LS") then 
+        open_tables$[4] ="SFE_WOLSISSU",    open_opts$[4] = "OTA"
+        open_tables$[5] ="SFT_OPNLSTRN",    open_opts$[5] = "OTA"
+        open_tables$[6] ="IVM_LSMASTER",    open_opts$[6] = "OTA"
+    endif
+
+    if lf$="Y" then
+        open_tables$[7] ="IVM_ITEMTIER",    open_opts$[7] = "OA"
+        open_tables$[8] ="IVW_LFCOST",      open_opts$[8] = "OTAL"
+        open_tables$[9] ="IVW_LFDET",       open_opts$[9] = "OAL"
+    endif
+    
+    if gl$="Y" then
+        open_tables$[10] ="GLS_PARAMS",     open_opts$[10] = "OTA"
+        open_tables$[11] ="GLM_ACCT",       open_opts$[11] = "OA"
+        open_tables$[12] ="GLW_DAILYDETAIL",open_opts$[12] = "OA"
+        open_tables$[13] ="GLE_DAILYDETAIL",open_opts$[13] = "OA"
+        open_tables$[14] ="GLT_BANKCHECKS", open_opts$[14] = "OA"
+    endif
+    
+	gosub open_tables
+    
+    if ar$="Y" then
+        ars01_dev=num(open_chans$[1])
+        arm01_dev=num(open_chans$[2])
+        arm10_dev=num(open_chans$[3])
+        dim ars01a$:open_tpls$[1],arm01a$:open_tpls$[2],arm10a$:open_tpls$[3]
+    endif
+    
+    if pos(p9$="LS") then 
+        sfe14_dev=num(open_chans$[4])
+        sft11_dev=num(open_chans$[5])
+        ivm07_dev=num(open_chans$[6])
+        dim sfe14a$:open_tpls$[4],sft11a$:open_tpls$[5],ivm07a$:open_tpls$[6]
+    endif
+    
+    if lf$="Y" then
+        ivm04_dev=num(open_chans$[7])
+        ivw05_dev=num(open_chans$[8])
+        ivw04_dev=num(open_chans$[9])
+        dim ivw05a$:open_tpls$[8]
+
+        rem --- Clear IVW_LFCOST (ivw-05) and IVW_LFDET (ivw-04)
+        call pgmdir$+"adc_clearfile.aon",ivw05_dev
+        call pgmdir$+"adc_clearfile.aon",ivw04_dev
+    endif
+
+    if gl$="Y" then
+        gls01_dev=num(open_chans$[10])
+        glm01_dev=num(open_chans$[11])
+        glw11_dev=num(open_chans$[12])
+        glt04_dev=num(open_chans$[13])
+        glt05_dev=num(open_chans$[14])
+        dim gls01a$:open_tpls$[10]
+    
+        rem --- Clear trans for this firm/process/batch from glw-11 work file (if not batching, batch_no$ is zero, and will clear all recs this firm/process)
+        rec_pfx$=firm_id$+process_id$+batch_no$
+        call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",glw11_dev,rec_pfx$,status
+    endif
 
 rem --- Initializations
 
-    if ar$="Y" then
-        find record (ars01_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
-        c0=num(c1$(1,2))
-        r9$=c3$(11,1)
-    else
-        c0=0
-        r9$="N"
-    endif
-    
-rem wgh ... first verify GL is installed
-    find record (gls01_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
-    g0=num(g2$(7,2))
-    dim g[4]
-    for x=0 to 4
-        g[x]=num(g2$(x*2+1,2))
-    next x
-
-    dim headings$[2],j$(80,"-"),j1$(40),a[1],u[1]
-    dim b[11],d[3],w[4],s[1],t[1],d1$(desc[1]+desc[2]+desc[3])
-    h0=132
-    h=0
-    headings=2
-    when$=sysinfo.system_date$
-    clock$=""
-    l9=59
-    l=l9+1
-    m1=len(m1$)
-    m2=len(m2$)
-    m3=len(m3$)
-    g5=len(g5$)
-    headings$[0]=n1$
-    headings$[1]=n3$
-    h2=h0-m2*4-m1-m3
-    if p9$="L" p8$="Lot Number: " else p8$="Serial Number: "
-
-rem --- Additional File Opens
-
-    if ar$<>"Y" goto l625
-    files$[13]="arm-01"
-    if r9$<>"Y" goto l625
-    files$[14]="arm-10"
-l625:
-    if pos(p9$="LS")=0 goto l645
-    files$[15]="woe-14"
-    files$[16]="ivm-07"
-    files$[17]="ivt-01"
-    files$[18]="wot-11"
-    files$[19]="ivm-17"
-    files$[20]="ivt-02"
-    files$[21]="ivt-03"
-l645:
-    if lf$<>"Y" goto l660
-    files$[22]="ivw-05"
-    files$[23]="ivm-04"
-    files$[24]="ivw-04"
-    options$[24]="CL"
-l660:
-    if gl$<>"Y" goto l675
-    files$[25]="glm-01"
-    files$[26]=glw11$
-    options$[26]="CL"
-    files$[27]="glt-04"
-    files$[28]="glt-05"
-l675:
-    call pgmdir$+"adc_fileopen.aon",1,12,28,files$[all],options$[all],channels[all],batch,status
-    if status goto l9900
-    if channels[13] arm01_dev=channels[13]
-    if channels[14] arm10_dev=channels[14]
-    if channels[15] sfe14_dev=channels[15],ivm07_dev=channels[16],ivt01_dev=channels[17],wot11_dev=channels[18],ivm17_dev=channels[19],ivt02_dev=channels[20],ivt03_dev=channels[21]
-    if channels[22] ivw05_dev=channels[22],ivm04_dev=channels[23],ivw04_dev=channels[24]
-
-rem --- Display Resource
-
-    dim resparams$[20],resparams[20]
-    resparams$[0]=pgm(-2)
-    call pgmdir$+"syc_ra.bbx","",resparams$[all],resparams[all],vmenu$[all],vmenu[all],vtool$[all],vtool[all],status
-    if status goto std_exit
-
-rem --- Options
-
-    prompt$="Do You Want To Print The "+n3$
-    call pgmdir$+"adc_yesno.aon",1,prompt$,2,v$,v3
-    if v$<>"Y" goto l9900
-
-rem --- Final Initializations
-
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status goto l9900
-    call pgmdir$+"adc_progress.aon","N","","","Printing","",7,0,1,0,ignore_status
+    rem --- Clear SFW_ISSUXTYP (sfw-01)
     call pgmdir$+"adc_clearfile.aon",sfw01_dev
-    if lf$<>"Y" goto l1000
-    call pgmdir$+"adc_clearfile.aon",ivw05_dev
-    call pgmdir$+"adc_clearfile.aon",ivw04_dev
-
-l1000: rem --- Init Read
 
     precision ivs01_precision
-    read (wotrans_dev,key=firm_id$+"  D",dom=*next)
+
+    c0=0,c$="",r9$="N"
+    if ar$="Y" then
+        find record (ars01_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
+        c0=num(ars01a.customer_size$)
+        r9$=ars01a.dist_by_item$
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",c$,0,0
+    endif
+    
+    dim g[4]
+    if gl$="Y" then
+        find record (gls01_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
+        g[0]=num(gls01a.total_pers$)
+        g[1]=num(gls01a.current_per$)
+        g[2]=num(gls01a.current_year$)
+        g[3]=num(gls01a.acct_length$)
+        g[4]=num(gls01a.max_acct_len$)
+   endif
+
+    width=132
+    headings=iff(ar$="Y",5,4)
+    dim headings$[headings]
+    headings$[0]=sysinfo.firm_name$
+    headings$[1]=sysinfo.task_desc$
+    headings$[2]=""
+    headings$[3]="[HEADER]"
+    headings$[4]="[HEADER]"
+    if ar$="Y" then headings$[5]="[HEADER]"
+    if num(batch_no$)<>0 then headings$[1]=headings$[1]+ Translate!.getTranslation("AON__(BATCH:_")+batch_no$+")"        
+    when$=sysinfo.system_date$
+    clock$=""
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","A","",m1$,0,0
+    m1=len(m1$)
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",m2$,0,0
+    m2=len(m2$)
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","R","",m3$,0,0
+    m3=len(m3$)
+    if p9$="L" p8$="Lot Number: " else p8$="Serial Number: "
+    dim s[1],t[1]
+rem wgh    dim j$(80,"-"),j1$(40)
+rem wgh    dim w[4],d1$(desc[1]+desc[2]+desc[3])
+rem wgh    g5=len(g5$)
+rem wgh    h2=h0-m2*4-m1-m3
+    
+rem --- Document initializations
+
+    OutVect!=bbjAPI().getSysGui().makeVector()
+    HdrVect!=bbjAPI().getSysGui().makeVector()
+    BrkVect!=bbjAPI().getSysGui().makeVector()
+    TotVect!=bbjAPI().getSysGui().makeVector()
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+    rep_prog$=pgm(-2)
+
+    rem --- Column headings
+    columns=9
+    dim columns$[columns,10]
+    columns$[0,0]=Translate!.getTranslation("AON_ITEM"),         columns$[0,1]="C",columns$[0,2]=str(p[0]+1)
+    columns$[1,0]=Translate!.getTranslation("AON_DESCRIPTION"),  columns$[1,1]="C",columns$[1,2]=str(min(desc[1],30)+1)
+    columns$[2,0]=Translate!.getTranslation("AON_UM"),           columns$[2,1]="C",columns$[2,2]="3"
+    columns$[3,0]=Translate!.getTranslation("AON_REQUIRED"),     columns$[3,1]="C",columns$[3,2]="8"
+    columns$[4,0]=Translate!.getTranslation("AON_ORDERED"),      columns$[4,1]="N",columns$[4,2]=str(m2+1),columns$[4,3]=m2$
+    columns$[5,0]=Translate!.getTranslation("AON_PRIOR^ISSUE"),  columns$[5,1]="N",columns$[5,2]=str(m2+1),columns$[5,3]=m2$
+    columns$[6,0]=Translate!.getTranslation("AON_BALANCE"),      columns$[6,1]="N",columns$[6,2]=str(m2+1),columns$[6,3]=m2$
+    columns$[7,0]=Translate!.getTranslation("AON_THIS^ISSUE"),   columns$[7,1]="N",columns$[7,2]=str(m2+1),columns$[7,3]=m2$
+    columns$[8,0]=Translate!.getTranslation("AON_UNIT^COST"),    columns$[8,1]="N",columns$[8,2]=str(m3+1),columns$[8,3]=m3$
+    columns$[9,0]=Translate!.getTranslation("AON_TOTAL"),        columns$[9,1]="N",columns$[9,2]=str(m1+1),columns$[9,3]=m1$
+
+
+rem --- Start progress meter and position header file
+
+	call pgmdir$+"adc_progress.aon","NC","","","","",0,wotrans_dev,1,meter_num,status
+    read (wotrans_dev,key=firm_id$,dom=*next)
+
+rem --- Read next Issue Inventory Transaction (SFE_WOTRANS) record
+    while 1
+        read record (wotrans_dev,end=*break)wotrans$
+        if wotrans.firm_id$<>firm_id$ then break
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+
+        rem --- Get Material Issues Header (SFE_WOMATISH, sfe-15) record for this transaction (and batch)
+        sfe15_key$=firm_id$+batch_no$+wotrans.wo_location$+wotrans.wo_no$
+        read record (sfe15_dev,key=sfe15_key$,knum="BATCH_KEY",dom=*continue) sfe15a$; rem --- skip if wrong batch
+        
+        rem --- Get Work Order Entry (SFE_WOMASTR, sfe-01) record
+        find record (sfe01_dev,key=firm_id$+wotrans.wo_location$+wotrans.wo_no$,dom=*continue) sfe01a$
+        wo_desc$=sfe01a.description_01$
+        if sfe01a.wo_category$="I" then
+            rem --- Use inventory item description
+            find record (ivm01_dev,key=firm_id$+sfe01a.item_id$,dom=*endif) ivm01a$
+            wo_desc$=ivm01a.item_desc$(1,min(desc[1],30))
+        endif
+        
+        rem --- Get customer's name
+        dim custname$(30)
+        if cvs(sfe01a.customer_id$,2)<>"" then
+            custname$(1)="Not On File"
+            if ar$="Y" then
+                find record (arm01_dev,key=firm_id$+sfe01a.customer_id$,dom=*endif) arm01a$
+                custname$=arm01a.customer_name$
+            endif
+        endif
+        
+        rem --- Get WO WIP account
+rem wgh ... confirm this can be skipped if GL is not being used?
+        if gl$="Y" then
+            dim wo_wip_acct$(g[4],"0")
+            find record (sfm10_dev,key=firm_id$+sfe01a.wo_type$,dom=*endif) sfm10a$
+            wo_wip_acct$=sfm10a.gl_wip_acct$(1,g[4])
+        endif
+
+        gosub wo_header
+
+        rem --- Process Material Issues Detail (SFE_WOMATISD, sfe-25) records
+        wo_total=t0
+rem wgh ... stopped here
+read (sfe25_dev,key=sfe15_key$,knum="BATCH_KEY",dom=*next)
+while 1
+    sfe25_key$=key(sfe25_dev,end=*break)
+    if pos(sfe15_key$=sfe25_key$)<>1 then break
+    break
+wend
+        wend
+goto done; rem wgh ... stop!!!
 
 l1100: rem --- Main Read
 
-    k$=key(wotrans_dev,end=l4000)
-    if k$(1,5)<>firm_id$+"  D" goto l4000
+    k$=key(wotrans_dev,end=done)
+    if k$(1,5)<>firm_id$+"  D" goto done
     read (wotrans_dev)
 
 rem --- WO Header
 
-    dim z1$(g[4],"0")
     read record (sfe15_dev,key=k$(1,4)+k$(6,7)+"000",dom=l1100) sfe15a$
     read (sfe25_dev,key=k$(1,4)+k$(6,7),dom=*next)
     find record (sfe01_dev,key=a0$(1,11),dom=l1100) sfe01a$
     if b0$(14,1)<>"I" goto l1280
     find record (ivm01_dev,key=firm_id$+b0$(56),dom=l1280) ivm01a$
+rem wgh ... wo_desc$=b1$
     b1$(1)=d1$(1,min(desc[1],30))
 l1280:
     call pgmdir$+"adc_progress.aon","S","","","",k$(6,7),0,0,1,0,ignore_status
+rem wgh ... wo_total=t0
     t0=0
 
 rem --- Additional Reads
 
+rem wgh ... wo_wip_acct$=z1$
+    dim z1$(g[4],"0")
     find record (sfm10_dev,key=firm_id$+"A"+b0$(12,2),dom=*next) sfm10a$
     z1$=z1$(1,g[4])
     if cvs(b0$(34,6),2)="" goto l1470
@@ -279,6 +363,7 @@ l1470:
 
 l2000: rem --- Process Details
 
+rem wgh ... stopped here
     dim w[4],d1$(desc[1]+desc[2]+desc[3])
     k2$=key(sfe25_dev,end=l3000)
     if k2$(1,11)<>a0$(1,11) goto l3000
@@ -380,20 +465,20 @@ rem --- Totals By Type
 l4200:
     read record (sfw01_dev,end=l4400) sfw01a$
     if pos(firm_id$=t0$)<>1 goto l4400
-    dim x0$(30),x1$(g0,"0"); let x0$(6)="*** Not On File ***"
+    dim x0$(30),x1$(g[3],"0"); let x0$(6)="*** Not On File ***"
     find record (sfm10_dev,key=firm_id$+"A"+t0$(3),dom=*next) wom10a1$
     if l+1>l9 gosub l5000
     print (printer_dev)t0$(3),"  ",x0$(6,20),"  ",
-    if gl$="Y" print (printer_dev)fnmask$(x1$(1,g0),g5$),
-    print (printer_dev)@(35+g0),t[0]:m1$
+    if gl$="Y" print (printer_dev)fnmask$(x1$(1,g[3]),g5$),
+    print (printer_dev)@(35+g[3]),t[0]:m1$
     l=l+1
     s[0]=s[0]+t[0]
     goto l4200
 l4400:
     if l+2>l9 gosub l5000
-    print (printer_dev)@(35+g0),j1$(1,m1),'lf',@(5),"Totals: ",@(35+g0),s[0]:m1$
+    print (printer_dev)@(35+g[3]),j1$(1,m1),'lf',@(5),"Totals: ",@(35+g[3]),s[0]:m1$
     l=l+2
-    if t9=0 goto l4900
+    if t9=0 goto done
     print @(0,3),'cl',@(10,3),t9," Lines Are Missing Serial/Lot #'s, <Enter> To Correct: ",
     v0$="S"
     v1$=""
@@ -406,7 +491,12 @@ l4400:
     gosub l7000
     goto l9900
 
-l4900: rem --- Run next overlay
+done: rem wgh ... temp label
+rem --- All done
+rem wgh ... test print
+x=fnblank(columns+1)
+out_action$="PRT-PDF"
+goto std_exit_no_update
 escape; rem wgh ... stop, not ready for this stuff yet
 
     update$="sfu_aa.bbx"
@@ -528,6 +618,45 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
         return str(q1$:q2$)
     fnend
 
+rem --- Create blank line in OutVect! (no return value wanted or needed)
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
+
+wo_header: rem --- WO Header
+
+    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+
+    dim pbuf$(width)
+    pbuf$(1)="WO Number: "+sfe15a.wo_no$
+    pbuf$(25)="Type: "+sfe15a.wo_type$
+    pbuf$(39)="Category: "+sfe15a.wo_category$
+    pbuf$(56)="Warehouse: "+sfe15a.warehouse_id$
+    pbuf$(75)="Issue Date: "+fndate$(sfe15a.issued_date$)
+    pbuf$(100)="Ordered: "+fndate$(sfe01a.opened_date$)
+    HdrVect!.addItem(pbuf$)
+
+    dim pbuf$(width)
+    if sfe01a.wo_category$="I" then
+        pbuf$(1)="Bill No.: "+cvs(sfe15a.item_id$,2)+"       "+"Description: "+wo_desc$
+    else
+        pbuf$(1)="Description: "+wo_desc$
+    endif
+    HdrVect!.addItem(pbuf$)
+
+    if ar$="Y" then
+        dim pbuf$(width)
+        if cvs(sfe01a.customer_id$,2)<>"" then
+            pbuf$(1)="Customer: ",cvs(fnmask$(sfe01a.customer_id$(1,c0),c$),2)+"  "+custname$
+            pbuf$(60),"Sales Order: ",sfe01a.order_no$
+        endif
+        HdrVect!.addItem(pbuf$)
+    endif
+    return
+    
 open_tables:rem --- Open Tables
 
 	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
