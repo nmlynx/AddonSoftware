@@ -42,12 +42,7 @@ rem --- Init Data
 		headings$[4]=hdaterange$
         headings$[5]=h7$
         more=1
-
-rem --- Retrieve key templates
-
-        call stbl("+DIR_SYP")+"bac_key_template.bbj","SFX_WOTRANXR","PRIMARY",sfm07a_key_tpl$,rd_table_chans$[all],status$
-		dim sfm07a_key$:sfm07a_key_tpl$
-		
+	
 rem --- Column Headings
 
     if pos("O"=transtype$)>0 then
@@ -80,46 +75,124 @@ rem --- Column Headings
 
 rem --- Background
 
-        call pgmdir$+"adc_progress.aon","N","","","","",0,sfe01a_dev,1,meter_num,status
-    
-rem --- Init Read
+        call pgmdir$+"adc_progress.aon","N","","","","",0,sfe01_dev,1,meter_num,status
 
-        extractrecord(sfe01a_dev,key=begin_key$,knum=keynum$,dom=*next)
+rem --- Get SQL view joining sfe01 with a mimic of legacy SFM-07 / WOM-07 / SFX_WOTRANXR
+rem   - Narrow the query of that view using the selections from the OE form
+rem   - This record set will be used as driver instead of sfe-01 and sfm-07
+
+    sql_prep$=""
+    sql_prep$=sql_prep$+"SELECT * "
+    sql_prep$=sql_prep$+"FROM vw_WOs_with_tran as vwWOs "
+	
+	rem Modify the query of that view per user selections in OE form	
+
+		where_clause$="WHERE vwWOs.firm_id = '"+firm_id$+"' AND "
+
+		rpt_order=pos(sequence$="WBCT")-1
+		switch rpt_order
+			case 0
+				beging$=wofrom$
+				ending$=wothru$
+				if beging$<>"" where_clause$=where_clause$+"vwWOs.wo_no >= '"+beging$+"' AND "
+				if ending$<>"" where_clause$=where_clause$+"vwWOs.wo_no <= '"+ending$+"' AND "
+				order_clause$=" ORDER BY vwWOs.wo_location,vwWOs.wo_no"
+				break
+			case 1
+				beging$=billfrom$
+				ending$=billthru$
+				where_clause$=where_clause$+"vwWOs.warehouse_id = '"+whse$+"' AND "
+				where_clause$=where_clause$+"vwWOs.item_id <> '' AND "			
+				if beging$<>"" where_clause$=where_clause$+"vwWOs.item_id >= '"+beging$+"' AND "
+				if ending$<>"" where_clause$=where_clause$+"vwWOs.item_id <= '"+ending$+"' AND "
+				order_clause$=" ORDER BY vwWOs.warehouse_id,vwWOs.item_id,vwWOs.wo_location,vwWOs.wo_no"
+				break
+			case 2
+				beging$=custfrom$
+				ending$=custthru$
+				where_clause$=where_clause$+"vwWOs.customer_id <> '' AND "			
+				if beging$<>"" where_clause$=where_clause$+"vwWOs.customer_id >= '"+beging$+"' AND "
+				if ending$<>"" where_clause$=where_clause$+"vwWOs.customer_id <= '"+ending$+"' AND "
+				order_clause$=" ORDER BY vwWOs.customer_ID,vwWOs.order_no,vwWOs.sls_ord_seq_ref,vwWOs.wo_location,vwWOs.wo_no "			
+				break
+			case 3
+				beging$=wotfrom$
+				ending$=wotthru$
+				if beging$<>"" where_clause$=where_clause$+"vwWOs.wo_type >= '"+beging$+"' AND "
+				if ending$<>"" where_clause$=where_clause$+"vwWOs.wo_type <= '"+ending$+"' AND "
+				order_clause$=" ORDER BY vwWOs.wo_type,vwWOs.wo_location,vwWOs.wo_no"			
+				break
+			case default
+				break
+		swend
+	
+	rem Limit recordset to Open? or Closed? O/E selection
+		if wo_status$="C" where_clause$=where_clause$+"vwWOs.wo_status = 'C' AND "
+		if wo_status$="O" where_clause$=where_clause$+"vwWOs.wo_status = 'O' AND "
+	
+	rem Limit recordset to date range O/E selection
+		if datefrom$<>"" where_clause$=where_clause$+"vwWOs.trans_date >= '"+datefrom$+"' AND "
+		if datethru$<>"" where_clause$=where_clause$+"vwWOs.trans_date <= '"+datethru$+"' AND "
+
+	rem Limit recordset to transaction type O/E selections
+		if pos("M"=transtype$)=0 where_clause$=where_clause$+"vwWOs.record_id <> 'M' AND "
+		if pos("O"=transtype$)=0 where_clause$=where_clause$+"vwWOs.record_id <> 'O' AND "
+		if pos("S"=transtype$)=0 where_clause$=where_clause$+"vwWOs.record_id <> 'S' AND "
+	
+    rem Complete the WHERE clause
+		where_clause$=cvs(where_clause$,2)
+		if where_clause$(len(where_clause$)-2,3)="AND" where_clause$=where_clause$(1,len(where_clause$)-3)
+
+	rem Complete the ORDER BY clause	
+		order_clause$=order_clause$+",vwWOs.trans_date,vwWOs.record_id,vwWOs.trans_seq "
+    
+	rem Complete sql_prep$
+		sql_prep$=sql_prep$+where_clause$+order_clause$	
+
+	rem Exec the completed query
+		sql_chan=sqlunt
+		sqlopen(sql_chan,err=*next)stbl("+DBNAME")
+		sqlprep(sql_chan)sql_prep$
+		dim read_tpl$:sqltmpl(sql_chan)
+		sqlexec(sql_chan)
+cjcnt=0; rem escape caj
+errcnt=0; rem escape caj
+err77cnt=0; rem escape caj
+escape; rem caj ?sql_prep$
 
 rem --- Main Read
     while more
-        sfe01_key$=key(sfe01a_dev,knum=keynum$,end=*break)
-        if pos(firm_id$=sfe01_key$)<>1 break
+        rem Use this line for Production     read_tpl$ = sqlfetch(sql_chan,err=*break)
+cajtest_escape:
 
-        if ending$<>"" 
-            if sequence$="W" and sfe01_key.firm_id$+sfe01_key.wo_location$+sfe01_key.wo_no$>firm_id$+sfe01_key.wo_location$+ending$ break
-            if sequence$="B" and sfe01_key.firm_id$+sfe01_key.warehouse_id$+sfe01_key.item_id$>firm_id$+whse$+ending$ break
-            if sequence$="C" and sfe01_key.firm_id$+sfe01_key.customer_id$>firm_id$+ending$ break
-            if sequence$="T" and sfe01_key.firm_id$+sfe01_key.wo_type$>firm_id$+ending$ break   
-        else
-            if sequence$="B" and whse$<>"" then if sfe01_key.warehouse_id$>whse$ break
-		endif
-
-		if sequence$="C" and cvs(sfe01_key.customer_id$,2)="" read (sfe01a_dev); continue
-		if sequence$="B" and cvs(sfe01_key.item_id$,2)="" read (sfe01a_dev); continue
-		
+read_tpl$ = sqlfetch(sql_chan,err=*next); rem escape caj test
+If err then
+	let ERR$=SQLERR(SQL_CHAN)
+	errcnt=errcnt+1 
+	if err77cnt>=100 escape
+	if err=77 then
+		err77cnt=err77cnt+1
+		sqlexec(sql_chan)
+		goto cajtest_escape
+	endif
+	if errcnt>100 or err<>77 then 
+		escape 
+	else 
+		goto cajtest_escape; rem caj ?err$
+endif	
+cjcnt=cjcnt+1; rem escape caj	
         if sequence$<>"W" then 
-            if sequence$="T" data1$=sfe01_key.wo_type$
-            if sequence$="C" data1$=sfe01_key.customer_id$
-            if sequence$="B" data1$=sfe01_key.item_id$
+            if sequence$="T" data1$=read_tpl.wo_type$
+            if sequence$="C" data1$=read_tpl.customer_id$
+            if sequence$="B" data1$=read_tpl.item_id$
             if data1$<>t0$ then gosub sub_total
-
-            read (sfe01a_dev,knum=keynum$)
         endif
 
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        read record (sfe01a_dev,key=sfe01_key$,knum=keynum$,dom=*continue) sfe01a$
 
-        if wo_status$="C" and sfe01a.wo_status$<>"C" then continue
-        if wo_status$="O" and sfe01a.wo_status$="C" then continue
-        if sfe01a.wo_category$="I" 
-            find record (ivm01a_dev,key=firm_id$+sfe01a.item_id$,dom=init_data) ivm01a$
-            sfe01a.description_01$=ivm01a.item_desc$(1,min(desc[1],30))
+        if read_tpl.wo_category$="I" 
+            find record (ivm01a_dev,key=firm_id$+read_tpl.item_id$,dom=init_data) ivm01a$
+            read_tpl.description_01$=ivm01a.item_desc$(1,min(desc[1],30))
         endif
 
 init_data: rem --- Init Data
@@ -129,7 +202,7 @@ init_data: rem --- Init Data
 
 rem --- Process Transactions
 
-        if sfe01a.wo_status$<>"C" or sfe01a.closed_date$>sf_prevper_enddate$ then 
+        if read_tpl.wo_status$<>"C" or read_tpl.closed_date$>sf_prevper_enddate$ then 
             tran01_dev=sft01a_dev; tran01a$=sft01_tpls$
             tran02_dev=sft21a_dev; tran02a$=sft21_tpls$
             tran03_dev=sft31a_dev; tran03a$=sft31_tpls$
@@ -139,52 +212,51 @@ rem --- Process Transactions
             tran03_dev=sft33a_dev; tran03a$=sft33_tpls$
         endif
 
-        read (sfm07a_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$+datefrom$,dom=*next)
-        while more
+        rem while more
             
-			sfm07a_key$=key(sfm07a_dev,end=*break)
-            if sfm07a_key.firm_id$+sfm07a.wo_location$+sfm07a_key.wo_no$<>sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$ then break
-            if datethru$<>"" then if sfm07a_key.trans_date$>datethru$ then break
-            if pos(sfm07a_key.record_id$="OMS")=0 then continue
-            
-			read (sfm07a_dev,key=sfm07a_key$)
-            if sfm07a_key.record_id$="O" then 
+            if read_tpl.record_id$="O" then 
 				sftran_dev=tran01_dev
 				dim sftran$:tran01a$
 				record_id_field$="O"
 			endif
-            if sfm07a_key.record_id$="M" then 
+            if read_tpl.record_id$="M" then 
 				sftran_dev=tran02_dev
 				dim sftran$:tran02a$
 				record_id_field$="M"
 			endif
-            if sfm07a_key.record_id$="S" then 
+            if read_tpl.record_id$="S" then  
 				sftran_dev=tran03_dev
 				dim sftran$:tran03a$
 				record_id_field$="S"
 			endif
-            
-			find record (sftran_dev,key=sfm07a_key$,dom=*continue) sftran$
+escape; rem caj ?sftran_read_k$    
+			sftran_read_k$=read_tpl.firm_id$
+			sftran_read_k$=sftran_read_k$+read_tpl.wo_location$
+			sftran_read_k$=sftran_read_k$+read_tpl.wo_no$
+			sftran_read_k$=sftran_read_k$+read_tpl.trans_date$
+			sftran_read_k$=sftran_read_k$+read_tpl.trans_seq$
+			
+			find record (sftran_dev,key=sftran_read_k$,dom=*continue) sftran$
             if transtype$<>"" then if pos(record_id_field$=transtype$)=0 then continue
-            if sfm07a_key.trans_date$(1,6)<>t1$ then gosub date_subtot
+            if read_tpl.trans_date$(1,6)<>t1$ then gosub date_subtot
             if l2<=0 
-                OutVect!.addItem(sfe01a.wo_no$); rem columns$[0
-                if sfe01a.wo_category$="I"
-                    x0$=sfe01a.item_id$
-                    x0$=x0$(1,pos("   "=x0$+"   ")-1)+" "+sfe01a.description_01$,x0$=x0$(1,30)
+                OutVect!.addItem(read_tpl.wo_no$); rem columns$[0
+                if read_tpl.wo_category$="I"
+                    x0$=read_tpl.item_id$
+                    x0$=x0$(1,pos("   "=x0$+"   ")-1)+" "+read_tpl.description_01$,x0$=x0$(1,30)
                     OutVect!.addItem(x0$); rem columns$[1
                 else
-                    OutVect!.addItem(sfe01a.description_01$); rem columns$[1
+                    OutVect!.addItem(read_tpl.description_01$); rem columns$[1
                 endif  
                 xwk=fnblank(2)
-                OutVect!.addItem(fill(20)+"Type: "+sfe01a.wo_type$+" Cat: "
-:								 +sfe01a.wo_category$+"  Stat: "+sfe01a.wo_status$
-:								 +"  Whse: "+sfe01a.warehouse_id$+"  Sched Prod: "
-:								 +str(sfe01a.sch_prod_qty:m2$)); rem columns$[4
+                OutVect!.addItem(fill(20)+"Type: "+read_tpl.wo_type$+" Cat: "
+:								 +read_tpl.wo_category$+"  Stat: "+read_tpl.wo_status$
+:								 +"  Whse: "+read_tpl.warehouse_id$+"  Sched Prod: "
+:								 +str(read_tpl.sch_prod_qty:m2$)); rem columns$[4
                 xwk=fnblank(columns-4); rem "finish the row
-				if pos("0"<sfe01a.customer_id$)>0 then
+				if pos("0"<read_tpl.customer_id$)>0 then
                     rem NOTE: in v6 Cust/Ord info is flush right, but those are numeric cols in DocOut, so I moved left w/indent
-					OutVect!.addItem(fill(5)+"Cust: "+fnmask$(sfe01a.customer_id$,c1$)+"  Order: "+sfe01a.order_no$+"-"+sfe01a.line_no$); rem columns$[0
+					OutVect!.addItem(fill(5)+"Cust: "+fnmask$(read_tpl.customer_id$,c1$)+"  Order: "+read_tpl.order_no$+"-"+read_tpl.line_no$); rem columns$[0
 					xwk=fnblank(columns); rem "finish the row
 				else
 					rem xwk=fnblank(columns+1); rem "blank row
@@ -194,9 +266,9 @@ rem --- Process Transactions
 		
 rem --- Now Print It
 
-            if sfm07a_key.record_id$="O" then 
+            if read_tpl.record_id$="O" then 
                 OutVect!.addItem(fndate$(sftran.trans_date$))
-                OutVect!.addItem(sftran.record_id_o$)
+                OutVect!.addItem(read_tpl.record_id$)
                 OutVect!.addItem(sftran.op_seq$)
                 gosub operation_details
                 OutVect!.addItem(str(sftran.units))
@@ -204,7 +276,7 @@ rem --- Now Print It
                 OutVect!.addItem(str(sftran.ext_cost))
             endif
 
-            if sfm07a_key.record_id$="M" then 
+            if read_tpl.record_id$="M" then 
                 OutVect!.addItem(fndate$(sftran.trans_date$))
                 OutVect!.addItem("M")
                 OutVect!.addItem(sftran.material_seq_ref$)
@@ -216,9 +288,9 @@ rem --- Now Print It
 				gosub lotserial_details
             endif
 
-            if sfm07a_key.record_id$="S" then 
+            if read_tpl.record_id$="S" then 
                 OutVect!.addItem(fndate$(sftran.trans_date$))
-                OutVect!.addItem(sftran.record_id_s$)
+                OutVect!.addItem(read_tpl.record_id$)
                 OutVect!.addItem(sftran.subcont_seq$)
                 gosub subcontract_details
                 if pos("O"=transtype$)>0 then xwk=fnblank(2)
@@ -244,7 +316,7 @@ rem --- Now Print It
             s[1]=s[1]+sftran.ext_cost
             u[1]=u[1]+sftran.ext_cost
                 
-        wend 
+        rem wend 
 
 rem --- W/O Totals Here
 
@@ -253,6 +325,10 @@ rem --- W/O Totals Here
    
 done: rem --- End
 
+escape; rem caj ? cjcnt 
+?"   cjcnt: ",cjcnt; rem escape caj
+?"  errcnt: ",errcnt; rem escape caj
+?"err77cnt: ",err77cnt; rem escape caj
         t9$="U"
         if sequence$<>"W" then gosub sub_total
 		xwk=fnblank(columns+1); rem "blank row
@@ -270,6 +346,8 @@ done: rem --- End
         xwk=fnblank(columns)
 		
 		out_action$="FORMAT"
+		
+		SQLCLOSE(sql_chan)
 		
         goto std_exit
 
@@ -336,7 +414,7 @@ date_subtot:rem --- Date Subtotal
 
         if t9$<>"" then return
         dim d[2]
-        t1$=sfm07a_key.trans_date$(1,6)
+        t1$=read_tpl.trans_date$(1,6)
         l=l+3
     return
 
@@ -348,7 +426,7 @@ wo_subtot: rem --- W/O Subtotal
         
         TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         xwk=fnblank(1)
-        OutVect!.addItem("Work Order "+sfe01a.wo_no$+" Total: ")
+        OutVect!.addItem("Work Order "+read_tpl.wo_no$+" Total: ")
         if pos("O"=transtype$)>0 then 
             xwk=fnblank(2)
             OutVect!.addItem("Total Hours: "+str(s[0]:m2$)+" Setup Hours: "+str(s[2]:m2$))
@@ -380,7 +458,7 @@ lotserial_details: rem --- Lot/Serial Here
     if record_id_field$="M"
         if ivm01a.lotser_item$+ivm01a.inventoried$="YY" and pos(ivs01a.lotser_flag$="LS")<>0 then 
 rem --- Serial Numbers Here
-            if sfe01a.wo_status$<>"C" or sfe01a.closed_date$>sf_prevper_enddate$ then 
+            if read_tpl.wo_status$<>"C" or read_tpl.closed_date$>sf_prevper_enddate$ then 
                 lstran_dev=sft11a_dev
                 dim lstran$:sft11_tpls$
             else
