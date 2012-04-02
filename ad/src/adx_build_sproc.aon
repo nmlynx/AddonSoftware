@@ -77,26 +77,8 @@ rem --- init for sql
     
 rem -- main loop (this will eventually be table-driven)
 
-
-
 rem --- first drop all std Addon SPROCs
 
-    sqlprep$="DROP PROCEDURE VENDOR_INVOICES"
-    gosub create_sproc_def
-    sqlprep$="DROP PROCEDURE VENDOR_INVOICE_DET "
-    gosub create_sproc_def
-    sqlprep$="DROP PROCEDURE VENDORDETAIL "
-    gosub create_sproc_def
-    sqlprep$="DROP PROCEDURE VENDORDETAIL_CMTS "
-    gosub create_sproc_def
-    sqlprep$="DROP PROCEDURE VENDORDETAIL_PURCH "
-    gosub create_sproc_def
-    sqlprep$="DROP PROCEDURE VENDORDETAIL_HIST "
-    gosub create_sproc_def
-    sqlprep$="DROP PROCEDURE VENDORDETAIL_INVHDR "
-    gosub create_sproc_def
-    sqlprep$="DROP PROCEDURE VENDORDETAIL_INVDET "
-    gosub create_sproc_def
     sqlprep$="DROP PROCEDURE POCALENDAR "
     gosub create_sproc_def
     sqlprep$="DROP PROCEDURE SALES_CUSTOMER "
@@ -120,83 +102,7 @@ rem --- first drop all std Addon SPROCs
 	sqlprep$="DROP PROCEDURE SFCALENDAR "
     gosub create_sproc_def
 
-rem POCALENDAR, SALES_CUSTOMER, SALES_CUST_TYPE, SALES_CUST_TYPE_CUST, and SALES_INVOICE_DETAILS
-rem are the only SPROCs currently in use (there are now more - jpb)
-goto createPOCalendar
-
-    sqlprep$="CREATE PROCEDURE VENDOR_INVOICES "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, VENDOR_ID CHAR(6) IN, AP_TYPE CHAR(2) IN, "
-    sqlprep$=sqlprep$+"BEG_INV_NO CHAR(10) IN, PD_UNPD_BOTH CHAR(1) IN, BARISTA_WD VARCHAR(50) IN, "
-    sqlprep$=sqlprep$+"DIR_REPORT VARCHAR(50) IN) "
-    sqlprep$=sqlprep$+"'"+sproc_path$+"vendor_invoices.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Vendor Open Invoice headers'"
-
-    gosub create_sproc_def
-
-    sqlprep$="CREATE PROCEDURE VENDOR_INVOICE_DET "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, AP_TYPE CHAR(2) IN, VENDOR_ID CHAR(6) IN, "
-    sqlprep$=sqlprep$+"AP_INV_NO CHAR(10) IN, BARISTA_WD VARCHAR(50) IN) "
-    sqlprep$=sqlprep$+"'"+sproc_path$+"vendor_invoice_det.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Vendor Open Invoice detail drilldown - selected invoice'"
-
-    gosub create_sproc_def
-    
-    sqlprep$="CREATE PROCEDURE VENDORDETAIL "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, VENDOR_ID_1 CHAR(6) IN, VENDOR_ID_2 CHAR(6) IN, "
-    sqlprep$=sqlprep$+"BARISTA_WD VARCHAR(50) IN) "
-    sqlprep$=sqlprep$+"'"+sproc_path$+"VENDORDETAIL.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Vendor Detail Report'"
-
-    gosub create_sproc_def
-    
-    sqlprep$="CREATE PROCEDURE VENDORDETAIL_CMTS "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, VENDOR_ID CHAR(6) IN, BARISTA_WD VARCHAR(50) IN) "
-    sqlprep$=sqlprep$+"'"+sproc_path$+"VENDORDETAIL_CMTS.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Vendor Detail Report - Comments'"
-
-    gosub create_sproc_def
-
-    sqlprep$="CREATE PROCEDURE VENDORDETAIL_PURCH "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, VENDOR_ID CHAR(6) IN, BARISTA_WD VARCHAR(50) IN) "
-    sqlprep$=sqlprep$+"'"+sproc_path$+"VENDORDETAIL_PURCH.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Vendor Detail Report - Purch Addrs'"
-
-    gosub create_sproc_def
-
-    sqlprep$="CREATE PROCEDURE VENDORDETAIL_HIST "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, VENDOR_ID CHAR(6) IN, BARISTA_WD VARCHAR(50) IN) "
-    sqlprep$=sqlprep$+"'"+sproc_path$+"VENDORDETAIL_HIST.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Vendor Detail Report - History'"
-
-    gosub create_sproc_def
-
-    sqlprep$="CREATE PROCEDURE VENDORDETAIL_INVHDR "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, VENDOR_ID CHAR(6) IN, AP_TYPE CHAR(2) IN, BARISTA_WD VARCHAR(50) IN) "
-    sqlprep$=sqlprep$+"'"+sproc_path$+"VENDORDETAIL_INVHDR.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Vendor Detail Report - Invoice Headers'"
-
-    gosub create_sproc_def
-
-    sqlprep$="CREATE PROCEDURE VENDORDETAIL_INVDET "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, VENDOR_ID CHAR(6) IN, AP_TYPE CHAR(2) IN, "
-    sqlprep$=sqlprep$+"AP_INV_NO CHAR(10) IN, BARISTA_WD VARCHAR(50) IN) "
-    sqlprep$=sqlprep$+"'"+sproc_path$+"VENDORDETAIL_INVDET.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Vendor Detail Report - Invoice Detail'"
-
-    gosub create_sproc_def
-
-
- 
-
-createPOCalendar:       
+rem --- now add them back (i.e., drop, then add, in case anything has changed)     
     sqlprep$="CREATE PROCEDURE POCALENDAR "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, BEGINNING_YEAR CHAR(4) IN, BEGINNING_MONTH CHAR(2) IN, "
     sqlprep$=sqlprep$+"ENDING_YEAR CHAR(4) IN, ENDING_MONTH CHAR(2) IN, BARISTA_WD VARCHAR(50) IN) "
@@ -208,7 +114,7 @@ createPOCalendar:
 
     sqlprep$="CREATE PROCEDURE SALES_CUSTOMER "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUSTOMER_NBR CHAR(6) IN, MONTH CHAR(2) IN, "
-    sqlprep$=sqlprep$+"YEAR CHAR(4) IN) "
+    sqlprep$=sqlprep$+"YEAR CHAR(4) IN, BARISTA_WD VARCHAR(50) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SALES_CUSTOMER.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'Sales for a Customer'"
@@ -216,7 +122,7 @@ createPOCalendar:
     gosub create_sproc_def
     
     sqlprep$="CREATE PROCEDURE SALES_CUST_TYPE "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, MONTH CHAR(2) IN, YEAR CHAR(4) IN) "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, MONTH CHAR(2) IN, YEAR CHAR(4) IN, BARISTA_WD VARCHAR(50) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SALES_CUST_TYPE.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'Sales by Customer Type'"
@@ -225,7 +131,7 @@ createPOCalendar:
     
     sqlprep$="CREATE PROCEDURE SALES_CUST_TYPE_CUST "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUST_TYPE CHAR(3) IN, MONTH CHAR(2) IN, YEAR CHAR(4) IN, "
-    sqlprep$=sqlprep$+"CUST_ID_MASK CHAR(10) IN, CUST_ID_LEN CHAR(3) IN) "
+    sqlprep$=sqlprep$+"CUST_ID_MASK CHAR(10) IN, CUST_ID_LEN CHAR(3) IN, BARISTA_WD VARCHAR(50) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SALES_CUST_TYPE_CUST.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'Sales by Customer within Customer Type'"
@@ -233,7 +139,7 @@ createPOCalendar:
     gosub create_sproc_def
 
     sqlprep$="CREATE PROCEDURE SALES_INVOICE_DETAILS "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUSTOMER_NBR CHAR(6) IN, AR_INV_NBR CHAR(7) IN) "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUSTOMER_NBR CHAR(6) IN, AR_INV_NBR CHAR(7) IN, BARISTA_WD VARCHAR(50) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SALES_INVOICE_DETAILS.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'Invoice Details'"
