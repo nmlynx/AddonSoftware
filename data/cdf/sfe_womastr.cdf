@@ -1065,8 +1065,8 @@ rem --- set defaults
 	callpoint!.setColumnData("SFE_WOMASTR.WAREHOUSE_ID",str(callpoint!.getDevObject("default_wh")))
 	callpoint!.setColumnData("SFE_WOMASTR.OPENED_DATE",stbl("+SYSTEM_DATE"))
 	callpoint!.setColumnData("SFE_WOMASTR.ESTSTT_DATE",stbl("+SYSTEM_DATE"))
-	callpoint!.setDevObject("prod_qty","0")
-	callpoint!.setDevObject("wo_est_yield","0")
+	callpoint!.setDevObject("prod_qty","1")
+	callpoint!.setDevObject("wo_est_yield","100")
 
 rem --- enable all enterable fields
 
