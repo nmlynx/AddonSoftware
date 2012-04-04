@@ -64,7 +64,7 @@ rem --- Open/Lock files
 
 	use ::ado_util.src::util
 
-	num_files=7
+	num_files=8
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 	open_tables$[1]="SFE_WOMASTR",open_opts$[1]="OTA"
@@ -74,6 +74,7 @@ rem --- Open/Lock files
 	open_tables$[5]="SFT_OPNOPRTR",open_opts$[5]="OTA"
 	open_tables$[6]="SFS_PARAMS",open_opts$[6]="OTA"
 	open_tables$[7]="IVM_ITEMMAST",open_opts$[7]="OTA"
+	open_tables$[8]="SFE_WOOPRTN",open_opts$[8]="OTAN"
 
 	gosub open_tables
 
@@ -84,6 +85,8 @@ rem --- Open/Lock files
 	sft01_dev=num(open_chans$[5]),sft01_tpl$=open_tpls$[5]
 	sfs_params=num(open_chans$[6]),sfs_params_tpl$=open_tpls$[6]
 	ivm01_dev=num(open_chans$[7])
+	callpoint!.setDevObject("sfe02_dev2",num(open_chans$[8]))
+
 rem --- Dimension string templates
 
 	dim sfe01a$:sfe01_tpl$,sfe02a$:sfe02_tpl$,sfm05a$:sfm05_tpl$
@@ -275,6 +278,8 @@ rem --- Get lengths
 	op_seq_len=dec(tmp_field$(10,2))
 	tmp_field$=fattr(sft01a$,"OP_CODE")
 	op_cod_len=dec(tmp_field$(10,2))
+	tmp_field$=fattr(sft01a$,"WO_NO")
+	wo_len=dec(tmp_field$(10,2))
 
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","H","",m1$,0,0
 	more=1
@@ -285,13 +290,17 @@ rem --- Get lengths
 		read record (sfe02_dev, end=*break) sfe02a$
 		if pos(firm_id$+sfe02a.wo_location$=sfe02a$)<>1 then break
 		if sfe02a.op_code$<>op_code$ break
-		read(sft01_dev,key=firm_id$+sfe02a.wo_location$+op_code$+sfe02a.wo_no$,knum="AO_OPCOD_WO",dom=*next)
+
+		read(sft01_dev,key=firm_id$+sfe02a.wo_location$+sfe02a.wo_no$,knum="PRIMARY",dom=*next)
 		while 1
 			read record (sft01_dev,end=*break) sft01a$
-			if pos(firm_id$+sfe02a.wo_location$+op_code$+sfe02a.wo_no$=sft01a.firm_id$+sft01a.wo_location$+sft01a.op_code$+sft01a.wo_no$)<>1 break
+			if pos(firm_id$+sfe02a.wo_location$+sfe02a.wo_no$=sft01a$)<>1 break
+			if sft01a.op_code$<>op_code$ continue
 			units=units+sft01a.units
 			setup=setup+sft01a.setup_time
 		wend
+
+rem --- Done with this Work Order
 
 		if units=0 and setup=0 continue
 		wostr$=wostr$+sfe02a.wo_no$+str(units:callpoint!.getDevObject("umask"))+str(setup:callpoint!.getDevObject("umask"))
@@ -315,6 +324,7 @@ rem --- Position Schedul Detail file
 
 rem --- Retrieve sfe-02 operations record
 
+		dim sfe02a$:fattr(sfe02a$)
 		read record (sfe02_dev,key=firm_id$+sfe02a.wo_location$+sfm05a.wo_no$+sfm05a.oper_seq_ref$,knum="AO_OP_SEQ",dom=*continue)sfe02a$
 		this_code$=sfe02a.op_code$
 
@@ -339,8 +349,9 @@ include_it:
 
 rem --- Shall we print it?
 
-		gosub  calc_actual
+		gosub calc_actual
 		gosub calc_remaining
+
 		if runtime=0 and setup=0 and movetime=0 continue
 		if sfe01a.priority$>pri_code$ continue
 		if cvs(begdate$,2)<>"" if sfm05a.sched_date$<begdate$ continue
@@ -384,14 +395,16 @@ rem --- Initialize WO ---
 	from$=""
 	setup=0
 	runtime=0
-	read (sfe02_dev,key=firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
+	sfe02_dev2=callpoint!.getDevObject("sfe02_dev2")
+	dim sfe02b$:fattr(sfe02a$)
+	read (sfe02_dev2,key=firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
 
 	while 1
-		read record (sfe02_dev,end=*break) sfe02a$
-		if pos(firm_id$+sfe01a.wo_location$+sfe01a.wo_no$=sfe02a$)<>1 break
-		if sfe02a.line_type$<>"S" continue
-		opnseq$=opnseq$+sfe02a.internal_seq_no$
-		opncod$=opncod$+sfe02a.op_code$
+		read record (sfe02_dev2,end=*break) sfe02b$
+		if pos(firm_id$+sfe01a.wo_location$+sfe01a.wo_no$=sfe02b$)<>1 break
+		if sfe02b.line_type$<>"S" continue
+		opnseq$=opnseq$+sfe02b.internal_seq_no$
+		opncod$=opncod$+sfe02b.op_code$
 		runtim[x0]=sfm05a.runtime_hrs
 		setup[x0]=sfm05a.setup_time
 		x0=x0+1
@@ -399,7 +412,7 @@ rem --- Initialize WO ---
 
 rem --- Calculate Actual
 
-	read (sft01_dev,key=firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
+	read (sft01_dev,key=firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,knum="PRIMARY",dom=*next)
 	while 1
 		readrecord (sft01_dev,end=*break) sft01a$
 		if pos(firm_id$+sfe01a.wo_location$+sfe01a.wo_no$=sft01a$)<>1 break
@@ -444,24 +457,24 @@ rem --- Calculate Remaining Units
 
 	unitrun=0
 	unitset=0
-	wopos=pos(sfe01a.wo_no$=wostr$)
+	wopos=pos(sfe01a.wo_no$=wostr$,wo_len+(umask*2))
 	if wopos<>0
-		unitrun=num(wostr$(wopos+7,umask))
-		unitset=num(wostr$(wopos+7+umask,umask))
+		unitrun=num(wostr$(wopos+wo_len,umask))
+		unitset=num(wostr$(wopos+wo_len+umask,umask))
 		runtime=runtime-unitrun
 		setup=setup-unitset
 		if runtime>=0
-			wostr$(wopos+7,umask)=str(0:umask$)
+			wostr$(wopos+wo_len,umask)=str(0:umask$)
 		else
 			unitrun=-runtime
-			wostr$(wopos+7,umask)=str(unitrun:umask$)
+			wostr$(wopos+wo_len,umask)=str(unitrun:umask$)
 			runtime=0
 		endif
 		if setup>=0
-			wostr$(wopos+7+umask,umask)=str(0:umask$)
+			wostr$(wopos+wo_len+umask,umask)=str(0:umask$)
 		else
 			unitset=-unitset
-			wostr$(wopos+7+umask,umask)=str(unitset:umask$)
+			wostr$(wopos+wo_len+umask,umask)=str(unitset:umask$)
 			setup=0
 		endif
 	endif
