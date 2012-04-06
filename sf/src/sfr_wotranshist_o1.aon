@@ -50,9 +50,9 @@ rem --- Column Headings
         dim columns$[columns,10]
 		columns$[0,0]="WO/Date",             columns$[0,1]="C",columns$[0,2]="8"
         columns$[1,0]="Src",                 columns$[1,1]="C",columns$[1,2]="8"
-        columns$[2,0]="Seq",                 columns$[2,1]="C",columns$[2,2]="3"
+        columns$[2,0]="   ",                 columns$[2,1]="C",columns$[2,2]="3"; rem v12 doesn't print seq_refs
         columns$[3,0]="Item/Vendor/OpCd",    columns$[3,1]="C",columns$[3,2]="20"
-		columns$[4,0]="Item Desc/Employee",	 columns$[4,1]="C",columns$[4,2]="20"
+		columns$[4,0]="UM/Desc/Employee",    columns$[4,1]="C",columns$[4,2]="20"
 		columns$[5,0]="P.O.",	        	 columns$[5,1]="C",columns$[5,2]="15"
         columns$[6,0]="Cmplt Qty",           columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m2$
         columns$[7,0]="SetUp hrs",           columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m2$
@@ -64,10 +64,10 @@ rem --- Column Headings
         dim columns$[columns,10]
 		columns$[0,0]="WO/Date",             columns$[0,1]="C",columns$[0,2]="8"
         columns$[1,0]="Src",                 columns$[1,1]="C",columns$[1,2]="8"
-        columns$[2,0]="Seq",                 columns$[2,1]="C",columns$[2,2]="3"
+        columns$[2,0]="   ",                 columns$[2,1]="C",columns$[2,2]="3"; rem v12 doesn't print seq_refs
         columns$[3,0]="Item/Vendor/OpCd",    columns$[3,1]="C",columns$[3,2]="20"
-		columns$[4,0]="Item Desc/Employee",	 columns$[4,1]="C",columns$[4,2]="20"
-		columns$[5,0]="Vendor/P.O.",		 columns$[5,1]="C",columns$[5,2]="15"
+		columns$[4,0]="UM/Desc/Employee",	 columns$[4,1]="C",columns$[4,2]="20"
+		columns$[5,0]="P.O.",       		 columns$[5,1]="C",columns$[5,2]="15"
         columns$[6,0]="Units",               columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m2$
         columns$[7,0]="Rate",                columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m3$
         columns$[8,0]="Amount",              columns$[8,1]="N",columns$[8,2]="12",columns$[8,3]=m1$,columns$[8,10]="T"
@@ -102,7 +102,7 @@ rem   - This record set will be used as driver instead of sfe-01 and sfm-07
 				beging$=billfrom$
 				ending$=billthru$
 				where_clause$=where_clause$+"vwWOs.warehouse_id = '"+whse$+"' AND "
-				where_clause$=where_clause$+"vwWOs.item_id <> '' AND "			
+				where_clause$=where_clause$+"vwWOs.item_id <> '' AND "; rem If by Bill, exclude non-stock WO-types 			
 				if beging$<>"" where_clause$=where_clause$+"vwWOs.item_id >= '"+beging$+"' AND "
 				if ending$<>"" where_clause$=where_clause$+"vwWOs.item_id <= '"+ending$+"' AND "
 				order_clause$=" ORDER BY vwWOs.warehouse_id,vwWOs.item_id,vwWOs.wo_location,vwWOs.wo_no"
@@ -155,33 +155,27 @@ rem   - This record set will be used as driver instead of sfe-01 and sfm-07
 		sqlprep(sql_chan)sql_prep$
 		dim read_tpl$:sqltmpl(sql_chan)
 		sqlexec(sql_chan)
-cjcnt=0; rem escape caj
-errcnt=0; rem escape caj
-err77cnt=0; rem escape caj
-escape; rem caj ?sql_prep$
+
+init_data: rem --- Init Data
+	dim s[2]
+	t1$=""
+	l2=0
+	prev_wo$=""
 
 rem --- Main Read
     while more
-        rem Use this line for Production     read_tpl$ = sqlfetch(sql_chan,err=*break)
-cajtest_escape:
+		read_tpl$ = sqlfetch(sql_chan,err=*break)
 
-read_tpl$ = sqlfetch(sql_chan,err=*next); rem escape caj test
-If err then
-	let ERR$=SQLERR(SQL_CHAN)
-	errcnt=errcnt+1 
-	if err77cnt>=100 escape
-	if err=77 then
-		err77cnt=err77cnt+1
-		sqlexec(sql_chan)
-		goto cajtest_escape
-	endif
-	if errcnt>100 or err<>77 then 
-		escape 
-	else 
-		goto cajtest_escape; rem caj ?err$
-endif	
-cjcnt=cjcnt+1; rem escape caj	
-        if sequence$<>"W" then 
+		if prev_wo$<>read_tpl.wo_no$
+			if prev_wo$<>"" and l2>0 gosub wo_subtot
+
+			dim s[2]
+			t1$=""
+			l2=0
+			prev_wo$=read_tpl.wo_no$
+		endif
+		
+		if sequence$<>"W" then 
             if sequence$="T" data1$=read_tpl.wo_type$
             if sequence$="C" data1$=read_tpl.customer_id$
             if sequence$="B" data1$=read_tpl.item_id$
@@ -195,11 +189,6 @@ cjcnt=cjcnt+1; rem escape caj
             read_tpl.description_01$=ivm01a.item_desc$(1,min(desc[1],30))
         endif
 
-init_data: rem --- Init Data
-        dim s[2]
-        t1$=""
-        l2=0
-
 rem --- Process Transactions
 
         if read_tpl.wo_status$<>"C" or read_tpl.closed_date$>sf_prevper_enddate$ then 
@@ -212,8 +201,6 @@ rem --- Process Transactions
             tran03_dev=sft33a_dev; tran03a$=sft33_tpls$
         endif
 
-        rem while more
-            
             if read_tpl.record_id$="O" then 
 				sftran_dev=tran01_dev
 				dim sftran$:tran01a$
@@ -229,7 +216,7 @@ rem --- Process Transactions
 				dim sftran$:tran03a$
 				record_id_field$="S"
 			endif
-escape; rem caj ?sftran_read_k$    
+
 			sftran_read_k$=read_tpl.firm_id$
 			sftran_read_k$=sftran_read_k$+read_tpl.wo_location$
 			sftran_read_k$=sftran_read_k$+read_tpl.wo_no$
@@ -256,7 +243,7 @@ escape; rem caj ?sftran_read_k$
                 xwk=fnblank(columns-4); rem "finish the row
 				if pos("0"<read_tpl.customer_id$)>0 then
                     rem NOTE: in v6 Cust/Ord info is flush right, but those are numeric cols in DocOut, so I moved left w/indent
-					OutVect!.addItem(fill(5)+"Cust: "+fnmask$(read_tpl.customer_id$,c1$)+"  Order: "+read_tpl.order_no$+"-"+read_tpl.line_no$); rem columns$[0
+					OutVect!.addItem(fill(5)+"Cust: "+fnmask$(read_tpl.customer_id$,c1$)+"  Order: "+read_tpl.order_no$); rem columns$[0
 					xwk=fnblank(columns); rem "finish the row
 				else
 					rem xwk=fnblank(columns+1); rem "blank row
@@ -269,7 +256,7 @@ rem --- Now Print It
             if read_tpl.record_id$="O" then 
                 OutVect!.addItem(fndate$(sftran.trans_date$))
                 OutVect!.addItem(read_tpl.record_id$)
-                OutVect!.addItem(sftran.op_seq$)
+                xwk=fnblank(1); rem OutVect!.addItem(sftran.oper_seq_ref$); rem v12 doesn't print seq_refs
                 gosub operation_details
                 OutVect!.addItem(str(sftran.units))
                 OutVect!.addItem(str(sftran.unit_cost))
@@ -279,7 +266,7 @@ rem --- Now Print It
             if read_tpl.record_id$="M" then 
                 OutVect!.addItem(fndate$(sftran.trans_date$))
                 OutVect!.addItem("M")
-                OutVect!.addItem(sftran.material_seq_ref$)
+                xwk=fnblank(1); rem OutVect!.addItem(sftran.material_seq_ref$); rem v12 doesn't print seq_refs
                 gosub material_details
                 if pos("O"=transtype$)>0 then xwk=fnblank(2)
                 OutVect!.addItem(str(sftran.units))
@@ -291,7 +278,7 @@ rem --- Now Print It
             if read_tpl.record_id$="S" then 
                 OutVect!.addItem(fndate$(sftran.trans_date$))
                 OutVect!.addItem(read_tpl.record_id$)
-                OutVect!.addItem(sftran.subcont_seq$)
+                xwk=fnblank(1); rem OutVect!.addItem(sftran.subcont_seq_ref$); rem v12 doesn't print seq_refs
                 gosub subcontract_details
                 if pos("O"=transtype$)>0 then xwk=fnblank(2)
                 OutVect!.addItem(str(sftran.units))
@@ -315,20 +302,12 @@ rem --- Now Print It
             t[1]=t[1]+sftran.ext_cost
             s[1]=s[1]+sftran.ext_cost
             u[1]=u[1]+sftran.ext_cost
-                
-        rem wend 
 
-rem --- W/O Totals Here
-
-        if l2<>0 gosub  wo_subtot 
     wend 
+	if prev_wo$<>"" and l2>0 gosub wo_subtot
    
 done: rem --- End
 
-escape; rem caj ? cjcnt 
-?"   cjcnt: ",cjcnt; rem escape caj
-?"  errcnt: ",errcnt; rem escape caj
-?"err77cnt: ",err77cnt; rem escape caj
         t9$="U"
         if sequence$<>"W" then gosub sub_total
 		xwk=fnblank(columns+1); rem "blank row
@@ -366,12 +345,19 @@ sub_head:rem --- Sub Heading
     return
 
 sub_total: rem --- First Sub Total
+
         if t0$<>"" and l0>1 then 
             rem xwk=fnblank(columns+1); rem "blank row
 			TotVect!.addItem(str(OutVect!.size()/(columns+1)))
-            xwk=fnblank(1)
+            xwk=fnblank(1)	
             OutVect!.addItem(h9$+" "+cvs(t0$,2)+"   "+"Total: ")
-            xwk=fnblank(columns-2); rem "finish the row
+            if pos("O"=transtype$)>0 then 
+                xwk=fnblank(2)
+                OutVect!.addItem("Total Hours: "+str(t[0]:m2$)+" Setup Hours: "+str(t[2]:m2$))
+                xwk=fnblank(5); rem "finish row
+            else
+                xwk=fnblank(6); rem "finish row
+            endif			
 			OutVect!.addItem(str(t[1]))            
 			xwk=fnblank(columns+1); rem "blank row
 			
@@ -426,7 +412,7 @@ wo_subtot: rem --- W/O Subtotal
         
         TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         xwk=fnblank(1)
-        OutVect!.addItem("Work Order "+read_tpl.wo_no$+" Total: ")
+        OutVect!.addItem("Work Order "+prev_wo$+" Total: ")
         if pos("O"=transtype$)>0 then 
             xwk=fnblank(2)
             OutVect!.addItem("Total Hours: "+str(s[0]:m2$)+" Setup Hours: "+str(s[2]:m2$))
@@ -468,7 +454,7 @@ rem --- Serial Numbers Here
 
             while more
                 k1$=key(lstran_dev,end=*break)
-                if pos(sftran.firm_id$+sftran.wo_location$+sftran.wo_no$+sftran.trans_date$+sftran.trans_seq_ref$=k1$)=1 then
+                if pos(sftran.firm_id$+sftran.wo_location$+sftran.wo_no$+sftran.trans_date$+sftran.trans_seq$=k1$)=1 then
                     read record (lstran_dev) lstran$ 
 rem --- Print It Here
                     if ivs01a.lotser_flag$="S" then lotser$="Serial: " else lotser$="Lot: "
@@ -500,7 +486,7 @@ subcontract_details: rem --- Subcontracts Here
 			rem -- Columns$[3,x]-[5,x]
 			OutVect!.addItem(fnmask$(sftran.vendor_id$,c3$)+"  "+apm01a.vendor_name$)
 			OutVect!.addItem("")
-			OutVect!.addItem("PO #: "+sftran.po_no$+sftran.pur_ord_seq_ref$)
+			OutVect!.addItem("PO #: "+sftran.po_no$); rem +sftran.pur_ord_seq_ref$); rem v12 doesn't print seq_refs
         endif
         return
 
