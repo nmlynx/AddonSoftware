@@ -48,7 +48,7 @@ rem --- Open/Lock Files
 
 	open_tables$[1] ="SFS_PARAMS",    open_opts$[1] = "OTA"
 	open_tables$[2] ="SFE_WOMASTR",   open_opts$[2] = "OTA"
-	open_tables$[3] ="SFE_WOTRANS",   open_opts$[3] = "OTA"
+	open_tables$[3] ="SFE_WOTRANS",   open_opts$[3] = "OTAL"
 	open_tables$[4] ="SFE_WOMATHDR",  open_opts$[4] = "OTA"
 	open_tables$[5] ="SFE_WOMATDTL",  open_opts$[5] = "OTA"
 	open_tables$[6] ="SFE_WOMATISH",  open_opts$[6] = "OTA"
@@ -102,22 +102,23 @@ rem --- Parameters
     find record (ivs01_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
     dim p[2]
     p[0]=ivs01a.item_id_len
-    ivs01_precision=num(ivs01a.precision$)
+    p[1]=ivs01a.vendor_prd_len
     p[2]=ivs01a.ls_no_len
+    ivs01_precision=num(ivs01a.precision$)
     lf$=iff(pos(ivs01a.lifofifo$="LF"),"Y","N")
     p9$=ivs01a.lotser_flag$
     dim desc[3]
     desc[1]=num(ivs01a.desc_len_01$)
     desc[2]=num(ivs01a.desc_len_02$)
     desc[3]=num(ivs01a.desc_len_03$)
-    
-    find record (sfs01_dev,key=firm_id$+"SF00",dom=std_missing_params) sfs01a$
-    ar$=sfs01a.ar_interface$
 
     dim info$[20]
     call pgmdir$+"adc_application.aon","AR",info$[all]
     ar$=info$[20]
-
+    
+    find record (sfs01_dev,key=firm_id$+"SF00",dom=std_missing_params) sfs01a$
+    if ar$="Y" then ar$=sfs01a.ar_interface$
+    
     gl$="N"
     status=0
     source$=pgm(-2)
@@ -172,6 +173,7 @@ rem --- Additional File Opens
     endif
     
     if lf$="Y" then
+        dim lf_channels[4],lf_tmpls$[4]
         ivm04_dev=num(open_chans$[7])
         ivw05_dev=num(open_chans$[8])
         ivw04_dev=num(open_chans$[9])
@@ -330,7 +332,7 @@ rem --- Read next Issue Inventory Transaction (SFE_WOTRANS) record
             sfe23_key$=firm_id$+sfe25a.wo_location$+sfe25a.wo_no$+sfe25a.womatdtl_seq_ref$
             find record (sfe23_dev,key=sfe23_key$,dom=*next) sfe23a$
 
-            if lf$="Y" then
+            if lf$="Y" and (pos(p9$="LS")=0 or ivm01a.lotser_item$<>"Y" or ivm01a.inventoried$<>"Y") then
                 rem --- Get LIFO-FIFO cost
                 gosub lifo_fifo
                 sfe25a.issue_cost=icost
@@ -594,7 +596,7 @@ lifo_fifo: rem --- LIFO/FIFO
     q7=sfe25a.issue_cost
     lf_date$=sfe15a.issued_date$
     lf_action$=ivs01a.lifofifo$+"I"
-    dim lf_item$[10]
+    dim lf_item$[2]
     lf_item$[0]=firm_id$
     lf_item$[1]=sfe25a.warehouse_id$
     lf_item$[2]=sfe25a.item_id$
@@ -602,16 +604,16 @@ lifo_fifo: rem --- LIFO/FIFO
     rem --- Inquiry On Tier Cost For Returned Items
     if sfe25a.qty_issued<0 then
         lf_action$(2,1)="R"
-        call pgmdir$+"ivc_lifofifo.aon",lf_action$,"I",lf_date$,lf_channels[all],lf_item$[all],ivs01_precision,abs(sfe25a.qty_issued),q7,ret_cost,status
+        call pgmdir$+"ivc_lifofifo.aon",lf_action$,"I",lf_date$,lf_channels[all],lf_tmpls$[all],lf_item$[all],ivs01_precision,abs(sfe25a.qty_issued),q7,ret_cost,status
         q7=ret_cost
     endif
 
     rem --- Report On Tier Cost For Sold Items
-    call pgmdir$+"ivc_lifofifo.aon",lf_action$,"R",lf_date$,lf_channels[all],lf_item$[all],ivs01_precision,abs(sfe25a.qty_issued),q7,ret_cost,status
+    call pgmdir$+"ivc_lifofifo.aon",lf_action$,"R",lf_date$,lf_channels[all],lf_tmpls$[all],lf_item$[all],ivs01_precision,abs(sfe25a.qty_issued),q7,ret_cost,status
     if ret_cost<>0 icost=ret_cost
     dim ivw05a$:fattr(ivw05a$)
-    ivw05a.item_id=sfe25a.item_id$
-    ivw05a.line_no=sfe25a.material_seq$
+    ivw05a.item_id$=sfe25a.item_id$
+    ivw05a.line_no$=sfe25a.material_seq$
     ivw05a.unit_cost=icost
     write record (ivw05_dev,key=w9$) ivw05a$
     return                                                  
