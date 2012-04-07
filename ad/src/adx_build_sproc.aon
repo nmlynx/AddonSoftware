@@ -204,7 +204,7 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
     gosub create_sproc_def
 	
     sqlprep$="CREATE PROCEDURE SFHARDCOPY "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_NO_1 CHAR(20) IN, BILL_NO_2 CHAR(20) IN, BARISTA_WD VARCHAR(50) IN) "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO_1 CHAR(20) IN, WO_NO_2 CHAR(20) IN, BARISTA_WD VARCHAR(50) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPY.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'WO Hard Copy'"
@@ -330,7 +330,7 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"        ON mast.firm_id+mast.wo_location+mast.wo_no"+$0a$
     sqlprep$=sqlprep$+"         = xref.firm_id+xref.wo_location+xref.wo_no"
 
-    gosub create_sproc_def	
+rem    gosub create_sproc_def	
 	
 done:
 
