@@ -7,6 +7,10 @@ rem --- VENDOR_INVOICES
 rem --- VENDOR_INVOICE_DET
 rem --- POCALENDAR
 
+rem --- 4/2012 Added VIEWs to the hard-coded logic herein
+rem --- vw_sfx_wotranxr  (replaces sfm-07/sfx_wotranxr xref of WO transactions)
+rem --- vw_WOs_with_tran (JOIN sfe-01/sfe_womastr and vw_sfx_wotranxr)
+
 rem --- idea is to make an admin table in Addon (Barista?) that contains
 rem --- name, params, .prc loc and .cfg loc so as we deploy, we can run this program
 rem --- as part of install/init, and see to it that sprocs are defined.
@@ -104,7 +108,8 @@ rem --- first drop all std Addon SPROCs
 	sqlprep$="DROP PROCEDURE SFHARDCOPY "
     gosub create_sproc_def
 	
-rem --- now add them back (i.e., drop, then add, in case anything has changed)     
+rem --- now add them back (i.e., drop, then add, in case anything has changed)    
+ 
     sqlprep$="CREATE PROCEDURE POCALENDAR "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, BEGINNING_YEAR CHAR(4) IN, BEGINNING_MONTH CHAR(2) IN, "
     sqlprep$=sqlprep$+"ENDING_YEAR CHAR(4) IN, ENDING_MONTH CHAR(2) IN, BARISTA_WD VARCHAR(50) IN) "
@@ -148,8 +153,7 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
-
-   sqlprep$="CREATE PROCEDURE INVOICE_DETAIL "
+    sqlprep$="CREATE PROCEDURE INVOICE_DETAIL "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN )"
     sqlprep$=sqlprep$+"'"+sproc_path$+"INVOICE_DETAIL.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
@@ -198,7 +202,7 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'Shop Floor Calendar'"
 
     gosub create_sproc_def
-
+	
     sqlprep$="CREATE PROCEDURE SFHARDCOPY "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_NO_1 CHAR(20) IN, BILL_NO_2 CHAR(20) IN, BARISTA_WD VARCHAR(50) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPY.prc' '"+barista_cfg_path$+"barista.cfg' "
@@ -207,6 +211,127 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
+rem --- Done with SPROCs. Now do VIEWs
+
+    task_val$="BUILDVIEWS"
+    task_desc$="Create VIEW Defs"
+	
+rem --- first drop all std Addon VIEWs
+
+    sqlprep$="DROP VIEW vw_sfx_wotranxr "
+    gosub create_sproc_def
+
+	sqlprep$="DROP VIEW vw_wos_with_tran "
+	gosub create_sproc_def
+
+rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)     
+
+	rem --  Replacement for sfm-07/sfx_wotranxr SF transaction xref
+    sqlprep$="CREATE VIEW VW_SFX_WOTRANXR AS "
+    sqlprep$=sqlprep$+"SELECT oMats.firm_id"+$0a$
+    sqlprep$=sqlprep$+"     , oMats.wo_location"+$0a$
+    sqlprep$=sqlprep$+"     , oMats.wo_no"+$0a$
+    sqlprep$=sqlprep$+"     , oMats.trans_date"+$0a$
+    sqlprep$=sqlprep$+"     , 'OpenMats' AS Trans_Type"+$0a$
+    sqlprep$=sqlprep$+"     , 'M' AS Record_ID"+$0a$
+    sqlprep$=sqlprep$+"     , oMats.trans_seq "+$0a$
+    sqlprep$=sqlprep$+"FROM SFT_OPNMATTR AS oMats"+$0a$
+    sqlprep$=sqlprep$+"  UNION "+$0a$
+    sqlprep$=sqlprep$+"SELECT oOps.firm_id "+$0a$
+    sqlprep$=sqlprep$+"     , oOps.wo_location"+$0a$
+    sqlprep$=sqlprep$+"     , oOps.wo_no"+$0a$
+    sqlprep$=sqlprep$+"     , oOps.trans_date"+$0a$
+    sqlprep$=sqlprep$+"     , 'OpenOprs' AS Trans_Type"+$0a$
+    sqlprep$=sqlprep$+"     , 'O' AS Record_ID"+$0a$
+    sqlprep$=sqlprep$+"     , oOps.trans_seq "+$0a$
+    sqlprep$=sqlprep$+"FROM SFT_OPNOPRTR AS oOps "+$0a$
+    sqlprep$=sqlprep$+"  UNION "+$0a$
+    sqlprep$=sqlprep$+"SELECT oSubs.firm_id "+$0a$
+    sqlprep$=sqlprep$+"     , oSubs.wo_location"+$0a$
+    sqlprep$=sqlprep$+"     , oSubs.wo_no"+$0a$
+    sqlprep$=sqlprep$+"     , oSubs.trans_date"+$0a$
+    sqlprep$=sqlprep$+"     , 'OpenSubs' AS Trans_Type"+$0a$
+    sqlprep$=sqlprep$+"     , 'S' AS Record_ID"+$0a$
+    sqlprep$=sqlprep$+"     , oSubs.trans_seq "+$0a$
+    sqlprep$=sqlprep$+"FROM SFT_OPNSUBTR AS oSubs"+$0a$
+    sqlprep$=sqlprep$+"  UNION "+$0a$
+    sqlprep$=sqlprep$+"SELECT cMats.firm_id "+$0a$
+    sqlprep$=sqlprep$+"     , cMats.wo_location"+$0a$
+    sqlprep$=sqlprep$+"     , cMats.wo_no"+$0a$
+    sqlprep$=sqlprep$+"     , cMats.trans_date"+$0a$
+    sqlprep$=sqlprep$+"     , 'ClosedMats' AS Trans_Type"+$0a$
+    sqlprep$=sqlprep$+"     , 'M' AS Record_ID"+$0a$
+    sqlprep$=sqlprep$+"     , cMats.trans_seq "+$0a$
+    sqlprep$=sqlprep$+"FROM SFT_CLSMATTR AS cMats "+$0a$
+    sqlprep$=sqlprep$+"  UNION "+$0a$
+    sqlprep$=sqlprep$+"SELECT cOps.firm_id "+$0a$
+    sqlprep$=sqlprep$+"     , cOps.wo_location"+$0a$
+    sqlprep$=sqlprep$+"     , cOps.wo_no"+$0a$
+    sqlprep$=sqlprep$+"     , cOps.trans_date"+$0a$
+    sqlprep$=sqlprep$+"     , 'ClosedOprs' AS Trans_Type"+$0a$
+    sqlprep$=sqlprep$+"     , 'O' AS Record_ID"+$0a$
+    sqlprep$=sqlprep$+"     , cOps.trans_seq "+$0a$
+    sqlprep$=sqlprep$+"FROM SFT_CLSOPRTR AS cOps"+$0a$
+    sqlprep$=sqlprep$+"  UNION "+$0a$
+    sqlprep$=sqlprep$+"SELECT cSubs.firm_id "+$0a$
+    sqlprep$=sqlprep$+"     , cSubs.wo_location"+$0a$
+    sqlprep$=sqlprep$+"     , cSubs.wo_no"+$0a$
+    sqlprep$=sqlprep$+"     , cSubs.trans_date"+$0a$
+    sqlprep$=sqlprep$+"     , 'ClosedSubs' AS Trans_Type"+$0a$
+    sqlprep$=sqlprep$+"     , 'S' AS Record_ID"+$0a$
+    sqlprep$=sqlprep$+"     , cSubs.trans_seq "+$0a$
+    sqlprep$=sqlprep$+"FROM SFT_CLSSUBTR AS cSubs"
+
+    gosub create_sproc_def	
+
+	rem --  JOIN sfe-01/sfe_womastr with transaction xref view
+    sqlprep$="CREATE VIEW VW_WOS_WITH_TRAN AS "
+	sqlprep$=sqlprep$+"SELECT mast.firm_id"+$0a$
+	sqlprep$=sqlprep$+"     , mast.wo_location"+$0a$
+    sqlprep$=sqlprep$+"     , mast.wo_no"+$0a$
+    sqlprep$=sqlprep$+"     , mast.wo_type"+$0a$
+    sqlprep$=sqlprep$+"     , xref.trans_date"+$0a$
+    sqlprep$=sqlprep$+"     , xref.record_id"+$0a$
+    sqlprep$=sqlprep$+"     , xref.trans_seq"+$0a$
+    sqlprep$=sqlprep$+"     , mast.wo_category"+$0a$
+    sqlprep$=sqlprep$+"     , mast.wo_status"+$0a$
+    sqlprep$=sqlprep$+"     , mast.customer_id"+$0a$
+    sqlprep$=sqlprep$+"     , mast.order_no"+$0a$
+    sqlprep$=sqlprep$+"     , mast.sls_ord_seq_ref"+$0a$
+    sqlprep$=sqlprep$+"     , mast.unit_measure"+$0a$
+    sqlprep$=sqlprep$+"     , mast.bill_rev"+$0a$
+    sqlprep$=sqlprep$+"     , mast.warehouse_id"+$0a$
+    sqlprep$=sqlprep$+"     , mast.item_id"+$0a$
+    sqlprep$=sqlprep$+"     , mast.opened_date"+$0a$
+    sqlprep$=sqlprep$+"     , mast.eststt_date"+$0a$
+    sqlprep$=sqlprep$+"     , mast.estcmp_date"+$0a$
+    sqlprep$=sqlprep$+"     , mast.act_st_date"+$0a$
+    sqlprep$=sqlprep$+"     , mast.lstact_date"+$0a$
+    sqlprep$=sqlprep$+"     , mast.closed_date"+$0a$
+    sqlprep$=sqlprep$+"     , mast.description_01"+$0a$
+    sqlprep$=sqlprep$+"     , mast.description_02"+$0a$
+    sqlprep$=sqlprep$+"     , mast.drawing_no"+$0a$
+    sqlprep$=sqlprep$+"     , mast.drawing_rev"+$0a$
+    sqlprep$=sqlprep$+"     , mast.complete_flg"+$0a$
+    sqlprep$=sqlprep$+"     , mast.recalc_flag"+$0a$
+    sqlprep$=sqlprep$+"     , mast.lotser_item"+$0a$
+    sqlprep$=sqlprep$+"     , mast.priority"+$0a$
+    sqlprep$=sqlprep$+"     , mast.sched_flag"+$0a$
+    sqlprep$=sqlprep$+"     , mast.forecast"+$0a$
+    sqlprep$=sqlprep$+"     , mast.cls_inp_date"+$0a$
+    sqlprep$=sqlprep$+"     , mast.sch_prod_qty"+$0a$
+    sqlprep$=sqlprep$+"     , mast.qty_cls_todt"+$0a$
+    sqlprep$=sqlprep$+"     , mast.cls_cst_todt"+$0a$
+    sqlprep$=sqlprep$+"     , mast.cls_inp_qty"+$0a$
+    sqlprep$=sqlprep$+"     , mast.closed_cost"+$0a$
+    sqlprep$=sqlprep$+"     , mast.est_yield "+$0a$
+    sqlprep$=sqlprep$+"FROM sfe_womastr AS mast "+$0a$
+    sqlprep$=sqlprep$+"INNER JOIN vw_sfx_wotranxr AS xref"+$0a$
+    sqlprep$=sqlprep$+"        ON mast.firm_id+mast.wo_location+mast.wo_no"+$0a$
+    sqlprep$=sqlprep$+"         = xref.firm_id+xref.wo_location+xref.wo_no"
+
+    gosub create_sproc_def	
+	
 done:
 
 sqlclose(chan)
@@ -222,12 +347,12 @@ update_status:rem --- Update AutoLaunch Status
 
 goto std_exit
 
-create_sproc_def:
+create_sproc_def:rem --- Create SPROC definitions
     SQLPREP(chan) sqlprep$
     SQLEXEC(chan,err=*next)
     curr_rec=curr_rec+1
     if mod(curr_rec,milestone)=0
-        progress!.setValue("+process_task",task_val$+"^U^"+str(curr_rec)+"^")
+		progress!.setValue("+process_task",task_val$+"^U^"+str(curr_rec)+"^")
     endif
 return
 
