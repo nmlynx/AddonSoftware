@@ -213,9 +213,6 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
 rem --- Done with SPROCs. Now do VIEWs
 
-    task_val$="BUILDVIEWS"
-    task_desc$="Create VIEW Defs"
-	
 rem --- first drop all std Addon VIEWs
 
     sqlprep$="DROP VIEW vw_sfx_wotranxr "
@@ -348,7 +345,7 @@ update_status:rem --- Update AutoLaunch Status
 goto std_exit
 
 create_sproc_def:rem --- Create SPROC definitions
-    SQLPREP(chan) sqlprep$
+    SQLPREP(chan,err=*next) sqlprep$; rem Err branch added to temporarily resolve error in CREATE VIEW when "Full Featured" option not checked in EM 4/9/12 cj
     SQLEXEC(chan,err=*next)
     curr_rec=curr_rec+1
     if mod(curr_rec,milestone)=0
@@ -421,7 +418,7 @@ std_exit: rem --- Standard program end (01Mar2006)
     
     progress!.setValue("+process_task",task_val$+"^D^")
     run stbl("+DIR_SYP",err=*next)+"bas_process_end.bbj",err=*next
-    release
+	release
 
 rem #endinclude std_end.src
 
