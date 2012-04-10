@@ -3,6 +3,7 @@ rem --- set default DevObjects
 
 	callpoint!.setDevObject("start_date","")
 	callpoint!.setDevObject("comp_date","")
+	callpoint!.setDevObject("sched_method","")
 [[SFR_SCHEDWO.ASVA]]
 rem --- Calculate dates
 

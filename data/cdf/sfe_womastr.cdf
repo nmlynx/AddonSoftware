@@ -219,6 +219,7 @@ rem --- Open tables
 		open_tables$[5]="BMM_BILLOPER",open_opts$[5]="OTA"
 		open_tables$[6]="BMM_BILLSUB",open_opts$[6]="OTA"
 	endif
+
 	callpoint!.setDevObject("bm",bm$)
 	x$=stbl("bm",bm$)
 
@@ -239,6 +240,15 @@ rem --- Open tables
 	if po$="Y"
 		call stbl("+DIR_PGM")+"adc_application.aon","PO",info$[all]
 		po$=info$[20]
+
+		num_files=2
+		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+
+		open_tables$[1]="POE_PODET",open_opts$[1]="OTA"
+		open_tables$[2]="POE_REQDET",open_opts$[2]="OTA"
+
+		gosub open_tables
+
 	endif
 	callpoint!.setDevObject("po",po$)
 	x$=stbl("po",po$)
@@ -881,7 +891,8 @@ rem --- launch other form(s) based on WO category
 
 	if callpoint!.getDevObject("new_rec")="Y"
 		switch pos(callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")="INR")
-			case 1;rem --- if on a regular stock WO, explode, then show mats grid
+
+			case 1;rem --- if on a regular stock WO, show mats grid
 
 				key_pfx$=firm_id$+callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
 
@@ -929,6 +940,7 @@ rem --- launch other form(s) based on WO category
 :					"",
 :					dflt_data$[all]
 
+launch_mats:
 				call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :					"SFE_WOMATL",
 :					stbl("+USER_ID"),
@@ -937,6 +949,8 @@ rem --- launch other form(s) based on WO category
 :					table_chans$[all],
 :					"",
 :					dflt_data$[all]
+
+				if callpoint!.getDevObject("explode_bills")="Y" then goto launch_mats
 
 				call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :					"SFE_WOSUBCNT",

@@ -1,28 +1,122 @@
+[[SFE_WOSUBCNT.PO_NO.AVAL]]
+rem --- additional code still needed here
+rem --- make sure po/req line is non-stock
+rem --- make sure po/req line is not already tied to a work order
+rem --- update poe-11/12 w/ work order number if field is empty or changed
+
+rem --- however, this AVAL isn't firing when/because custom query is used in BINQ, which does an ABORT
+[[SFE_WOSUBCNT.LEAD_TIME.BINP]]
+        rem --- why am I having to reset these? setting them in BINQ for PO#, after returning from custom queries, but doesn't 'stick' 
+	rem --- if the ABORT is removed from the BINQ, they stick, but then Barista std inquiry launches, which we don't want.
+
+	if callpoint!.getDevObject("po_req_no")<>""
+		callpoint!.setColumnData("SFE_WOSUBCNT.PO_NO",str(callpoint!.getDevObject("po_req_no")),1)
+		callpoint!.setColumnData("SFE_WOSUBCNT.PUR_ORD_SEQ_REF",str(callpoint!.getDevObject("po_req_line")),1)
+		callpoint!.setColumnData("<<DISPLAY>>.DISP_ITEM",str(callpoint!.getDevObject("po_line_desc")),1)
+	endif
+[[SFE_WOSUBCNT.BGDR]]
+rem --- get PO#/req# and ISN, load up corresponding item info
+
+	switch pos(callpoint!.getColumnData("SFE_WOSUBCNT.PO_STATUS")="RP")
+		case 1;rem requisition
+			call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQDET","PRIMARY",key_tpl$,rd_table_chans$[all],status$
+			dim po_req_key$:key_tpl$
+		break
+		case 2; rem po
+			call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_PODET","PRIMARY",key_tpl$,rd_table_chans$[all],status$
+			dim po_req_key$:key_tpl$
+		break
+	swend
+	po_req_key$=firm_id$+callpoint!.getColumnData("SFE_WOSUBCNT.PO_NO")+callpoint!.getColumnData("SFE_WOSUBCNT.PUR_ORD_SEQ_REF")
+
+	gosub get_po_info
+
+	callpoint!.setColumnData("<<DISPLAY>>.DISP_ITEM",line_desc$,1)
+[[SFE_WOSUBCNT.PO_NO.BINQ]]
+rem --- call custom inquiry depending on whether we're looking for PO or Req.
+
+	callpoint!.setDevObject("po_req_no","")
+	callpoint!.setDevObject("po_req_line","")
+	callpoint!.setDevObject("po_line_desc","")
+
+	switch pos(callpoint!.getColumnData("SFE_WOSUBCNT.PO_STATUS")="RP")
+		case 1;rem requisition
+
+			call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQDET","PRIMARY",key_tpl$,rd_table_chans$[all],status$
+			dim po_req_key$:key_tpl$
+			dim search_defs$[2]
+			dim filter_defs$[3,2]
+			filter_defs$[0,0]="POE_REQHDR.FIRM_ID"
+			filter_defs$[0,1]="='"+firm_id$ +"'"
+			filter_defs$[0,2]="LOCK"
+			filter_defs$[1,0]="POE_REQHDR.VENDOR_ID"
+			filter_defs$[1,1]="='"+callpoint!.getColumnData("SFE_WOSUBCNT.VENDOR_ID")+"'"
+			filter_defs$[1,2]="LOCK"
+ 
+                		call stbl("+DIR_SYP")+"bax_query.bbj",gui_dev,form!,"REQDETAIL","",table_chans$[all],po_req_key$,filter_defs$[all]
+		break
+		case 2;rem PO
+
+			call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_PODET","PRIMARY",key_tpl$,rd_table_chans$[all],status$
+			dim po_req_key$:key_tpl$
+			dim search_defs$[2]
+			dim filter_defs$[2,2]
+			filter_defs$[1,0]="POE_POHDR.FIRM_ID"
+			filter_defs$[1,1]="='"+firm_id$ +"'"
+			filter_defs$[1,2]="LOCK"
+			filter_defs$[2,0]="POE_POHDR.VENDOR_ID"
+			filter_defs$[2,1]="='"+callpoint!.getColumnData("SFE_WOSUBCNT.VENDOR_ID")+"'"
+			filter_defs$[2,2]="LOCK"
+	
+                		call stbl("+DIR_SYP")+"bax_query.bbj",gui_dev,form!,"PODETAIL","",table_chans$[all],po_req_key$,filter_defs$[all]
+
+		break
+		case default
+		break
+	swend
+
+	gosub get_po_info
+
+	if cvs(po_req_key$,3)<>""
+		callpoint!.setColumnData("SFE_WOSUBCNT.PO_NO",po_req_no$,1)
+		callpoint!.setColumnData("SFE_WOSUBCNT.PUR_ORD_SEQ_REF",po_req_line$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.DISP_ITEM",line_desc$,1)
+		rem -- setting these because the setColumnData isn't 'sticking', so resetting in the lead time BINP callpoint.CAH
+		callpoint!.setDevObject("po_req_no",po_req_no$)
+		callpoint!.setDevObject("po_req_line",po_req_line$)
+		callpoint!.setDevObject("po_line_desc",line_desc$)
+		callpoint!.setStatus("MODIFIED")
+	endif
+
+	callpoint!.setStatus("ACTIVATE-ABORT")
+	
+[[SFE_WOSUBCNT.LINE_TYPE.AVAL]]
+rem --- enable/disable PO-related fields based on PO Status (enabled if P or R)
+	
+	line_type$=callpoint!.getUserInput()
+	gosub enable_po_fields
+[[SFE_WOSUBCNT.AGRN]]
+rem --- enable/disable PO-related fields based on PO Status (enabled if P or R)
+	
+	line_type$=callpoint!.getColumnData("SFE_WOSUBCNT.LINE_TYPE")
+	gosub enable_po_fields
 [[SFE_WOSUBCNT.PO_STATUS.AVAL]]
 rem --- Disable PO Number and Sequence?
 
-	if cvs(callpoint!.getUserInput(),2)=""
-		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_LINE_NO",0)
+	if cvs(callpoint!.getUserInput(),2)="" or callpoint!.getUserInput()="C"
+		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PUR_ORD_SEQ_REF",0)
 		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_NO",0)
+		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.LEAD_TIME",0)
 	else
-		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_LINE_NO",1)
+		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PUR_ORD_SEQ_REF",1)
 		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_NO",1)
+		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.LEAD_TIME",1)
 	endif
-[[SFE_WOSUBCNT.AREC]]
-rem --- Check for PO Installed
-
-	if callpoint!.getDevObject("po")<>"Y"
-		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_LINE_NO",-1)
-		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_NO",-1)
-		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.LEAD_TIME",-1)
-	endif
-[[SFE_WOSUBCNT.BGDR]]
-rem --- Check for PO Installed
-
-	if callpoint!.getDevObject("po")<>"Y"
-		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_LINE_NO",-1)
-		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_NO",-1)
-		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.LEAD_TIME",-1)
+ 
+	if callpoint!.getUserInput()<>callpoint!.getColumnData("SFE_WOSUBCNT.PO_STATUS") and cvs(callpoint!.getColumnData("SFE_WOSUBCNT.PO_STATUS"),3)<>""
+		callpoint!.setColumnData("<<DISPLAY>>.DISP_ITEM","",1)
+		callpoint!.setColumnData("SFE_WOSUBCNT.PO_NO","",1)
+		callpoint!.setColumnData("SFE_WOSUBCNT.PUR_ORD_SEQ_REF","",1)
 	endif
 [[SFE_WOSUBCNT.UNITS.AVAL]]
 rem --- Verify minimum quantity > 0
@@ -59,10 +153,80 @@ rem ========================================================
 	callpoint!.setColumnData("SFE_WOSUBCNT.TOTAL_COST",str(units*rate*prod_qty),1)
 
 	return
-[[SFE_WOSUBCNT.BSHO]]
-rem --- Disable grid if Closed Work Order or Recurring
 
-	if callpoint!.getDevObject("wo_status")="C" or callpoint!.getDevObject("wo_category")="R"
+rem ========================================================
+enable_po_fields:
+rem line_type:	input
+rem ========================================================
+
+	if line_type$="S"
+		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_STATUS",1)
+		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PUR_ORD_SEQ_REF",1)
+		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_NO",1)
+		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.LEAD_TIME",1)
+	else
+		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_STATUS",0)
+		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PUR_ORD_SEQ_REF",0)
+		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_NO",0)
+		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.LEAD_TIME",0)
+	endif
+
+	return
+
+rem ========================================================
+get_po_info:
+rem po_req_key$:	input
+rem po_req_no$:	output
+rem po_req_line$:	output
+rem line_desc$:	output
+rem ========================================================
+
+	ivm01_dev=fnget_dev("IVM_ITEMMAST")
+	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
+
+	poe11_dev=fnget_dev("POE_PODET")
+	poe_podet_tpl$=fnget_tpl$("POE_PODET")
+
+	poe12_dev=fnget_dev("POE_REQDET")
+	poe_reqdet_tpl$=fnget_tpl$("POE_REQDET")
+
+	line_desc$=""
+
+	rem --- po_req_key$ will be firm/po or req#/ISN; need to read that PO line to get item/description for display in grid, and store ISN in subcontract rec.
+	if po_req_key$<>""
+		if po_req_key$(len(po_req_key$),1)="^" then po_req_key$=po_req_key$(1,len(po_req_key$)-1)
+		switch pos(callpoint!.getColumnData("SFE_WOSUBCNT.PO_STATUS")="RP")
+			case 1;rem requisition
+				po_req_dev=poe12_dev	
+				po_req_no$=po_req_key.req_no$
+				po_req_line$=po_req_key.internal_seq_no$
+				dim po_req_det$:poe_reqdet_tpl$
+			break
+			case 2; rem po
+				po_req_dev=poe11_dev
+				po_req_no$=po_req_key.po_no$
+				po_req_line$=po_req_key.internal_seq_no$
+				dim po_req_det$:poe_podet_tpl$
+			break
+			case default
+			break	
+		swend
+			
+		read record(po_req_dev,key=firm_id$+po_req_no$+po_req_line$,dom=*next)po_req_det$
+		if cvs(po_req_det.item_id$,3)<>""
+			read record (ivm01_dev,key=firm_id$+po_req_det.item_id$,dom=*next)ivm_itemmast$
+			line_desc$=cvs(ivm_itemmast.item_id$,3)+" - "+cvs(ivm_itemmast.item_desc$,3)
+		else
+			line_desc$=cvs(po_req_det.order_memo$,3)
+		endif		
+
+	endif
+
+	return
+[[SFE_WOSUBCNT.BSHO]]
+rem --- Disable grid if Closed Work Order or Recurring or PO not installed
+
+	if callpoint!.getDevObject("wo_status")="C" or callpoint!.getDevObject("wo_category")="R" or callpoint!.getDevObject("po")<>"Y"
 		opts$=callpoint!.getTableAttribute("OPTS")
 		callpoint!.setTableAttribute("OPTS",opts$+"BID")
 
@@ -121,4 +285,20 @@ rem --- fill listbox for use with Op Sequence
 		my_control!.removeAllItems()
 		my_control!.insertItems(0,ops_list!)
 		my_grid!.setColumnListControl(ListColumn,my_control!)
+	endif
+
+rem --- Check for PO Installed
+rem --- confusion in old code - seems subs grid isn't accessible if PO not installed, but other tests in the code look at the PO flag
+rem --- so even tho' code above says to disable the entire grid if PO not installed, leaving this if/else as is for now.
+
+	if callpoint!.getDevObject("po")<>"Y"
+		callpoint!.setColumnEnabled(-1,"SFE_WOSUBCNT.PO_STATUS",-1)
+		callpoint!.setColumnEnabled(-1,"SFE_WOSUBCNT.PUR_ORD_SEQ_REF",-1)
+		callpoint!.setColumnEnabled(-1,"SFE_WOSUBCNT.PO_NO",-1)
+		callpoint!.setColumnEnabled(-1,"SFE_WOSUBCNT.LEAD_TIME",-1)
+	else
+		callpoint!.setColumnEnabled(-1,"SFE_WOSUBCNT.PO_STATUS",1)
+		callpoint!.setColumnEnabled(-1,"SFE_WOSUBCNT.PUR_ORD_SEQ_REF",1)
+		callpoint!.setColumnEnabled(-1,"SFE_WOSUBCNT.PO_NO",1)
+		callpoint!.setColumnEnabled(-1,"SFE_WOSUBCNT.LEAD_TIME",1)
 	endif

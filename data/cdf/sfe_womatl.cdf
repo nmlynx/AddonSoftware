@@ -1,3 +1,97 @@
+[[SFE_WOMATL.BWRI]]
+rem --- If BOM is installed, build a string of item/seq# for any item that's a bill; used for explosion when exiting
+
+	if callpoint!.getDevObject("bm")="Y" and callpoint!.getColumnData("SFE_WOMATL.LINE_TYPE")="S"
+
+		bmm01_dev=fnget_dev("BMM_BILLMAST")
+		dim bmm_billmast$:fnget_tpl$("BMM_BILLMAST")
+
+		item_id$=callpoint!.getColumnData("SFE_WOMATL.ITEM_ID")
+		material_seq$=callpoint!.getColumnData("SFE_WOMATL.MATERIAL_SEQ")
+
+		read record (bmm01_dev,key=firm_id$+item_id$,dom=*next)bmm_billmast$
+
+		if pos(firm_id$+item_id$=bmm_billmast$)=1
+			explode_bills$=callpoint!.getDevObject("explode_bills")
+			tmp$=material_seq$+"^"+item_id$+"^^"
+			if pos(tmp$=explode_bills$)=0
+				explode_bills$=explode_bills$+tmp$
+				callpoint!.setDevObject("explode_bills",explode_bills$)
+			endif
+		endif
+	endif
+[[SFE_WOMATL.BEND]]
+rem --- if materials lines were entered manually, and any of them are bills, 
+rem --- prompt user to explode them; if yes, explode, then re-launch form so user can view/edit
+
+	if callpoint!.getDevObject("explode_bills")<>""
+
+		msg_id$="SF_EXPLODE"
+		msg_opt$=""
+		gosub disp_message
+		if msg_opt$="Y"
+
+			bmm01_dev=fnget_dev("BMM_BILLMAST")
+			sfe01_dev=fnget_dev("SFE_WOMASTR")
+			sfe22_dev=fnget_dev("SFE_WOMATL")
+
+			call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMATL","PRIMARY",sfe22_key_tpl$,rd_table_chans$[all],status$
+			call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOOPRTN","PRIMARY",sfe02_key_tpl$,rd_table_chans$[all],status$
+			call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOSUBCNT","PRIMARY",sfe32_key_tpl$,rd_table_chans$[all],status$
+
+			wo_no$=callpoint!.getDevObject("wo_no")
+			wo_loc$=callpoint!.getDevObject("wo_loc")
+			explode_bills$=callpoint!.getDevObject("explode_bills")
+			explode_bill$=""
+
+			while explode_bills$<>""
+
+				tmp=pos("^^"=explode_bills$+"^^")
+				explode_bill$=explode_bills$(1,tmp-1)
+				explode_bills$=explode_bills$(tmp+2)	
+				material_seq$=explode_bill$(1,pos("^"=explode_bill$)-1)
+				explode_bill$=explode_bill$(pos("^"=explode_bill$)+1)	
+
+				dim bmm_billmast$:fnget_tpl$("BMM_BILLMAST")
+				read record (bmm01_dev,key=firm_id$+explode_bill$,dom=*continue)bmm_billmast$
+
+				rem 0590 DIM T0$(0),T[10,1]
+				rem 0600 LET X=0,T[X,0]=1,T[X,1]=1,T=1
+			
+				all_bills$=""
+				x=0
+				t=1
+				dim allbills[10,1]
+				allbills[x,0]=1
+				allbills[x,1]=1
+					
+				dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")		
+				read record (sfe01_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)sfe_womastr$
+
+				new_bill$=bmm_billmast.bill_no$
+				t=num(callpoint!.getColumnData("SFE_WOMATL.UNITS"))
+				allbills[x,0]=t
+
+				gosub explode_bills
+				rem --- now remove the original bill record
+				remove(sfe22_dev,key=firm_id$+wo_loc$+wo_no$+material_seq$,dom=*next)
+		
+				callpoint!.setDevObject("explode_bills","Y")
+			wend
+		else
+			callpoint!.setDevObject("explode_bills","N")
+		endif
+	endif
+[[SFE_WOMATL.AGRE]]
+rem --- check to see if item is marked special order in IV warehouse rec; if so, mark PO Status flag
+	
+	if cvs(callpoint!.getColumnData("SFE_WOMATL.PO_STATUS"),3)=""
+		if callpoint!.getDevObject("special_order")="Y" then callpoint!.setColumnData("SFE_WOMATL.PO_STATUS","S")
+	endif
+[[SFE_WOMATL.AREC]]
+rem --- initializations
+
+	callpoint!.setDevObject("special_order","N")
 [[SFE_WOMATL.SCRAP_FACTOR.AVAL]]
 rem --- Calc Totals
 
@@ -47,12 +141,14 @@ rem ========================================================
 	wo_est_yield=num(callpoint!.getDevObject("wo_est_yield"))	
 	prod_qty=num(callpoint!.getDevObject("prod_qty"))
 
+	unit_cost=num(callpoint!.getColumnData("SFE_WOMATL.IV_UNIT_COST"))
+
 	units=SfUtils.matQtyWorkOrd(qty_required,alt_factor,divisor,scrap_factor,wo_est_yield)
 
 	callpoint!.setColumnData("SFE_WOMATL.UNITS",str(units),1)
-	callpoint!.setColumnData("SFE_WOMATL.UNIT_COST",str(units*scrap_factor),1)
+	callpoint!.setColumnData("SFE_WOMATL.UNIT_COST",str(units*unit_cost),1)
 	callpoint!.setColumnData("SFE_WOMATL.TOTAL_UNITS",str(prod_qty*units),1)
-	callpoint!.setColumnData("SFE_WOMATL.TOTAL_COST",str(prod_qty*units*scrap_factor),1)
+	callpoint!.setColumnData("SFE_WOMATL.TOTAL_COST",str(prod_qty*units*unit_cost),1)
 	precision 2
 	callpoint!.setColumnData("SFE_WOMATL.TOTAL_COST",str(num(callpoint!.getColumnData("SFE_WOMATL.TOTAL_COST"))*1)); rem jpb callpoint!.setColumnData("SFE_WOMATL.TOTAL_COST" is w(3)
 	precision num(callpoint!.getDevObject("iv_precision"))
@@ -234,7 +330,7 @@ no_prev_mats_key:
 				bmm_billmast.lstact_date$=sfe_womastr.opened_date$
 				bmm_billmast.source_code$="W"
 				bmm_billmast$=field(bmm_billmast$)
-				writerecord(bmm01_dev)billmast$
+				writerecord(bmm01_dev)bmm_billmast$
 			endif
 			exitto mats_next_bill
 		endif
@@ -386,13 +482,13 @@ do_subcontracts:
 		gosub verify_dates
 		if ok$="N" then continue
 
-		sfe_wosubcnt.required_date$=sfe_womastr.opened_date$
+		sfe_wosubcnt.require_date$=sfe_womastr.opened_date$
 		sfe_wosubcnt.vendor_id$=bmm_billsub.vendor_id$
 		sfe_wosubcnt.line_type$=bmm_billsub.line_type$
 
 		if sfe_wosubcnt.line_type$="S"
-			sfe_wosubcnt.unit_measure$=bmm_billsub.unit_measure	
-			sfe_wosubcnt.description$=bmm_billsub.description$(10,len(sfe_wosubcnt.description$))
+			sfe_wosubcnt.unit_measure$=bmm_billsub.unit_measure$	
+			sfe_wosubcnt.description$=bmm_billsub.ext_comments$(10,len(sfe_wosubcnt.description$))
 			sfe_wosubcnt.oper_seq_ref$=""
 			sfe_wosubcnt.units=SfUtils.netSubQuantityRequired(bmm_billsub.qty_required,bmm_billsub.alt_factor,bmm_billsub.divisor)
 			sfe_wosubcnt.unit_cost=sfe_wosubcnt.units*bmm_billsub.unit_cost
@@ -416,7 +512,7 @@ do_subcontracts:
 		dim sfe32_prev_key$:fattr(sfe32_prev_key$)
 		sfe32_prev_key$=keyp(sfe32_dev,end=no_prev_subs_key)
 		if pos(firm_id$+wo_loc$+wo_no$=sfe32_prev_key$)=1 then sfe_wosubcnt.subcont_seq$=sfe32_prev_key.subcont_seq$
-		if pos("9"<>sfe32_prev_key.op_seq$)=0 
+		if pos("9"<>sfe32_prev_key.subcont_seq$)=0 
 			msg_id$="SF_NO_MORE_SEQ"
 			gosub disp_message
 			exitto back_up_levels
@@ -461,19 +557,27 @@ rem =========================================================
 [[SFE_WOMATL.ITEM_ID.AVAL]]
 rem --- Set default Unit Cost
 
+	ivm01_dev=fnget_dev("IVM_ITEMMAST")
 	ivm02_dev=fnget_dev("IVM_ITEMWHSE")
+	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 	dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
 	whse_id$=callpoint!.getDevObject("default_wh")
 
+	read record(ivm01_dev,key=firm_id$+callpoint!.getUserInput())ivm01a$
 	read record (ivm02_dev,key=firm_id$+whse_id$+callpoint!.getUserInput()) ivm02a$
 
-	callpoint!.setColumnData("SFE_WOMATL.UNIT_COST",str(ivm02a.unit_cost))
+	callpoint!.setColumnData("SFE_WOMATL.IV_UNIT_COST",str(ivm02a.unit_cost))
+	callpoint!.setColumnData("SFE_WOMATL.UNIT_MEASURE",ivm01a.unit_of_sale$,1)
+	callpoint!.setColumnData("SFE_WOMATL.WAREHOUSE_ID",whse_id$)
+
+	callpoint!.setDevObject("special_order",ivm02a.special_ord$)
 
 	qty_required=num(callpoint!.getColumnData("SFE_WOMATL.QTY_REQUIRED"))
 	alt_factor=num(callpoint!.getColumnData("SFE_WOMATL.ALT_FACTOR"))
 	divisor=num(callpoint!.getColumnData("SFE_WOMATL.DIVISOR"))
 	scrap_factor=num(callpoint!.getColumnData("SFE_WOMATL.SCRAP_FACTOR"))
 	gosub calculate_totals
+
 [[SFE_WOMATL.BSHO]]
 use ::sfo_SfUtils.aon::SfUtils
 declare SfUtils sfUtils!
@@ -493,6 +597,9 @@ rem 0600 LET X=0,T[X,0]=1,T[X,1]=1,T=1
 	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMATL","PRIMARY",sfe22_key_tpl$,rd_table_chans$[all],status$
 	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOOPRTN","PRIMARY",sfe02_key_tpl$,rd_table_chans$[all],status$
 	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOSUBCNT","PRIMARY",sfe32_key_tpl$,rd_table_chans$[all],status$
+
+	callpoint!.setDevObject("explode_bills","")
+	callpoint!.setDevObject("special_order","")
 
 rem --- if coming in from the AWRI of the header form (vs. launching manually from the Addt'l Opts)
 rem --- see if we're on a new WO that's for an I-category bill, and if so explode mats/ops/subs before displaying mats
@@ -518,7 +625,7 @@ rem --- see if we're on a new WO that's for an I-category bill, and if so explod
 	endif
 
 rem --- Disable grid if Closed Work Order or Recurring
-	
+
 	if callpoint!.getDevObject("wo_status")="C" or 
 :		callpoint!.getDevObject("wo_category")="R" or
 :		(callpoint!.getDevObject("wo_category")="I" and callpoint!.getDevObject("bm")="Y")
