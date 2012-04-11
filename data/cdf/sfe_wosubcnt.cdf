@@ -5,15 +5,6 @@ rem --- make sure po/req line is not already tied to a work order
 rem --- update poe-11/12 w/ work order number if field is empty or changed
 
 rem --- however, this AVAL isn't firing when/because custom query is used in BINQ, which does an ABORT
-[[SFE_WOSUBCNT.LEAD_TIME.BINP]]
-        rem --- why am I having to reset these? setting them in BINQ for PO#, after returning from custom queries, but doesn't 'stick' 
-	rem --- if the ABORT is removed from the BINQ, they stick, but then Barista std inquiry launches, which we don't want.
-
-	if callpoint!.getDevObject("po_req_no")<>""
-		callpoint!.setColumnData("SFE_WOSUBCNT.PO_NO",str(callpoint!.getDevObject("po_req_no")),1)
-		callpoint!.setColumnData("SFE_WOSUBCNT.PUR_ORD_SEQ_REF",str(callpoint!.getDevObject("po_req_line")),1)
-		callpoint!.setColumnData("<<DISPLAY>>.DISP_ITEM",str(callpoint!.getDevObject("po_line_desc")),1)
-	endif
 [[SFE_WOSUBCNT.BGDR]]
 rem --- get PO#/req# and ISN, load up corresponding item info
 
@@ -34,10 +25,6 @@ rem --- get PO#/req# and ISN, load up corresponding item info
 	callpoint!.setColumnData("<<DISPLAY>>.DISP_ITEM",line_desc$,1)
 [[SFE_WOSUBCNT.PO_NO.BINQ]]
 rem --- call custom inquiry depending on whether we're looking for PO or Req.
-
-	callpoint!.setDevObject("po_req_no","")
-	callpoint!.setDevObject("po_req_line","")
-	callpoint!.setDevObject("po_line_desc","")
 
 	switch pos(callpoint!.getColumnData("SFE_WOSUBCNT.PO_STATUS")="RP")
 		case 1;rem requisition
@@ -81,10 +68,6 @@ rem --- call custom inquiry depending on whether we're looking for PO or Req.
 		callpoint!.setColumnData("SFE_WOSUBCNT.PO_NO",po_req_no$,1)
 		callpoint!.setColumnData("SFE_WOSUBCNT.PUR_ORD_SEQ_REF",po_req_line$,1)
 		callpoint!.setColumnData("<<DISPLAY>>.DISP_ITEM",line_desc$,1)
-		rem -- setting these because the setColumnData isn't 'sticking', so resetting in the lead time BINP callpoint.CAH
-		callpoint!.setDevObject("po_req_no",po_req_no$)
-		callpoint!.setDevObject("po_req_line",po_req_line$)
-		callpoint!.setDevObject("po_line_desc",line_desc$)
 		callpoint!.setStatus("MODIFIED")
 	endif
 

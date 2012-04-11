@@ -44,7 +44,7 @@ rem --- 3. remove schedule detail (sfe_woschdl/sfm-05)
 
 rem --- Loop thru materials detail - uncommit lot/serial only (i.e. atamo uncommits both item and lot/serial, so re-commit item and uncommit that qty later)
 
-	read (sfe13_dev,key=firm_id$+wo_location$+wo_no$,dom=*next)
+	read (sfe13_dev,key=firm_id$+wo_location$+wo_no$,dom=*next,dir=0)
 	while 1
 		sfe13_key$=key(sfe13_dev,end=*break)
 		read record (sfe13_dev)sfe_womathdr$
@@ -661,7 +661,9 @@ rem --- Display Job Status
 
 	run stbl("+DIR_PGM")+"sfe_jobstat.aon"
 [[SFE_WOMASTR.AOPT-RELS]]
-rem --- Schedule the Work Order
+rem --- Release/Commit the Work Order
+
+	callpoint!.setDevObject("wo_status",callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS"))
 
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :		"SFE_RELEASEWO",
@@ -671,6 +673,10 @@ rem --- Schedule the Work Order
 :		table_chans$[all],
 :		"",
 :		dflt_data$[all]
+
+	if callpoint!.getDevObject("wo_status")="O"
+		callpoint!.setStatus("RECORD:["+firm_id$+callpoint!.getDevObject("wo_loc")+callpoint!.getDevObject("wo_no")+"]")
+	endif
 [[SFE_WOMASTR.AOPT-SCHD]]
 rem --- Schedule the Work Order
 
@@ -1004,6 +1010,12 @@ rem --- Set new_rec to N
 rem --- disable Copy button
 
 	callpoint!.setOptionEnabled("COPY",0)
+
+rem --- enable Release/Commit
+
+	if pos(callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="PQ")<>0
+		callpoint!.setOptionEnabled("RELS",1)
+	endif
 [[SFE_WOMASTR.<CUSTOM>]]
 rem =========================================================
 build_ord_line:
