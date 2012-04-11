@@ -5,7 +5,7 @@ rem --- Check to make sure the category is the same
 		dim msg_tokens$[1]
 		msg_id$="SF_DIFF_CAT"
 		gosub disp_message
-		if msg_opt$="Y"
+		if msg_opt$="N"
 			callpoint!.setStatus("CLEAR")
 			break
 		endif

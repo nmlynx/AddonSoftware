@@ -418,7 +418,14 @@ rem --- Always disable these fields for an existing record
 	callpoint!.setColumnEnabled("SFE_WOMASTR.ITEM_ID",0)
 	callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_01",0)
 	callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_02",0)
-	callpoint!.setOptionEnabled("COPY",0)
+
+rem --- disable Copy function if closed or not an N category
+
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")<>"N" or callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C"
+		callpoint!.setOptionEnabled("COPY",0)
+	else
+		callpoint!.setOptionEnabled("COPY",1)
+	endif
 
 rem --- See if any transactions exist - disable WO Type if so
 
@@ -1007,9 +1014,13 @@ rem --- Set new_rec to N
 
 	callpoint!.setDevObject("new_rec","N")
 
-rem --- disable Copy button
+rem --- disable Copy function if closed or not an N category
 
-	callpoint!.setOptionEnabled("COPY",0)
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")<>"N" or callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C"
+		callpoint!.setOptionEnabled("COPY",0)
+	else
+		callpoint!.setOptionEnabled("COPY",1)
+	endif
 
 rem --- enable Release/Commit
 
