@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopy" language="groovy" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="50">
 	<property name="ireport.zoom" value="1.0"/>
-	<property name="ireport.x" value="0"/>
+	<property name="ireport.x" value="294"/>
 	<property name="ireport.y" value="0"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
 	<parameter name="WO_NO_1" class="java.lang.String"/>
@@ -56,7 +56,7 @@
 	<field name="DRAWING_NO" class="java.lang.String"/>
 	<field name="REV" class="java.lang.String"/>
 	<field name="ITEM_DESC_2" class="java.lang.String"/>
-	<group name="WO_NO">
+	<group name="WO_NO" isStartNewPage="true">
 		<groupExpression><![CDATA[$F{WO_NO}]]></groupExpression>
 		<groupHeader>
 			<band height="94">
@@ -235,6 +235,16 @@
 					<textElement/>
 					<textFieldExpression><![CDATA[$F{ITEM_DESC_2}]]></textFieldExpression>
 				</textField>
+				<textField>
+					<reportElement x="501" y="47" width="285" height="13"/>
+					<textElement/>
+					<textFieldExpression><![CDATA[$F{CUSTOMER_ID}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="501" y="60" width="136" height="13"/>
+					<textElement/>
+					<textFieldExpression><![CDATA[$F{SLS_ORDER_NO}]]></textFieldExpression>
+				</textField>
 			</band>
 		</groupHeader>
 		<groupFooter>
@@ -299,7 +309,7 @@
 	<detail>
 		<band height="125" splitType="Stretch">
 			<subreport>
-				<reportElement x="0" y="25" width="802" height="13"/>
+				<reportElement x="0" y="0" width="802" height="13"/>
 				<subreportParameter name="WO_NO">
 					<subreportParameterExpression><![CDATA[$F{WO_NO}]]></subreportParameterExpression>
 				</subreportParameter>

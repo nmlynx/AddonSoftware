@@ -62,33 +62,38 @@ rem	pgmdir$=stbl("+DIR_PGM",err=*next)
 rem	call pgmdir$+"adc_getmask.aon","","SF","U","",m1$,0,m1
 rem	call pgmdir$+"adc_getmask.aon","","AR","I","",custmask$,0,custmask
 	m1$="#,###.00-"
-	custmask$="00-0000"
+	cust_mask$="00-0000"
 	pct_mask$="##0.0%"
 	
 rem --- Open files with adc
 
-    files=2,begfile=1,endfile=files
+    files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ivm-01",ids$[1]="IVM_ITEMMAST"
 	files$[2]="sfm-10",ids$[2]="SFC_WOTYPECD"
+	files$[3]="arm-01",ids$[3]="ARM_CUSTMAST"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    ivm_itemmast_dev = channels[1]
-	sfc_type_dev = channels[2]
+    ivm_itemmast_dev=channels[1]
+	sfc_type_dev=channels[2]
+	arm_custmast=channels[3]
 
 rem --- Dimension string templates
 
 	dim ivm_itemmast$:templates$[1]
 	dim sfc_type$:templates$[2]
+	dim arm_custmast$:templates$[3]
 	
 goto no_bac_open
 rem --- Open Files    
-    num_files = 1
+    num_files = 3
     dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
 
 	open_tables$[1]="IVM_ITEMMAST",   open_opts$[1] = "OTA"
+	open_tables$[2]="SFC_WOTYPECD",   open_opts$[2] = "OTA"
+	open_tables$[3]="ARM_CUSTMAST",   open_opts$[3] = "OTA"
 
 call sypdir$+"bac_open_tables.bbj",
 :       open_beg,
@@ -102,8 +107,13 @@ call sypdir$+"bac_open_tables.bbj",
 :		open_status$
 
 	ivm_itemmast_dev  = num(open_chans$[1])
-
+	sfc_type_dev = num(open_chans$[2])
+	arm_custmast = num(open_chans$[3])
+	
 	dim ivm_itemmast$:open_tpls$[1]
+	dim sfc_type$:open_tpls$[2]
+	dim arm_custmast$:open_tpls$[3]
+
 no_bac_open:
 
 rem --- Build SQL statement
@@ -121,9 +131,11 @@ rem --- Build SQL statement
 			if from_bill$<>"" where_clause$=where_clause$+" item_id >= '"+from_bill$+"' AND "
 			if thru_bill$<>"" where_clause$=where_clause$+" item_id <= '"+thru_bill$+"' AND "
 			where_clause$=where_clause$+" warehouse_id = '"+wh_id$+"' AND "
+			where_clause$=where_clause$+" item_id$ <> '' AND "
             break
         case 2
             order_by$=" ORDER BY customer_id "
+			where_clause$=where_clause$+" customer_id <> '' AND "
 			if from_cust$<>"" where_clause$=where_clause$+" customer_id >= '"+from_cust$+"' AND "
 			if thru_cust$<>"" where_clause$=where_clause$+" customer_id <= '"+thru_cust$+"' AND "
             break
@@ -174,10 +186,12 @@ rem --- Trip Read
 			endif
 		endif
 		data!.setFieldValue("WO_STATUS",read_tpl.wo_status$+" "+stat$)
-		if cvs(sfe_customer_id$,3)<>""
-			data!.setFieldValue("CUSTOMER_ID",fnmask$(read_tpl.customer_id$,cust_mask$))
+		if cvs(read_tpl.customer_id$,3)<>""
+			dim arm_custmast$:fattr(arm_custmast$)
+			read record (arm_custmast,key=firm_id$+read_tpl.customer_id$,dom=*next) arm_custmast$
+			data!.setFieldValue("CUSTOMER_ID","Customer: "+fnmask$(read_tpl.customer_id$,cust_mask$)+" "+arm_custmast.customer_name$)
 			if num(read_tpl.order_no$)<>0
-				data!.setFieldValue("SLS_ORDER_NO",read_tpl.order_no$)
+				data!.setFieldValue("SLS_ORDER_NO","Sales Order: "+read_tpl.order_no$)
 			endif
 		endif
 		data!.setFieldValue("WAREHOUSE_ID",read_tpl.warehouse_id$)
