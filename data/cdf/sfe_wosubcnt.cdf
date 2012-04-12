@@ -1,10 +1,9 @@
 [[SFE_WOSUBCNT.PO_NO.AVAL]]
-rem --- additional code still needed here
-rem --- make sure po/req line is non-stock
-rem --- make sure po/req line is not already tied to a work order
-rem --- update poe-11/12 w/ work order number if field is empty or changed
 
-rem --- however, this AVAL isn't firing when/because custom query is used in BINQ, which does an ABORT
+
+
+
+
 [[SFE_WOSUBCNT.BGDR]]
 rem --- get PO#/req# and ISN, load up corresponding item info
 
@@ -39,6 +38,9 @@ rem --- call custom inquiry depending on whether we're looking for PO or Req.
 			filter_defs$[1,0]="POE_REQHDR.VENDOR_ID"
 			filter_defs$[1,1]="='"+callpoint!.getColumnData("SFE_WOSUBCNT.VENDOR_ID")+"'"
 			filter_defs$[1,2]="LOCK"
+			filter_defs$[3,0]="POE_REQDET.WO_NO"
+			filter_defs$[3,1]="='' "
+			filter_defs$[3,2]="LOCK"
  
                 		call stbl("+DIR_SYP")+"bax_query.bbj",gui_dev,form!,"REQDETAIL","",table_chans$[all],po_req_key$,filter_defs$[all]
 		break
@@ -47,13 +49,16 @@ rem --- call custom inquiry depending on whether we're looking for PO or Req.
 			call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_PODET","PRIMARY",key_tpl$,rd_table_chans$[all],status$
 			dim po_req_key$:key_tpl$
 			dim search_defs$[2]
-			dim filter_defs$[2,2]
+			dim filter_defs$[3,2]
 			filter_defs$[1,0]="POE_POHDR.FIRM_ID"
 			filter_defs$[1,1]="='"+firm_id$ +"'"
 			filter_defs$[1,2]="LOCK"
 			filter_defs$[2,0]="POE_POHDR.VENDOR_ID"
 			filter_defs$[2,1]="='"+callpoint!.getColumnData("SFE_WOSUBCNT.VENDOR_ID")+"'"
 			filter_defs$[2,2]="LOCK"
+			filter_defs$[3,0]="POE_PODET.WO_NO"
+			filter_defs$[3,1]="='' "
+			filter_defs$[3,2]="LOCK"
 	
                 		call stbl("+DIR_SYP")+"bax_query.bbj",gui_dev,form!,"PODETAIL","",table_chans$[all],po_req_key$,filter_defs$[all]
 
@@ -63,7 +68,12 @@ rem --- call custom inquiry depending on whether we're looking for PO or Req.
 	swend
 
 	gosub get_po_info
-
+	
+	rem --- this isn't code complete, yet.  Before moving into callpoint! object, need to gosub routine to update corresponding PO
+	rem --- if our PO# was empty, now isn't, update PO w/ WO#
+	rem --- if our PO# wasn't empty, now is, remove WO# from that PO
+	rem --- if our PO# has been changed (i.e., wasn't empty, still isn't, and <>), then remove WO# from old PO and update WO# in new PO
+	
 	if cvs(po_req_key$,3)<>""
 		callpoint!.setColumnData("SFE_WOSUBCNT.PO_NO",po_req_no$,1)
 		callpoint!.setColumnData("SFE_WOSUBCNT.PUR_ORD_SEQ_REF",po_req_line$,1)
