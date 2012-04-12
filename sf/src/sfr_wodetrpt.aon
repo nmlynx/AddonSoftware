@@ -6,7 +6,7 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 
-rem escape; rem caj TOP sfr_wodetrpt.aon
+ escape; rem caj TOP sfr_wodetrpt.aon
 
     use ::bbjasper.bbj::BBJasperReport
     use ::bbjasper.bbj::BBJasperViewerWindow
@@ -14,7 +14,10 @@ rem escape; rem caj TOP sfr_wodetrpt.aon
     ScreenSize!   = bbjAPI().getSysGui().getSystemMetrics().getScreenSize()
     screen_width  = ScreenSize!.width - 50; rem -50 keeps it in the MDI w/ no scroll bars
     screen_height = ScreenSize!.height - 50
-    
+     
+    setesc std_error
+    seterr std_error
+   
 rem --- Get HashMap of Values in Options Entry Form
 
     params! = Option!.getOptionMap()
@@ -351,18 +354,17 @@ rem --- Check for user authentication
     report!.setLocale(locale$)
 
 rem --- Fill Report and Show
-escape; rem about to declare jasper
+
     declare BBJasperViewerWindow viewerWindow!
-escape; rem after jasper declare
+
     report!.fill(1)
-escape; rem after fill()
     viewerWindow! = new BBJasperViewerWindow(report!,0,0,screen_width,screen_height,reportTitle$,$00080093$)
     viewerWindow!.getViewerControl().setGoogleDefaultDocument(reportTitle$)
     viewerWindow!.setReleaseOnClose(1)
     viewerWindow!.show(0)
         
 rem --- Event Control
-escape; rem before process events
+
     process_events,err=*same
 
     release
