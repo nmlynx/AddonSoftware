@@ -31,7 +31,16 @@ rem --- Get the IN parameters used by the procedure
 	from_wo$ = sp!.getParameter("WO_NO_1")
 	thru_wo$ = sp!.getParameter("WO_NO_2")
 	barista_wd$ = sp!.getParameter("BARISTA_WD")
-
+	report_seq$ = sp!.getParameter("REPORT_SEQ")
+	wostatus$ = sp!.getParameter("WOSTATUS")
+	from_bill$ = sp!.getParameter("BILL_NO_1")
+	thru_bill$ = sp!.getParameter("BILL_NO_2")
+	wh_id$ = sp!.getParameter("WAREHOUSE_ID")
+	from_cust$ = sp!.getParameter("CUSTOMER_ID_1")
+	thru_cust$ = sp!.getParameter("CUSTOMER_ID_2")
+	from_type$ = sp!.getParameter("WO_TYPE_1")
+	thru_type$ = sp!.getParameter("WO_TYPE_2")
+	
 	sv_wd$=dir("")
 	chdir barista_wd$
 
@@ -54,32 +63,32 @@ rem	call pgmdir$+"adc_getmask.aon","","SF","U","",m1$,0,m1
 rem	call pgmdir$+"adc_getmask.aon","","AR","I","",custmask$,0,custmask
 	m1$="#,###.00-"
 	custmask$="00-0000"
+	pct_mask$="##0.0%"
 	
 rem --- Open files with adc
 
     files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="sfe-01",ids$[1]="SFE_WOMASTR"
-    files$[2]="ivm-01",ids$[2]="IVM_ITEMMAST"
+    files$[1]="ivm-01",ids$[1]="IVM_ITEMMAST"
+	files$[2]="sfm-10",ids$[2]="SFC_WOTYPECD"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-    sfe_womast_dev = channels[1]
-    ivm_itemmast_dev = channels[2]
+    ivm_itemmast_dev = channels[1]
+	sfc_type_dev = channels[2]
 
 rem --- Dimension string templates
 
-    dim sfe_womast$:templates$[1]
-	dim ivm_itemmast$:templates$[2]
-
+	dim ivm_itemmast$:templates$[1]
+	dim sfc_type$:templates$[2]
+	
 goto no_bac_open
 rem --- Open Files    
-    num_files = 4
+    num_files = 1
     dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
 
-	open_tables$[1]="SFE_WOMASTR",  open_opts$[1] = "OTA"
-	open_tables$[2]="IVM_ITEMMAST",   open_opts$[2] = "OTA"
+	open_tables$[1]="IVM_ITEMMAST",   open_opts$[1] = "OTA"
 
 call sypdir$+"bac_open_tables.bbj",
 :       open_beg,
@@ -92,57 +101,106 @@ call sypdir$+"bac_open_tables.bbj",
 :		open_batch,
 :		open_status$
 
-	sfe_womast_dev  = num(open_chans$[1])
-	ivm_itemmast_dev  = num(open_chans$[2])
+	ivm_itemmast_dev  = num(open_chans$[1])
 
-	dim sfe_womast$:open_tpls$[1]
-	dim ivm_itemmast$:open_tpls$[2]
+	dim ivm_itemmast$:open_tpls$[1]
 no_bac_open:
+
+rem --- Build SQL statement
+
+	sql_prep$="select * from sfe_womastr "
+    action=pos(report_seq$="WBCT")-1
+    switch action
+        case 0
+            order_by$=" ORDER BY wo_no "
+			if from_wo$<>"" where_clause$=where_clause$+" wo_no >= '"+from_wo$+"' AND "
+			if thru_wo$<>"" where_clause$=where_clause$+" wo_no <= '"+thru_wo$+"' AND "
+            break
+        case 1
+            order_by$=" ORDER BY item_id "
+			if from_bill$<>"" where_clause$=where_clause$+" item_id >= '"+from_bill$+"' AND "
+			if thru_bill$<>"" where_clause$=where_clause$+" item_id <= '"+thru_bill$+"' AND "
+			where_clause$=where_clause$+" warehouse_id = '"+wh_id$+"' AND "
+            break
+        case 2
+            order_by$=" ORDER BY customer_id "
+			if from_cust$<>"" where_clause$=where_clause$+" customer_id >= '"+from_cust$+"' AND "
+			if thru_cust$<>"" where_clause$=where_clause$+" customer_id <= '"+thru_cust$+"' AND "
+            break
+        case 3
+            order_by$=" ORDER BY wo_type "
+			if from_type$<>"" where_clause$=where_clause$+" wo_type >= '"+from_type$+"' AND "
+			if thru_type$<>"" where_clause$=where_clause$+" wo_type <= '"+thru_type$+"' AND "
+            break
+        case default
+            break
+    swend
+
+	if len(where_clause$)>0
+		where_clause$=" WHERE "+where_clause$(1,len(where_clause$)-4)
+	endif
+	sql_prep$=sql_prep$+where_clause$+order_by$
+	
+	sql_chan=sqlunt
+	sqlopen(sql_chan,err=*next)stbl("+DBNAME")
+	sqlprep(sql_chan)sql_prep$
+	dim read_tpl$:sqltmpl(sql_chan)
+	sqlexec(sql_chan)
+
 rem --- Trip Read
 
-	extract record (sfe_womast_dev, key=firm_id$+wo_loc$+from_wo$, dom=*next)
 	while 1
-		sfe01_key$=key(sfe_womast_dev,end=*break)
-		if pos(firm_id$=sfe01_key$)<>1 break
-		readrecord (sfe_womast_dev,key=sfe01_key$) sfe_womast$
-		if cvs(thru_wo$,2)<>""
-			if cvs(sfe_womast.wo_no$,2)>cvs(thru_wo$,2) break
-		endif
+		read_tpl$ = sqlfetch(sql_chan,end=*break)
 
 		data! = rs!.getEmptyRecordData()
 
 		dim ivm_itemmast$:fattr(ivm_itemmast$)
-		find record (ivm_itemmast_dev,key=firm_id$+sfe_womast.item_id$,dom=*next)ivm_itemmast$
+		find record (ivm_itemmast_dev,key=firm_id$+read_tpl.item_id$,dom=*next)ivm_itemmast$
 		data!.setFieldValue("FIRM_ID",firm_id$)
-		data!.setFieldValue("WO_NO",sfe_womast.wo_no$)
-		data!.setFieldValue("WO_TYPE",sfe_womast.wo_type$)
-		data!.setFieldValue("WO_CATEGORY",sfe_womast.wo_category$)
-		data!.setFieldValue("WO_STATUS",sfe_womast.wo_status$)
-		if cvs(sfe_customer_id$,3)<>""
-			data!.setFieldValue("CUSTOMER_ID",fnmask$(sfe_womast.customer_id$,cust_mask$))
-			if num(sfe_womast.order_no$)<>0
-				data!.setFieldValue("SLS_ORDER_NO",sfe_womast.order_no$)
+		data!.setFieldValue("WO_NO",read_tpl.wo_no$)
+		data!.setFieldValue("WO_TYPE",read_tpl.wo_type$)
+		data!.setFieldValue("WO_CATEGORY",read_tpl.wo_category$)
+		if read_tpl.wo_status$="O"
+			stat$="**Open**"
+		else
+			if read_tpl.wo_status$="P"
+				stat$="*Planned*"
+			else
+				if read_tpl.wo_status$="C"
+					stat$="*Closed*"
+				else
+					stat$=""
+				endif
 			endif
 		endif
-		data!.setFieldValue("WAREHOUSE_ID",sfe_womast.warehouse_id$)
-		data!.setFieldValue("ITEM_ID",sfe_womast.item_id$)
-		data!.setFieldValue("OPENED_DATE",fndate$(sfe_womast.opened_date$))
-		data!.setFieldValue("LAST_CLOSE",fndate$(sfe_womast.closed_date$))
-rem		data!.setFieldValue("TYPE_DESC",sfe_womast.std_lot_size$)
-		data!.setFieldValue("PRIORITY",sfe_womast.priority$)
-		data!.setFieldValue("UOM",unit_measure$)
-		data!.setFieldValue("YIELD",sfe_womast.est_yield$)
-		data!.setFieldValue("PROD_QTY",str(sfe_womast.sch_prod_qty:m1$))
-		data!.setFieldValue("COMPLETED",str(sfe_womast.qty_cls_todt:m1$))
-		data!.setFieldValue("LAST_ACT_DATE",fndate$(sfe_womast.lstact_date$))
+		data!.setFieldValue("WO_STATUS",read_tpl.wo_status$+" "+stat$)
+		if cvs(sfe_customer_id$,3)<>""
+			data!.setFieldValue("CUSTOMER_ID",fnmask$(read_tpl.customer_id$,cust_mask$))
+			if num(read_tpl.order_no$)<>0
+				data!.setFieldValue("SLS_ORDER_NO",read_tpl.order_no$)
+			endif
+		endif
+		data!.setFieldValue("WAREHOUSE_ID",read_tpl.warehouse_id$)
+		data!.setFieldValue("ITEM_ID",read_tpl.item_id$)
+		data!.setFieldValue("OPENED_DATE",fndate$(read_tpl.opened_date$))
+		data!.setFieldValue("LAST_CLOSE",fndate$(read_tpl.closed_date$))
+		dim sfc_type$:fattr(sfc_type$)
+		read record (sfc_type_dev,key=firm_id$+"A"+read_tpl.wo_type$) sfc_type$
+		data!.setFieldValue("TYPE_DESC",sfc_type.code_desc$)
+		data!.setFieldValue("PRIORITY",read_tpl.priority$)
+		data!.setFieldValue("UOM",read_tpl.unit_measure$)
+		data!.setFieldValue("YIELD",str(read_tpl.est_yield:pct_mask$))
+		data!.setFieldValue("PROD_QTY",str(read_tpl.sch_prod_qty:m1$))
+		data!.setFieldValue("COMPLETED",str(read_tpl.qty_cls_todt:m1$))
+		data!.setFieldValue("LAST_ACT_DATE",fndate$(read_tpl.lstact_date$))
 		if cvs(ivm_itemmast.item_desc$,3)=""
-			data!.setFieldValue("ITEM_DESC_1",sfe_womast.description_01$)
-			data!.setFieldValue("ITEM_DESC_2",sfe_womast.description_02$)
+			data!.setFieldValue("ITEM_DESC_1",read_tpl.description_01$)
+			data!.setFieldValue("ITEM_DESC_2",read_tpl.description_02$)
 		else
 			data!.setFieldValue("ITEM_DESC_1",ivm_itemmast.item_desc$)
 		endif
-		data!.setFieldValue("DRAWING_NO",sfe_womast.drawing_no$)
-		data!.setFieldValue("REV",sfe_womast.drawing_rev$)
+		data!.setFieldValue("DRAWING_NO",read_tpl.drawing_no$)
+		data!.setFieldValue("REV",read_tpl.drawing_rev$)
 		rs!.insert(data!)
 	wend
 	

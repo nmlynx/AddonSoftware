@@ -29,8 +29,10 @@
 	<parameter name="CLOSED" class="java.lang.String"/>
 	<parameter name="PLANNED" class="java.lang.String"/>
 	<parameter name="WOSTATUS" class="java.lang.String"/>
+	<parameter name="WO_TYPE_1" class="java.lang.String"/>
+	<parameter name="WO_TYPE_2" class="java.lang.String"/>
 	<queryString language="SQL">
-		<![CDATA[call sfhardcopy($P{FIRM_ID},$P{WO_LOCATION},$P{WO_NO_1},$P{WO_NO_2},$P{BARISTA_WD})]]>
+		<![CDATA[call sfhardcopy($P{FIRM_ID},$P{WO_LOCATION},$P{WO_NO_1},$P{WO_NO_2},$P{BARISTA_WD},$P{REPORT_SEQ},$P{WOSTATUS},$P{BILL_NO_1},$P{BILL_NO_2},$P{WAREHOUSE_ID},$P{CUSTOMER_ID_1},$P{CUSTOMER_ID_2},$P{WO_TYPE_1},$P{WO_TYPE_2})]]>
 	</queryString>
 	<field name="FIRM_ID" class="java.lang.String"/>
 	<field name="WO_NO" class="java.lang.String"/>
@@ -308,7 +310,7 @@
 					<subreportParameterExpression><![CDATA[$P{WO_LOCATION}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-				<subreportExpression><![CDATA[$P{SUBREPORT_DIR} + "SFHardCopyCmnts.jasper"]]></subreportExpression>
+				<subreportExpression><![CDATA["SFHardCopyCmnts.jasper"]]></subreportExpression>
 			</subreport>
 		</band>
 	</detail>
