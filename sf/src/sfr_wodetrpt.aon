@@ -6,7 +6,7 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 
-escape; rem caj TOP sfr_wodetrpt.aon
+rem escape; rem caj TOP sfr_wodetrpt.aon
 
     use ::bbjasper.bbj::BBJasperReport
     use ::bbjasper.bbj::BBJasperViewerWindow
@@ -51,6 +51,7 @@ rem --- Open/Lock files
     gosub open_tables
 
 rem --- Assignments so parameters can be tested in lead-in program
+
     sfs_params_dev=num(open_chans$[1])
     aps_params_dev=num(open_chans$[2])
     ars_params_dev=num(open_chans$[3])
@@ -65,7 +66,8 @@ rem --- Assignments so parameters can be tested in lead-in program
     dim gls_params$:open_tpls$[4]
     dim ivs_params$:open_tpls$[5]
     dim prs_params$:open_tpls$[6]
-    dim bms_params$:open_tpls$[7]	
+    dim bms_params$:open_tpls$[7]
+	
 	dim sfe01a$:open_tpls$[11]
 	
 rem --- Close files after ensuring they exist
@@ -90,9 +92,31 @@ rem    wotfrom$=Option!.getOptionData("wo_type_1")
 rem    wotthru$=Option!.getOptionData("wo_type_2")
 rem    whse$=Option!.getOptionData("warehouse_id")
 rem    billfrom$=Option!.getOptionData("bill_no_1")
-rem   billthru$=Option!.getOptionData("bill_no_2")
+rem    billthru$=Option!.getOptionData("bill_no_2")
 rem    custfrom$=Option!.getOptionData("customer_ID_1")
 rem    custthru$=Option!.getOptionData("customer_ID_2")
+
+
+rem 	REPORT_SEQ$=Option!.getOptionData("report_seq")
+rem 	WO_NO_1$=Option!.getOptionData("wo_no_1")
+rem 	WO_NO_2$=Option!.getOptionData("wo_no_2")
+rem 	WO_TYPE$=Option!.getOptionData("wo_type"); escape caj Matches .jrxml, but is it right??????
+rem 	WO_TYPE_1$=Option!.getOptionData("wo_type_1")
+rem 	WO_TYPE_2$=Option!.getOptionData("wo_type_2")
+rem 	CUSTOMER_ID_1$=Option!.getOptionData("customer_id_1")
+rem 	CUSTOMER_ID_2$=Option!.getOptionData("customer_id_2")
+rem 	WAREHOUSE_ID$=Option!.getOptionData("warehouse_id")
+rem 	BILL_NO_1$=Option!.getOptionData("bill_no_1")
+rem 	BILL_NO_2$=Option!.getOptionData("bill_no_2")
+rem 	BEG_DESC$=Option!.getOptionData("beg_desc")
+rem 	END_DESC$=Option!.getOptionData("end_desc")
+rem 	OPEN$=Option!.getOptionData("open")
+rem 	CLOSED$=Option!.getOptionData("closed")
+rem 	PLANNED$=Option!.getOptionData("planned")
+rem 	QUOTED$=Option!.getOptionData("quoted")
+rem 	WOSTATUS$=Option!.getOptionData("wostatus")
+
+
 	
     wo_open$=Option!.getOptionData("open")
     wo_closed$=Option!.getOptionData("closed")
@@ -148,12 +172,12 @@ rem --- Parameters
     find record (ivs_params_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs_params$
     dim p[1],desc[3]
     p[0]=ivs_params$.item_id_len
-    p[1]=num(ivs_params$.precision$)
-    ivs01_precision=p[1]
+    ivs01_precision=num(ivs_params.precision$)
+    p[1]=num(ivs_params.precision$)
 	
-    m1=len(m1$)
-    m2=len(m2$)
-    m3=len(m3$)
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","A","",m1$,0,m1
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",m2$,0,m2
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","R","",m3$,0,m3
     desc[1]=num(ivs_params$.desc_len_01$)
     desc[2]=num(ivs_params$.desc_len_02$)
     desc[3]=num(ivs_params$.desc_len_03$)
@@ -275,7 +299,6 @@ rem --- Document Output Report Parameters
 rem --- Set Report Name & Subreport directory
 
     reportDir$ = stbl("+DIR_REPORTS",err=*next)
-rem reportDir$=reportDir$+"testing/";rem testing SQL vs SPROC driven; rem this for SQL version CH
     reportTitle$=sysinfo.task_desc$+"_"+rd_doc_id$   
     temp = unt
     open (temp)reportDir$
