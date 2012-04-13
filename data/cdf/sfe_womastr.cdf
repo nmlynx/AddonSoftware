@@ -12,7 +12,7 @@ rem --- WO Detail Report (Hard Copy)
 	dflt_data$[3,1]=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
 
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:		"SFE_WOHARDCOPY",
+:		"SFR_WOHARDCOPY",
 :		stbl("+USER_ID"),
 :		access$,
 :		key_pfx$,
