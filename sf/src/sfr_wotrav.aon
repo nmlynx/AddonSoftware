@@ -6,9 +6,6 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 
-
-rem escape; rem caj TOP sfr_wodtrav.aon
-
     use ::bbjasper.bbj::BBJasperReport
     use ::bbjasper.bbj::BBJasperViewerWindow
     use ::java.util.HashMap::HashMap
@@ -122,7 +119,6 @@ rem --- Assign needed jasper params that aren't on O/E form/table
  	report_seq$="W"
  	wo_no_1$=Option!.getOptionData("WO_NO")
  	wo_no_2$=""
-rem 	WO_TYPE$=Option!.getOptionData("WO_TYPE"); escape caj Matches .jrxml, but is it right??????
  	wo_type_1$=""
  	wo_type_2$=""
  	customer_id_1$=""
@@ -149,12 +145,12 @@ rem --- Add to params!
 	params!.put("WAREHOUSE_ID",warehouse_id$)
 	params!.put("BILL_NO_1",bill_no_1$)
 	params!.put("BILL_NO_2",bill_no_2$)	
-	params!.put("BEG_DESC",beg_desc$)
-	params!.put("END_DESC",end_desc$)
-	params!.put("OPEN",open$)
-	params!.put("CLOSED",closed$)
-	params!.put("PLANNED",planned$)
-	params!.put("QUOTED",quoted$)		
+rem	params!.put("BEG_DESC",beg_desc$)
+rem	params!.put("END_DESC",end_desc$)
+rem	params!.put("OPEN",open$)
+rem	params!.put("CLOSED",closed$)
+rem	params!.put("PLANNED",planned$)
+rem	params!.put("QUOTED",quoted$)		
 	params!.put("WOSTATUS",wostatus$)
 	params!.put("WO_LOCATION",wo_location$)	
 
@@ -318,18 +314,17 @@ rem --- Check for user authentication
     report!.setLocale(locale$)
 
 rem --- Fill Report and Show
-escape; rem about to declare jasper
+
     declare BBJasperViewerWindow viewerWindow!
-escape; rem after jasper declare
+
     report!.fill(1)
-escape; rem after fill()
     viewerWindow! = new BBJasperViewerWindow(report!,0,0,screen_width,screen_height,reportTitle$,$00080093$)
     viewerWindow!.getViewerControl().setGoogleDefaultDocument(reportTitle$)
     viewerWindow!.setReleaseOnClose(1)
     viewerWindow!.show(0)
         
 rem --- Event Control
-escape; rem before process events
+
     process_events,err=*same
 
     release

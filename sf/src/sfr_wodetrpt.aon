@@ -6,8 +6,6 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 
- escape; rem caj TOP sfr_wodetrpt.aon
-
     use ::bbjasper.bbj::BBJasperReport
     use ::bbjasper.bbj::BBJasperViewerWindow
 
@@ -103,7 +101,7 @@ rem    custthru$=Option!.getOptionData("customer_ID_2")
 rem 	REPORT_SEQ$=Option!.getOptionData("report_seq")
 rem 	WO_NO_1$=Option!.getOptionData("wo_no_1")
 rem 	WO_NO_2$=Option!.getOptionData("wo_no_2")
-rem 	WO_TYPE$=Option!.getOptionData("wo_type"); escape caj Matches .jrxml, but is it right??????
+	rem 	WO_TYPE$=Option!.getOptionData("wo_type"); escape caj Matches .jrxml, but is it right??????
 rem 	WO_TYPE_1$=Option!.getOptionData("wo_type_1")
 rem 	WO_TYPE_2$=Option!.getOptionData("wo_type_2")
 rem 	CUSTOMER_ID_1$=Option!.getOptionData("customer_id_1")
@@ -111,12 +109,12 @@ rem 	CUSTOMER_ID_2$=Option!.getOptionData("customer_id_2")
 rem 	WAREHOUSE_ID$=Option!.getOptionData("warehouse_id")
 rem 	BILL_NO_1$=Option!.getOptionData("bill_no_1")
 rem 	BILL_NO_2$=Option!.getOptionData("bill_no_2")
-rem 	BEG_DESC$=Option!.getOptionData("beg_desc")
-rem 	END_DESC$=Option!.getOptionData("end_desc")
-rem 	OPEN$=Option!.getOptionData("open")
-rem 	CLOSED$=Option!.getOptionData("closed")
-rem 	PLANNED$=Option!.getOptionData("planned")
-rem 	QUOTED$=Option!.getOptionData("quoted")
+	rem 	BEG_DESC$=Option!.getOptionData("beg_desc")
+	rem 	END_DESC$=Option!.getOptionData("end_desc")
+	rem 	OPEN$=Option!.getOptionData("open")
+	rem 	CLOSED$=Option!.getOptionData("closed")
+	rem 	PLANNED$=Option!.getOptionData("planned")
+	rem 	QUOTED$=Option!.getOptionData("quoted")
 rem 	WOSTATUS$=Option!.getOptionData("wostatus")
 
 
@@ -133,8 +131,8 @@ rem 	WOSTATUS$=Option!.getOptionData("wostatus")
     if wo_quoted$="Y" then wostatus$=wostatus$+"Q"
 	
 	params!.put("WOSTATUS",wostatus$)
-	params!.put("WO_LOCATION",sfe01a.wo_location$)
-	
+	params!.put("WO_LOCATION",sfe01a.wo_location$); rem Setting the len per how it's templated, so not hardcoded
+	params!.put("REPORT_NAME",sysinfo.task_desc$) 
 rem 	if params!.get("wo_no_2")="" then params!.put("wo_no_2","~~~~~~")
 
 rem --- Parameters
