@@ -1,3 +1,24 @@
+[[SFE_WOMASTR.AOPT-DRPT]]
+rem --- WO Detail Report (Hard Copy)
+
+	key_pfx$=firm_id$+callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+
+	dim dflt_data$[3,1]
+	dflt_data$[1,0]="FIRM_ID"
+	dflt_data$[1,1]=firm_id$
+	dflt_data$[2,0]="WO_LOCATION"
+	dflt_data$[2,1]=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
+	dflt_data$[3,0]="WO_NO"
+	dflt_data$[3,1]=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"SFE_WOHARDCOPY",
+:		stbl("+USER_ID"),
+:		access$,
+:		key_pfx$,
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
 [[SFE_WOMASTR.AOPT-LSNO]]
 rem --- launch sfe_wolotser if on an inventory type WO, if item is lotted/serialized, and if params have LS set.
 rem --- tests not in place yet, form hooked up, but no design, callpoint code, etc., done on it yet
