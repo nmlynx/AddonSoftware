@@ -37,9 +37,9 @@ rem --- (For new records qty_ordered=qty_issued and tot_qty_iss=0)
 rem --- Do not commit unless quantity issued has changed, or quantity issued exeeds quantity ordered
 	sfe_womatisd_dev=fnget_dev("SFE_WOMATISD")
 	dim sfe_womatisd$:fnget_tpl$("SFE_WOMATISD")
-	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
-	readrecord(sfe_womatisd_dev,key=sfe_womatisd_key$,dom=*next)sfe_womatisd$
+	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
+	sfe_womatisd_key$=firm_loc_wo$+callpoint!.getColumnData("SFE_WOMATISD.MATERIAL_SEQ")
+	readrecord(sfe_womatisd_dev,key=sfe_womatisd_key$,knum="AO_DISP_SEQ",dom=*next)sfe_womatisd$
 	start_qty_issued=sfe_womatisd.qty_issued
 	if qty_issued=start_qty_issued and qty_issued+tot_qty_iss<=qty_ordered then
 		rem --- qty_issued has not changed and less than qty_ordered, so do not commit inventory
@@ -86,20 +86,20 @@ rem --- Do initial commit if nothing previously ordered or issued
 			sfe_wolsissu_dev=fnget_dev("SFE_WOLSISSU")
 			dim sfe_wolsissu$:fnget_tpl$("SFE_WOLSISSU")
 			tot_ls_qty_issued=0
-			sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-			sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
-			read(sfe_wolsissu_dev,key=sfe_womatisd_key$,dom=*next)
+			firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
+			firm_loc_wo_isn$=firm_loc_wo$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
+			read(sfe_wolsissu_dev,key=firm_loc_wo_isn$,dom=*next)
 			while 1
 				sfe_wolsissu_key$=key(sfe_wolsissu_dev,end=*break)
-				if pos(sfe_womatisd_key$=sfe_wolsissu_key$)<>1 then break
+				if pos(firm_loc_wo_isn$=sfe_wolsissu_key$)<>1 then break
 				readrecord(sfe_wolsissu_dev)sfe_wolsissu$
 				tot_ls_qty_issued=tot_ls_qty_issued+sfe_wolsissu.qty_issued
 			wend
 
 			if tot_ls_qty_issued<>qty_issued+num(callpoint!.getColumnData("SFE_WOMATISD.TOT_QTY_ISS")) then
-				sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-				sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
-				callpoint!.setDevObject("sfe_womatisd_key",sfe_womatisd_key$)
+				firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
+				firm_loc_wo_isn$=firm_loc_wo$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
+				callpoint!.setDevObject("firm_loc_wo_isn",firm_loc_wo_isn$)
 				callpoint!.setDevObject("item_id",callpoint!.getColumnData("SFE_WOMATISD.ITEM_ID"))
 				callpoint!.setDevObject("womatisd_qty_issued",qty_issued)
 
@@ -111,7 +111,7 @@ rem --- Do initial commit if nothing previously ordered or issued
 				dflt_data$[3,0] = "WOMATISD_SEQ_REF"
 				dflt_data$[3,1] = callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
 
-				call stbl("+DIR_SYP")+"bam_run_prog.bbj","SFE_WOLSISSU",stbl("+USER_ID"),"MNT",sfe_womatisd_key$,table_chans$[all],"",dflt_data$[all]
+				call stbl("+DIR_SYP")+"bam_run_prog.bbj","SFE_WOLSISSU",stbl("+USER_ID"),"MNT",firm_loc_wo_isn$,table_chans$[all],"",dflt_data$[all]
 
 				qty_issued=num(callpoint!.getDevObject("tot_ls_qty_issued"))
 				callpoint!.setColumnData("SFE_WOMATISD.QTY_ISSUED",str(qty_issued),1)
@@ -143,9 +143,9 @@ rem --- Init DISPLAY columns
 	gosub init_display_cols
 [[SFE_WOMATISD.AOPT-LENT]]
 rem --- Lot/serial entry
-	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
-	callpoint!.setDevObject("sfe_womatisd_key",sfe_womatisd_key$)
+	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
+	firm_loc_wo_isn$=firm_loc_wo$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
+	callpoint!.setDevObject("firm_loc_wo_isn",firm_loc_wo_isn$)
 	callpoint!.setDevObject("item_id",callpoint!.getColumnData("SFE_WOMATISD.ITEM_ID"))
 	callpoint!.setDevObject("womatisd_qty_issued",callpoint!.getColumnData("SFE_WOMATISD.QTY_ISSUED"))
 
@@ -157,7 +157,7 @@ rem --- Lot/serial entry
 	dflt_data$[3,0] = "WOMATISD_SEQ_REF"
 	dflt_data$[3,1] = callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
 
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj","SFE_WOLSISSU",stbl("+USER_ID"),"MNT",sfe_womatisd_key$,table_chans$[all],"",dflt_data$[all]
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj","SFE_WOLSISSU",stbl("+USER_ID"),"MNT",firm_loc_wo_isn$,table_chans$[all],"",dflt_data$[all]
 
 	qty_issued=num(callpoint!.getDevObject("tot_ls_qty_issued"))
 	if qty_issued<>num(callpoint!.getColumnData("SFE_WOMATISD.QTY_ISSUED")) then
@@ -199,10 +199,10 @@ rem --- Other inits
 rem --- Has record been written yet?
 	sfe_womatisd_dev=fnget_dev("SFE_WOMATISD")
 	dim sfe_womatisd$:fnget_tpl$("SFE_WOMATISD")
-	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
+	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
+	sfe_womatisd_key$=firm_loc_wo$+callpoint!.getColumnData("SFE_WOMATISD.MATERIAL_SEQ")
 	found=0
-	readrecord(sfe_womatisd_dev,key=sfe_womatisd_key$,dom=*next)sfe_womatisd$; found=1
+	readrecord(sfe_womatisd_dev,key=sfe_womatisd_key$,knum="AO_DISP_SEQ",dom=*next)sfe_womatisd$; found=1
 	if !found then
 		rem --- Record not written yet, so don't uncommit inventory
 		break
@@ -228,11 +228,12 @@ rem --- Delete lot/serial and inventory commitments. Must do this before sfe_wom
 	dim sfe_wolsissu$:fnget_tpl$("SFE_WOLSISSU")
 
 	rem --- Delete lot/serial commitments, but keep inventory commitments (for now)
+	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
 	if pos(callpoint!.getDevObject("lotser")="LS") then
-		read(sfe_wolsissu_dev,key=sfe_womatish_key$+sfe_womatisd.internal_seq_no$,dom=*next)
+		read(sfe_wolsissu_dev,key=firm_loc_wo$+sfe_womatisd.internal_seq_no$,dom=*next)
 		while 1
 			sfe_wolsissu_key$=key(sfe_wolsissu_dev,end=*break)
-			if pos(sfe_womatish_key$+sfe_womatisd.internal_seq_no$=sfe_wolsissu_key$)<>1 then break
+			if pos(firm_loc_wo$+sfe_womatisd.internal_seq_no$=sfe_wolsissu_key$)<>1 then break
 			readrecord(sfe_wolsissu_dev)sfe_wolsissu$
 
 			rem --- Delete lot/serial commitments
@@ -260,10 +261,10 @@ rem --- Delete lot/serial and inventory commitments. Must do this before sfe_wom
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 
 		found=0
-		sfe_womatdtl_key$=sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$
+		sfe_womatdtl_key$=firm_loc_wo$+sfe_womatisd.womatdtl_seq_ref$
 		readrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next)sfe_womatdtl$; found=1
 		if found then
-			sfe_womatdtl.qty_ordered=0
+			sfe_womatdtl.qty_ordered=sfe_womatdtl.tot_qty_iss
 			writerecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$)sfe_womatdtl$
 		endif
 	else
@@ -275,7 +276,7 @@ rem --- Delete lot/serial and inventory commitments. Must do this before sfe_wom
 		else
 			rem --- Only uncommit portion of issue's qty_issued that is greater than released WO's qty_ordered
 			found=0
-			sfe_womatdtl_key$=sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$
+			sfe_womatdtl_key$=firm_loc_wo$+sfe_womatisd.womatdtl_seq_ref$
 			readrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next)sfe_womatdtl$; found=1
 			if found then
 				if max(0,sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss)>max(0,sfe_womatdtl.qty_ordered-sfe_womatdtl.tot_qty_iss) then
@@ -294,34 +295,27 @@ rem --- even though they "should" be the same.
 rem --- Was record written?
 	sfe_womatisd_dev=fnget_dev("SFE_WOMATISD")
 	dim sfe_womatisd$:fnget_tpl$("SFE_WOMATISD")
-	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.INTERNAL_SEQ_NO")
+	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
+	sfe_womatisd_key$=firm_loc_wo$+callpoint!.getColumnData("SFE_WOMATISD.MATERIAL_SEQ")
 	found=0
-	readrecord(sfe_womatisd_dev,key=sfe_womatisd_key$,dom=*next)sfe_womatisd$; found=1
+	readrecord(sfe_womatisd_dev,key=sfe_womatisd_key$,knum="AO_DISP_SEQ",dom=*next)sfe_womatisd$; found=1
 	if !found then
-		rem --- Record written , so do not undelete (recommit)
-		break
-	endif
-
-rem --- Do not undelete (recommit) if order quantity is zero
-	qty_ordered=sfe_womatisd.qty_ordered
-	if qty_ordered=0 then
-		rem --- qty_ordered is zero, so there is nothing to undelete (recommit)
+		rem --- Record not written , so do not undelete (recommit)
 		break
 	endif
 
 rem --- Initialize inventory item update
 	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 
-rem --- Were commitments retained during delete? No if sfe_womatdtl.qty_ordered=0
+rem --- Were commitments retained during delete? No if sfe_womatdtl.qty_ordered=sfe_womatisd.tot_qty_iss
 	sfe_womatdtl_dev=fnget_dev("SFE_WOMATDTL")
 	dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
-	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-	sfe_womatdtl_key$=sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$
+	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
+	sfe_womatdtl_key$=firm_loc_wo$+sfe_womatisd.womatdtl_seq_ref$
 	readrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next)sfe_womatdtl$
-	if sfe_womatdtl.qty_ordered=0 then
+	if sfe_womatdtl.qty_ordered=sfe_womatisd.tot_qty_iss then
 		rem --- Undelete inventory commitments (recommit)
-		sfe_womatdtl.qty_ordered=qty_ordered
+		sfe_womatdtl.qty_ordered=sfe_womatisd.qty_ordered
 		writerecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$)sfe_womatdtl$
 
 		items$[1]=sfe_womatisd.warehouse_id$
@@ -358,11 +352,11 @@ rem --- Item ID is disabled except for a new row, so can init entire new row her
 	rem --- Check item for commitments
 	sfe_womatdtl_dev=fnget_dev("SFE_WOMATDTL")
 	dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
-	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-	read(sfe_womatdtl_dev,key=sfe_womatish_key$,dom=*next)
+	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
+	read(sfe_womatdtl_dev,key=firm_loc_wo$,dom=*next)
 	while 1
 		sfe_womatdtl_key$=key(sfe_womatdtl_dev,end=*break)
-		if pos(sfe_womatish_key$=sfe_womatdtl_key$)<>1 then break
+		if pos(firm_loc_wo$=sfe_womatdtl_key$)<>1 then break
 		readrecord(sfe_womatdtl_dev)sfe_womatdtl$
 		rem --- Looking for matching warehouse and item
 		if sfe_womatdtl.warehouse_id$+sfe_womatdtl.item_id$=warehouse_id$+item_id$ then

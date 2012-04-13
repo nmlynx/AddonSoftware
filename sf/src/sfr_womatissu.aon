@@ -53,7 +53,6 @@ rem --- Open/Lock Files
 	open_tables$[5] ="SFE_WOMATDTL",  open_opts$[5] = "OTA"
 	open_tables$[6] ="SFE_WOMATISH",  open_opts$[6] = "OTA"
 	open_tables$[7] ="SFE_WOMATISD",  open_opts$[7] = "OTA"
-	open_tables$[8] ="SFX_WOTRANXR",  open_opts$[8] = "OTA"
 	open_tables$[9] ="SFC_WOTYPECD",  open_opts$[9] = "OTA"
 	open_tables$[10]="SFT_OPNMATTR",  open_opts$[10] = "OTA"
 	open_tables$[11]="SFW_ISSUXTYP",  open_opts$[11] = "OTAL"
@@ -78,7 +77,6 @@ rem --- Open/Lock Files
     sfe23_dev = num(open_chans$[5])
     sfe15_dev = num(open_chans$[6])
     sfe25_dev = num(open_chans$[7])
-    sfm07_dev = num(open_chans$[8])
     sfm10_dev = num(open_chans$[9])
     sft21_dev = num(open_chans$[10])
     sfw01_dev = num(open_chans$[11])
@@ -92,7 +90,7 @@ rem --- Dimension string templates
 
     dim sfs01a$:open_tpls$[1],sfe01a$:open_tpls$[2],wotrans$:open_tpls$[3],
 :       sfe13a$:open_tpls$[4],sfe23a$:open_tpls$[5],sfe15a$:open_tpls$[6],
-:       sfe25a$:open_tpls$[7],sfm07a$:open_tpls$[8],sfm10a$:open_tpls$[9],
+:       sfe25a$:open_tpls$[7],sfm10a$:open_tpls$[9],
 :       sft21a$:open_tpls$[10],sfw01a$:open_tpls$[11],ivs01a$:open_tpls$[12],
 :       ivm01a$:open_tpls$[13],ivm02a$:open_tpls$[14],ivm12a$:open_tpls$[15],
 :       ivt04a$:open_tpls$[16]
@@ -291,8 +289,8 @@ rem --- Read next Issue Inventory Transaction (SFE_WOTRANS) record
         
         rem --- Get Work Order Entry (SFE_WOMASTR, sfe-01) record
         find record (sfe01_dev,key=firm_id$+wotrans.wo_location$+wotrans.wo_no$,dom=*continue) sfe01a$
-        recs=recs+1
         wo_desc$=sfe01a.description_01$
+        dim ivm01a$:fattr(ivm01a$)
         if sfe01a.wo_category$="I" then
             rem --- Use inventory item description
             find record (ivm01_dev,key=firm_id$+sfe01a.item_id$,dom=*endif) ivm01a$
@@ -320,6 +318,7 @@ rem --- Read next Issue Inventory Transaction (SFE_WOTRANS) record
 
         rem --- Process Material Issues Detail (SFE_WOMATISD, sfe-25) records
         wo_total=0
+        new_sfe23_lines=0
         read (sfe25_dev,key=sfe15_key$,knum="BATCH_KEY",dom=*next)
         while 1
             sfe25_key$=key(sfe25_dev,end=*break)
@@ -330,7 +329,39 @@ rem --- Read next Issue Inventory Transaction (SFE_WOTRANS) record
             rem --- Get corresponding Material Commit/Issues Detail (SFE_WOMATDTL, sfe-23) record
             dim sfe23a$:fattr(sfe23a$)
             sfe23_key$=firm_id$+sfe25a.wo_location$+sfe25a.wo_no$+sfe25a.womatdtl_seq_ref$
-            find record (sfe23_dev,key=sfe23_key$,dom=*next) sfe23a$
+            find record (sfe23_dev,key=sfe23_key$,knum="PRIMARY",dom=*next) sfe23a$
+            if cvs(sfe23a.firm_id$+sfe23a.wo_location$+sfe23a.wo_no$+sfe23a.internal_seq_no$,2)="" then
+                rem --- Build, but don't write, new SFE_WOMATDTL (sfe-23) record
+                sfe23a.firm_id$=sfe25a.firm_id$
+                sfe23a.wo_location$=sfe25a.wo_location$
+                sfe23a.wo_no$=sfe25a.wo_no$
+                if cvs(sfe25a.womatdtl_seq_ref$,2)<>"" then
+                    sfe23a.internal_seq_no$=sfe25a.womatdtl_seq_ref$
+                else
+                    sfe23a.internal_seq_no$=sfe25a.internal_seq_no$
+                endif
+                sfe23a.unit_measure$=sfe25a.unit_measure$
+                sfe23a.warehouse_id$=sfe25a.warehouse_id$
+                sfe23a.item_id$=sfe25a.item_id$
+                sfe23a.require_date$=sfe25a.require_date$
+                rem --- Get next materials sequence number
+                new_sfe23_lines=new_sfe23_lines+1
+                next_seq_no=new_sfe23_lines
+                material_seq_mask$=fill(len(sfe23a.material_seq$),"0")
+                sfe23_trip$=sfe23a.firm_id$+sfe23a.wo_location$+sfe23a.wo_no$
+                read (sfe23_dev,key=sfe23_trip$+$ff$,knum="AO_DISP_SEQ",dom=*next)
+                previous_key$=""
+                previous_key$=keyp(sfe23_dev,end=*next)
+                if pos(sfe23_trip$=previous_key$)=1 then
+                    next_seq_no=num(previous_key$(1+len(sfe23_trip$)),err=*next)+new_sfe23_lines
+                endif
+                sfe23a.material_seq$=str(next_seq_no:material_seq_mask$)
+                sfe23a.qty_ordered=sfe25a.qty_ordered
+                sfe23a.tot_qty_iss=sfe25a.tot_qty_iss
+                sfe23a.unit_cost=sfe25a.unit_cost
+                sfe23a.qty_issued=sfe25a.qty_issued
+                sfe23a.issue_cost=sfe25a.issue_cost
+            endif
 
             if lf$="Y" and (pos(p9$="LS")=0 or ivm01a.lotser_item$<>"Y" or ivm01a.inventoried$<>"Y") then
                 rem --- Get LIFO-FIFO cost
@@ -386,7 +417,8 @@ rem --- Read next Issue Inventory Transaction (SFE_WOTRANS) record
 
                 rem --- Lotted/Serialized Totals
                 sfe25a.qty_issued=t1
-                sfe25a.issue_cost=iff(t1<>0,t2/t1,0)
+                sfe25a.issue_cost=0
+                if t1<>0 then sfe25a.issue_cost=t2/t1
                 TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
                 OutVect!.addItem("")
                 OutVect!.addItem("")
@@ -413,7 +445,7 @@ rem --- Read next Issue Inventory Transaction (SFE_WOTRANS) record
             gosub glrecap
             account$=wo_wip_acct$
             amount=-amount
-            memo$=cvs(sfe01a.description_01$,2)+" "+cvs(sfe01a.description_02$,2)
+            memo$=wo_desc$
             gosub glrecap
 
             t0=t0+(sfe25a.qty_issued*sfe25a.issue_cost)
@@ -432,7 +464,7 @@ rem --- Read next Issue Inventory Transaction (SFE_WOTRANS) record
         sfw01a.wo_type$=sfe15a.wo_type$
         find record (sfw01_dev,key=sfw01a.firm_id$+sfw01a.wo_type$,dom=*next) sfw01a$
         sfw01a.act_mat_tot=sfw01a.act_mat_tot+t0
-        write record (sfw01_dev,key=sfw01a.firm_id$+sfw01a.wo_type$) sfw01a$
+        write record (sfw01_dev) sfw01a$
     wend
     
 rem --- Report Total
@@ -519,7 +551,7 @@ rem --- Destroy the progress meter and run the next overlay
         goto std_exit
     endif
 
-rem --- Functions
+rem --- Standard AddonSoftware functions (01Mar2006)
 
 rem --- Format inventory item description
 
@@ -615,11 +647,12 @@ lifo_fifo: rem --- LIFO/FIFO
     ivw05a.item_id$=sfe25a.item_id$
     ivw05a.line_no$=sfe25a.material_seq$
     ivw05a.unit_cost=icost
-    write record (ivw05_dev,key=w9$) ivw05a$
+    write record (ivw05_dev) ivw05a$
     return                                                  
 
 issue_detail: rem --- Issue Detail
 
+    recs=recs+1
     desc$=fnitem$(ivm01a.item_desc$,desc[1],desc[2],desc[3])
     OutVect!.addItem(sfe25a.item_id$)
     OutVect!.addItem(desc$(1,min(len(desc$),31)))

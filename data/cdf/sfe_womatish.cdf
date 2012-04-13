@@ -2,10 +2,13 @@
 rem --- Hold on to sfe_womatish key
 
 	wo_no$=callpoint!.getUserInput()
-	sfe_womatish_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+wo_no$
+	sfe_womatish_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.BATCH_NO")+
+:		callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+wo_no$
 	callpoint!.setDevObject("sfe_womatish_key",sfe_womatish_key$)
 	callpoint!.setDevObject("wo_location",callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION"))
 	callpoint!.setDevObject("wo_no",wo_no$)
+	firm_loc_wo$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+wo_no$
+	callpoint!.setDevObject("firm_loc_wo",firm_loc_wo$)
 [[SFE_WOMATISH.BDEQ]]
 rem --- Suppress Barista's default delete message
 	callpoint!.setStatus("QUIET")
@@ -31,19 +34,19 @@ rem --- Delete inventory issues and commitments. Must do this before sfe_womatis
 	sfe_wolsissu_dev=fnget_dev("SFE_WOLSISSU")
 	dim sfe_wolsissu$:fnget_tpl$("SFE_WOLSISSU")
 
-	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-	read(sfe_womatisd_dev,key=sfe_womatish_key$,dom=*next)
+	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
+	read(sfe_womatisd_dev,key=firm_loc_wo$,knum="AO_DISP_SEQ",dom=*next)
 	while 1
 		sfe_womatisd_key$=key(sfe_womatisd_dev,end=*break)
-		if pos(sfe_womatish_key$=sfe_womatisd_key$)<>1 then break
+		if pos(firm_loc_wo$=sfe_womatisd_key$)<>1 then break
 		readrecord(sfe_womatisd_dev)sfe_womatisd$
 
 		rem --- Delete lot/serial commitments, but keep inventory commitments (for now)
 		if pos(callpoint!.getDevObject("lotser")="LS") then
-			read(sfe_wolsissu_dev,key=sfe_womatish_key$+sfe_womatisd.internal_seq_no$,dom=*next)
+			read(sfe_wolsissu_dev,key=firm_loc_wo$+sfe_womatisd.internal_seq_no$,dom=*next)
 			while 1
 				sfe_wolsissu_key$=key(sfe_wolsissu_dev,end=*break)
-				if pos(sfe_womatish_key$+sfe_womatisd.internal_seq_no$=sfe_wolsissu_key$)<>1 then break
+				if pos(firm_loc_wo$+sfe_womatisd.internal_seq_no$=sfe_wolsissu_key$)<>1 then break
 				readrecord(sfe_wolsissu_dev)sfe_wolsissu$
 
 				rem --- Delete lot/serial commitments
@@ -71,10 +74,10 @@ rem --- Delete inventory issues and commitments. Must do this before sfe_womatis
 			call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 
 			found=0
-			sfe_womatdtl_key$=sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$
+			sfe_womatdtl_key$=firm_loc_wo$+sfe_womatisd.womatdtl_seq_ref$
 			readrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next)sfe_womatdtl$; found=1
 			if found then
-				sfe_womatdtl.qty_ordered=0
+				sfe_womatdtl.qty_ordered=sfe_womatdtl.tot_qty_iss
 				writerecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$)sfe_womatdtl$
 			endif
 		else
@@ -86,7 +89,7 @@ rem --- Delete inventory issues and commitments. Must do this before sfe_womatis
 			else
 				rem --- Only uncommit portion of issue's qty_issued that is greater than released WO's qty_ordered
 				found=0
-				sfe_womatdtl_key$=sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$
+				sfe_womatdtl_key$=firm_loc_wo$+sfe_womatisd.womatdtl_seq_ref$
 				readrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next)sfe_womatdtl$; found=1
 				if found then
 					if max(0,sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss)>max(0,sfe_womatdtl.qty_ordered-sfe_womatdtl.tot_qty_iss) then
@@ -100,14 +103,14 @@ rem --- Delete inventory issues and commitments. Must do this before sfe_womatis
 [[SFE_WOMATISH.ADEL]]
 rem ---  Delete work order transactions
 
-	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
+	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
 
 	rem --- Delete work order issues transactions
-	remove(fnget_dev("SFE_WOTRANS"),key=sfe_womatish_key$,dom=*next)
+	remove(fnget_dev("SFE_WOTRANS"),key=firm_loc_wo$,dom=*next)
 
 	rem --- Delete work order commit transactions if not being retained
 	if callpoint!.getDevObject("del_issue_only")="N" then
-		remove(fnget_dev("SFE_WOCOMMIT"),key=sfe_womatish_key$,dom=*next)
+		remove(fnget_dev("SFE_WOCOMMIT"),key=firm_loc_wo$,dom=*next)
 	endif
 [[SFE_WOMATISH.BEND]]
 rem --- Remove software lock on batch when batching
@@ -165,13 +168,15 @@ rem --- Existing materials issues?
 	endif
 [[SFE_WOMATISH.ISSUED_DATE.AVAL]]
 rem --- When GL installed, verify date is in an open period.
-	issue_date$=callpoint!.getUserInput()
+	issued_date$=callpoint!.getUserInput()
 	if callpoint!.getDevObject("gl")="Y" then
-		call stbl("+DIR_PGM")+"glc_datecheck.aon",issue_date$,"Y",per$,yr$,status
-		if status>99 then callpoint!.setStatus("ABORT")
-		break
+		call stbl("+DIR_PGM")+"glc_datecheck.aon",issued_date$,"Y",per$,yr$,status
+		if status>99 then 
+			callpoint!.setStatus("ABORT")
+			break
+		endif
 	endif
-	callpoint!.setDevObject("issued_date",issue_date$)
+	callpoint!.setDevObject("issued_date",issued_date$)
 
 
 rem --- New materials issues entry or no existing materials issues
@@ -188,9 +193,9 @@ rem --- New materials issues entry or no existing materials issues
 		sfe_womatish.unit_measure$=callpoint!.getColumnData("SFE_WOMATISH.UNIT_MEASURE")
 		sfe_womatish.warehouse_id$=callpoint!.getColumnData("SFE_WOMATISH.WAREHOUSE_ID")
 		sfe_womatish.item_id$=callpoint!.getColumnData("SFE_WOMATISH.ITEM_ID")
-		sfe_womatish.issued_date$=callpoint!.getColumnData("SFE_WOMATISH.ISSUED_DATE")
+		sfe_womatish.issued_date$=issued_date$
+		sfe_womatish.batch_no$=callpoint!.getColumnData("SFE_WOMATISH.BATCH_NO")
 
-		sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
 		writerecord(sfe_womatish_dev)sfe_womatish$
 
 		rem --- Initialize SFE_WOMATISD Material Issues from SFE_WOMATDTL Material Detail
@@ -199,10 +204,11 @@ rem --- New materials issues entry or no existing materials issues
 		sfe_womatdtl_dev=fnget_dev("SFE_WOMATDTL")
 		dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
 
-		read(sfe_womatdtl_dev,key=sfe_womatish_key$,dom=*next)
+		firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
+		read(sfe_womatdtl_dev,key=firm_loc_wo$,dom=*next)
 		while 1
 			sfe_womatdtl_key$=key(sfe_womatdtl_dev,end=*break)
-			if pos(sfe_womatish_key$=sfe_womatdtl_key$)<>1 then break
+			if pos(firm_loc_wo$=sfe_womatdtl_key$)<>1 then break
 			readrecord(sfe_womatdtl_dev)sfe_womatdtl$
 
 			sfe_womatisd.firm_id$=sfe_womatdtl.firm_id$
@@ -220,6 +226,7 @@ rem --- New materials issues entry or no existing materials issues
 			sfe_womatisd.unit_cost=sfe_womatdtl.unit_cost
 			sfe_womatisd.qty_issued=sfe_womatdtl.qty_issued
 			sfe_womatisd.issue_cost=sfe_womatdtl.issue_cost
+			sfe_womatisd.batch_no$=sfe_womatish.batch_no$
 
 			writerecord(sfe_womatisd_dev)sfe_womatisd$
 		wend
@@ -233,10 +240,10 @@ rem --- New materials issues entry or no existing materials issues
 		if msg_opt$="Y" then
 
 			rem --- Pull complete
-			read(sfe_womatisd_dev,key=sfe_womatish_key$,dom=*next)
+			read(sfe_womatisd_dev,key=firm_loc_wo$,knum="AO_DISP_SEQ",dom=*next)
 			while 1
 				sfe_womatisd_key$=key(sfe_womatisd_dev,end=*break)
-				if pos(sfe_womatish_key$=sfe_womatisd_key$)<>1 then break
+				if pos(firm_loc_wo$=sfe_womatisd_key$)<>1 then break
 				readrecord(sfe_womatisd_dev)sfe_womatisd$
 
 				dim ivm_itemwhse$:ivm_itemwhse_tpl$
@@ -274,14 +281,14 @@ rem --- New materials issues entry or no existing materials issues
 
 				findrecord(sfe_womastr_dev,key=firm_id$+"  "+callpoint!.getColumnData("SFE_WOMATISH.WO_NO"))sfe_womastr$
 
-				read(sfe_womatisd_dev,key=sfe_womatish_key$,dom=*next)
+				read(sfe_womatisd_dev,key=firm_loc_wo$,knum="AO_DISP_SEQ",dom=*next)
 				while 1
 					sfe_womatisd_key$=key(sfe_womatisd_dev,end=*break)
-					if pos(sfe_womatish_key$=sfe_womatisd_key$)<>1 then break
+					if pos(firm_loc_wo$=sfe_womatisd_key$)<>1 then break
 					readrecord(sfe_womatisd_dev)sfe_womatisd$
 
 					dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
-					findrecord(sfe_womatl_dev,key=sfe_womatish_key$+sfe_womatisd.womatdtl_seq_ref$,knum="AO_MAT_SEQ",dom=*next)sfe_womatl$
+					findrecord(sfe_womatl_dev,key=firm_loc_wo$+sfe_womatisd.womatdtl_seq_ref$,knum="AO_MAT_SEQ",dom=*next)sfe_womatl$
 					if sfe_womatl.oper_seq_ref$="" then continue
 
 					rem --- Was this operation selected?
@@ -303,12 +310,12 @@ rem --- New materials issues entry or no existing materials issues
 					findrecord(ivm_itemwhse_dev,key=firm_id$+sfe_womatisd.warehouse_id$+sfe_womatisd.item_id$,dom=*next)ivm_itemwhse$
 
 					if sfe_womastr.sch_prod_qty=0 then sfe_womastr.sch_prod_qty=1
-					sfe_womatisd.qty_issued=sfe_womatisd.qty_ordered*qty_to_issue/sfe_womastr.sch_prod_qty
+					sfe_womatisd.qty_issued=min(sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss,sfe_womatisd.qty_ordered*qty_to_issue/sfe_womastr.sch_prod_qty)
 					sfe_womatisd.issue_cost=ivm_itemwhse.unit_cost
 
 					writerecord(sfe_womatisd_dev)sfe_womatisd$
 				wend
-            		endif
+			endif
 
 		endif
 
@@ -320,7 +327,8 @@ rem --- New materials issues entry or no existing materials issues
 		writerecord(sfe_wotrans_dev)sfe_wotrans$
 
 	        rem --- Reload and display with new detail
-	        callpoint!.setStatus("RECORD:["+sfe_womatish_key$+"]")
+		sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
+		callpoint!.setStatus("RECORD:["+sfe_womatish_key$+"]")
 	endif
 [[SFE_WOMATISH.ISSUED_DATE.BINP]]
 rem -- Verify WO status

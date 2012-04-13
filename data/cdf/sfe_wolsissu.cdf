@@ -65,11 +65,11 @@ get_tot_ls_qty_issued: rem --- Get total lot/serial issued quantity and total is
 	dim sfe_wolsissu$:fnget_tpl$("SFE_WOLSISSU")
 	tot_ls_qty_issued=0
 	tot_ls_issue_cost=0
-	sfe_womatisd_key$=callpoint!.getDevObject("sfe_womatisd_key")
-	read(sfe_wolsissu_dev,key=sfe_womatisd_key$,dom=*next)
+	firm_loc_wo_isn$=callpoint!.getDevObject("firm_loc_wo_isn")
+	read(sfe_wolsissu_dev,key=firm_loc_wo_isn$,dom=*next)
 	while 1
 		sfe_wolsissu_key$=key(sfe_wolsissu_dev,end=*break)
-		if pos(sfe_womatisd_key$=sfe_wolsissu_key$)<>1 then break
+		if pos(firm_loc_wo_isn$=sfe_wolsissu_key$)<>1 then break
 		readrecord(sfe_wolsissu_dev)sfe_wolsissu$
 		tot_ls_qty_issued=tot_ls_qty_issued+sfe_wolsissu.qty_issued
 		tot_ls_issue_cost=tot_ls_issue_cost+sfe_wolsissu.qty_issued*sfe_wolsissu.issue_cost

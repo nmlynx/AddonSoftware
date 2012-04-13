@@ -6,8 +6,6 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 
-rem wgh ... modify for batching (see gdoc 13a,b,c,d)
-
     setesc std_error
     seterr std_error
 
@@ -37,8 +35,6 @@ rem --- Get user approval to update
 
 rem --- Initialize inventory item update
 	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",ivfiles[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-escape; rem wgh ... stop!!!
-goto std_exit_no_update; rem wgh ... temporary exit for testing
 
 rem --- Start progress meter and position header file
 
@@ -58,10 +54,10 @@ rem --- Read next Issue Inventory Transaction (SFE_WOTRANS) record
 
         rem --- Get Work Order Entry (SFE_WOMASTR, sfe-01) record
         dim sfe01a$:fattr(sfe01a$)
-        find record (sfe01_dev,key=firm_id$+wotrans.wo_location$+wotrans.wo_no$,dom=*continue) sfe01a$
-        if cvs(sfe01a.firm_id$,2)="" then
+        find record (sfe01_dev,key=firm_id$+wotrans.wo_location$+wotrans.wo_no$,dom=*next) sfe01a$
+        if cvs(sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,2)="" then
             rem --- SFE_WOMASTR (sfe-01) record not found
-            remove (wotrans_dev,key=wotrans$,dom=+next)
+            remove (wotrans_dev,key=firm_id$+wotrans.wo_location$+wotrans.wo_no$,dom=*next)
             continue
         endif
 
@@ -72,6 +68,10 @@ rem --- Read next Issue Inventory Transaction (SFE_WOTRANS) record
             if pos(sfe15_key$=sfe25_key$)<>1 then break
             read record (sfe25_dev) sfe25a$
             if sfe25a.qty_issued=0 then continue
+
+            rem --- Get inventory item
+            dim ivm01a$:fattr(ivm01a$)
+            find record (ivm01_dev,key=firm_id$+sfe25a.item_id$,dom=*next) ivm01a$
             
             rem --- Update ivm-02 Warehouse Record
             updated_unit_cost=sfe25a.issue_cost
@@ -79,393 +79,168 @@ rem --- Read next Issue Inventory Transaction (SFE_WOTRANS) record
                 gosub update_warehouse_record
             endif
 
-rem wgh ... stopped here
-            rem --- Update Open WO Material Transactions (SFT_OPNMATTR, sfe-21)
-            dim sfe21a$:fattr(sfe21a$)
-            sfe21a.firm_id$=sfe25a.firm_id$
-            sfe21a.wo_location$=sfe25a.wo_location$
-            sfe21a.wo_no$=sfe25a.wo_no$
-            sfe21a.trans_date=sfe15a.issued_date$
-            sfe21a.trans_seq$(1)=$ff$
-            sfe21a.material_seq_ref$=sfe25a.internal_seq_no$
-            sfe21a.unit_measure$=sfea25a.unit_measure$
-            sfe21a.warehouse_id$=sfe25a.warehouse_id$
-            sfe21a.item_id$=sfe25a.item_id$
-            sfe21a.units=sfe25a.qty_issued
-            sfe21a.unit_cost=updated_unit_cost
+            rem --- Update Open WO Material Transactions (SFT_OPNMATTR, sft-21)
+            dim sft21a$:fattr(sft21a$)
+            next_seq_no=1
+            trans_seq_mask$=fill(len(sft21a.trans_seq$),"0")
+            sft21a.firm_id$=sfe25a.firm_id$
+            sft21a.wo_location$=sfe25a.wo_location$
+            sft21a.wo_no$=sfe25a.wo_no$
+            sft21a.trans_date$=sfe15a.issued_date$
+            sft21a.material_seq_ref$=sfe25a.internal_seq_no$
+            sft21a.unit_measure$=sfe25a.unit_measure$
+            sft21a.warehouse_id$=sfe25a.warehouse_id$
+            sft21a.item_id$=sfe25a.item_id$
+            sft21a.units=sfe25a.qty_issued
+            sft21a.unit_cost=updated_unit_cost
             precision 2
-            sfe21a.ext_cost=sfe21a.units*sfe21a.unit_cost
+            sft21a.ext_cost=sft21a.units*sft21a.unit_cost
             precision ivs01_precision
-            next_seq_no=0
-            sft21_key$=sfe21a.firm_id$=sfe25a.firm_id$+sfe21a.wo_location$=sfe25a.wo_location$+
-:               sfe21a.wo_no$=sfe25a.wo_no$+sfe21a.trans_date=sfe15a.issued_date$+sfe21a.trans_seq$(1)=$ff$
-            read (sft21_dev,key=sft21_key$,dom=*next)
+            sft21_trip$=sft21a.firm_id$+sft21a.wo_location$+sft21a.wo_no$+sft21a.trans_date$
+            read (sft21_dev,key=sft21_trip$+$ff$,dom=*next)
             previous_key$=""
-previous_key$=keyp(sft21_dev,end=*next)
-if pos(y0$(1,15)=previous_key$)=1 next_seq_no=num(previous_key$(16,3),err=*next)+1
-y0$(16,3)=str(next_seq_no:"000")
-write record (sft21_dev,key=y0$) sft21a$
-            
-        wend
-    wend
-
-l1100: rem --- Main Read
-
-    k0$=key(wotrans_dev,end=l4000)
-    read (wotrans_dev)
-    if k0$(1,5)<>firm_id$+"  "+"D" goto l4000
-    read record (sfe15_dev,key=k0$(1,4)+k0$(6)+"000",dom=l1100) sfe15a$
-    
-l1220:
-    dim d[11],z1$(g[4],"0"),d0$(30)
-    find record (sfe01_dev,key=a0$(1,11),dom=l3900) sfe01a$
-    find record (sfm10_dev,key=firm_id$+"A"+d0$(12,2),dom=*next) sfm10a$
-    z1$=z1$(1,g[4])
-
-    read (sfe25_dev,key=k0$(1,4)+k0$(6),dom=*next)
-l1300: rem --- Process Issue Details
-
-    k1$=key(sfe25_dev,end=l3000)
-    if k1$(1,11)<>a0$(1,11) goto l3000
-    dim w[4],b[10],c[16]
-    read record (sfe25_dev,key=k1$) sfe25a$
-    if w[3]=0 goto l1300
-    call pgmdir$+"adc_progress.aon","S","","","",w0$(5,7)+"-"+w0$(12,3),0,0,1,0,ignore_status
-
-rem --- Verify Inventory Item Number
-
-    dim z0$(g[4],"0"),b1$(desc[1]+desc[2]+desc[3])
-    find record (ivm01_dev,key=firm_id$+w1$(21,20),dom=l2900) ivm01a$
-    find record (ivm02_dev,key=firm_id$+w1$(19,22),dom=l2900) ivm02a$
-    v1=c[11]
-    if r9$="N" z0$=b6$(1,g[4]); goto l1500
-    read record (arm10_dev,key=firm_id$+"D"+c1$(13,2),dom=l1500) arm10d$
-    z0$=ar1$(61,g[4])
-
-l1500: rem --- Process LIFO/FIFO ?
-
-    lifo$="N"
-    if p3$(3,1)="N" or (pos(p9$="LS")>0 and b2$(19,2)="YY") goto l1600
-rem --------------------------------------------------------------------------
-rem It look like at some point this program was used both the estimate the
-rem cost on registers (and use that cost for the GL) and to actually update
-rem inventory.  This program current is used only for the first purpose.
-rem ivc_itemupdt.aon is used to update all inventory and it has its own lifo/
-rem fifo logic in it.  At some point, ivc_itemupdt should call this program
-rem so that all lifo/fifo logic is in one place.
-rem 
-rem Since this program is currently always estimating the cost, not updating
-rem it, lfchan_dev will always be ivw04_dev and we will always build the work
-rem file if necessary.
-rem
-rem KJS 24-Dec-2008
-rem --------------------------------------------------------------------------
-    lifo$="Y"
-    action$=p3$(3,1)+"I"
-    quantity=abs(w[3])
-    cost=w[4]
-    type$="R"
-    places=ivs01_precision
-    lf_date$=a1$(7,3)
-    if w[3]<0 action$(2,1)="R"
-    dim item$[2]
-    item$[0]=firm_id$
-    item$[1]=w1$(19,2)
-    item$[2]=w1$(21,20)
-    call pgmdir$+"ivc_lifofifo.aon",action$,type$,lf_date$,lf_channels[all],lf_tmpls$[all],item$[all],places,quantity,cost,ret_cost,status
-    v1=ret_cost
-
-l1600: rem --- Update ivm-02 Warehouse Record
-
-    if pos(p9$="LS")>0 and pos(b2$(19,2)="YY")=1 goto l1700
-    gosub get_item_info
-    refs[0]=-(w[3])
-    refs[1]=v1
-    gosub inventory_update
-
-l1700: rem --- G/L Distribution
-
-    precision 2
-    if pos(lf$="LS")=0 goto l1760
-    if pos(b2$(19,2)="YY")=0 goto l1760
-    dim h[1]
-    amount=0
-    units=0
-    read (sfe14_dev,key=w0$,dom=*next)
-l1735:
-    k1$=key(sfe14_dev,end=l1765)
-    if pos(w0$=k1$)<>1 goto l1765
-    read record (sfe14_dev,key=k1$) sfe14a$
-    amount=amount+(-h[0]*h[1])
-    units=units+(-h[0])
-    goto l1735
-l1760:
-    amount=(-w[3])*w[4]
-    units=-w[3]
-l1765:
-    account$=z0$
-    v0$=account$
-    when$=a1$(7,3)
-    memo$=fnitem$(b1$,desc[1],desc[2],desc[3])
-    ref1$="WO "+d0$(5,7)
-    ref2$="Step "+w1$(7,3)
-    ref3$="Whse "+d0$(54,2)
-    if lifo$="Y" amount=(-w[3])*v1
-    gosub glpost
-    account$=z1$
-    amount=-amount
-    units=-units
-    gosub glpost
-    precision ivs01_precision
-
-rem wgh ... stopped here
-rem --- Open Work Order Transactions
-
-    dim y0$(18),y1$(43),y[11]
-    y0$(1)=w0$(1,11)+a1$(7,3)+"M"+$ff$
-    y1$(1)=w0$(12,3)+w1$(1,2)
-    y1$(22,22)=w1$(19,22)
-    y[0]=w[3]
-    y[1]=w[4]
-    precision 2
-    y[2]=w[3]*w[4]
-    w9=0
-    if lifo$="Y" y[2]=w[3]*v1
-    precision ivs01_precision
-    read (sft21_dev,key=y0$,dom=*next)
-    l$=keyp(sft21_dev,end=l2010)
-    if pos(y0$(1,15)=l$)=1 w9=num(l$(16,3),err=*next)+1
-l2010:
-    y0$(16,3)=str(w9:"000")
-    write record (sft21_dev,key=y0$) sft21a$
-
-rem --- Update WO Transaction Cross Reference
-
-    dim m0$(18)
-    m0$(1,11)=w0$(1,11)
-    m0$(12,3)=a1$(7,3)
-    m0$(15,1)="M"
-    m0$(16,3)=y0$(16,3)
-    write record (sfm07_dev,key=m0$) sfm07a$
-
-rem --- Lotted/Serialized Update
-
-    if pos(lf$="LS")=0 goto l2800
-    if b2$(19,1)<>"Y" or b2$(20,1)<>"Y" goto l2800
-    dim h[1],xf[11]
-    read (sfe14_dev,key=w0$,dom=*next)
-l2200:
-    k1$=key(sfe14_dev,end=l2800)
-    if pos(w0$=k1$)<>1 goto l2800
-    read record (sfe14_dev,key=k1$) sfe14a$
-    if h[0]=0 goto l2790
-    gosub update_lotser_record
-
-rem --- WOT-11 Here
-
-    dim x[2],x0$(21)
-    x0$(1)=y0$+$ff$
-    x1$=" "
-    x2$=h1$
-    w9=0
-    read (sft11_dev,key=x0$,dom=*next)
-    l$=keyp(sft11_dev,end=l2450)
-    if pos(y0$=l$)=1 w9=num(l$(19,3),err=*next)+1
-l2450:
-    x0$(19,3)=str(w9:"000")
-    x[0]=h[0]
-    x[1]=h[1]
-    x[2]=x[0]*x[1]
-    write record (sft11_dev,key=x0$) sft11a$
-
-rem --- Done With Lot/Serial
-l2790: remove (sfe14_dev,key=h0$)
-
-    goto l2200
-
-l2800: rem --- Check On More...
-
-    w[1]=w[1]+w[3]
-    w[3]=0
-l2840:
-    if w[1]>=w[0] goto l2880
-    write record (sfe25_dev,key=w0$) sfe25a$
-    r0$=w0$(1,11)+w1$(7,3)
-    r1$=w1$(1,20+p[0])
-    read record (sfe23_dev,key=r0$,dom=*next) woe23a$
-    r0=w[0]
-    r1=w[1]
-    r2=w[2]
-    r3=w[3]
-    r4=w[4]
-    write record (sfe23_dev,key=r0$) woe23a$
-    goto l2890
-l2880: remove (sfe25_dev,key=w0$,dom=*next)
-
-remove (sfe23_dev,key=w0$(1,11)+w1$(7,3),dom=*next)
-
-l2890:
-    goto l1220
-
-l2900: rem --- No Valid Item Code++
-
-    w[3]=0
-    goto l2840
-
-l3000: rem --- Update Header
-
-    extract record (sfe01_dev,key=a0$(1,11)) sfe01a$
-    if pos(" "<>d0$(25,3))=0 d0$(25,3)=a1$(7,3)
-    if d0$(28,3)<a1$(7,3) d0$(28,3)=a1$(7,3)
-    write record (sfe01_dev,key=d0$(1,11)) sfe01a$
-
-rem --- Any More Left?
-
-    read (sfe25_dev,key=a0$(1,11),dom=*next)
-    k4$=key(sfe25_dev,end=l3200)
-    if k4$(1,11)<>a0$(1,11) goto l3200
-    goto l3300
-l3200: remove (sfe15_dev,key=a0$(1,11)+"000",dom=*next)
-
-remove (sfe13_dev,key=a0$(1,11)+"000",dom=*next)
-
-    goto l3900
-l3300:
-    a1$(7,3)=""
-    write record (sfe15_dev,key=a0$) sfe15a$
-    write record (sfe13_dev,key=a0$) woe13a$
-
-l3900: rem --- Remove Record
-
-remove (wotrans_dev,key=k0$,dom=l3990)
-
-    goto l1100
-
-l4000: rem --- End
-
-    if gl$="Y" call pgmdir$+"glc_ctlupdate.aon",status
-    call pgmdir$+"adc_batchdelete.aon",status
-    goto l9900                                                  
-
-UPDATE_WAREHOUSE_RECORD: rem --- Update Item/Warehouse Information 
-
-    gosub get_item_info
-    let refs[0]=-(w[3]),refs[1]=w[4]
-    gosub inventory_update
-    return                                                  
-
-update_lotser_record: rem --- Update Lot/Serial Information 
-
-    gosub get_item_info
-    let items$[3]=h1$(1),refs[0]=-(h[0]),refs[1]=h[1]
-    gosub inventory_update
-    return                                                  
-rem --- Inventory/Action Item Information
-get_item_info:                                                  
-    dim items$[3],refs$[11],refs[5]
-    let items$[0]=w0$(1,2),items$[1]=w1$(19,2),items$[2]=w1$(21,20)
-    let refs$[0]=a1$(7,3),refs$[3]=d0$(5,7),refs$[5]=w0$(12,3),action$="WI"
-    let refs$[1]=d0$(34,6),refs$[2]=d0$(40,7),refs$[4]=d0$(12,2)
-    let refs$[9]=d0$(56,20)
-    return                                                  
-rem --- Perform Inventory Update 
-inventory_update:
-    call pgmdir$+"ivc_itemupdt.aon",action$,ivfiles[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-    return                                                  
-rem --- Standard G/L Posting Routine
-glpost:                                                  
-    if gl$<>"Y" goto l6990
-    call pgmdir$+"glc_glpost.aon",glm01_dev,glt04_dev,glt05_dev,account$,when$,ref1$,ref2$,ref3$,memo$,amount,units,status
-l6990: return                                                  
-
-rem #include std_functions.src
-rem --- Standard AddonSoftware functions (01Mar2006)
-rem --- Functions used to retrieve form values
-
-    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
-    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
-:                            cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
-    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
-:                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
-    def fnget_table$(q0$)=rd_alias_id$
-
-rem --- Miscellaneous functions
-
-    def fncenter(q$,q)=int((q-len(q$))/2)
-
-rem --- Format inventory item description
-
-    def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
-
-rem --- Format zip/postal code
-
-    def fnzipcode$(q$)
-        q$=cvs(q$,4)
-        if len(cvs(q$,2))<>9 and len(cvs(q$,2))<>6 return q$
-        if len(cvs(q$,2))=9
-            q1$="[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]"
-            q1=mask(cvs(q$,2),q1$)
-            if q1=0 return q$
-            if q1<>0
-                if q$(6,4)="0000" return q$(1,5)
-            return q$(1,5)+"-"+q$(6,4)
+            previous_key$=keyp(sft21_dev,end=*next)
+            if pos(sft21_trip$=previous_key$)=1 then
+                next_seq_no=num(previous_key$(1+len(sft21_trip$)),err=*next)+1
             endif
+            sft21a.trans_seq$=str(next_seq_no:trans_seq_mask$)
+            write record (sft21_dev) sft21a$
+
+            rem --- Update WO Transaction Cross Reference
+            rem --- SFX_WOTRANXR (sfm-07) has been replaced by a database view vw_sfx_wotranxr
+
+            rem --- Update Lotted/Serialized Issues (SFE_WOLSISSU, sfe-14)
+            if pos(p9$="LS") and ivm01a.lotser_item$="Y" and ivm01a.inventoried$="Y" then
+                t1=0,t2=0
+                sfe14_trip$=sfe25a.firm_id$+sfe25a.wo_location$+sfe25a.wo_no$+sfe25a.internal_seq_no$
+                read (sfe14_dev,key=sfe14_trip$,dom=*next)
+                while 1
+                    sfe14_key$=key(sfe14_dev,end=*break)
+                    if pos(sfe14_trip$=sfe14_key$)<>1 then break
+                    read record (sfe14_dev) sfe14a$
+                    if sfe14a.qty_issued<>0 then
+                        gosub update_lotser_record
+
+                        rem --- Update Open WO Lot/Serial Transactions (SFT_OPNLSTRN, sft-11)
+                        dim sft11a$:fattr(sft11a$)
+                        next_seq_no=1
+                        sequence_no_mask$=fill(len(sft11a.sequence_no$),"0")
+                        sft11a.firm_id$=sft21a.firm_id$
+                        sft11a.wo_location$=sft21a.wo_location$
+                        sft11a.wo_no$=sft21a.wo_no$
+                        sft11a.trans_date$=sft21a.trans_date$
+                        sft11a.trans_seq_ref$=sft21a.trans_seq$
+                        sft11a.lotser_no$=sfe14a.lotser_no$
+                        sft11a.cls_inp_qty=sfe14a.qty_issued
+                        sft11a.closed_cost=sfe14a.issue_cost
+                        precision 2
+                        sft11a.ext_cost=sft11a.cls_inp_qty*sft11a.closed_cost
+                        precision ivs01_precision
+                        sft11_trip$=sft11a.firm_id$+sft11a.wo_location$+sft11a.wo_no$+sft11a.trans_date$+sft11a.trans_seq_ref$
+                        read (sft11_dev,key=sft11_trip$+$ff$,dom=*next)
+                        previous_key$=""
+                        previous_key$=keyp(sft11_dev,end=*next)
+                        if pos(sft11_trip$=previous_key$)=1 then
+                            next_seq_no=num(previous_key$(1+len(sft11_trip$)),err=*next)+1
+                        endif
+                        sft11a.sequence_no$=str(next_seq_no:sequence_no_mask$)
+                        write record (sft11_dev) sft11a$
+                    endif
+
+                    rem --- Done with this lot/serial number
+                    remove (sfe14_dev,key=sfe14_key$)
+                wend; rem --- end sfe-14 read
+            endif
+            
+            rem --- More to issue?
+            sfe25a.tot_qty_iss=sfe25a.tot_qty_iss+sfe25a.qty_issued
+            sfe25a.qty_issued=0
+            if cvs(sfe25a.womatdtl_seq_ref$,2)<>"" then
+                sfe23_key$=sfe25a.firm_id$+sfe25a.wo_location$+sfe25a.wo_no$+sfe25a.womatdtl_seq_ref$
+            else
+                sfe23_key$=sfe25a.firm_id$+sfe25a.wo_location$+sfe25a.wo_no$+sfe25a.internal_seq_no$
+            endif
+            if sfe25a.tot_qty_iss>=sfe25a.qty_ordered then
+                rem --- All issued, so remove SFE_WOMATISD and SFE_WOMATDTL (sfe-25 and sfe-23)
+                remove (sfe25_dev,key=sfe25a.firm_id$+sfe25a.wo_location$+sfe25a.wo_no$+sfe25a.internal_seq_no$,dom=*next)
+                remove (sfe23_dev,key=sfe23_key$,dom=*next)
+            else
+                rem --- More left to issue, update SFE_WOMATDTL (sfe-23)
+                dim sfe23a$:fattr(sfe23a$)
+                read record (sfe23_dev,key=sfe23_key$,knum="PRIMARY",dom=*next) sfe23a$
+                if cvs(sfe23a.firm_id$+sfe23a.wo_location$+sfe23a.wo_no$+sfe23a.internal_seq_no$,2)="" then
+                    rem --- Create new SFE_WOMATDTL (sfe-23) record
+                    sfe23a.firm_id$=sfe25a.firm_id$
+                    sfe23a.wo_location$=sfe25a.wo_location$
+                    sfe23a.wo_no$=sfe25a.wo_no$
+                    if cvs(sfe25a.womatdtl_seq_ref$,2)<>"" then
+                        sfe23a.internal_seq_no$=sfe25a.womatdtl_seq_ref$
+                    else
+                        sfe23a.internal_seq_no$=sfe25a.internal_seq_no$
+                        sfe25a.womatdtl_seq_ref$=sfe23a.internal_seq_no$
+                    endif
+                    sfe23a.unit_measure$=sfe25a.unit_measure$
+                    sfe23a.warehouse_id$=sfe25a.warehouse_id$
+                    sfe23a.item_id$=sfe25a.item_id$
+                    sfe23a.require_date$=sfe25a.require_date$
+                    rem --- Get next materials sequence number
+                    next_seq_no=1
+                    material_seq_mask$=fill(len(sfe23a.material_seq$),"0")
+                    sfe23_trip$=sfe23a.firm_id$+sfe23a.wo_location$+sfe23a.wo_no$
+                    read (sfe23_dev,key=sfe23_trip$+$ff$,knum="AO_DISP_SEQ",dom=*next)
+                    previous_key$=""
+                    previous_key$=keyp(sfe23_dev,end=*next)
+                    if pos(sfe23_trip$=previous_key$)=1 then
+                        next_seq_no=num(previous_key$(1+len(sfe23_trip$)),err=*next)+1
+                    endif
+                    sfe23a.material_seq$=str(next_seq_no:material_seq_mask$)
+                endif
+                sfe23a.qty_ordered=sfe25a.qty_ordered
+                sfe23a.tot_qty_iss=sfe25a.tot_qty_iss
+                sfe23a.unit_cost=sfe25a.unit_cost
+                sfe23a.qty_issued=sfe25a.qty_issued
+                sfe23a.issue_cost=sfe25a.issue_cost
+                write record (sfe23_dev) sfe23a$
+
+                rem --- Update SFE_WOMATISD (sfe-25)
+                write record (sfe25_dev) sfe25a$
+            endif
+        wend; rem -- end sfe-25 read
+        
+        rem --- Update Work Order Entry (SFE_WOMASTR, sfe-01) record
+        extract record (sfe01_dev,key=firm_id$+wotrans.wo_location$+wotrans.wo_no$) sfe01a$
+        if cvs(sfe01a.act_st_date$,2)="" then sfe01a.act_st_date$=sfe15a.issued_date$
+        if sfe01a.lstact_date$<sfe15a.issued_date$ then sfe01a.lstact_date$=sfe15a.issued_date$
+        write record (sfe01_dev) sfe01a$
+        
+        rem --- Any SFE_WOMATISD (sfe-25) records left?
+        read (sfe25_dev,key=sfe15_key$,knum="BATCH_KEY",dom=*next)
+        sfe25_key$=""
+        sfe25_key$=key(sfe25_dev,end=*next)
+        if pos(sfe15_key$=sfe25_key$)<>1 then
+            remove (sfe15_dev,key=firm_id$+wotrans.wo_location$+wotrans.wo_no$,dom=*next)
+            remove (sfe13_dev,key=firm_id$+wotrans.wo_location$+wotrans.wo_no$,dom=*next)
+            delete_batch=1
+        else
+            sfe15a.issued_date$(1)=""
+            write record (sfe15_dev) sfe15a$
+            write record (sfe13_dev) sfe13a$
+            delete_batch=0
         endif
-        if len(cvs(q$,2))=6
-            q1$="[a-zA-Z][0-9][a-zA-Z][0-9][a-zA-Z][0-9]"
-            q1=mask(cvs(q$,2),q1$)
-            if q1=0 return q$ else return q$(1,3)+" "+q$(4,3)
-        endif
-    fnend
 
-rem --- Date/time handling functions
+        rem --- Remove Issue Inventory Transaction (SFE_WOTRANS) record
+        remove (wotrans_dev,key=firm_id$+wotrans.wo_location$+wotrans.wo_no$,dom=*next)
+    wend; rem --- end SFE_WOTRANS read
 
-    def fndate$(q$)
-        q1$=""
-        q1$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
-        if q1$="" q1$=q$
-        return q1$
-    fnend
-    def fnyy$(q$)=q$(3,2)
-    def fnclock$(q$)=date(0:"%hz:%mz %p")
-    def fntime$(q$)=date(0:"%Hz%mz")
+rem --- All done
 
-rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
-
-    def fnmask$(q1$,q2$)
-        if q2$="" q2$=fill(len(q1$),"0")
-        return str(-num(q1$,err=*next):q2$,err=*next)
-        q=1
-        q0=0
-        while len(q2$(q))
-              if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
-              q=q+1
-        wend
-        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
-        return str(q1$:q2$)
-    fnend
-
-rem --- fnbasename$: Strip path and optionally the suffix from a file name
-
-    def fnbasename$(q$,q0$)
-        q=max(pos("/"=q$,-1),pos(":"=q$,-1),pos(">"=q$,-1),pos("\"=q$,-1))
-        if q then q$=q$(q+1)
-        if q0$<>"" then q=mask(q$,q0$); if q q$=q$(1,q-1)
-    return q$
-
-rem --- fnglobal: Return numeric value of passed stbl variable
-
-    def fnglobal(q$,q1)
-        q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
-        return q1
-    fnend
-
-rem --- fnglobal$: Return string value of passed STBL variable
-
-    def fnglobal$(q$,q1$)
-        q1$=stbl(q$,err=*next)
-        return q1$
-    fnend
+    if gl$="Y"
+        call pgmdir$+"glc_update.aon",glm01_dev,glt04_dev,glw11_dev,status
+        call pgmdir$+"glc_ctlupdate.aon",status
+        call pgmdir$+"glc_ctldelete.aon",status
+    endif
+    if delete_batch then call pgmdir$+"adc_batchdelete.aon",err=*next,status
+    goto std_exit
 
 update_warehouse_record: rem --- Update Item/Warehouse Information 
 
@@ -478,7 +253,9 @@ update_warehouse_record: rem --- Update Item/Warehouse Information
 update_lotser_record: rem --- Update Lot/Serial Information 
 
     gosub get_item_info
-    let items$[3]=h1$(1),refs[0]=-(h[0]),refs[1]=h[1]
+    items$[3]=sfe14a.lotser_no$
+    refs[0]=-(sfe14a.qty_issued)
+    refs[1]=sfe14a.issue_cost
     gosub inventory_update
     return                                                  
 
@@ -487,7 +264,7 @@ get_item_info: rem --- Inventory/Action Item Information
     items$[0]=sfe25a.firm_id$,items$[1]=sfe25a.warehouse_id$,items$[2]=sfe25a.item_id$
     refs$[0]=sfe15a.issued_date$,refs$[1]=sfe01a.customer_id$,refs$[2]=sfe01a.order_no$
     refs$[3]=sfe01a.wo_no$,refs$[4]=sfe01a.wo_type$,refs$[5]=sfe25a.material_seq$
-    refs$[9]=d0$(56,20)sfe01a.item_id$
+    refs$[9]=sfe01a.item_id$
     action$="WI"
     return                                                  
 
@@ -500,8 +277,6 @@ disp_message: rem --- Display Message Dialog
 
     call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
     return
-
-rem #endinclude std_functions.src
 
 rem #include std_error.src
 

@@ -52,8 +52,8 @@ rem --- Initialize remaining quantity that can be issued
 	sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
 	dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")
 
-	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-	findrecord(sfe_womastr_dev,key=sfe_womatish_key$,dom=*next)sfe_womastr$
+	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
+	findrecord(sfe_womastr_dev,key=firm_loc_wo$,dom=*next)sfe_womastr$
 
 	callpoint!.setDevObject("qty_remain",sfe_womastr.sch_prod_qty-sfe_womastr.qty_cls_todt)
 [[SFE_WOMATISO.ACUS]]
@@ -159,13 +159,13 @@ fill_grid: rem --- Fill the grid with data
 	selected_ops!=callpoint!.getDevObject("selected_ops")
 
 	vectRows!=SysGUI!.makeVector()
-	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
-	read(sfe_wooprtn_dev,key=sfe_womatish_key$,knum="AO_DISP_SEQ",dom=*next)
+	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
+	read(sfe_wooprtn_dev,key=firm_loc_wo$,dom=*next)
 	while 1
-		sfe_wooprtn_key$=key(sfe_wooprtn_dev,knum="AO_DISP_SEQ",end=*break)
-		if pos(sfe_womatish_key$=sfe_wooprtn_key$)<>1 then break
+		sfe_wooprtn_key$=key(sfe_wooprtn_dev,end=*break)
+		if pos(firm_loc_wo$=sfe_wooprtn_key$)<>1 then break
 
-		readrecord(sfe_wooprtn_dev,key=sfe_wooprtn_key$,knum="AO_DISP_SEQ")sfe_wooprtn$
+		readrecord(sfe_wooprtn_dev,key=sfe_wooprtn_key$)sfe_wooprtn$
 		if sfe_wooprtn.line_type$="M" then continue
 
 		dim opcode$:opcode_tpl$
