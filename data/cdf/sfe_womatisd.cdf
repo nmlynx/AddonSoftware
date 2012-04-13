@@ -149,6 +149,11 @@ rem --- Lot/serial entry
 	callpoint!.setDevObject("item_id",callpoint!.getColumnData("SFE_WOMATISD.ITEM_ID"))
 	callpoint!.setDevObject("womatisd_qty_issued",callpoint!.getColumnData("SFE_WOMATISD.QTY_ISSUED"))
 
+	rem --- Save current context so we'll know where to return from lot lookup
+	declare BBjStandardGrid grid!
+	grid! = util.getGrid(Form!)
+	grid_ctx=grid!.getContextID()
+
 	dim dflt_data$[3,1]
 	dflt_data$[1,0] = "WO_LOCATION"
 	dflt_data$[1,1] = callpoint!.getDevObject("wo_location")
@@ -172,13 +177,14 @@ rem --- Lot/serial entry
 
 		rem --- Force writing record with new values
 		callpoint!.setStatus("MODIFIED")
-
-		rem --- Reset focus on this detail row
-		callpoint!.setDevObject("ls_lookup_row",num(callpoint!.getValidationRow()))
 	endif
+
+	rem --- Reset focus on detail row where lot/serial lookup was executed
+	sysgui!.setContext(grid_ctx)
 [[SFE_WOMATISD.BGDS]]
 rem --- Init Java classes
 	use ::sfo_SfUtils.aon::SfUtils
+	use ::ado_util.src::util
 
 rem --- Init lot/serial additional option
 	switch pos(callpoint!.getDevObject("lotser")="LS")
@@ -192,9 +198,6 @@ rem --- Init lot/serial additional option
 			callpoint!.setOptionEnabled("LENT",0)
 			break
 	swend
-
-rem --- Other inits
-	callpoint!.setDevObject("ls_lookup_row",-1)
 [[SFE_WOMATISD.BDEL]]
 rem --- Has record been written yet?
 	sfe_womatisd_dev=fnget_dev("SFE_WOMATISD")
@@ -447,13 +450,6 @@ rem --- Init DISPLAY columns
 rem --- Set precision
 	precision num(callpoint!.getDevObject("precision"))
 
-rem --- Reset focus on detail row where lot/serial lookup was executed
-rem --- Can't use forceEdit per bug 5587, but can use new setFocus method when Barista bug 4794 is fixed
-	if callpoint!.getDevObject("ls_lookup_row")>=0 then
-		rem --- Old setFocus method requires fix to Barista bug 5586
-		callpoint!.setFocus(num(callpoint!.getDevObject("ls_lookup_row")),"SFE_WOMATISD.QTY_ISSUED")
-		callpoint!.setDevObject("ls_lookup_row",-1)
-	endif
 [[SFE_WOMATISD.ITEM_ID.AINV]]
 rem --- Item synonym processing
 	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::grid_entry"
