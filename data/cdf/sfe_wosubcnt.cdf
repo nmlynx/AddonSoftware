@@ -1,29 +1,101 @@
+[[SFE_WOSUBCNT.AGRE]]
+rem --- look at po/req number; if different than it was when we entered the row, update and/or remove link in corresponding po/req detail line
+
+	po_no_was$=callpoint!.getDevObject("start_po_no")
+	po_status_was$=callpoint!.getDevObject("start_po_status")
+	po_seq_ref_was$=callpoint!.getDevObject("start_po_seq_ref")
+
+	po_no_now$=callpoint!.getColumnData("SFE_WOSUBCNT.PO_NO")
+	po_status_now$=callpoint!.getColumnData("SFE_WOSUBCNT.PO_STATUS")
+	po_seq_ref_now$=callpoint!.getColumnData("SFE_WOSUBCNT.PUR_ORD_SEQ_REF")
+
+	poe11_dev=fnget_dev("POE_REQDET")
+	poe12_dev=fnget_dev("POE_PODET")
+
+	poe_podet_tpl$=fnget_tpl$("POE_PODET")
+	poe_reqdet_tpl$=fnget_tpl$("POE_REQDET")
+
+	if po_status_was$+po_no_was$+po_seq_ref_was$<>po_status_now$+po_no_now$+po_seq_ref_now$
+		rem --- figure out from/to device (changed from po to req, req to po, nothing to po, etc.)
+		switch pos(po_status_was$="RP ")
+			case 1; rem --- was a req
+				remove_link_dev=poe11_dev
+				dim remove_link$:poe_reqdet_tpl$
+			break
+			case 2; rem --- was a PO
+				remove_link_dev=poe12_dev
+				dim remove_link$:poe_podet_tpl$
+			break
+			case 3; rem --- no previous link
+				remove_link_dev=0
+				remove_link$=""
+			break
+		swend
+		switch pos(po_status_now$="RP ")
+			case 1; rem --- selected a req
+				create_link_dev=poe11_dev
+				dim create_link$:poe_reqdet_tpl$
+			break
+			case 2; rem --- selected a PO
+				create_link_dev=poe12_dev
+				dim create_link$:poe_podet_tpl$
+			break
+			case 3; rem --- no req/po currently selected
+				create_link_dev=0
+				create_link$=""
+			break
+		swend
+
+		rem --- used to reference different po# (i.e., changed from one po# to another, or have now removed the po# from this subs line)
+		if cvs(po_no_was$,3)<>""
+			find record (remove_link_dev,key=firm_id$+po_no_was$+po_seq_ref_was$,dom=*endif)remove_link$
+			remove_link.wo_no$=""
+			remove_link.wk_ord_seq_ref$=""
+			remove_link$=field(remove_link$)
+			write record (remove_link_dev)remove_link$
+		endif		
+		rem --- now references different po# (i.e., changed from one po# to another, or have now set a po# on this subs line)
+		if cvs(po_no_now$,3)<>""
+			find record (create_link_dev,key=firm_id$+po_no_now$+po_seq_ref_now$,dom=*endif)create_link$
+			create_link.wo_no$=callpoint!.getColumnData("SFE_WOSUBCNT.WO_NO")
+			create_link.wk_ord_seq_ref$=callpoint!.getColumnData("SFE_WOSUBCNT.INTERNAL_SEQ_NO")
+			create_link$=field(create_link$)
+			write record (create_link_dev)create_link$
+		endif
+	endif
 [[SFE_WOSUBCNT.PO_NO.AVAL]]
+rem --- need to use custom query so we get back both po# and line#
+rem --- throw message to user and abort manual entry
 
-
-
-
-
+	if cvs(callpoint!.getUserInput(),3)<>""
+		callpoint!.setMessage("SF_USE_QUERY")
+		callpoint!.setStatus("ABORT")
+	endif
 [[SFE_WOSUBCNT.BGDR]]
 rem --- get PO#/req# and ISN, load up corresponding item info
 
-	switch pos(callpoint!.getColumnData("SFE_WOSUBCNT.PO_STATUS")="RP")
-		case 1;rem requisition
-			call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQDET","PRIMARY",key_tpl$,rd_table_chans$[all],status$
-			dim po_req_key$:key_tpl$
-		break
-		case 2; rem po
-			call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_PODET","PRIMARY",key_tpl$,rd_table_chans$[all],status$
-			dim po_req_key$:key_tpl$
-		break
-	swend
-	po_req_key$=firm_id$+callpoint!.getColumnData("SFE_WOSUBCNT.PO_NO")+callpoint!.getColumnData("SFE_WOSUBCNT.PUR_ORD_SEQ_REF")
-
-	gosub get_po_info
-
-	callpoint!.setColumnData("<<DISPLAY>>.DISP_ITEM",line_desc$,1)
+		switch pos(callpoint!.getColumnData("SFE_WOSUBCNT.PO_STATUS")="RPC ")
+			case 1;rem requisition
+				call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQDET","PRIMARY",key_tpl$,rd_table_chans$[all],status$
+				dim po_req_key$:key_tpl$
+				po_req_key$=firm_id$+callpoint!.getColumnData("SFE_WOSUBCNT.PO_NO")+callpoint!.getColumnData("SFE_WOSUBCNT.PUR_ORD_SEQ_REF")
+				gosub get_po_info
+				callpoint!.setColumnData("<<DISPLAY>>.DISP_ITEM",line_desc$,1)
+			break
+			case 2; rem po		
+				call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_PODET","PRIMARY",key_tpl$,rd_table_chans$[all],status$
+				dim po_req_key$:key_tpl$
+				po_req_key$=firm_id$+callpoint!.getColumnData("SFE_WOSUBCNT.PO_NO")+callpoint!.getColumnData("SFE_WOSUBCNT.PUR_ORD_SEQ_REF")
+				gosub get_po_info
+				callpoint!.setColumnData("<<DISPLAY>>.DISP_ITEM",line_desc$,1)
+			break
+			case 3; rem none/receipt
+			case 4
+			break
+		swend
 [[SFE_WOSUBCNT.PO_NO.BINQ]]
-rem --- call custom inquiry depending on whether we're looking for PO or Req.
+rem --- call custom inquiry depending on whether we're looking for PO or Req. 
+rem --- Query displays PO's/Req's for given firm/vendor, only showing those not already linked to a WO, and only non-stocks (per v6 validation code)
 
 	switch pos(callpoint!.getColumnData("SFE_WOSUBCNT.PO_STATUS")="RP")
 		case 1;rem requisition
@@ -31,7 +103,7 @@ rem --- call custom inquiry depending on whether we're looking for PO or Req.
 			call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_REQDET","PRIMARY",key_tpl$,rd_table_chans$[all],status$
 			dim po_req_key$:key_tpl$
 			dim search_defs$[2]
-			dim filter_defs$[3,2]
+			dim filter_defs$[4,2]
 			filter_defs$[0,0]="POE_REQHDR.FIRM_ID"
 			filter_defs$[0,1]="='"+firm_id$ +"'"
 			filter_defs$[0,2]="LOCK"
@@ -41,6 +113,9 @@ rem --- call custom inquiry depending on whether we're looking for PO or Req.
 			filter_defs$[3,0]="POE_REQDET.WO_NO"
 			filter_defs$[3,1]="='' "
 			filter_defs$[3,2]="LOCK"
+			filter_defs$[4,0]="POC_LINECODE.LINE_TYPE"
+			filter_defs$[4,1]="='N' "
+			filter_defs$[4,2]="LOCK"
  
                 		call stbl("+DIR_SYP")+"bax_query.bbj",gui_dev,form!,"REQDETAIL","",table_chans$[all],po_req_key$,filter_defs$[all]
 		break
@@ -49,7 +124,7 @@ rem --- call custom inquiry depending on whether we're looking for PO or Req.
 			call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_PODET","PRIMARY",key_tpl$,rd_table_chans$[all],status$
 			dim po_req_key$:key_tpl$
 			dim search_defs$[2]
-			dim filter_defs$[3,2]
+			dim filter_defs$[4,2]
 			filter_defs$[1,0]="POE_POHDR.FIRM_ID"
 			filter_defs$[1,1]="='"+firm_id$ +"'"
 			filter_defs$[1,2]="LOCK"
@@ -59,6 +134,9 @@ rem --- call custom inquiry depending on whether we're looking for PO or Req.
 			filter_defs$[3,0]="POE_PODET.WO_NO"
 			filter_defs$[3,1]="='' "
 			filter_defs$[3,2]="LOCK"
+			filter_defs$[4,0]="POC_LINECODE.LINE_TYPE"
+			filter_defs$[4,1]="='N' "
+			filter_defs$[4,2]="LOCK"
 	
                 		call stbl("+DIR_SYP")+"bax_query.bbj",gui_dev,form!,"PODETAIL","",table_chans$[all],po_req_key$,filter_defs$[all]
 
@@ -68,11 +146,6 @@ rem --- call custom inquiry depending on whether we're looking for PO or Req.
 	swend
 
 	gosub get_po_info
-	
-	rem --- this isn't code complete, yet.  Before moving into callpoint! object, need to gosub routine to update corresponding PO
-	rem --- if our PO# was empty, now isn't, update PO w/ WO#
-	rem --- if our PO# wasn't empty, now is, remove WO# from that PO
-	rem --- if our PO# has been changed (i.e., wasn't empty, still isn't, and <>), then remove WO# from old PO and update WO# in new PO
 	
 	if cvs(po_req_key$,3)<>""
 		callpoint!.setColumnData("SFE_WOSUBCNT.PO_NO",po_req_no$,1)
@@ -93,6 +166,12 @@ rem --- enable/disable PO-related fields based on PO Status (enabled if P or R)
 	
 	line_type$=callpoint!.getColumnData("SFE_WOSUBCNT.LINE_TYPE")
 	gosub enable_po_fields
+
+rem --- save current po status flag, po/req# and line#
+
+	callpoint!.setDevObject("start_po_no",callpoint!.getColumnData("SFE_WOSUBCNT.PO_NO"))
+	callpoint!.setDevObject("start_po_status",callpoint!.getColumnData("SFE_WOSUBCNT.PO_STATUS"))
+	callpoint!.setDevObject("start_po_seq_ref",callpoint!.getColumnData("SFE_WOSUBCNT.PUR_ORD_SEQ_REF"))
 [[SFE_WOSUBCNT.PO_STATUS.AVAL]]
 rem --- Disable PO Number and Sequence?
 
@@ -152,7 +231,7 @@ enable_po_fields:
 rem line_type:	input
 rem ========================================================
 
-	if line_type$="S"
+	if line_type$="S" and callpoint!.getColumnData("SFE_WOSUBCNT.PO_STATUS")<>"C"
 		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_STATUS",1)
 		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PUR_ORD_SEQ_REF",1)
 		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"SFE_WOSUBCNT.PO_NO",1)
@@ -184,18 +263,22 @@ rem ========================================================
 	poe_reqdet_tpl$=fnget_tpl$("POE_REQDET")
 
 	line_desc$=""
+	
 
 	rem --- po_req_key$ will be firm/po or req#/ISN; need to read that PO line to get item/description for display in grid, and store ISN in subcontract rec.
 	if po_req_key$<>""
 		if po_req_key$(len(po_req_key$),1)="^" then po_req_key$=po_req_key$(1,len(po_req_key$)-1)
-		switch pos(callpoint!.getColumnData("SFE_WOSUBCNT.PO_STATUS")="RP")
-			case 1;rem requisition
+		switch pos(callpoint!.getColumnData("SFE_WOSUBCNT.PO_STATUS")=" RPC")
+			case 1; rem none
+			break
+			case 2;rem requisition
 				po_req_dev=poe12_dev	
 				po_req_no$=po_req_key.req_no$
 				po_req_line$=po_req_key.internal_seq_no$
 				dim po_req_det$:poe_reqdet_tpl$
 			break
-			case 2; rem po
+			case 3; rem po/receipt
+			case 4
 				po_req_dev=poe11_dev
 				po_req_no$=po_req_key.po_no$
 				po_req_line$=po_req_key.internal_seq_no$
@@ -205,7 +288,7 @@ rem ========================================================
 			break	
 		swend
 			
-		read record(po_req_dev,key=firm_id$+po_req_no$+po_req_line$,dom=*next)po_req_det$
+		read record(po_req_dev,key=firm_id$+po_req_no$+po_req_line$,err=*next)po_req_det$
 		if cvs(po_req_det.item_id$,3)<>""
 			read record (ivm01_dev,key=firm_id$+po_req_det.item_id$,dom=*next)ivm_itemmast$
 			line_desc$=cvs(ivm_itemmast.item_id$,3)+" - "+cvs(ivm_itemmast.item_desc$,3)

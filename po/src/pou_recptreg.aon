@@ -146,7 +146,7 @@ l630:
     files$[17]="sfe-23",ids$[17]="SFE_WOMATDTL"
     files$[18]="sfe-25",ids$[18]="SFE_WOMATISD"
     files$[19]="sfe-32",ids$[19]="SFE_WOSUBCNT"
-    files$[20]="sfm-07",ids$[20]="SFX_WOTRANXR"
+    rem files$[20] used to be sfm-07; no longer used
     files$[21]="sft-21",ids$[21]="SFT_OPNMATTR"
     files$[22]="sft-31",ids$[22]="SFT_OPNSUBTR"
     
@@ -161,13 +161,12 @@ l630:
     sfe23_dev=channels[17]
     sfe25_dev=channels[18]
     sfe32_dev=channels[19]
-    sfm07_dev=channels[20]
     sft21_dev=channels[21]
     sft31_dev=channels[22]
     
     dim sfe13a$:templates$[14],sfe15a$:templates$[15],
 :       sfe22a$:templates$[16],sfe23a$:templates$[17],sfe25a$:templates$[18],
-:       sfe32a$:templates$[19],sfm07a$:templates$[20],
+:       sfe32a$:templates$[19],
 :       sft21a$:templates$[21],sft31a$:templates$[22]
 
     if ls$="Y"     
