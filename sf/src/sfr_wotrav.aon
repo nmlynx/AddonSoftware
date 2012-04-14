@@ -6,6 +6,12 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 
+rem --- This lead-in is one of the four that use the Jasper SFHardCopy.prc
+rem --- The four reports are Traveler, Closed WO Detail Rpt,
+rem --- WO Detail Rpt (menu item), WO Hard Copy (an option within WO Entry)
+rem --- The four are similar in that they have to pass the same params to 
+rem --- the SPROC, but the options on each report differ
+
     use ::bbjasper.bbj::BBJasperReport
     use ::bbjasper.bbj::BBJasperViewerWindow
     use ::java.util.HashMap::HashMap
@@ -18,16 +24,13 @@ rem --- All Rights Reserved
  
     setesc std_error
     seterr std_error
-   
 
 rem --- Use statements and Declares
 
     use ::ado_func.src::func
     use ::ado_pdf.src::PDFHelper
-    use ::sys/prog/bao_callpoint.bbj::Callpoint
     use ::sys/prog/bao_option.bbj::Option
 
-    declare Callpoint callpoint!
     declare Option option!
 
 rem --- Retrieve the program path
@@ -114,8 +117,9 @@ rem --- Assign form input values to local variables
     wo_no$=option!.getOptionData("wo_no")
 	
 rem --- Assign needed jasper params that aren't on O/E form/table
+
+	wo_location$=sfe01a.wo_location$; rem Setting the len per how it's templated, so not hardcoded
 	
-	wo_location$=fill(2)
  	report_seq$="W"
  	wo_no_1$=Option!.getOptionData("WO_NO")
  	wo_no_2$=""
@@ -126,12 +130,11 @@ rem --- Assign needed jasper params that aren't on O/E form/table
  	warehouse_id$=""
  	bill_no_1$=""
  	bill_no_2$=""
- 	beg_desc$=""
- 	end_desc$=""
- 	open$="Y"
- 	closed$="Y"
- 	planned$="Y"
- 	quoted$="Y"
+
+ 	wo_open$="Y"
+ 	wo_closed$="Y"
+ 	wo_planned$="Y"
+ 	wo_quoted$="Y"
  	wostatus$="OCPQ"
 
 rem --- Add to params!		
@@ -145,14 +148,10 @@ rem --- Add to params!
 	params!.put("WAREHOUSE_ID",warehouse_id$)
 	params!.put("BILL_NO_1",bill_no_1$)
 	params!.put("BILL_NO_2",bill_no_2$)	
-rem	params!.put("BEG_DESC",beg_desc$)
-rem	params!.put("END_DESC",end_desc$)
-rem	params!.put("OPEN",open$)
-rem	params!.put("CLOSED",closed$)
-rem	params!.put("PLANNED",planned$)
-rem	params!.put("QUOTED",quoted$)		
 	params!.put("WOSTATUS",wostatus$)
-	params!.put("WO_LOCATION",wo_location$)	
+	params!.put("WO_LOCATION",wo_location$)
+
+rem 	if params!.get("wo_no_2")="" then params!.put("wo_no_2","~~~~~~")
 
 rem --- Parameters
 
@@ -223,6 +222,7 @@ check_travelers:
 
 rem --- Set additional params
 
+	params!.put("REPORT_NAME",sysinfo.task_desc$) 
     params!.put("FIRM_ID",firm_id$)
 	params!.put("FIRM_NAME",firm_name$)
     params!.put("BARISTA_WD",dir(""))  
@@ -320,13 +320,27 @@ rem --- Fill Report and Show
     report!.fill(1)
     viewerWindow! = new BBJasperViewerWindow(report!,0,0,screen_width,screen_height,reportTitle$,$00080093$)
     viewerWindow!.getViewerControl().setGoogleDefaultDocument(reportTitle$)
-    viewerWindow!.setReleaseOnClose(1)
+	
+	window!=viewerWindow!.getViewerWindow()
+    viewerWindow!.setReleaseOnClose(0)
     viewerWindow!.show(0)
         
 rem --- Event Control
 
+    window!.setCallback(BBjWindow.ON_CLOSE,"exit_viewer")
+	
     process_events,err=*same
+	
+exit_viewer:
+        dim message$[1]
+        message$[0]="Did the Travelers print correctly? (Yes will clear the print file.)"
+        call pgmdir$+"adc_stdmessage.aon",0,message$[all],0,22,-1,v$,v3
+        goto std_exit
 
+rem *************** escape caj
+Needs the logic for clearing the print file
+Needs actual messages re travelers
+		
     release
 
 connect_err:rem --- Connection Error

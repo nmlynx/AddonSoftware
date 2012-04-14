@@ -6,20 +6,45 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 
+rem --- This lead-in is one of the four that use the Jasper SFHardCopy.prc
+rem --- The four reports are Traveler, Closed WO Detail Rpt,
+rem --- WO Detail Rpt (menu item), WO Hard Copy (an option within WO Entry)
+rem --- The four are similar in that they have to pass the same params to 
+rem --- the SPROC, but the options on each report differ
+
     use ::bbjasper.bbj::BBJasperReport
     use ::bbjasper.bbj::BBJasperViewerWindow
-
+    use ::java.util.HashMap::HashMap
+	
+	params! = new java.util.HashMap()
+		
     ScreenSize!   = bbjAPI().getSysGui().getSystemMetrics().getScreenSize()
     screen_width  = ScreenSize!.width - 50; rem -50 keeps it in the MDI w/ no scroll bars
     screen_height = ScreenSize!.height - 50
-     
+ 
     setesc std_error
     seterr std_error
-   
-rem --- Get HashMap of Values in Options Entry Form
+  
+rem --- Use statements and Declares
 
-    params! = Option!.getOptionMap()
+    use ::ado_func.src::func
+    use ::ado_pdf.src::PDFHelper
+    use ::sys/prog/bao_option.bbj::Option
 
+    declare Option option!
+
+rem --- Retrieve the program path
+
+    pgmdir$=""
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+    sypdir$=""
+    sypdir$=stbl("+DIR_SYP",err=*next)
+
+rem --- Set document Directory
+
+    docdir$=""
+    docdir$=stbl("+DOC_DIR_PDF",err=*next)
+	
 rem --- Retrieve sysinfo data
 
     sysinfo_tpl$=stbl("+SYSINFO_TPL",err=*next)
@@ -86,39 +111,19 @@ rem --- Close files after ensuring they exist
 
 rem --- Assign form input values to local variables
 
-rem    sequence$=Option!.getOptionData("report_seq")
-rem    wofrom$=Option!.getOptionData("wo_no_1")
-rem    wothru$=Option!.getOptionData("wo_no_2")
-rem    wotfrom$=Option!.getOptionData("wo_type_1")
-rem    wotthru$=Option!.getOptionData("wo_type_2")
-rem    whse$=Option!.getOptionData("warehouse_id")
-rem    billfrom$=Option!.getOptionData("bill_no_1")
-rem    billthru$=Option!.getOptionData("bill_no_2")
-rem    custfrom$=Option!.getOptionData("customer_ID_1")
-rem    custthru$=Option!.getOptionData("customer_ID_2")
+	wo_location$=sfe01a.wo_location$; rem Setting the len per how it's templated, so not hardcoded
 
+    report_seq$=Option!.getOptionData("report_seq")
+    wo_no_1$=Option!.getOptionData("wo_no_1")
+    wo_no_2$=Option!.getOptionData("wo_no_2")
+    wo_type_1$=Option!.getOptionData("wo_type_1")
+    wo_type_2$=Option!.getOptionData("wo_type_2")
+    warehouse_id$=Option!.getOptionData("warehouse_id")
+    bill_no_1$=Option!.getOptionData("bill_no_1")
+    bill_no_2$=Option!.getOptionData("bill_no_2")
+    customer_ID_1$=Option!.getOptionData("customer_ID_1")
+    customer_ID_2$=Option!.getOptionData("customer_ID_2")
 
-rem 	REPORT_SEQ$=Option!.getOptionData("report_seq")
-rem 	WO_NO_1$=Option!.getOptionData("wo_no_1")
-rem 	WO_NO_2$=Option!.getOptionData("wo_no_2")
-	rem 	WO_TYPE$=Option!.getOptionData("wo_type"); escape caj Matches .jrxml, but is it right??????
-rem 	WO_TYPE_1$=Option!.getOptionData("wo_type_1")
-rem 	WO_TYPE_2$=Option!.getOptionData("wo_type_2")
-rem 	CUSTOMER_ID_1$=Option!.getOptionData("customer_id_1")
-rem 	CUSTOMER_ID_2$=Option!.getOptionData("customer_id_2")
-rem 	WAREHOUSE_ID$=Option!.getOptionData("warehouse_id")
-rem 	BILL_NO_1$=Option!.getOptionData("bill_no_1")
-rem 	BILL_NO_2$=Option!.getOptionData("bill_no_2")
-	rem 	BEG_DESC$=Option!.getOptionData("beg_desc")
-	rem 	END_DESC$=Option!.getOptionData("end_desc")
-	rem 	OPEN$=Option!.getOptionData("open")
-	rem 	CLOSED$=Option!.getOptionData("closed")
-	rem 	PLANNED$=Option!.getOptionData("planned")
-	rem 	QUOTED$=Option!.getOptionData("quoted")
-rem 	WOSTATUS$=Option!.getOptionData("wostatus")
-
-
-	
     wo_open$=Option!.getOptionData("open")
     wo_closed$=Option!.getOptionData("closed")
     wo_planned$=Option!.getOptionData("planned")
@@ -129,10 +134,21 @@ rem 	WOSTATUS$=Option!.getOptionData("wostatus")
     if wo_closed$="Y" then wostatus$=wostatus$+"C"
     if wo_planned$="Y" then wostatus$=wostatus$+"P"
     if wo_quoted$="Y" then wostatus$=wostatus$+"Q"
-	
+
+rem --- Add to params!		
+	params!.put("REPORT_SEQ",report_seq$)
+	params!.put("WO_NO_1",wo_no_1$)
+	params!.put("WO_NO_2",wo_no_2$)
+	params!.put("WO_TYPE_1",wo_type_1$)
+	params!.put("WO_TYPE_2",wo_type_2$)
+	params!.put("CUSTOMER_ID_1",customer_id_1$)
+	params!.put("CUSTOMER_ID_2",customer_id_2$)	
+	params!.put("WAREHOUSE_ID",warehouse_id$)
+	params!.put("BILL_NO_1",bill_no_1$)
+	params!.put("BILL_NO_2",bill_no_2$)	
 	params!.put("WOSTATUS",wostatus$)
-	params!.put("WO_LOCATION",sfe01a.wo_location$); rem Setting the len per how it's templated, so not hardcoded
-	params!.put("REPORT_NAME",sysinfo.task_desc$) 
+	params!.put("WO_LOCATION",wo_location$)
+
 rem 	if params!.get("wo_no_2")="" then params!.put("wo_no_2","~~~~~~")
 
 rem --- Parameters
@@ -184,15 +200,7 @@ rem --- Parameters
     desc[3]=num(ivs_params$.desc_len_03$)
 	
 rem --- Init Data
-
-    h0=60
-    h=0
-    h3$=""
-    l9=59
-    l=l9+1
-    m1=len(m1$)
-    m2=len(m2$)
-    
+   
 rem Find LAST PERIOD end date
 	p0=num(sfs_params$.current_per$)
     p1=num(sfs_params$.current_year$)
@@ -249,18 +257,9 @@ rem --- Options
             break
     swend
 
-done: rem --- Overlay
-rem    Z0$="N"
-rem    Z1$="Y"
-rem    Z2$="Y"
-rem    Z3$=""
-rem    Z4$=""
-rem    Z5$="OMS"
-rem    Z6$="Y"
-rem    run pgmdir$+"sfr_worderdet_o1.aon"
-
 rem --- Set additional params
 
+	params!.put("REPORT_NAME",sysinfo.task_desc$) 
     params!.put("FIRM_ID",firm_id$)
 	params!.put("FIRM_NAME",firm_name$)
     params!.put("BARISTA_WD",dir(""))  
