@@ -211,12 +211,11 @@ rem --- Check For Any Travelers to Print
 
     dim sfe04a_key$:sfe04a_key_tpl$
     read (sfe04a_dev,key=firm_id$,dom=*next)
-    sfe04a_key$=key(sfe04a_dev,end=check_travelers)
+    sfe04a_key$=key(sfe04a_dev,end=no_travelers)
     if sfe04a_key.firm_id$+sfe04a_key.wo_location$<>firm_id$+wo_location$ then 
-check_travelers:
-        dim message$[1]
-        message$[0]="There Are No Travelers To Print."
-        call pgmdir$+"adc_stdmessage.aon",0,message$[all],0,22,-1,v$,v3
+no_travelers:
+        msg_id$="SF_NO_TRAVELERS"
+        gosub disp_message
         goto std_exit
     endif
 
@@ -332,15 +331,17 @@ rem --- Event Control
     process_events,err=*same
 	
 exit_viewer:
-        dim message$[1]
-        message$[0]="Did the Travelers print correctly? (Yes will clear the print file.)"
-        call pgmdir$+"adc_stdmessage.aon",0,message$[all],0,22,-1,v$,v3
-        goto std_exit
-
-rem *************** escape caj
-Needs the logic for clearing the print file
-Needs actual messages re travelers
+	rem --- Conditionally clear travelers for firm + wo_location
+        msg_id$="SF_UPDT_TRAVELERS"
+		msg_opt$=""
+        gosub disp_message
 		
+		if msg_opt$="Y"
+			call "adc_clearpartial.aon","N",sfe04a_dev,firm_id$+wo_location$,status
+		endif	
+		
+		goto std_exit
+	
     release
 
 connect_err:rem --- Connection Error
