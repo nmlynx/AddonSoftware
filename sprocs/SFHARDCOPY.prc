@@ -148,11 +148,23 @@ rem --- Build SQL statement
             break
     swend
 
+	if len(wostatus$)>0
+		where_clause$=where_clause$+" ("
+		if pos("O"=wostatus$)>0 where_clause$=where_clause$+" wo_status = 'O' OR "
+		if pos("C"=wostatus$)>0 where_clause$=where_clause$+" wo_status = 'C' OR "
+		if pos("P"=wostatus$)>0 where_clause$=where_clause$+" wo_status = 'P' OR "
+		if pos("Q"=wostatus$)>0 where_clause$=where_clause$+" wo_status = 'Q' OR "
+		where_clause$=where_clause$(1,len(where_clause$)-4)+")"
+	endif
+		
 	if len(where_clause$)>0
-		where_clause$=" WHERE "+where_clause$(1,len(where_clause$)-4)
+		where_clause$=" WHERE "+where_clause$
+		if where_clause$(len(where_clause$),1)<>")"
+			where_clause$=where_clause$(1,len(where_clause$)-4)
+		endif
 	endif
 	sql_prep$=sql_prep$+where_clause$+order_by$
-	
+
 	sql_chan=sqlunt
 	sqlopen(sql_chan,err=*next)stbl("+DBNAME")
 	sqlprep(sql_chan)sql_prep$
