@@ -118,6 +118,11 @@ rem --- Assign form input values to local variables
 	
 rem --- Assign needed jasper params that aren't on O/E form/table
 
+	report_type$="T"; rem M = WO Detail Rpt from *M*enu
+					  rem T = *T*raveler
+					  rem E = Detail Rpt from WO *E*ntry
+					  rem C = *C*losed WO Detail Rpt
+	
 	wo_location$=sfe01a.wo_location$; rem Setting the len per how it's templated, so not hardcoded
 	
  	report_seq$="W"
@@ -138,6 +143,9 @@ rem --- Assign needed jasper params that aren't on O/E form/table
  	wostatus$="OCPQ"
 
 rem --- Add to params!		
+
+	params!.put("REPORT_TYPE",report_type$); REM "Specifies leadin pgm
+	
 	params!.put("REPORT_SEQ",report_seq$)
 	params!.put("WO_NO_1",wo_no_1$)
 	params!.put("WO_NO_2",wo_no_2$)

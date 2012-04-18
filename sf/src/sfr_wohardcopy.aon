@@ -14,9 +14,8 @@ rem --- the SPROC, but the options on each report differ
 
     use ::bbjasper.bbj::BBJasperReport
     use ::bbjasper.bbj::BBJasperViewerWindow
-    use ::java.util.HashMap::HashMap
-	
-	params! = new java.util.HashMap()
+
+    params! = Option!.getOptionMap()
 		
     ScreenSize!   = bbjAPI().getSysGui().getSystemMetrics().getScreenSize()
     screen_width  = ScreenSize!.width - 50; rem -50 keeps it in the MDI w/ no scroll bars
@@ -129,11 +128,16 @@ rem --- Assign form input values and WO Entry options to local variables
     if sub$="Y" transtype$=transtype$+"S"
     if opr$="Y" transtype$=transtype$+"O"
 	
-	wo_no$=option!.getOptionData("WO_NO"); rem From WO Entry
-	wo_location$=option!.getOptionData("WO_LOCATION"); rem From WO Entry
+	wo_no$=callpoint!.getDevObject("wo_num"); rem From WO Entry
+	wo_location$=callpoint!.getDevObject("wo_loc"); rem From WO Entry
 	
 rem --- Assign needed jasper params that aren't on O/E form/table
 
+	report_type$="E"; rem M = WO Detail Rpt from *M*enu
+					  rem T = *T*raveler
+					  rem E = Detail Rpt from WO *E*ntry
+					  rem C = *C*losed WO Detail Rpt
+	
  	report_seq$="W"
  	wo_no_1$=wo_no$
  	wo_no_2$=wo_no$
@@ -152,6 +156,9 @@ rem --- Assign needed jasper params that aren't on O/E form/table
  	wostatus$="OCPQ"
 
 rem --- Add to params!		
+
+	params!.put("REPORT_TYPE",report_type$); REM "Specifies leadin pgm
+	
 	params!.put("REPORT_SEQ",report_seq$)
 	params!.put("WO_NO_1",wo_no_1$)
 	params!.put("WO_NO_2",wo_no_2$)
@@ -162,9 +169,10 @@ rem --- Add to params!
 	params!.put("WAREHOUSE_ID",warehouse_id$)
 	params!.put("BILL_NO_1",bill_no_1$)
 	params!.put("BILL_NO_2",bill_no_2$)	
+
 	params!.put("WOSTATUS",wostatus$)
 	params!.put("WO_LOCATION",wo_location$)
-	
+
 	params!.put("INCLUDE_STANDARDS",include_standards$)
 	params!.put("INCLUDE_COSTSUMMARY",include_costsummary$)
 	params!.put("INCLUDE_COMMENTS",include_comments$)
@@ -172,6 +180,7 @@ rem --- Add to params!
 	params!.put("TRANS_DATEFROM",trans_datefrom$)
 	params!.put("TRANS_DATETHRU",trans_datethru$)
     params!.put("TRANSTYPE",transtype$)
+
 
 rem 	if params!.get("wo_no_2")="" then params!.put("wo_no_2","~~~~~~")
 

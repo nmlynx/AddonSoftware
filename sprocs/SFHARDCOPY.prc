@@ -26,6 +26,11 @@ rem --- Get the infomation object for the Stored Procedure
 
 rem --- Get the IN parameters used by the procedure
 
+rem escape caj	report_type$ = sp!.getParameter("REPORT_TYPE"); REM "M/T/E/C Specifies leadin pgm
+													rem M = WO Detail Rpt from *M*enu
+													rem T = *T*raveler
+													rem E = Detail Rpt from WO *E*ntry
+													rem C = *C*losed WO Detail Rpt
 	firm_id$ = sp!.getParameter("FIRM_ID")
 	wo_loc$  = sp!.getParameter("WO_LOCATION")
 	from_wo$ = sp!.getParameter("WO_NO_1")
@@ -163,8 +168,18 @@ rem --- Build SQL statement
 			where_clause$=where_clause$(1,len(where_clause$)-4)
 		endif
 	endif
-	sql_prep$=sql_prep$+where_clause$+order_by$
+	
+rem report_type$="T"; rem escape caj
 
+rem --- Concatenate the pieces of sql_prep$
+rem --- For Travelers, limit WO recs based on sfe_openedwo
+	if report_type$="T" then 
+		gosub get_traveler_join
+		sql_prep$=travel_join_pre$+sql_prep$+where_clause$+travel_join_post$+order_by$
+	else
+		sql_prep$=sql_prep$+where_clause$+order_by$
+	endif
+	
 	sql_chan=sqlunt
 	sqlopen(sql_chan,err=*next)stbl("+DBNAME")
 	sqlprep(sql_chan)sql_prep$
@@ -235,6 +250,58 @@ rem --- Tell the stored procedure to return the result set.
 	sp!.setRecordSet(rs!)
 	goto std_exit
 
+rem --- Build JOIN to wrap Traveler print file, sfe_openedwo, around sfe_womastr JOIN
+get_traveler_join:
+	tj_pre$=""
+	tj_pre$=tj_pre$+"SELECT m.firm_id"
+    tj_pre$=tj_pre$+"     , m.wo_location"
+    tj_pre$=tj_pre$+"     , m.wo_no"
+    tj_pre$=tj_pre$+"     , m.wo_type"
+    tj_pre$=tj_pre$+"     , m.wo_category"
+    tj_pre$=tj_pre$+"     , m.wo_status"
+    tj_pre$=tj_pre$+"     , m.customer_id"
+    tj_pre$=tj_pre$+"     , m.order_no"
+    tj_pre$=tj_pre$+"     , m.sls_ord_seq_ref"
+    tj_pre$=tj_pre$+"     , m.unit_measure"
+    tj_pre$=tj_pre$+"     , m.bill_rev"
+    tj_pre$=tj_pre$+"     , m.warehouse_id"
+    tj_pre$=tj_pre$+"     , m.item_id"
+    tj_pre$=tj_pre$+"     , m.opened_date"
+    tj_pre$=tj_pre$+"     , m.eststt_date"
+    tj_pre$=tj_pre$+"     , m.estcmp_date"
+    tj_pre$=tj_pre$+"     , m.act_st_date"
+    tj_pre$=tj_pre$+"     , m.lstact_date"
+    tj_pre$=tj_pre$+"     , m.closed_date"
+    tj_pre$=tj_pre$+"     , m.description_01"
+    tj_pre$=tj_pre$+"     , m.description_02"
+    tj_pre$=tj_pre$+"     , m.drawing_no"
+    tj_pre$=tj_pre$+"     , m.drawing_rev"
+    tj_pre$=tj_pre$+"     , m.complete_flg"
+    tj_pre$=tj_pre$+"     , m.recalc_flag"
+    tj_pre$=tj_pre$+"     , m.lotser_item"
+    tj_pre$=tj_pre$+"     , m.priority"
+    tj_pre$=tj_pre$+"     , m.sched_flag"
+    tj_pre$=tj_pre$+"     , m.forecast"
+    tj_pre$=tj_pre$+"     , m.cls_inp_date"
+    tj_pre$=tj_pre$+"     , m.sch_prod_qty"
+    tj_pre$=tj_pre$+"     , m.qty_cls_todt"
+    tj_pre$=tj_pre$+"     , m.cls_cst_todt"
+    tj_pre$=tj_pre$+"     , m.cls_inp_qty"
+    tj_pre$=tj_pre$+"     , m.closed_cost"
+    tj_pre$=tj_pre$+"     , m.est_yield "
+	tj_pre$=tj_pre$+" FROM sfe_openedwo AS o"
+	tj_pre$=tj_pre$+" INNER JOIN ( "
+	
+	tj_post$=""
+	tj_post$=tj_post$+") AS m "
+	tj_post$=tj_post$+"ON o.firm_id+o.wo_location+o.wo_no"
+ 	tj_post$=tj_post$+" = m.firm_id+m.wo_location+m.wo_no "
+		
+	travel_join_pre$=tj_pre$
+	travel_join_post$=tj_post$
+	
+	return
+	
 rem --- Functions
 
     def fndate$(q$)
