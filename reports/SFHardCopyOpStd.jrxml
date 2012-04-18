@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopyOpStd" language="groovy" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="822" leftMargin="0" rightMargin="20" topMargin="20" bottomMargin="20">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopyOpStd" language="groovy" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="822" leftMargin="0" rightMargin="20" topMargin="20" bottomMargin="10">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
@@ -43,27 +43,27 @@
 				<text><![CDATA[Operations]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="135" y="32" width="52" height="13"/>
+				<reportElement x="126" y="32" width="52" height="13"/>
 				<textElement/>
 				<text><![CDATA[Date Req]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="215" y="32" width="37" height="13"/>
+				<reportElement x="191" y="32" width="37" height="13"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Hours]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="274" y="32" width="42" height="13"/>
+				<reportElement x="250" y="32" width="42" height="13"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Pc/Hr]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="342" y="32" width="49" height="13"/>
+				<reportElement x="309" y="32" width="49" height="13"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Direct]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="408" y="32" width="44" height="13"/>
+				<reportElement x="378" y="32" width="44" height="13"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Ov'hd]]></text>
 			</staticText>
@@ -83,12 +83,12 @@
 				<text><![CDATA[Setup]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="672" y="32" width="45" height="13"/>
+				<reportElement x="672" y="32" width="63" height="13"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Units]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="731" y="32" width="56" height="13"/>
+				<reportElement x="747" y="32" width="56" height="13"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Cost]]></text>
 			</staticText>
@@ -98,66 +98,66 @@
 				<text><![CDATA[< - - - - - - Each - - - - - - >]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="672" y="19" width="115" height="13"/>
+				<reportElement x="688" y="19" width="115" height="13"/>
 				<textElement textAlignment="Center"/>
 				<text><![CDATA[< - - - - - - Total  - - - - - ->]]></text>
 			</staticText>
 		</band>
 	</columnHeader>
 	<detail>
-		<band height="24" splitType="Stretch">
+		<band height="13" splitType="Stretch">
 			<textField>
-				<reportElement x="0" y="11" width="100" height="13"/>
+				<reportElement x="0" y="0" width="115" height="13"/>
 				<textElement/>
 				<textFieldExpression><![CDATA[$F{OP_CODE}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="125" y="11" width="68" height="13"/>
+				<reportElement x="126" y="0" width="52" height="13"/>
 				<textElement/>
 				<textFieldExpression><![CDATA[$F{REQ_DATE}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="204" y="11" width="48" height="13"/>
+				<reportElement x="191" y="0" width="37" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{HOURS}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="262" y="11" width="54" height="13"/>
+				<reportElement x="238" y="0" width="54" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{PC_HR}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="323" y="11" width="68" height="13"/>
+				<reportElement x="309" y="0" width="49" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{DIRECT}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="400" y="11" width="52" height="13"/>
+				<reportElement x="370" y="0" width="52" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{OVHD}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="470" y="11" width="45" height="13"/>
+				<reportElement x="452" y="0" width="63" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{UNITS_EA}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="529" y="11" width="56" height="13"/>
+				<reportElement x="529" y="0" width="56" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{COST_EA}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="599" y="11" width="62" height="13"/>
+				<reportElement x="599" y="0" width="62" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{SETUP}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="672" y="11" width="45" height="13"/>
+				<reportElement x="672" y="0" width="63" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{UNITS_TOT}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="730" y="11" width="57" height="13"/>
+				<reportElement x="747" y="0" width="57" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{COST_TOT}]]></textFieldExpression>
 			</textField>
