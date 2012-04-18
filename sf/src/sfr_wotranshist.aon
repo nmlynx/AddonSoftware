@@ -29,7 +29,7 @@ rem --- Open/Lock files
 	open_tables$[2]	="IVS_PARAMS",   open_opts$[2] = "OTA"
 	open_tables$[3]	="SFS_PARAMS",   open_opts$[3] = "OTA"
 	open_tables$[4]	="SFE_WOMASTR",  open_opts$[4] = "OTA"; rem sfe-01
-	open_tables$[5]	="SFX_WOTRANXR", open_opts$[5] = "OTA"; rem sfm-07
+rem 	open_tables$[5]	used to be sfm-07; no longer used
 	open_tables$[6]	="SFC_WOTYPECD", open_opts$[6] = "OTA"; rem sfm-10
 	open_tables$[7]	="SFT_OPNOPRTR", open_opts$[7] = "OTA"; rem sft-01
 	open_tables$[8]	="SFT_CLSOPRTR", open_opts$[8] = "OTA"; rem sft-03
@@ -46,7 +46,6 @@ rem --- Open/Lock files
     ivs01a_dev = num(open_chans$[2])
     sfs01a_dev = num(open_chans$[3])
     sfe01a_dev = num(open_chans$[4])
-	sfm07a_dev = num(open_chans$[5])
 	sfm10a_dev = num(open_chans$[6])
 	sft01a_dev = num(open_chans$[7])
 	sft03a_dev = num(open_chans$[8])
@@ -63,7 +62,6 @@ rem --- Dimension string templates
     dim ivs01a$:open_tpls$[2]
     dim sfs01a$:open_tpls$[3]
     dim sfe01a$:open_tpls$[4]
-    dim sfm07a$:open_tpls$[5]
     dim sfm10a$:open_tpls$[6]
     sft01_tpls$=open_tpls$[7]; dim sft01a$:sft01_tpls$; rem Save template for next o'lay
 	sft03_tpls$=open_tpls$[8]; dim sft03a$:sft03_tpls$; rem Save template for next o'lay
