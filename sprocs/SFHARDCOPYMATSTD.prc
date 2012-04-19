@@ -1,10 +1,10 @@
 rem ----------------------------------------------------------------------------
-rem Program: SFHARDCOPYOPSTD.prc
-rem Description: Stored Procedure to get the Shop Floor Hard Copy Operation info into iReports
+rem Program: SFHARDCOPYOMATSTD.prc
+rem Description: Stored Procedure to get the Shop Floor Hard Copy Material info into iReports
 rem Used for Hard Copy, Traveler, Work Order Closed Detail and Work Order Detail
 rem
 rem Author(s): J. Brewer
-rem Revised: 04.13.2012
+rem Revised: 04.18.2012
 rem
 rem AddonSoftware
 rem Copyright BASIS International Ltd.
@@ -36,8 +36,8 @@ rem --- Get the IN parameters used by the procedure
 
 rem --- Create a memory record set to hold results.
 rem --- Columns for the record set are defined using a string template
-	temp$="OP_CODE:C(1*), REQ_DATE:C(1*), HOURS:C(1*), PC_HR:C(1*), DIRECT:C(1*), OVHD:C(1*), "
-	temp$=temp$+"UNITS_EA:C(1*), COST_EA:C(1*), SETUP:C(1*), UNITS_TOT:C(1*), COST_TOT:C(1*)"
+	temp$="ITEM:C(1*), OP_SEQ:C(1*), SCRAP:C(1*), DIVISOR:C(1*), FACTOR:C(1*), QTY_REQ:C(1*), "
+	temp$=temp$+"UNITS_EA:C(1*), COST_EA:C(1*), UNITS_TOT:C(1*), COST_TOT:C(1*)"
 
 	rs! = BBJAPI().createMemoryRecordSet(temp$)
 
@@ -65,37 +65,33 @@ rem	call pgmdir$+"adc_getmask.aon","","AR","I","",custmask$,0,custmask
 	
 rem --- Open files with adc
 
-    files=5,begfile=1,endfile=files
+    files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ivm-01",ids$[1]="IVM_ITEMMAST"
-	files$[2]="sfm-10",ids$[2]="SFC_WOTYPECD"
-	files$[3]="arm-01",ids$[3]="ARM_CUSTMAST"
-	files$[4]="sfs_params",ids$[4]="SFS_PARAMS"
+	files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
+	files$[3]="sfs_params",ids$[3]="SFS_PARAMS"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     ivm_itemmast_dev=channels[1]
-	sfc_type_dev=channels[2]
-	arm_custmast=channels[3]
-	sfs_params=channels[4]
+	arm_custmast=channels[2]
+	sfs_params=channels[3]
 
 rem --- Dimension string templates
 
 	dim ivm_itemmast$:templates$[1]
-	dim sfc_type$:templates$[2]
-	dim arm_custmast$:templates$[3]
-	dim sfs_params$:templates$[4]
+	dim arm_custmast$:templates$[2]
+	dim sfs_params$:templates$[3]
 	
 goto no_bac_open
 rem --- Open Files    
-    num_files = 5
+    num_files = 3
     dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
 
 	open_tables$[1]="IVM_ITEMMAST",   open_opts$[1] = "OTA"
-	open_tables$[2]="SFC_WOTYPECD",   open_opts$[2] = "OTA"
-	open_tables$[3]="ARM_CUSTMAST",   open_opts$[3] = "OTA"
-	open_tables$[4]="SFS_PARAMS",     open_opts$[4] = "OTA"
+	open_tables$[2]="ARM_CUSTMAST",   open_opts$[2] = "OTA"
+	open_tables$[3]="SFS_PARAMS",     open_opts$[3] = "OTA"
 	
 call sypdir$+"bac_open_tables.bbj",
 :       open_beg,
@@ -109,43 +105,20 @@ call sypdir$+"bac_open_tables.bbj",
 :		open_status$
 
 	ivm_itemmast_dev  = num(open_chans$[1])
-	sfc_type_dev = num(open_chans$[2])
-	arm_custmast = num(open_chans$[3])
-	sfs_params = num(open_chans$[4])
+	arm_custmast = num(open_chans$[2])
+	sfs_params = num(open_chans$[3])
 	
 	dim ivm_itemmast$:open_tpls$[1]
-	dim sfc_type$:open_tpls$[2]
-	dim arm_custmast$:open_tpls$[3]
-	dim sfs_params$:open_tpls$[4]
+	dim arm_custmast$:open_tpls$[2]
+	dim sfs_params$:open_tpls$[3]
 
 no_bac_open:
 
-rem --- Get proper Op Code Maintenance table
-
-	read record (sfs_params,key=firm_id$+"SF00") sfs_params$
-	bm$=sfs_params.bm_interface$
-	if bm$<>"Y"
-		files$[5]="sfm-02",ids$[5]="SFC_OPRTNCOD"
-rem		open_tables$[5]="SFC_OPRTNCOD",open_opts$[5]="OTA"
-	else
-		files$[5]="bmm-08",ids$[5]="BMC_OPCODES"
-rem		open_tables$[5]="BMC_OPCODES",open_opts$[5]="OTA"
-	endif
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-	
-	opcode_dev=channels[5]
-	dim opcode_tpl$:templates$[5]
-	
 rem --- Build SQL statement
 
-rem	sql_prep$="select * from vw_sfx_wotranxr as vw_trans where vw_trans.firm_id = '"+firm_id$+"' and "
-rem	sql_prep$=sql_prep$+"record_id = 'O' and wo_no = '"+wo_no$+"'"
-
-	sql_prep$="select op_code, require_date, runtime_hrs, pcs_per_hour, direct_rate, ovhd_rate, setup_time, "
-	sql_prep$=sql_prep$+"hrs_per_pce, unit_cost, total_time, tot_std_cost "
-	sql_prep$=sql_prep$+"from sfe_wooprtn where firm_id = '"+firm_id$+"' and wo_no = '"+wo_no$+"'"
+	sql_prep$="select item_id, oper_seq_ref, scrap_factor, divisor, alt_factor, qty_required, "
+	sql_prep$=sql_prep$+"units, unit_cost, total_units, total_cost "
+	sql_prep$=sql_prep$+"from sfe_womatl where firm_id = '"+firm_id$+"' and wo_no = '"+wo_no$+"'"
 	
 	sql_chan=sqlunt
 	sqlopen(sql_chan,err=*next)stbl("+DBNAME")
@@ -160,19 +133,18 @@ rem --- Trip Read
 
 		data! = rs!.getEmptyRecordData()
 
-		dim opcode_tpl$:fattr(opcode_tpl$)
-		read record (opcode_dev,key=firm_id$+read_tpl.op_code$,dom=*next) opcode_tpl$
-		data!.setFieldValue("OP_CODE",read_tpl.op_code$+" "+opcode_tpl.code_desc$)
-		data!.setFieldValue("REQ_DATE",fndate$(read_tpl.require_date$))
-		data!.setFieldValue("HOURS",str(read_tpl.hrs_per_pce:bm_hours_mask$))
-		data!.setFieldValue("PC_HR",str(read_tpl.pcs_per_hour:bm_units_mask$))
-		data!.setFieldValue("DIRECT",str(read_tpl.direct_rate:bm_rate_mask$))
-		data!.setFieldValue("OVHD",str(read_tpl.ovhd_rate:sf_rate_mask$))
-		data!.setFieldValue("UNITS_EA",str(read_tpl.runtime_hrs:iv_cost_mask$))
+		dim ivm_itemmast$:fattr(ivm_itemmast$)
+		read record (ivm_itemmast_dev,key=firm_id$+read_tpl.item_id$,dom=*next) ivm_itemmast$
+		data!.setFieldValue("ITEM",read_tpl.item_id$+" "+ivm_itemmast.item_desc$)
+rem		data!.setFieldValue("OP_SEQ",fndate$(read_tpl.require_date$))
+		data!.setFieldValue("SCRAP",str(read_tpl.scrap_factor:bm_hours_mask$))
+		data!.setFieldValue("DIVISOR",str(read_tpl.divisor:bm_units_mask$))
+		data!.setFieldValue("FACTOR",str(read_tpl.alt_factor:bm_rate_mask$))
+		data!.setFieldValue("QTY_REQ",str(read_tpl.qty_required:sf_rate_mask$))
+		data!.setFieldValue("UNITS_EA",str(read_tpl.units:iv_cost_mask$))
 		data!.setFieldValue("COST_EA",str(read_tpl.unit_cost:iv_cost_mask$))
-		data!.setFieldValue("SETUP",str(read_tpl.setup_time:bm_units_mask$))
-		data!.setFieldValue("UNITS_TOT",str(read_tpl.unit_cost:iv_cost_mask$))
-		data!.setFieldValue("COST_TOT",str(read_tpl.unit_cost:sf_rate_mask$))
+		data!.setFieldValue("UNITS_TOT",str(read_tpl.total_units:iv_cost_mask$))
+		data!.setFieldValue("COST_TOT",str(read_tpl.total_cost:sf_rate_mask$))
 		rs!.insert(data!)
 	wend
 	

@@ -26,7 +26,7 @@ rem --- Get the infomation object for the Stored Procedure
 
 rem --- Get the IN parameters used by the procedure
 
-rem escape caj	report_type$ = sp!.getParameter("REPORT_TYPE"); REM "M/T/E/C Specifies leadin pgm
+	report_type$ = sp!.getParameter("REPORT_TYPE"); REM "M/T/E/C Specifies leadin pgm
 													rem M = WO Detail Rpt from *M*enu
 													rem T = *T*raveler
 													rem E = Detail Rpt from WO *E*ntry

@@ -109,6 +109,8 @@ rem --- first drop all std Addon SPROCs
     gosub create_sproc_def
 	sqlprep$="DROP PROCEDURE SFHARDCOPYOPSTD "
     gosub create_sproc_def
+	sqlprep$="DROP PROCEDURE SFHARDCOPYMATSTD "
+    gosub create_sproc_def
 	
 rem --- now add them back (i.e., drop, then add, in case anything has changed)    
  
@@ -224,6 +226,14 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
+	sqlprep$="CREATE PROCEDURE SFHARDCOPYMATSTD "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(50) IN) "
+    sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPYMATSTD.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'WO Hard Copy Mat Std'"
+
+    gosub create_sproc_def
+	
 rem --- Done with SPROCs. Now do VIEWs
 
 rem --- first drop all std Addon VIEWs
