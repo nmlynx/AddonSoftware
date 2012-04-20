@@ -22,6 +22,13 @@
 	<parameter name="WO_TYPE_1" class="java.lang.String"/>
 	<parameter name="WO_TYPE_2" class="java.lang.String"/>
 	<parameter name="REPORT_TYPE" class="java.lang.String"/>
+	<parameter name="INCLUDE_COMMENTS" class="java.lang.String"/>
+	<parameter name="INCLUDE_STANDARDS" class="java.lang.String"/>
+	<parameter name="INCLUDE_COSTSUMMARY" class="java.lang.String"/>
+	<parameter name="INCLUDE_TRANSACTIONS" class="java.lang.String"/>
+	<parameter name="TRANS_DATEFROM" class="java.lang.String"/>
+	<parameter name="TRANS_DATETHRU" class="java.lang.String"/>
+	<parameter name="TRANSTYPE" class="java.lang.String"/>
 	<queryString language="SQL">
 		<![CDATA[call sfhardcopy($P{FIRM_ID},$P{WO_LOCATION},$P{WO_NO_1},$P{WO_NO_2},$P{BARISTA_WD},$P{REPORT_SEQ},$P{WOSTATUS},$P{BILL_NO_1},$P{BILL_NO_2},$P{WAREHOUSE_ID},$P{CUSTOMER_ID_1},$P{CUSTOMER_ID_2},$P{WO_TYPE_1},$P{WO_TYPE_2},$P{REPORT_TYPE})]]>
 	</queryString>
@@ -47,7 +54,7 @@
 	<field name="DRAWING_NO" class="java.lang.String"/>
 	<field name="REV" class="java.lang.String"/>
 	<field name="ITEM_DESC_2" class="java.lang.String"/>
-	<group name="WO_NO" isStartNewPage="true">
+	<group name="WO_NO" isStartNewPage="true" isReprintHeaderOnEachPage="true">
 		<groupExpression><![CDATA[$F{WO_NO}]]></groupExpression>
 		<groupHeader>
 			<band height="94">
@@ -298,9 +305,11 @@
 		<band splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="125" splitType="Stretch">
+		<band height="81" splitType="Stretch">
 			<subreport>
-				<reportElement positionType="Float" x="0" y="0" width="802" height="13"/>
+				<reportElement positionType="Float" x="0" y="0" width="802" height="13">
+					<printWhenExpression><![CDATA[$P{INCLUDE_COMMENTS}=="Y"]]></printWhenExpression>
+				</reportElement>
 				<subreportParameter name="WO_NO">
 					<subreportParameterExpression><![CDATA[$F{WO_NO}]]></subreportParameterExpression>
 				</subreportParameter>
@@ -314,7 +323,9 @@
 				<subreportExpression><![CDATA["SFHardCopyCmnts.jasper"]]></subreportExpression>
 			</subreport>
 			<subreport isUsingCache="true">
-				<reportElement positionType="Float" x="0" y="13" width="802" height="13"/>
+				<reportElement positionType="Float" x="0" y="13" width="802" height="13">
+					<printWhenExpression><![CDATA[$P{INCLUDE_STANDARDS}=="Y"]]></printWhenExpression>
+				</reportElement>
 				<subreportParameter name="WO_NO">
 					<subreportParameterExpression><![CDATA[$F{WO_NO}]]></subreportParameterExpression>
 				</subreportParameter>
@@ -330,13 +341,32 @@
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA["SFHardCopyOpStd.jasper"]]></subreportExpression>
 			</subreport>
+			<subreport isUsingCache="true">
+				<reportElement positionType="Float" x="0" y="26" width="802" height="13">
+					<printWhenExpression><![CDATA[$P{INCLUDE_STANDARDS}=="Y"]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="WO_NO">
+					<subreportParameterExpression><![CDATA[$F{WO_NO}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="BARISTA_WD">
+					<subreportParameterExpression><![CDATA[$P{BARISTA_WD}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="FIRM_ID">
+					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="WO_LOCATION">
+					<subreportParameterExpression><![CDATA[$P{WO_LOCATION}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA["SFHardCopyMatStd.jasper"]]></subreportExpression>
+			</subreport>
 		</band>
 	</detail>
 	<columnFooter>
-		<band height="45" splitType="Stretch"/>
+		<band splitType="Stretch"/>
 	</columnFooter>
 	<pageFooter>
-		<band height="54" splitType="Stretch"/>
+		<band splitType="Stretch"/>
 	</pageFooter>
 	<summary>
 		<band height="42" splitType="Stretch"/>

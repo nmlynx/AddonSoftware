@@ -62,7 +62,12 @@ rem	call pgmdir$+"adc_getmask.aon","","AR","I","",custmask$,0,custmask
 	bm_rate_mask$="###.00"
 	sf_rate_mask$="###.00"
 	bm_hours_mask$="#,##0.00"
-	
+
+rem --- Init totals
+
+	tot_cost_ea=0
+	tot_cost_tot=0
+
 rem --- Open files with adc
 
     files=3,begfile=1,endfile=files
@@ -146,7 +151,21 @@ rem		data!.setFieldValue("OP_SEQ",fndate$(read_tpl.require_date$))
 		data!.setFieldValue("UNITS_TOT",str(read_tpl.total_units:iv_cost_mask$))
 		data!.setFieldValue("COST_TOT",str(read_tpl.total_cost:sf_rate_mask$))
 		rs!.insert(data!)
+		tot_cost_ea=tot_cost_ea+read_tpl.unit_cost
+		tot_cost_tot=tot_cost_tot+read_tpl.total_cost
 	wend
+
+rem --- Output Totals
+	data! = rs!.getEmptyRecordData()
+	data!.setFieldValue("COST_EA",fill(20,"_"))
+	data!.setFieldValue("COST_TOT",fill(20,"_"))
+	rs!.insert(data!)
+	
+	data! = rs!.getEmptyRecordData()
+	data!.setFieldValue("ITEM","Total Materials")
+	data!.setFieldValue("COST_EA",str(tot_cost_ea:iv_cost_mask$))
+	data!.setFieldValue("COST_TOT",str(tot_cost_tot:sf_rate_mask$))
+	rs!.insert(data!)
 	
 rem --- Tell the stored procedure to return the result set.
 

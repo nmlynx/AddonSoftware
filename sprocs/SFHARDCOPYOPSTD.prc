@@ -62,7 +62,14 @@ rem	call pgmdir$+"adc_getmask.aon","","AR","I","",custmask$,0,custmask
 	bm_rate_mask$="###.00"
 	sf_rate_mask$="###.00"
 	bm_hours_mask$="#,##0.00"
-	
+
+rem --- Init totals
+
+	tot_units_ea=0
+	tot_cost_ea=0
+	tot_units_tot=0
+	tot_cost_tot=0
+
 rem --- Open files with adc
 
     files=5,begfile=1,endfile=files
@@ -171,11 +178,31 @@ rem --- Trip Read
 		data!.setFieldValue("UNITS_EA",str(read_tpl.runtime_hrs:iv_cost_mask$))
 		data!.setFieldValue("COST_EA",str(read_tpl.unit_cost:iv_cost_mask$))
 		data!.setFieldValue("SETUP",str(read_tpl.setup_time:bm_units_mask$))
-		data!.setFieldValue("UNITS_TOT",str(read_tpl.unit_cost:iv_cost_mask$))
-		data!.setFieldValue("COST_TOT",str(read_tpl.unit_cost:sf_rate_mask$))
+		data!.setFieldValue("UNITS_TOT",str(read_tpl.total_time:iv_cost_mask$))
+		data!.setFieldValue("COST_TOT",str(read_tpl.tot_std_cost:sf_rate_mask$))
 		rs!.insert(data!)
+		tot_units_ea=tot_units_ea+read_tpl.runtime_hrs
+		tot_cost_ea=tot_cost_ea+read_tpl.unit_cost
+		tot_units_tot=tot_units_tot+read_tpl.total_time
+		tot_cost_tot=tot_cost_tot+read_tpl.tot_std_cost
 	wend
+
+rem --- Output Totals
+	data! = rs!.getEmptyRecordData()
+	data!.setFieldValue("UNITS_EA",fill(20,"_"))
+	data!.setFieldValue("COST_EA",fill(20,"_"))
+	data!.setFieldValue("UNITS_TOT",fill(20,"_"))
+	data!.setFieldValue("COST_TOT",fill(20,"_"))
+	rs!.insert(data!)
 	
+	data! = rs!.getEmptyRecordData()
+	data!.setFieldValue("OP_CODE","Total Operations")
+	data!.setFieldValue("UNITS_EA",str(tot_units_ea:iv_cost_mask$))
+	data!.setFieldValue("COST_EA",str(tot_cost_ea:iv_cost_mask$))
+	data!.setFieldValue("UNITS_TOT",str(tot_units_tot:iv_cost_mask$))
+	data!.setFieldValue("COST_TOT",str(tot_cost_tot:sf_rate_mask$))
+	rs!.insert(data!)
+
 rem --- Tell the stored procedure to return the result set.
 
 	sp!.setRecordSet(rs!)
