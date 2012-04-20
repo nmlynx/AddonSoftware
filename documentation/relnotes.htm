@@ -63,7 +63,7 @@
 		<a name="TOP" id="TOP"></a>
 		<center>
 			<br />
-            <span class="title">RELNOTES for AddonSoftware 11.12</span>
+            <span class="title">RELNOTES for AddonSoftware 12.00</span>
 		</center>
 		<br />
 
@@ -88,6 +88,15 @@
 		<br />
 			AddonSoftware&reg; is a cost-effective, modular, full-featured and fully integrated enterprise resource planning solution for such mid-market industries as Accounting, Distributing, and Manufacturing.
             <ul>
+			<li>AddonSoftware Accounting modules
+			<br />
+				<ul>
+				<li>Accounts Payable</li>
+				<li>Accounts Receivable</li>
+				<li>General Ledger</li>
+				</ul>
+			</li>
+			<br />            
             <li>AddonSoftware Distribution modules
                 <br />
 				<ul>
@@ -98,12 +107,10 @@
 				</ul>
 			</li>
 			<br />
-			<li>AddonSoftware Accounting modules
+			<li>AddonSoftware Manufacturing modules
 			<br />
 				<ul>
-				<li>Accounts Payable</li>
-				<li>Accounts Receivable</li>
-				<li>General Ledger</li>
+				<li>Bill of Materials</li>
 				</ul>
 			</li>
 			<br />
@@ -115,34 +122,10 @@
 		<br />
 		<div class="indent1">
 			<br />
-			Version 11.12 takes advantage of the technological advancements provided by Barista&reg; and BBj&reg; to deliver an innovative software package known for its structural quality. Together with Barista, Version 11.12 offers a leap forward in the efficiency of software customization and the creation of vertical applications. AddonSoftware
+			Version 12.00 takes advantage of the technological advancements provided by Barista&reg; and BBj&reg; to deliver an innovative software package known for its structural quality. Together with Barista, Version 12.00 offers a leap forward in the efficiency of software customization and the creation of vertical applications. AddonSoftware
 continues its 25-year history of constant improvement - additional features, increased functionality, and updated technology - in this release.
 			<ul>
-			<li>New for version 11.12
-			<br />
-				<ul>
-				<li>Three new graphical reports have been added to the Accounts Receivable => Reports menu. These reports are all graphical, but each one takes a different approach, demonstrating how you can harness the power of BBj, java and JasperReports. </li>
-					<ul>
-						<li>Graphic Sales Report by Salesperson: presents a graphical representation of sales data for a selectable period by Salesperson in 6 different graphic formats. This is a straight BBj program, arr_graphicSalesReport.aon.</li>
-						<li>Sales Digital Dashboard: presents sales data for a selected month in several different formats by Salesperson, Customer Type and Year-to-Date sales. This program, arr_digitalDashboard.src, was created using AppBuilder.</li>
-						<li>Drill Down Sales Report by Customer Type: presents a series of reports starting with Sales By Customer type for a selectable period. The user can click on a customer type and see the sales by customer within that customer type. Clicking on a customer drills down to a report of invoices for that customer. Clicking on an invoice drills down to the invoice line items. The reports are linked, allowing the user to move up and down the drill-down stack. The lead-in is a straight BBj program that provides for selecting the period, and all the reports are done with Jasper iReports. The lead-in program also allows the user to select data and enter the drill-down stack at a lower level. This report uses BBj Stored Procedures (SPROCS), providing a glimpse into how to work with SPROCs as well.</li>
-					</ul>				
-                <li>Completed BBj Trigger definition and source files to facilitate running a hybrid version of Addon Payroll.  See the readme.txt in the <install>/apps/aon/util/v6triggers/ folder for more information. </li>
-                <li>Improved GL Financial Reports and Purchase Order Receipt Register to use DocOut formatting.</li>
-                <li>Developer/VAR utility to increment all of the year fields in demo data. Accessible only via the Form Manager => ADX_DEMOYEAR.</li>
-                <li>Enhanced AR Invoice drilldown in Customer Master that takes advantage of Barista drilldown filtering capability to display only open invoices.</li>
-                <li>The AddonSoftware Installation and Upgrade Wizard (AIUW) automates the install and upgrade process, eliminating manual copy/pasting and configuration file edits. All of these programs are located in the AddonSoftware Administration => Utilities => Install/Upgrade Utilities menu. </li>
-					<ul>
-						<li>Copy aon Directory: Copies the aon directory from the download location to a specified new location.</li>
-						<li>Update addon.syn File: Updates paths in the specified .syn file to reflect the new aon location and location of data files.</li>
-						<li>Update sync XML Files: Recovers administrative data (masks, messages, sequence numbers, etc.) previously backed up into the sync directory, and updates paths in admin_modules*.xml files to the new location.</li>
-                        <li>Copy Custom Modifications: Recursively copies specified application/project file structures used to store Addon customizations in order to re-install the customizations into a new/upgraded Addon.</li>
-                        <li>Distribute EM Update Wizard Files: Moves files converted during the EM Update wizard to their proper application data location and clears unneeded files.</li>
-                <li>Parameterized control over Totals tab in Order/Invoice Entry: A new field in the Sales Order Processing parameters provides control over whether or not users are warned or focus is forced onto the Totals tab to re-evaluate Freight and Discount amounts when changing existing line items.</li>
-					</ul>
-				</ul>
-			</li>
-			<li>Preview for version 12.00
+			<li>New for version 12.00
 			<br />
 				<ul>
                     <li>AddonSoftware Install and Upgrade Wizard: New Graphical Interfaces</li>
@@ -152,6 +135,8 @@ continues its 25-year history of constant improvement - additional features, inc
                     </ul>
                     <li>Order/Invoice Entry - A new field in the Sales Order Processing parameter record provides control over whether or not users are warned or focus is forced onto the Totals tab to re-evaluate Freight and Discount amounts when changing existing line items.</li>
                     <li>GL Report Format Listing - Prints a listing of heading and detail information for a financial report. It can be used for reference or as a worksheet for maintaining a financial report.</li>
+                    <li>GL Posting Control by Firm and Module - Module parameter tables have been enhanced to provide control over GL postings.</li> 
+                    <li>GL Fiscal Calendar auto-adjust February for leap year - Added new parameter to indicate whether a period end date of February 28 will be automatically adjusted to the 29th on leap years.</li> 
                     <li>Demo/Eval "nag" - Uses a Barista Auto-launch process to warn when Addon is launched from the BASIS product download location. Addon should only be launched/run from the BASIS product download location for demos/evals.</li>
                     <li>Inventory Costing Report -  Provides an exploded listing of Bills of Materials, including costs rolled up from the lowest level component to the highest assembly.</li>
                     <li>Inventory Costing Update - Updates Inventory Master and Bill of Material costs by first updating component costs and then using those costs to update higher levels through to the highest assembly.</li>
@@ -164,6 +149,7 @@ continues its 25-year history of constant improvement - additional features, inc
                         <li>Operation Where Used Listing – Prints a list of Operation Codes and in which Bills they are referenced.</li>
                         <li>Indented Bill of Materials Report – A listing of all levels of a Bill including the cost of Materials, Operations, and Subcontracts.</li>
                         <li>Bill of Materials Detail Listing – Prints detail information about each Bill selected.</li>
+                        <li>Bill of Materials Costing Report - An exploded list detailing each selected Bill and its costs along with the details of each Bill's sub-assemblies.</li>
                         <li>Bill of Materials Masters – Defines the header information about a BOM.</li>
                         <ul>
                             <li>Operations – Allows entry of detail information about each Operation that takes place in the BOM.</li>
@@ -176,12 +162,51 @@ continues its 25-year history of constant improvement - additional features, inc
                             <li>Comments – Allows entry of comments associated with the BOM.</li>
                             <li>Subcontracts – Allows entry of information of any outside contracting work associated with the BOM.</li>
                         </ul>
-                        <li>Purge Obsolete Detail Lines – Purges detail lines from each BOM that have an Obsolete date prior, or equal to, the Purge Date selected.</li> 
+                        <li>Bill of Materials Costing Update - Modifies Inventory Unit Costs to reflect the costs reported on the Bill of Materials Costing Report.</li> 
                         <li>Bill Detail Exception Report - Lists linkage anomalies between material component lines and operation or subcontractor lines (e.g., a subcontract line linking to a comment instead of to an item.</li>
                         <li>Component Item Replacement - Replaces a specified component, for a bill or range of bills, with another component based on effective and obsolete dates.</li>
                    </ul>
 				</ul>
-			</li>            
+			</li>
+			<li>Preview for version 13.00
+			<br />
+				<ul>
+                    <li>AddonSoftware Shop Floor Control</li>
+                    <ul> 
+                        <li>Work Order Entry</li>
+                        <ul>
+                            <li>Header Information</li>
+                            <li>Material Requirements</li>
+                            <li>Operation Requirements</li>
+                            <li>Schedule Work Order</li>
+                            <li>Release Work Order</li>
+                            <li>Job Status</li>
+                            <li>Transaction History</li>
+                            <li>Cost Summary</li>
+                            <li>Comments Maintenance</li>
+                            <li>Subcontract Requirements</li>
+                        </ul>
+                        <li>Dispatch Inquiry</li>
+                        <li>Create Purchase Requisitions</li>
+                        <li>Materials Issues Entry</li>
+                        <li>Materials Issues Register</li>
+                        <li>Materials Issues Update</li>
+                        <li>Work Order Header Report</li>
+                        <li>Labor Efficiency Analysis Report</li>
+                        <li>Cost Variance Analysis Report</li>
+                        <li>Date Analysis Report</li>
+                        <li>WO Transaction History Report</li>
+                        <li>Work Order Job Status Summary</li>
+                        <li>Type Codes Maintenance</li>
+                        <li>Operation Codes Maintenance</li>
+                        <li>Employees Maintenance</li>
+                        <li>Create Shop Floor Calendar</li>
+                        <li>Shop Floor Calendar Maintenance</li>
+                        <li>Copy Shop Floor Calendar</li>
+                        <li>Work Order Parameters</li>
+                    </ul>
+                </ul>
+            </li>
 			<br />				
 
 			<li>For a list of continued improvements in all modules, refer to the &quot;fixed issues&quot; link on the BASIS product download page.
@@ -192,7 +217,7 @@ continues its 25-year history of constant improvement - additional features, inc
 		<span class="style1"><a name="KNOWNISSUES" id="KNOWNISSUES">3. KNOWN ISSUES</a></span><span class="style6"><a href="#TOP">(top of page)</a></span>
 		<div class="indent1">
 			<ul>
-				<li>BBj version 11.12 or higher and the Barista Application Framework version 11.12 or higher are both required to run AddonSoftware version 11.12. Earlier versions may produce unexpected results</li>
+				<li>BBj version 12.00 or higher and the Barista Application Framework version 12.00 or higher are both required to run AddonSoftware version 12.00. Earlier versions may produce unexpected results</li>
 				<li>When running under Linux, the KDE desktop environment must be used.</li>
 			</ul>
 
@@ -204,7 +229,7 @@ continues its 25-year history of constant improvement - additional features, inc
 		If you purchased your AddonSoftware product from a distributor, reseller, or OEM, please contact them for technical support. They will answer your question or contact us on your behalf.	
 		<br />
 		<br />
-		Technical support for version 11.12 is available via e-mail at <a href="mailto:addon-developer@addonsoftware.com">addon-developer@addonsoftware.com</a>.
+		Technical support for version 12.00 is available via e-mail at <a href="mailto:addon-developer@addonsoftware.com">addon-developer@addonsoftware.com</a>.
 		<br />
 		<br />
 		When submitting a technical support question, please provide the following information: 	
@@ -232,7 +257,7 @@ For more information, call 1.800.370.9131 (US &amp; Canada) or +1.505.938.6131
 		<br>
         <hr />
 
-		Copyright &copy; 2008 -2011 BASIS International Ltd. All rights reserved. 
+		Copyright BASIS International Ltd. All rights reserved. 
 		<br />
 		<br />
 		AddonSoftware&reg;, BBj&reg; and Barista&reg; are registered trademarks 
