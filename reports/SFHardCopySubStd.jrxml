@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopySubStd" language="groovy" pageWidth="792" pageHeight="612" orientation="Landscape" columnWidth="772" leftMargin="0" rightMargin="20" topMargin="20" bottomMargin="10">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="FIRM_ID" class="java.lang.String"/>
+	<parameter name="WO_LOCATION" class="java.lang.String"/>
+	<parameter name="WO_NO" class="java.lang.String"/>
+	<parameter name="BARISTA_WD" class="java.lang.String"/>
+	<field name="VENDOR" class="java.lang.String"/>
+	<field name="DESC" class="java.lang.String"/>
+	<field name="OP_SEQ" class="java.lang.String"/>
+	<field name="DATE_REQ" class="java.lang.String"/>
+	<field name="STATUS" class="java.lang.String"/>
+	<field name="UNITS_EA" class="java.lang.String"/>
+	<field name="COST_EA" class="java.lang.String"/>
+	<field name="UNITS_TOT" class="java.lang.String"/>
+	<field name="COST_TOT" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="45" splitType="Stretch">
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="0" width="822" height="15" backcolor="#ECECEC"/>
+				<textElement/>
+				<text><![CDATA[Subcontract Standards]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="32" width="100" height="13"/>
+				<textElement/>
+				<text><![CDATA[Subcontracts]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="110" y="32" width="100" height="13"/>
+				<textElement/>
+				<text><![CDATA[Description]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="251" y="32" width="61" height="13"/>
+				<textElement/>
+				<text><![CDATA[Op Seq]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="324" y="32" width="80" height="13"/>
+				<textElement/>
+				<text><![CDATA[Date Required]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="419" y="32" width="33" height="13"/>
+				<textElement/>
+				<text><![CDATA[Status]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="619" y="19" width="153" height="13"/>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA[< - - - - - - - - - Total  - - - - - - - - ->]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="535" y="32" width="70" height="13"/>
+				<textElement textAlignment="Right"/>
+				<text><![CDATA[Cost]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="619" y="32" width="68" height="13"/>
+				<textElement textAlignment="Right"/>
+				<text><![CDATA[Units]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="702" y="32" width="70" height="13"/>
+				<textElement textAlignment="Right"/>
+				<text><![CDATA[Cost]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="465" y="32" width="70" height="13"/>
+				<textElement textAlignment="Right"/>
+				<text><![CDATA[Units]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="465" y="19" width="153" height="13"/>
+				<textElement textAlignment="Center"/>
+				<text><![CDATA[< - - - - - - - - - Each - - - - - - - - - >]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="13" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="100" height="13"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{VENDOR}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="110" y="0" width="129" height="13"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{DESC}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="251" y="0" width="61" height="13"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{OP_SEQ}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="324" y="0" width="80" height="13"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{DATE_REQ}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="419" y="0" width="33" height="13"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA[$F{STATUS}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="465" y="0" width="70" height="13"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{UNITS_EA}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="535" y="0" width="70" height="13"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{COST_EA}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="619" y="0" width="68" height="13"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{UNITS_TOT}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="703" y="0" width="69" height="13"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{COST_TOT}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band splitType="Stretch"/>
+	</columnFooter>
+	<pageFooter>
+		<band splitType="Stretch"/>
+	</pageFooter>
+	<summary>
+		<band splitType="Stretch"/>
+	</summary>
+</jasperReport>
