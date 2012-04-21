@@ -626,7 +626,7 @@ cal_actual1:
                 case sft01_dev
                 case sft03_dev
 rem ------- Actual Operations
-                    y=pos(sftran.op_seq$=x0$,3)
+                    y=pos(sftran.trans_seq$=x0$,3)
                     y=int(y/3)
                     actlab[y]=actlab[y]+sftran.ext_cost
                     actrun[y]=actrun[y]+sftran.units
