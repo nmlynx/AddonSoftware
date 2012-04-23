@@ -128,7 +128,7 @@ rem --- Assign form input values and WO Entry options to local variables
     if sub$="Y" transtype$=transtype$+"S"
     if opr$="Y" transtype$=transtype$+"O"
 	
-	wo_no$=callpoint!.getDevObject("wo_num"); rem From WO Entry
+	wo_no$=callpoint!.getDevObject("wo_no"); rem From WO Entry
 	wo_location$=callpoint!.getDevObject("wo_loc"); rem From WO Entry
 	
 rem --- Assign needed jasper params that aren't on O/E form/table

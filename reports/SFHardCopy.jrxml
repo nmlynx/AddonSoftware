@@ -360,6 +360,25 @@
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA["SFHardCopyMatStd.jasper"]]></subreportExpression>
 			</subreport>
+			<subreport>
+				<reportElement positionType="Float" x="0" y="39" width="802" height="13">
+					<printWhenExpression><![CDATA[$P{INCLUDE_STANDARDS}=="Y"]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="WO_NO">
+					<subreportParameterExpression><![CDATA[$F{WO_NO}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="BARISTA_WD">
+					<subreportParameterExpression><![CDATA[$P{BARISTA_WD}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="FIRM_ID">
+					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="WO_LOCATION">
+					<subreportParameterExpression><![CDATA[$P{WO_LOCATION}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA["SFHardCopySubStd"]]></subreportExpression>
+			</subreport>
 		</band>
 	</detail>
 	<columnFooter>

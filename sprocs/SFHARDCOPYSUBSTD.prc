@@ -78,7 +78,7 @@ rem --- Open files with adc
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
-	apm_custmast=channels[1]
+	apm_vendmast=channels[1]
 	sfs_params=channels[2]
 
 rem --- Dimension string templates
@@ -115,9 +115,9 @@ no_bac_open:
 
 rem --- Build SQL statement
 
-	sql_prep$="select vendor_id, description, seq_ref_list, require_date, po_status, "
+	sql_prep$="select vendor_id, description, oper_seq_ref, require_date, po_status, "
 	sql_prep$=sql_prep$+"units, unit_cost, total_units, total_cost "
-	sql_prep$=sql_prep$+"from sfe_womatl where firm_id = '"+firm_id$+"' and wo_no = '"+wo_no$+"'"
+	sql_prep$=sql_prep$+"from sfe_wosubcnt where firm_id = '"+firm_id$+"' and wo_no = '"+wo_no$+"'"
 	
 	sql_chan=sqlunt
 	sqlopen(sql_chan,err=*next)stbl("+DBNAME")
@@ -133,16 +133,16 @@ rem --- Trip Read
 		data! = rs!.getEmptyRecordData()
 
 		dim apm_vendmast$:fattr(apm_vendmast$)
-		read record (apm_vendmast_dev,key=firm_id$+read_tpl.vendor_id$,dom=*next) apm_itemmast$
+		read record (apm_vendmast,key=firm_id$+read_tpl.vendor_id$,dom=*next) apm_itemmast$
 		data!.setFieldValue("VENDOR",read_tpl.vendor_id$+" "+apm_vendmast.vendor_name$)
 rem		data!.setFieldValue("OP_SEQ",fndate$(read_tpl.require_date$))
-		data!.setFieldValue("DESC",str(read_tpl.description)
-		data!.setFieldValue("DATE_REQ",fndate$(read_tpl.require_date$)
-		data!.setFieldValue("STATUS",read_tpl.po_status)
+		data!.setFieldValue("DESC",read_tpl.description$)
+		data!.setFieldValue("DATE_REQ",fndate$(read_tpl.require_date$))
+		data!.setFieldValue("STATUS",read_tpl.po_status$)
 		data!.setFieldValue("UNITS_EA",str(read_tpl.units:iv_cost_mask$))
 		data!.setFieldValue("COST_EA",str(read_tpl.unit_cost:iv_cost_mask$))
 		data!.setFieldValue("UNITS_TOT",str(read_tpl.total_units:iv_cost_mask$))
-		data!.setFieldValue("COST_TOT",str(read_tpl.total_cost:sf_rate_mask$))
+		data!.setFieldValue("COST_TOT",str(read_tpl.total_cost:iv_cost_mask$))
 		rs!.insert(data!)
 		tot_cost_ea=tot_cost_ea+read_tpl.unit_cost
 		tot_cost_tot=tot_cost_tot+read_tpl.total_cost
@@ -155,9 +155,9 @@ rem --- Output Totals
 	rs!.insert(data!)
 	
 	data! = rs!.getEmptyRecordData()
-	data!.setFieldValue("ITEM","Total Subcontracts")
+	data!.setFieldValue("VENDOR","Total Subcontracts")
 	data!.setFieldValue("COST_EA",str(tot_cost_ea:iv_cost_mask$))
-	data!.setFieldValue("COST_TOT",str(tot_cost_tot:sf_rate_mask$))
+	data!.setFieldValue("COST_TOT",str(tot_cost_tot:iv_cost_mask$))
 	rs!.insert(data!)
 	
 rem --- Tell the stored procedure to return the result set.
