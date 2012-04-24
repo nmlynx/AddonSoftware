@@ -100,7 +100,65 @@
         <mkdir  dir="${addon.build.dir}"/>
         <mkdir  dir="${addon.build.dir}/${doc.dir}"/>
     </target>
+
     <!-- End of Misc targets -->
+    <!-- ====================================== -->
+
+
+
+    <!-- ====================================== -->
+    <!-- Get build info -->
+    <target name="build.info">
+
+        <!-- Gen package date/time -->
+        <exec executable="echo"
+              output="epoch.txt"
+              append="false">
+              <arg value="-n"/>
+              <arg value="addon.thedate="/>
+        </exec>
+        <exec executable="date"
+              output="epoch.txt"
+              append="true">
+        </exec>
+        <property file="epoch.txt"/>
+        <echo message="addon.thedate: ${addon.thedate}"/>
+        <delete file="epoch.txt"/>
+
+        <!-- Get package epoch -->
+        <exec executable="echo"
+              output="epoch.txt"
+              append="false">
+              <arg value="-n"/>
+              <arg value="addon.epoch="/>
+        </exec>
+        <exec executable="date"
+              output="epoch.txt"
+              append="true">
+              <arg value="--date"/>
+              <arg value="${addon.thedate}"/>
+              <arg value="+%s"/>
+        </exec>
+        <exec executable="echo"
+              output="epoch.txt"
+              append="true">
+              <arg value="-n"/>
+              <arg value="addon.dtstamp="/>
+        </exec>
+        <exec executable="date"
+              output="epoch.txt"
+              append="true">
+              <arg value="--date"/>
+              <arg value="${addon.thedate}"/>
+              <arg value="+%m-%d-%Y_%H%M"/>
+        </exec>
+        <property file="epoch.txt"/>
+        <echo message="addon.epoch: ${addon.epoch}"/>
+        <echo message="addon.dtstamp: ${addon.dtstamp}"/>
+        <delete file="epoch.txt"/>
+
+    </target>
+    <!-- End of build.info -->
     <!-- ====================================== -->
 
 
@@ -413,6 +471,12 @@
     <!-- ====================================== -->
     <!-- jar Addon  -->
     <target name="jar">
+
+        <propertyfile file="${build.dir}/apps/aon/documentation/build.info">
+            <entry key="addon.epoch"   value="${addon.epoch}"/>
+            <entry key="addon.dtstamp" value="${addon.dtstamp}"/>
+        </propertyfile>
+
         <!-- Jar it up - package_addon.jar -->
         <jar destfile="${build.dir}/package_addon.jar">
              <fileset dir="${build.dir}"
@@ -442,6 +506,7 @@
     <!-- build Addon  -->
     <target name="build"
             depends="clean,
+                     build.info,
                      installBBj,
                      installAddon,
                      startBBj,
