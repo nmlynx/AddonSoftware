@@ -101,7 +101,7 @@ rem --- Is General Ledger installed and being used?
 	call pgmdir$+"glc_ctlcreate.aon",err=*next,
 :				source$,application$,glw11$,gl$,status
 	if status 
-		goto std_exit
+		goto std_exit_no_update
 	endif
 
 rem --- Additional file opens
@@ -113,7 +113,7 @@ rem --- Additional file opens
 	open_tables$[3]="GLW_DAILYDETAIL",open_opts$[3]="OTA"
 
 	if gl$="Y" gosub open_tables
-	if status goto std_exit
+	if status goto std_exit_no_update
 
 	glm01_dev=num(open_chans$[1])
 	glt04_dev=num(open_chans$[2])
@@ -493,12 +493,9 @@ done: rem --- Totals
 
 no_data: rem --- No Data
 
-        t9$="E"
-        xwk=fnblank(10)
-        OutVect!.addItem("")
-        OutVect!.addItem(Translate!.getTranslation("AON_***_NOTHING_TO_REPORT_***"))
-        OutVect!.addItem(8)
-        goto std_exit
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
 
 date_heading: rem --- Date Heading
 
