@@ -29,8 +29,9 @@
 	<parameter name="TRANS_DATEFROM" class="java.lang.String"/>
 	<parameter name="TRANS_DATETHRU" class="java.lang.String"/>
 	<parameter name="TRANSTYPE" class="java.lang.String"/>
+	<parameter name="MASKS" class="java.lang.String"/>
 	<queryString language="SQL">
-		<![CDATA[call sfhardcopy($P{FIRM_ID},$P{WO_LOCATION},$P{WO_NO_1},$P{WO_NO_2},$P{BARISTA_WD},$P{REPORT_SEQ},$P{WOSTATUS},$P{BILL_NO_1},$P{BILL_NO_2},$P{WAREHOUSE_ID},$P{CUSTOMER_ID_1},$P{CUSTOMER_ID_2},$P{WO_TYPE_1},$P{WO_TYPE_2},$P{REPORT_TYPE})]]>
+		<![CDATA[call sfhardcopy($P{FIRM_ID},$P{WO_LOCATION},$P{WO_NO_1},$P{WO_NO_2},$P{BARISTA_WD},$P{REPORT_SEQ},$P{WOSTATUS},$P{BILL_NO_1},$P{BILL_NO_2},$P{WAREHOUSE_ID},$P{CUSTOMER_ID_1},$P{CUSTOMER_ID_2},$P{WO_TYPE_1},$P{WO_TYPE_2},$P{REPORT_TYPE},$P{MASKS})]]>
 	</queryString>
 	<field name="FIRM_ID" class="java.lang.String"/>
 	<field name="WO_NO" class="java.lang.String"/>
@@ -351,6 +352,9 @@
 				<subreportParameter name="BARISTA_WD">
 					<subreportParameterExpression><![CDATA[$P{BARISTA_WD}]]></subreportParameterExpression>
 				</subreportParameter>
+				<subreportParameter name="MASKS">
+					<subreportParameterExpression><![CDATA[$P{MASKS}]]></subreportParameterExpression>
+				</subreportParameter>
 				<subreportParameter name="FIRM_ID">
 					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
 				</subreportParameter>
@@ -369,6 +373,9 @@
 				</subreportParameter>
 				<subreportParameter name="BARISTA_WD">
 					<subreportParameterExpression><![CDATA[$P{BARISTA_WD}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="MASKS">
+					<subreportParameterExpression><![CDATA[$P{MASKS}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="FIRM_ID">
 					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>

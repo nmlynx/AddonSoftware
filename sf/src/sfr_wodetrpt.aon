@@ -157,6 +157,16 @@ rem --- Add to params!
 	params!.put("WOSTATUS",wostatus$)
 	params!.put("WO_LOCATION",wo_location$)
 
+rem --- Add masks to params!
+
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",msk$,0,0
+	masks$="ivc_cost_mask^"+msk$+"|"
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",msk$,0,0
+	masks$=masks$+"vendor_mask^"+msk$+"|"
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","AD","U","",msk$,0,0
+	masks$=masks$+"ad_units_mask^"+msk$+"|"
+	params!.put("MASKS",masks$)
+
 rem 	if params!.get("wo_no_2")="" then params!.put("wo_no_2","~~~~~~")
 
 rem --- Parameters
@@ -271,6 +281,14 @@ rem --- Set additional params
     params!.put("FIRM_ID",firm_id$)
 	params!.put("FIRM_NAME",firm_name$)
     params!.put("BARISTA_WD",dir(""))  
+	
+	params!.put("INCLUDE_STANDARDS","Y")
+	params!.put("INCLUDE_COSTSUMMARY","Y")
+	params!.put("INCLUDE_COMMENTS","N")
+	params!.put("INCLUDE_TRANSACTIONS","Y")
+	params!.put("TRANS_DATEFROM","")
+	params!.put("TRANS_DATETHRU","")
+    params!.put("TRANSTYPE","MOS")
 	
 rem --- Make Document Archive Record and Get ID
 

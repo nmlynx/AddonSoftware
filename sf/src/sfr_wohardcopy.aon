@@ -181,6 +181,15 @@ rem --- Add to params!
 	params!.put("TRANS_DATETHRU",trans_datethru$)
     params!.put("TRANSTYPE",transtype$)
 
+rem --- Add masks to params!
+
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",msk$,0,0
+	masks$="ivc_cost_mask^"+msk$+"|"
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",msk$,0,0
+	masks$=masks$+"vendor_mask^"+msk$+"|"
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","AD","U","",msk$,0,0
+	masks$=masks$+"ad_units_mask^"+msk$+"|"
+	params!.put("MASKS",masks$)
 
 rem 	if params!.get("wo_no_2")="" then params!.put("wo_no_2","~~~~~~")
 

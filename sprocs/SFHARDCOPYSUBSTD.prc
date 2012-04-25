@@ -30,6 +30,15 @@ rem --- Get the IN parameters used by the procedure
 	wo_loc$  = sp!.getParameter("WO_LOCATION")
 	wo_no$ = sp!.getParameter("WO_NO")
 	barista_wd$ = sp!.getParameter("BARISTA_WD")
+	masks$ = sp!.getParameter("MASKS")
+	
+rem --- masks$ will contain pairs of fields in a single string mask_name^mask|
+
+	if len(masks$)>0
+		if masks$(len(masks$),1)<>"|"
+			masks$=masks$+"|"
+		endif
+	endif
 	
 	sv_wd$=dir("")
 	chdir barista_wd$
@@ -48,20 +57,11 @@ rem --- Get Barista System Program directory
 
 rem --- Get masks
 
-rem	x$=stbl("+USER_ID","admin")
-rem	call stbl("+DIR_SYP")+"bas_process_beg.bbj",stbl("+USER_ID"),rd_table_chans$[all]
-
-rem escape;rem ? 
-
 	pgmdir$=stbl("+DIR_PGM",err=*next)
-rem 	call pgmdir$+"adc_getsprocmask.aon",firm_id$,"","SF","U","",m1$,0,m1
-rem	call pgmdir$+"adc_getmask.aon","","SF","U","",m1$,0,m1
-rem	call pgmdir$+"adc_getmask.aon","","AR","I","",custmask$,0,custmask
-	iv_cost_mask$="###,##0.0000-"
-	bm_units_mask$="#,##0.00"
-	bm_rate_mask$="###.00"
-	sf_rate_mask$="###.00"
-	bm_hours_mask$="#,##0.00"
+
+	iv_cost_mask$=fngetmask$("iv_cost_mask","###,##0.0000-",masks$)
+	ad_units_mask$=fngetmask$("ad_units_mask","#,###.00",masks$)
+	vendor_mask$=fngetmask$("vendor_mask","000000",masks$)
 
 rem --- Init totals
 
@@ -134,14 +134,14 @@ rem --- Trip Read
 
 		dim apm_vendmast$:fattr(apm_vendmast$)
 		read record (apm_vendmast,key=firm_id$+read_tpl.vendor_id$,dom=*next) apm_itemmast$
-		data!.setFieldValue("VENDOR",read_tpl.vendor_id$+" "+apm_vendmast.vendor_name$)
+		data!.setFieldValue("VENDOR",fnmask$(read_tpl.vendor_id$,vendor_mask$)+" "+apm_vendmast.vendor_name$)
 rem		data!.setFieldValue("OP_SEQ",fndate$(read_tpl.require_date$))
 		data!.setFieldValue("DESC",read_tpl.description$)
 		data!.setFieldValue("DATE_REQ",fndate$(read_tpl.require_date$))
 		data!.setFieldValue("STATUS",read_tpl.po_status$)
-		data!.setFieldValue("UNITS_EA",str(read_tpl.units:iv_cost_mask$))
+		data!.setFieldValue("UNITS_EA",str(read_tpl.units:ad_units_mask$))
 		data!.setFieldValue("COST_EA",str(read_tpl.unit_cost:iv_cost_mask$))
-		data!.setFieldValue("UNITS_TOT",str(read_tpl.total_units:iv_cost_mask$))
+		data!.setFieldValue("UNITS_TOT",str(read_tpl.total_units:ad_units_mask$))
 		data!.setFieldValue("COST_TOT",str(read_tpl.total_cost:iv_cost_mask$))
 		rs!.insert(data!)
 		tot_cost_ea=tot_cost_ea+read_tpl.unit_cost
@@ -189,6 +189,20 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
         return str(q1$:q2$)
     fnend
 
+	def fngetmask$(q1$,q2$,q3$)
+		rem --- q1$=mask name, q2$=default mask if not found in mask string, q3$=mask string from parameters
+		q$=q2$
+		if len(q1$)=0 return q$
+		if q1$(len(q1$),1)<>"^" q1$=q1$+"^"
+		q=pos(q1$=q3$)
+		if q=0 return q$
+		q$=q3$(q)
+		q=pos("^"=q$)
+		q$=q$(q+1)
+		q=pos("|"=q$)
+		q$=q$(1,q-1)
+		return q$
+	fnend
 
 	std_exit:
 	
