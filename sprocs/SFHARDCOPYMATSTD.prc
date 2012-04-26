@@ -122,7 +122,7 @@ no_bac_open:
 rem --- Build SQL statement
 
 	sql_prep$="select item_id, oper_seq_ref, scrap_factor, divisor, alt_factor, qty_required, "
-	sql_prep$=sql_prep$+"units, unit_cost, total_units, total_cost "
+	sql_prep$=sql_prep$+"units, unit_cost, total_units, total_cost, line_type, ext_comments "
 	sql_prep$=sql_prep$+"from sfe_womatl where firm_id = '"+firm_id$+"' and wo_no = '"+wo_no$+"'"
 	
 	sql_chan=sqlunt
@@ -140,16 +140,20 @@ rem --- Trip Read
 
 		dim ivm_itemmast$:fattr(ivm_itemmast$)
 		read record (ivm_itemmast_dev,key=firm_id$+read_tpl.item_id$,dom=*next) ivm_itemmast$
-		data!.setFieldValue("ITEM",read_tpl.item_id$+" "+ivm_itemmast.item_desc$)
-rem		data!.setFieldValue("OP_SEQ",fndate$(read_tpl.require_date$))
-		data!.setFieldValue("SCRAP",str(read_tpl.scrap_factor:bm_hours_mask$))
-		data!.setFieldValue("DIVISOR",str(read_tpl.divisor:bm_units_mask$))
-		data!.setFieldValue("FACTOR",str(read_tpl.alt_factor:bm_rate_mask$))
-		data!.setFieldValue("QTY_REQ",str(read_tpl.qty_required:sf_rate_mask$))
-		data!.setFieldValue("UNITS_EA",str(read_tpl.units:iv_cost_mask$))
-		data!.setFieldValue("COST_EA",str(read_tpl.unit_cost:iv_cost_mask$))
-		data!.setFieldValue("UNITS_TOT",str(read_tpl.total_units:iv_cost_mask$))
-		data!.setFieldValue("COST_TOT",str(read_tpl.total_cost:sf_rate_mask$))
+		if read_tpl.line_type$="M"
+			data!.setFieldValue("ITEM",read_tpl.ext_comments$)
+		else
+			data!.setFieldValue("ITEM",read_tpl.item_id$+" "+ivm_itemmast.item_desc$)
+	rem		data!.setFieldValue("OP_SEQ",fndate$(read_tpl.require_date$))
+			data!.setFieldValue("SCRAP",str(read_tpl.scrap_factor:bm_hours_mask$))
+			data!.setFieldValue("DIVISOR",str(read_tpl.divisor:bm_units_mask$))
+			data!.setFieldValue("FACTOR",str(read_tpl.alt_factor:bm_rate_mask$))
+			data!.setFieldValue("QTY_REQ",str(read_tpl.qty_required:sf_rate_mask$))
+			data!.setFieldValue("UNITS_EA",str(read_tpl.units:iv_cost_mask$))
+			data!.setFieldValue("COST_EA",str(read_tpl.unit_cost:iv_cost_mask$))
+			data!.setFieldValue("UNITS_TOT",str(read_tpl.total_units:iv_cost_mask$))
+			data!.setFieldValue("COST_TOT",str(read_tpl.total_cost:sf_rate_mask$))
+		endif
 		rs!.insert(data!)
 		tot_cost_ea=tot_cost_ea+read_tpl.unit_cost
 		tot_cost_tot=tot_cost_tot+read_tpl.total_cost

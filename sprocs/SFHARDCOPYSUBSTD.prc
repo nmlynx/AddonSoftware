@@ -116,7 +116,7 @@ no_bac_open:
 rem --- Build SQL statement
 
 	sql_prep$="select vendor_id, description, oper_seq_ref, require_date, po_status, "
-	sql_prep$=sql_prep$+"units, unit_cost, total_units, total_cost "
+	sql_prep$=sql_prep$+"units, unit_cost, total_units, total_cost, line_type, ext_comments "
 	sql_prep$=sql_prep$+"from sfe_wosubcnt where firm_id = '"+firm_id$+"' and wo_no = '"+wo_no$+"'"
 	
 	sql_chan=sqlunt
@@ -134,15 +134,19 @@ rem --- Trip Read
 
 		dim apm_vendmast$:fattr(apm_vendmast$)
 		read record (apm_vendmast,key=firm_id$+read_tpl.vendor_id$,dom=*next) apm_itemmast$
-		data!.setFieldValue("VENDOR",fnmask$(read_tpl.vendor_id$,vendor_mask$)+" "+apm_vendmast.vendor_name$)
-rem		data!.setFieldValue("OP_SEQ",fndate$(read_tpl.require_date$))
-		data!.setFieldValue("DESC",read_tpl.description$)
-		data!.setFieldValue("DATE_REQ",fndate$(read_tpl.require_date$))
-		data!.setFieldValue("STATUS",read_tpl.po_status$)
-		data!.setFieldValue("UNITS_EA",str(read_tpl.units:ad_units_mask$))
-		data!.setFieldValue("COST_EA",str(read_tpl.unit_cost:iv_cost_mask$))
-		data!.setFieldValue("UNITS_TOT",str(read_tpl.total_units:ad_units_mask$))
-		data!.setFieldValue("COST_TOT",str(read_tpl.total_cost:iv_cost_mask$))
+		if read_tpl.line_type$<>"S"
+			data!.setFieldValue("VENDOR",read_tpl.ext_comments$)
+		else
+			data!.setFieldValue("VENDOR",fnmask$(read_tpl.vendor_id$,vendor_mask$)+" "+apm_vendmast.vendor_name$)
+	rem		data!.setFieldValue("OP_SEQ",fndate$(read_tpl.require_date$))
+			data!.setFieldValue("DESC",read_tpl.description$)
+			data!.setFieldValue("DATE_REQ",fndate$(read_tpl.require_date$))
+			data!.setFieldValue("STATUS",read_tpl.po_status$)
+			data!.setFieldValue("UNITS_EA",str(read_tpl.units:ad_units_mask$))
+			data!.setFieldValue("COST_EA",str(read_tpl.unit_cost:iv_cost_mask$))
+			data!.setFieldValue("UNITS_TOT",str(read_tpl.total_units:ad_units_mask$))
+			data!.setFieldValue("COST_TOT",str(read_tpl.total_cost:iv_cost_mask$))
+		endif
 		rs!.insert(data!)
 		tot_cost_ea=tot_cost_ea+read_tpl.unit_cost
 		tot_cost_tot=tot_cost_tot+read_tpl.total_cost
