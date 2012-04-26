@@ -169,6 +169,8 @@ rem --- Add masks to params!
 	masks$=masks$+"sf_hours_mask^"+msk$+"|"
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","R","",msk$,0,0
 	masks$=masks$+"sf_rate_mask^"+msk$+"|"
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","%","",msk$,0,0
+	masks$=masks$+"sf_pct_mask^"+msk$+"|"
 	params!.put("MASKS",masks$)
 
 rem 	if params!.get("wo_no_2")="" then params!.put("wo_no_2","~~~~~~")

@@ -45,6 +45,15 @@ rem --- Get the IN parameters used by the procedure
 	thru_cust$ = sp!.getParameter("CUSTOMER_ID_2")
 	from_type$ = sp!.getParameter("WO_TYPE_1")
 	thru_type$ = sp!.getParameter("WO_TYPE_2")
+	masks$ = sp!.getParameter("MASKS")
+	
+rem --- masks$ will contain pairs of fields in a single string mask_name^mask|
+
+	if len(masks$)>0
+		if masks$(len(masks$),1)<>"|"
+			masks$=masks$+"|"
+		endif
+	endif
 	
 	sv_wd$=dir("")
 	chdir barista_wd$
@@ -63,12 +72,11 @@ rem --- Get Barista System Program directory
 
 rem --- Get masks
 
-rem	pgmdir$=stbl("+DIR_PGM",err=*next)
-rem	call pgmdir$+"adc_getmask.aon","","SF","U","",m1$,0,m1
-rem	call pgmdir$+"adc_getmask.aon","","AR","I","",custmask$,0,custmask
-	m1$="#,###.00-"
-	cust_mask$="00-0000"
-	pct_mask$="##0.0%"
+	pgmdir$=stbl("+DIR_PGM",err=*next)
+
+	ad_units_mask$=fngetmask$("ad_units_mask","#,###.00",masks$)
+	cust_mask$=fngetmask$("cust_mask","000000",masks$)
+	sf_pct_mask$=fngetmask$("sf_pct_mask","##0.0%",mask$)
 	
 rem --- Open files with adc
 
@@ -230,9 +238,9 @@ rem --- Trip Read
 		data!.setFieldValue("TYPE_DESC",sfc_type.code_desc$)
 		data!.setFieldValue("PRIORITY",read_tpl.priority$)
 		data!.setFieldValue("UOM",read_tpl.unit_measure$)
-		data!.setFieldValue("YIELD",str(read_tpl.est_yield:pct_mask$))
-		data!.setFieldValue("PROD_QTY",str(read_tpl.sch_prod_qty:m1$))
-		data!.setFieldValue("COMPLETED",str(read_tpl.qty_cls_todt:m1$))
+		data!.setFieldValue("YIELD",str(read_tpl.est_yield:sf_pct_mask$))
+		data!.setFieldValue("PROD_QTY",str(read_tpl.sch_prod_qty:ad_units_mask$))
+		data!.setFieldValue("COMPLETED",str(read_tpl.qty_cls_todt:ad_units_mask$))
 		data!.setFieldValue("LAST_ACT_DATE",fndate$(read_tpl.lstact_date$))
 		if cvs(ivm_itemmast.item_desc$,3)=""
 			data!.setFieldValue("ITEM_DESC_1",read_tpl.description_01$)
@@ -326,6 +334,20 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
         return str(q1$:q2$)
     fnend
 
+	def fngetmask$(q1$,q2$,q3$)
+		rem --- q1$=mask name, q2$=default mask if not found in mask string, q3$=mask string from parameters
+		q$=q2$
+		if len(q1$)=0 return q$
+		if q1$(len(q1$),1)<>"^" q1$=q1$+"^"
+		q=pos(q1$=q3$)
+		if q=0 return q$
+		q$=q3$(q)
+		q=pos("^"=q$)
+		q$=q$(q+1)
+		q=pos("|"=q$)
+		q$=q$(1,q-1)
+		return q$
+	fnend
 
 	std_exit:
 	
