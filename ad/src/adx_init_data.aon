@@ -138,7 +138,7 @@ init_post_to_gl:
 
     rem --- Verify modules_tpl still includes post_gl in case it was dropped
     use_post_gl=0
-    if pos("post_gl"=cvs(open_tpls$[2],8)) then use_post_gl=1
+    if pos("post_gl"=cvs(open_tpls$[1],8)) then use_post_gl=1
 
     rem --- As necessary, initialize *s_params.post_to_gl for all firms
     for i=1 to len(modules$) step 2
@@ -163,9 +163,12 @@ init_post_to_gl:
                 rem --- Override with pre-v12 adm_modules.post_gl if still available
                 if use_post_gl then
                     modules_tpl.post_gl$=""
-                    find record (modules_dev,key=stbl("+AON_APPCOMPANY",err=*next)+pad(mod$,3),dom=*next)modules_tpl$
+                    find record (modules_dev,key=stbl("+AON_APPCOMPANY",err=*next)+pad(mod$,3),dom=*endif)modules_tpl$
                     if pos(modules_tpl.post_gl$="YN") then
                         tpl.post_to_gl$=modules_tpl.post_gl$
+                        rem --- clear adm_modules.post_gl
+                        modules_tpl.post_gl$(1)=""
+                        write record (modules_dev,3),dom=*next)modules_tpl$
                     endif
                 endif
 
