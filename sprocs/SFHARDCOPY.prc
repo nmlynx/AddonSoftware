@@ -76,7 +76,7 @@ rem --- Get masks
 
 	ad_units_mask$=fngetmask$("ad_units_mask","#,###.00",masks$)
 	cust_mask$=fngetmask$("cust_mask","000000",masks$)
-	sf_pct_mask$=fngetmask$("sf_pct_mask","##0.0%",mask$)
+	sf_pct_mask$=fngetmask$("sf_pct_mask","##0.00%",masks$)
 	
 rem --- Open files with adc
 

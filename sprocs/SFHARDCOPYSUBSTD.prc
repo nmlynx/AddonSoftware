@@ -1,5 +1,5 @@
 rem ----------------------------------------------------------------------------
-rem Program: SFHARDCOPYOSUBSTD.prc
+rem Program: SFHARDCOPYSUBSTD.prc
 rem Description: Stored Procedure to get the Shop Floor Hard Copy Subcontract info into iReports
 rem Used for Hard Copy, Traveler, Work Order Closed Detail and Work Order Detail
 rem
