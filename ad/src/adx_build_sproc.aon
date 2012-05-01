@@ -276,6 +276,7 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"     , 'OpenMats' AS Trans_Type"+$0a$
     sqlprep$=sqlprep$+"     , 'M' AS Record_ID"+$0a$
     sqlprep$=sqlprep$+"     , oMats.trans_seq "+$0a$
+	sqlprep$=sqlprep$+"     , oMats.material_seq_ref AS Seq_Ref "+$0a$
     sqlprep$=sqlprep$+"FROM SFT_OPNMATTR AS oMats"+$0a$
     sqlprep$=sqlprep$+"  UNION "+$0a$
     sqlprep$=sqlprep$+"SELECT oOps.firm_id "+$0a$
@@ -285,6 +286,7 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"     , 'OpenOprs' AS Trans_Type"+$0a$
     sqlprep$=sqlprep$+"     , 'O' AS Record_ID"+$0a$
     sqlprep$=sqlprep$+"     , oOps.trans_seq "+$0a$
+	sqlprep$=sqlprep$+"     , oOps.oper_seq_ref AS Seq_Ref "+$0a$
     sqlprep$=sqlprep$+"FROM SFT_OPNOPRTR AS oOps "+$0a$
     sqlprep$=sqlprep$+"  UNION "+$0a$
     sqlprep$=sqlprep$+"SELECT oSubs.firm_id "+$0a$
@@ -294,6 +296,7 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"     , 'OpenSubs' AS Trans_Type"+$0a$
     sqlprep$=sqlprep$+"     , 'S' AS Record_ID"+$0a$
     sqlprep$=sqlprep$+"     , oSubs.trans_seq "+$0a$
+	sqlprep$=sqlprep$+"     , oSubs.subcont_seq_ref AS Seq_Ref "+$0a$
     sqlprep$=sqlprep$+"FROM SFT_OPNSUBTR AS oSubs"+$0a$
     sqlprep$=sqlprep$+"  UNION "+$0a$
     sqlprep$=sqlprep$+"SELECT cMats.firm_id "+$0a$
@@ -303,6 +306,7 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"     , 'ClosedMats' AS Trans_Type"+$0a$
     sqlprep$=sqlprep$+"     , 'M' AS Record_ID"+$0a$
     sqlprep$=sqlprep$+"     , cMats.trans_seq "+$0a$
+	sqlprep$=sqlprep$+"     , cMats.material_seq_ref AS Seq_Ref "+$0a$
     sqlprep$=sqlprep$+"FROM SFT_CLSMATTR AS cMats "+$0a$
     sqlprep$=sqlprep$+"  UNION "+$0a$
     sqlprep$=sqlprep$+"SELECT cOps.firm_id "+$0a$
@@ -312,6 +316,7 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"     , 'ClosedOprs' AS Trans_Type"+$0a$
     sqlprep$=sqlprep$+"     , 'O' AS Record_ID"+$0a$
     sqlprep$=sqlprep$+"     , cOps.trans_seq "+$0a$
+	sqlprep$=sqlprep$+"     , cOps.oper_seq_ref AS Seq_Ref "+$0a$
     sqlprep$=sqlprep$+"FROM SFT_CLSOPRTR AS cOps"+$0a$
     sqlprep$=sqlprep$+"  UNION "+$0a$
     sqlprep$=sqlprep$+"SELECT cSubs.firm_id "+$0a$
@@ -321,6 +326,7 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"     , 'ClosedSubs' AS Trans_Type"+$0a$
     sqlprep$=sqlprep$+"     , 'S' AS Record_ID"+$0a$
     sqlprep$=sqlprep$+"     , cSubs.trans_seq "+$0a$
+	sqlprep$=sqlprep$+"     , cSubs.subcont_seq_ref AS Seq_Ref  "+$0a$
     sqlprep$=sqlprep$+"FROM SFT_CLSSUBTR AS cSubs"
 
     gosub create_sproc_def	
