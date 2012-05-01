@@ -209,9 +209,6 @@
                dest="${addon.bbj.dir}/help/WebHelp">
         </untar>
 
-        <!-- The addon archive has a AddonHelp.jar placeholder file, delete it -->
-        <delete file="${addon.bbj.dir}/help/AddonHelp.jar"/>
-
         <move preserveLastModified="true"
               file="${bbj.jars.dir}/addonhelp.jar"
               tofile="${addon.bbj.dir}/help/addonhelp.jar">
