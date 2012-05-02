@@ -143,11 +143,11 @@ rem --- Assign needed jasper params that aren't on O/E form/table
  	wo_no_2$=wo_no$
  	wo_type_1$=""
  	wo_type_2$=""
- 	customer_id_1$=""
- 	customer_id_2$=""
  	warehouse_id$=""
  	bill_no_1$=""
  	bill_no_2$=""
+ 	customer_id_1$=""
+ 	customer_id_2$=""	
 
  	wo_open$="Y"
  	wo_closed$="Y"
@@ -185,6 +185,8 @@ rem --- Add masks to params!
 
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",msk$,0,0
 	masks$="iv_cost_mask^"+msk$+"|"
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",msk$,0,0
+	masks$=masks$+"cust_mask^"+msk$+"|"
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",msk$,0,0
 	masks$=masks$+"vendor_mask^"+msk$+"|"
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","AD","U","",msk$,0,0
