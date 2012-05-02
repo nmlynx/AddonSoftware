@@ -64,6 +64,7 @@ rem --- Get masks
 	sf_hours_mask$=fngetmask$("sf_hours_mask","#,##0.00",masks$)
 	sf_pct_mask$=fngetmask$("sf_pct_mask","###.00",masks$)
 	
+	
 rem --- Init totals
 
 	tot_std_dir=0
@@ -77,26 +78,50 @@ rem --- Init totals
 
 rem --- Open files with adc
 
-    files=2,begfile=1,endfile=files
+    files=8,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
 	files$[1]="sfs_params",ids$[1]="SFS_PARAMS"
+	files$[2]="sft-23",ids$[2]="SFT_CLSMATTR"
+	files$[3]="sft-03",ids$[3]="SFT_CLSOPRTR"
+	files$[4]="sft-33",ids$[4]="SFT_CLSSUBTR"
+	files$[5]="sft-21",ids$[5]="SFT_OPNMATTR"
+	files$[6]="sft-01",ids$[6]="SFT_OPNOPRTR"
+	files$[7]="sft-31",ids$[7]="SFT_OPNSUBTR"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
 
 	sfs_params=channels[1]
-
+	sft_clsmattr=channels[2]
+	sft_clsoprtr=channels[3]
+	sft_clssubtr=channels[4]
+	sft_opnmattr=channels[5]
+	sft_opnoprtr=channels[6]
+	sft_opnsubtr=channels[7]
+	
 rem --- Dimension string templates
 
 	dim sfs_params$:templates$[1]
+	dim sft_clsmattr$:templates$[2]
+	dim sft_clsoprtr$:templates$[3]
+	dim sft_clssubtr$:templates$[4]
+	dim sft_opnmattr$:templates$[5]
+	dim sft_opnoprtr$:templates$[6]
+	dim sft_opnsubtr$:templates$[7]
 	
 goto no_bac_open
 rem --- Open Files    
-    num_files = 2
+    num_files = 8
     dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
 
 	open_tables$[1]="SFS_PARAMS",     open_opts$[1] = "OTA"
+	open_tables$[2]="SFT_CLSMATTR",     open_opts$[2] = "OTA"
+	open_tables$[3]="SFT_CLSOPRTR",     open_opts$[3] = "OTA"
+	open_tables$[4]="SFT_CLSSUBTR",     open_opts$[4] = "OTA"
+	open_tables$[5]="SFT_OPNMATTR",     open_opts$[5] = "OTA"
+	open_tables$[6]="SFT_OPNOPRTR",     open_opts$[6] = "OTA"
+	open_tables$[7]="SFT_OPNSUBTR",     open_opts$[7] = "OTA"
 	
 call sypdir$+"bac_open_tables.bbj",
 :       open_beg,
@@ -110,9 +135,20 @@ call sypdir$+"bac_open_tables.bbj",
 :		open_status$
 
 	sfs_params = num(open_chans$[1])
+	sft_clsmattr=num(open_chans$[2])
+	sft_clsoprtr=num(open_chans$[3])
+	sft_clssubtr=num(open_chans$[4])
+	sft_opnmattr=num(open_chans$[5])
+	sft_opnoprtr=num(open_chans$[6])
+	sft_opnsubtr=num(open_chans$[7])
 	
 	dim sfs_params$:open_tpls$[1]
-
+	dim sft_clsmattr$:open_tpls$[2]
+	dim sft_clsoprtr$:open_tpls$[3]
+	dim sft_clssubtr$:open_tpls$[4]
+	dim sft_opnmattr$:open_tpls$[5]
+	dim sft_opnoprtr$:open_tpls$[6]
+	dim sft_opnsubtr$:open_tpls$[7]
 no_bac_open:
 
 rem --- Get proper Op Code Maintenance table
@@ -120,25 +156,25 @@ rem --- Get proper Op Code Maintenance table
 	read record (sfs_params,key=firm_id$+"SF00") sfs_params$
 	bm$=sfs_params.bm_interface$
 	if bm$<>"Y"
-		files$[2]="sfm-02",ids$[2]="SFC_OPRTNCOD"
+		files$[8]="sfm-02",ids$[8]="SFC_OPRTNCOD"
 rem		open_tables$[5]="SFC_OPRTNCOD",open_opts$[5]="OTA"
 	else
-		files$[2]="bmm-08",ids$[2]="BMC_OPCODES"
+		files$[8]="bmm-08",ids$[8]="BMC_OPCODES"
 rem		open_tables$[5]="BMC_OPCODES",open_opts$[5]="OTA"
 	endif
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
 	
-	opcode_dev=channels[2]
-	dim opcode_tpl$:templates$[2]
+	opcode_dev=channels[8]
+	dim opcode_tpl$:templates$[8]
 
 rem --- Build SQL statement
 
 rem	sql_prep$="select * from vw_sfx_wotranxr as vw_trans where vw_trans.firm_id = '"+firm_id$+"' and "
 rem	sql_prep$=sql_prep$+"record_id = 'O' and wo_no = '"+wo_no$+"'"
 
-	sql_prep$="select op_code, total_time, tot_std_cost, direct_rate, ovhd_rate "
+	sql_prep$="select op_code, total_time, tot_std_cost, direct_rate, ovhd_rate, internal_seq_no "
 	sql_prep$=sql_prep$+"from sfe_wooprtn where firm_id = '"+firm_id$+"' and wo_no = '"+wo_no$+"' and line_type = 'S'"
 	
 	sql_chan=sqlunt
@@ -154,29 +190,40 @@ rem --- Trip Read
 
 		data! = rs!.getEmptyRecordData()
 
+		gosub get_op_trans
+		
 		dim opcode_tpl$:fattr(opcode_tpl$)
 		read record (opcode_dev,key=firm_id$+read_tpl.op_code$,dom=*next) opcode_tpl$
 		data!.setFieldValue("OP_CODE",read_tpl.op_code$)
 		data!.setFieldValue("DESC",opcode_tpl.code_desc$)
 		data!.setFieldValue("STD_HRS",str(read_tpl.total_time:sf_hours_mask$))
-rem		data!.setFieldValue("ACT_HRS",str(read_tpl.pcs_per_hour:sf_hours_mask$))
-rem		data!.setFieldValue("VAR_HRS",str(read_tpl.direct_rate:sf_hours_mask$))
-rem		data!.setFieldValue("VAR_HRS_PCT",str(read_tpl.ovhd_rate:sf_pct_mask$))
+		data!.setFieldValue("ACT_HRS",str(act_op_hrs:sf_hours_mask$))
+		data!.setFieldValue("VAR_HRS",str(read_tpl.total_time-act_op_hrs:sf_hours_mask$))
+		if read_tpl.total_time<>0
+			data!.setFieldValue("VAR_HRS_PCT",str((read_tpl.total_time-act_op_hrs)/read_tpl.total_time*100:sf_pct_mask$))
+		else
+			data!.setFieldValue("VAR_HRS_PCT",str(0:sf_pct_mask$))
+		endif
 		data!.setFieldValue("STD_AMT",str(read_tpl.tot_std_cost:iv_cost_mask$))
-rem		data!.setFieldValue("ACT_AMT",str(read_tpl.unit_cost:iv_cost_mask$))
-rem		data!.setFieldValue("VAR_AMT",str(read_tpl.setup_time:iv_cost_mask$))
-rem		data!.setFieldValue("VAR_AMT_PCT",str(read_tpl.total_time:sf_pct_mask$))
-
+		data!.setFieldValue("ACT_AMT",str(act_op_amt:iv_cost_mask$))
+		data!.setFieldValue("VAR_AMT",str(read_tpl.tot_std_cost-act_op_amt:iv_cost_mask$))
+		if read_tpl.tot_std_cost<>0
+			data!.setFieldValue("VAR_AMT_PCT",str((read_tpl.tot_std_cost-act_op_amt)/read_tpl.tot_std_cost*100:sf_pct_mask$))
+		else
+			data!.setFieldValue("VAR_AMT_PCT",str(0:sf_pct_mask$))
+		endif
 		rs!.insert(data!)
 
 		tot_std_dir=tot_std_dir+read_tpl.total_time*read_tpl.direct_rate
 		tot_std_oh=tot_std_oh+read_tpl.total_time*read_tpl.ovhd_rate
+		tot_act_hrs=tot_act_hrs+act_op_hrs
+		tot_act_amt=tot_act_amt+act_op_amt
 		tot_act_dir=0
 		tot_act_oh=0
 		wo_tot_std_hrs=wo_tot_std_hrs+read_tpl.total_time
-		wo_tot_act_hrs=wo_tot_act_hrs+0
+		wo_tot_act_hrs=wo_tot_act_hrs+act_op_hrs
 		wo_tot_std_amt=wo_tot_std_amt+read_tpl.tot_std_cost
-		wo_tot_act_amt=wo_tot_act_amt+0
+		wo_tot_act_amt=wo_tot_act_amt+act_op_amt
 
 	wend
 
@@ -192,17 +239,17 @@ rem --- Output Totals
 	data! = rs!.getEmptyRecordData()
 	data!.setFieldValue("DESC","Direct Total")
 	data!.setFieldValue("STD_AMT",str(tot_std_dir:iv_cost_mask$))
-rem	data!.setFieldValue("ACT_AMT",str(tot_cost_ea:iv_cost_mask$))
+	data!.setFieldValue("ACT_AMT",str(act_op_dir_amt:iv_cost_mask$))
 rem	data!.setFieldValue("VAR_AMT",str(tot_units_tot:iv_cost_mask$))
-rem	data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_rate_mask$))
+rem	data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_pct_mask$))
 	rs!.insert(data!)
 
 		data! = rs!.getEmptyRecordData()
 	data!.setFieldValue("DESC","Overhead Total")
 	data!.setFieldValue("STD_AMT",str(tot_std_oh:iv_cost_mask$))
-rem	data!.setFieldValue("ACT_AMT",str(tot_cost_ea:iv_cost_mask$))
+	data!.setFieldValue("ACT_AMT",str(act_op_oh_amt:iv_cost_mask$))
 rem	data!.setFieldValue("VAR_AMT",str(tot_units_tot:iv_cost_mask$))
-rem	data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_rate_mask$))
+rem	data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_pct_mask$))
 	rs!.insert(data!)
 	
 	data! = rs!.getEmptyRecordData()
@@ -217,7 +264,7 @@ rem	data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_rate_mask$))
 	data!.setFieldValue("STD_AMT",str(tot_std_dir+tot_std_oh:iv_cost_mask$))
 rem	data!.setFieldValue("ACT_AMT",str(tot_cost_ea:iv_cost_mask$))
 rem	data!.setFieldValue("VAR_AMT",str(tot_units_tot:iv_cost_mask$))
-rem	data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_rate_mask$))
+rem	data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_pct_mask$))
 	rs!.insert(data!)
 
 	data! = rs!.getEmptyRecordData()
@@ -228,7 +275,7 @@ rem	data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_rate_mask$))
 rem	data!.setFieldValue("STD_AMT",str(tot_units_ea:iv_cost_mask$))
 rem	data!.setFieldValue("ACT_AMT",str(tot_cost_ea:iv_cost_mask$))
 rem	data!.setFieldValue("VAR_AMT",str(tot_units_tot:iv_cost_mask$))
-rem	data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_rate_mask$))
+rem	data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_pct_mask$))
 	rs!.insert(data!)
 
 	data! = rs!.getEmptyRecordData()
@@ -239,7 +286,7 @@ rem	data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_rate_mask$))
 rem	data!.setFieldValue("STD_AMT",str(tot_units_ea:iv_cost_mask$))
 rem	data!.setFieldValue("ACT_AMT",str(tot_cost_ea:iv_cost_mask$))
 rem	data!.setFieldValue("VAR_AMT",str(tot_units_tot:iv_cost_mask$))
-rem	data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_rate_mask$))
+rem	data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_pct_mask$))
 	rs!.insert(data!)
 
 	data! = rs!.getEmptyRecordData()
@@ -259,13 +306,21 @@ rem	data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_rate_mask$))
 	data! = rs!.getEmptyRecordData()
 	data!.setFieldValue("DESC","WO Totals")
 	data!.setFieldValue("STD_HRS",str(wo_tot_std_hrs:iv_cost_mask$))
-rem	data!.setFieldValue("ACT_HRS",str(tot_cost_ea:iv_cost_mask$))
-rem	data!.setFieldValue("VAR_HRS",str(tot_units_tot:iv_cost_mask$))
-rem	data!.setFieldValue("VAR_HRS_PCT",str(tot_cost_tot:sf_rate_mask$))
+	data!.setFieldValue("ACT_HRS",str(wo_tot_act_hrs:iv_cost_mask$))
+	data!.setFieldValue("VAR_HRS",str(wo_tot_std_hrs-wo_tot_act_hrs:iv_cost_mask$))
+	if wo_tot_std_hrs <> 0
+		data!.setFieldValue("VAR_HRS_PCT",str((wo_tot_std_hrs-wo_tot_act_hrs)/wo_tot_std_hrs*100:sf_pct_mask$))
+	else
+		data!.setFieldValue("VAR_HRS_PCT",str(0:sf_pct_mask$))
+	endif
 	data!.setFieldValue("STD_AMT",str(wo_tot_std_amt:iv_cost_mask$))
-rem	data!.setFieldValue("ACT_AMT",str(tot_cost_ea:iv_cost_mask$))
-rem	data!.setFieldValue("VAR_AMT",str(tot_units_tot:iv_cost_mask$))
-rem	data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_rate_mask$))
+	data!.setFieldValue("ACT_AMT",str(wo_tot_act_amt:iv_cost_mask$))
+	data!.setFieldValue("VAR_AMT",str(wo_tot_std_amt-wo_tot_act_amt:iv_cost_mask$))
+	if wo_tot_std_amt <> 0
+		data!.setFieldValue("VAR_AMT_PCT",str((wo_tot_std_amt-wo_tot_act_amt)/wo_tot_std_amt*100:sf_pct_mask$))
+	else
+		data!.setFieldValue("VAR_AMT_PCT",str(0:sf_pct_mask$))
+	endif
 	rs!.insert(data!)
 
 	data! = rs!.getEmptyRecordData()
@@ -283,13 +338,30 @@ rem	data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_rate_mask$))
 	data!.setFieldValue("DESC","Per Unit Totals")
 	if prod_qty<>0
 		data!.setFieldValue("STD_HRS",str(wo_tot_std_hrs/prod_qty:iv_cost_mask$))
-rem		data!.setFieldValue("ACT_HRS",str(tot_cost_ea:iv_cost_mask$))
-rem		data!.setFieldValue("VAR_HRS",str(tot_units_tot:iv_cost_mask$))
-rem		data!.setFieldValue("VAR_HRS_PCT",str(tot_cost_tot:sf_rate_mask$))
+		data!.setFieldValue("ACT_HRS",str(wo_tot_act_hrs/prod_qty:iv_cost_mask$))
+		data!.setFieldValue("VAR_HRS",str((wo_tot_std_hrs/prod_qty)-(wo_tot_act_hrs/prod_qty):iv_cost_mask$))
+		if wo_tot_std_hrs/prod_qty <> 0
+			data!.setFieldValue("VAR_HRS_PCT",str(((wo_tot_std_hrs/prod_qty)-(wo_tot_act_hrs/prod_qty))/(wo_tot_std_hrs/prod_qty)*100:sf_pct_mask$))
+		else
+			data!.setFieldValue("VAR_HRS_PCT",str(0:sf_pct_mask$))
+		endif
 		data!.setFieldValue("STD_AMT",str(wo_tot_std_amt/prod_qty:iv_cost_mask$))
-rem		data!.setFieldValue("ACT_AMT",str(tot_cost_ea:iv_cost_mask$))
-rem		data!.setFieldValue("VAR_AMT",str(tot_units_tot:iv_cost_mask$))
-rem		data!.setFieldValue("VAR_AMT_PCT",str(tot_cost_tot:sf_rate_mask$))
+		data!.setFieldValue("ACT_AMT",str(wo_tot_act_amt/prod_qty:iv_cost_mask$))
+		data!.setFieldValue("VAR_AMT",str((wo_tot_std_amt/prod_qty)-(wo_tot_act_amt/prod_qty):iv_cost_mask$))
+		if wo_tot_std_amt/prod_qty <> 0
+			data!.setFieldValue("VAR_AMT_PCT",str(((wo_tot_std_amt/prod_qty)-(wo_tot_act_amt/prod_qty))/(wo_tot_std_amt/prod_qty)*100:sf_pct_mask$))
+		else
+			data!.setFieldValue("VAR_AMT_PCT",str(0:sf_pct_mask$))
+		endif
+	else
+		data!.setFieldValue("STD_HRS",str(0:iv_cost_mask$))
+		data!.setFieldValue("ACT_HRS",str(0:iv_cost_mask$))
+		data!.setFieldValue("VAR_HRS",str(0:iv_cost_mask$))
+		data!.setFieldValue("VAR_HRS_PCT",str(0:sf_pct_mask$))
+		data!.setFieldValue("STD_AMT",str(0:iv_cost_mask$))
+		data!.setFieldValue("ACT_AMT",str(0:iv_cost_mask$))
+		data!.setFieldValue("VAR_AMT",str(0:iv_cost_mask$))
+		data!.setFieldValue("VAR_AMT_PCT",str(0:sf_pct_mask$))
 	endif
 	rs!.insert(data!)
 
@@ -297,6 +369,47 @@ rem --- Tell the stored procedure to return the result set.
 
 	sp!.setRecordSet(rs!)
 	goto std_exit
+
+rem --- Subroutines
+
+get_op_trans:
+
+	sql_prep$="select * from vw_sfx_wotranxr as vw_trans where vw_trans.firm_id = '"+firm_id$+"' and "
+	sql_prep$=sql_prep$+"record_id = 'O' and wo_no = '"+wo_no$+"' and seq_ref = '"+read_tpl.internal_seq_no$+"'"
+	act_op_hrs=0
+	act_op_amt=0
+
+	sql_chan1=sqlunt
+	sqlopen(sql_chan1,err=*next)stbl("+DBNAME")
+	sqlprep(sql_chan1)sql_prep$
+	dim tran_tpl$:sqltmpl(sql_chan1)
+	sqlexec(sql_chan1)
+	
+	while 1
+		tran_tpl$ = sqlfetch(sql_chan1,end=*break)
+		if tran_tpl.trans_type$="OpenOprs"
+			tran_dev=sft_opnoprtr
+			dim tran_rec$:fattr(sft_opnoprtr$)
+		else
+			tran_dev=sft_clsoprtr
+			dim tran_rec$:fattr(sft_clsoprtr$)
+		endif
+		read (tran_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
+		while 1
+			read record (tran_dev,end=*break) tran_rec$
+			if pos(firm_id$+wo_loc$+wo_no$=tran_rec$)<>1 break
+			if tran_rec.oper_seq_ref$=read_tpl.internal_seq_no$
+				act_op_hrs=act_op_hrs+tran_rec.units+tran_rec.setup_time
+				act_op_amt=act_op_amt+((tran_rec.units+tran_rec.setup_time)*tran_rec.unit_cost)
+				act_op_dir_amt=act_op_dir_amt+((tran_rec.units+tran_rec.setup_time)*tran_rec.direct_rate)
+				act_op_oh_amt=act_op_oh_amt+((tran_rec.units+tran_rec.setup_time)*tran_rec.ovhd_rate)
+			endif
+		wend
+	wend
+	
+	sqlclose(sql_chan1)
+
+	return
 
 rem --- Functions
 
