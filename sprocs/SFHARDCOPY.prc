@@ -130,7 +130,10 @@ call sypdir$+"bac_open_tables.bbj",
 no_bac_open:
 
 rem --- Build SQL statement
-
+    sql_prep$=""
+	where_clause$=""
+	order_clause$=""
+	
 	sql_prep$="select * from sfe_womastr "
     action=pos(report_seq$="WBCT")-1
     switch action
@@ -176,8 +179,6 @@ rem --- Build SQL statement
 			where_clause$=where_clause$(1,len(where_clause$)-4)
 		endif
 	endif
-	
-rem report_type$="T"; rem escape caj
 
 rem --- Concatenate the pieces of sql_prep$
 rem --- For Travelers, limit WO recs based on sfe_openedwo

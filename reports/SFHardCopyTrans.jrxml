@@ -11,18 +11,17 @@
 	<queryString language="SQL">
 		<![CDATA[call sfhardcopymatstd($P{FIRM_ID},$P{WO_LOCATION},$P{WO_NO},$P{BARISTA_WD},$P{MASKS})]]>
 	</queryString>
-	<field name="Trans_Date" class="java.lang.String"/>
-	<field name="Source" class="java.lang.String"/>
-	<field name="Item" class="java.lang.String"/>
-	<field name="Vendor" class="java.lang.String"/>
-	<field name="OpCode" class="java.lang.String"/>
-	<field name="Desc" class="java.lang.String"/>
-	<field name="PO_Num" class="java.lang.String"/>
-	<field name="Complete_Qty" class="java.lang.String"/>
-	<field name="Setup_Hrs" class="java.lang.String"/>
-	<field name="Units" class="java.lang.String"/>
-	<field name="Rate" class="java.lang.String"/>
-	<field name="Amount" class="java.lang.String"/>
+	<field name="TRANS_DATE" class="java.lang.String"/>
+	<field name="SOURCE" class="java.lang.String"/>
+	<field name="ITEM_VEND_OPER" class="java.lang.String"/>
+	<field name="DESC" class="java.lang.String"/>
+	<field name="PO_NUM" class="java.lang.String"/>
+	<field name="COMPLETE_QTY" class="java.lang.String"/>
+	<field name="SETUP_HRS" class="java.lang.String"/>
+	<field name="UNITS" class="java.lang.String"/>
+	<field name="RATE" class="java.lang.String"/>
+	<field name="AMOUNT" class="java.lang.String"/>
+	<field name="UOM" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -105,43 +104,43 @@
 			</textField>
 			<textField>
 				<reportElement x="103" y="0" width="55" height="13"/>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[IF $F{SOURCE}=="M" THEN $F{ITEM}]]></textFieldExpression>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{ITEM_VEND_OPER}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="213" y="0" width="55" height="13"/>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{Employee}]]></textFieldExpression>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{DESC}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="324" y="0" width="44" height="13"/>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{PO_Num}]]></textFieldExpression>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{PO_NUM}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="391" y="0" width="60" height="13"/>
 				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{Complete_Qty}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{COMPLETE_QTY}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="462" y="0" width="70" height="13"/>
 				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{Setup_Hrs}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{SETUP_HRS}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="545" y="0" width="70" height="13"/>
 				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{Units}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{UNITS}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="631" y="0" width="68" height="13"/>
 				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{Rate}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{RATE}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="750" y="0" width="69" height="13"/>
 				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{Amount}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{AMOUNT}]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
