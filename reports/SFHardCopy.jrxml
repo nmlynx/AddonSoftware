@@ -2,7 +2,7 @@
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopy" language="groovy" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="50">
 	<property name="ireport.zoom" value="2.0"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="100"/>
+	<property name="ireport.y" value="0"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
 	<parameter name="WO_NO_1" class="java.lang.String"/>
 	<parameter name="WO_NO_2" class="java.lang.String"/>
@@ -397,13 +397,13 @@
 					<subreportParameterExpression><![CDATA[$P{TRANS_DATEFROM}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="WO_NO">
-					<subreportParameterExpression><![CDATA[$P{WO_NO}]]></subreportParameterExpression>
+					<subreportParameterExpression><![CDATA[$F{WO_NO}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="BARISTA_WD">
-					<subreportParameterExpression><![CDATA[$P{BARIST_WD}]]></subreportParameterExpression>
+					<subreportParameterExpression><![CDATA[$P{BARISTA_WD}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="REPORT_SEQ">
-					<subreportParameterExpression><![CDATA[$P{REPORT_SEQ}]]></subreportParameterExpression>
+				<subreportParameter name="TRANSTYPE">
+					<subreportParameterExpression><![CDATA[$P{TRANSTYPE}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="MASKS">
 					<subreportParameterExpression><![CDATA[$P{MASKS}]]></subreportParameterExpression>

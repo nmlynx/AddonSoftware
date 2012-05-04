@@ -115,6 +115,8 @@ rem --- first drop all std Addon SPROCs
     gosub create_sproc_def
 	sqlprep$="DROP PROCEDURE SFHARDCOPYCOSTSUM "
     gosub create_sproc_def
+	sqlprep$="DROP PROCEDURE SFHARDCOPYTRANS "
+    gosub create_sproc_def	
 	
 rem --- now add them back (i.e., drop, then add, in case anything has changed)    
  
@@ -251,10 +253,19 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, PROD_QTY CHAR(10) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPYCOSTSUM.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'WO Hard Copy Sub Std'"
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'WO Hard Copy Cost Sum'"
 
     gosub create_sproc_def
-	
+
+	sqlprep$="CREATE PROCEDURE SFHARDCOPYTRANS "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, "
+	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, TRANS_DATEFROM CHAR(10) IN, TRANS_DATETHRU CHAR(10) IN, TRANSTYPE VARCHAR(3) IN) "
+    sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPYTRANS.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'WO Hard Copy Transactions'"
+
+    gosub create_sproc_def
+		
 rem --- Done with SPROCs. Now do VIEWs
 
 rem --- first drop all std Addon VIEWs
