@@ -189,6 +189,9 @@ rem ===========> ESCAPE    Figure out what to do when params are missing
 	
 		sfs_params_key$=firm_id$+"SF00"
         find record (sfs_params,key=sfs_params_key$) sfs_params$
+			
+		ivs_params_key$=firm_id$+"IV00"
+        find record (ivs_params,key=ivs_params_key$) ivs_params$
 
 rem --- Parameters
 
@@ -196,7 +199,23 @@ rem --- Parameters
         op$=sfs_params.ar_interface$
         po$=sfs_params.po_interface$
         pr$=sfs_params.pr_interface$
-
+    
+	if op$="Y" then
+        files$[1]="arm-01",     ids$[1]="ARM_CUSTMAST"
+        files$[2]="ars_params", ids$[2]="ARS_PARAMS"
+    endif
+    if po$="Y" then 
+        files$[3]="apm-01",     ids$[3]="APM_VENDMAST"
+        files$[4]="aps_params", ids$[4]="APS_PARAMS"
+    endif
+    if bm$="Y" files$[5]="bmm-08", ids$[5]="BMC_OPCODES"
+    if bm$="N" files$[5]="sfm-02", ids$[5]="SFC_OPRTNCOD"
+    if pr$="Y" then
+        files$[6]="prs_params", ids$[6]="PRS_PARAMS"
+        files$[7]="prm-01",     ids$[7]="PRM_EMPLMAST"
+    endif
+    if pr$="N" files$[7]="sfm-01", ids$[7]="SFM_EMPLMAST"
+	
 rem --- Additional File Opens
 		
 		gosub addl_opens_adc; rem Change from adc to bac once Barista's enhanced
@@ -210,11 +229,13 @@ Rem --- Find end date of SF's PREVIOUS period
 			sf_prevper_yr=sf_prevper_yr-1
 		endif
 		
-        call pgmdir$+"adc_perioddates.aon",gls_params,sf_prevper,sf_prevper_yr,begdate$,sf_prevper_enddate$,status
+rem ESCAPE CAJ        call pgmdir$+"adc_perioddates.aon",gls_params,sf_prevper,sf_prevper_yr,begdate$,sf_prevper_enddate$,status
         if status then goto std_exit
         sfs_params.current_per$=""
         sfs_params.current_year$=""
-				
+	
+		sf_prevper_enddate$="20120504" ; rem ESCAPE CAJ REMOVE THIS HARDCODE	<=====================
+		
 rem --- Build SQL statement
 
 rem --- Get SQL view joining sfe01 with a mimic of legacy SFM-07 / WOM-07 / SFX_WOTRANXR
@@ -255,23 +276,23 @@ rem   - This record set will be used as driver instead of sfe-01 and sfm-07.
 		sql_prep$=sql_prep$+where_clause$+order_clause$	
 
 	rem Exec the completed query
-
 	sql_chan=sqlunt
 	sqlopen(sql_chan,err=*next)stbl("+DBNAME")
 	sqlprep(sql_chan)sql_prep$
 	dim read_tpl$:sqltmpl(sql_chan)
-	sqlexec(sql_chan)
+	sqlexec(sql_chan,err=std_exit)
 
 rem --- Init totals and total-break vars
 
 	date_tot_setup_hours=0
 	date_tot_hours=0
 	date_tot_cost=0
+	doing_end=0
 	
 	grand_tot_setup_hours=0
 	grand_tot_hours=0
 	grand_tot_cost=0
-		
+			
 	prev_date$=""; rem This is t1$ in sfr_wotranshist_o1.aon and v6
 	
 rem --- Trip Read
@@ -284,7 +305,7 @@ rem ====================> ESCAPE Lot/Serial rows will need adjusting
 		read_tpl$ = sqlfetch(sql_chan,end=*break)
 
 		data! = rs!.getEmptyRecordData()
-ESCAPE; REM CAJ SFHARDCOPYTRANS.prc ?read_tpl$		
+	
 rem --- Process Transactions
 
         if read_tpl.wo_status$<>"C" or read_tpl.closed_date$>sf_prevper_enddate$ then 
@@ -355,7 +376,7 @@ rem --- Process Transactions
 				dim empcode$:fattr(empcode$)
 				find record (empcode_dev,key=firm_id$+sftran.employee_no$,dom=*next) empcode$
 
-				data!.setFieldValue("ITEM_VEND_OPER",sftran.op_code$+"  "+opcode.desc$)
+				data!.setFieldValue("ITEM_VEND_OPER",sftran.op_code$+"  "+opcode.code_desc$)
 				data!.setFieldValue("DESC",fnmask$(sftran.employee_no$,c5$)+" "+empcode.empl_surname$+empcode.empl_givname$)
 				data!.setFieldValue("PO_NUM","")
 				data!.setFieldValue("COMPLETE_QTY",str(sftran.complete_qty))
@@ -363,10 +384,14 @@ rem --- Process Transactions
 				break
 			case 2
 				rem --- Subcontracts
-				dim apm01a$:fattr(apm01a$)
-				if po$="Y" then find record (apm01a_dev,key=firm_id$+sftran.vendor_id$,dom=*next) apm01a$
-
-				data!.setFieldValue("ITEM_VEND_OPER",fnmask$(sftran.vendor_id$,c3$)+"  "+apm01a.vendor_name$)
+				vend_name$=""
+				if po$="Y"  
+					dim apm01a$:fattr(apm01a$)
+					find record (apm01a_dev,key=firm_id$+sftran.vendor_id$,dom=*next) apm01a$
+					vend_name$=apm01a.vendor_name$
+				endif 
+				
+				data!.setFieldValue("ITEM_VEND_OPER",fnmask$(sftran.vendor_id$,c3$)+"  "+vend_name$)
 				data!.setFieldValue("DESC","")
 				data!.setFieldValue("PO_NUM",sftran.po_no$)
 				data!.setFieldValue("COMPLETE_QTY","")
@@ -403,16 +428,20 @@ rem --- Process Transactions
 	wend
 
 rem --- Output Totals
-rem ===========> ESCAPE    Figure out what totals need outputting and accum'ing
+
+	doing_end=1
+	gosub date_subtot
+
 	data! = rs!.getEmptyRecordData()
-	data!.setFieldValue("COST_EA",fill(20,"_"))
-	data!.setFieldValue("COST_TOT",fill(20,"_"))
-	rs!.insert(data!)
-	
+	rs!.insert(data!); rem blank line between Date and Grand totals
+
 	data! = rs!.getEmptyRecordData()
-	data!.setFieldValue("ITEM","Total Materials")
-	data!.setFieldValue("COST_EA",str(tot_cost_ea:iv_cost_mask$))
-	data!.setFieldValue("COST_TOT",str(tot_cost_tot:sf_rate_mask$))
+
+	data!.setFieldValue("ITEM_VEND_OPER","Work Order Totals") 		
+	data!.setFieldValue("DESC","Total Hours: "+str(grand_tot_hours:m2$)) 			
+	data!.setFieldValue("PO_NUM","Setup Hours: "+str(grand_tot_setup_hours:m2$))
+	data!.setFieldValue("AMOUNT",str(grand_tot_cost))	
+
 	rs!.insert(data!)
 	
 rem --- Tell the stored procedure to return the result set.
@@ -424,157 +453,107 @@ rem --- Subroutines
 
 rem --- Additional File Opens subroutines
 addl_opens_adc:
-    files=9,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    
-	if op$="Y" then
-        files$[1]="arm-01",     ids$[1]="ARM_CUSTMAST"
-        files$[2]="ars_params", ids$[2]="ARS_PARAMS"
-    endif
-    if po$="Y" then 
-        files$[3]="apm-01",     ids$[3]="APM_VENDMAST"
-        files$[4]="aps_params", ids$[4]="APS_PARAMS"
-    endif
-    if bm$="Y" files$[5]="bmm-08", ids$[5]="BMC_OPCODES"
-    if bm$="N" files$[5]="sfm-02", ids$[5]="SFC_OPRTNCOD"
-    if pr$="Y" then
-        files$[6]="prs_params", ids$[6]="PRS_PARAMS"
-        files$[7]="prm-01",     ids$[7]="PRM_EMPLMAST"
-    endif
-    if pr$="N" files$[7]="sfm-01", ids$[7]="SFM_EMPLMAST"
+rem --- Conditionally open L/S files
     if pos(ivs_params.lotser_flag$="LS") then
-        files$[8]="sft-11",        ids$[8]="SFT_OPNLSTRN"
-        files$[9]="sft-12",        ids$[9]="SFT_CLSLSTRN"
-    endif
+		files=2,begfile=1,endfile=files
+		dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+
+        files$[1]="sft-11",        ids$[1]="SFT_OPNLSTRN"
+        files$[2]="sft-12",        ids$[2]="SFT_CLSLSTRN"
 	
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+		call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
+		if status goto std_exit
 
-    arm01a_dev = channels[1]
-    ars01a_dev = channels[2]
-    apm01a_dev = channels[3]
-    aps01a_dev = channels[4]
-    opcode_dev = channels[5]
-    prs01a_dev = channels[6]
-    empcode_dev = channels[7]
-    sft11a_dev = channels[8]
-    sft12a_dev = channels[9]
-		
-    ivm_itemmast_dev=channels[1]
-	arm_custmast=channels[2]
-	sfs_params  =channels[3]
+		sft11a_dev = channels[1]
+		sft12a_dev = channels[2]
 
-rem --- Dimension string templates
-
-	if op$="Y" then
-		dim arm01a$:templates$[1]
-		dim ars01a$:templates$[2]
-			
-		find record (ars01a_dev,key=firm_id$+"AR00") ars01a$
-        call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",c1$,0,c1
-    endif
-
-	if po$="Y" then
-		dim apm01a$:templates$[3]
-		dim aps01a$:templates$[4]
-			
-		find record (aps01a_dev,key=firm_id$+"AP00") aps01a$
-		call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",c3$,0,c3
-    endif
-		
-	dim opcode$:templates$[5]
-		
-	if pr$="Y" then	
-		dim prs01a$:templates$[6]
-
-        find record (prs01a_dev,key=firm_id$+"PR00") prs01a$
-        call stbl("+DIR_PGM")+"adc_getmask.aon","","PR","I","",c5$,0,c4
-	else
-        call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","I","",c5$,0,c4
-	endif
-		
-	dim empcode$:templates$[7]
+	rem --- Dimension L/S string templates
         
-	sft11_tpls$=templates$[8]; dim sft11a$:sft11_tpls$; rem Save template for conditional use
-	sft12_tpls$=templates$[9]; dim sft12a$:sft12_tpls$; rem Save template for conditional use	
+		sft11_tpls$=templates$[1]; dim sft11a$:sft11_tpls$; rem Save template for conditional use
+		sft12_tpls$=templates$[2]; dim sft12a$:sft12_tpls$; rem Save template for conditional use	
+	endif 
+	
+rem --- Open either BM or OpCodes file and either PR or SF Employees file
+rem --- Conditionally open apm-01 for vendor name
+	files=3,begfile=1,endfile=files
+	dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+
+	if bm$="Y" 
+		files$[1]="bmm-08", ids$[1]="BMC_OPCODES"
+    else 
+		files$[1]="sfm-02", ids$[1]="SFC_OPRTNCOD"
+	endif
+	if pr$="Y" 
+		files$[2]="prm-01", ids$[2]="PRM_EMPLMAST"
+    else 
+		files$[2]="sfm-01", ids$[2]="SFM_EMPLMAST"
+	endif	
+	if po$="Y" files$[3]="apm-01", ids$[3]="APM_VENDMAST"
+	
+	call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+	if status goto std_exit
+
+	opcode_dev = channels[1]
+	empcode_dev= channels[2]
+	apm01a_dev = channels[3]	
+	
+	rem --- Dimension OpCode, EmpCode, and apm01a string templates	
+		dim opcode$:templates$[1]
+		dim empcode$:templates$[2]
+		if po$="Y" dim apm01a$:templates$[3]
 	return
 	
 addl_opens_bac:	
-	num_files=9
+rem --- Conditionally open L/S files
+    if pos(ivs_params.lotser_flag$="LS") then
+		num_files=2
+		dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
+
+        open_tables$[1]="SFT_OPNLSTRN", open_opts$[1]="OTA"; rem sft-11
+        open_tables$[2]="SFT_CLSLSTRN", open_opts$[2]="OTA"; rem sft-12
+  	
+		gosub open_tables
+
+		sft11a_dev = num(open_chans$[1])
+		sft12a_dev = num(open_chans$[2])
+		
+	rem --- Dimension L/S string templates			
+      	sft11_tpls$=open_tpls$[1]; dim sft11a$:sft11_tpls$; rem Save template for conditional use
+		sft12_tpls$=open_tpls$[2]; dim sft12a$:sft12_tpls$; rem Save template for conditional use		
+	endif
+	
+rem --- Open either BM or OpCodes file and either PR or SF Employees file
+rem --- Conditionally open apm-01 for vendor name
+	num_files=3
 	dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
 
-    if op$="Y" then
-        open_tables$[1]="ARM_CUSTMAST", open_opts$[1]="OTA"; rem arm-01
-        open_tables$[2]="ARS_PARAMS",   open_opts$[2]="OTA"; rem ars_params
-    endif
-    if po$="Y" then 
-        open_tables$[3]="APM_VENDMAST", open_opts$[3]="OTA"; rem apm-01
-        open_tables$[4]="APS_PARAMS",   open_opts$[4]="OTA"; rem aps_params
-    endif
-    if bm$="Y" open_tables$[5]="BMC_OPCODES",  open_opts$[5]="OTA"; rem bmm-08
-    if bm$="N" open_tables$[5]="SFC_OPRTNCOD", open_opts$[5]="OTA"; rem sfm-02
-    if pr$="Y" then
-        open_tables$[6]="PRS_PARAMS",   open_opts$[6]="OTA"; rem prs_params
-        open_tables$[7]="PRM_EMPLMAST", open_opts$[7]="OTA"; rem prm-01
-    endif
-    if pr$="N" open_tables$[7]="SFM_EMPLMAST", open_opts$[7]="OTA"; rem sfm-01
-		
-    if pos(ivs_params.lotser_flag$="LS") then
-        open_tables$[8]="SFT_OPNLSTRN", open_opts$[8]="OTA"; rem sft-11
-        open_tables$[9]="SFT_CLSLSTRN", open_opts$[9]="OTA"; rem sft-12
-    endif
-  	
-	gosub open_tables
-		
-    arm01a_dev = num(open_chans$[1])
-    ars01a_dev = num(open_chans$[2])
-    apm01a_dev = num(open_chans$[3])
-    aps01a_dev = num(open_chans$[4])
-    opcode_dev = num(open_chans$[5])
-    prs01a_dev = num(open_chans$[6])
-    empcode_dev= num(open_chans$[7])
-    sft11a_dev = num(open_chans$[8])
-    sft12a_dev = num(open_chans$[9])
-		
-rem --- Dimension string templates & retrieve params (Add'l files)
-
-	if op$="Y" then
-		dim arm01a$:open_tpls$[1]
-		dim ars01a$:open_tpls$[2]
-			
-		find record (ars01a_dev,key=firm_id$+"AR00") ars01a$
-        call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",c1$,0,c1
-    endif
-
-	if po$="Y" then
-		dim apm01a$:open_tpls$[3]
-		dim aps01a$:open_tpls$[4]
-			
-		find record (aps01a_dev,key=firm_id$+"AP00") aps01a$
-		call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",c3$,0,c3
-    endif
-		
-	dim opcode$:open_tpls$[5]
-		
-	if pr$="Y" then	
-		dim prs01a$:open_tpls$[6]
-
-        find record (prs01a_dev,key=firm_id$+"PR00") prs01a$
-        call stbl("+DIR_PGM")+"adc_getmask.aon","","PR","I","",c5$,0,c4
-	else
-        call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","I","",c5$,0,c4
+	if bm$="Y" 
+		open_tables$[1]="BMC_OPCODES",  open_opts$[1]="OTA"; rem bmm-08
+    else
+		open_tables$[1]="SFC_OPRTNCOD", open_opts$[1]="OTA"; rem sfm-02
 	endif
-		
-	dim empcode$:open_tpls$[7]
-        
-	sft11_tpls$=open_tpls$[8]; dim sft11a$:sft11_tpls$; rem Save template for conditional use
-	sft12_tpls$=open_tpls$[9]; dim sft12a$:sft12_tpls$; rem Save template for conditional use		
+	if pr$="Y" 
+		open_tables$[1]="PRM_EMPLMAST", open_opts$[7]="OTA"; rem prm-01
+    else
+		open_tables$[2]="SFM_EMPLMAST", open_opts$[2]="OTA"; rem sfm-01
+	endif
+	if po$="Y" open_tables$[3]="APM_VENDMAST", open_opts$[3]="OTA"; rem apm-01
 	
+  	gosub open_tables		
+
+	opcode_dev = num(open_chans$[1])
+	empcode_dev = num(open_chans$[2])
+	apm01a_dev = num(open_chans$[3])
+	
+	rem --- Dimension OpCode, EmpCode, and apm01a string templates		
+      	dim opcode$:open_tpls$[1]	
+      	dim empcode$:open_tpls$[2]
+		if po$="Y" dim apm01a$:open_tpls$[3]
 	return    
 
 lotserial_details: rem --- Lot/Serial Here
-
 rem --- Serial Numbers Here
 	if read_tpl.wo_status$<>"C" or read_tpl.closed_date$>sf_prevper_enddate$ then 
         lstran_dev=sft11a_dev
@@ -607,8 +586,40 @@ rem --- Serial Numbers Here
     wend 
 	
     return
+
+rem --- Subtotals for date breaks
+date_subtot:rem --- Date Subtotal
+
+    if prev_date$<>"" then     
+		data! = rs!.getEmptyRecordData()	
+		
+		data!.setFieldValue("ITEM_VEND_OPER","Month "+fnh$(prev_date$)+" Total ") 	
+        if pos("O"=transtype$)>0 then 
+			rem data!.setFieldValue("DESC","Total Hours: "+str(date_tot_hours:m2$)+"      Setup Hours: "+str(date_tot_setup_hours:m2$)) 			
+			data!.setFieldValue("DESC","Total Hours: "+str(date_tot_hours:m2$)) 			
+			data!.setFieldValue("PO_NUM","Setup Hours: "+str(date_tot_setup_hours:m2$))
+	endif
+		data!.setFieldValue("AMOUNT",str(date_tot_cost))
+		
+		rs!.insert(data!)
+    endif
+
+    if doing_end then return
+
+	date_tot_setup_hours=0
+	date_tot_hours=0
+	date_tot_cost=0
+	
+    prev_date$=read_tpl.trans_date$(1,6); rem just the year/month
+	return
 	
 rem --- Functions
+
+rem --- Format inventory item description
+
+    def fnitem$(q$,q1,q2,q3)=cvs(q$(1,q1)+" "+q$(q1+1,q2)+" "+q$(q1+q2+1,q3),32)
+
+rem --- Date/time handling functions
 
     def fndate$(q$)
         q1$=""
@@ -616,6 +627,11 @@ rem --- Functions
         if q1$="" q1$=q$
         return q1$
     fnend
+    
+    def fnyy$(q$)=q$(3,2)
+    def fnclock$(q$)=date(0:"%hz:%mz %p")
+    def fntime$(q$)=date(0:"%Hz%mz")
+    def fnh$(q1$)=q1$(5,2)+"/"+q1$(1,4)
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
