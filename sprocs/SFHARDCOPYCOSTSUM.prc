@@ -227,7 +227,7 @@ rem --- Trip Read
 	wend
 
 rem --- Get Material Requirements Totals
-escape;rem 1
+
 	sql_prep$="select sum(total_cost) "
 	sql_prep$=sql_prep$+"from sfe_womatl where firm_id = '"+firm_id$+"' and wo_no = '"+wo_no$+"' and line_type = 'S'"
 
