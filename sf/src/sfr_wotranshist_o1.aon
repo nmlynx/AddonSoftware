@@ -201,107 +201,107 @@ rem --- Process Transactions
             tran03_dev=sft33a_dev; tran03a$=sft33_tpls$
         endif
 
-            if read_tpl.record_id$="O" then 
-				sftran_dev=tran01_dev
-				dim sftran$:tran01a$
-				record_id_field$="O"
-			endif
-            if read_tpl.record_id$="M" then 
-				sftran_dev=tran02_dev
-				dim sftran$:tran02a$
-				record_id_field$="M"
-			endif
-            if read_tpl.record_id$="S" then  
-				sftran_dev=tran03_dev
-				dim sftran$:tran03a$
-				record_id_field$="S"
-			endif
+        if read_tpl.record_id$="O" then 
+			sftran_dev=tran01_dev
+			dim sftran$:tran01a$
+			record_id_field$="O"
+		endif
+        if read_tpl.record_id$="M" then 
+			sftran_dev=tran02_dev
+			dim sftran$:tran02a$
+			record_id_field$="M"
+		endif
+        if read_tpl.record_id$="S" then  
+			sftran_dev=tran03_dev
+			dim sftran$:tran03a$
+			record_id_field$="S"
+		endif
 
-			sftran_read_k$=read_tpl.firm_id$
-			sftran_read_k$=sftran_read_k$+read_tpl.wo_location$
-			sftran_read_k$=sftran_read_k$+read_tpl.wo_no$
-			sftran_read_k$=sftran_read_k$+read_tpl.trans_date$
-			sftran_read_k$=sftran_read_k$+read_tpl.trans_seq$
+		sftran_read_k$=read_tpl.firm_id$
+		sftran_read_k$=sftran_read_k$+read_tpl.wo_location$
+		sftran_read_k$=sftran_read_k$+read_tpl.wo_no$
+		sftran_read_k$=sftran_read_k$+read_tpl.trans_date$
+		sftran_read_k$=sftran_read_k$+read_tpl.trans_seq$
 			
-			find record (sftran_dev,key=sftran_read_k$,dom=*continue) sftran$
-            if transtype$<>"" then if pos(record_id_field$=transtype$)=0 then continue
-            if read_tpl.trans_date$(1,6)<>t1$ then gosub date_subtot
-            if l2<=0 
-                OutVect!.addItem(read_tpl.wo_no$); rem columns$[0
-                if read_tpl.wo_category$="I"
-                    x0$=read_tpl.item_id$
-                    x0$=x0$(1,pos("   "=x0$+"   ")-1)+" "+read_tpl.description_01$,x0$=x0$(1,30)
-                    OutVect!.addItem(x0$); rem columns$[1
-                else
-                    OutVect!.addItem(read_tpl.description_01$); rem columns$[1
-                endif  
-                xwk=fnblank(2)
-                OutVect!.addItem(fill(20)+"Type: "+read_tpl.wo_type$+" Cat: "
-:								 +read_tpl.wo_category$+"  Stat: "+read_tpl.wo_status$
-:								 +"  Whse: "+read_tpl.warehouse_id$+"  Sched Prod: "
-:								 +str(read_tpl.sch_prod_qty:m2$)); rem columns$[4
-                xwk=fnblank(columns-4); rem "finish the row
-				if pos("0"<read_tpl.customer_id$)>0 then
-                    rem NOTE: in v6 Cust/Ord info is flush right, but those are numeric cols in DocOut, so I moved left w/indent
-					OutVect!.addItem(fill(5)+"Cust: "+fnmask$(read_tpl.customer_id$,c1$)+"  Order: "+read_tpl.order_no$); rem columns$[0
-					xwk=fnblank(columns); rem "finish the row
-				else
-					rem xwk=fnblank(columns+1); rem "blank row
-				endif
+		find record (sftran_dev,key=sftran_read_k$,dom=*continue) sftran$
+        if transtype$<>"" then if pos(record_id_field$=transtype$)=0 then continue
+        if read_tpl.trans_date$(1,6)<>t1$ then gosub date_subtot
+        if l2<=0 
+            OutVect!.addItem(read_tpl.wo_no$); rem columns$[0
+            if read_tpl.wo_category$="I"
+                x0$=read_tpl.item_id$
+                x0$=x0$(1,pos("   "=x0$+"   ")-1)+" "+read_tpl.description_01$,x0$=x0$(1,30)
+                OutVect!.addItem(x0$); rem columns$[1
+            else
+                OutVect!.addItem(read_tpl.description_01$); rem columns$[1
+            endif  
+            xwk=fnblank(2)
+            OutVect!.addItem(fill(20)+"Type: "+read_tpl.wo_type$+" Cat: "
+:							 +read_tpl.wo_category$+"  Stat: "+read_tpl.wo_status$
+:							 +"  Whse: "+read_tpl.warehouse_id$+"  Sched Prod: "
+:							 +str(read_tpl.sch_prod_qty:m2$)); rem columns$[4
+            xwk=fnblank(columns-4); rem "finish the row
+			if pos("0"<read_tpl.customer_id$)>0 then
+                rem NOTE: in v6 Cust/Ord info is flush right, but those are numeric cols in DocOut, so I moved left w/indent
+				OutVect!.addItem(fill(5)+"Cust: "+fnmask$(read_tpl.customer_id$,c1$)+"  Order: "+read_tpl.order_no$); rem columns$[0
+				xwk=fnblank(columns); rem "finish the row
+			else
+				rem xwk=fnblank(columns+1); rem "blank row
+			endif
 					
-            endif 
+        endif 
 		
 rem --- Now Print It
 
-            if read_tpl.record_id$="O" then 
-                OutVect!.addItem(fndate$(sftran.trans_date$))
-                OutVect!.addItem(read_tpl.record_id$)
-                xwk=fnblank(1); rem OutVect!.addItem(sftran.oper_seq_ref$); rem v12 doesn't print seq_refs
-                gosub operation_details
-                OutVect!.addItem(str(sftran.units))
-                OutVect!.addItem(str(sftran.unit_cost))
-                OutVect!.addItem(str(sftran.ext_cost))
-            endif
+        if read_tpl.record_id$="O" then 
+            OutVect!.addItem(fndate$(sftran.trans_date$))
+            OutVect!.addItem(read_tpl.record_id$)
+            xwk=fnblank(1); rem OutVect!.addItem(sftran.oper_seq_ref$); rem v12 doesn't print seq_refs
+            gosub operation_details
+            OutVect!.addItem(str(sftran.units))
+            OutVect!.addItem(str(sftran.unit_cost))
+            OutVect!.addItem(str(sftran.ext_cost))
+        endif
 
-            if read_tpl.record_id$="M" then 
-                OutVect!.addItem(fndate$(sftran.trans_date$))
-                OutVect!.addItem("M")
-                xwk=fnblank(1); rem OutVect!.addItem(sftran.material_seq_ref$); rem v12 doesn't print seq_refs
-                gosub material_details
-                if pos("O"=transtype$)>0 then xwk=fnblank(2)
-                OutVect!.addItem(str(sftran.units))
-                OutVect!.addItem(str(sftran.unit_cost))
-                OutVect!.addItem(str(sftran.ext_cost))
-				gosub lotserial_details
-            endif
+        if read_tpl.record_id$="M" then 
+            OutVect!.addItem(fndate$(sftran.trans_date$))
+            OutVect!.addItem("M")
+            xwk=fnblank(1); rem OutVect!.addItem(sftran.material_seq_ref$); rem v12 doesn't print seq_refs
+            gosub material_details
+            if pos("O"=transtype$)>0 then xwk=fnblank(2)
+            OutVect!.addItem(str(sftran.units))
+            OutVect!.addItem(str(sftran.unit_cost))
+            OutVect!.addItem(str(sftran.ext_cost))
+			gosub lotserial_details
+        endif
 
-            if read_tpl.record_id$="S" then 
-                OutVect!.addItem(fndate$(sftran.trans_date$))
-                OutVect!.addItem(read_tpl.record_id$)
-                xwk=fnblank(1); rem OutVect!.addItem(sftran.subcont_seq_ref$); rem v12 doesn't print seq_refs
-                gosub subcontract_details
-                if pos("O"=transtype$)>0 then xwk=fnblank(2)
-                OutVect!.addItem(str(sftran.units))
-                OutVect!.addItem(str(sftran.unit_cost))
-                OutVect!.addItem(str(sftran.ext_cost))
-            endif
+        if read_tpl.record_id$="S" then 
+            OutVect!.addItem(fndate$(sftran.trans_date$))
+            OutVect!.addItem(read_tpl.record_id$)
+            xwk=fnblank(1); rem OutVect!.addItem(sftran.subcont_seq_ref$); rem v12 doesn't print seq_refs
+            gosub subcontract_details
+            if pos("O"=transtype$)>0 then xwk=fnblank(2)
+            OutVect!.addItem(str(sftran.units))
+            OutVect!.addItem(str(sftran.unit_cost))
+            OutVect!.addItem(str(sftran.ext_cost))
+        endif
             
-            l=l+1
-            l0=l0+1,l2=l2+1
-            if record_id_field$="O" then 
-                d[0]=d[0]+sftran.units
-                t[0]=t[0]+sftran.units
-                s[0]=s[0]+sftran.units
-                u[0]=u[0]+sftran.units
-                d[2]=d[2]+sftran.setup_time
-                t[2]=t[2]+sftran.setup_time
-                s[2]=s[2]+sftran.setup_time
-                u[2]=u[2]+sftran.setup_time
-            endif
-            d[1]=d[1]+sftran.ext_cost
-            t[1]=t[1]+sftran.ext_cost
-            s[1]=s[1]+sftran.ext_cost
-            u[1]=u[1]+sftran.ext_cost
+        l=l+1
+        l0=l0+1,l2=l2+1
+        if record_id_field$="O" then 
+            d[0]=d[0]+sftran.units
+            t[0]=t[0]+sftran.units
+            s[0]=s[0]+sftran.units
+            u[0]=u[0]+sftran.units
+            d[2]=d[2]+sftran.setup_time
+            t[2]=t[2]+sftran.setup_time
+            s[2]=s[2]+sftran.setup_time
+            u[2]=u[2]+sftran.setup_time
+        endif
+        d[1]=d[1]+sftran.ext_cost
+        t[1]=t[1]+sftran.ext_cost
+        s[1]=s[1]+sftran.ext_cost
+        u[1]=u[1]+sftran.ext_cost
 
     wend 
 	if prev_wo$<>"" and l2>0 gosub wo_subtot
