@@ -235,7 +235,8 @@ rem --- Trip Read
 		data!.setFieldValue("OPENED_DATE",fndate$(read_tpl.opened_date$))
 		data!.setFieldValue("LAST_CLOSE",fndate$(read_tpl.closed_date$))
 		dim sfc_type$:fattr(sfc_type$)
-		read record (sfc_type_dev,key=firm_id$+"A"+read_tpl.wo_type$) sfc_type$
+		sfc_type.code_desc$="Code Not Found"
+		read record (sfc_type_dev,key=firm_id$+"A"+read_tpl.wo_type$,dom=*next) sfc_type$
 		data!.setFieldValue("TYPE_DESC",sfc_type.code_desc$)
 		data!.setFieldValue("PRIORITY",read_tpl.priority$)
 		data!.setFieldValue("UOM",read_tpl.unit_measure$)
