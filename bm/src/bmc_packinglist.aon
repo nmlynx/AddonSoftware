@@ -8,7 +8,7 @@ rem --- All Rights Reserved
 
 	seterr std_error
 	setesc std_error
-	enter action$,printer_dev,bill_no$,page_no,pdate$,OutVect!,Translate!,status
+	enter action$,printer_dev,bill_no$,page_no,pdate$,OutVect!,Translate!,status,columns,BrkVect!
 
 rem --- Retrieve the program path
 
@@ -67,11 +67,7 @@ rem --- Parameters
 rem --- Init Data
 
         more=1
-        pbufwidth=85
-        call stbl("+DIR_SYP")+"bac_key_template.bbj","BMM_BILLMAT","PRIMARY",bmm02a_key_tpl$,rd_table_chans$[all],status$
-        dim bmm02a_key$:bmm02a_key_tpl$
-        call stbl("+DIR_SYP")+"bac_key_template.bbj","BMM_BILLMAT","AO_OPSEQ_BILL",bmm02a_altkey02_tpl$,rd_table_chans$[all],status$
-        dim bmm02a_altkey$:bmm02a_altkey02_tpl$
+		gosub heading
 
 rem --- Read
 
@@ -80,67 +76,48 @@ rem --- Read
         endif
         findrecord (bmm01_dev,key=firm_id$+bill_no$,dom=std_exit) bmm01a$
 
-rem --- Heading
-        out_action$="FORMAT"
-        find record (ivm01_dev,key=firm_id$+bill_no$,dom=*next) ivm01a$
-        OutVect!.addItem(Translate!.getTranslation("AON_BILL_NUMBER:_")+cvs(bill_no$,1+2))
-        xwk=fnblank(4)
+rem --- Add op_int_seq_ref to memo lines following 'S' lines
 
-        OutVect!.addItem(Translate!.getTranslation("AON_DESCRIPTION:_")+ivm01a.ITEM_DESC$(1,min(desc[1],36)))
-        xwk=fnblank(1)
-        OutVect!.addItem(Translate!.getTranslation("AON_DRAWING_REVISION:")+bmm01a.DRAWING_REV$)
-        xwk=fnblank(1)
-        OutVect!.addItem(Translate!.getTranslation("AON_PHANTOM_BILL?:_")+bmm01a.PHANTOM_BILL$)
-
-        xwk=fnblank(1)
-        OutVect!.addItem(ivm01a.ITEM_DESC$(desc[1]+1,min(desc[2],34)))
-        OutVect!.addItem(Translate!.getTranslation("AON_REVISION_CODE:_")+bmm01a.BILL_REV$)
-        xwk=fnblank(1)
-        OutVect!.addItem(Translate!.getTranslation("AON_UNIT_OF_MEASURE:_")+bmm01a.UNIT_MEASURE$)
-
-        OutVect!.addItem(Translate!.getTranslation("AON_DRAWING_NUMBER:_")+bmm01a.DRAWING_NO$)
-        OutVect!.addItem(ivm01a.ITEM_DESC$(desc[1]+desc[2]+1,min(desc[3],32)))
-        OutVect!.addItem(Translate!.getTranslation("AON_CREATED:_")+fndate$(bmm01a.CREATE_DATE$))
-        xwk=fnblank(1)
-        OutVect!.addItem(Translate!.getTranslation("AON_ESTIMATED_YIELD_%:_")+str(bmm01a.EST_YIELD:"##0.00"))
-
-      
-        xwk=fnblank(2)
-        OutVect!.addItem(Translate!.getTranslation("AON_REVISED:_")+fndate$(bmm01a.LSTRVS_DATE$))
-        xwk=fnblank(1)
-        OutVect!.addItem(Translate!.getTranslation("AON_STANDARD_LOT_SIZE:_")+str(bmm01a.STD_LOT_SIZE))
-
-        xwk=fnblank(4)
-        OutVect!.addItem(Translate!.getTranslation("AON_AS_OF:_")+fndate$(pdate$))
-
-rem --- top dashed lines are just visually confusing...
-        xwk=fnblank(5)
-        
-  
-        OutVect!.addItem(Translate!.getTranslation("AON_OP_SEQ"))
-        OutVect!.addItem(Translate!.getTranslation("AON_COMPONENT"))
-        OutVect!.addItem("U/M")
-        OutVect!.addItem(Translate!.getTranslation("AON_QUANTITY")+$00$+"R")
-        OutVect!.addItem(Translate!.getTranslation("AON_PICKED"))
-        OutVect!.addItem(fill(10,"_"))
-        OutVect!.addItem(fill(45,"_"))
-        OutVect!.addItem(fill(8,"_"))
-        OutVect!.addItem(fill(30,"_")+$00$+"R")
-        OutVect!.addItem(fill(15,"_"))
-		xvk=fnblank(5)
-
+		read (bmm02_dev,key=firm_id$+bill_no$,dom=*next)
+		seq_ref$=""
+		
+		while 1
+			read record (bmm02_dev,end=*break) bmm02a$
+			if pos(firm_id$+bill_no$=bmm02a$)<>1 break
+			if bmm02a.line_type$="M"
+				bmm02a.op_int_seq_ref$=seq_ref$
+				write record (bmm02_dev) bmm02a$
+				continue
+			endif
+			seq_ref$=bmm02a.op_int_seq_ref$
+		wend
+		
 rem --- Detail
 
-        read (bmm02_dev,key=firm_id$+bill_no$,dom=*next)
-        first_time$="Y"
+		sql_prep$="select firm_id, bill_no, material_seq "
+		sql_prep$=sql_prep$+"from bmm_billmat where firm_id = '"+firm_id$+"' and bill_no = '"+bill_no$+"' "
+		sql_prep$=sql_prep$+"order by op_int_seq_ref, material_seq"
+		sql_chan=sqlunt
+		sqlopen(sql_chan,err=*next)stbl("+DBNAME")
+		sqlprep(sql_chan)sql_prep$
+		dim read_tpl$:sqltmpl(sql_chan)
+		sqlexec(sql_chan)
 
 rem --- Main Loop Starts
     while more
 
-        bmm02a_altkey$=key(bmm02_dev,knum="AO_OPSEQ_BILL",end=*break)
+		read_tpl$ = sqlfetch(sql_chan,end=*break)
+		read record (bmm02_dev,key=read_tpl.firm_id$+read_tpl.bill_no$+read_tpl.material_seq$) bmm02a$
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        if first_time$="Y" then let first_time$="N",t0$=bmm02a_altkey.op_int_seq_ref$
-        read record (bmm02_dev,key=bmm02a_altkey$,knum="AO_OPSEQ_BILL") bmm02a$
+
+rem --- Page break
+		if last_seq_ref$="" last_seq_ref$=bmm02a.op_int_seq_ref$
+		if last_seq_ref$<>bmm02a.op_int_seq_ref$
+			BrkVect!.addItem(str(OutVect!.size()/(columns)))
+			last_seq_ref$=bmm02a.op_int_seq_ref$
+			gosub heading
+		endif
+
         if pos(bmm01a.firm_id$+bmm01a.bill_no$=bmm02a.firm_id$+bmm02a.bill_no$+bmm02a.material_seq$)<>1 then break
         if cvs(bmm02a.effect_date$,3)<>"" and bmm02a.effect_date$>pdate$ then continue
         if cvs(bmm02a.obsolt_date$,3)<>"" and bmm02a.obsolt_date$<=pdate$ then continue
@@ -212,6 +189,58 @@ rem --- Totals
 rem --- End
     goto std_exit
 
+rem --- Heading
+	heading:
+        out_action$="FORMAT"
+        find record (ivm01_dev,key=firm_id$+bill_no$,dom=*next) ivm01a$
+        OutVect!.addItem(Translate!.getTranslation("AON_BILL_NUMBER:_")+cvs(bill_no$,1+2))
+        xwk=fnblank(4)
+
+        OutVect!.addItem(Translate!.getTranslation("AON_DESCRIPTION:_")+ivm01a.ITEM_DESC$(1,min(desc[1],36)))
+        xwk=fnblank(1)
+        OutVect!.addItem(Translate!.getTranslation("AON_DRAWING_REVISION:")+bmm01a.DRAWING_REV$)
+        xwk=fnblank(1)
+        OutVect!.addItem(Translate!.getTranslation("AON_PHANTOM_BILL?:_")+bmm01a.PHANTOM_BILL$)
+
+        xwk=fnblank(1)
+        OutVect!.addItem(ivm01a.ITEM_DESC$(desc[1]+1,min(desc[2],34)))
+        OutVect!.addItem(Translate!.getTranslation("AON_REVISION_CODE:_")+bmm01a.BILL_REV$)
+        xwk=fnblank(1)
+        OutVect!.addItem(Translate!.getTranslation("AON_UNIT_OF_MEASURE:_")+bmm01a.UNIT_MEASURE$)
+
+        OutVect!.addItem(Translate!.getTranslation("AON_DRAWING_NUMBER:_")+bmm01a.DRAWING_NO$)
+        OutVect!.addItem(ivm01a.ITEM_DESC$(desc[1]+desc[2]+1,min(desc[3],32)))
+        OutVect!.addItem(Translate!.getTranslation("AON_CREATED:_")+fndate$(bmm01a.CREATE_DATE$))
+        xwk=fnblank(1)
+        OutVect!.addItem(Translate!.getTranslation("AON_ESTIMATED_YIELD_%:_")+str(bmm01a.EST_YIELD:"##0.00"))
+
+      
+        xwk=fnblank(2)
+        OutVect!.addItem(Translate!.getTranslation("AON_REVISED:_")+fndate$(bmm01a.LSTRVS_DATE$))
+        xwk=fnblank(1)
+        OutVect!.addItem(Translate!.getTranslation("AON_STANDARD_LOT_SIZE:_")+str(bmm01a.STD_LOT_SIZE))
+
+        xwk=fnblank(4)
+        OutVect!.addItem(Translate!.getTranslation("AON_AS_OF:_")+fndate$(pdate$))
+
+rem --- top dashed lines are just visually confusing...
+        xwk=fnblank(5)
+        
+  
+        OutVect!.addItem(Translate!.getTranslation("AON_OP_SEQ"))
+        OutVect!.addItem(Translate!.getTranslation("AON_COMPONENT"))
+        OutVect!.addItem("U/M")
+        OutVect!.addItem(Translate!.getTranslation("AON_QUANTITY")+$00$+"R")
+        OutVect!.addItem(Translate!.getTranslation("AON_PICKED"))
+        OutVect!.addItem(fill(10,"_"))
+        OutVect!.addItem(fill(45,"_"))
+        OutVect!.addItem(fill(8,"_"))
+        OutVect!.addItem(fill(30,"_")+$00$+"R")
+        OutVect!.addItem(fill(15,"_"))
+		xvk=fnblank(5)
+
+	return
+		
 open_tables:rem --- Open Tables
 
     call stbl("+DIR_SYP")+"bac_open_tables.bbj",
