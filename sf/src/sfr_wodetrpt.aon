@@ -57,7 +57,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    num_files=13
+    num_files=7
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="SFS_PARAMS",   open_opts$[1]="OTA"
     open_tables$[2]="APS_PARAMS",   open_opts$[2]="OTA"
@@ -65,14 +65,8 @@ rem --- Open/Lock files
     open_tables$[4]="GLS_PARAMS",   open_opts$[4]="OTA"
     open_tables$[5]="IVS_PARAMS",   open_opts$[5]="OTA"
     open_tables$[6]="PRS_PARAMS",   open_opts$[6]="OTA"
-	open_tables$[7]="BMS_PARAMS",   open_opts$[7]="OTA"
 	
-    open_tables$[8]="ARM_CUSTMAST", open_opts$[8]="OTA"
-    open_tables$[9]="IVM_ITEMMAST", open_opts$[9]="OTA"; rem ivm-01
-    open_tables$[10]="IVC_WHSECODE",open_opts$[10]="OTA"
-    open_tables$[11]="SFE_WOMASTR", open_opts$[11]="OTA"; rem sfe-01
-    open_tables$[12]="SFE_WOOPRTN", open_opts$[12]="OTA"; rem sfe-02
-    open_tables$[13]="SFC_WOTYPECD",open_opts$[13]="OTA"; rem sfm-10
+    open_tables$[7]="SFE_WOMASTR", open_opts$[7]="OTA[2_]"; rem sfe-01
 
     gosub open_tables
 
@@ -84,7 +78,6 @@ rem --- Assignments so parameters can be tested in lead-in program
     gls_params_dev=num(open_chans$[4])	
     ivs_params_dev=num(open_chans$[5])
     prs_params_dev=num(open_chans$[6])
-    bms_params_dev=num(open_chans$[7])
 	
     dim sfs_params$:open_tpls$[1]
     dim aps_params$:open_tpls$[2]
@@ -92,20 +85,15 @@ rem --- Assignments so parameters can be tested in lead-in program
     dim gls_params$:open_tpls$[4]
     dim ivs_params$:open_tpls$[5]
     dim prs_params$:open_tpls$[6]
-    dim bms_params$:open_tpls$[7]
 	
-	dim sfe01a$:open_tpls$[11]
+	dim sfe01a$:open_tpls$[7]
 	
-rem --- Close files after ensuring they exist
+rem --- Close extra channel of sfe-01 after getting sfe01 template
 
-    num_files=6
+    num_files=1
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="ARM_CUSTMAST", open_opts$[1]="CX"
-    open_tables$[2]="IVM_ITEMMAST", open_opts$[2]="CX"; rem ivm-01
-    open_tables$[3]="IVC_WHSECODE", open_opts$[3]="CX"
-    open_tables$[4]="SFE_WOMASTR",  open_opts$[4]="CX"; rem sfe-01
-    open_tables$[5]="SFE_WOOPRTN",  open_opts$[5]="CX"; rem sfe-02
-    open_tables$[6]="SFC_WOTYPECD", open_opts$[6]="CX"; rem sfm-10
+
+    open_tables$[1]="SFE_WOMASTR",  open_opts$[1]="CX[2_]"; rem sfe-01
 
     gosub open_tables
 
@@ -193,9 +181,13 @@ rem --- Add masks to params!
 	masks$=masks$+"sf_rate_mask^"+msk$+"|"
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","%","",msk$,0,0
 	masks$=masks$+"sf_pct_mask^"+msk$+"|"
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","A","",msk$,0,0
+	masks$=masks$+"sf_amt_mask^"+msk$+"|"
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",msk$,0,0
+	masks$=masks$+"sf_units_mask^"+msk$+"|"
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","C","",msk$,0,0
+	masks$=masks$+"sf_cost_mask^"+msk$+"|"	
 	params!.put("MASKS",masks$)
-
-rem 	if params!.get("wo_no_2")="" then params!.put("wo_no_2","~~~~~~")
 
 rem --- Parameters
 
@@ -212,10 +204,7 @@ rem --- Parameters
     p6=num(sfs_params$.empl_no_len$)
 	
     find record (gls_params_dev,key=firm_id$+"GL00",dom=std_missing_params) gls_params$
-	
-    if bm$="Y" then 
-        find record (bms_params_dev,key=firm_id$+"BM00",dom=std_missing_params) bms_params$
-    endif
+
     if op$="Y" then
         find record (ars_params_dev,key=firm_id$+"AR00",dom=std_missing_params) ars_params$
         c0=num(ars_params$.customer_size$)
@@ -233,17 +222,11 @@ rem --- Parameters
         m5=num(sfs_params$.def_ovd_rate$)
     endif
     find record (ivs_params_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs_params$
-    dim p[1],desc[3]
-    p[0]=ivs_params$.item_id_len
-    ivs01_precision=num(ivs_params.precision$)
-    p[1]=num(ivs_params.precision$)
 	
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","A","",m1$,0,m1
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",m2$,0,m2
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","R","",m3$,0,m3
-    desc[1]=num(ivs_params$.desc_len_01$)
-    desc[2]=num(ivs_params$.desc_len_02$)
-    desc[3]=num(ivs_params$.desc_len_03$)
+
 	
 rem --- Init Data
    

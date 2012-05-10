@@ -67,15 +67,13 @@ rem --- Get masks
 rem ===========> ESCAPE    Figure out what masks are needed, and add them here and in appropriate masking code snips
 	pgmdir$=stbl("+DIR_PGM",err=*next)
 
-	iv_cost_mask$=fngetmask$("iv_cost_mask","###,##0.0000-",masks$)
-	ad_units_mask$=fngetmask$("ad_units_mask","#,###.00",masks$)
+	sf_cost_mask$=fngetmask$("sf_cost_mask","##,##0.0000-",masks$)
+	sf_units_mask$=fngetmask$("sf_units_mask","#,###.0000-",masks$)
+	sf_rate_mask$=fngetmask$("sf_rate_mask","#,##0.000-",masks$)
+	sf_hours_mask$=fngetmask$("sf_hours_mask","#,##0.00",masks$)
+	sf_amt_mask$=fngetmask$("sf_amt_mask","###,##0.00-",masks$)	
 	vendor_mask$=fngetmask$("vendor_mask","000000",masks$)
-	
-	REM iv_cost_mask$="###,##0.0000-"
-	bm_units_mask$="#,##0.00"
-	bm_rate_mask$="###.00"
-	sf_rate_mask$="###.00"
-	bm_hours_mask$="#,##0.00"
+	employee_mask$=fngetmask$("employee_mask","000000",masks$)
 
 rem --- Open files with adc (Change from adc to bac once Barista is enhanced)
 
@@ -296,7 +294,6 @@ rem --- Init totals and total-break vars
 	prev_date$=""; rem This is t1$ in sfr_wotranshist_o1.aon and v6
 	
 rem --- Trip Read
-rem ====================> ESCAPE Mask logic is incomplete in both definition and usage
 rem ====================> ESCAPE Accumulation of Totals is not well-defined
 rem ====================> ESCAPE Date Break is not implemented
 rem ====================> ESCAPE Lot/Serial rows will need adjusting 
@@ -347,9 +344,9 @@ rem --- Process Transactions
 		rem --- Data common to all transaction types
 		data!.setFieldValue("TRANS_DATE",fndate$(sftran.trans_date$))
 		data!.setFieldValue("SOURCE",read_tpl.record_id$)
-		data!.setFieldValue("UNITS",str(sftran.units))
-		data!.setFieldValue("RATE",str(sftran.unit_cost))
-		data!.setFieldValue("AMOUNT",str(sftran.ext_cost))
+		data!.setFieldValue("UNITS",str(sftran.units:sf_units_mask$))
+		data!.setFieldValue("RATE",str(sftran.unit_cost:sf_rate_mask$))
+		data!.setFieldValue("AMOUNT",str(sftran.ext_cost:sf_amt_mask$))
 		
         rem --- Based on Trans Type, fill type-specific fields
 
@@ -377,10 +374,10 @@ rem --- Process Transactions
 				find record (empcode_dev,key=firm_id$+sftran.employee_no$,dom=*next) empcode$
 
 				data!.setFieldValue("ITEM_VEND_OPER",sftran.op_code$+"  "+opcode.code_desc$)
-				data!.setFieldValue("DESC",fnmask$(sftran.employee_no$,c5$)+" "+empcode.empl_surname$+empcode.empl_givname$)
+				data!.setFieldValue("DESC",fnmask$(sftran.employee_no$,employee_mask$)+" "+empcode.empl_surname$+empcode.empl_givname$)
 				data!.setFieldValue("PO_NUM","")
-				data!.setFieldValue("COMPLETE_QTY",str(sftran.complete_qty))
-				data!.setFieldValue("SETUP_HRS",str(sftran.setup_time))		
+				data!.setFieldValue("COMPLETE_QTY",str(sftran.complete_qty:sf_units_mask$))
+				data!.setFieldValue("SETUP_HRS",str(sftran.setup_time:sf_hours_mask$))		
 				break
 			case 2
 				rem --- Subcontracts
@@ -391,7 +388,7 @@ rem --- Process Transactions
 					vend_name$=apm01a.vendor_name$
 				endif 
 				
-				data!.setFieldValue("ITEM_VEND_OPER",fnmask$(sftran.vendor_id$,c3$)+"  "+vend_name$)
+				data!.setFieldValue("ITEM_VEND_OPER",fnmask$(sftran.vendor_id$,vendor_mask$)+"  "+vend_name$)
 				data!.setFieldValue("DESC","")
 				data!.setFieldValue("PO_NUM",sftran.po_no$)
 				data!.setFieldValue("COMPLETE_QTY","")
@@ -433,14 +430,17 @@ rem --- Output Totals
 	gosub date_subtot
 
 	data! = rs!.getEmptyRecordData()
-	rs!.insert(data!); rem blank line between Date and Grand totals
-
+	rs!.insert(data!); rem Blank line between Date and Grand totals
+	
+	data! = rs!.getEmptyRecordData(); rem Add totals' underscores
+	data!.setFieldValue("AMOUNT",fill(20,"_"))
+	rs!.insert(data!)
+	
 	data! = rs!.getEmptyRecordData()
-
 	data!.setFieldValue("ITEM_VEND_OPER","Work Order Totals") 		
-	data!.setFieldValue("DESC","Total Hours: "+str(grand_tot_hours:m2$)) 			
-	data!.setFieldValue("PO_NUM","Setup Hours: "+str(grand_tot_setup_hours:m2$))
-	data!.setFieldValue("AMOUNT",str(grand_tot_cost))	
+	data!.setFieldValue("DESC","Total Hours: "+str(grand_tot_hours:sf_hours_mask$)) 			
+	data!.setFieldValue("PO_NUM","Setup Hours: "+str(grand_tot_setup_hours:sf_hours_mask$))
+	data!.setFieldValue("AMOUNT",str(grand_tot_cost:sf_amt_mask$))	
 
 	rs!.insert(data!)
 	
@@ -574,9 +574,9 @@ rem --- Serial Numbers Here
 			data!.setFieldValue("ITEM_VEND_OPER",lotser$+lstran.lotser_no$)
 
 			if lstran_dev=sft11a_dev then 
-				data!.setFieldValue("DESC","Issued:"+str(lstran.cls_inp_qty:m2$)+"  Cost:"+str(lstran.closed_cost:m3$)) 	
+				data!.setFieldValue("DESC","Issued:"+str(lstran.cls_inp_qty:sf_units_mask$)+"  Cost:"+str(lstran.closed_cost:sf_cost_mask$$)) 	
             else
-				data!.setFieldValue("DESC","Issued:"+str(lstran.qty_closed:m2$)+"  Cost:"+str(lstran.unit_cost:m3$))
+				data!.setFieldValue("DESC","Issued:"+str(lstran.qty_closed:sf_units_mask$)+"  Cost:"+str(lstran.unit_cost:sf_cost_mask$$))
 			endif
 			
 			rs!.insert(data!)
@@ -591,15 +591,20 @@ rem --- Subtotals for date breaks
 date_subtot:rem --- Date Subtotal
 
     if prev_date$<>"" then     
+		data! = rs!.getEmptyRecordData()
+		rs!.insert(data!); rem Blank line before Date totals
+	
+		data! = rs!.getEmptyRecordData(); rem Add totals' underscores
+		data!.setFieldValue("AMOUNT",fill(20,"_"))
+		rs!.insert(data!)
+	
 		data! = rs!.getEmptyRecordData()	
-		
 		data!.setFieldValue("ITEM_VEND_OPER","Month "+fnh$(prev_date$)+" Total ") 	
         if pos("O"=transtype$)>0 then 
-			rem data!.setFieldValue("DESC","Total Hours: "+str(date_tot_hours:m2$)+"      Setup Hours: "+str(date_tot_setup_hours:m2$)) 			
-			data!.setFieldValue("DESC","Total Hours: "+str(date_tot_hours:m2$)) 			
-			data!.setFieldValue("PO_NUM","Setup Hours: "+str(date_tot_setup_hours:m2$))
-	endif
-		data!.setFieldValue("AMOUNT",str(date_tot_cost))
+			data!.setFieldValue("DESC","Total Hours: "+str(date_tot_hours:sf_hours_mask$)) 			
+			data!.setFieldValue("PO_NUM","Setup Hours: "+str(date_tot_setup_hours:sf_hours_mask$))
+		endif
+		data!.setFieldValue("AMOUNT",str(date_tot_cost:sf_cost_mask$))
 		
 		rs!.insert(data!)
     endif
