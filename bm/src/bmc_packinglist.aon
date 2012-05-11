@@ -24,7 +24,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-	num_files=6
+	num_files=7
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="BMM_BILLMAST",open_opts$[1]="OTA"
 	open_tables$[2]="BMM_BILLMAT",open_opts$[2]="OTA"
@@ -32,6 +32,7 @@ rem --- Open/Lock files
 	open_tables$[4]="IVM_ITEMMAST",open_opts$[4]="OTA"
 	open_tables$[5]="IVS_PARAMS",open_opts$[5]="OTA"
 	open_tables$[6]="BMM_BILLOPER",open_opts$[6]="OTA"
+	open_tables$[7]="BMC_OPCODES",open_opts$[7]="OTA"
 
 	gosub open_tables
 
@@ -41,11 +42,13 @@ rem --- Open/Lock files
 	ivm01_dev=num(open_chans$[4])
 	ivs01a_dev=num(open_chans$[5])
 	bmm03_dev=num(open_chans$[6])
+	bmc_opcodes=num(open_chans$[7])
 	
 rem --- Dimension string templates
 
 	dim bmm01a$:open_tpls$[1],bmm02a$:open_tpls$[2],bms01a$:open_tpls$[3]
 	dim ivm01a$:open_tpls$[4],ivs01a$:open_tpls$[5],bmm03a$:open_tpls$[6]
+	dim bmc_opcodes$:open_tpls$[7]
 
 rem --- Retrieve parameter records
 
@@ -69,6 +72,19 @@ rem --- Init Data
         more=1
 		gosub heading
 
+rem --- Build list of Op Codes/internal_seq_no/occurrence used for this Bill
+		op_code_len=len(bmm03a.op_code$)
+		read (bmm03_dev,key=firm_id$+bill_no$,dom=*next)
+
+		while 1
+			read record (bmm03_dev,end=*break) bmm03a$
+			if pos(firm_id$+bill_no$=bmm03a$)<>1 break
+			if bmm03a.line_type$="S"
+				occ=pos(bmm03a.op_code$=opcodes$,op_code_len+12+2,0)
+				opcodes$=opcodes$+bmm03a.op_code$+bmm03a.internal_seq_no$+str(occ:"00")
+			endif
+		wend
+		
 rem --- Read
 
         if pos("D"=action$) then
@@ -141,6 +157,8 @@ addl_reads: rem --- Additional Reads
         ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desc[1],desc[2],desc[3])
 		dim bmm03a$:fattr(bmm03a$)
 		find record (bmm03_dev,key=firm_id$+bmm02a.bill_no$+bmm02a.op_int_seq_ref$,knum="AO_BILL_OPSEQ",dom=*next)bmm03a$
+		dim bmc_opcodes$:fattr(bmc_opcodes$)
+		find record (bmc_opcodes,key=firm_id$+bmm03a.op_code$,dom=*next) bmc_opcodes$
 		
 rem --- Print Detail
 
@@ -149,7 +167,17 @@ rem --- Print Detail
         OutVect!.addItem(bmm02a.unit_measure$)
         OutVect!.addItem(str(fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,bmm01a.est_yield,bmm02a.scrap_factor):m2$)+$00$+"R")
         OutVect!.addItem(fill(13,"_"))
-        xwk=fnblank(1)
+		out_desc$=""
+		x=pos(bmm03a.op_code$+bmm02a.op_int_seq_ref$=opcodes$,op_code_len+12+2)
+		if x>0
+			occ=num(opcodes$(x+15,2))+1
+			if occ>1
+				out_desc$=bmm03a.op_code$+"("+str(occ)+") "+bmc_opcodes.code_desc$
+			else
+				out_desc$=bmm03a.op_code$+" "+bmc_opcodes.code_desc$
+			endif
+		endif
+		OutVect!.addItem("  "+out_desc$)
         OutVect!.addItem("    "+ivm01a.item_desc$)
         xwk=fnblank(3)
 

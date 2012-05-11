@@ -223,7 +223,7 @@ rem --- fill listbox for use with Op Sequence
 		read record (bmm08_dev,key=firm_id$+bmm03a.op_code$,dom=*next)bmm08a$
 		ops_lines!.addItem(bmm03a.internal_seq_no$)
 		op_code_list$=op_code_list$+bmm03a.op_code$
-		work_var=pos(bmm03a.op_code$=op_code_list$,3,0)
+		work_var=pos(bmm03a.op_code$=op_code_list$,len(bmm03a.op_code$),0)
 		if work_var>1
 			work_var$=bmm03a.op_code$+"("+str(work_var)+")"
 		else
