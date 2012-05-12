@@ -1085,8 +1085,15 @@ rem --- Build Sequence list button
 		dim ivm01a$:fattr(ivm01a$)
 		read record (ivm01_dev,key=firm_id$+ope11a.item_id$,dom=*next)ivm01a$
 		ops_lines!.addItem(ope11a.internal_seq_no$)
-		ops_items!.addItem(ope11a.item_id$)
-		ops_list!.addItem(cvs(ope11a.item_id$,3)+" - "+ivm01a.item_desc$)
+		item_list$=item_list$+ope11a.item_id$
+		work_var=pos(ope11a.item_id$=item_list$,len(ope11a.item_id$),0)
+		if work_var>1
+			work_var$=cvs(ope11a.item_id$,2)+"("+str(work_var)+")"
+		else
+			work_var$=cvs(ope11a.item_id$,2)
+		endif
+		ops_items!.addItem(work_var$)
+		ops_list!.addItem(work_var$+" - "+ivm01a.item_desc$)
 	wend
 
 	if ops_lines!.size()>0
