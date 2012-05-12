@@ -18,12 +18,29 @@
 			<ASC_LICENSE_ID id="ddm_tables.sfe_timedate">37BB1EF237E7A1BFA11D739212C65E9E</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.sfe_timedate">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.sfe_timedate">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.sfe_timedate">20120501</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.sfe_timedate">20120501</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.sfe_timedate">084338</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.sfe_timedate">20120509</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.sfe_timedate">20120509</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.sfe_timedate">140418</DD_LSTSYNC_TIME>
+			<DD_ATTR_CPGM id="ddm_tables.sfe_timedate">C:/aon_dev/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_DKNM id="ddm_tables.sfe_timedate">BATCH_KEY</DD_ATTR_DKNM>
 			<DD_ATTR_FTYP id="ddm_tables.sfe_timedate">T</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV id="ddm_tables.sfe_timedate">zzzz</DD_ATTR_SLEV>
 			<DD_ATTR_WINT id="ddm_tables.sfe_timedate">Time Sheet Entry By Date</DD_ATTR_WINT>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_table_cpro">
+		<ID id="ddm_table_cpro">DDM_TABLE_CPRO</ID>
+		<RECORD id="ddm_table_cpro.sfe_timedatebend">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_timedatebend">SFE_TIMEDATE    </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.sfe_timedatebend">BEND</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.sfe_timedatebsho">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_timedatebsho">SFE_TIMEDATE    </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.sfe_timedatebsho">BSHO</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.sfe_timedatebtbl">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_timedatebtbl">SFE_TIMEDATE    </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.sfe_timedatebtbl">BTBL</DD_ATTR_CPRO>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_dtlg">
@@ -39,7 +56,7 @@
 		<RECORD id="ddm_table_tpls.sfe_timedate">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.sfe_timedate">SFE_TIMEDATE    </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.sfe_timedate">sfe-11</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.sfe_timedate">firm_id:c(2),trans_date:c(8),employee_no:c(9),batch_no:c(7*),hrs:n(7*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.sfe_timedate">firm_id:c(2),trans_date:c(8),employee_no:c(9),batch_no:c(7*),total_hrs:n(7*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -163,10 +180,11 @@
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_timedate002">N</DD_FIELD_DELIM>
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_timedate002">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_timedate002">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_CPGM id="ddm_table_cols.sfe_timedate002">C:/aon_dev/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_CTLW id="ddm_table_cols.sfe_timedate002">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_cols.sfe_timedate002">0</DD_ATTR_CTLH>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_timedate002">Transaction Date</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.sfe_timedate002">2</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_timedate002">3</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_timedate002">TRANS_DATE</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_timedate003">
@@ -181,7 +199,7 @@
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_timedate003">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_timedate003">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_timedate003">Employee Number</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.sfe_timedate003">3</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_timedate003">4</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_timedate003">EMPLOYEE_NO</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_timedate004">
@@ -201,23 +219,51 @@
 			<DD_ATTR_CTLW id="ddm_table_cols.sfe_timedate004">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_cols.sfe_timedate004">0</DD_ATTR_CTLH>
 			<DD_ATTR_MLAN id="ddm_table_cols.sfe_timedate004">N</DD_ATTR_MLAN>
-			<DD_ATTR_MINL id="ddm_table_cols.sfe_timedate004">0</DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_timedate004">0</DD_ATTR_MAXL>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_timedate004">2</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_timedate004">BATCH_NO</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_timedate005">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_timedate005">SFE_TIMEDATE    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_timedate005">005</DD_SEQUENCE>
 			<DD_DATA_NAME id="ddm_table_cols.sfe_timedate005">HRS             </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_timedate005">HRS             </DD_DVAR_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_timedate005">TOTAL_HRS       </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.sfe_timedate005">1</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_timedate005">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_timedate005">Y</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_timedate005">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_timedate005">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_timedate005">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_CTLX id="ddm_table_cols.sfe_timedate005">+41</DD_ATTR_CTLX>
+			<DD_ATTR_CTLY id="ddm_table_cols.sfe_timedate005">-2</DD_ATTR_CTLY>
+			<DD_ATTR_LABL id="ddm_table_cols.sfe_timedate005">Total Hours</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.sfe_timedate005">Total Hrs</DD_ATTR_LABS>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_timedate005">Hours</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.sfe_timedate005">15</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_timedate005">5</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_timedate005">HRS</SQL_COLUMN_NAME>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_table_disp">
+		<ID id="ddm_table_disp">DDM_TABLE_DISP</ID>
+		<RECORD id="ddm_table_disp.sfe_timedate001">
+			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_timedate001">SFE_TIMEDATE    </DD_TABLE_ALIAS>
+			<DD_SEQUENCE id="ddm_table_disp.sfe_timedate001">001</DD_SEQUENCE>
+			<DD_DATA_NAME id="ddm_table_disp.sfe_timedate001">HRS             </DD_DATA_NAME>
+			<DD_CTRL_NAME id="ddm_table_disp.sfe_timedate001">ENTERED_HRS     </DD_CTRL_NAME>
+			<DD_ATTR_LABL id="ddm_table_disp.sfe_timedate001">Entered Hours</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_disp.sfe_timedate001">Entered Hrs</DD_ATTR_LABS>
+			<DD_ATTR_CTLX id="ddm_table_disp.sfe_timedate001">0</DD_ATTR_CTLX>
+			<DD_ATTR_CTLY id="ddm_table_disp.sfe_timedate001">0</DD_ATTR_CTLY>
+			<DD_ATTR_CTLH id="ddm_table_disp.sfe_timedate001">0</DD_ATTR_CTLH>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_timedate001">6</DD_ATTR_TIND>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_column_cpro">
+		<ID id="ddm_column_cpro">DDM_COLUMN_CPRO</ID>
+		<RECORD id="ddm_column_cpro.sfe_timedatetrans_dateaval">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.sfe_timedatetrans_dateaval">SFE_TIMEDATE    </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.sfe_timedatetrans_dateaval">TRANS_DATE      </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.sfe_timedatetrans_dateaval">AVAL</DD_ATTR_CPRO>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_opts">
