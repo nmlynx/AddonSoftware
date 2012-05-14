@@ -488,7 +488,7 @@ do_subcontracts:
 
 		if sfe_wosubcnt.line_type$="S"
 			sfe_wosubcnt.unit_measure$=bmm_billsub.unit_measure$	
-			sfe_wosubcnt.description$=bmm_billsub.ext_comments$(10,len(sfe_wosubcnt.description$))
+			sfe_wosubcnt.description$=bmm_billsub.ext_comments$(1,len(sfe_wosubcnt.description$))
 			sfe_wosubcnt.oper_seq_ref$=""
 			sfe_wosubcnt.units=SfUtils.netSubQuantityRequired(bmm_billsub.qty_required,bmm_billsub.alt_factor,bmm_billsub.divisor)
 			sfe_wosubcnt.unit_cost=sfe_wosubcnt.units*bmm_billsub.unit_cost
