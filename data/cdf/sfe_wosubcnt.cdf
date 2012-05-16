@@ -302,7 +302,10 @@ rem ========================================================
 [[SFE_WOSUBCNT.BSHO]]
 rem --- Disable grid if Closed Work Order or Recurring or PO not installed
 
-	if callpoint!.getDevObject("wo_status")="C" or callpoint!.getDevObject("wo_category")="R" or callpoint!.getDevObject("po")<>"Y"
+	if callpoint!.getDevObject("wo_status")="C" or
+:		callpoint!.getDevObject("wo_category")="R" or
+:		callpoint!.getDevObject("po")<>"Y" or
+:		(callpoint!.getDevObject("wo_category")="I" and callpoint!.getDevObject("bm")="Y")
 		opts$=callpoint!.getTableAttribute("OPTS")
 		callpoint!.setTableAttribute("OPTS",opts$+"BID")
 
