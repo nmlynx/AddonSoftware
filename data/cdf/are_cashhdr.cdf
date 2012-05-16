@@ -1,27 +1,68 @@
 [[ARE_CASHHDR.AABO]]
-rem --- user has elected to not save changes -- remove any are_cashgl recs already added (don't want orphans)
+rem --- user has elected to not save changes
+rem --- remove any orphan are_cashdet and are_cashgl records, and update are_cashbal accordingly 
 
-key_pfx$=callpoint!.getColumnData("ARE_CASHHDR.FIRM_ID")+callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")+
-:	callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_01")+callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")+
-:	callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")+callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")+
-:	callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")+callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_02")
+rem --- Does are_cashhdr record exist?
+header_exists=0
+are_cashhdr_dev=fnget_dev("ARE_CASHHDR")
+are_cashhdr_key$=callpoint!.getColumnData("ARE_CASHHDR.FIRM_ID")+
+:	callpoint!.getColumnData("ARE_CASHHDR.BATCH_NO")+
+:	callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")+
+:	callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_01")+
+:	callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")+
+:	callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")+
+:	callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")+
+:	callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")+
+:	callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_02")
+read(are_cashhdr_dev,key=are_cashhdr_key$,dom=*next); header_exists=1
 
-rem --- read thru are-21's just written (if any) and remove them
-rem --- alternative might be to set "no_out" flag and just give a warning, then  ABORT, but
-rem --- while BEND has an ABORT, BREX doesn't, so if user wasn't closing, but just moving on, ABORT won't be seen
+rem --- Header does NOT exist. Remove orphans.
+if !header_exists then
+	rem --- Remove are_cashdet orphans.
+	are_cashbal_dev=fnget_dev("ARE_CASHBAL")
+	are_cashdet_dev=fnget_dev("ARE_CASHDET")
+	key_pfx$=callpoint!.getColumnData("ARE_CASHHDR.FIRM_ID")+
+:		callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")+
+:		callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_01")+
+:		callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")+
+:		callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")+
+:		callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")+
+:		callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")+
+:		callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_02")
+	read(are_cashdet_dev,key=key_pfx$,dom=*next)
+	while 1
+		ky$=key(are_cashdet_dev,end=*break)
+		if pos(key_pfx$=ky$)<>1 then break
+		dim are11a$:fnget_tpl$("ARE_CASHDET")
+		readrecord(are_cashdet_dev,key=ky$)are11a$
+		remove (are_cashdet_dev,key=ky$)	
 
-are_cashgl_dev=fnget_dev("ARE_CASHGL")
-dim are21a$:fnget_tpl$("ARE_CASHGL")
+		rem --- Update are_cashbal for removed are_cashdet
+		are_cashbal_exists=0
+		dim are31a$:fnget_tpl$("ARE_CASHBAL")	
+		are_cashbal_key$=are11a.firm_id$+are11a.ar_type$+are11a.reserved_key_01$+are11a.customer_id$+are11a.ar_inv_no$
+		readrecord(are_cashbal_dev,key=are_cashbal_key$,dom=*next)are31a$; are_cashbal_exists=1
+		if are_cashbal_exists then
+			are31a.apply_amt$=str(num(are31a.apply_amt)-num(are11a.apply_amt$))
+			are31a.discount_amt$=str(num(are31a.discount_amt$)-num(are11a.discount_amt$))
+			if num(are31a.apply_amt$)<>0 or num(are31a.discount_amt$)<>0
+				are31a$=field(are31a$)
+				writerecord(are_cashbal_dev)are31a$
+			else
+				remove(are_cashbal_dev,key=are_cashbal_key$,dom=*next)
+			endif
+		endif
+	wend
 
-read(are_cashgl_dev,key=key_pfx$,dom=*next)
-while 1	
-	ky$=key(are_cashgl_dev,end=*break)
-	read record(are_cashgl_dev,key=ky$)are21a$
-	if are21a$(1,len(key_pfx$))=key_pfx$ 
+	rem --- Remove are_cashgl orphans.
+	are_cashgl_dev=fnget_dev("ARE_CASHGL")
+	read(are_cashgl_dev,key=key_pfx$,dom=*next)
+	while 1
+		ky$=key(are_cashgl_dev,end=*break)
+		if pos(key_pfx$=ky$)<>1 then break
 		remove (are_cashgl_dev,key=ky$)	
-	endif
-wend
-	
+	wend
+endif
 [[ARE_CASHHDR.BEND]]
 rem --- remove software lock on batch, if batching
 
