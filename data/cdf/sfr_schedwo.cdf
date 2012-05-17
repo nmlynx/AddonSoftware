@@ -60,11 +60,3 @@ rem ========================================================
 	endif
 
 	return
-[[SFR_SCHEDWO.ESTSTT_DATE.AVAL]]
-rem --- Estimated Start Date
-
-	start_date$=callpoint!.getUserInput()
-	if pos(" "<>callpoint!.getDevObject("order_no"))=0
-		call "adc_daydates.aon",start_date$,ret_date$,leadtime
-		if ret_date$<>"N" callpoint!.setColumnData("SFR_SCHEDWO.ESTCMP_DATE",ret_date$,1)
-	endif

@@ -816,6 +816,22 @@ rem --- Set default values
 		callpoint!.setColumnData("SFE_WOMASTR.UNIT_MEASURE",bmm_billmast.unit_measure$,1)
 		callpoint!.setColumnData("SFE_WOMASTR.BILL_REV",bmm_billmast.bill_rev$,1)
 	endif
+
+rem --- Set default Completion Date
+
+	if cvs(callpoint!.getColumnData("SFE_WOMASTR.ESTCMP_DATE"),2)="" and
+:		callpoint!.getColumnData("SFE_WOMASTR.SCHED_FLAG")="M"
+		ivm_itemwhse=fnget_dev("IVM_ITEMWHSE")
+		dim ivm_itemwhse$:fnget_tpl$("IVM_ITEMWHSE")
+		read record (ivm_itemwhse,key=firm_id$+callpoint!.getDevObject("default_wh")+
+:			callpoint!.getUserInput(),dom=*next)ivm_itemwhse$
+		new_date$=""
+		leadtime=ivm_itemwhse.lead_time
+		call stbl("+DIR_PGM")+"adc_daydates.aon",stbl("+SYSTEM_DATE"),new_date$,leadtime
+		if new_date$<>"N"
+			callpoint!.setColumnData("SFE_WOMASTR.ESTCMP_DATE",new_date$,1)
+		endif
+	endif
 [[SFE_WOMASTR.WO_STATUS.AVAL]]
 rem --- Only allow changes to status if P or Q
 
