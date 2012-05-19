@@ -1,3 +1,20 @@
+[[BMR_COSTING.BILL_NO.AVAL]]
+rem --- Validate against BOM_BILLMAST
+
+	bmm_billmast=fnget_dev("BMM_BILLMAST")
+	found=0
+	bill$=callpoint!.getUserInput()
+	while 1
+		find (bmm_billmast,key=firm_id$+bill$,dom=*break)
+		found=1
+		break
+	wend
+
+	if found=0 and cvs(bill$,3)<>""
+		msg_id$="INPUT_ERR_DATA"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
 [[BMR_COSTING.BFMC]]
 rem --- Set Custom Query for BOM Item Number
 
@@ -10,10 +27,11 @@ rem --- Set default Warehouse
 	callpoint!.setColumnData("BMR_COSTING.WAREHOUSE_ID",whse$,1)
 [[BMR_COSTING.BSHO]]
 rem --- Open needed tables
-	num_files=2
+	num_files=3
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="IVM_ITEMMAST",open_opts$[2]="OTA"
+	open_tables$[3]="BMM_BILLMAST",open_opts$[3]="OTA"
 	gosub open_tables
 
 	ivs01_dev=num(open_chans$[1])
