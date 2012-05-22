@@ -10,16 +10,18 @@
 			<DD_KEY_LENGTH id="ddm_tables.sfr_wordtrans">0</DD_KEY_LENGTH>
 			<DD_NBR_RECORD id="ddm_tables.sfr_wordtrans">0</DD_NBR_RECORD>
 			<DD_RECORD_LEN id="ddm_tables.sfr_wordtrans">0</DD_RECORD_LEN>
+			<RESTRICT_CREATE id="ddm_tables.sfr_wordtrans">Y</RESTRICT_CREATE>
 			<RESTRICT_REBUILD id="ddm_tables.sfr_wordtrans">Y</RESTRICT_REBUILD>
+			<RESTRICT_AUTOADD id="ddm_tables.sfr_wordtrans">Y</RESTRICT_AUTOADD>
 			<ASC_COMP_ID id="ddm_tables.sfr_wordtrans">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_tables.sfr_wordtrans">SF </ASC_PROD_ID>
-			<ASC_VERSION_ID id="ddm_tables.sfr_wordtrans">12.0      </ASC_VERSION_ID>
+			<ASC_VERSION_ID id="ddm_tables.sfr_wordtrans">12.0</ASC_VERSION_ID>
 			<DD_EXPORT_DATA id="ddm_tables.sfr_wordtrans">N</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.sfr_wordtrans">20080228</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.sfr_wordtrans">20100610</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.sfr_wordtrans">20120327</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.sfr_wordtrans">140930</DD_LSTSYNC_TIME>
-			<DD_ATTR_CPGM id="ddm_tables.sfr_wordtrans">/apps/aon/;</DD_ATTR_CPGM>
+			<DD_LSTREV_DATE id="ddm_tables.sfr_wordtrans">20120521</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.sfr_wordtrans">20120521</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.sfr_wordtrans">221512</DD_LSTSYNC_TIME>
+			<DD_ATTR_CPGM id="ddm_tables.sfr_wordtrans">C:/Apps/aon/;/apps/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_FTYP id="ddm_tables.sfr_wordtrans">S</DD_ATTR_FTYP>
 			<DD_ATTR_PRUN id="ddm_tables.sfr_wordtrans">[+DIR_PGM]sfr_wordtrans.aon</DD_ATTR_PRUN>
 			<DD_ATTR_WINT id="ddm_tables.sfr_wordtrans">Work Order Transaction History Report</DD_ATTR_WINT>
@@ -27,6 +29,10 @@
 	</ALIAS>
 	<ALIAS id="ddm_table_cpro">
 		<ID id="ddm_table_cpro">DDM_TABLE_CPRO</ID>
+		<RECORD id="ddm_table_cpro.sfr_wordtransbfmc">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.sfr_wordtransbfmc">SFR_WORDTRANS   </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.sfr_wordtransbfmc">BFMC</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_table_cpro.sfr_wordtransbsho">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.sfr_wordtransbsho">SFR_WORDTRANS   </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.sfr_wordtransbsho">BSHO</DD_ATTR_CPRO>
@@ -59,6 +65,7 @@
 			<DD_ATTR_DFLT id="ddm_table_cols.sfr_wordtrans001">W</DD_ATTR_DFLT>
 			<DD_ATTR_MLAN id="ddm_table_cols.sfr_wordtrans001">N</DD_ATTR_MLAN>
 			<DD_ATTR_TIND id="ddm_table_cols.sfr_wordtrans001">1</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfr_wordtrans001">REPORT_SEQ</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfr_wordtrans002">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfr_wordtrans002">SFR_WORDTRANS   </DD_TABLE_ALIAS>
@@ -81,6 +88,7 @@
 			<DD_ATTR_MLAN id="ddm_table_cols.sfr_wordtrans002">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfr_wordtrans002">2</DD_ATTR_MAXL>
 			<DD_ATTR_TIND id="ddm_table_cols.sfr_wordtrans002">2</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfr_wordtrans002">WAREHOUSE_ID</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfr_wordtrans003">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfr_wordtrans003">SFR_WORDTRANS   </DD_TABLE_ALIAS>
@@ -102,6 +110,7 @@
 			<DD_ATTR_LABL id="ddm_table_cols.sfr_wordtrans003">WOType</DD_ATTR_LABL>
 			<DD_ATTR_MLAN id="ddm_table_cols.sfr_wordtrans003">N</DD_ATTR_MLAN>
 			<DD_ATTR_TIND id="ddm_table_cols.sfr_wordtrans003">3</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfr_wordtrans003">WO_TYPE</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfr_wordtrans004">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfr_wordtrans004">SFR_WORDTRANS   </DD_TABLE_ALIAS>
@@ -123,6 +132,7 @@
 			<DD_ATTR_LABL id="ddm_table_cols.sfr_wordtrans004">WO Number</DD_ATTR_LABL>
 			<DD_ATTR_MLAN id="ddm_table_cols.sfr_wordtrans004">N</DD_ATTR_MLAN>
 			<DD_ATTR_TIND id="ddm_table_cols.sfr_wordtrans004">4</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfr_wordtrans004">WO_NO</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfr_wordtrans005">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfr_wordtrans005">SFR_WORDTRANS   </DD_TABLE_ALIAS>
@@ -143,27 +153,32 @@
 			<DD_ATTR_CTLH id="ddm_table_cols.sfr_wordtrans005">0</DD_ATTR_CTLH>
 			<DD_ATTR_MLAN id="ddm_table_cols.sfr_wordtrans005">N</DD_ATTR_MLAN>
 			<DD_ATTR_TIND id="ddm_table_cols.sfr_wordtrans005">5</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfr_wordtrans005">CUSTOMER_ID</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfr_wordtrans006">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfr_wordtrans006">SFR_WORDTRANS   </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfr_wordtrans006">006</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.sfr_wordtrans006">RPT_BILL_NO     </DD_DATA_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.sfr_wordtrans006">BILL_NO         </DD_DATA_NAME>
 			<DD_DVAR_NAME id="ddm_table_cols.sfr_wordtrans006">BILL_NO         </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.sfr_wordtrans006">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfr_wordtrans006">2</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfr_wordtrans006">N</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.sfr_wordtrans006">0A</DD_DELIM_CHAR>
+			<DD_DELIM_CHAR id="ddm_table_cols.sfr_wordtrans006">[+DEFAULT_DELIM_CHAR]</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.sfr_wordtrans006">20080228</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.sfr_wordtrans006">20080228</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.sfr_wordtrans006">20120521</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.sfr_wordtrans006">SFR_WORDTRANS.REPORT_SEQ</DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.sfr_wordtrans006">B</DD_ATTR_ABLV>
+			<DD_ATTR_CPGM id="ddm_table_cols.sfr_wordtrans006">C:/Apps/aon/;/apps/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_COLW id="ddm_table_cols.sfr_wordtrans006">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.sfr_wordtrans006">0</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.sfr_wordtrans006">0</DD_ATTR_CTLY>
 			<DD_ATTR_CTLW id="ddm_table_cols.sfr_wordtrans006">160</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_cols.sfr_wordtrans006">0</DD_ATTR_CTLH>
 			<DD_ATTR_LABL id="ddm_table_cols.sfr_wordtrans006">Bill Number</DD_ATTR_LABL>
 			<DD_ATTR_MLAN id="ddm_table_cols.sfr_wordtrans006">N</DD_ATTR_MLAN>
+			<DD_ATTR_MAXL id="ddm_table_cols.sfr_wordtrans006">0</DD_ATTR_MAXL>
 			<DD_ATTR_TIND id="ddm_table_cols.sfr_wordtrans006">6</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfr_wordtrans006">BILL_NO</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfr_wordtrans007">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfr_wordtrans007">SFR_WORDTRANS   </DD_TABLE_ALIAS>
@@ -184,6 +199,7 @@
 			<DD_ATTR_LABL id="ddm_table_cols.sfr_wordtrans007">Open/Closed/Both</DD_ATTR_LABL>
 			<DD_ATTR_MLAN id="ddm_table_cols.sfr_wordtrans007">N</DD_ATTR_MLAN>
 			<DD_ATTR_TIND id="ddm_table_cols.sfr_wordtrans007">7</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfr_wordtrans007">REPORT_SEQ</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfr_wordtrans008">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfr_wordtrans008">SFR_WORDTRANS   </DD_TABLE_ALIAS>
@@ -203,6 +219,7 @@
 			<DD_ATTR_LABL id="ddm_table_cols.sfr_wordtrans008">Starting Date</DD_ATTR_LABL>
 			<DD_ATTR_MLAN id="ddm_table_cols.sfr_wordtrans008">N</DD_ATTR_MLAN>
 			<DD_ATTR_TIND id="ddm_table_cols.sfr_wordtrans008">8</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfr_wordtrans008">TRANS_DATE_START</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfr_wordtrans009">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfr_wordtrans009">SFR_WORDTRANS   </DD_TABLE_ALIAS>
@@ -222,6 +239,7 @@
 			<DD_ATTR_LABL id="ddm_table_cols.sfr_wordtrans009">Ending Date</DD_ATTR_LABL>
 			<DD_ATTR_MLAN id="ddm_table_cols.sfr_wordtrans009">N</DD_ATTR_MLAN>
 			<DD_ATTR_TIND id="ddm_table_cols.sfr_wordtrans009">9</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfr_wordtrans009">TRANS_DATE_END</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfr_wordtrans010">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfr_wordtrans010">SFR_WORDTRANS   </DD_TABLE_ALIAS>
@@ -242,6 +260,7 @@
 			<DD_ATTR_LABL id="ddm_table_cols.sfr_wordtrans010">Materials</DD_ATTR_LABL>
 			<DD_ATTR_MLAN id="ddm_table_cols.sfr_wordtrans010">N</DD_ATTR_MLAN>
 			<DD_ATTR_TIND id="ddm_table_cols.sfr_wordtrans010">10</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfr_wordtrans010">OPEN</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfr_wordtrans011">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfr_wordtrans011">SFR_WORDTRANS   </DD_TABLE_ALIAS>
@@ -262,6 +281,7 @@
 			<DD_ATTR_LABL id="ddm_table_cols.sfr_wordtrans011">Operations</DD_ATTR_LABL>
 			<DD_ATTR_MLAN id="ddm_table_cols.sfr_wordtrans011">N</DD_ATTR_MLAN>
 			<DD_ATTR_TIND id="ddm_table_cols.sfr_wordtrans011">11</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfr_wordtrans011">CLOSED</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfr_wordtrans012">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfr_wordtrans012">SFR_WORDTRANS   </DD_TABLE_ALIAS>
@@ -282,6 +302,15 @@
 			<DD_ATTR_LABL id="ddm_table_cols.sfr_wordtrans012">SubContractors</DD_ATTR_LABL>
 			<DD_ATTR_MLAN id="ddm_table_cols.sfr_wordtrans012">N</DD_ATTR_MLAN>
 			<DD_ATTR_TIND id="ddm_table_cols.sfr_wordtrans012">12</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfr_wordtrans012">PLANNED</SQL_COLUMN_NAME>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_column_cpro">
+		<ID id="ddm_column_cpro">DDM_COLUMN_CPRO</ID>
+		<RECORD id="ddm_column_cpro.sfr_wordtransbill_noaval">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.sfr_wordtransbill_noaval">SFR_WORDTRANS   </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.sfr_wordtransbill_noaval">BILL_NO         </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.sfr_wordtransbill_noaval">AVAL</DD_ATTR_CPRO>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_ldat">
@@ -324,16 +353,6 @@
 	</ALIAS>
 	<ALIAS id="ddm_column_opts">
 		<ID id="ddm_column_opts">DDM_COLUMN_OPTS</ID>
-		<RECORD id="ddm_column_opts.sfr_wordtransreport_seq1">
-			<DD_TABLE_ALIAS id="ddm_column_opts.sfr_wordtransreport_seq1">SFR_WORDTRANS   </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_opts.sfr_wordtransreport_seq1">REPORT_SEQ      </DD_DVAR_NAME>
-			<DD_ATTR_OPTS id="ddm_column_opts.sfr_wordtransreport_seq1">1</DD_ATTR_OPTS>
-		</RECORD>
-		<RECORD id="ddm_column_opts.sfr_wordtransreport_seq2">
-			<DD_TABLE_ALIAS id="ddm_column_opts.sfr_wordtransreport_seq2">SFR_WORDTRANS   </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_opts.sfr_wordtransreport_seq2">REPORT_SEQ      </DD_DVAR_NAME>
-			<DD_ATTR_OPTS id="ddm_column_opts.sfr_wordtransreport_seq2">2</DD_ATTR_OPTS>
-		</RECORD>
 		<RECORD id="ddm_column_opts.sfr_wordtranswarehouse_id1">
 			<DD_TABLE_ALIAS id="ddm_column_opts.sfr_wordtranswarehouse_id1">SFR_WORDTRANS   </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_opts.sfr_wordtranswarehouse_id1">WAREHOUSE_ID    </DD_DVAR_NAME>
@@ -559,31 +578,32 @@
 			<DD_ATTR_PADC id="ddm_elements.customer_id">30</DD_ATTR_PADC>
 			<DD_ATTR_PADJ id="ddm_elements.customer_id">R</DD_ATTR_PADJ>
 		</RECORD>
-		<RECORD id="ddm_elements.rpt_bill_no">
-			<DD_DATA_NAME id="ddm_elements.rpt_bill_no">RPT_BILL_NO     </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.rpt_bill_no">Bill of Materials Number</DD_DESCRIPTION>
-			<DD_DATA_TYPE id="ddm_elements.rpt_bill_no">C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.rpt_bill_no">20</DD_DATA_LENGTH>
-			<ASC_COMP_ID id="ddm_elements.rpt_bill_no">01007514</ASC_COMP_ID>
-			<ASC_PROD_ID id="ddm_elements.rpt_bill_no">BM </ASC_PROD_ID>
-			<DD_CREATE_DATE id="ddm_elements.rpt_bill_no">20080312</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.rpt_bill_no">20110913</DD_LSTREV_DATE>
-			<DD_AUTO_COMP id="ddm_elements.rpt_bill_no">N</DD_AUTO_COMP>
-			<DD_ATTR_CTLW id="ddm_elements.rpt_bill_no">0</DD_ATTR_CTLW>
-			<DD_ATTR_CTLH id="ddm_elements.rpt_bill_no">0</DD_ATTR_CTLH>
-			<DD_ATTR_CTYP id="ddm_elements.rpt_bill_no">E</DD_ATTR_CTYP>
-			<DD_ATTR_DCOM id="ddm_elements.rpt_bill_no">            </DD_ATTR_DCOM>
-			<DD_ATTR_DEXP id="ddm_elements.rpt_bill_no">            </DD_ATTR_DEXP>
-			<DD_ATTR_DKEY id="ddm_elements.rpt_bill_no">[+FIRM_ID]+@</DD_ATTR_DKEY>
-			<DD_ATTR_DTAB id="ddm_elements.rpt_bill_no">BMM_BILLMAST    </DD_ATTR_DTAB>
-			<DD_ATTR_LABL id="ddm_elements.rpt_bill_no">Bill of Materials Number</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_elements.rpt_bill_no">Bill of Mats No</DD_ATTR_LABS>
-			<DD_ATTR_MAXL id="ddm_elements.rpt_bill_no">0</DD_ATTR_MAXL>
-			<DD_ATTR_MAXR id="ddm_elements.rpt_bill_no">0</DD_ATTR_MAXR>
-			<DD_ATTR_MINL id="ddm_elements.rpt_bill_no">0</DD_ATTR_MINL>
-			<DD_ATTR_PADC id="ddm_elements.rpt_bill_no">20</DD_ATTR_PADC>
-			<DD_ATTR_PADJ id="ddm_elements.rpt_bill_no">L</DD_ATTR_PADJ>
-			<DD_ATTR_PREC id="ddm_elements.rpt_bill_no">0</DD_ATTR_PREC>
+		<RECORD id="ddm_elements.bill_no">
+			<DD_DATA_NAME id="ddm_elements.bill_no">BILL_NO         </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.bill_no">Bill of Materials Number</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.bill_no">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.bill_no">20</DD_DATA_LENGTH>
+			<DD_MASK_TYPE id="ddm_elements.bill_no"> </DD_MASK_TYPE>
+			<ASC_COMP_ID id="ddm_elements.bill_no">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.bill_no">AD </ASC_PROD_ID>
+			<DD_CREATE_DATE id="ddm_elements.bill_no">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.bill_no">20080215</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW id="ddm_elements.bill_no">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.bill_no">0</DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.bill_no">E</DD_ATTR_CTYP>
+			<DD_ATTR_DCOL id="ddm_elements.bill_no">ITEM_DESC</DD_ATTR_DCOL>
+			<DD_ATTR_DCOM id="ddm_elements.bill_no">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.bill_no">            </DD_ATTR_DEXP>
+			<DD_ATTR_DKEY id="ddm_elements.bill_no">[+FIRM_ID]+@</DD_ATTR_DKEY>
+			<DD_ATTR_DTAB id="ddm_elements.bill_no">IVM_ITEMMAST    </DD_ATTR_DTAB>
+			<DD_ATTR_LABL id="ddm_elements.bill_no">Bill of Materials Number</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.bill_no">Bill of Mats No</DD_ATTR_LABS>
+			<DD_ATTR_MAXL id="ddm_elements.bill_no">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.bill_no">0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL id="ddm_elements.bill_no">0</DD_ATTR_MINL>
+			<DD_ATTR_PADC id="ddm_elements.bill_no">20</DD_ATTR_PADC>
+			<DD_ATTR_PADJ id="ddm_elements.bill_no">L</DD_ATTR_PADJ>
+			<DD_ATTR_PREC id="ddm_elements.bill_no">0</DD_ATTR_PREC>
 		</RECORD>
 		<RECORD id="ddm_elements.trans_date_start">
 			<DD_DATA_NAME id="ddm_elements.trans_date_start">TRANS_DATE_START</DD_DATA_NAME>

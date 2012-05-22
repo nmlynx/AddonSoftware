@@ -1,3 +1,25 @@
+[[SFR_WORDTRANS.BILL_NO.AVAL]]
+rem --- Validate against BOM_BILLMAST
+
+	bmm_billmast=fnget_dev("BMM_BILLMAST")
+	found=0
+	bill$=callpoint!.getUserInput()
+	while 1
+		find (bmm_billmast,key=firm_id$+bill$,dom=*break)
+		found=1
+		break
+	wend
+
+	if found=0 and cvs(bill$,3)<>""
+		msg_id$="INPUT_ERR_DATA"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
+[[SFR_WORDTRANS.BFMC]]
+rem --- Set Custom Query for BOM Item Number
+
+	callpoint!.setTableColumnAttribute("SFR_WORDTRANS.BILL_NO_1", "IDEF", "BOM_LOOKUP")
+	callpoint!.setTableColumnAttribute("SFR_WORDTRANS.BILL_NO_2", "IDEF", "BOM_LOOKUP")
 [[SFR_WORDTRANS.<CUSTOM>]]
 #include std_missing_params.src
 [[SFR_WORDTRANS.BSHO]]
@@ -45,3 +67,10 @@ endif
 
 seq_list$=seq_list$+bill_no$+cust_no$
 callpoint!.setTableColumnAttribute("SFR_WORDTRANS.REPORT_SEQ","LDAT",seq_list$)
+
+	if bm$="Y"
+		num_files=1
+		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+		open_tables$[1]="BMM_BILLMAST",open_opts$[1]="OTA"
+		gosub open_tables
+	endif
