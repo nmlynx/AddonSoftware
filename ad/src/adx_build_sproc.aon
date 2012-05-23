@@ -3,9 +3,26 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- prototype for table-driven sproc definition
 
 rem --- for now, this program has hard-coded logic to create the following SPROCs:
-rem --- VENDOR_INVOICES
-rem --- VENDOR_INVOICE_DET
 rem --- POCALENDAR
+rem --- SALES_CUSTOMER
+rem --- SALES_CUST_TYPE
+rem --- ALES_CUST_TYPE_CUST
+rem --- SALES_INVOICE_DETAILS
+rem --- INVOICE_DETAIL
+rem --- INVOICE_HEADER
+rem --- PICKLST_DETAIL
+rem --- PICKLST_HEADER
+rem --- BOMCOSTING
+rem --- SFCALENDAR
+rem --- SFHARDCOPY
+rem --- SFHARDCOPYOPSTD
+rem --- SFHARDCOPYMATSTD
+rem --- SFHARDCOPYSUBSTD
+rem --- SFHARDCOPYCOSTSUM
+rem --- SFHARDCOPYTRANS
+
+rem --- VENDOR_INVOICES?
+rem --- VENDOR_INVOICE_DET?
 
 rem --- 4/2012 Added VIEWs to the hard-coded logic herein
 rem --- vw_sfx_wotranxr  (replaces sfm-07/sfx_wotranxr xref of WO transactions)
@@ -83,44 +100,84 @@ rem -- main loop (this will eventually be table-driven)
 
 rem --- first drop all std Addon SPROCs
 
-    sqlprep$="DROP PROCEDURE POCALENDAR "
+	sql_action$="DROP PROCEDURE"
+	abort_on_exec_err=0; rem OK if DROP fails to EXEC, but not OK if CREATE fails or if PREP fails
+	
+	sproc_vw_name$="POCALENDAR"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
-    sqlprep$="DROP PROCEDURE SALES_CUSTOMER "
+	
+	sproc_vw_name$="SALES_CUSTOMER"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
-    sqlprep$="DROP PROCEDURE SALES_CUST_TYPE "
+	
+	sproc_vw_name$="SALES_CUST_TYPE"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
-    sqlprep$="DROP PROCEDURE SALES_CUST_TYPE_CUST "
+	
+	sproc_vw_name$="SALES_CUST_TYPE_CUST"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
-    sqlprep$="DROP PROCEDURE SALES_INVOICE_DETAILS "
+	
+	sproc_vw_name$="SALES_INVOICE_DETAILS"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
-    sqlprep$="DROP PROCEDURE INVOICE_DETAIL "
+	
+	sproc_vw_name$="INVOICE_DETAIL"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
-    sqlprep$="DROP PROCEDURE INVOICE_HEADER "
+	
+	sproc_vw_name$="INVOICE_HEADER"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
-    sqlprep$="DROP PROCEDURE PICKLIST_DETAIL "
+	
+	sproc_vw_name$="PICKLST_DETAIL"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
-    sqlprep$="DROP PROCEDURE PICKLIST_HEADER "
+
+	sproc_vw_name$="PICKLST_HEADER"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
-	sqlprep$="DROP PROCEDURE BOMCOSTING "
+
+	sproc_vw_name$="BOMCOSTING"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
-	sqlprep$="DROP PROCEDURE SFCALENDAR "
+
+	sproc_vw_name$="SFCALENDAR"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
-	sqlprep$="DROP PROCEDURE SFHARDCOPY "
+
+	sproc_vw_name$="SFHARDCOPY"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
-	sqlprep$="DROP PROCEDURE SFHARDCOPYOPSTD "
+
+	sproc_vw_name$="SFHARDCOPYOPSTD"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
-	sqlprep$="DROP PROCEDURE SFHARDCOPYMATSTD "
+
+	sproc_vw_name$="SFHARDCOPYMATSTD"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
-	sqlprep$="DROP PROCEDURE SFHARDCOPYSUBSTD "
+
+	sproc_vw_name$="SFHARDCOPYSUBSTD"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
-	sqlprep$="DROP PROCEDURE SFHARDCOPYCOSTSUM "
+
+	sproc_vw_name$="SFHARDCOPYCOSTSUM"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
-	sqlprep$="DROP PROCEDURE SFHARDCOPYTRANS "
+
+	sproc_vw_name$="SFHARDCOPYTRANS"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def	
 	
-rem --- now add them back (i.e., drop, then add, in case anything has changed)    
- 
-    sqlprep$="CREATE PROCEDURE POCALENDAR "
+rem --- now add them back (i.e., drop, then add, in case anything has changed) 
+   
+	sql_action$="CREATE PROCEDURE"
+	abort_on_exec_err=1; rem OK if DROP fails to EXEC, but not OK if CREATE fails or if PREP fails
+	
+    sproc_vw_name$="POCALENDAR"
+	sqlprep$="CREATE PROCEDURE POCALENDAR "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, BEGINNING_YEAR CHAR(4) IN, BEGINNING_MONTH CHAR(2) IN, "
     sqlprep$=sqlprep$+"ENDING_YEAR CHAR(4) IN, ENDING_MONTH CHAR(2) IN, BARISTA_WD VARCHAR(50) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"POCALENDAR.prc' '"+barista_cfg_path$+"barista.cfg' "
@@ -129,7 +186,8 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
-    sqlprep$="CREATE PROCEDURE SALES_CUSTOMER "
+    sproc_vw_name$="SALES_CUSTOMER"
+	sqlprep$="CREATE PROCEDURE SALES_CUSTOMER "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUSTOMER_NBR CHAR(6) IN, MONTH CHAR(2) IN, "
     sqlprep$=sqlprep$+"YEAR CHAR(4) IN, BARISTA_WD VARCHAR(50) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SALES_CUSTOMER.prc' '"+barista_cfg_path$+"barista.cfg' "
@@ -138,7 +196,8 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
     
-    sqlprep$="CREATE PROCEDURE SALES_CUST_TYPE "
+    sproc_vw_name$="SALES_CUST_TYPE"
+	sqlprep$="CREATE PROCEDURE SALES_CUST_TYPE "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, MONTH CHAR(2) IN, YEAR CHAR(4) IN, BARISTA_WD VARCHAR(50) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SALES_CUST_TYPE.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
@@ -146,7 +205,8 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
     
-    sqlprep$="CREATE PROCEDURE SALES_CUST_TYPE_CUST "
+    sproc_vw_name$="SALES_CUST_TYPE_CUST"
+	sqlprep$="CREATE PROCEDURE SALES_CUST_TYPE_CUST "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUST_TYPE CHAR(3) IN, MONTH CHAR(2) IN, YEAR CHAR(4) IN, "
     sqlprep$=sqlprep$+"CUST_ID_MASK CHAR(10) IN, CUST_ID_LEN CHAR(3) IN, BARISTA_WD VARCHAR(50) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SALES_CUST_TYPE_CUST.prc' '"+barista_cfg_path$+"barista.cfg' "
@@ -155,7 +215,8 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
-    sqlprep$="CREATE PROCEDURE SALES_INVOICE_DETAILS "
+    sproc_vw_name$="SALES_INVOICE_DETAILS"
+	sqlprep$="CREATE PROCEDURE SALES_INVOICE_DETAILS "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUSTOMER_NBR CHAR(6) IN, AR_INV_NBR CHAR(7) IN, BARISTA_WD VARCHAR(50) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SALES_INVOICE_DETAILS.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
@@ -163,7 +224,8 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
-    sqlprep$="CREATE PROCEDURE INVOICE_DETAIL "
+    sproc_vw_name$="INVOICE_DETAIL"
+	sqlprep$="CREATE PROCEDURE INVOICE_DETAIL "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN )"
     sqlprep$=sqlprep$+"'"+sproc_path$+"INVOICE_DETAIL.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
@@ -171,7 +233,8 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
-    sqlprep$="CREATE PROCEDURE INVOICE_HEADER "
+    sproc_vw_name$="INVOICE_HEADER"
+	sqlprep$="CREATE PROCEDURE INVOICE_HEADER "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN )"
     sqlprep$=sqlprep$+"'"+sproc_path$+"INVOICE_HEADER.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
@@ -179,8 +242,8 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
-
-    sqlprep$="CREATE PROCEDURE PICKLST_DETAIL "
+    sproc_vw_name$="PICKLST_DETAIL"
+	sqlprep$="CREATE PROCEDURE PICKLST_DETAIL "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN )"
     sqlprep$=sqlprep$+"'"+sproc_path$+"PICKLST_DETAIL.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
@@ -188,7 +251,8 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
-    sqlprep$="CREATE PROCEDURE PICKLST_HEADER "
+    sproc_vw_name$="PICKLST_HEADER"
+	sqlprep$="CREATE PROCEDURE PICKLST_HEADER "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN )"
     sqlprep$=sqlprep$+"'"+sproc_path$+"PICKLST_HEADER.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
@@ -196,7 +260,8 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
-    sqlprep$="CREATE PROCEDURE BOMCOSTING "
+    sproc_vw_name$="BOMCOSTING"
+	sqlprep$="CREATE PROCEDURE BOMCOSTING "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, BILL_NO_1 CHAR(20) IN, BILL_NO_2 CHAR(20) IN, BARISTA_WD VARCHAR(50) IN )"
     sqlprep$=sqlprep$+"'"+sproc_path$+"BOMCOSTING.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
@@ -204,7 +269,8 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 	
-    sqlprep$="CREATE PROCEDURE SFCALENDAR "
+    sproc_vw_name$="SFCALENDAR"
+	sqlprep$="CREATE PROCEDURE SFCALENDAR "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, OP_CODE CHAR(3) IN, BEGINNING_YEAR CHAR(4) IN, BEGINNING_MONTH CHAR(2) IN, "
     sqlprep$=sqlprep$+"ENDING_YEAR CHAR(4) IN, ENDING_MONTH CHAR(2) IN, BARISTA_WD VARCHAR(50) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SFCALENDAR.prc' '"+barista_cfg_path$+"barista.cfg' "
@@ -213,7 +279,8 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 	
-    sqlprep$="CREATE PROCEDURE SFHARDCOPY "
+    sproc_vw_name$="SFHARDCOPY"
+	sqlprep$="CREATE PROCEDURE SFHARDCOPY "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO_1 CHAR(7) IN, WO_NO_2 CHAR(7) IN, "
 	sqlprep$=sqlprep$+"BARISTA_WD VARCHAR(1) IN, REPORT_SEQ CHAR(1) IN, WOSTATUS CHAR(4) IN, BILL_NO_1 CHAR(20) IN, "
 	sqlprep$=sqlprep$+"BILL_NO_2 CHAR(20) IN, WAREHOUSE_ID CHAR(2) IN, CUSTOMER_ID_1 CHAR(6) IN, CUSTOMER_ID_2 CHAR(6) IN, "
@@ -224,7 +291,8 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
-    sqlprep$="CREATE PROCEDURE SFHARDCOPYOPSTD "
+    sproc_vw_name$="SFHARDCOPYOPSTD"
+	sqlprep$="CREATE PROCEDURE SFHARDCOPYOPSTD "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, MASKS VARCHAR(1) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPYOPSTD.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
@@ -232,6 +300,7 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
+	sproc_vw_name$="SFHARDCOPYMATSTD"
 	sqlprep$="CREATE PROCEDURE SFHARDCOPYMATSTD "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, MASKS VARCHAR(1) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPYMATSTD.prc' '"+barista_cfg_path$+"barista.cfg' "
@@ -240,6 +309,7 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
+	sproc_vw_name$="SFHARDCOPYSUBSTD"
 	sqlprep$="CREATE PROCEDURE SFHARDCOPYSUBSTD "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, MASKS VARCHAR(1) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPYSUBSTD.prc' '"+barista_cfg_path$+"barista.cfg' "
@@ -248,6 +318,7 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
+	sproc_vw_name$="SFHARDCOPYCOSTSUM"
 	sqlprep$="CREATE PROCEDURE SFHARDCOPYCOSTSUM "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, "
 	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, PROD_QTY CHAR(10) IN) "
@@ -257,6 +328,7 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
+	sproc_vw_name$="SFHARDCOPYTRANS"
 	sqlprep$="CREATE PROCEDURE SFHARDCOPYTRANS "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, "
 	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, TRANS_DATEFROM CHAR(10) IN, TRANS_DATETHRU CHAR(10) IN, TRANSTYPE VARCHAR(3) IN) "
@@ -270,16 +342,26 @@ rem --- Done with SPROCs. Now do VIEWs
 
 rem --- first drop all std Addon VIEWs
 
-    sqlprep$="DROP VIEW vw_sfx_wotranxr "
+	sql_action$="DROP VIEW"
+	abort_on_exec_err=0; rem OK if DROP fails to EXEC, but not OK if CREATE fails or if PREP fails
+	
+	sproc_vw_name$="vw_sfx_wotranxr"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
 
-	sqlprep$="DROP VIEW vw_wos_with_tran "
-	gosub create_sproc_def
+	sproc_vw_name$="vw_wos_with_tran"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
 
 rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)     
-
+	
+	sql_action$="CREATE VIEW"
+	abort_on_exec_err=1; rem OK if DROP fails to EXEC, but not OK if CREATE fails or if PREP fails
+	
 	rem --  Replacement for sfm-07/sfx_wotranxr SF transaction xref
-    sqlprep$="CREATE VIEW VW_SFX_WOTRANXR AS "
+	
+    sproc_vw_name$="vw_sfx_wotranxr"
+	sqlprep$="CREATE VIEW VW_SFX_WOTRANXR AS "
     sqlprep$=sqlprep$+"SELECT oMats.firm_id"+$0a$
     sqlprep$=sqlprep$+"     , oMats.wo_location"+$0a$
     sqlprep$=sqlprep$+"     , oMats.wo_no"+$0a$
@@ -343,7 +425,8 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     gosub create_sproc_def	
 
 	rem --  JOIN sfe-01/sfe_womastr with transaction xref view
-    sqlprep$="CREATE VIEW VW_WOS_WITH_TRAN AS "
+    sproc_vw_name$="vw_wos_with_tran"
+	sqlprep$="CREATE VIEW VW_WOS_WITH_TRAN AS "
 	sqlprep$=sqlprep$+"SELECT mast.firm_id"+$0a$
 	sqlprep$=sqlprep$+"     , mast.wo_location"+$0a$
     sqlprep$=sqlprep$+"     , mast.wo_no"+$0a$
@@ -406,12 +489,45 @@ update_status:rem --- Update AutoLaunch Status
 goto std_exit
 
 create_sproc_def:rem --- Create SPROC definitions
-    SQLPREP(chan,err=*next) sqlprep$; rem Err branch added to temporarily resolve error in CREATE VIEW when "Full Featured" option not checked in EM 4/9/12 cj
-    SQLEXEC(chan,err=*next)
+
+	errored_sqlverb$=""
+	prep_err=0
+	exec_err=0
+	
+    SQLPREP(chan,err=err_sqlprep) sqlprep$
+    SQLEXEC(chan,err=err_sqlexec)
     curr_rec=curr_rec+1
     if mod(curr_rec,milestone)=0
 		progress!.setValue("+process_task",task_val$+"^U^"+str(curr_rec)+"^")
     endif
+	
+	rem Conditionally end processing if PREP or EXEC have errors
+	if errored_sqlverb$<>""	
+		err_sqlprep:	
+			prep_err=1
+			errored_sqlverb$="SQLPREP()"
+
+		err_sqlexec:
+			if errored_sqlverb$=""
+				exec_err=1
+				if abort_on_exec_err then errored_sqlverb$="SQLEXEC()"
+			endif
+			
+		if prep_err OR (exec_err AND abort_on_exec_err)		   
+			error_text$="Unknown error message"
+			error_text$=SQLERR(chan,err=*next)
+			
+			msg_id$="AD_SQL_CREATE_ERROR"
+			dim msg_tokens$[4]
+				msg_tokens$[1]=errored_sqlverb$
+				msg_tokens$[2]=sql_action$
+				msg_tokens$[3]=sproc_vw_name$
+				msg_tokens$[4]=error_text$			
+			gosub disp_message
+			goto std_exit
+		endif
+	endif
+
 return
 
 open_tables:rem -----<Open Tables
@@ -472,9 +588,11 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    if pos("SPROC_UPDT"=sysinfo.menu_option_id$)<>0
-        msg_id$="AD_SPROC_UPDT"
-        gosub disp_message;rem only display message if running stand-alone
+    if errored_sqlverb$="" 
+		if pos("SPROC_UPDT"=sysinfo.menu_option_id$)<>0
+			msg_id$="AD_SPROC_UPDT"
+			gosub disp_message;rem only display message if running stand-alone
+		endif
     endif
     
     progress!.setValue("+process_task",task_val$+"^D^")
