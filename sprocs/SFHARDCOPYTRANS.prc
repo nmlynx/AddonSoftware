@@ -77,19 +77,18 @@ rem ===========> ESCAPE    Figure out what masks are needed, and add them here a
 
 rem --- Open files with adc (Change from adc to bac once Barista is enhanced)
 
-    files=11,begfile=1,endfile=files
+    files=10,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ivm-01",    ids$[1]="IVM_ITEMMAST"
-	files$[2]="arm-01",    ids$[2]="ARM_CUSTMAST"
-	files$[3]="sfs_params",ids$[3]="SFS_PARAMS"
-	files$[4]="ivs_params",ids$[4]="IVS_PARAMS"	
-	files$[5]="gls_params",ids$[5]="IVS_PARAMS"		
-    files$[6]="sft-01",    ids$[6]="SFT_OPNOPRTR"
-	files$[7]="sft-03",    ids$[7]="SFT_CLSOPRTR"
-	files$[8]="sft-21",    ids$[8]="SFT_OPNMATTR"
-    files$[9]="sft-23",    ids$[9]="SFT_CLSMATTR"
-	files$[10]="sft-31",    ids$[10]="SFT_OPNSUBTR"
-	files$[11]="sft-33",   ids$[11]="SFT_CLSSUBTR"
+	files$[2]="sfs_params",ids$[2]="SFS_PARAMS"
+	files$[3]="ivs_params",ids$[3]="IVS_PARAMS"	
+	files$[4]="gls_params",ids$[4]="IVS_PARAMS"		
+    files$[5]="sft-01",    ids$[5]="SFT_OPNOPRTR"
+	files$[6]="sft-03",    ids$[6]="SFT_CLSOPRTR"
+	files$[7]="sft-21",    ids$[7]="SFT_OPNMATTR"
+    files$[8]="sft-23",    ids$[8]="SFT_CLSMATTR"
+	files$[9]="sft-31",    ids$[9]="SFT_OPNSUBTR"
+	files$[10]="sft-33",   ids$[10]="SFT_CLSSUBTR"
 
 	
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
@@ -97,48 +96,45 @@ rem --- Open files with adc (Change from adc to bac once Barista is enhanced)
     if status goto std_exit
 	
     ivm_itemmast_dev=channels[1]
-	arm_custmast=channels[2]
-	sfs_params=channels[3]
-	ivs_params=channels[4]	
-	gls_params=channels[5]
+	sfs_params=channels[2]
+	ivs_params=channels[3]	
+	gls_params=channels[4]
 	
-    sft01a_dev=channels[6]
-	sft03a_dev=channels[7]
-	sft21a_dev=channels[8]
-    sft23a_dev=channels[9]
-	sft31a_dev=channels[10]
-	sft33a_dev=channels[11]
+    sft01a_dev=channels[5]
+	sft03a_dev=channels[6]
+	sft21a_dev=channels[7]
+    sft23a_dev=channels[8]
+	sft31a_dev=channels[9]
+	sft33a_dev=channels[10]
 
 rem --- Dimension string templates
 
 	dim ivm_itemmast$:templates$[1]
-	dim arm_custmast$:templates$[2]
-	dim sfs_params$:templates$[3]
-	dim ivs_params$:templates$[4]
-	dim gls_params$:templates$[5]	
-    sft01_tpls$=templates$[6]; dim sft01a$:sft01_tpls$; rem Save template for conditional use
-	sft03_tpls$=templates$[7]; dim sft03a$:sft03_tpls$; rem Save template for conditional use
-    sft21_tpls$=templates$[8]; dim sft21a$:sft21_tpls$; rem Save template for conditional use
-    sft23_tpls$=templates$[9]; dim sft23a$:sft23_tpls$; rem Save template for conditional use
-    sft31_tpls$=templates$[10]; dim sft31a$:sft31_tpls$; rem Save template for conditional use
-    sft33_tpls$=templates$[11]; dim sft33a$:sft33_tpls$; rem Save template for conditional use
+	dim sfs_params$:templates$[2]
+	dim ivs_params$:templates$[3]
+	dim gls_params$:templates$[4]	
+    sft01_tpls$=templates$[5]; dim sft01a$:sft01_tpls$; rem Save template for conditional use
+	sft03_tpls$=templates$[6]; dim sft03a$:sft03_tpls$; rem Save template for conditional use
+    sft21_tpls$=templates$[7]; dim sft21a$:sft21_tpls$; rem Save template for conditional use
+    sft23_tpls$=templates$[8]; dim sft23a$:sft23_tpls$; rem Save template for conditional use
+    sft31_tpls$=templates$[9]; dim sft31a$:sft31_tpls$; rem Save template for conditional use
+    sft33_tpls$=templates$[10]; dim sft33a$:sft33_tpls$; rem Save template for conditional use
 	
 goto no_bac_open
 rem --- Open Files via bac    (Change from adc to bac once Barista is enhanced)
-    num_files = 11
+    num_files = 10
     dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
 
 	open_tables$[1]="IVM_ITEMMAST", open_opts$[1] = "OTA"
-	open_tables$[2]="ARM_CUSTMAST", open_opts$[2] = "OTA"
-	open_tables$[3]="SFS_PARAMS",   open_opts$[3] = "OTA"
-	open_tables$[4]="IVS_PARAMS",   open_opts$[4] = "OTA"
-	open_tables$[5]="GLS_PARAMS",   open_opts$[5] = "OTA"	
-	open_tables$[6]="SFT_OPNOPRTR", open_opts$[6] = "OTA"; rem sft-01
-	open_tables$[7]="SFT_CLSOPRTR", open_opts$[7] = "OTA"; rem sft-03
-	open_tables$[8]="SFT_OPNMATTR", open_opts$[8] = "OTA"; rem sft-21
-	open_tables$[9]="SFT_CLSMATTR", open_opts$[9] = "OTA"; rem sft-23
-	open_tables$[10]="SFT_OPNSUBTR", open_opts$[10] = "OTA"; rem sft-31
-	open_tables$[11]="SFT_CLSSUBTR",open_opts$[11] = "OTA"; rem sft-33	
+	open_tables$[2]="SFS_PARAMS",   open_opts$[2] = "OTA"
+	open_tables$[3]="IVS_PARAMS",   open_opts$[3] = "OTA"
+	open_tables$[4]="GLS_PARAMS",   open_opts$[4] = "OTA"	
+	open_tables$[5]="SFT_OPNOPRTR", open_opts$[5] = "OTA"; rem sft-01
+	open_tables$[6]="SFT_CLSOPRTR", open_opts$[6] = "OTA"; rem sft-03
+	open_tables$[7]="SFT_OPNMATTR", open_opts$[7] = "OTA"; rem sft-21
+	open_tables$[8]="SFT_CLSMATTR", open_opts$[8] = "OTA"; rem sft-23
+	open_tables$[9]="SFT_OPNSUBTR", open_opts$[9] = "OTA"; rem sft-31
+	open_tables$[10]="SFT_CLSSUBTR",open_opts$[10] = "OTA"; rem sft-33	
 	
 call sypdir$+"bac_open_tables.bbj",
 :       open_beg,
@@ -152,36 +148,34 @@ call sypdir$+"bac_open_tables.bbj",
 :		open_status$
 
 	ivm_itemmast_dev  = num(open_chans$[1])
-	arm_custmast = num(open_chans$[2])
-	sfs_params = num(open_chans$[3])
-	ivs_params = num(open_chans$[4])
-	gls_params = num(open_chans$[5])	
+	sfs_params = num(open_chans$[2])
+	ivs_params = num(open_chans$[3])
+	gls_params = num(open_chans$[4])	
 	
-	sft01a_dev = num(open_chans$[6])
-	sft03a_dev = num(open_chans$[7])
-	sft21a_dev = num(open_chans$[8])
-	sft23a_dev = num(open_chans$[9])
-	sft31a_dev = num(open_chans$[10])
-	sft33a_dev = num(open_chans$[11])	
+	sft01a_dev = num(open_chans$[5])
+	sft03a_dev = num(open_chans$[6])
+	sft21a_dev = num(open_chans$[7])
+	sft23a_dev = num(open_chans$[8])
+	sft31a_dev = num(open_chans$[9])
+	sft33a_dev = num(open_chans$[10])	
 	
 	rem --- templates
 	dim ivm_itemmast$:open_tpls$[1]
-	dim arm_custmast$:open_tpls$[2]
-	dim sfs_params$:open_tpls$[3]
-	dim ivs_params$:open_tpls$[4]
-	dim gls_params$:open_tpls$[5]	
+	dim sfs_params$:open_tpls$[2]
+	dim ivs_params$:open_tpls$[3]
+	dim gls_params$:open_tpls$[4]	
 	
-    sft01_tpls$=open_tpls$[6]; dim sft01a$:sft01_tpls$; rem Save template for conditional use
-	sft03_tpls$=open_tpls$[7]; dim sft03a$:sft03_tpls$; rem Save template for conditional use
-    sft21_tpls$=open_tpls$[8]; dim sft21a$:sft21_tpls$; rem Save template for conditional use
-    sft23_tpls$=open_tpls$[9]; dim sft23a$:sft23_tpls$; rem Save template for conditional use
-    sft31_tpls$=open_tpls$[10]; dim sft31a$:sft31_tpls$; rem Save template for conditional use
-    sft33_tpls$=open_tpls$[11]; dim sft33a$:sft33_tpls$; rem Save template for conditional use	
+    sft01_tpls$=open_tpls$[5]; dim sft01a$:sft01_tpls$; rem Save template for conditional use
+	sft03_tpls$=open_tpls$[6]; dim sft03a$:sft03_tpls$; rem Save template for conditional use
+    sft21_tpls$=open_tpls$[7]; dim sft21a$:sft21_tpls$; rem Save template for conditional use
+    sft23_tpls$=open_tpls$[8]; dim sft23a$:sft23_tpls$; rem Save template for conditional use
+    sft31_tpls$=open_tpls$[9]; dim sft31a$:sft31_tpls$; rem Save template for conditional use
+    sft33_tpls$=open_tpls$[10]; dim sft33a$:sft33_tpls$; rem Save template for conditional use	
 	
 no_bac_open:
 
 rem --- Retrieve parameter records
-rem ===========> ESCAPE    Figure out what to do when params are missing
+rem       NOTE: Params are checked to exist in initial overlay
         gls_params_key$=firm_id$+"GL00"
         find record (gls_params,key=gls_params_key$) gls_params$
 	
@@ -198,22 +192,6 @@ rem --- Parameters
         po$=sfs_params.po_interface$
         pr$=sfs_params.pr_interface$
     
-	if op$="Y" then
-        files$[1]="arm-01",     ids$[1]="ARM_CUSTMAST"
-        files$[2]="ars_params", ids$[2]="ARS_PARAMS"
-    endif
-    if po$="Y" then 
-        files$[3]="apm-01",     ids$[3]="APM_VENDMAST"
-        files$[4]="aps_params", ids$[4]="APS_PARAMS"
-    endif
-    if bm$="Y" files$[5]="bmm-08", ids$[5]="BMC_OPCODES"
-    if bm$="N" files$[5]="sfm-02", ids$[5]="SFC_OPRTNCOD"
-    if pr$="Y" then
-        files$[6]="prs_params", ids$[6]="PRS_PARAMS"
-        files$[7]="prm-01",     ids$[7]="PRM_EMPLMAST"
-    endif
-    if pr$="N" files$[7]="sfm-01", ids$[7]="SFM_EMPLMAST"
-	
 rem --- Additional File Opens
 		
 		gosub addl_opens_adc; rem Change from adc to bac once Barista's enhanced
@@ -474,7 +452,7 @@ rem --- Conditionally open L/S files
 		sft12_tpls$=templates$[2]; dim sft12a$:sft12_tpls$; rem Save template for conditional use	
 	endif 
 	
-rem --- Open either BM or OpCodes file and either PR or SF Employees file
+rem --- Open either BM or SF OpCodes file and either PR or SF Employees file
 rem --- Conditionally open apm-01 for vendor name
 	files=3,begfile=1,endfile=files
 	dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
@@ -524,7 +502,7 @@ rem --- Conditionally open L/S files
 		sft12_tpls$=open_tpls$[2]; dim sft12a$:sft12_tpls$; rem Save template for conditional use		
 	endif
 	
-rem --- Open either BM or OpCodes file and either PR or SF Employees file
+rem --- Open either BM or SF OpCodes file and either PR or SF Employees file
 rem --- Conditionally open apm-01 for vendor name
 	num_files=3
 	dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]

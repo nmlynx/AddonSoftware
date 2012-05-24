@@ -83,7 +83,34 @@ rem --- Open/Lock files
     dim ivs_params$:open_tpls$[5]
     dim prs_params$:open_tpls$[6]
 	
-rem --- Assign form input values and WO Entry options to local variables
+rem --- Assign non-jasper O/E form values to local variables
+
+	wo_no$=callpoint!.getDevObject("wo_no"); rem From WO Entry
+	
+rem --- Assign needed jasper params 
+
+	report_type$="E"; rem M = WO Detail Rpt from *M*enu
+					  rem T = *T*raveler
+					  rem E = Detail Rpt from WO *E*ntry
+					  rem C = *C*losed WO Detail Rpt
+	wo_location$=callpoint!.getDevObject("wo_loc"); rem From WO Entry
+ 	
+	report_seq$="W"
+ 	wo_no_1$=wo_no$
+ 	wo_no_2$=wo_no$
+ 	wo_type_1$=""
+ 	wo_type_2$=""
+ 	warehouse_id$=""
+ 	bill_no_1$=""
+ 	bill_no_2$=""
+ 	customer_id_1$=""
+ 	customer_id_2$=""	
+
+ 	wo_open$="Y"
+ 	wo_closed$="Y"
+ 	wo_planned$="Y"
+ 	wo_quoted$="Y"
+ 	wostatus$="OCPQ"
 
 	include_standards$=option!.getOptionData("include_standard"); rem From O/E
 	include_costsummary$=option!.getOptionData("include_costsum"); rem From O/E
@@ -101,33 +128,6 @@ rem --- Assign form input values and WO Entry options to local variables
     if sub$="Y" transtype$=transtype$+"S"
     if opr$="Y" transtype$=transtype$+"O"
 	
-	wo_no$=callpoint!.getDevObject("wo_no"); rem From WO Entry
-	wo_location$=callpoint!.getDevObject("wo_loc"); rem From WO Entry
-	
-rem --- Assign needed jasper params that aren't on O/E form/table
-
-	report_type$="E"; rem M = WO Detail Rpt from *M*enu
-					  rem T = *T*raveler
-					  rem E = Detail Rpt from WO *E*ntry
-					  rem C = *C*losed WO Detail Rpt
-	
- 	report_seq$="W"
- 	wo_no_1$=wo_no$
- 	wo_no_2$=wo_no$
- 	wo_type_1$=""
- 	wo_type_2$=""
- 	warehouse_id$=""
- 	bill_no_1$=""
- 	bill_no_2$=""
- 	customer_id_1$=""
- 	customer_id_2$=""	
-
- 	wo_open$="Y"
- 	wo_closed$="Y"
- 	wo_planned$="Y"
- 	wo_quoted$="Y"
- 	wostatus$="OCPQ"
-
 rem --- Add to params!		
 
 	params!.put("REPORT_TYPE",report_type$); REM "Specifies leadin pgm
@@ -154,6 +154,32 @@ rem --- Add to params!
 	params!.put("TRANS_DATETHRU",trans_datethru$)
     params!.put("TRANSTYPE",transtype$)
 
+rem --- Parameters (confirm params aren't missing, so no error in subsequent pgms)
+
+    bm$=""
+    op$=""
+    po$=""
+    pr$=""
+    find record (sfs_params_dev,key=firm_id$+"SF00",dom=std_missing_params) sfs_params$
+    bm$=sfs_params$.bm_interface$
+    op$=sfs_params$.ar_interface$
+    po$=sfs_params$.po_interface$
+    pr$=sfs_params$.pr_interface$
+
+    find record (gls_params_dev,key=firm_id$+"GL00",dom=std_missing_params) gls_params$
+	
+    if op$="Y" then
+        find record (ars_params_dev,key=firm_id$+"AR00",dom=std_missing_params) ars_params$
+    endif
+    if po$="Y" then
+        find record (aps_params_dev,key=firm_id$+"AP00",dom=std_missing_params) aps_params$
+    endif
+    if pr$="Y" then
+        find record (prs_params_dev,key=firm_id$+"PR00",dom=std_missing_params) prs_params$
+    endif
+
+    find record (ivs_params_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs_params$
+
 rem --- Add masks to params!
 
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",msk$,0,0
@@ -176,55 +202,31 @@ rem --- Add masks to params!
 	masks$=masks$+"sf_units_mask^"+msk$+"|"
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","C","",msk$,0,0
 	masks$=masks$+"sf_cost_mask^"+msk$+"|"	
+
+	if pr$="Y" 
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","PR","I","",msk$,0,0
+		masks$=masks$+"employee_mask^"+msk$+"|"	
+	else
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","I","",msk$,0,0
+		masks$=masks$+"employee_mask^"+msk$+"|"		
+	endif
+	
 	params!.put("MASKS",masks$)
 	
-rem --- Parameters
-
-    bm$=""
-    op$=""
-    po$=""
-    pr$=""
-    find record (sfs_params_dev,key=firm_id$+"SF00",dom=std_missing_params) sfs_params$
-    bm$=sfs_params$.bm_interface$
-    op$=sfs_params$.ar_interface$
-    po$=sfs_params$.po_interface$
-    pr$=sfs_params$.pr_interface$
-
-    p6=num(sfs_params$.empl_no_len$)
-	
-    find record (gls_params_dev,key=firm_id$+"GL00",dom=std_missing_params) gls_params$
-	
-    if op$="Y" then
-        find record (ars_params_dev,key=firm_id$+"AR00",dom=std_missing_params) ars_params$
-        c0=num(ars_params$.customer_size$)
-		call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",p8$,0,p8
-    endif
-    if po$="Y" then
-        find record (aps_params_dev,key=firm_id$+"AP00",dom=std_missing_params) aps_params$
-        p7=num(aps_params$.vendor_size$)
-    endif
-    if pr$="Y" then
-        find record (prs_params_dev,key=firm_id$+"PR00",dom=std_missing_params) prs_params$
-        p6=num(prs_params$.empl_no_len$)
-    endif
-    if pr$<>"Y" and sfs_params$.overhd_type$="P" then 
-        m5=num(sfs_params$.def_ovd_rate$)
-    endif
-    find record (ivs_params_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs_params$
-    dim p[1],desc[3]
-    p[0]=ivs_params$.item_id_len
-    ivs01_precision=num(ivs_params.precision$)
-    p[1]=num(ivs_params.precision$)
-	
-	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","A","",m1$,0,m1
-	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",m2$,0,m2
-	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","R","",m3$,0,m3
-    desc[1]=num(ivs_params$.desc_len_01$)
-    desc[2]=num(ivs_params$.desc_len_02$)
-    desc[3]=num(ivs_params$.desc_len_03$)
-
 rem --- Init Data
-
+		Rem --- Find end date of SF's PREVIOUS period
+        sf_prevper=num(sfs_params.current_per$)-1
+        sf_prevper_yr=num(sfs_params.current_year$)
+        if sf_prevper=0 then
+			sf_prevper=num(gls_params.total_pers$)
+			sf_prevper_yr=sf_prevper_yr-1
+		endif
+		
+        call pgmdir$+"adc_perioddates.aon",gls_params_dev,sf_prevper,sf_prevper_yr,begdate$,sf_prevper_enddate$,status
+        if status then goto std_exit
+        sfs_params.current_per$=""
+        sfs_params.current_year$=""
+		
 rem --- Retrieve key templates
 
 rem --- Set additional params

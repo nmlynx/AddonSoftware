@@ -101,22 +101,21 @@ rem --- Close extra channel of sfe-01 after getting sfe01 template
 	
     gosub open_tables	
 
-rem --- Assign form input values to local variables
+rem --- Assign non-jasper O/E form values to local variables
 
-    restart$=option!.getOptionData("restart")
-    wo_no$=option!.getOptionData("wo_no")
+    restart$=option!.getOptionData("restart"); rem From O/E
+    wo_no$=option!.getOptionData("wo_no"); rem From O/E
 	
-rem --- Assign needed jasper params that aren't on O/E form/table
+rem --- Assign needed jasper params 
 
 	report_type$="T"; rem M = WO Detail Rpt from *M*enu
 					  rem T = *T*raveler
 					  rem E = Detail Rpt from WO *E*ntry
 					  rem C = *C*losed WO Detail Rpt
-	
 	wo_location$=sfe01a.wo_location$; rem Setting the len per how it's templated, so not hardcoded
 	
- 	report_seq$="W"
- 	wo_no_1$=Option!.getOptionData("WO_NO"); rem If Restart? then start w/this WO
+	report_seq$="W"
+ 	wo_no_1$=wo_no$; rem If Restart? then start w/keyed-in WO
  	wo_no_2$=""
  	wo_type_1$=""
  	wo_type_2$=""
@@ -167,6 +166,32 @@ rem --- Add to params!
 	params!.put("TRANS_DATETHRU",trans_datethru$)
     params!.put("TRANSTYPE",transtype$)
 
+rem --- Parameters (confirm params aren't missing, so no error in subsequent pgms)
+
+    bm$=""
+    op$=""
+    po$=""
+    pr$=""
+    find record (sfs_params_dev,key=firm_id$+"SF00",dom=std_missing_params) sfs_params$
+    bm$=sfs_params$.bm_interface$
+    op$=sfs_params$.ar_interface$
+    po$=sfs_params$.po_interface$
+    pr$=sfs_params$.pr_interface$
+
+    find record (gls_params_dev,key=firm_id$+"GL00",dom=std_missing_params) gls_params$
+	
+    if op$="Y" then
+        find record (ars_params_dev,key=firm_id$+"AR00",dom=std_missing_params) ars_params$
+    endif
+    if po$="Y" then
+        find record (aps_params_dev,key=firm_id$+"AP00",dom=std_missing_params) aps_params$
+    endif
+    if pr$="Y" then
+        find record (prs_params_dev,key=firm_id$+"PR00",dom=std_missing_params) prs_params$
+    endif
+
+    find record (ivs_params_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs_params$
+
 rem --- Add masks to params!
 
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",msk$,0,0
@@ -189,44 +214,17 @@ rem --- Add masks to params!
 	masks$=masks$+"sf_units_mask^"+msk$+"|"
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","C","",msk$,0,0
 	masks$=masks$+"sf_cost_mask^"+msk$+"|"	
+
+	if pr$="Y" 
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","PR","I","",msk$,0,0
+		masks$=masks$+"employee_mask^"+msk$+"|"	
+	else
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","I","",msk$,0,0
+		masks$=masks$+"employee_mask^"+msk$+"|"		
+	endif
+	
 	params!.put("MASKS",masks$)
-	
-rem --- Parameters
-
-    bm$=""
-    op$=""
-    po$=""
-    pr$=""
-    find record (sfs_params_dev,key=firm_id$+"SF00",dom=std_missing_params) sfs_params$
-    bm$=sfs_params$.bm_interface$
-    op$=sfs_params$.ar_interface$
-    po$=sfs_params$.po_interface$
-    pr$=sfs_params$.pr_interface$
-
-    find record (gls_params_dev,key=firm_id$+"GL00",dom=std_missing_params) gls_params$
-
-    if op$="Y" then
-        find record (ars_params_dev,key=firm_id$+"AR00",dom=std_missing_params) ars_params$
-        c0=num(ars_params$.customer_size$)
-		call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",p8$,0,p8
-    endif
-    if po$="Y" then
-        find record (aps_params_dev,key=firm_id$+"AP00",dom=std_missing_params) aps_params$
-        p7=num(aps_params$.vendor_size$)
-    endif
-    if pr$="Y" then
-        find record (prs_params_dev,key=firm_id$+"PR00",dom=std_missing_params) prs_params$
-        p6=num(prs_params$.empl_no_len$)
-    endif
-    if pr$<>"Y" and sfs_params$.overhd_type$="P" then 
-        m5=num(sfs_params$.def_ovd_rate$)
-    endif
-    find record (ivs_params_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs_params$
-	
-	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","A","",m1$,0,m1
-	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",m2$,0,m2
-	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","R","",m3$,0,m3
-
+		
 rem --- Init Data
 
 rem --- Retrieve key templates
