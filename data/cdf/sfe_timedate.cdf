@@ -1,3 +1,10 @@
+[[SFE_TIMEDATE.BDEL]]
+rem wgh ... make sure detail is deleted when header is deleted
+[[SFE_TIMEDATE.TRANS_DATE.BINP]]
+rem --- Initialize trans_date
+	if cvs(callpoint!.getColumnData("SFE_TIMEEMPL.TRANS_DATE"),2)="" then 
+		callpoint!.setColumnData("SFE_TIMEEMPL.TRANS_DATE",stbl("+SYSTEM_DATE"),1)
+	endif
 [[SFE_TIMEDATE.TRANS_DATE.AVAL]]
 rem --- Validate trans_date
 	if cvs(callpoint!.getUserInput(),2)="" then callpoint!.setUserInput(stbl("+SYSTEM_DATE"))
@@ -45,6 +52,8 @@ rem --- Get SF parameters
 	gl$=sfs_params.post_to_gl$
 	pay_actstd$=sfs_params.pay_actstd$
 	callpoint!.setDevObject("pay_actstd",pay_actstd$)
+	time_clk_flg$=sfs_params.time_clk_flg$
+	callpoint!.setDevObject("time_clk_flg",time_clk_flg$)
 
 	if bm$="Y"
 		call stbl("+DIR_PGM")+"adc_application.aon","BM",info$[all]

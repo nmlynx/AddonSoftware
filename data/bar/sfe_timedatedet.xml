@@ -19,9 +19,9 @@
 			<ASC_VERSION_ID id="ddm_tables.sfe_timedatedet">12.0</ASC_VERSION_ID>
 			<DD_EXPORT_DATA id="ddm_tables.sfe_timedatedet">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.sfe_timedatedet">20120430</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.sfe_timedatedet">20120511</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.sfe_timedatedet">20120509</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.sfe_timedatedet">174044</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.sfe_timedatedet">20120525</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.sfe_timedatedet">20120525</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.sfe_timedatedet">151632</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.sfe_timedatedet">C:/aon_dev/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_FTYP id="ddm_tables.sfe_timedatedet">T</DD_ATTR_FTYP>
 			<DD_ATTR_PTAB id="ddm_tables.sfe_timedatedet">SFE_TIMEDATE    </DD_ATTR_PTAB>
@@ -30,13 +30,28 @@
 	</ALIAS>
 	<ALIAS id="ddm_table_cpro">
 		<ID id="ddm_table_cpro">DDM_TABLE_CPRO</ID>
+		<RECORD id="ddm_table_cpro.sfe_timedatedetadge">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_timedatedetadge">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.sfe_timedatedetadge">ADGE</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_table_cpro.sfe_timedatedetagcl">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_timedatedetagcl">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.sfe_timedatedetagcl">AGCL</DD_ATTR_CPRO>
 		</RECORD>
+		<RECORD id="ddm_table_cpro.sfe_timedatedetarec">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_timedatedetarec">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.sfe_timedatedetarec">AREC</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_table_cpro.sfe_timedatedetbgds">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_timedatedetbgds">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.sfe_timedatedetbgds">BGDS</DD_ATTR_CPRO>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_table_opts">
+		<ID id="ddm_table_opts">DDM_TABLE_OPTS</ID>
+		<RECORD id="ddm_table_opts.sfe_timedatedets">
+			<DD_TABLE_ALIAS id="ddm_table_opts.sfe_timedatedets">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
+			<DD_ATTR_OPTS id="ddm_table_opts.sfe_timedatedets">S</DD_ATTR_OPTS>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_tpls">
@@ -44,7 +59,7 @@
 		<RECORD id="ddm_table_tpls.sfe_timedatedet">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.sfe_timedatedet">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.sfe_timedatedet">sfe_timedatedet.dat</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.sfe_timedatedet">firm_id:c(2),trans_date:c(8),employee_no:c(9),wo_no:c(7),batch_no:c(7),sequence_num:c(2),op_seq:c(3),op_code:c(3),start_time:c(4),stop_time:c(4),pay_code:c(2),title_code:c(2),dept_code:c(2*),hrs:n(7*),setup_time:n(5*),complete_qty:n(5*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.sfe_timedatedet">firm_id:c(2),trans_date:c(8),employee_no:c(9),wo_no:c(7),batch_no:c(7),sequence_num:c(2),op_seq:c(3),op_code:c(3),start_time:c(4),stop_time:c(4),pay_code:c(2),title_code:c(2),dept_code:c(2*),hrs:n(7*),direct_rate:n(7*),ovhd_rate:n(7*),extended_amt:n(15*),setup_time:n(5*),complete_qty:n(5*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -278,6 +293,7 @@
 			<DD_ATTR_MLAN id="ddm_table_cols.sfe_timedatedet005">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_timedatedet005">0</DD_ATTR_MAXL>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_timedatedet005">5</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_timedatedet005">BATCH_NO</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_timedatedet006">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_timedatedet006">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
@@ -355,6 +371,7 @@
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_timedatedet009">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_timedatedet009">20120430</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_timedatedet009">20120430</DD_LSTREV_DATE>
+			<DD_ATTR_CPGM id="ddm_table_cols.sfe_timedatedet009">C:/aon_dev/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_COLW id="ddm_table_cols.sfe_timedatedet009">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.sfe_timedatedet009">0</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.sfe_timedatedet009">0</DD_ATTR_CTLY>
@@ -377,6 +394,7 @@
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_timedatedet010">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_timedatedet010">20120430</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_timedatedet010">20120430</DD_LSTREV_DATE>
+			<DD_ATTR_CPGM id="ddm_table_cols.sfe_timedatedet010">C:/aon_dev/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_COLW id="ddm_table_cols.sfe_timedatedet010">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.sfe_timedatedet010">0</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.sfe_timedatedet010">0</DD_ATTR_CTLY>
@@ -475,14 +493,14 @@
 		<RECORD id="ddm_table_cols.sfe_timedatedet015">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_timedatedet015">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_timedatedet015">015</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.sfe_timedatedet015">SETUP_TIME      </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_timedatedet015">SETUP_TIME      </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_timedatedet015">DIRECT_RATE     </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_timedatedet015">DIRECT_RATE     </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.sfe_timedatedet015">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_timedatedet015">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_timedatedet015">Y</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_timedatedet015">0A</DD_DELIM_CHAR>
-			<DD_CREATE_DATE id="ddm_table_cols.sfe_timedatedet015">20120430</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.sfe_timedatedet015">20120430</DD_LSTREV_DATE>
+			<DD_CREATE_DATE id="ddm_table_cols.sfe_timedatedet015">20120525</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.sfe_timedatedet015">20120525</DD_LSTREV_DATE>
 			<DD_ATTR_COLW id="ddm_table_cols.sfe_timedatedet015">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.sfe_timedatedet015">0</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.sfe_timedatedet015">0</DD_ATTR_CTLY>
@@ -490,20 +508,19 @@
 			<DD_ATTR_CTLH id="ddm_table_cols.sfe_timedatedet015">0</DD_ATTR_CTLH>
 			<DD_ATTR_MLAN id="ddm_table_cols.sfe_timedatedet015">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_timedatedet015">0</DD_ATTR_MAXL>
-			<DD_ATTR_TIND id="ddm_table_cols.sfe_timedatedet015">14</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_timedatedet015">SETUP_TIME</SQL_COLUMN_NAME>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_timedatedet015">17</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_timedatedet016">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_timedatedet016">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_timedatedet016">016</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.sfe_timedatedet016">COMPLETE_QTY    </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_timedatedet016">COMPLETE_QTY    </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_timedatedet016">OVHD_RATE       </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_timedatedet016">OVHD_RATE       </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.sfe_timedatedet016">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_timedatedet016">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_timedatedet016">Y</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_timedatedet016">0A</DD_DELIM_CHAR>
-			<DD_CREATE_DATE id="ddm_table_cols.sfe_timedatedet016">20120430</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.sfe_timedatedet016">20120430</DD_LSTREV_DATE>
+			<DD_CREATE_DATE id="ddm_table_cols.sfe_timedatedet016">20120525</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.sfe_timedatedet016">20120525</DD_LSTREV_DATE>
 			<DD_ATTR_COLW id="ddm_table_cols.sfe_timedatedet016">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.sfe_timedatedet016">0</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.sfe_timedatedet016">0</DD_ATTR_CTLY>
@@ -511,8 +528,82 @@
 			<DD_ATTR_CTLH id="ddm_table_cols.sfe_timedatedet016">0</DD_ATTR_CTLH>
 			<DD_ATTR_MLAN id="ddm_table_cols.sfe_timedatedet016">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.sfe_timedatedet016">0</DD_ATTR_MAXL>
-			<DD_ATTR_TIND id="ddm_table_cols.sfe_timedatedet016">16</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_timedatedet016">COMPLETE_QTY</SQL_COLUMN_NAME>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_timedatedet016">18</DD_ATTR_TIND>
+		</RECORD>
+		<RECORD id="ddm_table_cols.sfe_timedatedet017">
+			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_timedatedet017">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
+			<DD_SEQUENCE id="ddm_table_cols.sfe_timedatedet017">017</DD_SEQUENCE>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_timedatedet017">EXTENDED_AMT    </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_timedatedet017">EXTENDED_AMT    </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.sfe_timedatedet017">0</DD_COL_REPEATS>
+			<DD_COL_OCCURS id="ddm_table_cols.sfe_timedatedet017">0</DD_COL_OCCURS>
+			<DD_FIELD_DELIM id="ddm_table_cols.sfe_timedatedet017">Y</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.sfe_timedatedet017">0A</DD_DELIM_CHAR>
+			<DD_CREATE_DATE id="ddm_table_cols.sfe_timedatedet017">20120525</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.sfe_timedatedet017">20120525</DD_LSTREV_DATE>
+			<DD_ATTR_COLW id="ddm_table_cols.sfe_timedatedet017">0</DD_ATTR_COLW>
+			<DD_ATTR_CTLX id="ddm_table_cols.sfe_timedatedet017">0</DD_ATTR_CTLX>
+			<DD_ATTR_CTLY id="ddm_table_cols.sfe_timedatedet017">0</DD_ATTR_CTLY>
+			<DD_ATTR_CTLW id="ddm_table_cols.sfe_timedatedet017">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_table_cols.sfe_timedatedet017">0</DD_ATTR_CTLH>
+			<DD_ATTR_MLAN id="ddm_table_cols.sfe_timedatedet017">N</DD_ATTR_MLAN>
+			<DD_ATTR_MAXL id="ddm_table_cols.sfe_timedatedet017">0</DD_ATTR_MAXL>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_timedatedet017">19</DD_ATTR_TIND>
+		</RECORD>
+		<RECORD id="ddm_table_cols.sfe_timedatedet018">
+			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_timedatedet018">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
+			<DD_SEQUENCE id="ddm_table_cols.sfe_timedatedet018">018</DD_SEQUENCE>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_timedatedet018">SETUP_TIME      </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_timedatedet018">SETUP_TIME      </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.sfe_timedatedet018">0</DD_COL_REPEATS>
+			<DD_COL_OCCURS id="ddm_table_cols.sfe_timedatedet018">0</DD_COL_OCCURS>
+			<DD_FIELD_DELIM id="ddm_table_cols.sfe_timedatedet018">Y</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.sfe_timedatedet018">0A</DD_DELIM_CHAR>
+			<DD_CREATE_DATE id="ddm_table_cols.sfe_timedatedet018">20120430</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.sfe_timedatedet018">20120430</DD_LSTREV_DATE>
+			<DD_ATTR_COLW id="ddm_table_cols.sfe_timedatedet018">0</DD_ATTR_COLW>
+			<DD_ATTR_CTLX id="ddm_table_cols.sfe_timedatedet018">0</DD_ATTR_CTLX>
+			<DD_ATTR_CTLY id="ddm_table_cols.sfe_timedatedet018">0</DD_ATTR_CTLY>
+			<DD_ATTR_CTLW id="ddm_table_cols.sfe_timedatedet018">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_table_cols.sfe_timedatedet018">0</DD_ATTR_CTLH>
+			<DD_ATTR_MLAN id="ddm_table_cols.sfe_timedatedet018">N</DD_ATTR_MLAN>
+			<DD_ATTR_MAXL id="ddm_table_cols.sfe_timedatedet018">0</DD_ATTR_MAXL>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_timedatedet018">14</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_timedatedet018">SETUP_TIME</SQL_COLUMN_NAME>
+		</RECORD>
+		<RECORD id="ddm_table_cols.sfe_timedatedet019">
+			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_timedatedet019">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
+			<DD_SEQUENCE id="ddm_table_cols.sfe_timedatedet019">019</DD_SEQUENCE>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_timedatedet019">COMPLETE_QTY    </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_timedatedet019">COMPLETE_QTY    </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.sfe_timedatedet019">0</DD_COL_REPEATS>
+			<DD_COL_OCCURS id="ddm_table_cols.sfe_timedatedet019">0</DD_COL_OCCURS>
+			<DD_FIELD_DELIM id="ddm_table_cols.sfe_timedatedet019">Y</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.sfe_timedatedet019">0A</DD_DELIM_CHAR>
+			<DD_CREATE_DATE id="ddm_table_cols.sfe_timedatedet019">20120430</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.sfe_timedatedet019">20120430</DD_LSTREV_DATE>
+			<DD_ATTR_COLW id="ddm_table_cols.sfe_timedatedet019">0</DD_ATTR_COLW>
+			<DD_ATTR_CTLX id="ddm_table_cols.sfe_timedatedet019">0</DD_ATTR_CTLX>
+			<DD_ATTR_CTLY id="ddm_table_cols.sfe_timedatedet019">0</DD_ATTR_CTLY>
+			<DD_ATTR_CTLW id="ddm_table_cols.sfe_timedatedet019">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_table_cols.sfe_timedatedet019">0</DD_ATTR_CTLH>
+			<DD_ATTR_MLAN id="ddm_table_cols.sfe_timedatedet019">N</DD_ATTR_MLAN>
+			<DD_ATTR_MAXL id="ddm_table_cols.sfe_timedatedet019">0</DD_ATTR_MAXL>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_timedatedet019">16</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_timedatedet019">COMPLETE_QTY</SQL_COLUMN_NAME>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_column_cpro">
+		<ID id="ddm_column_cpro">DDM_COLUMN_CPRO</ID>
+		<RECORD id="ddm_column_cpro.sfe_timedatedetstart_timebinp">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.sfe_timedatedetstart_timebinp">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.sfe_timedatedetstart_timebinp">START_TIME      </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.sfe_timedatedetstart_timebinp">BINP</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.sfe_timedatedetstop_timeaval">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.sfe_timedatedetstop_timeaval">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.sfe_timedatedetstop_timeaval">STOP_TIME       </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.sfe_timedatedetstop_timeaval">AVAL</DD_ATTR_CPRO>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_opts">
@@ -541,6 +632,21 @@
 			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_timedatedetdept_codeo">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_opts.sfe_timedatedetdept_codeo">DEPT_CODE       </DD_DVAR_NAME>
 			<DD_ATTR_OPTS id="ddm_column_opts.sfe_timedatedetdept_codeo">O</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.sfe_timedatedetdirect_rateo">
+			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_timedatedetdirect_rateo">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.sfe_timedatedetdirect_rateo">DIRECT_RATE     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.sfe_timedatedetdirect_rateo">O</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.sfe_timedatedetovhd_rateo">
+			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_timedatedetovhd_rateo">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.sfe_timedatedetovhd_rateo">OVHD_RATE       </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.sfe_timedatedetovhd_rateo">O</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.sfe_timedatedetextended_amto">
+			<DD_TABLE_ALIAS id="ddm_column_opts.sfe_timedatedetextended_amto">SFE_TIMEDATEDET </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.sfe_timedatedetextended_amto">EXTENDED_AMT    </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.sfe_timedatedetextended_amto">O</DD_ATTR_OPTS>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_elements">
@@ -742,41 +848,51 @@
 		</RECORD>
 		<RECORD id="ddm_elements.start_time">
 			<DD_DATA_NAME id="ddm_elements.start_time">START_TIME      </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.start_time">Start Time [HHMM]             </DD_DESCRIPTION>
+			<DD_DESCRIPTION id="ddm_elements.start_time">Start Time [HHMM]</DD_DESCRIPTION>
 			<DD_DATA_TYPE id="ddm_elements.start_time">C</DD_DATA_TYPE>
 			<DD_DATA_LENGTH id="ddm_elements.start_time">4</DD_DATA_LENGTH>
-			<DD_MASK_TYPE id="ddm_elements.start_time"> </DD_MASK_TYPE>
 			<ASC_COMP_ID id="ddm_elements.start_time">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_elements.start_time">SF </ASC_PROD_ID>
 			<DD_CREATE_DATE id="ddm_elements.start_time">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.start_time">20060119</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.start_time">20120525</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW id="ddm_elements.start_time">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.start_time">0</DD_ATTR_CTLH>
 			<DD_ATTR_CTYP id="ddm_elements.start_time">E</DD_ATTR_CTYP>
 			<DD_ATTR_DCOM id="ddm_elements.start_time">            </DD_ATTR_DCOM>
 			<DD_ATTR_DEXP id="ddm_elements.start_time">            </DD_ATTR_DEXP>
 			<DD_ATTR_LABL id="ddm_elements.start_time">Start Time [HHMM]</DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_elements.start_time">Start Time [HHMM]</DD_ATTR_LABS>
+			<DD_ATTR_MAXL id="ddm_elements.start_time">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.start_time">0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL id="ddm_elements.start_time">0</DD_ATTR_MINL>
 			<DD_ATTR_MSKI id="ddm_elements.start_time">00:00</DD_ATTR_MSKI>
 			<DD_ATTR_MSKO id="ddm_elements.start_time">00:00</DD_ATTR_MSKO>
-			<DD_ATTR_STYP id="ddm_elements.start_time">A</DD_ATTR_STYP>
+			<DD_ATTR_PREC id="ddm_elements.start_time">0</DD_ATTR_PREC>
+			<DD_ATTR_STYP id="ddm_elements.start_time">B</DD_ATTR_STYP>
 		</RECORD>
 		<RECORD id="ddm_elements.stop_time">
 			<DD_DATA_NAME id="ddm_elements.stop_time">STOP_TIME       </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.stop_time">Stop Time [HHMM]              </DD_DESCRIPTION>
+			<DD_DESCRIPTION id="ddm_elements.stop_time">Stop Time [HHMM]</DD_DESCRIPTION>
 			<DD_DATA_TYPE id="ddm_elements.stop_time">C</DD_DATA_TYPE>
 			<DD_DATA_LENGTH id="ddm_elements.stop_time">4</DD_DATA_LENGTH>
-			<DD_MASK_TYPE id="ddm_elements.stop_time"> </DD_MASK_TYPE>
 			<ASC_COMP_ID id="ddm_elements.stop_time">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_elements.stop_time">SF </ASC_PROD_ID>
 			<DD_CREATE_DATE id="ddm_elements.stop_time">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.stop_time">20060119</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.stop_time">20120525</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW id="ddm_elements.stop_time">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.stop_time">0</DD_ATTR_CTLH>
 			<DD_ATTR_CTYP id="ddm_elements.stop_time">E</DD_ATTR_CTYP>
 			<DD_ATTR_DCOM id="ddm_elements.stop_time">            </DD_ATTR_DCOM>
 			<DD_ATTR_DEXP id="ddm_elements.stop_time">            </DD_ATTR_DEXP>
 			<DD_ATTR_LABL id="ddm_elements.stop_time">Stop Time [HHMM]</DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_elements.stop_time">Stop Time [HHMM]</DD_ATTR_LABS>
+			<DD_ATTR_MAXL id="ddm_elements.stop_time">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.stop_time">0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL id="ddm_elements.stop_time">0</DD_ATTR_MINL>
 			<DD_ATTR_MSKI id="ddm_elements.stop_time">00:00</DD_ATTR_MSKI>
 			<DD_ATTR_MSKO id="ddm_elements.stop_time">00:00</DD_ATTR_MSKO>
-			<DD_ATTR_STYP id="ddm_elements.stop_time">A</DD_ATTR_STYP>
+			<DD_ATTR_PREC id="ddm_elements.stop_time">0</DD_ATTR_PREC>
+			<DD_ATTR_STYP id="ddm_elements.stop_time">B</DD_ATTR_STYP>
 		</RECORD>
 		<RECORD id="ddm_elements.pay_code">
 			<DD_DATA_NAME id="ddm_elements.pay_code">PAY_CODE        </DD_DATA_NAME>
@@ -856,6 +972,66 @@
 			<DD_ATTR_DEXP id="ddm_elements.hrs">            </DD_ATTR_DEXP>
 			<DD_ATTR_LABL id="ddm_elements.hrs">Hours</DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_elements.hrs">Hrs</DD_ATTR_LABS>
+		</RECORD>
+		<RECORD id="ddm_elements.direct_rate">
+			<DD_DATA_NAME id="ddm_elements.direct_rate">DIRECT_RATE     </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.direct_rate">Direct Rate</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.direct_rate">N</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.direct_rate">7</DD_DATA_LENGTH>
+			<DD_MASK_TYPE id="ddm_elements.direct_rate">R</DD_MASK_TYPE>
+			<ASC_COMP_ID id="ddm_elements.direct_rate">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.direct_rate">BM </ASC_PROD_ID>
+			<DD_CREATE_DATE id="ddm_elements.direct_rate">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.direct_rate">20080204</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW id="ddm_elements.direct_rate">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.direct_rate">0</DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.direct_rate">N</DD_ATTR_CTYP>
+			<DD_ATTR_DCOM id="ddm_elements.direct_rate">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.direct_rate">            </DD_ATTR_DEXP>
+			<DD_ATTR_LABL id="ddm_elements.direct_rate">Direct Rate</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.direct_rate">Dir Rate</DD_ATTR_LABS>
+			<DD_ATTR_MAXL id="ddm_elements.direct_rate">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.direct_rate">0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL id="ddm_elements.direct_rate">0</DD_ATTR_MINL>
+			<DD_ATTR_PREC id="ddm_elements.direct_rate">0</DD_ATTR_PREC>
+		</RECORD>
+		<RECORD id="ddm_elements.ovhd_rate">
+			<DD_DATA_NAME id="ddm_elements.ovhd_rate">OVHD_RATE       </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.ovhd_rate">Overhead Rate                 </DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.ovhd_rate">N</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.ovhd_rate">7</DD_DATA_LENGTH>
+			<DD_MASK_TYPE id="ddm_elements.ovhd_rate">R</DD_MASK_TYPE>
+			<ASC_COMP_ID id="ddm_elements.ovhd_rate">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.ovhd_rate">SF </ASC_PROD_ID>
+			<DD_CREATE_DATE id="ddm_elements.ovhd_rate">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.ovhd_rate">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_CTYP id="ddm_elements.ovhd_rate">N</DD_ATTR_CTYP>
+			<DD_ATTR_DCOM id="ddm_elements.ovhd_rate">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.ovhd_rate">            </DD_ATTR_DEXP>
+			<DD_ATTR_LABL id="ddm_elements.ovhd_rate">Overhead Rate</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.ovhd_rate">Ovrhd Rate</DD_ATTR_LABS>
+		</RECORD>
+		<RECORD id="ddm_elements.extended_amt">
+			<DD_DATA_NAME id="ddm_elements.extended_amt">EXTENDED_AMT    </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.extended_amt">Extended Amount</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.extended_amt">N</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.extended_amt">15</DD_DATA_LENGTH>
+			<DD_MASK_TYPE id="ddm_elements.extended_amt">A</DD_MASK_TYPE>
+			<ASC_COMP_ID id="ddm_elements.extended_amt">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.extended_amt">IV </ASC_PROD_ID>
+			<DD_CREATE_DATE id="ddm_elements.extended_amt">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.extended_amt">20081022</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW id="ddm_elements.extended_amt">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.extended_amt">0</DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.extended_amt">N</DD_ATTR_CTYP>
+			<DD_ATTR_DCOM id="ddm_elements.extended_amt">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.extended_amt">            </DD_ATTR_DEXP>
+			<DD_ATTR_LABL id="ddm_elements.extended_amt">Extended Amount</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.extended_amt">Ext Amt</DD_ATTR_LABS>
+			<DD_ATTR_MAXL id="ddm_elements.extended_amt">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.extended_amt">0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL id="ddm_elements.extended_amt">0</DD_ATTR_MINL>
+			<DD_ATTR_PREC id="ddm_elements.extended_amt">0</DD_ATTR_PREC>
 		</RECORD>
 		<RECORD id="ddm_elements.setup_time">
 			<DD_DATA_NAME id="ddm_elements.setup_time">SETUP_TIME      </DD_DATA_NAME>

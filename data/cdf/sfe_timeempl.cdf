@@ -1,3 +1,12 @@
+[[SFE_TIMEEMPL.AREA]]
+rem wgh ... need to update entered_hrs = hrs + setup_time
+[[SFE_TIMEEMPL.BDEL]]
+rem wgh ... make sure detail is deleted when header is deleted
+[[SFE_TIMEEMPL.TRANS_DATE.BINP]]
+rem --- Initialize trans_date
+	if cvs(callpoint!.getColumnData("SFE_TIMEEMPL.TRANS_DATE"),2)="" then 
+		callpoint!.setColumnData("SFE_TIMEEMPL.TRANS_DATE",stbl("+SYSTEM_DATE"),1)
+	endif
 [[SFE_TIMEEMPL.TRANS_DATE.AVAL]]
 rem --- Validate trans_date
 	if cvs(callpoint!.getUserInput(),2)="" then callpoint!.setUserInput(stbl("+SYSTEM_DATE"))
@@ -50,6 +59,10 @@ rem --- Get SF parameters
 	gl$=sfs_params.post_to_gl$
 	pay_actstd$=sfs_params.pay_actstd$
 	callpoint!.setDevObject("pay_actstd",pay_actstd$)
+	time_clk_flg$=sfs_params.time_clk_flg$
+rem wgh ... testing
+time_clk_flg$="Y"
+	callpoint!.setDevObject("time_clk_flg",time_clk_flg$)
 
 	if bm$="Y"
 		call stbl("+DIR_PGM")+"adc_application.aon","BM",info$[all]
@@ -70,6 +83,8 @@ rem --- Get SF parameters
 		call stbl("+DIR_PGM")+"adc_application.aon","PR",info$[all]
 		pr$=info$[20]
 	endif
+rem wgh ... testing
+pr$="Y"
 	callpoint!.setDevObject("pr",pr$)
 
 rem --- Get IV parameters
@@ -89,7 +104,7 @@ rem --- Additional file opens
 	if pr$="Y" then
 		open_tables$[2]="PRS_PARAMS",open_opts$[2]="OTA"
 		open_tables$[3]="PRM_EMPLMAST",open_opts$[3]="OTA"
-		open_tables$[4]="PRX_NAMEEMPL",open_opts$[4]="OTA"
+rem wgh ... testing		open_tables$[4]="PRX_NAMEEMPL",open_opts$[4]="OTA"
 		open_tables$[5]="PRC_PAYCODE",open_opts$[5]="OTA"
 		open_tables$[6]="PRC_TITLCODE",open_opts$[6]="OTA"
 		open_tables$[7]="PRT_EMPLEARN",open_opts$[7]="OTA"
@@ -118,7 +133,7 @@ rem --- Additional file opens
 	if pr$="Y" then
 		prs_params_dev=num(open_chans$[2])
 		dim prs_params$:open_tpls$[2]
-		find record (prs_params_dev,key=firm_id$+"GL00",dom=std_missing_params) prs_params$
+		find record (prs_params_dev,key=firm_id$+"PR00",dom=std_missing_params) prs_params$
 		precision$=prs_params.precision$
 		callpoint!.setDevObject("precision",precision$)
 		precision num(precision$)
