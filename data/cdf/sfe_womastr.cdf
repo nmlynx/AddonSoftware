@@ -710,6 +710,7 @@ rem --- Release/Commit the Work Order
 rem --- Schedule the Work Order
 
 	callpoint!.setDevObject("order_no",callpoint!.getColumnData("SFE_WOMASTR.ORDER_NO"))
+	callpoint!.setDevObject("item_id",callpoint!.getColumnData("SFE_WOMASTR.ITEM_ID"))
 
 	dim dflt_data$[3,1]
 	dflt_data$[1,0]="SCHED_FLAG"
@@ -727,13 +728,15 @@ rem --- Schedule the Work Order
 :		"",
 :		dflt_data$[all]
 
-	start_date$=callpoint!.getDevObject("start_date")
-	comp_date$=callpoint!.getDevObject("comp_date")
-	sched_method$=callpoint!.getDevObject("sched_method")
-	callpoint!.setColumnData("SFE_WOMASTR.ESTSTT_DATE",start_date$,1)
-	callpoint!.setColumnData("SFE_WOMASTR.ESTCMP_DATE",comp_date$,1)
-	callpoint!.setColumnData("SFE_WOMASTR.SCHED_FLAG",sched_method$,1)
-	callpoint!.setStatus("MODIFIED")
+	if callpoint!.getDevObject("sched_method")<>""
+		start_date$=callpoint!.getDevObject("start_date")
+		comp_date$=callpoint!.getDevObject("comp_date")
+		sched_method$=callpoint!.getDevObject("sched_method")
+		callpoint!.setColumnData("SFE_WOMASTR.ESTSTT_DATE",start_date$,1)
+		callpoint!.setColumnData("SFE_WOMASTR.ESTCMP_DATE",comp_date$,1)
+		callpoint!.setColumnData("SFE_WOMASTR.SCHED_FLAG",sched_method$,1)
+		callpoint!.setStatus("MODIFIED")
+	endif
 [[SFE_WOMASTR.ORDER_NO.AVAL]]
 rem --- Validate Open Sales Order
 
