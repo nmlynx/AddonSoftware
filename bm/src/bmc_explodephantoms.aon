@@ -212,7 +212,7 @@ rem     print (printer_dev)@(14),bmm02a.item_id$," ",o1$
 		outVect!.addItem(str(ivm02a.qty_on_hand-ivm02a.qty_commit))
 		outVect!.addItem(str(fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant))
         if ivm02a.qty_on_hand-ivm02a.qty_commit<fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant
-			outVect!.addItem(abs(ivm02a.qty_on_hand-ivm02a.qty_commit-fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant))
+			outVect!.addItem(str(abs(ivm02a.qty_on_hand-ivm02a.qty_commit-fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant)))
 			info[4]=info[4]+1
 		else
 			outVect!.addItem("")
