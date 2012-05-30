@@ -26,16 +26,18 @@ rem --- Get the infomation object for the Stored Procedure
 
 rem --- Get the IN parameters used by the procedure
 
-	firm_id$  = sp!.getParameter("FIRM_ID")
-	wo_loc$   = sp!.getParameter("WO_LOCATION")
-	wo_no$    = sp!.getParameter("WO_NO")
+	firm_id$    = sp!.getParameter("FIRM_ID")
+	wo_loc$     = sp!.getParameter("WO_LOCATION")
+	wo_no$      = sp!.getParameter("WO_NO")
 	barista_wd$ = sp!.getParameter("BARISTA_WD")
-	masks$    = sp!.getParameter("MASKS")
+	masks$      = sp!.getParameter("MASKS")
 	
 	datefrom$ = sp!.getParameter("TRANS_DATEFROM")	
 	datethru$ = sp!.getParameter("TRANS_DATETHRU")
 
     transtype$ = sp!.getParameter("TRANSTYPE"); rem list of trans types to include on report
+	
+	sf_prevper_enddate$ = sp!.getParameter("SF_PREVPER_ENDDATE")
 	
 rem --- masks$ will contain pairs of fields in a single string mask_name^mask|
 
@@ -64,7 +66,7 @@ rem --- Get Barista System Program directory
 	sypdir$=stbl("+DIR_SYP",err=*next)
 
 rem --- Get masks
-rem ===========> ESCAPE    Figure out what masks are needed, and add them here and in appropriate masking code snips
+
 	pgmdir$=stbl("+DIR_PGM",err=*next)
 
 	sf_cost_mask$=fngetmask$("sf_cost_mask","##,##0.0000-",masks$)
@@ -197,21 +199,6 @@ rem --- Additional File Opens
 		gosub addl_opens_adc; rem Change from adc to bac once Barista's enhanced
 		rem gosub addl_opens_bac; rem Change from adc to bac once Barista's enhanced
 
-Rem --- Find end date of SF's PREVIOUS period
-        sf_prevper=num(sfs_params.current_per$)-1
-        sf_prevper_yr=num(sfs_params.current_year$)
-        if sf_prevper=0 then
-			sf_prevper=num(gls_params.total_pers$)
-			sf_prevper_yr=sf_prevper_yr-1
-		endif
-		
-rem ESCAPE CAJ        call pgmdir$+"adc_perioddates.aon",gls_params,sf_prevper,sf_prevper_yr,begdate$,sf_prevper_enddate$,status
-        if status then goto std_exit
-        sfs_params.current_per$=""
-        sfs_params.current_year$=""
-	
-		sf_prevper_enddate$="20120504" ; rem ESCAPE CAJ REMOVE THIS HARDCODE	<=====================
-		
 rem --- Build SQL statement
 
 rem --- Get SQL view joining sfe01 with a mimic of legacy SFM-07 / WOM-07 / SFX_WOTRANXR

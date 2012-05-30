@@ -1,6 +1,6 @@
-rem --- Work Order Detail Report
-rem --- Program sfr_wodetrpt.aon v8.0.0 04Jan2008 (sfr_ia)
-rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/04/2008 11:35:14)
+rem --- Closed Work Order Detail (and Closed Recurring WO Detail) Report - Setup
+rem --- Program sfr_clsdwodet.aon v8.0.0 04Jan2008 (sfr_ea)
+rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/04/2008 11:01:31)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
@@ -24,7 +24,7 @@ rem --- the SPROC, but the options on each report differ
  
     setesc std_error
     seterr std_error
-  
+
 rem --- Use statements and Declares
 
     use ::ado_func.src::func
@@ -44,7 +44,7 @@ rem --- Set document Directory
 
     docdir$=""
     docdir$=stbl("+DOC_DIR_PDF",err=*next)
-	
+
 rem --- Retrieve sysinfo data
 
     sysinfo_tpl$=stbl("+SYSINFO_TPL",err=*next)
@@ -57,7 +57,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    num_files=7
+    num_files=8
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="SFS_PARAMS",   open_opts$[1]="OTA"
     open_tables$[2]="APS_PARAMS",   open_opts$[2]="OTA"
@@ -67,17 +67,20 @@ rem --- Open/Lock files
     open_tables$[6]="PRS_PARAMS",   open_opts$[6]="OTA"
 	
     open_tables$[7]="SFE_WOMASTR", open_opts$[7]="OTA[2_]"; rem sfe-01
-
+	open_tables$[8]="SFE_OPENEDWO",open_opts$[8]="OTA"; rem sfe-04a
+	
     gosub open_tables
 
-rem --- Assignments so parameters can be tested in lead-in program
-
+	rem --- Assignments so parameters can be tested in lead-in program
+	
     sfs_params_dev=num(open_chans$[1])
     aps_params_dev=num(open_chans$[2])
     ars_params_dev=num(open_chans$[3])
     gls_params_dev=num(open_chans$[4])	
     ivs_params_dev=num(open_chans$[5])
     prs_params_dev=num(open_chans$[6])
+
+    sfe04a_dev=num(open_chans$[8])
 	
     dim sfs_params$:open_tpls$[1]
     dim aps_params$:open_tpls$[2]
@@ -86,53 +89,51 @@ rem --- Assignments so parameters can be tested in lead-in program
     dim ivs_params$:open_tpls$[5]
     dim prs_params$:open_tpls$[6]
 	
-	dim sfe01a$:open_tpls$[7]
+	dim sfe01a$:open_tpls$[7]	
+    dim sfe04a$:open_tpls$[8]
 	
 rem --- Close extra channel of sfe-01 after getting sfe01 template
 
     num_files=1
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-
-    open_tables$[1]="SFE_WOMASTR",  open_opts$[1]="CX[2_]"; rem sfe-01
-
-    gosub open_tables
+    
+	open_tables$[1]="SFE_WOMASTR",  open_opts$[1]="CX[2_]"; rem sfe-01
+	
+    gosub open_tables	
 
 rem --- Assign non-jasper O/E form values to local variables
+
+    restart$=option!.getOptionData("restart"); rem From O/E
+    wo_no$=option!.getOptionData("wo_no"); rem From O/E
 	
 rem --- Assign needed jasper params 
 
-	report_type$="M"; rem M = WO Detail Rpt from *M*enu
+	report_type$="C"; rem M = WO Detail Rpt from *M*enu
 					  rem T = *T*raveler
 					  rem E = Detail Rpt from WO *E*ntry
 					  rem C = *C*losed WO Detail Rpt
-	
 	wo_location$=sfe01a.wo_location$; rem Setting the len per how it's templated, so not hardcoded
-    
-	report_seq$=Option!.getOptionData("report_seq"); rem From O/E
-    wo_no_1$=Option!.getOptionData("wo_no_1"); rem From O/E
-    wo_no_2$=Option!.getOptionData("wo_no_2"); rem From O/E
-    wo_type_1$=Option!.getOptionData("wo_type_1"); rem From O/E
-    wo_type_2$=Option!.getOptionData("wo_type_2"); rem From O/E
-    warehouse_id$=Option!.getOptionData("warehouse_id"); rem From O/E
-    bill_no_1$=Option!.getOptionData("bill_no_1"); rem From O/E
-    bill_no_2$=Option!.getOptionData("bill_no_2"); rem From O/E
-    customer_ID_1$=Option!.getOptionData("customer_ID_1"); rem From O/E
-    customer_ID_2$=Option!.getOptionData("customer_ID_2"); rem From O/E
+	
+	report_seq$="W"
+ 	wo_no_1$=wo_no$; rem If Restart? then start w/keyed-in WO
+ 	wo_no_2$=""
+ 	wo_type_1$=""
+ 	wo_type_2$=""
+ 	warehouse_id$=""
+ 	bill_no_1$=""
+ 	bill_no_2$=""
+ 	customer_id_1$=""
+ 	customer_id_2$=""	
 
-    wo_open$=Option!.getOptionData("open"); rem From O/E
-    wo_closed$=Option!.getOptionData("closed"); rem From O/E
-    wo_planned$=Option!.getOptionData("planned"); rem From O/E
-    wo_quoted$=Option!.getOptionData("quoted"); rem From O/E
-	
-    wostatus$=""
-    if wo_open$="Y" then wostatus$=wostatus$+"O"
-    if wo_closed$="Y" then wostatus$=wostatus$+"C"
-    if wo_planned$="Y" then wostatus$=wostatus$+"P"
-    if wo_quoted$="Y" then wostatus$=wostatus$+"Q"
-	
+ 	wo_open$="N"
+ 	wo_closed$="Y"
+ 	wo_planned$="N"
+ 	wo_quoted$="N"
+ 	wostatus$="C"
+
 	include_standards$="Y"
 	include_costsummary$="Y"
-	include_comments$="N"
+	include_comments$="Y"
 	include_transactions$="Y"
 	trans_datefrom$=""
 	trans_datethru$=""
@@ -142,7 +143,7 @@ rem --- Assign needed jasper params
 rem --- Add to params!		
 
 	params!.put("REPORT_TYPE",report_type$); REM "Specifies leadin pgm
-
+	
 	params!.put("REPORT_SEQ",report_seq$)
 	params!.put("WO_NO_1",wo_no_1$)
 	params!.put("WO_NO_2",wo_no_2$)
@@ -164,7 +165,7 @@ rem --- Add to params!
 	params!.put("TRANS_DATEFROM",trans_datefrom$)
 	params!.put("TRANS_DATETHRU",trans_datethru$)
     params!.put("TRANSTYPE",transtype$)
-	
+
 rem --- Parameters (confirm params aren't missing, so no error in subsequent pgms)
 
     bm$=""
@@ -190,7 +191,7 @@ rem --- Parameters (confirm params aren't missing, so no error in subsequent pgm
     endif
 
     find record (ivs_params_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs_params$
-
+		
 rem --- Add masks to params!
 
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",msk$,0,0
@@ -223,9 +224,9 @@ rem --- Add masks to params!
 	endif
 	
 	params!.put("MASKS",masks$)
-	
+		
 rem --- Init Data
-   
+
 Rem --- Find end date of SF's PREVIOUS period
 
     sf_prevper_enddate$=""
@@ -243,52 +244,22 @@ Rem --- Find end date of SF's PREVIOUS period
     sfs_params.current_year$=""
 	
 	params!.put("SF_PREVPER_ENDDATE",sf_prevper_enddate$)
-	
+
 rem --- Retrieve key templates
 
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMASTR","PRIMARY",sfe01a_key_tpl$,rd_table_chans$[all],status$
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMASTR","AO_TYP_LOC_WO",sfe01a_key1_alttpl$,rd_table_chans$[all],status$
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMASTR","AO_TYP_LOC_WO",sfe01a_key2_alttpl$,rd_table_chans$[all],status$
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMASTR","AO_WH_ITM_LOC_WO",sfe01a_key3_alttpl$,rd_table_chans$[all],status$
+    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_OPENEDWO","PRIMARY",sfe04a_key_tpl$,rd_table_chans$[all],status$
 
-rem --- Options
-    action=pos(sequence$="WBCT")-1
-    switch action
-        case 0
-            h3$="Work Order Sequence"
-            beging$=wofrom$
-            ending$=wothru$
-            dim key_tpl$:sfe01a_key_tpl$
-            begin_key$=firm_id$+sfe01a.wo_location$+beginning$
-            keynum$="PRIMARY"
-            break
-        case 1
-            h3$="Bill Number Sequence"
-            beging$=billfrom$
-            ending$=billthru$
-            dim key_tpl$:sfe01a_key3_alttpl$
-            begin_key$=firm_id$+whse$+beging$
-            keynum$="AO_WH_ITM_LOC_WO"
-            break
-        case 2
-            h3$="Customer Sequence"
-            beging$=custfrom$
-            ending$=custthru$
-            dim key_tpl$:sfe01a_key2_alttpl$
-            begin_key$=firm_id$+beging$
-            keynum$="AO_CST_ORD_LINE"
-            break
-        case 3
-            h3$="Work Order Type Sequence"
-            beging$=wotfrom$
-            ending$=wotthru$
-            dim key_tpl$:sfe01a_key1_alttpl$
-            begin_key$=firm_id$+beging$
-            keynum$="AO_TYP_LOC_WO"
-            break
-        case default
-            break
-    swend
+rem --- Check For Any Travelers to Print
+
+    dim sfe04a_key$:sfe04a_key_tpl$
+    read (sfe04a_dev,key=firm_id$,dom=*next)
+    sfe04a_key$=key(sfe04a_dev,end=no_travelers)
+    if sfe04a_key.firm_id$+sfe04a_key.wo_location$<>firm_id$+wo_location$ then 
+no_travelers:
+        msg_id$="SF_NO_TRAVELERS"
+        gosub disp_message
+        goto std_exit
+    endif
 
 rem --- Set additional params
 
@@ -386,17 +357,33 @@ rem --- Check for user authentication
 rem --- Fill Report and Show
 
     declare BBJasperViewerWindow viewerWindow!
-		
+
     report!.fill(1)
     viewerWindow! = new BBJasperViewerWindow(report!,0,0,screen_width,screen_height,reportTitle$,$00080093$)
     viewerWindow!.getViewerControl().setGoogleDefaultDocument(reportTitle$)
-    viewerWindow!.setReleaseOnClose(1)
+	
+	window!=viewerWindow!.getViewerWindow()
+    viewerWindow!.setReleaseOnClose(0)
     viewerWindow!.show(0)
         
 rem --- Event Control
 
+    window!.setCallback(BBjWindow.ON_CLOSE,"exit_viewer")
+	
     process_events,err=*same
-
+	
+exit_viewer:
+	rem --- Conditionally clear travelers for firm + wo_location
+        msg_id$="SF_UPDT_TRAVELERS"
+		msg_opt$=""
+        gosub disp_message
+		
+		if msg_opt$="Y"
+			call "adc_clearpartial.aon","N",sfe04a_dev,firm_id$+wo_location$,status
+		endif	
+		
+		goto std_exit
+	
     release
 
 connect_err:rem --- Connection Error

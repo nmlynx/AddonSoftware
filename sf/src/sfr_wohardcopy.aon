@@ -214,19 +214,25 @@ rem --- Add masks to params!
 	params!.put("MASKS",masks$)
 	
 rem --- Init Data
-		Rem --- Find end date of SF's PREVIOUS period
-        sf_prevper=num(sfs_params.current_per$)-1
-        sf_prevper_yr=num(sfs_params.current_year$)
-        if sf_prevper=0 then
-			sf_prevper=num(gls_params.total_pers$)
-			sf_prevper_yr=sf_prevper_yr-1
-		endif
+
+Rem --- Find end date of SF's PREVIOUS period
+
+    sf_prevper_enddate$=""
+	
+	sf_prevper=num(sfs_params.current_per$)-1
+    sf_prevper_yr=num(sfs_params.current_year$)
+	if sf_prevper=0 then
+		sf_prevper=num(gls_params.total_pers$)
+		sf_prevper_yr=sf_prevper_yr-1
+	endif
 		
-        call pgmdir$+"adc_perioddates.aon",gls_params_dev,sf_prevper,sf_prevper_yr,begdate$,sf_prevper_enddate$,status
-        if status then goto std_exit
-        sfs_params.current_per$=""
-        sfs_params.current_year$=""
-		
+    call pgmdir$+"adc_perioddates.aon",gls_params_dev,sf_prevper,sf_prevper_yr,begdate$,sf_prevper_enddate$,status
+    if status then goto std_exit
+    sfs_params.current_per$=""
+    sfs_params.current_year$=""
+
+	params!.put("SF_PREVPER_ENDDATE",sf_prevper_enddate$)
+
 rem --- Retrieve key templates
 
 rem --- Set additional params
