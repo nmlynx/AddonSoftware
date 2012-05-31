@@ -70,7 +70,33 @@ rem --- Open File(s)
 
     ads_autolaunch=num(open_chans$[1]);dim ads_autolaunch$:open_tpls$[1]
 
+rem --- Open File(s) used in VIEWs to ensure their existence (so CREATE won't err)
+rem     ***** NOTE: New VIEWs should add their tables to these opens *****
+	num_files=7
+	dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
+
+	open_tables$[1]	="SFE_WOMASTR",  open_opts$[1] = "OTA"; rem sfe-01
+	open_tables$[2]	="SFT_OPNOPRTR", open_opts$[2] = "OTA"; rem sft-01
+	open_tables$[3]	="SFT_CLSOPRTR", open_opts$[3] = "OTA"; rem sft-03
+	open_tables$[4]	="SFT_OPNMATTR", open_opts$[4] = "OTA"; rem sft-21
+	open_tables$[5] ="SFT_CLSMATTR", open_opts$[5] = "OTA"; rem sft-23
+	open_tables$[6] ="SFT_OPNSUBTR", open_opts$[6] = "OTA"; rem sft-31
+	open_tables$[7] ="SFT_CLSSUBTR", open_opts$[7] = "OTA"; rem sft-33
+	
+	gosub open_tables
+
+rem --- Close tables opened solely to ensure VIEWs don't err
     
+	open_tables$[1]	="SFE_WOMASTR",  open_opts$[1] = "C"; rem sfe-01
+	open_tables$[2]	="SFT_OPNOPRTR", open_opts$[2] = "C"; rem sft-01
+	open_tables$[3]	="SFT_CLSOPRTR", open_opts$[3] = "C"; rem sft-03
+	open_tables$[4]	="SFT_OPNMATTR", open_opts$[4] = "C"; rem sft-21
+	open_tables$[5] ="SFT_CLSMATTR", open_opts$[5] = "C"; rem sft-23
+	open_tables$[6] ="SFT_OPNSUBTR", open_opts$[6] = "C"; rem sft-31
+	open_tables$[7] ="SFT_CLSSUBTR", open_opts$[7] = "C"; rem sft-33
+	
+    gosub open_tables	
+	
 rem --- init
 
     database$=stbl("+DBNAME",err=std_exit)
