@@ -54,11 +54,11 @@ rem --- Column Headings
         columns$[3,0]="Item/Vendor/OpCd",    columns$[3,1]="C",columns$[3,2]="20"
 		columns$[4,0]="UM/Desc/Employee",    columns$[4,1]="C",columns$[4,2]="20"
 		columns$[5,0]="P.O.",	        	 columns$[5,1]="C",columns$[5,2]="15"
-        columns$[6,0]="Cmplt Qty",           columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m2$
-        columns$[7,0]="SetUp hrs",           columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m2$
-        columns$[8,0]="Total Units",         columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=m2$
-        columns$[9,0]="Rate",                columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=m3$
-        columns$[10,0]="Amount",             columns$[10,1]="N",columns$[10,2]="12",columns$[10,3]=m1$,columns$[10,10]="T"
+        columns$[6,0]="Cmplt Qty",           columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=sf_units_mask$
+        columns$[7,0]="SetUp hrs",           columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=sf_units_mask$
+        columns$[8,0]="Total Units",         columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=sf_units_mask$
+        columns$[9,0]="Rate",                columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=sf_cost_mask$
+        columns$[10,0]="Amount",             columns$[10,1]="N",columns$[10,2]="12",columns$[10,3]=sf_amt_mask$,columns$[10,10]="T"
     else
         columns = 8
         dim columns$[columns,10]
@@ -68,9 +68,9 @@ rem --- Column Headings
         columns$[3,0]="Item/Vendor/OpCd",    columns$[3,1]="C",columns$[3,2]="20"
 		columns$[4,0]="UM/Desc/Employee",	 columns$[4,1]="C",columns$[4,2]="20"
 		columns$[5,0]="P.O.",       		 columns$[5,1]="C",columns$[5,2]="15"
-        columns$[6,0]="Units",               columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m2$
-        columns$[7,0]="Rate",                columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=m3$
-        columns$[8,0]="Amount",              columns$[8,1]="N",columns$[8,2]="12",columns$[8,3]=m1$,columns$[8,10]="T"
+        columns$[6,0]="Units",               columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=sf_units_mask$
+        columns$[7,0]="Rate",                columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=sf_cost_mask$
+        columns$[8,0]="Amount",              columns$[8,1]="N",columns$[8,2]="12",columns$[8,3]=sf_amt_mask$,columns$[8,10]="T"
     endif
 
 rem --- Background
@@ -161,7 +161,7 @@ init_data: rem --- Init Data
 	t1$=""
 	l2=0
 	prev_wo$=""
-
+	
 rem --- Main Read
     while more
 		read_tpl$ = sqlfetch(sql_chan,err=*break)
@@ -239,11 +239,11 @@ rem --- Process Transactions
             OutVect!.addItem(fill(20)+"Type: "+read_tpl.wo_type$+" Cat: "
 :							 +read_tpl.wo_category$+"  Stat: "+read_tpl.wo_status$
 :							 +"  Whse: "+read_tpl.warehouse_id$+"  Sched Prod: "
-:							 +str(read_tpl.sch_prod_qty:m2$)); rem columns$[4
+:							 +str(read_tpl.sch_prod_qty:sf_units_mask$)); rem columns$[4
             xwk=fnblank(columns-4); rem "finish the row
 			if pos("0"<read_tpl.customer_id$)>0 then
                 rem NOTE: in v6 Cust/Ord info is flush right, but those are numeric cols in DocOut, so I moved left w/indent
-				OutVect!.addItem(fill(5)+"Cust: "+fnmask$(read_tpl.customer_id$,c1$)+"  Order: "+read_tpl.order_no$); rem columns$[0
+				OutVect!.addItem(fill(5)+"Cust: "+fnmask$(read_tpl.customer_id$,customer_mask$)+"  Order: "+read_tpl.order_no$); rem columns$[0
 				xwk=fnblank(columns); rem "finish the row
 			else
 				rem xwk=fnblank(columns+1); rem "blank row
@@ -258,9 +258,9 @@ rem --- Now Print It
             OutVect!.addItem(read_tpl.record_id$)
             xwk=fnblank(1); rem OutVect!.addItem(sftran.oper_seq_ref$); rem v12 doesn't print seq_refs
             gosub operation_details
-            OutVect!.addItem(str(sftran.units))
-            OutVect!.addItem(str(sftran.unit_cost))
-            OutVect!.addItem(str(sftran.ext_cost))
+            OutVect!.addItem(str(sftran.units:sf_units_mask$))
+            OutVect!.addItem(str(sftran.unit_cost:sf_cost_mask$))
+            OutVect!.addItem(str(sftran.ext_cost:sf_cost_mask$))
         endif
 
         if read_tpl.record_id$="M" then 
@@ -269,9 +269,9 @@ rem --- Now Print It
             xwk=fnblank(1); rem OutVect!.addItem(sftran.material_seq_ref$); rem v12 doesn't print seq_refs
             gosub material_details
             if pos("O"=transtype$)>0 then xwk=fnblank(2)
-            OutVect!.addItem(str(sftran.units))
-            OutVect!.addItem(str(sftran.unit_cost))
-            OutVect!.addItem(str(sftran.ext_cost))
+            OutVect!.addItem(str(sftran.units:sf_units_mask$))
+            OutVect!.addItem(str(sftran.unit_cost:sf_cost_mask$))
+            OutVect!.addItem(str(sftran.ext_cost:sf_cost_mask$))
 			gosub lotserial_details
         endif
 
@@ -281,9 +281,9 @@ rem --- Now Print It
             xwk=fnblank(1); rem OutVect!.addItem(sftran.subcont_seq_ref$); rem v12 doesn't print seq_refs
             gosub subcontract_details
             if pos("O"=transtype$)>0 then xwk=fnblank(2)
-            OutVect!.addItem(str(sftran.units))
-            OutVect!.addItem(str(sftran.unit_cost))
-            OutVect!.addItem(str(sftran.ext_cost))
+            OutVect!.addItem(str(sftran.units:sf_units_mask$))
+            OutVect!.addItem(str(sftran.unit_cost:sf_cost_mask$))
+            OutVect!.addItem(str(sftran.ext_cost:sf_cost_mask$))
         endif
             
         l=l+1
@@ -316,12 +316,12 @@ done: rem --- End
         OutVect!.addItem("Grand Total: ")
         if pos("O"=transtype$)>0 then 
             xwk=fnblank(2)
-            OutVect!.addItem("Total Hours: "+str(u[0]:m2$)+" Setup Hours: "+str(u[2]:m2$)); rem columns$[4
+            OutVect!.addItem("Total Hours: "+str(u[0]:sf_hours_mask$)+" Setup Hours: "+str(u[2]:sf_hours_mask$)); rem columns$[4
         else
             xwk=fnblank(3)
 		endif
         xwk=fnblank(columns-5)
-		OutVect!.addItem(str(u[1]:m1$))
+		OutVect!.addItem(str(u[1]:sf_amt_mask$))
         xwk=fnblank(columns)
 		
 		out_action$="FORMAT"
@@ -338,7 +338,7 @@ sub_head:rem --- Sub Heading
             xwk=fnblank(columns-1)
         endif
         if sequence$="C" then
-			OutVect!.addItem(fnmask$(t0$,c1$))
+			OutVect!.addItem(fnmask$(t0$,customer_mask$))
             OutVect!.addItem(h5$)            
 			xwk=fnblank(columns-1)
         endif
@@ -353,12 +353,12 @@ sub_total: rem --- First Sub Total
             OutVect!.addItem(h9$+" "+cvs(t0$,2)+"   "+"Total: ")
             if pos("O"=transtype$)>0 then 
                 xwk=fnblank(2)
-                OutVect!.addItem("Total Hours: "+str(t[0]:m2$)+" Setup Hours: "+str(t[2]:m2$))
+                OutVect!.addItem("Total Hours: "+str(t[0]:sf_units_mask$)+" Setup Hours: "+str(t[2]:sf_units_mask$))
                 xwk=fnblank(5); rem "finish row
             else
                 xwk=fnblank(6); rem "finish row
             endif			
-			OutVect!.addItem(str(t[1]))            
+			OutVect!.addItem(str(t[1]:sf_amt_mask$))            
 			xwk=fnblank(columns+1); rem "blank row
 			
         endif
@@ -389,12 +389,12 @@ date_subtot:rem --- Date Subtotal
             OutVect!.addItem("Month "+fnh$(t1$)+"   "+"Total: ")
             if pos("O"=transtype$)>0 then 
                 xwk=fnblank(2)
-                OutVect!.addItem("Total Hours: "+str(d[0]:m2$)+" Setup Hours: "+str(d[2]:m2$))
+                OutVect!.addItem("Total Hours: "+str(d[0]:sf_units_mask$)+" Setup Hours: "+str(d[2]:sf_units_mask$))
                 xwk=fnblank(5); rem "finish row
             else
                 xwk=fnblank(6); rem "finish row
             endif
-            OutVect!.addItem(str(d[1]))
+            OutVect!.addItem(str(d[1]:sf_amt_mask$))
 			xwk=fnblank(columns+1); rem "blank row
         endif
 
@@ -415,12 +415,12 @@ wo_subtot: rem --- W/O Subtotal
         OutVect!.addItem("Work Order "+prev_wo$+" Total: ")
         if pos("O"=transtype$)>0 then 
             xwk=fnblank(2)
-            OutVect!.addItem("Total Hours: "+str(s[0]:m2$)+" Setup Hours: "+str(s[2]:m2$))
+            OutVect!.addItem("Total Hours: "+str(s[0]:sf_units_mask$)+" Setup Hours: "+str(s[2]:sf_units_mask$))
             xwk=fnblank(5); rem "finish row
         else
             xwk=fnblank(6); rem "finish row
         endif
-        OutVect!.addItem(str(s[1]))
+        OutVect!.addItem(str(s[1]:sf_amt_mask$))
         xwk=fnblank(columns+1); rem "blank row
     return
 
@@ -462,11 +462,11 @@ rem --- Print It Here
                     
 					rem -- Columns$[3,x]
 					if lstran_dev=sft11a_dev then 
-						OutVect!.addItem(lotser$+lstran.lotser_no$+"  Issued:"+str(lstran.cls_inp_qty:m2$)+"  Cost:"+str(lstran.closed_cost:m3$)+"  Amount: "+str(lstran.ext_cost:m1$))
+						OutVect!.addItem(lotser$+lstran.lotser_no$+"  Issued:"+str(lstran.cls_inp_qty:sf_units_mask$)+"  Cost:"+str(lstran.closed_cost:sf_cost_mask$)+"  Amount: "+str(lstran.ext_cost:sf_amt_mask$))
                     endif
 					
 					if lstran_dev=sft12a_dev then 
-						OutVect!.addItem(lotser$+lstran.lotser_no$+"  Issued:"+str(lstran.qty_closed:m2$)+"  Cost:"+str(lstran.unit_cost:m3$)+"  Amount: "+str(lstran.ext_cost:m1$))
+						OutVect!.addItem(lotser$+lstran.lotser_no$+"  Issued:"+str(lstran.qty_closed:sf_units_mask$)+"  Cost:"+str(lstran.unit_cost:sf_cost_mask$)+"  Amount: "+str(lstran.ext_cost:sf_amt_mask$))
 					endif
 					xwk=fnblank(columns-3)
                 else
@@ -484,7 +484,7 @@ subcontract_details: rem --- Subcontracts Here
             if po$="Y" then find record (apm01a_dev,key=firm_id$+sftran.vendor_id$,dom=*next) apm01a$
             
 			rem -- Columns$[3,x]-[5,x]
-			OutVect!.addItem(fnmask$(sftran.vendor_id$,c3$)+"  "+apm01a.vendor_name$)
+			OutVect!.addItem(fnmask$(sftran.vendor_id$,vendor_mask$)+"  "+apm01a.vendor_name$)
 			OutVect!.addItem("")
 			OutVect!.addItem("PO #: "+sftran.po_no$); rem +sftran.pur_ord_seq_ref$); rem v12 doesn't print seq_refs
         endif
@@ -501,12 +501,12 @@ operation_details: rem --- Operations Here
             
 			rem -- Columns$[3,x]-[5,x]
 			OutVect!.addItem(sftran.op_code$+"  "+x1$)
-            OutVect!.addItem(fnmask$(sftran.employee_no$,c5$)+" "+empcode.empl_surname$+empcode.empl_givname$)
+            OutVect!.addItem(fnmask$(sftran.employee_no$,employee_mask$)+" "+empcode.empl_surname$+empcode.empl_givname$)
 			OutVect!.addItem("")
 			 
 			rem -- Columns$[6,x]-[7,x]
-			OutVect!.addItem(str(sftran.complete_qty))
-            OutVect!.addItem(str(sftran.setup_time))
+			OutVect!.addItem(str(sftran.complete_qty:sf_units_mask$))
+            OutVect!.addItem(str(sftran.setup_time:sf_hours_mask$))
         endif
         return
 

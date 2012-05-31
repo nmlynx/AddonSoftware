@@ -166,7 +166,7 @@ rem --- Dimension string templates & retrieve params (Add'l files)
 			dim ars01a$:open_tpls$[2]
 			
 			find record (ars01a_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
-            call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",c1$,0,c1
+            call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",customer_mask$,0,c1
         endif
 
 		if po$="Y" then
@@ -174,7 +174,7 @@ rem --- Dimension string templates & retrieve params (Add'l files)
 			dim aps01a$:open_tpls$[4]
 			
 			find record (aps01a_dev,key=firm_id$+"AP00") aps01a$
-			call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",c3$,0,c3
+			call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",vendor_mask$,0,c3
         endif
 		
 		dim opcode$:open_tpls$[5]
@@ -183,9 +183,9 @@ rem --- Dimension string templates & retrieve params (Add'l files)
 			dim prs01a$:open_tpls$[6]
 
             find record (prs01a_dev,key=firm_id$+"PR00") prs01a$
-            call stbl("+DIR_PGM")+"adc_getmask.aon","","PR","I","",c5$,0,c4
+            call stbl("+DIR_PGM")+"adc_getmask.aon","","PR","I","",employee_mask$,0,c4
 		else
-            call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","I","",c5$,0,c4
+            call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","I","",employee_mask$,0,c4
 		endif
 		
 		dim empcode$:open_tpls$[7]
@@ -204,6 +204,13 @@ rem --- Init Data
         l=l9+1
         dim desc[3]
 
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","H","",sf_hours_mask$,0,0
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","R","",sf_rate_mask$,0,0
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","%","",sf_pct_mask$,0,0
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","A","",sf_amt_mask$,0,0
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",sf_units_mask$,0,0
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","C","",sf_cost_mask$,0,0		
+		
 		Rem --- Find end date of SF's PREVIOUS period
         sf_prevper=num(sfs01a.current_per$)-1
         sf_prevper_yr=num(sfs01a.current_year$)
