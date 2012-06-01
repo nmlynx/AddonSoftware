@@ -907,10 +907,6 @@ rem ==========================================================================
 			rem --- Update appRowVect! for unchecked install
 			appRowVect!.removeItem(index+2)
 			appRowVect!.insertItem(index+2, "n"); rem Install
-
-			rem --- Update stblRowVect! for uncopied application
-			appName$=appRowVect!.get(index+0)
-			gosub remove_app_stbl_vector
 		endif
 	endif
 
