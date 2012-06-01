@@ -116,9 +116,10 @@ callpoint!.setDevObject("multi_dist",aps01a.multi_dist$)
 callpoint!.setDevObject("dflt_dist_cd", aps01a.ap_dist_code$)
 callpoint!.setDevObject("retention",aps01a.ret_flag$)
 
-rem --- See if GL is installed
+rem --- See if GL is installed or linked to PO
+	read record(pos01_dev,key=firm_id$+"PO00",dom=*next)pos01a$
 	call stbl("+DIR_PGM")+"adc_application.aon","GL",info$[all]
-	if info$[20]="N"
+	if info$[20]="N" or pos01a.post_to_gl$<>"Y"
 		callpoint!.setDevObject("gl_installed","N")
 	else
 		callpoint!.setDevObject("gl_installed","Y")
