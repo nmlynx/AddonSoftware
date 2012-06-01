@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopyMatStd" language="groovy" pageWidth="787" pageHeight="612" orientation="Landscape" columnWidth="767" leftMargin="0" rightMargin="20" topMargin="20" bottomMargin="10">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopyMatStd" language="groovy" pageWidth="760" pageHeight="612" orientation="Landscape" columnWidth="740" leftMargin="0" rightMargin="20" topMargin="20" bottomMargin="10">
 	<property name="ireport.zoom" value="1.0"/>
-	<property name="ireport.x" value="59"/>
+	<property name="ireport.x" value="195"/>
 	<property name="ireport.y" value="0"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
 	<parameter name="WO_LOCATION" class="java.lang.String"/>
@@ -33,7 +33,7 @@
 	<columnHeader>
 		<band height="45" splitType="Stretch">
 			<staticText>
-				<reportElement mode="Opaque" x="0" y="0" width="822" height="15" backcolor="#ECECEC"/>
+				<reportElement mode="Opaque" x="0" y="0" width="767" height="15" backcolor="#ECECEC"/>
 				<textElement/>
 				<text><![CDATA[Material Standards]]></text>
 			</staticText>
@@ -53,47 +53,47 @@
 				<text><![CDATA[Scrap]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="267" y="32" width="41" height="13"/>
+				<reportElement x="256" y="32" width="41" height="13"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Divisor]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="326" y="32" width="41" height="13"/>
+				<reportElement x="297" y="32" width="41" height="13"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Factor]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="379" y="32" width="57" height="13"/>
+				<reportElement x="338" y="32" width="57" height="13"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Qty Req]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="448" y="32" width="70" height="13"/>
+				<reportElement x="411" y="32" width="70" height="13"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Units]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="531" y="32" width="70" height="13"/>
+				<reportElement x="500" y="32" width="70" height="13"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Cost]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="614" y="32" width="70" height="13"/>
+				<reportElement x="584" y="32" width="70" height="13"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Units]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="697" y="32" width="70" height="13"/>
+				<reportElement x="670" y="32" width="70" height="13"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Cost]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="448" y="19" width="153" height="13"/>
+				<reportElement x="417" y="19" width="153" height="13"/>
 				<textElement textAlignment="Center"/>
 				<text><![CDATA[< - - - - - - - - - Each - - - - - - - - - >]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="614" y="19" width="153" height="13"/>
+				<reportElement x="587" y="19" width="153" height="13"/>
 				<textElement textAlignment="Center"/>
 				<text><![CDATA[< - - - - - - - - - Total  - - - - - - - - ->]]></text>
 			</staticText>
@@ -117,37 +117,37 @@
 				<textFieldExpression><![CDATA[$F{SCRAP}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="267" y="0" width="41" height="13"/>
+				<reportElement x="256" y="0" width="41" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{DIVISOR}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="326" y="0" width="41" height="13"/>
+				<reportElement x="297" y="0" width="41" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{FACTOR}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="379" y="0" width="57" height="13"/>
+				<reportElement x="338" y="0" width="57" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{QTY_REQ}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="448" y="0" width="70" height="13"/>
+				<reportElement x="411" y="0" width="70" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{UNITS_EA}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="531" y="0" width="70" height="13"/>
+				<reportElement x="500" y="0" width="70" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{COST_EA}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="614" y="0" width="70" height="13"/>
+				<reportElement x="584" y="0" width="70" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{UNITS_TOT}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="697" y="0" width="70" height="13"/>
+				<reportElement x="670" y="0" width="70" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{COST_TOT}]]></textFieldExpression>
 			</textField>
