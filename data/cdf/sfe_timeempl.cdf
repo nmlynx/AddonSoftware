@@ -1,4 +1,26 @@
+[[SFE_TIMEEMPL.AREC]]
+rem --- Init new record
+	callpoint!.setDevObject("normal_title","")
+	callpoint!.setDevObject("hrlysalary","")
+[[SFE_TIMEEMPL.EMPLOYEE_NO.AVAL]]
+rem --- Init for this employee
+	if callpoint!.getDevObject("pr")="Y" then
+		empcode_dev=callpoint!.getDevObject("empcode_dev")
+		dim empcode$:callpoint!.getDevObject("empcode_tpl")
+		findrecord(empcode_dev,key=firm_id$+callpoint!.getColumnData("SFE_TIMEEMPL.EMPLOYEE_NO"),dom=*next)empcode$
+		callpoint!.setDevObject("normal_title",empcode.normal_title$)
+		callpoint!.setDevObject("hrlysalary",empcode.hrlysalary$)
+	endif
 [[SFE_TIMEEMPL.AREA]]
+rem --- Init for this employee
+	if callpoint!.getDevObject("pr")="Y" then
+		empcode_dev=callpoint!.getDevObject("empcode_dev")
+		dim empcode$:callpoint!.getDevObject("empcode_tpl")
+		findrecord(empcode_dev,key=firm_id$+callpoint!.getColumnData("SFE_TIMEEMPL.EMPLOYEE_NO"),dom=*next)empcode$
+		callpoint!.setDevObject("normal_title",empcode.normal_title$)
+		callpoint!.setDevObject("hrlysalary",empcode.hrlysalary$)
+	endif
+
 rem wgh ... need to update entered_hrs = hrs + setup_time
 [[SFE_TIMEEMPL.BDEL]]
 rem wgh ... make sure detail is deleted when header is deleted
@@ -58,10 +80,10 @@ rem --- Get SF parameters
 	pr$=sfs_params.pr_interface$
 	gl$=sfs_params.post_to_gl$
 	pay_actstd$=sfs_params.pay_actstd$
+rem wgh ... testing
+pay_actstd$="A"
 	callpoint!.setDevObject("pay_actstd",pay_actstd$)
 	time_clk_flg$=sfs_params.time_clk_flg$
-rem wgh ... testing
-time_clk_flg$="Y"
 	callpoint!.setDevObject("time_clk_flg",time_clk_flg$)
 
 	if bm$="Y"
@@ -104,7 +126,6 @@ rem --- Additional file opens
 	if pr$="Y" then
 		open_tables$[2]="PRS_PARAMS",open_opts$[2]="OTA"
 		open_tables$[3]="PRM_EMPLMAST",open_opts$[3]="OTA"
-rem wgh ... testing		open_tables$[4]="PRX_NAMEEMPL",open_opts$[4]="OTA"
 		open_tables$[5]="PRC_PAYCODE",open_opts$[5]="OTA"
 		open_tables$[6]="PRC_TITLCODE",open_opts$[6]="OTA"
 		open_tables$[7]="PRT_EMPLEARN",open_opts$[7]="OTA"
@@ -144,7 +165,7 @@ rem wgh ... testing		open_tables$[4]="PRX_NAMEEMPL",open_opts$[4]="OTA"
 	callpoint!.setDevObject("empxref_dev",num(open_chans$[4]))
 	callpoint!.setDevObject("empxref_tpl",open_tpls$[4])
 	callpoint!.setDevObject("paycode_dev",num(open_chans$[5]))
-	callpoint!.setDevObject("paycod_tpl",open_tpls$[5])
+	callpoint!.setDevObject("paycode_tpl",open_tpls$[5])
 	callpoint!.setDevObject("titlcode_dev",num(open_chans$[6]))
 	callpoint!.setDevObject("titlcode_tpl",open_tpls$[6])
 	callpoint!.setDevObject("emplearn_dev",num(open_chans$[7]))

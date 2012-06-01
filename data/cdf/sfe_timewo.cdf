@@ -1,9 +1,11 @@
+[[SFE_TIMEWO.AREA]]
+rem wgh ... need to update entered_hrs = hrs + setup_time
 [[SFE_TIMEWO.BDEL]]
 rem wgh ... make sure detail is deleted when header is deleted
 [[SFE_TIMEWO.TRANS_DATE.BINP]]
 rem --- Initialize trans_date
-	if cvs(callpoint!.getColumnData("SFE_TIMEEMPL.TRANS_DATE"),2)="" then 
-		callpoint!.setColumnData("SFE_TIMEEMPL.TRANS_DATE",stbl("+SYSTEM_DATE"),1)
+	if cvs(callpoint!.getColumnData("SFE_TIMEWO.TRANS_DATE"),2)="" then 
+		callpoint!.setColumnData("SFE_TIMEWO.TRANS_DATE",stbl("+SYSTEM_DATE"),1)
 	endif
 [[SFE_TIMEWO.TRANS_DATE.AVAL]]
 rem --- Validate trans_date
@@ -51,6 +53,8 @@ rem --- Get SF parameters
 	pr$=sfs_params.pr_interface$
 	gl$=sfs_params.post_to_gl$
 	pay_actstd$=sfs_params.pay_actstd$
+rem wgh ... testing
+pay_actstd$="A"
 	callpoint!.setDevObject("pay_actstd",pay_actstd$)
 	time_clk_flg$=sfs_params.time_clk_flg$
 	callpoint!.setDevObject("time_clk_flg",time_clk_flg$)
@@ -74,6 +78,8 @@ rem --- Get SF parameters
 		call stbl("+DIR_PGM")+"adc_application.aon","PR",info$[all]
 		pr$=info$[20]
 	endif
+rem wgh ... testing
+pr$="Y"
 	callpoint!.setDevObject("pr",pr$)
 
 rem --- Get IV parameters
@@ -93,7 +99,6 @@ rem --- Additional file opens
 	if pr$="Y" then
 		open_tables$[2]="PRS_PARAMS",open_opts$[2]="OTA"
 		open_tables$[3]="PRM_EMPLMAST",open_opts$[3]="OTA"
-		open_tables$[4]="PRX_NAMEEMPL",open_opts$[4]="OTA"
 		open_tables$[5]="PRC_PAYCODE",open_opts$[5]="OTA"
 		open_tables$[6]="PRC_TITLCODE",open_opts$[6]="OTA"
 		open_tables$[7]="PRT_EMPLEARN",open_opts$[7]="OTA"
@@ -122,7 +127,7 @@ rem --- Additional file opens
 	if pr$="Y" then
 		prs_params_dev=num(open_chans$[2])
 		dim prs_params$:open_tpls$[2]
-		find record (prs_params_dev,key=firm_id$+"GL00",dom=std_missing_params) prs_params$
+		find record (prs_params_dev,key=firm_id$+"PR00",dom=std_missing_params) prs_params$
 		precision$=prs_params.precision$
 		callpoint!.setDevObject("precision",precision$)
 		precision num(precision$)
@@ -133,7 +138,7 @@ rem --- Additional file opens
 	callpoint!.setDevObject("empxref_dev",num(open_chans$[4]))
 	callpoint!.setDevObject("empxref_tpl",open_tpls$[4])
 	callpoint!.setDevObject("paycode_dev",num(open_chans$[5]))
-	callpoint!.setDevObject("paycod_tpl",open_tpls$[5])
+	callpoint!.setDevObject("paycode_tpl",open_tpls$[5])
 	callpoint!.setDevObject("titlcode_dev",num(open_chans$[6]))
 	callpoint!.setDevObject("titlcode_tpl",open_tpls$[6])
 	callpoint!.setDevObject("emplearn_dev",num(open_chans$[7]))

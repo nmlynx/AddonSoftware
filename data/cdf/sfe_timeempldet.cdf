@@ -1,13 +1,31 @@
+[[SFE_TIMEEMPLDET.START_TIME.AVAL]]
+rem --- Calculate hours
+	start_time$=callpoint!.getUserInput()
+	stop_time$=callpoint!.getColumnData("SFE_TIMEEMPLDET.STOP_TIME")
+	gosub calculate_hours
+
+	rem --- Calculate hrs and extension
+	if hours<>0 then
+		setup_time=num(callpoint!.getColumnData("SFE_TIMEEMPLDET.SETUP_TIME"))
+		callpoint!.setColumnData("SFE_TIMEEMPLDET.HRS",str(hours-setup_time),1)
+		gosub calculate_extension
+	endif
 [[SFE_TIMEEMPLDET.<CUSTOM>]]
 rem ==========================================================================
 calculate_hours: rem --- Calculate hours
+rem --- start_time$: input
+rem --- stop_time$: input
 rem --- hours: output
 rem ==========================================================================
-	start=num(callpoint!.getColumnData("SFE_TIMEEMPLDET.START_TIME"))
-	stop=num(callpoint!.getColumnData("SFE_TIMEEMPLDET.STOP_TIME"))
-	if mod(stop,100)<mod(start,100) then stop=stop-40
-	hours=(int((stop-start)*.01)+mod(stop-start,100)/60)*1
-return
+	hours=0
+	if cvs(start_time$,2)<>"" and cvs(stop_time$,2)<>"" then
+		start=num(start_time$)
+		stop=num(stop_time$)
+		if stop<start then stop=stop+2400
+		if mod(stop,100)<mod(start,100) then stop=stop-40
+		hours=(int((stop-start)*.01)+mod(stop-start,100)/60)*1
+	endif
+	return
 
 rem ==========================================================================
 calculate_extension: rem --- Calculate extension
@@ -20,12 +38,92 @@ rem ==========================================================================
 	extended_amt=round((hrs+setup_time)*direct_rate,2)+round((hrs+setup_time)*ovhd_rate,2)
 	callpoint!.setColumnData("SFE_TIMEEMPLDET.OVHD_RATE",str(ovhd_rate))
 	callpoint!.setColumnData("SFE_TIMEEMPLDET.EXTENDED_AMT",str(extended_amt))
-return
+	return
+
+rem ==========================================================================
+get_pay_rate: rem --- Determine pay rate if actual
+rem --- pay_code$: input
+rem --- title_code$: input
+rem --- bad_code$: output
+rem ==========================================================================
+	bad_code$=""
+	if callpoint!.getDevObject("pr")<>"Y" then
+		rem --- No payroll interface, use opcode direct rate
+		if num(callpoint!.getColumnData("SFE_TIMEEMPLDET.DIRECT_RATE"))=0 then
+			callpoint!.setColumnData("SFE_TIMEEMPLDET.DIRECT_RATE",str(callpoint!.getDevObject("opcode_direct_rate")))
+		endif
+		gosub calculate_extension
+	else
+		rem --- Payroll Interface,  use employee's pay and title codes
+		employee_no$=callpoint!.getHeaderColumnData("SFE_TIMEEMPL.EMPLOYEE_NO")
+
+		rem --- Use imployee's pay code
+		bad_code$="PC"
+		emplearn_dev=callpoint!.getDevObject("emplearn_dev")
+		find(emplearn_dev,key=firm_id$+employee_no$+"A"+pay_code$,dom=*endif)
+		paycode_dev=callpoint!.getDevObject("paycode_dev")
+		dim paycode$:callpoint!.getDevObject("paycode_tpl")
+		findrecord(paycode_dev,key=firm_id$+"A"+pay_code$,dom=*endif)paycode$
+		bad_code$=""
+		paycode_rate=paycode.calc_rtamt
+		premium_rate=paycode.prem_factor
+
+		rem --- Use imployee's title code
+		if callpoint!.getDevObject("pay_actstd")="A" then 
+			bad_code$="TC"
+			emplpay_dev=callpoint!.getDevObject("emplpay_dev")
+			dim emplpay$:callpoint!.getDevObject("emplpay_tpl")
+			findrecord(emplpay_dev,key=firm_id$+employee_no$+title_code$,dom=*endif)emplpay$
+			titlcode_dev=callpoint!.getDevObject("titlcode_dev")
+			dim titlcode$:callpoint!.getDevObject("titlcode_tpl")
+			findrecord(titlcode_dev,key=firm_id$+"F"+title_code$,dom=*endif)titlcode$
+			bad_code$=""
+
+			rem --- Calculate actual pay rate"
+			rate=0
+			std_rate=emplpay.std_rate
+			std_hrs=emplpay.std_hrs
+			if callpoint!.getDevObject("hrlysalary")<>"S" then
+				rate=std_rate
+			else
+				if std_hrs<>0 then rate=std_rate/std_hrs
+			endif
+			if paycode_rate<>0 then rate=paycode_rate; rem --- override by pay code
+			if rate=0 then rate=titlcode.std_rate; rem --- use title code rate if needed
+			if premium_rate<>0 then rate=rate*premium_rate; rem --- premium factor
+    
+			if rate<>0 then
+				callpoint!.setColumnData("SFE_TIMEEMPLDET.DIRECT_RATE",str(rate))
+				gosub calculate_extension
+			else
+				bad_code$="TC"
+			endif
+		endif
+	endif
+
+	rem --- Bad pay code
+	if bad_code$="PC" and cvs(pay_code$,2)<>"" then
+		msg_id$ = "PR_BAD_PAY_CODE"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=pay_code$
+		gosub disp_message
+	endif
+
+	rem --- Bad title code
+	if bad_code$="TC" and cvs(title_code$,2)<>"" then
+		msg_id$ = "PR_BAD_TITLE_CODE"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=title_code$
+		gosub disp_message
+	endif
+
+	return
 [[SFE_TIMEEMPLDET.AREC]]
 rem --- Initialize new start_time
 	callpoint!.setColumnData("SFE_TIMEEMPLDET.START_TIME",str(callpoint!.getDevObject("prev_stoptime")),1)
 
 rem --- Initialize opcode overhead factor
+	callpoint!.setDevObject("opcode_direct_rate",0)
 	callpoint!.setDevObject("opcode_ovhd_factor",0)
 [[SFE_TIMEEMPLDET.START_TIME.BINP]]
 rem --- Initialize new start_time
@@ -62,52 +160,23 @@ rem wgh ... 3350 GOSUB 6800
 rem wgh ... 3360 IF POS(TS_SEQ$="E")<>0 AND P3$(13,1)="Y" THEN PRINT @(Q[5],L),FNE$(W1$(20,4))
 rem wgh ... 3370 GOTO 3600
 [[SFE_TIMEEMPLDET.TITLE_CODE.AVAL]]
-rem wgh ... 
-rem wgh ... 3100 REM " --- Title Code Here
-rem wgh ... 3110 IF P3$(4,1)<>"Y" THEN GOTO 3270
-rem wgh ... 3120 LET V0$="S",V1$="C",V2$=W1$(26,2),V3$="",V4$="Enter An Appropriate Title Code, <F3>=Lookup ",V0=2,V1=Q[3],V2=L
-rem wgh ... 3130 GOSUB 7000
-rem wgh ... 3140 IF V3=2 THEN GOTO 3270
-rem wgh ... 3150 IF V3<>3 THEN GOTO 3220
-rem wgh ... 3160 LET NUMBER=1; GOSUB DIMENSION_LOOKUP_PARAMETERS
-rem wgh ... 3170 LET DESCRIPTION$[0]="Code:",DESCRIPTION$[1]="Description:"
-rem wgh ... 3180 LET FIELD[0]=1,POSITION[0]=4,LENGTH[0]=2
-rem wgh ... 3190 LET FIELD[1]=1,POSITION[1]=6,LENGTH[1]=20
-rem wgh ... 3200 LET ROW=V2+1,COLUMN=79-LENGTH[0]-LENGTH[1]-2-NUMBER*4,CHANNEL=PRM10_DEV,RECORD$="F",TITLE$="Code Lookup"
-rem wgh ... 3210 CALL "SYC.LK",CHANNEL,RECORD$,NUMBER,TITLE$,DESCRIPTION$[ALL],FIELD[ALL],POSITION[ALL],LENGTH[ALL],COLUMN,ROW,V$
-rem wgh ... 3220 LET V$=V$+"  ",V$=V$(1,2)
-rem wgh ... 3230 FIND (PRM10_DEV,KEY=N0$+"F"+V$,DOM=3120)IOL=PRM10
-rem wgh ... 3235 LET OLDTC$=W1$(26,2),W1$(26,2)=V$
-rem wgh ... 3240 GOSUB 6000
-rem wgh ... 3245 IF BAD_CODE$="Y" THEN LET W1$(26,2)=OLDTC$; GOTO 3100
-rem wgh ... 3247 LET OLDTC$=""
-rem wgh ... 3250 PRINT @(40,23),"Title Code: ",V$," ",Y0$(6,20),
-rem wgh ... 3260 PRINT @(V1,V2),V$
-rem wgh ... 3270 GOTO 3600
+rem --- Get pay rate
+	title_code$=callpoint!.getUserInput()
+	pay_code$=callpoint!.getColumnData("SFE_TIMEEMPLDET.PAY_CODE")
+	gosub get_pay_rate
+	if bad_code$="TC" then
+		callpoint!.setStatus("ABORT")
+		break
+	endif
 [[SFE_TIMEEMPLDET.PAY_CODE.AVAL]]
-rem wgh ... 
-rem wgh ... 2800 REM " --- Pay Code Here
-rem wgh ... 2810 IF P3$(4,1)<>"Y" THEN GOTO 2990
-rem wgh +++ 2820 LET V0$="S",V1$="C",V2$=W1$(24,2),V3$="",V4$="Enter An Appropriate Pay Code, <F3>=Lookup",V0=2,V1=Q[2],V2=L
-rem wgh ... 2830 GOSUB 7000
-rem wgh ... 2840 IF V3=2 THEN GOTO 2990
-rem wgh ... 2850 IF V3<>3 THEN GOTO 2930
-rem wgh ... 2860 LET NUMBER=1; GOSUB DIMENSION_LOOKUP_PARAMETERS
-rem wgh ... 2870 LET DESCRIPTION$[0]="Code:",DESCRIPTION$[1]="Description:"
-rem wgh ... 2880 LET FIELD[0]=1,POSITION[0]=4,LENGTH[0]=2
-rem wgh ... 2890 LET FIELD[1]=1,POSITION[1]=6,LENGTH[1]=16
-rem wgh ... 2900 LET ROW=V2+1,COLUMN=79-LENGTH[0]-LENGTH[1]-2-NUMBER*4
-rem wgh ... 2910 LET CHANNEL=PRM10_DEV,RECORD$="A",TITLE$="Code Lookup"
-rem wgh ... 2920 CALL "SYC.LK",CHANNEL,RECORD$,NUMBER,TITLE$,DESCRIPTION$[ALL],FIELD[ALL],POSITION[ALL],LENGTH[ALL],COLUMN,ROW,V$
-rem wgh ... 2930 LET V$=V$+"  ",V$=V$(1,2)
-rem wgh ... 2940 FIND (PRM10_DEV,KEY=N0$+"A"+V$,DOM=2820)IOL=PRM10
-rem wgh ... 2945 LET OLDPC$=W1$(24,2),W1$(24,2)=V$
-rem wgh +++ 2950 GOSUB 6000
-rem wgh ... 2955 IF BAD_CODE$="Y" THEN LET W1$(24,2)=OLDPC$; GOTO 2800
-rem wgh ... 2960 LET OLDPC$=""
-rem wgh ... 2970 PRINT @(V1,V2),V$
-rem wgh ... 2980 PRINT @(0,23),"Pay Code: ",V$," ",Y0$(6,10),
-rem wgh ... 2990 GOTO 3600
+rem --- Get pay rate
+	pay_code$=callpoint!.getUserInput()
+	title_code$=callpoint!.getColumnData("SFE_TIMEEMPLDET.TITLE_CODE")
+	gosub get_pay_rate
+	if bad_code$="PC" then
+		callpoint!.setStatus("ABORT")
+		break
+	endif
 [[SFE_TIMEEMPLDET.OP_SEQ.AVAL]]
 rem wgh ... 
 rem wgh ... 2600 REM " --- Step
@@ -127,18 +196,18 @@ rem wgh ... 2730 GOTO 3600
 [[SFE_TIMEEMPLDET.STOP_TIME.AVAL]]
 rem --- Capture entry so can be used for next new start time
 	stop_time$=callpoint!.getUserInput()
-	callpoint!.setDevObject("prev_stoptime",stop_time$)
+	callpoint!.setDevObject("prev_stoptime",callpoint!.getUserInput())
 
 rem --- Calculate hours
-	callpoint!.setColumnData("SFE_TIMEEMPLDET.STOP_TIME",stop_time$)
+	start_time$=callpoint!.getColumnData("SFE_TIMEEMPLDET.START_TIME")
 	gosub calculate_hours
 
-rem --- Calculate hrs and extension
-if hours<>0 then
-	setup_time=num(callpoint!.getColumnData("SFE_TIMEEMPLDET.SETUP_TIME"))
-	callpoint!.setColumnData("SFE_TIMEEMPLDET.HRS",str(hours-setup_time),1)
-	gosub calculate_extension
-endif
+	rem --- Calculate hrs and extension
+	if hours<>0 then
+		setup_time=num(callpoint!.getColumnData("SFE_TIMEEMPLDET.SETUP_TIME"))
+		callpoint!.setColumnData("SFE_TIMEEMPLDET.HRS",str(hours-setup_time),1)
+		gosub calculate_extension
+	endif
 [[SFE_TIMEEMPLDET.WO_NO.AVAL]]
 rem wgh ... 
 rem wgh ... 2200 REM " --- W/O # ("DE" Selections)
