@@ -245,8 +245,9 @@ rem   - This record set will be used as driver instead of sfe-01 and sfm-07.
 	dim read_tpl$:sqltmpl(sql_chan)
 	sqlexec(sql_chan,err=std_exit)
 
-rem --- Init totals and total-break vars
-
+rem --- Init constants, totals and total-break vars
+	more = 1 
+	
 	date_tot_setup_hours=0
 	date_tot_hours=0
 	date_tot_cost=0
@@ -319,12 +320,10 @@ rem --- Process Transactions
 		switch transtype
 			case 0
 				rem --- Materials
-				if read_tpl.wo_category$="I" 
-					dim ivm_itemmast$:fattr(ivm_itemmast$)
-					read record (ivm_itemmast_dev,key=firm_id$+read_tpl.item_id$,dom=*next) ivm_itemmast$
-				endif
+				dim ivm_itemmast$:fattr(ivm_itemmast$)
+				read record (ivm_itemmast_dev,key=firm_id$+read_tpl.trans_item_id$,dom=*next) ivm_itemmast$
 
-				data!.setFieldValue("ITEM_VEND_OPER",pad(cvs(sftran.item_id$,2),20))
+				data!.setFieldValue("ITEM_VEND_OPER",pad(cvs(read_tpl.trans_item_id$,2),20))
 				data!.setFieldValue("DESC",ivm_itemmast.item_desc$)
 				data!.setFieldValue("PO_NUM","")
 				data!.setFieldValue("COMPLETE_QTY","")
@@ -380,11 +379,12 @@ rem --- Process Transactions
 		rem tot_cost_tot=tot_cost_tot+read_tpl.total_cost
 		
 		rem --- Conditionally process Lot/Serial for Materials records
+
 		if read_tpl.record_id$="M"		
-			if ivm_itemmast$.lotser_item$="Y" and
-:			   ivm_itemmast$.inventoried$="Y" and
-:			   pos(ivs_params.lotser_flag$="LS")<>0 then 
-				gosub lotserial_details				
+			if ivm_itemmast.lotser_item$="Y" and
+:			   ivm_itemmast.inventoried$="Y" and
+:			   pos(ivs_params.lotser_flag$="LS") then 
+				  gosub lotserial_details				
 			endif		
 		endif
 	wend
@@ -393,9 +393,6 @@ rem --- Output Totals
 
 	doing_end=1
 	gosub date_subtot
-
-	data! = rs!.getEmptyRecordData()
-	rs!.insert(data!); rem Blank line between Date and Grand totals
 	
 	data! = rs!.getEmptyRecordData(); rem Add totals' underscores
 	data!.setFieldValue("AMOUNT",fill(20,"_"))
@@ -528,20 +525,24 @@ rem --- Serial Numbers Here
         dim lstran$:sft12_tpls$
     endif
 
-    while more
+	read_ls_key$=sftran.firm_id$+sftran.wo_location$+sftran.wo_no$+sftran.trans_date$+sftran.trans_seq$
+    read (lstran_dev,key=read_ls_key$,dom=*next)
+
+		while more
 		data! = rs!.getEmptyRecordData()
 		
-        k1$=key(lstran_dev,end=*break)
-        if pos(sftran.firm_id$+sftran.wo_location$+sftran.wo_no$+sftran.trans_date$+sftran.trans_seq$=k1$)=1 then
-            read record (lstran_dev) lstran$ 
+		read record (lstran_dev,end=*break) lstran$ 
 
+        if pos(read_ls_key$=lstran$)=1 then      
             if ivs_params.lotser_flag$="S" then lotser$="Serial: " else lotser$="Lot: "
 			data!.setFieldValue("ITEM_VEND_OPER",lotser$+lstran.lotser_no$)
 
 			if lstran_dev=sft11a_dev then 
-				data!.setFieldValue("DESC","Issued:"+str(lstran.cls_inp_qty:sf_units_mask$)+"  Cost:"+str(lstran.closed_cost:sf_cost_mask$$)) 	
+				data!.setFieldValue("DESC","Issued:"+str(lstran.cls_inp_qty:sf_units_mask$)) 	
+				data!.setFieldValue("PO_NUM","Cost:"+str(lstran.closed_cost:sf_cost_mask$))
             else
-				data!.setFieldValue("DESC","Issued:"+str(lstran.qty_closed:sf_units_mask$)+"  Cost:"+str(lstran.unit_cost:sf_cost_mask$$))
+				data!.setFieldValue("DESC","Issued:"+str(lstran.qty_closed:sf_units_mask$))
+				data!.setFieldValue("PO_NUM","Cost:"+str(lstran.unit_cost:sf_cost_mask$))
 			endif
 			
 			rs!.insert(data!)
@@ -556,9 +557,7 @@ rem --- Subtotals for date breaks
 date_subtot:rem --- Date Subtotal
 
     if prev_date$<>"" then     
-		data! = rs!.getEmptyRecordData()
-		rs!.insert(data!); rem Blank line before Date totals
-	
+
 		data! = rs!.getEmptyRecordData(); rem Add totals' underscores
 		data!.setFieldValue("AMOUNT",fill(20,"_"))
 		rs!.insert(data!)
@@ -570,8 +569,11 @@ date_subtot:rem --- Date Subtotal
 			data!.setFieldValue("PO_NUM","Setup Hours: "+str(date_tot_setup_hours:sf_hours_mask$))
 		endif
 		data!.setFieldValue("AMOUNT",str(date_tot_cost:sf_cost_mask$))
-		
+	
 		rs!.insert(data!)
+		
+		data! = rs!.getEmptyRecordData(); rem blank line
+		rs!.insert(data!); rem Blank line before Date totals	
     endif
 
     if doing_end then return

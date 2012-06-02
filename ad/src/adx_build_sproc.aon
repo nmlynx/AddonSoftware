@@ -398,6 +398,8 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"     , 'M' AS Record_ID"+$0a$
     sqlprep$=sqlprep$+"     , oMats.trans_seq "+$0a$
 	sqlprep$=sqlprep$+"     , oMats.material_seq_ref AS Seq_Ref "+$0a$
+	sqlprep$=sqlprep$+"     , oMats.warehouse_id AS warehouse_id "+$0a$
+	sqlprep$=sqlprep$+"     , oMats.item_id AS item_id "+$0a$
     sqlprep$=sqlprep$+"FROM SFT_OPNMATTR AS oMats"+$0a$
     sqlprep$=sqlprep$+"  UNION "+$0a$
     sqlprep$=sqlprep$+"SELECT oOps.firm_id "+$0a$
@@ -408,6 +410,8 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"     , 'O' AS Record_ID"+$0a$
     sqlprep$=sqlprep$+"     , oOps.trans_seq "+$0a$
 	sqlprep$=sqlprep$+"     , oOps.oper_seq_ref AS Seq_Ref "+$0a$
+    sqlprep$=sqlprep$+"     , '' AS warehouse_id "+$0a$
+	sqlprep$=sqlprep$+"     , '' AS item_id "+$0a$
     sqlprep$=sqlprep$+"FROM SFT_OPNOPRTR AS oOps "+$0a$
     sqlprep$=sqlprep$+"  UNION "+$0a$
     sqlprep$=sqlprep$+"SELECT oSubs.firm_id "+$0a$
@@ -418,6 +422,8 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"     , 'S' AS Record_ID"+$0a$
     sqlprep$=sqlprep$+"     , oSubs.trans_seq "+$0a$
 	sqlprep$=sqlprep$+"     , oSubs.subcont_seq_ref AS Seq_Ref "+$0a$
+    sqlprep$=sqlprep$+"     , '' AS warehouse_id "+$0a$
+	sqlprep$=sqlprep$+"     , '' AS item_id "+$0a$
     sqlprep$=sqlprep$+"FROM SFT_OPNSUBTR AS oSubs"+$0a$
     sqlprep$=sqlprep$+"  UNION "+$0a$
     sqlprep$=sqlprep$+"SELECT cMats.firm_id "+$0a$
@@ -428,6 +434,8 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"     , 'M' AS Record_ID"+$0a$
     sqlprep$=sqlprep$+"     , cMats.trans_seq "+$0a$
 	sqlprep$=sqlprep$+"     , cMats.material_seq_ref AS Seq_Ref "+$0a$
+	sqlprep$=sqlprep$+"     , cMats.warehouse_id AS warehouse_id "+$0a$
+	sqlprep$=sqlprep$+"     , cMats.item_id AS item_id "+$0a$
     sqlprep$=sqlprep$+"FROM SFT_CLSMATTR AS cMats "+$0a$
     sqlprep$=sqlprep$+"  UNION "+$0a$
     sqlprep$=sqlprep$+"SELECT cOps.firm_id "+$0a$
@@ -438,6 +446,8 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"     , 'O' AS Record_ID"+$0a$
     sqlprep$=sqlprep$+"     , cOps.trans_seq "+$0a$
 	sqlprep$=sqlprep$+"     , cOps.oper_seq_ref AS Seq_Ref "+$0a$
+    sqlprep$=sqlprep$+"     , '' AS warehouse_id "+$0a$
+	sqlprep$=sqlprep$+"     , '' AS item_id "+$0a$
     sqlprep$=sqlprep$+"FROM SFT_CLSOPRTR AS cOps"+$0a$
     sqlprep$=sqlprep$+"  UNION "+$0a$
     sqlprep$=sqlprep$+"SELECT cSubs.firm_id "+$0a$
@@ -448,6 +458,8 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"     , 'S' AS Record_ID"+$0a$
     sqlprep$=sqlprep$+"     , cSubs.trans_seq "+$0a$
 	sqlprep$=sqlprep$+"     , cSubs.subcont_seq_ref AS Seq_Ref  "+$0a$
+    sqlprep$=sqlprep$+"     , '' AS warehouse_id "+$0a$
+	sqlprep$=sqlprep$+"     , '' AS item_id "+$0a$
     sqlprep$=sqlprep$+"FROM SFT_CLSSUBTR AS cSubs"
 
     gosub create_sproc_def	
@@ -462,6 +474,8 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"     , xref.trans_date"+$0a$
     sqlprep$=sqlprep$+"     , xref.record_id"+$0a$
     sqlprep$=sqlprep$+"     , xref.trans_seq"+$0a$
+    sqlprep$=sqlprep$+"     , xref.warehouse_id AS trans_warehouse_id"+$0a$
+    sqlprep$=sqlprep$+"     , xref.item_id AS trans_item_id"+$0a$
     sqlprep$=sqlprep$+"     , mast.wo_category"+$0a$
     sqlprep$=sqlprep$+"     , mast.wo_status"+$0a$
     sqlprep$=sqlprep$+"     , mast.customer_id"+$0a$
