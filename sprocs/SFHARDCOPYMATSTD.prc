@@ -30,7 +30,16 @@ rem --- Get the IN parameters used by the procedure
 	wo_loc$  = sp!.getParameter("WO_LOCATION")
 	wo_no$ = sp!.getParameter("WO_NO")
 	barista_wd$ = sp!.getParameter("BARISTA_WD")
-	
+	masks$ = sp!.getParameter("MASKS")
+
+rem --- masks$ will contain pairs of fields in a single string mask_name^mask|
+
+	if len(masks$)>0
+		if masks$(len(masks$),1)<>"|"
+			masks$=masks$+"|"
+		endif
+	endif
+
 	sv_wd$=dir("")
 	chdir barista_wd$
 
@@ -51,17 +60,12 @@ rem --- Get masks
 rem	x$=stbl("+USER_ID","admin")
 rem	call stbl("+DIR_SYP")+"bas_process_beg.bbj",stbl("+USER_ID"),rd_table_chans$[all]
 
-rem escape;rem ? 
-
 	pgmdir$=stbl("+DIR_PGM",err=*next)
-rem 	call pgmdir$+"adc_getsprocmask.aon",firm_id$,"","SF","U","",m1$,0,m1
-rem	call pgmdir$+"adc_getmask.aon","","SF","U","",m1$,0,m1
-rem	call pgmdir$+"adc_getmask.aon","","AR","I","",custmask$,0,custmask
-	iv_cost_mask$="###,##0.0000-"
-	bm_units_mask$="#,##0.00"
-	bm_rate_mask$="###.00"
-	sf_rate_mask$="###.00"
-	bm_hours_mask$="#,##0.00"
+
+	iv_cost_mask$=fngetmask$("iv_cost_mask","###,##0.0000-",masks$)
+	sf_hours_mask$=fngetmask$("sf_hours_mask","#,##0.00",masks$)
+	sf_units_mask$=fngetmask$("sf_units_mask","#,##0.00",mask$)
+	sf_rate_mask$=fngetmask$("sf_rate_mask","###.00",masks$)
 
 rem --- Init totals
 
@@ -143,11 +147,10 @@ rem --- Trip Read
 		if read_tpl.line_type$="M"
 			data!.setFieldValue("ITEM",read_tpl.ext_comments$)
 		else
-			data!.setFieldValue("ITEM",read_tpl.item_id$+" "+ivm_itemmast.item_desc$)
-	rem		data!.setFieldValue("OP_SEQ",fndate$(read_tpl.require_date$))
-			data!.setFieldValue("SCRAP",str(read_tpl.scrap_factor:bm_hours_mask$))
-			data!.setFieldValue("DIVISOR",str(read_tpl.divisor:bm_units_mask$))
-			data!.setFieldValue("FACTOR",str(read_tpl.alt_factor:bm_rate_mask$))
+			data!.setFieldValue("ITEM",read_tpl.item_id$)
+			data!.setFieldValue("SCRAP",str(read_tpl.scrap_factor:sf_hours_mask$))
+			data!.setFieldValue("DIVISOR",str(read_tpl.divisor:sf_units_mask$))
+			data!.setFieldValue("FACTOR",str(read_tpl.alt_factor:sf_rate_mask$))
 			data!.setFieldValue("QTY_REQ",str(read_tpl.qty_required:sf_rate_mask$))
 			data!.setFieldValue("UNITS_EA",str(read_tpl.units:iv_cost_mask$))
 			data!.setFieldValue("COST_EA",str(read_tpl.unit_cost:iv_cost_mask$))
@@ -155,6 +158,13 @@ rem --- Trip Read
 			data!.setFieldValue("COST_TOT",str(read_tpl.total_cost:sf_rate_mask$))
 		endif
 		rs!.insert(data!)
+		
+		if read_tpl.line_type$<>"M"
+			data! = rs!.getEmptyRecordData()
+			data!.setFieldValue("ITEM","   "+ivm_itemmast.item_desc$)
+rem			data!.setFieldValue("OP_SEQ",This will be Op Code plus (?) plus "Op Seq description")
+			rs!.insert(data!)
+		endif
 		tot_cost_ea=tot_cost_ea+read_tpl.unit_cost
 		tot_cost_tot=tot_cost_tot+read_tpl.total_cost
 	wend
@@ -200,6 +210,20 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
         return str(q1$:q2$)
     fnend
 
+	def fngetmask$(q1$,q2$,q3$)
+		rem --- q1$=mask name, q2$=default mask if not found in mask string, q3$=mask string from parameters
+		q$=q2$
+		if len(q1$)=0 return q$
+		if q1$(len(q1$),1)<>"^" q1$=q1$+"^"
+		q=pos(q1$=q3$)
+		if q=0 return q$
+		q$=q3$(q)
+		q=pos("^"=q$)
+		q$=q$(q+1)
+		q=pos("|"=q$)
+		q$=q$(1,q-1)
+		return q$
+	fnend
 
 	std_exit:
 	
