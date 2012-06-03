@@ -74,54 +74,67 @@ rem --- Init totals
 
 rem --- Open files with adc
 
-    files=3,begfile=1,endfile=files
+    files=5,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ivm-01",ids$[1]="IVM_ITEMMAST"
 	files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
 	files$[3]="sfs_params",ids$[3]="SFS_PARAMS"
-
+	files$[4]="sfe-02",ids$[4]="SFE_WOOPRTN"
+	
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     ivm_itemmast_dev=channels[1]
 	arm_custmast=channels[2]
 	sfs_params=channels[3]
+	sfe02_dev=channels[4]
 
 rem --- Dimension string templates
 
 	dim ivm_itemmast$:templates$[1]
 	dim arm_custmast$:templates$[2]
 	dim sfs_params$:templates$[3]
+	dim sfe02a$:templates$[4]
 	
-goto no_bac_open
-rem --- Open Files    
-    num_files = 3
-    dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
+rem --- Get proper Op Code Maintenance table
 
-	open_tables$[1]="IVM_ITEMMAST",   open_opts$[1] = "OTA"
-	open_tables$[2]="ARM_CUSTMAST",   open_opts$[2] = "OTA"
-	open_tables$[3]="SFS_PARAMS",     open_opts$[3] = "OTA"
+	read record (sfs_params,key=firm_id$+"SF00") sfs_params$
+	bm$=sfs_params.bm_interface$
+	if bm$<>"Y"
+		files$[5]="sfm-02",ids$[5]="SFC_OPRTNCOD"
+	else
+		files$[5]="bmm-08",ids$[5]="BMC_OPCODES"
+	endif
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
 	
-call sypdir$+"bac_open_tables.bbj",
-:       open_beg,
-:		open_end,
-:		open_tables$[all],
-:		open_opts$[all],
-:		open_chans$[all],
-:		open_tpls$[all],
-:		table_chans$[all],
-:		open_batch,
-:		open_status$
-
-	ivm_itemmast_dev  = num(open_chans$[1])
-	arm_custmast = num(open_chans$[2])
-	sfs_params = num(open_chans$[3])
+	opcode_dev=channels[5]
+	dim opcode_tpl$:templates$[5]
 	
-	dim ivm_itemmast$:open_tpls$[1]
-	dim arm_custmast$:open_tpls$[2]
-	dim sfs_params$:open_tpls$[3]
+rem --- generate vector for use with Op Sequence
 
-no_bac_open:
+	SysGUI!=BBjAPI()
+	ops_lines!=SysGUI!.makeVector()
+	ops_list!=SysGUI!.makeVector()
+
+	read(sfe02_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
+	while 1
+		read record (sfe02_dev,end=*break) sfe02a$
+		if pos(firm_id$+wo_loc$+wo_no$=sfe02a$)<>1 break
+		if sfe02a.line_type$<>"S" continue
+		dim opcode_tpl$:fattr(opcode_tpl$)
+		read record (opcode_dev,key=firm_id$+sfe02a.op_code$,dom=*next)opcode_tpl$
+		ops_lines!.addItem(sfe02a.internal_seq_no$)
+		op_code_list$=op_code_list$+sfe02a.op_code$
+		work_var=pos(sfe02a.op_code$=op_code_list$,len(sfe02a.op_code$),0)
+		if work_var>1
+			work_var$=sfe02a.op_code$+"("+str(work_var)+")"
+		else
+			work_var$=sfe02a.op_code$
+		endif
+		ops_list!.addItem(work_var$+" - "+opcode_tpl.code_desc$)
+	wend
 
 rem --- Build SQL statement
 
@@ -162,7 +175,15 @@ rem --- Trip Read
 		if read_tpl.line_type$<>"M"
 			data! = rs!.getEmptyRecordData()
 			data!.setFieldValue("ITEM","   "+ivm_itemmast.item_desc$)
-rem			data!.setFieldValue("OP_SEQ",This will be Op Code plus (?) plus "Op Seq description")
+			if cvs(read_tpl.oper_seq_ref$,3)<>""
+				if ops_lines!.size()
+					for x=1 to ops_lines!.size()-1
+						if read_tpl.oper_seq_ref$=ops_lines!.getItem(x)
+							data!.setFieldValue("OP_SEQ","Op Code: "+ops_list!.getItem(x))
+						endif
+					next x
+				endif
+			endif
 			rs!.insert(data!)
 		endif
 		tot_cost_ea=tot_cost_ea+read_tpl.unit_cost
