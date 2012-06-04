@@ -177,7 +177,7 @@ rem --- Trip Read
 			data!.setFieldValue("ITEM","   "+ivm_itemmast.item_desc$)
 			if cvs(read_tpl.oper_seq_ref$,3)<>""
 				if ops_lines!.size()
-					for x=1 to ops_lines!.size()-1
+					for x=0 to ops_lines!.size()-1
 						if read_tpl.oper_seq_ref$=ops_lines!.getItem(x)
 							data!.setFieldValue("OP_SEQ","Op Code: "+ops_list!.getItem(x))
 						endif

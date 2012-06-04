@@ -70,48 +70,64 @@ rem --- Init totals
 
 rem --- Open files with adc
 
-    files=2,begfile=1,endfile=files
+    files=4,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
 	files$[1]="apm-01",ids$[1]="APM_VENDMAST"
 	files$[2]="sfs_params",ids$[2]="SFS_PARAMS"
+	files$[3]="sfe-02",ids$[3]="SFE_WOOPRTN"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
 	apm_vendmast=channels[1]
 	sfs_params=channels[2]
+	sfe02_dev=channels[3]
 
 rem --- Dimension string templates
 
 	dim apm_vendmast$:templates$[1]
 	dim sfs_params$:templates$[2]
+	dim sfe02a$:templates$[3]
+
+rem --- Get proper Op Code Maintenance table
+
+	read record (sfs_params,key=firm_id$+"SF00") sfs_params$
+	bm$=sfs_params.bm_interface$
+	if bm$<>"Y"
+		files$[4]="sfm-02",ids$[4]="SFC_OPRTNCOD"
+	else
+		files$[4]="bmm-08",ids$[4]="BMC_OPCODES"
+	endif
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
 	
-goto no_bac_open
-rem --- Open Files    
-    num_files = 2
-    dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
-
-	open_tables$[1]="APM_VENDMAST",   open_opts$[1] = "OTA"
-	open_tables$[2]="SFS_PARAMS",     open_opts$[2] = "OTA"
-
-call sypdir$+"bac_open_tables.bbj",
-:       open_beg,
-:		open_end,
-:		open_tables$[all],
-:		open_opts$[all],
-:		open_chans$[all],
-:		open_tpls$[all],
-:		table_chans$[all],
-:		open_batch,
-:		open_status$
-
-	apm_vendmast = num(open_chans$[1])
-	sfs_params = num(open_chans$[2])
+	opcode_dev=channels[4]
+	dim opcode_tpl$:templates$[4]
 	
-	dim apm_vendmast$:open_tpls$[1]
-	dim sfs_params$:open_tpls$[2]
+rem --- generate vector for use with Op Sequence
 
-no_bac_open:
+	SysGUI!=BBjAPI()
+	ops_lines!=SysGUI!.makeVector()
+	ops_list!=SysGUI!.makeVector()
+
+	read(sfe02_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
+	while 1
+		read record (sfe02_dev,end=*break) sfe02a$
+		if pos(firm_id$+wo_loc$+wo_no$=sfe02a$)<>1 break
+		if sfe02a.line_type$<>"S" continue
+		dim opcode_tpl$:fattr(opcode_tpl$)
+		read record (opcode_dev,key=firm_id$+sfe02a.op_code$,dom=*next)opcode_tpl$
+		ops_lines!.addItem(sfe02a.internal_seq_no$)
+		op_code_list$=op_code_list$+sfe02a.op_code$
+		work_var=pos(sfe02a.op_code$=op_code_list$,len(sfe02a.op_code$),0)
+		if work_var>1
+			work_var$=sfe02a.op_code$+"("+str(work_var)+")"
+		else
+			work_var$=sfe02a.op_code$
+		endif
+		ops_list!.addItem(work_var$+" - "+opcode_tpl.code_desc$)
+	wend
 
 rem --- Build SQL statement
 
@@ -127,19 +143,20 @@ rem --- Build SQL statement
 
 rem --- Trip Read
 
+	tot_recs=0
 	while 1
 		read_tpl$ = sqlfetch(sql_chan,end=*break)
 
 		data! = rs!.getEmptyRecordData()
 
 		dim apm_vendmast$:fattr(apm_vendmast$)
-		read record (apm_vendmast,key=firm_id$+read_tpl.vendor_id$,dom=*next) apm_itemmast$
+		read record (apm_vendmast,key=firm_id$+read_tpl.vendor_id$,dom=*next) apm_vendmast$
 		if read_tpl.line_type$<>"S"
 			data!.setFieldValue("VENDOR",read_tpl.ext_comments$)
 		else
 			data!.setFieldValue("VENDOR",fnmask$(read_tpl.vendor_id$,vendor_mask$)+" "+apm_vendmast.vendor_name$)
-	rem		data!.setFieldValue("OP_SEQ",fndate$(read_tpl.require_date$))
-			data!.setFieldValue("DESC",read_tpl.description$)
+rem			data!.setFieldValue("OP_SEQ",fndate$(read_tpl.require_date$))
+rem			data!.setFieldValue("DESC",read_tpl.description$)
 			data!.setFieldValue("DATE_REQ",fndate$(read_tpl.require_date$))
 			data!.setFieldValue("STATUS",read_tpl.po_status$)
 			data!.setFieldValue("UNITS_EA",str(read_tpl.units:ad_units_mask$))
@@ -148,21 +165,40 @@ rem --- Trip Read
 			data!.setFieldValue("COST_TOT",str(read_tpl.total_cost:iv_cost_mask$))
 		endif
 		rs!.insert(data!)
+
+		if read_tpl.line_type$="S"
+			data! = rs!.getEmptyRecordData()
+			data!.setFieldValue("DESC",read_tpl.description$)
+			if cvs(read_tpl.oper_seq_ref$,3)<>""
+				if ops_lines!.size()
+					for x=0 to ops_lines!.size()-1
+						if read_tpl.oper_seq_ref$=ops_lines!.getItem(x)
+							data!.setFieldValue("OP_SEQ","Op Code: "+ops_list!.getItem(x))
+						endif
+					next x
+				endif
+			endif
+			rs!.insert(data!)
+		endif
+
 		tot_cost_ea=tot_cost_ea+read_tpl.unit_cost
 		tot_cost_tot=tot_cost_tot+read_tpl.total_cost
+		tot_recs=tot_recs+1
 	wend
 
 rem --- Output Totals
-	data! = rs!.getEmptyRecordData()
-	data!.setFieldValue("COST_EA",fill(20,"_"))
-	data!.setFieldValue("COST_TOT",fill(20,"_"))
-	rs!.insert(data!)
+	if tot_recs>0
+		data! = rs!.getEmptyRecordData()
+		data!.setFieldValue("COST_EA",fill(20,"_"))
+		data!.setFieldValue("COST_TOT",fill(20,"_"))
+		rs!.insert(data!)
 	
-	data! = rs!.getEmptyRecordData()
-	data!.setFieldValue("VENDOR","Total Subcontracts")
-	data!.setFieldValue("COST_EA",str(tot_cost_ea:iv_cost_mask$))
-	data!.setFieldValue("COST_TOT",str(tot_cost_tot:iv_cost_mask$))
-	rs!.insert(data!)
+		data! = rs!.getEmptyRecordData()
+		data!.setFieldValue("VENDOR","Total Subcontracts")
+		data!.setFieldValue("COST_EA",str(tot_cost_ea:iv_cost_mask$))
+		data!.setFieldValue("COST_TOT",str(tot_cost_tot:iv_cost_mask$))
+		rs!.insert(data!)
+	endif
 	
 rem --- Tell the stored procedure to return the result set.
 
