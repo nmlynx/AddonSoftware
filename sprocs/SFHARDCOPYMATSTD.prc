@@ -150,6 +150,7 @@ rem --- Build SQL statement
 
 rem --- Trip Read
 
+	tot_recs=0
 	while 1
 		read_tpl$ = sqlfetch(sql_chan,end=*break)
 
@@ -186,21 +187,24 @@ rem --- Trip Read
 			endif
 			rs!.insert(data!)
 		endif
+		tot_recs=tot_recs+1
 		tot_cost_ea=tot_cost_ea+read_tpl.unit_cost
 		tot_cost_tot=tot_cost_tot+read_tpl.total_cost
 	wend
 
 rem --- Output Totals
-	data! = rs!.getEmptyRecordData()
-	data!.setFieldValue("COST_EA",fill(20,"_"))
-	data!.setFieldValue("COST_TOT",fill(20,"_"))
-	rs!.insert(data!)
-	
-	data! = rs!.getEmptyRecordData()
-	data!.setFieldValue("ITEM","Total Materials")
-	data!.setFieldValue("COST_EA",str(tot_cost_ea:iv_cost_mask$))
-	data!.setFieldValue("COST_TOT",str(tot_cost_tot:sf_rate_mask$))
-	rs!.insert(data!)
+	if tot_recs>0
+		data! = rs!.getEmptyRecordData()
+		data!.setFieldValue("COST_EA",fill(20,"_"))
+		data!.setFieldValue("COST_TOT",fill(20,"_"))
+		rs!.insert(data!)
+
+		data! = rs!.getEmptyRecordData()
+		data!.setFieldValue("ITEM","Total Materials")
+		data!.setFieldValue("COST_EA",str(tot_cost_ea:iv_cost_mask$))
+		data!.setFieldValue("COST_TOT",str(tot_cost_tot:sf_rate_mask$))
+		rs!.insert(data!)
+	endif
 	
 rem --- Tell the stored procedure to return the result set.
 

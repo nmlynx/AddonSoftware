@@ -57,11 +57,6 @@ rem --- Get Barista System Program directory
 
 rem --- Get masks
 
-rem	x$=stbl("+USER_ID","admin")
-rem	call stbl("+DIR_SYP")+"bas_process_beg.bbj",stbl("+USER_ID"),rd_table_chans$[all]
-
-rem escape;rem ? 
-
 	pgmdir$=stbl("+DIR_PGM",err=*next)
 
 	iv_cost_mask$=fngetmask$("iv_cost_mask","###,##0.0000-",masks$)
@@ -100,49 +95,14 @@ rem --- Dimension string templates
 	dim arm_custmast$:templates$[3]
 	dim sfs_params$:templates$[4]
 	
-goto no_bac_open
-rem --- Open Files    
-    num_files = 5
-    dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
-
-	open_tables$[1]="IVM_ITEMMAST",   open_opts$[1] = "OTA"
-	open_tables$[2]="SFC_WOTYPECD",   open_opts$[2] = "OTA"
-	open_tables$[3]="ARM_CUSTMAST",   open_opts$[3] = "OTA"
-	open_tables$[4]="SFS_PARAMS",     open_opts$[4] = "OTA"
-	
-call sypdir$+"bac_open_tables.bbj",
-:       open_beg,
-:		open_end,
-:		open_tables$[all],
-:		open_opts$[all],
-:		open_chans$[all],
-:		open_tpls$[all],
-:		table_chans$[all],
-:		open_batch,
-:		open_status$
-
-	ivm_itemmast_dev  = num(open_chans$[1])
-	sfc_type_dev = num(open_chans$[2])
-	arm_custmast = num(open_chans$[3])
-	sfs_params = num(open_chans$[4])
-	
-	dim ivm_itemmast$:open_tpls$[1]
-	dim sfc_type$:open_tpls$[2]
-	dim arm_custmast$:open_tpls$[3]
-	dim sfs_params$:open_tpls$[4]
-
-no_bac_open:
-
 rem --- Get proper Op Code Maintenance table
 
 	read record (sfs_params,key=firm_id$+"SF00") sfs_params$
 	bm$=sfs_params.bm_interface$
 	if bm$<>"Y"
 		files$[5]="sfm-02",ids$[5]="SFC_OPRTNCOD"
-rem		open_tables$[5]="SFC_OPRTNCOD",open_opts$[5]="OTA"
 	else
 		files$[5]="bmm-08",ids$[5]="BMC_OPCODES"
-rem		open_tables$[5]="BMC_OPCODES",open_opts$[5]="OTA"
 	endif
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -152,9 +112,6 @@ rem		open_tables$[5]="BMC_OPCODES",open_opts$[5]="OTA"
 	dim opcode_tpl$:templates$[5]
 	
 rem --- Build SQL statement
-
-rem	sql_prep$="select * from vw_sfx_wotranxr as vw_trans where vw_trans.firm_id = '"+firm_id$+"' and "
-rem	sql_prep$=sql_prep$+"record_id = 'O' and wo_no = '"+wo_no$+"'"
 
 	sql_prep$="select op_code, require_date, runtime_hrs, pcs_per_hour, direct_rate, ovhd_rate, setup_time, "
 	sql_prep$=sql_prep$+"hrs_per_pce, unit_cost, total_time, tot_std_cost, line_type, ext_comments "
@@ -168,6 +125,7 @@ rem	sql_prep$=sql_prep$+"record_id = 'O' and wo_no = '"+wo_no$+"'"
 
 rem --- Trip Read
 
+	tot_recs=0
 	while 1
 		read_tpl$ = sqlfetch(sql_chan,end=*break)
 
@@ -190,6 +148,7 @@ rem --- Trip Read
 			data!.setFieldValue("UNITS_TOT",str(read_tpl.total_time:ad_units_mask$))
 			data!.setFieldValue("COST_TOT",str(read_tpl.tot_std_cost:iv_cost_mask$))
 		endif
+		tot_recs=tot_recs+1
 		rs!.insert(data!)
 		tot_units_ea=tot_units_ea+read_tpl.runtime_hrs
 		tot_cost_ea=tot_cost_ea+read_tpl.unit_cost
@@ -198,20 +157,23 @@ rem --- Trip Read
 	wend
 
 rem --- Output Totals
-	data! = rs!.getEmptyRecordData()
-	data!.setFieldValue("UNITS_EA",fill(20,"_"))
-	data!.setFieldValue("COST_EA",fill(20,"_"))
-	data!.setFieldValue("UNITS_TOT",fill(20,"_"))
-	data!.setFieldValue("COST_TOT",fill(20,"_"))
-	rs!.insert(data!)
+
+	if tot_recs>0
+		data! = rs!.getEmptyRecordData()
+		data!.setFieldValue("UNITS_EA",fill(20,"_"))
+		data!.setFieldValue("COST_EA",fill(20,"_"))
+		data!.setFieldValue("UNITS_TOT",fill(20,"_"))
+		data!.setFieldValue("COST_TOT",fill(20,"_"))
+		rs!.insert(data!)
 	
-	data! = rs!.getEmptyRecordData()
-	data!.setFieldValue("OP_CODE","Total Operations")
-	data!.setFieldValue("UNITS_EA",str(tot_units_ea:iv_cost_mask$))
-	data!.setFieldValue("COST_EA",str(tot_cost_ea:iv_cost_mask$))
-	data!.setFieldValue("UNITS_TOT",str(tot_units_tot:iv_cost_mask$))
-	data!.setFieldValue("COST_TOT",str(tot_cost_tot:sf_rate_mask$))
-	rs!.insert(data!)
+		data! = rs!.getEmptyRecordData()
+		data!.setFieldValue("OP_CODE","Total Operations")
+		data!.setFieldValue("UNITS_EA",str(tot_units_ea:iv_cost_mask$))
+		data!.setFieldValue("COST_EA",str(tot_cost_ea:iv_cost_mask$))
+		data!.setFieldValue("UNITS_TOT",str(tot_units_tot:iv_cost_mask$))
+		data!.setFieldValue("COST_TOT",str(tot_cost_tot:sf_rate_mask$))
+		rs!.insert(data!)
+	endif
 
 rem --- Tell the stored procedure to return the result set.
 
