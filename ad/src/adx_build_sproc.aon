@@ -197,6 +197,10 @@ rem --- first drop all std Addon SPROCs
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def	
 	
+	sproc_vw_name$="SFHARDCOPYFGLS"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def	
+		
 rem --- now add them back (i.e., drop, then add, in case anything has changed) 
    
 	sql_action$="CREATE PROCEDURE"
@@ -363,6 +367,16 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPYTRANS.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'WO Hard Copy Transactions'"
+
+    gosub create_sproc_def
+			
+	sproc_vw_name$="SFHARDCOPYFGLS"
+	sqlprep$="CREATE PROCEDURE SFHARDCOPYFGLS "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, "
+	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN) "	
+    sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPYFGLS.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'WO Hard Copy Finished Good LS'"
 
     gosub create_sproc_def
 		
