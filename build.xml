@@ -291,6 +291,11 @@
               <fileset dir="${templates.dir}/mac"
                        includes="AddonSoftware.app/"/>
         </copy>
+        <copy preserveLastModified="true"
+              todir="${build.dir}/${port.MAC}/apps">
+              <fileset dir="${templates.dir}/mac"
+                       includes="AddonSoftwareDeveloper.app/"/>
+        </copy>
     </target>
     <!-- End of copyScripts -->
     <!-- ====================================== -->
