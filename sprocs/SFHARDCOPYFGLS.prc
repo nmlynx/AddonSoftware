@@ -26,12 +26,13 @@ rem --- Get the infomation object for the Stored Procedure
 
 rem --- Get the IN parameters used by the procedure
 
-	firm_id$    = sp!.getParameter("FIRM_ID")
-	wo_loc$     = sp!.getParameter("WO_LOCATION")
-	wo_no$      = sp!.getParameter("WO_NO")
-	barista_wd$ = sp!.getParameter("BARISTA_WD")
-	masks$      = sp!.getParameter("MASKS")
-	
+	firm_id$            = sp!.getParameter("FIRM_ID")
+	wo_loc$             = sp!.getParameter("WO_LOCATION")
+	wo_no$              = sp!.getParameter("WO_NO")
+	barista_wd$         = sp!.getParameter("BARISTA_WD")
+	masks$              = sp!.getParameter("MASKS")
+	master_cls_inp_qty$ = sp!.getParameter("MASTER_CLS_INP_QTY")
+	master_cls_inp_qty = num(master_cls_inp_qty$)
 
 rem --- masks$ will contain pairs of fields in a single string mask_name^mask|
 
@@ -70,72 +71,6 @@ rem --- Get masks
 	vendor_mask$=fngetmask$("vendor_mask","000000",masks$)
 	employee_mask$=fngetmask$("employee_mask","000000",masks$)
 
-rem --- Open files with adc (Change from adc to bac once Barista is enhanced)
-
-    files=10,begfile=1,endfile=files
-    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="ivm-01",    ids$[1]="IVM_ITEMMAST"
-	files$[2]="sfs_params",ids$[2]="SFS_PARAMS"
-	files$[3]="ivs_params",ids$[3]="IVS_PARAMS"	
-	files$[4]="gls_params",ids$[4]="IVS_PARAMS"		
-    files$[5]="sft-01",    ids$[5]="SFT_OPNOPRTR"
-	files$[6]="sft-03",    ids$[6]="SFT_CLSOPRTR"
-	files$[7]="sft-21",    ids$[7]="SFT_OPNMATTR"
-    files$[8]="sft-23",    ids$[8]="SFT_CLSMATTR"
-	files$[9]="sft-31",    ids$[9]="SFT_OPNSUBTR"
-	files$[10]="sft-33",   ids$[10]="SFT_CLSSUBTR"
-
-	call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
-	
-    ivm_itemmast_dev=channels[1]
-	sfs_params=channels[2]
-	ivs_params=channels[3]	
-	gls_params=channels[4]
-	
-    sft01a_dev=channels[5]
-	sft03a_dev=channels[6]
-	sft21a_dev=channels[7]
-    sft23a_dev=channels[8]
-	sft31a_dev=channels[9]
-	sft33a_dev=channels[10]
-
-rem --- Dimension string templates
-
-	dim ivm_itemmast$:templates$[1]
-	dim sfs_params$:templates$[2]
-	dim ivs_params$:templates$[3]
-	dim gls_params$:templates$[4]	
-    sft01_tpls$=templates$[5]; dim sft01a$:sft01_tpls$; rem Save template for conditional use
-	sft03_tpls$=templates$[6]; dim sft03a$:sft03_tpls$; rem Save template for conditional use
-    sft21_tpls$=templates$[7]; dim sft21a$:sft21_tpls$; rem Save template for conditional use
-    sft23_tpls$=templates$[8]; dim sft23a$:sft23_tpls$; rem Save template for conditional use
-    sft31_tpls$=templates$[9]; dim sft31a$:sft31_tpls$; rem Save template for conditional use
-    sft33_tpls$=templates$[10]; dim sft33a$:sft33_tpls$; rem Save template for conditional use
-	
-rem --- Retrieve parameter records
-rem       NOTE: Params are checked to exist in initial overlay
-        gls_params_key$=firm_id$+"GL00"
-        find record (gls_params,key=gls_params_key$) gls_params$
-	
-		sfs_params_key$=firm_id$+"SF00"
-        find record (sfs_params,key=sfs_params_key$) sfs_params$
-			
-		ivs_params_key$=firm_id$+"IV00"
-        find record (ivs_params,key=ivs_params_key$) ivs_params$
-
-rem --- Parameters
-
-        bm$=sfs_params.bm_interface$
-        op$=sfs_params.ar_interface$
-        po$=sfs_params.po_interface$
-        pr$=sfs_params.pr_interface$
-    
-rem --- Additional File Opens
-		
-		gosub addl_opens_adc
-
 rem --- Build SQL statement
 
     sql_prep$=""
@@ -168,6 +103,12 @@ rem --- Build SQL statement
 	sqlprep(sql_chan)sql_prep$
 	dim read_tpl$:sqltmpl(sql_chan)
 	sqlexec(sql_chan,err=std_exit)
+
+rem --- Init Totals 
+
+	sched_qty_tot=0
+	closed_qty_tot=0
+	curr_closed_qty_tot=0
 	
 rem --- Trip Read
 
@@ -187,33 +128,34 @@ rem --- Trip Read
 		
 		if read_tpl.qty_cls_todt 
 			data!.setFieldValue("CLOSED_QTY",str(read_tpl.qty_cls_todt:sf_units_mask$))	
+			data!.setFieldValue("UNIT_COST",str(read_tpl.cls_cst_todt:sf_cost_mask$))
+		endif
+	
+		if master_cls_inp_qty 
 			data!.setFieldValue("CURR_CLSD_QTY",str(read_tpl.cls_inp_qty:sf_units_mask$))
 		endif
 		
-rem caj escape UNREM		if hdr_cls_inp_qty a[4] in v6
-			data!.setFieldValue("UNIT_COST",str(read_tpl.closed_cost:sf_cost_mask$))	
-rem caj escape UNREM		endif
-		
 		rs!.insert(data!)
+		
+		rem --- Accum tots
+		sched_qty_tot=sched_qty_tot + read_tpl.sch_prod_qty
+		closed_qty_tot=closed_qty_tot + read_tpl.qty_cls_todt
+		curr_closed_qty_tot=curr_closed_qty_tot + read_tpl.cls_inp_qty
+	
 	wend
 	
-	sp!.setRecordSet(rs!)
-DONE_CAJESCAPE: GOTO STD_EXIT
-REM <<================================================>>
-
-
-	doing_end=1
-	gosub date_subtot
+	rem --- Print totals
 	
 	data! = rs!.getEmptyRecordData(); rem Add totals' underscores
-	data!.setFieldValue("AMOUNT",fill(20,"_"))
+	data!.setFieldValue("SCHED_PROD_QTY",fill(20,"_"))
+	data!.setFieldValue("CLOSED_QTY",fill(20,"_"))
+	data!.setFieldValue("CURR_CLSD_QTY",fill(20,"_"))
 	rs!.insert(data!)
 	
 	data! = rs!.getEmptyRecordData()
-	data!.setFieldValue("ITEM_VEND_OPER","Work Order Totals") 		
-	data!.setFieldValue("DESC","Total Hours: "+str(grand_tot_hours:sf_hours_mask$)) 			
-	data!.setFieldValue("PO_NUM","Setup Hours: "+str(grand_tot_setup_hours:sf_hours_mask$))
-	data!.setFieldValue("AMOUNT",str(grand_tot_cost:sf_amt_mask$))	
+	data!.setFieldValue("SCHED_PROD_QTY",str(sched_qty_tot:sf_units_mask$)) 		
+	data!.setFieldValue("CLOSED_QTY",str(closed_qty_tot:sf_units_mask$)) 			
+	data!.setFieldValue("CURR_CLSD_QTY",str(curr_closed_qty_tot:sf_units_mask$))
 
 	rs!.insert(data!)
 	
@@ -223,60 +165,6 @@ rem --- Tell the stored procedure to return the result set.
 	goto std_exit
 
 rem --- Subroutines
-
-rem --- Additional File Opens subroutines
-addl_opens_adc:
-rem --- Conditionally open L/S files
-    if pos(ivs_params.lotser_flag$="LS") then
-		files=2,begfile=1,endfile=files
-		dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-
-        files$[1]="sft-11",        ids$[1]="SFT_OPNLSTRN"
-        files$[2]="sft-12",        ids$[2]="SFT_CLSLSTRN"
-	
-		call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-		if status goto std_exit
-
-		sft11a_dev = channels[1]
-		sft12a_dev = channels[2]
-
-	rem --- Dimension L/S string templates
-        
-		sft11_tpls$=templates$[1]; dim sft11a$:sft11_tpls$; rem Save template for conditional use
-		sft12_tpls$=templates$[2]; dim sft12a$:sft12_tpls$; rem Save template for conditional use	
-	endif 
-	
-rem --- Open either BM or SF OpCodes file and either PR or SF Employees file
-rem --- Conditionally open apm-01 for vendor name
-	files=3,begfile=1,endfile=files
-	dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-
-	if bm$="Y" 
-		files$[1]="bmm-08", ids$[1]="BMC_OPCODES"
-    else 
-		files$[1]="sfm-02", ids$[1]="SFC_OPRTNCOD"
-	endif
-	if pr$="Y" 
-		files$[2]="prm-01", ids$[2]="PRM_EMPLMAST"
-    else 
-		files$[2]="sfm-01", ids$[2]="SFM_EMPLMAST"
-	endif	
-	if po$="Y" files$[3]="apm-01", ids$[3]="APM_VENDMAST"
-	
-	call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-	if status goto std_exit
-
-	opcode_dev = channels[1]
-	empcode_dev= channels[2]
-	apm01a_dev = channels[3]	
-	
-	rem --- Dimension OpCode, EmpCode, and apm01a string templates	
-		dim opcode$:templates$[1]
-		dim empcode$:templates$[2]
-		if po$="Y" dim apm01a$:templates$[3]
-	return
 	
 lotserial_details: rem --- Lot/Serial Here
 rem --- Serial Numbers Here

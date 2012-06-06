@@ -64,7 +64,7 @@ rem --- Columns for the record set are defined using a string template
 	temp$=temp$+"SLS_ORDER_NO:C(1*), WAREHOUSE_ID:C(1*), ITEM_ID:C(1*), OPENED_DATE:C(1*), LAST_CLOSE:C(1*), "
 	temp$=temp$+"TYPE_DESC:C(1*), PRIORITY:C(1*), UOM:C(1*), YIELD:C(1*), PROD_QTY:C(1*), COMPLETED:C(1*), "
 	temp$=temp$+"LAST_ACT_DATE:C(1*), ITEM_DESC_1:C(1*), ITEM_DESC_2:C(1*), DRAWING_NO:C(1*), REV:C(1*), "
-	temp$=temp$+"INCLUDE_LOTSER:C(1*)"
+	temp$=temp$+"INCLUDE_LOTSER:C(1*), MASTER_CLS_INP_QTY:C(1*)"
 	rs! = BBJAPI().createMemoryRecordSet(temp$)
 
 rem --- Get Barista System Program directory
@@ -111,7 +111,7 @@ rem --- Open Files
 	open_tables$[1]="IVM_ITEMMAST",   open_opts$[1] = "OTA"
 	open_tables$[2]="SFC_WOTYPECD",   open_opts$[2] = "OTA"
 	open_tables$[3]="ARM_CUSTMAST",   open_opts$[3] = "OTA"
-	open_tables$[4]="ivs_parAMS",     open_opts$[4] = "OTA"	
+	open_tables$[4]="IVS_PARAMS",     open_opts$[4] = "OTA"	
 
 call sypdir$+"bac_open_tables.bbj",
 :       open_beg,
@@ -270,6 +270,7 @@ rem --- Trip Read
 		data!.setFieldValue("DRAWING_NO",read_tpl.drawing_no$)
 		data!.setFieldValue("REV",read_tpl.drawing_rev$)
 		data!.setFieldValue("INCLUDE_LOTSER",include_lotser$)
+		data!.setFieldValue("MASTER_CLS_INP_QTY",read_tpl.cls_inp_qty$)
 		rs!.insert(data!)
 	wend
 	

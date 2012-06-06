@@ -57,6 +57,7 @@
 	<field name="REV" class="java.lang.String"/>
 	<field name="ITEM_DESC_2" class="java.lang.String"/>
 	<field name="INCLUDE_LOTSER" class="java.lang.String"/>
+	<field name="MASTER_CLS_INP_QTY" class="java.lang.String"/>
 	<group name="WO_NO" isStartNewPage="true" isReprintHeaderOnEachPage="true">
 		<groupExpression><![CDATA[$F{WO_NO}]]></groupExpression>
 		<groupHeader>
@@ -403,6 +404,9 @@
 				</subreportParameter>
 				<subreportParameter name="MASKS">
 					<subreportParameterExpression><![CDATA[$P{MASKS}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="MASTER_CLS_INP_QTY">
+					<subreportParameterExpression><![CDATA[$F{MASTER_CLS_INP_QTY}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="FIRM_ID">
 					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
