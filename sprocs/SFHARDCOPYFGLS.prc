@@ -9,7 +9,7 @@ rem
 rem AddonSoftware
 rem Copyright BASIS International Ltd.
 rem ----------------------------------------------------------------------------
-escape; rem caj
+
 rem --- Set of utility methods
 
 	use ::ado_func.src::func
@@ -48,7 +48,7 @@ rem ---
 
 rem --- Create a memory record set to hold results.
 rem --- Columns for the record set are defined using a string template
-	temp$="LOTSERIAL:C(1*), COMMENT:C(1*), CLOSED_DATE:C(1*), "
+	temp$="LOTSERIAL:C(1*), COMMENT:C(1*), CLOSED_YN:C(1*), CLOSED_DATE:C(1*), "
 	temp$=temp$+"SCHED_PROD_QTY:C(1*), CLOSED_QTY:C(1*), CURR_CLSD_QTY:C(1*), UNIT_COST:C(1*) "
 	
 	rs! = BBJAPI().createMemoryRecordSet(temp$)
@@ -85,8 +85,7 @@ rem --- Open files with adc (Change from adc to bac once Barista is enhanced)
 	files$[9]="sft-31",    ids$[9]="SFT_OPNSUBTR"
 	files$[10]="sft-33",   ids$[10]="SFT_CLSSUBTR"
 
-	
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+	call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
 	
@@ -115,60 +114,6 @@ rem --- Dimension string templates
     sft31_tpls$=templates$[9]; dim sft31a$:sft31_tpls$; rem Save template for conditional use
     sft33_tpls$=templates$[10]; dim sft33a$:sft33_tpls$; rem Save template for conditional use
 	
-goto no_bac_open
-rem --- Open Files via bac    (Change from adc to bac once Barista is enhanced)
-    num_files = 10
-    dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
-
-	open_tables$[1]="IVM_ITEMMAST", open_opts$[1] = "OTA"
-	open_tables$[2]="SFS_PARAMS",   open_opts$[2] = "OTA"
-	open_tables$[3]="IVS_PARAMS",   open_opts$[3] = "OTA"
-	open_tables$[4]="GLS_PARAMS",   open_opts$[4] = "OTA"	
-	open_tables$[5]="SFT_OPNOPRTR", open_opts$[5] = "OTA"; rem sft-01
-	open_tables$[6]="SFT_CLSOPRTR", open_opts$[6] = "OTA"; rem sft-03
-	open_tables$[7]="SFT_OPNMATTR", open_opts$[7] = "OTA"; rem sft-21
-	open_tables$[8]="SFT_CLSMATTR", open_opts$[8] = "OTA"; rem sft-23
-	open_tables$[9]="SFT_OPNSUBTR", open_opts$[9] = "OTA"; rem sft-31
-	open_tables$[10]="SFT_CLSSUBTR",open_opts$[10] = "OTA"; rem sft-33	
-	
-call sypdir$+"bac_open_tables.bbj",
-:       open_beg,
-:		open_end,
-:		open_tables$[all],
-:		open_opts$[all],
-:		open_chans$[all],
-:		open_tpls$[all],
-:		table_chans$[all],
-:		open_batch,
-:		open_status$
-
-	ivm_itemmast_dev  = num(open_chans$[1])
-	sfs_params = num(open_chans$[2])
-	ivs_params = num(open_chans$[3])
-	gls_params = num(open_chans$[4])	
-	
-	sft01a_dev = num(open_chans$[5])
-	sft03a_dev = num(open_chans$[6])
-	sft21a_dev = num(open_chans$[7])
-	sft23a_dev = num(open_chans$[8])
-	sft31a_dev = num(open_chans$[9])
-	sft33a_dev = num(open_chans$[10])	
-	
-	rem --- templates
-	dim ivm_itemmast$:open_tpls$[1]
-	dim sfs_params$:open_tpls$[2]
-	dim ivs_params$:open_tpls$[3]
-	dim gls_params$:open_tpls$[4]	
-	
-    sft01_tpls$=open_tpls$[5]; dim sft01a$:sft01_tpls$; rem Save template for conditional use
-	sft03_tpls$=open_tpls$[6]; dim sft03a$:sft03_tpls$; rem Save template for conditional use
-    sft21_tpls$=open_tpls$[7]; dim sft21a$:sft21_tpls$; rem Save template for conditional use
-    sft23_tpls$=open_tpls$[8]; dim sft23a$:sft23_tpls$; rem Save template for conditional use
-    sft31_tpls$=open_tpls$[9]; dim sft31a$:sft31_tpls$; rem Save template for conditional use
-    sft33_tpls$=open_tpls$[10]; dim sft33a$:sft33_tpls$; rem Save template for conditional use	
-	
-no_bac_open:
-
 rem --- Retrieve parameter records
 rem       NOTE: Params are checked to exist in initial overlay
         gls_params_key$=firm_id$+"GL00"
@@ -189,46 +134,30 @@ rem --- Parameters
     
 rem --- Additional File Opens
 		
-		gosub addl_opens_adc; rem Change from adc to bac once Barista's enhanced
-		rem gosub addl_opens_bac; rem Change from adc to bac once Barista's enhanced
+		gosub addl_opens_adc
 
 rem --- Build SQL statement
-
-GOTO CAJESCAPE; REM ESCAPE CAJ <<===============
-
-rem --- Get SQL view joining sfe01 with a mimic of legacy SFM-07 / WOM-07 / SFX_WOTRANXR
-rem   - Narrow the query of that view using the selections passed in.
-rem   - This record set will be used as driver instead of sfe-01 and sfm-07.
 
     sql_prep$=""
 	where_clause$=""
 	order_clause$=""
 	
     sql_prep$=sql_prep$+"SELECT * "
-    sql_prep$=sql_prep$+"FROM vw_WOs_with_tran as vwWOs "
+    sql_prep$=sql_prep$+"FROM SFE_WOLOTSER as lots "
 	
 	rem Modify the query of that view per passed-in parameters	
 
-		where_clause$="WHERE vwWOs.firm_id+vwWOs.wo_location = '"+firm_id$+wo_loc$+"' AND "
+		where_clause$="WHERE lots.firm_id+lots.wo_location = '"+firm_id$+wo_loc$+"' AND "
 
 	rem Limit recordset to WO being reported on
-		where_clause$=where_clause$+"vwWOs.wo_no = '"+wo_no$+"' AND "
-
-	rem Limit recordset to date range parameters
-		if datefrom$<>"" where_clause$=where_clause$+"vwWOs.trans_date >= '"+datefrom$+"' AND "
-		if datethru$<>"" where_clause$=where_clause$+"vwWOs.trans_date <= '"+datethru$+"' AND "
-
-	rem Limit recordset to transaction type parameter
-		if pos("M"=transtype$)=0 where_clause$=where_clause$+"vwWOs.record_id <> 'M' AND "
-		if pos("O"=transtype$)=0 where_clause$=where_clause$+"vwWOs.record_id <> 'O' AND "
-		if pos("S"=transtype$)=0 where_clause$=where_clause$+"vwWOs.record_id <> 'S' AND "
+		where_clause$=where_clause$+"lots.wo_no = '"+wo_no$+"' AND "
 	
     rem Complete the WHERE clause
 		where_clause$=cvs(where_clause$,2)
 		if where_clause$(len(where_clause$)-2,3)="AND" where_clause$=where_clause$(1,len(where_clause$)-3)
 
 	rem Complete the ORDER BY clause	
-		order_clause$=order_clause$+" ORDER BY vwWOs.trans_date,vwWOs.record_id,vwWOs.trans_seq "
+		order_clause$=order_clause$+" ORDER BY lots.sequence_no "
     
 	rem Complete sql_prep$
 		sql_prep$=sql_prep$+where_clause$+order_clause$	
@@ -239,168 +168,39 @@ rem   - This record set will be used as driver instead of sfe-01 and sfm-07.
 	sqlprep(sql_chan)sql_prep$
 	dim read_tpl$:sqltmpl(sql_chan)
 	sqlexec(sql_chan,err=std_exit)
-
-rem --- Init constants, totals and total-break vars
-	more = 1 
-	
-	date_tot_setup_hours=0
-	date_tot_hours=0
-	date_tot_cost=0
-	doing_end=0
-	
-	grand_tot_setup_hours=0
-	grand_tot_hours=0
-	grand_tot_cost=0
-			
-	prev_date$=""; rem This is t1$ in sfr_wotranshist_o1.aon and v6
 	
 rem --- Trip Read
-rem ====================> ESCAPE Accumulation of Totals is not well-defined
-rem ====================> ESCAPE Date Break is not implemented
-rem ====================> ESCAPE Lot/Serial rows will need adjusting 
 
 	while 1
 		read_tpl$ = sqlfetch(sql_chan,end=*break)
 
 		data! = rs!.getEmptyRecordData()
-	
-rem --- Process Transactions
-
-        if read_tpl.wo_status$<>"C" or read_tpl.closed_date$>sf_prevper_enddate$ then 
-            tran01_dev=sft01a_dev; tran01a$=sft01_tpls$
-            tran02_dev=sft21a_dev; tran02a$=sft21_tpls$
-            tran03_dev=sft31a_dev; tran03a$=sft31_tpls$
-        else
-            tran01_dev=sft03a_dev; tran01a$=sft03_tpls$
-            tran02_dev=sft23a_dev; tran02a$=sft23_tpls$
-            tran03_dev=sft33a_dev; tran03a$=sft33_tpls$
-        endif
-
-        if read_tpl.record_id$="O" then 
-			sftran_dev=tran01_dev
-			dim sftran$:tran01a$
-			record_id_field$="O"
-		endif
-        if read_tpl.record_id$="M" then 
-			sftran_dev=tran02_dev
-			dim sftran$:tran02a$
-			record_id_field$="M"
-		endif
-        if read_tpl.record_id$="S" then  
-			sftran_dev=tran03_dev
-			dim sftran$:tran03a$
-			record_id_field$="S"
-		endif
-
-		sftran_read_k$=read_tpl.firm_id$
-		sftran_read_k$=sftran_read_k$+read_tpl.wo_location$
-		sftran_read_k$=sftran_read_k$+read_tpl.wo_no$
-		sftran_read_k$=sftran_read_k$+read_tpl.trans_date$
-		sftran_read_k$=sftran_read_k$+read_tpl.trans_seq$
-			
-		find record (sftran_dev,key=sftran_read_k$,dom=*continue) sftran$
-        if transtype$<>"" then if pos(record_id_field$=transtype$)=0 then continue
-        if read_tpl.trans_date$(1,6)<>prev_date$ then gosub date_subtot
-
-		rem --- Data common to all transaction types
-		data!.setFieldValue("TRANS_DATE",fndate$(sftran.trans_date$))
-		data!.setFieldValue("SOURCE",read_tpl.record_id$)
-		data!.setFieldValue("UNITS",str(sftran.units:sf_units_mask$))
-		data!.setFieldValue("RATE",str(sftran.unit_cost:sf_rate_mask$))
-		data!.setFieldValue("AMOUNT",str(sftran.ext_cost:sf_amt_mask$))
 		
-        rem --- Based on Trans Type, fill type-specific fields
-
-		transtype=pos(read_tpl.record_id$="MOS")-1
-		switch transtype
-			case 0
-				rem --- Materials
-				dim ivm_itemmast$:fattr(ivm_itemmast$)
-				read record (ivm_itemmast_dev,key=firm_id$+read_tpl.trans_item_id$,dom=*next) ivm_itemmast$
-
-				data!.setFieldValue("ITEM_VEND_OPER",pad(cvs(read_tpl.trans_item_id$,2),20))
-				data!.setFieldValue("DESC",ivm_itemmast.item_desc$)
-				data!.setFieldValue("PO_NUM","")
-				data!.setFieldValue("COMPLETE_QTY","")
-				data!.setFieldValue("SETUP_HRS","")
-				break
-			case 1
-				rem --- Operations
-				dim opcode$:fattr(opcode$)
-				find record (opcode_dev,key=firm_id$+sftran.op_code$,dom=*next) opcode$
-				
-				dim empcode$:fattr(empcode$)
-				find record (empcode_dev,key=firm_id$+sftran.employee_no$,dom=*next) empcode$
-
-				data!.setFieldValue("ITEM_VEND_OPER",sftran.op_code$+"  "+opcode.code_desc$)
-				data!.setFieldValue("DESC",fnmask$(sftran.employee_no$,employee_mask$)+" "+empcode.empl_surname$+empcode.empl_givname$)
-				data!.setFieldValue("PO_NUM","")
-				data!.setFieldValue("COMPLETE_QTY",str(sftran.complete_qty:sf_units_mask$))
-				data!.setFieldValue("SETUP_HRS",str(sftran.setup_time:sf_hours_mask$))		
-				break
-			case 2
-				rem --- Subcontracts
-				vend_name$=""
-				if po$="Y"  
-					dim apm01a$:fattr(apm01a$)
-					find record (apm01a_dev,key=firm_id$+sftran.vendor_id$,dom=*next) apm01a$
-					vend_name$=apm01a.vendor_name$
-				endif 
-				
-				data!.setFieldValue("ITEM_VEND_OPER",fnmask$(sftran.vendor_id$,vendor_mask$)+"  "+vend_name$)
-				data!.setFieldValue("DESC","")
-				data!.setFieldValue("PO_NUM",sftran.po_no$)
-				data!.setFieldValue("COMPLETE_QTY","")
-				data!.setFieldValue("SETUP_HRS","")				    	
-				break
-			case default
-				break
-		swend
-            
-        rem --- Accum Totals
-		if record_id_field$="O" then 
-			date_tot_setup_hours=date_tot_setup_hours+sftran.setup_time
-			date_tot_hours=date_tot_hours+sftran.units
-			grand_tot_setup_hours=grand_tot_setup_hours+sftran.setup_time
-			grand_tot_hours=grand_tot_hours+sftran.units
+		data!.setFieldValue("LOTSERIAL",read_tpl.lotser_no$)
+		data!.setFieldValue("COMMENT",read_tpl.wo_ls_cmt$) 		
+		data!.setFieldValue("SCHED_PROD_QTY",str(read_tpl.sch_prod_qty:sf_units_mask$))
+		data!.setFieldValue("CLOSED_YN",read_tpl.closed_flag$)		
+		
+		if read_tpl.closed_flag$="Y"
+			data!.setFieldValue("CLOSED_DATE",fndate$(read_tpl.closed_date$))
+		endif 
+		
+		if read_tpl.qty_cls_todt 
+			data!.setFieldValue("CLOSED_QTY",str(read_tpl.qty_cls_todt:sf_units_mask$))	
+			data!.setFieldValue("CURR_CLSD_QTY",str(read_tpl.cls_inp_qty:sf_units_mask$))
 		endif
 		
-		date_tot_cost=date_tot_cost+sftran.ext_cost
-		grand_tot_cost=grand_tot_cost+sftran.ext_cost
-
+rem caj escape UNREM		if hdr_cls_inp_qty a[4] in v6
+			data!.setFieldValue("UNIT_COST",str(read_tpl.closed_cost:sf_cost_mask$))	
+rem caj escape UNREM		endif
+		
 		rs!.insert(data!)
-		
-		rem tot_cost_ea=tot_cost_ea+read_tpl.unit_cost
-		rem tot_cost_tot=tot_cost_tot+read_tpl.total_cost
-		
-		rem --- Conditionally process Lot/Serial for Materials records
-
-		if read_tpl.record_id$="M"		
-			if ivm_itemmast.lotser_item$="Y" and
-:			   ivm_itemmast.inventoried$="Y" and
-:			   pos(ivs_params.lotser_flag$="LS") then 
-				  gosub lotserial_details				
-			endif		
-		endif
 	wend
-
-rem --- Output Totals
-REM <<================================================>>
-CAJESCAPE:
-	data! = rs!.getEmptyRecordData(); rem Add totals' underscores
-	data!.setFieldValue("LOTSERIAL","LOTSERIAL"))
-	data!.setFieldValue("COMMENT","COMMENT") 		
-	data!.setFieldValue("CLOSED_DATE","CLOSED_DATE") 			
-	data!.setFieldValue("SCHED_PROD_QTY","SCHED_PROD_QTY")
-	data!.setFieldValue("CLOSED_QTY","CLOSED_QTY")	
-	data!.setFieldValue("CURR_CLSD_QTY","CURR_CLSD_QTY")
-	data!.setFieldValue("UNIT_COST","UNIT_COST")	
-
-	rs!.insert(data!)
 	
 	sp!.setRecordSet(rs!)
 DONE_CAJESCAPE: GOTO STD_EXIT
 REM <<================================================>>
+
 
 	doing_end=1
 	gosub date_subtot
@@ -478,54 +278,6 @@ rem --- Conditionally open apm-01 for vendor name
 		if po$="Y" dim apm01a$:templates$[3]
 	return
 	
-addl_opens_bac:	
-rem --- Conditionally open L/S files
-    if pos(ivs_params.lotser_flag$="LS") then
-		num_files=2
-		dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
-
-        open_tables$[1]="SFT_OPNLSTRN", open_opts$[1]="OTA"; rem sft-11
-        open_tables$[2]="SFT_CLSLSTRN", open_opts$[2]="OTA"; rem sft-12
-  	
-		gosub open_tables
-
-		sft11a_dev = num(open_chans$[1])
-		sft12a_dev = num(open_chans$[2])
-		
-	rem --- Dimension L/S string templates			
-      	sft11_tpls$=open_tpls$[1]; dim sft11a$:sft11_tpls$; rem Save template for conditional use
-		sft12_tpls$=open_tpls$[2]; dim sft12a$:sft12_tpls$; rem Save template for conditional use		
-	endif
-	
-rem --- Open either BM or SF OpCodes file and either PR or SF Employees file
-rem --- Conditionally open apm-01 for vendor name
-	num_files=3
-	dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
-
-	if bm$="Y" 
-		open_tables$[1]="BMC_OPCODES",  open_opts$[1]="OTA"; rem bmm-08
-    else
-		open_tables$[1]="SFC_OPRTNCOD", open_opts$[1]="OTA"; rem sfm-02
-	endif
-	if pr$="Y" 
-		open_tables$[1]="PRM_EMPLMAST", open_opts$[7]="OTA"; rem prm-01
-    else
-		open_tables$[2]="SFM_EMPLMAST", open_opts$[2]="OTA"; rem sfm-01
-	endif
-	if po$="Y" open_tables$[3]="APM_VENDMAST", open_opts$[3]="OTA"; rem apm-01
-	
-  	gosub open_tables		
-
-	opcode_dev = num(open_chans$[1])
-	empcode_dev = num(open_chans$[2])
-	apm01a_dev = num(open_chans$[3])
-	
-	rem --- Dimension OpCode, EmpCode, and apm01a string templates		
-      	dim opcode$:open_tpls$[1]	
-      	dim empcode$:open_tpls$[2]
-		if po$="Y" dim apm01a$:open_tpls$[3]
-	return    
-
 lotserial_details: rem --- Lot/Serial Here
 rem --- Serial Numbers Here
 	if read_tpl.wo_status$<>"C" or read_tpl.closed_date$>sf_prevper_enddate$ then 

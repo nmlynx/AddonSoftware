@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopy" language="groovy" pageWidth="800" pageHeight="595" orientation="Landscape" columnWidth="760" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="50">
-	<property name="ireport.zoom" value="1.0"/>
-	<property name="ireport.x" value="252"/>
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
 	<parameter name="WO_NO_1" class="java.lang.String"/>
@@ -56,6 +56,7 @@
 	<field name="DRAWING_NO" class="java.lang.String"/>
 	<field name="REV" class="java.lang.String"/>
 	<field name="ITEM_DESC_2" class="java.lang.String"/>
+	<field name="INCLUDE_LOTSER" class="java.lang.String"/>
 	<group name="WO_NO" isStartNewPage="true" isReprintHeaderOnEachPage="true">
 		<groupExpression><![CDATA[$F{WO_NO}]]></groupExpression>
 		<groupHeader>
@@ -307,7 +308,7 @@
 		<band splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="81" splitType="Stretch">
+		<band height="92" splitType="Stretch">
 			<subreport>
 				<reportElement positionType="Float" x="0" y="0" width="760" height="13">
 					<printWhenExpression><![CDATA[$P{INCLUDE_COMMENTS}=="Y"]]></printWhenExpression>
@@ -392,6 +393,28 @@
 			</subreport>
 			<subreport isUsingCache="true" runToBottom="false">
 				<reportElement positionType="Float" x="0" y="52" width="760" height="13">
+					<printWhenExpression><![CDATA[$F{INCLUDE_LOTSER}=='Y']]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="WO_NO">
+					<subreportParameterExpression><![CDATA[$F{WO_NO}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="BARISTA_WD">
+					<subreportParameterExpression><![CDATA[$P{BARISTA_WD}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="MASKS">
+					<subreportParameterExpression><![CDATA[$P{MASKS}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="FIRM_ID">
+					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="WO_LOCATION">
+					<subreportParameterExpression><![CDATA[$P{WO_LOCATION}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA["SFHardCopyFGLS.jasper"]]></subreportExpression>
+			</subreport>
+			<subreport isUsingCache="true" runToBottom="false">
+				<reportElement positionType="Float" x="0" y="65" width="760" height="13">
 					<printWhenExpression><![CDATA[$P{INCLUDE_TRANSACTIONS}=='Y']]></printWhenExpression>
 				</reportElement>
 				<subreportParameter name="TRANS_DATEFROM">
@@ -425,7 +448,7 @@
 				<subreportExpression><![CDATA["SFHardCopyTrans.jasper"]]></subreportExpression>
 			</subreport>
 			<subreport>
-				<reportElement positionType="Float" x="0" y="65" width="760" height="13">
+				<reportElement positionType="Float" x="0" y="78" width="760" height="13">
 					<printWhenExpression><![CDATA[$P{INCLUDE_COSTSUMMARY}=="Y"]]></printWhenExpression>
 				</reportElement>
 				<subreportParameter name="PROD_QTY">

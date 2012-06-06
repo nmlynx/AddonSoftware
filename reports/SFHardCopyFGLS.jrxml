@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopyFGLS" language="groovy" pageWidth="760" pageHeight="595" orientation="Landscape" columnWidth="740" leftMargin="0" rightMargin="20" topMargin="20" bottomMargin="10">
-	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.zoom" value="1.5"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
@@ -13,6 +13,7 @@
 	</queryString>
 	<field name="LOTSERIAL" class="java.lang.String"/>
 	<field name="COMMENT" class="java.lang.String"/>
+	<field name="CLOSED_YN" class="java.lang.String"/>
 	<field name="CLOSED_DATE" class="java.lang.String"/>
 	<field name="SCHED_PROD_QTY" class="java.lang.String"/>
 	<field name="CLOSED_QTY" class="java.lang.String"/>
@@ -32,7 +33,7 @@
 			<staticText>
 				<reportElement mode="Opaque" x="0" y="0" width="740" height="15" backcolor="#ECECEC"/>
 				<textElement/>
-				<text><![CDATA[Serial of Lot Number Detail]]></text>
+				<text><![CDATA[Serial or Lot Number Detail]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="0" y="46" width="83" height="13"/>
@@ -45,25 +46,25 @@
 				<text><![CDATA[Comment]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="335" y="29" width="75" height="30"/>
+				<reportElement x="335" y="33" width="75" height="26"/>
 				<textElement textAlignment="Left"/>
 				<text><![CDATA[Closed
 Date]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="425" y="29" width="60" height="30"/>
+				<reportElement x="425" y="33" width="60" height="26"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Sched'd
 Prod Qty]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="496" y="29" width="60" height="30"/>
+				<reportElement x="496" y="33" width="60" height="26"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Closed
 Qty]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="569" y="29" width="60" height="30"/>
+				<reportElement x="569" y="33" width="60" height="26"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Current
 Close Qty]]></text>
@@ -111,6 +112,11 @@ Close Qty]]></text>
 				<reportElement x="646" y="0" width="60" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{UNIT_COST}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="310" y="0" width="25" height="13"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{CLOSED_YN}]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>

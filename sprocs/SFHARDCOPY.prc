@@ -63,7 +63,8 @@ rem --- Columns for the record set are defined using a string template
 	temp$="FIRM_ID:C(2), WO_NO:C(7*), WO_TYPE:C(1*), WO_CATEGORY:C(1*), WO_STATUS:C(1*), CUSTOMER_ID:C(1*), "
 	temp$=temp$+"SLS_ORDER_NO:C(1*), WAREHOUSE_ID:C(1*), ITEM_ID:C(1*), OPENED_DATE:C(1*), LAST_CLOSE:C(1*), "
 	temp$=temp$+"TYPE_DESC:C(1*), PRIORITY:C(1*), UOM:C(1*), YIELD:C(1*), PROD_QTY:C(1*), COMPLETED:C(1*), "
-	temp$=temp$+"LAST_ACT_DATE:C(1*), ITEM_DESC_1:C(1*), ITEM_DESC_2:C(1*), DRAWING_NO:C(1*), REV:C(1*)"
+	temp$=temp$+"LAST_ACT_DATE:C(1*), ITEM_DESC_1:C(1*), ITEM_DESC_2:C(1*), DRAWING_NO:C(1*), REV:C(1*), "
+	temp$=temp$+"INCLUDE_LOTSER:C(1*)"
 	rs! = BBJAPI().createMemoryRecordSet(temp$)
 
 rem --- Get Barista System Program directory
@@ -80,11 +81,12 @@ rem --- Get masks
 	
 rem --- Open files with adc
 
-    files=3,begfile=1,endfile=files
+    files=4,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ivm-01",ids$[1]="IVM_ITEMMAST"
 	files$[2]="sfm-10",ids$[2]="SFC_WOTYPECD"
 	files$[3]="arm-01",ids$[3]="ARM_CUSTMAST"
+	files$[4]="ivs_params",ids$[4]="IVS_PARAMS"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -92,21 +94,24 @@ rem --- Open files with adc
     ivm_itemmast_dev=channels[1]
 	sfc_type_dev=channels[2]
 	arm_custmast=channels[3]
-
+	ivs_params=channels[4]
+	
 rem --- Dimension string templates
 
 	dim ivm_itemmast$:templates$[1]
 	dim sfc_type$:templates$[2]
 	dim arm_custmast$:templates$[3]
+	dim ivs_params$:templates$[4]
 	
 goto no_bac_open
 rem --- Open Files    
-    num_files = 3
+    num_files = 4
     dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
 
 	open_tables$[1]="IVM_ITEMMAST",   open_opts$[1] = "OTA"
 	open_tables$[2]="SFC_WOTYPECD",   open_opts$[2] = "OTA"
 	open_tables$[3]="ARM_CUSTMAST",   open_opts$[3] = "OTA"
+	open_tables$[4]="ivs_parAMS",     open_opts$[4] = "OTA"	
 
 call sypdir$+"bac_open_tables.bbj",
 :       open_beg,
@@ -122,13 +127,18 @@ call sypdir$+"bac_open_tables.bbj",
 	ivm_itemmast_dev  = num(open_chans$[1])
 	sfc_type_dev = num(open_chans$[2])
 	arm_custmast = num(open_chans$[3])
+	ivs_params   = num(open_chans$[4])
 	
 	dim ivm_itemmast$:open_tpls$[1]
 	dim sfc_type$:open_tpls$[2]
 	dim arm_custmast$:open_tpls$[3]
+	dim ivs_params$:open_tpls$[4]	
 
 no_bac_open:
-
+rem --- Get IV Params for Lot/Serial flag
+	ivs_params_key$=firm_id$+"IV00"
+    find record (ivs_params,key=ivs_params_key$) ivs_params$
+	
 rem --- Build SQL statement
     sql_prep$=""
 	where_clause$=""
@@ -204,6 +214,13 @@ rem --- Trip Read
 
 		dim ivm_itemmast$:fattr(ivm_itemmast$)
 		find record (ivm_itemmast_dev,key=firm_id$+read_tpl.item_id$,dom=*next)ivm_itemmast$
+
+		if pos(ivs_params.lotser_flag$="LS") and ivm_itemmast.lotser_item$="Y"
+			include_lotser$="Y"
+		else	
+			include_lotser$="N"
+		endif
+		
 		data!.setFieldValue("FIRM_ID",firm_id$)
 		data!.setFieldValue("WO_NO",read_tpl.wo_no$)
 		data!.setFieldValue("WO_TYPE",read_tpl.wo_type$)
@@ -252,6 +269,7 @@ rem --- Trip Read
 		endif
 		data!.setFieldValue("DRAWING_NO",read_tpl.drawing_no$)
 		data!.setFieldValue("REV",read_tpl.drawing_rev$)
+		data!.setFieldValue("INCLUDE_LOTSER",include_lotser$)
 		rs!.insert(data!)
 	wend
 	
