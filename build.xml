@@ -209,6 +209,9 @@
                dest="${addon.bbj.dir}/help/WebHelp">
         </untar>
 
+        <!-- The addon archive has a AddonHelp.jar placeholder file, delete it -->
+        <delete file="${addon.bbj.dir}/help/AddonHelp.jar"/>
+
         <move preserveLastModified="true"
               file="${bbj.jars.dir}/addonhelp.jar"
               tofile="${addon.bbj.dir}/help/addonhelp.jar">
@@ -254,14 +257,17 @@
         <copy preserveLastModified="true"
               todir="${build.dir}/unix/images">
               <fileset file="${images.dir}/AddonSoftware.xpm"/>
+              <fileset file="${images.dir}/AddonDev.png"/>
               <fileset file="${images.dir}/Documentation.xpm"/>
         </copy>
         <copy preserveLastModified="true"
               todir="${build.dir}/${port.MAC}/images">
+              <fileset file="${images.dir}/AddonDev.icns"/>
               <fileset file="${images.dir}/AddonSoftware.icns"/>
         </copy>
         <copy preserveLastModified="true"
               todir="${build.dir}/${port.WIN}/images">
+              <fileset file="${images.dir}/AddonDev.ico"/>
               <fileset file="${images.dir}/AddonSoftware.ico"/>
               <fileset file="${images.dir}/Documentation.ico"/>
         </copy>
@@ -279,6 +285,10 @@
               todir="${build.dir}/unix/bin">
               <fileset file="${templates.dir}/addon"/>
         </copy>
+        <copy preserveLastModified="true"
+              todir="${build.dir}/unix/bin">
+              <fileset file="${templates.dir}/addondeveloper"/>
+        </copy>
 
         <!-- Specific Unix Scripts -->
 
@@ -287,6 +297,11 @@
               todir="${build.dir}/${port.MAC}/apps">
               <fileset dir="${templates.dir}/mac"
                        includes="AddonSoftware.app/"/>
+        </copy>
+        <copy preserveLastModified="true"
+              todir="${build.dir}/${port.MAC}/apps">
+              <fileset dir="${templates.dir}/mac"
+                       includes="AddonSoftwareDeveloper.app/"/>
         </copy>
     </target>
     <!-- End of copyScripts -->
