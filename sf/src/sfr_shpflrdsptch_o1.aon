@@ -89,8 +89,7 @@ rem --- Position sfm-05 detail file
     totrun=0,wtotset=0,wtotrun=0
     prefix$=firm_id$+op_code$
     read (sfm05a_dev,key=prefix$,dom=*next)
-open (999)"c:\settrace.txt"
-settrace (999,MODE="UNTIMED")
+
 rem --- Read next sfm-05 detail record
 
     dim sfm05a_key$:sfm05a_key_pritpl$
