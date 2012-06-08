@@ -1,7 +1,35 @@
+[[SFE_TIMEWO.WO_NO.AVAL]]
+rem --- Verify this WO is open
+	wo_no$=callpoint!.getUserInput()
+	wo_location$="  "
+	womastr_dev=callpoint!.getDevObject("sfe_womastr_dev")
+	dim womastr$:callpoint!.getDevObject("sfe_womastr_tpl")
+	findrecord(womastr_dev,key=firm_id$+wo_location$+wo_no$,dom=*next)womastr$
+	if womastr.wo_status$<>"O" then
+		msg_id$ = "WO_NOT_OPEN"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+[[SFE_TIMEWO.WO_NO.BINQ]]
+rem --- Open WO lookup
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMASTR","PRIMARY",key_tpl$,rd_table_chans$[all],status$
+	dim womastr_key$:key_tpl$
+	dim filter_defs$[2,2]
+	filter_defs$[1,0]="SFE_WOMASTR.FIRM_ID"
+	filter_defs$[1,1]="='"+firm_id$ +"'"
+	filter_defs$[1,2]="LOCK"
+	filter_defs$[2,0]="SFE_WOMASTR.WO_STATUS"
+	filter_defs$[2,1]="='O' "
+	filter_defs$[2,2]="LOCK"
+	
+	call stbl("+DIR_SYP")+"bax_query.bbj",gui_dev,form!,"AO_WO_LOOKUP","",table_chans$[all],womastr_key$,filter_defs$[all]
+
+	if cvs(womastr_key$,2)<>"" then callpoint!.setColumnData("SFE_TIMEWO.WO_NO",womastr_key.wo_no$,1)
+
+	callpoint!.setStatus("ACTIVATE-ABORT")
 [[SFE_TIMEWO.AREA]]
 rem wgh ... need to update entered_hrs = hrs + setup_time
-[[SFE_TIMEWO.BDEL]]
-rem wgh ... make sure detail is deleted when header is deleted
 [[SFE_TIMEWO.TRANS_DATE.BINP]]
 rem --- Initialize trans_date
 	if cvs(callpoint!.getColumnData("SFE_TIMEWO.TRANS_DATE"),2)="" then 
@@ -50,11 +78,10 @@ rem --- Open Files
 rem --- Get SF parameters
 	dim sfs_params$:sfs_params_tpl$
 	read record (sfs_params_dev,key=firm_id$+"SF00",dom=std_missing_params) sfs_params$
+	bm$=sfs_params.bm_interface$
 	pr$=sfs_params.pr_interface$
 	gl$=sfs_params.post_to_gl$
 	pay_actstd$=sfs_params.pay_actstd$
-rem wgh ... testing
-pay_actstd$="A"
 	callpoint!.setDevObject("pay_actstd",pay_actstd$)
 	time_clk_flg$=sfs_params.time_clk_flg$
 	callpoint!.setDevObject("time_clk_flg",time_clk_flg$)
@@ -78,8 +105,6 @@ pay_actstd$="A"
 		call stbl("+DIR_PGM")+"adc_application.aon","PR",info$[all]
 		pr$=info$[20]
 	endif
-rem wgh ... testing
-pr$="Y"
 	callpoint!.setDevObject("pr",pr$)
 
 rem --- Get IV parameters
@@ -128,6 +153,7 @@ rem --- Additional file opens
 		prs_params_dev=num(open_chans$[2])
 		dim prs_params$:open_tpls$[2]
 		find record (prs_params_dev,key=firm_id$+"PR00",dom=std_missing_params) prs_params$
+		callpoint!.setDevObject("reg_pay_code",prs_params.reg_pay_code$)
 		precision$=prs_params.precision$
 		callpoint!.setDevObject("precision",precision$)
 		precision num(precision$)
