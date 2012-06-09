@@ -34,8 +34,7 @@ rem --- Retrieve sysinfo data
         firm_id$=sysinfo.firm_id$
 
 rem --- retrieve masks 
-        call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,m1
-		call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","U","",m2$,0,m2
+
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","I","",g5$,0,acctmask
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","R","",m3$,0,m3
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",c1$,0,custmask
@@ -44,7 +43,7 @@ rem --- retrieve masks
 rem --- Check & Adjust Masks
 
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","A","",m1$,0,m1
-		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",m2$,0,m2
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","H","",m2$,0,m2
         m9=m1*11+m2*2+8
 
 rem --- Assign Title, Record, and keys
