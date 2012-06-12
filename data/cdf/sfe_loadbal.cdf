@@ -1,3 +1,19 @@
+[[SFE_LOADBAL.ZOOM_LEVEL.AVAL]]
+rem --- call graphing routine
+
+	if callpoint!.getColumnData("SFE_LOADBAL.ZOOM_LEVEL")<>callpoint!.getUserInput()
+
+		wo_open$=callpoint!.getColumnData("SFE_LOADBAL.CHK_OPENED")
+		wo_planned$=callpoint!.getColumnData("SFE_LOADBAL.CHK_PLANNED")
+		wo_quoted$=callpoint!.getColumnData("SFE_LOADBAL.CHK_QUOTED")
+		op_code$=callpoint!.getColumnData("SFE_LOADBAL.OP_CODE")
+		beg_date$=callpoint!.getColumnData("SFE_LOADBAL.BEG_WO_DATE")
+		num_days$=callpoint!.getColumnData("SFE_LOADBAL.DAYS_IN_MTH")
+		zoom=num(callpoint!.getUserInput())
+
+		gosub create_chart
+	
+	endif
 [[SFE_LOADBAL.CHK_QUOTED.AVAL]]
 rem --- call graphing routine
 
@@ -9,6 +25,7 @@ rem --- call graphing routine
 		op_code$=callpoint!.getColumnData("SFE_LOADBAL.OP_CODE")
 		beg_date$=callpoint!.getColumnData("SFE_LOADBAL.BEG_WO_DATE")
 		num_days$=callpoint!.getColumnData("SFE_LOADBAL.DAYS_IN_MTH")
+		zoom=num(callpoint!.getColumnData("SFE_LOADBAL.ZOOM_LEVEL"))
 
 		gosub create_chart
 	
@@ -24,6 +41,7 @@ rem --- call graphing routine
 		op_code$=callpoint!.getColumnData("SFE_LOADBAL.OP_CODE")
 		beg_date$=callpoint!.getColumnData("SFE_LOADBAL.BEG_WO_DATE")
 		num_days$=callpoint!.getColumnData("SFE_LOADBAL.DAYS_IN_MTH")
+		zoom=num(callpoint!.getColumnData("SFE_LOADBAL.ZOOM_LEVEL"))
 
 		gosub create_chart
 
@@ -38,6 +56,7 @@ rem --- call graphing routine
 		op_code$=callpoint!.getColumnData("SFE_LOADBAL.OP_CODE")
 		beg_date$=callpoint!.getColumnData("SFE_LOADBAL.BEG_WO_DATE")
 		num_days$=callpoint!.getColumnData("SFE_LOADBAL.DAYS_IN_MTH")
+		zoom=num(callpoint!.getColumnData("SFE_LOADBAL.ZOOM_LEVEL"))
 
 		gosub create_chart
 
@@ -62,6 +81,7 @@ rem --- validate this date is in calendar
 		op_code$=callpoint!.getColumnData("SFE_LOADBAL.OP_CODE")
 		beg_date$=callpoint!.getUserInput()
 		num_days$=callpoint!.getColumnData("SFE_LOADBAL.DAYS_IN_MTH")
+		zoom=num(callpoint!.getColumnData("SFE_LOADBAL.ZOOM_LEVEL"))
 
 		gosub create_chart
 	
@@ -77,6 +97,7 @@ rem --- call graphing routine
 		op_code$=callpoint!.getColumnData("SFE_LOADBAL.OP_CODE")
 		beg_date$=callpoint!.getColumnData("SFE_LOADBAL.BEG_WO_DATE")
 		num_days$=callpoint!.getColumnData("SFE_LOADBAL.DAYS_IN_MTH")
+		zoom=num(callpoint!.getColumnData("SFE_LOADBAL.ZOOM_LEVEL"))
 
 		if cvs(op_code$,3)<>"" and cvs(beg_date$,3)<>"" and cvs(num_days$,3)<>"" then gosub create_chart
 [[SFE_LOADBAL.DAYS_IN_MTH.AVAL]]
@@ -90,6 +111,7 @@ rem --- call graphing routine
 		op_code$=callpoint!.getColumnData("SFE_LOADBAL.OP_CODE")
 		beg_date$=callpoint!.getColumnData("SFE_LOADBAL.BEG_WO_DATE")
 		num_days$=callpoint!.getUserInput()
+		zoom=num(callpoint!.getColumnData("SFE_LOADBAL.ZOOM_LEVEL"))
 
 		gosub create_chart
 	
@@ -118,6 +140,7 @@ rem --- call graphing routine
 		op_code$=callpoint!.getUserInput()
 		beg_date$=callpoint!.getColumnData("SFE_LOADBAL.BEG_WO_DATE")
 		num_days$=callpoint!.getColumnData("SFE_LOADBAL.DAYS_IN_MTH")
+		zoom=num(callpoint!.getColumnData("SFE_LOADBAL.ZOOM_LEVEL"))
 
 		gosub create_chart
 	
@@ -130,7 +153,7 @@ create_chart:
 rem --- construct chart w/ category names (i.e., days of month), bar chart title, and avail/sched hours
 rem --- called from each control's AVAL to provide immediate results
 rem --- incoming:
-rem ---		wo_opened$, wo_planned$, wo_quoted$, op_code$, beg_date$, num_days$
+rem ---		wo_opened$, wo_planned$, wo_quoted$, op_code$, beg_date$, num_days$, zoom
 rem ==============================================================
 	wo_stats$=""
 	if wo_open$="Y" then wo_stats$="O"
@@ -139,14 +162,15 @@ rem ==============================================================
 
 	wdt$=beg_date$
 	gosub check_in_calendar
+
 	if date_valid=1
-		numCategories=num(num_days$)
 
-		bc_loadbal!=callpoint!.getDevObject("bc_loadbal")
-		bc_loadbal!.clearData()
-		bc_loadbal!.setSeriesName(0,"Available Hours")
-		bc_loadbal!.setSeriesName(1,"Scheduled Hours")
+		daysVect!=BBjAPI().makeVector()
+		availHrsVect!=BBjAPI().makeVector()
+		schedHrsVect!=BBjAPI().makeVector()
 
+		numCategories=num(num_days$);rem number of days to display across x-axis
+	
 		sfm_opcalndr=fnget_dev("SFM_OPCALNDR")
 		sfe_woschdl=fnget_dev("SFE_WOSCHDL")
 		sfe_womastr=fnget_dev("SFE_WOMASTR")
@@ -158,20 +182,20 @@ rem ==============================================================
 		yr=num(wdt$(1,4))
 		mo=num(wdt$(5,2))
 		dt=num(wdt$(7,2))
-		wdisp$=date(jul(yr,mo,dt):"%Ml")
-		bc_loadbal!.setTitle("Load Balance beginning "+wdisp$+" "+wdt$(7,2)+", "+wdt$(1,4))
+		wdisp$=date(jul(yr,mo,1):"%Ms")
 		calendar! = GregorianCalendar.getInstance()
 	  	calendar!.set(yr, mo-1, 1)
 	 	days = calendar!.getActualMaximum(GregorianCalendar.DAY_OF_MONTH);rem --- returns # days in specified mo/yr
-		read_flag=1
-		begin_dt=dt
+		new_month=1
+		dt_pfx$=""
 
 		for categories_ctr=0 to numCategories-1
-			bc_loadbal!.setCategoryName(categories_ctr,str(mo)+"/"+str(dt))
-			if read_flag=1
+			day_disp$=iff(new_month,wdisp$+" "+str(dt),dt_pfx$+str(dt))	
+			daysVect!.addItem(day_disp$)
+			if new_month=1
 				dim sfm_opcalndr$:fattr(sfm_opcalndr$)
 				read record (sfm_opcalndr,key=firm_id$+op_code$+str(yr:"0000")+str(mo:"00"),dom=*next)sfm_opcalndr$
-				read_flag=0
+				new_month=0
 			endif
 			read (sfe_woschdl,key=firm_id$+op_code$+str(yr:"0000")+str(mo:"00")+str(dt:"00"),dom=*next)
 			sched_hrs=0
@@ -183,22 +207,53 @@ rem ==============================================================
 					sched_hrs=sched_hrs+sfe_woschdl.setup_time+sfe_woschdl.runtime_hrs
 				endif
 			wend
-			bc_loadbal!.setBarValue(0,categories_ctr,num(field(sfm_opcalndr$,"HRS_PER_DAY_"+str(dt:"00"))))
-			bc_loadbal!.setBarValue(1,categories_ctr,sched_hrs)
+			avail_hrs=num(field(sfm_opcalndr$,"HRS_PER_DAY_"+str(dt:"00")))/zoom
+			availHrsVect!.addItem(avail_hrs)
+			if zoom=1
+				rem --- see if sched > avail only when zoom isn't turned on
+				schedHrsVect!.addItem(sched_hrs)
+			else
+				schedHrsVect!.addItem(num(iff(sched_hrs>avail_hrs,avail_hrs,sched_hrs)))
+			endif
 			dt=dt+1
 			if dt>days
 				mo=mo+1
 				if mo>12
 					yr=yr+1
+					mo=1
 				endif
-				calendar!.set(yr,mo,1)
+				calendar!.set(yr,mo-1,1)
 				days=calendar!.getActualMaximum(GregorianCalendar.DAY_OF_MONTH)
 				dt=1
-				read_flag=1
+				new_month=1
+				wdisp$=date(jul(yr,mo,1):"%Ms")
+				if dt_pfx$="" then dt_pfx$="." else dt_pfx$=".."
 			endif
 		next categories_ctr
 
+		gosub show_chart
+
 	endif
+
+	return
+
+rem ========================================================
+show_chart:
+rem --- (re)display bar chart based on data gathered in create_chart routine
+rem --- incoming: daysVect!, availHrsVect!, schedHrsVect!
+rem ========================================================
+
+	bc_loadbal!=callpoint!.getDevObject("bc_loadbal")
+	bc_loadbal!.clearData()
+	bc_loadbal!.setSeriesName(0,"Available Hours")
+	bc_loadbal!.setSeriesName(1,"Scheduled Hours")
+
+	for categories_ctr=0 to numCategories-1
+		bc_loadbal!.setCategoryName(categories_ctr,daysVect!.getItem(categories_ctr))
+		bc_loadbal!.setBarValue(0,categories_ctr,availHrsVect!.getItem(categories_ctr))
+		bc_loadbal!.setBarValue(1,categories_ctr,schedHrsVect!.getItem(categories_ctr))
+
+	next categories_ctr
 
 	return
 
@@ -245,13 +300,13 @@ rem --- open files/init
 	read record (sfs_params,key=firm_id$+"SF00",dom=std_missing_params)sfs_params$
 	bm$=sfs_params.bm_interface$
 
-	if bm$<>"Y"
-		callpoint!.setTableColumnAttribute("SFE_LOADBAL.OP_CODE","DTAB","SFC_OPRTNCOD")
-	endif
-
 	if bm$="Y"
 		call stbl("+DIR_PGM")+"adc_application.aon","BM",info$[all]
 		bm$=info$[20]
+	endif
+
+	if bm$<>"Y"
+		callpoint!.setTableColumnAttribute("SFE_LOADBAL.OP_CODE","DTAB","SFC_OPRTNCOD")
 	endif
 
 	num_files=1
@@ -268,15 +323,10 @@ rem --- open files/init
 
 	callpoint!.setDevObject("opcode_chan",num(open_chans$[1]))
 	callpoint!.setDevObject("opcode_tpl",open_tpls$[1])
-	
+
 rem --- add bar chart to form
 
 	ctl_id=num(stbl("+CUSTOM_CTL"))
-	numCategories=num(callpoint!.getTableColumnAttribute("SFE_LOADBAL.DAYS_IN_MTH","DFLT"))
-
-	bc_loadbal! = form!.addBarChart(ctl_id, 10, 100, 800, 500, "Days", "Hours", 2,numCategories,1, 1, 0); bc_loadbal!.setTitle("Load Balance Inquiry")
-
-	bc_loadbal!.setSeriesName(0,"Available Hours")
-	bc_loadbal!.setSeriesName(1,"Scheduled Hours")
-
+	bc_loadbal! = form!.addBarChart(ctl_id, 10, 100, form!.getWidth()-20, form!.getHeight()-100, "Days", "Hours", 2,99,1, 1, 0)
 	callpoint!.setDevObject("bc_loadbal",bc_loadbal!)
+	
