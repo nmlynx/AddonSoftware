@@ -440,6 +440,11 @@
               tofile="${bbj.pkgs.dir}/installBBj.jar">
         </move>
 
+        <!-- Update the JENKINS_BUILD_DIR marker with the Jenkins build directory -->
+        <replace file="${src.dir}/InstallResponse.properties"
+                 encoding="ISO-8859-1"
+                 token="JENKINS_BUILD_DIR"
+                 value="${basedir}"/>
 
         <!-- Run BBj installer -->
         <java jar="${bbj.pkgs.dir}/installBBj.jar" fork="true">
