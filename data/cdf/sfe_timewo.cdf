@@ -1,3 +1,41 @@
+[[SFE_TIMEWO.BWAR]]
+rem --- Check entered hrs
+	total_hrs=num(callpoint!.getColumnData("SFE_TIMEWO.TOTAL_HRS"))
+	entered_hrs=num(callpoint!.getColumnData("<<DISPLAY>>.ENTERED_HRS"))
+	if entered_hrs<>total_hrs then
+		msg_id$ = "SF_HOURS_OOB"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=str(total_hrs-entered_hrs:callpoint!.getDevObject("unit_mask"))
+		gosub disp_message
+		if msg_opt$="O" then
+			rem --- Ok oob
+			callpoint!.setColumnData("SFE_TIMEWO.TOTAL_HRS",str(entered_hrs),1)
+			callpoint!.setStatus("MODIFIED")
+		else
+			rem --- Cancel exit
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
+[[SFE_TIMEWO.ADIS]]
+rem --- Init entered hrs
+	entered_hrs=0
+	timedet_dev=fnget_dev("SFE_TIMEWODET")
+	dim timedet$:fnget_tpl$("SFE_TIMEWODET")
+	trip_key$=firm_id$+callpoint!.getColumnData("SFE_TIMEWO.WO_NO")+callpoint!.getColumnData("SFE_TIMEWO.TRANS_DATE")
+	read(timedet_dev,key=trip_key$,dom=*next)
+	while 1
+		timedet_key$=key(timedet_dev,end=*break)
+		if pos(trip_key$=timedet_key$)<>1 then break
+		readrecord(timedet_dev)timedet$
+		entered_hrs=entered_hrs+timedet.hrs+timedet.setup_time
+	wend
+	callpoint!.setColumnData("<<DISPLAY>>.ENTERED_HRS",str(entered_hrs),1)
+[[SFE_TIMEWO.AREC]]
+rem --- Init new record
+	entered_hrs=0
+	callpoint!.setColumnData("<<DISPLAY>>.ENTERED_HRS",str(entered_hrs),1)
+	callpoint!.setDevObject("entered_hrs",entered_hrs)
 [[SFE_TIMEWO.WO_NO.AVAL]]
 rem --- Verify this WO is open
 	wo_no$=callpoint!.getUserInput()
@@ -28,8 +66,6 @@ rem --- Open WO lookup
 	if cvs(womastr_key$,2)<>"" then callpoint!.setColumnData("SFE_TIMEWO.WO_NO",womastr_key.wo_no$,1)
 
 	callpoint!.setStatus("ACTIVATE-ABORT")
-[[SFE_TIMEWO.AREA]]
-rem wgh ... need to update entered_hrs = hrs + setup_time
 [[SFE_TIMEWO.TRANS_DATE.BINP]]
 rem --- Initialize trans_date
 	if cvs(callpoint!.getColumnData("SFE_TIMEWO.TRANS_DATE"),2)="" then 
@@ -85,6 +121,9 @@ rem --- Get SF parameters
 	callpoint!.setDevObject("pay_actstd",pay_actstd$)
 	time_clk_flg$=sfs_params.time_clk_flg$
 	callpoint!.setDevObject("time_clk_flg",time_clk_flg$)
+
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",unit_mask$,0,0
+	callpoint!.setDevObject("unit_mask",unit_mask$)
 
 	if bm$="Y"
 		call stbl("+DIR_PGM")+"adc_application.aon","BM",info$[all]
@@ -176,9 +215,8 @@ rem --- Additional file opens
 	callpoint!.setDevObject("opcode_dev",num(open_chans$[9]))
 	callpoint!.setDevObject("opcode_tpl",open_tpls$[9])
 
-rem --- Validate employee_no with SFM_EMPLMAST instead of PRM_EMPLMAST when PR not installed
-	rem --- employee_no not in sfe_timewo
-	rem --- if pr$<>"Y" then callpoint!.setTableColumnAttribute("SFE_TIMEWO.EMPLOYEE_NO","DTAB","SFM_EMPLMAST")
+rem --- Hold on to the control for entered_hrs so it can be updated in detail grid
+	callpoint!.setDevObject("control_entered_hrs",callpoint!.getControl("<<DISPLAY>>.ENTERED_HRS"))
 [[SFE_TIMEWO.<CUSTOM>]]
 #include std_missing_params.src
 [[SFE_TIMEWO.BTBL]]

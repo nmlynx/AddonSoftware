@@ -1,7 +1,23 @@
 [[SFE_TIMEDATEDET.BDEL]]
-rem wgh ... need to update entered_hrs = hrs + setup_time
+rem --- Update entered_hrs
+	previous_hrs=num(callpoint!.getDevObject("previous_hrs"))
+	previous_setup_time=num(callpoint!.getDevObject("previous_setup_time"))
+	entered_hrs=num(callpoint!.getHeaderColumnData("<<DISPLAY>>.ENTERED_HRS"))
+	entered_hrs=entered_hrs-previous_hrs-previous_setup_time
+	callpoint!.setHeaderColumnData("<<DISPLAY>>.ENTERED_HRS",str(entered_hrs))
+	control_entered_hrs!=callpoint!.getDevObject("control_entered_hrs")
+	control_entered_hrs!.setText(str(entered_hrs))
+	callpoint!.setStatus("REFRESH")
 [[SFE_TIMEDATEDET.AUDE]]
-rem wgh ... need to update entered_hrs = hrs + setup_time
+rem --- Update entered_hrs
+	hrs=num(callpoint!.getDevObject("previous_hrs"))
+	setup_time=num(callpoint!.getDevObject("previous_setup_time"))
+	entered_hrs=num(callpoint!.getHeaderColumnData("<<DISPLAY>>.ENTERED_HRS"))
+	entered_hrs=entered_hrs+hrs+setup_time
+	callpoint!.setHeaderColumnData("<<DISPLAY>>.ENTERED_HRS",str(entered_hrs))
+	control_entered_hrs!=callpoint!.getDevObject("control_entered_hrs")
+	control_entered_hrs!.setText(str(entered_hrs))
+	callpoint!.setStatus("REFRESH")
 [[SFE_TIMEDATEDET.AGRE]]
 rem --- Display appropriate WO description
 	wo_no$=callpoint!.getColumnData("SFE_TIMEDATEDET.WO_NO")
@@ -11,7 +27,21 @@ rem --- Display operation step
 	oper_seq_no$=callpoint!.getColumnData("SFE_TIMEDATEDET.OPER_SEQ_REF")
 	gosub set_op_step
 
-rem wgh ... need to update entered_hrs = hrs + setup_time
+rem --- Update entered_hrs, unless row has been deleted
+	if callpoint!.getGridRowDeleteStatus(callpoint!.getValidationRow())<>"Y" then
+		hrs=num(callpoint!.getColumnData("SFE_TIMEDATEDET.HRS"))
+		setup_time=num(callpoint!.getColumnData("SFE_TIMEDATEDET.SETUP_TIME"))
+		previous_hrs=num(callpoint!.getDevObject("previous_hrs"))
+		previous_setup_time=num(callpoint!.getDevObject("previous_setup_time"))
+		if hrs<>previous_hrs or setup_time<>previous_setup_time then
+			entered_hrs=num(callpoint!.getHeaderColumnData("<<DISPLAY>>.ENTERED_HRS"))
+			entered_hrs=entered_hrs+(hrs-previous_hrs)+(setup_time-previous_setup_time)
+			callpoint!.setHeaderColumnData("<<DISPLAY>>.ENTERED_HRS",str(entered_hrs))
+			control_entered_hrs!=callpoint!.getDevObject("control_entered_hrs")
+			control_entered_hrs!.setText(str(entered_hrs))
+			callpoint!.setStatus("REFRESH")
+		endif
+	endif
 [[SFE_TIMEDATEDET.BGDR]]
 rem --- Display appropriate WO description
 	wo_no$=callpoint!.getColumnData("SFE_TIMEDATEDET.WO_NO")
@@ -29,7 +59,13 @@ rem --- Display operation step
 	oper_seq_no$=callpoint!.getColumnData("SFE_TIMEDATEDET.OPER_SEQ_REF")
 	gosub set_op_step
 
-rem wgh ... need to init op code stuff
+rem --- Op_code initializations
+	op_code$=callpoint!.getColumnData("SFE_TIMEDATEDET.OP_CODE")
+	gosub op_code_init
+
+rem --- Hold on to starting values for hrs and setup_time
+	callpoint!.setDevObject("previous_hrs",callpoint!.getColumnData("SFE_TIMEDATEDET.HRS"))
+	callpoint!.setDevObject("previous_setup_time",callpoint!.getColumnData("SFE_TIMEDATEDET.SETUP_TIME"))
 [[SFE_TIMEDATEDET.OPER_SEQ_REF.BINP]]
 rem --- WO operation lookup
 	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOOPRTN","PRIMARY",key_tpl$,rd_table_chans$[all],status$
@@ -386,6 +422,8 @@ rem --- Calculate hours
 rem --- Initialize dev objects
 	callpoint!.setDevObject("opcode_direct_rate",0)
 	callpoint!.setDevObject("opcode_ovhd_factor",0)
+	callpoint!.setDevObject("previous_hrs",0)
+	callpoint!.setDevObject("previous_setup_time",0)
 
 rem --- Initialize column data
 	callpoint!.setColumnData("SFE_TIMEDATEDET.START_TIME",str(callpoint!.getDevObject("prev_stoptime")),1)
@@ -414,8 +452,6 @@ rem --- Initializations
 [[SFE_TIMEDATEDET.BGDS]]
 rem --- Set precision
 	precision num(callpoint!.getDevObject("precision"))
-
-rem wgh ... stopped at line 800 woe.bb
 [[SFE_TIMEDATEDET.AGCL]]
 rem --- set preset val for batch_no
 	callpoint!.setTableColumnAttribute("SFE_TIMEDATEDET.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
