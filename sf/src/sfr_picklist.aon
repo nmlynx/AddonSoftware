@@ -129,14 +129,43 @@ creat_xref: rem --- Create Cross Reference File
     dim sfe04c_key$:sfe04c_key_tpl$
     dim sfe23a_key$:sfe23a_key_tpl$
 
+    sql_prep$ = ""
+    sql_prep$ = sql_prep$ + "SELECT sfe_wocommit.firm_id, sfe_womatdtl.wo_location, sfe_womatdtl.wo_no, sfe_womatl.op_seq, "
+	sql_prep$ = sql_prep$ + "ivm_itemwhse.location, sfe_womatdtl.material_seq "
+    sql_prep$ = sql_prep$ + "  FROM sfe_wocommit INNER JOIN sfe_womatdtl "
+    sql_prep$ = sql_prep$ + "    ON sfe_wocommit.firm_id = sfe_womatdtl.firm_id AND "
+    sql_prep$ = sql_prep$ + "       sfe_wocommit.wo_location = sfe_womatdtl.wo_location AND "
+	sql_prep$ = sql_prep$ + "       sfe_wocommit.wo_no = sfe_womatdtl.wo_no "
+	sql_prep$ = sql_prep$ + "  INNER JOIN sfe_womatl "
+	sql_prep$ = sql_prep$ + "    ON sfe_wocommit.firm_id = sfe_womatl.firm_id AND "
+	sql_prep$ = sql_prep$ + "       sfe_wocommit.wo_location = sfe_womatl.wo_location AND "
+	sql_prep$ = sql_prep$ + "       sfe_wocommit.wo_no = sfe_womatl.wo_no "
+	sql_prep$ = sql_prep$ + "  INNER JOIN ivm_itemwhse "
+	sql_prep$ = sql_prep$ + "    ON sfe_wocommit.firm_id = ivm_itemwhse.firm_id AND "
+	sql_prep$ = sql_prep$ + "       sfe_womatdtl.warehouse_id = ivm_itemwhse.warehouse_id AND "
+	sql_prep$ = sql_prep$ + "       sfe_womatdtl.item_id = ivm_itemwhse.item_id "
+    where_clause$="WHERE sfe_wocommit.firm_id = '"+firm_id$+"' "
+	if sort_seq$="L"
+		sort_clause$ = "ORDER BY sfe_womatdtl.wo_no, sfe_womatl.op_seq, ivm_itemwhse_location"
+	else
+		sort_clause$ = "ORDER BY sfe_womatdtl.wo_no, sfe_womatl.op_seq, sfe_womatdtl.material_seq"
+	endif
+
+    sql_prep$=sql_prep$+where_clause$+sort_clause$
+escape
+    sql_chan=sqlunt
+    sqlopen(sql_chan)stbl("+DBNAME")
+    sqlprep(sql_chan)sql_prep$
+    dim sql_rec$:sqltmpl(sql_chan)
+    sqlexec(sql_chan)
     while more
 
         sfe04c_key$=key(sfe04c_dev,end=*break)
         read (sfe04c_dev,key=sfe04c_key$)
 
-        if sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.record_id_c$=firm_id$+"  "+"C"
+        if sfe04c_key.firm_id$=firm_id$
 
-            read (sfe13a_dev,key=sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.wo_no$,dom=creat_xref)
+            read (sfe13a_dev,key=sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.wo_no$,dom=*continue)
             read (sfe23a_dev,key=sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.wo_no$+"000",dom=*next)
 
             while more
@@ -145,7 +174,6 @@ creat_xref: rem --- Create Cross Reference File
                 if sfe23a_key.firm_id$+sfe23a_key.wo_location$+sfe23a_key.wo_no$<>sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.wo_no$ then break
                 read record (sfe23a_dev,key=k2$) sfe23a$
                 find record (sfe22b_dev,key=sfe23a.firm_id$+sfe23a.wo_location$+sfe23a.wo_no$+"B"+sfe23a.material_seq$,dom=*next) sfe22b$
-                if r1$="L" then find record (ivm02a_dev,key=firm_id$+sfe23a.warehouse_id$+sfe23a.item_id$,dom=*next) ivm02a$
                 if r1$="L" then find record (ivm02a_dev,key=firm_id$+sfe23a.warehouse_id$+sfe23a.item_id$,dom=*next) ivm02a$
                 k4$=sfe23a.firm_id$+sfe23a.wo_location$+sfe23a.wo_no$+sfe22b.op_seq$+ivm02a.location$+sfe23a.material_seq$
                 call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status

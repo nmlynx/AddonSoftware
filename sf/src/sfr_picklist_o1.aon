@@ -25,7 +25,7 @@ rem --- Retrieve sysinfo data
 rem --- Init Data
 
     m9=80-m2*3
-    if splitline or m2+23+p[0]<m9-m2 then let m9=m9-m2,m9$="Y"
+rem jpb    if splitline or m2+23+p[0]<m9-m2 then let m9=m9-m2,m9$="Y"
     stepnum=1
     more=1
     flag=0
@@ -75,25 +75,20 @@ rem --- Main Read
     rem --- Find Customer
 
 		dim arm01a$:fattr(arm01a$)
-        arm01a.cust_name$="*** Not On File ***"
+        arm01a.customer_name$="*** Not On File ***"
         if pos(" "<> sfe01a.customer_id$)<>0
             find record (arm01a_dev,key=firm_id$+sfe01a.customer_id$,dom=*next) arm01a$
         endif
 
     rem --- Find Warehouse
 
-        if y1$<>sfe13a.warehouse_id$ then
-            ivm10c.short_name$="*** Not On File ***"
-            find record (ivm10c_dev,key=firm_id$+"C"+sfe13a.warehouse_id$,dom=label1) ivm10c$
-            y1$=sfe13a.warehouse_id$
-        endif
+		ivm10c.short_name$="*** Not On File ***"
+		find record (ivm10c_dev,key=firm_id$+"C"+sfe13a.warehouse_id$,dom=label1) ivm10c$
 
     label1: rem --- Type
 
-        if z1$<>sfe13a.firm_id$ then
-            sfm10a.code_desc$="**** Not On File ****"
-            find record (sfm10a_dev,key=firm_id$+"A"+sfe13a.firm_id$,dom=*next) sfm10a$
-        endif
+		sfm10a.code_desc$="**** Not On File ****"
+		find record (sfm10a_dev,key=firm_id$+"A"+sfe13a.firm_id$,dom=*next) sfm10a$
 
     rem --- Category
 
@@ -101,7 +96,7 @@ rem --- Main Read
         if sfe13a.wo_category$="N" then let z2$="Non-Stock"
         if sfe13a.wo_category$="R" then let z2$="Recurring"
         h=0
-        print @(40,5),sfe13a.wo_no$,
+rem jpb        print @(40,5),sfe13a.wo_no$,
 
     rem --- Details Here
 
