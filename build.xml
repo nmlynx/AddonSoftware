@@ -443,8 +443,8 @@
         <!-- Update the JENKINS_BUILD_DIR marker with the Jenkins build directory -->
         <replace file="${src.dir}/InstallResponse.properties"
                  encoding="ISO-8859-1"
-                 token="JENKINS_BUILD_DIR"
-                 value="${basedir}"/>
+                 token="BBJ_INSTALL_DIR"
+                 value="${install.dir}"/>
 
         <!-- Run BBj installer -->
         <java jar="${bbj.pkgs.dir}/installBBj.jar" fork="true">
