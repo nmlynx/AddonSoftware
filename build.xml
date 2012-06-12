@@ -46,12 +46,18 @@
     <property name="port.SOLARISS" value="2179"/>
     <property name="port.AIX"      value="2184"/>
 
+    <!-- Import AntContrib -->
+    <taskdef resource="net/sf/antcontrib/antlib.xml" />
+
     <!-- Default addon languages to english only if not already set
          Example settings:
             "ENU"            - English only
             "ENU\;ESP\;FRA"  - English, Spanish, French
     -->
-    <condition property="addon.langs" value="ENU">
+    <condition property="use.locale" value="true">
+        <isset  property="addon.langs"/>
+    </condition>
+    <condition property="use.locale" value="false">
         <not>
             <isset  property="addon.langs"/>
         </not>
@@ -313,17 +319,34 @@
     <target name="syncAddon" depends="sleep15">
 
         <!-- Run BBj session to sync AddonSoftware -->
-        <exec executable="${install.dir}/bin/bbj">
-            <env key="DISPLAY" value=":99.0"/>
-            <arg value="-q"/>
-            <arg value="-WD${barista.bbj.dir}"/>
-            <arg value="-c${barista.bbj.dir}/sys/config/enu/barista.cfg"/>
-            <arg value="${barista.bbj.dir}/sys/prog/bax_build_sync.bbj"/>
-            <arg value="-"/>
-            <arg value="-s../apps/aon/config/addon.syn"/>
-            <arg value="-loc${addon.langs}"/>
-            <arg value="-log${log.bbj.dir}/addon_sync.log"/>
-        </exec>
+        <if>
+            <equals arg1="${use.locale}" arg2="true"/>
+            <then>
+                <exec executable="${install.dir}/bin/bbj">
+                    <env key="DISPLAY" value=":99.0"/>
+                    <arg value="-q"/>
+                    <arg value="-WD${barista.bbj.dir}"/>
+                    <arg value="-c${barista.bbj.dir}/sys/config/enu/barista.cfg"/>
+                    <arg value="${barista.bbj.dir}/sys/prog/bax_build_sync.bbj"/>
+                    <arg value="-"/>
+                    <arg value="-s../apps/aon/config/addon.syn"/>
+                    <arg value="-loc${addon.langs}"/>
+                    <arg value="-log${log.bbj.dir}/addon_sync.log"/>
+                </exec>
+            </then>
+            <else>
+                <exec executable="${install.dir}/bin/bbj">
+                    <env key="DISPLAY" value=":99.0"/>
+                    <arg value="-q"/>
+                    <arg value="-WD${barista.bbj.dir}"/>
+                    <arg value="-c${barista.bbj.dir}/sys/config/enu/barista.cfg"/>
+                    <arg value="${barista.bbj.dir}/sys/prog/bax_build_sync.bbj"/>
+                    <arg value="-"/>
+                    <arg value="-s../apps/aon/config/addon.syn"/>
+                    <arg value="-log${log.bbj.dir}/addon_sync.log"/>
+                </exec>
+            </else>
+        </if>
 
     </target>
     <!-- End of syncAddon -->
