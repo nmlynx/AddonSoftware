@@ -698,4 +698,4 @@ rem --- fill listbox for use with Op Sequence
 [[SFE_WOMATL.ITEM_ID.AINV]]
 rem --- Item synonym processing
 
-	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::grid_entry"
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"

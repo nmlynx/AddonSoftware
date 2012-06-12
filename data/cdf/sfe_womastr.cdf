@@ -228,9 +228,12 @@ rem --- Open tables
 	num_files=6
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
-	if bm$<>"Y"
+	if bm$="Y"
 		call stbl("+DIR_PGM")+"adc_application.aon","BM",info$[all]
 		bm$=info$[20]
+	endif
+
+	if bm$<>"Y"
 		open_tables$[1]="SFC_OPRTNCOD",open_opts$[1]="OTA"
 	else
 		open_tables$[1]="BMC_OPCODES",open_opts$[1]="OTA"
@@ -242,7 +245,6 @@ rem --- Open tables
 	endif
 
 	callpoint!.setDevObject("bm",bm$)
-	x$=stbl("bm",bm$)
 
 	gosub open_tables
 
@@ -272,14 +274,12 @@ rem --- Open tables
 
 	endif
 	callpoint!.setDevObject("po",po$)
-	x$=stbl("po",po$)
 
 	if pr$="Y"
 		call stbl("+DIR_PGM")+"adc_application.aon","PR",info$[all]
 		pr$=info$[20]
 	endif
 	callpoint!.setDevObject("pr",pr$)
-	x$=stbl("pr",pr$)
 
 	call stbl("+DIR_PGM")+"adc_application.aon","MP",info$[all]
 	callpoint!.setDevObject("mp",info$[20])
