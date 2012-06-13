@@ -260,9 +260,6 @@ rem --- Init constants, totals and total-break vars
 	prev_date$=""; rem This is t1$ in sfr_wotranshist_o1.aon and v6
 	
 rem --- Trip Read
-rem ====================> ESCAPE Accumulation of Totals is not well-defined
-rem ====================> ESCAPE Date Break is not implemented
-rem ====================> ESCAPE Lot/Serial rows will need adjusting 
 
 	while 1
 		read_tpl$ = sqlfetch(sql_chan,end=*break)
