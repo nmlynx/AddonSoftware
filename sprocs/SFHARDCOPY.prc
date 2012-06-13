@@ -190,14 +190,31 @@ rem --- Build SQL statement
 		endif
 	endif
 
-rem --- Concatenate the pieces of sql_prep$
-rem --- For Travelers, limit WO recs based on sfe_openedwo
-	if report_type$="T" then 
-		gosub get_traveler_join
-		sql_prep$=travel_join_pre$+sql_prep$+where_clause$+travel_join_post$+order_by$
-	else
-		sql_prep$=sql_prep$+where_clause$+order_by$
-	endif
+rem --- Concatenate the pieces of sql_prep$ based on report_type$
+rem  	 	report_type$ rem M = WO Detail Rpt from *M*enu
+						 rem T = *T*raveler
+						 rem E = Detail Rpt from WO *E*ntry
+						 rem C = *C*losed WO Detail Rpt
+
+   report_type=pos(report_type$="TCME")-1
+    switch report_type
+		rem --- For Travelers, limit WO recs based on sfe_openedwo
+		case 0
+			gosub get_traveler_join
+			sql_prep$=travel_join_pre$+sql_prep$+where_clause$+travel_join_post$+order_by$
+            break
+		rem --- For Close Data Report, limit WO recs based on sfe_closedwo
+        case 1
+			gosub get_closedwo_join
+			sql_prep$=closedwo_join_pre$+sql_prep$+where_clause$+closedwo_join_post$+order_by$
+            break
+        case 2,3
+			sql_prep$=sql_prep$+where_clause$+order_by$
+            break
+        case default
+            break
+    swend
+
 	
 	sql_chan=sqlunt
 	sqlopen(sql_chan,err=*next)stbl("+DBNAME")
@@ -328,6 +345,58 @@ get_traveler_join:
 		
 	travel_join_pre$=tj_pre$
 	travel_join_post$=tj_post$
+	
+	return
+
+rem --- Build JOIN to wrap Traveler print file, sfe_openedwo, around sfe_womastr JOIN
+get_closedwo_join:
+	cw_pre$=""
+	cw_pre$=cw_pre$+"SELECT m.firm_id"
+    cw_pre$=cw_pre$+"     , m.wo_location"
+    cw_pre$=cw_pre$+"     , m.wo_no"
+    cw_pre$=cw_pre$+"     , m.wo_type"
+    cw_pre$=cw_pre$+"     , m.wo_category"
+    cw_pre$=cw_pre$+"     , m.wo_status"
+    cw_pre$=cw_pre$+"     , m.customer_id"
+    cw_pre$=cw_pre$+"     , m.order_no"
+    cw_pre$=cw_pre$+"     , m.sls_ord_seq_ref"
+    cw_pre$=cw_pre$+"     , m.unit_measure"
+    cw_pre$=cw_pre$+"     , m.bill_rev"
+    cw_pre$=cw_pre$+"     , m.warehouse_id"
+    cw_pre$=cw_pre$+"     , m.item_id"
+    cw_pre$=cw_pre$+"     , m.opened_date"
+    cw_pre$=cw_pre$+"     , m.eststt_date"
+    cw_pre$=cw_pre$+"     , m.estcmp_date"
+    cw_pre$=cw_pre$+"     , m.act_st_date"
+    cw_pre$=cw_pre$+"     , m.lstact_date"
+    cw_pre$=cw_pre$+"     , m.closed_date"
+    cw_pre$=cw_pre$+"     , m.description_01"
+    cw_pre$=cw_pre$+"     , m.description_02"
+    cw_pre$=cw_pre$+"     , m.drawing_no"
+    cw_pre$=cw_pre$+"     , m.drawing_rev"
+    cw_pre$=cw_pre$+"     , m.complete_flg"
+    cw_pre$=cw_pre$+"     , m.recalc_flag"
+    cw_pre$=cw_pre$+"     , m.lotser_item"
+    cw_pre$=cw_pre$+"     , m.priority"
+    cw_pre$=cw_pre$+"     , m.sched_flag"
+    cw_pre$=cw_pre$+"     , m.forecast"
+    cw_pre$=cw_pre$+"     , m.cls_inp_date"
+    cw_pre$=cw_pre$+"     , m.sch_prod_qty"
+    cw_pre$=cw_pre$+"     , m.qty_cls_todt"
+    cw_pre$=cw_pre$+"     , m.cls_cst_todt"
+    cw_pre$=cw_pre$+"     , m.cls_inp_qty"
+    cw_pre$=cw_pre$+"     , m.closed_cost"
+    cw_pre$=cw_pre$+"     , m.est_yield "
+	cw_pre$=cw_pre$+" FROM sfe_closedwo AS c"
+	cw_pre$=cw_pre$+" INNER JOIN ( "
+	
+	cw_post$=""
+	cw_post$=cw_post$+") AS m "
+	cw_post$=cw_post$+"ON c.firm_id+c.wo_location+c.wo_no"
+ 	cw_post$=cw_post$+" = m.firm_id+m.wo_location+m.wo_no "
+		
+	closedwo_join_pre$=cw_pre$
+	closedwo_join_post$=cw_post$
 	
 	return
 	
