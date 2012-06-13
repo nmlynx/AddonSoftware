@@ -1,14 +1,16 @@
-[[SFE_WOLOTSER.BSHO]]
+[[SFE_WOLOTSER.ADIS]]
+rem --- disable inputs if on a closed WO
 
-rem --- Disable grid if Closed Work Order
-	
 	if callpoint!.getDevObject("wo_status")="C" 
-		opts$=callpoint!.getTableAttribute("OPTS")
-		callpoint!.setTableAttribute("OPTS",opts$+"BID")
-
-		x$=callpoint!.getTableColumns()
-		for x=1 to len(x$) step 40
-			opts$=callpoint!.getTableColumnAttribute(cvs(x$(x,40),2),"OPTS")
-			callpoint!.setTableColumnAttribute(cvs(x$(x,40),2),"OPTS",o$+"C"); rem - makes cells read only
-		next x
+		callpoint!.setColumnEnabled("SFE_WOLOTSER.LOTSER_NO",0)
+		callpoint!.setColumnEnabled("SFE_WOLOTSER.WO_LS_CMT",0)
+		callpoint!.setColumnEnabled("SFE_WOLOTSER.SCH_PROD_QTY",0)
 	endif
+[[SFE_WOLOTSER.BSHO]]
+rem --- set qty to 1 if serialized
+	
+
+	if callpoint!.getDevObject("lotser")="S" and callpoint!.getDevObject("wo_status")<>"C"
+		callpoint!.setTableColumnAttribute("SFE_WOLOTSER.SCH_PROD_QTY","DFLT","1")
+	endif
+
