@@ -157,7 +157,7 @@ rem --- Build SQL statement
 			if from_bill$<>"" where_clause$=where_clause$+" item_id >= '"+from_bill$+"' AND "
 			if thru_bill$<>"" where_clause$=where_clause$+" item_id <= '"+thru_bill$+"' AND "
 			where_clause$=where_clause$+" warehouse_id = '"+wh_id$+"' AND "
-			where_clause$=where_clause$+" item_id$ <> '' AND "
+			where_clause$=where_clause$+" item_id <> '' AND "
             break
         case 2
             order_by$=" ORDER BY customer_id "
