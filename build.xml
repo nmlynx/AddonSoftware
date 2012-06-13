@@ -9,7 +9,6 @@
     <!-- bbj.src.dir  where the bbj checkouts are located -->
     <!-- docpub.dir   where the built docs are found -->
     <!-- bbj.jars.dir where the bbj built installable jars are found -->
-    <!-- bbj.pkgs.dir where the bbj built packages are found -->
     <!-- install.dir  where to install BBj -->
 
 
@@ -34,6 +33,8 @@
 
     <property name="images.dir"          value="${bbj.src.dir}/install/images"/>
     <property name="templates.dir"       value="${bbj.src.dir}/install/templates"/>
+
+    <property name="work.dir"   value="${base.build}/work"/>
 
     <!-- the ports -->
     <property name="port.MAC"      value="2120"/>
@@ -419,26 +420,21 @@
         <delete dir="${install.dir}"/>
 
         <!-- Unzip the BASIS installer -->
-        <unjar src="${bbj.pkgs.dir}/BBjInstaller.jar" dest="${bbj.pkgs.dir}"/>
+        <mkdir dir="${work.dir}"/>
+        <unjar src="${build.dir}/BBjInstaller.jar" dest="${work.dir}"/>
 
         <!-- Jar up the install into an installable jar -->
-        <jar destfile="${build.dir}/installBBj.jar">
-            <fileset dir="${bbj.pkgs.dir}"
+        <jar destfile="${work.dir}/installBBj.jar">
+            <fileset dir="${work.dir}"
                      includes="install.xml,
-                               com/,
-                               package_*.jar"/>
+                               com/"/>
+            <fileset dir="${build.dir}"
+                     includes="package_*.jar"/>
             <manifest>
                 <attribute name="Main-Class"
                            value="com.basis.install.BASISInstallerStarter"/>
             </manifest>
         </jar>
-
-        <!-- Move the new install out of ${build.dir} -->
-        <!-- If we don't the installBBj.jar ends up in the install -->
-        <move preserveLastModified="true"
-              file="${build.dir}/installBBj.jar"
-              tofile="${bbj.pkgs.dir}/installBBj.jar">
-        </move>
 
         <!-- Update the JENKINS_BUILD_DIR marker with the Jenkins build directory -->
         <replace file="${src.dir}/InstallResponse.properties"
@@ -447,10 +443,13 @@
                  value="${install.dir}"/>
 
         <!-- Run BBj installer -->
-        <java jar="${bbj.pkgs.dir}/installBBj.jar" fork="true">
+        <java jar="${work.dir}/installBBj.jar" fork="true">
             <arg value="-pl"/>
             <arg value="${src.dir}/InstallResponse.properties"/>
         </java>
+
+        <!-- Clean up -->
+        <delete dir="${work.dir}"/>
 
     </target>
     <!-- End of installBBj -->
