@@ -129,7 +129,7 @@ rem --- Assign needed jasper params
  	wo_closed$="Y"
  	wo_planned$="N"
  	wo_quoted$="N"
- 	wostatus$="C"
+ 	wostatus$="OCPQ"; rem Status doesn't matter. All recs in SFE_CLOSEDWO print
 
 	include_standards$="Y"
 	include_costsummary$="Y"
@@ -357,7 +357,7 @@ rem --- Check for user authentication
 rem --- Fill Report and Show
 
     declare BBJasperViewerWindow viewerWindow!
-escape; rem caj
+
     report!.fill(1)
     viewerWindow! = new BBJasperViewerWindow(report!,0,0,screen_width,screen_height,reportTitle$,$00080093$)
     viewerWindow!.getViewerControl().setGoogleDefaultDocument(reportTitle$)

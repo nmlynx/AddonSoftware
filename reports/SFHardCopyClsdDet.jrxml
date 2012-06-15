@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopyClsdDet" language="groovy" pageWidth="760" pageHeight="595" orientation="Landscape" columnWidth="740" leftMargin="0" rightMargin="20" topMargin="20" bottomMargin="10">
 	<property name="ireport.zoom" value="1.5"/>
-	<property name="ireport.x" value="0"/>
+	<property name="ireport.x" value="4"/>
 	<property name="ireport.y" value="0"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
 	<parameter name="WO_LOCATION" class="java.lang.String"/>
@@ -15,19 +15,27 @@
 		<![CDATA[call sfhardcopyclsddet($P{FIRM_ID},$P{WO_LOCATION},$P{WO_NO},$P{BARISTA_WD},$P{MASKS},$P{COST_MASK},$P{AMT_MASK},$P{UNITS_MASK})]]>
 	</queryString>
 	<field name="CLOSED_DATE" class="java.lang.String"/>
+	<field name="WO_TYPE" class="java.lang.String"/>
 	<field name="WO_TYPE_DESC" class="java.lang.String"/>
 	<field name="CURR_PROD_QTY" class="java.lang.String"/>
-	<field name="PRIOR_CLSD" class="java.lang.String"/>
-	<field name="THIS_CLOSE" class="java.lang.String"/>
-	<field name="BAL_STILL_OPN" class="java.lang.String"/>
-	<field name="COMPLETE" class="java.lang.String"/>
+	<field name="PRIOR_CLSD_QTY" class="java.lang.String"/>
+	<field name="THIS_CLOSE_QTY" class="java.lang.String"/>
+	<field name="BAL_STILL_OPEN_QTY" class="java.lang.String"/>
+	<field name="COMPLETE_YN" class="java.lang.String"/>
 	<field name="IV_UNIT_COST" class="java.lang.String"/>
-	<field name="WO_COST_STD" class="java.lang.String"/>
-	<field name="CLS_AT_STD_ACT" class="java.lang.String"/>
-	<field name="WO_COST_ACT" class="java.lang.String"/>
-	<field name="PRIOR_CLOSED" class="java.lang.String"/>
+	<field name="WO_COST_AT_STD" class="java.lang.String"/>
+	<field name="CLOSE_AT_STD_ACT" class="java.lang.String"/>
+	<field name="WO_COST_AT_ACT" class="java.lang.String"/>
+	<field name="PRIOR_CLOSED_AMT" class="java.lang.String"/>
 	<field name="CURR_WIP_VALUE" class="java.lang.String"/>
 	<field name="CURR_CLOSE_VALUE" class="java.lang.String"/>
+	<field name="GL_ACCT_NUM" class="java.lang.String"/>
+	<field name="GL_ACCT_DESC" class="java.lang.String"/>
+	<field name="GL_DEBIT_AMT" class="java.lang.String"/>
+	<field name="GL_CREDIT_AMT" class="java.lang.String"/>
+	<field name="GL_DEBIT_PERUNIT" class="java.lang.String"/>
+	<field name="GL_CREDIT_PERUNIT" class="java.lang.String"/>
+	<field name="GL_ACCT_TYPE" class="java.lang.String"/>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -45,8 +53,8 @@
 				<text><![CDATA[Closed Detail]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="13" y="19" width="50" height="26"/>
-				<textElement verticalAlignment="Bottom"/>
+				<reportElement x="5" y="19" width="50" height="26"/>
+				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
 				<text><![CDATA[Current Prod Qty]]></text>
 			</staticText>
 			<staticText>
@@ -70,48 +78,139 @@
 				<textFieldExpression><![CDATA[$F{WO_TYPE_DESC}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="87" y="19" width="50" height="26"/>
-				<textElement verticalAlignment="Bottom"/>
+				<reportElement x="68" y="19" width="50" height="26"/>
+				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
 				<text><![CDATA[Prior Closed]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="164" y="19" width="50" height="26"/>
-				<textElement verticalAlignment="Bottom"/>
+				<reportElement x="131" y="19" width="50" height="26"/>
+				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
 				<text><![CDATA[This Close]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="243" y="19" width="50" height="26"/>
-				<textElement verticalAlignment="Bottom"/>
+				<reportElement x="194" y="19" width="50" height="26"/>
+				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
 				<text><![CDATA[Balance Still Open]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="253" y="19" width="33" height="26"/>
+				<textElement verticalAlignment="Bottom"/>
+				<text><![CDATA[Com plete?]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="297" y="19" width="46" height="26"/>
+				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
+				<text><![CDATA[Inventory Unit Cost]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="366" y="19" width="45" height="26"/>
+				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
+				<text><![CDATA[WO Cost At Std]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="423" y="19" width="48" height="26"/>
+				<textElement/>
+				<text><![CDATA[Close At Std/Actual]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="491" y="19" width="45" height="26"/>
+				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
+				<text><![CDATA[WO Cost At Act]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="558" y="19" width="45" height="26"/>
+				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
+				<text><![CDATA[Prior Closed]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="623" y="19" width="45" height="26"/>
+				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
+				<text><![CDATA[Curr WIP Value]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="688" y="19" width="48" height="26"/>
+				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
+				<text><![CDATA[Curr Close Value]]></text>
 			</staticText>
 		</band>
 	</columnHeader>
 	<detail>
 		<band height="13" splitType="Stretch">
 			<textField>
-				<reportElement x="0" y="0" width="63" height="13"/>
+				<reportElement x="0" y="0" width="55" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{CURR_PROD_QTY}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="74" y="0" width="63" height="13"/>
+				<reportElement x="126" y="0" width="55" height="13"/>
 				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{PRIOR_CLSD}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{THIS_CLOSE_QTY}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="151" y="0" width="63" height="13"/>
+				<reportElement x="189" y="0" width="55" height="13"/>
 				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{THIS_CLOSE}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{BAL_STILL_OPEN_QTY}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="230" y="0" width="63" height="13"/>
+				<reportElement x="63" y="0" width="55" height="13"/>
 				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{BAL_STILL_OPN}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{PRIOR_CLSD_QTY}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="255" y="0" width="19" height="13"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA[$F{COMPLETE_YN}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="286" y="0" width="57" height="13"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{IV_UNIT_COST}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="354" y="0" width="57" height="13"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{WO_COST_AT_STD}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="434" y="0" width="27" height="13"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA[$F{CLOSE_AT_STD_ACT}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="476" y="0" width="60" height="13"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{WO_COST_AT_ACT}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="543" y="0" width="60" height="13"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{PRIOR_CLOSED_AMT}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="610" y="0" width="60" height="13"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{CURR_WIP_VALUE}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="676" y="0" width="60" height="13"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{CURR_CLOSE_VALUE}]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
 	<columnFooter>
-		<band splitType="Stretch"/>
+		<band height="137" splitType="Stretch">
+			<staticText>
+				<reportElement x="25" y="23" width="100" height="20"/>
+				<textElement markup="none"/>
+				<text><![CDATA[Account Summary:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="5" y="57" width="100" height="20"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{GL_ACCT_NUM}]]></textFieldExpression>
+			</textField>
+		</band>
 	</columnFooter>
 	<pageFooter>
 		<band splitType="Stretch"/>
