@@ -64,7 +64,8 @@ rem --- Columns for the record set are defined using a string template
 	temp$=temp$+"SLS_ORDER_NO:C(1*), WAREHOUSE_ID:C(1*), ITEM_ID:C(1*), OPENED_DATE:C(1*), LAST_CLOSE:C(1*), "
 	temp$=temp$+"TYPE_DESC:C(1*), PRIORITY:C(1*), UOM:C(1*), YIELD:C(1*), PROD_QTY:C(1*), COMPLETED:C(1*), "
 	temp$=temp$+"LAST_ACT_DATE:C(1*), ITEM_DESC_1:C(1*), ITEM_DESC_2:C(1*), DRAWING_NO:C(1*), REV:C(1*), "
-	temp$=temp$+"INCLUDE_LOTSER:C(1*), MASTER_CLS_INP_QTY:C(1*)"
+	temp$=temp$+"INCLUDE_LOTSER:C(1*), MAST_CLS_INP_QTY_STR:C(1*), MAST_CLS_INP_DT:C(1*), MAST_CLOSED_COST_STR:C(1*), "
+	temp$=temp$+"COMPLETE_YN:C(1*), COST_MASK:C(1*), UNITS_MASK:C(1*), AMT_MASK:C(1*)"	
 	rs! = BBJAPI().createMemoryRecordSet(temp$)
 
 rem --- Get Barista System Program directory
@@ -78,6 +79,9 @@ rem --- Get masks
 	ad_units_mask$=fngetmask$("ad_units_mask","#,###.00",masks$)
 	cust_mask$=fngetmask$("cust_mask","000000",masks$)
 	sf_pct_mask$=fngetmask$("sf_pct_mask","##0.00%",masks$)
+	sf_cost_mask$=fngetmask$("sf_cost_mask","#,##0.00-",masks$)	
+	sf_units_mask$=fngetmask$("sf_units_mask","#,##0.00-",masks$)	
+	sf_amt_mask$=fngetmask$("sf_amt_mask","##,##0.00-",masks$)	
 	
 rem --- Open files with adc
 
@@ -208,13 +212,15 @@ rem  	 	report_type$ rem M = WO Detail Rpt from *M*enu
 			gosub get_closedwo_join
 			sql_prep$=closedwo_join_pre$+sql_prep$+where_clause$+closedwo_join_post$+order_by$
             break
-        case 2,3
+        case 2
 			sql_prep$=sql_prep$+where_clause$+order_by$
             break
+        case 3
+			sql_prep$=sql_prep$+where_clause$+order_by$
+            break			
         case default
             break
     swend
-
 	
 	sql_chan=sqlunt
 	sqlopen(sql_chan,err=*next)stbl("+DBNAME")
@@ -287,7 +293,18 @@ rem --- Trip Read
 		data!.setFieldValue("DRAWING_NO",read_tpl.drawing_no$)
 		data!.setFieldValue("REV",read_tpl.drawing_rev$)
 		data!.setFieldValue("INCLUDE_LOTSER",include_lotser$)
-		data!.setFieldValue("MASTER_CLS_INP_QTY",read_tpl.cls_inp_qty$)
+		data!.setFieldValue("MAST_CLS_INP_QTY_STR",str(read_tpl.cls_inp_qty:sf_units_mask$))
+		data!.setFieldValue("MAST_CLS_INP_DT",fndate$(read_tpl.cls_inp_date$))
+		data!.setFieldValue("MAST_CLOSED_COST_STR",str(read_tpl.closed_cost:sf_cost_mask$))
+		if read_tpl.complete_flg$<>"Y"
+			data!.setFieldValue("COMPLETE_YN","N")			
+		else
+			data!.setFieldValue("COMPLETE_YN",read_tpl.complete_flg$)
+		endif
+		data!.setFieldValue("COST_MASK",sf_cost_mask$)	
+		data!.setFieldValue("UNITS_MASK",sf_units_mask$)
+		data!.setFieldValue("AMT_MASK",sf_amt_mask$)		
+
 		rs!.insert(data!)
 	wend
 	

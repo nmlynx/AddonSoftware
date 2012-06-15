@@ -165,76 +165,7 @@ rem --- Tell the stored procedure to return the result set.
 	goto std_exit
 
 rem --- Subroutines
-	
-lotserial_details: rem --- Lot/Serial Here
-rem --- Serial Numbers Here
-	if read_tpl.wo_status$<>"C" or read_tpl.closed_date$>sf_prevper_enddate$ then 
-        lstran_dev=sft11a_dev
-        dim lstran$:sft11_tpls$
-    else
-        lstran_dev=sft12a_dev
-        dim lstran$:sft12_tpls$
-    endif
 
-	read_ls_key$=sftran.firm_id$+sftran.wo_location$+sftran.wo_no$+sftran.trans_date$+sftran.trans_seq$
-    read (lstran_dev,key=read_ls_key$,dom=*next)
-
-		while more
-		data! = rs!.getEmptyRecordData()
-		
-		read record (lstran_dev,end=*break) lstran$ 
-
-        if pos(read_ls_key$=lstran$)=1 then      
-            if ivs_params.lotser_flag$="S" then lotser$="Serial: " else lotser$="Lot: "
-			data!.setFieldValue("ITEM_VEND_OPER",lotser$+lstran.lotser_no$)
-
-			if lstran_dev=sft11a_dev then 
-				data!.setFieldValue("DESC","Issued:"+str(lstran.cls_inp_qty:sf_units_mask$)) 	
-				data!.setFieldValue("PO_NUM","Cost:"+str(lstran.closed_cost:sf_cost_mask$))
-            else
-				data!.setFieldValue("DESC","Issued:"+str(lstran.qty_closed:sf_units_mask$))
-				data!.setFieldValue("PO_NUM","Cost:"+str(lstran.unit_cost:sf_cost_mask$))
-			endif
-			
-			rs!.insert(data!)
-        else
-			break
-		endif
-    wend 
-	
-    return
-
-rem --- Subtotals for date breaks
-date_subtot:rem --- Date Subtotal
-
-    if prev_date$<>"" then     
-
-		data! = rs!.getEmptyRecordData(); rem Add totals' underscores
-		data!.setFieldValue("AMOUNT",fill(20,"_"))
-		rs!.insert(data!)
-	
-		data! = rs!.getEmptyRecordData()	
-		data!.setFieldValue("ITEM_VEND_OPER","Month "+fnh$(prev_date$)+" Total ") 	
-        if pos("O"=transtype$)>0 then 
-			data!.setFieldValue("DESC","Total Hours: "+str(date_tot_hours:sf_hours_mask$)) 			
-			data!.setFieldValue("PO_NUM","Setup Hours: "+str(date_tot_setup_hours:sf_hours_mask$))
-		endif
-		data!.setFieldValue("AMOUNT",str(date_tot_cost:sf_cost_mask$))
-	
-		rs!.insert(data!)
-		
-		data! = rs!.getEmptyRecordData(); rem blank line
-		rs!.insert(data!); rem Blank line before Date totals	
-    endif
-
-    if doing_end then return
-
-	date_tot_setup_hours=0
-	date_tot_hours=0
-	date_tot_cost=0
-	
-    prev_date$=read_tpl.trans_date$(1,6); rem just the year/month
-	return
 	
 rem --- Functions
 
