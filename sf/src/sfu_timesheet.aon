@@ -106,7 +106,7 @@ rem --- Additional File Opens
 :                                   ids$[all],templates$[all],channels[all],batch,status
         if status then goto std_exit
 
-        timesheet_dev=channels[8];dim timesheet$:templates$[8]
+        timesheet_dev=channels[8];dim timesht$:templates$[8]
         if gl$="Y" then 
             glm01_dev=channels[9]
             gls01a_dev=channels[10]
@@ -117,11 +117,11 @@ rem --- Additional File Opens
             prs01a_dev=channels[12]
             prs01b_dev=channels[13]
             pre02_dev=channels[14]
-            prm01_dev=channels[15]
+            empcode_dev=channels[15]
             prm02_dev=channels[16]
             prm10_dev=channels[17]
         dim prs01a$:templates$[12],prs01b$:templates$[13],pre02a$:templates$[14],
-:           prm01a$:templates$[15],prm02a$:templates$[16],prm10a$:templates$[17]
+:           ecode$:templates$[15],prm02a$:templates$[16],prm10a$:templates$[17]
         endif
         if bm$="Y" then 
             bmm08_dev=channels[18];dim bmm08a$:templates$[18]
@@ -131,6 +131,7 @@ rem --- Parameters
 
         if pr$="Y" then 
             find record (prs01a_dev,key=firm_id$+"PR00",dom=std_missing_params) prs01a$
+escape; rem wgh ... keep prs01b_dev findrecord in update pgm
             find record (prs01b_dev,key=firm_id$+"PR01",dom=payroll_defined) prs01b$
         endif
         if gl$="Y" then 
@@ -139,7 +140,8 @@ rem --- Parameters
         endif
 
         p[0]=num(prs01a.empl_no_len$)
-        p[1]=num(prs01a.max_empl_no$),p[2]=num(sfs01a.def_ovd_rate$)
+        p[1]=num(prs01a.max_empl_no$)
+        p[2]=num(sfs01a.def_ovd_rate$)
         p[3]=num(ivs01a.precision$)
         g[4]=num(gls01a.max_acct_len$)
         ivs01_precision=p[3]
@@ -191,7 +193,7 @@ rem --- Main Read
     while more
         k0$=key(timesheet_dev,end=done)
         if pos(firm_id$=k0$)<>1 then break
-        read record (timesheet_dev,key=k0$) timesheet$
+        read record (timesheet_dev,key=k0$) timesht$
         if timesheet.sequence_num$ ="00" then 
              remove (timesheet_dev,key=k0$)
              continue
@@ -201,15 +203,15 @@ rem --- Main Read
 rem --- Post To Payroll
         if p8$="YES" then 
             precision prs01_precision
-            find record (prm01_dev,key=firm_id$+timesheet.employee_no$,dom=work_order_transaction) prm01a$
+            find record (empcode_dev,key=firm_id$+timesheet.employee_no$,dom=work_order_transaction) ecode$
             find record (prm10_dev,key=firm_id$+"A"+timesheet.pay_code$,dom=*next) prm10a$
             if prm10a.prem_factor=0 then let prm10a.prem_factor=1
             if sfs01a.pay_actstd$="A" then 
                 prm10a.pay_units=timesheet.hrs
             else
                 prm10a.pay_units=prm10a.calc_rtamt*prm10a.prem_factor; rem "Pay code rate
-                find record (prm02_dev,key=prm01a.firm_id$+prm01a.employee_no$+timesheet.title_code$,dom=work_order_transaction) prm02a$
-                if prm01a.hrlysalary$="S" and prm02a.std_hrs<>0 then let prm02a.std_rate=prm02a.std_rate/prm02a.std_hrs
+                find record (prm02_dev,key=ecode.firm_id$+ecode.employee_no$+timesheet.title_code$,dom=work_order_transaction) prm02a$
+                if ecode.hrlysalary$="S" and prm02a.std_hrs<>0 then let prm02a.std_rate=prm02a.std_rate/prm02a.std_hrs
                 if prm10a.calc_rtamt<>0 prm02a.std_rate=prm10a.calc_rtamt; rem " Override by pay code
                 if prm10a.prem_factor<>0 prm02a.std_rate=prm02a.std_rate*prm10a.prem_factor; rem "Premium rate
                 prm10a.pay_units=prm02a.std_rate; rem "Employee rate
@@ -236,7 +238,7 @@ rem --- Build It & Check It
 
             pre02a.trans_date$=timesheet.trans_date$
             pre02a.pay_code$ = timesheet.pay_code$
-            pre02a.title_code$ = timesheet.title_code$ + prm01a.dept_code$
+            pre02a.title_code$ = timesheet.title_code$ + ecode.dept_code$
             pre02a.dept_code$ = pre02a.pr_job_no$
 
             pre02a.rate = prm10a.pay_units
@@ -312,8 +314,8 @@ rem --- Retrieve employee name
             find record (sfm01_dev,key=firm_id$+timesheet.employee_no$,dom=*next) sfm01a$
             emp$=cvs(sfm01a.empl_surname$,2)+", "+cvs(sfm01a.empl_givname$,2)
         else
-            find record (prm01_dev,key=firm_id$+timesheet.employee_no$,dom=*next) prm01a$
-            emp$=cvs(prm01a.empl_surname$,2)+", "+cvs(prm01a.empl_givname$,2)
+            find record (empcode_dev,key=firm_id$+timesheet.employee_no$,dom=*next) ecode$
+            emp$=cvs(ecode.empl_surname$,2)+", "+cvs(ecode.empl_givname$,2)
         endif
         gosub calc_transaction
 
