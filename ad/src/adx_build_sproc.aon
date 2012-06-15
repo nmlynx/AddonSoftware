@@ -177,6 +177,10 @@ rem --- first drop all std Addon SPROCs
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
 
+	sproc_vw_name$="SFHARDCOPYCLSDDET"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+
 	sproc_vw_name$="SFHARDCOPYOPSTD"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
@@ -322,6 +326,15 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
+    sproc_vw_name$="SFHARDCOPYCLSDDET"
+	sqlprep$="CREATE PROCEDURE SFHARDCOPYCLSDDET "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, MASKS VARCHAR(1) IN,"
+    sqlprep$=sqlprep$+" COST_MASK VARCHAR(1) IN, AMT_MASK VARCHAR(1) IN, UNITS_MASK VARCHAR(1) IN) "
+    sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPYCLSDDET.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'WO Hard Copy Closed Detail'"
+
+    gosub create_sproc_def
     sproc_vw_name$="SFHARDCOPYOPSTD"
 	sqlprep$="CREATE PROCEDURE SFHARDCOPYOPSTD "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, MASKS VARCHAR(1) IN) "
@@ -373,7 +386,7 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 	sproc_vw_name$="SFHARDCOPYFGLS"
 	sqlprep$="CREATE PROCEDURE SFHARDCOPYFGLS "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, "
-	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, MASTER_CLS_INP_QTY VARCHAR(1) IN) "	
+	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, MAST_CLS_INP_QTY_STR VARCHAR(1) IN) "	
     sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPYFGLS.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'WO Hard Copy Finished Good LS'"
