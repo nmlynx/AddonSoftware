@@ -14,6 +14,10 @@ rem --- Retrieve the program path
     pgmdir$=stbl("+DIR_PGM",err=*next)
     precision ivs01_precision
 
+rem --- Set document Directory
+
+    docdir$=stbl("+DOC_DIR_PDF",err=*next)
+
 rem --- Retrieve sysinfo data
 
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
@@ -21,6 +25,42 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
+
+rem --- Open the printer
+
+    textfont!  = new java.awt.Font("Times New Roman",java.awt.Font.PLAIN,10)
+    boldfont!  = new java.awt.Font("Times New Roman",java.awt.Font.BOLD,10)
+    largefont! = new java.awt.Font("Arial",java.awt.Font.BOLD,26)
+
+    requestAttributes!=new javax.print.attribute.HashPrintRequestAttributeSet()
+    requestAttributes!.add(javax.print.attribute.standard.MediaSizeName.NA_LETTER)
+    requestAttributes!.add(javax.print.attribute.standard.OrientationRequested.PORTRAIT)
+
+    units=javax.print.attribute.standard.MediaPrintableArea.INCH
+    x!=new java.lang.Float(0.0).floatValue()
+    y!=new java.lang.Float(0.0).floatValue()
+    w!=new java.lang.Float(8.5).floatValue()
+    h!=new java.lang.Float(10.5).floatValue()
+    a!=new javax.print.attribute.standard.MediaPrintableArea(x!,y!,w!,h!,units)
+
+    requestAttributes!.add(a!)
+
+    left_justify=0
+    right_justify=1
+    center_justify=2
+
+    myAPI!=BBjAPI()
+    myBBjPrinter!=myAPI!.getBBjPrinter(1,err=*next)
+    if myBBjPrinter!=null()
+        msg_id$="AD_NOPRINTER"
+        gosub disp_message
+        goto std_exit
+    endif
+
+    myBBjPDFPrinter!=BBjAPI()
+
+    myBBjPrinter!.setAttributes(requestAttributes!)
+    docPrint!=myBBjPrinter!.getForm(0)
 
 rem --- Init Data
 
@@ -31,20 +71,13 @@ rem jpb    if splitline or m2+23+p[0]<m9-m2 then let m9=m9-m2,m9$="Y"
     flag=0
     backtomain=0
 
-rem --- Additional File Opens
-
-    call pgmdir$+"adc_printer.aon",printer_dev,1,"","",status
-    if status then goto std_exit
-    v=5
-
 rem --- Background
 
-    print @(1,10),'cl',@(1,11),'cl',@(1,12),'cl'
     call pgmdir$+"adc_progress.aon","N","","","","",0,sfe04c_dev,1,meter_num,ignore_status
 
 rem --- Init Read
 
-    read (sfe04c_dev,key=firm_id$+"  "+"C",dom=*next)
+    read (sfe04c_dev,key=firm_id$,dom=*next)
 
 rem --- Main Read
 
@@ -52,51 +85,57 @@ rem --- Main Read
 
         old_op_step$=""
         stepnum=1
+		flag=0
 
         while more
 
-            sfe04c_key$=key(sfe04c_dev,end=*break)
-            if sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.record_id_c$<>firm_id$+"  "+"C"
+            read record (sfe04c_dev,end=*break) sfe04c$
+            if pos(firm_id$=sfe04c$)<>1
                 flag=1
                 break
             endif
-            read (sfe04c_dev)
 
         rem --- Get Work Order
 
-            read record (sfe13a_dev,key=sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.wo_no$,dom=*continue) sfe13a$
-            read record (sfe01_dev,key=sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$,dom=*continue) sfe01a$
-            find (sfe04c_dev2,key=(sfe13a.firm_id$+sfe13a.wo_location$)+"D"+sfe13a.wo_no$,dom=*break)
-
+            read record (sfe13a_dev,key=sfe04c.firm_id$+sfe04c.wo_location$+sfe04c.wo_no$,dom=*continue) sfe13a$
+            read record (sfe01a_dev,key=sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$,dom=*continue) sfe01a$
+            find (sfe04d_dev,key=sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$,dom=*break)
+			flag=1
         wend
 
-        if flag then break
+        if flag=0 then break
 
-    rem --- Find Customer
+rem --- Find Customer
 
 		dim arm01a$:fattr(arm01a$)
-        arm01a.customer_name$="*** Not On File ***"
-        if pos(" "<> sfe01a.customer_id$)<>0
-            find record (arm01a_dev,key=firm_id$+sfe01a.customer_id$,dom=*next) arm01a$
-        endif
+		arm01a.customer_name$="*** Not On File ***"
+		if pos(" "<> sfe01a.customer_id$)<>0
+			find record (arm01a_dev,key=firm_id$+sfe01a.customer_id$,dom=*next) arm01a$
+		endif
 
-    rem --- Find Warehouse
+rem --- Find Warehouse
 
 		ivm10c.short_name$="*** Not On File ***"
-		find record (ivm10c_dev,key=firm_id$+"C"+sfe13a.warehouse_id$,dom=label1) ivm10c$
+		find record (ivm10c_dev,key=firm_id$+"C"+sfe13a.warehouse_id$,dom=*next) ivm10c$
 
-    label1: rem --- Type
+rem --- Type
 
 		sfm10a.code_desc$="**** Not On File ****"
 		find record (sfm10a_dev,key=firm_id$+"A"+sfe13a.firm_id$,dom=*next) sfm10a$
 
-    rem --- Category
+rem --- Category
 
         if sfe13a.wo_category$="I" then let z2$="Inventory"
         if sfe13a.wo_category$="N" then let z2$="Non-Stock"
         if sfe13a.wo_category$="R" then let z2$="Recurring"
         h=0
-rem jpb        print @(40,5),sfe13a.wo_no$,
+
+rem --- call bac_documents.bbj to get back a barista document ID
+
+		new_doc_id$=""
+		pdf_doc$=""
+		call stbl("+DIR_SYP")+"bac_documents.bbj",new_doc_id$,"","","I","PDF",docdir$,
+:			"pdf",option!.getAlias(),"S",sfe01a.wo_no$,rd_table_chans$[all],"DOC_ID"
 
     rem --- Details Here
 
@@ -109,10 +148,11 @@ rem jpb        print @(40,5),sfe13a.wo_no$,
             sfw13a_key$=key(sfw13a_dev,end=*break)
             if sfw13a_key.firm_id$+sfw13a_key.wo_location$+sfw13a_key.wo_no$<>sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$ then break
             call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-            op_step$=sfw13a_key.op_seq$
+            op_step$=sfw13a_key.oper_seq_ref$
             k$=sfw13a_key.firm_id$+sfw13a_key.wo_location$+sfw13a_key.wo_no$+sfw13a_key.material_seq$
             read (sfw13a_dev)
-            read record (sfe23a_dev,key=sfw13a_key$,dom=*continue) sfe23a$
+
+            read record (sfe23a_dev,key=sfw13a_key.firm_id$+sfw13a_key.wo_location$+sfw13a_key.wo_no$+sfw13a_key.material_seq$,knum="AO_DISP_SEQ",dom=*continue) sfe23a$
             ivm01a.item_desc$="*** Not On File ***"
             find record (ivm01a_dev,key=firm_id$+sfe23a.item_id$,dom=*next) ivm01a1$
             dx$=ivm01a1.item_desc$
@@ -134,8 +174,8 @@ rem --- All done
 
     docPrint!.preview()
     goto std_exit
-    close (printer_dev,err=err_Line)
-    for i=10 to 12; print @(0,i),'cl'; next i
+rem    close (printer_dev,err=err_Line)
+rem    for i=10 to 12; print @(0,i),'cl'; next i
 
 err_Line:
 
@@ -144,14 +184,13 @@ err_Line:
     if v$="N" then goto std_exit
     if v$<>"Y" then goto err_Line
     print @(27,7),"Now Clearing Print File...",'cl',
-    read (sfe04c_dev,key=firm_id$+"  "+"C",dom=*next)
+    read (sfe04c_dev,key=firm_id$,dom=*next)
 
     while more
 
-        sfe04c_key$=key(sfe04c_dev,end=std_exit)
-        if sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.record_id_c$<>firm_id$+"  "+"C" then goto std_exit
-        read (sfe04c_dev)
-        read record (sfe13a_dev,key=sfe04c_key.firm_id$+sfe04c_key.wo_location$+sfe04c_key.wo_no$,dom=*continue) sfe13a$
+		read record (sfe04c_dev,end=*break) sfe04c$
+        if pos(firm_id$=sfe04c$)=0 break
+        read record (sfe13a_dev,key=sfe04c.firm_id$+sfe04c.wo_location$+sfe04c.wo_no$,dom=*continue) sfe13a$
         write record (sfe15a_dev,key=sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$) sfe15a$
 
     rem --- Remove Committed and Create Issue
@@ -183,8 +222,10 @@ err_Line:
 
     wend
 
+	goto std_exit
+	
 report_heading: rem --- Report Heading
-escape
+
 rem --- create pdf file
 
     while pdf_doc$ = ""
@@ -210,9 +251,6 @@ rem --- create pdf file
     pagePrint!=docPrint!.createPage(err=std_error)
     page!=pagePrint!
 
-rem    l=headings+3
-rem    call pgmdir$+"adc_rpthead.aon",printer_dev,headings$[all],headings,h,h0,when$,clock$,status
-rem    if status then exitto std_exit
     find record (ivm01a_dev,key=firm_id$+sfe13a.item_id$,dom=*next) ivm01a2$
     if sfe13a.wo_category$="I" then let desc1$=ivm01a2.item_desc$(1,min(desc[1],41)),ivm01a2.item_desc$=description$(desc[1]+1,min(desc[2],42))
     if sfe13a.wo_category$<>"I" then let desc1$=sfe01a.description_01$,desc2$=sfe01a.description_02$
@@ -221,73 +259,78 @@ rem    if status then exitto std_exit
 	while 1
 		tmp=fntext2(0,10,568,10,"PICK LIST",largefont!,center_justify,page!)
 
-		tmp=fntext(0,40,"Work Order: "+,sfe13a.wo_no$,textfont!,page!)
+		tmp=fntext2(0,40,65,40,"Work Order:",textfont!,right_justify,page!)
+		tmp=fntext2(70,40,50,40,sfe13a.wo_no$,textfont!,left_justify,page!)
 		tmp=fntext(150,40,"Type: "+sfe13a.wo_type$+" "+sfm10a.code_desc$,textfont!,page!)
-		tmp=fntext(400,40,"Category: "+sfe13a.wo_category$+" ",textfont!.page!);rem get category desc$ jpb
+		tmp=fntext(400,40,"Category: "+sfe13a.wo_category$+" "+z2$,textfont!,page!);rem get category desc$ jpb
+		tmp=fntext2(0,52,65,52,"Op Step:",textfont!,right_justify,page!)
+		tmp=fntext2(70,52,50,52,op_step$,textfont!,right_justify,page!)
 		
-		tmp=fntext(0,52,"Op Step: ",textfont!.page!)
-		
-rem		print (printer_dev)@(0),"WO Number: ",sfe13a.wo_no$,
-rem :                      @(21),"Type: ",sfe13a.firm_id$," ",sfm10a.code_desc$,@(53),"Category: ",a1$(3,1)," ",z2$,'lf',
-rem :                      @(2),"Op Step: ",op_step$; let l=l+2
 		if sfe13a.wo_category$="I" then
-			tmp=fntext(0,64,"Bill Number: "+sfe13a.item_id$,textfont!.page!)
-rem        print (printer_dev)@(0),"Bill Number:  ",sfe13a.item_id$; let l=l+1
+			tmp=fntext2(0,64,65,64,"Bill Number:",textfont!,right_justify,page!)
+			tmp=fntext2(70,64,65,64,sfe13a.item_id$,textfont!,left_justify,page!)
 		endif
 
-		tmp=fntext(0,76,"Description: "+desc1$,textfont!,page!)
-		tmp=fntext(400,76),"Open Date: "+fndate$(sfe01a.opened_date$),textfont!.page!)
+		tmp=fntext2(0,76,65,76,"Description:",textfont!,right_justify,page!)
+		tmp=fntext2(70,76,65,76,desc1$,textfont!,left_justify,page!)
+		tmp=fntext(400,76,"Open Date: "+fndate$(sfe01a.opened_date$),textfont!,page!)
 
-		tmp=fntext(20,88,desc2$,textfont!.page!)
-		tmp=fntext(400,88,"Start Date: "+fndate$(sfe01a.eststt_date$)
-goto end_of_head
-    print (printer_dev)@(0),"Description:",@(14),desc1$,@(56),"Open Date: ",
-:                       @(67),fndate$(sfe01a.opened_date$),'lf',@(14),desc2$,
-:                       @(55),"Start Date: ",@(67),fndate$(sfe01a.eststt_date$),'lf',
-:                       @(0),"Drawing #: ",sfe01a.drawing_no$,@(37),"Rev: ",sfe01a.drawing_no$,
-:                       @(50),"Completion Date:",@(67),fndate$(sfe01a.estcmp_date$),'lf'; let l=l+3
+		tmp=fntext(20,88,desc2$,textfont!,page!)
+		tmp=fntext(400,88,"Start Date: "+fndate$(sfe01a.eststt_date$),textfont!,page!)
+		tmp=fntext2(0,100,65,100,"Drawing #:",textfont!,right_justify,page!)
+		tmp=fntext2(70,100,65,100,sfe01a.drawing_no$,textfont!,left_justify,page!)
+		tmp=fntext(200,100,"Rev: "+sfe01a.drawing_no$,textfont!,page!)
+		tmp=fntext(400,100,"Completion Date: "+fndate$(sfe01a.estcmp_date$),textfont!,page!)
 
-    if pos(" "<>sfe01a.customer_id$)>0 then
-        print (printer_dev)@(0),"Customer: ",fnmask$(sfe01a.customer_id$,custmask$),"  ",c1$,@(62),"Order: ",sfe01a.order_no$,"-",sfe01a.line_no$,'lf'; let l=l+1
-    endif
-    print (printer_dev)@(0),"Warehouse: ",sfe13a.warehouse_id$," ",ivm10c.short_name$,@(62-m2),"Production Qty: ",sfe01a.SCH_PROD_QTY-sfe01a.QTY_CLS_TODT:m2$,'lf',j$; let l=l+2
-    print (printer_dev)@(m9+m2-4),"On",
-    if m9$="Y" then
-        print (printer_dev)@(m9+m2*4-4),"On"
-    else
-        print (printer_dev)""
-    endif
-    print (printer_dev)"Step Location",@(14+m2-6),"Req'd",@(23+m2-8),"Picked",
-:                                      @(22+m2),"Item",@(m9+m2-5),"Hand",
-:                                      @(m9+m2*2-6),"Com'd",@(m9+m2*3-6),"Avail",
-    if m9$="Y" then
-        print (printer_dev)@(m9+m2*4-6),"Order",'lf'
-    else
-        print (printer_dev)'lf'
-    endif
-    l=l+3
-    gosub print_hdr
-end_of_head:
+		if pos(" "<>sfe01a.customer_id$)>0 then
+			tmp=fntext(20,112,"Customer: "+fnmask$(sfe01a.customer_id$,custmask$)+" "+c1$,textfont!,page!)
+			tmp=fntext(200,112,"Order: "+sfe01a.order_no$+"-"+sfe01a.line_no$,textfont!,page!)
+		endif
+		tmp=fntext2(0,124,65,124,"Warehouse:",textfont!,right_justify,page!)
+		tmp=fntext2(70,124,50,124,sfe13a.warehouse_id$+" "+ivm10c.short_name$,textfont!,left_justify,page!)
+		tmp=fntext(400,124,"Production Qty: "+str(sfe01a.sch_prod_qty-sfe01a.qty_cls_todt:m2$),textfont!,page!)
+		tmp=fnline(0,140,560,140,page!)
+		tmp=fntext2(0,148,20,148,"Step",textfont!,left_justify,page!)
+		tmp=fntext2(25,148,40,148,"Location",textfont!,left_justify,page!)
+		tmp=fntext2(60,148,35,148,"Req'd",textfont!,right_justify,page!)
+		tmp=fntext2(100,148,50,148,"Picked",textfont!,right_justify,page!)
+		tmp=fntext2(200,148,70,148,"Item",textfont!,left_justify,page!)
+		tmp=fntext2(320,148,55,148,"On Hand",textfont!,right_justify,page!)
+		tmp=fntext2(380,148,55,148,"Com'd",textfont!,right_justify,page!)
+		tmp=fntext2(440,148,55,148,"Avail",textfont!,right_justify,page!)
+		tmp=fntext2(500,148,55,148,"On Ord",textfont!,right_justify,page!)
+
+		line_no=148
+				
         if page!=pagePDF! then break
         page!=pagePDF!
+
     wend
     return
 
 details: rem --- Details
-return;rem jpb
+
     x1=0
     if ivs01a.lotser_flag$="S" and (ivm01a1.lotser_item$+ivm01a1.inventoried$)="YY" then let x1=sfe23a.qty_ordered-sfe23a.tot_qty_iss,x9$="Serial #:"
     if ivs01a.lotser_flag$="L" and (ivm01a1.lotser_item$+ivm01a1.inventoried$)="YY" then let x1=5,x9$="Lot #:"
-    if l+2+splitline>l9 or op_step$<>old_op_step$ then gosub report_heading
-    print (printer_dev)@(0),stepnum:"000"," ",ivm02a.location$,@(14),sfe23a.qty_ordered-sfe23a.tot_qty_iss:m2$,j1$(1,7),@(22+m2),sfe23a.item_id$,
-    if splitline then print (printer_dev)""
-    print (printer_dev)@(m9),ivm02a.qty_on_hand:m2$,ivm02a.qty_commit:m2$,ivm02a.qty_on_hand-ivm02a.qty_commit:m2$,
-    if m9$="Y" then print (printer_dev)ivm02a.qty_on_order:m2$,
-    print (printer_dev)""
-    read record (sfe22b_dev,key=(sfe23a.firm_id$+sfe23a.wo_location$+sfe23a.wo_no$)+"B"+sfe23a.material_seq$,dom=*next) sfe22b$
+    if line_no>l9 or op_step$<>old_op_step$ then gosub report_heading
+	line_no=line_no+12
+
+	tmp=fntext2(0,line_no,20,line_no,str(stepnum:"000"),textfont!,left_justify,page!)
+	tmp=fntext2(25,line_no,40,line_no,ivm02a.location$,textfont!,left_justify,page!)
+	tmp=fntext2(60,line_no,35,line_no,str(sfe23a.qty_ordered-sfe23a.tot_qty_iss:m2$),textfont!,right_justify,page!)
+	tmp=fnline(100,line_no,50,line_no,page!)
+	tmp2=fntext2(200,line_no,50,line_no,sfe23a.item_id$,textfont!,left_justify,page!)
+	tmp2=fntext2(320,line_no,55,line_no,str(ivm02a.qty_on_hand:m2$),textfont!,right_justify,page!)
+rem    print (printer_dev)@(0),j1$(1,7),@(22+m2),sfe23a.item_id$,
+rem    if splitline then print (printer_dev)""
+rem    print (printer_dev)@(m9),ivm02a.qty_on_hand:m2$,ivm02a.qty_commit:m2$,ivm02a.qty_on_hand-ivm02a.qty_commit:m2$,
+rem    if m9$="Y" then print (printer_dev)ivm02a.qty_on_order:m2$,
+rem    print (printer_dev)""
+    read record (sfe22b_dev,key=(sfe23a.firm_id$+sfe23a.wo_location$+sfe23a.wo_no$)+sfe23a.material_seq$,dom=*next) sfe22b$
     dim desc$(60)
     desc$(1)=fnitem$(dx$,desc[1],desc[2],desc[3])
-    print (printer_dev)@(5),"WO Seq: ",sfe23a.material_seq$,@(25+m2),desc$(1,min(desc[1]+desc[2]+desc[3]+2,79-(25+m2)))
+rem    print (printer_dev)@(5),"WO Seq: ",sfe23a.material_seq$,@(25+m2),desc$(1,min(desc[1]+desc[2]+desc[3]+2,79-(25+m2)))
     l=l+2+splitline
     gosub material
     if pos(ivs01a.lotser_flag$="LS")=0 then
@@ -298,10 +341,14 @@ return;rem jpb
     endif
     for x=1 to x1
         if l>l9 then gosub report_heading
-        print (printer_dev)@(14),x9$,"_____________________________"
+rem        print (printer_dev)@(14),x9$,"_____________________________"
         l=l+1
     next x
 
+	if page!<>pagePDF!
+		page!=pagePDF!
+	endif
+	
     return
 
 material: rem --- Get comments for this material
@@ -330,15 +377,9 @@ return;rem jpb
     wend
     return
 
-print_hdr: rem --- Print Header Comments
-return;rem jpb
-    if len(head_comm$)<>0 then
-        for x=1 to len(head_comm$) step 60
-            print (printer_dev)@(14),head_comm$(x,60)
-            l=l+1
-        next x
-        if l>l9 then let l=l9-1
-    endif
+disp_message: rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
     return
 
 rem #include std_functions.src
@@ -415,6 +456,81 @@ rem --- fnglobal$: Return string value of passed STBL variable
 
 rem #endinclude std_functions.src
 
+rem --- fntext: Form Text command
+
+    def fntext(tmp_x,tmp_y,tmp_text$,tmp_font!,page!)
+        tmp_text$=cvs(tmp_text$,3)
+        tmp!.destroy(err=*next)
+        tmp!=page!.newParagraph()
+        tmp!.setHorizontalFill(1)
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        tmp!.setText(tmp_text$)
+        tmp!.setFont(tmp_font!)
+        page!.add(tmp!)
+        return(1)
+    fnend
+
+rem --- fntext2: Form Text command
+
+    def fntext2(tmp_x,tmp_y,tmp_x2,tmp_y2,tmp_text$,tmp_font!,tmp_just,page!)
+        tmp_text$=cvs(tmp_text$,3)
+        tmp!.destroy(err=*next)
+        tmp!=page!.newParagraph()
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        if tmp_just then tmp!.setSize(tmp_x2,tmp_y2)
+        if tmp_just=1 then tmp!.setHorizontalAlignment(tmp!.RIGHT_JUSTIFIED)
+        if tmp_just=2 then tmp!.setHorizontalAlignment(tmp!.CENTER_JUSTIFIED)
+        tmp!.setText(tmp_text$)
+        tmp!.setFont(tmp_font!)
+        page!.add(tmp!)
+        return(1)
+    fnend
+
+rem --- fnbox: Form Box command
+
+    def fnbox(tmp_x,tmp_y,tmp_w,tmp_h,page!)
+        tmp!=page!.newFrame()
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        tmp!.setWidth(tmp_w)
+        tmp!.setHeight(tmp_h)
+        page!.add(tmp!)
+        return(1)
+    fnend
+
+rem --- fnline: Form Line command
+
+    def fnline(tmp_x,tmp_y,tmp_w,tmp_h,page!)
+        tmp!=page!.newLine()
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        tmp!.setWidth(tmp_w)
+        tmp!.setHeight(tmp_h)
+        page!.add(tmp!)
+        return(1)
+    fnend
+
+rem --- fnframe: Form Frame command
+
+    def fnframe(tmp_x,tmp_y,tmp_x2,tmp_y2,page!)
+        tmp!=page!.newFrame()
+        tmp!.setPosition(new java.awt.Point(tmp_x,tmp_y))
+        tmpdim!=new java.awt.Dimension(tmp_x2,tmp_y2)
+        tmp!.setSize(tmpdim!)
+        page!.add(tmp!)
+        return(1)
+    fnend
+
+rem --- fnlogo: Put logo on page
+
+    def fnlogo(page!)
+        logo!=page!.newImage()
+        logo!.setURL(logofile$,err=*next)
+        logo!.setPosition(new java.awt.Point(0,0))
+        logo!.setWidth(185)
+        logo!.setHeight(68)
+        page!.add(logo!)
+        return(1)
+    fnend
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -466,6 +582,10 @@ std_exit: rem --- Standard program end (01Mar2006)
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
+std_exit_no_report: 
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     release
 
 rem #endinclude std_end.src
