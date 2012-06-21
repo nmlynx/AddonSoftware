@@ -23,6 +23,7 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
+	milestone=50
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
@@ -146,7 +147,8 @@ rem --- call bac_documents.bbj to get back a barista document ID
         while more
             sfw13a_key$=key(sfw13a_dev,end=*break)
             if sfw13a_key.firm_id$+sfw13a_key.wo_location$+sfw13a_key.wo_no$<>sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$ then break
-            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+            read_recs=read_recs+1
+			if mod(read_recs,milestone)=0 call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
             op_step$=sfw13a_key.oper_seq_ref$
             k$=sfw13a_key.firm_id$+sfw13a_key.wo_location$+sfw13a_key.wo_no$+sfw13a_key.material_seq$
             read (sfw13a_dev)
@@ -172,17 +174,14 @@ rem --- All done
     endif
 
     docPrint!.preview()
-    goto std_exit
-rem    close (printer_dev,err=err_Line)
-rem    for i=10 to 12; print @(0,i),'cl'; next i
 
-err_Line:
-
-    v4$="Did The Print Lists Pick Correctly "
-    call pgmdir$+"adc_yesno.aon",1,v4$,1,v$,v3
-    if v$="N" then goto std_exit
-    if v$<>"Y" then goto err_Line
-    print @(27,7),"Now Clearing Print File...",'cl',
+    msg_id$="AON_UPDT_SF_PICK"
+    dim msg_tokens$[1]
+    msg_tokens$[1]=sysinfo.task_desc$
+    gosub disp_message
+escape;rem this section probably won't work without serious work. jpb
+goto std_exit
+	if msg_opt$<>"Y" then goto std_exit
     read (sfe04c_dev,key=firm_id$,dom=*next)
 
     while more
@@ -315,9 +314,14 @@ rem --- create pdf file
 
 		line_no=148
 
-rem        if page!=pagePDF! then break
-rem        page!=pagePDF!
-break
+		if head_comm$<>""
+			line_no=line_no+12
+			for x=1 to len(head_comm$) step len(sfe22b.ext_comments$)
+				line_no=line_no+12
+				tmp=fntext(40,line_no,head_comm$(x,len(sfe22b.ext_comments$)),text_font!,page!)
+			next x
+		endif
+		break
     wend
     return
 
@@ -342,8 +346,7 @@ details: rem --- Details
     dim desc$(60)
     desc$(1)=fnitem$(dx$,desclen[1],desclen[2],desclen[3])
 	tmp=fntext(195,line_no,desc$,textfont!,page!)
-rem    print (printer_dev)@(5),"WO Seq: ",sfe23a.material_seq$,@(25+m2),desc$(1,min(desc[1]+desc[2]+desc[3]+2,79-(25+m2)))
-    l=l+2+splitline
+
     gosub material
 
     if pos(ivs01a.lotser_flag$="LS")=0 then
@@ -360,10 +363,6 @@ rem    print (printer_dev)@(5),"WO Seq: ",sfe23a.material_seq$,@(25+m2),desc$(1,
 		tmp=fnline(95,line_no+12,195,line_no+12,page!)
     next x
 
-rem	if page!<>pagePDF!
-rem		page!=pagePDF!
-rem	endif
-	
     return
 
 material: rem --- Get comments for this material
@@ -376,10 +375,8 @@ material: rem --- Get comments for this material
         read record (sfe22b_dev) sfe22b$
         if sfe22b.line_type$<>"M" then break 
         if line_no+1>l9 then gosub report_heading
-		line_no=line_no+24
+		line_no=line_no+12
 		tmp=fntext(40,line_no,sfe22b.ext_comments$,text_font!,page!)
-rem        print (printer_dev)@(14),sfe22bext_comments$
-        l=l+1
     wend
     return
 
@@ -392,10 +389,7 @@ get_wo_hdr_cmnts: rem --- Get header comments for this Work Order
 		dim sfe22b$:fattr(sfe22b$)
         read record (sfe22b_dev) sfe22b$
         if sfe22b.line_type$<>"M" then break
-        if line_no+1>l9 then gosub report_heading
-		line_no=line_no+24
-		tmp=fntext(40,line_no,sfe22b.ext_comments$,text_font!,page!)
-rem        head_comm$=head_comm$+sfe22b.ext_comments$
+		head_comm$=head_comm$+sfe22b.ext_comments$		
     wend
     return
 
