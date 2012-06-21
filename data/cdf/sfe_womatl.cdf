@@ -187,6 +187,9 @@ rem =========================================================
 	dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
 	dim sfe_wosubcnt$:fnget_tpl$("SFE_WOSUBCNT")
 
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMATL","PRIMARY",sfe22_key_tpl$,rd_table_chans$[all],status$
+	dim sfe22_prev_key$:sfe22_key_tpl$
+
 	all_bills$=new_bill$
 	curr_bill$=new_bill$
 	subs$=""
