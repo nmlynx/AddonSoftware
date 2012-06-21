@@ -64,11 +64,8 @@ rem --- Open the printer
 
 rem --- Init Data
 
-    m9=80-m2*3
-rem jpb    if splitline or m2+23+p[0]<m9-m2 then let m9=m9-m2,m9$="Y"
     stepnum=1
     more=1
-    flag=0
     backtomain=0
 
 rem --- Background
@@ -82,16 +79,15 @@ rem --- Init Read
 rem --- Main Read
 
     while more
-
-        old_op_step$=""
+        
         stepnum=1
-		flag=0
+		flag=0;rem flag 0 means we're all done, 1 means don't print it, 2 means print it
 
         while more
 
+			old_op_step$=""
             read record (sfe04c_dev,end=*break) sfe04c$
             if pos(firm_id$=sfe04c$)<>1
-                flag=1
                 break
             endif
 
@@ -99,12 +95,15 @@ rem --- Main Read
 
             read record (sfe13a_dev,key=sfe04c.firm_id$+sfe04c.wo_location$+sfe04c.wo_no$,dom=*continue) sfe13a$
             read record (sfe01a_dev,key=sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$,dom=*continue) sfe01a$
+			gosub get_op_seqs
+			flag=2
             find (sfe04d_dev,key=sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$,dom=*break)
 			flag=1
         wend
 
         if flag=0 then break
-
+		if flag=1 then continue
+		
 rem --- Find Customer
 
 		dim arm01a$:fattr(arm01a$)
@@ -251,8 +250,10 @@ rem --- create pdf file
     pagePrint!=docPrint!.createPage(err=std_error)
     page!=pagePrint!
 
+	desc1$=""
+	desc2$=""
     find record (ivm01a_dev,key=firm_id$+sfe13a.item_id$,dom=*next) ivm01a2$
-    if sfe13a.wo_category$="I" then let desc1$=ivm01a2.item_desc$(1,min(desc[1],41)),ivm01a2.item_desc$=description$(desc[1]+1,min(desc[2],42))
+    if sfe13a.wo_category$="I" then let desc1$=fnitem$(ivm01a2.item_desc$,desclen[1],desclen[2],desclen[3])
     if sfe13a.wo_category$<>"I" then let desc1$=sfe01a.description_01$,desc2$=sfe01a.description_02$
     old_op_step$=op_step$
 
@@ -262,49 +263,61 @@ rem --- create pdf file
 		tmp=fntext2(0,40,65,40,"Work Order:",textfont!,right_justify,page!)
 		tmp=fntext2(70,40,50,40,sfe13a.wo_no$,textfont!,left_justify,page!)
 		tmp=fntext(150,40,"Type: "+sfe13a.wo_type$+" "+sfm10a.code_desc$,textfont!,page!)
-		tmp=fntext(400,40,"Category: "+sfe13a.wo_category$+" "+z2$,textfont!,page!);rem get category desc$ jpb
+		tmp=fntext(400,40,"Category: "+sfe13a.wo_category$+" "+z2$,textfont!,page!)
 		tmp=fntext2(0,52,65,52,"Op Step:",textfont!,right_justify,page!)
-		tmp=fntext2(70,52,50,52,op_step$,textfont!,right_justify,page!)
+		op_step_out$=op_step$
+		if cvs(op_step$,3)<>""
+			if ops_lines!.size()
+				for x=0 to ops_lines!.size()-1
+					if op_step$=ops_lines!.getItem(x)
+						op_step_out$=ops_list!.getItem(x)
+					endif
+				next x
+			endif
+		endif
+		tmp=fntext(70,52,op_step_out$,textfont!,page!)
 		
 		if sfe13a.wo_category$="I" then
 			tmp=fntext2(0,64,65,64,"Bill Number:",textfont!,right_justify,page!)
-			tmp=fntext2(70,64,65,64,sfe13a.item_id$,textfont!,left_justify,page!)
+			tmp=fntext(70,64,sfe13a.item_id$,textfont!,page!)
 		endif
 
 		tmp=fntext2(0,76,65,76,"Description:",textfont!,right_justify,page!)
-		tmp=fntext2(70,76,65,76,desc1$,textfont!,left_justify,page!)
-		tmp=fntext(400,76,"Open Date: "+fndate$(sfe01a.opened_date$),textfont!,page!)
-
+		tmp=fntext(70,76,cvs(desc1$,2),textfont!,page!)
+		tmp2=fntext2(400,76,80,76,"Open Date:",textfont!,right_justify,page!)
+		tmp=fntext(485,76,fndate$(sfe01a.opened_date$),textfont!,page!)
 		tmp=fntext(20,88,desc2$,textfont!,page!)
-		tmp=fntext(400,88,"Start Date: "+fndate$(sfe01a.eststt_date$),textfont!,page!)
+		tmp2=fntext2(400,88,80,88,"Start Date:",textfont!,right_justify,page!)
+		tmp=fntext(485,88,fndate$(sfe01a.eststt_date$),textfont!,page!)
 		tmp=fntext2(0,100,65,100,"Drawing #:",textfont!,right_justify,page!)
 		tmp=fntext2(70,100,65,100,sfe01a.drawing_no$,textfont!,left_justify,page!)
 		tmp=fntext(200,100,"Rev: "+sfe01a.drawing_no$,textfont!,page!)
-		tmp=fntext(400,100,"Completion Date: "+fndate$(sfe01a.estcmp_date$),textfont!,page!)
+		tmp2=fntext2(400,100,80,100,"Completion Date:",textfont!,right_justify,page!)
+		tmp=fntext(485,100,fndate$(sfe01a.estcmp_date$),textfont!,page!)
 
 		if pos(" "<>sfe01a.customer_id$)>0 then
-			tmp=fntext(20,112,"Customer: "+fnmask$(sfe01a.customer_id$,custmask$)+" "+c1$,textfont!,page!)
-			tmp=fntext(200,112,"Order: "+sfe01a.order_no$+"-"+sfe01a.line_no$,textfont!,page!)
+			tmp=fntext2(0,112,65,112,"Customer:",textfont!,right_justify,page!)
+			tmp=fntext(70,112,fnmask$(sfe01a.customer_id$,custmask$)+" "+arm01a.customer_name$,textfont!,page!)
+			tmp=fntext(300,112,"Order: "+sfe01a.order_no$+"-"+sfe01a.sls_ord_seq_ref$,textfont!,page!)
 		endif
 		tmp=fntext2(0,124,65,124,"Warehouse:",textfont!,right_justify,page!)
 		tmp=fntext2(70,124,50,124,sfe13a.warehouse_id$+" "+ivm10c.short_name$,textfont!,left_justify,page!)
 		tmp=fntext(400,124,"Production Qty: "+str(sfe01a.sch_prod_qty-sfe01a.qty_cls_todt:m2$),textfont!,page!)
 		tmp=fnline(0,140,560,140,page!)
-		tmp=fntext2(0,148,20,148,"Step",textfont!,left_justify,page!)
-		tmp=fntext2(25,148,40,148,"Location",textfont!,left_justify,page!)
+		tmp=fntext2(25,148,30,148,"Location",textfont!,left_justify,page!)
 		tmp=fntext2(60,148,35,148,"Req'd",textfont!,right_justify,page!)
-		tmp=fntext2(100,148,50,148,"Picked",textfont!,right_justify,page!)
-		tmp=fntext2(200,148,70,148,"Item",textfont!,left_justify,page!)
+		tmp=fntext2(100,148,35,148,"Picked",textfont!,right_justify,page!)
+		tmp=fntext2(140,148,70,148,"Item",textfont!,left_justify,page!)
 		tmp=fntext2(320,148,55,148,"On Hand",textfont!,right_justify,page!)
 		tmp=fntext2(380,148,55,148,"Com'd",textfont!,right_justify,page!)
 		tmp=fntext2(440,148,55,148,"Avail",textfont!,right_justify,page!)
 		tmp=fntext2(500,148,55,148,"On Ord",textfont!,right_justify,page!)
 
 		line_no=148
-				
-        if page!=pagePDF! then break
-        page!=pagePDF!
 
+rem        if page!=pagePDF! then break
+rem        page!=pagePDF!
+break
     wend
     return
 
@@ -314,68 +327,104 @@ details: rem --- Details
     if ivs01a.lotser_flag$="S" and (ivm01a1.lotser_item$+ivm01a1.inventoried$)="YY" then let x1=sfe23a.qty_ordered-sfe23a.tot_qty_iss,x9$="Serial #:"
     if ivs01a.lotser_flag$="L" and (ivm01a1.lotser_item$+ivm01a1.inventoried$)="YY" then let x1=5,x9$="Lot #:"
     if line_no>l9 or op_step$<>old_op_step$ then gosub report_heading
-	line_no=line_no+12
+	line_no=line_no+24
 
-	tmp=fntext2(0,line_no,20,line_no,str(stepnum:"000"),textfont!,left_justify,page!)
-	tmp=fntext2(25,line_no,40,line_no,ivm02a.location$,textfont!,left_justify,page!)
+	tmp=fntext2(25,line_no,30,line_no,ivm02a.location$,textfont!,left_justify,page!)
 	tmp=fntext2(60,line_no,35,line_no,str(sfe23a.qty_ordered-sfe23a.tot_qty_iss:m2$),textfont!,right_justify,page!)
-	tmp=fnline(100,line_no,50,line_no,page!)
-	tmp2=fntext2(200,line_no,50,line_no,sfe23a.item_id$,textfont!,left_justify,page!)
+	tmp=fnline(100,line_no+12,135,line_no+12,page!)
+	tmp2=fntext2(140,line_no,50,line_no,sfe23a.item_id$,textfont!,left_justify,page!)
 	tmp2=fntext2(320,line_no,55,line_no,str(ivm02a.qty_on_hand:m2$),textfont!,right_justify,page!)
-rem    print (printer_dev)@(0),j1$(1,7),@(22+m2),sfe23a.item_id$,
-rem    if splitline then print (printer_dev)""
-rem    print (printer_dev)@(m9),ivm02a.qty_on_hand:m2$,ivm02a.qty_commit:m2$,ivm02a.qty_on_hand-ivm02a.qty_commit:m2$,
-rem    if m9$="Y" then print (printer_dev)ivm02a.qty_on_order:m2$,
-rem    print (printer_dev)""
+	tmp2=fntext2(380,line_no,55,line_no,str(ivm02a.qty_commit:m2$),textfont!,right_justify,page!)
+	tmp2=fntext2(440,line_no,55,line_no,str(ivm02a.qty_on_hand-qty_commit:m2$),textfont!,right_justify,page!)
+	tmp2=fntext2(500,line_no,55,line_no,str(ivm02a.qty_on_order:m2$),textfont!,right_justify,page!)
+
     read record (sfe22b_dev,key=(sfe23a.firm_id$+sfe23a.wo_location$+sfe23a.wo_no$)+sfe23a.material_seq$,dom=*next) sfe22b$
     dim desc$(60)
-    desc$(1)=fnitem$(dx$,desc[1],desc[2],desc[3])
+    desc$(1)=fnitem$(dx$,desclen[1],desclen[2],desclen[3])
+	tmp=fntext(195,line_no,desc$,textfont!,page!)
 rem    print (printer_dev)@(5),"WO Seq: ",sfe23a.material_seq$,@(25+m2),desc$(1,min(desc[1]+desc[2]+desc[3]+2,79-(25+m2)))
     l=l+2+splitline
     gosub material
+
     if pos(ivs01a.lotser_flag$="LS")=0 then
         return
     endif
     if (ivm01a1.lotser_item$+ivm01a1.inventoried$)<>"YY" then
         return
     endif
+
     for x=1 to x1
-        if l>l9 then gosub report_heading
-rem        print (printer_dev)@(14),x9$,"_____________________________"
-        l=l+1
+		line_no=line_no+24
+        if line_no>l9 then gosub report_heading
+		tmp2=fntext2(50,line_no,40,line_no,x9$,textfont!,right_justify,page!)
+		tmp=fnline(95,line_no+12,195,line_no+12,page!)
     next x
 
-	if page!<>pagePDF!
-		page!=pagePDF!
-	endif
+rem	if page!<>pagePDF!
+rem		page!=pagePDF!
+rem	endif
 	
     return
 
 material: rem --- Get comments for this material
-return;rem jpb
+
     dim sfe22b_key$:sfe22b_key_tpl$
     while more
         sfe22b_key$=key(sfe22b_dev,end=*break)
-        if pos(sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$+"B"=sfe22b_key$)<>1 then break
+        if pos(sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$=sfe22b_key$)<>1 then break
+		dim sfe22b$:fattr(sfe22b$)
         read record (sfe22b_dev) sfe22b$
         if sfe22b.line_type$<>"M" then break 
-        if l+1>l9 then gosub report_heading
-        print (printer_dev)@(14),sfe22bext_comments$
+        if line_no+1>l9 then gosub report_heading
+		line_no=line_no+24
+		tmp=fntext(40,line_no,sfe22b.ext_comments$,text_font!,page!)
+rem        print (printer_dev)@(14),sfe22bext_comments$
         l=l+1
     wend
     return
 
 get_wo_hdr_cmnts: rem --- Get header comments for this Work Order
-return;rem jpb
-    read (sfe22b_dev,key=sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$+"B",dom=*next)
+
+    read (sfe22b_dev,key=sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$,dom=*next)
     while more
         sfe22b_key$=key(sfe22b_dev,end=*break)
-        if pos(sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$+"B"=sfe22b_key$)<>1 then break
+        if pos(sfe13a.firm_id$+sfe13a.wo_location$+sfe13a.wo_no$=sfe22b_key$)<>1 then break
+		dim sfe22b$:fattr(sfe22b$)
         read record (sfe22b_dev) sfe22b$
         if sfe22b.line_type$<>"M" then break
-        head_comm$=head_comm$+sfe22b.ext_comments$
+        if line_no+1>l9 then gosub report_heading
+		line_no=line_no+24
+		tmp=fntext(40,line_no,sfe22b.ext_comments$,text_font!,page!)
+rem        head_comm$=head_comm$+sfe22b.ext_comments$
     wend
     return
+
+get_op_seqs: rem --- create vector for use with Op Sequence
+
+	SysGUI!=BBjAPI()
+	ops_lines!=SysGUI!.makeVector()
+	ops_list!=SysGUI!.makeVector()
+	op_code_list$=""
+
+	read(sfe02_dev,key=firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
+	while 1
+		read record (sfe02_dev,end=*break) sfe02a$
+		if pos(firm_id$+sfe01a.wo_location$+sfe01a.wo_no$=sfe02a$)<>1 break
+		if sfe02a.line_type$<>"S" continue
+		dim op_code$:fattr(op_code$)
+		read record (op_code,key=firm_id$+sfe02a.op_code$,dom=*next)op_code$
+		ops_lines!.addItem(sfe02a.internal_seq_no$)
+		op_code_list$=op_code_list$+sfe02a.op_code$
+		work_var=pos(sfe02a.op_code$=op_code_list$,len(sfe02a.op_code$),0)
+		if work_var>1
+			work_var$=sfe02a.op_code$+"("+str(work_var)+")"
+		else
+			work_var$=sfe02a.op_code$
+		endif
+		ops_list!.addItem(work_var$+" - "+op_code.code_desc$)
+	wend
+	
+	return
 
 disp_message: rem --- Display Message Dialog
 

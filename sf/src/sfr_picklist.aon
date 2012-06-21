@@ -29,7 +29,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=17,begfile=1,endfile=files
+    files=18,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="arm-01",ids$[1]="ARM_CUSTMAST"
     files$[2]="ars_params",ids$[2]="ARS_PARAMS"
@@ -48,7 +48,8 @@ rem --- Open/Lock files
     files$[15]="sfs_params",ids$[15]="SFS_PARAMS"
 	files$[16]="sfw-13",ids$[16]="SFW_PICKLCTN"
 	files$[17]="sfe_wotrans",ids$[17]="SFE_WOTRANS"
-	options$[16]="C"
+	files$[18]="sfe-02",ids$[18]="SFE_WOOPRTN"
+	options$[16]="CL"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -70,6 +71,7 @@ rem --- Open/Lock files
     sfs01a_dev=channels[15]
 	sfw13a_dev=channels[16]
 	sfe04d_dev=channels[17]
+	sfe02_dev=channels[18]
 
 rem --- Dimension string templates
 
@@ -78,7 +80,8 @@ rem --- Dimension string templates
 	dim sfe01a$:templates$[7],sfe04c$:templates$[8],sfe13a$:templates$[9]
 	dim	sfe15a$:templates$[10],sfe22b$:templates$[11],sfe23a$:templates$[12]
 	dim sfe25a$:templates$[13],sfm10a$:templates$[14],sfs01a$:templates$[15]
-	dim sfw13a$:templates$[16]
+	dim sfw13a$:templates$[16],sfe02a$:templates$[18]
+
 rem --- Assign form input values to local variables
 
     sort_seq$=option!.getOptionData("REPORT_SEQ")
@@ -92,9 +95,28 @@ rem --- Retrieve parameter records
     sfs01a_key$=firm_id$+"SF00"
     find record (sfs01a_dev,key=sfs01a_key$,err=std_missing_params) sfs01a$
 
+rem --- Get correct Op Code Maintenance file open
+
+	bm$=sfs01a.bm_interface$
+	if bm$="Y"
+		call stbl("+DIR_PGM")+"adc_application.aon","BM",info$[all]
+		bm$=info$[20]
+	endif
+
+	num_files=1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	if bm$<>"Y"
+		open_tables$[1]="SFC_OPRTNCOD",open_opts$[1]="OTA"
+	else
+		open_tables$[1]="BMC_OPCODES",open_opts$[1]="OTA"
+	endif
+	gosub open_tables
+
+	op_code=num(open_chans$[1])
+	dim op_code$:open_tpls$[1]
+
 rem --- Parameters
 
-    dim desc[3]
     ivs01_precision=num(ivs01a.precision$)
 
 rem --- Initialize Data
@@ -162,6 +184,36 @@ creat_xref: rem --- Create Cross Reference File
     wend
 
     return
+
+open_tables:rem --- Open Tables
+
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>"" then
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=open_status$
+		gosub disp_message
+		rdFuncSpace!=bbjAPI().getGroupNamespace().setValue("+build_task","OFF")
+		release
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+	return
 
 rem #include std_error.src
 
