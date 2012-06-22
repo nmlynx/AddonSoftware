@@ -36,16 +36,18 @@ rem --- Retrieve sysinfo data
 rem --- retrieve masks 
 
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","I","",g5$,0,acctmask
-        call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","R","",m3$,0,m3
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",c1$,0,custmask
-        m4$="#,###,##0.00"
+
 
 rem --- Check & Adjust Masks
 
-		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","A","",m1$,0,m1
-		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","H","",m2$,0,m2
-        m9=m1*11+m2*2+8
-
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","H","",sf_hours_mask$,0,0
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","R","",sf_rate_mask$,0,0
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","%","",pct_mask$,0,0
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","A","",sf_amt_mask$,0,0
+        grand_amt_mask$="#,###,##0.00-"
+		pct_mask$="####.00-"
+		
 rem --- Assign Title, Record, and keys
 
         action=pos(sequence$="WBCT")-1
@@ -123,7 +125,7 @@ rem --- Assign Title, Record, and keys
         headings$[4]=h6$
 
 rem --- Init Data
-        m9$="####.00-"
+
         more=1
 rem        flag=0
 
@@ -161,26 +163,26 @@ rem --- Column Headings
 
         dim columns$[15,10]
         columns = 15
-            columns$[0,0]="^^WO#",                 columns$[0,1]="C", columns$[0,2]="7"
-            columns$[1,0]="^Type/^Bill",                columns$[1,1]="C", columns$[1,2]="10"
-            columns$[2,0]="Standards^Ops^Hours",   columns$[2,1]="N", columns$[2,2]="8",  columns$[2,3]=m2$,  columns$[2,10]="T"
-            columns$[3,0]="Standards^Ops^Direct",  columns$[3,1]="N", columns$[3,2]="9",  columns$[3,3]=m1$,  columns$[3,10]="T"
-            columns$[4,0]="Standards^Ops^Ovrhd",   columns$[4,1]="N", columns$[4,2]="9",  columns$[4,3]=m1$,  columns$[4,10]="T"
-            columns$[5,0]="Standards^Mat'ls^Total",columns$[5,1]="N", columns$[5,2]="9",  columns$[5,3]=m1$,  columns$[5,10]="T"
-            columns$[6,0]="Standards^Sub's^Total", columns$[6,1]="N", columns$[6,2]="9",  columns$[6,3]=m1$,  columns$[6,10]="T"
-            columns$[7,0]="Standards^W.O.^Total",  columns$[7,1]="N", columns$[7,2]="8",  columns$[7,3]=m1$,  columns$[7,10]="T"
-            columns$[8,0]="Actuals^Ops^Hours",     columns$[8,1]="N", columns$[8,2]="8",  columns$[8,3]=m2$,  columns$[8,10]="T"
-            columns$[9,0]="Actuals^Ops^Direct",    columns$[9,1]="N", columns$[9,2]="9",  columns$[9,3]=m1$,  columns$[9,10]="T"
-            columns$[10,0]="Actuals^Ops^Ovrhd",    columns$[10,1]="N",columns$[10,2]="9", columns$[10,3]=m1$, columns$[10,10]="T"
-            columns$[11,0]="Actuals^Mat'ls^Total", columns$[11,1]="N",columns$[11,2]="9", columns$[11,3]=m1$, columns$[11,10]="T"
-            columns$[12,0]="Actuals^Sub's^Total",  columns$[12,1]="N",columns$[12,2]="9", columns$[12,3]=m1$, columns$[12,10]="T"
-            columns$[13,0]="Actuals^W.O.^Total",   columns$[13,1]="N",columns$[13,2]="8", columns$[13,3]=m1$, columns$[13,10]="T"
-            columns$[14,0]="^Variance",            columns$[14,1]="N",columns$[14,2]="8", columns$[14,3]=m1$, columns$[14,10]="T"
-            columns$[15,0]="%",                    columns$[15,1]="N",columns$[15,2]="6", columns$[15,3]=m9$, columns$[15,10]="T"
+        columns$[0,0]="^^WO#",                 columns$[0,1]="C", columns$[0,2]="7"
+        columns$[1,0]="^Type/^Bill",                columns$[1,1]="C", columns$[1,2]="10"
+        columns$[2,0]="Standards^Ops^Hours",   columns$[2,1]="N", columns$[2,2]="8",  columns$[2,3]=sf_hours_mask$,columns$[2,10]="T"
+        columns$[3,0]="Standards^Ops^Direct",  columns$[3,1]="N", columns$[3,2]="9",  columns$[3,3]=sf_amt_mask$,  columns$[3,10]="T"
+        columns$[4,0]="Standards^Ops^Ovrhd",   columns$[4,1]="N", columns$[4,2]="9",  columns$[4,3]=sf_amt_mask$,  columns$[4,10]="T"
+        columns$[5,0]="Standards^Mat'ls^Total",columns$[5,1]="N", columns$[5,2]="9",  columns$[5,3]=sf_amt_mask$,  columns$[5,10]="T"
+        columns$[6,0]="Standards^Sub's^Total", columns$[6,1]="N", columns$[6,2]="9",  columns$[6,3]=sf_amt_mask$,  columns$[6,10]="T"
+        columns$[7,0]="Standards^W.O.^Total",  columns$[7,1]="N", columns$[7,2]="8",  columns$[7,3]=grand_amt_mask$,  columns$[7,10]="T"
+        columns$[8,0]="Actuals^Ops^Hours",     columns$[8,1]="N", columns$[8,2]="8",  columns$[8,3]=sf_hours_mask$,columns$[8,10]="T"
+        columns$[9,0]="Actuals^Ops^Direct",    columns$[9,1]="N", columns$[9,2]="9",  columns$[9,3]=sf_amt_mask$,  columns$[9,10]="T"
+        columns$[10,0]="Actuals^Ops^Ovrhd",    columns$[10,1]="N",columns$[10,2]="9", columns$[10,3]=sf_amt_mask$, columns$[10,10]="T"
+        columns$[11,0]="Actuals^Mat'ls^Total", columns$[11,1]="N",columns$[11,2]="9", columns$[11,3]=sf_amt_mask$, columns$[11,10]="T"
+        columns$[12,0]="Actuals^Sub's^Total",  columns$[12,1]="N",columns$[12,2]="9", columns$[12,3]=sf_amt_mask$, columns$[12,10]="T"
+        columns$[13,0]="Actuals^W.O.^Total",   columns$[13,1]="N",columns$[13,2]="8", columns$[13,3]=grand_amt_mask$, columns$[13,10]="T"
+        columns$[14,0]="^Variance",            columns$[14,1]="N",columns$[14,2]="8", columns$[14,3]=sf_amt_mask$, columns$[14,10]="T"
+        columns$[15,0]="%",                    columns$[15,1]="N",columns$[15,2]="6", columns$[15,3]=pct_mask$,    columns$[15,10]="T"
 
 rem --- Background
 
-            call pgmdir$+"adc_progress.aon","N","","","","",0,sfe01a_dev,1,meter_num,status
+        call pgmdir$+"adc_progress.aon","N","","","","",0,sfe01a_dev,1,meter_num,status
            
 rem --- Init Read
 
@@ -426,35 +428,34 @@ rem --- Print
         if abs(a3_variance_percent)>999.9 then 
             a3_variance_percent$=" ****** " 
         else 
-            a3_variance_percent$=str(a3_variance_percent:"####.00-")
+            a3_variance_percent$=str(a3_variance_percent:pct_mask$)
         endif
 
         blank=fnblank(14)
         blank=fnblank(2)
-        OutVect!.addItem(str(a_standards[0])); rem Op hours
-        OutVect!.addItem(str(a_standards[1])); rem Op Direct
-        OutVect!.addItem(str(a_standards[2])); rem Op Overhead
-        OutVect!.addItem(str(a_standards[3])); rem Mats
-
-        OutVect!.addItem(str(a_standards[4])); rem Subs
-        OutVect!.addItem(str(a0_standard_tot))
-        OutVect!.addItem(str(a_actuals[0])); rem Op Hours
-        OutVect!.addItem(str(a_actuals[1])); rem Op Direct
-        OutVect!.addItem(str(a_actuals[2])); rem Op Overhead
-        OutVect!.addItem(str(a_actuals[3])); rem Mats
-        OutVect!.addItem(str(a_actuals[4])); rem Subs
-        OutVect!.addItem(str(a1_actual_tot))
-        OutVect!.addItem(str(a2_variance))
+        OutVect!.addItem(str(a_standards[0]:sf_hours_mask$)); rem Op hours
+        OutVect!.addItem(str(a_standards[1]:sf_amt_mask$)); rem Op Direct
+        OutVect!.addItem(str(a_standards[2]:sf_amt_mask$)); rem Op Overhead
+        OutVect!.addItem(str(a_standards[3]:sf_amt_mask$)); rem Mats
+        OutVect!.addItem(str(a_standards[4]:sf_amt_mask$)); rem Subs
+        OutVect!.addItem(str(a0_standard_tot:grand_amt_mask$))
+        OutVect!.addItem(str(a_actuals[0]:sf_hours_mask$)); rem Op Hours
+        OutVect!.addItem(str(a_actuals[1]:sf_amt_mask$)); rem Op Direct
+        OutVect!.addItem(str(a_actuals[2]:sf_amt_mask$)); rem Op Overhead
+        OutVect!.addItem(str(a_actuals[3]:sf_amt_mask$)); rem Mats
+        OutVect!.addItem(str(a_actuals[4]:sf_amt_mask$)); rem Subs
+        OutVect!.addItem(str(a1_actual_tot:grand_amt_mask$))
+        OutVect!.addItem(str(a2_variance:sf_amt_mask$))
         OutVect!.addItem(str(a3_variance_percent$))
-       
+
         if a_standards[5]<>0 then 
             blank=fnblank(12)
             OutVect!.addItem("Closed: ")
-            OutVect!.addItem(str(-a_standards[5]))
+            OutVect!.addItem(str(-a_standards[5]:sf_amt_mask$))
             blank=fnblank(2)
             blank=fnblank(12)
             OutVect!.addItem("Net Open: ")
-            OutVect!.addItem(str(a1_actual_tot-a_standards[5]))
+            OutVect!.addItem(str(a1_actual_tot-a_standards[5]:sf_amt_mask$))
             blank=fnblank(2)            
         endif
 
@@ -516,30 +517,29 @@ done: rem --- End
         blank=fnblank(1)
         OutVect!.addItem("Report Total:")
 		
-		OutVect!.addItem(str(u_standards[0])); rem Op hours
-        OutVect!.addItem(str(u_standards[1])); rem Op Direct
-        OutVect!.addItem(str(u_standards[2])); rem Op Overhead
-        OutVect!.addItem(str(u_standards[3])); rem Mats
-        OutVect!.addItem(str(u_standards[4])); rem Subs
-        OutVect!.addItem(str(u0_standard_tot:m4$))
-        OutVect!.addItem(str(u_actuals[0])); rem Op Hours
-        OutVect!.addItem(str(u_actuals[1])); rem Op Direct
-        OutVect!.addItem(str(u_actuals[2])); rem Op Overhead
-        OutVect!.addItem(str(u_actuals[3])); rem Mats
-        OutVect!.addItem(str(u_actuals[4])); rem Subs
-        OutVect!.addItem(str(u1_actual_tot:m4$))
-        OutVect!.addItem(str(u2_variance))
+		OutVect!.addItem(str(u_standards[0]:sf_hours_mask$)); rem Op hours
+        OutVect!.addItem(str(u_standards[1]:sf_amt_mask$)); rem Op Direct
+        OutVect!.addItem(str(u_standards[2]:sf_amt_mask$)); rem Op Overhead
+        OutVect!.addItem(str(u_standards[3]:sf_amt_mask$)); rem Mats
+        OutVect!.addItem(str(u_standards[4]:sf_amt_mask$)); rem Subs
+        OutVect!.addItem(str(u0_standard_tot:grand_amt_mask$))
+        OutVect!.addItem(str(u_actuals[0]:sf_hours_mask$)); rem Op Hours
+        OutVect!.addItem(str(u_actuals[1]:sf_amt_mask$)); rem Op Direct
+        OutVect!.addItem(str(u_actuals[2]:sf_amt_mask$)); rem Op Overhead
+        OutVect!.addItem(str(u_actuals[3]:sf_amt_mask$)); rem Mats
+        OutVect!.addItem(str(u_actuals[4]:sf_amt_mask$)); rem Subs
+        OutVect!.addItem(str(u1_actual_tot:grand_amt_mask$))
+        OutVect!.addItem(str(u2_variance:sf_amt_mask$))
         OutVect!.addItem(str(u3_variance_percent))
-
-      
+  
         if u_standards[5]<>0 then 
             blank=fnblank(12)
             OutVect!.addItem("Closed: ")
-            OutVect!.addItem(str(-u_standards[5]))
+            OutVect!.addItem(str(-u_standards[5]:sf_amt_mask$))
             blank=fnblank(2)
             blank=fnblank(12)
             OutVect!.addItem("Net Open: ")
-            OutVect!.addItem(str(u1_actual_tot-u_standards[5]))
+            OutVect!.addItem(str(u1_actual_tot-u_standards[5]:sf_amt_mask$))
             blank=fnblank(2)
 		endif
     
@@ -613,33 +613,33 @@ rem --- Subtotals By Type
         if abs(b3_variance_percent)>999.9 then 
             b3_variance_percent$=" ****** " 
         else 
-            b3_variance_percent$=str(b3_variance_percent:"####.00-")
+            b3_variance_percent$=str(b3_variance_percent:pct_mask$)
         endif
 
         blank=fnblank(2)
-        OutVect!.addItem(str(b_standards[0])); rem Op hours
-        OutVect!.addItem(str(b_standards[1])); rem Op Direct
-        OutVect!.addItem(str(b_standards[2])); rem Op Overhead
-        OutVect!.addItem(str(b_standards[3])); rem Mats
-        OutVect!.addItem(str(b_standards[4])); rem Subs
-        OutVect!.addItem(str(b0_standard_tot))
-        OutVect!.addItem(str(b_actuals[0])); rem Op Hours
-        OutVect!.addItem(str(b_actuals[1])); rem Op Direct
-        OutVect!.addItem(str(b_actuals[2])); rem Op Overhead
-        OutVect!.addItem(str(b_actuals[3])); rem Mats
-        OutVect!.addItem(str(b_actuals[4])); rem Subs
-        OutVect!.addItem(str(b1_actual_tot))
-        OutVect!.addItem(str(b2_variance))
+        OutVect!.addItem(str(b_standards[0]:sf_hours_mask$)); rem Op hours
+        OutVect!.addItem(str(b_standards[1]:sf_amt_mask$)); rem Op Direct
+        OutVect!.addItem(str(b_standards[2]:sf_amt_mask$)); rem Op Overhead
+        OutVect!.addItem(str(b_standards[3]:sf_amt_mask$)); rem Mats
+        OutVect!.addItem(str(b_standards[4]:sf_amt_mask$)); rem Subs
+        OutVect!.addItem(str(b0_standard_tot:grand_amt_mask$))
+        OutVect!.addItem(str(b_actuals[0]:sf_hours_mask$)); rem Op Hours
+        OutVect!.addItem(str(b_actuals[1]:sf_amt_mask$)); rem Op Direct
+        OutVect!.addItem(str(b_actuals[2]:sf_amt_mask$)); rem Op Overhead
+        OutVect!.addItem(str(b_actuals[3]:sf_amt_mask$)); rem Mats
+        OutVect!.addItem(str(b_actuals[4]:sf_amt_mask$)); rem Subs
+        OutVect!.addItem(str(b1_actual_tot:grand_amt_mask$))
+        OutVect!.addItem(str(b2_variance:sf_amt_mask$))
         OutVect!.addItem(str(b3_variance_percent$))
 
 		if sfw02a.cls_cst_todt<>0 then 
             blank=fnblank(12)
             OutVect!.addItem("Closed: ")
-            OutVect!.addItem(str(-sfw02a.cls_cst_todt))
+            OutVect!.addItem(str(-sfw02a.cls_cst_todt:sf_amt_mask$))
             blank=fnblank(2)
             blank=fnblank(12)
             OutVect!.addItem("Net Open: ")
-            OutVect!.addItem(str(b1_actual_tot-sfw02a.cls_cst_todt))
+            OutVect!.addItem(str(b1_actual_tot-sfw02a.cls_cst_todt:sf_amt_mask$))
             blank=fnblank(2)           
         endif
      
@@ -669,37 +669,37 @@ rem --- Report Totals
         if abs(t3_variance_percent)>999.9 then 
             t3_variance_percent$=" ****** " 
         else 
-            t3_variance_percent$=str(t3_variance_percent:"####.00-")
+            t3_variance_percent$=str(t3_variance_percent:pct_mask$)
         endif
 		
         blank=fnblank(16)
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
         blank=fnblank(1)
         OutVect!.addItem("Report Total:")
-		
-		OutVect!.addItem(str(t_standards[0])); rem Op hours
-        OutVect!.addItem(str(t_standards[1])); rem Op Direct
-        OutVect!.addItem(str(t_standards[2])); rem Op Overhead
-        OutVect!.addItem(str(t_standards[3])); rem Mats
-        OutVect!.addItem(str(t_standards[4])); rem Subs
-        OutVect!.addItem(str(t0_standard_tot))
-        OutVect!.addItem(str(t_actuals[0])); rem Op Hours
-        OutVect!.addItem(str(t_actuals[1])); rem Op Direct
-        OutVect!.addItem(str(t_actuals[2])); rem Op Overhead
-        OutVect!.addItem(str(t_actuals[3])); rem Mats
-        OutVect!.addItem(str(t_actuals[4])); rem Subs
-        OutVect!.addItem(str(t1_actual_tot))
-        OutVect!.addItem(str(t2_variance))
+	
+		OutVect!.addItem(str(t_standards[0]:sf_hours_mask$)); rem Op hours
+        OutVect!.addItem(str(t_standards[1]:sf_amt_mask$)); rem Op Direct
+        OutVect!.addItem(str(t_standards[2]:sf_amt_mask$)); rem Op Overhead
+        OutVect!.addItem(str(t_standards[3]:sf_amt_mask$)); rem Mats
+        OutVect!.addItem(str(t_standards[4]:sf_amt_mask$)); rem Subs
+        OutVect!.addItem(str(t0_standard_tot:grand_amt_mask$))
+        OutVect!.addItem(str(t_actuals[0]:sf_hours_mask$)); rem Op Hours
+        OutVect!.addItem(str(t_actuals[1]:sf_amt_mask$)); rem Op Direct
+        OutVect!.addItem(str(t_actuals[2]:sf_amt_mask$)); rem Op Overhead
+        OutVect!.addItem(str(t_actuals[3]:sf_amt_mask$)); rem Mats
+        OutVect!.addItem(str(t_actuals[4]:sf_amt_mask$)); rem Subs
+        OutVect!.addItem(str(t1_actual_tot:grand_amt_mask$))
+        OutVect!.addItem(str(t2_variance:sf_amt_mask$))
         OutVect!.addItem(str(t3_variance_percent$))
-
+ 
         if t_standards[5]<>0 then 
             blank=fnblank(12)
             OutVect!.addItem("Closed: ")
-            OutVect!.addItem(str(-t_standards[5]))
+            OutVect!.addItem(str(-t_standards[5]:sf_amt_mask$))
             blank=fnblank(2)
             blank=fnblank(12)
             OutVect!.addItem("Net Open: ")
-            OutVect!.addItem(str(t1_actual_tot-t_standards[5]))
+            OutVect!.addItem(str(t1_actual_tot-t_standards[5]:sf_amt_mask$))
             blank=fnblank(2)
 		endif
 
@@ -738,34 +738,34 @@ rem --- Now Subtotal By Category
 			if abs(c3_variance_percent)>999.9 then 
 				c3_variance_percent$=" ****** " 
 			else 
-				c3_variance_percent$=str(c3_variance_percent:"####.00-")
+				c3_variance_percent$=str(c3_variance_percent:pct_mask$)
 			endif
 			
             blank=fnblank(2)
 
-			OutVect!.addItem(str(c_standards[y,0])); rem Op hours
-			OutVect!.addItem(str(c_standards[y,1])); rem Op Direct
-			OutVect!.addItem(str(c_standards[y,2])); rem Op Overhead
-			OutVect!.addItem(str(c_standards[y,3])); rem Mats
-			OutVect!.addItem(str(c_standards[y,4])); rem Subs
-			OutVect!.addItem(str(c0_standard_tot))
-			OutVect!.addItem(str(c_actuals[y,0])); rem Op Hours
-			OutVect!.addItem(str(c_actuals[y,1])); rem Op Direct
-			OutVect!.addItem(str(c_actuals[y,2])); rem Op Overhead
-			OutVect!.addItem(str(c_actuals[y,3])); rem Mats
-			OutVect!.addItem(str(c_actuals[y,4])); rem Subs
-			OutVect!.addItem(str(c1_actual_tot))
-			OutVect!.addItem(str(c2_variance))
+			OutVect!.addItem(str(c_standards[y,0]:sf_hours_mask$)); rem Op hours
+			OutVect!.addItem(str(c_standards[y,1]:sf_amt_mask$)); rem Op Direct
+			OutVect!.addItem(str(c_standards[y,2]:sf_amt_mask$)); rem Op Overhead
+			OutVect!.addItem(str(c_standards[y,3]:sf_amt_mask$)); rem Mats
+			OutVect!.addItem(str(c_standards[y,4]:sf_amt_mask$)); rem Subs
+			OutVect!.addItem(str(c0_standard_tot:grand_amt_mask$))
+			OutVect!.addItem(str(c_actuals[y,0]:sf_hours_mask$)); rem Op Hours
+			OutVect!.addItem(str(c_actuals[y,1]:sf_amt_mask$)); rem Op Direct
+			OutVect!.addItem(str(c_actuals[y,2]:sf_amt_mask$)); rem Op Overhead
+			OutVect!.addItem(str(c_actuals[y,3]:sf_amt_mask$)); rem Mats
+			OutVect!.addItem(str(c_actuals[y,4]:sf_amt_mask$)); rem Subs
+			OutVect!.addItem(str(c1_actual_tot:grand_amt_mask$))
+			OutVect!.addItem(str(c2_variance:sf_amt_mask$))
 			OutVect!.addItem(str(c3_variance_percent$))
 
 			if c_standards[y,5]<>0 then 
 				blank=fnblank(12)
 				OutVect!.addItem("Closed: ")
-				OutVect!.addItem(str(-c_standards[y,5]))
+				OutVect!.addItem(str(-c_standards[y,5]:sf_amt_mask$))
 				blank=fnblank(2)
 				blank=fnblank(12)
 				OutVect!.addItem("Net Open: ")
-				OutVect!.addItem(str(c1_actual_tot-c_standards[y,5]))
+				OutVect!.addItem(str(c1_actual_tot-c_standards[y,5]:sf_amt_mask$))
 				blank=fnblank(2)
 			endif
 
@@ -791,37 +791,36 @@ rem --- Report Totals
         if abs(u3_variance_percent)>999.9 then 
             u3_variance_percent$=" ****** " 
         else 
-            u3_variance_percent$=str(u3_variance_percent:"####.00-")
+            u3_variance_percent$=str(u3_variance_percent:pct_mask$)
         endif
 
         blank=fnblank(16)
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
         blank=fnblank(1)
         OutVect!.addItem("Report Total:")
-		
-		OutVect!.addItem(str(u_standards[0])); rem Op hours
-        OutVect!.addItem(str(u_standards[1])); rem Op Direct
-        OutVect!.addItem(str(u_standards[2])); rem Op Overhead
-        OutVect!.addItem(str(u_standards[3])); rem Mats
-        OutVect!.addItem(str(u_standards[4])); rem Subs
-        OutVect!.addItem(str(u0_standard_tot))
-        OutVect!.addItem(str(u_actuals[0])); rem Op Hours
-        OutVect!.addItem(str(u_actuals[1])); rem Op Direct
-        OutVect!.addItem(str(u_actuals[2])); rem Op Overhead
-        OutVect!.addItem(str(u_actuals[3])); rem Mats
-        OutVect!.addItem(str(u_actuals[4])); rem Subs
-        OutVect!.addItem(str(u1_actual_tot))
-        OutVect!.addItem(str(u2_variance))
+		OutVect!.addItem(str(u_standards[0]:sf_hours_mask$)); rem Op hours
+        OutVect!.addItem(str(u_standards[1]:sf_amt_mask$)); rem Op Direct
+        OutVect!.addItem(str(u_standards[2]:sf_amt_mask$)); rem Op Overhead
+        OutVect!.addItem(str(u_standards[3]:sf_amt_mask$)); rem Mats
+        OutVect!.addItem(str(u_standards[4]:sf_amt_mask$)); rem Subs
+        OutVect!.addItem(str(u0_standard_tot:grand_amt_mask$))
+        OutVect!.addItem(str(u_actuals[0]:sf_hours_mask$)); rem Op Hours
+        OutVect!.addItem(str(u_actuals[1]:sf_amt_mask$)); rem Op Direct
+        OutVect!.addItem(str(u_actuals[2]:sf_amt_mask$)); rem Op Overhead
+        OutVect!.addItem(str(u_actuals[3]:sf_amt_mask$)); rem Mats
+        OutVect!.addItem(str(u_actuals[4]:sf_amt_mask$)); rem Subs
+        OutVect!.addItem(str(u1_actual_tot:grand_amt_mask$))
+        OutVect!.addItem(str(u2_variance:sf_amt_mask$))
         OutVect!.addItem(str(u3_variance_percent$))
 		 
 		if u_standards[5]<>0 then 
             blank=fnblank(12)
             OutVect!.addItem("Closed: ")
-            OutVect!.addItem(str(-u_standards[5]))
+            OutVect!.addItem(str(-u_standards[5]:sf_amt_mask$))
             blank=fnblank(2)
             blank=fnblank(12)
             OutVect!.addItem("Net Open: ")
-            OutVect!.addItem(str(u1_actual_tot-u_standards[5]))
+            OutVect!.addItem(str(u1_actual_tot-u_standards[5]:sf_amt_mask$))
             blank=fnblank(2)
 		endif
 		
@@ -867,7 +866,7 @@ first_sub_tot:   rem --- First Sub Total
 		    if abs(t3_variance_percent)>999.9 then 
 				t3_variance_percent$=" ****** " 
 			else 
-				t3_variance_percent$=str(t3_variance_percent:"####.00-")
+				t3_variance_percent$=str(t3_variance_percent:pct_mask$)
 			endif
 
             blank=fnblank(16)
@@ -886,19 +885,19 @@ first_sub_tot:   rem --- First Sub Total
                 endif
             endif
 			
-			OutVect!.addItem(str(t_standards[0])); rem Op hours
-			OutVect!.addItem(str(t_standards[1])); rem Op Direct
-			OutVect!.addItem(str(t_standards[2])); rem Op Overhead
-			OutVect!.addItem(str(t_standards[3])); rem Mats
-			OutVect!.addItem(str(t_standards[4])); rem Subs
-			OutVect!.addItem(str(t0_standard_tot))
-			OutVect!.addItem(str(t_actuals[0])); rem Op Hours
-			OutVect!.addItem(str(t_actuals[1])); rem Op Direct
-			OutVect!.addItem(str(t_actuals[2])); rem Op Overhead
-			OutVect!.addItem(str(t_actuals[3])); rem Mats
-			OutVect!.addItem(str(t_actuals[4])); rem Subs
-			OutVect!.addItem(str(t1_actual_tot))
-			OutVect!.addItem(str(t2_variance))
+			OutVect!.addItem(str(t_standards[0]:sf_hours_mask$)); rem Op hours
+			OutVect!.addItem(str(t_standards[1]:sf_amt_mask$)); rem Op Direct
+			OutVect!.addItem(str(t_standards[2]:sf_amt_mask$)); rem Op Overhead
+			OutVect!.addItem(str(t_standards[3]:sf_amt_mask$)); rem Mats
+			OutVect!.addItem(str(t_standards[4]:sf_amt_mask$)); rem Subs
+			OutVect!.addItem(str(t0_standard_tot:grand_amt_mask$))
+			OutVect!.addItem(str(t_actuals[0]:sf_hours_mask$)); rem Op Hours
+			OutVect!.addItem(str(t_actuals[1]:sf_amt_mask$)); rem Op Direct
+			OutVect!.addItem(str(t_actuals[2]:sf_amt_mask$)); rem Op Overhead
+			OutVect!.addItem(str(t_actuals[3]:sf_amt_mask$)); rem Mats
+			OutVect!.addItem(str(t_actuals[4]:sf_amt_mask$)); rem Subs
+			OutVect!.addItem(str(t1_actual_tot:grand_amt_mask$))
+			OutVect!.addItem(str(t2_variance:sf_amt_mask$))
 			OutVect!.addItem(str(t3_variance_percent$))
             blank=fnblank(16)
 
