@@ -6,9 +6,11 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 
-        setesc std_error
-        seterr std_error
+    setesc std_error
+    seterr std_error
 
+rem wgh ... stopped here
+goto done; rem wgh ... testing
 rem --- Document initializations
 
         OutVect!=bbjAPI().getSysGui().makeVector()
@@ -168,6 +170,30 @@ rem --- Run next overlay
             next_overlay$=overlay$
             goto std_exit
             run update$
+    
+rem --- All done
+
+    if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+
+rem --- Destroy the progress meter and run the next overlay
+
+done: rem wgh ... testing
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+
+    update$=pgmdir$+"sfu_timesheet.aon"
+update$=""; rem wgh ... testing
+    overlay$=update$
+    if gl$="Y" then overlay$=pgmdir$+"glr_recap.aon"
+    next_overlay$=overlay$
+    if update$=""
+        goto std_exit_no_update
+    else
+        goto std_exit
+    endif
 
 
 sub_heading:   rem --- Sub Heading
@@ -390,11 +416,24 @@ rem #endinclude std_missing_params.src
 
 rem #include std_end.src
 
+std_exit_no_report:
+
+    OutVect!=null();rem nothing to print, or some other err such that no report
+    
+std_exit_no_update:
+
+    if num(batch_no$)<>0
+        unlock_key$=firm_id$+stbl("+PROCESS_ID")+stbl("+BATCH_NO")
+        lock_status$=""
+        call stbl("+DIR_SYP")+"bac_lock_record.bbj","ADM_PROCBATCHES",unlock_key$,"X","",rd_table_chan,rd_table_chans$[all],lock_status$
+    endif
+
 std_exit: rem --- Standard program end (01Mar2006)
 
-rem    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
-    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
+    run stbl("+DIR_SYP",err=*next)+"bas_process_end.bbj",err=*next
     release
+
 rem #endinclude std_end.src
 
     end
