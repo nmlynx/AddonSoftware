@@ -264,7 +264,7 @@ rem --- Calculate Standards
             call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
             while more
-                sfreq_key$=key(sfreq_dev,end=*break)
+				sfreq_key$=key(sfreq_dev,end=*break)
                 if sfreq_key.firm_id$+sfreq_key.wo_location$+sfreq_key.wo_no$<>sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$ then break
                 read record (sfreq_dev) sfreqa$
 
@@ -301,7 +301,6 @@ rem --- Calculate Standards
         wend
 
 rem --- Calculate Actuals
-
         if sfe01a.wo_status$<>"C" or sfe01a.closed_date$>g9$ then
             tran01_dev=sft01a_dev
             tran02_dev=sft21a_dev
@@ -365,19 +364,19 @@ rem --- Calculate Actuals
                 read record (sftran_dev) sftran$
 
                 switch sftran_dev
-                    case sft01_dev
-                    case sft03_dev
+                    case sft01a_dev
+                    case sft03a_dev
                         a_actuals[0]=a_actuals[0]+sftran.units
                         x=(sftran.units+sftran.setup_time)*sftran.direct_rate
                         a_actuals[1]=a_actuals[1]+x
                         a_actuals[2]=a_actuals[2]+sftran.ext_cost-x
                     break
-                    case sft21_dev
-                    case sft23_dev
+                    case sft21a_dev
+                    case sft23a_dev
                         a_actuals[3]=a_actuals[3]+sftran.ext_cost
                     break
-                    case sft31_dev
-                    case sft33_dev
+                    case sft31a_dev
+                    case sft33a_dev
                         a_actuals[4]=a_actuals[4]+sftran.ext_cost
                     break
                     case default
