@@ -782,29 +782,32 @@ rem --- Schedule the Work Order
 [[SFE_WOMASTR.ORDER_NO.AVAL]]
 rem --- Validate Open Sales Order
 
-	if callpoint!.getUserInput()<>callpoint!.getColumnData("SFE_WOMASTR.ORDER_NO")
+	if cvs(callpoint!.getUserInput(),2)<>cvs(callpoint!.getColumnData("SFE_WOMASTR.ORDER_NO"),2)
 		callpoint!.setColumnData("SFE_WOMASTR.SLS_ORD_SEQ_REF","",1)
 	endif
 
-	ope_ordhdr=fnget_dev("OPE_ORDHDR")
-	dim ope_ordhdr$:fnget_tpl$("OPE_ORDHDR")
-	cust$=callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID")
-	order$=callpoint!.getUserInput()
-	found_ord$="N"
-	while 1
-		read (ope_ordhdr,key=firm_id$+ope_ordhdr.ar_type$+cust$+order$,dom=*break)
-		found_ord$="Y"
-		break
-	wend
+	if cvs(callpoint!.getUserInput(),2)<>""
+		ope_ordhdr=fnget_dev("OPE_ORDHDR")
+		dim ope_ordhdr$:fnget_tpl$("OPE_ORDHDR")
+		cust$=callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID")
+		order$=callpoint!.getUserInput()
+		found_ord$="N"
+		while 1
+			read (ope_ordhdr,key=firm_id$+ope_ordhdr.ar_type$+cust$+order$,dom=*break)
+			found_ord$="Y"
+			break
+		wend
 
-	if found_ord$="N"
-		msg_id$="SF_INVALID_SO_ORD"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-		break
+		if found_ord$="N"
+			msg_id$="SF_INVALID_SO_ORD"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+
+		gosub build_ord_line
+
 	endif
-
-	gosub build_ord_line
 [[SFE_WOMASTR.CUSTOMER_ID.AVAL]]
 rem --- Disable Order info if Customer not entered
 
