@@ -166,7 +166,7 @@ creat_xref: rem --- Create Cross Reference File
                 if sfe23a_key.firm_id$+sfe23a_key.wo_location$+sfe23a_key.wo_no$<>sfe04c.firm_id$+sfe04c.wo_location$+sfe04c.wo_no$ then break
                 read record (sfe23a_dev,key=sfe23a_key$) sfe23a$
                 find record (sfe22b_dev,key=sfe23a.firm_id$+sfe23a.wo_location$+sfe23a.wo_no$+sfe23a.material_seq$,dom=*next) sfe22b$
-                if sort_seq$="L" then find record (ivm02a_dev,key=firm_id$+sfe23a.warehouse_id$+sfe23a.item_id$,dom=*next) ivm02a$
+                find record (ivm02a_dev,key=firm_id$+sfe23a.warehouse_id$+sfe23a.item_id$,dom=*next) ivm02a$
 				sfw13a.firm_id$=firm_id$
 				sfw13a.wo_location$=sfe23a.wo_location$
 				sfw13a.wo_no$=sfe23a.wo_no$
