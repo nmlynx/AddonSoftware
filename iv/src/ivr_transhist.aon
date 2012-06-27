@@ -388,9 +388,7 @@ item_break: rem --- Item Break
     item_tot$=""
     net_qty=0
     net_ext=0
-    wkdesc$=fnitem$(ivm01a.item_desc$)
-    
-rem --- old format using params: wkdesc$=fnitem$(wkdesc$,p[5],p[6],p[7])
+    wkdesc$=fnitem$(ivm01a.item_desc$,p[5],p[6],p[7])
 
     subhead1$=t1$(1,p[0])+" "+wkdesc$
     subhead2$=Translate!.getTranslation("AON_PRODUCT_TYPE:_")+ivm01a.product_type$
