@@ -31,7 +31,7 @@ rem --- Get the IN parameters used by the procedure
 	wo_no$              = sp!.getParameter("WO_NO")
 	barista_wd$         = sp!.getParameter("BARISTA_WD")
 	masks$              = sp!.getParameter("MASKS")
-	master_cls_inp_qty$ = sp!.getParameter("MASTER_CLS_INP_QTY")
+	master_cls_inp_qty$ = sp!.getParameter("MAST_CLS_INP_QTY_STR")
 	master_cls_inp_qty = num(master_cls_inp_qty$)
 
 rem --- masks$ will contain pairs of fields in a single string mask_name^mask|
@@ -112,6 +112,7 @@ rem --- Init Totals
 	
 rem --- Trip Read
 
+	tot_recs=0
 	while 1
 		read_tpl$ = sqlfetch(sql_chan,end=*break)
 
@@ -134,7 +135,7 @@ rem --- Trip Read
 		if master_cls_inp_qty 
 			data!.setFieldValue("CURR_CLSD_QTY",str(read_tpl.cls_inp_qty:sf_units_mask$))
 		endif
-		
+		tot_recs=tot_recs+1
 		rs!.insert(data!)
 		
 		rem --- Accum tots
@@ -146,18 +147,20 @@ rem --- Trip Read
 	
 	rem --- Print totals
 	
-	data! = rs!.getEmptyRecordData(); rem Add totals' underscores
-	data!.setFieldValue("SCHED_PROD_QTY",fill(20,"_"))
-	data!.setFieldValue("CLOSED_QTY",fill(20,"_"))
-	data!.setFieldValue("CURR_CLSD_QTY",fill(20,"_"))
-	rs!.insert(data!)
+	if tot_recs>0
+		data! = rs!.getEmptyRecordData(); rem Add totals' underscores
+		data!.setFieldValue("SCHED_PROD_QTY",fill(20,"_"))
+		data!.setFieldValue("CLOSED_QTY",fill(20,"_"))
+		data!.setFieldValue("CURR_CLSD_QTY",fill(20,"_"))
+		rs!.insert(data!)
 	
-	data! = rs!.getEmptyRecordData()
-	data!.setFieldValue("SCHED_PROD_QTY",str(sched_qty_tot:sf_units_mask$)) 		
-	data!.setFieldValue("CLOSED_QTY",str(closed_qty_tot:sf_units_mask$)) 			
-	data!.setFieldValue("CURR_CLSD_QTY",str(curr_closed_qty_tot:sf_units_mask$))
+		data! = rs!.getEmptyRecordData()
+		data!.setFieldValue("SCHED_PROD_QTY",str(sched_qty_tot:sf_units_mask$)) 		
+		data!.setFieldValue("CLOSED_QTY",str(closed_qty_tot:sf_units_mask$)) 			
+		data!.setFieldValue("CURR_CLSD_QTY",str(curr_closed_qty_tot:sf_units_mask$))
 
-	rs!.insert(data!)
+		rs!.insert(data!)
+	endif
 	
 rem --- Tell the stored procedure to return the result set.
 
