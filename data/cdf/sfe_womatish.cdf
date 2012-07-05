@@ -1,12 +1,23 @@
+[[SFE_WOMATISH.AREA]]
+rem --- Hold on to sfe_womatish key
+
+	wo_no$=callpoint!.getColumnData("SFE_WOMATISH.WO_NO")
+	callpoint!.setDevObject("wo_no",wo_no$)
+	wo_location$=callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")
+	callpoint!.setDevObject("wo_location",wo_location$)
+	sfe_womatish_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.BATCH_NO")+wo_location$+wo_no$
+	callpoint!.setDevObject("sfe_womatish_key",sfe_womatish_key$)
+	firm_loc_wo$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+wo_no$
+	callpoint!.setDevObject("firm_loc_wo",firm_loc_wo$)
 [[SFE_WOMATISH.WO_NO.AVAL]]
 rem --- Hold on to sfe_womatish key
 
 	wo_no$=callpoint!.getUserInput()
-	sfe_womatish_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.BATCH_NO")+
-:		callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+wo_no$
-	callpoint!.setDevObject("sfe_womatish_key",sfe_womatish_key$)
-	callpoint!.setDevObject("wo_location",callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION"))
 	callpoint!.setDevObject("wo_no",wo_no$)
+	wo_location$=callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")
+	callpoint!.setDevObject("wo_location",wo_location$)
+	sfe_womatish_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.BATCH_NO")+wo_location$+wo_no$
+	callpoint!.setDevObject("sfe_womatish_key",sfe_womatish_key$)
 	firm_loc_wo$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+wo_no$
 	callpoint!.setDevObject("firm_loc_wo",firm_loc_wo$)
 [[SFE_WOMATISH.BDEQ]]
