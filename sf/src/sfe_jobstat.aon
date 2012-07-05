@@ -204,7 +204,7 @@ l5630:
 		read (wotran_dev,key=firm_id$+sfe02a.wo_location$+wo_no$,dom=*next)
 
 		while 1
-			read record (wotran_dev) wotran$
+			read record (wotran_dev,end=*break) wotran$
 			if pos(firm_id$+sfe02a.wo_location$+wo_no$=wotran$)<>1 break
 			if pos(firm_id$+sfe02a.wo_location$+wo_no$=wotran$)<>1 break
 

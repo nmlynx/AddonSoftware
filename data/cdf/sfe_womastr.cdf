@@ -244,6 +244,7 @@ rem --- Open tables
 	endif
 
 	callpoint!.setDevObject("bm",bm$)
+	x$=stbl("bm",bm$);rem for downstream rpt when callpoint! object not defined
 
 	gosub open_tables
 
@@ -273,12 +274,14 @@ rem --- Open tables
 
 	endif
 	callpoint!.setDevObject("po",po$)
+	x$=stbl("po",po$)
 
 	if pr$="Y"
 		call stbl("+DIR_PGM")+"adc_application.aon","PR",info$[all]
 		pr$=info$[20]
 	endif
 	callpoint!.setDevObject("pr",pr$)
+	x$=stbl("pr",pr$)
 
 	call stbl("+DIR_PGM")+"adc_application.aon","MP",info$[all]
 	callpoint!.setDevObject("mp",info$[20])
