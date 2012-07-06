@@ -13,6 +13,10 @@ rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
 
+rem --- Use statements
+
+    use ::ado_func.src::func    
+
 rem --- Retrieve sysinfo data
 
     dim sysinfo$:stbl("+SYSINFO_TPL")
@@ -201,6 +205,8 @@ rem --- Initializations
     call pgmdir$+"adc_clearfile.aon",sfw01_dev
 
     precision ivs01_precision
+    
+    call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,m0    
 
     c0=0,c$="",dist_by_item$="N"
     if ar$="Y" then
@@ -617,9 +623,9 @@ wo_header: rem --- WO Header
 
     if ar$="Y" then
         dim pbuf$(width)
-        if cvs(sfe01a.customer_id$,2)<>"" then
-            pbuf$(1)=Translate!.getTranslation("AON_CUSTOMER")+": ",cvs(fnmask$(sfe01a.customer_id$(1,c0),c$),2)+"  "+custname$
-            pbuf$(60),Translate!.getTranslation("AON_SALES_ORDER")+": ",sfe01a.order_no$
+        if cvs(sfe01a.customer_id$,2)<>"" then        
+            pbuf$(1)=Translate!.getTranslation("AON_CUSTOMER")+": "+func.alphaMask(sfe01a.customer_id$,m0$)+"  "+custname$
+            pbuf$(60)=Translate!.getTranslation("AON_SALES_ORDER")+": "+sfe01a.order_no$
         endif
         HdrVect!.addItem(pbuf$)
     endif
