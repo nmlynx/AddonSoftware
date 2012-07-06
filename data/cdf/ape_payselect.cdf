@@ -984,6 +984,7 @@ rem --- Misc other init
 	gridInvoices!.setColumnEditable(10,1)
 	gridInvoices!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 	gridInvoices!.setTabAction(gridInvoices!.GRID_NAVIGATE_GRID)
+	gridInvoices!.setTabActionSkipsNonEditableCells(1)
 
 	gosub create_reports_vector
 	gosub fill_grid
