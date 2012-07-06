@@ -132,7 +132,8 @@ rem =====================================================
 			req=num(gridAvail!.getCellText(curr_row,2))
 			avail=num(gridAvail!.getCellText(curr_row,5))
 			if req>avail
-				gridAvail!.setRowBackColor(curr_row,callpoint!.getDevObject("error_color"))
+				gridAvail!.setCellBackColor(curr_row,2,callpoint!.getDevObject("error_color"))
+				gridAvail!.setCellBackColor(curr_row,5,callpoint!.getDevObject("error_color"))
 			endif
 		next curr_row
 	endif
