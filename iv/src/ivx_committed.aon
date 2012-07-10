@@ -202,7 +202,7 @@ rem --- Rebuild From ope-21 Committed
             call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
             rem --- make sure this ord lsdet rec has corres. ord det rec... if not, remove
             if pos(ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+
-:               ope21a.orddet_seq_ref$=ope11a.firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$
+:               ope21a.orddet_seq_ref$=ope11a.firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$+
 :               ope11a.internal_seq_no$)<>1 
                     found=0
                     find record (ope11_dev,key=ope21a.firm_id$+ope21a.ar_type$+ope21a.customer_id$+ope21a.order_no$+ope21a.orddet_seq_ref$,dom=*next) ope11a$;found=1
