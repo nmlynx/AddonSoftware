@@ -1,6 +1,6 @@
 [[OPE_CREDMAINT.ARER]]
 rem --- Set dates to CCYYMMDD
-	tick_date$=callpoint!.getColumnData("OPE_CREDMAINT.REV_DATE")
+	tick_date$=pad(callpoint!.getColumnData("OPE_CREDMAINT.REV_DATE"),8)
 	tick_date$=tick_date$(5,4)+tick_date$(1,4)
 	callpoint!.setColumnData("OPE_CREDMAINT.REV_DATE",tick_date$)
 	callpoint!.setDevObject("old_tick_date",tick_date$)
