@@ -407,7 +407,14 @@ rem --- Dimension string templates
 rem --- Check Parameters
 
 	read record (ars01c_dev,key=firm_id$+"AR01",dom=std_missing_params)ars01c$
-	if ars01c.sys_install$<>"Y" release
+	if ars01c.sys_install$<>"Y"
+		msg_id$="OP_NOCREDIT"
+		gosub disp_message
+		bbjAPI!=bbjAPI()
+		rdFuncSpace!=bbjAPI!.getGroupNamespace()
+		rdFuncSpace!.setValue("+build_task","OFF")
+		release
+	endif
 
 rem --- get customer mask
 
