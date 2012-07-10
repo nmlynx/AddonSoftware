@@ -1,6 +1,7 @@
-[[SFE_WO_COST_ADJ.AOPT-OPER]]
-rem --- Call Operations Form
+[[SFE_WO_COST_ADJ.ASVA]]
+rem --- Call Correct Form
 
+if callpoint!.getColumnData("SFE_WO_COST_ADJ.LEVEL_SELECTION")="O"
 	if cvs(callpoint!.getColumnData("SFE_WO_COST_ADJ.WO_NO"),2)<>""
 		dim dflt_data$[2,1]
 		dflt_data$[1,0]="WO_NO"
@@ -16,17 +17,18 @@ rem --- Call Operations Form
 :			"",
 :			dflt_data$[all]
 	endif
-[[SFE_WO_COST_ADJ.AOPT-SUBS]]
-rem --- Call Subcontract Form
+endif
 
+if callpoint!.getColumnData("SFE_WO_COST_ADJ.LEVEL_SELECTION")="S"
 	if cvs(callpoint!.getColumnData("SFE_WO_COST_ADJ.WO_NO"),2)<>""
-		dim dflt_data$[2,1]
-		dflt_data$[1,0]="WO_NO"
-		dflt_data$[1,1]=callpoint!.getColumnData("SFE_WO_COST_ADJ.WO_NO")
-		dflt_data$[2,0]="WO_LOCATION"
-		dflt_data$[2,1]=callpoint!.getDevObject("wo_loc")
+rem		dim dflt_data$[1,1]
+rem		dflt_data$[1,0]="WO_NO"
+rem		dflt_data$[1,1]=callpoint!.getColumnData("SFE_WO_COST_ADJ.WO_NO")
+rem		dflt_data$[2,0]="WO_LOCATION"
+rem		dflt_data$[2,1]=callpoint!.getDevObject("wo_loc")
+		callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WO_COST_ADJ.WO_NO"))
 		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:			"SFE_WOSUBADJ",
+:			"SFE_WO_SUBADJ",
 :			stbl("+USER_ID"),
 :			"MNT",
 :			"",
@@ -34,6 +36,9 @@ rem --- Call Subcontract Form
 :			"",
 :			dflt_data$[all]
 	endif
+endif
+
+callpoint!.setStatus("ABORT")
 [[SFE_WO_COST_ADJ.WO_NO.AVAL]]
 rem --- Fill form
 
