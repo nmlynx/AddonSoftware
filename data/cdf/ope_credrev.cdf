@@ -107,6 +107,13 @@ launch_cred_maint:
 	cust_no$=gridCredit!.getCellText(curr_row,1)
 	cust$=cust_no$
 
+	if cvs(cust$,2)=""
+		msg_id$="OP_CRED_NO_CUST"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		goto dont_launch
+	endif
+
 	callpoint!.setDevObject("tick_date",gridCredit!.getCellText(curr_row,0))
 	callpoint!.setDevObject("order",gridCredit!.getCellText(curr_row,3))
 	callpoint!.setDevObject("ord_date",gridCredit!.getCellText(curr_row,4))
@@ -199,6 +206,8 @@ launch_cred_maint:
 	else
 		callpoint!.setOptionEnabled("CRED",1)
 	endif
+
+dont_launch:
 
 return
 
