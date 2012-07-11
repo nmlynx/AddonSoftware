@@ -1,3 +1,49 @@
+[[SFE_WO_SUBADJ.ASVA]]
+rem --- Now write the Adjutment Entry records out
+
+	vectSubs! = UserObj!.getItem(num(user_tpl.vectSubsOfst$))
+	vectSubsMaster! = UserObj!.getItem(num(user_tpl.vectSubsMasterOfst$))
+
+	sfe_subadj=fnget_dev("SFE_WOSUBADJ")
+	dim sfe_subadj$:fnget_tpl$("SFE_WOSUBADJ")
+
+	cols=num(user_tpl.gridSubsCols$)
+	mast=0
+	wo_no$=callpoint!.getDevObject("wo_no")
+	wo_loc$=callpoint!.getDevObject("wo_loc")
+
+	if vectSubs!.size()
+		for x=0 to vectSubs!.size()-1 step cols
+			tran_date$=vectSubs!.getItem(x)
+			tran_date$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2)
+			tran_seq$=vectSubsMaster!.getItem(mast)
+			new_wo$=vectSubs!.getItem(x+10)
+			new_date$=vectSubs!.getItem(x+11)
+			new_units=num(vectSubs!.getItem(x+5))
+			new_cost=num(vectSubs!.getItem(x+7))
+			if new_units > 0 or
+:			   new_cost > 0 or
+:			   cvs(new_wo$,2)<>"" or
+:			   cvs(new_date$,2)<>""
+rem --- Write entry Record
+				sfe_subadj.firm_id$=firm_id$
+				sfe_subadj.wo_location$=wo_loc$
+				sfe_subadj.wo_no$=wo_no$
+				sfe_subadj.trans_date$=tran_date$
+				sfe_subadj.trans_seq$=tran_seq$
+				sfe_subadj.new_wo_no$=new_wo$
+				sfe_subadj.new_trn_date$=new_date$
+				sfe_subadj.new_units=new_units
+				sfe_subadj.new_unit_cst=new_cost
+				sfe_subadj$=field(sfe_subadj$)
+				write record (sfe_subadj) sfe_subadj$
+			else
+rem --- Remove Entry Record
+				remove (sfe_subadj,key=firm_id$+wo_loc$+wo_no$+tran_date$+tran_seq$,dom=*next)
+			endif
+			mast=mast+1
+		next x
+	endif
 [[SFE_WO_SUBADJ.ASIZ]]
 rem --- Resize the grid
 
@@ -30,59 +76,67 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 	gridSubs! = UserObj!.getItem(num(user_tpl.gridSubsOfst$))
 	numcols = gridSubs!.getNumColumns()
 	vectSubs! = UserObj!.getItem(num(user_tpl.vectSubsOfst$))
-rem	vectSubsMaster! = UserObj!.getItem(num(user_tpl.vectSubsMasterOfst$))
+	vectSubsMaster! = UserObj!.getItem(num(user_tpl.vectSubsMasterOfst$))
 	curr_row = dec(notice.row$);rem 0 based
 	curr_col = dec(notice.col$);rem 0 based
 
 	switch notice.code
-		case 12; rem --- grid_key_press
-rem			if notice.wparam=32 gosub switch_value
-			break
-
-		case 14; rem --- grid_mouse_up
-rem			if notice.col=0 gosub switch_value
-			break
 
 		case 7; rem --- edit stop
 
 rem --- Units or Cost
 
-		if curr_col = 5 or curr_col=7 then
-			units=num(gridSubs!.getCellText(curr_row,5))
-			cost=num(gridSubs!.getCellText(curr_row,7))
-			tot_ext=units*cost
-			gridSubs!.setCellText(curr_row,9,str(tot_ext))
-rem				gosub get_master_offset
-		endif
+			if curr_col = 5 or curr_col=7 then
+				units=num(gridSubs!.getCellText(curr_row,5))
+				cost=num(gridSubs!.getCellText(curr_row,7))
+				tot_ext=units*cost
+				gridSubs!.setCellText(curr_row,9,str(tot_ext))
+				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+5,str(units))
+				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+7,str(cost))
+			endif
 
 rem --- New Work Order Number
 
 			if curr_col=10
 				wo_no$=str(num(gridSubs!.getCellText(cur_row,10)):callpoint!.getDevObject("wo_no_mask"))
 				sfe_womast=fnget_dev("SFE_WOMASTR")
-				found=0
-				while 1
-					read (sfe_womast,key=firm$+"  "+wo_no$,dom=*break)
-					found=1
-					break
-				wend
-				if found=0
-					msg_id$="INPUT_ERR_DATA"
-					gosub disp_message
-					
-					callpoint!.setStatus("ABORT")
-					break
-				endif
-rem				gosub get_master_offset
-				gridSubs!.setCellText(curr_row,10,wo_no$)
+				if num(wo_no$)<>0
+					found=0
+					while 1
+						read (sfe_womast,key=firm$+"  "+wo_no$,dom=*break)
+						found=1
+						break
+					wend
+					if found=0
+						msg_id$="INPUT_ERR_DATA"
+						gosub disp_message
+						callpoint!.setStatus("ABORT")
+						break
+					endif
 
-rem				inv_amt = orig_inv_amt -  (abs(retent_amt) + abs(disc_amt) + abs(pmt_amt)) * sgn(orig_inv_amt)
-rem				gridSubs!.setCellText(curr_row,8,str(inv_amt))
-rem				vectSubs!.setItem(curr_row*num(user_tpl.gridSubsCols$)+9,str(disc_amt))
-rem				vectSubs!.setItem(curr_row*num(user_tpl.gridSubsCols$)+10,str(pmt_amt))
-rem			endif
+					gridSubs!.setCellText(curr_row,10,wo_no$)
+
+				endif
+				if num(wo_no$)>0
+					vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+10,wo_no$)
+				else
+					vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+10,"")
+				endif
+			endif
+
+rem --- New Tran Date
+			if curr_col=11
+				tran_date$=gridSubs!.getCellText(curr_row,11)
+				if len(tran_date$)=8
+					tran_date$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2)
+				endif
+				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+11,tran_date$)
+			endif
 		break
 	swend
+
+	UserObj!.setItem(num(user_tpl.vectSubsOfst$),vectSubs!)
+	UserObj!.setItem(num(user_tpl.vectSubsMasterOfst$),vectSubsMaster!)
 [[SFE_WO_SUBADJ.ASHO]]
 rem --- Display Work Order Number
 
@@ -125,11 +179,14 @@ rem --- Add grid to store invoices, with checkboxes for user to select one or mo
 :		"gridSubsCols:c(5), " +
 :		"gridSubsRows:c(5), " +
 :		"gridSubsCtlID:c(5)," +
-:		"vectSubsOfst:c(5)"
+:		"vectSubsOfst:c(5), " +
+:		"vectSubsMasterOfst:c(5)"
+
 	dim user_tpl$:user_tpl_str$
 
 	UserObj! = BBjAPI().makeVector()
 	vectSubs! = BBjAPI().makeVector()
+	vectSubsMaster! = BBjAPI().makeVector()
 	nxt_ctlID = util.getNextControlID()
 
 	gridSubs! = Form!.addGrid(nxt_ctlID,5,40,900,300); rem --- ID, x, y, width, height
@@ -148,6 +205,9 @@ rem --- Add grid to store invoices, with checkboxes for user to select one or mo
 
 	UserObj!.addItem(vectSubs!); rem --- vector of Open Subs
 	user_tpl.vectSubsOfst$="1"
+
+	UserObj!.addItem(vectSubsMaster!); rem --- vector of Master Open Subs
+	user_tpl.vectSubsMasterOfst$="2"
 
 rem --- Misc other init
 
@@ -244,7 +304,7 @@ rem ==========================================================================
 	attr_sub_col$[12,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_DATE"
 	attr_sub_col$[12,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_DATE")
 	attr_sub_col$[12,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
-	attr_sub_col$[12,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="5"
+	attr_sub_col$[12,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="D"
 	attr_sub_col$[12,fnstr_pos("STYP",attr_def_col_str$[0,0],5)]="1"
 
 	for curr_attr=1 to def_sub_cols
@@ -316,6 +376,9 @@ rem ==========================================================================
 		vectSubs!.addItem(str(sfe_subadj.new_units*sfe_subadj.new_unit_cst)); rem 9
 		vectSubs!.addItem(sfe_subadj.new_trn_date$); rem 10
 		vectSubs!.addItem(sfe_subadj.new_trn_date$); rem 11
+
+		vectSubsMaster!.addItem(sft31a.trans_seq$);rem keep track of sequence
+
 	wend
 
 	callpoint!.setStatus("REFRESH")
