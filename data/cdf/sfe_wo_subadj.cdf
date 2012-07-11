@@ -15,7 +15,9 @@ rem --- Now write the Adjutment Entry records out
 	if vectSubs!.size()
 		for x=0 to vectSubs!.size()-1 step cols
 			tran_date$=vectSubs!.getItem(x)
-			tran_date$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2)
+			if len(cvs(tran_date$,2))=10
+				tran_date$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2)
+			endif
 			tran_seq$=vectSubsMaster!.getItem(mast)
 			new_wo$=vectSubs!.getItem(x+10)
 			new_date$=vectSubs!.getItem(x+11)
@@ -100,15 +102,23 @@ rem --- New Work Order Number
 			if curr_col=10
 				wo_no$=str(num(gridSubs!.getCellText(cur_row,10)):callpoint!.getDevObject("wo_no_mask"))
 				sfe_womast=fnget_dev("SFE_WOMASTR")
+				dim sfe_womast$:fnget_tpl$("SFE_WOMASTR")
 				if num(wo_no$)<>0
+					wo_no$=str(num(wo_no$):callpoint!.getDevObject("wo_no_mask"))
 					found=0
 					while 1
-						read (sfe_womast,key=firm$+"  "+wo_no$,dom=*break)
+						read record (sfe_womast,key=firm_id$+sfe_womast.wo_location$+wo_no$,dom=*break) sfe_womast$
 						found=1
 						break
 					wend
 					if found=0
 						msg_id$="INPUT_ERR_DATA"
+						gosub disp_message
+						callpoint!.setStatus("ABORT")
+						break
+					endif
+					if sfe_womast.wo_status$="C"
+						msg_id$="WO_CLOSED"
 						gosub disp_message
 						callpoint!.setStatus("ABORT")
 						break
@@ -127,7 +137,7 @@ rem --- New Work Order Number
 rem --- New Tran Date
 			if curr_col=11
 				tran_date$=gridSubs!.getCellText(curr_row,11)
-				if len(tran_date$)=8
+				if len(cvs(tran_date$,2))=10
 					tran_date$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2)
 				endif
 				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+11,tran_date$)
@@ -189,7 +199,7 @@ rem --- Add grid to store invoices, with checkboxes for user to select one or mo
 	vectSubsMaster! = BBjAPI().makeVector()
 	nxt_ctlID = util.getNextControlID()
 
-	gridSubs! = Form!.addGrid(nxt_ctlID,5,40,900,300); rem --- ID, x, y, width, height
+	gridSubs! = Form!.addGrid(nxt_ctlID,5,40,900,250); rem --- ID, x, y, width, height
 
 	user_tpl.gridSubsCtlID$ = str(nxt_ctlID)
 	user_tpl.gridSubsCols$ = "12"
@@ -224,8 +234,6 @@ rem --- Misc other init
 
 rem --- Set callbacks - processed in ACUS callpoint
 
-	gridSubs!.setCallback(gridSubs!.ON_GRID_KEY_PRESS,"custom_event")
-	gridSubs!.setCallback(gridSubs!.ON_GRID_MOUSE_UP,"custom_event")
 	gridSubs!.setCallback(gridSubs!.ON_GRID_EDIT_STOP,"custom_event")
 [[SFE_WO_SUBADJ.<CUSTOM>]]
 rem ==========================================================================
@@ -374,7 +382,7 @@ rem ==========================================================================
 		vectSubs!.addItem(str(sfe_subadj.new_unit_cst)); rem 7
 		vectSubs!.addItem(str(sft31a.ext_cost)); rem 8
 		vectSubs!.addItem(str(sfe_subadj.new_units*sfe_subadj.new_unit_cst)); rem 9
-		vectSubs!.addItem(sfe_subadj.new_trn_date$); rem 10
+		vectSubs!.addItem(sfe_subadj.new_wo_no$); rem 10
 		vectSubs!.addItem(sfe_subadj.new_trn_date$); rem 11
 
 		vectSubsMaster!.addItem(sft31a.trans_seq$);rem keep track of sequence
