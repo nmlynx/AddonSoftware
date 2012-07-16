@@ -64,7 +64,7 @@ rem --- Check Forward Or Backward Calc
 	if v0$>v1$
 		gosub calc_back
 	else
-		gosub cal_fwd
+		gosub calc_fwd
 	endif
 
 done: rem --- Done - Successful
@@ -120,21 +120,33 @@ oper_dt_nt_sched: rem --- Operation Date Not Scheduled
     flag$="Y"
     return
 
-cal_fwd: rem --- Calculate Forwards
+calc_fwd: rem --- Calculate Forwards
 
     f_yr=num(v$(1,4))
     f_mth=num(v$(5,2))
     f_day=num(v$(7,2))
 
+	n=0
     flg=0
+	dim hrsperday[31]
+	
     while more
 		dim sfm04a$:fattr(sfm04a$)
-        find record (sfm04_dev,key=firm_id$+op$+str(f_yr)+str(f_mth:"00"),dom=dt_nt_sched) sfm04a$
-        if sfm04a.days_in_mth=0 then goto dt_nt_sched
+		flag=1
+        find record (sfm04_dev,key=firm_id$+op$+str(f_yr)+str(f_mth:"00"),dom=*break) sfm04a$
+		flag=0
+		n=0
+        if sfm04a.days_in_mth=0 
+			flag=1
+			break
+		endif
         for x=f_day to sfm04a.days_in_mth
             n=n+1
             hrsperday[n]=num(field(sfm04a$,"hrs_per_day_"+str(x:"00")))
-            if hrsperday[n]<0 then goto dt_nt_sched
+            if hrsperday[n]<0
+				flag=1
+				break
+			endif
             if w$(1,6)<sfm04a.year$+sfm04a.month$
                 flg=1
                 break
@@ -145,12 +157,14 @@ cal_fwd: rem --- Calculate Forwards
             endif
             v0=v0+hrsperday[n]
         next x
-        if flg then return
+        if flg=1 then break
         f_mth=f_mth+1
         f_day=1
         if f_mth>12 then let f_yr=f_yr+1,f_mth=1
     wend
 
+	if flag=1 goto dt_nt_sched
+	
 	return
 
 dt_nt_sched: rem --- Date Not Scheduled
@@ -167,7 +181,7 @@ open_tables:rem -----<Open Tables
         dim msg_tokens$[1]
             msg_tokens$[1]=open_status$
         gosub disp_message
-        goto exit_prog
+        goto std_exit
     endif
 
     return
