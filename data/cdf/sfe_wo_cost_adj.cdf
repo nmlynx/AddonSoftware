@@ -1,15 +1,12 @@
 [[SFE_WO_COST_ADJ.ASVA]]
 rem --- Call Correct Form
-
+goto jim1;rem jpb!
 if callpoint!.getColumnData("SFE_WO_COST_ADJ.LEVEL_SELECTION")="O"
 	if cvs(callpoint!.getColumnData("SFE_WO_COST_ADJ.WO_NO"),2)<>""
-		dim dflt_data$[2,1]
-		dflt_data$[1,0]="WO_NO"
-		dflt_data$[1,1]=callpoint!.getColumnData("SFE_WO_COST_ADJ.WO_NO")
-		dflt_data$[2,0]="WO_LOCATION"
-		dflt_data$[2,1]=callpoint!.getDevObject("wo_loc")
+
+		callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WO_COST_ADJ.WO_NO"))
 		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:			"SFE_WOOPRADJ",
+:			"SFE_WO_OPSADJ",
 :			stbl("+USER_ID"),
 :			"MNT",
 :			"",
@@ -18,14 +15,10 @@ if callpoint!.getColumnData("SFE_WO_COST_ADJ.LEVEL_SELECTION")="O"
 :			dflt_data$[all]
 	endif
 endif
-
+jim1:
 if callpoint!.getColumnData("SFE_WO_COST_ADJ.LEVEL_SELECTION")="S"
 	if cvs(callpoint!.getColumnData("SFE_WO_COST_ADJ.WO_NO"),2)<>""
-rem		dim dflt_data$[1,1]
-rem		dflt_data$[1,0]="WO_NO"
-rem		dflt_data$[1,1]=callpoint!.getColumnData("SFE_WO_COST_ADJ.WO_NO")
-rem		dflt_data$[2,0]="WO_LOCATION"
-rem		dflt_data$[2,1]=callpoint!.getDevObject("wo_loc")
+
 		callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WO_COST_ADJ.WO_NO"))
 		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :			"SFE_WO_SUBADJ",

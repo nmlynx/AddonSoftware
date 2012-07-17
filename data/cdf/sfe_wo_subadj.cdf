@@ -1,3 +1,8 @@
+[[SFE_WO_SUBADJ.ARAR]]
+rem --- Display Work Order Number
+
+	wo_no$=callpoint!.getDevObject("wo_no")
+	callpoint!.setColumnData("SFE_WO_SUBADJ.WO_NO",wo_no$,1)
 [[SFE_WO_SUBADJ.ASVA]]
 rem --- Now write the Adjutment Entry records out
 
@@ -67,7 +72,7 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 	gui_event$=SysGUI!.getLastEventString()
 	ctl_ID=dec(gui_event.ID$)
 
-	if ctl_ID <> num(user_tpl.gridSubsCtlID$) then break; rem --- exit callpoint
+rem	if ctl_ID <> num(user_tpl.gridSubsCtlID$) then break; rem --- exit callpoint
 
 	if gui_event.code$="N"
 		notify_base$=notice(gui_dev,gui_event.x%)
@@ -81,30 +86,19 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 	vectSubsMaster! = UserObj!.getItem(num(user_tpl.vectSubsMasterOfst$))
 	curr_row = dec(notice.row$);rem 0 based
 	curr_col = dec(notice.col$);rem 0 based
+	grid_ctx=gridSubs!.getContextID()
 
 	switch notice.code
 
-		case 7; rem --- edit stop
-
-rem --- Units or Cost
-
-			if curr_col = 5 or curr_col=7 then
-				units=num(gridSubs!.getCellText(curr_row,5))
-				cost=num(gridSubs!.getCellText(curr_row,7))
-				tot_ext=units*cost
-				gridSubs!.setCellText(curr_row,9,str(tot_ext))
-				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+5,str(units))
-				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+7,str(cost))
-			endif
-
+		case 32; rem grid cell validation
 rem --- New Work Order Number
 
 			if curr_col=10
-				wo_no$=str(num(gridSubs!.getCellText(cur_row,10)):callpoint!.getDevObject("wo_no_mask"))
+				wo_no$=notice.buf$
+				wo$=str(num(wo_no$):callpoint!.getDevObject("wo_no_mask"))
 				sfe_womast=fnget_dev("SFE_WOMASTR")
 				dim sfe_womast$:fnget_tpl$("SFE_WOMASTR")
 				if num(wo_no$)<>0
-					wo_no$=str(num(wo_no$):callpoint!.getDevObject("wo_no_mask"))
 					found=0
 					while 1
 						read record (sfe_womast,key=firm_id$+sfe_womast.wo_location$+wo_no$,dom=*break) sfe_womast$
@@ -112,15 +106,18 @@ rem --- New Work Order Number
 						break
 					wend
 					if found=0
+						gridSubs!.setCellText(cur_row,10,"")
 						msg_id$="INPUT_ERR_DATA"
 						gosub disp_message
-						callpoint!.setStatus("ABORT")
+						gridSubs!.accept(0)
+						sysgui!.setContext(grid_ctx)
 						break
 					endif
 					if sfe_womast.wo_status$="C"
+						gridSubs!.setCellText(cur_row,10,"")
 						msg_id$="WO_CLOSED"
 						gosub disp_message
-						callpoint!.setStatus("ABORT")
+						gridSubs!.accept(0)
 						break
 					endif
 
@@ -132,26 +129,43 @@ rem --- New Work Order Number
 				else
 					vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+10,"")
 				endif
+				gridSubs!.accept(1)
+				break
+			endif
+
+rem --- Units or Cost
+
+			if curr_col = 5 or curr_col=7 then
+				if curr_col=5
+					units=num(notice.buf$)
+					cost=num(gridSubs!.getCellText(curr_row,7))
+				endif
+				if curr_col=7
+					cost=num(notice.buf$)
+					units=num(gridSubs!.getCellText(curr_row,5))
+				endif
+				tot_ext=units*cost
+				gridSubs!.setCellText(curr_row,9,str(tot_ext))
+				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+5,str(units))
+				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+7,str(cost))
+				gridSubs!.accept(1)
+				break
 			endif
 
 rem --- New Tran Date
 			if curr_col=11
-				tran_date$=gridSubs!.getCellText(curr_row,11)
+				tran_date$=notice.buf$
 				if len(cvs(tran_date$,2))=10
 					tran_date$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2)
 				endif
 				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+11,tran_date$)
 			endif
+			gridSubs!.accept(1)
 		break
 	swend
 
 	UserObj!.setItem(num(user_tpl.vectSubsOfst$),vectSubs!)
 	UserObj!.setItem(num(user_tpl.vectSubsMasterOfst$),vectSubsMaster!)
-[[SFE_WO_SUBADJ.ASHO]]
-rem --- Display Work Order Number
-
-	wo_no$=callpoint!.getDevObject("wo_no")
-	callpoint!.setColumnData("SFE_WO_SUBADJ.NEW_WO_NO",wo_no$,1)
 [[SFE_WO_SUBADJ.AWIN]]
 rem --- Open/Lock files
 
@@ -228,13 +242,15 @@ rem --- Misc other init
 	gridSubs!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 	gridSubs!.setTabAction(gridSubs!.GRID_NAVIGATE_GRID)
 	gridSubs!.setTabActionSkipsNonEditableCells(1)
+	gridSubs!.setEnterAsTab(1)
 
 	gosub create_reports_vector
 	gosub fill_grid
 
 rem --- Set callbacks - processed in ACUS callpoint
 
-	gridSubs!.setCallback(gridSubs!.ON_GRID_EDIT_STOP,"custom_event")
+rem	gridSubs!.setCallback(gridSubs!.ON_GRID_EDIT_STOP,"custom_event")
+	gridSubs!.setCallback(gridSubs!.ON_GRID_CELL_VALIDATION,"custom_event")
 [[SFE_WO_SUBADJ.<CUSTOM>]]
 rem ==========================================================================
 format_grid: rem --- Use Barista program to format the grid
