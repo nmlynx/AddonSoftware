@@ -93,7 +93,7 @@ rem	if ctl_ID <> num(user_tpl.gridOpsCtlID$) then break; rem --- exit callpoint
 		case 32; rem grid cell validation
 rem --- New Work Order Number
 
-			if curr_col=10
+			if curr_col=16
 				wo_no$=notice.buf$
 				wo$=str(num(wo_no$):callpoint!.getDevObject("wo_no_mask"))
 				sfe_womast=fnget_dev("SFE_WOMASTR")
@@ -106,28 +106,31 @@ rem --- New Work Order Number
 						break
 					wend
 					if found=0
-						gridOps!.setCellText(cur_row,10,"")
+						gridOps!.setCellText(cur_row,16,"")
 						msg_id$="INPUT_ERR_DATA"
 						gosub disp_message
 						gridOps!.accept(0)
+						gridOps!.focus()
 						sysgui!.setContext(grid_ctx)
 						break
 					endif
 					if sfe_womast.wo_status$="C"
-						gridOps!.setCellText(cur_row,10,"")
+						gridOps!.setCellText(cur_row,16,"")
 						msg_id$="WO_CLOSED"
 						gosub disp_message
 						gridOps!.accept(0)
+						gridOps!.focus()
+						sysgui!.setContext(grid_ctx)
 						break
 					endif
 
-					gridOps!.setCellText(curr_row,10,wo_no$)
+					gridOps!.setCellText(curr_row,16,wo_no$)
 
 				endif
 				if num(wo_no$)>0
-					vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+10,wo_no$)
+					vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+16,wo_no$)
 				else
-					vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+10,"")
+					vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+16,"")
 				endif
 				gridOps!.accept(1)
 				break
@@ -135,30 +138,38 @@ rem --- New Work Order Number
 
 rem --- Units or Cost
 
-			if curr_col = 5 or curr_col=7 then
+			if curr_col = 5 or curr_col=7  or curr_col=11 then
 				if curr_col=5
-					units=num(notice.buf$)
-					cost=num(gridOps!.getCellText(curr_row,7))
+					dir=num(notice.buf$)
+					ohd=num(gridOps!.getCellText(curr_row,7))
+					units=num(gridOps!.getCellText(curr_row,11))
 				endif
 				if curr_col=7
-					cost=num(notice.buf$)
-					units=num(gridOps!.getCellText(curr_row,5))
+					ohd=num(notice.buf$)
+					dir=num(gridOps!.getCellText(curr_row,5))
+					units=num(gridOps!.getCellText(curr_row,11))
 				endif
-				tot_ext=units*cost
-				gridOps!.setCellText(curr_row,9,str(tot_ext))
+				if curr_col=11
+					ohd=num(gridOps!.getCellText(curr_row,7))
+					dir=num(gridOps!.getCellText(curr_row,5))
+					units=num(notice.buf$)
+				endif
+				tot_ext=units*(dir+ohd)
+				gridOps!.setCellText(curr_row,13,str(tot_ext))
 				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+5,str(units))
 				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+7,str(cost))
+				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+11,str(units))
 				gridOps!.accept(1)
 				break
 			endif
 
 rem --- New Tran Date
-			if curr_col=11
+			if curr_col=17
 				tran_date$=notice.buf$
 				if len(cvs(tran_date$,2))=10
 					tran_date$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2)
 				endif
-				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+11,tran_date$)
+				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+17,tran_date$)
 			endif
 			gridOps!.accept(1)
 		break
@@ -176,7 +187,7 @@ rem --- Open/Lock files
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 	open_tables$[1]="SFT_OPNOPRTR",open_opts$[1]="OTA"
-	open_tables$[2]="APM_VENDMAST",open_opts$[2]="OTA"
+rem	open_tables$[2]="APM_VENDMAST",open_opts$[2]="OTA"
 	open_tables$[3]="SFS_PARAMS",open_opts$[3]="OTA"
 	open_tables$[4]="SFE_WOOPRADJ",open_opts$[4]="OTA"
 	open_tables$[5]="SFE_WOMASTR",open_opts$[5]="OTA"
@@ -184,13 +195,13 @@ rem --- Open/Lock files
 	gosub open_tables
 
 	sft01_dev=num(open_chans$[1]),sft01_tpl$=open_tpls$[1]
-	apm01_dev=num(open_chans$[2]),apm01_tpl$=open_tpls$[2]
+rem	apm01_dev=num(open_chans$[2]),apm01_tpl$=open_tpls$[2]
 	sfs_params=num(open_chans$[3]),sfs_params_tpl$=open_tpls$[3]
 
 rem --- Dimension string templates
 
 	dim sft01a$:sft01_tpl$
-	dim apm01a$:apm01_tpl$
+rem	dim apm01a$:apm01_tpl$
 	dim sfs_params$:sfs_params_tpl$
 
 rem --- Get parameter record
@@ -216,7 +227,7 @@ rem --- Add grid to store invoices, with checkboxes for user to select one or mo
 	gridOps! = Form!.addGrid(nxt_ctlID,5,40,900,250); rem --- ID, x, y, width, height
 
 	user_tpl.gridOpsCtlID$ = str(nxt_ctlID)
-	user_tpl.gridOpsCols$ = "12"
+	user_tpl.gridOpsCols$ = "18"
 	user_tpl.gridOpsRows$ = "10"
 	callpoint!.setDevObject("wo_no_len",len(sft01a.wo_no$))
 	callpoint!.setDevObject("wo_no_mask",fill(len(sft01a.wo_no$),"0"))
@@ -237,8 +248,11 @@ rem --- Misc other init
 
 	gridOps!.setColumnEditable(5,1)
 	gridOps!.setColumnEditable(7,1)
-	gridOps!.setColumnEditable(10,1)
+	gridOps!.setColumnEditable(9,1)
 	gridOps!.setColumnEditable(11,1)
+	gridOps!.setColumnEditable(15,1)
+	gridOps!.setColumnEditable(16,1)
+	gridOps!.setColumnEditable(17,1)
 	gridOps!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 	gridOps!.setTabAction(gridOps!.GRID_NAVIGATE_GRID)
 	gridOps!.setTabActionSkipsNonEditableCells(1)
@@ -249,7 +263,6 @@ rem --- Misc other init
 
 rem --- Set callbacks - processed in ACUS callpoint
 
-rem	gridOps!.setCallback(gridOps!.ON_GRID_EDIT_STOP,"custom_event")
 	gridOps!.setCallback(gridOps!.ON_GRID_CELL_VALIDATION,"custom_event")
 [[SFE_WO_OPSADJ.<CUSTOM>]]
 rem ==========================================================================
@@ -268,68 +281,104 @@ rem ==========================================================================
 	attr_ops_col$[1,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_TRANSACTION_DATE")
 	attr_ops_col$[1,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="40"
 
-	attr_ops_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="VEND_ID"
-	attr_ops_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_VENDOR")
+	attr_ops_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="EMP_ID"
+	attr_ops_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_EMPLOYEE")
 	attr_ops_col$[2,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 
-	attr_ops_col$[3,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="VEND_NAME"
+	attr_ops_col$[3,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="EMP_NAME"
 	attr_ops_col$[3,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_NAME")
 	attr_ops_col$[3,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="180"
 
-	attr_ops_col$[4,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="PO_NO"
-	attr_ops_col$[4,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_PO_NO")
+	attr_ops_col$[4,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="OP_CODE"
+	attr_ops_col$[4,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_OP_CODE")
 	attr_ops_col$[4,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="75"
 
-	attr_ops_col$[5,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_UNITS"
-	attr_ops_col$[5,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_UNITS")
+	attr_ops_col$[5,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_DIRECT"
+	attr_ops_col$[5,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_DIRECT")
 	attr_ops_col$[5,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[5,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[5,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[6,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_UNITS"
-	attr_ops_col$[6,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_UNITS")
+	attr_ops_col$[6,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_DIRECT"
+	attr_ops_col$[6,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_DIRECT")
 	attr_ops_col$[6,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[6,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[6,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[7,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_COST"
-	attr_ops_col$[7,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_COST")
+	attr_ops_col$[7,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_OVHD"
+	attr_ops_col$[7,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_OVHD")
 	attr_ops_col$[7,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[7,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[7,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[8,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_COST"
-	attr_ops_col$[8,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_COST")
+	attr_ops_col$[8,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_OVHD"
+	attr_ops_col$[8,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_OVHD")
 	attr_ops_col$[8,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[8,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[8,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[9,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_EXT"
-	attr_ops_col$[9,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_TOTAL")
+	attr_ops_col$[9,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_SETUP"
+	attr_ops_col$[9,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_SETUP")
 	attr_ops_col$[9,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[9,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[9,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[10,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_EXT"
-	attr_ops_col$[10,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_TOTAL")
+	attr_ops_col$[10,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_SETUP"
+	attr_ops_col$[10,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_SETUP")
 	attr_ops_col$[10,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[10,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[10,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[11,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_WO"
-	attr_ops_col$[11,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_WO")
-	attr_ops_col$[11,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="C"
+	attr_ops_col$[11,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_UNITS"
+	attr_ops_col$[11,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_UNITS")
+	attr_ops_col$[11,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[11,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
-	attr_ops_col$[11,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=callpoint!.getDevObject("wo_no_mask")
-	attr_ops_col$[11,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]=str(callpoint!.getDevObject("wo_no_len"))
-	attr_ops_col$[11,fnstr_pos("DTAB",attr_def_col_str$[0,0],5)]="SFE_WOMASTR"
-	attr_ops_col$[11,fnstr_pos("DCOL",attr_def_col_str$[0,0],5)]="DESC"
+	attr_ops_col$[11,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[12,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_DATE"
-	attr_ops_col$[12,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_DATE")
+	attr_ops_col$[12,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_UNITS"
+	attr_ops_col$[12,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_UNITS")
+	attr_ops_col$[12,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[12,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
-	attr_ops_col$[12,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="D"
-	attr_ops_col$[12,fnstr_pos("STYP",attr_def_col_str$[0,0],5)]="1"
+	attr_ops_col$[12,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
+
+	attr_ops_col$[13,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_EXT"
+	attr_ops_col$[13,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_TOTAL")
+	attr_ops_col$[13,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
+	attr_ops_col$[13,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+	attr_ops_col$[13,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
+
+	attr_ops_col$[14,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_EXT"
+	attr_ops_col$[14,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_TOTAL")
+	attr_ops_col$[14,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
+	attr_ops_col$[14,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+	attr_ops_col$[14,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
+
+	attr_ops_col$[15,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_COMPLETE"
+	attr_ops_col$[15,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_COST")
+	attr_ops_col$[15,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
+	attr_ops_col$[15,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+	attr_ops_col$[15,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
+
+	attr_ops_col$[16,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_COMPLETE"
+	attr_ops_col$[16,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_COST")
+	attr_ops_col$[16,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
+	attr_ops_col$[16,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+	attr_ops_col$[16,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
+
+	attr_ops_col$[17,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_WO"
+	attr_ops_col$[17,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_WO")
+	attr_ops_col$[17,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="C"
+	attr_ops_col$[17,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+	attr_ops_col$[17,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=callpoint!.getDevObject("wo_no_mask")
+	attr_ops_col$[17,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]=str(callpoint!.getDevObject("wo_no_len"))
+	attr_ops_col$[17,fnstr_pos("DTAB",attr_def_col_str$[0,0],5)]="SFE_WOMASTR"
+	attr_ops_col$[17,fnstr_pos("DCOL",attr_def_col_str$[0,0],5)]="DESC"
+
+	attr_ops_col$[18,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_DATE"
+	attr_ops_col$[18,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_DATE")
+	attr_ops_col$[18,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+	attr_ops_col$[18,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="D"
+	attr_ops_col$[18,fnstr_pos("STYP",attr_def_col_str$[0,0],5)]="1"
 
 	for curr_attr=1 to def_ops_cols
 		attr_ops_col$[0,1] = attr_ops_col$[0,1] + 
@@ -369,7 +418,7 @@ rem ==========================================================================
 create_reports_vector: rem --- Create a vector from the file to fill the grid
 rem ==========================================================================
 
-	sfe_opsadj=fnget_dev("SFE_WOOPSADJ")
+	sfe_opsadj=fnget_dev("SFE_WOOPRADJ")
 
 	call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_len
 	more=1
@@ -389,17 +438,23 @@ rem jpb		read record(apm01_dev, key=firm_id$+sft31a.vendor_id$, dom=*next) apm01
 	rem --- Now fill vectors
 
 		vectOps!.addItem(fndate$(sft01a.trans_date$)); rem 0
-rem jpb		vectOps!.addItem(func.alphaMask(sft31a.vendor_id$(1,vendor_len),m0$)); rem 1
-rem jpb		vectOps!.addItem(apm01a.vendor_name$); rem 2
-rem jpb		vectOps!.addItem(sft31a.po_no$); rem 3
-		vectOps!.addItem(str(sft01a.units)); rem 4
-		vectOps!.addItem(str(sfe_opsadj.new_units)); rem 5
-		vectOps!.addItem(str(sft01a.unit_cost)); rem 6
-		vectOps!.addItem(str(sfe_opsadj.new_unit_cst)); rem 7
-		vectOps!.addItem(str(sft01a.ext_cost)); rem 8
-		vectOps!.addItem(str(sfe_opsadj.new_units*sfe_opsadj.new_unit_cst)); rem 9
-		vectOps!.addItem(sfe_opsadj.new_wo_no$); rem 10
-		vectOps!.addItem(sfe_opsadj.new_trn_date$); rem 11
+		vectOps!.addItem(func.alphaMask(sft01a.employee_no$(1,vendor_len),m0$)); rem 1
+		vectOps!.addItem("");rem prm01a.emp_name$); rem 2
+		vectOps!.addItem(sft01a.op_code$); rem 3
+		vectOps!.addItem(str(sft01a.direct_rate)); rem 4
+		vectOps!.addItem(str(sfe_opsadj.new_dir_rate)); rem 5
+		vectOps!.addItem(str(sft01a.ovhd_rate)); rem 6
+		vectOps!.addItem(str(sfe_opsadj.new_ovr_rate)); rem 7
+		vectOps!.addItem(str(sft01a.setup_time)); rem 8
+		vectOps!.addItem(str(sfe_opsadj.new_set_hrs)); rem 9
+		vectOps!.addItem(str(sft01a.units)); rem 10
+		vectOps!.addItem(str(sfe_opsadj.new_units)); rem 11
+		vectOps!.addItem(str(sft01a.ext_cost)); rem 12
+		vectOps!.addItem(str(sfe_opsadj.new_units*(sfe_opsadj.new_dir_rate+sfe_opsadj.new_ovr_rate))); rem 13
+		vectOps!.addItem(str(sft01a.complete_qty)); rem 14
+		vectOps!.addItem(str(sfe_opsadj.new_qty_comp)); rem 15
+		vectOps!.addItem(sfe_opsadj.new_wo_no$); rem 16
+		vectOps!.addItem(sfe_opsadj.new_trn_date$); rem 17
 
 		vectOpsMaster!.addItem(sft01a.trans_seq$);rem keep track of sequence
 

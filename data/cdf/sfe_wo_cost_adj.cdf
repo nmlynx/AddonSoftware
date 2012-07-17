@@ -1,6 +1,6 @@
 [[SFE_WO_COST_ADJ.ASVA]]
 rem --- Call Correct Form
-goto jim1;rem jpb!
+
 if callpoint!.getColumnData("SFE_WO_COST_ADJ.LEVEL_SELECTION")="O"
 	if cvs(callpoint!.getColumnData("SFE_WO_COST_ADJ.WO_NO"),2)<>""
 
@@ -15,7 +15,7 @@ if callpoint!.getColumnData("SFE_WO_COST_ADJ.LEVEL_SELECTION")="O"
 :			dflt_data$[all]
 	endif
 endif
-jim1:
+
 if callpoint!.getColumnData("SFE_WO_COST_ADJ.LEVEL_SELECTION")="S"
 	if cvs(callpoint!.getColumnData("SFE_WO_COST_ADJ.WO_NO"),2)<>""
 
