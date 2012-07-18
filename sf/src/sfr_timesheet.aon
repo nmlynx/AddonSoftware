@@ -101,9 +101,6 @@ rem --- Get SF parameters
 		call stbl("+DIR_PGM")+"adc_application.aon","PR",info$[all]
 		pr$=info$[20]
 	endif
-rem wgh ... testing
-pr$="Y"
-sfs01a.pay_actstd$="A"
 
 rem --- Get IV parameters
     find record (ivs01a_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
@@ -209,8 +206,6 @@ rem --- Initializations
 	if pr$="Y" then
         rem --- Get PR parameters
 		find record (prs01a_dev,key=firm_id$+"PR00",dom=std_missing_params) prs01a$
-rem wgh ... testing
-rem wgh        p[0]=num(prs01a.empl_no_len$)
         p[1]=num(prs01a.max_empl_no$)
         p[2]=num(sfs01a.def_ovd_rate$)
         prs01_precision=num(prs01a.precision$)
@@ -219,10 +214,11 @@ rem wgh        p[0]=num(prs01a.empl_no_len$)
     endif
 
     width=132
-    headings=1
+    headings=2
     dim headings$[headings]
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
+    headings$[2]=""
     if num(batch_no$)<>0 then headings$[1]=headings$[1]+ Translate!.getTranslation("AON__(BATCH:_")+batch_no$+")"        
     when$=sysinfo.system_date$
     clock$=""
@@ -247,7 +243,7 @@ rem --- Document initializations
     switch (BBjAPI().TRUE)
         case sfs01a.time_entry_s$ = "D"
             rem --- enter time sheets by date
-            columns$[0,0]=Translate!.getTranslation("AON_EMPLOYEE"),   columns$[0,1]="C", columns$[0,2]=str(max(m0,10)
+            columns$[0,0]=Translate!.getTranslation("AON_EMPLOYEE"),   columns$[0,1]="C", columns$[0,2]=str(max(m0,10))
             columns$[1,0]=Translate!.getTranslation("AON_WORK_ORDER"), columns$[1,1]="C", columns$[1,2]=str(max(len(timeshtdet.wo_no$),10))
             break
         case sfs01a.time_entry_s$ = "E"
@@ -257,7 +253,7 @@ rem --- Document initializations
             break
         case sfs01a.time_entry_s$ = "W"
             rem --- enter time sheets by work order
-            columns$[0,0]=Translate!.getTranslation("AON_EMPLOYEE"),   columns$[0,1]="C", columns$[0,2]=str(max(m0,10)
+            columns$[0,0]=Translate!.getTranslation("AON_EMPLOYEE"),   columns$[0,1]="C", columns$[0,2]=str(max(m0,10))
             columns$[1,0]=Translate!.getTranslation("AON_DATE"),       columns$[1,1]="C", columns$[1,2]="10"
             break
         case default
@@ -283,8 +279,8 @@ rem --- Document initializations
         columns$[7,0]="", columns$[7,1]="C", columns$[7,2]="0"
         columns$[8,0]="", columns$[8,1]="C", columns$[8,2]="0"
     endif
-    columns$[9,0]=Translate!.getTranslation("AON_RUN^HRS"),     columns$[9,1]="N",  columns$[9,2]=str(max(m2,10)),  columns$[9,3]=m2$, columns$[9,10]="T"
-    columns$[10,0]=Translate!.getTranslation("AON_SETUP^HRS"),  columns$[10,1]="N", columns$[10,2]=str(max(m2,10)), columns$[10,3]=m2$, columns$[10,10]="T"
+    columns$[9,0]=Translate!.getTranslation("AON_SETUP^HRS"),      columns$[9,1]="N",   columns$[9,2]=str(max(m2,10)),   columns$[9,3]=m2$,  columns$[9,10]="T"
+    columns$[10,0]=Translate!.getTranslation("AON_RUN^HRS"),       columns$[10,1]="N",  columns$[10,2]=str(max(m2,10)),  columns$[10,3]=m2$, columns$[10,10]="T"
     columns$[11,0]=Translate!.getTranslation("AON_TOTAL^HRS"),     columns$[11,1]="N",  columns$[11,2]=str(max(m2,10)),  columns$[11,3]=m2$, columns$[11,10]="T"
     columns$[12,0]=Translate!.getTranslation("AON_DIRECT")+"^"+Translate!.getTranslation("AON_RATE") 
                                                                 columns$[12,1]="N", columns$[12,2]=str(max(m3,10)), columns$[12,3]=m3$
@@ -408,7 +404,9 @@ rem --- Main Read (header file)
                 OutVect!.addItem(timeshtdet.pay_code$)
                 OutVect!.addItem(timeshtdet.title_code$)
             else
-                xwk = fnblank(2)
+                rem --- Due to DocOut bug, non-blank items required for complete_qty to print
+                OutVect!.addItem(".")
+                OutVect!.addItem(".")
             endif
             
             OutVect!.addItem(str(timeshtdet.complete_qty))
@@ -421,8 +419,8 @@ rem --- Main Read (header file)
             endif
         
             gosub calc_totals
-            OutVect!.addItem(str(timeshtdet.hrs))
             OutVect!.addItem(str(timeshtdet.setup_time))
+            OutVect!.addItem(str(timeshtdet.hrs))
             OutVect!.addItem(str(timeshtdet.hrs+timeshtdet.setup_time))
             OutVect!.addItem(str(timeshtdet.direct_rate))
             OutVect!.addItem(str(direct_total))
@@ -495,7 +493,7 @@ rem --- Main Read (header file)
 
             find record (sfw11a_dev,key=sfw11a.firm_id$+sfw11a.wo_location$+sfw11a.wo_no$+sfw11a.op_seq$+sfw11a.trans_date$,dom=*next) sfw11a$
             sfw11a.op_code$=timeshtdet.op_code$
-            sfw11a.code_desc$=""; rem --- currently not used
+            sfw11a.code_desc$=wooprtn.code_desc$
             sfw11a.hrs=sfw11a.hrs+timeshtdet.hrs
             sfw11a.act_dir_amt=sfw11a.act_dir_amt+direct_total
             sfw11a.act_ovhd_amt=sfw11a.act_ovhd_amt+oh_total
@@ -543,12 +541,15 @@ rem --- End
     gosub first_sub_tot
     xwk = fnblank(columns+1); rem --- blank line
     TotVect!.addItem(str(OutVect!.size()/(columns+1)))
-    OutVect!.addItem("Grand Totals: ")
-    xwk = fnblank(5)
+    OutVect!.addItem(Translate!.getTranslation("AON_GRAND")+" "+Translate!.getTranslation("AON_TOTAL")+":")
+    xwk = fnblank(3)
+    rem --- Due to DocOut bug, non-blank items required for complete_qty to print
+    OutVect!.addItem(".")
+    OutVect!.addItem(".")
     OutVect!.addItem(str(u[6]))
     xwk = fnblank(2)
-    OutVect!.addItem(str(u[1]))
     OutVect!.addItem(str(u[2]))
+    OutVect!.addItem(str(u[1]))
     OutVect!.addItem(str(u[0]))
     xwk = fnblank(1)
     OutVect!.addItem(str(u[3]))
@@ -621,7 +622,7 @@ sub_head: rem --- Sub Heading
     switch (BBjAPI().TRUE)
         case sfs01a.time_entry_s$ = "D"
             rem --- Dates
-            OutVect!.addItem(Translate!.getTranslation("AON_DATE")+": "+fndate$(t0$)
+            OutVect!.addItem(Translate!.getTranslation("AON_DATE")+": "+fndate$(t0$))
             gldate$=t0$
             gosub chk_trans_date
             break
@@ -668,11 +669,14 @@ first_sub_tot: rem --- First Sub Total
                     OutVect!.addItem(Translate!.getTranslation("AON_TOTALS"))+":"
                     break
             swend
-            xwk = fnblank(4)
+            xwk = fnblank(2)
+            rem --- Due to DocOut bug, non-blank items required for complete_qty to print
+            OutVect!.addItem(".")
+            OutVect!.addItem(".")
             OutVect!.addItem(str(t[6]))
             xwk = fnblank(2)
-            OutVect!.addItem(str(t[1]))
             OutVect!.addItem(str(t[2]))
+            OutVect!.addItem(str(t[1]))
             OutVect!.addItem(str(t[0]))
             xwk = fnblank(1)
             OutVect!.addItem(str(t[3]))
@@ -729,11 +733,14 @@ sec_sub_tot: rem --- Second Sub Total
                     OutVect!.addItem(Translate!.getTranslation("AON_TOTALS"))+":"
                     break
             swend
-            xwk = fnblank(3)
+            xwk = fnblank(1)
+            rem --- Due to DocOut bug, non-blank items required for complete_qty to print
+            OutVect!.addItem(".")
+            OutVect!.addItem(".")
             OutVect!.addItem(str(s[6]))
             xwk = fnblank(2)
-            OutVect!.addItem(str(s[1]))
             OutVect!.addItem(str(s[2]))
+            OutVect!.addItem(str(s[1]))
             OutVect!.addItem(str(s[0]))
             xwk = fnblank(1)
             OutVect!.addItem(str(s[3]))
