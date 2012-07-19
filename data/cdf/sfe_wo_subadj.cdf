@@ -25,13 +25,13 @@ rem --- Now write the Adjutment Entry records out
 			endif
 			tran_seq$=vectSubsMaster!.getItem(mast)
 			new_wo$=vectSubs!.getItem(x+10)
+			if cvs(new_wo$,2)="" new_wo$=wo_no$
 			new_date$=vectSubs!.getItem(x+11)
+			if cvs(new_date$,2)="" new_date$=tran_date$
 			new_units=num(vectSubs!.getItem(x+5))
 			new_cost=num(vectSubs!.getItem(x+7))
-			if new_units > 0 or
-:			   new_cost > 0 or
-:			   cvs(new_wo$,2)<>"" or
-:			   cvs(new_date$,2)<>""
+			if new_units <> 0 or
+:			   new_cost <> 0
 rem --- Write entry Record
 				sfe_subadj.firm_id$=firm_id$
 				sfe_subadj.wo_location$=wo_loc$
@@ -95,7 +95,7 @@ rem --- New Work Order Number
 
 			if curr_col=10
 				wo_no$=notice.buf$
-				wo$=str(num(wo_no$):callpoint!.getDevObject("wo_no_mask"))
+				wo_no$=str(num(wo_no$):callpoint!.getDevObject("wo_no_mask"))
 				sfe_womast=fnget_dev("SFE_WOMASTR")
 				dim sfe_womast$:fnget_tpl$("SFE_WOMASTR")
 				if num(wo_no$)<>0
@@ -109,26 +109,28 @@ rem --- New Work Order Number
 						gridSubs!.setCellText(cur_row,10,"")
 						msg_id$="INPUT_ERR_DATA"
 						gosub disp_message
-						gridSubs!.accept(0)
+						gridSubs!.focus()
 						sysgui!.setContext(grid_ctx)
+						gridSubs!.accept(0)
+						gridSubs!.startEdit(curr_row,curr_col)
 						break
 					endif
 					if sfe_womast.wo_status$="C"
 						gridSubs!.setCellText(cur_row,10,"")
 						msg_id$="WO_CLOSED"
 						gosub disp_message
+						gridSubs!.focus()
+						sysgui!.setContext(grid_ctx)
 						gridSubs!.accept(0)
+						gridSubs!.startEdit(curr_row,curr_col)
 						break
 					endif
-
-					gridSubs!.setCellText(curr_row,10,wo_no$)
-
-				endif
-				if num(wo_no$)>0
-					vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+10,wo_no$)
 				else
-					vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+10,"")
+					wo_no$=callpoint!.getDevObject("wo_no")
 				endif
+
+				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+10,wo_no$)
+				gridSubs!.setCellText(curr_row,10,wo_no$)
 				gridSubs!.accept(1)
 				break
 			endif

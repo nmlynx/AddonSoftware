@@ -24,14 +24,20 @@ rem --- Now write the Adjutment Entry records out
 				tran_date$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2)
 			endif
 			tran_seq$=vectOpsMaster!.getItem(mast)
-			new_wo$=vectOps!.getItem(x+10)
-			new_date$=vectOps!.getItem(x+11)
+			new_wo$=vectOps!.getItem(x+16)
+			if cvs(new_wo$,2)="" new_wo$=wo_no$
+			new_date$=vectOps!.getItem(x+17)
+			if cvs(new_date$,2)="" new_date$=trans_date$
 			new_units=num(vectOps!.getItem(x+5))
-			new_cost=num(vectOps!.getItem(x+7))
-			if new_units > 0 or
-:			   new_cost > 0 or
-:			   cvs(new_wo$,2)<>"" or
-:			   cvs(new_date$,2)<>""
+			new_dir_rate=num(vectOps!.getItem(x+7))
+			new_ovr_rate=num(vectOps!.getItem(x+9))
+			new_set_hrs=num(vectOps!.getItem(x+11))
+			new_qty_comp=num(vectOps!.getItem(x+15))
+			if new_units <> 0 or
+:			   new_dir_rate <> 0 or
+:			   new_ovr_rate <> 0 or
+:			   new_set_hrs <> 0 or
+:			   new_qty_comp <>0
 rem --- Write entry Record
 				sfe_opsadj.firm_id$=firm_id$
 				sfe_opsadj.wo_location$=wo_loc$
@@ -41,7 +47,10 @@ rem --- Write entry Record
 				sfe_opsadj.new_wo_no$=new_wo$
 				sfe_opsadj.new_trn_date$=new_date$
 				sfe_opsadj.new_units=new_units
-				sfe_opsadj.new_unit_cst=new_cost
+				sfe_opsadj.new_dir_rate=new_dir_rate
+				sfe_opsadj.new_ovr_rate=new_ovr_rate
+				sfe_opsadj.new_set_hrs=new_set_hrs
+				sfe_opsadj.new_qty_comp=new_qty_comp
 				sfe_opsadj$=field(sfe_opsadj$)
 				write record (sfe_opsadj) sfe_opsadj$
 			else
@@ -95,7 +104,7 @@ rem --- New Work Order Number
 
 			if curr_col=16
 				wo_no$=notice.buf$
-				wo$=str(num(wo_no$):callpoint!.getDevObject("wo_no_mask"))
+				wo_no$=str(num(wo_no$):callpoint!.getDevObject("wo_no_mask"))
 				sfe_womast=fnget_dev("SFE_WOMASTR")
 				dim sfe_womast$:fnget_tpl$("SFE_WOMASTR")
 				if num(wo_no$)<>0
@@ -109,56 +118,72 @@ rem --- New Work Order Number
 						gridOps!.setCellText(cur_row,16,"")
 						msg_id$="INPUT_ERR_DATA"
 						gosub disp_message
-						gridOps!.accept(0)
 						gridOps!.focus()
 						sysgui!.setContext(grid_ctx)
+						gridOps!.accept(0)
+						gridOps!.startEdit(curr_row,curr_col)
 						break
 					endif
 					if sfe_womast.wo_status$="C"
 						gridOps!.setCellText(cur_row,16,"")
 						msg_id$="WO_CLOSED"
 						gosub disp_message
-						gridOps!.accept(0)
 						gridOps!.focus()
 						sysgui!.setContext(grid_ctx)
+						gridOps!.accept(0)
+						gridOps!.startEdit(curr_row,curr_col)
 						break
 					endif
-
-					gridOps!.setCellText(curr_row,16,wo_no$)
-
-				endif
-				if num(wo_no$)>0
-					vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+16,wo_no$)
 				else
-					vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+16,"")
+					wo_no$=callpoint!.getDevObject("wo_no")
 				endif
+
+				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+16,wo_no$)
+				gridOps!.accept(1)
+				gridOps!.setCellText(cur_row,16,wo_no$)
+				break
+			endif
+
+rem --- Rates or Units
+
+			if curr_col = 5 or curr_col=7  or curr_col=9 or curr_col=11 then
+				if curr_col=5
+					dir=num(notice.buf$)
+					ohd=num(gridOps!.getCellText(curr_row,7))
+					setup=num(gridOps!.getCellText(curr_row,9))
+					units=num(gridOps!.getCellText(curr_row,11))
+				endif
+				if curr_col=7
+					dir=num(gridOps!.getCellText(curr_row,5))
+					ohd=num(notice.buf$)
+					setup=num(gridOps!.getCellText(curr_row,9))
+					units=num(gridOps!.getCellText(curr_row,11))
+				endif
+				if curr_col=9
+					dir=num(gridOps!.getCellText(curr_row,5))
+					ohd=num(gridOps!.getCellText(curr_row,7))
+					setup=num(notice.buf$)
+					units=num(gridOps!.getCellText(curr_row,11))
+				endif
+				if curr_col=11
+					dir=num(gridOps!.getCellText(curr_row,5))
+					ohd=num(gridOps!.getCellText(curr_row,7))
+					setup=num(gridOps!.getCellText(curr_row,9))
+					units=num(notice.buf$)
+				endif
+				tot_ext=(units+setup)*(dir+ohd)
+				gridOps!.setCellText(curr_row,13,str(tot_ext))
+				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+5,str(dir))
+				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+7,str(ohd))
+				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+9,str(setup))
+				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+11,str(units))
 				gridOps!.accept(1)
 				break
 			endif
 
-rem --- Units or Cost
-
-			if curr_col = 5 or curr_col=7  or curr_col=11 then
-				if curr_col=5
-					dir=num(notice.buf$)
-					ohd=num(gridOps!.getCellText(curr_row,7))
-					units=num(gridOps!.getCellText(curr_row,11))
-				endif
-				if curr_col=7
-					ohd=num(notice.buf$)
-					dir=num(gridOps!.getCellText(curr_row,5))
-					units=num(gridOps!.getCellText(curr_row,11))
-				endif
-				if curr_col=11
-					ohd=num(gridOps!.getCellText(curr_row,7))
-					dir=num(gridOps!.getCellText(curr_row,5))
-					units=num(notice.buf$)
-				endif
-				tot_ext=units*(dir+ohd)
-				gridOps!.setCellText(curr_row,13,str(tot_ext))
-				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+5,str(units))
-				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+7,str(cost))
-				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+11,str(units))
+rem --- New Qty Complete
+			if curr_col=15
+				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+15,notice.buf$)
 				gridOps!.accept(1)
 				break
 			endif
