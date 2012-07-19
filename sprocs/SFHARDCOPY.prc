@@ -65,7 +65,8 @@ rem --- Columns for the record set are defined using a string template
 	temp$=temp$+"TYPE_DESC:C(1*), PRIORITY:C(1*), UOM:C(1*), YIELD:C(1*), PROD_QTY:C(1*), COMPLETED:C(1*), "
 	temp$=temp$+"LAST_ACT_DATE:C(1*), ITEM_DESC_1:C(1*), ITEM_DESC_2:C(1*), DRAWING_NO:C(1*), REV:C(1*), "
 	temp$=temp$+"INCLUDE_LOTSER:C(1*), MAST_CLS_INP_QTY_STR:C(1*), MAST_CLS_INP_DT:C(1*), MAST_CLOSED_COST_STR:C(1*), "
-	temp$=temp$+"COMPLETE_YN:C(1*), COST_MASK:C(1*), UNITS_MASK:C(1*), AMT_MASK:C(1*)"	
+	temp$=temp$+"COMPLETE_YN:C(1*), COST_MASK:C(1*), UNITS_MASK:C(1*), AMT_MASK:C(1*), "	
+	temp$=temp$+"COST_MASK_PATTERN:C(1*), UNITS_MASK_PATTERN:C(1*), AMT_MASK_PATTERN:C(1*)"		
 	rs! = BBJAPI().createMemoryRecordSet(temp$)
 
 rem --- Get Barista System Program directory
@@ -82,6 +83,63 @@ rem --- Get masks
 	sf_cost_mask$=fngetmask$("sf_cost_mask","#,##0.00-",masks$)	
 	sf_units_mask$=fngetmask$("sf_units_mask","#,##0.00-",masks$)	
 	sf_amt_mask$=fngetmask$("sf_amt_mask","##,##0.00-",masks$)	
+	
+rem --- Make the 'Patterns' used to mask in iReports from Addon masks
+rem       examples:
+rem          ##0.00;##0.00-   Includes negatives with minus at the end
+rem          ##0.00;-##0.00   Includes negatives with minus at the front
+rem          ##0.00;##0.00-   Positives only
+
+	sf_cost_mask_pattern$=fngetPattern$(sf_cost_mask$)
+	sf_units_mask_pattern$=fngetPattern$(sf_units_mask$)
+	sf_amt_mask_pattern$=fngetPattern$(sf_amt_mask$)
+
+	rem --- Cost mask's Pattern
+REM CAJ ESCAPE $,  $##,##0.00 ==>> $     0.00
+REM CAJ ESCAPE *$,  $*##,##0.00 ==>> $0.00
+REM CAJ ESCAPE CR
+
+REM JPB Create and FNGetPattern
+
+
+goto escapecaj_ENDOldPattern	
+
+	if pos("-"=sf_cost_mask$) 
+		minus_pos=pos("-"=sf_cost_mask$)
+		if minus_pos=len(sf_cost_mask$)
+			sf_cost_mask_pattern$=sf_cost_mask$(1,len(sf_cost_mask$)-1)+";"+sf_cost_mask$; rem Has negatives with minus at the end =>> ##0.00;##0.00-
+		else 
+			sf_cost_mask_pattern$=sf_cost_mask$(2,len(sf_cost_mask$))+";"+sf_cost_mask$; rem Has negatives with minus at the front =>> ##0.00;-##0.00
+		endif
+	else
+		sf_cost_mask_pattern$=sf_cost_mask$; rem Mask is positives only =>> ##0.00
+	endif
+	
+	rem --- Units mask's Pattern
+	if pos("-"=sf_units_mask$) 
+		minus_pos=pos("-"=sf_units_mask$)
+		if minus_pos=len(sf_units_mask$)
+			sf_units_mask_pattern$=sf_units_mask$(1,len(sf_units_mask$)-1)+";"+sf_units_mask$; rem Has negatives with minus at the end =>> ##0.00;##0.00-
+		else 
+			sf_units_mask_pattern$=sf_units_mask$(2,len(sf_units_mask$))+";"+sf_units_mask$; rem Has negatives with minus at the front =>> ##0.00;-##0.00
+		endif
+	else
+		sf_units_mask_pattern$=sf_units_mask$; rem Mask is positives only =>> ##0.00
+	endif
+
+	rem --- Amount mask's Pattern
+	if pos("-"=sf_amt_mask$) 
+		minus_pos=pos("-"=sf_amt_mask$)
+		if minus_pos=len(sf_amt_mask$)
+			sf_amt_mask_pattern$=sf_amt_mask$(1,len(sf_amt_mask$)-1)+";"+sf_amt_mask$; rem Has negatives with minus at the end =>> ##0.00;##0.00-
+		else 
+			sf_amt_mask_pattern$=sf_amt_mask$(2,len(sf_amt_mask$))+";"+sf_amt_mask$; rem Has negatives with minus at the front =>> ##0.00;-##0.00
+		endif
+	else
+		sf_amt_mask_pattern$=sf_amt_mask$; rem Mask is positives only =>> ##0.00
+	endif
+
+escapecaj_ENDOldPattern:
 	
 rem --- Open files with adc
 
@@ -305,6 +363,10 @@ rem --- Trip Read
 		data!.setFieldValue("UNITS_MASK",sf_units_mask$)
 		data!.setFieldValue("AMT_MASK",sf_amt_mask$)		
 
+		data!.setFieldValue("COST_MASK_PATTERN",sf_cost_mask_pattern$); rem Pattern used in iReports
+		data!.setFieldValue("UNITS_MASK_PATTERN",sf_units_mask_pattern$); rem Pattern used in iReports
+		data!.setFieldValue("AMT_MASK_PATTERN",sf_amt_mask_pattern$); rem Pattern used in iReports
+
 		rs!.insert(data!)
 	wend
 	
@@ -456,6 +518,28 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 		return q$
 	fnend
 
+rem --- fngetPattern$: Build iReports 'Pattern' from Addon Mask
+	def fngetPattern$(q$)
+		q1$=q$
+		if len(q$)>0
+			if pos("-"=q$)
+				q1=pos("-"=q$)
+				if q1=len(q$)
+					q1$=q$(1,len(q$)-1)+";"+q$; rem Has negatives with minus at the end =>> ##0.00;##0.00-
+				else
+					q1$=q$(2,len(q$))+";"+q$; rem Has negatives with minus at the front =>> ##0.00;-##0.00
+				endif
+			endif
+			if pos("CR"=q$)=len(q$)-1
+				q1$=q$(1,pos("CR"=q$)-1)+";"+q$
+			endif
+			if q$(1,1)="(" and q$(len(q$),1)=")"
+				q1$=q$(2,len(q$)-2)+";"+q$
+			endif
+		endif
+		return q1$
+	fnend	
+	
 	std_exit:
 	
 	end

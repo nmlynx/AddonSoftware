@@ -47,11 +47,28 @@ rem ---
 
 rem --- Create a memory record set to hold results.
 rem --- Columns for the record set are defined using a string template
-	      temp$="CLOSED_DATE:C(1*), WO_TYPE:C(1*), WO_TYPE_DESC:C(1*), CURR_PROD_QTY:C(1*), PRIOR_CLSD_QTY:C(1*), "
-	temp$=temp$+"THIS_CLOSE_QTY:C(1*), BAL_STILL_OPEN_QTY:C(1*), COMPLETE_YN:C(1*), IV_UNIT_COST:C(1*), WO_COST_AT_STD:C(1*), "
-	temp$=temp$+"CLOSE_AT_STD_ACT:C(1*), WO_COST_AT_ACT:C(1*), PRIOR_CLOSED_AMT:C(1*), CURR_WIP_VALUE:C(1*), "
-	temp$=temp$+"CURR_CLOSE_VALUE:C(1*), GL_ACCT_NUM:C(1*), GL_ACCT_DESC:C(1*), GL_DEBIT_AMT:C(1*), GL_CREDIT_AMT:C(1*), "
-	temp$=temp$+"GL_DEBIT_PERUNIT:C(1*), GL_CREDIT_PERUNIT:C(1*), GL_ACCT_TYPE:C(1*)"	
+
+	      temp$="CLOSED_DATE:C(1*), WO_TYPE:C(1*), WO_TYPE_DESC:C(1*), COMPLETE_YN:C(1*), CLOSE_AT_STD_ACT:C(1*), "
+rem    Masked     -So amounts will display correctly
+	temp$=temp$+"CURR_PROD_QTY_MSKD:C(1*), PRIOR_CLSD_QTY_MSKD:C(1*), THIS_CLOSE_QTY_MSKD:C(1*), BAL_STILL_OPEN_QTY_MSKD:C(1*), "
+	temp$=temp$+"IV_UNIT_COST_MSKD:C(1*), WO_COST_AT_STD_MSKD:C(1*), WO_COST_AT_ACT_MSKD:C(1*), PRIOR_CLOSED_AMT_MSKD:C(1*), "
+	temp$=temp$+"CURR_WIP_VALUE_MSKD:C(1*), CURR_CLOSE_VALUE_MSKD:C(1*), "
+rem    Un-Masked  -So amounts can be totalled by iReports	
+	temp$=temp$+"CURR_PROD_QTY:C(1*), PRIOR_CLSD_QTY:C(1*), THIS_CLOSE_QTY:C(1*), BAL_STILL_OPEN_QTY:C(1*), "
+	temp$=temp$+"IV_UNIT_COST:C(1*), WO_COST_AT_STD:C(1*), WO_COST_AT_ACT:C(1*), PRIOR_CLOSED_AMT:C(1*), "
+	temp$=temp$+"CURR_WIP_VALUE:C(1*), CURR_CLOSE_VALUE:C(1*), "
+rem -- GL
+	temp$=temp$+"GL_ACCT_NUM:C(1*), GL_ACCT_DESC:C(1*), GL_ACCT_TYPE:C(1*), "
+rem    Masked     -So amounts will display correctly
+	temp$=temp$+"GL_DEBIT_AMT_MSKD:C(1*), GL_CREDIT_AMT_MSKD:C(1*), GL_DEBIT_PERUNIT_MSKD:C(1*), GL_CREDIT_PERUNIT_MSKD:C(1*), "	
+rem    Un-Masked  -So amounts can be totalled by iReports
+	temp$=temp$+"GL_DEBIT_AMT:C(1*), GL_CREDIT_AMT:C(1*), GL_DEBIT_PERUNIT:C(1*), GL_CREDIT_PERUNIT:C(1*)"	
+	
+REM	      temp$="CLOSED_DATE:C(1*), WO_TYPE:C(1*), WO_TYPE_DESC:C(1*), CURR_PROD_QTY:C(1*), PRIOR_CLSD_QTY:C(1*), "
+REM	temp$=temp$+"THIS_CLOSE_QTY:C(1*), BAL_STILL_OPEN_QTY:C(1*), COMPLETE_YN:C(1*), IV_UNIT_COST:C(1*), WO_COST_AT_STD:C(1*), "
+REM	temp$=temp$+"CLOSE_AT_STD_ACT:C(1*), WO_COST_AT_ACT:C(1*), PRIOR_CLOSED_AMT:C(1*), CURR_WIP_VALUE:C(1*), "
+REM	temp$=temp$+"CURR_CLOSE_VALUE:C(1*), GL_ACCT_NUM:C(1*), GL_ACCT_DESC:C(1*), GL_DEBIT_AMT:C(1*), GL_CREDIT_AMT:C(1*), "
+REM	temp$=temp$+"GL_DEBIT_PERUNIT:C(1*), GL_CREDIT_PERUNIT:C(1*), GL_ACCT_TYPE:C(1*)"	
 	
 	rs! = BBJAPI().createMemoryRecordSet(temp$)
 
@@ -77,7 +94,7 @@ WO_TYPE$ = "01"
 WO_TYPE_DESC$ = "Standard WO Type"
 CURR_PROD_QTY = 20
 PRIOR_CLSD_QTY = 20
-THIS_CLOSE_QTY = 0
+THIS_CLOSE_QTY = 5
 BAL_STILL_OPEN_QTY = 0
 COMPLETE_YN$ = "Y"
 IV_UNIT_COST = 285.89
@@ -101,24 +118,48 @@ rem --- Print totals
 	data!.setFieldValue("CLOSED_DATE",fndate$(closed_date$))
 	data!.setFieldValue("WO_TYPE",wo_type$)
 	data!.setFieldValue("WO_TYPE_DESC",wo_type_desc$)
-	data!.setFieldValue("CURR_PROD_QTY",str(curr_prod_qty:sf_units_mask$))
-	data!.setFieldValue("PRIOR_CLSD_QTY",str(prior_clsd_qty:sf_units_mask$))
-	data!.setFieldValue("THIS_CLOSE_QTY",str(this_close_qty:sf_units_mask$))
-	data!.setFieldValue("BAL_STILL_OPEN_QTY",str(bal_still_open_qty:sf_units_mask$))
+	
+	data!.setFieldValue("CURR_PROD_QTY_MSKD",str(curr_prod_qty:sf_units_mask$))
+	data!.setFieldValue("PRIOR_CLSD_QTY_MSKD",str(prior_clsd_qty:sf_units_mask$))
+	data!.setFieldValue("THIS_CLOSE_QTY_MSKD",str(this_close_qty:sf_units_mask$))
+	data!.setFieldValue("BAL_STILL_OPEN_QTY_MSKD",str(bal_still_open_qty:sf_units_mask$))
+	
+	data!.setFieldValue("CURR_PROD_QTY",str(curr_prod_qty))
+	data!.setFieldValue("PRIOR_CLSD_QTY",str(prior_clsd_qty))
+	data!.setFieldValue("THIS_CLOSE_QTY",str(this_close_qty))
+	data!.setFieldValue("BAL_STILL_OPEN_QTY",str(bal_still_open_qty))
+	
 	data!.setFieldValue("COMPLETE_YN",complete_yn$)
-	data!.setFieldValue("IV_UNIT_COST",str(iv_unit_cost:iv_cost_mask$))
-	data!.setFieldValue("WO_COST_AT_STD",str(wo_cost_at_std:iv_cost_mask$))
+	data!.setFieldValue("IV_UNIT_COST_MSKD",str(iv_unit_cost:iv_cost_mask$))
+	data!.setFieldValue("WO_COST_AT_STD_MSKD",str(wo_cost_at_std:iv_cost_mask$))
+
+	data!.setFieldValue("IV_UNIT_COST",str(iv_unit_cost))
+	data!.setFieldValue("WO_COST_AT_STD",str(wo_cost_at_std))
+
 	data!.setFieldValue("CLOSE_AT_STD_ACT",close_at_std_act$)
-	data!.setFieldValue("WO_COST_AT_ACT",str(wo_cost_at_act:iv_cost_mask$))
-	data!.setFieldValue("PRIOR_CLOSED_AMT",str(prior_closed_amt:iv_cost_mask$))
-	data!.setFieldValue("CURR_WIP_VALUE",str(curr_wip_value:sf_amt_mask$))
-	data!.setFieldValue("CURR_CLOSE_VALUE",str(curr_close_value:sf_amt_mask$))
-	data!.setFieldValue("GL_ACCT_NUM",str(gl_acct_num:gl_acct_mask$))
+	data!.setFieldValue("WO_COST_AT_ACT_MSKD",str(wo_cost_at_act:iv_cost_mask$))
+	data!.setFieldValue("PRIOR_CLOSED_AMT_MSKD",str(prior_closed_amt:iv_cost_mask$))
+	data!.setFieldValue("CURR_WIP_VALUE_MSKD",str(curr_wip_value:sf_amt_mask$))
+	data!.setFieldValue("CURR_CLOSE_VALUE_MSKD",str(curr_close_value:sf_amt_mask$))
+
+	data!.setFieldValue("WO_COST_AT_ACT",str(wo_cost_at_act))
+	data!.setFieldValue("PRIOR_CLOSED_AMT",str(prior_closed_amt))
+	data!.setFieldValue("CURR_WIP_VALUE",str(curr_wip_value))
+rem ESCAPE; REM CAJ ?	CURR_WIP_VALUE
+	data!.setFieldValue("CURR_CLOSE_VALUE",str(curr_close_value))
+
+	data!.setFieldValue("GL_ACCT_NUM",fnmask$(gl_acct_num$,gl_acct_mask$))
 	data!.setFieldValue("GL_ACCT_DESC",gl_acct_desc$)
-	data!.setFieldValue("GL_DEBIT_AMT",str(gl_debit_amt:sf_amt_mask$))
-	data!.setFieldValue("GL_CREDIT_AMT",str(gl_credit_amt:sf_amt_mask$))
-	data!.setFieldValue("GL_DEBIT_PERUNIT",str(gl_debit_perunit:sf_rate_mask$))
-	data!.setFieldValue("GL_CREDIT_PERUNIT",str(gl_credit_perunit:sf_rate_mask$))
+	data!.setFieldValue("GL_DEBIT_AMT_MSKD",str(gl_debit_amt:sf_amt_mask$))
+	data!.setFieldValue("GL_CREDIT_AMT_MSKD",str(gl_credit_amt:sf_amt_mask$))
+	data!.setFieldValue("GL_DEBIT_PERUNIT_MSKD",str(gl_debit_perunit:sf_rate_mask$))
+	data!.setFieldValue("GL_CREDIT_PERUNIT_MSKD",str(gl_credit_perunit:sf_rate_mask$))
+	
+	data!.setFieldValue("GL_DEBIT_AMT",str(gl_debit_amt))
+	data!.setFieldValue("GL_CREDIT_AMT",str(gl_credit_amt))
+	data!.setFieldValue("GL_DEBIT_PERUNIT",str(gl_debit_perunit))
+	data!.setFieldValue("GL_CREDIT_PERUNIT",str(gl_credit_perunit))
+	
 	data!.setFieldValue("GL_ACCT_TYPE",gl_acct_type$)
 
 	rs!.insert(data!)

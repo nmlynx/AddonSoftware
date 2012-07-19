@@ -2,7 +2,7 @@
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopy" language="groovy" pageWidth="800" pageHeight="595" orientation="Landscape" columnWidth="760" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="50">
 	<property name="ireport.zoom" value="1.5"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="0"/>
+	<property name="ireport.y" value="96"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
 	<parameter name="WO_NO_1" class="java.lang.String"/>
 	<parameter name="WO_NO_2" class="java.lang.String"/>
@@ -64,6 +64,9 @@
 	<field name="COST_MASK" class="java.lang.String"/>
 	<field name="AMT_MASK" class="java.lang.String"/>
 	<field name="UNITS_MASK" class="java.lang.String"/>
+	<field name="COST_MASK_PATTERN" class="java.lang.String"/>
+	<field name="AMT_MASK_PATTERN" class="java.lang.String"/>
+	<field name="UNITS_MASK_PATTERN" class="java.lang.String"/>
 	<variable name="MAST_CLS_INP_QTY" class="java.lang.Float">
 		<variableExpression><![CDATA[]]></variableExpression>
 		<initialValueExpression><![CDATA[Float.valueOf($F{MAST_CLS_INP_QTY_STR}).floatValue()]]></initialValueExpression>
@@ -267,12 +270,12 @@
 					<text><![CDATA[******]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="45" y="1" width="74" height="13"/>
+					<reportElement x="43" y="1" width="76" height="13"/>
 					<textElement textAlignment="Left"/>
-					<text><![CDATA[This Close Date:]]></text>
+					<text><![CDATA[This Close Date:  ]]></text>
 				</staticText>
 				<textField>
-					<reportElement x="119" y="1" width="53" height="13"/>
+					<reportElement x="121" y="1" width="53" height="13"/>
 					<textElement markup="none"/>
 					<textFieldExpression><![CDATA[$F{MAST_CLS_INP_DT}]]></textFieldExpression>
 				</textField>
@@ -541,30 +544,41 @@
 				<subreportExpression><![CDATA["SFHardCopyCostSum.jasper"]]></subreportExpression>
 			</subreport>
 			<subreport>
-				<reportElement positionType="Float" x="0" y="91" width="760" height="13"/>
-				<subreportParameter name="FIRM_ID">
-					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="WO_LOCATION">
-					<subreportParameterExpression><![CDATA[$P{WO_LOCATION}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="BARISTA_WD">
-					<subreportParameterExpression><![CDATA[$P{BARISTA_WD}]]></subreportParameterExpression>
+				<reportElement positionType="Float" x="0" y="91" width="760" height="13">
+					<printWhenExpression><![CDATA[$P{REPORT_TYPE}=="C"]]></printWhenExpression>
+				</reportElement>
+				<subreportParameter name="COST_MASK">
+					<subreportParameterExpression><![CDATA[$F{COST_MASK}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="WO_NO">
 					<subreportParameterExpression><![CDATA[$F{WO_NO}]]></subreportParameterExpression>
 				</subreportParameter>
-				<subreportParameter name="MASKS">
-					<subreportParameterExpression><![CDATA[$P{MASKS}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="COST_MASK">
-					<subreportParameterExpression><![CDATA[$F{COST_MASK}]]></subreportParameterExpression>
+				<subreportParameter name="BARISTA_WD">
+					<subreportParameterExpression><![CDATA[$P{BARISTA_WD}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="AMT_MASK">
 					<subreportParameterExpression><![CDATA[$F{AMT_MASK}]]></subreportParameterExpression>
 				</subreportParameter>
+				<subreportParameter name="AMT_MASK_PATTERN">
+					<subreportParameterExpression><![CDATA[$F{AMT_MASK_PATTERN}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="MASKS">
+					<subreportParameterExpression><![CDATA[$P{MASKS}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="FIRM_ID">
+					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
+				</subreportParameter>
 				<subreportParameter name="UNITS_MASK">
 					<subreportParameterExpression><![CDATA[$F{UNITS_MASK}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="UNITS_MASK_PATTERN">
+					<subreportParameterExpression><![CDATA[$F{UNITS_MASK_PATTERN}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="COST_MASK_PATTERN">
+					<subreportParameterExpression><![CDATA[$F{COST_MASK_PATTERN}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="WO_LOCATION">
+					<subreportParameterExpression><![CDATA[$P{WO_LOCATION}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA["SFHardCopyClsdDet.jasper"]]></subreportExpression>
