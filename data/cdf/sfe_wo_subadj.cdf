@@ -157,10 +157,26 @@ rem --- Units or Cost
 rem --- New Tran Date
 			if curr_col=11
 				tran_date$=notice.buf$
-				if len(cvs(tran_date$,2))=10
-					tran_date$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2)
+				input_value$=tran_date$
+				gosub validate_date
+				if len(msg_id$)>0
+					dim msg_tokens$[1]
+					msg_tokens$[1]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_DATE")
+					gosub disp_message
+					gridOps!.focus()
+					sysgui!.setContext(grid_ctx)
+					gridOps!.accept(0)
+					gridOps!.startEdit(curr_row,curr_col)
+					break
 				endif
-				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+11,tran_date$)
+				tran_date$=temp_date$
+				if len(cvs(tran_date$,2))=0
+					tran_date$=gridOps!.getCellText(curr_row,0)
+					input_value$=vectOps!.getItem((curr_row*num(user_tpl.gridOpsCols$)))
+				endif
+
+				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+11,input_value$)
+				gridOps!.setCellText(curr_row,curr_col,input_value$)
 			endif
 			gridSubs!.accept(1)
 		break
@@ -324,8 +340,10 @@ rem ==========================================================================
 	attr_sub_col$[11,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_sub_col$[11,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=callpoint!.getDevObject("wo_no_mask")
 	attr_sub_col$[11,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]=str(callpoint!.getDevObject("wo_no_len"))
-	attr_sub_col$[11,fnstr_pos("DTAB",attr_def_col_str$[0,0],5)]="SFE_WOMASTR"
-	attr_sub_col$[11,fnstr_pos("DCOL",attr_def_col_str$[0,0],5)]="DESC"
+rem	attr_sub_col$[11,fnstr_pos("DTAB",attr_def_col_str$[0,0],5)]="SFE_WOMASTR"
+rem	attr_sub_col$[11,fnstr_pos("DCOL",attr_def_col_str$[0,0],5)]="ITEM_ID"
+rem	attr_sub_col$[11,fnstr_pos("DKEY",attr_def_col_str$[0,0],5)]="[+FIRM_ID]  @"
+	attr_sub_col$[11,fnstr_pos("ETYP",attr_def_col_str$[0,0],5)]="WO_NO"
 
 	attr_sub_col$[12,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_DATE"
 	attr_sub_col$[12,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_DATE")
@@ -409,4 +427,39 @@ rem ==========================================================================
 
 	callpoint!.setStatus("REFRESH")
 	
+	return
+
+rem ==========================================================
+validate_date:rem --- YYYYMMDD
+rem input_value$: input and output (anything in, ccyymmdd out)
+rem msg_id$: output (blank if valid date, INPUT_ERR_DATE if invalid)
+rem temp_date$: output (mm/dd/ccyy)
+rem ==========================================================
+
+	if cvs(input_value$,2)="" return
+	if num(input_value$,err=*next)<=0 input_value$=""; return 
+
+	date_value$="",temp_date$="",input_value_sav$=input_value$
+	date_mask$=stbl("+DATE_MASK")
+	msg_id$="INPUT_ERR_DATE"
+
+rem --- expand entered value as needed and do validity check based on JUL() function
+	if len(input_value$)<>7 or input_value$<"2000000" or input_value$>"2999999"
+		date_value$=str(jul(input_value$,date_mask$,err=*next))
+	else
+		date_value$=input_value$
+	endif
+
+	if date_value$="" or date_value$="-1"
+		input_value$=input_value_sav$
+		return
+	endif
+
+rem --- re-display extended, validated value in localized format, store "on disk" format in input var
+	temp_date$=date(num(date_value$),date_mask$)
+	if rdEventCtl!<>null() rdEventCtl!.setText(temp_date$)
+	input_value$=date(num(date_value$):"%Yd%Mz%Dz")
+
+	msg_id$=""
+
 	return
