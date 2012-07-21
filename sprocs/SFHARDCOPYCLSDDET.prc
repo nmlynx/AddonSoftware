@@ -48,26 +48,40 @@ rem ---
 rem --- Create a memory record set to hold results.
 rem --- Columns for the record set are defined using a string template
 
-	      temp$="CLOSED_DATE:C(1*), WO_TYPE:C(1*), WO_TYPE_DESC:C(1*), COMPLETE_YN:C(1*), CLOSE_AT_STD_ACT:C(1*), "
-
-
-rem    Un-Masked  -So amounts can be totalled by iReports	
-	temp$=temp$+"CURR_PROD_QTY:C(1*), PRIOR_CLSD_QTY:C(1*), THIS_CLOSE_QTY:C(1*), BAL_STILL_OPEN_QTY:C(1*), "
-	temp$=temp$+"IV_UNIT_COST:C(1*), WO_COST_AT_STD:C(1*), WO_COST_AT_ACT:C(1*), PRIOR_CLOSED_AMT:C(1*), "
-	temp$=temp$+"CURR_WIP_VALUE:C(1*), CURR_CLOSE_VALUE:C(1*), "
-
+	      temp$="CLOSED_DATE:C(1*), WO_TYPE:C(1*), WO_TYPE_DESC:C(1*), "
+	temp$=temp$+"COMPLETE_YN:C(1*), CLOSE_AT_STD_ACT:C(1*), "
+	temp$=temp$+"CURR_PROD_QTY:C(1*), PRIOR_CLSD_QTY:C(1*), THIS_CLOSE_QTY:C(1*), "
+	temp$=temp$+"BAL_STILL_OPEN_QTY:C(1*), IV_UNIT_COST:C(1*), WO_COST_AT_STD:C(1*), "
+	temp$=temp$+"WO_COST_AT_ACT:C(1*), PRIOR_CLOSED_AMT:C(1*), CURR_WIP_VALUE:C(1*), "
+	temp$=temp$+"CURR_CLOSE_VALUE:C(1*), "
 rem -- GL
-	temp$=temp$+"GL_ACCT_NUM:C(1*), GL_ACCT_DESC:C(1*), GL_ACCT_TYPE:C(1*), "
-rem    Masked     -So amounts will display correctly
-	temp$=temp$+"GL_DEBIT_AMT_MSKD:C(1*), GL_CREDIT_AMT_MSKD:C(1*), GL_DEBIT_PERUNIT_MSKD:C(1*), GL_CREDIT_PERUNIT_MSKD:C(1*), "	
-rem    Un-Masked  -So amounts can be totalled by iReports
-	temp$=temp$+"GL_DEBIT_AMT:C(1*), GL_CREDIT_AMT:C(1*), GL_DEBIT_PERUNIT:C(1*), GL_CREDIT_PERUNIT:C(1*)"	
+rem	temp$=temp$+"GL_ACCT_NUM:C(1*), GL_ACCT_DESC:C(1*), GL_ACCT_TYPE:C(1*), "
+rem	temp$=temp$+"GL_DEBIT_AMT:C(1*), GL_CREDIT_AMT:C(1*), GL_DEBIT_PERUNIT:C(1*), GL_CREDIT_PERUNIT:C(1*)"	
+
+	temp$=temp$+"WIP_GL_ACCT_NUM:C(1*), WIP_GL_ACCT_DESC:C(1*), WIP_GL_ACCT_TYPE:C(1*), "
+	temp$=temp$+"WIP_GL_DEBIT_AMT:C(1*), WIP_GL_CREDIT_AMT:C(1*), WIP_GL_DEBIT_PERUNIT:C(1*), "
+	temp$=temp$+"WIP_GL_CREDIT_PERUNIT:C(1*), "
 	
-REM	      temp$="CLOSED_DATE:C(1*), WO_TYPE:C(1*), WO_TYPE_DESC:C(1*), CURR_PROD_QTY:C(1*), PRIOR_CLSD_QTY:C(1*), "
-REM	temp$=temp$+"THIS_CLOSE_QTY:C(1*), BAL_STILL_OPEN_QTY:C(1*), COMPLETE_YN:C(1*), IV_UNIT_COST:C(1*), WO_COST_AT_STD:C(1*), "
-REM	temp$=temp$+"CLOSE_AT_STD_ACT:C(1*), WO_COST_AT_ACT:C(1*), PRIOR_CLOSED_AMT:C(1*), CURR_WIP_VALUE:C(1*), "
-REM	temp$=temp$+"CURR_CLOSE_VALUE:C(1*), GL_ACCT_NUM:C(1*), GL_ACCT_DESC:C(1*), GL_DEBIT_AMT:C(1*), GL_CREDIT_AMT:C(1*), "
-REM	temp$=temp$+"GL_DEBIT_PERUNIT:C(1*), GL_CREDIT_PERUNIT:C(1*), GL_ACCT_TYPE:C(1*)"	
+	temp$=temp$+"CLS_To_GL_ACCT_NUM:C(1*), CLS_To_GL_ACCT_DESC:C(1*), CLS_To_GL_ACCT_TYPE:C(1*), "
+	temp$=temp$+"CLS_To_GL_DEBIT_AMT:C(1*), CLS_To_GL_CREDIT_AMT:C(1*), CLS_To_GL_DEBIT_PERUNIT:C(1*), "
+	temp$=temp$+"CLS_To_GL_CREDIT_PERUNIT:C(1*), "
+	
+	temp$=temp$+"DIR_VAR_GL_ACCT_NUM:C(1*), DIR_VAR_GL_ACCT_DESC:C(1*), DIR_VAR_GL_ACCT_TYPE:C(1*), "
+	temp$=temp$+"DIR_VAR_GL_DEBIT_AMT:C(1*), DIR_VAR_GL_CREDIT_AMT:C(1*), DIR_VAR_GL_DEBIT_PERUNIT:C(1*), "
+	temp$=temp$+"DIR_VAR_GL_CREDIT_PERUNIT:C(1*), "
+	
+	temp$=temp$+"OVRH_VAR_GL_ACCT_NUM:C(1*), OVRH_VAR_GL_ACCT_DESC:C(1*), OVRH_VAR_GL_ACCT_TYPE:C(1*), "
+	temp$=temp$+"OVRH_VAR_GL_DEBIT_AMT:C(1*), OVRH_VAR_GL_CREDIT_AMT:C(1*), OVRH_VAR_GL_DEBIT_PERUNIT:C(1*), "
+	temp$=temp$+"OVRH_VAR_GL_CREDIT_PERUNIT:C(1*), "
+	
+	temp$=temp$+"MAT_VAR_GL_ACCT_NUM:C(1*), MAT_VAR_GL_ACCT_DESC:C(1*), MAT_VAR_GL_ACCT_TYPE:C(1*), "
+	temp$=temp$+"MAT_VAR_GL_DEBIT_AMT:C(1*), MAT_VAR_GL_CREDIT_AMT:C(1*), MAT_VAR_GL_DEBIT_PERUNIT:C(1*), "
+	temp$=temp$+"MAT_VAR_GL_CREDIT_PERUNIT:C(1*), "
+	
+	temp$=temp$+"SUB_VAR_GL_ACCT_NUM:C(1*), SUB_VAR_GL_ACCT_DESC:C(1*), SUB_VAR_GL_ACCT_TYPE:C(1*), "
+	temp$=temp$+"SUB_VAR_GL_DEBIT_AMT:C(1*), SUB_VAR_GL_CREDIT_AMT:C(1*), SUB_VAR_GL_DEBIT_PERUNIT:C(1*), "
+	temp$=temp$+"SUB_VAR_GL_CREDIT_PERUNIT:C(1*)"
+
 	
 	rs! = BBJAPI().createMemoryRecordSet(temp$)
 
@@ -133,22 +147,52 @@ rem --- Print totals
 	data!.setFieldValue("WO_COST_AT_ACT",str(wo_cost_at_act))
 	data!.setFieldValue("PRIOR_CLOSED_AMT",str(prior_closed_amt))
 	data!.setFieldValue("CURR_WIP_VALUE",str(curr_wip_value))
-rem ESCAPE; REM CAJ ?	CURR_WIP_VALUE
 	data!.setFieldValue("CURR_CLOSE_VALUE",str(curr_close_value))
 
-	data!.setFieldValue("GL_ACCT_NUM",fnmask$(gl_acct_num$,gl_acct_mask$))
-	data!.setFieldValue("GL_ACCT_DESC",gl_acct_desc$)
-	data!.setFieldValue("GL_DEBIT_AMT_MSKD",str(gl_debit_amt:sf_amt_mask$))
-	data!.setFieldValue("GL_CREDIT_AMT_MSKD",str(gl_credit_amt:sf_amt_mask$))
-	data!.setFieldValue("GL_DEBIT_PERUNIT_MSKD",str(gl_debit_perunit:sf_rate_mask$))
-	data!.setFieldValue("GL_CREDIT_PERUNIT_MSKD",str(gl_credit_perunit:sf_rate_mask$))
+	rem --- GL
+	rem 	The accounts (Logic in iReports to print if all amts not-zero):
+	rem			Work in Process
+	rem			Close to Account
+	rem			Direct Variance
+	rem 		Overhead Variance
+	rem			Material Variance
+	rem			Subcontract Variance
 	
-	data!.setFieldValue("GL_DEBIT_AMT",str(gl_debit_amt))
-	data!.setFieldValue("GL_CREDIT_AMT",str(gl_credit_amt))
-	data!.setFieldValue("GL_DEBIT_PERUNIT",str(gl_debit_perunit))
-	data!.setFieldValue("GL_CREDIT_PERUNIT",str(gl_credit_perunit))
+	for x = 0 to 5
+		switch x
+			case 0
+				AcctAbrv$ = "WIP_";      rem Work in Process
+			break
+			case 1	
+				AcctAbrv$ = "CLS_To_";   rem Close to Account
+			break
+			case 2
+				AcctAbrv$ = "DIR_VAR_";  rem Direct Variance
+			break
+			case 3	
+				AcctAbrv$ = "OVRH_VAR_"; rem Overhead Variance
+			break
+			case 4
+				AcctAbrv$ = "MAT_VAR_";  rem Material Variance
+			break
+			case 5	
+				AcctAbrv$ = "SUB_VAR_";  rem Subcontract Variance
+			break
+		swend
+
+		
+		data!.setFieldValue(AcctAbrv$+"GL_ACCT_NUM",fnmask$(gl_acct_num$,gl_acct_mask$))
+		data!.setFieldValue(AcctAbrv$+"GL_ACCT_DESC",gl_acct_desc$)
+		
+		data!.setFieldValue(AcctAbrv$+"GL_DEBIT_AMT",str(gl_debit_amt))
+		data!.setFieldValue(AcctAbrv$+"GL_CREDIT_AMT",str(gl_credit_amt))
+		data!.setFieldValue(AcctAbrv$+"GL_DEBIT_PERUNIT",str(gl_debit_perunit))
+		data!.setFieldValue(AcctAbrv$+"GL_CREDIT_PERUNIT",str(gl_credit_perunit))
+		
+		data!.setFieldValue(AcctAbrv$+"GL_ACCT_TYPE",gl_acct_type$)
 	
-	data!.setFieldValue("GL_ACCT_TYPE",gl_acct_type$)
+	next x
+	
 
 	rs!.insert(data!)
 	
