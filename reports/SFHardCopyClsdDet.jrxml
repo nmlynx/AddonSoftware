@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopyClsdDet" language="groovy" pageWidth="760" pageHeight="595" orientation="Landscape" columnWidth="740" leftMargin="0" rightMargin="20" topMargin="20" bottomMargin="10">
 	<property name="ireport.zoom" value="1.3636363636363635"/>
-	<property name="ireport.x" value="0"/>
+	<property name="ireport.x" value="547"/>
 	<property name="ireport.y" value="0"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
 	<parameter name="WO_LOCATION" class="java.lang.String"/>
@@ -22,16 +22,6 @@
 	<field name="WO_TYPE_DESC" class="java.lang.String"/>
 	<field name="COMPLETE_YN" class="java.lang.String"/>
 	<field name="CLOSE_AT_STD_ACT" class="java.lang.String"/>
-	<field name="CURR_PROD_QTY_MSKD" class="java.lang.String"/>
-	<field name="PRIOR_CLSD_QTY_MSKD" class="java.lang.String"/>
-	<field name="THIS_CLOSE_QTY_MSKD" class="java.lang.String"/>
-	<field name="BAL_STILL_OPEN_QTY_MSKD" class="java.lang.String"/>
-	<field name="IV_UNIT_COST_MSKD" class="java.lang.String"/>
-	<field name="WO_COST_AT_STD_MSKD" class="java.lang.String"/>
-	<field name="WO_COST_AT_ACT_MSKD" class="java.lang.String"/>
-	<field name="PRIOR_CLOSED_AMT_MSKD" class="java.lang.String"/>
-	<field name="CURR_WIP_VALUE_MSKD" class="java.lang.String"/>
-	<field name="CURR_CLOSE_VALUE_MSKD" class="java.lang.String"/>
 	<field name="CURR_PROD_QTY" class="java.lang.String"/>
 	<field name="PRIOR_CLSD_QTY" class="java.lang.String"/>
 	<field name="THIS_CLOSE_QTY" class="java.lang.String"/>
@@ -285,7 +275,7 @@
 			</textField>
 		</band>
 		<band height="40">
-			<printWhenExpression><![CDATA[$V{THIS_CLOSE_QTY_BigDec}!=0 && $V{THIS_CLOSE_QTY_BigDec}!=1 ]]></printWhenExpression>
+			<printWhenExpression><![CDATA[$V{THIS_CLOSE_QTY_BigDec}!=0 && $V{THIS_CLOSE_QTY_BigDec}!=1]]></printWhenExpression>
 			<staticText>
 				<reportElement x="224" y="19" width="50" height="13"/>
 				<textElement markup="none"/>
@@ -333,20 +323,16 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 		</band>
-	</detail>
-	<columnFooter>
-		<band height="81" splitType="Stretch">
+		<band height="117">
 			<staticText>
-				<reportElement x="18" y="16" width="100" height="20"/>
+				<reportElement x="5" y="12" width="100" height="20"/>
 				<textElement markup="none"/>
 				<text><![CDATA[Account Summary:]]></text>
 			</staticText>
-			<textField>
-				<reportElement x="18" y="56" width="100" height="20"/>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{GL_ACCT_NUM}]]></textFieldExpression>
-			</textField>
 		</band>
+	</detail>
+	<columnFooter>
+		<band height="81" splitType="Stretch"/>
 	</columnFooter>
 	<pageFooter>
 		<band height="30" splitType="Stretch">
