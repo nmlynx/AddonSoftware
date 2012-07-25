@@ -1,5 +1,5 @@
 rem --- Work Order Time Sheet Register (Summary)
-rem --- Program sfr_cb v8.0.0 04Jan2008 (sfr_cb)
+rem --- Program sfr_timesheet_o1 v8.0.0 04Jan2008 (wor_cb)
 rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/04/2008 10:55:30)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -147,8 +147,6 @@ rem --- Destroy the progress meter and run the next overlay
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
 
     update$=pgmdir$+"sfu_timesheet.aon"
-rem wgh ... testing
-update$=""
     overlay$=update$
     if gl$="Y" then overlay$=pgmdir$+"glr_recap.aon"
     next_overlay$=overlay$

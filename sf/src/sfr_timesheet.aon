@@ -1,5 +1,5 @@
 rem --- Work Order Time Sheet Register
-rem --- Program sfr_ca v8.0.0 04Jan2008 (sfr_ca)
+rem --- Program sfr_timesheet v8.0.0 04Jan2008 (wor_ca)
 rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/04/2008 11:02:37)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
@@ -43,15 +43,16 @@ rem --- Get user approval to proceed
 
 rem --- Open/Lock files
 
-	num_files=7
+	num_files=8
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="SFS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="IVS_PARAMS",open_opts$[2]="OTA"
 	open_tables$[3]="SFC_WOTYPECD",open_opts$[3]="OTA"
 	open_tables$[4]="SFE_WOMASTR",open_opts$[4]="OTA"
 	open_tables$[5]="SFE_WOOPRTN",open_opts$[5]="OTA"
-    open_tables$[6]="SFW_TIMESORT",open_opts$[6]="OTAIL"
-	open_tables$[7]="IVM_ITEMMAST",open_opts$[7]="OTA"
+    open_tables$[6]="SFT_OPNOPRTR",open_opts$[6]="OTA"
+    open_tables$[7]="SFW_TIMESORT",open_opts$[7]="OTAIL"
+	open_tables$[8]="IVM_ITEMMAST",open_opts$[8]="OTA"
 
 	gosub open_tables
 
@@ -60,14 +61,15 @@ rem --- Open/Lock files
     sfm10a_dev=num(open_chans$[3])
     sfe01a_dev=num(open_chans$[4])
     wooprtn_dev=num(open_chans$[5])
-    sfw11a_dev=num(open_chans$[6])
-    ivm01a_dev=num(open_chans$[7])
+    sft01a_dev=num(open_chans$[6])
+    sfw11a_dev=num(open_chans$[7])
+    ivm01a_dev=num(open_chans$[8])
 
 rem --- Dimension string templates
 
     dim sfs01a$:open_tpls$[1],ivs01a$:open_tpls$[2],sfm10a$:open_tpls$[3],
-:       sfe01a$:open_tpls$[4],wooprtn$:open_tpls$[5],sfw11a$:open_tpls$[6],
-:       ivm01a$:open_tpls$[7]
+:       sfe01a$:open_tpls$[4],wooprtn$:open_tpls$[5],sft01a$:open_tpls$[6],
+:       sfw11a$:open_tpls$[7],ivm01a$:open_tpls$[8]
     
 rem --- Get SF parameters
 	read record (sfs01a_dev,key=firm_id$+"SF00",dom=std_missing_params) sfs01a$
@@ -154,17 +156,17 @@ rem --- Additional file opens
 		open_tables$[9]="PRC_PAYCODE",open_opts$[9]="OTA"
 		open_tables$[10]="PRS_PERIOD",open_opts$[10]="OTA"
 		open_tables$[11]="PRE_DAYTIME",open_opts$[11]="OTA"
-		if sfs01a.pay_actstd$="A" then open_tables$[12]="PRM_EMPLPAY",open_opts$[12]="OTA"
+		if sfs01a.pay_actstd$<>"A" then open_tables$[12]="PRM_EMPLPAY",open_opts$[12]="OTA"
 	else
 		open_tables$[8]="SFM_EMPLMAST",open_opts$[8]="OTA"
 	endif
 
 	gosub open_tables
     
-        timesheet_dev=num(open_chans$[1])
-        timesheetdet_dev=num(open_chans$[2])
-        empcode_dev=num(open_chans$[8])
-		dim timesht$:open_tpls$[1],timeshtdet$:open_tpls$[2],ecode$:open_tpls$[8]
+    timesheet_dev=num(open_chans$[1])
+    timesheetdet_dev=num(open_chans$[2])
+    empcode_dev=num(open_chans$[8])
+    dim timesht$:open_tpls$[1],timeshtdet$:open_tpls$[2],ecode$:open_tpls$[8]
 
 	if gl$="Y" then
 		gls01a_dev=num(open_chans$[3])
@@ -184,7 +186,7 @@ rem --- Additional file opens
 		prs01b_dev=num(open_chans$[10])
 		pre02_dev=num(open_chans$[11])
 		dim prs01a$:open_tpls$[7],prm10a$:open_tpls$[9],prs01b$:open_tpls$[10],pre02a$:open_tpls$[11]
-        if sfs01a.pay_actstd$="A" then
+        if sfs01a.pay_actstd$<>"A" then
             prm02_dev=num(open_chans$[12])
             dim prm02a$:open_tpls$[12]
         endif
@@ -542,10 +544,14 @@ rem --- End
     xwk = fnblank(columns+1); rem --- blank line
     TotVect!.addItem(str(OutVect!.size()/(columns+1)))
     OutVect!.addItem(Translate!.getTranslation("AON_GRAND")+" "+Translate!.getTranslation("AON_TOTAL")+":")
-    xwk = fnblank(3)
-    rem --- Due to DocOut bug, non-blank items required for complete_qty to print
-    OutVect!.addItem(".")
-    OutVect!.addItem(".")
+    if pr$="Y" then
+        xwk = fnblank(5)
+    else
+        xwk = fnblank(3)
+        rem --- Due to DocOut bug, non-blank items required for complete_qty to print
+        OutVect!.addItem(".")
+        OutVect!.addItem(".")
+    endif
     OutVect!.addItem(str(u[6]))
     xwk = fnblank(2)
     OutVect!.addItem(str(u[2]))
@@ -669,10 +675,14 @@ first_sub_tot: rem --- First Sub Total
                     OutVect!.addItem(Translate!.getTranslation("AON_TOTALS"))+":"
                     break
             swend
-            xwk = fnblank(2)
-            rem --- Due to DocOut bug, non-blank items required for complete_qty to print
-            OutVect!.addItem(".")
-            OutVect!.addItem(".")
+            if pr$="Y" then
+                xwk = fnblank(4)
+            else
+                xwk = fnblank(2)
+                rem --- Due to DocOut bug, non-blank items required for complete_qty to print
+                OutVect!.addItem(".")
+                OutVect!.addItem(".")
+            endif
             OutVect!.addItem(str(t[6]))
             xwk = fnblank(2)
             OutVect!.addItem(str(t[2]))
@@ -733,10 +743,14 @@ sec_sub_tot: rem --- Second Sub Total
                     OutVect!.addItem(Translate!.getTranslation("AON_TOTALS"))+":"
                     break
             swend
-            xwk = fnblank(1)
-            rem --- Due to DocOut bug, non-blank items required for complete_qty to print
-            OutVect!.addItem(".")
-            OutVect!.addItem(".")
+            if pr$="Y" then
+                xwk = fnblank(3)
+            else
+                xwk = fnblank(1)
+                rem --- Due to DocOut bug, non-blank items required for complete_qty to print
+                OutVect!.addItem(".")
+                OutVect!.addItem(".")
+            endif
             OutVect!.addItem(str(s[6]))
             xwk = fnblank(2)
             OutVect!.addItem(str(s[2]))
