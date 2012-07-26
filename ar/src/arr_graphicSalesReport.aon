@@ -53,16 +53,20 @@ REM ========================================================================
     bbjhome$ = System.getProperty("basis.BBjHome") + "/"
     imageshome$ = stbl("+CUST_IMAGES")
     
-    rem ' the location of the Area, Dial and Guage Chart will be changing
+    rem ' the location of the Area, Dial and Guage Chart may change to utils/
+    rem ' until then their use is optional
     location1$ = bbjhome$  + "demos/Common/"
-    if pos(" " = location1$) <> 0 then location1$ = chr(34) + location1$ + chr(34)
-    
-    rem ' location2$ = bbjhome$ + "demos/Workbench/"
-    rem ' if pos(" " = location2$) <> 0 then location2$ = chr(34) + location2$ + chr(34)
-    
-    prefix$ = pfx
-    prefix$ = prefix$ + " " + location1$
-    prefix prefix$
+    rem ' demos installed?
+    testchan = unt
+    demosInstalled = 0
+    open(testchan, err=*next)location1$; demosInstalled = 1
+    if demosInstalled then
+    	close(testchan)	
+	if pos(" " = location1$) <> 0 then location1$ = chr(34) + location1$ + chr(34)
+    	prefix$ = pfx
+    	prefix$ = prefix$ + " " + location1$
+    	prefix prefix$
+    fi
     
     rem ' Open the BBj SysGUI Channel
     sysgui!=BBjAPI().openSysGui("X0") 
@@ -179,23 +183,26 @@ REM ========================================================================
     buttonChartBar!.setCallback(buttonChartBar!.ON_MOUSE_EXIT, "MOUSE_EXIT")
     buttonChartBar!.setCallback(buttonChartBar!.ON_GAINED_FOCUS, "MOUSE_CLICK")
     
-    buttonChartDial! = win!.addButton(win!.getAvailableControlID(), 540, 10, 50, 30, "BITMAP=" + imageshome$ + "dialchart0.png")
-    buttonChartDial!.setName("dialchart")
-    buttonChartDial!.setCallback(buttonChartDial!.ON_MOUSE_ENTER, "MOUSE_ENTER")
-    buttonChartDial!.setCallback(buttonChartDial!.ON_MOUSE_EXIT, "MOUSE_EXIT")
-    buttonChartDial!.setCallback(buttonChartDial!.ON_GAINED_FOCUS, "MOUSE_CLICK")
-    
-    buttonChartGauge! = win!.addButton(win!.getAvailableControlID(), 590, 10, 50, 30, "BITMAP=" + imageshome$ + "gaugechart0.png")
-    buttonChartGauge!.setName("gaugechart")
-    buttonChartGauge!.setCallback(buttonChartGauge!.ON_MOUSE_ENTER, "MOUSE_ENTER")
-    buttonChartGauge!.setCallback(buttonChartGauge!.ON_MOUSE_EXIT, "MOUSE_EXIT")
-    buttonChartGauge!.setCallback(buttonChartGauge!.ON_GAINED_FOCUS, "MOUSE_CLICK")
-    
-    buttonChartArea! = win!.addButton(win!.getAvailableControlID(), 640, 10, 50, 30, "BITMAP=" + imageshome$ + "areachart0.png")
-    buttonChartArea!.setName("areachart")
-    buttonChartArea!.setCallback(buttonChartArea!.ON_MOUSE_ENTER, "MOUSE_ENTER")
-    buttonChartArea!.setCallback(buttonChartArea!.ON_MOUSE_EXIT, "MOUSE_EXIT")
-    buttonChartArea!.setCallback(buttonChartArea!.ON_GAINED_FOCUS, "MOUSE_CLICK")
+    rem ' these charts are only available if the BBj demos are installed
+    if demosInstalled then
+	buttonChartDial! = win!.addButton(win!.getAvailableControlID(), 540, 10, 50, 30, "BITMAP=" + imageshome$ + "dialchart0.png")
+	buttonChartDial!.setName("dialchart")
+	buttonChartDial!.setCallback(buttonChartDial!.ON_MOUSE_ENTER, "MOUSE_ENTER")
+	buttonChartDial!.setCallback(buttonChartDial!.ON_MOUSE_EXIT, "MOUSE_EXIT")
+	buttonChartDial!.setCallback(buttonChartDial!.ON_GAINED_FOCUS, "MOUSE_CLICK")
+
+	buttonChartGauge! = win!.addButton(win!.getAvailableControlID(), 590, 10, 50, 30, "BITMAP=" + imageshome$ + "gaugechart0.png")
+	buttonChartGauge!.setName("gaugechart")
+	buttonChartGauge!.setCallback(buttonChartGauge!.ON_MOUSE_ENTER, "MOUSE_ENTER")
+	buttonChartGauge!.setCallback(buttonChartGauge!.ON_MOUSE_EXIT, "MOUSE_EXIT")
+	buttonChartGauge!.setCallback(buttonChartGauge!.ON_GAINED_FOCUS, "MOUSE_CLICK")
+
+	buttonChartArea! = win!.addButton(win!.getAvailableControlID(), 640, 10, 50, 30, "BITMAP=" + imageshome$ + "areachart0.png")
+	buttonChartArea!.setName("areachart")
+	buttonChartArea!.setCallback(buttonChartArea!.ON_MOUSE_ENTER, "MOUSE_ENTER")
+	buttonChartArea!.setCallback(buttonChartArea!.ON_MOUSE_EXIT, "MOUSE_EXIT")
+	buttonChartArea!.setCallback(buttonChartArea!.ON_GAINED_FOCUS, "MOUSE_CLICK")
+    fi
 
     win!.setCallback(win!.ON_CLOSE,"EXIT")
     win!.setCallback(win!.ON_RESIZE, "WINDOW_RESIZE")
@@ -231,9 +238,11 @@ WINDOW_RESIZE:
     myBBjBarChart!.setSize(winWidth - 20, winHeight - 90)
    
     rem ' resize area chart
-    AreaChartWindow!.setSize(winWidth - 20, winHeight - 90)
-    BBjGenericAreaChart!.setSize(winWidth - 20, winHeight - 90)
-
+    if demosInstalled then
+	AreaChartWindow!.setSize(winWidth - 20, winHeight - 90)
+	BBjGenericAreaChart!.setSize(winWidth - 20, winHeight - 90)
+    fi
+    
     return
     
 SELECT_DATES:
@@ -296,16 +305,19 @@ SET_CHART_TYPE:
     buttonChartLine!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartLine!.getName() + "0.png"))
     buttonChartBar!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartBar!.getName() + "0.png"))
     buttonChartPie!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartPie!.getName() + "0.png"))
-    buttonChartDial!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartDial!.getName() + "0.png"))
-    buttonChartArea!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartArea!.getName() + "0.png"))
-    buttonChartGauge!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartGauge!.getName() + "0.png"))
-    DialChartWindow!.setVisible(0,err=*NEXT)
-    AreaChartWindow!.setVisible(0,err=*NEXT)
     BarChartWindow!.setVisible(0,err=*NEXT)
     LineChartWindow!.setVisible(0,err=*NEXT)
     PieChartWindow!.setVisible(0,err=*NEXT)
-    GaugeChartWindow!.setVisible(0,err=*NEXT)
 
+    if demosInstalled then    
+	buttonChartDial!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartDial!.getName() + "0.png"))
+	buttonChartArea!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartArea!.getName() + "0.png"))
+	buttonChartGauge!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartGauge!.getName() + "0.png"))
+	DialChartWindow!.setVisible(0,err=*NEXT)
+	AreaChartWindow!.setVisible(0,err=*NEXT)
+	GaugeChartWindow!.setVisible(0,err=*NEXT)
+    fi
+    
     if currentChartType$ = "linechart" then
         buttonChartLine!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartLine!.getName() + "1.png"))
         LineChartWindow!.setVisible(1,err=*NEXT)
@@ -448,16 +460,14 @@ REM ========================================================================
 
     gosub GENERATE_DATASETS
     
-    gosub CREATE_AREACHART
-    gosub CREATE_DIALCHART
+    if demosInstalled then
+	gosub CREATE_AREACHART
+	gosub CREATE_DIALCHART
+	gosub CREATE_GAUGECHART
+    fi
     gosub CREATE_BARCHART
     gosub CREATE_LINECHART
     gosub CREATE_PIECHART
-    gosub CREATE_GAUGECHART
-
-    rem ' if salesperson!.size() = 0 then
-    rem ' 	currentChartType$ = "piechart"
-    rem ' endif
 
     gosub SET_CHART_TYPE
     win!.setCursor(0)
@@ -525,6 +535,8 @@ REM ========================================================================
          maxTotalSales = 0
     endif
 
+return
+
 CREATE_AREACHART:
 REM ========================================================================
 REM Create the AreaChart and customize it
@@ -553,10 +565,14 @@ REM ========================================================================
 
     REM Define colors and fonts
     bgColor! = BBjAPI().makeColor(170,170,170)
-    font! = BBjAPI().getSysGui().makeFont("Arial", 10, BBjAPI().getSysGui().BOLD)
-    font2! = BBjAPI().getSysGui().makeFont("Arial", 12, BBjAPI().getSysGui().BOLD)
-    font3! = BBjAPI().getSysGui().makeFont("Arial", 14, BBjAPI().getSysGui().BOLD)
-    font4! = BBjAPI().getSysGui().makeFont("Arial", 16, BBjAPI().getSysGui().BOLD)
+    rem ' font! = BBjAPI().getSysGui().makeFont("Arial", 10, BBjAPI().getSysGui().BOLD)
+    rem ' font2! = BBjAPI().getSysGui().makeFont("Arial", 12, BBjAPI().getSysGui().BOLD)
+    rem ' font3! = BBjAPI().getSysGui().makeFont("Arial", 14, BBjAPI().getSysGui().BOLD)
+    rem ' font4! = BBjAPI().getSysGui().makeFont("Arial", 16, BBjAPI().getSysGui().BOLD)
+    font! = BBjAPI().getSysGui().makeFont("Tahoma", 10, sysgui!.BOLD)
+    font2! = BBjAPI().getSysGui().makeFont("Tahoma", 12, sysgui!.BOLD)
+    font3! = BBjAPI().getSysGui().makeFont("Tahoma", 14, sysgui!.BOLD)
+    font4! = BBjAPI().getSysGui().makeFont("Tahoma", 16, sysgui!.BOLD)
 
     DialChartWindow!.destroy(err=*NEXT)
     DialChartWindow! = win!.addChildWindow(win!.getAvailableControlID(), 10, 80, winWidth - 20, winHeight - 90, "", $00010810$, sysgui!.getAvailableContext())
@@ -582,8 +598,8 @@ REM ========================================================================
 
         REM Add the scale, background, and salesperson name
         myBBjDialChart!.setScale(0, 0, maxTotalSales/1000, int(maxTotalSales/5000), -90, -270, .74, .05, font3!, .22, BBjAPI().makeColor(50,50,50), 10)
-        myBBjDialChart!.setBackgroundImageResized("/Program Files/basis/demos/DigitalDashboard/images/dialframe.png", dialWidth, dialHeight)
-        myBBjDialChart!.setAnnotation(salesperson$ + " (" + salespersonCode!.get(salesperson$+"_code") + ")", font4!, BBjAPI().makeColor(76,93,110), .30, -20)
+        myBBjDialChart!.setBackgroundImageResized(imageshome$ + "dialframe.png", dialWidth, dialHeight)
+        myBBjDialChart!.setAnnotation(salesperson$ + " (" + salespersonCode!.get(salesperson$+"_code") + ")", font4!, BBjAPI().makeColor(76,93,110), .05, -20)
 
         REM Set the value indicator color based on the sales figures
         valueFGColor! = BBjAPI().makeColor(93,115,135)
@@ -665,10 +681,7 @@ REM ========================================================================
         myBBjGaugeChart!.setValueIndicator(0, font4!, BBjAPI().makeColor(50,50,150), BBjAPI().makeColor(225,225,225), BBjAPI().makeColor(50,50,100), .66, 90)
         myBBjGaugeChart!.setAnnotation(annotation$ , font3!, BBjAPI().makeColor(150,50,50), .77, 90)
         myBBjGaugeChart!.setGradient(BBjAPI().makeColor(250,250,250), BBjAPI().makeColor(192,192,192), 1)
-        if (myBBjGaugeChart!.setBackgroundImage("/Program Files/basis/demos/DigitalDashboard/images/gaugeframe.png") = 0) then
-        	myBBjGaugeChart!.setBackgroundImage(dsk("") + dir("") + "images/gaugeframe.png")
-    	  endif
-
+        myBBjGaugeChart!.setBackgroundImage(imageshome$ + "gaugeframe.png")
 
         REM Add in the average
         myBBjGaugeChart!.addDataset(0, value, 0, .85)
