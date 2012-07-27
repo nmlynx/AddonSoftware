@@ -72,10 +72,9 @@ rem --- Columns for the record set are defined using a string template
 rem --- Get Barista System Program directory
 	sypdir$=""
 	sypdir$=stbl("+DIR_SYP",err=*next)
-
-rem --- Get masks
-
 	pgmdir$=stbl("+DIR_PGM",err=*next)
+	
+rem --- Get masks
 
 	ad_units_mask$=fngetmask$("ad_units_mask","#,###.00",masks$)
 	cust_mask$=fngetmask$("cust_mask","000000",masks$)
@@ -94,53 +93,6 @@ rem          ##0.00;##0.00-   Positives only
 	sf_units_mask_pattern$=fngetPattern$(sf_units_mask$)
 	sf_amt_mask_pattern$=fngetPattern$(sf_amt_mask$)
 
-	rem --- Cost mask's Pattern
-REM CAJ ESCAPE $,  $##,##0.00 ==>> $     0.00
-REM CAJ ESCAPE *$,  $*##,##0.00 ==>> $0.00
-REM CAJ ESCAPE CR
-
-REM JPB Create and FNGetPattern
-
-
-goto escapecaj_ENDOldPattern	
-
-	if pos("-"=sf_cost_mask$) 
-		minus_pos=pos("-"=sf_cost_mask$)
-		if minus_pos=len(sf_cost_mask$)
-			sf_cost_mask_pattern$=sf_cost_mask$(1,len(sf_cost_mask$)-1)+";"+sf_cost_mask$; rem Has negatives with minus at the end =>> ##0.00;##0.00-
-		else 
-			sf_cost_mask_pattern$=sf_cost_mask$(2,len(sf_cost_mask$))+";"+sf_cost_mask$; rem Has negatives with minus at the front =>> ##0.00;-##0.00
-		endif
-	else
-		sf_cost_mask_pattern$=sf_cost_mask$; rem Mask is positives only =>> ##0.00
-	endif
-	
-	rem --- Units mask's Pattern
-	if pos("-"=sf_units_mask$) 
-		minus_pos=pos("-"=sf_units_mask$)
-		if minus_pos=len(sf_units_mask$)
-			sf_units_mask_pattern$=sf_units_mask$(1,len(sf_units_mask$)-1)+";"+sf_units_mask$; rem Has negatives with minus at the end =>> ##0.00;##0.00-
-		else 
-			sf_units_mask_pattern$=sf_units_mask$(2,len(sf_units_mask$))+";"+sf_units_mask$; rem Has negatives with minus at the front =>> ##0.00;-##0.00
-		endif
-	else
-		sf_units_mask_pattern$=sf_units_mask$; rem Mask is positives only =>> ##0.00
-	endif
-
-	rem --- Amount mask's Pattern
-	if pos("-"=sf_amt_mask$) 
-		minus_pos=pos("-"=sf_amt_mask$)
-		if minus_pos=len(sf_amt_mask$)
-			sf_amt_mask_pattern$=sf_amt_mask$(1,len(sf_amt_mask$)-1)+";"+sf_amt_mask$; rem Has negatives with minus at the end =>> ##0.00;##0.00-
-		else 
-			sf_amt_mask_pattern$=sf_amt_mask$(2,len(sf_amt_mask$))+";"+sf_amt_mask$; rem Has negatives with minus at the front =>> ##0.00;-##0.00
-		endif
-	else
-		sf_amt_mask_pattern$=sf_amt_mask$; rem Mask is positives only =>> ##0.00
-	endif
-
-escapecaj_ENDOldPattern:
-	
 rem --- Open files with adc
 
     files=4,begfile=1,endfile=files

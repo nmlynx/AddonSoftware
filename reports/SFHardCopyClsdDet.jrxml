@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopyClsdDet" language="groovy" pageWidth="760" pageHeight="595" orientation="Landscape" columnWidth="740" leftMargin="0" rightMargin="20" topMargin="20" bottomMargin="10">
 	<property name="ireport.zoom" value="1.5"/>
-	<property name="ireport.x" value="0"/>
+	<property name="ireport.x" value="350"/>
 	<property name="ireport.y" value="0"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
 	<parameter name="WO_LOCATION" class="java.lang.String"/>
 	<parameter name="WO_NO" class="java.lang.String"/>
 	<parameter name="BARISTA_WD" class="java.lang.String"/>
-	<parameter name="MASKS" class="java.lang.String"/>
-	<parameter name="COST_MASK" class="java.lang.String"/>
-	<parameter name="AMT_MASK" class="java.lang.String"/>
-	<parameter name="UNITS_MASK" class="java.lang.String"/>
 	<parameter name="COST_MASK_PATTERN" class="java.lang.String"/>
 	<parameter name="AMT_MASK_PATTERN" class="java.lang.String"/>
 	<parameter name="UNITS_MASK_PATTERN" class="java.lang.String"/>
+	<parameter name="MASKS" class="java.lang.String"/>
 	<queryString language="SQL">
-		<![CDATA[call sfhardcopyclsddet($P{FIRM_ID},$P{WO_LOCATION},$P{WO_NO},$P{BARISTA_WD},$P{MASKS},$P{COST_MASK},$P{AMT_MASK},$P{UNITS_MASK},$P{COST_MASK_PATTERN},$P{AMT_MASK_PATTERN},$P{UNITS_MASK_PATTERN})]]>
+		<![CDATA[call sfhardcopyclsddet($P{FIRM_ID},$P{WO_LOCATION},$P{WO_NO},$P{BARISTA_WD},$P{MASKS},$P{COST_MASK_PATTERN},$P{AMT_MASK_PATTERN},$P{UNITS_MASK_PATTERN})]]>
 	</queryString>
 	<field name="CLOSED_DATE" class="java.lang.String"/>
 	<field name="WO_TYPE" class="java.lang.String"/>
 	<field name="WO_TYPE_DESC" class="java.lang.String"/>
+	<field name="LSTACT_DATE" class="java.lang.String"/>
+	<field name="LSTACT_DATE_RAW" class="java.lang.String"/>
+	<field name="CLS_INP_DATE_RAW" class="java.lang.String"/>
 	<field name="COMPLETE_YN" class="java.lang.String"/>
 	<field name="CLOSE_AT_STD_ACT" class="java.lang.String"/>
 	<field name="CURR_PROD_QTY" class="java.lang.String"/>
@@ -254,24 +254,40 @@
 				<text><![CDATA[Current Prod Qty]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="214" y="2" width="60" height="13"/>
+				<reportElement x="153" y="0" width="60" height="13"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[Closed Date:]]></text>
 			</staticText>
+			<textField>
+				<reportElement x="218" y="0" width="53" height="13"/>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{CLOSED_DATE}]]></textFieldExpression>
+			</textField>
 			<staticText>
-				<reportElement x="401" y="2" width="60" height="13"/>
+				<reportElement x="303" y="0" width="60" height="13"/>
 				<textElement textAlignment="Right"/>
 				<text><![CDATA[WO Type:]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="279" y="2" width="106" height="13"/>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{CLOSED_DATE}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="471" y="2" width="152" height="13"/>
+				<reportElement x="367" y="0" width="152" height="13"/>
 				<textElement/>
 				<textFieldExpression><![CDATA[$F{WO_TYPE_DESC}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="535" y="0" width="143" height="13">
+					<printWhenExpression><![CDATA[$F{LSTACT_DATE_RAW}>$F{CLS_INP_DATE_RAW}]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Warning Last Activity Was ]]></text>
+			</staticText>
+			<textField pattern="">
+				<reportElement x="683" y="0" width="57" height="13">
+					<printWhenExpression><![CDATA[$F{LSTACT_DATE_RAW}>$F{CLS_INP_DATE_RAW}]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{LSTACT_DATE}]]></textFieldExpression>
 			</textField>
 			<staticText>
 				<reportElement x="68" y="19" width="50" height="26"/>
