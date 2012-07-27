@@ -518,6 +518,12 @@
             <entry key="addon.dtstamp" value="${addon.dtstamp}"/>
         </propertyfile>
 
+        <!-- Jar it up property files -->
+        <jar destfile="${build.dir}/apps/aon/prop/addon.jar">
+             <fileset dir="${build.dir}"
+                      includes="apps/aon/prop/*.properties" />
+        </jar>
+
         <!-- Jar it up - package_addon.jar -->
         <jar destfile="${build.dir}/package_addon.jar">
              <fileset dir="${build.dir}"
