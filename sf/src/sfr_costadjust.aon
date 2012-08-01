@@ -171,11 +171,9 @@ rem --- Parameters
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",vend_mask$,0,vend_mask
 	endif
 
-	c4=num(sfs01a.empl_no_len$)
-	c5$=m0$
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","I","",c5$,0,c5
     if pr$="Y"
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","PR","I","",c5$,0,c5
-		find record (prs01_dev,key=firm_id$+"PR00",dom=std_missing_params) prs01a$
 	endif
 
 rem --- Is General Ledger installed and being used?
@@ -283,13 +281,13 @@ rem ---  column heading
 
 	dim columns$[14,10]
 	columns=14
-	columns$[0,0]=Translate!.getTranslation("AON_WO"),              columns$[0,1]="C",columns$[0,2]="15"
-	columns$[1,0]=Translate!.getTranslation("AON_TYPE"),            columns$[1,1]="C",columns$[1,2]="10"
-	columns$[2,0]=Translate!.getTranslation("AON_CATEGORY"),        columns$[2,1]="C",columns$[2,2]="12"
-	columns$[3,0]=Translate!.getTranslation("AON_DATE"),            columns$[3,1]="C",columns$[3,2]="12"
-	columns$[4,0]=Translate!.getTranslation("AON_SOURCE"),          columns$[4,1]="C",columns$[4,2]="12"
+	columns$[0,0]=Translate!.getTranslation("AON_WO"),              columns$[0,1]="C",columns$[0,2]="10"
+	columns$[1,0]=Translate!.getTranslation("AON_TYPE"),            columns$[1,1]="C",columns$[1,2]="8"
+	columns$[2,0]=Translate!.getTranslation("AON_CATEGORY"),        columns$[2,1]="C",columns$[2,2]="8"
+	columns$[3,0]=Translate!.getTranslation("AON_DATE"),            columns$[3,1]="C",columns$[3,2]="10"
+	columns$[4,0]=Translate!.getTranslation("AON_SOURCE"),          columns$[4,1]="C",columns$[4,2]="8"
 	columns$[5,0]=Translate!.getTranslation("AON_SEQ"),             columns$[5,1]="C",columns$[5,2]="8"
-	columns$[6,0]=Translate!.getTranslation(""),                    columns$[6,1]="C",columns$[6,2]="12"
+	columns$[6,0]=Translate!.getTranslation(""),                    columns$[6,1]="C",columns$[6,2]="8"
 	columns$[7,0]=Translate!.getTranslation("AON_QTY")+"^"+Translate!.getTranslation("AON_COMPLETE"),        columns$[7,1]="N",columns$[7,2]="12",columns$[7,3]=m2$
 	columns$[8,0]=Translate!.getTranslation("AON_DIRECT")+"^"+Translate!.getTranslation("AON_LABOR"),        columns$[8,1]="N",columns$[8,2]="12",columns$[8,3]=m2$
 	columns$[9,0]=Translate!.getTranslation("AON_OVHD")+"^"+Translate!.getTranslation("AON_LABOR"),        columns$[9,1]="N",columns$[9,2]="12",columns$[9,3]=m2$
@@ -368,7 +366,6 @@ rem --- W/O Header
 			while 1
 				dim ivm01a$:fattr(ivm01a$)
 				find record (ivm01_dev,key=firm_id$+woe01a.item_id$,dom=*break) ivm01a$
-rem				d1$(1,30)=desc$(1,min(desc[1],30))
 				break
 			wend
 		endif
@@ -380,7 +377,9 @@ rem --- Get Additional Data
 			read record (wot01_dev,key=firm_id$+wow08a.wo_location$+wow08a.wo_no$+wow08a.trans_date$+wow08a.trans_seq$,dom=*continue) wot01a$
 			rem jpb get a1$(8,3) and a1$(1,7) from somewhere
 		endif
-		if wow08a.record_id$="S" read record (wot31_dev,key=firm_id$+wow08a.wo_location$+wow08a.wo_no$+wow08a.trans_date$+wow08a.trans_seq$,dom=*continue) wot31a$
+		if wow08a.record_id$="S"
+			read record (wot31_dev,key=firm_id$+wow08a.wo_location$+wow08a.wo_no$+wow08a.trans_date$+wow08a.trans_seq$,dom=*continue) wot31a$
+		endif
 		find record (woe01_dev,key=firm_id$+"  "+a1$(1,7),dom=l1380) woe01b$
 		if pos(" "<>a1$(8,3))=0 a1$(8,3)=a0$(12,3)
 l1380:
@@ -392,22 +391,15 @@ operations: rem --- Get Employee/Op Code
 		dim empcode$:fattr(empcode$)
 		dim opcode$:fattr(opcode$)
 		find record (empcode_dev,key=firm_id$+wot01a.employee_no$,dom=*next) empcode$
-		emp_name$=empcode.empl_surname$+", "+empcode.empl_givname$; gosub l5700;rem was d9$=...
-rem		f0$=d9$
-		find record (opcode_dev,key=firm_id$+wot01a.op_code$,dom=l1470) opcode$
+		emp_name$=empcode.empl_surname$+", "+empcode.empl_givname$; gosub l5700
+		find record (opcode_dev,key=firm_id$+wot01a.op_code$,dom=*next) opcode$
 l1460:
-rem		f1$=f1$(6,20)
-l1470:
-rem		f1$=f1$(1,pos("   "=f1$+"   ")-1)
-rem		f0$=f0$(1,pos("   "=f0$+"   ")-1)
-rem		if len(f0$)+37>124-m1-m2-m3*3-6 f0$=f0$(1,124-m1-m2-m3*3-6-37)
-rem		if len(f1$)+37>124-m1-m2-m3*3-6 f1$=f1$(1,124-m1-m2-m3*3-6-37)
 		goto print_it
 
 subcontracts: rem --- Get Vendor Name
 
-		dim apm01a$:fattr(apm01a$);rem f0$(30)
-rem		f0$(1)="*** Missing Vendor ***"
+		dim apm01a$:fattr(apm01a$)
+		apm01a.vendor_name$="*** Missing Vendor ***"
 		find record (apm01_dev,key=firm_id$+wot31a.vendor_id$,dom=*next) apm01a$
 
 print_it: rem --- Print It Here
@@ -445,11 +437,6 @@ rem		if l>l9 gosub l5000
 				outVect!.addItem("")
 			endif
 		endif
-rem		print (printer_dev)a0$(5,7),"  ",d0$(12,2),"  ",d0$(14,1),"  ",fndate$(a0$(12)),"  ",a0$(15,1),"  ",a0$(16,3),
-rem		if a0$(15,1)="O" print (printer_dev)@(124-m1-m2*3-m3*3),b[5]:m2$,b[3]:m3$,b[1]-b[3]:m3$,@(124-m1-m2*2),b[6]:m2$,
-rem		if a0$(15,1)="S" print (printer_dev)@(124-m1-m2*2-m3),b[1]:m3$,
-rem		print (printer_dev)@(124-m1-m2*3-m3*3-7),"Orig: ",@(124-m1-m2),b[0]:m2$,b[2]:m1$,
-rem		if a1$(1,7)<>a0$(5,7) print (printer_dev)@(124),a1$(1,7) else print (printer_dev)""
 
 rem --- Adj Here
 
@@ -482,11 +469,6 @@ rem --- Adj Here
 				outVect!.addItem("")
 			endif
 		endif
-rem		print (printer_dev)@(3),d1$(1,30),
-rem		if a0$(15,1)="O" print (printer_dev)@(124-m1-m2*3-m3*3),a[4]:m2$,a[1]:m3$,a[2]:m3$,@(124-m1-m2*2),a[3]:m2$,
-rem		if a0$(15,1)="S" print (printer_dev)@(124-m1-m2*2-m3),a[1]:m3$,
-rem		print (printer_dev)@(124-m1-m2*3-m3*3-6),"Adj:",@(124-m1-m2),a[0]:m2$,(a[0]+a[3])*(a[1]+a[2]):m1$,
-rem		if a1$(8,3)<>a0$(12,3) print (printer_dev)@(124),fndate$(a1$(8,3)) else print (printer_dev)""
 
 rem --- Net
 
@@ -530,11 +512,6 @@ rem --- Net
 			endif
 		endif
 		
-rem		if a0$(15,1)="O" print (printer_dev)@(3),fnmask$(b1$(7,c4),c5$),"  ",b1$(4,3)," ",f1$,@(124-m1-m2*3-m3*3),a[4]-b[5]:m2$,a[1]-b[3]:m3$,a[2]-(b[1]-b[3]):m3$,@(124-m1-m2*2),a[3]-b[6]:m2$,
-rem		if a0$(15,1)="S" print (printer_dev)@(3),fnmask$(b1$(4,vend_mask),vend_mask$),"   ",b1$(10,10),@(124-m1-m2*2-m3),a[1]-b[1]:m3$,
-rem		print (printer_dev)@(124-m1-m2*3-m3*3-6),"Net:",@(124-m1-m2),a[0]-b[0]:m2$,(a[0]+a[3])*(a[1]+a[2])-b[2]:m1$,
-rem		if b[2]<>(a[0]+a[3])*(a[1]+a[2]) print (printer_dev)@(124),"***" else print (printer_dev)""
-
 rem --- Name
 
 		outVect!.addItem("")
@@ -547,11 +524,6 @@ rem --- Name
 		
 		xvf=fnblank(15)
 		
-rem		print (printer_dev)@(3),f0$
-rem		print (printer_dev)""
-rem		l=l+5
-rem		t0=t0+(a[0]+a[3])*(a[1]+a[2])-b[2]
-
 rem --- Check G/L Posting Dates
 		if gl$="Y"
 			glstatus=0
@@ -571,7 +543,7 @@ rem --- Check G/L Posting Dates
 		endif
 
 rem --- Post Original Dates
-rem jpb lots of work here
+
 		dim wow06a$:fattr(wow06a$)
 		wow06a.firm_id$=firm_id$
 		wow06a.trans_date$=wow08_key.trans_date$
@@ -586,101 +558,113 @@ rem jpb lots of work here
 			wow06a.unit_cost=wow06a.unit_cost-wot31a.unit_cost
 			wow06a.net_adjust=wow06a.net_adjust-wot31a.ext_cost
 		endif
-		if d0$(12,2)=c0$(12,2) and a0$(12,3)=a1$(8,3) goto l2650
-		write record (wow06_dev) wow06a$
+		if woe01a.wo_type$<>woe01b.wo_type$ or trans_date$=new_trans_date$
+			wow06a$=field(wow06a$)
+			write record (wow06_dev) wow06a$
 
 rem --- Adjusted Dates
-rem jpb - next 3 lines and then a[???]
-		w0$=firm_id$+a1$(8,3)+c0$(12,2)
-		dim w[3]
-		find record (wow06_dev,key=w0$,dom=*next) wow06a$
-l2650:
+
+			dim wow06a$:fattr(wow06a$)
+			find record (wow06_dev,key=firm_id$+new_trans_date$+woe01b.wo_type$,dom=*next) wow06a$
+		endif
+
 		if wow08a.record_id$="O"
-			wow06a.act_dir_amt=wow06a.act_dir_amt+a[1]*(a[0]+a[3])
-			wow06a.act_ovhd_amt=wow06a.act_ovhd_amt+a[2]*(a[0]+a[3])
+			wow06a.act_dir_amt=wow06a.act_dir_amt+woe12a.new_dir_rate*(woe12a.new_units+woe12a.new_set_hrs)
+			wow06a.act_ovhd_amt=wow06a.act_ovhd_amt+woe12a.new_ovr_rate*(woe12a.new_units+woe12a.new_set_hrs)
+			wow06a.net_adjust=wow06a.net_adjust+(woe12a.new_dir_rate+woe12a.new_ovr_rate)*(woe12a.new_units+woe12a.new_set_hrs)
 		endif
 		if wow08a.record_id$="S"
-			wow06a.unit_cost=wow06a.unit_cost+a[1]*a[0]
+			wow06a.unit_cost=wow06a.unit_cost+woe42a.new_unit_cst*woe42a.new_units
+			wow06a.net_adjust=wow06a.net_adjust+woe42a.new_unit_cst*woe42a.new_units
 		endif
-		wow06a.net_adjust=wow06a.net_adjust+(a[1]+a[2])*(a[0]+a[3])
+		wow06a$=field(wow06a$)
 		write record (wow06_dev) wow06a$
 
 rem --- Generate G/L Summary
 
-		if gl$<>"Y" goto l3900
-		dim y0$(70,"0"),z0$(70,"0")
-		find record (wom10_dev,key=firm_id$+"A"+d0$(12,2)) wom10a$
-		z0$=y0$
-		if c0$(12,2)=d0$(12,2) goto l3100
-		find record (wom10_dev,key=firm_id$+"A"+c0$(12,2),dom=l1460) wom10a2$
+		if gl$<>"Y" continue
+		dim wom10a$:fattr(wom10a$)
+		dim wom10a2$:fattr(wom10a$)
+		find record (wom10_dev,key=firm_id$+"A"+woe01a.wo_type$) wom10a$
+		wom10a2$=wom10a$
+		find record (wom10_dev,key=firm_id$+"A"+woe01b.wo_type$,dom=l1460) wom10a2$
 
-l3100: rem --- Back Out The Distribution
+rem --- Back Out The Distribution
 
-		account$=y0$(1,10)
-		gldate$=a0$(12,3)
-		amount=-b[2]
+		account$=wom10a.gl_wip_acct$
+		gldate$=trans_date$
+		if wow08a.record_id$="O"
+			amount=-wot01a.ext_cost
+		else
+			amount=-wot31a.ext_cost
+		endif
 		units=0
-		ref1$="WO "+a0$(5,7)
-		ref2$="Seq "+a0$(16,3)
-		ref3$=fndate$(a1$(8,3))
+		ref1$="WO "+wow08a.wo_no$
+		ref2$="Seq "+wow08a.trans_seq$
+		ref3$=fndate$(new_trans_date$)
 		memo$=cm$
 		gosub glrecap
-		on pos(a0$(15,1)="OS")-1 goto l3200,l3300,l3900
+		on pos(wow08a.record_id$="OS")-1 goto old_labor,old_subs
 
-l3200: rem --- Labor
+old_labor: rem --- Labor
 
-		account$=y0$(21,10)
-		amount=(b[0]+b[6])*b[3]
+		account$=wom10a.gl_dir_lab$
+		amount=(wot01a.units+wot01a.setup_time)*wot01a.direct_rate
 		memo$=lm$
 		gosub glrecap
-		account$=y0$(31,10)
-		amount=(b[0]+b[6])*b[4]
+		account$=wom10a.gl_ovh_lab$
+		amount=(wot01a.units+wot01a.setup_time)*wot01a.ovhd_rate
 		gosub glrecap
-		goto l3500
+		goto add_back
 
-l3300: rem --- Subcontracts
+old_subs: rem --- Subcontracts
 
-		account$=y0$(41,10)
-		amount=b[2]
+		account$=wom10a.gl_pur_acct$
+		amount=sft31.ext_cost
 		memo$=sm$
 		gosub glrecap
 
-l3500: rem --- Add It Back In With New Information
+add_back: rem --- Add It Back In With New Information
 
-		account$=z0$(1,10)
-		gldate$=a1$(8,3)
-		amount=round((a[0]+a[3])*a[1],2)+round((a[0]+a[3])*a[2],2)
-		ref1$="WO "+c0$(5,7)
-		ref2$="Seq "+a0$(16,3)
-		ref3$=fndate$(a0$(12,3))
+		account$=wom10a2.gl_wip_acct$
+		gldate$=new_trans_date$
+		if wow08a.record_id$="O"
+			amount=round((woe12a.new_units+woe12a.new_set_hrs)*woe12a.new_dir_rate,2)+round((woe12a.new_units+woe12a.new_set_hrs)*woe12a.new_ovr_rate,2)
+		else
+			amount=round(woe42a.new_units*woe42a.new_unit_cst,2)
+		endif
+		ref1$="WO "+woe01b.wo_no$
+		ref2$="Seq "+wow08a.trans_seq$
+		ref3$=fndate$(trans_date$)
 		memo$=cm$
 		gosub glrecap
-		on pos(a0$(15,1)="OS")-1 goto l3600,l3700
+		on pos(wow08a.record_id$="OS")-1 goto new_labor,new_subs
 
-l3600: rem --- Labor
+new_labor: rem --- Labor
 
-		account$=z0$(21,10)
-		amount=((-a[0])-a[3])*a[1]
+		account$=wom10a2.gl_dir_lab$
+		amount=((-woe12a.new_units)-woe12a.new_set_hrs)*woe12a.new_dir_rate
 		memo$=lm$
 		gosub glrecap
-		account$=z0$(31,10)
-		amount=((-a[0])-a[3])*a[2]
+		account$=wom10a2.gl_ovh_lab$
+		amount=((-woe12a.new_units)-woe12a.new_set_hrs)*woe12a.new_ovr_rate
 		gosub glrecap
-		goto l3900
+		continue
 
-l3700: rem --- Subcontracts
+new_subs: rem --- Subcontracts
 
-		account$=z0$(41,10)
-		amount=((-a[0])-a[3])*(a[1]+a[2])
+		account$=wom10a2.gl_pur_acct$
+		amount=(-woe42a.new_units)*woe42a.new_unit_cst
 		memo$=sm$
 		gosub glrecap
 
-l3900: rem --- Loop back for next record
+rem --- Loop back for next record
 
 	wend
 
 rem --- End
 
+goto std_exit;rem jpb - not really, but good for now...
     print (printer_dev)@(124-m1),j$(1,m1-1),'lf',@(37),"Report Total: ",@(124-m1),t0:m1$
 
 rem --- Totals By Type
@@ -712,7 +696,7 @@ l4400:
     page=h
     width=h0
     f0$=termf0$
-    if gl$="Y" run pgmdir$+"glr_xa."
+    if gl$="Y" run pgmdir$+"glr_xa.aon"
     run update$
 	
 l5000:
@@ -757,12 +741,12 @@ l6100:
     return                                                  
 rem --- Special G/L Recap Routine
 glrecap:                                                  
-    if gl$<>"Y" goto l6990
-    precision 2                                                  
-    let amount=amount*1
-    call pgmdir$+"glc_glpost.aon",glm01_dev,glw11_dev,glt05_dev,account$,gldate$,ref1$,ref2$,ref3$,memo$,amount,units,status
-    precision 4                                                  
-l6990: return                                                  
+    if gl$="Y"
+		precision 2                                                  
+		let amount=amount*1
+		call pgmdir$+"glc_glpost.aon",glm01_dev,glw11_dev,glt14_dev,account$,gldate$,ref1$,ref2$,ref3$,memo$,amount,units,status
+		precision 4                                                  
+	return                                                  
 
 open_tables:rem --- Open Tables
 
