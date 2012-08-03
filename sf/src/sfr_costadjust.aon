@@ -158,16 +158,16 @@ rem --- Initializations
     headings=1
     errors=0
     termf0$=f0$
-    if p9$="L" p8$="Lot Number: "
-    if p9$="S" p8$="Serial Number: "
+    if p9$="L" p8$=Translate!.getTranslation("AON_LOT_NUMBER:_")
+    if p9$="S" p8$=Translate!.getTranslation("AON_SERIAL_NUMBER:_")
     m0=len(m0$)
     m1=len(m1$)
     m2=len(m2$)
     m3=len(m3$)
     o9=0
-    lm$="Labor Cost Adjustment"
-    sm$="Subcontract Cost Adjustment"
-    cm$="Closed Cost Adjustment"
+    lm$=Translate!.getTranslation("AON_LABOR_COST_ADJUSTMENT")
+    sm$=Translate!.getTranslation("AON_SUBCONTRACT_COST_ADJUSTMENT")
+    cm$=Translate!.getTranslation("AON_CLOSED_COST_ADJUSTMENT")
 	desc[1]=num(ivs01a.desc_len_01$)
 	desc[2]=num(ivs01a.desc_len_02$)
 	desc[3]=num(ivs01a.desc_len_03$)
@@ -364,7 +364,7 @@ subcontracts: rem --- Get Vendor Name
 			woe42a.new_wo_no$=woe42a.wo_no$
 		endif
 		dim apm01a$:fattr(apm01a$)
-		apm01a.vendor_name$="*** Missing Vendor ***"
+		apm01a.vendor_name$=Translate!.getTranslation("AON_***_MISSING_VENDOR_***")
 		find record (apm01_dev,key=firm_id$+wot31a.vendor_id$,dom=*next) apm01a$
 
 print_it: rem --- Print It Here
@@ -375,7 +375,7 @@ print_it: rem --- Print It Here
 		outVect!.addItem(fndate$(wow08a.trans_date$))
 		outVect!.addItem(wow08a.record_id$)
 		outVect!.addItem(wow08a.trans_seq$)
-		outVect!.addItem("Orig:")
+		outVect!.addItem(Translate!.getTranslation("AON_ORIG:"))
 		if wow08a.record_id$="O"
 			outVect!.addItem(str(wot01a.complete_qty))
 			outVect!.addItem(str(wot01a.direct_rate))
@@ -407,7 +407,7 @@ rem --- Adj Here
 		outVect!.addItem("")
 		outVect!.addItem(ivm01a.item_desc$)
 		xvk=fnblank(4)
-		outVect!.addItem("Adj:")
+		outVect!.addItem(Translate!.getTranslation("AON_ADJ:"))
 		if wow08a.record_id$="O"
 			outVect!.addItem(str(woe12a.new_qty_comp))
 			outVect!.addItem(str(woe12a.new_dir_rate))
@@ -447,7 +447,7 @@ rem --- Net
 			outVect!.addItem("")
 		endif
 		xvk=fnblank(2)
-		outVect!.addItem("Net:")
+		outVect!.addItem(Translate!.getTranslation("AON_NET:"))
 		if wow08a.record_id$="O"
 			outVect!.addItem(str(woe12a.new_qty_comp-wot01a.complete_qty))
 			outVect!.addItem(str(woe12a.new_dir_rate-wot01a.direct_rate))
@@ -564,7 +564,7 @@ rem --- Back Out The Distribution
 		endif
 		units=0
 		ref1$="WO "+wow08a.wo_no$
-		ref2$="Seq "+wow08a.trans_seq$
+		ref2$=Translate!.getTranslation("AON_SEQ_")+wow08a.trans_seq$
 		ref3$=fndate$(new_trans_date$)
 		memo$=cm$
 		gosub glrecap
@@ -598,7 +598,7 @@ add_back: rem --- Add It Back In With New Information
 			amount=round(woe42a.new_units*woe42a.new_unit_cst,2)
 		endif
 		ref1$="WO "+woe01b.wo_no$
-		ref2$="Seq "+wow08a.trans_seq$
+		ref2$=Translate!.getTranslation("AON_SEQ_")+wow08a.trans_seq$
 		ref3$=fndate$(trans_date$)
 		memo$=cm$
 		gosub glrecap
@@ -629,7 +629,7 @@ rem --- Loop back for next record
 rem --- End
 
 goto std_exit;rem jpb - not really, but good for now...
-    print (printer_dev)@(124-m1),j$(1,m1-1),'lf',@(37),"Report Total: ",@(124-m1),t0:m1$
+    print (printer_dev)@(124-m1),j$(1,m1-1),'lf',@(37),Translate!.getTranslation("AON_REPORT_TOTAL:_"),@(124-m1),t0:m1$
 
 rem --- Totals By Type
 rem jpb new report?
@@ -654,7 +654,7 @@ l4400:
     gosub l6000
     if l>l9 gosub l5200
     print (printer_dev)@(30),j$(1,m1*4)
-    print (printer_dev)@(3),"Report Totals: ",@(30),u[0]:m1$,u[1]:m1$,u[2]:m1$,u[3]:m1$
+    print (printer_dev)@(3),Translate!.getTranslation("AON_REPORT_TOTALS:_"),@(30),u[0]:m1$,u[1]:m1$,u[2]:m1$,u[3]:m1$
 
     update$="sfu_ga.bbx"
     page=h
@@ -672,15 +672,15 @@ l5200: rem --- Dates Here
 
     let o9=1                                                  
     if l>l9 gosub l5000
-    print (printer_dev)"*** Work Order Adjustment Summary By Type ***",'lf'
-    print (printer_dev)@(30+m1-7),"Direct",@(30+m1*2-9),"Overhead",@(30+m1*3-5),"Subs"
-    print (printer_dev)@(30+m1-6),"Labor",@(30+m1*2-6),"Labor",@(30+m1*3-7),"Amount",@(30+m1*4-6),"Total",'lf'
+    print (printer_dev)Translate!.getTranslation("AON_***_WORK_ORDER_ADJUSTMENT_SUMMARY_BY_TYPE_***"),'lf'
+    print (printer_dev)@(30+m1-7),Translate!.getTranslation("AON_DIRECT"),@(30+m1*2-9),Translate!.getTranslation("AON_OVERHEAD"),@(30+m1*3-5),Translate!.getTranslation("AON_SUBS")
+    print (printer_dev)@(30+m1-6),Translate!.getTranslation("AON_LABOR"),@(30+m1*2-6),Translate!.getTranslation("AON_LABOR"),@(30+m1*3-7),Translate!.getTranslation("AON_AMOUNT"),@(30+m1*4-6),Translate!.getTranslation("AON_TOTAL"),'lf'
     return                                                  
 
 l5300: rem --- Date Subheading
 
     if l>l9 gosub l5200
-    print (printer_dev)"Transaction Date: ",fndate$(t0$),":",'lf'
+    print (printer_dev)Translate!.getTranslation("AON_TRANSACTION_DATE:_"),fndate$(t0$),":",'lf'
     let l=l+2                                                  
     return                                                  
 
@@ -689,7 +689,7 @@ l6000:
     if t0$="" goto l6100
     if l0=0 goto l6100
     print (printer_dev)@(30),j$(1,m1*4)
-    print (printer_dev)fndate$(t0$)," Total: ",@(30),t[0]:m1$,t[1]:m1$,t[2]:m1$,t[3]:m1$,'lf'
+    print (printer_dev)fndate$(t0$),Translate!.getTranslation("AON__TOTAL:_"),@(30),t[0]:m1$,t[1]:m1$,t[2]:m1$,t[3]:m1$,'lf'
     let l=l+3                                                  
 l6100:
     if t9$<>"" return
