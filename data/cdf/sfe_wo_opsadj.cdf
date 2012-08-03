@@ -94,7 +94,42 @@ rem	if ctl_ID <> num(user_tpl.gridOpsCtlID$) then break; rem --- exit callpoint
 	curr_col = dec(notice.col$);rem 0 based
 	grid_ctx=gridOps!.getContextID()
 
+	sfe_woopradj=fnget_dev("SFE_WOOPRADJ")
+	new_rec$="Y"
+	wo_no$=callpoint!.getDevObject("wo_no")
+	wo_loc$=callpoint!.getDevObject("wo_loc")
+	trans_date$=vectOps!.getItem(curr_row*(num(user_tpl.gridOpsCols$)-1));rem Make sure x is correct for the current row * jpb
+	trans_seq$=vectOpsMaster!.getItem(curr_row);rem Make sure mast is correct for the current row * jpb
+	while 1
+		read (sfe_woopradj,key=firm_id$+wo_loc$+wo_no$+trans_date$+trans_seq$,dom=*break)
+		new_rec$="N"
+		break
+	wend
+
 	switch notice.code
+
+		case 2;rem grid select column
+			if curr_col = 5 or curr_col=7  or curr_col=9 or curr_col=11 then
+				if num(notice.buf$)=0 and new_rec$="Y"
+					if curr_col=5
+						notice.buf$=gridOps!.getCellText(curr_row,4)
+						gridOps!.setCellText(curr_row,curr_col,notice.buf$)
+					endif
+					if curr_col=7
+						notice.buf$=gridOps!.getCellText(curr_row,6)
+						gridOps!.setCellText(curr_row,curr_col,notice.buf$)
+					endif
+					if curr_col=9
+						notice.buf$=gridOps!.getCellText(curr_row,8)
+						gridOps!.setCellText(curr_row,curr_col,notice.buf$)
+					endif
+					if curr_col=11
+						notice.buf$=gridOps!.getCellText(curr_row,10)
+						gridOps!.setCellText(curr_row,curr_col,notice.buf$)
+					endif
+				endif
+			endif
+		break
 
 		case 32; rem grid cell validation
 rem --- New Work Order Number
@@ -112,7 +147,7 @@ rem --- New Work Order Number
 						break
 					wend
 					if found=0
-						gridOps!.setCellText(cur_row,16,"")
+						gridOps!.setCellText(curr_row,16,"")
 						msg_id$="INPUT_ERR_DATA"
 						gosub disp_message
 						gridOps!.focus()
@@ -122,7 +157,7 @@ rem --- New Work Order Number
 						break
 					endif
 					if sfe_womast.wo_status$="C"
-						gridOps!.setCellText(cur_row,16,"")
+						gridOps!.setCellText(curr_row,16,"")
 						msg_id$="WO_CLOSED"
 						gosub disp_message
 						gridOps!.focus()
@@ -137,7 +172,7 @@ rem --- New Work Order Number
 
 				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+16,wo_no$)
 				gridOps!.accept(1)
-				gridOps!.setCellText(cur_row,16,wo_no$)
+				gridOps!.setCellText(curr_row,16,wo_no$)
 				break
 			endif
 
@@ -301,6 +336,7 @@ rem --- Misc other init
 rem --- Set callbacks - processed in ACUS callpoint
 
 	gridOps!.setCallback(gridOps!.ON_GRID_CELL_VALIDATION,"custom_event")
+	gridOps!.setCallback(gridOps!.ON_GRID_SELECT_COLUMN,"custom_event")
 [[SFE_WO_OPSADJ.<CUSTOM>]]
 rem ==========================================================================
 format_grid: rem --- Use Barista program to format the grid
@@ -491,7 +527,7 @@ rem jpb		read record(apm01_dev, key=firm_id$+sft31a.vendor_id$, dom=*next) apm01
 		vectOps!.addItem(str(sft01a.units)); rem 10
 		vectOps!.addItem(str(sfe_opsadj.new_units)); rem 11
 		vectOps!.addItem(str(sft01a.ext_cost)); rem 12
-		vectOps!.addItem(str(sfe_opsadj.new_units*(sfe_opsadj.new_dir_rate+sfe_opsadj.new_ovr_rate))); rem 13
+		vectOps!.addItem(str((sfe_opsadj.new_set_hrs+sfe_opsadj.new_units)*(sfe_opsadj.new_dir_rate+sfe_opsadj.new_ovr_rate))); rem 13
 		vectOps!.addItem(str(sft01a.complete_qty)); rem 14
 		vectOps!.addItem(str(sfe_opsadj.new_qty_comp)); rem 15
 		vectOps!.addItem(sfe_opsadj.new_wo_no$); rem 16

@@ -163,20 +163,20 @@ rem --- New Tran Date
 					dim msg_tokens$[1]
 					msg_tokens$[1]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_DATE")
 					gosub disp_message
-					gridOps!.focus()
+					gridSubs.focus()
 					sysgui!.setContext(grid_ctx)
-					gridOps!.accept(0)
-					gridOps!.startEdit(curr_row,curr_col)
+					gridSubs!.accept(0)
+					gridSubs!.startEdit(curr_row,curr_col)
 					break
 				endif
 				tran_date$=temp_date$
 				if len(cvs(tran_date$,2))=0
-					tran_date$=gridOps!.getCellText(curr_row,0)
-					input_value$=vectOps!.getItem((curr_row*num(user_tpl.gridOpsCols$)))
+					tran_date$=gridSubs!.getCellText(curr_row,0)
+					input_value$=vectSubs!.getItem((curr_row*num(user_tpl.gridSubsCols$)))
 				endif
 
 				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+11,input_value$)
-				gridOps!.setCellText(curr_row,curr_col,input_value$)
+				gridSubs!.setCellText(curr_row,curr_col,input_value$)
 			endif
 			gridSubs!.accept(1)
 		break
@@ -340,9 +340,9 @@ rem ==========================================================================
 	attr_sub_col$[11,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_sub_col$[11,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=callpoint!.getDevObject("wo_no_mask")
 	attr_sub_col$[11,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]=str(callpoint!.getDevObject("wo_no_len"))
-rem	attr_sub_col$[11,fnstr_pos("DTAB",attr_def_col_str$[0,0],5)]="SFE_WOMASTR"
-rem	attr_sub_col$[11,fnstr_pos("DCOL",attr_def_col_str$[0,0],5)]="ITEM_ID"
-rem	attr_sub_col$[11,fnstr_pos("DKEY",attr_def_col_str$[0,0],5)]="[+FIRM_ID]  @"
+	attr_sub_col$[11,fnstr_pos("DTAB",attr_def_col_str$[0,0],5)]="SFE_WOMASTR"
+	attr_sub_col$[11,fnstr_pos("DCOL",attr_def_col_str$[0,0],5)]="ITEM_ID"
+	attr_sub_col$[11,fnstr_pos("DKEY",attr_def_col_str$[0,0],5)]="[+FIRM_ID]  @"
 	attr_sub_col$[11,fnstr_pos("ETYP",attr_def_col_str$[0,0],5)]="WO_NO"
 
 	attr_sub_col$[12,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_DATE"

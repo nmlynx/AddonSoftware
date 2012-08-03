@@ -5,53 +5,6 @@ rem --- Created by Codeport Utility (07/20/2012 10:43:34)
 rem --- AddonSoftware
 rem --- Copyright (c) 1981-2011 AddonSoftware
 rem --- All Rights Reserved
-rem 13Nov96 JJD: Don't print packed date in sort notification. (960)
-rem -------------- Errors, Warnings and Conversion Information ---------------------
-
-rem --- The following error(s) were encountered during the conversion:
-
-rem --- Undefined function fnp$ (Line 0399)
-rem --- v7.x administrator reference ["sys-01"] (Line 0167)
-rem --- v7.x sys-01 reference [sys01_dev=ch] (Line 0183)
-rem --- v7.x sys-01 reference [sys01_dev,ke] (Line 0193)
-rem --- v7.x sys-01 reference [sys01_dev,ke] (Line 0198)
-rem --- v7.x sys-01 reference [sys01_dev,ke] (Line 0203)
-rem --- v7.x sys-01 reference [sys01_dev,ke] (Line 0204)
-rem --- v7.x sys-01 reference [sys01_dev,ke] (Line 0209)
-rem --- v7.x sys-01 reference [sys01_dev,ke] (Line 0214)
-rem --- v7.x sys-01 reference [sys01_dev,ke] (Line 0219)
-rem --- BBx reference ["sfu_ga.bbx"] (Line 0528)
-
-rem --- The following reset verbs were removed from this program:
-
-rem --- BEGIN statement removed [begin]
-
-rem --- The following IOLIST's were removed from this program:
-
-rem --- apm01a: iolist *,f0$(1)
-rem --- empcode: iolist *,f0$(1)
-rem --- gls01a: iolist x$,x$,g2$,g3$
-rem --- ivm01a: iolist x$,desc$(1)
-rem --- ivs01a: iolist i0$,i1$,i2$,i3$
-rem --- opcode: iolist f1$
-rem --- prs01a: iolist x$,x$,c4$,x$,x$,c5$
-rem --- woe01a: iolist d0$,d1$(1)
-rem --- woe01b: iolist c0$,c1$(1)
-rem --- woe12a: iolist a0$,a1$,a[all]
-rem --- woe42a: iolist a0$,a1$,a[all]
-rem --- wom10a: iolist *,y0$(1)
-rem --- wot01a: iolist b0$,b1$,b[all]
-rem --- wot31a: iolist b0$,b1$,b[all]
-rem --- wow06a: iolist w0$,w[all]
-rem --- wow08a: iolist sortseq$
-
-rem --- The following channel references have been identified:
-
-rem --- glm01a: Channel reference (Line 0236)
-
-rem --------------------------------------------------------------------------------
-rem --- glt05a: Channel reference (Line 0269)
-rem --- glw11a: Channel reference (Line 0234)
 
     setesc std_error
     seterr std_error
@@ -99,14 +52,14 @@ rem --- Open/Lock files
     open_tables$[6]="IVM_ITEMMAST",open_opts$[6]="OTA"
     open_tables$[7]="IVS_PARAMS",open_opts$[7]="OTA"
     open_tables$[8]="SFE_WOMASTR",open_opts$[8]="OTA"
-    open_tables$[9]="SFE_WOOPRADJ",open_opts$[9]="OTA";rem ,open_opts$[9]="";rem L
-    open_tables$[10]="SFE_WOSUBADJ",open_opts$[10]="OTA";rem ,open_opts$[10]="";rem L
+    open_tables$[9]="SFE_WOOPRADJ",open_opts$[9]="OTAL"
+    open_tables$[10]="SFE_WOSUBADJ",open_opts$[10]="OTAL"
     open_tables$[11]="SFC_WOTYPECD",open_opts$[11]="OTA"
     open_tables$[12]="SFS_PARAMS",open_opts$[12]="OTA"
     open_tables$[13]="SFT_OPNOPRTR",open_opts$[13]="OTA"
     open_tables$[14]="SFT_OPNSUBTR",open_opts$[14]="OTA"
-    open_tables$[15]="SFW_COSTADJT",open_opts$[15]="OTA";rem ,open_opts$[15]="C"
-    open_tables$[16]="SFW_ADJXTYPE",open_opts$[16]="OTA";rem ,open_opts$[16]="C"
+    open_tables$[15]="SFW_COSTADJT",open_opts$[15]="OTAI"
+    open_tables$[16]="SFW_ADJXTYPE",open_opts$[16]="OTAI"
 
 	gosub open_tables
 
@@ -157,7 +110,10 @@ rem --- Retrieve parameter records
 
 rem --- Parameters
 
-    n3$=sysinfo.task_desc$
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","R","",m3$,0,m3
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",m2$,0,m2
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","A","",m1$,0,m1
+
     bm$=sfs01a.bm_interface$
     ar$=sfs01a.ar_interface$
     ap$=sfs01a.po_interface$
@@ -190,14 +146,13 @@ rem --- Is General Ledger installed and being used?
 
 rem --- Initializations
 
-    dim j$(80,"-"),a0$(18),a1$(30),a[11],b[11],w[3],t[3],headings$[1],desc[3]
+    dim j$(80,"-"),a0$(18),a1$(30),a[11],b[11],w[3],t[3],headings$[2],desc[3]
     h0=132
     h=0
-    headings$[0]=n1$
-    headings$[1]=n3$
+    headings$[0]=sysinfo.firm_name$
+    headings$[1]=sysinfo.task_desc$
     l9=59
     l=l9+1
-    clock$=""
     p8$=""
     when$=sysinfo.system_date$
     headings=1
@@ -281,21 +236,21 @@ rem ---  column heading
 
 	dim columns$[14,10]
 	columns=14
-	columns$[0,0]=Translate!.getTranslation("AON_WO"),              columns$[0,1]="C",columns$[0,2]="10"
-	columns$[1,0]=Translate!.getTranslation("AON_TYPE"),            columns$[1,1]="C",columns$[1,2]="8"
+	columns$[0,0]=Translate!.getTranslation("AON_WO"),              columns$[0,1]="C",columns$[0,2]="8"
+	columns$[1,0]=Translate!.getTranslation("AON_TYPE"),            columns$[1,1]="C",columns$[1,2]="6"
 	columns$[2,0]=Translate!.getTranslation("AON_CATEGORY"),        columns$[2,1]="C",columns$[2,2]="8"
-	columns$[3,0]=Translate!.getTranslation("AON_DATE"),            columns$[3,1]="C",columns$[3,2]="10"
+	columns$[3,0]=Translate!.getTranslation("AON_DATE"),            columns$[3,1]="C",columns$[3,2]="8"
 	columns$[4,0]=Translate!.getTranslation("AON_SOURCE"),          columns$[4,1]="C",columns$[4,2]="8"
 	columns$[5,0]=Translate!.getTranslation("AON_SEQ"),             columns$[5,1]="C",columns$[5,2]="8"
 	columns$[6,0]=Translate!.getTranslation(""),                    columns$[6,1]="C",columns$[6,2]="8"
-	columns$[7,0]=Translate!.getTranslation("AON_QTY")+"^"+Translate!.getTranslation("AON_COMPLETE"),        columns$[7,1]="N",columns$[7,2]="12",columns$[7,3]=m2$
-	columns$[8,0]=Translate!.getTranslation("AON_DIRECT")+"^"+Translate!.getTranslation("AON_LABOR"),        columns$[8,1]="N",columns$[8,2]="12",columns$[8,3]=m2$
-	columns$[9,0]=Translate!.getTranslation("AON_OVHD")+"^"+Translate!.getTranslation("AON_LABOR"),        columns$[9,1]="N",columns$[9,2]="12",columns$[9,3]=m2$
-	columns$[10,0]=Translate!.getTranslation("AON_UNIT^COST"),        columns$[10,1]="N",columns$[10,2]="12",columns$[10,3]=m2$
-	columns$[11,0]=Translate!.getTranslation("AON_SETUP^HRS"),        columns$[11,1]="N",columns$[11,2]="12",columns$[11,3]=m2$
-	columns$[12,0]=Translate!.getTranslation("AON_UNITS"),        columns$[12,1]="N",columns$[12,2]="12",columns$[12,3]=m2$
-	columns$[13,0]=Translate!.getTranslation("AON_EXTENSION"),        columns$[13,1]="N",columns$[13,2]="12",columns$[13,3]=m2$,columns$[13,4]="T"
-	columns$[14,0]=Translate!.getTranslation("AON_NEW_WO^ADJ_DATE"),        columns$[14,1]="C",columns$[14,2]="12";rem jpb - need translation
+	columns$[7,0]=Translate!.getTranslation("AON_QTY")+"^"+Translate!.getTranslation("AON_COMPLETE"),        columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m2$
+	columns$[8,0]=Translate!.getTranslation("AON_DIRECT")+"^"+Translate!.getTranslation("AON_LABOR"),        columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m3$
+	columns$[9,0]=Translate!.getTranslation("AON_OVHD")+"^"+Translate!.getTranslation("AON_LABOR"),        columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m3$
+	columns$[10,0]=Translate!.getTranslation("AON_UNIT^COST"),        columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m1$
+	columns$[11,0]=Translate!.getTranslation("AON_SETUP^HRS"),        columns$[11,1]="N",columns$[11,2]="10",columns$[11,3]=m2$
+	columns$[12,0]=Translate!.getTranslation("AON_UNITS"),        columns$[12,1]="N",columns$[12,2]="10",columns$[12,3]=m2$
+	columns$[13,0]=Translate!.getTranslation("AON_EXTENSION"),        columns$[13,1]="N",columns$[13,2]="10",columns$[13,3]=m1$,columns$[13,4]="T"
+	columns$[14,0]=Translate!.getTranslation("AON_NEW_WO^ADJ_DATE"),        columns$[14,1]="C",columns$[14,2]="10";rem jpb - need translation
 
 rem --- Create Report Sort File
 
@@ -375,36 +330,45 @@ rem --- Get Additional Data
 
 		if wow08a.record_id$="O" 
 			read record (wot01_dev,key=firm_id$+wow08a.wo_location$+wow08a.wo_no$+wow08a.trans_date$+wow08a.trans_seq$,dom=*continue) wot01a$
-			rem jpb get a1$(8,3) and a1$(1,7) from somewhere
+			find record (woe01_dev,key=firm_id$+"  "+woe12a.new_wo_no$,dom=l1380) woe01b$
+			if cvs(woe12a.new_trn_date$,3)=""
+				woe12a.new_trn_date$=woe12a.trans_date$
+			endif
 		endif
 		if wow08a.record_id$="S"
 			read record (wot31_dev,key=firm_id$+wow08a.wo_location$+wow08a.wo_no$+wow08a.trans_date$+wow08a.trans_seq$,dom=*continue) wot31a$
+			find record (woe01_dev,key=firm_id$+"  "+woe42a.new_wo_no$,dom=l1380) woe01b$
+			if cvs(woe42a.new_trn_date$,3)=""
+				woe42a.new_trn_date$=woe42a.trans_date$
+			endif
 		endif
-		find record (woe01_dev,key=firm_id$+"  "+a1$(1,7),dom=l1380) woe01b$
-		if pos(" "<>a1$(8,3))=0 a1$(8,3)=a0$(12,3)
 l1380:
-		if num(a1$(1,7))=0 a1$(1,7)=a0$(5,7)
 		on pos(wow08a.record_id$="OS")-1 goto operations,subcontracts
 
 operations: rem --- Get Employee/Op Code
 
+		if num(woe12a.new_wo_no$)=0
+			woe12a.new_wo_no$=woe12a.wo_no$
+		endif
 		dim empcode$:fattr(empcode$)
 		dim opcode$:fattr(opcode$)
 		find record (empcode_dev,key=firm_id$+wot01a.employee_no$,dom=*next) empcode$
-		emp_name$=empcode.empl_surname$+", "+empcode.empl_givname$; gosub l5700
+		emp_name$=cvs(empcode.empl_surname$,2)+", "+cvs(empcode.empl_givname$,2)
 		find record (opcode_dev,key=firm_id$+wot01a.op_code$,dom=*next) opcode$
-l1460:
+l1460: rem is this a bug? Check out the dom that gets to this label - same as v6 but maybe not right.
 		goto print_it
 
 subcontracts: rem --- Get Vendor Name
 
+		if num(woe42a.new_wo_no$)=0
+			woe42a.new_wo_no$=woe42a.wo_no$
+		endif
 		dim apm01a$:fattr(apm01a$)
 		apm01a.vendor_name$="*** Missing Vendor ***"
 		find record (apm01_dev,key=firm_id$+wot31a.vendor_id$,dom=*next) apm01a$
 
 print_it: rem --- Print It Here
 
-rem		if l>l9 gosub l5000
 		outVect!.addItem(wow08a.wo_no$)
 		outVect!.addItem(woe01a.wo_type$)
 		outVect!.addItem(woe01a.wo_category$)
@@ -474,12 +438,12 @@ rem --- Net
 
 		outVect!.addItem("")
 		if wow08a.record_id$="O"
-			outVect!.addItem(wot01a.employee_no$)
-			outVect!.addItem(opcode.op_code$)
-			outVect!.addItem(opcode.code_desc$)
+			outVect!.addItem(wot01a.employee_no$+" "+opcode.op_code$+" "+opcode.code_desc$)
+			outVect!.addItem("")
+			outVect!.addItem("")
 		else
-			outVect!.addItem(apm01a.vendor_id$)
-			outVect!.addItem(wot01a.po_no$)
+			outVect!.addItem(apm01a.vendor_id$+" "+wot31a.po_no$+" "+wot31a.pur_ord_seq_ref$)
+			outVect!.addItem("")
 			outVect!.addItem("")
 		endif
 		xvk=fnblank(2)
@@ -487,7 +451,7 @@ rem --- Net
 		if wow08a.record_id$="O"
 			outVect!.addItem(str(woe12a.new_qty_comp-wot01a.complete_qty))
 			outVect!.addItem(str(woe12a.new_dir_rate-wot01a.direct_rate))
-			outVect!.addItem(str(woe12a.new_ovr_rate-wot01a.unit_cost-wot01a.direct_rate))
+			outVect!.addItem(str(woe12a.new_ovr_rate-(wot01a.unit_cost-wot01a.direct_rate)))
 			outVect!.addItem("")
 			outVect!.addItem(str(woe12a.new_set_hrs-wot01a.setup_time))
 			outVect!.addItem(str(woe12a.new_units-wot01a.units))
@@ -620,7 +584,7 @@ old_labor: rem --- Labor
 old_subs: rem --- Subcontracts
 
 		account$=wom10a.gl_pur_acct$
-		amount=sft31.ext_cost
+		amount=wot31a.ext_cost
 		memo$=sm$
 		gosub glrecap
 
@@ -720,12 +684,6 @@ l5300: rem --- Date Subheading
     let l=l+2                                                  
     return                                                  
 
-l5700: rem --- Compress Desc
-
-    let z=pos(" "<>d9$); if z>1 d9$=d9$(z)
-l5740:
-    let x8=pos("  "=d9$); if x8<>0 y8=pos(" "<>d9$(x8+2)); let d9$=d9$(1,x8)+d9$(x8+y8+1); if y8<>0 goto l5740
-    return                                                  
 rem --- First Sub Total
 l6000:
     if t0$="" goto l6100
@@ -942,6 +900,7 @@ std_exit_no_update:
 	
 std_exit: rem --- Standard program end (01Mar2006)
 
+	call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
