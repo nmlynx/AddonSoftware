@@ -146,8 +146,7 @@ rem --- Is General Ledger installed and being used?
 
 rem --- Initializations
 
-    dim j$(80,"-"),a0$(18),a1$(30),a[11],b[11],w[3],t[3],headings$[2],desc[3]
-    h0=132
+    dim j$(80,"-"),w[3],t[3],headings$[2],desc[3]
     h=0
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
@@ -658,7 +657,6 @@ l4400:
 
     update$="sfu_ga.bbx"
     page=h
-    width=h0
     f0$=termf0$
     if gl$="Y" run pgmdir$+"glr_xa.aon"
     run update$

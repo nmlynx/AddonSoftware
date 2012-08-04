@@ -21,20 +21,28 @@ rem --- Now write the Adjustment Entry records out
 		for x=0 to vectOps!.size()-1 step cols
 			tran_date$=vectOps!.getItem(x)
 			tran_seq$=vectOpsMaster!.getItem(mast)
+			old_dir_rate=num(vectOps!.getItem(x+4))
+			new_dir_rate=num(vectOps!.getItem(x+5))
+			old_ovr_rate=num(vectOps!.getItem(x+6))
+			new_ovr_rate=num(vectOps!.getItem(x+7))
+			old_set_hrs=num(vectOps!.getItem(x+8))
+			new_set_hrs=num(vectOps!.getItem(x+9))
+			old_units=num(vectOps!.getItem(x+10))
+			new_units=num(vectOps!.getItem(x+11))
+			old_qty_comp=num(vectOps!.getItem(x+14))
+			new_qty_comp=num(vectOps!.getItem(x+15))
 			new_wo$=vectOps!.getItem(x+16)
 			if cvs(new_wo$,2)="" new_wo$=wo_no$
 			new_date$=vectOps!.getItem(x+17)
 			if cvs(new_date$,2)="" new_date$=trans_date$
-			new_dir_rate=num(vectOps!.getItem(x+5))
-			new_ovr_rate=num(vectOps!.getItem(x+7))
-			new_set_hrs=num(vectOps!.getItem(x+9))
-			new_units=num(vectOps!.getItem(x+11))
-			new_qty_comp=num(vectOps!.getItem(x+15))
-			if new_units <> 0 or
-:			   new_dir_rate <> 0 or
-:			   new_ovr_rate <> 0 or
-:			   new_set_hrs <> 0 or
-:			   new_qty_comp <>0
+
+			if tran_date$<>new_date$ or
+:			   old_dir_rate<>new_dir_rate or
+:			   old_ovr_rate<>new_ovr_rate or
+:			   old_set_hrs<>new_set_hrs or
+:			   old_units<>new_units or
+:			   old_qty_comp<>new_qty_comp or
+:			   wo_no$<>new_wo$
 rem --- Write entry Record
 				sfe_opsadj.firm_id$=firm_id$
 				sfe_opsadj.wo_location$=wo_loc$
@@ -94,41 +102,36 @@ rem	if ctl_ID <> num(user_tpl.gridOpsCtlID$) then break; rem --- exit callpoint
 	curr_col = dec(notice.col$);rem 0 based
 	grid_ctx=gridOps!.getContextID()
 
-	sfe_woopradj=fnget_dev("SFE_WOOPRADJ")
-	new_rec$="Y"
-	wo_no$=callpoint!.getDevObject("wo_no")
-	wo_loc$=callpoint!.getDevObject("wo_loc")
-	trans_date$=vectOps!.getItem(curr_row*(num(user_tpl.gridOpsCols$)-1));rem Make sure x is correct for the current row * jpb
-	trans_seq$=vectOpsMaster!.getItem(curr_row);rem Make sure mast is correct for the current row * jpb
-	while 1
-		read (sfe_woopradj,key=firm_id$+wo_loc$+wo_no$+trans_date$+trans_seq$,dom=*break)
-		new_rec$="N"
-		break
-	wend
+	if callpoint!.getDevObject("new_row")="Y"
+		sfe_woopradj=fnget_dev("SFE_WOOPRADJ")
+		callpoint!.setDevObject("new_rec","Y")
+		wo_no$=callpoint!.getDevObject("wo_no")
+		wo_loc$=callpoint!.getDevObject("wo_loc")
+		trans_date$=vectOps!.getItem(curr_row*(num(user_tpl.gridOpsCols$)-1));rem Make sure x is correct for the current row * jpb
+		trans_seq$=vectOpsMaster!.getItem(curr_row);rem Make sure mast is correct for the current row * jpb
+		while 1
+			read (sfe_woopradj,key=firm_id$+wo_loc$+wo_no$+trans_date$+trans_seq$,dom=*break)
+			callpoint!.setDevObject("new_rec","N")
+			break
+		wend
+	endif
 
 	switch notice.code
 
-		case 2;rem grid select column
-			if curr_col = 5 or curr_col=7  or curr_col=9 or curr_col=11 then
-				if num(notice.buf$)=0 and new_rec$="Y"
-					if curr_col=5
-						notice.buf$=gridOps!.getCellText(curr_row,4)
-						gridOps!.setCellText(curr_row,curr_col,notice.buf$)
-					endif
-					if curr_col=7
-						notice.buf$=gridOps!.getCellText(curr_row,6)
-						gridOps!.setCellText(curr_row,curr_col,notice.buf$)
-					endif
-					if curr_col=9
-						notice.buf$=gridOps!.getCellText(curr_row,8)
-						gridOps!.setCellText(curr_row,curr_col,notice.buf$)
-					endif
-					if curr_col=11
-						notice.buf$=gridOps!.getCellText(curr_row,10)
-						gridOps!.setCellText(curr_row,curr_col,notice.buf$)
-					endif
-				endif
-			endif
+		case 19; rem new row
+
+rem			if callpoint!.setDevObject("new_row")="Y" and
+rem :			   callpoint!.setDevObject("new_rec")="Y"
+rem				notice.buf$=gridOps!.getCellText(curr_row,4)
+rem				gridOps!.setCellText(curr_row,curr_col,notice.buf$)
+rem				notice.buf$=gridOps!.getCellText(curr_row,6)
+rem				gridOps!.setCellText(curr_row,curr_col,notice.buf$)
+rem				notice.buf$=gridOps!.getCellText(curr_row,8)
+rem				gridOps!.setCellText(curr_row,curr_col,notice.buf$)
+rem				notice.buf$=gridOps!.getCellText(curr_row,10)
+rem				gridOps!.setCellText(curr_row,curr_col,notice.buf$)
+rem				callpoint!.setDevObject("new_row","N")
+rem			endif
 		break
 
 		case 32; rem grid cell validation
@@ -296,11 +299,13 @@ rem --- Add grid to store invoices, with checkboxes for user to select one or mo
 	vectOpsMaster! = BBjAPI().makeVector()
 	nxt_ctlID = util.getNextControlID()
 
-	gridOps! = Form!.addGrid(nxt_ctlID,5,40,900,250); rem --- ID, x, y, width, height
+	gridOps! = Form!.addGrid(nxt_ctlID,5,40,2000,250); rem --- ID, x, y, width, height
 
 	user_tpl.gridOpsCtlID$ = str(nxt_ctlID)
 	user_tpl.gridOpsCols$ = "18"
 	user_tpl.gridOpsRows$ = "10"
+	callpoint!.setDevObject("new_row","Y")
+	callpoint!.setDevObject("new_rec","Y")
 	callpoint!.setDevObject("wo_no_len",len(sft01a.wo_no$))
 	callpoint!.setDevObject("wo_no_mask",fill(len(sft01a.wo_no$),"0"))
 
@@ -337,6 +342,7 @@ rem --- Set callbacks - processed in ACUS callpoint
 
 	gridOps!.setCallback(gridOps!.ON_GRID_CELL_VALIDATION,"custom_event")
 	gridOps!.setCallback(gridOps!.ON_GRID_SELECT_COLUMN,"custom_event")
+	gridOps!.setCallback(gridOps!.ON_GRID_SELECT_ROW,"custom_event")
 [[SFE_WO_OPSADJ.<CUSTOM>]]
 rem ==========================================================================
 format_grid: rem --- Use Barista program to format the grid
@@ -510,7 +516,12 @@ rem ==========================================================================
 rem jpb		dim apm01a$:fattr(apm01a$)
 rem jpb		read record(apm01_dev, key=firm_id$+sft31a.vendor_id$, dom=*next) apm01a$
 		dim sfe_opsadj$:fnget_tpl$("SFE_WOOPRADJ")
-		read record (sfe_opsadj,key=firm_id$+wo_loc$+wo_no$+sft01a.trans_date$+sft01a.trans_seq$,dom=*next)sfe_opsadj$
+		found=0
+		while 1
+			read record (sfe_opsadj,key=firm_id$+wo_loc$+wo_no$+sft01a.trans_date$+sft01a.trans_seq$,dom=*break)sfe_opsadj$
+			found=1
+			break
+		wend
 
 	rem --- Now fill vectors
 
@@ -519,19 +530,45 @@ rem jpb		read record(apm01_dev, key=firm_id$+sft31a.vendor_id$, dom=*next) apm01
 		vectOps!.addItem("");rem prm01a.emp_name$); rem 2
 		vectOps!.addItem(sft01a.op_code$); rem 3
 		vectOps!.addItem(str(sft01a.direct_rate)); rem 4
-		vectOps!.addItem(str(sfe_opsadj.new_dir_rate)); rem 5
+		if found=1
+			vectOps!.addItem(str(sfe_opsadj.new_dir_rate)); rem 5
+		else
+			vectOps!.addItem(str(sft01a.direct_rate)); rem 5
+		endif
 		vectOps!.addItem(str(sft01a.ovhd_rate)); rem 6
-		vectOps!.addItem(str(sfe_opsadj.new_ovr_rate)); rem 7
+		if found=1
+			vectOps!.addItem(str(sfe_opsadj.new_ovr_rate)); rem 7
+		else
+			vectOps!.addItem(str(sft01a.ovhd_rate)); rem 7
+		endif
 		vectOps!.addItem(str(sft01a.setup_time)); rem 8
-		vectOps!.addItem(str(sfe_opsadj.new_set_hrs)); rem 9
+		if found=1
+			vectOps!.addItem(str(sfe_opsadj.new_set_hrs)); rem 9
+		else
+			vectOps!.addItem(str(sft01a.setup_time)); rem 9
+		endif
 		vectOps!.addItem(str(sft01a.units)); rem 10
-		vectOps!.addItem(str(sfe_opsadj.new_units)); rem 11
+		if found=1
+			vectOps!.addItem(str(sfe_opsadj.new_units)); rem 11
+		else
+			vectOps!.addItem(str(sft01a.units)); rem 11
+		endif
 		vectOps!.addItem(str(sft01a.ext_cost)); rem 12
-		vectOps!.addItem(str((sfe_opsadj.new_set_hrs+sfe_opsadj.new_units)*(sfe_opsadj.new_dir_rate+sfe_opsadj.new_ovr_rate))); rem 13
+		if found=1
+			vectOps!.addItem(str((sfe_opsadj.new_set_hrs+sfe_opsadj.new_units)*(sfe_opsadj.new_dir_rate+sfe_opsadj.new_ovr_rate))); rem 13
+		else
+			vectOps!.addItem(str(sft01a.ext_cost)); rem 13
+		endif
 		vectOps!.addItem(str(sft01a.complete_qty)); rem 14
-		vectOps!.addItem(str(sfe_opsadj.new_qty_comp)); rem 15
-		vectOps!.addItem(sfe_opsadj.new_wo_no$); rem 16
-		vectOps!.addItem(sfe_opsadj.new_trn_date$); rem 17
+		if found=1
+			vectOps!.addItem(str(sfe_opsadj.new_qty_comp)); rem 15
+			vectOps!.addItem(sfe_opsadj.new_wo_no$); rem 16
+			vectOps!.addItem(sfe_opsadj.new_trn_date$); rem 17
+		else
+			vectOps!.addItem(str(sft01a.complete_qty)); rem 15
+			vectOps!.addItem(wo_no$); rem 16
+			vectOps!.addItem(sft01a.trans_date$); rem 17
+		endif
 
 		vectOpsMaster!.addItem(sft01a.trans_seq$);rem keep track of sequence
 
