@@ -245,7 +245,7 @@ rem --- Initializations
     m2=len(m2$)
     call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","R","",m3$,0,0
     m3=len(m3$)
-    if p9$="L" p8$="    Lot Number: " else p8$="    Serial Number: "
+    if p9$="L" p8$=Translate!.getTranslation("AON_____LOT_NUMBER:_") else p8$=Translate!.getTranslation("AON_____SERIAL_NUMBER:_")
     dim s[1],t[1]
     missing_lotser=0
     
@@ -411,7 +411,7 @@ rem --- Read next Issue Inventory Transaction (SFE_WOTRANS) record
 
                 if t1<sfe25a.qty_issued then
                     missing_lotser=missing_lotser+1
-                    error$="* Missing"
+                    error$=Translate!.getTranslation("AON_*_MISSING")
                     sfe14a.lotser_no$(1)=fill(p[2],"_")
                     sfe14a.qty_issued=0
                     sfe14a.issue_cost=0

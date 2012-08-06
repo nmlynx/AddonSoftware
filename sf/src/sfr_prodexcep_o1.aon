@@ -38,15 +38,15 @@ rem --- Init Data
     more=1
     headings=3
     dim headings$[headings],a1$(141)
-    h4$="For Run Date Of "+fndate$(r0$)
+    h4$=Translate!.getTranslation("AON_FOR_RUN_DATE_OF_")+fndate$(r0$)
     if steps$="Y" then 
-        h4$=h4$+" Including All Incomplete Steps" 
+        h4$=h4$+Translate!.getTranslation("AON__INCLUDING_ALL_INCOMPLETE_STEPS") 
     else 
-        h4$=h4$+" Including Only Past Due Steps"
+        h4$=h4$+Translate!.getTranslation("AON__INCLUDING_ONLY_PAST_DUE_STEPS")
     endif
-    h5$="For "
-    if pos("L"=type$)>0 then h5$=h5$+"Past Due Labor And "
-    if pos("P"=type$)>0 then h5$=h5$+"Past Due P.O.'s And "
+    h5$=Translate!.getTranslation("AON_FOR_")
+    if pos("L"=type$)>0 then h5$=h5$+Translate!.getTranslation("AON_PAST_DUE_LABOR_AND_")
+    if pos("P"=type$)>0 then h5$=h5$+Translate!.getTranslation("AON_PAST_DUE_P.O.'S_AND_")
     h5$=h5$(1,len(h5$)-5)
     headings$[0]=h1$
     headings$[1]=h2$
@@ -62,15 +62,15 @@ rem --- Headings and print positions
  
     dim columns$[8,10]
     columns = 9
-    columns$[0,0]="Pri^Cod",                columns$[0,1]="C",columns$[0,2]="4"
-    columns$[1,0]="W.O.^Number",            columns$[1,1]="C",columns$[1,2]="8"
-    columns$[2,0]="Description^Customer",   columns$[2,1]="C",columns$[2,2]="21"
-    columns$[3,0]="Estimate^Start",         columns$[3,1]="C",columns$[3,2]="12"
-    columns$[4,0]="Actual^Start",           columns$[4,1]="C",columns$[4,2]="9"
-    columns$[5,0]="Estimate^Complete",      columns$[5,1]="C",columns$[5,2]="12"
-    columns$[6,0]="Type",                   columns$[6,1]="C",columns$[6,2]="5"
-    columns$[7,0]="Sch^Mth",                columns$[7,1]="C",columns$[7,2]="3"
-    columns$[8,0]="Date^Required",          columns$[8,1]="C",columns$[8,2]="9"
+    columns$[0,0]=Translate!.getTranslation("AON_PRI^COD"),                columns$[0,1]="C",columns$[0,2]="4"
+    columns$[1,0]=Translate!.getTranslation("AON_W.O.^NUMBER"),            columns$[1,1]="C",columns$[1,2]="8"
+    columns$[2,0]=Translate!.getTranslation("AON_DESCRIPTION^CUSTOMER"),   columns$[2,1]="C",columns$[2,2]="21"
+    columns$[3,0]=Translate!.getTranslation("AON_ESTIMATE^START"),         columns$[3,1]="C",columns$[3,2]="12"
+    columns$[4,0]=Translate!.getTranslation("AON_ACTUAL^START"),           columns$[4,1]="C",columns$[4,2]="9"
+    columns$[5,0]=Translate!.getTranslation("AON_ESTIMATE^COMPLETE"),      columns$[5,1]="C",columns$[5,2]="12"
+    columns$[6,0]=Translate!.getTranslation("AON_TYPE"),                   columns$[6,1]="C",columns$[6,2]="5"
+    columns$[7,0]=Translate!.getTranslation("AON_SCH^MTH"),                columns$[7,1]="C",columns$[7,2]="3"
+    columns$[8,0]=Translate!.getTranslation("AON_DATE^REQUIRED"),          columns$[8,1]="C",columns$[8,2]="9"
     
 rem --- Background
 
@@ -147,7 +147,7 @@ rem --- Operation Loop
             for i=now to no_ops
                 if cvs(ops$[i,0],2)="" then break
                 if steps$="N" and ops$[i,1]>r0$ then continue
-                x0$=fill(5)+pad("Not Found",20)
+                x0$=fill(5)+pad(Translate!.getTranslation("AON_NOT_FOUND"),20)
                 if bm$="Y" then 
                     find record (bmm08_dev,key=firm_id$+ops$[i,0],dom=*next) bmm08a$
                     x0$=bmm08a.code_desc$
@@ -157,11 +157,11 @@ rem --- Operation Loop
                 endif
 
                 blank=fnblank(1)
-                OutVect!.addItem("Op: "+ops$[i,0])
+                OutVect!.addItem(Translate!.getTranslation("AON_OP:_")+ops$[i,0])
                 OutVect!.addItem("   "+x0$)
-                OutVect!.addItem("Setup Left: "+str(ops[i,2]-ops[i,3]:"###.00"))
+                OutVect!.addItem(Translate!.getTranslation("AON_SETUP_LEFT:_")+str(ops[i,2]-ops[i,3]:"###.00"))
                 OutVect!.addItem("")
-                OutVect!.addItem("Run Left: "+str(ops[i,0]-ops[i,1]:"###.00"))
+                OutVect!.addItem(Translate!.getTranslation("AON_RUN_LEFT:_")+str(ops[i,0]-ops[i,1]:"###.00"))
                 OutVect!.addItem("")
                 OutVect!.addItem("")
                 OutVect!.addItem(fndate$(ops$[i,1]))
@@ -176,14 +176,14 @@ rem --- Subcontract Loop
             for i=1 to len(subs$) step op_len
                 find record (sfe32_dev,key=(sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$)+subs$(i,op_len),knum="AO_SUBCONT_SEQ") sfe32a$
                 if steps$="N" and sfe32a.require_date$>r0$ then continue
-                apm01a.vendor_name$=pad("Invalid Vendor",30)
+                apm01a.vendor_name$=pad(Translate!.getTranslation("AON_INVALID_VENDOR"),30)
                 find record (apm01_dev,key=firm_id$+sfe32a.vendor_id$,dom=*next) apm01a$
 
                 if sfe32a.po_status$=" " then
-                    status$="None"
+                    status$=Translate!.getTranslation("AON_NONE")
                 else 
                     if sfe32a.po_status$="R" then
-                         status$="Req."
+                         status$=Translate!.getTranslation("AON_REQ.")
                     else 
                         if sfe32a.po_status$="P" then
                             status$="P.O."
@@ -193,11 +193,11 @@ rem --- Subcontract Loop
                     fi
                 fi    
                 blank=fnblank(1)
-                OutVect!.addItem("Stat: "+status$)
-                OutVect!.addItem("Vndr:"+apm01a.vendor_name$)
+                OutVect!.addItem(Translate!.getTranslation("AON_STAT:_")+status$)
+                OutVect!.addItem(Translate!.getTranslation("AON_VNDR:")+apm01a.vendor_name$)
                 OutVect!.addItem("")
                 OutVect!.addItem("")
-                OutVect!.addItem("Days Left: "+str(sfe32a.lead_time:"##0"))
+                OutVect!.addItem(Translate!.getTranslation("AON_DAYS_LEFT:_")+str(sfe32a.lead_time:"##0"))
                 OutVect!.addItem("")
                 OutVect!.addItem("")
                 OutVect!.addItem(fndate$(sfe02a.require_date$))

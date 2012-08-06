@@ -113,26 +113,26 @@ rem --- Main Read
 rem --- Find Customer
 
 		dim arm01a$:fattr(arm01a$)
-		arm01a.customer_name$="*** Not On File ***"
+		arm01a.customer_name$=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
 		if pos(" "<> sfe01a.customer_id$)<>0
 			find record (arm01a_dev,key=firm_id$+sfe01a.customer_id$,dom=*next) arm01a$
 		endif
 
 rem --- Find Warehouse
 
-		ivm10c.short_name$="*** Not On File ***"
+		ivm10c.short_name$=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
 		find record (ivm10c_dev,key=firm_id$+"C"+sfe13a.warehouse_id$,dom=*next) ivm10c$
 
 rem --- Type
 
-		sfm10a.code_desc$="**** Not On File ****"
+		sfm10a.code_desc$=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
 		find record (sfm10a_dev,key=firm_id$+"A"+sfe13a.firm_id$,dom=*next) sfm10a$
 
 rem --- Category
 
-        if sfe13a.wo_category$="I" then let z2$="Inventory"
-        if sfe13a.wo_category$="N" then let z2$="Non-Stock"
-        if sfe13a.wo_category$="R" then let z2$="Recurring"
+        if sfe13a.wo_category$="I" then let z2$=Translate!.getTranslation("AON_INVENTORY")
+        if sfe13a.wo_category$="N" then let z2$=Translate!.getTranslation("AON_NON-STOCK")
+        if sfe13a.wo_category$="R" then let z2$=Translate!.getTranslation("AON_RECURRING")
         h=0
 
 rem --- call bac_documents.bbj to get back a barista document ID
@@ -157,7 +157,7 @@ rem --- call bac_documents.bbj to get back a barista document ID
             op_step$=sfw13a.oper_seq_ref$
 
             read record (sfe23a_dev,key=sfw13a.firm_id$+sfw13a.wo_location$+sfw13a.wo_no$+sfw13a.material_seq$,knum="AO_DISP_SEQ",dom=*continue) sfe23a$
-            ivm01a.item_desc$="*** Not On File ***"
+            ivm01a.item_desc$=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
             find record (ivm01a_dev,key=firm_id$+sfe23a.item_id$,dom=*next) ivm01a1$
             dx$=ivm01a1.item_desc$
             find record (ivm02a_dev,key=firm_id$+sfe23a.warehouse_id$+sfe23a.item_id$,dom=*next) ivm02a$
@@ -286,11 +286,11 @@ rem --- create pdf file
 	while 1
 		tmp=fntext2(0,10,568,10,"PICK LIST",largefont!,center_justify,page!)
 
-		tmp=fntext2(0,40,65,40,"Work Order:",textfont!,right_justify,page!)
+		tmp=fntext2(0,40,65,40,Translate!.getTranslation("AON_WORK_ORDER:"),textfont!,right_justify,page!)
 		tmp=fntext2(70,40,50,40,sfe13a.wo_no$,textfont!,left_justify,page!)
-		tmp=fntext(150,40,"Type: "+sfe13a.wo_type$+" "+sfm10a.code_desc$,textfont!,page!)
-		tmp=fntext(400,40,"Category: "+sfe13a.wo_category$+" "+z2$,textfont!,page!)
-		tmp=fntext2(0,52,65,52,"Op Step:",textfont!,right_justify,page!)
+		tmp=fntext(150,40,Translate!.getTranslation("AON_TYPE:_")+sfe13a.wo_type$+" "+sfm10a.code_desc$,textfont!,page!)
+		tmp=fntext(400,40,Translate!.getTranslation("AON_CATEGORY:_")+sfe13a.wo_category$+" "+z2$,textfont!,page!)
+		tmp=fntext2(0,52,65,52,Translate!.getTranslation("AON_OP_STEP:"),textfont!,right_justify,page!)
 		op_step_out$=op_step$
 		if cvs(op_step$,3)<>""
 			if ops_lines!.size()
@@ -304,40 +304,40 @@ rem --- create pdf file
 		tmp=fntext(70,52,op_step_out$,textfont!,page!)
 		
 		if sfe13a.wo_category$="I" then
-			tmp=fntext2(0,64,65,64,"Bill Number:",textfont!,right_justify,page!)
+			tmp=fntext2(0,64,65,64,Translate!.getTranslation("AON_BILL_NUMBER:"),textfont!,right_justify,page!)
 			tmp=fntext(70,64,sfe13a.item_id$,textfont!,page!)
 		endif
 
-		tmp=fntext2(0,76,65,76,"Description:",textfont!,right_justify,page!)
+		tmp=fntext2(0,76,65,76,Translate!.getTranslation("AON_DESCRIPTION:"),textfont!,right_justify,page!)
 		tmp=fntext(70,76,cvs(desc1$,2),textfont!,page!)
-		tmp2=fntext2(400,76,80,76,"Open Date:",textfont!,right_justify,page!)
+		tmp2=fntext2(400,76,80,76,Translate!.getTranslation("AON_OPEN_DATE:"),textfont!,right_justify,page!)
 		tmp=fntext(485,76,fndate$(sfe01a.opened_date$),textfont!,page!)
 		tmp=fntext(20,88,desc2$,textfont!,page!)
-		tmp2=fntext2(400,88,80,88,"Start Date:",textfont!,right_justify,page!)
+		tmp2=fntext2(400,88,80,88,Translate!.getTranslation("AON_START_DATE:"),textfont!,right_justify,page!)
 		tmp=fntext(485,88,fndate$(sfe01a.eststt_date$),textfont!,page!)
-		tmp=fntext2(0,100,65,100,"Drawing #:",textfont!,right_justify,page!)
+		tmp=fntext2(0,100,65,100,Translate!.getTranslation("AON_DRAWING_#:"),textfont!,right_justify,page!)
 		tmp=fntext2(70,100,65,100,sfe01a.drawing_no$,textfont!,left_justify,page!)
-		tmp=fntext(200,100,"Rev: "+sfe01a.drawing_no$,textfont!,page!)
-		tmp2=fntext2(400,100,80,100,"Completion Date:",textfont!,right_justify,page!)
+		tmp=fntext(200,100,Translate!.getTranslation("AON_REV:_")+sfe01a.drawing_no$,textfont!,page!)
+		tmp2=fntext2(400,100,80,100,Translate!.getTranslation("AON_COMPLETION_DATE:"),textfont!,right_justify,page!)
 		tmp=fntext(485,100,fndate$(sfe01a.estcmp_date$),textfont!,page!)
 
 		if pos(" "<>sfe01a.customer_id$)>0 then
-			tmp=fntext2(0,112,65,112,"Customer:",textfont!,right_justify,page!)
+			tmp=fntext2(0,112,65,112,Translate!.getTranslation("AON_CUSTOMER:"),textfont!,right_justify,page!)
 			tmp=fntext(70,112,fnmask$(sfe01a.customer_id$,custmask$)+" "+arm01a.customer_name$,textfont!,page!)
-			tmp=fntext(300,112,"Order: "+sfe01a.order_no$+"-"+sfe01a.sls_ord_seq_ref$,textfont!,page!)
+			tmp=fntext(300,112,Translate!.getTranslation("AON_ORDER:_")+sfe01a.order_no$+"-"+sfe01a.sls_ord_seq_ref$,textfont!,page!)
 		endif
-		tmp=fntext2(0,124,65,124,"Warehouse:",textfont!,right_justify,page!)
+		tmp=fntext2(0,124,65,124,Translate!.getTranslation("AON_WAREHOUSE:"),textfont!,right_justify,page!)
 		tmp=fntext2(70,124,50,124,sfe13a.warehouse_id$+" "+ivm10c.short_name$,textfont!,left_justify,page!)
-		tmp=fntext(400,124,"Production Qty: "+str(sfe01a.sch_prod_qty-sfe01a.qty_cls_todt:m2$),textfont!,page!)
+		tmp=fntext(400,124,Translate!.getTranslation("AON_PRODUCTION_QTY:_")+str(sfe01a.sch_prod_qty-sfe01a.qty_cls_todt:m2$),textfont!,page!)
 		tmp=fnline(0,140,560,140,page!)
-		tmp=fntext2(25,148,30,148,"Location",textfont!,left_justify,page!)
-		tmp=fntext2(60,148,35,148,"Req'd",textfont!,right_justify,page!)
-		tmp=fntext2(100,148,35,148,"Picked",textfont!,right_justify,page!)
-		tmp=fntext2(140,148,70,148,"Item",textfont!,left_justify,page!)
-		tmp=fntext2(320,148,55,148,"On Hand",textfont!,right_justify,page!)
-		tmp=fntext2(380,148,55,148,"Com'd",textfont!,right_justify,page!)
-		tmp=fntext2(440,148,55,148,"Avail",textfont!,right_justify,page!)
-		tmp=fntext2(500,148,55,148,"On Ord",textfont!,right_justify,page!)
+		tmp=fntext2(25,148,30,148,Translate!.getTranslation("AON_LOCATION"),textfont!,left_justify,page!)
+		tmp=fntext2(60,148,35,148,Translate!.getTranslation("AON_REQ'D"),textfont!,right_justify,page!)
+		tmp=fntext2(100,148,35,148,Translate!.getTranslation("AON_PICKED"),textfont!,right_justify,page!)
+		tmp=fntext2(140,148,70,148,Translate!.getTranslation("AON_ITEM"),textfont!,left_justify,page!)
+		tmp=fntext2(320,148,55,148,Translate!.getTranslation("AON_ON_HAND"),textfont!,right_justify,page!)
+		tmp=fntext2(380,148,55,148,Translate!.getTranslation("AON_COM'D"),textfont!,right_justify,page!)
+		tmp=fntext2(440,148,55,148,Translate!.getTranslation("AON_AVAIL"),textfont!,right_justify,page!)
+		tmp=fntext2(500,148,55,148,Translate!.getTranslation("AON_ON_ORD"),textfont!,right_justify,page!)
 
 		line_no=148
 
@@ -355,8 +355,8 @@ rem --- create pdf file
 details: rem --- Details
 
     x1=0
-    if ivs01a.lotser_flag$="S" and (ivm01a1.lotser_item$+ivm01a1.inventoried$)="YY" then let x1=sfe23a.qty_ordered-sfe23a.tot_qty_iss,x9$="Serial #:"
-    if ivs01a.lotser_flag$="L" and (ivm01a1.lotser_item$+ivm01a1.inventoried$)="YY" then let x1=5,x9$="Lot #:"
+    if ivs01a.lotser_flag$="S" and (ivm01a1.lotser_item$+ivm01a1.inventoried$)="YY" then let x1=sfe23a.qty_ordered-sfe23a.tot_qty_iss,x9$=Translate!.getTranslation("AON_SERIAL_#:")
+    if ivs01a.lotser_flag$="L" and (ivm01a1.lotser_item$+ivm01a1.inventoried$)="YY" then let x1=5,x9$=Translate!.getTranslation("AON_LOT_#:")
     if line_no>l9 or op_step$<>old_op_step$ then gosub report_heading
 	line_no=line_no+24
 

@@ -62,20 +62,20 @@ rem --- Headings and print positions
 
     dim columns$[13,10]
     columns = 13
-    columns$[0,0]="Date^Req'd",         columns$[0,1]="C",columns$[0,2]="8"
-    columns$[1,0]="Pri^Code",           columns$[1,1]="C",columns$[1,2]="4"
-    columns$[2,0]="WO^St",              columns$[2,1]="C",columns$[2,2]="4"
-    columns$[3,0]="WO^Tp",              columns$[3,1]="C",columns$[3,2]="4"
-    columns$[4,0]="W.O^Number",         columns$[4,1]="C",columns$[4,2]="6"
-    columns$[5,0]="Description",        columns$[5,1]="C",columns$[5,2]="25"
-    columns$[6,0]="At^Opn",             columns$[6,1]="C",columns$[6,2]="4"
-    columns$[7,0]="Frm^Opn",            columns$[7,1]="C",columns$[7,2]="4"
-    columns$[8,0]="Sched^Complete",     columns$[8,1]="C",columns$[8,2]="8"
-    columns$[9,0]="Customer",           columns$[9,1]="C",columns$[9,2]="15"
-    columns$[10,0]="Setup^Time",        columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m3$,columns$[10,10]="T"
-    columns$[11,0]="Run^Time",          columns$[11,1]="N",columns$[11,2]="10",columns$[11,3]=m3$,columns$[11,10]="T"
-    columns$[12,0]="Move^Time",         columns$[12,1]="N",columns$[12,2]="10",columns$[12,3]=m3$
-    columns$[13,0]="Critical^Ratio",    columns$[13,1]="N",columns$[13,2]="10",columns$[13,3]=m2$
+    columns$[0,0]=Translate!.getTranslation("AON_DATE^REQ'D"),         columns$[0,1]="C",columns$[0,2]="8"
+    columns$[1,0]=Translate!.getTranslation("AON_PRI^CODE"),           columns$[1,1]="C",columns$[1,2]="4"
+    columns$[2,0]=Translate!.getTranslation("AON_WO^ST"),              columns$[2,1]="C",columns$[2,2]="4"
+    columns$[3,0]=Translate!.getTranslation("AON_WO^TP"),              columns$[3,1]="C",columns$[3,2]="4"
+    columns$[4,0]=Translate!.getTranslation("AON_W.O.^NUMBER"),         columns$[4,1]="C",columns$[4,2]="6"
+    columns$[5,0]=Translate!.getTranslation("AON_DESCRIPTION"),        columns$[5,1]="C",columns$[5,2]="25"
+    columns$[6,0]=Translate!.getTranslation("AON_AT^OPN"),             columns$[6,1]="C",columns$[6,2]="4"
+    columns$[7,0]=Translate!.getTranslation("AON_FRM^OPN"),            columns$[7,1]="C",columns$[7,2]="4"
+    columns$[8,0]=Translate!.getTranslation("AON_SCHED^COMPLETE"),     columns$[8,1]="C",columns$[8,2]="8"
+    columns$[9,0]=Translate!.getTranslation("AON_CUSTOMER"),           columns$[9,1]="C",columns$[9,2]="15"
+    columns$[10,0]=Translate!.getTranslation("AON_SETUP^TIME"),        columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m3$,columns$[10,10]="T"
+    columns$[11,0]=Translate!.getTranslation("AON_RUN^TIME"),          columns$[11,1]="N",columns$[11,2]="10",columns$[11,3]=m3$,columns$[11,10]="T"
+    columns$[12,0]=Translate!.getTranslation("AON_MOVE^TIME"),         columns$[12,1]="N",columns$[12,2]="10",columns$[12,3]=m3$
+    columns$[13,0]=Translate!.getTranslation("AON_CRITICAL^RATIO"),    columns$[13,1]="N",columns$[13,2]="10",columns$[13,3]=m2$
 
 rem --- Calculate Actual Transactions
 
@@ -210,11 +210,11 @@ sub_head: rem --- Sub Heading
     blank=fnblank(14)
     if bm$="Y" then
         find record (bmm08a_dev,key=firm_id$+sfm05a_key.op_code$,dom=*next) bmm08a$
-        OutVect!.addItem("Operation Code: "+sfm05a_key.op_code$+" "+bmm08a.code_desc$)
+        OutVect!.addItem(Translate!.getTranslation("AON_OPERATION_CODE:_")+sfm05a_key.op_code$+" "+bmm08a.code_desc$)
         blank=fnblank(13)
     else
         find record (sfm02a_dev,key=firm_id$+sfm05a_key.op_code$,dom=*next) sfm02a$
-        OutVect!.addItem("Operation Code: "+sfm05a_key.op_code$+" "+sfm02a.code_desc$)
+        OutVect!.addItem(Translate!.getTranslation("AON_OPERATION_CODE:_")+sfm05a_key.op_code$+" "+sfm02a.code_desc$)
         blank=fnblank(13)
     endif
     blank=fnblank(14)
@@ -233,7 +233,7 @@ week_end_subtot: rem --- Week Ending Subtotals
 
                 TotVect!.addItem(str(OutVect!.size()/(columns+1)))
                 blank=fnblank(5)
-                OutVect!.addItem("Totals For Week Ending "+str(fndate$(sdate$)))
+                OutVect!.addItem(Translate!.getTranslation("AON_TOTALS_FOR_WEEK_ENDING_")+str(fndate$(sdate$)))
                 blank=fnblank(4)
                 OutVect!.addItem(str(wtotset))
                 OutVect!.addItem(str(wtotrun))
@@ -255,7 +255,7 @@ totals: rem --- Totals
     if t0$<>"" and l0<>0 then
         TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         blank=fnblank(5)
-        OutVect!.addItem("Total For Op Code "+t0$)
+        OutVect!.addItem(Translate!.getTranslation("AON_TOTAL_FOR_OP_CODE_")+t0$)
         blank=fnblank(4)
         OutVect!.addItem(str(totset))
         OutVect!.addItem(str(totrun))

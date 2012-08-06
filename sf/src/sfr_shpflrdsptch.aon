@@ -52,9 +52,9 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-    wo_open$=Option!.getOptionData("open")
-    wo_planned$=Option!.getOptionData("planned")
-    wo_quoted$=Option!.getOptionData("quoted")
+    wo_open$=Option!.getOptionData(Translate!.getTranslation("AON_OPEN"))
+    wo_planned$=Option!.getOptionData(Translate!.getTranslation("AON_PLANNED"))
+    wo_quoted$=Option!.getOptionData(Translate!.getTranslation("AON_QUOTED"))
     wo_status$=""
     if wo_open$="Y" then wo_status$=wo_status$+"O"
     if wo_planned$="Y" then wo_status$=wo_status$+"P"
@@ -109,18 +109,18 @@ rem --- Initializations
 
 rem --- Setup Headings
 
-    if pos("O"=wo_status$)>0 then h0$=h0$+"Open/"
-    if pos("P"=wo_status$)>0 then h0$=h0$+"Planned/"
-    if pos("Q"=wo_status$)>0 then h0$=h0$+"Quoted/"
-    h0$="Includes All "+h0$(1,len(h0$)-1)+" Work Orders"
-    h1$="From "
-    if begdate$="" then h1$=h1$+"The First Date" else h1$=h1$+fndate$(begdate$)
-    h1$=h1$+" Through "
-    if lastdate$="" then h1$=h1$+"The Last Date" else h1$=h1$+fndate$(lastdate$)
-    if op_code$="" then h2$="For All Op Codes" else h2$="For Op Code "+op_code$
-    h2$=h2$+" With Priority Code Of 1"
-    if pr_code$>"1" then h2$=h2$+" Through "+pr_code$
-    h2$=h2$+" Scheduled As Of "+fndate$(schedate$)
+    if pos("O"=wo_status$)>0 then h0$=h0$+Translate!.getTranslation("AON_OPEN/")
+    if pos("P"=wo_status$)>0 then h0$=h0$+Translate!.getTranslation("AON_PLANNED/")
+    if pos("Q"=wo_status$)>0 then h0$=h0$+Translate!.getTranslation("AON_QUOTED/")
+    h0$=Translate!.getTranslation("AON_INCLUDES_ALL_")+h0$(1,len(h0$)-1)+Translate!.getTranslation("AON__WORK_ORDERS")
+    h1$=Translate!.getTranslation("AON_FROM_")
+    if begdate$="" then h1$=h1$+Translate!.getTranslation("AON_THE_FIRST_DATE") else h1$=h1$+fndate$(begdate$)
+    h1$=h1$+Translate!.getTranslation("AON__THROUGH_")
+    if lastdate$="" then h1$=h1$+Translate!.getTranslation("AON_THE_LAST_DATE") else h1$=h1$+fndate$(lastdate$)
+    if op_code$="" then h2$=Translate!.getTranslation("AON_FOR_ALL_OP_CODES") else h2$=Translate!.getTranslation("AON_FOR_OP_CODE_")+op_code$
+    h2$=h2$+Translate!.getTranslation("AON__WITH_PRIORITY_CODE_OF_1")
+    if pr_code$>"1" then h2$=h2$+Translate!.getTranslation("AON__THROUGH_")+pr_code$
+    h2$=h2$+Translate!.getTranslation("AON__SCHEDULED_AS_OF_")+fndate$(schedate$)
 
 
 done: rem --- Run Overlay
@@ -152,8 +152,8 @@ rem --- Format inventory item description
 rem --- Date/time handling functions
 
     def fnyy$(q$)=q$(3,2)
-    def fnclock$(q$)=date(0:"%hz:%mz %p")
-    def fntime$(q$)=date(0:"%Hz%mz")
+    def fnclock$(q$)=date(0:Translate!.getTranslation("AON_%HZ:%MZ_%P"))
+    def fntime$(q$)=date(0:Translate!.getTranslation("AON_%HZ%MZ"))
 
 rem #include fndate.src
 

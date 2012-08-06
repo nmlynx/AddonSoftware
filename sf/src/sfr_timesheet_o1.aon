@@ -12,7 +12,7 @@ rem --- All Rights Reserved
 rem --- Init Data
             
     width=132
-    headings$[2]="Work Order Summary Report"
+    headings$[2]=Translate!.getTranslation("AON_WORK_ORDER_SUMMARY_REPORT")
     call pgmdir$+"adc_sizemask.aon",m1$,m1,m1+2,15
     call pgmdir$+"adc_sizemask.aon",m2$,m2,m2+2,15
     dim u[5]
@@ -185,7 +185,7 @@ rem --- fnBlank : Create blank cells in OutVect!. No return value
 
 sub_heading: rem --- Sub Heading
 
-    OutVect!.addItem("Work Order: "+t0$+"  "+d1$)
+    OutVect!.addItem(Translate!.getTranslation("AON_WORK_ORDER:_")+t0$+"  "+d1$)
     xwk = fnblank(columns)
 
     return
@@ -199,7 +199,7 @@ work_order_tot: rem --- Work Order Total
         if l1>1 
             TotVect!.addItem(str(OutVect!.size()/(columns+1)))
             xwk = fnblank(1)
-            OutVect!.addItem("Work Order "+t0$+" Totals:")
+            OutVect!.addItem(Translate!.getTranslation("AON_WORK_ORDER_")+t0$+Translate!.getTranslation("AON__TOTALS:"))
             xwk = fnblank(columns-7)
             OutVect!.addItem(str(t[5]:m2$))
             OutVect!.addItem(str(t[4]:m2$))
@@ -227,7 +227,7 @@ step_sub_tot:rem --- Step Sub Total
         if l2>1 
         TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         xwk = fnblank(2)
-        OutVect!.addItem("Step "+t1$+" Total: ")
+        OutVect!.addItem(Translate!.getTranslation("AON_STEP_")+t1$+Translate!.getTranslation("AON__TOTAL:_"))
         xwk = fnblank(columns-8)
         OutVect!.addItem(str(s[5]:m2$))
         OutVect!.addItem(str(s[4]:m2$))
