@@ -52,9 +52,9 @@ rem --- Dimension string templates
 
 rem --- Assign form input values to local variables
 
-    wo_open$=Option!.getOptionData(Translate!.getTranslation("AON_OPEN"))
-    wo_planned$=Option!.getOptionData(Translate!.getTranslation("AON_PLANNED"))
-    wo_quoted$=Option!.getOptionData(Translate!.getTranslation("AON_QUOTED"))
+    wo_open$=Option!.getOptionData("open")
+    wo_planned$=Option!.getOptionData("planned")
+    wo_quoted$=Option!.getOptionData("quoted")
     wo_status$=""
     if wo_open$="Y" then wo_status$=wo_status$+"O"
     if wo_planned$="Y" then wo_status$=wo_status$+"P"
@@ -152,8 +152,8 @@ rem --- Format inventory item description
 rem --- Date/time handling functions
 
     def fnyy$(q$)=q$(3,2)
-    def fnclock$(q$)=date(0:Translate!.getTranslation("AON_%HZ:%MZ_%P"))
-    def fntime$(q$)=date(0:Translate!.getTranslation("AON_%HZ%MZ"))
+    def fnclock$(q$)=date(0:"%hz:%mz %p")
+    def fntime$(q$)=date(0:"%Hz%mz")
 
 rem #include fndate.src
 
