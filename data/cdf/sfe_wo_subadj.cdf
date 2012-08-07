@@ -24,14 +24,18 @@ rem --- Now write the Adjutment Entry records out
 				tran_date$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2)
 			endif
 			tran_seq$=vectSubsMaster!.getItem(mast)
+			old_units=num(vectSubs!.getItem(x+4))
+			new_units=num(vectSubs!.getItem(x+5))
+			old_cost=num(vectSubs!.getItem(x+6))
+			new_cost=num(vectSubs!.getItem(x+7))
 			new_wo$=vectSubs!.getItem(x+10)
 			if cvs(new_wo$,2)="" new_wo$=wo_no$
 			new_date$=vectSubs!.getItem(x+11)
 			if cvs(new_date$,2)="" new_date$=tran_date$
-			new_units=num(vectSubs!.getItem(x+5))
-			new_cost=num(vectSubs!.getItem(x+7))
-			if new_units <> 0 or
-:			   new_cost <> 0
+			if tran_date$ <> new_date$ or
+:			   old_units <> new_units or
+:			   old_cost <> new_cost or
+:			   wo_no$ <> new_wo$
 rem --- Write entry Record
 				sfe_subadj.firm_id$=firm_id$
 				sfe_subadj.wo_location$=wo_loc$
@@ -253,6 +257,10 @@ rem --- Add grid to store invoices, with checkboxes for user to select one or mo
 
 rem --- Misc other init
 
+	diff_color!=SysGUI!.makeColor(3)
+	same_color!=SysGUI!.makeColor(7)
+	callpoint!.setDevObject("diff_color",diff_color!)
+	callpoint!.setDevObject("same_color",same_color!)
 	gridSubs!.setColumnEditable(5,1)
 	gridSubs!.setColumnEditable(7,1)
 	gridSubs!.setColumnEditable(10,1)
@@ -376,6 +384,30 @@ rem ==========================================================================
 		gridSubs!.clearMainGrid()
 		gridSubs!.setNumRows(numrow)
 		gridSubs!.setCellText(0,0,vectSubs!)
+
+		cols=num(user_tpl.gridSubsCols$)
+		for row=1 to vectSubs!.size()-1 step cols
+			if vectSubs!.getItem(((row-1)/cols)*cols+4)<>vectSubs!.getItem(((row-1)/cols)*cols+5)
+				gridSubs!.setCellBackColor((row-1)/cols,5,callpoint!.getDevObject("diff_color"))
+			else
+				gridSubs!.setCellBackColor((row-1)/cols,5,callpoint!.getDevObject("same_color"))
+			endif
+			if vectSubs!.getItem(((row-1)/cols)*cols+6)<>vectSubs!.getItem(((row-1)/cols)*cols+7)
+				gridSubs!.setCellBackColor((row-1)/cols,7,callpoint!.getDevObject("diff_color"))
+			else
+				gridSubs!.setCellBackColor((row-1)/cols,7,callpoint!.getDevObject("same_color"))
+			endif
+			if vectSubs!.getItem(((row-1)/cols)*cols+10)<>wo_no$
+				gridSubs!.setCellBackColor((row-1)/cols,10,callpoint!.getDevObject("diff_color"))
+			else
+				gridSubs!.setCellBackColor((row-1)/cols,10,callpoint!.getDevObject("same_color"))
+			endif
+			if vectSubs!.getItem(((row-1)/cols)*cols+11)<>vectSubs!.getItem(((row-1)/cols)*cols)
+				gridSubs!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("diff_color"))
+			else
+				gridSubs!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("same_color"))
+			endif
+		next row
 	else
 		gridSubs!.clearMainGrid()
 		gridSubs!.setNumRows(0)
@@ -404,7 +436,12 @@ rem ==========================================================================
 		dim apm01a$:fattr(apm01a$)
 		read record(apm01_dev, key=firm_id$+sft31a.vendor_id$, dom=*next) apm01a$
 		dim sfe_subadj$:fnget_tpl$("SFE_WOSUBADJ")
-		read record (sfe_subadj,key=firm_id$+wo_loc$+wo_no$+sft31a.trans_date$+sft31a.trans_seq$,dom=*next)sfe_subadj$
+		found=0
+		while 1
+			read record (sfe_subadj,key=firm_id$+wo_loc$+wo_no$+sft31a.trans_date$+sft31a.trans_seq$,dom=*break)sfe_subadj$
+			found=1
+			break
+		wend
 
 	rem --- Now fill vectors
 
@@ -413,14 +450,27 @@ rem ==========================================================================
 		vectSubs!.addItem(apm01a.vendor_name$); rem 2
 		vectSubs!.addItem(sft31a.po_no$); rem 3
 		vectSubs!.addItem(str(sft31a.units)); rem 4
-		vectSubs!.addItem(str(sfe_subadj.new_units)); rem 5
+		if found=1
+			vectSubs!.addItem(str(sfe_subadj.new_units)); rem 5
+		else
+			vectSubs!.addItem(str(sft31a.units)); rem 5
+		endif
 		vectSubs!.addItem(str(sft31a.unit_cost)); rem 6
-		vectSubs!.addItem(str(sfe_subadj.new_unit_cst)); rem 7
+		if found=1
+			vectSubs!.addItem(str(sfe_subadj.new_unit_cst)); rem 7
+		else
+			vectSubs!.addItem(str(sft31a.unit_cost)); rem 7
+		endif
 		vectSubs!.addItem(str(sft31a.ext_cost)); rem 8
-		vectSubs!.addItem(str(sfe_subadj.new_units*sfe_subadj.new_unit_cst)); rem 9
-		vectSubs!.addItem(sfe_subadj.new_wo_no$); rem 10
-		vectSubs!.addItem(sfe_subadj.new_trn_date$); rem 11
-
+		if found=1
+			vectSubs!.addItem(str(sfe_subadj.new_units*sfe_subadj.new_unit_cst)); rem 9
+			vectSubs!.addItem(sfe_subadj.new_wo_no$); rem 10
+			vectSubs!.addItem(sfe_subadj.new_trn_date$); rem 11
+		else
+			vectSubs!.addItem(str(sft31a.ext_cost)); rem 9
+			vectSubs!.addItem(wo_no$);rem 10
+			vectSubs!.addItem(fndate$(sft31a.trans_date$)); rem 11
+		endif
 		vectSubsMaster!.addItem(sft31a.trans_seq$);rem keep track of sequence
 
 	wend
