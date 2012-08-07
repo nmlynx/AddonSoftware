@@ -360,9 +360,9 @@ connect_err:rem --- Connection Error
     declare java.lang.Exception Exception!
     Exception! = bbjapi().getLastException()
     if Exception! = null() then 
-       x = msgbox(errmes(-1),16,"Connection Failed")
+       x = msgbox(errmes(-1),16,Translate!.getTranslation("AON_CONNECTION_FAILED"))
     else
-       x = msgbox(Exception!.getLocalizedMessage(),16,"Connection Failed")
+       x = msgbox(Exception!.getLocalizedMessage(),16,Translate!.getTranslation("AON_CONNECTION_FAILED"))
     endif
 
     release

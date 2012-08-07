@@ -80,9 +80,9 @@ rem --- Retrieve parameter records
 
 rem --- Init Data
 
-        lm$="Labor Cost Adjustment"
-        sm$="Subcontract Cost Adjustment"
-        cm$="Closed Cost Adjustment"
+        lm$=Translate!.getTranslation("AON_LABOR_COST_ADJUSTMENT")
+        sm$=Translate!.getTranslation("AON_SUBCONTRACT_COST_ADJUSTMENT")
+        cm$=Translate!.getTranslation("AON_CLOSED_COST_ADJUSTMENT")
         full$=""
         precision 4
         more=1
@@ -125,7 +125,7 @@ rem --- Background
 
 rem --- Options
 
-        v4$="Are you ready to update the "+sysinfo.task_desc$
+        v4$=Translate!.getTranslation("AON_ARE_YOU_READY_TO_UPDATE_THE_")+sysinfo.task_desc$
         call pgmdir$+"adc_yesno.aon",0,v4$,0,v$,v3
         if v$<>"YES" then goto std_exit
         exit_ctrl=1
@@ -174,7 +174,7 @@ rem --- Find The Distribution
 rem --- Back Out Distribution
 
             when$=sfadja.trans_date$
-            ref1$="WO "+sfe01a.wo_no$,ref2$="Seq "+sfadja.trans_seq$
+            ref1$="WO "+sfe01a.wo_no$,ref2$=Translate!.getTranslation("AON_SEQ_")+sfadja.trans_seq$
             ref3$=fndate$(sfadja.new_trn_date$)
             memo$=cm$
             account$=sfm10a.gl_wip_acct$
@@ -303,7 +303,7 @@ rem --- Summary posting when no free records exist
                     k2$=k2.firm_id$+k2.wo_location$+k2.wo_no$+k2.trans_date$+"999"
                     extract record (wotran_dev,key=k2$) sftran$
                     if record_id$="S" then 
-                        sftran.reserved_str$="Summary Transaction"
+                        sftran.reserved_str$=Translate!.getTranslation("AON_SUMMARY_TRANSACTION")
                         sftran.wo_units=sftran.wo_units+sfadja.new_units
                         sftran.ext_cost=sftran.ext_cost+sfadja.new_units*field_a1
                         if sftran.wo_units<>0 then 

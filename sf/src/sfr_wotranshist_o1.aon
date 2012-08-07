@@ -48,29 +48,29 @@ rem --- Column Headings
     if pos("O"=transtype$)>0 then
         columns = 10
         dim columns$[columns,10]
-		columns$[0,0]="WO/Date",             columns$[0,1]="C",columns$[0,2]="8"
-        columns$[1,0]="Src",                 columns$[1,1]="C",columns$[1,2]="8"
+		columns$[0,0]=Translate!.getTranslation("AON_WO/DATE"),             columns$[0,1]="C",columns$[0,2]="8"
+        columns$[1,0]=Translate!.getTranslation("AON_SRC"),                 columns$[1,1]="C",columns$[1,2]="8"
         columns$[2,0]="   ",                 columns$[2,1]="C",columns$[2,2]="3"; rem v12 doesn't print seq_refs
-        columns$[3,0]="Item/Vendor/OpCd",    columns$[3,1]="C",columns$[3,2]="20"
-		columns$[4,0]="UM/Desc/Employee",    columns$[4,1]="C",columns$[4,2]="20"
+        columns$[3,0]=Translate!.getTranslation("AON_ITEM/VENDOR/OPCD"),    columns$[3,1]="C",columns$[3,2]="20"
+		columns$[4,0]=Translate!.getTranslation("AON_UM/DESC/EMPLOYEE"),    columns$[4,1]="C",columns$[4,2]="20"
 		columns$[5,0]="P.O.",	        	 columns$[5,1]="C",columns$[5,2]="15"
-        columns$[6,0]="Cmplt Qty",           columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=sf_units_mask$
-        columns$[7,0]="SetUp hrs",           columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=sf_units_mask$
-        columns$[8,0]="Total Units",         columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=sf_units_mask$
-        columns$[9,0]="Rate",                columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=sf_cost_mask$
-        columns$[10,0]="Amount",             columns$[10,1]="N",columns$[10,2]="12",columns$[10,3]=sf_amt_mask$,columns$[10,10]="T"
+        columns$[6,0]=Translate!.getTranslation("AON_CMPLT_QTY"),           columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=sf_units_mask$
+        columns$[7,0]=Translate!.getTranslation("AON_SETUP_HRS"),           columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=sf_units_mask$
+        columns$[8,0]=Translate!.getTranslation("AON_TOTAL_UNITS"),         columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=sf_units_mask$
+        columns$[9,0]=Translate!.getTranslation("AON_RATE"),                columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=sf_cost_mask$
+        columns$[10,0]=Translate!.getTranslation("AON_AMOUNT"),             columns$[10,1]="N",columns$[10,2]="12",columns$[10,3]=sf_amt_mask$,columns$[10,10]="T"
     else
         columns = 8
         dim columns$[columns,10]
-		columns$[0,0]="WO/Date",             columns$[0,1]="C",columns$[0,2]="8"
-        columns$[1,0]="Src",                 columns$[1,1]="C",columns$[1,2]="8"
+		columns$[0,0]=Translate!.getTranslation("AON_WO/DATE"),             columns$[0,1]="C",columns$[0,2]="8"
+        columns$[1,0]=Translate!.getTranslation("AON_SRC"),                 columns$[1,1]="C",columns$[1,2]="8"
         columns$[2,0]="   ",                 columns$[2,1]="C",columns$[2,2]="3"; rem v12 doesn't print seq_refs
-        columns$[3,0]="Item/Vendor/OpCd",    columns$[3,1]="C",columns$[3,2]="20"
-		columns$[4,0]="UM/Desc/Employee",	 columns$[4,1]="C",columns$[4,2]="20"
+        columns$[3,0]=Translate!.getTranslation("AON_ITEM/VENDOR/OPCD"),    columns$[3,1]="C",columns$[3,2]="20"
+		columns$[4,0]=Translate!.getTranslation("AON_UM/DESC/EMPLOYEE"),	 columns$[4,1]="C",columns$[4,2]="20"
 		columns$[5,0]="P.O.",       		 columns$[5,1]="C",columns$[5,2]="15"
-        columns$[6,0]="Units",               columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=sf_units_mask$
-        columns$[7,0]="Rate",                columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=sf_cost_mask$
-        columns$[8,0]="Amount",              columns$[8,1]="N",columns$[8,2]="12",columns$[8,3]=sf_amt_mask$,columns$[8,10]="T"
+        columns$[6,0]=Translate!.getTranslation("AON_UNITS"),               columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=sf_units_mask$
+        columns$[7,0]=Translate!.getTranslation("AON_RATE"),                columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=sf_cost_mask$
+        columns$[8,0]=Translate!.getTranslation("AON_AMOUNT"),              columns$[8,1]="N",columns$[8,2]="12",columns$[8,3]=sf_amt_mask$,columns$[8,10]="T"
     endif
 
 rem --- Background
@@ -236,14 +236,14 @@ rem --- Process Transactions
                 OutVect!.addItem(read_tpl.description_01$); rem columns$[1
             endif  
             xwk=fnblank(2)
-            OutVect!.addItem(fill(20)+"Type: "+read_tpl.wo_type$+" Cat: "
-:							 +read_tpl.wo_category$+"  Stat: "+read_tpl.wo_status$
-:							 +"  Whse: "+read_tpl.warehouse_id$+"  Sched Prod: "
+            OutVect!.addItem(fill(20)+Translate!.getTranslation("AON_TYPE:_")+read_tpl.wo_type$+Translate!.getTranslation("AON__CAT:_")
+:							 +read_tpl.wo_category$+Translate!.getTranslation("AON___STAT:_")+read_tpl.wo_status$
+:							 +Translate!.getTranslation("AON___WHSE:_")+read_tpl.warehouse_id$+Translate!.getTranslation("AON___SCHED_PROD:_")
 :							 +str(read_tpl.sch_prod_qty:sf_units_mask$)); rem columns$[4
             xwk=fnblank(columns-4); rem "finish the row
 			if pos("0"<read_tpl.customer_id$)>0 then
                 rem NOTE: in v6 Cust/Ord info is flush right, but those are numeric cols in DocOut, so I moved left w/indent
-				OutVect!.addItem(fill(5)+"Cust: "+fnmask$(read_tpl.customer_id$,customer_mask$)+"  Order: "+read_tpl.order_no$); rem columns$[0
+				OutVect!.addItem(fill(5)+Translate!.getTranslation("AON_CUST:_")+fnmask$(read_tpl.customer_id$,customer_mask$)+Translate!.getTranslation("AON___ORDER:_")+read_tpl.order_no$); rem columns$[0
 				xwk=fnblank(columns); rem "finish the row
 			else
 				rem xwk=fnblank(columns+1); rem "blank row
@@ -313,10 +313,10 @@ done: rem --- End
 		xwk=fnblank(columns+1); rem "blank row
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
         xwk=fnblank(1)
-        OutVect!.addItem("Grand Total: ")
+        OutVect!.addItem(Translate!.getTranslation("AON_GRAND_TOTAL:_"))
         if pos("O"=transtype$)>0 then 
             xwk=fnblank(2)
-            OutVect!.addItem("Total Hours: "+str(u[0]:sf_hours_mask$)+" Setup Hours: "+str(u[2]:sf_hours_mask$)); rem columns$[4
+            OutVect!.addItem(Translate!.getTranslation("AON_TOTAL_HOURS:_")+str(u[0]:sf_hours_mask$)+Translate!.getTranslation("AON__SETUP_HOURS:_")+str(u[2]:sf_hours_mask$)); rem columns$[4
         else
             xwk=fnblank(3)
 		endif
@@ -350,10 +350,10 @@ sub_total: rem --- First Sub Total
             rem xwk=fnblank(columns+1); rem "blank row
 			TotVect!.addItem(str(OutVect!.size()/(columns+1)))
             xwk=fnblank(1)	
-            OutVect!.addItem(h9$+" "+cvs(t0$,2)+"   "+"Total: ")
+            OutVect!.addItem(h9$+" "+cvs(t0$,2)+"   "+Translate!.getTranslation("AON_TOTAL:_"))
             if pos("O"=transtype$)>0 then 
                 xwk=fnblank(2)
-                OutVect!.addItem("Total Hours: "+str(t[0]:sf_units_mask$)+" Setup Hours: "+str(t[2]:sf_units_mask$))
+                OutVect!.addItem(Translate!.getTranslation("AON_TOTAL_HOURS:_")+str(t[0]:sf_units_mask$)+Translate!.getTranslation("AON__SETUP_HOURS:_")+str(t[2]:sf_units_mask$))
                 xwk=fnblank(5); rem "finish row
             else
                 xwk=fnblank(6); rem "finish row
@@ -369,13 +369,13 @@ sub_total: rem --- First Sub Total
         l0=0
 
         if sequence$="T" then
-            dim h5$(20); let h5$(1)="*** Not On File ***"
+            dim h5$(20); let h5$(1)=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
             find record (sfm10a_dev,key=firm_id$+"A"+t0$,dom=*return) sfm10a$
             h5$=sfm10a.code_desc$
             gosub sub_head
         endif
         if sequence$="C" then
-            dim h5$(30); let h5$(1)="*** Not On File ***"
+            dim h5$(30); let h5$(1)=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
             find record (arm01a_dev,key=firm_id$+t0$,dom=*return) arm01a$
             h5$=arm01a.customer_name$
             gosub sub_head
@@ -386,10 +386,10 @@ date_subtot:rem --- Date Subtotal
         if t1$<>"" then             
             TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
             xwk=fnblank(1)
-            OutVect!.addItem("Month "+fnh$(t1$)+"   "+"Total: ")
+            OutVect!.addItem(Translate!.getTranslation("AON_MONTH_")+fnh$(t1$)+"   "+Translate!.getTranslation("AON_TOTAL:_"))
             if pos("O"=transtype$)>0 then 
                 xwk=fnblank(2)
-                OutVect!.addItem("Total Hours: "+str(d[0]:sf_units_mask$)+" Setup Hours: "+str(d[2]:sf_units_mask$))
+                OutVect!.addItem(Translate!.getTranslation("AON_TOTAL_HOURS:_")+str(d[0]:sf_units_mask$)+Translate!.getTranslation("AON__SETUP_HOURS:_")+str(d[2]:sf_units_mask$))
                 xwk=fnblank(5); rem "finish row
             else
                 xwk=fnblank(6); rem "finish row
@@ -412,10 +412,10 @@ wo_subtot: rem --- W/O Subtotal
         
         TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         xwk=fnblank(1)
-        OutVect!.addItem("Work Order "+prev_wo$+" Total: ")
+        OutVect!.addItem(Translate!.getTranslation("AON_WORK_ORDER_")+prev_wo$+Translate!.getTranslation("AON__TOTAL:_"))
         if pos("O"=transtype$)>0 then 
             xwk=fnblank(2)
-            OutVect!.addItem("Total Hours: "+str(s[0]:sf_units_mask$)+" Setup Hours: "+str(s[2]:sf_units_mask$))
+            OutVect!.addItem(Translate!.getTranslation("AON_TOTAL_HOURS:_")+str(s[0]:sf_units_mask$)+Translate!.getTranslation("AON__SETUP_HOURS:_")+str(s[2]:sf_units_mask$))
             xwk=fnblank(5); rem "finish row
         else
             xwk=fnblank(6); rem "finish row
@@ -426,7 +426,7 @@ wo_subtot: rem --- W/O Subtotal
 
 material_details: rem --- Materials Here
 
-    dim x0$(30),x1$(20),x2$(30); let x0$(1)="*** Not On File ***",x1$(1)=x0$
+    dim x0$(30),x1$(20),x2$(30); let x0$(1)=Translate!.getTranslation("AON_***_NOT_ON_FILE_***"),x1$(1)=x0$
    
     if record_id_field$="M"
         find record (ivm01a_dev,key=firm_id$+sftran.item_id$,dom=*next) ivm01a$
@@ -457,16 +457,16 @@ rem --- Serial Numbers Here
                 if pos(sftran.firm_id$+sftran.wo_location$+sftran.wo_no$+sftran.trans_date$+sftran.trans_seq$=k1$)=1 then
                     read record (lstran_dev) lstran$ 
 rem --- Print It Here
-                    if ivs01a.lotser_flag$="S" then lotser$="Serial: " else lotser$="Lot: "
+                    if ivs01a.lotser_flag$="S" then lotser$=Translate!.getTranslation("AON_SERIAL:_") else lotser$=Translate!.getTranslation("AON_LOT:_")
                     xwk=fnblank(3)
                     
 					rem -- Columns$[3,x]
 					if lstran_dev=sft11a_dev then 
-						OutVect!.addItem(lotser$+lstran.lotser_no$+"  Issued:"+str(lstran.cls_inp_qty:sf_units_mask$)+"  Cost:"+str(lstran.closed_cost:sf_cost_mask$)+"  Amount: "+str(lstran.ext_cost:sf_amt_mask$))
+						OutVect!.addItem(lotser$+lstran.lotser_no$+Translate!.getTranslation("AON___ISSUED:")+str(lstran.cls_inp_qty:sf_units_mask$)+Translate!.getTranslation("AON___COST:")+str(lstran.closed_cost:sf_cost_mask$)+Translate!.getTranslation("AON___AMOUNT:_")+str(lstran.ext_cost:sf_amt_mask$))
                     endif
 					
 					if lstran_dev=sft12a_dev then 
-						OutVect!.addItem(lotser$+lstran.lotser_no$+"  Issued:"+str(lstran.qty_closed:sf_units_mask$)+"  Cost:"+str(lstran.unit_cost:sf_cost_mask$)+"  Amount: "+str(lstran.ext_cost:sf_amt_mask$))
+						OutVect!.addItem(lotser$+lstran.lotser_no$+Translate!.getTranslation("AON___ISSUED:")+str(lstran.qty_closed:sf_units_mask$)+Translate!.getTranslation("AON___COST:")+str(lstran.unit_cost:sf_cost_mask$)+Translate!.getTranslation("AON___AMOUNT:_")+str(lstran.ext_cost:sf_amt_mask$))
 					endif
 					xwk=fnblank(columns-3)
                 else
@@ -479,7 +479,7 @@ rem --- Print It Here
 	
 subcontract_details: rem --- Subcontracts Here
 
-        dim x0$(30),x1$(20),x2$(30); let x0$(1)="*** Not On File ***",x1$(1)=x0$
+        dim x0$(30),x1$(20),x2$(30); let x0$(1)=Translate!.getTranslation("AON_***_NOT_ON_FILE_***"),x1$(1)=x0$
         if record_id_field$="S"
             if po$="Y" then find record (apm01a_dev,key=firm_id$+sftran.vendor_id$,dom=*next) apm01a$
             
@@ -491,9 +491,9 @@ subcontract_details: rem --- Subcontracts Here
         return
 
 operation_details: rem --- Operations Here
-        dim x0$(30),x1$(20),x2$(30); let x0$(1)="*** Not On File ***",x1$(1)=x0$
+        dim x0$(30),x1$(20),x2$(30); let x0$(1)=Translate!.getTranslation("AON_***_NOT_ON_FILE_***"),x1$(1)=x0$
         if record_id_field$="O"
-            x1$="Invalid Op Code"
+            x1$=Translate!.getTranslation("AON_INVALID_OP_CODE")
             find record (opcode_dev,key=firm_id$+sftran.op_code$,dom=label3) opcode$
             x1$=opcode.code_desc$
             label3:

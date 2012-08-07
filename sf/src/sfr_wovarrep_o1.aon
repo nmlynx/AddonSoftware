@@ -53,7 +53,7 @@ rem --- Assign Title, Record, and keys
         action=pos(sequence$="WBCT")-1
         switch action
             case 0
-                h3$="Work Order Sequence"
+                h3$=Translate!.getTranslation("AON_WORK_ORDER_SEQUENCE")
                 beging$=wofrom$
                 ending$=wothru$
                 dim key_tpl$:sfe01a_key_tpl$
@@ -61,7 +61,7 @@ rem --- Assign Title, Record, and keys
                 keynum$="PRIMARY"
                 break
             case 1
-                h3$="Bill Number Sequence for Warehouse "+whse$
+                h3$=Translate!.getTranslation("AON_BILL_NUMBER_SEQUENCE_FOR_WAREHOUSE_")+whse$
                 beging$=billfrom$
                 ending$=billthru$
                 dim key_tpl$:sfe01a_key_alt3$
@@ -69,7 +69,7 @@ rem --- Assign Title, Record, and keys
                 keynum$="AO_WH_ITM_LOC_WO"
                 break
             case 2
-                h3$="Customer Sequence"
+                h3$=Translate!.getTranslation("AON_CUSTOMER_SEQUENCE")
                 beging$=custfrom$
                 ending$=custthru$
                 dim key_tpl$:sfe01a_key_alt2$
@@ -77,7 +77,7 @@ rem --- Assign Title, Record, and keys
                 keynum$="AO_CST_ORD_LINE"
                 break
             case 3
-                h3$="Work Order Type Sequence"
+                h3$=Translate!.getTranslation("AON_WORK_ORDER_TYPE_SEQUENCE")
                 beging$=wotfrom$
                 ending$=wotthru$
                 dim key_tpl$:sfe01a_key_alt1$
@@ -89,35 +89,35 @@ rem --- Assign Title, Record, and keys
         swend
 
         h4$=""
-        if pos("O"=wostatus$)>0 then let h4$=h4$+"Open/"
-        if pos("C"=wostatus$)>0 then let h4$=h4$+"Closed/"
-        if pos("P"=wostatus$)>0 then let h4$=h4$+"Planned/"
-        if pos("Q"=wostatus$)>0 then let h4$=h4$+"Quoted/"
+        if pos("O"=wostatus$)>0 then let h4$=h4$+Translate!.getTranslation("AON_OPEN/")
+        if pos("C"=wostatus$)>0 then let h4$=h4$+Translate!.getTranslation("AON_CLOSED/")
+        if pos("P"=wostatus$)>0 then let h4$=h4$+Translate!.getTranslation("AON_PLANNED/")
+        if pos("Q"=wostatus$)>0 then let h4$=h4$+Translate!.getTranslation("AON_QUOTED/")
         h4$=h4$(1,len(h4$)-1)
 		
-        if beging$<> "" h4$=h4$+" Beginning With "+cvs(beging$,2) else h4$=h4$+" Beginning With First"
-        if ending$<> "" h4$=h4$+" and Ending With "+ending$ else h4$=h4$+" and Ending with Last "
+        if beging$<> "" h4$=h4$+Translate!.getTranslation("AON__BEGINNING_WITH_")+cvs(beging$,2) else h4$=h4$+Translate!.getTranslation("AON__BEGINNING_WITH_FIRST")
+        if ending$<> "" h4$=h4$+Translate!.getTranslation("AON__AND_ENDING_WITH_")+ending$ else h4$=h4$+Translate!.getTranslation("AON__AND_ENDING_WITH_LAST_")
  
 	    if includecost$<>"" then
-			h6$="For Cost Overruns "
+			h6$=Translate!.getTranslation("AON_FOR_COST_OVERRUNS_")
 		else
 			h6$=""
 		endif
 		
         if abs(min_variance)>999.9 then 
-            min_variance$="exceeding 999.9%" 
+            min_variance$=Translate!.getTranslation("AON_EXCEEDING_999.9%") 
         else 
-            min_variance$="of "+str(min_variance:"####.00-")+"%"
+            min_variance$=Translate!.getTranslation("AON_OF_")+str(min_variance:"####.00-")+"%"
         endif
 		
 		if min_variance = 0 then
-			h6$=h6$+"For All Variances"
+			h6$=h6$+Translate!.getTranslation("AON_FOR_ALL_VARIANCES")
 		else 
-			h6$=h6$+"With Minimum Variances "+min_variance$
+			h6$=h6$+Translate!.getTranslation("AON_WITH_MINIMUM_VARIANCES_")+min_variance$
 		endif
 		
         if as_of_date$<>"" then 
-			let h6$=h6$+" As Of "+fndate$(as_of_date$) 
+			let h6$=h6$+Translate!.getTranslation("AON__AS_OF_")+fndate$(as_of_date$) 
      	endif
 		
         headings$[2]=h3$
@@ -164,20 +164,20 @@ rem --- Column Headings
         dim columns$[15,10]
         columns = 15
         columns$[0,0]="^^WO#",                 columns$[0,1]="C", columns$[0,2]="7"
-        columns$[1,0]="^Type/^Bill",                columns$[1,1]="C", columns$[1,2]="10"
-        columns$[2,0]="Standards^Ops^Hours",   columns$[2,1]="N", columns$[2,2]="8",  columns$[2,3]=sf_hours_mask$,columns$[2,10]="T"
-        columns$[3,0]="Standards^Ops^Direct",  columns$[3,1]="N", columns$[3,2]="9",  columns$[3,3]=sf_amt_mask$,  columns$[3,10]="T"
-        columns$[4,0]="Standards^Ops^Ovrhd",   columns$[4,1]="N", columns$[4,2]="9",  columns$[4,3]=sf_amt_mask$,  columns$[4,10]="T"
-        columns$[5,0]="Standards^Mat'ls^Total",columns$[5,1]="N", columns$[5,2]="9",  columns$[5,3]=sf_amt_mask$,  columns$[5,10]="T"
-        columns$[6,0]="Standards^Sub's^Total", columns$[6,1]="N", columns$[6,2]="9",  columns$[6,3]=sf_amt_mask$,  columns$[6,10]="T"
-        columns$[7,0]="Standards^W.O.^Total",  columns$[7,1]="N", columns$[7,2]="8",  columns$[7,3]=grand_amt_mask$,  columns$[7,10]="T"
-        columns$[8,0]="Actuals^Ops^Hours",     columns$[8,1]="N", columns$[8,2]="8",  columns$[8,3]=sf_hours_mask$,columns$[8,10]="T"
-        columns$[9,0]="Actuals^Ops^Direct",    columns$[9,1]="N", columns$[9,2]="9",  columns$[9,3]=sf_amt_mask$,  columns$[9,10]="T"
-        columns$[10,0]="Actuals^Ops^Ovrhd",    columns$[10,1]="N",columns$[10,2]="9", columns$[10,3]=sf_amt_mask$, columns$[10,10]="T"
-        columns$[11,0]="Actuals^Mat'ls^Total", columns$[11,1]="N",columns$[11,2]="9", columns$[11,3]=sf_amt_mask$, columns$[11,10]="T"
-        columns$[12,0]="Actuals^Sub's^Total",  columns$[12,1]="N",columns$[12,2]="9", columns$[12,3]=sf_amt_mask$, columns$[12,10]="T"
-        columns$[13,0]="Actuals^W.O.^Total",   columns$[13,1]="N",columns$[13,2]="8", columns$[13,3]=grand_amt_mask$, columns$[13,10]="T"
-        columns$[14,0]="^Variance",            columns$[14,1]="N",columns$[14,2]="8", columns$[14,3]=sf_amt_mask$, columns$[14,10]="T"
+        columns$[1,0]=Translate!.getTranslation("AON_^TYPE/^BILL"),                columns$[1,1]="C", columns$[1,2]="10"
+        columns$[2,0]=Translate!.getTranslation("AON_STANDARDS^OPS^HOURS"),   columns$[2,1]="N", columns$[2,2]="8",  columns$[2,3]=sf_hours_mask$,columns$[2,10]="T"
+        columns$[3,0]=Translate!.getTranslation("AON_STANDARDS^OPS^DIRECT"),  columns$[3,1]="N", columns$[3,2]="9",  columns$[3,3]=sf_amt_mask$,  columns$[3,10]="T"
+        columns$[4,0]=Translate!.getTranslation("AON_STANDARDS^OPS^OVRHD"),   columns$[4,1]="N", columns$[4,2]="9",  columns$[4,3]=sf_amt_mask$,  columns$[4,10]="T"
+        columns$[5,0]=Translate!.getTranslation("AON_STANDARDS^MAT'LS^TOTAL"),columns$[5,1]="N", columns$[5,2]="9",  columns$[5,3]=sf_amt_mask$,  columns$[5,10]="T"
+        columns$[6,0]=Translate!.getTranslation("AON_STANDARDS^SUB'S^TOTAL"), columns$[6,1]="N", columns$[6,2]="9",  columns$[6,3]=sf_amt_mask$,  columns$[6,10]="T"
+        columns$[7,0]=Translate!.getTranslation("AON_STANDARDS^W.O.^TOTAL"),  columns$[7,1]="N", columns$[7,2]="8",  columns$[7,3]=grand_amt_mask$,  columns$[7,10]="T"
+        columns$[8,0]=Translate!.getTranslation("AON_ACTUALS^OPS^HOURS"),     columns$[8,1]="N", columns$[8,2]="8",  columns$[8,3]=sf_hours_mask$,columns$[8,10]="T"
+        columns$[9,0]=Translate!.getTranslation("AON_ACTUALS^OPS^DIRECT"),    columns$[9,1]="N", columns$[9,2]="9",  columns$[9,3]=sf_amt_mask$,  columns$[9,10]="T"
+        columns$[10,0]=Translate!.getTranslation("AON_ACTUALS^OPS^OVRHD"),    columns$[10,1]="N",columns$[10,2]="9", columns$[10,3]=sf_amt_mask$, columns$[10,10]="T"
+        columns$[11,0]=Translate!.getTranslation("AON_ACTUALS^MAT'LS^TOTAL"), columns$[11,1]="N",columns$[11,2]="9", columns$[11,3]=sf_amt_mask$, columns$[11,10]="T"
+        columns$[12,0]=Translate!.getTranslation("AON_ACTUALS^SUB'S^TOTAL"),  columns$[12,1]="N",columns$[12,2]="9", columns$[12,3]=sf_amt_mask$, columns$[12,10]="T"
+        columns$[13,0]=Translate!.getTranslation("AON_ACTUALS^W.O.^TOTAL"),   columns$[13,1]="N",columns$[13,2]="8", columns$[13,3]=grand_amt_mask$, columns$[13,10]="T"
+        columns$[14,0]=Translate!.getTranslation("AON_^VARIANCE"),            columns$[14,1]="N",columns$[14,2]="8", columns$[14,3]=sf_amt_mask$, columns$[14,10]="T"
         columns$[15,0]="%",                    columns$[15,1]="N",columns$[15,2]="6", columns$[15,3]=pct_mask$,    columns$[15,10]="T"
 
 rem --- Background
@@ -473,11 +473,11 @@ rem --- Print
 
         if a_standards[5]<>0 then 
             blank=fnblank(12)
-            OutVect!.addItem("Closed: ")
+            OutVect!.addItem(Translate!.getTranslation("AON_CLOSED:_"))
             OutVect!.addItem(str(-a_standards[5]:sf_amt_mask$))
             blank=fnblank(2)
             blank=fnblank(12)
-            OutVect!.addItem("Net Open: ")
+            OutVect!.addItem(Translate!.getTranslation("AON_NET_OPEN:_"))
             OutVect!.addItem(str(a1_actual_tot-a_standards[5]:sf_amt_mask$))
             blank=fnblank(2)            
         endif
@@ -538,7 +538,7 @@ done: rem --- End
         blank=fnblank(16)
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
         blank=fnblank(1)
-        OutVect!.addItem("Report Total:")
+        OutVect!.addItem(Translate!.getTranslation("AON_REPORT_TOTAL:"))
 		
 		OutVect!.addItem(str(u_standards[0]:sf_hours_mask$)); rem Op hours
         OutVect!.addItem(str(u_standards[1]:sf_amt_mask$)); rem Op Direct
@@ -557,11 +557,11 @@ done: rem --- End
   
         if u_standards[5]<>0 then 
             blank=fnblank(12)
-            OutVect!.addItem("Closed: ")
+            OutVect!.addItem(Translate!.getTranslation("AON_CLOSED:_"))
             OutVect!.addItem(str(-u_standards[5]:sf_amt_mask$))
             blank=fnblank(2)
             blank=fnblank(12)
-            OutVect!.addItem("Net Open: ")
+            OutVect!.addItem(Translate!.getTranslation("AON_NET_OPEN:_"))
             OutVect!.addItem(str(u1_actual_tot-u_standards[5]:sf_amt_mask$))
             blank=fnblank(2)
 		endif
@@ -579,11 +579,11 @@ rem --- Subtotals By Type
 		dim u_standards[5]
 		dim u_actuals[5]
 
-        OutVect!.addItem("Totals By Type: ")
+        OutVect!.addItem(Translate!.getTranslation("AON_TOTALS_BY_TYPE:_"))
         blank=fnblank(15)
         blank=fnblank(16)
     
-    call pgmdir$+"adc_progress.aon","N","","","","Totals By Type:",0,sfw02a_dev,1,meter_num,status
+    call pgmdir$+"adc_progress.aon","N","","","",Translate!.getTranslation("AON_TOTALS_BY_TYPE:"),0,sfw02a_dev,1,meter_num,status
 	
     read (sfw02a_dev,key=firm_id$,dom=*next)
 	
@@ -592,7 +592,7 @@ rem --- Subtotals By Type
         if pos(firm_id$=k5$)<>1 then break
         read record (sfw02a_dev) sfw02a$
 		
-        sfm10a.code_desc$="*** Not On File ***"
+        sfm10a.code_desc$=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
         find record (sfm10a_dev,key=firm_id$+"A"+sfw02a.wo_type$,dom=*next) sfm10a$
 		
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
@@ -657,11 +657,11 @@ rem --- Subtotals By Type
 
 		if sfw02a.cls_cst_todt<>0 then 
             blank=fnblank(12)
-            OutVect!.addItem("Closed: ")
+            OutVect!.addItem(Translate!.getTranslation("AON_CLOSED:_"))
             OutVect!.addItem(str(-sfw02a.cls_cst_todt:sf_amt_mask$))
             blank=fnblank(2)
             blank=fnblank(12)
-            OutVect!.addItem("Net Open: ")
+            OutVect!.addItem(Translate!.getTranslation("AON_NET_OPEN:_"))
             OutVect!.addItem(str(b1_actual_tot-sfw02a.cls_cst_todt:sf_amt_mask$))
             blank=fnblank(2)           
         endif
@@ -698,7 +698,7 @@ rem --- Report Totals
         blank=fnblank(16)
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
         blank=fnblank(1)
-        OutVect!.addItem("Report Total:")
+        OutVect!.addItem(Translate!.getTranslation("AON_REPORT_TOTAL:"))
 	
 		OutVect!.addItem(str(t_standards[0]:sf_hours_mask$)); rem Op hours
         OutVect!.addItem(str(t_standards[1]:sf_amt_mask$)); rem Op Direct
@@ -717,11 +717,11 @@ rem --- Report Totals
  
         if t_standards[5]<>0 then 
             blank=fnblank(12)
-            OutVect!.addItem("Closed: ")
+            OutVect!.addItem(Translate!.getTranslation("AON_CLOSED:_"))
             OutVect!.addItem(str(-t_standards[5]:sf_amt_mask$))
             blank=fnblank(2)
             blank=fnblank(12)
-            OutVect!.addItem("Net Open: ")
+            OutVect!.addItem(Translate!.getTranslation("AON_NET_OPEN:_"))
             OutVect!.addItem(str(t1_actual_tot-t_standards[5]:sf_amt_mask$))
             blank=fnblank(2)
 		endif
@@ -731,18 +731,18 @@ rem --- Now Subtotal By Category
         blank=fnblank(16)
         blank=fnblank(16)
         blank=fnblank(16)
-        OutVect!.addItem("Totals By Category:")
+        OutVect!.addItem(Translate!.getTranslation("AON_TOTALS_BY_CATEGORY:"))
         blank=fnblank(15)
         blank=fnblank(16)
         for y=0 to 2
             if y=0 then 
-                 OutVect!.addItem("Inventory: ")
+                 OutVect!.addItem(Translate!.getTranslation("AON_INVENTORY:_"))
             else 
                  if y=1 then 
-                     OutVect!.addItem("Specials:")
+                     OutVect!.addItem(Translate!.getTranslation("AON_SPECIALS:"))
                  else 
                      if y=2 then 
-                         OutVect!.addItem("Recurring:")
+                         OutVect!.addItem(Translate!.getTranslation("AON_RECURRING:"))
                      endif
                  endif
             endif
@@ -783,11 +783,11 @@ rem --- Now Subtotal By Category
 
 			if c_standards[y,5]<>0 then 
 				blank=fnblank(12)
-				OutVect!.addItem("Closed: ")
+				OutVect!.addItem(Translate!.getTranslation("AON_CLOSED:_"))
 				OutVect!.addItem(str(-c_standards[y,5]:sf_amt_mask$))
 				blank=fnblank(2)
 				blank=fnblank(12)
-				OutVect!.addItem("Net Open: ")
+				OutVect!.addItem(Translate!.getTranslation("AON_NET_OPEN:_"))
 				OutVect!.addItem(str(c1_actual_tot-c_standards[y,5]:sf_amt_mask$))
 				blank=fnblank(2)
 			endif
@@ -820,7 +820,7 @@ rem --- Report Totals
         blank=fnblank(16)
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
         blank=fnblank(1)
-        OutVect!.addItem("Report Total:")
+        OutVect!.addItem(Translate!.getTranslation("AON_REPORT_TOTAL:"))
 		OutVect!.addItem(str(u_standards[0]:sf_hours_mask$)); rem Op hours
         OutVect!.addItem(str(u_standards[1]:sf_amt_mask$)); rem Op Direct
         OutVect!.addItem(str(u_standards[2]:sf_amt_mask$)); rem Op Overhead
@@ -838,11 +838,11 @@ rem --- Report Totals
 		 
 		if u_standards[5]<>0 then 
             blank=fnblank(12)
-            OutVect!.addItem("Closed: ")
+            OutVect!.addItem(Translate!.getTranslation("AON_CLOSED:_"))
             OutVect!.addItem(str(-u_standards[5]:sf_amt_mask$))
             blank=fnblank(2)
             blank=fnblank(12)
-            OutVect!.addItem("Net Open: ")
+            OutVect!.addItem(Translate!.getTranslation("AON_NET_OPEN:_"))
             OutVect!.addItem(str(u1_actual_tot-u_standards[5]:sf_amt_mask$))
             blank=fnblank(2)
 		endif
@@ -896,14 +896,14 @@ first_sub_tot:   rem --- First Sub Total
             TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
 			
             if sequence$="T" then 
-                OutVect!.addItem("Type "+t0$)
-                OutVect!.addItem(" Totals")
+                OutVect!.addItem(Translate!.getTranslation("AON_TYPE_")+t0$)
+                OutVect!.addItem(Translate!.getTranslation("AON__TOTALS"))
             else 
                 if sequence$="C" then
-                    OutVect!.addItem("Customer")
-                    OutVect!.addItem(str(fnmask$(t0$(1,custmask),c1$))+" Totals")
+                    OutVect!.addItem(Translate!.getTranslation("AON_CUSTOMER"))
+                    OutVect!.addItem(str(fnmask$(t0$(1,custmask),c1$))+Translate!.getTranslation("AON__TOTALS"))
                 else
-                    OutVect!.addItem("Item "+cvs(t0$(3),2)+" Totals:")
+                    OutVect!.addItem(Translate!.getTranslation("AON_ITEM_")+cvs(t0$(3),2)+Translate!.getTranslation("AON__TOTALS:"))
                     blank=fnblank(1)
                 endif
             endif
@@ -938,7 +938,7 @@ label3:
             case 1 
                 t0$=key_tpl.wo_type$
                 dim h5$(30)
-                h5$(1)="*** Not On File ***"
+                h5$(1)=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
                 find record (sfm10a_dev,key=firm_id$+"A"+t0$,dom=*break) sfm10a$
                 h5$=sfm10a$.code_desc$
                 gosub sub_head
@@ -946,7 +946,7 @@ label3:
             case 2; rem --- Customer 
                 t0$=key_tpl.customer_id$ 
                 dim h5$(30)
-                h5$(1)="*** Not On File ***"
+                h5$(1)=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
                 find record (arm01a_dev,key=firm_id$+t0$,dom=*break) arm01a$
                 h5$=arm01a.customer_name$
 				gosub sub_head
