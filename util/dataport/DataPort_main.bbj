@@ -358,13 +358,24 @@ next_file:
     endif
 
     rem --- skip these files
-    if pos("."=datafile$)=1 then goto next_file
-    if pos("_"=datafile$)=1 then goto next_file
-    if pos("z"=cvs(datafile$,8))=1 then  goto next_file
-    if pos("dd"=cvs(datafile$,8))=1 then goto next_file
-    if pos("w-"=cvs(datafile$,8))=3 then goto next_file
-    if pos("sh"=cvs(datafile$,8))=1 then goto next_file
-    if pos("ivm-03"=cvs(datafile$,8))=1 then goto next_file
+    if pos("."=datafile$)=1 or
+:   pos("_"=datafile$)=1 or
+:   pos("z"=cvs(datafile$,8))=1 or
+:   pos("dd"=cvs(datafile$,8))=1 or
+:   pos("w-"=cvs(datafile$,8))=3 or
+:   pos("sh"=cvs(datafile$,8))=1 or
+:   pos(cvs(datafile$,8)="apm-04;apt-03;",7) or
+:   pos(cvs(datafile$,8)="are-07;are-43;arm-04;art-43;art-53;",7) or
+:   pos(cvs(datafile$,8)="bmm-04;bmm-06;",7)or
+:   pos(cvs(datafile$,8)="glt-05;",7) or
+:   pos(cvs(datafile$,8)="ivm-03;ivm-08;",7) or
+:   pos(cvs(datafile$,8)="poe-31;poe-32;poe-33;poe-34;poe-41;poe-42;po3-43;poe-44;poe-52;poe-53;poe-54;pot-24;pot-34;pot-35;pot-44;",7) or
+:   pos(cvs(datafile$,8)="sym-59;sym-69;sys-60;",7) or
+:   pos(cvs(datafile$,8)="woe-03;wom-07;",7) then
+        print "Skipped: ",datafile$
+        print (log_dev)"Skipped: ",datafile$
+        goto next_file
+    endif
 
     print "Data file: ",datafile$
     print (log_dev)"Data file: ",datafile$
@@ -374,20 +385,22 @@ next_file:
     endif; rem ' sys-01
 
     rem --- Split old header/detail files into separate files
-    switch pos(cvs(datafile$,8)="woe-11;woe-21;woe-31",7)
+    switch pos(cvs(datafile$,8)="woe-11;woe-21;woe-31;",7)
         case 1; rem --- woe-11
             split_record_id$="A"
             header_keys_end_with$="00"
+            headerfile$="wox-11"
+            detailfile$="wox-12"
 
             rem --- Copy header records to temporary header file.
             header_file=1
-            split_temp_file$="wox-11"
+            split_temp_file$=headerfile$
             split_temp_file_desc$="DataPort temp header re "+datafile$
             gosub split_header_detail_recs
 
             rem --- Copy detail records to temporary detail file.
             header_file=0
-            split_temp_file$="wox-12"
+            split_temp_file$=detailfile$
             split_temp_file_desc$="DataPort temp detail re "+datafile$
             gosub split_header_detail_recs
 
@@ -395,16 +408,18 @@ next_file:
         case 8; rem --- woe-21
             split_record_id$="A"
             header_keys_end_with$="00"
+            headerfile$="wox-21"
+            detailfile$="wox-22"
 
             rem --- Copy header records to temporary header file.
             header_file=1
-            split_temp_file$="wox-21"
+            split_temp_file$=headerfile$
             split_temp_file_desc$="DataPort temp header re "+datafile$
             gosub split_header_detail_recs
 
             rem --- Copy detail records to temporary detail file.
             header_file=0
-            split_temp_file$="wox-22"
+            split_temp_file$=detailfile$
             split_temp_file_desc$="DataPort temp detail re "+datafile$
             gosub split_header_detail_recs
 
@@ -412,16 +427,18 @@ next_file:
         case 15; rem --- woe-31
             split_record_id$="A"
             header_keys_end_with$="00"
+            headerfile$="wox-31"
+            detailfile$="wox-32"
 
             rem --- Copy header records to temporary header file.
             header_file=1
-            split_temp_file$="wox-31"
+            split_temp_file$=headerfile$
             split_temp_file_desc$="DataPort temp header re "+datafile$
             gosub split_header_detail_recs
 
             rem --- Copy detail records to temporary detail file.
             header_file=0
-            split_temp_file$="wox-32"
+            split_temp_file$=detailfile$
             split_temp_file_desc$="DataPort temp detail re "+datafile$
             gosub split_header_detail_recs
 
@@ -430,13 +447,15 @@ next_file:
             rem --- unknown file, don't split
             break
     swend
-    if pos(cvs(datafile$,8)="woe-11;woe-21;woe-31",7) then
+    if pos(cvs(datafile$,8)="woe-11;woe-21;woe-31;",7) then
         rem --- Don't port files that were split. Their temporary header and detail files will be ported.
-        print "   "+datafile$+" was split into separate header and detail files, which will be ported separately."
-        print (log_dev)"   "+datafile$+" was split into separate header and detail files, which will be ported separately."
+        print "   "+datafile$+" was split into separate header and detail files."
+        print "   "+cvs(headerfile$,version_cvs)+" and "+cvs(detailfile$,version_cvs)+" will be ported separately."
+        print (log_dev)"   "+datafile$+" was split into separate header and detail files."
+        print (log_dev)"   "+cvs(headerfile$,version_cvs)+" and "+cvs(detailfile$,version_cvs)+" will be ported separately."
         goto next_file
     endif
-    
+
 rem --- Read the dictionary file ddm-03 to get data file info
 
     read(ddm03,key=pad(datafile$,6),dom=*next)
