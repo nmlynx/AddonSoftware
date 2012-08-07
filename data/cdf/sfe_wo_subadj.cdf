@@ -184,6 +184,41 @@ rem --- New Tran Date
 			endif
 			gridSubs!.accept(1)
 		break
+
+		case 19; rem row change
+
+rem --- Now switch colors on all rows
+		if vectSubs!.size()=0 break
+		cols=num(user_tpl.gridSubsCols$)
+		for row=1 to vectSubs!.size()-1 step cols
+			if vectSubs!.getItem(((row-1)/cols)*cols+4)<>vectSubs!.getItem(((row-1)/cols)*cols+5)
+				gridSubs!.setCellBackColor((row-1)/cols,5,callpoint!.getDevObject("diff_color"))
+			else
+				gridSubs!.setCellBackColor((row-1)/cols,5,callpoint!.getDevObject("same_color"))
+			endif
+			if vectSubs!.getItem(((row-1)/cols)*cols+6)<>vectSubs!.getItem(((row-1)/cols)*cols+7)
+				gridSubs!.setCellBackColor((row-1)/cols,7,callpoint!.getDevObject("diff_color"))
+			else
+				gridSubs!.setCellBackColor((row-1)/cols,7,callpoint!.getDevObject("same_color"))
+			endif
+			if vectSubs!.getItem(((row-1)/cols)*cols+10)<>wo_no$
+				gridSubs!.setCellBackColor((row-1)/cols,10,callpoint!.getDevObject("diff_color"))
+			else
+				gridSubs!.setCellBackColor((row-1)/cols,10,callpoint!.getDevObject("same_color"))
+			endif
+			if vectSubs!.getItem(((row-1)/cols)*cols+11)<>vectSubs!.getItem(((row-1)/cols)*cols)
+				gridSubs!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("diff_color"))
+			else
+				gridSubs!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("same_color"))
+			endif
+		next row
+		break
+
+		case 6;rem "Special Key"
+			if notice.wparam=8
+				gridSubs!.endEdit()
+			endif
+		break
 	swend
 
 	UserObj!.setItem(num(user_tpl.vectSubsOfst$),vectSubs!)
@@ -275,8 +310,9 @@ rem --- Misc other init
 
 rem --- Set callbacks - processed in ACUS callpoint
 
-rem	gridSubs!.setCallback(gridSubs!.ON_GRID_EDIT_STOP,"custom_event")
 	gridSubs!.setCallback(gridSubs!.ON_GRID_CELL_VALIDATION,"custom_event")
+	gridSubs!.setCallback(gridSubs!.ON_GRID_SELECT_ROW,"custom_event")
+	gridSubs!.setCallback(gridSubs!.ON_GRID_SPECIAL_KEY,"custom_event")
 [[SFE_WO_SUBADJ.<CUSTOM>]]
 rem ==========================================================================
 format_grid: rem --- Use Barista program to format the grid

@@ -216,36 +216,47 @@ rem --- New Tran Date
 			endif
 			gridOps!.accept(1)
 		break
-	swend
 
-	if notice.code=32
-rem --- Now switch colors
-		if vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+4)<>vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+5)
-			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("diff_color"))
-		else
-			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("same_color"))
-		endif
-		if vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+6)<>vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+7)
-			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("diff_color"))
-		else
-			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("same_color"))
-		endif
-		if vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+8)<>vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+9)
-			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("diff_color"))
-		else
-			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("same_color"))
-		endif	
-		if vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+10)<>vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+11)
-			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("diff_color"))
-		else
-			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("same_color"))
-		endif
-		if vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+14)<>vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+15)
-			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("diff_color"))
-		else
-			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("same_color"))
-		endif
-	endif
+		case 19; rem row change
+
+rem --- Now switch colors on all rows
+		if vectOps!.size()=0 break
+		cols=num(user_tpl.gridOpsCols$)
+		for row=1 to vectOps!.size()-1 step cols
+			if vectOps!.getItem(((row-1)/cols)*cols+4)<>vectOps!.getItem(((row-1)/cols)*cols+5)
+				gridOps!.setCellBackColor((row-1)/cols,5,callpoint!.getDevObject("diff_color"))
+			else
+				gridOps!.setCellBackColor((row-1)/cols,5,callpoint!.getDevObject("same_color"))
+			endif
+			if vectOps!.getItem(((row-1)/cols)*cols+6)<>vectOps!.getItem(((row-1)/cols)*cols+7)
+				gridOps!.setCellBackColor((row-1)/cols,7,callpoint!.getDevObject("diff_color"))
+			else
+				gridOps!.setCellBackColor((row-1)/cols,7,callpoint!.getDevObject("same_color"))
+			endif
+			if vectOps!.getItem(((row-1)/cols)*cols+8)<>vectOps!.getItem(((row-1)/cols)*cols+9)
+				gridOps!.setCellBackColor((row-1)/cols,9,callpoint!.getDevObject("diff_color"))
+			else
+				gridOps!.setCellBackColor((row-1)/cols,9,callpoint!.getDevObject("same_color"))
+			endif	
+			if vectOps!.getItem(((row-1)/cols)*cols+10)<>vectOps!.getItem(((row-1)/cols)*cols+11)
+				gridOps!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("diff_color"))
+			else
+				gridOps!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("same_color"))
+			endif
+			if vectOps!.getItem(((row-1)/cols)*cols+14)<>vectOps!.getItem(((row-1)/cols)*cols+15)
+				gridOps!.setCellBackColor((row-1)/cols,15,callpoint!.getDevObject("diff_color"))
+			else
+				gridOps!.setCellBackColor((row-1)/cols,15,callpoint!.getDevObject("same_color"))
+			endif
+		next row
+		break
+
+		case 6;rem "Special Key"
+			if notice.wparam=8
+				gridOps!.endEdit()
+			endif
+		break
+	swend
 
 	UserObj!.setItem(num(user_tpl.vectOpsOfst$),vectOps!)
 	UserObj!.setItem(num(user_tpl.vectOpsMasterOfst$),vectOpsMaster!)
@@ -340,7 +351,8 @@ rem --- Misc other init
 rem --- Set callbacks - processed in ACUS callpoint
 
 	gridOps!.setCallback(gridOps!.ON_GRID_CELL_VALIDATION,"custom_event")
-	gridOps!.setCallback(gridOps!.ON_GRID_SELECT_COLUMN,"custom_event")
+	gridOps!.setCallback(gridOps!.ON_GRID_SELECT_ROW,"custom_event")
+	gridOps!.setCallback(gridOps!.ON_GRID_SPECIAL_KEY,"custom_event")
 [[SFE_WO_OPSADJ.<CUSTOM>]]
 rem ==========================================================================
 format_grid: rem --- Use Barista program to format the grid
