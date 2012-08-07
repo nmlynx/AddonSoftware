@@ -86,8 +86,6 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 	gui_event$=SysGUI!.getLastEventString()
 	ctl_ID=dec(gui_event.ID$)
 
-rem	if ctl_ID <> num(user_tpl.gridOpsCtlID$) then break; rem --- exit callpoint
-
 	if gui_event.code$="N"
 		notify_base$=notice(gui_dev,gui_event.x%)
 		dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
@@ -102,37 +100,7 @@ rem	if ctl_ID <> num(user_tpl.gridOpsCtlID$) then break; rem --- exit callpoint
 	curr_col = dec(notice.col$);rem 0 based
 	grid_ctx=gridOps!.getContextID()
 
-	if callpoint!.getDevObject("new_row")="Y"
-		sfe_woopradj=fnget_dev("SFE_WOOPRADJ")
-		callpoint!.setDevObject("new_rec","Y")
-		wo_no$=callpoint!.getDevObject("wo_no")
-		wo_loc$=callpoint!.getDevObject("wo_loc")
-		trans_date$=vectOps!.getItem(curr_row*(num(user_tpl.gridOpsCols$)-1));rem Make sure x is correct for the current row * jpb
-		trans_seq$=vectOpsMaster!.getItem(curr_row);rem Make sure mast is correct for the current row * jpb
-		while 1
-			read (sfe_woopradj,key=firm_id$+wo_loc$+wo_no$+trans_date$+trans_seq$,dom=*break)
-			callpoint!.setDevObject("new_rec","N")
-			break
-		wend
-	endif
-
 	switch notice.code
-
-		case 19; rem new row
-
-rem			if callpoint!.setDevObject("new_row")="Y" and
-rem :			   callpoint!.setDevObject("new_rec")="Y"
-rem				notice.buf$=gridOps!.getCellText(curr_row,4)
-rem				gridOps!.setCellText(curr_row,curr_col,notice.buf$)
-rem				notice.buf$=gridOps!.getCellText(curr_row,6)
-rem				gridOps!.setCellText(curr_row,curr_col,notice.buf$)
-rem				notice.buf$=gridOps!.getCellText(curr_row,8)
-rem				gridOps!.setCellText(curr_row,curr_col,notice.buf$)
-rem				notice.buf$=gridOps!.getCellText(curr_row,10)
-rem				gridOps!.setCellText(curr_row,curr_col,notice.buf$)
-rem				callpoint!.setDevObject("new_row","N")
-rem			endif
-		break
 
 		case 32; rem grid cell validation
 rem --- New Work Order Number
@@ -250,6 +218,35 @@ rem --- New Tran Date
 		break
 	swend
 
+	if notice.code=32
+rem --- Now switch colors
+		if vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+4)<>vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+5)
+			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("diff_color"))
+		else
+			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("same_color"))
+		endif
+		if vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+6)<>vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+7)
+			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("diff_color"))
+		else
+			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("same_color"))
+		endif
+		if vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+8)<>vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+9)
+			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("diff_color"))
+		else
+			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("same_color"))
+		endif	
+		if vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+10)<>vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+11)
+			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("diff_color"))
+		else
+			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("same_color"))
+		endif
+		if vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+14)<>vectOps!.getItem(curr_row*num(user_tpl.gridOpsCols$)+15)
+			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("diff_color"))
+		else
+			gridOps!.setCellBackColor(curr_row,curr_col,callpoint!.getDevObject("same_color"))
+		endif
+	endif
+
 	UserObj!.setItem(num(user_tpl.vectOpsOfst$),vectOps!)
 	UserObj!.setItem(num(user_tpl.vectOpsMasterOfst$),vectOpsMaster!)
 [[SFE_WO_OPSADJ.AWIN]]
@@ -304,8 +301,6 @@ rem --- Add grid to store invoices, with checkboxes for user to select one or mo
 	user_tpl.gridOpsCtlID$ = str(nxt_ctlID)
 	user_tpl.gridOpsCols$ = "18"
 	user_tpl.gridOpsRows$ = "10"
-	callpoint!.setDevObject("new_row","Y")
-	callpoint!.setDevObject("new_rec","Y")
 	callpoint!.setDevObject("wo_no_len",len(sft01a.wo_no$))
 	callpoint!.setDevObject("wo_no_mask",fill(len(sft01a.wo_no$),"0"))
 
@@ -323,6 +318,10 @@ rem --- Add grid to store invoices, with checkboxes for user to select one or mo
 
 rem --- Misc other init
 
+	diff_color!=SysGUI!.makeColor(3)
+	same_color!=SysGUI!.makeColor(7)
+	callpoint!.setDevObject("diff_color",diff_color!)
+	callpoint!.setDevObject("same_color",same_color!)
 	gridOps!.setColumnEditable(5,1)
 	gridOps!.setColumnEditable(7,1)
 	gridOps!.setColumnEditable(9,1)
@@ -342,7 +341,6 @@ rem --- Set callbacks - processed in ACUS callpoint
 
 	gridOps!.setCallback(gridOps!.ON_GRID_CELL_VALIDATION,"custom_event")
 	gridOps!.setCallback(gridOps!.ON_GRID_SELECT_COLUMN,"custom_event")
-	gridOps!.setCallback(gridOps!.ON_GRID_SELECT_ROW,"custom_event")
 [[SFE_WO_OPSADJ.<CUSTOM>]]
 rem ==========================================================================
 format_grid: rem --- Use Barista program to format the grid
@@ -488,6 +486,35 @@ rem ==========================================================================
 		gridOps!.clearMainGrid()
 		gridOps!.setNumRows(numrow)
 		gridOps!.setCellText(0,0,vectOps!)
+
+		cols=num(user_tpl.gridOpsCols$)
+		for row=1 to vectOps!.size()-1 step cols
+			if vectOps!.getItem(((row-1)/cols)*cols+4)<>vectOps!.getItem(((row-1)/cols)*cols+5)
+				gridOps!.setCellBackColor((row-1)/cols,5,callpoint!.getDevObject("diff_color"))
+			else
+				gridOps!.setCellBackColor((row-1)/cols,5,callpoint!.getDevObject("same_color"))
+			endif
+			if vectOps!.getItem(((row-1)/cols)*cols+6)<>vectOps!.getItem(((row-1)/cols)*cols+7)
+				gridOps!.setCellBackColor((row-1)/cols,7,callpoint!.getDevObject("diff_color"))
+			else
+				gridOps!.setCellBackColor((row-1)/cols,7,callpoint!.getDevObject("same_color"))
+			endif
+			if vectOps!.getItem(((row-1)/cols)*cols+8)<>vectOps!.getItem(((row-1)/cols)*cols+9)
+				gridOps!.setCellBackColor((row-1)/cols,9,callpoint!.getDevObject("diff_color"))
+			else
+				gridOps!.setCellBackColor((row-1)/cols,9,callpoint!.getDevObject("same_color"))
+			endif	
+			if vectOps!.getItem(((row-1)/cols)*cols+10)<>vectOps!.getItem(((row-1)/cols)*cols+11)
+				gridOps!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("diff_color"))
+			else
+				gridOps!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("same_color"))
+			endif
+			if vectOps!.getItem(((row-1)/cols)*cols+14)<>vectOps!.getItem(((row-1)/cols)*cols+15)
+				gridOps!.setCellBackColor((row-1)/cols,15,callpoint!.getDevObject("diff_color"))
+			else
+				gridOps!.setCellBackColor((row-1)/cols,15,callpoint!.getDevObject("same_color"))
+			endif
+	next row
 	else
 		gridOps!.clearMainGrid()
 		gridOps!.setNumRows(0)
