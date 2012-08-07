@@ -139,7 +139,7 @@ rem --- Headings and print positions
  
     dim columns$[12,10]
         columns = 12
-        columns$[0,0]="WO #",                                columns$[0,1]="C",columns$[0,2]="6"
+        columns$[0,0]=Translate!.getTranslation("AON_WO_#"),                                columns$[0,1]="C",columns$[0,2]="6"
     if sfs01a.po_interface$="Y" then
         
         columns$[1,0]=Translate!.getTranslation("AON_TYPE_CAT^VENDOR/PO_#/_"),              columns$[1,1]="C",columns$[1,2]="10"
@@ -462,7 +462,7 @@ rem --- Back Out The Distribution
 
         account$=sfm10a.gl_wip_acct$
         gldate$=sfex2.trans_date$,amount=-sftx1a.ext_cost,units=0
-        ref1$="WO "+sfex2.wo_no$
+        ref1$=Translate!.getTranslation("AON_WO_")+sfex2.wo_no$
         ref2$=Translate!.getTranslation("AON_SEQ_")+sfex2.trans_seq_ref$,ref3$=fndate$(sfex2a.new_trn_date$)
         memo$=cm$
         gosub glrecap
@@ -488,7 +488,7 @@ rem --- Add It Back In With New Information
         account$=sfm10a.gl_wip_acct$
         gldate$=sfex2a.new_trn_date$
         amount=round((sfex2a.new_units+sfex2a.new_set_hrs)*sfex2a.new_dir_rate,2)+round((sfex2a.new_units+sfex2a.new_set_hrs)*sfex2a.new_ovr_rate,2)
-        ref1$="WO "+sfe01a.wo_no$
+        ref1$=Translate!.getTranslation("AON_WO_")+sfe01a.wo_no$
         ref2$=Translate!.getTranslation("AON_SEQ_")+sfex2.trans_seq_ref$,ref3$=fndate$(sfex2.trans_date$)
         memo$=cm$
         gosub glrecap

@@ -174,7 +174,7 @@ rem --- Find The Distribution
 rem --- Back Out Distribution
 
             when$=sfadja.trans_date$
-            ref1$="WO "+sfe01a.wo_no$,ref2$=Translate!.getTranslation("AON_SEQ_")+sfadja.trans_seq$
+            ref1$=Translate!.getTranslation("AON_WO_")+sfe01a.wo_no$,ref2$=Translate!.getTranslation("AON_SEQ_")+sfadja.trans_seq$
             ref3$=fndate$(sfadja.new_trn_date$)
             memo$=cm$
             account$=sfm10a.gl_wip_acct$
@@ -206,7 +206,7 @@ rem --- Remove Record
 rem --- Add It Back In
 
             when$=sfadja.new_trn_date$
-            ref1$="WO "+wo_no$,ref3$=fndate$(sfadja.trans_date$)
+            ref1$=Translate!.getTranslation("AON_WO_")+wo_no$,ref3$=fndate$(sfadja.trans_date$)
             account$=sfm10a_copy.gl_wip_acct
             amount=(sfadja.new_units+field_a3)*(field_a1+field_a2),units=0,memo$=cm$
             gosub glpost

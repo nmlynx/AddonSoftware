@@ -562,7 +562,7 @@ rem --- Back Out The Distribution
 			amount=-wot31a.ext_cost
 		endif
 		units=0
-		ref1$="WO "+wow08a.wo_no$
+		ref1$=Translate!.getTranslation("AON_WO_")+wow08a.wo_no$
 		ref2$=Translate!.getTranslation("AON_SEQ_")+wow08a.trans_seq$
 		ref3$=fndate$(new_trans_date$)
 		memo$=cm$
@@ -596,7 +596,7 @@ add_back: rem --- Add It Back In With New Information
 		else
 			amount=round(woe42a.new_units*woe42a.new_unit_cst,2)
 		endif
-		ref1$="WO "+woe01b.wo_no$
+		ref1$=Translate!.getTranslation("AON_WO_")+woe01b.wo_no$
 		ref2$=Translate!.getTranslation("AON_SEQ_")+wow08a.trans_seq$
 		ref3$=fndate$(trans_date$)
 		memo$=cm$

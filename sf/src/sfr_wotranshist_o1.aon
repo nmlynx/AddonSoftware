@@ -53,7 +53,7 @@ rem --- Column Headings
         columns$[2,0]="   ",                 columns$[2,1]="C",columns$[2,2]="3"; rem v12 doesn't print seq_refs
         columns$[3,0]=Translate!.getTranslation("AON_ITEM/VENDOR/OPCD"),    columns$[3,1]="C",columns$[3,2]="20"
 		columns$[4,0]=Translate!.getTranslation("AON_UM/DESC/EMPLOYEE"),    columns$[4,1]="C",columns$[4,2]="20"
-		columns$[5,0]="P.O.",	        	 columns$[5,1]="C",columns$[5,2]="15"
+		columns$[5,0]=Translate!.getTranslation("AON_P.O."),	        	 columns$[5,1]="C",columns$[5,2]="15"
         columns$[6,0]=Translate!.getTranslation("AON_CMPLT_QTY"),           columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=sf_units_mask$
         columns$[7,0]=Translate!.getTranslation("AON_SETUP_HRS"),           columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=sf_units_mask$
         columns$[8,0]=Translate!.getTranslation("AON_TOTAL_UNITS"),         columns$[8,1]="N",columns$[8,2]="8",columns$[8,3]=sf_units_mask$
@@ -67,7 +67,7 @@ rem --- Column Headings
         columns$[2,0]="   ",                 columns$[2,1]="C",columns$[2,2]="3"; rem v12 doesn't print seq_refs
         columns$[3,0]=Translate!.getTranslation("AON_ITEM/VENDOR/OPCD"),    columns$[3,1]="C",columns$[3,2]="20"
 		columns$[4,0]=Translate!.getTranslation("AON_UM/DESC/EMPLOYEE"),	 columns$[4,1]="C",columns$[4,2]="20"
-		columns$[5,0]="P.O.",       		 columns$[5,1]="C",columns$[5,2]="15"
+		columns$[5,0]=Translate!.getTranslation("AON_P.O."),       		 columns$[5,1]="C",columns$[5,2]="15"
         columns$[6,0]=Translate!.getTranslation("AON_UNITS"),               columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=sf_units_mask$
         columns$[7,0]=Translate!.getTranslation("AON_RATE"),                columns$[7,1]="N",columns$[7,2]="8",columns$[7,3]=sf_cost_mask$
         columns$[8,0]=Translate!.getTranslation("AON_AMOUNT"),              columns$[8,1]="N",columns$[8,2]="12",columns$[8,3]=sf_amt_mask$,columns$[8,10]="T"
@@ -433,7 +433,7 @@ material_details: rem --- Materials Here
         
 		rem -- Columns$[3,x]-[5,x]
 		OutVect!.addItem(pad(cvs(sftran.item_id$,2),20))
-		OutVect!.addItem("UM: "+sftran.unit_measure$+fill(5)+ivm01a.item_desc$)
+		OutVect!.addItem(Translate!.getTranslation("AON_UM:_")+sftran.unit_measure$+fill(5)+ivm01a.item_desc$)
 		OutVect!.addItem("")
     endif
 	return
@@ -486,7 +486,7 @@ subcontract_details: rem --- Subcontracts Here
 			rem -- Columns$[3,x]-[5,x]
 			OutVect!.addItem(fnmask$(sftran.vendor_id$,vendor_mask$)+"  "+apm01a.vendor_name$)
 			OutVect!.addItem("")
-			OutVect!.addItem("PO #: "+sftran.po_no$); rem +sftran.pur_ord_seq_ref$); rem v12 doesn't print seq_refs
+			OutVect!.addItem(Translate!.getTranslation("AON_PO_#:_")+sftran.po_no$); rem +sftran.pur_ord_seq_ref$); rem v12 doesn't print seq_refs
         endif
         return
 

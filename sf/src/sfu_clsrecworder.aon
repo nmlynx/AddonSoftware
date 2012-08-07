@@ -248,7 +248,7 @@ rem --- Post G/L Here
                 account$=FIELD(sfm10a$,xfield$)
                 when$=sfe01a.cls_inp_date$,amount=t[x],units=0
                 memo$=sfe01a.description_01$
-                ref1$="WO "+sfe01a.wo_no$
+                ref1$=Translate!.getTranslation("AON_WO_")+sfe01a.wo_no$
                 ref2$=Translate!.getTranslation("AON_WHSE_")+sfe01a.warehouse_id$
                 ref3$=Translate!.getTranslation("AON_TYPE_")+sfe01a.wo_type$
                 gosub glpost
