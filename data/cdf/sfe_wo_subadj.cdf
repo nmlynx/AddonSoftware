@@ -19,18 +19,18 @@ rem --- Now write the Adjutment Entry records out
 
 	if vectSubs!.size()
 		for x=0 to vectSubs!.size()-1 step cols
-			tran_date$=vectSubs!.getItem(x)
+			tran_date$=vectSubs!.getItem(x+1)
 			if len(cvs(tran_date$,2))=10
 				tran_date$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2)
 			endif
 			tran_seq$=vectSubsMaster!.getItem(mast)
-			old_units=num(vectSubs!.getItem(x+4))
-			new_units=num(vectSubs!.getItem(x+5))
-			old_cost=num(vectSubs!.getItem(x+6))
-			new_cost=num(vectSubs!.getItem(x+7))
-			new_wo$=vectSubs!.getItem(x+10)
+			old_units=num(vectSubs!.getItem(x+5))
+			new_units=num(vectSubs!.getItem(x+6))
+			old_cost=num(vectSubs!.getItem(x+7))
+			new_cost=num(vectSubs!.getItem(x+8))
+			new_wo$=vectSubs!.getItem(x+11)
 			if cvs(new_wo$,2)="" new_wo$=wo_no$
-			new_date$=vectSubs!.getItem(x+11)
+			new_date$=vectSubs!.getItem(x+12)
 			if cvs(new_date$,2)="" new_date$=tran_date$
 			if tran_date$ <> new_date$ or
 :			   old_units <> new_units or
@@ -97,7 +97,7 @@ rem	if ctl_ID <> num(user_tpl.gridSubsCtlID$) then break; rem --- exit callpoint
 		case 32; rem grid cell validation
 rem --- New Work Order Number
 
-			if curr_col=10
+			if curr_col=11
 				wo_no$=notice.buf$
 				wo_no$=str(num(wo_no$):callpoint!.getDevObject("wo_no_mask"))
 				sfe_womast=fnget_dev("SFE_WOMASTR")
@@ -110,7 +110,7 @@ rem --- New Work Order Number
 						break
 					wend
 					if found=0
-						gridSubs!.setCellText(cur_row,10,"")
+						gridSubs!.setCellText(cur_row,11,"")
 						msg_id$="INPUT_ERR_DATA"
 						gosub disp_message
 						gridSubs!.focus()
@@ -120,7 +120,7 @@ rem --- New Work Order Number
 						break
 					endif
 					if sfe_womast.wo_status$="C"
-						gridSubs!.setCellText(cur_row,10,"")
+						gridSubs!.setCellText(cur_row,11,"")
 						msg_id$="WO_CLOSED"
 						gosub disp_message
 						gridSubs!.focus()
@@ -133,33 +133,33 @@ rem --- New Work Order Number
 					wo_no$=callpoint!.getDevObject("wo_no")
 				endif
 
-				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+10,wo_no$)
-				gridSubs!.setCellText(curr_row,10,wo_no$)
+				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+11,wo_no$)
+				gridSubs!.setCellText(curr_row,11,wo_no$)
 				gridSubs!.accept(1)
 				break
 			endif
 
 rem --- Units or Cost
 
-			if curr_col = 5 or curr_col=7 then
-				if curr_col=5
+			if curr_col = 6 or curr_col=8 then
+				if curr_col=6
 					units=num(notice.buf$)
-					cost=num(gridSubs!.getCellText(curr_row,7))
+					cost=num(gridSubs!.getCellText(curr_row,8))
 				endif
-				if curr_col=7
+				if curr_col=8
 					cost=num(notice.buf$)
-					units=num(gridSubs!.getCellText(curr_row,5))
+					units=num(gridSubs!.getCellText(curr_row,6))
 				endif
 				tot_ext=units*cost
-				gridSubs!.setCellText(curr_row,9,str(tot_ext))
-				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+5,str(units))
-				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+7,str(cost))
+				gridSubs!.setCellText(curr_row,10,str(tot_ext))
+				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+6,str(units))
+				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+8,str(cost))
 				gridSubs!.accept(1)
 				break
 			endif
 
 rem --- New Tran Date
-			if curr_col=11
+			if curr_col=12
 				tran_date$=notice.buf$
 				input_value$=tran_date$
 				gosub validate_date
@@ -179,7 +179,7 @@ rem --- New Tran Date
 					input_value$=vectSubs!.getItem((curr_row*num(user_tpl.gridSubsCols$)))
 				endif
 
-				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+11,input_value$)
+				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+12,input_value$)
 				gridSubs!.setCellText(curr_row,curr_col,input_value$)
 			endif
 			gridSubs!.accept(1)
@@ -187,31 +187,8 @@ rem --- New Tran Date
 
 		case 19; rem row change
 
-rem --- Now switch colors on all rows
-		if vectSubs!.size()=0 break
-		cols=num(user_tpl.gridSubsCols$)
-		for row=1 to vectSubs!.size()-1 step cols
-			if vectSubs!.getItem(((row-1)/cols)*cols+4)<>vectSubs!.getItem(((row-1)/cols)*cols+5)
-				gridSubs!.setCellBackColor((row-1)/cols,5,callpoint!.getDevObject("diff_color"))
-			else
-				gridSubs!.setCellBackColor((row-1)/cols,5,callpoint!.getDevObject("same_color"))
-			endif
-			if vectSubs!.getItem(((row-1)/cols)*cols+6)<>vectSubs!.getItem(((row-1)/cols)*cols+7)
-				gridSubs!.setCellBackColor((row-1)/cols,7,callpoint!.getDevObject("diff_color"))
-			else
-				gridSubs!.setCellBackColor((row-1)/cols,7,callpoint!.getDevObject("same_color"))
-			endif
-			if vectSubs!.getItem(((row-1)/cols)*cols+10)<>wo_no$
-				gridSubs!.setCellBackColor((row-1)/cols,10,callpoint!.getDevObject("diff_color"))
-			else
-				gridSubs!.setCellBackColor((row-1)/cols,10,callpoint!.getDevObject("same_color"))
-			endif
-			if vectSubs!.getItem(((row-1)/cols)*cols+11)<>vectSubs!.getItem(((row-1)/cols)*cols)
-				gridSubs!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("diff_color"))
-			else
-				gridSubs!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("same_color"))
-			endif
-		next row
+			if vectSubs!.size()=0 break
+			gosub switch_colors
 		break
 
 		case 6;rem "Special Key"
@@ -273,7 +250,7 @@ rem --- Add grid to store invoices, with checkboxes for user to select one or mo
 	gridSubs! = Form!.addGrid(nxt_ctlID,5,40,900,250); rem --- ID, x, y, width, height
 
 	user_tpl.gridSubsCtlID$ = str(nxt_ctlID)
-	user_tpl.gridSubsCols$ = "12"
+	user_tpl.gridSubsCols$ = "13"
 	user_tpl.gridSubsRows$ = "10"
 	callpoint!.setDevObject("wo_no_len",len(sft31a.wo_no$))
 	callpoint!.setDevObject("wo_no_mask",fill(len(sft31a.wo_no$),"0"))
@@ -296,10 +273,11 @@ rem --- Misc other init
 	same_color!=SysGUI!.makeColor(7)
 	callpoint!.setDevObject("diff_color",diff_color!)
 	callpoint!.setDevObject("same_color",same_color!)
-	gridSubs!.setColumnEditable(5,1)
-	gridSubs!.setColumnEditable(7,1)
-	gridSubs!.setColumnEditable(10,1)
+	gridSubs!.setColumnEditable(0,1)
+	gridSubs!.setColumnEditable(6,1)
+	gridSubs!.setColumnEditable(8,1)
 	gridSubs!.setColumnEditable(11,1)
+	gridSubs!.setColumnEditable(12,1)
 	gridSubs!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 	gridSubs!.setTabAction(gridSubs!.GRID_NAVIGATE_GRID)
 	gridSubs!.setTabActionSkipsNonEditableCells(1)
@@ -326,74 +304,80 @@ rem ==========================================================================
 	num_rpts_rows = num(user_tpl.gridSubsRows$)
 	dim attr_sub_col$[def_sub_cols,len(attr_def_col_str$[0,0])/5]
 
-	attr_sub_col$[1,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_TRANS_DATE"
-	attr_sub_col$[1,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_TRANSACTION_DATE")
-	attr_sub_col$[1,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="40"
+	attr_sub_col$[1,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="SELECT"
+	attr_sub_col$[1,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=""
+	attr_sub_col$[1,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="25"
+	attr_sub_col$[1,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]="1"
+	attr_sub_col$[1,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="C"
 
-	attr_sub_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="VEND_ID"
-	attr_sub_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_VENDOR")
-	attr_sub_col$[2,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+	attr_sub_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_TRANS_DATE"
+	attr_sub_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_TRANSACTION_DATE")
+	attr_sub_col$[2,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="40"
 
-	attr_sub_col$[3,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="VEND_NAME"
-	attr_sub_col$[3,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_NAME")
-	attr_sub_col$[3,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="180"
+	attr_sub_col$[3,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="VEND_ID"
+	attr_sub_col$[3,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_VENDOR")
+	attr_sub_col$[3,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 
-	attr_sub_col$[4,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="PO_NO"
-	attr_sub_col$[4,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_PO_NO")
-	attr_sub_col$[4,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="75"
+	attr_sub_col$[4,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="VEND_NAME"
+	attr_sub_col$[4,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_NAME")
+	attr_sub_col$[4,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="180"
 
-	attr_sub_col$[5,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_UNITS"
-	attr_sub_col$[5,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_UNITS")
-	attr_sub_col$[5,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
-	attr_sub_col$[5,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
-	attr_sub_col$[5,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
+	attr_sub_col$[5,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="PO_NO"
+	attr_sub_col$[5,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_PO_NO")
+	attr_sub_col$[5,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="75"
 
-	attr_sub_col$[6,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_UNITS"
-	attr_sub_col$[6,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_UNITS")
+	attr_sub_col$[6,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_UNITS"
+	attr_sub_col$[6,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_UNITS")
 	attr_sub_col$[6,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_sub_col$[6,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_sub_col$[6,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_sub_col$[7,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_COST"
-	attr_sub_col$[7,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_COST")
+	attr_sub_col$[7,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_UNITS"
+	attr_sub_col$[7,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_UNITS")
 	attr_sub_col$[7,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_sub_col$[7,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_sub_col$[7,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_sub_col$[8,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_COST"
-	attr_sub_col$[8,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_COST")
+	attr_sub_col$[8,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_COST"
+	attr_sub_col$[8,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_COST")
 	attr_sub_col$[8,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_sub_col$[8,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_sub_col$[8,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_sub_col$[9,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_EXT"
-	attr_sub_col$[9,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_TOTAL")
+	attr_sub_col$[9,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_COST"
+	attr_sub_col$[9,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_COST")
 	attr_sub_col$[9,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_sub_col$[9,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_sub_col$[9,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_sub_col$[10,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_EXT"
-	attr_sub_col$[10,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_TOTAL")
+	attr_sub_col$[10,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_EXT"
+	attr_sub_col$[10,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_TOTAL")
 	attr_sub_col$[10,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_sub_col$[10,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_sub_col$[10,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_sub_col$[11,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_WO"
-	attr_sub_col$[11,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_WO")
-	attr_sub_col$[11,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="C"
+	attr_sub_col$[11,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_EXT"
+	attr_sub_col$[11,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_TOTAL")
+	attr_sub_col$[11,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_sub_col$[11,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
-	attr_sub_col$[11,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=callpoint!.getDevObject("wo_no_mask")
-	attr_sub_col$[11,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]=str(callpoint!.getDevObject("wo_no_len"))
-	attr_sub_col$[11,fnstr_pos("DTAB",attr_def_col_str$[0,0],5)]="SFE_WOMASTR"
-	attr_sub_col$[11,fnstr_pos("DCOL",attr_def_col_str$[0,0],5)]="ITEM_ID"
-	attr_sub_col$[11,fnstr_pos("DKEY",attr_def_col_str$[0,0],5)]="[+FIRM_ID]  @"
-	attr_sub_col$[11,fnstr_pos("ETYP",attr_def_col_str$[0,0],5)]="WO_NO"
+	attr_sub_col$[11,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_sub_col$[12,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_DATE"
-	attr_sub_col$[12,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_DATE")
+	attr_sub_col$[12,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_WO"
+	attr_sub_col$[12,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_WO")
+	attr_sub_col$[12,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="C"
 	attr_sub_col$[12,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
-	attr_sub_col$[12,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="D"
-	attr_sub_col$[12,fnstr_pos("STYP",attr_def_col_str$[0,0],5)]="1"
+	attr_sub_col$[12,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=callpoint!.getDevObject("wo_no_mask")
+	attr_sub_col$[12,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]=str(callpoint!.getDevObject("wo_no_len"))
+	attr_sub_col$[12,fnstr_pos("DTAB",attr_def_col_str$[0,0],5)]="SFE_WOMASTR"
+	attr_sub_col$[12,fnstr_pos("DCOL",attr_def_col_str$[0,0],5)]="ITEM_ID"
+	attr_sub_col$[12,fnstr_pos("DKEY",attr_def_col_str$[0,0],5)]="[+FIRM_ID]  @"
+	attr_sub_col$[12,fnstr_pos("ETYP",attr_def_col_str$[0,0],5)]="WO_NO"
+
+	attr_sub_col$[13,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_DATE"
+	attr_sub_col$[13,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_DATE")
+	attr_sub_col$[13,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+	attr_sub_col$[13,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="D"
+	attr_sub_col$[13,fnstr_pos("STYP",attr_def_col_str$[0,0],5)]="1"
 
 	for curr_attr=1 to def_sub_cols
 		attr_sub_col$[0,1] = attr_sub_col$[0,1] + 
@@ -402,7 +386,7 @@ rem ==========================================================================
 
 	attr_disp_col$=attr_sub_col$[0,1]
 
-	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridSubs!,"COLH-LINES-LIGHT-SIZEC-DATES",num_rpts_rows,
+	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridSubs!,"CHECKS-COLH-DATES-LIGHT-LINES-SIZEC",num_rpts_rows,
 :		attr_def_col_str$[all],attr_disp_col$,attr_sub_col$[all]
 
 	return
@@ -421,29 +405,7 @@ rem ==========================================================================
 		gridSubs!.setNumRows(numrow)
 		gridSubs!.setCellText(0,0,vectSubs!)
 
-		cols=num(user_tpl.gridSubsCols$)
-		for row=1 to vectSubs!.size()-1 step cols
-			if vectSubs!.getItem(((row-1)/cols)*cols+4)<>vectSubs!.getItem(((row-1)/cols)*cols+5)
-				gridSubs!.setCellBackColor((row-1)/cols,5,callpoint!.getDevObject("diff_color"))
-			else
-				gridSubs!.setCellBackColor((row-1)/cols,5,callpoint!.getDevObject("same_color"))
-			endif
-			if vectSubs!.getItem(((row-1)/cols)*cols+6)<>vectSubs!.getItem(((row-1)/cols)*cols+7)
-				gridSubs!.setCellBackColor((row-1)/cols,7,callpoint!.getDevObject("diff_color"))
-			else
-				gridSubs!.setCellBackColor((row-1)/cols,7,callpoint!.getDevObject("same_color"))
-			endif
-			if vectSubs!.getItem(((row-1)/cols)*cols+10)<>wo_no$
-				gridSubs!.setCellBackColor((row-1)/cols,10,callpoint!.getDevObject("diff_color"))
-			else
-				gridSubs!.setCellBackColor((row-1)/cols,10,callpoint!.getDevObject("same_color"))
-			endif
-			if vectSubs!.getItem(((row-1)/cols)*cols+11)<>vectSubs!.getItem(((row-1)/cols)*cols)
-				gridSubs!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("diff_color"))
-			else
-				gridSubs!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("same_color"))
-			endif
-		next row
+		gosub switch_colors
 	else
 		gridSubs!.clearMainGrid()
 		gridSubs!.setNumRows(0)
@@ -481,31 +443,32 @@ rem ==========================================================================
 
 	rem --- Now fill vectors
 
-		vectSubs!.addItem(fndate$(sft31a.trans_date$)); rem 0
-		vectSubs!.addItem(func.alphaMask(sft31a.vendor_id$(1,vendor_len),m0$)); rem 1
-		vectSubs!.addItem(apm01a.vendor_name$); rem 2
-		vectSubs!.addItem(sft31a.po_no$); rem 3
-		vectSubs!.addItem(str(sft31a.units)); rem 4
+		vectSubs!.addItem(""); rem 0
+		vectSubs!.addItem(fndate$(sft31a.trans_date$)); rem 1
+		vectSubs!.addItem(func.alphaMask(sft31a.vendor_id$(1,vendor_len),m0$)); rem 2
+		vectSubs!.addItem(apm01a.vendor_name$); rem 3
+		vectSubs!.addItem(sft31a.po_no$); rem 4
+		vectSubs!.addItem(str(sft31a.units)); rem 5
 		if found=1
-			vectSubs!.addItem(str(sfe_subadj.new_units)); rem 5
+			vectSubs!.addItem(str(sfe_subadj.new_units)); rem 6
 		else
-			vectSubs!.addItem(str(sft31a.units)); rem 5
+			vectSubs!.addItem(str(sft31a.units)); rem 6
 		endif
-		vectSubs!.addItem(str(sft31a.unit_cost)); rem 6
+		vectSubs!.addItem(str(sft31a.unit_cost)); rem 7
 		if found=1
-			vectSubs!.addItem(str(sfe_subadj.new_unit_cst)); rem 7
+			vectSubs!.addItem(str(sfe_subadj.new_unit_cst)); rem 8
 		else
-			vectSubs!.addItem(str(sft31a.unit_cost)); rem 7
+			vectSubs!.addItem(str(sft31a.unit_cost)); rem 8
 		endif
-		vectSubs!.addItem(str(sft31a.ext_cost)); rem 8
+		vectSubs!.addItem(str(sft31a.ext_cost)); rem 9
 		if found=1
-			vectSubs!.addItem(str(sfe_subadj.new_units*sfe_subadj.new_unit_cst)); rem 9
-			vectSubs!.addItem(sfe_subadj.new_wo_no$); rem 10
-			vectSubs!.addItem(sfe_subadj.new_trn_date$); rem 11
+			vectSubs!.addItem(str(sfe_subadj.new_units*sfe_subadj.new_unit_cst)); rem 10
+			vectSubs!.addItem(sfe_subadj.new_wo_no$); rem 11
+			vectSubs!.addItem(sfe_subadj.new_trn_date$); rem 12
 		else
-			vectSubs!.addItem(str(sft31a.ext_cost)); rem 9
-			vectSubs!.addItem(wo_no$);rem 10
-			vectSubs!.addItem(fndate$(sft31a.trans_date$)); rem 11
+			vectSubs!.addItem(str(sft31a.ext_cost)); rem 10
+			vectSubs!.addItem(wo_no$);rem 11
+			vectSubs!.addItem(fndate$(sft31a.trans_date$)); rem 12
 		endif
 		vectSubsMaster!.addItem(sft31a.trans_seq$);rem keep track of sequence
 
@@ -547,5 +510,45 @@ rem --- re-display extended, validated value in localized format, store "on disk
 	input_value$=date(num(date_value$):"%Yd%Mz%Dz")
 
 	msg_id$=""
+
+	return
+
+rem ==========================================================
+switch_colors:
+rem ==========================================================
+
+	cols=num(user_tpl.gridSubsCols$)
+	for row=1 to vectSubs!.size()-1 step cols
+		change$="N"
+		if vectSubs!.getItem(((row-1)/cols)*cols+5)<>vectSubs!.getItem(((row-1)/cols)*cols+6)
+			gridSubs!.setCellBackColor((row-1)/cols,6,callpoint!.getDevObject("diff_color"))
+			change$="Y"
+		else
+			gridSubs!.setCellBackColor((row-1)/cols,6,callpoint!.getDevObject("same_color"))
+		endif
+		if vectSubs!.getItem(((row-1)/cols)*cols+7)<>vectSubs!.getItem(((row-1)/cols)*cols+8)
+			gridSubs!.setCellBackColor((row-1)/cols,8,callpoint!.getDevObject("diff_color"))
+			change$="Y"
+		else
+			gridSubs!.setCellBackColor((row-1)/cols,8,callpoint!.getDevObject("same_color"))
+		endif
+		if vectSubs!.getItem(((row-1)/cols)*cols+11)<>callpoint!.getDevObject("wo_no")
+			gridSubs!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("diff_color"))
+			change$="Y"
+		else
+			gridSubs!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("same_color"))
+		endif
+		if vectSubs!.getItem(((row-1)/cols)*cols+12)<>vectSubs!.getItem(((row-1)/cols)*cols)
+			gridSubs!.setCellBackColor((row-1)/cols,12,callpoint!.getDevObject("diff_color"))
+			change$="Y"
+		else
+			gridSubs!.setCellBackColor((row-1)/cols,12,callpoint!.getDevObject("same_color"))
+		endif
+		if change$="Y"
+			gridSubs!.setCellStyle((row-1)/cols, 0, SysGUI!.GRID_STYLE_CHECKED)
+		else
+			gridSubs!.setCellStyle((row-1)/cols, 0, SysGUI!.GRID_STYLE_CHECKED)
+		endif
+	next row
 
 	return
