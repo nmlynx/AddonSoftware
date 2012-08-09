@@ -1,3 +1,9 @@
+[[SFE_WO_OPSADJ.BEND]]
+rem --- Ask user if they really want to exit
+
+	if vectOrig! <> vectOps!
+		escape
+	endif
 [[SFE_WO_OPSADJ.ARAR]]
 rem --- Display Work Order Number
 
@@ -19,23 +25,28 @@ rem --- Now write the Adjustment Entry records out
 
 	if vectOps!.size()
 		for x=0 to vectOps!.size()-1 step cols
-			tran_date$=vectOps!.getItem(x)
+			tran_date$=vectOps!.getItem(x+1)
+			if len(cvs(tran_date$,2))=10
+				tran_date$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2)
+			endif
 			tran_seq$=vectOpsMaster!.getItem(mast)
-			old_dir_rate=num(vectOps!.getItem(x+4))
-			new_dir_rate=num(vectOps!.getItem(x+5))
-			old_ovr_rate=num(vectOps!.getItem(x+6))
-			new_ovr_rate=num(vectOps!.getItem(x+7))
-			old_set_hrs=num(vectOps!.getItem(x+8))
-			new_set_hrs=num(vectOps!.getItem(x+9))
-			old_units=num(vectOps!.getItem(x+10))
-			new_units=num(vectOps!.getItem(x+11))
-			old_qty_comp=num(vectOps!.getItem(x+14))
-			new_qty_comp=num(vectOps!.getItem(x+15))
-			new_wo$=vectOps!.getItem(x+16)
+			old_dir_rate=num(vectOps!.getItem(x+5))
+			new_dir_rate=num(vectOps!.getItem(x+6))
+			old_ovr_rate=num(vectOps!.getItem(x+7))
+			new_ovr_rate=num(vectOps!.getItem(x+8))
+			old_set_hrs=num(vectOps!.getItem(x+9))
+			new_set_hrs=num(vectOps!.getItem(x+10))
+			old_units=num(vectOps!.getItem(x+11))
+			new_units=num(vectOps!.getItem(x+12))
+			old_qty_comp=num(vectOps!.getItem(x+15))
+			new_qty_comp=num(vectOps!.getItem(x+16))
+			new_wo$=vectOps!.getItem(x+17)
 			if cvs(new_wo$,2)="" new_wo$=wo_no$
-			new_date$=vectOps!.getItem(x+17)
+			new_date$=vectOps!.getItem(x+18)
 			if cvs(new_date$,2)="" new_date$=trans_date$
-
+			if len(cvs(new_date$,2))=10
+				new_date$=new_date$(7,4)+new_date$(1,2)+new_date$(4,2)
+			endif
 			if tran_date$<>new_date$ or
 :			   old_dir_rate<>new_dir_rate or
 :			   old_ovr_rate<>new_ovr_rate or
@@ -105,7 +116,7 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 		case 32; rem grid cell validation
 rem --- New Work Order Number
 
-			if curr_col=16
+			if curr_col=17
 				wo_no$=notice.buf$
 				wo_no$=str(num(wo_no$):callpoint!.getDevObject("wo_no_mask"))
 				sfe_womast=fnget_dev("SFE_WOMASTR")
@@ -118,7 +129,7 @@ rem --- New Work Order Number
 						break
 					wend
 					if found=0
-						gridOps!.setCellText(curr_row,16,"")
+						gridOps!.setCellText(curr_row,17,"")
 						msg_id$="INPUT_ERR_DATA"
 						gosub disp_message
 						gridOps!.focus()
@@ -128,7 +139,7 @@ rem --- New Work Order Number
 						break
 					endif
 					if sfe_womast.wo_status$="C"
-						gridOps!.setCellText(curr_row,16,"")
+						gridOps!.setCellText(curr_row,17,"")
 						msg_id$="WO_CLOSED"
 						gosub disp_message
 						gridOps!.focus()
@@ -141,58 +152,58 @@ rem --- New Work Order Number
 					wo_no$=callpoint!.getDevObject("wo_no")
 				endif
 
-				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+16,wo_no$)
+				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+17,wo_no$)
 				gridOps!.accept(1)
-				gridOps!.setCellText(curr_row,16,wo_no$)
+				gridOps!.setCellText(curr_row,17,wo_no$)
 				break
 			endif
 
 rem --- Rates or Units
 
-			if curr_col = 5 or curr_col=7  or curr_col=9 or curr_col=11 then
-				if curr_col=5
+			if curr_col = 6 or curr_col=8  or curr_col=10 or curr_col=12 then
+				if curr_col=6
 					dir=num(notice.buf$)
-					ohd=num(gridOps!.getCellText(curr_row,7))
-					setup=num(gridOps!.getCellText(curr_row,9))
-					units=num(gridOps!.getCellText(curr_row,11))
+					ohd=num(gridOps!.getCellText(curr_row,8))
+					setup=num(gridOps!.getCellText(curr_row,10))
+					units=num(gridOps!.getCellText(curr_row,12))
 				endif
-				if curr_col=7
-					dir=num(gridOps!.getCellText(curr_row,5))
+				if curr_col=8
+					dir=num(gridOps!.getCellText(curr_row,6))
 					ohd=num(notice.buf$)
-					setup=num(gridOps!.getCellText(curr_row,9))
-					units=num(gridOps!.getCellText(curr_row,11))
+					setup=num(gridOps!.getCellText(curr_row,10))
+					units=num(gridOps!.getCellText(curr_row,12))
 				endif
-				if curr_col=9
-					dir=num(gridOps!.getCellText(curr_row,5))
-					ohd=num(gridOps!.getCellText(curr_row,7))
+				if curr_col=10
+					dir=num(gridOps!.getCellText(curr_row,6))
+					ohd=num(gridOps!.getCellText(curr_row,8))
 					setup=num(notice.buf$)
-					units=num(gridOps!.getCellText(curr_row,11))
+					units=num(gridOps!.getCellText(curr_row,12))
 				endif
-				if curr_col=11
-					dir=num(gridOps!.getCellText(curr_row,5))
-					ohd=num(gridOps!.getCellText(curr_row,7))
-					setup=num(gridOps!.getCellText(curr_row,9))
+				if curr_col=12
+					dir=num(gridOps!.getCellText(curr_row,6))
+					ohd=num(gridOps!.getCellText(curr_row,8))
+					setup=num(gridOps!.getCellText(curr_row,10))
 					units=num(notice.buf$)
 				endif
 				tot_ext=(units+setup)*(dir+ohd)
-				gridOps!.setCellText(curr_row,13,str(tot_ext))
-				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+5,str(dir))
-				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+7,str(ohd))
-				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+9,str(setup))
-				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+11,str(units))
+				gridOps!.setCellText(curr_row,14,str(tot_ext))
+				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+6,str(dir))
+				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+8,str(ohd))
+				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+10,str(setup))
+				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+12,str(units))
 				gridOps!.accept(1)
 				break
 			endif
 
 rem --- New Qty Complete
-			if curr_col=15
-				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+15,notice.buf$)
+			if curr_col=16
+				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+16,notice.buf$)
 				gridOps!.accept(1)
 				break
 			endif
 
 rem --- New Tran Date
-			if curr_col=17
+			if curr_col=18
 				tran_date$=notice.buf$
 				input_value$=tran_date$
 				gosub validate_date
@@ -211,23 +222,39 @@ rem --- New Tran Date
 					tran_date$=gridOps!.getCellText(curr_row,0)
 					input_value$=vectOps!.getItem((curr_row*num(user_tpl.gridOpsCols$)))
 				endif
-				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+17,input_value$)
-				gridOps!.setCellText(curr_row,curr_col,input_value$)
+				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+18,fndate$(input_value$))
+				gridOps!.setCellText(curr_row,curr_col,fndate$(input_value$))
 			endif
 			gridOps!.accept(1)
-		break
+			break
 
 		case 19; rem row change
 
 			if vectOps!.size()=0 break
 			gosub switch_colors
-		break
+			break
 
 		case 6;rem "Special Key"
 			if notice.wparam=8
 				gridOps!.endEdit()
 			endif
-		break
+			break
+
+		case 12; rem Lookup
+			if curr_col=17
+rem				escape;rem ? notice.wparam
+			endif
+			break
+		case 1; rem Lookup
+			if curr_col=17
+rem				escape;rem ? notice.wparam
+			endif
+			break
+
+		case 14; rem --- grid_mouse_up
+			if notice.col=0 gosub switch_value
+			break
+
 	swend
 
 	UserObj!.setItem(num(user_tpl.vectOpsOfst$),vectOps!)
@@ -263,7 +290,7 @@ rem --- Get parameter record
 
 	readrecord(sfs_params,key=firm_id$+"SF00")sfs_params$
 
-rem --- Add grid to store invoices, with checkboxes for user to select one or more
+rem --- Add grid to store Operations, with checkboxes for user to select one or more
 
 	user_tpl_str$ = "gridOpsOfst:c(5), " +
 :		"gridOpsCols:c(5), " +
@@ -276,6 +303,7 @@ rem --- Add grid to store invoices, with checkboxes for user to select one or mo
 
 	UserObj! = BBjAPI().makeVector()
 	vectOps! = BBjAPI().makeVector()
+	vectOrig!= BBjAPI().makeVector()
 	vectOpsMaster! = BBjAPI().makeVector()
 	nxt_ctlID = util.getNextControlID()
 
@@ -283,7 +311,7 @@ rem --- Add grid to store invoices, with checkboxes for user to select one or mo
 	gridOps!.setHorizontalScrollBarAlways(1)
 
 	user_tpl.gridOpsCtlID$ = str(nxt_ctlID)
-	user_tpl.gridOpsCols$ = "18"
+	user_tpl.gridOpsCols$ = "19"
 	user_tpl.gridOpsRows$ = "10"
 	callpoint!.setDevObject("wo_no_len",len(sft01a.wo_no$))
 	callpoint!.setDevObject("wo_no_mask",fill(len(sft01a.wo_no$),"0"))
@@ -306,13 +334,14 @@ rem --- Misc other init
 	same_color!=SysGUI!.makeColor(7)
 	callpoint!.setDevObject("diff_color",diff_color!)
 	callpoint!.setDevObject("same_color",same_color!)
-	gridOps!.setColumnEditable(5,1)
-	gridOps!.setColumnEditable(7,1)
-	gridOps!.setColumnEditable(9,1)
-	gridOps!.setColumnEditable(11,1)
-	gridOps!.setColumnEditable(15,1)
+	gridOps!.setColumnEditable(0,1)
+	gridOps!.setColumnEditable(6,1)
+	gridOps!.setColumnEditable(8,1)
+	gridOps!.setColumnEditable(10,1)
+	gridOps!.setColumnEditable(12,1)
 	gridOps!.setColumnEditable(16,1)
 	gridOps!.setColumnEditable(17,1)
+	gridOps!.setColumnEditable(18,1)
 	gridOps!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 	gridOps!.setTabAction(gridOps!.GRID_NAVIGATE_GRID)
 	gridOps!.setTabActionSkipsNonEditableCells(1)
@@ -326,6 +355,9 @@ rem --- Set callbacks - processed in ACUS callpoint
 	gridOps!.setCallback(gridOps!.ON_GRID_CELL_VALIDATION,"custom_event")
 	gridOps!.setCallback(gridOps!.ON_GRID_SELECT_ROW,"custom_event")
 	gridOps!.setCallback(gridOps!.ON_GRID_SPECIAL_KEY,"custom_event")
+	gridOps!.setCallback(gridOps!.ON_GRID_KEYPRESS,"custom_event")
+	gridOps!.setCallback(gridOps!.ON_GRID_MOUSE_UP,"custom_event")
+	gridOps!.setCallback(gridOps!.ON_GRID_MOUSE_DOWN,"custom_event")
 [[SFE_WO_OPSADJ.<CUSTOM>]]
 rem ==========================================================================
 format_grid: rem --- Use Barista program to format the grid
@@ -339,112 +371,120 @@ rem ==========================================================================
 	num_rpts_rows = num(user_tpl.gridOpsRows$)
 	dim attr_ops_col$[def_ops_cols,len(attr_def_col_str$[0,0])/5]
 
-	attr_ops_col$[1,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_TRANS_DATE"
-	attr_ops_col$[1,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_TRANSACTION_DATE")
-	attr_ops_col$[1,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="20"
-	attr_ops_col$[1,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="D"
-	attr_ops_col$[1,fnstr_pos("STYP",attr_def_col_str$[0,0],5)]="1"
-	attr_ops_col$[1,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=stbl("+DATE_MASK")
-	attr_ops_col$[1,fnstr_pos("MSKI",attr_def_col_str$[0,0],5)]=stbl("+DATE_MASK")
+	attr_ops_col$[1,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="SELECT"
+	attr_ops_col$[1,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=""
+	attr_ops_col$[1,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="25"
+	attr_ops_col$[1,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]="1"
+	attr_ops_col$[1,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="C"
 
-	attr_ops_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="EMP_ID"
-	attr_ops_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_EMPLOYEE")
-	attr_ops_col$[2,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+	attr_ops_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_TRANS_DATE"
+	attr_ops_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_TRANSACTION_DATE")
+	attr_ops_col$[2,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="20"
+	attr_ops_col$[2,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="D"
+	attr_ops_col$[2,fnstr_pos("STYP",attr_def_col_str$[0,0],5)]="1"
+	attr_ops_col$[2,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=stbl("+DATE_MASK")
+	attr_ops_col$[2,fnstr_pos("MSKI",attr_def_col_str$[0,0],5)]=stbl("+DATE_MASK")
 
-	attr_ops_col$[3,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="EMP_NAME"
-	attr_ops_col$[3,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_NAME")
-	attr_ops_col$[3,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="180"
+	attr_ops_col$[3,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="EMP_ID"
+	attr_ops_col$[3,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_EMPLOYEE")
+	attr_ops_col$[3,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 
-	attr_ops_col$[4,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="OP_CODE"
-	attr_ops_col$[4,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_OP_CODE")
-	attr_ops_col$[4,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="75"
+	attr_ops_col$[4,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="EMP_NAME"
+	attr_ops_col$[4,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_NAME")
+	attr_ops_col$[4,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="180"
 
-	attr_ops_col$[5,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_DIRECT"
-	attr_ops_col$[5,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_DIRECT")
-	attr_ops_col$[5,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
-	attr_ops_col$[5,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
-	attr_ops_col$[5,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
+	attr_ops_col$[5,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="OP_CODE"
+	attr_ops_col$[5,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_OP_CODE")
+	attr_ops_col$[5,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="75"
 
-	attr_ops_col$[6,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_DIRECT"
-	attr_ops_col$[6,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_DIRECT")
+	attr_ops_col$[6,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_DIRECT"
+	attr_ops_col$[6,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_DIRECT")
 	attr_ops_col$[6,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[6,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[6,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[7,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_OVHD"
-	attr_ops_col$[7,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_OVHD")
+	attr_ops_col$[7,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_DIRECT"
+	attr_ops_col$[7,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_DIRECT")
 	attr_ops_col$[7,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[7,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[7,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[8,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_OVHD"
-	attr_ops_col$[8,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_OVHD")
+	attr_ops_col$[8,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_OVHD"
+	attr_ops_col$[8,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_OVHD")
 	attr_ops_col$[8,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[8,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[8,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[9,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_SETUP"
-	attr_ops_col$[9,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_SETUP")
+	attr_ops_col$[9,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_OVHD"
+	attr_ops_col$[9,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_OVHD")
 	attr_ops_col$[9,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[9,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[9,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[10,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_SETUP"
-	attr_ops_col$[10,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_SETUP")
+	attr_ops_col$[10,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_SETUP"
+	attr_ops_col$[10,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_SETUP")
 	attr_ops_col$[10,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[10,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[10,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[11,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_UNITS"
-	attr_ops_col$[11,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_UNITS")
+	attr_ops_col$[11,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_SETUP"
+	attr_ops_col$[11,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_SETUP")
 	attr_ops_col$[11,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[11,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[11,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[12,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_UNITS"
-	attr_ops_col$[12,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_UNITS")
+	attr_ops_col$[12,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_UNITS"
+	attr_ops_col$[12,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_UNITS")
 	attr_ops_col$[12,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[12,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[12,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[13,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_EXT"
-	attr_ops_col$[13,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_TOTAL")
+	attr_ops_col$[13,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_UNITS"
+	attr_ops_col$[13,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_UNITS")
 	attr_ops_col$[13,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[13,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[13,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[14,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_EXT"
-	attr_ops_col$[14,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_TOTAL")
+	attr_ops_col$[14,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_EXT"
+	attr_ops_col$[14,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_TOTAL")
 	attr_ops_col$[14,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[14,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[14,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[15,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_COMPLETE"
-	attr_ops_col$[15,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_COST")
+	attr_ops_col$[15,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_EXT"
+	attr_ops_col$[15,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_TOTAL")
 	attr_ops_col$[15,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[15,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[15,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[16,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_COMPLETE"
-	attr_ops_col$[16,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_COST")
+	attr_ops_col$[16,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_COMPLETE"
+	attr_ops_col$[16,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_COST")
 	attr_ops_col$[16,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[16,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[16,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[17,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_WO"
-	attr_ops_col$[17,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_WO")
-	attr_ops_col$[17,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="C"
+	attr_ops_col$[17,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_COMPLETE"
+	attr_ops_col$[17,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_COST")
+	attr_ops_col$[17,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[17,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
-	attr_ops_col$[17,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=callpoint!.getDevObject("wo_no_mask")
-	attr_ops_col$[17,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]=str(callpoint!.getDevObject("wo_no_len"))
-	attr_ops_col$[17,fnstr_pos("DTAB",attr_def_col_str$[0,0],5)]="SFE_WOMASTR"
-	attr_ops_col$[17,fnstr_pos("DCOL",attr_def_col_str$[0,0],5)]="DESC"
+	attr_ops_col$[17,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
-	attr_ops_col$[18,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_DATE"
-	attr_ops_col$[18,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_DATE")
+	attr_ops_col$[18,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_WO"
+	attr_ops_col$[18,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_WO")
+	attr_ops_col$[18,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="C"
 	attr_ops_col$[18,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
-	attr_ops_col$[18,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="D"
-	attr_ops_col$[18,fnstr_pos("STYP",attr_def_col_str$[0,0],5)]="1"
+	attr_ops_col$[18,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=callpoint!.getDevObject("wo_no_mask")
+	attr_ops_col$[18,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]=str(callpoint!.getDevObject("wo_no_len"))
+	attr_ops_col$[18,fnstr_pos("DTAB",attr_def_col_str$[0,0],5)]="SFE_WOMASTR"
+	attr_ops_col$[18,fnstr_pos("DCOL",attr_def_col_str$[0,0],5)]="DESC"
+
+	attr_ops_col$[19,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_DATE"
+	attr_ops_col$[19,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_DATE")
+	attr_ops_col$[19,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+	attr_ops_col$[19,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="D"
+	attr_ops_col$[19,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="C"
+	attr_ops_col$[19,fnstr_pos("STYP",attr_def_col_str$[0,0],5)]="1"
+	attr_ops_col$[19,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=stbl("+DATE_MASK",err=*next)
 
 	for curr_attr=1 to def_ops_cols
 		attr_ops_col$[0,1] = attr_ops_col$[0,1] + 
@@ -453,7 +493,7 @@ rem ==========================================================================
 
 	attr_disp_col$=attr_ops_col$[0,1]
 
-	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridOps!,"CHECKS-COLH-LINES-SIZEC-LIGHT-DATES",num_rpts_rows,
+	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridOps!,"CHECKS-COLH-DATES-LIGHT-LINES-SIZEC",num_rpts_rows,
 :		attr_def_col_str$[all],attr_disp_col$,attr_ops_col$[all]
 
 	return
@@ -510,54 +550,57 @@ rem jpb		read record(apm01_dev, key=firm_id$+sft31a.vendor_id$, dom=*next) apm01
 
 	rem --- Now fill vectors
 
-		vectOps!.addItem(sft01a.trans_date$); rem 0
-		vectOps!.addItem(func.alphaMask(sft01a.employee_no$(1,vendor_len),m0$)); rem 1
-		vectOps!.addItem("");rem prm01a.emp_name$); rem 2
-		vectOps!.addItem(sft01a.op_code$); rem 3
-		vectOps!.addItem(str(sft01a.direct_rate)); rem 4
+		vectOps!.addItem(""); rem 0
+		vectOps!.addItem(fndate$(sft01a.trans_date$)); rem 1
+		vectOps!.addItem(func.alphaMask(sft01a.employee_no$(1,vendor_len),m0$)); rem 2
+		vectOps!.addItem("");rem prm01a.emp_name$); rem 3
+		vectOps!.addItem(sft01a.op_code$); rem 4
+		vectOps!.addItem(str(sft01a.direct_rate)); rem 5
 		if found=1
-			vectOps!.addItem(str(sfe_opsadj.new_dir_rate)); rem 5
+			vectOps!.addItem(str(sfe_opsadj.new_dir_rate)); rem 6
 		else
-			vectOps!.addItem(str(sft01a.direct_rate)); rem 5
+			vectOps!.addItem(str(sft01a.direct_rate)); rem 6
 		endif
-		vectOps!.addItem(str(sft01a.ovhd_rate)); rem 6
+		vectOps!.addItem(str(sft01a.ovhd_rate)); rem 7
 		if found=1
-			vectOps!.addItem(str(sfe_opsadj.new_ovr_rate)); rem 7
+			vectOps!.addItem(str(sfe_opsadj.new_ovr_rate)); rem 8
 		else
-			vectOps!.addItem(str(sft01a.ovhd_rate)); rem 7
+			vectOps!.addItem(str(sft01a.ovhd_rate)); rem 8
 		endif
-		vectOps!.addItem(str(sft01a.setup_time)); rem 8
+		vectOps!.addItem(str(sft01a.setup_time)); rem 9
 		if found=1
-			vectOps!.addItem(str(sfe_opsadj.new_set_hrs)); rem 9
+			vectOps!.addItem(str(sfe_opsadj.new_set_hrs)); rem 10
 		else
-			vectOps!.addItem(str(sft01a.setup_time)); rem 9
+			vectOps!.addItem(str(sft01a.setup_time)); rem 10
 		endif
-		vectOps!.addItem(str(sft01a.units)); rem 10
+		vectOps!.addItem(str(sft01a.units)); rem 11
 		if found=1
-			vectOps!.addItem(str(sfe_opsadj.new_units)); rem 11
+			vectOps!.addItem(str(sfe_opsadj.new_units)); rem 12
 		else
-			vectOps!.addItem(str(sft01a.units)); rem 11
+			vectOps!.addItem(str(sft01a.units)); rem 12
 		endif
-		vectOps!.addItem(str(sft01a.ext_cost)); rem 12
+		vectOps!.addItem(str(sft01a.ext_cost)); rem 13
 		if found=1
-			vectOps!.addItem(str((sfe_opsadj.new_set_hrs+sfe_opsadj.new_units)*(sfe_opsadj.new_dir_rate+sfe_opsadj.new_ovr_rate))); rem 13
+			vectOps!.addItem(str((sfe_opsadj.new_set_hrs+sfe_opsadj.new_units)*(sfe_opsadj.new_dir_rate+sfe_opsadj.new_ovr_rate))); rem 14
 		else
-			vectOps!.addItem(str(sft01a.ext_cost)); rem 13
+			vectOps!.addItem(str(sft01a.ext_cost)); rem 14
 		endif
-		vectOps!.addItem(str(sft01a.complete_qty)); rem 14
+		vectOps!.addItem(str(sft01a.complete_qty)); rem 15
 		if found=1
-			vectOps!.addItem(str(sfe_opsadj.new_qty_comp)); rem 15
-			vectOps!.addItem(sfe_opsadj.new_wo_no$); rem 16
-			vectOps!.addItem(sfe_opsadj.new_trn_date$); rem 17
+			vectOps!.addItem(str(sfe_opsadj.new_qty_comp)); rem 16
+			vectOps!.addItem(sfe_opsadj.new_wo_no$); rem 17
+			vectOps!.addItem(fndate$(sfe_opsadj.new_trn_date$)); rem 18
 		else
-			vectOps!.addItem(str(sft01a.complete_qty)); rem 15
-			vectOps!.addItem(wo_no$); rem 16
-			vectOps!.addItem(sft01a.trans_date$); rem 17
+			vectOps!.addItem(str(sft01a.complete_qty)); rem 16
+			vectOps!.addItem(wo_no$); rem 17
+			vectOps!.addItem(fndate$(sft01a.trans_date$)); rem 18
 		endif
 
 		vectOpsMaster!.addItem(sft01a.trans_seq$);rem keep track of sequence
 
 	wend
+
+	vectOrig! = vectOps!
 
 	callpoint!.setStatus("REFRESH")
 	
@@ -606,41 +649,123 @@ rem --- Now switch colors on all rows
 	if vectOps!.size()=0 break
 	cols=num(user_tpl.gridOpsCols$)
 	for row=1 to vectOps!.size()-1 step cols
-		if vectOps!.getItem(((row-1)/cols)*cols+4)<>vectOps!.getItem(((row-1)/cols)*cols+5)
-			gridOps!.setCellBackColor((row-1)/cols,5,callpoint!.getDevObject("diff_color"))
+		change$="N"
+		if vectOps!.getItem(((row-1)/cols)*cols+5)<>vectOps!.getItem(((row-1)/cols)*cols+6)
+			gridOps!.setCellBackColor((row-1)/cols,6,callpoint!.getDevObject("diff_color"))
+			change$="Y"
 		else
-			gridOps!.setCellBackColor((row-1)/cols,5,callpoint!.getDevObject("same_color"))
+			gridOps!.setCellBackColor((row-1)/cols,6,callpoint!.getDevObject("same_color"))
 		endif
-		if vectOps!.getItem(((row-1)/cols)*cols+6)<>vectOps!.getItem(((row-1)/cols)*cols+7)
-			gridOps!.setCellBackColor((row-1)/cols,7,callpoint!.getDevObject("diff_color"))
+		if vectOps!.getItem(((row-1)/cols)*cols+7)<>vectOps!.getItem(((row-1)/cols)*cols+8)
+			gridOps!.setCellBackColor((row-1)/cols,8,callpoint!.getDevObject("diff_color"))
+			change$="Y"
 		else
-			gridOps!.setCellBackColor((row-1)/cols,7,callpoint!.getDevObject("same_color"))
+			gridOps!.setCellBackColor((row-1)/cols,8,callpoint!.getDevObject("same_color"))
 		endif
-		if vectOps!.getItem(((row-1)/cols)*cols+8)<>vectOps!.getItem(((row-1)/cols)*cols+9)
-			gridOps!.setCellBackColor((row-1)/cols,9,callpoint!.getDevObject("diff_color"))
+		if vectOps!.getItem(((row-1)/cols)*cols+9)<>vectOps!.getItem(((row-1)/cols)*cols+10)
+			gridOps!.setCellBackColor((row-1)/cols,10,callpoint!.getDevObject("diff_color"))
+			change$="Y"
 		else
-			gridOps!.setCellBackColor((row-1)/cols,9,callpoint!.getDevObject("same_color"))
+			gridOps!.setCellBackColor((row-1)/cols,10,callpoint!.getDevObject("same_color"))
 		endif	
-		if vectOps!.getItem(((row-1)/cols)*cols+10)<>vectOps!.getItem(((row-1)/cols)*cols+11)
-			gridOps!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("diff_color"))
+		if vectOps!.getItem(((row-1)/cols)*cols+11)<>vectOps!.getItem(((row-1)/cols)*cols+12)
+			gridOps!.setCellBackColor((row-1)/cols,12,callpoint!.getDevObject("diff_color"))
+			change$="Y"
 		else
-			gridOps!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("same_color"))
+			gridOps!.setCellBackColor((row-1)/cols,12,callpoint!.getDevObject("same_color"))
 		endif
-		if vectOps!.getItem(((row-1)/cols)*cols+14)<>vectOps!.getItem(((row-1)/cols)*cols+15)
-			gridOps!.setCellBackColor((row-1)/cols,15,callpoint!.getDevObject("diff_color"))
-		else
-			gridOps!.setCellBackColor((row-1)/cols,15,callpoint!.getDevObject("same_color"))
-		endif
-		if vectOps!.getItem(((row-1)/cols)*cols+16)<>callpoint!.getDevObject("wo_no")
+		if vectOps!.getItem(((row-1)/cols)*cols+15)<>vectOps!.getItem(((row-1)/cols)*cols+16)
 			gridOps!.setCellBackColor((row-1)/cols,16,callpoint!.getDevObject("diff_color"))
+			change$="Y"
 		else
 			gridOps!.setCellBackColor((row-1)/cols,16,callpoint!.getDevObject("same_color"))
 		endif
-		if vectOps!.getItem(((row-1)/cols)*cols+17)<>vectOps!.getItem(((row-1)/cols)*cols)
+		if vectOps!.getItem(((row-1)/cols)*cols+17)<>callpoint!.getDevObject("wo_no")
 			gridOps!.setCellBackColor((row-1)/cols,17,callpoint!.getDevObject("diff_color"))
+			change$="Y"
 		else
 			gridOps!.setCellBackColor((row-1)/cols,17,callpoint!.getDevObject("same_color"))
 		endif
+		if vectOps!.getItem(((row-1)/cols)*cols+18)<>vectOps!.getItem(((row-1)/cols)*cols+1)
+			gridOps!.setCellBackColor((row-1)/cols,18,callpoint!.getDevObject("diff_color"))
+			change$="Y"
+		else
+			gridOps!.setCellBackColor((row-1)/cols,18,callpoint!.getDevObject("same_color"))
+		endif
+		if change$="Y"
+			gridOps!.setCellStyle((row-1)/cols, 0, SysGUI!.GRID_STYLE_CHECKED)
+		else
+			gridOps!.setCellStyle((row-1)/cols, 0, SysGUI!.GRID_STYLE_UNCHECKED)
+		endif
 	next row
+
+	return
+
+rem ==========================================================================
+switch_value: rem --- Switch Check Values
+rem ==========================================================================
+
+	SysGUI!.setRepaintEnabled(0)
+
+rem	gridOps!       = UserObj!.getItem(num(user_tpl.gridOps$))
+rem	vectOps!       = UserObj!.getItem(num(user_tpl.vectOpsOfst$))
+
+	TempRows! = gridOps!.getSelectedRows()
+	numcols   = gridOps!.getNumColumns()
+
+	if TempRows!.size() > 0 then
+		for curr_row=1 to TempRows!.size()
+			row_no = num(TempRows!.getItem(curr_row-1))
+
+			if gridOps!.getCellState(row_no,0) = 0 then
+		rem --- not checked - leave alone
+
+				gridOps!.setCellState(row_no, 0, 0)
+
+			else
+		rem --- Checked -> not checked
+
+				orig_dir$ = gridOps!.getCellText(row_no,5)
+				orig_ovh$=gridOps!.getCellText(row_no,7)
+				orig_setup$=gridOps!.getCellText(row_no,9)
+				orig_units$=gridOps!.getCellText(row_no,11)
+				orig_ext$=gridOps!.getCellText(row_no,13)
+				orig_comp$=gridOps!.getCellText(row_no,15)
+				orig_wo$=callpoint!.getDevObject("wo_no")
+				orig_date$=gridOps!.getCellText(row_no,1)
+
+				gridOps!.setCellState(row_no,0,0)
+				gridOps!.setCellText(row_no, 6, orig_dir$)
+				gridOps!.setCellText(row_no,8,orig_ovh$)
+				gridOps!.setCellText(row_no,10,orig_setup$)
+				gridOps!.setCellText(row_no,12,orig_units$)
+				gridOps!.setCellText(row_no,14,orig_ext$)
+				gridOps!.setCellText(row_no,16,orig_comp$)
+				gridOps!.setCellText(row_no,17,orig_wo$)
+				gridOps!.setCellText(row_no,18,orig_date$)
+
+				gridOps!.setCellBackColor(rowno,6,callpoint!.getDevObject("same_color"))
+				gridOps!.setCellBackColor(rowno,8,callpoint!.getDevObject("same_color"))
+				gridOps!.setCellBackColor(rowno,10,callpoint!.getDevObject("same_color"))
+				gridOps!.setCellBackColor(rowno,12,callpoint!.getDevObject("same_color"))
+				gridOps!.setCellBackColor(rowno,14,callpoint!.getDevObject("same_color"))
+				gridOps!.setCellBackColor(rowno,16,callpoint!.getDevObject("same_color"))
+				gridOps!.setCellBackColor(rowno,17,callpoint!.getDevObject("same_color"))
+				gridOps!.setCellBackColor(rowno,18,callpoint!.getDevObject("same_color"))
+
+				vectOps!.setItem((row_no*numcols)+6,orig_dir$)
+				vectOps!.setItem((row_no*numcols)+8,orig_ovh$)
+				vectOps!.setItem((row_no*numcols)+10,orig_setup$)
+				vectOps!.setItem((row_no*numcols)+12,orig_units$)
+				vectOps!.setItem((row_no*numcols)+14,orig_ext$)
+				vectOps!.setItem((row_no*numcols)+16,orig_comp$)
+				vectOps!.setItem((row_no*numcols)+17,orig_wo$)
+				vectOps!.setItem((row_no*numcols)+18,orig_date$)
+
+			endif
+		next curr_row
+	endif
+
+	SysGUI!.setRepaintEnabled(1)
 
 	return

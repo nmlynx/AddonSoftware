@@ -32,6 +32,9 @@ rem --- Now write the Adjutment Entry records out
 			if cvs(new_wo$,2)="" new_wo$=wo_no$
 			new_date$=vectSubs!.getItem(x+12)
 			if cvs(new_date$,2)="" new_date$=tran_date$
+			if len(cvs(new_date$,2))=10
+				new_date$=new_date$(7,4)+new_date$(1,2)+new_date$(4,2)
+			endif
 			if tran_date$ <> new_date$ or
 :			   old_units <> new_units or
 :			   old_cost <> new_cost or
@@ -167,7 +170,7 @@ rem --- New Tran Date
 					dim msg_tokens$[1]
 					msg_tokens$[1]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_DATE")
 					gosub disp_message
-					gridSubs.focus()
+					gridSubs!.focus()
 					sysgui!.setContext(grid_ctx)
 					gridSubs!.accept(0)
 					gridSubs!.startEdit(curr_row,curr_col)
@@ -179,23 +182,39 @@ rem --- New Tran Date
 					input_value$=vectSubs!.getItem((curr_row*num(user_tpl.gridSubsCols$)))
 				endif
 
-				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+12,input_value$)
-				gridSubs!.setCellText(curr_row,curr_col,input_value$)
+				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+12,fndate$(input_value$))
+				gridSubs!.setCellText(curr_row,curr_col,fndate$(input_value$))
 			endif
 			gridSubs!.accept(1)
-		break
+			break
 
 		case 19; rem row change
 
 			if vectSubs!.size()=0 break
 			gosub switch_colors
-		break
+			break
 
-		case 6;rem "Special Key"
+		case 6; rem "Special Key"
 			if notice.wparam=8
 				gridSubs!.endEdit()
 			endif
-		break
+			break
+
+		case 12; rem Lookup
+			if curr_col=11
+rem				escape;rem ? notice.wparam
+			endif
+			break
+		case 1; rem Lookup
+			if curr_col=11
+rem				escape;rem ? notice.wparam
+			endif
+			break
+
+		case 14; rem --- grid_mouse_up
+			if notice.col=0 gosub switch_value
+			break
+
 	swend
 
 	UserObj!.setItem(num(user_tpl.vectSubsOfst$),vectSubs!)
@@ -231,7 +250,7 @@ rem --- Get parameter record
 
 	readrecord(sfs_params,key=firm_id$+"SF00")sfs_params$
 
-rem --- Add grid to store invoices, with checkboxes for user to select one or more
+rem --- Add grid to store Subcontracts, with checkboxes for user to select one or more
 
 	user_tpl_str$ = "gridSubsOfst:c(5), " +
 :		"gridSubsCols:c(5), " +
@@ -291,6 +310,9 @@ rem --- Set callbacks - processed in ACUS callpoint
 	gridSubs!.setCallback(gridSubs!.ON_GRID_CELL_VALIDATION,"custom_event")
 	gridSubs!.setCallback(gridSubs!.ON_GRID_SELECT_ROW,"custom_event")
 	gridSubs!.setCallback(gridSubs!.ON_GRID_SPECIAL_KEY,"custom_event")
+	gridSubs!.setCallback(gridSubs!.ON_GRID_KEYPRESS,"custom_event")
+	gridSubs!.setCallback(gridSubs!.ON_GRID_MOUSE_UP,"custom_event")
+	gridSubs!.setCallback(gridSubs!.ON_GRID_MOUSE_DOWN,"custom_event")
 [[SFE_WO_SUBADJ.<CUSTOM>]]
 rem ==========================================================================
 format_grid: rem --- Use Barista program to format the grid
@@ -370,14 +392,16 @@ rem ==========================================================================
 	attr_sub_col$[12,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]=str(callpoint!.getDevObject("wo_no_len"))
 	attr_sub_col$[12,fnstr_pos("DTAB",attr_def_col_str$[0,0],5)]="SFE_WOMASTR"
 	attr_sub_col$[12,fnstr_pos("DCOL",attr_def_col_str$[0,0],5)]="ITEM_ID"
-	attr_sub_col$[12,fnstr_pos("DKEY",attr_def_col_str$[0,0],5)]="[+FIRM_ID]  @"
+	attr_sub_col$[12,fnstr_pos("DKEY",attr_def_col_str$[0,0],5)]="[+FIRM_ID]+@"
 	attr_sub_col$[12,fnstr_pos("ETYP",attr_def_col_str$[0,0],5)]="WO_NO"
 
 	attr_sub_col$[13,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_DATE"
 	attr_sub_col$[13,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_DATE")
 	attr_sub_col$[13,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_sub_col$[13,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="D"
+	attr_sub_col$[13,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="C"
 	attr_sub_col$[13,fnstr_pos("STYP",attr_def_col_str$[0,0],5)]="1"
+	attr_sub_col$[13,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=stbl("+DATE_MASK",err=*next)
 
 	for curr_attr=1 to def_sub_cols
 		attr_sub_col$[0,1] = attr_sub_col$[0,1] + 
@@ -464,7 +488,7 @@ rem ==========================================================================
 		if found=1
 			vectSubs!.addItem(str(sfe_subadj.new_units*sfe_subadj.new_unit_cst)); rem 10
 			vectSubs!.addItem(sfe_subadj.new_wo_no$); rem 11
-			vectSubs!.addItem(sfe_subadj.new_trn_date$); rem 12
+			vectSubs!.addItem(fndate$(sfe_subadj.new_trn_date$)); rem 12
 		else
 			vectSubs!.addItem(str(sft31a.ext_cost)); rem 10
 			vectSubs!.addItem(wo_no$);rem 11
@@ -538,7 +562,7 @@ rem ==========================================================
 		else
 			gridSubs!.setCellBackColor((row-1)/cols,11,callpoint!.getDevObject("same_color"))
 		endif
-		if vectSubs!.getItem(((row-1)/cols)*cols+12)<>vectSubs!.getItem(((row-1)/cols)*cols)
+		if vectSubs!.getItem(((row-1)/cols)*cols+12)<>vectSubs!.getItem(((row-1)/cols)*cols+1)
 			gridSubs!.setCellBackColor((row-1)/cols,12,callpoint!.getDevObject("diff_color"))
 			change$="Y"
 		else
@@ -547,8 +571,65 @@ rem ==========================================================
 		if change$="Y"
 			gridSubs!.setCellStyle((row-1)/cols, 0, SysGUI!.GRID_STYLE_CHECKED)
 		else
-			gridSubs!.setCellStyle((row-1)/cols, 0, SysGUI!.GRID_STYLE_CHECKED)
+			gridSubs!.setCellStyle((row-1)/cols, 0, SysGUI!.GRID_STYLE_UNCHECKED)
 		endif
 	next row
+
+	return
+
+rem ==========================================================================
+switch_value: rem --- Switch Check Values
+rem ==========================================================================
+
+	SysGUI!.setRepaintEnabled(0)
+
+rem	gridSubs!       = UserObj!.getItem(num(user_tpl.gridSubs$))
+rem	vectsubs!       = UserObj!.getItem(num(user_tpl.vectSubsOfst$))
+
+	TempRows! = gridSubs!.getSelectedRows()
+	numcols   = gridSubs!.getNumColumns()
+
+	if TempRows!.size() > 0 then
+		for curr_row=1 to TempRows!.size()
+			row_no = num(TempRows!.getItem(curr_row-1))
+
+			if gridSubs!.getCellState(row_no,0) = 0 then
+		rem --- not checked - leave alone
+
+				gridSubs!.setCellState(row_no, 0, 0)
+
+			else
+		rem --- Checked -> not checked
+
+				orig_units$ = gridSubs!.getCellText(row_no,5)
+				orig_cost$=gridSubs!.getCellText(row_no,7)
+				orig_ext$=gridSubs!.getCellText(row_no,9)
+				orig_wo$=callpoint!.getDevObject("wo_no")
+				orig_date$=gridSubs!.getCellText(row_no,1)
+
+				gridSubs!.setCellState(row_no,0,0)
+				gridSubs!.setCellText(row_no, 6, orig_units$)
+				gridSubs!.setCellText(row_no,8,orig_cost$)
+				gridSubs!.setCellText(row_no,10,orig_ext$)
+				gridSubs!.setCellText(row_no,11,orig_wo$)
+				gridSubs!.setCellText(row_no,12,orig_date$)
+
+				gridSubs!.setCellBackColor(rowno,6,callpoint!.getDevObject("same_color"))
+				gridSubs!.setCellBackColor(rowno,8,callpoint!.getDevObject("same_color"))
+				gridSubs!.setCellBackColor(rowno,10,callpoint!.getDevObject("same_color"))
+				gridSubs!.setCellBackColor(rowno,11,callpoint!.getDevObject("same_color"))
+				gridSubs!.setCellBackColor(rowno,12,callpoint!.getDevObject("same_color"))
+
+				vectSubs!.setItem((row_no*numcols)+6,orig_units$)
+				vectSubs!.setItem((row_no*numcols)+8,orig_cost$)
+				vectSubs!.setItem((row_no*numcols)+10,orig_ext$)
+				vectSubs!.setItem((row_no*numcols)+11,orig_wo$)
+				vectSubs!.setItem((row_no*numcols)+12,orig_date$)
+
+			endif
+		next curr_row
+	endif
+
+	SysGUI!.setRepaintEnabled(1)
 
 	return
