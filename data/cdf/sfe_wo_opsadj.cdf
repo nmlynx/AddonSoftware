@@ -1,8 +1,20 @@
 [[SFE_WO_OPSADJ.BEND]]
 rem --- Ask user if they really want to exit
 
+	vectOps! = UserObj!.getItem(num(user_tpl.vectOpsOfst$))
+	vectOrig! = callpoint!.getDevObject("vectOrig")
+escape;rem ? vectOps! vectOrig!
 	if vectOrig! <> vectOps!
-		escape
+		msg_id$="SAVE_CHANGES"
+		gosub disp_msg
+		if msg_opt$="C"
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+		if msg_opt$="Y"
+			callpoint!.setStatus("SAVE")
+			break
+		endif
 	endif
 [[SFE_WO_OPSADJ.ARAR]]
 rem --- Display Work Order Number
@@ -297,7 +309,8 @@ rem --- Add grid to store Operations, with checkboxes for user to select one or 
 :		"gridOpsRows:c(5), " +
 :		"gridOpsCtlID:c(5)," +
 :		"vectOpsOfst:c(5), " +
-:		"vectOpsMasterOfst:c(5)"
+:		"vectOpsMasterOfst:c(5), " +
+:		"vectOrigOfst:c(5)"
 
 	dim user_tpl$:user_tpl_str$
 
@@ -327,6 +340,9 @@ rem --- Add grid to store Operations, with checkboxes for user to select one or 
 
 	UserObj!.addItem(vectOpsMaster!); rem --- vector of Master Open Ops
 	user_tpl.vectOpsMasterOfst$="2"
+
+	UserObj!.addItem(vectOrig!); rem --- vector of original displayed vector
+	user_tpl.vectOrigOfst$="3"
 
 rem --- Misc other init
 
@@ -601,6 +617,10 @@ rem jpb		read record(apm01_dev, key=firm_id$+sft31a.vendor_id$, dom=*next) apm01
 	wend
 
 	vectOrig! = vectOps!
+rem escape
+
+	callpoint!.setDevObject("vectOrig",vectOrig!)
+	UserObj!.setItem(num(user_tpl.vectOrigOfst$),vectOrig!)
 
 	callpoint!.setStatus("REFRESH")
 	
