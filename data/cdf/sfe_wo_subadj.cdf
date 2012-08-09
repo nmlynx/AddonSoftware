@@ -1,18 +1,18 @@
 [[SFE_WO_SUBADJ.BEND]]
 rem --- Ask user if they really want to exit
 
-	vectOps! = UserObj!.getItem(num(user_tpl.vectOpsOfst$))
+	vectSubs! = UserObj!.getItem(num(user_tpl.vectSubsOfst$))
 	vectOrig! = UserObj!.getItem(num(user_tpl.vectOrigOfst$))
-rem escape;rem ? vectOps! vectOrig!
-	if vectOrig! <> vectOps!
+
+	if vectOrig! <> vectSubs!
 		msg_id$="SAVE_CHANGES"
-		gosub disp_msg
+		gosub disp_message
 		if msg_opt$="C"
 			callpoint!.setStatus("ABORT")
 			break
 		endif
 		if msg_opt$="Y"
-			callpoint!.setStatus("SAVE")
+			gosub save_changes
 			break
 		endif
 	endif
@@ -24,58 +24,7 @@ rem --- Display Work Order Number
 [[SFE_WO_SUBADJ.ASVA]]
 rem --- Now write the Adjutment Entry records out
 
-	vectSubs! = UserObj!.getItem(num(user_tpl.vectSubsOfst$))
-	vectSubsMaster! = UserObj!.getItem(num(user_tpl.vectSubsMasterOfst$))
-
-	sfe_subadj=fnget_dev("SFE_WOSUBADJ")
-	dim sfe_subadj$:fnget_tpl$("SFE_WOSUBADJ")
-
-	cols=num(user_tpl.gridSubsCols$)
-	mast=0
-	wo_no$=callpoint!.getDevObject("wo_no")
-	wo_loc$=callpoint!.getDevObject("wo_loc")
-
-	if vectSubs!.size()
-		for x=0 to vectSubs!.size()-1 step cols
-			tran_date$=vectSubs!.getItem(x+1)
-			if len(cvs(tran_date$,2))=10
-				tran_date$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2)
-			endif
-			tran_seq$=vectSubsMaster!.getItem(mast)
-			old_units=num(vectSubs!.getItem(x+5))
-			new_units=num(vectSubs!.getItem(x+6))
-			old_cost=num(vectSubs!.getItem(x+7))
-			new_cost=num(vectSubs!.getItem(x+8))
-			new_wo$=vectSubs!.getItem(x+11)
-			if cvs(new_wo$,2)="" new_wo$=wo_no$
-			new_date$=vectSubs!.getItem(x+12)
-			if cvs(new_date$,2)="" new_date$=tran_date$
-			if len(cvs(new_date$,2))=10
-				new_date$=new_date$(7,4)+new_date$(1,2)+new_date$(4,2)
-			endif
-			if tran_date$ <> new_date$ or
-:			   old_units <> new_units or
-:			   old_cost <> new_cost or
-:			   wo_no$ <> new_wo$
-rem --- Write entry Record
-				sfe_subadj.firm_id$=firm_id$
-				sfe_subadj.wo_location$=wo_loc$
-				sfe_subadj.wo_no$=wo_no$
-				sfe_subadj.trans_date$=tran_date$
-				sfe_subadj.trans_seq$=tran_seq$
-				sfe_subadj.new_wo_no$=new_wo$
-				sfe_subadj.new_trn_date$=new_date$
-				sfe_subadj.new_units=new_units
-				sfe_subadj.new_unit_cst=new_cost
-				sfe_subadj$=field(sfe_subadj$)
-				write record (sfe_subadj) sfe_subadj$
-			else
-rem --- Remove Entry Record
-				remove (sfe_subadj,key=firm_id$+wo_loc$+wo_no$+tran_date$+tran_seq$,dom=*next)
-			endif
-			mast=mast+1
-		next x
-	endif
+	gosub save_changes
 [[SFE_WO_SUBADJ.ASIZ]]
 rem --- Resize the grid
 
@@ -520,9 +469,7 @@ rem ==========================================================================
 
 	wend
 
-	vectOrig! = vectOps!
-rem escape
-
+	vectOrig! = vectSubs!.clone()
 	UserObj!.setItem(num(user_tpl.vectOrigOfst$),vectOrig!)
 
 	callpoint!.setStatus("REFRESH")
@@ -658,5 +605,66 @@ rem	vectsubs!       = UserObj!.getItem(num(user_tpl.vectSubsOfst$))
 	endif
 
 	SysGUI!.setRepaintEnabled(1)
+
+	return
+
+rem ==========================================================================
+save_changes:
+rem ==========================================================================
+
+rem --- Now write the Adjutment Entry records out
+
+	vectSubs! = UserObj!.getItem(num(user_tpl.vectSubsOfst$))
+	vectSubsMaster! = UserObj!.getItem(num(user_tpl.vectSubsMasterOfst$))
+
+	sfe_subadj=fnget_dev("SFE_WOSUBADJ")
+	dim sfe_subadj$:fnget_tpl$("SFE_WOSUBADJ")
+
+	cols=num(user_tpl.gridSubsCols$)
+	mast=0
+	wo_no$=callpoint!.getDevObject("wo_no")
+	wo_loc$=callpoint!.getDevObject("wo_loc")
+
+	if vectSubs!.size()
+		for x=0 to vectSubs!.size()-1 step cols
+			tran_date$=vectSubs!.getItem(x+1)
+			if len(cvs(tran_date$,2))=10
+				tran_date$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2)
+			endif
+			tran_seq$=vectSubsMaster!.getItem(mast)
+			old_units=num(vectSubs!.getItem(x+5))
+			new_units=num(vectSubs!.getItem(x+6))
+			old_cost=num(vectSubs!.getItem(x+7))
+			new_cost=num(vectSubs!.getItem(x+8))
+			new_wo$=vectSubs!.getItem(x+11)
+			if cvs(new_wo$,2)="" new_wo$=wo_no$
+			new_date$=vectSubs!.getItem(x+12)
+			if cvs(new_date$,2)="" new_date$=tran_date$
+			if len(cvs(new_date$,2))=10
+				new_date$=new_date$(7,4)+new_date$(1,2)+new_date$(4,2)
+			endif
+			if tran_date$ <> new_date$ or
+:			   old_units <> new_units or
+:			   old_cost <> new_cost or
+:			   wo_no$ <> new_wo$
+rem --- Write entry Record
+				sfe_subadj.firm_id$=firm_id$
+				sfe_subadj.wo_location$=wo_loc$
+				sfe_subadj.wo_no$=wo_no$
+				sfe_subadj.trans_date$=tran_date$
+				sfe_subadj.trans_seq$=tran_seq$
+				sfe_subadj.new_wo_no$=new_wo$
+				sfe_subadj.new_trn_date$=new_date$
+				sfe_subadj.new_units=new_units
+				sfe_subadj.new_unit_cst=new_cost
+				sfe_subadj$=field(sfe_subadj$)
+				write record (sfe_subadj) sfe_subadj$
+			else
+rem --- Remove Entry Record
+				remove (sfe_subadj,key=firm_id$+wo_loc$+wo_no$+tran_date$+tran_seq$,dom=*next)
+			endif
+			mast=mast+1
+		next x
+	endif
 
 	return

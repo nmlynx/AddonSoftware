@@ -2,17 +2,17 @@
 rem --- Ask user if they really want to exit
 
 	vectOps! = UserObj!.getItem(num(user_tpl.vectOpsOfst$))
-	vectOrig! = callpoint!.getDevObject("vectOrig")
-escape;rem ? vectOps! vectOrig!
+	vectOrig! = UserObj!.getItem(num(user_tpl.vectOrigOfst$))
+
 	if vectOrig! <> vectOps!
 		msg_id$="SAVE_CHANGES"
-		gosub disp_msg
+		gosub disp_message
 		if msg_opt$="C"
 			callpoint!.setStatus("ABORT")
 			break
 		endif
 		if msg_opt$="Y"
-			callpoint!.setStatus("SAVE")
+			gosub save_changes
 			break
 		endif
 	endif
@@ -24,70 +24,7 @@ rem --- Display Work Order Number
 [[SFE_WO_OPSADJ.ASVA]]
 rem --- Now write the Adjustment Entry records out
 
-	vectOps! = UserObj!.getItem(num(user_tpl.vectOpsOfst$))
-	vectOpsMaster! = UserObj!.getItem(num(user_tpl.vectOpsMasterOfst$))
-
-	sfe_opsadj=fnget_dev("SFE_WOOPRADJ")
-	dim sfe_opsadj$:fnget_tpl$("SFE_WOOPRADJ")
-
-	cols=num(user_tpl.gridOpsCols$)
-	mast=0
-	wo_no$=callpoint!.getDevObject("wo_no")
-	wo_loc$=callpoint!.getDevObject("wo_loc")
-
-	if vectOps!.size()
-		for x=0 to vectOps!.size()-1 step cols
-			tran_date$=vectOps!.getItem(x+1)
-			if len(cvs(tran_date$,2))=10
-				tran_date$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2)
-			endif
-			tran_seq$=vectOpsMaster!.getItem(mast)
-			old_dir_rate=num(vectOps!.getItem(x+5))
-			new_dir_rate=num(vectOps!.getItem(x+6))
-			old_ovr_rate=num(vectOps!.getItem(x+7))
-			new_ovr_rate=num(vectOps!.getItem(x+8))
-			old_set_hrs=num(vectOps!.getItem(x+9))
-			new_set_hrs=num(vectOps!.getItem(x+10))
-			old_units=num(vectOps!.getItem(x+11))
-			new_units=num(vectOps!.getItem(x+12))
-			old_qty_comp=num(vectOps!.getItem(x+15))
-			new_qty_comp=num(vectOps!.getItem(x+16))
-			new_wo$=vectOps!.getItem(x+17)
-			if cvs(new_wo$,2)="" new_wo$=wo_no$
-			new_date$=vectOps!.getItem(x+18)
-			if cvs(new_date$,2)="" new_date$=trans_date$
-			if len(cvs(new_date$,2))=10
-				new_date$=new_date$(7,4)+new_date$(1,2)+new_date$(4,2)
-			endif
-			if tran_date$<>new_date$ or
-:			   old_dir_rate<>new_dir_rate or
-:			   old_ovr_rate<>new_ovr_rate or
-:			   old_set_hrs<>new_set_hrs or
-:			   old_units<>new_units or
-:			   old_qty_comp<>new_qty_comp or
-:			   wo_no$<>new_wo$
-rem --- Write entry Record
-				sfe_opsadj.firm_id$=firm_id$
-				sfe_opsadj.wo_location$=wo_loc$
-				sfe_opsadj.wo_no$=wo_no$
-				sfe_opsadj.trans_date$=tran_date$
-				sfe_opsadj.trans_seq$=tran_seq$
-				sfe_opsadj.new_wo_no$=new_wo$
-				sfe_opsadj.new_trn_date$=new_date$
-				sfe_opsadj.new_units=new_units
-				sfe_opsadj.new_dir_rate=new_dir_rate
-				sfe_opsadj.new_ovr_rate=new_ovr_rate
-				sfe_opsadj.new_set_hrs=new_set_hrs
-				sfe_opsadj.new_qty_comp=new_qty_comp
-				sfe_opsadj$=field(sfe_opsadj$)
-				write record (sfe_opsadj) sfe_opsadj$
-			else
-rem --- Remove Entry Record
-				remove (sfe_opsadj,key=firm_id$+wo_loc$+wo_no$+tran_date$+tran_seq$,dom=*next)
-			endif
-			mast=mast+1
-		next x
-	endif
+	gosub save_changes
 [[SFE_WO_OPSADJ.ASIZ]]
 rem --- Resize the grid
 
@@ -616,10 +553,7 @@ rem jpb		read record(apm01_dev, key=firm_id$+sft31a.vendor_id$, dom=*next) apm01
 
 	wend
 
-	vectOrig! = vectOps!
-rem escape
-
-	callpoint!.setDevObject("vectOrig",vectOrig!)
+	vectOrig! = vectOps!.clone()
 	UserObj!.setItem(num(user_tpl.vectOrigOfst$),vectOrig!)
 
 	callpoint!.setStatus("REFRESH")
@@ -789,3 +723,75 @@ rem	vectOps!       = UserObj!.getItem(num(user_tpl.vectOpsOfst$))
 	SysGUI!.setRepaintEnabled(1)
 
 	return
+
+rem ==========================================================================
+save_changes:
+rem ==========================================================================
+
+rem --- Now write the Adjustment Entry records out
+
+	vectOps! = UserObj!.getItem(num(user_tpl.vectOpsOfst$))
+	vectOpsMaster! = UserObj!.getItem(num(user_tpl.vectOpsMasterOfst$))
+
+	sfe_opsadj=fnget_dev("SFE_WOOPRADJ")
+	dim sfe_opsadj$:fnget_tpl$("SFE_WOOPRADJ")
+
+	cols=num(user_tpl.gridOpsCols$)
+	mast=0
+	wo_no$=callpoint!.getDevObject("wo_no")
+	wo_loc$=callpoint!.getDevObject("wo_loc")
+
+	if vectOps!.size()
+		for x=0 to vectOps!.size()-1 step cols
+			tran_date$=vectOps!.getItem(x+1)
+			if len(cvs(tran_date$,2))=10
+				tran_date$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2)
+			endif
+			tran_seq$=vectOpsMaster!.getItem(mast)
+			old_dir_rate=num(vectOps!.getItem(x+5))
+			new_dir_rate=num(vectOps!.getItem(x+6))
+			old_ovr_rate=num(vectOps!.getItem(x+7))
+			new_ovr_rate=num(vectOps!.getItem(x+8))
+			old_set_hrs=num(vectOps!.getItem(x+9))
+			new_set_hrs=num(vectOps!.getItem(x+10))
+			old_units=num(vectOps!.getItem(x+11))
+			new_units=num(vectOps!.getItem(x+12))
+			old_qty_comp=num(vectOps!.getItem(x+15))
+			new_qty_comp=num(vectOps!.getItem(x+16))
+			new_wo$=vectOps!.getItem(x+17)
+			if cvs(new_wo$,2)="" new_wo$=wo_no$
+			new_date$=vectOps!.getItem(x+18)
+			if cvs(new_date$,2)="" new_date$=trans_date$
+			if len(cvs(new_date$,2))=10
+				new_date$=new_date$(7,4)+new_date$(1,2)+new_date$(4,2)
+			endif
+			if tran_date$<>new_date$ or
+:			   old_dir_rate<>new_dir_rate or
+:			   old_ovr_rate<>new_ovr_rate or
+:			   old_set_hrs<>new_set_hrs or
+:			   old_units<>new_units or
+:			   old_qty_comp<>new_qty_comp or
+:			   wo_no$<>new_wo$
+rem --- Write entry Record
+				sfe_opsadj.firm_id$=firm_id$
+				sfe_opsadj.wo_location$=wo_loc$
+				sfe_opsadj.wo_no$=wo_no$
+				sfe_opsadj.trans_date$=tran_date$
+				sfe_opsadj.trans_seq$=tran_seq$
+				sfe_opsadj.new_wo_no$=new_wo$
+				sfe_opsadj.new_trn_date$=new_date$
+				sfe_opsadj.new_units=new_units
+				sfe_opsadj.new_dir_rate=new_dir_rate
+				sfe_opsadj.new_ovr_rate=new_ovr_rate
+				sfe_opsadj.new_set_hrs=new_set_hrs
+				sfe_opsadj.new_qty_comp=new_qty_comp
+				sfe_opsadj$=field(sfe_opsadj$)
+				write record (sfe_opsadj) sfe_opsadj$
+			else
+rem --- Remove Entry Record
+				remove (sfe_opsadj,key=firm_id$+wo_loc$+wo_no$+tran_date$+tran_seq$,dom=*next)
+			endif
+			mast=mast+1
+		next x
+	endif
+ 	return
