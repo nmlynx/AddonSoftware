@@ -411,13 +411,13 @@ rem ==========================================================================
 	attr_ops_col$[15,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
 	attr_ops_col$[16,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ORIG_COMPLETE"
-	attr_ops_col$[16,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_COST")
+	attr_ops_col$[16,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ORIG")+" "+Translate!.getTranslation("AON_COMPLETE")
 	attr_ops_col$[16,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[16,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[16,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
 
 	attr_ops_col$[17,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_COMPLETE"
-	attr_ops_col$[17,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_COST")
+	attr_ops_col$[17,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ADJUST")+" "+Translate!.getTranslation("AON_COMPLETE")
 	attr_ops_col$[17,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
 	attr_ops_col$[17,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[17,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=m1$
@@ -480,8 +480,15 @@ create_reports_vector: rem --- Create a vector from the file to fill the grid
 rem ==========================================================================
 
 	sfe_opsadj=fnget_dev("SFE_WOOPRADJ")
-
-	call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_len
+	if callpoint!.getDevObject("pr")="Y"
+		empmast_dev=fnget_dev("PRM_EMPLMAST")
+		dim empmast$:fnget_tpl$("PRM_EMPLMAST")
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","PR","I","",emp_mask$,0,emp_len
+	else
+		empmast_dev=fnget_dev("SFM_EMPLMAST")
+		dim empmast$:fnget_tpl$("SFM_EMPLMAST")
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","I","",emp_mask$,0,emp_len
+	endif
 	more=1
 	wo_loc$=callpoint!.getDevObject("wo_loc")
 	wo_no$=callpoint!.getDevObject("wo_no")
@@ -491,8 +498,8 @@ rem ==========================================================================
 		read record (sft01_dev, end=*break) sft01a$
 		if pos(firm_id$=sft01a$)<>1 then break
 		if wo_no$<>sft01a.wo_no$ break
-rem jpb		dim apm01a$:fattr(apm01a$)
-rem jpb		read record(apm01_dev, key=firm_id$+sft31a.vendor_id$, dom=*next) apm01a$
+		dim empmast$:fattr(empmast$)
+		read record(empmast_dev, key=firm_id$+sft01a.employee_no$, dom=*next) empmast$
 		dim sfe_opsadj$:fnget_tpl$("SFE_WOOPRADJ")
 		found=0
 		while 1
@@ -505,8 +512,8 @@ rem jpb		read record(apm01_dev, key=firm_id$+sft31a.vendor_id$, dom=*next) apm01
 
 		vectOps!.addItem(""); rem 0
 		vectOps!.addItem(fndate$(sft01a.trans_date$)); rem 1
-		vectOps!.addItem(func.alphaMask(sft01a.employee_no$(1,vendor_len),m0$)); rem 2
-		vectOps!.addItem("");rem prm01a.emp_name$); rem 3
+		vectOps!.addItem(func.alphaMask(sft01a.employee_no$(1,emp_len),emp_mask$)); rem 2
+		vectOps!.addItem(cvs(empmast.empl_surname$,2)+", "+cvs(empmast.empl_givname$,2)); rem 3
 		vectOps!.addItem(sft01a.op_code$); rem 4
 		vectOps!.addItem(str(sft01a.direct_rate)); rem 5
 		if found=1
@@ -604,31 +611,31 @@ rem --- Now switch colors on all rows
 	cols=num(user_tpl.gridOpsCols$)
 	for row=1 to vectOps!.size()-1 step cols
 		change$="N"
-		if vectOps!.getItem(((row-1)/cols)*cols+5)<>vectOps!.getItem(((row-1)/cols)*cols+6)
+		if num(vectOps!.getItem(((row-1)/cols)*cols+5))<>num(vectOps!.getItem(((row-1)/cols)*cols+6))
 			gridOps!.setCellBackColor((row-1)/cols,6,callpoint!.getDevObject("diff_color"))
 			change$="Y"
 		else
 			gridOps!.setCellBackColor((row-1)/cols,6,callpoint!.getDevObject("same_color"))
 		endif
-		if vectOps!.getItem(((row-1)/cols)*cols+7)<>vectOps!.getItem(((row-1)/cols)*cols+8)
+		if num(vectOps!.getItem(((row-1)/cols)*cols+7))<>num(vectOps!.getItem(((row-1)/cols)*cols+8))
 			gridOps!.setCellBackColor((row-1)/cols,8,callpoint!.getDevObject("diff_color"))
 			change$="Y"
 		else
 			gridOps!.setCellBackColor((row-1)/cols,8,callpoint!.getDevObject("same_color"))
 		endif
-		if vectOps!.getItem(((row-1)/cols)*cols+9)<>vectOps!.getItem(((row-1)/cols)*cols+10)
+		if num(vectOps!.getItem(((row-1)/cols)*cols+9))<>num(vectOps!.getItem(((row-1)/cols)*cols+10))
 			gridOps!.setCellBackColor((row-1)/cols,10,callpoint!.getDevObject("diff_color"))
 			change$="Y"
 		else
 			gridOps!.setCellBackColor((row-1)/cols,10,callpoint!.getDevObject("same_color"))
 		endif	
-		if vectOps!.getItem(((row-1)/cols)*cols+11)<>vectOps!.getItem(((row-1)/cols)*cols+12)
+		if num(vectOps!.getItem(((row-1)/cols)*cols+11))<>num(vectOps!.getItem(((row-1)/cols)*cols+12))
 			gridOps!.setCellBackColor((row-1)/cols,12,callpoint!.getDevObject("diff_color"))
 			change$="Y"
 		else
 			gridOps!.setCellBackColor((row-1)/cols,12,callpoint!.getDevObject("same_color"))
 		endif
-		if vectOps!.getItem(((row-1)/cols)*cols+15)<>vectOps!.getItem(((row-1)/cols)*cols+16)
+		if num(vectOps!.getItem(((row-1)/cols)*cols+15))<>num(vectOps!.getItem(((row-1)/cols)*cols+16))
 			gridOps!.setCellBackColor((row-1)/cols,16,callpoint!.getDevObject("diff_color"))
 			change$="Y"
 		else

@@ -1,3 +1,5 @@
+[[SFE_WO_COST_ADJ.<CUSTOM>]]
+#include std_missing_params.src
 [[SFE_WO_COST_ADJ.ASVA]]
 rem --- Call Correct Form
 
@@ -67,7 +69,27 @@ rem --- Set Custom Query for BOM Item Number
 
 rem --- Open tables
 
-	num_files=1
+	num_files=2
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="SFE_WOMASTR",open_opts$[1]="OTA"
+	open_tables$[2]="SFS_PARAMS",open_opts$[2]="OTA"
 	gosub open_tables
+
+	sfs_params=num(open_chans$[2])
+	dim sfs_params$:open_tpls$[2]
+
+	read record(sfs_params,key=firm_id$+"SF00",dom=std_missing_params)sfs_params$
+	pr$=sfs_params.pr_interface$
+
+	num_files=1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+
+	if pr$="Y"
+		open_tables$[1]="PRM_EMPLMAST",open_opts$[1]="OTA"
+	else
+		open_tables$[1]="SFM_EMPLMAST",open_opts$[1]="OTA"
+	endif
+
+	gosub open_tables
+
+	callpoint!.setDevObject("pr",pr$)
