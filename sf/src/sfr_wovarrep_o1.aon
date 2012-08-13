@@ -256,7 +256,7 @@ label2:
         endif
 
 rem --- Calculate Standards
-goto TheSQLWay_Escape_CAJ
+rem goto TheSQLWay_Escape_CAJ
         sfreq_dev=sfe02a_dev
         dim sfreq_key$:sfe02a_key_tpl$
         dim sfreqa$:sfe02_tpls$
@@ -301,8 +301,8 @@ goto TheSQLWay_Escape_CAJ
                 endif
             endif
         wend
-		
-TheSQLWay_Escape_CAJ:		
+goto TheSQLWay_Escape_CAJ 		
+rem TheSQLWay_Escape_CAJ:		
 		Firm_ID$=sfe01a.firm_id$
 		WO_Loc$=sfe01a.wo_location$
 		dim From$[5], Thru$[5] 
@@ -324,7 +324,8 @@ TheSQLWay_Escape_CAJ:
 		a_standards[2]=read_tpl.Tot_Ovhd_Cost
 		a_standards[3]=read_tpl.STD_mat_COST
 		a_standards[4]=read_tpl.STD_Sub_COST
-		
+
+TheSQLWay_Escape_CAJ:		
 rem --- Calculate Actuals
         if sfe01a.wo_status$<>"C" or sfe01a.closed_date$>g9$ then
             tran01_dev=sft01a_dev
