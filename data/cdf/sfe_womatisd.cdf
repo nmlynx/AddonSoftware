@@ -434,14 +434,7 @@ rem --- Init DISPLAY columns
 	gosub init_display_cols
 [[SFE_WOMATISD.BGDR]]
 rem --- Init DISPLAY columns
-
-	qty_ordered=num(callpoint!.getColumnData("SFE_WOMATISD.QTY_ORDERED"))
-	tot_qty_iss=num(callpoint!.getColumnData("SFE_WOMATISD.TOT_QTY_ISS"))
-	callpoint!.setColumnData("<<DISPLAY>>.QTY_REMAIN",str(qty_ordered-tot_qty_iss),1)
-
-	qty_issued=num(callpoint!.getColumnData("SFE_WOMATISD.QTY_ISSUED"))
-	issue_cost=num(callpoint!.getColumnData("SFE_WOMATISD.ISSUE_COST"))
-	callpoint!.setColumnData("<<DISPLAY>>.VALUE",str(qty_issued*issue_cost),1)
+	gosub init_display_cols
 [[SFE_WOMATISD.AGRN]]
 rem --- Init DISPLAY columns
 	gosub init_display_cols
