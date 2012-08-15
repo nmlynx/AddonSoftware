@@ -234,7 +234,7 @@ rem --- Add grid to store Subcontracts, with checkboxes for user to select one o
 	vectSubsMaster! = BBjAPI().makeVector()
 	nxt_ctlID = util.getNextControlID()
 
-	gridSubs! = Form!.addGrid(nxt_ctlID,5,40,900,250); rem --- ID, x, y, width, height
+	gridSubs! = Form!.addGrid(nxt_ctlID,5,60,900,250); rem --- ID, x, y, width, height
 
 	user_tpl.gridSubsCtlID$ = str(nxt_ctlID)
 	user_tpl.gridSubsCols$ = "13"
@@ -259,7 +259,7 @@ rem --- Add grid to store Subcontracts, with checkboxes for user to select one o
 
 rem --- Misc other init
 
-	diff_color!=SysGUI!.makeColor(3)
+	call stbl("+DIR_SYP")+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",diff_color!,""
 	same_color!=SysGUI!.makeColor(7)
 	callpoint!.setDevObject("diff_color",diff_color!)
 	callpoint!.setDevObject("same_color",same_color!)
@@ -657,6 +657,7 @@ rem --- Write entry Record
 				sfe_subadj.new_trn_date$=new_date$
 				sfe_subadj.new_units=new_units
 				sfe_subadj.new_unit_cst=new_cost
+				sfe_subadj.batch_no$=callpoint!.getColumnData("SFE_WO_SUBADJ.BATCH_NO")
 				sfe_subadj$=field(sfe_subadj$)
 				write record (sfe_subadj) sfe_subadj$
 			else

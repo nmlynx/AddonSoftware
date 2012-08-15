@@ -1,3 +1,7 @@
+[[SFE_WO_OPSADJ.AFMC]]
+rem --- set preset val for batch_no
+
+	callpoint!.setTableColumnAttribute("SFE_WO_OPSADJ.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
 [[SFE_WO_OPSADJ.BEND]]
 rem --- Ask user if they really want to exit
 
@@ -41,6 +45,15 @@ rem This routine is executed when callbacks have been set to run a 'custom event
 rem Analyze gui_event$ and notice$ to see which control's callback triggered the event, and what kind of event it is.
 rem See basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info.
 
+rem print 'show'
+rem open (unt)"X0"
+s!=bbjAPI().getSysGui()
+e!=s!.getLastEvent()
+
+rem escape;rem ? e!.getKeyCode() and e!.isControlDown()
+rem	if last_event!.getKeyCode()=6 and last_event!.isControlDown() = true escape
+
+
 	dim gui_event$:tmpl(gui_dev)
 	dim notify_base$:noticetpl(0,0)
 	gui_event$=SysGUI!.getLastEventString()
@@ -59,6 +72,10 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 	curr_row = dec(notice.row$);rem 0 based
 	curr_col = dec(notice.col$);rem 0 based
 	grid_ctx=gridOps!.getContextID()
+
+rem if curr_col=17 escape; rem print e!.getKeyCode()
+rem escape;rem ? e!.getKeyCode() and e!.isControlDown()
+rem	if last_event!.getKeyCode()=6 and last_event!.isControlDown() = true escape
 
 	switch notice.code
 
@@ -257,7 +274,7 @@ rem --- Add grid to store Operations, with checkboxes for user to select one or 
 	vectOpsMaster! = BBjAPI().makeVector()
 	nxt_ctlID = util.getNextControlID()
 
-	gridOps! = Form!.addGrid(nxt_ctlID,5,40,1500,250); rem --- ID, x, y, width, height, flags
+	gridOps! = Form!.addGrid(nxt_ctlID,5,60,1500,250); rem --- ID, x, y, width, height, flags
 	gridOps!.setHorizontalScrollBarAlways(1)
 
 	user_tpl.gridOpsCtlID$ = str(nxt_ctlID)
@@ -283,7 +300,7 @@ rem --- Add grid to store Operations, with checkboxes for user to select one or 
 
 rem --- Misc other init
 
-	diff_color!=SysGUI!.makeColor(3)
+	call stbl("+DIR_SYP")+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",diff_color!,""
 	same_color!=SysGUI!.makeColor(7)
 	callpoint!.setDevObject("diff_color",diff_color!)
 	callpoint!.setDevObject("same_color",same_color!)
@@ -792,6 +809,7 @@ rem --- Write entry Record
 				sfe_opsadj.new_ovr_rate=new_ovr_rate
 				sfe_opsadj.new_set_hrs=new_set_hrs
 				sfe_opsadj.new_qty_comp=new_qty_comp
+				sfe_opsadj.batch_no$=callpoint!.getColumnData("SFE_WO_OPSADJ.BATCH_NO")
 				sfe_opsadj$=field(sfe_opsadj$)
 				write record (sfe_opsadj) sfe_opsadj$
 			else

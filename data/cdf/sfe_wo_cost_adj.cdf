@@ -1,3 +1,30 @@
+[[SFE_WO_COST_ADJ.BEND]]
+rem --- remove software lock on batch, if batching
+
+    batch$=stbl("+BATCH_NO",err=*next)
+    if num(batch$)<>0
+        lock_table$="ADM_PROCBATCHES"
+        lock_record$=firm_id$+stbl("+PROCESS_ID")+batch$
+        lock_type$="X"
+        lock_status$=""
+        lock_disp$=""
+        call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+    endif
+
+rem --- remove soft lock on Work Order
+
+        lock_table$="SFE_WOMASTR"
+        lock_record$=firm_id$+callpoint!.getColumnData("SFE_WO_COST_ADJ.WO_NO")
+        lock_type$="X"
+        lock_status$=""
+        lock_disp$=""
+        call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+[[SFE_WO_COST_ADJ.BFMC]]
+rem --- Get Batch information
+
+call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]
+callpoint!.setTableColumnAttribute("SFE_WO_COST_ADJ.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
+
 [[SFE_WO_COST_ADJ.<CUSTOM>]]
 #include std_missing_params.src
 [[SFE_WO_COST_ADJ.ASVA]]
@@ -52,6 +79,53 @@ rem --- Fill form
 			break
 		endif
 
+rem --- Soft lock the Work Order
+
+		lock_table$="SFE_WOMASTR"
+		lock_record$=firm_id$+wo_no$
+		lock_type$="S"
+		lock_status$=""
+		lock_disp$="M"
+		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+		if lock_status$<>""
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+
+rem --- check to see if recs exist for a different batch
+
+		found$=""
+		adj_dev=fnget_dev("SFE_WOOPRADJ")
+		dim adj_tpl$:fnget_tpl$("SFE_WOOPRADJ")
+		while 1
+			read (adj_dev,key=firm_id$+adj_tpl.wo_location$+wo_no$,dom=*next)
+			read record(adj_dev,end=*break) adj_tpl$
+			if adj_tpl.batch_no$<>callpoint!.getColumnData("SFE_WO_COST_ADJ.BATCH_NO")
+				found$=adj_tpl.batch_no$
+			endif
+			break
+		wend
+		adj_dev=fnget_dev("SFE_WOSUBADJ")
+		dim adj_tpl$:fnget_tpl$("SFE_WOSUBADJ")
+		while 1
+			read (adj_dev,key=firm_id$+adj_tpl.wo_location$+wo_no$,dom=*next)
+			read record(adj_dev,end=*break) adj_tpl$
+			if adj_tpl.batch_no$<>callpoint!.getColumnData("SFE_WO_COST_ADJ.BATCH_NO")
+				found$=adj_tpl.batch_no$
+			endif
+			break
+		wend
+		if found$<>""
+			msg_id$="SF_ADJ_ANOTHERBATCH"
+			dim msg_tokens$[1]
+			msg_tokens$[1]=found$
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+
+rem --- passed all tests - go ahead and show the info
+
 		callpoint!.setColumnData("<<DISPLAY>>.WO_CATEGORY",sfe_womast.wo_category$,1)
 		callpoint!.setColumnData("<<DISPLAY>>.WO_STATUS",sfe_womast.wo_status$,1)
 		callpoint!.setColumnData("<<DISPLAY>>.WO_TYPE",sfe_womast.wo_type$,1)
@@ -69,10 +143,12 @@ rem --- Set Custom Query for BOM Item Number
 
 rem --- Open tables
 
-	num_files=2
+	num_files=4
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="SFE_WOMASTR",open_opts$[1]="OTA"
 	open_tables$[2]="SFS_PARAMS",open_opts$[2]="OTA"
+	open_tables$[3]="SFE_WOOPRADJ",open_opts$[3]="OTA"
+	open_tables$[4]="SFE_WOSUBADJ",open_opts$[4]="OTA"
 	gosub open_tables
 
 	sfs_params=num(open_chans$[2])
@@ -93,3 +169,12 @@ rem --- Open tables
 	gosub open_tables
 
 	callpoint!.setDevObject("pr",pr$)
+
+rem --- Additional Init
+
+	gl$="N"
+	status=0
+	source$=pgm(-2)
+	call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"AP",glw11$,gl$,status
+	if status<>0 goto std_exit
+rem	user_tpl.glint$=gl$
