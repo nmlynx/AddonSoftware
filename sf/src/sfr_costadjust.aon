@@ -58,8 +58,8 @@ rem --- Open/Lock files
     open_tables$[12]="SFS_PARAMS",open_opts$[12]="OTA"
     open_tables$[13]="SFT_OPNOPRTR",open_opts$[13]="OTA"
     open_tables$[14]="SFT_OPNSUBTR",open_opts$[14]="OTA"
-    open_tables$[15]="SFW_COSTADJT",open_opts$[15]="OTAI"
-    open_tables$[16]="SFW_ADJXTYPE",open_opts$[16]="OTAI"
+    open_tables$[15]="SFW_COSTADJT",open_opts$[15]="OTA"
+    open_tables$[16]="SFW_ADJXTYPE",open_opts$[16]="OTA"
 
 	gosub open_tables
 
@@ -150,9 +150,11 @@ rem --- Initializations
     h=0
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
+	if num(batch_no$)<>0 headings$[1]=headings$[1]+" (Batch: "+batch_no$+")"
     l9=59
     l=l9+1
     p8$=""
+	width=80
     when$=sysinfo.system_date$
     headings=1
     errors=0
@@ -218,6 +220,11 @@ rem --- Clear trans for this firm/process/batch from glw-11 work file (if not ba
 		call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",glw11_dev,rec_pfx$,status
 	endif
 
+rem --- Clear Work files
+
+	call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",glw11_dev,firm_id$+batch_no$,status
+	call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",glw11_dev,firm_id$+batch_no$,status
+
 rem --- Run Report?
 
 	msg_id$="AON_RUN_QUERY"
@@ -248,7 +255,7 @@ rem ---  column heading
 	columns$[10,0]=Translate!.getTranslation("AON_UNIT^COST"),        columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m1$
 	columns$[11,0]=Translate!.getTranslation("AON_SETUP^HRS"),        columns$[11,1]="N",columns$[11,2]="10",columns$[11,3]=m2$
 	columns$[12,0]=Translate!.getTranslation("AON_UNITS"),        columns$[12,1]="N",columns$[12,2]="10",columns$[12,3]=m2$
-	columns$[13,0]=Translate!.getTranslation("AON_EXTENSION"),        columns$[13,1]="N",columns$[13,2]="10",columns$[13,3]=m1$,columns$[13,4]="T"
+	columns$[13,0]=Translate!.getTranslation("AON_EXTENSION"),        columns$[13,1]="N",columns$[13,2]="10",columns$[13,3]=m1$,columns$[13,10]="T"
 	columns$[14,0]=Translate!.getTranslation("AON_NEW_WO^ADJ_DATE"),        columns$[14,1]="C",columns$[14,2]="10";rem jpb - need translation
 
 rem --- Create Report Sort File
@@ -258,10 +265,10 @@ rem --- Create Report Sort File
 	dim woadj$:fattr(woe12a$)
 
 	while 1
-		read (woadj_dev,key=firm_id$,dom=*next)
+		read (woadj_dev,key=firm_id$+batch_no$,knum="BATCH_KEY",dom=*next)
 		while 1
 			k$=key(woadj_dev,end=*break)
-			if pos(firm_id$=k$)<>1 break
+			if pos(firm_id$+batch_no$=k$)<>1 break
 			read record(woadj_dev,key=k$) woadj$
 			wow08a.firm_id$=firm_id$
 			wow08a.wo_location$=woadj.wo_location$
@@ -273,8 +280,10 @@ rem --- Create Report Sort File
 				wow08a.record_id$="S"
 			endif
 			wow08a.trans_seq$=woadj.trans_seq$
+			wow08a.batch_no$=batch_no$
 			wow08a$=field(wow08a$)
 			write record (wow08_dev) wow08a$
+			recs=recs+1
 			call pgmdir$+"adc_progress.aon","S","","","",wow08a$,0,0,1,0,ignore_status
 		wend
 		if woadj_dev=woe42_dev
@@ -291,18 +300,18 @@ rem --- Create Report Sort File
 
 rem --- Init Read
 
-	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFW_COSTADJT","PRIMARY",wow08_key$,rd_table_chans$[all],rd_status$
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFW_COSTADJT","BATCH_KEY",wow08_key$,rd_table_chans$[all],rd_status$
 	dim wow08_key$:wow08_key$
-    read (wow08_dev,key=firm_id$,dom=*next)
+    read (wow08_dev,key=firm_id$+batch_no$,knum="BATCH_KEY",dom=*next)
 
 rem --- Main Read
 
 	while 1
 		wow08_key$=key(wow08_dev,end=*break)
-		if pos(firm_id$=wow08_key$)<>1 break
+		if pos(firm_id$+batch_no$=wow08_key$)<>1 break
 		read record (wow08_dev,key=wow08_key$) wow08a$
-		if wow08a.record_id$="O" read record (woe12_dev,key=firm_id$+wow08_key.wo_location$+wow08_key.wo_no$+wow08_key.trans_date$+wow08_key.trans_seq$) woe12a$
-		if wow08a.record_id$="S" read record (woe42_dev,key=firm_id$+wow08_key.wo_location$+wow08_key.wo_no$+wow08_key.trans_date$+wow08_key.trans_seq$) woe42a$
+		if wow08a.record_id$="O" read record (woe12_dev,key=firm_id$+wow08_key.wo_location$+wow08_key.wo_no$+wow08_key.trans_date$+wow08_key.trans_seq$,knum="PRIMARY") woe12a$
+		if wow08a.record_id$="S" read record (woe42_dev,key=firm_id$+wow08_key.wo_location$+wow08_key.wo_no$+wow08_key.trans_date$+wow08_key.trans_seq$,knum="PRIMARY") woe42a$
 		call pgmdir$+"adc_progress.aon","S","","","",k$,0,0,1,0,ignore_status
 
 rem --- W/O Header
@@ -522,6 +531,7 @@ rem --- Post Original Dates
 			wow06a.net_adjust=wow06a.net_adjust-wot31a.ext_cost
 		endif
 		if woe01a.wo_type$<>woe01b.wo_type$ or trans_date$=new_trans_date$
+			wow06a.batch_no$=batch_no$
 			wow06a$=field(wow06a$)
 			write record (wow06_dev) wow06a$
 
@@ -540,6 +550,7 @@ rem --- Adjusted Dates
 			wow06a.unit_cost=wow06a.unit_cost+woe42a.new_unit_cst*woe42a.new_units
 			wow06a.net_adjust=wow06a.net_adjust+woe42a.new_unit_cst*woe42a.new_units
 		endif
+		wow06a.batch_no$=batch_no$
 		wow06a$=field(wow06a$)
 		write record (wow06_dev) wow06a$
 
@@ -627,74 +638,22 @@ rem --- Loop back for next record
 
 rem --- End
 
-goto std_exit;rem jpb - not really, but good for now...
-    print (printer_dev)@(124-m1),j$(1,m1-1),'lf',@(37),Translate!.getTranslation("AON_REPORT_TOTAL:_"),@(124-m1),t0:m1$
+	if recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+	endif
 
-rem --- Totals By Type
-rem jpb new report?
-
-    l=l9+5
-    dim t[3],u[3]
-    read (wow06_dev,key=firm_id$,dom=*next)
-l4200:
-    read record (wow06_dev,end=l4400) wow06a$
-    if pos(firm_id$=w0$)<>1 goto l4400
-    if w0$(3,3)<>t0$ gosub l6000
-    dim x0$(39),x1$(110)
-    find record (wom10_dev,key=firm_id$+"A"+w0$(6),dom=*next) wom10a3$
-    if l>l9 gosub l5200
-    print (printer_dev)w0$(6),"  ",x0$(6,20),@(30),w[0]:m1$,w[1]:m1$,w[2]:m1$,w[3]:m1$
-    for x=0 to 3; let t[x]=t[x]+w[x],u[x]=u[x]+w[x]; next x
-    l0=l0+1
-    goto l4200
-l4400:
-    if l+2>l9 gosub l5000
-    t9$="E"
-    gosub l6000
-    if l>l9 gosub l5200
-    print (printer_dev)@(30),j$(1,m1*4)
-    print (printer_dev)@(3),Translate!.getTranslation("AON_REPORT_TOTALS:_"),@(30),u[0]:m1$,u[1]:m1$,u[2]:m1$,u[3]:m1$
-
-    update$="sfu_ga.bbx"
-    page=h
-    f0$=termf0$
-    if gl$="Y" run pgmdir$+"glr_xa.aon"
-    run update$
+	totVect!.addItem(str(outVect!.size()/(columns+1)))
+	xvk=fnblank(6)
+	outVect!.addItem("Report Total")
+	xvk=fnblank(6)
+	outVect!.addItem(str(t0))
+	outVect!.addItem("")
 	
-l5000:
-    report_heading:rem " --- Heading"
-
-    return
-
-l5200: rem --- Dates Here
-
-    let o9=1                                                  
-    if l>l9 gosub l5000
-    print (printer_dev)Translate!.getTranslation("AON_***_WORK_ORDER_ADJUSTMENT_SUMMARY_BY_TYPE_***"),'lf'
-    print (printer_dev)@(30+m1-7),Translate!.getTranslation("AON_DIRECT"),@(30+m1*2-9),Translate!.getTranslation("AON_OVERHEAD"),@(30+m1*3-5),Translate!.getTranslation("AON_SUBS")
-    print (printer_dev)@(30+m1-6),Translate!.getTranslation("AON_LABOR"),@(30+m1*2-6),Translate!.getTranslation("AON_LABOR"),@(30+m1*3-7),Translate!.getTranslation("AON_AMOUNT"),@(30+m1*4-6),Translate!.getTranslation("AON_TOTAL"),'lf'
-    return                                                  
-
-l5300: rem --- Date Subheading
-
-    if l>l9 gosub l5200
-    print (printer_dev)Translate!.getTranslation("AON_TRANSACTION_DATE:_"),fndate$(t0$),":",'lf'
-    let l=l+2                                                  
-    return                                                  
-
-rem --- First Sub Total
-l6000:
-    if t0$="" goto l6100
-    if l0=0 goto l6100
-    print (printer_dev)@(30),j$(1,m1*4)
-    print (printer_dev)fndate$(t0$),Translate!.getTranslation("AON__TOTAL:_"),@(30),t[0]:m1$,t[1]:m1$,t[2]:m1$,t[3]:m1$,'lf'
-    let l=l+3                                                  
-l6100:
-    if t9$<>"" return
-    dim t[3]                                                  
-    let t0$=w0$(3,3),l0=0
-    gosub l5300                                                  
-    return                                                  
+	next_overlay$="sfr_costadjust_o1.aon"
+	goto std_exit
+	
 rem --- Special G/L Recap Routine
 glrecap:                                                  
     if gl$="Y"
@@ -895,7 +854,7 @@ std_exit_no_update:
         lock_status$=""
         call stbl("+DIR_SYP")+"bac_lock_record.bbj","ADM_PROCBATCHES",unlock_key$,"X","",rd_table_chan,rd_table_chans$[all],lock_status$
     endif
-	
+
 std_exit: rem --- Standard program end (01Mar2006)
 
 	call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
