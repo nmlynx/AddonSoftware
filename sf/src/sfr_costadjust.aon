@@ -42,62 +42,56 @@ rem --- see if batching
 
 rem --- Open/Lock files
 
-    num_files=16
+    num_files=14
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="APM_VENDMAST",open_opts$[1]="OTA"
-    open_tables$[2]="GLM_ACCT",open_opts$[2]="OTA"
-    open_tables$[3]="GLS_PARAMS",open_opts$[3]="OTA"
-    open_tables$[4]="GLT_BANKCHECKS",open_opts$[4]="OTA"
-    open_tables$[5]="GLW_DAILYDETAIL",open_opts$[5]="OTA"
-    open_tables$[6]="IVM_ITEMMAST",open_opts$[6]="OTA"
-    open_tables$[7]="IVS_PARAMS",open_opts$[7]="OTA"
-    open_tables$[8]="SFE_WOMASTR",open_opts$[8]="OTA"
-    open_tables$[9]="SFE_WOOPRADJ",open_opts$[9]="OTAL"
-    open_tables$[10]="SFE_WOSUBADJ",open_opts$[10]="OTAL"
-    open_tables$[11]="SFC_WOTYPECD",open_opts$[11]="OTA"
-    open_tables$[12]="SFS_PARAMS",open_opts$[12]="OTA"
-    open_tables$[13]="SFT_OPNOPRTR",open_opts$[13]="OTA"
-    open_tables$[14]="SFT_OPNSUBTR",open_opts$[14]="OTA"
-    open_tables$[15]="SFW_COSTADJT",open_opts$[15]="OTA"
-    open_tables$[16]="SFW_ADJXTYPE",open_opts$[16]="OTA"
+    open_tables$[2]="GLS_PARAMS",open_opts$[2]="OTA"
+    open_tables$[3]="GLT_BANKCHECKS",open_opts$[3]="OTA"
+    open_tables$[4]="IVM_ITEMMAST",open_opts$[4]="OTA"
+    open_tables$[5]="IVS_PARAMS",open_opts$[5]="OTA"
+    open_tables$[6]="SFE_WOMASTR",open_opts$[6]="OTA"
+    open_tables$[7]="SFE_WOOPRADJ",open_opts$[7]="OTAL"
+    open_tables$[8]="SFE_WOSUBADJ",open_opts$[8]="OTAL"
+    open_tables$[9]="SFC_WOTYPECD",open_opts$[9]="OTA"
+    open_tables$[10]="SFS_PARAMS",open_opts$[10]="OTA"
+    open_tables$[11]="SFT_OPNOPRTR",open_opts$[11]="OTA"
+    open_tables$[12]="SFT_OPNSUBTR",open_opts$[12]="OTA"
+    open_tables$[13]="SFW_COSTADJT",open_opts$[13]="OTA"
+    open_tables$[14]="SFW_ADJXTYPE",open_opts$[14]="OTA"
 
 	gosub open_tables
 
     apm01_dev=num(open_chans$[1])
-    glm01_dev=num(open_chans$[2])
-    gls01_dev=num(open_chans$[3])
-    glt05_dev=num(open_chans$[4])
-    glw11_dev=num(open_chans$[5])
-    ivm01_dev=num(open_chans$[6])
-    ivs01_dev=num(open_chans$[7])
-    woe01_dev=num(open_chans$[8])
-    woe12_dev=num(open_chans$[9])
-    woe42_dev=num(open_chans$[10])
-    wom10_dev=num(open_chans$[11])
-    sfs01_dev=num(open_chans$[12])
-    wot01_dev=num(open_chans$[13])
-    wot31_dev=num(open_chans$[14])
-	wow08_dev=num(open_chans$[15])
-	wow06_dev=num(open_chans$[16])
+    gls01_dev=num(open_chans$[2])
+    glt05_dev=num(open_chans$[3])
+    ivm01_dev=num(open_chans$[4])
+    ivs01_dev=num(open_chans$[5])
+    woe01_dev=num(open_chans$[6])
+    woe12_dev=num(open_chans$[7])
+    woe42_dev=num(open_chans$[8])
+    wom10_dev=num(open_chans$[9])
+    sfs01_dev=num(open_chans$[10])
+    wot01_dev=num(open_chans$[11])
+    wot31_dev=num(open_chans$[12])
+	wow08_dev=num(open_chans$[13])
+	wow06_dev=num(open_chans$[14])
 
 rem --- Dimension string templates
 
     dim apm01a$:open_tpls$[1]
-	dim glm01a$:open_tpls$[2]
-	dim gls01a$:open_tpls$[3]
-	dim glt05a$:open_tpls$[4]
-	dim glw11a$:open_tpls$[5]
-	dim ivm01a$:open_tpls$[6]
-	dim ivs01a$:open_tpls$[7]
-	dim woe01a$:open_tpls$[8]
-	dim woe12a$:open_tpls$[9]
-	dim woe42a$:open_tpls$[10]
-	dim wom10a$:open_tpls$[11]
-	dim sfs01a$:open_tpls$[12]
-	dim wot01a$:open_tpls$[13]
-	dim wot31a$:open_tpls$[14]
-	dim wow08a$:open_tpls$[15]
-	dim wow06a$:open_tpls$[16]
+	dim gls01a$:open_tpls$[2]
+	dim glt05a$:open_tpls$[3]
+	dim ivm01a$:open_tpls$[4]
+	dim ivs01a$:open_tpls$[5]
+	dim woe01a$:open_tpls$[6]
+	dim woe12a$:open_tpls$[7]
+	dim woe42a$:open_tpls$[8]
+	dim wom10a$:open_tpls$[9]
+	dim sfs01a$:open_tpls$[10]
+	dim wot01a$:open_tpls$[11]
+	dim wot31a$:open_tpls$[12]
+	dim wow08a$:open_tpls$[13]
+	dim wow06a$:open_tpls$[14]
 
 rem --- Retrieve parameter records
 
@@ -219,11 +213,6 @@ rem --- Clear trans for this firm/process/batch from glw-11 work file (if not ba
 		rec_pfx$=firm_id$+process_id$+batch_no$
 		call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",glw11_dev,rec_pfx$,status
 	endif
-
-rem --- Clear Work files
-
-	call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",glw11_dev,firm_id$+batch_no$,status
-	call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",glw11_dev,firm_id$+batch_no$,status
 
 rem --- Run Report?
 

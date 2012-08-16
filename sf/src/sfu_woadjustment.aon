@@ -37,27 +37,16 @@ rem --- Get user approval to update
     gosub disp_message
     if msg_opt$<>"Y" then goto std_exit_no_update
 escape;rem not ready to update yet. jpb
+
 rem --- Open/Lock files
 
-	files=13,begfile=1,endfile=files
-        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-
-        files$[3]="glt-04",ids$[3]="GLE_DAILYDETAIL"
-        files$[7]="sfe-42",ids$[7]="SFE_WOSUBADJ"
 REM remove references to this file                files$[8]="sfm-07",ids$[8]="SFX_WOTRANXR"; rem --- SFX_WOTRANXR (sfm-07) has been replaced by a database view vw_sfx_wotranxr
 
-    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-        if status goto std_exit
-
-        glt04_dev=channels[3]
-        sfe42_dev=channels[7]
 REM remove references to this file         sfm07_dev=channels[8]; rem --- SFX_WOTRANXR (sfm-07) has been replaced by a database view vw_sfx_wotranxr
 
 rem --- Dimension string templates
 
-    dim glt04a$:templates$[3],
-:       sfe42a$:templates$[7],sfm07a$:templates$[8]
+rem :       sfm07a$:templates$[8]
 
 rem --- Retrieve parameter records
 
@@ -80,7 +69,6 @@ rem --- Init Data
 	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNOPRTR","PRIMARY",wot01_key_tpl$,rd_table_chans$[all],status$
 	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNSUBTR","PRIMARY",wot31_key_tpl$,rd_table_chans$[all],status$
 
-rem --- Additional File Opens
 rem --- Assign Adjustment and Transaction Channels
 
 	sfadj_dev=woe12_dev
@@ -100,14 +88,15 @@ rem --- Assign Adjustment and Transaction Channels
 	field_w6=sftran.setup_time
 
     if gl$="Y"
-        files$[8]="glm-01"
-        files$[9]="glt-04"
-        call pgmdir$+"adc_fileopen.aon",1,8,10,files$[all],options$[all],
-:                                   ids$[all],templates$[all],channels[all],batch,status
-        if status then goto std_exit
-        glm01_dev=channels[8]
-        glt04_dev=channels[9]
-    endif
+		files=1
+		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+		open_tables$[1]="GLE_DAILYDETAIL",open_opts$="OTA"
+
+		gosub open_tables
+
+		glt04_dev=channels[1]
+		dim glt04a$:templates$[1]
+	endif
 
 	call pgmdir$+"adc_progress.aon","N","","","","",0,sfadj_dev,1,meter_num,ignore_status
 
@@ -330,9 +319,9 @@ remove_record: rem --- Remove Record
         wend
 done: rem --- Overlay
 
-        if sfadj_dev<>sfe42_dev then break
-        sfadj_dev=sfe42_dev
-        dim sfadja$:templates$[5]
+        if sfadj_dev<>woe42_dev then break
+        sfadj_dev=woe42_dev
+        dim sfadja$:fattr(woe42a$)
         field_a1=sfadja.new_unit_cst
         field_a2=sfadja.reserved_num_1
         field_a3=sfadja.reserved_num_2
@@ -361,6 +350,30 @@ glpost:
         call pgmdir$+"glc_glpost.aon",glm01_dev,glt04_dev,glt14_dev,account$,when$,ref1$,ref2$,ref3$,memo$,amount,units,status
         precision 4
     endif
+    return
+
+open_tables:rem --- Open Tables
+
+    call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:       open_beg,
+:       open_end,
+:       open_tables$[all],
+:       open_opts$[all],
+:       open_chans$[all],
+:       open_tpls$[all],
+:       rd_table_chans$[all],
+:       open_batch,
+:       open_status$
+
+    if open_status$<>"" then
+        msg_id$="ENTRY_OPEN_ERROR"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=open_status$
+        gosub disp_message
+        rdFuncSpace!=bbjAPI().getGroupNamespace().setValue("+build_task","OFF")
+        release
+    endif
+
     return
 
 disp_message: rem --- Display Message Dialog
