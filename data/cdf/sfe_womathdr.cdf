@@ -1,3 +1,10 @@
+[[SFE_WOMATHDR.ARAR]]
+rem -- Build starting rowQtyMap!
+	gosub build_rowQtyMap
+	callpoint!.setDevObject("start_rowQtyMap",rowQtyMap!)
+[[SFE_WOMATHDR.AREC]]
+rem -- Provide initial empty starting rowQtyMap!
+	callpoint!.setDevObject("start_rowQtyMap", new java.util.HashMap())
 [[SFE_WOMATHDR.BPFX]]
 rem -- Verify WO status
 	gosub verify_wo_status
@@ -144,6 +151,10 @@ rem --- so can display new detail in grid.
 
         rem --- Display grid with new detail.
 	callpoint!.setStatus("REFGRID")
+
+rem -- Build starting rowQtyMap!
+	gosub build_rowQtyMap
+	callpoint!.setDevObject("start_rowQtyMap",rowQtyMap!)
 [[SFE_WOMATHDR.ADIS]]
 rem --- Init <<DISPLAY>> fields
 	sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
@@ -169,8 +180,7 @@ rem --- Existing materials issues?
 		break
 	endif
 
-rem wgh ... stopped here
-rem wgh ... focus needs to move to the grid
+rem ... focus needs to move to the grid re Barista bug 6299
 [[SFE_WOMATHDR.<CUSTOM>]]
 #include std_missing_params.src
 
@@ -191,7 +201,28 @@ verify_wo_status: rem -- Verify WO status
 		callpoint!.setStatus("NEWREC")
 		bad_wo=1
 	endif
+	return
 
+rem ==========================================================================
+build_rowQtyMap: rem --- Build rowQtyMap!
+rem --- The rowQtyMap! is keyed by sfe_womatdtl.internal_seq_no$ and holds sfe_womatdtl.qty_ordered.
+rem --- It is used to determine if any qty_ordered is different than when entry started, and thus maybe requiring reprint
+rem --- of the pick list. A simple flag does not work for this since the qty_ordered could be changed multiple times, and
+rem --- ending up back where it originally started.
+rem --- output: rowQtyMap!
+rem ==========================================================================
+	rowQtyMap!=new java.util.HashMap()
+	sfe_womatdtl_dev=fnget_dev("SFE_WOMATDTL")
+	dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
+
+	firm_loc_wo$=firm_id$+callpoint!.getColumnData("SFE_WOMATHDR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMATHDR.WO_NO")
+	read(sfe_womatdtl_dev,key=firm_loc_wo$,dom=*next)
+	while 1
+		sfe_womatdtl_key$=key(sfe_womatdtl_dev,end=*break)
+		if pos(firm_loc_wo$=sfe_womatdtl_key$)<>1 then break
+		readrecord(sfe_womatdtl_dev)sfe_womatdtl$
+		rowQtyMap!.put(sfe_womatdtl.internal_seq_no$, sfe_womatdtl.qty_ordered)
+	wend
 	return
 [[SFE_WOMATHDR.BSHO]]
 rem --- Open Files
@@ -239,3 +270,6 @@ rem --- Additional file opens
 
 		ivm_lsmaster_dev=num(open_chans$[1]),ivm_lsmaster_tpl$=open_tpls$[1]
 	endif
+
+rem -- Provide initial empty starting rowQtyMap!
+	callpoint!.setDevObject("start_rowQtyMap", new java.util.HashMap())

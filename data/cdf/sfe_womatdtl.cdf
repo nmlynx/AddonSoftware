@@ -1,6 +1,11 @@
 [[SFE_WOMATDTL.BDGX]]
+rem -- Get starting and ending rowQtyMap!s
+	start_rowQtyMap!=callpoint!.getDevObject("start_rowQtyMap")
+	gosub build_rowQtyMap
+	end_rowQtyMap!=rowQtyMap!
+
 rem --- May want to reprint pick list if commitments changed
-	if num(callpoint!.getDevObject("commit_changed")) then
+	if !start_rowQtyMap!.equals(end_rowQtyMap!) then
 		rem --- Don't need to reprint pick list if have work order commit transaction
 		sfe_wocommit_dev=fnget_dev("SFE_WOCOMMIT")
 		dim sfe_wocommit$:fnget_tpl$("SFE_WOCOMMIT")
@@ -71,14 +76,10 @@ rem  --- Update committed quantity
 		refs[0]=qty_ordered-start_qty_ordered
 		action$="CO"
 	else
-		refs[0]=start_qty_ordered-qty_ordered
+		refs[0]=start_qty_ordered-qty_ordered; rem --- already prevent qty_ordered from being less than tot_qty_iss
 		action$="UC"
 	endif
 	call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-
-rem --- Commitment changed so may want to reprint pick list
-	callpoint!.setDevObject("commit_changed",1)
-rem wgh ... this is too simple, because could make a second change back to original qty_ordered which wouldn't need reprint
 [[SFE_WOMATDTL.AGRN]]
 rem --- Init DISPLAY columns
 	gosub init_display_cols
@@ -97,42 +98,95 @@ init_display_cols: rem --- Init DISPLAY columns
 	callpoint!.setColumnData("<<DISPLAY>>.QTY_AVAILABLE",str(ivm_itemwhse.qty_on_hand-ivm_itemwhse.qty_commit),1)
 	callpoint!.setColumnData("<<DISPLAY>>.QTY_ON_ORDER",str(ivm_itemwhse.qty_on_order),1)
 	return
+
+rem ==========================================================================
+build_rowQtyMap: rem --- Build rowQtyMap!
+rem --- The rowQtyMap! is keyed by sfe_womatdtl.internal_seq_no$ and holds sfe_womatdtl.qty_ordered.
+rem --- It is used to determine if any qty_ordered is different than when entry started, and thus maybe requiring reprint
+rem --- of the pick list. A simple flag does not work for this since the qty_ordered could be changed multiple times, and
+rem --- ending up back where it originally started.
+rem --- output: rowQtyMap!
+rem ==========================================================================
+	rowQtyMap!=new java.util.HashMap()
+	sfe_womatdtl_dev=fnget_dev("SFE_WOMATDTL")
+	dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
+
+	firm_loc_wo$=firm_id$+callpoint!.getHeaderColumnData("SFE_WOMATHDR.WO_LOCATION")+callpoint!.getHeaderColumnData("SFE_WOMATHDR.WO_NO")
+	read(sfe_womatdtl_dev,key=firm_loc_wo$,dom=*next)
+	while 1
+		sfe_womatdtl_key$=key(sfe_womatdtl_dev,end=*break)
+		if pos(firm_loc_wo$=sfe_womatdtl_key$)<>1 then break
+		readrecord(sfe_womatdtl_dev)sfe_womatdtl$
+		rowQtyMap!.put(sfe_womatdtl.internal_seq_no$, sfe_womatdtl.qty_ordered)
+	wend
+	return
 [[SFE_WOMATDTL.AGDR]]
 rem --- Init DISPLAY columns
 	gosub init_display_cols
 [[SFE_WOMATDTL.ADGE]]
 rem --- Set precision
 	precision num(callpoint!.getDevObject("precision"))
-
-rem --- May want to reprint pick list if commitments changed
-	callpoint!.setDevObject("commit_changed",0)
 [[SFE_WOMATDTL.AUDE]]
-rem wgh ... undelete ???
+rem --- Make sure undeleted row gets written to file
+	callpoint!.setStatus("MODIFIED")
+
+rem --- It is "safer" to use qty_ordered from what was restored to disk rather than the grid row
+rem --- even though they "should" be the same. 
+rem --- Was record written?
+	sfe_womatdtl_dev=fnget_dev("SFE_WOMATDTL")
+	dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
+	sfe_womatdtl_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATDTL.WO_LOCATION")+
+:		callpoint!.getColumnData("SFE_WOMATDTL.WO_NO")+callpoint!.getColumnData("SFE_WOMATDTL.MATERIAL_SEQ")
+	found=0
+	readrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,knum="AO_DISP_SEQ",dom=*next)sfe_womatdtl$; found=1
+	if !found then
+		rem --- Record not written yet, so don't uncommit inventory
+		break
+	endif
+
+rem --- Initialize inventory item update
+	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+rem  --- Update committed quantity
+	items$[1]=sfe_womatdtl.warehouse_id$
+	items$[2]=sfe_womatdtl.item_id$
+	refs[0]=sfe_womatdtl.qty_ordered-sfe_womatdtl.tot_qty_iss
+	call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+rem --- Init DISPLAY columns
+	gosub init_display_cols
 [[SFE_WOMATDTL.BDEL]]
-rem wgh ... stopped here
-rem wgh ... 3700 REM " --- Delete"
-rem wgh ... 3710 IF O1$="" THEN GOTO 3760
-rem wgh ... 3720 LET S9$=O1$,S9=O1,S8=-1
-rem wgh ... 3730 GOSUB 6000
+rem --- Has record been written yet?
+	sfe_womatdtl_dev=fnget_dev("SFE_WOMATDTL")
+	dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
+	sfe_womatdtl_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATDTL.WO_LOCATION")+
+:		callpoint!.getColumnData("SFE_WOMATDTL.WO_NO")+callpoint!.getColumnData("SFE_WOMATDTL.MATERIAL_SEQ")
+	found=0
+	readrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,knum="AO_DISP_SEQ",dom=*next)sfe_womatdtl$; found=1
+	if !found then
+		rem --- Record not written yet, so don't uncommit inventory
+		break
+	endif
+    
+rem --- Initialize inventory item update
+	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 
-rem wgh ... 6000 REM " --- Commit/Uncommit Here
-rem wgh ... 6010 IF S8>0 THEN LET ACTION$="CO"
-rem wgh ... 6015 IF S8<0 THEN LET ACTION$="UC"
-rem wgh ... 6020 LET ITEMS$[0]=N0$,ITEMS$[1]=S9$(1,2),ITEMS$[2]=S9$(3,20)
-rem wgh ... 6040 LET REFS[0]=S9
-rem wgh ... 6060 CALL "IVC.UA",ACTION$,IVFILES[ALL],PARAMS[ALL],PARAMS$[ALL],ITEMS$[ALL],REFS$[ALL],REFS[ALL],STATUS
-rem wgh ... 6090 RETURN 
-
-rem wgh ... 3760 REMOVE (WOE23_DEV,KEY=W0$(1,14),DOM=3780)
-rem wgh ... 3770 IF O9$="0" THEN LET O9$="1"
-rem wgh ... 3780 PRINT @(0,L),'LD','LD'
-rem wgh ... 3790 GOTO 1000
-
-rem wgh ... stopped here
-rem wgh ... current method for flagging when to reprint pick list is too simple,
-rem wgh ... because could make a second change back to original qty_ordered which shouldn't need reprint
-rem wgh ... believe solution is to use a HashMap keyed by ISN to hold originial qty_ordered
+rem  --- Update committed quantity
+	items$[1]=sfe_womatdtl.warehouse_id$
+	items$[2]=sfe_womatdtl.item_id$
+	refs[0]=sfe_womatdtl.qty_ordered-sfe_womatdtl.tot_qty_iss
+	call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 [[SFE_WOMATDTL.QTY_ORDERED.AVAL]]
+rem --- qty_ordered cannot be less than tot_qty_iss
+	qty_ordered=num(callpoint!.getUserInput())
+	tot_qty_iss=num(callpoint!.getColumnData("SFE_WOMATDTL.TOT_QTY_ISS"))
+	if qty_ordered<tot_qty_iss then
+		msg_id$="SF_ISS_EXCEEDS_ORD"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
 rem --- Update balance (qty_remain)
 	qty_ordered=num(callpoint!.getUserInput())
 	tot_qty_iss=num(callpoint!.getColumnData("SFE_WOMATDTL.TOT_QTY_ISS"))
