@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopyFGLS" language="groovy" pageWidth="760" pageHeight="595" orientation="Landscape" columnWidth="740" leftMargin="0" rightMargin="20" topMargin="20" bottomMargin="10">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopyFGLS" language="groovy" pageWidth="760" pageHeight="595" orientation="Landscape" columnWidth="740" leftMargin="0" rightMargin="20" topMargin="20" bottomMargin="10" resourceBundle="addon">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
@@ -31,50 +31,46 @@
 	</pageHeader>
 	<columnHeader>
 		<band height="41" splitType="Stretch">
-			<staticText>
+			<textField>
 				<reportElement mode="Opaque" x="0" y="0" width="740" height="15" backcolor="#ECECEC"/>
 				<textElement/>
-				<text><![CDATA[Serial or Lot Number Detail]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_SERIAL_OR_LOT_NUMBER_DETAIL}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="0" y="28" width="83" height="13"/>
 				<textElement/>
-				<text><![CDATA[Serial or Lot #]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_SERIAL_OR_LOT_#}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="133" y="28" width="162" height="13"/>
 				<textElement textAlignment="Left"/>
-				<text><![CDATA[Comment]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_COMMENT}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="335" y="15" width="75" height="26"/>
 				<textElement textAlignment="Left"/>
-				<text><![CDATA[Closed
-Date]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_CLOSED_DATE}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="425" y="15" width="60" height="26"/>
 				<textElement textAlignment="Right"/>
-				<text><![CDATA[Sched'd
-Prod Qty]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_SCHED'D_PROD_QTY}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="496" y="15" width="60" height="26"/>
 				<textElement textAlignment="Right"/>
-				<text><![CDATA[Closed
-Qty]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_CLOSED_QTY}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="569" y="15" width="60" height="26"/>
 				<textElement textAlignment="Right"/>
-				<text><![CDATA[Current
-Close Qty]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_CURRENT_CLOSE_QTY}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="646" y="28" width="60" height="13"/>
 				<textElement textAlignment="Right"/>
-				<text><![CDATA[Unit Cost]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA[$R{AON_UNIT_COST}]]></textFieldExpression>
+			</textField>
 		</band>
 	</columnHeader>
 	<detail>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopyClsdDet" language="groovy" pageWidth="760" pageHeight="595" orientation="Landscape" columnWidth="740" leftMargin="0" rightMargin="20" topMargin="20" bottomMargin="10">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopyClsdDet" language="groovy" pageWidth="760" pageHeight="595" orientation="Landscape" columnWidth="740" leftMargin="0" rightMargin="20" topMargin="20" bottomMargin="10" resourceBundle="addon">
 	<property name="ireport.zoom" value="1.5"/>
-	<property name="ireport.x" value="350"/>
+	<property name="ireport.x" value="156"/>
 	<property name="ireport.y" value="0"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
 	<parameter name="WO_LOCATION" class="java.lang.String"/>
@@ -241,47 +241,47 @@
 	</pageHeader>
 	<columnHeader>
 		<band height="45" splitType="Stretch">
-			<staticText>
+			<textField>
 				<reportElement mode="Opaque" x="0" y="0" width="740" height="15" backcolor="#ECECEC"/>
 				<textElement>
 					<font isBold="true"/>
 				</textElement>
-				<text><![CDATA[Closed Detail]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_CLOSED_DETAIL}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="5" y="19" width="50" height="26"/>
 				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
-				<text><![CDATA[Current Prod Qty]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_CURRENT_PROD_QTY}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="153" y="0" width="60" height="13"/>
 				<textElement textAlignment="Right"/>
-				<text><![CDATA[Closed Date:]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA[$R{AON_CLOSED_DATE:}]]></textFieldExpression>
+			</textField>
 			<textField>
 				<reportElement x="218" y="0" width="53" height="13"/>
 				<textElement/>
 				<textFieldExpression><![CDATA[$F{CLOSED_DATE}]]></textFieldExpression>
 			</textField>
-			<staticText>
+			<textField>
 				<reportElement x="303" y="0" width="60" height="13"/>
 				<textElement textAlignment="Right"/>
-				<text><![CDATA[WO Type:]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA[$R{AON_WO_TYPE:}]]></textFieldExpression>
+			</textField>
 			<textField>
 				<reportElement x="367" y="0" width="152" height="13"/>
 				<textElement/>
 				<textFieldExpression><![CDATA[$F{WO_TYPE_DESC}]]></textFieldExpression>
 			</textField>
-			<staticText>
+			<textField>
 				<reportElement x="535" y="0" width="143" height="13">
 					<printWhenExpression><![CDATA[$F{LSTACT_DATE_RAW}>$F{CLS_INP_DATE_RAW}]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right">
 					<font isBold="true"/>
 				</textElement>
-				<text><![CDATA[Warning Last Activity Was ]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA[$R{AON_WARNING_LAST_ACTIVITY_WAS}]]></textFieldExpression>
+			</textField>
 			<textField pattern="">
 				<reportElement x="683" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{LSTACT_DATE_RAW}>$F{CLS_INP_DATE_RAW}]]></printWhenExpression>
@@ -289,61 +289,61 @@
 				<textElement/>
 				<textFieldExpression><![CDATA[$F{LSTACT_DATE}]]></textFieldExpression>
 			</textField>
-			<staticText>
+			<textField>
 				<reportElement x="68" y="19" width="50" height="26"/>
 				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
-				<text><![CDATA[Prior  Closed Qty]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_PRIOR__CLOSED_QTY}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="131" y="19" width="50" height="26"/>
 				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
-				<text><![CDATA[This Close]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_THIS_CLOSE}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="194" y="19" width="50" height="26"/>
 				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
-				<text><![CDATA[Balance Still Open]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_BALANCE_STILL_OPEN}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="253" y="19" width="33" height="26"/>
 				<textElement verticalAlignment="Bottom"/>
-				<text><![CDATA[Com plete?]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_COM_PLETE?}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="297" y="19" width="46" height="26"/>
 				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
-				<text><![CDATA[Inventory Unit Cost]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_INVENTORY_UNIT_COST}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="366" y="19" width="45" height="26"/>
 				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
-				<text><![CDATA[WO Cost At Std]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_WO_COST_AT_STD}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="423" y="19" width="48" height="26"/>
 				<textElement/>
-				<text><![CDATA[Close At Std/Actual]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_CLOSE_AT_STD/ACTUAL}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="491" y="19" width="45" height="26"/>
 				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
-				<text><![CDATA[WO Cost At Act]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_WO_COST_AT_ACT}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="558" y="19" width="45" height="26"/>
 				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
-				<text><![CDATA[Prior Closed]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_PRIOR_CLOSED}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="623" y="19" width="45" height="26"/>
 				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
-				<text><![CDATA[Curr WIP Value]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_CURR_WIP_VALUE}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="688" y="19" width="48" height="26"/>
 				<textElement textAlignment="Right" verticalAlignment="Bottom"/>
-				<text><![CDATA[Curr Close Value]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA[$R{AON_CURR_CLOSE_VALUE}]]></textFieldExpression>
+			</textField>
 		</band>
 	</columnHeader>
 	<detail>
@@ -421,11 +421,11 @@
 		</band>
 		<band height="34">
 			<printWhenExpression><![CDATA[$V{THIS_CLOSE_QTY_BigDec}!=0 && $V{THIS_CLOSE_QTY_BigDec}!=1]]></printWhenExpression>
-			<staticText>
+			<textField>
 				<reportElement x="224" y="10" width="50" height="13"/>
 				<textElement markup="none"/>
-				<text><![CDATA[Per Unit:]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA[$R{AON_PER_UNIT:}]]></textFieldExpression>
+			</textField>
 			<textField>
 				<reportElement x="286" y="10" width="57" height="13"/>
 				<textElement textAlignment="Right"/>
@@ -469,27 +469,27 @@
 			</textField>
 		</band>
 		<band height="149">
-			<staticText>
+			<textField>
 				<reportElement x="5" y="0" width="100" height="13"/>
 				<textElement textAlignment="Left" markup="none">
 					<font isBold="false"/>
 				</textElement>
-				<text><![CDATA[Account Summary]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_ACCOUNT_SUMMARY}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="235" y="14" width="40" height="13"/>
 				<textElement textAlignment="Right" markup="none">
 					<font isBold="false"/>
 				</textElement>
-				<text><![CDATA[Debit]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_DEBIT}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="303" y="14" width="40" height="13"/>
 				<textElement textAlignment="Right" markup="none">
 					<font isBold="false"/>
 				</textElement>
-				<text><![CDATA[Credit]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA[$R{AON_CREDIT}]]></textFieldExpression>
+			</textField>
 			<textField>
 				<reportElement x="5" y="27" width="60" height="13"/>
 				<textElement/>
@@ -574,27 +574,27 @@
 				<textFieldExpression><![CDATA[$V{WIP_GL_ACCT_CREDIT_PERUNIT_BigDec}]]></textFieldExpression>
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
-			<staticText>
+			<textField>
 				<reportElement x="382" y="0" width="82" height="13"/>
 				<textElement textAlignment="Right" markup="none">
 					<font isBold="false"/>
 				</textElement>
-				<text><![CDATA[Per Unit Totals]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_PER_UNIT_TOTALS}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="372" y="14" width="40" height="13"/>
 				<textElement textAlignment="Right" markup="none">
 					<font isBold="false"/>
 				</textElement>
-				<text><![CDATA[Debit]]></text>
-			</staticText>
-			<staticText>
+				<textFieldExpression><![CDATA[$R{AON_DEBIT}]]></textFieldExpression>
+			</textField>
+			<textField>
 				<reportElement x="440" y="14" width="40" height="13"/>
 				<textElement textAlignment="Right" markup="none">
 					<font isBold="false"/>
 				</textElement>
-				<text><![CDATA[Credit]]></text>
-			</staticText>
+				<textFieldExpression><![CDATA[$R{AON_CREDIT}]]></textFieldExpression>
+			</textField>
 			<textField>
 				<reportElement x="218" y="40" width="57" height="13"/>
 				<textElement textAlignment="Right"/>
