@@ -29,13 +29,13 @@ rem --- Retrieve sysinfo data
 
 rem --- Get user approval to update
 
-    msg_id$="AON_UPDT_QUERY"
-    dim x$:stbl("+SYSINFO_TPL")
-    dim msg_tokens$[1]
-    x$=stbl("+SYSINFO")                                                            
-    msg_tokens$[1]=x.task_desc$
-    gosub disp_message
-    if msg_opt$<>"Y" then goto std_exit_no_update
+	msg_id$="AON_UPDT_QUERY"
+	dim x$:stbl("+SYSINFO_TPL")
+	dim msg_tokens$[1]
+	x$=stbl("+SYSINFO")                                                            
+	msg_tokens$[1]=x.task_desc$
+	gosub disp_message
+	if msg_opt$<>"Y" then goto std_exit_no_update
 
 rem --- Init Data
 
@@ -59,7 +59,7 @@ rem --- Assign Adjustment and Transaction Channels
 	dim wotran_key$:wot01_key_tpl$
 	record_id_flag=0; rem 0 = processing Operations; 1 = processing subcontracts
 
-    if gl$="Y"
+	if gl$="Y"
 		files=1
 		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 		open_tables$[1]="GLE_DAILYDETAIL",open_opts$="OTA"
@@ -73,20 +73,20 @@ rem --- Assign Adjustment and Transaction Channels
 	call pgmdir$+"adc_progress.aon","N","","","","",0,sfadj_dev,1,meter_num,ignore_status
 
 rem --- Initial File Read
-    while more
+	while more
 
-        read (sfadj_dev,key=firm_id$+batch_no$,knum="BATCH_KEY",dom=*next)
+		read (sfadj_dev,key=firm_id$+batch_no$,knum="BATCH_KEY",dom=*next)
 
 rem --- Main Read
-        while more
+		while more
 
-            read record (sfadj_dev,end=*break) sfadja$
+			read record (sfadj_dev,end=*break) sfadja$
 			if pos(firm_id$=sfadja$)<>1 break
 			if batch_no$<>sfadja.batch_no$ break
-            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
+			call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
 
 rem --- setup field_ transactions
-			switch pos(record_id$="OS")-1
+			switch record_id_flag
 				case 0
 					field_a1=sfadja.new_dir_rate
 					field_a2=sfadja.new_ovr_rate
@@ -103,79 +103,74 @@ rem --- setup field_ transactions
 			
 rem --- Find Original Transaction
 			k$=firm_id$+sfadja.wo_location$+sfadja.wo_no$+sfadja.trans_date$+sfadja.trans_seq$
-            extract record (wotran_dev,key=k$,dom=remove_record) sftran$
+			extract record (wotran_dev,key=k$,dom=remove_record) sftran$
 
 rem --- Find Header(S)
-            find record (woe01_dev,key=sfadja.firm_id$+sfadja.wo_location$+sfadja.wo_no$) woe01a$
-            if num(sfadja.new_wo_no$)=0 then sfadja.new_wo_no$=sfadja.wo_no$
-            if pos(" "=sfadja.new_trn_date$)<>0 then sfadja.new_trn_date$=sfadja.trans_date$
-            wo_type$=woe01a.wo_type$
-            wo_no$=woe01a.wo_no$
-            if sfadja.new_wo_no$<>sfadja.wo_no$
-                find record (woe01_dev,key=firm_id$+"  "+sfadja.new_wo_no$,dom=*next) woe01a$
-            endif
+			find record (woe01_dev,key=sfadja.firm_id$+sfadja.wo_location$+sfadja.wo_no$) woe01a$
+			if num(sfadja.new_wo_no$)=0 then sfadja.new_wo_no$=sfadja.wo_no$
+			if pos(" "=sfadja.new_trn_date$)<>0 then sfadja.new_trn_date$=sfadja.trans_date$
+			wo_type$=woe01a.wo_type$
+			wo_no$=woe01a.wo_no$
+			if sfadja.new_wo_no$<>sfadja.wo_no$
+				find record (woe01_dev,key=firm_id$+"  "+sfadja.new_wo_no$,dom=*next) woe01a$
+			endif
 
 rem --- Find The Distribution
 
-            find record (wom10_dev,key=firm_id$+"A"+woe01a.wo_type$) wom10a$
-            dim wom10a_copy$:fattr(wom10a$)
+			find record (wom10_dev,key=firm_id$+"A"+woe01a.wo_type$) wom10a$
+			dim wom10a_copy$:fattr(wom10a$)
 
-            if wo_type$<>woe01a.wo_type$ then 
-                find record (wom10_dev,key=firm_id$+"A"+wo_type$,dom=*next) wom10a_copy$
-            endif
-            remove (sfadj_dev,key=k$,dom=*next)
+			if wo_type$<>woe01a.wo_type$ then 
+				find record (wom10_dev,key=firm_id$+"A"+wo_type$,dom=*next) wom10a_copy$
+			endif
+			remove (sfadj_dev,key=k$,dom=*next)
 
 rem --- Update The Transactions
 
-            newwo$=""
-            if sfadja.wo_no$<>sfadja.new_wo_no$ or sfadja.trans_date$<>sfadja.new_trn_date$ then 
-                newwo$="Y"
-                remove (wotran_dev,key=k$)
-                sftran.wo_no$=sfadja.new_wo_no$
-                sftran.trans_date$=sfadja.new_trn_date$
-            endif
-            sftran.units=sfadja.new_units
-            sftran.unit_cost=field_a1+field_a2
-            sftran.ext_cost=(sftran.units+field_a3)*sftran.unit_cost
-            if record_id$="O" then 
-                sftran.direct_rate=field_a1
-                sftran.ovhd_rate=field_a2
-                sftran.complete_qty=field_a4
-                sftran.setup_time=field_a3
-            endif
-            if newwo$<>"Y" then 
-                write record (wotran_dev,key=sftran_key$) sftran$
-            else
+			newwo$=""
+			if sfadja.wo_no$<>sfadja.new_wo_no$ or sfadja.trans_date$<>sfadja.new_trn_date$ then 
+				newwo$="Y"
+				remove (wotran_dev,key=k$)
+				sftran.wo_no$=sfadja.new_wo_no$
+				sftran.trans_date$=sfadja.new_trn_date$
+			endif
+			sftran.units=sfadja.new_units
+			sftran.unit_cost=field_a1+field_a2
+			sftran.ext_cost=(sftran.units+field_a3)*sftran.unit_cost
+			if record_id_flag=0 then 
+				sftran.direct_rate=field_a1
+				sftran.ovhd_rate=field_a2
+				sftran.complete_qty=field_a4
+				sftran.setup_time=field_a3
+			endif
+			if newwo$<>"Y" then 
+				write record (wotran_dev,key=sftran_key$) sftran$
+			else
 rem --- Add transaction to wot-01 or wot-31
 				seq_mask$=fill(len(sftran.trans_seq$),"0")
-                pos1$=(sftran.firm_id$+sftran.wo_location$+sftran.wo_no$+sftran.trans_date$)
-                if pos(pos1$=full$,len(pos1$))>0 then continue
-rem ?                if wotran_dev=wot31_dev then
-rem ?                    dim k2$:templates$[12]
-rem ?                else
-rem ?                    dim k2$:templates$[11]
-rem ?                endif
-                k2$=pos1$+$ff$
-                read (wotran_dev,key=k2$,dom=*next)
-                wotran_key$=keyp(wotran_dev,end=free_sequences)
-                v2=1
-                if pos(k2$(1,len(pos1$))=wotran_key$)=1 then v2=num(wotran_key.tran_key$)+1
-                flag=0
-                if v2<1000 then 
-                    k2$=k2$(1,len(pos1$))+str(v2:seq_mask$)
-                else
+				pos1$=(sftran.firm_id$+sftran.wo_location$+sftran.wo_no$+sftran.trans_date$)
+				if pos(pos1$=full$,len(pos1$))>0 then continue
+				k2$=pos1$+$ff$
+				read (wotran_dev,key=k2$,dom=*next)
+				wotran_key$=keyp(wotran_dev,end=free_sequences)
+				v2=1
+				if pos(k2$(1,len(pos1$))=wotran_key$)=1 then v2=num(wotran_key.tran_key$)+1
+				flag=0
+				if v2<1000 then 
+					k2$=k2$(1,len(pos1$))+str(v2:seq_mask$)
+				else
 free_sequences: rem --- Any free sequences left between 000 and 999
-                v2=-1
-                    while more
-                        v2=v2+1
-                        k2$=k2$(1,len(pos1$))+str(v2:seq_mask$)
-                        if v2>999 then 
-                            flag = 1
-                            break
-                        endif
-                        read (wotran_dev,key=k2$,dom=*break)
-                    wend
-                endif
+				v2=-1
+					while more
+						v2=v2+1
+						k2$=k2$(1,len(pos1$))+str(v2:seq_mask$)
+						if v2>999 then 
+							flag = 1
+							break
+						endif
+						read (wotran_dev,key=k2$,dom=*break)
+					wend
+				endif
 rem --- Write record using free sequence number
 				if flag = 0 then
 					sftran.firm_id$=firm_id$
@@ -184,13 +179,13 @@ rem	jpb				sftran.wo_location$=k2.wo_location$
 rem jpb					sftran.wo_no$=k2.wo_no$
 rem jpb					sftran.trans_date$=k2.trans_date$
 					sftran$=field(sftran$)
-                    write record (wotran_dev) sftran$
-                else
-                    full$=full$+k2$(1,len(pos1$))
+					write record (wotran_dev) sftran$
+				else
+					full$=full$+k2$(1,len(pos1$))
 rem --- Summary posting when no free records exist
-                    k2$=k2$(1,len(pos1$))+"999"
-                    extract record (wotran_dev,key=k2$) sftran$
-                    if record_id$="S" then 
+					k2$=k2$(1,len(pos1$))+"999"
+					extract record (wotran_dev,key=k2$) sftran$
+					if record_id_flag=1 then 
 rem jpb                        sftran.reserved_str$=Translate!.getTranslation("AON_SUMMARY_TRANSACTION")
 						sftran.wo_units=sftran.wo_units+sfadja.new_units
 						sftran.ext_cost=sftran.ext_cost+sfadja.new_units*field_a1
@@ -200,7 +195,7 @@ rem jpb                        sftran.reserved_str$=Translate!.getTranslation("A
 							sftran.unit_cost=0
 						endif
 					endif
-					if record_id$="O" then 
+					if record_id_flag=0 then 
 						sftran.employee_no$=""
 						w0=sftran.wo_units+sfadja.new_units
 						w2=sftran.ext_cost+sfadja.new_units*(field_a1+field_a2)
@@ -233,11 +228,11 @@ rem --- Update The Last Activity Date
 				write record (woe01_dev) woe01a$
 			endif
 remove_record: rem --- Remove Record
-            remove (sfadj_dev,key=k$,dom=remove_record)
+            remove (sfadj_dev,key=k$,dom=*break)
         wend
 done: rem --- Overlay
 
-		if sfadj_dev<>woe42_dev then break
+		if sfadj_dev=woe42_dev then break
 		sfadj_dev=woe42_dev
 		dim sfadja$:fattr(woe42a$)
 		field_a1=0
@@ -246,7 +241,7 @@ done: rem --- Overlay
 		field_a4=0
 
 		wotran_dev=wot31_dev
-		dim sftran$:templates$[12]
+		dim sftran$:fattr(wot31a$)
 		dim wotran_key$:wot31_key_tpl$
 		record_id_flag=1; rem 0 = processing Operations; 1 = processing subcontracts
 		field_w3=0
@@ -353,17 +348,17 @@ rem --- fnbasename$: Strip path and optionally the suffix from a file name
 
 rem --- fnglobal: Return numeric value of passed stbl variable
 
-    def fnglobal(q$,q1)
-        q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
-        return q1
-    fnend
+	def fnglobal(q$,q1)
+		q1$=stbl(q$,err=*next),q1=num(q1$,err=*next)
+		return q1
+	fnend
 
 rem --- fnglobal$: Return string value of passed STBL variable
 
-    def fnglobal$(q$,q1$)
-        q1$=stbl(q$,err=*next)
-        return q1$
-    fnend
+	def fnglobal$(q$,q1$)
+		q1$=stbl(q$,err=*next)
+		return q1$
+	fnend
 
 rem #endinclude std_functions.src
 

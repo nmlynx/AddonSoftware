@@ -1,3 +1,7 @@
+[[SFE_WO_SUBADJ.AFMC]]
+rem --- set preset val for batch_no
+
+	callpoint!.setTableColumnAttribute("SFE_WO_SUBADJ.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
 [[SFE_WO_SUBADJ.BEND]]
 rem --- Ask user if they really want to exit
 

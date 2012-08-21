@@ -38,6 +38,39 @@ rem --- Resize the grid
 		gridOps!.setFitToGrid(0)
 	endif
 [[SFE_WO_OPSADJ.ACUS]]
+rem Event template:
+rem CONTEXT:I(2),CODE:U(1),ID:U(2),FLAGS:U(1),X:U(2),Y:U(2)
+rem Generic template:
+rem CONTEXT:U(2),CODE:U(1),ID:U(2),OBJTYPE:I(2)
+rem Notice template:
+rem CONTEXT:U(2),CODE:U(1),ID:U(2),OBJTYPE:I(2),MSG:I(4),WPARAM:I(4),LPARAM:I(4),COL:I(4),ROW:I(4),TEXTCOLOR:C(3),BACKCOLOR:C(3),ALIGNMENT:U(1),STYLE:I(4),IMGIDX:I(4),X:I(2),Y:I(2),W:U(2),H:U(2),PTX:I(2),PTY:I(2),BUF:C(1*)
+
+goto no_debug;rem jpb
+
+dim event$:tmpl(gui_dev),generic$:noticetpl(0,0)
+event$=sysgui!.getLastEventString()
+print 'show',
+: "event context="+str(event.context),
+: " code="+str(event.code)+"(s/b n)",
+: " id="+str(event.id),
+: " flags="+str(event.flags)+"(s/b 12)",
+: " x="+str(event.x),
+: " y="+str(event.y)
+ 
+rem control id 5000 is what was used for the custom grid, so change it as necessary in the following line
+if event.code$="N"  then
+      generic$=notice(gui_dev,event.x)
+      dim notice$:noticetpl(generic.objtype,event.flags)
+      notice$=generic$
+      if event.flags=12 or event.flags=6 then
+            print "GridKeypress: $"+hta(notice.wparam$)+"$: ",
+            keycode=notice.wparam
+            gosub keycode
+      endif
+endif
+no_debug:
+rem --- above is for testing
+
 rem --- Process custom event
 rem --- Select/de-select checkboxes in grid and edit payment and discount amounts
 
@@ -445,7 +478,7 @@ rem ==========================================================================
 	attr_ops_col$[18,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
 	attr_ops_col$[18,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=callpoint!.getDevObject("wo_no_mask")
 	attr_ops_col$[18,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]=str(callpoint!.getDevObject("wo_no_len"))
-	attr_ops_col$[18,fnstr_pos("DTAB",attr_def_col_str$[0,0],5)]="SFE_WOMASTR"
+rem	attr_ops_col$[18,fnstr_pos("DTAB",attr_def_col_str$[0,0],5)]="SFE_WOMASTR"
 	attr_ops_col$[18,fnstr_pos("DCOL",attr_def_col_str$[0,0],5)]="DESC"
 
 	attr_ops_col$[19,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="NEW_DATE"
@@ -820,3 +853,96 @@ rem --- Remove Entry Record
 		next x
 	endif
  	return
+
+rem --- below is for testing
+
+keycode:
+keycode$=bin(keycode,2)
+if asc(and(keycode$,$1000$)) then print "SHIFT+",
+if asc(and(keycode$,$2000$)) then 
+      print "CTRL+",
+      switch dec(keycode$)
+          case dec($2000$); print "@ (NUL (null))"; break
+          case dec($2001$); print "A (SOH (start of heading))"; break
+          case dec($2002$); print "B (STX (start of text))"; break
+          case dec($2003$); print "C (ETX (end of text))"; break
+          case dec($2004$); print "D (EOT (end of transmission))"; break
+          case dec($2005$); print "E (ENQ (enquiry))"; break
+          case dec($2006$); print "F (ACK (acknowledge))"; break
+          case dec($2007$); print "G (BEL (bell))"; break
+          case dec($2008$); print "H (BS (backspace))"; break
+          case dec($2009$); print "I (HT (horizontal tab))"; break
+          case dec($200A$); print "J (LF (line feed))"; break
+          case dec($200B$); print "K (VT (vertical tab))"; break
+          case dec($200C$); print "L (FF (form feed))"; break
+          case dec($200D$); print "M (CR (carriage return))"; break
+          case dec($200E$); print "N (SO (shift out))"; break
+          case dec($200F$); print "O (SI (shift in))"; break
+          case dec($2010$); print "P (DLE (data link escape))"; break
+          case dec($2011$); print "Q (DC1 (device control 1))"; break
+          case dec($2012$); print "R (DC2 (device control 2))"; break
+          case dec($2013$); print "S (DC3 (device control 3))"; break
+          case dec($2014$); print "T (DC4 (device control 4))"; break
+          case dec($2015$); print "U (NAK (negative acknowledge))"; break
+          case dec($2016$); print "V (SYN (synchronous idle))"; break
+          case dec($2017$); print "W (ETB (end of transmission block))"; break
+          case dec($2018$); print "X (CAN (cancel))"; break
+          case dec($2019$); print "Y (EM (end of medium))"; break
+          case dec($201A$); print "Z (SUB (substitute))"; break
+          case dec($201B$); print "[ (ESC (escape))"; break
+          case dec($201C$); print "\ (FS (file separator))"; break
+          case dec($201D$); print "] (GS (group separator))"; break
+          case dec($201E$); print "^ (RS (record separator))"; break
+          case dec($201F$); print "_ (US (unit separator))"; break
+      swend
+endif
+if asc(and(keycode$,$4000$)) then print "ALT+",
+if asc(and(keycode$,$8000$)) then print "CMD+",
+switch dec(and(keycode$,$0fff$))
+    case dec($0009$); print "Tab"; break
+    case dec($001b$); print "Escape"; break
+    case dec($007f$); print "Delete"; break
+    case dec($012d$); print "Up arrow"; break
+    case dec($012e$); print "Down arrow"; break
+    case dec($012f$); print "Right arrow"; break
+    case dec($0130$); print "Left arrow"; break
+    case dec($0131$); print "Page up"; break
+    case dec($0132$); print "Page down"; break
+    case dec($0133$); print "Home"; break
+    case dec($0134$); print "End"; break
+    case dec($0135$); print "Ctrl-Home"; break
+    case dec($0136$); print "Ctrl-End"; break
+    case dec($0138$); print "Insert"; break
+    case dec($0139$); print "Ctrl-Right arrow"; break
+    case dec($013a$); print "Ctrl-Left arrow"; break
+    case dec($013b$); print "Backtab"; break
+    case dec($013e$); print "Keypad 0"; break
+    case dec($013f$); print "Keypad 1"; break
+    case dec($0140$); print "Keypad 2"; break
+    case dec($0141$); print "Keypad 3"; break
+    case dec($0142$); print "Keypad 4"; break
+    case dec($0143$); print "Keypad 5"; break
+    case dec($0144$); print "Keypad 6"; break
+    case dec($0145$); print "Keypad 7"; break
+    case dec($0146$); print "Keypad 8"; break
+    case dec($0147$); print "Keypad 9"; break
+    case dec($014b$); print "F1"; break
+    case dec($014c$); print "F2"; break
+    case dec($014d$); print "F3"; break
+    case dec($014e$); print "F4"; break
+    case dec($014f$); print "F5"; break
+    case dec($0150$); print "F6"; break
+    case dec($0151$); print "F7"; break
+    case dec($0152$); print "F8"; break
+    case dec($0153$); print "F9"; break
+    case dec($0154$); print "F10"; break
+    case dec($0155$); print "F11"; break
+    case dec($0156$); print "F12"; break
+    case dec($0174$); print "Keypad *"; break
+    case dec($0175$); print "Keypad -"; break
+    case dec($0176$); print "Keypad +"; break
+    case dec($0177$); print "Keypad /"; break
+    case dec($0006$); print "Ctl-F"; break
+    case default; print and(keycode$,$0fff$); break
+swend
+return
