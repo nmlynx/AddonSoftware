@@ -22,9 +22,8 @@ rem --- remove soft lock on Work Order
 [[SFE_WO_COST_ADJ.BFMC]]
 rem --- Get Batch information
 
-call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]
-callpoint!.setTableColumnAttribute("SFE_WO_COST_ADJ.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
-
+	call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]
+	callpoint!.setTableColumnAttribute("SFE_WO_COST_ADJ.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
 [[SFE_WO_COST_ADJ.<CUSTOM>]]
 #include std_missing_params.src
 [[SFE_WO_COST_ADJ.ASVA]]
@@ -177,4 +176,3 @@ rem --- Additional Init
 	source$=pgm(-2)
 	call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"AP",glw11$,gl$,status
 	if status<>0 goto std_exit
-rem	user_tpl.glint$=gl$
