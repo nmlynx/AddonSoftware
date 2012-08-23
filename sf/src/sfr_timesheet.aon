@@ -493,7 +493,7 @@ rem --- Main Read (header file)
             sfw11a.op_seq$=wooprtn.op_seq$
             sfw11a.trans_date$=trans_date$
 
-            find record (sfw11a_dev,key=sfw11a.firm_id$+sfw11a.wo_location$+sfw11a.wo_no$+sfw11a.op_seq$+sfw11a.trans_date$,dom=*next) sfw11a$
+            extract record (sfw11a_dev,key=sfw11a.firm_id$+sfw11a.wo_location$+sfw11a.wo_no$+sfw11a.op_seq$+sfw11a.trans_date$,dom=*next) sfw11a$
             sfw11a.op_code$=timeshtdet.op_code$
             sfw11a.code_desc$=wooprtn.code_desc$
             sfw11a.hrs=sfw11a.hrs+timeshtdet.hrs
