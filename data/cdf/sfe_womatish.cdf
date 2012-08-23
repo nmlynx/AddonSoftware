@@ -86,10 +86,10 @@ rem --- Delete inventory issues and commitments. Must do this before sfe_womatis
 
 			found=0
 			sfe_womatdtl_key$=firm_loc_wo$+sfe_womatisd.womatdtl_seq_ref$
-			readrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next)sfe_womatdtl$; found=1
+			extractrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next)sfe_womatdtl$; found=1
 			if found then
 				sfe_womatdtl.qty_ordered=sfe_womatdtl.tot_qty_iss
-				writerecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$)sfe_womatdtl$
+				writerecord(sfe_womatdtl_dev)sfe_womatdtl$
 			endif
 		else
 			rem --- Retaining committments, so only delete additional committments made after WO was released
@@ -255,7 +255,7 @@ rem --- New materials issues entry or no existing materials issues
 			while 1
 				sfe_womatisd_key$=key(sfe_womatisd_dev,end=*break)
 				if pos(firm_loc_wo$=sfe_womatisd_key$)<>1 then break
-				readrecord(sfe_womatisd_dev)sfe_womatisd$
+				extractrecord(sfe_womatisd_dev)sfe_womatisd$
 
 				dim ivm_itemwhse$:ivm_itemwhse_tpl$
 				findrecord(ivm_itemwhse_dev,key=firm_id$+sfe_womatisd.warehouse_id$+sfe_womatisd.item_id$,dom=*next)ivm_itemwhse$
@@ -296,7 +296,7 @@ rem --- New materials issues entry or no existing materials issues
 				while 1
 					sfe_womatisd_key$=key(sfe_womatisd_dev,end=*break)
 					if pos(firm_loc_wo$=sfe_womatisd_key$)<>1 then break
-					readrecord(sfe_womatisd_dev)sfe_womatisd$
+					extractrecord(sfe_womatisd_dev)sfe_womatisd$
 
 					dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
 					findrecord(sfe_womatl_dev,key=firm_loc_wo$+sfe_womatisd.womatdtl_seq_ref$,knum="AO_MAT_SEQ",dom=*next)sfe_womatl$

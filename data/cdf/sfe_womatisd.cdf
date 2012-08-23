@@ -265,10 +265,10 @@ rem --- Delete lot/serial and inventory commitments. Must do this before sfe_wom
 
 		found=0
 		sfe_womatdtl_key$=firm_loc_wo$+sfe_womatisd.womatdtl_seq_ref$
-		readrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next)sfe_womatdtl$; found=1
+		extractrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next)sfe_womatdtl$; found=1
 		if found then
 			sfe_womatdtl.qty_ordered=sfe_womatdtl.tot_qty_iss
-			writerecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$)sfe_womatdtl$
+			writerecord(sfe_womatdtl_dev)sfe_womatdtl$
 		endif
 	else
 		rem --- Retaining committments, so only delete additional committments made after WO was released
@@ -315,16 +315,19 @@ rem --- Were commitments retained during delete? No if sfe_womatdtl.qty_ordered=
 	dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
 	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
 	sfe_womatdtl_key$=firm_loc_wo$+sfe_womatisd.womatdtl_seq_ref$
-	readrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next)sfe_womatdtl$
+	extractrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next)sfe_womatdtl$
 	if sfe_womatdtl.qty_ordered=sfe_womatisd.tot_qty_iss then
 		rem --- Undelete inventory commitments (recommit)
 		sfe_womatdtl.qty_ordered=sfe_womatisd.qty_ordered
-		writerecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$)sfe_womatdtl$
+		writerecord(sfe_womatdtl_dev)sfe_womatdtl$
 
 		items$[1]=sfe_womatisd.warehouse_id$
 		items$[2]=sfe_womatisd.item_id$
 		refs[0]=max(0,sfe_womatisd.qty_ordered-sfe_womatisd.tot_qty_iss)
 		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	else
+		rem --- remove extract lock
+		find(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next)
 	endif
 
 rem --- Init DISPLAY columns
