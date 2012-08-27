@@ -622,9 +622,9 @@ end_ddm04:
     endif
 	thisFirm$=""
 
-    rem --- start field loop
+rem --- start field loop
 
-        for field=1 to fields
+    for field=1 to fields
 
 rem --- Retrieve value$ if applicable
 
@@ -799,7 +799,7 @@ rem --- if this field.value is listed in flat file "field_translations" then tra
             value$=translate_value$
         endif
 
- rem --- date formatting
+rem --- date formatting
 
         attr$=fattr(old_rec$,old_fieldlist.name$[field])
         fld_sep$=attr$(3,1)
@@ -854,19 +854,26 @@ rem --- if this field.value is listed in flat file "field_translations" then tra
            case default; escape; rem ' should never get here
         swend
 
-        rem --- replace non-print characters with spaces
+rem --- replace non-print characters with spaces
 
         value$=cvs(value$,16)
 
-        rem --- probably need logic here to read ddm_elements, and make sure that 
-        rem --- delimited elements that are marked as left/space padded actually get padded
-        rem --- right now, padding doesn't happen, but isn't causing widespread problem (CAH; Apr09)
+rem --- Field terminators can result in short character fields that need to be padded.
+        rem --- Get length of character fields from string template.
+        if hta(fattr(new_rec$,new_fieldlist.name$[field]))(1,2)="01" then
+            fieldlen$=hta(fattr(new_rec$,new_fieldlist.name$[field]))(19,4)
+            fieldlen=dec(ath(fieldlen$))
+            rem --- Pad field as necessary
+            if len(value$)<fieldlen then
+                value$=pad(value$, fieldlen)
+            endif
+        endif
 
-                field new_rec$,new_fieldlist.name$[field]=value$
+        field new_rec$,new_fieldlist.name$[field]=value$
 
-            next field
+    next field
 
-    rem --- final misc processing prior to writing new record    
+rem --- final misc processing prior to writing new record    
 
     if addr_lines then gosub reformat_address
 
@@ -1012,11 +1019,22 @@ end_read_normalize_xref:
 
 rem --- Now go populate masks and sequences
 
+rem wgh ... bug 6273 problems start here
+rem wgh ... It converts the ARS_MTDCASH and OPS_MTDSALES files, the OPC_MSG_HDR/DET files, creates ARS_CUSTDFLT if need-be, then converts masks and sequence numbers.
 	if port_masks$="Y"
 		if source_version=6 gosub version6_files
+rem wgh ... does ARS_MTDCASH
+rem wgh ... does OPS_MTDSALES
+rem wgh ... does OPC_MSG_HDR
+rem wgh ... does OPC_MSG_DET
 		if source_version=7 gosub version7_files
+rem wgh ... does ARS_MTDCASH
+rem wgh ... does OPS_MTDSALES
 		gosub make_masks
+rem wgh ... does ARS_CUSTDFLT
+rem wgh ... does masks
 		gosub set_sequence_numbers
+rem wgh ... does sequence numbers
     endif
     
     if temp_vend_ok$="N"
