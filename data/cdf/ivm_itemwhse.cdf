@@ -39,7 +39,8 @@ rem --- Get total on Open SO lines
 		endif
 	wend
 
-	callpoint!.setColumnData("<<DISPLAY>>.COMMIT_SO",str(op_qty))
+	callpoint!.setColumnData("<<DISPLAY>>.COMMIT_SO",str(op_qty),1)
+	callpoint!.setColumnData("IVM_ITEMWHSE.QTY_ON_ORDER",str(op_qty+po_qty),1)
 
 rem --- Get total on WO Finished Goods (On Order)
 
@@ -62,11 +63,9 @@ rem --- Get total on WO Finished Goods (On Order)
 		wend
 
 		callpoint!.setColumnData("<<DISPLAY>>.ON_ORD_WO",str(womast_qty))
-	endif
 
 rem --- Get WO commits
 
-	if callpoint!.getDevObject("wo_installed") = "Y"
 		womatdtl_dev=fnget_dev("SFE_WOMATDTL")
 		dim womatdtl_tpl$:fnget_tpl$("SFE_WOMATDTL")
 		womatisd_dev=fnget_dev("SFE_WOMATISD")
@@ -81,7 +80,7 @@ rem --- Get WO commits
 			if firm_id$<>womatdtl_tpl.firm_id$ break
 			if whse$<>womatdtl_tpl.warehouse_id$ break
 			if item$<>womatdtl_tpl.item_id$ break
-			womatdtl_qty = womatdtl_qty + (womatdtl_tpl.qty_ordered - womatdtl_tpl.tot_qty_iss)
+			womatdtl_qty = womatdtl_qty + womatdtl_tpl.qty_ordered
 		wend
 
 		rem --- Include additional committments made after WO was released
@@ -94,19 +93,20 @@ rem --- Get WO commits
 			rem --- Skip commits already counted for open WOs
 			if cvs(womatisd_tpl.womatdtl_seq_ref$,2)="" then
 				rem --- Not part of released WO
-				womatdtl_qty = womatdtl_qty + (womatisd_tpl.qty_ordered - womatisd_tpl.tot_qty_iss)
+				womatdtl_qty = womatdtl_qty + womatisd_tpl.qty_ordered
 			else
 				rem --- Only count portion of issue's qty_issued that is greater than released WO's qty_ordered
 				womatdtl_key$=firm_id$+womatisd_tpl.wo_location$+womatisd_tpl.wo_no$+womatisd_tpl.womatdtl_seq_ref$
 				findrecord(womatdtl_dev,key=womatdtl_key$,knum="PRIMARY",err=*endif)womatdtl_tpl$
 				if womatisd_tpl.qty_ordered - womatisd_tpl.tot_qty_iss > womatdtl_tpl.qty_ordered - womatdtl_tpl.tot_qty_iss then
-					womatdtl_qty = womatdtl_qty - (womatdtl_tpl.qty_ordered - womatdtl_tpl.tot_qty_iss)
-					womatdtl_qty = womatdtl_qty + (womatisd_tpl.qty_ordered - womatisd_tpl.tot_qty_iss)
+					womatdtl_qty = womatdtl_qty - womatdtl_tpl.qty_ordered
+					womatdtl_qty = womatdtl_qty + womatisd_tpl.qty_ordered
 				endif
 			endif
 		wend
 
-		callpoint!.setColumnData("<<DISPLAY>>.COMMIT_WO",str(womatdtl_qty))
+		callpoint!.setColumnData("<<DISPLAY>>.COMMIT_WO",str(womatdtl_qty),1)
+		callpoint!.setColumnData("IVM_ITEMWHSE.QTY_COMMIT",str(womast_qty+womatdtl_qty),1)
 	endif
 [[IVM_ITEMWHSE.BDEL]]
 rem --- Allow this warehouse to be deleted?
