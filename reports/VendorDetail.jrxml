@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Vendor Detail" pageWidth="595" pageHeight="842" columnWidth="535" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="75" resourceBundle="addon">
-	<property name="ireport.zoom" value="2.0"/>
+	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
@@ -15,6 +15,8 @@
 	<parameter name="TEMP_VEND_3" class="java.lang.String"/>
 	<parameter name="FIRM_NAME" class="java.lang.String"/>
 	<parameter name="REPORT_NAME" class="java.lang.String"/>
+	<parameter name="BARISTA_WD" class="java.lang.String"/>
+	<parameter name="MASKS" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[SELECT * FROM APM_VENDMAST WHERE APM_VENDMAST.FIRM_ID = $P{FIRM_ID} AND APM_VENDMAST.VENDOR_ID >= $P{VENDOR_ID_1} AND APM_VENDMAST.VENDOR_ID <= $P{VENDOR_ID_2} AND (APM_VENDMAST.TEMP_VEND = $P{TEMP_VEND_1} OR APM_VENDMAST.TEMP_VEND = $P{TEMP_VEND_2} OR APM_VENDMAST.TEMP_VEND = $P{TEMP_VEND_3})]]>
 	</queryString>
@@ -412,6 +414,12 @@
 			</textField>
 			<subreport>
 				<reportElement positionType="Float" x="0" y="137" width="528" height="10"/>
+				<subreportParameter name="BARISTA_WD">
+					<subreportParameterExpression><![CDATA[$P{BARISTA_WD}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="MASKS">
+					<subreportParameterExpression><![CDATA[$P{MASKS}]]></subreportParameterExpression>
+				</subreportParameter>
 				<subreportParameter name="FIRM_ID">
 					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
 				</subreportParameter>

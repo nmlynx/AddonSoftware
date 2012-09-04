@@ -204,7 +204,11 @@ rem --- first drop all std Addon SPROCs
 	sproc_vw_name$="SFHARDCOPYFGLS"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def	
-		
+
+	sproc_vw_name$="VENDORDETAIL_HIST"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+
 rem --- now add them back (i.e., drop, then add, in case anything has changed) 
    
 	sql_action$="CREATE PROCEDURE"
@@ -392,7 +396,17 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'WO Hard Copy Finished Good LS'"
 
     gosub create_sproc_def
-		
+
+    sproc_vw_name$="VENDORDETAIL_HIST"
+	sqlprep$="CREATE PROCEDURE VENDORDETAIL_HIST "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, VENDOR_ID CHAR(6) IN, "
+    sqlprep$=sqlprep$+"BARISTA_WD VARCHAR(50) IN, MASKS VARCHAR(1) IN) "
+    sqlprep$=sqlprep$+"'"+sproc_path$+"VENDORDETAIL_HIST.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Vendor Detail History'"
+
+    gosub create_sproc_def
+	
 rem --- Done with SPROCs. Now do VIEWs
 
 rem --- first drop all std Addon VIEWs
