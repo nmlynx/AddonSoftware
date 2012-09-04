@@ -54,6 +54,8 @@ REM ========================================================================
     declare BBjProgressBar bar1!
     declare BBjProgressBar bar2!
     
+    declare BBjImageManager imageMgr!
+    
 REM ========================================================================
 REM Common information
 REM ========================================================================
@@ -82,6 +84,10 @@ REM ========================================================================
     rem ' Open the BBj SysGUI Channel
     sysgui!=BBjAPI().openSysGui("X0") 
 
+    rem ' get an imageManager
+    imageMgr! = sysgui!.getImageManager()
+    imageMgr!.setCacheSize(0)
+    
     rem ' set the database URL
     dbserver$="localhost"
     dbsqlport$=":2001"
@@ -149,7 +155,8 @@ REM ========================================================================
     inputDStart! = win!.addInputD(win!.getAvailableControlID(), 83, 10, 80, 19, $$, "%Yl-%Mz-%Dz", "", jul(startYear,startMonth,startDay), jul(startYear,startMonth,startDay))
     inputDStart!.setFont(font!)
     inputDStart!.setCallback(inputDStart!.ON_EDIT_MODIFY, "START_DATE_CHANGED")
-    buttonStartLookup! = win!.addButton(win!.getAvailableControlID(), 163, 10, 19, 19, "BITMAP=" + imageshome$ + "im_tb_cal_f.png")
+    buttonStartLookup! = win!.addButton(win!.getAvailableControlID(), 163, 10, 19, 19, "")
+    buttonStartLookup!.setImage(imageMgr!.loadImageFromFile(imageshome$ + "im_tb_cal_f.png"))
     buttonStartLookup!.setFont(font!)
     buttonStartLookup!.setCallback(buttonStartLookup!.ON_BUTTON_PUSH, "SELECT_START_DATE")
 
@@ -158,7 +165,8 @@ REM ========================================================================
     inputDFinish! = win!.addInputD(win!.getAvailableControlID(), 268, 10, 80, 19, $$, "%Yl-%Mz-%Dz", "", 0, jul(endYear,endMonth,endDay))
     inputDFinish!.setFont(font!)
     inputDFinish!.setCallback(inputDFinish!.ON_EDIT_MODIFY, "END_DATE_CHANGED")
-    buttonFinishLookup! = win!.addButton(win!.getAvailableControlID(), 348, 10, 19, 19, "BITMAP=" + imageshome$ + "im_tb_cal_f.png")
+    buttonFinishLookup! = win!.addButton(win!.getAvailableControlID(), 348, 10, 19, 19, "")
+    buttonFinishLookup!.setImage(imageMgr!.loadImageFromFile(imageshome$ + "im_tb_cal_f.png"))
     buttonFinishLookup!.setFont(font!)
     buttonFinishLookup!.setCallback(buttonFinishLookup!.ON_BUTTON_PUSH, "SELECT_FINISH_DATE")
 
@@ -172,40 +180,46 @@ REM ========================================================================
     sliderDateRange!.setMinimum(1)
     sliderDateRange!.setMaximum(numPeriods)
 
-    buttonChartPie! = win!.addButton(win!.getAvailableControlID(), 390, 10, 50, 30, "BITMAP=" + imageshome$ + "piechart0.png")
+    buttonChartPie! = win!.addButton(win!.getAvailableControlID(), 390, 10, 50, 30, "")
     buttonChartPie!.setName("piechart")
+    buttonChartPie!.setImage(imageMgr!.loadImageFromFile(imageshome$ + "piechart0.png"))
     buttonChartPie!.setCallback(buttonChartPie!.ON_MOUSE_ENTER, "MOUSE_ENTER")
     buttonChartPie!.setCallback(buttonChartPie!.ON_MOUSE_EXIT, "MOUSE_EXIT")
     buttonChartPie!.setCallback(buttonChartPie!.ON_GAINED_FOCUS, "MOUSE_CLICK")
     
-    buttonChartLine! = win!.addButton(win!.getAvailableControlID(), 440, 10, 50, 30, "BITMAP=" + imageshome$ + "linechart0.png")
+    buttonChartLine! = win!.addButton(win!.getAvailableControlID(), 440, 10, 50, 30, "")
     buttonChartLine!.setName("linechart")
+    buttonChartLine!.setImage(imageMgr!.loadImageFromFile(imageshome$ + "linechart0.png"))
     buttonChartLine!.setCallback(buttonChartLine!.ON_MOUSE_ENTER, "MOUSE_ENTER")
     buttonChartLine!.setCallback(buttonChartLine!.ON_MOUSE_EXIT, "MOUSE_EXIT")
     buttonChartLine!.setCallback(buttonChartLine!.ON_GAINED_FOCUS, "MOUSE_CLICK")
     
-    buttonChartBar! = win!.addButton(win!.getAvailableControlID(), 490, 10, 50, 30, "BITMAP=" + imageshome$ + "barchart0.png")
+    buttonChartBar! = win!.addButton(win!.getAvailableControlID(), 490, 10, 50, 30, "")
     buttonChartBar!.setName("barchart")
+    buttonChartBar!.setImage(imageMgr!.loadImageFromFile(imageshome$ + "barchart0.png"))
     buttonChartBar!.setCallback(buttonChartBar!.ON_MOUSE_ENTER, "MOUSE_ENTER")
     buttonChartBar!.setCallback(buttonChartBar!.ON_MOUSE_EXIT, "MOUSE_EXIT")
     buttonChartBar!.setCallback(buttonChartBar!.ON_GAINED_FOCUS, "MOUSE_CLICK")
     
     rem ' these charts are only available if the BBj demos are installed
     if demosInstalled then
-	buttonChartDial! = win!.addButton(win!.getAvailableControlID(), 540, 10, 50, 30, "BITMAP=" + imageshome$ + "dialchart0.png")
+	buttonChartDial! = win!.addButton(win!.getAvailableControlID(), 540, 10, 50, 30, "")
 	buttonChartDial!.setName("dialchart")
+	buttonChartDial!.setImage(imageMgr!.loadImageFromFile(imageshome$ + "dialchart0.png"))
 	buttonChartDial!.setCallback(buttonChartDial!.ON_MOUSE_ENTER, "MOUSE_ENTER")
 	buttonChartDial!.setCallback(buttonChartDial!.ON_MOUSE_EXIT, "MOUSE_EXIT")
 	buttonChartDial!.setCallback(buttonChartDial!.ON_GAINED_FOCUS, "MOUSE_CLICK")
 
-	buttonChartGauge! = win!.addButton(win!.getAvailableControlID(), 590, 10, 50, 30, "BITMAP=" + imageshome$ + "gaugechart0.png")
+	buttonChartGauge! = win!.addButton(win!.getAvailableControlID(), 590, 10, 50, 30, "")
 	buttonChartGauge!.setName("gaugechart")
+	buttonChartGauge!.setImage(imageMgr!.loadImageFromFile(imageshome$ + "gaugechart0.png"))
 	buttonChartGauge!.setCallback(buttonChartGauge!.ON_MOUSE_ENTER, "MOUSE_ENTER")
 	buttonChartGauge!.setCallback(buttonChartGauge!.ON_MOUSE_EXIT, "MOUSE_EXIT")
 	buttonChartGauge!.setCallback(buttonChartGauge!.ON_GAINED_FOCUS, "MOUSE_CLICK")
 
-	buttonChartArea! = win!.addButton(win!.getAvailableControlID(), 640, 10, 50, 30, "BITMAP=" + imageshome$ + "areachart0.png")
+	buttonChartArea! = win!.addButton(win!.getAvailableControlID(), 640, 10, 50, 30, "")
 	buttonChartArea!.setName("areachart")
+	buttonChartArea!.setImage(imageMgr!.loadImageFromFile(imageshome$ + "areachart0.png"))
 	buttonChartArea!.setCallback(buttonChartArea!.ON_MOUSE_ENTER, "MOUSE_ENTER")
 	buttonChartArea!.setCallback(buttonChartArea!.ON_MOUSE_EXIT, "MOUSE_EXIT")
 	buttonChartArea!.setCallback(buttonChartArea!.ON_GAINED_FOCUS, "MOUSE_CLICK")
@@ -298,7 +312,7 @@ RELOAD_ON_DATE_CHANGE:
 MOUSE_ENTER:
     e! = sysgui!.getLastEvent()
     control! = e!.getControl()
-    control!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + control!.getName() + "1.png"))
+    control!.setImage(imageMgr!.loadImageFromFile(imageshome$ + control!.getName() + "1.png"))
     return
 
 
@@ -306,7 +320,7 @@ MOUSE_EXIT:
     e! = sysgui!.getLastEvent()
     control! = e!.getControl()
     if currentChartType$ <> control!.getName() then
-	control!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + control!.getName() + "0.png"))
+	control!.setImage(imageMgr!.loadImageFromFile(imageshome$ + control!.getName() + "0.png"))
     fi
     return
 
@@ -319,49 +333,49 @@ MOUSE_CLICK:
     return
 
 SET_CHART_TYPE:
-    buttonChartLine!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartLine!.getName() + "0.png"))
-    buttonChartBar!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartBar!.getName() + "0.png"))
-    buttonChartPie!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartPie!.getName() + "0.png"))
+    buttonChartLine!.setImage(imageMgr!.loadImageFromFile(imageshome$ + buttonChartLine!.getName() + "0.png"))
+    buttonChartBar!.setImage(imageMgr!.loadImageFromFile(imageshome$ + buttonChartBar!.getName() + "0.png"))
+    buttonChartPie!.setImage(imageMgr!.loadImageFromFile(imageshome$ + buttonChartPie!.getName() + "0.png"))
     BarChartWindow!.setVisible(0,err=*NEXT)
     LineChartWindow!.setVisible(0,err=*NEXT)
     PieChartWindow!.setVisible(0,err=*NEXT)
 
     if demosInstalled then    
-	buttonChartDial!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartDial!.getName() + "0.png"))
-	buttonChartArea!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartArea!.getName() + "0.png"))
-	buttonChartGauge!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartGauge!.getName() + "0.png"))
+	buttonChartDial!.setImage(imageMgr!.loadImageFromFile(imageshome$ + buttonChartDial!.getName() + "0.png"))
+	buttonChartArea!.setImage(imageMgr!.loadImageFromFile(imageshome$ + buttonChartArea!.getName() + "0.png"))
+	buttonChartGauge!.setImage(imageMgr!.loadImageFromFile(imageshome$ + buttonChartGauge!.getName() + "0.png"))
 	DialChartWindow!.setVisible(0,err=*NEXT)
 	AreaChartWindow!.setVisible(0,err=*NEXT)
 	GaugeChartWindow!.setVisible(0,err=*NEXT)
     fi
     
     if currentChartType$ = "linechart" then
-        buttonChartLine!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartLine!.getName() + "1.png"))
+        buttonChartLine!.setImage(imageMgr!.loadImageFromFile(imageshome$ + buttonChartLine!.getName() + "1.png"))
         LineChartWindow!.setVisible(1,err=*NEXT)
     endif
 
     if currentChartType$ = "barchart" then
-        buttonChartBar!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartBar!.getName() + "1.png"))
+        buttonChartBar!.setImage(imageMgr!.loadImageFromFile(imageshome$ + buttonChartBar!.getName() + "1.png"))
         BarChartWindow!.setVisible(1,err=*NEXT)
     endif 
     
     if currentChartType$ = "piechart" then
-        buttonChartPie!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartPie!.getName() + "1.png"))
+        buttonChartPie!.setImage(imageMgr!.loadImageFromFile(imageshome$ + buttonChartPie!.getName() + "1.png"))
         PieChartWindow!.setVisible(1,err=*NEXT)
     endif
 
     if currentChartType$ = "dialchart" then
-        buttonChartDial!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartDial!.getName() + "1.png"))
+        buttonChartDial!.setImage(imageMgr!.loadImageFromFile(imageshome$ + buttonChartDial!.getName() + "1.png"))
         DialChartWindow!.setVisible(1,err=*NEXT)
     endif
 
     if currentChartType$ = "areachart" then
-        buttonChartArea!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartArea!.getName() + "1.png"))
+        buttonChartArea!.setImage(imageMgr!.loadImageFromFile(imageshome$ + buttonChartArea!.getName() + "1.png"))
         AreaChartWindow!.setVisible(1,err=*NEXT)
     endif
 
     if currentChartType$ = "gaugechart" then
-        buttonChartGauge!.setImage(sysgui!.getImageManager().loadImageFromFile(imageshome$ + buttonChartGauge!.getName() + "1.png"))
+        buttonChartGauge!.setImage(imageMgr!.loadImageFromFile(imageshome$ + buttonChartGauge!.getName() + "1.png"))
         GaugeChartWindow!.setVisible(1,err=*NEXT)
     endif
 
@@ -617,38 +631,40 @@ REM ========================================================================
 
     rem ' detirmine row and dial width and height
     dialCount = salesperson!.size()
-    dialRows = 1
-    dialWinWidth = winWidth - 20
-    dialWinHeight = winHeight - 90
-    while 1
-    	if dialRows = 1 then 
-    		changeRow = dialCount
-    	else
-    		changeRow = int((dialCount / dialRows) + 1)
-    	fi
-    	dialWidth = int(dialWinWidth/changeRow)
-    	dialHeight = dialWidth
-    	if dialHeight > dialWinHeight then
-    		dialHeight = dialWinHeight
-    		dialWidth = dialHeight
-    	fi
-    	if (dialWinHeight - (dialHeight * dialRows)) < dialHeight then
-    		if (dialWinHeight - (dialHeight * dialRows)) >= 0 then
-	    		break
-	    	else
-	    		dialRows = dialRows - 1
-			if dialRows = 1 then 
-				changeRow = dialCount
+    if dialCount > 0 then
+	    dialRows = 1
+	    dialWinWidth = winWidth - 20
+	    dialWinHeight = winHeight - 90
+	    while 1
+		if dialRows = 1 then 
+			changeRow = dialCount
+		else
+			changeRow = int((dialCount / dialRows) + 1)
+		fi
+		dialWidth = int(dialWinWidth/changeRow)
+		dialHeight = dialWidth
+		if dialHeight > dialWinHeight then
+			dialHeight = dialWinHeight
+			dialWidth = dialHeight
+		fi
+		if (dialWinHeight - (dialHeight * dialRows)) < dialHeight then
+			if (dialWinHeight - (dialHeight * dialRows)) >= 0 then
+				break
 			else
-				changeRow = int((dialCount / dialRows) + 1)
+				dialRows = dialRows - 1
+				if dialRows = 1 then 
+					changeRow = dialCount
+				else
+					changeRow = int((dialCount / dialRows) + 1)
+				fi
+				dialWidth = int(dialWinWidth/changeRow)
+				dialHeight = dialWidth
+				break
 			fi
-			dialWidth = int(dialWinWidth/changeRow)
-			dialHeight = dialWidth
-	    		break
-	    	fi
-	fi
-	dialRows = dialRows + 1    
-    wend
+		fi
+		dialRows = dialRows + 1    
+	    wend
+    fi
     
     DialChartWindow!.destroy(err=*NEXT)
     rem ' DialChartWindow! = win!.addChildWindow(win!.getAvailableControlID(), 10, 80, winWidth - 20, winHeight - 90, "", $00010810$, sysgui!.getAvailableContext())
@@ -719,37 +735,39 @@ REM ========================================================================
     gaugeWinWidth = winWidth - 20
     gaugeWinHeight = winHeight - 90
 
-    while 1
-    	if gaugeRows = 1 then 
-    		changeRow = gaugeCount
-    	else
-    		changeRow = int((gaugeCount / gaugeRows) + 1)
-    	fi
-    	gaugeWidth = int(gaugeWinWidth/changeRow)
-    	gaugeHeight = int(gaugeWidth * (0.7))
-    	if gaugeHeight > dialWinHeight then
-    		gaugeHeight = dialWindHeight
-    		gaugeWidth = int(gauageHeight / (0.7))
+    if gaugeCount > 0 then
+	    while 1
+		if gaugeRows = 1 then 
+			changeRow = gaugeCount
+		else
+			changeRow = int((gaugeCount / gaugeRows) + 1)
+		fi
+		gaugeWidth = int(gaugeWinWidth/changeRow)
+		gaugeHeight = int(gaugeWidth * (0.7))
+		if gaugeHeight > dialWinHeight then
+			gaugeHeight = dialWindHeight
+			gaugeWidth = int(gauageHeight / (0.7))
 
-	fi    		
-    	if (gaugeWinHeight - (gaugeHeight * gaugeRows)) < gaugeHeight then
-    		if (gaugeWinHeight - (gaugeHeight * gaugeRows)) >= 0 then
-	    		break
-	    	else
-	    		gaugeRows = gaugeRows - 1
-			if gaugeRows = 1 then 
-				changeRow = gaugeCount
+		fi    		
+		if (gaugeWinHeight - (gaugeHeight * gaugeRows)) < gaugeHeight then
+			if (gaugeWinHeight - (gaugeHeight * gaugeRows)) >= 0 then
+				break
 			else
-				changeRow = int((gaugeCount / gaugeRows) + 1)
+				gaugeRows = gaugeRows - 1
+				if gaugeRows = 1 then 
+					changeRow = gaugeCount
+				else
+					changeRow = int((gaugeCount / gaugeRows) + 1)
+				fi
+				gaugeWidth = int(gaugeWinWidth/changeRow)
+				gaugeHeight = int(gaugeWidth * (0.7))
+				break
 			fi
-			gaugeWidth = int(gaugeWinWidth/changeRow)
-			gaugeHeight = int(gaugeWidth * (0.7))
-	    		break
-	    	fi
-	fi
-	gaugeRows = gaugeRows + 1    
-    wend
-
+		fi
+		gaugeRows = gaugeRows + 1    
+	    wend
+    fi
+    
     GaugeChartWindow!.destroy(err=*NEXT)
     GaugeChartWindow! = win!.addChildWindow(win!.getAvailableControlID(), 10, 80, gaugeWinWidth, gaugeWinHeight, "", $00010810$, sysgui!.getAvailableContext())
 
