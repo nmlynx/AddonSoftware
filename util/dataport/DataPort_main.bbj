@@ -469,6 +469,16 @@ next_ddm03:
           goto next_file
        endif
     endif
+    rem --- Open/create ARS_CUSTDFLT and ARS_PARAMS for ARS-01A record
+    if ddm03.file_name$="ARS-01" and ddm03.record_id$="A" then
+        rem --- Add ARS_CUSTDFLT to file_xref! HashMap for ARS-01A key
+        file_xref!.put("ARS-01A","ARS_CUSTDFLT")
+        gosub get_new_template
+        ars_custdflt_dev=new_file
+        dim ars_custdflt_rec$:fattr(new_rec$)
+        rem --- Reset ARS_PARAMS to file_xref! HashMap for ARS-01A key
+        file_xref!.put("ARS-01A","ARS_PARAMS")
+    endif
     rem --- Open/create opm-04 (OPC_MSG_HDR) and opm-14(OPC_MSG_DET) for version 6 ARM-10G records
     if source_version=6 and ddm03.file_name$="ARM-10" and ddm03.record_id$="G" then
         rem --- Add opm-04A (OPC_MSG_HDR) to file_xref! HashMap for ARM-10G key
@@ -629,6 +639,10 @@ end_ddm04:
     if copy_sys01 and field(old_rec$,old_fieldlist.name$[2],err=*continue) + field(old_rec$,old_fieldlist.name$[3],err=*continue) <> file_normalization$(1,4) then
        goto next_rec
     endif
+if copy_sys01 and file_normalization$(1,4)="AR00" then
+    rem --- Write ARS_CUSTDFLT for ARS-01A records
+    gosub write_ars_custdflt_recs
+endif
     if source_version=6 and datafile$="ARM-10" and record_id_field$="RECORD_ID_G" then
         rem --- Write opm-04 (OPC_MSG_HDR) and opm-14(OPC_MSG_DET) records from version 6 ARM-10G records
         opm14_dev=new_file
@@ -1034,15 +1048,9 @@ end_read_normalize_xref:
     endif; rem ' normalize_sys01
 
 rem --- Now go populate masks and sequences
-
-rem wgh ... bug 6273 problems start here
-rem wgh ... It creates ARS_CUSTDFLT if need-be, then converts masks and sequence numbers.
 	if port_masks$="Y"
 		gosub make_masks
-rem wgh ... does ARS_CUSTDFLT ... why isnt' this done with sys-01?
-rem wgh ... does masks
 		gosub set_sequence_numbers
-rem wgh ... does sequence numbers
     endif
     
     if temp_vend_ok$="N"
@@ -1152,6 +1160,40 @@ write_opc_msg_recs: rem --- Write opm-04 (OPC_MSG_HDR) and opm-14(OPC_MSG_DET) r
             writerecord(opm14_dev)opm14_rec$
         endif
     next i
+
+    return
+
+write_ars_custdflt_recs: rem --- Write ARS_CUSTDFLT for ARS-01A records
+
+    rem --- Init ARS_CUSTDFLT record
+    ars_custdflt_rec.firm_id$=old_rec.firm_id$
+    ars_custdflt_rec.record_id_d$="D"
+    ars_custdflt_rec.disc_code$=old_rec.disc_code$
+    ars_custdflt_rec.territory$=old_rec.territory$
+    ars_custdflt_rec.slspsn_code$=old_rec.slspsn_code$
+    ars_custdflt_rec.tax_code$=old_rec.tax_code$
+    ars_custdflt_rec.ar_terms_code$=old_rec.terms_code$
+    ars_custdflt_rec.ar_dist_code$=old_rec.dist_code$
+    ars_custdflt_rec.customer_inv_his$=old_rec.cust_inv_his$
+
+    rem --- Translate ARS_CUSTDFLT codes listed in field_translations file
+    tmp$=fattr(ars_custdflt_rec$,"")
+    tmp=pos($0A$=tmp$,1,0)
+    dim tmp_fieldlist$:"name["+str(tmp)+"]:c(20*)"
+    tmp_fieldlist$=tmp$
+
+    for field=1 to tmp
+        value$=field(ars_custdflt_rec$,tmp_fieldlist.name$[field])
+        translate_value!=field_translations!.get(tmp_fieldlist.name$[field]+"."+cvs(value$,3))
+        if translate_value!<>null()
+            translate_value$=str(translate_value!)
+            field ars_custdflt_rec$,tmp_fieldlist.name$[field]=translate_value$
+        endif
+    next field
+
+    rem --- Write ARS_CUSTDFLT record
+    ars_custdflt_rec$=field(ars_custdflt_rec$)
+    writerecord(ars_custdflt_dev)ars_custdflt_rec$
 
     return
 
