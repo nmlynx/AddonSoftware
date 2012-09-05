@@ -7,6 +7,9 @@ rem --- Get total on Open PO lines
 	whse$=callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
 	item$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
 	po_qty=0
+	op_qty=0
+	womast_qty=0
+	womatdtl_qty=0
 
 	read(podet_dev,key=firm_id$+whse$+item$,knum="WHSE_ITEM",dom=*next)
 
@@ -25,8 +28,6 @@ rem --- Get total on Open SO lines
 	opdet_dev=fnget_dev("OPE_ORDDET")
 	dim opdet_tpl$:fnget_tpl$("OPE_ORDDET")
 
-	op_qty=0
-
 	read(opdet_dev,key=firm_id$+item$+whse$,knum="AO_ITEM_WH_CUST",dom=*next)
 
 	while 1
@@ -40,15 +41,12 @@ rem --- Get total on Open SO lines
 	wend
 
 	callpoint!.setColumnData("<<DISPLAY>>.COMMIT_SO",str(op_qty),1)
-	callpoint!.setColumnData("IVM_ITEMWHSE.QTY_ON_ORDER",str(op_qty+po_qty),1)
 
 rem --- Get total on WO Finished Goods (On Order)
 
 	if callpoint!.getDevObject("wo_installed") = "Y"
 		womast_dev=fnget_dev("SFE_WOMASTR")
 		dim womast_tpl$:fnget_tpl$("SFE_WOMASTR")
-
-		womast_qty=0
 
 		read(womast_dev,key=firm_id$+whse$+item$,knum="AO_WH_ITM_LOC_WO",dom=*next)
 
@@ -70,8 +68,6 @@ rem --- Get WO commits
 		dim womatdtl_tpl$:fnget_tpl$("SFE_WOMATDTL")
 		womatisd_dev=fnget_dev("SFE_WOMATISD")
 		dim womatisd_tpl$:fnget_tpl$("SFE_WOMATISD")
-
-		womatdtl_qty=0
 
 		rem --- Get WO commits for open WOs
 		read(womatdtl_dev,key=firm_id$+whse$+item$,knum="AO_WH_ITM_LOC_WO",dom=*next)
@@ -106,8 +102,10 @@ rem --- Get WO commits
 		wend
 
 		callpoint!.setColumnData("<<DISPLAY>>.COMMIT_WO",str(womatdtl_qty),1)
-		callpoint!.setColumnData("IVM_ITEMWHSE.QTY_COMMIT",str(womast_qty+womatdtl_qty),1)
 	endif
+
+	callpoint!.setColumnData("IVM_ITEMWHSE.QTY_ON_ORDER",str(po_qty+womast_qty),1)
+	callpoint!.setColumnData("IVM_ITEMWHSE.QTY_COMMIT",str(op_qty+womatdtl_qty),1)
 [[IVM_ITEMWHSE.BDEL]]
 rem --- Allow this warehouse to be deleted?
 
