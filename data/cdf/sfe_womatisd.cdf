@@ -1,15 +1,6 @@
 [[SFE_WOMATISD.AGCL]]
 rem --- set preset val for batch_no
 	callpoint!.setTableColumnAttribute("SFE_WOMATISD.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
-[[SFE_WOMATISD.REQUIRE_DATE.BINP]]
-rem --- Enable lot/serial button
-	gosub able_lot_button
-[[SFE_WOMATISD.QTY_ISSUED.BINP]]
-rem --- Enable lot/serial button
-	gosub able_lot_button
-[[SFE_WOMATISD.ITEM_ID.AVEC]]
-rem --- Enable lot/serial button
-	gosub able_lot_button
 [[SFE_WOMATISD.BDGX]]
 rem --- Disable detail-only buttons
 	callpoint!.setOptionEnabled("LENT",0)
@@ -441,6 +432,9 @@ rem --- Init DISPLAY columns
 [[SFE_WOMATISD.AGRN]]
 rem --- Init DISPLAY columns
 	gosub init_display_cols
+
+rem --- Enable lot/serial button
+	gosub able_lot_button
 [[SFE_WOMATISD.ADGE]]
 
 rem --- Set precision
