@@ -49,7 +49,6 @@ rem --- initialization
     source_folder$ = callpoint!.getDevObject("source_folder")
     destin_folder$ = callpoint!.getDevObject("destin_folder")
     vectPort! = callpoint!.getDevObject("vectPort")
-	port_masks$ = callpoint!.getDevObject("port_masks")
 	
     dictfile$=stbl("+DIR_BRD")
     dictpgm$=stbl("+DIR_SYP")
@@ -308,6 +307,7 @@ close (po_files)
 
 rem --- read sequence_no into hash map
 
+seq_no_files! = new java.util.HashMap()
 sequence_no! = new java.util.HashMap()
 sequence_no_tpl$="seq_no_id:c(16*=124),v6_file:c(16*=124),v6_field:c(16*=124),v6_element_no:c(16*=124),v7_file:c(16*=124),v7_field:c(16*=124),v7_element_no:c(16*=)"
 dim sequence_no$:sequence_no_tpl$
@@ -319,6 +319,12 @@ while 1
       keyval$ = cvs(sequence_no.seq_no_id$,3)
       dataval$ = cvs(sequence_no$,3)
       sequence_no!.put(keyval$,dataval$)
+      if source_version=6
+          old_file$=cvs(sequence_no.v6_file$,11)
+      else
+          old_file$=cvs(sequence_no.v7_file$,11)
+      endif
+      seq_no_files!.put(old_file$,"n")
    endif
 wend
 close (sequence_no)
@@ -382,7 +388,14 @@ next_file:
 
     if cvs(datafile$,8)="sys-01" then
        normalize_sys01=1
+       do_make_masks=1
     endif; rem ' sys-01
+
+    rem --- Does this file contain sequence numbers that need to be processed separately later?
+    if seq_no_files!.containsKey(cvs(datafile$,8)) then
+        seq_no_files!.put(cvs(datafile$,8),"y")
+        do_sequence_numbers=1
+    endif
 
     rem --- Split old header/detail files into separate files
     switch pos(cvs(datafile$,8)="woe-11;woe-21;woe-31;",7)
@@ -1047,11 +1060,9 @@ end_read_normalize_xref:
        goto end_read_loop
     endif; rem ' normalize_sys01
 
-rem --- Now go populate masks and sequences
-	if port_masks$="Y"
-		gosub make_masks
-		gosub set_sequence_numbers
-    endif
+rem --- Now go populate masks and sequences as needed
+    if do_make_masks then gosub make_masks
+	if do_sequence_numbers then gosub set_sequence_numbers
     
     if temp_vend_ok$="N"
         rd_meter_data$="Temporary vendor records found not ported. See error file."
@@ -1394,7 +1405,7 @@ rem --- although flat file sequence_no could probably be modified to contain all
     while sequence_iterator!.hasNext()
         sequence_id$ = str(sequence_iterator!.next())
         sequence_no$=sequence_no!.get(sequence_id$)
-    
+        
         old_file=unt
         if source_version=6
             old_file$=cvs(sequence_no.v6_file$,version_cvs)
@@ -1403,6 +1414,7 @@ rem --- although flat file sequence_no could probably be modified to contain all
             old_file$=cvs(sequence_no.v7_file$,version_cvs)
             old_element_no=num(sequence_no.v7_element_no$)
         endif
+        if seq_no_files!.get(cvs(old_file$,11))<>"y" then continue; rem --- Skip if this file wasn't processed
         open (old_file,err=*continue)source_folder$+"/"+old_file$
 
         if len(firms$)>0
