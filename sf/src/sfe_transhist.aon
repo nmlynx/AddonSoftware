@@ -154,6 +154,7 @@ rem --- Do Materials
 rem --- Do Operations
 
 		if type_o$="Y"
+			if wo_status$="0"
 				wotran_dev=fnget_dev("SFT_CLSOPRTR")
 				dim wotran$:fnget_tpl$("SFT_CLSOPRTR")
 			else
