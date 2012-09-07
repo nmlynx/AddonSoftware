@@ -384,7 +384,7 @@ check_face: rem --- Print Check
     apw01a.vendor_id$=t1$(3,6)
     apw01a.ap_inv_no$=t2.ap_inv_no$
     if aps01a.multi_types$="Y" remove (apw01_dev,key=firm_id$+"  "+apw01a.check_no$,dom=*next)
-    write record (apw01_dev,key=firm_id$+apw01a.ap_type$+apw01a.check_no$) apw01a$
+    write record (apw01_dev) apw01a$
 
     return
 
@@ -443,7 +443,7 @@ rem --- Write Void
     apw01a.check_date$=check_date$
     apw01a.ap_inv_no$=ape04a.ap_inv_no$
     if aps01a.multi_types$<>"Y" apw01a.ap_type$=""
-    write record (apw01_dev,key=firm_id$+apw01a.ap_type$+apw01a.check_no$) apw01a$
+    write record (apw01_dev) apw01a$
     gosub increment_check
 
     return
@@ -467,7 +467,7 @@ rem --- using the current check number and firm_id$ + t1$ (ap type and vendor nu
         read(ape04_dev2,key=firm_id$+t1$,dom=*next)
 
         while more
-            extract record (ape04_dev2,end=*break) ape04b$
+            extract record (ape04_dev2,end=*break) ape04b$;rem Advisory Locking
             if pos(firm_id$+t1$=ape04b$)<>1 then read (ape04_dev2); break
             ape04b.check_no$ = check_no$
             ape04b$ = field(ape04b$)
