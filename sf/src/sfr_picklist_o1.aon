@@ -199,8 +199,6 @@ rem --- All done
 		sfe15a.unit_measure$=sfe13a.unit_measure$
 		sfe15a.warehouse_id$=sfe13a.warehouse_id$
 		sfe15a.item_id$=sfe13a.item_id$
-rem		sfe15a.batch_no$=???
-rem what about batching in sfe15a??? jpb
         write record (sfe15a_dev) sfe15a$
 
     rem --- Remove Committed and Create Issue
@@ -231,8 +229,6 @@ rem what about batching in sfe15a??? jpb
 			sfe25a.unit_cost=sfe23a.unit_cost
 			sfe25a.qty_issued=sfe23a.qty_issued
 			sfe25a.issue_cost=sfe23a.issue_cost
-rem what about batch numbers??? jpb
-rem			sfe25a.batch_no$=sfe23a.
 			sfe25a$=field(sfe25a$)
             write record (sfe25a_dev) sfe25a$
 
