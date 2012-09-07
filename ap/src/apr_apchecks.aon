@@ -467,8 +467,8 @@ rem --- using the current check number and firm_id$ + t1$ (ap type and vendor nu
         read(ape04_dev2,key=firm_id$+t1$,dom=*next)
 
         while more
-            read record (ape04_dev2,end=*break) ape04b$
-            if pos(firm_id$+t1$=ape04b$)<>1 then break
+            extract record (ape04_dev2,end=*break) ape04b$
+            if pos(firm_id$+t1$=ape04b$)<>1 then read (ape04_dev2); break
             ape04b.check_no$ = check_no$
             ape04b$ = field(ape04b$)
             write record (ape04_dev2) ape04b$
