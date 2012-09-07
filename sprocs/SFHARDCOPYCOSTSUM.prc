@@ -490,6 +490,7 @@ get_op_trans:
 				act_op_oh_amt=act_op_oh_amt+(tran_rec.ext_cost-(tran_rec.units*tran_rec.direct_rate))
 			endif
 		wend
+		break
 	wend
 	
 	return
