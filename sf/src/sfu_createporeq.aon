@@ -64,11 +64,11 @@ rem --- Assign form input values to local variables
     wofrom$=Option!.getOptionData("wo_no_1")
     wothru$=Option!.getOptionData("wo_no_2")
     wo_open$=Option!.getOptionData("open")
-    wo_closed$=Option!.getOptionData("closed")
+    wo_planned$=Option!.getOptionData("planned")
 	
     wostatus$=""
     if wo_open$="Y" then wostatus$=wostatus$+"O"
-    if wo_closed$="Y" then wostatus$=wostatus$+"C"
+    if wo_planned$="Y" then wostatus$=wostatus$+"P"
 		
 rem --- Parameters
 
