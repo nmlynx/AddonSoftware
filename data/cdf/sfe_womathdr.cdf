@@ -1,3 +1,92 @@
+[[SFE_WOMATHDR.ARNF]]
+rem --- Write work order commit transaction
+	sfe_wocommit_dev=fnget_dev("SFE_WOCOMMIT")
+	dim sfe_wocommit$:fnget_tpl$("SFE_WOCOMMIT")
+	sfe_wocommit.firm_id$=firm_id$
+	sfe_wocommit.wo_location$=callpoint!.getColumnData("SFE_WOMATHDR.WO_LOCATION")
+	sfe_wocommit.wo_no$=callpoint!.getColumnData("SFE_WOMATHDR.WO_NO")
+	writerecord(sfe_wocommit_dev)sfe_wocommit$
+
+rem --- Initialize inventory item update
+	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+
+rem --- Initialize SFE_WOMATDTL Materials Commitment Detail from SFE_WOMATL Material Requirements
+rem --- so can display new detail in grid.
+	sfe_womatdtl_dev=fnget_dev("SFE_WOMATDTL")
+	sfe_womatl_dev=fnget_dev("SFE_WOMATL")
+	dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
+
+	sfe_womathdr_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATHDR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMATHDR.WO_NO")
+	read(sfe_womatl_dev,key=sfe_womathdr_key$,dom=*next)
+	while 1
+		sfe_womatl_key$=key(sfe_womatl_dev,end=*break)
+		if pos(sfe_womathdr_key$=sfe_womatl_key$)<>1 then break
+		readrecord(sfe_womatl_dev)sfe_womatl$
+		if sfe_womatl.line_type$="M" then continue; rem --- skip message lines
+
+		rem --- Skip if SFE_WOMATDTL record already exists
+		dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
+		sfe_womatdtl.firm_id$=sfe_womatl.firm_id$
+		sfe_womatdtl.wo_location$=sfe_womatl.wo_location$
+		sfe_womatdtl.wo_no$=sfe_womatl.wo_no$
+		sfe_womatdtl.material_seq$=sfe_womatl.material_seq$
+		internal_seq_no$=""
+		call stbl("+DIR_SYP")+"bas_sequences.bbj","INTERNAL_SEQ_NO",internal_seq_no$,table_chans$[all],"QUIET"
+		sfe_womatdtl.internal_seq_no$=internal_seq_no$
+		sfe_womatdtl_key$=sfe_womatdtl.firm_id$+sfe_womatdtl.wo_location$+sfe_womatdtl.wo_no$+sfe_womatdtl.internal_seq_no$
+		find(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next); continue
+
+		rem --- Initialize and write new SFE_WOMATDTL record
+		sfe_womatdtl.unit_measure$=sfe_womatl.unit_measure$
+		sfe_womatdtl.require_date$=sfe_womatl.require_date$
+		sfe_womatdtl.warehouse_id$=callpoint!.getColumnData("SFE_WOMATHDR.WAREHOUSE_ID")
+		sfe_womatdtl.item_id$=sfe_womatl.item_id$
+		sfe_womatdtl.qty_ordered=sfe_womatl.total_units
+		sfe_womatdtl.tot_qty_iss=0
+		sfe_womatdtl.unit_cost=sfe_womatl.iv_unit_cost
+		sfe_womatdtl.qty_issued=0
+		sfe_womatdtl.issue_cost=sfe_womatl.iv_unit_cost
+		writerecord(sfe_womatdtl_dev)sfe_womatdtl$
+
+		rem  --- Update committed quantity
+		items$[1]=sfe_womatdtl.warehouse_id$
+		items$[2]=sfe_womatdtl.item_id$
+		refs[0]=sfe_womatdtl.qty_ordered
+		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	wend
+
+rem --- Display grid with new detail.
+	callpoint!.setStatus("REFGRID")
+
+rem -- Build starting rowQtyMap!
+	gosub build_rowQtyMap
+	callpoint!.setDevObject("start_rowQtyMap",rowQtyMap!)
+[[SFE_WOMATHDR.WO_NO.AVAL]]
+rem --- If new record, initialize SFE_WOMATHDR and SFE_WOMATDET
+	if callpoint!.getRecordMode()="A"
+		rem --- When new record, initialize new SFE_WOMATHDR Materials Commitment Header record from SFE_WOMASTR Work Order Entry
+		sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
+		dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")
+
+		findrecord(sfe_womastr_dev,key=firm_id$+"  "+callpoint!.getUserInput())sfe_womastr$
+
+		callpoint!.setColumnData("SFE_WOMATHDR.WO_TYPE",sfe_womastr.wo_type$,1)
+		callpoint!.setColumnData("SFE_WOMATHDR.WO_CATEGORY",sfe_womastr.wo_category$,1)
+		callpoint!.setColumnData("SFE_WOMATHDR.UNIT_MEASURE",sfe_womastr.unit_measure$,1)
+		callpoint!.setColumnData("SFE_WOMATHDR.WAREHOUSE_ID",sfe_womastr.warehouse_id$,1)
+		callpoint!.setColumnData("SFE_WOMATHDR.ITEM_ID",sfe_womastr.item_id$,1)
+		callpoint!.setColumnData("SFE_WOMATHDR.ISSUED_DATE","",1)
+		callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_01",sfe_womastr.description_01$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_02",sfe_womastr.description_02$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.WO_STATUS",sfe_womastr.wo_status$,1)
+
+		rem -- Verify WO status
+		gosub verify_wo_status
+		if bad_wo then
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
 [[SFE_WOMATHDR.ARAR]]
 rem -- Build starting rowQtyMap!
 	gosub build_rowQtyMap
@@ -78,83 +167,6 @@ rem --- Delete inventory issues.
 			endif
 		wend
 	endif
-[[SFE_WOMATHDR.ARNF]]
-rem --- Initialize new SFE_WOMATHDR Materials Commitment Header record from SFE_WOMASTR Work Order Entry
-	sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
-	dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")
-
-	findrecord(sfe_womastr_dev,key=firm_id$+"  "+callpoint!.getColumnData("SFE_WOMATHDR.WO_NO"))sfe_womastr$
-
-	callpoint!.setColumnData("SFE_WOMATHDR.WO_TYPE",sfe_womastr.wo_type$,1)
-	callpoint!.setColumnData("SFE_WOMATHDR.WO_CATEGORY",sfe_womastr.wo_category$,1)
-	callpoint!.setColumnData("SFE_WOMATHDR.UNIT_MEASURE",sfe_womastr.unit_measure$,1)
-	callpoint!.setColumnData("SFE_WOMATHDR.WAREHOUSE_ID",sfe_womastr.warehouse_id$,1)
-	callpoint!.setColumnData("SFE_WOMATHDR.ITEM_ID",sfe_womastr.item_id$,1)
-	callpoint!.setColumnData("SFE_WOMATHDR.ISSUED_DATE","",1)
-	callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_01",sfe_womastr.description_01$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_02",sfe_womastr.description_02$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.WO_STATUS",sfe_womastr.wo_status$,1)
-
-rem --- Write work order commit transaction
-	sfe_wocommit_dev=fnget_dev("SFE_WOCOMMIT")
-	dim sfe_wocommit$:fnget_tpl$("SFE_WOCOMMIT")
-	sfe_wocommit.firm_id$=firm_id$
-	sfe_wocommit.wo_location$=callpoint!.getColumnData("SFE_WOMATHDR.WO_LOCATION")
-	sfe_wocommit.wo_no$=callpoint!.getColumnData("SFE_WOMATHDR.WO_NO")
-	writerecord(sfe_wocommit_dev)sfe_wocommit$
-
-rem --- Initialize inventory item update
-	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-
-rem --- Initialize SFE_WOMATDTL Materials Commitment Detail from SFE_WOMATL Material Requirements
-rem --- so can display new detail in grid.
-	sfe_womatdtl_dev=fnget_dev("SFE_WOMATDTL")
-	sfe_womatl_dev=fnget_dev("SFE_WOMATL")
-	dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
-
-	sfe_womathdr_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATHDR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMATHDR.WO_NO")
-	read(sfe_womatl_dev,key=sfe_womathdr_key$,dom=*next)
-	while 1
-		sfe_womatl_key$=key(sfe_womatl_dev,end=*break)
-		if pos(sfe_womathdr_key$=sfe_womatl_key$)<>1 then break
-		readrecord(sfe_womatl_dev)sfe_womatl$
-		if sfe_womatl.line_type$="M" then continue; rem --- skip message lines
-
-		rem --- Skip if SFE_WOMATDTL record already exists
-		dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
-		sfe_womatdtl.firm_id$=sfe_womatl.firm_id$
-		sfe_womatdtl.wo_location$=sfe_womatl.wo_location$
-		sfe_womatdtl.wo_no$=sfe_womatl.wo_no$
-		sfe_womatdtl.material_seq$=sfe_womatl.material_seq$
-		sfe_womatdtl.internal_seq_no$=sfe_womatl.internal_seq_no$
-		sfe_womatdtl_key$=sfe_womatdtl.firm_id$+sfe_womatdtl.wo_location$+sfe_womatdtl.wo_no$+sfe_womatdtl.internal_seq_no$
-		find(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next); continue
-
-		rem --- Initialize and write new SFE_WOMATDTL record
-		sfe_womatdtl.unit_measure$=sfe_womatl.unit_measure$
-		sfe_womatdtl.require_date$=sfe_womatl.require_date$
-		sfe_womatdtl.warehouse_id$=callpoint!.getColumnData("SFE_WOMATHDR.WAREHOUSE_ID")
-		sfe_womatdtl.item_id$=sfe_womatl.item_id$
-		sfe_womatdtl.qty_ordered=sfe_womatl.total_units
-		sfe_womatdtl.tot_qty_iss=0
-		sfe_womatdtl.unit_cost=sfe_womatl.iv_unit_cost
-		sfe_womatdtl.qty_issued=0
-		sfe_womatdtl.issue_cost=sfe_womatl.iv_unit_cost
-		writerecord(sfe_womatdtl_dev)sfe_womatdtl$
-
-		rem  --- Update committed quantity
-		items$[1]=sfe_womatdtl.warehouse_id$
-		items$[2]=sfe_womatdtl.item_id$
-		refs[0]=sfe_womatdtl.qty_ordered
-		call stbl("+DIR_PGM")+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-	wend
-
-        rem --- Display grid with new detail.
-	callpoint!.setStatus("REFGRID")
-
-rem -- Build starting rowQtyMap!
-	gosub build_rowQtyMap
-	callpoint!.setDevObject("start_rowQtyMap",rowQtyMap!)
 [[SFE_WOMATHDR.ADIS]]
 rem --- Init <<DISPLAY>> fields
 	sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
