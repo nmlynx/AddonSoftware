@@ -58,6 +58,8 @@ rem --- Open/Lock files
     files$[5]="gle-03",ids$[5]="GLE_ALLOCHDR"
     files$[6]="gle-13",ids$[6]="GLE_ALLOCDET"
     files$[7]="glw-11",ids$[7]="GLW_DAILYDETAIL"
+    if num(batch_no$)=0 then options$[5]="L";rem lock if not batching
+    if num(batch_no$)=0 then options$[6]="L";rem lock if not batching
     rem --- options$[7]="CL";do clear partial instead of full clear since everyone sharing glw-11. (batching.CAH)
 call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
