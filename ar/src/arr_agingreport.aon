@@ -333,7 +333,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
              arm02a.ar_type$=artype$
              arm01_key$=arm01a.firm_id$+arm01a.customer_id$
              arm02_key$=arm02a.firm_id$+arm02a.customer_id$+arm02a.ar_type$
-             find record (arm02_dev,key=arm02_key$,dom=*proceed) arm02a$
+             find record (arm02_dev,key=arm02_key$,dom=*next) arm02a$
           endif
 
           if option$="S"
@@ -355,6 +355,17 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
           if mod(total_recs,milestone)=0 then call pgmdir$+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
           if option$="C" if sequence$="N" if endcust$<>"" if arm01a.customer_id$>endcust$ break
           if option$="S" if endsales$<>"" if arm02a.slspsn_code$>endsales$ break
+          
+          rem --- Advisory Locking
+          if option$="C"
+             extract record (arm01_dev,knum=keynum$,key=k$) arm01a$
+             extract record (arm02_dev,key=arm02_key$,dom=*next) arm02a$
+          endif
+          if option$="S"
+             extract record (arm02_dev,knum=keynum$,key=k$) arm02a$
+             extract record (arm01_dev,key=arm01_key$,dom=*continue) arm01a$
+          endif
+          
 
           rem --- Level break?
 
