@@ -210,8 +210,8 @@ rem --- Read next Customer Master (arm-01) record
 
     while morecustomers
           arm01_key$=key(arm01_dev,end=*break)
-          if pos(firm_id$=arm01_key$)<>1 break
-          read record (arm01_dev,key=arm01_key$) arm01a$
+          if pos(firm_id$=arm01_key$)<>1 then read(arm01_dev); break
+          extract record (arm01_dev,key=arm01_key$) arm01a$; rem Advisory Locking
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
           rem --- Update Customer Sales and Payments Summary (arm-06) record
@@ -257,7 +257,7 @@ rem --- Read next Customer Master (arm-01) record
 
           rem --- If this isn't a temporary customer we're done
 
-          if arm01a.retain_cust$<>"N" continue
+          if arm01a.retain_cust$<>"N" then read(arm01_dev); continue
 
           rem --- Perform checks to see if this temporary customer can be deleted
           rem --- Start with the Invoice Header (art-01) file
@@ -265,7 +265,7 @@ rem --- Read next Customer Master (arm-01) record
           keyprefix$=firm_id$+artype$+arm01a.customer_id$
           read (art01_dev,key=keyprefix$,dom=*next)
           k$=key(art01_dev,end=*next)
-          if pos(keyprefix$=k$)=1 continue
+          if pos(keyprefix$=k$)=1 then read(arm01_dev); continue
 
           rem --- Check the Customer Sales Analysis (sam-01) file if sales analysis is installed
 
@@ -283,7 +283,7 @@ rem --- Read next Customer Master (arm-01) record
                 year$=str(num(sam01_key$(3,4))+1:"0000")
                 k$=firm_id$+year$+arm01a.customer_id$
           wend 
-          if found continue
+          if found then read(arm01_dev); continue
 
           rem --- Check Open Order (ope-01) file if Sales Order Processing is installed
 
@@ -293,7 +293,7 @@ rem --- Read next Customer Master (arm-01) record
              read (ope01_dev,key=keyprefix$,dom=*proceed)
              k$=key(ope01_dev,end=*proceed)
           endif
-          if pos(keyprefix$=k$)=1 continue
+          if pos(keyprefix$=k$)=1 then read(arm01_dev); continue
 
           rem --- Check Invoice History (ope-01) file if Sales Order Processing is installed
 
@@ -303,7 +303,7 @@ rem --- Read next Customer Master (arm-01) record
              read (opt01_dev,key=keyprefix$,dom=*proceed)
              k$=key(opt01_dev,end=*proceed)
           endif
-          if pos(keyprefix$=k$)=1 continue
+          if pos(keyprefix$=k$)=1 then read(arm01_dev); continue
 
           rem --- Remove temporary customer
 

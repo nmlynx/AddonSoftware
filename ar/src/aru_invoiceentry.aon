@@ -38,14 +38,14 @@ rem --- Start progress meter and position header file
 rem --- Read next Invoice Header (are-05) record
 
     while moreheaders
-          read record (are05_dev,end=*break) are05a$
-          if are05a.firm_id$<>firm_id$ or are05a.batch_no$<>batch_no$ then break
+          extract record (are05_dev,end=*break) are05a$; rem Advisory Locking
+          if are05a.firm_id$<>firm_id$ or are05a.batch_no$<>batch_no$ then read(are05_dev); break
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
           are05a_key$=are05a.firm_id$+are05a.ar_inv_no$
 
 rem --- Skip unprinted invoices
 
-          if are05a.print_status$<>"Y" continue
+          if are05a.print_status$<>"Y" then read(are05_dev); continue
 
 rem --- Skip voided invoices
 

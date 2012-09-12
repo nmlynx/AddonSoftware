@@ -32,7 +32,7 @@ rem --- Read next Cash Receipts Header (are-01) record
     while moreheaders
           are01a_key$=key(are01_dev,end=*break)
           if pos(firm_id$+batch_no$=are01a_key$)<>1 break
-          read record (are01_dev) are01a$
+          extract record (are01_dev) are01a$; rem Advisory Locking
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
           rem --- Initializations for this invoice
@@ -52,7 +52,9 @@ rem --- Read next Cash Receipts Header (are-01) record
           arm01a.firm_id$=firm_id$
           arm01a.customer_id$=are01a.customer_id$
           k$=arm01a.firm_id$+arm01a.customer_id$ 
-          find record (arm01_dev,key=k$,dom=*continue) arm01a$
+          found=0
+          find record (arm01_dev,key=k$,dom=*next) arm01a$; found=1
+          if !found then read(are01_dev); continue
           arm02a.firm_id$=firm_id$
           arm02a.customer_id$=are01a.customer_id$
           arm02a.ar_type$=are01a.ar_type$
