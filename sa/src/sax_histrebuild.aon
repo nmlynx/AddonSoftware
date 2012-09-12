@@ -420,7 +420,7 @@ done: rem --- All done
 
 write_rec: rem --- write records
 
-    find record (sam_dev,key=sam_key$,dom=*next) sam$
+    extract record (sam_dev,key=sam_key$,dom=*next) sam$;rem Advisory Locking
     field sam$,"QTY_SHIPPED_"+str(period:"00")=nfield(sam$,"QTY_SHIPPED_"+str(period:"00"))+opt11a.qty_shipped
     precision 2
     field sam$,"TOTAL_COST_"+str(period:"00")=nfield(sam$,"TOTAL_COST_"+str(period:"00"))+opt11a.unit_cost*opt11a.qty_shipped
