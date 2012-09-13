@@ -321,9 +321,11 @@
             <arg value="${barista.bbj.dir}/sys/prog/bax_build_sync.bbj"/>
             <arg value="-"/>
             <arg value="-s../apps/aon/config/addon.syn"/>
-            <arg value="-loc${addon.langs}"/>
             <arg value="-log${log.bbj.dir}/addon_sync.log"/>
         </exec>
+            <!-- Add back in as an arg if we only want the specified languages
+            <arg value="-loc${addon.langs}"/>
+            -->
 
     </target>
     <!-- End of syncAddon -->
