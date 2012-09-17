@@ -445,6 +445,11 @@ rem --- Print
         if includecost$="Y" and a3_variance_percent<min_variance then continue
         if includecost$="N" and abs(a3_variance_percent)<min_variance then continue
 
+		if printed_subhead$<>"Y"
+			gosub sub_head
+			printed_subhead$="Y"
+		endif
+
 		blank=fnblank(16)
         OutVect!.addItem(sfe01a.wo_no$)
         OutVect!.addItem(sfe01a.wo_type$+" "+sfe01a.description_01$)
@@ -875,6 +880,7 @@ sub_head:  rem --- Sub Heading
 
 first_sub_tot:   rem --- First Sub Total
 
+		printed_subhead$="N"
         if t0$<>"" and l0>1 then
             
 			t0_standard_tot=t_standards[1]+t_standards[2]+t_standards[3]+t_standards[4]
@@ -940,17 +946,17 @@ label3:
                 t0$=key_tpl.wo_type$
                 dim h5$(30)
                 h5$(1)=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
-                find record (sfm10a_dev,key=firm_id$+"A"+t0$,dom=*break) sfm10a$
+				dim sfm10a$:fattr(sfm10a$)
+                find record (sfm10a_dev,key=firm_id$+"A"+t0$,dom=*next) sfm10a$
                 h5$=sfm10a$.code_desc$
-                gosub sub_head
                 break
             case 2; rem --- Customer 
                 t0$=key_tpl.customer_id$ 
                 dim h5$(30)
                 h5$(1)=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
-                find record (arm01a_dev,key=firm_id$+t0$,dom=*break) arm01a$
+				dim arm01a$:fattr(arm01a$)
+                find record (arm01a_dev,key=firm_id$+t0$,dom=*next) arm01a$
                 h5$=arm01a.customer_name$
-				gosub sub_head
                 break
         swend 
         return
