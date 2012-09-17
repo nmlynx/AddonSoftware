@@ -202,7 +202,11 @@ rem --- Main Read
                 endif
 
     rem --- Print
-             OutVect!.addItem(sfe01a.wo_no$)
+		if printed_subhead$ <>"Y"
+			gosub sub_heading
+			printed_subhead$="Y"
+		endif
+		OutVect!.addItem(sfe01a.wo_no$)
         if pos(sfe01a.wo_status$="CPQ")=0
             OutVect!.addItem(fndate$(sfe01a.opened_date$))
         else
@@ -262,13 +266,14 @@ sub_heading: rem --- Sub Heading
             xwk=fnblank(25)
         endif
         if sequence$="C"
-            OutVect!.addItem(fnmask$(t0$(1,c0),ars01a.customer_output$)+"   "+h5$)
+            OutVect!.addItem(fnmask$(arm01a.customer_id$,custmask$)+"   "+h5$)
             xwk=fnblank(25)
         endif
     return
 
 
 sub_total: rem --- First Sub Total
+	printed_subhead$="N"
     if t0$<>"" 
         if l0>1 
             if sequence$="B" then 
@@ -301,18 +306,18 @@ sub_total: rem --- First Sub Total
 
     p=pos(sequence$="TC") 
     if p=0 return 
-      if p=1
+	if p=1
         dim h5$(39); let h5$(1)=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
-        find record (sfm10a_dev,key=firm_id$+"A"+t0$,dom=sub_heading) sfm10a$
+        find record (sfm10a_dev,key=firm_id$+"A"+t0$,dom=*next) sfm10a$
         h5$=sfm10a.code_desc$
-        gosub sub_heading
-      endif 
-      if p=2
+rem        gosub sub_heading
+	endif 
+	if p=2
         dim h5$(30); let h5$(1)=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
-        find record (arm01a_dev,key=firm_id$+t0$,dom=sub_heading) arm01a$
+        find record (arm01a_dev,key=firm_id$+t0$,dom=*next) arm01a$
         h5$=arm01a.customer_name$
-        gosub sub_heading
-     endif
+rem        gosub sub_heading
+	endif
     return
 
 closed: rem --- Process Closed Work Order Transactions
