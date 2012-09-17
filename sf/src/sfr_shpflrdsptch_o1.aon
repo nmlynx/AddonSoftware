@@ -310,7 +310,12 @@ rem --- Calculate Actual
 
 rem ---- This operation?
 
-    if actset[now]+actrun[now]>setup[now]+runtim[now] then now=now+1
+rem --- Next line has been remarked out so that this report matches the Dispatch Inquiry form.
+rem --- The next line assumed that if more time has been entered against a particular Op Code than it required,
+rem --- then it MUST be at the next Op Code. However, because of various factors that could cause an overrun
+rem --- at a particular Operation Center, it has been decided that this logic should match the Dipatch Inquiry.
+rem --- If your customer needs the original version 6 logic to take place, unremark the next line.
+rem    if actset[now]+actrun[now]>setup[now]+runtim[now] then now=now+1
     at$=ops$[now,0]
 
     thisindx=pos(thisseq$=opind$,op_len)
