@@ -338,7 +338,7 @@ rem --- Does order exist?
 
 rem --- A new record must be the next sequence
 
-	if found = 0 and new_seq$ = "N" then
+	if found = 0 and new_seq$ = "N"  and callpoint!.getDevObject("wo_no") = "" then
 		msg_id$ = "SF_NEW_ORD_USE_SEQ"
 		gosub disp_message	
 		callpoint!.setFocus("SFE_WOMASTR.WO_NO")
