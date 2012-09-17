@@ -284,6 +284,7 @@ rem --- Trip Read
 		data!.setFieldValue("ITEM_ID",read_tpl.item_id$)
 		data!.setFieldValue("OPENED_DATE",fndate$(read_tpl.opened_date$))
 		data!.setFieldValue("LAST_CLOSE",fndate$(read_tpl.closed_date$))
+		if cvs(read_tpl.closed_date$,3)="" data!.setFieldValue("LAST_CLOSE","")
 		dim sfc_type$:fattr(sfc_type$)
 		sfc_type.code_desc$="Code Not Found"
 		read record (sfc_type_dev,key=firm_id$+"A"+read_tpl.wo_type$,dom=*next) sfc_type$
@@ -294,6 +295,7 @@ rem --- Trip Read
 		data!.setFieldValue("PROD_QTY",str(read_tpl.sch_prod_qty:ad_units_mask$))
 		data!.setFieldValue("COMPLETED",str(read_tpl.qty_cls_todt:ad_units_mask$))
 		data!.setFieldValue("LAST_ACT_DATE",fndate$(read_tpl.lstact_date$))
+		if cvs(read_tpl.lstact_date$,3)="" data!.setFieldValue("LAST_ACT_DATE","")
 		if cvs(ivm_itemmast.item_desc$,3)=""
 			data!.setFieldValue("ITEM_DESC_1",read_tpl.description_01$)
 			data!.setFieldValue("ITEM_DESC_2",read_tpl.description_02$)
