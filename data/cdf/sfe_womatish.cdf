@@ -25,7 +25,13 @@ rem --- Suppress Barista's default delete message
 	callpoint!.setStatus("QUIET")
 [[SFE_WOMATISH.BDEL]]
 rem --- Retain commitment on delete?
-	msg_id$="SF_DELETE_ISSUE"
+
+	if callpoint!.getColumnData("SFE_WOMATISH.WO_CATEGORY") = "R"
+		msg_id$="SF_DELETE_ISSUE_REC"
+	else
+		msg_id$="SF_DELETE_ISSUE"
+	endif
+
 	gosub disp_message
 	if msg_opt$="C" then
 		callpoint!.setStatus("ABORT")
