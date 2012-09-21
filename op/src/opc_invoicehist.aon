@@ -236,7 +236,7 @@ rem --- Initial Read
     call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",len(m0$)+8,opt01_dev,1,0,status
     if status = 999 then goto std_exit
 
-    find record (opt01_dev, key=firm_id$+"  "+cust_id$+invoice_no$, dom=display) opt01a$
+    extract record (opt01_dev, key=firm_id$+"  "+cust_id$+invoice_no$, dom=display) opt01a$; rem Advisory Locking
 
 rem --- Main Read (no loop, mostly for the breaks)
 
@@ -469,6 +469,8 @@ rem gosub open_cash_box
     gosub order_update
 
 all_done: rem --- Exit
+
+    read(opt01_dev,end=*next); rem release extract
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     if status = 999 then goto std_exit
