@@ -114,7 +114,7 @@ rem --- Clear ivm-02 On Order
             if mod(total_recs,milestone)=0 call pgmdir$+"adc_progress.aon","S","","","",ivm02a.warehouse_id$+" "+ivm02a.item_id$,0,0,1,meter_num,status
             extract record (ivm02_dev,key=ivm02a_key$) ivm02a$
             ivm02a.qty_on_order=0
-            write record (ivm02_dev,key=ivm02a_key$) ivm02a$
+            write record (ivm02_dev) ivm02a$
         wend
 		call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
 		
@@ -138,7 +138,7 @@ rem --- Read next PO record; use knum=ITEM_PO, po's by item
                 extract record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
                 ivm02a.qty_on_order=ivm02a.qty_on_order+((poe12a.qty_ordered-poe12a.qty_received)*poe12a.conv_factor)
                 ivm02a$=field(ivm02a$)
-                write record (ivm02_dev,key=ivm02a.firm_id$+ivm02a.warehouse_id$+ivm02a.item_id$) ivm02a$
+                write record (ivm02_dev) ivm02a$
             wend
 			call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
         endif
@@ -172,7 +172,7 @@ rem --- Update warehouse
                 extract record (ivm02_dev,key=ivm02a_key$,dom=*continue) ivm02a$
                 ivm02a.qty_on_order=ivm02a.qty_on_order+(sfe01a.sch_prod_qty-sfe01a.qty_cls_todt)
                 ivm02a$=field(ivm02a$)                
-                write record (ivm02_dev,key=ivm02a_key$) ivm02a$
+                write record (ivm02_dev) ivm02a$
             wend
 			call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
         endif
