@@ -10,6 +10,10 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
+rem --- Use statements
+
+    use ::ado_func.src::func
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -19,6 +23,7 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
+	milestone=50
     milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
 
@@ -30,7 +35,7 @@ rem --- Open/Lock files
     files$[2]="ivs_params",ids$[2]="IVS_PARAMS"
     files$[3]="sfe-01",ids$[3]="SFE_WOMASTR"
     files$[4]="sfm-10",ids$[4]="SFC_WOTYPECD"
-    files$[5]="sfs-01a",ids$[5]="SFS_PARAMS"
+    files$[5]="sfs_params",ids$[5]="SFS_PARAMS"
     files$[6]="sft-01",ids$[6]="SFT_OPNOPRTR"
     files$[7]="sft-03",ids$[7]="SFT_CLSOPRTR"
     files$[8]="sft-11",ids$[8]="SFT_OPNLSTRN"
@@ -39,9 +44,11 @@ rem --- Open/Lock files
     files$[11]="sft-23",ids$[11]="SFT_CLSMATTR"
     files$[12]="sft-31",ids$[12]="SFT_OPNSUBTR"
     files$[13]="sft-33",ids$[13]="SFT_CLSSUBTR"
+
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
+
+    if status goto std_exit_no_update
     gls01a_dev=channels[1]
     ivs01a_dev=channels[2]
     sfe01a_dev=channels[3]
@@ -64,10 +71,6 @@ rem --- Dimension string templates
 :       sft21a$:templates$[10],sft23a$:templates$[11],sft31a$:templates$[12],
 :       sft33a$:templates$[13]
 
-rem --- Assign form input values to local variables
-
-    v$=Option!.getOptionData("Period (1 Thru 3)")
-
 rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"
@@ -77,103 +80,65 @@ rem --- Retrieve parameter records
     sfs01a_key$=firm_id$+"SF00"
     find record (sfs01a_dev,key=sfs01a_key$,err=std_missing_params) sfs01a$
 
-rem --- Parameters
-
-    n1$=sysinfo.firm_name$,n2$="SF",n3$=sysinfo.task_desc$
-    find record (sfs01a_dev,key=firm_id$+n2$+"00",dom=std_missing_params) sfs01a$
-    find record (gls01a_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
-    find record (ivs01a_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
     dim p[2],g[4]
-    
-    gls01_field$=fattr(ddm_03$,"")
-    xfer$=gls01_field$(pos("total_pers"=cvs(gls01_field$,8)))
-    xfer$=xfer$(1,pos("per_ending_01"=cvs(xfer$,8))-1)
-    x = 0
-    while xfer$<>""
-       xfield$=xfer$(1,pos($0A$=xfer$)-1)
-       g[x]=num(field(gls01a$,xfield$))
-       xfer$=xfer$(pos($0A$=xfer$)+1)
-       x=x+1
-    wend
 
-    g[2]=fnyy_year(gls01a.current_year$)
     p[0]=num(sfs01a.empl_no_len$)
-    p[1]=num(sfs01a.current_per$),p[2]=fnyy_year(sfs01a.current_year$)
+    p[1]=num(sfs01a.current_per$)
+	p[2]=num(sfs01a.current_year$)
 
 rem --- Init Data
 
-    h0=60
-    h1=120,h=0,h1$=n1$,h2$=n3$
-    l9=50
-    l=l9+1
-    dim j$(80,"-")
-    m0=len(sfs01a.empl_output$)
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","A","",m1$,0,m1
-    g5=len(gls01a.acct_output$)
     more=1
 
 rem --- Open Serial Files
 
-    if pos(ivs01a.lotser_flag$="LS")<>0 then 
-        files$[10]="sft-11"
-        files$[11]="sft-12"
-        call pgmdir$+"adc_fileopen.aon",1,10,11,files$[all],options$[all],channels[all],batch,status
-        if status then goto std_exit
-        sft11_dev=channels[10]
-        sft12_dev=channels[11]
+    if pos(ivs01a.lotser_flag$="LS")<>0
+		files=2,begfile=1,endfile=files
+		dim files$[files],options$[files],ids$[files],templates$[files],channels[files]	
+        files$[1]="sft-11"
+        files$[2]="sft-12"
+		call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:       	                            ids$[all],templates$[all],channels[all],batch,status
+
+        if status then goto std_exit_no_update
+        sft11_dev=channels[1]
+        sft12_dev=channels[2]
     endif
-rem --- Background
-
-    for x=4 to 6 step 2
-        call pgmdir$+"syc_wc.bbx",1,0,80,0,0,x,0
-    next x
-    print 'sb',@(20,3),"Period (1 Thru "+str(p[1]:"##")+"): ",'sf',@(0,22),'cl',
-
-rem --- Options
-    while more
-        flag=0
-        seterr std_error
-        v0$="S"
-        v1$="E",v2$="",v3$="",v4$="",v0=2,v1=40,v2=3
-        if v3=4 then goto std_exit
-        i=num(v$,err=*continue)
-        if i<1 or i>p[1] then continue
 
 rem --- Determine Period Limits
 
-        v=i
-        call pgmdir$+"adc_perioddates.aon",sys01_dev,i,p[2],v0$,v9$,status
-        if status then goto std_exit
-        p8$=v0$
-        p9$=v9$,p9=i
-        h3$="Period "+str(i)+"  From "+fndate$(v0$)+" To "+fndate$(v9$)
-        print @(40,3),h3$(8),
+	current_period=num(sfs01a.current_per$)
+	current_year=num(sfs01a.current_year$)
+	call pgmdir$+"adc_perioddates.aon",gls01a_dev,current_period,current_year,begdate$,
+:		enddate$,status
+	if status then goto std_exit_no_update
 
-rem --- Correct?
-        while more 
-            v4$="Is This The Correct Period: "
-            call pgmdir$+"adc_yesno.aon",1,v4$,0,v$,v3
-            print @(0,5),'cl',
-            if v3=4 then goto std_exit
-            if v$="NO" then 
-                flag=1
-                break
-            endif
-            if v$<>"YES" then continue
-        wend
-        if flag=1 continue
-        break
-    wend
+rem --- Get user approval to proceed
+
+    msg_id$="CLOSE_PERIOD"
+    dim msg_tokens$[2]
+    msg_tokens$[0]=str(current_period)
+    msg_tokens$[1]=func.formatDate(begdate$)
+    msg_tokens$[2]=func.formatDate(enddate$)
+    gosub disp_message
+    if msg_opt$="N" goto std_exit_no_update
+
 rem --- Overlay
 
-    t0$=""
-    read (sfm10_dev,key=firm_id$+"A",dom=*next)
+    wo_types$=""
+    read (sfm10a_dev,key=firm_id$+"A",dom=*next)
     while more
-        read record (sfm10_dev,end=*break) sfm10a$
+        read record (sfm10a_dev,end=*break) sfm10a$
         if pos(firm_id$=sfm10a.firm_id$)<>1 then break
-        if sfm10a.wo_category$="R" then let t0$=t0$+fm10a.wo_type$
+        if sfm10a.wo_category$="R" then let wo_types$=wo_types$+sfm10a.wo_type$
     wend
-    run pgmdir$+"sfu_eb.bbx"
+    run pgmdir$+"sfu_periodend_o1.aon"
+
+disp_message: rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -298,6 +263,14 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
+
+std_exit_no_update: 
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src

@@ -6,89 +6,70 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 
+	setesc std_error
+	seterr std_error
 
-    setesc std_error
-    seterr std_error
-
-rem --- Retrieve the program path
-
-    pgmdir$=stbl("+DIR_PGM",err=*next)
-
-rem --- Retrieve sysinfo data
-
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
-    firm_id$=sysinfo.firm_id$
-
-
-rem --- Open/Lock Files
 rem --- Init Data
-    more=1
+	more=1
 
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMASTR","PRIMARY",sfe01_key_tpl$,rd_table_chans$[all],status$
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNOPRTR","PRIMARY",sft01_key_tpl$,rd_table_chans$[all],status$
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNMATTR","PRIMARY",sft21_key_tpl$,rd_table_chans$[all],status$
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNSUBTR","PRIMARY",sft31_key_tpl$,rd_table_chans$[all],status$
-    call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNLSTRN","PRIMARY",sft11_key_tpl$,rd_table_chans$[all],status$
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMASTR","PRIMARY",sfe01_key_tpl$,rd_table_chans$[all],status$
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNOPRTR","PRIMARY",sft01_key_tpl$,rd_table_chans$[all],status$
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNMATTR","PRIMARY",sft21_key_tpl$,rd_table_chans$[all],status$
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNSUBTR","PRIMARY",sft31_key_tpl$,rd_table_chans$[all],status$
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNLSTRN","PRIMARY",sft11_key_tpl$,rd_table_chans$[all],status$
   
 rem --- Background
 
-    call pgmdir$+"adc_progress.aon","N","","","","",0,sfe01_dev,1,meter_num,ignore_status
-
-
-rem --- Disallow 'M'enu option in Error Routine
-
-    exit_ctrl=1
+	call pgmdir$+"adc_progress.aon","N","","","","",0,sfe01_dev,1,meter_num,ignore_status
 
 rem --- Process Here
 
-    read (sfe01_dev,key=firm_id$,dom=*next)
+	read (sfe01a_dev,key=firm_id$,dom=*next)
 
-    
-    dim sfe01a_key$:sfe01_key_tpl$
-    while more
-        sfe01a_key$=key(sfe01_dev,end=*break)
-        if pos(firm_id$=sfe01a_key$)<>1 then break
-        read record (sfe01_dev,key=sfe01a_key$) sfe01a$
-        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
-        if pos(sfe01a.WO_TYPE$=t0$,2)<=0 then
-            if sfe01a.WO_STATUS$<>"C" then continue
-            if sfe01a.CLOSED_DATE$>p9$ then continue
-        endif
+	dim sfe01a_key$:sfe01_key_tpl$
+	while more
+		sfe01a_key$=key(sfe01a_dev,end=*break)
+		if pos(firm_id$=sfe01a_key$)<>1 then break
+		read record (sfe01a_dev,key=sfe01a_key$) sfe01a$
+		recs=recs+1
+		if mod(recs,milestone)=0 call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
+		if pos(sfe01a.wo_type$=wo_types$,len(sfm10a.wo_type$))<=0 then
+			if sfe01a.wo_status$<>"C" then continue
+			if sfe01a.closed_date$>enddate$ then continue
+		endif
 
-rem --- WOT-01/21/31 To WOT-03/23/33 Here
+rem --- sft-01/21/31 to sft-03/23/33 here
 
-        wotran_dev=sft01_dev
-        dim wotran_key$:sft01_key_tpl$
-        dim sftran$:tmpl(wotran_dev)
-        wohist_dev=sft03_dev
-        dim sfhist$:tmpl(wohist_dev)
+		wotran_dev=sft01a_dev
+		dim wotran_key$:sft01_key_tpl$
+		dim sftran$:fattr(sft01a$)
+		wohist_dev=sft03a_dev
+		dim sfhist$:fattr(sft03a$)
 
-        if pos(sfe01a.WO_TYPE$=t0$,2)>0 then
-            let d9$=sfe01a.CLOSED_DATE$
-        else
-            let d9$=p9$
-        endif
+		if pos(sfe01a.wo_type$=wo_types$,len(sfm10a.wo_type$))>0
+			closed_date$=sfe01a.closed_date$
+		else
+			closed_date$=enddate$
+		endif
 
-        while more
-            read (wotran_dev,key=sfe01a.FIRM_ID$+sfe01a.WO_LOCATION$+sfe01a.WO_NO$,dom=*next)
-            while more
-                wotran_key$=key(wotran_dev,end=*break)
-                if (wotran_key.FIRM_ID$+wotran_key.WO_LOCATION$+wotran_key.WO_NO$)<>
-:                       (sfe01a.FIRM_ID$+sfe01a.WO_LOCATION$+sfe01a.WO_NO$) then
-                    break
-                endif
-                if wotran_key.TRANS_DATE$>d9$ then
-                    break
-                endif
-                print @(column+8,11),fndate$(wotran_key.TRANS_DATE$)
+		while more
+			read (wotran_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$,dom=*next)
+			while more
+				wotran_key$=key(wotran_dev,end=*break)
+				if (wotran_key.firm_id$+wotran_key.wo_location$+wotran_key.wo_no$)<>
+:                       (sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_no$)
+					break
+				endif
+				if wotran_key.trans_date$>closed_date$
+					break
+				endif
                 read record (wotran_dev,key=wotran_key$) sftran$
-                write record (wohist_dev,key=wotran_key$) sfhist$
+				dim sfhist$:fattr(sfhist$)
+				call pgm_dir$+"adc_copyfile.aon",sftran$,sfhist$,status
+                write record (wohist_dev) sfhist$
                 remove (wotran_dev,key=wotran_key$)
 
-                if pos(i3$(17,1)="LS")=0 then continue
+                if pos(ivs01a.lotser_flag$="LS")=0 then continue
 
 rem ------------wot-11 To wot-12 Here
 
@@ -100,26 +81,27 @@ rem ------------wot-11 To wot-12 Here
                         break
                     endif
                     read record (sft11_dev,key=sft11a_key$) sft11a$
-                    print @(column+8,11),fndate$(sft11a.TRANS_DATE$)
+					dim sft12a$:fattr(sft12a$)
+					call pgm_dir$+"adc_copyfile.aon",sft11a$,sf12a$,status
                     write record (sft12_dev,key=sft11a_key$) sft12a$
                     remove (sft11_dev,key=sft11a_key$)
                 wend
             wend
 
-            if wotran_dev=sft01_dev then
-                wotran_dev=sft21_dev
+            if wotran_dev=sft01a_dev
+                wotran_dev=sft21a_dev
                 dim wotran_key$:sft21_key_tpl$
-                dim sftran$:tmpl(wotran_dev)
-                wohist_dev=sft23_dev
-                dim sfhist$:tmpl(wohist_dev)
+                dim sftran$:fattr(sft21a$)
+                wohist_dev=sft23a_dev
+                dim sfhist$:fattr(sft23a$)
                 continue
             endif
-            if wotran_dev=sft21_dev then
-                wotran_dev=sft31_dev
+            if wotran_dev=sft21a_dev then
+                wotran_dev=sft31a_dev
                 dim wotran_key$:sft31_key_tpl$
-                dim sftran$:tmpl(wotran_dev)
-                wohist_dev=sft33_dev
-                dim sfhist$:tmpl(wohist_dev)
+                dim sftran$:fattr(sft31a$)
+                wohist_dev=sft33a_dev
+                dim sfhist$:fattr(sft33a$)
                 continue
             endif
             break
@@ -127,22 +109,29 @@ rem ------------wot-11 To wot-12 Here
 
     wend
 
+rem --- Increment Period
 
-
-done: rem --- Increment Period
-
-    if p9>=p[1] then
-        p[1]=p[1]+1
-        if p[1]>g[0] then
-            let p[1]=1,p[2]=p[2]+1
+    if current_period>=num(sfs01a.current_per$)
+		extract record (sfs01a_dev,key=firm_id$+"SF00",dom=std_missing_params) sfs01a$
+		cur_per=num(sfs01a.current_per$)
+		cur_yr=num(sfs01a.current_year$)
+		cur_per=cur_per+1
+		if cur_per>num(gls01a.total_pers$)
+			cur_per=1
+			cur_yr=cur_yr+1
         endif
-        extract record (sfs01_dev,key=firm_id$+n2$+"00",dom=std_missing_params) sfs01a$
-        sfs01a.CURRENT_PER$=str(p[1]:"00")
-        sfs01a.CURRENT_YEAR$=fnyear_yy21$(p[2])
-        write record (sfs01_dev,key=firm_id$+n2$+"00") sfs01a$
+        
+        sfs01a.current_per$=str(cur_per:"00")
+        sfs01a.current_year$=str(cur_yr:"0000")
+        write record (sfs01a_dev) sfs01a$
     endif
 
     goto std_exit
+
+disp_message: rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -266,6 +255,14 @@ rem #endinclude std_missing_params.src
 rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
+
+    msg_id$="UPDATE_COMPLETE"
+    dim msg_tokens$[1]
+    msg_opt$=""
+    gosub disp_message
+
+std_exit_no_update:
+
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
