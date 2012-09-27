@@ -45,11 +45,11 @@ rem --- Headings and print positions
 
     dim columns$[16,10]
     columns = 16
-    columns$[0,0]=Translate!.getTranslation("AON_PRI^CODE"),                   columns$[0,1]="C",columns$[0,2]="10"
+    columns$[0,0]=Translate!.getTranslation("AON_PRI^CODE"),                   columns$[0,1]="C",columns$[0,2]="5"
     columns$[1,0]=Translate!.getTranslation("AON_WO^NUMBER"),                  columns$[1,1]="C",columns$[1,2]="6"
     columns$[2,0]=Translate!.getTranslation("AON_SEQ"),                        columns$[2,1]="C",columns$[2,2]="10"
     columns$[3,0]=Translate!.getTranslation("AON_CAT"),                        columns$[3,1]="C",columns$[3,2]="4"
-    columns$[4,0]=Translate!.getTranslation("AON_DESCRIPTION^CUSTOMER"),       columns$[4,1]="C",columns$[4,2]="15"
+    columns$[4,0]=Translate!.getTranslation("AON_DESCRIPTION^CUSTOMER"),       columns$[4,1]="C",columns$[4,2]="25"
     columns$[5,0]=Translate!.getTranslation("AON_EST^START"),                  columns$[5,1]="C",columns$[5,2]="6"
     columns$[6,0]=Translate!.getTranslation("AON_ACT^START"),                  columns$[6,1]="C",columns$[6,2]="6"
     columns$[7,0]=Translate!.getTranslation("AON_EST^COMPLETE"),               columns$[7,1]="C",columns$[7,2]="8"
@@ -76,17 +76,16 @@ rem --- Init Read
     call stbl("+DIR_SYP")+"bac_key_template.bbj","SFT_OPNOPRTR","PRIMARY",sft01_key_tpl$,rd_table_chans$[all],status$
 
 rem --- Main Read
-    done_flag=0
+
     dim sfm05a_key$:sfm05_key_tpl$
     while more
-        sfm05a_key$=key(sfm05_dev,end=done)
+        sfm05a_key$=key(sfm05_dev,end=*break)
+
         if pos(firm_id$=sfm05a_key$)<>1 then
-            done_flag=1
             break
         endif
 		read record (sfm05_dev,key=sfm05a_key$) sfm05a$
         if opthru$<>"" and sfm05a_key.op_code$>opthru$ then 
-            done_flag = 1
             break
         endif
         if datefrom$<>"" and sfm05a_key.sched_date$<datefrom$ then 
@@ -99,149 +98,50 @@ rem --- Main Read
 rem --- Breaks
 
 		recs=recs+1
-        if mod(recs,milestone)=0 call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
-        if opcode$<>sfm05a.op_code$ then 
-            done_flag=0
-            gosub print_data 
-        endif
-        if transdate$<>sfm05a.sched_date$ then 
-            done_flag=0
-            gosub print_data
-        endif
+		if mod(recs,milestone)=0 call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
+		if opcode$=""
+			opcode$=sfm05a.op_code$
+			transdate$=sfm05a.sched_date$
+		endif
+		if opcode$<>sfm05a.op_code$ then 
+			gosub print_data 
+		endif
+		if transdate$<>sfm05a.sched_date$ then 
+			gosub print_data
+		endif
 
 rem --- Additional Reads
-        find record (sfe01_dev,key=firm_id$+sfe01a.wo_location$+sfm05a.wo_no$,dom=*continue) sfe01a$
-        if pos(sfe01a.wo_status$="QC")>0 then 
-            read (sfm05_dev,key=sfm05a.firm_id$+sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+sfm05a.oper_seq_ref$,dom=*continue)
-        endif
+		find record (sfe01_dev,key=firm_id$+sfe01a.wo_location$+sfm05a.wo_no$,dom=*continue) sfe01a$
+		if pos(sfe01a.wo_status$="QC")>0
+			read (sfm05_dev,key=firm_id$+sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+$ff$,dom=*continue)
+		endif
 
 rem --- Include?
 
-        gosub find_current_location
-        if opind$="" then continue
-        if sfm05a.oper_seq_ref$<now_seq$ then continue
+		gosub find_current_location
+		if opind$="" continue
+		if sfm05a.oper_seq_ref$<now_seq$ continue
 
 rem --- Add It Here
 
-        if num(sfe01a.priority$)=0 then sfe01a.priority$="9"
-        w$[num(sfe01a.priority$)]=w$[num(sfe01a.priority$)]+(firm_id$+sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+sfm05a.oper_seq_ref$)
-        t0=t0+sfm05a.setup_time+sfm05a.runtime_hrs
-    wend
+		if num(sfe01a.priority$)=0 then sfe01a.priority$="9"
+		w$[num(sfe01a.priority$)]=w$[num(sfe01a.priority$)]+(firm_id$+sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+sfm05a.oper_seq_ref$)
+		record_count=record_count+1
+		t0=t0+sfm05a.setup_time+sfm05a.runtime_hrs
+	wend
 
-    if done_flag=0 then
-print_data: rem --- Print Data
-        while more
-            if t0=0 then break
-            year$=transdate$(1,4)
-            month$=transdate$(5,2)
-            find record (sfm04_dev,key=firm_id$+opcode$+year$+month$,dom=*next) sfm04a$
-            s_day=num(transdate$(7,2))
-            if num(field(sfm04a$,"hrs_per_day_"+str(s_day:"00")))<0 then 
-                s_hrs=0 
-            else 
-                s_hrs=num(field(sfm04a$,"hrs_per_day_"+str(s_day:"00")))
-            endif
-            if s_hrs>0 and 100*t0/s_hrs<utilperc then break
-            gosub sub_heading
-            dim sfm05a1$:templates$[8]
+rem --- End Of File Here
 
-			for x=1 to 9
-				if len(w$[x])=0 then continue
-				for y=1 to len(w$[x]) step len(sfm05a_key$)
-					read record (sfm05_dev,key=w$[x](y,len(sfm05a_key$))) sfm05a1$
-					read record (sfe01_dev,key=firm_id$+sfe01a.wo_location$+sfm05a1.wo_no$,dom=*break) sfe01a$
-					if sfs01a.ar_interface$="Y" then 
-						read record (arm01_dev,key=firm_id$+sfe01a.customer_id$,dom=*next) arm01a$
-					endif
-					if opcode_break$="" then 
-						opcode_break$=sfm05a.op_code$
-						transdate$=sfm05a.sched_date$
-						gosub main_header
-					endif
-					if opcode_break$<>sfm05a.op_code$ then 
-						gosub main_header
-					endif
-					OutVect!.addItem(sfe01a.priority$)
-					OutVect!.addItem(sfm05a1.wo_no$)
-					OutVect!.addItem(sfm05a1.oper_seq_ref$)
-					OutVect!.addItem(sfe01a.wo_category$)
-
-					if sfe01a.wo_category$="I" then 
-						OutVect!.addItem(sfe01a.item_id$)
-					else 
-						dim desc$(20)
-						desc$(1)=sfe01a.description$
-						OutVect!.addItem(desc$)
-					endif
-
-					OutVect!.addItem(str(fndate$(sfe01a.eststt_date$)))
-					OutVect!.addItem(str(fndate$(sfe01a.act_st_date$)))
-					OutVect!.addItem(str(fndate$(sfe01a.estcmp_date$)))
-					OutVect!.addItem(sfe01a.sched_flag$)
-					OutVect!.addItem(now_op$)
-					OutVect!.addItem(str(sfm05a1.move_time))
-					OutVect!.addItem(str(sfm05a1.setup_time))
-					OutVect!.addItem(str(sfm05a1.runtime_hrs))
-					OutVect!.addItem(str(sfm05a1.setup_time+sfm05a1.runtime_hrs))
-					blank=fnblank(3)
-
-					blank=fnblank(4)
-					OutVect!.addItem(cvs(arm01a.customer_name$,3))
-					blank=fnblank(4)
-					OutVect!.addItem(from_op$)
-					OutVect!.addItem(str(sfm05a1.queue_time))
-					blank=fnblank(6)
-
-					t[1]=t[1]+sfm05a1.setup_time
-					t[2]=t[2]+sfm05a1.runtime_hrs
-				next y
-			next x
-
-rem --- End of Day
-
-            blank=fnblank(17)
-            TotVect!.addItem(str(OutVect!.size()/(columns+1)))
-            OutVect!.addItem(Translate!.getTranslation("AON_TOTAL_FOR_DATE:"))
-            OutVect!.addItem(str(fndate$(transdate$)))
-            blank=fnblank(9)
-            OutVect!.addItem(str(t[1]))
-            OutVect!.addItem(str(t[2]))
-            OutVect!.addItem(str(t[1]+t[2]))
-            OutVect!.addItem(str(s_hrs))
-            OutVect!.addItem(str(s_hrs-(t[1]+t[2])))
-
-            if s_hrs=0 then 
-                OutVect!.addItem("*****")
-            else 
-                OutVect!.addItem(str(100*(t[1]+t[2])/s_hrs))
-            endif
-            blank=fnblank(17)
-            blank=fnblank(17)
-            break
-        wend
-
-rem --- Reset for next day
-
-        dim w$[9],t[2]
-        opcode$=sfm05a.op_code$
-        transdate$=sfm05a.sched_date$
-		t0=0
-		return
+	if record_count=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
     endif
 
-done: rem --- End Of File Here
-
-    a0$=sfm05a.firm_id$+sfm05a.op_code$+sfm05a.sched_date$+sfm05a.wo_no$+sfm05a.oper_seq_ref$
-    if len(a0$)=0 then 
-        gosub main_header
-        goto std_exit
-    endif
-    done_flag=0
     gosub print_data
     goto std_exit
 
-
-main_header: rem --- Main Header
+op_code_break: rem --- Main Header
 
     if sfs01a.bm_interface$="Y" 
 		dim bmm08a$:fattr(bmm08a$)
@@ -260,16 +160,7 @@ main_header: rem --- Main Header
 	
 	return
 
-sub_heading: rem --- Sub Heading
-
-	if opcode_break$="" then 
-		opcode_break$=sfm05a.op_code$
-		transdate$=sfm05a.sched_date$
-		gosub main_header
-	endif
-	if opcode_break$<>sfm05a.op_code$ then 
-		gosub main_header
-	endif
+date_break: rem --- Sub Heading
 
 	OutVect!.addItem(Translate!.getTranslation("AON_DATE:_")+str(fndate$(transdate$)))
 	blank=fnblank(16)
@@ -329,6 +220,98 @@ rem --- Now setup NOW_OP$ and FROM_OP$
         from_op$=ops$[now,0]
     endif
     return
+
+print_data: rem --- Print Data
+	while more
+		if t0=0 then break
+		year$=transdate$(1,4)
+		month$=transdate$(5,2)
+		dim sfm04a$:fattr(sfm04a$)
+		find record (sfm04_dev,key=firm_id$+opcode$+year$+month$,dom=*next) sfm04a$
+		s_day=num(transdate$(7,2))
+		if s_day=0 s_day=1
+		if num(field(sfm04a$,"hrs_per_day_"+str(s_day:"00")))<0 then 
+			s_hrs=0 
+		else 
+			s_hrs=num(field(sfm04a$,"hrs_per_day_"+str(s_day:"00")))
+		endif
+		if s_hrs>0 and 100*t0/s_hrs<utilperc then break
+		gosub date_break
+		dim sfm05a1$:fattr(sfm05a$)
+
+		for x=1 to 9
+			if len(w$[x])=0 then continue
+			for y=1 to len(w$[x]) step len(sfm05a_key$)
+				read record (sfm05_dev,key=w$[x](y,len(sfm05a_key$))) sfm05a1$
+				read record (sfe01_dev,key=firm_id$+sfe01a.wo_location$+sfm05a1.wo_no$,dom=*next) sfe01a$
+				if sfs01a.ar_interface$="Y"
+					dim arm01a$:fattr(arm01a$)
+					read record (arm01_dev,key=firm_id$+sfe01a.customer_id$,dom=*next) arm01a$
+				endif
+				OutVect!.addItem(sfe01a.priority$)
+				OutVect!.addItem(sfm05a1.wo_no$)
+				OutVect!.addItem(sfm05a1.oper_seq_ref$)
+				OutVect!.addItem(sfe01a.wo_category$)
+
+				if sfe01a.wo_category$="I" then 
+					OutVect!.addItem(sfe01a.item_id$)
+				else 
+					OutVect!.addItem(sfe01a.description_01$)
+				endif
+
+				OutVect!.addItem(str(fndate$(sfe01a.eststt_date$)))
+				OutVect!.addItem(str(fndate$(sfe01a.act_st_date$)))
+				OutVect!.addItem(str(fndate$(sfe01a.estcmp_date$)))
+				OutVect!.addItem(sfe01a.sched_flag$)
+				OutVect!.addItem(now_op$)
+				OutVect!.addItem(str(sfm05a1.move_time))
+				OutVect!.addItem(str(sfm05a1.setup_time))
+				OutVect!.addItem(str(sfm05a1.runtime_hrs))
+				OutVect!.addItem(str(sfm05a1.setup_time+sfm05a1.runtime_hrs))
+				blank=fnblank(3)
+
+				blank=fnblank(4)
+				OutVect!.addItem(cvs(arm01a.customer_name$,3))
+				blank=fnblank(4)
+				OutVect!.addItem(from_op$)
+				OutVect!.addItem(str(sfm05a1.queue_time))
+				blank=fnblank(6)
+
+				t[1]=t[1]+sfm05a1.setup_time
+				t[2]=t[2]+sfm05a1.runtime_hrs
+			next y
+		next x
+
+rem --- End of Day
+
+		blank=fnblank(17)
+		TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+		OutVect!.addItem(Translate!.getTranslation("AON_TOTAL_FOR_DATE:")+" "+str(fndate$(transdate$)))
+		blank=fnblank(10)
+		OutVect!.addItem(str(t[1]))
+		OutVect!.addItem(str(t[2]))
+		OutVect!.addItem(str(t[1]+t[2]))
+		OutVect!.addItem(str(s_hrs))
+		OutVect!.addItem(str(s_hrs-(t[1]+t[2])))
+
+		if s_hrs=0 then 
+			OutVect!.addItem("*****")
+		else 
+			OutVect!.addItem(str(100*(t[1]+t[2])/s_hrs))
+		endif
+		blank=fnblank(17)
+		blank=fnblank(17)
+		break
+	wend
+
+rem --- Reset for next day
+
+	dim w$[9],t[2]
+	opcode$=sfm05a.op_code$
+	transdate$=sfm05a.sched_date$
+	t0=0
+
+	return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -420,6 +403,13 @@ rem --- fnglobal$: Return string value of passed STBL variable
 
 rem #endinclude std_functions.src
 
+rem #include disp_message.src
+
+disp_message: rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    return
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (01Apr2006)
@@ -472,6 +462,13 @@ std_exit: rem --- Standard program end (01Mar2006)
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
+
+std_exit_no_report: 
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status    
+    OutVect!=null()
+    goto std_exit
+
 rem #endinclude std_end.src
 
     end
