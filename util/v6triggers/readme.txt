@@ -13,6 +13,8 @@ GLM-03 Journal ID Codes
 GLT-04 Daily Transaction Detail
 GLT-05 Transaction Detail Sort
 IVM-02 Inventory Warehouse/Item Master
+PRM-01 Payroll Master File (used for Shop Floor integration)
+PRM-10 Pay Codes and Title Codes (used for Shop Floor integration)
 SYM-04 System Master
 SYM-06 Firm Master
 SYS-01 System Control
