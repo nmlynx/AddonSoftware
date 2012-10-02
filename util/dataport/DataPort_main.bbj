@@ -612,6 +612,11 @@ end_ddm04:
         endif
     next
 
+    rem ' Data record ID does not match dictionary record ID.
+    if pos(cvs(datafile$,8)="woe-12;woe-22;woe-32;woe-42;wom-03;wot-01;wot-03;wot-11;wot-12;wot-21;wot-23;wot-31;wot-33;",7) then 
+        record_id_field$=""
+    endif
+    
     rem ' Special address processing?
     addr_lines=0
     if source_version=6 and pos($0a$+"CITY"+$0a$=new_fields$) and pos($0a$+"STATE_CODE"+$0a$=new_fields$)
