@@ -59,7 +59,7 @@ if callpoint!.getColumnData("SFE_WO_COST_ADJ.LEVEL_SELECTION")="S"
 	endif
 endif
 
-callpoint!.setStatus("ABORT")
+callpoint!.setStatus("ABORT-ACTIVATE")
 [[SFE_WO_COST_ADJ.WO_NO.AVAL]]
 rem --- Fill form
 
