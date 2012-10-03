@@ -15,18 +15,24 @@ rem --- PICKLST_HEADER
 rem --- BOMCOSTING
 rem --- SFCALENDAR
 rem --- SFHARDCOPY
+rem --- SFHARDCOPYCLSDDET
 rem --- SFHARDCOPYOPSTD
 rem --- SFHARDCOPYMATSTD
 rem --- SFHARDCOPYSUBSTD
 rem --- SFHARDCOPYCOSTSUM
 rem --- SFHARDCOPYTRANS
+rem --- SFHARDCOPYFGLS
 
 rem --- VENDOR_INVOICES?
 rem --- VENDOR_INVOICE_DET?
 
 rem --- 4/2012 Added VIEWs to the hard-coded logic herein
-rem --- vw_sfx_wotranxr  (replaces sfm-07/sfx_wotranxr xref of WO transactions)
-rem --- vw_WOs_with_tran (JOIN sfe-01/sfe_womastr and vw_sfx_wotranxr)
+rem --- VW_SFX_WOTRANXR  (replaces sfm-07/sfx_wotranxr xref of WO transactions)
+rem --- VW_WOS_WITH_TRAN (JOIN sfe-01/sfe_womastr and vw_sfx_wotranxr)
+rem --- SF_COSTSUMS_STD (Accums Dir, Ovh, Mat and Sub STD costs by WO)
+rem --- SF_COSTSUMS_ACTO (Accums Ops, Dir, Ovh, Mat and Sub Actual costs of Open Trans by WO)
+rem --- SF_COSTSUMS_ACTC (Accums Ops, Dir, Ovh, Mat and Sub Actual costs of Closed Trans by WO)
+
 
 rem --- idea is to make an admin table in Addon (Barista?) that contains
 rem --- name, params, .prc loc and .cfg loc so as we deploy, we can run this program
@@ -72,7 +78,7 @@ rem --- Open File(s)
 
 rem --- Open File(s) used in VIEWs to ensure their existence (so CREATE won't err)
 rem     ***** NOTE: New VIEWs should add their tables to these opens *****
-	num_files=7
+	num_files=10
 	dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
 
 	open_tables$[1]	="SFE_WOMASTR",  open_opts$[1] = "OTA"; rem sfe-01
@@ -82,6 +88,9 @@ rem     ***** NOTE: New VIEWs should add their tables to these opens *****
 	open_tables$[5] ="SFT_CLSMATTR", open_opts$[5] = "OTA"; rem sft-23
 	open_tables$[6] ="SFT_OPNSUBTR", open_opts$[6] = "OTA"; rem sft-31
 	open_tables$[7] ="SFT_CLSSUBTR", open_opts$[7] = "OTA"; rem sft-33
+	open_tables$[8] ="SFE_WOOPRTN",  open_opts$[8] = "OTA"; rem sfe-02
+	open_tables$[9] ="SFE_WOMATL",   open_opts$[9] = "OTA"; rem sfe-22
+	open_tables$[10]="SFE_WOSUBCNT", open_opts$[10]= "OTA"; rem sfe-32	
 	
 	gosub open_tables
 
@@ -94,6 +103,9 @@ rem --- Close tables opened solely to ensure VIEWs don't err
 	open_tables$[5] ="SFT_CLSMATTR", open_opts$[5] = "C"; rem sft-23
 	open_tables$[6] ="SFT_OPNSUBTR", open_opts$[6] = "C"; rem sft-31
 	open_tables$[7] ="SFT_CLSSUBTR", open_opts$[7] = "C"; rem sft-33
+	open_tables$[8] ="SFE_WOOPRTN",  open_opts$[8] = "C"; rem sfe-02
+	open_tables$[9] ="SFE_WOMATL",   open_opts$[9] = "C"; rem sfe-22
+	open_tables$[10]="SFE_WOSUBCNT", open_opts$[10]= "C"; rem sfe-32		
 	
     gosub open_tables	
 	
@@ -333,8 +345,10 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
     sproc_vw_name$="SFHARDCOPYCLSDDET"
 	sqlprep$="CREATE PROCEDURE SFHARDCOPYCLSDDET "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, MASKS VARCHAR(1) IN,"
-	sqlprep$=sqlprep$+" COST_MASK_PATTERN VARCHAR(1) IN, AMT_MASK_PATTERN VARCHAR(1) IN, UNITS_MASK_PATTERN VARCHAR(1) IN) "
-    sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPYCLSDDET.prc' '"+barista_cfg_path$+"barista.cfg' "
+	sqlprep$=sqlprep$+" COST_MASK_PATTERN VARCHAR(1) IN, AMT_MASK_PATTERN VARCHAR(1) IN, UNITS_MASK_PATTERN VARCHAR(1) IN, "
+	sqlprep$=sqlprep$+" WO_CATEGORY VARCHAR(1) IN, WAREHOUSE_ID VARCHAR(1) IN, WO_TYPE VARCHAR(1) IN, ITEM_ID VARCHAR(1) IN, "
+    sqlprep$=sqlprep$+" SF_PREVPER_ENDDATE VARCHAR(1) IN, WO_STATUS_LETTER VARCHAR(1) IN, CLOSED_DATE_RAW VARCHAR(1) IN) "
+	sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPYCLSDDET.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'WO Hard Copy Closed Detail'"
 
@@ -414,13 +428,26 @@ rem --- first drop all std Addon VIEWs
 	sql_action$="DROP VIEW"
 	abort_on_exec_err=0; rem OK if DROP fails to EXEC, but not OK if CREATE fails or if PREP fails
 	
-	sproc_vw_name$="vw_sfx_wotranxr"
+	sproc_vw_name$="VW_SFX_WOTRANXR"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
 
-	sproc_vw_name$="vw_wos_with_tran"
+	sproc_vw_name$="VW_WOS_WITH_TRAN"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
+	
+	sproc_vw_name$="SF_COSTSUMS_STD"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+
+	sproc_vw_name$="SF_COSTSUMS_ACTO"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+	
+	sproc_vw_name$="SF_COSTSUMS_ACTC"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+	
 
 rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)     
 	
@@ -428,8 +455,9 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
 	abort_on_exec_err=1; rem OK if DROP fails to EXEC, but not OK if CREATE fails or if PREP fails
 	
 	rem --  Replacement for sfm-07/sfx_wotranxr SF transaction xref
+	rem --  JOINed with sfe_WOMastr in vw_wos_with_tran
 	
-    sproc_vw_name$="vw_sfx_wotranxr"
+    sproc_vw_name$="VW_SFX_WOTRANXR"
 	sqlprep$="CREATE VIEW VW_SFX_WOTRANXR AS "
     sqlprep$=sqlprep$+"SELECT oMats.firm_id"+$0a$
     sqlprep$=sqlprep$+"     , oMats.wo_location"+$0a$
@@ -506,7 +534,7 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     gosub create_sproc_def	
 
 	rem --  JOIN sfe-01/sfe_womastr with transaction xref view
-    sproc_vw_name$="vw_wos_with_tran"
+    sproc_vw_name$="VW_WOS_WITH_TRAN"
 	sqlprep$="CREATE VIEW VW_WOS_WITH_TRAN AS "
 	sqlprep$=sqlprep$+"SELECT mast.firm_id"+$0a$
 	sqlprep$=sqlprep$+"     , mast.wo_location"+$0a$
@@ -549,12 +577,149 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"     , mast.cls_inp_qty"+$0a$
     sqlprep$=sqlprep$+"     , mast.closed_cost"+$0a$
     sqlprep$=sqlprep$+"     , mast.est_yield "+$0a$
-    sqlprep$=sqlprep$+"FROM sfe_womastr AS mast "+$0a$
-    sqlprep$=sqlprep$+"INNER JOIN vw_sfx_wotranxr AS xref"+$0a$
+    sqlprep$=sqlprep$+"FROM SFE_WOMASTR AS mast "+$0a$
+    sqlprep$=sqlprep$+"INNER JOIN VW_SFX_WOTRANXR AS xref"+$0a$
     sqlprep$=sqlprep$+"        ON mast.firm_id+mast.wo_location+mast.wo_no"+$0a$
     sqlprep$=sqlprep$+"         = xref.firm_id+xref.wo_location+xref.wo_no"
 
     gosub create_sproc_def	
+		
+	rem --- SF_COSTSUMS_STD (Accums Dir, Ovh, Mat and Sub STD costs by WO)
+	rem --- Can replace v6 logic of looping through sfe-02, sfe-22, sfe-32
+	rem --- Originally written for Closed WO Detail Report
+    sproc_vw_name$="SF_COSTSUMS_STD"
+	sqlprep$="CREATE VIEW SF_COSTSUMS_STD AS "
+    sqlprep$=sqlprep$+"SELECT wo.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,wo.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"      ,wo.WO_No"+$0a$
+	sqlprep$=sqlprep$+"      ,operReq.Tot_STD_Dir_Cost"+$0a$
+	sqlprep$=sqlprep$+"      ,operReq.Tot_STD_Ovh_Cost"+$0a$
+	sqlprep$=sqlprep$+"      ,matReq.Tot_STD_Mat_Cost"+$0a$
+	sqlprep$=sqlprep$+"      ,subReq.Tot_STD_Sub_Cost"+$0a$
+	sqlprep$=sqlprep$+"FROM SFE_WOMASTR AS wo"+$0a$
+	sqlprep$=sqlprep$+"LEFT JOIN (SELECT ops.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"                 ,ops.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"                 ,ops.WO_No"+$0a$
+	sqlprep$=sqlprep$+"                 ,SUM(ops.Total_Time * ops.Direct_Rate) AS Tot_STD_Dir_Cost"+$0a$
+	sqlprep$=sqlprep$+"                 ,SUM(ops.Tot_STD_Cost-(ops.Total_Time * ops.Direct_Rate)) AS Tot_STD_Ovh_Cost"+$0a$
+	sqlprep$=sqlprep$+"           FROM SFE_WOOprtn AS ops"+$0a$
+	sqlprep$=sqlprep$+"           GROUP BY ops.Firm_ID,ops.WO_Location,ops.WO_No"+$0a$
+	sqlprep$=sqlprep$+"          ) AS operReq"+$0a$
+	sqlprep$=sqlprep$+"       ON wo.Firm_ID+wo.WO_Location+wo.WO_No"+$0a$
+	sqlprep$=sqlprep$+"        = operReq.Firm_ID+operReq.WO_Location+operReq.WO_No"+$0a$
+	sqlprep$=sqlprep$+"LEFT JOIN (SELECT mats.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"                 ,mats.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"                 ,mats.WO_No"+$0a$
+	sqlprep$=sqlprep$+"                 ,SUM(mats.Total_Cost) AS Tot_STD_Mat_Cost"+$0a$
+	sqlprep$=sqlprep$+"           FROM SFE_WOMatl AS mats"+$0a$
+	sqlprep$=sqlprep$+"           GROUP BY mats.Firm_ID,mats.WO_Location,mats.WO_No"+$0a$
+	sqlprep$=sqlprep$+"          ) AS matReq"+$0a$
+	sqlprep$=sqlprep$+"       ON wo.Firm_ID+wo.WO_Location+wo.WO_No"+$0a$
+	sqlprep$=sqlprep$+"        = matReq.Firm_ID+matReq.WO_Location+matReq.WO_No"+$0a$
+	sqlprep$=sqlprep$+"LEFT JOIN (SELECT subs.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"                 ,subs.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"                 ,subs.WO_No"+$0a$
+	sqlprep$=sqlprep$+"                 ,SUM(subs.Total_Cost) AS Tot_STD_Sub_Cost"+$0a$
+	sqlprep$=sqlprep$+"           FROM SFE_WOSubcnt AS subs"+$0a$
+	sqlprep$=sqlprep$+"           GROUP BY  subs.Firm_ID,subs.WO_Location,subs.WO_No"+$0a$
+	sqlprep$=sqlprep$+"          ) AS subReq"+$0a$
+	sqlprep$=sqlprep$+"       ON wo.Firm_ID+wo.WO_Location+wo.WO_No"+$0a$
+	sqlprep$=sqlprep$+"        = subReq.Firm_ID+subReq.WO_Location+subReq.WO_No"+$0a$
+
+    gosub create_sproc_def	
+	
+	rem --- SF_COSTSUMS_ACTO (Accums Ops, Dir, Ovh, Mat and Sub Actual costs of Open Trans by WO)	
+    rem --- Can replace v6 logic of looping through sft-01, sft-21, sft-31 to accum total Open Trans costs
+	rem --- Originally written for Closed WO Detail Report
+	sproc_vw_name$="SF_COSTSUMS_ACTO"
+	sqlprep$="CREATE VIEW SF_COSTSUMS_ACTO AS "
+    sqlprep$=sqlprep$+"SELECT wo.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,wo.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"      ,wo.WO_No"+$0a$
+	sqlprep$=sqlprep$+"      ,operAct.Tot_ACT_Ops_Cost"+$0a$
+	sqlprep$=sqlprep$+"      ,operAct.Tot_ACT_Dir_Cost"+$0a$
+	sqlprep$=sqlprep$+"      ,operAct.Tot_ACT_Ovh_Cost"+$0a$
+	sqlprep$=sqlprep$+"      ,matAct.Tot_ACT_Mat_Cost"+$0a$
+	sqlprep$=sqlprep$+"      ,subAct.Tot_ACT_Sub_Cost"+$0a$
+	sqlprep$=sqlprep$+"FROM SFE_WOMASTR AS wo"+$0a$
+	sqlprep$=sqlprep$+"LEFT JOIN (SELECT ops.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"                 ,ops.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"                 ,ops.WO_No"+$0a$
+	sqlprep$=sqlprep$+"                 ,SUM(ops.Ext_Cost) AS Tot_ACT_Ops_Cost"+$0a$
+	sqlprep$=sqlprep$+"                 ,SUM(ops.Units * ops.Direct_Rate) AS Tot_ACT_Dir_Cost"+$0a$
+	sqlprep$=sqlprep$+"                 ,SUM(ops.Ext_Cost-(ops.Units * ops.Direct_Rate)) AS Tot_ACT_Ovh_Cost"+$0a$
+	sqlprep$=sqlprep$+"           FROM SFT_OPNOPRTR AS ops"+$0a$
+	sqlprep$=sqlprep$+"           GROUP BY ops.Firm_ID,ops.WO_Location,ops.WO_No"+$0a$
+	sqlprep$=sqlprep$+"          ) AS operAct"+$0a$
+	sqlprep$=sqlprep$+"       ON wo.Firm_ID+wo.WO_Location+wo.WO_No"+$0a$
+	sqlprep$=sqlprep$+"        = operAct.Firm_ID+operAct.WO_Location+operAct.WO_No"+$0a$
+	sqlprep$=sqlprep$+"LEFT JOIN (SELECT mats.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"                 ,mats.WO_Location "+$0a$
+	sqlprep$=sqlprep$+"                 ,mats.WO_No"+$0a$
+	sqlprep$=sqlprep$+"                 ,SUM(mats.Ext_Cost) AS Tot_ACT_Mat_Cost"+$0a$
+	sqlprep$=sqlprep$+"           FROM SFT_OPNMATTR AS mats"+$0a$
+	sqlprep$=sqlprep$+"           GROUP BY mats.Firm_ID,mats.WO_Location,mats.WO_No"+$0a$
+	sqlprep$=sqlprep$+"          ) AS matAct"+$0a$
+	sqlprep$=sqlprep$+"       ON wo.Firm_ID+wo.WO_Location+wo.WO_No"+$0a$
+	sqlprep$=sqlprep$+"        = matAct.Firm_ID+matAct.WO_Location+matAct.WO_No"+$0a$
+	sqlprep$=sqlprep$+"LEFT JOIN (SELECT subs.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"                 ,subs.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"                 ,subs.WO_No"+$0a$
+	sqlprep$=sqlprep$+"                 ,SUM(subs.Ext_Cost) AS Tot_ACT_Sub_Cost"+$0a$
+	sqlprep$=sqlprep$+"           FROM SFT_OPNSUBTR AS subs"+$0a$
+	sqlprep$=sqlprep$+"           GROUP BY  subs.Firm_ID,subs.WO_Location,subs.WO_No"+$0a$
+	sqlprep$=sqlprep$+"          ) AS subAct"+$0a$
+	sqlprep$=sqlprep$+"       ON wo.Firm_ID+wo.WO_Location+wo.WO_No"+$0a$
+	sqlprep$=sqlprep$+"        = subAct.Firm_ID+subAct.WO_Location+subAct.WO_No"+$0a$
+
+    gosub create_sproc_def	
+	
+	rem --- SF_COSTSUMS_ACTC (Accums Ops, Dir, Ovh, Mat and Sub Actual costs of Closed Trans by WO)
+    rem --- Can replace v6 logic of looping through sft-03, sft-23, sft-33 to accum total Closed Trans costs
+	rem --- Originally written for Closed WO Detail Report
+	sproc_vw_name$="SF_COSTSUMS_ACTC"
+	sqlprep$="CREATE VIEW SF_COSTSUMS_ACTC AS "
+    sqlprep$=sqlprep$+"SELECT wo.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,wo.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"      ,wo.WO_No"+$0a$
+	sqlprep$=sqlprep$+"      ,operAct.Tot_ACT_Ops_Cost"+$0a$
+	sqlprep$=sqlprep$+"      ,operAct.Tot_ACT_Dir_Cost"+$0a$
+	sqlprep$=sqlprep$+"      ,operAct.Tot_ACT_Ovh_Cost"+$0a$
+	sqlprep$=sqlprep$+"      ,matAct.Tot_ACT_Mat_Cost"+$0a$
+	sqlprep$=sqlprep$+"      ,subAct.Tot_ACT_Sub_Cost"+$0a$
+	sqlprep$=sqlprep$+"FROM SFE_WOMASTR AS wo"+$0a$
+	sqlprep$=sqlprep$+"LEFT JOIN (SELECT ops.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"                 ,ops.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"                 ,ops.WO_No"+$0a$
+	sqlprep$=sqlprep$+"                 ,SUM(ops.Ext_Cost) AS Tot_ACT_Ops_Cost"+$0a$
+	sqlprep$=sqlprep$+"                 ,SUM(ops.Units * ops.Direct_Rate) AS Tot_ACT_Dir_Cost"+$0a$
+	sqlprep$=sqlprep$+"                 ,SUM(ops.Ext_Cost-(ops.Units * ops.Direct_Rate)) AS Tot_ACT_Ovh_Cost"+$0a$
+	sqlprep$=sqlprep$+"           FROM SFT_CLSOPRTR AS ops"+$0a$
+	sqlprep$=sqlprep$+"           GROUP BY ops.Firm_ID,ops.WO_Location,ops.WO_No"+$0a$
+	sqlprep$=sqlprep$+"          ) AS operAct"+$0a$
+	sqlprep$=sqlprep$+"       ON wo.Firm_ID+wo.WO_Location+wo.WO_No"+$0a$
+	sqlprep$=sqlprep$+"        = operAct.Firm_ID+operAct.WO_Location+operAct.WO_No"+$0a$
+	sqlprep$=sqlprep$+"LEFT JOIN (SELECT mats.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"                 ,mats.WO_Location "+$0a$
+	sqlprep$=sqlprep$+"                 ,mats.WO_No"+$0a$
+	sqlprep$=sqlprep$+"                 ,SUM(mats.Ext_Cost) AS Tot_ACT_Mat_Cost"+$0a$
+	sqlprep$=sqlprep$+"           FROM SFT_CLSMATTR AS mats"+$0a$
+	sqlprep$=sqlprep$+"           GROUP BY mats.Firm_ID,mats.WO_Location,mats.WO_No"+$0a$
+	sqlprep$=sqlprep$+"          ) AS matAct"+$0a$
+	sqlprep$=sqlprep$+"       ON wo.Firm_ID+wo.WO_Location+wo.WO_No"+$0a$
+	sqlprep$=sqlprep$+"        = matAct.Firm_ID+matAct.WO_Location+matAct.WO_No"+$0a$
+	sqlprep$=sqlprep$+"LEFT JOIN (SELECT subs.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"                 ,subs.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"                 ,subs.WO_No"+$0a$
+	sqlprep$=sqlprep$+"                 ,SUM(subs.Ext_Cost) AS Tot_ACT_Sub_Cost"+$0a$
+	sqlprep$=sqlprep$+"           FROM SFT_CLSSUBTR AS subs"+$0a$
+	sqlprep$=sqlprep$+"           GROUP BY  subs.Firm_ID,subs.WO_Location,subs.WO_No"+$0a$
+	sqlprep$=sqlprep$+"          ) AS subAct"+$0a$
+	sqlprep$=sqlprep$+"       ON wo.Firm_ID+wo.WO_Location+wo.WO_No"+$0a$
+	sqlprep$=sqlprep$+"        = subAct.Firm_ID+subAct.WO_Location+subAct.WO_No"+$0a$
+
+    gosub create_sproc_def	
+
 	
 done:
 
