@@ -707,7 +707,7 @@ rem --- Create pages from both physical and display objects
     declare BBjFormPage pagePrint!
 
     pagePDF!   = docPDF!.createPage()
-    pagePrint! = docPrint!.createPage(err=std_error)
+    pagePrint! = docPrint!.createPage(err=invalid_printer)
 
     pdf!.setPage(pagePrint!)
 
@@ -1208,6 +1208,13 @@ disp_message: rem --- Display a message
 :       table_chans$[all]
 
     return
+
+invalid_printer:
+
+	msg_id$="AD_NOPRINTER"
+	gosub disp_message
+	status=998
+	goto std_exit
 
 rem #endinclude disp_message.src
 
