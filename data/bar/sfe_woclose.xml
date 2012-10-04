@@ -18,9 +18,9 @@
 			<ASC_VERSION_ID id="ddm_tables.sfe_woclose">12.0</ASC_VERSION_ID>
 			<DD_EXPORT_DATA id="ddm_tables.sfe_woclose">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.sfe_woclose">20120924</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.sfe_woclose">20121002</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.sfe_woclose">20121001</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.sfe_woclose">173940</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.sfe_woclose">20121004</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.sfe_woclose">20121004</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.sfe_woclose">105036</DD_LSTSYNC_TIME>
 			<DD_ATTR_ATAB id="ddm_tables.sfe_woclose">SFE_WOMASTR     </DD_ATTR_ATAB>
 			<DD_ATTR_CPGM id="ddm_tables.sfe_woclose">C:/aon_dev/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.sfe_woclose">PRIMARY</DD_ATTR_DKNM>
@@ -28,11 +28,25 @@
 			<DD_ATTR_WINT id="ddm_tables.sfe_woclose">Work Order Close Data</DD_ATTR_WINT>
 		</RECORD>
 	</ALIAS>
+	<ALIAS id="ddm_table_aopt">
+		<ID id="ddm_table_aopt">DDM_TABLE_AOPT</ID>
+		<RECORD id="ddm_table_aopt.sfe_woclose01">
+			<DD_TABLE_ALIAS id="ddm_table_aopt.sfe_woclose01">SFE_WOCLOSE     </DD_TABLE_ALIAS>
+			<DD_ATTR_SEQ id="ddm_table_aopt.sfe_woclose01">01</DD_ATTR_SEQ>
+			<DD_ATTR_AOPT id="ddm_table_aopt.sfe_woclose01">Lot/Serial Number</DD_ATTR_AOPT>
+			<DD_ATTR_AOPT_CD id="ddm_table_aopt.sfe_woclose01">LSNO</DD_ATTR_AOPT_CD>
+			<DD_ATTR_AOPT_FM id="ddm_table_aopt.sfe_woclose01">M</DD_ATTR_AOPT_FM>
+		</RECORD>
+	</ALIAS>
 	<ALIAS id="ddm_table_cpro">
 		<ID id="ddm_table_cpro">DDM_TABLE_CPRO</ID>
 		<RECORD id="ddm_table_cpro.sfe_wocloseadis">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_wocloseadis">SFE_WOCLOSE     </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.sfe_wocloseadis">ADIS</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.sfe_wocloseaopt-lsno">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_wocloseaopt-lsno">SFE_WOCLOSE     </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.sfe_wocloseaopt-lsno">AOPT-LSNO</DD_ATTR_CPRO>
 		</RECORD>
 		<RECORD id="ddm_table_cpro.sfe_wocloseasho">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_wocloseasho">SFE_WOCLOSE     </DD_TABLE_ALIAS>

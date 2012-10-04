@@ -1,3 +1,6 @@
+[[SFE_WOCLOSE.AOPT-LSNO]]
+rem --- Launch sfe_wolotser form to assign lot/serial numbers
+	gosub do_wolotser
 [[SFE_WOCLOSE.ASVA]]
 rem --- Don't do close stuff when SAVE comes from callpoint!.setStatus("SAVE")
 	if callpoint!.getDevObject("set_status_save") then 
@@ -114,8 +117,11 @@ rem --- Recalculate standards
 	endif
 
 rem --- Lot/serial processing if needed
-rem wgh ... stopped here
-	if callpoint!.getColumnData("SFE_WOCLOSE.LOTSER_ITEM")="Y" then escape; rem wgh ... need to do WOE.EB here
+	if callpoint!.getColumnData("SFE_WOCLOSE.WO_CATEGORY")="I" and 
+:	callpoint!.getColumnData("SFE_WOCLOSE.LOTSER_ITEM")="Y" and 
+:	pos(callpoint!.getDevObject("lotser")="LS") then
+		gosub do_wolotser
+	endif
 [[SFE_WOCLOSE.CLOSED_COST.BINP]]
 rem --- As needed, initialize actual closed cost and closed value
 	if num(callpoint!.getColumnData("SFE_WOCLOSE.CLOSED_COST"))=0 then
@@ -261,6 +267,9 @@ rem --- Initialize input close date
 		callpoint!.setStatus("MODIFIED")
 	endif
 [[SFE_WOCLOSE.ADIS]]
+rem --- Need to ask about closing this work order
+	callpoint!.setDevObject("ask_close_question","1")
+
 rem --- Close at standard or actual?
 	wotypecd_dev=fnget_dev("@SFC_WOTYPECD")
 	dim wotypecd$:fnget_tpl$("@SFC_WOTYPECD")
@@ -286,11 +295,11 @@ rem --- Work order scheduled to be closed?
 		if msg_opt$="Y" then
 			rem --- Reopen work order
 			remove(closedwo_dev,key=firm_id$+wo_location$+wo_no$,dom=*next)
-			callpoint!.setColumnData("SFE_WOCLOSE.CLS_INP_DATE","")
-			callpoint!.setColumnData("SFE_WOCLOSE.COMPLETE_FLG","")
-			callpoint!.setColumnData("SFE_WOCLOSE.CLS_INP_QTY","0")
-			callpoint!.setColumnData("SFE_WOCLOSE.CLOSED_COST","0")
-			callpoint!.setStatus("SAVE")
+			callpoint!.setColumnData("SFE_WOCLOSE.CLS_INP_DATE","",1)
+			callpoint!.setColumnData("SFE_WOCLOSE.COMPLETE_FLG","",1)
+			callpoint!.setColumnData("SFE_WOCLOSE.CLS_INP_QTY","0",1)
+			callpoint!.setColumnData("SFE_WOCLOSE.CLOSED_COST","0",1)
+			callpoint!.setStatus("REFRESH-SAVE")
 			callpoint!.setDevObject("set_status_save",1)
 
 			rem --- Clear close entries for serial/lot numbers for this work order
@@ -303,15 +312,12 @@ rem --- Work order scheduled to be closed?
 					wolotser_key$=key(wolotser_dev,end=*break)
 					if pos(firm_id$+wo_location$+wo_no$=wolotser_key$)<>1 then break
 					extractrecord(wolotser_dev,key=wolotser_key$)wolotser$; rem Advisory locking
+					wolotser.complete_flg$=""
 					wolotser.cls_inp_qty=0
 					wolotser.closed_cost=0
 					writerecord(wolotser_dev)wolotser$
 				wend
 			endif
-
-			rem --- Done with this work order
-			callpoint!.setStatus("ABORT")
-			break
 		else
 			closed_no_reopen=1
 		endif
@@ -447,8 +453,14 @@ rem --- Calculate and display new amounts
 	callpoint!.setColumnData("<<DISPLAY>>.ACT_UNIT_COST",str(act_unit_cost),1)
 	callpoint!.setColumnData("<<DISPLAY>>.VALUE_AT_ACT",str(act_cost),1)
 
-rem --- Need to ask about closing this work order
-	callpoint!.setDevObject("ask_close_question","1")
+rem -- Disable lot/serial option if not lotted/serialized
+	if callpoint!.getColumnData("SFE_WOCLOSE.WO_CATEGORY")="I" and 
+:	callpoint!.getColumnData("SFE_WOCLOSE.LOTSER_ITEM")="Y" and 
+:	pos(callpoint!.getDevObject("lotser")="LS") then
+		callpoint!.setOptionEnabled("LSNO",1)
+	else
+		callpoint!.setOptionEnabled("LSNO",0)
+	endif
 [[SFE_WOCLOSE.<CUSTOM>]]
 #include std_missing_params.src
 
@@ -495,6 +507,33 @@ rem ==========================================================================
 	endif
 	return
 
+rem ==========================================================================
+do_wolotser: rem --- Launch sfe_wolotser form to assign lot/serial numbers
+rem ==========================================================================
+	callpoint!.setDevObject("prod_qty",callpoint!.getColumnData("SFE_WOCLOSE.SCH_PROD_QTY"))
+	callpoint!.setDevObject("wo_status",callpoint!.getColumnData("SFE_WOCLOSE.WO_STATUS"))
+	callpoint!.setDevObject("allow_close","Y")
+
+	key_pfx$=firm_id$+callpoint!.getColumnData("SFE_WOCLOSE.WO_LOCATION")+callpoint!.getColumnData("SFE_WOCLOSE.WO_NO")
+
+	dim dflt_data$[3,1]
+	dflt_data$[1,0]="SFE_WOLOTSER.FIRM_ID"
+	dflt_data$[1,1]=firm_id$
+	dflt_data$[2,0]="SFE_WOLOTSER.WO_LOCATION"
+	dflt_data$[2,1]=callpoint!.getColumnData("SFE_WOCLOSE.WO_LOCATION")
+	dflt_data$[3,0]="SFE_WOLOTSER.WO_NO"
+	dflt_data$[3,1]=callpoint!.getColumnData("SFE_WOCLOSE.WO_NO")
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"SFE_WOLOTSER",
+:		stbl("+USER_ID"),
+:		access$,
+:		key_pfx$,
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
+	return
 [[SFE_WOCLOSE.BSHO]]
 use ::sfo_SfUtils.aon::SfUtils
 
@@ -553,25 +592,24 @@ rem --- Get IV parameters
 	callpoint!.setDevObject("cost_method",cost_method$)
 
 rem --- Additional file opens
-	num_files=5
+	num_files=4
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	if po$="Y" then
 		open_tables$[1]="POE_REQDET",open_opts$[1]="OTA@"
 		open_tables$[2]="POE_PODET",open_opts$[2]="OTA@"
 	endif
 	if pos(lotser$="LS") then
-		open_tables$[3]="SFE_WOLOTSER",open_opts$[3]="OTA[1]"
-		open_tables$[4]="IVM_LSMASTER",open_opts$[4]="OTA@"
+		open_tables$[3]="IVM_LSMASTER",open_opts$[3]="OTA@"
 	endif
 	if gl$="Y" then
-		open_tables$[5]="GLS_PARAMS",open_opts$[5]="OTA@"
+		open_tables$[4]="GLS_PARAMS",open_opts$[4]="OTA@"
 	endif
 
 	gosub open_tables
 
 	if gl$="Y" then
 		rem --- Get GL period start date for current SF period
-		gls_params_dev=num(open_chans$[5])
+		gls_params_dev=num(open_chans$[4])
 		call stbl("+DIR_PGM")+"adc_perioddates.aon",gls_params_dev,num(sfs_params.current_per$),num(sfs_params.current_year$),beg_date$,end_date$,status
 		callpoint!.setDevObject("gl_beg_date",beg_date$)
 	endif

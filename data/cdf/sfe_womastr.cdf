@@ -1,6 +1,7 @@
 [[SFE_WOMASTR.AOPT-LSNO]]
 rem --- launch sfe_wolotser form to assign lot/serial numbers
 rem --- should only be enabled if on an inventory type WO, if item is lotted/serialized, and if params have LS set.
+	callpoint!.setDevObject("allow_close","N")
 
 	key_pfx$=firm_id$+callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
 
