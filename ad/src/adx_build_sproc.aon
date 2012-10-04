@@ -32,7 +32,9 @@ rem --- VW_WOS_WITH_TRAN (JOIN sfe-01/sfe_womastr and vw_sfx_wotranxr)
 rem --- SF_COSTSUMS_STD (Accums Dir, Ovh, Mat and Sub STD costs by WO)
 rem --- SF_COSTSUMS_ACTO (Accums Ops, Dir, Ovh, Mat and Sub Actual costs of Open Trans by WO)
 rem --- SF_COSTSUMS_ACTC (Accums Ops, Dir, Ovh, Mat and Sub Actual costs of Closed Trans by WO)
-
+rem --- SF_WO_REQ_VALS   (Returns Standards/Requirements data for Closed Ops, Mats, and Subs)
+rem --- SF_OPNTRAN_VALS  (Returns Open Transactions for Ops, Mats, and Subs)
+rem --- SF_CLSDTRAN_VALS (Returns Closed Transactions for Ops, Mats, and Subs)
 
 rem --- idea is to make an admin table in Addon (Barista?) that contains
 rem --- name, params, .prc loc and .cfg loc so as we deploy, we can run this program
@@ -448,6 +450,19 @@ rem --- first drop all std Addon VIEWs
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
 	
+	
+	sproc_vw_name$="SF_WO_REQ_VALS"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def	
+
+	sproc_vw_name$="SF_OPNTRAN_VALS"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+	
+	sproc_vw_name$="SF_CLSDTRAN_VALS"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+
 
 rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)     
 	
@@ -719,7 +734,193 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
 	sqlprep$=sqlprep$+"        = subAct.Firm_ID+subAct.WO_Location+subAct.WO_No"+$0a$
 
     gosub create_sproc_def	
+	
+	rem --- SF_WO_REQ_VALS   (Returns Standards/Requirements data for Closed Ops, Mats, and Subs)
+    rem --- Can replace v6 logic of looping through sfe-02, sfe-22, sfe-32 to gather Requirements data
+	rem --- Useful for 
+	rem ---		1) Grabbing all requirements(stds) lines for a WO
+	rem ---		2) Accumulating costs (in conjuction w/add'l query)
+	rem --- NOTE: The result set may be quite large, so recommend using as part of another query that
+	rem           would limit the records returned 
+	rem          (e.g. SELECT * FROM SF_WO_REQ_VALS WHERE Firm_ID+WO_Location+WO_No = firm$+'  '+wonum$)
+	rem --- Originally written for Closed WO Detail Report
+	sproc_vw_name$="SF_WO_REQ_VALS"
+	sqlprep$="CREATE VIEW SF_WO_REQ_VALS AS "
+    sqlprep$=sqlprep$+"SELECT Ops.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,Ops.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"      ,Ops.WO_No"+$0a$
+	sqlprep$=sqlprep$+"      ,Ops.Op_Seq AS Seq_Ref"+$0a$
+	sqlprep$=sqlprep$+"      ,'O' AS Record_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,'' AS Warehouse_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,'' AS Item_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,Ops.Runtime_Hrs AS Units"+$0a$
+	sqlprep$=sqlprep$+"      ,Ops.Unit_Cost"+$0a$
+    sqlprep$=sqlprep$+"      ,Ops.Total_Time AS Total_Units"+$0a$
+    sqlprep$=sqlprep$+"      ,Ops.Tot_Std_Cost AS Total_Cost"+$0a$
+    sqlprep$=sqlprep$+"      ,Ops.Direct_Rate "+$0a$
+    sqlprep$=sqlprep$+"      ,Ops.Ovhd_Rate"+$0a$
+	sqlprep$=sqlprep$+"FROM SFE_WOOprtn AS Ops"+$0a$
+	sqlprep$=sqlprep$+"  UNION "
+    sqlprep$=sqlprep$+"SELECT Mat.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,Mat.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"      ,Mat.WO_No"+$0a$
+	sqlprep$=sqlprep$+"      ,Mat.Material_Seq AS Seq_Ref"+$0a$
+	sqlprep$=sqlprep$+"      ,'M' AS Record_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,Mat.Warehouse_ID AS Warehouse_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,Mat.Item_ID AS Item_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,Mat.Units AS Units"+$0a$
+	sqlprep$=sqlprep$+"      ,Mat.Unit_Cost"+$0a$
+    sqlprep$=sqlprep$+"      ,Mat.Total_Units AS Total_Units"+$0a$
+    sqlprep$=sqlprep$+"      ,Mat.Total_Cost AS Total_Cost"+$0a$
+    sqlprep$=sqlprep$+"      ,0 AS Direct_Rate "+$0a$
+    sqlprep$=sqlprep$+"      ,0 AS Ovhd_Rate"+$0a$
+	sqlprep$=sqlprep$+"FROM SFE_WOMatl AS Mat"+$0a$
+	sqlprep$=sqlprep$+"  UNION "
+    sqlprep$=sqlprep$+"SELECT Sub.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,Sub.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"      ,Sub.WO_No"+$0a$
+	sqlprep$=sqlprep$+"      ,Sub.SubCont_Seq AS Seq_Ref"+$0a$
+	sqlprep$=sqlprep$+"      ,'S' AS Record_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,'' AS Warehouse_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,'' AS Item_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,Sub.Units AS Units"+$0a$
+	sqlprep$=sqlprep$+"      ,Sub.Unit_Cost"+$0a$
+    sqlprep$=sqlprep$+"      ,Sub.Total_Units AS Total_Units"+$0a$
+    sqlprep$=sqlprep$+"      ,Sub.Total_Cost AS Total_Cost"+$0a$
+    sqlprep$=sqlprep$+"      ,0 AS Direct_Rate"+$0a$
+    sqlprep$=sqlprep$+"      ,0 AS Ovhd_Rate"+$0a$
+	sqlprep$=sqlprep$+"FROM SFE_WOSubcnt AS Sub"+$0a$	
 
+    gosub create_sproc_def
+
+
+	rem --- SF_OPNTRAN_VALS  (Returns Open Transactions for Ops, Mats, and Subs)
+    rem --- Can replace v6 logic of looping through sft-01, sft-21, sft-31 to gather Open Transaction data
+	rem --- Useful for 
+	rem ---		1) Grabbing all Open Trans w/o the v6 looping logic
+	rem ---		2) Accumulating costs (in conjuction w/add'l query)
+	rem --- NOTE: The result set may be quite large, so recommend using as part of another query that
+	rem           would limit the records returned 
+	rem          (e.g. SELECT * FROM SF_OPNTRAN_VALS WHERE Firm_ID+WO_Location+WO_No = firm$+'  '+wonum$)
+	rem --- Originally written for Closed WO Detail Report
+	sproc_vw_name$="SF_OPNTRAN_VALS"
+	sqlprep$="CREATE VIEW SF_OPNTRAN_VALS AS "
+	sqlprep$=sqlprep$+"SELECT oOps.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,oOps.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"      ,oOps.WO_No"+$0a$
+	sqlprep$=sqlprep$+"      ,oOps.trans_date"+$0a$
+    sqlprep$=sqlprep$+"      ,'OpenOprs' AS Trans_Type"+$0a$
+    sqlprep$=sqlprep$+"      ,'O' AS Record_ID"+$0a$
+    sqlprep$=sqlprep$+"      ,oOps.trans_seq "+$0a$
+	sqlprep$=sqlprep$+"      ,oOps.oper_seq_ref AS Seq_Ref"+$0a$
+	sqlprep$=sqlprep$+"      ,'' AS Warehouse_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,'' AS Item_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,oOps.units"+$0a$
+	sqlprep$=sqlprep$+"      ,oOps.Unit_Cost"+$0a$
+    sqlprep$=sqlprep$+"      ,oOps.ext_cost"+$0a$
+    sqlprep$=sqlprep$+"      ,oOps.direct_rate"+$0a$
+    sqlprep$=sqlprep$+"      ,oOps.ovhd_rate "+$0a$
+	sqlprep$=sqlprep$+"FROM SFT_OPNOPRTR AS oOps"+$0a$
+	sqlprep$=sqlprep$+"  UNION "
+    sqlprep$=sqlprep$+"SELECT oMats.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,oMats.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"      ,oMats.WO_No"+$0a$
+	sqlprep$=sqlprep$+"      ,oMats.trans_date"+$0a$
+	sqlprep$=sqlprep$+"      ,'OpenMats' AS Trans_Type"+$0a$
+	sqlprep$=sqlprep$+"      ,'M' AS Record_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,oMats.trans_seq "+$0a$
+	sqlprep$=sqlprep$+"      ,oMats.material_seq_ref AS Seq_Ref"+$0a$
+	sqlprep$=sqlprep$+"      ,oMats.Warehouse_ID AS Warehouse_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,oMats.Item_ID AS Item_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,oMats.Units"+$0a$
+	sqlprep$=sqlprep$+"      ,oMats.Unit_Cost"+$0a$
+    sqlprep$=sqlprep$+"      ,oMats.ext_cost"+$0a$
+    sqlprep$=sqlprep$+"      ,0 AS direct_rate"+$0a$
+    sqlprep$=sqlprep$+"      ,0 AS ovhd_rate"+$0a$
+	sqlprep$=sqlprep$+"FROM SFT_OPNMATTR AS oMats"+$0a$
+	sqlprep$=sqlprep$+"  UNION "
+    sqlprep$=sqlprep$+"SELECT oSubs.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,oSubs.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"      ,oSubs.WO_No"+$0a$
+	sqlprep$=sqlprep$+"      ,oSubs.trans_date"+$0a$
+	sqlprep$=sqlprep$+"      ,'OpenSubs' AS Trans_Type"+$0a$
+	sqlprep$=sqlprep$+"      ,'S' AS Record_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,oSubs.trans_seq "+$0a$
+	sqlprep$=sqlprep$+"      ,oSubs.subcont_seq_ref AS Seq_Ref"+$0a$
+	sqlprep$=sqlprep$+"      ,'' AS Warehouse_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,'' AS Item_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,oSubs.Units"+$0a$
+	sqlprep$=sqlprep$+"      ,oSubs.Unit_Cost"+$0a$
+    sqlprep$=sqlprep$+"      ,oSubs.ext_cost"+$0a$
+    sqlprep$=sqlprep$+"      ,0 AS direct_rate"+$0a$
+    sqlprep$=sqlprep$+"      ,0 AS ovhd_rate"+$0a$
+	sqlprep$=sqlprep$+"FROM SFT_OPNSUBTR AS oSubs"+$0a$	
+
+    gosub create_sproc_def
+	
+	rem --- SF_CLSDTRAN_VALS (Returns Closed Transactions for Ops, Mats, and Subs)
+	rem --- Can replace v6 logic of looping through sft-03, sft-23, sft-33 to gather Closed Transaction data
+	rem --- Useful for 
+	rem ---		1) Grabbing all Closed Trans w/o the v6 looping logic
+	rem ---		2) Accumulating costs (in conjuction w/add'l query)
+	rem --- NOTE: The result set may be quite large, so recommend using as part of another query that
+	rem           would limit the records returned 
+	rem          (e.g. SELECT * FROM SF_CLSDTRAN_VALS WHERE Firm_ID+WO_Location+WO_No = firm$+'  '+wonum$)
+	rem --- Originally written for Closed WO Detail Report
+	sproc_vw_name$="SF_CLSDTRAN_VALS"
+	sqlprep$="CREATE VIEW SF_CLSDTRAN_VALS AS "
+    sqlprep$=sqlprep$+"SELECT cOps.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,cOps.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"      ,cOps.WO_No"+$0a$
+	sqlprep$=sqlprep$+"      ,cOps.trans_date"+$0a$
+    sqlprep$=sqlprep$+"      ,'ClosedOprs' AS Trans_Type"+$0a$
+    sqlprep$=sqlprep$+"      ,'O' AS Record_ID"+$0a$
+    sqlprep$=sqlprep$+"      ,cOps.trans_seq "+$0a$
+	sqlprep$=sqlprep$+"      ,cOps.oper_seq_ref AS Seq_Ref"+$0a$
+	sqlprep$=sqlprep$+"      ,'' AS Warehouse_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,'' AS Item_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,cOps.units"+$0a$
+	sqlprep$=sqlprep$+"      ,cOps.Unit_Cost"+$0a$
+    sqlprep$=sqlprep$+"      ,cOps.ext_cost"+$0a$
+    sqlprep$=sqlprep$+"      ,cOps.direct_rate"+$0a$
+    sqlprep$=sqlprep$+"      ,cOps.ovhd_rate "+$0a$
+	sqlprep$=sqlprep$+"FROM SFT_OPNOPRTR AS cOps"+$0a$
+	sqlprep$=sqlprep$+"  UNION "
+    sqlprep$=sqlprep$+"SELECT cMats.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,cMats.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"      ,cMats.WO_No"+$0a$
+	sqlprep$=sqlprep$+"      ,cMats.trans_date"+$0a$
+	sqlprep$=sqlprep$+"      ,'ClosedMats' AS Trans_Type"+$0a$
+	sqlprep$=sqlprep$+"      ,'M' AS Record_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,cMats.trans_seq "+$0a$
+	sqlprep$=sqlprep$+"      ,cMats.material_seq_ref AS Seq_Ref"+$0a$
+	sqlprep$=sqlprep$+"      ,cMats.Warehouse_ID AS Warehouse_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,cMats.Item_ID AS Item_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,cMats.Units"+$0a$
+	sqlprep$=sqlprep$+"      ,cMats.Unit_Cost"+$0a$
+    sqlprep$=sqlprep$+"      ,cMats.ext_cost"+$0a$
+    sqlprep$=sqlprep$+"      ,0 AS direct_rate"+$0a$
+    sqlprep$=sqlprep$+"      ,0 AS ovhd_rate"+$0a$
+	sqlprep$=sqlprep$+"FROM SFT_OPNMATTR AS cMats"+$0a$
+	sqlprep$=sqlprep$+"  UNION "
+    sqlprep$=sqlprep$+"SELECT cSubs.Firm_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,cSubs.WO_Location"+$0a$
+	sqlprep$=sqlprep$+"      ,cSubs.WO_No"+$0a$
+	sqlprep$=sqlprep$+"      ,cSubs.trans_date"+$0a$
+	sqlprep$=sqlprep$+"      ,'ClosedSubs' AS Trans_Type"+$0a$
+	sqlprep$=sqlprep$+"      ,'S' AS Record_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,cSubs.trans_seq "+$0a$
+	sqlprep$=sqlprep$+"      ,cSubs.subcont_seq_ref AS Seq_Ref"+$0a$
+	sqlprep$=sqlprep$+"      ,'' AS Warehouse_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,'' AS Item_ID"+$0a$
+	sqlprep$=sqlprep$+"      ,cSubs.Units"+$0a$
+	sqlprep$=sqlprep$+"      ,cSubs.Unit_Cost"+$0a$
+    sqlprep$=sqlprep$+"      ,cSubs.ext_cost"+$0a$
+    sqlprep$=sqlprep$+"      ,0 AS direct_rate"+$0a$
+    sqlprep$=sqlprep$+"      ,0 AS ovhd_rate"+$0a$
+	sqlprep$=sqlprep$+"FROM SFT_OPNSUBTR AS cSubs"+$0a$	
+
+    gosub create_sproc_def
 	
 done:
 
