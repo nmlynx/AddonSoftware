@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopyClsdDet" language="groovy" pageWidth="760" pageHeight="595" orientation="Landscape" columnWidth="740" leftMargin="0" rightMargin="20" topMargin="20" bottomMargin="10" resourceBundle="addon">
-	<property name="ireport.zoom" value="1.5"/>
-	<property name="ireport.x" value="205"/>
-	<property name="ireport.y" value="0"/>
+	<property name="ireport.zoom" value="3.0"/>
+	<property name="ireport.x" value="463"/>
+	<property name="ireport.y" value="126"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
 	<parameter name="WO_LOCATION" class="java.lang.String"/>
 	<parameter name="WO_NO" class="java.lang.String"/>
@@ -278,7 +278,7 @@
 			<textField>
 				<reportElement mode="Opaque" x="0" y="0" width="740" height="15" backcolor="#ECECEC"/>
 				<textElement>
-					<font isBold="true"/>
+					<font isBold="false"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$R{AON_CLOSED_DETAIL}]]></textFieldExpression>
 			</textField>
@@ -502,7 +502,7 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 		</band>
-		<band height="135">
+		<band height="31">
 			<textField>
 				<reportElement x="5" y="0" width="100" height="13"/>
 				<textElement textAlignment="Left" markup="none">
@@ -525,122 +525,6 @@
 				<textFieldExpression><![CDATA[$R{AON_CREDIT}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="5" y="27" width="60" height="13">
-					<printWhenExpression><![CDATA[$F{WIP_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{WIP_GL_ACCT_NUM}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="5" y="40" width="60" height="13">
-					<printWhenExpression><![CDATA[$F{CLS_TO_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{CLS_TO_GL_ACCT_NUM}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="5" y="66" width="60" height="13">
-					<printWhenExpression><![CDATA[$F{OVRH_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{OVRH_VAR_GL_ACCT_NUM}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="5" y="79" width="60" height="13">
-					<printWhenExpression><![CDATA[$F{MAT_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{MAT_VAR_GL_ACCT_NUM}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="5" y="92" width="60" height="13">
-					<printWhenExpression><![CDATA[$F{SUB_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{SUB_VAR_GL_ACCT_NUM}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="5" y="53" width="60" height="13">
-					<printWhenExpression><![CDATA[$F{DIR_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{DIR_VAR_GL_ACCT_NUM}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="78" y="27" width="123" height="13">
-					<printWhenExpression><![CDATA[$F{WIP_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{WIP_GL_ACCT_DESC}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="78" y="40" width="123" height="13">
-					<printWhenExpression><![CDATA[$F{CLS_TO_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{CLS_TO_GL_ACCT_DESC}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="78" y="53" width="123" height="13">
-					<printWhenExpression><![CDATA[$F{DIR_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{DIR_VAR_GL_ACCT_DESC}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="78" y="66" width="123" height="13">
-					<printWhenExpression><![CDATA[$F{OVRH_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{OVRH_VAR_GL_ACCT_DESC}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="78" y="79" width="123" height="13">
-					<printWhenExpression><![CDATA[$F{MAT_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{MAT_VAR_GL_ACCT_DESC}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="78" y="92" width="123" height="13">
-					<printWhenExpression><![CDATA[$F{SUB_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{SUB_VAR_GL_ACCT_DESC}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="218" y="27" width="57" height="13">
-					<printWhenExpression><![CDATA[$F{WIP_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$V{WIP_GL_ACCT_DEBIT_AMT_BigDec}]]></textFieldExpression>
-				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
-			</textField>
-			<textField>
-				<reportElement x="286" y="27" width="57" height="13">
-					<printWhenExpression><![CDATA[$F{WIP_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$V{WIP_GL_ACCT_CREDIT_AMT_BigDec}]]></textFieldExpression>
-				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
-			</textField>
-			<textField>
-				<reportElement x="356" y="27" width="57" height="13">
-					<printWhenExpression><![CDATA[$F{WIP_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$V{WIP_GL_ACCT_DEBIT_PERUNIT_BigDec}]]></textFieldExpression>
-				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
-			</textField>
-			<textField>
-				<reportElement x="423" y="27" width="57" height="13">
-					<printWhenExpression><![CDATA[$F{WIP_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$V{WIP_GL_ACCT_CREDIT_PERUNIT_BigDec}]]></textFieldExpression>
-				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
-			</textField>
-			<textField>
 				<reportElement x="382" y="0" width="82" height="13"/>
 				<textElement textAlignment="Right" markup="none">
 					<font isBold="false"/>
@@ -661,8 +545,81 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$R{AON_CREDIT}]]></textFieldExpression>
 			</textField>
+		</band>
+		<band height="15">
+			<printWhenExpression><![CDATA[$F{WIP_PRINT_FLAG} == "Y"]]></printWhenExpression>
 			<textField>
-				<reportElement x="218" y="40" width="57" height="13">
+				<reportElement x="5" y="0" width="60" height="13">
+					<printWhenExpression><![CDATA[$F{WIP_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{WIP_GL_ACCT_NUM}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="78" y="0" width="123" height="13">
+					<printWhenExpression><![CDATA[$F{WIP_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{WIP_GL_ACCT_DESC}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="218" y="0" width="57" height="13">
+					<printWhenExpression><![CDATA[$F{WIP_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$V{WIP_GL_ACCT_DEBIT_AMT_BigDec}]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
+			</textField>
+			<textField>
+				<reportElement x="286" y="0" width="57" height="13">
+					<printWhenExpression><![CDATA[$F{WIP_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$V{WIP_GL_ACCT_CREDIT_AMT_BigDec}]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
+			</textField>
+			<textField>
+				<reportElement x="356" y="0" width="57" height="13">
+					<printWhenExpression><![CDATA[$F{WIP_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$V{WIP_GL_ACCT_DEBIT_PERUNIT_BigDec}]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
+			</textField>
+			<textField>
+				<reportElement x="423" y="0" width="57" height="13">
+					<printWhenExpression><![CDATA[$F{WIP_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$V{WIP_GL_ACCT_CREDIT_PERUNIT_BigDec}]]></textFieldExpression>
+				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
+			</textField>
+			<textField>
+				<reportElement x="505" y="0" width="100" height="13">
+					<printWhenExpression><![CDATA[$F{WIP_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{WIP_GL_ACCT_TYPE}]]></textFieldExpression>
+			</textField>
+		</band>
+		<band height="15">
+			<printWhenExpression><![CDATA[$F{CLS_TO_PRINT_FLAG} == "Y"]]></printWhenExpression>
+			<textField>
+				<reportElement x="5" y="0" width="60" height="13">
+					<printWhenExpression><![CDATA[$F{CLS_TO_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{CLS_TO_GL_ACCT_NUM}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="78" y="0" width="123" height="13">
+					<printWhenExpression><![CDATA[$F{CLS_TO_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{CLS_TO_GL_ACCT_DESC}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="218" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{CLS_TO_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -670,7 +627,7 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="286" y="40" width="57" height="13">
+				<reportElement x="286" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{CLS_TO_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -678,7 +635,7 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="356" y="40" width="57" height="13">
+				<reportElement x="356" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{CLS_TO_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -686,7 +643,7 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="423" y="40" width="57" height="13">
+				<reportElement x="423" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{CLS_TO_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -694,7 +651,31 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="218" y="53" width="57" height="13">
+				<reportElement x="505" y="0" width="100" height="13">
+					<printWhenExpression><![CDATA[$F{CLS_TO_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{CLS_TO_GL_ACCT_TYPE}]]></textFieldExpression>
+			</textField>
+		</band>
+		<band height="15">
+			<printWhenExpression><![CDATA[$F{DIR_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
+			<textField>
+				<reportElement x="5" y="0" width="60" height="13">
+					<printWhenExpression><![CDATA[$F{DIR_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{DIR_VAR_GL_ACCT_NUM}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="78" y="0" width="123" height="13">
+					<printWhenExpression><![CDATA[$F{DIR_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{DIR_VAR_GL_ACCT_DESC}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="218" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{DIR_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -702,7 +683,7 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="286" y="53" width="57" height="13">
+				<reportElement x="286" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{DIR_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -710,7 +691,7 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="356" y="53" width="57" height="13">
+				<reportElement x="356" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{DIR_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -718,7 +699,7 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="423" y="53" width="57" height="13">
+				<reportElement x="423" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{DIR_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -726,7 +707,31 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="218" y="66" width="57" height="13">
+				<reportElement x="505" y="0" width="100" height="13">
+					<printWhenExpression><![CDATA[$F{DIR_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{DIR_VAR_GL_ACCT_TYPE}]]></textFieldExpression>
+			</textField>
+		</band>
+		<band height="15">
+			<printWhenExpression><![CDATA[$F{OVRH_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
+			<textField>
+				<reportElement x="5" y="0" width="60" height="13">
+					<printWhenExpression><![CDATA[$F{OVRH_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{OVRH_VAR_GL_ACCT_NUM}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="78" y="0" width="123" height="13">
+					<printWhenExpression><![CDATA[$F{OVRH_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{OVRH_VAR_GL_ACCT_DESC}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="218" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{OVRH_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -734,7 +739,7 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="286" y="66" width="57" height="13">
+				<reportElement x="286" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{OVRH_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -742,7 +747,7 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="356" y="66" width="57" height="13">
+				<reportElement x="356" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{OVRH_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -750,7 +755,7 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="423" y="66" width="57" height="13">
+				<reportElement x="423" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{OVRH_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -758,7 +763,31 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="218" y="79" width="57" height="13">
+				<reportElement x="505" y="0" width="100" height="13">
+					<printWhenExpression><![CDATA[$F{OVRH_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{OVRH_VAR_GL_ACCT_TYPE}]]></textFieldExpression>
+			</textField>
+		</band>
+		<band height="15">
+			<printWhenExpression><![CDATA[$F{MAT_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
+			<textField>
+				<reportElement x="5" y="0" width="60" height="13">
+					<printWhenExpression><![CDATA[$F{MAT_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{MAT_VAR_GL_ACCT_NUM}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="78" y="0" width="123" height="13">
+					<printWhenExpression><![CDATA[$F{MAT_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{MAT_VAR_GL_ACCT_DESC}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="218" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{MAT_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -766,7 +795,7 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="286" y="79" width="57" height="13">
+				<reportElement x="286" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{MAT_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -774,7 +803,7 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="356" y="79" width="57" height="13">
+				<reportElement x="356" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{MAT_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -782,7 +811,7 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="423" y="79" width="57" height="13">
+				<reportElement x="423" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{MAT_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -790,7 +819,31 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="218" y="92" width="57" height="13">
+				<reportElement x="505" y="0" width="100" height="13">
+					<printWhenExpression><![CDATA[$F{MAT_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{MAT_VAR_GL_ACCT_TYPE}]]></textFieldExpression>
+			</textField>
+		</band>
+		<band height="14">
+			<printWhenExpression><![CDATA[$F{SUB_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
+			<textField>
+				<reportElement x="5" y="0" width="60" height="13">
+					<printWhenExpression><![CDATA[$F{SUB_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{SUB_VAR_GL_ACCT_NUM}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="78" y="0" width="123" height="13">
+					<printWhenExpression><![CDATA[$F{SUB_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement/>
+				<textFieldExpression><![CDATA[$F{SUB_VAR_GL_ACCT_DESC}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="218" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{SUB_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -798,7 +851,7 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="286" y="92" width="57" height="13">
+				<reportElement x="286" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{SUB_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -806,7 +859,7 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="356" y="92" width="57" height="13">
+				<reportElement x="356" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{SUB_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -814,7 +867,7 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="423" y="92" width="57" height="13">
+				<reportElement x="423" y="0" width="57" height="13">
 					<printWhenExpression><![CDATA[$F{SUB_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right"/>
@@ -822,71 +875,66 @@
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="505" y="27" width="100" height="13">
-					<printWhenExpression><![CDATA[$F{WIP_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{WIP_GL_ACCT_TYPE}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="505" y="40" width="100" height="13">
-					<printWhenExpression><![CDATA[$F{CLS_TO_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{CLS_TO_GL_ACCT_TYPE}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="505" y="53" width="100" height="13">
-					<printWhenExpression><![CDATA[$F{DIR_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{DIR_VAR_GL_ACCT_TYPE}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="505" y="66" width="100" height="13">
-					<printWhenExpression><![CDATA[$F{OVRH_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{OVRH_VAR_GL_ACCT_TYPE}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="505" y="79" width="100" height="13">
-					<printWhenExpression><![CDATA[$F{MAT_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
-				</reportElement>
-				<textElement/>
-				<textFieldExpression><![CDATA[$F{MAT_VAR_GL_ACCT_TYPE}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="505" y="92" width="100" height="13">
+				<reportElement x="505" y="0" width="100" height="13">
 					<printWhenExpression><![CDATA[$F{SUB_VAR_PRINT_FLAG} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement/>
 				<textFieldExpression><![CDATA[$F{SUB_VAR_GL_ACCT_TYPE}]]></textFieldExpression>
 			</textField>
+		</band>
+		<band height="32">
 			<textField>
-				<reportElement x="218" y="116" width="57" height="13"/>
+				<reportElement x="218" y="16" width="57" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$V{GL_DEBIT_COLTOT}]]></textFieldExpression>
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="286" y="116" width="57" height="13"/>
+				<reportElement x="286" y="16" width="57" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$V{GL_CREDIT_COLTOT}]]></textFieldExpression>
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="356" y="116" width="57" height="13"/>
+				<reportElement x="356" y="16" width="57" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$V{GL_DEBIT_PERUNIT_COLTOT}]]></textFieldExpression>
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
 			<textField>
-				<reportElement x="423" y="116" width="57" height="13"/>
+				<reportElement x="423" y="16" width="57" height="13"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$V{GL_CREDIT_PERUNITCOLTOT}]]></textFieldExpression>
 				<patternExpression><![CDATA[$P{AMT_MASK_PATTERN}]]></patternExpression>
 			</textField>
+			<staticText>
+				<reportElement x="217" y="0" width="57" height="13"/>
+				<textElement textAlignment="Right" markup="none">
+					<font size="10" isBold="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[________]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="286" y="0" width="57" height="13"/>
+				<textElement textAlignment="Right" markup="none">
+					<font size="10" isBold="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[________]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="354" y="0" width="57" height="13"/>
+				<textElement textAlignment="Right" markup="none">
+					<font size="10" isBold="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[________]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="423" y="0" width="57" height="13"/>
+				<textElement textAlignment="Right" markup="none">
+					<font size="10" isBold="false" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[________]]></text>
+			</staticText>
 		</band>
 	</detail>
 	<columnFooter>
