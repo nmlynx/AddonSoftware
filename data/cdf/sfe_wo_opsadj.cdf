@@ -230,28 +230,26 @@ rem --- New Tran Date
 			gosub switch_colors
 			break
 
-		case 6;rem "Special Key"
+		case 6;rem "Special Key" - escape
 			if notice.wparam=8
 				gridOps!.endEdit()
 			endif
 			break
 
-		case 12; rem Lookup;rem CAH 
-			if curr_col=17			
+		case 12; rem Lookup;rem CAH
+			if curr_col=17
 				keycode=notice.wparam
 				keycode$=bin(keycode,2)
 				if asc(and(keycode$,$2000$)) and keycode$=$2006$
 					key_pfx$=firm_id$
 					call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMASTR","PRIMARY",key_tpl$,table_chans$[all],status$
 					dim sel_key$:key_tpl$
-					call stbl("+DIR_SYP")+"bam_inquiry.bbj",gui_dev,Form!,"SFE_WOMASTR","SELECT",table_chans$[all],key_pfx$,"",sel_key$					
-					VectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+17,sel_key.wo_no$)
-					gridOps!.setCellText(curr_row,curr_col,sel_key.wo_no$)					
-			endif
-			break
-		case 1; rem Lookup
-			if curr_col=17
-rem				escape;rem ? notice.wparam
+					call stbl("+DIR_SYP")+"bam_inquiry.bbj",gui_dev,Form!,"SFE_WOMASTR","SELECT",table_chans$[all],key_pfx$,"",sel_key$	
+					if len(sel_key$)>0
+						VectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+17,sel_key.wo_no$)
+						gridOps!.setCellText(curr_row,curr_col,sel_key.wo_no$)
+					endif
+				endif
 			endif
 			break
 
