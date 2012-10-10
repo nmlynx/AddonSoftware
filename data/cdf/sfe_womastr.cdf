@@ -1,7 +1,12 @@
 [[SFE_WOMASTR.AOPT-LSNO]]
 rem --- launch sfe_wolotser form to assign lot/serial numbers
 rem --- should only be enabled if on an inventory type WO, if item is lotted/serialized, and if params have LS set.
-	callpoint!.setDevObject("allow_close","N")
+	callpoint!.setDevObject("warehouse_id",callpoint!.getColumnData("SFE_WOMASTR.WAREHOUSE_ID"))
+	callpoint!.setDevObject("item_id",callpoint!.getColumnData("SFE_WOMASTR.ITEM_ID"))
+	callpoint!.setDevObject("cls_inp_qty",callpoint!.getColumnData("SFE_WOMASTR.CLS_INP_QTY"))
+	callpoint!.setDevObject("qty_cls_todt",callpoint!.getColumnData("SFE_WOMASTR.QTY_CLS_TODT"))
+	callpoint!.setDevObject("closed_cost",callpoint!.getColumnData("SFE_WOMASTR.CLOSED_COST"))
+	callpoint!.setDevObject("wolotser_action","schedule")
 
 	key_pfx$=firm_id$+callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
 
@@ -224,6 +229,15 @@ rem --- Open tables
 	op$=sfs_params.ar_interface$
 	po$=sfs_params.po_interface$
 	pr$=sfs_params.pr_interface$
+
+	if pos(ivs_params.lotser_flag$="LS") then
+		num_files=1
+		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+
+		open_tables$[1]="IVM_LSMASTER",open_opts$[1]="OTA@"
+
+		gosub open_tables
+	endif
 
 	num_files=6
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]

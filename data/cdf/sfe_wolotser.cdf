@@ -1,34 +1,246 @@
-[[SFE_WOLOTSER.ADTW]]
+[[SFE_WOLOTSER.COMPLETE_FLG.BINP]]
+rem --- Initialize complete flag
+	this_ls_sch_qty=num(callpoint!.getColumnData("SFE_WOLOTSER.SCH_PROD_QTY"))
+	this_cls_inp_qty=num(callpoint!.getColumnData("SFE_WOLOTSER.CLS_INP_QTY"))
+	this_ls_cls_todt=num(callpoint!.getColumnData("SFE_WOLOTSER.QTY_CLS_TODT"))
+	if this_ls_sch_qty=this_cls_inp_qty+this_ls_cls_todt and
+:	callpoint!.getColumnData("SFE_WOLOTSER.COMPLETE_FLG")<>"Y" then
+		callpoint!.setColumnData("SFE_WOLOTSER.COMPLETE_FLG","Y",1)
+		callpoint!.setStatus("MODIFIED")
+	endif
+[[SFE_WOLOTSER.CLS_INP_QTY.BINP]]
+rem --- Capture current lot/ser cls_inpt_qty so can make adjustments if it gets changed
+	prev_cls_inp_qty=num(callpoint!.getColumnData("SFE_WOLOTSER.CLS_INP_QTY"))
+	callpoint!.setDevObject("prev_cls_inp_qty",prev_cls_inp_qty)
 
+	rem --- Initialize cls_inpt_qty as needed
+	this_ls_sch_qty=num(callpoint!.getColumnData("SFE_WOLOTSER.SCH_PROD_QTY"))
+	this_ls_cls_todt=num(callpoint!.getColumnData("SFE_WOLOTSER.QTY_CLS_TODT"))
+	if prev_cls_inp_qty=0 and  this_ls_cls_todt<>this_ls_sch_qty then
+		callpoint!.setColumnData("SFE_WOLOTSER.CLS_INP_QTY",str(this_ls_sch_qty-this_ls_cls_todt),1)
+		callpoint!.setStatus("MODIFIED")
+	endif
+[[SFE_WOLOTSER.AUDE]]
+rem --- Adjust how many lot/serial items have been scheduled
+	ls_sch_qty=callpoint!.getDevObject("ls_sch_qty")
+	ls_sch_qty=ls_sch_qty+num(callpoint!.getColumnData("SFE_WOLOTSER.SCH_PROD_QTY"))
+	callpoint!.setDevObject("ls_sch_qty",ls_sch_qty)
+
+rem --- Adjust how many lot/serial items have been closed
+	ls_close_qty=callpoint!.getDevObject("ls_close_qty")
+	ls_close_qty=ls_close_qty+num(callpoint!.getColumnData("SFE_WOLOTSER.CLS_INP_QTY"))
+	callpoint!.setDevObject("ls_close_qty",ls_close_qty)
+[[SFE_WOLOTSER.BDEL]]
+rem --- Adjust how many lot/serial items have been scheduled
+	ls_sch_qty=callpoint!.getDevObject("ls_sch_qty")
+	ls_sch_qty=ls_sch_qty-num(callpoint!.getColumnData("SFE_WOLOTSER.SCH_PROD_QTY"))
+	callpoint!.setDevObject("ls_sch_qty",ls_sch_qty)
+
+rem --- Adjust how many lot/serial items have been closed
+	ls_close_qty=callpoint!.getDevObject("ls_close_qty")
+	ls_close_qty=ls_close_qty-num(callpoint!.getColumnData("SFE_WOLOTSER.CLS_INP_QTY"))
+	callpoint!.setDevObject("ls_close_qty",ls_close_qty)
+[[SFE_WOLOTSER.SCH_PROD_QTY.BINP]]
+rem --- Capture current lot/ser sch_prod_qty so can make adjustments if it gets changed
+	prev_ls_sch_qty=num(callpoint!.getColumnData("SFE_WOLOTSER.SCH_PROD_QTY"))
+	callpoint!.setDevObject("prev_ls_sch_qty",prev_ls_sch_qty)
+
+rem --- Initialize sch_prod_qty for lotted item
+	if prev_ls_sch_qty=0 and callpoint!.getDevObject("lotser")="L" then
+		wo_close_qty=num(callpoint!.getDevObject("cls_inp_qty"))
+		if callpoint!.getDevObject("wolotser_action")="close" then
+			rem --- Only being used with sfe_woclose form
+			ls_close_qty=callpoint!.getDevObject("ls_close_qty")
+			callpoint!.setColumnData("SFE_WOLOTSER.SCH_PROD_QTY",str(wo_close_qty-ls_close_qty),1)
+			callpoint!.setStatus("MODIFIED")
+		else
+			rem --- Not being used with sfe_woclose form
+			wo_sch_qty=num(callpoint!.getDevObject("prod_qty"))
+			wo_cls_todt=num(callpoint!.getDevObject("qty_cls_todt"))
+			callpoint!.setColumnData("SFE_WOLOTSER.SCH_PROD_QTY",str(wo_sch_qty-(wo_close_qty+wo_cls_todt)),1)
+			callpoint!.setStatus("MODIFIED")
+		endif
+	endif
+[[SFE_WOLOTSER.AGRN]]
+rem --- Validate lot/serial quantities the first time in the grid
+	if callpoint!.getDevObject("check_ls_qty") then
+		callpoint!.setDevObject("check_ls_qty",0)
+		gosub validate_ls_qty
+	endif
+[[SFE_WOLOTSER.AOPT-ACLS]]
+rem wgh ... stopped here
+rem wgh ... looks like woc.ca does the auto-close
+rem wgh ... 6326 IF P3$(17,1)="S" AND Y>1 AND V3=1 THEN CALL "WOC.CA",SERIAL$,WOE06_DEV,SYS01_DEV,A0$(5,7),STATUS ELSE GOTO 6335
+[[SFE_WOLOTSER.BEND]]
+rem --- Get how many lot/serial items need to be closed
+	gosub get_close_qty_needed
+
+rem --- Validate lot/serial quantities
+rem --- Register will prevents running update if have bad  lot/serial quantities
+	gosub validate_ls_qty
+
+rem wgh ... stopped here
+rem wgh ... what happens if sfe_wolotser is saved but sfe_woclose is not?????????????
+rem wgh ... in sfe_woclose remove sfe_wolotser if no SFE_CLOSEDWO record, or just leave for future close???????
+[[SFE_WOLOTSER.<CUSTOM>]]
+rem ==========================================================================
+get_close_qty_needed: rem --- Get how many lot/serial items have been closed, and how many have been scheduled
+rem ==========================================================================
+	wolotser_dev=fnget_dev("SFE_WOLOTSER")
+	dim wolotser$:fnget_tpl$("SFE_WOLOTSER")
+
+	ls_sch_qty=0
+	ls_close_qty=0
+	wo_location$=callpoint!.getDevObject("wo_loc")
+	wo_no$=callpoint!.getDevObject("wo_no")
+	read (wolotser_dev,key=firm_id$+wo_location$+wo_no$,dom=*next)
+	while 1		
+		wolotser_key$=key(wolotser_dev,end=*break)
+		if pos(firm_id$+wo_location$+wo_no$=wolotser_key$)<>1 then break
+		readrecord (wolotser_dev)wolotser$
+		ls_sch_qty=ls_sch_qty+wolotser.sch_prod_qty
+		ls_close_qty=ls_close_qty+(wolotser.cls_inp_qty+wolotser.qty_cls_todt)
+	wend
+	callpoint!.setDevObject("ls_sch_qty",ls_sch_qty)
+	callpoint!.setDevObject("ls_close_qty",ls_close_qty)
+	return
+
+rem ==========================================================================
+validate_ls_qty: rem --- Validate lot/serial quantities
+rem --- validation_err: output
+rem ==========================================================================
+	validation_err=0
+	sf_units_mask$=callpoint!.getDevObject("sf_units_mask")
+	wo_sch_qty=num(callpoint!.getDevObject("prod_qty"))
+	wo_close_qty=num(callpoint!.getDevObject("cls_inp_qty"))
+	wo_cls_todt=num(callpoint!.getDevObject("qty_cls_todt"))
+	ls_sch_qty=callpoint!.getDevObject("ls_sch_qty")
+	ls_close_qty=callpoint!.getDevObject("ls_close_qty")
+
+	if callpoint!.getDevObject("wolotser_action")<>"close" then
+		rem --- Not being used with sfe_woclose form
+
+		if ls_sch_qty<>0 and ls_sch_qty<wo_sch_qty-wo_cls_todt then
+			msg_id$="SF_LS_SCH_LT_WO_SCH"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=cvs(str(ls_sch_qty:sf_units_mask$),3)
+			msg_tokens$[2]=cvs(str(wo_sch_qty-wo_cls_todt:sf_units_mask$),3)
+			gosub disp_message
+			validation_err=1
+		endif
+
+		if ls_sch_qty>wo_sch_qty-wo_cls_todt then
+			msg_id$="SF_LS_SCH_GT_WO_SCH"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=cvs(str(ls_sch_qty:sf_units_mask$),3)
+			msg_tokens$[2]=cvs(str(wo_sch_qty-wo_cls_todt:sf_units_mask$),3)
+			gosub disp_message
+			validation_err=2
+		endif
+	else
+		rem --- Only being used with sfe_woclose form
+
+		if ls_sch_qty<wo_close_qty then
+			msg_id$="SF_LS_SCH_LT_WO_CLS"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=cvs(str(ls_sch_qty:sf_units_mask$),3)
+			msg_tokens$[2]=cvs(str(wo_close_qty:sf_units_mask$),3)
+			gosub disp_message
+			validation_err=3
+		endif
+
+		if ls_sch_qty>wo_close_qty then
+			msg_id$="SF_LS_SCH_GT_WO_CLS"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=cvs(str(ls_sch_qty:sf_units_mask$),3)
+			msg_tokens$[2]=cvs(str(wo_close_qty:sf_units_mask$),3)
+			gosub disp_message
+			validation_err=4
+		endif
+
+		if ls_close_qty<ls_sch_qty then
+			msg_id$="SF_LS_CLS_LT_LS_SCH"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=cvs(str(ls_close_qty:sf_units_mask$),3)
+			msg_tokens$[2]=cvs(str(ls_sch_qty:sf_units_mask$),3)
+			gosub disp_message
+			validation_err=5
+		endif
+
+		if ls_close_qty>ls_sch_qty then
+			msg_id$="SF_LS_CLS_GT_LS_SCH"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=cvs(str(ls_close_qty:sf_units_mask$),3)
+			msg_tokens$[2]=cvs(str(ls_sch_qty:sf_units_mask$),3)
+			gosub disp_message
+			validation_err=6
+		endif
+	endif
+	return
+[[SFE_WOLOTSER.AGDR]]
+rem --- Disable all input fields if lot/serial has been closed
+	if callpoint!.getColumnData("SFE_WOLOTSER.CLOSED_FLAG")="Y" then
+		this_row=callpoint!.getValidationRow()
+		callpoint!.setColumnEnabled(this_row,"SFE_WOLOTSER.LOTSER_NO",0)
+		callpoint!.setColumnEnabled(this_row,"SFE_WOLOTSER.WO_LS_CMT",0)
+		callpoint!.setColumnEnabled(this_row,"SFE_WOLOTSER.SCH_PROD_QTY",0)
+		callpoint!.setColumnEnabled(this_row,"SFE_WOLOTSER.CLS_INP_QTY",0)
+		callpoint!.setColumnEnabled(this_row,"SFE_WOLOTSER.COMPLETE_FLG",0)
+	endif
 [[SFE_WOLOTSER.CLS_INP_QTY.AVAL]]
-rem wgh ... entry only allowed for woclose
+rem --- Validate this cls_inp_qty if changed
+	this_cls_inp_qty=num(callpoint!.getUserInput())
+	prev_cls_inp_qty=callpoint!.getDevObject("prev_cls_inp_qty")
+	if this_cls_inp_qty<>prev_cls_inp_qty
+		rem --- Restrict cls_inp_qty value for serialized items
+		if callpoint!.getDevObject("lotser")="S" and (this_cls_inp_qty<0 or this_cls_inp_qty>1) then
+			callpoint!.setStatus("ABORT")
+			break
+		endif
 
-rem wgh ... 2600 REM " --- Closed Qty Here
-rem wgh ... 2610 IF W[4]=0 THEN IF P3$(17,1)<>"L" THEN LET W[4]=W[0],NEEDED=NEEDED-W[4] ELSE LET W[4]=A[4],NEEDED=NEEDED-W[4]
-rem wgh ... 2620 LET OLDQTY=W[4]
-rem wgh ... 2630 LET V0$="N",V1$="C",V3$=M2$,V4$="",V0=7,V1=72-M3-M2,V2=L
-rem wgh ... 2640 IF P3$(17,1)="S" AND V3<>2 THEN PRINT @(V1,V2),W[4]:M2$; GOTO 2720
-rem wgh ... 2660 LET V2$=STR(W[4]),V4$="Enter Qty To Complete This "+S9$+", <Enter>="+V2$
-rem wgh ... 2680 GOSUB 7000
-rem wgh ... 2690 IF P3$(17,1)="S" THEN IF LEN(D2$)>0 THEN IF D2$(19,1)="Y" THEN IF V<0 OR V>1 THEN LET V3=2; GOTO 2600
-rem wgh ... 2700 LET W[4]=V
-rem wgh ... 2720 IF W[4]=0 THEN LET W[5]=0,W1$(25,1)="" ELSE LET W[5]=A[5]
-rem wgh ... 2740 PRINT @(72-M3,L),W[5]:M3$,
-rem wgh ... 2750 IF OLDQTY<>W[4] THEN LET NEEDED=NEEDED-W[4]+OLDQTY
-rem wgh ... 2790 GOTO 3200
-[[SFE_WOLOTSER.COMPLETE_FLG.AVAL]]
-rem wgh ... entry only allowed for woclose
+		rem --- Adjust how many lot/serial items have been closed
+		ls_close_qty=callpoint!.getDevObject("ls_close_qty")
+		ls_close_qty=ls_close_qty+this_cls_inp_qty-prev_cls_inp_qty
+		callpoint!.setDevObject("ls_close_qty",ls_close_qty)
 
-rem wgh ... 2800 REM " --- Complete?
-rem wgh ... 2810 IF P3$(17,1)="S" AND W[2]+W[4]>0 THEN LET W1$(25,1)="Y"; PRINT @(75,L),W1$(25,1); GOTO 3200
-rem wgh ... 2820 IF W[2]+W[4]=W[0] THEN LET W1$(25,1)="Y"
-rem wgh ... 2830 LET V4$="Is This "+S9$+" Complete (Y/N)?"
-rem wgh ... 2835 LET V0$="Y",V1$="C",V2$=W1$(25,1),V3$="",V0=1,V1=75,V2=L
-rem wgh ... 2840 GOSUB 7000
-rem wgh ... 2860 LET W1$(25,1)=V$
-rem wgh ... 2890 GOTO 3200
+		rem --- Update complete flag and closed cost
+		this_ls_sch_qty=num(callpoint!.getColumnData("SFE_WOLOTSER.SCH_PROD_QTY"))
+		this_ls_cls_todt=num(callpoint!.getColumnData("SFE_WOLOTSER.QTY_CLS_TODT"))
+		if this_cls_inp_qty<>0 then
+			if this_cls_inp_qty=this_ls_sch_qty-this_ls_cls_todt and
+:			callpoint!.getColumnData("SFE_WOLOTSER.COMPLETE_FLG")<>"Y" then
+				callpoint!.setColumnData("SFE_WOLOTSER.COMPLETE_FLG","Y",1)
+			endif
+			if num(callpoint!.getColumnData("SFE_WOLOTSER.CLOSED_COST"))=0 then
+				callpoint!.setColumnData("SFE_WOLOTSER.CLOSED_COST",callpoint!.getDevObject("closed_cost"),1)
+			endif
+		else
+			if callpoint!.getColumnData("SFE_WOLOTSER.COMPLETE_FLG")<>"" then
+				callpoint!.setColumnData("SFE_WOLOTSER.COMPLETE_FLG","",1)
+			endif
+			if num(callpoint!.getColumnData("SFE_WOLOTSER.CLOSED_COST"))<>0 then
+				callpoint!.setColumnData("SFE_WOLOTSER.CLOSED_COST",str(0),1)
+			endif
+		endif
 
+		rem --- Validate this_cls_inp_qty
+		if this_cls_inp_qty+this_ls_cls_todt<this_ls_sch_qty then
+			msg_id$="SF_LS_CLS_LT_LS_SCH"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=cvs(str(this_cls_inp_qty+this_ls_cls_todt:sf_units_mask$),3)
+			msg_tokens$[2]=cvs(str(this_ls_sch_qty:sf_units_mask$),3)
+			gosub disp_message
+		endif
+		if this_cls_inp_qty+this_ls_cls_todt>this_ls_sch_qty then
+			msg_id$="SF_LS_CLS_GT_LS_SCH"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=cvs(str(this_cls_inp_qty+this_ls_cls_todt:sf_units_mask$),3)
+			msg_tokens$[2]=cvs(str(this_ls_sch_qty:sf_units_mask$),3)
+			gosub disp_message
+		endif
+	endif
 [[SFE_WOLOTSER.AOPT-AUTO]]
+rem wgh ... stopped here
 rem wgh ... 6400 REM " --- Auto Generate Numbers"
 rem wgh ... 6410 DIM SERIAL$[1]
 rem wgh ... 6420 LET SERIAL$[0]=STR(NEEDED)
@@ -55,104 +267,111 @@ rem wgh ... 6660 LET W0=NUM(W0$(12,3))+1
 rem wgh ... 6670 LET W0$(12,3)=STR(W0:"000")
 rem wgh ... 6680 NEXT X0
 rem wgh ... 6690 RETURN 
-[[SFE_WOLOTSER.WO_LS_CMT.AVAL]]
-rem wgh ... 2400 REM " --- Comments
-rem wgh ... 2420 LET V0$="S",V1$="",V2$=W1$(5,20),V3$="",V4$="",V0=20,V1=10,V2=L+1
-rem wgh ... 2440 GOSUB 7000
-rem wgh ... 2460 LET W1$(5,20)=V$
-rem wgh ... 2490 GOTO 3200
 [[SFE_WOLOTSER.LOTSER_NO.AVAL]]
-rem wgh ... 2000 REM " --- Enter Data
-rem wgh ... 2010 IF W1$(1,1)="Y" THEN LET V3=4; GOTO 3200
-rem wgh ... 2020 LET V0$="S",V1$="CE",V2$=W1$(37,SS9),V3$="",V4$="Enter "+SL$,V0=SS9,V1=10,V2=L
-rem wgh ... 2030 IF POS(P3$(17,1)="SL")>0 AND NEEDED>1 THEN LET V4$=V4$+" (<F1> To Auto Generate Numbers)"
-rem wgh ... 2040 GOSUB 7000
-rem wgh ... 2050 IF V3=2 THEN GOTO 1100
-rem wgh ... 2055 IF POS(P3$(17,1)="SL")>0 AND V3=1 AND NEEDED>1 THEN GOSUB 6400; LET V$="L"; GOTO 4400
-rem wgh ... 2060 IF V$=J1$(1,20) THEN GOTO 2000
-rem wgh ... 2070 LET W1$(37)=V$
-rem wgh ... 2080 FIND (IVM07_DEV,KEY=N0$+A0$(54)+W1$(37),DOM=2190)IOL=IVM07A
-rem wgh ... 2090 GOTO 3200
-rem wgh ... 2100 IF P3$(17,1)="S" AND D[1]-D[2]>0 THEN GOTO 2105 ELSE GOTO 2120
-rem wgh ... 2105 LET V4$="Warning!! Serial Number On Hand! :"
-rem wgh ... 2110 CALL "SYC.YN",1,V4$,2,V$,V3
-rem wgh ... 2115 IF V$="N" THEN GOTO 2000 ELSE GOTO 2190
-rem wgh ... 2118 PRINT @(V1,V2),'RB',
-rem wgh ... 2120 IF P3$(17,1)="L" AND D[1]-D[2]>0 THEN GOTO 2130 ELSE GOTO 2170
-rem wgh ... 2130 PRINT 'RB'
-rem wgh ... 2135 LET V4$="Warning!! "+STR(D[1]-D[2])+" Items Are Currently On Hand!! <Enter> To Continue:"
-rem wgh ... 2140 LET V0$="S",V1$="C",V2$="",V3$="",V0=1,V1=FNV(V4$),V2=22
-rem wgh ... 2150 GOSUB 7000
-rem wgh ... 2190 IF P3$(17,1)="S" THEN LET NEEDED=NEEDED+W[0]-1,W[0]=1,I0=I0+1; PRINT @(72-M2*2-M3,L),W[0]:M2$,
-rem wgh ... 2195 GOTO 3200
+rem --- Verify lot/serial can be used
+	lotser_no$=callpoint!.getUserInput()
+	lsmaster_dev=fnget_dev("@IVM_LSMASTER")
+	dim lsmaster$:fnget_tpl$("@IVM_LSMASTER")
+	warehouse_id$=callpoint!.getDevObject("warehouse_id")
+	item_id$=callpoint!.getDevObject("item_id")
+	lsmaster_found=0
+	findrecord(lsmaster_dev,key=firm_id$+warehouse_id$+item_id$+lotser_no$,dom=*next)lsmaster$; lsmaster_found=1
+	if lsmaster_found and lsmaster.qty_on_hand-lsmaster.qty_commit>0 then
+		if callpoint!.getDevObject("lotser")="S" then
+			rem --- Can't use serial number that is already on hand
+			msg_id$="SF_SERIAL_ON_HAND"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		else
+			rem --- Warn that items are already on hand for this lot
+			msg_id$="SF_LOT_AVAILABLE"
+			gosub disp_message
+		endif
+	endif
+
+rem --- Initialize serialized quantity to one
+	if callpoint!.getDevObject("lotser")="S" and
+:	callpoint!.getColumnData("SFE_WOLOTSER.SCH_PROD_QTY")="0" then
+		callpoint!.setColumnData("SFE_WOLOTSER.SCH_PROD_QTY","1",1)
+
+		rem --- CLS_INP_QTY is disabled for serialized items, so adjust lot/serial quantity here
+		ls_sch_qty=callpoint!.getDevObject("ls_sch_qty")
+		ls_sch_qty=ls_sch_qty-1
+		callpoint!.setDevObject("ls_sch_qty",ls_sch_qty)
+	endif
 [[SFE_WOLOTSER.SCH_PROD_QTY.AVAL]]
-rem wgh ... 2200 REM " --- Production Qty Here
-rem wgh ... 2210 IF W1$(1,1)="Y" THEN GOTO 3200
-rem wgh ... 2215 LET OLDQTY=W[0]
-rem wgh ... 2220 LET V0$="N",V1$="C",V2$=STR(W[0]),V3$=M2$,V4$="Enter Production Qty For This "+SL$,V0=7,V1=72-M3-M2*2,V2=L
-rem wgh ... 2230 IF W[0]=0 AND P3$(17,1)="L" THEN LET V2$=STR(A[0]-A[2]-A[4]),V4$=V4$+", <Enter>="+V2$+"."
-rem wgh ... 2240 GOSUB 7000
-rem wgh ... 2250 IF V3=2 OR V3=4 THEN GOTO 3200
-rem wgh ... 2260 LET W[0]=V
-rem wgh ... 2280 IF W[0]>A[0]-A[2]-A[4] THEN GOTO 2200
-rem wgh ... 2285 IF OLDQTY<>W[0] THEN LET NEEDED=NEEDED-W[0]+OLDQTY
-rem wgh ... 2290 GOTO 3200
-[[SFE_WOLOTSER.BEND]]
-rem --- loop thru and count lot/ser quantities compared to WO sched prod qty
+rem --- Validate this sch_prod_qty if changed
+	this_ls_sch_qty=num(callpoint!.getUserInput())
+	prev_ls_sch_qty=callpoint!.getDevObject("prev_ls_sch_qty")
+	if this_ls_sch_qty<>prev_ls_sch_qty then
+		rem --- Adjust how many lot/serial items have been scheduled
+		ls_sch_qty=callpoint!.getDevObject("ls_sch_qty")
+		ls_sch_qty=ls_sch_qty+this_ls_sch_qty-prev_ls_sch_qty
+		callpoint!.setDevObject("ls_sch_qty",ls_sch_qty)
 
-	sfe_wolotser=fnget_dev("SFE_WOLOTSER")
-	dim sfe_wolotser$:fnget_tpl$("SFE_WOLOTSER")
-
-	sch_prod_qty=num(callpoint!.getDevObject("prod_qty"))
-	wo_loc$=callpoint!.getColumnData("SFE_WOLOTSER.WO_LOCATION")
-	wo_no$=callpoint!.getColumnData("SFE_WOLOTSER.WO_NO")
-
-	tot_lotser=0
-	read (sfe_wolotser,key=firm_id$+wo_loc$+wo_no$,dom=*next)
-
-	while 1		
-		readrecord (sfe_wolotser,end=*break)sfe_wolotser$
-		if pos(firm_id$+wo_loc$+wo_no$=sfe_wolotser$)<>1 then break
-		tot_lotser=tot_lotser+num(sfe_wolotser.sch_prod_qty$)
-	wend
-
-	if tot_lotser>sch_prod_qty
-		msg_id$="SF_TOO_MANY"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-	endif
-
-[[SFE_WOLOTSER.AREC]]
-rem --- if serialized, then make qty control read only
-	
-	if callpoint!.getDevObject("lotser")="S" 		
-		callpoint!.setColumnEnabled("SFE_WOLOTSER.SCH_PROD_QTY",0)
-	endif
-[[SFE_WOLOTSER.ADIS]]
-rem --- disable inputs if on a closed WO
-
-	if callpoint!.getDevObject("wo_status")="C" 
-		callpoint!.setColumnEnabled("SFE_WOLOTSER.LOTSER_NO",0)
-		callpoint!.setColumnEnabled("SFE_WOLOTSER.SCH_PROD_QTY",0)
+	rem --- Validate this_ls_sch_qty
+		wo_close_qty=num(callpoint!.getDevObject("cls_inp_qty"))
+		if this_ls_sch_qty<wo_close_qty then
+			msg_id$="SF_LS_SCH_LT_WO_CLS"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=cvs(str(this_ls_sch_qty:sf_units_mask$),3)
+			msg_tokens$[2]=cvs(str(ls_close_qty:sf_units_mask$),3)
+			gosub disp_message
+		endif
+		if this_ls_sch_qty>wo_close_qty then
+			msg_id$="SF_LS_SCH_GT_WO_CLS"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=cvs(str(this_ls_sch_qty:sf_units_mask$),3)
+			msg_tokens$[2]=cvs(str(wo_close_qty:sf_units_mask$),3)
+			gosub disp_message
+		endif
 	endif
 [[SFE_WOLOTSER.BSHO]]
+rem --- Disable all input fields if work order has been closed
+	if callpoint!.getDevObject("wo_status")="C" then
+		callpoint!.setColumnEnabled(-1,"SFE_WOLOTSER.LOTSER_NO",-1)
+		callpoint!.setColumnEnabled(-1,"SFE_WOLOTSER.WO_LS_CMT",-1)
+		callpoint!.setColumnEnabled(-1,"SFE_WOLOTSER.SCH_PROD_QTY",-1)
+		callpoint!.setColumnEnabled(-1,"SFE_WOLOTSER.CLS_INP_QTY",-1)
+		callpoint!.setColumnEnabled(-1,"SFE_WOLOTSER.COMPLETE_FLG",-1)
+	endif
+
 rem --- Disable fields when closing work order, or not
-rem wgh ... stopped here
-	if callpoint!.getDevObject("allow_close")<>"Y"then
-		callpoint!.setColumnEnabled("SFE_WOLOTSER.CLS_INP_QTY",0)
-		callpoint!.setColumnEnabled("SFE_WOLOTSER.COMPLETE_FLG",0)
+	if callpoint!.getDevObject("wolotser_action")<>"close" then
+		rem --- Not being used with sfe_woclose form
+		callpoint!.setColumnEnabled(-1,"SFE_WOLOTSER.CLS_INP_QTY",-1)
+		callpoint!.setColumnEnabled(-1,"SFE_WOLOTSER.COMPLETE_FLG",-1)
 	endif
 
-rem --- Disable auto-assign option if lotted
-rem wgh ... stopped here
-rem wgh ... also disable if need<=1
+rem --- Disable sch_prod_qty field if serialized
+	if callpoint!.getDevObject("lotser")="S" 		
+		callpoint!.setColumnEnabled(-1,"SFE_WOLOTSER.SCH_PROD_QTY",-1)
+	endif
+
+rem --- Get how many lot/serial items need to be closed
+	gosub get_close_qty_needed
+	callpoint!.setDevObject("check_ls_qty",1)
+
+rem --- Disable auto-assign and auto-close options as needed
 	if callpoint!.getDevObject("lotser")<>"S" then
+		rem --- Disable auto-assign and auto-close options when not serialized
 		callpoint!.setOptionEnabled("AUTO",0)
+		callpoint!.setOptionEnabled("ACLS",0)
+	else
+		close_qty_needed=num(callpoint!.getDevObject("cls_inp_qty"))-callpoint!.getDevObject("ls_sch_qty")
+		if close_qty_needed<=1 then
+			rem --- Disable auto-assign options when don't need more than one
+			callpoint!.setOptionEnabled("AUTO",0)
+		endif
+		ls_qty_not_closed=callpoint!.getDevObject("ls_sch_qty")-callpoint!.getDevObject("ls_close_qty")
+		if callpoint!.getDevObject("wolotser_action")<>"close" or ls_qty_not_closed<=1 then
+			rem --- Disable auto-close options when not being used with sfe_woclose form 
+			rem --- or don't have more than one ready to close
+			callpoint!.setOptionEnabled("ACLS",0)
+		endif
 	endif
 
-rem --- dflt qty to 1 if serialized
-rem wgh ... stopped here
-rem wgh ... looks better if this is done after lot/serial is entered
-	if callpoint!.getDevObject("lotser")="S"
-		callpoint!.setTableColumnAttribute("SFE_WOLOTSER.SCH_PROD_QTY","DFLT","1")
-	endif
+rem --- Get SF unit mask
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",sf_units_mask$,0,0
+	callpoint!.setDevObject("sf_units_mask",sf_units_mask$)

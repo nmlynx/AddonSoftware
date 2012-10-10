@@ -29,6 +29,9 @@ rem --- Recalculate standards
 			break
 		endif
 
+rem wgh ... stopped here
+rem wgh ... why is inventory adjusted only when standards are recalculated?????????????
+rem wgh ... check update (and atamo), does it do wo on-order when it does WO on-hand using sch_prod_qty ... if so, this makes sense
 		rem --- Adjust inventory on order quantity if necessary
 		sch_prod_qty=num(callpoint!.getColumnData("SFE_WOCLOSE.SCH_PROD_QTY"))
 		if callpoint!.getColumnData("SFE_WOCLOSE.WO_CATEGORY")="I" and sch_prod_qty-(qty_cls_todt+cls_inp_qty)<>0 then
@@ -266,6 +269,9 @@ rem --- Initialize input close date
 		callpoint!.setColumnData("SFE_WOCLOSE.CLS_INP_DATE",sysinfo.system_date$,1)
 		callpoint!.setStatus("MODIFIED")
 	endif
+
+rem --- Display isn't being refreshed after wo reopened in ADIS , so must do it here
+	callpoint!.setStatus("REFRESH")
 [[SFE_WOCLOSE.ADIS]]
 rem --- Need to ask about closing this work order
 	callpoint!.setDevObject("ask_close_question","1")
@@ -510,9 +516,16 @@ rem ==========================================================================
 rem ==========================================================================
 do_wolotser: rem --- Launch sfe_wolotser form to assign lot/serial numbers
 rem ==========================================================================
-	callpoint!.setDevObject("prod_qty",callpoint!.getColumnData("SFE_WOCLOSE.SCH_PROD_QTY"))
+	callpoint!.setDevObject("wo_loc",callpoint!.getColumnData("SFE_WOCLOSE.WO_LOCATION"))
+	callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WOCLOSE.WO_NO"))
 	callpoint!.setDevObject("wo_status",callpoint!.getColumnData("SFE_WOCLOSE.WO_STATUS"))
-	callpoint!.setDevObject("allow_close","Y")
+	callpoint!.setDevObject("warehouse_id",callpoint!.getColumnData("SFE_WOCLOSE.WAREHOUSE_ID"))
+	callpoint!.setDevObject("item_id",callpoint!.getColumnData("SFE_WOCLOSE.ITEM_ID"))
+	callpoint!.setDevObject("prod_qty",callpoint!.getColumnData("SFE_WOCLOSE.SCH_PROD_QTY"))
+	callpoint!.setDevObject("cls_inp_qty",callpoint!.getColumnData("SFE_WOCLOSE.CLS_INP_QTY"))
+	callpoint!.setDevObject("qty_cls_todt",callpoint!.getColumnData("SFE_WOCLOSE.QTY_CLS_TODT"))
+	callpoint!.setDevObject("closed_cost",callpoint!.getColumnData("SFE_WOCLOSE.CLOSED_COST"))
+	callpoint!.setDevObject("wolotser_action","close")
 
 	key_pfx$=firm_id$+callpoint!.getColumnData("SFE_WOCLOSE.WO_LOCATION")+callpoint!.getColumnData("SFE_WOCLOSE.WO_NO")
 
