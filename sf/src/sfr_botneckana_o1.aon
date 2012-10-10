@@ -236,6 +236,7 @@ print_data: rem --- Print Data
 			s_hrs=num(field(sfm04a$,"hrs_per_day_"+str(s_day:"00")))
 		endif
 		if s_hrs>0 and 100*t0/s_hrs<utilperc then break
+		if sfm05.op_code$<>opcode_break$ gosub op_code_break
 		gosub date_break
 		dim sfm05a1$:fattr(sfm05a$)
 
