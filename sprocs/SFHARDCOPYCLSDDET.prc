@@ -139,38 +139,17 @@ rem --- Get AR Params for Distribute by Item flag
 
 rem --- Init
 	dim GL_Acct_amts[5]; 	rem One per row of possible accts listed
+	
+	default_precision=tcb(14)
+	precision default_precision
 
 rem --- Use SQL queries to gather needed data
 
-	rem --- Determine which VIEW (Transaction file set) to use for Actuals
-	rem ---   Note: The Closed Det Report does not limit transactions by date per v6
-	rem ---         but it does choose Open vs Closed Trans files based on following:
-	rem ---         =>  If WO is closed ('C') AND closed_date$ <= prevper_enddate$, 
-	rem ---                    use Closed Transactions
-	rem ---             Else use Opened Transactions
-
-	rem --- Use VIEW, SF_OPNTRAN_VALS, for Open WOs (as determined by above logic) 
+	rem --- Use VIEWs, SF_OPNTRAN_VALS and SF_COSTSUMS_ACTO, for Open Transactions 
+	rem ---  (NOTE: Closed WO Det and Summary do not use Closed Transactions) 
 	rem ---		SFT_OPNOPRTR sft-01
 	rem ---		SFT_OPNMATTR sft-21
 	rem ---		SFT_OPNSUBTR sft-31
-	rem ---           === OR ===
-	rem --- Use VIEW, SF_CLSDTRAN_VALS, for Closed WOs (as determined by above logic) 
-	rem ---		SFT_CLSOPRTR sft-03
-	rem ---		SFT_CLSMATTR sft-23
-	rem ---		SFT_CLSSUBTR sft-33
-
-		if wo_status$="C" and wo_clsddate$<=prevper_enddate$ then
-			tran_val_view$=" SF_CLSDTRAN_VALS "
-			tran_costsums_view$=" SF_COSTSUMS_ACTC "; rem ACTC=Use Closed Trans files to accum Actual
-		else
-			tran_val_view$=" SF_OPNTRAN_VALS "
-			tran_costsums_view$=" SF_COSTSUMS_ACTO "; rem ACTO=Use Open Trans files to accum Actual
-		endif
-
-		rem --- NOTE: v6 WOR.EA/EB does not set G9$ (prevper_enddate$) prior to WOR.XA
-		rem ---       Therefore, WOR.XA always uses OPEN Trans files to accum Trans tots 
-		rem ---       for this report; thus the next two lines here 'hardcoding' to OPEN
-		rem ---       I don't understand the v6 logic, but am aping it here.
 		
 		tran_val_view$=" SF_OPNTRAN_VALS "
 		tran_costsums_view$=" SF_COSTSUMS_ACTO "; rem ACTO=Use Open Trans files to accum Actual
@@ -188,13 +167,13 @@ rem --- Use SQL queries to gather needed data
 			select$=select$+"typ.GL_WIP_ACCT, typ.GL_CLOSE_TO, typ.GL_LAB_VAR, "
 			select$=select$+"typ.GL_OVH_VAR,  typ.GL_MAT_VAR,  typ.GL_SUB_VAR, "			
 			
-			select$=select$+"wh.UNIT_COST,   req.Tot_STD_Cost, act.Tot_ACT_Cost, "
-			select$=select$+"cs_std.Tot_STD_Dir_Cost, cs_std.Tot_STD_Ovh_Cost, "	
-			select$=select$+"cs_std.Tot_STD_Mat_Cost, cs_std.Tot_STD_Sub_Cost, "	
+			select$=select$+"wh.UNIT_COST,    req.TOT_STD_COST,act.TOT_ACT_COST, "
+			select$=select$+"cs_std.TOT_STD_DIR_COST, cs_std.TOT_STD_OVH_COST, "	
+			select$=select$+"cs_std.TOT_STD_MAT_COST, cs_std.TOT_STD_SUB_COST, "	
 			
-			select$=select$+"cs_act.Tot_ACT_Dir_Cost, cs_act.Tot_ACT_Ovh_Cost, "	
-			select$=select$+"cs_act.Tot_ACT_Mat_Cost, cs_act.Tot_ACT_Sub_Cost, "	
-			select$=select$+"cs_act.Tot_ACT_Ops_Cost "				
+			select$=select$+"cs_act.TOT_ACT_DIR_COST, cs_act.TOT_ACT_OVH_COST, "	
+			select$=select$+"cs_act.TOT_ACT_MAT_COST, cs_act.TOT_ACT_SUB_COST, "	
+			select$=select$+"cs_act.TOT_ACT_OPS_COST "			
 			
 			
 		rem --- Build clause for getting the Transactions/Actual cost of WO
@@ -203,7 +182,7 @@ rem --- Use SQL queries to gather needed data
 			actuals$=actuals$+" (SELECT tran.Firm_ID"
 			actuals$=actuals$+"        ,tran.WO_Location"
 			actuals$=actuals$+"        ,tran.WO_No"
-			actuals$=actuals$+"        ,SUM(tran.Ext_Cost) AS Tot_ACT_Cost"
+			actuals$=actuals$+"        ,SUM(tran.Ext_Cost) AS TOT_ACT_COST"
 			actuals$=actuals$+"  FROM "+tran_val_view$+" AS tran"; rem The VIEW used here is determined above
 			actuals$=actuals$+"  GROUP BY tran.Firm_ID,tran.WO_Location,tran.WO_No"; rem SUM() based on firm+loc+woNo
 			actuals$=actuals$+" ) AS act  "
@@ -214,7 +193,7 @@ rem --- Use SQL queries to gather needed data
 			requirements$=requirements$+" (SELECT std.Firm_ID"
 			requirements$=requirements$+"        ,std.WO_Location"
 			requirements$=requirements$+"        ,std.WO_No"
-			requirements$=requirements$+"        ,SUM(std.Total_Cost) AS Tot_STD_Cost"
+			requirements$=requirements$+"        ,SUM(std.Total_Cost) AS TOT_STD_COST"
 			requirements$=requirements$+"  FROM SF_WO_REQ_VALS AS std"
 			requirements$=requirements$+"  GROUP BY std.Firm_ID,std.WO_Location,std.WO_No"; rem SUM() based on firm+loc+woNo
 			requirements$=requirements$+" ) AS req  "
@@ -270,15 +249,15 @@ rem --- Use SQL queries to gather needed data
 		
 rem --- Assign values from SQL query
 
-	closed_date$ 	 	= read_tpl.closed_date$
-	WO_TypeCode_desc$ 	= read_tpl.code_desc$
-	lstact_date_raw$ 	= read_tpl.lstact_date$
-	cls_inp_date_raw$	= read_tpl.cls_inp_date$
-	curr_prod_qty 	 	= read_tpl.sch_prod_qty
-	prior_clsd_qty 	 	= read_tpl.qty_cls_todt
-	this_close_qty 	 	= read_tpl.cls_inp_qty
-	complete_yn$ 	 	= read_tpl.complete_flg$
-	recalc_flag$ 		= read_tpl.recalc_flag$
+	closed_date$ 	 	= read_tpl.CLOSED_DATE$
+	WO_TypeCode_desc$ 	= read_tpl.CODE_DESC$
+	lstact_date_raw$ 	= read_tpl.LSTACT_DATE$
+	cls_inp_date_raw$	= read_tpl.CLS_INP_DATE$
+	curr_prod_qty 	 	= read_tpl.SCH_PROD_QTY
+	prior_clsd_qty 	 	= read_tpl.QTY_CLS_TODT
+	this_close_qty 	 	= read_tpl.CLS_INP_QTY
+	complete_yn$ 	 	= read_tpl.COMPLETE_FLG$
+	recalc_flag$ 		= read_tpl.RECALC_FLAG$
 
 	IF complete_yn$<>"Y" THEN 
 		LET bal_still_open_qty=curr_prod_qty-(prior_clsd_qty+this_close_qty)
@@ -286,26 +265,26 @@ rem --- Assign values from SQL query
 		bal_still_open_qty=0
 	endif
 
-	closed_cost         = read_tpl.closed_cost
-	iv_unit_cost 	 	= read_tpl.unit_cost; rem NOTE: v6 had a bug and was using MaxQty here.
-	wo_cost_at_std 	 	= read_tpl.Tot_STD_Cost
-	close_at_std_act$	= read_tpl.stdact_flag$
-	wo_cost_at_act 	 	= read_tpl.Tot_ACT_Cost
-	prior_closed_amt 	= read_tpl.cls_cst_todt
+	closed_cost         = read_tpl.CLOSED_COST
+	iv_unit_cost 	 	= read_tpl.UNIT_COST; rem NOTE: v6 had a bug and was using MaxQty here.
+	wo_cost_at_std 	 	= read_tpl.TOT_STD_COST
+	close_at_std_act$	= read_tpl.STDACT_FLAG$
+	wo_cost_at_act 	 	= read_tpl.TOT_ACT_COST
+	prior_closed_amt 	= read_tpl.CLS_CST_TODT
 	
 	curr_wip_value 		= wo_cost_at_act - prior_closed_amt
 	curr_close_value	= this_close_qty * closed_cost
 	
-	Tot_STD_Dir_Cost	= read_tpl.Tot_STD_Dir_Cost
-	Tot_STD_Ovh_Cost	= read_tpl.Tot_STD_Ovh_Cost
-	Tot_STD_Mat_Cost	= read_tpl.Tot_STD_Mat_Cost
-	Tot_STD_Sub_Cost	= read_tpl.Tot_STD_Sub_Cost
+	wo_std_dir_Cost		= read_tpl.TOT_STD_DIR_COST
+	wo_std_Ovh_Cost		= read_tpl.TOT_STD_OVH_COST
+	wo_std_mat_Cost		= read_tpl.TOT_STD_MAT_COST
+	wo_std_sub_Cost		= read_tpl.TOT_STD_SUB_COST
 			
-	Tot_ACT_Dir_Cost	= read_tpl.Tot_ACT_Dir_Cost
-	Tot_ACT_Ovh_Cost	= read_tpl.Tot_ACT_Ovh_Cost
-	Tot_ACT_Mat_Cost	= read_tpl.Tot_ACT_Mat_Cost
-	Tot_ACT_Sub_Cost	= read_tpl.Tot_ACT_Sub_Cost
-	Tot_ACT_Ops_Cost	= read_tpl.Tot_ACT_Ops_Cost		
+	wo_act_dir_Cost		= read_tpl.TOT_ACT_DIR_COST
+	wo_act_Ovh_Cost		= read_tpl.TOT_ACT_OVH_COST
+	wo_act_mat_Cost		= read_tpl.TOT_ACT_MAT_COST
+	wo_act_sub_Cost		= read_tpl.TOT_ACT_SUB_COST
+	wo_act_Ops_Cost		= read_tpl.TOT_ACT_OPS_COST		
 
 	rem --- Per Unit values from SQL query
 	if curr_prod_qty<>0 then
@@ -339,13 +318,13 @@ rem --- Assign values from SQL query
 	endif
 
 	rem --- GL accts from SQL query (from JOIN to WO Type Code)
-	gl_wip_acct$  	  = read_tpl.gl_wip_acct$
-	gl_close_to_acct$ = read_tpl.gl_close_to$
-	gl_pur_acct$	  = read_tpl.gl_pur_acct$
-	gl_lab_var_acct$  = read_tpl.gl_lab_var$
-	gl_ovh_var_acct$  = read_tpl.gl_ovh_var$
-	gl_mat_var_acct$  = read_tpl.gl_mat_var$
-	gl_sub_var_acct$  = read_tpl.gl_sub_var$
+	gl_wip_acct$  	  = read_tpl.GL_WIP_ACCT$
+	gl_close_to_acct$ = read_tpl.GL_CLOSE_TO$
+	gl_pur_acct$	  = read_tpl.GL_PUR_ACCT$
+	gl_lab_var_acct$  = read_tpl.GL_LAB_VAR$
+	gl_ovh_var_acct$  = read_tpl.GL_OVH_VAR$
+	gl_mat_var_acct$  = read_tpl.GL_MAT_VAR$
+	gl_sub_var_acct$  = read_tpl.GL_SUB_VAR$
 	
 rem ========================== beg wor.eb 2070-2140 =======================================
 rem --- GL account/postings section	
@@ -383,24 +362,27 @@ rem ========================== end wor.eb 2070-2140 ============================
 
 rem --- Calculate Postings to GL
 
+		precision 2
+		
         GL_Acct_amts[0]=-curr_wip_value; rem WIP acct
         GL_Acct_amts[1]=curr_close_value; rem Inventory acct
 
         if complete_yn$<>"Y"
             GL_Acct_amts[0]=-curr_close_value
         else
-            if close_at_std_act$="A" then
+            if close_at_std_act$="A" 
                 GL_Acct_amts[1]=curr_wip_value
             else
 			rem --- Calculate Variance Postings
-                if wo_category$<>"I" and (curr_prod_qty=prior_clsd_qty+this_close_qty 
+                precision default_precision
+				if wo_category$<>"I" and (curr_prod_qty=prior_clsd_qty+this_close_qty 
 :									      or wo_cost_at_std=0 
 :										  or recalc_flag$="N") then
                     prorte=(this_close_qty*closed_cost)+prior_closed_amt
                 else
 				rem --- Prorate Standards If Needed
                     if wo_category$<>"I"
-                        if curr_prod_qty<>0 then
+                        if curr_prod_qty<>0 
                             prorte=wo_cost_at_std*(prior_clsd_qty+this_close_qty)/curr_prod_qty
                         else
                             prorte=0
@@ -409,25 +391,26 @@ rem --- Calculate Postings to GL
                         prorte=(this_close_qty*closed_cost)+prior_closed_amt
                     endif
 
-                    if prorte<>wo_cost_at_std then
-                        if wo_cost_at_std=0 then
-                            Tot_STD_Dir_Cost=0,
-							Tot_STD_Mat_Cost=0,
-							Tot_STD_Sub_Cost=0
+                    if prorte<>wo_cost_at_std 
+                        if wo_cost_at_std=0 
+                            wo_std_dir_Cost=0
+							wo_std_mat_Cost=0
+							wo_std_sub_Cost=0
                         else
-                            Tot_STD_Dir_Cost=Tot_STD_Dir_Cost*prorte/wo_cost_at_std
-                            Tot_STD_Mat_Cost=Tot_STD_Mat_Cost*prorte/wo_cost_at_std 
-                            Tot_STD_Sub_Cost=Tot_STD_Sub_Cost*prorte/wo_cost_at_std
+                            wo_std_dir_Cost=wo_std_dir_Cost*prorte/wo_cost_at_std
+                            wo_std_mat_Cost=wo_std_mat_Cost*prorte/wo_cost_at_std 
+                            wo_std_sub_Cost=wo_std_sub_Cost*prorte/wo_cost_at_std
                         endif
-                       rem  u[9]=prorte-(Tot_STD_Dir_Cost+Tot_STD_Mat_Cost+Tot_STD_Sub_Cost) rem'd because apparently not used
+                       rem  u[9]=prorte-(wo_std_dir_Cost+wo_std_mat_Cost+wo_std_sub_Cost) rem'd because apparently not used
                     endif
                 endif
 				
 rem --- Now Calculate Variances
                 precision 2
-                GL_Acct_amts[2]=(Tot_ACT_Dir_Cost-Tot_STD_Dir_Cost)*1 
-                GL_Acct_amts[4]=(Tot_ACT_Mat_Cost-Tot_STD_Mat_Cost)*1 
-				GL_Acct_amts[5]=(Tot_ACT_Sub_Cost-Tot_STD_Sub_Cost)*1
+				
+                GL_Acct_amts[2]=(wo_act_dir_Cost-wo_std_dir_Cost)*1 
+                GL_Acct_amts[4]=(wo_act_mat_Cost-wo_std_mat_Cost)*1 
+				GL_Acct_amts[5]=(wo_act_sub_Cost-wo_std_sub_Cost)*1
                 GL_Acct_amts[3]=(wo_cost_at_act-prorte-(GL_Acct_amts[2]+GL_Acct_amts[4]+GL_Acct_amts[5]))*1
                 GL_Acct_amts[0]=GL_Acct_amts[0]*1
                 GL_Acct_amts[1]=GL_Acct_amts[1]*1
