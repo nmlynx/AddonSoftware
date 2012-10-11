@@ -651,6 +651,20 @@ end_ddm04:
     next_rec:
     readrecord(old_file,end=eof)old_rec$
     if pos("00"=old_rec$)=1 goto next_rec
+	if pos("FIRM_ID"=fattr(old_rec$))=1 if old_rec.firm_id$="ZZ" goto next_rec
+
+	rem --- fix data based on an old bug discovered in v6 (never fixed in v6) while writing data
+	rem --- IV Period End swapped the Operator ID and System Date fields in the BB records
+	if cvs(ddm03.file_name$,8)="ivt-04" or cvs(ddm03.file_name$,8)="ivt-01"
+		if old_rec.trans_source$="BB"
+			if old_rec.operator_id$(2,1)>=$21$ and old_rec.operator_id$(2,1)<=$2c$
+				tmp_fld$=old_rec.operator_id$
+				old_rec.operator_id$=old_rec.system_date$
+				old_rec.system_date$=tmp_fld$
+			endif
+		endif
+	endif
+
     if record_id_field$<>"" and field(old_rec$,record_id_field$,err=*continue)<>ddm03.record_id$ then
        goto next_rec
     endif
