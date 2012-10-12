@@ -5,7 +5,7 @@ rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/04/2008 11:36:00)
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
-escape; rem Initial Commit. DO NOT RUN
+
         setesc std_error
         seterr std_error
 
@@ -312,7 +312,7 @@ rem --- Use SQL queries to gather needed data
 			sql_prep$=sql_prep$+"WHERE wo.Firm_ID+wo.WO_Location+wo.WO_No "; rem Limit to RECs in Closed WO file, SFE_CLOSEDWO
 			sql_prep$=sql_prep$+"   IN (SELECT clsd.firm_id+clsd.WO_Location+clsd.WO_No "
 			sql_prep$=sql_prep$+"       FROM SFE_CLOSEDWO AS clsd)"
-			sql_prep$=sql_prep$+"  AND wo.WO_Category <> 'R'"; rem Skip Recurring
+			sql_prep$=sql_prep$+"  AND wo.WO_Category = 'R'"; rem Recurring Only
 
 			sql_chan=sqlunt
 			sqlopen(sql_chan,err=*next)stbl("+DBNAME")
@@ -377,13 +377,6 @@ rem --- Assign values from SQL query
 		
 		rem --- Breaks
 
-        if wo_category$="I"
-            find record (ivm_itemmast_dev,key=firm_id$+item_id$,dom=label2) ivm_itemmast$
-            description_01$=ivm_itemmast.item_desc$(1,min(desc[1],30))
-        endif
-
-label2:
-     
 		call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,0,ignore_status
         
 		tot_act_cost=0
@@ -394,25 +387,6 @@ label2:
 		tot_Mats_Var=0
 		tot_Subs_Var=0
 		tot_Ovhd_Var=0
-
-rem --- Get GL Inventory Acct based on Dist By Item (for Category 'I' items)
-		if wo_category$="I" then
-            find record (ivm_itemmast_dev,key=firm_id$+item_id$,dom=Read_WOTypeCd) ivm_itemmast$
-            if ars_params.DIST_BY_ITEM$<>"Y" then
-                gl_inventory_acct$=ivm_itemmast.gl_inv_acct$
-            else
-                find record (ivm_itemwhse_dev,key=firm_id$+warehouse_id$+item_id$,dom=Read_WOTypeCd) ivm_itemwhse$
-                distribution_code$=ivm_itemwhse.ar_dist_code$
-                find record (arc_distcode_dev,key=firm_id$+"D"+distribution_code$,dom=Read_WOTypeCd) arc_distcode$
-                gl_inventory_acct$=arc_distcode.gl_inv_acct$; rem "Set the closed to account...
-            endif
-        endif
-	
-	Read_WOTypeCd:
-	rem --- Get GL Accounts from WO Type Code
-        if wo_category$="I" then 
-            gl_close_to_acct$=gl_inventory_acct$
-        endif
 
 rem --- Init GL_Acct_amts[] and GL_Accts[], parallel arrays for postings
 			rem [0] Work in Process
@@ -452,20 +426,17 @@ rem --- Calculate Close Value, Variances, etc.
                 let tot_closed_Value=tot_curr_wip
 	        else
 				precision default_precision
-				if wo_category$<>"I" and (curr_prod_qty=prior_clsd_qty+this_close_qty 
-:											or wo_cost_at_std=0 
-:											or recalc_flag$="N") then
+				if curr_prod_qty=prior_clsd_qty+this_close_qty 
+:								or wo_cost_at_std=0 
+:								or recalc_flag$="N" then
                     prorte=(this_close_qty*closed_cost)+prior_closed_amt
                 else
 				rem --- Pro-Rate Standards If Needed
-                    if wo_category$<>"I"  
-						if curr_prod_qty<>0  
-							prorte=wo_cost_at_std*(prior_clsd_qty+this_close_qty)/curr_prod_qty 
-						else 
-							prorte=0 
-						endif
+ 
+					if curr_prod_qty<>0  
+						prorte=wo_cost_at_std*(prior_clsd_qty+this_close_qty)/curr_prod_qty 
 					else 
-						prorte=(this_close_qty*closed_cost)+prior_closed_amt
+						prorte=0 
 					endif
 					
                     if prorte<>wo_cost_at_std
@@ -507,11 +478,7 @@ rem --- Now Calculate Variances
 			
         dim x1$(30)
 
-        if wo_category$="I" then 
-            let x1$(1)=item_id$,x1$(1)=x1$(1,pos("   "=x1$+"   ")-1)+" "+description_01$ 
-        else 
             let x1$=description_01$
-        endif
         
 		precision default_precision
 
