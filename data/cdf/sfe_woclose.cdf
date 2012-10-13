@@ -29,9 +29,6 @@ rem --- Recalculate standards
 			break
 		endif
 
-rem wgh ... stopped here
-rem wgh ... why is inventory adjusted only when standards are recalculated?????????????
-rem wgh ... check update (and atamo), does it do wo on-order when it does WO on-hand using sch_prod_qty ... if so, this makes sense
 		rem --- Adjust inventory on order quantity if necessary
 		sch_prod_qty=num(callpoint!.getColumnData("SFE_WOCLOSE.SCH_PROD_QTY"))
 		if callpoint!.getColumnData("SFE_WOCLOSE.WO_CATEGORY")="I" and sch_prod_qty-(qty_cls_todt+cls_inp_qty)<>0 then
@@ -459,11 +456,21 @@ rem --- Calculate and display new amounts
 	callpoint!.setColumnData("<<DISPLAY>>.ACT_UNIT_COST",str(act_unit_cost),1)
 	callpoint!.setColumnData("<<DISPLAY>>.VALUE_AT_ACT",str(act_cost),1)
 
-rem -- Disable lot/serial option if not lotted/serialized
+rem -- Disable lot/serial option if not lotted/serialized, and scheduled for close
 	if callpoint!.getColumnData("SFE_WOCLOSE.WO_CATEGORY")="I" and 
 :	callpoint!.getColumnData("SFE_WOCLOSE.LOTSER_ITEM")="Y" and 
 :	pos(callpoint!.getDevObject("lotser")="LS") then
-		callpoint!.setOptionEnabled("LSNO",1)
+		rem --- Work order scheduled for close?
+		closedwo_dev=fnget_dev("1SFE_CLOSEDWO")
+		wo_location$=callpoint!.getColumnData("SFE_WOCLOSE.WO_LOCATION")
+		wo_no$=callpoint!.getColumnData("SFE_WOCLOSE.WO_NO")
+		closedwo_found=0
+		findrecord(closedwo_dev,key=firm_id$+wo_location$+wo_no$,dom=*next);closedwo_found=1
+		if closedwo_found then
+			callpoint!.setOptionEnabled("LSNO",1)
+		else
+			callpoint!.setOptionEnabled("LSNO",0)
+		endif
 	else
 		callpoint!.setOptionEnabled("LSNO",0)
 	endif

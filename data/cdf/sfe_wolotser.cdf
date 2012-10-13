@@ -30,6 +30,9 @@ rem --- Adjust how many lot/serial items have been closed
 	ls_close_qty=callpoint!.getDevObject("ls_close_qty")
 	ls_close_qty=ls_close_qty+num(callpoint!.getColumnData("SFE_WOLOTSER.CLS_INP_QTY"))
 	callpoint!.setDevObject("ls_close_qty",ls_close_qty)
+
+rem --- Enable/disable additional options
+	gosub enable_options
 [[SFE_WOLOTSER.BDEL]]
 rem --- Adjust how many lot/serial items have been scheduled
 	ls_sch_qty=callpoint!.getDevObject("ls_sch_qty")
@@ -40,6 +43,9 @@ rem --- Adjust how many lot/serial items have been closed
 	ls_close_qty=callpoint!.getDevObject("ls_close_qty")
 	ls_close_qty=ls_close_qty-num(callpoint!.getColumnData("SFE_WOLOTSER.CLS_INP_QTY"))
 	callpoint!.setDevObject("ls_close_qty",ls_close_qty)
+
+rem --- Enable/disable additional options
+	gosub enable_options
 [[SFE_WOLOTSER.SCH_PROD_QTY.BINP]]
 rem --- Capture current lot/ser sch_prod_qty so can make adjustments if it gets changed
 	prev_ls_sch_qty=num(callpoint!.getColumnData("SFE_WOLOTSER.SCH_PROD_QTY"))
@@ -78,10 +84,6 @@ rem --- Get how many lot/serial items need to be closed
 rem --- Validate lot/serial quantities
 rem --- Register will prevents running update if have bad  lot/serial quantities
 	gosub validate_ls_qty
-
-rem wgh ... stopped here
-rem wgh ... what happens if sfe_wolotser is saved but sfe_woclose is not?????????????
-rem wgh ... in sfe_woclose remove sfe_wolotser if no SFE_CLOSEDWO record, or just leave for future close???????
 [[SFE_WOLOTSER.<CUSTOM>]]
 rem ==========================================================================
 get_close_qty_needed: rem --- Get how many lot/serial items have been closed, and how many have been scheduled
@@ -177,6 +179,25 @@ rem ==========================================================================
 		endif
 	endif
 	return
+
+rem ==========================================================================
+enable_options: rem --- Enable/disable additional options
+rem ==========================================================================
+	close_qty_needed=num(callpoint!.getDevObject("cls_inp_qty"))-callpoint!.getDevObject("ls_sch_qty")
+	if close_qty_needed<=1 then
+		rem --- Disable auto-assign options when don't need more than one
+		callpoint!.setOptionEnabled("AUTO",0)
+	endif
+	ls_qty_not_closed=callpoint!.getDevObject("ls_sch_qty")-callpoint!.getDevObject("ls_close_qty")
+	if callpoint!.getDevObject("wolotser_action")<>"close" or ls_qty_not_closed<=1 then
+		rem --- Disable auto-close options when not being used with sfe_woclose form 
+		rem --- or don't have more than one ready to close
+		callpoint!.setOptionEnabled("ACLS",0)
+	endif
+rem wgh ... stopped here
+rem wgh ... the additional option buttons aren't getting refreshed
+	callpoint!.setStatus("REFRESH")
+	return
 [[SFE_WOLOTSER.AGDR]]
 rem --- Disable all input fields if lot/serial has been closed
 	if callpoint!.getColumnData("SFE_WOLOTSER.CLOSED_FLAG")="Y" then
@@ -240,35 +261,52 @@ rem --- Validate this cls_inp_qty if changed
 		endif
 	endif
 [[SFE_WOLOTSER.AOPT-AUTO]]
+rem --- Generate new lot/serial numbers
+	wo_close_qty=num(callpoint!.getDevObject("cls_inp_qty"))
+	ls_sch_qty=callpoint!.getDevObject("ls_sch_qty")
+	max_qty=max(wo_close_qty-ls_sch_qty,0)
+	callpoint!.setDevObject("max_qty",max_qty)
+	callpoint!.setDevObject("sequence_no",callpoint!.getColumnData("SFE_WOLOTSER.SEQUENCE_NO"))
+	wo_location$=callpoint!.getColumnData("SFE_WOLOTSER.WO_LOCATION")
+	wo_no$=callpoint!.getColumnData("SFE_WOLOTSER.WO_NO")
+
+	dim dflt_data$[6,1]
+	dflt_data$[1,0]="LOTSER_NO"
+	dflt_data$[1,1]=callpoint!.getColumnData("SFE_WOLOTSER.LOTSER_NO")
+	dflt_data$[2,0]="GEN_QTY"
+	dflt_data$[2,1]=str(max_qty)
+	dflt_data$[3,0]="WO_LOCATION"
+	dflt_data$[3,1]=wo_location$
+	dflt_data$[4,0]="WO_NO"
+	dflt_data$[4,1]=wo_no$
+	dflt_data$[5,0]="WAREHOUSE_ID"
+	dflt_data$[5,1]=callpoint!.getDevObject("warehouse_id")
+	dflt_data$[6,0]="ITEM_ID"
+	dflt_data$[6,1]=callpoint!.getDevObject("item_id")
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"SFE_AUTOGENLS",
+:		stbl("+USER_ID"),
+:		"",
+:		"",
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
+rem --- Adjust how many lot/serial items have been scheduled
+	ls_sch_qty=callpoint!.getDevObject("ls_sch_qty")
+	ls_sch_qty=ls_sch_qty+num(callpoint!.getDevObject("ls_created"))
+	callpoint!.setDevObject("ls_sch_qty",ls_sch_qty)
+
+rem --- Refresh grid with new sfe_wolotser records just created
+	callpoint!.setStatus("CLEAR-REFGRID")
+
 rem wgh ... stopped here
-rem wgh ... 6400 REM " --- Auto Generate Numbers"
-rem wgh ... 6410 DIM SERIAL$[1]
-rem wgh ... 6420 LET SERIAL$[0]=STR(NEEDED)
-rem wgh ... 6430 CALL "IVC.SN",SYS01_DEV,V2,NEEDED,SERIAL$[ALL],STATUS
-rem wgh ... 6440 IF STATUS>0 THEN GOSUB 6000; GOTO 6690
-rem wgh ... 6450 IF NUM(W0$(12,3))+NUM(SERIAL$[0])-1>999 THEN GOSUB 6000; GOTO 6690
-rem wgh ... 6455 IF NUM(SERIAL$[0])=0 THEN GOTO 6690
-rem wgh ... 6460 FOR X0=1 TO NUM(SERIAL$[0])
-rem wgh ... 6470 DIM X0$(20)
-rem wgh ... 6480 LET X0$(1)=SERIAL$[X0]
-rem wgh ... 6490 FIND (IVM07_DEV,KEY=N0$+A0$(54)+X0$,DOM=6550)IOL=IVM07A
-rem wgh ... 6500 IF D[1]-D[2]>0 THEN GOTO 6510 ELSE GOTO 6550
-rem wgh ... 6510 LET V4$="WARNING: Serial Number On Hand - OK"
-rem wgh ... 6520 PRINT @(V1,V2),'RB',
-rem wgh ... 6530 CALL "SYC.YN",1,V4$,2,V$,V3
-rem wgh ... 6540 IF V$="N" THEN EXITTO 6690 ELSE GOTO 6550
-rem wgh ... 6550 NEXT X0
-rem wgh ... 6610 FOR X0=1 TO NUM(SERIAL$[0])
-rem wgh ... 6620 DIM W[5]
-rem wgh ... 6630 LET W1$(1)="",W1$(37)=SERIAL$[X0]
-rem wgh ... 6640 LET W[0]=1,NEEDED=NEEDED-W[0]
-rem wgh ... 6650 WRITE (WOE06_DEV,KEY=W0$(1,14))IOL=WOE06A
-rem wgh ... 6660 LET W0=NUM(W0$(12,3))+1
-rem wgh ... 6670 LET W0$(12,3)=STR(W0:"000")
-rem wgh ... 6680 NEXT X0
-rem wgh ... 6690 RETURN 
+rem wgh ... this may not be needed after grid is refreshed
+rem --- Enable/disable additional options
+rem	gosub enable_options
 [[SFE_WOLOTSER.LOTSER_NO.AVAL]]
-rem --- Verify lot/serial can be used
+rem --- Verify lot/serial not currently in inventory
 	lotser_no$=callpoint!.getUserInput()
 	lsmaster_dev=fnget_dev("@IVM_LSMASTER")
 	dim lsmaster$:fnget_tpl$("@IVM_LSMASTER")
@@ -287,6 +325,39 @@ rem --- Verify lot/serial can be used
 			rem --- Warn that items are already on hand for this lot
 			msg_id$="SF_LOT_AVAILABLE"
 			gosub disp_message
+		endif
+	endif
+
+rem --- Verify lot/serial can be used
+	wolotser_dev=fnget_dev("@SFE_WOLOTSER")
+	dim wolotser$:fnget_tpl$("@SFE_WOLOTSER")
+	wolotser_found=0
+	findrecord(wolotser_dev,key=firm_id$+lotser_no$,knum="AO_LOTSER",dom=*next)wolotser$; wolotser_found=1
+	if wolotser_found then
+		rem --- This lotser_no already entered for a work order being closed.
+		wo_location$=callpoint!.getColumnData("SFE_WOLOTSER.WO_LOCATION")
+		wo_no$=callpoint!.getColumnData("SFE_WOLOTSER.WO_NO")
+		if wolotser.wo_location$=wo_location$ and wolotser.wo_no$=wo_no$ then
+			rem --- This lotser_no already entered for this work order being closed.
+			msg_id$="SF_LS_ENTERED"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=cvs(lotser_no$,3)
+			msg_tokens$[2]=cvs(wolotser.wo_no$,3)
+			gosub disp_message
+		else
+			rem --- This lotser_no already entered for a different work order being closed.
+			rem --- Is that other work order for the same item (finished good)?
+			womastr_dev=fnget_dev("@SFE_WOMASTR")
+			dim womastr$:fnget_tpl$("@SFE_WOMASTR")
+			womastr_found=0
+			findrecord(womastr_dev,key=firm_id$+wolotser.wo_location$+wolotser.wo_no$,dom=*next)womastr$; womastr_found=1
+			if womastr_found and womastr.warehouse_id$=warehouse_id$ and womastr.item_id$=item_id$ then
+				msg_id$="SF_LS_ENTERED"
+				dim msg_tokens$[2]
+				msg_tokens$[1]=cvs(lotser_no$,3)
+				msg_tokens$[2]=cvs(wolotser.wo_no$,3)
+				gosub disp_message
+			endif
 		endif
 	endif
 
@@ -328,6 +399,15 @@ rem --- Validate this sch_prod_qty if changed
 		endif
 	endif
 [[SFE_WOLOTSER.BSHO]]
+rem --- Open Files
+	num_files=3
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="SFE_WOMASTR",open_opts$[1]="OTA@"
+	open_tables$[2]="SFE_WOLOTSER",open_opts$[2]="OTA@"
+	open_tables$[3]="IVM_LSMASTER",open_opts$[3]="OTA@"
+
+	gosub open_tables
+
 rem --- Disable all input fields if work order has been closed
 	if callpoint!.getDevObject("wo_status")="C" then
 		callpoint!.setColumnEnabled(-1,"SFE_WOLOTSER.LOTSER_NO",-1)
@@ -359,6 +439,7 @@ rem --- Disable auto-assign and auto-close options as needed
 		callpoint!.setOptionEnabled("AUTO",0)
 		callpoint!.setOptionEnabled("ACLS",0)
 	else
+		gosub enable_options
 		close_qty_needed=num(callpoint!.getDevObject("cls_inp_qty"))-callpoint!.getDevObject("ls_sch_qty")
 		if close_qty_needed<=1 then
 			rem --- Disable auto-assign options when don't need more than one
