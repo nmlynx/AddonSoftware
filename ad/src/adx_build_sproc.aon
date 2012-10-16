@@ -884,7 +884,7 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"      ,cOps.ext_cost"+$0a$
     sqlprep$=sqlprep$+"      ,cOps.direct_rate"+$0a$
     sqlprep$=sqlprep$+"      ,cOps.ovhd_rate "+$0a$
-	sqlprep$=sqlprep$+"FROM SFT_OPNOPRTR AS cOps"+$0a$
+	sqlprep$=sqlprep$+"FROM SFT_CLSOPRTR AS cOps"+$0a$
 	sqlprep$=sqlprep$+"  UNION "
     sqlprep$=sqlprep$+"SELECT cMats.Firm_ID"+$0a$
 	sqlprep$=sqlprep$+"      ,cMats.WO_Location"+$0a$
@@ -901,7 +901,7 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"      ,cMats.ext_cost"+$0a$
     sqlprep$=sqlprep$+"      ,0 AS direct_rate"+$0a$
     sqlprep$=sqlprep$+"      ,0 AS ovhd_rate"+$0a$
-	sqlprep$=sqlprep$+"FROM SFT_OPNMATTR AS cMats"+$0a$
+	sqlprep$=sqlprep$+"FROM SFT_CLSMATTR AS cMats"+$0a$
 	sqlprep$=sqlprep$+"  UNION "
     sqlprep$=sqlprep$+"SELECT cSubs.Firm_ID"+$0a$
 	sqlprep$=sqlprep$+"      ,cSubs.WO_Location"+$0a$
@@ -918,7 +918,7 @@ rem --- now add VIEWs back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"      ,cSubs.ext_cost"+$0a$
     sqlprep$=sqlprep$+"      ,0 AS direct_rate"+$0a$
     sqlprep$=sqlprep$+"      ,0 AS ovhd_rate"+$0a$
-	sqlprep$=sqlprep$+"FROM SFT_OPNSUBTR AS cSubs"+$0a$	
+	sqlprep$=sqlprep$+"FROM SFT_CLSSUBTR AS cSubs"+$0a$	
 
     gosub create_sproc_def
 	
