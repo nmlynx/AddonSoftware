@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopy" language="groovy" pageWidth="800" pageHeight="595" orientation="Landscape" columnWidth="760" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="50" resourceBundle="addon">
-	<property name="ireport.zoom" value="1.5"/>
-	<property name="ireport.x" value="0"/>
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="112"/>
 	<property name="ireport.y" value="0"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
 	<parameter name="WO_NO_1" class="java.lang.String"/>
@@ -129,17 +129,17 @@
 					<textFieldExpression><![CDATA[$F{WO_STATUS}]]></textFieldExpression>
 				</textField>
 				<textField pattern="">
-					<reportElement x="584" y="8" width="53" height="13"/>
+					<reportElement x="580" y="8" width="53" height="13"/>
 					<textElement/>
 					<textFieldExpression><![CDATA[$F{OPENED_DATE}]]></textFieldExpression>
 				</textField>
 				<textField>
-					<reportElement x="513" y="8" width="71" height="13"/>
+					<reportElement x="505" y="8" width="71" height="13"/>
 					<textElement textAlignment="Right"/>
 					<textFieldExpression><![CDATA[$R{AON_DATE_OPENED:}]]></textFieldExpression>
 				</textField>
 				<textField>
-					<reportElement x="639" y="8" width="54" height="13"/>
+					<reportElement x="637" y="8" width="54" height="13"/>
 					<textElement textAlignment="Right"/>
 					<textFieldExpression><![CDATA[$R{AON_LAST_CLOSE:}]]></textFieldExpression>
 				</textField>
@@ -239,7 +239,7 @@
 					<textFieldExpression><![CDATA[$F{COMPLETED}]]></textFieldExpression>
 				</textField>
 				<textField>
-					<reportElement x="633" y="73" width="60" height="13"/>
+					<reportElement x="628" y="73" width="60" height="13"/>
 					<textElement textAlignment="Right"/>
 					<textFieldExpression><![CDATA[$R{AON_LAST_ACTIVITY:}]]></textFieldExpression>
 				</textField>

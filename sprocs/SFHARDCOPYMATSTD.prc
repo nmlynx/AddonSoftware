@@ -63,6 +63,7 @@ rem	call stbl("+DIR_SYP")+"bas_process_beg.bbj",stbl("+USER_ID"),rd_table_chans$
 	pgmdir$=stbl("+DIR_PGM",err=*next)
 
 	iv_cost_mask$=fngetmask$("iv_cost_mask","###,##0.0000-",masks$)
+	sf_amt_mask$=fngetmask$("sf_amt_mask","###,##0.00-",masks$)
 	sf_hours_mask$=fngetmask$("sf_hours_mask","#,##0.00",masks$)
 	sf_units_mask$=fngetmask$("sf_units_mask","#,##0.00",mask$)
 	sf_rate_mask$=fngetmask$("sf_rate_mask","###.00",masks$)
@@ -169,7 +170,7 @@ rem --- Trip Read
 			data!.setFieldValue("UNITS_EA",str(read_tpl.units:iv_cost_mask$))
 			data!.setFieldValue("COST_EA",str(read_tpl.unit_cost:iv_cost_mask$))
 			data!.setFieldValue("UNITS_TOT",str(read_tpl.total_units:iv_cost_mask$))
-			data!.setFieldValue("COST_TOT",str(read_tpl.total_cost:sf_rate_mask$))
+			data!.setFieldValue("COST_TOT",str(read_tpl.total_cost:sf_amt_mask$))
 		endif
 		rs!.insert(data!)
 		
@@ -202,7 +203,7 @@ rem --- Output Totals
 		data! = rs!.getEmptyRecordData()
 		data!.setFieldValue("ITEM","Total Materials")
 		data!.setFieldValue("COST_EA",str(tot_cost_ea:iv_cost_mask$))
-		data!.setFieldValue("COST_TOT",str(tot_cost_tot:sf_rate_mask$))
+		data!.setFieldValue("COST_TOT",str(tot_cost_tot:sf_amt_mask$))
 		rs!.insert(data!)
 	endif
 	

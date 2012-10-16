@@ -60,6 +60,7 @@ rem --- Get masks
 	pgmdir$=stbl("+DIR_PGM",err=*next)
 
 	iv_cost_mask$=fngetmask$("iv_cost_mask","###,##0.0000-",masks$)
+	sf_amt_mask$=fngetmask$("sf_amt_mask","###,##0.00-",masks$)
 	ad_units_mask$=fngetmask$("ad_units_mask","#,###.00",masks$)
 	sf_hours_mask$=fngetmask$("sf_hours_mask","#,##0.00",masks$)
 	sf_rate_mask$=fngetmask$("sf_rate_mask","###.00",masks$)
@@ -146,7 +147,7 @@ rem --- Trip Read
 			data!.setFieldValue("COST_EA",str(read_tpl.unit_cost:iv_cost_mask$))
 			data!.setFieldValue("SETUP",str(read_tpl.setup_time:sf_hours_mask$))
 			data!.setFieldValue("UNITS_TOT",str(read_tpl.total_time:ad_units_mask$))
-			data!.setFieldValue("COST_TOT",str(read_tpl.tot_std_cost:iv_cost_mask$))
+			data!.setFieldValue("COST_TOT",str(read_tpl.tot_std_cost:sf_amt_mask$))
 		endif
 		tot_recs=tot_recs+1
 		rs!.insert(data!)
@@ -171,7 +172,7 @@ rem --- Output Totals
 		data!.setFieldValue("UNITS_EA",str(tot_units_ea:iv_cost_mask$))
 		data!.setFieldValue("COST_EA",str(tot_cost_ea:iv_cost_mask$))
 		data!.setFieldValue("UNITS_TOT",str(tot_units_tot:iv_cost_mask$))
-		data!.setFieldValue("COST_TOT",str(tot_cost_tot:sf_rate_mask$))
+		data!.setFieldValue("COST_TOT",str(tot_cost_tot:sf_amt_mask$))
 		rs!.insert(data!)
 	endif
 
