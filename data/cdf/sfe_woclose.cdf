@@ -124,6 +124,7 @@ rem --- Lot/serial processing if needed
 	endif
 [[SFE_WOCLOSE.CLOSED_COST.BINP]]
 rem --- As needed, initialize actual closed cost and closed value
+	closed_cost=num(callpoint!.getUserInput())
 	if num(callpoint!.getColumnData("SFE_WOCLOSE.CLOSED_COST"))=0 then
 		stdact_flag$=callpoint!.getDevObject("stdact_flag")
 		complete_flg$=callpoint!.getColumnData("SFE_WOCLOSE.COMPLETE_FLG")
@@ -142,6 +143,7 @@ rem --- Enable/disable closed cost
 	gosub enable_closed_cost
 
 rem --- Update actual closed cost and closed value
+	closed_cost=num(callpoint!.getColumnData("SFE_WOCLOSE.CLOSED_COST"))
 	cls_inp_qty=num(callpoint!.getColumnData("SFE_WOCLOSE.CLS_INP_QTY"))
 	gosub update_act_closed_cost
 
@@ -211,6 +213,7 @@ rem --- Work order complete?
 	endif
 
 rem --- Update actual closed cost and closed value
+	closed_cost=num(callpoint!.getColumnData("SFE_WOCLOSE.CLOSED_COST"))
 	stdact_flag$=callpoint!.getDevObject("stdact_flag")
 	gosub update_act_closed_cost
 
@@ -494,15 +497,18 @@ update_act_closed_cost: rem --- Update actual closed cost and closed value
 rem --- stdact_flag$: input
 rem --- complete_flg$: input
 rem --- cls_inp_qty: input
+rem --- closed_cost: input
 rem ==========================================================================
-	if cls_inp_qty<>0 and stdact_flag$="A" and complete_flg$="Y" then
+
+	if stdact_flag$="A" and complete_flg$="Y" then
 		act_cost=num(callpoint!.getColumnData("<<DISPLAY>>.VALUE_AT_ACT"))
 		cls_cst_todt=num(callpoint!.getColumnData("SFE_WOCLOSE.CLS_CST_TODT"))
 		closed_cost=(act_cost-cls_cst_todt)/cls_inp_qty
-		callpoint!.setColumnData("SFE_WOCLOSE.CLOSED_COST",str(closed_cost),1)
-		callpoint!.setColumnData("<<DISPLAY>>.CLOSED_VALUE",str(cls_inp_qty*closed_cost),1)
-		callpoint!.setStatus("MODIFIED")
 	endif
+	callpoint!.setColumnData("SFE_WOCLOSE.CLOSED_COST",str(closed_cost),1)
+	callpoint!.setColumnData("<<DISPLAY>>.CLOSED_VALUE",str(cls_inp_qty*closed_cost),1)
+	callpoint!.setStatus("MODIFIED")
+
 	return
 
 rem ==========================================================================
