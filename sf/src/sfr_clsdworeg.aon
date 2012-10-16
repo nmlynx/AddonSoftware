@@ -105,6 +105,7 @@ label1:
         status=0
         call pgmdir$+"glc_ctlcreate.aon",err=*next,source$,n2$,glw11$,gl$,status
         if status then goto std_exit
+		
         desc[1]=num(ivs01a.desc_len_01$)
         desc[2]=num(ivs01a.desc_len_02$)
         desc[3]=num(ivs01a.desc_len_03$)
@@ -183,7 +184,7 @@ rem --- Additional File Opens
         endif
         if gl$="Y" then 
             files$[19]="glm-01",ids$[19]="GLM_ACCT"
-            files$[20]="glw-11",ids$[20]="GLW_DAILYDETAIL",options$[20]="CL"
+            files$[20]="glw-11",ids$[20]="GLW_DAILYDETAIL";rem --- no longer using; ,options$[20]="CL"
         endif
 		call pgmdir$+"adc_fileopen.aon",action,18,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -196,7 +197,17 @@ rem --- Additional File Opens
         dim arc_distcode$:templates$[18]
 		dim glm01a$:templates$[19]
 		dim glw11$:templates$[20]
+    
+	rem --- Clear trans for this firm/process/batch from glw-11 work file 
+    rem --- If not batching, batch_no$ is zero, and will clear all recs this firm/process
 
+        if gl$="Y"
+			process_id$=stbl("+PROCESS_ID")
+			batch_no$=stbl("+BATCH_NO")		
+            rec_pfx$=firm_id$+process_id$+batch_no$
+            call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",glw11_dev,rec_pfx$,status
+        endif  
+		
 rem --- Options
 
         msg_id$="AON_RUN_QUERY"
