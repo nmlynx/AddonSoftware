@@ -1,3 +1,19 @@
+[[SFE_WOLOTSER.ADEL]]
+rem --- Enable/disable additional options
+	gosub enable_options
+[[SFE_WOLOTSER.LOTSER_NO.BINP]]
+rem --- Capture current lotser_no so can skip validation if it hasn't changed
+	prev_lotser_no$=callpoint!.getColumnData("SFE_WOLOTSER.LOTSER_NO")
+	callpoint!.setDevObject("prev_lotser_no",prev_lotser_no$)
+[[SFE_WOLOTSER.AWRI]]
+rem --- Enable/disable additional options
+	gosub enable_options
+[[SFE_WOLOTSER.AREC]]
+rem --- Enable/disable additional options
+	gosub enable_options
+[[SFE_WOLOTSER.COMPLETE_FLG.AVAL]]
+rem --- Enable/disable additional options
+	gosub enable_options
 [[SFE_WOLOTSER.COMPLETE_FLG.BINP]]
 rem --- Initialize complete flag
 	this_ls_sch_qty=num(callpoint!.getColumnData("SFE_WOLOTSER.SCH_PROD_QTY"))
@@ -7,6 +23,9 @@ rem --- Initialize complete flag
 :	callpoint!.getColumnData("SFE_WOLOTSER.COMPLETE_FLG")<>"Y" then
 		callpoint!.setColumnData("SFE_WOLOTSER.COMPLETE_FLG","Y",1)
 		callpoint!.setStatus("MODIFIED")
+
+		rem --- Enable/disable additional options
+		gosub enable_options
 	endif
 [[SFE_WOLOTSER.CLS_INP_QTY.BINP]]
 rem --- Capture current lot/ser cls_inpt_qty so can make adjustments if it gets changed
@@ -19,6 +38,14 @@ rem --- Capture current lot/ser cls_inpt_qty so can make adjustments if it gets 
 	if prev_cls_inp_qty=0 and  this_ls_cls_todt<>this_ls_sch_qty then
 		callpoint!.setColumnData("SFE_WOLOTSER.CLS_INP_QTY",str(this_ls_sch_qty-this_ls_cls_todt),1)
 		callpoint!.setStatus("MODIFIED")
+
+		rem --- Adjust how many lot/serial items have been closed
+		ls_close_qty=callpoint!.getDevObject("ls_close_qty")
+		ls_close_qty=ls_close_qty+(this_ls_sch_qty-this_ls_cls_todt)
+		callpoint!.setDevObject("ls_close_qty",ls_close_qty)
+
+		rem --- Enable/disable additional options
+		gosub enable_options
 	endif
 [[SFE_WOLOTSER.AUDE]]
 rem --- Adjust how many lot/serial items have been scheduled
@@ -43,9 +70,6 @@ rem --- Adjust how many lot/serial items have been closed
 	ls_close_qty=callpoint!.getDevObject("ls_close_qty")
 	ls_close_qty=ls_close_qty-num(callpoint!.getColumnData("SFE_WOLOTSER.CLS_INP_QTY"))
 	callpoint!.setDevObject("ls_close_qty",ls_close_qty)
-
-rem --- Enable/disable additional options
-	gosub enable_options
 [[SFE_WOLOTSER.SCH_PROD_QTY.BINP]]
 rem --- Capture current lot/ser sch_prod_qty so can make adjustments if it gets changed
 	prev_ls_sch_qty=num(callpoint!.getColumnData("SFE_WOLOTSER.SCH_PROD_QTY"))
@@ -59,12 +83,28 @@ rem --- Initialize sch_prod_qty for lotted item
 			ls_close_qty=callpoint!.getDevObject("ls_close_qty")
 			callpoint!.setColumnData("SFE_WOLOTSER.SCH_PROD_QTY",str(wo_close_qty-ls_close_qty),1)
 			callpoint!.setStatus("MODIFIED")
+
+			rem --- Adjust how many lot/serial items have been scheduled
+			ls_sch_qty=callpoint!.getDevObject("ls_sch_qty")
+			ls_sch_qty=ls_sch_qty+(wo_close_qty-ls_close_qty)
+			callpoint!.setDevObject("ls_sch_qty",ls_sch_qty)
+
+			rem --- Enable/disable additional options
+			gosub enable_options
 		else
 			rem --- Not being used with sfe_woclose form
 			wo_sch_qty=num(callpoint!.getDevObject("prod_qty"))
 			wo_cls_todt=num(callpoint!.getDevObject("qty_cls_todt"))
 			callpoint!.setColumnData("SFE_WOLOTSER.SCH_PROD_QTY",str(wo_sch_qty-(wo_close_qty+wo_cls_todt)),1)
 			callpoint!.setStatus("MODIFIED")
+
+			rem --- Adjust how many lot/serial items have been scheduled
+			ls_sch_qty=callpoint!.getDevObject("ls_sch_qty")
+			ls_sch_qty=ls_sch_qty+(wo_sch_qty-(wo_close_qty+wo_cls_todt))
+			callpoint!.setDevObject("ls_sch_qty",ls_sch_qty)
+
+			rem --- Enable/disable additional options
+			gosub enable_options
 		endif
 	endif
 [[SFE_WOLOTSER.AGRN]]
@@ -73,10 +113,48 @@ rem --- Validate lot/serial quantities the first time in the grid
 		callpoint!.setDevObject("check_ls_qty",0)
 		gosub validate_ls_qty
 	endif
+
+rem --- Enable/disable additional options
+	gosub enable_options
 [[SFE_WOLOTSER.AOPT-ACLS]]
-rem wgh ... stopped here
-rem wgh ... looks like woc.ca does the auto-close
-rem wgh ... 6326 IF P3$(17,1)="S" AND Y>1 AND V3=1 THEN CALL "WOC.CA",SERIAL$,WOE06_DEV,SYS01_DEV,A0$(5,7),STATUS ELSE GOTO 6335
+rem --- Close lot/serial items
+	ls_sch_qty=callpoint!.getDevObject("ls_sch_qty")
+	ls_close_qty=callpoint!.getDevObject("ls_close_qty")
+	max_qty=max(ls_sch_qty-ls_close_qty,0)
+	callpoint!.setDevObject("max_qty",max_qty)
+	callpoint!.setDevObject("sequence_no",callpoint!.getColumnData("SFE_WOLOTSER.SEQUENCE_NO"))
+	wo_location$=callpoint!.getColumnData("SFE_WOLOTSER.WO_LOCATION")
+	wo_no$=callpoint!.getColumnData("SFE_WOLOTSER.WO_NO")
+
+	dim dflt_data$[4,1]
+	dflt_data$[1,0]="LOTSER_NO"
+	dflt_data$[1,1]=callpoint!.getColumnData("SFE_WOLOTSER.LOTSER_NO")
+	dflt_data$[2,0]="CLOSE_QTY"
+	dflt_data$[2,1]=str(max_qty)
+	dflt_data$[3,0]="WO_LOCATION"
+	dflt_data$[3,1]=wo_location$
+	dflt_data$[4,0]="WO_NO"
+	dflt_data$[4,1]=wo_no$
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"SFE_AUTOCLOSELS",
+:		stbl("+USER_ID"),
+:		"",
+:		"",
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
+rem --- Adjust how many lot/serial items have been closed
+	ls_close_qty=callpoint!.getDevObject("ls_close_qty")
+	ls_close_qty=ls_close_qty+callpoint!.getDevObject("ls_closed")
+	callpoint!.setDevObject("ls_close_qty",ls_close_qty)
+
+rem --- Refresh grid with new sfe_wolotser records just created
+	callpoint!.setStatus("CLEAR-REFGRID")
+
+rem --- Enable/disable additional options
+	gosub enable_options
 [[SFE_WOLOTSER.BEND]]
 rem --- Get how many lot/serial items need to be closed
 	gosub get_close_qty_needed
@@ -183,20 +261,38 @@ rem ==========================================================================
 rem ==========================================================================
 enable_options: rem --- Enable/disable additional options
 rem ==========================================================================
-	close_qty_needed=num(callpoint!.getDevObject("cls_inp_qty"))-callpoint!.getDevObject("ls_sch_qty")
-	if close_qty_needed<=1 then
-		rem --- Disable auto-assign options when don't need more than one
+	rem --- Disable auto-assign and auto-close options when grid has been modified.
+	rem --- Need to force write of current grid rows to file so they can be updated in these additional options.
+	grid_modified=0
+	for row=0 to GridVect!.size()-1
+		if callpoint!.getGridRowModifyStatus(row)="Y" or callpoint!.getGridRowDeleteStatus(row)="Y" then
+			grid_modified=1
+			break
+		endif
+	next row
+
+	if callpoint!.getDevObject("lotser")<>"S" or grid_modified then
+		rem --- Disable auto-assign and auto-close options when not serialized, or grid is in modified state
 		callpoint!.setOptionEnabled("AUTO",0)
-	endif
-	ls_qty_not_closed=callpoint!.getDevObject("ls_sch_qty")-callpoint!.getDevObject("ls_close_qty")
-	if callpoint!.getDevObject("wolotser_action")<>"close" or ls_qty_not_closed<=1 then
-		rem --- Disable auto-close options when not being used with sfe_woclose form 
-		rem --- or don't have more than one ready to close
 		callpoint!.setOptionEnabled("ACLS",0)
+	else
+		rem --- Disable auto-assign option when don't need more than one
+		close_qty_needed=num(callpoint!.getDevObject("cls_inp_qty"))-callpoint!.getDevObject("ls_sch_qty")
+		if close_qty_needed<=1 then
+			callpoint!.setOptionEnabled("AUTO",0)
+		else
+			callpoint!.setOptionEnabled("AUTO",1)
+		endif
+
+		rem --- Disable auto-close option when not being used with sfe_woclose form 
+		rem --- or don't have more than one ready to close
+		ls_qty_not_closed=callpoint!.getDevObject("ls_sch_qty")-callpoint!.getDevObject("ls_close_qty")
+		if callpoint!.getDevObject("wolotser_action")<>"close" or ls_qty_not_closed<=1 then
+			callpoint!.setOptionEnabled("ACLS",0)
+		else
+			callpoint!.setOptionEnabled("ACLS",1)
+		endif
 	endif
-rem wgh ... stopped here
-rem wgh ... the additional option buttons aren't getting refreshed
-	callpoint!.setStatus("REFRESH")
 	return
 [[SFE_WOLOTSER.AGDR]]
 rem --- Disable all input fields if lot/serial has been closed
@@ -221,7 +317,7 @@ rem --- Validate this cls_inp_qty if changed
 
 		rem --- Adjust how many lot/serial items have been closed
 		ls_close_qty=callpoint!.getDevObject("ls_close_qty")
-		ls_close_qty=ls_close_qty+this_cls_inp_qty-prev_cls_inp_qty
+		ls_close_qty=ls_close_qty+(this_cls_inp_qty-prev_cls_inp_qty)
 		callpoint!.setDevObject("ls_close_qty",ls_close_qty)
 
 		rem --- Update complete flag and closed cost
@@ -233,7 +329,7 @@ rem --- Validate this cls_inp_qty if changed
 				callpoint!.setColumnData("SFE_WOLOTSER.COMPLETE_FLG","Y",1)
 			endif
 			if num(callpoint!.getColumnData("SFE_WOLOTSER.CLOSED_COST"))=0 then
-				callpoint!.setColumnData("SFE_WOLOTSER.CLOSED_COST",callpoint!.getDevObject("closed_cost"),1)
+				callpoint!.setColumnData("SFE_WOLOTSER.CLOSED_COST",str(callpoint!.getDevObject("closed_cost")),1)
 			endif
 		else
 			if callpoint!.getColumnData("SFE_WOLOTSER.COMPLETE_FLG")<>"" then
@@ -243,6 +339,9 @@ rem --- Validate this cls_inp_qty if changed
 				callpoint!.setColumnData("SFE_WOLOTSER.CLOSED_COST",str(0),1)
 			endif
 		endif
+
+		rem --- Enable/disable additional options
+		gosub enable_options
 
 		rem --- Validate this_cls_inp_qty
 		if this_cls_inp_qty+this_ls_cls_todt<this_ls_sch_qty then
@@ -295,19 +394,21 @@ rem --- Generate new lot/serial numbers
 
 rem --- Adjust how many lot/serial items have been scheduled
 	ls_sch_qty=callpoint!.getDevObject("ls_sch_qty")
-	ls_sch_qty=ls_sch_qty+num(callpoint!.getDevObject("ls_created"))
+	ls_sch_qty=ls_sch_qty+callpoint!.getDevObject("ls_created")
 	callpoint!.setDevObject("ls_sch_qty",ls_sch_qty)
 
 rem --- Refresh grid with new sfe_wolotser records just created
 	callpoint!.setStatus("CLEAR-REFGRID")
 
-rem wgh ... stopped here
-rem wgh ... this may not be needed after grid is refreshed
 rem --- Enable/disable additional options
-rem	gosub enable_options
+	gosub enable_options
 [[SFE_WOLOTSER.LOTSER_NO.AVAL]]
-rem --- Verify lot/serial not currently in inventory
+rem --- Do not validate unless lotser_no has changed
 	lotser_no$=callpoint!.getUserInput()
+	prev_lotser_no$=callpoint!.getDevObject("prev_lotser_no")
+	if lotser_no$=prev_lotser_no$ then break
+
+rem --- Verify lot/serial not currently in inventory
 	lsmaster_dev=fnget_dev("@IVM_LSMASTER")
 	dim lsmaster$:fnget_tpl$("@IVM_LSMASTER")
 	warehouse_id$=callpoint!.getDevObject("warehouse_id")
@@ -368,9 +469,12 @@ rem --- Initialize serialized quantity to one
 
 		rem --- CLS_INP_QTY is disabled for serialized items, so adjust lot/serial quantity here
 		ls_sch_qty=callpoint!.getDevObject("ls_sch_qty")
-		ls_sch_qty=ls_sch_qty-1
+		ls_sch_qty=ls_sch_qty+1
 		callpoint!.setDevObject("ls_sch_qty",ls_sch_qty)
 	endif
+
+rem --- Enable/disable additional options
+	gosub enable_options
 [[SFE_WOLOTSER.SCH_PROD_QTY.AVAL]]
 rem --- Validate this sch_prod_qty if changed
 	this_ls_sch_qty=num(callpoint!.getUserInput())
@@ -378,10 +482,13 @@ rem --- Validate this sch_prod_qty if changed
 	if this_ls_sch_qty<>prev_ls_sch_qty then
 		rem --- Adjust how many lot/serial items have been scheduled
 		ls_sch_qty=callpoint!.getDevObject("ls_sch_qty")
-		ls_sch_qty=ls_sch_qty+this_ls_sch_qty-prev_ls_sch_qty
+		ls_sch_qty=ls_sch_qty+(this_ls_sch_qty-prev_ls_sch_qty)
 		callpoint!.setDevObject("ls_sch_qty",ls_sch_qty)
 
-	rem --- Validate this_ls_sch_qty
+		rem --- Enable/disable additional options
+		gosub enable_options
+
+		rem --- Validate this_ls_sch_qty
 		wo_close_qty=num(callpoint!.getDevObject("cls_inp_qty"))
 		if this_ls_sch_qty<wo_close_qty then
 			msg_id$="SF_LS_SCH_LT_WO_CLS"
@@ -433,25 +540,8 @@ rem --- Get how many lot/serial items need to be closed
 	gosub get_close_qty_needed
 	callpoint!.setDevObject("check_ls_qty",1)
 
-rem --- Disable auto-assign and auto-close options as needed
-	if callpoint!.getDevObject("lotser")<>"S" then
-		rem --- Disable auto-assign and auto-close options when not serialized
-		callpoint!.setOptionEnabled("AUTO",0)
-		callpoint!.setOptionEnabled("ACLS",0)
-	else
-		gosub enable_options
-		close_qty_needed=num(callpoint!.getDevObject("cls_inp_qty"))-callpoint!.getDevObject("ls_sch_qty")
-		if close_qty_needed<=1 then
-			rem --- Disable auto-assign options when don't need more than one
-			callpoint!.setOptionEnabled("AUTO",0)
-		endif
-		ls_qty_not_closed=callpoint!.getDevObject("ls_sch_qty")-callpoint!.getDevObject("ls_close_qty")
-		if callpoint!.getDevObject("wolotser_action")<>"close" or ls_qty_not_closed<=1 then
-			rem --- Disable auto-close options when not being used with sfe_woclose form 
-			rem --- or don't have more than one ready to close
-			callpoint!.setOptionEnabled("ACLS",0)
-		endif
-	endif
+rem --- Enable/disable additional options
+	gosub enable_options
 
 rem --- Get SF unit mask
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",sf_units_mask$,0,0
