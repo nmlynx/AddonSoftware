@@ -122,7 +122,6 @@ rem --- Initialize Data
 		dim headings$[headings]
 		headings$[0]=n1$
 		headings$[1]=n3$
-		headings$[headings]="[HEADER]"
 		
         m0=len(m0$)
         m1=len(m1$),m2=len(m2$),m3=len(m3$),g5=len(g5$)+2
@@ -729,7 +728,7 @@ rem --- Report Totals Again (For WO Type section)
 rem --- Destroy the progress meter and run the next overlay
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-    update$=pgmdir$+"sfu_closeworeg.aon"
+    update$=pgmdir$+"sfu_clsdworeg.aon"
 
     overlay$=update$
     if gl$="Y" then overlay$=pgmdir$+"glr_recap.aon"
