@@ -609,8 +609,8 @@ lot_serial_trans: rem --- ivt-01 Lot/Serial Transactions
         channel=ivt01_dev
         if dropship then location$=Translate!.getTranslation("AON_DROPSHIP")
         gosub init_trans_hist_rec
-        ivt01_key$=ivt01a.firm_id$=firm_id$+ivt01a.warehouse_id$+ivt01a.item_id$=item$+ivt01a.lotser_no$=lotser$+
-:           ivt01a.trans_date$=ymd$+ivt01a.iv_hist_seq$
+        ivt01_key$=ivt01a.firm_id$+ivt01a.warehouse_id$+ivt01a.item_id$+ivt01a.lotser_no$+
+:           ivt01a.trans_date$+ivt01a.iv_hist_seq$
         extract record (ivt01_dev,key=ivt01_key$,dom=*next)x$; rem Advisory Locking
         ivt01a$=field(ivt01a$)
         write record (ivt01_dev) ivt01a$
@@ -627,7 +627,7 @@ rem --- ivt-02 Lot/Serial By Customer Xref (are we going to use this?)
         ivt02a.warehouse_id$=whse$
         ivt02a.item_id$=item$
         ivt02a.iv_hist_seq$=ivt01a.iv_hist_seq$
-        ivt02_key$=ivt02a.firm_id$=firm_id$+ivt02a.customer_id$+ivt02a.product_type$+ivt02a.lotser_no$+
+        ivt02_key$=ivt02a.firm_id$+ivt02a.customer_id$+ivt02a.product_type$+ivt02a.lotser_no$+
 :           ivt02a.trans_date$+ivt02a.warehouse_id$+ivt02a.item_id$+ivt02a.iv_hist_seq$
         extract record (ivt02_dev,key=ivt02_key$,dom=*next)x$; rem Advisory Locking
         ivt02a$=field(ivt02a$)
@@ -647,7 +647,7 @@ rem --- ivt-03 Lot/Serial By Vendor Xref (are we going to use this?)
         ivt03a.iv_hist_seq$=ivt01a.iv_hist_seq$
         if action$="OP" then ivt03a.vendor_id$=vendor$
         if cvs(ivt03a.vendor_id$,2)<>"" then 
-            ivt03_key$=ivt03a.firm_id$+ivt03a.vendor_id$+ivt03a.product_type$+ivt03a.lotser_no$=lotser$+
+            ivt03_key$=ivt03a.firm_id$+ivt03a.vendor_id$+ivt03a.product_type$+ivt03a.lotser_no$+
 :               ivt03a.trans_date$+ivt03a.warehouse_id$+ivt03a.item_id$+ivt03a.iv_hist_seq$
             extract record (ivt03_dev,key=ivt03_key$,dom=*next)x$; rem Advisory Locking
             ivt03a$=field(ivt03a$)
