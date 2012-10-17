@@ -503,7 +503,11 @@ rem ==========================================================================
 	if stdact_flag$="A" and complete_flg$="Y" then
 		act_cost=num(callpoint!.getColumnData("<<DISPLAY>>.VALUE_AT_ACT"))
 		cls_cst_todt=num(callpoint!.getColumnData("SFE_WOCLOSE.CLS_CST_TODT"))
-		closed_cost=(act_cost-cls_cst_todt)/cls_inp_qty
+		if cls_inp_qty=0
+			closed_cost=0
+		else
+			closed_cost=(act_cost-cls_cst_todt)/cls_inp_qty
+		endif
 	endif
 	callpoint!.setColumnData("SFE_WOCLOSE.CLOSED_COST",str(closed_cost),1)
 	callpoint!.setColumnData("<<DISPLAY>>.CLOSED_VALUE",str(cls_inp_qty*closed_cost),1)
