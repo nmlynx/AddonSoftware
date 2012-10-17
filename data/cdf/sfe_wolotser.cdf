@@ -430,14 +430,35 @@ rem --- Verify lot/serial not currently in inventory
 	endif
 
 rem --- Verify lot/serial can be used
-	wolotser_dev=fnget_dev("@SFE_WOLOTSER")
+	rem --- Has this lotser_no already been entered for this work order?
+	wo_no$=callpoint!.getColumnData("SFE_WOLOTSER.WO_NO")
 	dim wolotser$:fnget_tpl$("@SFE_WOLOTSER")
+	lotser_used=0
+	for row=0 to GridVect!.size()-1
+		wolotser$=GridVect!.getItem(row)
+		if lotser_no$=wolotser.lotser_no$ then
+			rem --- This lotser_no already entered for this work order being closed.
+			lotser_used=1
+			msg_id$="SF_LS_ENTERED"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=cvs(lotser_no$,3)
+			msg_tokens$[2]=cvs(wo_no$,3)
+			gosub disp_message
+			break
+		endif
+	next row
+	if lotser_used then
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+	rem --- Has this lotser_no already been written to sfe_wolotser?
+	wolotser_dev=fnget_dev("@SFE_WOLOTSER")
 	wolotser_found=0
 	findrecord(wolotser_dev,key=firm_id$+lotser_no$,knum="AO_LOTSER",dom=*next)wolotser$; wolotser_found=1
 	if wolotser_found then
 		rem --- This lotser_no already entered for a work order being closed.
 		wo_location$=callpoint!.getColumnData("SFE_WOLOTSER.WO_LOCATION")
-		wo_no$=callpoint!.getColumnData("SFE_WOLOTSER.WO_NO")
 		if wolotser.wo_location$=wo_location$ and wolotser.wo_no$=wo_no$ then
 			rem --- This lotser_no already entered for this work order being closed.
 			msg_id$="SF_LS_ENTERED"
@@ -445,6 +466,8 @@ rem --- Verify lot/serial can be used
 			msg_tokens$[1]=cvs(lotser_no$,3)
 			msg_tokens$[2]=cvs(wolotser.wo_no$,3)
 			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
 		else
 			rem --- This lotser_no already entered for a different work order being closed.
 			rem --- Is that other work order for the same item (finished good)?
@@ -458,6 +481,8 @@ rem --- Verify lot/serial can be used
 				msg_tokens$[1]=cvs(lotser_no$,3)
 				msg_tokens$[2]=cvs(wolotser.wo_no$,3)
 				gosub disp_message
+				callpoint!.setStatus("ABORT")
+				break
 			endif
 		endif
 	endif
