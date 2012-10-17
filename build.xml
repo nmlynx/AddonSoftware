@@ -23,8 +23,8 @@
     <property file="${basedir}/basis.build.properties"/>
 
     <!-- Now let's set specific properties -->
-    <property name="addon.build.dir"   value="${build.dir}/apps/aon"/>
-    <property name="barista.build.dir" value="${build.dir}/barista"/>
+    <property name="addon.build.dir"   value="${addon.dir}/apps/aon"/>
+    <property name="barista.build.dir" value="${addon.dir}/barista"/>
     <property name="addon.bbj.dir"     value="${install.dir}/apps/aon"/>
     <property name="barista.bbj.dir"   value="${install.dir}/barista"/>
     <property name="log.bbj.dir"       value="${install.dir}/log"/>
@@ -261,18 +261,18 @@
     <!-- copy Images -->
     <target name="copyImages">
         <copy preserveLastModified="true"
-              todir="${build.dir}/unix/images">
+              todir="${addon.dir}/unix/images">
               <fileset file="${images.dir}/AddonSoftware.xpm"/>
               <fileset file="${images.dir}/AddonDev.png"/>
               <fileset file="${images.dir}/Documentation.xpm"/>
         </copy>
         <copy preserveLastModified="true"
-              todir="${build.dir}/${port.MAC}/images">
+              todir="${addon.dir}/${port.MAC}/images">
               <fileset file="${images.dir}/AddonDev.icns"/>
               <fileset file="${images.dir}/AddonSoftware.icns"/>
         </copy>
         <copy preserveLastModified="true"
-              todir="${build.dir}/${port.WIN}/images">
+              todir="${addon.dir}/${port.WIN}/images">
               <fileset file="${images.dir}/AddonDev.ico"/>
               <fileset file="${images.dir}/AddonSoftware.ico"/>
               <fileset file="${images.dir}/Documentation.ico"/>
@@ -288,11 +288,11 @@
     <target name="copyScripts">
         <!-- Generic Unix Scripts -->
         <copy preserveLastModified="true"
-              todir="${build.dir}/unix/bin">
+              todir="${addon.dir}/unix/bin">
               <fileset file="${templates.dir}/addon"/>
         </copy>
         <copy preserveLastModified="true"
-              todir="${build.dir}/unix/bin">
+              todir="${addon.dir}/unix/bin">
               <fileset file="${templates.dir}/addondeveloper"/>
         </copy>
 
@@ -300,12 +300,12 @@
 
         <!-- Mac Shortcuts -->
         <copy preserveLastModified="true"
-              todir="${build.dir}/${port.MAC}/apps">
+              todir="${addon.dir}/${port.MAC}/apps">
               <fileset dir="${templates.dir}/mac"
                        includes="AddonSoftware.app/"/>
         </copy>
         <copy preserveLastModified="true"
-              todir="${build.dir}/${port.MAC}/apps">
+              todir="${addon.dir}/${port.MAC}/apps">
               <fileset dir="${templates.dir}/mac"
                        includes="AddonSoftwareDeveloper.app/"/>
         </copy>
@@ -513,20 +513,20 @@
     <!-- jar Addon  -->
     <target name="jar">
 
-        <propertyfile file="${build.dir}/apps/aon/documentation/build.info">
+        <propertyfile file="${addon.dir}/apps/aon/documentation/build.info">
             <entry key="addon.epoch"   value="${addon.epoch}"/>
             <entry key="addon.dtstamp" value="${addon.dtstamp}"/>
         </propertyfile>
 
         <!-- Jar it up property files -->
-        <jar destfile="${build.dir}/apps/aon/prop/addonprop.jar">
-             <fileset dir="${build.dir}/apps/aon/prop"
+        <jar destfile="${addon.dir}/apps/aon/prop/addonprop.jar">
+             <fileset dir="${addon.dir}/apps/aon/prop"
                       includes="*.properties" />
         </jar>
 
         <!-- Jar it up - package_addon.jar -->
         <jar destfile="${build.dir}/package_addon.jar">
-             <fileset dir="${build.dir}"
+             <fileset dir="${addon.dir}"
                       includes="**,*"
                       excludes="apps/aon/images/AddonSoftware.xpm,
                                 apps/aon/images/Documentation.xpm,
