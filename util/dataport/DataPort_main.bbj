@@ -329,6 +329,19 @@ while 1
 wend
 close (sequence_no)
 
+rem --- Read sym-06 to get list of valid firms to be ported
+sym06_dev=unt
+if source_version=6
+	open (sym06_dev)"SYM-06"
+else
+	open (sym06_dev)"sym-06"
+endif
+while 1
+	read(sym06_dev,end=*break) sym06_0$
+	firms$=firms$+sym06_0$
+wend
+close (sym06_dev)
+
 rem --- misc init; set up meter
 rd_meter_data$="DataPort Start Time: "+DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")
 rd_meter_proc_recs=rd_meter_total_recs
@@ -654,10 +667,10 @@ end_ddm04:
     print "   Copying data from  "+ddm03.file_name$+ddm03.record_id$
     print(log_dev)"   Copying data from    "+ddm03.file_name$+ddm03.record_id$
 
-    next_rec:
+next_rec:
     readrecord(old_file,end=eof)old_rec$
     if pos("00"=old_rec$)=1 goto next_rec
-	if pos("FIRM_ID"=fattr(old_rec$))=1 if old_rec.firm_id$="ZZ" goto next_rec
+	if pos("FIRM_ID"=fattr(old_rec$))=1 if pos(old_rec.firm_id$=firms$,2)=0 goto next_rec
 
 	rem --- fix data based on an old bug discovered in v6 (never fixed in v6) while writing data
 	rem --- IV Period End swapped the Operator ID and System Date fields in the BB records
@@ -699,17 +712,6 @@ rem --- Retrieve value$ if applicable
 
         if new_fieldlist.name$[field]=$$ then continue
         value$=field(old_rec$,old_fieldlist.name$[field],err=*continue)
-
-rem --- Get list of valid firms
-        if cvs(old_fieldlist.name$[field],3)="FIRM_ID"
-            if cvs(value$,3)<>""
-				thisFirm$=value$
-                if pos(value$=firms$,2)=0
-                    firms$=firms$+value$
-                endif
-            endif
-        endif
-
 rem --- Populate new internal sequence from old display sequence
 
         keyval$ = table_alias$+"."+new_fieldlist.name$[field]
@@ -809,7 +811,7 @@ rem --- Set all Retain Customer flags to Y
         endif
 		
 rem --- set Inventory auto number flag
-        
+
         if cvs(datafile$,8)="sys-01"
             if old_rec$(3,4)="IV00"
                 new_rec.auto_no_iv$=old_rec.auto_number$
@@ -1796,7 +1798,7 @@ set_new_fieldname:
     if pos($0a$+old_fieldname$+$0a$=new_fields$) then
        new_fieldname$=old_fieldname$
     endif
-		
+
     if new_fieldname$<>"" and new_fieldname$<>"RESERVED_STR" then
        return
     endif
