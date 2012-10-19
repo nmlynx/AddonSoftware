@@ -255,15 +255,18 @@ rem --- Print
         find record (sfw02a_dev,key=sfe01a.firm_id$+sfe01a.wo_location$+sfe01a.wo_type$,dom=*next) sfw02a$
         for x=0 to 10
             t[x]=t[x]+a[x]
-            u[x]=u[x]+a[x];b[x]=b[x]+a[x]
+            u[x]=u[x]+a[x]
+			b[x]=b[x]+a[x]
         next x
         sfw02a.std_hrs=a[0]
-        sfw02a.std_ops_tot=a[1]
+        sfw02a.std_dir_tot=a[1]
+		sfw02a.std_ovhd_tot=a[9]
         sfw02a.std_mat_tot=a[2]
         sfw02a.std_sub_tot=a[3]
         sfw02a.actual_hrs=a[4]
-        sfw02a.act_ops_tot=a[5]
-        sfw02a.act_mat_tot=a[6]
+        sfw02a.act_dir_tot=a[5]
+        sfw02a.act_ovhd_tot=a[10]
+		sfw02a.act_mat_tot=a[6]
         sfw02a.act_sub_tot=a[7]  
         sfw02a$=field(sfw02a$)
         write record (sfw02a_dev,key=sfw02a.firm_id$+sfw02a.wo_location$+sfw02a.wo_type$) sfw02a$             
@@ -321,31 +324,47 @@ rem --- Subtotals By Type
         while more    
             k5$=key(sfw02a_dev,end=*break)
             if pos(firm_id$=k5$)<>1 then break
-            read record (sfw02a_dev) sfw02a$
-            dim x0$(30),x1$(g0,"0")
+            
+			read record (sfw02a_dev) sfw02a$
+            
+			dim x0$(30),x1$(g0,"0")
             x0$(6)=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
             find record (sfm10a_dev,key=firm_id$+"A"+sfw02a.wo_type$,dom=*next) sfm10a$
             x0$(1)=sfm10a.code_desc$
-            str1$=sfw02a.wo_type$+"  "+x0$+"  "+str(fnmask$(sfm10a.gl_wip_acct$,g5$))+"  "+str(fnmask$(sfm10a.gl_close_to$,g5$))
-            OutVect!.addItem(str1$)
+            
+			str1$=sfw02a.wo_type$+"  "
+            str1$=str1$+x0$+"  "
+
+			if pos("0"<>cvs(sfm10a.gl_wip_acct$,2))
+				str1$=str1$+"WIP Acct: "+str(fnmask$(sfm10a.gl_wip_acct$,gl_acct_mask$))+"  "
+			endif
+			if pos("0"<>cvs(sfm10a.gl_close_to$,2))
+				str1$=str1$+"Close To Acct: "+str(fnmask$(sfm10a.gl_close_to$,gl_acct_mask$))
+			endif
+			
+			OutVect!.addItem(str1$)
             blank=fnblank(14)
-            b0=sfw02a.std_ops_tot+sfw02a.std_mat_tot+sfw02a.std_sub_tot+b[9]
-            b1=sfw02a.act_ops_tot+sfw02a.act_mat_tot+sfw02a.act_sub_tot+b[10],b2=b0-b1
+            
+			b0=  sfw02a.std_dir_tot+sfw02a.std_mat_tot+sfw02a.std_sub_tot+sfw02a.std_ovhd_tot
+			b1=  sfw02a.act_dir_tot+sfw02a.act_mat_tot+sfw02a.act_sub_tot+sfw02a.act_ovhd_tot
+			b2=  b0-b1
+			
             if b0<>0 then 
                 b3=(b0-b1)*100/b0 
             else 
                 b3=0
             endif
+			
             blank=fnblank(1)
             OutVect!.addItem(str(fnnummask$(sfw02a.std_hrs,m2$)))
-            OutVect!.addItem(str(fnnummask$(sfw02a.std_ops_tot,m1$)))
-            OutVect!.addItem(str(fnnummask$(b[9],m1$)))
+            OutVect!.addItem(str(fnnummask$(sfw02a.std_dir_tot,m1$)))
+            OutVect!.addItem(str(fnnummask$(sfw02a.std_ovhd_tot,m1$)))
             OutVect!.addItem(str(fnnummask$(sfw02a.std_mat_tot,m1$)))
             OutVect!.addItem(str(fnnummask$(sfw02a.std_sub_tot,m1$)))
             OutVect!.addItem(str(fnnummask$(b0,m1$)))
             OutVect!.addItem(str(fnnummask$(sfw02a.actual_hrs,m2$)))
-            OutVect!.addItem(str(fnnummask$(sfw02a.act_ops_tot,m1$)))
-            OutVect!.addItem(str(fnnummask$(b[10],m1$)))
+            OutVect!.addItem(str(fnnummask$(sfw02a.act_dir_tot,m1$)))
+            OutVect!.addItem(str(fnnummask$(sfw02a.act_ovhd_tot,m1$)))
             OutVect!.addItem(str(fnnummask$(sfw02a.act_mat_tot,m1$)))
             OutVect!.addItem(str(fnnummask$(sfw02a.act_sub_tot,m1$)))
             OutVect!.addItem(str(fnnummask$(b1,m1$)))
