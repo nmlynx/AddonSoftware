@@ -133,7 +133,7 @@ rem --- Build SQL statement
 
 	sql_prep$="select vendor_id, description, oper_seq_ref, require_date, po_status, "
 	sql_prep$=sql_prep$+"units, unit_cost, total_units, total_cost, line_type, ext_comments "
-	sql_prep$=sql_prep$+"from sfe_wosubcnt where firm_id = '"+firm_id$+"' and wo_no = '"+wo_no$+"'"
+	sql_prep$=sql_prep$+"from sfe_wosubcnt where firm_id = '"+firm_id$+"' and wo_location = '"+wo_loc$+"' and wo_no = '"+wo_no$+"'"
 	
 	sql_chan=sqlunt
 	sqlopen(sql_chan,err=*next)stbl("+DBNAME")

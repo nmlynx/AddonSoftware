@@ -157,7 +157,7 @@ rem --- Get IV Params for Lot/Serial flag
 	
 rem --- Build SQL statement
     sql_prep$=""
-	where_clause$=""
+	where_clause$=" firm_id = '"+firm_id$+"' AND wo_location = '"+wo_loc$+"' AND "
 	order_clause$=""
 	
 	sql_prep$="select * from sfe_womastr "

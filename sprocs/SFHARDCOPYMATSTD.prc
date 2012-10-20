@@ -63,7 +63,6 @@ rem	call stbl("+DIR_SYP")+"bas_process_beg.bbj",stbl("+USER_ID"),rd_table_chans$
 	pgmdir$=stbl("+DIR_PGM",err=*next)
 
 	iv_cost_mask$=fngetmask$("iv_cost_mask","###,##0.0000-",masks$)
-	sf_amt_mask$=fngetmask$("sf_amt_mask","###,##0.00-",masks$)
 	sf_hours_mask$=fngetmask$("sf_hours_mask","#,##0.00",masks$)
 	sf_units_mask$=fngetmask$("sf_units_mask","#,##0.00",mask$)
 	sf_rate_mask$=fngetmask$("sf_rate_mask","###.00",masks$)
@@ -141,7 +140,7 @@ rem --- Build SQL statement
 
 	sql_prep$="select item_id, oper_seq_ref, scrap_factor, divisor, alt_factor, qty_required, "
 	sql_prep$=sql_prep$+"units, unit_cost, total_units, total_cost, line_type, ext_comments "
-	sql_prep$=sql_prep$+"from sfe_womatl where firm_id = '"+firm_id$+"' and wo_no = '"+wo_no$+"'"
+	sql_prep$=sql_prep$+"from sfe_womatl where firm_id = '"+firm_id$+"' and wo_location = '"+wo_loc$+"' and wo_no = '"+wo_no$+"'"
 	
 	sql_chan=sqlunt
 	sqlopen(sql_chan,err=*next)stbl("+DBNAME")
@@ -170,7 +169,7 @@ rem --- Trip Read
 			data!.setFieldValue("UNITS_EA",str(read_tpl.units:iv_cost_mask$))
 			data!.setFieldValue("COST_EA",str(read_tpl.unit_cost:iv_cost_mask$))
 			data!.setFieldValue("UNITS_TOT",str(read_tpl.total_units:iv_cost_mask$))
-			data!.setFieldValue("COST_TOT",str(read_tpl.total_cost:sf_amt_mask$))
+			data!.setFieldValue("COST_TOT",str(read_tpl.total_cost:sf_rate_mask$))
 		endif
 		rs!.insert(data!)
 		
@@ -203,7 +202,7 @@ rem --- Output Totals
 		data! = rs!.getEmptyRecordData()
 		data!.setFieldValue("ITEM","Total Materials")
 		data!.setFieldValue("COST_EA",str(tot_cost_ea:iv_cost_mask$))
-		data!.setFieldValue("COST_TOT",str(tot_cost_tot:sf_amt_mask$))
+		data!.setFieldValue("COST_TOT",str(tot_cost_tot:sf_rate_mask$))
 		rs!.insert(data!)
 	endif
 	

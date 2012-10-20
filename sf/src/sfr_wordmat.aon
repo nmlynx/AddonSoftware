@@ -93,7 +93,7 @@ rem --- Setup SQL to read through sfe-23
 	sql_prep$ = sql_prep$ + "  FROM sfe_womatdtl "
 	sql_prep$ = sql_prep$ + "  INNER JOIN ivm_itemmast ON sfe_womatdtl.firm_id = ivm_itemmast.firm_id "
 	sql_prep$ = sql_prep$ + "                          AND sfe_womatdtl.item_id = ivm_itemmast.item_id "
-	where_clause$="WHERE sfe_womatdtl.firm_id = '"+firm_id$+"' AND "
+	where_clause$="WHERE sfe_womatdtl.firm_id = '"+firm_id$+"' AND sfe_womatdtl.wo_location = '"+sfe01a.wo_location$+"' AND "
 	if cvs(whse$,3)<>"" where_clause$=where_clause$+"sfe_womatdtl.warehouse_id = '"+whse$+"' AND "
 	if cvs(prodtype$,3)<>"" where_clause$=where_clause$+"ivm_itemmast.product_type = '"+prodtype$+"' AND "
 	order_clause$=" ORDER BY warehouse_id, item_id, wo_no, material_seq "

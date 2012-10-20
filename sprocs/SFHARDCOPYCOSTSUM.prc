@@ -60,9 +60,10 @@ rem --- Get masks
 
 	pgmdir$=stbl("+DIR_PGM",err=*next)
 
-	sf_amt_mask$=fngetmask$("sf_amt_mask","###,##0.00-",masks$)
-	sf_hours_mask$=fngetmask$("sf_hours_mask","#,##0.00-",masks$)
-	sf_pct_mask$=fngetmask$("sf_pct_mask","###.00-",masks$)
+	iv_cost_mask$=fngetmask$("iv_cost_mask","###,##0.0000-",masks$)
+	sf_hours_mask$=fngetmask$("sf_hours_mask","#,##0.00",masks$)
+	sf_pct_mask$=fngetmask$("sf_pct_mask","###.00",masks$)
+	
 	
 rem --- Init totals
 
@@ -171,7 +172,7 @@ rem		open_tables$[5]="BMC_OPCODES",open_opts$[5]="OTA"
 rem --- Build SQL statement
 
 	sql_prep$="select op_code, total_time, tot_std_cost, direct_rate, ovhd_rate, internal_seq_no "
-	sql_prep$=sql_prep$+"from sfe_wooprtn where firm_id = '"+firm_id$+"' and wo_no = '"+wo_no$+"' and line_type = 'S'"
+	sql_prep$=sql_prep$+"from sfe_wooprtn where firm_id = '"+firm_id$+"' and wo_location = '"+wo_loc$+"' and wo_no = '"+wo_no$+"' and line_type = 'S'"
 	
 	sql_chan=sqlunt
 	sqlopen(sql_chan,err=*next)stbl("+DBNAME")
@@ -202,9 +203,9 @@ rem --- Trip Read
 		else
 			data!.setFieldValue("VAR_HRS_PCT",str(0:sf_pct_mask$))
 		endif
-		data!.setFieldValue("STD_AMT",str(read_tpl.tot_std_cost:sf_amt_mask$))
-		data!.setFieldValue("ACT_AMT",str(act_op_amt:sf_amt_mask$))
-		data!.setFieldValue("VAR_AMT",str(read_tpl.tot_std_cost-act_op_amt:sf_amt_mask$))
+		data!.setFieldValue("STD_AMT",str(read_tpl.tot_std_cost:iv_cost_mask$))
+		data!.setFieldValue("ACT_AMT",str(act_op_amt:iv_cost_mask$))
+		data!.setFieldValue("VAR_AMT",str(read_tpl.tot_std_cost-act_op_amt:iv_cost_mask$))
 		if read_tpl.tot_std_cost<>0
 			data!.setFieldValue("VAR_AMT_PCT",str((read_tpl.tot_std_cost-act_op_amt)/read_tpl.tot_std_cost*100:sf_pct_mask$))
 		else
@@ -228,7 +229,7 @@ rem --- Trip Read
 rem --- Get Material Requirements Totals
 
 	sql_prep$="select sum(total_cost) "
-	sql_prep$=sql_prep$+"from sfe_womatl where firm_id = '"+firm_id$+"' and wo_no = '"+wo_no$+"' and line_type = 'S'"
+	sql_prep$=sql_prep$+"from sfe_womatl where firm_id = '"+firm_id$+"' and wo_location = '"+wo_loc$+"' and wo_no = '"+wo_no$+"' and line_type = 'S'"
 
 	sqlprep(sql_chan)sql_prep$
 	dim read_tpl$:sqltmpl(sql_chan)
@@ -241,7 +242,7 @@ rem --- Get Material Requirements Totals
 rem --- Get Subcontract Requirements Totals
 
 	sql_prep$="select sum(total_cost) "
-	sql_prep$=sql_prep$+"from sfe_wosubcnt where firm_id = '"+firm_id$+"' and wo_no = '"+wo_no$+"' and line_type = 'S'"
+	sql_prep$=sql_prep$+"from sfe_wosubcnt where firm_id = '"+firm_id$+"' and wo_location = '"+wo_loc$+"' and wo_no = '"+wo_no$+"' and line_type = 'S'"
 
 	sqlprep(sql_chan)sql_prep$
 	dim read_tpl$:sqltmpl(sql_chan)
@@ -304,9 +305,9 @@ rem --- Output Totals
 	
 	data! = rs!.getEmptyRecordData()
 	data!.setFieldValue("DESC","Direct Total")
-	data!.setFieldValue("STD_AMT",str(tot_std_dir:sf_amt_mask$))
-	data!.setFieldValue("ACT_AMT",str(act_op_dir_amt:sf_amt_mask$))
-	data!.setFieldValue("VAR_AMT",str(tot_std_dir-act_op_dir_amt:sf_amt_mask$))
+	data!.setFieldValue("STD_AMT",str(tot_std_dir:iv_cost_mask$))
+	data!.setFieldValue("ACT_AMT",str(act_op_dir_amt:iv_cost_mask$))
+	data!.setFieldValue("VAR_AMT",str(tot_std_dir-act_op_dir_amt:iv_cost_mask$))
 	if tot_std_dir<>0
 		data!.setFieldValue("VAR_AMT_PCT",str((tot_std_dir-act_op_dir_amt)/tot_std_dir*100:sf_pct_mask$))
 	else
@@ -316,9 +317,9 @@ rem --- Output Totals
 
 		data! = rs!.getEmptyRecordData()
 	data!.setFieldValue("DESC","Overhead Total")
-	data!.setFieldValue("STD_AMT",str(tot_std_oh:sf_amt_mask$))
-	data!.setFieldValue("ACT_AMT",str(act_op_oh_amt:sf_amt_mask$))
-	data!.setFieldValue("VAR_AMT",str(tot_std_oh-act_op_oh_amt:sf_amt_mask$))
+	data!.setFieldValue("STD_AMT",str(tot_std_oh:iv_cost_mask$))
+	data!.setFieldValue("ACT_AMT",str(act_op_oh_amt:iv_cost_mask$))
+	data!.setFieldValue("VAR_AMT",str(tot_std_oh-act_op_oh_amt:iv_cost_mask$))
 	if tot_std_oh<>0
 		data!.setFieldValue("VAR_AMT_PCT",str((tot_std_oh-act_op_oh_amt)/tot_std_oh*100:sf_pct_mask$))
 	else
@@ -335,9 +336,9 @@ rem --- Output Totals
 
 	data! = rs!.getEmptyRecordData()
 	data!.setFieldValue("DESC","Labor Total")
-	data!.setFieldValue("STD_AMT",str(tot_std_dir+tot_std_oh:sf_amt_mask$))
-	data!.setFieldValue("ACT_AMT",str(act_op_dir_amt+act_op_oh_amt:sf_amt_mask$))
-	data!.setFieldValue("VAR_AMT",str((tot_std_dir+tot_std_oh)-(act_op_dir_amt+act_op_oh_amt):sf_amt_mask$))
+	data!.setFieldValue("STD_AMT",str(tot_std_dir+tot_std_oh:iv_cost_mask$))
+	data!.setFieldValue("ACT_AMT",str(act_op_dir_amt+act_op_oh_amt:iv_cost_mask$))
+	data!.setFieldValue("VAR_AMT",str((tot_std_dir+tot_std_oh)-(act_op_dir_amt+act_op_oh_amt):iv_cost_mask$))
 	if tot_std_dir+tot_std_oh<>0
 		data!.setFieldValue("VAR_AMT_PCT",str(((tot_std_dir+tot_std_oh)-(act_op_dir_amt+act_op_oh_amt))/(tot_std_dir+tot_std_oh)*100:sf_pct_mask$))
 	else
@@ -350,9 +351,9 @@ rem --- Output Totals
 
 	data! = rs!.getEmptyRecordData()
 	data!.setFieldValue("DESC","Materials")
-	data!.setFieldValue("STD_AMT",str(std_mat_amt:sf_amt_mask$))
-	data!.setFieldValue("ACT_AMT",str(act_mat_amt:sf_amt_mask$))
-	data!.setFieldValue("VAR_AMT",str(std_mat_amt-act_mat_amt:sf_amt_mask$))
+	data!.setFieldValue("STD_AMT",str(std_mat_amt:iv_cost_mask$))
+	data!.setFieldValue("ACT_AMT",str(act_mat_amt:iv_cost_mask$))
+	data!.setFieldValue("VAR_AMT",str(std_mat_amt-act_mat_amt:iv_cost_mask$))
 	if std_mat_amt<>0
 		data!.setFieldValue("VAR_AMT_PCT",str((std_mat_amt-act_mat_amt)/std_mat_amt*100:sf_pct_mask$))
 	else
@@ -365,9 +366,9 @@ rem --- Output Totals
 
 	data! = rs!.getEmptyRecordData()
 	data!.setFieldValue("DESC","Subcontracts")
-	data!.setFieldValue("STD_AMT",str(std_sub_amt:sf_amt_mask$))
-	data!.setFieldValue("ACT_AMT",str(act_sub_amt:sf_amt_mask$))
-	data!.setFieldValue("VAR_AMT",str(std_sub_amt-act_sub_amt:sf_amt_mask$))
+	data!.setFieldValue("STD_AMT",str(std_sub_amt:iv_cost_mask$))
+	data!.setFieldValue("ACT_AMT",str(act_sub_amt:iv_cost_mask$))
+	data!.setFieldValue("VAR_AMT",str(std_sub_amt-act_sub_amt:iv_cost_mask$))
 	if std_sub_amt<>0
 		data!.setFieldValue("VAR_AMT_PCT",str((std_sub_amt-act_sub_amt)/std_sub_amt*100:sf_pct_mask$))
 	else
@@ -391,17 +392,17 @@ rem --- Output Totals
 
 	data! = rs!.getEmptyRecordData()
 	data!.setFieldValue("DESC","WO Totals")
-	data!.setFieldValue("STD_HRS",str(wo_tot_std_hrs:sf_hrs_mask$))
-	data!.setFieldValue("ACT_HRS",str(wo_tot_act_hrs:sf_hrs_mask$))
-	data!.setFieldValue("VAR_HRS",str(wo_tot_std_hrs-wo_tot_act_hrs:sf_hrs_mask$))
+	data!.setFieldValue("STD_HRS",str(wo_tot_std_hrs:iv_cost_mask$))
+	data!.setFieldValue("ACT_HRS",str(wo_tot_act_hrs:iv_cost_mask$))
+	data!.setFieldValue("VAR_HRS",str(wo_tot_std_hrs-wo_tot_act_hrs:iv_cost_mask$))
 	if wo_tot_std_hrs <> 0
 		data!.setFieldValue("VAR_HRS_PCT",str((wo_tot_std_hrs-wo_tot_act_hrs)/wo_tot_std_hrs*100:sf_pct_mask$))
 	else
 		data!.setFieldValue("VAR_HRS_PCT",str(0:sf_pct_mask$))
 	endif
-	data!.setFieldValue("STD_AMT",str(wo_tot_std_amt+std_mat_amt+std_sub_amt:sf_amt_mask$))
-	data!.setFieldValue("ACT_AMT",str(wo_tot_act_amt+act_mat_amt+act_sub_amt:sf_amt_mask$))
-	data!.setFieldValue("VAR_AMT",str((wo_tot_std_amt+std_mat_amt+std_sub_amt)-(wo_tot_act_amt+act_mat_amt+act_sub_amt):sf_amt_mask$))
+	data!.setFieldValue("STD_AMT",str(wo_tot_std_amt+std_mat_amt+std_sub_amt:iv_cost_mask$))
+	data!.setFieldValue("ACT_AMT",str(wo_tot_act_amt+act_mat_amt+act_sub_amt:iv_cost_mask$))
+	data!.setFieldValue("VAR_AMT",str((wo_tot_std_amt+std_mat_amt+std_sub_amt)-(wo_tot_act_amt+act_mat_amt+act_sub_amt):iv_cost_mask$))
 	if wo_tot_std_amt+std_mat_amt+std_sub_amt <> 0
 		data!.setFieldValue("VAR_AMT_PCT",str(((wo_tot_std_amt+std_mat_amt+std_sub_amt)-(wo_tot_act_amt+act_mat_amt+act_sub_amt))/(wo_tot_std_amt+std_mat_amt+std_sub_amt)*100:sf_pct_mask$))
 	else
@@ -423,30 +424,30 @@ rem --- Output Totals
 	data! = rs!.getEmptyRecordData()
 	data!.setFieldValue("DESC","Per Unit Totals")
 	if prod_qty<>0
-		data!.setFieldValue("STD_HRS",str(wo_tot_std_hrs/prod_qty:sf_hrs_mask$))
-		data!.setFieldValue("ACT_HRS",str(wo_tot_act_hrs/prod_qty:sf_hrs_mask$))
-		data!.setFieldValue("VAR_HRS",str((wo_tot_std_hrs/prod_qty)-(wo_tot_act_hrs/prod_qty):sf_hrs_mask$))
+		data!.setFieldValue("STD_HRS",str(wo_tot_std_hrs/prod_qty:iv_cost_mask$))
+		data!.setFieldValue("ACT_HRS",str(wo_tot_act_hrs/prod_qty:iv_cost_mask$))
+		data!.setFieldValue("VAR_HRS",str((wo_tot_std_hrs/prod_qty)-(wo_tot_act_hrs/prod_qty):iv_cost_mask$))
 		if wo_tot_std_hrs/prod_qty <> 0
 			data!.setFieldValue("VAR_HRS_PCT",str(((wo_tot_std_hrs/prod_qty)-(wo_tot_act_hrs/prod_qty))/(wo_tot_std_hrs/prod_qty)*100:sf_pct_mask$))
 		else
 			data!.setFieldValue("VAR_HRS_PCT",str(0:sf_pct_mask$))
 		endif
-		data!.setFieldValue("STD_AMT",str((wo_tot_std_amt+std_mat_amt+std_sub_amt)/prod_qty:sf_amt_mask$))
-		data!.setFieldValue("ACT_AMT",str((wo_tot_act_amt+act_mat_amt+act_sub_amt)/prod_qty:sf_amt_mask$))
-		data!.setFieldValue("VAR_AMT",str(((wo_tot_std_amt+std_mat_amt+std_sub_amt)/prod_qty)-((wo_tot_act_amt+act_mat_amt+act_sub_amt)/prod_qty):sf_amt_mask$))
+		data!.setFieldValue("STD_AMT",str((wo_tot_std_amt+std_mat_amt+std_sub_amt)/prod_qty:iv_cost_mask$))
+		data!.setFieldValue("ACT_AMT",str((wo_tot_act_amt+act_mat_amt+act_sub_amt)/prod_qty:iv_cost_mask$))
+		data!.setFieldValue("VAR_AMT",str(((wo_tot_std_amt+std_mat_amt+std_sub_amt)/prod_qty)-((wo_tot_act_amt+act_mat_amt+act_sub_amt)/prod_qty):iv_cost_mask$))
 		if (wo_tot_std_amt+std_mat_amt+std_sub_amt)/prod_qty <> 0
 			data!.setFieldValue("VAR_AMT_PCT",str((((wo_tot_std_amt+std_mat_amt+std_sub_amt)/prod_qty)-((wo_tot_act_amt+act_mat_amt+act_sub_amt)/prod_qty))/((wo_tot_std_amt+std_mat_amt+std_sub_amt)/prod_qty)*100:sf_pct_mask$))
 		else
 			data!.setFieldValue("VAR_AMT_PCT",str(0:sf_pct_mask$))
 		endif
 	else
-		data!.setFieldValue("STD_HRS",str(0:sf_hrs_mask$))
-		data!.setFieldValue("ACT_HRS",str(0:sf_hrs_mask$))
-		data!.setFieldValue("VAR_HRS",str(0:sf_hrs_mask$))
+		data!.setFieldValue("STD_HRS",str(0:iv_cost_mask$))
+		data!.setFieldValue("ACT_HRS",str(0:iv_cost_mask$))
+		data!.setFieldValue("VAR_HRS",str(0:iv_cost_mask$))
 		data!.setFieldValue("VAR_HRS_PCT",str(0:sf_pct_mask$))
-		data!.setFieldValue("STD_AMT",str(0:sf_amt_mask$))
-		data!.setFieldValue("ACT_AMT",str(0:sf_amt_mask$))
-		data!.setFieldValue("VAR_AMT",str(0:sf_amt_mask$))
+		data!.setFieldValue("STD_AMT",str(0:iv_cost_mask$))
+		data!.setFieldValue("ACT_AMT",str(0:iv_cost_mask$))
+		data!.setFieldValue("VAR_AMT",str(0:iv_cost_mask$))
 		data!.setFieldValue("VAR_AMT_PCT",str(0:sf_pct_mask$))
 	endif
 	rs!.insert(data!)
@@ -461,7 +462,7 @@ rem --- Subroutines
 get_op_trans:
 
 	sql_prep$="select * from vw_sfx_wotranxr as vw_trans where vw_trans.firm_id = '"+firm_id$+"' and "
-	sql_prep$=sql_prep$+"record_id = 'O' and wo_no = '"+wo_no$+"' and seq_ref = '"+read_tpl.internal_seq_no$+"'"
+	sql_prep$=sql_prep$+"record_id = 'O' and wo_location = '"+wo_loc$+"' and wo_no = '"+wo_no$+"' and seq_ref = '"+read_tpl.internal_seq_no$+"'"
 	act_op_hrs=0
 	act_op_amt=0
 

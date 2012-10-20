@@ -116,7 +116,7 @@ rem --- Build SQL statement
 
 	sql_prep$="select op_code, require_date, runtime_hrs, pcs_per_hour, direct_rate, ovhd_rate, setup_time, "
 	sql_prep$=sql_prep$+"hrs_per_pce, unit_cost, total_time, tot_std_cost, line_type, ext_comments "
-	sql_prep$=sql_prep$+"from sfe_wooprtn where firm_id = '"+firm_id$+"' and wo_no = '"+wo_no$+"'"
+	sql_prep$=sql_prep$+"from sfe_wooprtn where firm_id = '"+firm_id$+"' and wo_location = '"+wo_loc$+"' and wo_no = '"+wo_no$+"'"
 	
 	sql_chan=sqlunt
 	sqlopen(sql_chan,err=*next)stbl("+DBNAME")
