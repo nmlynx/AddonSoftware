@@ -110,6 +110,18 @@ rem --- Main Read
             if sequence$="B" and whse$<>"" then if key_tpl.warehouse_id$>whse$ break
         endif
 
+		rem --- If by Cust make sure WO is linked to a customer
+			if sequence$="C" and (cvs(key_tpl.customer_id$,2))="" then
+				read (sfe01a_dev)
+				continue
+			endif
+
+		rem --- If by Bill make sure WO is for a bill
+			if sequence$="B" and (cvs(key_tpl.item_id$,2))="" then
+				read (sfe01a_dev)
+				continue
+			endif
+ 
         if sequence$<>"W" then 
             if sequence$="T" data1$=key_tpl.wo_type$
             if sequence$="C" data1$=key_tpl.customer_id$
@@ -118,6 +130,7 @@ rem --- Main Read
         endif
 
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+		
         readrecord (sfe01a_dev,key=key_tpl$,knum=keynum$,dom=*continue) sfe01a$
         if sfe01a.wo_status$<>"C" then continue
         if sfe01a.closed_date$<begdate$ then continue
@@ -216,7 +229,8 @@ rem --- Calculate Actuals
 rem --- Calculate Totals, Variance, etc.
 
         a0=a[1]+a[2]+a[3]+a[9]
-        a1=a[5]+a[6]+a[7]+a[10],a2=a0-a1
+        a1=a[5]+a[6]+a[7]+a[10]
+		a2=a0-a1
         if a0<>0 then a3=(a0-a1)*100/a0 else a3=0
         if sfe01a.wo_category$="I" then 
             x$=sfe01a.item_id$
@@ -225,7 +239,11 @@ rem --- Calculate Totals, Variance, etc.
         endif
 
 rem --- Print
-        if l>l9 then gosub sub_head
+        if printed_subhead$ <>"Y"
+			gosub sub_heading
+			printed_subhead$="Y"
+		endif
+		
         str1$=sfe01a.wo_no$+"  "+sfe01a.wo_type$+"  "+sfe01a.description_01$
         OutVect!.addItem(str1$)
         blank=fnblank(14)
@@ -243,8 +261,7 @@ rem --- Print
         OutVect!.addItem(str(fnnummask$(a[7],m1$)))
         OutVect!.addItem(str(fnnummask$(a1,m1$)))
         OutVect!.addItem(str(fnnummask$(a2,m1$)))
-        OutVect!.addItem(str(fnnummask$(a3,"####.00-")))
-        
+        OutVect!.addItem(str(fnnummask$(a3,"####.00-")))        
        
         l=l+2
         l0=l0+1
@@ -258,16 +275,16 @@ rem --- Print
             u[x]=u[x]+a[x]
 			b[x]=b[x]+a[x]
         next x
-        sfw02a.std_hrs=a[0]
-        sfw02a.std_dir_tot=a[1]
-		sfw02a.std_ovhd_tot=a[9]
-        sfw02a.std_mat_tot=a[2]
-        sfw02a.std_sub_tot=a[3]
-        sfw02a.actual_hrs=a[4]
-        sfw02a.act_dir_tot=a[5]
-        sfw02a.act_ovhd_tot=a[10]
-		sfw02a.act_mat_tot=a[6]
-        sfw02a.act_sub_tot=a[7]  
+        sfw02a.std_hrs=sfw02a.std_hrs+a[0]
+        sfw02a.std_dir_tot=sfw02a.std_dir_tot+a[1]
+		sfw02a.std_ovhd_tot=sfw02a.std_ovhd_tot+a[9]
+        sfw02a.std_mat_tot=sfw02a.std_mat_tot+a[2]
+        sfw02a.std_sub_tot=sfw02a.std_sub_tot+a[3]
+        sfw02a.actual_hrs=sfw02a.actual_hrs+a[4]
+        sfw02a.act_dir_tot=sfw02a.act_dir_tot+a[5]
+        sfw02a.act_ovhd_tot=sfw02a.act_ovhd_tot+a[10]
+		sfw02a.act_mat_tot=sfw02a.act_mat_tot+a[6]
+        sfw02a.act_sub_tot=sfw02a.act_sub_tot+a[7]  
         sfw02a$=field(sfw02a$)
         write record (sfw02a_dev,key=sfw02a.firm_id$+sfw02a.wo_location$+sfw02a.wo_type$) sfw02a$             
     wend 
@@ -277,12 +294,18 @@ done: rem --- End
         t9$="U"
         if sequence$<>"W" then gosub sub_total
         u0=u[1]+u[2]+u[3]+u[9]
-        u1=u[5]+u[6]+u[7]+u[10],u2=u0-u1
+        u1=u[5]+u[6]+u[7]+u[10]
+		u2=u0-u1
         if u0<>0 then u3=(u0-u1)*100/u0 else u3=0
         if u[8]<>0 
             u5=u0-(u1-u[8])
-            if u0<>0 then u6=(u0-(u1-u[8]))*100/u0 else u6=0
+            if u0<>0 then 
+				u6=(u0-(u1-u[8]))*100/u0 
+			else 
+				u6=0
+			endif
         endif
+		
         blank=fnblank(15)
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
         OutVect!.addItem(Translate!.getTranslation("AON_REPORT_TOTAL:"))    
@@ -315,7 +338,8 @@ done: rem --- End
 rem --- Subtotals By Type
 
         dim c[2,10],t[10],u[10]
-        BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+        
+		BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
         OutVect!.addItem(Translate!.getTranslation("AON_TOTALS_BY_TYPE:_"))
         blank=fnblank(14)
         blank=fnblank(15)
@@ -497,6 +521,7 @@ rem --- Report Totals
         u1=u[5]+u[6]+u[7]+u[10],u2=u0-u1
         if u0<>0 then u3=(u0-u1)*100/u0 else u3=0
         blank=fnblank(15)
+		
         TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         OutVect!.addItem(Translate!.getTranslation("AON_REPORT_TOTAL:"))
         OutVect!.addItem(str(fnnummask$(u[0],m2$)))
@@ -527,7 +552,7 @@ rem --- Report Totals
         goto std_exit
 
 
-sub_head: rem --- Sub Heading
+sub_heading: rem --- Sub Heading
         switch pos(sequence$="CT")
             case 1
                 if t0$="" then 
@@ -553,11 +578,11 @@ sub_head: rem --- Sub Heading
 return
 
 sub_total: rem --- First Sub Total 
-
+		printed_subhead$="N"
         if t0$<>"" and l0>1 then 
-                if l+2>l9 then gosub sub_head
                 t0=t[1]+t[2]+t[3]+t[9]
-                t1=t[5]+t[6]+t[7]+t[10],t2=t0-t1
+                t1=t[5]+t[6]+t[7]+t[10]
+				t2=t0-t1
                 if t0<>0 then t3=(t0-t1)*100/t0 else t3=0
                 blank=fnblank(15)
                 TotVect!.addItem(str(OutVect!.size()/(columns+1)))
@@ -599,14 +624,14 @@ sub_total: rem --- First Sub Total
             h5$(1)=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
             find record (sfm10a_dev,key=firm_id$+"A"+t0$,dom=*return) sfm10a$
             h5$=sfm10a.code_desc$
-            gosub sub_head
+rem            gosub sub_heading
         endif
         if sequence$="C" then
             dim h5$(30)
             h5$(1)=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
             find record (arm01a_dev,key=firm_id$+t0$,dom=*return) arm01a$
             h5$=arm01a.customer_name$
-            gosub sub_head
+rem            gosub sub_heading
         endif
         return
 

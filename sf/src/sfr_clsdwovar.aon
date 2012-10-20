@@ -137,14 +137,13 @@ rem --- Init Data
         dim headings$[headings]
         headings$[0]=sysinfo.firm_name$
         headings$[1]=sysinfo.task_desc$
-        l9=59
-        l=l9+1
 
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","A","",m1$,0,m1
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",m2$,0,m2
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","I","",gl_acct_mask$,0,gl_acct_mask
 
         m9$="####.00-"
+		m9=len(m9$)
 
         dim desc[3]
         desc[1]=num(ivs01a.desc_len_01$)
@@ -155,24 +154,41 @@ rem --- Init Data
 		call "adc_perioddates.aon",gls01a_dev,num(period$),num(sfs01a.current_year$),begdate$,enddate$,status
 
 rem --- Headings and print positions
- 
-    dim columns$[14,10]
+	proportionalfont_pad=12
+	std_cols_width=(m1*5)+m2+(proportionalfont_pad*3.75)
+	std_ops_cols_width=(m1*2)+m2+proportionalfont_pad
+	
+	act_cols_width=(m1*5)+m2+(proportionalfont_pad*3.75)
+	act_ops_cols_width=(m1*2)+m2+proportionalfont_pad
+	
+	var_cols_width=m1+m9
+	
+    dim columns$[14,12]
     columns = 14
-        columns$[0,0]=Translate!.getTranslation("AON_+-----------------------------------------------------^WO#"),columns$[0,1]="C",columns$[0,2]="23"
-        columns$[1,0]=Translate!.getTranslation("AON_------------------^OPERATIONS_HOURS"),                       columns$[1,1]="N",columns$[1,2]="9",columns$[1,3]=m4$,columns$[1,10]="T"
-        columns$[2,0]=Translate!.getTranslation("AON_---------------^DIRECT"),                                    columns$[2,1]="N",columns$[2,2]="7",columns$[2,3]=m1$,columns$[2,10]="T"
-        columns$[3,0]=Translate!.getTranslation("AON_---STANDARD---^OVRHD"),                                      columns$[3,1]="N",columns$[3,2]="9",columns$[3,3]=m1$,columns$[3,10]="T"
-        columns$[4,0]=Translate!.getTranslation("AON_----------------^MAT'LS_TOTAL"),                             columns$[4,1]="N",columns$[4,2]="8",columns$[4,3]=m1$,columns$[4,10]="T"
-        columns$[5,0]=Translate!.getTranslation("AON_----------------^SUB'S_TOTAL"),                              columns$[5,1]="N",columns$[5,2]="8",columns$[5,3]=m1$,columns$[5,10]="T"
-        columns$[6,0]=Translate!.getTranslation("AON_-------------+^W.O._TOTAL"),                                columns$[6,1]="N",columns$[6,2]="8",columns$[6,3]=m1$,columns$[6,10]="T"
-        columns$[7,0]=Translate!.getTranslation("AON_+------------^OPERATION_HOURS"),                             columns$[7,1]="N",columns$[7,2]="7",columns$[7,3]=m2$,columns$[7,10]="T"
-        columns$[8,0]=Translate!.getTranslation("AON_-------------^DIRECT"),                                      columns$[8,1]="N",columns$[8,2]="7",columns$[8,3]=m1$,columns$[8,10]="T"
-        columns$[9,0]=Translate!.getTranslation("AON_----ACTUAL----^OVRHD"),                                      columns$[9,1]="N",columns$[9,2]="8",columns$[9,3]=m1$,columns$[9,10]="T"
-        columns$[10,0]=Translate!.getTranslation("AON_-----------------^MAT'LS_TOTAL"),                           columns$[10,1]="N",columns$[10,2]="8",columns$[10,3]=m1$,columns$[10,10]="T"
-        columns$[11,0]=Translate!.getTranslation("AON_----------------^SUB'S_TOTAL"),                             columns$[11,1]="N",columns$[11,2]="8",columns$[11,3]=m1$,columns$[11,10]="T"
-        columns$[12,0]=Translate!.getTranslation("AON_-------------+^W.O._TOTAL"),                                 columns$[12,1]="N",columns$[12,2]="8",columns$[12,3]=m1$,columns$[12,10]="T"
-        columns$[13,0]=Translate!.getTranslation("AON_^VARIANCE"),                                                columns$[13,1]="N",columns$[13,2]="8",columns$[13,3]=m1$,columns$[13,10]="T"
-        columns$[14,0]="%",                                                        columns$[14,1]="N",columns$[14,2]="7",columns$[14,3]=m9$,columns$[14,10]="T"
+        columns$[0,0]=Translate!.getTranslation("AON_WO^NUMBER"),columns$[0,1]="C",columns$[0,2]="23"
+
+		columns$[1,0]=                  pad("   "+Translate!.getTranslation("AON_STANDARDS")+"   ",std_cols_width+4,"C","-")
+		columns$[1,0]=columns$[1,0]+"^"+pad("  "+Translate!.getTranslation("AON_OPERATIONS")+"  ",std_ops_cols_width+4,"C","-")
+		columns$[1,0]=columns$[1,0]+"^"+Translate!.getTranslation("AON_HOURS"),                           columns$[1,1]="N",columns$[1,2]=str(m2),columns$[1,3]=m2$,columns$[1,5]="C^C^R",columns$[1,10]="T",columns$[1,11]="6^3^1"
+
+        columns$[2,0]=Translate!.getTranslation("AON_DIRECT"),                                            columns$[2,1]="N",columns$[2,2]=str(m1),columns$[2,3]=m1$,columns$[2,10]="T"
+        columns$[3,0]=Translate!.getTranslation("AON_OVHD"),                                              columns$[3,1]="N",columns$[3,2]=str(m1),columns$[3,3]=m1$,columns$[3,10]="T"
+        columns$[4,0]=Translate!.getTranslation("AON_MAT'LS")+"^"+Translate!.getTranslation("AON_TOTAL"), columns$[4,1]="N",columns$[4,2]=str(m1),columns$[4,3]=m1$,columns$[4,10]="T"
+        columns$[5,0]=Translate!.getTranslation("AON_SUB'S")+"^"+Translate!.getTranslation("AON_TOTAL"),  columns$[5,1]="N",columns$[5,2]=str(m1),columns$[5,3]=m1$,columns$[5,10]="T"
+		columns$[6,0]=Translate!.getTranslation("AON_W.O.")+"^"+Translate!.getTranslation("AON_TOTAL"),   columns$[6,1]="N",columns$[6,2]=str(m1),columns$[6,3]=m1$,columns$[6,10]="T"
+        
+		columns$[7,0]=                  pad("   "+Translate!.getTranslation("AON_ACTUALS")+"   ",act_cols_width+4,"C","-")
+		columns$[7,0]=columns$[7,0]+"^"+pad("  "+Translate!.getTranslation("AON_OPERATIONS")+"  ",act_ops_cols_width+4,"C","-")
+		columns$[7,0]=columns$[7,0]+"^"+Translate!.getTranslation("AON_HOURS"),                           columns$[7,1]="N",columns$[7,2]=str(m2),columns$[7,3]=m2$,columns$[7,5]="C^C^R",columns$[7,10]="T",columns$[7,11]="6^3^1"
+
+		columns$[8,0]=Translate!.getTranslation("AON_DIRECT"),                                            columns$[8,1]="N",columns$[8,2]=str(m1),columns$[8,3]=m1$,columns$[8,10]="T"
+        columns$[9,0]=Translate!.getTranslation("AON_OVHD"),                                              columns$[9,1]="N",columns$[9,2]=str(m1),columns$[9,3]=m1$,columns$[9,10]="T"
+        columns$[10,0]=Translate!.getTranslation("AON_MAT'LS")+"^"+Translate!.getTranslation("AON_TOTAL"),columns$[10,1]="N",columns$[10,2]=str(m1),columns$[10,3]=m1$,columns$[10,10]="T"
+        columns$[11,0]=Translate!.getTranslation("AON_SUB'S")+"^"+Translate!.getTranslation("AON_TOTAL"), columns$[11,1]="N",columns$[11,2]=str(m1),columns$[11,3]=m1$,columns$[11,10]="T"
+		columns$[12,0]=Translate!.getTranslation("AON_W.O.")+"^"+Translate!.getTranslation("AON_TOTAL"),  columns$[12,1]="N",columns$[12,2]=str(m1),columns$[12,3]=m1$,columns$[12,10]="T"
+
+        columns$[13,0]=Translate!.getTranslation("AON_^VARIANCE"),                                        columns$[13,1]="N",columns$[13,2]=str(m1),columns$[13,3]=m1$,columns$[13,10]="T"
+        columns$[14,0]="%",                                                                               columns$[14,1]="N",columns$[14,2]=str(m9),columns$[14,3]=m9$,columns$[14,10]="T"
 
 rem --- Retrieve key templates
 
