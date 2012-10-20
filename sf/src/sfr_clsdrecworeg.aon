@@ -155,7 +155,7 @@ rem --- Additional headings
 
 rem --- Column Headings
         columns = 18
-		dim columns$[columns,10]
+		dim columns$[columns,11]
         
 		columns$[0,0]=Translate!.getTranslation("AON_WO^NUMBER"),         columns$[0,1]="C", columns$[0,2]="7"
 		columns$[1,0]=Translate!.getTranslation("AON_TYPE"),              columns$[1,1]="C", columns$[1,2]="4"
@@ -166,16 +166,19 @@ rem --- Column Headings
 		columns$[6,0]=Translate!.getTranslation("AON_PRIOR^CLOSE"),       columns$[6,1]="N", columns$[6,2]="8",columns$[6,3]=m2$
 		columns$[7,0]=Translate!.getTranslation("AON_THIS^CLOSE"),        columns$[7,1]="N", columns$[7,2]="8",columns$[7,3]=m2$
 		columns$[8,0]=Translate!.getTranslation("AON_STILL^OPEN"),        columns$[8,1]="N", columns$[8,2]="8",columns$[8,3]=m2$
-		columns$[9,0]=Translate!.getTranslation("AON_CMP?"),              columns$[9,1]="C", columns$[9,2]="5"
+		columns$[9,0]=Translate!.getTranslation("AON_CMP"),               columns$[9,1]="C", columns$[9,2]="5"
 		columns$[10,0]=Translate!.getTranslation("AON_UNIT^COST"),        columns$[10,1]="N",columns$[10,2]="8",columns$[10,3]=m3$
 		columns$[11,0]=Translate!.getTranslation("AON_TOTAL^ACTUAL^COST"),columns$[11,1]="N",columns$[11,2]="7",columns$[11,3]=m1$,columns$[11,10]="T"
 		columns$[12,0]=Translate!.getTranslation("AON_PRIOR^CLOSE"),      columns$[12,1]="N",columns$[12,2]="7",columns$[12,3]=m1$,columns$[12,10]="T"
 		columns$[13,0]=Translate!.getTranslation("AON_CURRENT^WIP"),      columns$[13,1]="N",columns$[13,2]="7",columns$[13,3]=m1$,columns$[13,10]="T"
 		columns$[14,0]=Translate!.getTranslation("AON_CLOSED^VALUE"),     columns$[14,1]="N",columns$[14,2]="7",columns$[14,3]=m1$,columns$[14,10]="T"
-		columns$[15,0]=Translate!.getTranslation("AON_+------^DIRECT"),   columns$[15,1]="N",columns$[15,2]="7",columns$[15,3]=m1$,columns$[15,10]="T"
-		columns$[16,0]=Translate!.getTranslation("AON_--VARIANCE---^OVERHEAD"),columns$[16,1]="N",columns$[16,2]="9",columns$[16,3]=m1$,columns$[16,10]="T"
-		columns$[17,0]=Translate!.getTranslation("AON_----------^MATL'S"),columns$[17,1]="N",columns$[17,2]="7",columns$[17,3]=m1$,columns$[17,10]="T"
-		columns$[18,0]=Translate!.getTranslation("AON_-------+^SUBS"),    columns$[18,1]="N",columns$[18,2]="7",columns$[18,3]=m1$,columns$[18,10]="T"
+        variance$=Translate!.getTranslation("AON_VARIANCE")
+        direct$=Translate!.getTranslation("AON_DIRECT")
+        dashes$=pad("-",m1*2+10,"-")
+        columns$[15,0]=dashes$+variance$+dashes$+"^"+direct$,             columns$[15,1]="N",columns$[15,2]=str(m1+1),columns$[15,3]=m1$,columns$[15,5]="C^R",columns$[15,10]="T",columns$[15,11]="4^1"
+		columns$[16,0]=Translate!.getTranslation("AON_OVERHEAD"),         columns$[16,1]="N",columns$[16,2]="9",columns$[16,3]=m1$,columns$[16,10]="T"
+		columns$[17,0]=Translate!.getTranslation("AON_MAT'LS"),           columns$[17,1]="N",columns$[17,2]="7",columns$[17,3]=m1$,columns$[17,10]="T"
+		columns$[18,0]=Translate!.getTranslation("AON_SUBS"),             columns$[18,1]="N",columns$[18,2]="7",columns$[18,3]=m1$,columns$[18,10]="T"
 
 rem --- Additional File Opens
         if dist_by_item$="Y" then
