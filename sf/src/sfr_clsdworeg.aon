@@ -35,7 +35,7 @@ rem --- Get user approval to proceed
     
 rem --- Open/Lock files
 
-    num_files=21
+    num_files=22
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="SFS_PARAMS",open_opts$[1]="OTA"
     open_tables$[2]="IVS_PARAMS",open_opts$[2]="OTA"
@@ -58,6 +58,7 @@ rem --- Open/Lock files
     open_tables$[19]="SFX_WOSCHDXR",open_opts$[19]="OTA"
     open_tables$[20]="IVM_ITEMMAST",open_opts$[20]="OTA"
     open_tables$[21]="IVM_ITEMWHSE",open_opts$[21]="OTA"
+    open_tables$[22]="GLS_PARAMS",open_opts$[22]="OTA"	
 
     gosub open_tables
 
@@ -82,7 +83,8 @@ rem --- Open/Lock files
     sfm06_dev=num(open_chans$[19])
     ivm_itemmast_dev=num(open_chans$[20])
     ivm_itemwhse_dev=num(open_chans$[21])
-
+    gls01a_dev=num(open_chans$[22])
+	
 rem --- Dimension string templates
 
     dim sfs01a$:open_tpls$[1],ivs01a$:open_tpls$[2],sfm10a$:open_tpls$[3],
@@ -91,7 +93,8 @@ rem --- Dimension string templates
 :       sfe15a$:open_tpls$[10],sfe22a$:open_tpls$[11],sfe02a$:open_tpls$[12],
 :       sfm05a$:open_tpls$[13],sfe32a$:open_tpls$[14],sft21a$:open_tpls$[15],
 :       sft01a$:open_tpls$[16],sft31a$:open_tpls$[17],sfw07a$:open_tpls$[18],
-:       sfm06a$:open_tpls$[19],ivm_itemmast$:open_tpls$[20],ivm_itemwhse$:open_tpls$[21]
+:       sfm06a$:open_tpls$[19],ivm_itemmast$:open_tpls$[20],ivm_itemwhse$:open_tpls$[21],
+:		gls01a$:open_tpls$[22]
 
 rem --- Get SF parameters
 
@@ -128,6 +131,7 @@ rem --- Get IV parameters
     desc[1]=num(ivs01a.desc_len_01$)
     desc[2]=num(ivs01a.desc_len_02$)
     desc[3]=num(ivs01a.desc_len_03$)
+	ls$=ivs01a.lotser_flag$
 
 rem --- Additional File Opens
 
@@ -295,8 +299,22 @@ rem --- Use SQL queries to gather needed data
 			
 			select$=select$+"cs_act.TOT_ACT_DIR_COST, cs_act.TOT_ACT_OVH_COST, "	
 			select$=select$+"cs_act.TOT_ACT_MAT_COST, cs_act.TOT_ACT_SUB_COST, "	
-			select$=select$+"cs_act.TOT_ACT_OPS_COST "				
-				
+			select$=select$+"cs_act.TOT_ACT_OPS_COST "
+			
+		rem --- If Lotted/Serialized, get the number of lot/serial number records on file for ea WO
+		rem --- This total will be compared w/Qty being closed.
+		rem --- Update will not run if they don't match.
+			
+			if ls$<>"N"
+				select$=select$+", (SELECT SUM(cls_inp_qty) "
+				select$=select$+"   FROM sfe_wolotser AS ls"
+				select$=select$+"   WHERE ls.Firm_ID+ls.WO_Location+ls.WO_No "
+				select$=select$+"       = wo.Firm_ID+wo.WO_Location+wo.WO_No "
+				select$=select$+"     AND ls.Closed_Flag<>'Y'  "				
+				select$=select$+"  ) AS TOT_LS_CLS_INP_QTY   "
+
+			endif
+			
 		rem --- Build clause for getting the Transactions/Actual cost of WO
 		rem ---   Note: This SQL query's resultset(a table) will be JOINed in main query
 			actuals$=""
@@ -433,7 +451,7 @@ rem --- Assign values from SQL query
         endif
 
 label2:
-        
+
 		tot_act_cost=0
 		tot_prior_closed=0
 		tot_curr_wip=0
@@ -783,8 +801,7 @@ rem --- All done
 				
 rem --- Destroy the progress meter and run the next overlay
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
-
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     update$=pgmdir$+"sfu_clsdworeg.aon"
     if missing_lotser
         msg_id$="OP_MISSING_LOTSER_NO"
@@ -806,7 +823,7 @@ glrecap: rem --- Standard G/L Recap Routine
         call pgmdir$+"glc_glpost.aon",glm01a_dev,glw11_dev,glt14a_dev,account$,gldate$,ref1$,ref2$,ref3$,memo$,amount,units,status
     endif
     return
-
+	
 rem --- Standard AddonSoftware functions (01Mar2006)
 
 rem --- Miscellaneous functions
@@ -853,7 +870,7 @@ open_tables:rem --- Open Tables
 	endif
 
 	return
-
+	
 rem #include disp_message.src
 
 disp_message: rem --- Display Message Dialog
