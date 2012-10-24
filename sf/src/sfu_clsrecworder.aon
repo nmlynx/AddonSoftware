@@ -358,7 +358,9 @@ remove_schedule_detail: rem --- Remove Schedule Detail Records
             let sfm06_key$=key(sfm06_dev,end=*break)
             if pos(sfe01a.firm_id$+sfe01a.wo_no$=sfm06_key$)<>1 then break
 label2: 
+escape; rem wgh ... sfm-06 is now the AON_WONUM alternate key to sfm-05
             remove (sfm06_dev,key=sfm06_key$)
+rem wgh ... think sfm06_key.op_seq$ needs to be a seq_ref
             remove (sfm05_dev,key=sfm06_key.firm_id$+sfm06_key.op_code$+sfm06_key.sched_date$+sfm06_key.wo_no$+sfm06_key.wo_seq$,dom=label2)
         wend 
     return

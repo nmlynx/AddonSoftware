@@ -35,7 +35,7 @@ rem --- Get user approval to proceed
     
 rem --- Open/Lock files
 
-    num_files=22
+    num_files=21
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="SFS_PARAMS",open_opts$[1]="OTA"
     open_tables$[2]="IVS_PARAMS",open_opts$[2]="OTA"
@@ -49,16 +49,15 @@ rem --- Open/Lock files
     open_tables$[10]="SFE_WOMATISH",open_opts$[10]="OTA"
     open_tables$[11]="SFE_WOMATL",open_opts$[11]="OTA"
     open_tables$[12]="SFE_WOOPRTN",open_opts$[12]="OTA"
-    open_tables$[13]="SFE_WOSCHDL",open_opts$[13]="OTA"
-    open_tables$[14]="SFE_WOSUBCNT",open_opts$[14]="OTA"
-    open_tables$[15]="SFT_OPNMATTR",open_opts$[15]="OTA"
-    open_tables$[16]="SFT_OPNOPRTR",open_opts$[16]="OTA"
-    open_tables$[17]="SFT_OPNSUBTR",open_opts$[17]="OTA"
-    open_tables$[18]="SFW_CLSWOXTY",open_opts$[18]="OTAIL"
-    open_tables$[19]="SFX_WOSCHDXR",open_opts$[19]="OTA"
+    open_tables$[13]="SFE_WOSCHDL",open_opts$[13]="OTA[1]"
+    open_tables$[14]="SFE_WOSCHDL",open_opts$[14]="OTA[2]"
+    open_tables$[15]="SFE_WOSUBCNT",open_opts$[15]="OTA"
+    open_tables$[16]="SFT_OPNMATTR",open_opts$[16]="OTA"
+    open_tables$[17]="SFT_OPNOPRTR",open_opts$[17]="OTA"
+    open_tables$[18]="SFT_OPNSUBTR",open_opts$[18]="OTA"
+    open_tables$[19]="SFW_CLSWOXTY",open_opts$[19]="OTAIL"
     open_tables$[20]="IVM_ITEMMAST",open_opts$[20]="OTA"
     open_tables$[21]="IVM_ITEMWHSE",open_opts$[21]="OTA"
-    open_tables$[22]="GLS_PARAMS",open_opts$[22]="OTA"	
 
     gosub open_tables
 
@@ -75,15 +74,14 @@ rem --- Open/Lock files
     sfe22_dev=num(open_chans$[11])
     sfe02_dev=num(open_chans$[12])
     sfm05_dev=num(open_chans$[13])
-    sfe32_dev=num(open_chans$[14])
-    sft21_dev=num(open_chans$[15])
-    sft01_dev=num(open_chans$[16])
-    sft31_dev=num(open_chans$[17])
-    sfw07a_dev=num(open_chans$[18])
-    sfm06_dev=num(open_chans$[19])
+    sfm05alt_dev=num(open_chans$[14])
+    sfe32_dev=num(open_chans$[15])
+    sft21_dev=num(open_chans$[16])
+    sft01_dev=num(open_chans$[17])
+    sft31_dev=num(open_chans$[18])
+    sfw07a_dev=num(open_chans$[19])
     ivm_itemmast_dev=num(open_chans$[20])
     ivm_itemwhse_dev=num(open_chans$[21])
-    gls01a_dev=num(open_chans$[22])
 	
 rem --- Dimension string templates
 
@@ -91,10 +89,9 @@ rem --- Dimension string templates
 :       sfe04b$:open_tpls$[4],sfe06a$:open_tpls$[5],sfe01a$:open_tpls$[6],
 :       sfe23a$:open_tpls$[7],sfe13a$:open_tpls$[8],sfe25a$:open_tpls$[9],
 :       sfe15a$:open_tpls$[10],sfe22a$:open_tpls$[11],sfe02a$:open_tpls$[12],
-:       sfm05a$:open_tpls$[13],sfe32a$:open_tpls$[14],sft21a$:open_tpls$[15],
-:       sft01a$:open_tpls$[16],sft31a$:open_tpls$[17],sfw07a$:open_tpls$[18],
-:       sfm06a$:open_tpls$[19],ivm_itemmast$:open_tpls$[20],ivm_itemwhse$:open_tpls$[21],
-:		gls01a$:open_tpls$[22]
+:       sfm05a$:open_tpls$[13],sfm05alt$:open_tpls$[14],sfe32a$:open_tpls$[15],
+:       sft21a$:open_tpls$[16],sft01a$:open_tpls$[17],sft31a$:open_tpls$[18],
+:       sfw07a$:open_tpls$[19],ivm_itemmast$:open_tpls$[20],ivm_itemwhse$:open_tpls$[21]
 
 rem --- Get SF parameters
 
@@ -131,7 +128,7 @@ rem --- Get IV parameters
     desc[1]=num(ivs01a.desc_len_01$)
     desc[2]=num(ivs01a.desc_len_02$)
     desc[3]=num(ivs01a.desc_len_03$)
-	ls$=ivs01a.lotser_flag$
+    ls$=ivs01a.lotser_flag$
 
 rem --- Additional File Opens
 
@@ -188,12 +185,12 @@ rem --- Initializations
     dim g[4]
     if gl$="Y" then
         rem --- Get GL parameters
-        find record (gls01a_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
-        g[0]=num(gls01a.total_pers$)
-        g[1]=num(gls01a.current_per$)
-        g[2]=num(gls01a.current_year$)
-        g[3]=num(gls01a.acct_length$)
-        g[4]=num(gls01a.max_acct_len$)
+        find record (gls_params_dev,key=firm_id$+"GL00",dom=std_missing_params) gls_params$
+        g[0]=num(gls_params.total_pers$)
+        g[1]=num(gls_params.current_per$)
+        g[2]=num(gls_params.current_year$)
+        g[3]=num(gls_params.acct_length$)
+        g[4]=num(gls_params.max_acct_len$)
     endif
 
     width=132
@@ -287,7 +284,7 @@ rem --- Use SQL queries to gather needed data
 			select$=select$+"wo.CLOSED_DATE,  wo.WO_TYPE,      wo.COMPLETE_FLG, "
 			select$=select$+"wo.LSTACT_DATE,  wo.CLS_INP_DATE, wo.SCH_PROD_QTY, "
 			select$=select$+"wo.CLS_INP_QTY,  wo.QTY_CLS_TODT, wo.CLS_CST_TODT, "
-			select$=select$+"wo.CLOSED_COST,  wo.RECALC_FLAG, "
+			select$=select$+"wo.CLOSED_COST,  wo.RECALC_FLAG,  wo.LOTSER_ITEM, "
 
 			select$=select$+"typ.CODE_DESC,   typ.STDACT_FLAG, typ.GL_PUR_ACCT, "
 			select$=select$+"typ.GL_WIP_ACCT, typ.GL_CLOSE_TO, typ.GL_LAB_VAR, "
@@ -305,7 +302,7 @@ rem --- Use SQL queries to gather needed data
 		rem --- This total will be compared w/Qty being closed.
 		rem --- Update will not run if they don't match.
 			
-			if ls$<>"N"
+			if pos(ls$="LS") then
 				select$=select$+", (SELECT SUM(cls_inp_qty) "
 				select$=select$+"   FROM sfe_wolotser AS ls"
 				select$=select$+"   WHERE ls.Firm_ID+ls.WO_Location+ls.WO_No "
@@ -412,6 +409,8 @@ rem --- Assign values from SQL query
 		this_close_qty 	 	= read_tpl.CLS_INP_QTY
 		complete_yn$ 	 	= read_tpl.COMPLETE_FLG$
 		recalc_flag$ 		= read_tpl.RECALC_FLAG$
+                wo_lotser_item$     = read_tpl.LOTSER_ITEM$
+                total_ls_this_cls_qty = read_tpl.TOT_LS_CLS_INP_QTY
 
 		closed_cost         = read_tpl.CLOSED_COST
 		iv_unit_cost 	 	= read_tpl.UNIT_COST
@@ -590,11 +589,9 @@ rem --- Print
         OutVect!.addItem(x1$)
         xwk=fnblank(14)
 		
-    rem --- Second line for WO
-rem wgh ... replace wgh with sum of sfe_wolotser (sfe-06) cls_inp_qty for this work order
-wgh=this_close_qty
-        ls_missing=this_close_qty-wgh
-        if ls_missing<>0 then
+        rem --- Second line for WO
+        ls_missing=this_close_qty-total_ls_this_cls_qty
+        if wo_category$="I" and wo_lotser_item$="Y" and ls_missing<>0 then
             missing_lotser=1
             OutVect!.addItem("    **** "+str(ls_missing)+" "+Translate!.getTranslation("AON_LOT/SERIAL_ENTRIES_MISSING")+" ***")
             xwk=fnblank(4)
@@ -801,7 +798,8 @@ rem --- All done
 				
 rem --- Destroy the progress meter and run the next overlay
 
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+
     update$=pgmdir$+"sfu_clsdworeg.aon"
     if missing_lotser
         msg_id$="OP_MISSING_LOTSER_NO"
@@ -820,7 +818,7 @@ rem --- Destroy the progress meter and run the next overlay
 glrecap: rem --- Standard G/L Recap Routine
 
     if gl$="Y"
-        call pgmdir$+"glc_glpost.aon",glm01a_dev,glw11_dev,glt14a_dev,account$,gldate$,ref1$,ref2$,ref3$,memo$,amount,units,status
+        call pgmdir$+"glc_glpost.aon",glm01a_dev,glw11_dev,notused,account$,gldate$,ref1$,ref2$,ref3$,memo$,amount,units,status
     endif
     return
 	

@@ -36,13 +36,34 @@ rem --- Capture current lot/ser cls_inpt_qty so can make adjustments if it gets 
 	this_ls_sch_qty=num(callpoint!.getColumnData("SFE_WOLOTSER.SCH_PROD_QTY"))
 	this_ls_cls_todt=num(callpoint!.getColumnData("SFE_WOLOTSER.QTY_CLS_TODT"))
 	if prev_cls_inp_qty=0 and  this_ls_cls_todt<>this_ls_sch_qty then
-		callpoint!.setColumnData("SFE_WOLOTSER.CLS_INP_QTY",str(this_ls_sch_qty-this_ls_cls_todt),1)
+		this_cls_inp_qty=this_ls_sch_qty-this_ls_cls_todt
+		callpoint!.setColumnData("SFE_WOLOTSER.CLS_INP_QTY",str(this_cls_inp_qty),1)
 		callpoint!.setStatus("MODIFIED")
 
 		rem --- Adjust how many lot/serial items have been closed
 		ls_close_qty=callpoint!.getDevObject("ls_close_qty")
 		ls_close_qty=ls_close_qty+(this_ls_sch_qty-this_ls_cls_todt)
 		callpoint!.setDevObject("ls_close_qty",ls_close_qty)
+
+		rem --- Update complete flag and closed cost
+		this_ls_sch_qty=num(callpoint!.getColumnData("SFE_WOLOTSER.SCH_PROD_QTY"))
+		this_ls_cls_todt=num(callpoint!.getColumnData("SFE_WOLOTSER.QTY_CLS_TODT"))
+		if this_cls_inp_qty<>0 then
+			if this_cls_inp_qty=this_ls_sch_qty-this_ls_cls_todt and
+:			callpoint!.getColumnData("SFE_WOLOTSER.COMPLETE_FLG")<>"Y" then
+				callpoint!.setColumnData("SFE_WOLOTSER.COMPLETE_FLG","Y",1)
+			endif
+			if num(callpoint!.getColumnData("SFE_WOLOTSER.CLOSED_COST"))=0 then
+				callpoint!.setColumnData("SFE_WOLOTSER.CLOSED_COST",str(callpoint!.getDevObject("closed_cost")),1)
+			endif
+		else
+			if callpoint!.getColumnData("SFE_WOLOTSER.COMPLETE_FLG")<>"" then
+				callpoint!.setColumnData("SFE_WOLOTSER.COMPLETE_FLG","",1)
+			endif
+			if num(callpoint!.getColumnData("SFE_WOLOTSER.CLOSED_COST"))<>0 then
+				callpoint!.setColumnData("SFE_WOLOTSER.CLOSED_COST",str(0),1)
+			endif
+		endif
 
 		rem --- Enable/disable additional options
 		gosub enable_options
@@ -178,8 +199,10 @@ rem ==========================================================================
 		wolotser_key$=key(wolotser_dev,end=*break)
 		if pos(firm_id$+wo_location$+wo_no$=wolotser_key$)<>1 then break
 		readrecord (wolotser_dev)wolotser$
-		ls_sch_qty=ls_sch_qty+wolotser.sch_prod_qty
-		ls_close_qty=ls_close_qty+(wolotser.cls_inp_qty+wolotser.qty_cls_todt)
+		if cvs(wolotser.closed_date$,2)="" then 
+			ls_sch_qty=ls_sch_qty+wolotser.sch_prod_qty
+			ls_close_qty=ls_close_qty+(wolotser.cls_inp_qty+wolotser.qty_cls_todt)
+		endif
 	wend
 	callpoint!.setDevObject("ls_sch_qty",ls_sch_qty)
 	callpoint!.setDevObject("ls_close_qty",ls_close_qty)
