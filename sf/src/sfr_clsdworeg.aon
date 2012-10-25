@@ -95,6 +95,9 @@ rem --- Dimension string templates
 
 rem --- Get SF parameters
 
+
+
+
     find record (sfs01a_dev,key=firm_id$+"SF00",dom=std_missing_params) sfs01a$
     ar$=sfs01a.ar_interface$
     gl$=sfs01a.post_to_gl$
@@ -385,11 +388,10 @@ rem --- Use SQL queries to gather needed data
 rem --- Main Read
 
     while 1
-     
-                recs=recs+1
-                call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
-		read_tpl$ = sqlfetch(sql_chan,end=*break)
+        read_tpl$ = sqlfetch(sql_chan,end=*break)
+        recs=recs+1
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
 rem --- Assign values from SQL query
 		
@@ -823,6 +825,13 @@ glrecap: rem --- Standard G/L Recap Routine
     return
 	
 rem --- Standard AddonSoftware functions (01Mar2006)
+
+
+
+
+
+
+
 
 rem --- Miscellaneous functions
 
