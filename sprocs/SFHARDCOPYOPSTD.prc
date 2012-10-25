@@ -163,7 +163,7 @@ rem --- Trip Read
 rem --- Output Totals
 
 	if tot_recs>0 and report_type$<>"T"
-		data! = rs!.getEmpty	RecordData()
+		data! = rs!.getEmptyRecordData()
 		data!.setFieldValue("UNITS_EA",fill(20,"_"))
 		data!.setFieldValue("COST_EA",fill(20,"_"))
 		data!.setFieldValue("UNITS_TOT",fill(20,"_"))
