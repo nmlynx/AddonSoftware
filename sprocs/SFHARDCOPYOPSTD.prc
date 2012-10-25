@@ -31,6 +31,7 @@ rem --- Get the IN parameters used by the procedure
 	wo_no$ = sp!.getParameter("WO_NO")
 	barista_wd$ = sp!.getParameter("BARISTA_WD")
 	masks$ = sp!.getParameter("MASKS")
+	report_type$ = sp!.getParameter("REPORT_TYPE")
 	
 rem --- masks$ will contain pairs of fields in a single string mask_name^mask|
 
@@ -141,13 +142,15 @@ rem --- Trip Read
 			data!.setFieldValue("REQ_DATE",fndate$(read_tpl.require_date$))
 			data!.setFieldValue("HOURS",str(read_tpl.hrs_per_pce:sf_hours_mask$))
 			data!.setFieldValue("PC_HR",str(read_tpl.pcs_per_hour:ad_units_mask$))
-			data!.setFieldValue("DIRECT",str(read_tpl.direct_rate:sf_rate_mask$))
-			data!.setFieldValue("OVHD",str(read_tpl.ovhd_rate:sf_rate_mask$))
 			data!.setFieldValue("UNITS_EA",str(read_tpl.runtime_hrs:ad_units_mask$))
-			data!.setFieldValue("COST_EA",str(read_tpl.unit_cost:iv_cost_mask$))
 			data!.setFieldValue("SETUP",str(read_tpl.setup_time:sf_hours_mask$))
 			data!.setFieldValue("UNITS_TOT",str(read_tpl.total_time:ad_units_mask$))
-			data!.setFieldValue("COST_TOT",str(read_tpl.tot_std_cost:sf_amt_mask$))
+			if report_type$<>"T"
+				data!.setFieldValue("DIRECT",str(read_tpl.direct_rate:sf_rate_mask$))
+				data!.setFieldValue("OVHD",str(read_tpl.ovhd_rate:sf_rate_mask$))
+				data!.setFieldValue("COST_EA",str(read_tpl.unit_cost:iv_cost_mask$))
+				data!.setFieldValue("COST_TOT",str(read_tpl.tot_std_cost:sf_amt_mask$))
+			endif
 		endif
 		tot_recs=tot_recs+1
 		rs!.insert(data!)
@@ -159,8 +162,8 @@ rem --- Trip Read
 
 rem --- Output Totals
 
-	if tot_recs>0
-		data! = rs!.getEmptyRecordData()
+	if tot_recs>0 and report_type$<>"T"
+		data! = rs!.getEmpty	RecordData()
 		data!.setFieldValue("UNITS_EA",fill(20,"_"))
 		data!.setFieldValue("COST_EA",fill(20,"_"))
 		data!.setFieldValue("UNITS_TOT",fill(20,"_"))

@@ -357,7 +357,7 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
     gosub create_sproc_def
     sproc_vw_name$="SFHARDCOPYOPSTD"
 	sqlprep$="CREATE PROCEDURE SFHARDCOPYOPSTD "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, MASKS VARCHAR(1) IN) "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, MASKS VARCHAR(1) IN, REPORT_TYPE CHAR(1) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPYOPSTD.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'WO Hard Copy Op Std'"
@@ -366,7 +366,7 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
 	sproc_vw_name$="SFHARDCOPYMATSTD"
 	sqlprep$="CREATE PROCEDURE SFHARDCOPYMATSTD "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, MASKS VARCHAR(1) IN) "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, MASKS VARCHAR(1) IN, REPORT_TYPE CHAR(1) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPYMATSTD.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'WO Hard Copy Mat Std'"
@@ -375,7 +375,7 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
 	sproc_vw_name$="SFHARDCOPYSUBSTD"
 	sqlprep$="CREATE PROCEDURE SFHARDCOPYSUBSTD "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, MASKS VARCHAR(1) IN) "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_LOCATION CHAR(2) IN, WO_NO CHAR(7) IN, BARISTA_WD VARCHAR(1) IN, MASKS VARCHAR(1) IN, REPORT_TYPE CHAR(1) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SFHARDCOPYSUBSTD.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'WO Hard Copy Sub Std'"
