@@ -143,6 +143,16 @@ rem --- Open Files
 rem --- Get SF parameters
 	dim sfs_params$:sfs_params_tpl$
 	read record (sfs_params_dev,key=firm_id$+"SF00",dom=std_missing_params) sfs_params$
+	gl$="N"; rem --- Conversion Work Order tasks do not hit GL
+
+	if gl$="Y"
+		gl$="N"
+		status=0
+		source$=pgm(-2)
+		call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"SF",glw11$,gl$,status
+		if status<>0 goto std_exit
+	endif
+	callpoint!.setDevObject("gl",gl$)
 
 rem --- Get IV parameters
 	dim ivs_params$:ivs_params_tpl$
