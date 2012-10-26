@@ -18,10 +18,11 @@
 			<ASC_LICENSE_ID id="ddm_tables.sfe_woconvrn">F580F9A0EC78E2A558E11AC2C715EC6A</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.sfe_woconvrn">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.sfe_woconvrn">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.sfe_woconvrn">20121025</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.sfe_woconvrn">20121025</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.sfe_woconvrn">182536</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.sfe_woconvrn">20121026</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.sfe_woconvrn">20121026</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.sfe_woconvrn">130812</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.sfe_woconvrn">C:/aon_dev/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_DKNM id="ddm_tables.sfe_woconvrn">BATCH_KEY</DD_ATTR_DKNM>
 			<DD_ATTR_FTYP id="ddm_tables.sfe_woconvrn">T</DD_ATTR_FTYP>
 			<DD_ATTR_SLEV id="ddm_tables.sfe_woconvrn">zzzz</DD_ATTR_SLEV>
 			<DD_ATTR_WINT id="ddm_tables.sfe_woconvrn">Conversion Work Order Entry</DD_ATTR_WINT>
@@ -33,9 +34,17 @@
 			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_woconvrnadis">SFE_WOCONVRN    </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.sfe_woconvrnadis">ADIS</DD_ATTR_CPRO>
 		</RECORD>
+		<RECORD id="ddm_table_cpro.sfe_woconvrnbend">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_woconvrnbend">SFE_WOCONVRN    </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.sfe_woconvrnbend">BEND</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_table_cpro.sfe_woconvrnbsho">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_woconvrnbsho">SFE_WOCONVRN    </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.sfe_woconvrnbsho">BSHO</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.sfe_woconvrnbtbl">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.sfe_woconvrnbtbl">SFE_WOCONVRN    </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.sfe_woconvrnbtbl">BTBL</DD_ATTR_CPRO>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_tpls">
@@ -43,7 +52,7 @@
 		<RECORD id="ddm_table_tpls.sfe_woconvrn">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.sfe_woconvrn">SFE_WOCONVRN    </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.sfe_woconvrn">sfe-05</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.sfe_woconvrn">firm_id:c(2),wo_location:c(2),wo_no:c(7),hrs:n(7*),direct_rate:n(7*),ovhd_rate:n(7*),act_ops_tot:n(7*),act_mat_tot:n(7*),act_sub_tot:n(7*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.sfe_woconvrn">firm_id:c(2),wo_location:c(2),wo_no:c(7),batch_no:c(7*),hrs:n(7*),direct_rate:n(7*),ovhd_rate:n(7*),act_ops_tot:n(7*),act_mat_tot:n(7*),act_sub_tot:n(7*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -53,6 +62,12 @@
 			<DD_KEY_NUMBER id="ddm_keys.sfe_woconvrn00">00</DD_KEY_NUMBER>
 			<DD_KEY_DESC id="ddm_keys.sfe_woconvrn00">Primary</DD_KEY_DESC>
 			<DD_KEY_ID id="ddm_keys.sfe_woconvrn00">PRIMARY         </DD_KEY_ID>
+		</RECORD>
+		<RECORD id="ddm_keys.sfe_woconvrn01">
+			<DD_TABLE_ALIAS id="ddm_keys.sfe_woconvrn01">SFE_WOCONVRN    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.sfe_woconvrn01">01</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.sfe_woconvrn01">By Batch</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.sfe_woconvrn01">BATCH_KEY       </DD_KEY_ID>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_key_segs">
@@ -84,6 +99,54 @@
 			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_woconvrn0003">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_woconvrn0003">0</DD_SEGMENT_LEN>
 		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_woconvrn0101">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_woconvrn0101">SFE_WOCONVRN    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_woconvrn0101">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_woconvrn0101">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_woconvrn0101">FIRM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_woconvrn0101">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_woconvrn0101">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_woconvrn0101">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_woconvrn0101">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_woconvrn0101">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_woconvrn0101">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_woconvrn0102">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_woconvrn0102">SFE_WOCONVRN    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_woconvrn0102">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_woconvrn0102">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_woconvrn0102">BATCH_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_woconvrn0102">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_woconvrn0102">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_woconvrn0102">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_woconvrn0102">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_woconvrn0102">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_woconvrn0102">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_woconvrn0103">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_woconvrn0103">SFE_WOCONVRN    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_woconvrn0103">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_woconvrn0103">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_woconvrn0103">WO_LOCATION</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_woconvrn0103">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_woconvrn0103">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_woconvrn0103">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_woconvrn0103">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_woconvrn0103">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_woconvrn0103">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.sfe_woconvrn0104">
+			<DD_TABLE_ALIAS id="ddm_key_segs.sfe_woconvrn0104">SFE_WOCONVRN    </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.sfe_woconvrn0104">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.sfe_woconvrn0104">04</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.sfe_woconvrn0104">WO_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.sfe_woconvrn0104">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.sfe_woconvrn0104">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.sfe_woconvrn0104">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.sfe_woconvrn0104">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.sfe_woconvrn0104">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.sfe_woconvrn0104">N</DD_SEGMENT_MATH>
+		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cols">
 		<ID id="ddm_table_cols">DDM_TABLE_COLS</ID>
@@ -112,7 +175,7 @@
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_woconvrn002">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_woconvrn002">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_woconvrn002">Work Order Location [Not Used]</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.sfe_woconvrn002">2</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_woconvrn002">3</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_woconvrn002">WO_LOCATION</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_woconvrn003">
@@ -128,106 +191,102 @@
 			<DD_ATTR_CPGM id="ddm_table_cols.sfe_woconvrn003">C:/aon_dev/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_MINL id="ddm_table_cols.sfe_woconvrn003">1</DD_ATTR_MINL>
 			<DD_ATTR_PROM id="ddm_table_cols.sfe_woconvrn003">Work Order Number</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.sfe_woconvrn003">3</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_woconvrn003">4</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_woconvrn003">WO_NO</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_woconvrn004">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_woconvrn004">SFE_WOCONVRN    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_woconvrn004">004</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.sfe_woconvrn004">HRS             </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_woconvrn004">HRS             </DD_DVAR_NAME>
-			<DD_COL_REPEATS id="ddm_table_cols.sfe_woconvrn004">1</DD_COL_REPEATS>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_woconvrn004">BATCH_NO        </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_woconvrn004">BATCH_NO        </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.sfe_woconvrn004">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_woconvrn004">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_woconvrn004">Y</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_woconvrn004">0A</DD_DELIM_CHAR>
-			<DD_CREATE_DATE id="ddm_table_cols.sfe_woconvrn004">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.sfe_woconvrn004">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_CPGM id="ddm_table_cols.sfe_woconvrn004">C:/aon_dev/aon/;</DD_ATTR_CPGM>
-			<DD_ATTR_CTLY id="ddm_table_cols.sfe_woconvrn004">+1</DD_ATTR_CTLY>
-			<DD_ATTR_LABL id="ddm_table_cols.sfe_woconvrn004">Operations Hours</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.sfe_woconvrn004">Op Hrs</DD_ATTR_LABS>
-			<DD_ATTR_PROM id="ddm_table_cols.sfe_woconvrn004">Enter direct labor hours.</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.sfe_woconvrn004">20</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_woconvrn004">HRS</SQL_COLUMN_NAME>
+			<DD_CREATE_DATE id="ddm_table_cols.sfe_woconvrn004">20121026</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.sfe_woconvrn004">20121026</DD_LSTREV_DATE>
+			<DD_ATTR_COLW id="ddm_table_cols.sfe_woconvrn004">0</DD_ATTR_COLW>
+			<DD_ATTR_MLAN id="ddm_table_cols.sfe_woconvrn004">N</DD_ATTR_MLAN>
+			<DD_ATTR_MAXL id="ddm_table_cols.sfe_woconvrn004">0</DD_ATTR_MAXL>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_woconvrn004">2</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_woconvrn005">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_woconvrn005">SFE_WOCONVRN    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_woconvrn005">005</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.sfe_woconvrn005">DIRECT_RATE     </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_woconvrn005">DIRECT_RATE     </DD_DVAR_NAME>
-			<DD_COL_REPEATS id="ddm_table_cols.sfe_woconvrn005">0</DD_COL_REPEATS>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_woconvrn005">HRS             </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_woconvrn005">HRS             </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.sfe_woconvrn005">1</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_woconvrn005">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_woconvrn005">Y</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_woconvrn005">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_woconvrn005">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_woconvrn005">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_CPGM id="ddm_table_cols.sfe_woconvrn005">C:/aon_dev/aon/;</DD_ATTR_CPGM>
-			<DD_ATTR_LABL id="ddm_table_cols.sfe_woconvrn005">Rate</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.sfe_woconvrn005">Op Rate</DD_ATTR_LABS>
-			<DD_ATTR_PROM id="ddm_table_cols.sfe_woconvrn005">Enter direct labor rate.</DD_ATTR_PROM>
+			<DD_ATTR_CTLY id="ddm_table_cols.sfe_woconvrn005">+1</DD_ATTR_CTLY>
+			<DD_ATTR_LABL id="ddm_table_cols.sfe_woconvrn005">Operations Hours</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.sfe_woconvrn005">Op Hrs</DD_ATTR_LABS>
+			<DD_ATTR_PROM id="ddm_table_cols.sfe_woconvrn005">Enter direct labor hours.</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_woconvrn005">21</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_woconvrn005">DIRECT_RATE</SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_woconvrn005">HRS</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_woconvrn006">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_woconvrn006">SFE_WOCONVRN    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_woconvrn006">006</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.sfe_woconvrn006">OVHD_RATE       </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_woconvrn006">OVHD_RATE       </DD_DVAR_NAME>
-			<DD_COL_REPEATS id="ddm_table_cols.sfe_woconvrn006">1</DD_COL_REPEATS>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_woconvrn006">DIRECT_RATE     </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_woconvrn006">DIRECT_RATE     </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.sfe_woconvrn006">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_woconvrn006">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_woconvrn006">Y</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_woconvrn006">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_woconvrn006">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_woconvrn006">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_CPGM id="ddm_table_cols.sfe_woconvrn006">C:/aon_dev/aon/;</DD_ATTR_CPGM>
-			<DD_ATTR_LABL id="ddm_table_cols.sfe_woconvrn006">Overhead</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.sfe_woconvrn006">Op Ovhd</DD_ATTR_LABS>
-			<DD_ATTR_PROM id="ddm_table_cols.sfe_woconvrn006">Enter overhead factor.</DD_ATTR_PROM>
+			<DD_ATTR_LABL id="ddm_table_cols.sfe_woconvrn006">Rate</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.sfe_woconvrn006">Op Rate</DD_ATTR_LABS>
+			<DD_ATTR_PROM id="ddm_table_cols.sfe_woconvrn006">Enter direct labor rate.</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_woconvrn006">22</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_woconvrn006">OVHD_RATE</SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_woconvrn006">DIRECT_RATE</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_woconvrn007">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_woconvrn007">SFE_WOCONVRN    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_woconvrn007">007</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.sfe_woconvrn007">ACT_OPS_TOT     </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_woconvrn007">ACT_OPS_TOT     </DD_DVAR_NAME>
-			<DD_COL_REPEATS id="ddm_table_cols.sfe_woconvrn007">0</DD_COL_REPEATS>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_woconvrn007">OVHD_RATE       </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_woconvrn007">OVHD_RATE       </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.sfe_woconvrn007">1</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_woconvrn007">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_woconvrn007">Y</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_woconvrn007">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_woconvrn007">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_woconvrn007">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_LABL id="ddm_table_cols.sfe_woconvrn007">Operations Total</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.sfe_woconvrn007">Ops Tot</DD_ATTR_LABS>
-			<DD_ATTR_PROM id="ddm_table_cols.sfe_woconvrn007">Actual Operations Total</DD_ATTR_PROM>
+			<DD_ATTR_CPGM id="ddm_table_cols.sfe_woconvrn007">C:/aon_dev/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_LABL id="ddm_table_cols.sfe_woconvrn007">Overhead</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.sfe_woconvrn007">Op Ovhd</DD_ATTR_LABS>
+			<DD_ATTR_PROM id="ddm_table_cols.sfe_woconvrn007">Enter overhead factor.</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_woconvrn007">23</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_woconvrn007">ACT_OPS_TOT</SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_woconvrn007">OVHD_RATE</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_woconvrn008">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_woconvrn008">SFE_WOCONVRN    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_woconvrn008">008</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.sfe_woconvrn008">ACT_MAT_TOT     </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_woconvrn008">ACT_MAT_TOT     </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_woconvrn008">ACT_OPS_TOT     </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_woconvrn008">ACT_OPS_TOT     </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.sfe_woconvrn008">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_woconvrn008">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_woconvrn008">Y</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.sfe_woconvrn008">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.sfe_woconvrn008">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.sfe_woconvrn008">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_CPGM id="ddm_table_cols.sfe_woconvrn008">C:/aon_dev/aon/;</DD_ATTR_CPGM>
-			<DD_ATTR_CTLX id="ddm_table_cols.sfe_woconvrn008">+25</DD_ATTR_CTLX>
-			<DD_ATTR_CTLY id="ddm_table_cols.sfe_woconvrn008">-1</DD_ATTR_CTLY>
-			<DD_ATTR_LABL id="ddm_table_cols.sfe_woconvrn008">Materials Total</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.sfe_woconvrn008">Mats Tot</DD_ATTR_LABS>
-			<DD_ATTR_PROM id="ddm_table_cols.sfe_woconvrn008">Actual Material Totals</DD_ATTR_PROM>
+			<DD_ATTR_LABL id="ddm_table_cols.sfe_woconvrn008">Operations Total</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.sfe_woconvrn008">Ops Tot</DD_ATTR_LABS>
+			<DD_ATTR_PROM id="ddm_table_cols.sfe_woconvrn008">Actual Operations Total</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_woconvrn008">24</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_woconvrn008">ACT_MAT_TOT</SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_woconvrn008">ACT_OPS_TOT</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.sfe_woconvrn009">
 			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_woconvrn009">SFE_WOCONVRN    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.sfe_woconvrn009">009</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.sfe_woconvrn009">ACT_SUB_TOT     </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.sfe_woconvrn009">ACT_SUB_TOT     </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_woconvrn009">ACT_MAT_TOT     </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_woconvrn009">ACT_MAT_TOT     </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.sfe_woconvrn009">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.sfe_woconvrn009">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.sfe_woconvrn009">Y</DD_FIELD_DELIM>
@@ -237,11 +296,31 @@
 			<DD_ATTR_CPGM id="ddm_table_cols.sfe_woconvrn009">C:/aon_dev/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_CTLX id="ddm_table_cols.sfe_woconvrn009">+25</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.sfe_woconvrn009">-1</DD_ATTR_CTLY>
-			<DD_ATTR_LABL id="ddm_table_cols.sfe_woconvrn009">Subcontracts Total</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.sfe_woconvrn009">Subs Total</DD_ATTR_LABS>
-			<DD_ATTR_PROM id="ddm_table_cols.sfe_woconvrn009">Actual Subcontracts Total</DD_ATTR_PROM>
+			<DD_ATTR_LABL id="ddm_table_cols.sfe_woconvrn009">Materials Total</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.sfe_woconvrn009">Mats Tot</DD_ATTR_LABS>
+			<DD_ATTR_PROM id="ddm_table_cols.sfe_woconvrn009">Actual Material Totals</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.sfe_woconvrn009">25</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_woconvrn009">ACT_SUB_TOT</SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_woconvrn009">ACT_MAT_TOT</SQL_COLUMN_NAME>
+		</RECORD>
+		<RECORD id="ddm_table_cols.sfe_woconvrn010">
+			<DD_TABLE_ALIAS id="ddm_table_cols.sfe_woconvrn010">SFE_WOCONVRN    </DD_TABLE_ALIAS>
+			<DD_SEQUENCE id="ddm_table_cols.sfe_woconvrn010">010</DD_SEQUENCE>
+			<DD_DATA_NAME id="ddm_table_cols.sfe_woconvrn010">ACT_SUB_TOT     </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.sfe_woconvrn010">ACT_SUB_TOT     </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.sfe_woconvrn010">0</DD_COL_REPEATS>
+			<DD_COL_OCCURS id="ddm_table_cols.sfe_woconvrn010">0</DD_COL_OCCURS>
+			<DD_FIELD_DELIM id="ddm_table_cols.sfe_woconvrn010">Y</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.sfe_woconvrn010">0A</DD_DELIM_CHAR>
+			<DD_CREATE_DATE id="ddm_table_cols.sfe_woconvrn010">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.sfe_woconvrn010">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_CPGM id="ddm_table_cols.sfe_woconvrn010">C:/aon_dev/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_CTLX id="ddm_table_cols.sfe_woconvrn010">+25</DD_ATTR_CTLX>
+			<DD_ATTR_CTLY id="ddm_table_cols.sfe_woconvrn010">-1</DD_ATTR_CTLY>
+			<DD_ATTR_LABL id="ddm_table_cols.sfe_woconvrn010">Subcontracts Total</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.sfe_woconvrn010">Subs Total</DD_ATTR_LABS>
+			<DD_ATTR_PROM id="ddm_table_cols.sfe_woconvrn010">Actual Subcontracts Total</DD_ATTR_PROM>
+			<DD_ATTR_TIND id="ddm_table_cols.sfe_woconvrn010">26</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.sfe_woconvrn010">ACT_SUB_TOT</SQL_COLUMN_NAME>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_disp">
@@ -257,7 +336,7 @@
 			<DD_ATTR_CTLY id="ddm_table_disp.sfe_woconvrn001">-1</DD_ATTR_CTLY>
 			<DD_ATTR_CTLW id="ddm_table_disp.sfe_woconvrn001">35</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_woconvrn001">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn001">4</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn001">5</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_disp.sfe_woconvrn002">
 			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_woconvrn002">SFE_WOCONVRN    </DD_TABLE_ALIAS>
@@ -270,7 +349,7 @@
 			<DD_ATTR_CTLY id="ddm_table_disp.sfe_woconvrn002">0</DD_ATTR_CTLY>
 			<DD_ATTR_CTLW id="ddm_table_disp.sfe_woconvrn002">160</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_woconvrn002">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn002">5</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn002">6</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_disp.sfe_woconvrn003">
 			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_woconvrn003">SFE_WOCONVRN    </DD_TABLE_ALIAS>
@@ -282,7 +361,7 @@
 			<DD_ATTR_CTLX id="ddm_table_disp.sfe_woconvrn003">0</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_disp.sfe_woconvrn003">0</DD_ATTR_CTLY>
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_woconvrn003">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn003">6</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn003">7</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_disp.sfe_woconvrn004">
 			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_woconvrn004">SFE_WOCONVRN    </DD_TABLE_ALIAS>
@@ -292,7 +371,7 @@
 			<DD_ATTR_CTLX id="ddm_table_disp.sfe_woconvrn004">0</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_disp.sfe_woconvrn004">0</DD_ATTR_CTLY>
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_woconvrn004">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn004">7</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn004">8</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_disp.sfe_woconvrn005">
 			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_woconvrn005">SFE_WOCONVRN    </DD_TABLE_ALIAS>
@@ -304,7 +383,7 @@
 			<DD_ATTR_CTLX id="ddm_table_disp.sfe_woconvrn005">0</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_disp.sfe_woconvrn005">0</DD_ATTR_CTLY>
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_woconvrn005">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn005">8</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn005">9</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_disp.sfe_woconvrn006">
 			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_woconvrn006">SFE_WOCONVRN    </DD_TABLE_ALIAS>
@@ -316,7 +395,7 @@
 			<DD_ATTR_CTLX id="ddm_table_disp.sfe_woconvrn006">+26</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_disp.sfe_woconvrn006">-1</DD_ATTR_CTLY>
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_woconvrn006">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn006">9</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn006">10</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_disp.sfe_woconvrn007">
 			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_woconvrn007">SFE_WOCONVRN    </DD_TABLE_ALIAS>
@@ -328,7 +407,7 @@
 			<DD_ATTR_CTLX id="ddm_table_disp.sfe_woconvrn007">-26</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_disp.sfe_woconvrn007">+1</DD_ATTR_CTLY>
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_woconvrn007">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn007">10</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn007">11</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_disp.sfe_woconvrn008">
 			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_woconvrn008">SFE_WOCONVRN    </DD_TABLE_ALIAS>
@@ -340,7 +419,7 @@
 			<DD_ATTR_CTLX id="ddm_table_disp.sfe_woconvrn008">+26</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_disp.sfe_woconvrn008">-1</DD_ATTR_CTLY>
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_woconvrn008">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn008">11</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn008">12</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_disp.sfe_woconvrn009">
 			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_woconvrn009">SFE_WOCONVRN    </DD_TABLE_ALIAS>
@@ -352,7 +431,7 @@
 			<DD_ATTR_CTLX id="ddm_table_disp.sfe_woconvrn009">+28</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_disp.sfe_woconvrn009">-7</DD_ATTR_CTLY>
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_woconvrn009">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn009">12</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn009">13</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_disp.sfe_woconvrn010">
 			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_woconvrn010">SFE_WOCONVRN    </DD_TABLE_ALIAS>
@@ -365,7 +444,7 @@
 			<DD_ATTR_CTLY id="ddm_table_disp.sfe_woconvrn010">0</DD_ATTR_CTLY>
 			<DD_ATTR_CTLW id="ddm_table_disp.sfe_woconvrn010">166</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_woconvrn010">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn010">13</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn010">14</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_disp.sfe_woconvrn011">
 			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_woconvrn011">SFE_WOCONVRN    </DD_TABLE_ALIAS>
@@ -378,7 +457,7 @@
 			<DD_ATTR_CTLY id="ddm_table_disp.sfe_woconvrn011">0</DD_ATTR_CTLY>
 			<DD_ATTR_CTLW id="ddm_table_disp.sfe_woconvrn011">80</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_woconvrn011">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn011">14</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn011">15</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_disp.sfe_woconvrn012">
 			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_woconvrn012">SFE_WOCONVRN    </DD_TABLE_ALIAS>
@@ -391,7 +470,7 @@
 			<DD_ATTR_CTLY id="ddm_table_disp.sfe_woconvrn012">0</DD_ATTR_CTLY>
 			<DD_ATTR_CTLW id="ddm_table_disp.sfe_woconvrn012">35</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_woconvrn012">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn012">15</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn012">16</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_disp.sfe_woconvrn013">
 			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_woconvrn013">SFE_WOCONVRN    </DD_TABLE_ALIAS>
@@ -404,7 +483,7 @@
 			<DD_ATTR_CTLY id="ddm_table_disp.sfe_woconvrn013">0</DD_ATTR_CTLY>
 			<DD_ATTR_CTLW id="ddm_table_disp.sfe_woconvrn013">35</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_woconvrn013">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn013">16</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn013">17</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_disp.sfe_woconvrn014">
 			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_woconvrn014">SFE_WOCONVRN    </DD_TABLE_ALIAS>
@@ -417,7 +496,7 @@
 			<DD_ATTR_CTLY id="ddm_table_disp.sfe_woconvrn014">0</DD_ATTR_CTLY>
 			<DD_ATTR_CTLW id="ddm_table_disp.sfe_woconvrn014">80</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_woconvrn014">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn014">17</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn014">18</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_disp.sfe_woconvrn015">
 			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_woconvrn015">SFE_WOCONVRN    </DD_TABLE_ALIAS>
@@ -430,7 +509,7 @@
 			<DD_ATTR_CTLY id="ddm_table_disp.sfe_woconvrn015">0</DD_ATTR_CTLY>
 			<DD_ATTR_CTLW id="ddm_table_disp.sfe_woconvrn015">80</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_woconvrn015">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn015">18</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn015">19</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_disp.sfe_woconvrn016">
 			<DD_TABLE_ALIAS id="ddm_table_disp.sfe_woconvrn016">SFE_WOCONVRN    </DD_TABLE_ALIAS>
@@ -443,7 +522,7 @@
 			<DD_ATTR_CTLY id="ddm_table_disp.sfe_woconvrn016">+1</DD_ATTR_CTLY>
 			<DD_ATTR_CTLH id="ddm_table_disp.sfe_woconvrn016">0</DD_ATTR_CTLH>
 			<DD_ATTR_GHDR id="ddm_table_disp.sfe_woconvrn016">Conversion Data</DD_ATTR_GHDR>
-			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn016">19</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.sfe_woconvrn016">20</DD_ATTR_TIND>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_cpro">
@@ -663,6 +742,33 @@
 			<DD_ATTR_PADC id="ddm_elements.wo_no">30</DD_ATTR_PADC>
 			<DD_ATTR_PADJ id="ddm_elements.wo_no">R</DD_ATTR_PADJ>
 			<DD_ATTR_PREC id="ddm_elements.wo_no">0</DD_ATTR_PREC>
+		</RECORD>
+		<RECORD id="ddm_elements.batch_no">
+			<DD_DATA_NAME id="ddm_elements.batch_no">BATCH_NO        </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.batch_no">Batch Entry Control Number</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.batch_no">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.batch_no">7</DD_DATA_LENGTH>
+			<DD_MASK_TYPE id="ddm_elements.batch_no"> </DD_MASK_TYPE>
+			<ASC_COMP_ID id="ddm_elements.batch_no">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.batch_no">AD </ASC_PROD_ID>
+			<LOCALIZATION_EX id="ddm_elements.batch_no">N</LOCALIZATION_EX>
+			<DD_CREATE_DATE id="ddm_elements.batch_no">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.batch_no">20090714</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW id="ddm_elements.batch_no">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.batch_no">0</DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.batch_no">E</DD_ATTR_CTYP>
+			<DD_ATTR_DCOM id="ddm_elements.batch_no">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.batch_no">            </DD_ATTR_DEXP>
+			<DD_ATTR_LABL id="ddm_elements.batch_no">Batch Entry Control Number</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.batch_no">Batch Entry No</DD_ATTR_LABS>
+			<DD_ATTR_MAXL id="ddm_elements.batch_no">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.batch_no">0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL id="ddm_elements.batch_no">0</DD_ATTR_MINL>
+			<DD_ATTR_MSKI id="ddm_elements.batch_no">0000000</DD_ATTR_MSKI>
+			<DD_ATTR_MSKO id="ddm_elements.batch_no">0000000</DD_ATTR_MSKO>
+			<DD_ATTR_PADC id="ddm_elements.batch_no">30</DD_ATTR_PADC>
+			<DD_ATTR_PADJ id="ddm_elements.batch_no">R</DD_ATTR_PADJ>
+			<DD_ATTR_PREC id="ddm_elements.batch_no">0</DD_ATTR_PREC>
 		</RECORD>
 		<RECORD id="ddm_elements.hrs">
 			<DD_DATA_NAME id="ddm_elements.hrs">HRS             </DD_DATA_NAME>
