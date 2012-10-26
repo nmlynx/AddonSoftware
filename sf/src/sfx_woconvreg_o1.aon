@@ -1,6 +1,6 @@
-rem --- Work Order Work In Process Conversion Register
-rem --- Program sfx_ba v8.0.0 17Jan2008 (sfx_ba)
-rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/17/2008 12:44:38)
+rem --- Work Order Work In Process Conversion Register - Print
+rem --- Program sfx_bb v8.0.0 17Jan2008 (sfx_bb)
+rem --- Created by c:\codeport_bbj\adx_codeport.bbj v1.1.5 (01/17/2008 02:06:53)
 
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
@@ -13,6 +13,18 @@ rem --- Retrieve the program path
 
         pgmdir$=stbl("+DIR_PGM",err=*next)
 
+rem --- Document initializations
+
+        OutVect!=bbjAPI().getSysGui().makeVector()
+        HdrVect!=bbjAPI().getSysGui().makeVector()
+        BrkVect!=bbjAPI().getSysGui().makeVector()
+        TotVect!=bbjAPI().getSysGui().makeVector()
+        rep_date$=date(0:"%Mz/%Dz/%Yd")
+        rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+        rep_time$=date(0:"%hz:%mz %p")
+        rep_time_stamp$=date(0:"%Hz%mz%sz")
+        rep_prog$=pgm(-2)
+
 rem --- Retrieve sysinfo data
 
         sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
@@ -23,89 +35,116 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-        files=10,begfile=1,endfile=files
+        files=5,begfile=1,endfile=files
         dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-        files$[1]="arm-01",ids$[1]="ARM_CUSTMAST"
-        files$[2]="ars_params",ids$[2]="ARS_PARAMS"
-        files$[3]="gls_params",ids$[3]="GLS_PARAMS"
-        files$[4]="ivm-01",ids$[4]="IVM_ITEMMAST"
-        files$[5]="ivc_prodcode",ids$[5]="IVC_PRODCODE"
-        files$[6]="ivs_params",ids$[6]="IVS_PARAMS"
-        files$[7]="sfe-01",ids$[7]="SFE_WOMASTR"
-        files$[8]="sfe-05",ids$[8]="SFE_WOCONVRN"
-        files$[9]="sfm-10",ids$[9]="SFC_WOTYPECD"
-        files$[10]="sfs_params",ids$[10]="SFS_PARAMS"
+        files$[1]="ivm-01",ids$[1]="IVM_ITEMMAST"
+        files$[2]="ivs_params",ids$[2]="IVS_PARAMS"
+        files$[3]="sfe-01",ids$[3]="SFE_WOMASTR"
+        files$[4]="sfe-05",ids$[4]="SFE_WOCONVRN"
+        files$[5]="sfs_params",ids$[5]="SFS_PARAMS"
         call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
         if status goto std_exit
-        arm01_dev=channels[1]
-        ars01a_dev=channels[2]
-        gls01a_dev=channels[3]
-        ivm01_dev=channels[4]
-        ivm10_dev=channels[5]
-        ivs01a_dev=channels[6]
-        sfe01_dev=channels[7]
-        sfe05_dev=channels[8]
-        sfm10_dev=channels[9]
-        sfs01a_dev=channels[10]
+        ivm01_dev=channels[1]
+        ivs01a_dev=channels[2]
+        sfe01_dev=channels[3]
+        sfe05_dev=channels[4]
+        sfs01a_dev=channels[5]
 
 rem --- Dimension string templates
 
-        dim arm01a$:templates$[1],ars01a$:templates$[2],gls01a$:templates$[3],
-:       ivm01a$:templates$[4],ivm10a$:templates$[5],ivs01a$:templates$[6],
-:       sfe01a$:templates$[7],sfe05a$:templates$[8],sfm10a$:templates$[9],
-:       sfs01a$:templates$[10]
+        dim ivm01a$:templates$[1],ivs01a$:templates$[2],sfe01a$:templates$[3],
+:       sfe05a$:templates$[4],sfs01a$:templates$[5]
 
 rem --- Retrieve parameter records
 
-        gls01a_key$=firm_id$+"GL00"
-        find record (gls01a_dev,key=gls01a_key$,err=std_missing_params) gls01a$
         ivs01a_key$=firm_id$+"IV00"
         find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
         sfs01a_key$=firm_id$+"SF00"
         find record (sfs01a_dev,key=sfs01a_key$,err=std_missing_params) sfs01a$
 
-rem --- Parameters
-
-        if sfs01a.ar_interface$<>"N" then 
-            find record (ars01a_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
-            c0=num(ars01a.firm_id$)
-            c1=len(ars01a.customer_input$)
-        endif
-        g0=num(gls01a.acct_length$)
-        g1=num(gls01a.max_acct_len$)
-        i9=ivs01a.item_id_len
-        i1=num(ivs01a.precision$)
-
 rem --- Init Data
-        dim desc[3]
-        h0=132
-        headings=2,h=0,when$=sysinfo.system_date$,clock$=""
-        dim headings$[headings]
-        headings$[0]=sysinfo.firm_name$
-        headings$[1]=sysinfo.task_desc$
-        m0=len(sfs01a.empl_output$)
-        g5=len(gls01a.acct_output$)
-		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","A","",m1$,0,m1
-		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",m2$,0,m2
 
-        for x=1 to 3
-            let desc[x]=num(FIELD(ivs01a$,"desc_len_"+str(x:"00")))
+        dim t[5]
+        more=1
+
+rem ---  column heading
+
+        dim columns$[7,10]
+            columns=7
+            columns$[0,0]=Translate!.getTranslation("AON_WO_#"),                  columns$[0,1]="C",columns$[0,2]="10"
+            columns$[1,0]=Translate!.getTranslation("AON_ITEM"),                  columns$[1,1]="C",columns$[1,2]="10"
+            columns$[2,0]=Translate!.getTranslation("AON_DESCRIPTION"),           columns$[2,1]="C",columns$[2,2]="25"
+            columns$[3,0]=Translate!.getTranslation("AON_HOURS"),                 columns$[3,1]="N",columns$[3,2]="10",columns$[3,3]=m1$,columns$[3,10]="T"
+            columns$[4,0]=Translate!.getTranslation("AON_LABOR"),                 columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m2$,columns$[4,10]="T"
+            columns$[5,0]=Translate!.getTranslation("AON_MAT'LS"),                columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m2$,columns$[5,10]="T"
+            columns$[6,0]=Translate!.getTranslation("AON_SUB'S"),                 columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m2$,columns$[6,10]="T"
+            columns$[7,0]=Translate!.getTranslation("AON_TOTAL"),                 columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m2$,columns$[7,10]="T"
+
+rem --- Background
+
+        call pgmdir$+"adc_progress.aon","N","","","","",8,sfe05_dev,1,meter_num,ignore_status
+    
+rem --- Init Read
+
+        read (sfe05_dev,key=firm_id$,dom=*next)
+
+rem --- Main Read
+
+    while more
+        k$=key(sfe05_dev,end=*break)
+        if pos(firm_id$=k$)<>1 then break
+
+rem --- Breaks
+
+        read record (sfe05_dev,key=k$) sfe05a$
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
+        read record (sfe01_dev,key=sfe05a.firm_id$+sfe05a.wo_location$+sfe05a.wo_no$,dom=*continue) sfe01a$
+        if sfe01a.wo_category$="I" then 
+            find record (ivm01_dev,key=firm_id$+sfe01a.item_id$,dom=print_data) ivm01a$
+            dim item_desc$(30)
+            item_desc$(1)=ivm01a.item_desc$
+            sfe01a.description_01$=item_desc$
+        endif
+
+rem --- Print
+
+print_data:
+
+        OutVect!.addItem(sfe05a.wo_no$)
+        OutVect!.addItem(sfe01a.item_id$)
+        OutVect!.addItem(sfe01a.description_01$)
+        OutVect!.addItem(str(sfe05a.hrs:m1$))
+        OutVect!.addItem(str(sfe05a.act_ops_tot:m2$))
+        OutVect!.addItem(str(sfe05a.act_mat_tot:m2$))
+        OutVect!.addItem(str(sfe05a.act_sub_tot:m2$))
+        OutVect!.addItem(str(sfe05a.act_ops_tot+sfe05a.act_mat_tot+sfe05a.act_sub_tot:m2$)) 
+        sfe05_field$=fattr(sfe05a$,"")
+        sfe05_field$=sfe05_field$(pos(Translate!.getTranslation("AON_HRS")=cvs(sfe05_field$,8)))
+        for x=0 to 5
+            xfield$=sfe05_field$(1,pos($0A$=sfe05_field$)-1)
+            t[x]=t[x]+num(FIELD(sfe05a$,xfield$))
+            sfe05_field$=sfe05_field$(pos($0A$=sfe05_field$)+1)
         next x
+        l=l+1
+    wend
 
-rem --- Run Report?
+done: rem --- End
+     
+        xwk=fnblank(8)
+        TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
+        xwk=fnblank(2)
+        OutVect!.addItem(Translate!.getTranslation("AON_REPORT_TOTALS:"))
+        OutVect!.addItem(str(t[0]:m2$))
+        OutVect!.addItem(str(t[3]:m1$))
+        OutVect!.addItem(str(t[4]:m1$))
+        OutVect!.addItem(str(t[5]:m1$))
+        OutVect!.addItem(str(t[3]+t[4]+t[5]:m1$))
 
-        msg_id$="AON_RUN_QUERY"
-        dim x$:stbl("+SYSINFO_TPL")
-        dim msg_tokens$[1]
-        x$=stbl("+SYSINFO")                                                            
-        msg_tokens$[1]=x.task_desc$
-        gosub disp_message
-        if msg_opt$<>"Y" then goto std_exit
+        out_action$="PRT-PDF"
+        next_overlay$=pgmdir$+"sfx_woconvupdt.aon"
+        goto std_exit
 
-rem --- Overlay
-
-        run pgmdir$+"sfx_woregister_o1.aon"
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -172,16 +211,16 @@ rem --- fnglobal$: Return string value of passed STBL variable
         return q1$
     fnend
 
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+   
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
+
 rem #endinclude std_functions.src
-
-rem #include disp_message.src
-
-disp_message:rem --- Display Message Dialog
-
-    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
-return
-	
-rem #endinclude disp_message.src
 
 rem #include std_error.src
 
@@ -232,7 +271,8 @@ rem #include std_end.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+   run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
 rem #endinclude std_end.src
 
