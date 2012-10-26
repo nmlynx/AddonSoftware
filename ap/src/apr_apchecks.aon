@@ -164,7 +164,7 @@ rem --- Main Read
 rem --- Breaks
 
         if ape04a.ap_type$<>t0$ gosub ap_type_break
-        if ape04a.ap_type$+ape04a.vendor$<>t1$ gosub new_vendor 
+        if ape04a.ap_type$+ape04a.vendor_id$<>t1$ gosub new_vendor 
 
         gosub inv_detail
 
@@ -491,7 +491,7 @@ vendor_header:
         address$(1)=apm01a.addr_line_1$+apm01a.addr_line_2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$,vend_name$=apm01a.vendor_name$
         x1$(1)=fnmask$(ape04a.vendor_id$(1,vendor_length),m0$)
 
-        t1$=ape04a.ap_type$+ape04a.vendor$
+        t1$=ape04a.ap_type$+ape04a.vendor_id$
         accntid$=apm01a.vendor_acct$
         start_block = 1
 
