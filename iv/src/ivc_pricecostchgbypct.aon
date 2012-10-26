@@ -182,13 +182,8 @@ rem --- Read item and warehouse records
         
     if begvend$<>"" and vendor$<begvend$ then continue
     if endvend$<>"" and vendor$>endvend$ then continue
-rem if action$="R" and cvs(itemwhse_rec.cur_price_cd$,2)<>price_code$ then continue
 
-    if action$ <> "C" 
-            if len(price_code$)<>0
-                if cvs(itemwhse_rec.cur_price_cd$, 2) <> cvs(price_code$, 2) then continue
-            endif
-        endif    
+	if action$="R" and cvs(itemwhse_rec.cur_price_cd$,2)<>price_code$ then continue
 
 rem --- Generate price/cost change record
 
