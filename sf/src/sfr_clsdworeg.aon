@@ -409,7 +409,7 @@ rem --- Assign values from SQL query
 		curr_prod_qty 	 	= read_tpl.SCH_PROD_QTY
 		prior_clsd_qty 	 	= read_tpl.QTY_CLS_TODT
 		this_close_qty 	 	= read_tpl.CLS_INP_QTY
-		complete_yn$ 	 	= read_tpl.COMPLETE_FLG$
+		complete_yn$ 	 	= iff(read_tpl.COMPLETE_FLG$="Y","Y","N")
 		recalc_flag$ 		= read_tpl.RECALC_FLAG$
                 wo_lotser_item$     = read_tpl.LOTSER_ITEM$
                 total_ls_this_cls_qty = read_tpl.TOT_LS_CLS_INP_QTY
@@ -514,7 +514,7 @@ rem --- Calculate Close Value, Variances, etc.
 			LET bal_still_open_qty=curr_prod_qty-(prior_clsd_qty+this_close_qty)
 		endif
 
-        if complete_yn$<>"N"
+        if complete_yn$="Y"
             if close_at_std_act$="A"
                 let tot_closed_Value=tot_curr_wip
 	        else
