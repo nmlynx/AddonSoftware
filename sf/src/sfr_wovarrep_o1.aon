@@ -517,6 +517,12 @@ done: rem --- End
 			u3_variance_percent=0
 		endif
 
+        if abs(u3_variance_percent)>999.9 then 
+            u3_variance_percent$=" ****** " 
+        else 
+            u3_variance_percent$=str(u3_variance_percent:pct_mask$)
+        endif	
+		
         blank=fnblank(16)
         TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
         blank=fnblank(1)
@@ -535,7 +541,7 @@ done: rem --- End
         OutVect!.addItem(str(u_actuals[4]:sf_amt_mask$)); rem Subs
         OutVect!.addItem(str(u1_actual_tot:grand_amt_mask$))
         OutVect!.addItem(str(u2_variance:sf_amt_mask$))
-        OutVect!.addItem(str(u3_variance_percent))
+        OutVect!.addItem(str(u3_variance_percent$))
   
         if u_standards[5]<>0 then 
             blank=fnblank(12)
