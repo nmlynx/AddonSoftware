@@ -203,8 +203,8 @@ rem --- Can't unclose more than previously closed
 	endif
 
 rem --- Work order complete?
-	complete_flg$=cvs(callpoint!.getColumnData("SFE_WOCLOSE.COMPLETE_FLG"),2)
-	if cls_inp_qty+qty_cls_todt>=num(callpoint!.getColumnData("SFE_WOCLOSE.SCH_PROD_QTY")) and complete_flg$="" then
+	complete_flg$=callpoint!.getColumnData("SFE_WOCLOSE.COMPLETE_FLG")
+	if cls_inp_qty+qty_cls_todt>=num(callpoint!.getColumnData("SFE_WOCLOSE.SCH_PROD_QTY")) then
 		complete_flg$="Y"
 		callpoint!.setColumnData("SFE_WOCLOSE.COMPLETE_FLG",complete_flg$,1)
 		callpoint!.setStatus("MODIFIED")
@@ -276,6 +276,13 @@ rem --- Display isn't being refreshed after wo reopened in ADIS , so must do it 
 rem --- Need to ask about closing this work order
 	callpoint!.setDevObject("ask_close_question","1")
 
+rem --- Initialize complete flag as necessary
+	complete_flg$=callpoint!.getColumnData("SFE_WOCLOSE.COMPLETE_FLG")
+	if pos(complete_flg$="YN")=0 then
+		complete_flg$="N"
+		callpoint!.setColumnData("SFE_WOCLOSE.COMPLETE_FLG",complete_flg$,1)
+	endif
+
 rem --- Close at standard or actual?
 	wotypecd_dev=fnget_dev("@SFC_WOTYPECD")
 	dim wotypecd$:fnget_tpl$("@SFC_WOTYPECD")
@@ -283,7 +290,6 @@ rem --- Close at standard or actual?
 	findrecord(wotypecd_dev,key=firm_id$+"A"+wo_type$,dom=*next)wotypecd$
 	stdact_flag$=wotypecd.stdact_flag$
 	callpoint!.setDevObject("stdact_flag",stdact_flag$)
-	complete_flg$=callpoint!.getColumnData("SFE_WOCLOSE.COMPLETE_FLG")
 	gosub enable_closed_cost
 
 rem --- Work order scheduled to be closed?
@@ -302,7 +308,7 @@ rem --- Work order scheduled to be closed?
 			rem --- Reopen work order
 			remove(closedwo_dev,key=firm_id$+wo_location$+wo_no$,dom=*next)
 			callpoint!.setColumnData("SFE_WOCLOSE.CLS_INP_DATE","",1)
-			callpoint!.setColumnData("SFE_WOCLOSE.COMPLETE_FLG","",1)
+			callpoint!.setColumnData("SFE_WOCLOSE.COMPLETE_FLG","N",1)
 			callpoint!.setColumnData("SFE_WOCLOSE.CLS_INP_QTY","0",1)
 			callpoint!.setColumnData("SFE_WOCLOSE.CLOSED_COST","0",1)
 			callpoint!.setStatus("REFRESH-SAVE")
@@ -318,7 +324,7 @@ rem --- Work order scheduled to be closed?
 					wolotser_key$=key(wolotser_dev,end=*break)
 					if pos(firm_id$+wo_location$+wo_no$=wolotser_key$)<>1 then break
 					extractrecord(wolotser_dev,key=wolotser_key$)wolotser$; rem Advisory locking
-					wolotser.complete_flg$=""
+					wolotser.complete_flg$="N"
 					wolotser.cls_inp_qty=0
 					wolotser.closed_cost=0
 					writerecord(wolotser_dev)wolotser$

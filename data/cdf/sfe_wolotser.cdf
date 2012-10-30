@@ -327,6 +327,12 @@ rem --- Disable all input fields if lot/serial has been closed
 		callpoint!.setColumnEnabled(this_row,"SFE_WOLOTSER.CLS_INP_QTY",0)
 		callpoint!.setColumnEnabled(this_row,"SFE_WOLOTSER.COMPLETE_FLG",0)
 	endif
+
+rem --- Initialize complete flag as necessary
+	complete_flg$=callpoint!.getColumnData("SFE_WOLOTSER.COMPLETE_FLG")
+	if pos(complete_flg$="YN")=0 then
+		callpoint!.setColumnData("SFE_WOLOTSER.COMPLETE_FLG","N",1)
+	endif
 [[SFE_WOLOTSER.CLS_INP_QTY.AVAL]]
 rem --- Validate this cls_inp_qty if changed
 	this_cls_inp_qty=num(callpoint!.getUserInput())
