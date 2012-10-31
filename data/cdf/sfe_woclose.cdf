@@ -298,7 +298,6 @@ rem --- Work order scheduled to be closed?
 	wo_location$=callpoint!.getColumnData("SFE_WOCLOSE.WO_LOCATION")
 	wo_no$=callpoint!.getColumnData("SFE_WOCLOSE.WO_NO")
 	findrecord(closedwo_dev,key=firm_id$+wo_location$+wo_no$,dom=*next)closedwo$
-	closed_no_reopen=0
 	callpoint!.setDevObject("set_status_save",0)
 	if closedwo.wo_no$=wo_no$ then
 		rem --- Reopen closed work order?
@@ -330,8 +329,6 @@ rem --- Work order scheduled to be closed?
 					writerecord(wolotser_dev)wolotser$
 				wend
 			endif
-		else
-			closed_no_reopen=1
 		endif
 	endif
 
@@ -358,10 +355,9 @@ rem --- Check work order status
 		break
 	endif
 
-rem --- Calculate standard cost, actual cost, complete qty and last op code seq number
+rem --- Calculate standard cost, actual cost and last op code seq number
 	std_cost=0
 	act_cost=0
-	comp_qty=num(callpoint!.getColumnData("SFE_WOCLOSE.CLS_INP_QTY"))
 	last_op_cd_seq_no$=""
 	sch_prod_qty=num(callpoint!.getColumnData("SFE_WOCLOSE.SCH_PROD_QTY"))
 	wo_category$=callpoint!.getColumnData("SFE_WOCLOSE.WO_CATEGORY")
@@ -428,7 +424,6 @@ rem --- Calculate standard cost, actual cost, complete qty and last op code seq 
 			if pos(firm_id$+wo_location$+wo_no$=wotran_key$)<>1 then break
 			readrecord(wotran_dev)wotran$
 			act_cost=act_cost+wotran.ext_cost
-			if tran=1 and wotran.oper_seq_ref$=last_op_cd_seq_no$ and !closed_no_reopen then comp_qty=comp_qty+wotran.complete_qty
 		wend
 	next tran
 
@@ -448,8 +443,8 @@ rem --- Calculate and display new amounts
 	closed_cost=num(callpoint!.getColumnData("SFE_WOCLOSE.CLOSED_COST"))
 	if closed_cost=0 and stdact_flag$<>"A" then closed_cost=itemwhse.std_cost
 	qty_cls_todt=num(callpoint!.getColumnData("SFE_WOCLOSE.QTY_CLS_TODT"))
-	cls_inp_qty=max(0,comp_qty-qty_cls_todt)
-	if num(callpoint!.getColumnData("SFE_WOCLOSE.CLS_INP_QTY"))<>cls_inp_qty then
+	if num(callpoint!.getColumnData("SFE_WOCLOSE.CLS_INP_QTY"))=0 then
+		cls_inp_qty=max(0,sch_prod_qty-qty_cls_todt)
 		callpoint!.setColumnData("SFE_WOCLOSE.CLS_INP_QTY",str(cls_inp_qty),1)
 		callpoint!.setStatus("MODIFIED")
 	endif
