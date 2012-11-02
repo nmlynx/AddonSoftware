@@ -317,52 +317,9 @@ rem --- alter control label and prompt for Bill No vs. Item ID depending on whet
 		callpoint!.setTableColumnAttribute("SFE_WOMASTR.ITEM_ID","PROM",Translate!.getTranslation("AON_ENTER_INVENTORY_ITEM_ID","Enter a valid Inventory Item ID",1))
 	endif
 [[SFE_WOMASTR.WO_NO.AVAL]]
-rem --- Do we need to create a new work order number?
-
-	new_seq$ = "N"
-	wo_no$ = callpoint!.getUserInput()
-
-	if cvs(wo_no$, 2) = "" then 
-
-	rem --- Option on work order no field to assign a new sequence on null must be cleared
-
-		call stbl("+DIR_SYP")+"bas_sequences.bbj","WO_NO",wo_no$,table_chans$[all]
-		
-		if wo_no$ = "" then
-			callpoint!.setStatus("ABORT")
-			break; rem --- exit callpoint
-		else
-			callpoint!.setUserInput(wo_no$)
-			new_seq$ = "Y"
-		endif
-	endif
-
-rem --- Does order exist?
-
-	sfe01_dev = fnget_dev("SFE_WOMASTR")
-	dim sfe01a$:fnget_tpl$("SFE_WOMASTR")
-
-	wo_loc$=sfe01a.wo_location$
-	found = 0
-	start_block = 1
-
-	if start_block then
-		find record (sfe01_dev, key=firm_id$+wo_loc$+wo_no$, dom=*endif)
-		found = 1
-	endif
-
-rem --- A new record must be the next sequence
-
-	if found = 0 and new_seq$ = "N"  and callpoint!.getDevObject("wo_no") = "" then
-		msg_id$ = "SF_NEW_ORD_USE_SEQ"
-		gosub disp_message	
-		callpoint!.setFocus("SFE_WOMASTR.WO_NO")
-		break; rem --- exit from callpoint
-	endif
-
 rem --- put WO number and loc in DevObject
 
-	callpoint!.setDevObject("wo_no",wo_no$)
+	callpoint!.setDevObject("wo_no",callpoint!.getUserInput())
 	callpoint!.setDevObject("wo_loc",callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION"))
 [[SFE_WOMASTR.OPENED_DATE.AVAL]]
 rem --- need to see if date has been changed; if so, prompt to change in sfe-02/22/23 as well
