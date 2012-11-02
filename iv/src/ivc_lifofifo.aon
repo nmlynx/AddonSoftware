@@ -276,7 +276,7 @@ rem --------------------------------------------------------------------------
 			if work_qty = 0 then done = true
 				
 		endif
-		record (lfchan_dev,key=key$)
+		read record (lfchan_dev,key=key$)
 		
 		rem Is this to make keyp() work correctly?  Should we use dir=0?
 		if lifo then extract (lfchan_dev,key=key$)
@@ -320,7 +320,7 @@ rem --------------------------------------------------------------------------
 		
 	wend
 
-    extract record (lfchan_dev,key=ivw04a_key$,dom=*next))x$; rem Advisory Locking
+    extract record (lfchan_dev,key=ivw04a_key$,dom=*next)x$; rem Advisory Locking
 	ivw04a$ = field(ivw04a$)
 	write record (lfchan_dev) ivw04a$
 
