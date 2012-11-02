@@ -12,7 +12,7 @@ rem --- Query displays WO's for given firm/vendor, only showing those not alread
 		case 1;rem Non-Stock
 			call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOSUBCNT","AO_SUBCONT_SEQ",key_tpl$,rd_table_chans$[all],status$
 			dim sf_sub_key$:key_tpl$
-			dim filter_defs$[7,2]
+			dim filter_defs$[6,2]
 			filter_defs$[1,0]="SFE_WOSUBCNT.FIRM_ID"
 			filter_defs$[1,1]="='"+firm_id$ +"'"
 			filter_defs$[1,2]="LOCK"
@@ -26,14 +26,11 @@ rem --- Query displays WO's for given firm/vendor, only showing those not alread
 			filter_defs$[4,1]="='S' "
 			filter_defs$[4,2]="LOCK"
 			filter_defs$[5,0]="SFE_WOSUBCNT.WO_LOCATION"
-			filter_defs$[5,1]="='  ' "
+			filter_defs$[5,1]="='"+sf_sub_key.wo_location$+"' "
 			filter_defs$[5,2]="LOCK"
 			filter_defs$[6,0]="SFE_WOMASTR.WO_STATUS"
-			filter_defs$[6,1]="<>'Q' "
+			filter_defs$[6,1]="not in ('Q','C') "
 			filter_defs$[6,2]="LOCK"
-			filter_defs$[7,0]="SFE_WOMASTR.WO_STATUS"
-			filter_defs$[7,1]="<>'C' "
-			filter_defs$[7,2]="LOCK"
 
 			call stbl("+DIR_SYP")+"bax_query.bbj",gui_dev,form!,"SF_SUBDETAIL","",table_chans$[all],sf_sub_key$,filter_defs$[all]
 			wo_type$="N"
@@ -48,7 +45,7 @@ rem --- Query displays WO's for given firm/vendor, only showing those not alread
 			if ivm_itemwhse.special_ord$<>"Y" break
 			call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMATL","AO_MAT_SEQ",key_tpl$,rd_table_chans$[all],status$
 			dim sf_mat_key$:key_tpl$
-			dim filter_defs$[6,2]
+			dim filter_defs$[5,2]
 			filter_defs$[1,0]="SFE_WOMATL.FIRM_ID"
 			filter_defs$[1,1]="='"+firm_id$ +"'"
 			filter_defs$[1,2]="LOCK"
@@ -56,17 +53,14 @@ rem --- Query displays WO's for given firm/vendor, only showing those not alread
 			filter_defs$[2,1]="='"+callpoint!.getColumnData("POE_PODET.ITEM_ID")+"'"
 			filter_defs$[2,2]="LOCK"
 			filter_defs$[3,0]="SFE_WOMATL.WO_LOCATION"
-			filter_defs$[3,1]="='  ' "
+			filter_defs$[3,1]="='"+sf_mat_key.wo_location$+"' "
 			filter_defs$[3,2]="LOCK"
 			filter_defs$[4,0]="SFE_WOMATL.LINE_TYPE"
 			filter_defs$[4,1]="='S' "
 			filter_defs$[4,2]="LOCK"
 			filter_defs$[5,0]="SFE_WOMASTR.WO_STATUS"
-			filter_defs$[5,1]="<>'Q' "
+			filter_defs$[5,1]="not in ('C','Q') "
 			filter_defs$[5,2]="LOCK"
-			filter_defs$[6,0]="SFE_WOMASTR.WO_STATUS"
-			filter_defs$[6,1]="<>'C' "
-			filter_defs$[6,2]="LOCK"
 	
 			call stbl("+DIR_SYP")+"bax_query.bbj",gui_dev,form!,"SF_MATDETAIL","",table_chans$[all],sf_mat_key$,filter_defs$[all]
 			wo_type$="S"
@@ -980,12 +974,12 @@ rem ========================================================
 		if wo_key$(len(wo_key$),1)="^" then wo_key$=wo_key$(1,len(wo_key$)-1)
 		switch pos(wo_type$="NS")
 			case 1; rem Non-stock Subcontract line
-				read record (sfe_wosub,key=wo_key$) sfe_wosub$
+				read record (sfe_wosub,key=wo_key$,knum="PRIMARY") sfe_wosub$
 				wo_no$=sfe_wosub.wo_no$
 				wo_line$=sfe_wosub.internal_seq_no$
 			break
 			case 2;rem Special Order Item
-				read record (sfe_womatl,key=wo_key$) sfe_womatl$
+				read record (sfe_womatl,key=wo_key$,knum="PRIMARY") sfe_womatl$
 				wo_no$=sfe_womatl.wo_no$
 				wo_line$=sfe_womatl.internal_seq_no$
 			break
