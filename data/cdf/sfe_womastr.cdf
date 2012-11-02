@@ -1100,6 +1100,8 @@ rem =========================================================
 
 rem --- Build Sequence list button
 
+	wo_cat$=callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")
+
 	ope11_dev=fnget_dev("OPE_ORDDET")
 	dim ope11a$:fnget_tpl$("OPE_ORDDET")
 	opc_linecode=fnget_dev("OPC_LINECODE")
@@ -1123,19 +1125,35 @@ rem --- Build Sequence list button
 		if pos(firm_id$+ope_ordhdr.ar_type$+cust$+order$=ope11a$)<>1 break
 		dim opc_linecode$:fattr(opc_linecode$)
 		read record (opc_linecode,key=firm_id$+ope11a.line_code$,dom=*next)opc_linecode$
-		if pos(opc_linecode.line_type$="SP")=0 continue
-		dim ivm01a$:fattr(ivm01a$)
-		read record (ivm01_dev,key=firm_id$+ope11a.item_id$,dom=*next)ivm01a$
-		ops_lines!.addItem(ope11a.internal_seq_no$)
-		item_list$=item_list$+ope11a.item_id$
-		work_var=pos(ope11a.item_id$=item_list$,len(ope11a.item_id$),0)
-		if work_var>1
-			work_var$=cvs(ope11a.item_id$,2)+"("+str(work_var)+")"
-		else
-			work_var$=cvs(ope11a.item_id$,2)
+		if wo_cat$="R" continue
+		if wo_cat$="I" and pos(opc_linecode.line_type$="SP")=0 continue
+		if wo_cat$="N" and pos(opc_linecode.line_type$="N")=0 continue
+		if wo_cat$="I"
+			dim ivm01a$:fattr(ivm01a$)
+			read record (ivm01_dev,key=firm_id$+ope11a.item_id$,dom=*next)ivm01a$
+			ops_lines!.addItem(ope11a.internal_seq_no$)
+			item_list$=item_list$+$ff$+ope11a.item_id$
+			work_var=pos($ff$+ope11a.item_id$=item_list$,1,0)
+			if work_var>1
+				work_var$=cvs(ope11a.item_id$,2)+"("+str(work_var)+")"
+			else
+				work_var$=cvs(ope11a.item_id$,2)
+			endif
+			ops_items!.addItem(work_var$)
+			ops_list!.addItem(work_var$+" - "+ivm01a.item_desc$)
 		endif
-		ops_items!.addItem(work_var$)
-		ops_list!.addItem(work_var$+" - "+ivm01a.item_desc$)
+		if wo_cat$="N"
+			ops_lines!.addItem(ope11a.internal_seq_no$)
+			item_list$=item_list$+$ff$+ope11a.order_memo$
+			work_var=pos($ff$+ope11a.order_memo$=item_list$,1,0)
+			if work_var>1
+				work_var$=cvs(ope11a.order_memo$,2)+"("+str(work_var)+")"
+			else
+				work_var$=cvs(ope11a.order_memo$,2)
+			endif
+			ops_items!.addItem(work_var$)
+			ops_list!.addItem(work_var$)
+		endif
 	wend
 
 	if ops_lines!.size()>0
