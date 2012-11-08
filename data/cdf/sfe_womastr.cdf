@@ -1,3 +1,25 @@
+[[SFE_WOMASTR.ADTW]]
+rem --- Re-launch sfe_womatl form after a bill is exploded
+	if callpoint!.getDevObject("explode_bills")="Y" then
+		key_pfx$=firm_id$+callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+
+		dim dflt_data$[3,1]
+		dflt_data$[1,0]="FIRM_ID"
+		dflt_data$[1,1]=firm_id$
+		dflt_data$[2,0]="WO_LOCATION"
+		dflt_data$[2,1]=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
+		dflt_data$[3,0]="WO_NO"
+		dflt_data$[3,1]=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:			"SFE_WOMATL",
+:			stbl("+USER_ID"),
+:			"MNT",
+:			key_pfx$,
+:			table_chans$[all],
+:			"",
+:			dflt_data$[all]
+	endif
 [[SFE_WOMASTR.AOPT-LSNO]]
 rem --- launch sfe_wolotser form to assign lot/serial numbers
 rem --- should only be enabled if on an inventory type WO, if item is lotted/serialized, and if params have LS set.

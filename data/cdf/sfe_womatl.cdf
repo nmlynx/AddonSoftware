@@ -1,23 +1,38 @@
+[[SFE_WOMATL.LINE_TYPE.AVAL]]
+rem --- Enable/disable explode field
+	line_type$=callpoint!.getUserInput()
+	callpoint!.setColumnData("SFE_WOMATL.LINE_TYPE",line_type$)
+	gosub enable_explode
+[[SFE_WOMATL.AGDR]]
+rem --- Enable/disable explode field
+	gosub enable_explode
 [[SFE_WOMATL.BWRI]]
-rem --- If BOM is installed, build a string of item/seq# for any item that's a bill; used for explosion when exiting
+rem --- Maintain a string of item/seq# for any bill being exploded (explosion done on exit)
 
-	if callpoint!.getDevObject("bm")="Y" and callpoint!.getColumnData("SFE_WOMATL.LINE_TYPE")="S"
+	rem --- Always explode phantom bills
+	bmm01_dev=fnget_dev("BMM_BILLMAST")
+	dim bmm_billmast$:fnget_tpl$("BMM_BILLMAST")
+	item_id$=callpoint!.getColumnData("SFE_WOMATL.ITEM_ID")
+	read record (bmm01_dev,key=firm_id$+item_id$,dom=*next)bmm_billmast$
 
-		bmm01_dev=fnget_dev("BMM_BILLMAST")
-		dim bmm_billmast$:fnget_tpl$("BMM_BILLMAST")
+	rem --- Add to string of bills being exploded
+	explode_bills$=callpoint!.getDevObject("explode_bills")
+	item_id$=callpoint!.getColumnData("SFE_WOMATL.ITEM_ID")
+	material_seq$=callpoint!.getColumnData("SFE_WOMATL.MATERIAL_SEQ")
+	tmp$=material_seq$+"^"+item_id$+"^^"
 
-		item_id$=callpoint!.getColumnData("SFE_WOMATL.ITEM_ID")
-		material_seq$=callpoint!.getColumnData("SFE_WOMATL.MATERIAL_SEQ")
-
-		read record (bmm01_dev,key=firm_id$+item_id$,dom=*next)bmm_billmast$
-
-		if pos(firm_id$+item_id$=bmm_billmast$)=1
-			explode_bills$=callpoint!.getDevObject("explode_bills")
-			tmp$=material_seq$+"^"+item_id$+"^^"
-			if pos(tmp$=explode_bills$)=0
-				explode_bills$=explode_bills$+tmp$
-				callpoint!.setDevObject("explode_bills",explode_bills$)
-			endif
+	if callpoint!.getColumnData("<<DISPLAY>>.EXPLODE_BILL")="Y"  or bmm_billmast.phantom_bill$="Y" then
+		rem --- Add to string of bills being exploded
+		if pos(tmp$=explode_bills$)=0
+			explode_bills$=explode_bills$+tmp$
+			callpoint!.setDevObject("explode_bills",explode_bills$)
+		endif
+	else
+		rem --- Remove from string of bills being exploded
+		start=pos(tmp$=explode_bills$)
+		if start then
+			explode_bills$=explode_bills$(1,start-1)+explode_bills$(start+len(tmp$))
+			callpoint!.setDevObject("explode_bills",explode_bills$)
 		endif
 	endif
 [[SFE_WOMATL.BEND]]
@@ -26,6 +41,7 @@ rem --- prompt user to explode them; if yes, explode, then re-launch form so use
 
 	if callpoint!.getDevObject("explode_bills")<>""
 
+rem wgh ... this message needs to be changed
 		msg_id$="SF_EXPLODE"
 		msg_opt$=""
 		gosub disp_message
@@ -54,9 +70,6 @@ rem --- prompt user to explode them; if yes, explode, then re-launch form so use
 
 				dim bmm_billmast$:fnget_tpl$("BMM_BILLMAST")
 				read record (bmm01_dev,key=firm_id$+explode_bill$,dom=*continue)bmm_billmast$
-
-				rem 0590 DIM T0$(0),T[10,1]
-				rem 0600 LET X=0,T[X,0]=1,T[X,1]=1,T=1
 			
 				all_bills$=""
 				x=0
@@ -79,7 +92,9 @@ rem --- prompt user to explode them; if yes, explode, then re-launch form so use
 				callpoint!.setDevObject("explode_bills","Y")
 			wend
 		else
-			callpoint!.setDevObject("explode_bills","N")
+			rem --- Don't exit, they want to edit bills selected for explosion
+			callpoint!.setStatus("ABORT")
+			break
 		endif
 	endif
 [[SFE_WOMATL.AGRE]]
@@ -134,6 +149,43 @@ rem --- Calc Totals
 	scrap_factor=num(callpoint!.getColumnData("SFE_WOMATL.SCRAP_FACTOR"))
 	gosub calculate_totals
 [[SFE_WOMATL.<CUSTOM>]]
+rem ==========================================================================
+enable_explode: rem --- Enable/disable explode field (and initialize)
+rem ==========================================================================
+	rem --- Enable explode when item is a Bill
+	row=callpoint!.getValidationRow()
+	if callpoint!.getDevObject("bm")="Y" and callpoint!.getColumnData("SFE_WOMATL.LINE_TYPE")="S"
+		bmm01_dev=fnget_dev("BMM_BILLMAST")
+		dim bmm_billmast$:fnget_tpl$("BMM_BILLMAST")
+		item_id$=callpoint!.getColumnData("SFE_WOMATL.ITEM_ID")
+
+		bmm01_found=0
+		read record (bmm01_dev,key=firm_id$+item_id$,dom=*next)bmm_billmast$; bmm01_found=1
+		if bmm01_found then
+			rem --- Always explode phantom bills
+			if bmm_billmast.phantom_bill$="Y" then
+				rem --- Disable so explode can't be cancelled
+				callpoint!.setColumnEnabled(row,"<<DISPLAY>>.EXPLODE_BILL",0)
+				callpoint!.setColumnData("<<DISPLAY>>.EXPLODE_BILL","Y",1)
+				callpoint!.setStatus("MODIFIED")
+			else
+				rem --- Enable so explode can be changed
+				callpoint!.setColumnEnabled(row,"<<DISPLAY>>.EXPLODE_BILL",1)
+				if callpoint!.getGridRowNewStatus(row)="Y" then
+					rem --- For new row, check explode
+					callpoint!.setColumnData("<<DISPLAY>>.EXPLODE_BILL","Y",1)
+				endif
+			endif
+		else
+			callpoint!.setColumnEnabled(row,"<<DISPLAY>>.EXPLODE_BILL",0)
+			callpoint!.setColumnData("<<DISPLAY>>.EXPLODE_BILL","N",1)
+		endif
+	else
+		callpoint!.setColumnEnabled(row,"<<DISPLAY>>.EXPLODE_BILL",0)
+		callpoint!.setColumnData("<<DISPLAY>>.EXPLODE_BILL","N",1)
+	endif
+	return
+
 rem ========================================================
 calculate_totals:
 rem ========================================================
@@ -251,6 +303,7 @@ mats_loop:
 		if bmm_billmat.line_type$="M"
 			sfe_womatl.line_type$="M"
 			sfe_womatl.ext_comments$=bmm_billmat.ext_comments$
+			phantom_bill$="N"
 		else
 			sfe_womatl.unit_measure$=ivm_itemmast.unit_of_sale$
 			sfe_womatl.require_date$=sfe_womastr.eststt_date$
@@ -502,7 +555,7 @@ do_subcontracts:
 		else
 			sfe_wosubcnt.unit_measure$=""
 			sfe_wosubcnt.description$=""
-			sfe_wosubcnt.ext_comments$=bill_billsub.ext_comments$
+			sfe_wosubcnt.ext_comments$=bmm_billsub.ext_comments$
 		endif
 
 		subs_pos=pos(bmm_billsub.bill_no$+bmm_billsub.op_int_seq_ref$=subs$,subs_offset+op_isn_len)
@@ -558,6 +611,11 @@ rem =========================================================
 	endif
 	return
 [[SFE_WOMATL.ITEM_ID.AVAL]]
+rem --- Enable/disable explode field
+	item_id$=callpoint!.getUserInput()
+	callpoint!.setColumnData("SFE_WOMATL.ITEM_ID",item_id$)
+	gosub enable_explode
+
 rem --- Set default Unit Cost
 
 	ivm01_dev=fnget_dev("IVM_ITEMMAST")
@@ -566,8 +624,8 @@ rem --- Set default Unit Cost
 	dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
 	whse_id$=callpoint!.getDevObject("default_wh")
 
-	read record(ivm01_dev,key=firm_id$+callpoint!.getUserInput())ivm01a$
-	read record (ivm02_dev,key=firm_id$+whse_id$+callpoint!.getUserInput()) ivm02a$
+	read record(ivm01_dev,key=firm_id$+item_id$)ivm01a$
+	read record (ivm02_dev,key=firm_id$+whse_id$+item_id$) ivm02a$
 
 	callpoint!.setColumnData("SFE_WOMATL.IV_UNIT_COST",str(ivm02a.unit_cost))
 	callpoint!.setColumnData("SFE_WOMATL.UNIT_MEASURE",ivm01a.unit_of_sale$,1)
@@ -580,15 +638,11 @@ rem --- Set default Unit Cost
 	divisor=num(callpoint!.getColumnData("SFE_WOMATL.DIVISOR"))
 	scrap_factor=num(callpoint!.getColumnData("SFE_WOMATL.SCRAP_FACTOR"))
 	gosub calculate_totals
-
 [[SFE_WOMATL.BSHO]]
 use ::sfo_SfUtils.aon::SfUtils
 declare SfUtils sfUtils!
 
 rem --- init data
-
-rem 0590 DIM T0$(0),T[10,1]
-rem 0600 LET X=0,T[X,0]=1,T[X,1]=1,T=1
 
 	all_bills$=""
 	x=0
