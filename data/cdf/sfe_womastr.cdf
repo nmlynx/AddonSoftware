@@ -906,7 +906,9 @@ rem --- If new order, check for type of Work Order and disable Item or Descripti
 		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_01",1)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_02",1)
 	else
-		callpoint!.setColumnEnabled("SFE_WOMASTR.ITEM_ID",1)
+		if callpoint!.getDevObject("new_rec")="Y"
+			callpoint!.setColumnEnabled("SFE_WOMASTR.ITEM_ID",1)
+		endif
 		callpoint!.setColumnData("SFE_WOMASTR.DESCRIPTION_01","",1)
 		callpoint!.setColumnData("SFE_WOMASTR.DESCRIPTION_02","",1)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_01",0)
@@ -1088,9 +1090,10 @@ launch_mats:
 		swend
 	endif
 
-rem --- Set new_rec to N
+rem --- Set new_rec to N and disable Item Number
 
 	callpoint!.setDevObject("new_rec","N")
+	callpoint!.setColumnEnabled("SFE_WOMASTR.ITEM_ID",0)
 
 rem --- disable Copy function if closed or not an N category
 
