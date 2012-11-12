@@ -1,6 +1,6 @@
 [[SFE_WOMASTR.ADTW]]
 rem --- Re-launch sfe_womatl form after a bill is exploded
-	if callpoint!.getDevObject("explode_bills")="Y" then
+	while callpoint!.getDevObject("explode_bills")="Y"
 		key_pfx$=firm_id$+callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
 
 		dim dflt_data$[3,1]
@@ -19,7 +19,7 @@ rem --- Re-launch sfe_womatl form after a bill is exploded
 :			table_chans$[all],
 :			"",
 :			dflt_data$[all]
-	endif
+	wend
 [[SFE_WOMASTR.AOPT-LSNO]]
 rem --- launch sfe_wolotser form to assign lot/serial numbers
 rem --- should only be enabled if on an inventory type WO, if item is lotted/serialized, and if params have LS set.
@@ -199,6 +199,8 @@ rem --- won't work there (too late).
 rem --- Set new record flag
 
 	callpoint!.setDevObject("new_rec","Y")
+	callpoint!.setDevObject("mark_to_explode",""); rem --- this needs to be initialized for sfe_womatl form here
+
 
 rem --- Open tables
 
