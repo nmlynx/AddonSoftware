@@ -923,8 +923,6 @@ rem --- If new order, check for type of Work Order and disable Item or Descripti
 		callpoint!.setOptionEnabled("LSNO",0)
 		callpoint!.setColumnData("SFE_WOMASTR.DRAWING_NO","",1)
 		callpoint!.setColumnData("SFE_WOMASTR.DRAWING_REV","",1)
-		callpoint!.setColumnData("SFE_WOMASTR.EST_YIELD","",1)
-		callpoint!.setColumnData("SFE_WOMASTR.SCH_PROD_QTY","",1)
 		callpoint!.setColumnData("SFE_WOMASTR.UNIT_MEASURE","",1)
 		callpoint!.setColumnData("SFE_WOMASTR.BILL_REV","",1)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_01",1)
