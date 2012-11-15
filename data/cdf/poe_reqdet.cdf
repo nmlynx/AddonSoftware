@@ -1,3 +1,19 @@
+[[POE_REQDET.WO_NO.AVAL]]
+rem --- need to use custom query so we get back both po# and line#
+rem --- throw message to user and abort manual entry
+
+	if cvs(callpoint!.getUserInput(),3)<>""
+		if callpoint!.getUserInput()<>callpoint!.getColumnData("POE_REQDET.WO_NO")
+			if callpoint!.getDevObject("wo_looked_up")<>"Y"
+				callpoint!.setMessage("PO_USE_QUERY")
+				callpoint!.setStatus("ABORT")
+			endif
+		endif
+	else
+		callpoint!.setColumnData("POE_REQDET.WK_ORD_SEQ_REF","",1)
+	endif
+
+	callpoint!.setDevObject("wo_looked_up","N")
 [[POE_REQDET.WO_NO.BINQ]]
 rem --- call custom inquiry
 rem --- Query displays WO's for given firm/vendor, only showing those not already linked to a PO, and only non-stocks (per v6 validation code)
@@ -12,6 +28,20 @@ rem --- Query displays WO's for given firm/vendor, only showing those not alread
 		case 1;rem Non-Stock
 			call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOSUBCNT","AO_SUBCONT_SEQ",key_tpl$,rd_table_chans$[all],status$
 			dim sf_sub_key$:key_tpl$
+			wo_loc$=sf_sub_key.wo_location$
+
+			saved_wo$=callpoint!.getColumnData("POE_REQDET.WO_NO")
+			saved_seq$=callpoint!.getColumnData("POE_REQDET.WK_ORD_SEQ_REF")
+			sub_dev=fnget_dev("SFE_WOSUBCNT")
+			dim subs$:fnget_tpl$("SFE_WOSUBCNT")
+			read record (sub_dev,key=firm_id$+sf_sub_key.wo_location$+saved_wo$+saved_seq$,knum="AO_SUBCONT_SEQ",dom=*next)subs$
+			if cvs(subs.wo_no$,3)=""
+				saved_wo$=""
+				saved_seq$=""
+			else
+				saved_seq$=subs.subcont_seq$
+			endif
+
 			dim filter_defs$[6,2]
 			filter_defs$[1,0]="SFE_WOSUBCNT.FIRM_ID"
 			filter_defs$[1,1]="='"+firm_id$ +"'"
@@ -35,6 +65,7 @@ rem --- Query displays WO's for given firm/vendor, only showing those not alread
 			call stbl("+DIR_SYP")+"bax_query.bbj",gui_dev,form!,"SF_SUBDETAIL","",table_chans$[all],sf_sub_key$,filter_defs$[all]
 			wo_type$="N"
 			wo_key$=sf_sub_key$
+			if wo_key$="" wo_key$=firm_id$+wo_loc$+saved_wo$+saved_seq$
 			break
 		case 2;rem Special Order Item
 			whse$=callpoint!.getColumnData("POE_REQDET.WAREHOUSE_ID")
@@ -45,6 +76,20 @@ rem --- Query displays WO's for given firm/vendor, only showing those not alread
 			if ivm_itemwhse.special_ord$<>"Y" break
 			call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMATL","AO_MAT_SEQ",key_tpl$,rd_table_chans$[all],status$
 			dim sf_mat_key$:key_tpl$
+			wo_loc$=sf_mat_key.wo_location$
+
+			saved_wo$=callpoint!.getColumnData("POE_REQDET.WO_NO")
+			saved_seq$=callpoint!.getColumnData("POE_REQDET.WK_ORD_SEQ_REF")
+			mat_dev=fnget_dev("SFE_WOMATL")
+			dim mats$:fnget_tpl$("SFE_WOMATL")
+			read record (mat_dev,key=firm_id$+sf_mat_key.wo_location$+saved_wo$+saved_seq$,knum="AO_MAT_SEQ",dom=*next)mats$
+			if cvs(mats.wo_no$,3)=""
+				saved_wo$=""
+				saved_seq$=""
+			else
+				saved_seq$=mats.material_seq$
+			endif
+
 			dim filter_defs$[5,2]
 			filter_defs$[1,0]="SFE_WOMATL.FIRM_ID"
 			filter_defs$[1,1]="='"+firm_id$ +"'"
@@ -65,19 +110,24 @@ rem --- Query displays WO's for given firm/vendor, only showing those not alread
 			call stbl("+DIR_SYP")+"bax_query.bbj",gui_dev,form!,"SF_MATDETAIL","",table_chans$[all],sf_mat_key$,filter_defs$[all]
 			wo_type$="S"
 			wo_key$=sf_mat_key$
+			if wo_key$="" wo_key$=firm_id$+wo_loc$+saved_wo$+saved_seq$
 		break
 		case default
 		break
 	swend
+
+	if cvs(wo_key$,3)=firm_id$ wo_key$=""
 
 	gosub get_wo_info
 
 	if cvs(wo_key$,3)<>""
 		callpoint!.setColumnData("POE_REQDET.WO_NO",wo_no$,1)
 		callpoint!.setColumnData("POE_REQDET.WK_ORD_SEQ_REF",wo_line$,1)
+		callpoint!.setDevObject("wo_looked_up","Y")
 	else
 		callpoint!.setColumnData("POE_REQDET.WO_NO","",1)
 		callpoint!.setColumnData("POE_REQDET.WK_ORD_SEQ_REF","",1)
+		callpoint!.setDevObject("wo_looked_up","N")
 	endif
 
 	callpoint!.setStatus("MODIFIED-ACTIVATE-ABORT")
@@ -152,6 +202,7 @@ rem --- save current po status flag, po/req# and line#
 
 	callpoint!.setDevObject("start_wo_no",callpoint!.getColumnData("POE_REQDET.WO_NO"))
 	callpoint!.setDevObject("start_wo_seq_ref",callpoint!.getColumnData("POE_REQDET.WK_ORD_SEQ_REF"))
+	callpoint!.setDevObject("wo_looked_up","N")
 [[POE_REQDET.AGRE]]
 rem --- check data to see if o.k. to leave row (only if the row isn't marked as deleted)
 
@@ -446,13 +497,12 @@ if pos("ABORT"=callpoint!.getStatus())<>0
 	callpoint!.setUserInput("")
 endif
 
-
-
-
-
-
-
-	
+	poc_linecode_dev=fnget_dev("POC_LINECODE")
+	dim poc_linecode$:fnget_tpl$("POC_LINECODE")
+	po_line_code$=callpoint!.getColumnData("POE_REQDET.PO_LINE_CODE")
+	read record(poc_linecode_dev,key=firm_id$+po_line_code$,dom=*next)poc_linecode$
+	line_type$=poc_linecode.line_type$
+	gosub enable_by_line_type
 [[POE_REQDET.<CUSTOM>]]
 update_line_type_info:
 	poc_linecode_dev=fnget_dev("POC_LINECODE")
@@ -579,7 +629,11 @@ rem ==========================================================================
 			callpoint!.setColumnEnabled(this_row,"POE_REQDET.WK_ORD_SEQ_REF",0)
 		else
 			whse$=callpoint!.getColumnData("POE_REQDET.WAREHOUSE_ID")
-			item$=callpoint!.getColumnData("POE_REQDET.ITEM_ID")
+			if callpoint!.getCallpointEvent()="POE_REQDET.ITEM_ID.AVAL"
+				item$=callpoint!.getUserInput()
+			else
+				item$=callpoint!.getColumnData("POE_REQDET.ITEM_ID")
+			endif
 			ivm_itemwhse=fnget_dev("IVM_ITEMWHSE")
 			dim ivm_itemwhse$:fnget_tpl$("IVM_ITEMWHSE")
 			spec_ord$="N"
