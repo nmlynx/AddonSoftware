@@ -892,8 +892,23 @@ rem --- If new order, check for type of Work Order and disable Item or Descripti
 	endif
 
 	if typecode.wo_category$<>"I"
+		callpoint!.setColumnData("SFE_WOMASTR.ITEM_ID","",1)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.ITEM_ID",0)
+		callpoint!.setColumnData("SFE_WOMASTR.UNIT_MEASURE","",1)
+		callpoint!.setColumnData("SFE_WOMASTR.LOTSER_ITEM","N",1)
+		callpoint!.setOptionEnabled("LSNO",0)
+		callpoint!.setColumnData("SFE_WOMASTR.DRAWING_NO","",1)
+		callpoint!.setColumnData("SFE_WOMASTR.DRAWING_REV","",1)
+		callpoint!.setColumnData("SFE_WOMASTR.EST_YIELD","",1)
+		callpoint!.setColumnData("SFE_WOMASTR.SCH_PROD_QTY","",1)
+		callpoint!.setColumnData("SFE_WOMASTR.UNIT_MEASURE","",1)
+		callpoint!.setColumnData("SFE_WOMASTR.BILL_REV","",1)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_01",1)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_02",1)
 	else
+		callpoint!.setColumnEnabled("SFE_WOMASTR.ITEM_ID",1)
+		callpoint!.setColumnData("SFE_WOMASTR.DESCRIPTION_01","",1)
+		callpoint!.setColumnData("SFE_WOMASTR.DESCRIPTION_02","",1)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_01",0)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_02",0)
 	endif
