@@ -1166,6 +1166,65 @@ rem						endif
 :				)
 			endif
 
+			if pmt_amt=0 then
+				rem --- de-select payment
+				if gridInvoices!.getCellState(curr_row,0) = 1 then 
+					x=curr_row
+					gosub switch_value
+					curr_row=x
+				endif
+			else
+				if gridInvoices!.getCellState(curr_row,0)=0 then
+					vend$ = gridInvoices!.getCellText(row_no,3)
+					gosub strip_dashes
+					read record (apm01_dev, key=firm_id$+
+:						vend$, dom=*next) apm01a$
+
+rem --- Following lines removed to allow payment of open invoices for a held vendor
+rem						if apm01a.hold_flag$="Y" then 
+rem							gridInvoices!.setCellText(curr_row,10,str(0))
+rem							gridInvoices!.setCellText(curr_row,11,str(0))
+rem							msg_id$="AP_VEND_HOLD"
+rem							gosub disp_message
+rem							break
+rem						endif
+
+					read record (apt01_dev, key=firm_id$+
+:						gridInvoices!.getCellText(curr_row,2)+
+:						vend$+
+:						gridInvoices!.getCellText(curr_row,5), dom=*next) apt01a$
+
+					if apt01a.hold_flag$="Y" then 
+						gridInvoices!.setCellText(curr_row,10,str(0))
+						gridInvoices!.setCellText(curr_row,11,str(0))
+						msg_id$="AP_INV_HOLD"
+						gosub disp_message
+						break
+					endif
+
+					gridInvoices!.setCellState(curr_row,0,1)
+					dummy = fn_setmast_flag(
+:						vectInvoices!.getItem(curr_row*numcols+2),
+:						vectInvoices!.getItem(curr_row*numcols+3),
+:						vectInvoices!.getItem(curr_row*numcols+5),
+:						"Y",
+:						str(pmt_amt)
+:					)
+				endif
+			endif
+
+			inv_amt = orig_inv_amt -  (abs(retent_amt) + abs(disc_amt) + abs(pmt_amt)) * sgn(orig_inv_amt)
+			gridInvoices!.setCellText(curr_row,9,str(inv_amt))
+			vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+10,str(disc_amt))
+			vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+11,str(pmt_amt))
+			dummy = fn_setmast_amts(
+:				vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+2),
+:				vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+3),
+:				vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+5),
+:				str(disc_amt),
+:				str(pmt_amt)
+:			)
+
 		rem --- Payment Amount
 
 			if curr_col=11
