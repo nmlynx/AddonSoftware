@@ -95,7 +95,7 @@ rem --- Loop thru materials detail - uncommit lot/serial only (i.e. atamo uncomm
 	read (sfe13_dev,key=firm_id$+wo_location$+wo_no$,dom=*next,dir=0)
 	while 1
 		sfe13_key$=key(sfe13_dev,end=*break)
-		read record (sfe13_dev)sfe_womathdr$
+		extract record (sfe13_dev)sfe_womathdr$; rem --- Advisory locking
 		if pos(firm_id$+wo_location$+wo_no$=sfe13_key$)<>1 then break
 
 		read (sfe23_dev,key=firm_id$+wo_location$+wo_no$,dom=*next)
@@ -126,8 +126,8 @@ rem --- Remove sfm-05 (sfe_woschdl)
 	read (sfm05_dev,key=firm_id$+wo_no$,knum=AO_WONUM,dom=*next)
 
 	while 1
-		read record(sfm05_dev,end=*break)sfe_woschdl$
-		if sfe_woschdl.firm_id$+sfe_woschdl.wo_no$<>firm_id$+wo_no$ then continue
+		extract record(sfm05_dev,end=*break)sfe_woschdl$; rem --- Advisory locking
+		if sfe_woschdl.firm_id$+sfe_woschdl.wo_no$<>firm_id$+wo_no$ then read(sfm05_dev); continue
 		remove (sfm05_dev,key=sfe_woschdl.firm_id$+sfe_woschdl.op_code$+sfe_woschdl.sched_date$+sfe_woschdl.wo_no$+sfe_woschdl.oper_seq_ref$,dom=*next)
 	wend
 
@@ -371,7 +371,7 @@ rem --- need to see if date has been changed; if so, prompt to change in sfe-02/
 			read (sfe02_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
 			while 1
 				k$=key(sfe02_dev,end=*break)
-				readrecord(sfe02_dev)sfe_wooprtn$
+				extractrecord(sfe02_dev)sfe_wooprtn$; rem --- Advisory locking
 				if sfe_wooprtn.firm_id$+sfe_wooprtn.wo_location$+sfe_wooprtn.wo_no$<>firm_id$+wo_loc$+wo_no$ then break
 				sfe_wooprtn.require_date$=new_dt$
 				sfe_wooprtn$=field(sfe_wooprtn$)
@@ -382,7 +382,7 @@ rem --- need to see if date has been changed; if so, prompt to change in sfe-02/
 			read (sfe22_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
 			while 1
 				k$=key(sfe22_dev,end=*break)
-				readrecord(sfe22_dev)sfe_womatl$
+				extractrecord(sfe22_dev)sfe_womatl$; rem --- Advisory locking
 				if sfe_womatl.firm_id$+sfe_womatl.wo_location$+sfe_womatl.wo_no$<>firm_id$+wo_loc$+wo_no$ then break
 				sfe_womatl.require_date$=new_dt$
 				sfe_womatl$=field(sfe_womatl$)
@@ -393,7 +393,7 @@ rem --- need to see if date has been changed; if so, prompt to change in sfe-02/
 			read (sfe23_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
 			while 1
 				k$=key(sfe23_dev,end=*break)
-				readrecord(sfe23_dev)sfe_womatdtl$
+				extractrecord(sfe23_dev)sfe_womatdtl$; rem --- Advisory locking
 				if sfe_womatdtl.firm_id$+sfe_womatdtl.wo_location$+sfe_womatdtl.wo_no$<>firm_id$+wo_loc$+wo_no$ then break
 				sfe_womatdtl.require_date$=new_dt$
 				sfe_womatdtl$=field(sfe_womatdtl$)
@@ -977,7 +977,7 @@ rem --- create WO comments from BOM comments
 			sfe_wocomnt.sequence_no$=str(num(bmm_billcmts.sequence_num$):seq_mask$)
 			sfe_wocomnt.ext_comments$=bmm_billcmts.std_comments$
 			sfe_wocomnt$=field(sfe_wocomnt$)
-			write record (sfe07_dev)sfe_wocomnts$
+			write record (sfe07_dev)sfe_wocomnt$
 		wend
 
 	endif

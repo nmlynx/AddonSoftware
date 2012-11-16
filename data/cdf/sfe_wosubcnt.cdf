@@ -48,7 +48,7 @@ rem --- look at po/req number; if different than it was when we entered the row,
 
 		rem --- used to reference different po# (i.e., changed from one po# to another, or have now removed the po# from this subs line)
 		if cvs(po_no_was$,3)<>""
-			find record (remove_link_dev,key=firm_id$+po_no_was$+po_seq_ref_was$,dom=*endif)remove_link$
+			extract record (remove_link_dev,key=firm_id$+po_no_was$+po_seq_ref_was$,dom=*endif)remove_link$; rem --- Advisory locking
 			remove_link.wo_no$=""
 			remove_link.wk_ord_seq_ref$=""
 			remove_link$=field(remove_link$)
@@ -56,7 +56,7 @@ rem --- look at po/req number; if different than it was when we entered the row,
 		endif		
 		rem --- now references different po# (i.e., changed from one po# to another, or have now set a po# on this subs line)
 		if cvs(po_no_now$,3)<>""
-			find record (create_link_dev,key=firm_id$+po_no_now$+po_seq_ref_now$,dom=*endif)create_link$
+			extract record (create_link_dev,key=firm_id$+po_no_now$+po_seq_ref_now$,dom=*endif)create_link$; rem --- Advisory locking
 			create_link.wo_no$=callpoint!.getColumnData("SFE_WOSUBCNT.WO_NO")
 			create_link.wk_ord_seq_ref$=callpoint!.getColumnData("SFE_WOSUBCNT.INTERNAL_SEQ_NO")
 			create_link$=field(create_link$)
