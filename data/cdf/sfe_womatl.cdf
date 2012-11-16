@@ -1,6 +1,19 @@
-[[SFE_WOMATL.LINE_TYPE.AVAL]]
+[[<<DISPLAY>>.EXPLODE_BILL.AVAL]]
 rem --- Enable/disable explode field
+	callpoint!.setColumnData("<<DISPLAY>>.EXPLODE_BILL",callpoint!.getUserInput())
+	gosub enable_explode
+[[SFE_WOMATL.ITEM_ID.BINP]]
+rem --- Capture current item_id so will know later if it was changed
+	callpoint!.setDevObject("prev_item_id",callpoint!.getColumnData("SFE_WOMATL.ITEM_ID"))
+[[SFE_WOMATL.LINE_TYPE.BINP]]
+rem --- Capture current line_type so will know later if it was changed
+	callpoint!.setDevObject("prev_line_type",callpoint!.getColumnData("SFE_WOMATL.LINE_TYPE"))
+[[SFE_WOMATL.LINE_TYPE.AVAL]]
+rem --- Skip if line_type didn't changed
 	line_type$=callpoint!.getUserInput()
+	if line_type$=callpoint!.getDevObject("prev_line_type") then break
+
+rem --- Enable/disable explode field
 	callpoint!.setColumnData("SFE_WOMATL.LINE_TYPE",line_type$)
 	gosub enable_explode
 [[SFE_WOMATL.AGDR]]
@@ -9,19 +22,19 @@ rem --- Enable/disable explode field
 [[SFE_WOMATL.BWRI]]
 rem --- Maintain a string of item/seq# for any bill being exploded (explosion done on exit)
 
-	rem --- Always explode phantom bills
-	bmm01_dev=fnget_dev("BMM_BILLMAST")
-	dim bmm_billmast$:fnget_tpl$("BMM_BILLMAST")
-	item_id$=callpoint!.getColumnData("SFE_WOMATL.ITEM_ID")
-	read record (bmm01_dev,key=firm_id$+item_id$,dom=*next)bmm_billmast$
-
-	rem --- Add to string of bills being exploded
+	rem --- Add/remove to string of bills being exploded
 	explode_bills$=callpoint!.getDevObject("explode_bills")
 	item_id$=callpoint!.getColumnData("SFE_WOMATL.ITEM_ID")
 	material_seq$=callpoint!.getColumnData("SFE_WOMATL.MATERIAL_SEQ")
 	tmp$=material_seq$+"^"+item_id$+"^^"
 
-	if callpoint!.getColumnData("<<DISPLAY>>.EXPLODE_BILL")="Y"  or bmm_billmast.phantom_bill$="Y" then
+	rem --- Bug 6493: On grids callpoint!.getColumnData("<<DISPLAY>>.field") does NOT return data for the current validation row
+	rem --- So must test check box directly instead of <<DISPLAY>>.EXPLODE_BILL
+	grid! = Form!.getControl(num(stbl("+GRID_CTL")))
+	row=callpoint!.getValidationRow()
+	column=3; rem --- check box column
+	checked$=iff(grid!.getCellState(row,column),"Y","N")
+	if checked$="Y" then
 		rem --- Add to string of bills being exploded
 		if pos(tmp$=explode_bills$)=0
 			explode_bills$=explode_bills$+tmp$
@@ -41,7 +54,6 @@ rem --- prompt user to explode them; if yes, explode, then re-launch form so use
 
 	if callpoint!.getDevObject("explode_bills")<>""
 
-rem wgh ... this message needs to be changed
 		msg_id$="SF_EXPLODE"
 		msg_opt$=""
 		gosub disp_message
@@ -86,9 +98,10 @@ rem wgh ... this message needs to be changed
 				allbills[x,0]=t
 
 				gosub explode_bills
+
 				rem --- now remove the original bill record
 				remove(sfe22_dev,key=firm_id$+wo_loc$+wo_no$+material_seq$,dom=*next)
-		
+
 				callpoint!.setDevObject("explode_bills","Y")
 			wend
 		else
@@ -152,7 +165,7 @@ rem --- Calc Totals
 rem ==========================================================================
 enable_explode: rem --- Enable/disable explode field (and initialize)
 rem ==========================================================================
-	rem --- Enable explode when item is a Bill
+	rem --- Enable explode when item is a Bill on non-stock WO or a phantom
 	row=callpoint!.getValidationRow()
 	if callpoint!.getDevObject("bm")="Y" and callpoint!.getColumnData("SFE_WOMATL.LINE_TYPE")="S"
 		bmm01_dev=fnget_dev("BMM_BILLMAST")
@@ -162,18 +175,33 @@ rem ==========================================================================
 		bmm01_found=0
 		read record (bmm01_dev,key=firm_id$+item_id$,dom=*next)bmm_billmast$; bmm01_found=1
 		if bmm01_found then
-			rem --- Always explode phantom bills
 			if bmm_billmast.phantom_bill$="Y" then
+				rem --- Always explode phantom bills
 				rem --- Disable so explode can't be cancelled
 				callpoint!.setColumnEnabled(row,"<<DISPLAY>>.EXPLODE_BILL",0)
 				callpoint!.setColumnData("<<DISPLAY>>.EXPLODE_BILL","Y",1)
 				callpoint!.setStatus("MODIFIED")
 			else
-				rem --- Enable so explode can be changed
-				callpoint!.setColumnEnabled(row,"<<DISPLAY>>.EXPLODE_BILL",1)
-				if callpoint!.getGridRowNewStatus(row)="Y" then
-					rem --- For new row, check explode
-					callpoint!.setColumnData("<<DISPLAY>>.EXPLODE_BILL","Y",1)
+rem wgh ... probably shouldn't allow exploding a bill that already has transactions against it
+				if callpoint!.getDevObject("wo_category")="N" then
+					rem --- Enable so explode can be changed for non-stock work orders
+					callpoint!.setColumnEnabled(row,"<<DISPLAY>>.EXPLODE_BILL",1)
+					mark_pos=pos(callpoint!.getColumnData("SFE_WOMATL.INTERNAL_SEQ_NO")=callpoint!.getDevObject("mark_to_explode"))
+					if callpoint!.getGridRowNewStatus(row)="Y" or mark_pos then
+						rem --- For new row, check explode
+						callpoint!.setColumnData("<<DISPLAY>>.EXPLODE_BILL","Y",1)
+						callpoint!.setStatus("MODIFIED")
+						if mark_pos then
+							rem --- Remove from mark_to_explode
+							mark_len=len(callpoint!.getColumnData("SFE_WOMATL.INTERNAL_SEQ_NO"))
+							mark_to_explode$=callpoint!.getDevObject("mark_to_explode")
+							mark_to_explode$=mark_to_explode$(1,mark_pos-1)+mark_to_explode$(mark_pos+mark_len)
+							callpoint!.setDevObject("mark_to_explode",mark_to_explode$)
+						endif
+					endif
+				else
+					callpoint!.setColumnEnabled(row,"<<DISPLAY>>.EXPLODE_BILL",0)
+					callpoint!.setColumnData("<<DISPLAY>>.EXPLODE_BILL","N",1)
 				endif
 			endif
 		else
@@ -242,6 +270,7 @@ rem =========================================================
 	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMATL","PRIMARY",sfe22_key_tpl$,rd_table_chans$[all],status$
 	dim sfe22_prev_key$:sfe22_key_tpl$
 
+	mark_to_explode$=""
 	all_bills$=new_bill$
 	curr_bill$=new_bill$
 	subs$=""
@@ -364,6 +393,11 @@ no_prev_mats_key:
 			sfe_womatl$=field(sfe_womatl$)
 			writerecord (sfe22_dev)sfe_womatl$
 
+			rem --- Keep track if this is a bill so can mark to explode on initial redisplay
+			if sfe_womatl.item_id$=bmm_billmast.bill_no$ then
+				mark_to_explode$=mark_to_explode$+sfe_womatl.internal_seq_no$+";"
+			endif
+
 			if cvs(bmm_billmat.op_int_seq_ref$,3)<>""			
 				if mats$="" mats_offset=len(bmm_billmat.bill_no$+bmm_billmat.op_int_seq_ref$)
 				mats$=mats$+bmm_billmat.bill_no$+bmm_billmat.op_int_seq_ref$+sfe_womatl.material_seq$
@@ -414,6 +448,8 @@ next_bill_level:
 		if callpoint!.getDevObject("po")="Y" then gosub do_subcontracts
 		rem all done... should now be ready to display what's just been added to mats grid
 	endif
+
+	callpoint!.setDevObject("mark_to_explode",mark_to_explode$)
 	return
 
 rem =========================================================
@@ -611,8 +647,11 @@ rem =========================================================
 	endif
 	return
 [[SFE_WOMATL.ITEM_ID.AVAL]]
-rem --- Enable/disable explode field
+rem --- Skip if item_id didn't change
 	item_id$=callpoint!.getUserInput()
+	if item_id$=callpoint!.getDevObject("prev_item_id") then break
+
+rem --- Enable/disable explode field
 	callpoint!.setColumnData("SFE_WOMATL.ITEM_ID",item_id$)
 	gosub enable_explode
 
