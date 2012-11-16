@@ -200,6 +200,7 @@ rem --- Set new record flag
 
 	callpoint!.setDevObject("new_rec","Y")
 	callpoint!.setDevObject("mark_to_explode",""); rem --- this needs to be initialized for sfe_womatl form here
+	callpoint!.setDevObject("explode_bills","N")
 
 
 rem --- Open tables
@@ -890,6 +891,7 @@ rem --- Only allow changes to status if P or Q
 	if pos(status$="PQ")=0
 		callpoint!.setUserInput(old_status$)
 	endif
+	callpoint!.setDevObject("wo_status",callpoint!.getUserInput())
 [[SFE_WOMASTR.WO_TYPE.AVAL]]
 rem --- Only allow change to Type if it's the same Category
 
