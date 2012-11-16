@@ -864,10 +864,10 @@ rem --- First check to see if user_tpl.ap_check_seq$ is Y and multiple AP Types 
 					ape04a.invoice_date$ = apt01a.invoice_date$
 					ape04a.inv_due_date$ = apt01a.inv_due_date$
 					ape04a.disc_date$    = apt01a.disc_date$
-					ape04a.invoice_amt   = amt_to_pay
+					ape04a.invoice_amt   = amt_to_pay+disc_to_take
 					ape04a.discount_amt  = disc_to_take
 					ape04a.retention     = apt01a.retention
-					ape04a.orig_inv_amt  = orig_inv_amt
+					ape04a.orig_inv_amt  = apt01a.invoice_amt
 
 					ape04a$=field(ape04a$)
 					extract record (ape04_dev, key=apt01_key$, dom=*next) dummy$; rem Advisory Locking
