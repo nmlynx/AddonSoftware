@@ -344,7 +344,7 @@ rem				endif
 				endif
 
 				gridInvoices!.setCellText(row_no, 9, "0.00")
-				payment_amt = apt01a.invoice_amt - num(gridInvoices!.getCellText(row_no,9)) - apt01a.retention
+				payment_amt = apt01a.invoice_amt - num(gridInvoices!.getCellText(row_no,10)) - apt01a.retention
 				gridInvoices!.setCellText(row_no, 11, str(payment_amt))
 				vectInvoices!.setItem(row_no * numcols, "Y")
 				dummy = fn_setmast_flag(
