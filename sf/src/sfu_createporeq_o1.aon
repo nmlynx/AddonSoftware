@@ -61,7 +61,6 @@ rem --- Main Read
             endif
 			
             call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,ignore_status
-
             t1$=""
 			
             extract record (sfreq_dev,key=sfreq_key$) sfreqa$; rem --- Advisory locking
@@ -135,6 +134,8 @@ rem --- Process Non-Stock Items
 					sfreqa.po_status$="R"; rem R=requisition
 				
 	                write record (sfreq_dev,key=sfreq_key$) sfreqa$; rem Subcontracts
+				else
+					read(sfreq_dev); rem Release Advisory Locking
 				endif
             else
 				rem --- Process Special Order Material Requirements (sfe-22/SFE_WOMATL, materials)
