@@ -238,7 +238,7 @@ write_message_record: rem --- Write The Message Record
     info$[1]=t1$
 	info$[2]="M"
 	info$[3]=sfe01a.warehouse_id$
-    info$[4]=f0$(18,6)
+    info$[4]=sysinfo.system_date$
     info$[5]=sfreqa.require_date$
 	info$[7]="W"
     info$[9]=cur_wo_no$+sfreqa.internal_seq_no$
