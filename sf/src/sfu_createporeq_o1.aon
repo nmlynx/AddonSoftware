@@ -180,9 +180,9 @@ rem --- Use Vendor's Item Discount Pricing When Available
 
 				find record (ivm05a_dev,key=info$[0]+info$[1]+info$[13],dom=create_req_and_log) ivm05a$
             
-				if ivm05a.unit_cost_0>0 and info[2]>ivm05a.break_qty_0 then let cost=ivm05a.unit_cost_0
-				if ivm05a.unit_cost_1>0 and info[2]>ivm05a.break_qty_1 then let cost=ivm05a.unit_cost_1
-				if ivm05a.unit_cost_2>0 and info[2]>ivm05a.break_qty_2 then let cost=ivm05a.unit_cost_2
+				if ivm05a.unit_cost_01>0 and info[2]>ivm05a.break_qty_01 then let cost=ivm05a.unit_cost_01
+				if ivm05a.unit_cost_02>0 and info[2]>ivm05a.break_qty_02 then let cost=ivm05a.unit_cost_02
+				if ivm05a.unit_cost_03>0 and info[2]>ivm05a.break_qty_03 then let cost=ivm05a.unit_cost_03
 
 create_req_and_log: rem --- Create PO Requisition And Log It In Work Order Detail Record
 
