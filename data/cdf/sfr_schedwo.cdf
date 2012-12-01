@@ -1,3 +1,21 @@
+[[SFR_SCHEDWO.ESTSTT_DATE.AVAL]]
+rem --- Completion date can't be before start date
+	if callpoint!.getColumnData("SFR_SCHEDWO.ESTCMP_DATE")<>"" and
+:	callpoint!.getColumnData("SFR_SCHEDWO.ESTCMP_DATE")<callpoint!.getUserInput() then
+		msg_id$="SF_ESTCMP_B4_ESTSTT"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+[[SFR_SCHEDWO.ESTCMP_DATE.AVAL]]
+rem --- Start date can't be after completion date
+	if callpoint!.getColumnData("SFR_SCHEDWO.ESTSTT_DATE")<>"" and
+:	callpoint!.getColumnData("SFR_SCHEDWO.ESTSTT_DATE")>callpoint!.getUserInput() then
+		msg_id$="SF_ESTCMP_B4_ESTSTT"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
 [[SFR_SCHEDWO.SCHED_FLAG.AVAL]]
 rem --- Set default Start and Completion Date for Manual
 
