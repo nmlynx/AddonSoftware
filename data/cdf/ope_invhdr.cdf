@@ -593,6 +593,7 @@ rem --- Has customer and order number been entered?
 
 	if cvs(cust_id$, 2) = "" or cvs(order_no$, 2) = "" then
 		callpoint!.setStatus("ABORT")
+		break
 	endif
 
 rem --- Check Ship-to's
@@ -601,6 +602,8 @@ rem --- Check Ship-to's
 	shipto_no$  = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
 	gosub check_shipto
 	if user_tpl.shipto_warned
+		callpoint!.setFocus("OPE_INVHDR.SHIPTO_TYPE")
+		callpoint!.setStatus("ABORT")
 		break; rem --- exit callpoint
 	endif
 
