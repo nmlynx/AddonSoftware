@@ -309,11 +309,12 @@ op_code_subtot: rem --- Op Codes Subtotals Here
     t1$=sfw05a_key.op_code$
     if bminstalled$="Y" then 
         find record (bmm08a_dev,key=firm_id$+t1$,dom=*endif) bmm08a$
+        opdesc$=bmm08a.code_desc$
     else 
         find record (sfm02a_dev,key=firm_id$+t1$,dom=*next) sfm02a$
+        opdesc$=sfm02a.code_desc$
     endif
 
-    opdesc$=bmm08a.code_desc$
     gosub sub_head
     return
 
