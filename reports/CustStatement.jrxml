@@ -341,7 +341,9 @@
 				<imageExpression><![CDATA[$P{LOGO_FILE}]]></imageExpression>
 			</image>
 			<staticText>
-				<reportElement x="25" y="176" width="34" height="13"/>
+				<reportElement x="25" y="176" width="34" height="13">
+					<printWhenExpression><![CDATA[new Boolean (!$F{AR_PHONE_NO}.isEmpty())]]></printWhenExpression>
+				</reportElement>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font fontName="Serif"/>
 				</textElement>
