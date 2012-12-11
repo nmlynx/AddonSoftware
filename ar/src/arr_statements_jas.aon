@@ -18,8 +18,8 @@ rem --- All Rights Reserved
     params! = Option!.getOptionMap()
 		
     ScreenSize!   = bbjAPI().getSysGui().getSystemMetrics().getScreenSize()
-    screen_width  = ScreenSize!.width - 50; rem -50 keeps it in the MDI w/ no scroll bars
-    screen_height = ScreenSize!.height - 50
+    screen_width  = ScreenSize!.width - 75; rem keep it in the MDI w/ no scroll bars
+    screen_height = ScreenSize!.height - 75
 
 rem --- Retrieve the program path
 
@@ -37,7 +37,7 @@ rem --- Retrieve sysinfo data
     firm_id$=sysinfo.firm_id$
 
     milestone=50
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)        
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
 
 rem --- Derive/set path and filename for logo to go on form
 
@@ -59,6 +59,8 @@ rem --- Set Report Name & Subreport directory
     close (temp)
     reportBaseName$ = "CustStatement"
     filename$ = reportDir$ + reportBaseName$ + ".jasper"
+    masterBaseName$ = "StatementMaster"
+    master_filename$ = reportDir$ + masterBaseName$+".jasper"
 
     declare BBJasperReport report!
     
@@ -155,6 +157,7 @@ rem --- Initializations
     keynum$="PRIMARY"
     begvalue$=begcust$
     endvalue$=endcust$
+    master_document=1
 
     if sequence$="A" then 
         keynum$="AO_ALTSEQ_CUST"
@@ -264,14 +267,23 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
         doc_name$="CustomerStatement_"+arm01a.customer_id$
         doc_keywords$="Stmt date: "+fndate$(stmt_date$)
 
-        rem --- Get Next Document Number and update Document Audit
+        rem --- Get Next Document Number and update Document Audit for individual pdf
 
         call stbl("+DIR_SYP")+"bas_sequences.bbj","DOC_NO",new_doc_id$,rd_table_chans$[all] 
-
         new_doc_name$=new_doc_id$+"_"+doc_name$+".pdf"        
         
         call stbl("+DIR_SYP")+"bac_documents.bbj",new_doc_id$,rep_date_stamp$,rep_time_stamp$,rd_doc_source$,rd_doc_ext$,docdir$,
 :           rd_source_type$,rd_source_alias$,"C",arm01a.customer_id$,rd_table_chans$[all],"",new_doc_name$,doc_name$,doc_keywords$
+
+        rem --- Get Next Document Number and update Document Audit for master copy of pdf, if first time thru
+
+        if master_document
+            call stbl("+DIR_SYP")+"bas_sequences.bbj","DOC_NO",master_doc_id$,rd_table_chans$[all] 
+            master_doc_name$=master_doc_id$+"_"+masterBaseName$+".pdf"      
+        
+            call stbl("+DIR_SYP")+"bac_documents.bbj",master_doc_id$,rep_date_stamp$,rep_time_stamp$,rd_doc_source$,rd_doc_ext$,docdir$,
+:               rd_source_type$,rd_source_alias$,"C","",rd_table_chans$[all],"",master_doc_name$,masterBaseName$,doc_keywords$
+        endif
 
     rem --- Document Output Report Parameters
 
@@ -292,7 +304,13 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
         params!.put("CUST_SIZE",str(customer_size))
         params!.put("PERIOD_DATES",period_dates$)        
 
-    rem --- invoke jasper    
+    rem --- invoke jasper
+        
+        if master_document
+            master_report! = new BBJasperReport(master_filename$,url$)
+            master_report!.fill()
+            master_document=0
+        endif
 
         report! = new BBJasperReport(filename$,url$)
         report!.putParams(params!)
@@ -302,15 +320,10 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
         report!.setLocale(locale$)
      
         report!.fill()
-        report!.exportToPDF(BBjAPI().FALSE, docdir$+new_doc_name$)    
+        report!.exportToPDF(BBjAPI().FALSE, docdir$+new_doc_name$)
 
-rem --- after invoking jasper, append it to cumulative jasper (code needed for this), add this cust to the doc proc queue, if app.  
-		rem ' to see the cumulative doc in a viewer window un-rem the statements below, or something close
-		rem ' BBjReportWindow! = new BBJasperViewerWindow(BBjReport!, 0, 0, 920, 700,"BASIS International, Ltd.", $93$)
-		rem ' BBjReportWindow!.center()
-		rem ' BBjReportWindow!.show(1)
-
-		rem ' BBjReportWindow!.destroy()      
+        master_report!.appendReport(report!)
+     
         call stbl("+DIR_PGM")+"adc_rptcontrol.aon",option!.getAlias(),arm01a.customer_id$,"C",new_doc_id$,"pdf"
     
         report!.destroy()
@@ -322,6 +335,17 @@ rem --- after invoking jasper, append it to cumulative jasper (code needed for t
     wend
 
 rem --- done
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
+
+rem --- bring up master statement document in jasper viewer  
+
+    master_report!.exportToPDF(BBjAPI().FALSE, docdir$+master_doc_name$)
+    BBjReportWindow! = new BBJasperViewerWindow(master_report!,0,0,screen_width,screen_height,masterBaseName$,$00080093$)
+    BBjReportWindow!.center()
+    BBjReportWindow!.show(1)
+
+    BBjReportWindow!.destroy() 
 
     goto std_exit
 
