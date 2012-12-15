@@ -47,6 +47,7 @@ rem --- Deal with Schedule Records
 	run_time=SfUtils.opUnits(hrs_per_pc,pcs_per_hr,yield)
 	move_time=num(callpoint!.getColumnData("SFE_WOOPRTN.MOVE_TIME"))
 	add_date$=callpoint!.getColumnData("SFE_WOOPRTN.REQUIRE_DATE")
+
 	if callpoint!.getUserInput()<>callpoint!.getColumnData("SFE_WOOPRTN.SETUP_TIME")
 		gosub remove_sched
 		gosub add_sched
@@ -68,6 +69,21 @@ rem --- Check for valid quantity
 		gosub disp_message
 		callpoint!.setColumnData("SFE_WOOPRTN.PCS_PER_HOUR","1",1)
 		callpoint!.setFocus(callpoint!.getValidationRow(),"SFE_WOOPRTN.PCS_PER_HOUR")
+	endif
+
+rem --- Deal with Schedule Records
+
+	setup_time=num(callpoint!.getColumnData("SFE_WOOPRTN.SETUP_TIME"))
+	hrs_per_pc=num(callpoint!.getColumnData("SFE_WOOPRTN.HRS_PER_PCE"))
+	pcs_per_hr=num(callpoint!.getUserInput())
+	yield=num(callpoint!.getDevObject("wo_est_yield"))
+	run_time=SfUtils.opUnits(hrs_per_pc,pcs_per_hr,yield)
+	move_time=num(callpoint!.getColumnData("SFE_WOOPRTN.MOVE_TIME"))
+	add_date$=callpoint!.getColumnData("SFE_WOOPRTN.REQUIRE_DATE")
+
+	if callpoint!.getUserInput()<>callpoint!.getColumnData("SFE_WOOPRTN.SETUP_TIME")
+		gosub remove_sched
+		gosub add_sched
 	endif
 
 rem --- Calculate totals
