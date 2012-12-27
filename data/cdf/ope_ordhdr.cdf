@@ -1234,7 +1234,7 @@ rem --- Create a default POS record
 
 	pointofsale_rec.firm_id$         = firm_id$
 	pointofsale_rec.pos_station$ = pad(station$, 16)
-	pointofsale_key$=pointofsale_rec.firm_id$+pointofsale_rec.default_station$
+	pointofsale_key$=pointofsale_rec.firm_id$+pointofsale_rec.pos_station$
 	extractrecord(pointofsale_dev,key=pointofsale_key$,dom=*next)x$; rem Advisory Locking
 	pointofsale_rec.skip_whse$       = "N"
 	pointofsale_rec.val_ctr_prt$     = sysinfo.printer_id$
