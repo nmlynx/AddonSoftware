@@ -2022,6 +2022,7 @@ rem --- Should we call Credit Action?
 :			callpoint!.getColumnData("CREDIT_FLAG") <> "R" then
 		callpoint!.setDevObject("run_by", "order")
 		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, order_no$, table_chans$[all], callpoint!, action$, status
+		callpoint!.setStatus("ACTIVATE")
 		if status = 999 then goto std_exit
 
 	rem --- Delete the order
