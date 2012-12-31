@@ -297,6 +297,7 @@ rem ==========================================================================
 					if cycleData!.getItem(i) = "5" then util.disableGridCell( cast(BBjStandardGrid, grid!), 0, row)
 				else
 					grid!.setCellStyle(row, 0, SysGUI!.GRID_STYLE_UNCHECKED)
+					util.enableGridCell( cast(BBjStandardGrid, grid!), 0, row)
 				endif
 
 				grid!.setCellText(row, 0, "")
