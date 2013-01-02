@@ -1115,10 +1115,10 @@ rem --- Restrict lookup to orders
 
 	if selected_key$<>"" then 
 		callpoint!.setStatus("RECORD:[" + selected_key$ +"]")
-		callpoint!.setStatus("ACTIVATE")
 	else
 		callpoint!.setStatus("ABORT")
 	endif
+	callpoint!.setStatus("ACTIVATE")
 [[OPE_INVHDR.AWRI]]
 rem --- Write/Remove manual ship to file
 
