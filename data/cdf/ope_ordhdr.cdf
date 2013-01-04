@@ -1074,7 +1074,7 @@ end_of_reprintable:
 
 		cust_id$   = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 		order_no$  = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE",callpoint!.getDevObject("create_quote"),1)
+		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE",str(callpoint!.getDevObject("create_quote")),1)
 		rem --- Set dflt invoice type in OrderHelper object
 
 		ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
@@ -1089,7 +1089,7 @@ end_of_reprintable:
 		read record (arm01_dev,key=firm_id$+cust_id$, dom=*next) arm01a$
 
 		callpoint!.setColumnData("OPE_ORDHDR.SHIPMNT_DATE",user_tpl.def_ship$)
-		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE",callpoint!.getDevObject("create_quote"),1)
+		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_TYPE",str(callpoint!.getDevObject("create_quote")),1)
 		callpoint!.setColumnData("OPE_ORDHDR.ORDINV_FLAG","O")
 		callpoint!.setColumnData("OPE_ORDHDR.INVOICE_DATE",sysinfo.system_date$)
 		callpoint!.setColumnData("OPE_ORDHDR.AR_SHIP_VIA",arm01a.ar_ship_via$)
