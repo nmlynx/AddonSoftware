@@ -331,7 +331,7 @@ use ::ado_util.src::util
 
 rem --- set default line code based on param file
 if cvs(callpoint!.getDevObject("dflt_po_line_code"),2)<>"" then
-	callpoint!.setTableColumnAttribute("POE_PODET.PO_LINE_CODE","DFLT",callpoint!.getDevObject("dflt_po_line_code"))
+	callpoint!.setTableColumnAttribute("POE_PODET.PO_LINE_CODE","DFLT",str(callpoint!.getDevObject("dflt_po_line_code")))
 endif
 [[POE_PODET.ITEM_ID.AINV]]
 rem --- Item synonym processing
