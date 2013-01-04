@@ -19,6 +19,8 @@
 	<parameter name="REPORT_NAME" class="java.lang.String"/>
 	<parameter name="BARISTA_WD" class="java.lang.String"/>
 	<parameter name="MASKS" class="java.lang.String"/>
+	<parameter name="VEND_PATTERN" class="java.lang.String"/>
+	<parameter name="VEND_REPLACE" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[SELECT * FROM APM_VENDMAST WHERE APM_VENDMAST.FIRM_ID = $P{FIRM_ID} AND APM_VENDMAST.VENDOR_ID >= $P{VENDOR_ID_1} AND APM_VENDMAST.VENDOR_ID <= $P{VENDOR_ID_2} AND (APM_VENDMAST.TEMP_VEND = $P{TEMP_VEND_1} OR APM_VENDMAST.TEMP_VEND = $P{TEMP_VEND_2} OR APM_VENDMAST.TEMP_VEND = $P{TEMP_VEND_3})]]>
 	</queryString>
@@ -166,7 +168,7 @@
 			<textField>
 				<reportElement x="84" y="14" width="80" height="13"/>
 				<textElement/>
-				<textFieldExpression><![CDATA[$F{VENDOR_ID}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{VENDOR_ID}.replaceAll($P{VEND_PATTERN},$P{VEND_REPLACE})]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="164" y="14" width="148" height="13"/>

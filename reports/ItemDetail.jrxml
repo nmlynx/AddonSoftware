@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ItemDetail" language="groovy" pageWidth="612" pageHeight="792" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon">
-	<property name="ireport.zoom" value="2.0"/>
+	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="0"/>
+	<property name="ireport.y" value="49"/>
 	<template><![CDATA["StyleTemplate.jrtx"]]></template>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
 	<parameter name="DOC_NO" class="java.lang.String"/>
@@ -16,6 +16,8 @@
 	<parameter name="PRODUCT_TYPE_2" class="java.lang.String"/>
 	<parameter name="ITEM_TYPE" class="java.lang.String"/>
 	<parameter name="REPORT_NAME" class="java.lang.String"/>
+	<parameter name="VEND_PATTERN" class="java.lang.String"/>
+	<parameter name="VEND_REPLACE" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[select item_id, item_desc, product_type, unit_of_sale, purchase_um, sa_level, lotser_item, inventoried, taxable_flag, weight, conv_factor, bar_code, item_class, item_type, upc_code, alt_sup_flag, alt_sup_item, lstrec_date, lstblt_date, lstsal_date, lstiss_date, lstadj_date, lstxin_date, lstxot_date, lstret_date, msrp, conv_factor, ivc_prodcode.code_desc AS prod_desc, ivc_clascode.code_desc AS class_desc, ivc_typecode.code_desc AS type_desc, iv2.item_desc AS alt_desc from ivm_itemmast iv1
 left join ivc_prodcode on iv1.firm_id = ivc_prodcode.firm_id and iv1.product_type = ivc_prodcode.product_type
@@ -467,8 +469,14 @@ where iv1.firm_id = $P{FIRM_ID} and iv1.item_id >= $P{ITEM_ID_1} and iv1.item_id
 				<subreportParameter name="FIRM_ID">
 					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
 				</subreportParameter>
+				<subreportParameter name="VEND_REPLACE">
+					<subreportParameterExpression><![CDATA[$P{VEND_REPLACE}]]></subreportParameterExpression>
+				</subreportParameter>
 				<subreportParameter name="ITEM_ID">
 					<subreportParameterExpression><![CDATA[$F{ITEM_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="VEND_PATTERN">
+					<subreportParameterExpression><![CDATA[$P{VEND_PATTERN}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA["ItemDetail_whse.jasper"]]></subreportExpression>
@@ -478,8 +486,14 @@ where iv1.firm_id = $P{FIRM_ID} and iv1.item_id >= $P{ITEM_ID_1} and iv1.item_id
 				<subreportParameter name="FIRM_ID">
 					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
 				</subreportParameter>
+				<subreportParameter name="VEND_REPLACE">
+					<subreportParameterExpression><![CDATA[$P{VEND_REPLACE}]]></subreportParameterExpression>
+				</subreportParameter>
 				<subreportParameter name="ITEM_ID">
 					<subreportParameterExpression><![CDATA[$F{ITEM_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="VEND_PATTERN">
+					<subreportParameterExpression><![CDATA[$P{VEND_PATTERN}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA["ItemDetail_vend.jasper"]]></subreportExpression>
