@@ -175,7 +175,7 @@ rem --- Position detail file
 
         while more
 
-                    read record (poe_reqdet_dev) poe_reqdet$
+            read record (poe_reqdet_dev,end=*break) poe_reqdet$
             if pos(firm_id$=poe_reqdet$)<>1 then break
             if poe_reqdet.req_no$<>poe_reqhdr.req_no$ then break
             dim poe_podet$:fattr(poe_podet$)
