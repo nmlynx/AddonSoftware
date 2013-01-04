@@ -2188,6 +2188,7 @@ rem --- Should we call Credit Action?
 	if user_tpl.credit_installed$ = "Y" and inv_type$ <> "P" and cvs(cust_id$, 2) <> "" and cvs(order_no$, 2) <> "" then
 		callpoint!.setDevObject("run_by", "invoice")
 		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, order_no$, table_chans$[all], callpoint!, action$, status
+		callpoint!.setStatus("ACTIVATE")
 		if status = 999 then goto std_exit
 
 	rem --- Delete the order
