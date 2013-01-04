@@ -1,3 +1,21 @@
+[[GLM_ACCT.ARAR]]
+rem --- Display MTD and YTD
+
+	glm02_dev=fnget_dev("GLM_ACCTSUMMARY")
+	dim glm02$:fnget_tpl$("GLM_ACCTSUMMARY")
+	acct_no$=callpoint!.getColumnData("GLM_ACCT.GL_ACCOUNT")
+	rec_id$=callpoint!.getDevObject("rec_id")
+	cur_per=num(callpoint!.getDevObject("cur_per"))
+
+	read record (glm02_dev,key=firm_id$+acct_no$+rec_id$,dom=*next) glm02$
+	cur_amt=nfield(glm02$,"period_amt_"+str(cur_per:"00"))
+	ytd_amt=0
+	for x=1 to cur_per
+		ytd_amt=ytd_amt+nfield(glm02$,"period_amt_"+str(x:"00"))
+	next x
+
+	callpoint!.setColumnData("<<DISPLAY>>.MTD_TOTAL",str(cur_amt),1)
+	callpoint!.setColumnData("<<DISPLAY>>.YTD_TOTAL",str(ytd_amt),1)
 [[GLM_ACCT.BDEL]]
 rem --- Check for activity
 	okay$="Y"
@@ -291,9 +309,10 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 [[GLM_ACCT.BSHO]]
 rem --- Open/Lock files
 
-files=1,begfile=1,endfile=files
+files=2,begfile=1,endfile=files
 dim files$[files],options$[files],chans$[files],templates$[files]
 files$[1]="GLS_PARAMS",options$[1]="OTA"
+files$[2]="GLM_ACCTSUMMARY",options$[2]="OTA"
 
 call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                 chans$[all],templates$[all],table_chans$[all],batch,status$
@@ -314,3 +333,15 @@ rem --- init/parameters
 
 gls01a_key$=firm_id$+"GL00"
 find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+
+	glyear=num(gls01a.current_year$)
+	if gls01a.gl_yr_closed$ <> "Y" then 
+		record$="4"
+	else
+		record$="0"
+	endif
+	callpoint!.setDevObject("rec_id",record$)
+	callpoint!.setDevObject("cur_per",gls01a.current_per$)
+	callpoint!.setDevObject("cur_year",gls01a.current_year$)
+	x$=stbl("+YEAR",gls01a.current_year$)
+	x$=stbl("+PER",gls01a.current_per$)
