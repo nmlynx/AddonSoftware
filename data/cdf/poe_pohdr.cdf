@@ -16,54 +16,9 @@ rem --- if dropshipping, retrieve/display specified shipto address
 		gosub fill_dropship_address
 		callpoint!.setColumnData("POE_POHDR.DS_NAME",rec.name$,1)
 	endif
-[[POE_POHDR.PO_NO.AINP]]
-rem --- enable Create PO from Req button
-
-	callpoint!.setOptionEnabled("CRPO",1)
-[[POE_POHDR.AOPT-CRPO]]
-rem --- Lookup requisiton
-rem --- Can't have Barista do the lookup because it also validates, which fails after req is deleted when po is created.
-
-	po_no$=cvs(callpoint!.getColumnData("POE_POHDR.PO_NO"),3)
-	vendor_id$=cvs(callpoint!.getColumnData("POE_POHDR.VENDOR_ID"),3)
-
-	if po_no$=""
-		msg_id$="PO_INVAL_PO"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-	else
-		rd_key$ = ""
-		if vendor_id$=""
-			key_pfx$  = firm_id$
-			key_id$   = "PRIMARY"
-		else
-			key_pfx$  = firm_id$ + vendor_id$
-			key_id$   = "AO_VEND_REQ"
-		endif
-
-		call stbl("+DIR_SYP")+"bam_inquiry.bbj",
-:			gui_dev,
-:			Form!,
-:			"POE_REQHDR",
-:			"LOOKUP",
-:			table_chans$[all],
-:			key_pfx$,
-:			key_id$,
-:			rd_key$
-
-		if rd_key$<>"" then 
-			if vendor_id$=""
-				req_no$=rd_key$(3)
-			else
-				req_no$=rd_key$(9)
-			endif
-			callpoint!.setColumnData("POE_POHDR.REQ_NO",req_no$,1)
-		endif
-	endif
 [[POE_POHDR.BPFX]]
 rem --- disable buttons
 
-	callpoint!.setOptionEnabled("CRPO",0)
 	callpoint!.setOptionEnabled("QPRT",0)
 	callpoint!.setOptionEnabled("DPRT",0)
 [[POE_POHDR.ORD_DATE.AVAL]]
@@ -375,9 +330,6 @@ rem --- enable/disable buttons
 	if po_no$<>""
 		callpoint!.setOptionEnabled("QPRT",1)
 		callpoint!.setOptionEnabled("DPRT",1)
-		if vendor_id$<>""
-			callpoint!.setOptionEnabled("CRPO",0)
-		endif
 	endif
 [[POE_POHDR.AWRI]]
 rem --- need to put out poe_poprint record
@@ -386,28 +338,10 @@ gosub queue_for_printing
 
 
 [[POE_POHDR.REQ_NO.AVAL]]
-rem --- Validate requisition number
-rem --- Can't have Barista validate since req is deleted after po is created.
-
-	req_no$=cvs(callpoint!.getUserInput(),3)
-	valid_req=1
-
-	if req_no$<>""
-		valid_req=0
-		poe_reqhdr_dev=fnget_dev("POE_REQHDR")
-		find (poe_reqhdr_dev,key=firm_id$+req_no$,dom=*endif) 
-		valid_req=1
-	endif
-
-	if !(valid_req)
-		msg_id$="PO_INVAL_REQ_LK"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-	endif
-
 rem --- Load PO from requisition
 
-if req_no$<>"" and valid_req
+req_no$=cvs(callpoint!.getUserInput(),3)
+if req_no$<>""
 
 	msg_id$="PO_CREATE_REQ"
 	gosub disp_message
