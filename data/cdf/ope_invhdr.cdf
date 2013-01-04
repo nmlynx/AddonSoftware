@@ -2059,7 +2059,7 @@ rem ==========================================================================
 				line_no_mask$=callpoint!.getDevObject("line_no_mask")
 				ope11a.line_no$=str(disp_line_no:line_no_mask$)
 				ope11_key$=ope11a.firm_id$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$+ope11a.internal_seq_no$
-				extractrecord(ope11_dev,key=ope11_key$,dom=*next)x$; rem Advisory Locking
+				extractrecord(ope11_dev,knum="PRIMARY",key=ope11_key$,dom=*next)x$; rem Advisory Locking
 
 				ope11a$ = field(ope11a$)
 				write record (ope11_dev) ope11a$
