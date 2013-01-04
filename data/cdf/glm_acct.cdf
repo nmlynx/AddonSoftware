@@ -1,21 +1,63 @@
+[[<<DISPLAY>>.CURRENT_YEAR.AVAL]]
+rem --- set variables
+
+	yr$=callpoint!.getUserInput()
+	callpoint!.setDevObject("cur_year",yr$)
+	x$=stbl("+YEAR",yr$)
+
+rem --- Set proper record ID
+	record$=" "
+	if num(yr$)=num(callpoint!.getDevObject("gls_cur_yr"))
+		if callpoint!.getDevObject("gl_yr_closed") <> "Y"
+			record$="4";rem Next Year Actual
+		else
+			record$="0";rem Current Year Actual
+		endif
+	endif
+	if num(yr$)=num(callpoint!.getDevObject("gls_cur_yr"))-1
+		if callpoint!.getDevObject("gl_yr_closed") <> "Y"
+			record$="0";rem Current Year Actual
+		else
+			record$="2";rem Prior Year Actual
+		endif
+	endif
+	if num(yr$)=num(callpoint!.getDevObject("gls_cur_yr"))+1
+		if callpoint!.getDevObject("gl_yr_closed") <> "Y"
+			record$=" ";rem Undefined
+		else
+			record$="4";rem Next Year Actual
+		endif
+	endif
+	callpoint!.setDevObject("rec_id",record$)
+	gosub check_modified
+
+	gosub display_mtd_ytd
+[[<<DISPLAY>>.CURRENT_PER.AVAL]]
+rem --- set variables
+
+	per$=callpoint!.getUserInput()
+	callpoint!.setDevObject("cur_per",per$)
+	x$=stbl("+PER",per$)
+
+	gosub check_modified
+
+	gosub display_mtd_ytd
+[[<<DISPLAY>>.CURRENT_PER.AINP]]
+rem -- Ensure valid period
+
+	period$=callpoint!.getUserInput()
+	if num(period$)<1 or num(period$)>num(callpoint!.getDevObject("tot_pers"))
+		msg_id$="INVALID_PERIOD"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
 [[GLM_ACCT.ARAR]]
-rem --- Display MTD and YTD
+rem --- Set initial values for period and year
 
-	glm02_dev=fnget_dev("GLM_ACCTSUMMARY")
-	dim glm02$:fnget_tpl$("GLM_ACCTSUMMARY")
-	acct_no$=callpoint!.getColumnData("GLM_ACCT.GL_ACCOUNT")
-	rec_id$=callpoint!.getDevObject("rec_id")
-	cur_per=num(callpoint!.getDevObject("cur_per"))
+	callpoint!.setColumnData("<<DISPLAY>>.CURRENT_PER",stbl("+PER"),1)
+	callpoint!.setColumnData("<<DISPLAY>>.CURRENT_YEAR",stbl("+YEAR"),1)
 
-	read record (glm02_dev,key=firm_id$+acct_no$+rec_id$,dom=*next) glm02$
-	cur_amt=nfield(glm02$,"period_amt_"+str(cur_per:"00"))
-	ytd_amt=0
-	for x=1 to cur_per
-		ytd_amt=ytd_amt+nfield(glm02$,"period_amt_"+str(x:"00"))
-	next x
-
-	callpoint!.setColumnData("<<DISPLAY>>.MTD_TOTAL",str(cur_amt),1)
-	callpoint!.setColumnData("<<DISPLAY>>.YTD_TOTAL",str(ytd_amt),1)
+	gosub display_mtd_ytd
 [[GLM_ACCT.BDEL]]
 rem --- Check for activity
 	okay$="Y"
@@ -305,6 +347,46 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :                       "",
 :                       dflt_data$[all]
 [[GLM_ACCT.<CUSTOM>]]
+rem ======================================================
+check_modified:
+rem ======================================================
+
+	det_flag$=callpoint!.getColumnData("GLM_ACCT.DETAIL_FLAG")
+	dsk_det_flag$=callpoint!.getColumnDiskData("GLM_ACCT.DETAIL_FLAG")
+	desc$=callpoint!.getColumnData("GLM_ACCT.GL_ACCT_DESC")
+	dsk_desc$=callpoint!.getColumnDiskData("GLM_ACCT.GL_ACCT_DESC")
+	type$=callpoint!.getColumnData("GLM_ACCT.GL_ACCT_TYPE")
+	dsk_type$=callpoint!.getColumnDiskData("GLM_ACCT.GL_ACCT_TYPE")
+	if det_flag$=dsk_det_flag$ and desc$=dsk_desc$ and type$=dsk_type$
+		callpoint!.setStatus("CLEAR")
+	endif
+
+	return
+
+rem ======================================================
+display_mtd_ytd:
+rem ======================================================
+
+rem --- Display MTD and YTD
+
+	glm02_dev=fnget_dev("GLM_ACCTSUMMARY")
+	dim glm02$:fnget_tpl$("GLM_ACCTSUMMARY")
+	acct_no$=callpoint!.getColumnData("GLM_ACCT.GL_ACCOUNT")
+	rec_id$=callpoint!.getDevObject("rec_id")
+	cur_per=num(callpoint!.getDevObject("cur_per"))
+
+	read record (glm02_dev,key=firm_id$+acct_no$+rec_id$,dom=*next) glm02$
+	cur_amt=nfield(glm02$,"period_amt_"+str(cur_per:"00"))
+	ytd_amt=0
+	for x=1 to cur_per
+		ytd_amt=ytd_amt+nfield(glm02$,"period_amt_"+str(x:"00"))
+	next x
+
+	callpoint!.setColumnData("<<DISPLAY>>.MTD_TOTAL",str(cur_amt),1)
+	callpoint!.setColumnData("<<DISPLAY>>.YTD_TOTAL",str(ytd_amt),1)
+
+	return
+
 #include std_missing_params.src
 [[GLM_ACCT.BSHO]]
 rem --- Open/Lock files
@@ -345,3 +427,6 @@ find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
 	callpoint!.setDevObject("cur_year",gls01a.current_year$)
 	x$=stbl("+YEAR",gls01a.current_year$)
 	x$=stbl("+PER",gls01a.current_per$)
+	callpoint!.setDevObject("tot_pers",gls01a.total_pers$)
+	callpoint!.setDevObject("gl_yr_closed",gls01a.gl_yr_closed$)
+	callpoint!.setDevObject("gls_cur_yr",gls01a.current_year$)
