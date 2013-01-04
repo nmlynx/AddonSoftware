@@ -3,11 +3,14 @@ rem --- Recalculate totals
 
 	disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getUserInput())
+	prev_freight_amt=num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
 	gosub calculate_tax
 	gosub disp_totals
 
- 	callpoint!.setFocus("OPE_ORDHDR.DISCOUNT_AMT")
 	callpoint!.setDevObject("was_on_tot_tab","Y")
+	if freight_amt<>prev_freight_amt then
+	 	callpoint!.setFocus("<<DISPLAY>>.NET_SALES")
+	endif
 [[OPE_ORDHDR.DISCOUNT_AMT.AVAL]]
 rem --- Discount Amount cannot exceed Total Sales Amount
 
