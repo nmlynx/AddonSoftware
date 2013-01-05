@@ -1,3 +1,14 @@
+[[SFE_LOADBAL.ARAR]]
+rem --- Default Op Code to first in the file
+
+	opcode_dev=callpoint!.getDevObject("opcode_chan")
+	dim opcode$:callpoint!.getDevObject("opcode_tpl")
+
+	read (opcode_dev,key=firm_id$,dom=*next)
+	read record (opcode_dev,dom=*next) opcode$
+	if firm_id$=opcode.firm_id$
+		callpoint!.setColumnData("SFE_LOADBAL.OP_CODE",opcode.op_code$,1)
+	endif
 [[SFE_LOADBAL.BFMC]]
 rem --- open files/init
 
@@ -42,7 +53,6 @@ rem --- open files/init
 
 	callpoint!.setDevObject("opcode_chan",num(open_chans$[1]))
 	callpoint!.setDevObject("opcode_tpl",open_tpls$[1])
-
 [[SFE_LOADBAL.ZOOM_LEVEL.AVAL]]
 rem --- call graphing routine
 
