@@ -41,7 +41,16 @@ group by bmm_billmat.firm_id, bmm_billmat.bill_no, bmm_billmat.material_seq, bmm
     ($F{DIVISOR}*$P{EST_YIELD}*(100-$F{SCRAP_FACTOR}))]]></variableExpression>
 	</variable>
 	<variable name="TOT_MAT_COST" class="java.math.BigDecimal" calculation="Sum">
-		<variableExpression><![CDATA[$V{TOTAL_COST}]]></variableExpression>
+		<variableExpression><![CDATA[new Boolean ($F{LINE_TYPE} == "S") &&
+((((new Boolean ($P{PROD_DATE}.trim().isEmpty())) ||
+(new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
+    $P{PROD_DATE} >= $F{EFFECT_DATE} &&
+    $F{OBSOLT_DATE}.trim().isEmpty()) ||
+(new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
+    $P{PROD_DATE} >= $F{EFFECT_DATE} &&
+    !$F{OBSOLT_DATE}.trim().isEmpty() &&
+    $P{PROD_DATE} < $F{OBSOLT_DATE}))) ||
+$P{ALL_DATES} == "Y") ? $V{TOTAL_COST} : 0]]></variableExpression>
 	</variable>
 	<variable name="NET_REQUIRED" class="java.math.BigDecimal">
 		<variableExpression><![CDATA[$F{DIVISOR} == 0 ? 0:10000*$F{QTY_REQUIRED}*$F{ALT_FACTOR}/
@@ -107,10 +116,10 @@ group by bmm_billmat.firm_id, bmm_billmat.bill_no, bmm_billmat.material_seq, bmm
 			<printWhenExpression><![CDATA[new Boolean ($F{LINE_TYPE} == "S") &&
 ((((new Boolean ($P{PROD_DATE}.trim().isEmpty())) ||
 (new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
-    $P{PROD_DATE} > $F{EFFECT_DATE} &&
+    $P{PROD_DATE} >= $F{EFFECT_DATE} &&
     $F{OBSOLT_DATE}.trim().isEmpty()) ||
 (new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
-    $P{PROD_DATE} > $F{EFFECT_DATE} &&
+    $P{PROD_DATE} >= $F{EFFECT_DATE} &&
     !$F{OBSOLT_DATE}.trim().isEmpty() &&
     $P{PROD_DATE} < $F{OBSOLT_DATE}))) ||
 $P{ALL_DATES} == "Y")]]></printWhenExpression>
@@ -224,10 +233,10 @@ $P{ALL_DATES} == "Y"]]></printWhenExpression>
 			<printWhenExpression><![CDATA[new Boolean ($F{LINE_TYPE} =="M") &&
 ((((new Boolean ($P{PROD_DATE}.trim().isEmpty())) ||
 (new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
-    $P{PROD_DATE} > $F{EFFECT_DATE} &&
+    $P{PROD_DATE} >= $F{EFFECT_DATE} &&
     $F{OBSOLT_DATE}.trim().isEmpty()) ||
 (new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
-    $P{PROD_DATE} > $F{EFFECT_DATE} &&
+    $P{PROD_DATE} >= $F{EFFECT_DATE} &&
     !$F{OBSOLT_DATE}.trim().isEmpty() &&
     $P{PROD_DATE} < $F{OBSOLT_DATE}))) ||
 $P{ALL_DATES} == "Y")]]></printWhenExpression>
