@@ -62,10 +62,28 @@ where firm_id = $P{FIRM_ID} and bill_no = $P{BILL_NO}]]>
 		<initialValueExpression><![CDATA[new BigDecimal(0.000)]]></initialValueExpression>
 	</variable>
 	<variable name="TOT_DIR_COST" class="java.math.BigDecimal" calculation="Sum">
-		<variableExpression><![CDATA[$V{DIR_COST}]]></variableExpression>
+		<variableExpression><![CDATA[new Boolean ($F{LINE_TYPE} == "S") &&
+(((new Boolean ($P{PROD_DATE}.trim().isEmpty())) ||
+(new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
+    $P{PROD_DATE} >= $F{EFFECT_DATE} &&
+    $F{OBSOLT_DATE}.trim().isEmpty()) ||
+(new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
+    $P{PROD_DATE} >= $F{EFFECT_DATE} &&
+    !$F{OBSOLT_DATE}.trim().isEmpty() &&
+    $P{PROD_DATE} < $F{OBSOLT_DATE})) ||
+$P{ALL_DATES} == "Y") ? $V{DIR_COST} : 0]]></variableExpression>
 	</variable>
 	<variable name="TOT_OH_COST" class="java.math.BigDecimal" calculation="Sum">
-		<variableExpression><![CDATA[$V{OH_COST}]]></variableExpression>
+		<variableExpression><![CDATA[new Boolean ($F{LINE_TYPE} == "S") &&
+(((new Boolean ($P{PROD_DATE}.trim().isEmpty())) ||
+(new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
+    $P{PROD_DATE} >= $F{EFFECT_DATE} &&
+    $F{OBSOLT_DATE}.trim().isEmpty()) ||
+(new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
+    $P{PROD_DATE} >= $F{EFFECT_DATE} &&
+    !$F{OBSOLT_DATE}.trim().isEmpty() &&
+    $P{PROD_DATE} < $F{OBSOLT_DATE})) ||
+$P{ALL_DATES} == "Y") ? $V{OH_COST} : 0]]></variableExpression>
 	</variable>
 	<background>
 		<band splitType="Stretch"/>
@@ -156,10 +174,10 @@ where firm_id = $P{FIRM_ID} and bill_no = $P{BILL_NO}]]>
 			<printWhenExpression><![CDATA[new Boolean ($F{LINE_TYPE} == "S") &&
 (((new Boolean ($P{PROD_DATE}.trim().isEmpty())) ||
 (new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
-    $P{PROD_DATE} > $F{EFFECT_DATE} &&
+    $P{PROD_DATE} >= $F{EFFECT_DATE} &&
     $F{OBSOLT_DATE}.trim().isEmpty()) ||
 (new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
-    $P{PROD_DATE} > $F{EFFECT_DATE} &&
+    $P{PROD_DATE} >= $F{EFFECT_DATE} &&
     !$F{OBSOLT_DATE}.trim().isEmpty() &&
     $P{PROD_DATE} < $F{OBSOLT_DATE})) ||
 $P{ALL_DATES} == "Y")]]></printWhenExpression>
@@ -261,10 +279,10 @@ $P{ALL_DATES} == "Y"]]></printWhenExpression>
 			<printWhenExpression><![CDATA[new Boolean ($F{LINE_TYPE} == "M") &&
 (((new Boolean ($P{PROD_DATE}.trim().isEmpty())) ||
 (new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
-    $P{PROD_DATE} > $F{EFFECT_DATE} &&
+    $P{PROD_DATE} >= $F{EFFECT_DATE} &&
     $F{OBSOLT_DATE}.trim().isEmpty()) ||
 (new Boolean (!$P{PROD_DATE}.trim().isEmpty()) &&
-    $P{PROD_DATE} > $F{EFFECT_DATE} &&
+    $P{PROD_DATE} >= $F{EFFECT_DATE} &&
     !$F{OBSOLT_DATE}.trim().isEmpty() &&
     $P{PROD_DATE} < $F{OBSOLT_DATE})) ||
 $P{ALL_DATES} == "Y")]]></printWhenExpression>
