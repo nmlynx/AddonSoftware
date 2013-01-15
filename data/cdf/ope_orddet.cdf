@@ -45,11 +45,15 @@ rem --- Enable repricing, options, lots
 	gosub enable_addl_opts
 	gosub able_lot_button
 
-rem --- Force focus on Item ID when Warehouse Code entry is skipped
+rem --- Force focus when Warehouse Code entry is skipped
 
 	if callpoint!.getDevObject("skipWHCode") = "Y" then
 		callpoint!.setDevObject("skipWHCode","N"); rem --- skip warehouse code entry only once
-		callpoint!.setFocus(num(callpoint!.getValidationRow()),"OPE_ORDDET.ITEM_ID",1)
+		if pos(user_tpl.line_type$="SP") then 
+			callpoint!.setFocus(num(callpoint!.getValidationRow()),"OPE_ORDDET.ITEM_ID",1)
+		else
+			callpoint!.setFocus(num(callpoint!.getValidationRow()),"OPE_ORDDET.ORDER_MEMO",1)
+		endif
 		break
 	endif
 [[OPE_ORDDET.AOPT-ADDL]]
