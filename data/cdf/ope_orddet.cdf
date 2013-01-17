@@ -903,6 +903,10 @@ rem --- Set buttons
 rem --- Set availability info
 
 	gosub set_avail
+
+rem --- May want to skip line code entry, and/or warehouse code entry, the first time.
+	callpoint!.setDevObject("skipLineCode",user_tpl.skip_ln_code$)
+	callpoint!.setDevObject("skipWHCode",user_tpl.skip_whse$)
 [[OPE_ORDDET.AGRE]]
 rem --- Clear/set flags
 
