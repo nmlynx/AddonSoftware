@@ -1,9 +1,236 @@
 =======================================================================================================================================
- Report Date:   2013-01-09
+ Report Date:   2013-01-15
  Report Branch: AddonSoftware 12.21
  Last Release:  AddonSoftware 12.20
 =======================================================================================================================================
 
+Revision: 10239
+
+Date: 4:00:20 PM, Tuesday, January 15, 2013
+Message:
+Propagating the new jasper-based AR Simple Invoice and AR Statements (and On Demand Stmt updated) to 12.21 branch.
+----
+Modified : /branches/BBJ1221GA/ad/src/adx_build_sproc.aon
+Modified : /branches/BBJ1221GA/ar/src/arr_invoices.aon
+Added : /branches/BBJ1221GA/ar/src/arr_invoices_BBjForm.aon
+Modified : /branches/BBJ1221GA/ar/src/arr_statements.aon
+Added : /branches/BBJ1221GA/ar/src/arr_statements_BBjForm.aon
+Modified : /branches/BBJ1221GA/ar/src/arr_stmt_demand.aon
+Modified : /branches/BBJ1221GA/data/ars_report
+Modified : /branches/BBJ1221GA/data/bar/arr_invoices.xml
+Modified : /branches/BBJ1221GA/data/bar/arr_statements.xml
+Modified : /branches/BBJ1221GA/data/bar/arr_stmt_demand.xml
+Modified : /branches/BBJ1221GA/reports/CustStatement.jasper
+Modified : /branches/BBJ1221GA/reports/CustStatement.jrxml
+Added : /branches/BBJ1221GA/reports/StatementMaster.jasper
+Added : /branches/BBJ1221GA/reports/StatementMaster.jrxml
+Modified : /branches/BBJ1221GA/sprocs/CUSTSTATEMENTS.prc
+Added : /branches/BBJ1221GA/sprocs/SIMPLE_INVOICE.prc
+Added : /branches/BBJ1221GA/sprocs/SIMPLE_INVOICE_DTL.prc
+
+=======================================================================================================================================
+Revision: 10238
+
+Date: 3:51:41 PM, Tuesday, January 15, 2013
+Message:
+Prop to branch -> Revision: 10106
+
+Date: Wednesday, December 19, 2012 4:20:25 PM
+Message:
+Setting SF installed flag to Y.
+----
+Modified : /trunk/data/sync/adm_modules~01007514sf.xml
+----
+Modified : /branches/BBJ1221GA/data/sync/adm_modules~01007514sf.xml
+
+=======================================================================================================================================
+Revision: 10237
+
+Date: 2:53:40 PM, Tuesday, January 15, 2013
+Message:
+Prop to branch -> Revision: 10236
+
+Date: Tuesday, January 15, 2013 2:48:30 PM
+Message:
+Bug 6494: Enabled new "Disallow master record maintenance" option on Set Build Defaults form for Addon modules.
+----
+Added : /trunk/data/sync/adm_module_dflt~01007514ad_r.xml
+Added : /trunk/data/sync/adm_module_dflt~01007514ap_r.xml
+Added : /trunk/data/sync/adm_module_dflt~01007514ar_r.xml
+Added : /trunk/data/sync/adm_module_dflt~01007514bm_r.xml
+Added : /trunk/data/sync/adm_module_dflt~01007514cr_r.xml
+Added : /trunk/data/sync/adm_module_dflt~01007514gl_r.xml
+Added : /trunk/data/sync/adm_module_dflt~01007514iv_r.xml
+Added : /trunk/data/sync/adm_module_dflt~01007514mp_r.xml
+Added : /trunk/data/sync/adm_module_dflt~01007514op_r.xml
+Added : /trunk/data/sync/adm_module_dflt~01007514po_r.xml
+Added : /trunk/data/sync/adm_module_dflt~01007514pr_r.xml
+Added : /trunk/data/sync/adm_module_dflt~01007514sa_r.xml
+Added : /trunk/data/sync/adm_module_dflt~01007514sf_r.xml
+Added : /trunk/data/sync/adm_module_dflt~01007514sy_r.xml
+----
+Added : /branches/BBJ1221GA/data/sync/adm_module_dflt~01007514ad_r.xml
+Added : /branches/BBJ1221GA/data/sync/adm_module_dflt~01007514ap_r.xml
+Added : /branches/BBJ1221GA/data/sync/adm_module_dflt~01007514ar_r.xml
+Added : /branches/BBJ1221GA/data/sync/adm_module_dflt~01007514bm_r.xml
+Added : /branches/BBJ1221GA/data/sync/adm_module_dflt~01007514cr_r.xml
+Added : /branches/BBJ1221GA/data/sync/adm_module_dflt~01007514gl_r.xml
+Added : /branches/BBJ1221GA/data/sync/adm_module_dflt~01007514iv_r.xml
+Added : /branches/BBJ1221GA/data/sync/adm_module_dflt~01007514mp_r.xml
+Added : /branches/BBJ1221GA/data/sync/adm_module_dflt~01007514op_r.xml
+Added : /branches/BBJ1221GA/data/sync/adm_module_dflt~01007514po_r.xml
+Added : /branches/BBJ1221GA/data/sync/adm_module_dflt~01007514pr_r.xml
+Added : /branches/BBJ1221GA/data/sync/adm_module_dflt~01007514sa_r.xml
+Added : /branches/BBJ1221GA/data/sync/adm_module_dflt~01007514sf_r.xml
+Added : /branches/BBJ1221GA/data/sync/adm_module_dflt~01007514sy_r.xml
+
+=======================================================================================================================================
+Revision: 10235
+
+Date: 11:23:41 AM, Tuesday, January 15, 2013
+Message:
+Prop to branch -> Revision: 10226
+
+Date: Tuesday, January 15, 2013 10:27:42 AM
+Message:
+Bug 6594: When warehouse is skipped, set focus on next field based on line type.
+----
+Modified : /trunk/data/bar/ope_invdet.xml
+Modified : /trunk/data/bar/ope_orddet.xml
+Modified : /trunk/data/cdf/ope_invdet.cdf
+Modified : /trunk/data/cdf/ope_orddet.cdf
+----
+Modified : /branches/BBJ1221GA/data/bar/ope_invdet.xml
+Modified : /branches/BBJ1221GA/data/bar/ope_orddet.xml
+Modified : /branches/BBJ1221GA/data/cdf/ope_invdet.cdf
+Modified : /branches/BBJ1221GA/data/cdf/ope_orddet.cdf
+
+=======================================================================================================================================
+Revision: 10234
+
+Date: 11:21:12 AM, Tuesday, January 15, 2013
+Message:
+Prop to branch -> Revision: 10225
+
+Date: Monday, January 14, 2013 10:22:21 PM
+Message:
+Added column to display Hold Status to Payment Selection grid to fix bug 4632.
+----
+Modified : /trunk/data/bar/ape_payselect.xml
+Modified : /trunk/data/cdf/ape_payselect.cdf
+----
+Modified : /branches/BBJ1221GA/data/bar/ape_payselect.xml
+Modified : /branches/BBJ1221GA/data/cdf/ape_payselect.cdf
+
+=======================================================================================================================================
+Revision: 10233
+
+Date: 11:18:16 AM, Tuesday, January 15, 2013
+Message:
+Prop to branch -> Revision: 10224
+
+Date: Friday, January 11, 2013 10:15:08 PM
+Message:
+Add Aging Date to report to fix bug 4533.
+----
+Modified : /trunk/ap/src/apr_agingreport.aon
+----
+Modified : /branches/BBJ1221GA/ap/src/apr_agingreport.aon
+
+=======================================================================================================================================
+Revision: 10232
+
+Date: 11:16:18 AM, Tuesday, January 15, 2013
+Message:
+Prop to branch -> Revision: 10223
+
+Date: Thursday, January 10, 2013 10:39:27 PM
+Message:
+Added logic using getListingForPhysicalLine in adc_noparams.aon to display the line of code that caused the missing parameter message to be displayed to fix bug 5988.
+----
+Modified : /trunk/ad/src/adc_noparams.aon
+----
+Modified : /branches/BBJ1221GA/ad/src/adc_noparams.aon
+
+=======================================================================================================================================
+Revision: 10231
+
+Date: 11:14:35 AM, Tuesday, January 15, 2013
+Message:
+Prop to branch -> Revision: 10221
+
+Date: Wednesday, January 09, 2013 11:06:04 PM
+Message:
+Created the key template using bac_key_template, and used the proper secondary key to fix bug 6593.
+----
+Modified : /trunk/sf/src/sfu_clsdworeg.aon
+----
+Modified : /branches/BBJ1221GA/sf/src/sfu_clsdworeg.aon
+
+=======================================================================================================================================
+Revision: 10230
+
+Date: 11:12:29 AM, Tuesday, January 15, 2013
+Message:
+Prop to branch -> Revision: 10220
+
+Date: Wednesday, January 09, 2013 4:58:37 PM
+Message:
+Bug 6578: Corrected construction of key for glm_bankmaster (glm-05).
+----
+Modified : /trunk/data/bar/glm_bankmaster.xml
+Modified : /trunk/data/cdf/glm_bankmaster.cdf
+----
+Modified : /branches/BBJ1221GA/data/bar/glm_bankmaster.xml
+Modified : /branches/BBJ1221GA/data/cdf/glm_bankmaster.cdf
+
+=======================================================================================================================================
+Revision: 10229
+
+Date: 11:10:19 AM, Tuesday, January 15, 2013
+Message:
+Prop to branch -> Revision: 10219
+
+Date: Wednesday, January 09, 2013 4:07:18 PM
+Message:
+Bug 6582: Corrected logic for testing if an inventory item is also a bill of materials component.
+----
+Modified : /trunk/iv/src/ivc_deleteitem.aon
+----
+Modified : /branches/BBJ1221GA/iv/src/ivc_deleteitem.aon
+
+=======================================================================================================================================
+Revision: 10228
+
+Date: 11:07:50 AM, Tuesday, January 15, 2013
+Message:
+Prop to branch -> Revision: 10217
+
+Date: Wednesday, January 09, 2013 11:09:25 AM
+Message:
+Bug 6591 - AR - AR Cash Receipts Register: Out-of-balance logic may be using wrong buckets for comparison
+Changed logic that checks for out-of-balance condition. 
+----
+Modified : /trunk/ar/src/arr_cashreceipts.aon
+----
+Modified : /branches/BBJ1221GA/ar/src/arr_cashreceipts.aon
+
+=======================================================================================================================================
+Revision: 10227
+
+Date: 11:05:44 AM, Tuesday, January 15, 2013
+Message:
+Prop to branch -> Revision: 10216
+
+Date: Tuesday, January 08, 2013 6:38:14 PM
+Message:
+Per bug 6592, fixed potential loop due to an advisory locking extract.
+----
+Modified : /trunk/ap/src/apu_invoiceentry.aon
+----
+Modified : /branches/BBJ1221GA/ap/src/apu_invoiceentry.aon
+
+=======================================================================================================================================
 Revision: 10214
 
 Date: 10:24:11 AM, Saturday, January 05, 2013
