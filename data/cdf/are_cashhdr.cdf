@@ -1,3 +1,7 @@
+[[ARE_CASHHDR.ADEQ]]
+rem --- Need to delete orphan are-11 and (are_cashdet) are-31 (are_cashbal) records in ADEQ instead of ADEL
+rem --- because ADEL doesn't fire when a new un-saved cash receipt entry is deleted.
+gosub delete_cashdet_cashbal
 [[ARE_CASHHDR.AABO]]
 rem --- user has elected to not save changes
 rem --- remove any orphan are_cashdet and are_cashgl records, and update are_cashbal accordingly 
@@ -165,8 +169,6 @@ if data_present$="Y"
 endif
 
 gosub update_cashhdr_cashdet_cashbal
-[[ARE_CASHHDR.ADEL]]
-gosub delete_cashdet_cashbal
 [[ARE_CASHHDR.ADIS]]
 gosub calc_header
 [[ARE_CASHHDR.AOPT-OACT]]
