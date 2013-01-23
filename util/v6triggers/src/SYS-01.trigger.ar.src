@@ -162,8 +162,8 @@ rem		goto return_default
 							sys01.type$=tpl.ar$
 							sys01.zero$=tpl.sequence_00$
 							sys01.cust_in_mask$=acct_mask_in$
-							sys01.cust_size$=str(acctlen)
-							sys01.max_size$=tpl.max_customer_len$
+							sys01.cust_size$=str(acctlen:"00")
+							sys01.max_size$=str(max(6,acctlen):"00")
 							sys01.mult_types$=tpl.multi_types$
 							sys01.mult_dist$=tpl.multi_dist$
 							sys01.hold_zero$=tpl.hold_zero$
