@@ -205,7 +205,7 @@ rem ---  create list for column zero of grid -- column type drop-down
 rem ---  set up grid
 
 	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
-	gridActivity!=Form!.addGrid(nxt_ctlID,5,100,1000,200)
+	gridActivity!=Form!.addGrid(nxt_ctlID,5,130,1000,200)
 	gridActivity!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 	gridActivity!.setSelectionMode(gridActivity!.GRID_SELECT_CELL)
 	gridActivity!.setSelectedRow(0)
@@ -257,6 +257,8 @@ rem --- Set initial values for period and year
 
 	callpoint!.setColumnData("<<DISPLAY>>.CURRENT_PER",stbl("+PER"),1)
 	callpoint!.setColumnData("<<DISPLAY>>.CURRENT_YEAR",stbl("+YEAR"),1)
+	callpoint!.setColumnData("<<DISPLAY>>.FISCAL_PER",stbl("+PER"),1)
+	callpoint!.setColumnData("<<DISPLAY>>.FISCAL_YEAR",stbl("+YEAR"),1)
 
 	gosub display_mtd_ytd
 
@@ -407,6 +409,7 @@ rem --- Display MTD and YTD
 
 	callpoint!.setColumnData("<<DISPLAY>>.MTD_TOTAL",str(cur_amt),1)
 	callpoint!.setColumnData("<<DISPLAY>>.YTD_TOTAL",str(ytd_amt),1)
+	callpoint!.setColumnData("<<DISPLAY>>.YTD_BALANCE",str(ytd_amt+glm02.begin_amt),1)
 
 	return
 
