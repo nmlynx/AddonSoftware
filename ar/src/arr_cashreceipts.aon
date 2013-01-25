@@ -629,7 +629,13 @@ print_totals: rem --- Print date or receipt code totals
 
 	if pt[0]+pt[3]<>pt[6]
 		bal_errors=bal_errors+1
-		OutVect!.addItem("*** "+Translate!.getTranslation("ERROR")+" ***")
+		msg$="*** "+Translate!.getTranslation("ERROR")+" - "
+		msg$=msg$+Translate!.getTranslation("AON_CASH_AMT")
+		msg$=msg$+Translate!.getTranslation("AON__PLUS_")
+		msg$=msg$+Translate!.getTranslation("AON_MISC_AMT")
+		msg$=msg$+Translate!.getTranslation("AON__IS_NOT_EQUAL_TO_")
+		msg$=msg$+Translate!.getTranslation("AON_DEPOSIT")+" ***"
+		OutVect!.addItem(msg$)
 		xwk=fnblank(10)
 	endif
     return
