@@ -1,3 +1,30 @@
+[[APM_VENDMAST.AOPT-HCPY]]
+rem --- Go run the Hard Copy form
+
+	vend$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+	temp$=callpoint!.getColumnData("APM_VENDMAST.TEMP_VEND")
+	if temp$="Y"
+		type$="T"
+	else
+		type$="P"
+	endif
+
+	dim dflt_data$[3,1]
+	dflt_data$[1,0]="VENDOR_ID_1"
+	dflt_data$[1,1]=vend$
+	dflt_data$[2,0]="VENDOR_ID_2"
+	dflt_data$[2,1]=vend$
+	dflt_data$[3,0]="VENDOR_TYPE"
+	dflt_data$[3,1]=type$
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"APR_DETAIL",
+:		stbl("+USER_ID"),
+:		"MNT",
+:		"",
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
 [[APM_VENDMAST.VENDOR_ID.AVAL]]
 if num(callpoint!.getUserInput(),err=*endif)=0
 	callpoint!.setMessage("INPUT_ERR_MAIN")
