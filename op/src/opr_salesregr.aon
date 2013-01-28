@@ -110,8 +110,8 @@ rem --- Parameters
         g[4]=num(gls01a.max_acct_len$)
 
         g[2]=fnyy_year(gls01a.current_year$)
-        p[0]=num(ars01a.customer_size$)
-        p[1]=num(ars01a.max_customer_len$)
+        p[0]=len(arm01a.customer_id$)
+        p[1]=max(6,len(arm01a.customer_id$))
         p[2]=fnyy_year(ars01a.current_year$)
 
     rem --- Initializations

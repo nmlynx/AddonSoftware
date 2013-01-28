@@ -119,7 +119,7 @@ rem --- Parameters
 
         if sfs01a.ar_interface$<>"N"
             find record (ars01a_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
-            c0=num(ars01a.customer_size$)
+            c0=len(arm01a.customer_id$)
             c1=len(ars01a.customer_output$)
         endif
 
