@@ -205,7 +205,7 @@ rem ---  create list for column zero of grid -- column type drop-down
 rem ---  set up grid
 
 	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
-	gridActivity!=Form!.addGrid(nxt_ctlID,5,100,1000,100)
+	gridActivity!=Form!.addGrid(nxt_ctlID,5,100,1000,200)
 	gridActivity!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 	gridActivity!.setSelectionMode(gridActivity!.GRID_SELECT_CELL)
 	gridActivity!.setSelectedRow(0)
