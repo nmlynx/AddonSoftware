@@ -117,7 +117,7 @@ rem --- Parameters
 
         if ap$<>"N"
             find record (aps01a_dev,key=firm_id$+"AP00",dom=std_missing_params) aps01a$
-            c2=num(aps01a.vendor_size$)
+            c2=len(apm01a.vendor_id$)
             c3=len(aps01a.vendor_output$)
         endif
 
