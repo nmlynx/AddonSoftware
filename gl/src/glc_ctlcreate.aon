@@ -303,7 +303,7 @@ rem --- or returned.
         glcontrol.max_lim_str$=str(gls01d.gl_max_limit)
         glcontrol.max_bal_str$=str(gls01d.max_balance)
         glcontrol.acct_output$=glm0$
-        glcontrol.max_acct_len$=max(10,len(gls01d.gl_account$))
+        glcontrol.max_acct_len$=str(max(10,len(gls01d.gl_account$)))
         call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",glm1$,0,0
         glcontrol.amount_mask$=glm1$
         call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","U","",glm2$,0,0
