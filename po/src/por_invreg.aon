@@ -170,8 +170,8 @@ rem --- Parameters
     g[0]=num(gls01a.total_pers$)
     g[1]=num(gls01a.current_per$)
     g[2]=num(gls01a.current_year$)
-    g[3]=num(gls01a.acct_length$)
-    g[4]=num(gls01a.max_acct_len$)
+    g[3]=glmasklen
+    g[4]=max(10,len(poe35a.gl_account$))
     if cash goto l500
     call pgmdir$+"glc_ctlcreate.aon",err=l500,source$,n2$,glw11$,gl$,status
     if status goto remove_locks_and_exit

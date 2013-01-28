@@ -193,6 +193,7 @@ rem --- Additional File Opens
         glt04_dev=num(open_chans$[13])
         glt05_dev=num(open_chans$[14])
         dim gls01a$:open_tpls$[10]
+        dim glm01a$:open_tpls$[11]
     
         rem --- Clear trans for this firm/process/batch from glw-11 work file (if not batching, batch_no$ is zero, and will clear all recs this firm/process)
         rec_pfx$=firm_id$+process_id$+batch_no$
@@ -222,9 +223,9 @@ rem --- Initializations
         g[0]=num(gls01a.total_pers$)
         g[1]=num(gls01a.current_per$)
         g[2]=num(gls01a.current_year$)
-        g[3]=num(gls01a.acct_length$)
-        g[4]=num(gls01a.max_acct_len$)
-        call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","I","",g5$,0,0
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","I","",g5$,0,acct_length
+        g[3]=acct_length
+        g[4]=max(10,len(glm01a.gl_account$))
    endif
 
     width=132
