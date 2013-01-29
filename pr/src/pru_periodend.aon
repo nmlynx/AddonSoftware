@@ -72,7 +72,7 @@ rem --- Parameters
         g[2]=num(current_year$)
         call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,acct_length
         g[3]=acct_length
-        g[4]=max(10,len(prm10b.gl_account$))
+        g[4]=max(10,g[3])
 
         g[2]=fnyy_year(current_year$)
         p[0]=num(prs01a.empl_no_len$)

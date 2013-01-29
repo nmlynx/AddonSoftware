@@ -225,7 +225,7 @@ rem --- Initializations
         g[2]=num(gls01a.current_year$)
         call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","I","",g5$,0,acct_length
         g[3]=acct_length
-        g[4]=max(10,len(glm01a.gl_account$))
+        g[4]=max(10,g[3])
    endif
 
     width=132

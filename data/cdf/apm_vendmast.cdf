@@ -180,7 +180,7 @@ rem --- Open/Lock files
 	files$[5]="GLS_PARAMS";rem --- gls-01
 	files$[6]="IVS_PARAMS";rem --- ivs-01
 	files$[7]="APC_TYPECODE"
-	files$[8]="GLM_ACCT"
+	files$[8]="APE_INVOICEDET"
 
 	for wkx=begfile to endfile
 		options$[wkx]="OTA"
@@ -202,7 +202,7 @@ rem --- Open/Lock files
 
 rem --- Dimension miscellaneous string templates
 	dim aps01a$:templates$[4],gls01a$:templates$[5],ivs01c$:templates$[6]
-	dim glm01a$:templates$[8]
+	dim ape11a$:templates$[8]
 
 rem --- Retrieve parameter data
 	dim info$[20]
@@ -229,7 +229,7 @@ rem --- Retrieve parameter data
 :		user_tpl.multi_types$=aps01a.multi_types$,user_tpl.multi_dist$=aps01a.multi_dist$,
 :		user_tpl.ret_flag$=aps01a.ret_flag$,user_tpl.use_replen$=aps01a.use_replen$,
 :		user_tpl.gl_total_pers$=gls01a.total_pers$,user_tpl.gl_current_per$=gls01a.current_per$,
-:		user_tpl.gl_current_year$=gls01a.current_year$,user_tpl.gl_max_len$=str(max(10,len(glm01a.gl_account$)):"00")
+:		user_tpl.gl_current_year$=gls01a.current_year$,user_tpl.gl_max_len$=str(max(10,len(ape11a.gl_account$)):"00")
 	
 rem --- used to also open ivm-03 if iv$="Y", but using alt keys on ivm-01 instead
 rem --- knum=3 is firm/vendor/item, knum=9 is firm/buyer/vendor/item
