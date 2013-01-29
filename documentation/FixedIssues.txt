@@ -4,6 +4,226 @@
  Last Release:  AddonSoftware 12.20
 =======================================================================================================================================
 
+Revision: 10294
+
+Date: Tuesday, January 29, 2013 3:31:58 PM
+Message:
+Prop to branch -> Revision: 10289
+
+Date: Tuesday, January 29, 2013 2:23:08 PM
+Message:
+Bug 6621: Replaced num(empl_no_len$) with len(employee_no$), and num(max_empl_no$) with max(9,len(employee_no$))
+----
+Modified : /trunk/data/prs_params
+Modified : /trunk/data/sfs_params
+Modified : /trunk/mp/src/mpr_pegging.aon
+Modified : /trunk/pr/src/prm_archyrendtot.aon
+Modified : /trunk/pr/src/prr_accrlstat.aon
+Modified : /trunk/pr/src/prr_adjustment.aon
+Modified : /trunk/pr/src/prr_checkhistory.aon
+Modified : /trunk/pr/src/prr_chkprint.aon
+Modified : /trunk/pr/src/prr_chkregister.aon
+Modified : /trunk/pr/src/prr_contribstat.aon
+Modified : /trunk/pr/src/prr_dailyentry.aon
+Modified : /trunk/pr/src/prr_datelist.aon
+Modified : /trunk/pr/src/prr_dedsttreport.aon
+Modified : /trunk/pr/src/prr_depart_cd.aon
+Modified : /trunk/pr/src/prr_details.aon
+Modified : /trunk/pr/src/prr_dlyentryreg.aon
+Modified : /trunk/pr/src/prr_earnhist.aon
+Modified : /trunk/pr/src/prr_earningentry.aon
+Modified : /trunk/pr/src/prr_earnings.aon
+Modified : /trunk/pr/src/prr_earnstatus.aon
+Modified : /trunk/pr/src/prr_empl_master.aon
+Modified : /trunk/pr/src/prr_empmaintlist.aon
+Modified : /trunk/pr/src/prr_exception.aon
+Modified : /trunk/pr/src/prr_gldistrib.aon
+Modified : /trunk/pr/src/prr_labrdistrib.aon
+Modified : /trunk/pr/src/prr_lbrdistrepor.aon
+Modified : /trunk/pr/src/prr_mnthchck.aon
+Modified : /trunk/pr/src/prr_precheck.aon
+Modified : /trunk/pr/src/prr_taxstatus.aon
+Modified : /trunk/pr/src/prr_unionhist.aon
+Modified : /trunk/pr/src/pru_chkupdate_ca.aon
+Modified : /trunk/pr/src/pru_dailyentry.aon
+Modified : /trunk/pr/src/pru_periodend.aon
+Modified : /trunk/pr/src/prw_w2calc.aon
+Modified : /trunk/sf/src/sfr_woadjustment.aon
+Modified : /trunk/util/v6triggers/src/SYS-01.trigger.aw.src
+----
+Modified : /branches/BBJ1221GA/data/prs_params
+Modified : /branches/BBJ1221GA/data/sfs_params
+Modified : /branches/BBJ1221GA/mp/src/mpr_pegging.aon
+Modified : /branches/BBJ1221GA/pr/src/prm_archyrendtot.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_accrlstat.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_adjustment.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_chkprint.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_contribstat.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_dailyentry.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_datelist.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_dedsttreport.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_details.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_dlyentryreg.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_earnhist.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_earningentry.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_earnings.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_earnstatus.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_empl_master.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_empmaintlist.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_exception.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_gldistrib.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_labrdistrib.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_lbrdistrepor.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_mnthchck.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_precheck.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_taxstatus.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_unionhist.aon
+Modified : /branches/BBJ1221GA/pr/src/pru_dailyentry.aon
+Modified : /branches/BBJ1221GA/pr/src/prw_w2calc.aon
+Modified : /branches/BBJ1221GA/sf/src/sfr_woadjustment.aon
+Modified : /branches/BBJ1221GA/util/v6triggers/src/SYS-01.trigger.aw.src
+
+=======================================================================================================================================
+Revision: 10293
+
+Date: Tuesday, January 29, 2013 3:26:19 PM
+Message:
+Prop to branch -> Revision: 10288
+
+Date: Tuesday, January 29, 2013 11:25:53 AM
+Message:
+Bug 6620: Cannot use template length of glm_acct.gl_account to get size of gl_account element type because field deliminator makes it zero. 
+
+----
+Modified : /trunk/ap/src/apr_invoiceentry.aon
+Modified : /trunk/ap/src/apu_chkregister.aon
+Modified : /trunk/ar/src/arr_cnvinv.aon
+Modified : /trunk/ar/src/arr_invoiceentry.aon
+Modified : /trunk/ar/src/arr_otherentry.aon
+Modified : /trunk/bm/src/bmc_explodephantoms.aon
+Modified : /trunk/bm/src/bmc_explodeupdate.aon
+Modified : /trunk/bm/src/bmr_invproduction.aon
+Modified : /trunk/data/bar/apm_vendmast.xml
+Modified : /trunk/data/cdf/apm_vendmast.cdf
+Modified : /trunk/gl/src/glc_ctlcreate.aon
+Modified : /trunk/gl/src/glc_glpost.aon
+Modified : /trunk/gl/src/glr_recap.aon
+Modified : /trunk/iv/src/ivr_valuation.aon
+Modified : /trunk/op/src/opr_salesregister.aon
+Modified : /trunk/op/src/opr_salesregr.aon
+Modified : /trunk/po/src/por_invreg.aon
+Modified : /trunk/po/src/por_recptreg.aon
+Modified : /trunk/pr/src/prr_checkhistory.aon
+Modified : /trunk/pr/src/prr_chkregister.aon
+Modified : /trunk/pr/src/prr_depart_cd.aon
+Modified : /trunk/pr/src/pru_chkupdate_ca.aon
+Modified : /trunk/pr/src/pru_periodend.aon
+Modified : /trunk/sf/src/sfr_clsdrecworeg.aon
+Modified : /trunk/sf/src/sfr_clsdworeg.aon
+Modified : /trunk/sf/src/sfr_clsdwovar.aon
+Modified : /trunk/sf/src/sfr_timesheet.aon
+Modified : /trunk/sf/src/sfr_womatissu.aon
+Modified : /trunk/sf/src/sfr_wovarrep.aon
+----
+Modified : /branches/BBJ1221GA/ap/src/apr_invoiceentry.aon
+Modified : /branches/BBJ1221GA/ap/src/apu_chkregister.aon
+Modified : /branches/BBJ1221GA/ar/src/arr_cnvinv.aon
+Modified : /branches/BBJ1221GA/ar/src/arr_invoiceentry.aon
+Modified : /branches/BBJ1221GA/ar/src/arr_otherentry.aon
+Modified : /branches/BBJ1221GA/bm/src/bmc_explodephantoms.aon
+Modified : /branches/BBJ1221GA/bm/src/bmc_explodeupdate.aon
+Modified : /branches/BBJ1221GA/bm/src/bmr_invproduction.aon
+Modified : /branches/BBJ1221GA/data/bar/apm_vendmast.xml
+Modified : /branches/BBJ1221GA/data/cdf/apm_vendmast.cdf
+Modified : /branches/BBJ1221GA/gl/src/glc_ctlcreate.aon
+Modified : /branches/BBJ1221GA/gl/src/glc_glpost.aon
+Modified : /branches/BBJ1221GA/gl/src/glr_recap.aon
+Modified : /branches/BBJ1221GA/iv/src/ivr_valuation.aon
+Modified : /branches/BBJ1221GA/po/src/por_invreg.aon
+Modified : /branches/BBJ1221GA/po/src/por_recptreg.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_checkhistory.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_chkregister.aon
+Modified : /branches/BBJ1221GA/pr/src/prr_depart_cd.aon
+Modified : /branches/BBJ1221GA/pr/src/pru_chkupdate_ca.aon
+Modified : /branches/BBJ1221GA/pr/src/pru_periodend.aon
+Modified : /branches/BBJ1221GA/sf/src/sfr_clsdrecworeg.aon
+Modified : /branches/BBJ1221GA/sf/src/sfr_clsdworeg.aon
+Modified : /branches/BBJ1221GA/sf/src/sfr_timesheet.aon
+Modified : /branches/BBJ1221GA/sf/src/sfr_womatissu.aon
+Modified : /branches/BBJ1221GA/sf/src/sfr_wovarrep.aon
+
+=======================================================================================================================================
+Revision: 10292
+
+Date: Tuesday, January 29, 2013 3:11:23 PM
+Message:
+Prop to branch -> Revision: 10287
+
+Date: Tuesday, January 29, 2013 10:28:29 AM
+Message:
+Bug 6619: Cannot use template length of arm_custmast.customer_id to get size of customer_id element type because field deliminator makes it zero. 
+----
+Modified : /trunk/op/src/opr_custjobs.aon
+Modified : /trunk/op/src/opr_history.aon
+Modified : /trunk/op/src/opr_invoiceedit.aon
+Modified : /trunk/op/src/opr_monthsales.aon
+Modified : /trunk/op/src/opr_opnorddetail.aon
+Modified : /trunk/op/src/opr_salescomm.aon
+Modified : /trunk/op/src/opr_salesregister.aon
+Modified : /trunk/op/src/opr_salesregr.aon
+Modified : /trunk/op/src/opr_shippingr.aon
+Modified : /trunk/sf/src/sfr_clsdwovar.aon
+Modified : /trunk/sf/src/sfr_woheader.aon
+----
+Modified : /branches/BBJ1221GA/op/src/opr_custjobs.aon
+Modified : /branches/BBJ1221GA/op/src/opr_history.aon
+Modified : /branches/BBJ1221GA/op/src/opr_invoiceedit.aon
+Modified : /branches/BBJ1221GA/op/src/opr_monthsales.aon
+Modified : /branches/BBJ1221GA/op/src/opr_opnorddetail.aon
+Modified : /branches/BBJ1221GA/op/src/opr_salescomm.aon
+Modified : /branches/BBJ1221GA/op/src/opr_salesregister.aon
+Modified : /branches/BBJ1221GA/op/src/opr_salesregr.aon
+Modified : /branches/BBJ1221GA/op/src/opr_shippingr.aon
+Modified : /branches/BBJ1221GA/sf/src/sfr_clsdwovar.aon
+Modified : /branches/BBJ1221GA/sf/src/sfr_woheader.aon
+
+=======================================================================================================================================
+Revision: 10291
+
+Date: Tuesday, January 29, 2013 3:07:37 PM
+Message:
+Prop to branch -> Revision: 10286
+
+Date: Monday, January 28, 2013 10:51:49 PM
+Message:
+Add Freight Terms to the PO Hard Copy to work on bug 6587. These files can be populated before v13.00 if necessary.
+----
+Modified : /trunk/po/src/por_poprint.aon
+Modified : /trunk/prop/addon.properties
+Modified : /trunk/prop/addon_en.properties
+----
+Modified : /branches/BBJ1221GA/po/src/por_poprint.aon
+Modified : /branches/BBJ1221GA/prop/addon.properties
+Modified : /branches/BBJ1221GA/prop/addon_en.properties
+
+=======================================================================================================================================
+Revision: 10290
+
+Date: Tuesday, January 29, 2013 3:04:39 PM
+Message:
+Prop to branch -> Revision: 10285
+
+Date: Monday, January 28, 2013 5:59:41 PM
+Message:
+Bug 6629: Added processing for non-stock drop ships.
+----
+Modified : /trunk/data/bar/poe_pohdr.xml
+Modified : /trunk/data/cdf/poe_pohdr.cdf
+----
+Modified : /branches/BBJ1221GA/data/bar/poe_pohdr.xml
+Modified : /branches/BBJ1221GA/data/cdf/poe_pohdr.cdf
+
+=======================================================================================================================================
 Revision: 10283
 
 Date: Monday, January 28, 2013 12:20:34 PM
