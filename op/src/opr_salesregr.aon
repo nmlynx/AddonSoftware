@@ -108,11 +108,11 @@ rem --- Parameters
         g[2]=num(gls01a.current_year$)
         call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,acct_length
         g[3]=acct_length
-        g[4]=max(10,len(glm01a.gl_account$))
+        g[4]=max(10,g[3])
 
         g[2]=fnyy_year(gls01a.current_year$)
-        p[0]=len(arm01a.customer_id$)
-        p[1]=max(6,len(arm01a.customer_id$))
+        p[0]=len(arm02a.customer_id$)
+        p[1]=max(6,p[0])
         p[2]=fnyy_year(ars01a.current_year$)
 
     rem --- Initializations

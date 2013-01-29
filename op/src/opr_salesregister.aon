@@ -156,7 +156,7 @@ rem --- Parameters
     g[2]=num(gls01a.current_year$)
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,acct_length
     g[3]=acct_length
-    g[4]=max(10,len(glm01a.gl_account$))
+    g[4]=max(10,g[3])
 
     find record (ivs01a_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs01a$
 
@@ -169,8 +169,8 @@ rem --- Parameters
     i[4]=num(ivs01a.current_year$)
     i[5]=ivs01a.ls_no_len
 
-    p[0]=len(arm01a.customer_id$)
-    p[1]=max(6,len(arm01a.customer_id$))
+    p[0]=len(ope01a.customer_id$)
+    p[1]=max(6,p[0])
     p[2]=num(ars01a.current_per$)
     p[3]=num(ars01a.current_year$)
 

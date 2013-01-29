@@ -122,13 +122,13 @@ rem --- Parameters
 
         if sfs01a.ar_interface$<>"N"
             find record (ars01a_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
-            c0=len(arm01a.customer_id$)
+            c0=len(sfe01a.customer_id$)
             c1=len(ars01a.customer_output$)
         endif
 
         call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,acct_length
         g0=acct_length
-        g1=max(10,len(glm01a.gl_account$))
+        g1=max(10,g0)
         i9=ivs01a.item_id_len
         i1=num(ivs01a.precision$)
 
