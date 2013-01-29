@@ -143,7 +143,8 @@ rem --- Additional File Opens
     if gl$="Y" then
         glm_acct_dev=channels[12],glw_accttotals_dev=channels[13]
         dim glm_acct_rec$:templates$[12],glw_accttotals_rec$:templates$[13]
-        g[4]=max(10,len(glm_acct_rec.gl_account$))
+        call pgmdir$+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,acct_length
+        g[4]=max(10,acct_length)
     endif
 
     if di$="Y" then 

@@ -87,7 +87,7 @@ rem --- Retrieve parameter records
     period=num(ars01a.current_per$)
     year=num(ars01a.current_year$)
 	call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,account_length
-    max_acct_len=max(10,len(are15a.gl_account$))
+    max_acct_len=max(10,account_length)
     m0=len(m0$)
     m1=len(m1$)
     application$="AR"
