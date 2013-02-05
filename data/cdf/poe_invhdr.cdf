@@ -1,3 +1,9 @@
+[[POE_INVHDR.ARAR]]
+if cvs(callpoint!.getColumnData("POE_INVHDR.AP_INV_NO"),2)<>""then
+	if callpoint!.getDevObject("gl_installed")="Y"
+		callpoint!.setOptionEnabled("GDIS",1)
+	endif
+endif
 [[POE_INVHDR.AP_TYPE.AVAL]]
 ap_type$=callpoint!.getUserInput()
 if ap_type$=""
@@ -195,7 +201,8 @@ rem --- when re-entering primary form, enable GL button
 rem --- only enable invoice detail button if we've already written some poe_invdet records
 rem --- also re-initialize the "deleted" flag
 
-if cvs(callpoint!.getColumnData("POE_INVHDR.AP_INV_NO"),2)<>""then
+if cvs(callpoint!.getColumnData("POE_INVHDR.AP_INV_NO"),2)<>"" and
+:	num(callpoint!.getColumnData("POE_INVHDR.INVOICE_AMT"))<>0
 	if callpoint!.getDevObject("gl_installed")="Y"
 		callpoint!.setOptionEnabled("GDIS",1)
 	endif
