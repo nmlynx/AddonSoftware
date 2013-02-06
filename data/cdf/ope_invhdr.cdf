@@ -1,3 +1,26 @@
+[[OPE_INVHDR.AOPT-COMM]]
+rem --- Display Comments form
+
+	ar_type$=callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
+	cust$=callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	order$=callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+
+	dim dflt_data$[3,1]
+	dflt_data$[1,0] = "AR_TYPE"
+	dflt_data$[1,1] = ar_type$
+	dflt_data$[2,0] = "CUSTOMER_ID"
+	dflt_data$[2,1] = cust$
+	dflt_data$[3,0] = "ORDER_NO"
+	dflt_data$[3,1] = order$
+	comment_pfx$=firm_id$+ar_type$+cust$+order$
+
+	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
+:		"OPE_ORDCOMMENTS", 
+:		stbl("+USER_ID"), 
+:		"MNT", 
+:		comment_pfx$,
+:		table_chans$[all], 
+:		dflt_data$[all]
 [[OPE_INVHDR.TAX_AMOUNT.BINP]]
 rem --- Enable/Disable Cash Sale button
 	gosub able_cash_sale
@@ -272,6 +295,7 @@ rem --- Set flags
 	callpoint!.setOptionEnabled("RPRT",0)
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("CRCH",0)
+	callpoint!.setOptionEnabled("COMM",0)
 	callpoint!.setOptionEnabled("TTLS",0)
 
 rem --- Clear order helper object
@@ -790,6 +814,7 @@ print "Hdr:APFE"; rem debug
 rem --- Enable / Disable buttons
 
 	callpoint!.setOptionEnabled("CRCH",0)
+	callpoint!.setOptionEnabled("COMM",0)
 
 	if cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2) = "" then
 		if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2) = ""
@@ -809,6 +834,7 @@ rem --- Enable / Disable buttons
 			callpoint!.setOptionEnabled("PRNT",1)
 			callpoint!.setOptionEnabled("TTLS",1)
 			callpoint!.setOptionEnabled("CRCH",1)
+			callpoint!.setOptionEnabled("COMM",1)
 			gosub able_cash_sale
 
 			if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG")<> "I" then
@@ -850,6 +876,7 @@ print "Hdr:BPFX"; rem debug
 rem --- Disable buttons
 
 	callpoint!.setOptionEnabled("CRCH",0)
+	callpoint!.setOptionEnabled("COMM",0)
 	callpoint!.setOptionEnabled("CRAT",0)
 	callpoint!.setOptionEnabled("DINV",0)
 	callpoint!.setOptionEnabled("CINV",0)
@@ -1489,6 +1516,7 @@ rem --- Enable Duplicate buttons, printer
 	endif
 
 	callpoint!.setOptionEnabled("CRCH",1)
+	callpoint!.setOptionEnabled("COMM",1)
 [[OPE_INVHDR.CUSTOMER_ID.AINP]]
 print "Hdr:CUSTOMER_ID.AINP"; rem debug
 
@@ -2653,8 +2681,8 @@ rem --- Open needed files
 	open_tables$[39]="OPE_INVHDR",   open_opts$[39]="OTA"
 	open_tables$[40]="ARC_TERMCODE", open_opts$[40]="OTA"
 	open_tables$[41]="IVM_ITEMSYN",open_opts$[41]="OTA"
-	
-gosub open_tables
+
+	gosub open_tables
 
 rem --- Verify that there are line codes - abort if not.
 
@@ -2954,6 +2982,7 @@ rem --- Enable buttons
 	callpoint!.setOptionEnabled("CASH",0)
 	callpoint!.setOptionEnabled("TTLS",0)
 	callpoint!.setOptionEnabled("CRCH",0)
+	callpoint!.setOptionEnabled("COMM",0)
 	callpoint!.setOptionEnabled("CRAT",0)
 
 rem --- Parse table_chans$[all] into an object
