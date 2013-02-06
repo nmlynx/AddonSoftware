@@ -1,6 +1,6 @@
 [[POE_INVHDR.ARAR]]
 if cvs(callpoint!.getColumnData("POE_INVHDR.AP_INV_NO"),2)<>""then
-	if callpoint!.getDevObject("gl_installed")="Y"
+	if callpoint!.getDevObject("gl_installed")="Y" and callpoint!.getDevObject("cash_basis")<>"Y"
 		callpoint!.setOptionEnabled("GDIS",1)
 	endif
 endif
@@ -121,6 +121,7 @@ callpoint!.setDevObject("multi_types",aps01a.multi_types$)
 callpoint!.setDevObject("multi_dist",aps01a.multi_dist$)
 callpoint!.setDevObject("dflt_dist_cd", aps01a.ap_dist_code$)
 callpoint!.setDevObject("retention",aps01a.ret_flag$)
+callpoint!.setDevObject("cash_basis",aps01a.cash_basis$)
 
 rem --- See if GL is installed or linked to PO
 	read record(pos01_dev,key=firm_id$+"PO00",dom=*next)pos01a$
@@ -203,7 +204,7 @@ rem --- also re-initialize the "deleted" flag
 
 if cvs(callpoint!.getColumnData("POE_INVHDR.AP_INV_NO"),2)<>"" and
 :	num(callpoint!.getColumnData("POE_INVHDR.INVOICE_AMT"))<>0
-	if callpoint!.getDevObject("gl_installed")="Y"
+	if callpoint!.getDevObject("gl_installed")="Y" and callpoint!.getDevObject("cash_basis")<>"Y"
 		callpoint!.setOptionEnabled("GDIS",1)
 	endif
 endif
@@ -269,8 +270,10 @@ endif
 
 if callpoint!.getDevObject("gl_installed")="Y"
 	callpoint!.setOptionEnabled("INVD",1)
+	if callpoint!.getDevObject("cash_basis")<>"Y"
+		callpoint!.setOptionEnabled("GDIS",1)
+	endif
 endif
-callpoint!.setOptionEnabled("GDIS",1)
 
 rem --- also need final check of balance -- invoice amt - invsel amt - gl dist amt (invsel should already equal invdet)
 
