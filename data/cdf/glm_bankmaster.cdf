@@ -292,8 +292,8 @@ rem --- Back out transactions for period after statement date"
 	total_amt=total_amt-amount
 
 rem --- All Done"
-	callpoint!.setColumnData("GLM_BANKMASTER.BOOK_BALANCE",str(total_amt))
-	callpoint!.setStatus("REFRESH")
+	callpoint!.setColumnData("GLM_BANKMASTER.BOOK_BALANCE",str(total_amt),1)
+	callpoint!.setStatus("MODIFIED")
 
 rem " --- Recalc Summary Info
 
