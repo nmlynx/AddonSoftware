@@ -4,6 +4,40 @@
  Last Release:  AddonSoftware 12.20
 =======================================================================================================================================
 
+Revision: 10347
+
+Date: Wednesday, February 06, 2013 4:51:54 PM
+Message:
+Prop to branch -> Revision: 10345
+
+Date: Wednesday, February 06, 2013 3:59:52 PM
+Message:
+Bug 6665: Eliminated the call to poc_recglpost.aon in pou_recptreg.aon.
+----
+Modified : /trunk/po/src/pou_recptreg.aon
+----
+Modified : /branches/BBJ1221GA/po/src/pou_recptreg.aon
+
+=======================================================================================================================================
+Revision: 10346
+
+Date: Wednesday, February 06, 2013 4:49:30 PM
+Message:
+Prop to branch -> Revision: 10343
+
+Date: Wednesday, February 06, 2013 1:58:53 PM
+Message:
+Remove code to set the REPRINT_FLAG in back end code if it's an On Demand pick ticket. Set the REPRINT_FLAG in OPE_ORDHDR during the Print Now process to Yes if it was being reprinted, and then set it back to the original value after printing the Pick Ticket to fix bug 6661.
+----
+Modified : /trunk/data/bar/ope_ordhdr.xml
+Modified : /trunk/data/cdf/ope_ordhdr.cdf
+Modified : /trunk/op/src/opc_picklist.aon
+----
+Modified : /branches/BBJ1221GA/data/bar/ope_ordhdr.xml
+Modified : /branches/BBJ1221GA/data/cdf/ope_ordhdr.cdf
+Modified : /branches/BBJ1221GA/op/src/opc_picklist.aon
+
+=======================================================================================================================================
 Revision: 10340
 
 Date: Wednesday, February 06, 2013 11:20:41 AM
