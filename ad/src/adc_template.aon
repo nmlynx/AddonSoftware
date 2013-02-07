@@ -13,8 +13,9 @@ rem --- IDS$[n]      : Template record ids in xxx-99x format(Input)
 rem --- TEMPLATES$[n]: Template for requested record id (Returned)
 rem --- STATUS       : Status code/0=No error (Returned)
 
-rem    seterr std_error
     setesc std_error
+    seterr std_error
+    
     enter begfile,endfile,ids$[all],templates$[all],status
 
 rem --- open ddm21 (template file); get its own template (i.e. template for the template file)
