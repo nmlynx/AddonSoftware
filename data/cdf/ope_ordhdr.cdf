@@ -1657,35 +1657,43 @@ rem ==========================================================================
 
 	while 1
 		rd_key$ = ""
-		call stbl("+DIR_SYP")+"bam_inquiry.bbj",
+		dim filter_defs$[2,2]
+		filter_defs$[0,0]="FIRM_ID"
+		filter_defs$[0,1]="='"+firm_id$+"'"
+		filter_defs$[0,2]="LOCK"
+		filter_defs$[1,0]="AR_TYPE"
+		filter_defs$[1,1]="='"+callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+"'"
+		filter_defs$[1,2]="LOCK"
+		filter_defs$[2,0]="CUSTOMER_ID"
+		filter_defs$[2,1]="='"+callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+"'"
+		filter_defs$[2,2]="LOCK"
+		call stbl("+DIR_SYP")+"bax_query.bbj",
 :			gui_dev,
 :			Form!,
-:			"OPT_INVHDR",
-:			"LOOKUP",
+:			"OP_INVOICELOOKUP",
+:			"",
 :			table_chans$[all],
-:			key_pfx$,
-:			"PRIMARY",
-:			rd_key$
+:			rd_key$,
+:			filter_defs$[all]
 
 		if cvs(rd_key$,2)<>"" then 
-			key_pfx_det$ = rd_key$
-			call stbl("+DIR_SYP")+"bam_inquiry.bbj",
-:				gui_dev,
-:				Form!,
-:				"OPT_INVDET",
-:				"LOOKUP",
-:				table_chans$[all],
-:				key_pfx_det$,
+			call stbl("+DIR_SYP")+"bac_key_template.bbj",
+:				"OPT_INVHDR",
 :				"PRIMARY",
-:				rd_key_det$
-
-			if cvs(rd_key_det$,2)<>"" then 
-				opt01_dev = fnget_dev("OPT_INVHDR")
-				dim opt01a$:fnget_tpl$("OPT_INVHDR")
-				read record (opt01_dev, key=rd_key$) opt01a$
-				break
+:				key_temp$,
+:				table_chans$[all],
+:				status$
+			if rd_key$(len(rd_key$),1)="^"
+				rd_key$=rd_key$(1,len(rd_key$)-1)
 			endif
 
+			dim key_temp$:key_temp$
+			key_temp$=rd_key$
+			key_opt$=key_temp.firm_id$+key_temp.ar_type$+key_temp.customer_id$+key_temp.ar_inv_no$
+			opt01_dev = fnget_dev("OPT_INVHDR")
+			dim opt01a$:fnget_tpl$("OPT_INVHDR")
+			read record (opt01_dev, key=key_opt$) opt01a$
+			break
 		else
 			copy_ok$="N"
 			break
