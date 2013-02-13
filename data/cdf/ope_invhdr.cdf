@@ -1424,6 +1424,7 @@ rem --- New record, set default
 		callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",arm02a.tax_code$)
 		callpoint!.setColumnData("OPE_INVHDR.PRICING_CODE",arm02a.pricing_code$)
 		callpoint!.setColumnData("OPE_INVHDR.ORD_TAKEN_BY",sysinfo.user_id$)
+		callpoint!.setColumnData("OPE_INVHDR.FOB",arm01a.fob$)
 
 		callpoint!.setDevObject("disc_code",arm02a.disc_code$)
 		user_tpl.disc_code$    = arm02a.disc_code$
