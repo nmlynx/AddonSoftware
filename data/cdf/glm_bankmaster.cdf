@@ -1,11 +1,3 @@
-[[GLM_BANKMASTER.ASVA]]
-rem --- Disable POST button if date is blank
-
-	if cvs(callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE"),3)=""
-rem		callpoint!.setOptionEnabled("POST",0)
-	else
-rem		callpoint!.setOptionEnabled("POST",1)
-	endif
 [[GLM_BANKMASTER.AOPT-POST]]
 rem --- Check Statement Date and Amount
 
@@ -117,24 +109,11 @@ rem " --- Recalc Summary Info
 rem " --- Calculate Summary info
 
   	gosub calc_totals
-
-rem --- Disable POST button if date is blank
-
-	if cvs(callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE"),3)=""
-rem		callpoint!.setOptionEnabled("POST",0)
-	else
-rem		callpoint!.setOptionEnabled("POST",1)
-	endif
 [[GLM_BANKMASTER.CURSTM_DATE.AVAL]]
 rem " --- Recalc Summary Info
 
 	gosub calc_totals
 
-rem --- Disable POST button if date is blank
-
-	if cvs(callpoint!.getUserInput(),3)=""
-rem		callpoint!.setOptionEnabled("POST",0)
-	endif
 [[GLM_BANKMASTER.AOPT-DETL]]
 rem " --- Recalc Summary Info
 
