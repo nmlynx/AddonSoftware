@@ -738,7 +738,7 @@ rem --- Create pages from both physical and display objects
         pdf!.setText(66+2,  top_of_ribbon+2, 204-180, 0, "Sls",        boldfont!, pdf!.LEFT_JUSTIFY(),   light_gray!)
         pdf!.setText(96,    top_of_ribbon+2, 288-204, 0, "P/O Number", boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
 
-        pdf!.setText(288,   top_of_ribbon+2, 378-288, 0,        "Ship Via",  boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
+        pdf!.setText(208,   top_of_ribbon+2, 378-208, 0,        "Ship Via/FOB",  boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
         pdf!.setText(378,   top_of_ribbon+2, 438-378, 0,        "Ship Date", boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
         pdf!.setText(438,   top_of_ribbon+2, page_width-440, 0, "Terms",     boldfont!, pdf!.CENTER_JUSTIFY(), light_gray!)
         
@@ -747,15 +747,17 @@ rem --- Create pages from both physical and display objects
 
         pdf!.setText(66+2,  262+2,            288-100, 0,        arm10f.code_desc$,                     pdf!.LEFT_JUSTIFY())
         pdf!.setText(100,   top_of_ribbon+14, 288-100, 0,        ope01a.customer_po_no$,                pdf!.LEFT_JUSTIFY())
-        pdf!.setText(288,   top_of_ribbon+14, 378-288, 0,        ope01a.ar_ship_via$,                   pdf!.CENTER_JUSTIFY())
+        pdf!.setText(208,   top_of_ribbon+14, 378-208, 0,        ope01a.ar_ship_via$,                   pdf!.CENTER_JUSTIFY())
+		pdf!.setText(208,   262+2,            378-208, 0,        ope01a.fob$,                           pdf!.CENTER_JUSTIFY())
+		
         pdf!.setText(378,   top_of_ribbon+14, 438-378, 0,        func.formatDate(ope01a.shipmnt_date$), pdf!.CENTER_JUSTIFY())
         pdf!.setText(438,   top_of_ribbon+14, page_width-438, 0, ope01a.terms_code$,                    pdf!.CENTER_JUSTIFY())
         pdf!.setText(438,   262+2,            page_width-438, 0, arm10a.code_desc$,                     pdf!.CENTER_JUSTIFY())
 
         pdf!.drawVLine( 66, top_of_ribbon, 48)
         pdf!.drawVLine( 98, top_of_ribbon, 28)
-        pdf!.drawHLine( 98, 262, 190)
-        pdf!.drawVLine(288, top_of_ribbon, 48)
+        pdf!.drawHLine( 98, 262, 110)
+        pdf!.drawVLine(208, top_of_ribbon, 48)
         pdf!.drawVLine(378, top_of_ribbon, 48)
         pdf!.drawVLine(438, top_of_ribbon, 48)
 
