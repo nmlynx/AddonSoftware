@@ -152,7 +152,7 @@ return
 rem --- Functions
     def fndatestamp$(q)=date(0:"%Mz/%Dz/%Y %hz:%mz:%sz")+" "
 
-std_error: rem --- Standard error handler (21Feb2013)
+std_error: rem --- Standard error handler (22Feb2013)
 
     if tcb(19)>0
         rem --- Escape handler
@@ -165,7 +165,7 @@ std_error: rem --- Standard error handler (21Feb2013)
     endif
 
     rd_err_text$=""
-    if tcb(2)=0 and rd_tcb5 then rd_err_text$=pgm(rd_tcb5,tcb(13),err=*next)
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
     if pos("ESCAPE"=rd_err_act$) seterr 0; setesc 0
     if pos("RETRY"=rd_err_act$) retry
