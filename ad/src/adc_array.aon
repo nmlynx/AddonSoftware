@@ -194,6 +194,7 @@ rem ==========================================================================
     rem --- Constructor
         
         method public ArrayObject(BBjTemplatedString pDim!, BBjVector pData!)
+            seterr method_error
         
             #Dimensions%  = int(pDim!.getFieldAsNumber("dims"))
             #D0_elements% = int(pDim!.getFieldAsNumber("d0elem"))
@@ -204,7 +205,16 @@ rem ==========================================================================
             #D2_base%     = int(pDim!.getFieldAsNumber("d2base"))
             
             #data! = pData!
+            methodret
             
+method_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
         
     rem --- Accessor to data
@@ -216,47 +226,98 @@ rem ==========================================================================
     rem --- List data (diagnostic)
     
         method public void listData()
+            seterr method_error
             for i = 0 to #data!.size() -1
                 print str(i), ": ", #data!.getItem(i)
             next i
+            methodret
+            
+method_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
         
     rem --- Get an element from a one-dimensional array
         
         method public BBjString getElement(BBjInt p_elem%)
+            seterr method_error
             if #Dimensions% <> 1 then
+                seterr 0
+                x$=stbl("+THROWN_ERR","TRUE")   
                 throw #className$ + ": Array is not one dimensional", 42
             endif
             
             if p_elem% - #D0_base% > #D0_elements% - 1 then
+                seterr 0
+                x$=stbl("+THROWN_ERR","TRUE")   
                 throw #className$ + ": Element is out of range, " + str(p_elem% - #D0_base%) + " > " + str(#D0_elements% - 1), 42
             endif
             
             if p_elem% - #D0_base% < 0 then
+                seterr 0
+                x$=stbl("+THROWN_ERR","TRUE")   
                 throw #className$ + ": Element is out of range, " + str(p_elem% - #D0_base%) + " < 0", 42
             endif
             
             methodret str(#data!.getItem(p_elem% - #D0_base%))
+            
+method_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
         
     rem --- Get an element from a two-dimentional array
     
         method public BBjString getElement(BBjInt p_d0elem%, BBjInt p_d1elem%)
+            seterr method_error
             if #Dimensions% <> 2 then
+                seterr 0
+                x$=stbl("+THROWN_ERR","TRUE")   
                 throw #className$ + ": Array is not two dimensional", 42
             endif
 
             methodret str(#data!.getItem((p_d0elem% - #D0_base%) * #D1_elements% + p_d1elem% - #D1_base%))
+            
+method_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
         
     rem --- Get an element from a three-dimentional array
     
         method public BBjString getElement(BBjInt p_d0elem%, BBjInt p_d1elem%, BBjInt p_d2elem%)
+            seterr method_error
             if #Dimensions% <> 3 then
+                seterr 0
+                x$=stbl("+THROWN_ERR","TRUE")   
                 throw #className$ + ": Array is not three dimensional", 42
             endif
 
             methodret str(#data!.getItem((p_d0elem% - #D0_base%) * #D0_elements% * #D1_elements% + (p_d1elem% - #D1_base%) * #D1_elements% + p_d2elem% - #D2_base%))
+            
+method_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
         
     classend
