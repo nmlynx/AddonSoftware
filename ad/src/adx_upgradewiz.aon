@@ -136,7 +136,7 @@ rem --- Update new addon.syn file
     call pgmdir$+"adc_updatesynfile.aon",newSynFile$,oldSynFile$,upgrade%,stblMap!,pfxList!,rdForm!,0,status
 
 rem --- Add new application to Barista Installation Manager
-rem --- Run BIM bai_install_manager.bbj program via synchronous system call because of it's terminating release
+rem --- Run BIM bai_install_manager.bbj program via synchronous system call because of its terminating release
 
     rem --- Increment progress meter
     meter_text$=Translate!.getTranslation("AON_BIM_CREATE")
@@ -144,6 +144,31 @@ rem --- Run BIM bai_install_manager.bbj program via synchronous system call beca
     meter_action$="MTR-LST"
     gosub disp_meter
     print(log_dev)meter_text$
+
+    rem --- Create new session specific classpath (SSCP) in Enterprise Manager
+    sscpName$=cvs(dbName$,8)
+    needAddonprop=1
+    needBaristaprop=1
+    paths!=BBjAPI().makeVector()
+    env!=BBjAPI().getAdmin(rdAdmin!.getUser(), rdAdmin!.getPassword()).getEnvironment()
+    paths!=env!.getClasspath(BBjAPI().getConfig().getCurrentCommandLineObject().getOriginalClasspathName(),err=*next)
+    if paths!.size()>0 then
+        for i=0 to paths!.size()-1
+            if pos("addonprop.jar"=paths!.getItem(i)) then
+                rem --- Update path to addonprop.jar
+                paths!.setItem(i,newAonLoc$+"/aon/prop/addonprop.jar")
+                needAddonprop=0
+            endif
+            if pos("baristaprop.jar"=paths!.getItem(i)) then
+                rem --- Update path to baristaprop.jar
+                paths!.setItem(i,newAonLoc$+"/barista/sys/prop/baristaprop.jar")
+                needBaristaprop=0
+            endif
+        next i
+    endif
+    if needBaristaprop then paths!.addItem(newAonLoc$+"/barista/sys/prop/baristaprop.jar")
+    if needAddonprop then paths!.addItem(newAonLoc$+"/aon/prop/addonprop.jar")
+    env!.setClasspath(sscpName$, paths!)
 
     rem --- Launch bai_install_manager.bbj
 	bar_dir$=dir("")
@@ -156,6 +181,7 @@ rem --- Run BIM bai_install_manager.bbj program via synchronous system call beca
 :	+" -id"+dbName$
 :	+" -desc"+$22$+appDesc$+$22$
 :	+" -loc"+$22$+newAonLoc$+$22$
+:   +" -cp"+$22$+sscpName$+$22$
 	scall_result=scall(run_arg$+user_arg$,err=*next)
     
 rem --- Update new sync XML files (and copy old barista/settings dir)
