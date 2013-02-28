@@ -193,7 +193,8 @@
         </copy>
 
         <!-- Update config files to include Adddon install -->
-        <java classname="com.basis.install.IS.WriteConfigurationFiles" fork="true">
+        <echo message="WriteConfigurationFiles -cdstore -barista -addon"/>
+        <java classname="com.basis.install.IS.WriteConfigurationFiles" dir="${basedir}" fork="true">
             <classpath refid="path.bbj"/>
             <arg value="${install.dir}"/>
             <arg value="-cdstore"/>
