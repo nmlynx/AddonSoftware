@@ -98,7 +98,7 @@ rem --- Initializations
     endif
 	headings$[2]=headings$[2]+" "
 	if cvs(begvend$,3)<>""
-		headings$[2]=headings$[2]+Translate!.getTranslation("AON_FROM_VENDOR\:_")+fnmask$(begvend$(1,vendor_size),m0$)
+		headings$[2]=headings$[2]+Translate!.getTranslation("AON_FROM_VENDOR:_")+fnmask$(begvend$(1,vendor_size),m0$)
 	else
 		headings$[2]=headings$[2]+Translate!.getTranslation("AON_FROM_THE_FIRST_VENDOR")
 	endif
@@ -106,13 +106,13 @@ rem --- Initializations
 	headings$[2]=headings$[2]+" "+Translate!.getTranslation("AON_TO")+" "
 	
 	if cvs(endvend$,3)<>""
-		headings$[2]=headings$[2]+Translate!.getTranslation("AON_VENDOR\:_")+fnmask$(endvend$(1,vendor_size),m0$)
+		headings$[2]=headings$[2]+Translate!.getTranslation("AON_VENDOR:_")+fnmask$(endvend$(1,vendor_size),m0$)
 	else
 		headings$[2]=headings$[2]+Translate!.getTranslation("AON_THE_LAST_VENDOR")
 	endif
 
 	if cvs(checkno$,3)<>"" headings$[2]=headings$[2]+" "+Translate!.getTranslation("AON_CHECK_NO")+" "+checkno$
-	if cvs(inv_no$,3)<>"" headings$[2]=headings$[2]+" "+Translate!.getTranslation("AON_INVOICE_\#")+" "+inv_no$
+	if cvs(inv_no$,3)<>"" headings$[2]=headings$[2]+" "+Translate!.getTranslation("AON_INVOICE_#")+" "+inv_no$
 
     if multitypes then headings$[3]="[HEADER]"
     types$[0]=Translate!.getTranslation("AON_UNKNOWN")
