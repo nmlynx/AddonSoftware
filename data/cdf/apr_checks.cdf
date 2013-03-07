@@ -43,11 +43,15 @@ rem --- Abort if a check run is actively running
 
 	while 1
 		extract record(adxlocks_dev, key=firm_id$+taskname$, dom=*break)
+		
 		msg_id$="AP_CHKS_PRINTING"
 		dim msg_tokens$[1]
 		msg_opt$=""
 		gosub disp_message
-		callpoint!.setStatus("EXIT")		
+		if pos("PASSVALID"=msg_opt$)=0
+			callpoint!.setStatus("EXIT")		
+		endif
+
 		break
 	wend
 [[APR_CHECKS.<CUSTOM>]]
