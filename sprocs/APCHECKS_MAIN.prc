@@ -24,30 +24,32 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 rem ----------------------------------------------------------------------------
 
-declare BBjStoredProcedureData sp!
-declare BBjRecordSet rs!
-declare BBjRecordData data!
+	seterr sproc_error
+		
+	declare BBjStoredProcedureData sp!
+	declare BBjRecordSet rs!
+	declare BBjRecordData data!
 
 rem --- Get the infomation object for the Stored Procedure
 
-sp! = BBjAPI().getFileSystem().getStoredProcedureData()
+	sp! = BBjAPI().getFileSystem().getStoredProcedureData()
 
 rem --- Get 'IN' SPROC parameters 
 
-firm_id$ = sp!.getParameter("FIRM_ID")
-barista_wd$ = sp!.getParameter("BARISTA_WD")
-ap_type$ = sp!.getParameter("AP_TYPE")
+	firm_id$ = sp!.getParameter("FIRM_ID")
+	barista_wd$ = sp!.getParameter("BARISTA_WD")
+	ap_type$ = sp!.getParameter("AP_TYPE")
 
-chdir barista_wd$
+	chdir barista_wd$
 	
 rem --- Create the memory recordset for return to jasper
 
-dataTemplate$ = ""
-dataTemplate$ = dataTemplate$ + "firm_id:C(2), ap_type:C(1*), check_num:C(1*), check_date:C(10), "
-dataTemplate$ = dataTemplate$ + "aptype_vend_pagenum:C(3), vendor_id:C(1*), vend_name:C(30), "
-dataTemplate$ = dataTemplate$ + "vend_addr1:C(35), vend_addr2:C(35), vend_addr3:C(35) "
+	dataTemplate$ = ""
+	dataTemplate$ = dataTemplate$ + "firm_id:C(2), ap_type:C(1*), check_num:C(1*), check_date:C(10), "
+	dataTemplate$ = dataTemplate$ + "aptype_vend_pagenum:C(3), vendor_id:C(1*), vend_name:C(30), "
+	dataTemplate$ = dataTemplate$ + "vend_addr1:C(35), vend_addr2:C(35), vend_addr3:C(35) "
 
-rs! = BBJAPI().createMemoryRecordSet(dataTemplate$)
+	rs! = BBJAPI().createMemoryRecordSet(dataTemplate$)
 
 rem --- Get Barista System Program directory
 	sypdir$=""
@@ -62,7 +64,11 @@ rem --- Open/Lock files
     files$[2]="apm_payaddr",ids$[2]="APM_PAYADDR"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
-    if status goto std_exit
+    if status then
+        seterr 0
+        x$=stbl("+THROWN_ERR","TRUE")   
+        throw "File open error.",1001
+    endif
 
     apm01_dev=channels[1]
     apm08_dev=channels[2]
@@ -233,8 +239,12 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 		q$=q$(1,q-1)
 		return q$
 	fnend
-	
+
+sproc_error:rem --- SPROC error trap/handler
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+    
 std_exit:
-end
-
-
+    end

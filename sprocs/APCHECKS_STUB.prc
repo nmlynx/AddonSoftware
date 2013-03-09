@@ -24,6 +24,8 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 rem ----------------------------------------------------------------------------
 
+	seterr sproc_error
+
 	declare BBjStoredProcedureData sp!
 	declare BBjRecordSet rs!
 	declare BBjRecordData data!
@@ -253,71 +255,12 @@ rem --- fnglobal$: Return string value of passed STBL variable
     fnend
 
 rem #endinclude std_functions.src   
+
+sproc_error:rem --- SPROC error trap/handler
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
     
-rem #include std_error.src
-
-std_error: rem --- Standard error handler (01Apr2006)
-
-    rd_err_text$=""
-    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    call stbl("+DIR_SYP")+"bac_error.bbj",err=std_error_exit,pgm(-2),str(tcb(5)),
-:                                str(err),rd_err_text$,rd_err_act$
-    if pos("EXIT"=rd_err_act$) goto std_error_exit
-    if pos("ESCAPE"=rd_err_act$) seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$) retry
-
-std_error_exit:
-    
-    master_user$=cvs(stbl("+MASTER_USER",err=std_error_release),2)
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_error_release)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=std_error_release)
-    if cvs(sysinfo.user_id$,2)=master_user$ escape
-    
-std_error_release:
-
-    status=999
-    if pgm(-1)<>pgm(-2) exit 
-    release
-
-rem #endinclude std_error.src
-
-rem #include std_missing_params.src
-
-std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
-
-    rd_err_text$=""
-    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
-    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
-    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
-:                                   str(err:"000"),rd_err_text$,rd_err_act$
-
-std_missing_params_exit:
-    
-    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
-    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
-    dim sysinfo$:sysinfo_template$
-    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
-    if cvs(sysinfo.user_id$,2)=master_user$ escape
-    
-std_missing_params_release:
-
-    status=999
-    if pgm(-1)<>pgm(-2) exit 
-    release
-
-rem #endinclude std_missing_params.src
-
-rem #include std_end.src
-
-std_exit: rem --- Standard program end (01Mar2006)
-
-    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
-
-std_exit_no_report:
-
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
-    release
-rem #endinclude std_end.src
-
+std_exit:
     end
