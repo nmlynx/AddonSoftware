@@ -429,3 +429,6 @@ find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
 	callpoint!.setDevObject("gl_yr_closed",gls01a.gl_yr_closed$)
 	callpoint!.setDevObject("gls_cur_yr",gls01a.current_year$)
 	callpoint!.setDevObject("gls_cur_per",gls01a.current_per$)
+
+	tns!=BBjAPI().getNamespace("GLM_ACCT","drill",1)
+	tns!.setValue("cur_per",gls01a.current_per$)
