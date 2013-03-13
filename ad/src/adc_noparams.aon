@@ -32,6 +32,7 @@ rem --- Build and display error message
 	else
 		message!=BBjAPI().getProgramInfo(pgmname$)
 		message$=message$+$0a$+$0a$+message!.getListingForPhysicalLine(num(line$))
+	endif
     x=msgbox(message$,16,title$)
 
 rem --- All done
