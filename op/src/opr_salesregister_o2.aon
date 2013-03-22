@@ -223,6 +223,15 @@ disp_message: rem --- Display Message Dialog
 	
 rem #endinclude disp_message.src
 
+rem --- fnBlank : Create blank cells in OutVect!. No return value
+
+    def fnblank(q0)
+        for q1=1 to q0
+            OutVect!.addItem("")
+        next q1
+        return q1
+    fnend
+
 rem --- #include std_error.src
 
 std_error: rem --- Standard error handler (22Feb2013)
