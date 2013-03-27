@@ -73,13 +73,16 @@ misc_vars:rem --- Misc Variables
 
 rem --- Open Tables
 
-    rd_num_files=4
+    rd_num_files=6
     dim rd_open_tables$[1:rd_num_files],rd_open_opts$[1:rd_num_files],rd_open_chans$[1:rd_num_files],rd_open_tpls$[1:rd_num_files]
 
     rd_open_tables$[1]="DDM_ELEMENTS",rd_open_opts$[1]="OTA"
     rd_open_tables$[2]="ADS_MASKS",rd_open_opts$[2]="OTA"
     rd_open_tables$[3]="DDM_ELEMENT_LDAT",rd_open_opts$[3]="OTA"
     rd_open_tables$[4]="DDM_COLUMN_LDAT",rd_open_opts$[4]="OTA"
+    rem --- Need to be able to close these files that bac_open_tables.bbj might open
+    rd_open_tables$[5]="DDM_TABLES",rd_open_opts$[5]="O"
+    rd_open_tables$[6]="DDM_TABLE_TPLS",rd_open_opts$[6]="O"
 
     gosub open_tables
 
@@ -201,9 +204,12 @@ done: rem --- All done
 	endif
 
     rem --- Close files
-    for curr_chan=1 to rd_num_files
-        rd_open_opts$[curr_chan]="C"
-    next curr_chan
+    rd_open_tables$[1]="DDM_ELEMENTS",rd_open_opts$[1]="C"
+    rd_open_tables$[2]="ADS_MASKS",rd_open_opts$[2]="C"
+    rd_open_tables$[3]="DDM_ELEMENT_LDAT",rd_open_opts$[3]="C"
+    rd_open_tables$[4]="DDM_COLUMN_LDAT",rd_open_opts$[4]="C"
+    rd_open_tables$[5]="DDM_TABLES",rd_open_opts$[5]="C"
+    rd_open_tables$[6]="DDM_TABLE_TPLS",rd_open_opts$[6]="C"
     gosub open_tables
 
     goto std_exit
