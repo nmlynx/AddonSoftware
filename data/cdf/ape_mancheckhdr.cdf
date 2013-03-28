@@ -1,3 +1,18 @@
+[[APE_MANCHECKHDR.ADEL]]
+rem --- Verify all G/L Distribution records get deleted
+
+	ape12_dev=fnget_dev("APE_MANCHECKDIST")
+	ap_type$=callpoint!.getColumnData("APE_MANCHECKHDR.AP_TYPE")
+	check_no$=callpoint!.getColumnData("APE_MANCHECKHDR.CHECK_NO")
+	vend$=callpoint!.getColumnData("APE_MANCHECKHDR.VENDOR_ID")
+
+	read(ape12_dev,key=firm_id$+ap_type$+check_no$+vend$,dom=*next)
+	while 1
+		ape12_key$=key(ape12_dev,end=*break)
+		read(ape12_dev)
+		if pos(firm_id$+ap_type$+check_no$+vend$=ape12_key$)<>1 break
+		remove (ape12_dev,key=ape12_key$)
+	wend
 [[APE_MANCHECKHDR.AP_TYPE.AVAL]]
 user_tpl.dflt_ap_type$=callpoint!.getUserInput()
 if user_tpl.dflt_ap_type$=""
