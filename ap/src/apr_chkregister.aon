@@ -306,7 +306,7 @@ rem --- Read next Check Detail (apw-01) record
                 rem --- Accumulate totals
 
                 dim ct[3]
-                ct[0]=ape04a.invoice_amt+ape04a.retention
+                ct[0]=ape04a.invoice_amt
                 ct[1]=ape04a.discount_amt
                 ct[3]=ape04a.retention
                 ct[2]=ct[0]-ct[1]-ct[3]; rem payment
@@ -397,7 +397,7 @@ rem --- Read next Check Detail (apw-01) record
                 rem --- Cash account
 
                 account$=apm10b.gl_cash_acct$
-                amount=(-ape04a.invoice_amt+ape04a.discount_amt); rem payment
+                amount=(-ape04a.invoice_amt+ape04a.discount_amt+ape04a.retention); rem payment
                 units=0
                 gosub glrecap
 
@@ -405,7 +405,7 @@ rem --- Read next Check Detail (apw-01) record
 
                 if cashbasis=0
                    account$=apm10b.gl_ap_acct$
-                   amount=ape04a.invoice_amt
+                   amount=ape04a.invoice_amt-ape04a.retention
                    units=0
                    gosub glrecap
                 endif
