@@ -1,3 +1,37 @@
+[[OPE_ORDHDR.CUSTOMER_PO_NO.AVAL]]
+rem --- Check for duplicate PO numbers
+
+	if callpoint!.getDevObject("check_po_dupes")="Y"
+		po_no$=callpoint!.getUserInput()
+		cust_no$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+		order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+		ope_polookup_dev=num(callpoint!.getDevObject("ope_polookup"))
+		dim ope_polookup$:fnget_tpl$("OPE_ORDHDR")
+
+		read (ope_polookup_dev,key=firm_id$+po_no$+cust_no$,knum="CUST_PO",dom=*next)
+		found_dupe$=""
+		while 1
+			k$=key(ope_polookup_dev)
+			read record (ope_polookup_dev,knum="CUST_PO",end=*break) ope_polookup$
+			if pos(firm_id$+po_no$+cust_no$=ope_polookup.firm_id$+ope_polookup.customer_po_no$+ope_polookup.customer_id$)<>1 break
+			if order_no$<>ope_polookup.order_no$
+				found_dupe$="O"+ope_polookup.order_no$
+			endif
+		wend
+
+		opt_invlookup_dev=num(callpoint!.getDevObject("opt_invlookup"))
+		dim opt_invlookup$:fnget_tpl$("OPT_INVHDR")
+		read (opt_invlookup_dev,key=firm_id$+po_no$+cust_no$,knum="CUST_PO",dom=*next)
+		while 1
+			read record (opt_invlookup_dev,end=*break) opt_invlookup$
+			if pos(firm_id$+po_no$+cust_no$=opt_invlookup.firm_id$+opt_invlookup.customer_po_no$+opt_invlookup.customer_id$)<>1 break
+			if order_no$<>opt_invlookup.order_no$
+				found_dupe$="H"+opt_invlookup.ar_inv_no$
+			endif
+		wend
+	endif
+
+rem	if cvs(found_dupe$,2)<>"" escape
 [[OPE_ORDHDR.AOPT-COMM]]
 rem --- Display Comments form
 
@@ -2338,7 +2372,7 @@ rem                 = 1 -> user_tpl.hist_ord$ = "N"
 
 rem --- Open needed files
 
-	num_files=43
+	num_files=44
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	
 	open_tables$[1]="ARM_CUSTMAST",  open_opts$[1]="OTA"
@@ -2383,10 +2417,12 @@ rem --- Open needed files
 	open_tables$[41]="IVM_ITEMSYN",open_opts$[41]="OTA"
 	open_tables$[42]="OPE_ORDCOMMENTS",open_opts$[42]="OTA"
 	open_tables$[43]="OPT_INVHDR",open_opts$[43]="OTAN[2_]"
+	open_tables$[44]="OPT_INVHDR",open_opts$[44]="OTAN[2_]"
 
 	gosub open_tables
 
 	callpoint!.setDevObject("opt_invlookup",open_chans$[43])
+	callpoint!.setDevObject("ope_polookup",open_chans$[44])
 
 rem --- Verify that there are line codes - abort if not.
 
@@ -2418,6 +2454,7 @@ rem --- get AR Params
 	read record (num(open_chans$[4]), key=firm_id$+"AR00") ars01a$
 	if ars01a.op_totals_warn$="" ars01a.op_totals_warn$="4"
 	callpoint!.setDevObject("totals_warn",ars01a.op_totals_warn$)
+	callpoint!.setDevObject("check_po_dupes",ars01a.op_check_dupe_po$)
 
 	dim ars_credit$:open_tpls$[7]
 	read record (num(open_chans$[7]), key=firm_id$+"AR01") ars_credit$
