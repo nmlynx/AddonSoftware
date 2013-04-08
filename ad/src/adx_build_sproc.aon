@@ -29,6 +29,9 @@ rem --- APCHECKS_MAIN
 rem --- APCHECKS_CHECK (The check itself)
 rem --- APCHECKS_STUB (Vendor and Accounting Stubs)
 rem --- VENDORDETAIL_HIST
+rem --- OPINVOICE_HDR
+rem --- OPINVOICE_DET
+rem --- OPINVOICE_DET_LOTSER
 
 rem --- 4/2012 Added VIEWs to the hard-coded logic herein
 rem --- VW_SFX_WOTRANXR  (replaces sfm-07/sfx_wotranxr xref of WO transactions)
@@ -251,6 +254,18 @@ rem --- first drop all std Addon SPROCs
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
 	
+	sproc_vw_name$="OPINVOICE_HDR"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+	
+	sproc_vw_name$="OPINVOICE_DET"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+		
+	sproc_vw_name$="OPINVOICE_DET_LOTSER"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+
 rem --- now add them back (i.e., drop, then add, in case anything has changed) 
    
 	sql_action$="CREATE PROCEDURE"
@@ -482,7 +497,7 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def    
 	
-rem --- APCHECKS_MAIN (main jasper to drive the sub-reports from)
+	rem --- APCHECKS_MAIN (main jasper to drive the sub-reports from)
     sproc_vw_name$="APCHECKS_MAIN"
 	sqlprep$="CREATE PROCEDURE APCHECKS_MAIN "
 	sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, BARISTA_WD VARCHAR(50) IN, AP_TYPE CHAR(2) IN) "	
@@ -492,7 +507,7 @@ rem --- APCHECKS_MAIN (main jasper to drive the sub-reports from)
 
     gosub create_sproc_def
 
-rem --- APCHECKS_CHECK (The check itself)
+	rem --- APCHECKS_CHECK (The check itself)
     sproc_vw_name$="APCHECKS_CHECK"
 	sqlprep$="CREATE PROCEDURE APCHECKS_CHECK "
 	sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, BARISTA_WD VARCHAR(50) IN, CHECK_NUM CHAR(7) IN, "
@@ -509,7 +524,7 @@ rem --- APCHECKS_CHECK (The check itself)
 
     gosub create_sproc_def
 	
-rem --- APCHECKS_STUB (Vendor and Accounting Stubs)
+	rem --- APCHECKS_STUB (Vendor and Accounting Stubs)
     sproc_vw_name$="APCHECKS_STUB"
 	sqlprep$="CREATE PROCEDURE APCHECKS_STUB "
 	sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, BARISTA_WD VARCHAR(50) IN, CHECK_NUM CHAR(7) IN, "
@@ -526,7 +541,43 @@ rem --- APCHECKS_STUB (Vendor and Accounting Stubs)
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'AP Checks'"
 
     gosub create_sproc_def
-	
+
+	rem --- OPINVOICE_HDR
+    sproc_vw_name$="OPINVOICE_HDR"
+	sqlprep$="CREATE PROCEDURE OPINVOICE_HDR "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, AR_TYPE CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN, "
+	sqlprep$=sqlprep$+"CUST_MASK CHAR(20) IN, CUST_SIZE CHAR(1) IN, "
+	sqlprep$=sqlprep$+"BARISTA_WD VARCHAR(50) IN)"
+    sqlprep$=sqlprep$+"'"+sproc_path$+"OPINVOICE_HDR.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'OP Invoice Header'"
+
+    gosub create_sproc_def
+
+	rem --- OPINVOICE_DET	
+    sproc_vw_name$="OPINVOICE_DET"
+	sqlprep$="CREATE PROCEDURE OPINVOICE_DET "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, AR_TYPE CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN, "
+	sqlprep$=sqlprep$+"QTY_MASK CHAR(20) IN, AMT_MASK CHAR(20) IN, PRICE_MASK CHAR(20) IN, EXT_MASK CHAR(20) IN, "
+	sqlprep$=sqlprep$+"BARISTA_WD VARCHAR(50) IN)"	
+    sqlprep$=sqlprep$+"'"+sproc_path$+"OPINVOICE_DET.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'OP Invoice Detail'"
+
+    gosub create_sproc_def
+
+	rem --- OPINVOICE_DET_LOTSER
+    sproc_vw_name$="OPINVOICE_DET_LOTSER"
+	sqlprep$="CREATE PROCEDURE OPINVOICE_DET_LOTSER "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, AR_TYPE CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN, "
+	sqlprep$=sqlprep$+"INTERNAL_SEQ_NO CHAR(12) IN, OPE11_QTY_SHIPPED CHAR(20) IN, QTY_MASK CHAR(20) IN, "
+	sqlprep$=sqlprep$+"IVS_LOTSER_FLAG CHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"	
+    sqlprep$=sqlprep$+"'"+sproc_path$+"OPINVOICE_DET_LOTSER.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'OP Invoice Detail'"
+
+    gosub create_sproc_def
+
 rem --- Done with SPROCs. Now do VIEWs
 
 rem --- first drop all std Addon VIEWs
