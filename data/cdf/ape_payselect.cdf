@@ -34,6 +34,7 @@ rem --- Set filters on grid
 	gosub filter_recs
 [[APE_PAYSELECT.PAYMENT_GRP.AVAL]]
 rem --- Set filters on grid
+
 	gosub filter_recs
 [[APE_PAYSELECT.DUE_DATE_OP.AVAL]]
 rem --- Set filters on grid
@@ -624,6 +625,7 @@ rem ==========================================================================
 
 	TempRows! = gridInvoices!.getSelectedRows()
 	numcols   = gridInvoices!.getNumColumns()
+	mastercols =num(user_tpl.MasterCols$)
 
 	vect_size = num(vectInvoicesMaster!.size())
 	rows = 0
@@ -726,11 +728,16 @@ rem				endif
 
 					apt01a.invoice_amt = apt01a.invoice_amt + apt11a.trans_amt
 					apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
+					apt01a.retention = apt01a.retention + apt11a.trans_ret
 				wend
 				if apt01a.discount_amt<0 then apt01a.discount_amt=0
-
+				inv_amt = apt01a.invoice_amt
+				disc_amt = apt01a.discount_amt
+				ret_amt = apt01a.retention
+				amt_due = inv_amt - ret_amt - disc_amt
 				gridInvoices!.setCellState(row_no,0,0)
-				gridInvoices!.setCellText(row_no, 10, str(str(apt01a.invoice_amt - apt01a.retention - apt01a.discount_amt)))
+				gridInvoices!.setCellText(row_no, 10, str(amt_due))
+				vectInvoicesMaster!.setItem(row_no*mastercols+11,str(amt_due))
 				gridInvoices!.setCellText(row_no,11,str(apt01a.discount_amt))
 				gridInvoices!.setCellText(row_no,12,"0.00")
 				dummy = fn_setmast_flag(
@@ -740,6 +747,7 @@ rem				endif
 :					"N",
 :					"0"
 :				)
+
 				dummy = fn_setmast_amts(
 :					vectInvoices!.getItem(row_no*numcols+2),
 :					vectInvoices!.getItem(row_no*numcols+3),
