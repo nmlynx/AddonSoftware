@@ -428,7 +428,11 @@ rem --- Main Read
 		params!.put("AR_ADDRESS2",comp$((comp_addrLine_len*1)+1,comp_addrLine_len))
 		params!.put("AR_ADDRESS3",comp$((comp_addrLine_len*2)+1,comp_addrLine_len))
 		params!.put("AR_ADDRESS4",comp$((comp_addrLine_len*3)+1,comp_addrLine_len))
-		params!.put("AR_PHONE_NO",ars01b.phone_no$)
+
+        call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(ars01b.phone_no$,2),"",phone_mask$
+        tmpphone$=cvs(ars01b.phone_no$,2)
+        tmpphone$=str(tmpphone$:phone_mask$,err=*next)
+		params!.put("AR_PHONE_NO",tmpphone$)
 
 		params!.put("REMIT1",remit$((remit_addrLine_len*0)+1,remit_addrLine_len))
 		params!.put("REMIT2",remit$((remit_addrLine_len*1)+1,remit_addrLine_len))
