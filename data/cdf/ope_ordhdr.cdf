@@ -2,7 +2,7 @@
 rem --- Check for duplicate PO numbers
 
 	if callpoint!.getDevObject("check_po_dupes")="Y"
-		po_no$=callpoint!.getUserInput()
+		po_no$=pad(callpoint!.getUserInput(),num(callpoint!.getTableColumnAttribute("OPE_ORDHDR.CUSTOMER_PO_NO","MAXL")))
 		cust_no$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 		order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 		ope_polookup_dev=num(callpoint!.getDevObject("ope_polookup"))
@@ -11,11 +11,10 @@ rem --- Check for duplicate PO numbers
 		read (ope_polookup_dev,key=firm_id$+po_no$+cust_no$,knum="CUST_PO",dom=*next)
 		found_dupe$=""
 		while 1
-			k$=key(ope_polookup_dev)
-			read record (ope_polookup_dev,knum="CUST_PO",end=*break) ope_polookup$
+			read record (ope_polookup_dev,end=*break) ope_polookup$
 			if pos(firm_id$+po_no$+cust_no$=ope_polookup.firm_id$+ope_polookup.customer_po_no$+ope_polookup.customer_id$)<>1 break
 			if order_no$<>ope_polookup.order_no$
-				found_dupe$="O"+ope_polookup.order_no$
+				found_dupe$=found_dupe$+"O"+ope_polookup.order_no$
 			endif
 		wend
 
@@ -26,12 +25,26 @@ rem --- Check for duplicate PO numbers
 			read record (opt_invlookup_dev,end=*break) opt_invlookup$
 			if pos(firm_id$+po_no$+cust_no$=opt_invlookup.firm_id$+opt_invlookup.customer_po_no$+opt_invlookup.customer_id$)<>1 break
 			if order_no$<>opt_invlookup.order_no$
-				found_dupe$="H"+opt_invlookup.ar_inv_no$
+				found_dupe$=found_dupe$+"H"+opt_invlookup.ar_inv_no$
 			endif
 		wend
 	endif
 
-rem	if cvs(found_dupe$,2)<>"" escape
+	if cvs(found_dupe$,2)<>""
+		msg_id$="OP_DUPLICATE_POS"
+		gosub disp_message
+		if msg_opt$="D"
+			callpoint!.setDevObject("customer",callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"))
+			callpoint!.setDevObject("found_dupe",found_dupe$)
+			call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
+:				"OPE_DUPEPO", 
+:				stbl("+USER_ID"), 
+:				"", 
+:				"", 
+:				table_chans$[all], 
+:				dflt_data$[all]
+		endif
+	endif
 [[OPE_ORDHDR.AOPT-COMM]]
 rem --- Display Comments form
 
@@ -2417,12 +2430,14 @@ rem --- Open needed files
 	open_tables$[41]="IVM_ITEMSYN",open_opts$[41]="OTA"
 	open_tables$[42]="OPE_ORDCOMMENTS",open_opts$[42]="OTA"
 	open_tables$[43]="OPT_INVHDR",open_opts$[43]="OTAN[2_]"
-	open_tables$[44]="OPT_INVHDR",open_opts$[44]="OTAN[2_]"
+	open_tables$[44]="OPE_ORDHDR",open_opts$[44]="OTAN[2_]"
 
 	gosub open_tables
 
 	callpoint!.setDevObject("opt_invlookup",open_chans$[43])
+	callpoint!.setDevObject("opt_invlookup_tpl",open_tpls$[43])
 	callpoint!.setDevObject("ope_polookup",open_chans$[44])
+	callpoint!.setDevObject("ope_polookup_tpl",open_tpls$[44])
 
 rem --- Verify that there are line codes - abort if not.
 
