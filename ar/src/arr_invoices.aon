@@ -246,12 +246,19 @@ rem --- done
 
 rem --- bring up master statement document in jasper viewer  
 
-    master_report!.exportToPDF(BBjAPI().FALSE, docdir$+master_doc_name$)
-    BBjReportWindow! = new BBJasperViewerWindow(master_report!,0,0,screen_width,screen_height,masterBaseName$,$00080093$)
-    BBjReportWindow!.center()
-    BBjReportWindow!.show(1)
+    if master_report!<>null()
+        master_report!.exportToPDF(BBjAPI().FALSE, docdir$+master_doc_name$)
+        BBjReportWindow! = new BBJasperViewerWindow(master_report!,0,0,screen_width,screen_height,masterBaseName$,$00080093$)
+        BBjReportWindow!.center()
+        BBjReportWindow!.show(1)
+        BBjReportWindow!.destroy()
+    endif
 
-    BBjReportWindow!.destroy() 
+    if total_recs=0
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit_no_report
+    endif
 
     goto std_exit
 
