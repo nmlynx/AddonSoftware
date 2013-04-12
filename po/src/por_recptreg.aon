@@ -320,7 +320,7 @@ rem --- Clear trans for this firm/process/batch from glw-11 work file (if not ba
 		files=3,begfile=1,endfile=files
 		dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
         files$[1]="sfe-01",ids$[1]="SFE_WOMASTR"
-        files$[2]="sfe-04",ids$[2]="SFE_WOTRANS"
+        files$[2]="sfe_wotrans",ids$[2]="SFE_WOTRANS"
         files$[3]="sfm-10",ids$[3]="SFC_WOTYPECD"
 
         call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
