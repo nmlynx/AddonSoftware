@@ -135,7 +135,7 @@ rem --- masks
     call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",customask$,0,custlen
 
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,acct_length
-    
+
 rem --- Parameters
 
     dim i[7],g[4],info$[20]
@@ -234,15 +234,15 @@ rem --- Headings and print positions
     columns$[5,0]="UM", columns$[5,1]="C",columns$[5,2]="3"
     columns$[6,0]=Translate!.getTranslation("AON_QUANTITY^ORDERED"), columns$[6,1]="C", columns$[6,2]=str(len(m2$)), columns$[6,5]="R^R", columns$[6,10]="T"
     columns$[7,0]=Translate!.getTranslation("AON_QUANTITY^RECEIVED"), columns$[7,1]="C", columns$[7,2]=str(len(m2$)), columns$[7,5]="R^R", columns$[7,10]="T"
-    columns$[8,0]=Translate!.getTranslation("AON_AVG")+"^"+Translate!.getTranslation("AON_COST"), columns$[8,1]="C", columns$[8,2]=str(len(m3$)), columns$[8,5]="R^R"
-    columns$[9,0]=Translate!.getTranslation("AON_AVG")+"^"+Translate!.getTranslation("AON_EXTENSION"), columns$[9,1]="C", columns$[9,2]=str(len(m1$)), columns$[9,5]="R^R", columns$[9,10]="T"
+    columns$[8,0]=Translate!.getTranslation("AON_UNIT^COST"), columns$[8,1]="C", columns$[8,2]=str(len(m3$)), columns$[8,5]="R^R"
+    columns$[9,0]=Translate!.getTranslation("AON_EXTENSION"), columns$[9,1]="C", columns$[9,2]=str(len(m1$)), columns$[9,5]="R^R", columns$[9,10]="T"
     columns$[10,0]=Translate!.getTranslation("AON_PO_COST"), columns$[10,1]="C", columns$[10,2]=str(len(m3$)), columns$[10,5]="R"
     columns$[11,0]=Translate!.getTranslation("AON_PO^EXTENSION"), columns$[11,1]="C", columns$[11,2]=str(len(m1$)), columns$[11,5]="R^R", columns$[11,10]="T"
     columns$[12,0]=Translate!.getTranslation("AON_RECEIVING")+"^"+Translate!.getTranslation("AON_LOCATION"), columns$[12,1]="C", columns$[12,2]="10"
 
     if stbl("rpt_break")<>"Y"
         HdrVect!.addItem(Translate!.getTranslation("AON_RECEIPTS_BY_VENDOR"))
-        BrkVect!.addItem(str(OutVect!.size())) 
+        BrkVect!.addItem(str(OutVect!.size()/(columns+1))) 
     endif
     
 rem --- Additional File Opens
@@ -431,7 +431,7 @@ std_line: rem --- Standard line
             OutVect!.addItem(str(poe14a.qty_ordered:m2$)+$00$+"R")
             OutVect!.addItem(str(poe14a.qty_received:m2$)+$00$+"R")
             OutVect!.addItem(str(ivm02a.unit_cost*poe14a.conv_factor:m3$)+$00$+"R")
-            OutVect!.addItem(str(iv_extension:m2$)+$00$+"R")
+            OutVect!.addItem(str(iv_extension:m1$)+$00$+"R")
             OutVect!.addItem(str(poe14a.unit_cost:m3$)+$00$+"R")
             OutVect!.addItem(str(po_extension:m1$)+$00$+"R")
             OutVect!.addItem(poe14a.location$)
