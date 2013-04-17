@@ -32,6 +32,8 @@ rem --- Get the IN parameters used by the procedure
 	thru_bill$ = sp!.getParameter("BILL_NO_2")
 	barista_wd$ = sp!.getParameter("BARISTA_WD")
 	whse$ = sp!.getParameter("WHSE")
+	all_dates$ = sp!.getParameter("ALL_DATES")
+	prod_date$ = sp!.getParameter("PROD_DATE")
 
 	sv_wd$=dir("")
 	chdir barista_wd$
@@ -137,9 +139,19 @@ rem --- Now find all sub-bills within the main bill
 			readrecord (bmm_billmat_dev,end=*break) bmm_billmat$
 			if pos(firm_id$+bmm_billmast.bill_no$=bmm_billmat$)<>1 break
 			if bmm_billmat.line_type$<>"S" continue
-			find (bmm_billmast_dev1,key=firm_id$+bmm_billmat.item_id$,dom=*continue)
-			find (ivm_itemwhse_dev,key=firm_id$+whse$+bmm_billmat.item_id$,dom=*continue)
-			bill_numbers$=bill_numbers$+"*"+bmm_billmat.item_id$
+			if cvs(prod_date$,2)="" or
+:				(cvs(prod_date$,2)<>"" and
+:				 prod_date$ >= bmm_billmat.effect_date$ and
+:				 cvs(bmm_billmat.obsolt_date$,2)="") or
+:				((cvs(prod_date$,2)<>"" and
+:				 prod_date$ >= bmm_billmat.effect_date$ and
+:				 cvs(bmm_billmat.obsolt_date$,2)<>"") and
+:				 prod_date$ < bmm_billmat.obsolt_date$) or
+:				all_dates$ = "Y"
+				find (bmm_billmast_dev1,key=firm_id$+bmm_billmat.item_id$,dom=*continue)
+				find (ivm_itemwhse_dev,key=firm_id$+whse$+bmm_billmat.item_id$,dom=*continue)
+				bill_numbers$=bill_numbers$+"*"+bmm_billmat.item_id$
+			endif
 		wend
 		while pos("*"=bill_numbers$,bill_len+1)>0
 			bill_pos=pos("*"=bill_numbers$,bill_len+1)
@@ -171,8 +183,18 @@ rem --- next_bill$ is the next subbill to use - input
 		readrecord (bmm_billmat_dev,end=*break) bmm_billmat$
 		if pos(firm_id$+next_bill$=bmm_billmat$)<>1 break
 		if bmm_billmat.line_type$<>"S" continue
-		find (bmm_billmast_dev1,key=firm_id$+bmm_billmat.item_id$,dom=*continue)
-		bill_numbers$=bill_numbers$(1,bill_pos+bill_len)+"*"+bmm_billmat.item_id$+bill_numbers$(bill_pos+bill_len+1)
+		if cvs(prod_date$,2)="" or
+:			(cvs(prod_date$,2)<>"" and
+:			 prod_date$ >= bmm_billmat.effect_date$ and
+:			 cvs(bmm_billmat.obsolt_date$,2)="") or
+:			((cvs(prod_date$,2)<>"" and
+:			 prod_date$ >= bmm_billmat.effect_date$ and
+:			 cvs(bmm_billmat.obsolt_date$,2)<>"") and
+:			 prod_date$ < bmm_billmat.obsolt_date$) or
+:			all_dates$ = "Y"
+			find (bmm_billmast_dev1,key=firm_id$+bmm_billmat.item_id$,dom=*continue)
+			bill_numbers$=bill_numbers$(1,bill_pos+bill_len)+"*"+bmm_billmat.item_id$+bill_numbers$(bill_pos+bill_len+1)
+		endif
 	wend
 	
 	return
