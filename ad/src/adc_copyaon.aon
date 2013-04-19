@@ -303,18 +303,21 @@ method_error:rem --- Method error trap/handler
                     endif
                 endif
                 
-                rem --- copy file
-                #incrementProgressMeter(source!.getPath())
-                sourceChan=unt
-                open(sourceChan,isz=-1)source!.getPath()
-                targetChan=unt
-                open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getPath()
-                while 1
-                    readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
-                    writerecord(targetChan)record$
-                wend
-                close(sourceChan)
-                close(targetChan)
+                rem --- skip if source and target are the same
+                if !FileObject.isSameFile(source!.getPath(),target!.getPath()) then
+                    rem --- copy file
+                    #incrementProgressMeter(source!.getPath())
+                    sourceChan=unt
+                    open(sourceChan,isz=-1)source!.getPath()
+                    targetChan=unt
+                    open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getPath()
+                    while 1
+                        readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
+                        writerecord(targetChan)record$
+                    wend
+                    close(sourceChan)
+                    close(targetChan)
+                endif
                 #log("COPIED: " + source!.getPath())
                
             endif

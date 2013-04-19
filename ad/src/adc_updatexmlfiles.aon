@@ -214,16 +214,19 @@ method_error:rem --- Method error trap/handler
                     rem --- copy file
                     targetXml! = new File(targetDir!, xmlName$)
                     #incrementProgressMeter("copying: " + targetXml!.getPath())
-                    sourceChan=unt
-                    open(sourceChan,isz=-1)sourceXml!.getPath()
-                    targetChan=unt
-                    open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")targetXml!.getPath()
-                    while 1
-                        readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
-                        writerecord(targetChan)record$
-                    wend
-                    close(sourceChan)
-                    close(targetChan)
+                    rem --- skip if source and target are the same
+                    if !FileObject.isSameFile(sourceXml!.getPath(),targetXml!.getPath()) then
+                        sourceChan=unt
+                        open(sourceChan,isz=-1)sourceXml!.getPath()
+                        targetChan=unt
+                        open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")targetXml!.getPath()
+                        while 1
+                            readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
+                            writerecord(targetChan)record$
+                        wend
+                        close(sourceChan)
+                        close(targetChan)
+                    endif
                     #log("COPIED: " + sourceXml!.getPath())
                 next i
             endif
@@ -495,16 +498,19 @@ method_error:rem --- Method error trap/handler
                 rem --- copy file
 				if target!<>null() then
 					#incrementProgressMeter("copying: " + source!.getPath())
-					sourceChan=unt
-					open(sourceChan,isz=-1,err=*endif)source!.getPath()
-					targetChan=unt
-					open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getPath()
-					while 1
-						readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
-						writerecord(targetChan)record$
-					wend
-					close(sourceChan)
-					close(targetChan)
+                    rem --- skip if source and target are the same
+                    if !FileObject.isSameFile(source!.getPath(),target!.getPath()) then
+                        sourceChan=unt
+                        open(sourceChan,isz=-1,err=*endif)source!.getPath()
+                        targetChan=unt
+                        open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getPath()
+                        while 1
+                            readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
+                            writerecord(targetChan)record$
+                        wend
+                        close(sourceChan)
+                        close(targetChan)
+                    endif
 					#log("COPIED: " + source!.getPath())
 				endif
 				count%=count% + 1

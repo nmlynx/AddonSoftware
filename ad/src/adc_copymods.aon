@@ -370,23 +370,27 @@ method_error:rem --- Method error trap/handler
                 
             else
                 
-                rem --- copy file
-                sourceChan=unt
-                open(sourceChan,isz=-1,err=*endif)source!.getPath()
-				rem --- target directory must exist in order to create file
-				declare File targetParent!
-				targetParent! = target!.getParentFile()
-				if(! targetParent!.exists()) then
-					FileObject.makeDirs(targetParent!)
-				endif
-                targetChan=unt
-                open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getAbsolutePath()
-                while 1
-                    readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
-                    writerecord(targetChan)record$
-                wend
-                close(sourceChan)
-                close(targetChan)
+                rem --- skip if source and target are the same
+                if !FileObject.isSameFile(source!.getPath(),target!.getAbsolutePath()) then
+                    rem --- copy file
+                    sourceChan=unt
+                    open(sourceChan,isz=-1,err=*endif)source!.getPath()
+
+                    rem --- target directory must exist in order to create file
+                    declare File targetParent!
+                    targetParent! = target!.getParentFile()
+                    if(! targetParent!.exists()) then
+                        FileObject.makeDirs(targetParent!)
+                    endif
+                    targetChan=unt
+                    open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getAbsolutePath()
+                    while 1
+                        readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
+                        writerecord(targetChan)record$
+                    wend
+                    close(sourceChan)
+                    close(targetChan)
+                endif
                 #log("    " + source!.getPath())
                
             endif

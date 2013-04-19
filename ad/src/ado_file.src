@@ -794,6 +794,46 @@ method_error:rem --- Method error trap/handler
             x$=stbl("+THROWN_ERR","TRUE")   
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
+
+        rem /**
+        rem  * Returns true if given files are the same physical file. Otherwise returns false. 
+        rem  *
+        rem  * @param BBjString file1$
+        rem  * @param BBjString file2$
+        rem  * @return boolean
+        rem  */
+        method public static boolean isSameFile(BBjString file1$, BBjString file2$)
+            seterr method_error
+            chan=unt
+            sameFile=0
+            
+            rem --- Are the file fid()'s the same?
+            open(chan,err=file_not_found)file1$
+            fid1$=fid(chan)
+            close(chan)
+            open(chan,err=file_not_found)file2$
+            fid2$=fid(chan)
+            close(chan)
+            if fid1$(9)=fid2$(9) then
+                sameFile=1
+            endif
+
+file_not_found:
+            if sameFile then
+                methodret Boolean.valueOf("true")
+            else
+                methodret Boolean.valueOf("false")
+            endif
+            
+method_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
         
     rem ==========================================================================
     rem --- Accessors
