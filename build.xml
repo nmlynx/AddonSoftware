@@ -36,6 +36,8 @@
 
     <property name="work.dir"   value="${base.build}/work"/>
 
+    <property name="display" value=":99.0"/>
+
     <!-- the ports -->
     <property name="port.MAC"      value="2120"/>
     <property name="port.LINUX"    value="2145"/>
@@ -326,7 +328,7 @@
             <equals arg1="${use.locale}" arg2="true"/>
             <then>
                 <exec executable="${install.dir}/bin/bbj">
-                    <env key="DISPLAY" value=":99.0"/>
+                    <env key="DISPLAY" value="${display}"/>
                     <arg value="-q"/>
                     <arg value="-WD${barista.bbj.dir}"/>
                     <arg value="-c${barista.bbj.dir}/sys/config/enu/barista.cfg"/>
@@ -340,7 +342,7 @@
             </then>
             <else>
                 <exec executable="${install.dir}/bin/bbj">
-                    <env key="DISPLAY" value=":99.0"/>
+                    <env key="DISPLAY" value="${display}"/>
                     <arg value="-q"/>
                     <arg value="-WD${barista.bbj.dir}"/>
                     <arg value="-c${barista.bbj.dir}/sys/config/enu/barista.cfg"/>
@@ -364,7 +366,7 @@
 
         <!-- Use killBBjProcs to shutdown BBj -->
         <exec executable="${install.dir}/bin/bbjservices">
-              <env key="DISPLAY" value=":99.0"/>
+              <env key="DISPLAY" value="${display}"/>
         </exec>
 
     </target>
