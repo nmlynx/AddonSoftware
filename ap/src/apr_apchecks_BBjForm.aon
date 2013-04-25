@@ -86,7 +86,7 @@ initializations: rem --- Initializations
     show_progress=1
     t0$=""
     t1$=""
-    dim t[2]
+    dim t[3]
     m1$="########.00CR"
     m8$="*#######"
     m9$="*"+m1$(2,10)
@@ -174,9 +174,10 @@ rem --- Breaks
 
 rem --- Accumulate
 
-        t[0]=t[0]+ape04a.invoice_amt+ape04a.retention
+        t[0]=t[0]+ape04a.invoice_amt
         t[1]=t[1]+ape04a.discount_amt
         t[2]=t[2]+ape04a.retention
+		t[3]=t[3]+ape04a.payment_amt
     wend
 
 rem --- Totals
@@ -322,7 +323,7 @@ check_stub_detail:
     tmp = fntext(col[1]+6, row+stub, ape04a.ap_inv_no$, boldfont!)
     tmp = fntext2(col[2], row+stub, col[3]-col[2]-6, row+stub, str(ape04a.invoice_amt + ape04a.retention:m1$), boldfont!, right_justify)
     tmp = fntext2(col[3], row+stub, col[4]-col[3]-6 ,row+stub, str(ape04a.discount_amt:m1$), boldfont!, right_justify)
-    tmp = fntext2(col[4], row+stub, col[5]-col[4]-6, row+stub, str(ape04a.invoice_amt - ape04a.discount_amt:m1$), boldfont!, right_justify)
+    tmp = fntext2(col[4], row+stub, col[5]-col[4]-6, row+stub, str(ape04a.payment_amt:m1$), boldfont!, right_justify)
 
     return
 
@@ -332,7 +333,7 @@ stub_total: rem --- Stub Total
 
     tmp=fntext2(col[2],204,col[3]-col[2]-6,204,str(t[0]:m1$),boldfont!,right_justify)
     tmp=fntext2(col[3],204,col[4]-col[3]-6,204,str(t[1]:m1$),boldfont!,right_justify)
-    tmp=fntext2(col[4],204,col[5]-col[4]-6,204,str(t[0]-t[2]-t[1]:m1$),boldfont!,right_justify)
+    tmp=fntext2(col[4],204,col[5]-col[4]-6,204,str(t[3]:m1$),boldfont!,right_justify)
     tmp=fntext2(col[5],216,118,216,Translate!.getTranslation("AON_ACCOUNTING_COPY"),boldfont!,right_justify)
     tmp=fnbox2(col[1],204,col[2]-col[1],12)
     tmp=fntext3(col[1],204,col[2]-col[1]-6,204,Translate!.getTranslation("AON_TOTALS"),boldfont!,right_justify)
@@ -346,7 +347,7 @@ stub_total: rem --- Stub Total
 
     tmp=fntext2(col[2],204+stub_offset,col[3]-col[2]-6,204+stub,str(t[0]:m1$),boldfont!,right_justify)
     tmp=fntext2(col[3],204+stub_offset,col[4]-col[3]-6,204+stub,str(t[1]:m1$),boldfont!,right_justify)
-    tmp=fntext2(col[4],204+stub_offset,col[5]-col[4]-6,204+stub,str(t[0]-t[2]-t[1]:m1$),boldfont!,right_justify)
+    tmp=fntext2(col[4],204+stub_offset,col[5]-col[4]-6,204+stub,str(t[3]:m1$),boldfont!,right_justify)
     tmp=fntext2(col[5],216+stub_offset,118,216+stub,Translate!.getTranslation("AON_VENDOR_COPY"),boldfont!,right_justify)
     tmp=fnbox2(col[1],204+stub,col[2]-col[1],12)
     tmp=fntext3(col[1],204+stub,col[2]-col[1]-6,204+stub_offset,Translate!.getTranslation("AON_TOTALS"),boldfont!,right_justify)
@@ -362,17 +363,17 @@ check_face: rem --- Print Check
 
     call pgmdir$+"adc_address.aon",address$,24,3,9,35
 
-    x$=str(fpt(t[0]-t[2]-t[1])*100:"00")
+    x$=str(fpt(t[3])*100:"00")
     if x$="00" then x$="NO"
 
     gosub common_check_face
 
-    exactly$=Translate!.getTranslation("AON_EXACTLY*")+str(int(t[0]-t[2]-t[1]):m8$)+Translate!.getTranslation("AON_*DOLLARS*AND*")+x$+Translate!.getTranslation("AON_*CENTS")
+    exactly$=Translate!.getTranslation("AON_EXACTLY*")+str(int(t[3]):m8$)+Translate!.getTranslation("AON_*DOLLARS*AND*")+x$+Translate!.getTranslation("AON_*CENTS")
     tmp=fntext(36,612,exactly$,boldfont!)
 
     tmp=fntext2(332,582, 58,582,fndate$(check_date$),boldfont!,center_justify)
     tmp=fntext2(390,582, 54,582,check_no$,boldfont!,center_justify)
-    tmp=fntext2(444,582,118,582,str(t[0]-t[1]-t[2]:m9$),boldfont!,right_justify)
+    tmp=fntext2(444,582,118,582,str(t[3]:m9$),boldfont!,right_justify)
 
     tmp=fntext(72,672,vend_name$,boldfont!)
     tmp=fntext(72,684,address$(1,35),boldfont!)
@@ -457,7 +458,7 @@ new_vendor: rem --- New Vendor
     if t1$ <> "" then 
         gosub stub_total
 
-        if t[0]-t[2]-t[1] <= 0 then 
+        if t[3] <= 0 then 
             gosub void_check 
         else 
             gosub check_face
@@ -485,7 +486,7 @@ vendor_header:
 
     if t9$ = "" then
         dim x1$(vendor_length)
-        dim t[2]
+        dim t[3]
         dim address$(81)
         dim apm01a$:fattr(apm01a$)
         dim t2$:fattr(ape04a$)

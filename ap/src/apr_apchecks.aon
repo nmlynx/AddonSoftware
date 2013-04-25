@@ -251,7 +251,7 @@ initializations: rem --- Initializations
     show_progress=1
     prev_aptype_t0$=""
     prev_aptype_vend_t1$=""
-    dim t[2]
+    dim t[3]
 	
     stub_amt_mask$="########.00CR"
     exactly_amt_mask$="*#######"
@@ -373,6 +373,7 @@ rem --- Accumulate
         t[0]=t[0]+ape04a.invoice_amt; rem +ape04a.retention
         t[1]=t[1]+ape04a.discount_amt
         t[2]=t[2]+ape04a.retention
+		t[3]=t[3]+ape04a.payment_amt
     wend
 
 rem --- Totals
@@ -451,9 +452,8 @@ inv_detail: rem --- Invoice Detail
             k1$=key(apt02_dev,end=*break)
             if k1$(1,21)<>firm_id$+ape04a.ap_type$+ape04a.vendor_id$+"I"+ape04a.ap_inv_no$ then break
             read record (apt02_dev) apt02a$
-
             if ape04a.orig_inv_amt then 
-                gl_post_amt=apt02a.gl_post_amt*(ape04a.invoice_amt-ape04a.retention)/ape04a.orig_inv_amt 
+                gl_post_amt=apt02a.gl_post_amt*(ape04a.payment_amt+ape04a.discount_amt)/ape04a.orig_inv_amt 
             else 
                 gl_post_amt=0
             endif
@@ -530,7 +530,7 @@ check_stub_detail:
 	
 	apw_chkprn.stub_inv_amt=    ape04a.invoice_amt
 	apw_chkprn.stub_inv_discamt=ape04a.discount_amt
-	apw_chkprn.stub_inv_amt_pd= ape04a.invoice_amt - ape04a.discount_amt - ape04a.retention
+	apw_chkprn.stub_inv_amt_pd= ape04a.payment_amt
 	
 	apw_chkprn.chk_amt=0
 	
@@ -585,7 +585,7 @@ stub_total: rem --- Stub Total
 
 check_face: rem --- Print Check
 
-	chk_amt=t[0]-t[1]-t[2]
+	chk_amt=t[3]
     check_tot_cents$=str(fpt(chk_amt)*100:"00")
     if check_tot_cents$="00" then check_tot_cents$="NO"
 	
@@ -728,7 +728,7 @@ new_vendor: rem --- New Vendor
     if prev_aptype_vend_t1$ <> "" then 
 		stub_inv_amt=     t[0]
 		stub_inv_discamt= t[1]
-		stub_inv_amt_pd=  t[0]-t[2]-t[1]
+		stub_inv_amt_pd=  t[3]
 		stub_memo_dist$=  ""
 			
 		section_type$=  "A"; rem accounting stub
@@ -737,13 +737,13 @@ new_vendor: rem --- New Vendor
 			
 		stub_inv_amt=     t[0]
 		stub_inv_discamt= t[1]
-		stub_inv_amt_pd=  t[0]-t[2]-t[1]
+		stub_inv_amt_pd=  t[3]
 		stub_memo_dist$=  ""
 		section_type$=  "V"; rem vendor stub
 		gosub stub_total; rem vendor stub
 		vendstub_rowcnt=1
 
-        if t[0]-t[2]-t[1] <= 0 then 
+        if t[3] <= 0 then 
             gosub void_check 
         else 
             gosub check_face
@@ -770,7 +770,7 @@ rem --- using the current check number and firm_id$ + prev_aptype_vend_t1$ (ap t
 vendor_header:
 
     if do_vend_header then
-        dim t[2]
+        dim t[3]
 		chk_pagenum=1
 		
         dim address$(81)

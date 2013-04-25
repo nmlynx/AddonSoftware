@@ -92,7 +92,7 @@ rem --- Retrieve parameter records
 rem --- Initializations
 
     dim headings$[maxheadings],underline$((2)*m1,"-")
-    dim h[9],o[9],detail[2],totals[2],at[2],rt[2],vt[2],totals[2]
+    dim h[9],o[9],detail[3],totals[3],at[3],rt[3],vt[3]
     vm=max(m0,8)
     done=0
     page=0
@@ -216,7 +216,7 @@ rem --- Read next Check Detail (ape-04) record
         OutVect!.addItem(fndate$(ape04a.disc_date$))
         OutVect!.addItem(str(ape04a.invoice_amt))
         OutVect!.addItem(str(ape04a.discount_amt))
-        OutVect!.addItem(str(ape04a.invoice_amt-ape04a.discount_amt-ape04a.retention)); rem payment
+        OutVect!.addItem(str(ape04a.payment_amt)); rem payment
 
         if retention
             OutVect!.addItem(retention$)
@@ -232,8 +232,9 @@ rem --- Read next Check Detail (ape-04) record
         detail[0]=ape04a.invoice_amt
         detail[1]=ape04a.discount_amt
         detail[2]=ape04a.retention
+		detail[3]=ape04a.payment_amt
         
-        for x=0 to 2
+        for x=0 to 3
             vt[x]=vt[x]+detail[x]
             at[x]=at[x]+detail[x]
             rt[x]=rt[x]+detail[x]
@@ -255,7 +256,7 @@ rem --- All done
     gosub type_break
 
     total$=Translate!.getTranslation("AON_TOTALS_FOR_REPORT")
-    for x=0 to 2
+    for x=0 to 3
         totals[x]=rt[x]
     next x
     gosub print_total
@@ -278,7 +279,7 @@ print_total: rem --- Print totals
 
     retention$=""
     if retention retention$=str(totals[2])
-    payment=totals[0]-totals[1]-totals[2]
+    payment=totals[3]
 
     if warning$<>""
         xwk = fnblank(1)
@@ -311,7 +312,7 @@ type_break: rem --- AP type break
     while lasttype$<>""
         total$=Translate!.getTranslation("AON_TOTALS_FOR_")+aptype$
         
-        for x=0 to 2
+        for x=0 to 3
             totals[x]=at[x]
         next x
         
@@ -349,12 +350,12 @@ vendor_break: rem --- Vendor break
         
         total$=Translate!.getTranslation("AON_TOTALS_FOR_VENDOR_")+x$
         
-        for x=0 to 2
+        for x=0 to 3
             totals[x]=vt[x]
         next
         
         warning$=""
-        payment=totals[0]-totals[1]-totals[2]
+        payment=totals[3]
         
         if payment<0 
             negative_checks=1
@@ -387,7 +388,7 @@ vendor_break: rem --- Vendor break
 
     if done return
     
-    dim vt[2]
+    dim vt[3]
     lastvendor$=ape04a.vendor_id$
     if cvs(lastvendor$,2)="" return
     dim apm01a$:fattr(apm01a$)

@@ -244,7 +244,7 @@ rem ==========================================================================
 			inv_amt = ape04a.invoice_amt
 			disc_amt = ape04a.discount_amt
 			ret_amt = ape04a.retention
-			pymnt_amt = inv_amt - disc_amt - ret_amt
+			pymnt_amt = ape04a.payment_amt
 			amt_due = inv_amt - ret_amt - disc_amt - pymnt_amt
 		endif
 
@@ -911,6 +911,7 @@ rem --- First check to see if user_tpl.ap_check_seq$ is Y and multiple AP Types 
 					ape04a.discount_amt  = disc_to_take
 					ape04a.retention     = apt01a.retention+retention
 					ape04a.orig_inv_amt  = apt01a.invoice_amt
+					ape04a.payment_amt = amt_to_pay
 
 					ape04a$=field(ape04a$)
 					extract record (ape04_dev, key=apt01_key$, dom=*next) dummy$; rem Advisory Locking
