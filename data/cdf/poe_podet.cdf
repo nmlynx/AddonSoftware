@@ -1,3 +1,16 @@
+[[POE_PODET.CONV_FACTOR.AVAL]]
+rem --- Recalc Unit Cost
+
+	prev_fact=num(callpoint!.getColumnData("POE_PODET.CONV_FACTOR"))
+	new_fact=num(callpoint!.getUserInput())
+	unit_cost=num(callpoint!.getColumnData("POE_PODET.UNIT_COST"))
+	if num(callpoint!.getUserInput())<>prev_fact and prev_fact<>0
+		unit_cost=unit_cost/prev_fact
+		unit_cost=unit_cost*new_fact
+		callpoint!.setColumnData("POE_PODET.UNIT_COST",str(unit_cost),1)
+		gosub update_header_tots
+		callpoint!.setDevObject("cost_this_row",unit_cost)
+	endif
 [[POE_PODET.WO_NO.BINQ]]
 rem --- call custom inquiry
 rem --- Query displays WO's for given firm/vendor, only showing those not already linked to a PO, and only non-stocks (per v6 validation code)
@@ -863,9 +876,14 @@ if pos(".AVAL"=callpoint!.getCallpointEvent())
 	if callpoint!.getVariableName()="POE_PODET.QTY_ORDERED"
 		new_qty=num(callpoint!.getUserInput())
 		new_cost=num(callpoint!.getColumnData("POE_PODET.UNIT_COST"))
-	else
+	endif
+	if callpoint!.getVariableName()="POE_PODET.UNIT_COST"
 		new_qty=num(callpoint!.getColumnData("POE_PODET.QTY_ORDERED"))
 		new_cost=num(callpoint!.getUserInput())
+	endif
+	if callpoint!.getVariableName()="POE_PODET.CONV_FACTOR"
+		new_qty=num(callpoint!.getColumnData("POE_PODET.QTY_ORDERED"))
+		new_cost=unit_cost
 	endif
 	gosub calculate_header_tots
 endif
