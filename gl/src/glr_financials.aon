@@ -294,7 +294,7 @@ print_line: rem --- Perform any required editing and print the line
         rem --- Page break?
 
         if pos("P"=editing_code$)
-            BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+            BrkVect!.addItem(str(OutVect!.size()/(numcols+1)))
         endif
 
         rem --- Blank line?
