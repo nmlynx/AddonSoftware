@@ -508,6 +508,12 @@ callpoint!.setDevObject("qty_this_row",num(callpoint!.getUserInput()))
 callpoint!.setDevObject("cost_this_row",unit_cost);rem setting both qty and cost because cost may have changed based on qty break
 [[POE_REQDET.WAREHOUSE_ID.AVAL]]
 rem --- Warehouse ID - After Validataion
+
+	if callpoint!.getHeaderColumnData("POE_REQHDR.WAREHOUSE_ID")<>pad(callpoint!.getUserInput(),2)
+		msg_id$="PO_WHSE_NOT_MATCH"
+		gosub disp_message
+	endif
+
 	gosub validate_whse_item
 [[POE_REQDET.AGDR]]
 rem --- After Grid Display Row

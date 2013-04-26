@@ -612,8 +612,8 @@ rem --- REFRESH is needed in order to get the default PO_LINE_CODE set in AGCL
 callpoint!.setStatus("REFRESH")
 [[POE_PODET.WAREHOUSE_ID.AVAL]]
 rem --- Warehouse ID - After Validataion
-rem --- this code was already here... is it right?
-if callpoint!.getHeaderColumnData("POE_POHDR.WAREHOUSE_ID")<>pad(callpoint!.getUserInput(),2) then
+
+if callpoint!.getHeaderColumnData("POE_POHDR.WAREHOUSE_ID")<>pad(callpoint!.getUserInput(),2)
 	msg_id$="PO_WHSE_NOT_MATCH"
 	gosub disp_message
 endif
