@@ -1,1304 +1,367 @@
 =======================================================================================================================================
- Report Date:   2012-10-31
- Report Branch: AddonSoftware 12.20
- Last Release:  AddonSoftware 12.10
+ Report Date:   2013-05-01
+ Report Branch: AddonSoftware 13.00
+ Last Release:  AddonSoftware 12.22
 =======================================================================================================================================
 
-Revision: 9930
+Revision: 10551
 
-Date: 5:08:11 PM, Tuesday, October 30, 2012
+Date: Wednesday, May 01, 2013 12:37:13 PM
 Message:
-Bug 6440: Initialize cls_inp_qty to max(0,sch_prod_qty-qty_cls_todt)
+Change the way the header total is calculated from detail lines by using GridVect! (item 0) to fix bug 6852.
 ----
-Modified : /trunk/data/bar/sfe_woclose.xml
-Modified : /trunk/data/cdf/sfe_woclose.cdf
+Modified : /trunk/data/bar/sfe_timedatedet.xml
+Modified : /trunk/data/bar/sfe_timeempldet.xml
+Modified : /trunk/data/bar/sfe_timewodet.xml
+Modified : /trunk/data/cdf/sfe_timedatedet.cdf
+Modified : /trunk/data/cdf/sfe_timeempldet.cdf
+Modified : /trunk/data/cdf/sfe_timewodet.cdf
 
 =======================================================================================================================================
-Revision: 9926
+Revision: 10541
 
-Date: 1:51:58 PM, Tuesday, October 30, 2012
+Date: Tuesday, April 30, 2013 10:32:36 AM
 Message:
-Bug 6460: Made sure complete flag is either Y or N, not blank. Modified glr_recap to not run update when errors encountered.
+Manually remove the IDEF lines to correct a problem with differing versions of Barista.
 ----
-Modified : /trunk/data/bar/sfe_woclose.xml
-Modified : /trunk/data/bar/sfe_wolotser.xml
-Modified : /trunk/data/cdf/sfe_woclose.cdf
-Modified : /trunk/data/cdf/sfe_wolotser.cdf
-Modified : /trunk/gl/src/glr_recap.aon
-Modified : /trunk/sf/src/sfr_clsdworeg.aon
+Modified : /trunk/data/bar/ape_payselect.xml
 
 =======================================================================================================================================
-Revision: 9925
+Revision: 10540
 
-Date: 10:32:44 AM, Tuesday, October 30, 2012
+Date: Monday, April 29, 2013 10:46:21 PM
 Message:
-WO Cost Variance Analysis Report: Added masking to variance percentage total.
+Add Total Payments display field and populate it when displaying the form, modifying the discount and payment fields, selecting by checkbox, or using the select/clear all buttons to fix bug 6734.
 ----
-Modified : /trunk/sf/src/sfr_wovarrep_o1.aon
+Modified : /trunk/data/bar/ape_payselect.xml
+Modified : /trunk/data/cdf/ape_payselect.cdf
 
 =======================================================================================================================================
-Revision: 9924
+Revision: 10539
 
-Date: 6:25:03 AM, Tuesday, October 30, 2012
+Date: Monday, April 29, 2013 3:23:30 PM
 Message:
-Replaced hard-coded version number with [VERSION_ID].
+Bug 6843: Removed problem <DD_ATTR_IDEF> lines from bar/*.xml files. These problem <DD_ATTR_IDEF> lines resulted from a Barista change, which was corrected 4/17/2013  with change to bam_attr_save.bbj.
 ----
-Modified : /trunk/config/addon.syn
-Modified : /trunk/config/addon_dev.syn
+Modified : /trunk/data/bar/ape_payselect.xml
+Modified : /trunk/data/bar/bmm_billmast.xml
+Modified : /trunk/data/bar/poe_podet.xml
+Modified : /trunk/data/bar/poe_recdet.xml
+Modified : /trunk/data/bar/poe_reqdet.xml
+Modified : /trunk/data/bar/sfe_timedate.xml
+Modified : /trunk/data/bar/sfe_timeempl.xml
+Modified : /trunk/data/bar/sfe_timewo.xml
 
 =======================================================================================================================================
-Revision: 9922
+Revision: 10538
 
-Date: 2:21:09 PM, Monday, October 29, 2012
+Date: Friday, April 26, 2013 10:28:11 PM
 Message:
-SF Conversion Work Order Register and update development complete. Ready for QA.
+Remove Save records on exit on the header to prevent the checking of details against the header until a manual save is done to fix bug 6815.
 ----
-Modified : /trunk/sf/src/sfx_woconvreg.aon
-Deleted : /trunk/sf/src/sfx_woconvreg_o1.aon
-Modified : /trunk/sf/src/sfx_woconvupdt.aon
+Modified : /trunk/data/bar/sfe_timedate.xml
+Modified : /trunk/data/bar/sfe_timeempl.xml
+Modified : /trunk/data/bar/sfe_timewo.xml
 
 =======================================================================================================================================
-Revision: 9921
+Revision: 10537
 
-Date: 9:35:54 AM, Monday, October 29, 2012
+Date: Friday, April 26, 2013 12:39:55 PM
 Message:
-Updating version number to 12.20
+Created new message and enabled the Warehouse column in the 3 forms to fix bug 6767.
 ----
-Modified : /trunk/config/addon.syn
-Modified : /trunk/config/addon_dev.syn
-Modified : /trunk/documentation/readme.htm
-Modified : /trunk/documentation/relnotes.htm
-
-=======================================================================================================================================
-Revision: 9920
-
-Date: 3:58:48 PM, Friday, October 26, 2012
-Message:
-Fix Bug 6459 - IV - Price Change by Percentage: Entries not being saved to file
-----
-Modified : /trunk/iv/src/ivc_pricecostchgbypct.aon
-
-=======================================================================================================================================
-Revision: 9919
-
-Date: 3:23:24 PM, Friday, October 26, 2012
-Message:
-Added batching to Conversion Work Order Entry.
-----
-Modified : /trunk/data/bar/sfe_woconvrn.xml
-Modified : /trunk/data/cdf/sfe_woconvrn.cdf
-
-=======================================================================================================================================
-Revision: 9918
-
-Date: 2:35:35 PM, Friday, October 26, 2012
-Message:
-Added batching to Conversion Work Order Entry.
-----
-Modified : /trunk/data/bar/sfe_woconvrn.xml
-Modified : /trunk/data/cdf/sfe_woconvrn.cdf
-Deleted : /trunk/data/sfe-05
-
-=======================================================================================================================================
-Revision: 9917
-
-Date: 12:51:55 PM, Friday, October 26, 2012
-Message:
-Replaced the existing way of getting the next control ID with the util.getNextControlID method to fix bug 6452.
-----
-Modified : /trunk/data/bar/ape_invoicehdr.xml
-Modified : /trunk/data/cdf/ape_invoicehdr.cdf
-
-=======================================================================================================================================
-Revision: 9916
-
-Date: 12:48:09 PM, Friday, October 26, 2012
-Message:
-Remove the masking of a number when doing an addItem in a DocOut report to fix bug 6456.
-----
-Modified : /trunk/ap/src/apr_disbursemnts.aon
-
-=======================================================================================================================================
-Revision: 9915
-
-Date: 11:13:47 AM, Friday, October 26, 2012
-Message:
-Set up Process Maintenance of Conversion Work Order Entry/Register/Update.
-----
-Modified : /trunk/data/adm-09
-Modified : /trunk/data/adm-19
-Modified : /trunk/data/adm-39
-
-=======================================================================================================================================
-Revision: 9914
-
-Date: 10:10:11 AM, Friday, October 26, 2012
-Message:
-Connected the Conversion Work Order Register program to the menu system.
-----
-Modified : /trunk/config/deu/addon.men
-Modified : /trunk/config/enc/addon.men
-Modified : /trunk/config/enu/addon.men
-Modified : /trunk/config/esm/addon.men
-Modified : /trunk/config/esp/addon.men
-Modified : /trunk/config/fra/addon.men
-Modified : /trunk/config/frc/addon.men
-Modified : /trunk/config/ita/addon.men
-Added : /trunk/sf/src/sfx_woconvreg.aon
-Added : /trunk/sf/src/sfx_woconvreg_o1.aon
-Added : /trunk/sf/src/sfx_woconvupdt.aon
-Deleted : /trunk/sf/src/sfx_woregister.aon
-Deleted : /trunk/sf/src/sfx_woregister_o1.aon
-Deleted : /trunk/sf/src/sfx_woregupdt.aon
-
-=======================================================================================================================================
-Revision: 9913
-
-Date: 9:43:40 AM, Friday, October 26, 2012
-Message:
-Delete unused obsolete upgrade800 programs.
-----
-Deleted : /trunk/ap/src/apx_upgrade800.aon
-Deleted : /trunk/ar/src/arx_upgrade800.aon
-Deleted : /trunk/gl/src/glx_upgrade800.aon
-Deleted : /trunk/iv/src/ivx_upgrade800.aon
-Deleted : /trunk/mp/src/mpx_upgrade800.aon
-Deleted : /trunk/op/src/opx_upgrade800.aon
-Deleted : /trunk/po/src/pox_upgrade800.aon
-Deleted : /trunk/pr/src/prx_upgrade800.aon
-Deleted : /trunk/sa/src/sax_upgrade800.aon
-Deleted : /trunk/sf/src/sfx_upgrade800.aon
-
-=======================================================================================================================================
-Revision: 9912
-
-Date: 6:31:20 PM, Thursday, October 25, 2012
-Message:
-SF Conversion Work Order Entry development complete. Ready for QA now.
-----
-Modified : /trunk/data/bar/sfe_woconvrn.xml
-Added : /trunk/data/cdf/sfe_woconvrn.cdf
-Added : /trunk/data/sync/ads_messages~sf_wo_ops_missing.xml
+Modified : /trunk/data/bar/poe_podet.xml
+Modified : /trunk/data/bar/poe_recdet.xml
+Modified : /trunk/data/bar/poe_reqdet.xml
+Modified : /trunk/data/cdf/poe_podet.cdf
+Modified : /trunk/data/cdf/poe_recdet.cdf
+Modified : /trunk/data/cdf/poe_reqdet.cdf
+Added : /trunk/data/sync/ads_messages~po_whse_not_match.xml
 Modified : /trunk/prop/addon.properties
-Modified : /trunk/prop/addon_de.properties
 Modified : /trunk/prop/addon_en.properties
-Modified : /trunk/prop/addon_en_CA.properties
-Modified : /trunk/prop/addon_es.properties
-Modified : /trunk/prop/addon_es_ES.properties
-Modified : /trunk/prop/addon_fr.properties
-Modified : /trunk/prop/addon_fr_CA.properties
-Modified : /trunk/prop/addon_it.properties
 
 =======================================================================================================================================
-Revision: 9911
+Revision: 10536
 
-Date: 5:09:01 PM, Thursday, October 25, 2012
+Date: Thursday, April 25, 2013 10:57:06 PM
 Message:
-Correct incorrect vendor$ to vendor_id$ as part of fix to 6426.
+Correct variable name used to calculate BrkVect to fix bug 6764.
+----
+Modified : /trunk/gl/src/glr_financials.aon
+
+=======================================================================================================================================
+Revision: 10535
+
+Date: Thursday, April 25, 2013 10:29:02 PM
+Message:
+Add Display Only field to header forms and populate with full name to fix bug 6824.
+----
+Modified : /trunk/data/bar/sfe_timedate.xml
+Modified : /trunk/data/bar/sfe_timeempl.xml
+Modified : /trunk/data/cdf/sfe_timedate.cdf
+Modified : /trunk/data/cdf/sfe_timeempl.cdf
+
+=======================================================================================================================================
+Revision: 10534
+
+Date: Thursday, April 25, 2013 1:53:22 PM
+Message:
+Added line to bypass the error routine if no errors encountered to fix bug 6834.
+----
+Modified : /trunk/ad/src/adx_dummy.aon
+
+=======================================================================================================================================
+Revision: 10533
+
+Date: Thursday, April 25, 2013 1:04:51 PM
+Message:
+Add logic to CONV_FACTOR.AVAL callpoint to match v6 to fix bug 6832.
+----
+Modified : /trunk/data/bar/poe_podet.xml
+Modified : /trunk/data/bar/poe_reqdet.xml
+Modified : /trunk/data/cdf/poe_podet.cdf
+Modified : /trunk/data/cdf/poe_reqdet.cdf
+
+=======================================================================================================================================
+Revision: 10531
+
+Date: Wednesday, April 24, 2013 10:57:42 PM
+Message:
+Make use of the new payment_amt field to fix bug 6761.
 ----
 Modified : /trunk/ap/src/apr_apchecks.aon
+Modified : /trunk/ap/src/apr_apchecks_BBjForm.aon
+Modified : /trunk/ap/src/apr_chkregister.aon
+Modified : /trunk/ap/src/apr_payments.aon
+Modified : /trunk/ap/src/apu_chkregister.aon
+Modified : /trunk/data/bar/ape_payselect.xml
+Modified : /trunk/data/cdf/ape_payselect.cdf
 
 =======================================================================================================================================
-Revision: 9910
+Revision: 10530
 
-Date: 3:36:08 PM, Thursday, October 25, 2012
+Date: Tuesday, April 23, 2013 10:15:55 PM
 Message:
-Added logic to print Vendor Total if the report is done even if the last ap type is blank to fix bug 6451.
+Changed AVAL in the BILL_NO callpoint to display each field if a new record and set status to MODIFIED to fix bug 6830.
 ----
-Modified : /trunk/ap/src/apr_purchases.aon
+Modified : /trunk/data/bar/bmm_billmast.xml
+Modified : /trunk/data/cdf/bmm_billmast.cdf
 
 =======================================================================================================================================
-Revision: 9909
+Revision: 10528
 
-Date: 1:27:19 PM, Thursday, October 25, 2012
+Date: Tuesday, April 23, 2013 12:25:42 PM
 Message:
-Removed TAB typo.
+Use the cost$ variable in the headings of the reports to fix bug 6792.
 ----
-Modified : /trunk/sprocs/SFHARDCOPYOPSTD.prc
+Modified : /trunk/po/src/por_recptreg.aon
+Modified : /trunk/po/src/por_recptreg_o1.aon
 
 =======================================================================================================================================
-Revision: 9908
+Revision: 10527
 
-Date: 12:50:04 PM, Thursday, October 25, 2012
+Date: Monday, April 22, 2013 8:12:17 AM
 Message:
-Change Traveler to never print any cost information to fix bug 6448.
+Extracted :99.0 out into a variable to make it easier to change.
+
+----
+Modified : /trunk/build.xml
+
+=======================================================================================================================================
+Revision: 10526
+
+Date: Friday, April 19, 2013 2:10:57 PM
+Message:
+Bug 6813: Don't copy source file when it's the same physical file as the target.
+----
+Modified : /trunk/ad/src/adc_copyaon.aon
+Modified : /trunk/ad/src/adc_copydir.aon
+Modified : /trunk/ad/src/adc_copymods.aon
+Modified : /trunk/ad/src/adc_updatexmlfiles.aon
+Modified : /trunk/ad/src/ado_file.src
+
+=======================================================================================================================================
+Revision: 10525
+
+Date: Wednesday, April 17, 2013 12:26:24 PM
+Message:
+Change the validation of quantity entered for Adjustments to warn if it would make the On Hand go to negative instead of abort if quantity would go below the Available quantity to fix bug 6745.
+----
+Modified : /trunk/data/bar/ive_transdet.xml
+Modified : /trunk/data/cdf/ive_transdet.cdf
+Added : /trunk/data/sync/ads_messages~iv_qty_over_qoh.xml
+Modified : /trunk/prop/addon.properties
+Modified : /trunk/prop/addon_en.properties
+
+=======================================================================================================================================
+Revision: 10524
+
+Date: Tuesday, April 16, 2013 10:19:03 PM
+Message:
+Change sproc to check for Production Date before including sub-bills to the nth degree to fix bug 6779.
 ----
 Modified : /trunk/ad/src/adx_build_sproc.aon
-Modified : /trunk/reports/SFHardCopy.jasper
-Modified : /trunk/reports/SFHardCopy.jrxml
-Modified : /trunk/reports/SFHardCopyMatStd.jasper
-Modified : /trunk/reports/SFHardCopyMatStd.jrxml
-Modified : /trunk/reports/SFHardCopyOpStd.jasper
-Modified : /trunk/reports/SFHardCopyOpStd.jrxml
-Modified : /trunk/reports/SFHardCopySubStd.jasper
-Modified : /trunk/reports/SFHardCopySubStd.jrxml
-Modified : /trunk/sf/src/sfr_wotrav.aon
-Modified : /trunk/sprocs/SFHARDCOPYMATSTD.prc
-Modified : /trunk/sprocs/SFHARDCOPYOPSTD.prc
-Modified : /trunk/sprocs/SFHARDCOPYSUBSTD.prc
+Modified : /trunk/reports/BOMCosting.jasper
+Modified : /trunk/reports/BOMCosting.jrxml
+Modified : /trunk/sprocs/BOMCOSTING.prc
 
 =======================================================================================================================================
-Revision: 9907
+Revision: 10523
 
-Date: 9:28:05 AM, Thursday, October 25, 2012
+Date: Tuesday, April 16, 2013 12:13:16 PM
 Message:
-Prop menu change to other languages.
+Prevent user from setting up parameters with description lengths whose sum exceeds the defined length of the element DESC_LEN to fix bug 6793. Also don't allow a description 1 length of 0, and don't allow a description 3 without defining a description 2.
 ----
-Modified : /trunk/config/deu/addon.men
-Modified : /trunk/config/enc/addon.men
-Modified : /trunk/config/esm/addon.men
-Modified : /trunk/config/esp/addon.men
-Modified : /trunk/config/fra/addon.men
-Modified : /trunk/config/frc/addon.men
-Modified : /trunk/config/ita/addon.men
-
-=======================================================================================================================================
-Revision: 9906
-
-Date: 8:16:24 AM, Thursday, October 25, 2012
-Message:
-Corrected menu entry for SF Conversion Work Order Entry.
-----
-Modified : /trunk/config/enu/addon.men
-
-=======================================================================================================================================
-Revision: 9905
-
-Date: 10:19:01 PM, Wednesday, October 24, 2012
-Message:
-Moved the Last Activity Date to the left to allow a larger size for the date to fix bug 6449.
-----
-Modified : /trunk/reports/SFHardCopy.jasper
-Modified : /trunk/reports/SFHardCopy.jrxml
-
-=======================================================================================================================================
-Revision: 9904
-
-Date: 10:10:04 PM, Wednesday, October 24, 2012
-Message:
-Moved out_action$="FORMAT" line of code to the std_exit paragraph to fix bug 6446.
-----
-Modified : /trunk/gl/src/glr_dailydetail.aon
-
-=======================================================================================================================================
-Revision: 9903
-
-Date: 5:56:17 PM, Wednesday, October 24, 2012
-Message:
-Per recent changes to crush images and consolidate them into imagelists; Nick created this imagelist png for the images in the report; I modified the report to use the imagelist instead of individual images.
-----
-Modified : /trunk/ar/src/arr_graphicSalesReport.aon
-Added : /trunk/cust_images/chartsImageList.png
-
-=======================================================================================================================================
-Revision: 9902
-
-Date: 5:47:19 PM, Wednesday, October 24, 2012
-Message:
-SF Closed Recurring Work Order Summary Register and update development complete. Ready for QA now.
-----
-Modified : /trunk/sf/src/sfr_clsdrecworeg.aon
-Modified : /trunk/sf/src/sfr_clsdworeg.aon
-Added : /trunk/sf/src/sfu_clsdrecworeg.aon
-Deleted : /trunk/sf/src/sfu_clsrecworder.aon
-
-=======================================================================================================================================
-Revision: 9901
-
-Date: 3:49:05 PM, Wednesday, October 24, 2012
-Message:
-Altered to use new BarImageMgr class to get images (prev yr, prev mo, next mo, next yr, calendar) from new imageList rather than specifying individual image file in the .arc.
-----
-Modified : /trunk/ad/arc/ads_execsummary.arc
-Modified : /trunk/ad/src/ads_execsummary.aon
-Modified : /trunk/po/arc/pom_calendar.arc
-Modified : /trunk/po/src/pom_calendar.aon
-Modified : /trunk/sf/arc/sfm_calendar.arc
-Modified : /trunk/sf/src/sfm_calendar.aon
-
-=======================================================================================================================================
-Revision: 9900
-
-Date: 12:58:25 PM, Wednesday, October 24, 2012
-Message:
-Replaced concatenated key in the WHERE clauses to splitting out each element of the key to fix bug 6442.
-----
-Modified : /trunk/sprocs/SFHARDCOPYCOSTSUM.prc
-Modified : /trunk/sprocs/SFHARDCOPYTRANS.prc
-
-=======================================================================================================================================
-Revision: 9899
-
-Date: 5:59:36 PM, Tuesday, October 23, 2012
-Message:
-SF Closed Work Order Summary Register and update development complete. Ready for QA now.
-----
-Modified : /trunk/data/bar/sfe_wolotser.xml
-Deleted : /trunk/data/bar/sfx_woschdxr.xml
-Modified : /trunk/data/cdf/sfe_wolotser.cdf
-Deleted : /trunk/data/sfm-06
-Modified : /trunk/sf/src/sfr_clsdworeg.aon
-Modified : /trunk/sf/src/sfu_clsdworeg.aon
-Modified : /trunk/sf/src/sfu_clsrecworder.aon
-
-=======================================================================================================================================
-Revision: 9898
-
-Date: 4:56:41 PM, Tuesday, October 23, 2012
-Message:
-Changed the element WO_TYPE to be left justified, right space filled to fix bug 6441.
-----
-Modified : /trunk/data/bar/sfc_wotypecd.xml
-Modified : /trunk/data/bar/sfe_woclose.xml
-Modified : /trunk/data/bar/sfe_womastr.xml
-Modified : /trunk/data/bar/sfe_womathdr.xml
-Modified : /trunk/data/bar/sfe_womatish.xml
-Modified : /trunk/data/bar/sfr_clsdwovar.xml
-Modified : /trunk/data/bar/sfr_wodetrpt.xml
-Modified : /trunk/data/bar/sfr_woheader.xml
-Modified : /trunk/data/bar/sfr_wordjobstat.xml
-Modified : /trunk/data/bar/sfr_wotranshist.xml
-Modified : /trunk/data/bar/sfr_wovarrep.xml
-Modified : /trunk/data/bar/sfw_adjxtype.xml
-Modified : /trunk/data/bar/sfw_clswoxty.xml
-Modified : /trunk/data/bar/sfw_issuxtyp.xml
-Modified : /trunk/data/bar/sfw_laboreff.xml
-Modified : /trunk/data/bar/sfw_vrncxtyp.xml
-Modified : /trunk/data/bar/sfx_typewo.xml
-
-=======================================================================================================================================
-Revision: 9897
-
-Date: 2:58:20 PM, Tuesday, October 23, 2012
-Message:
-Ran Create Locale Props to catch any missing keys from dictionary.
-----
+Modified : /trunk/data/bar/ivs_params.xml
+Modified : /trunk/data/cdf/ivs_params.cdf
+Added : /trunk/data/sync/ads_messages~iv_desc3_nodesc2.xml
+Added : /trunk/data/sync/ads_messages~iv_desc_too_long.xml
 Modified : /trunk/prop/addon.properties
 Modified : /trunk/prop/addon_en.properties
 
 =======================================================================================================================================
-Revision: 9896
+Revision: 10522
 
-Date: 2:18:43 PM, Tuesday, October 23, 2012
+Date: Monday, April 15, 2013 10:13:34 PM
 Message:
-Bringing menus in other languages in line w/ English menu.
+Removed commission information as well as total cost from the Totals tab to fix bug 6790.
 ----
-Modified : /trunk/config/fra/addon.men
-Modified : /trunk/config/frc/addon.men
-Modified : /trunk/config/ita/addon.men
+Modified : /trunk/data/bar/opt_invhdr.xml
 
 =======================================================================================================================================
-Revision: 9895
+Revision: 10521
 
-Date: 9:55:28 AM, Tuesday, October 23, 2012
+Date: Monday, April 15, 2013 10:08:56 PM
 Message:
-Bringing menus in other languages in line w/ English menu.
+Add Display description in grid to the optional defs for the Item Number to fix bug 6788.
 ----
-Modified : /trunk/config/esp/addon.men
+Modified : /trunk/data/bar/opt_invdet.xml
 
 =======================================================================================================================================
-Revision: 9894
+Revision: 10520
 
-Date: 10:59:52 PM, Monday, October 22, 2012
+Date: Friday, April 12, 2013 10:09:26 PM
 Message:
-Add new message for PO Line Entry at the Work Order Number field.
+Clear Last Activity Date during BOM Copy to fix bug 6778.
 ----
-Added : /trunk/data/sync/ads_messages~sf_quote_closed.xml
-Modified : /trunk/prop/addon.properties
-Modified : /trunk/prop/addon_en.properties
+Modified : /trunk/data/bar/bmc_copybill.xml
+Modified : /trunk/data/cdf/bmc_copybill.cdf
 
 =======================================================================================================================================
-Revision: 9893
+Revision: 10519
 
-Date: 7:13:18 PM, Monday, October 22, 2012
+Date: Friday, April 12, 2013 5:25:59 PM
 Message:
-Bringing menus in other languages in line w/ English menu.
+Changed headers, brkvect calculations, and which array elements print in the totals routine to fix bug 6785.
 ----
-Modified : /trunk/config/esm/addon.men
+Modified : /trunk/po/src/por_recptreg.aon
+Modified : /trunk/po/src/por_recptreg_o1.aon
 
 =======================================================================================================================================
-Revision: 9892
+Revision: 10517
 
-Date: 5:40:14 PM, Monday, October 22, 2012
+Date: Friday, April 12, 2013 12:44:08 PM
 Message:
-Bringing menus in other languages in line w/ English menu.
+Moved the Last Activity Date field to the right to allow the date control for Revision Date to be active to fix bug 6777.
 ----
-Modified : /trunk/config/enc/addon.men
+Modified : /trunk/data/bar/bmm_billmast.xml
 
 =======================================================================================================================================
-Revision: 9891
+Revision: 10516
 
-Date: 5:23:48 PM, Monday, October 22, 2012
+Date: Friday, April 12, 2013 12:28:51 PM
 Message:
-Bringing menus in other languages in line w/ English menu. Using a combination of regex in Notepad++, KDiff3, and bbj pgms to get the job done. Committing Deutsch first for Ralph's review.
+Remove sfe-04 from the repository since it no longer exists as a valid file in Barista, and change reference to it in PO Receipts Register to now be sfe_wotrans to fix bug 6775.
 ----
-Modified : /trunk/config/deu/addon.men
+Deleted : /trunk/data/sfe-04
+Modified : /trunk/po/src/por_recptreg.aon
 
 =======================================================================================================================================
-Revision: 9890
+Revision: 10515
 
-Date: 11:56:05 AM, Monday, October 22, 2012
+Date: Thursday, April 11, 2013 4:57:29 PM
 Message:
-Cleaning up unneeded global in .syn files.
+Correct variable name to resolve Bug 6776 - PO - Purchase Order Print: Message Text from O/E form does not print on PO
 ----
-Modified : /trunk/config/addon.syn
-Modified : /trunk/config/addon_dev.syn
+Modified : /trunk/po/src/por_poprint.aon
 
 =======================================================================================================================================
-Revision: 9889
+Revision: 10514
 
-Date: 11:09:33 AM, Monday, October 22, 2012
+Date: Wednesday, April 10, 2013 6:12:03 PM
 Message:
-Closed Work Order Summary Register: Added subquery for Lot/Serial logic to get total L/S qty entries; to be used for testing whether it's ok to do update (have the right number of lot/serial number been assigned?). Also added open of gls_params to resolve pgm complaint.
+Per bug 6768; added logic to exit gracefully if no invoices or statements are generated.
 ----
-Modified : /trunk/sf/src/sfr_clsdworeg.aon
+Modified : /trunk/ar/src/arr_invoices.aon
+Modified : /trunk/ar/src/arr_statements.aon
 
 =======================================================================================================================================
-Revision: 9888
+Revision: 10513
 
-Date: 10:33:29 PM, Friday, October 19, 2012
+Date: Wednesday, April 10, 2013 1:42:12 PM
 Message:
-Add where clause for sql commands when wo_location was not in use and should have been to fix bug 6439.
+Add AP_PAYMENT_AMT element for use in paying A/P Checks to work on bug 6761. For version 13. 
 ----
-Modified : /trunk/sf/src/sfr_wordmat.aon
-Modified : /trunk/sprocs/SFHARDCOPY.prc
-Modified : /trunk/sprocs/SFHARDCOPYCOSTSUM.prc
-Modified : /trunk/sprocs/SFHARDCOPYMATSTD.prc
-Modified : /trunk/sprocs/SFHARDCOPYOPSTD.prc
-Modified : /trunk/sprocs/SFHARDCOPYSUBSTD.prc
+Modified : /trunk/data/ape-04
+Modified : /trunk/data/bar/ape_checks.xml
 
 =======================================================================================================================================
-Revision: 9887
+Revision: 10512
 
-Date: 6:09:06 PM, Friday, October 19, 2012
+Date: Tuesday, April 09, 2013 10:24:33 PM
 Message:
-Closed Work Order Summary Register and update development "in process" check in.
+Add new field to OP parameter, new duplicate Customer PO form, and necessary callpoint code to fix enhancement 6721. This is for v13.00.
 ----
-Modified : /trunk/prop/addon.properties
-Modified : /trunk/prop/addon_de.properties
-Modified : /trunk/prop/addon_en.properties
-Modified : /trunk/prop/addon_es.properties
-Modified : /trunk/prop/addon_fr.properties
-Modified : /trunk/prop/addon_it.properties
-Modified : /trunk/sf/src/sfr_clsdrecworeg.aon
-Modified : /trunk/sf/src/sfr_clsdworeg.aon
-Deleted : /trunk/sf/src/sfu_closeworeg.aon
-Added : /trunk/sf/src/sfu_clsdworeg.aon
+Added : /trunk/data/bar/ope_dupepo.xml
+Modified : /trunk/data/bar/ope_invhdr.xml
+Modified : /trunk/data/bar/ope_ordhdr.xml
+Modified : /trunk/data/bar/ops_params.xml
+Added : /trunk/data/cdf/ope_dupepo.cdf
+Modified : /trunk/data/cdf/ope_invhdr.cdf
+Modified : /trunk/data/cdf/ope_ordhdr.cdf
+Added : /trunk/data/sync/ads_messages~op_duplicate_pos.xml
 
 =======================================================================================================================================
-Revision: 9886
+Revision: 10511
 
-Date: 5:37:28 PM, Friday, October 19, 2012
+Date: Tuesday, April 09, 2013 5:29:01 PM
 Message:
-Closed WO Variance Report: WIP commit.
+OP Invoices Jaspers -- Removed Salesrep, and terms codes (leaving the descriptions). Minor adjustments to placement of related fields.
 ----
-Modified : /trunk/sf/src/sfr_clsdwovar.aon
-Modified : /trunk/sf/src/sfr_clsdwovar_o1.aon
+Modified : /trunk/reports/OPInvoiceHdr.jasper
+Modified : /trunk/reports/OPInvoiceHdr.jrxml
+
+Revision: 10510
+Author: cjohnson
+Date: Tuesday, April 09, 2013 3:49:14 PM
+Message:
+Format phone number to fix: Bug 6758 - OP - Sales order invoice header telephone number is not formatted
+----
+Modified : /trunk/op/src/opc_invoice.aon
 
 =======================================================================================================================================
-Revision: 9885
+Revision: 10503
 
-Date: 2:03:05 PM, Friday, October 19, 2012
+Date: Monday, April 08, 2013 2:38:10 PM
 Message:
-Added triggers for GLM-06 to fix bug 6415.
-----
-Added : /trunk/util/v6triggers/GLM-06.trigger
-Added : /trunk/util/v6triggers/src/GLM-06.trigger.ar.src
-Added : /trunk/util/v6triggers/src/GLM-06.trigger.aw.src
-
-=======================================================================================================================================
-Revision: 9884
-
-Date: 1:45:29 PM, Friday, October 19, 2012
-Message:
-Replace all backslashes with forward slashes to prevent error 13's on *nix boxes.
-----
-Modified : /trunk/util/v6triggers/PRM-01.trigger
-
-=======================================================================================================================================
-Revision: 9883
-
-Date: 11:46:04 AM, Friday, October 19, 2012
-Message:
-Adding description for SYSDESC line in .syn files.
-----
-Modified : /trunk/config/addon.syn
-Modified : /trunk/config/addon_dev.syn
-
-=======================================================================================================================================
-Revision: 9882
-
-Date: 5:00:40 PM, Thursday, October 18, 2012
-Message:
-Closed WO Variance Report: Initial WIP commit.
-----
-Modified : /trunk/config/enu/addon.men
-Modified : /trunk/data/bar/sfr_clsdwovar.xml
-Modified : /trunk/data/cdf/sfr_clsdwovar.cdf
-Modified : /trunk/sf/src/sfr_clsdwovar.aon
-Modified : /trunk/sf/src/sfr_clsdwovar_o1.aon
-
-=======================================================================================================================================
-Revision: 9880
-
-Date: 10:24:23 AM, Thursday, October 18, 2012
-Message:
-Add WO_LOCATION with a blank translation to avoid lines in the error log.
-----
-Modified : /trunk/util/dataport/files/field_translations
-
-=======================================================================================================================================
-Revision: 9879
-
-Date: 10:38:04 PM, Wednesday, October 17, 2012
-Message:
-Built list of valid firms before starting the port, and them use that list when determining which records to port to fix bug 6436.
-----
-Modified : /trunk/util/dataport/DataPort_main.bbj
-
-=======================================================================================================================================
-Revision: 9878
-
-Date: 10:18:40 PM, Wednesday, October 17, 2012
-Message:
-Added files to be excluded in the callpoint code to fix bug 6435.
-----
-Modified : /trunk/data/bar/adx_dataport.xml
-Modified : /trunk/data/cdf/adx_dataport.cdf
-
-=======================================================================================================================================
-Revision: 9877
-
-Date: 11:29:05 AM, Wednesday, October 17, 2012
-Message:
-Bug 6434: Used GridVect! to check if lot/serial number already entered in grid, but not written to file yet.
-----
-Modified : /trunk/data/bar/sfe_wolotser.xml
-Modified : /trunk/data/cdf/sfe_wolotser.cdf
-
-=======================================================================================================================================
-Revision: 9876
-
-Date: 10:40:42 AM, Wednesday, October 17, 2012
-Message:
-Create conditional division to avoid possible errors down the road as part of fix to bug 6395.
-----
-Modified : /trunk/data/bar/sfe_woclose.xml
-Modified : /trunk/data/cdf/sfe_woclose.cdf
-
-=======================================================================================================================================
-Revision: 9875
-
-Date: 10:07:56 AM, Wednesday, October 17, 2012
-Message:
-Closed Work Order Summary Register and Closed Recurring WO Summary Register: Removed unneeded [HEADER] assignment.
-----
-Modified : /trunk/sf/src/sfr_clsdrecworeg.aon
-Modified : /trunk/sf/src/sfr_clsdworeg.aon
-
-=======================================================================================================================================
-Revision: 9871
-
-Date: 10:49:45 PM, Tuesday, October 16, 2012
-Message:
-Changed the logic so that if a continue command is executed before the writing of the extracted record, the table is read to move the pointer to fix bug 6427.
-----
-Modified : /trunk/data/bar/sfe_womatish.xml
-Modified : /trunk/data/cdf/sfe_womatish.cdf
-
-=======================================================================================================================================
-Revision: 9870
-
-Date: 5:18:52 PM, Tuesday, October 16, 2012
-Message:
-Bug 6428: Corrected syntax errors.
-----
-Modified : /trunk/iv/src/ivc_itemupdt.aon
-
-=======================================================================================================================================
-Revision: 9869
-
-Date: 4:29:53 PM, Tuesday, October 16, 2012
-Message:
-Compressed PNGs
-----
-Modified : /trunk/cust_images/areachart0.png
-Modified : /trunk/cust_images/areachart1.png
-Modified : /trunk/cust_images/barchart0.png
-Modified : /trunk/cust_images/barchart1.png
-Modified : /trunk/cust_images/dialchart0.png
-Modified : /trunk/cust_images/dialchart1.png
-Modified : /trunk/cust_images/dialframe.png
-Modified : /trunk/cust_images/gaugechart0.png
-Modified : /trunk/cust_images/gaugechart1.png
-Modified : /trunk/cust_images/gaugeframe.png
-Modified : /trunk/cust_images/im_menui_view.png
-Modified : /trunk/cust_images/im_node_doc.png
-Modified : /trunk/cust_images/im_tb_cal_f.png
-Modified : /trunk/cust_images/im_tb_fst_m.png
-Modified : /trunk/cust_images/im_tb_lst_m.png
-Modified : /trunk/cust_images/im_tb_nxt_m.png
-Modified : /trunk/cust_images/im_tb_prv_m.png
-Modified : /trunk/cust_images/linechart0.png
-Modified : /trunk/cust_images/linechart1.png
-Modified : /trunk/cust_images/piechart0.png
-Modified : /trunk/cust_images/piechart1.png
-
-=======================================================================================================================================
-Revision: 9868
-
-Date: 4:29:44 PM, Tuesday, October 16, 2012
-Message:
-Compressed PNGs
-----
-Modified : /trunk/images/addon_logo32.png
-
-=======================================================================================================================================
-Revision: 9867
-
-Date: 4:18:46 PM, Tuesday, October 16, 2012
-Message:
-Corrected the tables used in VIEW definition for SF_CLSDTRAN_VALS.
+OP Invoices Jaspers -- Replaces BBjForm version, which was renamed and included in this commit.
+      NOTE: Historical Invoices are NOT included since they should be handled with implemenation of 
+            Real Time Processing.
+NOTE: Run adx_build_sproc.aon and sync.
 ----
 Modified : /trunk/ad/src/adx_build_sproc.aon
+Modified : /trunk/op/src/opc_invoice.aon
+Added : /trunk/op/src/opc_invoice_BBjForm.aon
+Modified : /trunk/op/src/opr_invoice.aon
+Added : /trunk/reports/OPInvoiceDet-LotSer.jasper
+Added : /trunk/reports/OPInvoiceDet-LotSer.jrxml
+Added : /trunk/reports/OPInvoiceDet.jasper
+Added : /trunk/reports/OPInvoiceDet.jrxml
+Added : /trunk/reports/OPInvoiceHdr.jasper
+Added : /trunk/reports/OPInvoiceHdr.jrxml
+Added : /trunk/reports/OPInvoiceMaster.jasper
+Added : /trunk/reports/OPInvoiceMaster.jrxml
+Added : /trunk/sprocs/OPINVOICE_DET.prc
+Added : /trunk/sprocs/OPINVOICE_DET_LOTSER.prc
+Added : /trunk/sprocs/OPINVOICE_HDR.prc
 
-=======================================================================================================================================
-Revision: 9865
-
-Date: 1:58:15 PM, Tuesday, October 16, 2012
-Message:
-SF Work Order Close Data Entry development complete. Ready for QA.
-----
-Added : /trunk/data/bar/sfe_autoclosels.xml
-Modified : /trunk/data/bar/sfe_wolotser.xml
-Added : /trunk/data/cdf/sfe_autoclosels.cdf
-Modified : /trunk/data/cdf/sfe_wolotser.cdf
-Added : /trunk/data/sync/ads_messages~sf_ls_not_closed.xml
-Added : /trunk/data/sync/ads_messages~sf_ls_not_entered.xml
-Modified : /trunk/prop/addon.properties
-Modified : /trunk/prop/addon_de.properties
-Modified : /trunk/prop/addon_en.properties
-Modified : /trunk/prop/addon_en_CA.properties
-Modified : /trunk/prop/addon_es.properties
-Modified : /trunk/prop/addon_es_ES.properties
-Modified : /trunk/prop/addon_fr.properties
-Modified : /trunk/prop/addon_fr_CA.properties
-Modified : /trunk/prop/addon_it.properties
-Deleted : /trunk/sf/src/sfc_ca.aon
-
-=======================================================================================================================================
-Revision: 9864
-
-Date: 12:51:48 PM, Tuesday, October 16, 2012
-Message:
-Change references to subscripted k$ variable to element names from ape04a$ to fix bug 6426.
-----
-Modified : /trunk/ap/src/apr_apchecks.aon
-
-=======================================================================================================================================
-Revision: 9863
-
-Date: 12:41:59 PM, Tuesday, October 16, 2012
-Message:
-Duplicate exact logic from WOE.EA in v6 in order to display the proper Closed Cost to fix bug 6395.
-----
-Modified : /trunk/data/bar/sfe_woclose.xml
-Modified : /trunk/data/cdf/sfe_woclose.cdf
-
-=======================================================================================================================================
-Revision: 9862
-
-Date: 12:25:15 PM, Tuesday, October 16, 2012
-Message:
-Closed Recurring WO Summary Register: Updated program name in process control .
-----
-Modified : /trunk/data/adm-19
-
-=======================================================================================================================================
-Revision: 9860
-
-Date: 10:33:18 PM, Monday, October 15, 2012
-Message:
-Changed Total Costs to use SF Amount Mask in Operations and Materials standards, and Cost Summary. Put spaces before dates in the header to fix bug 6420.
-----
-Modified : /trunk/reports/SFHardCopy.jasper
-Modified : /trunk/reports/SFHardCopy.jrxml
-Modified : /trunk/sprocs/SFHARDCOPYCOSTSUM.prc
-Modified : /trunk/sprocs/SFHARDCOPYMATSTD.prc
-Modified : /trunk/sprocs/SFHARDCOPYOPSTD.prc
-
-=======================================================================================================================================
-Revision: 9859
-
-Date: 8:52:59 PM, Monday, October 15, 2012
-Message:
-Closed Recurring WO Summary Register: WIP commit. Includes correction of pgm name in glm-06.
-----
-Modified : /trunk/data/glm-06
-Modified : /trunk/sf/src/sfr_clsdrecworeg.aon
-
-=======================================================================================================================================
-Revision: 9858
-
-Date: 8:47:07 PM, Monday, October 15, 2012
-Message:
-Closed WO Summary Register: Changed full Clear of glw_dailydetail (glw-11) to only partial clear.
-----
-Modified : /trunk/sf/src/sfr_clsdworeg.aon
-
-=======================================================================================================================================
-Revision: 9857
-
-Date: 4:00:13 PM, Monday, October 15, 2012
-Message:
-Closed Recurring WO Detail Report: Ready for testing.
-----
-Modified : /trunk/config/enu/addon.men
-Added : /trunk/data/bar/sfr_clsdrecwodet.xml
-
-=======================================================================================================================================
-Revision: 9856
-
-Date: 3:07:02 PM, Monday, October 15, 2012
-Message:
-DataPort: remove unused rows.
-----
-Modified : /trunk/util/dataport/files/file_alias
-
-=======================================================================================================================================
-Revision: 9855
-
-Date: 10:33:17 PM, Friday, October 12, 2012
-Message:
-Complete initial programming of Committed Materials Report.
-----
-Modified : /trunk/config/enu/addon.men
-Modified : /trunk/data/bar/sfr_wordmat.xml
-Modified : /trunk/sf/src/sfr_wordmat.aon
-Modified : /trunk/sf/src/sfr_wordmat_o1.aon
-
-=======================================================================================================================================
-Revision: 9854
-
-Date: 10:20:36 PM, Friday, October 12, 2012
-Message:
-Modified process that builds the list of data files to port to exclude files that start with WOX- to fix bug 6422.
-----
-Modified : /trunk/data/bar/adx_dataport.xml
-Modified : /trunk/data/cdf/adx_dataport.cdf
-
-=======================================================================================================================================
-Revision: 9853
-
-Date: 5:56:02 PM, Friday, October 12, 2012
-Message:
-Work Order Lot/Serial Entry development "in process" check in.
-----
-Added : /trunk/data/bar/sfe_autogenls.xml
-Modified : /trunk/data/bar/sfe_woclose.xml
-Modified : /trunk/data/bar/sfe_wolotser.xml
-Added : /trunk/data/cdf/sfe_autogenls.cdf
-Modified : /trunk/data/cdf/sfe_woclose.cdf
-Modified : /trunk/data/cdf/sfe_wolotser.cdf
-Modified : /trunk/data/sfe-06
-Added : /trunk/data/sync/ads_messages~sf_ls_entered.xml
-Added : /trunk/data/sync/ads_messages~sf_ls_not_created.xml
-Modified : /trunk/prop/addon.properties
-Modified : /trunk/prop/addon_de.properties
-Modified : /trunk/prop/addon_en.properties
-Modified : /trunk/prop/addon_en_CA.properties
-Modified : /trunk/prop/addon_es.properties
-Modified : /trunk/prop/addon_es_ES.properties
-Modified : /trunk/prop/addon_fr.properties
-Modified : /trunk/prop/addon_fr_CA.properties
-Modified : /trunk/prop/addon_it.properties
-
-=======================================================================================================================================
-Revision: 9852
-
-Date: 4:56:07 PM, Friday, October 12, 2012
-Message:
-Closed Recurring WO Summary Register: WIP commit. Needs testing.  Note: will err at update since update has not been touched yet.
-----
-Modified : /trunk/sf/src/sfr_clsdrecworeg.aon
-
-=======================================================================================================================================
-Revision: 9851
-
-Date: 4:25:58 PM, Friday, October 12, 2012
-Message:
-DataPort: Changes to code and txts so that SF parameters (sfs_params) will port.
-----
-Modified : /trunk/util/dataport/DataPort_main.bbj
-Modified : /trunk/util/dataport/files/file_alias
-Modified : /trunk/util/dataport/files/file_normalization
-Modified : /trunk/util/dataport/files/file_xref
-
-=======================================================================================================================================
-Revision: 9850
-
-Date: 4:22:29 PM, Friday, October 12, 2012
-Message:
-Closed Recurring WO Summary Register: Add menu option.
-----
-Modified : /trunk/config/enu/addon.men
-
-=======================================================================================================================================
-Revision: 9849
-
-Date: 9:10:57 AM, Friday, October 12, 2012
-Message:
-Closed Recurring WO Summary Register: Initial commit. Renamed to match related tasks, especially Closed WO Summary Register,sfr_clsdworeg.aon.
-----
-Modified : /trunk/config/enu/addon.men
-Added : /trunk/sf/src/sfr_clsdrecworeg.aon
-Deleted : /trunk/sf/src/sfr_clsrecworder.aon
-
-=======================================================================================================================================
-Revision: 9848
-
-Date: 9:04:26 AM, Friday, October 12, 2012
-Message:
-Bug 6418: Re-ported ivt-itemtran (ivt-04) and ivt_lstrans (ivt-01) demo data to correct bad user_id and system_date fields for BB records.
-----
-Modified : /trunk/data/ivt-01
-Modified : /trunk/data/ivt-04
-
-=======================================================================================================================================
-Revision: 9847
-
-Date: 3:59:09 PM, Thursday, October 11, 2012
-Message:
-Closed WO Summary Register: Complete up to, but NOT including, update.
-----
-Modified : /trunk/sf/src/sfr_clsdworeg.aon
-
-=======================================================================================================================================
-Revision: 9846
-
-Date: 3:53:12 PM, Thursday, October 11, 2012
-Message:
-Closed WO Detail Report: Added PRECISION, removed unused code, and made changes to better match Closed WO Summary Register.
-----
-Modified : /trunk/sprocs/SFHARDCOPYCLSDDET.prc
-
-=======================================================================================================================================
-Revision: 9845
-
-Date: 11:32:34 AM, Thursday, October 11, 2012
-Message:
-Added logic to swap system_date and operator_id fields if the table being read is ivt-01 or ivt-04, and the trans_source is BB to fix 6418. Also ignore any record that has a blank firm_id value.
-----
-Modified : /trunk/util/dataport/DataPort_main.bbj
-
-=======================================================================================================================================
-Revision: 9844
-
-Date: 4:57:04 PM, Wednesday, October 10, 2012
-Message:
-Added display of selected printer and Program Description to fix bug 6417.
-----
-Modified : /trunk/ad/src/adx_v6leadin.aon
-
-=======================================================================================================================================
-Revision: 9843
-
-Date: 11:38:47 AM, Wednesday, October 10, 2012
-Message:
-Work Order Lot/Serial Entry development "in process" check in.
-----
-Modified : /trunk/data/bar/sfe_woclose.xml
-Modified : /trunk/data/bar/sfe_wolotser.xml
-Modified : /trunk/data/bar/sfe_womastr.xml
-Modified : /trunk/data/cdf/sfe_woclose.cdf
-Modified : /trunk/data/cdf/sfe_wolotser.cdf
-Modified : /trunk/data/cdf/sfe_womastr.cdf
-Added : /trunk/data/sync/ads_messages~sf_lot_available.xml
-Added : /trunk/data/sync/ads_messages~sf_ls_cls_gt_ls_sch.xml
-Added : /trunk/data/sync/ads_messages~sf_ls_cls_lt_ls_sch.xml
-Added : /trunk/data/sync/ads_messages~sf_ls_sch_gt_wo_cls.xml
-Added : /trunk/data/sync/ads_messages~sf_ls_sch_gt_wo_sch.xml
-Added : /trunk/data/sync/ads_messages~sf_ls_sch_lt_wo_cls.xml
-Added : /trunk/data/sync/ads_messages~sf_ls_sch_lt_wo_sch.xml
-Deleted : /trunk/data/sync/ads_messages~sf_too_many.xml
-Modified : /trunk/prop/addon.properties
-Modified : /trunk/prop/addon_de.properties
-Modified : /trunk/prop/addon_en.properties
-Modified : /trunk/prop/addon_en_CA.properties
-Modified : /trunk/prop/addon_es.properties
-Modified : /trunk/prop/addon_es_ES.properties
-Modified : /trunk/prop/addon_fr.properties
-Modified : /trunk/prop/addon_fr_CA.properties
-Modified : /trunk/prop/addon_it.properties
-
-=======================================================================================================================================
-Revision: 9842
-
-Date: 10:26:45 PM, Tuesday, October 09, 2012
-Message:
-Added break logic on Op Code to fix bug 6409.
-----
-Modified : /trunk/sf/src/sfr_botneckana_o1.aon
-
-=======================================================================================================================================
-Revision: 9841
-
-Date: 6:03:57 PM, Tuesday, October 09, 2012
-Message:
-Consolidated trigger info for v6 vs. Barista Addon together into one file.
-----
-Modified : /trunk/util/triggers/readme.txt
-Modified : /trunk/util/v6triggers/readme.txt
-
-=======================================================================================================================================
-Revision: 9840
-
-Date: 2:03:09 PM, Tuesday, October 09, 2012
-Message:
-Remove unused development code that mistakenly got committed.
-----
-Modified : /trunk/sf/src/sfr_wovarrep_o1.aon
-
-=======================================================================================================================================
-Revision: 9839
-
-Date: 10:56:22 PM, Monday, October 08, 2012
-Message:
-Add Batch Rescheduling process to Shop Floor.
-----
-Modified : /trunk/config/enu/addon.men
-Modified : /trunk/data/bar/sfr_breschwo.xml
-Modified : /trunk/sf/src/sfr_breschwo.aon
-Modified : /trunk/sf/src/sfr_breschwo_o1.aon
-
-=======================================================================================================================================
-Revision: 9838
-
-Date: 10:16:29 PM, Monday, October 08, 2012
-Message:
-Write Firm Name to the "T" record in SYS-01 when running adx_v6leadin.aon to fix bug 6411.
-----
-Modified : /trunk/ad/src/adx_v6leadin.aon
-
-=======================================================================================================================================
-Revision: 9837
-
-Date: 2:35:18 PM, Monday, October 08, 2012
-Message:
-Complete initial testing on Cost Adjust Update.
-----
-Modified : /trunk/sf/src/sfu_costadjust.aon
-
-=======================================================================================================================================
-Revision: 9836
-
-Date: 5:08:25 PM, Friday, October 05, 2012
-Message:
-Add extra logic to Cost Adjust Entry to ensure proper soft lock checking takes place. Add WO Lookup to Subcontracts. Allow for closing lookup form without selection.
-----
-Modified : /trunk/data/bar/sfe_wo_cost_adj.xml
-Modified : /trunk/data/bar/sfe_wo_opsadj.xml
-Modified : /trunk/data/bar/sfe_wo_subadj.xml
-Modified : /trunk/data/cdf/sfe_wo_cost_adj.cdf
-Modified : /trunk/data/cdf/sfe_wo_opsadj.cdf
-Modified : /trunk/data/cdf/sfe_wo_subadj.cdf
-
-=======================================================================================================================================
-Revision: 9835
-
-Date: 4:45:31 PM, Friday, October 05, 2012
-Message:
-Add Work Order header Translation for Work Order Summary Report.
-----
-Modified : /trunk/prop/addon.properties
-Modified : /trunk/prop/addon_en.properties
-
-=======================================================================================================================================
-Revision: 9834
-
-Date: 3:23:05 PM, Friday, October 05, 2012
-Message:
-Have a gDoc version of this now, so deleting here.
-----
-Deleted : /trunk/util/dataport/files/DataPort Notes.txt
-
-=======================================================================================================================================
-Revision: 9833
-
-Date: 2:44:19 PM, Friday, October 05, 2012
-Message:
-Added standard UPDATE_COMPLETE message to the end of the process to fix bug 6401.
-----
-Modified : /trunk/iv/src/ivx_loadcyclecode.aon
-
-=======================================================================================================================================
-Revision: 9832
-
-Date: 2:43:27 PM, Friday, October 05, 2012
-Message:
-Added standard UPDATE_COMPLETE message to the end of the process to fix bug 6400.
-----
-Modified : /trunk/iv/src/ivx_builddisplaydesc.aon
-
-=======================================================================================================================================
-Revision: 9831
-
-Date: 11:27:20 AM, Friday, October 05, 2012
-Message:
-Per bug 6402; make sure auto-launch of Vendor Codes/History form only allows access to the newly-added vendor.
-----
-Modified : /trunk/data/bar/apm_vendmast.xml
-Modified : /trunk/data/cdf/apm_vendmast.cdf
-
-=======================================================================================================================================
-Revision: 9830
-
-Date: 2:48:20 PM, Thursday, October 04, 2012
-Message:
-Add details to the triggers documentation.
-----
-Added : /trunk/util/triggers/readme.txt
-Modified : /trunk/util/v6triggers/readme.txt
-
-=======================================================================================================================================
-Revision: 9829
-
-Date: 2:26:42 PM, Thursday, October 04, 2012
-Message:
-Remove unused triggers.
-----
-Deleted : /trunk/util/v6triggers/IVM-01.trigger
-Deleted : /trunk/util/v6triggers/IVM-02.trigger
-Deleted : /trunk/util/v6triggers/src/IVM-01.trigger.ir.src
-Deleted : /trunk/util/v6triggers/src/IVM-02.trigger.ir.src
-
-=======================================================================================================================================
-Revision: 9828
-
-Date: 11:52:20 AM, Thursday, October 04, 2012
-Message:
-Fixed typo in "New Database Name".
-----
-Modified : /trunk/ad/src/adc_mvupgrdfiles.aon
-
-=======================================================================================================================================
-Revision: 9827
-
-Date: 11:50:46 AM, Thursday, October 04, 2012
-Message:
-Work Order Lot/Serial Entry development "in process" check in.
-----
-Modified : /trunk/data/bar/sfe_woclose.xml
-Modified : /trunk/data/bar/sfe_wolotser.xml
-Modified : /trunk/data/bar/sfe_womastr.xml
-Modified : /trunk/data/cdf/sfe_woclose.cdf
-Modified : /trunk/data/cdf/sfe_wolotser.cdf
-Modified : /trunk/data/cdf/sfe_womastr.cdf
-
-=======================================================================================================================================
-Revision: 9826
-
-Date: 10:53:28 PM, Wednesday, October 03, 2012
-Message:
-Replace the Payroll menu options with the v6 Hybrid entries.
-----
-Modified : /trunk/config/enu/addon.men
-
-=======================================================================================================================================
-Revision: 9825
-
-Date: 7:19:33 PM, Wednesday, October 03, 2012
-Message:
-Closed WO Detail Report: Added detail bands to conditionally print GL Debit/Credit totals.
-----
-Modified : /trunk/reports/SFHardCopyClsdDet.jasper
-Modified : /trunk/reports/SFHardCopyClsdDet.jrxml
-
-=======================================================================================================================================
-Revision: 9824
-
-Date: 6:24:21 PM, Wednesday, October 03, 2012
-Message:
-Closed WO Detail Report: The required VIEW definitions for the report.
-----
-Modified : /trunk/ad/src/adx_build_sproc.aon
-
-=======================================================================================================================================
-Revision: 9823
-
-Date: 3:16:13 PM, Wednesday, October 03, 2012
-Message:
-Closed WO Detail Report: WIP Commit   Mostly done. SFHardCopyClsdDet.jrxml needs some adjusting.
-----
-Modified : /trunk/ad/src/adx_build_sproc.aon
-Modified : /trunk/reports/SFHardCopy.jasper
-Modified : /trunk/reports/SFHardCopy.jrxml
-Modified : /trunk/reports/SFHardCopyClsdDet.jasper
-Modified : /trunk/reports/SFHardCopyClsdDet.jrxml
-Modified : /trunk/sf/src/sfr_clsdwodet.aon
-Modified : /trunk/sprocs/SFHARDCOPY.prc
-Modified : /trunk/sprocs/SFHARDCOPYCLSDDET.prc
-
-=======================================================================================================================================
-Revision: 9822
-
-Date: 1:36:02 PM, Wednesday, October 03, 2012
-Message:
-Trap error 3 and give user a more friendly message about a missing printer to fix bug 6204.
-----
-Modified : /trunk/op/src/opc_picklist.aon
-
-=======================================================================================================================================
-Revision: 9821
-
-Date: 11:46:17 AM, Wednesday, October 03, 2012
-Message:
-Add (hopefully) last trigger required for Shop Floor to v6 Payroll hybrid.
-----
-Added : /trunk/util/triggers/pre-02.trigger
-Added : /trunk/util/triggers/src/pre-02.trigger.iw.src
-
-=======================================================================================================================================
-Revision: 9820
-
-Date: 10:30:27 PM, Tuesday, October 02, 2012
-Message:
-Add heading for the Cost Adjustment Register.
-----
-Modified : /trunk/prop/addon.properties
-Modified : /trunk/prop/addon_en.properties
-
-=======================================================================================================================================
-Revision: 9819
-
-Date: 10:26:03 PM, Tuesday, October 02, 2012
-Message:
-More triggers for hybrid v6 Payroll.
-----
-Added : /trunk/util/v6triggers/PRM-02.trigger
-Added : /trunk/util/v6triggers/PRT-01.trigger
-Modified : /trunk/util/v6triggers/readme.txt
-Added : /trunk/util/v6triggers/src/PRM-02.trigger.arm.src
-Added : /trunk/util/v6triggers/src/PRM-02.trigger.aw.src
-Added : /trunk/util/v6triggers/src/PRT-01.trigger.arm.src
-Added : /trunk/util/v6triggers/src/PRT-01.trigger.aw.src
-Modified : /trunk/util/v6triggers/src/SYS-01.trigger.aw.src
-
-=======================================================================================================================================
-Revision: 9818
-
-Date: 3:50:35 PM, Tuesday, October 02, 2012
-Message:
-More triggers for hybrid v6 Payroll.
-----
-Modified : /trunk/util/v6triggers/SYS-01.trigger
-Modified : /trunk/util/v6triggers/src/PRM-01.trigger.aw.src
-Added : /trunk/util/v6triggers/src/SYS-01.trigger.aw.src
-
-=======================================================================================================================================
-Revision: 9817
-
-Date: 2:34:34 PM, Tuesday, October 02, 2012
-Message:
-SF Development; Enabling ctl-F in Cost Adjust Ops grid.
-----
-Modified : /trunk/data/bar/sfe_wo_opsadj.xml
-Modified : /trunk/data/cdf/sfe_wo_opsadj.cdf
-
-=======================================================================================================================================
-Revision: 9816
-
-Date: 2:31:57 PM, Tuesday, October 02, 2012
-Message:
-Bug 6367: Handle data record IDs that don't match dictionary record ID.
-----
-Modified : /trunk/util/dataport/DataPort_main.bbj
-Modified : /trunk/util/dataport/files/file_xref
-
-=======================================================================================================================================
-Revision: 9815
-
-Date: 12:50:20 PM, Tuesday, October 02, 2012
-Message:
-Work Order Close Data Entry development complete except for lot/serial processing. Ready for QA now.
-----
-Modified : /trunk/data/bar/sfe_woclose.xml
-Modified : /trunk/data/cdf/sfe_woclose.cdf
-Added : /trunk/data/sync/ads_messages~sf_close_prior.xml
-Added : /trunk/data/sync/ads_messages~sf_close_wo.xml
-Added : /trunk/data/sync/ads_messages~sf_open_subcontracts.xml
-Added : /trunk/data/sync/ads_messages~sf_recalc_stds.xml
-Modified : /trunk/prop/addon.properties
-Modified : /trunk/prop/addon_de.properties
-Modified : /trunk/prop/addon_en.properties
-Modified : /trunk/prop/addon_en_CA.properties
-Modified : /trunk/prop/addon_es.properties
-Modified : /trunk/prop/addon_es_ES.properties
-Modified : /trunk/prop/addon_fr.properties
-Modified : /trunk/prop/addon_fr_CA.properties
-Modified : /trunk/prop/addon_it.properties
-
-=======================================================================================================================================
-Revision: 9814
-
-Date: 12:41:28 PM, Tuesday, October 02, 2012
-Message:
-Activate the main form to allow toolbars to be activated after sub grids are run.
-----
-Modified : /trunk/data/bar/sfe_wo_cost_adj.xml
-Modified : /trunk/data/cdf/sfe_wo_cost_adj.cdf
-
-=======================================================================================================================================
-Revision: 9813
-
-Date: 12:38:22 PM, Tuesday, October 02, 2012
-Message:
-Allow changes to Shop Floor Parameter - PR Interface - to allow hybrid v6 payroll to work properly.
-----
-Modified : /trunk/data/bar/sfs_params.xml
-Modified : /trunk/data/cdf/sfs_params.cdf
-
-=======================================================================================================================================
-Revision: 9812
-
-Date: 10:27:48 AM, Tuesday, October 02, 2012
-Message:
-Add triggers for hybrid Payroll integration with Shop Floor. Include change to documentation.
-----
-Added : /trunk/util/v6triggers/PRM-10.trigger
-Modified : /trunk/util/v6triggers/readme.txt
-Modified : /trunk/util/v6triggers/src/PRM-01.trigger.aw.src
-Added : /trunk/util/v6triggers/src/PRM-10.trigger.arm.src
-Added : /trunk/util/v6triggers/src/PRM-10.trigger.aw.src
-
-=======================================================================================================================================
-Revision: 9811
-
-Date: 10:23:32 PM, Monday, October 01, 2012
-Message:
-Move and widen columns to allow for complete dates in differing fonts to fix bug 6392.
-----
-Modified : /trunk/reports/CustDetail_invdet.jasper
-Modified : /trunk/reports/CustDetail_invdet.jrxml
-Modified : /trunk/reports/CustDetail_invhdr.jasper
-Modified : /trunk/reports/CustDetail_invhdr.jrxml
-
-=======================================================================================================================================
-Revision: 9810
-
-Date: 10:05:48 PM, Monday, October 01, 2012
-Message:
-Add Payroll Master triggers for use with hybrid v6 Payroll programs.
-----
-Added : /trunk/util/v6triggers/PRM-01.trigger
-Added : /trunk/util/v6triggers/src/PRM-01.trigger.arm.src
-Added : /trunk/util/v6triggers/src/PRM-01.trigger.aw.src
-
-=======================================================================================================================================
-Revision: 9809
-
-Date: 10:18:54 AM, Monday, October 01, 2012
-Message:
-Added a line that retrieved the template sysinfo_tpl from the GlobalNamespace to fix bug 6391.
-----
-Modified : /trunk/util/v6triggers/src/SYM-04.trigger.ir.src
