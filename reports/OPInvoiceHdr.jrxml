@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OPInvoiceHdr" language="groovy" pageWidth="612" pageHeight="792" columnWidth="570" leftMargin="22" rightMargin="20" topMargin="20" bottomMargin="20" uuid="b146e7c7-7794-48d0-bad4-a5da78d1668b">
 	<property name="ireport.zoom" value="3.0"/>
-	<property name="ireport.x" value="0"/>
-	<property name="ireport.y" value="643"/>
+	<property name="ireport.x" value="1109"/>
+	<property name="ireport.y" value="1831"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
 	<parameter name="AR_TYPE" class="java.lang.String"/>
 	<parameter name="CUSTOMER_ID" class="java.lang.String"/>
@@ -245,9 +245,9 @@
 					</graphicElement>
 				</rectangle>
 				<staticText>
-					<reportElement uuid="d5b5a7b3-e446-4159-8c4c-c04c282c2f66" x="398" y="53" width="73" height="12" forecolor="#FFFFFF"/>
+					<reportElement uuid="d5b5a7b3-e446-4159-8c4c-c04c282c2f66" x="398" y="52" width="73" height="14" forecolor="#FFFFFF"/>
 					<textElement textAlignment="Center" verticalAlignment="Middle" markup="none">
-						<font fontName="Arial" isBold="true" isItalic="false"/>
+						<font fontName="SansSerif" isBold="true" isItalic="false"/>
 						<paragraph leftIndent="6"/>
 					</textElement>
 					<text><![CDATA[Total Due]]></text>
@@ -291,7 +291,7 @@
 				<textField pattern="">
 					<reportElement uuid="3e8d769c-ebcb-4a99-9b66-e4f35f6baa44" x="477" y="53" width="78" height="12"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
-						<font fontName="Arial" size="9" isBold="true"/>
+						<font fontName="SansSerif" size="9" isBold="true"/>
 						<paragraph rightIndent="4"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$V{TOTAL_SALE_BigDec}.add($V{TOTAL_DISC_TAX_FRT_BigDec})]]></textFieldExpression>
