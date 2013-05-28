@@ -2314,26 +2314,30 @@ init_update_glm06: rem --- Initialize and update glm-06 and adm-09/19/39
                         rem --- Don't change new standard adm-39 record
                         adm39_updated=1
                     else
-                        rem --- Does not map to new standard adm-39 record
-                        dim adm39$:fattr(adm39$)
-                        adm39.firm_id$=this_firm$
-                        adm39.process_id$=pad(old_proc$,16)
-                        rem adm39.sequence_no$=???
-                        adm39.dd_table_alias$=pad(" ",16)
-                        adm39.dd_file_name$=pad(file$,30)
-                    
-                        rem --- Get next sequence_no for this new record
-                        seq_no=1
-                        while seq_no<1000
-                            read(adm39_trgt,key=adm39.firm_id$+adm39.process_id$+str(seq_no:"000"),dom=*break)
-                            seq_no=seq_no+1
-                        wend
-                        if seq_no>999 then seq_no=0
-                        adm39.sequence_no$=str(seq_no:"000")
+                        if pos(cvs("GLW-",version_cvs)=file$)=1 then
+                            rem --- Do not copy old v6 GLW-* records forward to new adm-39
+                        else
+                            rem --- Does not map to new standard adm-39 record
+                            dim adm39$:fattr(adm39$)
+                            adm39.firm_id$=this_firm$
+                            adm39.process_id$=pad(old_proc$,16)
+                            rem adm39.sequence_no$=???
+                            adm39.dd_table_alias$=pad(" ",16)
+                            adm39.dd_file_name$=pad(file$,30)
+                        
+                            rem --- Get next sequence_no for this new record
+                            seq_no=1
+                            while seq_no<1000
+                                read(adm39_trgt,key=adm39.firm_id$+adm39.process_id$+str(seq_no:"000"),dom=*break)
+                                seq_no=seq_no+1
+                            wend
+                            if seq_no>999 then seq_no=0
+                            adm39.sequence_no$=str(seq_no:"000")
 
-                        adm39$=field(adm39$)
-                        writerecord(adm39_trgt)adm39$
-                        adm39_updated=1
+                            adm39$=field(adm39$)
+                            writerecord(adm39_trgt)adm39$
+                            adm39_updated=1
+                        endif
                     endif
                 wend
             endif
