@@ -28,7 +28,7 @@ rem --- Do custom query
 :			status$
 		dim sfe_close_key$:sfe_close_key$
 		sfe_close_key$=sel_key$
-		callpoint!.setColumnData("SFE_CLOSE.WO_NO",sfe_close_key.wo_no$,1)
+		callpoint!.setColumnData("SFE_WOCLOSE.WO_NO",sfe_close_key.wo_no$,1)
 	endif
 	callpoint!.setStatus("ACTIVATE-ABORT")
 [[SFE_WOCLOSE.AOPT-LSNO]]
