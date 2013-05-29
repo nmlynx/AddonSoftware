@@ -34,7 +34,7 @@ rem --- so can display new detail in grid.
 		call stbl("+DIR_SYP")+"bas_sequences.bbj","INTERNAL_SEQ_NO",internal_seq_no$,table_chans$[all],"QUIET"
 		sfe_womatdtl.internal_seq_no$=internal_seq_no$
 		sfe_womatdtl_key$=sfe_womatdtl.firm_id$+sfe_womatdtl.wo_location$+sfe_womatdtl.wo_no$+sfe_womatdtl.internal_seq_no$
-		find(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*next); continue
+		find(sfe_womatdtl_dev,key=sfe_womatdtl_key$,knum="PRIMARY",dom=*next); continue
 
 		rem --- Initialize and write new SFE_WOMATDTL record
 		sfe_womatdtl.unit_measure$=sfe_womatl.unit_measure$
@@ -110,7 +110,7 @@ rem --- Delete inventory commitments. Must do this before sfe_womatisd records a
 	dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
 
 	firm_loc_wo$=firm_id$+callpoint!.getColumnData("SFE_WOMATHDR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMATHDR.WO_NO")
-	read(sfe_womatdtl_dev,key=firm_loc_wo$,dom=*next)
+	read(sfe_womatdtl_dev,key=firm_loc_wo$,knum="PRIMARY",dom=*next)
 	while 1
 		sfe_womatdtl_key$=key(sfe_womatdtl_dev,end=*break)
 		if pos(firm_loc_wo$=sfe_womatdtl_key$)<>1 then break
@@ -228,7 +228,7 @@ rem ==========================================================================
 	dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
 
 	firm_loc_wo$=firm_id$+callpoint!.getColumnData("SFE_WOMATHDR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMATHDR.WO_NO")
-	read(sfe_womatdtl_dev,key=firm_loc_wo$,dom=*next)
+	read(sfe_womatdtl_dev,key=firm_loc_wo$,knum="PRIMARY",dom=*next)
 	while 1
 		sfe_womatdtl_key$=key(sfe_womatdtl_dev,end=*break)
 		if pos(firm_loc_wo$=sfe_womatdtl_key$)<>1 then break
