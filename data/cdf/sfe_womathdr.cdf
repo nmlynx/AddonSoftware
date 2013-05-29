@@ -238,7 +238,7 @@ rem ==========================================================================
 	return
 [[SFE_WOMATHDR.BSHO]]
 rem --- Open Files
-	num_files=12
+	num_files=13
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="SFS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="IVS_PARAMS",open_opts$[2]="OTA"
@@ -246,12 +246,13 @@ rem --- Open Files
 	open_tables$[4]="SFE_WOCOMMIT",open_opts$[4]="OTA"
 	open_tables$[5]="SFE_WOTRANS",open_opts$[5]="OTA"
 	open_tables$[6]="SFE_WOMATISH",open_opts$[6]="OTA"
-	open_tables$[7]="SFE_WOMATISD ",open_opts$[7]="OTA"
+	open_tables$[7]="SFE_WOMATISD",open_opts$[7]="OTA"
 	open_tables$[8]="SFE_WOMATL",open_opts$[8]="OTA"
 	open_tables$[9]="SFC_WOTYPECD",open_opts$[9]="OTA"
 	open_tables$[10]="IVM_ITEMMAST",open_opts$[10]="OTA"
 	open_tables$[11]="IVM_ITEMWHSE",open_opts$[11]="OTA"
 	open_tables$[12]="IVC_WHSECODE",open_opts$[12]="OTA"
+	open_tables$[13]="SFE_WOLSISSU",open_opts$[13]="OTA"
 
 	gosub open_tables
 
