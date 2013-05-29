@@ -1,9 +1,291 @@
 =======================================================================================================================================
- Report Date:   2013-05-10
- Report Branch: AddonSoftware 13.00
+ Report Date:   2013-05-29
+ Report Branch: AddonSoftware 13.01
  Last Release:  AddonSoftware 12.22
 =======================================================================================================================================
 
+Revision: 10636
+
+Date: Tuesday, May 28, 2013 11:10:32 PM
+Message:
+Correct 2 different calculations dealing with Taxable Amounts so that they use the taxable flag in the Line Code to fix bugs 6939 and 6940.
+----
+Modified : /trunk/ad/src/ado_order.src
+
+=======================================================================================================================================
+Revision: 10635
+
+Date: Tuesday, May 28, 2013 11:24:58 AM
+Message:
+Bug 6308: Do not copy old v6 GLW-* records forward to new adm-39.
+----
+Modified : /trunk/util/dataport/DataPort_main.bbj
+
+=======================================================================================================================================
+Revision: 10633
+
+Date: Monday, May 27, 2013 10:51:06 PM
+Message:
+Recalculate Total Payments after every Select All or Clear All instead of trying to calculate within the loop to fix bug 6953.
+----
+Modified : /trunk/data/bar/ape_payselect.xml
+Modified : /trunk/data/cdf/ape_payselect.cdf
+
+=======================================================================================================================================
+Revision: 10632
+
+Date: Friday, May 24, 2013 8:47:25 PM
+Message:
+Bug 6308: Modified DataPort to initialize and update glm-06, adm-09, adm-19 and adm-39.
+----
+Modified : /trunk/data/bar/adx_dataport.xml
+Modified : /trunk/data/cdf/adx_dataport.cdf
+Modified : /trunk/util/dataport/DataPort_main.bbj
+Added : /trunk/util/dataport/files/posting_controls_xref
+Added : /trunk/util/dataport/files/process_files_xref
+Added : /trunk/util/dataport/files/process_pgms_xref
+
+=======================================================================================================================================
+Revision: 10631
+
+Date: Thursday, May 23, 2013 11:16:13 PM
+Message:
+When selecting Auto-close, search the grid vector for the first lot/serial number that isn't closed, and default the starting number with that one to fix bug 6949.
+----
+Modified : /trunk/data/bar/sfe_wolotser.xml
+Modified : /trunk/data/cdf/sfe_wolotser.cdf
+
+=======================================================================================================================================
+Revision: 10630
+
+Date: Thursday, May 23, 2013 10:36:40 PM
+Message:
+Set default value of callpoint!.setDevObject("ls_closed") to 0 in the BFMC callpoint to fix bug 6950.
+----
+Modified : /trunk/data/bar/sfe_autoclosels.xml
+Modified : /trunk/data/cdf/sfe_autoclosels.cdf
+
+=======================================================================================================================================
+Revision: 10629
+
+Date: Thursday, May 23, 2013 10:16:40 PM
+Message:
+Change field reference to SFE_WOCLOSE.WO_NO to fix bug 6948.
+----
+Modified : /trunk/data/bar/sfe_woclose.xml
+Modified : /trunk/data/cdf/sfe_woclose.cdf
+
+=======================================================================================================================================
+Revision: 10628
+
+Date: Tuesday, May 21, 2013 10:54:42 PM
+Message:
+Add firm_id$ and [x,2]="DEFAULT" to the filter_defs$[] array to the call to a custom query to fix bug 6891.
+----
+Modified : /trunk/data/bar/bme_product.xml
+Modified : /trunk/data/cdf/bme_product.cdf
+
+=======================================================================================================================================
+Revision: 10627
+
+Date: Monday, May 20, 2013 10:51:23 PM
+Message:
+Correct references to begyear$, begper$, endyear$, and endper$ during assignment from getOptionData to fix bug 6921.
+----
+Modified : /trunk/iv/src/ivr_lotactivity.aon
+
+=======================================================================================================================================
+Revision: 10626
+
+Date: Monday, May 20, 2013 10:32:54 PM
+Message:
+Pad the entered beginning and ending Lot Numbers to the actual length of the Lot Number field before comparing in the report to fix bug 6922.
+----
+Modified : /trunk/iv/src/ivr_lotstatus_o1.aon
+
+=======================================================================================================================================
+Revision: 10625
+
+Date: Monday, May 20, 2013 5:32:41 PM
+Message:
+Bug 4031: Use "hidden" field to allow enter/tab from single enabled field
+for temporary workaround to Barista bug 6925.
+----
+Modified : /trunk/data/bar/ivm_itemmast.xml
+Modified : /trunk/data/cdf/ivm_itemmast.cdf
+
+=======================================================================================================================================
+Revision: 10624
+
+Date: Monday, May 20, 2013 12:25:45 PM
+Message:
+Added logic to test for quantity 1 or -1 if Serial parameter is on and item is deemed to be serialized. Display message and abort if quantity is otherwise to fix bug 6801.
+----
+Modified : /trunk/data/bar/ive_transdet.xml
+Modified : /trunk/data/cdf/ive_transdet.cdf
+
+=======================================================================================================================================
+Revision: 10623
+
+Date: Friday, May 17, 2013 10:36:25 AM
+Message:
+Set "Destroy window on run" option for the OPE_ADDL_OPTS Options Entry form.
+----
+Modified : /trunk/data/bar/ope_addl_opts.xml
+
+=======================================================================================================================================
+Revision: 10622
+
+Date: Thursday, May 16, 2013 10:50:26 PM
+Message:
+Correctly capture the prior record information in AGRN, and use that information in AWRI instead of using Undo information and always reduce ivm-02 On Order by prior amounts and increase by new amounts to fix bug 6894.
+----
+Modified : /trunk/data/bar/poe_podet.xml
+Modified : /trunk/data/cdf/poe_podet.cdf
+
+=======================================================================================================================================
+Revision: 10621
+
+Date: Thursday, May 16, 2013 11:33:32 AM
+Message:
+Removed inappropriate use of "Expand on new grid entry" option and "Allow grid row expand".
+----
+Modified : /trunk/data/bar/ivc_itemavail.xml
+Modified : /trunk/data/bar/ive_costchg.xml
+Modified : /trunk/data/bar/ivm_itemvend.xml
+Modified : /trunk/data/bar/ivm_itemwhse.xml
+Modified : /trunk/data/bar/poc_rejctcmt.xml
+
+=======================================================================================================================================
+Revision: 10620
+
+Date: Wednesday, May 15, 2013 4:10:15 PM
+Message:
+Bug 6915: SFE_WOLSISSU needed to be opened before using.
+----
+Modified : /trunk/data/bar/sfe_womathdr.xml
+Modified : /trunk/data/cdf/sfe_womathdr.cdf
+
+=======================================================================================================================================
+Revision: 10619
+
+Date: Wednesday, May 15, 2013 3:55:04 PM
+Message:
+Bug 6833: sfe_womatdtl sets KNUM=AO_DISPSEQ for sfe_womatdtl_dev, so must reset KNUM=PRIMARY in sfe_womathdr.
+----
+Modified : /trunk/data/bar/sfe_womathdr.xml
+Modified : /trunk/data/cdf/sfe_womathdr.cdf
+
+=======================================================================================================================================
+Revision: 10618
+
+Date: Wednesday, May 15, 2013 2:27:06 PM
+Message:
+Bug 6912: Modified DocOut columns$[] initialization for exported summary report.
+----
+Modified : /trunk/ap/src/apr_cashrequire.aon
+
+=======================================================================================================================================
+Revision: 10617
+
+Date: Tuesday, May 14, 2013 10:53:23 PM
+Message:
+Force Drawing Number and Revision Code to be Display Only fields to fix bug 6911.
+----
+Modified : /trunk/data/bar/sfe_womastr.xml
+
+=======================================================================================================================================
+Revision: 10616
+
+Date: Tuesday, May 14, 2013 10:35:05 PM
+Message:
+Added display field to form and populated with proper text of where the BOM was last used to work on bug 6899.
+----
+Modified : /trunk/data/bar/bmm_billmast.xml
+Modified : /trunk/data/cdf/bmm_billmast.cdf
+Modified : /trunk/prop/addon.properties
+Modified : /trunk/prop/addon_en.properties
+
+=======================================================================================================================================
+Revision: 10615
+
+Date: Monday, May 13, 2013 10:47:37 PM
+Message:
+Moved the read of the BMM Master file into the header subroutine to fix bug 6897.
+----
+Modified : /trunk/bm/src/bmc_packinglist.aon
+
+=======================================================================================================================================
+Revision: 10614
+
+Date: Monday, May 13, 2013 10:29:39 PM
+Message:
+Left justified the Estimated Yield and Standard Lot Size to fix bug 6898.
+----
+Modified : /trunk/reports/BOMDetail.jasper
+Modified : /trunk/reports/BOMDetail.jrxml
+
+=======================================================================================================================================
+Revision: 10613
+
+Date: Monday, May 13, 2013 10:21:10 PM
+Message:
+Moved the increment to total_recs after breaking out of the while/wend loop if a single statement is selected to fix bug 6904.
+----
+Modified : /trunk/ar/src/arr_statements.aon
+
+=======================================================================================================================================
+Revision: 10612
+
+Date: Monday, May 13, 2013 10:10:12 PM
+Message:
+Added new query and implemented it in Shop Floor Close Entry for the Record Query to only show Open Work Orders to fix bug 6902.
+----
+Modified : /trunk/data/bar/sfe_woclose.xml
+Modified : /trunk/data/cdf/sfe_woclose.cdf
+Added : /trunk/data/sync/adm_query_cols~sf_close001.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close002.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close003.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close004.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close005.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close006.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close007.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close008.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close009.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close010.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close011.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close012.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close013.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close014.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close015.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close016.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close017.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close018.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close019.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close020.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close021.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close022.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close023.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close024.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close025.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close026.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close027.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close028.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close029.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close030.xml
+Added : /trunk/data/sync/adm_query_cols~sf_close031.xml
+Added : /trunk/data/sync/adm_query~sf_close.xml
+
+=======================================================================================================================================
+Revision: 10611
+
+Date: Monday, May 13, 2013 2:24:14 PM
+Message:
+Bug 6900: Use IVE_TRANSFER (ive-02) to size progress meter.
+----
+Modified : /trunk/iv/src/ivr_transferreg.aon
+
+=======================================================================================================================================
 Revision: 10604
 
 Date: Friday, May 10, 2013 12:51:59 PM
