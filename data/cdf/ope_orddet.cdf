@@ -237,6 +237,8 @@ rem --- Set shipped and back ordered
 	qty_ord    = num(callpoint!.getUserInput())
 
 	if qty_ord = 0 then
+		msg_id$="OP_QTY_ZERO"
+		gosub disp_message
 		callpoint!.setStatus("ABORT")
 		break; rem --- exit callpoint
 	endif
@@ -382,6 +384,12 @@ rem --- Clear quantities if line type is Memo or Other
 rem --- Set product types for certain line types 
 
 	if pos(linecode_rec.line_type$="NOP") then
+		if qty_ord = 0 then
+			msg_id$="OP_QTY_ZERO"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		endif
 		if linecode_rec.prod_type_pr$ = "D" then			
 			callpoint!.setColumnData("OPE_ORDDET.PRODUCT_TYPE", linecode_rec.product_type$)
 		else
@@ -925,6 +933,18 @@ rem --- Returns
 	if num( callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED") ) < 0 then
 		callpoint!.setColumnData( "OPE_ORDDET.QTY_SHIPPED", callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED") )
 		callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
+	endif
+
+rem --- Verify Qty Ordered is not 0
+
+	if pos(user_tpl.line_type$="SNP") then
+		if num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) = 0
+			msg_id$="OP_QTY_ZERO"
+			gosub disp_message
+			callpoint!.setFocus(this_row,"OPE_ORDDET.QTY_ORDERED",1)
+			callpoint!.setStatus("ABORT")
+			break; rem --- exit callpoint
+		endif
 	endif
 
 rem --- What is extended price?
