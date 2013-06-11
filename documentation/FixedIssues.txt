@@ -1,9 +1,134 @@
 =======================================================================================================================================
- Report Date:   2013-06-01
+ Report Date:   2013-06-11
  Report Branch: AddonSoftware 13.01
  Last Release:  AddonSoftware 13.00
 =======================================================================================================================================
 
+Revision: 10702
+
+Date: Monday, June 10, 2013 10:15:56 PM
+Message:
+Bottom justify Bill To and Ship To on the Invoice to fix bug 6978.
+----
+Modified : /trunk/sprocs/OPINVOICE_HDR.prc
+
+=======================================================================================================================================
+Revision: 10701
+
+Date: Monday, June 10, 2013 4:30:10 PM
+Message:
+Bug 6719: Do NOT disable the Commit checkbox on the Additional Options form for drop ship lines.
+----
+Modified : /trunk/data/bar/ope_addl_opts.xml
+Modified : /trunk/data/cdf/ope_addl_opts.cdf
+
+=======================================================================================================================================
+Revision: 10700
+
+Date: Monday, June 10, 2013 12:46:20 PM
+Message:
+Set Distribution Code, Payment Group, and Terms Code from AP Type Maintenance in ARNF callpoint and save the record to fix bug 6932.
+----
+Modified : /trunk/data/bar/apm_vendhist.xml
+Modified : /trunk/data/bar/apm_vendmast.xml
+Modified : /trunk/data/cdf/apm_vendhist.cdf
+Modified : /trunk/data/cdf/apm_vendmast.cdf
+
+=======================================================================================================================================
+Revision: 10699
+
+Date: Friday, June 07, 2013 3:48:57 PM
+Message:
+Per bug 6986, corrected issue where email/fax from Customer Master Email/Fax record is used to populate Customer Report Control record, but isn't refreshed.
+----
+Modified : /trunk/data/bar/arm_custrpt_ctl.xml
+Modified : /trunk/data/cdf/arm_custrpt_ctl.cdf
+
+=======================================================================================================================================
+Revision: 10697
+
+Date: Thursday, June 06, 2013 10:33:07 PM
+Message:
+Move Pay to the Order of and related text including the Signature line further down on the check to fix bug 6977.
+----
+Modified : /trunk/reports/APCheck-Check.jasper
+Modified : /trunk/reports/APCheck-Check.jrxml
+
+=======================================================================================================================================
+Revision: 10696
+
+Date: Thursday, June 06, 2013 2:55:49 PM
+Message:
+Bug 6984: Modified DataPort to skip GLM-10 records with a blank GL account number.
+----
+Modified : /trunk/util/dataport/DataPort_main.bbj
+
+=======================================================================================================================================
+Revision: 10695
+
+Date: Thursday, June 06, 2013 1:17:21 PM
+Message:
+Use proper variable of tableAlias$ instead of filename$ to determine if the table contains a Days In Month variable to properly fix bug 6979. Also correct _29 elements in February records to correct issue when leap year is actually encountered.
+----
+Modified : /trunk/ad/src/adx_demoyear.aon
+Modified : /trunk/data/pom-01
+Modified : /trunk/data/sfm-04
+
+=======================================================================================================================================
+Revision: 10694
+
+Date: Wednesday, June 05, 2013 7:20:46 PM
+Message:
+Per Paul - added new help topic for GL Account Summary Maintenance - I put tag in the menu.
+----
+Modified : /trunk/config/enu/addon.men
+
+=======================================================================================================================================
+Revision: 10693
+
+Date: Tuesday, June 04, 2013 10:27:20 PM
+Message:
+Correct demo data so that the 2 calendar tables have only 28 days in February of 2013 to fix bug 6979.
+----
+Modified : /trunk/data/pom-01
+Modified : /trunk/data/sfm-04
+
+=======================================================================================================================================
+Revision: 10692
+
+Date: Tuesday, June 04, 2013 1:06:16 PM
+Message:
+Move the Ext column to not encroach on the Telephone Number to fix bug 6975.
+----
+Modified : /trunk/data/bar/apm_vendmast.xml
+
+=======================================================================================================================================
+Revision: 10691
+
+Date: Tuesday, June 04, 2013 1:00:44 PM
+Message:
+Move the Ext column to not encroach on the Telephone Number to fix bug 6974.
+----
+Modified : /trunk/data/bar/arm_custdet.xml
+Modified : /trunk/data/bar/arm_custmast.xml
+Modified : /trunk/data/bar/arm_custpmts.xml
+
+=======================================================================================================================================
+Revision: 10690
+
+Date: Monday, June 03, 2013 11:00:40 PM
+Message:
+Add logic to add a new message to work on bug 6951.
+----
+Modified : /trunk/data/bar/ope_invdet.xml
+Modified : /trunk/data/bar/ope_orddet.xml
+Modified : /trunk/data/cdf/ope_invdet.cdf
+Modified : /trunk/data/cdf/ope_orddet.cdf
+Added : /trunk/data/sync/ads_messages~op_qty_zero.xml
+Modified : /trunk/prop/addon.properties
+Modified : /trunk/prop/addon_en.properties
+
+=======================================================================================================================================
 Revision: 10683
 
 Date: Saturday, June 01, 2013 11:33:47 AM
