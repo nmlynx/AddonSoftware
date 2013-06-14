@@ -920,8 +920,18 @@ rem --- Check value of new field for blanks if part of primary key
             if cvs(value$,2)=""
                 if pos(new_fieldlist.name$[field]+$0a$=blank_fields$)=0
                     if field_translations!.get(new_fieldlist.name$[field]+"."+cvs(value$,3))=null()
+                            rem --- Do NOT report thes missing key fields, they are optional
+                            if cvs(new_datafile$,2)="apt-05" and cvs(new_fieldlist.name$[field],2)="AP_INV_NO" goto no_msg
+                            if cvs(new_datafile$,2)="art-06" and cvs(new_fieldlist.name$[field],2)="AR_CHECK_NO" goto no_msg
+                            if cvs(new_datafile$,2)="art-16" and cvs(new_fieldlist.name$[field],2)="AR_CHECK_NO" goto no_msg
+                            if cvs(new_datafile$,2)="art-26" and cvs(new_fieldlist.name$[field],2)="AR_CHECK_NO" goto no_msg
+                            if cvs(new_datafile$,2)="bme-01" and cvs(new_fieldlist.name$[field],2)="BM_REFERENCE" goto no_msg
+                            if cvs(new_datafile$,2)="glt-06" and cvs(new_fieldlist.name$[field],2)="GL_ADT_NO" goto no_msg
+                            if cvs(new_datafile$,2)="ope-03" and cvs(new_fieldlist.name$[field],2)="ORDER_NO" goto no_msg
+                            if pos("sam-"=cvs(new_datafile$,2))=1 and cvs(new_fieldlist.name$[field],2)="ITEM_ID" goto no_msg
                         blank_fields$=blank_fields$+new_fieldlist.name$[field]+$0a$
                         print (err_dev) "field "+new_fieldlist.name$[field]+" in file "+new_datafile$+" has a blank value and no translation specified." 
+no_msg:
                     endif
                 endif    
             endif
