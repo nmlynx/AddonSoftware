@@ -916,7 +916,7 @@ rem     name from the dictionary of the source data. datafile$ is the source dat
         endif
 
 rem --- Check value of new field for blanks if part of primary key
-        if pos($0a$+new_fieldlist.name$[field]+$0a$=key_temp$)>0
+        if pos($0a$+new_fieldlist.name$[field]+$0a$=$0a$+key_temp$+$0a$)>0
             if cvs(value$,2)=""
                 if pos(new_fieldlist.name$[field]+$0a$=blank_fields$)=0
                     if field_translations!.get(new_fieldlist.name$[field]+"."+cvs(value$,3))=null()
