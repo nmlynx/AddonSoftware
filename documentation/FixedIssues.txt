@@ -1,9 +1,164 @@
 =======================================================================================================================================
- Report Date:   2013-06-11
+ Report Date:   2013-06-17
  Report Branch: AddonSoftware 13.01
  Last Release:  AddonSoftware 13.00
 =======================================================================================================================================
 
+Revision: 10729
+
+Date: Friday, June 14, 2013 10:52:14 PM
+Message:
+If item is serialized, only allow a quantity of positive 1 to fix bug 6797.
+----
+Modified : /trunk/data/bar/ive_transfer.xml
+Modified : /trunk/data/cdf/ive_transfer.cdf
+
+=======================================================================================================================================
+Revision: 10728
+
+Date: Friday, June 14, 2013 10:33:05 PM
+Message:
+Add Country Code for both Bill To and Ship To and populate to fix bug 6789.
+----
+Modified : /trunk/data/bar/opt_invhdr.xml
+Modified : /trunk/data/cdf/opt_invhdr.cdf
+
+=======================================================================================================================================
+Revision: 10727
+
+Date: Friday, June 14, 2013 8:04:05 PM
+Message:
+Per bug 5221; reverted back to before r7575, where a bug fix caused problems downstream. Revisited the fix for that original bug (4824), then reapplied applicable fixes since then. While in there, made enhancement to GL Dist grid to supply the default amount.
+----
+Modified : /trunk/data/bar/are_cashgl.xml
+Modified : /trunk/data/bar/are_cashhdr.xml
+Modified : /trunk/data/cdf/are_cashgl.cdf
+Modified : /trunk/data/cdf/are_cashhdr.cdf
+
+=======================================================================================================================================
+Revision: 10726
+
+Date: Friday, June 14, 2013 9:51:12 AM
+Message:
+Bug 6994: Skipped warning for blank key fields that are optional.
+----
+Modified : /trunk/util/dataport/DataPort_main.bbj
+
+=======================================================================================================================================
+Revision: 10725
+
+Date: Friday, June 14, 2013 8:41:34 AM
+Message:
+Bug 6995: Check for match to entire key field name, not just the ending of the key field name.
+----
+Modified : /trunk/util/dataport/DataPort_main.bbj
+
+=======================================================================================================================================
+Revision: 10724
+
+Date: Thursday, June 13, 2013 10:27:30 PM
+Message:
+Use hard coded values for the width of columns instead of using the length of masks to fix bug 6752.
+----
+Modified : /trunk/iv/src/ivr_transregister.aon
+
+=======================================================================================================================================
+Revision: 10723
+
+Date: Thursday, June 13, 2013 1:21:39 PM
+Message:
+Bug 6993: Added DataPort translations for five code fields.
+----
+Modified : /trunk/util/dataport/files/field_translations
+
+=======================================================================================================================================
+Revision: 10722
+
+Date: Thursday, June 13, 2013 12:48:41 PM
+Message:
+Change references to the elements on the report to correct as Steve suggested to fix bug 6021.
+----
+Modified : /trunk/iv/src/ivr_itemact.aon
+
+=======================================================================================================================================
+Revision: 10721
+
+Date: Thursday, June 13, 2013 12:33:48 PM
+Message:
+Added adc_clearpartial calls and removed the "I" from the open_opts$ to fix bug 6003.
+----
+Modified : /trunk/iv/src/ivr_costchgvalue.aon
+Modified : /trunk/po/src/por_reqsnreg.aon
+
+=======================================================================================================================================
+Revision: 10720
+
+Date: Thursday, June 13, 2013 11:05:14 AM
+Message:
+Bug 6995: Check for match to entire key field name, not just the ending of the key field name.
+----
+Modified : /trunk/util/dataport/DataPort_main.bbj
+
+=======================================================================================================================================
+Revision: 10719
+
+Date: Wednesday, June 12, 2013 10:44:42 PM
+Message:
+Added logic to uppercase rd_alias_id$ in each program to allow for consistency with all Doc Print Settings to fix bug 5938.
+----
+Modified : /trunk/ap/src/apr_chkregister.aon
+Modified : /trunk/ap/src/apr_invoiceentry.aon
+Modified : /trunk/ap/src/apr_manualchecks.aon
+Modified : /trunk/ap/src/apr_payments.aon
+Modified : /trunk/ar/src/arr_cnvinv.aon
+Modified : /trunk/ar/src/arr_dateregister.aon
+Modified : /trunk/ar/src/arr_invoiceentry.aon
+Modified : /trunk/ar/src/arr_otherentry.aon
+Modified : /trunk/gl/src/glr_acctxref.aon
+Modified : /trunk/gl/src/glr_bankmaster.aon
+Modified : /trunk/gl/src/glr_beginbalance.aon
+Modified : /trunk/gl/src/glr_consacctxref.aon
+Modified : /trunk/gl/src/glr_financialformat.aon
+Modified : /trunk/gl/src/glr_journal.aon
+Modified : /trunk/gl/src/glr_recurring.aon
+Modified : /trunk/gl/src/glr_register.aon
+Modified : /trunk/gl/src/glr_totalsreport.aon
+Modified : /trunk/iv/src/ivr_transferreg.aon
+Modified : /trunk/op/src/opr_stdmessage.aon
+Modified : /trunk/sf/src/sfr_timesheet.aon
+Modified : /trunk/sf/src/sfr_womatissu.aon
+Modified : /trunk/sf/src/sfx_woconvreg.aon
+
+=======================================================================================================================================
+Revision: 10718
+
+Date: Wednesday, June 12, 2013 10:25:32 PM
+Message:
+Calculate the net invoice amount to display on the Invoice Header when entering an existing invoice to be adjusted to fix bug 5426.
+----
+Modified : /trunk/data/bar/ape_invoicehdr.xml
+Modified : /trunk/data/cdf/ape_invoicehdr.cdf
+
+=======================================================================================================================================
+Revision: 10717
+
+Date: Wednesday, June 12, 2013 12:42:56 PM
+Message:
+Add rd_alias_id$="<OP_SLSREGRECAP>" to program to make document settings be unique to this one overlay to fix bug 5412.
+----
+Modified : /trunk/op/src/opr_salesregister_o2.aon
+
+=======================================================================================================================================
+Revision: 10716
+
+Date: Tuesday, June 11, 2013 12:19:11 PM
+Message:
+Bug 6903: Removed bad assignment to unused variable in CLOSED_COST BIMP.
+----
+Modified : /trunk/data/bar/sfe_woclose.xml
+Modified : /trunk/data/cdf/sfe_woclose.cdf
+
+=======================================================================================================================================
 Revision: 10702
 
 Date: Monday, June 10, 2013 10:15:56 PM
