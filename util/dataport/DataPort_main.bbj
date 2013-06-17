@@ -1258,6 +1258,8 @@ write_opc_msg_recs: rem --- Write opm-04 (OPC_MSG_HDR) and opm-14(OPC_MSG_DET) r
     if old_rec.record_id$="1" then
         rec=0
         opm04_rec.firm_id$=old_rec.firm_id$
+        translate_value!=field_translations!.get("MESSAGE_CODE."+cvs(old_rec.message_code$,3))
+        if translate_value!<>null() then old_rec.message_code$=str(translate_value!)
         opm04_rec.message_code$=old_rec.message_code$
         opm04_rec.code_desc$=old_rec.code_desc$
         opm04_rec$=field(opm04_rec$)
@@ -1268,6 +1270,8 @@ write_opc_msg_recs: rem --- Write opm-04 (OPC_MSG_HDR) and opm-14(OPC_MSG_DET) r
     write_opm14_recs=0
     for i=5 to 1 step -1
         opm14_rec.firm_id$=old_rec.firm_id$
+        translate_value!=field_translations!.get("MESSAGE_CODE."+cvs(old_rec.message_code$,3))
+        if translate_value!<>null() then old_rec.message_code$=str(translate_value!)
         opm14_rec.message_code$=old_rec.message_code$
         opm14_rec.message_seq$=str(i+rec:"00")
         opm14_rec.message_text$=field(old_rec$,"MESSAGE_TEXT_"+str(i:"00"))
