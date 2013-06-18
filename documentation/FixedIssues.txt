@@ -1,9 +1,28 @@
 =======================================================================================================================================
- Report Date:   2013-06-17
+ Report Date:   2013-06-18
  Report Branch: AddonSoftware 13.01
  Last Release:  AddonSoftware 13.00
 =======================================================================================================================================
 
+Revision: 10749
+
+Date: Tuesday, June 18, 2013 3:08:22 PM
+Message:
+Bug 6765: Must use bac_open_tables to close files that where opened via bac_open_tables rather than using a CLOSE statement.
+----
+Modified : /trunk/data/bar/glr_financials.xml
+Modified : /trunk/data/cdf/glr_financials.cdf
+
+=======================================================================================================================================
+Revision: 10748
+
+Date: Monday, June 17, 2013 6:44:36 PM
+Message:
+Per bug 7001; took off old/incorrect optional def on the alias - had been set as 'query based form' which is a no op, except it was causing all navigation, binocs, etc. to be disabled.
+----
+Modified : /trunk/data/bar/are_finchg.xml
+
+=======================================================================================================================================
 Revision: 10745
 
 Date: Monday, June 17, 2013 2:43:03 PM
