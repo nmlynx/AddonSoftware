@@ -809,7 +809,7 @@ rem --- Set defaults for new record
 	opc_linecode.dropship$ = "N"
 	find record (fnget_dev(file$), key=firm_id$+callpoint!.getColumnData("OPE_ORDDET.LINE_CODE"), dom=*next) opc_linecode$
 
-	if opc_linecode.dropship$ = "Y" or inv_type$ = "P" or ship_date$ > user_tpl.def_commit$ then
+	if inv_type$ = "P" or ship_date$ > user_tpl.def_commit$ then
  		callpoint!.setColumnData("OPE_ORDDET.COMMIT_FLAG", "N")
 	else
 		callpoint!.setColumnData("OPE_ORDDET.COMMIT_FLAG", "Y")
@@ -1882,7 +1882,7 @@ rem ==========================================================================
 		callpoint!.setColumnData("OPE_ORDDET.VENDOR_ID", "")
 		callpoint!.setColumnData("OPE_ORDDET.DROPSHIP", "")
 
-		if user_tpl.line_dropship$ = "Y" or inv_type$ = "P" or callpoint!.getHeaderColumnData("OPE_ORDHDR.SHIPMNT_DATE") > user_tpl.def_commit$ then
+		if inv_type$ = "P" or callpoint!.getHeaderColumnData("OPE_ORDHDR.SHIPMNT_DATE") > user_tpl.def_commit$ then
  			callpoint!.setColumnData("OPE_ORDDET.COMMIT_FLAG", "N")
 		else
 			callpoint!.setColumnData("OPE_ORDDET.COMMIT_FLAG", "Y")
