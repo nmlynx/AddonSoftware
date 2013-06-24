@@ -2478,6 +2478,14 @@ init_update_glm06: rem --- Initialize and update glm-06 and adm-09/19/39
             print (err_dev)"*** ERROR ***: Data not copied from "+cvs("sym-39",version_cvs)
         endif
     endif
+    
+    rem --- Close files opened in source directory for this subroutine
+    close(glm06_src)
+    if port_sym04 then close(sym04_src)
+    if port_sym06 then close(sym06_src)
+    if port_sym09 then close(sym09_src)
+    if port_sym19 then close(sym19_src)
+    if port_sym39 then close(sym39_src)
     return
 
 split_header_detail_recs: rem --- Split old header/detail files into separate files
