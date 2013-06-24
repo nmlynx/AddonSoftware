@@ -2147,6 +2147,12 @@ init_update_glm06: rem --- Initialize and update glm-06 and adm-09/19/39
         rem --- Open files in source directory
         glm06_src=unt
         open (glm06_src)source_folder$+"/"+cvs("glm-06",version_cvs)
+        port_sym04=0
+        sym04_src=unt
+        open (sym04_src,err=*next)source_folder$+"/"+cvs("sym-04",version_cvs); port_sym04=1
+        port_sym06=0
+        sym06_src=unt
+        open (sym06_src,err=*next)source_folder$+"/"+cvs("sym-06",version_cvs); port_sym06=1
         port_sym09=0
         sym09_src=unt
         open (sym09_src,err=*next)source_folder$+"/"+cvs("sym-09",version_cvs); port_sym09=1
@@ -2156,6 +2162,14 @@ init_update_glm06: rem --- Initialize and update glm-06 and adm-09/19/39
         port_sym39=0
         sym39_src=unt
         open (sym39_src,err=*next)source_folder$+"/"+cvs("sym-39",version_cvs); port_sym39=1
+        if !port_sym04 then
+            print "*** ERROR ***: Couldn't find source file "+source_folder$+"/"+cvs("sym-04",version_cvs)
+            print (err_dev)"*** ERROR ***: Couldn't find source file "+source_folder$+"/"+cvs("sym-04",version_cvs)
+        endif
+        if !port_sym06 then
+            print "*** ERROR ***: Couldn't find source file "+source_folder$+"/"+cvs("sym-06",version_cvs)
+            print (err_dev)"*** ERROR ***: Couldn't find source file "+source_folder$+"/"+cvs("sym-06",version_cvs)
+        endif
         if !port_sym09 then
             print "*** ERROR ***: Couldn't find source file "+source_folder$+"/"+cvs("sym-09",version_cvs)
             print (err_dev)"*** ERROR ***: Couldn't find source file "+source_folder$+"/"+cvs("sym-09",version_cvs)
@@ -2312,11 +2326,18 @@ init_update_glm06: rem --- Initialize and update glm-06 and adm-09/19/39
                     dim sym09_0$(10),sym09_1$(30),sym09_2$(23)
                     read(sym09_src,err=*break)sym09_0$(1),sym09_1$(1),sym09_2$(1)
                     old_proc$=sym09_0$
+                    dim sym04_1$(64)
+                    if port_sym04 then
+                        read(sym04_src,key=sym09_2$(1,2),dom=*next)*,sym04_1$
+                    endif
+                    dim sym06_2$(16)
+                    if port_sym06 then
+                        read(sym06_src,key=this_firm$,dom=*next)*,*,sym06_2$
+                    endif
                     if processes!.containsKey(old_proc$) then
                         rem --- Maps to new standard adm-09 record
                         new_proc$=cast(BBjString,processes!.get(old_proc$))
                         readrecord(adm09_trgt,key=this_firm$+new_proc$,dom=*continue)adm09$
-                        adm09.batch_entry$=sym09_2$(3,1)
                     else
                         rem --- Does not map to new standard adm-09 record
                         dim adm09$:fattr(adm09$)
@@ -2324,9 +2345,14 @@ init_update_glm06: rem --- Initialize and update glm-06 and adm-09/19/39
                         adm09.process_id$=pad(old_proc$,16)
                         adm09.description$=sym09_1$
                         adm09.process_mod_id$=sym09_2$(1,2)
-                        adm09.batch_entry$=sym09_2$(3,1)
                         adm09.allow_batch$=" "
                     endif
+                    rem --- BATCH_ENTRY is 'Y' only if it's 'Y' in SYM-04 and SYM-06 and SYM-09
+                    if sym04_1$(47,1)="Y" and sym06_2$(2,1)="Y" and sym09_2$(3,1)="Y" then
+                        adm09.batch_entry$="Y"
+                    else
+                        adm09.batch_entry$="N"
+                    endif                    
                     adm09$=field(adm09$)
                     writerecord(adm09_trgt)adm09$
                     adm09_updated=1
