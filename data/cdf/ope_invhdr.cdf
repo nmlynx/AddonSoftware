@@ -838,11 +838,13 @@ rem --- Enable/Disable Cash Sale button
 	gosub able_cash_sale
 
 rem --- Allow changing shipto_type when abort shipto_no
-	if callpoint!.getDevObject("abort_shipto_no") then
-		callpoint!.setDevObject("abort_shipto_no",0)
-		callpoint!.setFocus("OPE_INVHDR.SHIPTO_TYPE")
-		callpoint!.setStatus("ABORT")
-		break; rem --- exit callpoint
+	if callpoint!.getDevObject("abort_shipto_no")<>null() then
+		if num(callpoint!.getDevObject("abort_shipto_no"),err=*endif)
+			callpoint!.setDevObject("abort_shipto_no",0)
+			callpoint!.setFocus("OPE_ORDHDR.SHIPTO_TYPE")
+			callpoint!.setStatus("ABORT")
+			break; rem --- exit callpoint
+		endif
 	endif
 [[OPE_INVHDR.AOPT-CINV]]
 rem --- Credit Historical Invoice

@@ -539,11 +539,13 @@ rem --- Save old value
 	user_tpl.prev_ship_to$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
 
 rem --- Allow changing shipto_type when abort shipto_no
-	if callpoint!.getDevObject("abort_shipto_no") then
-		callpoint!.setDevObject("abort_shipto_no",0)
-		callpoint!.setFocus("OPE_ORDHDR.SHIPTO_TYPE")
-		callpoint!.setStatus("ABORT")
-		break; rem --- exit callpoint
+	if callpoint!.getDevObject("abort_shipto_no")<>null() then
+		if num(callpoint!.getDevObject("abort_shipto_no"),err=*endif)
+			callpoint!.setDevObject("abort_shipto_no",0)
+			callpoint!.setFocus("OPE_ORDHDR.SHIPTO_TYPE")
+			callpoint!.setStatus("ABORT")
+			break; rem --- exit callpoint
+		endif
 	endif
 [[OPE_ORDHDR.APFE]]
 print "Hdr:APFE"; rem debug
