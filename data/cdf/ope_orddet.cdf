@@ -926,6 +926,10 @@ rem --- Clear/set flags
 		break; rem --- exit callpoint
 	endif
 
+	if  callpoint!.getGridRowDeleteStatus(this_row) = "Y"
+		break; rem --- exit callpoint
+	endif
+
 	user_tpl.detail_modified = 1
 
 rem --- Returns
