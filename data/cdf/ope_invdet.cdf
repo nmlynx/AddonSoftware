@@ -380,7 +380,7 @@ rem --- Clear quantities if line type is Memo or Other
 rem --- Set product types for certain line types 
 
 	if pos(linecode_rec.line_type$="NOP") then
-		if qty_ord = 0 then
+		if num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED")) = 0 then
 			msg_id$="OP_QTY_ZERO"
 			gosub disp_message
 			callpoint!.setStatus("ABORT")
