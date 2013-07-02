@@ -2007,7 +2007,6 @@ reformat_address:
        next x
     endif
 
-    REM ' TODO: More detail here?
     if city$="" or state$="" then
        print(err_dev)"Error copying address fields"
     endif
@@ -2326,6 +2325,7 @@ init_update_glm06: rem --- Initialize and update glm-06 and adm-09/19/39
                     dim sym09_0$(10),sym09_1$(30),sym09_2$(23)
                     read(sym09_src,err=*break)sym09_0$(1),sym09_1$(1),sym09_2$(1)
                     old_proc$=sym09_0$
+                    if cvs(old_proc$,2)="" then continue
                     dim sym04_1$(64)
                     if port_sym04 then
                         read(sym04_src,key=sym09_2$(1,2),dom=*next)*,sym04_1$
@@ -2365,6 +2365,7 @@ init_update_glm06: rem --- Initialize and update glm-06 and adm-09/19/39
                     dim sym19_0$(18),sym19_1$(30),sym19_2$(11)
                     read(sym19_src,err=*break)sym19_0$(1),sym19_1$(1),sym19_2$(1)
                     old_proc$=sym19_0$(1,10)
+                    if cvs(old_proc$,2)="" then continue
                     prog$=sym19_0$(11,8)                               
                     if process_details!.containsKey(old_proc$+"."+prog$) then
                         rem --- Maps to new standard adm-19 record
@@ -2414,6 +2415,7 @@ init_update_glm06: rem --- Initialize and update glm-06 and adm-09/19/39
                     dim sym39_0$(16)
                     read(sym39_src,err=*break)sym39_0$(1)
                     old_proc$=sym39_0$(1,10)
+                    if cvs(old_proc$,2)="" then continue
                     file$=sym39_0$(11,6)                               
                     if process_files!.containsKey(old_proc$+"."+file$) then
                         rem --- Maps to new standard adm-39 record
