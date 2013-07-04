@@ -1,5 +1,5 @@
 [[SFE_WOMASTR.ASVA]]
-rem --- Disable Scheduled Quantity and Yield if saved and Inventory Item
+rem --- Disable Scheduled Quantity and Yield if Inventory Item
 
 	typecode_dev=fnget_dev("SFC_WOTYPECD")
 	dim typecode$:fnget_tpl$("SFC_WOTYPECD")
@@ -10,8 +10,6 @@ rem --- Disable Scheduled Quantity and Yield if saved and Inventory Item
 		callpoint!.setColumnEnabled("SFE_WOMASTR.SCH_PROD_QTY",0)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.EST_YIELD",0)
 	endif
-
-rem --- Give warning for sched qty and yeild if non-stock... jpb
 [[SFE_WOMASTR.ADTW]]
 rem --- Re-launch sfe_womatl form after a bill is exploded
 	while callpoint!.getDevObject("explode_bills")="Y"
