@@ -1,5 +1,309 @@
 =======================================================================================================================================
- Report Date:   2013-06-20
+ Report Date:   2013-07-08
  Report Branch: AddonSoftware 13.02
  Last Release:  AddonSoftware 13.01
 =======================================================================================================================================
+
+=======================================================================================================================================
+Revision: 1bfdfcc07aa59a75c662a92da73fb6c35e8b5150
+
+Date: 7/5/2013 3:36:33 PM
+Message:
+Bug 7057: Fixed the "Auto-adjust Feb for leap year" check box.
+----
+Modified: data/bar/ads_calendar.xml
+Modified: data/bar/gls_calendar.xml
+
+=======================================================================================================================================
+Revision: f5fc2a9b69340f8b2ac6bc5275680674039cd1bf
+
+Date: 7/5/2013 2:52:26 PM
+Message:
+Bug 7056: Reset period 2 locked date.
+----
+Modified: data/gls_params
+
+=======================================================================================================================================
+Revision: 29308027ed4ab57e274f6da681d5c4ebb591e41b
+
+Date: 7/3/2013 10:38:10 PM
+Message:
+Complete changes to fix bug 6910.
+----
+Modified: data/bar/sfe_womastr.xml
+Modified: data/cdf/sfe_womastr.cdf
+
+=======================================================================================================================================
+Revision: e7619af065584ebe8e10cb0e81a0a47e9ce2dbbd
+
+Date: 7/3/2013 11:56:25 AM
+Message:
+Bug 6173: Moved code setting DTAB for SFE_WOOPRTN.OP_CODE from BSHO to new BFMC callpoint.
+----
+Modified: data/bar/sfe_wooprtn.xml
+Modified: data/cdf/sfe_wooprtn.cdf
+
+=======================================================================================================================================
+Revision: a50947b27bd6c4330daa5d40df60dd7fc4322f46
+
+Date: 7/2/2013 10:51:21 PM
+Message:
+Don't allow the same Invoice Number to be added multiple times in the grid to fix bug 6997.
+----
+Modified: data/bar/ape_mancheckdet.xml
+
+=======================================================================================================================================
+Revision: 90d4698c580c48748db0966f5213113f48ae5bf3
+
+Date: 7/2/2013 10:49:09 PM
+Message:
+Don't allow the same Invoice Number to be added multiple times in the grid to fix bug 6997. One more file to be committed.
+----
+Modified: data/cdf/ape_mancheckdet.cdf
+Added: data/sync/ads_messages~ap_dupe_inv.xml
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
+
+=======================================================================================================================================
+Revision: 0fcf66cb3a018a66127c5d3188505f514953091d
+
+Date: 7/2/2013 4:28:41 PM
+Message:
+Bug 7054: Don't write adm-09/19/39 records with blank PROCESS_ID
+----
+Modified: util/dataport/DataPort_main.bbj
+
+=======================================================================================================================================
+Revision: 88c0cc30b00cdd8c5e7710e932c2d07e83bca59e
+
+Date: 7/2/2013 10:30:19 AM
+Message:
+Disable Scheduled Quantity and Yield once form is saved for Inventory type Work Order to work on bug 6910.
+----
+Modified: data/bar/sfe_womastr.xml
+Modified: data/cdf/sfe_womastr.cdf
+
+=======================================================================================================================================
+Revision: 10781
+
+Date: Friday, June 28, 2013 10:47:59 PM
+Message:
+Check the DeleteStatus flag in AGRE, and if set, don't do any validation in that callpoint to fix bug 7030.
+----
+Modified : /trunk/data/bar/ope_invdet.xml
+Modified : /trunk/data/bar/ope_orddet.xml
+Modified : /trunk/data/cdf/ope_invdet.cdf
+Modified : /trunk/data/cdf/ope_orddet.cdf
+
+=======================================================================================================================================
+Revision: 10780
+
+Date: Friday, June 28, 2013 10:35:20 PM
+Message:
+Changed the qty_ord variable to the actual callpoint!.getColumnData in BWRI to fix bug 7046.
+----
+Modified : /trunk/data/bar/ope_invdet.xml
+Modified : /trunk/data/cdf/ope_invdet.cdf
+
+=======================================================================================================================================
+Revision: 10779
+
+Date: Friday, June 28, 2013 10:32:21 PM
+Message:
+Changed the qty_ord variable to the actual callpoint!.getColumnData in BWRI to fix bug 7044.
+----
+Modified : /trunk/data/bar/ope_orddet.xml
+Modified : /trunk/data/cdf/ope_orddet.cdf
+
+=======================================================================================================================================
+Revision: 10778
+
+Date: Thursday, June 27, 2013 10:45:47 PM
+Message:
+Restructure the way the list button selections are passed from the OE form to the back end report program to fix bug 7036.
+----
+Modified : /trunk/data/bar/glr_budgetreport.xml
+Modified : /trunk/data/cdf/glr_budgetreport.cdf
+Modified : /trunk/gl/src/gle_budgetreport.aon
+
+=======================================================================================================================================
+Revision: 10777
+
+Date: Wednesday, June 26, 2013 10:22:51 PM
+Message:
+Corrected totals to print correct array elements. Also included quantity totals for all subtotals. Destroyed window on run to be more consistent with standards. All to fix bug 7019.
+----
+Modified : /trunk/data/bar/ivr_lifofifo.xml
+Modified : /trunk/iv/src/ivr_lifofifo.aon
+
+=======================================================================================================================================
+Revision: 10776
+
+Date: Wednesday, June 26, 2013 10:06:06 PM
+Message:
+Open the IVM_ITEMMAST table in the BSHO callpoint of Vendor Replenishment form to fix bug 7020.
+----
+Modified : /trunk/data/bar/apm_vendrepl.xml
+Modified : /trunk/data/cdf/apm_vendrepl.cdf
+
+=======================================================================================================================================
+Revision: 10775
+
+Date: Tuesday, June 25, 2013 2:23:28 PM
+Message:
+Per bug 7035; need to test devObject() value for null() before trying to take num of it.
+----
+Modified : /trunk/data/bar/ope_invhdr.xml
+Modified : /trunk/data/bar/ope_ordhdr.xml
+Modified : /trunk/data/cdf/ope_invhdr.cdf
+Modified : /trunk/data/cdf/ope_ordhdr.cdf
+
+=======================================================================================================================================
+Revision: 10774
+
+Date: Monday, June 24, 2013 10:34:38 PM
+Message:
+Replace close statement with call to bac_open_tables to properly close table channel in GL to work on bug 7009.
+----
+Modified : /trunk/gl/src/glc_ctlcreate.aon
+
+
+=======================================================================================================================================
+Revision: 10773
+
+Date: Monday, June 24, 2013 9:42:40 PM
+Message:
+Per bug 7032; fixed typo in invoice edit report.
+----
+Modified : /trunk/op/src/opr_invoiceedit_o1.aon
+
+=======================================================================================================================================
+Revision: 10772
+
+Date: Monday, June 24, 2013 3:41:38 PM
+Message:
+Bug 7008: Close files opened in source directory for init_update_glm06 subroutine.
+----
+Modified : /trunk/util/dataport/DataPort_main.bbj
+
+=======================================================================================================================================
+Revision: 10771
+
+Date: Monday, June 24, 2013 1:23:05 PM
+Message:
+Per bug 7029; fixed these forms so they send in table and column, rather than just column, to the custom lookup query used for duplicate/credit orders/invoices.
+----
+Modified : /trunk/data/bar/ope_invhdr.xml
+Modified : /trunk/data/bar/ope_ordhdr.xml
+Modified : /trunk/data/cdf/ope_invhdr.cdf
+Modified : /trunk/data/cdf/ope_ordhdr.cdf
+
+=======================================================================================================================================
+Revision: 10770
+
+Date: Monday, June 24, 2013 12:58:35 PM
+Message:
+Replace close statements with call to bac_open_tables to properly close table channels to work on bug 7009.
+----
+Modified : /trunk/sa/src/sac_pa.aon
+
+=======================================================================================================================================
+Revision: 10769
+
+Date: Monday, June 24, 2013 12:29:40 PM
+Message:
+Bug 7014: Rebuilt gls_param, gls_columns, gls_calendar and ads_calendar.
+----
+Modified : /trunk/data/bar/ads_calendar.xml
+Modified : /trunk/data/bar/gls_calendar.xml
+Modified : /trunk/data/bar/gls_columns.xml
+Modified : /trunk/data/bar/gls_params.xml
+
+=======================================================================================================================================
+Revision: 10768
+
+Date: Monday, June 24, 2013 10:48:27 AM
+Message:
+Per bug 7026 - correct issue where fattr(arm10d$) throws error, because file isn't open if dist by item is off.
+----
+Modified : /trunk/po/src/por_invreg.aon
+
+=======================================================================================================================================
+Revision: 10767
+
+Date: Monday, June 24, 2013 10:12:40 AM
+Message:
+Bug 7008: Set BATCH_ENTRY to Y in adm-09 (adm_procmaster) if BATCH ENTRY is Y in SYM-04 and SYM-06 and SYM-09, otherwise set BATCH_ENTRY to N in adm-09 (adm_procmaster).
+----
+Modified : /trunk/util/dataport/DataPort_main.bbj
+
+=======================================================================================================================================
+Revision: 10766
+
+Date: Monday, June 24, 2013 9:18:12 AM
+Message:
+Per bug 7024 - the vendor ID field should only be enabled if the restart box is checked.
+----
+Modified : /trunk/data/bar/por_poprint.xml
+Modified : /trunk/data/bar/por_reqprint.xml
+
+=======================================================================================================================================
+Revision: 10765
+
+Date: Friday, June 21, 2013 3:36:26 PM
+Message:
+Per bug 7015; fixing a form sizing issue. Form was coming up larger each time.
+----
+Modified : /trunk/data/bar/glm_budgetmaint.xml
+Modified : /trunk/data/cdf/glm_budgetmaint.cdf
+
+=======================================================================================================================================
+Revision: 10764
+
+Date: Friday, June 21, 2013 2:55:00 PM
+Message:
+Per bug 7012; error 47 due to field name typo in Consolidated Financials.
+----
+Modified : /trunk/gl/src/glu_financials.aon
+
+=======================================================================================================================================
+Revision: 10763
+
+Date: Friday, June 21, 2013 9:18:23 AM
+Message:
+Bug 7010: Moved Batch Entry Control field to top of ive_costchg form.
+----
+Modified : /trunk/data/bar/ive_costchg.xml
+
+=======================================================================================================================================
+Revision: 10762
+
+Date: Thursday, June 20, 2013 6:37:26 PM
+Message:
+Bug 7005: Initialized ALLOW_BATCH data in adm_procmaster (adm-09), and check it before enabling BATCH_ENTRY checkbox on adm_procmaster form.
+----
+Modified : /trunk/data/adm-09
+Modified : /trunk/data/bar/adm_procmaster.xml
+Modified : /trunk/data/cdf/adm_procmaster.cdf
+
+=======================================================================================================================================
+Revision: 10758
+
+Date: Wednesday, June 19, 2013 12:25:58 PM
+Message:
+Bug 6719: Drop ship items ARE committed when the ship date is on or before the commit date.
+----
+Modified : /trunk/data/bar/ope_invdet.xml
+Modified : /trunk/data/bar/ope_orddet.xml
+Modified : /trunk/data/cdf/ope_invdet.cdf
+Modified : /trunk/data/cdf/ope_orddet.cdf
+
+=======================================================================================================================================
+Revision: 10756
+
+Date: Tuesday, June 18, 2013 10:34:54 PM
+Message:
+Before deleting a row, check to see if the record exists in the table before uncommitting. Before undeleting a row, check the quantity to make sure it's valid before recommitting to fix bug 6800.
+----
+Modified : /trunk/data/bar/ive_transdet.xml
+Modified : /trunk/data/cdf/ive_transdet.cdf
