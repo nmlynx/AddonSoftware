@@ -1966,13 +1966,13 @@ rem ==========================================================================
 	while 1
 		rd_key$ = ""
 		dim filter_defs$[2,2]
-		filter_defs$[0,0]="FIRM_ID"
+		filter_defs$[0,0]="OPT_INVDET.FIRM_ID"
 		filter_defs$[0,1]="='"+firm_id$+"'"
 		filter_defs$[0,2]="LOCK"
-		filter_defs$[1,0]="AR_TYPE"
+		filter_defs$[1,0]="OPT_INVDET.AR_TYPE"
 		filter_defs$[1,1]="='"+callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")+"'"
 		filter_defs$[1,2]="LOCK"
-		filter_defs$[2,0]="CUSTOMER_ID"
+		filter_defs$[2,0]="OPT_INVDET.CUSTOMER_ID"
 		filter_defs$[2,1]="='"+callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")+"'"
 		filter_defs$[2,2]="LOCK"
 		call stbl("+DIR_SYP")+"bax_query.bbj",
