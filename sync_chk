@@ -1,0 +1,18 @@
+#!/usr/bin/perl
+
+$logfile = $ARGV[0];
+print "logfile: ${logfile}\n";
+
+open(PIPE,"tail -1 ${logfile} |");
+$line = <PIPE>;
+close(PIPE);
+print "last line: ${line}\n";
+
+if ($line =~ /Process_completed$/)
+{
+    # The sync process completed successfully
+    exit;
+}
+
+# The sync process did not complete, return an error
+exit(-1);

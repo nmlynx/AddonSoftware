@@ -354,6 +354,15 @@
             </else>
         </if>
 
+        <!-- Make sure the sync was successful          -->
+        <!-- If successful, the addon_sync.log has      -->
+        <!-- "Process_completed" at the end of the file -->
+        <echo message="verifying addon sync"/>
+        <exec executable="$src.dir}/sync_chk" failonerror="true">
+              <arg value="${log.bbj.dir}/addon_sync.log"/>
+        </exec>
+        <echo message="addon sync verified"/>
+
     </target>
     <!-- End of syncAddon -->
     <!-- ====================================== -->
