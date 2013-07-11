@@ -327,7 +327,7 @@
         <if>
             <equals arg1="${use.locale}" arg2="true"/>
             <then>
-                <exec executable="${install.dir}/bin/bbj">
+                <exec executable="${install.dir}/bin/bbj" failonerror="true">
                     <env key="DISPLAY" value="${display}"/>
                     <arg value="-q"/>
                     <arg value="-WD${barista.bbj.dir}"/>
@@ -341,7 +341,7 @@
                 </exec>
             </then>
             <else>
-                <exec executable="${install.dir}/bin/bbj">
+                <exec executable="${install.dir}/bin/bbj" failonerror="true">
                     <env key="DISPLAY" value="${display}"/>
                     <arg value="-q"/>
                     <arg value="-WD${barista.bbj.dir}"/>
