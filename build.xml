@@ -327,7 +327,7 @@
         <if>
             <equals arg1="${use.locale}" arg2="true"/>
             <then>
-                <exec executable="${install.dir}/bin/bbj">
+                <exec executable="${install.dir}/bin/bbj" failonerror="true">
                     <env key="DISPLAY" value="${display}"/>
                     <arg value="-q"/>
                     <arg value="-WD${barista.bbj.dir}"/>
@@ -341,7 +341,7 @@
                 </exec>
             </then>
             <else>
-                <exec executable="${install.dir}/bin/bbj">
+                <exec executable="${install.dir}/bin/bbj" failonerror="true">
                     <env key="DISPLAY" value="${display}"/>
                     <arg value="-q"/>
                     <arg value="-WD${barista.bbj.dir}"/>
@@ -353,6 +353,15 @@
                 </exec>
             </else>
         </if>
+
+        <!-- Make sure the sync was successful          -->
+        <!-- If successful, the addon_sync.log has      -->
+        <!-- "Process_completed" at the end of the file -->
+        <echo message="verifying addon sync"/>
+        <exec executable="${src.dir}/sync_chk" failonerror="true">
+              <arg value="${log.bbj.dir}/addon_sync.log"/>
+        </exec>
+        <echo message="addon sync verified"/>
 
     </target>
     <!-- End of syncAddon -->
