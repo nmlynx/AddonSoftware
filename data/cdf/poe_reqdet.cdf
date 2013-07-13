@@ -222,7 +222,6 @@ rem --- save current po status flag, po/req# and line#
 rem --- check data to see if o.k. to leave row (only if the row isn't marked as deleted)
 
 rem print "col data: ",callpoint!.getColumnData("POE_REQDET.REQ_QTY")
-rem print "undo data: ",callpoint!.getColumnUndoData("POE_REQDET.REQ_QTY")
 rem print "disk data: ",callpoint!.getColumnDiskData("POE_REQDET.REQ_QTY")
 
 if callpoint!.getGridRowDeleteStatus(num(callpoint!.getValidationRow()))<>"Y"

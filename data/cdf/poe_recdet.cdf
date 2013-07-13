@@ -278,9 +278,9 @@ if callpoint!.getHeaderColumnData("POE_RECHDR.DROPSHIP")<>"Y" and cvs(callpoint!
 	curr_item$ = callpoint!.getColumnData("POE_RECDET.ITEM_ID")
 	curr_qty   = (num(callpoint!.getColumnData("POE_RECDET.QTY_ORDERED"))-num(callpoint!.getColumnData("POE_RECDET.QTY_PREV_REC"))) * num(callpoint!.getColumnData("POE_RECDET.CONV_FACTOR"))
 
-	prior_whse$ = callpoint!.getColumnUndoData("POE_RECDET.WAREHOUSE_ID")
-	prior_item$ = callpoint!.getColumnUndoData("POE_RECDET.ITEM_ID")
-	prior_qty   = (num(callpoint!.getColumnUndoData("POE_RECDET.QTY_ORDERED"))-num(callpoint!.getColumnUndoData("POE_RECDET.QTY_PREV_REC"))) * num(callpoint!.getColumnUndoData("POE_RECDET.CONV_FACTOR"))
+	prior_whse$ = callpoint!.getDevObject("prior_whse")
+	prior_item$ = callpoint!.getDevObject("prior_item")
+	prior_qty   = (callpoint!.getDevObject("prior_qty_ordered")-callpoint!.getDevObject("prior_prev_rec")) * callpoint!.getDevObject("prior_conv_factor")
 
 	rem --- Has there been any change?
 
@@ -656,6 +656,12 @@ callpoint!.setDevObject("cost_this_row",callpoint!.getColumnData("POE_RECDET.UNI
 rem print "AGRN "
 rem print "qty this row: ",callpoint!.getDevObject("qty_this_row")
 rem print "cost this row: ",callpoint!.getDevObject("cost_this_row")
+
+	callpoint!.setDevObject("prior_whse",callpoint!.getColumnData("POE_RECDET.WAREHOUSE_ID"))
+	callpoint!.setDevObject("prior_item",callpoint!.getColumnData("POE_RECDET.ITEM_ID"))
+	callpoint!.setDevObject("prior_qty_ordered",num(callpoint!.getColumnData("POE_RECDET.QTY_ORDERED")))
+	callpoint!.setDevObject("prior_prev_rec",num(callpoint!.getColumnData("POE_RECDET.QTY_PREV_REC")))
+	callpoint!.setDevObject("prior_conv_factor",num(callpoint!.getColumnData("POE_RECDET.CONV_FACTOR")))
 
 item_id$=callpoint!.getColumnData("POE_RECDET.ITEM_ID")
 gosub enable_serial
