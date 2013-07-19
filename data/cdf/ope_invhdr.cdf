@@ -3,6 +3,7 @@ rem --- Check Ship-to's
 
 	shipto_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
 	shipto_no$  = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
+	ship_addr1$=callpoint!.getUserInput()
 	gosub check_shipto
 	if user_tpl.shipto_warned
 		break; rem --- exit callpoint
@@ -12,6 +13,7 @@ rem --- Check Ship-to's
 
 	shipto_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
 	shipto_no$  = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
+	ship_addr1$=callpoint!.getColumnData("<<DISPLAY>>.SADD1")
 	gosub check_shipto
 	if user_tpl.shipto_warned
 		callpoint!.setStatus("ABORT")
@@ -772,6 +774,7 @@ rem --- Check Ship-to's
 
 	shipto_no$  = callpoint!.getUserInput()
 	shipto_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
+	ship_addr1$=callpoint!.getColumnData("<<DISPLAY>>.SADD1")
 	gosub check_shipto
 	if user_tpl.shipto_warned
 		callpoint!.setDevObject("abort_shipto_no",1)
@@ -2646,6 +2649,7 @@ rem ==========================================================================
 check_shipto: rem --- Check Ship-to's
 rem IN: shipto_type$
 rem IN: shipto_no$
+rem IN: ship_addr1$
 rem ==========================================================================
 
 	user_tpl.shipto_warned = 0
@@ -2654,7 +2658,7 @@ rem ==========================================================================
 		gosub disp_message
 		user_tpl.shipto_warned = 1
 	endif
-	if shipto_type$ = "M" and cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD1"), 2) = "" then
+	if shipto_type$ = "M" and cvs(ship_addr1$, 2) = "" then
 		msg_id$ = "OP_MAN_SHIPTO_NEEDED"
 		gosub disp_message
 		user_tpl.shipto_warned = 1
