@@ -1719,6 +1719,12 @@ ship_to_info: rem --- Get and display Bill To Information
               rem          order_no$
 rem ==========================================================================
 
+	ar_type$=callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
+	custdet_dev=fnget_dev("ARM_CUSTDET")
+	dim custdet$:fnget_tpl$("ARM_CUSTDET")
+	read record(custdet_dev,key=firm_id$+cust_id$+ar_type$)custdet$
+
+
 	if ship_to_type$<>"M" then
 
 		if ship_to_type$="S" then
@@ -1735,6 +1741,9 @@ rem ==========================================================================
 			callpoint!.setColumnData("<<DISPLAY>>.SSTATE",custship_tpl.state_code$)
 			callpoint!.setColumnData("<<DISPLAY>>.SZIP",custship_tpl.zip_code$)
 			callpoint!.setColumnData("<<DISPLAY>>.SCNTRY_ID",custship_tpl.cntry_id$)
+			callpoint!.setColumnData("OPE_INVHDR.SLSPSN_CODE",custship_tpl.slspsn_code$)
+			callpoint!.setColumnData("OPE_INVHDR.TERRITORY",custship_tpl.territory$)
+			callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",custship_tpl.tax_code$)
 		else
 			callpoint!.setColumnData("OPE_INVHDR.SHIPTO_NO","")
 			callpoint!.setColumnData("<<DISPLAY>>.SNAME",Translate!.getTranslation("AON_SAME"))
@@ -1746,6 +1755,9 @@ rem ==========================================================================
 			callpoint!.setColumnData("<<DISPLAY>>.SSTATE","")
 			callpoint!.setColumnData("<<DISPLAY>>.SZIP","")
 			callpoint!.setColumnData("<<DISPLAY>>.SCNTRY_ID","")
+			callpoint!.setColumnData("OPE_INVHDR.SLSPSN_CODE",custdet.slspsn_code$)
+			callpoint!.setColumnData("OPE_INVHDR.TERRITORY",custdet.territory$)
+			callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",custdet.tax_code$)
 		endif
 
 	else
@@ -1765,6 +1777,9 @@ rem ==========================================================================
 		callpoint!.setColumnData("<<DISPLAY>>.SSTATE",ordship_tpl.state_code$)
 		callpoint!.setColumnData("<<DISPLAY>>.SZIP",ordship_tpl.zip_code$)
 		callpoint!.setColumnData("<<DISPLAY>>.SCNTRY_ID",ordship_tpl.cntry_id$)
+		callpoint!.setColumnData("OPE_INVHDR.SLSPSN_CODE",custdet.slspsn_code$)
+		callpoint!.setColumnData("OPE_INVHDR.TERRITORY",custdet.territory$)
+		callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",custdet.tax_code$)
 	endif
 
 	callpoint!.setStatus("REFRESH")
