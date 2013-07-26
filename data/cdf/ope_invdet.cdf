@@ -380,7 +380,7 @@ rem --- Clear quantities if line type is Memo or Other
 rem --- Order quantity is required for S, N and P line types
 
 	if pos(linecode_rec.line_type$="SNP") then
-		if num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED")) = 0 then
+		if num(callpoint!.getColumnData("OPE_INVDET.QTY_ORDERED")) = 0 then
 			msg_id$="OP_QTY_ZERO"
 			gosub disp_message
 			callpoint!.setStatus("ABORT")
