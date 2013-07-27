@@ -103,9 +103,6 @@ rem --- Get WO commits
 
 		callpoint!.setColumnData("<<DISPLAY>>.COMMIT_WO",str(womatdtl_qty),1)
 	endif
-
-	callpoint!.setColumnData("IVM_ITEMWHSE.QTY_ON_ORDER",str(po_qty+womast_qty),1)
-	callpoint!.setColumnData("IVM_ITEMWHSE.QTY_COMMIT",str(op_qty+womatdtl_qty),1)
 [[IVM_ITEMWHSE.BDEL]]
 rem --- Allow this warehouse to be deleted?
 
@@ -152,6 +149,26 @@ else
 	callpoint!.setColumnEnabled("IVM_ITEMWHSE.LOCATION",1)
 	callpoint!.setColumnEnabled("IVM_ITEMWHSE.PI_CYCLECODE",1)
 endif
+
+rem --- Draw attention when on-order quantities don't add up
+	qty_on_order=num(callpoint!.getColumnData("IVM_ITEMWHSE.QTY_ON_ORDER"))
+	po_qty=num(callpoint!.getColumnData("<<DISPLAY>>.ON_ORD_PO"))
+	womast_qty=num(callpoint!.getColumnData("<<DISPLAY>>.ON_ORD_WO"))
+	if qty_on_order<>po_qty+womast_qty then
+		call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
+		qtyOnOrder!=callpoint!.getControl("IVM_ITEMWHSE.QTY_ON_ORDER")
+		qtyOnOrder!.setBackColor(rdErrorColor!)
+	endif
+
+rem --- Draw attention when commit quantities don't add up
+	qty_commit=num(callpoint!.getColumnData("IVM_ITEMWHSE.QTY_COMMIT"))
+	op_qty=num(callpoint!.getColumnData("<<DISPLAY>>.COMMIT_SO"))
+	womatdtl_qty=num(callpoint!.getColumnData("<<DISPLAY>>.COMMIT_WO"))
+	if qty_commit<>op_qty+womatdtl_qty then
+		call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
+		qtyCommit!=callpoint!.getControl("IVM_ITEMWHSE.QTY_COMMIT")
+		qtyCommit!.setBackColor(rdErrorColor!)
+	endif
 [[IVM_ITEMWHSE.SAFETY_STOCK.AVAL]]
 if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
 [[IVM_ITEMWHSE.ORDER_POINT.AVAL]]
