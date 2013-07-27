@@ -27,6 +27,10 @@ rem --- Get total on Open SO lines
 
 	opdet_dev=fnget_dev("OPE_ORDDET")
 	dim opdet_tpl$:fnget_tpl$("OPE_ORDDET")
+	ophdr_dev=fnget_dev("OPE_ORDHDR")
+	dim ophdr_tpl$:fnget_tpl$("OPE_ORDHDR")
+	opm02_dev=fnget_dev("OPC_LINECODE")
+	dim opm02_tpl$:fnget_tpl$("OPC_LINECODE")
 
 	read(opdet_dev,key=firm_id$+item$+whse$,knum="AO_ITEM_WH_CUST",dom=*next)
 
@@ -35,8 +39,17 @@ rem --- Get total on Open SO lines
 		if firm_id$<>opdet_tpl.firm_id$ break
 		if whse$<>opdet_tpl.warehouse_id$ break
 		if item$<>opdet_tpl.item_id$ break
-		if opdet_tpl.commit_flag$ = "Y"
-			op_qty = op_qty + opdet_tpl.qty_ordered
+		if opdet_tpl.commit_flag$<>"Y" then continue
+
+		rem --- "Check header records for quotes
+		find record (ophdr_dev,key=opdet_tpl.firm_id$+opdet_tpl.ar_type$+opdet_tpl.customer_id$+opdet_tpl.order_no$,dom=*continue) ophdr_tpl$
+		if ophdr_tpl.invoice_type$="P" then continue
+
+		rem --- "Check line code for drop ships
+		find record (opm02_dev,key=opdet_tpl.firm_id$+opdet_tpl.line_code$,dom=*continue) opm02_tpl$
+		if pos(opm02_tpl.line_type$="MNO")<>0 or opm02_tpl.dropship$="Y" then continue
+
+		op_qty = op_qty + opdet_tpl.qty_ordered
 		endif
 	wend
 
@@ -186,7 +199,7 @@ if (callpoint!.getUserInput()<"A" or callpoint!.getUserInput()>"Z") and cvs(call
 [[IVM_ITEMWHSE.BSHO]]
 rem --- Open extra tables
 
-num_files=5
+num_files=7
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="POE_PODET",open_opts$[1]="OTA"
 open_tables$[2]="OPE_ORDDET",open_opts$[2]="OTA"
@@ -195,6 +208,8 @@ if callpoint!.getDevObject("wo_installed") = "Y"
 	open_tables$[4]="SFE_WOMATDTL",open_opts$[4]="OTA"
 	open_tables$[5]="SFE_WOMATISD",open_opts$[5]="OTA"
 endif
+open_tables$[6]="OPE_ORDHDR",open_opts$[6]="OTA"
+open_tables$[7]="OPC_LINECODE",open_opts$[7]="OTA"
 gosub open_tables
 
 rem --- Get IV params
