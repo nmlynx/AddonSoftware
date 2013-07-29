@@ -1,3 +1,7 @@
+[[SFE_WOMATL.AGRN]]
+rem --- Show ISN as Reference Number
+	isn$=callpoint!.getColumnData("SFE_WOMATL.INTERNAL_SEQ_NO")
+	callpoint!.setColumnData("<<DISPLAY>>.REFERENCE_NO",isn$(7),1)
 [[<<DISPLAY>>.EXPLODE_BILL.AVAL]]
 rem --- Enable/disable explode field
 	callpoint!.setColumnData("<<DISPLAY>>.EXPLODE_BILL",callpoint!.getUserInput())
@@ -19,6 +23,11 @@ rem --- Enable/disable explode field
 [[SFE_WOMATL.AGDR]]
 rem --- Enable/disable explode field
 	gosub enable_explode
+
+rem --- Show ISN as Reference Number
+	isn$=callpoint!.getColumnData("SFE_WOMATL.INTERNAL_SEQ_NO")
+	callpoint!.setColumnData("<<DISPLAY>>.REFERENCE_NO",isn$(7),1)
+
 [[SFE_WOMATL.BWRI]]
 rem --- Maintain a string of item/seq# for any bill being exploded (explosion done on exit)
 
