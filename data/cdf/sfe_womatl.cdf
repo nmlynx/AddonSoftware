@@ -41,7 +41,8 @@ rem --- Maintain a string of item/seq# for any bill being exploded (explosion do
 	rem --- So must test check box directly instead of <<DISPLAY>>.EXPLODE_BILL
 	grid! = Form!.getControl(num(stbl("+GRID_CTL")))
 	row=callpoint!.getValidationRow()
-	column=3; rem --- check box column
+	col_hdr$=callpoint!.getTableColumnAttribute("<<DISPLAY>>.EXPLODE_BILL","LABS")
+	column=util.getGridColumnNumber(grid!, col_hdr$)
 	checked$=iff(grid!.getCellState(row,column),"Y","N")
 	if checked$="Y" then
 		rem --- Add to string of bills being exploded
