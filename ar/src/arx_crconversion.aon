@@ -1,0 +1,535 @@
+rem --- Copy records to new tables
+rem --- Program arx_cronconversion Jul 5, 2012
+rem --- Created by DLA_pjk (07/05/2013  11:22 am)
+
+rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem --- All Rights Reserved
+
+    setesc std_error
+    seterr std_error
+
+rem **********************************************
+PROG_PATHS:
+rem **********************************************
+    pgmdir$=""
+    pgmdir$=stbl("+DIR_PGM",err=*next); rem << Pgm files >>
+    sypdir$=""
+    sypdir$=stbl("+DIR_SYP",err=*next); rem << Barista Pgm files >>
+    datdir$=stbl("+ADDATA",err=*next); rem << Barista Admin files >>
+
+   rem **********************************************
+SYSINFO: rem --- Retrieve sysinfo data
+rem **********************************************
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem **********************************************
+CREATE_LOGFILE:   
+rem **********************************************
+
+    gosub time_stamp
+    logfile$=datdir$+"arx_crconv"+rep_date_stamp$+rep_time_stamp$+".txt"
+    string logfile$
+    logfile_dev=unt;open (logfile_dev)logfile$
+
+rem **********************************************
+SETUP_FILES:
+rem **********************************************
+
+    opts$="OTA@",eop=0
+
+        gosub setup_arrays
+    gosub open_tables
+
+  rem **********************************************
+SETUP_CHANNELS:
+rem **********************************************
+
+    invhdr_dev=num(rd_open_chans$[1])
+    art03_dev=num(rd_open_chans$[2])
+    cashheader_dev=num(rd_open_chans$[3])
+    artrans_dev=num(rd_open_chans$[4])
+    invheader_dev=num(rd_open_chans$[5])
+    cashhdr_dev=num(rd_open_chans$[6])
+    cashpost_dev=num(rd_open_chans$[7])
+    cashgl_dev=num(rd_open_chans$[8])
+    invdet_dev=num(rd_open_chans$[9])
+    cashdet_dev=num(rd_open_chans$[10])
+
+rem **********************************************
+DIM_STRING_TEMPLATES:
+rem **********************************************
+
+    dim invhdr$:rd_open_tpls$[1]
+    dim art03$:rd_open_tpls$[2]
+    dim cashheader$:rd_open_tpls$[3]
+    dim artrans$:rd_open_tpls$[4]
+    dim invheader$:rd_open_tpls$[5]
+    dim cashhdr$:rd_open_tpls$[6]
+    dim cashpost$:rd_open_tpls$[7]
+    dim cashgl$:rd_open_tpls$[8]
+    dim invdet$:rd_open_tpls$[9]
+    dim cashdet$:rd_open_tpls$[10]
+
+ rem **********************************************
+MISC:
+rem **********************************************
+
+    more=1,invhdr_rcds=0,invheader_rcds=0,cashhdr_rcds=0,cashheader_rcds=0,invdet_rcds=0,trans_rcds=0,cashdet_rcds=0,cashpost_rcds=0,artrans_rcds=0
+    invheader_rcds_from_invhdr=0,artrans_rcds_from_invhdr=0, artrans_rcds_from_invdet=0,cashheader_rcds_from_cashhdr=0,artrans_rcds_updated_from_cashheader=0
+    cashpost_rcds_from_cashhdr=0
+
+    print 'cs'
+
+rem **********************************************
+ART_INVHEADER: REM --- Build ART_INVHEADER FROM ART_INVHDR <ART-01> ---
+rem **********************************************
+
+    read (invhdr_dev,key=firm_id$+"  "+begcust$,dir=0,dom=*next)
+    while more
+        msg$="File: ART_INVHDR updating...",inc_tim=1
+            gosub logfile
+        invhdr_key$=key(invhdr_dev,end=*break)
+        if pos(firm_id$=invhdr_key$)<>1 break
+            read record (invhdr_dev,key=invhdr_key$) invhdr$
+
+                        call stbl("+DIR_SYP")+"bas_sequences.bbj", "INTERNAL_SEQ_NO", AR_INVOICE_ID$, table_chans$[all]
+            if ar_invoice_id$ = "" then 
+                callpoint!.setStatus("ABORT")
+            endif
+        endif
+
+        invheader.firm_id$=firm_id$
+        invheader.ar_invoice_id$=ar_invoice_id$
+        invheader.ar_type$=invhdr.ar_type$
+        invheader.customer_id$=invhdr.customer_id$
+        invheader.invoice_no$=invhdr.ar_inv_no$
+        invheader.invoice_source$="AR"
+        invheader.dist_code$=invhdr.ar_dist_code$
+        invheader.terms_code$=invhdr.ar_terms_code$ 
+        invheader.invoice_date$=invhdr.invoice_date$
+        invheader.due_date$=invhdr.inv_due_date$
+        invheader.disc_date$=invhdr.disc_date$
+        invheader.gl_audit_no$=""
+        invheader.ar_inv_type$="IN"
+        invheader.invoice_amt$=invhdr.invoice_amt$ 
+        invheader.disc_allowed$=invhdr.disc_allowed$
+        rcd$=field(invheader$),dest=invheader_dev,source=invhdr_dev,dfile$="ART_INVHEADER",sfile$="ART_INVHDR"
+
+        action$="NS",filename$="ART_INVHEADER",subtitle$="Updating "+filename$,channel=0,milestone=1
+        call pgmdir$+"adc_progress.aon",action$,filename$,subtitle$,reserved1$,reserved2$,reserved1,channel,milestone,reserved2,status
+
+                write record (invheader_dev)rcd$
+
+                invheader_rcds_from_invhdr=invheader_rcds_from_invhdr+1
+        msg$=$09$+"INVHDR key <"+invhdr_key$+"> written to INVHEADER w/ key <"+invheader.firm_id$+invheader.ar_invoice_id$+">"
+            gosub logfile
+
+rem **********************************************
+ART_TRANSACTIONS: REM --- Build ART_TRANSACTIONS from ART_INVHDR <ART-01> --- 
+rem **********************************************
+
+        call stbl("+DIR_SYP")+"bas_sequences.bbj", "INTERNAL_SEQ_NO", AR_TRANS_ID$, table_chans$[all]
+        if ar_trans_id$ = "" then callpoint!.setStatus("ABORT")
+            endif
+
+        artrans.firm_id$=invhdr.firm_id$
+        artrans.ar_trans_id$=ar_trans_id$
+        artrans.trans_date$=invhdr.invoice_date$
+        artrans.ar_trans_type$="IN"
+        artrans.trans_amount$=invhdr.invoice_amt$
+        artrans.disc_amount$=invhdr.disc_allowed$
+        artrans.cr_trans_id$=""
+        artrans.ar_invoice_id$=invheader.ar_invoice_id$
+        rcd$=field(artrans$),dest=artrans_dev,source=invhdr_dev,dfile$="ART_TRANSACTIONS",sfile$="ART_INVHDR",relrcd=99,k$=invhdr_key$,keylen=len(invhdr_key$)
+
+        action$="S",filename$="ART_TRANSACTIONS",subtitle$="Updating "+filename$,channel=0,number=1
+        call pgmdir$+"adc_progress.aon",action$,filename$,subtitle$,reserved1$,reserved2$,reserved1,channel,number,reserved2,status
+
+        write record (artrans_dev)rcd$
+
+        artrans_rcds_from_invheader=artrans_rcds_from_invheader+1
+		msg$=$09$+"ART_INVHDR key <"+invhdr_key$+"> written to ART_TRANSACTIONS w/ key <"+artrans.firm_id$+artrans.ar_trans_id$+">"
+            gosub logfile
+
+rem **********************************************
+ART_INVTRANSACTIONS_1: REM --- Build ART_TRANSACTIONS (=ART_INVTRANS-child rcd) from ART_INVDET <ART-11> ---
+rem **********************************************
+
+        read (invdet_dev,key=invhdr_key$,dom=*next)
+        while more
+            msg$="File: INVDET writing to TRANSACTIONS ",inc_tim=1
+                gosub logfile
+            invdet_key$=key(invdet_dev,end=*break)
+            if pos(invhdr_key$(1,keylen-2)=invdet_key$)<>1 
+                break
+            endif
+            read record (invdet_dev,key=invdet_key$) invdet$
+            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+
+            call stbl("+DIR_SYP")+"bas_sequences.bbj", "INTERNAL_SEQ_NO", AR_TRANS_ID$, table_chans$[all]
+
+            artrans.firm_id$=firm_id$
+            artrans.ar_trans_id$=ar_trans_id$
+            artrans.trans_date$=invdet.trans_date$
+            artrans.ar_trans_type$="PY"
+            artrans.trans_amount$=invdet.trans_amt$
+            artrans.disc_amount$=invdet.adjdisc_amt$
+            artrans.cr_trans_id$=""
+            artrans.ar_invoice_id$=invheader.ar_invoice_id$
+
+            rcd$=field(artrans$),dest=artrans_dev,source=invdet_dev,sfile$="ART_INVDET",dfile$="ART_TRANSACTIONS",relrcd=99,k$=invdet_key$
+
+                        action$="S",filename$="ART_TRANSACTIONS",subtitle$="Updating "+filename$,channel=0,number=1
+            call pgmdir$+"adc_progress.aon",action$,filename$,subtitle$,reserved1$,reserved2$,reserved1,channel,number,reserved2,status
+
+            write record (artrans_dev)rcd$
+
+                        artrans_rcds_from_invdet=artrans_rcds_from_invdet+1
+            msg$=$09$+"INVDET key <"+invdet_key$+"> written to TRANSACTIONS w/ key <"+artrans.firm_id$+artrans.ar_trans_id$+">"
+            gosub logfile
+
+        wend ; rem << Get next INVDET detail rcd 
+    wend; rem << Get next INVHDR invoice Hdr rcd >>
+
+rem **********************************************
+ART_CASHHEADER: REM --- Build ART_CASHHEADER from ART_CASHHDR <ART-06> ---
+rem **********************************************
+
+    read (cashhdr_dev,key=firm_id$+"  ",dir=0,dom=*next)
+    cashgl_key$=""
+    msg$="File: CASHHDR writing to CASHHEADER ",inc_tim=1
+        gosub logfile
+    while more
+        cashhdr_key$=key(cashhdr_dev,end=*break)
+        if pos(firm_id$=k$)<>1 break
+            endif
+
+        read record (cashhdr_dev,key=cashhdr_key$) cashhdr$
+
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        call stbl("+DIR_SYP")+"bas_sequences.bbj", "INTERNAL_SEQ_NO", CR_TRANS_ID$, table_chans$[all]
+
+        if cvs(cashhdr.cash_check$,3)="$" cr_trans_type$="CA" else if cvs(cashhdr.cash_check$,3)="C" and cashhdr.ar_check_no$>"" cr_trans_type$="CH" else if cvs(cashhdr.cash_check$,3)="C" and cvs(cashhdr.ar_check_no$,3)="" cr_trans_type$="CC"
+        endif
+
+        cashheader.firm_id$=firm_id$
+        cashheader.cr_trans_id$=cr_trans_id$
+        cashheader.customer_id$=cashhdr.customer_id$
+        cashheader.receipt_date$=cashhdr.receipt_date$
+        cashheader.cash_rec_cd$=cashhdr.cash_rec_cd$
+        cashheader.status$="C"
+        cashheader.cr_source$="CR"
+        cashheader.cr_trans_type$=cr_trans_type$
+        cashheader.trans_data1$=cashhdr.ar_check_no$
+        cashheader.trans_data2$=cashhdr.aba_no$
+        cashheader.payment_amt$=cashhdr.payment_amt$
+        cashheader.auth_trans_id$=""
+        cashheader.post_trans_id$=""
+        cashheader.rev_trans_id$=""
+        cashheader.encrypted_acct$=""
+        cashheader.gl_batch_number$=""
+        cashheader.rev_cr_trans_id$=""
+
+        rcd$=field(cashheader$),dest=cashheader_dev,source=cashhdr_dev,dfile$="ART_CASHEADER",sfile$="ART_CASHHDR",relrcd=99,k$=cashhdr_key$,keylen=len(cashhdr_key$), last_cashhdr_key$=cashheader.firm_id$+cashheader.cr_trans_id$
+        cashgl_key$=cashhdr_key$(1,28)
+
+                action$="S",filename$="ART_CASHHEADER",subtitle$="Updating "+filename$,channel=0,number=1
+        call pgmdir$+"adc_progress.aon",action$,filename$,subtitle$,reserved1$,reserved2$,reserved1,channel,number,reserved2,status
+
+                write record (cashheader_dev)rcd$
+
+        cashheader_rcds_from_cashhdr=cashheader_rcds_from_cashhdr+1
+        msg$=$09$+"CASHHDR key <"+cashhdr_key$+"> written to CASHHEADER w/ key <"+firm_id$+cashheader.cr_trans_id$+">"
+            gosub logfile
+
+rem **********************************************
+CASHDET: REM --- setup key to get INVHEADER rcd ---
+rem **********************************************
+
+         read (cashdet_dev,key=cashhdr_key$,dom=*next)
+        crtrans_found=0   
+        while more
+            cashdet_key$=key(cashdet_dev,end=*break)
+            if pos(cashhdr_key$=cashdet_key$)<>1 break
+            endif
+            read record (cashdet_dev,key=cashdet_key$) cashdet$
+            alt_invheader_key$=cashdet.firm_id$+cashdet.ar_type$+cashdet.customer_id$+cashdet.ar_inv_no$ 
+
+rem **********************************************
+UPDATE_AR_INVOICE_ID: REM --- Set ART_TRANSACTIONS.AR_INVOICE_ID$ = ART_INVHEADER.AR_INVOICE_ID  ---
+rem **********************************************
+rem --- find invoice hdr rcd from cashdet rcd <firm_id + ar_type + customer_id + ar_inv_no)
+rem --- Then find all corresponding transactions rcds (all invdet 'PY' rcds incl. invheader.ar_invoice_id pointer)
+rem --- Then match up the cashdet.apply_amt & cashdet.discount_amt to the transactions rcd just found
+rem --- Then update the transactions.cr_trans_id from the cashheader.cr_trans_id
+
+            read (invheader_dev,key=alt_invheader_key$,knum="INVOICE_NO",dom=*next)
+            invheader_found=0
+            while more
+                invheader_key$=key(invheader_dev,end=*break)
+                read record (invheader_dev,key=invheader_key$)invheader$
+                if invheader.firm_id$+invheader.ar_type$+invheader.customer_id$+invheader.invoice_no$<>alt_invheader_key$  break
+                    endif
+
+                If invheader.customer_id$=cashdet.customer_id$ and invheader.invoice_no$=cashdet.ar_inv_no$
+                    invheader_found=1, alt_trans_key$=invheader.firm_id$+invheader.ar_invoice_id$
+                    read (artrans_dev,key=alt_trans_key$,knum="INV_DATE",err=*next)
+                    while more
+                        artrans_key$=key(artrans_dev,end=*break)
+
+                        if artrans_key$(1,14)>alt_trans_key$
+                            break
+                        endif
+                        read record (artrans_dev,key=artrans_key$)artrans$
+
+                        inverted_amt=artrans.trans_amount*-1
+                        inverted_disc_amt=artrans.disc_amount*-1
+                        if artrans.ar_invoice_id$=invheader.ar_invoice_id$ and artrans.trans_date$=cashheader.receipt_date$ and inverted_amt=cashdet.apply_amt and cashdet.discount_amt=inverted_disc_amt and cvs(artrans.cr_trans_id$,3)="" and artrans.ar_trans_type$="PY"
+                            extract record (artrans_dev,key=artrans_key$)artrans$
+                            artrans.cr_trans_id$=cashheader.cr_trans_id$
+                            rcd$=field(artrans$),dest=artrans_dev,source=artrans_dev,sfile$="ART_TRANSACTIONS",dfile$="ART_TRANSACTIONS",relrcd=99,k$=artrans_key$
+
+                            action$="NS",filename$="ART_TRANSACTIONS",subtitle$="Updating "+filename$,channel=0,number=1
+                            call pgmdir$+"adc_progress.aon",action$,filename$,subtitle$,reserved1$,reserved2$,reserved1,channel,number,reserved2,status
+
+                            write record (artrans_dev)rcd$
+                            crtrans_found=1
+
+                                                        artrans_rcds_updated_from_cashheader=artrans_rcds_updated_from_cashheader+1, msg$=$09$+"CASHHEADER key <"+firm_id$+cashheader.ar_trans_id$+"> updated to TRANSACTIONS key <"+firm$+artrans_id$+">"
+                            gosub logfile
+                            break
+
+                        endif
+
+                    wend ; rem << from artrans_dev loop >> 
+
+                    break; rem << from invheader_dev loop >>
+            wend ; rem << from invheader_dev loop >>
+
+            if invheader_found=0 err_msg$="Table ART_INVHEADER is missing a match on key <"+alt_key$+"> coming from table ART_INVHEADER."; gosub logfile
+                endif
+
+        wend ; rem << from cashdet loop >>
+
+rem **********************************************
+ART_CASHPOST: REM --- Build ART_CASHPOST from ART_CASHGL <ART-26> ---
+rem **********************************************
+
+rem --- Cash receipts entry will generate cashgl records corresponding to the cashhdr 
+rem --- Read into cashgl w/ cashhdr key
+rem --- find all corresponding cashgl rcds from this cash receipt
+rem --- write data to cashpost
+
+        read (CASHGL_DEV,KEY=cashgl_key$,DOM=*NEXT)
+        msg$="File: CASHGL writing to CASHPOST ",inc_tim=1
+            gosub logfile
+        while more
+            cashgl_key$=key(cashgl_dev,end=*break)
+            if cashgl_key$(1,28)<>cashhdr_key$(1,28) 
+                break
+            endif
+            read record (cashgl_dev,key=cashgl_key$,dom=*break)cashgl$
+            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+
+                        cashpost.firm_id$=firm_id$
+            cashpost.cr_trans_id$=cashheader.cr_trans_id$
+            cashpost.gl_account$=cashgl.gl_account$
+            cashpost.gl_trans_type$="M"
+            cashpost.trans_amount=cashheader.payment_amt
+
+	        rcd$=field(cashpost$),dest=cashpost_dev,source=cashgl_dev,dfile$="ART_CASHPOST",sfile$="ART_CASHGL",relrcd=0
+
+	        	        action$="NS",filename$="ART_CASHPOST",subtitle$="Updating "+filename$,channel=0,number=1
+	        call pgmdir$+"adc_progress.aon",action$,filename$,subtitle$,reserved1$,reserved2$,reserved1,channel,number,reserved2,status
+	        write record (cashpost_dev)rcd$
+
+	        	        cashpost_rcds_from_cashhdr=cashpost_rcds_from_cashhdr+1, msg$=$09$+"CASHPOST key <"+firm_id$+CASHPOST.CR_TRANS_ID$+CASHPOST_GL_ACCOUNT$+"> updated from CASHHDR key <"+cashgl_key$+">"+$0d$
+	            gosub logfile
+
+	                    wend ; rem << from CASHGL loop >>
+
+
+
+    wend ; rem << from cashhdr_dev loop >>
+    if crtrans_found=0 err_msg$="The ART_CASHHEADER.CR_TRANS_ID value <"+cashheader.cr_trans_id$+"> did not update to ART_TRANSACTIONS. ART_TRANSACTIONS does not have a 'PY' record (from INVDET) matching up w/ the (CASHDET.)APPLY_AMT or DISCOUNT_AMT."; gosub LOGFILE
+            endif
+    rem --- All done
+
+rem **********************************************
+METRICS:
+rem **********************************************
+
+msg$="************** Report metrics ******************";gosub logfile
+fin$=fin(invhdr_dev),active_keys=dec(fin$(77,4)),msg$="ART_INVHDR: active keys="+str(active_keys)+$0D$,fin$="",active_keys=0; gosub logfile
+fin$=fin(invheader_dev),active_keys=dec(fin$(77,4)),msg$="ART_INVHEADER: active keys="+str(active_keys)+$0D$,fin$="",active_keys=0;gosub logfile
+msg$="INVHEADER rcds from INVHDR="+str(invheader_rcds_from_invhdr);gosub logfile
+fin$=fin(invdet_dev),active_keys=dec(fin$(77,4)),msg$="ART_INVDET: active keys="+str(active_keys)+$0D$,fin$="",active_keys=0;gosub logfile
+fin$=fin(artrans_dev),active_keys=dec(fin$(77,4)),msg$="ART_TRANSACTIONS: active keys="+str(active_keys)+$0D$,fin$="",active_keys=0;gosub logfile
+msg$="TRANSACTIONS rcds from INVHEADER="+str(artrans_rcds_from_invheader);gosub logfile
+msg$="TRANSACTIONS rcds from INVDET="+str(artrans_rcds_from_invdet);gosub logfile
+fin$=fin(cashhdr_dev),active_keys=dec(fin$(77,4)),msg$="ART_CASHHDR: active keys="+str(active_keys)+$0D$,fin$="",active_keys=0; gosub logfile
+fin$=fin(cashheader_dev),active_keys=dec(fin$(77,4)),msg$="ART_CASHHEADER: active keys="+str(active_keys)+$0D$,fin$="",active_keys=0; gosub logfile
+MSG$="CASHHEADER rcds from CASHHDR="+str(cashheader_rcds_from_cashhdr);gosub logfile
+fin$=fin(cashdet_dev),active_keys=dec(fin$(77,4)),msg$="ART_CASHDET: active keys="+str(active_keys)+$0D$,fin$="",active_keys=0; gosub logfile
+MSG$="TRANSACTIONS rcds upated from CASHHDR="+str(artrans_rcds_updated_from_cashheader);gosub logfile
+    goto std_exit
+
+rem **********************************************
+RESET:
+rem **********************************************
+
+    relrcd=0,rcd$=""
+    return
+
+rem **********************************************
+SETUP_ARRAYS:
+rem **********************************************
+
+    files=10,rd_open_beg=1,rd_open_end=files,rd_open_batch=0,rd_open_status$=""
+    dim rd_open_tables$[1:files],rd_open_opts$[1:files],rd_open_chans$[1:files],rd_open_tpls$[1:files]; rem << Do NOT dim rd_table_chans$[files].  Just pass in rd_table_chans$it in as is >>
+
+        rd_open_tables$[1]="ART_INVHDR",rd_open_opts$[1]=opts$
+    rd_open_tables$[2]="OPT_INVHDR",rd_open_opts$[2]=opts$
+    rd_open_tables$[3]="ART_CASHHEADER",rd_open_opts$[3]=opts$
+    rd_open_tables$[4]="ART_TRANSACTIONS",rd_open_opts$[4]=opts$
+    rd_open_tables$[5]="ART_INVHEADER",rd_open_opts$[5]=opts$
+    rd_open_tables$[6]="ART_CASHHDR",rd_open_opts$[6]=opts$
+    rd_open_tables$[7]="ART_CASHPOST",rd_open_opts$[7]=opts$
+    rd_open_tables$[8]="ART_CASHGL",rd_open_opts$[8]=opts$
+    rd_open_tables$[9]="ART_INVDET",rd_open_opts$[9]=opts$
+    rd_open_tables$[10]="ART_CASHDET",rd_open_opts$[10]=opts$
+    return
+
+rem **********************************************
+OPEN_TABLES:
+rem **********************************************
+
+    call sypdir$+"bac_open_tables.bbj",rd_open_beg,rd_open_end,rd_open_tables$[all],rd_open_opts$[all],rd_open_chans$[all],rd_open_tpls$[all],rd_table_chans$,rd_open_batch,rd_open_status$
+
+    if rd_open_status$<>"" then
+        msg_id$="ENTRY_OPEN_ERROR"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=open_status$
+        gosub disp_message
+        status=912
+        exitto std_exit
+    endif
+    return
+
+
+rem **********************************************
+LOGFILE:  REM --- Build Error Log File on errors ---
+rem **********************************************
+
+    gosub time_stamp
+    if inc_tim msg$=msg$+"  "+tstamp$
+    print (logfile_dev)msg$+$0D$
+    err_msg$="" ,relrcd=0,rcd$="",errors=errors+1,inc_tim=0
+
+         return
+
+
+rem **********************************************
+FUNCTIONS: rem --- Functions used to retrieve form values
+rem **********************************************
+
+    def fnstr_pos(q0$,q1$,q1)=int((pos(q0$=q1$,q1)+q1-1)/q1)
+    def fnget_rec_date$(q0$)=rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+ cvs(q0$,1+2+4),rd_rec_data$[0,0],40),0]
+    def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+ cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
+    def fnget_table$(q0$)=rd_alias_id$
+
+rem --- Date/time handling functions
+
+    def fndate$(q$)
+        q1$=""
+        q1$=date(jul(num(q$(1,4)),num(q$(5,2)),num(q$(7,2)),err=*next),err=*next)
+        if q1$="" q1$=q$
+        return q1$
+    fnend
+
+        def fnyy$(q$)=q$(3,2)
+    def fnclock$(q$)=date(0:"%hz:%mz %p")
+    def fntime$(q$)=date(0:"%Hz%mz")
+
+rem **********************************************
+time_stamp:
+rem **********************************************
+
+    rep_date$=date(0:"%Mz/%Dz/%Yd")
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
+    tstamp$=rep_time_stamp$(1,2)+":"+rep_time_stamp$(3,2)+":"+rep_time_stamp$(5,2)
+    rep_prog$=pgm(-2)
+    return
+
+rem **********************************************
+STD_ERROR: rem --- Standard error handler (22Feb2013)
+rem **********************************************
+
+    if tcb(19)>0
+        rem --- Escape handler
+        if and(chr(tcb(19)),$08$)=$08$
+            release
+        else
+            setesc std_error
+            return
+        endif
+    endif
+
+    rd_err_text$=""
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$) seterr 0; setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+    if pgm(-1)<>pgm(-2) status=999; exit 
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),str(err:"000"),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+rem **********************************************
+STD_EXIT: rem --- Standard program end (01Mar2006)
+rem **********************************************
+
+    action$="D",filename$="",subtitle$="",channel=0,number=0
+        call pgmdir$+"adc_progress.aon",action$,filename$,subtitle$,reserved1$,reserved2$,reserved1,channel,number,reserved2,status
+
+    opts$="C",eop=1
+    gosub setup_arrays
+    gosub open_tables ; rem << Use same pgm to open/close channels >> 
+ ESCAPE ; rem << EOP : stop here for testing >>
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
+        release
+rem #endinclude std_end.src
+
+    end
