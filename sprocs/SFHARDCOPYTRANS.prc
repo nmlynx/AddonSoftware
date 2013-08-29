@@ -376,8 +376,9 @@ rem --- Construct sql_prep$
 		sql_prep$=sql_prep$+"FROM sfe_womastr AS mast "
 		sql_prep$=sql_prep$+"INNER JOIN ("+trans_tbl_query$+" "
 		sql_prep$=sql_prep$+"          ) AS trans"
-		sql_prep$=sql_prep$+"       ON mast.firm_id+mast.wo_location+mast.wo_no "
-		sql_prep$=sql_prep$+"        = trans.firm_id+trans.wo_location+trans.wo_no " 
+		sql_prep$=sql_prep$+"       ON mast.firm_id=trans.firm_id "
+		sql_prep$=sql_prep$+"      AND mast.wo_location=trans.wo_location "
+		sql_prep$=sql_prep$+"      AND mast.wo_no=trans.wo_no "
 		sql_prep$=sql_prep$+"WHERE mast.firm_id = '"+firm_id$+"' AND mast.wo_location = '"+wo_loc$+"' AND mast.wo_no = '"+wo_no$+"' "
 		sql_prep$=sql_prep$+order_clause$	
 
