@@ -325,7 +325,7 @@ rem ---            Ops that are repeated on WOs are repeated by line here
 			
 		wend
 	
-	rem --- Output Ops Dir and Ovhd totals lines (Direct Total and Overhead Total)
+	rem --- Output Ops Dir and Ovhd totals lines (Direct Total and Overhead Total) 
 		data! = rs!.getEmptyRecordData()
 		data!.setFieldValue("STD_AMT",fill(20,"_"))
 		data!.setFieldValue("ACT_AMT",fill(20,"_"))
