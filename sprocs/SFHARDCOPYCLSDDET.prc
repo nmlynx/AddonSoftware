@@ -113,8 +113,8 @@ rem --- Open files with adc
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ivm-01",ids$[1]="IVM_ITEMMAST"
     files$[2]="ivm-02",ids$[2]="IVM_ITEMWHSE"	
-	files$[3]="ARC_DISTCODE",ids$[3]="ARC_DISTCODE"
-	files$[4]="ARS_PARAMS",ids$[4]="ARS_PARAMS"
+	files$[3]="arc_distcode",ids$[3]="ARC_DISTCODE"
+	files$[4]="ars_params",ids$[4]="ARS_PARAMS"
 	files$[5]="glm-01",ids$[5]="GLM_ACCT"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
