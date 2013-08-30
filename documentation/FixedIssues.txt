@@ -5,6 +5,108 @@
 =======================================================================================================================================
 
 =======================================================================================================================================
+Revision: 808a0c0156e1ba5f5f52e46be76d164e41c747b7
+
+Date: 8/30/2013 3:47:11 PM
+Message:
+Bug 7222: Replaced SF_CLOSE custom query with SF_CLOSE_1 in order to
+"upgrade" the query to use DESCRIPTION_01 and DESCRIPTION_02 columns.
+----
+Modified: data/bar/sfe_woclose.xml
+Modified: data/cdf/sfe_woclose.cdf
+Rename: data/sync/adm_query_cols~sf_close_1001.xml (from data/sync/adm_query_cols~sf_close001.xml)
+Rename: data/sync/adm_query_cols~sf_close_1002.xml (from data/sync/adm_query_cols~sf_close002.xml)
+Rename: data/sync/adm_query_cols~sf_close_1003.xml (from data/sync/adm_query_cols~sf_close003.xml)
+Rename: data/sync/adm_query_cols~sf_close_1004.xml (from data/sync/adm_query_cols~sf_close004.xml)
+Rename: data/sync/adm_query_cols~sf_close_1005.xml (from data/sync/adm_query_cols~sf_close005.xml)
+Rename: data/sync/adm_query_cols~sf_close_1006.xml (from data/sync/adm_query_cols~sf_close006.xml)
+Rename: data/sync/adm_query_cols~sf_close_1007.xml (from data/sync/adm_query_cols~sf_close007.xml)
+Rename: data/sync/adm_query_cols~sf_close_1008.xml (from data/sync/adm_query_cols~sf_close008.xml)
+Rename: data/sync/adm_query_cols~sf_close_1009.xml (from data/sync/adm_query_cols~sf_close009.xml)
+Rename: data/sync/adm_query_cols~sf_close_1010.xml (from data/sync/adm_query_cols~sf_close010.xml)
+Rename: data/sync/adm_query_cols~sf_close_1011.xml (from data/sync/adm_query_cols~sf_close011.xml)
+Rename: data/sync/adm_query_cols~sf_close_1012.xml (from data/sync/adm_query_cols~sf_close012.xml)
+Rename: data/sync/adm_query_cols~sf_close_1013.xml (from data/sync/adm_query_cols~sf_close013.xml)
+Rename: data/sync/adm_query_cols~sf_close_1014.xml (from data/sync/adm_query_cols~sf_close014.xml)
+Rename: data/sync/adm_query_cols~sf_close_1015.xml (from data/sync/adm_query_cols~sf_close015.xml)
+Rename: data/sync/adm_query_cols~sf_close_1016.xml (from data/sync/adm_query_cols~sf_close016.xml)
+Rename: data/sync/adm_query_cols~sf_close_1017.xml (from data/sync/adm_query_cols~sf_close017.xml)
+Rename: data/sync/adm_query_cols~sf_close_1018.xml (from data/sync/adm_query_cols~sf_close018.xml)
+Rename: data/sync/adm_query_cols~sf_close_1019.xml (from data/sync/adm_query_cols~sf_close019.xml)
+Rename: data/sync/adm_query_cols~sf_close_1020.xml (from data/sync/adm_query_cols~sf_close020.xml)
+Rename: data/sync/adm_query_cols~sf_close_1021.xml (from data/sync/adm_query_cols~sf_close021.xml)
+Rename: data/sync/adm_query_cols~sf_close_1022.xml (from data/sync/adm_query_cols~sf_close022.xml)
+Rename: data/sync/adm_query_cols~sf_close_1023.xml (from data/sync/adm_query_cols~sf_close023.xml)
+Rename: data/sync/adm_query_cols~sf_close_1024.xml (from data/sync/adm_query_cols~sf_close024.xml)
+Rename: data/sync/adm_query_cols~sf_close_1025.xml (from data/sync/adm_query_cols~sf_close025.xml)
+Rename: data/sync/adm_query_cols~sf_close_1026.xml (from data/sync/adm_query_cols~sf_close026.xml)
+Rename: data/sync/adm_query_cols~sf_close_1027.xml (from data/sync/adm_query_cols~sf_close027.xml)
+Rename: data/sync/adm_query_cols~sf_close_1028.xml (from data/sync/adm_query_cols~sf_close028.xml)
+Rename: data/sync/adm_query_cols~sf_close_1029.xml (from data/sync/adm_query_cols~sf_close029.xml)
+Rename: data/sync/adm_query_cols~sf_close_1030.xml (from data/sync/adm_query_cols~sf_close030.xml)
+Rename: data/sync/adm_query_cols~sf_close_1031.xml (from data/sync/adm_query_cols~sf_close031.xml)
+Rename: data/sync/adm_query~sf_close_1.xml (from data/sync/adm_query~sf_close.xml)
+
+=======================================================================================================================================
+Revision: bdc54f39f8455bb3f6d4df74e83134faea7a6b11
+
+Date: 8/30/2013 1:23:30 PM
+Message:
+- Added print of new Work Order Materials and Subcontract Reference
+Numbers (Bug 7220 - SF - Add reference number field to Materials and
+Subcontracts)
+- Corrected the masks used (were AD Units mask instead of SF Units
+mask): (Bug 7146 - SF - Traveler/WO Hardcopy etc: Subcontract standards
+use wrong masks)
+- Added logic to print human-friendly Req/PO/Rec/None instead of just
+the 1-char PO Status code. (Bug 7170 - SF - WO Hardcopy (all flavors):
+PO Status col in Subcontracts should print more than just the code)
+----
+Modified: reports/SFHardCopySubStd.jasper
+Modified: reports/SFHardCopySubStd.jrxml
+Modified: sprocs/SFHARDCOPYSUBSTD.prc
+
+=======================================================================================================================================
+Revision: c8df1c453849db071ad73398a50ac8d505c5d01b
+
+Date: 8/30/2013 1:00:53 PM
+Message:
+- Added print of new Work Order Materials and Subcontract Reference
+Numbers (Bug 7220 - SF - Add reference number field to Materials and
+Subcontracts)
+- Corrected the masks used: (Bug 7147 - SF - Traveler/WO Hardcopy etc:
+Material standards use wrong masks)
+   -- Scrap col was using SF Hours mask.
+   -- Factor col was using SF Rate mask.
+   -- Qty_Req col was using SF Rate mask.
+   -- Units_Ea and _Tot cols were using IV Cost mask.
+- Added logic so that Item descriptions > 30 chars aren't truncated.
+(Bug 7142 - SF - Traveler/WO Hardcopy etc: Descriptions may be cut off.)
+----
+Modified: reports/SFHardCopyMatStd.jasper
+Modified: reports/SFHardCopyMatStd.jrxml
+Modified: sprocs/SFHARDCOPYMATSTD.prc
+
+=======================================================================================================================================
+Revision: 2f1b8dfed2008b65379f341f4961848835d8c8b6
+
+Date: 8/30/2013 12:22:58 PM
+Message:
+Correct casing of arc_distcode and ars_params (change to lowercase).
+----
+Modified: sprocs/SFHARDCOPYCLSDDET.prc
+
+=======================================================================================================================================
+Revision: 880981a253be900be185f2c49682ef4a5e3779a4
+
+Date: 8/30/2013 11:20:49 AM
+Message:
+Optimization -- Change concatenation to AND in WHERE, ON clauses; remove
+views. For Bug 6442 - SF - SQL statements in sprocs for iReports need optimization.
+----
+Modified: sprocs/SFHARDCOPYCLSDDET.prc
+
+=======================================================================================================================================
 Revision: 11ee209b7e2b1fe4eabe4d2c7775e6905e21093c
 
 Date: 8/30/2013 10:25:08 AM
