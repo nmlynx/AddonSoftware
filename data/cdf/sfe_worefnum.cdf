@@ -43,19 +43,23 @@ rem =========================================================
 	if abort then return
 
 	rem --- Should the refnum numeric be zero filled?
-	refnum_mask$=""
-	if callpoint!.getDevObject("zfill_refnum")="" and len(str(last_num))>len(refnum_numeric$) then
-		refnum_mask$=pad("",len(str(last_num)),"0")
-		new_refnum$=refnum_base$+str(num(refnum_numeric$):refnum_mask$)
-		msg_id$="SF_ZFILL_REFNUM"
-		dim msg_tokens$[2]
-		msg_tokens$[1]=first_refnum$
-		msg_tokens$[2]=new_refnum$
-		gosub disp_message
-
-		callpoint!.setDevObject("zfill_refnum",msg_opt$)
-		if msg_opt$="Y" then
+	refnum_mask$=pad("",len(refnum_numeric$),"0")
+	if len(str(last_num))>len(refnum_numeric$) then
+		if callpoint!.getDevObject("zfill_refnum")="" then
+			new_mask$=pad("",len(str(last_num)),"0")
+			new_refnum$=refnum_base$+str(num(refnum_numeric$):new_mask$)
+			msg_id$="SF_ZFILL_REFNUM"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=first_refnum$
+			msg_tokens$[2]=new_refnum$
+			gosub disp_message
+			callpoint!.setDevObject("zfill_refnum",msg_opt$)
+		endif
+		if callpoint!.getDevObject("zfill_refnum")="Y" then
+			new_mask$=pad("",len(str(last_num)),"0")
+			new_refnum$=refnum_base$+str(num(refnum_numeric$):new_mask$)
 			callpoint!.setColumnData("SFE_WOREFNUM.FIRST_REFNUM",new_refnum$,1)
+			refnum_mask$=new_mask$
 		endif
 	endif
 
