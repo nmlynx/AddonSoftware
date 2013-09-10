@@ -588,7 +588,7 @@ rem --- force exportToPDF first, in case it hasn't already been saved
     return
 
 close_win:rem --- Viewer closed - do post-processing for batch vs single
-escape;rem watch
+
     if type=batch_inv
         msg_id$ = "OP_INVOICE_UPDATE"
         gosub disp_message
