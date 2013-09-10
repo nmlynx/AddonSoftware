@@ -1,8 +1,58 @@
 =======================================================================================================================================
- Report Date:   2013-09-09
+ Report Date:   2013-10-09
  Report Branch: AddonSoftware 13.03
  Last Release:  AddonSoftware 13.02
 =======================================================================================================================================
+
+=======================================================================================================================================
+Revision: 356e7c5377c065f05fc60c9181eab7d19b9d3819
+
+Date: 9/10/2013 1:44:31 PM
+Message:
+Bug 7252: Corrected sizing of mask for numeric portion of the reference
+number.
+----
+Modified: data/bar/sfe_worefnum.xml
+Modified: data/cdf/sfe_worefnum.cdf
+
+=======================================================================================================================================
+Revision: 9038bb845ad6cec2d7acbcbbe26138f5960d9de0
+
+Date: 9/10/2013 10:31:59 AM
+Message:
+Per VAR meeting; no reason to disallow save/email of AP Checks for now.
+Should be able to handle via Barista security when further enhancements
+are made to more closely tie Jasper save/email to DocOut functionality
+(i.e., taking users print group and doc settings into account)
+----
+Modified: ap/src/apr_apchecks.aon
+
+=======================================================================================================================================
+Revision: bd7b5b3b584fd7dff37aaacdba80b823694b0f61
+
+Date: 9/10/2013 9:43:56 AM
+Message:
+Per bug 7249; left debugging escape in the code. Removed.
+----
+Modified: op/src/opc_invoice.aon
+
+=======================================================================================================================================
+Revision: 87682c8386c24df852516a4e65f8b6e3a46c0658
+
+Date: 9/9/2013 6:31:38 PM
+Message:
+Continued work on mods to jaspers. The OP Invoice is more complicated
+because of processing that needs to happen when viewer is closed; the AR
+Drilldown because the drilldowns move from one report to the next in the
+viewer, so before saving/emailing, need to get the report object that's
+currently in the viewer, rather than the report object we started off
+with.  Also modified the option entry form for the AR Drilldown to turn
+off saved selection options, and destroy on run, to be consistent w/
+other Addon reports.
+----
+Modified: ar/src/arr_drillDownSalesReport.aon
+Modified: data/bar/arr_drlldown.xml
+Modified: op/src/opc_invoice.aon
 
 =======================================================================================================================================
 Revision: d5c8bf1167a4e3a93625133f4a5f80869afb2221
