@@ -1880,7 +1880,9 @@ rem ==========================================================================
 		callpoint!.setColumnData("OPE_INVDET.VENDOR_ID", "")
 		callpoint!.setColumnData("OPE_INVDET.DROPSHIP", "")
 
-		if inv_type$ = "P" or callpoint!.getHeaderColumnData("OPE_INVHDR.SHIPMNT_DATE") > user_tpl.def_commit$ then
+		if callpoint!.getHeaderColumnData("OPE_INVHDR.INVOICE_TYPE") = "P" or 
+:		callpoint!.getHeaderColumnData("OPE_INVHDR.SHIPMNT_DATE") > user_tpl.def_commit$ 
+:		then
  			callpoint!.setColumnData("OPE_INVDET.COMMIT_FLAG", "N")
 		else
 			callpoint!.setColumnData("OPE_INVDET.COMMIT_FLAG", "Y")
