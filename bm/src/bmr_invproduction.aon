@@ -338,9 +338,6 @@ rem --- Get Item Info
         i0$=bme01a.item_id$
         gosub get_iteminfo
         ivacct$=ivm01a.gl_inv_acct$
-rem wgh ... 7271
-rem wgh ... (item) if update_flag=Y and inventoried and L/S
-rem wgh ... then print warning and don't allow update (noUpdate=1)
         if bme01a.update_flag$="Y" and ivm01a.lotser_item$="Y" and ivm01a.inventoried$="Y" then
             noUpdate=1
             OutVect!.addItem(Translate!.getTranslation("AON_***_CANNOT_UPDATE_INV_LS_ITEM"))
@@ -404,9 +401,6 @@ print_components: rem --- Print Components
 
             i0$=bmm02a.item_id$
             gosub get_iteminfo
-rem wgh ... 7271
-rem wgh ... (component) if inventoried and L/S
-rem wgh ... then print warning and don't allow update (noUpdate=1)
             if ivm01a.lotser_item$="Y" and ivm01a.inventoried$="Y" then
                 noUpdate=1
                 OutVect!.addItem(Translate!.getTranslation("AON_***_CANNOT_UPDATE_INV_LS_ITEM"))
@@ -467,7 +461,6 @@ rem --- Totals
 
 	t9$="E"
 	gosub warehouse
-rem wgh ... 7271
 	if noUpdate or o1<>0 or o2$<>"" or div0<>0 then 
 		BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
 		HdrVect!.addItem(Translate!.getTranslation("AON_FOR_WAREHOUSE_")+h3$)
