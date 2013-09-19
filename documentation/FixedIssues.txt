@@ -1,8 +1,205 @@
 =======================================================================================================================================
- Report Date:   2013-13-09
+ Report Date:   2013-19-09
  Report Branch: AddonSoftware 13.03
  Last Release:  AddonSoftware 13.02
 =======================================================================================================================================
+
+=======================================================================================================================================
+Revision: 1380de3a58dccd8508af2f82998b6a40640f7058
+
+Date: 9/18/2013 4:11:38 PM
+Message:
+Per bug 7279; altered Recurring Invoice Entry form to have min lengths
+on header fields same as regular AP Invoice Entry. Also modified the
+register to make sure the day (d) isn't allowed to be <=0 (which it
+shouldn't be given min length requirement)
+----
+Modified: ap/src/apr_recurring.aon
+Modified: data/bar/ape_recurringhdr.xml
+
+=======================================================================================================================================
+Revision: 4903900bccc19e2a04423346d67cbf56984eb258
+
+Date: 9/18/2013 3:36:12 PM
+Message:
+Bug 7270: Unchecked and disabled "Update Flag" checkbox for inventoried
+lotted/serialized items.
+----
+Modified: bm/src/bmr_invproduction.aon
+Modified: data/bar/bme_product.xml
+Modified: data/cdf/bme_product.cdf
+Added: data/sync/ads_messages~not_updt_inv_ls_item.xml
+Modified: prop/addon.properties
+Modified: prop/addon_de.properties
+Modified: prop/addon_en.properties
+Modified: prop/addon_en_CA.properties
+Modified: prop/addon_es.properties
+Modified: prop/addon_es_ES.properties
+Modified: prop/addon_fr.properties
+Modified: prop/addon_fr_CA.properties
+Modified: prop/addon_it.properties
+
+=======================================================================================================================================
+Revision: a7edeaf8d88600565e767aa16e6abe0d13c13161
+
+Date: 9/18/2013 2:28:31 PM
+Message:
+Bug 7271: Do not allow updating inventoried lotted/serialized items in
+BM Inventory Production Register.
+----
+Modified: bm/src/bmr_invproduction.aon
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
+
+=======================================================================================================================================
+Revision: 561ca2eb57ffd7817164f58d39bdf9ebaf332e31
+
+Date: 9/17/2013 5:35:05 PM
+Message:
+Bug 7186: For uncommitted "O" line type sales (not quotes), ext_price is
+moved to unit_price until committed.
+----
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/cdf/ope_invdet.cdf
+Modified: data/cdf/ope_orddet.cdf
+Modified: op/src/opr_opnorddetail_o1.aon
+
+=======================================================================================================================================
+Revision: deafa6c599d2d32cd680a657a9474c1b525ff8da
+
+Date: 9/17/2013 4:04:54 PM
+Message:
+Bug 7274: Corrected test for quotes when initializing detail line for
+new line code.
+----
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/cdf/ope_invdet.cdf
+Modified: data/cdf/ope_orddet.cdf
+
+=======================================================================================================================================
+Revision: 1b66d45803799497426b924f429223f1f5dc68da
+
+Date: 9/17/2013 1:31:36 PM
+Message:
+Bug 6771: Released extracted record before breaking out of read loop.
+----
+Modified: sf/src/sfc_schdayfore.aon
+
+=======================================================================================================================================
+Revision: 2ceae6350670df569fbed3edd81928b6e3c165b4
+
+Date: 9/17/2013 12:37:08 PM
+Message:
+Re-positioned input fields on Addon forms so labels don't cover the
+button on ListButtons, or calendar and drilldown icons, as a result of
+recent changes in how Barista sizes fields.
+----
+Modified: data/bar/ape_invoicehdr.xml
+Modified: data/bar/ape_mancheckhdr.xml
+Modified: data/bar/ape_payselect.xml
+Modified: data/bar/ape_recurringhdr.xml
+Modified: data/bar/apm_vendaddr.xml
+Modified: data/bar/apm_vendmast.xml
+Modified: data/bar/apm_vendrepl.xml
+Modified: data/bar/are_datechange.xml
+Modified: data/bar/arm_custdet.xml
+Modified: data/bar/arm_custmast.xml
+Modified: data/bar/arm_custpmts.xml
+Modified: data/bar/arm_custship.xml
+Modified: data/bar/arr_agingreport.xml
+Deleted: data/bar/arr_agingreportx.xml
+Modified: data/bar/ars_mtdcash.xml
+Modified: data/bar/bmm_billmast.xml
+Modified: data/bar/glm_acct.xml
+Modified: data/bar/glm_acctsumhdr.xml
+Modified: data/bar/glm_bankmaster.xml
+Modified: data/bar/ive_transhdr.xml
+Modified: data/bar/ivm_itemmast.xml
+Modified: data/bar/ivm_itemwhse.xml
+Modified: data/bar/ivm_lsmaster.xml
+Modified: data/bar/ivm_stock.xml
+Modified: data/bar/ivs_params.xml
+Modified: data/bar/opc_taxcode.xml
+Modified: data/bar/ope_credmaint.xml
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/bar/ope_pricequote.xml
+Modified: data/bar/ops_mtdsales.xml
+Modified: data/bar/ops_mtdslsmnt.xml
+Modified: data/bar/opt_invhdr.xml
+Modified: data/bar/poe_invhdr.xml
+Modified: data/bar/poe_pohdr.xml
+Modified: data/bar/poe_rechdr.xml
+Modified: data/bar/poe_reqhdr.xml
+Modified: data/bar/sam_customer.xml
+Modified: data/bar/sam_custship.xml
+Modified: data/bar/sam_custsic.xml
+Modified: data/bar/sam_custterr.xml
+Modified: data/bar/sam_custtype.xml
+Modified: data/bar/sam_distcode.xml
+Modified: data/bar/sam_item.xml
+Modified: data/bar/sam_nonstock.xml
+Modified: data/bar/sam_proditmcst.xml
+Modified: data/bar/sam_salespsn.xml
+Modified: data/bar/sam_territry.xml
+Modified: data/bar/sam_vendor.xml
+Modified: data/bar/sam_warehse.xml
+Modified: data/bar/sfe_dispatchinq.xml
+Modified: data/bar/sfe_loadbal.xml
+Modified: data/bar/sfe_timedate.xml
+Modified: data/bar/sfe_woclose.xml
+Modified: data/bar/sfe_woconvrn.xml
+Modified: data/bar/sfm_cal_create.xml
+Modified: data/bar/sfr_clsdwovar.xml
+
+=======================================================================================================================================
+Revision: d8426d4f758a4e6783043aebf330ae820e4fcca3
+
+Date: 9/16/2013 9:39:09 AM
+Message:
+Bug 7240: Re-positioned input fields so labels don't cover button on
+ListButtons.
+----
+Modified: data/bar/arr_agingreport.xml
+
+=======================================================================================================================================
+Revision: 8e6d04a5c7c9dea3912bb6579740acc722e93c0e
+
+Date: 9/13/2013 6:02:38 PM
+Message:
+Bug 7268: Made addition options available by both menu and buttons.
+----
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/bar/ope_ordhdr.xml
+
+=======================================================================================================================================
+Revision: e1df0ac993444924764102ffe0fb38ae06fd1bce
+
+Date: 9/13/2013 2:04:07 PM
+Message:
+Made sure Derived Data Elements (DDEs) in Detail Grids remain
+non-editable, i.e. are "Display only".
+----
+Modified: data/bar/poe_recdet.xml
+Modified: data/bar/pre_daytime.xml
+Modified: data/bar/sfe_timedatedet.xml
+Modified: data/bar/sfe_timeempldet.xml
+Modified: data/bar/sfe_timewodet.xml
+
+=======================================================================================================================================
+Revision: d88943abb21c20d75deb2e232b0a9e521b45d613
+
+Date: 9/13/2013 9:54:23 AM
+Message:
+Bug 7265: Initialized Time Sheet Entry Sequence to Employee (E) for new
+SF installs.
+----
+Modified: data/bar/sfs_params.xml
+Modified: data/cdf/sfs_params.cdf
 
 =======================================================================================================================================
 Revision: 68241089a29e400313ef9326260590bd9796b750
