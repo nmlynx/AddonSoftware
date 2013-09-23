@@ -195,7 +195,7 @@ rem --- Sorts
 
         headrecprinted$="N"
 
-        if whse$<>"ALL" if poe02a.warehouse_id$<>whse$ break
+        if whse$<>"ALL" if poe02a.warehouse_id$<>whse$ continue
         gosub gettestdate_header
 
         if cvs(datefrom$,3)<>"" and testdateh$<datefrom$ then continue
