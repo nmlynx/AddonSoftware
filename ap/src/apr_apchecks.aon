@@ -553,14 +553,8 @@ inv_detail: rem --- Invoice Detail
             k1$=key(apt02_dev,end=*break)
             if k1$(1,21)<>firm_id$+ape04a.ap_type$+ape04a.vendor_id$+"I"+ape04a.ap_inv_no$ then break
             read record (apt02_dev) apt02a$
-            if ape04a.orig_inv_amt then 
-                gl_post_amt=apt02a.gl_post_amt*(ape04a.payment_amt+ape04a.discount_amt)/ape04a.orig_inv_amt 
-            else 
-                gl_post_amt=0
-            endif
-
             gl_account$=fnmask$(apt02a.gl_account$(1,gl_acct_length),gl_acct_mask$)
-            gl_post_amt$=str(gl_post_amt:stub_amt_mask$)
+            gl_post_amt$=str(apt02a.gl_post_amt:stub_amt_mask$)
             gl_post_amt$=gl_post_amt$(pos(" "<>gl_post_amt$))
 
 			rem --- Split GL Account and Amount to two lines if necessary
@@ -569,7 +563,7 @@ inv_detail: rem --- Invoice Detail
 			x$(memodist_width-len(gl_post_amt$)+1)=gl_post_amt$
 
             if acctstub_rowcnt+1>max_stub_rows then gosub overflow
-			
+
 			stub_memo_dist$=x$
             
 			section_type$=  "A"; rem accounting stub
