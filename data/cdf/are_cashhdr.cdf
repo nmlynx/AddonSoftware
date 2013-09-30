@@ -1232,6 +1232,11 @@ rem ==================================================================
 			gridInvoice!.setCellText(clicked_row,num(user_tpl.disc_taken_ofst$),str(new_disc))
 			gridInvoice!.setCellText(clicked_row,num(user_tpl.new_bal_ofst$),
 :					vectInvoice!.getItem(clicked_row*cols+num(user_tpl.new_bal_ofst$)))
+			rem --- Warn when End Balance goes negative
+			if num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.new_bal_ofst$)))<0 and (old_pay<>new_pay or old_disc<>new_disc)
+				msg_id$="AR_CREDIT_BALANCE"
+				gosub disp_message
+			endif
 			rem --- if this is an OA/CM line (test inv amt, curr amt), then applied amt just increases total to apply
 			if num(vectInvoice!.getItem(clicked_row*cols+4))<0
 :				or num(vectInvoice!.getItem(clicked_row*cols+num(user_tpl.cur_bal_ofst$))) <0
@@ -1261,7 +1266,7 @@ rem ==================================================================
 			endif
 			Form!.getControl(num(user_tpl.asel_chkbox_id$)).setSelected(0)
 			UserObj!.setItem(num(user_tpl.pymt_dist$),pymt_dist$)
-			callpoint!.setStatus("REFRESH-MODIFIED"); rem "added MODIFIED 19sept07.CH, as events in dtl grid no longer 'turning on' save icon
+			callpoint!.setStatus("REFRESH-MODIFIED")
 			
 		break
 		case 8;rem --- edit start
