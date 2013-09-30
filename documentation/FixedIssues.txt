@@ -5,6 +5,133 @@
 =======================================================================================================================================
 
 =======================================================================================================================================
+Revision: b11053e6dcaf01518726ebe2cd4c415174829dcb
+
+Date: 9/30/2013 1:06:16 PM
+Message:
+Bug 7302: Moved sfe_womatl set ROW_NUM logic from AREC to AGRN.
+----
+Modified: data/bar/sfe_womatl.xml
+Modified: data/cdf/sfe_womatl.cdf
+
+=======================================================================================================================================
+Revision: 38a4b7fc76f0ac17e88f002249d090fd030d1526
+
+Date: 9/26/2013 6:33:03 PM
+Message:
+Bug 7295: Modified adc_application.aon to use prs_params for PR.
+----
+Modified: ad/src/adc_application.aon
+Modified: util/v6triggers/src/SYM-04.trigger.ir.src
+
+=======================================================================================================================================
+Revision: 8dabf7a121f0f4ed5ecfbf1694b3f2b86c8d356f
+
+Date: 9/24/2013 4:29:17 PM
+Message:
+Bug 6585: Added warning when End Balance goes negative.
+----
+Modified: data/bar/are_cashhdr.xml
+Modified: data/cdf/are_cashhdr.cdf
+Added: data/sync/ads_messages~ar_credit_balance.xml
+Modified: prop/addon.properties
+Modified: prop/addon_de.properties
+Modified: prop/addon_en.properties
+Modified: prop/addon_en_CA.properties
+Modified: prop/addon_es.properties
+Modified: prop/addon_es_ES.properties
+Modified: prop/addon_fr.properties
+Modified: prop/addon_fr_CA.properties
+Modified: prop/addon_it.properties
+
+=======================================================================================================================================
+Revision: 496e8f7c6c1a75fcea7b100d05c4a8b5fdef89d5
+
+Date: 9/23/2013 4:59:26 PM
+Message:
+Bug 6996: Fixed being able to exit the Inv Amt and Disc Amt cells.
+----
+Modified: data/bar/ape_mancheckdet.xml
+Modified: data/cdf/ape_mancheckdet.cdf
+
+=======================================================================================================================================
+Revision: 195727f939bbe293450ef8a34a4fdfadb9ac260b
+
+Date: 9/23/2013 1:50:11 PM
+Message:
+Bug 7293: Don't check current grid row, or deleted grid rows, for
+invoice just entered.
+----
+Modified: data/bar/ape_mancheckdet.xml
+Modified: data/cdf/ape_mancheckdet.cdf
+
+=======================================================================================================================================
+Revision: 9eac3bcf15b3ac2248dcf2fd5065824e4b827726
+
+Date: 9/23/2013 12:04:55 PM
+Message:
+Bug 7089: On accounting copy of check stub, print GL account posting
+amounts from apt_invoicedist (apt-02).
+----
+Modified: ap/src/apr_apchecks.aon
+
+=======================================================================================================================================
+Revision: e63fdaeb73cd2376837be184c7fe39c2c72da29f
+
+Date: 9/23/2013 9:04:59 AM
+Message:
+Bug 7158: Skip wrong warehouse instead of ending report.
+----
+Modified: po/src/por_openpo_o1.aon
+
+=======================================================================================================================================
+Revision: 5cd7423f10c84c6d715104523cc7fc798ca8354c
+
+Date: 9/20/2013 5:54:32 PM
+Message:
+Bug 7191: Modified Sales Register update to write art_invhdr and
+art_invdet (art-01 and art-11) records for cash sales.
+----
+Modified: op/src/opu_updateinventory.aon
+
+=======================================================================================================================================
+Revision: f79ac424c91be28db6b33b790576eac0858fac93
+
+Date: 9/20/2013 5:18:38 PM
+Message:
+- Modified SQL to fix Bug 7287 - SF - Closed Recurring Work Order
+Summary Register error 77 line 372
+- Corrected logic for excluding recurring WOs to fix Bug 7290 - SF -
+Closed Recurring WO Summary Register: May falsely report "Document does
+not contain any data"
+- Misc changes to align code w/the non-recurring summary register.
+----
+Modified: sf/src/sfr_clsdrecworeg.aon
+
+=======================================================================================================================================
+Revision: 0e2f04e077f7ec34b03080d411ea349898f7c78e
+
+Date: 9/20/2013 5:04:51 PM
+Message:
+Corrected logic for excluding recurring WOs to fix Bug 7291 - SF - 
+Closed Work Order Summary Register: May falsely report "Document does
+not contain any data”. Also removed unused code in the subroutines section.
+----
+Modified: sf/src/sfr_clsdworeg.aon
+
+=======================================================================================================================================
+Revision: 1b36d6593b47dd46885a42dd586a8f8d2b24712d
+
+Date: 9/20/2013 10:11:36 AM
+Message:
+Correct alignment of totals for Total col in transactions section for
+Bug 7286 - SF - WO Hardcopy etc: Transaction section Totals are
+misaligned
+----
+Modified: reports/SFHardCopyTrans.jasper
+Modified: reports/SFHardCopyTrans.jrxml
+
+=======================================================================================================================================
 Revision: c6084bcaa411de3dec633f88754debdce7426ba5
 
 Date: 9/19/2013 4:25:04 PM
