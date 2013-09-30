@@ -239,12 +239,15 @@ print "Det: AP_INV_NO.AVAL"; rem debug
 rem --- Check to make sure Invoice isn't already in the grid
 
 	this_inv$=callpoint!.getUserInput()
+	this_row=callpoint!.getValidationRow()
 	recVect!=GridVect!.getItem(0)
 	dim gridrec$:dtlg_param$[1,3]
 	numrecs=recVect!.size()
 	break_out=0
 	if numrecs>0
 		for reccnt=0 to numrecs-1
+			if reccnt=this_row then continue
+			if callpoint!.getGridRowDeleteStatus(reccnt)="Y" then continue
 			gridrec$=recVect!.getItem(reccnt)
 			if cvs(gridrec$,3)<> ""
 				if gridrec.ap_inv_no$=this_inv$
