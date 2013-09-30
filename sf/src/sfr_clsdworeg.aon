@@ -274,6 +274,10 @@ rem --- Main Read
 		wo_loc$=sfe04b.wo_location$
 		wo_no$=sfe04b.wo_no$
 	
+	rem --- Skip recurring WOs
+		read record (sfe01_dev,key=k$,dom=*continue)sfe01a$
+		if sfe01a.wo_category$="R" continue
+	
 	rem --- Use SQL queries to gather needed data
 
 		rem --- Start with non-aggregate projection values (cols from JOINs)
@@ -425,7 +429,6 @@ rem --- Main Read
 			sql_prep$=sql_prep$+" WHERE wo.firm_id = '"+firm_id$+"' "
 			sql_prep$=sql_prep$+"   AND wo.wo_location = '"+wo_loc$+"' "
 			sql_prep$=sql_prep$+"   AND wo.wo_no = '"+wo_no$+"' "
-			sql_prep$=sql_prep$+"   AND wo.wo_category <> 'R'"; rem Skip Recurring
 
 			sql_chan=sqlunt
 			sqlopen(sql_chan,err=*next)stbl("+DBNAME")
@@ -862,153 +865,6 @@ rem --- Destroy the progress meter and run the next overlay
     endif
 
 rem --- Subroutines	
-
-rem --- Construct a subquery to get standards/requirements
-rem --- Limits to the firm+wo_location+wo_no passed in
-	stds_subquery:
-		std_reqs$=std_reqs$+" (SELECT ops.firm_id"
-		std_reqs$=std_reqs$+"        ,ops.wo_location"
-		std_reqs$=std_reqs$+"        ,ops.wo_no"
-		std_reqs$=std_reqs$+"        ,ops.tot_std_cost AS total_cost"
-		std_reqs$=std_reqs$+"    FROM sfe_wooprtn AS ops"
-		std_reqs$=std_reqs$+"   WHERE ops.firm_id = '"+firm_id$+"' "
-		std_reqs$=std_reqs$+"     AND ops.wo_location = '"+wo_loc$+"' "
-		std_reqs$=std_reqs$+"     AND ops.wo_no = '"+wo_no$+"' "	
-		std_reqs$=std_reqs$+"          UNION "
-		std_reqs$=std_reqs$+"  SELECT mat.firm_id"
-		std_reqs$=std_reqs$+"        ,mat.wo_location"
-		std_reqs$=std_reqs$+"        ,mat.wo_no"
-		std_reqs$=std_reqs$+"        ,mat.total_cost AS total_cost"
-		std_reqs$=std_reqs$+"    FROM sfe_womatl AS mat"
-		std_reqs$=std_reqs$+"   WHERE mat.firm_id = '"+firm_id$+"' "
-		std_reqs$=std_reqs$+"     AND mat.wo_location = '"+wo_loc$+"' "
-		std_reqs$=std_reqs$+"     AND mat.wo_no = '"+wo_no$+"' "	
-		std_reqs$=std_reqs$+"          UNION "
-		std_reqs$=std_reqs$+"  SELECT sub.firm_id"
-		std_reqs$=std_reqs$+"        ,sub.wo_location"
-		std_reqs$=std_reqs$+"        ,sub.wo_no"
-		std_reqs$=std_reqs$+"        ,sub.total_cost AS total_cost"
-		std_reqs$=std_reqs$+"    FROM sfe_wosubcnt AS sub"
-		std_reqs$=std_reqs$+"   WHERE sub.firm_id = '"+firm_id$+"' "
-		std_reqs$=std_reqs$+"     AND sub.wo_location = '"+wo_loc$+"' "
-		std_reqs$=std_reqs$+"     AND sub.wo_no = '"+wo_no$+"' "
-		std_reqs$=std_reqs$+" ) "		
-	return
-
-	
-rem --- Construct a subquery to get actual costs
-rem --- Limits to the firm+wo_location+wo_no passed in
-	acts_costsum_subquery:
-		act_costsums$=""
-		act_costsums$=act_costsums$+" (SELECT wo.firm_id"
-		act_costsums$=act_costsums$+"        ,wo.wo_location"
-		act_costsums$=act_costsums$+"        ,wo.wo_no"
-		act_costsums$=act_costsums$+"        ,(SELECT SUM(ops.ext_cost)"
-		act_costsums$=act_costsums$+"            FROM sft_opnoprtr AS ops"
-		act_costsums$=act_costsums$+"           WHERE ops.firm_id=wo.firm_id"
-		act_costsums$=act_costsums$+"             AND ops.wo_location=wo.wo_location"
-		act_costsums$=act_costsums$+"             AND ops.wo_no=wo.wo_no"
-		act_costsums$=act_costsums$+"          ) AS tot_act_ops_cost"
-		act_costsums$=act_costsums$+"        ,(SELECT SUM(ops.units * ops.direct_rate) "
-		act_costsums$=act_costsums$+"            FROM sft_opnoprtr AS ops"
-		act_costsums$=act_costsums$+"           WHERE ops.firm_id=wo.firm_id"
-		act_costsums$=act_costsums$+"             AND ops.wo_location=wo.wo_location"
-		act_costsums$=act_costsums$+"             AND ops.wo_no=wo.wo_no"
-		act_costsums$=act_costsums$+"          ) AS tot_act_dir_cost"
-		act_costsums$=act_costsums$+"        ,(SELECT SUM(ops.ext_cost-(ops.units * ops.direct_rate)) "
-		act_costsums$=act_costsums$+"            FROM sft_opnoprtr AS ops"
-		act_costsums$=act_costsums$+"           WHERE ops.firm_id=wo.firm_id"
-		act_costsums$=act_costsums$+"             AND ops.wo_location=wo.wo_location"
-		act_costsums$=act_costsums$+"             AND ops.wo_no=wo.wo_no"
-		act_costsums$=act_costsums$+"          ) AS tot_act_ovh_cost"
-		act_costsums$=act_costsums$+"        ,(SELECT SUM(mats.ext_cost) "
-		act_costsums$=act_costsums$+"            FROM sft_opnmattr AS mats"
-		act_costsums$=act_costsums$+"           WHERE mats.firm_id=wo.firm_id"
-		act_costsums$=act_costsums$+"             AND mats.wo_location=wo.wo_location"
-		act_costsums$=act_costsums$+"             AND mats.wo_no=wo.wo_no"
-		act_costsums$=act_costsums$+"          ) AS tot_act_mat_cost"
-		act_costsums$=act_costsums$+"        ,(SELECT SUM(subs.ext_cost) "
-		act_costsums$=act_costsums$+"            FROM sft_opnsubtr AS subs"
-		act_costsums$=act_costsums$+"           WHERE subs.firm_id=wo.firm_id"
-		act_costsums$=act_costsums$+"             AND subs.wo_location=wo.wo_location"
-		act_costsums$=act_costsums$+"             AND subs.wo_no=wo.wo_no"
-		act_costsums$=act_costsums$+"          ) AS tot_act_sub_cost"
-		act_costsums$=act_costsums$+"  FROM sfe_womastr AS wo	  "
-		act_costsums$=act_costsums$+"  WHERE wo.firm_id = '"+firm_id$+"' "
-		act_costsums$=act_costsums$+"    AND wo.wo_location = '"+wo_loc$+"' "
-		act_costsums$=act_costsums$+"    AND wo.wo_no = '"+wo_no$+"' "	
-		act_costsums$=act_costsums$+" )   "	
-	return
-	
-	
-rem --- Construct a subquery to get open transactions
-rem --- Limits to the firm+wo_location+wo_no passed in
-	opentrans_subquery:
-		opentrans$=opentrans$+" (SELECT ops.firm_id"
-		opentrans$=opentrans$+"        ,ops.wo_location"
-		opentrans$=opentrans$+"        ,ops.wo_no"
-		opentrans$=opentrans$+"        ,ops.ext_cost"
-		opentrans$=opentrans$+"    FROM sft_opnoprtr AS ops"
-		opentrans$=opentrans$+"   WHERE ops.firm_id = '"+firm_id$+"' "
-		opentrans$=opentrans$+"     AND ops.wo_location = '"+wo_loc$+"' "
-		opentrans$=opentrans$+"     AND ops.wo_no = '"+wo_no$+"' "			
-		opentrans$=opentrans$+"          UNION "
-		opentrans$=opentrans$+"  SELECT mat.firm_id"
-		opentrans$=opentrans$+"        ,mat.wo_location"
-		opentrans$=opentrans$+"        ,mat.wo_no"
-		opentrans$=opentrans$+"        ,mat.ext_cost"
-		opentrans$=opentrans$+"    FROM sft_opnmattr AS mat"
-		opentrans$=opentrans$+"   WHERE mat.firm_id = '"+firm_id$+"' "
-		opentrans$=opentrans$+"     AND mat.wo_location = '"+wo_loc$+"' "
-		opentrans$=opentrans$+"     AND mat.wo_no = '"+wo_no$+"' "			
-		opentrans$=opentrans$+"          UNION "
-		opentrans$=opentrans$+"  SELECT sub.firm_id"
-		opentrans$=opentrans$+"        ,sub.wo_location"
-		opentrans$=opentrans$+"        ,sub.wo_no"
-		opentrans$=opentrans$+"        ,sub.ext_cost"
-		opentrans$=opentrans$+"    FROM sft_opnsubtr AS sub"
-		opentrans$=opentrans$+"   WHERE sub.firm_id = '"+firm_id$+"' "
-		opentrans$=opentrans$+"     AND sub.wo_location = '"+wo_loc$+"' "
-		opentrans$=opentrans$+"     AND sub.wo_no = '"+wo_no$+"' "		
-		opentrans$=opentrans$+" )  "		
-	return	
-	
-rem --- Construct a subquery to get standards' costs' sums
-rem --- Limits to the firm+wo_location+wo_no passed in
-	stds_costsum_subquery:
-		std_costsums$=std_costsums$+" (SELECT wo.firm_id"
-		std_costsums$=std_costsums$+"        ,wo.wo_location"
-		std_costsums$=std_costsums$+"        ,wo.wo_no"
-		std_costsums$=std_costsums$+"        ,(SELECT SUM(ops.total_time * ops.direct_rate)"
-		std_costsums$=std_costsums$+"            FROM sfe_wooprtn AS ops"
-		std_costsums$=std_costsums$+"           WHERE ops.firm_id = '"+firm_id$+"' "
-		std_costsums$=std_costsums$+"             AND ops.wo_location = '"+wo_loc$+"' "
-		std_costsums$=std_costsums$+"             AND ops.wo_no = '"+wo_no$+"' "
-		std_costsums$=std_costsums$+"         ) AS tot_std_dir_cost"
-		std_costsums$=std_costsums$+"        ,(SELECT SUM(ops.tot_std_cost-(ops.total_time * ops.direct_rate))"
-		std_costsums$=std_costsums$+"            FROM sfe_wooprtn AS ops"
-		std_costsums$=std_costsums$+"           WHERE ops.firm_id = '"+firm_id$+"' "
-		std_costsums$=std_costsums$+"             AND ops.wo_location = '"+wo_loc$+"' "
-		std_costsums$=std_costsums$+"             AND ops.wo_no = '"+wo_no$+"' "
-		std_costsums$=std_costsums$+"         ) AS tot_std_ovh_cost"
-		std_costsums$=std_costsums$+"        ,(SELECT SUM(mats.total_cost)"
-		std_costsums$=std_costsums$+"            FROM sfe_womatl AS mats"
-		std_costsums$=std_costsums$+"           WHERE mats.firm_id = '"+firm_id$+"' "
-		std_costsums$=std_costsums$+"             AND mats.wo_location = '"+wo_loc$+"' "
-		std_costsums$=std_costsums$+"             AND mats.wo_no = '"+wo_no$+"' "
-		std_costsums$=std_costsums$+"         ) AS tot_std_mat_cost"
-		std_costsums$=std_costsums$+"        ,(SELECT SUM(subs.total_cost)"
-		std_costsums$=std_costsums$+"            FROM sfe_wosubcnt AS subs"
-		std_costsums$=std_costsums$+"           WHERE subs.firm_id = '"+firm_id$+"' "
-		std_costsums$=std_costsums$+"             AND subs.wo_location = '"+wo_loc$+"' "
-		std_costsums$=std_costsums$+"             AND subs.wo_no = '"+wo_no$+"' "
-		std_costsums$=std_costsums$+"         ) AS tot_std_sub_cost"
-		std_costsums$=std_costsums$+"    FROM sfe_womastr AS wo"
-		std_costsums$=std_costsums$+"   WHERE wo.firm_id = '"+firm_id$+"' "
-		std_costsums$=std_costsums$+"     AND wo.wo_location = '"+wo_loc$+"' "
-		std_costsums$=std_costsums$+"     AND wo.wo_no = '"+wo_no$+"' "
-		std_costsums$=std_costsums$+" ) "	
-	return	
 	
 glrecap: rem --- Standard G/L Recap Routine
 
