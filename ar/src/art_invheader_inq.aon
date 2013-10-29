@@ -1,0 +1,123 @@
+rem INVHEADER custom query retrive balance
+rem Program ID: ctm_custsales_inq.src
+rem --- this program is associated with the MTD Sales amount in the query
+rem --- it is invoked for each row in the query result set
+rem --- if all sales amounts are zero, the status is set to SKIP (i.e., don't display in query grid)
+
+    setesc std_error
+ rem   seterr std_error
+
+    enter inq_mode$,rec_tpl$,calc_tpl$,table_chans$[all],status$
+
+rem    enter rd_gui_dev, rdWindow!, rd_call_opt$, rd_alias_id$, rd_selected_key$, rd_table_chans$[all], rd_status$   
+    
+rem inq_mode       - Not currently used
+rem rec_tpl$       - Current inquiry record
+rem calc_tpl$      - Current inquiry calculated columns
+rem table_chans$[] - Barista opened channels array
+rem status$        - Returned status: "SKIP" = Skip current record
+
+rem --- Open Tables
+
+    filename$="ART_TRANSACTIONS"
+    
+    art_transactions_dev=fnget_dev(filename$)
+    
+    if art_transactions_dev>0
+        dim art_transactions$:fnget_tpl$(filename$)
+    else
+        rd_num_tables=1
+        dim rd_open_tables$[1:rd_num_tables],rd_open_opts$[1:rd_num_tables],rd_open_chans$[1:rd_num_tables],rd_open_tpls$[1:rd_num_tables]
+        rd_open_tables$[1]=filename$,rd_open_opts$[1]="OTA"
+    
+        gosub open_tables
+        
+        art_transactions_dev=num(rd_open_chans$[1])
+        dim art_transactions$:rd_open_tpls$[1]
+     endif
+
+rem --- Main process
+    
+    pk$=rec_tpl.firm_id$+rec_tpl.ar_trans_id$
+    balance = 0 
+    read (art_transactions_dev,key=pk$,knum="AR_INVOICE_ID", dom=*next)
+    while (1)
+        k$=key(art_transactions_dev,end=*break)
+        if pos(pk$=k$)<>1 then break
+        read record(art_transactions_dev) art_transactions$
+        balance = balance + art_transactions.trans_amount+art_transactions.disc_amount
+    wend
+    
+    status$="UPDATE"
+    rec_tpl.inv_balance=balance
+    
+    openflag$=BBjAPI().getNamespace("ART_INVHEADER","flags",1).getValue("openbalance",err=*next)
+    if openflag$="Y" and balance=0 then status$="SKIP"
+
+    goto exit_prog
+
+open_tables:rem -----<Open Tables
+
+    call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:       rd_open_beg,
+:       rd_open_end,
+:       rd_open_tables$[all],
+:       rd_open_opts$[all],
+:       rd_open_chans$[all],
+:       rd_open_tpls$[all],
+:       table_chans$[all],
+:       rd_open_batch,
+:       rd_open_status$
+
+    if rd_open_status$<>""
+        rd_msg_id$ = "ENTRY_OPEN_ERROR"
+        dim rd_msg_tokens$[1]
+            rd_msg_tokens$[1] = rd_open_status$
+        gosub disp_message
+        goto exit_prog
+    endif
+
+    return
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",
+:       rd_msg_id$,
+:       rd_msg_tokens$[all],
+:       rd_msg_opt$,
+:       rd_table_chans$[all]
+
+    return
+ 
+rem functions needed   
+
+    def fnget_dev(tmp0$)=num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3))
+    def fnget_tpl$(tmp0$)=table_chans$[num(table_chans$[0,0](pos(pad(tmp0$,17)=table_chans$[0,0],20)+17,3)),0]
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (22Feb2013)
+
+    if tcb(19)>0
+        rem --- Escape handler
+        if and(chr(tcb(19)),$08$)=$08$
+            release
+        else
+            setesc std_error
+            return
+        endif
+    endif
+
+    rd_err_text$=""
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$) seterr 0; setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+    if pgm(-1)<>pgm(-2) status=999; exit 
+    release
+
+rem #endinclude std_error.src
+    
+exit_prog:rem --- Exit Program
+
+    exit
