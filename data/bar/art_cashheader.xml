@@ -19,12 +19,13 @@
 			<ASC_VERSION_ID id="ddm_tables.art_cashheader">13.00</ASC_VERSION_ID>
 			<DD_EXPORT_DATA id="ddm_tables.art_cashheader">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.art_cashheader">20130802</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.art_cashheader">20130819</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.art_cashheader">20130819</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.art_cashheader">151638</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.art_cashheader">20131029</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.art_cashheader">20131029</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.art_cashheader">141620</DD_LSTSYNC_TIME>
 			<DD_ATTR_CPGM id="ddm_tables.art_cashheader">/basis_dev/v1400GA/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.art_cashheader">PRIMARY</DD_ATTR_DKNM>
 			<DD_ATTR_FTYP id="ddm_tables.art_cashheader">T</DD_ATTR_FTYP>
+			<DD_ATTR_IDEF id="ddm_tables.art_cashheader">ART_CASHHEADER_O</DD_ATTR_IDEF>
 			<DD_ATTR_WINT id="ddm_tables.art_cashheader">Cash Receipts</DD_ATTR_WINT>
 		</RECORD>
 	</ALIAS>
@@ -47,6 +48,10 @@
 	</ALIAS>
 	<ALIAS id="ddm_table_cpro">
 		<ID id="ddm_table_cpro">DDM_TABLE_CPRO</ID>
+		<RECORD id="ddm_table_cpro.art_cashheaderadis">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.art_cashheaderadis">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.art_cashheaderadis">ADIS</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_table_cpro.art_cashheaderaopt-aoa">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.art_cashheaderaopt-aoa">ART_CASHHEADER  </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.art_cashheaderaopt-aoa">AOPT-AOA</DD_ATTR_CPRO>
@@ -55,13 +60,32 @@
 			<DD_TABLE_ALIAS id="ddm_table_cpro.art_cashheaderaopt-glp">ART_CASHHEADER  </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.art_cashheaderaopt-glp">AOPT-GLP</DD_ATTR_CPRO>
 		</RECORD>
+		<RECORD id="ddm_table_cpro.art_cashheaderarea">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.art_cashheaderarea">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.art_cashheaderarea">AREA</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.art_cashheaderarec">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.art_cashheaderarec">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.art_cashheaderarec">AREC</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_table_cpro.art_cashheaderawin">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.art_cashheaderawin">ART_CASHHEADER  </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.art_cashheaderawin">AWIN</DD_ATTR_CPRO>
 		</RECORD>
-		<RECORD id="ddm_table_cpro.art_cashheaderbwri">
-			<DD_TABLE_ALIAS id="ddm_table_cpro.art_cashheaderbwri">ART_CASHHEADER  </DD_TABLE_ALIAS>
-			<DD_ATTR_CPRO id="ddm_table_cpro.art_cashheaderbwri">BWRI</DD_ATTR_CPRO>
+		<RECORD id="ddm_table_cpro.art_cashheaderbdel">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.art_cashheaderbdel">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.art_cashheaderbdel">BDEL</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.art_cashheaderbsho">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.art_cashheaderbsho">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.art_cashheaderbsho">BSHO</DD_ATTR_CPRO>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_table_dtld">
+		<ID id="ddm_table_dtld">DDM_TABLE_DTLD</ID>
+		<RECORD id="ddm_table_dtld.art_cashheaderart_cashtrans">
+			<DD_TABLE_ALIAS id="ddm_table_dtld.art_cashheaderart_cashtrans">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_ATTR_DTLD id="ddm_table_dtld.art_cashheaderart_cashtrans">ART_CASHTRANS   </DD_ATTR_DTLD>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_dtlg">
@@ -81,9 +105,17 @@
 	</ALIAS>
 	<ALIAS id="ddm_table_opts">
 		<ID id="ddm_table_opts">DDM_TABLE_OPTS</ID>
+		<RECORD id="ddm_table_opts.art_cashheaderc">
+			<DD_TABLE_ALIAS id="ddm_table_opts.art_cashheaderc">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_ATTR_OPTS id="ddm_table_opts.art_cashheaderc">C</DD_ATTR_OPTS>
+		</RECORD>
 		<RECORD id="ddm_table_opts.art_cashheaderg">
 			<DD_TABLE_ALIAS id="ddm_table_opts.art_cashheaderg">ART_CASHHEADER  </DD_TABLE_ALIAS>
 			<DD_ATTR_OPTS id="ddm_table_opts.art_cashheaderg">G</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_table_opts.art_cashheaders">
+			<DD_TABLE_ALIAS id="ddm_table_opts.art_cashheaders">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_ATTR_OPTS id="ddm_table_opts.art_cashheaders">S</DD_ATTR_OPTS>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_tpls">
@@ -91,7 +123,7 @@
 		<RECORD id="ddm_table_tpls.art_cashheader">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.art_cashheader">ART_CASHHEADER  </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.art_cashheader">art_cashheader</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.art_cashheader">firm_id:c(2),cr_trans_id:c(12),customer_id:c(6),receipt_date:c(8),cash_rec_cd:c(3),status:c(1),cr_source:c(2),cr_trans_type:c(3),trans_data1:c(20),trans_data2:c(20),auth_trans_id:c(20),post_trans_id:c(20),rev_trans_id:c(20),encrypted_acct:c(20),gl_batch_number:c(7),rev_cr_trans_id:c(12*),payment_amt:n(7*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.art_cashheader">firm_id:c(2),ar_trans_id:c(8),customer_id:c(6),receipt_date:c(8),cash_rec_cd:c(3),status:c(1),cr_source:c(2),cr_trans_type:c(3),trans_data1:c(20),trans_data2:c(20),auth_trans_id:c(20),post_trans_id:c(20),rev_trans_id:c(20),encrypted_acct:c(20),batch_no:c(7),journal_id:c(2),gl_adt_no:c(7),rev_cr_trans_id:c(8*),payment_amt:n(7*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -112,7 +144,19 @@
 			<DD_TABLE_ALIAS id="ddm_keys.art_cashheader02">ART_CASHHEADER  </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_keys.art_cashheader02">02</DD_KEY_NUMBER>
 			<DD_KEY_DESC id="ddm_keys.art_cashheader02">Receipt Date</DD_KEY_DESC>
-			<DD_KEY_ID id="ddm_keys.art_cashheader02">REC_DATE        </DD_KEY_ID>
+			<DD_KEY_ID id="ddm_keys.art_cashheader02">CUST_REC_DT     </DD_KEY_ID>
+		</RECORD>
+		<RECORD id="ddm_keys.art_cashheader03">
+			<DD_TABLE_ALIAS id="ddm_keys.art_cashheader03">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.art_cashheader03">03</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.art_cashheader03">Receipt Date</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.art_cashheader03">REC_DATE        </DD_KEY_ID>
+		</RECORD>
+		<RECORD id="ddm_keys.art_cashheader04">
+			<DD_TABLE_ALIAS id="ddm_keys.art_cashheader04">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.art_cashheader04">04</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.art_cashheader04">By batch numer for posting</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.art_cashheader04">AO_BATCH_RECTDAT</DD_KEY_ID>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_key_segs">
@@ -133,7 +177,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashheader0002">ART_CASHHEADER  </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_cashheader0002">00</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.art_cashheader0002">02</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_cashheader0002">CR_TRANS_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_cashheader0002">AR_TRANS_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.art_cashheader0002">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.art_cashheader0002">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.art_cashheader0002">0</DD_SEGMENT_LEN>
@@ -193,7 +237,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashheader0105">ART_CASHHEADER  </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_cashheader0105">01</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.art_cashheader0105">05</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_cashheader0105">TRANS_DATA1</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_cashheader0105">AR_TRANS_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.art_cashheader0105">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.art_cashheader0105">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.art_cashheader0105">0</DD_SEGMENT_LEN>
@@ -241,13 +285,97 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashheader0204">ART_CASHHEADER  </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_cashheader0204">02</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.art_cashheader0204">04</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_cashheader0204">CR_TRANS_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_cashheader0204">AR_TRANS_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.art_cashheader0204">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.art_cashheader0204">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.art_cashheader0204">0</DD_SEGMENT_LEN>
 			<DD_SEGMENT_SORT id="ddm_key_segs.art_cashheader0204">N</DD_SEGMENT_SORT>
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_cashheader0204">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.art_cashheader0204">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.art_cashheader0301">
+			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashheader0301">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.art_cashheader0301">03</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.art_cashheader0301">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_cashheader0301">FIRM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.art_cashheader0301">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.art_cashheader0301">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.art_cashheader0301">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.art_cashheader0301">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_cashheader0301">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.art_cashheader0301">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.art_cashheader0302">
+			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashheader0302">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.art_cashheader0302">03</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.art_cashheader0302">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_cashheader0302">STATUS</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.art_cashheader0302">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.art_cashheader0302">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.art_cashheader0302">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.art_cashheader0302">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_cashheader0302">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.art_cashheader0302">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.art_cashheader0303">
+			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashheader0303">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.art_cashheader0303">03</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.art_cashheader0303">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_cashheader0303">RECEIPT_DATE</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.art_cashheader0303">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.art_cashheader0303">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.art_cashheader0303">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.art_cashheader0303">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_cashheader0303">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.art_cashheader0303">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.art_cashheader0304">
+			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashheader0304">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.art_cashheader0304">03</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.art_cashheader0304">04</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_cashheader0304">AR_TRANS_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.art_cashheader0304">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.art_cashheader0304">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.art_cashheader0304">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.art_cashheader0304">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_cashheader0304">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.art_cashheader0304">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.art_cashheader0401">
+			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashheader0401">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.art_cashheader0401">04</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.art_cashheader0401">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_cashheader0401">FIRM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.art_cashheader0401">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.art_cashheader0401">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.art_cashheader0401">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.art_cashheader0401">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_cashheader0401">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.art_cashheader0401">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.art_cashheader0402">
+			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashheader0402">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.art_cashheader0402">04</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.art_cashheader0402">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_cashheader0402">BATCH_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.art_cashheader0402">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.art_cashheader0402">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.art_cashheader0402">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.art_cashheader0402">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_cashheader0402">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.art_cashheader0402">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.art_cashheader0403">
+			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashheader0403">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.art_cashheader0403">04</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.art_cashheader0403">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_cashheader0403">AR_TRANS_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.art_cashheader0403">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.art_cashheader0403">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.art_cashheader0403">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.art_cashheader0403">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_cashheader0403">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.art_cashheader0403">N</DD_SEGMENT_MATH>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cols">
@@ -272,21 +400,22 @@
 		<RECORD id="ddm_table_cols.art_cashheader002">
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_cashheader002">ART_CASHHEADER  </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.art_cashheader002">002</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.art_cashheader002">INTERNAL_SEQ_NO </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.art_cashheader002">CR_TRANS_ID     </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.art_cashheader002">AR_TRANS_ID     </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_cashheader002">AR_TRANS_ID     </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.art_cashheader002">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.art_cashheader002">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.art_cashheader002">N</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.art_cashheader002">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.art_cashheader002">20130802</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.art_cashheader002">20130802</DD_LSTREV_DATE>
+			<DD_ATTR_CPGM id="ddm_table_cols.art_cashheader002">/basis_dev/v1400GA/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_COLW id="ddm_table_cols.art_cashheader002">0</DD_ATTR_COLW>
-			<DD_ATTR_LABL id="ddm_table_cols.art_cashheader002">CR_Trans_ID</DD_ATTR_LABL>
+			<DD_ATTR_LABL id="ddm_table_cols.art_cashheader002">AR Trans_ID</DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_table_cols.art_cashheader002">CR_Trans_ID</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.art_cashheader002">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.art_cashheader002">0</DD_ATTR_MAXL>
 			<DD_ATTR_TIND id="ddm_table_cols.art_cashheader002">2</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashheader002">CR_TRANS_ID</SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashheader002">AR_TRANS_ID</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.art_cashheader003">
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_cashheader003">ART_CASHHEADER  </DD_TABLE_ALIAS>
@@ -299,9 +428,11 @@
 			<DD_DELIM_CHAR id="ddm_table_cols.art_cashheader003">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.art_cashheader003">20130802</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.art_cashheader003">20130802</DD_LSTREV_DATE>
+			<DD_ATTR_CPGM id="ddm_table_cols.art_cashheader003">/basis_dev/v1400GA/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_COLW id="ddm_table_cols.art_cashheader003">0</DD_ATTR_COLW>
 			<DD_ATTR_LABS id="ddm_table_cols.art_cashheader003">Customer ID</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.art_cashheader003">N</DD_ATTR_MLAN>
+			<DD_ATTR_MINL id="ddm_table_cols.art_cashheader003">1</DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.art_cashheader003">0</DD_ATTR_MAXL>
 			<DD_ATTR_TIND id="ddm_table_cols.art_cashheader003">3</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashheader003">CUSTOMER_ID</SQL_COLUMN_NAME>
@@ -317,8 +448,11 @@
 			<DD_DELIM_CHAR id="ddm_table_cols.art_cashheader004">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.art_cashheader004">20130802</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.art_cashheader004">20130802</DD_LSTREV_DATE>
+			<DD_ATTR_CPGM id="ddm_table_cols.art_cashheader004">/basis_dev/v1400GA/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_COLW id="ddm_table_cols.art_cashheader004">0</DD_ATTR_COLW>
+			<DD_ATTR_DFLT id="ddm_table_cols.art_cashheader004">[+SYSTEM_DATE]</DD_ATTR_DFLT>
 			<DD_ATTR_MLAN id="ddm_table_cols.art_cashheader004">N</DD_ATTR_MLAN>
+			<DD_ATTR_MINL id="ddm_table_cols.art_cashheader004">1</DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.art_cashheader004">0</DD_ATTR_MAXL>
 			<DD_ATTR_TIND id="ddm_table_cols.art_cashheader004">4</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashheader004">RECEIPT_DATE</SQL_COLUMN_NAME>
@@ -336,6 +470,7 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.art_cashheader005">20130802</DD_LSTREV_DATE>
 			<DD_ATTR_COLW id="ddm_table_cols.art_cashheader005">0</DD_ATTR_COLW>
 			<DD_ATTR_MLAN id="ddm_table_cols.art_cashheader005">N</DD_ATTR_MLAN>
+			<DD_ATTR_MINL id="ddm_table_cols.art_cashheader005">1</DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.art_cashheader005">0</DD_ATTR_MAXL>
 			<DD_ATTR_TIND id="ddm_table_cols.art_cashheader005">5</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashheader005">CASH_REC_CD</SQL_COLUMN_NAME>
@@ -385,6 +520,7 @@
 			<DD_DELIM_CHAR id="ddm_table_cols.art_cashheader008">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.art_cashheader008">20130802</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.art_cashheader008">20130802</DD_LSTREV_DATE>
+			<DD_ATTR_CPGM id="ddm_table_cols.art_cashheader008">/basis_dev/v1400GA/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_COLW id="ddm_table_cols.art_cashheader008">0</DD_ATTR_COLW>
 			<DD_ATTR_MLAN id="ddm_table_cols.art_cashheader008">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.art_cashheader008">0</DD_ATTR_MAXL>
@@ -509,7 +645,7 @@
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_cashheader015">ART_CASHHEADER  </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.art_cashheader015">015</DD_SEQUENCE>
 			<DD_DATA_NAME id="ddm_table_cols.art_cashheader015">BATCH_NO        </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.art_cashheader015">GL_BATCH_NUMBER </DD_DVAR_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_cashheader015">BATCH_NO        </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.art_cashheader015">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.art_cashheader015">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.art_cashheader015">N</DD_FIELD_DELIM>
@@ -517,66 +653,242 @@
 			<DD_CREATE_DATE id="ddm_table_cols.art_cashheader015">20130802</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.art_cashheader015">20130802</DD_LSTREV_DATE>
 			<DD_ATTR_COLW id="ddm_table_cols.art_cashheader015">0</DD_ATTR_COLW>
-			<DD_ATTR_LABL id="ddm_table_cols.art_cashheader015">GL Batch No</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.art_cashheader015">GL Batch No</DD_ATTR_LABS>
+			<DD_ATTR_LABL id="ddm_table_cols.art_cashheader015">Batch No</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.art_cashheader015">Batch No</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.art_cashheader015">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.art_cashheader015">0</DD_ATTR_MAXL>
 			<DD_ATTR_TIND id="ddm_table_cols.art_cashheader015">15</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashheader015">GL_BATCH_NUMBER</SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashheader015">BATCH_NO</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.art_cashheader016">
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_cashheader016">ART_CASHHEADER  </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.art_cashheader016">016</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.art_cashheader016">INTERNAL_SEQ_NO </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.art_cashheader016">REV_CR_TRANS_ID </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.art_cashheader016">JOURNAL_ID      </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_cashheader016">JOURNAL_ID      </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.art_cashheader016">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.art_cashheader016">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.art_cashheader016">Y</DD_FIELD_DELIM>
+			<DD_FIELD_DELIM id="ddm_table_cols.art_cashheader016">N</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.art_cashheader016">0A</DD_DELIM_CHAR>
-			<DD_CREATE_DATE id="ddm_table_cols.art_cashheader016">20130802</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.art_cashheader016">20130802</DD_LSTREV_DATE>
+			<DD_CREATE_DATE id="ddm_table_cols.art_cashheader016">20131028</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.art_cashheader016">20131028</DD_LSTREV_DATE>
 			<DD_ATTR_COLW id="ddm_table_cols.art_cashheader016">0</DD_ATTR_COLW>
-			<DD_ATTR_LABL id="ddm_table_cols.art_cashheader016">Rev_CR_Trans</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.art_cashheader016">Rev_CR_Trans</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.art_cashheader016">N</DD_ATTR_MLAN>
+			<DD_ATTR_MINL id="ddm_table_cols.art_cashheader016">0</DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.art_cashheader016">0</DD_ATTR_MAXL>
-			<DD_ATTR_TIND id="ddm_table_cols.art_cashheader016">16</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashheader016">REV_CR_TRANS_ID</SQL_COLUMN_NAME>
+			<DD_ATTR_TIND id="ddm_table_cols.art_cashheader016">20</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashheader016">JOURNAL_ID</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.art_cashheader017">
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_cashheader017">ART_CASHHEADER  </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.art_cashheader017">017</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.art_cashheader017">PAYMENT_AMT     </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.art_cashheader017">PAYMENT_AMT     </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.art_cashheader017">GL_ADT_NO       </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_cashheader017">GL_ADT_NO       </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.art_cashheader017">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.art_cashheader017">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.art_cashheader017">Y</DD_FIELD_DELIM>
+			<DD_FIELD_DELIM id="ddm_table_cols.art_cashheader017">N</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.art_cashheader017">0A</DD_DELIM_CHAR>
-			<DD_CREATE_DATE id="ddm_table_cols.art_cashheader017">20130802</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.art_cashheader017">20130802</DD_LSTREV_DATE>
+			<DD_CREATE_DATE id="ddm_table_cols.art_cashheader017">20131028</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.art_cashheader017">20131028</DD_LSTREV_DATE>
 			<DD_ATTR_COLW id="ddm_table_cols.art_cashheader017">0</DD_ATTR_COLW>
 			<DD_ATTR_MLAN id="ddm_table_cols.art_cashheader017">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.art_cashheader017">0</DD_ATTR_MAXL>
-			<DD_ATTR_TIND id="ddm_table_cols.art_cashheader017">17</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashheader017">PAYMENT_AMT</SQL_COLUMN_NAME>
+			<DD_ATTR_TIND id="ddm_table_cols.art_cashheader017">21</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashheader017">GL_ADT_NO</SQL_COLUMN_NAME>
+		</RECORD>
+		<RECORD id="ddm_table_cols.art_cashheader018">
+			<DD_TABLE_ALIAS id="ddm_table_cols.art_cashheader018">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_SEQUENCE id="ddm_table_cols.art_cashheader018">018</DD_SEQUENCE>
+			<DD_DATA_NAME id="ddm_table_cols.art_cashheader018">AR_TRANS_ID     </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_cashheader018">REV_CR_TRANS_ID </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.art_cashheader018">0</DD_COL_REPEATS>
+			<DD_COL_OCCURS id="ddm_table_cols.art_cashheader018">0</DD_COL_OCCURS>
+			<DD_FIELD_DELIM id="ddm_table_cols.art_cashheader018">Y</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.art_cashheader018">0A</DD_DELIM_CHAR>
+			<DD_CREATE_DATE id="ddm_table_cols.art_cashheader018">20130802</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.art_cashheader018">20130802</DD_LSTREV_DATE>
+			<DD_ATTR_COLW id="ddm_table_cols.art_cashheader018">0</DD_ATTR_COLW>
+			<DD_ATTR_LABL id="ddm_table_cols.art_cashheader018">Rev Cash Recript ID</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.art_cashheader018">Rev Cash Recript ID</DD_ATTR_LABS>
+			<DD_ATTR_MLAN id="ddm_table_cols.art_cashheader018">N</DD_ATTR_MLAN>
+			<DD_ATTR_MAXL id="ddm_table_cols.art_cashheader018">0</DD_ATTR_MAXL>
+			<DD_ATTR_TIND id="ddm_table_cols.art_cashheader018">16</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashheader018">REV_CR_TRANS_ID</SQL_COLUMN_NAME>
+		</RECORD>
+		<RECORD id="ddm_table_cols.art_cashheader019">
+			<DD_TABLE_ALIAS id="ddm_table_cols.art_cashheader019">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_SEQUENCE id="ddm_table_cols.art_cashheader019">019</DD_SEQUENCE>
+			<DD_DATA_NAME id="ddm_table_cols.art_cashheader019">PAYMENT_AMT     </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_cashheader019">PAYMENT_AMT     </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.art_cashheader019">0</DD_COL_REPEATS>
+			<DD_COL_OCCURS id="ddm_table_cols.art_cashheader019">0</DD_COL_OCCURS>
+			<DD_FIELD_DELIM id="ddm_table_cols.art_cashheader019">Y</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.art_cashheader019">0A</DD_DELIM_CHAR>
+			<DD_CREATE_DATE id="ddm_table_cols.art_cashheader019">20130802</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.art_cashheader019">20130802</DD_LSTREV_DATE>
+			<DD_ATTR_CPGM id="ddm_table_cols.art_cashheader019">/basis_dev/v1400GA/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_COLW id="ddm_table_cols.art_cashheader019">0</DD_ATTR_COLW>
+			<DD_ATTR_MLAN id="ddm_table_cols.art_cashheader019">N</DD_ATTR_MLAN>
+			<DD_ATTR_MAXL id="ddm_table_cols.art_cashheader019">0</DD_ATTR_MAXL>
+			<DD_ATTR_TIND id="ddm_table_cols.art_cashheader019">17</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashheader019">PAYMENT_AMT</SQL_COLUMN_NAME>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_table_disp">
+		<ID id="ddm_table_disp">DDM_TABLE_DISP</ID>
+		<RECORD id="ddm_table_disp.art_cashheader001">
+			<DD_TABLE_ALIAS id="ddm_table_disp.art_cashheader001">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_SEQUENCE id="ddm_table_disp.art_cashheader001">001</DD_SEQUENCE>
+			<DD_DATA_NAME id="ddm_table_disp.art_cashheader001">INVOICE_AMT     </DD_DATA_NAME>
+			<DD_CTRL_NAME id="ddm_table_disp.art_cashheader001">DISP_APPLIED    </DD_CTRL_NAME>
+			<DD_ATTR_LABL id="ddm_table_disp.art_cashheader001">Amt Applied</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_disp.art_cashheader001">Applied</DD_ATTR_LABS>
+			<DD_ATTR_CTLX id="ddm_table_disp.art_cashheader001">0</DD_ATTR_CTLX>
+			<DD_ATTR_CTLY id="ddm_table_disp.art_cashheader001">0</DD_ATTR_CTLY>
+			<DD_ATTR_CTLH id="ddm_table_disp.art_cashheader001">0</DD_ATTR_CTLH>
+			<DD_ATTR_TIND id="ddm_table_disp.art_cashheader001">18</DD_ATTR_TIND>
+		</RECORD>
+		<RECORD id="ddm_table_disp.art_cashheader002">
+			<DD_TABLE_ALIAS id="ddm_table_disp.art_cashheader002">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_SEQUENCE id="ddm_table_disp.art_cashheader002">002</DD_SEQUENCE>
+			<DD_DATA_NAME id="ddm_table_disp.art_cashheader002">INVOICE_AMT     </DD_DATA_NAME>
+			<DD_CTRL_NAME id="ddm_table_disp.art_cashheader002">DISP_BAL        </DD_CTRL_NAME>
+			<DD_ATTR_LABL id="ddm_table_disp.art_cashheader002">Balance</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_disp.art_cashheader002">Balance</DD_ATTR_LABS>
+			<DD_ATTR_CTLX id="ddm_table_disp.art_cashheader002">0</DD_ATTR_CTLX>
+			<DD_ATTR_CTLY id="ddm_table_disp.art_cashheader002">0</DD_ATTR_CTLY>
+			<DD_ATTR_CTLH id="ddm_table_disp.art_cashheader002">0</DD_ATTR_CTLH>
+			<DD_ATTR_TIND id="ddm_table_disp.art_cashheader002">19</DD_ATTR_TIND>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_column_cpro">
+		<ID id="ddm_column_cpro">DDM_COLUMN_CPRO</ID>
+		<RECORD id="ddm_column_cpro.art_cashheaderar_trans_idaval">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.art_cashheaderar_trans_idaval">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.art_cashheaderar_trans_idaval">AR_TRANS_ID     </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.art_cashheaderar_trans_idaval">AVAL</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.art_cashheadercustomer_idbinp">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.art_cashheadercustomer_idbinp">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.art_cashheadercustomer_idbinp">CUSTOMER_ID     </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.art_cashheadercustomer_idbinp">BINP</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.art_cashheaderreceipt_datebinp">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.art_cashheaderreceipt_datebinp">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.art_cashheaderreceipt_datebinp">RECEIPT_DATE    </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.art_cashheaderreceipt_datebinp">BINP</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.art_cashheadercr_trans_typeaval">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.art_cashheadercr_trans_typeaval">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.art_cashheadercr_trans_typeaval">CR_TRANS_TYPE   </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.art_cashheadercr_trans_typeaval">AVAL</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.art_cashheaderpayment_amtaval">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.art_cashheaderpayment_amtaval">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.art_cashheaderpayment_amtaval">PAYMENT_AMT     </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.art_cashheaderpayment_amtaval">AVAL</DD_ATTR_CPRO>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_opts">
 		<ID id="ddm_column_opts">DDM_COLUMN_OPTS</ID>
-		<RECORD id="ddm_column_opts.art_cashheadercr_trans_idc">
-			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheadercr_trans_idc">ART_CASHHEADER  </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_opts.art_cashheadercr_trans_idc">CR_TRANS_ID     </DD_DVAR_NAME>
-			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheadercr_trans_idc">C</DD_ATTR_OPTS>
+		<RECORD id="ddm_column_opts.art_cashheadercr_sourceg">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheadercr_sourceg">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheadercr_sourceg">CR_SOURCE       </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheadercr_sourceg">G</DD_ATTR_OPTS>
 		</RECORD>
-		<RECORD id="ddm_column_opts.art_cashheadercash_rec_cdc">
-			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheadercash_rec_cdc">ART_CASHHEADER  </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_opts.art_cashheadercash_rec_cdc">CASH_REC_CD     </DD_DVAR_NAME>
-			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheadercash_rec_cdc">C</DD_ATTR_OPTS>
+		<RECORD id="ddm_column_opts.art_cashheadercr_sourcel">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheadercr_sourcel">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheadercr_sourcel">CR_SOURCE       </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheadercr_sourcel">L</DD_ATTR_OPTS>
 		</RECORD>
-		<RECORD id="ddm_column_opts.art_cashheadercr_sourcec">
-			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheadercr_sourcec">ART_CASHHEADER  </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_opts.art_cashheadercr_sourcec">CR_SOURCE       </DD_DVAR_NAME>
-			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheadercr_sourcec">C</DD_ATTR_OPTS>
+		<RECORD id="ddm_column_opts.art_cashheadercr_sourceo">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheadercr_sourceo">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheadercr_sourceo">CR_SOURCE       </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheadercr_sourceo">O</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheadercr_sourcew">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheadercr_sourcew">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheadercr_sourcew">CR_SOURCE       </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheadercr_sourcew">W</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheadercr_sourceh">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheadercr_sourceh">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheadercr_sourceh">CR_SOURCE       </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheadercr_sourceh">h</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheaderencrypted_acctg">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheaderencrypted_acctg">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheaderencrypted_acctg">ENCRYPTED_ACCT  </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheaderencrypted_acctg">G</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheaderencrypted_accti">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheaderencrypted_accti">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheaderencrypted_accti">ENCRYPTED_ACCT  </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheaderencrypted_accti">I</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheaderencrypted_acctl">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheaderencrypted_acctl">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheaderencrypted_acctl">ENCRYPTED_ACCT  </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheaderencrypted_acctl">L</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheaderencrypted_accto">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheaderencrypted_accto">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheaderencrypted_accto">ENCRYPTED_ACCT  </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheaderencrypted_accto">O</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheaderencrypted_acctp">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheaderencrypted_acctp">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheaderencrypted_acctp">ENCRYPTED_ACCT  </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheaderencrypted_acctp">P</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheaderencrypted_acctr">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheaderencrypted_acctr">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheaderencrypted_acctr">ENCRYPTED_ACCT  </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheaderencrypted_acctr">R</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheaderencrypted_acctw">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheaderencrypted_acctw">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheaderencrypted_acctw">ENCRYPTED_ACCT  </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheaderencrypted_acctw">W</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheaderencrypted_accth">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheaderencrypted_accth">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheaderencrypted_accth">ENCRYPTED_ACCT  </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheaderencrypted_accth">h</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheaderbatch_noc">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheaderbatch_noc">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheaderbatch_noc">BATCH_NO        </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheaderbatch_noc">C</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheaderjournal_idl">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheaderjournal_idl">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheaderjournal_idl">JOURNAL_ID      </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheaderjournal_idl">L</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheaderjournal_idw">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheaderjournal_idw">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheaderjournal_idw">JOURNAL_ID      </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheaderjournal_idw">W</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheaderjournal_idh">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheaderjournal_idh">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheaderjournal_idh">JOURNAL_ID      </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheaderjournal_idh">h</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheadergl_adt_nol">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheadergl_adt_nol">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheadergl_adt_nol">GL_ADT_NO       </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheadergl_adt_nol">L</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheadergl_adt_now">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheadergl_adt_now">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheadergl_adt_now">GL_ADT_NO       </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheadergl_adt_now">W</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheadergl_adt_noh">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheadergl_adt_noh">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheadergl_adt_noh">GL_ADT_NO       </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheadergl_adt_noh">h</DD_ATTR_OPTS>
 		</RECORD>
 		<RECORD id="ddm_column_opts.art_cashheaderrev_cr_trans_idg">
 			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheaderrev_cr_trans_idg">ART_CASHHEADER  </DD_TABLE_ALIAS>
@@ -608,6 +920,16 @@
 			<DD_DVAR_NAME id="ddm_column_opts.art_cashheaderrev_cr_trans_idh">REV_CR_TRANS_ID </DD_DVAR_NAME>
 			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheaderrev_cr_trans_idh">h</DD_ATTR_OPTS>
 		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheaderdisp_appliedc">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheaderdisp_appliedc">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheaderdisp_appliedc">DISP_APPLIED    </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheaderdisp_appliedc">C</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashheaderdisp_balc">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashheaderdisp_balc">ART_CASHHEADER  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashheaderdisp_balc">DISP_BAL        </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashheaderdisp_balc">C</DD_ATTR_OPTS>
+		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_elements">
 		<ID id="ddm_elements">DDM_ELEMENTS</ID>
@@ -635,29 +957,31 @@
 			<DD_ATTR_PREC id="ddm_elements.firm_id">0</DD_ATTR_PREC>
 			<DD_ATTR_PVAL id="ddm_elements.firm_id">stbl("+FIRM_ID")</DD_ATTR_PVAL>
 		</RECORD>
-		<RECORD id="ddm_elements.internal_seq_no">
-			<DD_DATA_NAME id="ddm_elements.internal_seq_no">INTERNAL_SEQ_NO </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.internal_seq_no">Internal Sequence Number</DD_DESCRIPTION>
-			<DD_DATA_TYPE id="ddm_elements.internal_seq_no">C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.internal_seq_no">12</DD_DATA_LENGTH>
-			<ASC_COMP_ID id="ddm_elements.internal_seq_no">01007514</ASC_COMP_ID>
-			<ASC_PROD_ID id="ddm_elements.internal_seq_no">AD </ASC_PROD_ID>
-			<LOCALIZATION_EX id="ddm_elements.internal_seq_no">N</LOCALIZATION_EX>
-			<DD_CREATE_DATE id="ddm_elements.internal_seq_no">20081120</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.internal_seq_no">20090330</DD_LSTREV_DATE>
-			<DD_ATTR_BLNK id="ddm_elements.internal_seq_no">N</DD_ATTR_BLNK>
-			<DD_ATTR_CTLW id="ddm_elements.internal_seq_no">0</DD_ATTR_CTLW>
-			<DD_ATTR_CTLH id="ddm_elements.internal_seq_no">0</DD_ATTR_CTLH>
-			<DD_ATTR_CTYP id="ddm_elements.internal_seq_no">E</DD_ATTR_CTYP>
-			<DD_ATTR_DFLT id="ddm_elements.internal_seq_no">[SEQ:INTERNAL_SEQ_NO]</DD_ATTR_DFLT>
-			<DD_ATTR_LABL id="ddm_elements.internal_seq_no">Internal Sequence Number</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_elements.internal_seq_no">Internal Seq No</DD_ATTR_LABS>
-			<DD_ATTR_MAXL id="ddm_elements.internal_seq_no">0</DD_ATTR_MAXL>
-			<DD_ATTR_MAXR id="ddm_elements.internal_seq_no">0</DD_ATTR_MAXR>
-			<DD_ATTR_MINL id="ddm_elements.internal_seq_no">0</DD_ATTR_MINL>
-			<DD_ATTR_PADC id="ddm_elements.internal_seq_no">30</DD_ATTR_PADC>
-			<DD_ATTR_PADJ id="ddm_elements.internal_seq_no">R</DD_ATTR_PADJ>
-			<DD_ATTR_PREC id="ddm_elements.internal_seq_no">0</DD_ATTR_PREC>
+		<RECORD id="ddm_elements.ar_trans_id">
+			<DD_DATA_NAME id="ddm_elements.ar_trans_id">AR_TRANS_ID     </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.ar_trans_id">Ar Trans ID</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.ar_trans_id">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.ar_trans_id">8</DD_DATA_LENGTH>
+			<ASC_COMP_ID id="ddm_elements.ar_trans_id">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.ar_trans_id">AR </ASC_PROD_ID>
+			<LOCALIZATION_EX id="ddm_elements.ar_trans_id">N</LOCALIZATION_EX>
+			<DD_CREATE_DATE id="ddm_elements.ar_trans_id">20130823</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.ar_trans_id">20130826</DD_LSTREV_DATE>
+			<DD_ATTR_BLNK id="ddm_elements.ar_trans_id">N</DD_ATTR_BLNK>
+			<DD_ATTR_CTLW id="ddm_elements.ar_trans_id">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.ar_trans_id">0</DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.ar_trans_id">E</DD_ATTR_CTYP>
+			<DD_ATTR_LABL id="ddm_elements.ar_trans_id">Ar Trans ID</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.ar_trans_id">Ar Trans ID</DD_ATTR_LABS>
+			<DD_ATTR_MAXL id="ddm_elements.ar_trans_id">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.ar_trans_id">0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL id="ddm_elements.ar_trans_id">0</DD_ATTR_MINL>
+			<DD_ATTR_MSKI id="ddm_elements.ar_trans_id">UUUUUUUU</DD_ATTR_MSKI>
+			<DD_ATTR_MSKO id="ddm_elements.ar_trans_id">UUUUUUUU</DD_ATTR_MSKO>
+			<DD_ATTR_PADC id="ddm_elements.ar_trans_id">30</DD_ATTR_PADC>
+			<DD_ATTR_PADJ id="ddm_elements.ar_trans_id">R</DD_ATTR_PADJ>
+			<DD_ATTR_PREC id="ddm_elements.ar_trans_id">0</DD_ATTR_PREC>
+			<DD_ATTR_STEP id="ddm_elements.ar_trans_id">0</DD_ATTR_STEP>
 		</RECORD>
 		<RECORD id="ddm_elements.customer_id">
 			<DD_DATA_NAME id="ddm_elements.customer_id">CUSTOMER_ID     </DD_DATA_NAME>
@@ -866,6 +1190,54 @@
 			<DD_ATTR_PADJ id="ddm_elements.batch_no">R</DD_ATTR_PADJ>
 			<DD_ATTR_PREC id="ddm_elements.batch_no">0</DD_ATTR_PREC>
 		</RECORD>
+		<RECORD id="ddm_elements.journal_id">
+			<DD_DATA_NAME id="ddm_elements.journal_id">JOURNAL_ID      </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.journal_id">Journal ID Code</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.journal_id">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.journal_id">2</DD_DATA_LENGTH>
+			<DD_MASK_TYPE id="ddm_elements.journal_id"> </DD_MASK_TYPE>
+			<ASC_COMP_ID id="ddm_elements.journal_id">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.journal_id">AD </ASC_PROD_ID>
+			<DD_CREATE_DATE id="ddm_elements.journal_id">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.journal_id">20080303</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW id="ddm_elements.journal_id">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.journal_id">0</DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.journal_id">E</DD_ATTR_CTYP>
+			<DD_ATTR_DCOL id="ddm_elements.journal_id">CODE_DESC       </DD_ATTR_DCOL>
+			<DD_ATTR_DCOM id="ddm_elements.journal_id">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.journal_id">            </DD_ATTR_DEXP>
+			<DD_ATTR_DKEY id="ddm_elements.journal_id">[+FIRM_ID]+@</DD_ATTR_DKEY>
+			<DD_ATTR_DTAB id="ddm_elements.journal_id">GLC_JOURNALCODE </DD_ATTR_DTAB>
+			<DD_ATTR_LABL id="ddm_elements.journal_id">Journal ID Code</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.journal_id">Journal ID Cd</DD_ATTR_LABS>
+			<DD_ATTR_MAXL id="ddm_elements.journal_id">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.journal_id">0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL id="ddm_elements.journal_id">1</DD_ATTR_MINL>
+			<DD_ATTR_MSKI id="ddm_elements.journal_id">UU</DD_ATTR_MSKI>
+			<DD_ATTR_MSKO id="ddm_elements.journal_id">AA</DD_ATTR_MSKO>
+			<DD_ATTR_PADC id="ddm_elements.journal_id">30</DD_ATTR_PADC>
+			<DD_ATTR_PADJ id="ddm_elements.journal_id">L</DD_ATTR_PADJ>
+			<DD_ATTR_PREC id="ddm_elements.journal_id">0</DD_ATTR_PREC>
+			<DD_ATTR_PROM id="ddm_elements.journal_id">Enter a Valid Journal ID Code</DD_ATTR_PROM>
+		</RECORD>
+		<RECORD id="ddm_elements.gl_adt_no">
+			<DD_DATA_NAME id="ddm_elements.gl_adt_no">GL_ADT_NO       </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.gl_adt_no">GL Audit Control Number</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.gl_adt_no">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.gl_adt_no">7</DD_DATA_LENGTH>
+			<DD_MASK_TYPE id="ddm_elements.gl_adt_no"> </DD_MASK_TYPE>
+			<ASC_COMP_ID id="ddm_elements.gl_adt_no">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.gl_adt_no">GL </ASC_PROD_ID>
+			<DD_CREATE_DATE id="ddm_elements.gl_adt_no">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.gl_adt_no">20060428</DD_LSTREV_DATE>
+			<DD_ATTR_CTYP id="ddm_elements.gl_adt_no">E</DD_ATTR_CTYP>
+			<DD_ATTR_DCOM id="ddm_elements.gl_adt_no">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.gl_adt_no">            </DD_ATTR_DEXP>
+			<DD_ATTR_LABL id="ddm_elements.gl_adt_no">Audit Number</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.gl_adt_no">Audit Ctrl No</DD_ATTR_LABS>
+			<DD_ATTR_PADC id="ddm_elements.gl_adt_no">30</DD_ATTR_PADC>
+			<DD_ATTR_PADJ id="ddm_elements.gl_adt_no">R</DD_ATTR_PADJ>
+		</RECORD>
 		<RECORD id="ddm_elements.payment_amt">
 			<DD_DATA_NAME id="ddm_elements.payment_amt">PAYMENT_AMT     </DD_DATA_NAME>
 			<DD_DESCRIPTION id="ddm_elements.payment_amt">Payment Amount                </DD_DESCRIPTION>
@@ -882,6 +1254,22 @@
 			<DD_ATTR_LABL id="ddm_elements.payment_amt">Payment Amount</DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_elements.payment_amt">Pmt Amt</DD_ATTR_LABS>
 			<DD_ATTR_PREC id="ddm_elements.payment_amt">2</DD_ATTR_PREC>
+		</RECORD>
+		<RECORD id="ddm_elements.invoice_amt">
+			<DD_DATA_NAME id="ddm_elements.invoice_amt">INVOICE_AMT     </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.invoice_amt">Invoice Amount                </DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.invoice_amt">N</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.invoice_amt">7</DD_DATA_LENGTH>
+			<DD_MASK_TYPE id="ddm_elements.invoice_amt">A</DD_MASK_TYPE>
+			<ASC_COMP_ID id="ddm_elements.invoice_amt">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.invoice_amt">AP </ASC_PROD_ID>
+			<DD_CREATE_DATE id="ddm_elements.invoice_amt">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.invoice_amt">20060119</DD_LSTREV_DATE>
+			<DD_ATTR_CTYP id="ddm_elements.invoice_amt">N</DD_ATTR_CTYP>
+			<DD_ATTR_DCOM id="ddm_elements.invoice_amt">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.invoice_amt">            </DD_ATTR_DEXP>
+			<DD_ATTR_LABL id="ddm_elements.invoice_amt">Invoice Amount</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.invoice_amt">Inv Amt</DD_ATTR_LABS>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_element_ldat">
