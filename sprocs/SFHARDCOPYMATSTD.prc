@@ -50,8 +50,11 @@ rem --- masks$ will contain pairs of fields in a single string mask_name^mask|
 
 rem --- Create a memory record set to hold results.
 rem --- Columns for the record set are defined using a string template
-	temp$="REF_NO:C(1*), ITEM:C(1*), OP_SEQ:C(1*), SCRAP:C(1*), DIVISOR:C(1*), FACTOR:C(1*), "
-	temp$=temp$+"QTY_REQ:C(1*), UNITS_EA:C(1*), COST_EA:C(1*), UNITS_TOT:C(1*), COST_TOT:C(1*), "
+	
+	temp$=""
+	temp$=temp$+"REF_NO:C(1*), ITEM:C(1*), COMMENT:C(1*), OP_SEQ:C(1*), SCRAP:C(1*), "
+	temp$=temp$+"DIVISOR:C(1*), FACTOR:C(1*), QTY_REQ:C(1*), "
+	temp$=temp$+"UNITS_EA:C(1*), COST_EA:C(1*), UNITS_TOT:C(1*), COST_TOT:C(1*), "
 	temp$=temp$+"THIS_IS_TOTAL_LINE:C(1*), COST_EA_RAW:C(1*), COST_TOT_RAW:C(1*) "	
 	
 	rs! = BBJAPI().createMemoryRecordSet(temp$)
@@ -134,36 +137,23 @@ rem --- Get proper Op Code Maintenance table
 	opcode_dev=channels[5]
 	dim opcode_tpl$:templates$[5]
 	
-rem --- generate vector for use with Op Sequence
-
-	SysGUI!=BBjAPI()
-	ops_lines!=SysGUI!.makeVector()
-	ops_list!=SysGUI!.makeVector()
-
-	read(sfe02_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
-	while 1
-		read record (sfe02_dev,end=*break) sfe02a$
-		if pos(firm_id$+wo_loc$+wo_no$=sfe02a$)<>1 break
-		if sfe02a.line_type$<>"S" continue
-		dim opcode_tpl$:fattr(opcode_tpl$)
-		read record (opcode_dev,key=firm_id$+sfe02a.op_code$,dom=*next)opcode_tpl$
-		ops_lines!.addItem(sfe02a.internal_seq_no$)
-		op_code_list$=op_code_list$+sfe02a.op_code$
-		work_var=pos(sfe02a.op_code$=op_code_list$,len(sfe02a.op_code$),0)
-		if work_var>1
-			work_var$=sfe02a.op_code$+"("+str(work_var)+")"
-		else
-			work_var$=sfe02a.op_code$
-		endif
-REM		ops_list!.addItem(work_var$+" - "+opcode_tpl.code_desc$) ; REM TEMPORARILY REM'D
-		ops_list!.addItem(work_var$)		
-	wend
-
 rem --- Build SQL statement
 
-	sql_prep$="select wo_ref_num, item_id, oper_seq_ref, scrap_factor, divisor, alt_factor, qty_required, "
-	sql_prep$=sql_prep$+"units, unit_cost, total_units, total_cost, line_type, ext_comments "
-	sql_prep$=sql_prep$+"from sfe_womatl where firm_id = '"+firm_id$+"' and wo_location = '"+wo_loc$+"' and wo_no = '"+wo_no$+"'"
+	sql_prep$=""
+	sql_prep$=sql_prep$+"SELECT m.wo_ref_num, m.item_id, m.oper_seq_ref "+$0a$
+	sql_prep$=sql_prep$+"     , m.scrap_factor, m.divisor, m.alt_factor "+$0a$
+	sql_prep$=sql_prep$+"     , m.qty_required, m.units, m.unit_cost "+$0a$
+	sql_prep$=sql_prep$+"     , m.total_units, m.total_cost, m.line_type "+$0a$
+	sql_prep$=sql_prep$+"     , m.ext_comments, o.wo_op_ref "+$0a$
+	sql_prep$=sql_prep$+"  FROM sfe_womatl m"+$0a$
+	sql_prep$=sql_prep$+"LEFT JOIN sfe_wooprtn o "+$0a$	
+	sql_prep$=sql_prep$+"       ON m.firm_id=o.firm_id "+$0a$	
+	sql_prep$=sql_prep$+"      AND m.wo_location=o.wo_location "+$0a$	
+	sql_prep$=sql_prep$+"      AND m.wo_no=o.wo_no "+$0a$	
+	sql_prep$=sql_prep$+"      AND m.oper_seq_ref=o.internal_seq_no "+$0a$	
+	sql_prep$=sql_prep$+" WHERE firm_id = '"+firm_id$+"' "+$0a$
+	sql_prep$=sql_prep$+"   AND wo_location = '"+wo_loc$+"' "+$0a$
+	sql_prep$=sql_prep$+"   AND wo_no = '"+wo_no$+"'"+$0a$
 	
 	sql_chan=sqlunt
 	sqlopen(sql_chan,mode="PROCEDURE",err=*next)stbl("+DBNAME")
@@ -184,7 +174,7 @@ rem --- Trip Read
 		
 		if read_tpl.line_type$="M"
 			rem --- Send data row for Memos
-			data!.setFieldValue("ITEM",read_tpl.ext_comments$); rem Note: Memos are allowed more print space
+			data!.setFieldValue("COMMENT",read_tpl.ext_comments$); rem Note: Memos are allowed more print space
 			rs!.insert(data!)
 		else
 			rem --- Send data row for non-Memos
@@ -193,15 +183,7 @@ rem --- Trip Read
 			gosub build_itemfield
 			data!.setFieldValue("ITEM",item_n_desc1$); rem From build_itemfield routine
 			
-			if cvs(read_tpl.oper_seq_ref$,3)<>""
-				if ops_lines!.size()
-					for x=0 to ops_lines!.size()-1
-						if read_tpl.oper_seq_ref$=ops_lines!.getItem(x)
-							data!.setFieldValue("OP_SEQ",ops_list!.getItem(x))
-						endif
-					next x
-				endif
-			endif
+			data!.setFieldValue("OP_SEQ",read_tpl.wo_op_ref$)
 			
 			data!.setFieldValue("SCRAP",str(read_tpl.scrap_factor:sf_matlfact_mask$))
 			data!.setFieldValue("DIVISOR",str(read_tpl.divisor:sf_matlfact_mask$))
@@ -267,13 +249,15 @@ rem --   The routine is for non-memos,
 rem --     - The ITEM field is a combo of the item plus as much desc as possible.
 rem --     - Space for the item uses the number of chars from IV Params Item Len.
 rem --     - As much desc as possible is appended to the ITEM field after the item id.
-rem --     - Change the constant, max_itemPlusDesc_len, to allow more desc to print.
+
+rem --     - Change the constant, max_itemPlusDesc_len, to allow more/less desc to print. <===== ***
+
 rem --     - Non-Travelers, since they aren't printed and number of pages isn't an issue, 
 rem --       have a second line of description if the Desc Len IV Param is set to have more
 rem --       than prints on the main line.
-rem ---  Memos are handled in main code: 
-rem --     - The ITEM field is the memo itself.
-rem --     - The full memo prints because there are no numeric cols taking space.
+rem ---  Memo lines are handled in main code: 
+rem --     - The COMMENT field is used for a memo line's comment; it's printed on its own line.
+rem --     - The full memo comment prints because there are no numeric cols taking space.
 
 	rem --- Build ITEM field based on report type and item len param
 		temp_itemPlusDesc$=read_tpl.item_id$(1,item_len)+"  "+cvs(ivm_itemmast.item_desc$,2)

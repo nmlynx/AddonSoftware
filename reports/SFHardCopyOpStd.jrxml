@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopyOpStd" language="groovy" pageWidth="772" pageHeight="612" orientation="Landscape" columnWidth="752" leftMargin="0" rightMargin="0" topMargin="3" bottomMargin="0" resourceBundle="addon" uuid="27bbd285-8e80-48d4-a91c-bd4b66ef9173">
 	<property name="ireport.zoom" value="2.0"/>
-	<property name="ireport.x" value="252"/>
+	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
 	<template><![CDATA["StyleTemplate.jrtx"]]></template>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
@@ -14,7 +14,10 @@
 	<queryString language="SQL">
 		<![CDATA[call sfhardcopyopstd($P{FIRM_ID},$P{WO_LOCATION},$P{WO_NO},$P{BARISTA_WD},$P{MASKS},$P{REPORT_TYPE},$P{PRINT_COSTS})]]>
 	</queryString>
+	<field name="REF_NO" class="java.lang.String"/>
 	<field name="OP_CODE" class="java.lang.String"/>
+	<field name="CODE_DESC" class="java.lang.String"/>
+	<field name="COMMENTS" class="java.lang.String"/>
 	<field name="REQ_DATE" class="java.lang.String"/>
 	<field name="HOURS" class="java.lang.String"/>
 	<field name="PC_HR" class="java.lang.String"/>
@@ -67,7 +70,14 @@
 				<textFieldExpression><![CDATA[$R{AON_TOTAL}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement uuid="aa986650-af50-44d7-a7ac-239747bd8bbf" x="4" y="13" width="100" height="13"/>
+				<reportElement uuid="ff2d4cb8-553d-4717-b9a0-48a8d26e877d" x="4" y="13" width="39" height="13"/>
+				<textElement>
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Op Ref"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement uuid="aa986650-af50-44d7-a7ac-239747bd8bbf" x="44" y="13" width="100" height="13"/>
 				<textElement>
 					<font isBold="true"/>
 				</textElement>
@@ -151,9 +161,6 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$R{AON_COST}]]></textFieldExpression>
 			</textField>
-			<frame>
-				<reportElement uuid="56cda79c-6a66-453a-ba56-f990259a6847" x="4" y="6" width="100" height="20"/>
-			</frame>
 		</band>
 	</columnHeader>
 	<detail>
@@ -172,9 +179,19 @@
 					<printWhenExpression><![CDATA[$F{THIS_IS_TOTAL_LINE} != "Y"]]></printWhenExpression>
 				</reportElement>
 				<textField>
-					<reportElement uuid="f459ac6a-63c7-4207-b43a-a14998249f50" x="4" y="0" width="500" height="11"/>
+					<reportElement uuid="f459ac6a-63c7-4207-b43a-a14998249f50" x="4" y="0" width="39" height="11"/>
+					<textElement/>
+					<textFieldExpression><![CDATA[$F{REF_NO}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement uuid="12046e67-9d70-49fd-8600-45b5d943725b" x="44" y="0" width="20" height="11"/>
 					<textElement/>
 					<textFieldExpression><![CDATA[$F{OP_CODE}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement uuid="a5fac7a0-8766-47e7-8768-2ade1ad82ce4" x="67" y="0" width="113" height="11"/>
+					<textElement/>
+					<textFieldExpression><![CDATA[$F{CODE_DESC}]]></textFieldExpression>
 				</textField>
 				<textField>
 					<reportElement uuid="de073f85-316f-4f10-b8d7-f2bd6fbc00bb" x="185" y="0" width="52" height="11"/>
@@ -233,6 +250,16 @@
 					</reportElement>
 					<textElement textAlignment="Right"/>
 					<textFieldExpression><![CDATA[$F{COST_TOT}]]></textFieldExpression>
+				</textField>
+			</frame>
+			<frame>
+				<reportElement uuid="ce672dc3-b44e-410c-b793-171026a60441" x="0" y="0" width="740" height="11">
+					<printWhenExpression><![CDATA[$F{THIS_IS_TOTAL_LINE} != "Y" && $F{COMMENTS} != ""]]></printWhenExpression>
+				</reportElement>
+				<textField>
+					<reportElement uuid="a09f2abd-215e-428e-ae45-3607b313a5c1" x="52" y="0" width="500" height="11"/>
+					<textElement/>
+					<textFieldExpression><![CDATA[$F{COMMENTS}]]></textFieldExpression>
 				</textField>
 			</frame>
 			<frame>
