@@ -21,7 +21,7 @@ rem --- Get user approval to update
     msg_tokens$[1]=x.task_desc$
     gosub disp_message
     if msg_opt$<>"Y" then goto std_exit_no_update
-
+ESCAPE; REM << aru_cashreceipts.aon - just starting update here >>
 rem --- Start progress meter and position header file
 
     call pgmdir$+"adc_progress.aon","NC","","","","",0,are01_dev,1,meter_num,status

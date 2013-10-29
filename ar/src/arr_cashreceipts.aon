@@ -1,7 +1,8 @@
 rem --- Cash Receipts Register
 rem --- Program arr_cashreceipts v8.0.0 14Dec2006 (arr_aa)
 rem --- Created by adx_codeport.bbx v1.1.4 (12/14/2006 07:37:31)
-
+input (0,err=0004,siz=1)@(10,10),"<O>rig version <N>ew Version   ",@(39,10),x$:(""=std_exit_no_report,"O"=*next,"N"=*next,"n"=*next,"o"=*next)
+if pos(x$="Nn") run "arr_cashreceipts_new.aon"; rem << ***** TESTING >>
 rem --- AddonSoftware
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
@@ -461,12 +462,12 @@ rem         xwk=fnblank(11);rem don't think it needs this.CAH
           if gl$<>"Y" continue
           read (are21_dev,key=receipt$,dom=*next)
 
-          rem --- Read the next Cash Receipt Distribution (are-21) record
+          rem --- Read the next Cash Receipt Distribution (art_glpost) record
 
           while moredetail
                 k$=key(are21_dev,end=*break)
                 if pos(receipt$=k$)<>1 break
-                read record (are21_dev) are21a$
+                read record (glpost_dev) are21a$
 
                 rem --- Print this detail record
                 
@@ -626,7 +627,6 @@ print_totals: rem --- Print date or receipt code totals
     xwk=fnblank(9)
     OutVect!.addItem(Translate!.getTranslation("AON_CASH"))
     OutVect!.addItem(str(pt[5]))
-
 	if pt[0]-pt[3]<>pt[6]
 		bal_errors=bal_errors+1
 		msg$="*** "+Translate!.getTranslation("ERROR")+" - "
@@ -772,6 +772,7 @@ Display_Message: rem --- Display Message Routine
     msg_id$="AON_REG_ERRS"
     gosub disp_message
     if pos("PASSVALID"=msg_opt$)<>0 special_flag$="Y"
+
     return
 
 rem --- Functions

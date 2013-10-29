@@ -60,7 +60,8 @@ rem **********************************************
     cashgl_dev=num(rd_open_chans$[8])
     invdet_dev=num(rd_open_chans$[9])
     cashdet_dev=num(rd_open_chans$[10])
-
+    artrans2_dev=num(rd_open_chans$[11])
+ 
 rem **********************************************
 DIM_STRING_TEMPLATES:
 rem **********************************************
@@ -75,6 +76,7 @@ rem **********************************************
     dim cashgl$:rd_open_tpls$[8]
     dim invdet$:rd_open_tpls$[9]
     dim cashdet$:rd_open_tpls$[10]
+    dim artrans2$:rd_open_tpls$[11]
 
 rem **********************************************
 MISC:
@@ -89,7 +91,7 @@ rem **********************************************
 rem **********************************************
 ART_INVHEADER: REM --- Build ART_INVHEADER FROM ART_INVHDR <ART-01> ---
 rem **********************************************
-
+    
     read (invhdr_dev,key=firm_id$+"  "+begcust$,dir=0,dom=*next)
     while more
         msg$="File: ART_INVHDR updating...",inc_tim=1
@@ -97,15 +99,13 @@ rem **********************************************
         invhdr_key$=key(invhdr_dev,end=*break)
         if pos(firm_id$=invhdr_key$)<>1 break
             read record (invhdr_dev,key=invhdr_key$) invhdr$
-
-                        call stbl("+DIR_SYP")+"bas_sequences.bbj", "INTERNAL_SEQ_NO", AR_INVOICE_ID$, table_chans$[all]
-            if ar_invoice_id$ = "" then 
+                        call stbl("+DIR_SYP")+"bas_sequences.bbj", "AR_TRANS_ID", AR_TRANS_ID$, table_chans$[all]
+            if ar_trans_id$ = "" then 
                 callpoint!.setStatus("ABORT")
             endif
         endif
-
         invheader.firm_id$=firm_id$
-        invheader.ar_invoice_id$=ar_invoice_id$
+        invheader.ar_trans_id$=ar_trans_id$
         invheader.ar_type$=invhdr.ar_type$
         invheader.customer_id$=invhdr.customer_id$
         invheader.invoice_no$=invhdr.ar_inv_no$
@@ -116,7 +116,7 @@ rem **********************************************
         invheader.due_date$=invhdr.inv_due_date$
         invheader.disc_date$=invhdr.disc_date$
         invheader.gl_audit_no$=""
-        invheader.ar_inv_type$="IN"
+        invheader.ar_inv_type$=invhdr.invoice_type$
         invheader.invoice_amt$=invhdr.invoice_amt$ 
         invheader.disc_allowed$=invhdr.disc_allowed$
         rcd$=field(invheader$),dest=invheader_dev,source=invhdr_dev,dfile$="ART_INVHEADER",sfile$="ART_INVHDR"
@@ -127,74 +127,85 @@ rem **********************************************
                 write record (invheader_dev)rcd$
 
                 invheader_rcds_from_invhdr=invheader_rcds_from_invhdr+1
-        msg$=$09$+"INVHDR key <"+invhdr_key$+"> written to INVHEADER w/ key <"+invheader.firm_id$+invheader.ar_invoice_id$+">"
-            gosub logfile
+        msg$=$09$+"INVHDR key <"+invhdr_key$+"> written to INVHEADER w/ key <"+invheader.firm_id$+invheader.ar_trans_id$+">"
+            rem << hold while testing >> gosub logfile
 
 rem **********************************************
-ART_TRANSACTIONS: REM --- Build ART_TRANSACTIONS from ART_INVHDR <ART-01> --- 
+ART_INVTRANS_HDR: REM --- ALSO Write ART_INVHEADER rcds to ART_INVTRANS (=child of ART_TRANSACTIONS) w/ 001 counter --- 
 rem **********************************************
-
-        call stbl("+DIR_SYP")+"bas_sequences.bbj", "INTERNAL_SEQ_NO", AR_TRANS_ID$, table_chans$[all]
-        if ar_trans_id$ = "" then callpoint!.setStatus("ABORT")
-            endif
-
+        artrans_seqno=0
+        REM << Now coming from INVHEADER >> call stbl("+DIR_SYP")+"bas_sequences.bbj", "AR_TRANS_ID", AR_TRANS_ID$, table_chans$[all]
+        rem << if ar_trans_id$ = "" then callpoint!.setStatus("ABORT")
+            rem << endif
+        artrans_seqno=artrans_seqno+1
         artrans.firm_id$=invhdr.firm_id$
-        artrans.ar_trans_id$=ar_trans_id$
+        artrans.ar_trans_id$=invheader.ar_trans_id$
+        artrans.sequence_no$=str(artrans_seqno:"000")
+        rem << artrans.invoice_no$=invhdr.ar_inv_no$
         artrans.trans_date$=invhdr.invoice_date$
         artrans.ar_trans_type$="IN"
+        artrans.cr_trans_id$=""
+        artrans.ar_invoice_id$=invheader.ar_trans_id$
         artrans.trans_amount$=invhdr.invoice_amt$
         artrans.disc_amount$=invhdr.disc_allowed$
-        artrans.cr_trans_id$=""
-        artrans.ar_invoice_id$=invheader.ar_invoice_id$
+	 rem << artrans.customer_id$=invheader.customer_id$        
+
         rcd$=field(artrans$),dest=artrans_dev,source=invhdr_dev,dfile$="ART_TRANSACTIONS",sfile$="ART_INVHDR",relrcd=99,k$=invhdr_key$,keylen=len(invhdr_key$)
 
         action$="S",filename$="ART_TRANSACTIONS",subtitle$="Updating "+filename$,channel=0,number=1
         call pgmdir$+"adc_progress.aon",action$,filename$,subtitle$,reserved1$,reserved2$,reserved1,channel,number,reserved2,status
-
+        if cvs(artrans.ar_trans_id$,3)="" escape
         write record (artrans_dev)rcd$
 
         artrans_rcds_from_invheader=artrans_rcds_from_invheader+1
 		msg$=$09$+"ART_INVHDR key <"+invhdr_key$+"> written to ART_TRANSACTIONS w/ key <"+artrans.firm_id$+artrans.ar_trans_id$+">"
-            gosub logfile
+            rem << Hold while testing >> gosub logfile
 
 rem **********************************************
-ART_INVTRANSACTIONS_1: REM --- Build ART_TRANSACTIONS (=ART_INVTRANS-child rcd) from ART_INVDET <ART-11> ---
+ART_INVTRANS_DET: REM --- Now Write ART_INVDET to ART_INVTRANS (=child of ART_TRANSACTIONS) w/ 002+ counter---
 rem **********************************************
-
+        artrans_seqno=1;rem << Header rcd starts w/ 001 >>
         read (invdet_dev,key=invhdr_key$,dom=*next)
         while more
             msg$="File: INVDET writing to TRANSACTIONS ",inc_tim=1
-                gosub logfile
+                rem << gosub logfile
             invdet_key$=key(invdet_dev,end=*break)
             if pos(invhdr_key$(1,keylen-2)=invdet_key$)<>1 
                 break
             endif
             read record (invdet_dev,key=invdet_key$) invdet$
-            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+            rem << call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
-            call stbl("+DIR_SYP")+"bas_sequences.bbj", "INTERNAL_SEQ_NO", AR_TRANS_ID$, table_chans$[all]
-
+            rem << call stbl("+DIR_SYP")+"bas_sequences.bbj", "AR_TRANS_ID", AR_TRANS_ID$, table_chans$[all]
+            artrans_seqno=artrans_seqno+1
             artrans.firm_id$=firm_id$
-            artrans.ar_trans_id$=ar_trans_id$
+            artrans.ar_trans_id$=invheader.ar_trans_id$
+            artrans.sequence_no$=str(artrans_seqno:"000")
+
             artrans.trans_date$=invdet.trans_date$
             artrans.ar_trans_type$="PY"
             artrans.trans_amount$=invdet.trans_amt$
             artrans.disc_amount$=invdet.adjdisc_amt$
             artrans.cr_trans_id$=""
-            artrans.ar_invoice_id$=invheader.ar_invoice_id$
+            artrans.ar_invoice_id$=invheader.ar_trans_id$
+	    REM <<  artrans.customer_id$=invheader.customer_id$
 
             rcd$=field(artrans$),dest=artrans_dev,source=invdet_dev,sfile$="ART_INVDET",dfile$="ART_TRANSACTIONS",relrcd=99,k$=invdet_key$
 
                         action$="S",filename$="ART_TRANSACTIONS",subtitle$="Updating "+filename$,channel=0,number=1
             call pgmdir$+"adc_progress.aon",action$,filename$,subtitle$,reserved1$,reserved2$,reserved1,channel,number,reserved2,status
 
+            findkey$=firm_id$+artrans.ar_trans_id$+artrans.sequence_no$
+            find (artrans_dev,key=findkey$,err=*next);escape; rem << Dupe key!! 
+
             write record (artrans_dev)rcd$
 
-                        artrans_rcds_from_invdet=artrans_rcds_from_invdet+1
+            artrans_rcds_from_invdet=artrans_rcds_from_invdet+1
             msg$=$09$+"INVDET key <"+invdet_key$+"> written to TRANSACTIONS w/ key <"+artrans.firm_id$+artrans.ar_trans_id$+">"
             gosub logfile
 
         wend ; rem << Get next INVDET detail rcd 
+
     wend; rem << Get next INVHDR invoice Hdr rcd >>
 
 rem **********************************************
@@ -204,22 +215,21 @@ rem **********************************************
     read (cashhdr_dev,key=firm_id$+"  ",dir=0,dom=*next)
     cashgl_key$=""
     msg$="File: CASHHDR writing to CASHHEADER ",inc_tim=1
-        gosub logfile
+        rem << hold while testing >> gosub logfile
     while more
         cashhdr_key$=key(cashhdr_dev,end=*break)
-        if pos(firm_id$=k$)<>1 break
-            endif
+        if pos(firm_id$=cashhdr_key$)<>1 break
+        endif
 
         read record (cashhdr_dev,key=cashhdr_key$) cashhdr$
 
-        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        call stbl("+DIR_SYP")+"bas_sequences.bbj", "INTERNAL_SEQ_NO", CR_TRANS_ID$, table_chans$[all]
+        rem << For testing >> call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        call stbl("+DIR_SYP")+"bas_sequences.bbj", "AR_TRANS_ID", AR_TRANS_ID$, table_chans$[all]
 
         if cvs(cashhdr.cash_check$,3)="$" cr_trans_type$="CA" else if cvs(cashhdr.cash_check$,3)="C" and cashhdr.ar_check_no$>"" cr_trans_type$="CH" else if cvs(cashhdr.cash_check$,3)="C" and cvs(cashhdr.ar_check_no$,3)="" cr_trans_type$="CC"
         endif
-
         cashheader.firm_id$=firm_id$
-        cashheader.cr_trans_id$=cr_trans_id$
+        cashheader.ar_trans_id$=ar_trans_id$
         cashheader.customer_id$=cashhdr.customer_id$
         cashheader.receipt_date$=cashhdr.receipt_date$
         cashheader.cash_rec_cd$=cashhdr.cash_rec_cd$
@@ -233,81 +243,86 @@ rem **********************************************
         cashheader.post_trans_id$=""
         cashheader.rev_trans_id$=""
         cashheader.encrypted_acct$=""
-        cashheader.gl_batch_number$=""
+        cashheader.journal_id$=""
+        cashheader.gl_adt_no$=""
         cashheader.rev_cr_trans_id$=""
 
-        rcd$=field(cashheader$),dest=cashheader_dev,source=cashhdr_dev,dfile$="ART_CASHEADER",sfile$="ART_CASHHDR",relrcd=99,k$=cashhdr_key$,keylen=len(cashhdr_key$), last_cashhdr_key$=cashheader.firm_id$+cashheader.cr_trans_id$
+        rcd$=field(cashheader$),dest=cashheader_dev,source=cashhdr_dev,dfile$="ART_CASHEADER",sfile$="ART_CASHHDR",relrcd=99,k$=cashhdr_key$,keylen=len(cashhdr_key$), last_cashhdr_key$=cashheader.firm_id$+cashheader.ar_trans_id$
         cashgl_key$=cashhdr_key$(1,28)
 
-                action$="S",filename$="ART_CASHHEADER",subtitle$="Updating "+filename$,channel=0,number=1
+        action$="S",filename$="ART_CASHHEADER",subtitle$="Updating "+filename$,channel=0,number=1
         call pgmdir$+"adc_progress.aon",action$,filename$,subtitle$,reserved1$,reserved2$,reserved1,channel,number,reserved2,status
-
-                write record (cashheader_dev)rcd$
-
+        write record (cashheader_dev)rcd$
+        dtl_rcds=0
         cashheader_rcds_from_cashhdr=cashheader_rcds_from_cashhdr+1
-        msg$=$09$+"CASHHDR key <"+cashhdr_key$+"> written to CASHHEADER w/ key <"+firm_id$+cashheader.cr_trans_id$+">"
-            gosub logfile
+        msg$=$09$+"CASHHDR key <"+cashhdr_key$+"> written to CASHHEADER w/ key <"+firm_id$+cashheader.ar_trans_id$+">"
+            rem << Hole while Testing >> gosub logfile
 
 rem **********************************************
-CASHDET: REM --- setup key to get INVHEADER rcd ---
+CASHDET: REM --- setup key to get INVHEADER rcd --- 
 rem **********************************************
 
-         read (cashdet_dev,key=cashhdr_key$,dom=*next)
-        crtrans_found=0   
-        while more
-            cashdet_key$=key(cashdet_dev,end=*break)
-            if pos(cashhdr_key$=cashdet_key$)<>1 break
+    seq_no=0
+    read (cashdet_dev,key=cashhdr_key$,dom=*next)
+    crtrans_found=0   
+    while more
+        cashdet_key$=key(cashdet_dev,end=*break)
+        if pos(cashhdr_key$=cashdet_key$)<>1 break
             endif
-            read record (cashdet_dev,key=cashdet_key$) cashdet$
-            alt_invheader_key$=cashdet.firm_id$+cashdet.ar_type$+cashdet.customer_id$+cashdet.ar_inv_no$ 
+        read record (cashdet_dev,key=cashdet_key$) cashdet$
+        alt_invheader_key$=cashdet.firm_id$+cashdet.customer_id$+cashdet.ar_inv_no$ 
 
 rem **********************************************
 UPDATE_AR_INVOICE_ID: REM --- Set ART_TRANSACTIONS.AR_INVOICE_ID$ = ART_INVHEADER.AR_INVOICE_ID  ---
 rem **********************************************
-rem --- find invoice hdr rcd from cashdet rcd <firm_id + ar_type + customer_id + ar_inv_no)
+rem --- find invoice hdr rcd from cashdet rcd (firm_id + ar_type + customer_id + ar_inv_no)
 rem --- Then find all corresponding transactions rcds (all invdet 'PY' rcds incl. invheader.ar_invoice_id pointer)
 rem --- Then match up the cashdet.apply_amt & cashdet.discount_amt to the transactions rcd just found
 rem --- Then update the transactions.cr_trans_id from the cashheader.cr_trans_id
 
-            read (invheader_dev,key=alt_invheader_key$,knum="INVOICE_NO",dom=*next)
-            invheader_found=0
+            invheader_found=0,LINE_COUNT=0
+            read record (invheader_dev,key=alt_invheader_key$,knum="CUST_INVNO",dom=*next)invheader$
             while more
-                invheader_key$=key(invheader_dev,end=*break)
-                read record (invheader_dev,key=invheader_key$)invheader$
-                if invheader.firm_id$+invheader.ar_type$+invheader.customer_id$+invheader.invoice_no$<>alt_invheader_key$  break
+                rem << invheader_key$=key(invheader_dev,end=*break)
+                rem << read record (invheader_dev,key=invheader_key$)invheader$
+                if invheader.firm_id$+invheader.customer_id$+invheader.invoice_no$<>alt_invheader_key$  break
                     endif
 
                 If invheader.customer_id$=cashdet.customer_id$ and invheader.invoice_no$=cashdet.ar_inv_no$
-                    invheader_found=1, alt_trans_key$=invheader.firm_id$+invheader.ar_invoice_id$
-                    read (artrans_dev,key=alt_trans_key$,knum="INV_DATE",err=*next)
+                    invheader_found=1, trans_key$=invheader.firm_id$+invheader.ar_trans_id$
+                    read (artrans_dev,key=trans_key$,knum="PRI",err=*next)
                     while more
                         artrans_key$=key(artrans_dev,end=*break)
 
-                        if artrans_key$(1,14)>alt_trans_key$
+                        if artrans_key$(1,10)>trans_key$
                             break
                         endif
                         read record (artrans_dev,key=artrans_key$)artrans$
 
                         inverted_amt=artrans.trans_amount*-1
                         inverted_disc_amt=artrans.disc_amount*-1
-                        if artrans.ar_invoice_id$=invheader.ar_invoice_id$ and artrans.trans_date$=cashheader.receipt_date$ and inverted_amt=cashdet.apply_amt and cashdet.discount_amt=inverted_disc_amt and cvs(artrans.cr_trans_id$,3)="" and artrans.ar_trans_type$="PY"
+                        if artrans.ar_trans_id$=invheader.ar_trans_id$ and artrans.trans_date$=cashheader.receipt_date$ and inverted_amt=cashdet.apply_amt and cashdet.discount_amt=inverted_disc_amt and cvs(artrans.cr_trans_id$,3)="" and artrans.ar_trans_type$="PY"
                             extract record (artrans_dev,key=artrans_key$)artrans$
-                            artrans.cr_trans_id$=cashheader.cr_trans_id$
-                            rcd$=field(artrans$),dest=artrans_dev,source=artrans_dev,sfile$="ART_TRANSACTIONS",dfile$="ART_TRANSACTIONS",relrcd=99,k$=artrans_key$
+                             
+                            delkey$=artrans.firm_id$+artrans.ar_trans_id$+artrans.sequence_no$;rem << This is the primary key, generated from INVHEADER.AR_TRANS_ID$ originally - 'PY' rcd >>
+                            seqno=0; gosub get_next_seq_no
+                            artrans.ar_trans_id$=cashheader.ar_trans_id$, artrans.cr_trans_id$=cashheader.ar_trans_id$, artrans.sequence_no$=sequence_no$
+                            rcd$=field(artrans$),dest=artrans2_dev,source=artrans2_dev,sfile$="ART_TRANSACTIONS",dfile$="ART_TRANSACTIONS",relrcd=99,k$=artrans_key$
 
                             action$="NS",filename$="ART_TRANSACTIONS",subtitle$="Updating "+filename$,channel=0,number=1
-                            call pgmdir$+"adc_progress.aon",action$,filename$,subtitle$,reserved1$,reserved2$,reserved1,channel,number,reserved2,status
+                            rem << call pgmdir$+"adc_progress.aon",action$,filename$,subtitle$,reserved1$,reserved2$,reserved1,channel,number,reserved2,status
+ 
+                            write record (artrans2_dev)rcd$
+				            read (artrans_dev,key=artrans_key$,dom=*next); rem << Release rcd lock >> was read .. key=""
+                            crtrans_found=1, dtl_rcds=dtl_rcds+1
+				            read (artrans2_dev,key=delkey$)
+				            remove (artrans2_dev,key=delkey$);rem << rcd replaced by the cashheader.trans_id$ key just written >>
+                            delkey$="",artrans_rcds_updated_from_cashheader=artrans_rcds_updated_from_cashheader+1, msg$=$09$+"CASHHEADER key <"+firm_id$+cashheader.ar_trans_id$+"> updated to TRANSACTIONS key <"+firm$+artrans_id$+">"
+                            rem << Hold while testing >> gosub logfile
+                        endif; rem << NEW test >>
+                        rem << NEW on hold >>    break
 
-                            write record (artrans_dev)rcd$
-                            crtrans_found=1
-
-                                                        artrans_rcds_updated_from_cashheader=artrans_rcds_updated_from_cashheader+1, msg$=$09$+"CASHHEADER key <"+firm_id$+cashheader.ar_trans_id$+"> updated to TRANSACTIONS key <"+firm$+artrans_id$+">"
-                            gosub logfile
-                            break
-
-                        endif
-
-                    wend ; rem << from artrans_dev loop >> 
+                    wend ;rem << from artrans_dev loop >> 
 
                     break; rem << from invheader_dev loop >>
             wend ; rem << from invheader_dev loop >>
@@ -315,49 +330,47 @@ rem --- Then update the transactions.cr_trans_id from the cashheader.cr_trans_id
             if invheader_found=0 err_msg$="Table ART_INVHEADER is missing a match on key <"+alt_key$+"> coming from table ART_INVHEADER."; gosub logfile
                 endif
 
-        wend ; rem << from cashdet loop >>
+    wend ; rem << from cashdet loop >>
 
 rem **********************************************
 ART_CASHPOST: REM --- Build ART_CASHPOST from ART_CASHGL <ART-26> ---
 rem **********************************************
-
 rem --- Cash receipts entry will generate cashgl records corresponding to the cashhdr 
 rem --- Read into cashgl w/ cashhdr key
 rem --- find all corresponding cashgl rcds from this cash receipt
 rem --- write data to cashpost
+REM --- << cashgl_key$=cashhdr_key$(1,28) >>
 
         read (CASHGL_DEV,KEY=cashgl_key$,DOM=*NEXT)
         msg$="File: CASHGL writing to CASHPOST ",inc_tim=1
-            gosub logfile
+            rem << gosub logfile
         while more
             cashgl_key$=key(cashgl_dev,end=*break)
             if cashgl_key$(1,28)<>cashhdr_key$(1,28) 
                 break
             endif
             read record (cashgl_dev,key=cashgl_key$,dom=*break)cashgl$
-            call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+            REM << call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
-                        cashpost.firm_id$=firm_id$
-            cashpost.cr_trans_id$=cashheader.cr_trans_id$
+            cashpost.firm_id$=firm_id$
+            cashpost.ar_trans_id$=cashheader.ar_trans_id$
             cashpost.gl_account$=cashgl.gl_account$
             cashpost.gl_trans_type$="M"
             cashpost.trans_amount=cashheader.payment_amt
 
 	        rcd$=field(cashpost$),dest=cashpost_dev,source=cashgl_dev,dfile$="ART_CASHPOST",sfile$="ART_CASHGL",relrcd=0
 
-	        	        action$="NS",filename$="ART_CASHPOST",subtitle$="Updating "+filename$,channel=0,number=1
-	        call pgmdir$+"adc_progress.aon",action$,filename$,subtitle$,reserved1$,reserved2$,reserved1,channel,number,reserved2,status
+	        action$="NS",filename$="ART_CASHPOST",subtitle$="Updating "+filename$,channel=0,number=1
+	        rem << call pgmdir$+"adc_progress.aon",action$,filename$,subtitle$,reserved1$,reserved2$,reserved1,channel,number,reserved2,status
 	        write record (cashpost_dev)rcd$
 
-	        	        cashpost_rcds_from_cashhdr=cashpost_rcds_from_cashhdr+1, msg$=$09$+"CASHPOST key <"+firm_id$+CASHPOST.CR_TRANS_ID$+CASHPOST_GL_ACCOUNT$+"> updated from CASHHDR key <"+cashgl_key$+">"+$0d$
-	            gosub logfile
+	        cashpost_rcds_from_cashhdr=cashpost_rcds_from_cashhdr+1, msg$=$09$+"CASHPOST key <"+firm_id$+CASHPOST.AR_TRANS_ID$+CASHPOST_GL_ACCOUNT$+"> updated from CASHHDR key <"+cashgl_key$+">"+$0d$
+	        rem << Hold while testing >> gosub logfile
 
-	                    wend ; rem << from CASHGL loop >>
-
-
+	    wend ; rem << from CASHGL loop >>
 
     wend ; rem << from cashhdr_dev loop >>
-    if crtrans_found=0 err_msg$="The ART_CASHHEADER.CR_TRANS_ID value <"+cashheader.cr_trans_id$+"> did not update to ART_TRANSACTIONS. ART_TRANSACTIONS does not have a 'PY' record (from INVDET) matching up w/ the (CASHDET.)APPLY_AMT or DISCOUNT_AMT."; gosub LOGFILE
+    if crtrans_found=0 err_msg$="The ART_CASHHEADER.CR_TRANS_ID value <"+cashheader.ar_trans_id$+"> did not update to ART_TRANSACTIONS. ART_TRANSACTIONS does not have a 'PY' record (from INVDET) matching up w/ the (CASHDET.)APPLY_AMT or DISCOUNT_AMT."; gosub LOGFILE
             endif
     rem --- All done
 
@@ -380,21 +393,36 @@ fin$=fin(cashdet_dev),active_keys=dec(fin$(77,4)),msg$="ART_CASHDET: active keys
 MSG$="TRANSACTIONS rcds upated from CASHHDR="+str(artrans_rcds_updated_from_cashheader);gosub logfile
     goto std_exit
 
-rem **********************************************
+rem ==============================================
+get_next_seq_no: rem << Replacing ARTRANS <PY> rcd from INVHEADER w/ same data except use CASHHEADER ARTRANS_ID # >>
+rem ==============================================
+rem --- The ARTRANS 'PY" rcds get written from INVDET initially. 
+rem --- In the cash receipts section, we need to match up CR detail records to these PY rcds to apply payments.
+rem --- The ARTRANS.AR_TRANS_ID$ (PY rcd) is = to the INVHEADER.AR_TRANS_ID$ when first written (points back to the INVOICE header).
+rem --- The AR_TRANS_ID must = the CASHHEADER.AR_TRANS_ID in order for the transactions to mach up w/ the cash header rcd.
+rem --- We need to remove the original ARTRANS 'PY' record and replace the primary key (Firm ID + AR_TRANS_ID) w/ the same
+rem --- data but use the CASHHEADER.AR_TRANS_ID$ in the rcd so it points back to the CASHHEADER table.
+
+    seqno=seqno+1,seqno$=str(seqno:"000"),key$=cashheader.firm_id$+cashheader.ar_trans_id$+seqno$
+    find (artrans2_dev,key=key$,KNUM="PRI",dom=*next);goto get_next_seq_no
+    sequence_no$=seqno$,new_artrans_key$=key$
+    return
+
+rem ==============================================
 RESET:
-rem **********************************************
+rem ==============================================
 
     relrcd=0,rcd$=""
     return
 
-rem **********************************************
+rem ==============================================
 SETUP_ARRAYS:
-rem **********************************************
+rem ==============================================
 
-    files=10,rd_open_beg=1,rd_open_end=files,rd_open_batch=0,rd_open_status$=""
+    files=11,rd_open_beg=1,rd_open_end=files,rd_open_batch=0,rd_open_status$=""
     dim rd_open_tables$[1:files],rd_open_opts$[1:files],rd_open_chans$[1:files],rd_open_tpls$[1:files]; rem << Do NOT dim rd_table_chans$[files].  Just pass in rd_table_chans$it in as is >>
 
-        rd_open_tables$[1]="ART_INVHDR",rd_open_opts$[1]=opts$
+    rd_open_tables$[1]="ART_INVHDR",rd_open_opts$[1]=opts$
     rd_open_tables$[2]="OPT_INVHDR",rd_open_opts$[2]=opts$
     rd_open_tables$[3]="ART_CASHHEADER",rd_open_opts$[3]=opts$
     rd_open_tables$[4]="ART_TRANSACTIONS",rd_open_opts$[4]=opts$
@@ -404,6 +432,7 @@ rem **********************************************
     rd_open_tables$[8]="ART_CASHGL",rd_open_opts$[8]=opts$
     rd_open_tables$[9]="ART_INVDET",rd_open_opts$[9]=opts$
     rd_open_tables$[10]="ART_CASHDET",rd_open_opts$[10]=opts$
+    rd_open_tables$[11]="ART_TRANSACTIONS",rd_open_opts$[11]="OTA[1]"; rem << opts$
     return
 
 rem **********************************************
@@ -526,7 +555,7 @@ rem **********************************************
     opts$="C",eop=1
     gosub setup_arrays
     gosub open_tables ; rem << Use same pgm to open/close channels >> 
- ESCAPE ; rem << EOP : stop here for testing >>
+ rem << ESCAPE ; rem << EOP : stop here for testing >>
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
 
         release
