@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<meta name='barista_version' content='13.0' />
+<barista_admin_record>
+	<barista_record_table>ADM_QUERY</barista_record_table>
+	<query_id>ART_CASHHEADER_O</query_id>
+	<desc>Cash Header Open Records</desc>
+	<dd_table_alias>ART_CASHHEADER  </dd_table_alias>
+	<column_move>Y</column_move>
+	<query_type>S</query_type>
+	<default_value>Y</default_value>
+	<user_filters>Y</user_filters>
+	<disp_all_rows>Y</disp_all_rows>
+	<asc_comp_id>01007514</asc_comp_id>
+	<asc_prod_id>AR </asc_prod_id>
+	<override_sql>Y</override_sql>
+	<sql_select>SELECT art_cashheader.firm_id, art_cashheader.ar_trans_id, art_cashheader.customer_id, arm_custmast.customer_name, art_cashheader.status, art_cashheader.receipt_date, art_cashheader.cash_rec_cd, arc_cashcode.code_desc, art_cashheader.cr_trans_type, art_cashheader.payment_amt[$0a$]FROM art_cashheader[$0a$]LEFT JOIN arm_custmast ON arm_custmast.firm_id=art_cashheader.firm_id AND arm_custmast.customer_id=art_cashheader.customer_id[$0a$]LEFT JOIN arc_cashcode ON arc_cashcode.firm_id=art_cashheader.firm_id AND arc_cashcode.record_id_c='C' AND arc_cashcode.cash_rec_cd=art_cashheader.cash_rec_cd[$0a$]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           </sql_select>
+</barista_admin_record>
