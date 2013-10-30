@@ -57,7 +57,7 @@ rem --- Require op_ref entry
 	callpoint!.setTableColumnAttribute("<<DISPLAY>>.OP_REF","MINL","1")
 
 rem --- Set op_ref lookup
-	callpoint!.setTableColumnAttribute("<<DISPLAY>>.OP_REF","IDEF","AO_WO_OPRTN_LK")
+	callpoint!.setTableColumnAttribute("<<DISPLAY>>.OP_REF","IDEF","AO_WO_OP_REF_LK")
 
 rem --- Op_code initializations
 	op_code$=callpoint!.getColumnData("SFE_TIMEEMPLDET.OP_CODE")
