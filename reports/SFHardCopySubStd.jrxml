@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopySubStd" language="groovy" pageWidth="772" pageHeight="592" orientation="Landscape" columnWidth="752" leftMargin="0" rightMargin="0" topMargin="3" bottomMargin="0" resourceBundle="addon" uuid="3f01eeb1-0394-4f86-9d0e-eb00faf12192">
-	<property name="ireport.zoom" value="1.5"/>
-	<property name="ireport.x" value="0"/>
+	<property name="ireport.zoom" value="2.0"/>
+	<property name="ireport.x" value="655"/>
 	<property name="ireport.y" value="0"/>
 	<template><![CDATA["StyleTemplate.jrtx"]]></template>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
@@ -54,14 +54,14 @@
 				<textFieldExpression><![CDATA[" "+$R{AON_SUBCONTRACT_STANDARDS}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement uuid="0415375f-b207-4f34-8cc0-b14808f2c1de" mode="Opaque" x="501" y="0" width="113" height="13" backcolor="#D2D2D2"/>
+				<reportElement uuid="0415375f-b207-4f34-8cc0-b14808f2c1de" mode="Opaque" x="509" y="0" width="110" height="13" backcolor="#D2D2D2"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$R{AON_EACH}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement uuid="b6ef4924-f7d2-46fa-a283-9a5179326f11" mode="Opaque" x="619" y="0" width="121" height="13" backcolor="#D2D2D2"/>
+				<reportElement uuid="b6ef4924-f7d2-46fa-a283-9a5179326f11" mode="Opaque" x="626" y="0" width="114" height="13" backcolor="#D2D2D2"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font isBold="true"/>
 				</textElement>
@@ -89,7 +89,7 @@
 				<textFieldExpression><![CDATA["Op Ref"]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement uuid="3cd18d98-0ca8-4179-b7f0-52ae952991b1" x="417" y="13" width="50" height="13"/>
+				<reportElement uuid="3cd18d98-0ca8-4179-b7f0-52ae952991b1" x="417" y="13" width="43" height="13"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font isBold="true"/>
 					<paragraph rightIndent="4"/>
@@ -104,7 +104,7 @@
 				<textFieldExpression><![CDATA[$R{AON_STATUS}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement uuid="05c519e1-2511-4469-b4a3-d6ff71f9d44b" x="502" y="13" width="55" height="13"/>
+				<reportElement uuid="05c519e1-2511-4469-b4a3-d6ff71f9d44b" x="511" y="13" width="55" height="13"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font isBold="true"/>
 					<paragraph rightIndent="4"/>
@@ -112,7 +112,7 @@
 				<textFieldExpression><![CDATA[$R{AON_UNITS}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement uuid="eb2aa2d8-acca-4c60-af2d-0c7e7b843ace" x="560" y="13" width="53" height="13" isPrintWhenDetailOverflows="true">
+				<reportElement uuid="eb2aa2d8-acca-4c60-af2d-0c7e7b843ace" x="568" y="13" width="50" height="13" isPrintWhenDetailOverflows="true">
 					<printWhenExpression><![CDATA[$P{PRINT_COSTS} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
@@ -122,7 +122,7 @@
 				<textFieldExpression><![CDATA[$R{AON_COST}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement uuid="3f10cfe0-14e7-4231-b51f-05ce65f49517" x="620" y="13" width="58" height="13"/>
+				<reportElement uuid="3f10cfe0-14e7-4231-b51f-05ce65f49517" x="628" y="13" width="55" height="13"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<font isBold="true"/>
 					<paragraph rightIndent="4"/>
@@ -130,7 +130,7 @@
 				<textFieldExpression><![CDATA[$R{AON_UNITS}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement uuid="8bf1f83c-26ce-40f6-b234-d18299a15355" x="680" y="13" width="58" height="13" isPrintWhenDetailOverflows="true">
+				<reportElement uuid="8bf1f83c-26ce-40f6-b234-d18299a15355" x="685" y="13" width="50" height="13" isPrintWhenDetailOverflows="true">
 					<printWhenExpression><![CDATA[$P{PRINT_COSTS} == "Y"]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
@@ -177,7 +177,7 @@
 					<textFieldExpression><![CDATA[$F{OP_SEQ}]]></textFieldExpression>
 				</textField>
 				<textField>
-					<reportElement uuid="ce5b5867-d6d9-41e2-9ede-7f547ba8c84f" x="417" y="0" width="50" height="11"/>
+					<reportElement uuid="ce5b5867-d6d9-41e2-9ede-7f547ba8c84f" x="417" y="0" width="43" height="11"/>
 					<textElement textAlignment="Center"/>
 					<textFieldExpression><![CDATA[$F{DATE_REQ}]]></textFieldExpression>
 				</textField>
@@ -187,24 +187,24 @@
 					<textFieldExpression><![CDATA[$F{PO_STATUS}]]></textFieldExpression>
 				</textField>
 				<textField>
-					<reportElement uuid="99ab77fd-ef19-479c-9187-19c00d669977" x="502" y="0" width="55" height="11"/>
+					<reportElement uuid="99ab77fd-ef19-479c-9187-19c00d669977" x="511" y="0" width="55" height="11"/>
 					<textElement textAlignment="Right"/>
 					<textFieldExpression><![CDATA[$F{UNITS_EA}]]></textFieldExpression>
 				</textField>
 				<textField>
-					<reportElement uuid="fc522651-df15-4eab-afcc-25c5e3bb59fb" x="560" y="0" width="53" height="11">
+					<reportElement uuid="fc522651-df15-4eab-afcc-25c5e3bb59fb" x="568" y="0" width="50" height="11">
 						<printWhenExpression><![CDATA[$P{PRINT_COSTS} == "Y"]]></printWhenExpression>
 					</reportElement>
 					<textElement textAlignment="Right"/>
 					<textFieldExpression><![CDATA[$F{COST_EA}]]></textFieldExpression>
 				</textField>
 				<textField>
-					<reportElement uuid="3c804cad-9f66-4119-bfd2-9811bacc759f" x="620" y="0" width="58" height="11"/>
+					<reportElement uuid="3c804cad-9f66-4119-bfd2-9811bacc759f" x="628" y="0" width="55" height="11"/>
 					<textElement textAlignment="Right"/>
 					<textFieldExpression><![CDATA[$F{UNITS_TOT}]]></textFieldExpression>
 				</textField>
 				<textField>
-					<reportElement uuid="46b8faa0-67dd-43c4-b8d5-773b70ecf5c1" x="680" y="0" width="58" height="11">
+					<reportElement uuid="46b8faa0-67dd-43c4-b8d5-773b70ecf5c1" x="685" y="0" width="50" height="11">
 						<printWhenExpression><![CDATA[$P{PRINT_COSTS} == "Y"]]></printWhenExpression>
 					</reportElement>
 					<textElement textAlignment="Right"/>
@@ -236,7 +236,7 @@
 					<printWhenExpression><![CDATA[$F{THIS_IS_TOTAL_LINE}=="Y"]]></printWhenExpression>
 				</reportElement>
 				<textField>
-					<reportElement uuid="69287df1-2e21-4de4-b5de-bd49419f4820" x="560" y="0" width="53" height="11">
+					<reportElement uuid="69287df1-2e21-4de4-b5de-bd49419f4820" x="568" y="0" width="50" height="11">
 						<printWhenExpression><![CDATA[$P{PRINT_COSTS} == "Y"]]></printWhenExpression>
 					</reportElement>
 					<box>
@@ -246,7 +246,7 @@
 					<textFieldExpression><![CDATA[$F{COST_EA}]]></textFieldExpression>
 				</textField>
 				<textField>
-					<reportElement uuid="2a28d633-5432-42af-a193-f21de2e8c0da" x="680" y="0" width="58" height="11">
+					<reportElement uuid="2a28d633-5432-42af-a193-f21de2e8c0da" x="685" y="0" width="50" height="11">
 						<printWhenExpression><![CDATA[$P{PRINT_COSTS} == "Y"]]></printWhenExpression>
 					</reportElement>
 					<box>
