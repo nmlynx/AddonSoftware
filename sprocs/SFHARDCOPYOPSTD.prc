@@ -10,6 +10,8 @@ rem AddonSoftware
 rem Copyright BASIS International Ltd.
 rem ----------------------------------------------------------------------------
 
+developing=0; rem Set to 1 to turn on test pattern printing for development/debug
+
 seterr sproc_error
 
 rem --- Set of utility methods
@@ -158,7 +160,12 @@ rem --- Trip Read
 
 		dim opcode_tpl$:fattr(opcode_tpl$)
 		read record (opcode_dev,key=firm_id$+read_tpl.op_code$,dom=*next) opcode_tpl$
-		
+
+		if developing 
+			gosub send_test_pattern
+			continue
+		endif
+				
 		if read_tpl.line_type$="M"
 			Rem --- Send data row for Memos
 			data!.setFieldValue("COMMENTS",read_tpl.ext_comments$)
@@ -221,6 +228,37 @@ rem --- Tell the stored procedure to return the result set.
 	sp!.setRecordSet(rs!)
 	goto std_exit
 
+rem --- Subroutines
+	
+	rem --- Print test pattern of main fields for developing/debugging column placement
+	send_test_pattern: 
+
+		if read_tpl.line_type$="M"
+			Rem --- Send data row for Memos
+			data!.setFieldValue("COMMENTS",FILL(LEN(read_tpl.ext_comments$)-1,"W")+"x")
+		else
+			rem --- Send data row for non-Memos
+			data!.setFieldValue("REF_NO","99999X")
+			data!.setFieldValue("OP_CODE",FILL(LEN(read_tpl.op_code$)-1,"W")+"X")
+			data!.setFieldValue("CODE_DESC",FILL(LEN(opcode_tpl.code_desc$)-1,"W")+"x")
+			data!.setFieldValue("REQ_DATE","98/65/6789")
+			data!.setFieldValue("HOURS","x"+sf_hours_mask$+"x")
+			data!.setFieldValue("PC_HR","x"+sf_units_mask$+"x")
+			data!.setFieldValue("UNITS_EA","x"+sf_units_mask$+"x")
+			data!.setFieldValue("SETUP","x"+sf_hours_mask$+"x")
+			data!.setFieldValue("UNITS_TOT","x"+sf_units_mask$+"x")
+			
+			if print_costs$="Y"
+				data!.setFieldValue("DIRECT","x"+sf_rate_mask$+"x")
+				data!.setFieldValue("OVHD","x"+sf_rate_mask$+"x")
+				data!.setFieldValue("COST_EA","x"+sf_cost_mask$+"x")
+				data!.setFieldValue("COST_TOT","x"+sf_amt_mask$+"x")
+			endif
+		endif	
+		rs!.insert(data!)
+	
+	return
+	
 rem --- Functions
 
     def fndate$(q$)

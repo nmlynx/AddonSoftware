@@ -10,6 +10,8 @@ rem AddonSoftware
 rem Copyright BASIS International Ltd.
 rem ----------------------------------------------------------------------------
 
+developing=0; rem Set to 1 to turn on test pattern printing for development/debug
+
 seterr sproc_error
 
 rem --- Set of utility methods
@@ -628,7 +630,7 @@ rem --- Subroutines
 		data! = rs!.getEmptyRecordData()
 
 		data!.setFieldValue("THIS_IS_TOTAL_LINE","N")
-		data!.setFieldValue("REF_NO","WWWWWX")
+		data!.setFieldValue("REF_NO","99999X")
 		data!.setFieldValue("OP_CODE",FILL(LEN(op_code$)-1,"W")+"x")
 		data!.setFieldValue("DESC",FILL(LEN(op_code_desc$)-1,"W")+"x")
 		data!.setFieldValue("STD_HRS","x"+sf_hours_mask$+"x")

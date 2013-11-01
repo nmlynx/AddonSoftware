@@ -283,11 +283,11 @@ rem --- Subroutines
 		if read_tpl.line_type$<>"S"
 			data!.setFieldValue("COMMENT",FILL(LEN(read_tpl.ext_comments$)-1,"W")+"x")
 		else
- 			data!.setFieldValue("REF_NO","WWWWWX")
+ 			data!.setFieldValue("REF_NO","WXWXWX")
 			data!.setFieldValue("VENDOR","XWXWXW")
 			data!.setFieldValue("VENDNAME",FILL(LEN(apm_vendmast.vendor_name$)-1,"W")+"x")
-			data!.setFieldValue("OP_SEQ",FILL(LEN(read_tpl.wo_op_ref$)-1,"W")+"x")
-			data!.setFieldValue("DATE_REQ","98/65/4321")
+			data!.setFieldValue("OP_SEQ",FILL(LEN(read_tpl.wo_op_ref$)-1,"9")+"x")
+			data!.setFieldValue("DATE_REQ","98/65/6789")
 			data!.setFieldValue("PO_STATUS",FILL(LEN(postatus$)-1,"W")+"x")
 			data!.setFieldValue("UNITS_EA","x"+sf_units_mask$+"x")
 			data!.setFieldValue("UNITS_TOT","x"+sf_units_mask$+"x")
