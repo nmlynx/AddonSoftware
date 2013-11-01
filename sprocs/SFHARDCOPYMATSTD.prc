@@ -10,6 +10,8 @@ rem AddonSoftware
 rem Copyright BASIS International Ltd.
 rem ----------------------------------------------------------------------------
 
+developing=0; rem Set to 1 to turn on test pattern printing for development/debug
+
 seterr sproc_error
 
 rem --- Set of utility methods
@@ -171,6 +173,11 @@ rem --- Trip Read
 
 		dim ivm_itemmast$:fattr(ivm_itemmast$)
 		read record (ivm_itemmast_dev,key=firm_id$+read_tpl.item_id$,dom=*next) ivm_itemmast$
+
+		if developing 
+			gosub send_test_pattern
+			continue
+		endif
 		
 		if read_tpl.line_type$="M"
 			rem --- Send data row for Memos
@@ -236,7 +243,6 @@ rem --- Note: The report jasper report definition draws a top line for these tot
 		endif
 		
 		rs!.insert(data!)
-		
 	endif
 	
 rem --- Tell the stored procedure to return the result set.
@@ -244,6 +250,51 @@ rem --- Tell the stored procedure to return the result set.
 	sp!.setRecordSet(rs!)
 	goto std_exit
 
+rem --- Subroutines
+	
+	rem --- Print test pattern of main fields for developing/debugging column placement
+	send_test_pattern: 
+
+		if read_tpl.line_type$="M"
+			rem --- Send data row for Memos
+			data!.setFieldValue("COMMENT",FILL(LEN(read_tpl.ext_comments$)-1,"W")+"x")
+			rs!.insert(data!)
+		else
+			rem --- Send data row for non-Memos
+			data!.setFieldValue("REF_NO","WXWXWX")
+			
+			gosub build_itemfield
+			data!.setFieldValue("ITEM",FILL(LEN(item_n_desc1$)-1,"W")+"x")
+			
+			data!.setFieldValue("OP_SEQ",FILL(LEN(read_tpl.wo_op_ref$)-1,"9")+"x")
+			
+			data!.setFieldValue("SCRAP","x"+sf_matlfact_mask$+"x")
+			data!.setFieldValue("DIVISOR","x"+sf_matlfact_mask$+"x")
+			data!.setFieldValue("FACTOR","x"+sf_matlfact_mask$+"x")
+			data!.setFieldValue("QTY_REQ","x"+sf_units_mask$+"x")
+			data!.setFieldValue("UNITS_EA","x"+sf_units_mask$+"x")
+			data!.setFieldValue("UNITS_TOT","x"+sf_units_mask$+"x")
+			
+			if print_costs$="Y"
+				data!.setFieldValue("COST_EA","x"+sf_cost_mask$+"x")
+				data!.setFieldValue("COST_TOT","x"+sf_amt_mask$+"x")
+			endif
+			
+			rs!.insert(data!)		
+
+			rem --- For non-Travelers, print 2nd line w/rest of the item desc if not all would fit
+			if report_type$<>"T"
+				if cvs(item_n_desc2$,2)<>""	
+					data! = rs!.getEmptyRecordData()
+					data!.setFieldValue("ITEM","xx"+FILL(LEN(item_n_desc2$)-1,"W")+"x")
+					rs!.insert(data!)
+				endif
+			endif
+		endif
+	
+	return
+
+	
 build_itemfield: rem --- Build ITEM field for non-Memos: Item plus Desc
 rem --   The routine is for non-memos, 
 rem --     - The ITEM field is a combo of the item plus as much desc as possible.
