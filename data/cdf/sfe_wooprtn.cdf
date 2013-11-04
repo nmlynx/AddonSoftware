@@ -355,6 +355,6 @@ rem --- Disable grid if Closed Work Order
 
 rem --- Disable WO_OP_REF when locked
 	if callpoint!.getDevObject("lock_ref_num")="Y" then
-		opts$=callpoint!.getTableColumnAttribute("SFE_WOOPRTN.WO_OP_+REF","OPTS")
+		opts$=callpoint!.getTableColumnAttribute("SFE_WOOPRTN.WO_OP_REF","OPTS")
 		callpoint!.setTableColumnAttribute("SFE_WOOPRTN.WO_OP_REF","OPTS",opts$+"C"); rem --- makes read only
 	endif
