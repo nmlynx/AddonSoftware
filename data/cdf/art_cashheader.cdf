@@ -1,3 +1,13 @@
+[[ART_CASHHEADER.ARER]]
+	callpoint!.setColumnEnabled("ART_CASHHEADER.RECEIPT_DATE",1)
+	callpoint!.setColumnEnabled("ART_CASHHEADER.CUSTOMER_ID",1)
+
+	callpoint!.setColumnData("art_cashheader.status","O ")	
+	callpoint!.setColumnData("art_cashheader.cr_source","CR")
+	callpoint!.setColumnData("ART_CASHHEADER.CR_TRANS_TYPE","CH",1)
+
+	switch_var$=callpoint!.getColumnData("ART_CASHHEADER.CR_TRANS_TYPE")
+	gosub update_fields
 [[ART_CASHHEADER.CR_TRANS_TYPE.AVAL]]
 
 
@@ -49,13 +59,6 @@ rem -- check to see if detail lines exist. If they exist, jumpt to cash_rec_cd a
 	if lines_exist
 		callpoint!.setFocus("art_cashheader.cash_rec_cd")
 	endif
-[[ART_CASHHEADER.AREC]]
-	callpoint!.setColumnEnabled("ART_CASHHEADER.RECEIPT_DATE",1)
-	callpoint!.setColumnEnabled("ART_CASHHEADER.CUSTOMER_ID",1)
-
-	callpoint!.setColumnData("art_cashheader.status","O ")	
-	callpoint!.setColumnData("art_cashheader.cr_source","CR")
-	callpoint!.setColumnData("ART_CASHHEADER.CR_TRANS_TYPE","CH")
 [[ART_CASHHEADER.CUSTOMER_ID.BINP]]
 
 gosub check_if_detail_lines_exist

@@ -1,3 +1,17 @@
+[[<<DISPLAY>>.INVOICE_DATE.BINP]]
+rem --- code only exists until barista issue fixed
+
+if cvs(callpoint!.getColumnData("<<DISPLAY>>.INVOICE_NO"),3)="" 
+	callpoint!.setFocus("<<DISPLAY>>.INVOICE_NO")
+endif
+[[ART_CASHTRANS.AGRN]]
+
+[[<<DISPLAY>>.DISC_AMT.BINP]]
+if cvs(callpoint!.getColumnData("<<DISPLAY>>.INVOICE_NO"),3)="" 
+	callpoint!.setFocus("<<DISPLAY>>.INVOICE_NO")
+[[<<DISPLAY>>.ENTRY_AMT.BINP]]
+if cvs(callpoint!.getColumnData("<<DISPLAY>>.INVOICE_NO"),3)="" 
+	callpoint!.setFocus("<<DISPLAY>>.INVOICE_NO")
 [[ART_CASHTRANS.ADEL]]
 rem -- remove deleted line from header totals
 
@@ -80,9 +94,9 @@ rem --- reminder that the disc_amt is postive but stored as a negative number in
 [[<<DISPLAY>>.INVOICE_NO.AVAL]]
 
 	invoice_no$=callpoint!.getUserInput()
-	if cvs(invoice_no$,3)=""
-		callpoint!.setStatus("ABORT")
-	else
+
+	rem --- because of barista limitations, we allow a blank invoice_no and trap it at the two other entry fields on the line
+	if cvs(invoice_no$,3)<>"" and cvs(invoice_no$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.INVOICE_NO"),3)
 		file$="@ART_INVHEADER"
 		invheader_dev=fnget_dev(file$)
 		dim invheader$ : fnget_tpl$(file$)
@@ -135,7 +149,7 @@ rem --- reminder that the disc_amt is postive but stored as a negative number in
 	from_binq=1
 	gosub custom_invoice_query
 	from_binq=0
-	callpoint!.setStatus("ABORT"); rem << Needed to prevent system from running stock query triggered by magnifying glass >>
+	callpoint!.setStatus("ACTIVATE-ABORT"); rem << Needed to prevent system from running stock query triggered by magnifying glass >>
 	
 	
 [[ART_CASHTRANS.AOPT-ILU]]
