@@ -20,8 +20,8 @@
 			<DD_EXPORT_DATA id="ddm_tables.ops_params">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.ops_params">20080429</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_tables.ops_params">20130409</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.ops_params">20130913</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.ops_params">155800</DD_LSTSYNC_TIME>
+			<DD_LSTSYNC_DATE id="ddm_tables.ops_params">20131111</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.ops_params">142702</DD_LSTSYNC_TIME>
 			<DD_ATTR_ATAB id="ddm_tables.ops_params">ARS_PARAMS      </DD_ATTR_ATAB>
 			<DD_ATTR_CPGM id="ddm_tables.ops_params">C:/aon_dev/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_FTYP id="ddm_tables.ops_params">T</DD_ATTR_FTYP>
@@ -76,7 +76,7 @@
 		<ID id="ddm_table_tpls">DDM_TABLE_TPLS</ID>
 		<RECORD id="ddm_table_tpls.ops_params">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.ops_params">OPS_PARAMS      </DD_TABLE_ALIAS>
-			<DD_TABLE_TPL id="ddm_table_tpls.ops_params">firm_id:c(2),ar:c(2),sequence_00:c(2),customer_size:c(2),max_customer_len:c(2),multi_types:c(1),multi_dist:c(1),hold_zero:c(1),zip_length:c(1),label_across:c(2),label_length:c(2),label_width:c(2),dist_by_item:c(1),job_nos:c(1),auto_no:c(1),br_interface:c(1),ar_post_to_gl:c(1),cash_sale:c(1),customer_id:c(6),retain_hist:c(2),beg_cmt_line:c(2),end_cmt_line:c(2),dropshp_cost:c(1),min_ord_amt:c(5),min_line_amt:c(5),skip_ln_code:c(1),line_code:c(1),dropshp_whse:c(1),backorders:c(1),retain_jobs:c(2),min_csh_sale:n(5),rec_prt_sys:c(1),cntr_prt_pgm:c(10),inv_hist_flg:c(1),post_to_gl:c(1),prt_gl_det:c(1),commit_days:c(3),def_shp_days:c(2),rec_prt_pgm:c(10),inv_histpgm:c(10),lstcom_date:c(8),current_per:c(2),current_year:c(4),customer_output:c(10),default_station:c(16),op_totals_warn:c(1),op_check_dupe_po:c(1)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.ops_params">firm_id:c(2),ar:c(2),sequence_00:c(2),customer_size:c(2),max_customer_len:c(2),multi_types:c(1),multi_dist:c(1),hold_zero:c(1),zip_length:c(1),label_across:c(2),label_length:c(2),label_width:c(2),dist_by_item:c(1),job_nos:c(1),auto_no:c(1),br_interface:c(1),post_to_gl:c(1),cash_sale:c(1),customer_id:c(6),retain_hist:c(2),beg_cmt_line:c(2),end_cmt_line:c(2),dropshp_cost:c(1),min_ord_amt:n(7*),min_line_amt:n(7*),skip_ln_code:c(1),line_code:c(1),dropshp_whse:c(1),backorders:c(1),retain_jobs:c(2),min_csh_sale:n(7*),rec_prt_sys:c(1),cntr_prt_pgm:c(10),inv_hist_flg:c(1),op_post_to_gl:c(1),prt_gl_det:c(1),commit_days:c(3),def_shp_days:c(2),rec_prt_pgm:c(10),inv_histpgm:c(10),lstcom_date:c(8),current_per:c(2),current_year:c(4),customer_output:c(10),default_station:c(16),op_totals_warn:c(1),op_check_dupe_po:c(1)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -354,7 +354,7 @@
 			<DD_TABLE_ALIAS id="ddm_table_cols.ops_params017">OPS_PARAMS      </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.ops_params017">017</DD_SEQUENCE>
 			<DD_DATA_NAME id="ddm_table_cols.ops_params017">POST_TO_GL      </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.ops_params017">AR_POST_TO_GL   </DD_DVAR_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.ops_params017">POST_TO_GL      </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.ops_params017">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.ops_params017">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.ops_params017">N</DD_FIELD_DELIM>
@@ -362,10 +362,9 @@
 			<DD_CREATE_DATE id="ddm_table_cols.ops_params017">20120125</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ops_params017">20120125</DD_LSTREV_DATE>
 			<DD_ATTR_COLW id="ddm_table_cols.ops_params017">0</DD_ATTR_COLW>
-			<DD_ATTR_LABL id="ddm_table_cols.ops_params017">AR Post To General Ledger</DD_ATTR_LABL>
 			<DD_ATTR_MLAN id="ddm_table_cols.ops_params017">N</DD_ATTR_MLAN>
-			<DD_ATTR_TIND id="ddm_table_cols.ops_params017">51</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ops_params017">AR_POST_TO_GL</SQL_COLUMN_NAME>
+			<DD_ATTR_TIND id="ddm_table_cols.ops_params017">43</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ops_params017">POST_TO_GL</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.ops_params018">
 			<DD_TABLE_ALIAS id="ddm_table_cols.ops_params018">OPS_PARAMS      </DD_TABLE_ALIAS>
@@ -462,7 +461,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.ops_params024">MIN_ORD_AMT     </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.ops_params024">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.ops_params024">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.ops_params024">N</DD_FIELD_DELIM>
+			<DD_FIELD_DELIM id="ddm_table_cols.ars_params024">Y</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.ars_params024">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.ops_params024">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ops_params024">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_PROM id="ddm_table_cols.ops_params024">Minimum Order Amount</DD_ATTR_PROM>
@@ -476,7 +476,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.ops_params025">MIN_LINE_AMT    </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.ops_params025">1</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.ops_params025">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.ops_params025">N</DD_FIELD_DELIM>
+			<DD_FIELD_DELIM id="ddm_table_cols.ars_params025">Y</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.ars_params025">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.ops_params025">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ops_params025">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_PROM id="ddm_table_cols.ops_params025">Minimum Line Amount</DD_ATTR_PROM>
@@ -565,7 +566,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.ops_params031">MIN_CSH_SALE    </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.ops_params031">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.ops_params031">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.ops_params031">N</DD_FIELD_DELIM>
+			<DD_FIELD_DELIM id="ddm_table_cols.ars_params031">Y</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.ars_params031">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.ops_params031">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ops_params031">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_PROM id="ddm_table_cols.ops_params031">Minimum Cash Sale</DD_ATTR_PROM>
@@ -618,7 +620,7 @@
 			<DD_TABLE_ALIAS id="ddm_table_cols.ops_params035">OPS_PARAMS      </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.ops_params035">035</DD_SEQUENCE>
 			<DD_DATA_NAME id="ddm_table_cols.ops_params035">POST_TO_GL      </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.ops_params035">POST_TO_GL      </DD_DVAR_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.ops_params035">OP_POST_TO_GL   </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.ops_params035">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.ops_params035">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.ops_params035">N</DD_FIELD_DELIM>
@@ -626,9 +628,10 @@
 			<DD_CREATE_DATE id="ddm_table_cols.ops_params035">20120125</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.ops_params035">20120125</DD_LSTREV_DATE>
 			<DD_ATTR_COLW id="ddm_table_cols.ops_params035">0</DD_ATTR_COLW>
+			<DD_ATTR_LABL id="ddm_table_cols.ops_params035">OP Post To General Ledger</DD_ATTR_LABL>
 			<DD_ATTR_MLAN id="ddm_table_cols.ops_params035">N</DD_ATTR_MLAN>
-			<DD_ATTR_TIND id="ddm_table_cols.ops_params035">43</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ops_params035">POST_TO_GL</SQL_COLUMN_NAME>
+			<DD_ATTR_TIND id="ddm_table_cols.ops_params035">51</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ops_params035">OP_POST_TO_GL</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.ops_params036">
 			<DD_TABLE_ALIAS id="ddm_table_cols.ops_params036">OPS_PARAMS      </DD_TABLE_ALIAS>
@@ -947,11 +950,6 @@
 			<DD_TABLE_ALIAS id="ddm_column_opts.ops_paramsbr_interfaceo">OPS_PARAMS      </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_opts.ops_paramsbr_interfaceo">BR_INTERFACE    </DD_DVAR_NAME>
 			<DD_ATTR_OPTS id="ddm_column_opts.ops_paramsbr_interfaceo">O</DD_ATTR_OPTS>
-		</RECORD>
-		<RECORD id="ddm_column_opts.ops_paramsar_post_to_glo">
-			<DD_TABLE_ALIAS id="ddm_column_opts.ops_paramsar_post_to_glo">OPS_PARAMS      </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_opts.ops_paramsar_post_to_glo">AR_POST_TO_GL   </DD_DVAR_NAME>
-			<DD_ATTR_OPTS id="ddm_column_opts.ops_paramsar_post_to_glo">O</DD_ATTR_OPTS>
 		</RECORD>
 		<RECORD id="ddm_column_opts.ops_paramscustomer_idu">
 			<DD_TABLE_ALIAS id="ddm_column_opts.ops_paramscustomer_idu">OPS_PARAMS      </DD_TABLE_ALIAS>
@@ -1471,12 +1469,12 @@
 		<RECORD id="ddm_elements.min_ord_amt">
 			<DD_DATA_NAME id="ddm_elements.min_ord_amt">MIN_ORD_AMT     </DD_DATA_NAME>
 			<DD_DESCRIPTION id="ddm_elements.min_ord_amt">Minimum Order Amount</DD_DESCRIPTION>
-			<DD_DATA_TYPE id="ddm_elements.min_ord_amt">C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.min_ord_amt">5</DD_DATA_LENGTH>
+			<DD_DATA_TYPE id="ddm_elements.min_ord_amt">N</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.min_ord_amt">7</DD_DATA_LENGTH>
 			<ASC_COMP_ID id="ddm_elements.min_ord_amt">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_elements.min_ord_amt">AR </ASC_PROD_ID>
 			<DD_CREATE_DATE id="ddm_elements.min_ord_amt">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.min_ord_amt">20090223</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.min_ord_amt">20131111</DD_LSTREV_DATE>
 			<DD_ATTR_BLNK id="ddm_elements.min_ord_amt">N</DD_ATTR_BLNK>
 			<DD_ATTR_CTLW id="ddm_elements.min_ord_amt">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_elements.min_ord_amt">0</DD_ATTR_CTLH>
@@ -1488,19 +1486,20 @@
 			<DD_ATTR_MAXL id="ddm_elements.min_ord_amt">0</DD_ATTR_MAXL>
 			<DD_ATTR_MAXR id="ddm_elements.min_ord_amt">0</DD_ATTR_MAXR>
 			<DD_ATTR_MINL id="ddm_elements.min_ord_amt">0</DD_ATTR_MINL>
-			<DD_ATTR_MSKI id="ddm_elements.min_ord_amt">#0.00</DD_ATTR_MSKI>
-			<DD_ATTR_MSKO id="ddm_elements.min_ord_amt">#0.00</DD_ATTR_MSKO>
+			<DD_ATTR_MSKI id="ddm_elements.min_ord_amt">###0.00</DD_ATTR_MSKI>
+			<DD_ATTR_MSKO id="ddm_elements.min_ord_amt">###0.00</DD_ATTR_MSKO>
 			<DD_ATTR_PREC id="ddm_elements.min_ord_amt">0</DD_ATTR_PREC>
+			<DD_ATTR_STEP id="ddm_elements.min_ord_amt">0</DD_ATTR_STEP>
 		</RECORD>
 		<RECORD id="ddm_elements.min_line_amt">
 			<DD_DATA_NAME id="ddm_elements.min_line_amt">MIN_LINE_AMT    </DD_DATA_NAME>
 			<DD_DESCRIPTION id="ddm_elements.min_line_amt">Minimum Line Amount</DD_DESCRIPTION>
-			<DD_DATA_TYPE id="ddm_elements.min_line_amt">C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.min_line_amt">5</DD_DATA_LENGTH>
+			<DD_DATA_TYPE id="ddm_elements.min_line_amt">N</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.min_line_amt">7</DD_DATA_LENGTH>
 			<ASC_COMP_ID id="ddm_elements.min_line_amt">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_elements.min_line_amt">AR </ASC_PROD_ID>
 			<DD_CREATE_DATE id="ddm_elements.min_line_amt">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.min_line_amt">20090223</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.min_line_amt">20131111</DD_LSTREV_DATE>
 			<DD_ATTR_CTLW id="ddm_elements.min_line_amt">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_elements.min_line_amt">0</DD_ATTR_CTLH>
 			<DD_ATTR_CTYP id="ddm_elements.min_line_amt">N</DD_ATTR_CTYP>
@@ -1511,9 +1510,10 @@
 			<DD_ATTR_MAXL id="ddm_elements.min_line_amt">0</DD_ATTR_MAXL>
 			<DD_ATTR_MAXR id="ddm_elements.min_line_amt">0</DD_ATTR_MAXR>
 			<DD_ATTR_MINL id="ddm_elements.min_line_amt">0</DD_ATTR_MINL>
-			<DD_ATTR_MSKI id="ddm_elements.min_line_amt">#0.00</DD_ATTR_MSKI>
-			<DD_ATTR_MSKO id="ddm_elements.min_line_amt">#0.00</DD_ATTR_MSKO>
+			<DD_ATTR_MSKI id="ddm_elements.min_line_amt">###0.00</DD_ATTR_MSKI>
+			<DD_ATTR_MSKO id="ddm_elements.min_line_amt">###0.00</DD_ATTR_MSKO>
 			<DD_ATTR_PREC id="ddm_elements.min_line_amt">0</DD_ATTR_PREC>
+			<DD_ATTR_STEP id="ddm_elements.min_line_amt">0</DD_ATTR_STEP>
 		</RECORD>
 		<RECORD id="ddm_elements.skip_ln_code">
 			<DD_DATA_NAME id="ddm_elements.skip_ln_code">SKIP_LN_CODE    </DD_DATA_NAME>
@@ -1626,11 +1626,11 @@
 			<DD_DATA_NAME id="ddm_elements.min_csh_sale">MIN_CSH_SALE    </DD_DATA_NAME>
 			<DD_DESCRIPTION id="ddm_elements.min_csh_sale">Minimum Cash Sale</DD_DESCRIPTION>
 			<DD_DATA_TYPE id="ddm_elements.min_csh_sale">N</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.min_csh_sale">5</DD_DATA_LENGTH>
+			<DD_DATA_LENGTH id="ddm_elements.min_csh_sale">7</DD_DATA_LENGTH>
 			<ASC_COMP_ID id="ddm_elements.min_csh_sale">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_elements.min_csh_sale">AD </ASC_PROD_ID>
 			<DD_CREATE_DATE id="ddm_elements.min_csh_sale">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.min_csh_sale">20131030</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.min_csh_sale">20131111</DD_LSTREV_DATE>
 			<DD_ATTR_CTLW id="ddm_elements.min_csh_sale">0</DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_elements.min_csh_sale">0</DD_ATTR_CTLH>
 			<DD_ATTR_CTYP id="ddm_elements.min_csh_sale">N</DD_ATTR_CTYP>
@@ -1641,8 +1641,8 @@
 			<DD_ATTR_MAXL id="ddm_elements.min_csh_sale">0</DD_ATTR_MAXL>
 			<DD_ATTR_MAXR id="ddm_elements.min_csh_sale">0</DD_ATTR_MAXR>
 			<DD_ATTR_MINL id="ddm_elements.min_csh_sale">0</DD_ATTR_MINL>
-			<DD_ATTR_MSKI id="ddm_elements.min_csh_sale">##0.00</DD_ATTR_MSKI>
-			<DD_ATTR_MSKO id="ddm_elements.min_csh_sale">##0.00</DD_ATTR_MSKO>
+			<DD_ATTR_MSKI id="ddm_elements.min_csh_sale">###0.00</DD_ATTR_MSKI>
+			<DD_ATTR_MSKO id="ddm_elements.min_csh_sale">###0.00</DD_ATTR_MSKO>
 			<DD_ATTR_PREC id="ddm_elements.min_csh_sale">0</DD_ATTR_PREC>
 			<DD_ATTR_STEP id="ddm_elements.min_csh_sale">0</DD_ATTR_STEP>
 			<DD_ATTR_FLPT id="ddm_elements.min_csh_sale">N</DD_ATTR_FLPT>
