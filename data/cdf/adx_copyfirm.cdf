@@ -304,7 +304,7 @@ rem --- fill with File information
 							tot_recs=dec(table_fin$(77,4))
 						endif
 
-						vectFiles!.addItem("N"); rem 0
+						vectFiles!.addItem("Y"); rem 0
 						vectFiles!.addItem(ddm_tables.asc_comp_id$);rem 1
 						vectFiles!.addItem(ddm_tables.asc_prod_id$);rem 2
 						vectFiles!.addItem(ddm_tables.dd_table_alias$); rem 3
@@ -312,7 +312,7 @@ rem --- fill with File information
 						vectFiles!.addItem(str(tot_recs)); rem 5
 
 						vectFilesMaster!.addItem("Y"); rem 0 - Filtered Y or N
-						vectFilesMaster!.addItem("N"); rem 1 - Selected Y or N
+						vectFilesMaster!.addItem("Y"); rem 1 - Selected Y or N
 						vectFilesMaster!.addItem(ddm_tables.asc_comp_id$);rem 2
 						vectFilesMaster!.addItem(ddm_tables.asc_prod_id$); rem 3
 						vectFilesMaster!.addItem(ddm_tables.dd_table_alias$); rem 4
