@@ -32,14 +32,6 @@ rem --- Confirm ready to copy data
 		endif
 	endif
 
-rem --- Confirm both from and to firms entered.
-	if cvs(from_firm$,2) = "" or cvs(to_firm$,2) = ""
-		msg_id$ = "AD_MISSING_FIRM"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-		break
-	endif
-
 rem --- Copy selected data
 	if numSelected then
 		rem --- Start progress meter
