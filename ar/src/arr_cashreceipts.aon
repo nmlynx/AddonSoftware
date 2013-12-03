@@ -1,8 +1,8 @@
 rem --- Cash Receipts Register
-rem --- Program arr_cashreceipts v8.0.0 14Dec2006 (arr_aa)
+rem --- Program arr_cashreceipts v13.10.0 16Oct2013 (arr_aa)
 rem --- Created by adx_codeport.bbx v1.1.4 (12/14/2006 07:37:31)
-input (0,err=0004,siz=1)@(10,10),"<O>rig version <N>ew Version   ",@(39,10),x$:(""=std_exit_no_report,"O"=*next,"N"=*next,"n"=*next,"o"=*next)
-if pos(x$="Nn") run "arr_cashreceipts_new.aon"; rem << ***** TESTING >>
+rem --- Modified version (V14.00) Data-Link Associates (10/16/2013)
+
 rem --- AddonSoftware
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
@@ -32,26 +32,26 @@ rem --- see if batching (batching.CAH)
 
 rem --- Open/Lock files
 
-    files=17,begfile=1,endfile=files
+    files=19,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ars_params",ids$[1]="ARS_PARAMS"
-    files$[2]="are-01",ids$[2]="ARE_CASHHDR"
-    files$[3]="are-11",ids$[3]="ARE_CASHDET"
-    files$[4]="are-21",ids$[4]="ARE_CASHGL"
-    files$[5]="are-31",ids$[5]="ARE_CASHBAL"
+    
     files$[6]="arm-01",ids$[6]="ARM_CUSTMAST"
     files$[7]="arm-02",ids$[7]="ARM_CUSTDET"
     files$[8]="arm-06",ids$[8]="ARM_CUSTPMTS"
     files$[9]="arc_cashcode",ids$[9]="ARC_CASHCODE"
     files$[10]="ars_mtdcash",ids$[10]="ARS_MTDCASH"
-    files$[11]="art-01",ids$[11]="ART_INVHDR"
-    files$[12]="art-06",ids$[12]="ART_CASHHDR"
-    files$[13]="art-11",ids$[13]="ART_INVDET"
-    files$[14]="art-16",ids$[14]="ART_CASHDET"
-    files$[15]="art-26",ids$[15]="ART_CASHGL"
+    files$[11]="ART_INVHEADER",ids$[11]="ART_INVHEADER"
+    files$[12]="ART_CASHHEADER",ids$[12]="ART_CASHHEADER"
+    files$[13]="ART_TRANSACTIONS",ids$[13]="ART_TRANSACTIONS"
+    files$[14]="ART_TRANSACTIONS",ids$[14]="ART_TRANSACTIONS"
+    files$[15]="ART_CASHPOST",ids$[15]="ART_CASHPOST"
     files$[16]="gls_params",ids$[16]="GLS_PARAMS"
     files$[17]="arc_distcode",ids$[17]="ARC_DISTCODE"
-    rem --- only lock entry files if not batching.CAH
+    files$[18]="ars_mtdcash",ids$[18]="ARS_MTDCASH"
+    files$[19]="ART_CASHHEADER",ids$[19]="ART_CASHHEADER"
+
+rem --- only lock entry files if not batching.CAH
     if num(batch_no$)=0
         for x=2 to 5
             options$[x]="L"
@@ -61,31 +61,30 @@ rem --- Open/Lock files
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit_no_report
     ars01_dev=channels[1]
-    are01_dev=channels[2]
-    are11_dev=channels[3]
-    are21_dev=channels[4]
-    are31_dev=channels[5]
     arm01_dev=channels[6]
     arm02_dev=channels[7]
     arm06_dev=channels[8]
     arc_cashcode_dev=channels[9]
     ars10_dev=channels[10]
-    art01_dev=channels[11]
-    art06_dev=channels[12]
-    art11_dev=channels[13]
-    art16_dev=channels[14]
-    art26_dev=channels[15]
+    invheader_dev=channels[11]
+    cashheader_dev=channels[12]
+    invtrans_dev=channels[13]
+    cashtrans_dev=channels[14]
+    cashpost_dev=channels[15]
     gls01_dev=channels[16]
     arc_distcode_dev=channels[17]
-	
+	ars_mtdcash_dev=channels[18]
+	cashheader2_dev=channels[19]
+
 rem --- Dimension string templates
 
-    dim ars01a$:templates$[1],are01a$:templates$[2],are11a$:templates$[3]
-    dim are21a$:templates$[4],are31a$:templates$[5],arm01a$:templates$[6]
+    dim ars01a$:templates$[1]
+    dim arm01a$:templates$[6]
     dim arm02a$:templates$[7],arm06a$:templates$[8],arm10c$:templates$[9]
-    dim ars10c$:templates$[10],art01a$:templates$[11],art06a$:templates$[12]
-    dim art11a$:templates$[13],art16a$:templates$[14],art26a$:templates$[15]
-    dim gls01a$:templates$[16],arm10d$:templates$[17]
+    dim ars10c$:templates$[10],invheader$:templates$[11],cashheader$:templates$[12]
+    dim art11a$:templates$[13],cashtrans$:templates$[14],cashpost$:templates$[15]
+    dim gls01a$:templates$[16],arm10d$:templates$[17],ars_mtdcash$:templates$[18]
+    dim cashheader2$:templates$[19]
 
 rem --- Assign form input values to local variables
 
@@ -98,13 +97,6 @@ rem --- Retrieve parameter records
     find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
     ars10c_key$=firm_id$+"C"
     find record (ars10_dev,key=ars10c_key$,dom=*next) ars10c$
-    dim tot_cash[5]
-    tot_cash[0]=ars10c.mtd_cash
-    tot_cash[1]=ars10c.mtd_csh_disc
-    tot_cash[2]=ars10c.mtd_csh_gl
-    tot_cash[3]=ars10c.nxt_mtd_cash
-    tot_cash[4]=ars10c.nmtd_cash_ds
-    tot_cash[5]=ars10c.nmtd_cashgl
     gls01a_key$=firm_id$+"GL00"
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     br$=ars01a.br_interface$
@@ -117,10 +109,18 @@ rem --- Retrieve parameter records
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,acct_length
     g0=len(g0$)
     application$="AR"
+    findrecord(ars_mtdcash_dev,key=firm_id$+"C") ars_mtdcash$
+    dim tot_cash[5]
+    tot_cash[0]=ars_mtdcash.mtd_cash
+    tot_cash[1]=ars_mtdcash.mtd_csh_disc
+    tot_cash[2]=ars_mtdcash.mtd_csh_gl
+    tot_cash[3]=ars_mtdcash.nxt_mtd_cash
+    tot_cash[4]=ars_mtdcash.nmtd_cash_ds
+    tot_cash[5]=ars_mtdcash.nmtd_cashgl
     
 rem --- Is General Ledger installed and being used?
 rem --- as of v9, glw11$ no longer used.  Always use actual glw-11 file (batching.CAH)
-    
+
     gl$="N"
     status=0
     rem --- use this form when running back-end pgm directly; source$=fnbasename$(pgm(-2),"")
@@ -240,6 +240,7 @@ rem --- Additional file opens
     rem --- options$[4]="CL";do clear partial instead of full clear since everyone sharing glw-11. (batching.CAH)
     if gl call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                         ids$[all],templates$[all],channels[all],batch,status
+
     if status goto std_exit_no_report
     glm01_dev=channels[1]
     glt04_dev=channels[2]
@@ -250,12 +251,13 @@ rem --- Dimension string templates
 
     if gl dim glm01a$:templates$[1],glt04a$:templates$[2]
     if br dim glt15a$:templates$[3]
-    
+
 rem --- Clear trans for this firm/process/batch from glw-11 work file (if not batching, batch_no$ is zero, and will clear all recs this firm/process)
 
         if gl$="Y"
             rec_pfx$=firm_id$+process_id$+batch_no$
             call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",glw11_dev,rec_pfx$,status
+
         endif
 
 rem --- Open printer and start progress meter
@@ -264,113 +266,114 @@ rem --- Open printer and start progress meter
 
 rem --- Sort the cash receipts if the register is by receipt code
 
-    if sequence$="C" key_no$="AO_BATCH_RECCD" else key_no$="AO_BATCH_RECTDAT"
+    rem **** BATCH PROCESSING TO DO **** if sequence$="C" key_no$="AO_BATCH_RECCD" else key_no$="AO_BATCH_RECTDAT"
 
 rem --- Position the driver file
 
-    read (are01_dev,key=firm_id$+batch_no$,knum=key_no$,dom=*next)
+    sts_opts$="O"
+    key$=firm_id$+sts_opts$(1,1); rem << Go straightto (O)pen cash receipt rcds, allow R also >>
+    key_no$="STS_REC_DT", cashheader=1
+    read (cashheader_dev,key=key$,knum=key_no$,dom=*next)
 
 rem --- Read the next Cash Receipt Header (are-01) record
 
-    while moreheaders
+    while cashheader
+        k$=key(cashheader_dev,end=*break)
+        if pos(firm_id$=k$)<>1 then break
+        if pos(k$(3,1)=sts_opts$)=0 then break
+        recs=recs+1
 
-          k$=key(are01_dev,end=*break)
-          if pos(firm_id$+batch_no$=k$)<>1 break
-          recs=recs+1
-          rem --- Read transaction header record
 
-          read record (are01_dev,key=k$,dom=*continue) are01a$
-          record_count=record_count+1
-          if mod(record_count,milestone)=0 call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+rem --- Read transaction header record
+        read record (cashheader_dev,key=k$,dom=*continue) cashheader$
+        record_count=record_count+1
+        if mod(record_count,milestone)=0 call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
-          rem --- Check for level breaks on receipt code and date
+rem --- Check for level breaks on receipt code and date
 
-          if sequence$="D" lastcode$=are01a.cash_rec_cd$
-          if are01a.cash_rec_cd$<>lastcode$ gosub code_break
-          if are01a.receipt_date$<>lastdate$ gosub date_break
+        if sequence$="D" lastcode$=cashheader.cash_rec_cd$
+        if cashheader.cash_rec_cd$<>lastcode$ gosub code_break
+        if cashheader.receipt_date$<>lastdate$ gosub date_break
 
-          rem --- Retrieve Customer Master (arm-01) record
+rem --- Retrieve Customer Master (arm-01) record
+        dim arm01a$:fattr(arm01a$),name$(w)
+        arm01a.firm_id$=firm_id$
+        arm01a.customer_id$=cashheader.customer_id$
+        arm01a.customer_name$=nf$
+        k$=arm01a.firm_id$+arm01a.customer_id$ 
+        find record (arm01_dev,key=k$,dom=*next) arm01a$
+        customer$=fnmask$(cashheader.customer_id$(1,customer_size),m0$)
+        name$(1)=arm01a.customer_name$
 
-          dim arm01a$:fattr(arm01a$),name$(w)
-          arm01a.firm_id$=firm_id$
-          arm01a.customer_id$=are01a.customer_id$
-          arm01a.customer_name$=nf$
-          k$=arm01a.firm_id$+arm01a.customer_id$ 
-          find record (arm01_dev,key=k$,dom=*next) arm01a$
-          customer$=fnmask$(are01a.customer_id$(1,customer_size),m0$)
-          name$(1)=arm01a.customer_name$
+rem --- Format and store header fields, accumulate payment totals 
+rem --- and print receipt header information
 
-          rem --- Format and store header fields, accumulate payment totals 
-          rem --- and print receipt header information
+        check$=cashheader.trans_data1$
+        aba$=cashheader.trans_data2$
+        payment=cashheader.payment_amt
+        payment$=str(payment)
+        receipt$=cashheader.firm_id$+cashheader.ar_trans_id$
+        if cvs(cashheader.cr_trans_type$,3)="CH" 
+            ct[4]=ct[4]+payment
+            dt[4]=dt[4]+payment
+        endif
+        if cvs(cashheader.cr_trans_type$,3)="$" 
+            ct[5]=ct[5]+payment
+            dt[5]=dt[5]+payment
+        endif
 
-          check$=are01a.ar_check_no$
-          aba$=are01a.aba_no$
-          payment=are01a.payment_amt
-          payment$=str(payment)
-          receipt$=are01a.firm_id$+are01a.ar_type$+are01a.reserved_key_01$+are01a.receipt_date$+
-:                  are01a.customer_id$+are01a.cash_rec_cd$+are01a.ar_check_no$+
-:                  are01a.reserved_key_02$
-          if are01a.cash_check$="C" 
-             ct[4]=ct[4]+payment
-             dt[4]=dt[4]+payment
-          endif
-          if are01a.cash_check$="$" 
-             ct[5]=ct[5]+payment
-             dt[5]=dt[5]+payment
-          endif
-
-          ct[6]=ct[6]+payment
-          dt[6]=dt[6]+payment
-          rt[4]=rt[4]+payment
-          if are01a.receipt_date$ < endperiod$
+        ct[6]=ct[6]+payment
+        dt[6]=dt[6]+payment
+        rt[4]=rt[4]+payment
+        if cashheader.receipt_date$ < endperiod$
             mt[4]=mt[4]+payment
-          else
+        else
             nt[4]=nt[4]+payment
-          endif
+        endif
 
-          if first_tran>0 
+        if first_tran>0 
 rem         xwk=fnblank(11);rem don't think it needs this.CAH
-          else
+        else
             first_tran=1
-          endif
+        endif
 
-          OutVect!.addItem(customer$+" "+name$)
-          OutVect!.addItem(are01a.cash_rec_cd$) 
+        OutVect!.addItem(customer$+" "+name$)
+        OutVect!.addItem(cashheader.cash_rec_cd$) 
           
-          rem --- If GL is being used verify the receipt date
+rem --- If GL is being used verify the receipt date
 
-          if gl call pgmdir$+"glc_datecheck.aon",are01a.receipt_date$,"N",period$,year$,
+        if gl call pgmdir$+"glc_datecheck.aon",cashheader.receipt_date$,"N",period$,year$,
 :                                                glstatus
 
-          rem --- Position Cash Receipts Detail (are-11) file
+rem --- Position Cash Receipts Detail (are-11) file
 
-          read (are11_dev,key=receipt$,dom=*next)
+        receipt$=cashheader.firm_id$+cashheader.ar_trans_id$
+        read (cashtrans_dev,key=receipt$,dom=*next)
+        cashtrans=1
 
-          rem --- Read the next Cash Receipt Detail (are-11) record
-
-          while moredetail
-				k$=""
-                k$=key(are11_dev,end=*next)
-                if pos(receipt$=k$)<>1
-                    if name$<>"" 
-                      OutVect!.addItem(check$)
-                      xwk=fnblank(6)
-                      OutVect!.addItem(aba$)
-                      OutVect!.addItem(payment$)
-                     endif
-                    break
+rem --- Read the next Cash Receipt Detail (are-11) record
+        while cashtrans
+		    k$=""
+            k$=key(cashtrans_dev,end=*next)
+            if pos(receipt$=k$)<>1
+                if name$<>"" 
+                    OutVect!.addItem(check$)
+                    xwk=fnblank(6)
+                    OutVect!.addItem(aba$)
+                    OutVect!.addItem(payment$)
                 endif
-                read record (are11_dev) are11a$
+                break
+            endif
+            read record (cashtrans_dev) cashtrans$
 
-                rem --- Print the detail record
+rem --- Print the detail record
+            applied=-cashtrans.trans_amount; rem << WAS: no negative sign >>
+            discount=-cashtrans.disc_amount; rem << WAS: no negative sign >>
+            credits=applied+discount
 
-                applied=are11a.apply_amt
-                discount=are11a.discount_amt
-                credits=applied+discount
-
-                if cvs(name$,3)="" xwk=fnblank(2)
+            if cvs(name$,3)="" xwk=fnblank(2)
                 OutVect!.addItem(check$)
-                OutVect!.addItem(are11a.ar_inv_no$)
+                OutVect!.addItem(cashtrans.ar_invoice_id$)
                 OutVect!.addItem(str(applied))
                 OutVect!.addItem(str(discount))
                 OutVect!.addItem(str(credits))
@@ -382,149 +385,165 @@ rem         xwk=fnblank(11);rem don't think it needs this.CAH
                 check$=""
                 aba$=""
                 payment$=""
-                
-                if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,are01a.receipt_date$,
+
+                if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,cashheader.receipt_date$,
 :                                                           glstatus,lines,errors,status
                 if stbl("+DTWARN_MSG",err=*endif)<>""
-                    OutVect!.addItem(stbl("+DTWARN_MSG"))
-                    xwk=fnblank(10)
-                endif
+                OutVect!.addItem(stbl("+DTWARN_MSG"))
+                xwk=fnblank(10)
+            endif
 
-                rem --- added by CH.3/26/07
-                ct[0]=ct[0]+applied
-                ct[1]=ct[1]+discount
-                ct[2]=ct[2]+credits
+rem --- added by CH.3/26/07
+            ct[0]=ct[0]+applied
+            ct[1]=ct[1]+discount
+            ct[2]=ct[2]+credits
 
-                dt[0]=dt[0]+applied
-                dt[1]=dt[1]+discount
-                dt[2]=dt[2]+credits
+            dt[0]=dt[0]+applied
+            dt[1]=dt[1]+discount
+            dt[2]=dt[2]+credits
 
-                rt[0]=rt[0]+applied
-                rt[1]=rt[1]+discount
-                rt[2]=rt[2]+credits
+            rt[0]=rt[0]+applied
+            rt[1]=rt[1]+discount
+            rt[2]=rt[2]+credits
 
-                if are01a.receipt_date$ < endperiod$
-                    mt[0]=mt[0]+applied
-                    mt[1]=mt[1]+discount
-                    mt[2]=mt[2]+credits
-                else
-                    nt[0]=nt[0]+applied
-                    nt[1]=nt[1]+discount
-                    nt[2]=nt[2]+credits
-                endif
-                rem --- end of CH add
-
-                rem --- Generate GL postings for this invoice
-
-                while gl
-                      gosub receipt_code
-                      gosub distribution_code
-                      ref1$=customer$
-                      ref2$=are01a.ar_check_no$
-                      ref3$=are11a.ar_inv_no$
-                      memo$=arm01a.customer_name$
-                      gldate$=are01a.receipt_date$
-
-                      rem --- Post receivables
-
-                      account$=arm10d.gl_ar_acct$
-                      amount=-applied
-                      gosub glrecap
-
-                      rem --- Post cash received
-
-                      account$=arm10c.gl_cash_acct$
-                      amount=applied
-                      gosub glrecap
-
-                      rem --- Post discount amount
-
-                      account$=arm10c.gl_disc_acct$
-                      amount=discount
-                      gosub glrecap
-
-                      rem --- Post discount to AR
-
-                      account$=arm10d.gl_ar_acct$
-                      amount=-discount
-                      gosub glrecap
-                      break
-
-                wend
-
-                rem --- Loop back for the next Cash Receipt Detail (are-11) record
-
-          wend
-
-          rem --- Position Cash Receipts Distribution (are-21) file
-
-          if gl$<>"Y" continue
-          read (are21_dev,key=receipt$,dom=*next)
-
-          rem --- Read the next Cash Receipt Distribution (art_glpost) record
-
-          while moredetail
-                k$=key(are21_dev,end=*break)
-                if pos(receipt$=k$)<>1 break
-                read record (glpost_dev) are21a$
-
-                rem --- Print this detail record
-                
-                amount=are21a.gl_post_amt
-                account$=are21a.gl_account$
-                xwk=fnblank(7)
-                OutVect!.addItem(fnmask$(account$(1,acct_length),g0$))
-                OutVect!.addItem(str(amount))
-                xwk=fnblank(2)
+            if cashheader.receipt_date$ < endperiod$
+                mt[0]=mt[0]+applied
+                mt[1]=mt[1]+discount
+                mt[2]=mt[2]+credits
+                    else
+                nt[0]=nt[0]+applied
+                nt[1]=nt[1]+discount
+                nt[2]=nt[2]+credits
+            endif
 
 
-                if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,are01a.receipt_date$,
-:                                                           glstatus,lines,errors,status
-                if stbl("+DTWARN_MSG",err=*endif)<>""
-                    OutVect!.addItem(stbl("+DTWARN_MSG"))
-                    xwk=fnblank(10)
-                endif
-
-                rem --- added by CH.3/26/07
-                ct[3]=ct[3]+amount
-                dt[3]=dt[3]+amount
-                rt[3]=rt[3]+amount
-
-                if are01a.receipt_date$ < endperiod$
-                    mt[3]=mt[3]+amount
-                else
-                    nt[3]=nt[3]+amount
-                endif
-                rem --- end of CH add
-
-                rem --- Post this record to GL
-
+rem --- end of CH add
+rem --- Generate GL postings for this invoice
+            while gl
                 gosub receipt_code
+                gosub distribution_code
                 ref1$=customer$
-                ref2$=are21a.ar_check_no$
-                ref3$=""
+                ref2$=cashheader.trans_data1$; rem << WAS: ar_check_no$
+                ref3$=cashtrans.ar_invoice_id$; rem << WAS: ar_inv_no$
                 memo$=arm01a.customer_name$
-                gldate$=are01a.receipt_date$
+                gldate$=cashheader.receipt_date$
+                gosub clear_cashpost
 
-                rem --- Entered account
+rem --- Post receivables
 
-                account$=are21a.gl_account$
-                amount=are21a.gl_post_amt
+                account$=arm10d.gl_ar_acct$
+                amount=-applied
                 gosub glrecap
+                gosub update_cashpost
 
-                rem --- Cash account
+rem --- Post cash received
 
                 account$=arm10c.gl_cash_acct$
-                amount=-are21a.gl_post_amt
+                amount=applied
                 gosub glrecap
+                gosub update_cashpost
 
-                rem --- Loop back for the next Cash Receipt Distribution (are-21) record
+rem --- Post discount amount
 
-          wend
+                account$=arm10c.gl_disc_acct$
+                amount=discount
+                gosub glrecap
+                gosub update_cashpost
 
-          rem --- Loop back for next Cash Receipt Header (are-01) record
+rem --- Post discount to AR
+                account$=arm10d.gl_ar_acct$
+                amount=-discount 
+                gosub glrecap
+                break
+                gosub update_cashpost
+            wend
 
+
+rem --- Loop back for the next Cash Receipt Detail (art_transactions) record
+        wend
+
+
+rem --- Position Cash Receipts Distribution (are-21) file
+        if gl$<>"Y" continue
+        read (cashpost_dev,key=receipt$,dom=*next)
+        cashpost=1
+
+
+rem --- Read the next Cash Receipt Distribution (are-21) record
+        while cashpost
+            k$=key(cashpost_dev,end=*break)
+            if pos(receipt$=k$)<>1 then break
+            read record (cashpost_dev) cashpost$
+
+rem --- Print this detail record
+
+            amount=-cashpost.trans_amount
+            account$=cashpost.gl_account$
+            xwk=fnblank(7)
+            OutVect!.addItem(fnmask$(account$(1,acct_length),g0$))
+            OutVect!.addItem(str(amount))
+            xwk=fnblank(2)
+
+
+            if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,cashheader.receipt_date$,
+:                                                           glstatus,lines,errors,status
+            if stbl("+DTWARN_MSG",err=*endif)<>""
+                OutVect!.addItem(stbl("+DTWARN_MSG"))
+                xwk=fnblank(10)
+            endif
+
+rem --- added by CH.3/26/07
+            ct[3]=ct[3]+amount
+            dt[3]=dt[3]+amount
+            rt[3]=rt[3]+amount
+
+            if cashheader.receipt_date$ < endperiod$
+                mt[3]=mt[3]+amount
+                    else
+                nt[3]=nt[3]+amount
+            endif
+            
+
+rem --- end of CH add
+
+
+rem --- Post this record to GL
+            gosub receipt_code
+            ref1$=customer$
+            ref2$=cashheader.trans_data1$; rem << WAS ar_check_no >>
+            ref3$=""
+            memo$=arm01a.customer_name$
+            gldate$=cashheader.receipt_date$
+
+
+rem --- Entered account
+
+            account$=cashpost.gl_account$
+            amount=cashpost.trans_amount
+            gosub glrecap
+
+rem --- Cash account
+
+            account$=arm10c.gl_cash_acct$
+            amount=-cashpost.trans_amount
+            gosub glrecap
+
+
+rem --- Loop back for the next Cashpost (art_cashpost) record
+        wend
+
+
+rem --- Set cashheader status flag to 'R'
+        rem --- ********************** NEW ************************ 
+        if cashheader.status$="O"
+            cashheader.status$="R"
+            write record (cashheader2_dev)cashheader$
+        endif
+
+
+rem --- Loop back for next Cash Receipt Header (art_cashheader) record
     wend
+
 
 rem --- All done
 
@@ -553,7 +572,7 @@ rem --- Print register, MTD and next MTD totals
         pt[x]=mt[x]
     next x
 
-rem --- Now add MTD Totals from ars_mtdcash    
+rem --- Now add MTD Totals from ars_mtdcash
     pt[0]=pt[0]+tot_cash[0]
     pt[1]=pt[1]+tot_cash[1]
     pt[2]=pt[2]+tot_cash[0]+tot_cash[1]
@@ -566,7 +585,7 @@ rem --- Now add MTD Totals from ars_mtdcash
         pt[x]=nt[x];rem --- this did say mt; changed to nt 3/26/07.CH
     next x
 
-rem --- Now add NMTD Totals from ars_mtdcash    
+rem --- Now add NMTD Totals from ars_mtdcash
     pt[0]=pt[0]+tot_cash[3]
     pt[1]=pt[1]+tot_cash[4]
     pt[2]=pt[2]+tot_cash[3]+tot_cash[4]
@@ -587,14 +606,14 @@ rem     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
 
     overlay$=update$
     if gl overlay$=pgmdir$+"glr_recap.aon"
-    
+
 	if bal_errors
 		gosub Display_Message
 		update$=""
 		gl_overlay$=""
 		overlay$=""
 	endif
-	
+
     next_overlay$=overlay$
     out_action$="PRT"
     if update$=""
@@ -626,6 +645,7 @@ print_totals: rem --- Print date or receipt code totals
     xwk=fnblank(9)
     OutVect!.addItem(Translate!.getTranslation("AON_CASH"))
     OutVect!.addItem(str(pt[5]))
+
 	if pt[0]-pt[3]<>pt[6]
 		bal_errors=bal_errors+1
 		msg$="*** "+Translate!.getTranslation("ERROR")+" - "
@@ -679,14 +699,15 @@ code_break: rem --- Cash Receipt Code break
     HdrVect!.addItem(subheading$)
 
     if lastcode$<>""
-        OutVect!.addItem(Translate!.getTranslation("AON_RECEIPT_DATE_")+fndate$(are01a.receipt_date$))
+        OutVect!.addItem(Translate!.getTranslation("AON_RECEIPT_DATE_")+fndate$(cashheader.receipt_date$))
         xwk=fnblank(10)
         xwk=fnblank(11)
     endif
 
-    lastcode$=are01a.cash_rec_cd$
+    lastcode$=cashheader.cash_rec_cd$
     lines=maxlines+1
     return
+
 
 date_break: rem --- Receipt date break
 
@@ -700,7 +721,7 @@ date_break: rem --- Receipt date break
     wend
     if done return
     dim dt[6]
-    lastdate$=are01a.receipt_date$
+    lastdate$=cashheader.receipt_date$
     if sequence$="D"
        subheading$=Translate!.getTranslation("AON_CASH_RECEIPTS_FOR_")+fndate$(lastdate$)
         BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
@@ -717,37 +738,33 @@ date_break: rem --- Receipt date break
 
     return
 
+
 receipt_code: rem --- Retrieve Cash Receipts Code (arm-10c) record
 
     dim arm10c$:fattr(arm10c$)
     arm10c.firm_id$=firm_id$
     arm10c.record_id_c$="C"
-    arm10c.cash_rec_cd$=are01a.cash_rec_cd$
+    arm10c.cash_rec_cd$=cashheader.cash_rec_cd$
     arm10c.code_desc$=nf$
     k$=arm10c.firm_id$+arm10c.record_id_c$+arm10c.cash_rec_cd$ 
     find record (arc_cashcode_dev,key=k$,dom=*next) arm10c$
     return
 
+
 distribution_code: rem --- Retrieve Distribution Code (arm-10d) record
 
-    dim arm02a$:fattr(arm02a$),arm10d$:fattr(arm10d$),art01a$:fattr(art01a$)
-    onaccount=pos("OA"=are11a.ar_inv_no$)=1
+    dim arm02a$:fattr(arm02a$),arm10d$:fattr(arm10d$),invheader$:fattr(invheader$)
+    onaccount=pos("OA"=cashtrans.ar_invoice_id$)=1
     ar_dist_code$=""
     if onaccount=0
-       art01a.firm_id$=firm_id$
-       art01a.ar_type$=are11a.ar_type$
-       art01a.customer_id$=are11a.customer_id$
-       art01a.ar_inv_no$=are11a.ar_inv_no$
-       art01a.sequence_00$="00"
-       k$=art01a.firm_id$+art01a.ar_type$+art01a.customer_id$+
-:         art01a.ar_inv_no$+art01a.sequence_00$
-       find record (art01_dev,key=k$,dom=*next) art01a$
-       ar_dist_code$=art01a.ar_dist_code$
+       invheader_key$=cashtrans.firm_id$+cashtrans.ar_invoice_id$
+       find record (invheader_dev,key=invheader_key$,dom=*next) invheader$
+       ar_dist_code$=invheader.dist_code$
     endif
     if onaccount
        arm02a.firm_id$=firm_id$
-       arm02a.customer_id$=are11a.customer_id$
-       arm02a.ar_type$=are11a.ar_type$
+       arm02a.customer_id$=cashheader.customer_id$
+       arm02a.ar_type$=cashtrans.trans_type$
        k$=arm02a.firm_id$+arm02a.customer_id$+arm02a.ar_type$ 
        find record (arm02_dev,key=k$,dom=*next) arm02a$
        ar_dist_code$=arm02a.ar_dist_code$
@@ -760,21 +777,65 @@ distribution_code: rem --- Retrieve Distribution Code (arm-10d) record
     find record (arc_distcode_dev,key=k$,dom=*next) arm10d$
     return
 
-glrecap: rem --- Standard GL Recap Routine
 
+glrecap: rem --- Standard GL Recap Routine
     if gl$="Y" call pgmdir$+"glc_glpost.aon",glm01_dev,glw11_dev,notused,account$,gldate$,
 :                                            ref1$,ref2$,ref3$,memo$,amount,units,status
     return
+
 
 Display_Message: rem --- Display Message Routine
 
     msg_id$="AON_REG_ERRS"
     gosub disp_message
     if pos("PASSVALID"=msg_opt$)<>0 special_flag$="Y"
-
     return
 
-rem --- Functions
+
+flip_status_flags:
+    dim cashheader$ : fattr(cashheader$)
+    key$=firm_id$+old_sts$
+    key_no$="STS_REC_DT"
+    read (cashheader_dev,key=key$,knum=key_no$,dom=*next)
+    while 1
+        cashheader_key$=key(cashheader_dev,end=*break)
+        if pos(key$=cashheader_key$)<>1 break
+        extract record (cashheader_dev,key=cashheader_key$)cashheader$
+        if cashheader.status$=old_sts$
+            cashheader.status$=new_sts$
+            cashheader$=field(cashheader$)
+            write record (cashheader_dev)cashheader$
+        endif
+    wend
+return
+
+
+clear_cashpost:
+rem --- removed rcds we may have written while running this but not updating
+rem --- so these entries can be re-written safely
+
+    cashpost_key$=cashheader.firm_id$+cashheader.ar_trans_id$+arm10d.gl_ar_acct$+"A"
+    remove (cashpost_dev,key=cashpost_key$,dom=*next)
+    cashpost_key$=cashheader.firm_id$+cashheader.ar_trans_id$+arm10d.gl_cash_acct$+"A"
+    remove (cashpost_dev,key=cashpost_key$,dom=*next)
+    cashpost_key$=cashheader.firm_id$+cashheader.ar_trans_id$+arm10d.gl_disc_acct$+"A"
+    remove (cashpost_dev,key=cashpost_key$,dom=*next)
+return
+
+
+update_cashpost:
+rem --- add transactions to cashpost file
+    dim cashpost$ : fattr(cashpost$)
+    cashpost.firm_id$=cashtrans.firm_id$
+    cashpost.cr_trans_id$=cashtrans.ar_trans_id$
+    cashpost.gl_account$=account$
+    cashpost.gl_trans_type$="A"
+    cashpost_key$=cashtrans.firm_id$+cashpost.cr_trans_id$+cashpost.gl_account$+cashpost.gl_trans_type$
+    extract record (cashpost_dev,key=cashpost_key$,dom=*next)cashpost$
+    cashpost.trans_amount=cashpost.trans_amount+amount
+    write record (cashpost_dev)cashpost$
+return
+
 
 rem --- Functions used to retrieve form values
 
@@ -784,9 +845,11 @@ rem --- Functions used to retrieve form values
     def fnget_fld_data$(q0$,q1$)=cvs(rd_rec_data$[fnstr_pos(cvs(q0$,1+2+4)+"."+
 :                                cvs(q1$,1+2+4),rd_rec_data$[0,0],40),0],2)
 
+
 rem --- Miscellaneous functions
 
     def fncenter(q$,q)=int((q-len(q$))/2)
+
 
 rem --- Date/time handling functions
 
@@ -796,6 +859,7 @@ rem --- Date/time handling functions
         if q1$="" q1$=q$
         return q1$
     fnend
+ 
  
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 
@@ -812,6 +876,7 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
         return str(q1$:q2$)
     fnend
 
+
 rem --- fncolumn$: Center a heading over two columns
 
     def fncolumn$(q1$,q)
@@ -823,6 +888,7 @@ rem --- fncolumn$: Center a heading over two columns
         return q2$
     fnend
 
+
 rem --- Create blank cell(s) in OutVect! (no return value wanted or needed)
     def fnblank(q0)
         for q1=1 to q0
@@ -831,6 +897,7 @@ rem --- Create blank cell(s) in OutVect! (no return value wanted or needed)
         return q1
     fnend
 
+
 rem #include disp_message.src
 
 disp_message:rem --- Display Message Dialog
@@ -838,14 +905,18 @@ disp_message:rem --- Display Message Dialog
     call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
 
     return
-    
+
+
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (22Feb2013)
 
+
     if tcb(19)>0
         rem --- Escape handler
         if and(chr(tcb(19)),$08$)=$08$
+        	old_sts$="R", new_sts$="O"
+			gosub flip_status_flags
             release
         else
             setesc std_error
@@ -853,16 +924,19 @@ std_error: rem --- Standard error handler (22Feb2013)
         endif
     endif
 
+
     rd_err_text$=""
     if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
     if pos("ESCAPE"=rd_err_act$) seterr 0; setesc 0
     if pos("RETRY"=rd_err_act$) retry
     if pgm(-1)<>pgm(-2) status=999; exit 
+    old_sts$="R", new_sts$="O"
+	gosub flip_status_flags
     release
 
-rem #endinclude std_error.src
 
+rem #endinclude std_error.src
 rem #include std_missing_params.src
 
 std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
@@ -889,7 +963,7 @@ rem #include std_end.src
 std_exit_no_report:
 
     OutVect!=null();rem nothing to print, or some other err such that no report
-    
+
 std_exit_no_update:
 
     if num(batch_no$)<>0
@@ -897,6 +971,10 @@ std_exit_no_update:
         lock_status$=""
         call stbl("+DIR_SYP")+"bac_lock_record.bbj","ADM_PROCBATCHES",unlock_key$,"X","",rd_table_chan,rd_table_chans$[all],lock_status$
     endif
+
+    old_sts$="R", new_sts$="O"
+    gosub flip_status_flags
+
 
 std_exit: rem --- Standard program end (01Mar2006)
 

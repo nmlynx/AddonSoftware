@@ -1,8 +1,7 @@
 rem --- Monthly Cash Receipts Journal (Report)
 rem --- Program arr_cashjournal v8.0.0 31Dec2006 (arr_gb)
 rem --- Created by adx_codeport.bbx v1.1.5 (12/31/2006 01:37:08)
-input (0,err=0004,siz=1)@(10,10),"<O>rig version <N>ew Version   ",@(39,10),x$:(""=std_exit_no_report,"O"=*next,"N"=*next,"n"=*next,"o"=*next)
-if pos(x$="Nn") run "arr_cashjournal_new.aon"; rem << PJK testing >>
+
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
@@ -45,11 +44,11 @@ rem --- Open/Lock files
             files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
             files$[3]="arm-02",ids$[3]="ARM_CUSTDET"
             files$[4]="arc_cashcode",ids$[4]="ARC_CASHCODE"
-            files$[5]="art-01",ids$[5]="ART_INVHDR"
-            files$[6]="art-06",ids$[6]="ART_CASHHDR"
-            files$[7]="art-11",ids$[7]="ART_INVDET"
-            files$[8]="art-16",ids$[8]="ART_CASHDET"
-            files$[9]="art-26",ids$[9]="ART_CASHGL"
+            files$[5]="ART_INVHEADER",ids$[5]="art_invheader"; rem << WAS: art-01",ids$[5]="ART_INVHDR"
+            files$[6]="ART_CASHHEADER",ids$[6]="ART_CASHHEADER"; REM << was: art-06",ids$[6]="ART_CASHHDR"
+            files$[7]="ART_TRANSACTIONS",ids$[7]="ART_TRANSACTIONS"; REM <<was: art-11",ids$[7]="ART_INVDET"
+            files$[8]="ART_TRANSACTIONS",ids$[8]="ART_TRANSACTIONS"; REM <<was: art-16",ids$[8]="ART_CASHDET"
+            files$[9]="ART_CASHPOST",ids$[9]="ART_CASHPOST"; REM <<was: art-26",ids$[9]="ART_CASHGL"
             files$[10]="arw-07",IDS$[10]="ARW_CASHJOURNAL"
             files$[11]="gls_params",ids$[11]="GLS_PARAMS"
             files$[12]="arc_distcode",ids$[12]="ARC_DISTCODE"
@@ -61,11 +60,11 @@ rem --- Open/Lock files
             arm01_dev=channels[2]
             arm02_dev=channels[3]
             arc_cashcode_dev=channels[4]
-            art01_dev=channels[5]
-            art06_dev=channels[6]
-            art11_dev=channels[7]
-            art16_dev=channels[8]
-            art26_dev=channels[9]
+            invheader_dev=channels[5]
+            cashheader_dev=channels[6]
+            artrans_dev=channels[7]
+            artrans2_dev=channels[8]
+            cashpost_dev=channels[9]
             arw07_dev=channels[10]
             gls01_dev=channels[11]
             arc_distcode_dev=channels[12]
@@ -73,8 +72,8 @@ rem --- Open/Lock files
 rem --- Dimension string templates
 
             dim ars01a$:templates$[1],arm01a$:templates$[2],arm02a$:templates$[3]
-            dim arm10c$:templates$[4],art01a$:templates$[5],art06a$:templates$[6]
-            dim art11a$:templates$[7],art16a$:templates$[8],art26a$:templates$[9]
+            dim arm10c$:templates$[4],invheader$:templates$[5],cashheader$:templates$[6]
+            dim artrans$:templates$[7],artrans2$:templates$[8],cashpost$:templates$[9]
             dim arw07a$:templates$[10],gls01a$:templates$[11],arm10d$:templates$[12]
 
 rem --- Assign form input values to local variables
@@ -146,7 +145,6 @@ rem --- Initializations
             begvalue$=begcust$
             endvalue$=endcust$
             total_recs=0
-            
             headings$[0]=sysinfo.firm_name$
             headings$[1]=sysinfo.task_desc$+Translate!.getTranslation("AON__BY_CUSTOMER_ID")
             if sequence$="A"
@@ -155,6 +153,7 @@ rem --- Initializations
                endvalue$=endalt$
                headings$[1]=sysinfo.task_desc$+Translate!.getTranslation("AON__BY_ALTERNATE_SEQUENCE")
             endif
+            headings$[1]=headings$[1]
             gosub init_heading
 
 rem --- Headings
@@ -252,76 +251,80 @@ rem --- Read next Customer Master (arm-01) record
 
 rem --- Position Cash Receipts History Header (art-06) file
 
-          keyprefix$=arm01a.firm_id$+artype$+reserved$+arm01a.customer_id$
-          read (art06_dev,key=keyprefix$+begdate$,dom=*next)
+          keyprefix$=arm01a.firm_id$+arm01a.customer_id$
+          knum$="CUST_REC_DT"
+          read (cashheader_dev,key=keyprefix$+begdate$,knum=knum$,dom=*next)
 
 rem --- Read next Cash Receipt History Header (art-06) record
 
           while moreheaders
 
-                k$=key(art06_dev,end=*break)
+                k$=key(cashheader_dev,end=*break)
                 if pos(keyprefix$=k$)<>1 break
-                read record (art06_dev) art06a$
-                if enddate$<>"" if art06a.receipt_date$>enddate$ break
-                if cashcode$<>"" if art06a.cash_rec_cd$<>cashcode$ continue
+                read record (cashheader_dev) cashheader$
+                if enddate$<>"" if cashheader.receipt_date$>enddate$ break
+                if cashcode$<>"" if cashheader.cash_rec_cd$<>cashcode$ continue
+                if pos("C"=cashheader.status$)<>1 continue
+                trans_rcds=0
 
 rem --- Change in customer?
  
-                if art06a.customer_id$<>customer$ gosub customer_break
+                if cashheader.customer_id$<>customer$ gosub customer_break
 
 rem --- Print the Cash Receipt Header
-                
-                
+
                 detail=0
                 printed=1
-                customer[0]=customer[0]+art06a.payment_amt
-                totals[0]=totals[0]+art06a.payment_amt
+                customer[0]=customer[0]+cashheader.payment_amt
+                totals[0]=totals[0]+cashheader.payment_amt
 
-rem --- Position Cash Receipts History Detail (art-16) file
+rem --- Position Cash Receipts History Detail (art_transactions) file
 
-                receipt$=art06a.firm_id$+art06a.ar_type$+art06a.reserved_key_01$+
-:                        art06a.customer_id$+art06a.receipt_date$+art06a.cash_rec_cd$+
-:                        art06a.ar_check_no$
-                rdate$= fndate$(art06a.receipt_date$)
-                rcode$= art06a.cash_rec_cd$
-                rcheck$= art06a.ar_check_no$
-                rpay = art06a.payment_amt
-                
-                read (art16_dev,key=receipt$,dom=*next)
+                receipt$=cashheader.firm_id$+cashheader.ar_trans_id$
+                rdate$= fndate$(cashheader.receipt_date$)
+                rcode$= cashheader.cash_rec_cd$
+                rcheck$= cashheader.trans_data1$; rem << WAS: ar_chk_no$ >>
+                rpay = cashheader.payment_amt
 
-rem --- Read next Cash Receipts History Detail (art-16) record
+                read (artrans_dev,key=receipt$,dom=*next)
+
+rem --- Read next Cash Receipts History Detail (art_transactions) record
 
                 while moredetail
-                      k$=key(art16_dev,end=*break)
-                      if pos(receipt$=k$)<>1 break
-                      read record (art16_dev,key=k$) art16a$
-
+                      k1$=key(artrans_dev,end=*break)
+                      if pos(receipt$=k1$)<>1 break
+                      read record (artrans_dev,key=k1$) artrans$
+                      
 rem --- Calculate invoice balance
 
                       balance=0
                       while moreheaders
-                            dim art01a$:fattr(art01a$)
-                            if art16a.ar_inv_no$(1,2)="OA" break
-                            invoice$=art16a.firm_id$+artype$+art16a.customer_id$+
-:                                    art16a.ar_inv_no$
-                            k$=invoice$+"00"
-                            find record (art01_dev,key=k$,dom=*break) art01a$
-                            balance=art01a.invoice_amt
-                            read (art11_dev,key=invoice$,dom=*next)
+                            dim invheader$:fattr(invheader$)
+                            invhdr_key$=artrans.firm_id$+artrans.ar_invoice_id$
+                            find record (invheader_dev,key=invhdr_key$,dom=*break) invheader$
+                            if invheader.invoice_no$(1,2)="OA" break
+                            balance=invheader.invoice_amt
+                            altkey$=invhdr_key$,knum$="AR_INVOICE_ID"
+                            read (artrans2_dev,key=altkey$,knum=knum$,dom=*next)
                             while moredetail
-                                  k$=key(art11_dev,end=*break)
-                                  if pos(invoice$=k$)<>1 break
-                                  read record (art11_dev) art11a$
-                                  if art11a.trans_date$>art06a.receipt_date$ continue 
-                                  if art11a.refchk_no$=art06a.ar_check_no$ continue
-                                  balance=balance+art11a.trans_amt+art11a.adjdisc_amt
+                                  k2$=key(artrans2_dev,end=*break)
+                                  if pos(altkey$=k2$)<>1 break
+                                  read record (artrans2_dev) artrans2$
+                                  if artrans2.ar_trans_type$="IN" continue
+                                  if artrans2.trans_date$>cashheader.receipt_date$ continue
+
+rem --- << Next line: reading in all past CR's to est. Inv_balance before this CR; so don't include the CR we're on >> 
+                                  orig_cr$=artrans.firm_id$+artrans.ar_trans_id$+artrans.sequence_no$
+                                  cur_cr$=artrans2.firm_id$+artrans2.ar_trans_id$+artrans2.sequence_no$
+                                  if cur_cr$=orig_cr$ continue
+                                  balance=balance+artrans2.trans_amount+artrans2.disc_amount
                             wend
                             break
                       wend
 
 rem --- Print invoice information
 
-                      credit=art16a.apply_amt+art16a.discount_amt
+                      credit=artrans.trans_amount+artrans.disc_amount
 
                       if export_format$="Y"
                         OutVect!.addItem(arm01a.customer_id$)
@@ -339,18 +342,23 @@ rem --- Print invoice information
                         else
                         OutVect!.addItem("")
                        endif
-                      OutVect!.addItem(art16a.ar_inv_no$)
+rem --- << Reverse trans_amount & disc_amount to match old format >>
+                      artrans.trans_amount=artrans.trans_amount*-1
+                      artrans.disc_amount=artrans.disc_amount*-1
+                      credit=credit*-1
+                      
+                      OutVect!.addItem(invheader.invoice_no$)
                       OutVect!.addItem(str(balance))
-                      OutVect!.addItem(str(art16a.apply_amt))
-                      OutVect!.addItem(str(art16a.discount_amt))
+                      OutVect!.addItem(str(artrans.trans_amount))
+                      OutVect!.addItem(str(artrans.disc_amount))
                       OutVect!.addItem(str(credit))
                       OutVect!.addItem("")
                       OutVect!.addItem("")
                       detail=1  
-                      customer[1]=customer[1]+art16a.apply_amt
-                      customer[2]=customer[2]+art16a.discount_amt
-                      totals[1]=totals[1]+art16a.apply_amt
-                      totals[2]=totals[2]+art16a.discount_amt
+                      customer[1]=customer[1]+artrans.trans_amount
+                      customer[2]=customer[2]+artrans.disc_amount
+                      totals[1]=totals[1]+artrans.trans_amount
+                      totals[2]=totals[2]+artrans.disc_amount
                       cust_balance=cust_balance+balance
                       rept_balance=rept_balance+balance
                       recs=recs+1
@@ -360,28 +368,28 @@ rem --- Print invoice information
 rem --- Retrieve cash receipts code record using the code from
 rem --- the receipt header to get the GL cash and discount accounts
 
-                      receiptcode$=art06a.cash_rec_cd$
+                      receiptcode$=cashheader.cash_rec_cd$
                       gosub receipt_code
 
 rem --- The distribution code from the invoice header or customer
 rem --- detail record is used to retrieve the GL AR account
 
-                      if art16a.ar_inv_no$(1,2)="OA" gosub customer_distribution
+                      if invheader.invoice_no$(1,2)="OA" gosub customer_distribution
 :                                               else gosub invoice_distribution
 
 rem --- Update the GL summary for this detail record
 
                       account$=araccount$ 
-                      amount=-art16a.apply_amt 
+                      amount=-artrans.trans_amount 
                       gosub update_gl 
                       account$=cashaccount$ 
-                      amount=art16a.apply_amt
+                      amount=artrans.trans_amount
                       gosub update_gl
                       account$=discaccount$
-                      amount=art16a.discount_amt
+                      amount=artrans.disc_amount
                       gosub update_gl
                       account$=araccount$
-                      amount=-art16a.discount_amt
+                      amount=-artrans.disc_amount
                       gosub update_gl
 
 rem --- Loop back for next Cash Receipts History Detail record
@@ -390,15 +398,15 @@ rem --- Loop back for next Cash Receipts History Detail record
 
 rem --- Position Cash Receipts History GL Distribution (art-26) file
 
-                read (art26_dev,key=receipt$,dom=*next)
+                read (cashpost_dev,key=receipt$,dom=*next)
 
 rem --- Read next Cash Receipts History GL Distribution (art-16) record
 
                 while moredetail
-                      k$=key(art26_dev,end=*break)
+                      k$=key(cashpost_dev,end=*break)
           
                       if pos(receipt$=k$)<>1 break
-                      read record (art26_dev,key=k$) art26a$
+                      read record (cashpost_dev,key=k$) cashpost$
 
 rem --- Print GL distribution information
 
@@ -428,26 +436,26 @@ rem --- Print GL distribution information
                       endif
                             rpay=0
                       
-                      OutVect!.addItem(fnmask$(art26a.gl_account$(1,account_length),g0$))
-                      OutVect!.addItem(str(art26a.gl_post_amt))
+                      OutVect!.addItem(fnmask$(cashpost.gl_account$(1,account_length),g0$))
+                      OutVect!.addItem(str(cashpost.trans_amount))
                       detail=1
                       recs=recs+1
-                      customer[4]=customer[4]+art26a.gl_post_amt
-                      totals[4]=totals[4]+art26a.gl_post_amt
+                      customer[4]=customer[4]+cashpost.trans_amount
+                      totals[4]=totals[4]+cashpost.trans_amount
 
 rem --- Retrieve cash receipts code record using the code from
 rem --- the receipt header to get the GL cash account
 
-                      receiptcode$=art06a.cash_rec_cd$
+                      receiptcode$=cashheader.cash_rec_cd$
                       gosub receipt_code
 
 rem --- Update the GL summary for this detail record
 
-                      account$=art26a.gl_account$ 
-                      amount=art26a.gl_post_amt 
+                      account$=cashpost.gl_account$ 
+                      amount=cashpost.trans_amount 
                       gosub update_gl 
                       account$=cashaccount$ 
-                      amount=-art26a.gl_post_amt
+                      amount=-cashpost.trans_amount
                       gosub update_gl
 
 rem --- Loop back for next Cash Receipts History GL Distribution record
@@ -524,8 +532,6 @@ init_heading: rem --- Init Column Headings
             columns$[columns-1,0]=Translate!.getTranslation("AON_MISC_ACCT"),    columns$[columns-1,1]="C",columns$[columns-1,2]="8"
             columns$[columns,0]=Translate!.getTranslation("AON_MISC_AMT"),     columns$[columns,1]="N",columns$[columns,2]=str(len(m1$)-2),columns$[columns,3]=m1$,columns$[columns,10]="T"
 
-            call stbl("+DIR_PGM",err=*next)+"adc_docout_adj.aon",columns$[all]
-
         return
 
 customer_break: rem --- Customer break
@@ -555,7 +561,7 @@ startcust:
             if done return
             dim customer[4]
             cust_balance=0
-            customer$=art06a.customer_id$
+            customer$=cashheader.customer_id$
             if export_format$<>"Y"
                 xwk=fnblank(columns+1)
                 OutVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$)+" "+arm01a.customer_name$+" "+arm01a.alt_sequence$)
@@ -579,20 +585,20 @@ receipt_code: rem --- Retrieve the Cash Receipts Code record
 
 invoice_distribution: rem --- Get the Distribution Code based on the invoice
 
-            dim arm02a$:fattr(arm02a$),arm10d$:fattr(arm10d$),art01a$:fattr(art01a$)
-            k$=art16a.firm_id$+artype$+art16a.customer_id$+art16a.ar_inv_no$+"00"
-            find record (art01_dev,key=k$,dom=*next) art01a$
-            k$=art16a.firm_id$+"D"+art01a.ar_dist_code$
+            dim arm02a$:fattr(arm02a$),arm10d$:fattr(arm10d$),invheader$:fattr(invheader$)
+            k$=artrans.firm_id$+artrans.ar_invoice_id$
+            find record (invheader_dev,key=k$,dom=*next) invheader$
+            k$=artrans.firm_id$+"D"+invheader.dist_code$
             find record (arc_distcode_dev,key=k$,dom=*next) arm10d$
             araccount$=arm10d.gl_ar_acct$
             return
 
 customer_distribution: rem --- Get the Distribution Code based on the customer
 
-            dim art01a$:fattr(art01a$),arm10d$:fattr(arm10d$)
-            k$=art16a.firm_id$+art16a.customer_id$+artype$
+            dim invheader$:fattr(invheader$),arm10d$:fattr(arm10d$)
+            k$=cashheader.firm_id$+cashheader.customer_id$+ar_type$
             find record (arm02_dev,key=k$,dom=*next) arm02a$
-            k$=art16a.firm_id$+"D"+arm02a.ar_dist_code$
+            k$=artrans.firm_id$+"D"+arm02a.ar_dist_code$
             find record (arc_distcode_dev,key=k$,dom=*next) arm10d$
             araccount$=arm10d.gl_ar_acct$
             return
@@ -603,24 +609,24 @@ update_gl: rem --- Update GL summary
             if include$<>"Y" return
             if amount=0 return
             dim arw07a$:fattr(arw07a$),glw04a$:fattr(glw04a$)
-            arw07a.firm_id$=art06a.firm_id$
+            arw07a.firm_id$=cashheader.firm_id$
             arw07a.ar_type$=artype$
-            arw07a.receipt_date$=art06a.receipt_date$
+            arw07a.receipt_date$=cashheader.receipt_date$
             arw07a.gl_account$=account$
-            arw07a.customer_id$=art06a.customer_id$
-            arw07a.ar_check_no$=art06a.ar_check_no$
-            arw07a.ar_inv_no$=art16a.ar_inv_no$
+            arw07a.customer_id$=cashheader.customer_id$
+            arw07a.ar_check_no$=cashheader.trans_data1$; rem << WAS: ar_chk_no$ >>
+            arw07a.ar_inv_no$=invheader.invoice_no$; rem << WAS: artrans.ar_inv_no$ >>
             k$=arw07a.firm_id$+arw07a.ar_type$+arw07a.receipt_date$+arw07a.gl_account$+
 :      arw07a.customer_id$+arw07a.ar_check_no$+arw07a.ar_inv_no$
             find record (arw07_dev,key=k$,dom=*next) arw07a$
-            arw07a.gl_post_amt=arw07a.gl_post_amt+amount
+            arw07a.trans_amount=arw07a.trans_amount+amount
             arw07a$=field(arw07a$)
             write record (arw07_dev) arw07a$
-            glw04a.firm_id$=art06a.firm_id$
+            glw04a.firm_id$=cashheader.firm_id$
             glw04a.gl_account$=account$
             k$=glw04a.firm_id$+glw04a.gl_account$
             find record (glw04_dev,key=k$,dom=*next) glw04a$
-            glw04a.gl_post_amt=glw04a.gl_post_amt+amount
+            glw04a.trans_amount=glw04a.trans_amount+amount
             glw04a$=field(glw04a$)
             write record (glw04_dev) glw04a$
             return

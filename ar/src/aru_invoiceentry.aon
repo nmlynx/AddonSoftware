@@ -163,6 +163,7 @@ rem --- the adjustment needs to be created.
           art01a.disc_allowed=(art01a.invoice_amt*arm10a.disc_percent)/100
           art01a$=field(art01a$)
           write record (art01_dev) art01a$
+          gosub UPDATE_INVHEADER
           goto customer_payment
 
           detail_adjustment: rem --- Create/update a detail record for the adjustment
@@ -211,6 +212,7 @@ rem --- Create a new invoice detail record for this transaction
 :                     art11a.ar_inv_no$+art11a.sequence_num$
           invoice_type$=art11a.trans_type$
           gosub update_detail
+
           goto customer_payment
 
           update_invoice: rem --- Update the Invoice Header (art-01) with new record
@@ -268,7 +270,83 @@ update_detail: rem --- Create or update an invoice detail record
     art11a.adjdisc_amt=0
     art11a$=field(art11a$)
     write record (art11_dev) art11a$
+    REM *** write to new tables ***
+    gosub UPDATE_ARTRANS
     return
+
+REM **********************************************
+    UPDATE_INVHEADER:
+REM ********************************************
+
+    file$="@ART_INVHEADER"
+    invheader_dev=fnget_dev(file$)
+    dim invheader$ : fnget_tpl$(file$)
+    
+    altkey$=firm_id$+customer_id$+invoice_no$
+    knum$="CUST_INVNO"
+    found=0, rcd$=""
+    extract record (invheader_dev,key=altkey$,err=*next)invheader$
+    if cvs(invheader.ar_trans_id$,2)>"" found=1
+    
+    if found=0
+        call stbl("+DIR_SYP")+"bas_sequences.bbj", "AR_TRANS_ID", AR_TRANS_ID$, table_chans$[all]
+        if ar_trans_id$ = "" then 
+            callpoint!.setStatus("ABORT")
+        endif
+        invheader.firm_id$=firm_id$
+        invheader.ar_trans_id$=ar_trans_id$
+        invheader.ar_type$="I"
+        invheader.customer_id$=art01a.customer_id$
+        invheader.invoice_no$=art01a.ar_inv_no$
+        invheader.invoice_source$="AR"
+        invheader.dist_code$=art01a.ar_dist_code$
+        invheader.terms_code$=art01a.ar_terms_code$ 
+        invheader.invoice_date$=art01a.invoice_date$
+        invheader.due_date$=art01a.inv_due_date$
+        invheader.disc_date$=art01a.disc_date$
+        invheader.gl_audit_no$=""
+        invheader.ar_inv_type$=art01a.invoice_type$
+    endif
+
+    invheader.invoice_amt=extension
+    invheader.disc_allowed=(art01a.invoice_amt*arm10a.disc_percent)/100
+    rcd$=field(invheader$)
+    write record (invheader_dev)rcd$
+    return
+
+
+REM **********************************************
+UPDATE_ARTRANS:
+REM **********************************************
+
+    file$="@ART_TRANSACTIONS"
+    artrans_dev=fnget_dev(file$)
+    dim artrans$ : fnget_tpl$(file$)
+    
+    seq_no=0
+    key$=firm_id$+invheader.ar_trans_id$,more=1,knum$="PRIMARY"
+    read  (artrans_dev,key=key$,knum=knum$,dom=*next)
+    while more
+        k$=key(artrans_dev,end=*break);if pos(key$=k$)=0 break
+        read (artrans_dev,key=k$)
+        seq_no=num(k$(11,3))
+    wend
+    seq_no=seq_no+1
+    
+    artrans.firm_id$=art01a.firm_id$
+    artrans.ar_trans_id$=invheader.ar_trans_id$
+    artrans_sequence_no$=str(seqno:"000")
+    artrans.trans_date$=art01a.invoice_date$
+    artrans.ar_trans_type$="IN"
+    artrans.cr_trans_id$=""
+    artrans.ar_invoice_id$=invheader.ar_trans_id$
+    artrans.trans_amount$=art01a.invoice_amt$
+    artrans.disc_amount$=art01a.disc_allowed$
+    
+    rcd$=field(artrans$)
+    write record (artrans_dev)rcd$
+return
+
 
 disp_message:rem --- Display Message Dialog
 

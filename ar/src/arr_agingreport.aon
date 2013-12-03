@@ -1,8 +1,7 @@
 rem --- Aging Report
 rem --- Program arr_agingreport v8.0.0 12Jan2007 (arr_bb)
 rem --- Created by adx_codeport.bbx v1.1.5 (01/12/2007 11:41:57)
-input (0,err=0004,siz=1)@(10,10),"<O>rig version <N>ew Version   ",@(39,10),x$:(""=std_exit_no_report,"O"=*next,"N"=*next,"n"=*next,"o"=*next)
-if pos(x$="Nn") run "arr_agingreport_new.aon"
+
 rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
@@ -24,6 +23,7 @@ rem --- credits$  : Include credits in aging (Y/N)?
 rem --- update$   : Update customer aging summary (Y/N)?
 rem --- type$     : Summary or detail report (S/D)?
 rem --- comments$ : Include customer comments on the report (Y/N)?
+rem --- pending$ : Include Pending Transactions (Y/N)
 
 rem --- Totals arrays
 
@@ -52,15 +52,16 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=7,begfile=1,endfile=files
+    files=8,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ars_params",ids$[1]="ARS_PARAMS"
     files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
     files$[3]="arm-02",ids$[3]="ARM_CUSTDET"
     files$[4]="arm-05",ids$[4]="ARM_CUSTCMTS"
     files$[5]="arc_salecode",ids$[5]="ARC_SALECODE"
-    files$[6]="art-01",ids$[6]="ART_INVHDR"
-    files$[7]="art-11",ids$[7]="ART_INVDET"
+    files$[6]="ART_INVHEADER",ids$[6]="ART_INVHEADER"
+    files$[7]="ART_TRANSACTIONS",ids$[7]="ART_TRANSACTIONS"
+    files$[8]="ART_CASHHEADER",ids$[8]="ART_CASHHEADER"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -70,14 +71,15 @@ rem --- Open/Lock files
     arm02_dev=channels[3]
     arm05_dev=channels[4]
     arm10_dev=channels[5]
-    art01_dev=channels[6]
-    art11_dev=channels[7]
+    invheader_dev=channels[6]
+    artrans_dev=channels[7]
+    cashheader_dev=channels[8]
 
 rem --- Dimension string templates
 
     dim ars01a$:templates$[1],arm01a$:templates$[2],arm02a$:templates$[3]
-    dim arm05a$:templates$[4],arm10f$:templates$[5],art01a$:templates$[6]
-    dim art11a$:templates$[7]
+    dim arm05a$:templates$[4],arm10f$:templates$[5],invheader$:templates$[6]
+    dim artrans$:templates$[7], cashheader$:templates$[8]
 
 rem --- Assign form input values to local variables
 
@@ -109,6 +111,7 @@ rem --- Assign form input values to local variables
     endperiods$[4]=option!.getOptionData("AGEDATE_90_THRU")
     endperiods$[5]=option!.getOptionData("AGEDATE_120_THRU")
     col_format$=option!.getOptionData("COL_FORMAT")
+    pending$=option!.getOptionData("PENDING_TRANS")
 
 rem --- Retrieve parameter records
 
@@ -154,7 +157,7 @@ rem --- Initializations
 
     headings=3
     if option$="S" headings=4
-    dim headings$[headings],hd1[12],hd2[12],hs[7],od[12],os[7]
+    dim headings$[headings],hd1[13],hd2[13],hs[8],od[13],os[8]; rem --- << WAS: dim headings$[headings],hd1[12],hd2[12],hs[7],od[12],os[7]
     dim periodbeg$[maxperiods],periodend$[maxperiods]
     dim c[maxperiods+1],d[maxperiods+1],s[maxperiods+1],t[maxperiods+1]
     page=0
@@ -174,6 +177,7 @@ rem --- Initializations
     future=future$="Y"
     customer_printed=0
     total_recs=0
+    h99$="", pending=pending$="Y"
 
 rem --- Underline for subtotals and totals
 
@@ -205,6 +209,7 @@ rem --- Initialize report headings
     h8$=Translate!.getTranslation("AON_FIRST")
     h9$=Translate!.getTranslation("AON_LAST")
     ageby$=Translate!.getTranslation("AON_DUE")
+    if pending h99$=Translate!.getTranslation("AON_PENDING^TRANS")
 
     if basis$="I" 
        h2$=Translate!.getTranslation("AON_BASED_ON_INVOICE_DATE")
@@ -267,8 +272,8 @@ rem --- column headings
 
     if type$="D"
 
-        columns=12
-        if col_format$="Y" columns=16
+        columns=13
+        if col_format$="Y" columns=17
         dim columns$[columns,10]
 
         p1$=periodbeg$[1]+"^-"+periodend$[1]
@@ -276,21 +281,22 @@ rem --- column headings
         p3$=periodbeg$[3]+"^-"+periodend$[3]
         p4$=periodbeg$[4]+"^-"+periodend$[4]
         p5$=periodend$[5]
-    
-        columns$[columns-12,0]=Translate!.getTranslation("AON_INVOICE"),columns$[columns-12,1]="C",columns$[columns-12,2]="7"
-        columns$[columns-11,0]=Translate!.getTranslation("AON_INVOICED"),columns$[columns-11,1]="C",columns$[columns-11,2]="15"
-        columns$[columns-10,0]=Translate!.getTranslation("AON_PO^NUMBER"),columns$[columns-10,1]="C",columns$[columns-10,2]="7"
-        columns$[columns-9,0]=Translate!.getTranslation("AON_ORDER^NUMBER"),columns$[columns-9,1]="C",columns$[columns-9,2]="7"
-        columns$[columns-8,0]=Translate!.getTranslation("AON_TRM"),columns$[columns-8,1]="C",columns$[columns-8,2]="3"
-        columns$[columns-7,0]=Translate!.getTranslation("AON_TP"),columns$[columns-7,1]="C",columns$[columns-7,2]="3"
-        columns$[columns-6,0]=future_heading$ ,columns$[columns-6,1]="N",columns$[columns-6,2]="10",columns$[columns-6,3]=m1$,columns$[columns-6,10]="T"
-        columns$[columns-5,0]=p1$,columns$[columns-5,1]="N",columns$[columns-5,2]="10",columns$[columns-5,3]=m1$,columns$[columns-5,10]="T"
-        columns$[columns-4,0]=p2$,columns$[columns-4,1]="N",columns$[columns-4,2]="10",columns$[columns-4,3]=m1$,columns$[columns-4,10]="T"
-        columns$[columns-3,0]=p3$,columns$[columns-3,1]="N",columns$[columns-3,2]="10",columns$[columns-3,3]=m1$,columns$[columns-3,10]="T"
-        columns$[columns-2,0]=p4$,columns$[columns-2,1]="N",columns$[columns-2,2]="10",columns$[columns-2,3]=m1$,columns$[columns-2,10]="T"
-        columns$[columns-1,0]=p5$,columns$[columns-1,1]="N",columns$[columns-1,2]="10",columns$[columns-1,3]=m1$,columns$[columns-1,10]="T"
-        columns$[columns,0]=Translate!.getTranslation("AON_BALANCE"),columns$[columns,1]="N",columns$[columns,2]="12",columns$[columns,3]=m9$,columns$[columns,10]="T"
-        
+
+        columns$[columns-13,0]=Translate!.getTranslation("AON_INVOICE"),columns$[columns-13,1]="C",columns$[columns-13,2]="7"
+        columns$[columns-12,0]=Translate!.getTranslation("AON_INVOICED"),columns$[columns-12,1]="C",columns$[columns-12,2]="15"
+        columns$[columns-11,0]=Translate!.getTranslation("AON_PO^NUMBER"),columns$[columns-11,1]="C",columns$[columns-11,2]="7"
+        columns$[columns-10,0]=Translate!.getTranslation("AON_ORDER^NUMBER"),columns$[columns-10,1]="C",columns$[columns-10,2]="7"
+        columns$[columns-9,0]=Translate!.getTranslation("AON_TRM"),columns$[columns-9,1]="C",columns$[columns-9,2]="3"
+        columns$[columns-8,0]=Translate!.getTranslation("AON_TP"),columns$[columns-8,1]="C",columns$[columns-8,2]="3"
+        columns$[columns-7,0]=future_heading$ ,columns$[columns-7,1]="N",columns$[columns-7,2]="12",columns$[columns-7,3]=m9$,columns$[columns-7,10]="T"
+        columns$[columns-6,0]=p1$,columns$[columns-6,1]="N",columns$[columns-6,2]="12",columns$[columns-6,3]=m9$,columns$[columns-6,10]="T"
+        columns$[columns-5,0]=p2$,columns$[columns-5,1]="N",columns$[columns-5,2]="12",columns$[columns-5,3]=m9$,columns$[columns-5,10]="T"
+        columns$[columns-4,0]=p3$,columns$[columns-4,1]="N",columns$[columns-4,2]="12",columns$[columns-4,3]=m9$,columns$[columns-4,10]="T"
+        columns$[columns-3,0]=p4$,columns$[columns-3,1]="N",columns$[columns-3,2]="12",columns$[columns-3,3]=m9$,columns$[columns-3,10]="T"
+        columns$[columns-2,0]=p5$,columns$[columns-2,1]="N",columns$[columns-2,2]="12",columns$[columns-2,3]=m9$,columns$[columns-2,10]="T"
+        columns$[columns-1,0]=Translate!.getTranslation("AON_BALANCE"),columns$[columns-1,1]="N",columns$[columns-1,2]="12",columns$[columns-1,3]=m9$,columns$[columns-1,10]="T"
+        columns$[columns,0]=h99$,columns$[columns,1]="C",columns$[columns,2]="6",columns$[columns,5]="C"
+
         if col_format$="Y"
             columns$[0,0]=Translate!.getTranslation("AON_CUSTOMER"),columns$[0,1]="C",columns$[0,2]="7"
             columns$[1,0]=Translate!.getTranslation("AON_NAME"),columns$[1,1]="C",columns$[1,2]="30"
@@ -301,21 +307,20 @@ rem --- column headings
 
     if type$="S"
 
-        columns=7
-        dim columns$[7,10]
+        columns=8
+        dim columns$[8,10]
 
         columns$[0,0]=Translate!.getTranslation("AON_CUSTOMER"),columns$[0,1]="C",columns$[0,2]="30"
-        columns$[1,0]=future_heading$ ,columns$[1,1]="N",columns$[1,2]="10",columns$[1,3]=m1$,columns$[1,10]="T"
-        columns$[2,0]=periodbeg$[1]+"^-"+periodend$[1],columns$[2,1]="N",columns$[2,2]="10",columns$[2,3]=m1$,columns$[2,10]="T"
-        columns$[3,0]=periodbeg$[2]+"^-"+periodend$[2],columns$[3,1]="N",columns$[3,2]="10",columns$[3,3]=m1$,columns$[3,10]="T"
-        columns$[4,0]=periodbeg$[3]+"^-"+periodend$[3],columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m1$,columns$[4,10]="T"
-        columns$[5,0]=periodbeg$[4]+"^-"+periodend$[4],columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$,columns$[5,10]="T"
-        columns$[6,0]=periodend$[5],columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
-        columns$[7,0]=Translate!.getTranslation("AON_BALANCE"),columns$[7,1]="N",columns$[7,2]="12",columns$[7,3]=m1$,columns$[7,10]="T"
+        columns$[1,0]=future_heading$ ,columns$[1,1]="N",columns$[1,2]="12",columns$[1,3]=m9$,columns$[1,10]="T"
+        columns$[2,0]=periodbeg$[1]+"^-"+periodend$[1],columns$[2,1]="N",columns$[2,2]="12",columns$[2,3]=m9$,columns$[2,10]="T"
+        columns$[3,0]=periodbeg$[2]+"^-"+periodend$[2],columns$[3,1]="N",columns$[3,2]="12",columns$[3,3]=m9$,columns$[3,10]="T"
+        columns$[4,0]=periodbeg$[3]+"^-"+periodend$[3],columns$[4,1]="N",columns$[4,2]="12",columns$[4,3]=m9$,columns$[4,10]="T"
+        columns$[5,0]=periodbeg$[4]+"^-"+periodend$[4],columns$[5,1]="N",columns$[5,2]="12",columns$[5,3]=m9$,columns$[5,10]="T"
+        columns$[6,0]=periodend$[5],columns$[6,1]="N",columns$[6,2]="12",columns$[6,3]=m9$,columns$[6,10]="T"
+        columns$[7,0]=Translate!.getTranslation("AON_BALANCE"),columns$[7,1]="N",columns$[7,2]="12",columns$[7,3]=m9$,columns$[7,10]="T"
+        columns$[8,0]=h99$,columns$[columns,1]="C",columns$[columns,2]="6",columns$[columns,5]="C"
 
     endif
-
-    call stbl("+DIR_PGM",err=*next)+"adc_docout_adj.aon",columns$[all]
 
 rem --- Start progress meter and position customer file
 
@@ -358,8 +363,8 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
           if mod(total_recs,milestone)=0 then call pgmdir$+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
           if option$="C" if sequence$="N" if endcust$<>"" if arm01a.customer_id$>endcust$ break
           if option$="S" if endsales$<>"" if arm02a.slspsn_code$>endsales$ break
-          
-          rem --- Advisory Locking
+
+rem --- Advisory Locking
           if option$="C"
              extract record (arm01_dev,knum=keynum$,key=k$) arm01a$
              extract record (arm02_dev,key=arm02_key$,dom=*next) arm02a$
@@ -375,11 +380,11 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
           endif
           
 
-          rem --- Level break?
+rem --- Level break?
 
           if option$="S" if arm02a.slspsn_code$<>lastcode$ gosub salesperson
 
-          rem --- Initializations for this customer
+rem --- Initializations for this customer
 
           dim customer$(w),c[maxperiods+1]
           printed=0
@@ -389,46 +394,61 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
           phone$=cvs(arm01a.phone_no$,2)
           phone$=str(phone$:phone_mask$,err=*next)
 
-          rem --- Position the Invoice Header (art-01) file for aging
+rem --- Position the Invoice Header (art_invheader) file for aging
 
-          keyprefix$=arm01a.firm_id$+artype$+arm01a.customer_id$
-          read (art01_dev,key=keyprefix$,dom=*next)
+          keyprefix$=arm01a.firm_id$+arm01a.customer_id$
+          knum$="CUST_INVNO"
+          read (invheader_dev,key=keyprefix$,knum=knum$,dom=*next)
 
-          rem --- Read next Invoice Header record
-
+rem --- Read next Invoice Header record (art_invheader)
+          bold$="", sts$=""; rem << Added for pending invoices flag >>
           while moreheaders
-                art01_key$=key(art01_dev,end=*break)
-                if pos(keyprefix$=art01_key$)<>1 break
-                read record (art01_dev) art01a$
-                if future$="N" if art01a.invoice_date$>agingdate$ continue
-                amount=art01a.invoice_amt
+                invheader_key$=key(invheader_dev,end=*break)
+                if pos(keyprefix$=invheader_key$)<>1 break
+                read record (invheader_dev) invheader$
 
-                rem --- Position Invoice Detail (art-11) file
+                if future$="N" if invheader.invoice_date$>agingdate$ continue
+                amount=invheader.invoice_amt; rem --- Position Invoice Detail (art_transactions) file
 
-                art01_key$=art01a.firm_id$+art01a.ar_type$+
-:                          art01a.customer_id$+art01a.ar_inv_no$
-                read (art11_dev,key=art01_key$,dom=*next)
+                artrans_key$=invheader.firm_id$+invheader.ar_trans_id$
+                knum$="AR_INVOICE_ID"
+                read (artrans_dev,key=artrans_key$,knum=knum$,dom=*next)
 
-                rem --- Read Invoice Detail (art-11) records
+rem --- Read Invoice Detail (art_transactions) records
 
                 while moredetail
-                      k$=key(art11_dev,end=*break)
-                      if pos(art01_key$=k$)<>1 break
-                      read record (art11_dev) art11a$
-                      if future$="N" if art11a.trans_date$>agingdate$ continue
-                      amount=amount+art11a.trans_amt+art11a.adjdisc_amt
-                wend
+                      k$=key(artrans_dev,end=*break)
+                      if pos(artrans_key$=k$)<>1 break
+                      read record (artrans_dev) artrans$
+                      if artrans.ar_trans_type$="IN" continue
+                      if future$="N" if artrans.trans_date$>agingdate$ continue
 
-                rem --- Include credit?
+rem --- Determine if amount is from a pending cash receipt (status=O/C)
+                      key$=artrans.firm_id$+artrans.cr_trans_id$
+                      read (cashheader_dev,key=key$,knum="PRIMARY",dom=*next)cashheader$
+                      if pending$<>"Y"
+                          if cashheader.status$<>"C" continue
+                      endif
+
+                      if cashheader.status$<>"C"
+                          out_action$="FORMAT"
+                          bold$=$00$+"B",sts$="      ** "
+                      endif
+                      endif
+
+                      amount=amount+artrans.trans_amount+artrans.disc_amount
+                wend 
+                
+rem --- Include credit?
 
                 if credits$<>"Y" if amount<0 continue
 
-                rem --- Assign the proper date for aging purposes
+rem --- Assign the proper date for aging purposes
 
-                asof$=art01a.invoice_date$
-                if basis$="D" asof$=art01a.inv_due_date$
+                asof$=invheader.invoice_date$
+                if basis$="D" asof$=invheader.due_date$
 
-                rem --- Age this invoice
+rem --- Age this invoice
 
                 dim d[maxperiods]
                 notaged=1
@@ -440,7 +460,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
 
                 if amount=0 continue
 
-                rem --- Accumulate totals
+rem --- Accumulate totals
 
                 printed=1
                 d[period]=amount
@@ -448,11 +468,11 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                 s[period]=s[period]+amount
                 t[period]=t[period]+amount
 
-                rem --- Summary report?
+rem --- Summary report?
 
                 if type$="S" continue
 
-                rem --- Format detail line
+rem --- Format detail line
 
                 dim periods$[maxperiods+1],po$(10),order$(7)
                 periods$[period]=str(amount)
@@ -460,7 +480,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                 po$(1)=Translate!.getTranslation("AON_NONE")
                 order$(1)=Translate!.getTranslation("AON_NONE")
 
-                rem --- Print customer header and comments if necessary
+rem --- Print customer header and comments if necessary
 
                 while first
                       none=1
@@ -470,7 +490,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
 
                       if comments$<>"Y" or col_format$="Y" break
 
-                      rem --- Print customer comments
+rem --- Print customer comments
                                                      
                       read (arm05_dev,key=arm01_key$,dom=*next)
 
@@ -478,7 +498,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                             k$=key(arm05_dev,end=*break)
                             if pos(arm01_key$=k$)<>1 break
                             read record (arm05_dev) arm05a$
-                            rem if lines+1>maxlines gosub customer_heading
+rem if lines+1>maxlines gosub customer_heading
 
                             OutVect!.addItem(arm05a.sequence_num$)
                             OutVect!.addItem(arm05a.std_comments$)
@@ -489,7 +509,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                       wend
 
                       if none break
-                      rem if lines+2>maxlines gosub customer_heading
+rem if lines+2>maxlines gosub customer_heading
                       abc=fnblank(columns+1)
                       lines=lines+1
                       break
@@ -505,10 +525,10 @@ rem --- line.
 
                 if history
                    dim opt01a$:fattr(opt01a$)
-                   opt01a.firm_id$=art01a.firm_id$
-                   opt01a.ar_type$=art01a.ar_type$
-                   opt01a.customer_id$=art01a.customer_id$
-                   opt01a.ar_inv_no$=art01a.ar_inv_no$
+                   opt01a.firm_id$=invheader.firm_id$
+                   opt01a.ar_type$=invheader.ar_type$
+                   opt01a.customer_id$=invheader.customer_id$
+                   opt01a.ar_inv_no$=invheader.invoice_no$
                    opt01a.sequence_000$=fill(len(opt01a.sequence_000$),"0")
                    opt01a.order_no$=order$
                    opt01a.customer_po_no$=po$
@@ -519,8 +539,8 @@ rem --- line.
                    po$(1)=opt01a.customer_po_no$
                 endif
 
-                rem --- Print detail line
-                rem if lines+1>maxlines gosub customer_heading
+rem --- Print detail line
+rem if lines+1>maxlines gosub customer_heading
 
                 if col_format$="Y"
                    OutVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$))
@@ -529,58 +549,61 @@ rem --- line.
                    OutVect!.addItem(phone$)
                 endif
 
-                OutVect!.addItem(art01a.ar_inv_no$) 
+                OutVect!.addItem(invheader.invoice_no$+bold$) 
                 OutVect!.addItem(fndate$(asof$))
                 OutVect!.addItem(po$)
                 OutVect!.addItem(order$)
-                OutVect!.addItem(art01a.ar_terms_code$)
-                OutVect!.addItem(art01a.invoice_type$)
+                OutVect!.addItem(invheader.terms_code$)
+                OutVect!.addItem(invheader.ar_inv_type$)
 
                 if period=0
-                     OutVect!.addItem(str(amount))
+                      OutVect!.addItem(str(amount))
                      abc=fnblank(5)
-                     OutVect!.addItem(str(amount))
-                endif                     
+                      OutVect!.addItem(str(amount))
+                endif
 
                 if period=1
                      abc=fnblank(1)
-                     OutVect!.addItem(str(amount))
+                      OutVect!.addItem(str(amount))
                      abc=fnblank(4)
-                     OutVect!.addItem(str(amount))
+                      OutVect!.addItem(str(amount))
                 endif
 
                 if period=2
                      abc=fnblank(2)
-                     OutVect!.addItem(str(amount))
+                      OutVect!.addItem(str(amount))
                      abc=fnblank(3)
-                     OutVect!.addItem(str(amount))
+                      OutVect!.addItem(str(amount))
                 endif
 
                 if period=3
                      abc=fnblank(3)
-                     OutVect!.addItem(str(amount))
+                      OutVect!.addItem(str(amount))
                      abc=fnblank(2)
-                     OutVect!.addItem(str(amount))
+                      OutVect!.addItem(str(amount))
                 endif
 
                 if period=4
                      abc=fnblank(4)
-                     OutVect!.addItem(str(amount))
+                      OutVect!.addItem(str(amount))
                      abc=fnblank(1)
-                     OutVect!.addItem(str(amount))
+                      OutVect!.addItem(str(amount))
                 endif
 
                 if period>4
-                     abc=fnblank(5)   
-                     OutVect!.addItem(str(amount))
-                     OutVect!.addItem(str(amount))
+                     abc=fnblank(5)
+                      OutVect!.addItem(str(amount))
+                      OutVect!.addItem(str(amount))
                 endif
+
+                OutVect!.addItem(sts$); rem << Detailed rpt format >>
 
                 lines=lines+1
                 recs=recs+1
+                sts$="",bold$=""
 
                 rem --- If job numbers are being used retrieve the job (if one exists) and print it
-  
+
                 while jn$="Y"
                       dim opm09a$:fattr(opm09a$),job$(j)
                       k$=opt01a.firm_id$+opt01a.customer_id$+opt01a.job_no$
@@ -589,7 +612,7 @@ rem --- line.
                       rem if lines+1>maxlines gosub customer_heading
  
                       OutVect!.addItem(job$)
-                      abc=fnblank(12)
+                      abc=fnblank(13); rem --- << WAS 12 >>
                       lines=lines+1
                       break
                 wend
@@ -598,7 +621,7 @@ rem --- line.
 
           wend
 
-          rem --- Print customer total
+rem --- Print customer total
 
           while printed
 
@@ -627,7 +650,7 @@ rem --- line.
                    if col_format$="N"
                        abc=fnblank(9)
                    endif
-                   OutVect!.addItem(customer$)
+                   OutVect!.addItem(customer$+bold$); rem --- << Summarize Rpt format >>
                 endif
 
                 if future$="Y"
@@ -642,15 +665,16 @@ rem --- line.
                 OutVect!.addItem(str(c[4]))
                 OutVect!.addItem(str(c[5]))
                 OutVect!.addItem(str(c[6]))
-
+                OutVect!.addItem(sts$); rem --- << Summarized Rpt format >>
                 lines=lines+2                
                 printed=0
                 customer_printed=1
                 recs=recs+1
+                sts$="",bold$=""
 
           wend  
 
-          rem --- Update customer detail record (if requested)
+rem --- Update customer detail record (if requested)
 
           if update$<>"N"
               arm02a.aging_future=c[0]
@@ -665,7 +689,7 @@ rem --- line.
               read (arm02_dev); rem release extract
           endif
 
-          rem --- Loop back for next customer
+rem --- Loop back for next customer
           
           read (arm01_dev); rem release extract
 
@@ -698,7 +722,7 @@ rem --- All done
 
     if type$="D" and col_format$<>"Y"
         TotVect!.addItem(str(OutVect!.size()/(columns+1)))
- 
+
         abc=fnblank(1)
         OutVect!.addItem(x$)
         abc=fnblank(4)
@@ -708,7 +732,7 @@ rem --- All done
         TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         OutVect!.addItem(x$)
     endif 
- 
+
     if future$="Y"
         OutVect!.addItem(str(t[0]))
     else
@@ -722,6 +746,7 @@ rem --- All done
         OutVect!.addItem(str(t[4]))
         OutVect!.addItem(str(t[5]))
         OutVect!.addItem(str(t[6]))
+        OutVect!.addItem(""); rem << last column=Pending trans >>
     endif
 
     goto std_exit
@@ -738,19 +763,19 @@ customer_heading: rem --- Print customer subheading
     if type$="S" or col_format$="Y" return
     if lines+3>maxlines gosub increment_lines
 
-        abc=fnblank(13)
+        abc=fnblank(14)
 
         OutVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$))
         OutVect!.addItem(arm01a.customer_name$)
-        abc=fnblank(11)
+        abc=fnblank(12)
 
         abc=fnblank(1)
         OutVect!.addItem(phone$)
-        abc=fnblank(11)
+        abc=fnblank(12)
 
         abc=fnblank(1)
         OutVect!.addItem(arm01a.contact_name$)
-        abc=fnblank(11)
+        abc=fnblank(12)
 
         lines=lines+3
 
@@ -800,8 +825,8 @@ salesperson: rem --- Salesperson break
         lines=lines+2
         break
     wend
-    
-    
+
+
     if done return
 
     dim arm10f$:fattr(arm10f$),s[maxperiods+1]
@@ -873,7 +898,7 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
     fnend
 
 rem --- fnBlank : Create blank cells in OutVect!. No return value
-   
+
     def fnblank(q0)
         for q1=1 to q0
             OutVect!.addItem("")
