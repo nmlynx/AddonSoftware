@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2013-11-20
+ Report Date:   2013-12-03
  Report Branch: AddonSoftware 13.10
  Last Release:  AddonSoftware 13.04
 =======================================================================================================================================
@@ -647,3 +647,90 @@ Bug 7384: Handle missing ARS_MTDCASH record for a new firm.
 ----
 Modified: ar/src/arr_cashreceipts.aon
 
+=======================================================================================================================================
+Revision: 1dc64504ce6fb3675d8bd88d3c1d7a612e63c5f7
+
+Date: 11/21/2013 3:38:34 PM
+Message:
+Bug 7410: Modified GLM-06 triggers to process "PR Distrib" records.
+----
+Modified: data/glm-06
+Modified: util/dataport/files/posting_controls_xref
+Modified: util/v6triggers/src/GLM-06.trigger.ar.src
+Modified: util/v6triggers/src/GLM-06.trigger.aw.src
+
+=======================================================================================================================================
+Revision: 3f5bf8322fd4449e1c65566983bdd99b349b39dd
+
+Date: 11/25/2013 1:40:13 PM
+Message:
+Bug 7412: Reduced size of needless wide columns.
+----
+Modified: sf/src/sfr_wordmat_o1.aon
+
+=======================================================================================================================================
+Revision: 8ace86ce95b42bace4c7ffd0da792676d159a925
+
+Date: 11/26/2013 5:54:31 PM
+Message:
+First installment of localization of last round of mods to Jasper
+reports for Bug 7415 "Jasper reports may need additional localization".
+
+More manual adjustments are needed still.
+----
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
+Modified: reports/APCheck-Check.jasper
+Modified: reports/APCheck-Check.jrxml
+Modified: reports/APCheck-Stub.jasper
+Modified: reports/APCheck-Stub.jrxml
+Modified: reports/BOMCosting.jasper
+Modified: reports/BOMCosting.jrxml
+Modified: reports/BOMDetail.jasper
+Modified: reports/BOMDetail.jrxml
+Modified: reports/CustDetail.jasper
+Modified: reports/CustDetail.jrxml
+Modified: reports/CustStatement.jasper
+Modified: reports/CustStatement.jrxml
+Modified: reports/ItemDetail.jasper
+Modified: reports/ItemDetail.jrxml
+Modified: reports/OPInvoiceDet-LotSer.jasper
+Modified: reports/OPInvoiceDet-LotSer.jrxml
+Modified: reports/OPInvoiceHdr.jasper
+Modified: reports/OPInvoiceHdr.jrxml
+Modified: reports/OPInvoiceMaster.jasper
+Modified: reports/OPInvoiceMaster.jrxml
+Modified: reports/SFHardCopyFGLS.jasper
+Modified: reports/SFHardCopyFGLS.jrxml
+Modified: reports/SFHardCopySubStd.jasper
+Modified: reports/SFHardCopySubStd.jrxml
+Modified: reports/SFHardCopyTrans.jasper
+Modified: reports/SFHardCopyTrans.jrxml
+Modified: reports/SimpleInvoice.jasper
+Modified: reports/SimpleInvoice.jrxml
+Modified: reports/SimpleInvoiceDtl.jasper
+Modified: reports/SimpleInvoiceDtl.jrxml
+Modified: reports/SimpleInvoiceMaster.jasper
+Modified: reports/SimpleInvoiceMaster.jrxml
+
+=======================================================================================================================================
+Revision: 973d3e8829655a84f794fd3c34d590f27eb1b36e
+
+Date: 11/27/2013 4:57:01 PM
+Message:
+Bug 7399: Use AVAL callpoint instead of MINV and MAXV attributes to
+validate period entry.
+----
+Modified: data/bar/apr_purchases.xml
+Modified: data/cdf/apr_purchases.cdf
+
+=======================================================================================================================================
+Revision: bb046b9689cfed61536ce9bf596de2f34a7f77ea
+
+Date: 11/27/2013 5:18:02 PM
+Message:
+Bug 7400: Use AVAL callpoint instead of MINV and MAXV attributes to
+validate period entry.
+----
+Modified: data/bar/apr_disbursemnts.xml
+Modified: data/cdf/apr_disbursemnts.cdf
