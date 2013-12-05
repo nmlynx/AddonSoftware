@@ -1,11 +1,3 @@
-[[OPE_ORDDET.QTY_ORDERED.AINV]]
-print "rem wgh ... 7394 ... enter qty_ordered AINV"
-[[OPE_ORDDET.QTY_ORDERED.AINP]]
-print "rem wgh ... 7394 ... enter qty_ordered AINP"
-[[OPE_ORDDET.UNIT_PRICE.AINV]]
-print "rem wgh ... 7394 ... enter unit_price AINV"
-[[OPE_ORDDET.UNIT_PRICE.AINP]]
-print "rem wgh ... 7394 ... enter unit_price AINP"
 [[OPE_ORDDET.ADGE]]
 rem --- Disable header buttons
 
@@ -32,7 +24,6 @@ rem --- Extend price now that grid vector has been updated
 	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 	gosub disp_ext_amt
 [[OPE_ORDDET.UNIT_PRICE.AVEC]]
-print "rem wgh ... 7394 ... enter unit_price AVEC"
 rem --- Extend price now that grid vector has been updated
 	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
 	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
@@ -216,7 +207,6 @@ rem --- Disable by line type
 	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
 	gosub disable_by_linetype
 [[OPE_ORDDET.UNIT_PRICE.BINP]]
-print "rem wgh ... 7394 ... enter unit_price BINP"
 rem --- Enable repricing, options, lots
 
 	gosub enable_repricing
@@ -232,7 +222,6 @@ rem --- Has a valid whse/item been entered?
 		gosub check_item_whse
 	endif
 [[OPE_ORDDET.QTY_ORDERED.AVEC]]
-print "rem wgh ... 7394 ... enter qty_ordered AVEC"
 rem --- Extend price now that grid vector has been updated
 	qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
 	unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
@@ -243,7 +232,6 @@ rem --- Enable buttons
 	gosub enable_repricing
 	gosub enable_addl_opts
 [[OPE_ORDDET.QTY_ORDERED.AVAL]]
-print "rem wgh ... 7394 ... enter qty_ordered AVAL"
 rem --- Set shipped and back ordered
 
 	qty_ord    = num(callpoint!.getUserInput())
@@ -320,9 +308,6 @@ rem --- Has a valid whse/item been entered?
 		gosub check_item_whse
 	endif
 [[OPE_ORDDET.QTY_ORDERED.BINP]]
-print "rem wgh ... 7394 ... enter qty_ordered BINP"
-print "Det:QTY_ORDERED.BINP"; rem debug
-
 rem --- Get prev qty / enable repricing, options, lots
 
 	user_tpl.prev_qty_ord = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
@@ -1077,7 +1062,6 @@ rem --- Set header order totals
 
 	callpoint!.setStatus("MODIFIED;REFRESH")
 [[OPE_ORDDET.UNIT_PRICE.AVAL]]
-print "rem wgh ... 7394 ... enter unit_price AVAL"
 rem --- Set Manual Price flag and round price
 	round_precision = num(callpoint!.getDevObject("precision"))
 	unit_price = round(num(callpoint!.getUserInput()),round_precision)
@@ -1367,11 +1351,7 @@ rem ==========================================================================
 	if price=0 then
 		msg_id$="ENTER_PRICE"
 		gosub disp_message
-rem wgh ... 7394 ... before setFocus
-rem		util.forceEdit(Form!, user_tpl.unit_price_col)
-callpoint!.setFocus(callpoint!.getValidationRow(),"OPE_ORDDET.UNIT_PRICE",1)
-rem callpoint!.setFocus(callpoint!.getValidationRow(),"OPE_ORDDET.UNIT_PRICE",0)
-rem wgh ... 7394 ... after setFocus
+		callpoint!.setFocus(callpoint!.getValidationRow(),"OPE_ORDDET.UNIT_PRICE",1)
 		enter_price_message = 1
 	else
 		callpoint!.setColumnData("OPE_ORDDET.UNIT_PRICE", str(round(price, round_precision)) )
