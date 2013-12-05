@@ -234,7 +234,7 @@ rem ==========================================================================
 			apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
 			apt01a.retention = apt01a.retention + apt11a.trans_ret
 		wend
-		if apt01a.discount_amt<0 then apt01a.discount_amt=0
+rem 7426 ...		if apt01a.discount_amt<0 then apt01a.discount_amt=0
 		inv_amt = apt01a.invoice_amt
 		disc_amt = apt01a.discount_amt
 		ret_amt = apt01a.retention
@@ -367,7 +367,7 @@ rem				endif
 					apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
 					apt01a.retention = apt01a.retention + apt11a.trans_ret
 				wend
-				if apt01a.discount_amt<0 then apt01a.discount_amt=0
+rem 7426 ...				if apt01a.discount_amt<0 then apt01a.discount_amt=0
 
 				gridInvoices!.setCellState(row_no,0,1)
 
@@ -422,7 +422,7 @@ rem				endif
 				wend
 				tot_payments=tot_payments-num(gridInvoices!.getCellText(row_no,12))
 
-				if apt01a.discount_amt<0 then apt01a.discount_amt=0
+rem 7426 ...				if apt01a.discount_amt<0 then apt01a.discount_amt=0
 
 				gridInvoices!.setCellState(row_no,0,0)
 				gridInvoices!.setCellText(row_no, 10, str(str(apt01a.invoice_amt - apt01a.retention - apt01a.discount_amt)))
@@ -693,7 +693,7 @@ rem				endif
 					apt01a.invoice_amt = apt01a.invoice_amt + apt11a.trans_amt
 					apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
 				wend
-				if apt01a.discount_amt<0 then apt01a.discount_amt=0
+rem 7426 ...				if apt01a.discount_amt<0 then apt01a.discount_amt=0
 
 				gridInvoices!.setCellState(row_no,0,1)
 
@@ -747,7 +747,7 @@ rem				endif
 					apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
 					apt01a.retention = apt01a.retention + apt11a.trans_ret
 				wend
-				if apt01a.discount_amt<0 then apt01a.discount_amt=0
+rem 7426 ...				if apt01a.discount_amt<0 then apt01a.discount_amt=0
 				inv_amt = apt01a.invoice_amt
 				disc_amt = apt01a.discount_amt
 				ret_amt = apt01a.retention
@@ -1333,7 +1333,7 @@ rem --- Payment Amount
 					apt01a.invoice_amt = apt01a.invoice_amt + apt11a.trans_amt
 					apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
 				wend
-				if apt01a.discount_amt<0 then apt01a.discount_amt=0
+rem 7426 ...				if apt01a.discount_amt<0 then apt01a.discount_amt=0
 				gridInvoices!.setCellText(curr_row, 10, str(str(apt01a.invoice_amt - apt01a.retention - apt01a.discount_amt)))
 				gridInvoices!.setCellText(curr_row,11,str(apt01a.discount_amt))
 
