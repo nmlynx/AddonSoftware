@@ -440,13 +440,16 @@ next_file:
         print (log_dev)"Skipped: ",datafile$
         goto next_file
     endif
-    
+
     rem --- If source POM-02 isn't available, then skip poe-11, poe-12, poe-13, poe-14 and pot-14
     if pos(cvs(datafile$,8)="poe-11;poe-12;poe-13;poe-14;pot-14",7) and !pom02_dev then
         found_pom02=0
         pom02_dev=unt
         open (pom02_dev,err=*next)source_folder$+"/"+cvs("pom-02",version_cvs);found_pom02=1
-        if !found_pom02 then
+        if found_pom02 then
+            readrecord(ddm_table_tpls,key=pad("POC_LINECODE",16))ddm_table_tpls$
+            pom02_tpl$=ddm_table_tpls.template$
+        else
             print "*** ERROR ***: ",datafile$," requires ",cvs("pom-02",version_cvs)
             print (log_dev)"*** ERROR ***: ",datafile$," requires ",cvs("pom-02",version_cvs)," for non-stock line items"
             print (err_dev)"*** ERROR ***: ",datafile$," requires ",cvs("pom-02",version_cvs)," for non-stock line items"
@@ -1051,7 +1054,7 @@ rem --- final misc processing prior to writing new record
     
 rem --- Initialize NS_ITEM_ID in POE_REQDET, POE_PODET, POE_QADET, POE_RECDET, and POT_RECDET
     if pos(cvs(datafile$,8)="poe-11;poe-12;poe-13;poe-14;pot-14",7)
-        dim pom02$:"firm_id:c(2),po_line_code:c(2*),code_desc:c(20),line_type:c(1),dropship:c(1),lead_tim_flg:c(1),land_cst_flg:c(1),add_options:c(1),reserved_str:c(7*),gl_exp_acct:c(10),gl_ppv_acct:c(10*)"
+        dim pom02$:pom02_tpl$
         readrecord(pom02_dev,key=new_rec.firm_id$+new_rec.po_line_code$,dom=*endif)pom02$
         if pom02.line_type$="N" then
             new_rec.ns_item_id$=new_rec.item_id$
@@ -1280,7 +1283,7 @@ rem --- Initialize *s_params.post_to_gl with SYM-04's post_gl flag
 
     gosub init_params_post_gl
 
-    rem --- Enable disabled triggers
+rem --- Enable disabled triggers
     if disabledTriggers!.size() then
         iter!=disabledTriggers!.iterator()
         while iter!.hasNext()
