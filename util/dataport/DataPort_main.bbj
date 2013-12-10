@@ -1051,8 +1051,15 @@ rem --- final misc processing prior to writing new record
        swend
        field new_rec$,"shipto_type"=shipto_type$
     endif
+
+rem --- As needed, fix ivs_default.inventoried
+
+    if table_alias$="IVS_DEFAULTS" then
+        if new_rec.lotser_item$<>"Y" then new_rec.inventoried$="N"
+    endif
     
 rem --- Initialize NS_ITEM_ID in POE_REQDET, POE_PODET, POE_QADET, POE_RECDET, and POT_RECDET
+
     if pos(cvs(datafile$,8)="poe-11;poe-12;poe-13;poe-14;pot-14",7)
         dim pom02$:pom02_tpl$
         readrecord(pom02_dev,key=new_rec.firm_id$+new_rec.po_line_code$,dom=*endif)pom02$
