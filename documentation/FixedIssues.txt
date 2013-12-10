@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2013-12-04
+ Report Date:   2013-12-10
  Report Branch: AddonSoftware 13.10
  Last Release:  AddonSoftware 13.04
 =======================================================================================================================================
@@ -772,3 +772,80 @@ Modified: ar/digitalDashboard/arr_digitalDashboard.src
 Modified: bm/src/bmc_getcost.aon
 Modified: gl/src/glr_recurring.aon
 Modified: iv/src/ivr_stkstatus.aon
+
+=======================================================================================================================================
+Revision: 8d0d40ffe19002c87d6050730c0d5ef0fcccdaf0
+
+Date: 12/4/2013 4:38:44 PM
+Message:
+Bug 7426: Allow negative discount amounts, which might appear a Debit
+Memo.
+----
+Modified: data/bar/ape_payselect.xml
+Modified: data/cdf/ape_payselect.cdf
+
+=======================================================================================================================================
+Revision: 37ff6967ad5f4e2fd17bc5efd7a4168194c6e9d8
+
+Date: 12/5/2013 9:25:28 AM
+Message:
+Bug 7426: Allow negative discount amounts only for Debit
+Memos.
+----
+Modified: data/bar/ape_payselect.xml
+Modified: data/cdf/ape_payselect.cdf
+
+=======================================================================================================================================
+Revision: c97037bf40904384c7cfe6e06a92fd6dc6df5d5f
+
+Date: 12/5/2013 12:17:05 PM
+Message:
+Bug 7394: Replaced use of :ado_util.src::forceEdit(Form!, <col_num>)
+with callpoint!.setFocus(<row>, <column>, <edit_flag>).
+----
+Modified: ad/src/ado_util.src
+Modified: data/bar/ape_mancheckdet.xml
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/cdf/ape_mancheckdet.cdf
+Modified: data/cdf/ope_invdet.cdf
+Modified: data/cdf/ope_orddet.cdf
+
+=======================================================================================================================================
+Revision: 47af3448205e73d8d4287c86b23b394a7a8c8985
+
+Date: 12/6/2013 4:09:14 PM
+Message:
+Bug 7428: Moved ITEM_ID to NS_ITEM_ID for non-stock lines in POE_REQDET,
+POE_PODET, POE_QADET, POE_RECDET and POT_RECDET.
+----
+Modified: util/dataport/DataPort_main.bbj
+
+=======================================================================================================================================
+Revision: cb4b109a42d20c7b0c988edac1dd2f215c878b42
+
+Date: 12/6/2013 4:28:32 PM
+Message:
+Bug 7429: Added trip read to sort file.
+----
+Modified: ap/src/apr_disbursemnts.aon
+
+=======================================================================================================================================
+Revision: ef0c84955624f75b9b72d15c8fccd83a3dde4183
+
+Date: 12/9/2013 1:57:30 PM
+Message:
+Bug 7430: Updated DataPort to correctly handle repeating PO_MSG_CODE
+fields in v6/v7 POM-04 file.
+----
+Modified: util/dataport/DataPort_main.bbj
+Modified: util/dataport/files/field_name_xref
+
+=======================================================================================================================================
+Revision: 924fb942931c3f4afa9a3e3e516d773370b2f0cc
+
+Date: 12/10/2013 10:36:08 AM
+Message:
+Bug 7432: Set ivs_default.inventoried=N when ivs_default.lotser_item<>Y
+----
+Modified: util/dataport/DataPort_main.bbj
