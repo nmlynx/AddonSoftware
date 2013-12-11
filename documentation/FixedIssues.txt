@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2013-12-10
+ Report Date:   2013-12-11
  Report Branch: AddonSoftware 13.10
  Last Release:  AddonSoftware 13.04
 =======================================================================================================================================
@@ -849,3 +849,35 @@ Message:
 Bug 7432: Set ivs_default.inventoried=N when ivs_default.lotser_item<>Y
 ----
 Modified: util/dataport/DataPort_main.bbj
+
+=======================================================================================================================================
+Revision: 988c5e9a21755dc5cc217e8956c69609cda63a42
+
+Date: 12/10/2013 3:20:35 PM
+Message:
+Per bug 7436; Added a line to the glr_headings.aon program to construct
+a key for column widths and report settings based on the report number:
+rd_alias_id$="<gl_fin_rpt_"+glm12a.gl_rpt_no$+">"
+This way each report in the custom financials suite can have its own
+column widths and doc settings in Barista.
+----
+Modified: gl/src/glr_headings.aon
+
+=======================================================================================================================================
+Revision: 055bcee56004f46101aa5820cc8c26fac23bca03
+
+Date: 12/10/2013 4:00:53 PM
+Message:
+Bug 7438: Vendor name was being DIM'd to zero. Deleted that statement.
+----
+Modified: ap/src/apr_checkreport.aon
+
+=======================================================================================================================================
+Revision: 3c76ddd3ae04f2f9aa231e052f29fecb7eba2275
+
+Date: 12/11/2013 11:07:17 AM
+Message:
+Bug 7440: Corrected IF statement controlling printing detail lines for
+Purchase Journal by Distribution Account.
+----
+Modified: ap/src/apr_purchases.aon
