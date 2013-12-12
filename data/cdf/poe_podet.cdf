@@ -698,6 +698,11 @@ if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))="Y" or cvs
 endif
 
 gosub enable_by_line_type
+
+if line_type$="M" and cvs(callpoint!.getColumnData("POE_PODET.ORDER_MEMO"),2)=""
+	callpoint!.setColumnData("POE_PODET.ORDER_MEMO"," ")
+	callpoint!.setStatus("MODIFIED")
+endif
 [[POE_PODET.ITEM_ID.AVAL]]
 rem --- Item ID - After Column Validataion
 
