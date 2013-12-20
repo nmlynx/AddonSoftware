@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2013-12-11
+ Report Date:   2013-12-20
  Report Branch: AddonSoftware 13.10
  Last Release:  AddonSoftware 13.04
 =======================================================================================================================================
@@ -881,3 +881,58 @@ Bug 7440: Corrected IF statement controlling printing detail lines for
 Purchase Journal by Distribution Account.
 ----
 Modified: ap/src/apr_purchases.aon
+
+=======================================================================================================================================
+Revision: d5a597b31b5d30c9fbd2f3cd9a62939182f9bcfb
+
+Date: 12/11/2013 5:42:21 PM
+Message:
+Bug 7444: Corrected miss-named variable old_item$.
+----
+Modified: iv/src/ivm_copyitem.aon
+
+=======================================================================================================================================
+Revision: bef032a9672593f7ace0cedb14c23c4157994b79
+
+Date: 12/11/2013 6:48:19 PM
+Message:
+Per bugs 7434 and 7435; altering so blank memo field is allowed for a
+message type line, and defaults correctly if the default line code is M
+(i.e., doesn't force you to enter a . or a space).
+----
+Modified: data/bar/poe_podet.xml
+Modified: data/bar/poe_recdet.xml
+Modified: data/bar/poe_reqdet.xml
+Modified: data/cdf/poe_podet.cdf
+Modified: data/cdf/poe_recdet.cdf
+Modified: data/cdf/poe_reqdet.cdf
+
+=======================================================================================================================================
+Revision: 049cf7272eceaaaefdf0f943b4c0016ecd7c3059
+
+Date: 12/13/2013 3:12:46 PM
+Message:
+Bug 7449: Fixed Reference Information on Lot/Serial Transaction History
+report for WO Issues.
+----
+Modified: iv/src/ivc_transdata.aon
+
+=======================================================================================================================================
+Revision: 202b485cbe66798c3204d2ff44e145394a676c7c
+
+Date: 12/16/2013 4:01:52 PM
+Message:
+Bug 7454: Correct calculation of SFE_WOOPRTN.TOTAL_TIME in WO Operations
+Requirements grid.
+----
+Modified: data/bar/sfe_wooprtn.xml
+Modified: data/cdf/sfe_wooprtn.cdf
+
+=======================================================================================================================================
+Revision: 5067773ec11b15965af875f2c5e77e373577d681
+
+Date: 12/20/2013 9:33:05 AM
+Message:
+Bug 7460: Process BM masks and initialize masks new to Barista-Addon.
+----
+Modified: util/dataport/DataPort_main.bbj
