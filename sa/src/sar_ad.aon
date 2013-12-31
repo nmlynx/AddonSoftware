@@ -114,6 +114,7 @@ rem --- Initializations
     prev_seg1_head$=""
     prev_seg2_head$=""
     prev_seg3_head$=""
+    aon_description$=Translate!.getTranslation("AON_DESCRIPTION")
 
 rem --- Print positions
 
@@ -174,22 +175,47 @@ rem --- Report headings
 
 rem --- Document columns
 
-    columns=13
-    dim columns$[columns,10]
-    if level>=1 columns$[0,0]=literals$[1],columns$[0,1]="C",columns$[0,2]="15"
-    if level>=2 columns$[0,0]=literals$[1]+"/^"+literals$[2]
-    if level>=3 columns$[0,0]=literals$[1]+"/^"+literals$[2]+"/^"+literals$[3]
-    if level>=4 columns$[0,0]=literals$[1]+"/^"+literals$[2]+"/^"+literals$[3]+"/^"+literals$[4]
+    if export_fmt$="Y" then
+        columns=12+(level*2)
+        dim columns$[columns,10]
+        if level>=1 then
+            seg=1; gosub get_column_size
+            columns$[0,0]=literals$[1],columns$[0,1]="C",columns$[0,2]=str(size_fld)
+            columns$[1,0]=literals$[1]+" "+aon_description$,columns$[1,1]="C",columns$[1,2]=str(size_desc)
+        endif
+        if level>=2 then
+            seg=2; gosub get_column_size
+            columns$[2,0]=literals$[2],columns$[2,1]="C",columns$[2,2]=str(size_fld)
+            columns$[3,0]=literals$[2]+" "+aon_description$,columns$[3,1]="C",columns$[3,2]=str(size_desc)
+        endif
+        if level>=3 then
+            seg=3; gosub get_column_size
+            columns$[4,0]=literals$[3],columns$[4,1]="C",columns$[4,2]=str(size_fld)
+            columns$[5,0]=literals$[3]+" "+aon_description$,columns$[5,1]="C",columns$[5,2]=str(size_desc)
+        endif
+        if level>=4 then
+            seg=4; gosub get_column_size
+            columns$[6,0]=literals$[4],columns$[6,1]="C",columns$[6,2]=str(size_fld)
+            columns$[7,0]=literals$[4]+" "+aon_description$,columns$[7,1]="C",columns$[7,2]=str(size_desc)
+        endif
+        last_col=(level*2)-1
+    else
+        columns=13
+        dim columns$[columns,10]
+        if level>=1 then columns$[0,0]=literals$[1],columns$[0,1]="C",columns$[0,2]="15"
+        if level>=2 then columns$[0,0]=columns$[0,0]+"/^"+literals$[2]
+        if level>=3 then columns$[0,0]=columns$[0,0]+"/^"+literals$[3]
+        if level>=4 then columns$[0,0]=columns$[0,0]+"/^"+literals$[4]
+        last_col=0
+    endif
     p=begperiod
     yr$=begyear$
-
-    for i=0 to 11
-        columns$[i+1,0]=periods$[p]+" "+str(num(yr$):"0000"),columns$[i+1,1]="N",columns$[i+1,2]=str(m2),columns$[i+1,3]=m2$,columns$[i+1,10]="T"
+    for i=1 to 12
+        columns$[i+last_col,0]=periods$[p]+" "+str(num(yr$):"0000"),columns$[i+last_col,1]="N",columns$[i+last_col,2]=str(m2),columns$[i+last_col,3]=m2$,columns$[i+last_col,10]="T"
         p=p+1
         if p>periods yr$=str(num(yr$)+1:"0000"),p=1
     next i
-
-    columns$[13,0]=Translate!.getTranslation("AON_TOTAL"),columns$[13,1]="N",columns$[13,2]=str(m1),columns$[13,3]=m1$,columns$[13,10]="T"
+    columns$[columns,0]=Translate!.getTranslation("AON_TOTAL"),columns$[columns,1]="N",columns$[columns,2]=str(m1),columns$[columns,3]=m1$,columns$[columns,10]="T"
 
     call stbl("+DIR_PGM",err=*next)+"adc_docout_adj.aon",columns$[all]
 
@@ -430,36 +456,55 @@ done: rem --- All done
         HdrVect!.addItem(Translate!.getTranslation("AON_TOTAL_PAGE"))
     endif    
 
-    gosub print_detail
+    if export_fmt$<>"Y" then gosub print_detail
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status    
     goto std_exit
 
 print_detail: rem --- Print Detail Line
 
-    seg=1
+    if tot_flag$="Y" and export_fmt$="Y" then
+        tot_flag$=""
+        return
+    endif
 
+    seg=1
     if cvs(seg1_head$,2)<>""
-        OutVect!.addItem(seg1_head$)
-        blank=fnblank(columns)
-        seg1_head$=""
+        if export_fmt$="Y" then
+            OutVect!.addItem(seg1_fld$)
+            OutVect!.addItem(seg1_desc$)
+        else
+            OutVect!.addItem(seg1_head$)
+            blank=fnblank(columns)
+            seg1_head$=""
+        endif
     endif
 
     if level>=2 
         seg=2
         if cvs(seg2_head$,2)<>"" 
-            OutVect!.addItem(seg2_head$)
-            blank=fnblank(columns)
-            seg2_head$=""
+            if export_fmt$="Y" then
+                OutVect!.addItem(seg2_fld$)
+                OutVect!.addItem(seg2_desc$)
+            else
+                OutVect!.addItem(seg2_head$)
+                blank=fnblank(columns)
+                seg2_head$=""
+            endif
         endif
     endif
 
     if level>=3
         seg=3
         if cvs(seg3_head$,2)<>""
-            OutVect!.addItem(seg3_head$)
-            blank=fnblank(columns)
-            seg3_head$=""
+            if export_fmt$="Y" then
+                OutVect!.addItem(seg3_fld$)
+                OutVect!.addItem(seg3_desc$)
+            else
+                OutVect!.addItem(seg3_head$)
+                blank=fnblank(columns)
+                seg3_head$=""
+            endif
         endif
     endif
 
@@ -467,17 +512,22 @@ print_detail: rem --- Print Detail Line
         seg=4
         seg$=a0$(wpos[seg],fldlen[seg])
         gosub get_seg_desc
-        OutVect!.addItem(segdesc$)
-        blank=fnblank(columns)
-        seg4_head$=""
+        if export_fmt$="Y" then
+            OutVect!.addItem(segdfld$)
+            OutVect!.addItem(segdesc$)
+        else
+            OutVect!.addItem(segdfld$+" "+segdesc$)
+            blank=fnblank(columns)
+            seg4_head$=""
+        endif
     endif
-
-    if tot_flag$="Y" 
+    
+    if tot_flag$="Y" and export_fmt$<>"Y" then
         TotVect!.addItem(str(OutVect!.size()/(columns+1)))
         tot_flag$=""
     endif
 
-    blank=fnblank(1)
+    if export_fmt$<>"Y" then blank=fnblank(1)
 
     for i=0 to 11
         OutVect!.addItem(str(n[i]))
@@ -499,8 +549,13 @@ first_break: rem --- First Segment Break
     seg2_head$=""
     seg3_head$=""
     seg4_head$=""
-    tot_flag$="Y"
+    if export_fmt$="Y" and level=1 then
+        tot_flag$=""
+    else
+        tot_flag$="Y"
+    endif
     gosub print_detail
+    endif
 l6100: 
     if done goto l6190
     dim nmbr_tot1[11]
@@ -523,7 +578,9 @@ l6100:
     seg$=t0$
     seg=1
     gosub get_seg_desc
-    seg1_head$=segdesc$
+    seg1_fld$=segdfld$
+    seg1_desc$=segdesc$
+    seg1_head$=seg1_fld$+" "+seg1_desc$
 
 l6190: 
     return
@@ -545,7 +602,7 @@ l6260:
         tot_flag$="Y"
     endif
 
-    gosub print_detail
+        gosub print_detail
 l6300: 
     if done goto l6390
     dim nmbr_tot2[11]
@@ -555,7 +612,9 @@ l6300:
     seg$=t1$
     seg=2
     gosub get_seg_desc
-    seg2_head$=segdesc$
+    seg2_fld$=segdfld$
+    seg2_desc$=segdesc$
+    seg2_head$=seg2_fld$+" "+seg2_desc$
 
 l6390: 
     return
@@ -584,7 +643,9 @@ l6500:
     seg$=t2$
     seg=3
     gosub get_seg_desc
-    seg3_head$=segdesc$
+    seg3_fld$=segdfld$
+    seg3_desc$=segdesc$
+    seg3_head$=seg3_fld$+" "+seg3_desc$
 
 l6590: 
     return
@@ -620,8 +681,21 @@ l6850:
     fld$(1)=seg$
     if types$[seg]="M" fld$=fnmask$(fld$(1,inlen[seg]),omasks$[seg])
     if literals$[seg]=Translate!.getTranslation("AON_ITEM") desc$=fnitem$(x$[descstr[seg]](descpos[seg],desclen[seg]),iv_desc[1],iv_desc[2],iv_desc[3]),fld$=fld$(1,inlen[seg])
-    segdesc$=cvs(cvs(fld$,3)+" "+cvs(desc$,3),3)
+    segdfld$=cvs(fld$,3)
+    segdesc$=cvs(desc$,3)
 
+    return
+
+get_column_size: rem --- Get size of column and description for segment selection
+
+    if levels$[seg]="I" then
+        size_fld=max(iv_desc[0],len(literals$[seg]))
+        size_desc=max(iv_desc[1]+iv_desc[2]+iv_desc[3],len(literals$[seg]+" "+aon_description$))
+    else
+        size_fld=max(inlen[seg],len(literals$[seg]))
+        size_desc=max(desclen[seg],len(literals$[seg]+" "+aon_description$))
+    endif
+    
     return
 
 get_sort_parameters: rem --- Get Sort Parameters
