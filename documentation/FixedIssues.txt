@@ -936,3 +936,92 @@ Message:
 Bug 7460: Process BM masks and initialize masks new to Barista-Addon.
 ----
 Modified: util/dataport/DataPort_main.bbj
+
+=======================================================================================================================================
+Revision: d9199d780c8de1279ec6afb6a58ffba3c7b90c25
+
+Date: 12/23/2013 11:28:45 AM
+Message:
+Bug 7455: Removed all glc_datecheck.aon date checks on TRANS_DATE and
+REVERSE_DATE in Recurring Journal Entry.
+----
+Modified: data/bar/gle_recjehdr.xml
+Modified: data/cdf/gle_recjehdr.cdf
+
+=======================================================================================================================================
+Revision: 6d1cf9b2c6fe6da41ec1f4b04a136d753923f65d
+
+Date: 12/23/2013 5:13:27 PM
+Message:
+Bug 7466: SQL queries need to use parent tables OPE_INVHDR and
+OPE_INVDET instead of child tables OPE_ORDHDR and OPE_ORDDET.
+----
+Modified: data/sync/adm_searches~customers0010.xml
+Modified: data/sync/adm_searches~customers0020.xml
+
+=======================================================================================================================================
+Revision: 532af077c7be77e2f2fb876eec97906f8488c937
+
+Date: 12/24/2013 1:03:19 PM
+Message:
+Bug 7467: Get units from Material Requirements grid for current item
+being exploded.
+----
+Modified: data/bar/sfe_womatl.xml
+Modified: data/cdf/sfe_womatl.cdf
+
+=======================================================================================================================================
+Revision: 368169f914a9f9d7b31481a86637ceef29f2c5a8
+
+Date: 12/30/2013 5:27:26 PM
+Message:
+Per bug 7472; altered the export to create client (payer) and vendor
+(recipient) text file formats that import successfully into the Account
+Ability software.
+----
+Modified: ap/src/apx_export_1099.aon
+
+=======================================================================================================================================
+Revision: fb743275c57fb5cf0b6552e30fabb6e2bc0c943b
+
+Date: 12/30/2013 5:49:36 PM
+Message:
+Per bug 7473; set 'ruler' and old heading controls to a fixed width for
+this form.
+----
+Modified: data/bar/glm_finheading.xml
+
+=======================================================================================================================================
+Author: Bill Halsted <bhalsted@basis.com>
+
+Message:
+Bug 7409: Added Excel export for 12 period Sales Analysis reports.
+----
+Modified: data/bar/sar_customer.xml
+Modified: data/bar/sar_custship.xml
+Modified: data/bar/sar_custsic.xml
+Modified: data/bar/sar_custterr.xml
+Modified: data/bar/sar_custtype.xml
+Modified: data/bar/sar_distcode.xml
+Modified: data/bar/sar_item.xml
+Modified: data/bar/sar_nonstock.xml
+Modified: data/bar/sar_proditmcst.xml
+Modified: data/bar/sar_salespsn.xml
+Modified: data/bar/sar_territory.xml
+Modified: data/bar/sar_vendor.xml
+Modified: data/bar/sar_warehse.xml
+Modified: data/cdf/sar_custterr.cdf
+Modified: sa/src/sar_ad.aon
+Modified: sa/src/sar_customer.aon
+Modified: sa/src/sar_custship.aon
+Modified: sa/src/sar_custsic.aon
+Modified: sa/src/sar_custterr.aon
+Modified: sa/src/sar_custtype.aon
+Modified: sa/src/sar_distcode.aon
+Modified: sa/src/sar_item.aon
+Modified: sa/src/sar_nonstock.aon
+Modified: sa/src/sar_proditmcst.aon
+Modified: sa/src/sar_salespsn.aon
+Modified: sa/src/sar_territory.aon
+Modified: sa/src/sar_vendor.aon
+Modified: sa/src/sar_warehse.aon
