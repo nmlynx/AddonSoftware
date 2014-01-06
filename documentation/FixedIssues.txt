@@ -1026,3 +1026,147 @@ Modified: sa/src/sar_salespsn.aon
 Modified: sa/src/sar_territory.aon
 Modified: sa/src/sar_vendor.aon
 Modified: sa/src/sar_warehse.aon
+
+=======================================================================================================================================
+Revision: 303dd84f7a08e69b0ea713067fc9423379fa866d
+
+Date: 1/3/2014 9:45:54 AM
+Message:
+Bug 7409: Added Excel export for MTD/YTD/Prior Sales Analysis reports.
+----
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
+Modified: sa/src/sar_ab.aon
+Modified: sa/src/sar_ac.aon
+Added: sa/src/sar_ac_export.aon
+
+=======================================================================================================================================
+Revision: d04f3449a13718c59832fef8c67955198e5621a5
+
+Date: 1/3/2014 6:00:40 PM
+Message:
+Bug 7419: Added "Default List Item" to Addon list control element types
+that didn't have a pre-defined list.
+----
+Modified: data/bar/adx_buildsproc.xml
+Modified: data/bar/ape_invoicehdr.xml
+Modified: data/bar/ape_recurringhdr.xml
+Modified: data/bar/apr_agingreport.xml
+Modified: data/bar/apr_cashrequire.xml
+Modified: data/bar/apr_labels.xml
+Modified: data/bar/apt_invoicedist.xml
+Modified: data/bar/apw_purchasegl.xml
+Modified: data/bar/apw_purchasename.xml
+Modified: data/bar/apw_purchjrn.xml
+Modified: data/bar/are_cnvinv.xml
+Modified: data/bar/are_datechange.xml
+Modified: data/bar/are_finchg.xml
+Modified: data/bar/arr_agingreport.xml
+Modified: data/bar/arr_analysis.xml
+Modified: data/bar/arr_cashreceipts.xml
+Modified: data/bar/arr_ranking.xml
+Modified: data/bar/arr_statements.xml
+Modified: data/bar/art_invhdr.xml
+Modified: data/bar/aru_agingupdate.xml
+Modified: data/bar/arx_changesaflag.xml
+Modified: data/bar/bmm_billmat.xml
+Modified: data/bar/bmm_billsub.xml
+Modified: data/bar/glm_budgetmaster.xml
+Modified: data/bar/glr_budgetreport.xml
+Modified: data/bar/glr_budgetupdate.xml
+Modified: data/bar/glr_recurring.xml
+Modified: data/bar/glr_summary.xml
+Modified: data/bar/glr_transhistory.xml
+Modified: data/bar/gls_columns.xml
+Modified: data/bar/glt_bankchecks.xml
+Modified: data/bar/glt_bankother.xml
+Modified: data/bar/glu_createbudget.xml
+Modified: data/bar/ivc_itemlookup.xml
+Modified: data/bar/ivc_lotlookup.xml
+Modified: data/bar/ivm_itemmast.xml
+Modified: data/bar/ivr_itemabcrpt.xml
+Modified: data/bar/ivr_itemalt.xml
+Modified: data/bar/ivr_itemsyn.xml
+Modified: data/bar/ivr_itemturns.xml
+Modified: data/bar/ivr_lotactivity.xml
+Modified: data/bar/ivr_lotstatus.xml
+Modified: data/bar/ivr_stkreordr.xml
+Modified: data/bar/ivr_valuationrpt.xml
+Modified: data/bar/ivr_zerobal.xml
+Modified: data/bar/ivs_params.xml
+Modified: data/bar/opc_linecode.xml
+Modified: data/bar/ope_credrev.xml
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/bar/opr_commission.xml
+Modified: data/bar/opr_invoiceedit.xml
+Modified: data/bar/opr_oderpicklst.xml
+Modified: data/bar/opr_oderstatitem.xml
+Modified: data/bar/opr_opnorddetail.xml
+Modified: data/bar/opr_saleregister.xml
+Modified: data/bar/opr_salescomm.xml
+Modified: data/bar/opr_salesreg.xml
+Modified: data/bar/opr_shipping.xml
+Modified: data/bar/opt_invhdr.xml
+Modified: data/bar/opt_salescom.xml
+Modified: data/bar/poc_msgcode.xml
+Modified: data/bar/poe_podet.xml
+Modified: data/bar/poe_recdet.xml
+Modified: data/bar/poe_reqdet.xml
+Modified: data/bar/por_billunbill.xml
+Modified: data/bar/por_histbyvend.xml
+Modified: data/bar/por_openpo.xml
+Modified: data/bar/por_openreqsn.xml
+Modified: data/bar/por_pobyitem.xml
+Modified: data/bar/por_pocashreqmt.xml
+Modified: data/bar/por_poprint.xml
+Modified: data/bar/por_reqbyitem.xml
+Modified: data/bar/por_reqprint.xml
+Modified: data/bar/por_reqsnreg.xml
+Modified: data/bar/prc_rprtcode.xml
+Modified: data/bar/prr_adjustment.xml
+Modified: data/bar/prr_chkprint.xml
+Modified: data/bar/prr_datelist.xml
+Modified: data/bar/prr_earnhist.xml
+Modified: data/bar/prr_empl_master.xml
+Modified: data/bar/prr_emplblprnt.xml
+Modified: data/bar/prr_empmaintlist.xml
+Modified: data/bar/prr_lbrdistrepor.xml
+Modified: data/bar/sar_customer.xml
+Modified: data/bar/sar_custship.xml
+Modified: data/bar/sar_custsic.xml
+Modified: data/bar/sar_custterr.xml
+Modified: data/bar/sar_custtype.xml
+Modified: data/bar/sar_distcode.xml
+Modified: data/bar/sar_item.xml
+Modified: data/bar/sar_nonstock.xml
+Modified: data/bar/sar_proditmcst.xml
+Modified: data/bar/sar_salespsn.xml
+Modified: data/bar/sar_territory.xml
+Modified: data/bar/sar_vendor.xml
+Modified: data/bar/sar_warehse.xml
+Modified: data/bar/sfe_loadbal.xml
+Modified: data/bar/sfe_woclose.xml
+Modified: data/bar/sfe_womastr.xml
+Modified: data/bar/sfe_womatl.xml
+Modified: data/bar/sfe_wosubcnt.xml
+Modified: data/bar/sfr_picklist.xml
+Modified: data/bar/sfr_prodexcep.xml
+Modified: data/bar/sfr_worddate.xml
+Modified: data/bar/sfr_wotranshist.xml
+Modified: data/bar/sfr_wovarrep.xml
+Modified: data/bar/sfs_params.xml
+Modified: data/bar/sfw_picklctn.xml
+
+=======================================================================================================================================
+Revision: 2c0c30ba2ebc7ac7514f889bd37645c756fa2a14
+
+Date: 1/6/2014 1:06:58 PM
+Message:
+Bug 7416: Don't strip trailing blanks from CUSTOMER_ID in ope_invdet
+BDGX.
+----
+Modified: data/bar/ope_invdet.xml
+Modified: data/cdf/ope_invdet.cdf
