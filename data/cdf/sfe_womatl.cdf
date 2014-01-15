@@ -17,6 +17,7 @@ rem --- Update displayed row nums for inserted and deleted rows, or
 	endif
 
 rem --- Auto create Reference Numbers
+	callpoint!.setDevObject("MatlTable","SFE_WOMATL")
 	callpoint!.setDevObject("GridVect",GridVect!)
 
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
