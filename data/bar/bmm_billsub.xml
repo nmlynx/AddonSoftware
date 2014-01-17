@@ -18,10 +18,10 @@
 			<ASC_LICENSE_ID id="ddm_tables.bmm_billsub">9A9B1111D89A1ECCC6209952A6F0B22A</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.bmm_billsub">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.bmm_billsub">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.bmm_billsub">20140114</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.bmm_billsub">20140109</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.bmm_billsub">163344</DD_LSTSYNC_TIME>
-			<DD_ATTR_CPGM id="ddm_tables.bmm_billsub">c:/apps/aon/;</DD_ATTR_CPGM>
+			<DD_LSTREV_DATE id="ddm_tables.bmm_billsub">20140115</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.bmm_billsub">20140115</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.bmm_billsub">165202</DD_LSTSYNC_TIME>
+			<DD_ATTR_CPGM id="ddm_tables.bmm_billsub">C:/dev_projects/aon_v1400/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_FTYP id="ddm_tables.bmm_billsub">G</DD_ATTR_FTYP>
 			<DD_ATTR_PTAB id="ddm_tables.bmm_billsub">BMM_BILLMAST    </DD_ATTR_PTAB>
 			<DD_ATTR_SLEV id="ddm_tables.bmm_billsub">zzzz</DD_ATTR_SLEV>
@@ -30,6 +30,14 @@
 	</ALIAS>
 	<ALIAS id="ddm_table_cpro">
 		<ID id="ddm_table_cpro">DDM_TABLE_CPRO</ID>
+		<RECORD id="ddm_table_cpro.bmm_billsubagdr">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.bmm_billsubagdr">BMM_BILLSUB     </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.bmm_billsubagdr">AGDR</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.bmm_billsubbdel">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.bmm_billsubbdel">BMM_BILLSUB     </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.bmm_billsubbdel">BDEL</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_table_cpro.bmm_billsubbdtw">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.bmm_billsubbdtw">BMM_BILLSUB     </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.bmm_billsubbdtw">BDTW</DD_ATTR_CPRO>
@@ -41,6 +49,10 @@
 		<RECORD id="ddm_table_cpro.bmm_billsubbsho">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.bmm_billsubbsho">BMM_BILLSUB     </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.bmm_billsubbsho">BSHO</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.bmm_billsubbude">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.bmm_billsubbude">BMM_BILLSUB     </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.bmm_billsubbude">BUDE</DD_ATTR_CPRO>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_tpls">
@@ -163,7 +175,7 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.bmm_billsub005">BMM_BILLSUB.LINE_TYPE</DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.bmm_billsub005">S</DD_ATTR_ABLV>
 			<DD_ATTR_PROM id="ddm_table_cols.bmm_billsub005">Unit of Measure</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub005">13</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub005">14</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.bmm_billsub005">UNIT_MEASURE</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.bmm_billsub006">
@@ -181,7 +193,7 @@
 			<DD_ATTR_LABS id="ddm_table_cols.bmm_billsub006">Vendor Num</DD_ATTR_LABS>
 			<DD_ATTR_MINL id="ddm_table_cols.bmm_billsub006">1</DD_ATTR_MINL>
 			<DD_ATTR_PROM id="ddm_table_cols.bmm_billsub006">Vendor Number</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub006">5</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub006">6</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.bmm_billsub006">VENDOR_ID</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.bmm_billsub007">
@@ -196,7 +208,7 @@
 			<DD_CREATE_DATE id="ddm_table_cols.bmm_billsub007">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.bmm_billsub007">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_PROM id="ddm_table_cols.bmm_billsub007">Comments or Message Line</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub007">6</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub007">7</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.bmm_billsub007">EXT_COMMENTS</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.bmm_billsub008">
@@ -209,9 +221,9 @@
 			<DD_FIELD_DELIM id="ddm_table_cols.bmm_billsub008">N</DD_FIELD_DELIM>
 			<DD_CREATE_DATE id="ddm_table_cols.bmm_billsub008">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.bmm_billsub008">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_CPGM id="ddm_table_cols.bmm_billsub008">c:/apps/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.bmm_billsub008">C:/dev_projects/aon_v1400/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_PROM id="ddm_table_cols.bmm_billsub008">Date Effective</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub008">16</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub008">17</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.bmm_billsub008">EFFECT_DATE</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.bmm_billsub009">
@@ -225,9 +237,9 @@
 			<DD_DELIM_CHAR id="ddm_table_cols.bmm_billsub009">0A</DD_DELIM_CHAR>
 			<DD_CREATE_DATE id="ddm_table_cols.bmm_billsub009">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.bmm_billsub009">20060119</DD_LSTREV_DATE>
-			<DD_ATTR_CPGM id="ddm_table_cols.bmm_billsub009">c:/apps/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.bmm_billsub009">C:/dev_projects/aon_v1400/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_PROM id="ddm_table_cols.bmm_billsub009">Obsolete Date</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub009">17</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub009">18</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.bmm_billsub009">OBSOLT_DATE</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.bmm_billsub010">
@@ -243,8 +255,10 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.bmm_billsub010">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.bmm_billsub010">BMM_BILLSUB.LINE_TYPE</DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.bmm_billsub010">S</DD_ATTR_ABLV>
+			<DD_ATTR_LABL id="ddm_table_cols.bmm_billsub010">Operation Ref.</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.bmm_billsub010">Op Seq</DD_ATTR_LABS>
 			<DD_ATTR_PROM id="ddm_table_cols.bmm_billsub010">Quantity Required</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub010">14</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub010">15</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.bmm_billsub010">OP_INT_SEQ_REF</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.bmm_billsub011">
@@ -257,14 +271,13 @@
 			<DD_FIELD_DELIM id="ddm_table_cols.bmm_billsub011">N</DD_FIELD_DELIM>
 			<DD_CREATE_DATE id="ddm_table_cols.bmm_billsub011">20140114</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.bmm_billsub011">20140114</DD_LSTREV_DATE>
+			<DD_ATTR_CPGM id="ddm_table_cols.bmm_billsub011">C:/dev_projects/aon_v1400/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_COLW id="ddm_table_cols.bmm_billsub011">0</DD_ATTR_COLW>
-			<DD_ATTR_CTLX id="ddm_table_cols.bmm_billsub011">0</DD_ATTR_CTLX>
-			<DD_ATTR_CTLY id="ddm_table_cols.bmm_billsub011">0</DD_ATTR_CTLY>
-			<DD_ATTR_CTLW id="ddm_table_cols.bmm_billsub011">0</DD_ATTR_CTLW>
-			<DD_ATTR_CTLH id="ddm_table_cols.bmm_billsub011">0</DD_ATTR_CTLH>
+			<DD_ATTR_LABL id="ddm_table_cols.bmm_billsub011">Subcontract Ref.</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.bmm_billsub011">Sub Ref</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.bmm_billsub011">N</DD_ATTR_MLAN>
-			<DD_ATTR_MINL id="ddm_table_cols.bmm_billsub011">0</DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.bmm_billsub011">0</DD_ATTR_MAXL>
+			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub011">5</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.bmm_billsub011">WO_REF_NUM</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.bmm_billsub012">
@@ -280,10 +293,10 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.bmm_billsub012">20110713</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.bmm_billsub012">BMM_BILLSUB.LINE_TYPE</DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.bmm_billsub012">S</DD_ATTR_ABLV>
-			<DD_ATTR_CPGM id="ddm_table_cols.bmm_billsub012">c:/apps/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.bmm_billsub012">C:/dev_projects/aon_v1400/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_COLW id="ddm_table_cols.bmm_billsub012">0</DD_ATTR_COLW>
 			<DD_ATTR_MLAN id="ddm_table_cols.bmm_billsub012">N</DD_ATTR_MLAN>
-			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub012">8</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub012">9</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.bmm_billsub012">QTY_REQUIRED</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.bmm_billsub013">
@@ -299,10 +312,10 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.bmm_billsub013">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.bmm_billsub013">BMM_BILLSUB.LINE_TYPE</DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.bmm_billsub013">S</DD_ATTR_ABLV>
-			<DD_ATTR_CPGM id="ddm_table_cols.bmm_billsub013">c:/apps/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.bmm_billsub013">C:/dev_projects/aon_v1400/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DFLT id="ddm_table_cols.bmm_billsub013">1</DD_ATTR_DFLT>
 			<DD_ATTR_PROM id="ddm_table_cols.bmm_billsub013">Alternate Factor</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub013">9</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub013">10</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.bmm_billsub013">ALT_FACTOR</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.bmm_billsub014">
@@ -318,9 +331,9 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.bmm_billsub014">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.bmm_billsub014">BMM_BILLSUB.LINE_TYPE</DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.bmm_billsub014">S</DD_ATTR_ABLV>
-			<DD_ATTR_CPGM id="ddm_table_cols.bmm_billsub014">c:/apps/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.bmm_billsub014">C:/dev_projects/aon_v1400/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_PROM id="ddm_table_cols.bmm_billsub014">Unit Cost</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub014">10</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub014">11</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.bmm_billsub014">UNIT_COST</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.bmm_billsub015">
@@ -336,10 +349,10 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.bmm_billsub015">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.bmm_billsub015">BMM_BILLSUB.LINE_TYPE</DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.bmm_billsub015">S</DD_ATTR_ABLV>
-			<DD_ATTR_CPGM id="ddm_table_cols.bmm_billsub015">c:/apps/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.bmm_billsub015">C:/dev_projects/aon_v1400/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DFLT id="ddm_table_cols.bmm_billsub015">1</DD_ATTR_DFLT>
 			<DD_ATTR_PROM id="ddm_table_cols.bmm_billsub015">Divisor</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub015">7</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub015">8</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.bmm_billsub015">DIVISOR</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.bmm_billsub016">
@@ -356,7 +369,7 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.bmm_billsub016">BMM_BILLSUB.LINE_TYPE</DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.bmm_billsub016">S</DD_ATTR_ABLV>
 			<DD_ATTR_PROM id="ddm_table_cols.bmm_billsub016">Lead Time</DD_ATTR_PROM>
-			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub016">12</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.bmm_billsub016">13</DD_ATTR_TIND>
 			<SQL_COLUMN_NAME id="ddm_table_cols.bmm_billsub016">LEAD_TIME</SQL_COLUMN_NAME>
 		</RECORD>
 	</ALIAS>
@@ -372,7 +385,7 @@
 			<DD_ATTR_CTLX id="ddm_table_disp.bmm_billsub001">0</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_disp.bmm_billsub001">0</DD_ATTR_CTLY>
 			<DD_ATTR_CTLH id="ddm_table_disp.bmm_billsub001">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.bmm_billsub001">11</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.bmm_billsub001">12</DD_ATTR_TIND>
 		</RECORD>
 		<RECORD id="ddm_table_disp.bmm_billsub002">
 			<DD_TABLE_ALIAS id="ddm_table_disp.bmm_billsub002">BMM_BILLSUB     </DD_TABLE_ALIAS>
@@ -384,7 +397,7 @@
 			<DD_ATTR_CTLX id="ddm_table_disp.bmm_billsub002">0</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_disp.bmm_billsub002">0</DD_ATTR_CTLY>
 			<DD_ATTR_CTLH id="ddm_table_disp.bmm_billsub002">0</DD_ATTR_CTLH>
-			<DD_ATTR_TIND id="ddm_table_disp.bmm_billsub002">15</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_disp.bmm_billsub002">16</DD_ATTR_TIND>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_cmts">
@@ -407,6 +420,16 @@
 			<DD_TABLE_ALIAS id="ddm_column_cpro.bmm_billsubobsolt_dateaval">BMM_BILLSUB     </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_cpro.bmm_billsubobsolt_dateaval">OBSOLT_DATE     </DD_DVAR_NAME>
 			<DD_ATTR_CPRO id="ddm_column_cpro.bmm_billsubobsolt_dateaval">AVAL</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.bmm_billsubwo_ref_numaval">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.bmm_billsubwo_ref_numaval">BMM_BILLSUB     </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.bmm_billsubwo_ref_numaval">WO_REF_NUM      </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.bmm_billsubwo_ref_numaval">AVAL</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.bmm_billsubwo_ref_numbinp">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.bmm_billsubwo_ref_numbinp">BMM_BILLSUB     </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.bmm_billsubwo_ref_numbinp">WO_REF_NUM      </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.bmm_billsubwo_ref_numbinp">BINP</DD_ATTR_CPRO>
 		</RECORD>
 		<RECORD id="ddm_column_cpro.bmm_billsubqty_requiredaval">
 			<DD_TABLE_ALIAS id="ddm_column_cpro.bmm_billsubqty_requiredaval">BMM_BILLSUB     </DD_TABLE_ALIAS>
