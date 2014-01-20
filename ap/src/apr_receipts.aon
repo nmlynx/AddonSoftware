@@ -272,24 +272,18 @@ nonstock: rem --- Load display strings - Non-Stock Line
 
 vpartnum: rem --- Load display strings - Vendor Part Number Line
 
-rem wgh ... 7501
-rem        xwk=fnblank(3)
         OutVect!.addItem(pot14a.order_memo$)
         xwk=fnblank(7)
         goto loaddisp_detail
 
 message: rem --- Load display strings - Message Line
 
-rem wgh ... 7501
-rem        xwk=fnblank(3)
         OutVect!.addItem(pot14a.order_memo$)
         xwk=fnblank(7)
         goto loaddisp_detail
 
 other: rem --- Load display strings - Other Line
 
-rem wgh ... 7501
-rem        xwk=fnblank(3)
         OutVect!.addItem(pot14a.order_memo$)
         OutVect!.addItem(fndate$(pot14a.reqd_date$))
         xwk=fnblank(4)
