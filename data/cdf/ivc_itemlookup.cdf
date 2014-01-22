@@ -332,6 +332,7 @@ load_and_display_grid:
 		if len(cvs(search_text$,2)) > 0
 			if pos(firm_id$+cvs(search_text$,2)=skey$)<>1 break
 		endif
+		dim ivm_itemmast$:fattr(ivm_itemmast$)
 		read record (ivm_itemmast_dev,key=firm_id$+searchrec.item_id$,dom=*next)ivm_itemmast$
 	
 		vectSearch!.addItem(field(searchrec$,search_field$))
