@@ -322,7 +322,7 @@ load_and_display_grid:
 
 	rem --- Position search file	
 
-	vectSearch!=callpoint!.getDevObject("vectSearch")
+	vectSearch!=SysGUI!.makeVector()
 	
 	read (search_dev,key=firm_id$+cvs(search_text$,3),knum=search_knum$,dom=*next)
 
