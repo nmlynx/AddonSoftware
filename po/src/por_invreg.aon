@@ -189,7 +189,7 @@ rem --- Parameters
 l500: rem --- Initializations
 
     precision i[1]
-    dim a0$(20),a1$(64),a[8],b0$(8),b1$(30),xa$(32),headings$[3]
+    dim a0$(20),a1$(64),a[8],b0$(8),b1$(30),xa$(32)
     dim oi[10],og[2],vendor[3],type[3],report[3],totals[3],desc$[3]
     dim op[7],ol[8],xc$(26),xc[2],y0$(4),y1$(32),y2$(2*g[4])
     dim d0$(24),d1$(32),d[4],w0$(24),w1$(96),w[4],item$[6]
@@ -199,15 +199,12 @@ l500: rem --- Initializations
     l0=11
     increment=10
     hl=3
-    aptype$=""
     retention$=""
     nf$=Translate!.getTranslation("AON_(NOT_ON_FILE)")
     rh1$=Translate!.getTranslation("AON_DISCOUNT")
     rh2$=Translate!.getTranslation("AON_AMOUNT")
     m0=len(m0$)
-    aptype=0
     retention=0
-    headings=2
     t0$=""
     t1$=""
     errors=0
@@ -221,10 +218,17 @@ l500: rem --- Initializations
     desc$[2]=Translate!.getTranslation("AON_BY_PURCHASE_ORDER")
     glstatus=0
     desc$[3]=Translate!.getTranslation("AON_BY_LINE_ITEM")
+    if aps01a.multi_types$="Y" then
+        aptype=1
+        headings=3
+    else
+        headings=2
+        aptype=0
+    endif
+    dim headings$[headings]
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
-    headings$[2]="[HEADER]"
-    if aps01a.multi_types$="Y" aptype=1,headings=3
+    if aptype then headings$[2]="[HEADER]"
     if aps01a.ret_flag$="Y" retention=1,rh1$=Translate!.getTranslation("AON_DISCOUNT/"),rh2$=Translate!.getTranslation("AON_RETENTION")
 
 rem --- Column headings
