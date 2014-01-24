@@ -806,7 +806,7 @@ l6100:
     t0$=poe05a.ap_type$,xa$(6,20)=nf$,l=l9+1,warehouse=0
     find record (apm10a_dev,key=firm_id$+"A"+t0$,dom=*next) apm10a$
     HdrVect!.addItem(Translate!.getTranslation("AON_FOR_AP_TYPE_")+t0$+" "+cvs(apm10a.code_desc$,3))
-    BrkVect!.addItem(str(OutVect!.size()))
+    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
 l6190:
     return
 
