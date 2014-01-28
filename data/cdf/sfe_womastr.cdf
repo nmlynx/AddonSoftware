@@ -967,6 +967,8 @@ rem --- If new order, check for type of Work Order and disable Item or Descripti
 	endif
 
 	if typecode.wo_category$<>"I"
+		callpoint!.setColumnData("SFE_WOMASTR.ITEM_ID","",1)
+		callpoint!.setColumnEnabled("SFE_WOMASTR.ITEM_ID",0)
 		callpoint!.setColumnData("SFE_WOMASTR.LOTSER_ITEM","N",1)
 		callpoint!.setOptionEnabled("LSNO",0)
 		callpoint!.setColumnEnabled("SFE_WOMASTR.DESCRIPTION_01",1)
