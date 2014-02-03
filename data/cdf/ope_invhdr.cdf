@@ -2139,7 +2139,7 @@ rem ==========================================================================
 				call stbl("+DIR_PGM")+"adc_copyfile.aon",opt31a$,ope31a$,status
 				if status=999 then exitto std_exit
 				ope31a.order_no$ = ope01a.order_no$
-				ope31_key$=ope31a.firm_no$+ope31a.customer_id$+ope31a.order_no$
+				ope31_key$=ope31a.firm_id$+ope31a.customer_id$+ope31a.order_no$
 				extractrecord(ope31_dev,key=ope31_key$,dom=*next)x$; rem Advisory Locking
 				ope31a$ = field(ope31a$)
 				write record (ope31_dev) ope31a$
