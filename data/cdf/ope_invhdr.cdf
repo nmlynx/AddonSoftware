@@ -1744,9 +1744,13 @@ rem ==========================================================================
 			callpoint!.setColumnData("<<DISPLAY>>.SSTATE",custship_tpl.state_code$)
 			callpoint!.setColumnData("<<DISPLAY>>.SZIP",custship_tpl.zip_code$)
 			callpoint!.setColumnData("<<DISPLAY>>.SCNTRY_ID",custship_tpl.cntry_id$)
-			callpoint!.setColumnData("OPE_INVHDR.SLSPSN_CODE",custship_tpl.slspsn_code$)
-			callpoint!.setColumnData("OPE_INVHDR.TERRITORY",custship_tpl.territory$)
-			callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",custship_tpl.tax_code$)
+			if ship_to_type$<>callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE") or
+:                       ship_to_no$<>callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO") then
+				rem --- Initialize for change
+				callpoint!.setColumnData("OPE_INVHDR.SLSPSN_CODE",custship_tpl.slspsn_code$)
+				callpoint!.setColumnData("OPE_INVHDR.TERRITORY",custship_tpl.territory$)
+				callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",custship_tpl.tax_code$)
+			endif
 		else
 			callpoint!.setColumnData("OPE_INVHDR.SHIPTO_NO","")
 			callpoint!.setColumnData("<<DISPLAY>>.SNAME",Translate!.getTranslation("AON_SAME"))
@@ -1758,14 +1762,23 @@ rem ==========================================================================
 			callpoint!.setColumnData("<<DISPLAY>>.SSTATE","")
 			callpoint!.setColumnData("<<DISPLAY>>.SZIP","")
 			callpoint!.setColumnData("<<DISPLAY>>.SCNTRY_ID","")
-			callpoint!.setColumnData("OPE_INVHDR.SLSPSN_CODE",custdet.slspsn_code$)
-			callpoint!.setColumnData("OPE_INVHDR.TERRITORY",custdet.territory$)
-			callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",custdet.tax_code$)
+			if ship_to_type$<>callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE") then
+				rem --- Initialize for change
+				callpoint!.setColumnData("OPE_INVHDR.SLSPSN_CODE",custdet.slspsn_code$)
+				callpoint!.setColumnData("OPE_INVHDR.TERRITORY",custdet.territory$)
+				callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",custdet.tax_code$)
+			endif
 		endif
 
 	else
 
 		callpoint!.setColumnData("OPE_INVHDR.SHIPTO_NO","")
+		if ship_to_type$<>callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE") then
+			rem --- Initialize for change
+			callpoint!.setColumnData("OPE_INVHDR.SLSPSN_CODE",custdet.slspsn_code$)
+			callpoint!.setColumnData("OPE_INVHDR.TERRITORY",custdet.territory$)
+			callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",custdet.tax_code$)
+		endif
 
 		ordship_dev = fnget_dev("OPE_ORDSHIP")
 		dim ordship_tpl$:fnget_tpl$("OPE_ORDSHIP")
@@ -1780,9 +1793,6 @@ rem ==========================================================================
 		callpoint!.setColumnData("<<DISPLAY>>.SSTATE",ordship_tpl.state_code$)
 		callpoint!.setColumnData("<<DISPLAY>>.SZIP",ordship_tpl.zip_code$)
 		callpoint!.setColumnData("<<DISPLAY>>.SCNTRY_ID",ordship_tpl.cntry_id$)
-		callpoint!.setColumnData("OPE_INVHDR.SLSPSN_CODE",custdet.slspsn_code$)
-		callpoint!.setColumnData("OPE_INVHDR.TERRITORY",custdet.territory$)
-		callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",custdet.tax_code$)
 	endif
 
 	disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
