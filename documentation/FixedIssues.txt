@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2014-01-31
+ Report Date:   2014-02-05
  Report Branch: AddonSoftware 13.11
  Last Release:  AddonSoftware 13.10
 =======================================================================================================================================
@@ -36,3 +36,69 @@ Modified: prop/addon.properties
 Modified: prop/addon_en.properties
 Modified: sf/src/sfr_womatissu.aon
 
+=======================================================================================================================================
+Revision: 859db3fcd1a5db86a9c71888e236fd62bf4deeb4
+
+Date: 1/31/2014 5:48:44 PM
+Message:
+Changed code to use the ISN to link transactions to parent standards
+records. Also corrected typo in Unit Total Variance.
+
+To fix:
+- Bug 7531 - SF - Work Order Entry-Cost Summary: Actuals are not
+accumulated correctly for each operation
+- Bug 7529 - SF - Work Order Entry-Cost Summary: Per Unit Total Variance
+in WO Totals is incorrectly calculated
+----
+Modified: sf/src/sfe_costsumm.aon
+
+=======================================================================================================================================
+Revision: cb7b5edda3805e17a20c00c7d5b814e9d35c31f1
+
+Date: 1/31/2014 6:15:09 PM
+Message:
+Commit text:
+Changed code to use the ISN to link transactions to parent standards
+records. To fix: Bug 7530 - SF - Work Order Entry-Job Status: Actuals
+are not accumulated correctly
+----
+Modified: sf/src/sfe_jobstat.aon
+
+=======================================================================================================================================
+Revision: c4805f1939e0e1a6a6779485ef9e687d9608a4f2
+
+Date: 2/3/2014 8:51:17 AM
+Message:
+Bug 7528: Corrected miss-named firm_id field reference.
+----
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_invhdr.cdf
+Modified: data/cdf/ope_ordhdr.cdf
+
+=======================================================================================================================================
+Revision: 4d2ee4aa852bcece8abdf11e7426b2ef58f5d7b4
+
+Date: 2/4/2014 5:31:30 PM
+Message:
+Bug 7536: Don't overwrite existing SLSPSN_CODE, TERRITORY or TAX_CODE
+unless SHIPTO_TYPE or SHIPTO_NO has changed.
+----
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_invhdr.cdf
+Modified: data/cdf/ope_ordhdr.cdf
+
+=======================================================================================================================================
+Revision: 95d366fab4a336e02512dcbd288755ab4310d410
+
+Date: 2/5/2014 2:06:07 PM
+Message:
+Bug 7533: Updated DataPort to handle Next WO Number. Updated DataPort
+doc to cover next sequence numbers for BATCH_NO, IV_TRANS_NO and WO_NO.
+----
+Deleted: data/bar/sfs_numbers.xml
+Modified: data/sync/ads_sequences~01batch_no.xml
+Modified: util/dataport/DataPort_main.bbj
+Modified: util/dataport/files/file_xref
+Modified: util/dataport/files/sequence_no
