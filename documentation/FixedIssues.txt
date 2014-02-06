@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2014-02-05
+ Report Date:   2014-02-06
  Report Branch: AddonSoftware 13.11
  Last Release:  AddonSoftware 13.10
 =======================================================================================================================================
@@ -102,3 +102,36 @@ Modified: data/sync/ads_sequences~01batch_no.xml
 Modified: util/dataport/DataPort_main.bbj
 Modified: util/dataport/files/file_xref
 Modified: util/dataport/files/sequence_no
+
+=======================================================================================================================================
+Revision: 07835ef61a57f4813647364f69d303890f40564b
+
+Date: 2/5/2014 6:03:13 PM
+Message:
+Altered AIUW's Install Wizard to do 'Quick Copy'vs 'Production' install.
+Quick Copy copies pre-sync'd Barista Addon (and possibly Examples and
+Default). Production is the same thing the Install Wizard has done
+heretofore: copies only Addon, makes clean copy of Barista, etc. Quick
+Copy should make it faster to set up for demos and/or training, since it
+doesn't require full sync.
+----
+Modified: ad/src/adx_installwiz.aon
+Added: ad/src/adx_quickcopywiz.aon
+Modified: data/bar/adx_installwiz.xml
+Modified: data/cdf/adx_installwiz.cdf
+Modified: data/sync/ads_messages~ad_firm_wo_demo.xml
+Added: data/sync/ads_messages~ad_no_quickcopy.xml
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
+
+=======================================================================================================================================
+Revision: c4bb3eac8e8442c7621f17f2eabd5e1d8089e13a
+
+Date: 2/6/2014 12:25:23 PM
+Message:
+Bug 7521: Performance improved significantly by making the check boxes
+display only (disabled) in Form Manager, and only enabling them in
+callpoint code when needed (which isn't often).
+----
+Modified: data/bar/sfe_womatl.xml
+Modified: data/cdf/sfe_womatl.cdf
