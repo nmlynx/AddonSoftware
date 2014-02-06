@@ -4,6 +4,9 @@ rem --- Set ROW_NUM
 	wk$=fattr(sfe_womatl$,"material_seq")
 	new_row_num=1+callpoint!.getValidationRow()
 	callpoint!.setColumnData("<<DISPLAY>>.ROW_NUM",pad(str(new_row_num),dec(wk$(10,2)),"R","0"),1)
+
+rem --- Enable/disable explode field
+	gosub enable_explode
 [[SFE_WOMATL.AOPT-AUTO]]
 rem --- Update displayed row nums for inserted and deleted rows, or
 	if callpoint!.getDevObject("insertedRows")+callpoint!.getDevObject("deletedRows") then
@@ -17,7 +20,6 @@ rem --- Update displayed row nums for inserted and deleted rows, or
 	endif
 
 rem --- Auto create Reference Numbers
-	callpoint!.setDevObject("MatlTable","SFE_WOMATL")
 	callpoint!.setDevObject("GridVect",GridVect!)
 
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
@@ -308,7 +310,6 @@ rem ==========================================================================
 			if bmm_billmast.phantom_bill$="Y" then
 				rem --- Always explode phantom bills
 				rem --- Disable so explode can't be cancelled
-				callpoint!.setColumnEnabled(row,"<<DISPLAY>>.EXPLODE_BILL",0)
 				callpoint!.setColumnData("<<DISPLAY>>.EXPLODE_BILL","Y",1)
 				callpoint!.setStatus("MODIFIED")
 			else
@@ -329,16 +330,13 @@ rem ==========================================================================
 						endif
 					endif
 				else
-					callpoint!.setColumnEnabled(row,"<<DISPLAY>>.EXPLODE_BILL",0)
 					callpoint!.setColumnData("<<DISPLAY>>.EXPLODE_BILL","N",1)
 				endif
 			endif
 		else
-			callpoint!.setColumnEnabled(row,"<<DISPLAY>>.EXPLODE_BILL",0)
 			callpoint!.setColumnData("<<DISPLAY>>.EXPLODE_BILL","N",1)
 		endif
 	else
-		callpoint!.setColumnEnabled(row,"<<DISPLAY>>.EXPLODE_BILL",0)
 		callpoint!.setColumnData("<<DISPLAY>>.EXPLODE_BILL","N",1)
 	endif
 	return
