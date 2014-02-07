@@ -508,7 +508,7 @@ rem --- Create new session specific classpath (SSCP) in Enterprise Manager
         next i
     endif
     if needBaristaprop then paths!.addItem(newAonLoc$+"/barista/sys/prop/baristaprop.jar")
-    if needAddonprop then paths!.addItem(newAonLoc$+"/aon/prop/addonprop.jar")
+    if needAddonprop then paths!.addItem(newAonLoc$+"/apps/aon/prop/addonprop.jar")
     env!.setClasspath(sscpName$, paths!)
 
 	return
