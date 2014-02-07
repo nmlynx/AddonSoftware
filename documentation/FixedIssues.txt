@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2014-02-06
+ Report Date:   2014-02-07
  Report Branch: AddonSoftware 13.11
  Last Release:  AddonSoftware 13.10
 =======================================================================================================================================
@@ -135,3 +135,14 @@ callpoint code when needed (which isn't often).
 ----
 Modified: data/bar/sfe_womatl.xml
 Modified: data/cdf/sfe_womatl.cdf
+
+=======================================================================================================================================
+Revision: fb3abbaf836efbb731569277adcb37ae3a18ada3
+
+Date: 2/6/2014 7:36:22 PM
+Message:
+Put this back to using adc_copydir.aon for copying Addon (and/or Default
+and Examples) rather than java copy as latter didn't preserve
+permissions, causing err 18's on *x.
+----
+Modified: ad/src/adx_quickcopywiz.aon
