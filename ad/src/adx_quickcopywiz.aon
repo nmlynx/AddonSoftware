@@ -133,11 +133,17 @@ rem --- Recursively copy mounted app dirs and barista from bbjHome$ to newAonLoc
 	gosub fix_path
 	bbjHome$=filepath$
 
+rem --- using BBj copy (via adc_copydir.aon) instead of this java copy, to avoid permissions issues on *x.
+rem	for copycnt=0 to mountedSys!.size()-1
+rem		mounted_sys$=mountedSys!.getItem(copycnt)
+rem		srcDir!=new java.io.File(bbjHome$+sep$+mounted_sys$)
+rem		destDir!=new java.io.File(newAonLoc$+sep$+mounted_sys$)
+rem		FileUtils.copyDirectory(srcDir!, destDir!)
+rem	next copycnt
+
 	for copycnt=0 to mountedSys!.size()-1
 		mounted_sys$=mountedSys!.getItem(copycnt)
-		srcDir!=new java.io.File(bbjHome$+sep$+mounted_sys$)
-		destDir!=new java.io.File(newAonLoc$+sep$+mounted_sys$)
-		FileUtils.copyDirectory(srcDir!, destDir!)
+		call pgmdir$+"adc_copydir.aon",bbjHome$+sep$+mounted_sys$,newAonLoc$+sep$+mounted_sys$,rdForm!,0,status
 	next copycnt
 
     rem --- Increment progress meter
@@ -617,11 +623,3 @@ std_exit: rem --- Standard program end (01Mar2006)
 rem #endinclude std_end.src
     
     end
-
-rem --- unused code copied here
-
-	for copycnt=0 to mountedSys!.size()-1
-		mounted_sys$=mountedSys!.getItem(copycnt)
-		call pgmdir$+"adc_copydir.aon",bbjHome$+sep$+mounted_sys$,newAonLoc$+sep$+mounted_sys$,rdForm!,0,status
-	next copycnt
-	call pgmdir$+"adc_copydir.aon",bbjHome$+sep$+"barista",newAonLoc$+sep$+"barista",rdForm!,0,status
