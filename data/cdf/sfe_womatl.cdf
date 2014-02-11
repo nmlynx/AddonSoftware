@@ -19,6 +19,22 @@ rem --- Update displayed row nums for inserted and deleted rows, or
 		break
 	endif
 
+rem --- Keep track of lines to explode so they can be checked again when grid is refreshed
+	dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
+	grid! = Form!.getControl(num(stbl("+GRID_CTL")))
+	col_hdr$=callpoint!.getTableColumnAttribute("<<DISPLAY>>.EXPLODE_BILL","LABS")
+	explode_bill_column=util.getGridColumnNumber(grid!, col_hdr$)
+	col_hdr$=callpoint!.getTableColumnAttribute("SFE_WOMATL.INTERNAL_SEQ_NO","LABS")
+	isn_column=util.getGridColumnNumber(grid!, col_hdr$)
+	mark_to_explode$=""
+	for row=0 to grid!.getNumRows()-1
+		if grid!.getCellState(row,explode_bill_column) then
+				sfe_womatl$=GridVect!.get(row)
+				mark_to_explode$=mark_to_explode$+sfe_womatl.internal_seq_no$+";"
+		endif
+	next row
+	callpoint!.setDevObject("mark_to_explode",mark_to_explode$)
+
 rem --- Auto create Reference Numbers
 	callpoint!.setDevObject("GridVect",GridVect!)
 	callpoint!.setDevObject("worefnum_status","")
