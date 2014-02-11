@@ -888,7 +888,18 @@ rem --- Set default Unit Cost
 	whse_id$=callpoint!.getDevObject("default_wh")
 
 	read record(ivm01_dev,key=firm_id$+item_id$)ivm01a$
-	read record (ivm02_dev,key=firm_id$+whse_id$+item_id$) ivm02a$
+	ivm02_found=0
+	read record (ivm02_dev,key=firm_id$+whse_id$+item_id$,dom=*next) ivm02a$; ivm02_found=1
+	if !ivm02_found then
+		msg_id$="SF_ITEM_NOT_IN_WH"
+		dim msg_tokens$[2]
+		msg_tokens$[1]=cvs(item_id$,2)
+		msg_tokens$[2]=whse_id$
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
 
 	callpoint!.setColumnData("SFE_WOMATL.IV_UNIT_COST",str(ivm02a.unit_cost))
 	callpoint!.setColumnData("SFE_WOMATL.UNIT_MEASURE",ivm01a.unit_of_sale$,1)
