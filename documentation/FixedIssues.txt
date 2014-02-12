@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2014-02-07
+ Report Date:   2014-02-11
  Report Branch: AddonSoftware 13.11
  Last Release:  AddonSoftware 13.10
 =======================================================================================================================================
@@ -165,3 +165,115 @@ Message:
 Minor fix to sscp routine, making sure 'apps' is in pathname.
 ----
 Modified: ad/src/adx_quickcopywiz.aon
+
+=======================================================================================================================================
+Revision: ba3bcac1b672d4d3f1a5e3eb894838bfab509787
+
+Date: 2/10/2014 10:48:36 AM
+Message:
+Bug 7523: Drawing Number and Drawing Rev No are enabled for wo_status P
+and Q, and disabled for wo_status C and O.
+----
+Modified: data/bar/sfe_womastr.xml
+Modified: data/cdf/sfe_womastr.cdf
+
+=======================================================================================================================================
+Revision: 9c259bcaf7b69f6cb024639ff805c3c24bd59bfc
+
+Date: 2/10/2014 11:12:07 AM
+Message:
+Bug 7544: Replaced AON_NOT_B4_DATE translation with AON_NOT_BEFORE_DATE.
+----
+Modified: po/src/por_openpo_o1.aon
+Modified: prop/addon.properties
+Modified: prop/addon_de.properties
+Modified: prop/addon_en.properties
+Modified: prop/addon_es.properties
+Modified: prop/addon_fr.properties
+Modified: prop/addon_it.properties
+
+=======================================================================================================================================
+Revision: 7fe58ab3c8106c8308c7992e0496ccace1fbe955
+
+Date: 2/10/2014 12:23:30 PM
+Message:
+Bug 7524: Skip rebuilding Material Requirements grid when exit Auto Ref
+No form (sfe_worefnum) without re-numbering references.
+----
+Modified: data/bar/sfe_womatl.xml
+Modified: data/bar/sfe_worefnum.xml
+Modified: data/cdf/sfe_womatl.cdf
+Modified: data/cdf/sfe_worefnum.cdf
+
+=======================================================================================================================================
+Revision: 5fc3cd6ec30138624d5aaeaaef9569378d0cec88
+
+Date: 2/10/2014 12:50:47 PM
+Message:
+Bug 7548: Corrected invalid column references to OPE_ORDDET fields in
+OPE_INVDET.
+----
+Modified: data/bar/ope_invdet.xml
+Modified: data/cdf/ope_invdet.cdf
+
+=======================================================================================================================================
+Revision: c75b9d2f30ced5b94e6d405ba27ba5e91202c84d
+
+Date: 2/10/2014 5:27:55 PM
+Message:
+Bug 7549: Keep track of lines to explode so they can be checked again
+when grid is refreshed following "Auto Ref Num".
+----
+Modified: data/bar/sfe_womatl.xml
+Modified: data/cdf/sfe_womatl.cdf
+
+=======================================================================================================================================
+Revision: 7e41f029c23148438498d63d4e04a13c6b7bf44a
+
+Date: 2/11/2014 11:54:52 AM
+Message:
+Bug 7555: Make sure lsmast_tpl$ template is DIM'ed before using.
+----
+Modified: data/bar/ope_ordlsdet.xml
+Modified: data/cdf/ope_ordlsdet.cdf
+
+=======================================================================================================================================
+Revision: 1f1d2fc9e30ba7d0441b685b5913bcdb90e778da
+
+Date: 2/11/2014 12:36:15 PM
+Message:
+Bug 7540: Display message when item is not setup for the warehouse.
+----
+Modified: data/bar/sfe_womatl.xml
+Modified: data/cdf/sfe_womatl.cdf
+Added: data/sync/ads_messages~sf_item_not_in_wh.xml
+Modified: prop/addon.properties
+Modified: prop/addon_de.properties
+Modified: prop/addon_en.properties
+Modified: prop/addon_en_CA.properties
+Modified: prop/addon_es.properties
+Modified: prop/addon_es_ES.properties
+Modified: prop/addon_fr.properties
+Modified: prop/addon_fr_CA.properties
+Modified: prop/addon_it.properties
+
+=======================================================================================================================================
+Revision: 017ae85e25521cfbb5d69eb23b024049e95ae6db
+
+Date: 2/11/2014 1:35:54 PM
+Message:
+Changed so that assignment of Lot/Serial-related fields is now
+conditional. Addresses Bug 7556 "SF - Closed Work Order Summary
+Register: error 47 sfr_clsdworeg.aon when Lot/Serial turned off".
+----
+Modified: sf/src/sfr_clsdworeg.aon
+
+=======================================================================================================================================
+Revision: 5771ebd25eb804c1510fa85a021b6a75cfd764fe
+
+Date: 2/11/2014 2:49:06 PM
+Message:
+Bug 7553: Don't explode deleted rows in Material Requirement grid.
+----
+Modified: data/bar/sfe_womatl.xml
+Modified: data/cdf/sfe_womatl.cdf
