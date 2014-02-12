@@ -21,6 +21,7 @@ rem --- Update displayed row nums for inserted and deleted rows, or
 
 rem --- Auto create Reference Numbers
 	callpoint!.setDevObject("GridVect",GridVect!)
+	callpoint!.setDevObject("worefnum_status","")
 
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :		"SFE_WOREFNUM",
@@ -32,7 +33,7 @@ rem --- Auto create Reference Numbers
 :		dflt_data$[all]
 
 rem --- Update grid with changes
-	callpoint!.setStatus("REFGRID")
+	if callpoint!.getDevObject("worefnum_status")<>"CANCEL" then callpoint!.setStatus("REFGRID")
 [[SFE_WOMATL.BUDE]]
 rem --- verify wo_ref_num is unique
 	refnumMap!=callpoint!.getDevObject("refnumMap")
