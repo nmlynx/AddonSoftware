@@ -1,3 +1,11 @@
+[[SFE_WOMASTR.AENA]]
+rem --- Disable Barista menu items
+	wctl$="31031"; rem --- Save-As menu item in barista.ini
+	wmap$=callpoint!.getAbleMap()
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)="X"
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP")
 [[SFE_WOMASTR.LOCK_REF_NUM.BINP]]
 rem --- Need to know if LOCK_REF_NUM is changed
 	prev_lockrefnum$=callpoint!.getColumnData("SFE_WOMASTR.LOCK_REF_NUM")
