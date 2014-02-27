@@ -828,7 +828,7 @@ rem --- Buttons start disabled
 rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 
 	if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))<>"Y" and
-:		callpoint!.getColumnData("OPE_IVNDET.COMMIT_FLAG")="Y"
+:		callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG")="Y"
 :	then
 		action$="UC"
 		gosub uncommit_iv
