@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2014-03-06
+ Report Date:   2014-03-12
  Report Branch: AddonSoftware 13.13
  Last Release:  AddonSoftware 13.12
 =======================================================================================================================================
@@ -119,3 +119,77 @@ Message:
 Bugs 5387 & 7578: Missed ads_messages in previous commit.
 ----
 Added: data/sync/ads_messages~aon_reg_errs_ok.xml
+
+=======================================================================================================================================
+Revision: 4fee39bbf98986b804cea0abfae1329e0833c040
+
+Date: 3/6/2014 4:08:52 PM
+Message:
+Bug 7156: Changed JOB_NO element type to Left-Justified Space-Filled,
+and rebuilt forms where-used.
+----
+Modified: data/bar/art_invhdr.xml
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/bar/opm_custjobs.xml
+Modified: data/bar/opt_invhdr.xml
+
+=======================================================================================================================================
+Revision: 4830f15063ac7d601661b99db7053151a809b3ac
+
+Date: 3/6/2014 5:46:30 PM
+Message:
+Bug 7437: Changed field label from "Ovhd Labor Variance Acct" to
+"Overhead Labor Account".
+----
+Modified: data/bar/bmc_opcodes.xml
+
+=======================================================================================================================================
+Revision: 5a299d6a1a37f7fbdc6660a2e0a75c324d8e71d6
+
+Date: 3/10/2014 5:15:48 PM
+Message:
+Per bugs 7623 and 7625; corrected issue that caused stair-stepping when
+putting out lot/serial info, and also corrected for/next loop for
+missing lot/serial lines.
+----
+Modified: sf/src/sfr_womatissu.aon
+
+=======================================================================================================================================
+Revision: c30affb92ef5e7873a543c7642cbb67b4b19899f
+
+Date: 3/11/2014 10:33:16 PM
+Message:
+Per bug 7633; added F1 help tags for these graphical reports
+----
+Modified: config/deu/addon.men
+Modified: config/enc/addon.men
+Modified: config/enu/addon.men
+Modified: config/esm/addon.men
+Modified: config/esp/addon.men
+Modified: config/fra/addon.men
+Modified: config/frc/addon.men
+Modified: config/ita/addon.men
+
+=======================================================================================================================================
+Revision: e56de9b61dfd195fcd101796982c02892b6956b3
+
+Date: 3/12/2014 10:11:50 AM
+Message:
+Bug 7591: Added serial number auto-generation.
+----
+Added: data/bar/poe_autogenls.xml
+Modified: data/bar/poe_reclsdet.xml
+Added: data/cdf/poe_autogenls.cdf
+Modified: data/cdf/poe_reclsdet.cdf
+Added: data/sync/ads_messages~po_max_serial_no.xml
+Added: data/sync/ads_messages~po_serial_rows.xml
+Modified: prop/addon.properties
+Modified: prop/addon_de.properties
+Modified: prop/addon_en.properties
+Modified: prop/addon_en_CA.properties
+Modified: prop/addon_es.properties
+Modified: prop/addon_es_ES.properties
+Modified: prop/addon_fr.properties
+Modified: prop/addon_fr_CA.properties
+Modified: prop/addon_it.properties
