@@ -192,7 +192,7 @@ rem --- do string replace on "../" on .def files in all of the data/def/<lang> d
 				if def_file$(len(def_file$)-3,4)<>".def" then continue				
 				oldDef! = FileUtils.readFileToString(new java.io.File(def_dir$+sep$+lang_dir$+sep$+def_file$))
 				newDef! = new java.io.File(def_dir$+sep$+lang_dir$+sep$+def_file$)
-				FileUtils.writeStringToFile(newDef!, oldDef!.replaceAll("\^../", "^"+newAonLoc$+sep$))
+				FileUtils.writeStringToFile(newDef!, oldDef!.replaceAll("\^\.\./", "^"+newAonLoc$+sep$))
 			wend
 			close(langchan,err=*next)
 		wend
