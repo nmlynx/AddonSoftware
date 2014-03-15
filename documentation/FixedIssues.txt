@@ -235,3 +235,98 @@ Modified: data/bar/sfr_schedwo.xml
 Modified: data/cdf/sfe_womastr.cdf
 Modified: data/cdf/sfr_schedwo.cdf
 Modified: sf/src/sfc_schdayfore.aon
+
+=======================================================================================================================================
+Revision: 7dbac5841ad2f7ce8ba39a79baba08275c98d8b8
+
+Date: 3/14/2014 12:41:57 PM
+Message:
+Per bug 7636; corrected issue with setting process_id$ in the wrong
+place.
+----
+Modified: data/bar/adm_procbatchmnt.xml
+Modified: data/cdf/adm_procbatchmnt.cdf
+
+=======================================================================================================================================
+Revision: a03ab7b6a588449b37299093aee38c7396a7f354
+
+Date: 3/14/2014 12:44:25 PM
+Message:
+Per bug 7634; changed driver key for this form from primary to 'batch
+key' so it correctly disables the preset batch#.
+----
+Modified: data/bar/gle_allochdr.xml
+
+=======================================================================================================================================
+Revision: 395a6cc6430dbab0aa3b46ae700ba7b78c407ee9
+
+Date: 3/14/2014 12:48:18 PM
+Message:
+Per bug 7622; set batch number field to always be disabled.
+----
+Modified: data/bar/sfe_wo_cost_adj.xml
+
+=======================================================================================================================================
+Revision: 50e313e8a6d006c51eef354c1d7c52da300ccb9e
+
+Date: 3/14/2014 1:03:24 PM
+Message:
+Bug 7598: Moved "Check for Order Total" code from BNEK and BPRK to BNEX
+and BPRI respectively so Barista will handle possible
+setStatus("ABORT").
+----
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_invhdr.cdf
+Modified: data/cdf/ope_ordhdr.cdf
+
+=======================================================================================================================================
+Revision: 22a03b6d8812fb4686585d89235b92e73d4df4aa
+
+Date: 3/14/2014 2:08:58 PM
+Message:
+Per bug 7630; corrected issue where AP/OP interface flag in SF params
+wasn't being checked.
+----
+Modified: sf/src/sfr_shpflrdsptch.aon
+
+=======================================================================================================================================
+Revision: 690f58090f1dc77b7b54e8d98aa9a37b29a149bf
+
+Date: 3/14/2014 2:22:49 PM
+Message:
+Bug 7632: Corrected report column headings.
+----
+Modified: sf/src/sfr_wordjobstat_o1.aon
+
+=======================================================================================================================================
+Revision: c0da60ae20f4cf868efaf26d27aa6d5fb7b45e05
+
+Date: 3/14/2014 2:57:42 PM
+Message:
+Per bug 7621; corrected headings.
+----
+Modified: sf/src/sfe_jobstat.aon
+
+=======================================================================================================================================
+Revision: 05afa49e42695e49ca9ca59dc87d5980af6c2d84
+
+Date: 3/14/2014 3:29:37 PM
+Message:
+Per bug 7627; altered so the description column prints Bill# + item
+description from Item Master if 'I' type, otherwise uses the first
+description from the WO Master.
+----
+Modified: data/bar/sfe_dispatchinq.xml
+Modified: data/cdf/sfe_dispatchinq.cdf
+
+=======================================================================================================================================
+Revision: 858cb0a44d200b2f559944208e56fe63d924f2e1
+
+Date: 3/14/2014 5:27:46 PM
+Message:
+Bug 7626: Initialize each new sfe_wooprtn record with sfe_wooprtn
+template.
+----
+Modified: data/bar/sfe_womatl.xml
+Modified: data/cdf/sfe_womatl.cdf
