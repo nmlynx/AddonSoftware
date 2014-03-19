@@ -26,10 +26,8 @@ rem --- Confirm ready to copy data
 	else
 		msg_id$="AD_NO_SELECTION"
 		gosub disp_message
-		if msg_opt$<>"Y"then
-			callpoint!.setStatus("ABORT")
-			break
-		endif
+		callpoint!.setStatus("ABORT")
+		break
 	endif
 
 rem --- Copy selected data
