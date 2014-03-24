@@ -1,3 +1,10 @@
+[[SFM_CAL_COPY.AREC]]
+rem --- Clear previous selections
+	vectOps!=UserObj!.getItem(num(user_tpl.vectOpsOfst$))
+	vectOps!.clear()
+	gosub create_reports_vector
+	gosub fill_grid
+	UserObj!.setItem(num(user_tpl.vectOpsOfst$),vectOps!)
 [[SFM_CAL_COPY.OP_CODE.AVAL]]
 rem --- Create vector excluding the current Op Code
 
