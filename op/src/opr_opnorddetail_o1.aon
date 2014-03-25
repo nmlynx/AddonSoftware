@@ -238,7 +238,7 @@ rem --- Main Loop Starts
 
         rem --- Void
 
-            OutVect!.addItem(ope01a.customer_id$)
+            OutVect!.addItem(fnmask$(ope01a.customer_id$(1,m0),m0$))
             OutVect!.addItem(arm01a.customer_name$)
             OutVect!.addItem(ope01a.order_no$)
             OutVect!.addItem(ope01a.ar_inv_no$)
@@ -499,7 +499,7 @@ ord_header: rem --- Print Order Header
     if width>30 then  width=30
 
     xwk = fnblank(13)
-    OutVect!.addItem(ope01a.customer_id$)
+    OutVect!.addItem(fnmask$(ope01a.customer_id$(1,m0),m0$))
     OutVect!.addItem(arm01a.customer_name$)
     OutVect!.addItem(stat$+" "+ope01a.order_no$)
     OutVect!.addItem(fndate$(ope01a.order_date$))
