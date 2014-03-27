@@ -635,8 +635,7 @@ rem --- First line
 	endif
 	
 	if pos(opm02a.line_type$="O")<>0 
-		OutVect!.addItem(str(ope11a.qty_ordered:m2$)+$00$+"R")
-		xwk=fnblank(5)
+		xwk=fnblank(6)
 		OutVect!.addItem(str(ope11a.ext_price:m1$)+$00$+"R")
 		xwk=fnblank(1)
 		OutVect!.addItem(str(ope11a.ext_price-(ope11a.unit_cost*ope11a.qty_shipped):m4$)+$00$+"R")
