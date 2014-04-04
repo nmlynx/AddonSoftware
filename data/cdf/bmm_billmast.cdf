@@ -1,7 +1,15 @@
-[[BMM_BILLMAST.LOCK_REF_NUM.BINP]]
-rem --- Need to know if LOCK_REF_NUM is changed
-	prev_lockrefnum$=callpoint!.getColumnData("BMM_BILLMAST.LOCK_REF_NUM")
-	callpoint!.setDevObject("prev_lockrefnum",prev_lockrefnum$)
+[[BMM_BILLMAST.AENA]]
+rem --- Disable Barista menu items
+	wctl$="31031"; rem --- Save-As menu item in barista.ini
+	wmap$=callpoint!.getAbleMap()
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)="X"
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP")
+[[BMM_BILLMAST.ADIS]]
+rem --- set DevObjects
+
+	callpoint!.setDevObject("lock_ref_num",callpoint!.getColumnData("BMM_BILLMAST.LOCK_REF_NUM"))
 [[BMM_BILLMAST.LOCK_REF_NUM.AVAL]]
 rem --- Notify when LOCK_REF_NUM is changed
 	prev_lockrefnum$=callpoint!.getDevObject("prev_lockrefnum")
@@ -23,18 +31,10 @@ rem --- Notify when LOCK_REF_NUM is changed
 			callpoint!.setStatus("ABORT")
 		endif
 	endif
-[[BMM_BILLMAST.ADIS]]
-rem --- set DevObjects
-
-	callpoint!.setDevObject("lock_ref_num",callpoint!.getColumnData("BMM_BILLMAST.LOCK_REF_NUM"))
-[[BMM_BILLMAST.AENA]]
-rem --- Disable Barista menu items
-	wctl$="31031"; rem --- Save-As menu item in barista.ini
-	wmap$=callpoint!.getAbleMap()
-	wpos=pos(wctl$=wmap$,8)
-	wmap$(wpos+6,1)="X"
-	callpoint!.setAbleMap(wmap$)
-	callpoint!.setStatus("ABLEMAP")
+[[BMM_BILLMAST.LOCK_REF_NUM.BINP]]
+rem --- Need to know if LOCK_REF_NUM is changed
+	prev_lockrefnum$=callpoint!.getColumnData("BMM_BILLMAST.LOCK_REF_NUM")
+	callpoint!.setDevObject("prev_lockrefnum",prev_lockrefnum$)
 [[BMM_BILLMAST.BILL_NO.AINP]]
 rem --- Make sure item exists before allowing user to continue
 [[BMM_BILLMAST.AOPT-PLST]]
