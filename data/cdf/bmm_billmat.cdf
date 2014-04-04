@@ -360,6 +360,13 @@ rem --- fill listbox for use with Op Sequence
 	my_control!.insertItems(0,ops_list!)
 	my_grid!.setColumnListControl(col_ref,my_control!)
 	my_grid!.setColumnHeaderCellText(ListColumn,"Op Ref")
+
+rem --- Disable WO_REF_NUM when locked
+	if callpoint!.getDevObject("lock_ref_num")="Y" then
+		opts$=callpoint!.getTableColumnAttribute("BMM_BILLMAT.WO_REF_NUM","OPTS")
+		callpoint!.setTableColumnAttribute("BMM_BILLMAT.WO_REF_NUM","OPTS",opts$+"C"); rem --- makes read only
+		callpoint!.setOptionEnabled("AUTO",0)
+	endif
 [[BMM_BILLMAT.ITEM_ID.AINV]]
 rem --- Check for item synonyms
 
