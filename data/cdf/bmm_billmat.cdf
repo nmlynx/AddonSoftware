@@ -359,7 +359,6 @@ rem --- fill listbox for use with Op Sequence
 	my_control!.removeAllItems()
 	my_control!.insertItems(0,ops_list!)
 	my_grid!.setColumnListControl(col_ref,my_control!)
-	my_grid!.setColumnHeaderCellText(ListColumn,"Op Ref")
 
 rem --- Disable WO_REF_NUM when locked
 	if callpoint!.getDevObject("lock_ref_num")="Y" then
