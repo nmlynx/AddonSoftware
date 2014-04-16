@@ -1,3 +1,23 @@
+[[APS_PARAMS.ADIS]]
+rem wgh ...
+rem --- Display selected colors
+	RGB$=callpoint!.getColumnData("APS_PAYAUTH.ONE_AUTH_COLOR")
+	gosub get_RGB
+	valRGB!=SysGUI!.makeColor(R,G,B)
+	one_color_ctl!=callpoint!.getDevObject("one_color_ctl")
+	one_color_ctl!.setBackColor(valRGB!)
+
+	RGB$=callpoint!.getColumnData("APS_PAYAUTH.TWO_AUTH_COLOR")
+	gosub get_RGB
+	valRGB!=SysGUI!.makeColor(R,G,B)
+	two_color_ctl!=callpoint!.getDevObject("two_color_ctl")
+	two_color_ctl!.setBackColor(valRGB!)
+
+	RGB$=callpoint!.getColumnData("APS_PAYAUTH.ALL_AUTH_COLOR")
+	gosub get_RGB
+	valRGB!=SysGUI!.makeColor(R,G,B)
+	all_color_ctl!=callpoint!.getDevObject("all_color_ctl")
+	all_color_ctl!.setBackColor(valRGB!)
 [[APS_PAYAUTH.ONE_AUTH_COLOR.AMOD]]
 rem --- Display selected color
 	RGB$=callpoint!.getColumnData("APS_PAYAUTH.ONE_AUTH_COLOR")
