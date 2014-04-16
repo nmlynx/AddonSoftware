@@ -6,8 +6,15 @@ rem --- Display selected color
 	one_color_ctl!=callpoint!.getDevObject("one_color_ctl")
 	one_color_ctl!.setBackColor(valRGB!)
 [[APS_PAYAUTH.SCAN_DOCS_TO.AVAL]]
-rem --- Enable/Disable WARN_IN_REGISTER and OK_TO_UPDATE
+rem --- Restrict selection to currently available options
 	scan_docs_to$=callpoint!.getUserInput()
+	if pos(scan_docs_to$="NOTGD ",3)=0 then
+		callpoint!.setMessage("AD_OPTION_NOT")
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+rem --- Enable/Disable WARN_IN_REGISTER and OK_TO_UPDATE
 	gosub able_scan_docs
 [[APS_PAYAUTH.ALL_AUTH_COLOR.AMOD]]
 rem --- Display selected color
