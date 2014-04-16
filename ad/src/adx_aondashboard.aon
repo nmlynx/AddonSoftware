@@ -1,0 +1,901 @@
+rem --- adx_aondashboard.aon
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem --- Addon dashboards
+
+	use ::dashboard/dashboard.bbj::Dashboard
+	use ::dashboard/dashboard.bbj::DashboardCategory
+	use ::dashboard/dashboard.bbj::DashboardWidget
+	use ::dashboard/dashboard.bbj::DashboardWidgetFilter
+	use ::dashboard/dashboard.bbj::DashboardWidgetLink
+	use ::dashboard/dashboard.bbj::DashboardWindow
+	use ::dashboard/widget.bbj::Widget
+	use ::dashboard/widget.bbj::ChartWidget
+	use ::dashboard/widget.bbj::ImageWidget
+	use ::dashboard/widget.bbj::GridWidget
+	use ::dashboard/widget.bbj::BarChartWidget
+	use ::dashboard/widget.bbj::StackedBarChartWidget
+	use ::dashboard/widget.bbj::StackedPercentageBarChartWidget
+	use ::dashboard/widget.bbj::LineChartWidget
+	use ::dashboard/widget.bbj::PieChartWidget
+	use ::dashboard/widget.bbj::JasperViewerWidget
+	use ::reporting/bbjasper/bbjasper.bbj::BBJasperReport
+	use ::BBUtils.bbj::BBUtils
+
+	use java.awt.Color
+	use java.awt.Font
+
+	seterr std_error
+	setesc std_error
+	
+rem --- if BUI, need to call bas_process_beg
+
+	if info(3,6)="5"
+		tmp_cnt=0
+		while tmp_cnt<argc()
+			tmp$=argv(tmp_cnt)
+			if pos("-u"=tmp$) then user_id$=cvs(tmp$(3),4); break
+			tmp_cnt=tmp_cnt+1
+		wend
+		if user_id$<>""
+			call stbl("+DIR_SYP")+"bas_process_beg.bbj",user_id$,table_chans$[all]
+		else		
+			goto std_exit
+		endif
+		if rd_session_pfx$="" then
+			rd_session_pfx$="barista_"+str(dec(info(3,1)):"0000000000000000")
+			rd_temp_stbl$=stbl("+SESSION_PREFIX",rd_session_pfx$)
+		endif
+	endif
+
+rem --- initialization
+	
+	gosub get_sysinfo
+	gosub get_masks	
+	gosub get_connectstring
+	gosub resolve_paths
+	gosub init_prog_meter
+	
+rem --- create dashboard, tabs, widgets
+
+	gosub create_dashboard
+	gosub create_acct_tab_and_widgets
+	gosub create_sales_tab_and_widgets
+	
+rem --- now create/show the Dashboard Window
+ 
+	aonDashboardWindow! = new DashboardWindow(aonDashboard!)
+	progress!.setValue("+process_task",task_id$+"^D^")
+
+	aonDashboardWindow!.doModal()
+
+	goto std_exit
+
+	release
+	
+
+rem =========================================================================================================================
+rem  create dashboard, accounting tab, and widgets
+rem  this section defines the accounting category/tab, and the several widgets it contains
+rem =========================================================================================================================
+	
+rem ==============================================
+create_dashboard:
+rem ==============================================
+
+	declare Dashboard aonDashboard!
+
+	aonDashboard! = new Dashboard("AddonSoftware Dashboard")
+
+	return
+
+	
+rem ==============================================
+create_acct_tab_and_widgets:
+rem ==============================================
+
+	declare DashboardCategory   acctDashboardCategory!
+
+	acctDashboardCategory! = aonDashboard!.addDashboardCategory("Accounting")
+
+rem ==============================================
+rem --- create a yearly GL totals grid
+rem ==============================================
+
+	dashboard_menu_id$="ADD_GLINCTOT_GRD"
+	gosub get_security
+	if allow_widget$="Y"
+		name$ = "GL Income Acct. Totals"
+		previewText$="General Ledger Income account totals by year displayed in a grid"
+		previewImage$=preview_path$+"glinctot_grd.png"
+		connectString$=aon_url$
+		
+		rem --- params for calling SPROC
+		include_type$="J"; rem "Include Current and Prior Actual summaries; includes GL Record IDs 0, 2
+		acct_type$="I"; rem "Income accounts only
+		do_coa_join$="N"; rem "Change to Y to include a column for Chart of Accts Category 
+
+		sql$="CALL GLINCTOT_GRD ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
+
+		incomeGridDashboardWidget! = acctDashboardCategory!.addGridDashboardWidget(name$,previewText$,previewImage$,connectString$,sql$)
+		gridWidget!=incomeGridDashboardWidget!.getWidget()
+		gridWidget!.setColumnAlignment(3,GridWidget.getHORIZONTAL_ALIGNMENT_RIGHT())
+		gridWidget!.setColumnAlignment(0,GridWidget.getHORIZONTAL_ALIGNMENT_LEFT())
+
+		rem Create Filters 
+		filterName$ = "Income Totals - Time Frame"
+		filterHashMap! = new java.util.HashMap()
+		filterHashMap!.put("A","Current Year Actual")
+		filterHashMap!.put("B","Current Year Budget")
+		filterHashMap!.put("C","Prior Year Actual")
+		filterHashMap!.put("D","Prior Year Budget")
+		filterHashMap!.put("E","Next Year Actual")
+		filterHashMap!.put("F","Next Year Budget")
+		filterHashMap!.put("G","All Actual")
+		filterHashMap!.put("H","All Budget")
+		filterHashMap!.put("I","All (Actual & Budget)")
+		filterHashMap!.put("J","Current & Prior Year Actual")
+		filterHashMap!.put("K","Current & Prior Year Budget")
+
+		toolTip$ = "Select time frame and actual/budget"
+		dockLocation = DashboardWidget.getDOCK_LEFT()
+		filter! = incomeGridDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
+		filter!.selectFilter("J")
+		filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnGLINCTOT_GRDFilterSelect")
+	
+		gosub update_meter
+		
+	endif
+
+rem ==============================================
+rem --- create an Income Comparison bar chart
+rem ==============================================
+
+	dashboard_menu_id$="ADD_GLCMPINC_BAR"
+	gosub get_security
+	if allow_widget$="Y"
+		name$ = "Income Comparison"
+		previewText$="Income comparison"
+		previewImage$=preview_path$+"glcmpinc_bar.png"
+		domainTitle$ = ""
+		rangeTitle$ = "$ in 1000s"
+		orientation=BarChartWidget.getORIENTATION_VERTICAL() 
+		legend=1
+		chartTitle$ = ""
+		flat = 1
+		connectString$=aon_url$
+
+		rem --- params for calling SPROC
+		include_type$="F"; rem "Include Current vs Prior years' data; summarized by period
+		acct_type$="I"; rem "Income accounts only
+		do_coa_join$="N"; rem "Change to Y to JOIN w/Chart of Accts to filter by account grouping
+
+		sql$="CALL GLCMPINC_BAR ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
+
+		incomeComparisonBarDashboardWidget! = acctDashboardCategory!.addBarChartDashboardWidget(name$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		incCmpWidget!=incomeComparisonBarDashboardWidget!.getWidget()
+		incCmpWidget!.setFontScalingFactor(0.45)
+		incCmpWidget!.setChartColors("#00a4d9","#7fbe27",1.0,1.0); rem Colors for By Period
+		rem incCmpWidget!.setChartColors("#00a4d9","#46dca5",1.0,1.0); rem Colors for By Year
+		
+		rem Create Filters 
+		filterName$ = "Compare"
+
+		filterHashMap! = new java.util.HashMap()
+		filterHashMap!.put("A","Current/Prior")
+		filterHashMap!.put("C","Current/Next")
+		filterHashMap!.put("E","Current/Prior/Next")
+		
+		toolTip$ = "Select basis for comparison"
+		dockLocation = DashboardWidget.getDOCK_LEFT()
+		filter! = incomeComparisonBarDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
+		filter!.selectFilter("E")
+		filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnGLCMPINC_BARFilterSelect")
+
+		filterName$ = "PerYear"
+		filterHashMap! = new java.util.HashMap()
+		filterHashMap!.put("0","By Period")
+		filterHashMap!.put("1","By Year")
+		
+		toolTip$ = "Select comparison for period or year"
+		dockLocation = DashboardWidget.getDOCK_RIGHT()
+		filter! = incomeComparisonBarDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
+		filter!.selectFilter("1")
+		filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnGLCMPINC_BARFilterSelect")
+
+		gosub update_meter
+	endif
+
+rem ==============================================
+rem --- create bank acct balances bar chart
+rem ==============================================
+
+	dashboard_menu_id$="ADD_GLBNKBAL_BAR"
+	gosub get_security
+	if allow_widget$="Y"
+		name$ = "Bank Account Balances"
+		previewText$="Bank account balances displayed in a bar chart"
+		previewImage$=preview_path$+"glbnkbal_bar.png"
+		chartTitle$ = ""
+		domainTitle$ = ""
+		rangeTitle$ = ""
+		flat=1 
+		orientation=BarChartWidget.getORIENTATION_VERTICAL() 
+		legend=0
+		connectString$=aon_url$
+		
+		rem --- params for calling SPROC
+		include_type$="A"; rem "Include Current Year Actual totals (no data/period filtering)
+
+		sql$="CALL GLBNKBAL_BAR ('"+firm_id$+"', '"+include_type$+"', '"+masks$+"', '"+barista_wd$+"')"
+		
+		bankacctBarChartDashboardWidget! = acctDashboardCategory!.addBarChartDashboardWidget(name$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		acctWidget! = bankacctBarChartDashboardWidget!.getWidget()
+		acctWidget!.setDomainLabelAngle(1)
+		acctWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
+		acctWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
+
+		gosub update_meter
+	endif
+
+rem ==============================================
+rem --- create bank acct bal ring chart
+rem ==============================================
+
+	dashboard_menu_id$="ADD_GLBNKBAL_RNG"
+	gosub get_security
+	if allow_widget$="Y"
+		name$ = "Bank Balances RingChart"
+		previewText$="Bank account balances displayed in a pie chart"
+		previewImage$=preview_path$+"glbnkbal_rng.png"
+		chartTitle$ = ""
+		flat=1 
+		legend=0		
+		connectString$=aon_url$
+				
+		rem --- params for calling SPROC
+		include_type$="A"; rem "Include Current Year Actual totals
+		min_amt = 600; rem Hardcoded for now
+
+		sql$="CALL GLBNKBAL_RNG ('"+firm_id$+"', '"+include_type$+"', '"+str(min_amt)+"', '"+masks$+"', '"+barista_wd$+"')"
+
+		bankacctRingChartDashboardWidget! = acctDashboardCategory!.addRingChartDashboardWidget(name$,previewText$,previewImage$,chartTitle$,flat,legend,connectString$,sql$)
+		
+		rem Modify the chart
+		ringChartWidget! = bankacctRingChartDashboardWidget!.getWidget()
+		ringChartWidget!.setExplodeAllSlicesPercent(.025)
+		ringChartWidget!.setGradientShadingAmount(.0)
+		ringChartWidget!.setChartColors(ringChartWidget!.getColorTheme(ChartWidget.getColorThemeGreen()))
+		ringChartWidget!.setRingDepth(.55)
+	 
+		rem Create Filters 
+		filterName$ = "Bank Balances RingChart - TimeFrame"
+		filterHashMap! = new java.util.HashMap()
+		filterHashMap!.put("A","Current year")
+		filterHashMap!.put("C","Previous year")
+		toolTip$ = "Select time frame"
+		dockLocation = DashboardWidget.getDOCK_LEFT()
+		filter! = bankacctRingChartDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
+		filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnGLBNKBAL_RNGFilterSelect")
+		
+		gosub update_meter
+	endif
+
+rem ==============================================
+rem --- Create an Expense Breakdown Piechart
+rem ==============================================
+
+	dashboard_menu_id$="ADD_GLEXPTOT_PIE"
+	gosub get_security
+	if allow_widget$="Y"
+		name$ = "YTD Expense Breakdown"
+		previewText$="Expense year to date breakdown displayed in a pie chart"
+		previewImage$=preview_path$+"glexptot_pie.png"
+		chartTitle$ = ""
+		flat = 1
+		legend=0
+		numSlices=8
+		connectString$=aon_url$
+		
+		rem --- params for calling SPROC
+		include_type$="A"; rem "Include Current Year Actual totals (no data/period filtering)
+		acct_type$="E"; rem "Expense accounts only
+		do_coa_join$="N"; rem "No Op. Chart of Acocunts is integral part of this SPROC
+		
+		sql$="CALL GLEXPTOT_PIE ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
+	
+		expPieChartDashboardWidget! = acctDashboardCategory!.addPieChartDashboardWidget(name$,previewText$,previewImage$,chartTitle$,flat,legend,connectString$,sql$)
+		expPieWidget! = expPieChartDashboardWidget!.getWidget()
+		expPieWidget!.setChartColors("#860102,#cc2200,#e14900,#fe7600,#ff9c01,#fdce2e")
+		expPieWidget!.setGradientShadingAmount(.05)
+		chartColors! = expPieWidget!.getCustomChartColors()
+		ChartWidget.adjustColorVectorBrightness(chartColors!, 0.35)
+		ChartWidget.adjustColorVectorOpacity(chartColors!, 0.75)
+		expPieWidget!.setCustomChartColors(chartColors!)
+				
+		text$ = "Chart of Accounts" 
+		toolTip$ = "Launch query on GL Chart of Accounts" 
+		dockLocation = DashboardWidget.getDOCK_LEFT()
+		browseOnSelect = 0
+		link! = expPieChartDashboardWidget!.addLink(url$,text$,toolTip$,dockLocation,browseOnSelect)
+		link!.setCallback(DashboardWidgetLink.getON_LINK_SELECT(),pgm(-2) + "::OnGLEXPTOT_PIEAppLink")
+		
+		gosub update_meter
+	endif
+
+	return
+	
+
+rem =========================================================================================================================
+rem  create sales tab and widgets
+rem  this section defines the sales category/tab, and the several widgets it contains
+rem =========================================================================================================================
+ 
+rem ==============================================
+create_sales_tab_and_widgets:
+rem ==============================================
+	
+	declare DashboardCategory   salesDashboardCategory!
+	
+	salesDashboardCategory! = aonDashboard!.addDashboardCategory("Sales")
+rem	salesDashboardCategory!.setMinWidgetWidth(500)
+rem	salesDashboardCategory!.setMaxWidgetWidth(2000)
+
+rem ==============================================
+rem --- create SA Top Customers bar chart
+rem ==============================================
+
+	dashboard_menu_id$="ADD_SATOPCST_BAR"
+	gosub get_security
+	if allow_widget$="Y"
+		name$ = "Top Customers"
+		previewText$="Top 5 Customers displayed in a bar chart"
+		previewImage$=preview_path$+"satopcst_bar.png"
+		chartTitle$ = ""
+		domainTitle$ = ""
+		rangeTitle$ = ""
+		flat=1 
+		orientation=BarChartWidget.getORIENTATION_HORIZONTAL() 
+		legend=0
+		connectString$=aon_url$
+		
+		rem --- params for calling SPROC
+		year$ = "2014"; rem <<============= HARDCODED =========
+		num_to_list$ = "5"; rem <<============= HARDCODED =========
+	
+		sql$="CALL SATOPCST_BAR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+		
+		bankacctBarChartDashboardWidget! = salesDashboardCategory!.addBarChartDashboardWidget(name$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		acctWidget! = bankacctBarChartDashboardWidget!.getWidget()
+		acctWidget!.setFontScalingFactor(0.45)
+		acctWidget!.setDomainLabelAngle(1)
+		acctWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
+		acctWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
+
+		gosub update_meter
+	endif
+
+rem ==============================================   
+rem --- create jasper widget for Sales by Cust Type
+rem --- code copied from arr_drillDownSalesReport.aon
+rem ==============================================  
+
+	dashboard_menu_id$="ADD_SLSBYCST_JAS"
+	gosub get_security
+	if allow_widget$="Y"
+		call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",custIdMask$,0,custIdLen
+		custIdMaskLen = len(custIdMask$)
+
+rem --- get the accounting periods
+
+		sql$ = "SELECT TOTAL_PERS, CURRENT_PER, CURRENT_YEAR, "
+		sql$ = sql$ + "PER_ENDING_01, PER_ENDING_02, PER_ENDING_03, PER_ENDING_04, PER_ENDING_05, PER_ENDING_06, "
+		sql$ = sql$ + "PER_ENDING_07, PER_ENDING_08, PER_ENDING_09, PER_ENDING_10, PER_ENDING_11, PER_ENDING_12, PER_ENDING_13 "
+		sql$ = sql$ + "FROM GLS_PARAMS "
+		sql$ = sql$ + "WHERE FIRM_ID = '" + firm_id$ + "'"
+
+		params! = BBjAPI().createSQLRecordSet(aon_url$,"",sql$)
+		periods! = params!.getCurrentRecordData()
+
+rem --- Assign input values to local variables
+rem --- ***************** HARD-CODED FOR NOW TO BE CURRENT MONTH/YR
+
+		period$="03"
+		year$=proc_date$(7,4)
+
+rem - establish the month 
+
+		period = num(period$)
+
+		firstPerEnding$ = periods!.getFieldValue("PER_ENDING_01")
+
+		switch period
+			case 1; ending$ = periods!.getFieldValue("PER_ENDING_01"); break
+			case 2; ending$ = periods!.getFieldValue("PER_ENDING_02"); break
+			case 3; ending$ = periods!.getFieldValue("PER_ENDING_03"); break
+			case 4; ending$ = periods!.getFieldValue("PER_ENDING_04"); break
+			case 5; ending$ = periods!.getFieldValue("PER_ENDING_05"); break
+			case 6; ending$ = periods!.getFieldValue("PER_ENDING_06"); break
+			case 7; ending$ = periods!.getFieldValue("PER_ENDING_07"); break
+			case 8; ending$ = periods!.getFieldValue("PER_ENDING_08"); break
+			case 9; ending$ = periods!.getFieldValue("PER_ENDING_09"); break
+			case 10; ending$ = periods!.getFieldValue("PER_ENDING_10"); break
+			case 11; ending$ = periods!.getFieldValue("PER_ENDING_11"); break
+			case 12; ending$ = periods!.getFieldValue("PER_ENDING_12"); break
+			case 13; ending$ = periods!.getFieldValue("PER_ENDING_13"); break
+		swend
+
+		month$ = ending$(1,2)
+
+		name$ = "Sales by Customer Type"
+		previewText$="Drilldown sales report for month/year displayed in a jasper viewer"
+		previewImage$=preview_path$+"slsbycst_jas.png"
+		reportFile$ = report_path$+"SalesByCustType.jasper"
+		connectString$=aon_url$
+		report! = new BBJasperReport(reportFile$,connectString$)
+
+		report!.putParam("FIRM_ID",firm_id$)
+		report!.putParam("FIRM_NAME",firm_name$)
+		report!.putParam("MONTH",month$)
+		report!.putParam("YEAR",year$)
+		report!.putParam("CUST_ID_MASK", custIdMask$)
+		report!.putParam("CUST_ID_LEN", str(custIdLen))
+		report!.putParam("BARISTA_WD",barista_wd$)
+
+		report!.fill()
+
+		salesJasperViewerDashboardWidget! = salesDashboardCategory!.addJasperViewerDashboardWidget(name$,previewText$,previewImage$,report!)
+		
+		salesJasperViewerWidget!=salesJasperViewerDashboardWidget!.getWidget()
+		salesJasperViewerWidget!.setCallback(JasperViewerWidget.getSAVE_MENU_BUTTON_NAME(),BBjMenuButton.ON_BUTTON_PUSH,pgm(-2) + "::OnSLSBYCST_JASFileSave")
+		salesJasperViewerWidget!.setCallback(JasperViewerWidget.getSAVE_MENU_ITEM_NAME(),BBjMenuItem.ON_POPUP_ITEM_SELECT,pgm(-2) + "::OnSLSBYCST_JASFileSave")
+		salesJasperViewerWidget!.setCallback(JasperViewerWidget.getEMAIL_TOOL_BUTTON_NAME(),BBjToolButton.ON_TOOL_BUTTON_PUSH,pgm(-2) + "::OnSLSBYCST_JASEmail")
+
+		myNS!=BBjAPI().getNamespace("dash","slsbycst",1)
+		myNS!.setValue("sv_widget",salesJasperViewerWidget!)
+		
+	endif
+	
+	return
+
+	
+rem =========================================================================================================================
+rem  event handlers
+rem  this section contains the event handlers for the widget filters and jasper save/email buttons
+rem =========================================================================================================================
+		
+rem ==============================================   
+rem Handle filter select event for GL YrTots grid
+OnGLINCTOT_GRDFilterSelect:
+rem ==============================================    
+rem The filter selection event for the Left filter on the Income Comparison bar graph
+rem Get the information from the filter event so we'll have our dashboard widget and the inner widget
+rem     The dashboard widget gives us access to the filters and links
+rem     The inner widget gives us access to the dataset so that we can provide new data
+
+	customEvent! = BBjAPI().getLastEvent()
+	filterSelectEvent! = customEvent!.getObject()
+	filterName$ = filterSelectEvent!.getFilterName()
+	
+	rem You can get the current filter value from the filter selection event
+	filterKey$ = filterSelectEvent!.getFilterKey()
+	
+	rem Get the dashboard widget and inner widget
+	incomeGridDashboardWidget! = filterSelectEvent!.getDashboardWidget()
+	gridWidget! = incomeGridDashboardWidget!.getWidget()
+	
+	gosub get_masks
+	gosub get_sysinfo
+	gosub get_connectstring
+	acct_type$="I"; rem "Income accounts only
+	do_coa_join$="N"; rem "Change to Y to include a column for Chart of Accts Category
+	include_type$=filterKey$
+
+	sql$="CALL GLINCTOT_GRD ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
+	
+	rem Refresh based on new sql
+	gridWidget!.fill(aon_url$,sql$)
+	gridWidget!.update()
+	exit
+
+rem ==============================================   
+rem Handle filter select event for Bank Acct
+OnGLBNKBAL_RNGFilterSelect:
+rem ==============================================    
+rem The filter selection event for the Left filter on the Income Comparison bar graph
+rem Get the information from the filter event so we'll have our dashboard widget and the inner widget
+rem     The dashboard widget gives us access to the filters and links
+rem     The inner widget gives us access to the dataset so that we can provide new data
+
+	customEvent! = BBjAPI().getLastEvent()
+	filterSelectEvent! = customEvent!.getObject()
+	filterName$ = filterSelectEvent!.getFilterName()
+	
+	rem You can get the current filter value from the filter selection event
+	filterKey$ = filterSelectEvent!.getFilterKey()
+	filterValue$ = filterSelectEvent!.getFilterValue()
+	
+	rem Get the dashboard widget and inner widget
+	bankacctRingChartDashboardWidget! = filterSelectEvent!.getDashboardWidget()
+	ringChartWidget! = bankacctRingChartDashboardWidget!.getWidget()
+	
+	gosub get_masks
+	gosub get_sysinfo
+	min_amt=600; rem using same hard-coded as code that initially creates the ring chart (above)
+	include_type$=filterKey$
+
+	sql$="CALL GLBNKBAL_RNG ('"+firm_id$+"', '"+include_type$+"', '"+str(min_amt)+"', '"+masks$+"', '"+barista_wd$+"')"
+	
+	rem Clear out the old data from the inner widget
+	ringChartWidget!.clearDataSet()
+	
+	rem Refresh based on new sql
+	ringChartWidget!.setSQL(sql$)
+    ringChartWidget!.refresh()
+	
+	exit
+
+rem ==============================================   
+rem Handle filter select event for Bank Acct
+OnGLCMPINC_BARFilterSelect:
+rem ==============================================    
+rem The filter selection event for the Left filter on the Income Comparison bar graph
+rem Get the information from the filter event so we'll have our dashboard widget and the inner widget
+rem     The dashboard widget gives us access to the filters and links
+rem     The inner widget gives us access to the dataset so that we can provide new data
+
+	customEvent! = BBjAPI().getLastEvent()
+	filterSelectEvent! = customEvent!.getObject()
+	filterName$ = filterSelectEvent!.getFilterName()
+	
+	rem You can get the current filter value from the filter selection event
+	filterKey$ = filterSelectEvent!.getFilterKey()
+	filterValue$ = filterSelectEvent!.getFilterValue()
+	
+	rem Get the dashboard widget and inner widget
+	incomeComparisonBarDashboardWidget! = filterSelectEvent!.getDashboardWidget()
+	incCmpWidget! = incomeComparisonBarDashboardWidget!.getWidget()
+	
+    rem Get the current filter values from the dashboard widget, as that way we have access to all of them
+    filterLeft! = incomeComparisonBarDashboardWidget!.getDashboardWidgetFilterLeft()
+	incCmpWidgetFilterCompareKey$ = filterLeft!.getKey()
+	include_type$=incCmpWidgetFilterCompareKey$;rem A,C,E
+	
+	filterRight! = incomeComparisonBarDashboardWidget!.getDashboardWidgetFilterRight()
+	incCmpWidgetFilterCompareKey$ = filterRight!.getKey();rem 0,1
+	
+	gosub get_masks
+	gosub get_sysinfo
+	include_type$=chr(asc(include_type$)+num(incCmpWidgetFilterCompareKey$));rem A,B,C,D,E,F
+	acct_type$="I"; rem "Income accounts only
+	do_coa_join$="N"; rem "Change to Y to JOIN w/Chart of Accts to filter by account grouping
+
+	sql$="CALL GLCMPINC_BAR ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
+	
+	rem Clear out the old data from the inner widget
+	incCmpWidget!.clearDataSet()
+	
+	rem Refresh based on new sql
+	incCmpWidget!.setSQL(sql$)
+    incCmpWidget!.refresh()
+	
+	exit
+	
+rem ==============================================   
+OnGLEXPTOT_PIEAppLink:
+rem ==============================================    
+
+	customEvent! = BBjAPI().getLastEvent()
+	linkSelectEvent! = customEvent!.getObject()
+	url$ = linkSelectEvent!.getURL();rem not using
+	dashboardWidget! = linkSelectEvent!.getDashboardWidget()
+	widget! = dashboardWidget!.getWidget()
+	
+	rdNSAdmin! = BBjAPI().getNamespace("adminobjects", "barista", 1)
+	rdAdmin! = rdNSAdmin!.getValue("+bar_admin_" + cvs(stbl("+USER_ID"), 11))
+	query_user$=rdAdmin!.getUser()
+	query_pass$=rdAdmin!.getPassword()
+
+	myConfig! = BBjAPI().getConfig().getCurrentCommandLineObject()
+	myConfig!.setProgramName(stbl("+DIR_SYP")+"bax_launch_task.bbj")
+	myConfig!.setProgramArgs("-yQ"+" -u"+query_user$+" -p"+query_pass$+" -qGL_ACCOUNTS")
+
+	tmp=BBjAPI().newBBjSession(myConfig!)
+
+	exit
+	
+
+rem ==============================================    
+OnSLSBYCST_JASFileSave:
+rem ============================================== 
+
+rem --- retrieve jasper widget
+
+	customEvent! = BBjAPI().getLastEvent()
+	jasperViewerWidgetControlEvent! = customEvent!.getObject()
+	salesJasperViewerWidget! = jasperViewerWidgetControlEvent!.getWidget()
+	saveReport! = salesJasperViewerWidget!.getReport()
+	if saveReport!<>null()
+	
+rem --- get doc path for saved pdf, and report title
+
+		gosub get_sysinfo
+		gosub doc_path
+		repTitle!=sysinfo.task_desc$
+		repTitle$=repTitle!.replace(" ","_")
+
+rem --- set rd_alias_id$
+
+		if rd_alias_id$=""
+			rd_alias_id$=pgm(-2)
+			rd_alias_id$=rd_alias_id$(max(pos("/"="/"+rd_alias_id$,-1),pos("\"="\"+rd_alias_id$,-1)))
+			rd_alias_id$=rd_alias_id$(1,pos("."=rd_alias_id$+".")-1)
+		endif    
+		rd_alias_id$=cvs(rd_alias_id$,4)
+		
+rem --- Make Document Archive Record and Get ID
+
+		rep_date$=date(0:stbl("+DATE_MASK"))
+		rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+		rep_time$=date(0:"%hz:%mz %p")
+		rep_time_stamp$=date(0:"%Hz%mz%sz")
+
+		rd_source_alias$=rd_alias_id$
+		rd_source_type$="O"
+		rd_doc_source$="E"
+		rd_doc_ext$="JAS"
+		rd_archive_action$="DOC_ID-NOREPRINT"
+		gosub document_whse
+		rd_archive_action$=""	
+
+		rd_sv_path$=rd_doc_path$
+		if rpt_pg>0
+			rd_doc_id$=""
+			rd_doc_path$=""
+			rd_doc_name$=""
+			rd_doc_ext$="JAS"
+			rd_archive_action$="DOC_ID-NOREPRINT"
+			gosub document_whse
+			rd_archive_action$=""
+		endif
+		rpt_pg=rpt_pg+1
+		rd_doc_path$=rd_sv_path$
+		rd_doc_name$=repTitle$+"_"+rd_doc_id$+"_p"+str(rpt_pg)+".pdf"
+		rd_doc_ext$="PDF"
+		saveReport!.exportToPDF(BBjAPI().FALSE, rd_doc_path$+rd_doc_name$)
+		gosub document_whse
+	endif
+    
+	if email_event then return else exit
+
+rem ============================================== 
+OnSLSBYCST_JASEmail:
+rem ============================================== 
+rem --- Add document to fax/email queue
+rem --- force exportToPDF first, in case it hasn't already been saved
+  
+    rem --- force exportToPDF in case not already saved
+	email_event=1
+    gosub OnSLSBYCST_JASFileSave
+	email_event=0
+
+    if rd_doc_id$<>"" and rd_doc_ext$<>""
+        call stbl("+DIR_SYP")+"bac_faxemail_jasper.bbj",rd_doc_id$,rd_doc_ext$,rd_table_chans$[all]
+    endif
+
+    exit
+	
+	
+rem =========================================================================================================================
+rem  misc. subroutines
+rem =========================================================================================================================
+
+rem ==============================================   
+init_prog_meter:
+rem ============================================== 
+
+	num_recs=5;rem current count of widgets being built
+	progress! = bbjAPI().getGroupNamespace()
+	progress!.setValue("+process_task",task_id$+"^C^"+sysinfo.task_desc$+"^CNC^"+str(num_recs)+"^")
+	curr_rec=0
+	
+	return
+	
+rem ==============================================   
+resolve_paths:
+rem ============================================== 
+  
+rem --- resolve path to preview image pngs
+
+    preview_path$=stbl("+CUST_IMAGES",err=*next)
+	sv_dir$=dsk("")+dir("")
+	chdir preview_path$
+	preview_path$=dsk("")+dir("")
+	chdir sv_dir$
+
+rem --- resolve path to jasper reports
+
+    report_path$=stbl("+DIR_REPORTS",err=*next)
+	sv_dir$=dsk("")+dir("")
+	chdir report_path$
+	report_path$=dsk("")+dir("")
+	chdir sv_dir$
+	
+	return
+
+rem ==============================================   
+get_connectstring:
+rem ==============================================
+
+    dbserver$="localhost"
+    dbsqlport$=":2001" 
+    dbserver$=stbl("+DBSERVER",err=*next)
+    dbsqlport$=":"+stbl("+DBSQLPORT",err=*next)
+    dbssl=num(stbl("+DBSSL",err=*next))
+    
+    if dbssl
+        dbssl$="&ssl=true"
+    else
+        dbssl$="&ssl=false"
+    endif
+
+    url_user$="&user=guest"
+    if stbl("!DSUDDB",err=*endif)<>"" then
+        url_user$=""
+    endif
+
+    dbname$ = stbl("+DBNAME")
+    dbname_api$ = stbl("+DBNAME_API")
+    if pos("jdbc:apache"=cvs(dbname$,8))=1 then
+        url$ = dbname$
+    else
+        if pos("jdbc:"=cvs(dbname$,8))=1 then			
+            url$=dbname$+url_user$+dbssl$
+        else
+            url$ = "jdbc:basis:"+dbserver$+dbsqlport$+"?database="+dbname_api$+url_user$+dbssl$
+        endif
+    endif
+	
+	aon_url$=url$
+	
+	return
+
+rem ==============================================   
+get_sysinfo:
+rem ==============================================
+ 
+	sysinfo_tpl$=stbl("+SYSINFO_TPL",err=*next)
+	dim sysinfo$:sysinfo_tpl$
+	sysinfo$=stbl("+SYSINFO",err=*next)
+	user_id$=sysinfo.user_id$
+	proc_date$=date(jul(num(sysinfo.system_date$(1,4)),num(sysinfo.system_date$(5,2)),num(sysinfo.system_date$(7,2))):stbl("+DATE_MASK"))
+	firm_id$=sysinfo.firm_id$
+	firm_name$=sysinfo.firm_name$
+	task_description$=cvs(sysinfo.task_desc$,2)
+	task_id$=sysinfo.task_id$
+
+	barista_wd$=dsk("")+dir("")
+	sproc_dir$=stbl("+DIR_SPROCS",err=*next)
+	
+	return
+
+rem ==============================================   
+get_masks:
+rem ==============================================    
+
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",msk$,0,0
+	masks$=masks$+"cust_mask^"+msk$+"|"
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",msk$,0,0
+	masks$=masks$+"vendor_mask^"+msk$+"|"
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","AD","U","",msk$,0,0
+	masks$=masks$+"ad_units_mask^"+msk$+"|"
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",msk$,0,0
+	masks$=masks$+"gl_amt_mask^"+msk$+"|"
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","I","",msk$,0,0
+	masks$=masks$+"gl_acct_mask^"+msk$+"|"
+	
+	return
+
+rem ==============================================
+get_security:
+rem get Barista security settings for this widget
+rem ==============================================
+
+	allow_widget$=""
+    call stbl("+DIR_SYP")+"bac_getsecurity.bbj",
+:       user_id$,
+:       dashboard_menu_id$,
+:       "",
+:       firm_id$,
+:       temp_array$[all],
+:       access$[all],
+:       table_chans$[all],
+:       "ACCESS",
+:       role_status$
+
+    if role_status$<>"INVALID"
+        allow_widget$=iff(pos("Y"=access$[0]),"Y","")
+    endif
+
+	return
+
+rem ==============================================   
+rem Update progress meter
+update_meter:
+rem ==============================================
+
+	curr_rec=curr_rec+1
+	progress!.setValue("+process_task",task_id$+"^U^"+str(curr_rec)+"^")	
+	
+	return
+
+rem ==============================================
+document_whse:
+rem --- Write record to Barista document warehouse
+rem ==============================================
+
+    call stbl("+DIR_SYP")+"bac_documents.bbj",
+:       rd_doc_id$,
+:       rep_date_stamp$,
+:       rep_time_stamp$,
+:       rd_doc_source$,
+:       rd_doc_ext$,
+:       rd_doc_path$,
+:       rd_source_type$,
+:       rd_source_alias$,
+:       rd_source_id$,
+:       rd_source_ref$,
+:       rd_table_chans$[all],
+:       rd_archive_action$,
+:       rd_doc_name$,
+:       rep_title$,
+:       rd_doc_keywords$
+
+    return
+rem ==============================================
+doc_path:rem --- Get Document Path
+rem ==============================================
+
+    if rd_doc_path$="" then
+        rd_tmp_dir$=stbl("+DOC_DIR_PDF",err=*endif)
+        rd_temp_wd$=dsk("")+dir("")
+        if pos(":"=rd_tmp_dir$) setdrive rd_tmp_dir$(1,pos(":"=rd_tmp_dir$)-1),err=*next
+        chdir rd_tmp_dir$,err=*next
+        rd_doc_path$=dsk("")+dir("")
+        if pos(":"=rd_temp_wd$) setdrive rd_temp_wd$(1,pos(":"=rd_temp_wd$)-1)
+        chdir rd_temp_wd$
+    endif
+
+    return
+
+rem ==============================================
+std_error: rem --- Standard error handler
+rem ==============================================
+
+    if tcb(19)>0
+        rem --- Escape handler
+        if and(chr(tcb(19)),$08$)=$08$
+            release
+        else
+            setesc std_error
+            return
+        endif
+    endif
+
+    rd_err_text$=""
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$) seterr 0; setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+    if pgm(-1)<>pgm(-2) status=999; exit 
+    release
+
+rem ==============================================
+std_exit: rem --- Standard program end
+rem ==============================================
+
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+
+    release
+
+	
+
