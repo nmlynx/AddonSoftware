@@ -84,7 +84,7 @@ rem ==============================================
 
 	declare Dashboard aonDashboard!
 
-	aonDashboard! = new Dashboard("AddonSoftware Dashboard")
+	aonDashboard! = new Dashboard("Addon","AddonSoftware Dashboard")
 
 	return
 
@@ -95,7 +95,7 @@ rem ==============================================
 
 	declare DashboardCategory   acctDashboardCategory!
 
-	acctDashboardCategory! = aonDashboard!.addDashboardCategory("Accounting")
+	acctDashboardCategory! = aonDashboard!.addDashboardCategory("Accounting","Accounting")
 
 rem ==============================================
 rem --- create a yearly GL totals grid
@@ -104,7 +104,8 @@ rem ==============================================
 	dashboard_menu_id$="ADD_GLINCTOT_GRD"
 	gosub get_security
 	if allow_widget$="Y"
-		name$ = "GL Income Acct. Totals"
+		name$="GLINCTOT_GRD"
+		title$ = "GL Income Account Totals"
 		previewText$="General Ledger Income account totals by year displayed in a grid"
 		previewImage$=preview_path$+"glinctot_grd.png"
 		connectString$=aon_url$
@@ -116,7 +117,7 @@ rem ==============================================
 
 		sql$="CALL GLINCTOT_GRD ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
 
-		incomeGridDashboardWidget! = acctDashboardCategory!.addGridDashboardWidget(name$,previewText$,previewImage$,connectString$,sql$)
+		incomeGridDashboardWidget! = acctDashboardCategory!.addGridDashboardWidget(name$,title$,previewText$,previewImage$,connectString$,sql$)
 		gridWidget!=incomeGridDashboardWidget!.getWidget()
 		gridWidget!.setColumnAlignment(3,GridWidget.getHORIZONTAL_ALIGNMENT_RIGHT())
 		gridWidget!.setColumnAlignment(0,GridWidget.getHORIZONTAL_ALIGNMENT_LEFT())
@@ -153,7 +154,8 @@ rem ==============================================
 	dashboard_menu_id$="ADD_GLCMPINC_BAR"
 	gosub get_security
 	if allow_widget$="Y"
-		name$ = "Income Comparison"
+		name$="GLCMPINC_BAR"
+		title$ = "Income Comparison"
 		previewText$="Income comparison"
 		previewImage$=preview_path$+"glcmpinc_bar.png"
 		domainTitle$ = ""
@@ -171,7 +173,7 @@ rem ==============================================
 
 		sql$="CALL GLCMPINC_BAR ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
 
-		incomeComparisonBarDashboardWidget! = acctDashboardCategory!.addBarChartDashboardWidget(name$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		incomeComparisonBarDashboardWidget! = acctDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		incCmpWidget!=incomeComparisonBarDashboardWidget!.getWidget()
 		incCmpWidget!.setFontScalingFactor(0.45)
 		incCmpWidget!.setChartColors("#00a4d9","#7fbe27",1.0,1.0); rem Colors for By Period
@@ -212,7 +214,8 @@ rem ==============================================
 	dashboard_menu_id$="ADD_GLBNKBAL_BAR"
 	gosub get_security
 	if allow_widget$="Y"
-		name$ = "Bank Account Balances"
+		name$="GLBNKBAL_BAR"
+		title$ = "Bank Account Balances"
 		previewText$="Bank account balances displayed in a bar chart"
 		previewImage$=preview_path$+"glbnkbal_bar.png"
 		chartTitle$ = ""
@@ -228,7 +231,7 @@ rem ==============================================
 
 		sql$="CALL GLBNKBAL_BAR ('"+firm_id$+"', '"+include_type$+"', '"+masks$+"', '"+barista_wd$+"')"
 		
-		bankacctBarChartDashboardWidget! = acctDashboardCategory!.addBarChartDashboardWidget(name$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		bankacctBarChartDashboardWidget! = acctDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		acctWidget! = bankacctBarChartDashboardWidget!.getWidget()
 		acctWidget!.setDomainLabelAngle(1)
 		acctWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
@@ -244,7 +247,8 @@ rem ==============================================
 	dashboard_menu_id$="ADD_GLBNKBAL_RNG"
 	gosub get_security
 	if allow_widget$="Y"
-		name$ = "Bank Balances RingChart"
+		name$="GLBNKBAL_RNG"
+		title$ = "Bank Balances RingChart"
 		previewText$="Bank account balances displayed in a pie chart"
 		previewImage$=preview_path$+"glbnkbal_rng.png"
 		chartTitle$ = ""
@@ -258,7 +262,7 @@ rem ==============================================
 
 		sql$="CALL GLBNKBAL_RNG ('"+firm_id$+"', '"+include_type$+"', '"+str(min_amt)+"', '"+masks$+"', '"+barista_wd$+"')"
 
-		bankacctRingChartDashboardWidget! = acctDashboardCategory!.addRingChartDashboardWidget(name$,previewText$,previewImage$,chartTitle$,flat,legend,connectString$,sql$)
+		bankacctRingChartDashboardWidget! = acctDashboardCategory!.addRingChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,flat,legend,connectString$,sql$)
 		
 		rem Modify the chart
 		ringChartWidget! = bankacctRingChartDashboardWidget!.getWidget()
@@ -287,7 +291,8 @@ rem ==============================================
 	dashboard_menu_id$="ADD_GLEXPTOT_PIE"
 	gosub get_security
 	if allow_widget$="Y"
-		name$ = "YTD Expense Breakdown"
+		name$="GLEXPTOT_PIE"
+		title$ = "YTD Expense Breakdown"
 		previewText$="Expense year to date breakdown displayed in a pie chart"
 		previewImage$=preview_path$+"glexptot_pie.png"
 		chartTitle$ = ""
@@ -303,7 +308,7 @@ rem ==============================================
 		
 		sql$="CALL GLEXPTOT_PIE ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
 	
-		expPieChartDashboardWidget! = acctDashboardCategory!.addPieChartDashboardWidget(name$,previewText$,previewImage$,chartTitle$,flat,legend,connectString$,sql$)
+		expPieChartDashboardWidget! = acctDashboardCategory!.addPieChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,flat,legend,connectString$,sql$)
 		expPieWidget! = expPieChartDashboardWidget!.getWidget()
 		expPieWidget!.setChartColors("#860102,#cc2200,#e14900,#fe7600,#ff9c01,#fdce2e")
 		expPieWidget!.setGradientShadingAmount(.05)
@@ -336,7 +341,7 @@ rem ==============================================
 	
 	declare DashboardCategory   salesDashboardCategory!
 	
-	salesDashboardCategory! = aonDashboard!.addDashboardCategory("Sales")
+	salesDashboardCategory! = aonDashboard!.addDashboardCategory("Sales","Sales")
 rem	salesDashboardCategory!.setMinWidgetWidth(500)
 rem	salesDashboardCategory!.setMaxWidgetWidth(2000)
 
@@ -347,7 +352,8 @@ rem ==============================================
 	dashboard_menu_id$="ADD_SATOPCST_BAR"
 	gosub get_security
 	if allow_widget$="Y"
-		name$ = "Top Customers"
+		name$="SATOPCST_BAR"
+		title$ = "Top Customers"
 		previewText$="Top 5 Customers displayed in a bar chart"
 		previewImage$=preview_path$+"satopcst_bar.png"
 		chartTitle$ = ""
@@ -364,7 +370,7 @@ rem ==============================================
 	
 		sql$="CALL SATOPCST_BAR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
 		
-		bankacctBarChartDashboardWidget! = salesDashboardCategory!.addBarChartDashboardWidget(name$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		bankacctBarChartDashboardWidget! = salesDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		acctWidget! = bankacctBarChartDashboardWidget!.getWidget()
 		acctWidget!.setFontScalingFactor(0.45)
 		acctWidget!.setDomainLabelAngle(1)
@@ -426,7 +432,8 @@ rem - establish the month
 
 		month$ = ending$(1,2)
 
-		name$ = "Sales by Customer Type"
+		name$="SLSBYCST_JAS"
+		title$ = "Sales by Customer Type"
 		previewText$="Drilldown sales report for month/year displayed in a jasper viewer"
 		previewImage$=preview_path$+"slsbycst_jas.png"
 		reportFile$ = report_path$+"SalesByCustType.jasper"
@@ -443,7 +450,7 @@ rem - establish the month
 
 		report!.fill()
 
-		salesJasperViewerDashboardWidget! = salesDashboardCategory!.addJasperViewerDashboardWidget(name$,previewText$,previewImage$,report!)
+		salesJasperViewerDashboardWidget! = salesDashboardCategory!.addJasperViewerDashboardWidget(name$,title$,previewText$,previewImage$,report!)
 		
 		salesJasperViewerWidget!=salesJasperViewerDashboardWidget!.getWidget()
 		salesJasperViewerWidget!.setCallback(JasperViewerWidget.getSAVE_MENU_BUTTON_NAME(),BBjMenuButton.ON_BUTTON_PUSH,pgm(-2) + "::OnSLSBYCST_JASFileSave")
