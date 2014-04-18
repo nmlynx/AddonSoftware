@@ -23,6 +23,7 @@ rem --- Addon dashboards
 
 	use java.awt.Color
 	use java.awt.Font
+	use java.util.HashMap
 
 	seterr std_error
 	setesc std_error
@@ -54,6 +55,7 @@ rem --- initialization
 	gosub get_connectstring
 	gosub resolve_paths
 	gosub init_prog_meter
+	gosub get_installed_modules
 	
 rem --- create dashboard, tabs, widgets
 
@@ -103,7 +105,7 @@ rem ==============================================
 
 	dashboard_menu_id$="ADD_GLINCTOT_GRD"
 	gosub get_security
-	if allow_widget$="Y"
+	if allow_widget$="Y" and installMap!.get("GL")="Y"
 		name$="GLINCTOT_GRD"
 		title$ = "GL Income Account Totals"
 		previewText$="General Ledger Income account totals by year displayed in a grid"
@@ -124,7 +126,7 @@ rem ==============================================
 
 		rem Create Filters 
 		filterName$ = "Income Totals - Time Frame"
-		filterHashMap! = new java.util.HashMap()
+		filterHashMap! = new HashMap()
 		filterHashMap!.put("A","Current Year Actual")
 		filterHashMap!.put("B","Current Year Budget")
 		filterHashMap!.put("C","Prior Year Actual")
@@ -153,7 +155,7 @@ rem ==============================================
 
 	dashboard_menu_id$="ADD_GLCMPINC_BAR"
 	gosub get_security
-	if allow_widget$="Y"
+	if allow_widget$="Y" and installMap!.get("GL")="Y"
 		name$="GLCMPINC_BAR"
 		title$ = "Income Comparison"
 		previewText$="Income comparison"
@@ -182,7 +184,7 @@ rem ==============================================
 		rem Create Filters 
 		filterName$ = "Compare"
 
-		filterHashMap! = new java.util.HashMap()
+		filterHashMap! = new HashMap()
 		filterHashMap!.put("A","Current/Prior")
 		filterHashMap!.put("C","Current/Next")
 		filterHashMap!.put("E","Current/Prior/Next")
@@ -194,7 +196,7 @@ rem ==============================================
 		filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnGLCMPINC_BARFilterSelect")
 
 		filterName$ = "PerYear"
-		filterHashMap! = new java.util.HashMap()
+		filterHashMap! = new HashMap()
 		filterHashMap!.put("0","By Period")
 		filterHashMap!.put("1","By Year")
 		
@@ -213,7 +215,7 @@ rem ==============================================
 
 	dashboard_menu_id$="ADD_GLBNKBAL_BAR"
 	gosub get_security
-	if allow_widget$="Y"
+	if allow_widget$="Y" and installMap!.get("GL")="Y"
 		name$="GLBNKBAL_BAR"
 		title$ = "Bank Account Balances"
 		previewText$="Bank account balances displayed in a bar chart"
@@ -246,7 +248,7 @@ rem ==============================================
 
 	dashboard_menu_id$="ADD_GLBNKBAL_RNG"
 	gosub get_security
-	if allow_widget$="Y"
+	if allow_widget$="Y" and installMap!.get("GL")="Y"
 		name$="GLBNKBAL_RNG"
 		title$ = "Bank Balances RingChart"
 		previewText$="Bank account balances displayed in a pie chart"
@@ -273,7 +275,7 @@ rem ==============================================
 	 
 		rem Create Filters 
 		filterName$ = "Bank Balances RingChart - TimeFrame"
-		filterHashMap! = new java.util.HashMap()
+		filterHashMap! = new HashMap()
 		filterHashMap!.put("A","Current year")
 		filterHashMap!.put("C","Previous year")
 		toolTip$ = "Select time frame"
@@ -290,7 +292,7 @@ rem ==============================================
 
 	dashboard_menu_id$="ADD_GLEXPTOT_PIE"
 	gosub get_security
-	if allow_widget$="Y"
+	if allow_widget$="Y" and installMap!.get("GL")="Y"
 		name$="GLEXPTOT_PIE"
 		title$ = "YTD Expense Breakdown"
 		previewText$="Expense year to date breakdown displayed in a pie chart"
@@ -351,7 +353,7 @@ rem ==============================================
 
 	dashboard_menu_id$="ADD_SATOPCST_BAR"
 	gosub get_security
-	if allow_widget$="Y"
+	if allow_widget$="Y" and installMap!.get("SA")="Y"
 		name$="SATOPCST_BAR"
 		title$ = "Top Customers"
 		previewText$="Top 5 Customers displayed in a bar chart"
@@ -387,7 +389,7 @@ rem ==============================================
 
 	dashboard_menu_id$="ADD_SLSBYCST_JAS"
 	gosub get_security
-	if allow_widget$="Y"
+	if allow_widget$="Y" and installMap!.get("OP")="Y"
 		call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",custIdMask$,0,custIdLen
 		custIdMaskLen = len(custIdMask$)
 
@@ -873,6 +875,22 @@ rem ==============================================
     endif
 
     return
+
+rem ==============================================
+get_installed_modules:rem --- which apps installed
+rem ==============================================
+
+	installMap! = new HashMap()
+	modules$="ADAPARBMGLIVMPOPPOPRSASF"
+
+    dim info$[20]
+    for i=1 to len(modules$) step 2
+        mod$=modules$(i,2)
+        call stbl("+DIR_PGM")+"adc_application.aon",mod$,info$[all]
+        installMap!.put(mod$,info$[20])
+    next i
+	
+	return
 
 rem ==============================================
 std_error: rem --- Standard error handler
