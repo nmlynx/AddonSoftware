@@ -214,11 +214,6 @@
         </copy>
 
         <!-- Addon Docs -->
-        <mkdir  dir="${addon.bbj.dir}/help/WebHelp"/>
-        <untar src="${docpub.dir}/docaddonhtml.tar.gz"
-               compression="gzip"
-               dest="${addon.bbj.dir}/help/WebHelp">
-        </untar>
 
         <!-- The addon archive has a AddonHelp.jar placeholder file, delete it -->
         <delete file="${addon.bbj.dir}/help/AddonHelp.jar"/>
