@@ -1,14 +1,14 @@
 rem ----------------------------------------------------------------------------
-rem Program: SATOPCST_BAR.prc  
+rem Program: SATOPREP_PIC.prc  
 rem Description: Stored Procedure to build a resultset that aon_dashboard.bbj
 rem              can use to populate the given dashboard widget
 rem 
-rem              Data returned is current year SA totals for top 5 customers
-rem              based on Sales stored in SA and is used by 
-rem              the "Top 5 Customers" Bar widget
+rem              Data returned is current year SA totals for salesreps
+rem              for TOP x reps based on Sales stored in SA and is used by 
+rem              the "Top Salesreps Pie" stacked bar widget
 rem
 rem    ****  NOTE: Initial effort restricts the year to '2014' and the
-rem    ****        number of customers to 5.
+rem    ****        number of reps to 5.
 rem    ****        But code is written with conditionals for possible 
 rem    ****        future enhancements
 rem
@@ -20,11 +20,11 @@ rem Copyright BASIS International Ltd.
 rem ----------------------------------------------------------------------------
 
 GOTO SKIP_DEBUG
-Debug$= "C:\Dev_aon\aon\_SPROC-Debug\SATOPCST_BAR_DebugPRC.txt"	
+Debug$= "C:\Dev_aon\aon\_SPROC-Debug\SATOPREP_PIE_DebugPRC.txt"	
 string Debug$
-DebugChan=unt
-open(DebugChan)Debug$	
-write(DebugChan)"Top of SATOPCST_BAR "
+debugchan=unt
+open(debugchan)Debug$	
+write(debugchan)"Top of SATOPREP_PIE "
 SKIP_DEBUG:
 
 seterr sproc_error
@@ -46,7 +46,7 @@ rem --- Get the IN parameters used by the procedure
 	max_bars=5; rem Max number of bars to show on widget
 		
 	year$ = sp!.getParameter("YEAR")
-	num_to_list = num(sp!.getParameter("NUM_TO_LIST")); rem Number of customers to list
+	num_to_list = num(sp!.getParameter("NUM_TO_LIST")); rem Number of salesreps to list
 	if num_to_list=0 or num_to_list>max_bars
 		num_to_list=max_bars; rem default to Current Year Actual
 	endif
@@ -76,11 +76,10 @@ rem --- masks$ will contain pairs of fields in a single string mask_name^mask|
 rem --- Get masks
 
 	ar_amt_mask$=fngetmask$("ar_amt_mask","$###,###,##0.00-",masks$)	
-	ar_cust_mask$=fngetmask$("cust_mask","UU-UUUU",masks$)		
 	
 rem --- create the in memory recordset for return
 
-	dataTemplate$ = "Dummy:C(1),CUSTOMER:C(25*),TOTAL:N(10)"
+	dataTemplate$ = "SALESREP:C(25*),TOTAL:N(10)"
 
 	rs! = BBJAPI().createMemoryRecordSet(dataTemplate$)
 	
@@ -88,36 +87,37 @@ rem --- Build the SELECT statement to be returned to caller
 
 	sql_prep$ = ""
 	
-rem	sql_prep$ = sql_prep$+"SELECT TOP "+str(num_to_list)+" STR(cust.customer_id,'"+cust_mask$+"')+'  '+LEFT(cust.customer_name,15) AS customer"
-	sql_prep$ = sql_prep$+"SELECT TOP "+str(num_to_list)+" cust.customer_id, LEFT(cust.customer_name,15) AS customer_name"
-	sql_prep$ = sql_prep$+"        ,ROUND(SUM(cust.total),2) AS total "
-	sql_prep$ = sql_prep$+"FROM (SELECT  "
-	sql_prep$ = sql_prep$+"		 c.customer_id "
-	sql_prep$ = sql_prep$+"		,m.customer_name "
-	sql_prep$ = sql_prep$+"		,(c.total_sales_01 "
-	sql_prep$ = sql_prep$+"		 +c.total_sales_02 "
-	sql_prep$ = sql_prep$+"		 +c.total_sales_03 "
-	sql_prep$ = sql_prep$+"		 +c.total_sales_04 "
-	sql_prep$ = sql_prep$+"		 +c.total_sales_05 "
-	sql_prep$ = sql_prep$+"		 +c.total_sales_06 "
-	sql_prep$ = sql_prep$+"		 +c.total_sales_07 "
-	sql_prep$ = sql_prep$+"		 +c.total_sales_08 "
-	sql_prep$ = sql_prep$+"		 +c.total_sales_09 "
-	sql_prep$ = sql_prep$+"		 +c.total_sales_10 "
-	sql_prep$ = sql_prep$+"		 +c.total_sales_11 "
-	sql_prep$ = sql_prep$+"		 +c.total_sales_12 "
-	sql_prep$ = sql_prep$+"		 +c.total_sales_13 "
-	sql_prep$ = sql_prep$+"		  ) AS total "
-	sql_prep$ = sql_prep$+"      FROM sam_customer c "
-	sql_prep$ = sql_prep$+"      LEFT JOIN arm_custmast m "
-	sql_prep$ = sql_prep$+"      ON m.firm_id=c.firm_id "
-	sql_prep$ = sql_prep$+"	  AND m.customer_id=c.customer_id "
-	sql_prep$ = sql_prep$+"      WHERE c.firm_id='"+firm_id$+"' "
-	sql_prep$ = sql_prep$+"      AND c.year='"+year$+"' "
-	sql_prep$ = sql_prep$+"     ) cust	 "
-	sql_prep$ = sql_prep$+"GROUP BY cust.customer_id,cust.customer_name "
-	sql_prep$ = sql_prep$+"ORDER BY total DESC "
-	
+	sql_prep$ = sql_prep$+"SELECT TOP "+str(num_to_list)+" rep.slspsn_code "
+	sql_prep$ = sql_prep$+"              ,rep.rep_name "
+	sql_prep$ = sql_prep$+"              ,ROUND(SUM(rep.total),2) AS total "
+	sql_prep$ = sql_prep$+"   FROM "
+	sql_prep$ = sql_prep$+"     (SELECT  "
+	sql_prep$ = sql_prep$+"          r.slspsn_code "
+	sql_prep$ = sql_prep$+"	   	    ,c.code_desc AS rep_name "
+	sql_prep$ = sql_prep$+"	        ,(r.total_sales_01 "
+	sql_prep$ = sql_prep$+"		     +r.total_sales_02 "
+	sql_prep$ = sql_prep$+"		     +r.total_sales_03 "
+	sql_prep$ = sql_prep$+"		     +r.total_sales_04 "
+	sql_prep$ = sql_prep$+"		     +r.total_sales_05 "
+	sql_prep$ = sql_prep$+"		     +r.total_sales_06 "
+	sql_prep$ = sql_prep$+"		     +r.total_sales_07 "
+	sql_prep$ = sql_prep$+"		     +r.total_sales_08 "
+	sql_prep$ = sql_prep$+"		     +r.total_sales_09 "
+	sql_prep$ = sql_prep$+"		     +r.total_sales_10 "
+	sql_prep$ = sql_prep$+"		     +r.total_sales_11 "
+	sql_prep$ = sql_prep$+"		     +r.total_sales_12 "
+	sql_prep$ = sql_prep$+"		     +r.total_sales_13 "
+	sql_prep$ = sql_prep$+"		      ) AS total "
+	sql_prep$ = sql_prep$+"		 FROM sam_salespsn r "; rem r for rep
+	sql_prep$ = sql_prep$+"      LEFT JOIN arc_salecode c "; rem c for code
+	sql_prep$ = sql_prep$+"        ON c.firm_id=r.firm_id "
+	sql_prep$ = sql_prep$+"       AND c.slspsn_code=r.slspsn_code "
+	sql_prep$ = sql_prep$+"      WHERE r.firm_id='"+firm_id$+"' AND r.year='"+year$+"' "
+	sql_prep$ = sql_prep$+"     ) AS rep	 "
+	sql_prep$ = sql_prep$+"   GROUP BY rep.slspsn_code,rep.rep_name "
+	sql_prep$ = sql_prep$+"   ORDER BY total DESC "
+write(debugchan)"sql_prep$ ="+sql_prep$ 
+
 rem --- Execute the query
 
 	sql_chan=sqlunt
@@ -131,10 +131,7 @@ rem --- Assign the SELECT results to rs!
 	while 1
 		read_tpl$ = sqlfetch(sql_chan,end=*break)
 		data! = rs!.getEmptyRecordData()
-		data!.setFieldValue("DUMMY"," ")
-rem		data!.setFieldValue("CUSTOMER",read_tpl.customer_id$) 
-		data!.setFieldValue("CUSTOMER",read_tpl.customer_name$)
-rem		str(num_to_list)+" STR(cust.customer_id,'"+cust_mask$+"')+'  '+LEFT(cust.customer_name,15) AS customer"
+		data!.setFieldValue("SALESREP",read_tpl.rep_name$)
 		data!.setFieldValue("TOTAL",str(read_tpl.total))
 		rs!.insert(data!)
 	
@@ -145,19 +142,6 @@ rem --- Tell the stored procedure to return the result set.
 	sp!.setRecordSet(rs!)
 	goto std_exit
 
-rem --- Add SELECT to sql_prep$ based on include_type/gl_record_id
-
-add_to_sql_prep:	
-		
-	sql_prep$ = sql_prep$+"SELECT '', b.gl_account as 'Account', "
-	sql_prep$ = sql_prep$+"ROUND(s.begin_amt +s.period_amt_01 +s.period_amt_02 +s.period_amt_03 +s.period_amt_04 +s.period_amt_05 +s.period_amt_06 "
-	sql_prep$ = sql_prep$+"+s.period_amt_07 +s.period_amt_08 +s.period_amt_09 +s.period_amt_10 +s.period_amt_11 +s.period_amt_12 +s.period_amt_13 ,2) as 'Total' "; rem  For Each Account' "
-	sql_prep$ = sql_prep$+"FROM glm_bankmaster b "
-	sql_prep$ = sql_prep$+"LEFT JOIN glm_acctsummary s "
-	sql_prep$ = sql_prep$+"ON b.firm_id=s.firm_id AND b.gl_account=s.gl_account "
-	sql_prep$ = sql_prep$+"WHERE b.firm_id='"+firm_id$+"' AND s.firm_id='"+firm_id$+"' AND s.record_id='"+gl_record_id$+"' "	
-	
-	return
 	
 rem --- Functions
 
