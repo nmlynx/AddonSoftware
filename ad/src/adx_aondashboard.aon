@@ -16,6 +16,7 @@ rem --- Addon dashboards
 	use ::dashboard/widget.bbj::StackedBarChartWidget
 	use ::dashboard/widget.bbj::StackedPercentageBarChartWidget
 	use ::dashboard/widget.bbj::LineChartWidget
+	use ::dashboard/widget.bbj::AreaChartWidget	
 	use ::dashboard/widget.bbj::PieChartWidget
 	use ::dashboard/widget.bbj::JasperViewerWidget
 	use ::reporting/bbjasper/bbjasper.bbj::BBJasperReport
@@ -180,6 +181,7 @@ rem ==============================================
 		incCmpWidget!.setFontScalingFactor(0.45)
 		incCmpWidget!.setChartColors("#00a4d9","#7fbe27",1.0,1.0); rem Colors for By Period
 		rem incCmpWidget!.setChartColors("#00a4d9","#46dca5",1.0,1.0); rem Colors for By Year
+		incCmpWidget!.setLabelsInBarChartColor("#ffffff")
 		
 		rem Create Filters 
 		filterName$ = "Compare"
@@ -362,7 +364,7 @@ rem ==============================================
 		domainTitle$ = ""
 		rangeTitle$ = ""
 		flat=1 
-		orientation=BarChartWidget.getORIENTATION_HORIZONTAL() 
+		orientation=BarChartWidget.getORIENTATION_VERTICAL() 
 		legend=0
 		connectString$=aon_url$
 		
@@ -372,16 +374,242 @@ rem ==============================================
 	
 		sql$="CALL SATOPCST_BAR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
 		
-		bankacctBarChartDashboardWidget! = salesDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
-		acctWidget! = bankacctBarChartDashboardWidget!.getWidget()
-		acctWidget!.setFontScalingFactor(0.45)
-		acctWidget!.setDomainLabelAngle(1)
-		acctWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
-		acctWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
+		topCustsBarChartDashboardWidget! = salesDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		topCustsWidget! = topCustsBarChartDashboardWidget!.getWidget()
+		topCustsWidget!.setFontScalingFactor(0.45)
+		topCustsWidget!.setDomainLabelAngle(1)
+		topCustsWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
+		topCustsWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 
 		gosub update_meter
 	endif
 
+
+rem ==============================================
+rem --- create SA Top Customers STACKED bar chart
+rem ==============================================
+
+	dashboard_menu_id$="ADD_SATOPCST_SBR"
+	gosub get_security
+	if allow_widget$="Y" and installMap!.get("SA")="Y"
+		name$ = "SATOPCST_SBR"
+		title$ = "Products for Top Customers"
+		previewText$="Top 5 Customers displayed in a stacked bar chart"
+		previewImage$=preview_path$+"satopcst_sbr.png"
+		chartTitle$ = ""
+		domainTitle$ = ""
+		rangeTitle$ = ""
+		flat=1 
+		orientation=BarChartWidget.getORIENTATION_HORIZONTAL() 
+		legend=1
+		connectString$=aon_url$
+		
+		rem --- params for calling SPROC
+		year$ = "2014"; rem <<============= HARDCODED =========
+		num_to_list$ = "5"; rem <<============= HARDCODED =========
+	
+		sql$="CALL SATOPCST_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+
+		topCustsSStackedBarChartDashboardWidget! = salesDashboardCategory!.addStackedBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		topCustsSWidget! = topCustsSStackedBarChartDashboardWidget!.getWidget()
+		topCustsSWidget!.setFontScalingFactor(0.45)
+		topCustsSWidget!.setDomainLabelAngle(1)
+rem		topCustsSWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
+rem		topCustsSWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
+
+		gosub update_meter
+	endif	
+
+	
+rem ==============================================
+rem --- create SA Top Salesreps STACKED bar chart
+rem ==============================================
+
+	dashboard_menu_id$="ADD_SATOPREP_SBR"
+	gosub get_security
+	if allow_widget$="Y" and installMap!.get("SA")="Y"
+		name$ = "SATOPREP_SBR"
+		title$ = "Products for Top Salesreps"
+		previewText$="Products for Top Salesreps displayed in a stacked bar chart"
+		previewImage$=preview_path$+"satoprep_sbr.png"
+		chartTitle$ = ""
+		domainTitle$ = ""
+		rangeTitle$ = ""
+		flat=1 
+		orientation=BarChartWidget.getORIENTATION_HORIZONTAL() 
+		legend=1
+		connectString$=aon_url$
+		
+		rem --- params for calling SPROC
+		year$ = "2014"; rem <<============= HARDCODED =========
+		num_to_list$ = "5"; rem <<============= HARDCODED =========
+	
+		sql$="CALL SATOPREP_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+
+		toprepSStackedBarChartDashboardWidget! = salesDashboardCategory!.addStackedBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		toprepWidget! = toprepSStackedBarChartDashboardWidget!.getWidget()
+		
+		toprepWidget!.setDomainLabelAngle(1)
+		toprepWidget!.setFontScalingFactor(0.45)
+rem		toprepWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
+rem		toprepWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
+
+		gosub update_meter
+	endif	
+
+	
+rem ==============================================
+rem --- create SA Top Salesreps pie chart
+rem ==============================================
+
+	dashboard_menu_id$="ADD_SATOPREP_PIE"
+	gosub get_security
+	if allow_widget$="Y" and installMap!.get("SA")="Y"
+		name$ = "SATOPREP_PIE"
+		title$ = "Top Salesreps"
+		previewText$="Top Salesreps displayed in a pie chart"
+		previewImage$=preview_path$+"satoprep_pie.png"
+		chartTitle$ = ""
+		flat=1 
+		legend=0
+		numSlices=8
+		connectString$=aon_url$
+		
+		rem --- params for calling SPROC
+		year$ = "2014"; rem <<============= HARDCODED =========
+		num_to_list$ = "5"; rem <<============= HARDCODED =========
+	
+		sql$="CALL SATOPREP_PIE ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+
+		toprepPPieChartDashboardWidget! = salesDashboardCategory!.addPieChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,flat,legend,connectString$,sql$)
+		toprepPWidget! = toprepPPieChartDashboardWidget!.getWidget()
+
+		toprepPWidget!.setFontScalingFactor(0.45)
+		toprepPWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
+rem		toprepPWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
+	rem toprepPWidget!.setLabelsInPieChartColor("#ffffff")
+	
+		gosub update_meter
+	endif		
+
+	
+rem ==============================================
+rem --- create SA Salesrep YTD Totals stacked bar chart
+rem ==============================================
+
+	dashboard_menu_id$="ADD_SAREPTOT_SBR"
+	gosub get_security
+	if allow_widget$="Y" and installMap!.get("SA")="Y"
+		name$ = "SAREPTOT_SBR"
+		title$ = "Products for Salesreps"
+		previewText$="Products for Salesreps displayed in a stacked bar chart"
+		previewImage$=preview_path$+"sareptot_sbr.png"
+		chartTitle$ = ""
+		domainTitle$ = ""
+		rangeTitle$ = "$ in 1000s"
+		flat=1 
+		orientation=BarChartWidget.getORIENTATION_VERTICAL() 
+		legend=1
+		connectString$=aon_url$
+		
+		rem --- params for calling SPROC
+		year$ = "2014"; rem <<============= HARDCODED =========
+		num_to_list$ = "5"; rem <<============= HARDCODED =========
+	
+		sql$="CALL SAREPTOT_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+	
+		repsalesSStackedBarChartDashboardWidget! = salesDashboardCategory!.addStackedBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		repsalesWidget! = repsalesSStackedBarChartDashboardWidget!.getWidget()
+		
+		repsalesWidget!.setDomainLabelAngle(1)
+		repsalesWidget!.setFontScalingFactor(0.45)
+rem		repsalesWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
+rem		repsalesWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
+		repsalesWidget!.setLabelsInBarChartColor("#ffffff")
+
+		gosub update_meter
+	endif		
+		
+rem =======================================
+rem --- create SA SA Top Salesrep line chart
+rem =======================================
+rem GOTO TMPSKIP_SAREPS
+	dashboard_menu_id$="ADD_SATOPREP_LIN"
+	gosub get_security
+	if allow_widget$="Y" and installMap!.get("SA")="Y"
+		name$ = "SATOPREP_LIN"
+		title$ = "Top Salesrep Totals"
+		previewText$="Top 5 Salesreps displayed in a line chart"
+		previewImage$=preview_path$+"satoprep_lin.png"
+		chartTitle$ = ""
+		domainTitle$ = ""
+		rangeTitle$ = ""
+		flat=0 
+		orientation=LineChartWidget.getORIENTATION_VERTICAL() 
+		legend=1
+		connectString$=aon_url$
+		
+		rem --- params for calling SPROC
+		year$ = "2014"; rem <<============= HARDCODED =========
+		num_to_list$ = "5"; rem <<============= HARDCODED =========. Also Note: SATOPREP_LIN sets a MAX of 5
+		include_type$ = "A"; rem Summarize at the rep-level. No others are currently implemented
+		
+		sql$="CALL SATOPREP_LIN ('"+firm_id$+"', '"+include_type$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+
+		topRepsLLineChartDashboardWidget! = salesDashboardCategory!.addLineChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		topRepsLWidget! = topRepsLLineChartDashboardWidget!.getWidget()
+		
+		topRepsLWidget!.setFontScalingFactor(0.45)
+		topRepsLWidget!.setDomainLabelAngle(1)
+rem		topRepsLWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
+rem		topRepsLWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
+
+		gosub update_meter
+
+	endif
+		
+rem =======================================
+rem --- create SA SA Top Salesrep Area chart
+rem =======================================
+
+	dashboard_menu_id$="ADD_SATOPREP_ARE"
+	gosub get_security
+	if allow_widget$="Y" and installMap!.get("SA")="Y"
+		name$ = "SATOPREP_ARE"
+		title$ = "Top Salesreps Period Totals"
+		previewText$="Top 5 Salesreps' period totals displayed in a area chart"
+		previewImage$=preview_path$+"satoprep_are.png"
+		chartTitle$ = ""
+		domainTitle$ = ""
+		rangeTitle$ = ""
+		flat=0 
+		orientation=LineChartWidget.getORIENTATION_VERTICAL() 
+		legend=1
+		connectString$=aon_url$
+		
+		rem --- params for calling SPROC
+		year$ = "2014"; rem <<============= HARDCODED =========
+		num_to_list$ = "5"; rem <<============= HARDCODED =========. Also Note: SATOPREP_ARE sets a MAX of 5
+		include_type$ = "A"; rem Summarize at the rep-level. No others are currently implemented
+		
+		sql$="CALL SATOPREP_ARE ('"+firm_id$+"', '"+include_type$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+
+		topRepsAAreaChartDashboardWidget! = salesDashboardCategory!.addAreaChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,orientation,legend,connectString$,sql$)
+		topRepsAWidget! = topRepsAAreaChartDashboardWidget!.getWidget()
+		
+		topRepsAWidget!.setFontScalingFactor(0.45)
+		topRepsAWidget!.setDomainLabelAngle(1)
+		topRepsAWidget!.setChartColors("#3300ff","#6fd37c",1.0,1.0)
+
+		achartColors! = topRepsAWidget!.getCustomChartColors()
+		ChartWidget.adjustColorVectorOpacity(achartColors!, 0.30)
+		topRepsAWidget!.setCustomChartColors(achartColors!)
+		
+		gosub update_meter
+
+	endif
+		
+	
 rem ==============================================   
 rem --- create jasper widget for Sales by Cust Type
 rem --- code copied from arr_drillDownSalesReport.aon
