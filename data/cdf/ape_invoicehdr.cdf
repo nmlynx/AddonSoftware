@@ -5,7 +5,7 @@ rem --- Displaye invoice images in the browser
 	vendor_id$ = callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
 	ap_inv_no$ = callpoint!.getColumnData("APE_INVOICEHDR.AP_INV_NO")
 
-	read record(invimage_dev, key=firm_id$+vendor_id$+ap_inv_no$, dom=*next)apm_invimage$
+	read record(invimage_dev, key=firm_id$+vendor_id$+ap_inv_no$, dom=*next)
 	while 1
 		invimage_key$=key(invimage_dev,end=*break)
 		if pos(firm_id$+vendor_id$+ap_inv_no$=invimage_key$)<>1 then break
@@ -25,7 +25,6 @@ rem --- Displaye invoice images in the browser
 				break
 		swend
 	wend
-
 
 
 [[APE_INVOICEHDR.AOPT-LIIM]]
