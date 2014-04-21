@@ -1,21 +1,274 @@
+[[APE_PAYSELECT.BSHO]]
+rem --- Disable View Images option as needed
+
+	if !callpoint!.getDevObject("use_pay_auth") or callpoint!.getDevObject("scan_docs_to")="NOT" then
+			callpoint!.setOptionEnabled("VIMG",0)
+	endif
+
+rem --- Disable Approve Invoices option as needed
+
+	if !callpoint!.getDevObject("use_pay_auth")  then
+			callpoint!.setOptionEnabled("AINV",0)
+	endif
+[[APE_PAYSELECT.AOPT-VIMG]]
+rem --- Display the images associated with the selected invoices in the grid.
+	gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
+	rowsSelected! = gridInvoices!.getSelectedRows()
+
+	rem --- Verify an invoice was selected
+	if rowsSelected!.size() = 0 then
+		callpoint!.setMessage("AD_NO_SELECTION")
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+rem --- Displaye invoice images in the browser
+	invimage_dev=fnget_dev("@APT_INVIMAGE")
+	dim invimage$:fnget_tpl$("@APT_INVIMAGE")
+	image_count =0
+	for rowCount = 0 to rowsSelected!.size()-1
+		rem --- get the row data needed
+		curr_row = num(rowsSelected!.getItem(rowCount))
+		vendor_id$ = gridInvoices!.getCellText(curr_row,3)
+		ap_inv_no$ = gridInvoices!.getCellText(curr_row,5)
+		read record(invimage_dev, key=firm_id$+vendor_id$+ap_inv_no$, dom=*next)
+		while 1
+			invimage_key$=key(invimage_dev,end=*break)
+			if pos(firm_id$+vendor_id$+ap_inv_no$=invimage_key$)<>1 then break
+			invimage$=fattr(invimage$)
+			read record(invimage_dev)invimage$
+
+			switch (BBjAPI().TRUE)
+				case invimage.scan_docs_to$="BDA"
+					rem --- Do Barista Doc Archive
+					break
+				case invimage.scan_docs_to$="GD "
+					rem --- Do Google Docs
+					BBjAPI().getThinClient().browse(cvs(invimage.doc_url$,2))
+					break
+				case default
+					rem --- Unknown ... skip
+					break
+			swend
+			image_count = image_count + 1
+		wend
+	next rowCount
+
+	msg_id$="GENERIC_OK"
+	dim msg_tokens$[1]
+	if image_count then
+		msg_tokens$[1] = str(image_count) + " "+Translate!.getTranslation("AON_IMAGES_FOUND")
+	else
+		msg_tokens$[1]=Translate!.getTranslation("AON_NO_IMAGES_FOUND")
+	endif
+	gosub disp_message
+[[APE_PAYSELECT.AOPT-AINV]]
+rem --- Approve the invoice selected in the grid
+	adm_user=fnget_dev("@ADM_USER")
+	dim adm_user$:fnget_tpl$("@ADM_USER")
+	apm_approvers=fnget_dev("@APM_APPROVERS")
+	dim apm_approvers$:fnget_tpl$("@APM_APPROVERS")
+	apt_invapproval=fnget_dev("@APT_INVAPPROVAL")
+	dim apt_invapproval$:fnget_tpl$("@APT_INVAPPROVAL")
+        wk$=fattr(apt_invapproval$,"SEQUENCE_NUM")
+        seq_no_mask$=fill(dec(wk$(10,2)),"0")
+
+	rem --- Verify current user is an approver
+	found=0
+	user$=sysinfo.user_id$
+	read record(apm_approvers,key=firm_id$ + user$,dom=*next)apm_approvers$; found=1
+	if !found then
+		rem --- Not an approver
+		callpoint!.setStatus("ABORT")
+		break
+	else
+		if !apm_approvers.check_signer and !apm_approvers.prelim_approval then
+			rem --- Not an approver
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
+
+	rem --- Get current user's name
+	read record(adm_user,key=apm_approvers.user_id$)adm_user$
+
+	rem --- Get selected grid rows, then deselect all rows
+	gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
+	rowsSelected! = gridInvoices!.getSelectedRows()
+	gridInvoices!.deselectAllCells()
+
+	if rowsSelected!.size() =  0 then
+		msg_id$="GENERIC_OK"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=Translate!.getTranslation("AON_MUST_SELECT_INVOICE_ROW")
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+	rem --- Confirm approval
+	invCount = rowsSelected!.size() 
+	if apm_approvers.prelim_approval$ = "Y" then
+		msg_id$="AP_INV_PAY_REVWD"
+	else
+		msg_id$="AP_INV_PAY_APPVD"
+	endif
+	dim msg_tokens$[1]
+	if invCount > 1 then 
+		msg_tokens$[1] = Translate!.getTranslation("AON_THESE")+" "+str(invCount)+ " "+Translate!.getTranslation("AON_INVOICES")
+	else
+		msg_tokens$[1] = Translate!.getTranslation("AON_THIS")+" "+Translate!.getTranslation("AON_INVOICE")
+	endif
+	gosub disp_message
+	if msg_opt$<>"Y" then
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+	rem --- Get grid row background colors
+	gosub get_grid_back_colors
+
+	rem --- Get the approval vector
+	userNamespace! = BBjAPI().getExistingNamespace(user$ + ".paymentSelect")	
+	approvalsEntered! = userNamespace!.getValue("approvalsEntered")
+
+	rem --- Process each selected row
+	for item = 0 to rowsSelected!.size() - 1
+		rem --- Get needed data for this row
+		curr_row = num(rowsSelected!.getItem(item))
+		vendor_id$ = gridInvoices!.getCellText(curr_row,3)
+		vendor_name$ = gridInvoices!.getCellText(curr_row,4)
+		ap_inv_no$ = gridInvoices!.getCellText(curr_row,5)
+		inv_amt  = num(gridInvoices!.getCellText(curr_row,9))
+		thisVendor_total = cast(BBjNumber, vendorTotalsMap!.get(vendor_id$))
+		gosub get_approval_status	
+
+		rem --- Record approval
+		dim apt_invapproval$:fattr(apt_invapproval$)
+		apt_invapproval.firm_id$ = firm_id$
+		apt_invapproval.vendor_id$ = vendor_id$
+		apt_invapproval.ap_inv_no$ = ap_inv_no$
+		apt_invapproval.sequence_num$ = str(sequence_num + 1:"seq_no_mask$")
+		apt_invapproval.approval_type$ = ""
+		apt_invapproval.user_id$ = user$
+		apt_invapproval.name$ = adm_user.name$
+		apt_invapproval.appv_timestamp$ = date(0:"%Y%Mz%Dz %Hz:%mz:%sz")
+
+		rem --- Not reviewed, and user is not a reviewer
+		if !reviewed and !apm_approvers.prelim_approval then
+			continue
+		endif
+
+		rem --- Not reviewed, and user is a reviewer
+		if !reviewed and apm_approvers.prelim_approval then
+			rem --- Set approval type
+			apt_invapproval.approval_type$ = "R"
+
+			rem --- Update approvalsEntered! and grid row background color
+			apt_invapproval! = BBjAPI().makeTemplatedString(fattr(apt_invapproval$))
+			apt_invapproval!.setString(apt_invapproval$)
+			approvalsEntered!.addItem(apt_invapproval!)
+			gridInvoices!.setRowBackColor(curr_row, reviewedColor!)
+			continue
+		endif	
+
+		rem --- Not approved, and user is not an approver
+		if !approved and !apm_approvers.check_signer then
+			continue
+		endif
+
+		rem --- Not approved, and user is an approver
+		if !approved and apm_approvers.check_signer then
+			rem --- Set approval type
+			apt_invapproval.approval_type$ = "S"
+
+			rem --- Update approvalsEntered! and grid row background color
+			apt_invapproval! = BBjAPI().makeTemplatedString(fattr(apt_invapproval$))
+			apt_invapproval!.setString(apt_invapproval$)
+			approvalsEntered!.addItem(apt_invapproval!)
+			approved = approved + 1			
+			gosub getInvoiceRowApprovalStatus
+			continue
+		endif	
+
+		rem --- One approval by this user
+		if approved = 1 and approved_by$ = user$ then
+			continue
+		endif
+
+		rem --- One approval, and less than threshhold for two approvals
+		if approved = 1 and thisVendor_total <= callpoint!.getDevObject("two_sig_amt") then
+			continue
+		endif
+
+		rem --- One approval, over threshhold for two approvals,  and user is an approver
+		if approved = 1 and thisVendor_total >= threshhold and apm_approvers.check_signer then
+			rem --- Set approval type
+			apt_invapproval.approval_type$ = "S"
+
+			rem --- Update approvalsEntered! and grid row background color
+			apt_invapproval! = BBjAPI().makeTemplatedString(fattr(apt_invapproval$))
+			apt_invapproval!.setString(apt_invapproval$)
+			approvalsEntered!.addItem(apt_invapproval!)
+			approved = approved + 1			
+			gosub getInvoiceRowApprovalStatus
+			continue
+		endif	
+	next item
+[[APE_PAYSELECT.BEND]]
+rem --- Payment Authorization may need to send emails
+	if callpoint!.getDevObject("use_pay_auth") then
+		rem --- Get the approval vector
+		userNamespace! = BBjAPI().getExistingNamespace(sysinfo.user_id$ + ".paymentSelect")	
+		approvalsEntered! = userNamespace!.getValue("approvalsEntered")
+
+		if approvalsEntered!.size() > 0 then
+			msg_id$="AP_PAYSELECT_EXIT "
+			gosub disp_message
+			if msg_opt$<>"Y"then
+				rem --- Abort the exit
+				callpoint!.setStatus("ABORT")
+				break
+			else
+				gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
+rem wgh ... AFTER callpoint ... stopped here
+rem wgh ...				call "notify_apprv_exit.src", firm_id$, sysinfo.user_id$, gridInvoices!
+			endif
+		endif
+	endif
 [[APE_PAYSELECT.AOPT-DELA]]
-rem --- Turn all selected invoices off
-
-	on_value$="N"
-	gosub set_value
+rem --- Always clear all selections when using Payment Authorization 
+	if callpoint!.getDevObject("use_pay_auth") then
+		rem --- Ensure that no row is selected
+		gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
+		gridInvoices!.deselectAllCells()
+	else
+		rem --- Turn all selected invoices off
+		on_value$="N"
+		gosub set_value
+	endif
 [[APE_PAYSELECT.AOPT-SELA]]
-rem --- Turn all selected invoices on
-
-	on_value$="Y"
-	gosub set_value
+rem --- Always select all invoices when using Payment Authorization 
+	if callpoint!.getDevObject("use_pay_auth") then
+		rem --- Ensure that all rows are selected
+		gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
+		numrows = gridInvoices!.getNumRows()
+		rowsToSelect! = BBjAPI().makeVector()
+		if numrows > 0 then
+			for row = 0 to numrows - 1
+				rowsToSelect!.add(row)
+			next row
+			gridInvoices!.setSelectedRows(rowsToSelect!)
+		endif
+	else
+		rem --- Turn all selected invoices on
+		on_value$="Y"
+		gosub set_value
+	endif
 [[APE_PAYSELECT.ARAR]]
 rem --- If mult AP types = N, disable AP Type field
 
-	aps_params=fnget_dev("APS_PARAMS")
-	dim aps_params$:fnget_tpl$("APS_PARAMS")
-	read record(aps_params, key=firm_id$+"AP00", dom=std_missing_params) aps_params$
-
-	if aps_params.multi_types$<>"Y" then 
+	if callpoint!.getDevObject("multi_types")<>"Y" then 
 		callpoint!.setColumnEnabled("APE_PAYSELECT.AP_TYPE", 0)
 	endif
 
@@ -52,10 +305,219 @@ rem --- Set filters on grid
 	gosub filter_recs
 [[APE_PAYSELECT.<CUSTOM>]]
 rem ==========================================================================
+load_Invoice_Approval_Status: rem --- Set grid row background colors and selections
+	rem --- Only called from AWIN, so doesn't need to use approvalsEntered! because none have been entered.
+rem ==========================================================================
+	rem --- Shouldn't get here unless using Payment Authorization.
+	if !callpoint!.getDevObject("use_pay_auth")  then return
+
+	rem --- Get grid row background colors
+	gosub get_grid_back_colors
+
+	rem --- HashMap to hold invoice totals for each vendor
+	vendorTotalsMap!=new java.util.HashMap()
+	callpoint!.setDevObject("vendorTotalsMap",vendorTotalsMap!)
+
+	rem --- Total invoices on grid by vendor
+	numrows = gridInvoices!.getNumRows()
+	if numrows > 0 then
+		for row = 0 to numrows-1
+			vendor_id$ = gridInvoices!.getCellText(row,3)
+			inv_amt  = num(gridInvoices!.getCellText(row,9))
+			if vendorTotalsMap!.containsKey(vendor_id$) then
+				vendorTotalsMap!.put(vendor_id$, inv_amt+cast(BBjNumber, vendorTotalsMap!.get(vendor_id$)))
+			else
+				vendorTotalsMap!.put(vendor_id$, inv_amt)
+			endif
+		next row
+	endif
+
+	rem --- Update invoice selections, and grid row background color
+	if numrows > 0 then
+		for row = 0 to numrows-1
+			vendor_id$ = gridInvoices!.getCellText(row,3)
+			vendor_name$ = gridInvoices!.getCellText(row,4)
+			ap_inv_no$ = gridInvoices!.getCellText(row,5)
+			inv_amt  = num(gridInvoices!.getCellText(row,9))
+			thisVendor_total = cast(BBjNumber, vendorTotalsMap!.get(vendor_id$))
+			gosub get_approval_status	
+
+			rem --- Update grid row backgound color
+			selected = gridInvoices!.getCellState(row,0)
+			gridInvoices!.setSelectedRow(row)
+			gridInvoices!.setRowBackColor(row, fullyApproved!)
+			if reviewed =1 and approved = 0 then
+				rem --- Reviewed and no approvals
+				gridInvoices!.setRowBackColor(row, reviewedColor!)
+			else
+				rem --- Reviewd and at least one approval
+				if approved = 1 and thisVendor_total > callpoint!.getDevObject("two_sig_amt") then
+					rem --- Second approval needed
+					gridInvoices!.setRowBackColor(row, partiallyApproved!)
+				endif
+			endif
+
+			rem --- Set payment selection based on approval state
+			gosub set_payment_selection
+		next row
+
+		rem --- Ensure that there are no rows selected
+		gridInvoices!.deselectAllCells()
+	endif
+
+	return
+
+rem ==========================================================================
+get_approval_status: rem --- Check Approval Status of an invoice
+rem ==========================================================================
+	rem --- Shouldn't get here unless using Payment Authorization.
+	if !callpoint!.getDevObject("use_pay_auth")  then return
+
+	apt_invapproval=fnget_dev("@APT_INVAPPROVAL")
+	dim apt_invapproval$:fnget_tpl$("@APT_INVAPPROVAL")
+	approval_list$=Translate!.getTranslation("AON_INVOICE")+": "+cvs(ap_inv_no$,3)
+	approval_list$=approval_list$+" "+Translate!.getTranslation("AON_FROM_")+cvs(vendor_name$,3) 
+	approval_list$=approval_list$+" "+Translate!.getTranslation("AON_FOR_")+cvs(str(inv_amt:callpoint!.getDevObject("ap_a_mask")),3) + $0A$
+	reviewed=0
+	approved=0
+	sequence_num = -1
+	approved_by$ = ""
+
+	rem --- Check the table first
+	read record(apt_invapproval, key=firm_id$ + vendor_id$ + ap_inv_no$,dom=*next)apt_invapproval$
+	while 1
+		invapproval_key$=key(apt_invapproval,end=*break)
+		if pos(firm_id$ + vendor_id$ + ap_inv_no$ = invapproval_key$)<>1 then break
+		read record(apt_invapproval)apt_invapproval$
+		sequence_num = num(apt_invapproval.sequence_num$)
+		if apt_invapproval.approval_type$ = "R" then
+			reviewed=1
+			approval_list$ = approval_list$ + Translate!.getTranslation("AON_REVIEWED_BY") + ": " + cvs(apt_invapproval.user_id$,3) + " "
+			approval_list$ = approval_list$ + cvs(apt_invapproval.name$,3) + " "
+			ts$ = cvs(apt_invapproval.appv_timestamp$,3)
+			ts$ = ts$(5,2) + "/" + ts$(7,2) + "/" + ts$(1,4) + ts$(9)
+			approval_list$ = approval_list$ + ts$ + $0A$
+		else
+			if apt_invapproval.approval_type$ = "S" then
+				approved = approved + 1
+				approved_by$ = apt_invapproval.user_id$
+				approval_list$ = approval_list$ + Translate!.getTranslation("AON_APPROVED_BY") + ": " + cvs(apt_invapproval.user_id$,3) + " "
+				approval_list$ = approval_list$ + cvs(apt_invapproval.name$,3) + " "
+				ts$ = cvs(apt_invapproval.appv_timestamp$,3)
+				ts$ = ts$(5,2) + "/" + ts$(7,2) + "/" + ts$(1,4) + ts$(9)
+				approval_list$ = approval_list$ + ts$ + $0A$
+			endif
+		endif
+	wend
+
+	rem --- Check the vector
+	userNamespace! = BBjAPI().getExistingNamespace(sysinfo.user_id$ + ".paymentSelect")	
+	approvalsEntered! = userNamespace!.getValue("approvalsEntered")
+	if approvalsEntered!.size() > 0 then
+		for ouritem = 0 to approvalsEntered!.size() - 1
+			apt_invapproval! = approvalsEntered!.getItem(ouritem)
+			apt_invapproval$ = apt_invapproval!.getString()
+			if firm_id$ + vendor_id$ + ap_inv_no$ <> apt_invapproval.firm_id$ + apt_invapproval.vendor_id$ + apt_invapproval.ap_inv_no$ then 
+				continue
+			endif
+			if apt_invapproval.approval_type$ = "R" then
+				reviewed=1
+				approval_list$ = approval_list$ + Translate!.getTranslation("AON_REVIEWED_BY") + ": " + cvs(apt_invapproval.user_id$,3) + " "
+				approval_list$ = approval_list$ + cvs(apt_invapproval.name$,3) + " "
+				ts$ = cvs(apt_invapproval.appv_timestamp$,3)
+				ts$ = ts$(5,2) + "/" + ts$(7,2) + "/" + ts$(1,4) + ts$(9)
+				approval_list$ = approval_list$ + ts$ + $0A$
+			else
+				if apt_invapproval.approval_type$ = "S" then
+					approved = approved + 1
+					approved_by$ = apt_invapproval.user_id$
+					approval_list$ = approval_list$ + Translate!.getTranslation("AON_APPROVED_BY") + ": " + cvs(apt_invapproval.user_id$,3) + " "
+					approval_list$ = approval_list$ + cvs(apt_invapproval.name$,3) + " "
+					ts$ = cvs(apt_invapproval.appv_timestamp$,3)
+					ts$ = ts$(5,2) + "/" + ts$(7,2) + "/" + ts$(1,4) + ts$(9)
+					approval_list$ = approval_list$ + ts$ + $0A$
+				endif
+			endif
+		next ouritem
+	endif
+
+	return
+
+rem ==========================================================================
+set_payment_selection: rem --- Set payment selection based on approval state
+rem ==========================================================================
+	rem --- Shouldn't get here unless using Payment Authorization.
+	if !callpoint!.getDevObject("use_pay_auth")  then return
+
+	if !selected then
+		rem --- Invoice not selected in the grid
+		rem --- Check invoice for approved status and switch values if needed
+		if approved = 1 and thisVendor_total <= callpoint!.getDevObject("two_sig_amt") then
+			gosub switch_value
+		endif
+		if approved > 1 then 
+			gosub switch_value
+		endif
+	else
+		rem --- Invoice selected in the grid
+		rem --- Check invoice to be sure it is approved properly
+		if approved = 0 
+			gosub switch_value
+		endif
+		if approved = 1 and thisVendor_total > callpoint!.getDevObject("two_sig_amt") then
+			gosub switch_value
+		endif
+	endif
+
+	return
+
+rem ==========================================================================
+getInvoiceRowApprovalStatus: rem --- Set payment selection based on approval state
+rem ==========================================================================
+	rem --- Shouldn't get here unless using Payment Authorization.
+	if !callpoint!.getDevObject("use_pay_auth")  then return
+
+	selected = gridInvoices!.getCellState(curr_row,0)
+	gridInvoices!.setSelectedRow(curr_row)
+
+	if !selected then
+		rem --- Invoice not selected in the grid
+		rem --- Check invoice for approved status and switch values if needed
+		if approved = 1 then
+			if thisVendor_total <= callpoint!.getDevObject("two_sig_amt") then
+				gridInvoices!.setRowBackColor(curr_row, fullyApproved!)
+				gosub switch_value
+			else
+				gridInvoices!.setRowBackColor(curr_row, partiallyApproved!)
+			endif
+		endif
+		if approved > 1 then
+			gridInvoices!.setRowBackColor(curr_row, fullyApproved!)
+			gosub switch_value
+		endif
+	else
+		rem --- Invoice selected in the grid
+		rem --- Check invoice to be sure it is approved properly
+		if approved = 0 
+			gridInvoices!.setRowBackColor(curr_row, reviewedColor!)
+			gosub switch_value
+		endif
+		if approved = 1 and thisVendor_total > callpoint!.getDevObject("two_sig_amt") then
+			gridInvoices!.setRowBackColor(curr_row, partiallyApproved!)
+			gosub switch_value
+		endif
+	endif
+
+	rem --- clear the row selection
+	gridInvoices!.deselectAllCells()
+
+	return
+
+rem ==========================================================================
 format_grid: rem --- Use Barista program to format the grid
 rem ==========================================================================
 
-	call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","A","",m1$,0,0
+	m1$=callpoint!.getDevObject("ap_a_mask")
 
 	dim attr_def_col_str$[0,0]
 	attr_def_col_str$[0,0] = callpoint!.getColumnAttributeTypes()
@@ -790,6 +1252,50 @@ rem ==========================================================================
 offset_return:
 	return
 
+rem =========================================================
+get_grid_back_colors: rem --- Get grid row background colors
+	rem --- output: reviewedColor!
+	rem --- output: partiallyApproved!
+	rem --- output: fullyApproved!
+rem =========================================================
+	rem --- Shouldn't get here unless using Payment Authorization.
+	if !callpoint!.getDevObject("use_pay_auth")  then return
+
+	rem --- Get reviewed color (one_auth_color)
+	RGB$=callpoint!.getDevObject("one_auth_color")
+	gosub get_RGB
+	reviewedColor! = BBjAPI().getSysGui().makeColor(R,G,B) 
+
+	rem --- Get partially approved color (two_auth_color), if needed
+	if callpoint!.getDevObject("two_sig_req") then
+		RGB$=callpoint!.getDevObject("two_pay_auth")
+		gosub get_RGB
+		partiallyApproved! = BBjAPI().getSysGui().makeColor(R,G,B)
+	else
+		partiallyApproved! = null()
+	endif
+
+	rem --- Get fully approved color (all_auth_color)
+	RGB$=callpoint!.getDevObject("all_auth_color")
+	gosub get_RGB
+	fullyApproved! = BBjAPI().getSysGui().makeColor(R,G,B)
+
+	return
+
+rem =========================================================
+get_RGB: rem --- Parse Red, Green and Blue segments from RGB$ string
+	rem --- input: RGB$
+	rem --- output: R
+	rem --- output: G
+	rem --- output: B
+rem =========================================================
+	comma1=pos(","=RGB$,1,1)
+	comma2=pos(","=RGB$,1,2)
+	R=num(RGB$(1,comma1-1))
+	G=num(RGB$(comma1+1,comma2-comma1-1))
+	B=num(RGB$(comma2+1))
+	return
+
 rem ==========================================================================
 rem --- Functions
 rem ==========================================================================
@@ -932,12 +1438,14 @@ rem --- First check to see if user_tpl.ap_check_seq$ is Y and multiple AP Types 
 			next row
 		endif
 	endif
+
+rem wgh ... need to do stuff in Call Program payselectExit.src
 [[APE_PAYSELECT.AWIN]]
 rem --- Open/Lock files
 
 	use ::ado_util.src::util
 
-	num_files=7
+	num_files=11
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 	open_tables$[1]="APT_INVOICEHDR",open_opts$[1]="OTA"
@@ -947,6 +1455,10 @@ rem --- Open/Lock files
 	open_tables$[5]="APW_CHECKINVOICE",open_opts$[5]="OTA"
 	open_tables$[6]="APE_INVOICEHDR",open_opts$[6]="OTA"
 	open_tables$[7]="APS_PARAMS",open_opts$[7]="OTA"
+	open_tables$[8]="APS_PAYAUTH",open_opts$[8]="OTA@"
+	open_tables$[9]="APT_INVIMAGE",open_opts$[9]="OTA@"
+	open_tables$[10]="APT_INVAPPROVAL",open_opts$[10]="OTA@"
+	open_tables$[11]="ADM_USER",open_opts$[10]="OTA@"
 
 	gosub open_tables
 
@@ -957,15 +1469,26 @@ rem --- Open/Lock files
 	apw01_dev=num(open_chans$[5])
 	ape01_dev=num(open_chans$[6]),ape01_tpl$=open_tpls$[6]
 	aps_params=num(open_chans$[7]),aps_params_tpl$=open_tpls$[7]
+	aps_payauth=num(open_chans$[8]),aps_payauth_tpl$=open_tpls$[8]
 
 rem --- Dimension string templates
 
 	dim apt01a$:apt01_tpl$,apt11a$:apt11_tpl$,apm01a$:apm01_tpl$,ape04a$:ape04_tpl$
-	dim ape01a$:ape01_tpl$,aps_params$:aps_params_tpl$
+	dim ape01a$:ape01_tpl$,aps_params$:aps_params_tpl$,aps_payauth$:aps_payauth_tpl$
 
 rem --- Get parameter record
 
-	readrecord(aps_params,key=firm_id$+"AP00")aps_params$
+	readrecord(aps_params, key=firm_id$+"AP00", dom=std_missing_params) aps_params$
+	callpoint!.setDevObject("multi_types",aps_params.multi_types$)
+
+	readrecord(aps_payauth,key=firm_id$+"AP00",dom=*next)aps_payauth$
+	callpoint!.setDevObject("use_pay_auth",aps_payauth.use_pay_auth)
+	callpoint!.setDevObject("scan_docs_to",aps_payauth.scan_docs_to$)
+	callpoint!.setDevObject("all_auth_color",aps_payauth.all_auth_color$)
+	callpoint!.setDevObject("one_auth_color",aps_payauth.one_auth_color$)
+	callpoint!.setDevObject("two_pay_auth",aps_payauth.two_auth_color$)
+	callpoint!.setDevObject("two_sig_req",aps_payauth.two_sig_req)
+	callpoint!.setDevObject("two_sig_amt",aps_payauth.two_sig_amt)
 
 rem --- See if Check Printing has already been started
 
@@ -975,7 +1498,8 @@ rem --- See if Check Printing has already been started
 	if pos(firm_id$=k$)=1 then
 		msg_id$="CHECKS_IN_PROGRESS"
 		gosub disp_message
-		if pos("PASSVALID"=msg_opt$)=0 then
+		if pos("PASSVALID"=msg_opt$)=0 or callpoint!.getDevObject("use_pay_auth") then
+			rem --- Password override not currently allowed with Payment Authorization
 			bbjAPI!=bbjAPI()
 			rdFuncSpace!=bbjAPI!.getGroupNamespace()
 			rdFuncSpace!.setValue("+build_task","OFF")
@@ -988,17 +1512,21 @@ rem --- NOTE: For Advisory Locking, replaced call to adc_clearpartial.aon with
 rem ---       REMOVE of ape-04 recs within the loop that resets apt01a.selected_for_pay$ 
 rem ---       flag in guard against getting ape04 and apt01 out of sync if fail on 
 rem ---       EXTRACT of apt01
-
 	
 	while 1
 		read(ape04_dev,key=firm_id$,dom=*next)
 		ape04_key$=key(ape04_dev,end=*break)
 		if pos(firm_id$=ape04_key$)<>1 break
 
-		msg_id$="CLEAR_SEL"
-		dim msg_tokens$[1]
-		msg_opt$=""
-		gosub disp_message
+		if callpoint!.getDevObject("use_pay_auth") then
+			rem --- Always clear previous selections when using Payment Authorization 
+			msg_opt$="Y"
+		else
+			msg_id$="CLEAR_SEL"
+			dim msg_tokens$[1]
+			msg_opt$=""
+			gosub disp_message
+		endif
 
 		if msg_opt$="Y" then
 			rem call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",ape04_dev,firm_id$,status; rem REMd for Advisory Locking
@@ -1046,6 +1574,9 @@ rem --- Add grid to store invoices, with checkboxes for user to select one or mo
 	user_tpl.retention_col = 14
 	user_tpl.ap_check_seq$=aps_params.ap_check_seq$
 
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","A","",ap_a_mask$,0,0
+	callpoint!.setDevObject("ap_a_mask",ap_a_mask$)
+
 	gosub format_grid
 	util.resizeWindow(Form!, SysGui!)
 
@@ -1079,6 +1610,23 @@ rem --- Set callbacks - processed in ACUS callpoint
 	gridInvoices!.setCallback(gridInvoices!.ON_GRID_KEY_PRESS,"custom_event")
 	gridInvoices!.setCallback(gridInvoices!.ON_GRID_MOUSE_UP,"custom_event")
 	gridInvoices!.setCallback(gridInvoices!.ON_GRID_EDIT_STOP,"custom_event")
+
+	if callpoint!.getDevObject("use_pay_auth") then
+		rem --- For Payment Authorization, stash the girdInvoices! in a namespace
+		user_id$=sysinfo.user_id$
+		userNamespace! = BBjAPI().getNamespace(user_id$, "paymentSelect", 1)
+		gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
+		rem --- Make sure that more than one row can be selected at a time
+		gridInvoices!.setMultipleSelection(1)
+		userNamespace!.setValue("gridInvoices",gridInvoices!)
+
+		rem --- Make a vector to hold Payment Authorization approvals done in the session
+		approvalsEntered! = BBjAPI().makeVector()
+		userNamespace!.setValue("approvalsEntered",approvalsEntered!)
+
+		rem --- Set grid row background colors and selections
+		gosub load_Invoice_Approval_Status
+	endif
 [[APE_PAYSELECT.ASIZ]]
 rem --- Resize the grid
 
@@ -1421,3 +1969,21 @@ rem						endif
 
 	tot_payments=num(callpoint!.getDevObject("tot_payments"))
 	callpoint!.setColumnData("<<DISPLAY>>.TOT_PAYMENTS",str(tot_payments),1)
+
+	rem --- For Payment Authorization ensure that user can not change the select column.
+	rem --- It must be set based on the approval status of the invoice.
+	if callpoint!.getDevObject("use_pay_auth") then
+		gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
+		row = gridInvoices!.getSelectedRow()
+
+		vendor_id$ = gridInvoices!.getCellText(row,3)
+		vendor_name$ = gridInvoices!.getCellText(row,4)
+		ap_inv_no$ = gridInvoices!.getCellText(row,5)
+		inv_amt  = num(gridInvoices!.getCellText(row,9))
+		thisVendor_total = cast(BBjNumber, vendorTotalsMap!.get(vendor_id$))
+		gosub get_approval_status	
+
+		rem --- Set payment selection based on approval state
+		selected = gridInvoices!.getCellState(row,0)
+		gosub set_payment_selection
+	endif
