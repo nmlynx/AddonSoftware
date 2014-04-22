@@ -707,10 +707,12 @@ rem ==========================================================================
 				msg_tokens$[1]=msg$
 				gosub disp_message
 				if msg_opt$="Y" then
+rem wgh ... stopped here
 					call "sendEmailHtml.src", from$, to$, cc$, bcc$, subject$, msgtxt$, file$
 				endif
 			else
 				rem --- usertype$="A" and approver, send the email
+rem wgh ... stopped here
 				call "sendEmailHtml.src", from$, to$, cc$, bcc$, subject$, msgtxt$, file$
 			endif
 		endif
@@ -1667,7 +1669,7 @@ rem --- Open/Lock files
 
 	use ::ado_util.src::util
 
-	num_files=11
+	num_files=12
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 	open_tables$[1]="APT_INVOICEHDR",open_opts$[1]="OTA"
@@ -1680,7 +1682,8 @@ rem --- Open/Lock files
 	open_tables$[8]="APS_PAYAUTH",open_opts$[8]="OTA@"
 	open_tables$[9]="APT_INVIMAGE",open_opts$[9]="OTA@"
 	open_tables$[10]="APT_INVAPPROVAL",open_opts$[10]="OTA@"
-	open_tables$[11]="ADM_USER",open_opts$[10]="OTA@"
+	open_tables$[11]="ADM_USER",open_opts$[11]="OTA@"
+	open_tables$[12]="ADM_APPROVERS",open_opts$[12]="OTA@"
 
 	gosub open_tables
 
