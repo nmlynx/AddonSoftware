@@ -108,7 +108,7 @@ rem --- Approve the invoice selected in the grid
 
 	rem --- Confirm approval
 	invCount = rowsSelected!.size() 
-	if apm_approvers.prelim_approval$ = "Y" then
+	if apm_approvers.prelim_approval then
 		msg_id$="AP_INV_PAY_REVWD"
 	else
 		msg_id$="AP_INV_PAY_APPVD"
@@ -546,8 +546,8 @@ rem ==========================================================================
 		endif
 	endif
 
-	rem --- Use +EMAIL_USER_ID and +EMAIL_PASSWORD from Barista's Configuration Records
-	mail_account$=""
+	rem --- Use Barista Email Account +PAYAUTH
+	mail_account$="+PAYAUTH"
 
 	rem --- Set the from, cc, bcc and replyto email addresses
 	read record(adm_user,key=apm_approvers.user_id$)adm_user$
@@ -711,19 +711,13 @@ rem ==========================================================================
 				msg_tokens$[1]=msg$
 				gosub disp_message
 				if msg_opt$="Y" then
-rem wgh ... stopped here
-rem wgh ...					call "sendEmailHtml.src", from$, to$, cc$, bcc$, subject$, msgtxt$, file$
-mail_files$=""
-call stbl("+DIR_SYP")+"bac_sendmail.bbj",mail_account$,from$,replyto$,to$,cc$,bcc$,subject$,msgtxt$,mail_files$,mail_status,mail_status$
-rem wgh ... handle email errors
+				mail_files$=""
+				call stbl("+DIR_SYP")+"bac_sendmail.bbj",mail_account$,from$,replyto$,to$,cc$,bcc$,subject$,msgtxt$,mail_files$,mail_status,mail_status$
 				endif
 			else
 				rem --- usertype$="A" and approver, send the email
-rem wgh ... stopped here
-rem wgh ...				call "sendEmailHtml.src", from$, to$, cc$, bcc$, subject$, msgtxt$, file$
-mail_files$=""
-call stbl("+DIR_SYP")+"bac_sendmail.bbj",mail_account$,from$,replyto$,to$,cc$,bcc$,subject$,msgtxt$,mail_files$,mail_status,mail_status$
-rem wgh ... handle email errors
+				mail_files$=""
+				call stbl("+DIR_SYP")+"bac_sendmail.bbj",mail_account$,from$,replyto$,to$,cc$,bcc$,subject$,msgtxt$,mail_files$,mail_status,mail_status$
 			endif
 		endif
 	endif
