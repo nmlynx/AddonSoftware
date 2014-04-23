@@ -148,7 +148,7 @@ rem --- Approve the invoice selected in the grid
 		apt_invapproval.firm_id$ = firm_id$
 		apt_invapproval.vendor_id$ = vendor_id$
 		apt_invapproval.ap_inv_no$ = ap_inv_no$
-		apt_invapproval.sequence_num$ = str(sequence_num + 1:"seq_no_mask$")
+		apt_invapproval.sequence_num$ = str(sequence_num + 1:seq_no_mask$)
 		apt_invapproval.approval_type$ = ""
 		apt_invapproval.user_id$ = user$
 		apt_invapproval.name$ = adm_user.name$
