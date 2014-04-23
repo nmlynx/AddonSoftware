@@ -139,6 +139,7 @@ rem --- Approve the invoice selected in the grid
 		vendor_id$ = gridInvoices!.getCellText(curr_row,3)
 		vendor_name$ = gridInvoices!.getCellText(curr_row,4)
 		ap_inv_no$ = gridInvoices!.getCellText(curr_row,5)
+		hold=gridInvoices!.getCellState(curr_row,6)
 		inv_amt  = num(gridInvoices!.getCellText(curr_row,9))
 		thisVendor_total = cast(BBjNumber, vendorTotalsMap!.get(vendor_id$))
 		gosub get_approval_status	
@@ -153,6 +154,9 @@ rem --- Approve the invoice selected in the grid
 		apt_invapproval.user_id$ = user$
 		apt_invapproval.name$ = adm_user.name$
 		apt_invapproval.appv_timestamp$ = date(0:"%Y%Mz%Dz %Hz:%mz:%sz")
+
+		rem --- Skip held invoices
+		if hold then continue
 
 		rem --- Not reviewed, and user is not a reviewer
 		if !reviewed and !apm_approvers.prelim_approval then
