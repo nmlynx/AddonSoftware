@@ -82,7 +82,7 @@ rem --- Approve the invoice selected in the grid
 		callpoint!.setStatus("ABORT")
 		break
 	else
-		if !apm_approvers.prelim_approval and !apm_approvers.check_signerthen
+		if !apm_approvers.prelim_approval and !apm_approvers.check_signer then
 			rem --- Not reviewer or approver
 			callpoint!.setStatus("ABORT")
 			break
