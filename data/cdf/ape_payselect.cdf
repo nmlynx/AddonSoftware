@@ -546,12 +546,16 @@ rem ==========================================================================
 		endif
 	endif
 
-	rem --- Set the from, cc and bcc email addresses
+	rem --- Use +EMAIL_USER_ID and +EMAIL_PASSWORD from Barista's Configuration Records
+	mail_account$=""
+
+	rem --- Set the from, cc, bcc and replyto email addresses
 	read record(adm_user,key=apm_approvers.user_id$)adm_user$
 	rem -- for both usertype$ the current user will be a cc
 	from$=cvs(adm_user.email_address$,3)
 	cc$=cvs(adm_user.email_address$,3)
 	bcc$=""
+	replyto$=from$
 	
 	rem --- Set the to email address, and complete the cc email addresses
 	to$ = ""
@@ -708,12 +712,18 @@ rem ==========================================================================
 				gosub disp_message
 				if msg_opt$="Y" then
 rem wgh ... stopped here
-					call "sendEmailHtml.src", from$, to$, cc$, bcc$, subject$, msgtxt$, file$
+rem wgh ...					call "sendEmailHtml.src", from$, to$, cc$, bcc$, subject$, msgtxt$, file$
+mail_files$=""
+call stbl("+DIR_SYP")+"bac_sendmail.bbj",mail_account$,from$,replyto$,to$,cc$,bcc$,subject$,msgtxt$,mail_files$,mail_status,mail_status$
+rem wgh ... handle email errors
 				endif
 			else
 				rem --- usertype$="A" and approver, send the email
 rem wgh ... stopped here
-				call "sendEmailHtml.src", from$, to$, cc$, bcc$, subject$, msgtxt$, file$
+rem wgh ...				call "sendEmailHtml.src", from$, to$, cc$, bcc$, subject$, msgtxt$, file$
+mail_files$=""
+call stbl("+DIR_SYP")+"bac_sendmail.bbj",mail_account$,from$,replyto$,to$,cc$,bcc$,subject$,msgtxt$,mail_files$,mail_status,mail_status$
+rem wgh ... handle email errors
 			endif
 		endif
 	endif
@@ -1683,7 +1693,7 @@ rem --- Open/Lock files
 	open_tables$[9]="APT_INVIMAGE",open_opts$[9]="OTA@"
 	open_tables$[10]="APT_INVAPPROVAL",open_opts$[10]="OTA@"
 	open_tables$[11]="ADM_USER",open_opts$[11]="OTA@"
-	open_tables$[12]="ADM_APPROVERS",open_opts$[12]="OTA@"
+	open_tables$[12]="APM_APPROVERS",open_opts$[12]="OTA@"
 
 	gosub open_tables
 
