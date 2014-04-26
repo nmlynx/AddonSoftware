@@ -1,5 +1,8 @@
+[[APS_PAYAUTH.WARN_IN_REGISTER.AVAL]]
+rem --- Disable ok_to_update if not warning in register
+	warn_in_register=num(callpoint!.getUserInput())
+	gosub able_ok_to_update
 [[APS_PARAMS.ADIS]]
-rem wgh ...
 rem --- Display selected colors
 	RGB$=callpoint!.getColumnData("APS_PAYAUTH.ONE_AUTH_COLOR")
 	gosub get_RGB
@@ -150,6 +153,18 @@ rem =========================================================
 	return
 
 rem =========================================================
+able_ok_to_update: rem --- Enable/Disable OK_TO_UPDATE
+	rem --- input: warn_in_register
+rem =========================================================
+	if warn_in_register then
+		callpoint!.setColumnEnabled("APS_PAYAUTH.OK_TO_UPDATE",1)
+	else
+		callpoint!.setColumnData("APS_PAYAUTH.OK_TO_UPDATE","0",1)
+		callpoint!.setColumnEnabled("APS_PAYAUTH.OK_TO_UPDATE",0)
+	endif
+	return
+
+rem =========================================================
 able_two_sig: rem --- Enable/Disable TWO_SIG_AMT and TWO_AUTH_COLOR (and initialize TWO_AUTH_COLOR)
 	rem --- input: two_sig_req
 rem =========================================================
@@ -171,12 +186,16 @@ able_scan_docs: rem --- Enable/Disable WARN_IN_REGISTER and OK_TO_UPDATE
 rem =========================================================
 	if scan_docs_to$="NOT" then
 		rem --- Disable if not scanning invoices
+		callpoint!.setColumnData("APS_PAYAUTH.WARN_IN_REGISTER","0",1)
 		callpoint!.setColumnEnabled("APS_PAYAUTH.WARN_IN_REGISTER",0)
+		callpoint!.setColumnData("APS_PAYAUTH.OK_TO_UPDATE","0",1)
 		callpoint!.setColumnEnabled("APS_PAYAUTH.OK_TO_UPDATE",0)
 	else
 		rem --- Enable if scanning invoices
 		callpoint!.setColumnEnabled("APS_PAYAUTH.WARN_IN_REGISTER",1)
-		callpoint!.setColumnEnabled("APS_PAYAUTH.OK_TO_UPDATE",1)
+		rem --- Disable ok_to_update if not warning in register
+		warn_in_register=num(callpoint!.getColumnData("APS_PAYAUTH.WARN_IN_REGISTER"))
+		gosub able_ok_to_update
 	endif
 	return
 
