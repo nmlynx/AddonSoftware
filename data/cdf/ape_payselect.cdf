@@ -515,7 +515,7 @@ rem ==========================================================================
 	return
 
 rem ==========================================================================
-send_payauth_email: rem --- Sent Payment Authorization notification emails
+send_payauth_email: rem --- Send Payment Authorization notification emails
 rem ==========================================================================
 	rem --- Shouldn't get here unless using Payment Authorization.
 	if !callpoint!.getDevObject("use_pay_auth")  then return
@@ -552,6 +552,7 @@ rem ==========================================================================
 
 	rem --- Use Barista Email Account +PAYAUTH
 	mail_account$="+PAYAUTH"
+	mail_files$=""
 
 	rem --- Set the from, cc, bcc and replyto email addresses
 	read record(adm_user,key=apm_approvers.user_id$)adm_user$
@@ -709,19 +710,23 @@ rem ==========================================================================
 			gosub disp_message
 		else
 			if usertype$ = "R" then
-				rem ---- give them a choice
-				msg_id$="AP_PAYAUTH_EMAIL"
+				if callpoint!.getDevObject("send_email")  then
+					rem ---- give them a choice
+					msg_id$="AP_PAYAUTH_EMAIL"
+				else
+					msg_id$="GENERIC_OK"
+				endif
 				dim msg_tokens$[1]
 				msg_tokens$[1]=msg$
 				gosub disp_message
 				if msg_opt$="Y" then
-				mail_files$=""
-				call stbl("+DIR_SYP")+"bac_sendmail.bbj",mail_account$,from$,replyto$,to$,cc$,bcc$,subject$,msgtxt$,mail_files$,mail_status,mail_status$
+					call stbl("+DIR_SYP")+"bac_sendmail.bbj",mail_account$,from$,replyto$,to$,cc$,bcc$,subject$,msgtxt$,mail_files$,mail_status,mail_status$
 				endif
 			else
 				rem --- usertype$="A" and approver, send the email
-				mail_files$=""
-				call stbl("+DIR_SYP")+"bac_sendmail.bbj",mail_account$,from$,replyto$,to$,cc$,bcc$,subject$,msgtxt$,mail_files$,mail_status,mail_status$
+				if callpoint!.getDevObject("send_email")  then
+					call stbl("+DIR_SYP")+"bac_sendmail.bbj",mail_account$,from$,replyto$,to$,cc$,bcc$,subject$,msgtxt$,mail_files$,mail_status,mail_status$
+				endif
 			endif
 		endif
 	endif
@@ -1716,6 +1721,7 @@ rem --- Get parameter record
 
 	readrecord(aps_payauth,key=firm_id$+"AP00",dom=*next)aps_payauth$
 	callpoint!.setDevObject("use_pay_auth",aps_payauth.use_pay_auth)
+	callpoint!.setDevObject("send_email",aps_payauth.send_email)
 	callpoint!.setDevObject("scan_docs_to",aps_payauth.scan_docs_to$)
 	callpoint!.setDevObject("all_auth_color",aps_payauth.all_auth_color$)
 	callpoint!.setDevObject("one_auth_color",aps_payauth.one_auth_color$)
