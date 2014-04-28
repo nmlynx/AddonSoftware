@@ -110,6 +110,7 @@ rem =========================================================
 able_payauth: rem --- Enable/Disable Payment Authorization
 	rem --- input: use_pay_auth
 rem =========================================================
+	callpoint!.setColumnEnabled("APS_PAYAUTH.SEND_EMAIL",use_pay_auth)
 	callpoint!.setColumnEnabled("APS_PAYAUTH.SCAN_DOCS_TO",use_pay_auth)
 	callpoint!.setColumnEnabled("APS_PAYAUTH.ALL_AUTH_COLOR",use_pay_auth)
 	callpoint!.setColumnEnabled("APS_PAYAUTH.ONE_AUTH_COLOR",use_pay_auth)
