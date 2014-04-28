@@ -506,7 +506,7 @@ common_check_face:
         rem --- It is possible to have more than two signers approve invoices being paid by this check.
         rem --- For now, just use the first two signers in the signerSet! TreeSet.
         formImage! = page!.newImage()
-        formImage!.setURL("file:" + stbl("+AON_IMAGES") + cast(BBjString, signerSignatureMap!.get(signerSet!.first())))
+        formImage!.setURL("file:" + stbl("+CUST_IMAGES") + cast(BBjString, signerSignatureMap!.get(signerSet!.first())))
         formImage!.setPosition(new java.awt.Point(image1_X,signatureY-imageHeight/2))
         formImage!.setWidth(imageWidth)
         formImage!.setHeight(imageHeight)
@@ -518,7 +518,7 @@ common_check_face:
             signer$=signerSet!.first()
             signerSet!.remove(signer$)
             formImage2! = page!.newImage()
-            formImage2!.setURL("file:" + stbl("+AON_IMAGES") + cast(BBjString, signerSignatureMap!.get(signerSet!.first())))
+            formImage2!.setURL("file:" + stbl("+CUST_IMAGES") + cast(BBjString, signerSignatureMap!.get(signerSet!.first())))
             formImage2!.setPosition(new java.awt.Point(image2_X,signatureY-imageHeight/2))
             formImage2!.setWidth(imageWidth)
             formImage2!.setHeight(imageHeight)
