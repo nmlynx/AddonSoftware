@@ -550,17 +550,11 @@ rem ==========================================================================
 		endif
 	endif
 
-	rem --- Use Barista Email Account +PAYAUTH
-	mail_account$="+PAYAUTH"
-	mail_files$=""
-
 	rem --- Set the from, cc, bcc and replyto email addresses
 	read record(adm_user,key=apm_approvers.user_id$)adm_user$
 	rem -- for both usertype$ the current user will be a cc
 	from$=cvs(adm_user.email_address$,3)
 	cc$=cvs(adm_user.email_address$,3)
-	bcc$=""
-	replyto$=from$
 	
 	rem --- Set the to email address, and complete the cc email addresses
 	to$ = ""
@@ -603,22 +597,24 @@ rem ==========================================================================
 		endif
 	wend
 
-	subject$ = Translate!.getTranslation("AON_ACCOUNTS_PAYABLE")+" "+Translate!.getTranslation("AON_INVOICES")
+	subject$ = Translate!.getTranslation("AON_INVOICES")
 	if usertype$ = "R" then 
 		subject$ = subject$+" "+Translate!.getTranslation("AON_AWAITING_APPROVAL")
 	else
 		subject$ = subject$+" "+Translate!.getTranslation("AON_APPROVAL_STATUS")
 	endif
 
-	msgtxt$ = "<html><body>" + $0A$
+	msgHtml$ = "<html><body>" + $0A$
 	if usertype$="R" then
-		msgtxt$ = msgtxt$ + Translate!.getTranslation("AON_AP_INV_WAITING_APPROVAL")+" "
-		msgtxt$ = msgtxt$ + Translate!.getTranslation("AON_AP_REVIEW_INVOICES:")+" <br><br>" + $0A$ 
+		msgText$ = Translate!.getTranslation("AON_AP_INV_WAITING_APPROVAL")
+		msgHtml$ = msgHtml$ + msgText$+" "
+		msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_AP_REVIEW_INVOICES:")+" <br><br>" + $0A$ 
 	else
-		msgtxt$ = msgtxt$ + Translate!.getTranslation("AON_APPROVER")+" " + cvs(user$,3) + " "+Translate!.getTranslation("AON_EXITED_PAY_SELECTION")+" <br><br>" + $0A$
-		msgtxt$ = msgtxt$ + Translate!.getTranslation("AON_STATUS_OF_AP_INVOICES:")+" <br><br>" + $0A$
+		msgText$ = Translate!.getTranslation("AON_APPROVER")+" " + cvs(user$,3) + " "+Translate!.getTranslation("AON_EXITED_PAY_SELECTION")
+		msgHtml$ = msgHtml$ + msgText$+" <br><br>" + $0A$
+		msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_STATUS_OF_AP_INVOICES:")+" <br><br>" + $0A$
 	endif
-
+	msgText$=msgText$+" "+Translate!.getTranslation("AON_SEE_ATTACHMENT")+"."
 	
 	rem --- Process each grid row
 	approved_invoices=0
@@ -679,15 +675,15 @@ rem ==========================================================================
 
 	if usertype$="R" then
 		rem --- User is the reviewer
-		msgtxt$ = msgtxt$ + "<table border=1>" + reviewed_but_not_approved$ + partially_approved$ + "</table>" + $0A$
+		msgHtml$ = msgHtml$ + "<table border=1>" + reviewed_but_not_approved$ + partially_approved$ + "</table>" + $0A$
 	else
 		rem --- User is an approver
-		if len(not_reviewed$) <> 0 then msgtxt$ = msgtxt$ + Translate!.getTranslation("AON_INV_NOT_REVIEWED:")+" <br>" + $0A$ + "<table border=1>" + not_reviewed$ + "</table><br>" +$0A$
-		if len(reviewed_but_not_approved$) <> 0 then msgtxt$ = msgtxt$ + Translate!.getTranslation("AON_INV_REVIEWED_NO_APPROVALS:")+" <br>" + $0A$ + "<table border=1>" + reviewed_but_not_approved$ + "</table><br>" + $0A$
-		if len(partially_approved$) <> 0 then msgtxt$ = msgtxt$ + Translate!.getTranslation("AON_INV_REVIEWED_REQUIRE_ANOTHER_APPROVAL:")+" <br>" + $0A$ + "<table border=1>" + partially_approved$ + "</table><br>" + $0A$
-		if len(approved_invoices$) <> 0 then msgtxt$ = msgtxt$ + Translate!.getTranslation("AON_INV_APPROVED_READY_FOR_PAYMENT:")+" <br>" + $0A$ + "<table border=1>" + approved_invoices$ + "</table><br>" + $0A$
+		if len(not_reviewed$) <> 0 then msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_INV_NOT_REVIEWED:")+" <br>" + $0A$ + "<table border=1>" + not_reviewed$ + "</table><br>" +$0A$
+		if len(reviewed_but_not_approved$) <> 0 then msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_INV_REVIEWED_NO_APPROVALS:")+" <br>" + $0A$ + "<table border=1>" + reviewed_but_not_approved$ + "</table><br>" + $0A$
+		if len(partially_approved$) <> 0 then msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_INV_REVIEWED_REQUIRE_ANOTHER_APPROVAL:")+" <br>" + $0A$ + "<table border=1>" + partially_approved$ + "</table><br>" + $0A$
+		if len(approved_invoices$) <> 0 then msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_INV_APPROVED_READY_FOR_PAYMENT:")+" <br>" + $0A$ + "<table border=1>" + approved_invoices$ + "</table><br>" + $0A$
 	endif		
-	msgtxt$ = msgtxt$ + "</body></html>"
+	msgHtml$ = msgHtml$ + "</body></html>"
 
 	msg$ = Translate!.getTranslation("AON_INV_NOT_REVIEWED")+": " +str(not_reviewed) + $0A$
 	msg$ = msg$ +Translate!.getTranslation("AON_INV_REVIEWED_APPROVAL_NOT_COMPLETE:")+" " + str(reviewed_but_not_approved + partially_approved) + $0A$
@@ -720,16 +716,70 @@ rem ==========================================================================
 				msg_tokens$[1]=msg$
 				gosub disp_message
 				if msg_opt$="Y" then
-					call stbl("+DIR_SYP")+"bac_sendmail.bbj",mail_account$,from$,replyto$,to$,cc$,bcc$,subject$,msgtxt$,mail_files$,mail_status,mail_status$
+					gosub queue_email
 				endif
 			else
 				rem --- usertype$="A" and approver, send the email
 				if callpoint!.getDevObject("send_email")  then
-					call stbl("+DIR_SYP")+"bac_sendmail.bbj",mail_account$,from$,replyto$,to$,cc$,bcc$,subject$,msgtxt$,mail_files$,mail_status,mail_status$
+					gosub queue_email
 				endif
 			endif
 		endif
 	endif
+
+	return
+
+rem ==========================================================================
+queue_email: rem --- Make email entry in Barista's Doc Processing Queue
+rem ==========================================================================
+	rem --- Get next Barista document number
+	call stbl("+DIR_SYP")+"bas_sequences.bbj","DOC_NO",next_docno$,table_chans$[all]
+
+rem --- Write HTML message to file so it can be sent as an attachment
+	docDir$=stbl("+DOC_DIR_HTM")
+	docName$="PayAuthNotifiction_"+next_docno$+".htm"
+	outFile!=new java.io.FileWriter(docDir$+docName$)
+	outFile!.write(msgHtml$)
+	outFile!.close()
+
+rem --- Create entry for zip/txt file in ads_documents
+	date_stamp$=date(0:"%Yd%Mz%Dz")
+	time_stamp$=date(0:"%Hz%mz%sz")
+	docTitle$=Translate!.getTranslation("AON_PAYAUTH_NOTIFICATION")+": "+next_docno$
+
+	call stbl("+DIR_SYP")+"bac_documents.bbj",
+:		next_docno$,
+:		date_stamp$,
+:		time_stamp$,
+:		"E",
+:		"HTM",
+:		docDir$,
+:		"",
+:		"",
+:		"AP",
+:		"",
+:		table_chans$[all],
+:		"NOREPRINT",
+:		docName$,
+:		docTitle$,
+:		""
+
+rem --- Make email entry in Doc Processing Queue
+	docQueue!=callpoint!.getDevObject("docQueue")
+	docQueue!.clear()
+	docQueue!.setFirmID(firm_id$)
+	docQueue!.setDocumentID(next_docno$)
+	docQueue!.setDocumentExt("HTM")
+	docQueue!.setProcessType("E")
+	docQueue!.setStatus("A");rem Auto-detect.  Queue will switch it to "Ready" if all required data is present
+	docQueue!.setEmailFrom(from$)
+	docQueue!.setEmailTo(to$)
+	docQueue!.setEmailCC(cc$)
+	docQueue!.setSubject(subject$)
+	docQueue!.setMessage(msgText$)
+	docQueue!.createProcess()
+	proc_key$=docQueue!.getFirmID()+docQueue!.getProcessID()
+	docQueue!.checkStatus(proc_key$)
 
 	return
 
@@ -1860,6 +1910,11 @@ rem --- Set callbacks - processed in ACUS callpoint
 
 		rem --- Set grid row background colors and selections
 		gosub load_Invoice_Approval_Status
+
+		rem --- Get Barista's Document Queue object 
+		use ::sys/prog/bao_docqueue.bbj::DocumentQueue
+		docQueue! = new DocumentQueue()
+		callpoint!.setDevObject("docQueue",docQueue!)
 	endif
 [[APE_PAYSELECT.ASIZ]]
 rem --- Resize the grid
