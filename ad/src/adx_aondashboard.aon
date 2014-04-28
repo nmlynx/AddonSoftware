@@ -275,6 +275,9 @@ rem ==============================================
 		ringChartWidget!.setChartColors(ringChartWidget!.getColorTheme(ChartWidget.getColorThemeGreen()))
 		ringChartWidget!.setRingDepth(.55)
 	 
+		rem Ensure the labels aren't truncated by increasing the padding around the plot by 10%
+		ringChartWidget!.setPlotPadding(0.1)
+
 		rem Create Filters 
 		filterName$ = "Bank Balances RingChart - TimeFrame"
 		filterHashMap! = new HashMap()
@@ -309,9 +312,9 @@ rem ==============================================
 		include_type$="A"; rem "Include Current Year Actual totals (no data/period filtering)
 		acct_type$="E"; rem "Expense accounts only
 		do_coa_join$="N"; rem "No Op. Chart of Acocunts is integral part of this SPROC
-		
+
 		sql$="CALL GLEXPTOT_PIE ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
-	
+
 		expPieChartDashboardWidget! = acctDashboardCategory!.addPieChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,flat,legend,connectString$,sql$)
 		expPieWidget! = expPieChartDashboardWidget!.getWidget()
 		expPieWidget!.setChartColors("#860102,#cc2200,#e14900,#fe7600,#ff9c01,#fdce2e")
@@ -320,7 +323,10 @@ rem ==============================================
 		ChartWidget.adjustColorVectorBrightness(chartColors!, 0.35)
 		ChartWidget.adjustColorVectorOpacity(chartColors!, 0.75)
 		expPieWidget!.setCustomChartColors(chartColors!)
-				
+
+        rem Ensure the labels aren't truncated by increasing the padding around the plot by 10%
+        expPieWidget!.setPlotPadding(0.1)
+
 		text$ = "Chart of Accounts" 
 		toolTip$ = "Launch query on GL Chart of Accounts" 
 		dockLocation = DashboardWidget.getDOCK_LEFT()
@@ -732,6 +738,7 @@ rem     The inner widget gives us access to the dataset so that we can provide n
 	rem Refresh based on new sql
 	gridWidget!.fill(aon_url$,sql$)
 	gridWidget!.refresh()
+
 	exit
 
 rem ==============================================   
