@@ -88,7 +88,7 @@ rem ==============================================
 
 	declare Dashboard aonDashboard!
 
-	aonDashboard! = new Dashboard("Addon","AddonSoftware Dashboard")
+	aonDashboard! = new Dashboard("Addon",Translate!.getTranslation("AON_ADDONSOFTWARE_DASHBOARD"))
 
 	return
 
@@ -99,7 +99,7 @@ rem ==============================================
 
 	declare DashboardCategory   acctDashboardCategory!
 
-	acctDashboardCategory! = aonDashboard!.addDashboardCategory("Accounting","Accounting")
+	acctDashboardCategory! = aonDashboard!.addDashboardCategory("Accounting",Translate!.getTranslation("AON_ACCOUNTING"))
 
 rem ==============================================
 rem --- create a yearly GL totals grid
@@ -109,8 +109,8 @@ rem ==============================================
 	gosub get_security
 	if allow_widget$="Y" and installMap!.get("GL")="Y"
 		name$="GLINCTOT_GRD"
-		title$ = "GL Income Account Totals"
-		previewText$="General Ledger Income account totals by year displayed in a grid"
+		title$ = Translate!.getTranslation("AON_GL_INCOME_ACCOUNT_TOTALS")
+		previewText$=Translate!.getTranslation("AON_GENERAL_LEDGER_INCOME_ACCOUNT_TOTALS_BY_YEAR_DISPLAYED_IN_A_GRID")
 		previewImage$=preview_path$+"glinctot_grd.png"
 		connectString$=aon_url$
 		
@@ -127,21 +127,21 @@ rem ==============================================
 		gridWidget!.setColumnAlignment(0,GridWidget.getHORIZONTAL_ALIGNMENT_LEFT())
 
 		rem Create Filters 
-		filterName$ = "Income Totals - Time Frame"
+		filterName$ = Translate!.getTranslation("AON_INCOME_TOTALS_-_TIME_FRAME")
 		filterHashMap! = new LinkedHashMap()
-		filterHashMap!.put("A","Current Year Actual")
-		filterHashMap!.put("B","Current Year Budget")
-		filterHashMap!.put("C","Prior Year Actual")
-		filterHashMap!.put("D","Prior Year Budget")
-		filterHashMap!.put("E","Next Year Actual")
-		filterHashMap!.put("F","Next Year Budget")
-		filterHashMap!.put("G","All Actual")
-		filterHashMap!.put("H","All Budget")
-		filterHashMap!.put("I","All (Actual & Budget)")
-		filterHashMap!.put("J","Current & Prior Year Actual")
-		filterHashMap!.put("K","Current & Prior Year Budget")
+		filterHashMap!.put("A",Translate!.getTranslation("AON_CURRENT_YEAR_ACTUAL"))
+		filterHashMap!.put("B",Translate!.getTranslation("AON_CURRENT_YEAR_BUDGET"))
+		filterHashMap!.put("C",Translate!.getTranslation("AON_PRIOR_YEAR_ACTUAL"))
+		filterHashMap!.put("D",Translate!.getTranslation("AON_PRIOR_YEAR_BUDGET"))
+		filterHashMap!.put("E",Translate!.getTranslation("AON_NEXT_YEAR_ACTUAL"))
+		filterHashMap!.put("F",Translate!.getTranslation("AON_NEXT_YEAR_BUDGET"))
+		filterHashMap!.put("G",Translate!.getTranslation("AON_ALL_ACTUAL"))
+		filterHashMap!.put("H",Translate!.getTranslation("AON_ALL_BUDGET"))
+		filterHashMap!.put("I",Translate!.getTranslation("AON_ALL_(ACTUAL_&_BUDGET)"))
+		filterHashMap!.put("J",Translate!.getTranslation("AON_CURRENT_&_PRIOR_YEAR_ACTUAL"))
+		filterHashMap!.put("K",Translate!.getTranslation("AON_CURRENT_&_PRIOR_YEAR_BUDGET"))
 
-		toolTip$ = "Select time frame and actual/budget"
+		toolTip$ = Translate!.getTranslation("AON_SELECT_TIME_FRAME_AND_ACTUAL/BUDGET")
 		dockLocation = DashboardWidget.getDOCK_LEFT()
 		filter! = incomeGridDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
 		filter!.selectFilter("J")
@@ -159,11 +159,11 @@ rem ==============================================
 	gosub get_security
 	if allow_widget$="Y" and installMap!.get("GL")="Y"
 		name$="GLCMPINC_BAR"
-		title$ = "Income Comparison"
-		previewText$="Income comparison"
+		title$ = Translate!.getTranslation("AON_INCOME_COMPARISON")
+		previewText$=Translate!.getTranslation("AON_INCOME_COMPARISON")
 		previewImage$=preview_path$+"glcmpinc_bar.png"
 		domainTitle$ = ""
-		rangeTitle$ = "$ in 1000s"
+		rangeTitle$ = Translate!.getTranslation("AON_$_IN_1000S")
 		orientation=BarChartWidget.getORIENTATION_VERTICAL() 
 		legend=1
 		chartTitle$ = ""
@@ -185,25 +185,25 @@ rem		incCmpWidget!.setChartColors("#00a4d9","#7fbe27",1.0,1.0); rem Colors for B
 		incCmpWidget!.setLabelsInBarChartColor("#000000")
 		
 		rem Create Filters 
-		filterName$ = "Compare"
+		filterName$ = Translate!.getTranslation("AON_COMPARE")
 
 		filterHashMap! = new LinkedHashMap()
-		filterHashMap!.put("A","Current/Prior")
-		filterHashMap!.put("C","Current/Next")
-		filterHashMap!.put("E","Current/Prior/Next")
+		filterHashMap!.put("A",Translate!.getTranslation("AON_CURRENT/PRIOR"))
+		filterHashMap!.put("C",Translate!.getTranslation("AON_CURRENT/NEXT"))
+		filterHashMap!.put("E",Translate!.getTranslation("AON_CURRENT/PRIOR/NEXT"))
 		
-		toolTip$ = "Select basis for comparison"
+		toolTip$ = Translate!.getTranslation("AON_SELECT_BASIS_FOR_COMPARISON")
 		dockLocation = DashboardWidget.getDOCK_LEFT()
 		filter! = incomeComparisonBarDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
 		filter!.selectFilter("A")
 		filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnGLCMPINC_BARFilterSelect")
 
-		filterName$ = "PerYear"
+		filterName$ = Translate!.getTranslation("AON_PERYEAR")
 		filterHashMap! = new LinkedHashMap()
-		filterHashMap!.put("0","By Period")
-		filterHashMap!.put("1","By Year")
+		filterHashMap!.put("0",Translate!.getTranslation("AON_BY_PERIOD"))
+		filterHashMap!.put("1",Translate!.getTranslation("AON_BY_YEAR"))
 		
-		toolTip$ = "Select comparison for period or year"
+		toolTip$ = Translate!.getTranslation("AON_SELECT_COMPARISON_FOR_PERIOD_OR_YEAR")
 		dockLocation = DashboardWidget.getDOCK_RIGHT()
 		filter! = incomeComparisonBarDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
 		filter!.selectFilter("0")
@@ -220,8 +220,8 @@ rem ==============================================
 	gosub get_security
 	if allow_widget$="Y" and installMap!.get("GL")="Y"
 		name$="GLBNKBAL_BAR"
-		title$ = "Bank Account Balances"
-		previewText$="Bank account balances displayed in a bar chart"
+		title$ = Translate!.getTranslation("AON_BANK_ACCOUNT_BALANCES")
+		previewText$=Translate!.getTranslation("AON_BANK_ACCOUNT_BALANCES_DISPLAYED_IN_A_BAR_CHART")
 		previewImage$=preview_path$+"glbnkbal_bar.png"
 		chartTitle$ = ""
 		domainTitle$ = ""
@@ -253,8 +253,8 @@ rem ==============================================
 	gosub get_security
 	if allow_widget$="Y" and installMap!.get("GL")="Y"
 		name$="GLBNKBAL_RNG"
-		title$ = "Bank Balances RingChart"
-		previewText$="Bank account balances displayed in a pie chart"
+		title$ = Translate!.getTranslation("AON_BANK_BALANCES_RINGCHART")
+		previewText$=Translate!.getTranslation("AON_BANK_ACCOUNT_BALANCES_DISPLAYED_IN_A_PIE_CHART")
 		previewImage$=preview_path$+"glbnkbal_rng.png"
 		chartTitle$ = ""
 		flat=1 
@@ -280,11 +280,11 @@ rem ==============================================
 		ringChartWidget!.setPlotPadding(0.1)
 
 		rem Create Filters 
-		filterName$ = "Bank Balances RingChart - TimeFrame"
+		filterName$ = Translate!.getTranslation("AON_BANK_BALANCES_RINGCHART_-_TIMEFRAME")
 		filterHashMap! = new LinkedHashMap()
-		filterHashMap!.put("A","Current year")
-		filterHashMap!.put("C","Previous year")
-		toolTip$ = "Select time frame"
+		filterHashMap!.put("A",Translate!.getTranslation("AON_CURRENT_YEAR"))
+		filterHashMap!.put("C",Translate!.getTranslation("AON_PREVIOUS_YEAR"))
+		toolTip$ = Translate!.getTranslation("AON_SELECT_TIME_FRAME")
 		dockLocation = DashboardWidget.getDOCK_LEFT()
 		filter! = bankacctRingChartDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
 		filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnGLBNKBAL_RNGFilterSelect")
@@ -300,8 +300,8 @@ rem ==============================================
 	gosub get_security
 	if allow_widget$="Y" and installMap!.get("GL")="Y"
 		name$="GLEXPTOT_PIE"
-		title$ = "YTD Expense Breakdown"
-		previewText$="Expense year to date breakdown displayed in a pie chart"
+		title$ = Translate!.getTranslation("AON_YTD_EXPENSE_BREAKDOWN")
+		previewText$=Translate!.getTranslation("AON_EXPENSE_YEAR_TO_DATE_BREAKDOWN_DISPLAYED_IN_A_PIE_CHART")
 		previewImage$=preview_path$+"glexptot_pie.png"
 		chartTitle$ = ""
 		flat = 1
@@ -328,8 +328,8 @@ rem ==============================================
         rem Ensure the labels aren't truncated by increasing the padding around the plot by 10%
         expPieWidget!.setPlotPadding(0.1)
 
-		text$ = "Chart of Accounts" 
-		toolTip$ = "Launch query on GL Chart of Accounts" 
+		text$ = Translate!.getTranslation("AON_CHART_OF_ACCOUNTS") 
+		toolTip$ = Translate!.getTranslation("AON_LAUNCH_QUERY_ON_GL_CHART_OF_ACCOUNTS") 
 		dockLocation = DashboardWidget.getDOCK_LEFT()
 		browseOnSelect = 0
 		link! = expPieChartDashboardWidget!.addLink(url$,text$,toolTip$,dockLocation,browseOnSelect)
@@ -352,7 +352,7 @@ rem ==============================================
 	
 	declare DashboardCategory   salesDashboardCategory!
 	
-	salesDashboardCategory! = aonDashboard!.addDashboardCategory("Sales","Sales")
+	salesDashboardCategory! = aonDashboard!.addDashboardCategory("Sales",Translate!.getTranslation("AON_SALES"))
 rem	salesDashboardCategory!.setMinWidgetWidth(500)
 rem	salesDashboardCategory!.setMaxWidgetWidth(2000)
 
@@ -364,8 +364,8 @@ rem ==============================================
 	gosub get_security
 	if allow_widget$="Y" and installMap!.get("SA")="Y"
 		name$="SATOPCST_BAR"
-		title$ = "Top Customers"
-		previewText$="Top 5 Customers displayed in a bar chart"
+		title$ = Translate!.getTranslation("AON_TOP_CUSTOMERS")
+		previewText$=Translate!.getTranslation("AON_TOP_5_CUSTOMERS_DISPLAYED_IN_A_BAR_CHART")
 		previewImage$=preview_path$+"satopcst_bar.png"
 		chartTitle$ = ""
 		domainTitle$ = ""
@@ -400,8 +400,8 @@ rem ==============================================
 	gosub get_security
 	if allow_widget$="Y" and installMap!.get("SA")="Y"
 		name$ = "SATOPCST_SBR"
-		title$ = "Products for Top Customers"
-		previewText$="Top 5 Customers displayed in a stacked bar chart"
+		title$ = Translate!.getTranslation("AON_PRODUCTS_FOR_TOP_CUSTOMERS")
+		previewText$=Translate!.getTranslation("AON_TOP_5_CUSTOMERS_DISPLAYED_IN_A_STACKED_BAR_CHART")
 		previewImage$=preview_path$+"satopcst_sbr.png"
 		chartTitle$ = ""
 		domainTitle$ = ""
@@ -436,8 +436,8 @@ rem ==============================================
 	gosub get_security
 	if allow_widget$="Y" and installMap!.get("SA")="Y"
 		name$ = "SATOPREP_SBR"
-		title$ = "Products for Top Salesreps"
-		previewText$="Products for Top Salesreps displayed in a stacked bar chart"
+		title$ = Translate!.getTranslation("AON_PRODUCTS_FOR_TOP_SALESREPS")
+		previewText$=Translate!.getTranslation("AON_PRODUCTS_FOR_TOP_SALESREPS_DISPLAYED_IN_A_STACKED_BAR_CHART")
 		previewImage$=preview_path$+"satoprep_sbr.png"
 		chartTitle$ = ""
 		domainTitle$ = ""
@@ -473,8 +473,8 @@ rem ==============================================
 	gosub get_security
 	if allow_widget$="Y" and installMap!.get("SA")="Y"
 		name$ = "SATOPREP_PIE"
-		title$ = "Top Salesreps"
-		previewText$="Top Salesreps displayed in a pie chart"
+		title$ = Translate!.getTranslation("AON_TOP_SALESREPS")
+		previewText$=Translate!.getTranslation("AON_TOP_SALESREPS_DISPLAYED_IN_A_PIE_CHART")
 		previewImage$=preview_path$+"satoprep_pie.png"
 		chartTitle$ = ""
 		flat=1 
@@ -508,12 +508,12 @@ rem ==============================================
 	gosub get_security
 	if allow_widget$="Y" and installMap!.get("SA")="Y"
 		name$ = "SAREPTOT_SBR"
-		title$ = "Products for Salesreps"
-		previewText$="Products for Salesreps displayed in a stacked bar chart"
+		title$ = Translate!.getTranslation("AON_PRODUCTS_FOR_SALESREPS")
+		previewText$=Translate!.getTranslation("AON_PRODUCTS_FOR_SALESREPS_DISPLAYED_IN_A_STACKED_BAR_CHART")
 		previewImage$=preview_path$+"sareptot_sbr.png"
 		chartTitle$ = ""
 		domainTitle$ = ""
-		rangeTitle$ = "$ in 1000s"
+		rangeTitle$ = Translate!.getTranslation("AON_$_IN_1000S")
 		flat=1 
 		orientation=BarChartWidget.getORIENTATION_VERTICAL() 
 		legend=1
@@ -545,8 +545,8 @@ rem GOTO TMPSKIP_SAREPS
 	gosub get_security
 	if allow_widget$="Y" and installMap!.get("SA")="Y"
 		name$ = "SATOPREP_LIN"
-		title$ = "Top Salesrep Totals"
-		previewText$="Top 5 Salesreps displayed in a line chart"
+		title$ = Translate!.getTranslation("AON_TOP_SALESREP_TOTALS")
+		previewText$=Translate!.getTranslation("AON_TOP_5_SALESREPS_DISPLAYED_IN_A_LINE_CHART")
 		previewImage$=preview_path$+"satoprep_lin.png"
 		chartTitle$ = ""
 		domainTitle$ = ""
@@ -583,8 +583,8 @@ rem =======================================
 	gosub get_security
 	if allow_widget$="Y" and installMap!.get("SA")="Y"
 		name$ = "SATOPREP_ARE"
-		title$ = "Top Salesreps Period Totals"
-		previewText$="Top 5 Salesreps' period totals displayed in a area chart"
+		title$ = Translate!.getTranslation("AON_TOP_SALESREPS_PERIOD_TOTALS")
+		previewText$=Translate!.getTranslation("AON_TOP_5_SALESREPS'_PERIOD_TOTALS_DISPLAYED_IN_A_AREA_CHART")
 		previewImage$=preview_path$+"satoprep_are.png"
 		chartTitle$ = ""
 		domainTitle$ = ""
@@ -670,8 +670,8 @@ rem - establish the month
 		month$ = ending$(1,2)
 
 		name$="SLSBYCST_JAS"
-		title$ = "Sales by Customer Type"
-		previewText$="Drilldown sales report for month/year displayed in a jasper viewer"
+		title$ = Translate!.getTranslation("AON_SALES_BY_CUSTOMER_TYPE")
+		previewText$=Translate!.getTranslation("AON_DRILLDOWN_SALES_REPORT_FOR_MONTH/YEAR_DISPLAYED_IN_A_JASPER_VIEWER")
 		previewImage$=preview_path$+"slsbycst_jas.png"
 		reportFile$ = report_path$+"SalesByCustType.jasper"
 		connectString$=aon_url$
@@ -694,9 +694,6 @@ rem - establish the month
 		salesJasperViewerWidget!.setCallback(JasperViewerWidget.getSAVE_MENU_ITEM_NAME(),BBjMenuItem.ON_POPUP_ITEM_SELECT,pgm(-2) + "::OnSLSBYCST_JASFileSave")
 		salesJasperViewerWidget!.setCallback(JasperViewerWidget.getEMAIL_TOOL_BUTTON_NAME(),BBjToolButton.ON_TOOL_BUTTON_PUSH,pgm(-2) + "::OnSLSBYCST_JASEmail")
 
-		myNS!=BBjAPI().getNamespace("dash","slsbycst",1)
-		myNS!.setValue("sv_widget",salesJasperViewerWidget!)
-		
 	endif
 	
 	return
