@@ -105,7 +105,7 @@ rem --- If using Payment Authorization, get all possible signers and their signa
             if pos(firm_id$=apm_approvers_key$)<>1 then break
             readrecord(apm_approvers_dev)apm_approvers$
             if apm_approvers.check_signer and apm_approvers.limit_auth and !signerAuthLimitMap!.containsKey(apm_approvers.user_id$) then
-                signerAuthLimitMap!.put(apm_approvers.user_id$,apm_approvers.max_auth_limit)
+                signerAuthLimitMap!.put(apm_approvers.user_id$,apm_approvers.max_auth_amt)
             endif
         wend
         
