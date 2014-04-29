@@ -170,7 +170,7 @@ rem ==============================================
 		connectString$=aon_url$
 
 		rem --- params for calling SPROC
-		include_type$="F"; rem "Include Current vs Prior years' data; summarized by period
+		include_type$="A"; rem "Include Current vs Prior years' data; summarized by period (filter values A/0)
 		acct_type$="I"; rem "Income accounts only
 		do_coa_join$="N"; rem "Change to Y to JOIN w/Chart of Accts to filter by account grouping
 
@@ -179,9 +179,9 @@ rem ==============================================
 		incomeComparisonBarDashboardWidget! = acctDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		incCmpWidget!=incomeComparisonBarDashboardWidget!.getWidget()
 		incCmpWidget!.setFontScalingFactor(0.45)
-		incCmpWidget!.setChartColors("#00a4d9","#7fbe27",1.0,1.0); rem Colors for By Period
-		rem incCmpWidget!.setChartColors("#00a4d9","#46dca5",1.0,1.0); rem Colors for By Year
-		incCmpWidget!.setLabelsInBarChartColor("#ffffff")
+rem		incCmpWidget!.setChartColors("#00a4d9","#7fbe27",1.0,1.0); rem Colors for By Period
+		incCmpWidget!.setChartColors("#3cb6df,#4aca75,#91bd5d"); rem supplying three explicit colors due to issue in legend vs chart if range is used (CAH)
+		incCmpWidget!.setLabelsInBarChartColor("#000000")
 		
 		rem Create Filters 
 		filterName$ = "Compare"
@@ -194,7 +194,7 @@ rem ==============================================
 		toolTip$ = "Select basis for comparison"
 		dockLocation = DashboardWidget.getDOCK_LEFT()
 		filter! = incomeComparisonBarDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
-		filter!.selectFilter("E")
+		filter!.selectFilter("A")
 		filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnGLCMPINC_BARFilterSelect")
 
 		filterName$ = "PerYear"
@@ -205,7 +205,7 @@ rem ==============================================
 		toolTip$ = "Select comparison for period or year"
 		dockLocation = DashboardWidget.getDOCK_RIGHT()
 		filter! = incomeComparisonBarDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
-		filter!.selectFilter("1")
+		filter!.selectFilter("0")
 		filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnGLCMPINC_BARFilterSelect")
 
 		gosub update_meter
