@@ -2403,6 +2403,12 @@ rem --- Approve the invoice selected in the grid
 
 		rem --- Not approved, and user is an approver
 		if !approved and apm_approvers.check_signer then
+rem wgh ... 
+rem --- Is check over approvers limit?
+if apm_approvers.limit_auth and thisVendor_total>num(apm_approvers.max_auth_amt) then
+	continue
+endif
+
 			rem --- Set approval type
 			apt_invapproval.approval_type$ = "S"
 
@@ -2427,6 +2433,12 @@ rem --- Approve the invoice selected in the grid
 
 		rem --- One approval, over threshhold for two approvals,  and user is an approver
 		if approved = 1 and thisVendor_total >= threshhold and apm_approvers.check_signer then
+rem wgh ... is check over approvers limit?
+rem --- Is check over approvers limit?
+if apm_approvers.limit_auth and thisVendor_total>num(apm_approvers.max_auth_amt) then
+	continue
+endif
+
 			rem --- Set approval type
 			apt_invapproval.approval_type$ = "S"
 
