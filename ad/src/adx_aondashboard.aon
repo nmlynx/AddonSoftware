@@ -25,6 +25,7 @@ rem --- Addon dashboards
 	use java.awt.Color
 	use java.awt.Font
 	use java.util.HashMap
+	use java.util.LinkedHashMap
 
 	seterr std_error
 	setesc std_error
@@ -127,7 +128,7 @@ rem ==============================================
 
 		rem Create Filters 
 		filterName$ = "Income Totals - Time Frame"
-		filterHashMap! = new HashMap()
+		filterHashMap! = new LinkedHashMap()
 		filterHashMap!.put("A","Current Year Actual")
 		filterHashMap!.put("B","Current Year Budget")
 		filterHashMap!.put("C","Prior Year Actual")
@@ -186,7 +187,7 @@ rem		incCmpWidget!.setChartColors("#00a4d9","#7fbe27",1.0,1.0); rem Colors for B
 		rem Create Filters 
 		filterName$ = "Compare"
 
-		filterHashMap! = new HashMap()
+		filterHashMap! = new LinkedHashMap()
 		filterHashMap!.put("A","Current/Prior")
 		filterHashMap!.put("C","Current/Next")
 		filterHashMap!.put("E","Current/Prior/Next")
@@ -198,7 +199,7 @@ rem		incCmpWidget!.setChartColors("#00a4d9","#7fbe27",1.0,1.0); rem Colors for B
 		filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnGLCMPINC_BARFilterSelect")
 
 		filterName$ = "PerYear"
-		filterHashMap! = new HashMap()
+		filterHashMap! = new LinkedHashMap()
 		filterHashMap!.put("0","By Period")
 		filterHashMap!.put("1","By Year")
 		
@@ -280,7 +281,7 @@ rem ==============================================
 
 		rem Create Filters 
 		filterName$ = "Bank Balances RingChart - TimeFrame"
-		filterHashMap! = new HashMap()
+		filterHashMap! = new LinkedHashMap()
 		filterHashMap!.put("A","Current year")
 		filterHashMap!.put("C","Previous year")
 		toolTip$ = "Select time frame"
