@@ -103,7 +103,7 @@ rem --- Loop through result set from work file query
 		data! = rs!.getEmptyRecordData()
 		data!.setFieldValue("CHECK_DATE", fndate$(read_tpl.check_date$))
         if cvs(read_tpl.signature_2$,2)="" then
-            if cvs(read_tpl.signature_2$,1)="" then
+            if cvs(read_tpl.signature_1$,1)="" then
                 rem --- No signatures on this check
                 data!.setFieldValue("ONE_SIGNATURE", "")
                 data!.setFieldValue("TWO_SIGNATURE_1", "")
