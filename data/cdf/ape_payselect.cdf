@@ -2403,11 +2403,11 @@ rem --- Approve the invoice selected in the grid
 
 		rem --- Not approved, and user is an approver
 		if !approved and apm_approvers.check_signer then
-rem wgh ... 
-rem --- Is check over approvers limit?
-if apm_approvers.limit_auth and thisVendor_total>num(apm_approvers.max_auth_amt) then
-	continue
-endif
+
+			rem --- Is check over approvers limit?
+			if apm_approvers.limit_auth and thisVendor_total>num(apm_approvers.max_auth_amt) then
+				continue
+			endif
 
 			rem --- Set approval type
 			apt_invapproval.approval_type$ = "S"
@@ -2433,11 +2433,11 @@ endif
 
 		rem --- One approval, over threshhold for two approvals,  and user is an approver
 		if approved = 1 and thisVendor_total >= threshhold and apm_approvers.check_signer then
-rem wgh ... is check over approvers limit?
-rem --- Is check over approvers limit?
-if apm_approvers.limit_auth and thisVendor_total>num(apm_approvers.max_auth_amt) then
-	continue
-endif
+
+			rem --- Is check over approvers limit?
+			if apm_approvers.limit_auth and thisVendor_total>num(apm_approvers.max_auth_amt) then
+				continue
+			endif
 
 			rem --- Set approval type
 			apt_invapproval.approval_type$ = "S"
@@ -2870,10 +2870,17 @@ rem ==========================================================================
 		vendor_id$ = gridInvoices!.getCellText(row,3)
 		vendor_name$ = gridInvoices!.getCellText(row,4)
 		ap_inv_no$ = gridInvoices!.getCellText(row,5)
+		hold=gridInvoices!.getCellState(row,6)
 		inv_amt  = num(gridInvoices!.getCellText(row,9))
 		vendorTotalsMap!=callpoint!.getDevObject("vendorTotalsMap")
 		thisVendor_total = cast(BBjNumber, vendorTotalsMap!.get(vendor_id$))
-		gosub get_approval_status	
+
+		rem --- Skip held invoices
+		if hold then
+			continue
+		else
+			gosub get_approval_status
+		endif
 
 		line$ = "<tr><td>" + ap_inv_no$ + "</td>" + $0A$
 		line$ = line$ + "<td>" + vendor_id$ + "</td>" + $0A$
