@@ -2828,6 +2828,7 @@ rem ==========================================================================
 			endif
 		endif
 	wend
+	if cvs(to$,2)="" then to$=from$
 
 	subject$ = Translate!.getTranslation("AON_INVOICES")
 	if usertype$ = "R" then 
