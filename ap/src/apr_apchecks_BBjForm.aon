@@ -220,17 +220,19 @@ rem --- Accumulate
         t[2]=t[2]+ape04a.retention
 		t[3]=t[3]+ape04a.payment_amt
 		
-        rem --- Get signers that approved this invoice
-        partialkey$ = ape04a.firm_id$ + ape04a.vendor_id$ + ape04a.ap_inv_no$
-        read (apt_invapproval_dev, key=partialkey$, dom=*next)
-        while 1
-            apt_invapproval_key$=key(apt_invapproval_dev,end=*break)
-            if pos(partialkey$ = apt_invapproval_key$) <> 1 then break
-            read record(apt_invapproval_dev)apt_invapproval$
-            if apt_invapproval.approval_type$="S" then
-                signerSet!.add(apt_invapproval.user_id$)
-            endif
-        wend
+        rem --- If using Payment Authorization, get signers that approved this invoice
+        if payauth.use_pay_auth then
+            partialkey$ = ape04a.firm_id$ + ape04a.vendor_id$ + ape04a.ap_inv_no$
+            read (apt_invapproval_dev, key=partialkey$, dom=*next)
+            while 1
+                apt_invapproval_key$=key(apt_invapproval_dev,end=*break)
+                if pos(partialkey$ = apt_invapproval_key$) <> 1 then break
+                read record(apt_invapproval_dev)apt_invapproval$
+                if apt_invapproval.approval_type$="S" then
+                    signerSet!.add(apt_invapproval.user_id$)
+                endif
+            wend
+        endif
 
     wend
 
