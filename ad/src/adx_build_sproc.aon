@@ -46,8 +46,11 @@ rem --- SATOPCST_SBR
 rem --- SAREPTOT_SBR
 rem --- SATOPREP_LIN
 rem --- SATOPREP_ARE
+rem --- SATOPREP_SAR
 rem --- SATOPREP_PIE
 rem --- SATOPREP_SBR
+
+rem --- SFWOSSOS_GRD
 
 
 rem --- 4/2012 Added VIEWs to the hard-coded logic herein
@@ -289,12 +292,21 @@ rem --- first drop all std Addon SPROCs
 	sproc_vw_name$="SATOPREP_ARE"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def		
+	
+	sproc_vw_name$="SATOPREP_SAR"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def		
 		
 	sproc_vw_name$="SATOPREP_PIE"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def	
 	
 	sproc_vw_name$="SATOPREP_SBR"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def		
+
+	
+	sproc_vw_name$="SFWOSSOS_GRD"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def		
 
@@ -614,6 +626,9 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
+rem ==============================================
+rem --- Dashboard SPROC definitions
+rem ==============================================
 
 	rem --- Dashboard: GLINCTOT_GRD
     sproc_vw_name$="GLINCTOT_GRD"
@@ -726,6 +741,17 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def		
 	
+	rem --- Dashboard: SATOPREP_SAR
+    sproc_vw_name$="SATOPREP_SAR"
+	sqlprep$="CREATE PROCEDURE SATOPREP_SAR "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, INCLUDE_TYPE CHAR(1) IN, YEAR CHAR(1) IN, "
+	sqlprep$=sqlprep$+"NUM_TO_LIST VARCHAR(1) IN, MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"	
+    sqlprep$=sqlprep$+"'"+sproc_path$+"SATOPREP_SAR.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Dashboard SA Top Salesreps - Stacked Area Widget'"
+
+    gosub create_sproc_def		
+	
 	rem --- Dashboard: SATOPREP_PIE
     sproc_vw_name$="SATOPREP_PIE"
 	sqlprep$="CREATE PROCEDURE SATOPREP_PIE "
@@ -748,7 +774,17 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def		
 		
+	rem --- Dashboard: SFWOSSOS_GRD
+    sproc_vw_name$="SFWOSSOS_GRD"
+	sqlprep$="CREATE PROCEDURE SFWOSSOS_GRD "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, WO_INCLUDE_TYPE CHAR(1) IN, SO_INCLUDE_TYPE CHAR(1) IN, "
+	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"	
+    sqlprep$=sqlprep$+"'"+sproc_path$+"SFWOSSOS_GRD.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'WOs linked to SOs - Grid Widget'"
 
+    gosub create_sproc_def		
+	
 	
 rem --- Done with SPROCs. Now do VIEWs
 rem --- As of 10/2013, no VIEWs are needed
