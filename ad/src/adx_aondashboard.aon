@@ -64,6 +64,7 @@ rem --- create dashboard, tabs, widgets
 	gosub create_dashboard
 	gosub create_acct_tab_and_widgets
 	gosub create_sales_tab_and_widgets
+rem	gosub create_mfg_tab_and_widgets
 	
 rem --- now create/show the Dashboard Window
  
@@ -167,7 +168,7 @@ rem ==============================================
 		orientation=BarChartWidget.getORIENTATION_VERTICAL() 
 		legend=1
 		chartTitle$ = ""
-		flat = 1
+		flat=0
 		connectString$=aon_url$
 
 		rem --- params for calling SPROC
@@ -181,7 +182,7 @@ rem ==============================================
 		incCmpWidget!=incomeComparisonBarDashboardWidget!.getWidget()
 		incCmpWidget!.setFontScalingFactor(0.45)
 rem		incCmpWidget!.setChartColors("#00a4d9","#7fbe27",1.0,1.0); rem Colors for By Period
-		incCmpWidget!.setChartColors("#3cb6df,#4aca75,#91bd5d"); rem supplying three explicit colors due to issue in legend vs chart if range is used (CAH)
+rem		incCmpWidget!.setChartColors("#3cb6df,#4aca75,#91bd5d"); rem supplying three explicit colors due to issue in legend vs chart if range is used (CAH)
 		incCmpWidget!.setLabelsInBarChartColor("#000000")
 		
 		rem Create Filters 
@@ -226,7 +227,7 @@ rem ==============================================
 		chartTitle$ = ""
 		domainTitle$ = ""
 		rangeTitle$ = ""
-		flat=1 
+		flat=0 
 		orientation=BarChartWidget.getORIENTATION_VERTICAL() 
 		legend=0
 		connectString$=aon_url$
@@ -239,8 +240,8 @@ rem ==============================================
 		bankacctBarChartDashboardWidget! = acctDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		acctWidget! = bankacctBarChartDashboardWidget!.getWidget()
 		acctWidget!.setDomainLabelAngle(1)
-		acctWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
-		acctWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
+rem		acctWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
+rem		acctWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 
 		gosub update_meter
 	endif
@@ -273,7 +274,7 @@ rem ==============================================
 		ringChartWidget! = bankacctRingChartDashboardWidget!.getWidget()
 		ringChartWidget!.setExplodeAllSlicesPercent(.025)
 		ringChartWidget!.setGradientShadingAmount(.0)
-		ringChartWidget!.setChartColors(ringChartWidget!.getColorTheme(ChartWidget.getColorThemeGreen()))
+rem		ringChartWidget!.setChartColors(ringChartWidget!.getColorTheme(ChartWidget.getColorThemeGreen()))
 		ringChartWidget!.setRingDepth(.55)
 	 
 		rem Ensure the labels aren't truncated by increasing the padding around the plot by 10%
@@ -304,7 +305,7 @@ rem ==============================================
 		previewText$=Translate!.getTranslation("AON_EXPENSE_YEAR_TO_DATE_BREAKDOWN_DISPLAYED_IN_A_PIE_CHART")
 		previewImage$=preview_path$+"glexptot_pie.png"
 		chartTitle$ = ""
-		flat = 1
+		flat = 0
 		legend=0
 		numSlices=8
 		connectString$=aon_url$
@@ -318,12 +319,12 @@ rem ==============================================
 
 		expPieChartDashboardWidget! = acctDashboardCategory!.addPieChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,flat,legend,connectString$,sql$)
 		expPieWidget! = expPieChartDashboardWidget!.getWidget()
-		expPieWidget!.setChartColors("#860102,#cc2200,#e14900,#fe7600,#ff9c01,#fdce2e")
+rem		expPieWidget!.setChartColors("#860102,#cc2200,#e14900,#fe7600,#ff9c01,#fdce2e")
 		expPieWidget!.setGradientShadingAmount(.05)
-		chartColors! = expPieWidget!.getCustomChartColors()
-		ChartWidget.adjustColorVectorBrightness(chartColors!, 0.35)
-		ChartWidget.adjustColorVectorOpacity(chartColors!, 0.75)
-		expPieWidget!.setCustomChartColors(chartColors!)
+rem		chartColors! = expPieWidget!.getCustomChartColors()
+rem		ChartWidget.adjustColorVectorBrightness(chartColors!, 0.35)
+rem		ChartWidget.adjustColorVectorOpacity(chartColors!, 0.75)
+rem		expPieWidget!.setCustomChartColors(chartColors!)
 
         rem Ensure the labels aren't truncated by increasing the padding around the plot by 10%
         expPieWidget!.setPlotPadding(0.1)
@@ -370,7 +371,7 @@ rem ==============================================
 		chartTitle$ = ""
 		domainTitle$ = ""
 		rangeTitle$ = ""
-		flat=1 
+		flat=0 
 		orientation=BarChartWidget.getORIENTATION_VERTICAL() 
 		legend=0
 		connectString$=aon_url$
@@ -385,8 +386,8 @@ rem ==============================================
 		topCustsWidget! = topCustsBarChartDashboardWidget!.getWidget()
 		topCustsWidget!.setFontScalingFactor(0.45)
 		topCustsWidget!.setDomainLabelAngle(1)
-		topCustsWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
-		topCustsWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
+rem		topCustsWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
+rem		topCustsWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 
 		gosub update_meter
 	endif
@@ -406,7 +407,7 @@ rem ==============================================
 		chartTitle$ = ""
 		domainTitle$ = ""
 		rangeTitle$ = ""
-		flat=1 
+		flat=0 
 		orientation=BarChartWidget.getORIENTATION_HORIZONTAL() 
 		legend=1
 		connectString$=aon_url$
@@ -442,7 +443,7 @@ rem ==============================================
 		chartTitle$ = ""
 		domainTitle$ = ""
 		rangeTitle$ = ""
-		flat=1 
+		flat=0 
 		orientation=BarChartWidget.getORIENTATION_HORIZONTAL() 
 		legend=1
 		connectString$=aon_url$
@@ -477,7 +478,7 @@ rem ==============================================
 		previewText$=Translate!.getTranslation("AON_TOP_SALESREPS_DISPLAYED_IN_A_PIE_CHART")
 		previewImage$=preview_path$+"satoprep_pie.png"
 		chartTitle$ = ""
-		flat=1 
+		flat=0 
 		legend=0
 		numSlices=8
 		connectString$=aon_url$
@@ -492,9 +493,9 @@ rem ==============================================
 		toprepPWidget! = toprepPPieChartDashboardWidget!.getWidget()
 
 		toprepPWidget!.setFontScalingFactor(0.45)
-		toprepPWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
+rem		toprepPWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		toprepPWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
-	rem toprepPWidget!.setLabelsInPieChartColor("#ffffff")
+rem		toprepPWidget!.setLabelsInPieChartColor("#ffffff")
 	
 		gosub update_meter
 	endif		
@@ -514,7 +515,7 @@ rem ==============================================
 		chartTitle$ = ""
 		domainTitle$ = ""
 		rangeTitle$ = Translate!.getTranslation("AON_$_IN_1000S")
-		flat=1 
+		flat=0 
 		orientation=BarChartWidget.getORIENTATION_VERTICAL() 
 		legend=1
 		connectString$=aon_url$
@@ -532,7 +533,7 @@ rem ==============================================
 		repsalesWidget!.setFontScalingFactor(0.45)
 rem		repsalesWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		repsalesWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
-		repsalesWidget!.setLabelsInBarChartColor("#ffffff")
+		repsalesWidget!.setLabelsInBarChartColor("#000000")
 
 		gosub update_meter
 	endif		
@@ -551,7 +552,7 @@ rem GOTO TMPSKIP_SAREPS
 		chartTitle$ = ""
 		domainTitle$ = ""
 		rangeTitle$ = ""
-		flat=0 
+		flat=1 
 		orientation=LineChartWidget.getORIENTATION_VERTICAL() 
 		legend=1
 		connectString$=aon_url$
@@ -589,7 +590,7 @@ rem =======================================
 		chartTitle$ = ""
 		domainTitle$ = ""
 		rangeTitle$ = ""
-		flat=0 
+		flat=1 
 		orientation=LineChartWidget.getORIENTATION_VERTICAL() 
 		legend=1
 		connectString$=aon_url$
@@ -606,15 +607,48 @@ rem =======================================
 		
 		topRepsAWidget!.setFontScalingFactor(0.45)
 		topRepsAWidget!.setDomainLabelAngle(1)
-		topRepsAWidget!.setChartColors("#3300ff","#6fd37c",1.0,1.0)
-
-		achartColors! = topRepsAWidget!.getCustomChartColors()
-		ChartWidget.adjustColorVectorOpacity(achartColors!, 0.30)
-		topRepsAWidget!.setCustomChartColors(achartColors!)
+		topRepsAcolors$= "#3366cc,#ff9900,#990099,#dd4477,#b82e2e"; rem colors based on the BBj default 5/1/2014
+		topRepsAWidget!.setChartColors(topRepsAcolors$,0.35); rem Mostly transparent so overlapping colors are visible
 		
 		gosub update_meter
 
 	endif
+		
+rem =======================================
+rem --- create SA SA Top Salesrep Stacked Area chart
+rem =======================================
+
+	dashboard_menu_id$="ADD_SATOPREP_SAR"
+	gosub get_security
+	if allow_widget$="Y" and installMap!.get("SA")="Y"
+		name$ = "SATOPREP_SAR"
+		title$ = Translate!.getTranslation("AON_TOP_SALESREPS_PERIOD_TOTALS")
+		previewText$=Translate!.getTranslation("AON_TOP_5_SALESREPS'_PERIOD_TOTALS_DISPLAYED_IN_A_AREA_CHART")
+		previewImage$=preview_path$+"satoprep_sar.png"
+		chartTitle$ = ""
+		domainTitle$ = ""
+		rangeTitle$ = ""
+		flat=1 
+		orientation=LineChartWidget.getORIENTATION_VERTICAL() 
+		legend=1
+		connectString$=aon_url$
+		
+		rem --- params for calling SPROC
+		year$ = "2014"; rem <<============= HARDCODED =========
+		num_to_list$ = "5"; rem <<============= HARDCODED =========. Also Note: SATOPREP_SAR sets a MAX of 5
+		include_type$ = "A"; rem Summarize at the rep-level. No others are currently implemented
+		
+		sql$="CALL SATOPREP_SAR ('"+firm_id$+"', '"+include_type$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+
+		topRepsSAAreaChartDashboardWidget! = salesDashboardCategory!.addStackedAreaChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,orientation,legend,connectString$,sql$)
+		topRepsSAWidget! = topRepsSAAreaChartDashboardWidget!.getWidget()
+		
+		topRepsSAWidget!.setFontScalingFactor(0.45)
+		topRepsSAWidget!.setDomainLabelAngle(1)
+		
+		gosub update_meter
+
+	endif	
 		
 	
 rem ==============================================   
@@ -699,10 +733,97 @@ rem - establish the month
 	return
 
 	
+
+rem =========================================================================================================================
+rem  create manufacturing tab and widgets
+rem  this section defines the mfg category/tab, and the several widgets it contains
+rem =========================================================================================================================
+ 
+rem ==============================================
+create_mfg_tab_and_widgets:
+rem ==============================================
+	
+	declare DashboardCategory   mfgDashboardCategory!
+	
+	mfgDashboardCategory! = aonDashboard!.addDashboardCategory("Manufacturing","Manufacturing")
+
+
+rem ==============================================
+rem --- create a WOs with SOs grid
+rem ==============================================
+
+	dashboard_menu_id$="ADD_SFWOSSOS_GRD"
+	gosub get_security
+	if allow_widget$="Y" and installMap!.get("OP")="Y" and installMap!.get("SF")="Y"
+		name$="SFWOSSOS_GRD"
+		title$ = "WOs linked to SOs"
+		previewText$="Work Orders linked to Sales Orders displayed in a grid"
+		previewImage$=preview_path$+"sfwossos_grd.png"
+		connectString$=aon_url$
+		
+		rem --- params for calling SPROC
+		wo_include_type$="A"; rem "Default to Open WOs only
+		so_include_type$="A"; rem "Default to Open SOs only
+
+		sql$="CALL SFWOSSOS_GRD ('"+firm_id$+"', '"+wo_include_type$+"', '"+so_include_type$+"', '"+masks$+"', '"+barista_wd$+"')"
+
+		woSOGridDashboardWidget! = mfgDashboardCategory!.addGridDashboardWidget(name$,title$,previewText$,previewImage$,connectString$,sql$)
+		woSOgridWidget!=woSOGridDashboardWidget!.getWidget()
+		woSOgridWidget!.setColumnAlignment(3,GridWidget.getHORIZONTAL_ALIGNMENT_RIGHT())
+		woSOgridWidget!.setColumnAlignment(0,GridWidget.getHORIZONTAL_ALIGNMENT_LEFT())
+
+		rem Create Filters 
+		filterName$ = "WO Status"
+		filterHashMap! = new LinkedHashMap()
+		filterHashMap!.put("A","Open WOs only")
+		filterHashMap!.put("B","Planned WOs only")
+		filterHashMap!.put("C","Quoted WOs only")
+		filterHashMap!.put("D","Open and Planned WOs")
+		filterHashMap!.put("E","Planned and Quoted WOs")
+		filterHashMap!.put("F","Open and Quoted WOs")
+		filterHashMap!.put("G","All Open/Planned/Quoted")
+
+		toolTip$ = "Select WO status"
+		dockLocation = DashboardWidget.getDOCK_LEFT()
+		filter! = woSOGridDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
+		filter!.selectFilter("G"); rem default to All
+		filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnSFWOSSOS_GRDFilterSelect")
+	
+	
+		filterName$ = "SO Status"
+		filterHashMap! = new LinkedHashMap()
+		filterHashMap!.put("A","Open SOs only")
+		filterHashMap!.put("B","Backorders only")
+		filterHashMap!.put("C","Quotes only")
+		filterHashMap!.put("D","Sales and Backorders")
+		filterHashMap!.put("E","Backorders and Quotes")
+		filterHashMap!.put("F","Sales and Quotes")
+		filterHashMap!.put("G","All Sales/Backorders/Quotes")
+		
+		toolTip$ = "Select SO status"
+		dockLocation = DashboardWidget.getDOCK_RIGHT()
+		filter! = woSOGridDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
+		filter!.selectFilter("G"); rem default to All
+		filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnSFWOSSOS_GRDFilterSelect")
+	
+		gosub update_meter
+		
+	endif
+	
+	return
+
+	
+	
 rem =========================================================================================================================
 rem  event handlers
-rem  this section contains the event handlers for the widget filters and jasper save/email buttons
+rem  this section contains the event handlers for the widget filters, links and jasper save/email buttons
 rem =========================================================================================================================
+
+
+rem ==================================================================
+rem ===                     FILTERS                                ===
+rem ==================================================================
+
 		
 rem ==============================================   
 rem Handle filter select event for GL YrTots grid
@@ -821,6 +942,54 @@ rem     The inner widget gives us access to the dataset so that we can provide n
     incCmpWidget!.refresh()
 	
 	exit
+
+	
+rem ==============================================   
+rem Handle filter select event for "WOs linked to SOs" grid
+OnSFWOSSOS_GRDFilterSelect:
+rem ==============================================    
+rem The filter selection event for the Left filter on the "WOs linked to SOs" grid
+rem Get the information from the filter event so we'll have our dashboard widget and the inner widget
+rem     The dashboard widget gives us access to the filters and links
+rem     The inner widget gives us access to the dataset so that we can provide new data
+
+	customEvent! = BBjAPI().getLastEvent()
+	filterSelectEvent! = customEvent!.getObject()
+	filterName$ = filterSelectEvent!.getFilterName()
+	
+	rem You can get the current filter value from the filter selection event
+	filterKey$ = filterSelectEvent!.getFilterKey()
+	filterValue$ = filterSelectEvent!.getFilterValue()
+	
+	rem Get the dashboard widget and inner widget
+	woSOGridDashboardWidget! = filterSelectEvent!.getDashboardWidget()
+	woSOgridWidget! = woSOGridDashboardWidget!.getWidget()
+	
+    rem Get the current filter values from the dashboard widget, as that way we have access to all of them
+    filterLeft! = woSOGridDashboardWidget!.getDashboardWidgetFilterLeft()
+	woSOWidgetFilterCompareKey$ = filterLeft!.getKey()
+	wo_include_type$=woSOWidgetFilterCompareKey$;rem A-G
+	
+	filterRight! = woSOGridDashboardWidget!.getDashboardWidgetFilterRight()
+	woSOWidgetFilterCompareKey$ = filterRight!.getKey();rem A-G
+	so_include_type$=woSOWidgetFilterCompareKey$;rem A-G
+	
+	gosub get_masks
+	gosub get_sysinfo
+	gosub get_connectstring
+	
+	sql$="CALL SFWOSSOS_GRD ('"+firm_id$+"', '"+wo_include_type$+"', '"+so_include_type$+"', '"+masks$+"', '"+barista_wd$+"')"
+	
+	rem Refresh based on new sql
+	woSOgridWidget!.fill(aon_url$,sql$)	
+	woSOgridWidget!.refresh()
+	
+	exit
+	
+	
+rem ==================================================================
+rem ===                      LINKS                                 ===
+rem ==================================================================
 	
 rem ==============================================   
 OnGLEXPTOT_PIEAppLink:
@@ -845,6 +1014,10 @@ rem ==============================================
 
 	exit
 	
+
+rem ==================================================================
+rem ===                     JASPER                                 ===
+rem ==================================================================
 
 rem ==============================================    
 OnSLSBYCST_JASFileSave:
