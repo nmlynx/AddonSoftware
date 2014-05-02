@@ -959,22 +959,27 @@ rem ==========================================================================
 create_reports_vector: rem --- Create a vector from the file to fill the grid
 rem ==========================================================================
 
-	more=1
-	read (apt01_dev,key=firm_id$,dom=*next)
+	invoiceMap! = new java.util.TreeMap()
 	rows=0
 	tot_payments=0
+	sql_chan=sqlunt
+	sqlopen(sql_chan)stbl("+DBNAME")
+	sql_prep$="SELECT firm_id,ap_type,vendor_id,ap_inv_no "
+	sql_prep$=sql_prep$+"FROM apt_invoicehdr "
+	sql_prep$=sql_prep$+"WHERE firm_id='"+firm_id$+"' and invoice_bal>=0.01"
+	sqlprep(sql_chan)sql_prep$
+	sqlexec(sql_chan)
 
-	while more
-		read record (apt01_dev, end=*break) apt01a$
-		if pos(firm_id$=apt01a$)<>1 then break
-		rem --- Don't show zero balance invoice in grid
-		if apt01a.invoice_bal=0 then continue
+	dim select_tpl$:sqltmpl(sql_chan)
+	while 1
+		select_tpl$=sqlfetch(sql_chan,err=*break) 
+		readrecord(apt01_dev,key=select_tpl$,dom=*continue)apt01a$
 		read (ape01_dev, key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$, dom=*next); continue
 		dim apm01a$:fattr(apm01a$)
 		read record(apm01_dev, key=firm_id$+apt01a.vendor_id$, dom=*next) apm01a$
 		read record(apt11_dev, key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$, dom=*next)
 
-		while more
+		while 1
 			readrecord(apt11_dev,end=*break)apt11a$
 
 			if pos(firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$ =
@@ -987,7 +992,7 @@ rem ==========================================================================
 			apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
 			apt01a.retention = apt01a.retention + apt11a.trans_ret
 		wend
-        if apt01a.discount_amt<0 and apt01a.invoice_amt>0 then apt01a.discount_amt=0
+		if apt01a.discount_amt<0 and apt01a.invoice_amt>0 then apt01a.discount_amt=0
 		inv_amt = apt01a.invoice_amt
 		disc_amt = apt01a.discount_amt
 		ret_amt = apt01a.retention
@@ -1007,47 +1012,48 @@ rem ==========================================================================
 			amt_due = inv_amt - ret_amt - disc_amt - pymnt_amt
 		endif
 
-	rem --- Now fill vectors
-	rem --- Items 1 thru n+1 in InvoicesMaster must equal items 0 thru n in Invoices
-
+		rem --- Need vectInvoices! and vectInvoicesMaster! sorted in PRIMARY key order, not AO_INVBAL order
 		if apt01a.invoice_amt<>0 then
-			vectInvoices!.addItem(apt01a.selected_for_pay$); rem 0
-			vectInvoices!.addItem(apt01a.payment_grp$); rem 1
-			vectInvoices!.addItem(apt01a.ap_type$); rem 2
-			vectInvoices!.addItem(apt01a.vendor_id$); rem 3
-			vectInvoices!.addItem(apm01a.vendor_name$); rem 4
-			vectInvoices!.addItem(apt01a.ap_inv_no$); rem 5
-			vectInvoices!.addItem(apt01a.hold_flag$);rem 6
-			vectInvoices!.addItem(date(jul(apt01a.inv_due_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID"))); rem 7
-			vectInvoices!.addItem(date(jul(apt01a.disc_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID"))); rem 8
-			vectInvoices!.addItem(str(inv_amt)); rem 9
-			vectInvoices!.addItem(str(amt_due)); rem 10
-			vectInvoices!.addItem(str(disc_amt)); rem 11
-			vectInvoices!.addItem(str(pymnt_amt)); rem 12
-			vectInvoices!.addItem(str(ret_amt)); rem 13
+			tmpVect!=new BBjVector()
+			tmpVect!.addItem(apt01a.selected_for_pay$); rem 0
+			tmpVect!.addItem(apt01a.payment_grp$); rem 1
+			tmpVect!.addItem(apt01a.ap_type$); rem 2
+			tmpVect!.addItem(apt01a.vendor_id$); rem 3
+			tmpVect!.addItem(apm01a.vendor_name$); rem 4
+			tmpVect!.addItem(apt01a.ap_inv_no$); rem 5
+			tmpVect!.addItem(apt01a.hold_flag$);rem 6
+			tmpVect!.addItem(date(jul(apt01a.inv_due_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID"))); rem 7
+			tmpVect!.addItem(date(jul(apt01a.disc_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID"))); rem 8
+			tmpVect!.addItem(str(inv_amt)); rem 9
+			tmpVect!.addItem(str(amt_due)); rem 10
+			tmpVect!.addItem(str(disc_amt)); rem 11
+			tmpVect!.addItem(str(pymnt_amt)); rem 12
+			tmpVect!.addItem(str(ret_amt)); rem 13
+			tmpVect!.addItem(apt01a.inv_due_date$); rem 14
+			tmpVect!.addItem(apt01a.vendor_id$); rem 15
+			tmpVect!.addItem(apt01a.disc_date$); rem 16
+			tmpVect!.addItem(apt01a.invoice_amt$); rem 17
 
-			vectInvoicesMaster!.addItem("Y"); rem 0
-			vectInvoicesMaster!.addItem(apt01a.selected_for_pay$); rem 1
-			vectInvoicesMaster!.addItem(apt01a.payment_grp$); rem 2
-			vectInvoicesMaster!.addItem(apt01a.ap_type$); rem 3
-			vectInvoicesMaster!.addItem(apt01a.vendor_id$); rem 4
-			vectInvoicesMaster!.addItem(apm01a.vendor_name$); rem 5
-			vectInvoicesMaster!.addItem(apt01a.ap_inv_no$); rem 6
-			vectInvoicesMaster!.addItem(apt01a.hold_flag$);rem 7
-			vectInvoicesMaster!.addItem(date(jul(apt01a.inv_due_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID"))); rem 8
-			vectInvoicesMaster!.addItem(date(jul(apt01a.disc_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID"))); rem 9
-			vectInvoicesMaster!.addItem(str(inv_amt)); rem 10
-			vectInvoicesMaster!.addItem(str(amt_due)); rem 11
-			vectInvoicesMaster!.addItem(str(disc_amt)); rem 12
-			vectInvoicesMaster!.addItem(str(pymnt_amt)); rem 13
-			vectInvoicesMaster!.addItem(str(ret_amt)); rem 14
-			vectInvoicesMaster!.addItem(apt01a.inv_due_date$); rem 15
-			vectInvoicesMaster!.addItem(apt01a.vendor_id$); rem 16
-			vectInvoicesMaster!.addItem(apt01a.disc_date$); rem 17
-			vectInvoicesMaster!.addItem(apt01a.invoice_amt$); rem 18
+			mapkey$=apt01a.firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$
+			invoiceMap!.put(mapkey$,tmpVect!)
+
 			rows=rows+1
 			tot_payments=tot_payments+pymnt_amt
 		endif
+	wend
+	sqlclose(sql_chan)
+
+	rem --- Now fill vectors
+	rem --- Items 1 thru n+1 in InvoicesMaster must equal items 0 thru n in Invoices
+	iter!=invoiceMap!.keySet().iterator()
+	while iter!.hasNext()
+		mapkey$=iter!.next()
+		tmpVect!=cast(BBjVector, invoiceMap!.get(mapkey$))
+
+		vectInvoices!.addAll(tmpVect!.subList(0, 14))
+
+		vectInvoicesMaster!.addItem("Y")
+		vectInvoicesMaster!.addAll(tmpVect!)
 	wend
 
 	callpoint!.setDevObject("tot_payments",str(tot_payments))
