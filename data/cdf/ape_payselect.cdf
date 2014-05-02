@@ -967,6 +967,8 @@ rem ==========================================================================
 	while more
 		read record (apt01_dev, end=*break) apt01a$
 		if pos(firm_id$=apt01a$)<>1 then break
+		rem --- Don't show zero balance invoice in grid
+		if apt01a.invoice_bal=0 then continue
 		read (ape01_dev, key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$, dom=*next); continue
 		dim apm01a$:fattr(apm01a$)
 		read record(apm01_dev, key=firm_id$+apt01a.vendor_id$, dom=*next) apm01a$
