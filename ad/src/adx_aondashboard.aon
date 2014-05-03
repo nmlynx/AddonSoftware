@@ -21,6 +21,7 @@ rem --- Addon dashboards
 	use ::dashboard/widget.bbj::JasperViewerWidget
 	use ::reporting/bbjasper/bbjasper.bbj::BBJasperReport
 	use ::BBUtils.bbj::BBUtils
+    use ::bbtranslator.bbj::BBTranslator
 
 	use java.awt.Color
 	use java.awt.Font
@@ -53,6 +54,7 @@ rem --- if BUI, need to call bas_process_beg
 rem --- initialization
 	
 	gosub get_sysinfo
+    if info(3,6)="5" then gosub get_translate_object
 	gosub get_masks	
 	gosub get_connectstring
 	gosub resolve_paths
@@ -623,7 +625,7 @@ rem =======================================
 	if allow_widget$="Y" and installMap!.get("SA")="Y"
 		name$ = "SATOPREP_SAR"
 		title$ = Translate!.getTranslation("AON_TOP_SALESREPS_PERIOD_TOTALS")
-		previewText$=Translate!.getTranslation("AON_TOP_5_SALESREPS'_PERIOD_TOTALS_DISPLAYED_IN_A_AREA_CHART")
+		previewText$=Translate!.getTranslation("AON_TOP_5_SALESREPS'_PERIOD_TOTALS_DISPLAYED_IN_A_STACKED_AREA_CHART")
 		previewImage$=preview_path$+"satoprep_sar.png"
 		chartTitle$ = ""
 		domainTitle$ = ""
@@ -745,7 +747,7 @@ rem ==============================================
 	
 	declare DashboardCategory   mfgDashboardCategory!
 	
-	mfgDashboardCategory! = aonDashboard!.addDashboardCategory("Manufacturing","Manufacturing")
+	mfgDashboardCategory! = aonDashboard!.addDashboardCategory("Manufacturing",Translate!.getTranslation("AON_MANUFACTURING"))
 
 
 rem ==============================================
@@ -756,8 +758,8 @@ rem ==============================================
 	gosub get_security
 	if allow_widget$="Y" and installMap!.get("OP")="Y" and installMap!.get("SF")="Y"
 		name$="SFWOSSOS_GRD"
-		title$ = "WOs linked to SOs"
-		previewText$="Work Orders linked to Sales Orders displayed in a grid"
+		title$ = Translate!.getTranslation("AON_WOS_LINKED_TO_SOS")
+		previewText$=Translate!.getTranslation("AON_WORK_ORDERS_LINKED_TO_SALES_ORDERS_DISPLAYED_IN_A_GRID")
 		previewImage$=preview_path$+"sfwossos_grd.png"
 		connectString$=aon_url$
 		
@@ -773,34 +775,34 @@ rem ==============================================
 		woSOgridWidget!.setColumnAlignment(0,GridWidget.getHORIZONTAL_ALIGNMENT_LEFT())
 
 		rem Create Filters 
-		filterName$ = "WO Status"
+		filterName$ = Translate!.getTranslation("AON_WO_STATUS")
 		filterHashMap! = new LinkedHashMap()
-		filterHashMap!.put("A","Open WOs only")
-		filterHashMap!.put("B","Planned WOs only")
-		filterHashMap!.put("C","Quoted WOs only")
-		filterHashMap!.put("D","Open and Planned WOs")
-		filterHashMap!.put("E","Planned and Quoted WOs")
-		filterHashMap!.put("F","Open and Quoted WOs")
-		filterHashMap!.put("G","All Open/Planned/Quoted")
+		filterHashMap!.put("A",Translate!.getTranslation("AON_OPEN_WOS_ONLY"))
+		filterHashMap!.put("B",Translate!.getTranslation("AON_PLANNED_WOS_ONLY"))
+		filterHashMap!.put("C",Translate!.getTranslation("AON_QUOTED_WOS_ONLY"))
+		filterHashMap!.put("D",Translate!.getTranslation("AON_OPEN_AND_PLANNED_WOS"))
+		filterHashMap!.put("E",Translate!.getTranslation("AON_PLANNED_AND_QUOTED_WOS"))
+		filterHashMap!.put("F",Translate!.getTranslation("AON_OPEN_AND_QUOTED_WOS"))
+		filterHashMap!.put("G",Translate!.getTranslation("AON_ALL_OPEN/PLANNED/QUOTED"))
 
-		toolTip$ = "Select WO status"
+		toolTip$ = Translate!.getTranslation("AON_SELECT_WO_STATUS")
 		dockLocation = DashboardWidget.getDOCK_LEFT()
 		filter! = woSOGridDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
 		filter!.selectFilter("G"); rem default to All
 		filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnSFWOSSOS_GRDFilterSelect")
 	
 	
-		filterName$ = "SO Status"
+		filterName$ = Translate!.getTranslation("AON_SO_STATUS")
 		filterHashMap! = new LinkedHashMap()
-		filterHashMap!.put("A","Open SOs only")
-		filterHashMap!.put("B","Backorders only")
-		filterHashMap!.put("C","Quotes only")
-		filterHashMap!.put("D","Sales and Backorders")
-		filterHashMap!.put("E","Backorders and Quotes")
-		filterHashMap!.put("F","Sales and Quotes")
-		filterHashMap!.put("G","All Sales/Backorders/Quotes")
+		filterHashMap!.put("A",Translate!.getTranslation("AON_OPEN_SOS_ONLY"))
+		filterHashMap!.put("B",Translate!.getTranslation("AON_BACKORDERS_ONLY"))
+		filterHashMap!.put("C",Translate!.getTranslation("AON_QUOTES_ONLY"))
+		filterHashMap!.put("D",Translate!.getTranslation("AON_SALES_AND_BACKORDERS"))
+		filterHashMap!.put("E",Translate!.getTranslation("AON_BACKORDERS_AND_QUOTES"))
+		filterHashMap!.put("F",Translate!.getTranslation("AON_SALES_AND_QUOTES"))
+		filterHashMap!.put("G",Translate!.getTranslation("AON_ALL_SALES/BACKORDERS/QUOTES"))
 		
-		toolTip$ = "Select SO status"
+		toolTip$ = Translate!.getTranslation("AON_SELECT_SO_STATUS")
 		dockLocation = DashboardWidget.getDOCK_RIGHT()
 		filter! = woSOGridDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
 		filter!.selectFilter("G"); rem default to All
@@ -1192,6 +1194,33 @@ rem ==============================================
 	sproc_dir$=stbl("+DIR_SPROCS",err=*next)
 	
 	return
+
+rem ==============================================   
+get_translate_object:
+rem ==============================================
+    rem --- Open/Lock files
+    files=1,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="adm_modules.dat",options$[1]="S",ids$[1]="ADM_MODULES";rem "S"=System file  
+    
+    call stbl("+DIR_PGM",err=*next)+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+    
+    rd_adm_modules=channels[1]; dim rd_adm_modules$:templates$[1]
+    readrecord(rd_adm_modules,key=pad(sysinfo.lic_feature$,11),dom=*endif)rd_adm_modules$
+    
+    if rd_adm_modules.locale_resource$<>"" and rd_adm_modules.locale_path$<>""
+        locale_path$=rd_adm_modules.locale_path$
+rem        sv_dir$=dsk("")+dir("")
+rem        chdir locale_path$
+rem        locale_path$=dsk("")+dir("")
+rem        chdir sv_dir$
+        Translate!=BBTranslator.getInstance(rd_adm_modules.locale_resource$,stbl("+USER_LOCALE"),null(),locale_path$); rem ,err=*endif
+        rd_temp_stbl$=stbl("+PROPS_NAME",rd_adm_modules.locale_resource$)
+        rd_temp_stbl$=stbl("+PROPS_PATH",locale_path$)
+    endif
+  
+    return
 
 rem ==============================================   
 get_masks:
