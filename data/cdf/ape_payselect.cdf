@@ -73,17 +73,17 @@ rem --- Approve the invoice selected in the grid
         wk$=fattr(apt_invapproval$,"SEQUENCE_NUM")
         seq_no_mask$=fill(dec(wk$(10,2)),"0")
 
-	rem --- Verify current user is an approver
+	rem --- Verify current user is a reviewer or approver
 	found=0
 	user$=sysinfo.user_id$
 	read record(apm_approvers,key=firm_id$ + user$,dom=*next)apm_approvers$; found=1
 	if !found then
-		rem --- Not an approver
+		rem --- Not reviewer or approver
 		callpoint!.setStatus("ABORT")
 		break
 	else
-		if !apm_approvers.check_signer and !apm_approvers.prelim_approval then
-			rem --- Not an approver
+		if !apm_approvers.prelim_approval and !apm_approvers.check_signerthen
+			rem --- Not reviewer or approver
 			callpoint!.setStatus("ABORT")
 			break
 		endif
@@ -129,10 +129,10 @@ rem --- Approve the invoice selected in the grid
 	gosub get_grid_back_colors
 
 	rem --- Get the approval vector
-	userNamespace! = BBjAPI().getExistingNamespace(user$ + ".paymentSelect")	
-	approvalsEntered! = userNamespace!.getValue("approvalsEntered")
+	approvalsEntered! = callpoint!.getDevObject("approvalsEntered")
 
 	rem --- Process each selected row
+	vendorTotalsMap!=callpoint!.getDevObject("vendorTotalsMap")
 	for item = 0 to rowsSelected!.size() - 1
 		rem --- Get needed data for this row
 		curr_row = num(rowsSelected!.getItem(item))
@@ -219,8 +219,7 @@ rem --- Approve the invoice selected in the grid
 rem --- Payment Authorization may need to send emails
 	if callpoint!.getDevObject("use_pay_auth") then
 		rem --- Get the approval vector
-		userNamespace! = BBjAPI().getExistingNamespace(sysinfo.user_id$ + ".paymentSelect")	
-		approvalsEntered! = userNamespace!.getValue("approvalsEntered")
+		approvalsEntered! = callpoint!.getDevObject("approvalsEntered")
 
 		if approvalsEntered!.size() > 0 then
 			msg_id$="AP_PAYSELECT_EXIT "
@@ -231,8 +230,7 @@ rem --- Payment Authorization may need to send emails
 				break
 			else
 				gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
-rem wgh ... AFTER callpoint ... stopped here
-rem wgh ...				call "notify_apprv_exit.src", firm_id$, sysinfo.user_id$, gridInvoices!
+				gosub send_payauth_email
 			endif
 		endif
 	endif
@@ -411,8 +409,7 @@ rem ==========================================================================
 	wend
 
 	rem --- Check the vector
-	userNamespace! = BBjAPI().getExistingNamespace(sysinfo.user_id$ + ".paymentSelect")	
-	approvalsEntered! = userNamespace!.getValue("approvalsEntered")
+	approvalsEntered! = callpoint!.getDevObject("approvalsEntered")
 	if approvalsEntered!.size() > 0 then
 		for ouritem = 0 to approvalsEntered!.size() - 1
 			apt_invapproval! = approvalsEntered!.getItem(ouritem)
@@ -510,6 +507,214 @@ rem ==========================================================================
 
 	rem --- clear the row selection
 	gridInvoices!.deselectAllCells()
+
+	return
+
+rem ==========================================================================
+send_payauth_email: rem --- Sent Payment Authorization notification emails
+rem ==========================================================================
+	rem --- Shouldn't get here unless using Payment Authorization.
+	if !callpoint!.getDevObject("use_pay_auth")  then return
+
+	adm_user=fnget_dev("@ADM_USER")
+	dim adm_user$:fnget_tpl$("@ADM_USER")
+	apm_approvers=fnget_dev("@APM_APPROVERS")
+	dim apm_approvers$:fnget_tpl$("@APM_APPROVERS")
+	apt_invapproval=fnget_dev("@APT_INVAPPROVAL")
+	dim apt_invapproval$:fnget_tpl$("@APT_INVAPPROVAL")
+        wk$=fattr(apt_invapproval$,"SEQUENCE_NUM")
+        seq_no_mask$=fill(dec(wk$(10,2)),"0")
+
+	rem --- Verify current user is a reviewer or approver
+	found=0
+	user$=sysinfo.user_id$
+	read record(apm_approvers,key=firm_id$ + user$,dom=*next)apm_approvers$; found=1
+	if !found then
+		rem --- Not reviewer or approver
+		return
+	endif
+	if apm_approvers.prelim_approval then
+		rem --- Reviewer
+		usertype$ = "R"
+	else
+		if apm_approvers.check_signer then
+			rem --- Approver
+			usertype$ = "A"
+		else
+			rem --- Not reviewer or approver
+			return
+		endif
+	endif
+
+	rem --- Set the from, cc and bcc email addresses
+	read record(adm_user,key=apm_approvers.user_id$)adm_user$
+	rem -- for both usertype$ the current user will be a cc
+	from$=cvs(adm_user.email_address$,3)
+	cc$=cvs(adm_user.email_address$,3)
+	bcc$=""
+	
+	rem --- Set the to email address, and complete the cc email addresses
+	to$ = ""
+	read record(apm_approvers,key=firm_id$,dom=*next)
+	while 1
+		approvers_key$=key(apm_approvers,end=*break)
+		if pos(firm_id$=approvers_key$)<>1 then break
+		read record(apm_approvers)apm_approvers$
+
+		rem --- Skip the current user
+		if apm_approvers.user_id$ = user$ then continue
+
+		rem --- Get this user's email address
+		dim adm_user$:fattr(adm_user$)
+		read record(adm_user, key=apm_approvers.user_id$,dom=*next)adm_user$
+		rem --- Skip if no email address
+		if cvs(adm_user.email_address$,2)<>"" then
+			if apm_approvers.check_signer then
+				rem --- Approver
+				if usertype$ = "R" then
+					if len(to$) then to$ = to$ + ", "
+					to$ = to$ + adm_user.email_address$
+				else
+					if len(cc$) then cc$ = cc$ + ", " 
+					cc$ = cc$ + adm_user.email_address$
+				endif
+			else
+				if apm_approvers.prelim_approval then
+					rem --- Reviewer
+					if usertype$ = "A" then
+						if len(to$) then to$ = to$ + ", "
+						to$ = to$ + ", " + adm_user.email_address$
+					endif
+				else
+					rem --- Not approver or reviewer
+					if len(cc$) then cc$ = cc$ + ", " 
+					cc$ = cc$ + adm_user.email_address$
+				endif
+			endif
+		endif
+	wend
+
+	subject$ = Translate!.getTranslation("AON_ACCOUNTS_PAYABLE")+" "+Translate!.getTranslation("AON_INVOICES")
+	if usertype$ = "R" then 
+		subject$ = subject$+" "+Translate!.getTranslation("AON_AWAITING_APPROVAL")
+	else
+		subject$ = subject$+" "+Translate!.getTranslation("AON_APPROVAL_STATUS")
+	endif
+
+	msgtxt$ = "<html><body>" + $0A$
+	if usertype$="R" then
+		msgtxt$ = msgtxt$ + Translate!.getTranslation("AON_AP_INV_WAITING_APPROVAL")+" "
+		msgtxt$ = msgtxt$ + Translate!.getTranslation("AON_AP_REVIEW_INVOICES:")+" <br><br>" + $0A$ 
+	else
+		msgtxt$ = msgtxt$ + Translate!.getTranslation("AON_APPROVER")+" " + cvs(user$,3) + " "+Translate!.getTranslation("AON_EXITED_PAY_SELECTION")+" <br><br>" + $0A$
+		msgtxt$ = msgtxt$ + Translate!.getTranslation("AON_STATUS_OF_AP_INVOICES:")+" <br><br>" + $0A$
+	endif
+
+	
+	rem --- Process each grid row
+	approved_invoices=0
+	partially_approved=0
+	reviewed_but_not_approved=0
+	not_reviewed=0
+	approved_invoices$=""
+	partially_approved$=""
+	reviewed_but_not_approved$=""
+	not_reviewed$=""
+	m1$=callpoint!.getDevObject("ap_a_mask")
+
+	vendorTotalsMap!=callpoint!.getDevObject("vendorTotalsMap")
+	gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
+	numrows = gridInvoices!.getNumRows()
+	if numrows=0 then return; rem --- There are no emails to send
+	rem --- Not selected means that it still requires some approvals
+	for row = 0 to numrows-1
+		rem --- Get needed data for this row
+		selected = gridInvoices!.getCellState(row,0)	
+		vendor_id$ = gridInvoices!.getCellText(row,3)
+		vendor_name$ = gridInvoices!.getCellText(row,4)
+		ap_inv_no$ = gridInvoices!.getCellText(row,5)
+		inv_amt  = num(gridInvoices!.getCellText(row,9))
+		vendorTotalsMap!=callpoint!.getDevObject("vendorTotalsMap")
+		thisVendor_total = cast(BBjNumber, vendorTotalsMap!.get(vendor_id$))
+		gosub get_approval_status	
+
+		line$ = "<tr><td>" + ap_inv_no$ + "</td>" + $0A$
+		line$ = line$ + "<td>" + vendor_id$ + "</td>" + $0A$
+		line$ = line$ + "<td>" + vendor_name$ + "</td>" + $0A$
+		line$ = line$ + "<td align=right>" + cvs(str(inv_amt:m1$),3) + "</td></tr>" + $0A$
+		if reviewed = 0 and approved = 0 then
+			not_reviewed = not_reviewed + 1
+			not_reviewed$ = not_reviewed$ + line$
+		else
+			if reviewed = 1 and approved = 0 then
+				reviewed_but_not_approved = reviewed_but_not_approved + 1
+				reviewed_but_not_approved$ = reviewed_but_not_approved$ + line$
+			else
+				if reviewed = 1 and approved = 1 and thisVendor_total <= callpoint!.getDevObject("two_sig_amt") then
+					approved_invoices = approved_invoices +1
+					approved_invoices$ = approved_invoices$ + line$
+				else
+					if reviewed =1 and approved = 1 and thisVendor_total > callpoint!.getDevObject("two_sig_amt") then
+						partially_approved = partially_approved + 1
+						partially_approved$ = partially_approved$ + line$
+					else
+						if reviewed = 1 and approved > 1 then
+							approved_invoices = approved_invoices + 1
+							approved_invoices$ = approved_invoices$ + line$
+						endif
+					endif
+				endif
+			endif
+		endif
+	next row
+
+	if usertype$="R" then
+		rem --- User is the reviewer
+		msgtxt$ = msgtxt$ + "<table border=1>" + reviewed_but_not_approved$ + partially_approved$ + "</table>" + $0A$
+	else
+		rem --- User is an approver
+		if len(not_reviewed$) <> 0 then msgtxt$ = msgtxt$ + Translate!.getTranslation("AON_INV_NOT_REVIEWED:")+" <br>" + $0A$ + "<table border=1>" + not_reviewed$ + "</table><br>" +$0A$
+		if len(reviewed_but_not_approved$) <> 0 then msgtxt$ = msgtxt$ + Translate!.getTranslation("AON_INV_REVIEWED_NO_APPROVALS:")+" <br>" + $0A$ + "<table border=1>" + reviewed_but_not_approved$ + "</table><br>" + $0A$
+		if len(partially_approved$) <> 0 then msgtxt$ = msgtxt$ + Translate!.getTranslation("AON_INV_REVIEWED_REQUIRE_ANOTHER_APPROVAL:")+" <br>" + $0A$ + "<table border=1>" + partially_approved$ + "</table><br>" + $0A$
+		if len(approved_invoices$) <> 0 then msgtxt$ = msgtxt$ + Translate!.getTranslation("AON_INV_APPROVED_READY_FOR_PAYMENT:")+" <br>" + $0A$ + "<table border=1>" + approved_invoices$ + "</table><br>" + $0A$
+	endif		
+	msgtxt$ = msgtxt$ + "</body></html>"
+
+	msg$ = Translate!.getTranslation("AON_INV_NOT_REVIEWED")+": " +str(not_reviewed) + $0A$
+	msg$ = msg$ +Translate!.getTranslation("AON_INV_REVIEWED_APPROVAL_NOT_COMPLETE:")+" " + str(reviewed_but_not_approved + partially_approved) + $0A$
+	msg$ = msg$ +Translate!.getTranslation("AON_INV_APPROVED_READY")+": " + str(approved_invoices) + $0A$ + $0A$
+
+	if usertype$ = "R" and not_reviewed<>0 then
+		rem --- Report it and go, all invoices must be reviewed prior to emailing the approvers
+		msg$ = msg$ + Translate!.getTranslation("AON_INV_AWAITING_REVIEW")
+		msg_id$="GENERIC_OK"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=msg$
+		gosub disp_message
+	else
+		if usertype$ = "R" and not_reviewed = 0 and reviewed_but_not_approved = 0 and partially_approved = 0 then
+			rem --- Report it and go, all invoices have been approved
+			msg$ = msg$ + Translate!.getTranslation("AON_INV_APPROVED_READY_FOR_PAYMENT")
+			msg_id$="GENERIC_OK"
+			dim msg_tokens$[1]
+			msg_tokens$[1]=msg$
+			gosub disp_message
+		else
+			if usertype$ = "R" then
+				rem ---- give them a choice
+				msg_id$="AP_PAYAUTH_EMAIL"
+				dim msg_tokens$[1]
+				msg_tokens$[1]=msg$
+				gosub disp_message
+				if msg_opt$="Y" then
+					call "sendEmailHtml.src", from$, to$, cc$, bcc$, subject$, msgtxt$, file$
+				endif
+			else
+				rem --- usertype$="A" and approver, send the email
+				call "sendEmailHtml.src", from$, to$, cc$, bcc$, subject$, msgtxt$, file$
+			endif
+		endif
+	endif
 
 	return
 
@@ -1439,7 +1644,24 @@ rem --- First check to see if user_tpl.ap_check_seq$ is Y and multiple AP Types 
 		endif
 	endif
 
-rem wgh ... need to do stuff in Call Program payselectExit.src
+rem --- Payment Authorization needs to write approvals to file and send emails
+	if callpoint!.getDevObject("use_pay_auth") then
+		rem --- Write approvals to file
+		approvalsEntered! = callpoint!.getDevObject("approvalsEntered")
+		if approvalsEntered!.size() > 0 then
+			apt_invapproval=fnget_dev("@APT_INVAPPROVAL")
+			dim apt_invapproval$:fnget_tpl$("@APT_INVAPPROVAL")
+			for item = 0 to approvalsEntered!.size() - 1
+				apt_invapproval! = approvalsEntered!.getItem(item)
+				apt_invapproval$ = apt_invapproval!.getString()
+				apt_invapproval$ = field(apt_invapproval$)
+				write record(apt_invapproval)apt_invapproval$
+			next item
+		endif
+
+		rem --- Send notification emails
+		gosub send_payauth_email
+	endif
 [[APE_PAYSELECT.AWIN]]
 rem --- Open/Lock files
 
@@ -1612,17 +1834,12 @@ rem --- Set callbacks - processed in ACUS callpoint
 	gridInvoices!.setCallback(gridInvoices!.ON_GRID_EDIT_STOP,"custom_event")
 
 	if callpoint!.getDevObject("use_pay_auth") then
-		rem --- For Payment Authorization, stash the girdInvoices! in a namespace
-		user_id$=sysinfo.user_id$
-		userNamespace! = BBjAPI().getNamespace(user_id$, "paymentSelect", 1)
-		gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
-		rem --- Make sure that more than one row can be selected at a time
+		rem --- For Payment Authorization, make sure that more than one row can be selected at a time
 		gridInvoices!.setMultipleSelection(1)
-		userNamespace!.setValue("gridInvoices",gridInvoices!)
 
 		rem --- Make a vector to hold Payment Authorization approvals done in the session
 		approvalsEntered! = BBjAPI().makeVector()
-		userNamespace!.setValue("approvalsEntered",approvalsEntered!)
+		callpoint!.setDevObject("approvalsEntered",approvalsEntered!)
 
 		rem --- Set grid row background colors and selections
 		gosub load_Invoice_Approval_Status
@@ -1980,6 +2197,7 @@ rem						endif
 		vendor_name$ = gridInvoices!.getCellText(row,4)
 		ap_inv_no$ = gridInvoices!.getCellText(row,5)
 		inv_amt  = num(gridInvoices!.getCellText(row,9))
+		vendorTotalsMap!=callpoint!.getDevObject("vendorTotalsMap")
 		thisVendor_total = cast(BBjNumber, vendorTotalsMap!.get(vendor_id$))
 		gosub get_approval_status	
 
