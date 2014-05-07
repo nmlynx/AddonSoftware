@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2014-05-05
+ Report Date:   2014-05-07
  Report Branch: AddonSoftware 14.00
  Last Release:  AddonSoftware 13.14
 =======================================================================================================================================
@@ -98,3 +98,85 @@ ars_params as the physical table, rather than having ops_params as a
 child alias.
 ----
 Modified: data/bar/ops_params.xml
+
+=======================================================================================================================================
+Revision: 95dcf0b966269470285ec6e6b6ab18d2572a54f1
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/7/2014 2:59:51 PM
+Message:
+Bug 7705: Modified menu tasks that launch as Application Programs to
+allow running in BUI. Blocked hybrid Payroll programs from launching in
+BUI.
+----
+Modified: ad/src/ado_util.src
+Modified: ad/src/ads_execsummary.aon
+Modified: ad/src/adx_build_sproc.aon
+Modified: ad/src/adx_execsummary.aon
+Modified: ad/src/adx_set_printer.aon
+Modified: ad/src/adx_v1400conversion.aon
+Modified: ad/src/adx_v6leadin.aon
+Modified: ap/src/apc_rebuildinvbal.aon
+Modified: ap/src/apr_approvers.aon
+Modified: ap/src/apr_chkregister.aon
+Modified: ap/src/apr_invoiceentry.aon
+Modified: ap/src/apr_manualchecks.aon
+Modified: ap/src/apr_payments.aon
+Modified: ap/src/apu_close1099.aon
+Modified: ap/src/apu_period_end.aon
+Modified: ap/src/apx_rebuildinvbal.aon
+Modified: ar/digitalDashboard/arr_digitalDashboard.src
+Modified: ar/src/arr_cnvinv.aon
+Modified: ar/src/arr_dateregister.aon
+Modified: ar/src/arr_graphicSalesReport.aon
+Modified: ar/src/arr_invoiceentry.aon
+Modified: ar/src/arr_otherentry.aon
+Modified: ar/src/aru_periodend.aon
+Modified: bm/src/bmr_invproduction.aon
+Modified: bm/src/bmr_ordproduction.aon
+Added: data/sync/ads_messages~ad_task_not_bui.xml
+Modified: gl/src/gle_yearend.aon
+Modified: gl/src/glr_acctxref.aon
+Modified: gl/src/glr_beginbalance.aon
+Modified: gl/src/glr_consacctxref.aon
+Modified: gl/src/glr_journal.aon
+Modified: gl/src/glr_totalsreport.aon
+Modified: gl/src/glu_periodend.aon
+Modified: iv/src/ivr_transferreg.aon
+Modified: iv/src/ivr_transregister.aon
+Modified: iv/src/ivu_periodend.aon
+Modified: iv/src/ivx_builddisplaydesc.aon
+Modified: iv/src/ivx_committed.aon
+Modified: iv/src/ivx_loadcyclecode.aon
+Modified: iv/src/ivx_onorder.aon
+Modified: iv/src/ivx_rebuildcosts.aon
+Modified: op/src/opx_prntfile.aon
+Modified: op/src/opx_unlinked.aon
+Modified: po/src/pom_calendar.aon
+Modified: po/src/por_recptreg.aon
+Modified: po/src/por_recptreg_o1.aon
+Modified: po/src/por_recptreg_o2.aon
+Modified: po/src/por_recptreg_o25.aon
+Modified: po/src/por_recptreg_o3.aon
+Modified: po/src/pox_unlinked.aon
+Modified: prop/addon.properties
+Modified: prop/addon_de.properties
+Modified: prop/addon_en.properties
+Modified: prop/addon_en_CA.properties
+Modified: prop/addon_es.properties
+Modified: prop/addon_es_ES.properties
+Modified: prop/addon_fr.properties
+Modified: prop/addon_fr_CA.properties
+Modified: prop/addon_it.properties
+Modified: sf/src/sfe_timesheet.aon
+Modified: sf/src/sfm_calendar.aon
+Modified: sf/src/sfr_clsdworeg.aon
+Modified: sf/src/sfr_costadjust.aon
+Modified: sf/src/sfr_costadjust_o1.aon
+Modified: sf/src/sfr_timesheet.aon
+Modified: sf/src/sfr_timesheet_o1.aon
+Modified: sf/src/sfr_womatissu.aon
+Modified: sf/src/sfu_closerecwo.aon
+Modified: sf/src/sfu_closerecwo_o1.aon
+Modified: sf/src/sfu_clsdrecworeg.aon
+Modified: sf/src/sfu_periodend.aon
+Modified: sf/src/sfx_woconvreg.aon
