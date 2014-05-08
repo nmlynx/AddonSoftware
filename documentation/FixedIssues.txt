@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2014-05-07
+ Report Date:   2014-05-08
  Report Branch: AddonSoftware 14.00
  Last Release:  AddonSoftware 13.14
 =======================================================================================================================================
@@ -180,3 +180,14 @@ Modified: sf/src/sfu_closerecwo_o1.aon
 Modified: sf/src/sfu_clsdrecworeg.aon
 Modified: sf/src/sfu_periodend.aon
 Modified: sf/src/sfx_woconvreg.aon
+
+=======================================================================================================================================
+Revision: 4e0d60742d4a9c3870b2a5288fccc70584de6042
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/8/2014 3:09:30 PM
+Message:
+Bug 7725: When copying poe_podet records to poe_recdet, set
+poe_recdet.qty_received=0 if not defaulting to quantity ordered.
+----
+Modified: data/bar/poe_rechdr.xml
+Modified: data/cdf/poe_rechdr.cdf
