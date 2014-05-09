@@ -379,7 +379,7 @@ rem ==============================================
 		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
-		year$ = "2014"; rem <<============= HARDCODED =========
+		year$ = proc_date$(7,4)
 		num_to_list$ = "5"; rem <<============= HARDCODED =========
 	
 		sql$="CALL SATOPCST_BAR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
@@ -415,7 +415,7 @@ rem ==============================================
 		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
-		year$ = "2014"; rem <<============= HARDCODED =========
+		year$ = proc_date$(7,4)
 		num_to_list$ = "5"; rem <<============= HARDCODED =========
 	
 		sql$="CALL SATOPCST_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
@@ -451,7 +451,7 @@ rem ==============================================
 		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
-		year$ = "2014"; rem <<============= HARDCODED =========
+		year$ = proc_date$(7,4)
 		num_to_list$ = "5"; rem <<============= HARDCODED =========
 	
 		sql$="CALL SATOPREP_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
@@ -486,7 +486,7 @@ rem ==============================================
 		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
-		year$ = "2014"; rem <<============= HARDCODED =========
+		year$ = proc_date$(7,4)
 		num_to_list$ = "5"; rem <<============= HARDCODED =========
 	
 		sql$="CALL SATOPREP_PIE ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
@@ -523,7 +523,7 @@ rem ==============================================
 		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
-		year$ = "2014"; rem <<============= HARDCODED =========
+		year$ = proc_date$(7,4)
 		num_to_list$ = "5"; rem <<============= HARDCODED =========
 	
 		sql$="CALL SAREPTOT_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
@@ -560,7 +560,7 @@ rem GOTO TMPSKIP_SAREPS
 		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
-		year$ = "2014"; rem <<============= HARDCODED =========
+		year$ = proc_date$(7,4)
 		num_to_list$ = "5"; rem <<============= HARDCODED =========. Also Note: SATOPREP_LIN sets a MAX of 5
 		include_type$ = "A"; rem Summarize at the rep-level. No others are currently implemented
 		
@@ -598,7 +598,7 @@ rem =======================================
 		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
-		year$ = "2014"; rem <<============= HARDCODED =========
+		year$ = proc_date$(7,4) 
 		num_to_list$ = "5"; rem <<============= HARDCODED =========. Also Note: SATOPREP_ARE sets a MAX of 5
 		include_type$ = "A"; rem Summarize at the rep-level. No others are currently implemented
 		
@@ -636,7 +636,7 @@ rem =======================================
 		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
-		year$ = "2014"; rem <<============= HARDCODED =========
+		year$ = proc_date$(7,4)
 		num_to_list$ = "5"; rem <<============= HARDCODED =========. Also Note: SATOPREP_SAR sets a MAX of 5
 		include_type$ = "A"; rem Summarize at the rep-level. No others are currently implemented
 		
@@ -788,7 +788,7 @@ rem ==============================================
 		toolTip$ = Translate!.getTranslation("AON_SELECT_WO_STATUS")
 		dockLocation = DashboardWidget.getDOCK_LEFT()
 		filter! = woSOGridDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
-		filter!.selectFilter("G"); rem default to All
+		filter!.selectFilter("A"); rem default to All
 		filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnSFWOSSOS_GRDFilterSelect")
 	
 	
@@ -805,7 +805,7 @@ rem ==============================================
 		toolTip$ = Translate!.getTranslation("AON_SELECT_SO_STATUS")
 		dockLocation = DashboardWidget.getDOCK_RIGHT()
 		filter! = woSOGridDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
-		filter!.selectFilter("G"); rem default to All
+		filter!.selectFilter("A"); rem default to All
 		filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnSFWOSSOS_GRDFilterSelect")
 	
 		gosub update_meter
