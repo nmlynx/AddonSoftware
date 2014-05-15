@@ -584,6 +584,7 @@ rem =======================================
 
 	dashboard_menu_id$="ADD_SATOPREP_ARE"
 	gosub get_security
+allow_widget$="N";rem temp CAH until SPROC is revised to use area chart more effectively
 	if allow_widget$="Y" and installMap!.get("SA")="Y"
 		name$ = "SATOPREP_ARE"
 		title$ = Translate!.getTranslation("AON_TOP_SALESREPS_PERIOD_TOTALS")
