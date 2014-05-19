@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2014-05-16
+ Report Date:   2014-05-19
  Report Branch: AddonSoftware 14.00
  Last Release:  AddonSoftware 13.14
 =======================================================================================================================================
@@ -255,3 +255,14 @@ Modified: data/bar/poe_recdet.xml
 Modified: data/bar/poe_reqhdr.xml
 Modified: prop/addon.properties
 Modified: prop/addon_en.properties
+
+=======================================================================================================================================
+Revision: 8b252f2947a673e97db0f25d70665942b2786be7
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/19/2014 10:48:59 AM
+Message:
+Bug 7743: Don't count approvalsEntered! approvals if they have been
+written to apt_invapproval otherwise they'll be counted twice.
+----
+Modified: data/bar/ape_payselect.xml
+Modified: data/cdf/ape_payselect.cdf
