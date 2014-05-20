@@ -685,7 +685,7 @@ rem ==============================================
 	rem --- Dashboard: SATOPCST_BAR
     sproc_vw_name$="SATOPCST_BAR"
 	sqlprep$="CREATE PROCEDURE SATOPCST_BAR "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, YEAR CHAR(1) IN, NUM_TO_LIST VARCHAR(1) IN, "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, YEAR CHAR(4) IN, NUM_TO_LIST VARCHAR(1) IN, "
 	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"	
     sqlprep$=sqlprep$+"'"+sproc_path$+"SATOPCST_BAR.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
@@ -696,7 +696,7 @@ rem ==============================================
 	rem --- Dashboard: SATOPCST_SBR
     sproc_vw_name$="SATOPCST_SBR"
 	sqlprep$="CREATE PROCEDURE SATOPCST_SBR "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, YEAR CHAR(1) IN, NUM_TO_LIST VARCHAR(1) IN, "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, YEAR CHAR(4) IN, NUM_TO_LIST VARCHAR(1) IN, "
 	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"	
     sqlprep$=sqlprep$+"'"+sproc_path$+"SATOPCST_SBR.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
@@ -708,7 +708,7 @@ rem ==============================================
 	rem --- Dashboard: SAREPTOT_SBR
     sproc_vw_name$="SAREPTOT_SBR"
 	sqlprep$="CREATE PROCEDURE SAREPTOT_SBR "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, YEAR CHAR(1) IN, NUM_TO_LIST VARCHAR(1) IN, "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, YEAR CHAR(4) IN, NUM_TO_LIST VARCHAR(1) IN, "
 	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"	
     sqlprep$=sqlprep$+"'"+sproc_path$+"SAREPTOT_SBR.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
@@ -719,7 +719,7 @@ rem ==============================================
 	rem --- Dashboard: SATOPREP_LIN
     sproc_vw_name$="SATOPREP_LIN"
 	sqlprep$="CREATE PROCEDURE SATOPREP_LIN "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, INCLUDE_TYPE CHAR(1) IN, YEAR CHAR(1) IN, "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, INCLUDE_TYPE CHAR(1) IN, YEAR CHAR(4) IN, "
 	sqlprep$=sqlprep$+"NUM_TO_LIST VARCHAR(1) IN, MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"	
     sqlprep$=sqlprep$+"'"+sproc_path$+"SATOPREP_LIN.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
@@ -730,7 +730,7 @@ rem ==============================================
 	rem --- Dashboard: SATOPREP_ARE
     sproc_vw_name$="SATOPREP_ARE"
 	sqlprep$="CREATE PROCEDURE SATOPREP_ARE "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, INCLUDE_TYPE CHAR(1) IN, YEAR CHAR(1) IN, "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, INCLUDE_TYPE CHAR(1) IN, YEAR CHAR(4) IN, "
 	sqlprep$=sqlprep$+"NUM_TO_LIST VARCHAR(1) IN, MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"	
     sqlprep$=sqlprep$+"'"+sproc_path$+"SATOPREP_ARE.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
@@ -741,7 +741,7 @@ rem ==============================================
 	rem --- Dashboard: SATOPREP_SAR
     sproc_vw_name$="SATOPREP_SAR"
 	sqlprep$="CREATE PROCEDURE SATOPREP_SAR "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, INCLUDE_TYPE CHAR(1) IN, YEAR CHAR(1) IN, "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, INCLUDE_TYPE CHAR(1) IN, YEAR CHAR(4) IN, "
 	sqlprep$=sqlprep$+"NUM_TO_LIST VARCHAR(1) IN, MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"	
     sqlprep$=sqlprep$+"'"+sproc_path$+"SATOPREP_SAR.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
@@ -752,7 +752,7 @@ rem ==============================================
 	rem --- Dashboard: SATOPREP_PIE
     sproc_vw_name$="SATOPREP_PIE"
 	sqlprep$="CREATE PROCEDURE SATOPREP_PIE "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, YEAR CHAR(1) IN, NUM_TO_LIST VARCHAR(1) IN, "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, YEAR CHAR(4) IN, NUM_TO_LIST VARCHAR(1) IN, "
 	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"	
     sqlprep$=sqlprep$+"'"+sproc_path$+"SATOPREP_PIE.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
@@ -763,7 +763,7 @@ rem ==============================================
 	rem --- Dashboard: SATOPREP_SBR
     sproc_vw_name$="SATOPREP_SBR"
 	sqlprep$="CREATE PROCEDURE SATOPREP_SBR "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, YEAR CHAR(1) IN, NUM_TO_LIST VARCHAR(1) IN, "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, YEAR CHAR(4) IN, NUM_TO_LIST VARCHAR(1) IN, "
 	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"	
     sqlprep$=sqlprep$+"'"+sproc_path$+"SATOPREP_SBR.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
