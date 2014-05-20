@@ -39,13 +39,13 @@ rem --- GLBNKBAL_BAR
 rem --- GLBNKBAL_RNG
 rem --- GLCMPINC_BAR
 rem --- GLEXPTOT_PIE
+rem --- GLINCEXP_ARE
 
 rem --- SATOPCST_BAR
 rem --- SATOPCST_SBR
 
 rem --- SAREPTOT_SBR
 rem --- SATOPREP_LIN
-rem --- SATOPREP_ARE
 rem --- SATOPREP_SAR
 rem --- SATOPREP_PIE
 rem --- SATOPREP_SBR
@@ -270,6 +270,10 @@ rem --- first drop all std Addon SPROCs
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def	
 	
+	sproc_vw_name$="GLINCEXP_ARE"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def		
+		
 	sproc_vw_name$="SATOPCST_BAR"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def		
@@ -285,11 +289,7 @@ rem --- first drop all std Addon SPROCs
 	sproc_vw_name$="SATOPREP_LIN"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def		
-	
-	sproc_vw_name$="SATOPREP_ARE"
-    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
-    gosub create_sproc_def		
-	
+
 	sproc_vw_name$="SATOPREP_SAR"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def		
@@ -681,6 +681,17 @@ rem ==============================================
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'Dashboard GL Expense Year Totals - Pie Widget'"
 
     gosub create_sproc_def		
+		
+	rem --- Dashboard: GLINCEXP_ARE
+    sproc_vw_name$="GLINCEXP_ARE"
+	sqlprep$="CREATE PROCEDURE GLINCEXP_ARE "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, INCLUDE_TYPE CHAR(1) IN, "
+	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"	
+    sqlprep$=sqlprep$+"'"+sproc_path$+"GLINCEXP_ARE.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Dashboard Compare GL Income to Expense - Area Widget'"
+
+    gosub create_sproc_def	
 	
 	rem --- Dashboard: SATOPCST_BAR
     sproc_vw_name$="SATOPCST_BAR"
@@ -726,17 +737,6 @@ rem ==============================================
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'Dashboard SA Top Salesreps - Line Widget'"
 
     gosub create_sproc_def	
-		
-	rem --- Dashboard: SATOPREP_ARE
-    sproc_vw_name$="SATOPREP_ARE"
-	sqlprep$="CREATE PROCEDURE SATOPREP_ARE "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, INCLUDE_TYPE CHAR(1) IN, YEAR CHAR(4) IN, "
-	sqlprep$=sqlprep$+"NUM_TO_LIST VARCHAR(1) IN, MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"	
-    sqlprep$=sqlprep$+"'"+sproc_path$+"SATOPREP_ARE.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Dashboard SA Top Salesreps - Area Widget'"
-
-    gosub create_sproc_def		
 	
 	rem --- Dashboard: SATOPREP_SAR
     sproc_vw_name$="SATOPREP_SAR"
