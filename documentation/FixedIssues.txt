@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2014-05-21
+ Report Date:   2014-05-22
  Report Branch: AddonSoftware 14.00
  Last Release:  AddonSoftware 13.14
 =======================================================================================================================================
@@ -311,3 +311,37 @@ bax_query.bbj query of APT_INVOICEHDR on INVOICE_BAL>=0.01.
 ----
 Modified: data/bar/ape_mancheckdet.xml
 Modified: data/cdf/ape_mancheckdet.cdf
+
+=======================================================================================================================================
+Revision: e6a992748d54ade0b33f88ac132402cc7d8fdd80
+Author: chawkins
+Date: 5/21/2014 1:00:10 PM
+Message:
+Per bug 7667, created custom query for employee lookups in SF Time Sheet
+Entry so only limited employee info is exposed. Also corrected typo in
+time sheet by WO detail callpoint, bug 7752, while in there.
+----
+Modified: data/bar/sfe_timedate.xml
+Modified: data/bar/sfe_timeempl.xml
+Modified: data/bar/sfe_timewodet.xml
+Modified: data/cdf/sfe_timewodet.cdf
+Added: data/sync/adm_query_cols~pr_employees001.xml
+Added: data/sync/adm_query_cols~pr_employees002.xml
+Added: data/sync/adm_query_cols~pr_employees003.xml
+Added: data/sync/adm_query_cols~pr_employees004.xml
+Added: data/sync/adm_query_cols~pr_employees005.xml
+Added: data/sync/adm_query_cols~pr_employees006.xml
+Added: data/sync/adm_query_cols~pr_employees007.xml
+Added: data/sync/adm_query_cols~pr_employees008.xml
+Added: data/sync/adm_query_cols~pr_employees009.xml
+Added: data/sync/adm_query~pr_employees.xml
+
+=======================================================================================================================================
+Revision: db1df3e2cddf2ad740f3b136aeb518371dc7267a
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/22/2014 4:39:04 PM
+Message:
+Bug 7755: Put account number and description in separate columns, and
+provided unique rd_alias_id$ for summary and detail reports.
+----
+Modified: gl/src/glr_transhistory.aon
