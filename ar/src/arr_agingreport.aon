@@ -186,6 +186,7 @@ rem --- Initializations
     customer_printed=0
     total_recs=0
     h99$="", pending=pending$="Y"
+	bold$=$00$+"B"; rem Bold formatting used in general (eg Cust ID) as opposed to that used to flag pending (sts_sts_bold$)
 
 rem --- Underline for subtotals and totals
 
@@ -290,7 +291,7 @@ rem --- column headings
         p4$=periodbeg$[4]+"^-"+periodend$[4]
         p5$=periodend$[5]
 
-        columns$[columns-13,0]=Translate!.getTranslation("AON_INVOICE"),columns$[columns-13,1]="C",columns$[columns-13,2]="7"
+        columns$[columns-13,0]=Translate!.getTranslation("AON_CUSTOMER/")+"^"+Translate!.getTranslation("AON_INVOICE"),columns$[columns-13,1]="C",columns$[columns-13,2]="7"
         columns$[columns-12,0]=Translate!.getTranslation("AON_INVOICED"),columns$[columns-12,1]="C",columns$[columns-12,2]="15"
         columns$[columns-11,0]=Translate!.getTranslation("AON_PO^NUMBER"),columns$[columns-11,1]="C",columns$[columns-11,2]="7"
         columns$[columns-10,0]=Translate!.getTranslation("AON_ORDER^NUMBER"),columns$[columns-10,1]="C",columns$[columns-10,2]="7"
@@ -409,7 +410,7 @@ rem --- Position the Invoice Header (art_invheader) file for aging
           read (invheader_dev,key=keyprefix$,knum=knum$,dom=*next)
 
 rem --- Read next Invoice Header record (art_invheader)
-          bold$="", sts$=""; rem << Added for pending invoices flag >>
+          sts_bold$="", sts$=""; rem << Added for pending invoices flag >>
           while moreheaders
                 invheader_key$=key(invheader_dev,end=*break)
                 if pos(keyprefix$=invheader_key$)<>1 break
@@ -440,7 +441,7 @@ rem --- Determine if amount is from a pending cash receipt (status=O/C)
 
                       if cashheader.status$<>"C"
                           out_action$="FORMAT"
-                          bold$=$00$+"B",sts$="      ** "
+                          sts_bold$=$00$+"B",sts$="      ** "
                       endif
                       endif
 
@@ -555,9 +556,11 @@ rem if lines+1>maxlines gosub customer_heading
                    OutVect!.addItem(arm01a.customer_name$)
                    OutVect!.addItem(arm01a.contact_name$)
                    OutVect!.addItem(phone$)
-                endif
+				   OutVect!.addItem(art01a.ar_inv_no$+sts_bold$)
+				else 
+				   OutVect!.addItem("  "+art01a.ar_inv_no$+sts_bold$)
+				endif
 
-                OutVect!.addItem(invheader.invoice_no$+bold$) 
                 OutVect!.addItem(fndate$(asof$))
                 OutVect!.addItem(po$)
                 OutVect!.addItem(order$)
@@ -608,7 +611,7 @@ rem if lines+1>maxlines gosub customer_heading
 
                 lines=lines+1
                 recs=recs+1
-                sts$="",bold$=""
+                sts$="",sts_bold$=""
 
                 rem --- If job numbers are being used retrieve the job (if one exists) and print it
 
@@ -658,7 +661,7 @@ rem --- Print customer total
                    if col_format$="N"
                        abc=fnblank(9)
                    endif
-                   OutVect!.addItem(customer$+bold$); rem --- << Summarize Rpt format >>
+                   OutVect!.addItem(customer$+sts_bold$); rem --- << Summarize Rpt format >>
                 endif
 
                 if future$="Y"
@@ -678,7 +681,7 @@ rem --- Print customer total
                 printed=0
                 customer_printed=1
                 recs=recs+1
-                sts$="",bold$=""
+                sts$="",sts_bold$=""
 
           wend  
 
@@ -757,6 +760,8 @@ rem --- All done
         OutVect!.addItem(""); rem << last column=Pending trans >>
     endif
 
+	out_action$="FORMAT"
+
     goto std_exit
 
 increment_lines: rem --- Increment lines variable
@@ -773,7 +778,7 @@ customer_heading: rem --- Print customer subheading
 
         abc=fnblank(14)
 
-        OutVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$))
+        OutVect!.addItem(fnmask$(arm01a.customer_id$(1,customer_size),m0$)+bold$)
         OutVect!.addItem(arm01a.customer_name$)
         abc=fnblank(12)
 
