@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2014-05-22
+ Report Date:   2014-06-02
  Report Branch: AddonSoftware 14.00
  Last Release:  AddonSoftware 13.14
 =======================================================================================================================================
@@ -345,3 +345,17 @@ Bug 7755: Put account number and description in separate columns, and
 provided unique rd_alias_id$ for summary and detail reports.
 ----
 Modified: gl/src/glr_transhistory.aon
+
+=======================================================================================================================================
+Revision: 103a727e248cd9f5ee5601039376edc0676236a4
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 6/2/2014 1:35:26 PM
+Message:
+Bug 7775: Changed numerics in user_tpl$ to be N(7*) instead of N(15).
+Rounded user_tpl.prev_ext_cost assignment to IV precision.
+----
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_invdet.cdf
+Modified: data/cdf/ope_invhdr.cdf
