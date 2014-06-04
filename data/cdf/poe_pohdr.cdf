@@ -513,6 +513,8 @@ promise_date$=cvs(callpoint!.getColumnData("POE_POHDR.PROMISE_DATE"),2)
 not_b4_date$=cvs(callpoint!.getColumnData("POE_POHDR.NOT_B4_DATE"),2)
 
 gosub validate_dates
+
+if bad_date$="" then gosub warn_dates
 [[POE_POHDR.NOT_B4_DATE.AVAL]]
 ord_date$=cvs(callpoint!.getColumnData("POE_POHDR.ORD_DATE"),2)
 req_date$=cvs(callpoint!.getColumnData("POE_POHDR.REQD_DATE"),2)
@@ -527,6 +529,8 @@ promise_date$=cvs(callpoint!.getUserInput(),2)
 not_b4_date$=cvs(callpoint!.getColumnData("POE_POHDR.NOT_B4_DATE"),2)
 
 gosub validate_dates
+
+if bad_date$="" then gosub warn_dates
 [[POE_POHDR.BSHO]]
 rem print 'show';rem debug
 rem --- inits
@@ -972,10 +976,6 @@ validate_dates: rem --- validate dates
 		bad_date$ = order_date$+" "+after$+" "+nb4_date$
 	endif
 
-	if req_date$<>"" and promise_date$<>"" and req_date$<promise_date$ then
-		bad_date$ = reqd_date$+" "+before$+" "+prom_date$
-	endif
-
 	if req_date$<>"" and not_b4_date$<>"" and req_date$<not_b4_date$ then
 		bad_date$ = reqd_date$+" "+before$+" "+nb4_date$
 	endif
@@ -992,5 +992,23 @@ validate_dates: rem --- validate dates
 		callpoint!.setStatus("ABORT")
 	endif
 
+return
+
+warn_dates: rem --- warn about possible bad dates
+
+	warn_date$=""
+	reqd_date$=Translate!.getTranslation("AON_REQUIRED")+" "+Translate!.getTranslation("AON_DATE")
+	prom_date$=Translate!.getTranslation("AON_PROMISED")+" "+Translate!.getTranslation("AON_DATE")
+
+	if req_date$<>"" and promise_date$<>"" and req_date$<promise_date$ then
+		warn_date$ = reqd_date$+" "+before$+" "+prom_date$
+	endif
+
+	if warn_date$ <> ""
+		msg_id$="WARN_PO_DATE"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=warn_date$
+		gosub disp_message
+	endif
 
 return
