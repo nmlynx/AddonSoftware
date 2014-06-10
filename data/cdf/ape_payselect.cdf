@@ -2427,7 +2427,7 @@ rem --- Approve the invoice selected in the grid
 		endif
 
 		rem --- One approval, and less than threshhold for two approvals
-		if approved = 1 and thisVendor_total <= callpoint!.getDevObject("two_sig_amt") then
+		if approved = 1 and callpoint!.getDevObject("two_sig_req") and thisVendor_total <= callpoint!.getDevObject("two_sig_amt") then
 			continue
 		endif
 
@@ -2540,7 +2540,6 @@ rem --- Set filters on grid
 [[APE_PAYSELECT.<CUSTOM>]]
 rem ==========================================================================
 load_Invoice_Approval_Status: rem --- Set grid row background colors and selections
-	rem --- Only called from AWIN, so doesn't need to use approvalsEntered! because none have been entered.
 rem ==========================================================================
 	rem --- Shouldn't get here unless using Payment Authorization.
 	if !callpoint!.getDevObject("use_pay_auth")  then return
@@ -2579,15 +2578,20 @@ rem ==========================================================================
 			rem --- Update grid row backgound color
 			selected = gridInvoices!.getCellState(row,0)
 			gridInvoices!.setSelectedRow(row)
-			gridInvoices!.setRowBackColor(row, fullyApproved!)
-			if reviewed =1 and approved = 0 then
-				rem --- Reviewed and no approvals
-				gridInvoices!.setRowBackColor(row, reviewedColor!)
-			else
-				rem --- Reviewd and at least one approval
-				if approved = 1 and thisVendor_total > callpoint!.getDevObject("two_sig_amt") then
-					rem --- Second approval needed
-					gridInvoices!.setRowBackColor(row, partiallyApproved!)
+			gridInvoices!.setRowBackColor(row, defaultColor!)
+			if reviewed =1 then
+				if approved = 0 then
+					rem --- Reviewed and no approvals
+					gridInvoices!.setRowBackColor(row, reviewedColor!)
+				else
+					rem --- Reviewed and at least one approval
+					if approved = 1 and callpoint!.getDevObject("two_sig_req") and thisVendor_total > callpoint!.getDevObject("two_sig_amt") then
+						rem --- Second approval needed
+						gridInvoices!.setRowBackColor(row, partiallyApproved!)
+					else
+						rem --- Fully approved
+						gridInvoices!.setRowBackColor(row, fullyApproved!)
+					endif
 				endif
 			endif
 
@@ -2691,8 +2695,14 @@ rem ==========================================================================
 	if !selected then
 		rem --- Invoice not selected in the grid
 		rem --- Check invoice for approved status and switch values if needed
-		if approved = 1 and thisVendor_total <= callpoint!.getDevObject("two_sig_amt") then
-			gosub switch_value
+		if approved = 1 then
+			if !callpoint!.getDevObject("two_sig_req") then
+				gosub switch_value
+			else
+				if thisVendor_total <= callpoint!.getDevObject("two_sig_amt") then
+					gosub switch_value
+				endif
+			endif
 		endif
 		if approved > 1 then 
 			gosub switch_value
@@ -2703,7 +2713,7 @@ rem ==========================================================================
 		if approved = 0 
 			gosub switch_value
 		endif
-		if approved = 1 and thisVendor_total > callpoint!.getDevObject("two_sig_amt") then
+		if approved = 1 and callpoint!.getDevObject("two_sig_req") and thisVendor_total > callpoint!.getDevObject("two_sig_amt") then
 			gosub switch_value
 		endif
 	endif
@@ -2723,11 +2733,11 @@ rem ==========================================================================
 		rem --- Invoice not selected in the grid
 		rem --- Check invoice for approved status and switch values if needed
 		if approved = 1 then
-			if thisVendor_total <= callpoint!.getDevObject("two_sig_amt") then
+			if callpoint!.getDevObject("two_sig_req") and thisVendor_total > callpoint!.getDevObject("two_sig_amt") then
+				gridInvoices!.setRowBackColor(curr_row, partiallyApproved!)
+			else
 				gridInvoices!.setRowBackColor(curr_row, fullyApproved!)
 				gosub switch_value
-			else
-				gridInvoices!.setRowBackColor(curr_row, partiallyApproved!)
 			endif
 		endif
 		if approved > 1 then
@@ -2741,7 +2751,7 @@ rem ==========================================================================
 			gridInvoices!.setRowBackColor(curr_row, reviewedColor!)
 			gosub switch_value
 		endif
-		if approved = 1 and thisVendor_total > callpoint!.getDevObject("two_sig_amt") then
+		if approved = 1 and callpoint!.getDevObject("two_sig_req") and thisVendor_total > callpoint!.getDevObject("two_sig_amt") then
 			gridInvoices!.setRowBackColor(curr_row, partiallyApproved!)
 			gosub switch_value
 		endif
@@ -2901,20 +2911,20 @@ rem ==========================================================================
 				reviewed_but_not_approved = reviewed_but_not_approved + 1
 				reviewed_but_not_approved$ = reviewed_but_not_approved$ + line$
 			else
-				if reviewed = 1 and approved = 1 and thisVendor_total <= callpoint!.getDevObject("two_sig_amt") then
-					approved_invoices = approved_invoices +1
-					approved_invoices$ = approved_invoices$ + line$
-				else
-					if reviewed =1 and approved = 1 and thisVendor_total > callpoint!.getDevObject("two_sig_amt") then
-						partially_approved = partially_approved + 1
-						partially_approved$ = partially_approved$ + line$
-					else
-						if reviewed = 1 and approved > 1 then
-							approved_invoices = approved_invoices + 1
-							approved_invoices$ = approved_invoices$ + line$
-						endif
-					endif
-				endif
+                if reviewed = 1 and approved = 1 and !callpoint!.getDevObject("two_sig_req") then
+                    approved_invoices = approved_invoices +1
+                    approved_invoices$ = approved_invoices$ + line$
+                else
+                    if reviewed =1 and approved = 1 and callpoint!.getDevObject("two_sig_req") and thisVendor_total > callpoint!.getDevObject("two_sig_amt") then
+                        partially_approved = partially_approved + 1
+                        partially_approved$ = partially_approved$ + line$
+                    else
+                        if reviewed = 1 and approved > 1 then
+                            approved_invoices = approved_invoices + 1
+                            approved_invoices$ = approved_invoices$ + line$
+                        endif
+                    endif
+                endif
 			endif
 		endif
 	next row
@@ -3175,6 +3185,11 @@ rem ==========================================================================
 		gridInvoices!.setColumnStyle(0, SysGUI!.GRID_STYLE_UNCHECKED)
 		gridInvoices!.setColumnStyle(6, SysGUI!.GRID_STYLE_UNCHECKED)
 		gridInvoices!.setNumRows(0)
+	endif
+
+	rem --- Update grid row background colors and selections when using Payment Authorization 
+	if callpoint!.getDevObject("use_pay_auth")  then
+		gosub load_Invoice_Approval_Status
 	endif
 
 	SysGUI!.setRepaintEnabled(1)
@@ -3778,12 +3793,18 @@ offset_return:
 
 rem =========================================================
 get_grid_back_colors: rem --- Get grid row background colors
+	rem --- output: defaultColor!
 	rem --- output: reviewedColor!
 	rem --- output: partiallyApproved!
 	rem --- output: fullyApproved!
 rem =========================================================
 	rem --- Shouldn't get here unless using Payment Authorization.
 	if !callpoint!.getDevObject("use_pay_auth")  then return
+
+	rem --- Get grid default color
+	RGB$=callpoint!.getDevObject("default_color")
+	gosub get_RGB
+	defaultColor! = BBjAPI().getSysGui().makeColor(R,G,B) 
 
 	rem --- Get reviewed color (one_auth_color)
 	RGB$=callpoint!.getDevObject("one_auth_color")
@@ -4028,6 +4049,7 @@ rem --- Get parameter record
 	callpoint!.setDevObject("send_email",aps_payauth.send_email)
 	callpoint!.setDevObject("scan_docs_to",aps_payauth.scan_docs_to$)
 	callpoint!.setDevObject("all_auth_color",aps_payauth.all_auth_color$)
+	callpoint!.setDevObject("default_color","255,255,255"); rem --- white
 	callpoint!.setDevObject("one_auth_color",aps_payauth.one_auth_color$)
 	callpoint!.setDevObject("two_pay_auth",aps_payauth.two_auth_color$)
 	callpoint!.setDevObject("two_sig_req",aps_payauth.two_sig_req)
@@ -4145,15 +4167,6 @@ rem --- Misc other init
 	gridInvoices!.setTabAction(gridInvoices!.GRID_NAVIGATE_GRID)
 	gridInvoices!.setTabActionSkipsNonEditableCells(1)
 
-	gosub create_reports_vector
-	gosub fill_grid
-
-rem --- Set callbacks - processed in ACUS callpoint
-
-	gridInvoices!.setCallback(gridInvoices!.ON_GRID_KEY_PRESS,"custom_event")
-	gridInvoices!.setCallback(gridInvoices!.ON_GRID_MOUSE_UP,"custom_event")
-	gridInvoices!.setCallback(gridInvoices!.ON_GRID_EDIT_STOP,"custom_event")
-
 	if callpoint!.getDevObject("use_pay_auth") then
 		rem --- For Payment Authorization, make sure that more than one row can be selected at a time
 		gridInvoices!.setMultipleSelection(1)
@@ -4162,14 +4175,20 @@ rem --- Set callbacks - processed in ACUS callpoint
 		approvalsEntered! = BBjAPI().makeVector()
 		callpoint!.setDevObject("approvalsEntered",approvalsEntered!)
 
-		rem --- Set grid row background colors and selections
-		gosub load_Invoice_Approval_Status
-
 		rem --- Get Barista's Document Queue object 
 		use ::sys/prog/bao_docqueue.bbj::DocumentQueue
 		docQueue! = new DocumentQueue()
 		callpoint!.setDevObject("docQueue",docQueue!)
 	endif
+
+	gosub create_reports_vector
+	gosub fill_grid
+
+rem --- Set callbacks - processed in ACUS callpoint
+
+	gridInvoices!.setCallback(gridInvoices!.ON_GRID_KEY_PRESS,"custom_event")
+	gridInvoices!.setCallback(gridInvoices!.ON_GRID_MOUSE_UP,"custom_event")
+	gridInvoices!.setCallback(gridInvoices!.ON_GRID_EDIT_STOP,"custom_event")
 [[APE_PAYSELECT.ASIZ]]
 rem --- Resize the grid
 
