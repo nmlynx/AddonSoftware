@@ -301,19 +301,11 @@ rem --- PO Params
 	dim pos_params$:fnget_tpl$("POS_PARAMS")
 	read record(pos_params_chn,key=firm_id$+"PO00")pos_params$
 rem --- Set Defaults
-	apm02_dev=fnget_dev("APM_VENDHIST")
-	dim apm02a$:fnget_tpl$("APM_VENDHIST")
-	read record(apm02_dev,key=firm_id$+vendor_id$,dom=*next)
-	tmp$=key(apm02_dev,end=done_apm_vendhist)
-		if pos(firm_id$+vendor_id$=tmp$)<>1 then goto done_apm_vendhist
-		read record(apm02_dev,key=tmp$)apm02a$
-	done_apm_vendhist:
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOTAL","")
 	callpoint!.setColumnData("POE_RECHDR.WAREHOUSE_ID",ivs_params.warehouse_id$)
 	gosub whse_addr_info
 
 	callpoint!.setColumnData("POE_RECHDR.ORD_DATE",sysinfo.system_date$)
-	callpoint!.setColumnData("POE_RECHDR.AP_TERMS_CODE",apm02a.ap_terms_code$)
 	callpoint!.setColumnData("POE_RECHDR.PO_FRT_TERMS",pos_params.po_frt_terms$)
 	callpoint!.setColumnData("POE_RECHDR.AP_SHIP_VIA",pos_params.ap_ship_via$)
 	callpoint!.setColumnData("POE_RECHDR.FOB",pos_params.fob$)
