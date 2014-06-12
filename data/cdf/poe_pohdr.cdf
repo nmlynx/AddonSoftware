@@ -195,28 +195,40 @@ else
 
 endif
 [[POE_POHDR.VENDOR_ID.AVAL]]
-vendor_id$=callpoint!.getUserInput()
-gosub vendor_info
-gosub disp_vendor_comments
+rem --- Update vendor info if vendor changed
+	vendor_id$=callpoint!.getUserInput()
+	if vendor_id$<>callpoint!.getColumnData("POE_POHDR.VENDOR_ID") then
+		gosub vendor_info
+		gosub disp_vendor_comments
 
-rem --- set defaults from Parameter record
+		rem --- Set defaults from Parameter record
+		pos_params_chn=fnget_dev("POS_PARAMS")
+		dim pos_params$:fnget_tpl$("POS_PARAMS")
+		read record(pos_params_chn,key=firm_id$+"PO00")pos_params$
+		callpoint!.setColumnData("POE_POHDR.PO_FRT_TERMS",pos_params.po_frt_terms$,1)
+		callpoint!.setColumnData("POE_POHDR.AP_SHIP_VIA",pos_params.ap_ship_via$,1)
+		callpoint!.setColumnData("POE_POHDR.FOB",pos_params.fob$,1)
 
-	pos_params_chn=fnget_dev("POS_PARAMS")
-	dim pos_params$:fnget_tpl$("POS_PARAMS")
-	read record(pos_params_chn,key=firm_id$+"PO00")pos_params$
-	callpoint!.setColumnData("POE_POHDR.PO_FRT_TERMS",pos_params.po_frt_terms$,1)
-	callpoint!.setColumnData("POE_POHDR.AP_SHIP_VIA",pos_params.ap_ship_via$,1)
-	callpoint!.setColumnData("POE_POHDR.FOB",pos_params.fob$,1)
+		rem --- Now override the defaults with the Vendor info if not blank
+		if cvs(apm01a.ap_ship_via$,3)<>""
+			callpoint!.setColumnData("POE_POHDR.AP_SHIP_VIA",apm01a.ap_ship_via$,1)
+		endif
+		if cvs(apm01a.fob$,3)<>""
+			callpoint!.setColumnData("POE_POHDR.FOB",apm01a.fob$,1)
+		endif
+		if cvs(apm01a.po_frt_terms$,3)<>""
+			callpoint!.setColumnData("POE_POHDR.PO_FRT_TERMS",apm01a.po_frt_terms$,1)
+		endif
 
-rem --- Now override the defaults with the Vendor info if not blank
-	if cvs(apm01a.ap_ship_via$,3)<>""
-		callpoint!.setColumnData("POE_POHDR.AP_SHIP_VIA",apm01a.ap_ship_via$,1)
-	endif
-	if cvs(apm01a.fob$,3)<>""
-		callpoint!.setColumnData("POE_POHDR.FOB",apm01a.fob$,1)
-	endif
-	if cvs(apm01a.po_frt_terms$,3)<>""
-		callpoint!.setColumnData("POE_POHDR.PO_FRT_TERMS",apm01a.po_frt_terms$,1)
+		rem --- Use Terms Code from vendor's first AP type record
+		apm02_dev=fnget_dev("APM_VENDHIST")
+		dim apm02a$:fnget_tpl$("APM_VENDHIST")
+		read(apm02_dev,key=firm_id$+vendor_id$,dom=*next)
+		tmp$=key(apm02_dev,end=done_apm_vendhist)
+		if pos(firm_id$+vendor_id$=tmp$)<>1 then goto done_apm_vendhist
+		readrecord(apm02_dev,key=tmp$)apm02a$
+		done_apm_vendhist:
+		callpoint!.setColumnData("POE_POHDR.AP_TERMS_CODE",apm02a.ap_terms_code$,1)
 	endif
 [[POE_POHDR.DROPSHIP.AVAL]]
 rem --- if turning off dropship flag, clear devObject items
@@ -487,18 +499,10 @@ rem --- PO Params
 	dim pos_params$:fnget_tpl$("POS_PARAMS")
 	read record(pos_params_chn,key=firm_id$+"PO00")pos_params$
 rem --- Set Defaults
-	apm02_dev=fnget_dev("APM_VENDHIST")
-	dim apm02a$:fnget_tpl$("APM_VENDHIST")
-	read record(apm02_dev,key=firm_id$+vendor_id$,dom=*next)
-	tmp$=key(apm02_dev,end=done_apm_vendhist)
-		if pos(firm_id$+vendor_id$=tmp$)<>1 then goto done_apm_vendhist
-		read record(apm02_dev,key=tmp$)apm02a$
-	done_apm_vendhist:
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOTAL","",1)
 	callpoint!.setColumnData("POE_POHDR.WAREHOUSE_ID",ivs_params.warehouse_id$,1)
 	gosub whse_addr_info
 	callpoint!.setColumnData("POE_POHDR.ORD_DATE",sysinfo.system_date$,1)
-	callpoint!.setColumnData("POE_POHDR.AP_TERMS_CODE",apm02a.ap_terms_code$,1)
 	callpoint!.setColumnData("POE_POHDR.PO_FRT_TERMS",pos_params.po_frt_terms$,1)
 	callpoint!.setColumnData("POE_POHDR.AP_SHIP_VIA",pos_params.ap_ship_via$,1)
 	callpoint!.setColumnData("POE_POHDR.FOB",pos_params.fob$,1)
