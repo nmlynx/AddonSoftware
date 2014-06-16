@@ -2938,7 +2938,9 @@ rem ==========================================================================
 		if len(reviewed_but_not_approved$) <> 0 then msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_INV_REVIEWED_NO_APPROVALS:")+" <br>" + $0A$ + "<table border=1>" + reviewed_but_not_approved$ + "</table><br>" + $0A$
 		if len(partially_approved$) <> 0 then msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_INV_REVIEWED_REQUIRE_ANOTHER_APPROVAL:")+" <br>" + $0A$ + "<table border=1>" + partially_approved$ + "</table><br>" + $0A$
 		if len(approved_invoices$) <> 0 then msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_INV_APPROVED_READY_FOR_PAYMENT:")+" <br>" + $0A$ + "<table border=1>" + approved_invoices$ + "</table><br>" + $0A$
-	endif		
+	endif	
+	gosub build_bui_url
+	msgHtml$ = msgHtml$ + "<br><a href=" + chr(34) + buiurl$ +chr(34) + ">"+Translate!.getTranslation("AON_LAUNCH_BARISTA_IN_BROWSER")+"</a><br>"
 	msgHtml$ = msgHtml$ + "</body></html>"
 
 	msg$ = Translate!.getTranslation("AON_INV_NOT_REVIEWED")+": " +str(not_reviewed) + $0A$
@@ -2982,6 +2984,38 @@ rem ==========================================================================
 			endif
 		endif
 	endif
+
+	return
+
+rem ==========================================================================
+build_bui_url: rem --- Build a url to launch Barista Application Framework in BUI
+rem ==========================================================================
+
+	httpEnabled!=System.getProperty("com.basis.jetty.enableHttp")
+	if (httpEnabled! = null() or httpEnabled!.equals("true"))
+		protocol$="http"
+		port$ =  System.getProperty("com.basis.jetty.port")
+		if port$="" then port$="8888"
+	else
+		rem --- Check if web server is running in SSL
+		sslEnabled!=System.getProperty("com.basis.jetty.enableSSL")
+		if (sslEnabled! = null() or sslEnabled!.equals("true"))
+	    		protocol$="https"
+	    		port$ = System.getProperty("com.basis.jetty.sslPort")
+	    		if port$="" then port$="8443"
+		else
+	    		rem --- default to http/8888 if no properties are set
+	    		protocol$="http"
+	    		port$="8888"
+		endif  
+	endif
+
+	host$ = System.getProperty("com.basis.jetty.host")
+	if host$="" then host$ = info(3,4)
+
+	bui_name$="BaristaApplicationFramework"
+
+	buiurl$ = protocol$ + "://" + host$ + ":" + port$ + "/apps/" + bui_name$ + "?locale=" + stbl("+USER_LOCALE")
 
 	return
 
