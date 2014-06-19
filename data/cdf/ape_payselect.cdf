@@ -2351,16 +2351,18 @@ rem						endif
 	if callpoint!.getDevObject("use_pay_auth") then
 		gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
 		row = gridInvoices!.getSelectedRow()
+		if row >= 0 then
+			rem --- Make sure a grid row was selected
+			vendor_id$ = gridInvoices!.getCellText(row,3)
+			vendor_name$ = gridInvoices!.getCellText(row,4)
+			ap_inv_no$ = gridInvoices!.getCellText(row,5)
+			inv_amt  = num(gridInvoices!.getCellText(row,9))
+			vendorTotalsMap!=callpoint!.getDevObject("vendorTotalsMap")
+			thisVendor_total = cast(BBjNumber, vendorTotalsMap!.get(vendor_id$))
+			gosub get_approval_status	
 
-		vendor_id$ = gridInvoices!.getCellText(row,3)
-		vendor_name$ = gridInvoices!.getCellText(row,4)
-		ap_inv_no$ = gridInvoices!.getCellText(row,5)
-		inv_amt  = num(gridInvoices!.getCellText(row,9))
-		vendorTotalsMap!=callpoint!.getDevObject("vendorTotalsMap")
-		thisVendor_total = cast(BBjNumber, vendorTotalsMap!.get(vendor_id$))
-		gosub get_approval_status	
-
-		rem --- Set payment selection based on approval state
-		selected = gridInvoices!.getCellState(row,0)
-		gosub set_payment_selection
+			rem --- Set payment selection based on approval state
+			selected = gridInvoices!.getCellState(row,0)
+			gosub set_payment_selection
+		endif
 	endif
