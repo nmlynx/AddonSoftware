@@ -65,7 +65,7 @@ rem --- Get Barista System Program directory
 	
 rem --- create the in memory recordset for return
 
-	dataTemplate$ = "Dummy:C(1),CUSTOMER:C(25*),TOTAL:N(7*)"
+	dataTemplate$ = "Dummy:C(1),CUSTOMER:C(30*),TOTAL:C(7*)"
 
 	rs! = BBJAPI().createMemoryRecordSet(dataTemplate$)
 	
