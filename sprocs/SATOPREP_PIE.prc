@@ -124,7 +124,7 @@ rem --- Build result set for top five salespersons by sales
             while slspsnIter!.hasNext()
                 slspsn_code$=slspsnIter!.next()
                 topSlspsns=topSlspsns+1
-                if topSlspsns>5 then break
+                if topSlspsns>num_to_list then break
                 dim arm10f$:fattr(arm10f$)
                 findrecord(arm10f_dev,key=firm_id$+"F"+slspsn_code$,dom=*next)arm10f$
                 
@@ -133,7 +133,7 @@ rem --- Build result set for top five salespersons by sales
                 data!.setFieldValue("TOTAL",str(slspsnSales))
                 rs!.insert(data!)
             wend
-            if topSlspsns>5 then break
+            if topSlspsns>num_to_list then break
         wend
     endif
 
