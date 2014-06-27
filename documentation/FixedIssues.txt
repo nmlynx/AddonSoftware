@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2014-06-26
+ Report Date:   2014-06-27
  Report Branch: AddonSoftware 14.01
  Last Release:  AddonSoftware 13.14
 =======================================================================================================================================
@@ -554,3 +554,14 @@ the WO Hard Copy Operations section.
 ----
 Modified: reports/SFHardCopyOpStd.jasper
 Modified: reports/SFHardCopyOpStd.jrxml
+
+=======================================================================================================================================
+Revision: 97ff65902ccdf1adb0e4941dd3e163216d37b9d6
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 6/27/2014 8:33:05 AM
+Message:
+Bug 7859: Re-initialize IVM_ITEMWHSE record template before getting
+item's IV unit cost in case item isn't found (like for a memo line).
+----
+Modified: data/bar/sfe_wocopy.xml
+Modified: data/cdf/sfe_wocopy.cdf
