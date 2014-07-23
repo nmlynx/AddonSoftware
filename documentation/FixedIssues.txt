@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2014-07-22
+ Report Date:   2014-07-23
  Report Branch: AddonSoftware 14.10
  Last Release:  AddonSoftware 14.01
 =======================================================================================================================================
@@ -225,3 +225,18 @@ Message:
 Bug 7888: Made Work Order Number a required entry.
 ----
 Modified: data/bar/sfe_woclose.xml
+
+=======================================================================================================================================
+Revision: 60e2e1c235d11c29c0f7045ee841a63aafa877a1
+Author: chawkins
+Date: 7/23/2014 12:56:35 PM
+Message:
+Per bug 7925; altered PO Req. register to handle corner case of missing
+line code. Also noticed two 'WAIT' commands in requisition form that are
+unnecessary, so removed them.
+----
+Modified: data/bar/poe_reqhdr.xml
+Modified: data/cdf/poe_reqhdr.cdf
+Modified: po/src/por_reqsnreg_o1.aon
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
