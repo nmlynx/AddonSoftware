@@ -260,3 +260,14 @@ Message:
 Bug 7736: Disabled production warehouse field when WO status is Open.
 ----
 Modified: data/bar/sfe_womastr.xml
+
+=======================================================================================================================================
+Revision: 3760e8f14fa187fe593642bf3b799a764c6b0fdd
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 7/24/2014 12:16:03 PM
+Message:
+Bug 7735: To avoid endless loop, added second ABORT in SFE_WOMATL.ITEM
+AINV when ABORT executed in SFE_WOMATL.ITEM AVAL.
+----
+Modified: data/bar/sfe_womatl.xml
+Modified: data/cdf/sfe_womatl.cdf
