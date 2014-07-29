@@ -324,8 +324,9 @@ rem =========================================================
 rem ==========================================================================
 enable_explode: rem --- Enable/disable explode field (and initialize)
 rem ==========================================================================
-	rem --- Enable explode when item is a Bill on non-stock planned or quote WO, or a phantom
+	rem --- Enable explode when item is a Bill on non-stock planned or quote WO, else disable.
 	row=callpoint!.getValidationRow()
+	callpoint!.setColumnEnabled(row,"<<DISPLAY>>.EXPLODE_BILL",0)
 	if callpoint!.getDevObject("bm")="Y" and callpoint!.getColumnData("SFE_WOMATL.LINE_TYPE")="S"
 		bmm01_dev=fnget_dev("BMM_BILLMAST")
 		dim bmm_billmast$:fnget_tpl$("BMM_BILLMAST")
