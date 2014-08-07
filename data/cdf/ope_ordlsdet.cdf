@@ -259,8 +259,8 @@ rem --- Send back qty shipped
 rem ==========================================================================
 check_avail: rem --- Check for available quantity
 		rem      IN: lot_qty
-	    rem    OUT:  aborted - true/false
-        rem          committedNow!
+		rem   OUT: aborted - true/false
+		rem           committedNow!
 rem ==========================================================================
 
 	aborted = 0
@@ -483,7 +483,7 @@ rem --- See if there are any open lots
 
 	rem --- Test lot and available qty
 
-		if callpoint!.getDevObject("selected_lot") <> null() then 
+		if callpoint!.getDevObject("selected_lot") <> null() and callpoint!.getDevObject("selected_lot")<>"" then 
 			ls_no$ = str(callpoint!.getDevObject("selected_lot"))
 			committedNow! = cast(HashMap, callpoint!.getDevObject("committed_now"))
 
