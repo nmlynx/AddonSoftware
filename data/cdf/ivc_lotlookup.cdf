@@ -1,3 +1,13 @@
+[[IVC_LOTLOOKUP.BEND]]
+rem --- Clear selection if Cancel button clicked
+	if callpoint!.getDevObject("cancel_selection")="Y" then
+		callpoint!.setDevObject("selected_lot",null())
+		callpoint!.setDevObject("selected_lot_avail","0")
+		callpoint!.setDevObject("selected_lot_cost","0")
+	endif
+[[IVC_LOTLOOKUP.ASVA]]
+rem --- ASVA is fired for Okay button, but not Cancel button, so turn off flag to clear selection if Cancel button clicked
+	callpoint!.setDevObject("cancel_selection","N")
 [[IVC_LOTLOOKUP.ITEM_ID.AINV]]
 rem --- Item synonym processing
 
@@ -29,7 +39,7 @@ rem --- Parameters
 	if pos(ivs_params.lotser_flag$="SL")=0 goto std_exit
 	call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
 	callpoint!.setDevObject("ap_installed",info$[20])
-	callpoint!.setDevObject("selected_lot","")
+	callpoint!.setDevObject("selected_lot",null())
 	callpoint!.setDevObject("selected_lot_avail","0")
 	callpoint!.setDevObject("selected_lot_cost","0")
 
@@ -151,6 +161,9 @@ rem --- Item_id, warehouse_id, and type of lot (open,closed, etc.) coming from c
 
 	lots_to_disp$ = callpoint!.getColumnData("IVC_LOTLOOKUP.LOTS_TO_DISP")
 	gosub read_and_display_lot_grid
+
+rem --- Initialize flag to clear selection if Cancel button clicked
+	callpoint!.setDevObject("cancel_selection","Y")
 [[IVC_LOTLOOKUP.ACUS]]
 rem --- Process custom event -- used in this pgm to select lot and display info.
 rem
