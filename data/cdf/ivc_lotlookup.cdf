@@ -8,37 +8,30 @@ rem --- open files
 	use ::ado_util.src::util
 	use ::ado_func.src::func
 
-	num_files=4
+	num_files=3
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="APM_VENDMAST", open_opts$[1]="OTA"
 	open_tables$[2]="IVM_LSMASTER", open_opts$[2]="OTA"
-	rem open_tables$[3]="APS_PARAMS",   open_opts$[3]="OTA"
-	open_tables$[4]="IVS_PARAMS",   open_opts$[4]="OTA"
+	open_tables$[3]="IVS_PARAMS",   open_opts$[3]="OTA"
 
 	gosub open_tables
 
 	apm_vendmast_dev=num(open_chans$[1]); dim apm_vendmast$:open_tpls$[1]
 	ivm_lsmaster_dev=num(open_chans$[2]); dim ivm_lsmaster$:open_tpls$[2]
-	rem aps_params_dev=num(open_chans$[3]);   dim aps_params$:open_tpls$[3]
-	ivs_params_dev=num(open_chans$[4]);   dim ivs_params$:open_tpls$[4]
+	ivs_params_dev=num(open_chans$[3]);   dim ivs_params$:open_tpls$[3]
 
 rem --- Retrieve parameter records
 
-    rem find record (aps_params_dev,key=firm_id$+"AP00",err=std_missing_params) aps_params$
-    find record (ivs_params_dev,key=firm_id$+"IV00",err=std_missing_params) ivs_params$
+	find record (ivs_params_dev,key=firm_id$+"IV00",err=std_missing_params) ivs_params$
 
 rem --- Parameters
 
-    dim p[5]   
-    if pos(ivs_params.lotser_flag$="SL")=0 goto std_exit
-    p[0]=num(ivs_params.item_id_len$)
-    p[1]=num(ivs_params.vendor_prd_len$)
-    p[3]=num(ivs_params.ls_no_len$)
-    p[2]=num(ivs_params.desc_len_01$)
-    p[4]=num(ivs_params.desc_len_02$)
-    p[5]=num(ivs_params.desc_len_03$)
-    call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
-    callpoint!.setDevObject("ap_installed",info$[20])
+	if pos(ivs_params.lotser_flag$="SL")=0 goto std_exit
+	call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
+	callpoint!.setDevObject("ap_installed",info$[20])
+	callpoint!.setDevObject("selected_lot","")
+	callpoint!.setDevObject("selected_lot_avail","0")
+	callpoint!.setDevObject("selected_lot_cost","0")
 
 rem ---  Set up grid
 
