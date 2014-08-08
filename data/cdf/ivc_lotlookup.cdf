@@ -5,6 +5,12 @@ rem --- Clear selection if Cancel button clicked
 		callpoint!.setDevObject("selected_lot_avail","0")
 		callpoint!.setDevObject("selected_lot_cost","0")
 	endif
+
+rem wgh ... 7949
+rem --- added knum="PRIMARY" to below, because if user typed their own lot#, Barista validation logic would
+rem --- have used knum="AO_ITEM_WH_LOT"...
+ivm_lsmaster_dev=fnget_dev("IVM_LSMASTER")
+read record(ivm_lsmaster_dev,key=firm_id$,knum="PRIMARY",dom=*next)
 [[IVC_LOTLOOKUP.ASVA]]
 rem --- ASVA is fired for Okay button, but not Cancel button, so turn off flag to clear selection if Cancel button clicked
 	callpoint!.setDevObject("cancel_selection","N")
@@ -297,6 +303,7 @@ rem ==========================================================================
 
 	rem --- added knum="PRIMARY" to below, because if user typed their own lot#, Barista validation logic would
 	rem --- have used knum="AO_ITEM_WH_LOT"...
+	dim ivm_lsmaster$:fattr(ivm_lsmaster$)
 	read record(ivm_lsmaster_dev,key=firm_id$+whse_id$+item_id$+get_lot$,knum="PRIMARY",dom=*next)ivm_lsmaster$
 
 	lotWin!=callpoint!.getDevObject("lotInfo")	
