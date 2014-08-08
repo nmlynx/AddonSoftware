@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2014-08-07
+ Report Date:   2014-08-08
  Report Branch: AddonSoftware 14.10
  Last Release:  AddonSoftware 14.01
 =======================================================================================================================================
@@ -548,3 +548,15 @@ Modified: data/bar/ivc_lotlookup.xml
 Modified: data/bar/ope_ordlsdet.xml
 Modified: data/cdf/ivc_lotlookup.cdf
 Modified: data/cdf/ope_ordlsdet.cdf
+
+=======================================================================================================================================
+Revision: 6ceef5c9b86d076e4a188dff858a3e980cbf918e
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 8/8/2014 11:37:10 AM
+Message:
+Bug 7949: Made sure the default knum for IVM_LSMASTER (ivm-07) got
+re-set back to PRIMARY since Barista's validation logic for serial/lot
+uses knum="AO_ITEM_WH_LOT".
+----
+Modified: data/bar/ivc_lotlookup.xml
+Modified: data/cdf/ivc_lotlookup.cdf
