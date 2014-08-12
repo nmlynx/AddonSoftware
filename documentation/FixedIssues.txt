@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2014-08-08
+ Report Date:   2014-08-11
  Report Branch: AddonSoftware 14.10
  Last Release:  AddonSoftware 14.01
 =======================================================================================================================================
@@ -571,3 +571,16 @@ Open Invoice lookup.
 ----
 Modified: data/bar/ape_mancheckdet.xml
 Modified: data/cdf/ape_mancheckdet.cdf
+
+=======================================================================================================================================
+Revision: 8ccc5c712228e7b00b94aa8f15182fc9bfad407a
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 8/12/2014 11:20:14 AM
+Message:
+Bug 7951: Replaced apd_openinvoice.aon filter program in AP_INVOICES
+drilldown with drilldown's built in filter definition to filter column
+apt_invoicehdr<>0.
+----
+Modified: ad/src/adx_v1400conversion.aon
+Deleted: ap/src/apd_openinvoices.aon
+Modified: data/sync/ddm_drill_defs~ap_invoices.xml
