@@ -597,6 +597,21 @@ Modified: ad/src/adx_v1400conversion.aon
 Rename: gl/src/glf_ytdamts.aon (from gl/src/gld_ytdamts.aon)
 
 =======================================================================================================================================
+Revision: ebed174de371919ce202a6b9cdaf8f87e575cf4c
+Author: chawkins
+Date: 8/13/2014 2:44:53 PM
+Message:
+Per bug 7955; altered programs that need to do initialization when
+running non-form tasks via BUI so they can get user id from encrypted
+URL since it's no longer stored in BUI App config.
+----
+Modified: ad/src/ado_util.src
+Modified: ad/src/adx_aondashboard.aon
+Modified: ad/src/adx_build_sproc.aon
+Modified: ad/src/adx_demo_nag.aon
+Modified: ad/src/adx_init_data.aon
+
+=======================================================================================================================================
 Revision: 7e0fd30a1c3b077182920952fbb9157675cb152f
 Author: Bill Halsted <bhalsted@basis.com>
 Date: 8/15/2014 11:17:40 AM
@@ -605,3 +620,17 @@ Removed temporary REM accidentially left in code after completing work
 on bug 7951.
 ----
 Modified: ad/src/adx_v1400conversion.aon
+
+=======================================================================================================================================
+Revision: 33c6fb656525d4517d0d759c0a07f33d649fe7b0
+Author: chawkins
+Date: 8/15/2014 1:15:00 PM
+Message:
+Per bug 7957; corrected possible error if not all default display
+columns are used.
+----
+Modified: data/bar/glm_acctsumhdr.xml
+Modified: data/bar/glm_summactivity.xml
+Modified: data/cdf/glm_acctsumhdr.cdf
+Modified: data/cdf/glm_summactivity.cdf
+
