@@ -654,3 +654,26 @@ Replacing bar/*.xml file committed for bug 7961 because it was corrupted
 by Barista bug fix 2973 that has since been reverted.
 ----
 Modified: data/bar/bmm_billmast.xml
+
+=======================================================================================================================================
+Revision: 52ae011c2fe893ff350a9455ec7bceec5f0993ac
+Author: chawkins
+Date: 8/22/2014 12:34:37 PM
+Message:
+Per bug 7962; corrected issue where commit quantities can be erroneously
+updated more than once.
+----
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/cdf/ope_invdet.cdf
+Modified: data/cdf/ope_orddet.cdf
+
+=======================================================================================================================================
+Revision: 7f001345bab3c320c1b5b476709cf269141a404f
+Author: chawkins
+Date: 8/22/2014 12:43:09 PM
+Message:
+Per bug 7963; corrected logic error allowing uncommitted orders to get
+included in the commit count.
+----
+Modified: iv/src/ivx_committed.aon
