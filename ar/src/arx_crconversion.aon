@@ -99,13 +99,13 @@ rem **********************************************
         invhdr_key$=key(invhdr_dev,end=*break)
         if pos(firm_id$=invhdr_key$)<>1 break
             read record (invhdr_dev,key=invhdr_key$) invhdr$
-                        call stbl("+DIR_SYP")+"bas_sequences.bbj", "AR_TRANS_ID", AR_TRANS_ID$, table_chans$[all]
+            call stbl("+DIR_SYP")+"bas_sequences.bbj", "INTERNAL_SEQ_NO", AR_INVOICE_ID$, table_chans$[all]
             if ar_trans_id$ = "" then 
                 callpoint!.setStatus("ABORT")
             endif
         endif
         invheader.firm_id$=firm_id$
-        invheader.ar_trans_id$=ar_trans_id$
+        invheader.ar_invoice_id$=ar_invoice_id$
         invheader.ar_type$=invhdr.ar_type$
         invheader.customer_id$=invhdr.customer_id$
         invheader.invoice_no$=invhdr.ar_inv_no$
@@ -116,7 +116,7 @@ rem **********************************************
         invheader.due_date$=invhdr.inv_due_date$
         invheader.disc_date$=invhdr.disc_date$
         invheader.gl_audit_no$=""
-        invheader.ar_inv_type$=invhdr.invoice_type$
+        invheader.ar_inv_type$=invhdr.invoice_type$ ; rem --- need to convert to a two character value
         invheader.invoice_amt$=invhdr.invoice_amt$ 
         invheader.disc_allowed$=invhdr.disc_allowed$
         rcd$=field(invheader$),dest=invheader_dev,source=invhdr_dev,dfile$="ART_INVHEADER",sfile$="ART_INVHDR"
@@ -124,9 +124,9 @@ rem **********************************************
         action$="NS",filename$="ART_INVHEADER",subtitle$="Updating "+filename$,channel=0,milestone=1
         call pgmdir$+"adc_progress.aon",action$,filename$,subtitle$,reserved1$,reserved2$,reserved1,channel,milestone,reserved2,status
 
-                write record (invheader_dev)rcd$
+        write record (invheader_dev)rcd$
 
-                invheader_rcds_from_invhdr=invheader_rcds_from_invhdr+1
+        invheader_rcds_from_invhdr=invheader_rcds_from_invhdr+1
         msg$=$09$+"INVHDR key <"+invhdr_key$+"> written to INVHEADER w/ key <"+invheader.firm_id$+invheader.ar_trans_id$+">"
             rem << hold while testing >> gosub logfile
 
@@ -137,15 +137,15 @@ rem **********************************************
         REM << Now coming from INVHEADER >> call stbl("+DIR_SYP")+"bas_sequences.bbj", "AR_TRANS_ID", AR_TRANS_ID$, table_chans$[all]
         rem << if ar_trans_id$ = "" then callpoint!.setStatus("ABORT")
             rem << endif
-        artrans_seqno=artrans_seqno+1
+        
         artrans.firm_id$=invhdr.firm_id$
-        artrans.ar_trans_id$=invheader.ar_trans_id$
-        artrans.sequence_no$=str(artrans_seqno:"000")
+        call stbl("+DIR_SYP")+"bas_sequences.bbj", "INTERNAL_SEQ_NO", AR_TRANS_ID$, table_chans$[all]
+        artrans.ar_trans_id$=ar_trans_id$
         rem << artrans.invoice_no$=invhdr.ar_inv_no$
         artrans.trans_date$=invhdr.invoice_date$
         artrans.ar_trans_type$="IN"
         artrans.cr_trans_id$=""
-        artrans.ar_invoice_id$=invheader.ar_trans_id$
+        artrans.ar_invoice_id$=invheader.ar_invoice_id$
         artrans.trans_amount$=invhdr.invoice_amt$
         artrans.disc_amount$=invhdr.disc_allowed$
 	 rem << artrans.customer_id$=invheader.customer_id$        
@@ -177,22 +177,21 @@ rem **********************************************
             rem << call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
             rem << call stbl("+DIR_SYP")+"bas_sequences.bbj", "AR_TRANS_ID", AR_TRANS_ID$, table_chans$[all]
-            artrans_seqno=artrans_seqno+1
+            call stbl("+DIR_SYP")+"bas_sequences.bbj", "INTERNAL_SEQ_NO", AR_TRANS_ID$, table_chans$[all]        
             artrans.firm_id$=firm_id$
-            artrans.ar_trans_id$=invheader.ar_trans_id$
-            artrans.sequence_no$=str(artrans_seqno:"000")
+            artrans.ar_trans_id$=ar_trans_id$
 
             artrans.trans_date$=invdet.trans_date$
             artrans.ar_trans_type$="PY"
             artrans.trans_amount$=invdet.trans_amt$
             artrans.disc_amount$=invdet.adjdisc_amt$
             artrans.cr_trans_id$=""
-            artrans.ar_invoice_id$=invheader.ar_trans_id$
+            artrans.ar_invoice_id$=invheader.ar_invoice_id$
 	    REM <<  artrans.customer_id$=invheader.customer_id$
 
             rcd$=field(artrans$),dest=artrans_dev,source=invdet_dev,sfile$="ART_INVDET",dfile$="ART_TRANSACTIONS",relrcd=99,k$=invdet_key$
 
-                        action$="S",filename$="ART_TRANSACTIONS",subtitle$="Updating "+filename$,channel=0,number=1
+            action$="S",filename$="ART_TRANSACTIONS",subtitle$="Updating "+filename$,channel=0,number=1
             call pgmdir$+"adc_progress.aon",action$,filename$,subtitle$,reserved1$,reserved2$,reserved1,channel,number,reserved2,status
 
             findkey$=firm_id$+artrans.ar_trans_id$+artrans.sequence_no$
@@ -224,12 +223,12 @@ rem **********************************************
         read record (cashhdr_dev,key=cashhdr_key$) cashhdr$
 
         rem << For testing >> call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        call stbl("+DIR_SYP")+"bas_sequences.bbj", "AR_TRANS_ID", AR_TRANS_ID$, table_chans$[all]
+        call stbl("+DIR_SYP")+"bas_sequences.bbj", "INTERNAL_SEQ_NO", CR_TRANS_ID$, table_chans$[all]
 
         if cvs(cashhdr.cash_check$,3)="$" cr_trans_type$="CA" else if cvs(cashhdr.cash_check$,3)="C" and cashhdr.ar_check_no$>"" cr_trans_type$="CH" else if cvs(cashhdr.cash_check$,3)="C" and cvs(cashhdr.ar_check_no$,3)="" cr_trans_type$="CC"
         endif
         cashheader.firm_id$=firm_id$
-        cashheader.ar_trans_id$=ar_trans_id$
+        cashheader.cr_trans_id$=cr_trans_id$
         cashheader.customer_id$=cashhdr.customer_id$
         cashheader.receipt_date$=cashhdr.receipt_date$
         cashheader.cash_rec_cd$=cashhdr.cash_rec_cd$
@@ -289,19 +288,21 @@ rem --- Then update the transactions.cr_trans_id from the cashheader.cr_trans_id
                     endif
 
                 If invheader.customer_id$=cashdet.customer_id$ and invheader.invoice_no$=cashdet.ar_inv_no$
-                    invheader_found=1, trans_key$=invheader.firm_id$+invheader.ar_trans_id$
-                    read (artrans_dev,key=trans_key$,knum="PRI",err=*next)
+                    invheader_found=1
+                    trans_key$=invheader.firm_id$+invheader.ar_invoice_id$
+                    read (artrans_dev,key=trans_key$,knum="AR_INVOICE_ID",err=*next)
                     while more
                         artrans_key$=key(artrans_dev,end=*break)
+                        read record (artrans_dev,key=artrans_key$,knum="AR_INVOICE_ID")artrans$                       
 
-                        if artrans_key$(1,10)>trans_key$
+                        if artrans.firm_id$+artrans.ar_invoice_id$<>trans_key$
                             break
                         endif
-                        read record (artrans_dev,key=artrans_key$)artrans$
+
 
                         inverted_amt=artrans.trans_amount*-1
                         inverted_disc_amt=artrans.disc_amount*-1
-                        if artrans.ar_trans_id$=invheader.ar_trans_id$ and artrans.trans_date$=cashheader.receipt_date$ and inverted_amt=cashdet.apply_amt and cashdet.discount_amt=inverted_disc_amt and cvs(artrans.cr_trans_id$,3)="" and artrans.ar_trans_type$="PY"
+                        if artrans.ar_invoice_id$=invheader.ar_invoice_id$ and artrans.trans_date$=cashheader.receipt_date$ and inverted_amt=cashdet.apply_amt and cashdet.discount_amt=inverted_disc_amt and cvs(artrans.cr_trans_id$,3)="" and artrans.ar_trans_type$="PY"
                             extract record (artrans_dev,key=artrans_key$)artrans$
                              
                             delkey$=artrans.firm_id$+artrans.ar_trans_id$+artrans.sequence_no$;rem << This is the primary key, generated from INVHEADER.AR_TRANS_ID$ originally - 'PY' rcd >>
