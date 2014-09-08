@@ -219,7 +219,7 @@ gosub disp_meter
 rem --- read file_alias into hash map
 
 file_alias! = new java.util.HashMap()
-dim file_alias$:"file_id:c(16*=124),alias:c(16*=)"
+dim file_alias$:"file_id:c(16*=124),alias:c(16*=124),comments:c(1*)"
 file_alias = unt
 open (file_alias)filedir$+"file_alias"
 while 1
@@ -239,7 +239,7 @@ close (file_alias)
 rem --- read file_xref into hash map
 
 file_xref! = new java.util.HashMap()
-dim file_xref$:"old_filename:c(16*=124),new_filename:c(16*=)"
+dim file_xref$:"old_filename:c(16*=124),new_filename:c(16*=124),comments:c(1*)"
 file_xref = unt
 open (file_xref)filedir$+"file_xref"
 while 1
