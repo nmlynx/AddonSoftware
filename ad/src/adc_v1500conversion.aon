@@ -1,0 +1,61 @@
+rem --- Upgrade Converion Utility For Version 15.00
+rem --- Program adc_v1500conversion.aon
+
+rem --- AddonSoftware Version 15.00 - Sept2014
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+
+
+rem --- rdForm!          : Window object to hold progress meter
+rem --- CONVERSIONPROPS! : Property object of the conversion control file data/adx_conversionCtrl (Input)
+rem --- INSTALLMAP!      : HashMap object of installed modules, keyed by module ID (Input)
+rem --- STATUS           : Status code/0=No error (Returned)
+    
+    setesc std_error
+    seterr std_error
+    
+    enter rdForm!,conversionProps!,installMap!,status
+
+rem --- Initializations
+
+    status=1
+    dir_syp$=stbl("+DIR_SYP")
+	
+done:rem --- Update AutoLaunch Status
+
+    status=0; rem --- no errors encountered
+	goto std_exit
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (22Feb2013)
+
+    if tcb(19)>0
+        rem --- Escape handler
+        if and(chr(tcb(19)),$08$)=$08$
+            release
+        else
+            setesc std_error
+            return
+        endif
+    endif
+
+    rd_err_text$=""
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$) seterr 0; setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+    if pgm(-1)<>pgm(-2) status=999; exit 
+    release
+
+rem #endinclude std_error.src
+
+
+rem #include std_exit.src
+
+std_exit: rem --- Standard called program exit (01Mar2006)
+    
+    exit
+
+rem #endinclude std_exit.src
+
+    end
