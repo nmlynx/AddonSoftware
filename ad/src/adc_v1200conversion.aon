@@ -37,6 +37,8 @@ rem --- Open log file in aon/logs directory, if possible
         xpos=pos("/data/"=dataDir$,-1)
         if xpos then
             aonDir$=dataDir$(1,xpos)
+        else
+            aonDir$=dataDir$
         endif
     endif
 
