@@ -52,7 +52,9 @@ rem --- Start progress meter
     
 rem --- Open log file in aon/logs directory, if possible
     aonDir$=""
-    dataDir$=stbl("+DIR_DAT",err=*next)
+    filePath$=stbl("+DIR_DAT",err=*next)
+    gosub fix_path
+    dataDir$=filePath$
     xpos=pos("/aon/"=dataDir$,-1)
     if xpos then
         aonDir$=dataDir$(1,xpos+4)
@@ -168,7 +170,7 @@ rem --- Process each file in source dir
 	
 rem --- Update conversion control file data/adx_conversionCtrl, and create conversion marker files as needed
 
-    convCtrlFileName$=aonDir$+"/data/adx_conversionCtrl"
+    convCtrlFileName$=aonDir$+"data/adx_conversionCtrl"
     convCtrlFile!=new File(convCtrlFileName$,err=*next)
     if convCtrlFile!.exists() then
         rem --- Update conversion control file data/adx_conversionCtrl
@@ -224,7 +226,7 @@ rem --- Update conversion control file data/adx_conversionCtrl, and create conve
                 wend
             next i
         endif
-        dataDir$=aonDir$+"/data/"
+        dataDir$=aonDir$+"data/"
         requiredFiles!=BBjAPI().makeVector()
         keyIter!=fileDependencies!.keySet().iterator()
         while keyIter!.hasNext()

@@ -48,7 +48,9 @@ rem --- Initializations
 rem --- Locate aon/data directory, if possible
 
     aonDir$=""
-    dataDir$=stbl("+DIR_DAT",err=*next)
+    filePath$=stbl("+DIR_DAT",err=*next)
+    gosub fix_path
+    dataDir$=filePath$
     xpos=pos("/aon/"=dataDir$,-1)
     if xpos then
         aonDir$=dataDir$(1,xpos+4)
@@ -64,7 +66,7 @@ rem --- Locate aon/data directory, if possible
 
 rem --- If conversion control file data/adx_conversionCtrl present and data_source=AIUW, launch Distribute EM Update Wizard Files form
 
-    convCtrlFileName$=aonDir$+"/data/adx_conversionCtrl"
+    convCtrlFileName$=aonDir$+"data/adx_conversionCtrl"
     convCtrlFile!=new File(convCtrlFileName$,err=*next)
     if convCtrlFile!.exists() then
         fileReader!=new FileReader(convCtrlFile!)
@@ -80,6 +82,14 @@ rem --- If conversion control file data/adx_conversionCtrl present and data_sour
 done: rem --- All done
 
     goto std_exit
+
+fix_path: rem --- Flip directory path separators
+    pos=pos("\"=filePath$)
+    while pos
+        filePath$=filePath$(1, pos-1)+"/"+filePath$(pos+1)
+        pos=pos("\"=filePath$)
+    wend
+    return
     
 rem #include std_error.src
 

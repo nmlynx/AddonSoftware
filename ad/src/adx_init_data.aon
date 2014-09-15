@@ -51,7 +51,9 @@ rem --- Initializations
 rem --- Locate aon/data directory, if possible
 
     aonDir$=""
-    dataDir$=stbl("+DIR_DAT",err=*next)
+    filePath$=stbl("+DIR_DAT",err=*next)
+    gosub fix_path
+    dataDir$=filePath$
     xpos=pos("/aon/"=dataDir$,-1)
     if xpos then
         aonDir$=dataDir$(1,xpos+4)
@@ -67,7 +69,7 @@ rem --- Locate aon/data directory, if possible
 
 rem --- There's nothing to do if data/adx_conversionCtrl isn’t found, i.e. new install or all required conversions already completed.
 
-    convCtrlFile!=new File(aonDir$+"/data/adx_conversionCtrl",err=*next)
+    convCtrlFile!=new File(aonDir$+"data/adx_conversionCtrl",err=*next)
     if !convCtrlFile!.exists() then goto std_exit
     fileReader!=new FileReader(convCtrlFile!)
 
@@ -438,6 +440,14 @@ show_error_message: rem --- Displays message that error should be fixed before c
     
     close_mdi=1
 
+    return
+
+fix_path: rem --- Flip directory path separators
+    pos=pos("\"=filePath$)
+    while pos
+        filePath$=filePath$(1, pos-1)+"/"+filePath$(pos+1)
+        pos=pos("\"=filePath$)
+    wend
     return
     
 open_tables:rem -----<Open Tables

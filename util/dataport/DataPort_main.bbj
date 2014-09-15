@@ -17,6 +17,10 @@ rem
     seterr std_error
 
     use java.io.File
+    use java.io.FileReader
+    use java.io.FileWriter
+    use java.util.HashMap
+    use java.util.Properties
     use java.util.Vector
 
 rem --- Dictionary file templates
@@ -38,7 +42,8 @@ rem --- Open files and/or retrieve templates that may be needed for PO file conv
     
     gosub open_tables
     
-    ads_sequences_dev=num(rd_open_chans$[1]),ads_sequences_tpl$=rd_open_tpls$[1]
+    ads_sequences_dev=num(rd_open_chans$[1])
+    dim ads_sequences$:rd_open_tpls$[1]
     arm_custmast_tpl$=rd_open_tpls$[2]
     arm_custship_tpl$=rd_open_tpls$[3]
     ope_ordship_tpl$=rd_open_tpls$[4]
@@ -398,6 +403,35 @@ rd_meter_proc_recs=rd_meter_total_recs
 rd_meter_action$="LST"
 gosub disp_meter
 
+rem --- Locate /config/adx_conversionCtrl.ini
+aonDir$=""
+filePath$=stbl("+DIR_DAT",err=*next)
+gosub fix_path
+dataDir$=filePath$
+xpos=pos("/aon/"=dataDir$,-1)
+if xpos then
+    aonDir$=dataDir$(1,xpos+4)
+endif
+if aonDir$="" then
+    xpos=pos("/data/"=dataDir$,-1)
+    if xpos then
+        aonDir$=dataDir$(1,xpos)
+    else
+        aonDir$=dataDir$
+    endif
+endif
+convCtrlIniFileName$=aonDir$+"config/adx_conversionCtrl.ini"
+convCtrlIniFile!=new File(convCtrlIniFileName$,err=*next)
+if !convCtrlIniFile!.exists() then
+    rem --- Report can't find the required config/adx_conversionCtrl.ini initialization file
+    err_msg$="***** ERROR: Required file not found, "+convCtrlIniFileName$+" *****"
+    print(log_dev)err_msg$
+    print(err_dev)err_msg$
+    rd_meter_data$=err_msg$
+    rd_meter_action$="LST"
+    gosub disp_meter
+    goto done
+endif
 
 rd_meter_data$="Processing files . . ."
 rd_meter_total_recs=iff(vectPort!=null(),0,vectPort!.size())
@@ -1296,7 +1330,7 @@ rem --- Populate sequence record(s)
 
     if len(firms$)>0
         for firms=1 to len(firms$) step 2
-            dim ads_sequences$:ads_sequences_tpl$
+            dim ads_sequences$:fattr(ads_sequences$)
             ads_sequences.firm_id$=firms$(firms,2)
             ads_sequences.seq_id$=pad("INTERNAL_SEQ_NO",16)
             ads_sequences.description$="Internal Sequence Number"
@@ -1322,7 +1356,84 @@ rem --- Verify master file records exist for used translations
         gosub verify_translation_master
     endif
 
-rem --- Enable disabled triggers
+rem --- On successful complete, initialize conversion control file data/adx_conversionCtrl
+    fileReader!=new FileReader(convCtrlIniFile!)
+    convCtrl!=new Properties()
+    convCtrl!.load(fileReader!)
+    fileReader!.close()
+    
+    convCtrl!.setProperty("data_source","DataPort")
+    convCtrl!.setProperty("start_version",str(source_version:"00.00"))
+    
+    rem --- Get version of this Addon installation
+    num_files=1
+    dim rd_open_tables$[1:num_files],rd_open_opts$[1:num_files],rd_open_chans$[1:num_files],rd_open_tpls$[1:num_files]
+    rd_open_tables$[1]="ADM_MODULES",rd_open_opts$[1]="OTA"
+    gosub open_tables
+    adm_modules_dev=num(rd_open_chans$[1]);dim adm_modules$:rd_open_tpls$[1]
+    readrecord(adm_modules_dev,key=pad("01007514AD",11),dom=*next)adm_modules$
+    end_version$=cvs(adm_modules.version_id$,3)
+    convCtrl!.setProperty("end_version",end_version$)
+    
+    rem --- Put initialized conversion control file in target data directory
+    convCtrlFilePath$=aonDir$+"data"
+    convCtrlFileName$=convCtrlFilePath$+"/adx_conversionCtrl"
+    convCtrlFile!=new File(convCtrlFileName$)
+    rem --- Create path/file if doesn't exist
+    if !convCtrlFile!.exists() then
+        convCtrlPath!=new File(convCtrlFilePath$)
+        if !convCtrlPath!.exists() then
+            convCtrlPath!.mkdirs()
+        endif
+        convCtrlFile!.createNewFile()
+    endif
+    fileWriter!=new FileWriter(convCtrlFile!)
+    convCtrl!.store(fileWriter!,"Addon Conversion Control File")
+    fileWriter!.close()
+    print(log_dev)"Initialized ",convCtrlFileName$
+
+rem --- On successful completion, create conversion marker files in target directory for all file dependency groups that were ported
+    fileDependencies!=new HashMap()
+    convCtrlKeys!=convCtrl!.stringPropertyNames()
+    versionsVect!=BBjAPI().makeVector()
+    versionsVect!.addAll(java.util.Arrays.asList(convCtrl!.getProperty("conversion_versions").split(";")))
+    for i=0 to versionsVect!.size()-1
+        version$=versionsVect!.getItem(i)
+        iter!=convCtrlKeys!.iterator()
+        while iter!.hasNext()
+            key$=iter!.next()
+            if pos(version$+"_"=key$)=1 then
+                fileDependencies!.put(convCtrl!.getProperty(key$),version$)
+            endif
+        wend
+    next i
+    requiredFiles!=BBjAPI().makeVector()
+    keyIter!=fileDependencies!.keySet().iterator()
+    while keyIter!.hasNext()
+        rem --- Create marker file for each dependency where all the files exist
+        create_marker=1
+        requiredFiles!.clear()
+        key!=keyIter!.next()
+        requiredFiles!.addAll(java.util.Arrays.asList(key!.split(";")))
+        version$=fileDependencies!.get(key!)
+        for i=0 to requiredFiles!.size()-1
+            file!=new File(destin_folder$+"/"+requiredFiles!.get(i))
+            if !file!.exists() then
+                create_marker=0
+                break
+            endif
+        next i
+        if create_marker then
+            markerFile!=new File(destin_folder$+"/v"+version$+"_"+requiredFiles!.get(0))
+            markerFile!.createNewFile()
+    
+            print(log_dev)"Created conversion marker file: ",markerFile!.getAbsoluteFile()
+        endif
+    wend
+    
+done: rem --- Done    
+
+    rem --- Enable disabled triggers
     if disabledTriggers!.size() then
         iter!=disabledTriggers!.iterator()
         while iter!.hasNext()
@@ -1334,8 +1445,6 @@ rem --- Enable disabled triggers
             print (log_dev)"Enabled triggers for: ",trigger$
         wend
     endif
-    
-rem --- Done    
 
     print (log_dev)$0a$+"DataPort completed"
     print (log_dev)"DataPort End Time: "+DATE(0:"%Mz/%Dz/%Y %hz:%mz:%sz")+" "
@@ -1748,7 +1857,7 @@ rem --- although flat file sequence_no could probably be modified to contain all
                     if sys01_3$(13,1)<>"Y" then continue
                 endif            
                 read (old_file,key=firms$(firms,2)+"N",dom=*continue)*,sequence_no[all]              
-                dim ads_sequences$:ads_sequences_tpl$
+                dim ads_sequences$:fattr(ads_sequences$)
                 ads_sequences.firm_id$=firms$(firms,2)
                 ads_sequences.seq_id$=pad(sequence_id$,16)                             
                 readrecord(ads_sequences_dev,key=ads_sequences.firm_id$+ads_sequences.seq_id$,dom=*continue)ads_sequences$
@@ -2931,6 +3040,14 @@ fix_yymmdd_date: rem --- Convert yy dates to yyyy, and yymmdd dates to yyyymmdd
     else
         value$=pad("",8)
     endif
+    return
+
+fix_path: rem --- Flip directory path separators
+    pos=pos("\"=filePath$)
+    while pos
+        filePath$=filePath$(1, pos-1)+"/"+filePath$(pos+1)
+        pos=pos("\"=filePath$)
+    wend
     return
 
 disp_meter:rem --- Display Progress Meter

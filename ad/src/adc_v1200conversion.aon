@@ -28,7 +28,9 @@ rem --- Initializations
 rem --- Open log file in aon/logs directory, if possible
 
     aonDir$=""
-    dataDir$=stbl("+DIR_DAT",err=*next)
+    filePath$=stbl("+DIR_DAT",err=*next)
+    gosub fix_path
+    dataDir$=filePath$
     xpos=pos("/aon/"=dataDir$,-1)
     if xpos then
         aonDir$=dataDir$(1,xpos+4)
@@ -374,6 +376,14 @@ disp_meter:rem --- Display Progress Meter
 :       meter_text$,
 :       meter_action$
 
+    return
+
+fix_path: rem --- Flip directory path separators
+    pos=pos("\"=filePath$)
+    while pos
+        filePath$=filePath$(1, pos-1)+"/"+filePath$(pos+1)
+        pos=pos("\"=filePath$)
+    wend
     return
     
 open_tables:rem -----<Open Tables
