@@ -11,6 +11,7 @@ rem ==========================================================================
     use java.io.File
     use java.io.FileReader
     use java.util.Properties
+    use ::ado_file.src::FileObject
 
     setesc std_error
     seterr std_error
@@ -48,9 +49,7 @@ rem --- Initializations
 rem --- Locate aon/data directory, if possible
 
     aonDir$=""
-    filePath$=stbl("+DIR_DAT",err=*next)
-    gosub fix_path
-    dataDir$=filePath$
+    dataDir$=FileObject.fixPath(stbl("+DIR_DAT",err=*next), "/")
     xpos=pos("/aon/"=dataDir$,-1)
     if xpos then
         aonDir$=dataDir$(1,xpos+4)
@@ -82,14 +81,6 @@ rem --- If conversion control file data/adx_conversionCtrl present and data_sour
 done: rem --- All done
 
     goto std_exit
-
-fix_path: rem --- Flip directory path separators
-    pos=pos("\"=filePath$)
-    while pos
-        filePath$=filePath$(1, pos-1)+"/"+filePath$(pos+1)
-        pos=pos("\"=filePath$)
-    wend
-    return
     
 rem #include std_error.src
 

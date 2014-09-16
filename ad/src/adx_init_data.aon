@@ -51,9 +51,7 @@ rem --- Initializations
 rem --- Locate aon/data directory, if possible
 
     aonDir$=""
-    filePath$=stbl("+DIR_DAT",err=*next)
-    gosub fix_path
-    dataDir$=filePath$
+    dataDir$=FileObject.fixPath(stbl("+DIR_DAT",err=*next), "/")
     xpos=pos("/aon/"=dataDir$,-1)
     if xpos then
         aonDir$=dataDir$(1,xpos+4)
@@ -278,7 +276,7 @@ rem --- Process needed version conversion programs
         
         rem --- CALL conversion program for this version
         found_conv_pgm=0
-        call stbl("+DIR_PGM",err=*next)+this_conv_pgm$,err=*next,rdForm!,conversionProps!,installMap!,status; found_conv_pgm=1
+        call stbl("+DIR_PGM",err=*next)+this_conv_pgm$,err=*next,convCtrl!,installMap!,rdForm!,Translate!,status; found_conv_pgm=1
         if !found_conv_pgm then
             rem --- Report conversion program not found, skip other conversions
             err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
@@ -440,14 +438,6 @@ show_error_message: rem --- Displays message that error should be fixed before c
     
     close_mdi=1
 
-    return
-
-fix_path: rem --- Flip directory path separators
-    pos=pos("\"=filePath$)
-    while pos
-        filePath$=filePath$(1, pos-1)+"/"+filePath$(pos+1)
-        pos=pos("\"=filePath$)
-    wend
     return
     
 open_tables:rem -----<Open Tables

@@ -203,9 +203,7 @@ rem --- confirm ready to port selected files?
     
 			rem --- Locate aon/data directory, if possible
 			aonDir$=""
-			filePath$=stbl("+DIR_DAT",err=*next)
-			gosub fix_path
-			dataDir$=filePath$
+			dataDir$=FileObject.fixPath(stbl("+DIR_DAT",err=*next), "/")
 			xpos=pos("/aon/"=dataDir$,-1)
 			if xpos then
  				aonDir$=dataDir$(1,xpos+4)
@@ -519,16 +517,7 @@ attr_disp_col$=attr_col$[0,1]
 call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridFiles!,"COLH-LINES-LIGHT-AUTO-MULTI-SIZEC-DATES-CHECKS",num_rows,
 :	attr_def_col_str$[all],attr_disp_col$,attr_col$[all]
 
-
 return
-
-fix_path: rem --- Flip directory path separators
-    pos=pos("\"=filePath$)
-    while pos
-        filePath$=filePath$(1, pos-1)+"/"+filePath$(pos+1)
-        pos=pos("\"=filePath$)
-    wend
-    return
 [[ADX_DATAPORT.BSHO]]
 rem --- inits
 
@@ -537,6 +526,7 @@ rem --- inits
 	use java.util.HashMap
 	use java.util.Properties
 	use ::ado_util.src::util
+	use ::ado_file.src::FileObject
 
 rem --- disable Scan button until we have valid source dir
 

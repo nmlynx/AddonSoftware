@@ -5,15 +5,16 @@ rem --- AddonSoftware Version 15.00 - Sept2014
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 
 
-rem --- rdForm!          : Window object to hold progress meter
-rem --- CONVERSIONPROPS! : Property object of the conversion control file data/adx_conversionCtrl (Input)
-rem --- INSTALLMAP!      : HashMap object of installed modules, keyed by module ID (Input)
-rem --- STATUS           : Status code/0=No error (Returned)
+rem --- CONVCTRL!   : Property object of the conversion control file data/adx_conversionCtrl (Input)
+rem --- INSTALLMAP! : HashMap object of installed modules, keyed by module ID (Input)
+rem --- rdForm!     : Window object to hold progress meter
+rem --- Translate!  : Translator object translations
+rem --- STATUS      : Status code/0=No error (Returned)
     
     setesc std_error
     seterr std_error
     
-    enter rdForm!,conversionProps!,installMap!,status
+    enter convCtrl!,installMap!,rdForm!,Translate!,status
 
 rem --- Initializations
 

@@ -22,6 +22,7 @@ rem
     use java.util.HashMap
     use java.util.Properties
     use java.util.Vector
+    use ::ado_file.src::FileObject
 
 rem --- Dictionary file templates
 dim ddm01$:"data_name:c(12*),description:c(30),lstrev:c(6),data_type:c(1),reserved_str:c(68*),fld_length:n(3*),display_len:n(3*),reserved_num:n(1*)"
@@ -405,9 +406,7 @@ gosub disp_meter
 
 rem --- Locate /config/adx_conversionCtrl.ini
 aonDir$=""
-filePath$=stbl("+DIR_DAT",err=*next)
-gosub fix_path
-dataDir$=filePath$
+dataDir$=FileObject.fixPath(stbl("+DIR_DAT",err=*next), "/")
 xpos=pos("/aon/"=dataDir$,-1)
 if xpos then
     aonDir$=dataDir$(1,xpos+4)
@@ -3040,14 +3039,6 @@ fix_yymmdd_date: rem --- Convert yy dates to yyyy, and yymmdd dates to yyyymmdd
     else
         value$=pad("",8)
     endif
-    return
-
-fix_path: rem --- Flip directory path separators
-    pos=pos("\"=filePath$)
-    while pos
-        filePath$=filePath$(1, pos-1)+"/"+filePath$(pos+1)
-        pos=pos("\"=filePath$)
-    wend
     return
 
 disp_meter:rem --- Display Progress Meter
