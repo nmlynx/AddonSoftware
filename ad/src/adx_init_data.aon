@@ -344,8 +344,10 @@ done: rem --- All done
 	
 close_barista_mdi: rem --- Close Barista MDI
 
-escape; rem wgh ... close Barista MDI here
-goto std_exit
+    rdGroupSpace!=BBjAPI().getGroupNamespace()
+    rdGroupSpace!.setValue("+exit_mdi","FORCE_CLOSE")
+
+    goto std_exit
     
 disp_meter: rem --- Display Progress Meter
 
