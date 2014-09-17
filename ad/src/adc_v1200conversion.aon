@@ -9,7 +9,7 @@ rem --- CONVCTRL!   : Property object of the conversion control file data/adx_co
 rem --- INSTALLMAP! : HashMap object of installed modules, keyed by module ID (Input)
 rem --- rdForm!     : Window object to hold progress meter
 rem --- Translate!  : Translator object translations
-rem --- STATUS      : Status code/0=No error (Returned)
+rem --- CONV_STATUS : Status code/0=No error (Returned)
 
     use java.io.File
     use java.util.HashMap
@@ -18,11 +18,11 @@ rem --- STATUS      : Status code/0=No error (Returned)
     setesc std_error
     seterr std_error
     
-    enter convCtrl!,installMap!,rdForm!,Translate!,status
+    enter convCtrl!,installMap!,rdForm!,Translate!,conv_status
 
 rem --- Initializations
 
-    status=1
+    conv_status=1
     dir_syp$=stbl("+DIR_SYP")
     pgmdir$=stbl("+DIR_PGM",err=*next)
     
@@ -127,7 +127,7 @@ done: rem --- Done, close things up
     print(log_dev)"v1200conversion log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     close(log_dev)
 
-    if completed_successfully then status=0; rem --- no errors encountered
+    if completed_successfully then conv_status=0; rem --- no errors encountered
 	goto std_exit
 
 rem --- For v12.00, adm_modules.post_gl was moved to *s_params.post_to_gl. Following an upgrade,
