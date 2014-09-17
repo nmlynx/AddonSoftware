@@ -691,7 +691,7 @@ rem --- additional file opens, depending on which apps are installed, param valu
 	endif
 
 	if op$="Y" then 
-		more_files$=more_files$+"OPE_ORDHDR;OPE_ORDDET;OPE_ORDITEM;"
+		more_files$=more_files$+"OPE_ORDHDR;OPE_ORDDET;"
 		files=files+3
 	endif
 
