@@ -85,7 +85,6 @@ rem --- Open/Lock files
     files$[26]="sam-10",ids$[26]="SAM_DISTCODE"
     files$[27]="sam-11",ids$[27]="SAM_NONSTOCK"
     files$[28]="ars_params",ids$[28]="ARS_PARAMS"
-    files$[29]="opt-81",ids$[29]="OPT_LSTPRICE"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :       ids$[all],templates$[all],channels[all],batch,status
@@ -120,10 +119,8 @@ rem --- Open/Lock files
     sam10_dev=channels[26]
     sam11_dev=channels[27]
     ars01a_dev=channels[28]
-    opt81_dev=channels[29]
 
 rem --- Dimension string templates
-rem opt51a$:templates$[17],opt61a$:templates$[18],opt81a$:templates$[19],sam21a$:templates$[31]
 
     dim arm01a$:templates$[1],arm02a$:templates$[2],ivm01a$:templates$[3],
 :       ivm02a$:templates$[4],ivw05a$:templates$[5],ope01a$:templates$[6],
@@ -134,7 +131,7 @@ rem opt51a$:templates$[17],opt61a$:templates$[18],opt81a$:templates$[19],sam21a$
 :       sam03a$:templates$[19],sam04a$:templates$[20],sam05a$:templates$[21],
 :       sam06a$:templates$[22],sam07a$:templates$[23],sam08a$:templates$[24],
 :       sam09a$:templates$[25],sam10a$:templates$[26],sam11a$:templates$[27],
-:       ars01a$:templates$[28],opt81a$:templates$[29]
+:       ars01a$:templates$[28],
 
 rem --- Retrieve parameter records
 
@@ -344,20 +341,7 @@ rem            opt11a.item_id$=ope11a.item_id$
                 find record (opm02_dev,key=firm_id$+ope11a.line_code$,dom=*next) opm02a$
             endif
 
-        rem ---Commission Detail and Last Price
-
-            if opm02a.line_type$<>"N" then 
-                dim opt81a$:fattr(opt81a$)
-                opt81a.firm_id$     = firm_id$
-                opt81a.customer_id$ = opt11a.customer_id$
-                opt81a.item_id$     = opt11a.item_id$
-                opt81_key$=opt81a.firm_id$+opt81a.customer_id$+opt81a.item_id$
-                extract record (opt81_dev,key=opt81_key$,dom=*next)x$; rem Advisory Locking
-                opt81a.unit_price   = ope11a.unit_price
-                opt81a.unit_cost    = ope11a.unit_cost
-                opt81a$ = field(opt81a$)
-                write record (opt81_dev) opt81a$
-            endif
+        rem ---Commission Detail
             
             if pos(opm02a.line_type$="SNP") and opt11a.ext_price>0 then ext_sales=ext_sales+opt11a.ext_price
             if opt11a.ext_price<0 then ext_returns=ext_returns+opt11a.ext_price
