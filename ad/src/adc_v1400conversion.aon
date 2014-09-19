@@ -67,7 +67,7 @@ rem --- For version 14.10, update drilldown definitions in ddm_drill_defs
 
         num_files=1
         dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-        open_tables$[1]="DDM_DRILL_DEFS",   open_opts$[1]="OTA@"
+        open_tables$[1]="DDM_DRILL_DEFS",   open_opts$[1]="OTA"
         gosub open_tables
         ddm_drilldefs_dev=num(open_chans$[1])
         dim ddm_drilldefs$:open_tpls$[1]

@@ -225,8 +225,107 @@ v1500_ope21: rem --- Data conversion for ope-21;opt-21
     status=0
     return
 
-v1500_ope31: rem --- Data conversion for ope-31;opt-31
+v1500_ope31: rem --- Data conversion for ope-31 (ope_ordship) and opt-31 (opt_invship)
+
     status=0
+
+    rem --- Open file(s) in new data dictionary
+    num_files=2
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="OPT_INVSHIP", open_opts$[1]="OTA"
+    open_tables$[2]="OPE_ORDSHIP", open_opts$[2]="T"
+    gosub open_tables
+    opt_invship_dev=num(open_chans$[1]);dim opt_invship$:open_tpls$[1]
+    dim ope_ordship$:open_tpls$[2]
+
+    rem --- Open file(s) NOT in new data dictionary
+    ope31$=stbl("+OPDATA")+"ope-31"
+    open_success=0
+    ope_ordship_dev=unt
+    open(ope_ordship_dev,err=*next)ope31$; open_success=1
+    if !open_success then
+        rem --- Required file missing
+        meter_text$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:       Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+ope31$+" *****"
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+        status=1
+        return
+    endif
+
+    rem --- Set TRANS_STATUS=Update for existing records in opt-31 (opt_invship)
+    read(opt_invship_dev,key="",dom=*next)
+    while 1
+        readrecord(opt_invship_dev,end=*break)opt_invship$
+        if opt_invship.trans_status$=" " then
+            opt_invship.trans_status$="U"
+            opt_invship$=field(opt_invship$)
+            writerecord(opt_invship_dev)opt_invship$
+        endif
+    wend
+
+    rem --- Copy ope-31 (ope_ordship) records to opt-13 (opt_invship) and set TRANS_STATUS=Update
+    if convCtrl!.getProperty("data_source")="OCJ" then
+        rem --- Data upgraded via EM Update Wizard (OCJ)
+        rem --- New ope-31 has old ope-31 structure
+        tpl_found=0
+        findrecord(ddm_table_tpls,key=pad("OPE_ORDSHIP",16),dom=*next)ddm_table_tpls$;tpl_found=1
+        if tpl_found then
+            dim ope_ordship$:ddm_table_tpls.template$
+        else
+            rem --- Required template missing
+            meter_text$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+Translate!.getTranslation("AON_VERSION","Verion")+" "+convCtrl!.getProperty("start_version")+
+:           " "+Translate!.getTranslation("AON_TEMPLATE_NOT_FOUND","Template not found")+": "+"OPE_ORDSHIP"+" *****"
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+            status=1
+            return
+        endif
+    else
+        rem --- Data upgraded via DataPort
+        rem --- New ope-31 has new opt-31 structure
+    endif
+    read(ope_ordship_dev,key="",dom=*next)
+    while 1
+        readrecord(ope_ordship_dev,end=*break)ope_ordship$
+        if convCtrl!.getProperty("data_source")="OCJ" then
+            rem --- Data upgraded via EM Update Wizard (OCJ)
+            rem --- New ope-31 has old ope-31 structure
+            dim opt_invship$:fattr(opt_invship$)
+            call pgmdir$+"adc_copyfile.aon",ope_ordship$,opt_invship$,status
+            if status then break
+        else
+            rem --- Data upgraded via DataPort
+            rem --- New ope-31 has new opt-31 structure
+rem wgh ... stopped here
+rem wgh ... verify for DataPort
+            opt_invship$=ope_ordship$
+        endif
+        if opt_invship.trans_status$=" " then
+            opt_invship.trans_status$="E"
+            opt_invship$=field(opt_invship$)
+            writerecord(opt_invship_dev)opt_invship$
+        endif
+    wend
+
+    rem --- Delete ope-31 if conversion completed successfully
+    if status=0 then
+        close(ope_ordship_dev)
+        ope31File!=new File(ope31$)
+        if ope31File!.delete() then
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_CONV_FILE_DELETED","Conversion file deleted")+": "+ope31$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+        endif
+    endif
+
     return
 
 v1500_ope41: rem --- Data conversion for ope-41;opt-41
@@ -274,6 +373,29 @@ disp_meter: rem --- Display Progress Meter
 :       meter_text$,
 :       meter_action$
 
+    return
+   
+open_tables: rem --- Open Tables
+
+    call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:       open_beg,
+:       open_end,
+:       open_tables$[all],
+:       open_opts$[all],
+:       open_chans$[all],
+:       open_tpls$[all],
+:       rd_table_chans$[all],
+:       open_batch,
+:       open_status$
+
+    if open_status$<>"" then
+        msg_id$="ENTRY_OPEN_ERROR"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=open_status$
+        gosub disp_message
+        rdFuncSpace!=bbjAPI().getGroupNamespace().setValue("+build_task","OFF")
+        release
+    endif
     return
 
 disp_message: rem --- Display Message Dialog
