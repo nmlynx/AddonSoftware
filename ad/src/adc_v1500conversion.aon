@@ -112,6 +112,7 @@ rem --- For version 15.00, data conversions for OP Real Time Processing (RTP) fi
                     switch marker
                         case 0
                             gosub v1500_ope01
+                            if status=0 then gosub v1500_ope11
                             break
                         case 1
                             gosub v1500_ope21
@@ -217,36 +218,61 @@ done: rem --- Done, close things up
     if completed_successfully then conv_status=0; rem --- no errors encountered
     goto std_exit
 
-v1500_ope01: rem --- Data conversion for ope-01;opt-01;ope-11;opt-11
-    status=0
+v1500_ope01: rem --- Data conversion for ope-01;opt-01
+
+    opt_table$="OPT_INVHDR"
+    ope_table$="OPE_INVHDR"
+    ope_file$="ope-01"
+    add_order_number=0
+    gosub op_rtp_data_conv
+    
+    return
+
+v1500_ope11: rem --- Data conversion for ope-11;opt-11
+    
     return
 
 v1500_ope21: rem --- Data conversion for ope-21;opt-21
-    status=0
+    
     return
 
 v1500_ope31: rem --- Data conversion for ope-31 (ope_ordship) and opt-31 (opt_invship)
 
+    opt_table$="OPT_INVSHIP"
+    ope_table$="OPE_ORDSHIP"
+    ope_file$="ope-31"
+    add_order_number=1
+    gosub op_rtp_data_conv
+
+    return
+
+v1500_ope41: rem --- Data conversion for ope-41;opt-41
+    
+    return
+    
+op_rtp_data_conv: rem --- OP Real Time Processing (RTP) data conversion
     status=0
 
     rem --- Open file(s) in new data dictionary
-    num_files=2
+    num_files=3
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="OPT_INVSHIP", open_opts$[1]="OTA"
-    open_tables$[2]="OPE_ORDSHIP", open_opts$[2]="T"
+    open_tables$[1]="OPT_INVHDR", open_opts$[1]="OTA"
+    open_tables$[2]=opt_table$, open_opts$[2]="OTA"
+    open_tables$[3]=ope_table$, open_opts$[3]="T"
     gosub open_tables
-    opt_invship_dev=num(open_chans$[1]);dim opt_invship$:open_tpls$[1]
-    dim ope_ordship$:open_tpls$[2]
+    opt_invhdr_dev=num(open_chans$[1]);dim opt_invhdr_tpl$:open_tpls$[1]
+    opt_dev=num(open_chans$[2]);dim opt_tpl$:open_tpls$[2]
+    dim ope_tpl$:open_tpls$[3]
 
     rem --- Open file(s) NOT in new data dictionary
-    ope31$=stbl("+OPDATA")+"ope-31"
+    ope_file$=stbl("+OPDATA")+ope_file$
     open_success=0
-    ope_ordship_dev=unt
-    open(ope_ordship_dev,err=*next)ope31$; open_success=1
+    ope_dev=unt
+    open(ope_dev,err=*next)ope_file$; open_success=1
     if !open_success then
         rem --- Required file missing
         meter_text$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
-:       Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+ope31$+" *****"
+:       Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+ope_file$+" *****"
         meter_proc_recs=meter_proc_recs+1
         meter_action$="MTR-LST"
         gosub disp_meter
@@ -255,29 +281,40 @@ v1500_ope31: rem --- Data conversion for ope-31 (ope_ordship) and opt-31 (opt_in
         return
     endif
 
-    rem --- Set TRANS_STATUS=Update for existing records in opt-31 (opt_invship)
-    read(opt_invship_dev,key="",dom=*next)
+    rem --- Set TRANS_STATUS=Update for existing records in opt-* transaction file
+    read(opt_dev,key="",dom=*next)
     while 1
-        readrecord(opt_invship_dev,end=*break)opt_invship$
-        if opt_invship.trans_status$=" " then
-            opt_invship.trans_status$="U"
-            opt_invship$=field(opt_invship$)
-            writerecord(opt_invship_dev)opt_invship$
+        opt_key$=key(opt_dev,end=*break)
+        readrecord(opt_dev)opt_tpl$
+        if opt_tpl.trans_status$=" " then
+            opt_tpl.trans_status$="U"
+            if add_order_number and cvs(opt_tpl.order_no$,2)="" then
+                rem --- Set ORDER_NO from OPT_INVHDR via knum=AO_CUST_INV
+                dim opt_invhdr_tpl$:fattr(opt_invhdr_tpl$)
+                opt_invhdr_key$=opt_tpl.firm_id$+opt_invhdr_tpl.ar_type$+opt_tpl.customer_id$+opt_tpl.ar_inv_no$
+                readrecord(opt_invhdr_dev,key=opt_invhdr_key$,knum="AO_CUST_INV",err=*next)opt_invhdr_tpl$
+                opt_tpl.order_no$=opt_invhdr_tpl.order_no$
+                
+                rem --- Remove existing record with blank ORDER_NO in the key
+                remove(opt_dev,key=opt_key$)
+            endif
+            opt_tpl$=field(opt_tpl$)
+            writerecord(opt_dev)opt_tpl$
         endif
     wend
 
-    rem --- Copy ope-31 (ope_ordship) records to opt-13 (opt_invship) and set TRANS_STATUS=Update
+    rem --- Copy old ope-* entry file records to new opt-* transaction file and set TRANS_STATUS=Entry
     if convCtrl!.getProperty("data_source")="OCJ" then
         rem --- Data upgraded via EM Update Wizard (OCJ)
-        rem --- New ope-31 has old ope-31 structure
+        rem --- New ope-* entry file has old ope-* entry file structure
         tpl_found=0
-        findrecord(ddm_table_tpls,key=pad("OPE_ORDSHIP",16),dom=*next)ddm_table_tpls$;tpl_found=1
+        findrecord(ddm_table_tpls,key=pad(ope_table$,16),dom=*next)ddm_table_tpls$;tpl_found=1
         if tpl_found then
-            dim ope_ordship$:ddm_table_tpls.template$
+            dim ope_tpl$:ddm_table_tpls.template$
         else
             rem --- Required template missing
             meter_text$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+Translate!.getTranslation("AON_VERSION","Verion")+" "+convCtrl!.getProperty("start_version")+
-:           " "+Translate!.getTranslation("AON_TEMPLATE_NOT_FOUND","Template not found")+": "+"OPE_ORDSHIP"+" *****"
+:           " "+Translate!.getTranslation("AON_TEMPLATE_NOT_FOUND","Template not found")+": "+ope_table$+" *****"
             meter_proc_recs=meter_proc_recs+1
             meter_action$="MTR-LST"
             gosub disp_meter
@@ -287,36 +324,36 @@ v1500_ope31: rem --- Data conversion for ope-31 (ope_ordship) and opt-31 (opt_in
         endif
     else
         rem --- Data upgraded via DataPort
-        rem --- New ope-31 has new opt-31 structure
+        rem --- New ope-* entry file has new opt-* transaction file structure
     endif
-    read(ope_ordship_dev,key="",dom=*next)
+    read(ope_dev,key="",dom=*next)
     while 1
-        readrecord(ope_ordship_dev,end=*break)ope_ordship$
+        readrecord(ope_dev,end=*break)ope_tpl$
         if convCtrl!.getProperty("data_source")="OCJ" then
             rem --- Data upgraded via EM Update Wizard (OCJ)
-            rem --- New ope-31 has old ope-31 structure
-            dim opt_invship$:fattr(opt_invship$)
-            call pgmdir$+"adc_copyfile.aon",ope_ordship$,opt_invship$,status
+            rem --- New ope-* entry file has old ope-* entry file structure
+            dim opt_tpl$:fattr(opt_tpl$)
+            call pgmdir$+"adc_copyfile.aon",ope_tpl$,opt_tpl$,status
             if status then break
         else
             rem --- Data upgraded via DataPort
-            rem --- New ope-31 has new opt-31 structure
-            opt_invship$=ope_ordship$
+            rem --- New ope-* entry file has new opt-* transaction file structure
+            opt_tpl$=ope_tpl$
         endif
-        if opt_invship.trans_status$=" " then
-            opt_invship.trans_status$="E"
-            opt_invship$=field(opt_invship$)
-            writerecord(opt_invship_dev)opt_invship$
+        if opt_tpl.trans_status$=" " then
+            opt_tpl.trans_status$="E"
+            opt_tpl$=field(opt_tpl$)
+            writerecord(opt_dev)opt_tpl$
         endif
     wend
 
-    rem --- Delete ope-31 if conversion completed successfully
+    rem --- Delete old ope-* entry file if conversion completed successfully
     if status=0 then
-        close(ope_ordship_dev)
-        ope31File!=new File(ope31$)
-        if ope31File!.delete() then
+        close(ope_dev)
+        opeFile!=new File(ope_file$)
+        if opeFile!.delete() then
             rem --- Increment progress meter
-            meter_text$=Translate!.getTranslation("AON_CONV_FILE_DELETED","Conversion file deleted")+": "+ope31$
+            meter_text$=Translate!.getTranslation("AON_CONV_FILE_DELETED","Conversion file deleted")+": "+ope_file$
             meter_proc_recs=meter_proc_recs+1
             meter_action$="MTR-LST"
             gosub disp_meter
@@ -324,10 +361,6 @@ v1500_ope31: rem --- Data conversion for ope-31 (ope_ordship) and opt-31 (opt_in
         endif
     endif
 
-    return
-
-v1500_ope41: rem --- Data conversion for ope-41;opt-41
-    status=0
     return
 
 open_log: rem --- Open log file
