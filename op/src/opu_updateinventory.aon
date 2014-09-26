@@ -492,72 +492,79 @@ rem --- Read next invoice header --- Main Loop Starts
             while more
                 precision 2
                 if total_ext<>ope01a.total_sales then ope01a.total_sales=total_ext
-                    art01a.firm_id$=ope01a.firm_id$
-                    art01a.ar_type$=ope01a.ar_type$
-                    art01a.customer_id$=ope01a.customer_id$
-                    art01a.ar_inv_no$=ope01a.ar_inv_no$
-                    art01a.sequence_00$="00"
-                    key_value$ = art01a.firm_id$+art01a.ar_type$+art01a.customer_id$+art01a.ar_inv_no$+art01a.sequence_00$
-                    extract record (art01_dev, key=key_value$, dom=ar_open_inv_hdr) art01a$; rem Advisory Locking
-                    goto ar_open_inv_det_smry_record
+                dim art01a$:fattr(art01a$)
+                art01a.firm_id$=ope01a.firm_id$
+                art01a.ar_type$=ope01a.ar_type$
+                art01a.customer_id$=ope01a.customer_id$
+                art01a.ar_inv_no$=ope01a.ar_inv_no$
+                art01a.sequence_00$="00"
+                key_value$ = art01a.firm_id$+art01a.ar_type$+art01a.customer_id$+art01a.ar_inv_no$+art01a.sequence_00$
+                extract record (art01_dev, key=key_value$, dom=ar_open_inv_hdr) art01a$; rem Advisory Locking
+                goto ar_open_inv_det_smry_record
 
-                ar_open_inv_hdr: rem --- AR Open Invoice Header
+ar_open_inv_hdr: rem --- AR Open Invoice Header
 
-                    art01a.ar_dist_code$=ope01a.ar_dist_code$
-                    art01a.ar_terms_code$=ope01a.terms_code$
-                    art01a.invoice_date$=ope01a.invoice_date$
-                    art01a.invoice_type$=ope01a.invoice_type$
-                    art01a.job_no$=ope01a.job_no$
+                art01a.ar_dist_code$=ope01a.ar_dist_code$
+                art01a.ar_terms_code$=ope01a.terms_code$
+                art01a.invoice_date$=ope01a.invoice_date$
+                art01a.invoice_type$=ope01a.invoice_type$
+                art01a.job_no$=ope01a.job_no$
 
-                    arm10a.inv_days_due = 0
-                    find record (arm10_dev,key=firm_id$+"A"+ope01a.terms_code$,dom=*next) arm10a$
-                    v=arm10a.inv_days_due
-                    call pgmdir$+"adc_duedate.aon",arm10a.prox_or_days$,art01a.invoice_date$,v,v$,status
-                    if status = 999 then exitto std_exit
-                    art01a.inv_due_date$=v$
+                arm10a.inv_days_due = 0
+                find record (arm10_dev,key=firm_id$+"A"+ope01a.terms_code$,dom=*next) arm10a$
+                v=arm10a.inv_days_due
+                call pgmdir$+"adc_duedate.aon",arm10a.prox_or_days$,art01a.invoice_date$,v,v$,status
+                if status = 999 then exitto std_exit
+                art01a.inv_due_date$=v$
 
-                    v=arm10a.disc_days
-                    call pgmdir$+"adc_duedate.aon",arm10a.prox_or_days$,art01a.invoice_date$,v,v$,status
-                    if status = 999 then exitto std_exit
-                    art01a.disc_date$=v$
+                v=arm10a.disc_days
+                call pgmdir$+"adc_duedate.aon",arm10a.prox_or_days$,art01a.invoice_date$,v,v$,status
+                if status = 999 then exitto std_exit
+                art01a.disc_date$=v$
 
-                    art01a.invoice_amt=total_ext+ope01a.tax_amount+ope01a.freight_amt-ope01a.discount_amt
-                    art01a.disc_allowed=(total_ext-ope01a.discount_amt)*arm10a.disc_percent/100
-                    art01a$ = field(art01a$)
-                    write record (art01_dev) art01a$
-                    if ope01a.cash_sale$="Y" then goto ar_open_inv_det_smry_record
-                    break
+                art01a.invoice_amt=total_ext+ope01a.tax_amount+ope01a.freight_amt-ope01a.discount_amt
+                art01a.disc_allowed=(total_ext-ope01a.discount_amt)*arm10a.disc_percent/100
+                art01a.invoice_bal=art01a.invoice_amt
+                art01a.disc_taken=0
+                art01a$ = field(art01a$)
+                write record (art01_dev) art01a$
+                if ope01a.cash_sale$="Y" then goto ar_open_inv_det_smry_record
+                break
 
-                ar_open_inv_det_smry_record: rem --- AR Open Invoice Detail Summary Record
+ar_open_inv_det_smry_record: rem --- AR Open Invoice Detail Summary Record
 
-                    art11a.firm_id$=art01a.firm_id$
-                    art11a.ar_type$=art01a.ar_type$
-                    art11a.customer_id$=art01a.customer_id$
-                    art11a.ar_inv_no$=art01a.ar_inv_no$
-                    art11a.sequence_num$="99"
-                    art11a_key$=art11a.firm_id$+art11a.ar_type$+art11a.customer_id$+art11a.ar_inv_no$+art11a.sequence_num$
-                    read (art11_dev, key=art11a_key$, dom=ar_open_invoice_detail)
+                art11a.firm_id$=art01a.firm_id$
+                art11a.ar_type$=art01a.ar_type$
+                art11a.customer_id$=art01a.customer_id$
+                art11a.ar_inv_no$=art01a.ar_inv_no$
+                art11a.sequence_num$="99"
+                art11a_key$=art11a.firm_id$+art11a.ar_type$+art11a.customer_id$+art11a.ar_inv_no$+art11a.sequence_num$
+                read (art11_dev, key=art11a_key$, dom=ar_open_invoice_detail)
 
-                    extract record (art11_dev, key=art11a_key$) art11a$
-                    if art11a.trans_type$="C" then art11a.trans_type$="A"
-                    art11a.trans_date$=ope01a.invoice_date$
-                    art11a.ar_inv_no$=ope01a.ar_inv_no$
-                    if ope01a.cash_sale$="Y" then
-                        art11a.trans_amt=art11a.trans_amt-ope41a.tendered_amt
-                    else
-                        art11a.trans_amt=art11a.trans_amt+total_ext+ope01a.tax_amount+ope01a.freight_amt-ope01a.discount_amt
-                    endif
-                    art11a$ = field(art11a$)
-                    write record (art11_dev) art11a$
-                    break
+                extract record (art11_dev, key=art11a_key$) art11a$
+                if art11a.trans_type$="C" then art11a.trans_type$="A"
+                art11a.trans_date$=ope01a.invoice_date$
+                art11a.ar_inv_no$=ope01a.ar_inv_no$
+                if ope01a.cash_sale$="Y" then
+                    art11a.trans_amt=art11a.trans_amt-ope41a.tendered_amt
+                    art01a.invoice_bal=art01a.invoice_bal-ope41a.tendered_amt
+                else
+                    art11a.trans_amt=art11a.trans_amt+total_ext+ope01a.tax_amount+ope01a.freight_amt-ope01a.discount_amt
+                    art01a.invoice_bal=art01a.invoice_bal+total_ext+ope01a.tax_amount+ope01a.freight_amt-ope01a.discount_amt
+                endif
+                art11a$ = field(art11a$)
+                write record (art11_dev) art11a$
+                art01a$=field(art01a$)
+                write record (art01_dev) art01a$
+                break
 
-                ar_open_invoice_detail: rem --- AR Open Invoice Detail
+ar_open_invoice_detail: rem --- AR Open Invoice Detail
 
-                    art11a.firm_id$=art01a.firm_id$
-                    art11a.ar_type$=art01a.ar_type$
-                    art11a.customer_id$=art01a.customer_id$
-                    art11a.ar_inv_no$=art01a.ar_inv_no$
-                    art11a.sequence_num$="01"
+                art11a.firm_id$=art01a.firm_id$
+                art11a.ar_type$=art01a.ar_type$
+                art11a.customer_id$=art01a.customer_id$
+                art11a.ar_inv_no$=art01a.ar_inv_no$
+                art11a.sequence_num$="01"
                     start_block = 1
 
                     if start_block then
@@ -567,41 +574,44 @@ rem --- Read next invoice header --- Main Loop Starts
 :                           art01a.firm_id$+art01a.ar_type$+art01a.customer_id$+art01a.ar_inv_no$ 
 :                       then
                             art11a.sequence_num$=str(num(art11a.sequence_num$)+1:"00")
-                        endif
                     endif
+                endif
 
-                    art11_key$=art11a.firm_id$+art11a.ar_type$+art11a.customer_id$+art11a.ar_inv_no$+art11a.sequence_num$
-                    extract record (art11_dev,key=art11_key$,dom=*next)x$; rem Advisory Locking
-                    art11a.trans_date$=ope01a.invoice_date$
-                    if ope01a.cash_sale$="Y" then
-                        art11a.trans_type$="C"
-                        art11a.trans_amt=-ope41a.tendered_amt
-                        if arm10c.trans_type$ = "C" then
-                            art11a.refchk_no$=ope41a.ar_check_no$
-                        else
-                            if arm10c.trans_type$ = "P" then
-                                credCard! = new CreditCard()
-                                cc_config$="BAR_CREDIT_CARD"
-                                cc_no$=""
-                                cc_no$=credCard!.getMaskedCardValue(credCard!.decryptCard(cvs(ope41a.credit_card_no$,2),cc_config$),err=*next)
-                                wk$=fattr(art11a$,"refchk_no")
-                                refchk_len=dec(wk$(10,2))
-                                if len(cc_no$)>=refchk_len then cc_no$=cc_no$(len(cc_no$)-refchk_len+1)            
-                                art11a.refchk_no$=cc_no$
-                            else
-                                art11a.refchk_no$="Cash"
-                            endif
-                        endif
+                art11_key$=art11a.firm_id$+art11a.ar_type$+art11a.customer_id$+art11a.ar_inv_no$+art11a.sequence_num$
+                extract record (art11_dev,key=art11_key$,dom=*next)x$; rem Advisory Locking
+                art11a.trans_date$=ope01a.invoice_date$
+                if ope01a.cash_sale$="Y" then
+                    art11a.trans_type$="C"
+                    art11a.trans_amt=-ope41a.tendered_amt
+                    if arm10c.trans_type$ = "C" then
+                        art11a.refchk_no$=ope41a.ar_check_no$
                     else
-                        art11a.trans_type$="I"
-                        art11a.trans_amt=total_ext+ope01a.tax_amount+ope01a.freight_amt-ope01a.discount_amt
-                        art11a.refchk_no$=ope01a.ar_inv_no$
+                        if arm10c.trans_type$ = "P" then
+                            credCard! = new CreditCard()
+                            cc_config$="BAR_CREDIT_CARD"
+                            cc_no$=""
+                            cc_no$=credCard!.getMaskedCardValue(credCard!.decryptCard(cvs(ope41a.credit_card_no$,2),cc_config$),err=*next)
+                            wk$=fattr(art11a$,"refchk_no")
+                            refchk_len=dec(wk$(10,2))
+                            if len(cc_no$)>=refchk_len then cc_no$=cc_no$(len(cc_no$)-refchk_len+1)            
+                            art11a.refchk_no$=cc_no$
+                        else
+                            art11a.refchk_no$="Cash"
+                        endif
                     endif
-                    art11a$ = field(art11a$)
-                    write record (art11_dev) art11a$
-                    break
+                else
+                    art11a.trans_type$="I"
+                    art11a.trans_amt=total_ext+ope01a.tax_amount+ope01a.freight_amt-ope01a.discount_amt
+                    art11a.refchk_no$=ope01a.ar_inv_no$
+                endif
+                art11a$ = field(art11a$)
+                write record (art11_dev) art11a$
+                art01a.invoice_bal=art01a.invoice_bal+art11a.trans_amt
+                art01a$=field(art01a$)
+                write record (art01_dev) art01a$
+                break
 
-            rem --- Bank Reconciliation
+                rem --- Bank Reconciliation
 
                 if br$<>"Y" then break
                 glt15a.firm_id$=firm_id$
