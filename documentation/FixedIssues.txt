@@ -505,6 +505,30 @@ attempting to copy source field to target template.
 Modified: ad/src/adc_copyfile.aon
 
 =======================================================================================================================================
+Revision: c9f47c5fe83120eb7f9432e6c2a42e831dd17307
+Author: Carla <cjohnson@basis.com>
+Date: 9/29/2014 3:12:44 PM
+Message:
+Changed UNIONs to UNION ALL so that transactions (mats, subs, and ops)
+that happen to have the same total will each be included in the total
+cost. (Bug 8011)
+----
+Modified: sf/src/sfr_clsdworeg.aon
+
+=======================================================================================================================================
+Revision: c472eb364995b4e6d311dc17cf4961570adc4439
+Author: Carla <cjohnson@basis.com>
+Date: 10/1/2014 2:23:52 PM
+Message:
+Change UNIONs to UNION ALL so that transactions/requirements (mats,
+subs, and ops) that happen to have the same total will each be included
+in the total costs rather than ignored as duplicates--to fix Bug 8019
+"SF-Closed WO Detail Report: Total standard and actual costs in the
+Closed Detail section may differ from those in other sections".
+----
+Modified: sprocs/SFHARDCOPYCLSDDET.prc
+
+=======================================================================================================================================
 Revision: c917460a2a50092781ee68d44ba3981d129bae91
 Author: Bill Halsted <bhalsted@basis.com>
 Date: 10/1/2014 3:27:42 PM
