@@ -152,7 +152,7 @@
 			<DD_CREATE_DATE id="ddm_table_cols.crm_custpmts006">20060119</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.crm_custpmts006">20060119</DD_LSTREV_DATE>
 			<DD_ATTR_CTLX id="ddm_table_cols.crm_custpmts006">-3</DD_ATTR_CTLX>
-			<DD_ATTR_DRLE id="ddm_table_cols.crm_custpmts006">AR_INV_SALES</DD_ATTR_DRLE>
+            <DD_ATTR_DRLE id="ddm_table_disp.arm_custmast009">AR_CUSTBAL</DD_ATTR_DRLE>
 			<DD_ATTR_LABL id="ddm_table_cols.crm_custpmts006">Sales</DD_ATTR_LABL>
 			<DD_ATTR_PROM id="ddm_table_cols.crm_custpmts006">MTD Sales</DD_ATTR_PROM>
 			<DD_ATTR_TIND id="ddm_table_cols.crm_custpmts006">51</DD_ATTR_TIND>
@@ -1168,15 +1168,15 @@
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_drill_defs">
-		<ID id="ddm_drill_defs">DDM_DRILL_DEFS</ID>
-		<RECORD id="ddm_drill_defs.ar_inv_sales">
-			<DRILL_DEF_ID id="ddm_drill_defs.ar_inv_sales">AR_INV_SALES    </DRILL_DEF_ID>
-			<DESCRIPTION id="ddm_drill_defs.ar_inv_sales">AR Invoice Sales</DESCRIPTION>
-			<DD_ATTR_DTAB id="ddm_drill_defs.ar_inv_sales">ART_INVHDR      </DD_ATTR_DTAB>
-			<DD_ATTR_DKEY id="ddm_drill_defs.ar_inv_sales">[+FIRM_ID]+"  "+[CUSTOMER_ID]</DD_ATTR_DKEY>
-			<ASC_COMP_ID id="ddm_drill_defs.ar_inv_sales">01007514</ASC_COMP_ID>
-			<ASC_PROD_ID id="ddm_drill_defs.ar_inv_sales">AD </ASC_PROD_ID>
-			<FILTER_PROG id="ddm_drill_defs.ar_inv_sales">ard_invoicesales.aon</FILTER_PROG>
-		</RECORD>
+        <ID id="ddm_drill_defs">DDM_DRILL_DEFS</ID>
+        <RECORD id="ddm_drill_defs.ar_custbal">
+            <DRILL_DEF_ID id="ddm_drill_defs.ar_custbal">AR_CUSTBAL      </DRILL_DEF_ID>
+            <DESCRIPTION id="ddm_drill_defs.ar_custbal">Customer Balance</DESCRIPTION>
+            <DD_ATTR_DTAB id="ddm_drill_defs.ar_custbal">ART_INVHDR      </DD_ATTR_DTAB>
+            <DD_ATTR_DKEY id="ddm_drill_defs.ar_custbal">[+FIRM_ID]+"  "+[CUSTOMER_ID]</DD_ATTR_DKEY>
+            <ASC_COMP_ID id="ddm_drill_defs.ar_custbal">01007514</ASC_COMP_ID>
+            <ASC_PROD_ID id="ddm_drill_defs.ar_custbal">AD </ASC_PROD_ID>
+            <DD_ATTR_IDEF id="ddm_drill_defs.ar_custbal">AR_CUSTBAL      </DD_ATTR_IDEF>
+        </RECORD>
 	</ALIAS>
 </CRM_CUSTPMTS>

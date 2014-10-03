@@ -73,6 +73,61 @@ rem --- If data_source=OCJ, verify can read DDM_TABLE_TPLS for barista_source
         endif
     endif
     
+rem --- For version 15.00, update drilldown definitions in ddm_drill_defs
+
+    this_module$="AD"
+    if installMap!.get(this_module$)="Y" then 
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:       Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+
+        num_files=2
+        dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+        open_tables$[1]="DDM_DRILL_DEFS",   open_opts$[1]="OTA"
+        open_tables$[1]="ADM_QUERY_COLS",   open_opts$[1]="OTA"
+        gosub open_tables
+        ddm_drilldefs_dev=num(open_chans$[1])
+        adm_querycols_dev=num(open_chans$[2])
+        dim ddm_drilldefs$:open_tpls$[1]
+        dim adm_querycols$:open_tpls$[2]
+        
+        rem --- Delete AR_INV_SALES drilldown definition
+        wk$=fattr(ddm_drilldefs$,"DRILL_DEF_ID")
+        dim drill_def_id$(dec(wk$(10,2)))
+        drill_def_id$(1)="AR_INV_SALES"
+        remove(ddm_drilldefs_dev,key=drill_def_id$,dom=*next)
+        
+        rem --- Update AR_CUSTBAL custom query
+        wk$=fattr(adm_querycols$,"QUERY_ID")
+        dim query_cols_id$(dec(wk$(10,2)))
+        query_cols_id$(1)="AR_CUSTBAL"
+        readrecord(adm_querycols_dev,key=query_cols_id$+"004",dom=*next)adm_querycols$
+        if adm_querycols.query_cols_id$=query_cols_id$ then
+            adm_querycols.column_prog$=""
+            writerecord(adm_querycols_dev)adm_querycols$
+        endif
+
+        rem --- Increment progress meter
+        meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+    else
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_NOT","Not")+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:       Translate!.getTranslation("AON_SKIP","SKIP")+" "+Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+    endif
+    
 rem --- For version 15.00, initialize invoice_bal and disc_taken in art_invhdr
 
     this_module$="AR"
