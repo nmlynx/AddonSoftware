@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2014-10-01
+ Report Date:   2014-10-08
  Report Branch: AddonSoftware 14.11
  Last Release:  AddonSoftware 14.10
 =======================================================================================================================================
@@ -540,3 +540,25 @@ Modified: data/bar/ape_invoicehdr.xml
 Modified: data/bar/apm_vendhist.xml
 Modified: data/bar/poe_invhdr.xml
 
+=======================================================================================================================================
+Revision: 99419cf66596ee2f17e4fb3a0c993042867160ba
+Author: Carla <cjohnson@basis.com>
+Date: 10/2/2014 11:28:57 AM
+Message:
+Change UNIONs to UNION ALL so that transactions/requirements (mats,
+subs, and ops) that happen to have the same total will each be included
+in the total costs rather than ignored as duplicates--to fix Bug 8020
+"SF-Closed Recurring WO Summary Register: Total standard and actual
+costs may be incorrect".
+----
+Modified: sf/src/sfr_clsdrecworeg.aon
+
+=======================================================================================================================================
+Revision: 562f4e52741ed03f933c1a511a5ae1269aa1d530
+Author: chawkins
+Date: 10/8/2014 5:06:29 PM
+Message:
+Per bug 8024; optimized code so it no longer needlessly calls
+adc_getmask.aon with every iteration.
+----
+Modified: gl/src/glc_glpost.aon
