@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2014-10-08
+ Report Date:   2014-10-15
  Report Branch: AddonSoftware 14.11
  Last Release:  AddonSoftware 14.10
 =======================================================================================================================================
@@ -562,3 +562,17 @@ Per bug 8024; optimized code so it no longer needlessly calls
 adc_getmask.aon with every iteration.
 ----
 Modified: gl/src/glc_glpost.aon
+
+=======================================================================================================================================
+Revision: 7374729f19b83bef9e9c0fd85c0c0859ab221461
+Author: chawkins
+Date: 10/15/2014 5:19:29 PM
+Message:
+Per bug 8001; corrected issue with backorders that was leaving
+commission percent at zero; also corrected where total cost is
+erroneously set to zero.
+----
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_invhdr.cdf
+Modified: data/cdf/ope_ordhdr.cdf
