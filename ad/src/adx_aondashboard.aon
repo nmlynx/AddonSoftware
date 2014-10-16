@@ -252,6 +252,7 @@ rem ==============================================
 		bankacctBarChartDashboardWidget! = acctDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		acctWidget! = bankacctBarChartDashboardWidget!.getWidget()
 		acctWidget!.setDomainLabelAngle(1)
+        acctWidget!.setChartRangeAxisToCurrency()
 rem		acctWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		acctWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 
@@ -444,6 +445,7 @@ rem ==============================================
 		topCustsWidget! = topCustsBarChartDashboardWidget!.getWidget()
 		topCustsWidget!.setFontScalingFactor(0.45)
 		topCustsWidget!.setDomainLabelAngle(1)
+        topCustsWidget!.setChartRangeAxisToCurrency()
 rem		topCustsWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		topCustsWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 
@@ -627,6 +629,7 @@ rem GOTO TMPSKIP_SAREPS
 		
 		topRepsLWidget!.setFontScalingFactor(0.45)
 		topRepsLWidget!.setDomainLabelAngle(1)
+        topRepsLWidget!.setChartRangeAxisToCurrency()
 rem		topRepsLWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		topRepsLWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 
@@ -667,6 +670,7 @@ rem =======================================
 		
 		topRepsSAWidget!.setFontScalingFactor(0.45)
 		topRepsSAWidget!.setDomainLabelAngle(1)
+        topRepsSAWidget!.setChartRangeAxisToCurrency()
 		
 		gosub update_meter
 
