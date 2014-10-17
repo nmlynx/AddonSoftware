@@ -18,8 +18,8 @@
 			<DD_EXPORT_DATA id="ddm_tables.art_cashtrans">N</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.art_cashtrans">20130809</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_tables.art_cashtrans">20131105</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.art_cashtrans">20140825</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.art_cashtrans">094638</DD_LSTSYNC_TIME>
+			<DD_LSTSYNC_DATE id="ddm_tables.art_cashtrans">20131111</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.art_cashtrans">110546</DD_LSTSYNC_TIME>
 			<DD_ATTR_ATAB id="ddm_tables.art_cashtrans">ART_TRANSACTIONS</DD_ATTR_ATAB>
 			<DD_ATTR_CPGM id="ddm_tables.art_cashtrans">/basis_dev/v1400GA/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.art_cashtrans">PRI</DD_ATTR_DKNM>
@@ -81,7 +81,7 @@
 		<ID id="ddm_table_tpls">DDM_TABLE_TPLS</ID>
 		<RECORD id="ddm_table_tpls.art_cashtrans">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.art_cashtrans">ART_CASHTRANS   </DD_TABLE_ALIAS>
-			<DD_TABLE_TPL id="ddm_table_tpls.art_cashtrans">firm_id:c(2),ar_trans_id:c(8),trans_date:c(8),ar_trans_type:c(2),ar_invoice_id:c(8),cr_trans_id:c(8),trans_amount:n(7*),disc_amount:n(7*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.art_cashtrans">firm_id:c(2),ar_trans_id:c(8),sequence_no:c(3),trans_date:c(8),ar_trans_type:c(2),ar_invoice_id:c(8),cr_trans_id:c(8),trans_amount:n(7*),disc_amount:n(7*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -137,6 +137,18 @@
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_cashtrans0002">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.art_cashtrans0002">N</DD_SEGMENT_MATH>
 		</RECORD>
+		<RECORD id="ddm_key_segs.art_cashtrans0003">
+			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashtrans0003">ART_CASHTRANS   </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.art_cashtrans0003">00</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.art_cashtrans0003">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_cashtrans0003">SEQUENCE_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.art_cashtrans0003">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.art_cashtrans0003">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.art_cashtrans0003">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.art_cashtrans0003">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_cashtrans0003">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.art_cashtrans0003">N</DD_SEGMENT_MATH>
+		</RECORD>
 		<RECORD id="ddm_key_segs.art_cashtrans0101">
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashtrans0101">ART_CASHTRANS   </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_cashtrans0101">01</DD_KEY_NUMBER>
@@ -172,6 +184,18 @@
 			<DD_SEGMENT_SORT id="ddm_key_segs.art_cashtrans0103">N</DD_SEGMENT_SORT>
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_cashtrans0103">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.art_cashtrans0103">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.art_cashtrans0104">
+			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashtrans0104">ART_CASHTRANS   </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.art_cashtrans0104">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.art_cashtrans0104">04</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_cashtrans0104">SEQUENCE_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.art_cashtrans0104">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.art_cashtrans0104">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.art_cashtrans0104">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.art_cashtrans0104">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_cashtrans0104">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.art_cashtrans0104">N</DD_SEGMENT_MATH>
 		</RECORD>
 		<RECORD id="ddm_key_segs.art_cashtrans0201">
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashtrans0201">ART_CASHTRANS   </DD_TABLE_ALIAS>
@@ -209,6 +233,18 @@
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_cashtrans0203">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.art_cashtrans0203">N</DD_SEGMENT_MATH>
 		</RECORD>
+		<RECORD id="ddm_key_segs.art_cashtrans0204">
+			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashtrans0204">ART_CASHTRANS   </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.art_cashtrans0204">02</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.art_cashtrans0204">04</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_cashtrans0204">SEQUENCE_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.art_cashtrans0204">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.art_cashtrans0204">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.art_cashtrans0204">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.art_cashtrans0204">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_cashtrans0204">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.art_cashtrans0204">N</DD_SEGMENT_MATH>
+		</RECORD>
 		<RECORD id="ddm_key_segs.art_cashtrans0401">
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashtrans0401">ART_CASHTRANS   </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_cashtrans0401">04</DD_KEY_NUMBER>
@@ -244,6 +280,18 @@
 			<DD_SEGMENT_SORT id="ddm_key_segs.art_cashtrans0403">N</DD_SEGMENT_SORT>
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_cashtrans0403">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.art_cashtrans0403">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.art_cashtrans0404">
+			<DD_TABLE_ALIAS id="ddm_key_segs.art_cashtrans0404">ART_CASHTRANS   </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.art_cashtrans0404">04</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.art_cashtrans0404">04</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_cashtrans0404">SEQUENCE_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.art_cashtrans0404">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.art_cashtrans0404">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.art_cashtrans0404">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.art_cashtrans0404">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_cashtrans0404">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.art_cashtrans0404">N</DD_SEGMENT_MATH>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cols">
@@ -288,25 +336,26 @@
 		<RECORD id="ddm_table_cols.art_cashtrans003">
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_cashtrans003">ART_CASHTRANS   </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.art_cashtrans003">003</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.art_cashtrans003">TRANS_DATE      </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.art_cashtrans003">TRANS_DATE      </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.art_cashtrans003">SEQUENCE_NO     </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_cashtrans003">SEQUENCE_NO     </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.art_cashtrans003">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.art_cashtrans003">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.art_cashtrans003">N</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.art_cashtrans003">0A</DD_DELIM_CHAR>
-			<DD_CREATE_DATE id="ddm_table_cols.art_cashtrans003">20130607</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.art_cashtrans003">20130607</DD_LSTREV_DATE>
+			<DD_CREATE_DATE id="ddm_table_cols.art_cashtrans003">20130826</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.art_cashtrans003">20130826</DD_LSTREV_DATE>
 			<DD_ATTR_COLW id="ddm_table_cols.art_cashtrans003">0</DD_ATTR_COLW>
+			<DD_ATTR_LABL id="ddm_table_cols.art_cashtrans003">Seq No</DD_ATTR_LABL>
 			<DD_ATTR_MLAN id="ddm_table_cols.art_cashtrans003">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.art_cashtrans003">0</DD_ATTR_MAXL>
-			<DD_ATTR_TIND id="ddm_table_cols.art_cashtrans003">8</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashtrans003">TRANS_DATE</SQL_COLUMN_NAME>
+			<DD_ATTR_TIND id="ddm_table_cols.art_cashtrans003">3</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashtrans003">SEQUENCE_NO</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.art_cashtrans004">
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_cashtrans004">ART_CASHTRANS   </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.art_cashtrans004">004</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.art_cashtrans004">AR_TRANS_TYPE   </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.art_cashtrans004">AR_TRANS_TYPE   </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.art_cashtrans004">TRANS_DATE      </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_cashtrans004">TRANS_DATE      </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.art_cashtrans004">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.art_cashtrans004">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.art_cashtrans004">N</DD_FIELD_DELIM>
@@ -314,36 +363,35 @@
 			<DD_CREATE_DATE id="ddm_table_cols.art_cashtrans004">20130607</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.art_cashtrans004">20130607</DD_LSTREV_DATE>
 			<DD_ATTR_COLW id="ddm_table_cols.art_cashtrans004">0</DD_ATTR_COLW>
-			<DD_ATTR_LABL id="ddm_table_cols.art_cashtrans004">AR Trans Type</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.art_cashtrans004">AR Trans Type</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.art_cashtrans004">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.art_cashtrans004">0</DD_ATTR_MAXL>
-			<DD_ATTR_TIND id="ddm_table_cols.art_cashtrans004">9</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashtrans004">AR_TRANS_TYPE</SQL_COLUMN_NAME>
+			<DD_ATTR_TIND id="ddm_table_cols.art_cashtrans004">8</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashtrans004">TRANS_DATE</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.art_cashtrans005">
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_cashtrans005">ART_CASHTRANS   </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.art_cashtrans005">005</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.art_cashtrans005">AR_TRANS_ID     </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.art_cashtrans005">AR_INVOICE_ID   </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.art_cashtrans005">AR_TRANS_TYPE   </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_cashtrans005">AR_TRANS_TYPE   </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.art_cashtrans005">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.art_cashtrans005">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.art_cashtrans005">N</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.art_cashtrans005">0A</DD_DELIM_CHAR>
-			<DD_CREATE_DATE id="ddm_table_cols.art_cashtrans005">20130825</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.art_cashtrans005">20130825</DD_LSTREV_DATE>
+			<DD_CREATE_DATE id="ddm_table_cols.art_cashtrans005">20130607</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.art_cashtrans005">20130607</DD_LSTREV_DATE>
 			<DD_ATTR_COLW id="ddm_table_cols.art_cashtrans005">0</DD_ATTR_COLW>
-			<DD_ATTR_IDEF id="ddm_table_cols.art_cashtrans005">ART_INV_LKUP</DD_ATTR_IDEF>
+			<DD_ATTR_LABL id="ddm_table_cols.art_cashtrans005">AR Trans Type</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.art_cashtrans005">AR Trans Type</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.art_cashtrans005">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.art_cashtrans005">0</DD_ATTR_MAXL>
-			<DD_ATTR_TIND id="ddm_table_cols.art_cashtrans005">10</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashtrans005">AR_INVOICE_ID</SQL_COLUMN_NAME>
+			<DD_ATTR_TIND id="ddm_table_cols.art_cashtrans005">9</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashtrans005">AR_TRANS_TYPE</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.art_cashtrans006">
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_cashtrans006">ART_CASHTRANS   </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.art_cashtrans006">006</DD_SEQUENCE>
 			<DD_DATA_NAME id="ddm_table_cols.art_cashtrans006">AR_TRANS_ID     </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.art_cashtrans006">CR_TRANS_ID     </DD_DVAR_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_cashtrans006">AR_INVOICE_ID   </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.art_cashtrans006">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.art_cashtrans006">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.art_cashtrans006">N</DD_FIELD_DELIM>
@@ -351,36 +399,34 @@
 			<DD_CREATE_DATE id="ddm_table_cols.art_cashtrans006">20130825</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.art_cashtrans006">20130825</DD_LSTREV_DATE>
 			<DD_ATTR_COLW id="ddm_table_cols.art_cashtrans006">0</DD_ATTR_COLW>
+			<DD_ATTR_IDEF id="ddm_table_cols.art_cashtrans006">ART_INV_LKUP</DD_ATTR_IDEF>
 			<DD_ATTR_MLAN id="ddm_table_cols.art_cashtrans006">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.art_cashtrans006">0</DD_ATTR_MAXL>
-			<DD_ATTR_TIND id="ddm_table_cols.art_cashtrans006">11</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashtrans006">CR_TRANS_ID</SQL_COLUMN_NAME>
+			<DD_ATTR_TIND id="ddm_table_cols.art_cashtrans006">10</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashtrans006">AR_INVOICE_ID</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.art_cashtrans007">
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_cashtrans007">ART_CASHTRANS   </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.art_cashtrans007">007</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.art_cashtrans007">TRANS_AMT       </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.art_cashtrans007">TRANS_AMOUNT    </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.art_cashtrans007">AR_TRANS_ID     </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_cashtrans007">CR_TRANS_ID     </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.art_cashtrans007">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.art_cashtrans007">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.art_cashtrans007">Y</DD_FIELD_DELIM>
+			<DD_FIELD_DELIM id="ddm_table_cols.art_cashtrans007">N</DD_FIELD_DELIM>
 			<DD_DELIM_CHAR id="ddm_table_cols.art_cashtrans007">0A</DD_DELIM_CHAR>
-			<DD_CREATE_DATE id="ddm_table_cols.art_cashtrans007">20130722</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.art_cashtrans007">20130722</DD_LSTREV_DATE>
+			<DD_CREATE_DATE id="ddm_table_cols.art_cashtrans007">20130825</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.art_cashtrans007">20130825</DD_LSTREV_DATE>
 			<DD_ATTR_COLW id="ddm_table_cols.art_cashtrans007">0</DD_ATTR_COLW>
-			<DD_ATTR_IDEF id="ddm_table_cols.art_cashtrans007">ART_OPEN_INV</DD_ATTR_IDEF>
-			<DD_ATTR_LABL id="ddm_table_cols.art_cashtrans007">Payment Amt</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.art_cashtrans007">Payment Amt</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.art_cashtrans007">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.art_cashtrans007">0</DD_ATTR_MAXL>
-			<DD_ATTR_TIND id="ddm_table_cols.art_cashtrans007">13</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashtrans007">TRANS_AMOUNT</SQL_COLUMN_NAME>
+			<DD_ATTR_TIND id="ddm_table_cols.art_cashtrans007">11</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashtrans007">CR_TRANS_ID</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.art_cashtrans008">
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_cashtrans008">ART_CASHTRANS   </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.art_cashtrans008">008</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.art_cashtrans008">DISCOUNT_AMT    </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.art_cashtrans008">DISC_AMOUNT     </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.art_cashtrans008">TRANS_AMT       </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_cashtrans008">TRANS_AMOUNT    </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.art_cashtrans008">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.art_cashtrans008">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.art_cashtrans008">Y</DD_FIELD_DELIM>
@@ -388,10 +434,30 @@
 			<DD_CREATE_DATE id="ddm_table_cols.art_cashtrans008">20130722</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_table_cols.art_cashtrans008">20130722</DD_LSTREV_DATE>
 			<DD_ATTR_COLW id="ddm_table_cols.art_cashtrans008">0</DD_ATTR_COLW>
+			<DD_ATTR_IDEF id="ddm_table_cols.art_cashtrans008">ART_OPEN_INV</DD_ATTR_IDEF>
+			<DD_ATTR_LABL id="ddm_table_cols.art_cashtrans008">Payment Amt</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.art_cashtrans008">Payment Amt</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.art_cashtrans008">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.art_cashtrans008">0</DD_ATTR_MAXL>
-			<DD_ATTR_TIND id="ddm_table_cols.art_cashtrans008">15</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashtrans008">DISC_AMOUNT</SQL_COLUMN_NAME>
+			<DD_ATTR_TIND id="ddm_table_cols.art_cashtrans008">13</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashtrans008">TRANS_AMOUNT</SQL_COLUMN_NAME>
+		</RECORD>
+		<RECORD id="ddm_table_cols.art_cashtrans009">
+			<DD_TABLE_ALIAS id="ddm_table_cols.art_cashtrans009">ART_CASHTRANS   </DD_TABLE_ALIAS>
+			<DD_SEQUENCE id="ddm_table_cols.art_cashtrans009">009</DD_SEQUENCE>
+			<DD_DATA_NAME id="ddm_table_cols.art_cashtrans009">DISCOUNT_AMT    </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_cashtrans009">DISC_AMOUNT     </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.art_cashtrans009">0</DD_COL_REPEATS>
+			<DD_COL_OCCURS id="ddm_table_cols.art_cashtrans009">0</DD_COL_OCCURS>
+			<DD_FIELD_DELIM id="ddm_table_cols.art_cashtrans009">Y</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.art_cashtrans009">0A</DD_DELIM_CHAR>
+			<DD_CREATE_DATE id="ddm_table_cols.art_cashtrans009">20130722</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.art_cashtrans009">20130722</DD_LSTREV_DATE>
+			<DD_ATTR_COLW id="ddm_table_cols.art_cashtrans009">0</DD_ATTR_COLW>
+			<DD_ATTR_MLAN id="ddm_table_cols.art_cashtrans009">N</DD_ATTR_MLAN>
+			<DD_ATTR_MAXL id="ddm_table_cols.art_cashtrans009">0</DD_ATTR_MAXL>
+			<DD_ATTR_TIND id="ddm_table_cols.art_cashtrans009">15</DD_ATTR_TIND>
+			<SQL_COLUMN_NAME id="ddm_table_cols.art_cashtrans009">DISC_AMOUNT</SQL_COLUMN_NAME>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_disp">
@@ -530,6 +596,46 @@
 			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashtransar_trans_idh">ART_CASHTRANS   </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_opts.art_cashtransar_trans_idh">AR_TRANS_ID     </DD_DVAR_NAME>
 			<DD_ATTR_OPTS id="ddm_column_opts.art_cashtransar_trans_idh">h</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashtranssequence_nog">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashtranssequence_nog">ART_CASHTRANS   </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashtranssequence_nog">SEQUENCE_NO     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashtranssequence_nog">G</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashtranssequence_noi">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashtranssequence_noi">ART_CASHTRANS   </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashtranssequence_noi">SEQUENCE_NO     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashtranssequence_noi">I</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashtranssequence_nol">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashtranssequence_nol">ART_CASHTRANS   </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashtranssequence_nol">SEQUENCE_NO     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashtranssequence_nol">L</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashtranssequence_noo">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashtranssequence_noo">ART_CASHTRANS   </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashtranssequence_noo">SEQUENCE_NO     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashtranssequence_noo">O</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashtranssequence_nop">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashtranssequence_nop">ART_CASHTRANS   </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashtranssequence_nop">SEQUENCE_NO     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashtranssequence_nop">P</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashtranssequence_nor">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashtranssequence_nor">ART_CASHTRANS   </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashtranssequence_nor">SEQUENCE_NO     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashtranssequence_nor">R</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashtranssequence_now">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashtranssequence_now">ART_CASHTRANS   </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashtranssequence_now">SEQUENCE_NO     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashtranssequence_now">W</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.art_cashtranssequence_noh">
+			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashtranssequence_noh">ART_CASHTRANS   </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.art_cashtranssequence_noh">SEQUENCE_NO     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.art_cashtranssequence_noh">h</DD_ATTR_OPTS>
 		</RECORD>
 		<RECORD id="ddm_column_opts.art_cashtranstrans_dateg">
 			<DD_TABLE_ALIAS id="ddm_column_opts.art_cashtranstrans_dateg">ART_CASHTRANS   </DD_TABLE_ALIAS>
@@ -748,6 +854,33 @@
 			<DD_ATTR_PADJ id="ddm_elements.ar_trans_id">R</DD_ATTR_PADJ>
 			<DD_ATTR_PREC id="ddm_elements.ar_trans_id">0</DD_ATTR_PREC>
 			<DD_ATTR_STEP id="ddm_elements.ar_trans_id">0</DD_ATTR_STEP>
+		</RECORD>
+		<RECORD id="ddm_elements.sequence_no">
+			<DD_DATA_NAME id="ddm_elements.sequence_no">SEQUENCE_NO     </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.sequence_no">Sequence Number</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.sequence_no">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.sequence_no">3</DD_DATA_LENGTH>
+			<DD_SYSTEM_REC id="ddm_elements.sequence_no">Y</DD_SYSTEM_REC>
+			<ASC_COMP_ID id="ddm_elements.sequence_no">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.sequence_no">ADB</ASC_PROD_ID>
+			<DD_CREATE_DATE id="ddm_elements.sequence_no">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.sequence_no">20120326</DD_LSTREV_DATE>
+			<DD_ATTR_CTLW id="ddm_elements.sequence_no">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.sequence_no">0</DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.sequence_no">E</DD_ATTR_CTYP>
+			<DD_ATTR_DCOM id="ddm_elements.sequence_no">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.sequence_no">            </DD_ATTR_DEXP>
+			<DD_ATTR_LABL id="ddm_elements.sequence_no">Sequence Number</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.sequence_no">Seq No</DD_ATTR_LABS>
+			<DD_ATTR_MAXL id="ddm_elements.sequence_no">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.sequence_no">0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL id="ddm_elements.sequence_no">0</DD_ATTR_MINL>
+			<DD_ATTR_MSKI id="ddm_elements.sequence_no">000</DD_ATTR_MSKI>
+			<DD_ATTR_MSKO id="ddm_elements.sequence_no">000</DD_ATTR_MSKO>
+			<DD_ATTR_PADC id="ddm_elements.sequence_no">30</DD_ATTR_PADC>
+			<DD_ATTR_PADJ id="ddm_elements.sequence_no">R</DD_ATTR_PADJ>
+			<DD_ATTR_PREC id="ddm_elements.sequence_no">0</DD_ATTR_PREC>
+			<DD_ATTR_STYP id="ddm_elements.sequence_no">S</DD_ATTR_STYP>
 		</RECORD>
 		<RECORD id="ddm_elements.trans_date">
 			<DD_DATA_NAME id="ddm_elements.trans_date">TRANS_DATE      </DD_DATA_NAME>
