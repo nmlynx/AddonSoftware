@@ -68,6 +68,8 @@ rem --- initialization
 	gosub resolve_paths
 	gosub init_prog_meter
 	gosub get_installed_modules
+    
+    all_prod_types$ = Translate!.getTranslation("AON_ALL")+" "+Translate!.getTranslation("AON_PRODUCT_TYPE")
 	
 rem --- create dashboard, tabs, widgets
 
@@ -250,6 +252,7 @@ rem ==============================================
 		bankacctBarChartDashboardWidget! = acctDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		acctWidget! = bankacctBarChartDashboardWidget!.getWidget()
 		acctWidget!.setDomainLabelAngle(1)
+        acctWidget!.setChartRangeAxisToCurrency()
 rem		acctWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		acctWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 
@@ -442,6 +445,7 @@ rem ==============================================
 		topCustsWidget! = topCustsBarChartDashboardWidget!.getWidget()
 		topCustsWidget!.setFontScalingFactor(0.45)
 		topCustsWidget!.setDomainLabelAngle(1)
+        topCustsWidget!.setChartRangeAxisToCurrency()
 rem		topCustsWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		topCustsWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 
@@ -472,7 +476,7 @@ rem ==============================================
 		year$ = proc_date$(7,4)
 		num_to_list$ = "5"; rem <<============= HARDCODED =========
 	
-		sql$="CALL SATOPCST_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+		sql$="CALL SATOPCST_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"', '"+all_prod_types$+"')"
 
 		topCustsSStackedBarChartDashboardWidget! = salesDashboardCategory!.addStackedBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		topCustsSWidget! = topCustsSStackedBarChartDashboardWidget!.getWidget()
@@ -508,7 +512,7 @@ rem ==============================================
 		year$ = proc_date$(7,4)
 		num_to_list$ = "5"; rem <<============= HARDCODED =========
 	
-		sql$="CALL SATOPREP_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+		sql$="CALL SATOPREP_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"', '"+all_prod_types$+"')"
 
 		toprepSStackedBarChartDashboardWidget! = salesDashboardCategory!.addStackedBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		toprepWidget! = toprepSStackedBarChartDashboardWidget!.getWidget()
@@ -580,7 +584,7 @@ rem ==============================================
 		year$ = proc_date$(7,4)
 		num_to_list$ = "5"; rem <<============= HARDCODED =========
 	
-		sql$="CALL SAREPTOT_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+		sql$="CALL SAREPTOT_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"', '"+all_prod_types$+"')"
 	
 		repsalesSStackedBarChartDashboardWidget! = salesDashboardCategory!.addStackedBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		repsalesWidget! = repsalesSStackedBarChartDashboardWidget!.getWidget()
@@ -625,6 +629,7 @@ rem GOTO TMPSKIP_SAREPS
 		
 		topRepsLWidget!.setFontScalingFactor(0.45)
 		topRepsLWidget!.setDomainLabelAngle(1)
+        topRepsLWidget!.setChartRangeAxisToCurrency()
 rem		topRepsLWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		topRepsLWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 
@@ -665,6 +670,7 @@ rem =======================================
 		
 		topRepsSAWidget!.setFontScalingFactor(0.45)
 		topRepsSAWidget!.setDomainLabelAngle(1)
+        topRepsSAWidget!.setChartRangeAxisToCurrency()
 		
 		gosub update_meter
 

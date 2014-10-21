@@ -279,6 +279,14 @@ rem --- Invoice History Header, set to void
 
 	opt_invhdr_rec$ = util.copyFields(opt_invhdr_tpl$, callpoint!)
 	opt_invhdr_rec.invoice_type$ = "V"
+	opt_invhdr_rec.tax_amount=0
+	opt_invhdr_rec.freight_amt=0
+	opt_invhdr_rec.discount_amt=0
+	opt_invhdr_rec.comm_percent=0
+	opt_invhdr_rec.taxable_amt=0
+	opt_invhdr_rec.comm_amt=0
+	opt_invhdr_rec.total_sales=0
+	opt_invhdr_rec.total_cost=0
 
 	if cvs(opt_invhdr_rec.ar_inv_no$,2)<>""
 		opt_invhdr_key$=opt_invhdr_rec.firm_id$+opt_invhdr_rec.ar_type$+opt_invhdr_rec.customer_id$+opt_invhdr_rec.ar_inv_no$
@@ -1378,6 +1386,11 @@ rem --- Display Ship to information
 	ship_to_no$   = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
 	order_no$     = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 	gosub ship_to_info
+
+rem --- Set comm percent (if calling up a B/O, it will have been cleared);rem bug 8001 CAH
+
+	slsp$=callpoint!.getColumnData("OPE_INVHDR.SLSPSN_CODE")
+	gosub get_comm_percent
 
 rem --- Enable buttons
 
@@ -2643,6 +2656,7 @@ rem ==========================================================================
 	prev_sub_tot=num(callpoint!.getColumnData("<<DISPLAY>>.SUBTOTAL"))
 	prev_net_sales=num(callpoint!.getColumnData("<<DISPLAY>>.NET_SALES"))
 	ttl_ext_price = num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES"))
+	ttl_ext_cost = num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_COST"))
 	tax_amt = num(callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
 	sub_tot = ttl_ext_price - disc_amt
 	net_sales = sub_tot + tax_amt + freight_amt
