@@ -11,7 +11,7 @@
 			<DD_KEY_LENGTH id="ddm_tables.art_invheader">0</DD_KEY_LENGTH>
 			<DD_NBR_RECORD id="ddm_tables.art_invheader">0</DD_NBR_RECORD>
 			<DD_RECORD_LEN id="ddm_tables.art_invheader">0</DD_RECORD_LEN>
-			<RESTRICT_CREATE id="ddm_tables.art_invheader">N</RESTRICT_CREATE>
+			<RESTRICT_CREATE id="ddm_tables.art_invheader">Y</RESTRICT_CREATE>
 			<RESTRICT_REBUILD id="ddm_tables.art_invheader">N</RESTRICT_REBUILD>
 			<RESTRICT_AUTOADD id="ddm_tables.art_invheader">Y</RESTRICT_AUTOADD>
 			<ASC_COMP_ID id="ddm_tables.art_invheader">01007514</ASC_COMP_ID>
@@ -19,9 +19,9 @@
 			<ASC_VERSION_ID id="ddm_tables.art_invheader">13.0</ASC_VERSION_ID>
 			<DD_EXPORT_DATA id="ddm_tables.art_invheader">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.art_invheader">20130801</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.art_invheader">20140403</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.art_invheader">20131101</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.art_invheader">171428</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.art_invheader">20140825</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.art_invheader">20140825</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.art_invheader">095328</DD_LSTSYNC_TIME>
 			<DD_ATTR_FTYP id="ddm_tables.art_invheader">T</DD_ATTR_FTYP>
 			<DD_ATTR_WINT id="ddm_tables.art_invheader">AR Invoice Entry/Maint</DD_ATTR_WINT>
 		</RECORD>
@@ -31,7 +31,7 @@
 		<RECORD id="ddm_table_tpls.art_invheader">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.art_invheader">ART_INVHEADER   </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.art_invheader">art_invheader</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.art_invheader">firm_id:c(2),ar_trans_id:c(8),ar_type:c(2),customer_id:c(6),invoice_no:c(7),invoice_source:c(2),dist_code:c(2),terms_code:c(2),due_date:c(8),invoice_date:c(8),disc_date:c(8),gl_audit_no:c(7),ar_inv_type:c(2*),invoice_amt:n(7*),disc_allowed:n(7*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.art_invheader">firm_id:c(2),ar_invoice_id:c(12),ar_type:c(2),customer_id:c(6),invoice_no:c(7),invoice_source:c(2),dist_code:c(2),terms_code:c(2),due_date:c(8),invoice_date:c(8),disc_date:c(8),gl_audit_no:c(7),ar_inv_type:c(2*),invoice_amt:n(7*),disc_allowed:n(7*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -73,7 +73,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_invheader0002">ART_INVHEADER   </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_invheader0002">00</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.art_invheader0002">02</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_invheader0002">AR_TRANS_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_invheader0002">AR_INVOICE_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.art_invheader0002">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.art_invheader0002">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.art_invheader0002">0</DD_SEGMENT_LEN>
@@ -117,6 +117,18 @@
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_invheader0103">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.art_invheader0103">N</DD_SEGMENT_MATH>
 		</RECORD>
+		<RECORD id="ddm_key_segs.art_invheader0104">
+			<DD_TABLE_ALIAS id="ddm_key_segs.art_invheader0104">ART_INVHEADER   </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.art_invheader0104">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.art_invheader0104">04</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_invheader0104">AR_INVOICE_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.art_invheader0104">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.art_invheader0104">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.art_invheader0104">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.art_invheader0104">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_invheader0104">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.art_invheader0104">N</DD_SEGMENT_MATH>
+		</RECORD>
 		<RECORD id="ddm_key_segs.art_invheader0201">
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_invheader0201">ART_INVHEADER   </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_invheader0201">02</DD_KEY_NUMBER>
@@ -141,6 +153,18 @@
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_invheader0202">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.art_invheader0202">N</DD_SEGMENT_MATH>
 		</RECORD>
+		<RECORD id="ddm_key_segs.art_invheader0203">
+			<DD_TABLE_ALIAS id="ddm_key_segs.art_invheader0203">ART_INVHEADER   </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.art_invheader0203">02</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.art_invheader0203">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_invheader0203">AR_INVOICE_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.art_invheader0203">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.art_invheader0203">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.art_invheader0203">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.art_invheader0203">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_invheader0203">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.art_invheader0203">N</DD_SEGMENT_MATH>
+		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cols">
 		<ID id="ddm_table_cols">DDM_TABLE_COLS</ID>
@@ -163,8 +187,8 @@
 		<RECORD id="ddm_table_cols.art_invheader002">
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_invheader002">ART_INVHEADER   </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.art_invheader002">002</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.art_invheader002">AR_TRANS_ID     </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.art_invheader002">AR_TRANS_ID     </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.art_invheader002">INTERNAL_SEQ_NO </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_invheader002">AR_INVOICE_ID   </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.art_invheader002">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.art_invheader002">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.art_invheader002">N</DD_FIELD_DELIM>
@@ -174,7 +198,7 @@
 			<DD_ATTR_MLAN id="ddm_table_cols.art_invheader002">N</DD_ATTR_MLAN>
 			<DD_ATTR_MAXL id="ddm_table_cols.art_invheader002">0</DD_ATTR_MAXL>
 			<DD_ATTR_TIND id="ddm_table_cols.art_invheader002">2</DD_ATTR_TIND>
-			<SQL_COLUMN_NAME id="ddm_table_cols.art_invheader002">AR_TRANS_ID</SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.art_invheader002">AR_INVOICE_ID</SQL_COLUMN_NAME>
 		</RECORD>
 		<RECORD id="ddm_table_cols.art_invheader003">
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_invheader003">ART_INVHEADER   </DD_TABLE_ALIAS>
@@ -425,31 +449,29 @@
 			<DD_ATTR_PREC id="ddm_elements.firm_id">0</DD_ATTR_PREC>
 			<DD_ATTR_PVAL id="ddm_elements.firm_id">stbl("+FIRM_ID")</DD_ATTR_PVAL>
 		</RECORD>
-		<RECORD id="ddm_elements.ar_trans_id">
-			<DD_DATA_NAME id="ddm_elements.ar_trans_id">AR_TRANS_ID     </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.ar_trans_id">Ar Trans ID</DD_DESCRIPTION>
-			<DD_DATA_TYPE id="ddm_elements.ar_trans_id">C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.ar_trans_id">8</DD_DATA_LENGTH>
-			<ASC_COMP_ID id="ddm_elements.ar_trans_id">01007514</ASC_COMP_ID>
-			<ASC_PROD_ID id="ddm_elements.ar_trans_id">AR </ASC_PROD_ID>
-			<LOCALIZATION_EX id="ddm_elements.ar_trans_id">N</LOCALIZATION_EX>
-			<DD_CREATE_DATE id="ddm_elements.ar_trans_id">20130823</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.ar_trans_id">20130826</DD_LSTREV_DATE>
-			<DD_ATTR_BLNK id="ddm_elements.ar_trans_id">N</DD_ATTR_BLNK>
-			<DD_ATTR_CTLW id="ddm_elements.ar_trans_id">0</DD_ATTR_CTLW>
-			<DD_ATTR_CTLH id="ddm_elements.ar_trans_id">0</DD_ATTR_CTLH>
-			<DD_ATTR_CTYP id="ddm_elements.ar_trans_id">E</DD_ATTR_CTYP>
-			<DD_ATTR_LABL id="ddm_elements.ar_trans_id">Ar Trans ID</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_elements.ar_trans_id">Ar Trans ID</DD_ATTR_LABS>
-			<DD_ATTR_MAXL id="ddm_elements.ar_trans_id">0</DD_ATTR_MAXL>
-			<DD_ATTR_MAXR id="ddm_elements.ar_trans_id">0</DD_ATTR_MAXR>
-			<DD_ATTR_MINL id="ddm_elements.ar_trans_id">0</DD_ATTR_MINL>
-			<DD_ATTR_MSKI id="ddm_elements.ar_trans_id">UUUUUUUU</DD_ATTR_MSKI>
-			<DD_ATTR_MSKO id="ddm_elements.ar_trans_id">UUUUUUUU</DD_ATTR_MSKO>
-			<DD_ATTR_PADC id="ddm_elements.ar_trans_id">30</DD_ATTR_PADC>
-			<DD_ATTR_PADJ id="ddm_elements.ar_trans_id">R</DD_ATTR_PADJ>
-			<DD_ATTR_PREC id="ddm_elements.ar_trans_id">0</DD_ATTR_PREC>
-			<DD_ATTR_STEP id="ddm_elements.ar_trans_id">0</DD_ATTR_STEP>
+		<RECORD id="ddm_elements.internal_seq_no">
+			<DD_DATA_NAME id="ddm_elements.internal_seq_no">INTERNAL_SEQ_NO </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.internal_seq_no">Internal Sequence Number</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.internal_seq_no">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.internal_seq_no">12</DD_DATA_LENGTH>
+			<ASC_COMP_ID id="ddm_elements.internal_seq_no">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.internal_seq_no">AD </ASC_PROD_ID>
+			<LOCALIZATION_EX id="ddm_elements.internal_seq_no">N</LOCALIZATION_EX>
+			<DD_CREATE_DATE id="ddm_elements.internal_seq_no">20081120</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.internal_seq_no">20090330</DD_LSTREV_DATE>
+			<DD_ATTR_BLNK id="ddm_elements.internal_seq_no">N</DD_ATTR_BLNK>
+			<DD_ATTR_CTLW id="ddm_elements.internal_seq_no">0</DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.internal_seq_no">0</DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.internal_seq_no">E</DD_ATTR_CTYP>
+			<DD_ATTR_DFLT id="ddm_elements.internal_seq_no">[SEQ:INTERNAL_SEQ_NO]</DD_ATTR_DFLT>
+			<DD_ATTR_LABL id="ddm_elements.internal_seq_no">Internal Sequence Number</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.internal_seq_no">Internal Seq No</DD_ATTR_LABS>
+			<DD_ATTR_MAXL id="ddm_elements.internal_seq_no">0</DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.internal_seq_no">0</DD_ATTR_MAXR>
+			<DD_ATTR_MINL id="ddm_elements.internal_seq_no">0</DD_ATTR_MINL>
+			<DD_ATTR_PADC id="ddm_elements.internal_seq_no">30</DD_ATTR_PADC>
+			<DD_ATTR_PADJ id="ddm_elements.internal_seq_no">R</DD_ATTR_PADJ>
+			<DD_ATTR_PREC id="ddm_elements.internal_seq_no">0</DD_ATTR_PREC>
 		</RECORD>
 		<RECORD id="ddm_elements.ar_type">
 			<DD_DATA_NAME id="ddm_elements.ar_type">AR_TYPE         </DD_DATA_NAME>
