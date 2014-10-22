@@ -52,26 +52,6 @@ rem --- Start progress meter
     meter_text$=""
     meter_action$="WIN-LST"
     gosub disp_meter
-
-rem --- If data_source=OCJ, verify can read DDM_TABLE_TPLS for barista_source
-    if convCtrl!.getProperty("data_source")="OCJ" then
-        ddm_table_tpls$=convCtrl!.getProperty("barista_source")+"/barista/sys/data/ddm_table_tpls.dat"
-        open_success=0
-        ddm_table_tpls=unt
-        open(ddm_table_tpls,err=*next)ddm_table_tpls$; open_success=1
-        if open_success then
-            dim ddm_table_tpls$:"table_name:c(16*),file_name:c(30*),template:c(10230*)"
-        else
-            rem --- Required file missing
-            msg_id$="AD_FILE_MISSING"
-            dim msg_tokens$[1]
-            msg_tokens$[1]=ddm_table_tpls$
-            gosub disp_message
-            err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
-:           Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+ddm_table_tpls$+" *****"
-            goto done
-        endif
-    endif
     
 rem --- For version 15.00, update drilldown definitions in ddm_drill_defs
 
@@ -88,7 +68,7 @@ rem --- For version 15.00, update drilldown definitions in ddm_drill_defs
         num_files=2
         dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
         open_tables$[1]="DDM_DRILL_DEFS",   open_opts$[1]="OTA"
-        open_tables$[1]="ADM_QUERY_COLS",   open_opts$[1]="OTA"
+        open_tables$[2]="ADM_QUERY_COLS",   open_opts$[2]="OTA"
         gosub open_tables
         ddm_drilldefs_dev=num(open_chans$[1])
         adm_querycols_dev=num(open_chans$[2])
@@ -103,10 +83,10 @@ rem --- For version 15.00, update drilldown definitions in ddm_drill_defs
         
         rem --- Update AR_CUSTBAL custom query
         wk$=fattr(adm_querycols$,"QUERY_ID")
-        dim query_cols_id$(dec(wk$(10,2)))
-        query_cols_id$(1)="AR_CUSTBAL"
-        readrecord(adm_querycols_dev,key=query_cols_id$+"004",dom=*next)adm_querycols$
-        if adm_querycols.query_cols_id$=query_cols_id$ then
+        dim query_id$(dec(wk$(10,2)))
+        query_id$(1)="AR_CUSTBAL"
+        readrecord(adm_querycols_dev,key=query_id$+"004",dom=*next)adm_querycols$
+        if adm_querycols.query_id$=query_id$ then
             adm_querycols.column_prog$=""
             writerecord(adm_querycols_dev)adm_querycols$
         endif
@@ -224,6 +204,48 @@ rem --- For version 15.00, data conversions for OP Real Time Processing (RTP) fi
         meter_action$="MTR-LST"
         gosub disp_meter
         print(log_dev)meter_text$
+
+        rem --- If data_source=OCJ, verify can read DDM_TABLE_TPLS for barista_source
+        if convCtrl!.getProperty("data_source")="OCJ" then
+            ddm_table_tpls$=convCtrl!.getProperty("barista_source")+"/barista/sys/data/ddm_table_tpls.dat"
+            open_success=0
+            ddm_table_tpls=unt
+            open(ddm_table_tpls,err=*next)ddm_table_tpls$; open_success=1
+            if open_success then
+                dim ddm_table_tpls$:"table_name:c(16*),file_name:c(30*),template:c(10230*)"
+            else
+                rem --- Required file missing
+                msg_id$="AD_FILE_MISSING"
+                dim msg_tokens$[1]
+                msg_tokens$[1]=ddm_table_tpls$
+                gosub disp_message
+                err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                   Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+ddm_table_tpls$+" *****"
+                goto done
+            endif
+        endif
+
+        rem --- If data_source=OCJ and have v1500_ope-01 conversion marker file, verify can read old opt-11 for addon_source
+        if convCtrl!.getProperty("data_source")="OCJ" then
+            conv_marker_file$=aonDir$+"data/v1500_ope-01"
+            convmarkerFile!=new File(conv_marker_file$)
+            if convmarkerFile!.exists() then
+                old_opt11$=convCtrl!.getProperty("addon_source")+"/aon/data/opt-11"
+                open_success=0
+                old_opt11_dev=unt
+                open(old_opt11_dev,err=*next)old_opt11$; open_success=1
+                if !open_success then
+                    rem --- Required file missing
+                    msg_id$="AD_FILE_MISSING"
+                    dim msg_tokens$[1]
+                    msg_tokens$[1]=old_opt11$
+                    gosub disp_message
+                    err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                       Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+old_opt11$+" *****"
+                    goto done
+                endif
+            endif
+        endif
 
         rem --- Process each conversion marker file that exist    
         convMarkers!=BBjAPI().makeVector()
@@ -369,6 +391,69 @@ v1500_ope01: rem --- Data conversion for ope-01;opt-01
     return
 
 v1500_ope11: rem --- Data conversion for ope-11;opt-11
+
+    rem --- Replace ORDDET_SEQ_REF (type SEQ_REF) in PRIMARY key with INTERNAL_SEQ_NO (type INTERNAL_SEQ_NO), and add missing LINE_NO
+    if convCtrl!.getProperty("data_source")="OCJ" then
+        rem --- Data upgraded via EM Update Wizard (OCJ)
+
+        rem --- Get record template for old opt-11 file
+        ope_table$="OPT_INVDET"
+        tpl_found=0
+        findrecord(ddm_table_tpls,key=pad(ope_table$,16),dom=*next)ddm_table_tpls$;tpl_found=1
+        if tpl_found then
+            dim old_opt11_tpl$:ddm_table_tpls.template$
+
+            rem --- Clear and open new opt-11 file
+            num_files=1
+            dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+            open_tables$[1]="OPT_INVDET", open_opts$[1]="IOTA"
+            gosub open_tables
+            opt_invdet_dev=num(open_chans$[1])
+            dim opt_invdet_tpl$:open_tpls$[1]
+            wk$=fattr(opt_invdet_tpl$,"LINE_NO")
+            line_no_mask$=fill(dec(wk$(10,2)),"0")
+
+            rem --- Copy old opt-11 records to new opt-11 setting internal_seq_no and line_no
+            this_invoice$=""
+            read(old_opt11_dev,key="",dom=*next)
+            while 1
+                readrecord(old_opt11_dev,end=*break)old_opt11_tpl$
+                if old_opt11_tpl.ar_inv_no$<>this_invoice$ then
+                    this_invoice$=old_opt11_tpl.ar_inv_no$
+                    line=0
+                endif
+                dim opt_invdet_tpl$:fattr(opt_invdet_tpl$)
+                call pgmdir$+"adc_copyfile.aon",old_opt11_tpl$,opt_invdet_tpl$,status
+                if status then break
+                line=line+1
+                opt_invdet_tpl.line_no$=str(line:line_no_mask$)
+                opt_invdet_tpl.internal_seq_no$=old_opt11_tpl.orddet_seq_ref$
+                opt_invdet_tpl$=field(opt_invdet_tpl$)
+                writerecord(opt_invdet_dev)opt_invdet_tpl$
+            wend
+            if status then return
+        else
+            rem --- Required template missing
+            meter_text$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+Translate!.getTranslation("AON_VERSION","Verion")+" "+convCtrl!.getProperty("start_version")+
+:           " "+Translate!.getTranslation("AON_TEMPLATE_NOT_FOUND","Template not found")+": "+ope_table$+" *****"
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+            status=1
+            return
+        endif
+    else
+        rem --- Data upgraded via DataPort
+        rem --- ORDDET_SEQ_REF changed to INTERNAL_SEQ_NO handled by DataPort (re internal_seq)
+        rem --- LINE_NO handled by DataPort (re field_name_xref)
+    endif
+
+    opt_table$="OPT_INVDET"
+    ope_table$="OPE_INVDET"
+    ope_file$="ope-11"
+    add_order_number=1
+    gosub op_rtp_data_conv
     
     return
 
@@ -440,6 +525,7 @@ op_rtp_data_conv: rem --- OP Real Time Processing (RTP) data conversion
             endif
             opt_tpl$=field(opt_tpl$)
             writerecord(opt_dev)opt_tpl$
+            read(opt_dev,key=opt_key$,dom=*next)
         endif
     wend
 
