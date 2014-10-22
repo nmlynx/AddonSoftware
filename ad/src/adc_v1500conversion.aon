@@ -380,7 +380,7 @@ done: rem --- Done, close things up
     if completed_successfully then conv_status=0; rem --- no errors encountered
     goto std_exit
 
-v1500_ope01: rem --- Data conversion for ope-01;opt-01
+v1500_ope01: rem --- Data conversion for ope-01 (ope_ordhdr and ope_invhdr) and opt-01 (opt_invhdr)
 
     opt_table$="OPT_INVHDR"
     ope_table$="OPE_INVHDR"
@@ -390,7 +390,7 @@ v1500_ope01: rem --- Data conversion for ope-01;opt-01
     
     return
 
-v1500_ope11: rem --- Data conversion for ope-11;opt-11
+v1500_ope11: rem --- Data conversion for ope-11 (ope_orddet and ope_invdet) and opt-11 (opt_invdet)
 
     rem --- Replace ORDDET_SEQ_REF (type SEQ_REF) in PRIMARY key with INTERNAL_SEQ_NO (type INTERNAL_SEQ_NO), and add missing LINE_NO
     if convCtrl!.getProperty("data_source")="OCJ" then
@@ -457,7 +457,13 @@ v1500_ope11: rem --- Data conversion for ope-11;opt-11
     
     return
 
-v1500_ope21: rem --- Data conversion for ope-21;opt-21
+v1500_ope21: rem --- Data conversion for ope-21 (ope_ordlsdet) and opt-21 (opt_invlsdet)
+
+    opt_table$="OPT_INVLSDET"
+    ope_table$="OPE_ORDLSDET"
+    ope_file$="ope-21"
+    add_order_number=1
+    gosub op_rtp_data_conv
     
     return
 
@@ -471,7 +477,7 @@ v1500_ope31: rem --- Data conversion for ope-31 (ope_ordship) and opt-31 (opt_in
 
     return
 
-v1500_ope41: rem --- Data conversion for ope-41;opt-41
+v1500_ope41: rem --- Data conversion for ope-41 (ope_invcash) and opt-41 (opt_invcash)
     
     return
     
