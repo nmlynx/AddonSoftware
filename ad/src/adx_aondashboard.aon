@@ -193,6 +193,7 @@ rem ==============================================
 		incomeComparisonBarDashboardWidget! = acctDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		incCmpWidget!=incomeComparisonBarDashboardWidget!.getWidget()
 		incCmpWidget!.setFontScalingFactor(0.45)
+        incCmpWidget!.setChartRangeAxisToCurrency()
 rem		incCmpWidget!.setChartColors("#00a4d9","#7fbe27",1.0,1.0); rem Colors for By Period
 rem		incCmpWidget!.setChartColors("#3cb6df,#4aca75,#91bd5d"); rem supplying three explicit colors due to issue in legend vs chart if range is used (CAH)
 		incCmpWidget!.setLabelsInBarChartColor("#000000")
@@ -383,6 +384,7 @@ rem =======================================
 		
 		incExpAWidget!.setFontScalingFactor(0.45)
 		incExpAWidget!.setDomainLabelAngle(1)
+        incExpAWidget!.setChartRangeAxisToCurrency()
 
 		rem Create Filters 
 		filterName$ = Translate!.getTranslation("AON_COMPARE_INCOME_TO_EXPENSE_TIME_FRAME")
@@ -482,6 +484,7 @@ rem ==============================================
 		topCustsSWidget! = topCustsSStackedBarChartDashboardWidget!.getWidget()
 		topCustsSWidget!.setFontScalingFactor(0.45)
 		topCustsSWidget!.setDomainLabelAngle(1)
+        topCustsSWidget!.setChartRangeAxisToCurrency()
 rem		topCustsSWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		topCustsSWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 
@@ -519,6 +522,7 @@ rem ==============================================
 		
 		toprepWidget!.setDomainLabelAngle(1)
 		toprepWidget!.setFontScalingFactor(0.45)
+        toprepWidget!.setChartRangeAxisToCurrency()
 rem		toprepWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		toprepWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 
@@ -594,6 +598,7 @@ rem ==============================================
 rem		repsalesWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		repsalesWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 		repsalesWidget!.setLabelsInBarChartColor("#000000")
+        repsalesWidget!.setChartRangeAxisToCurrency()
 
 		gosub update_meter
 	endif		
