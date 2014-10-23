@@ -478,6 +478,12 @@ v1500_ope31: rem --- Data conversion for ope-31 (ope_ordship) and opt-31 (opt_in
     return
 
 v1500_ope41: rem --- Data conversion for ope-41 (ope_invcash) and opt-41 (opt_invcash)
+
+    opt_table$="OPT_INVCASH"
+    ope_table$="OPE_INVCASH"
+    ope_file$="ope-41"
+    add_order_number=1
+    gosub op_rtp_data_conv
     
     return
     
