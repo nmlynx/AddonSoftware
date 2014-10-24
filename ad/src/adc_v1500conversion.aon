@@ -230,7 +230,10 @@ rem --- For version 15.00, data conversions for OP Real Time Processing (RTP) fi
             conv_marker_file$=aonDir$+"data/v1500_ope-01"
             convmarkerFile!=new File(conv_marker_file$)
             if convmarkerFile!.exists() then
-                old_opt11$=convCtrl!.getProperty("addon_source")+"/aon/data/opt-11"
+                oldStbl$="+OPDATA"
+                oldFile$="opt-11"
+                gosub get_path_to_old_file
+                old_opt11$=oldPathToFile$
                 open_success=0
                 old_opt11_dev=unt
                 open(old_opt11_dev,err=*next)old_opt11$; open_success=1
@@ -375,7 +378,8 @@ done: rem --- Done, close things up
     close(log_dev)
 
     rem --- Close opened files
-    close(ddm_table_tpls,err=*next)
+    if ddm_table_tpls then close(ddm_table_tpls)
+    if old_opt11_dev then close(old_opt11_dev)
 
     if completed_successfully then conv_status=0; rem --- no errors encountered
     goto std_exit
@@ -598,6 +602,32 @@ op_rtp_data_conv: rem --- OP Real Time Processing (RTP) data conversion
             print(log_dev)meter_text$
         endif
     endif
+
+    return
+
+get_path_to_old_file: rem --- Locate data directory in old Addon installation
+    rem --- IN: oldStbl$ - STBL in old addon.syn that points to the data directory where the old file is located
+    rem --- IN: oldFile$ - name of old file to get path for
+    rem --- OUT: oldPathToFile$ - full path to requested file, including the file name
+    oldPathToFile$=oldFile$
+
+    rem --- Open old aon/config/addon.syn
+    open_success=0
+    old_addonsyn_dev=unt
+    open(old_addonsyn_dev,isz=-1,err=*next)convCtrl!.getProperty("addon_source")+"/aon/config/addon.syn"; open_success=1
+    if !open_success then return
+
+    rem --- Get specified data directory from old addon.syn
+    key$="=SET "+oldStbl$+"="
+    while 1
+        read(old_addonsyn_dev,end=*break)record$
+        if(pos(key$=record$)) then
+            xpos=pos(key$=record$)
+            oldPathToFile$=record$(xpos+len(key$))+oldFile$
+            break
+        endif
+    wend
+    close(old_addonsyn_dev)
 
     return
 

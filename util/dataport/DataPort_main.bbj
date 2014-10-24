@@ -31,15 +31,14 @@ dim ddm04$:"file_name:c(6),record_id:c(1),layout_seq:c(3*),data_name:c(12),reser
 
 rem --- Open files and/or retrieve templates that may be needed for PO file conversion
 
-    num_files=7
+    num_files=6
     dim rd_open_tables$[1:num_files],rd_open_opts$[1:num_files],rd_open_chans$[1:num_files],rd_open_tpls$[1:num_files]
     rd_open_tables$[1]="ADS_SEQUENCES",rd_open_opts$[1]="OTA"
     rd_open_tables$[2]="ARM_CUSTMAST",rd_open_opts$[2]="T"
     rd_open_tables$[3]="ARM_CUSTSHIP",rd_open_opts$[3]="T"
     rd_open_tables$[4]="OPE_ORDSHIP",rd_open_opts$[4]="T"
     rd_open_tables$[5]="OPT_INVSHIP",rd_open_opts$[5]="T"
-    rd_open_tables$[6]="OPE_ORDHDR",rd_open_opts$[6]="T"
-    rd_open_tables$[7]="OPT_INVHDR",rd_open_opts$[7]="T"
+    rd_open_tables$[6]="OPT_INVHDR",rd_open_opts$[6]="T"
     
     gosub open_tables
     
@@ -49,8 +48,7 @@ rem --- Open files and/or retrieve templates that may be needed for PO file conv
     arm_custship_tpl$=rd_open_tpls$[3]
     ope_ordship_tpl$=rd_open_tpls$[4]
     opt_invship_tpl$=rd_open_tpls$[5]
-    ope_ordhdr_tpl$=rd_open_tpls$[6]
-    opt_invhdr_tpl$=rd_open_tpls$[7]
+    opt_invhdr_tpl$=rd_open_tpls$[6]
     
 rem --- initialization
 
@@ -1989,39 +1987,28 @@ convert_po_files:
             close (arm_custship_dev)          
         else
             if num(cvs(old_rec.shipto_nbr$,3))=99
-                rem --- read ope31 or opt-01/31 for manual (99) shipto
-                ope_ordship_dev=unt
-                dim rec$:ope_ordship_tpl$
-                addr_file$="ope-31"
-                order_found=0
-                open (ope_ordship_dev,err=addr_open_err)destin_folder$+"/"+addr_file$
+                rem --- read opt-01/31 for manual (99) shipto
+                opt_invhdr_dev=unt
+                dim opt_invhdr$:opt_invhdr_tpl$
+                addr_file$="opt-01"
+                open (opt_invhdr_dev,err=addr_open_err)destin_folder$+"/"+addr_file$
+                opt_invship_dev=unt
+                dim rec$:opt_invship_tpl$
+                addr_file$="opt-31"
+                open (opt_invship_dev,err=addr_open_err)destin_folder$+"/"+addr_file$
                 while 1
-                    read record (ope_ordship_dev,key=po_hdr_rec.firm_id$+po_hdr_rec.customer_id$+po_hdr_rec.order_no$,dom=*break)rec$
+                    trip_key$=po_hdr_rec.firm_id$+opt_invhdr.ar_type$+po_hdr_rec.customer_id$+po_hdr_rec.order_no$
+                    read(opt_invhdr_dev,key=trip_key$,dom=*next)opt_invhdr$
+                    opt_invhdr_key$=key(opt_invhdr_dev,end=*break)
+                    if pos(trip_key$=opt_invhdr_key$)<>1 then break
+                    read record (opt_invhdr_dev)opt_invhdr$
+                    read record (opt_invship_dev,key=po_hdr_rec.firm_id$+po_hdr_rec.customer_id$+opt_invhdr.ar_inv_no$,knum="AO_CUST_INV",dom=*break)rec$
                     po_hdr_rec.ds_name$=rec.name$            
                     gosub fill_dropship_address
-                    order_found=1
                     break
                 wend
-                close (ope_ordship_dev)
-                if !order_found
-                    opt_invhdr_dev=unt
-                    dim opt_invhdr$:opt_invhdr_tpl$
-                    addr_file$="opt-01"
-                    open (opt_invhdr_dev,err=addr_open_err)destin_folder$+"/"+addr_file$
-                    opt_invship_dev=unt
-                    dim rec$:opt_invship_tpl$
-                    addr_file$="opt-31"
-                    open (opt_invship_dev,err=addr_open_err)destin_folder$+"/"+addr_file$
-                    while 1
-                        read record (opt_invhdr_dev,key=po_hdr_rec.firm_id$+opt_invhdr.ar_type$+po_hdr_rec.customer_id$+po_hdr_rec.order_no$,knum="AO_CUST_ORD",dom=*break)opt_invhdr$
-                        read record (opt_invship_dev,key=po_hdr_rec.firm_id$+po_hdr_rec.customer_id$+opt_invhdr.ar_inv_no$,dom=*break)rec$
-                        po_hdr_rec.ds_name$=rec.name$            
-                        gosub fill_dropship_address
-                        break
-                    wend
-                    close (opt_invhdr_dev)
-                    close (opt_invship_dev)
-                endif                           
+                close (opt_invhdr_dev)
+                close (opt_invship_dev)
             else
                 rem --- invalid shipto
                 po_hdr_rec.addr_line_1$="Unknown address"
