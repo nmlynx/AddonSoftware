@@ -246,8 +246,8 @@ rem --- Generate list of application files to be opened based on what's installe
         files$[7]="ivt-04",ids$[7]="IVT_ITEMTRAN"
     endif
     if op
-        files$[8]="ope-01",ids$[8]="OPE_ORDHDR"
-        files$[9]="ope-11",ids$[9]="OPE_ORDDET"
+        files$[8]="opt-01",ids$[8]="OPE_ORDHDR"
+        files$[9]="opt-11",ids$[9]="OPE_ORDDET"
         files$[10]="opm-02",ids$[10]="OPC_LINECODE"
     endif
     if po
@@ -414,10 +414,10 @@ rem ---------------------------------------------------------------------
             if pos(firm_id$=k$)<>1 break
             gosub update_meter
             read record (ope01_dev) ope01a$
-            if ope01a.invoice_type$<>"S" continue
+            if ope01a.invoice_type$<>"S" or pos(ope01a.trans_status$="ER")=0 continue
             units=1
             order$=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+
-:                               ope01a.order_no$
+:                               ope01a.order_no$+ope01a.ar_inv_no$
 
             rem --- Position Sales Order Detail file (ope-11)
 
@@ -1042,6 +1042,7 @@ rem ---------------------------------------------------------------------
                 if pos(firm_id$=k$)<>1 break
                 gosub update_meter
                 read record (opt01_dev) opt01a$
+                if opt01a.trans_status$<>"U" then continue
                 units=1
 
                 rem --- Determine the estimated date for this sale
