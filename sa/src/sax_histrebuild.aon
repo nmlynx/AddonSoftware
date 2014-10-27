@@ -133,18 +133,19 @@ rem --- Main read
     while 1
         read record (opt01_dev,end=*break) opt01a$
         if pos(opt01a.firm_id$=firm_id$)<>1 break
+        if opt01a.trans_status$<>"U" then continue
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
 rem --- Position Invoice History Detail File
 
-        read (opt11_dev,key=firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$,dom=*next)
+        read (opt11_dev,key=firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.order_no$+opt01a.ar_inv_no$,dom=*next)
 
 rem --- Read next line item
 
         while 1
             read record (opt11_dev,end=*break) opt11a$
-            if pos(firm_id$+opt11a.ar_type$+opt11a.customer_id$+opt11a.ar_inv_no$=
-:                  firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$)<>1 break
+            if pos(firm_id$+opt11a.ar_type$+opt11a.customer_id$+opt11a.order_no$+opt11a.ar_inv_no$=
+:                  firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.order_no$+opt01a.ar_inv_no$)<>1 break
 
 rem --- Additional Reads
 
