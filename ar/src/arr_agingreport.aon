@@ -527,14 +527,14 @@ rem --- line.
                    opt01a.ar_type$=art01a.ar_type$
                    opt01a.customer_id$=art01a.customer_id$
                    opt01a.ar_inv_no$=art01a.ar_inv_no$
-                   opt01a.sequence_000$=fill(len(opt01a.sequence_000$),"0")
-                   opt01a.order_no$=order$
-                   opt01a.customer_po_no$=po$
-                   k$=opt01a.firm_id$+opt01a.ar_type$+opt01a.customer_id$+
-:                     opt01a.ar_inv_no$; rem +opt01a.sequence_000$
-                   find record (opt01_dev,key=k$,dom=*proceed) opt01a$
-                   order$(1)=opt01a.order_no$
-                   po$(1)=opt01a.customer_po_no$
+                   job_no$=opt01a.job_no$
+                   k$=opt01a.firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$
+                   find record (opt01_dev,key=k$,knum="AO_CUST_INV",dom=*next) opt01a$
+                   if opt01a.trans_status$="U" then
+                       order$(1)=opt01a.order_no$
+                       po$(1)=opt01a.customer_po_no$
+                       job_no$=opt01a.job_no$
+                   endif
                 endif
 
                 rem --- Print detail line
@@ -603,7 +603,7 @@ rem --- line.
   
                 while jn$="Y"
                       dim opm09a$:fattr(opm09a$),job$(j)
-                      k$=opt01a.firm_id$+opt01a.customer_id$+opt01a.job_no$
+                      k$=opt01a.firm_id$+opt01a.customer_id$+job_no$
                       find record (opm09_dev,key=k$,dom=*break) opm09a$
                       job$(1)=Translate!.getTranslation("AON_JOB_")+opm09a.job_no$+" "+opm09a.customer_name$
                       rem if lines+1>maxlines gosub customer_heading
