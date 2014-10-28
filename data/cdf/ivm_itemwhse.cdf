@@ -32,18 +32,18 @@ rem --- Get total on Open SO lines
 	opm02_dev=fnget_dev("OPC_LINECODE")
 	dim opm02_tpl$:fnget_tpl$("OPC_LINECODE")
 
-	read(opdet_dev,key=firm_id$+item$+whse$,knum="AO_ITEM_WH_CUST",dom=*next)
+	read(opdet_dev,key=firm_id$+item$+whse$,knum="ITEM_WH_CUST_INV",dom=*next)
 
 	while 1
 		read record (opdet_dev,end=*break) opdet_tpl$
 		if firm_id$<>opdet_tpl.firm_id$ break
 		if whse$<>opdet_tpl.warehouse_id$ break
 		if item$<>opdet_tpl.item_id$ break
-		if opdet_tpl.commit_flag$<>"Y" then continue
+		if opdet_tpl.commit_flag$<>"Y" or pos(opdet_tpl.trans_status$="ER")=0 then continue
 
 		rem --- "Check header records for quotes
-		find record (ophdr_dev,key=opdet_tpl.firm_id$+opdet_tpl.ar_type$+opdet_tpl.customer_id$+opdet_tpl.order_no$,dom=*continue) ophdr_tpl$
-		if ophdr_tpl.invoice_type$="P" then continue
+		find record (ophdr_dev,key=opdet_tpl.firm_id$+opdet_tpl.ar_type$+opdet_tpl.customer_id$+opdet_tpl.order_no$+opdet_tpl.ar_inv_no$,dom=*continue) ophdr_tpl$
+		if ophdr_tpl.invoice_type$="P" or pos(opdet_tpl.trans_status$="ER")=0 then continue
 
 		rem --- "Check line code for drop ships
 		find record (opm02_dev,key=opdet_tpl.firm_id$+opdet_tpl.line_code$,dom=*continue) opm02_tpl$
