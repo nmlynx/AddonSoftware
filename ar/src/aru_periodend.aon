@@ -49,7 +49,6 @@ rem --- Open/Lock files
     files$[6]="art-01",ids$[6]="ART_INVHDR"
     options$[6]="L"
     if op$="Y"
-       files$[7]="ope-01",ids$[7]="OPE_ORDHDR"
        files$[8]="opm-09",ids$[8]="OPM_CUSTJOBS"
        files$[9]="ops_mtdsales",ids$[9]="OPS_MTDSALES"
        files$[10]="opt-01",ids$[10]="OPT_INVHDR"
@@ -79,7 +78,6 @@ rem --- Open/Lock files
     arm06_dev=channels[4]
     ars10_dev=channels[5]
     art01_dev=channels[6]
-    ope01_dev=channels[7]
     opm09_dev=channels[8]
     ops10_dev=channels[9]
     opt01_dev=channels[10]
@@ -103,7 +101,7 @@ rem --- Dimension string templates
     dim ars01a$:templates$[1],arm01a$:templates$[2],arm02a$:templates$[3]
     dim arm06a$:templates$[4],ars10c$:templates$[5],art01a$:templates$[6]
     dim gls01a$:templates$[24]
-    if op$="Y" dim ope01a$:templates$[7],opm09a$:templates$[8],ops10s$:templates$[9],opt01a$:templates$[10]
+    if op$="Y" dim opm09a$:templates$[8],ops10s$:templates$[9],opt01a$:templates$[10]
     if sa$="Y" dim sam01a$:templates$[11],sam02a$:templates$[12],sam03a$:templates$[13],
 :                  sam04a$:templates$[14],sam05a$:templates$[15],sam06a$:templates$[16],
 :                  sam07a$:templates$[17],sam08a$:templates$[18],sam09a$:templates$[19],
@@ -292,17 +290,7 @@ rem --- Read next Customer Master (arm-01) record
           wend 
           if found then read(arm01_dev); continue
 
-          rem --- Check Open Order (ope-01) file if Sales Order Processing is installed
-
-          k$=""
-          keyprefix$=firm_id$+artype$+arm01a.customer_id$
-          if op$="Y"
-             read (ope01_dev,key=keyprefix$,dom=*proceed)
-             k$=key(ope01_dev,end=*proceed)
-          endif
-          if pos(keyprefix$=k$)=1 then read(arm01_dev); continue
-
-          rem --- Check Invoice History (ope-01) file if Sales Order Processing is installed
+          rem --- Check Invoice History (opt-01) file if Sales Order Processing is installed
 
           k$=""
           keyprefix$=firm_id$+artype$+arm01a.customer_id$
