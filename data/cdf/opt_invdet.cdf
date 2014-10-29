@@ -22,7 +22,6 @@ rem ==========================================================================
 
 		if start_block then
 			read record (ivm01_dev, key=firm_id$+item_id$, dom=*endif) ivm01a$
-			callpoint!.setDevObject("inventoried",ivm01a.inventoried$)
 
 		rem --- In Invoice Entry, non-inventoried lotted/serial can enter lots
 
@@ -77,17 +76,6 @@ rem --- Is this item lot/serial?
 		if cvs(cust$,2) <> ""
 
 		rem --- Run the Lot/Serial# detail entry form
-		rem      IN: call/enter list
-		rem          the DevObjects set below
-		rem          DevObject("lotser_flag"): set in OPT_INVHDR
-
-			callpoint!.setDevObject("from",          "invoice_entry")
-			callpoint!.setDevObject("wh",            callpoint!.getColumnData("OPT_INVDET.WAREHOUSE_ID"))
-			callpoint!.setDevObject("item",          callpoint!.getColumnData("OPT_INVDET.ITEM_ID"))
-			callpoint!.setDevObject("ord_qty",       callpoint!.getColumnData("OPT_INVDET.QTY_ORDERED"))
-			callpoint!.setDevObject("dropship_line", user_tpl.line_dropship$)
-			callpoint!.setDevObject("invoice_type",  callpoint!.getHeaderColumnData("OPT_INVHDR.INVOICE_TYPE"))
-
 			grid!.focus()
 
 			dim dflt_data$[4,1]
