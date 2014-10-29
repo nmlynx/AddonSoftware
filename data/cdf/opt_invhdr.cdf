@@ -1,6 +1,3 @@
-[[OPT_INVHDR.BTBL]]
-rem --- Filter records returned by Invoice History Inquiry
-	callpoint!.setTableColumnAttribute("OPT_INVHDR.TRANS_STATUS","PVAL",$22$+"U"+$22$)
 [[OPT_INVHDR.AOPT-COMM]]
 rem --- Display Comments form
 
