@@ -429,6 +429,7 @@ rem ---------------------------------------------------------------------
                 k$=key(ope11_dev,end=*break)
                 if pos(order$=k$)<>1 break
                 read record (ope11_dev) ope11a$
+                if pos(ope11a.trans_status$="ER")=0 then continue
 
                 rem --- Retrieve line type
 

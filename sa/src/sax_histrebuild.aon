@@ -146,6 +146,7 @@ rem --- Read next line item
             read record (opt11_dev,end=*break) opt11a$
             if pos(firm_id$+opt11a.ar_type$+opt11a.customer_id$+opt11a.order_no$+opt11a.ar_inv_no$=
 :                  firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.order_no$+opt01a.ar_inv_no$)<>1 break
+            if opt11a.trans_status$<>"U" then continue
 
 rem --- Additional Reads
 
