@@ -200,25 +200,26 @@ rem  --- Check for Open AR Invoices
 	if pos(firm_id$+"  "+cust$=art01_key$)<>1 goto check_op_ord
 	delete_msg$=Translate!.getTranslation("AON_OPEN_INVOICES_EXIST_-_CUSTOMER_DELETION_NOT_ALLOWED")
 	goto done_checking	
+
 check_op_ord:
 	if user_tpl.op_installed$<>"Y" goto done_checking
-	num_files=2
+	num_files=1
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="OPE_INVHDR",open_opts$[1]="OTA"
-	open_tables$[2]="OPT_INVHDR",open_opts$[2]="OTA"
+	open_tables$[1]="OPT_INVHDR",open_opts$[1]="OTA"
 	gosub open_tables
-	ope01_dev=num(open_chans$[1])
-	opt01_dev=num(open_chans$[2])
-	read (ope01_dev,key=firm_id$+"  "+cust$,dom=*next)
-	ope01_key$=key(ope01_dev,end=check_op_inv)
-	if pos(firm_id$+"  "+cust$=ope01_key$)<>1 goto check_op_inv
-	delete_msg$=Translate!.getTranslation("AON_OPEN_ORDERS_EXIST_-_CUSTOMER_DELETION_NOT_ALLOWED")
-	goto done_checking	
-check_op_inv:
+	opt01_dev=num(open_chans$[1])
+	dim opt01_tpl$:open_tpls$[1]
+
 	read (opt01_dev,key=firm_id$+"  "+cust$,dom=*next)
 	opt01_key$=key(opt01_dev,end=done_checking)              
 	if pos(firm_id$+"  "+cust$=opt01_key$)<>1 goto done_checking
-	delete_msg$=Translate!.getTranslation("AON_HISTORICAL_INVOICES_EXIST_-_CUSTOMER_DELETION_NOT_ALLOWED")
+	readrecord(opt01_dev)opt01_tpl$
+	if opt01_tpl.trans_status$="U"
+		delete_msg$=Translate!.getTranslation("AON_HISTORICAL_INVOICES_EXIST_-_CUSTOMER_DELETION_NOT_ALLOWED")
+	else
+		delete_msg$=Translate!.getTranslation("AON_OPEN_ORDERS_EXIST_-_CUSTOMER_DELETION_NOT_ALLOWED")
+	endif
+
 done_checking:
 	if delete_msg$<>""
 		callpoint!.setMessage("NO_DELETE:"+delete_msg$)
