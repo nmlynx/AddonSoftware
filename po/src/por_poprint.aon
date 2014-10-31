@@ -913,9 +913,9 @@ shipto_break: rem --- Ship-To Break
     else
         drop_ship$=""
         dim ivm10c$:fattr(ivm10c$)
-        ivm10c.firm_id$=firm_id$,ivm10c.record_id_c$="C",ivm10c.warehouse_id$=poe12a.warehouse_id$,ivm10c.short_name$=nf$
-        t3$=poe12a.warehouse_id$
-        if cvs(poe12a.warehouse_id$,2)="" 
+        ivm10c.firm_id$=firm_id$,ivm10c.record_id_c$="C",ivm10c.warehouse_id$=whse_id$,ivm10c.short_name$=nf$
+        t3$=whse_id$
+        if cvs(whse_id$,2)="" 
             ivm10c.warehouse_id$=poe02a.warehouse_id$
             t3$=poe02a.warehouse_id$; rem ESCAPE
         endif
