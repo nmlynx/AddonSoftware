@@ -52,6 +52,7 @@ rem --- Initializations
     ivm_itemvend.item_id$=item_id$
     ivm_itemvend.prisec_flag$="S"
     when$=ord_date$
+    brk_qty=qty
     qty=qty*conv_factor
 
 rem --- Retrieve current record
@@ -63,9 +64,9 @@ rem --- Retrieve current record
 rem --- Reassign cost if record exists
 
         if ivm_itemvend.last_po_cost>0 then let unit_cost=ivm_itemvend.last_po_cost*conv_factor
-        if ivm_itemvend.unit_cost_01>0 and qty>=ivm_itemvend.break_qty_01 then let unit_cost=ivm_itemvend.unit_cost_01*conv_factor
-        if ivm_itemvend.unit_cost_02>0 and qty>=ivm_itemvend.break_qty_02 then let unit_cost=ivm_itemvend.unit_cost_02*conv_factor
-        if ivm_itemvend.unit_cost_03>0 and qty>=ivm_itemvend.break_qty_03 then let unit_cost=ivm_itemvend.unit_cost_03*conv_factor
+        if ivm_itemvend.unit_cost_01>0 and brk_qty>=ivm_itemvend.break_qty_01 then let unit_cost=ivm_itemvend.unit_cost_01*conv_factor
+        if ivm_itemvend.unit_cost_02>0 and brk_qty>=ivm_itemvend.break_qty_02 then let unit_cost=ivm_itemvend.unit_cost_02*conv_factor
+        if ivm_itemvend.unit_cost_03>0 and brk_qty>=ivm_itemvend.break_qty_03 then let unit_cost=ivm_itemvend.unit_cost_03*conv_factor
 
     else
 
