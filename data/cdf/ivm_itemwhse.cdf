@@ -32,14 +32,13 @@ rem --- Get total on Open SO lines
 	opm02_dev=fnget_dev("OPC_LINECODE")
 	dim opm02_tpl$:fnget_tpl$("OPC_LINECODE")
 
-	read(opdet_dev,key=firm_id$+item$+whse$,knum="ITEM_WH_CUST_INV",dom=*next)
+	read(opdet_dev,key=firm_id$+"E"+item$+whse$,knum="STAT_ITEM_CUS_IN",dom=*next)
 
 	while 1
-		read record (opdet_dev,end=*break) opdet_tpl$
-		if firm_id$<>opdet_tpl.firm_id$ break
-		if whse$<>opdet_tpl.warehouse_id$ break
-		if item$<>opdet_tpl.item_id$ break
-		if opdet_tpl.commit_flag$<>"Y" or pos(opdet_tpl.trans_status$="ER")=0 then continue
+		optdet_key$=key(opdet_dev,end=*break)
+		if pos(firm_id$+"E"+item$+whse$=optdet_key$)<>1 then break
+		read record (opdet_dev) opdet_tpl$
+		if opdet_tpl.commit_flag$<>"Y" then continue
 
 		rem --- "Check header records for quotes
 		find record (ophdr_dev,key=opdet_tpl.firm_id$+opdet_tpl.ar_type$+opdet_tpl.customer_id$+opdet_tpl.order_no$+opdet_tpl.ar_inv_no$,dom=*continue) ophdr_tpl$
