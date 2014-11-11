@@ -1,7 +1,7 @@
 =======================================================================================================================================
- Report Date:   2014-10-17
+ Report Date:   2014-11-11
  Report Branch: AddonSoftware 14.20
- Last Release:  AddonSoftware 14.11
+ Last Release:  AddonSoftware 14.12
 =======================================================================================================================================
 
 =======================================================================================================================================
@@ -55,3 +55,18 @@ Modified: config/fra/addon.men
 Modified: config/frc/addon.men
 Modified: config/ita/addon.men
 Modified: data/sync/adm_rolealias~[all].xml
+
+=======================================================================================================================================
+Revision: 5f02c8ed9435f110d38ee9016f42de94b7ceee50
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 11/11/2014 10:25:09 AM
+Message:
+Bug 8053: Add new ado_order::totalSalesCostTaxable(BBjVector, Callpoint)
+method that sums up three totals, and uses a HashMap to cache previously
+read opc_linecode records.
+----
+Modified: ad/src/ado_order.src
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/cdf/ope_invdet.cdf
+Modified: data/cdf/ope_orddet.cdf
