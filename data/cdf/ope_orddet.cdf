@@ -1288,9 +1288,10 @@ rem ==========================================================================
 		ttl_ext_cost = 0
 		ttl_taxable = 0
 	else
-		ttl_ext_price = ordHelp!.totalSales( cast(BBjVector, GridVect!.getItem(0)), cast(Callpoint, callpoint!) )
-		ttl_ext_cost = ordHelp!.totalCost( cast(BBjVector, GridVect!.getItem(0)), cast(Callpoint, callpoint!) )
-		ttl_taxable = ordHelp!.totalTaxable( cast(BBjVector, GridVect!.getItem(0)), cast(Callpoint, callpoint!) )
+		totalsVect!=ordHelp!.totalSalesCostTaxable(cast(BBjVector, GridVect!.getItem(0)), cast(Callpoint, callpoint!))
+		ttl_ext_price=totalsVect!.getItem(0)
+		ttl_ext_cost=totalsVect!.getItem(1)
+		ttl_taxable=totalsVect!.getItem(2)
 	endif
 
 	freight_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.FREIGHT_AMT"))
