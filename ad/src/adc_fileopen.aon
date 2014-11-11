@@ -135,12 +135,12 @@ actual_open:
             if filedir$<>"" then filedir$ = BBjAPI().getFileSystem().resolvePath(filedir$)+"/"         
             lockfile! = admin!.getBBjFile(filedir$+pathname$,err=*next)
             if lockfile! <> NULL() 
-                openFile! = lockfile!.getOpenFileLocked()
+                openFile! = lockfile!.getOpenFileLocked(err=*next)
                 if openFile! <> NULL() then
                     lock_user$ = "User " + openFile!.getString(BBjAdminOpenFile.USER)
                     lock_user$ = lock_user$ + " has file locked on host " + openFile!.getString(BBjAdminOpenFile.HOST)
                 else
-                    lock_user$ = "Open file info was null, indicating file is no longer locked."
+                    lock_user$ = "Open file info not available. File no longer locked or user doesn't have permissions to view file info."
                 endif
             endif
         else
