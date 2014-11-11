@@ -123,8 +123,33 @@ actual_open:
     file_locked: rem --- Error 0 - File locked by another user
 
         description$="file: "+files$[x]
+        lock_user$=""
+        lockfile!=null()
+        
+        rem get admin object that Barista stored in namespace
+        NSAdmin!=bbjAPI().getNamespace("adminobjects","barista",1)
+        admin!=NSAdmin!.getValue("+bar_admin_"+cvs(stbl("+USER_ID",err=*next),11),err=*next)
+        NSAdmin!=null()
 
-        error$=description$+" is locked by another user"
+        if admin! <> NULL() then
+            if filedir$<>"" then filedir$ = BBjAPI().getFileSystem().resolvePath(filedir$)+"/"         
+            lockfile! = admin!.getBBjFile(filedir$+pathname$,err=*next)
+            if lockfile! <> NULL() 
+                openFile! = lockfile!.getOpenFileLocked()
+                if openFile! <> NULL() then
+                    lock_user$ = "User " + openFile!.getString(BBjAdminOpenFile.USER)
+                    lock_user$ = lock_user$ + " has file locked on host " + openFile!.getString(BBjAdminOpenFile.HOST)
+                else
+                    lock_user$ = "Open file info was null, indicating file is no longer locked."
+                endif
+            endif
+        else
+            lock_user$ = "Unable to open file and unable to get admin object."
+        endif
+
+        error$=description$+" is locked."
+        if lock_user$<>"" then error$=error$+ $0a$ + lock_user$
+        
         break
 
     not_found: rem --- Error 12 - File not found
