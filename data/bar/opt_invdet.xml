@@ -22,8 +22,8 @@
 			<DD_EXPORT_DATA id="ddm_tables.opt_invdet">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.opt_invdet">20090727</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_tables.opt_invdet">20141027</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.opt_invdet">20141027</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.opt_invdet">095250</DD_LSTSYNC_TIME>
+			<DD_LSTSYNC_DATE id="ddm_tables.opt_invdet">20141104</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.opt_invdet">140316</DD_LSTSYNC_TIME>
 			<DD_ATTR_ATAB id="ddm_tables.opt_invdet"></DD_ATTR_ATAB>
 			<DD_ATTR_CPGM id="ddm_tables.opt_invdet">C:/dev_projects/mod1500bt/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.opt_invdet">AO_CUST_INV_LINE</DD_ATTR_DKNM>
@@ -104,18 +104,11 @@
 			<DD_KEY_ID id="ddm_keys.opt_invdet00">PRIMARY         </DD_KEY_ID>
 			<DD_KEY_AUTO_GEN id="ddm_keys.opt_invdet00"></DD_KEY_AUTO_GEN>
 		</RECORD>
-		<RECORD id="ddm_keys.opt_invdet01">
-			<DD_TABLE_ALIAS id="ddm_keys.opt_invdet01">OPT_INVDET      </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_keys.opt_invdet01">01</DD_KEY_NUMBER>
-			<DD_KEY_DESC id="ddm_keys.opt_invdet01">Open Invoices By Item</DD_KEY_DESC>
-			<DD_KEY_ID id="ddm_keys.opt_invdet01">AO_WH_ITEM_INV  </DD_KEY_ID>
-			<DD_KEY_AUTO_GEN id="ddm_keys.opt_invdet01"></DD_KEY_AUTO_GEN>
-		</RECORD>
 		<RECORD id="ddm_keys.opt_invdet02">
 			<DD_TABLE_ALIAS id="ddm_keys.opt_invdet02">OPT_INVDET      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_keys.opt_invdet02">02</DD_KEY_NUMBER>
-			<DD_KEY_DESC id="ddm_keys.opt_invdet02">Item_whs_customer_invoice</DD_KEY_DESC>
-			<DD_KEY_ID id="ddm_keys.opt_invdet02">ITEM_WH_CUST_INV</DD_KEY_ID>
+			<DD_KEY_DESC id="ddm_keys.opt_invdet02">Invoice By Item-Whse-Customer</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.opt_invdet02">STAT_ITEM_CUS_IN</DD_KEY_ID>
 			<DD_KEY_AUTO_GEN id="ddm_keys.opt_invdet02"></DD_KEY_AUTO_GEN>
 		</RECORD>
 		<RECORD id="ddm_keys.opt_invdet03">
@@ -128,16 +121,9 @@
 		<RECORD id="ddm_keys.opt_invdet04">
 			<DD_TABLE_ALIAS id="ddm_keys.opt_invdet04">OPT_INVDET      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_keys.opt_invdet04">04</DD_KEY_NUMBER>
-			<DD_KEY_DESC id="ddm_keys.opt_invdet04">whse_item_order_cust</DD_KEY_DESC>
-			<DD_KEY_ID id="ddm_keys.opt_invdet04">AO_WH_ITEM_ORD  </DD_KEY_ID>
+			<DD_KEY_DESC id="ddm_keys.opt_invdet04">Orders By Whse-Item</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.opt_invdet04">STAT_WH_ITEM_ORD</DD_KEY_ID>
 			<DD_KEY_AUTO_GEN id="ddm_keys.opt_invdet04"></DD_KEY_AUTO_GEN>
-		</RECORD>
-		<RECORD id="ddm_keys.opt_invdet05">
-			<DD_TABLE_ALIAS id="ddm_keys.opt_invdet05">OPT_INVDET      </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_keys.opt_invdet05">05</DD_KEY_NUMBER>
-			<DD_KEY_DESC id="ddm_keys.opt_invdet05">item_whse_cust_order</DD_KEY_DESC>
-			<DD_KEY_ID id="ddm_keys.opt_invdet05">ITEM_WH_CUST_ORD</DD_KEY_ID>
-			<DD_KEY_AUTO_GEN id="ddm_keys.opt_invdet05"></DD_KEY_AUTO_GEN>
 		</RECORD>
 		<RECORD id="ddm_keys.opt_invdet06">
 			<DD_TABLE_ALIAS id="ddm_keys.opt_invdet06">OPT_INVDET      </DD_TABLE_ALIAS>
@@ -277,90 +263,6 @@
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0006">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0006">N</DD_SEGMENT_MATH>
 		</RECORD>
-		<RECORD id="ddm_key_segs.opt_invdet0101">
-			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0101">OPT_INVDET      </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0101">01</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0101">01</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0101">FIRM_ID</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0101">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0101">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0101">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0101">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0101">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0101">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.opt_invdet0102">
-			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0102">OPT_INVDET      </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0102">01</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0102">02</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0102">WAREHOUSE_ID</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0102">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0102">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0102">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0102">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0102">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0102">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.opt_invdet0103">
-			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0103">OPT_INVDET      </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0103">01</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0103">03</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0103">ITEM_ID</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0103">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0103">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0103">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0103">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0103">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0103">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.opt_invdet0104">
-			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0104">OPT_INVDET      </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0104">01</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0104">04</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0104">AR_TYPE</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0104">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0104">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0104">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0104">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0104">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0104">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.opt_invdet0105">
-			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0105">OPT_INVDET      </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0105">01</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0105">05</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0105">AR_INV_NO</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0105">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0105">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0105">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0105">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0105">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0105">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.opt_invdet0106">
-			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0106">OPT_INVDET      </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0106">01</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0106">06</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0106">INTERNAL_SEQ_NO</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0106">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0106">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0106">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0106">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0106">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0106">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.opt_invdet0107">
-			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0107">OPT_INVDET      </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0107">01</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0107">07</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0107">CUSTOMER_ID</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0107">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0107">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0107">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0107">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0107">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0107">N</DD_SEGMENT_MATH>
-		</RECORD>
 		<RECORD id="ddm_key_segs.opt_invdet0201">
 			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0201">OPT_INVDET      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0201">02</DD_KEY_NUMBER>
@@ -377,7 +279,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0202">OPT_INVDET      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0202">02</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0202">02</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0202">ITEM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0202">TRANS_STATUS</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0202">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0202">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0202">0</DD_SEGMENT_LEN>
@@ -389,7 +291,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0203">OPT_INVDET      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0203">02</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0203">03</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0203">WAREHOUSE_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0203">ITEM_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0203">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0203">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0203">0</DD_SEGMENT_LEN>
@@ -401,7 +303,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0204">OPT_INVDET      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0204">02</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0204">04</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0204">AR_TYPE</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0204">WAREHOUSE_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0204">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0204">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0204">0</DD_SEGMENT_LEN>
@@ -413,7 +315,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0205">OPT_INVDET      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0205">02</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0205">05</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0205">CUSTOMER_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0205">AR_TYPE</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0205">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0205">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0205">0</DD_SEGMENT_LEN>
@@ -425,7 +327,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0206">OPT_INVDET      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0206">02</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0206">06</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0206">AR_INV_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0206">CUSTOMER_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0206">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0206">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0206">0</DD_SEGMENT_LEN>
@@ -437,13 +339,25 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0207">OPT_INVDET      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0207">02</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0207">07</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0207">INTERNAL_SEQ_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0207">AR_INV_NO</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0207">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0207">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0207">0</DD_SEGMENT_LEN>
 			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0207">N</DD_SEGMENT_SORT>
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0207">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0207">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.opt_invdet0208">
+			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0208">OPT_INVDET      </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0208">02</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0208">08</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0208">INTERNAL_SEQ_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0208">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0208">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0208">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0208">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0208">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0208">N</DD_SEGMENT_MATH>
 		</RECORD>
 		<RECORD id="ddm_key_segs.opt_invdet0301">
 			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0301">OPT_INVDET      </DD_TABLE_ALIAS>
@@ -521,7 +435,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0402">OPT_INVDET      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0402">04</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0402">02</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0402">WAREHOUSE_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0402">TRANS_STATUS</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0402">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0402">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0402">0</DD_SEGMENT_LEN>
@@ -533,7 +447,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0403">OPT_INVDET      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0403">04</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0403">03</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0403">ITEM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0403">WAREHOUSE_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0403">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0403">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0403">0</DD_SEGMENT_LEN>
@@ -545,7 +459,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0404">OPT_INVDET      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0404">04</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0404">04</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0404">AR_TYPE</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0404">ITEM_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0404">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0404">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0404">0</DD_SEGMENT_LEN>
@@ -557,7 +471,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0405">OPT_INVDET      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0405">04</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0405">05</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0405">ORDER_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0405">AR_TYPE</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0405">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0405">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0405">0</DD_SEGMENT_LEN>
@@ -569,7 +483,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0406">OPT_INVDET      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0406">04</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0406">06</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0406">LINE_NO</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0406">ORDER_NO</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0406">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0406">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0406">0</DD_SEGMENT_LEN>
@@ -581,7 +495,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0407">OPT_INVDET      </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0407">04</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0407">07</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0407">CUSTOMER_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0407">LINE_NO</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0407">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0407">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0407">0</DD_SEGMENT_LEN>
@@ -589,89 +503,17 @@
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0407">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0407">N</DD_SEGMENT_MATH>
 		</RECORD>
-		<RECORD id="ddm_key_segs.opt_invdet0501">
-			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0501">OPT_INVDET      </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0501">05</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0501">01</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0501">FIRM_ID</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0501">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0501">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0501">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0501">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0501">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0501">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.opt_invdet0502">
-			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0502">OPT_INVDET      </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0502">05</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0502">02</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0502">ITEM_ID</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0502">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0502">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0502">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0502">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0502">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0502">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.opt_invdet0503">
-			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0503">OPT_INVDET      </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0503">05</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0503">03</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0503">WAREHOUSE_ID</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0503">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0503">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0503">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0503">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0503">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0503">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.opt_invdet0504">
-			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0504">OPT_INVDET      </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0504">05</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0504">04</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0504">AR_TYPE</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0504">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0504">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0504">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0504">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0504">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0504">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.opt_invdet0505">
-			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0505">OPT_INVDET      </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0505">05</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0505">05</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0505">CUSTOMER_ID</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0505">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0505">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0505">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0505">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0505">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0505">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.opt_invdet0506">
-			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0506">OPT_INVDET      </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0506">05</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0506">06</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0506">ORDER_NO</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0506">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0506">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0506">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0506">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0506">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0506">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.opt_invdet0507">
-			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0507">OPT_INVDET      </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0507">05</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0507">07</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0507">LINE_NO</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0507">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0507">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0507">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0507">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0507">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0507">N</DD_SEGMENT_MATH>
+		<RECORD id="ddm_key_segs.opt_invdet0408">
+			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0408">OPT_INVDET      </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.opt_invdet0408">04</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.opt_invdet0408">08</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.opt_invdet0408">CUSTOMER_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.opt_invdet0408">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.opt_invdet0408">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.opt_invdet0408">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.opt_invdet0408">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.opt_invdet0408">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.opt_invdet0408">N</DD_SEGMENT_MATH>
 		</RECORD>
 		<RECORD id="ddm_key_segs.opt_invdet0601">
 			<DD_TABLE_ALIAS id="ddm_key_segs.opt_invdet0601">OPT_INVDET      </DD_TABLE_ALIAS>

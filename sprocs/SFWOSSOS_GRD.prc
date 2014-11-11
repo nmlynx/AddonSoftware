@@ -94,8 +94,8 @@ rem --- Open/Lock files
     files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="sfe-01",ids$[1]="SFE_WOMASTR"
-    files$[2]="ope-01",ids$[2]="OPE_ORDHDR"
-    files$[3]="ope-11",ids$[3]="OPE_ORDDET"
+    files$[2]="opt-01",ids$[2]="OPE_ORDHDR"
+    files$[3]="opt-11",ids$[3]="OPE_ORDDET"
    
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
     if status then
@@ -141,8 +141,18 @@ rem --- get data
         if pos(sfe01a.wo_status$=wo_status$)=0 then continue
 
         rem --- Get SO linked to this WO
-        readrecord(ope01a_dev,key=firm_id$+ar_type$+sfe01a.customer_id$+sfe01a.order_no$,dom=*continue)ope01a$
-        if ope01a.ordinv_flag$<>"O" then continue; rem --- Exclude invoices
+        found_ope01a_rec=0
+        read(ope01a_dev,key=firm_id$+ar_type$+sfe01a.customer_id$+sfe01a.order_no$,dom=*next)
+        while 1
+            ope01a_key$=key(ope01a_dev,end=*break)
+            if pos(firm_id$+ar_type$+sfe01a.customer_id$+sfe01a.order_no$=ope01a_key$)<>1 then break
+            readrecord(ope01a_dev)ope01a$
+            if pos(ope01a.trans_status$="ER")=0 then continue
+            if ope01a.ordinv_flag$<>"O" then continue; rem --- Exclude invoices
+            found_ope01a_rec=1
+            break
+        wend
+        if !found_ope01a_rec then continue
 
         switch pos(so_include_type$="ABCDEFG")
             case 1; rem --- A = Sales (Open) SOs only
@@ -169,7 +179,8 @@ rem --- get data
                 continue
         swend
 
-        readrecord(ope11a_dev,key=firm_id$+ar_type$+sfe01a.customer_id$+sfe01a.order_no$+sfe01a.sls_ord_seq_ref$,dom=*continue)ope11a$
+        readrecord(ope11a_dev,key=ope01a_key$+sfe01a.sls_ord_seq_ref$,dom=*continue)ope11a$
+        if pos(ope11a.trans_status$="ER")=0 then continue
 
         data! = rs!.getEmptyRecordData()
         data!.setFieldValue("WO",sfe01a.wo_no$)
