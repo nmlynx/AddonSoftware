@@ -735,6 +735,7 @@ rem --- Sort By G/L
 		endif
 		
 		rem --- Send GL data to GLRecap
+		tot_wo_postings=0
 		for x=0 to 5
 			if GL_Acct_amts[x]=0 then continue
 			if x<>1 then GL_Acct_amts[x]=-GL_Acct_amts[x]
@@ -749,7 +750,16 @@ rem --- Sort By G/L
             ref3$=Translate!.getTranslation("AON_TYPE_")+wo_type$
 			
 			gosub glrecap
+			
+			tot_wo_postings=tot_wo_postings+amount
         next x
+        
+        rem --- Use Ovh Var Acct to balance penny rounding errors for this WO
+        if tot_wo_postings<>0 then
+            account$=GL_Accts$[3]
+            amount=-tot_wo_postings
+            gosub glrecap
+        endif
 
     wend
 
