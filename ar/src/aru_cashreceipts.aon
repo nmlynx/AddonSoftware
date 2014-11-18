@@ -314,7 +314,6 @@ disp_message:rem --- Display Message Dialog
 rem #include std_error.src
 
 std_error: rem --- Standard error handler (18Nov2014)
-old_sts$="R",new_sts$="O";gosub flip_status_flags
 
     if tcb(19)>0
         rem --- Escape handler

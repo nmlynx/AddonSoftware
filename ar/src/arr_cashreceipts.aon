@@ -911,12 +911,9 @@ rem #include std_error.src
 
 std_error: rem --- Standard error handler (18Nov2014)
 
-
     if tcb(19)>0
         rem --- Escape handler
         if and(chr(tcb(19)),$08$)=$08$
-        	old_sts$="R", new_sts$="O"
-			gosub flip_status_flags
             release
         else
             setesc std_error
@@ -936,8 +933,6 @@ std_error: rem --- Standard error handler (18Nov2014)
     if pos("ESCAPE"=rd_err_act$) seterr 0; setesc 0
     if pos("RETRY"=rd_err_act$) retry
     if pgm(-1)<>pgm(-2) status=999; exit 
-    old_sts$="R", new_sts$="O"
-	gosub flip_status_flags
     release
 
 
