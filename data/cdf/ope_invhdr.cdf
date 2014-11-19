@@ -2471,21 +2471,28 @@ rem --- Make sure everything's written back to disk
 	gosub get_disk_rec
 	ordhdr_rec$ = field(ordhdr_rec$)
 	write record (ordhdr_dev) ordhdr_rec$
-	ordhdr_key$=ordhdr_rec.firm_id$+ordhdr_rec.ar_type$+ordhdr_rec.customer_id$+ordhdr_rec.order_no$
-	extractrecord(ordhdr_dev,key=ordhdr_key$)ordhdr_rec$; rem Advisory Locking
 
-rem --- Call printing program
+rem --- on demand invoice
 
-	call user_tpl.pgmdir$+"opc_invoice.aon::on_demand", cust_id$, order_no$, callpoint!, table_chans$[all], status
-	if status = 999 then goto std_exit
+	cp_cust_id$=callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	cp_order_no$=callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+	user_id$=stbl("+USER_ID")
 
-	callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "Y")
+	dim dflt_data$[2,1]
+	dflt_data$[1,0]="CUSTOMER_ID"
+	dflt_data$[1,1]=cp_cust_id$
+	dflt_data$[2,0]="ORDER_NO"
+	dflt_data$[2,1]=cp_order_no$
 
-	msg_id$ = "OP_INVOICE_DONE"
-	gosub disp_message
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	                       "OPR_INV_DEMAND",
+:	                       user_id$,
+:	                       "",
+:	                       "",
+:	                       table_chans$[all],
+:	                       "",
+:	                       dflt_data$[all]
 
-	print "---Print Status: Y"; rem debug
-	print "out"; rem debug
 
 	return
 
