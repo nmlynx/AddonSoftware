@@ -130,6 +130,8 @@ continues its 25-year history of constant improvement - additional features, inc
 			<br />
 				<ul>
                     <li>All forms and reports are now launchable in BUI.</li>
+                    <li>** New BBj methods have been incorporated into Addon's table open routine for error 0's. The error message can now include the user and host that has the file locked.</li>
+                    <li>** Addon's error handling routine has also been enhanced for record locks, so the user and host that has a record locked can be displayed in the error message.</li>                                        
                     <li>Addon Dashboard</li>
                         <ul><li>New Manufacturing tab with a widget that shows Work Orders linked to Sales Orders; includes filters for both Work Order status and Sales Order Status.</li>
                         <li>Fast access to the dashboard via a new top-level menu.</li>
@@ -145,7 +147,14 @@ continues its 25-year history of constant improvement - additional features, inc
                     <li>SPROC code optimizations boost the speed of the AR Drilldown Sales Report.</li>
                     </ul>
                     <li>Distribution</li>
-                    <ul><li>--</li>
+                    <ul>
+                    <li>** The Duplicate/Credit Memo query in Order and Invoice Entry has been replaced with a new custom query that runs much faster since it only shows data from the historical invoice header table. New hyperlinks in the query grid let the user launch a secondary query on invoice detail, or launch the Invoice History Inquiry form. </li>
+                    <li>** Invoicing has been enhanced in the following ways:</li>
+                    <ul>
+                    <li>In addition to the current Master copy showing all invoices in the batch run, there is also now a Print copy containing only those invoices that need to be printed.</li>
+                    <li>The Print Now button in Invoice Entry launches a new form so the user can specify a message for the on-demand invoice, as well as select whether or not to process the invoice according to report control settings.</li>
+                    <li>Both batch (Master) and on-demand invoices will prompt the user to update the print file. Only when the user chooses to do the update are print flags set and applicable invoices added to the document processing queue.</li>
+                    </ul>
                     </ul>
                     <li>Manufacturing</li>
                     <ul><li>--</li>
@@ -161,8 +170,9 @@ continues its 25-year history of constant improvement - additional features, inc
                     </ul>    
                 </ul>
             </li>
-			<br />				
-
+			<br />
+            
+            <li>** New in this release</li>
 			<li>For a list of continued improvements in all modules, refer to the <a href="http://www.basis.com/readme-bbj" target="_blank"><strong>Readme/Relnotes and Fixes</strong></a> link on the BASIS product download page.
 	 		</li>
 			</ul>
