@@ -789,7 +789,7 @@ close_win:rem --- Master or On-demand viewer closed - do post-processing for bat
             endif
         wend
         
-        call stbl("+DIR_PGM")+"adc_rptcontrol_batch.aon",emailFax!;rem add email/fax invoices to doc queue 
+        if emailFax!.size() then call stbl("+DIR_PGM")+"adc_rptcontrol_batch.aon",emailFax!;rem add email/fax invoices to doc queue 
 	else 
 		rem gosub open_cash_box... not implemented in Barista Addon
 		gosub order_update       
