@@ -474,9 +474,11 @@ rem --- force exportToPDF first, in case it hasn't already been saved
 
 close_win:rem --- Viewer Window Closed
 
-    msg_id$ = "CONF_RPTCTL"
-    gosub disp_message
-    if msg_opt$="Y" then call stbl("+DIR_PGM")+"adc_rptcontrol_batch.aon",emailFax!;rem add email/fax invoices to doc queue 
+    if emailFax!.size()
+        msg_id$ = "CONF_RPTCTL"
+        gosub disp_message
+        if msg_opt$="Y" then call stbl("+DIR_PGM")+"adc_rptcontrol_batch.aon",emailFax!;rem add email/fax invoices to doc queue 
+    endif
 
     masterViewerWindow!.destroy(err=*next)
     printViewerWindow!.destroy(err=*next)
