@@ -1,60 +1,105 @@
 =======================================================================================================================================
- Report Date:   2014-11-18
+ Report Date:   2014-11-20
  Report Branch: AddonSoftware 14.20
  Last Release:  AddonSoftware 14.12
 =======================================================================================================================================
 
-=======================================================================================================================================
-Revision: 562f4e52741ed03f933c1a511a5ae1269aa1d530
+Revision: 73464356daffe247f00bea596a034c42f947847b
 Author: chawkins
-Date: 10/8/2014 5:06:29 PM
+Date: 10/31/2014 2:09:46 PM
 Message:
-Per bug 8024; optimized code so it no longer needlessly calls
-adc_getmask.aon with every iteration.
+Per bug 8082; corrected PO On Order display field in warehouse master to
+use sale/stocking units rather than purchase units.
 ----
-Modified: gl/src/glc_glpost.aon
+Modified: data/bar/ivm_itemwhse.xml
+Modified: data/cdf/ivm_itemwhse.cdf
 
 =======================================================================================================================================
-Revision: 7374729f19b83bef9e9c0fd85c0c0859ab221461
+Revision: 9129d168221ec487fba0561ce5f3188dd44c43ef
 Author: chawkins
-Date: 10/15/2014 5:19:29 PM
+Date: 10/31/2014 2:41:40 PM
 Message:
-Per bug 8001; corrected issue with backorders that was leaving
-commission percent at zero; also corrected where total cost is
-erroneously set to zero.
+Per bug 8081, corrected issue in req/PO/receipt line item entry so unit
+cost is calculated correctly according to vendor break levels.
+----
+Modified: po/src/poc_itemvend.aon
+
+=======================================================================================================================================
+Revision: 7a0e1b37220f3af40fb66b8eebf70d8d61f773d1
+Author: chawkins
+Date: 10/31/2014 2:43:21 PM
+Message:
+Per bug 8084, corrected issue causing wrong/previous warehouse address
+to print on POs.
+----
+Modified: po/src/por_poprint.aon
+
+=======================================================================================================================================
+Revision: 2741bb0b7d231f5237ad97d3f44e38c194c502e8
+Author: chawkins
+Date: 11/6/2014 9:57:29 AM
+Message:
+Per bug 8076; changed query for duplicate/credit memos to only look at
+opt_invhdr, and added hyperlinks to drill into detail if desired.
 ----
 Modified: data/bar/ope_invhdr.xml
 Modified: data/bar/ope_ordhdr.xml
 Modified: data/cdf/ope_invhdr.cdf
 Modified: data/cdf/ope_ordhdr.cdf
+Added: data/sync/adm_query_cols~op_histinv001.xml
+Added: data/sync/adm_query_cols~op_histinv002.xml
+Added: data/sync/adm_query_cols~op_histinv003.xml
+Added: data/sync/adm_query_cols~op_histinv004.xml
+Added: data/sync/adm_query_cols~op_histinv005.xml
+Added: data/sync/adm_query_cols~op_histinv006.xml
+Added: data/sync/adm_query_cols~op_histinv007.xml
+Added: data/sync/adm_query_cols~op_histinv008.xml
+Added: data/sync/adm_query_cols~op_histinv009.xml
+Added: data/sync/adm_query_cols~op_histinv010.xml
+Added: data/sync/adm_query_cols~op_histinv011.xml
+Added: data/sync/adm_query_cols~op_histinv012.xml
+Added: data/sync/adm_query_cols~op_histinv013.xml
+Added: data/sync/adm_query_cols~op_histinv014.xml
+Added: data/sync/adm_query_cols~op_histinv015.xml
+Added: data/sync/adm_query_cols~op_histinv016.xml
+Added: data/sync/adm_query_cols~op_histinv017.xml
+Added: data/sync/adm_query_cols~op_histinvdet001.xml
+Added: data/sync/adm_query_cols~op_histinvdet002.xml
+Added: data/sync/adm_query_cols~op_histinvdet003.xml
+Added: data/sync/adm_query_cols~op_histinvdet004.xml
+Added: data/sync/adm_query_cols~op_histinvdet005.xml
+Added: data/sync/adm_query_cols~op_histinvdet006.xml
+Added: data/sync/adm_query_cols~op_histinvdet007.xml
+Added: data/sync/adm_query_cols~op_histinvdet008.xml
+Added: data/sync/adm_query_cols~op_histinvdet009.xml
+Added: data/sync/adm_query_cols~op_histinvdet010.xml
+Added: data/sync/adm_query_cols~op_histinvdet011.xml
+Added: data/sync/adm_query_cols~op_histinvdet012.xml
+Added: data/sync/adm_query_cols~op_histinvdet013.xml
+Added: data/sync/adm_query_cols~op_histinvdet014.xml
+Added: data/sync/adm_query~op_histinv.xml
+Added: data/sync/adm_query~op_histinvdet.xml
+Added: data/sync/ddm_drill_defs~op_histinvdet.xml
 
 =======================================================================================================================================
-Revision: 272badcf2c7b02ed1b8b5e625629ec5a030d2176
-Author: chawkins
-Date: 10/17/2014 9:45:30 AM
+Revision: 83170f952e6f94bec5ea0da835817e426e0fb34c
+Author: chawkins <chawkins@basis.com>
+Date: 11/10/2014 5:48:15 PM
 Message:
-Per bug 8068; cleaned up code that set chan=unt, then did open (unt)
-instead of open (chan).
+Per bug 4760; new methods in BBj now make it possible to identify user
+who has file locked.
 ----
-Modified: ad/src/adx_quickcopywiz.aon
+Modified: ad/src/adc_fileopen.aon
 
 =======================================================================================================================================
-Revision: 247fc40a5edb35d33a69593cbcff277b0cf150ef
-Author: chawkins
-Date: 10/17/2014 11:05:28 AM
+Revision: fd908dd2cb4f614390387b7da9bba996f898ff47
+Author: chawkins <chawkins@basis.com>
+Date: 11/10/2014 8:09:08 PM
 Message:
-Per bug 8069; added SF WO to SO grid widget to AD (hidden) menu, and to
-guest security role.
+Per bug 4760; added err=*next on getOpenFileLocked() and
+getOpenFileExtracted() methods.
 ----
-Modified: config/deu/addon.men
-Modified: config/enc/addon.men
-Modified: config/enu/addon.men
-Modified: config/esm/addon.men
-Modified: config/esp/addon.men
-Modified: config/fra/addon.men
-Modified: config/frc/addon.men
-Modified: config/ita/addon.men
-Modified: data/sync/adm_rolealias~[all].xml
+Modified: ad/src/adc_fileopen.aon
 
 =======================================================================================================================================
 Revision: 5f02c8ed9435f110d38ee9016f42de94b7ceee50
@@ -742,3 +787,106 @@ Modified: util/codeport/adx_codeportlbls.bbj
 Modified: util/codeport/lib/std_error.src
 Modified: util/codeport/user_selections.bbj
 Modified: util/dataport/DataPort_main.bbj
+
+=======================================================================================================================================
+Revision: bf64ab642066d46e387f377503ee118a0408092f
+Author: chawkins
+Date: 11/19/2014 12:31:59 PM
+Message:
+Corrected program name in initial rem stmt.
+----
+Modified: op/src/opd_histinv.aon
+
+=======================================================================================================================================
+Revision: 2e8183a79fa6b2e22af333c34be74e8e50583f47
+Author: chawkins
+Date: 11/19/2014 1:09:53 PM
+Message:
+Modifications to OP Invoicing:
+
+1. Generate a 'Print' jasper as well as the 'Master' jasper
+2. 'Print' jasper contains invoices for those not in report control
+file, or in the file with print box checked
+3. Print Now button launches new Option Entry form where user can
+specify message and whether or not to send via rpt ctl
+4. Ask user if OK to update regardless of whether doing a batch or
+on-demand invoice
+5. If OK to update, set print flags and move docs to processing queue as
+applicable. If not OK, don't do either.
+----
+Added: ad/src/adc_rptcontrol_batch.aon
+Modified: data/bar/ope_invhdr.xml
+Added: data/bar/opr_inv_demand.xml
+Modified: data/cdf/ope_invhdr.cdf
+Added: data/cdf/opr_inv_demand.cdf
+Modified: op/src/opc_invoice.aon
+Added: op/src/opr_inv_demand.aon
+
+=======================================================================================================================================
+Revision: fdc96f9070d3d2518ddf80e5f5461fba1d456040
+Author: chawkins
+Date: 11/19/2014 3:58:34 PM
+Message:
+Left out new 'print' copy of jasper in previous commit for Invoice mods.
+----
+Added: reports/OPInvoicePrint.jasper
+Added: reports/OPInvoicePrint.jrxml
+
+=======================================================================================================================================
+Revision: dead30fda0e625d2fb3a26165a34b6378e416be3
+Author: chawkins
+Date: 11/19/2014 4:55:55 PM
+Message:
+Modifications to Simple AR Invoicing:
+
+1. Generate a 'Print' jasper as well as the 'Master' jasper
+2. 'Print' jasper contains invoices for those not in report control
+file, or in the file with print box checked
+4. New message asks user if designated docs should be forwarded to doc
+queue, so they're only sent upon user's OK.
+----
+Modified: ar/src/arr_invoices.aon
+Added: data/sync/ads_messages~conf_rptctl.xml
+Added: reports/SimpleInvoicePrint.jasper
+Added: reports/SimpleInvoicePrint.jrxml
+
+=======================================================================================================================================
+Revision: 0d5db94514f7658651e75b438a240ef3d0b0d488
+Author: chawkins
+Date: 11/19/2014 6:35:55 PM
+Message:
+Modifications to on-demand Customer Statement:
+
+1. Option Entry form 'Send via Report Control' only enabled if the
+customer has email or fax selected
+2. New confirmation message when viewer is closed; statement not
+forwarded to doc queue unless user OKs it
+3. Removed some old/unused code
+----
+Modified: ar/src/arr_stmt_demand.aon
+Modified: data/bar/arr_stmt_demand.xml
+Added: data/cdf/arr_stmt_demand.cdf
+
+=======================================================================================================================================
+Revision: 11c11e723592e0dd95cbac4734742d81996f1718
+Author: chawkins
+Date: 11/20/2014 12:12:37 PM
+Message:
+Modifications to AR Statements:
+
+1. Generate a 'Print' jasper as well as the 'Master' jasper
+2. 'Print' jasper contains statements for those not in report control
+file, or in the file with print box checked
+4. New message asks user if designated docs should be forwarded to doc
+queue, so they're only sent upon user's OK.
+
+Also adjusted AR Invoices and OP Invoices so it doesn't try to send docs
+to queue if emailFax! vector is empty.
+----
+Modified: ar/src/arr_invoices.aon
+Modified: ar/src/arr_statements.aon
+Modified: op/src/opc_invoice.aon
+Modified: reports/StatementMaster.jasper
+Modified: reports/StatementMaster.jrxml
+Added: reports/StatementPrint.jasper
+Added: reports/StatementPrint.jrxml
