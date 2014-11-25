@@ -1,6 +1,6 @@
 =======================================================================================================================================
  Report Date:   2014-11-20
- Report Branch: AddonSoftware 14.20
+ Report Branch: AddonSoftware 14.25
  Last Release:  AddonSoftware 14.12
 =======================================================================================================================================
 
@@ -890,3 +890,17 @@ Modified: reports/StatementMaster.jasper
 Modified: reports/StatementMaster.jrxml
 Added: reports/StatementPrint.jasper
 Added: reports/StatementPrint.jrxml
+
+=======================================================================================================================================
+Revision: 36ec5c4fa94b05f5c3a50a9cc662fdd7bf077710
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 11/25/2014 1:24:48 PM
+Message:
+Bug 8053: Eliminated unnecessary GOSUBs to calc_grid_totals in order to
+minimize the number of times the entire grid gets processed, and thus
+improve performance.
+----
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/cdf/ope_invdet.cdf
+Modified: data/cdf/ope_orddet.cdf
