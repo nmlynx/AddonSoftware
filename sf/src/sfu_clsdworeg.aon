@@ -295,7 +295,6 @@ rem --- Read next Closed Work Order Transaction (SFE-CLOSEDWO) record
             sfe01a.wo_status$="C"
 
             rem --- Post To Customer Order (Complete)
-escape; rem wgh ... #1
             if sfe01a.wo_category$="N" and ar$="Y"
                 found_ope11_rec=0
                 read(ope11_dev,key=firm_id$+"  "+sfe01a.customer_id$+sfe01a.order_no$,dom=*next)
@@ -366,7 +365,6 @@ escape; rem wgh ... #1
             sfe01a.recalc_flag$=""
 
             rem --- Post To Customer Order Line Item (Partial)
-escape; rem wgh ... #2
             if sfe01a.wo_category$="N" and ar$="Y" 
                 found_ope11_rec=0
                 read(ope11_dev,key=firm_id$+"  "+sfe01a.customer_id$+sfe01a.order_no$,dom=*next)
