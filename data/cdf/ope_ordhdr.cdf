@@ -923,7 +923,7 @@ rem --- remove Comments record if no invoice history found
 	opt01_dev=num(callpoint!.getDevObject("opt_invlookup"))
 	found_inv=0
 	while 1
-		read (opt01_dev,key=opt01_key$,knum="AO_STAT_CUST_ORD",dom=*break)
+		read (opt01_dev,key=opt01_key$,knum="AO_STATUS",dom=*break)
 		found_inv=1
 		break
 	wend
@@ -1019,25 +1019,25 @@ rem --- Remove committments for detail records by calling ATAMO
 	cashrct_dev = fnget_dev("OPE_INVCASH")
 	creddate_dev = fnget_dev("OPE_CREDDATE")
 
+	trans_status$=callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")
 	ar_type$  = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
 	cust$     = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	ord$      = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	invoice$=callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")
 	ord_date$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_DATE")
 	inv_type$ = callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
-	trans_status$=callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")
 
-	read (ope11_dev, key=firm_id$+ar_type$+cust$+ord$+invoice$, dom=*next)
+	read (ope11_dev, key=firm_id$+trans_status$+ar_type$+cust$+ord$+invoice$, dom=*next)
 
 	while 1
 		read record (ope11_dev, end=*break) ope11a$
 
 		if firm_id$<>ope11a.firm_id$ then break
+		if trans_status$<>ope11a.trans_status$ then break
 		if ar_type$<>ope11a.ar_type$ then break
 		if cust$<>ope11a.customer_id$ then break
 		if ord$<>ope11a.order_no$ then break
 		if invoice$<>ope11a.ar_inv_no$ then break
-		if trans_status$<>ope11a.trans_status$ then continue
 
 		read record (opc_linecode_dev, key=firm_id$+ope11a.line_code$) opc_linecode$
 
@@ -1462,21 +1462,20 @@ rem --- Convert Quote?
 				old_prec = tcb(14)
 				precision num(ivs01a.precision$)
 
+				trans_status$=callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")
 				ar_type$ = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
 				cust$    = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 				ord$     = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-				trans_status$=callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")
-				read record (ope11_dev, key=firm_id$+ar_type$+cust$+ord$, dom=*next)
+				read record (ope11_dev, key=firm_id$+trans_status$+ar_type$+cust$+ord$, dom=*next)
 
 				while 1
 					extract record (ope11_dev, end=*break) ope11a$; rem Advisory Locking
 
-					if pos(firm_id$+ar_type$+cust$+ord$=ope11a.firm_id$+
+					if pos(firm_id$+trans_status$+ar_type$+cust$+ord$=ope11a.firm_id$+ope11a.trans_status$+
 :						ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$)<>1 then
 						read(ope11_dev)
 						break
 					endif
-					if trans_status$<>ope11a.trans_status$ then continue
 
 					linecode_found=0
 					read record (opc_linecode_dev, key=firm_id$+ope11a.line_code$, dom=*next) opc_linecode$; linecode_found=1
@@ -1839,7 +1838,7 @@ rem ==========================================================================
 :			filter_defs$[all],
 :			"",
 :			"",
-:			"AO_STAT_CUST_ORD"
+:			"AO_STATUS"
 
 		if cvs(rd_key$,2)<>"" then 
 			if rd_key$(len(rd_key$),1)="^"
@@ -2083,7 +2082,7 @@ rem ==========================================================================
 
 				write record (ope11_dev) ope11a$
 			wend
-			read(ope11_dev,knum="AO_CUST_ORD_LINE",dom=*next); rem --- reset key to OPE_ORDDET form's key
+			read(ope11_dev,knum="AO_STATUS",dom=*next); rem --- reset key to OPE_ORDDET form's key
 
 			callpoint!.setStatus("RECORD:["+firm_id$+callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$+"]")
 			user_tpl.hist_ord$ = "Y"
@@ -2277,12 +2276,11 @@ rem ==========================================================================
 	
 	ope11_dev = fnget_dev("OPE_ORDDET")
 	dim ope11a$:fnget_tpl$("OPE_ORDDET")
-	read (ope11_dev, key=firm_id$+ar_type$+cust_id$+order_no$, dom=*next)
+	read (ope11_dev, key=firm_id$+trans_status$+ar_type$+cust_id$+order_no$, dom=*next)
 
 	while 1
 		read record (ope11_dev, end=*break) ope11a$
-		if pos(firm_id$+ar_type$+cust_id$+order_no$ = ope11a$) <> 1 then break
-		if trans_status$<>ope11a.trans_status$ then continue
+		if pos(firm_id$+trans_status$+ar_type$+cust_id$+order_no$ = ope11a$) <> 1 then break
 
 		if ope11a.pick_flag$ = "Y" then 
 			reprintable = 1

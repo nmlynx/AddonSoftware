@@ -127,7 +127,7 @@ rem --- Print positions
 
 rem --- Retrieve templates
 
-    call sypdir$+"bac_key_template.bbj","OPE_ORDHDR","AO_STAT_CUST_ORD",ope01a_key_tpl$,table_chans$[all],status$
+    call sypdir$+"bac_key_template.bbj","OPE_ORDHDR","AO_STATUS",ope01a_key_tpl$,table_chans$[all],status$
     dim ope01a_key$:ope01a_key_tpl$
 
 rem --- Background
@@ -137,7 +137,7 @@ rem --- Background
 
 rem --- Initial Read
 
-    read (ope01_dev,key=firm_id$+"E"+"  "+from_cust$,knum="AO_STAT_CUST_ORD",dom=*next)
+    read (ope01_dev,key=firm_id$+"E"+"  "+from_cust$,knum="AO_STATUS",dom=*next)
 
 rem --- Main Loop Starts
 
