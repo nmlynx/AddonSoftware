@@ -378,7 +378,6 @@ rem --- Set values based on line type
 	file$ = "OPC_LINECODE"
 	dim linecode_rec$:fnget_tpl$(file$)
 	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
-	print "---Line code: """, line_code$, """"; rem debug
 	find record(fnget_dev(file$), key=firm_id$+line_code$) linecode_rec$
 
 rem --- If line type is Memo, clear the extended price
@@ -416,6 +415,13 @@ rem --- Set product types for certain line types
 				callpoint!.setColumnData("OPE_ORDDET.PRODUCT_TYPE", "")
 			endif
 		endif
+	endif
+
+rem --- Initialize RTP modified fields for modified existing records
+	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())<>"Y" then
+		callpoint!.setColumnData("OPE_ORDDET.MOD_USER", sysinfo.user_id$)
+		callpoint!.setColumnData("OPE_ORDDET.MOD_DATE", date(0:"%Yd%Mz%Dz"))
+		callpoint!.setColumnData("OPE_ORDDET.MOD_TIME", date(0:"%Hz%mz"))
 	endif
 [[OPE_ORDDET.EXT_PRICE.AVAL]]
 rem --- Round 
@@ -818,6 +824,12 @@ rem --- add and recommit Lot/Serial records (if any) and detail lines if not
 		gosub uncommit_iv
 	endif
 [[OPE_ORDDET.AREC]]
+rem --- Initialize RTP trans_status and created fields
+	rem --- TRANS_STATUS set to "E" via form Preset Value
+	callpoint!.setColumnData("OPE_ORDDET.CREATED_USER",sysinfo.user_id$)
+	callpoint!.setColumnData("OPE_ORDDET.CREATED_DATE",date(0:"%Yd%Mz%Dz"))
+	callpoint!.setColumnData("OPE_ORDDET.CREATED_TIME",date(0:"%Hz%mz"))
+
 rem --- Backorder is zero and disabled on a new record
 
 	callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD", "0")
@@ -1515,6 +1527,7 @@ rem ==========================================================================
 	cust$    = callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
 	ar_type$ = callpoint!.getColumnData("OPE_ORDDET.AR_TYPE")
 	order$   = callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
+	invoice_no$= callpoint!.getColumnData("OPE_ORDDET.AR_INV_NO")
 	seq$     = callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
 	wh$      = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
 	item$    = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
@@ -1535,17 +1548,18 @@ rem ==========================================================================
 			endif
 		else
 			found_lot=0
-			read (ope_ordlsdet_dev, key=firm_id$+ar_type$+cust$+order$+seq$, dom=*next)
+			read (ope_ordlsdet_dev, key=firm_id$+ar_type$+cust$+order$+invoice_no$+seq$, dom=*next)
 
 			while 1
 				read record (ope_ordlsdet_dev, end=*break) ope_ordlsdet$
-				if pos(firm_id$+ar_type$+cust$+order$+seq$=ope_ordlsdet$)<>1 then break
+				if pos(firm_id$+ar_type$+cust$+order$+invoice_no$+seq$=ope_ordlsdet$)<>1 then break
+				if pos(ope_ordlsdet.trans_status$="ER")=0 then continue
 				items$[3] = ope_ordlsdet.lotser_no$
 				refs[0]   = ope_ordlsdet.qty_ordered
 				if line_ship_date$<=user_tpl.def_commit$
 					call stbl("+DIR_PGM")+"ivc_itemupdt.aon",action$,channels[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				endif
-				remove (ope_ordlsdet_dev, key=firm_id$+ar_type$+cust$+order$+seq$+ope_ordlsdet.sequence_no$)
+				remove (ope_ordlsdet_dev, key=firm_id$+ar_type$+cust$+order$+invoice_no$+seq$+ope_ordlsdet.sequence_no$)
 				found_lot=1
 			wend
 
