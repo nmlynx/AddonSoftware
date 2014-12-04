@@ -1154,12 +1154,14 @@ rem --- Remove committments for detail records by calling ATAMO
 		remove (creddate_dev, key=firm_id$+ord_date$+cust$+ord$, err=*next)	
 	endif
 [[OPE_INVHDR.BPRK]]
-
 rem --- Previous record must be an invoice
 
 	file_name$ = "OPE_INVHDR"
 	ope01_dev = fnget_dev(file_name$)
 	dim ope01a$:fnget_tpl$(file_name$)
+
+	current_key$=callpoint!.getRecordKey()
+	read(ope01_dev,key=current_key$,dir=0,dom=*next)
 
 	hit_eof=0
 	while 1
@@ -1212,6 +1214,9 @@ rem --- Position the file at the correct record
 			read record (ope01_dev,key=start_key$,dom=*break)
 			break
 		wend
+	else
+		current_key$=callpoint!.getRecordKey()
+		read(ope01_dev,key=current_key$,dom=*next)
 	endif
 
 	hit_eof=0

@@ -565,6 +565,9 @@ rem --- Is previous record an order and not void?
 	ope01_dev = fnget_dev(file_name$)
 	dim ope01a$:fnget_tpl$(file_name$)
 
+	current_key$=callpoint!.getRecordKey()
+	read(ope01_dev,key=current_key$,dir=0,dom=*next)
+
 	trans_status$=callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")
 	hit_eof=0
 	while 1
@@ -706,6 +709,9 @@ rem --- Position the file at the correct record
 			extract record (ope01_dev,key=start_key$)
 			break
 		wend
+	else
+		current_key$=callpoint!.getRecordKey()
+		read(ope01_dev,key=current_key$,dom=*next)
 	endif
 
 	hit_eof=0
