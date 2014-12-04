@@ -697,7 +697,7 @@ rem --- Position the file at the correct record
 		if cvs(cust_id$,2)<>""
 			start_key$=start_key$+cust_id$
 			if cvs(order_no$,2)<>""
-				start_key$=start_key$+order_no$
+				start_key$=start_key$+order_no$+callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")
 			endif
 		endif
 
@@ -1145,11 +1145,12 @@ rem --- Does order exist?
 
 	ar_type$ = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
 	cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	invoice_no$=callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")
 
 	rem --- Restrict to only order with Entry transaction status
 	trans_status$=callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")
 	found = 0
-	extract record (ope01_dev, key=firm_id$+trans_status$+ar_type$+cust_id$+order_no$, dom=*next) ope01a$; found = 1; rem Advisory Locking
+	extract record (ope01_dev, key=firm_id$+trans_status$+ar_type$+cust_id$+order_no$+invoice_no$, dom=*next) ope01a$; found = 1; rem Advisory Locking
 
 rem --- A new record must be the next sequence
 
@@ -1926,7 +1927,7 @@ rem ==========================================================================
 
 			ope01a$=field(ope01a$)
 			write record (ope01_dev) ope01a$
-			ope01_key$=ope01a.firm_id$+ope01a.trans_status$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$
+			ope01_key$=ope01a.firm_id$+ope01a.trans_status$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$+ope01a.ar_inv_no$
 			extractrecord(ope01_dev,key=ope01_key$)ope01a$; rem Advisory Locking
 			callpoint!.setStatus("SETORIG")
 
@@ -2084,7 +2085,7 @@ rem ==========================================================================
 			wend
 			read(ope11_dev,knum="AO_STATUS",dom=*next); rem --- reset key to OPE_ORDDET form's key
 
-			callpoint!.setStatus("RECORD:["+firm_id$+callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$+"]")
+			callpoint!.setStatus("RECORD:["+firm_id$+callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$+ope01a.ar_inv_no$+"]")
 			user_tpl.hist_ord$ = "Y"
 
 		endif
@@ -2188,7 +2189,8 @@ rem ==========================================================================
 	ar_type$ =ope11a.ar_type$
 	cust$    =ope11a.customer_id$
 	ord$     =seq_id$
-	extract record (ope01_dev, key=firm_id$+trans_status$+ar_type$+cust$+ord$) ope01a$; rem Advisory Locking
+	inv_no$=ope01a.ar_inv_no$
+	extract record (ope01_dev, key=firm_id$+trans_status$+ar_type$+cust$+ord$+inv_no$) ope01a$; rem Advisory Locking
 
 	dim pc_files[6]
 	pc_files[1] = fnget_dev("IVM_ITEMMAST")
