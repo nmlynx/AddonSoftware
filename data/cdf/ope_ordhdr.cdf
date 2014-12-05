@@ -2089,7 +2089,7 @@ rem ==========================================================================
 
 				write record (ope11_dev) ope11a$
 			wend
-			read(ope11_dev,knum="AO_STATUS",dom=*next); rem --- reset key to OPE_ORDDET form's key
+			read(ope11_dev,knum="AO_STAT_CUST_ORD",dom=*next); rem --- reset key to OPE_ORDDET form's key
 
 			callpoint!.setStatus("RECORD:["+firm_id$+callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$+ope01a.ar_inv_no$+"]")
 			user_tpl.hist_ord$ = "Y"
