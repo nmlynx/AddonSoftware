@@ -735,6 +735,7 @@ rem --- Is this item lot/serial?
 		ar_type$ = "  "
 		cust$    = callpoint!.getColumnData("OPE_ORDDET.CUSTOMER_ID")
 		order$   = callpoint!.getColumnData("OPE_ORDDET.ORDER_NO")
+		invoice$=callpoint!.getColumnData("OPE_ORDDET.AR_INV_NO")
 		int_seq$ = callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
 
 		if cvs(cust$,2) <> "" then
@@ -755,16 +756,21 @@ rem --- Is this item lot/serial?
 
 			grid!.focus()
 
-			dim dflt_data$[3,1]
+			dim dflt_data$[6,1]
 			dflt_data$[1,0] = "AR_TYPE"
 			dflt_data$[1,1] = ar_type$
-			dflt_data$[2,0] = "CUSTOMER_ID"
-			dflt_data$[2,1] = cust$
-			dflt_data$[3,0] = "ORDER_NO"
-			dflt_data$[3,1] = order$
-			lot_pfx$ = firm_id$+ar_type$+cust$+order$+int_seq$
+			dflt_data$[2,0] = "TRANS_STATUS"
+			dflt_data$[2,1] = "E"
+			dflt_data$[3,0] = "CUSTOMER_ID"
+			dflt_data$[3,1] = cust$
+			dflt_data$[4,0] = "ORDER_NO"
+			dflt_data$[4,1] = order$
+			dflt_data$[5,0] = "AR_INV_NO"
+			dflt_data$[5,1] = invoice$
+			dflt_data$[6,0] = "ORDDET_SEQ_REF"
+			dflt_data$[6,1] = int_seq$
+			lot_pfx$ = firm_id$+"E"+ar_type$+cust$+order$+invoice$+int_seq$
 
-			print "---Launch OPE_ORDLSDET..."; rem debug
 			call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :				"OPE_ORDLSDET", 
 :				stbl("+USER_ID"), 
@@ -772,7 +778,6 @@ rem --- Is this item lot/serial?
 :				lot_pfx$, 
 :				table_chans$[all], 
 :				dflt_data$[all]
-			print "---back for OPE_ORDLSDET"; rem debug
 
 		rem --- Updated qty shipped, backordered, extension
 
@@ -829,6 +834,7 @@ rem --- Initialize RTP trans_status and created fields
 	callpoint!.setColumnData("OPE_ORDDET.CREATED_USER",sysinfo.user_id$)
 	callpoint!.setColumnData("OPE_ORDDET.CREATED_DATE",date(0:"%Yd%Mz%Dz"))
 	callpoint!.setColumnData("OPE_ORDDET.CREATED_TIME",date(0:"%Hz%mz"))
+	callpoint!.setColumnData("OPE_ORDDET.AUDIT_NUMBER","0")
 
 rem --- Backorder is zero and disabled on a new record
 

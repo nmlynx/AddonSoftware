@@ -1,3 +1,17 @@
+[[OPE_ORDLSDET.BWRI]]
+rem --- Initialize RTP modified fields for modified existing records
+	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())<>"Y" then
+		callpoint!.setColumnData("OPE_ORDLSDET.MOD_USER", sysinfo.user_id$)
+		callpoint!.setColumnData("OPE_ORDLSDET.MOD_DATE", date(0:"%Yd%Mz%Dz"))
+		callpoint!.setColumnData("OPE_ORDLSDET.MOD_TIME", date(0:"%Hz%mz"))
+	endif
+[[OPE_ORDLSDET.AREC]]
+rem --- Initialize RTP trans_status and created fields
+	rem --- TRANS_STATUS set to "E" via form Preset Value
+	callpoint!.setColumnData("OPE_ORDLSDET.CREATED_USER",sysinfo.user_id$)
+	callpoint!.setColumnData("OPE_ORDLSDET.CREATED_DATE",date(0:"%Yd%Mz%Dz"))
+	callpoint!.setColumnData("OPE_ORDLSDET.CREATED_TIME",date(0:"%Hz%mz"))
+	callpoint!.setColumnData("OPE_ORDLSDET.AUDIT_NUMBER","0")
 [[OPE_ORDLSDET.AGRN]]
 rem --- keep track of starting qty for this line, so we can accurately check avail qty minus what's already been committed
 

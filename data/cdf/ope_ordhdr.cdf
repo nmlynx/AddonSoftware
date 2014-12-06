@@ -238,6 +238,7 @@ rem --- Initialize RTP trans_status and created fields
 	callpoint!.setColumnData("OPE_ORDHDR.CREATED_USER",sysinfo.user_id$)
 	callpoint!.setColumnData("OPE_ORDHDR.CREATED_DATE",date(0:"%Yd%Mz%Dz"))
 	callpoint!.setColumnData("OPE_ORDHDR.CREATED_TIME",date(0:"%Hz%mz"))
+	callpoint!.setColumnData("OPE_ORDHDR.AUDIT_NUMBER","0")
 
 rem --- Clear availability information
 	
