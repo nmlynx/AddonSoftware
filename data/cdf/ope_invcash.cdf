@@ -229,13 +229,11 @@ rem --- Inits
 
 rem --- Open files
 
-	num_files = 4
+	num_files = 2
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 	open_tables$[1]="ARM_CUSTMAST", open_opts$[1]="OTA"
 	open_tables$[2]="ARC_CASHCODE", open_opts$[2]="OTA"
-	open_tables$[3]="OPE_ORDHDR",   open_opts$[3]="OTA"
-	open_tables$[4]="OPE_ORDDET",   open_opts$[4]="OTA"
 
 	gosub open_tables
 

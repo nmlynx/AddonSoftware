@@ -1067,7 +1067,7 @@ rem --- Remove committments for detail records by calling ATAMO
 	wend
 
 	remove (ope31_dev, key=firm_id$+cust$+ord$+invoice$, dom=*next)
-	remove (cashrct_dev, key=firm_id$+ar_type$+cust$+ord$, err=*next)
+	remove (cashrct_dev, key=firm_id$+ar_type$+cust$+ord$+invoice$, err=*next)
 
 	if user_tpl.credit_installed$="Y" then
 		remove (creddate_dev, key=firm_id$+ord_date$+cust$+ord$, err=*next)	
