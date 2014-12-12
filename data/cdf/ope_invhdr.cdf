@@ -2775,16 +2775,23 @@ rem ==========================================================================
 	callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 
-	dim dflt_data$[3,1]
+	trans_status$=callpoint!.getColumnData("OPE_INVHDR.TRANS_STATUS")
+	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+	ar_inv_no$=callpoint!.getColumnData("OPE_INVHDR.AR_INV_NO")
+
+	dim dflt_data$[5,1]
 	dflt_data$[1,0]="INVOICE_DATE"
 	dflt_data$[1,1]=callpoint!.getColumnData("OPE_INVHDR.INVOICE_DATE")
 	dflt_data$[2,0]="AR_INV_NO"
-	dflt_data$[2,1]=callpoint!.getColumnData("OPE_INVHDR.AR_INV_NO")
+	dflt_data$[2,1]=ar_inv_no$
 	dflt_data$[3,0]="CUSTOMER_NAME"
 	dflt_data$[3,1]=custmast_tpl.customer_name$
+	dflt_data$[4,0]="TRANS_STATUS"
+	dflt_data$[4,1]=trans_status$
+	dflt_data$[5,0]="ORDER_NO"
+	dflt_data$[5,1]=order_no$
 
-	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-	key_pfx$  = firm_id$+"  "+cust_id$+order_no$
+	key_pfx$  = firm_id$+trans_status$+"  "+cust_id$+order_no$+ar_inv_no$
 
 	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :		"OPE_INVCASH", 
