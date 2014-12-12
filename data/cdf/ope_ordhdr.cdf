@@ -850,22 +850,25 @@ rem --- Restrict lookup to orders
 
 	alias_id$ = "OPE_ORDHDR"
 	inq_mode$ = "EXM_ITEM"
-	key_pfx$  = firm_id$
-	key_id$   = "PRIMARY"
+	key_id$   = "AO_STATUS"
 	rem bug 7564 --- cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	custControl!=callpoint!.getControl("OPE_ORDHDR.CUSTOMER_ID")
 	cust_id$=custControl!.getText()
 
-	dim filter_defs$[3,1]
-	filter_defs$[1,0] = "OPE_ORDHDR.ORDINV_FLAG"
-	filter_defs$[1,1] = "='O'"
-	filter_defs$[2,0] = "OPE_ORDHDR.INVOICE_NO"
-	filter_defs$[2,1] = "<>'V'"
+	dim filter_defs$[4,1]
+	filter_defs$[1,0] = "OPE_ORDHDR.TRANS_STATUS"
+	filter_defs$[1,1] = "='"+callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")+"'"
+	filter_defs$[2,0] = "OPE_ORDHDR.ORDINV_FLAG"
+	filter_defs$[2,1] = "='O'"
+	filter_defs$[3,0] = "OPE_ORDHDR.INVOICE_TYPE"
+	filter_defs$[3,1] = "<>'V'"
 
 	if cvs(cust_id$, 2) <> "" then
-		filter_defs$[3,0] = "OPE_ORDHDR.CUSTOMER_ID"
-		filter_defs$[3,1] = "='" + cust_id$ + "'"
+		filter_defs$[4,0] = "OPE_ORDHDR.CUSTOMER_ID"
+		filter_defs$[4,1] = "='" + cust_id$ + "'"
 	endif
+
+	key_pfx$  = firm_id$+callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")
 
 	call stbl("+DIR_SYP")+"bam_inquiry.bbj",
 :		gui_dev,
@@ -1156,8 +1159,15 @@ rem --- Does order exist?
 
 	rem --- Restrict to only order with Entry transaction status
 	trans_status$=callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")
-	found = 0
-	extract record (ope01_dev, key=firm_id$+trans_status$+ar_type$+cust_id$+order_no$+invoice_no$, dom=*next) ope01a$; found = 1; rem Advisory Locking
+	ope01_trip$=firm_id$+trans_status$+ar_type$+cust_id$+order_no$
+	read(ope01_dev, key=ope01_trip$, dom=*next)
+	ope01_key$=key(ope01_dev,end=*next)
+	if pos(ope01_trip$=ope01_key$)=1 then
+		found = 1
+		readrecord(ope01_dev,key=ope01_key$)ope01a$
+	else
+		found = 0
+	endif
 
 rem --- A new record must be the next sequence
 
