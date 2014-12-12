@@ -2010,8 +2010,8 @@ rem ==========================================================================
 
 				read record (opt11_dev, end=*break) opt11a$
 
-				if firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$ <>
-:					opt11a.firm_id$+opt11a.ar_type$+opt11a.customer_id$+opt11a.ar_inv_no$ 
+				if firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.order_no$+opt01a.ar_inv_no$ <>
+:					opt11a.firm_id$+opt11a.ar_type$+opt11a.customer_id$+opt11a.order_no$+opt11a.ar_inv_no$ 
 :				then 
 					break
 				endif
@@ -2097,7 +2097,6 @@ rem ==========================================================================
 				extractrecord(ope11_dev,key=ope11_key$,dom=*next,knum="PRIMARY")x$; rem Advisory Locking
 
 				ope11a$ = field(ope11a$)
-
 				write record (ope11_dev) ope11a$
 			wend
 			read(ope11_dev,knum="AO_STAT_CUST_ORD",dom=*next); rem --- reset key to OPE_ORDDET form's key
@@ -2144,7 +2143,6 @@ remove_lot_ser_det: rem --- Remove Lot/Serial Detail
                     rem          ord$     = order number
                     rem          invoice$ = invoice number
                     rem          ord_seq$ = internal seq number
-                    rem          trans_status$ = RTP transaction status
 rem ==========================================================================
 
 	inv_type$ = callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
@@ -2162,7 +2160,6 @@ rem ==========================================================================
 		if ord$<>ope21a.order_no$ then break
 		if invoice$<>ope21a.ar_inv_no$ then break
 		if ord_seq$<>ope21a.orddet_seq_ref$ then break
-rem		if trans_status$<>ope21a.trans_status$ then continue
 
 		if opc_linecode.dropship$<>"Y" and inv_type$<>"P" then 
 			wh_id$    = ope11a.warehouse_id$
