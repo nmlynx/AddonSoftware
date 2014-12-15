@@ -560,6 +560,9 @@ rem --- set number of lines to print
 				ope01a.print_status$="B"
 			endif
 
+            ope01a.mod_user$=sysinfo.user_id$
+            ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
+            ope01a.mod_time$=date(0:"%Hz%mz")
 			ope01a$=field(ope01a$)
 			write record (ordhdr_dev) ope01a$	
 
@@ -607,6 +610,9 @@ rem			callpoint!.setColumnData("REPRINT_FLAG","Y")
 
         ope01a.lock_status$="N";rem --- really?  If on-demand, I'll be returning to OE w/ order up... shouldn't it be locked?
 
+        ope01a.mod_user$=sysinfo.user_id$
+        ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
+        ope01a.mod_time$=date(0:"%Hz%mz")
 		ope01a$=field(ope01a$)
 		write record (ordhdr_dev) ope01a$
 
@@ -661,6 +667,9 @@ rem --- Clear Print Flags
 
 				if ope01a.print_status$<>"Y" then ope01a.print_status$="N"
 				if status <> 999 and type = on_demand ope01a.print_status$="Y"
+                ope01a.mod_user$=sysinfo.user_id$
+                ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
+                ope01a.mod_time$=date(0:"%Hz%mz")
 				ope01a$=field(ope01a$)
 				write record (ordhdr_dev) ope01a$
 			endif
@@ -1073,6 +1082,9 @@ valid_lines: rem --- Look for valid lines here
 
         if after$="YES" then 
             ope11a.pick_flag$ = "Y"
+            ope11a.mod_user$=sysinfo.user_id$
+            ope11a.mod_date$=date(0:"%Yd%Mz%Dz")
+            ope11a.mod_time$=date(0:"%Hz%mz")
             ope11a$ = field(ope11a$)
             write record (orddet_dev) ope11a$
         else
