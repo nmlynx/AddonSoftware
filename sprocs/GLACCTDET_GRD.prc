@@ -40,6 +40,7 @@ rem --- Get the IN parameters used by the procedure
 	firm_id$ = sp!.getParameter("FIRM_ID")
 	year$ = sp!.getParameter("YEAR")
 	period$ = sp!.getParameter("PERIOD")
+	period$ = cvs(period$,3)
 	
 	account$ = sp!.getParameter("ACCOUNT_ID")
 	if len(cvs(account$,3))<>10 then 
@@ -102,7 +103,11 @@ rem --- get data
 	if glt06a.firm_id$ <> firm_id$ then break
 	if glt06a.gl_account$ <> account$ then break
 	if glt06a.posting_year$ <> year$ then break
-	if glt06a.posting_per$ <> period$ then break
+	
+	rem ' check period if doing a period return vs an annual
+	if period$ <> "" then
+		if glt06a.posting_per$ <> period$ then break
+	endif
 	
 	data! = rs!.getEmptyRecordData()
 	data!.setFieldValue("DATE",fndate$(glt06a.trns_date$))

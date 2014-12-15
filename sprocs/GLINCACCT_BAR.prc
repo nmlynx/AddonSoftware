@@ -40,6 +40,7 @@ rem --- Get the IN parameters used by the procedure
 	firm_id$ = sp!.getParameter("FIRM_ID")
 	year$ = sp!.getParameter("YEAR")
 	period$ = sp!.getParameter("PERIOD")
+	period$=cvs(period$,3)
 	barista_wd$ = sp!.getParameter("BARISTA_WD")
 	masks$ = sp!.getParameter("MASKS")
 	gl_acct_mask$=fngetmask$("gl_acct_mask","000-000",masks$)
@@ -130,25 +131,40 @@ rem --- get data
 	            for j=0 to acctsVec!.size()-1
 	                    dim glm02a$:fattr(glm02a$)
 	                    readrecord(glm02a_dev,key=firm_id$+acctsVec!.getItem(j)+record_id$,dom=*next)glm02a$
-  			    switch num(period$)
-  			    	case 1; amount = glm02a.period_amt_01; break
-				case 2; amount = glm02a.period_amt_02; break
-				case 3; amount = glm02a.period_amt_03; break
-				case 4; amount = glm02a.period_amt_04; break
-				case 5; amount = glm02a.period_amt_05; break
-				case 6; amount = glm02a.period_amt_06; break
-				case 7; amount = glm02a.period_amt_07; break
-				case 8; amount = glm02a.period_amt_08; break
-				case 9; amount = glm02a.period_amt_09; break
-                       		case 10 amount = ;glm02a.period_amt_10; break
-                       		case 11; amount = glm02a.period_amt_11; break
-                       		case 12; amount = glm02a.period_amt_12; break
-                       		case 13; amount = glm02a.period_amt_13; break
-  				case default; amount = 0; break
-  			    swend
+	                    
+	                    rem ' either have a full year or a period
+	                    if period$ = "" then
+				amount = glm02a.period_amt_01 + glm02a.period_amt_02 + glm02a.period_amt_03
+				amount = amount + glm02a.period_amt_04 + glm02a.period_amt_05 + glm02a.period_amt_06
+				amount = amount + glm02a.period_amt_07 + glm02a.period_amt_08 + glm02a.period_amt_09
+				amount = amount + glm02a.period_amt_10 + glm02a.period_amt_11 + glm02a.period_amt_12
+				amount = amount + glm02a.period_amt_13
+			    else
+				    switch num(period$)
+					case 1; amount = glm02a.period_amt_01; break
+					case 2; amount = glm02a.period_amt_02; break
+					case 3; amount = glm02a.period_amt_03; break
+					case 4; amount = glm02a.period_amt_04; break
+					case 5; amount = glm02a.period_amt_05; break
+					case 6; amount = glm02a.period_amt_06; break
+					case 7; amount = glm02a.period_amt_07; break
+					case 8; amount = glm02a.period_amt_08; break
+					case 9; amount = glm02a.period_amt_09; break
+					case 10 amount = ;glm02a.period_amt_10; break
+					case 11; amount = glm02a.period_amt_11; break
+					case 12; amount = glm02a.period_amt_12; break
+					case 13; amount = glm02a.period_amt_13; break
+					case default; amount = 0; break
+				    swend
+			    endif
+			    
   			    if round((amount * -1)/1000,0) <> 0 then
 				data! = rs!.getEmptyRecordData()
-				data!.setFieldValue("YRPERIOD",year$ + "-" + period$)
+				if period$ = "" then 
+					data!.setFieldValue("YRPERIOD",year$)
+				else
+					data!.setFieldValue("YRPERIOD",year$ + "-" + period$)
+				endif
 				data!.setFieldValue("ACCOUNT",fnmask$(acctsVec!.getItem(j),gl_acct_mask$))
 				data!.setFieldValue("TOTAL",str(round((amount * -1)/1000,0)))
 				rs!.insert(data!)
