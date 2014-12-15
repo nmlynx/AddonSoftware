@@ -203,7 +203,10 @@ rem ==============================================
 rem		incCmpWidget!.setChartColors("#00a4d9","#7fbe27",1.0,1.0); rem Colors for By Period
 rem		incCmpWidget!.setChartColors("#3cb6df,#4aca75,#91bd5d"); rem supplying three explicit colors due to issue in legend vs chart if range is used (CAH)
 		incCmpWidget!.setLabelsInBarChartColor("#000000")
-		incCmpWidget!.setUserData("IncomeCompare")
+		
+		dim chartState$:"CHART_TYPE:C(25*),INCLUDE_TYPE:C(1*),YEAR:C(4*),PERIOD:C(2*)"
+		chartState.CHART_TYPE$="IncomeCompare", chartState.INCLUDE_TYPE$="A",chartState.YEAR$="", chartState.period$=""
+		incCmpWidget!.setUserData(chartState$)
 		incomeComparisonBarDashboardWidget!.setCallback(DashboardWidget.getON_WIDGET_CLICK(),pgm(-2) + "::OnIncCmpBarChartWidgetClick")
 		
 		rem Create Filters 
@@ -1004,14 +1007,18 @@ rem     The inner widget gives us access to the dataset so that we can provide n
 	include_type$=chr(asc(include_type$)+num(incCmpWidgetFilterCompareKey$));rem A,B,C,D,E,F
 	acct_type$="I"; rem "Income accounts only
 	do_coa_join$="N"; rem "Change to Y to JOIN w/Chart of Accts to filter by account grouping
-
+	
+	rem ' when changing filter values the chart reverts to the base chart
 	sql$="CALL GLCMPINC_BAR ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
+	dim chartState$:"CHART_TYPE:C(25*),INCLUDE_TYPE:C(1*),YEAR:C(4*),PERIOD:C(2*)"
+	chartState.CHART_TYPE$="IncomeCompare", chartState.INCLUDE_TYPE$ = include_type$,chartState.YEAR$ = ""; chartState.PERIOD$=""
 	
 	rem Clear out the old data from the inner widget
 	incCmpWidget!.clearDataSet()
 	
 	rem Refresh based on new sql
 	incCmpWidget!.setSQL(sql$)
+	incCmpWidget!.setUserData(chartState$)
     incCmpWidget!.refresh()
 	
 	exit
@@ -1150,15 +1157,20 @@ OnIncCmpBarChartWidgetClick:
     button = click!.getMouseButton()
     x = click!.getX()
     y = click!.getY()  
+
+    dim chartState$:"CHART_TYPE:C(25*),INCLUDE_TYPE:C(1*),YEAR:C(4*),PERIOD:C(2*)"
+    chartState$ = widget!.getUserData()
     
     rem Reset the widget back to the original query on a right click
     if (button = 3) then 
 	   rem --- params for calling SPROC
 	   gosub get_sysinfo
 	   gosub get_masks
-    	   include_type$="A", acct_type$="I", do_coa_join$="N"
+    	   acct_type$="I", do_coa_join$="N"
+    	   include_type$=chartState.INCLUDE_TYPE$, acct_type$="I", do_coa_join$="N"
 	   sql$="CALL GLCMPINC_BAR ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
-	   widget!.setUserData("IncomeCompare")
+	   chartState.CHART_TYPE$="IncomeCompare", chartState.INCLUDE_TYPE$=include_type$,chartState.YEAR$="", chartState.period$=""
+	   widget!.setUserData(chartState$)
 	   widget!.setSQL(sql$)
            widget!.refresh()
            exit
@@ -1175,13 +1187,13 @@ OnIncCmpBarChartWidgetClick:
     		colKey$ = dataItem!.getColKey()
 
 	        rem Figure out what query they are currently viewing
-                if widget!.getUserData() = "IncomeCompare" then
+	        if chartState.CHART_TYPE$ = "IncomeCompare" then
                 	
                 	gosub get_sysinfo
                 	gosub get_masks
 				
 			year$ = rowKey$
-			period$ = colKey$(1,2)
+			if len(colKey$) > 2 then period$ = colKey$(1,2) else period$ = ""
 			
 	                rem Build an SQL query to return the accounts totals for the selected year and period
 	                sql$ = "CALL GLINCACCT_BAR ('"+firm_id$+"', '"+year$+"', '"+period$+"', '"+masks$+"', '"+barista_wd$+"')"
@@ -1191,24 +1203,31 @@ OnIncCmpBarChartWidgetClick:
                 	rem ' widget!.setDomainLabelAngle(1)
                 	                	                
                 	rem Change the user data
-                	widget!.setUserData("IncomeAccountsYearPeriod")
+                	chartState.CHART_TYPE$="IncomeAccountsYearPeriod",chartState.YEAR$=year$,chartState.PERIOD$=period$
+                	widget!.setUserData(chartState$)
                 	
                 	rem Set the new query and refresh the chart
 			widget!.OnClearTip(null())
 			widget!.setSQL(sql$)
 			widget!.refresh() 
 		else
-	                if widget!.getUserData() = "IncomeAccountsYearPeriod" then
+	                if chartState.CHART_TYPE$ = "IncomeAccountsYearPeriod" then
 	                    rem We have information about the year, period, and account
 	                    rem rowKey = year and period
 	                    rem colKey = account
 	                    gosub get_sysinfo
 	                    gosub get_masks
+
 			    p=pos("-"=rowKey$)
+			    rem --- could an annul list or a list of a period
 			    if p then 
 			    	year$ = rowKey$(1,p-1)
 			    	period$ = rowKey$(p+1)
+			    else
+			    	year$ = rowKey$
+			    	period$ = ""
 			    endif
+
 			    account$ = colKey$
 			    while pos("-"=account$)
 			    	p = pos("-"=account$)
@@ -1221,7 +1240,6 @@ OnIncCmpBarChartWidgetClick:
                             connectString$ = widget!.getConnectString()
                             
                             sql$ = "CALL GLACCTDET_GRD ('"+firm_id$+"', '"+year$+"', '"+period$+"', '"+account$+"', '"+masks$+"', '"+barista_wd$+"')"
-                                                        
                             embeddedDBWidget! = EmbeddedWidgetFactory.createGridEmbeddedWidget(name$, title$, connectString$, sql$)
  	                    rem Set the grid's column widths
  	                    embeddedWidget! = embeddedDBWidget!.getWidget()
