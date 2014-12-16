@@ -1234,9 +1234,27 @@ OnIncCmpBarChartWidgetClick:
 			    	account$ = account$(1,p-1) + account$(p+1)
 			    wend
 			    
+			    rem --- get the account's description
+			    account_desc$=""
+			    files=1,begfile=1,endfile=files
+			    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+			    files$[1]="glm-01",ids$[1]="GLM_ACCT"
+			    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
+			    if !status then
+			        glm01a_dev=channels[1]
+			        dim glm01a$:templates$[1]
+		                read record(glm01a_dev,key=firm_id$ + account$,dom=*next)glm01a$
+		                read record(glm01a_dev,err=*next)glm01a$
+		                if glm01a.firm_id$ = firm_id$ and pos(account$=glm01a.gl_account$)=1 then account_desc$ = glm01a.gl_acct_desc$
+			    endif			    
+			    
 			    rem Create an embedded grid widget with the accounts detail for the period
 			    name$ = "Transaction"
-			    title$ = colKey$ + " Transactions"
+			    if cvs(account_desc$,3) = "" then
+				    title$ = colKey$ + " Transactions"
+			    else
+			            title$ = colKey$ + " " + cvs(account_desc$,3)
+			    endif
                             connectString$ = widget!.getConnectString()
                             
                             sql$ = "CALL GLACCTDET_GRD ('"+firm_id$+"', '"+year$+"', '"+period$+"', '"+account$+"', '"+masks$+"', '"+barista_wd$+"')"
