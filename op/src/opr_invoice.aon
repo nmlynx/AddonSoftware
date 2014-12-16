@@ -95,8 +95,13 @@ rem --- Check to see if record is in use in Invoice Entry
 
         if start_block then
             bad_record = 1
-            extract record (ope01_dev, key=firm_id$+"  "+ope04a.customer_id$+ope04a.order_no$, dom=*endif) ope01a$
-            bad_record = 0
+            ope01_trip$=firm_id$+"E"+"  "+ope04a.customer_id$+ope04a.order_no$
+            read(ope01_dev,key=ope01_trip$,knum="AO_STATUS",dom=*next)
+            ope01_key$=key(ope01_dev,end=*endif)
+            if pos(ope01_trip$=ope01_key$)=1 then
+                extract record (ope01_dev, key=ope01_key$, dom=*endif) ope01a$
+                bad_record = 0
+            endif
         endif
 
         if bad_record then
@@ -110,6 +115,9 @@ rem --- Check to see if record is in use in Invoice Entry
             if ope01a.print_status$ = "Y" then continue
             if ope01a.print_status$<>"B" and ope01a.lock_status$="Y" then continue
             ope01a.lock_status$ = "Y"
+            ope01a.mod_user$=sysinfo.user_id$
+            ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
+            ope01a.mod_time$=date(0:"%Hz%mz")
             ope01a$ = field(ope01a$)
             write record (ope01_dev) ope01a$
         else

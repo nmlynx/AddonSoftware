@@ -26,7 +26,6 @@ rem -----------------------------------
 
 rem ----------------------------------------------------------------------------
 
-
 on_demand: rem --- Entry point for on-denamd invoices    
 
     setesc std_error
@@ -343,7 +342,11 @@ rem --- Main Read
         cust_id$ = str( custIds!.getItem(next_item) )
         order_no$ = str( orderNos!.getItem(next_item) )
 
-        extract record (ope01_dev, key=firm_id$+"  "+cust_id$+order_no$, dom=*continue) ope01a$; rem Advisory Locking
+        ope01_trip$=firm_id$+"E"+"  "+cust_id$+order_no$
+        read(ope01_dev,key=ope01_trip$,knum="AO_STATUS",dom=*next)
+        ope01_key$=key(ope01_dev,end=*continue)
+        if pos(ope01_trip$=ope01_key$)<>1 then continue
+        extract record (ope01_dev, key=ope01_key$, dom=*continue) ope01a$; rem Advisory Locking
 
 	rem --- Is invoice Void?
 		if ope01a.invoice_type$ = "V" 
@@ -359,6 +362,9 @@ rem --- Main Read
         
         if type = batch_inv then
             ope01a.print_status$ = "B"
+            ope01a.mod_user$=sysinfo.user_id$
+            ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
+            ope01a.mod_time$=date(0:"%Hz%mz")
             ope01a$ = field(ope01a$)
             write record (ope01_dev) ope01a$
         endif
@@ -413,6 +419,7 @@ rem --- Main Read
 		params!.put("AR_TYPE",ope01a.ar_type$)
 		params!.put("CUSTOMER_ID",ope01a.customer_id$)
 		params!.put("ORDER_NO",ope01a.order_no$)
+        params!.put("AR_INV_NO",ope01a.ar_inv_no$)
 		params!.put("QTY_MASK",qty_mask$)
 		params!.put("QTY_MASK_PATTERN",qty_mask_pattern$)
 		params!.put("PRICE_MASK",price_mask$)
@@ -610,8 +617,13 @@ close_win:rem --- Viewer closed - do post-processing for batch vs single
             if status = 999 then exitto all_done
 
             if start_block then
-                extract record (ope01_dev,key=firm_id$+"  "+ope04a.customer_id$+ope04a.order_no$, dom=*endif) ope01a$
-                if ope01a.print_status$="B" then gosub order_update
+                ope01_trip$=firm_id$+"E"+"  "+ope04a.customer_id$+ope04a.order_no$
+                read(ope01_dev,key=ope01_trip$,knum="AO_STATUS",dom=*next)
+                ope01_key$=key(ope01_dev,end=*continue)
+                if pos(ope01_trip$=ope01_key$)=1 then
+                    extract record (ope01_dev,key=ope01_key$, dom=*endif) ope01a$
+                    if ope01a.print_status$="B" then gosub order_update
+                endif
             endif
         wend
 	else 
@@ -622,14 +634,14 @@ close_win:rem --- Viewer closed - do post-processing for batch vs single
     endif 
 
     if type = historical then
-        read (ope01_dev, key=firm_id$+"  "+ope01a.customer_id$, dom=*next)
+        rem read (ope01_dev, key=firm_id$+"  "+ope01a.customer_id$, dom=*next)
         read record (arm01_dev,key=firm_id$+ope01a.customer_id$) arm01a1$
         read record (arm02_dev,key=firm_id$+ope01a.customer_id$+"  ") arm02a$
     endif    
 
 all_done: rem --- Exit
 
-    read(ope01_dev,end=*next); rem release extract
+    read(ope01_dev,knum="AO_STATUS",end=*next); rem release extract, and reset knum in case on-demand printing
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     
@@ -643,6 +655,9 @@ order_update: rem --- Update order's status
 
     ope01a.print_status$ = "Y"
     ope01a.lock_status$  = "N"
+    ope01a.mod_user$=sysinfo.user_id$
+    ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
+    ope01a.mod_time$=date(0:"%Hz%mz")
     ope01a$ = field(ope01a$)
     write record (ope01_dev) ope01a$
     if type = on_demand then callpoint!.setStatus("SETORIG")
