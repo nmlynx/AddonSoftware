@@ -725,6 +725,7 @@ rem --- Is this item lot/serial?
 		ar_type$ = callpoint!.getColumnData("OPE_INVDET.AR_TYPE")
 		cust$    = callpoint!.getColumnData("OPE_INVDET.CUSTOMER_ID")
 		order$   = callpoint!.getColumnData("OPE_INVDET.ORDER_NO")
+		invoice$=callpoint!.getColumnData("OPE_INVDET.AR_INV_NO")
 		int_seq$ = callpoint!.getColumnData("OPE_INVDET.INTERNAL_SEQ_NO")
 
 		if cvs(cust$,2) <> ""
@@ -745,16 +746,20 @@ rem --- Is this item lot/serial?
 
 			grid!.focus()
 
-			dim dflt_data$[4,1]
+			dim dflt_data$[6,1]
 			dflt_data$[1,0] = "AR_TYPE"
 			dflt_data$[1,1] = ar_type$
-			dflt_data$[2,0] = "CUSTOMER_ID"
-			dflt_data$[2,1] = cust$
-			dflt_data$[3,0] = "ORDER_NO"
-			dflt_data$[3,1] = order$
-			dflt_data$[4,0]="INVDET_SEQ_REF"
-			dflt_data$[4,1]=int_seq$
-			lot_pfx$ = firm_id$+ar_type$+cust$+order$+int_seq$
+			dflt_data$[2,0] = "TRANS_STATUS"
+			dflt_data$[2,1] = "E"
+			dflt_data$[3,0] = "CUSTOMER_ID"
+			dflt_data$[3,1] = cust$
+			dflt_data$[4,0] = "ORDER_NO"
+			dflt_data$[4,1] = order$
+			dflt_data$[5,0] = "AR_INV_NO"
+			dflt_data$[5,1] = invoice$
+			dflt_data$[6,0] = "ORDDET_SEQ_REF"
+			dflt_data$[6,1] = int_seq$
+			lot_pfx$ = firm_id$+"E"+ar_type$+cust$+order$+invoice$+int_seq$
 
 			call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :				"OPE_ORDLSDET", 
