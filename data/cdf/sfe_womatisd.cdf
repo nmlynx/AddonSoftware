@@ -25,11 +25,12 @@ rem --- Adjust committed if issue qty exceeds ordered qty
 rem --- (For new records qty_ordered=qty_issued and tot_qty_iss=0)
 	if qty_issued+tot_qty_iss>qty_ordered then
 
-rem --- Do not commit unless quantity issued has changed, or quantity issued exeeds quantity ordered
+rem --- Do not commit unless quantity issued has changed, or quantity issued exceeds quantity ordered
 	sfe_womatisd_dev=fnget_dev("SFE_WOMATISD")
 	dim sfe_womatisd$:fnget_tpl$("SFE_WOMATISD")
 	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
-	sfe_womatisd_key$=firm_loc_wo$+callpoint!.getColumnData("SFE_WOMATISD.MATERIAL_SEQ")
+	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
+	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.MATERIAL_SEQ")
 	readrecord(sfe_womatisd_dev,key=sfe_womatisd_key$,knum="AO_DISP_SEQ",dom=*next)sfe_womatisd$
 	start_qty_issued=sfe_womatisd.qty_issued
 	if qty_issued=start_qty_issued and qty_issued+tot_qty_iss<=qty_ordered then
@@ -194,7 +195,8 @@ rem --- Has record been written yet?
 	sfe_womatisd_dev=fnget_dev("SFE_WOMATISD")
 	dim sfe_womatisd$:fnget_tpl$("SFE_WOMATISD")
 	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
-	sfe_womatisd_key$=firm_loc_wo$+callpoint!.getColumnData("SFE_WOMATISD.MATERIAL_SEQ")
+	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
+	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.MATERIAL_SEQ")
 	found=0
 	readrecord(sfe_womatisd_dev,key=sfe_womatisd_key$,knum="AO_DISP_SEQ",dom=*next)sfe_womatisd$; found=1
 	if !found then
@@ -290,7 +292,8 @@ rem --- Was record written?
 	sfe_womatisd_dev=fnget_dev("SFE_WOMATISD")
 	dim sfe_womatisd$:fnget_tpl$("SFE_WOMATISD")
 	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
-	sfe_womatisd_key$=firm_loc_wo$+callpoint!.getColumnData("SFE_WOMATISD.MATERIAL_SEQ")
+	sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
+	sfe_womatisd_key$=sfe_womatish_key$+callpoint!.getColumnData("SFE_WOMATISD.MATERIAL_SEQ")
 	found=0
 	readrecord(sfe_womatisd_dev,key=sfe_womatisd_key$,knum="AO_DISP_SEQ",dom=*next)sfe_womatisd$; found=1
 	if !found then
@@ -447,7 +450,6 @@ rem --- Enable lot/serial button
 
 rem --- Set precision
 	precision num(callpoint!.getDevObject("precision"))
-
 [[SFE_WOMATISD.ITEM_ID.AINV]]
 rem --- Item synonym processing
 	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::grid_entry"
