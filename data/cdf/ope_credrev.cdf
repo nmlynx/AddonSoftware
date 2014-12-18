@@ -319,7 +319,7 @@ rem ==========================================================================
 			read record (ope01_dev) ope01a$
 			if pos(ope01a.trans_status$="ER")=0 then continue
 			found_ope01_rec=1
-			break
+			break; rem --- new order can have at most just one new invoice, if any
 		wend
 		if !found_ope01_rec then continue
 

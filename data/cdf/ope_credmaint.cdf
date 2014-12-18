@@ -59,7 +59,7 @@ rem --- Delete the order
 		extractrecord(ope01_dev,dom=*next)ope01a$; rem Advisory Locking
 		if pos(ope01a.trans_status$="ER")=0 then continue
 		found_ope01_rec=1
-		break
+		break; rem --- new order can have at most just one new invoice, if any
 	wend
 	if !found_ope01_rec or ope01a.invoice_type$="I" then read(ope01_dev); goto no_delete
 
@@ -209,7 +209,7 @@ rem --- Release an Order from Credit Hold
 		ope01a.terms_code$=callpoint!.getDevObject("terms")
 		readrecord(arc_terms_dev,key=firm_id$+"A"+ope01a.terms_code$,dom=*next);goto good_code
 		read(ope01_dev)
-		break
+		break; rem --- new order can have at most just one new invoice, if any
 
 good_code:
 		ope01a.credit_flag$="R"

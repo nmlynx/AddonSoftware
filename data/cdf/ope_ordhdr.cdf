@@ -935,7 +935,7 @@ rem --- remove Comments record if no invoice history found
 	while 1
 		read (opt01_dev,key=opt01_key$,knum="AO_STATUS",dom=*break)
 		found_inv=1
-		break
+		break; rem --- new order can have at most just one new invoice, if any
 	wend
 
 	if found_inv=0

@@ -787,7 +787,7 @@ dropship_shipto: rem --- get and display shipto from Sales Order if dropship ind
 		ope_ordhdr_key$=key(ope_ordhdr_dev,end=*break)
 		if pos(firm_id$+ope_ordhdr.ar_type$+tmp_customer_id$+tmp_order_no$=ope_ordhdr_key$)<>1 then break
 		read record (ope_ordhdr_dev)ope_ordhdr$
-		if pos(ope_ordhdr.trans_status$="ER") then break
+		if pos(ope_ordhdr.trans_status$="ER") then break; rem --- new order can have at most just one new invoice, if any
 	wend
 	shipto_no$=ope_ordhdr.shipto_no$
 	callpoint!.setColumnData("POE_POHDR.SHIPTO_NO",shipto_no$,1)
@@ -856,7 +856,7 @@ rem --- read thru selected sales order and build list of lines for which line co
 		read record (ope_ordhdr_dev)ope_ordhdr$
 		if pos(ope_ordhdr.trans_status="ER")=0 then continue
 		found_ope_ordhdr=1
-		break
+		break; rem --- new order can have at most just one new invoice, if any
 	wend
 	if !found_ope_ordhdr then return
 

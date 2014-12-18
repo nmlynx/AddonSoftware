@@ -865,7 +865,7 @@ rem --- Validate Open Sales Order
 			readrecord(ope_ordhdr)ope_ordhdr$
 			if pos(ope_ordhdr.trans_status$="ER")=0 then continue
 			found_ord$="Y"
-			break
+			break; rem --- new order can have at most just one new invoice, if any
 		wend
 
 		if found_ord$="N"
@@ -1238,7 +1238,7 @@ rem --- Build Sequence list button
 			readrecord(ope_ordhdr)ope_ordhdr$
 			if pos(ope_ordhdr.trans_status$="ER")=0 then continue
 			found_ord$="Y"
-			break
+			break; rem --- new order can have at most just one new invoice, if any
 		wend
 
 		if found_ord$="Y"

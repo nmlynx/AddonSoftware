@@ -150,7 +150,7 @@ rem --- get data
             if pos(ope01a.trans_status$="ER")=0 then continue
             if ope01a.ordinv_flag$<>"O" then continue; rem --- Exclude invoices
             found_ope01a_rec=1
-            break
+            break; rem --- new order can have at most just one new invoice, if any
         wend
         if !found_ope01a_rec then continue
 

@@ -89,7 +89,7 @@ rem --- Initialize Data
         readrecord(ope01_dev)ope01a$
         if pos(ope01a.trans_status$="ER") then
             found=1
-            break
+            break; rem --- new order can have at most just one new invoice, if any
         endif
     wend
     read(ope01_dev,knum="AO_STATUS"); rem --- reset knum for ope_invhdr and ope_ordhdr
