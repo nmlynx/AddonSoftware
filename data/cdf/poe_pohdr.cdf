@@ -854,7 +854,7 @@ rem --- read thru selected sales order and build list of lines for which line co
 		ope_ordhdr_key$=key(ope_ordhdr_dev,end=*break)
 		if pos(firm_id$+ope_ordhdr.ar_type$+tmp_customer_id$+tmp_order_no$=ope_ordhdr_key$)<>1 then break
 		read record (ope_ordhdr_dev)ope_ordhdr$
-		if pos(ope_ordhdr.trans_status="ER")=0 then continue
+		if pos(ope_ordhdr.trans_status$="ER")=0 then continue
 		found_ope_ordhdr=1
 		break; rem --- new order can have at most just one new invoice, if any
 	wend
