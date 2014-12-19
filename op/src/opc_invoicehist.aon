@@ -236,7 +236,8 @@ rem --- Initial Read
     call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",len(m0$)+8,opt01_dev,1,0,status
     if status = 999 then goto std_exit
 
-    read record (opt01_dev, key=firm_id$+"  "+cust_id$+invoice_no$, dom=display) opt01a$
+    read record (opt01_dev, key=firm_id$+"  "+cust_id$+invoice_no$, knum="AO_CUST_INV", dom=display) opt01a$
+    if opt01a.trans_status$<>"U" then goto display
 
 rem --- Main Read (no loop, mostly for the breaks)
 
@@ -247,8 +248,10 @@ rem --- Main Read (no loop, mostly for the breaks)
             arm10c.trans_type$ = "C"
 
             if opt41_dev then
-                find record (opt41_dev, key=firm_id$+"  "+opt01a.customer_id$+opt01a.ar_inv_no$, dom=*endif, err=*endif) opt41a$; rem z0$, z1$
-                find record (arm10c_dev, key=firm_id$+"C"+opt41a.cash_rec_cd$, dom=*next) arm10c$; rem y7$, y9$
+                find record (opt41_dev, key=firm_id$+"  "+opt01a.customer_id$+opt01a.ar_inv_no$, knum="AO_CUST_INV", dom=*endif, err=*endif) opt41a$; rem z0$, z1$
+                if opt41a.trans_status$="U" then
+                    find record (arm10c_dev, key=firm_id$+"C"+opt41a.cash_rec_cd$, dom=*next) arm10c$; rem y7$, y9$
+                endif
             endif
         endif
 
@@ -309,11 +312,11 @@ rem --- Main Read (no loop, mostly for the breaks)
             shipto$ = ""
 
             if start_block then
-                find record (opt31_dev, key=firm_id$+opt01a.customer_id$+opt01a.ar_inv_no$, dom=*endif) opt31!
-                c$ = func.formatAddress(opt31!, address, 6)
+                find record (opt31_dev, key=firm_id$+opt01a.customer_id$+opt01a.ar_inv_no$, knum="AO_CUST_INV", dom=*endif) opt31!
+                if opt31!.getFieldAsString("TRANS_STATUS")="U" then
+                    c$ = func.formatAddress(opt31!, address, 6)
+                endif
             endif
-            
-            read (opt01_dev, key=firm_id$+"  "+opt01a.customer_id$+opt01a.ar_inv_no$, dom=*next)
         else
             if opt01a.shipto_type$ = "S" then
                 shipto$ = ""
@@ -354,7 +357,7 @@ rem --- Main Read (no loop, mostly for the breaks)
         gosub report_heading
         total_sale=0
 
-        read (opt11_dev, key=firm_id$+"  "+opt01a.customer_id$+opt01a.ar_inv_no$, dom=*next)
+        read (opt11_dev, key=firm_id$+"  "+opt01a.customer_id$+opt01a.ar_inv_no$, knum="AO_CUST_INV_LINE", dom=*next)
 
     rem --- Detail lines
 
@@ -364,6 +367,7 @@ rem --- Main Read (no loop, mostly for the breaks)
             if opt01a.firm_id$     <> opt11a.firm_id$     then break
             if opt01a.customer_id$ <> opt11a.customer_id$ then break
             if opt01a.ar_inv_no$    <> opt11a.ar_inv_no$    then break
+            if opt01a.trans_status$<>"U" then continue
 
         rem --- Type
 
@@ -407,14 +411,15 @@ rem --- Main Read (no loop, mostly for the breaks)
                 total_ls = 0
                 line = orig_line
 
-                read (opt21_dev, key=firm_id$+"  "+opt11a.customer_id$+opt11a.ar_inv_no$+opt11a.orddet_seq_ref$, dom=*next)
+                read (opt21_dev, key=firm_id$+"  "+opt11a.customer_id$+opt11a.ar_inv_no$+opt11a.internal_seq_no$, knum="AO_CUST_INV_LINE", dom=*next)
 
                 while 1
                     read record (opt21_dev, end=*break) opt21a$; rem t0$, t1$, t[all]
                     if firm_id$                <> opt21a.firm_id$        then break
                     if opt11a.customer_id$     <> opt21a.customer_id$    then break
                     if opt11a.ar_inv_no$        <> opt21a.ar_inv_no$       then break
-                    if opt11a.orddet_seq_ref$ <> opt21a.orddet_seq_ref$ then break
+                    if opt11a.internal_seq_no$ <> opt21a.orddet_seq_ref$ then break
+                    if opt11a.trans_status$<>"U" then continue
 
                     if opt21a.qty_ordered then
                         gosub print_lotser_no
@@ -467,6 +472,13 @@ all_done: rem --- Exit
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     if status = 999 then goto std_exit
+
+    rem --- Reset knum and file pointer
+    read(opt01_dev,KEY=firm_id$+"U"+"  "+cust_id$+invoice_no$,knum="AO_STAT_CUST_INV",dom=*next)
+    read(opt11_dev,knum="AO_STAT_CUST_INV",end=*next)
+    read(opt21_dev,knum="AO_STAT_CUST_INV",end=*next)
+    read(opt31_dev,knum="PRIMARY",end=*next)
+    read(opt41_dev,knum="PRIMARY",end=*next)
 
     goto std_exit
 
