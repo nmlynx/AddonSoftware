@@ -396,7 +396,12 @@ rem --- Display Ship to information
 
 rem --- Display invoice total
 
-	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT", callpoint!.getColumnData("OPT_INVHDR.TOTAL_SALES"))
+	net_sales=num(callpoint!.getColumnData("OPT_INVHDR.TOTAL_SALES"))-
+:			  num(callpoint!.getColumnData("OPT_INVHDR.DISCOUNT_AMT"))+
+:			  num(callpoint!.getColumnData("OPT_INVHDR.TAX_AMOUNT"))+
+:			  num(callpoint!.getColumnData("OPT_INVHDR.FREIGHT_AMT"))
+
+	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str(net_sales),1)
 [[OPT_INVHDR.AOPT-PRNT]]
 rem --- Print a counter Invoice
 
