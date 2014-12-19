@@ -8,8 +8,6 @@ rem --- SALES_CUSTOMER
 rem --- SALES_CUST_TYPE
 rem --- SALES_CUST_TYPE_CUST
 rem --- SALES_INVOICE_DETAILS
-rem --- INVOICE_DETAIL
-rem --- INVOICE_HEADER
 rem --- PICKLST_DETAIL
 rem --- PICKLST_HEADER
 rem --- BOMCOSTING
@@ -164,14 +162,6 @@ rem --- first drop all std Addon SPROCs
     gosub create_sproc_def
 	
 	sproc_vw_name$="SALES_INVOICE_DETAILS"
-    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
-    gosub create_sproc_def
-	
-	sproc_vw_name$="INVOICE_DETAIL"
-    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
-    gosub create_sproc_def
-	
-	sproc_vw_name$="INVOICE_HEADER"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
 	
@@ -379,24 +369,6 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"'"+sproc_path$+"SALES_INVOICE_DETAILS.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'Invoice Details'"
-
-    gosub create_sproc_def
-
-    sproc_vw_name$="INVOICE_DETAIL"
-	sqlprep$="CREATE PROCEDURE INVOICE_DETAIL "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN )"
-    sqlprep$=sqlprep$+"'"+sproc_path$+"INVOICE_DETAIL.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Invoice Detail'"
-
-    gosub create_sproc_def
-
-    sproc_vw_name$="INVOICE_HEADER"
-	sqlprep$="CREATE PROCEDURE INVOICE_HEADER "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN )"
-    sqlprep$=sqlprep$+"'"+sproc_path$+"INVOICE_HEADER.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} ' Invoice Header'"
 
     gosub create_sproc_def
 
