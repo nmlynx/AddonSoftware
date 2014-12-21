@@ -162,7 +162,7 @@ rem --- Read next Invoice Header (are-05) record
         new_doc_id$=""
         new_doc_name$=""
         doc_name$=reportBaseName$+"_"+are05.customer_id$
-        doc_keywords$="Invoice generated: "+fndate$(are05.inv_date$)
+        doc_keywords$="AR Invoice: "+are05.ar_inv_no$+", generated: "+fndate$(are05.inv_date$)
 
         rem --- Get Next Document Number and update Document Audit for individual pdf
 
@@ -176,7 +176,7 @@ rem --- Read next Invoice Header (are-05) record
 
         if master_document
             rd_doc_ext$="JAS"
-            rd_archive_action$="DOC_ID-NOREPRINT"
+            rd_archive_action$="DOC_ID"
             rd_doc_id$=""
             gosub document_whse
             rd_archive_action$=""
@@ -256,7 +256,7 @@ rem --- done
 
 rem --- export the master doc as PDF
 
-    repTitle$=masterBaseName$
+    repTitle$=master_doc_id$+"_"+masterBaseName$
     rd_doc_id$=master_doc_id$
     
     rem --- bring up master statement document in jasper viewer  

@@ -4,12 +4,10 @@ rem --- Program: OP_HIST_INVOICE_DET.prc
 rem --- Description: Stored Procedure to create detail for a jasper-based OP invoice 
  
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
-rem --- All Rights Reserved
 
-rem --- 9/2014-----------------------
-rem --- Based on OP_INVOICE_DET.prc, but uses historical (opt) files
+rem --- 12/2014-----------------------
+rem --- Based on OP_INVOICE.prc, but uses "U" trans_status
 rem --- used to print historical invoice from Invoice History Inquiry form
-rem --- may become the 'only' print program once RTP is done
 
 rem --- There are three sprocs and three .jaspers for this enhancement:
 rem ---    - OP_HIST_INVOICE_HDR.prc / OPHistInvoiceHdr.jasper
@@ -37,7 +35,8 @@ rem --- Get 'IN' SPROC parameters
 	firm_id$ =     sp!.getParameter("FIRM_ID")
 	ar_type$ =     sp!.getParameter("AR_TYPE")
 	customer_id$ = sp!.getParameter("CUSTOMER_ID")
-	ar_inv_no$ =    sp!.getParameter("AR_INV_NO")
+	order_no$ =    sp!.getParameter("ORDER_NO")
+	ar_inv_no$ =   sp!.getParameter("AR_INV_NO")
 	qty_mask$ =    sp!.getParameter("QTY_MASK")
 	amt_mask$ =    sp!.getParameter("AMT_MASK")
 	price_mask$ =  sp!.getParameter("PRICE_MASK")
@@ -51,9 +50,8 @@ rem --- create the in memory recordset for return
 	dataTemplate$ = dataTemplate$ + "order_qty_masked:c(1*), ship_qty_masked:c(1*), backord_qty_masked:c(1*), "
 	dataTemplate$ = dataTemplate$ + "item_id:c(1*), item_desc:c(1*), um:c(1*), "
 	dataTemplate$ = dataTemplate$ + "price_raw:c(1*), price_masked:c(1*), "
-	dataTemplate$ = dataTemplate$ + "extended_raw:c(1*), extended_masked:c(1*), orddet_seq_ref:c(1*), "
+	dataTemplate$ = dataTemplate$ + "extended_raw:c(1*), extended_masked:c(1*), internal_seq_no:c(1*), "
 	dataTemplate$ = dataTemplate$ + "item_is_ls:c(1), linetype_allows_ls:c(1),ship_qty:c(1*)"
-
 
 	rs! = BBJAPI().createMemoryRecordSet(dataTemplate$)
 	
@@ -66,7 +64,7 @@ rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]    
 
     files$[1]="ivm-01",      ids$[1]="IVM_ITEMMAST"
-    files$[2]="opt-11",      ids$[2]="OPT_INVDET"
+    files$[2]="opt-11",      ids$[2]="OPE_INVDET"
     files$[3]="opm-02",      ids$[3]="OPC_LINECODE"
 
 	call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
@@ -80,16 +78,16 @@ rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
 	files_opened = files; rem used in loop to close files
 
     ivm01_dev   = channels[1]
-    opt11_dev   = channels[2]
+    ope11_dev   = channels[2]
     opm02_dev   = channels[3]
     
     dim ivm01a$:templates$[1]
-    dim opt11a$:templates$[2]
+    dim ope11a$:templates$[2]
     dim opm02a$:templates$[3]
 	
 rem --- Main
 
-    read (opt11_dev, key=firm_id$+ar_type$+customer_id$+ar_inv_no$, dom=*next)
+    read (ope11_dev, key=firm_id$+"U"+ar_type$+customer_id$+order_no$+ar_inv_no$, knum="AO_STAT_CUST_ORD", dom=*next)
 	
     rem --- Detail lines
 
@@ -107,19 +105,20 @@ rem --- Main
 			price_masked$ =       ""
 			ext_raw$ =            ""
 			ext_masked$ =         ""
-			orddet_seq_ref$ =    ""
+			internal_seq_no$ =    ""
+
 			linetype_allows_ls$ = "N"
 			item_is_ls$ =         "N"	
 			
-            read record (opt11_dev, end=*break) opt11a$
+            read record (ope11_dev, end=*break) ope11a$
 
-            if firm_id$     <> opt11a.firm_id$     then break
-			if ar_type$     <> opt11a.ar_type$     then break
-            if customer_id$ <> opt11a.customer_id$ then break
-            if ar_inv_no$    <> opt11a.ar_inv_no$    then break
+            if firm_id$     <> ope11a.firm_id$     then break
+			if ar_type$     <> ope11a.ar_type$     then break
+            if customer_id$ <> ope11a.customer_id$ then break
+            if order_no$    <> ope11a.order_no$    then break
+            if ar_inv_no$    <> ope11a.ar_inv_no$    then break
+			internal_seq_no$ = ope11a.internal_seq_no$
 
-			orddet_seq_ref$ = opt11a.orddet_seq_ref$
-			
         rem --- Type
 		
             dim opm02a$:fattr(opm02a$)
@@ -128,13 +127,13 @@ rem --- Main
             start_block = 1
 			
             if start_block then
-                find record (opm02_dev, key=firm_id$+opt11a.line_code$, dom=*endif) opm02a$
-                ivm01a.item_desc$ = opt11a.item_id$
+                find record (opm02_dev, key=firm_id$+ope11a.line_code$, dom=*endif) opm02a$
+                ivm01a.item_desc$ = ope11a.item_id$
             endif
 
             if pos(opm02a.line_type$=" SP") then
 				linetype_allows_ls$ = "Y"
-                find record (ivm01_dev, key=firm_id$+opt11a.item_id$, dom=*next) ivm01a$
+                find record (ivm01_dev, key=firm_id$+ope11a.item_id$, dom=*next) ivm01a$
                 item_description$ = func.displayDesc(ivm01a.item_desc$)
 				item_is_ls$ = ivm01a.lotser_item$
 			endif
@@ -144,28 +143,28 @@ rem --- Main
 line_detail: rem --- Item Detail
 
 			if pos(opm02a.line_type$="MO")=0 then
-				order_qty_masked$= str(opt11a.qty_ordered:qty_mask$)
-				ship_qty_masked$= str(opt11a.qty_shipped:qty_mask$)
-				ship_qty$= str(opt11a.qty_shipped)
-				backord_qty_masked$= str(opt11a.qty_backord:qty_mask$)
+				order_qty_masked$= str(ope11a.qty_ordered:qty_mask$)
+				ship_qty_masked$= str(ope11a.qty_shipped:qty_mask$)
+				ship_qty$= str(ope11a.qty_shipped)
+				backord_qty_masked$= str(ope11a.qty_backord:qty_mask$)
 			endif
 
 			if pos(opm02a.line_type$="MNO") then
-				item_id$= opt11a.order_memo$
+				item_id$= ope11a.order_memo$
 			endif
 
 			if pos(opm02a.line_type$=" SRDP") then 
-				item_id$= opt11a.item_id$
+				item_id$= ope11a.item_id$
 			endif
 
 			if pos(opm02a.line_type$=" SRDNP") then 
-				price_raw$=   str(opt11a.unit_price)
-				price_masked$=str(opt11a.unit_price:price_mask$)
+				price_raw$=   str(ope11a.unit_price)
+				price_masked$=str(ope11a.unit_price:price_mask$)
 			endif
 
 			if opm02a.line_type$<>"M" then 
-				ext_raw$=   str(opt11a.ext_price)
-				ext_masked$=str(opt11a.ext_price:ext_mask$)
+				ext_raw$=   str(ope11a.ext_price)
+				ext_masked$=str(ope11a.ext_price:ext_mask$)
 			endif
 
 			if opm02a.line_type$="S" then 
@@ -188,7 +187,7 @@ line_detail: rem --- Item Detail
 			data!.setFieldValue("PRICE_MASKED", price_masked$)
 			data!.setFieldValue("EXTENDED_RAW", ext_raw$)
 			data!.setFieldValue("EXTENDED_MASKED", ext_masked$)
-			data!.setFieldValue("ORDDET_SEQ_REF",orddet_seq_ref$)
+			data!.setFieldValue("INTERNAL_SEQ_NO",internal_seq_no$)
 			data!.setFieldValue("ITEM_IS_LS",item_is_ls$)
 			data!.setFieldValue("LINETYPE_ALLOWS_LS",linetype_allows_ls$)
 
@@ -203,7 +202,6 @@ rem --- Tell the stored procedure to return the result set.
 	sp!.setRecordSet(rs!)
 
 	goto std_exit
-
 	
 sproc_error:rem --- SPROC error trap/handler
     rd_err_text$="", err_num=err

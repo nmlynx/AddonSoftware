@@ -1,15 +1,13 @@
 rem ----------------------------------------------------------------------------
 rem --- OP Invoice Printing
 rem --- Program: OP_HIST_INVOICE_DET_LOTSER.prc
-rem --- Description: Stored Procedure to create Lot/Serial detail for a jasper-based OP invoice 
+rem --- Description: Stored Procedure to create detail for a jasper-based OP invoice 
  
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
-rem --- All Rights Reserved
 
-rem --- 9/2014-----------------------
-rem --- Based on OP_INVOICE_DET_LOTSER.prc, but uses historical (opt) files
+rem --- 12/2014-----------------------
+rem --- Based on OP_INVOICE.prc, but uses "U" trans_status
 rem --- used to print historical invoice from Invoice History Inquiry form
-rem --- may become the 'only' print program once RTP is done
 
 rem --- There are three sprocs and three .jaspers for this enhancement:
 rem ---    - OP_HIST_INVOICE_HDR.prc / OPHistInvoiceHdr.jasper
@@ -33,14 +31,14 @@ rem --- Get the infomation object for the Stored Procedure
 
 	sp! = BBjAPI().getFileSystem().getStoredProcedureData()
 
-
 rem --- Get 'IN' SPROC parameters 
 	firm_id$ =               sp!.getParameter("FIRM_ID")
 	ar_type$ =               sp!.getParameter("AR_TYPE")
 	customer_id$ =           sp!.getParameter("CUSTOMER_ID")
+	order_no$ =              sp!.getParameter("ORDER_NO")
 	ar_inv_no$ =             sp!.getParameter("AR_INV_NO")
-	opt11_orddet_seq_ref$ =  sp!.getParameter("ORDDET_SEQ_REF")
-	opt11_qty_shipped =  num(sp!.getParameter("OPT11_QTY_SHIPPED")); rem To conditionally print writein lines for missing Lot/Serial shipped qtys
+	ope11_internal_seq_no$ = sp!.getParameter("INTERNAL_SEQ_NO")
+	ope11_qty_shipped =  num(sp!.getParameter("OPE11_QTY_SHIPPED")); rem To conditionally print writein lines for missing Lot/Serial shipped qtys
 	qty_mask$ =              sp!.getParameter("QTY_MASK")
 	lotser_flag$ =           sp!.getParameter("IVS_LOTSER_FLAG")
 	barista_wd$ =            sp!.getParameter("BARISTA_WD")
@@ -100,7 +98,7 @@ rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
     files=1,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]    
 
-    files$[1]="opt-21",      ids$[1]="OPT_INVLSDET"
+    files$[1]="opt-21",      ids$[1]="OPE_ORDLSDET"
 	
 	call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
 
@@ -112,21 +110,23 @@ rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
     
 	files_opened = files; rem used in loop to close files
 
-    opt21_dev = channels[1]
+    ope21_dev = channels[1]
     
-    dim opt21a$:templates$[1]
+    dim ope21a$:templates$[1]
 
 rem --- Get any associated Lots/SerialNumbers
 
 	sqlprep$=""
 	sqlprep$=sqlprep$+"SELECT LOTSER_NO, QTY_SHIPPED"
-	sqlprep$=sqlprep$+" FROM opt_invlsdet"
+	sqlprep$=sqlprep$+" FROM ope_ordlsdet"
 	sqlprep$=sqlprep$+" WHERE firm_id="       +"'"+ firm_id$+"'"
+    sqlprep$=sqlprep$+"   AND trans_status="  +"'U'"
 	sqlprep$=sqlprep$+"   AND ar_type="       +"'"+ ar_type$+"'"
 	sqlprep$=sqlprep$+"   AND customer_id="   +"'"+ customer_id$+"'"
-	sqlprep$=sqlprep$+"   AND ar_inv_no="      +"'"+ ar_inv_no$+"'"
-	sqlprep$=sqlprep$+"   AND orddet_seq_ref="+"'"+ opt11_orddet_seq_ref$+"'"
-
+	sqlprep$=sqlprep$+"   AND order_no="      +"'"+ order_no$+"'"
+	sqlprep$=sqlprep$+"   AND ar_inv_no="     +"'"+ ar_inv_no$+"'"
+	sqlprep$=sqlprep$+"   AND orddet_seq_ref="+"'"+ ope11_internal_seq_no$+"'"
+    
 	sql_chan=sqlunt
 	sqlopen(sql_chan,mode="PROCEDURE",err=*next)stbl("+DBNAME")
 	sqlprep(sql_chan)sqlprep$
@@ -155,9 +155,9 @@ rem --- Process through SQL results
 	rem --- If they do not match, send underscores to 
 	rem --- prompt for L/S entry/write-in on the invoice.
 
-	if total_lotser_qty_shipped <> opt11_qty_shipped
+	if total_lotser_qty_shipped <> ope11_qty_shipped
 	
-		for y=1 to max(abs(opt11_qty_shipped - total_lotser_qty_shipped),1)
+		for y=1 to max(abs(ope11_qty_shipped - total_lotser_qty_shipped),1)
 			data! = rs!.getEmptyRecordData()
 			
 			data!.setFieldValue("LOTSER_NO", FILL(20,"_"))				
@@ -174,7 +174,6 @@ rem --- Tell the stored procedure to return the result set.
 	sp!.setRecordSet(rs!)
 
 	goto std_exit
-
 	
 sproc_error:rem --- SPROC error trap/handler
     rd_err_text$="", err_num=err

@@ -1,14 +1,13 @@
 rem ----------------------------------------------------------------------------
 rem --- OP Invoice Printing
-rem --- Program: OP_HIST_INVOICE_HDR.prc 
+rem --- Program: OP_HIST_INVOICE_HDR.prc
+rem --- Description: Stored Procedure to create detail for a jasper-based OP invoice 
 
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
-rem --- All Rights Reserved
 
-rem --- 9/2014-----------------------
-rem --- Based on OP_INVOICE.prc, but uses historical (opt) files
+rem --- 12/2014-----------------------
+rem --- Based on OP_INVOICE.prc, but uses "U" trans_status
 rem --- used to print historical invoice from Invoice History Inquiry form
-rem --- may become the 'only' print program once RTP is done
 
 rem --- There are three sprocs and three .jaspers for this enhancement:
 rem ---    - OP_HIST_INVOICE_HDR.prc / OPHistInvoiceHdr.jasper
@@ -32,6 +31,7 @@ rem --- get SPROC parameters
 firm_id$ =     sp!.getParameter("FIRM_ID")
 ar_type$ =     sp!.getParameter("AR_TYPE")
 customer_id$ = sp!.getParameter("CUSTOMER_ID")
+order_no$ =    sp!.getParameter("ORDER_NO")
 ar_inv_no$ =    sp!.getParameter("AR_INV_NO")
 cust_mask$ =   sp!.getParameter("CUST_MASK")
 cust_size = num(sp!.getParameter("CUST_SIZE"))
@@ -42,7 +42,7 @@ chdir barista_wd$
 rem --- create the in memory recordset for return
 
 dataTemplate$ = ""
-dataTemplate$ = dataTemplate$ + "order_no:C(7),invoice_date:C(10),order_date:C(10),"
+dataTemplate$ = dataTemplate$ + "invoice_no:C(7),invoice_date:C(10),order_date:C(10),"
 datatemplate$ = datatemplate$ + "bill_addr_line1:C(30),bill_addr_line2:C(30),bill_addr_line3:C(30),"
 datatemplate$ = datatemplate$ + "bill_addr_line4:C(30),bill_addr_line5:C(30),bill_addr_line6:C(30),"
 datatemplate$ = datatemplate$ + "bill_addr_line7:C(30),"
@@ -101,10 +101,10 @@ rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
     files$[5]="arc_cashcode", ids$[5]="ARC_CASHCODE"
     files$[6]="arc_salecode", ids$[6]="ARC_SALECODE"
     files$[7]="ivm-01",       ids$[7]="IVM_ITEMMAST"
-    files$[8]="opt-01",      ids$[8]="OPT_INVHDR"
-    files$[9]="ope-04",      ids$[9]="OPE_PRNTLIST"	
-    files$[10]="opt-31",      ids$[10]="OPT_INVSHIP"
-    files$[11]="opt-41",      ids$[11]="OPT_INVCASH"    
+    files$[8]="opt-01",       ids$[8]="OPE_INVHDR"
+    files$[9]="ope-04",       ids$[9]="OPE_PRNTLIST"	
+    files$[10]="opt-31",      ids$[10]="OPE_ORDSHIP"
+    files$[11]="opt-41",      ids$[11]="OPE_INVCASH"    
     files$[12]="opm-04",      ids$[12]="OPC_MSG_HDR"
     files$[13]="opm-09",      ids$[13]="OPM_CUSTJOBS"
     files$[14]="opm-14",      ids$[14]="OPC_MSG_DET"
@@ -126,10 +126,10 @@ rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
     arm10c_dev = channels[5]
     arm10f_dev = channels[6]
     ivm01_dev = channels[7]
-    opt01_dev = channels[8]
+    ope01_dev = channels[8]
     ope04_dev = channels[9]
-    opt31_dev = channels[10]
-    opt41_dev = channels[11]
+    ope31_dev = channels[10]
+    ope41_dev = channels[11]
     opm04_dev = channels[12]
     opm09_dev = channels[13]
     opm14_dev = channels[14]
@@ -143,10 +143,10 @@ rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
     dim arm10c$:templates$[5]
     dim arm10f$:templates$[6]
     dim ivm01a$:templates$[7]
-    dim opt01a$:templates$[8]
+    dim ope01a$:templates$[8]
     dim ope04a$:templates$[9]	
-    dim opt31a$:templates$[10]
-    dim opt41a$:templates$[11]
+    dim ope31a$:templates$[10]
+    dim ope41a$:templates$[11]
     dim opm04a$:templates$[12]
     dim opm09a$:templates$[13]
     dim opm14a$:templates$[14]
@@ -165,7 +165,7 @@ rem --- Initialize Data
 	cust_addrLine_len = 30	
 	dim c$(max_custAddr_lines * bill_custLine_len)
 	
-	order_no$ =    ""
+
 	invoice_date$ = ""
 	order_date$ =   ""
 	slspsn_code$ =  ""
@@ -186,39 +186,35 @@ rem --- Initialize Data
 	
 rem --- Main Read
 
-	find record (opt01_dev, key=firm_id$+ar_type$+customer_id$+ar_inv_no$, dom=all_done, end=all_done) opt01a$
+    find record (ope01_dev, key=firm_id$+"U"+ar_type$+customer_id$+order_no$+ar_inv_no$, knum="AO_STATUS", dom=all_done) ope01a$
 
-	if opt01a.firm_id$ <> firm_id$ then goto all_done
-	if opt01a.ar_type$ <> ar_type$ then goto all_done
-	if opt01a.customer_id$ <> customer_id$ then goto all_done
-	
-	order_no$ =    opt01a.order_no$
-	invoice_date$ = func.formatDate(opt01a.invoice_date$)
-	order_date$ =   func.formatDate(opt01a.order_date$)
-	cust_po_no$ =   opt01a.customer_po_no$
-	ship_via$ =     opt01a.ar_ship_via$
-	fob$ =          opt01a.fob$
-	ship_date$ =    func.formatDate(opt01a.shipmnt_date$)
-	discount_amt_raw$ = str(-opt01a.discount_amt:amt_mask$)
-    tax_amt_raw$ =      str(opt01a.tax_amount:amt_mask$)
-    freight_amt_raw$ =  str(opt01a.freight_amt:amt_mask$)
+    ar_inv_no$ =    ope01a.ar_inv_no$   
+	invoice_date$ = func.formatDate(ope01a.invoice_date$)
+	order_date$ =   func.formatDate(ope01a.order_date$)
+	cust_po_no$ =   ope01a.customer_po_no$
+	ship_via$ =     ope01a.ar_ship_via$
+	fob$ =          ope01a.fob$
+	ship_date$ =    func.formatDate(ope01a.shipmnt_date$)
+	discount_amt_raw$ = str(-ope01a.discount_amt:amt_mask$)
+    tax_amt_raw$ =      str(ope01a.tax_amount:amt_mask$)
+    freight_amt_raw$ =  str(ope01a.freight_amt:amt_mask$)
 	discount_amt$ = str(discount_amt_raw:amt_mask$)
     tax_amt$ =      str(tax_amt_raw:amt_mask$)
     freight_amt$ =  str(freight_amt_raw:amt_mask$)
 
 	rem --- Cash Sale?
 	
-		if opt01a.cash_sale$ = "Y" then
+		if ope01a.cash_sale$ = "Y" then
 			arm10c.code_desc$  = "Invalid Receipt Code"
 			arm10c.trans_type$ = "C"
 
-			if opt41_dev then
-				find record (opt41_dev, key=firm_id$+ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$, dom=*endif, err=*endif) opt41a$; rem z0$, z1$
+			if ope41_dev then
+				find record (ope41_dev, key=firm_id$+ar_type$+ope01a.customer_id$+opt01a.ar_inv_no$, dom=*endif, err=*endif) ope41a$; rem z0$, z1$
 				find record (arm10c_dev, key=firm_id$+"C"+opt41a.cash_rec_cd$, dom=*next) arm10c$; rem y7$, y9$                
 			endif
 		endif
 		
-        if opt01a.cash_sale$="Y"
+        if ope01a.cash_sale$="Y"
 		
 		    paid_desc$ = cvs(arm10c.code_desc$,2)
 			
@@ -226,15 +222,15 @@ rem --- Main Read
 				credCard! = new CreditCard()
 				cc_config$="BAR_CREDIT_CARD"
 				cc_no$=""
-				cc_no$=credCard!.getMaskedCardValue(credCard!.decryptCard(cvs(opt41a.credit_card_no$,2),cc_config$),err=*next)    
+				cc_no$=credCard!.getMaskedCardValue(credCard!.decryptCard(cvs(ope01a.credit_card_no$,2),cc_config$),err=*next)    
 				paid_text1$ = "# " + cc_no$
 			else
 				if arm10c.trans_type$="C" then 
-					paid_text1$ = "# " + opt41a.ar_check_no$ 
+					paid_text1$ = "# " + ope41a.ar_check_no$ 
 				endif
 			endif
 			
-			paid_text2$ = opt41a.customer_name$
+			paid_text2$ = ope41a.customer_name$
 		
 		endif
 
@@ -242,17 +238,17 @@ rem --- Main Read
         
         declare BBjTemplatedString arm01!
         declare BBjTemplatedString arm03!
-        declare BBjTemplatedString opt31!
+        declare BBjTemplatedString ope31!
         
         arm01! = BBjAPI().makeTemplatedString(fattr(arm01a$))
-        opt31! = BBjAPI().makeTemplatedString(fattr(opt31a$))
+        ope31! = BBjAPI().makeTemplatedString(fattr(ope31a$))
         arm03! = BBjAPI().makeTemplatedString(fattr(arm03a$))
 
         found = 0
         start_block = 1
 
         if start_block then
-            read record (arm01_dev, key=firm_id$+opt01a.customer_id$, dom=*endif) arm01!
+            read record (arm01_dev, key=firm_id$+ope01a.customer_id$, dom=*endif) arm01!
             b$ = func.formatAddress(arm01!, bill_addrLine_len, max_billAddr_lines-1)
             b$ = pad(func.alphaMask(arm01!.getFieldAsString("CUSTOMER_ID"), cust_mask$), bill_addrLine_len) + b$
             found = 1
@@ -267,24 +263,24 @@ rem --- Main Read
         c$ = b$
         start_block = 1
 
-        if opt01a.shipto_type$ = "M" then 
+        if ope01a.shipto_type$ = "M" then 
             shipto$ = ""
 
             if start_block then
-                find record (opt31_dev, key=firm_id$+opt01a.customer_id$+opt01a.ar_inv_no$, dom=*endif) opt31!
-                c$ = func.formatAddress(opt31!, cust_addrLine_len, max_custAddr_lines)
-            endif
-            
-            read (opt01_dev, key=firm_id$+ar_type$+opt01a.customer_id$+opt01a.ar_inv_no$, dom=*next)
-        else
-            if opt01a.shipto_type$ = "S" then
-                shipto$ = ""
+                find record (ope31_dev, key=firm_id$+"U"+ope01a.customer_id$+ope01a.order_no$+ope01a.ar_inv_no$,knum="AO_STATUS", dom=*endif) ope31!
+                c$ = func.formatAddress(ope31!, cust_addrLine_len, max_custAddr_lines)
+           endif
 
-                if start_block then
-                    find record (arm03_dev,key=firm_id$+opt01a.customer_id$+opt01a.shipto_no$, dom=*endif) arm03!
-                    c$ = func.formatAddress(arm03!, cust_addrLine_len, max_custAddr_lines)
-                    shipto$ = opt01a.shipto_no$
-                endif
+           
+           else
+                if ope01a.shipto_type$ = "S" then
+                    shipto$ = ""
+
+                    if start_block then
+                        find record (arm03_dev,key=firm_id$+ope01a.customer_id$+ope01a.shipto_no$, dom=*endif) arm03!
+                        c$ = func.formatAddress(arm03!, cust_addrLine_len, max_custAddr_lines)
+                        shipto$ = ope01a.shipto_no$
+                    endif
             endif
         endif
 
@@ -292,17 +288,17 @@ rem --- Main Read
 
         dim arm10a$:fattr(arm10a$)
         arm10a.code_desc$ = "Not Found"
-        find record (arm10a_dev,key=firm_id$+"A"+opt01a.terms_code$,dom=*next) arm10a$
+        find record (arm10a_dev,key=firm_id$+"A"+ope01a.terms_code$,dom=*next) arm10a$
 
-		terms_code$ = opt01a.terms_code$
+		terms_code$ = ope01a.terms_code$
 		terms_desc$ = arm10a.code_desc$
 		
     rem --- Salesperson
 
         arm10f.code_desc$ = "Not Found"
-        find record (arm10f_dev,key=firm_id$+"F"+opt01a.slspsn_code$,dom=*next) arm10f$
+        find record (arm10f_dev,key=firm_id$+"F"+ope01a.slspsn_code$,dom=*next) arm10f$
 
-		slspsn_code$ = opt01a.slspsn_code$
+		slspsn_code$ = ope01a.slspsn_code$
 		slspsn_desc$ = arm10f.code_desc$
 
 	rem --- Job Name
@@ -311,9 +307,9 @@ rem --- Main Read
         opm09a.customer_name$ = "Not Found"
 
         if opm09_dev then 
-            find record (opm09_dev, key=firm_id$+opt01a.customer_id$+opt01a.job_no$, dom=*next) opm09a$
+            find record (opm09_dev, key=firm_id$+ope01a.customer_id$+ope01a.job_no$, dom=*next) opm09a$
         else
-            opm09a.customer_name$ = opt01a.job_no$
+            opm09a.customer_name$ = ope01a.job_no$
         endif
 
     rem --- Standard Message
@@ -336,7 +332,7 @@ rem --- Format addresses to be bottom justified
 	c$=address$
 
 		data! = rs!.getEmptyRecordData()
-		data!.setFieldValue("ORDER_NO", order_no$)
+		data!.setFieldValue("INVOICE_NO", ar_inv_no$)
 		data!.setFieldValue("INVOICE_DATE", invoice_date$)
 		data!.setFieldValue("ORDER_DATE", order_date$)
 
@@ -413,13 +409,13 @@ get_stdMessage: rem --- Get Standard Message lines
     rem dim stdMessage$(max_stdMsg_lines * stdMsg_len)
 
     if start_block then
-        find record (opm04_dev, key=firm_id$+opt01a.message_code$, dom=*endif) opm04a$; rem mh0$
+        find record (opm04_dev, key=firm_id$+ope01a.message_code$, dom=*endif) opm04a$; rem mh0$
         status=0
-        read (opm14_dev, key=firm_id$+opt01a.message_code$, dom=*next)
+        read (opm14_dev, key=firm_id$+ope01a.message_code$, dom=*next)
 
         while 1
             read record (opm14_dev, end=*break) opm14a$; rem md0$, md1$
-            if opm14a.firm_id$<>firm_id$ or opm14a.message_code$<>opt01a.message_code$ then break
+            if opm14a.firm_id$<>firm_id$ or opm14a.message_code$<>ope01a.message_code$ then break
             stdMessage$ = stdMessage$ + pad(opm14a.message_text$, stdMsg_len)
         wend
     endif

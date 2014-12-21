@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OPHistInvoiceDet" language="groovy" pageWidth="554" pageHeight="320" columnWidth="554" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="a46c6452-81bd-4023-bafb-8f0488b8a578">
-	<property name="ireport.zoom" value="2.0"/>
-	<property name="ireport.x" value="20"/>
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
 	<parameter name="AR_TYPE" class="java.lang.String"/>
 	<parameter name="CUSTOMER_ID" class="java.lang.String"/>
-	<parameter name="AR_INV_NO" class="java.lang.String"/>
+	<parameter name="ORDER_NO" class="java.lang.String"/>
 	<parameter name="QTY_MASK" class="java.lang.String"/>
 	<parameter name="QTY_MASK_PATTERN" class="java.lang.String"/>
 	<parameter name="PRICE_MASK" class="java.lang.String"/>
@@ -17,8 +17,9 @@
 		<defaultValueExpression><![CDATA["C:\\Dev_aon\\aon\\reports\\"]]></defaultValueExpression>
 	</parameter>
 	<parameter name="IVS_LOTSER_FLAG" class="java.lang.String"/>
-	<queryString>
-		<![CDATA[call OP_HIST_INVOICE_DET($P{FIRM_ID},$P{AR_TYPE},$P{CUSTOMER_ID},$P{AR_INV_NO},$P{QTY_MASK},$P{AMT_MASK},$P{PRICE_MASK},$P{EXT_MASK},$P{BARISTA_WD})]]>
+	<parameter name="AR_INV_NO" class="java.lang.String"/>
+	<queryString language="SQL">
+		<![CDATA[call OP_HIST_INVOICE_DET($P{FIRM_ID},$P{AR_TYPE},$P{CUSTOMER_ID},$P{ORDER_NO},$P{AR_INV_NO},$P{QTY_MASK},$P{AMT_MASK},$P{PRICE_MASK},$P{EXT_MASK},$P{BARISTA_WD})]]>
 	</queryString>
 	<field name="ORDER_QTY_MASKED" class="java.lang.String"/>
 	<field name="SHIP_QTY_MASKED" class="java.lang.String"/>
@@ -30,7 +31,7 @@
 	<field name="PRICE_MASKED" class="java.lang.String"/>
 	<field name="EXTENDED_RAW" class="java.lang.String"/>
 	<field name="EXTENDED_MASKED" class="java.lang.String"/>
-	<field name="ORDDET_SEQ_REF" class="java.lang.String"/>
+	<field name="INTERNAL_SEQ_NO" class="java.lang.String"/>
 	<field name="ITEM_IS_LS" class="java.lang.String">
 		<fieldDescription><![CDATA[Item is flagged as Lotted/Serialized]]></fieldDescription>
 	</field>
@@ -46,7 +47,7 @@
 		<variableExpression><![CDATA[$V{EXTENDED_BigDec}]]></variableExpression>
 	</variable>
 	<group name="LINE_ITEM">
-		<groupExpression><![CDATA[$F{ORDDET_SEQ_REF}]]></groupExpression>
+		<groupExpression><![CDATA[$F{INTERNAL_SEQ_NO}]]></groupExpression>
 		<groupFooter>
 			<band height="15" splitType="Stretch">
 				<printWhenExpression><![CDATA[($P{IVS_LOTSER_FLAG}=="L" || $P{IVS_LOTSER_FLAG}=="S")
@@ -59,11 +60,14 @@
 					<subreportParameter name="BARISTA_WD">
 						<subreportParameterExpression><![CDATA[$P{BARISTA_WD}]]></subreportParameterExpression>
 					</subreportParameter>
+					<subreportParameter name="OPE11_QTY_SHIPPED">
+						<subreportParameterExpression><![CDATA[$F{SHIP_QTY}]]></subreportParameterExpression>
+					</subreportParameter>
 					<subreportParameter name="AR_TYPE">
 						<subreportParameterExpression><![CDATA[$P{AR_TYPE}]]></subreportParameterExpression>
 					</subreportParameter>
-					<subreportParameter name="ORDDET_SEQ_REF">
-						<subreportParameterExpression><![CDATA[$F{ORDDET_SEQ_REF}]]></subreportParameterExpression>
+					<subreportParameter name="ORDER_NO">
+						<subreportParameterExpression><![CDATA[$P{ORDER_NO}]]></subreportParameterExpression>
 					</subreportParameter>
 					<subreportParameter name="FIRM_ID">
 						<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
@@ -77,11 +81,11 @@
 					<subreportParameter name="AR_INV_NO">
 						<subreportParameterExpression><![CDATA[$P{AR_INV_NO}]]></subreportParameterExpression>
 					</subreportParameter>
-					<subreportParameter name="OPT11_QTY_SHIPPED">
-						<subreportParameterExpression><![CDATA[$F{SHIP_QTY}]]></subreportParameterExpression>
-					</subreportParameter>
 					<subreportParameter name="IVS_LOTSER_FLAG">
 						<subreportParameterExpression><![CDATA[$P{IVS_LOTSER_FLAG}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="INTERNAL_SEQ_NO">
+						<subreportParameterExpression><![CDATA[$F{INTERNAL_SEQ_NO}]]></subreportParameterExpression>
 					</subreportParameter>
 					<subreportParameter name="QTY_MASK_PATTERN">
 						<subreportParameterExpression><![CDATA[$P{QTY_MASK_PATTERN}]]></subreportParameterExpression>

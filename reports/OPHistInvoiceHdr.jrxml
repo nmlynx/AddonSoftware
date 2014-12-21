@@ -6,7 +6,7 @@
 	<parameter name="FIRM_ID" class="java.lang.String"/>
 	<parameter name="AR_TYPE" class="java.lang.String"/>
 	<parameter name="CUSTOMER_ID" class="java.lang.String"/>
-	<parameter name="AR_INV_NO" class="java.lang.String"/>
+	<parameter name="ORDER_NO" class="java.lang.String"/>
 	<parameter name="QTY_MASK" class="java.lang.String"/>
 	<parameter name="QTY_MASK_PATTERN" class="java.lang.String"/>
 	<parameter name="PRICE_MASK" class="java.lang.String"/>
@@ -29,11 +29,12 @@
 	<parameter name="REMIT2" class="java.lang.String"/>
 	<parameter name="REMIT3" class="java.lang.String"/>
 	<parameter name="REMIT4" class="java.lang.String"/>
+	<parameter name="AR_INV_NO" class="java.lang.String"/>
 	<parameter name="TYPE" class="java.lang.String"/>
-	<queryString>
-		<![CDATA[call OP_HIST_INVOICE_HDR($P{FIRM_ID},$P{AR_TYPE},$P{CUSTOMER_ID},$P{AR_INV_NO},$P{CUST_MASK},$P{CUST_SIZE},$P{BARISTA_WD})]]>
+	<queryString language="SQL">
+		<![CDATA[call OP_HIST_INVOICE_HDR($P{FIRM_ID},$P{AR_TYPE},$P{CUSTOMER_ID},$P{ORDER_NO},$P{AR_INV_NO},$P{CUST_MASK},$P{CUST_SIZE},$P{BARISTA_WD})]]>
 	</queryString>
-	<field name="ORDER_NO" class="java.lang.String"/>
+	<field name="INVOICE_NO" class="java.lang.String"/>
 	<field name="INVOICE_DATE" class="java.lang.String"/>
 	<field name="ORDER_DATE" class="java.lang.String"/>
 	<field name="BILL_ADDR_LINE1" class="java.lang.String"/>
@@ -91,7 +92,7 @@
 		<initialValueExpression><![CDATA[]]></initialValueExpression>
 	</variable>
 	<group name="Invoice" isReprintHeaderOnEachPage="true" footerPosition="ForceAtBottom">
-		<groupExpression><![CDATA[$P{AR_INV_NO}]]></groupExpression>
+		<groupExpression><![CDATA[$F{INVOICE_NO}]]></groupExpression>
 		<groupHeader>
 			<band height="16">
 				<rectangle radius="8">
@@ -497,7 +498,7 @@
 					<font fontName="Serif"/>
 					<paragraph leftIndent="4"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$P{AR_INV_NO}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{INVOICE_NO}]]></textFieldExpression>
 			</textField>
 			<textField pattern="">
 				<reportElement uuid="8955ff13-5a75-41ac-9564-68b908455aee" x="343" y="94" width="60" height="13"/>
@@ -547,7 +548,7 @@
 					<font fontName="Serif"/>
 					<paragraph leftIndent="4"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{ORDER_NO}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$P{ORDER_NO}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement uuid="1d358563-9666-4659-b203-5cefac8bd0da" x="474" y="94" width="60" height="13"/>
@@ -813,7 +814,7 @@
 				<textFieldExpression><![CDATA[$F{FOB}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement uuid="0d3a2ee4-0aac-4d50-9d59-1c17b03a3e00" x="272" y="6" width="281" height="62" forecolor="#CCCCCC">
+				<reportElement uuid="826a6714-ee58-4160-a15f-b48597790bf2" x="272" y="6" width="281" height="62" forecolor="#CCCCCC">
 					<printWhenExpression><![CDATA[$P{TYPE}.equals( "3" )]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
@@ -823,7 +824,7 @@
  INVOICE]]></text>
 			</staticText>
 			<staticText>
-				<reportElement uuid="d97413ba-1b4b-4ce6-98ae-803e7d1559b1" x="270" y="5" width="281" height="62" forecolor="#000000">
+				<reportElement uuid="f92f8db1-d008-4ace-8e3d-0e339439a14a" x="270" y="5" width="281" height="62" forecolor="#000000">
 					<printWhenExpression><![CDATA[$P{TYPE}.equals( "3" )]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
@@ -862,14 +863,17 @@
 				<subreportParameter name="AR_TYPE">
 					<subreportParameterExpression><![CDATA[$P{AR_TYPE}]]></subreportParameterExpression>
 				</subreportParameter>
+				<subreportParameter name="ORDER_NO">
+					<subreportParameterExpression><![CDATA[$P{ORDER_NO}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="AR_INV_NO">
+					<subreportParameterExpression><![CDATA[$P{AR_INV_NO}]]></subreportParameterExpression>
+				</subreportParameter>
 				<subreportParameter name="FIRM_ID">
 					<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="CUSTOMER_ID">
 					<subreportParameterExpression><![CDATA[$P{CUSTOMER_ID}]]></subreportParameterExpression>
-				</subreportParameter>
-				<subreportParameter name="AR_INV_NO">
-					<subreportParameterExpression><![CDATA[$P{AR_INV_NO}]]></subreportParameterExpression>
 				</subreportParameter>
 				<subreportParameter name="IVS_LOTSER_FLAG">
 					<subreportParameterExpression><![CDATA[$P{IVS_LOTSER_FLAG}]]></subreportParameterExpression>

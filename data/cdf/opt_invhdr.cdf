@@ -406,7 +406,8 @@ rem --- Display invoice total
 rem --- Print a counter Invoice
 
 	cust_id$  = callpoint!.getColumnData("OPT_INVHDR.CUSTOMER_ID")
-	order_no$ = callpoint!.getColumnData("OPT_INVHDR.AR_INV_NO")
+	order_no$ = callpoint!.getColumnData("OPT_INVHDR.ORDER_NO")
+	invoice_no$ = callpoint!.getColumnData("OPT_INVHDR.AR_INV_NO")
 
-	call pgmdir$+"opc_invoicehist.aon", cust_id$, order_no$, callpoint!, table_chans$[all], status
+	call pgmdir$+"opc_hist_invoice.aon::historical", cust_id$, order_no$, invoice_no$, callpoint!, table_chans$[all], status
 	if status = 999 then goto std_exit
