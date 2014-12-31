@@ -1838,30 +1838,30 @@ rem ==========================================================================
 	while 1
 		rd_key$ = ""
 		dim filter_defs$[3,2]
-		filter_defs$[0,0]="OPT_INVDET.FIRM_ID"
+		filter_defs$[0,0]="OPT_INVHDR.FIRM_ID"
 		filter_defs$[0,1]="='"+firm_id$+"'"
 		filter_defs$[0,2]="LOCK"
-		filter_defs$[1,0]="OPT_INVDET.TRANS_STATUS"
+		filter_defs$[1,0]="OPT_INVHDR.TRANS_STATUS"
 		filter_defs$[1,1]="='U'"
 		filter_defs$[1,2]="LOCK"
-		filter_defs$[2,0]="OPT_INVDET.AR_TYPE"
+		filter_defs$[2,0]="OPT_INVHDR.AR_TYPE"
 		filter_defs$[2,1]="='"+callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+"'"
 		filter_defs$[2,2]="LOCK"
-		filter_defs$[3,0]="OPT_INVDET.CUSTOMER_ID"
+		filter_defs$[3,0]="OPT_INVHDR.CUSTOMER_ID"
 		filter_defs$[3,1]="='"+callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+"'"
 		filter_defs$[3,2]="LOCK"
 
 		call stbl("+DIR_SYP")+"bax_query.bbj",
 :			gui_dev,
 :			Form!,
-:			"OP_INVOICELOOKUP",
+:			"OP_HISTINV",
 :			"",
 :			table_chans$[all],
 :			rd_key$,
 :			filter_defs$[all],
 :			"",
 :			"",
-:			"AO_STATUS"
+:			"AO_STAT_CUST_INV"
 
 		if cvs(rd_key$,2)<>"" then 
 			if rd_key$(len(rd_key$),1)="^"
