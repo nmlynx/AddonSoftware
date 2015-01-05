@@ -1036,7 +1036,7 @@ rem --- Allow changing shipto_type when abort shipto_no
 	if callpoint!.getDevObject("abort_shipto_no")<>null() then
 		if num(callpoint!.getDevObject("abort_shipto_no"),err=*endif)
 			callpoint!.setDevObject("abort_shipto_no",0)
-			callpoint!.setFocus("OPE_ORDHDR.SHIPTO_TYPE")
+			callpoint!.setFocus("OPE_INVHDR.SHIPTO_TYPE")
 			callpoint!.setStatus("ABORT")
 			break; rem --- exit callpoint
 		endif
@@ -1927,7 +1927,7 @@ rem ==========================================================================
 
 		ordship_dev = fnget_dev("OPE_ORDSHIP")
 		dim ordship_tpl$:fnget_tpl$("OPE_ORDSHIP")
-		invoice_no$=callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")
+		invoice_no$=callpoint!.getColumnData("OPE_INVHDR.AR_INV_NO")
 		read record (ordship_dev, key=firm_id$+cust_id$+order_no$+invoice_no$, dom=*endif) ordship_tpl$
 
 		callpoint!.setColumnData("<<DISPLAY>>.SNAME",ordship_tpl.name$)
@@ -2612,20 +2612,28 @@ rem --- Make sure everything's written back to disk
 	ordhdr_rec$ = field(ordhdr_rec$)
 	write record (ordhdr_dev) ordhdr_rec$
 	ordhdr_key$=ordhdr_rec.firm_id$+ordhdr_rec.trans_status$+ordhdr_rec.ar_type$+ordhdr_rec.customer_id$+ordhdr_rec.order_no$+ordhdr_rec.ar_inv_no$
-	extractrecord(ordhdr_dev,key=ordhdr_key$)ordhdr_rec$; rem Advisory Locking
+rem	extractrecord(ordhdr_dev,key=ordhdr_key$)ordhdr_rec$; rem Advisory Locking - rem'd because invoice program does the extract
 
-rem --- Call printing program
-
-	call user_tpl.pgmdir$+"opc_invoice.aon::on_demand", cust_id$, order_no$, callpoint!, table_chans$[all], status
-	if status = 999 then goto std_exit
-
-	callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "Y")
-
-	msg_id$ = "OP_INVOICE_DONE"
-	gosub disp_message
-
-	print "---Print Status: Y"; rem debug
-	print "out"; rem debug
+rem --- on demand invoice
+ 
+	cp_cust_id$=callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	cp_order_no$=callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+	user_id$=stbl("+USER_ID")
+ 
+	dim dflt_data$[2,1]
+	dflt_data$[1,0]="CUSTOMER_ID"
+	dflt_data$[1,1]=cp_cust_id$
+	dflt_data$[2,0]="ORDER_NO"
+	dflt_data$[2,1]=cp_order_no$
+ 
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	                       "OPR_INV_DEMAND",
+:	                       user_id$,
+:	                       "",
+:	                       "",
+:	                       table_chans$[all],
+:	                       "",
+:	                       dflt_data$[all]
 
 	return
 
