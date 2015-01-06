@@ -2770,9 +2770,6 @@ rem ==========================================================================
 
 			rem --- Load new invoice
 			callpoint!.setStatus("RECORD:["+firm_id$+status$+ar_type$+customer_id$+order_no$+inv_no$+"]")
-rem wgh ... Not working correctly when customer-order selected from binoculars.
-rem wgh ... The new invoice is displayed briefly, then cleared.
-rem wgh ... New invoice is written to file, and the old order is removed correctly.
 		endif
 		
 	endif
