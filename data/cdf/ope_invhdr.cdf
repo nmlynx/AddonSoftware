@@ -891,7 +891,6 @@ rem --- Initialize RTP modified fields for modified existing records
 		dim initial_rec_data$:fattr(rec_data$)
 		initial_rec_data$=callpoint!.getDevObject("initial_rec_data$")
 		if rec_data$<>initial_rec_data$ then
-rem wgh ... RTP modified fields aren't getting updated even though this code is executed
 			rec_data.mod_user$=sysinfo.user_id$
 			rec_data.mod_date$=date(0:"%Yd%Mz%Dz")
 			rec_data.mod_time$=date(0:"%Hz%mz")
