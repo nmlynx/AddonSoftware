@@ -77,3 +77,16 @@ Bug 8092: Updated DataPort for previous change in ope-01 table alias
 name from OPE_ORDHDR to OPE_INVHDR.
 ----
 Modified: util/dataport/DataPort_main.bbj
+
+=======================================================================================================================================
+Revision: c7d960a739d350dbe7b8fc64a91d86dd0b9b3526
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/8/2015 4:14:45 PM
+Message:
+Bug 8165: Added table_chans$[all] to the ENTER statement in
+bmc_getcost.aon, then used it when bmc_getcost.aon CALLs
+bac_key_template.bbj.
+----
+Modified: bm/src/bmc_getcost.aon
+Modified: data/bar/bme_totals.xml
+Modified: data/cdf/bme_totals.cdf
