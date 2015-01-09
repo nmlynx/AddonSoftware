@@ -103,3 +103,26 @@ Modified: data/bar/sfr_schedwo.xml
 Modified: data/cdf/sfr_schedwo.cdf
 Modified: sf/src/sfc_schdayfore.aon
 Modified: sf/src/sfr_breschwo_o1.aon
+
+=======================================================================================================================================
+Revision: 83514204c126dd067b2990161e92265a2dd14c4a
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/9/2015 1:27:12 PM
+Message:
+Bug 8167: In CALLs that use bac_open_tables, either added Barista's
+table_chans$[all] in their ENTER statement, or (2) on exit closed the
+channels they just opened.
+----
+Modified: ad/src/adc_application.aon
+Modified: ad/src/adc_mvupgrdfiles.aon
+Modified: ad/src/adx_mvupgrdfiles.aon
+Modified: data/bar/poe_pohdr.xml
+Modified: data/cdf/poe_pohdr.cdf
+Modified: mp/src/mpu_updatereqreg.aon
+Modified: po/src/poc_deletepo.aon
+Modified: po/src/poc_itemvend.aon
+Modified: po/src/poc_requpdate.aon
+Modified: po/src/poc_updpurreq.aon
+Modified: po/src/pou_repselupdate.aon
+Modified: po/src/pou_reqsnreg.aon
+Modified: sf/src/sfu_createporeq_o1.aon
