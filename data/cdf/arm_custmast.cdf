@@ -23,7 +23,7 @@ rem --- Create/embed dashboard to show aged balance
 	use ::dashboard/widget.bbj::EmbeddedWidgetControl
 	use ::dashboard/widget.bbj::BarChartWidget
 
-	ctl_name$="ARM_CUSTPMTS.AVG_DAYS"
+	ctl_name$="ARM_CUSTDET.AGING_FUTURE"
 	ctlContext=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLC"))
 	ctlID=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI"))
 	ctl1!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
@@ -32,6 +32,11 @@ rem --- Create/embed dashboard to show aged balance
 	ctlContext=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLC"))
 	ctlID=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI"))
 	ctl2!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
+
+	ctl_name$="ARM_CUSTPMTS.NMTD_SALES"
+	ctlContext=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLC"))
+	ctlID=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI"))
+	ctl3!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
 
 	childWin!=SysGUI!.getWindow(ctlContext).getControl(0)
 	save_ctx=SysGUI!.getContext()
@@ -46,6 +51,8 @@ rem --- Create either a pie chart or bar chart - the latter if any of the aging 
 	flat = 0
 	legend=0
 	numSlices=6
+	widgetX=ctl3!.getX()
+	widgetY=ctl1!.getY()
 	widgetHeight=ctl2!.getY()+ctl2!.getHeight()-ctl1!.getY()
 	widgetWidth=widgetHeight+widgetHeight*.5
 
@@ -60,7 +67,7 @@ rem --- Create either a pie chart or bar chart - the latter if any of the aging 
 	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_120_DAYS","120 days",1), 0)
 	agingPieWidget!.setFontScalingFactor(1.2)
 
-	agingPieWidgetControl! = new EmbeddedWidgetControl(agingDashboardPieWidget!,childWin!,ctl1!.getX()+ctl1!.getWidth()+50,ctl1!.getY(),widgetWidth,widgetHeight,$$)
+	agingPieWidgetControl! = new EmbeddedWidgetControl(agingDashboardPieWidget!,childWin!,widgetX,widgetY,widgetWidth,widgetHeight,$$)
 	agingPieWidgetControl!.setVisible(0)
 
 	rem --- bar
@@ -83,7 +90,7 @@ rem --- Create either a pie chart or bar chart - the latter if any of the aging 
 	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_90","90",1), "", 0)
 	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_120","120",1), "", 0)
 
-	agingBarWidgetControl! = new EmbeddedWidgetControl(agingDashboardBarWidget!,childWin!,ctl1!.getX()+ctl1!.getWidth()+50,ctl1!.getY(),widgetWidth,widgetHeight,$$)
+	agingBarWidgetControl! = new EmbeddedWidgetControl(agingDashboardBarWidget!,childWin!,widgetX,widgetY,widgetWidth,widgetHeight,$$)
 	agingBarWidgetControl!.setVisible(0)
 
 	callpoint!.setDevObject("dbPieWidget",agingDashboardPieWidget!)

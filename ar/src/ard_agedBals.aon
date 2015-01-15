@@ -23,7 +23,7 @@ rem --- currently used from Customer form's Future/Current/30/60/90/120 drilldow
     
     rem --- create filter_defs$[ ] from the aged invoices hashmap built in do_aging subroutine (i.e., where ar_inv_no IN ('inv1','inv2','inv3'))
     rem --- then call the query program, filtering on these invoices
- 
+
     if invoiceVect!.size()
         invoices$="IN ("
         for x=0 to invoiceVect!.size()-1
@@ -108,8 +108,9 @@ rem --- processes all invoices this customer and loads non-zero bal inv#'s into 
             if cvs(last_age_dt$,2)=""
                 msg_id$="AGE_INFO_NOT_AVAIL"
                 gosub disp_message
+                break
             else
-                gosub calc_dates_fixed            
+                gosub calc_dates_fixed
             endif
         endif
         
