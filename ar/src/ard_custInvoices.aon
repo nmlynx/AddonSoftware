@@ -8,6 +8,7 @@ enter rd_gui_dev,rdWindow!,rd_field_tvar$,rd_ddm_drill_defs$,rd_drill_pfx$,rd_ta
     dim info$[20]
     call stbl("+DIR_PGM")+"adc_application.aon","OP",info$[all]
 	op$=info$[20]
+    found=0
     
     if op$="Y"
         num_files=1
@@ -18,29 +19,27 @@ enter rd_gui_dev,rdWindow!,rd_field_tvar$,rd_ddm_drill_defs$,rd_drill_pfx$,rd_ta
         
         opt_invhdr=num(open_chans$[1])
         dim opt_invhdr$:open_tpls$[1]
-        readrecord(opt_invhdr,key=rd_drill_pfx$,knum="AO_CUST_INV",err=*next)opt_invhdr$
-        if opt_invhdr.trans_status$<>"U" then dim opt_invhdr$:fattr(opt_invhdr$);rem shouldn't happen - precautionary with new RTP mods
+        readrecord(opt_invhdr,key=rd_drill_pfx$,knum="AO_CUST_INV",err=*next)opt_invhdr$;found=1
+        if opt_invhdr.trans_status$<>"U" then dim opt_invhdr$:fattr(opt_invhdr$);found=0;rem shouldn't happen - precautionary with new RTP mods
         rem --- if this invoice is in opt_invhdr, run Hist Inv Inquiry
         rem --- otherwise, launch query to view archived AR Simple Invoices
+
+        num_files=1
+        dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+        open_tables$[1]="D"+"OPT_INVHDR",open_opts$[1]="CX"
+        gosub open_tables;rem close OPT_INVHDR
     endif
 
-    num_files=1
-    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="D"+"OPT_INVHDR",open_opts$[1]="CX"
-    gosub open_tables;rem close OPT_INVHDR
-
-    if rd_drill_pfx$=opt_invhdr.firm_id$+opt_invhdr.ar_type$+opt_invhdr.customer_id$+opt_invhdr.ar_inv_no$  
-            dim dflt_data$[2,1]
-            sel_key$=opt_invhdr.firm_id$+opt_invhdr.trans_status$+opt_invhdr.ar_type$+opt_invhdr.customer_id$+opt_invhdr.ar_inv_no$
-            call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPT_INVHDR",stbl("+USER_ID"),"",sel_key$,rd_table_chans$[all],"",dflt_data$[all]           
-        else 
-            dim filter_defs$[1,2]
-            filter_defs$[1,0]="ADS_DOCUMENTS.DOC_KEYWORDS"
-            filter_defs$[1,1]="LIKE '%Invoice: "+rd_drill_pfx$(len(rd_drill_pfx$)-6,7)+"%'"
-            filter_defs$[1,2]="LOCK"
-            
-            call STBL("+DIR_SYP")+"bax_query.bbj",rd_gui_dev, rdWindow!,"BAR_DOCUMENTS","DEFAULT",rd_table_chans$[all],sel_key$,filter_defs$[all]           
-        endif       
+    if found=1
+        dim dflt_data$[2,1]
+        sel_key$=opt_invhdr.firm_id$+opt_invhdr.trans_status$+opt_invhdr.ar_type$+opt_invhdr.customer_id$+opt_invhdr.ar_inv_no$
+        call stbl("+DIR_SYP")+"bam_run_prog.bbj","OPT_INVHDR",stbl("+USER_ID"),"",sel_key$,rd_table_chans$[all],"",dflt_data$[all]
+    else
+        dim filter_defs$[1,2]
+        filter_defs$[1,0]="ADS_DOCUMENTS.DOC_KEYWORDS"
+        filter_defs$[1,1]="LIKE '%Invoice: "+rd_drill_pfx$(len(rd_drill_pfx$)-6,7)+"%'"
+        filter_defs$[1,2]="LOCK"
+        call STBL("+DIR_SYP")+"bax_query.bbj",rd_gui_dev, rdWindow!,"BAR_DOCUMENTS","DEFAULT",rd_table_chans$[all],sel_key$,filter_defs$[all]       
     endif
 
     goto exit_prog
@@ -113,11 +112,13 @@ rem #endinclude std_error.src
 
 exit_prog:rem --- Exit Program
 
-rem - can't remember why this seemingly extra file close is here...I *think* it had to do w/ launching drilldown, then going into hist invoice, then doing a print... had err 0 along the way, or instances of opt_invhdr were stacking up?
-    num_files=1
-    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="OPT_INVHDR",open_opts$[1]="CX"
-    gosub open_tables;rem close OPT_INVHDR
+    if op$="Y"
+        rem - can't remember why this seemingly extra file close is here...I *think* it had to do w/ launching drilldown, then going into hist invoice, then doing a print... had err 0 along the way, or instances of opt_invhdr were stacking up?
+        num_files=1
+        dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+        open_tables$[1]="OPT_INVHDR",open_opts$[1]="CX"
+        gosub open_tables;rem close OPT_INVHDR
+    endif
 
     exit
                 
