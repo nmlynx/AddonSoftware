@@ -1,3 +1,9 @@
+[[IVM_ITEMWHSE.AREC]]
+rem --- Initialize product_type with ivm_itemmast product_type
+	itemmast_dev=fnget_dev("IVM_ITEMMAST")
+	dim itemmast_tpl$:fnget_tpl$("IVM_ITEMMAST")
+	readrecord(itemmast_dev,key=firm_id$+callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID"),dom=*next)itemmast_tpl$
+	callpoint!.setColumnData("IVM_ITEMWHSE.PRODUCT_TYPE",itemmast_tpl.product_type$)
 [[IVM_ITEMWHSE.ARAR]]
 rem --- Get total on Open PO lines
 
