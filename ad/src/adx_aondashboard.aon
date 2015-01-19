@@ -74,8 +74,8 @@ rem --- initialization
 	gosub resolve_paths
 	gosub init_prog_meter
 	gosub get_installed_modules
-    
-    all_prod_types$ = Translate!.getTranslation("AON_ALL")+" "+Translate!.getTranslation("AON_PRODUCT_TYPE")
+
+    unspecified_prod_type$ = Translate!.getTranslation("AON_UNSPECIFIED")
 	
 rem --- create dashboard, tabs, widgets
 
@@ -489,7 +489,7 @@ rem ==============================================
 		year$ = proc_date$(7,4)
 		num_to_list$ = "5"; rem <<============= HARDCODED =========
 	
-		sql$="CALL SATOPCST_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"', '"+all_prod_types$+"')"
+		sql$="CALL SATOPCST_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"', '"+unspecified_prod_type$+"')"
 
 		topCustsSStackedBarChartDashboardWidget! = salesDashboardCategory!.addStackedBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		topCustsSWidget! = topCustsSStackedBarChartDashboardWidget!.getWidget()
@@ -501,7 +501,6 @@ rem		topCustsSWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 
 		gosub update_meter
 	endif	
-
 	
 rem ==============================================
 rem --- create SA Top Salesreps STACKED bar chart
@@ -526,7 +525,7 @@ rem ==============================================
 		year$ = proc_date$(7,4)
 		num_to_list$ = "5"; rem <<============= HARDCODED =========
 	
-		sql$="CALL SATOPREP_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"', '"+all_prod_types$+"')"
+		sql$="CALL SATOPREP_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"', '"+unspecified_prod_type$+"')"
 
 		toprepSStackedBarChartDashboardWidget! = salesDashboardCategory!.addStackedBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		toprepWidget! = toprepSStackedBarChartDashboardWidget!.getWidget()
@@ -599,7 +598,7 @@ rem ==============================================
 		year$ = proc_date$(7,4)
 		num_to_list$ = "5"; rem <<============= HARDCODED =========
 	
-		sql$="CALL SAREPTOT_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"', '"+all_prod_types$+"')"
+		sql$="CALL SAREPTOT_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"', '"+unspecified_prod_type$+"')"
 	
 		repsalesSStackedBarChartDashboardWidget! = salesDashboardCategory!.addStackedBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		repsalesWidget! = repsalesSStackedBarChartDashboardWidget!.getWidget()
