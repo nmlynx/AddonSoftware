@@ -786,7 +786,7 @@ rem ==============================================
     sproc_vw_name$="SAREPTOT_SBR"
 	sqlprep$="CREATE PROCEDURE SAREPTOT_SBR "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, YEAR CHAR(4) IN, NUM_TO_LIST VARCHAR(1) IN, "
-	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN, UNSPECIFIED_PROD_TYPE VARCHAR(50) IN)"	
+    sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"   
     sqlprep$=sqlprep$+"'"+sproc_path$+"SAREPTOT_SBR.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'Dashboard SA Sales by Salesrep - Stacked Bar Widget'"

@@ -501,6 +501,45 @@ rem		topCustsSWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 
 		gosub update_meter
 	endif	
+
+    
+rem ==============================================
+rem --- create SA Top Salesrep YTD Totals bar chart
+rem ==============================================
+
+    dashboard_menu_id$="ADD_SAREPTOT_SBR"
+    gosub get_security
+    if allow_widget$="Y" and installMap!.get("SA")="Y"
+        name$ = "SAREPTOT_SBR"
+        title$ = Translate!.getTranslation("AON_TOP_SALESREPS")
+        previewText$=Translate!.getTranslation("AON_TOP_SALESREPS_DISPLAYED_IN_A_BAR_CHART")
+        previewImage$=preview_path$+"sareptot_sbr.png"
+        chartTitle$ = ""
+        domainTitle$ = ""
+        rangeTitle$ = Translate!.getTranslation("AON_$_IN_1000S")
+        flat=0 
+        orientation=BarChartWidget.getORIENTATION_VERTICAL() 
+        legend=1
+        connectString$=aon_url$
+        
+        rem --- params for calling SPROC
+        year$ = proc_date$(7,4)
+        num_to_list$ = "5"; rem <<============= HARDCODED =========
+    
+        sql$="CALL SAREPTOT_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+    
+        repsalesSStackedBarChartDashboardWidget! = salesDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+        repsalesWidget! = repsalesSStackedBarChartDashboardWidget!.getWidget()
+        repsalesWidget!.setDomainLabelAngle(1)
+        repsalesWidget!.setFontScalingFactor(0.45)
+rem     repsalesWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
+rem     repsalesWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
+        repsalesWidget!.setLabelsInBarChartColor("#000000")
+        repsalesWidget!.setChartRangeAxisToCurrency()
+
+        gosub update_meter
+    endif       
+
 	
 rem ==============================================
 rem --- create SA Top Salesreps STACKED bar chart
@@ -541,7 +580,7 @@ rem		toprepWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 
 	
 rem ==============================================
-rem --- create SA Top Salesreps pie chart
+rem --- create SA Top Salesreps YTD Totals pie chart
 rem ==============================================
 
 	dashboard_menu_id$="ADD_SATOPREP_PIE"
@@ -574,44 +613,6 @@ rem		toprepPWidget!.setLabelsInPieChartColor("#ffffff")
 		gosub update_meter
 	endif		
 
-	
-rem ==============================================
-rem --- create SA Salesrep YTD Totals stacked bar chart
-rem ==============================================
-
-	dashboard_menu_id$="ADD_SAREPTOT_SBR"
-	gosub get_security
-	if allow_widget$="Y" and installMap!.get("SA")="Y"
-		name$ = "SAREPTOT_SBR"
-		title$ = Translate!.getTranslation("AON_PRODUCTS_FOR_SALESREPS")
-		previewText$=Translate!.getTranslation("AON_PRODUCTS_FOR_SALESREPS_DISPLAYED_IN_A_STACKED_BAR_CHART")
-		previewImage$=preview_path$+"sareptot_sbr.png"
-		chartTitle$ = ""
-		domainTitle$ = ""
-		rangeTitle$ = Translate!.getTranslation("AON_$_IN_1000S")
-		flat=0 
-		orientation=BarChartWidget.getORIENTATION_VERTICAL() 
-		legend=1
-		connectString$=aon_url$
-		
-		rem --- params for calling SPROC
-		year$ = proc_date$(7,4)
-		num_to_list$ = "5"; rem <<============= HARDCODED =========
-	
-		sql$="CALL SAREPTOT_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"', '"+unspecified_prod_type$+"')"
-	
-		repsalesSStackedBarChartDashboardWidget! = salesDashboardCategory!.addStackedBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
-		repsalesWidget! = repsalesSStackedBarChartDashboardWidget!.getWidget()
-		
-		repsalesWidget!.setDomainLabelAngle(1)
-		repsalesWidget!.setFontScalingFactor(0.45)
-rem		repsalesWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
-rem		repsalesWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
-		repsalesWidget!.setLabelsInBarChartColor("#000000")
-        repsalesWidget!.setChartRangeAxisToCurrency()
-
-		gosub update_meter
-	endif		
 		
 rem =======================================
 rem --- create SA SA Top Salesrep line chart
@@ -652,7 +653,6 @@ rem		topRepsLWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 
 	endif
 		
-
 		
 rem =======================================
 rem --- create SA SA Top Salesrep Stacked Area chart

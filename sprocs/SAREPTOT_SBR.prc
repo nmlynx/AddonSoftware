@@ -53,7 +53,6 @@ rem --- Get the IN parameters used by the procedure
 	
 	firm_id$ =	sp!.getParameter("FIRM_ID")
 	barista_wd$ = sp!.getParameter("BARISTA_WD")
-    unspecified_prod_type$ = sp!.getParameter("UNSPECIFIED_PROD_TYPE")
 
 rem --- dirs	
 	sv_wd$=dir("")
@@ -66,7 +65,7 @@ rem --- Get Barista System Program directory
 	
 rem --- create the in memory recordset for return
 
-	dataTemplate$ = "PRODTYPE:C(20*),SALESREP:C(20*),TOTAL:C(7*)"
+	dataTemplate$ = "Dummy:C(1),SALESREP:C(20*),TOTAL:C(7*)"
 
 	rs! = BBJAPI().createMemoryRecordSet(dataTemplate$)
 
@@ -95,20 +94,17 @@ rem --- Dimension string templates
     dim arm10f$:templates$[2]
     dim ivm10a$:templates$[3]
     
-rem --- Get sales by salesperson and salesperson + product type
+rem --- Get sales by salesperson
 rem --- salesMap! key=total sales for salesperson, holds slspsnMap! (in case more than one salesperson with same total sales)
-rem --- slspsnMap! key=salesperson, holds prodTypeMap!
-rem --- prodTypeMap! key=product type, holds customer sales for product type
+rem --- slspsnMap! key=salesperson, holds nothing (empty)
     salesMap!=new java.util.TreeMap()
     slspsn_code$=""
-    product_type$=""
     read(sam03a_dev,key=firm_id$+year$,dom=*next)
     while 1
         readrecord(sam03a_dev,end=*break)sam03a$
         if sam03a.firm_id$+sam03a.year$<>firm_id$+year$ then break
 
         if sam03a.slspsn_code$<>slspsn_code$ then gosub slspsn_break
-        if sam03a.product_type$<>product_type$ then gosub prodType_break
 
         thisSales=sam03a.total_sales_01+sam03a.total_sales_02+sam03a.total_sales_03+sam03a.total_sales_04+
 :                 sam03a.total_sales_05+sam03a.total_sales_06+sam03a.total_sales_07+sam03a.total_sales_08+
@@ -116,7 +112,6 @@ rem --- prodTypeMap! key=product type, holds customer sales for product type
 :                 sam03a.total_sales_13
         thisSales=round(thisSales,2)
         slspsnSales=slspsnSales+thisSales
-        prodTypeSales=prodTypeSales+thisSales
     wend
     gosub slspsn_break
 
@@ -135,26 +130,12 @@ rem --- Build result set for top five salespersons by sales
                 if topSlspsns>num_to_list then break
                 dim arm10f$:fattr(arm10f$)
                 findrecord(arm10f_dev,key=firm_id$+"F"+slspsn_code$,dom=*next)arm10f$
-                
-                prodTypeMap!=slspsnMap!.get(slspsn_code$)
-                prodIter!=prodTypeMap!.keySet().iterator()
-                while prodIter!.hasNext()
-                    product_type$=prodIter!.next()
-                    prodTypeSales=prodTypeMap!.get(product_type$)
-                    dim ivm10a$:fattr(ivm10a$)                  
-                    if product_type$=fill(len(ivm10a.product_type$)," ") then
-                        rem --- Sales might be summarized by customer with no product type
-                        ivm10a.code_desc$=unspecified_prod_type$
-                    else
-                        findrecord(ivm10a_dev,key=firm_id$+"A"+product_type$,dom=*next)ivm10a$
-                    endif
-                
-                    data! = rs!.getEmptyRecordData()
-                    data!.setFieldValue("SALESREP",arm10f.code_desc$)
-                    data!.setFieldValue("PRODTYPE",ivm10a.code_desc$)
-                    data!.setFieldValue("TOTAL",str(prodTypeSales))
-                    rs!.insert(data!)
-                wend
+
+                data! = rs!.getEmptyRecordData()
+                data!.setFieldValue("DUMMY"," ")
+                data!.setFieldValue("SALESREP",arm10f.code_desc$)
+                data!.setFieldValue("TOTAL",str(slspsnSales/1000))
+                rs!.insert(data!)
             wend
             if topSlspsns>num_to_list then break
         wend
@@ -166,33 +147,19 @@ rem --- Tell the stored procedure to return the result set.
 	goto std_exit
 
 slspsn_break: rem --- Salesperson break
-    gosub prodType_break
     if slspsn_code$<>"" then
         if salesMap!.containsKey(slspsnSales) then
             slspsnMap!=salesMap!.get(slspsnSales)
         else
             slspsnMap!=new java.util.HashMap()
         endif
-        slspsnMap!.put(slspsn_code$,prodTypeMap!)
+        slspsnMap!.put(slspsn_code$,"")
         salesMap!.put(slspsnSales,slspsnMap!)
     endif
     
-    rem --- Initialize for next customer
+    rem --- Initialize for next salesperson
     slspsn_code$=sam03a.slspsn_code$
     slspsnSales=0
-    prodTypeMap!=new java.util.TreeMap()
-    product_type$=sam03a.product_type$
-    prodTypeSales=0
-    return
-    
-prodType_break: rem --- Product type break
-    if product_type$<>"" then
-        prodTypeMap!.put(product_type$,round(prodTypeSales/1000,2))
-    endif
-
-    rem --- Initialize for next product type
-    product_type$=sam03a.product_type$
-    prodTypeSales=0
     return
 	
 rem --- Functions
