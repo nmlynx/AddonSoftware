@@ -138,6 +138,7 @@ continues its 25-year history of constant improvement - additional features, inc
                         <li>Optimized SPROCs improve load/display times for Sales Analysis data.</li>
                         <li>Month and Year filters have been added to the AR Drilldown Sales Report widget.</li>
                         <li>Uses the new setChartRangeAxisToCurrency() method on applicable widgets.</li>
+                        <li>Accounts Payable Export 1099 Data to Text has been updated for 2014 export to Account Ability.</li>
                         </ul>
 					<li>Accounting</li>
                     <ul><li>Embedded dashboard widget on Customer Master form shows customer's aged balance, dynamically switching from a pie chart to a bar chart to show credit balances.</li>
@@ -147,7 +148,7 @@ continues its 25-year history of constant improvement - additional features, inc
                     <li>The Balance and Sales drilldowns on the Customer Master have been improved to include both OP and AR invoices, with hyperlinks on the invoice number to launch either OP Historical Invoice Inquiry, or Barista's Document Inquiry, filtered on the AR Invoice Number. New read-only fields showing the last aging criteria for this customer have been added along with drilldowns for each aged balance field. The new drilldowns make use of the aging criteria to show the invoices associated with each aging bucket.</li>
                     </ul>
                     <li>Distribution</li>
-                    <ul><li>Order Processing now uses Real Time Processing.</li>
+                    <ul><li>Order Processing now uses Real Time Processing. Order/Invoice Entry have undergone a major revision to eliminate the two-step process of entering data into one set of files, then transferring the data to the transaction history files after the register/update. All records are now written directly to the transaction history files, using new fields that carry the record status and creation/modification stamps to direct data entry, registers, updates, and queries. These structural file changes will enable future Real Time Processing enhancements in Sales Order Processing.</li>
                     <li>Added product type and related index to IV Warehouse Master table to improve performance on the Stock Status Report.</li>
                     <li>Creating a Duplicate or Credit Memo in Order/Invoice Entry uses a new custom query that runs much faster since it only shows data from the historical invoice header table. New hyperlinks in the query grid let the user launch a secondary query on invoice detail, or launch the Invoice History Inquiry form.</li>
                     <li>Invoicing has been enhanced so that, in addition to the current Master copy showing all invoices in the batch run, there is also now a Print copy containing only those invoices that need to be printed. The Print Now button in Invoice Entry launches a new form so the user can specify a message for the on-demand invoice, as well as select whether or not to process the invoice according to report control settings. Both batch (Master) and on-demand invoices will prompt the user to update the print file. Only when the user chooses to do the update are print flags set and applicable invoices added to the document processing queue, ensuring that documents don't go into the queue without approval.</li>
@@ -160,7 +161,7 @@ continues its 25-year history of constant improvement - additional features, inc
                     <ul><li>--</li>
                     </ul>
                     <li>Utilities</li>
-                    <ul><li>--</li>
+                    <ul><li>New Auto-conversion Utility uses a config file to record the conversion steps necessary when moving from one version to another. The utility runs automatically when launching Addon after an upgrade, ensuring the proper post-upgrade conversions are accomplished before running the application.</li>
                     </ul>
                     <li>Testing</li>
                     <ul><li>This version passes all QF-Test suites.</li>                    
