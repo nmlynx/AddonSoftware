@@ -130,10 +130,11 @@ continues its 25-year history of constant improvement - additional features, inc
 			<br />
 				<ul>
                     <li>All forms and reports are now launchable in BUI.</li>
-                    <li>** New BBj methods have been incorporated into Addon's table open routine for error 0's. The error message can now include the user and host that has the file locked.</li>
-                    <li>** Addon's error handling routine has also been enhanced for record locks, so the user and host that has a record locked can be displayed in the error message.</li>                                        
+                    <li>New BBj methods have been incorporated into Addon's table open routine for error 0's. The error message can now include the user and host that has the file locked.</li>
+                    <li>Addon's error handling routine has also been enhanced for record locks, so the user and host that has a record locked can be displayed in the error message.</li>                                        
                     <li>Addon Dashboard</li>
-                        <ul><li>** Now uses the setChartRangeAxisToCurrency() method on applicable widgets. This method uses the current locale's currency formatter to work in various countries.</li>
+                        <ul>** The GL Income Comparison widget now has drilldown capability. Click on a period revenue column, and the chart changes to show the revenue for that period by account. Then click on an account column to drill further and see a grid showing the transactions for the account for the period.</li>
+                        <li>Now uses the setChartRangeAxisToCurrency() method on applicable widgets. This method uses the current locale's currency formatter to work in various countries.</li>
                         <li>New Manufacturing tab with a widget that shows Work Orders linked to Sales Orders; includes filters for both Work Order status and Sales Order Status.</li>
                         <li>Fast access to the dashboard via a new top-level menu.</li>
                         <li>Optimized SPROCs improve load/display times for Sales Analysis data.</li>
@@ -141,8 +142,9 @@ continues its 25-year history of constant improvement - additional features, inc
                         </ul>
 					<li>Accounting</li>
                     <ul>
-                    <li>** AR Simple Invoices and Statements now generate Print copy as well as the Master copy. The Print copy contains only those invoices/statements that need to be printed. Closing the Master copy will prompt the user to forward designated documents to the document queue, ensuring that documents don't go into the queue without approval.</li>
-                    <li>** AR On-demand Statements (launched from the Customer form) also prompt the user before forwarding the statement to the document queue.</li>
+                    <li>** Accounts Payable Export 1099 Data to Text has been updated for 2014 export to Account Ability</li>
+                    <li>AR Simple Invoices and Statements now generate Print copy as well as the Master copy. The Print copy contains only those invoices/statements that need to be printed. Closing the Master copy will prompt the user to forward designated documents to the document queue, ensuring that documents don't go into the queue without approval.</li>
+                    <li>AR On-demand Statements (launched from the Customer form) also prompt the user before forwarding the statement to the document queue.</li>
                     <li>Enhanced drilldowns on the Customer Master</li>
                     <ul><li>The Balance drilldown now runs an enhanced custom query to view outstanding AR Invoices, showing the original invoice amount as well as current balance, with down-totals. New link on invoice number launches custom query into the invoice payment transactions.</li>
                     <li>Four additional drilldowns are available on the MTD, YTD, Prior Year, and Future sales fields if Order Processing is installed. These drilldowns show sales for the selected time frame, and a new link on the invoice number launches the OP Historical Invoice form.</li>
@@ -152,8 +154,8 @@ continues its 25-year history of constant improvement - additional features, inc
                     </ul>
                     <li>Distribution</li>
                     <ul>
-                    <li>** The Duplicate/Credit Memo query in Order and Invoice Entry has been replaced with a new custom query that runs much faster since it only shows data from the historical invoice header table. New hyperlinks in the query grid let the user launch a secondary query on invoice detail, or launch the Invoice History Inquiry form. </li>
-                    <li>** OP Invoicing has been enhanced in the following ways:</li>
+                    <li>The Duplicate/Credit Memo query in Order and Invoice Entry has been replaced with a new custom query that runs much faster since it only shows data from the historical invoice header table. New hyperlinks in the query grid let the user launch a secondary query on invoice detail, or launch the Invoice History Inquiry form. </li>
+                    <li>OP Invoicing has been enhanced in the following ways:</li>
                     <ul>
                     <li>In addition to the current Master copy showing all invoices in the batch run, there is also now a Print copy containing only those invoices that need to be printed.</li>
                     <li>The Print Now button in Invoice Entry launches a new form so the user can specify a message for the on-demand invoice, as well as select whether or not to process the invoice according to report control settings.</li>
