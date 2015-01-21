@@ -21,6 +21,7 @@ rem --- Addon dashboards
 	use ::dashboard/widget.bbj::PieChartWidget
 	use ::dashboard/widget.bbj::JasperViewerWidget
 	use ::dashboard/widget.bbj::CategoryDataItem
+    use ::dashboard/widget.bbj::KeyedValueDataItem
 	use ::dashboard/widget.bbj::EmbeddedWidgetFactory
 	use ::dashboard/widget.bbj::EmbeddedWidget
 	use ::dashboard/widget.bbj::EmbeddedWidgetWindow
@@ -519,7 +520,7 @@ rem ==============================================
         rangeTitle$ = Translate!.getTranslation("AON_$_IN_1000S")
         flat=0 
         orientation=BarChartWidget.getORIENTATION_VERTICAL() 
-        legend=1
+        legend=0
         connectString$=aon_url$
         
         rem --- params for calling SPROC
@@ -527,15 +528,20 @@ rem ==============================================
         num_to_list$ = "5"; rem <<============= HARDCODED =========
     
         sql$="CALL SAREPTOT_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
-    
-        repsalesSStackedBarChartDashboardWidget! = salesDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
-        repsalesWidget! = repsalesSStackedBarChartDashboardWidget!.getWidget()
+
+        repsalesBarChartDashboardWidget! = salesDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+        repsalesWidget! = repsalesBarChartDashboardWidget!.getWidget()
         repsalesWidget!.setDomainLabelAngle(1)
         repsalesWidget!.setFontScalingFactor(0.45)
 rem     repsalesWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem     repsalesWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
         repsalesWidget!.setLabelsInBarChartColor("#000000")
         repsalesWidget!.setChartRangeAxisToCurrency()
+        
+        dim chartState$:"CHART_TYPE:C(25*)"
+        chartState.chart_type$="TopSalesrepsYTD_bar"
+        repsalesWidget!.setUserData(chartState$)
+        repsalesBarChartDashboardWidget!.setCallback(DashboardWidget.getON_WIDGET_CLICK(),pgm(-2) + "::OnTopSalesrepsYTDChartWidgetClick")
 
         gosub update_meter
     endif       
@@ -609,6 +615,11 @@ rem ==============================================
 rem		toprepPWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		toprepPWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		toprepPWidget!.setLabelsInPieChartColor("#ffffff")
+        
+        dim chartState$:"CHART_TYPE:C(25*)"
+        chartState.chart_type$="TopSalesrepsYTD_pie"
+        toprepPWidget!.setUserData(chartState$)
+        toprepPPieChartDashboardWidget!.setCallback(DashboardWidget.getON_WIDGET_CLICK(),pgm(-2) + "::OnTopSalesrepsYTDChartWidgetClick")
 	
 		gosub update_meter
 	endif		
@@ -1176,9 +1187,9 @@ OnIncCmpBarChartWidgetClick:
      endif
 
     rem For a Left click, drilldown
-    if (button = 1) then 
-	    dataItem! = cast(CategoryDataItem, widget!.getChartDataItemFromPoint(x, y))
-	
+    if (button = 1) then
+        dataItem! = cast(CategoryDataItem, widget!.getChartDataItemFromPoint(x, y))
+
 	    if (dataItem! <> null()) then
 	    
     		rem Get the data from the chart
@@ -1287,6 +1298,114 @@ OnIncCmpBarChartWidgetClick:
 	                widget!.showTip(msg$)
 	        endif
 	    endif	
+    endif
+   
+exit
+
+REM =============================================   
+REM Handle the click event for the Top Salesreps YTD charts
+REM ============================================= 
+OnTopSalesrepsYTDChartWidgetClick:
+
+    declare DashboardWidgetClickEvent   dbWidgetClickEvent!
+    declare DashboardWidget             dbWidget!
+    declare BBjMouseUpEvent             click!
+
+    rem Get the event and the object payload
+    event! = BBjAPI().getLastEvent()
+    dbWidgetClickEvent! = cast(DashboardWidgetClickEvent, event!.getObject())
+    
+    rem From the custom event we can get the dashboard widget and the click event
+    dbWidget! = cast(DashboardWidget, dbWidgetClickEvent!.getDashboardWidget())
+    click! = cast(BBjMouseUpEvent, dbWidgetClickEvent!.getBBjMouseUpEvent()) 
+
+    rem Get the chart widget and some of the widget properties
+    widget! = dbWidget!.getWidget()
+    widgetName$ = dbWidget!.getName()
+    widgetTitle$ = dbWidget!.getTitle()
+
+    rem Get information about the click event
+    button = click!.getMouseButton()
+    x = click!.getX()
+    y = click!.getY()  
+
+    dim chartState$:"CHART_TYPE:C(25*)"
+    chartState$ = widget!.getUserData()
+    
+    rem Reset the widget back to the original query on a right click
+    if (button = 3) then 
+       rem --- params for calling SPROC
+       gosub get_sysinfo
+       gosub get_masks
+       year$ = proc_date$(7,4)
+       num_to_list$ = "5"; rem <<============= HARDCODED =========
+       sql$="CALL SAREPTOT_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+       chartState.chart_type$="TopSalesrepsYTD"
+       widget!.setUserData(chartState$)
+       widget!.setSQL(sql$)
+       widget!.refresh()
+       exit
+    endif
+
+    rem For a Left click, drilldown
+    if (button = 1) then 
+        if pos("TopSalesrepsYTD_bar"=chartState.chart_type$)=1 then
+            dataItem! = cast(CategoryDataItem, widget!.getChartDataItemFromPoint(x, y))
+        endif
+        if pos("TopSalesrepsYTD_pie"=chartState.chart_type$)=1 then
+            dataItem! = cast(KeyedValueDataItem, widget!.getChartDataItemFromPoint(x, y))
+        endif
+        
+        gosub get_sysinfo
+        gosub get_translate_object
+    
+        if (dataItem! <> null()) then
+       
+            rem Get the data from the chart
+            if pos("TopSalesrepsYTD_bar"=chartState.chart_type$)=1 then
+                slspsn_desc$ = dataItem!.getColKey()
+            endif
+            if pos("TopSalesrepsYTD_pie"=chartState.chart_type$)=1 then
+                slspsn_desc$ = dataItem!.getKey()
+            endif
+                
+            rem --- Setup SPROC
+            gosub get_masks
+            year$=proc_date$(7,4)
+            sql$ = "CALL SATOPREPPROD_GRD ('"+firm_id$+"', '"+year$+"', '"+slspsn_desc$+"', '"+masks$+"', '"+barista_wd$+"')"
+                                                
+            rem Create an embedded grid widget with the product type sales for the salesperson
+            name$ = "SATOPREPPROD_GRD"
+            title$ = cvs(slspsn_desc$,2)+" "+Translate!.getTranslation("AON_SALES")+" "+
+:               Translate!.getTranslation("AON_BY_PRODUCT")+" "+Translate!.getTranslation("AON_TYPE")
+                connectString$ = widget!.getConnectString()
+                
+                embeddedDBWidget! = EmbeddedWidgetFactory.createGridEmbeddedWidget(name$, title$, connectString$, sql$)
+ 
+                rem Setup the grid's columns
+            embeddedWidget! = embeddedDBWidget!.getWidget()
+            embeddedWidget!.setColumnWidthPercentages("50,25,25")
+            embeddedWidget!.setColumnAlignment(0,GridWidget.getHORIZONTAL_ALIGNMENT_LEFT())
+            embeddedWidget!.setColumnAlignment(1,GridWidget.getHORIZONTAL_ALIGNMENT_RIGHT())
+            embeddedWidget!.setColumnAlignment(2,GridWidget.getHORIZONTAL_ALIGNMENT_RIGHT())
+            colHeaderVec!=BBjAPI().makeVector()
+            colHeaderVec!.addItem(Translate!.getTranslation("AON_PRODUCT_TYPE"))
+            colHeaderVec!.addItem(Translate!.getTranslation("AON_YTD_SALES"))
+            colHeaderVec!.addItem(Translate!.getTranslation("AON_PRIOR_YEAR")+" "+Translate!.getTranslation("AON_SALES"))
+            embeddedWidget!.setColumnHeaderData(colHeaderVec!)
+
+            rem Create an embedded widget window to display the grid in
+            embeddedWidgetWindow! = new EmbeddedWidgetWindow(embeddedDBWidget!, 400, 230)
+            embeddedWidgetWindow!.setTitle("WidgetWindow")
+            embeddedWidgetWindow!.doModal()
+            embeddedWidgetWindow!.destroy()
+            widget!.OnClearTip(null())
+            sql$ = ""
+        else
+            rem They clicked on the chart, but not on a data entity so we'll show an instructional tip
+            msg$=Translate!.getTranslation("AON_WIDGET_SATOPREPPROD_GRD_LEFT_CLICK")
+            widget!.showTip(msg$)
+        endif   
     endif
    
 exit
