@@ -844,7 +844,7 @@ rem ==============================================
     sproc_vw_name$="SATOPREPPROD_GRD"
     sqlprep$="CREATE PROCEDURE SATOPREPPROD_GRD "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, YEAR CHAR(4) IN, SLSPSN_DESC CHAR(20) IN, "
-    sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"   
+    sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN, UNSPECIFIED_PROD_TYPE VARCHAR(50) IN)"   
     sqlprep$=sqlprep$+"'"+sproc_path$+"SATOPREPPROD_GRD.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'Dashboard SA Salesrep Sales by Product Type - Grid Widget'"

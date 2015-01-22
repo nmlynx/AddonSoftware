@@ -38,6 +38,7 @@ rem --- Get the IN parameters used by the procedure
 	year$ = sp!.getParameter("YEAR")
     slspsn_desc$ = sp!.getParameter("SLSPSN_DESC")
 	barista_wd$ = sp!.getParameter("BARISTA_WD")
+	unspecified_prod_type$ = sp!.getParameter("UNSPECIFIED_PROD_TYPE")
 	masks$ = sp!.getParameter("MASKS")
 	gl_amt_mask$=fngetmask$("gl_amt_mask","$###,###,##0.00-",masks$)
 
@@ -104,8 +105,7 @@ rem --- producTypeMap! key=product type, holds salesVec!
 rem --- salesVec! (0)=prior year sales, (1)=current YTD sales
 
     productTypeMap!=new java.util.TreeMap()
-    wk$=fattr(sam03a$,"item_id")
-    dim blank_item$(dec(wk$(10,2)))
+    productType$=""
     prior_year$=str(num(year$)-1)
     trip_key$=firm_id$+prior_year$+slspsn_code$
     read(sam03a_dev,key=trip_key$,dom=*next)
@@ -114,47 +114,29 @@ rem --- salesVec! (0)=prior year sales, (1)=current YTD sales
         if pos(trip_key$=sam03a_key$)<>1 then
             if prior_year$="" then break
             rem --- Do current year now
+            gosub productType_break
             prior_year$=""
             trip_key$=firm_id$+year$+slspsn_code$
             read(sam03a_dev,key=trip_key$,dom=*continue)
         endif
         readrecord(sam03a_dev)sam03a$
-        productType$=sam03a.product_type$        
-        dim sam03a$:fattr(sam03a$)
-        readrecord(sam03a_dev,key=trip_key$+productType$+blank_item$,dom=*next)sam03a$
+
+        if sam03a.product_type$<>productType$ then gosub productType_break
 
         thisSales=sam03a.total_sales_01+sam03a.total_sales_02+sam03a.total_sales_03+sam03a.total_sales_04+
 :                 sam03a.total_sales_05+sam03a.total_sales_06+sam03a.total_sales_07+sam03a.total_sales_08+
 :                 sam03a.total_sales_09+sam03a.total_sales_10+sam03a.total_sales_11+sam03a.total_sales_12+
 :                 sam03a.total_sales_13
         thisSales=round(thisSales,2)
-        if productTypeMap!.containsKey(productType$) then
-            salesVec!=productTypeMap!.get(productType$)
-        else
-            salesVec!=BBjAPI().makeVector()
-        endif
-        if prior_year$<>"" then
-            rem --- Prior year sales
-            salesVec!.addItem(thisSales)
-            salesVec!.addItem(0)
-        else
-            rem --- Current YTD sales
-            if salesVec!.size()=0 then
-                salesVec!.addItem(0)
-                salesVec!.addItem(thisSales)
-            else
-                salesVec!.insertItem(1,thisSales)
-            endif
-        endif
-        productTypeMap!.put(productType$,salesVec!)
-
-        rem --- Move to next product type
-        read(sam03a_dev,key=trip_key$+productType$+$FF$,dom=*next)
+        productTypeSales=productTypeSales+thisSales
     wend
+    gosub productType_break
 
 rem --- Build result set for this salesperson's sales by product type
 
     if productTypeMap!.size()>0 then
+        ytd_total=0
+        prior_total=0
         productTypeIter!=productTypeMap!.keySet().iterator()
         while productTypeIter!.hasNext()
             productType$=productTypeIter!.next()
@@ -162,6 +144,7 @@ rem --- Build result set for this salesperson's sales by product type
 
             rem ... Get product type description
             dim ivm10a$:fattr(ivm10a$)
+            ivm10a.code_desc$=unspecified_prod_type$; rem --- Sales might be summarized by salesrep with no product type
             readrecord(ivm10a_dev,key=firm_id$+"A"+productType$,dom=*next)ivm10a$
                 
             data! = rs!.getEmptyRecordData()
@@ -169,7 +152,24 @@ rem --- Build result set for this salesperson's sales by product type
             data!.setFieldValue("YTD_AMT",str(salesVec!.getItem(1):gl_amt_mask$))
             data!.setFieldValue("PRIOR_AMT",str(salesVec!.getItem(0):gl_amt_mask$))
             rs!.insert(data!)
+            
+            ytd_total=ytd_total+salesVec!.getItem(1)
+            prior_total=prior_total+salesVec!.getItem(0)
         wend
+        
+        rem --- Add salesperson's total sales to record set
+        dashes$=fill(len(gl_amt_mask$),"=")
+        data! = rs!.getEmptyRecordData()
+        data!.setFieldValue("PRODUCT_TYPE","")
+        data!.setFieldValue("YTD_AMT",dashes$)
+        data!.setFieldValue("PRIOR_AMT",dashes$)
+        rs!.insert(data!)
+            
+        data! = rs!.getEmptyRecordData()
+        data!.setFieldValue("PRODUCT_TYPE","")
+        data!.setFieldValue("YTD_AMT",str(ytd_total:gl_amt_mask$))
+        data!.setFieldValue("PRIOR_AMT",str(prior_total:gl_amt_mask$))
+        rs!.insert(data!)
     endif
 
 rem --- Tell the stored procedure to return the result set.
@@ -177,6 +177,34 @@ rem --- Tell the stored procedure to return the result set.
 	sp!.setRecordSet(rs!)
 
 	goto std_exit
+
+productType_break: rem --- Product type break
+    if productType$<>"" then
+        if productTypeMap!.containsKey(productType$) then
+            salesVec!=productTypeMap!.get(productType$)
+        else
+            salesVec!=BBjAPI().makeVector()
+        endif
+        if prior_year$<>"" then
+            rem --- Prior year sales
+            salesVec!.addItem(productTypeSales)
+            salesVec!.addItem(0)
+        else
+            rem --- Current YTD sales
+            if salesVec!.size()=0 then
+                salesVec!.addItem(0)
+                salesVec!.addItem(productTypeSales)
+            else
+                salesVec!.insertItem(1,productTypeSales)
+            endif
+        endif
+        productTypeMap!.put(productType$,salesVec!)
+    endif
+    
+    rem --- Initialize for next product type
+    productType$=sam03a.product_type$
+    productTypeSales=0
+    return
 
 rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 

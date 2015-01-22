@@ -1332,24 +1332,6 @@ OnTopSalesrepsYTDChartWidgetClick:
     dim chartState$:"CHART_TYPE:C(25*)"
     chartState$ = widget!.getUserData()
 
-rem wgh ... 8160
-rem wgh ... 8160 ... warn when salesreps sales aren't available by product type
-    
-    rem Reset the widget back to the original query on a right click
-    if (button = 3) then 
-       rem --- params for calling SPROC
-       gosub get_sysinfo
-       gosub get_masks
-       year$ = proc_date$(7,4)
-       num_to_list$ = "5"; rem <<============= HARDCODED =========
-       sql$="CALL SAREPTOT_BAR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
-       chartState.chart_type$="TopSalesrepsYTD"
-       widget!.setUserData(chartState$)
-       widget!.setSQL(sql$)
-       widget!.refresh()
-       exit
-    endif
-
     rem For a Left click, drilldown
     if (button = 1) then 
         if pos("TopSalesrepsYTD_bar"=chartState.chart_type$)=1 then
@@ -1375,17 +1357,18 @@ rem wgh ... 8160 ... warn when salesreps sales aren't available by product type
             rem --- Setup SPROC
             gosub get_masks
             year$=proc_date$(7,4)
-            sql$ = "CALL SATOPREPPROD_GRD ('"+firm_id$+"', '"+year$+"', '"+slspsn_desc$+"', '"+masks$+"', '"+barista_wd$+"')"
+            unspecified_prod_type$ = Translate!.getTranslation("AON_UNSPECIFIED")
+            sql$ = "CALL SATOPREPPROD_GRD ('"+firm_id$+"', '"+year$+"', '"+slspsn_desc$+"', '"+masks$+"', '"+barista_wd$+"', '"+unspecified_prod_type$+"')"
                                                 
             rem Create an embedded grid widget with the product type sales for the salesperson
             name$ = "SATOPREPPROD_GRD"
             title$ = cvs(slspsn_desc$,2)+" "+Translate!.getTranslation("AON_SALES")+" "+
-:               Translate!.getTranslation("AON_BY_PRODUCT")+" "+Translate!.getTranslation("AON_TYPE")
-                connectString$ = widget!.getConnectString()
+:           Translate!.getTranslation("AON_BY_PRODUCT")+" "+Translate!.getTranslation("AON_TYPE")
+            connectString$ = widget!.getConnectString()
                 
-                embeddedDBWidget! = EmbeddedWidgetFactory.createGridEmbeddedWidget(name$, title$, connectString$, sql$)
+            embeddedDBWidget! = EmbeddedWidgetFactory.createGridEmbeddedWidget(name$, title$, connectString$, sql$)
  
-                rem Setup the grid's columns
+            rem Setup the grid's columns
             embeddedWidget! = embeddedDBWidget!.getWidget()
             embeddedWidget!.setColumnWidthPercentages("50,25,25")
             embeddedWidget!.setColumnAlignment(0,GridWidget.getHORIZONTAL_ALIGNMENT_LEFT())

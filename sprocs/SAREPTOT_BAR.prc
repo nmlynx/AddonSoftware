@@ -131,10 +131,11 @@ rem --- Build result set for top five salespersons by sales
                 dim arm10f$:fattr(arm10f$)
                 findrecord(arm10f_dev,key=firm_id$+"F"+slspsn_code$,dom=*next)arm10f$
 
+                slspsnSales=round(slspsnSales/1000,1)
                 data! = rs!.getEmptyRecordData()
                 data!.setFieldValue("DUMMY"," ")
                 data!.setFieldValue("SALESREP",arm10f.code_desc$)
-                data!.setFieldValue("TOTAL",str(slspsnSales/1000))
+                data!.setFieldValue("TOTAL",str(slspsnSales))
                 rs!.insert(data!)
             wend
             if topSlspsns>num_to_list then break
