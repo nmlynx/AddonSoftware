@@ -47,11 +47,12 @@ rem --- GLINCEXP_ARE
 rem --- SATOPCST_BAR
 rem --- SATOPCST_SBR
 
-rem --- SAREPTOT_SBR
+rem --- SAREPTOT_BAR
 rem --- SATOPREP_LIN
 rem --- SATOPREP_SAR
 rem --- SATOPREP_PIE
 rem --- SATOPREP_SBR
+rem --- SATOPREPPROD_GRD
 
 rem --- SFWOSSOS_GRD
 
@@ -308,7 +309,7 @@ rem --- first drop all std Addon SPROCs
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def		
 	
-	sproc_vw_name$="SAREPTOT_SBR"
+	sproc_vw_name$="SAREPTOT_BAR"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def		
 	
@@ -327,7 +328,10 @@ rem --- first drop all std Addon SPROCs
 	sproc_vw_name$="SATOPREP_SBR"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def		
-
+    
+    sproc_vw_name$="SATOPREPPROD_GRD"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def      
 	
 	sproc_vw_name$="SFWOSSOS_GRD"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
@@ -781,27 +785,16 @@ rem ==============================================
 
     gosub create_sproc_def		
 		
-	rem --- Dashboard: SAREPTOT_SBR
-    sproc_vw_name$="SAREPTOT_SBR"
-	sqlprep$="CREATE PROCEDURE SAREPTOT_SBR "
+	rem --- Dashboard: SAREPTOT_BAR
+    sproc_vw_name$="SAREPTOT_BAR"
+	sqlprep$="CREATE PROCEDURE SAREPTOT_BAR "
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, YEAR CHAR(4) IN, NUM_TO_LIST VARCHAR(1) IN, "
     sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"   
-    sqlprep$=sqlprep$+"'"+sproc_path$+"SAREPTOT_SBR.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"'"+sproc_path$+"SAREPTOT_BAR.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'Dashboard SA Sales by Salesrep - Stacked Bar Widget'"
 
     gosub create_sproc_def		
-
-    rem --- Dashboard: SAREPTOT_SBR
-    sproc_vw_name$="SATOPREPPROD_GRD"
-    sqlprep$="CREATE PROCEDURE SATOPREPPROD_GRD "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, YEAR CHAR(4) IN, SLSPSN_DESC CHAR(20) IN, "
-    sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"   
-    sqlprep$=sqlprep$+"'"+sproc_path$+"SATOPREPPROD_GRD.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Dashboard SA Salesrep Sales by Product Type - Grid Widget'"
-
-gosub create_sproc_def      
 		
 	rem --- Dashboard: SATOPREP_LIN
     sproc_vw_name$="SATOPREP_LIN"
@@ -846,6 +839,17 @@ gosub create_sproc_def
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'Dashboard SA Top Salesreps - Stacked Bar Widget'"
 
     gosub create_sproc_def		
+
+    rem --- Dashboard: SATOPREPPROD_GRD
+    sproc_vw_name$="SATOPREPPROD_GRD"
+    sqlprep$="CREATE PROCEDURE SATOPREPPROD_GRD "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, YEAR CHAR(4) IN, SLSPSN_DESC CHAR(20) IN, "
+    sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"   
+    sqlprep$=sqlprep$+"'"+sproc_path$+"SATOPREPPROD_GRD.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Dashboard SA Salesrep Sales by Product Type - Grid Widget'"
+
+    gosub create_sproc_def      
 		
 	rem --- Dashboard: SFWOSSOS_GRD
     sproc_vw_name$="SFWOSSOS_GRD"

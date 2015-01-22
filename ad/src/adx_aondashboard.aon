@@ -508,13 +508,13 @@ rem ==============================================
 rem --- create SA Top Salesrep YTD Totals bar chart
 rem ==============================================
 
-    dashboard_menu_id$="ADD_SAREPTOT_SBR"
+    dashboard_menu_id$="ADD_SAREPTOT_BAR"
     gosub get_security
     if allow_widget$="Y" and installMap!.get("SA")="Y"
-        name$ = "SAREPTOT_SBR"
+        name$ = "SAREPTOT_BAR"
         title$ = Translate!.getTranslation("AON_TOP_SALESREPS")
         previewText$=Translate!.getTranslation("AON_TOP_SALESREPS_DISPLAYED_IN_A_BAR_CHART")
-        previewImage$=preview_path$+"sareptot_sbr.png"
+        previewImage$=preview_path$+"sareptot_bar.png"
         chartTitle$ = ""
         domainTitle$ = ""
         rangeTitle$ = Translate!.getTranslation("AON_$_IN_1000S")
@@ -527,7 +527,7 @@ rem ==============================================
         year$ = proc_date$(7,4)
         num_to_list$ = "5"; rem <<============= HARDCODED =========
     
-        sql$="CALL SAREPTOT_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+        sql$="CALL SAREPTOT_BAR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
 
         repsalesBarChartDashboardWidget! = salesDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
         repsalesWidget! = repsalesBarChartDashboardWidget!.getWidget()
@@ -1331,6 +1331,9 @@ OnTopSalesrepsYTDChartWidgetClick:
 
     dim chartState$:"CHART_TYPE:C(25*)"
     chartState$ = widget!.getUserData()
+
+rem wgh ... 8160
+rem wgh ... 8160 ... warn when salesreps sales aren't available by product type
     
     rem Reset the widget back to the original query on a right click
     if (button = 3) then 
@@ -1339,7 +1342,7 @@ OnTopSalesrepsYTDChartWidgetClick:
        gosub get_masks
        year$ = proc_date$(7,4)
        num_to_list$ = "5"; rem <<============= HARDCODED =========
-       sql$="CALL SAREPTOT_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+       sql$="CALL SAREPTOT_BAR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
        chartState.chart_type$="TopSalesrepsYTD"
        widget!.setUserData(chartState$)
        widget!.setSQL(sql$)

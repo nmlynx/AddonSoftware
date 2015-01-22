@@ -1,11 +1,11 @@
 rem ----------------------------------------------------------------------------
-rem Program: SAREPTOT_SBR.prc  
+rem Program: SAREPTOT_BAR.prc  
 rem Description: Stored Procedure to build a resultset that adx_aondashboard.aon
 rem              can use to populate the given dashboard widget
 rem 
 rem              Data returned is current year SA totals for salesreps
 rem              based on Sales stored in SA and is used by 
-rem              the "Sales by Salesrep" stacked bar widget
+rem              the "Sales by Salesrep" bar widget
 rem
 rem    ****  NOTE: Initial effort restricts the year to '2014' and the
 rem    ****        number of reps to 5.
@@ -20,11 +20,11 @@ rem Copyright BASIS International Ltd.
 rem ----------------------------------------------------------------------------
 
 GOTO SKIP_DEBUG
-Debug$= "C:\Dev_aon\aon\_SPROC-Debug\SAREPTOT_SBR_DebugPRC.txt"	
+Debug$= "C:\Dev_aon\aon\_SPROC-Debug\SAREPTOT_BAR_DebugPRC.txt"	
 string Debug$
 debugchan=unt
 open(debugchan)Debug$	
-write(debugchan)"Top of SAREPTOT_SBR "
+write(debugchan)"Top of SAREPTOT_BAR "
 SKIP_DEBUG:
 
 seterr sproc_error
