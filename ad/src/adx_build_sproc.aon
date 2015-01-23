@@ -832,8 +832,8 @@ rem ==============================================
 	rem --- Dashboard: SATOPREP_SBR
     sproc_vw_name$="SATOPREP_SBR"
 	sqlprep$="CREATE PROCEDURE SATOPREP_SBR "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, YEAR CHAR(4) IN, NUM_TO_LIST VARCHAR(1) IN, "
-	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN, UNSPECIFIED_PROD_TYPE VARCHAR(50) IN)"	
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, INCLUDE_TYPE CHAR(1) IN, YEAR CHAR(4) IN, NUM_TO_LIST VARCHAR(1) IN, "
+	sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"	
     sqlprep$=sqlprep$+"'"+sproc_path$+"SATOPREP_SBR.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'Dashboard SA Top Salesreps - Stacked Bar Widget'"

@@ -555,31 +555,48 @@ rem ==============================================
 	gosub get_security
 	if allow_widget$="Y" and installMap!.get("SA")="Y"
 		name$ = "SATOPREP_SBR"
-		title$ = Translate!.getTranslation("AON_PRODUCTS_FOR_TOP_SALESREPS")
-		previewText$=Translate!.getTranslation("AON_PRODUCTS_FOR_TOP_SALESREPS_DISPLAYED_IN_A_STACKED_BAR_CHART")
+		title$ = Translate!.getTranslation("AON_TOP_SALESREPS_MULTIYEAR")
+		previewText$=Translate!.getTranslation("AON_TOP_SALESREPS_MULTIYEAR_DISPLAYED_IN_A_STACKED_BAR_CHART")
 		previewImage$=preview_path$+"satoprep_sbr.png"
 		chartTitle$ = ""
 		domainTitle$ = ""
-		rangeTitle$ = ""
+		rangeTitle$ = Translate!.getTranslation("AON_$_IN_1000S")
 		flat=0 
 		orientation=BarChartWidget.getORIENTATION_HORIZONTAL() 
 		legend=1
 		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
+        include_type$="1"
 		year$ = proc_date$(7,4)
 		num_to_list$ = "5"; rem <<============= HARDCODED =========
 	
-		sql$="CALL SATOPREP_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"', '"+unspecified_prod_type$+"')"
+		sql$="CALL SATOPREP_SBR ('"+firm_id$+"', '"+include_type$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
 
 		toprepSStackedBarChartDashboardWidget! = salesDashboardCategory!.addStackedBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		toprepWidget! = toprepSStackedBarChartDashboardWidget!.getWidget()
 		
 		toprepWidget!.setDomainLabelAngle(1)
 		toprepWidget!.setFontScalingFactor(0.45)
+        toprepWidget!.setLabelsInBarChartColor("#000000")
         toprepWidget!.setChartRangeAxisToCurrency()
 rem		toprepWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		toprepWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
+
+        rem Create Filters 
+        filterName$ = "SATOPREP_SBR_FILTER_TIMEFRAME"
+        filterHashMap! = new LinkedHashMap()
+        include_last$=Translate!.getTranslation("AON_INCLUDE")+" "+Translate!.getTranslation("AON_LAST")
+        aon_years$=Translate!.getTranslation("AON_YEARS") 
+        filterHashMap!.put("1",include_last$+" "+Translate!.getTranslation("AON_YEAR"))
+        filterHashMap!.put("2",include_last$+" 2 "+aon_years$)
+        filterHashMap!.put("3",include_last$+" 3 "+aon_years$)
+        filterHashMap!.put("4",include_last$+" 4 "+aon_years$)
+        filterHashMap!.put("5",include_last$+" 5 "+aon_years$)
+        toolTip$ = Translate!.getTranslation("AON_SELECT_TIME_FRAME")
+        dockLocation = DashboardWidget.getDOCK_LEFT()
+        filter! = toprepSStackedBarChartDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
+        filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnSATOPREP_SBRFilterSelect")
 
 		gosub update_meter
 	endif	
@@ -1068,6 +1085,44 @@ rem     The inner widget gives us access to the dataset so that we can provide n
     incExpAWidget!.refresh()
 	
 	exit
+
+rem ==============================================   
+rem Handle filter select event for SATOPREP_SBR
+OnSATOPREP_SBRFilterSelect:
+rem ==============================================    
+rem The filter selection event for the Left filter on the Top Salesreps Over Multiple Years stacked bar graph
+rem Get the information from the filter event so we'll have our dashboard widget and the inner widget
+rem     The dashboard widget gives us access to the filters and links
+rem     The inner widget gives us access to the dataset so that we can provide new data
+
+    customEvent! = BBjAPI().getLastEvent()
+    filterSelectEvent! = customEvent!.getObject()
+    filterName$ = filterSelectEvent!.getFilterName()
+    
+    rem You can get the current filter value from the filter selection event
+    filterKey$ = filterSelectEvent!.getFilterKey()
+    filterValue$ = filterSelectEvent!.getFilterValue()
+    
+    rem Get the dashboard widget and inner widget
+    toprepSStackedBarChartDashboardWidget! = filterSelectEvent!.getDashboardWidget()
+    toprepWidget! = toprepSStackedBarChartDashboardWidget!.getWidget()
+    
+    gosub get_masks
+    gosub get_sysinfo
+    include_type$=filterKey$
+    year$ = proc_date$(7,4)
+    num_to_list$ = "5"; rem <<============= HARDCODED =========
+
+    sql$="CALL SATOPREP_SBR ('"+firm_id$+"', '"+include_type$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+    
+    rem Clear out the old data from the inner widget
+    toprepWidget!.clearDataSet()
+    
+    rem Refresh based on new sql
+    toprepWidget!.setSQL(sql$)
+    toprepWidget!.refresh()
+    
+    exit
 	
 rem ==============================================   
 rem Handle filter select event for "WOs linked to SOs" grid

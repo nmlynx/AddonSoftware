@@ -3,8 +3,8 @@ rem Program: SATOPREPPROD_GRD.prc
 rem Description: Stored Procedure to build a resultset that adx_aondashboard.bbj
 rem              can use to populate the given dashboard widget
 rem 
-rem              Data returned is for GL Income accounts for a given monthly period
-rem              uses as a drilldown from the "Income Comparison" BarChart widget
+rem              Data returned is a salesperson's sales by product type and is
+rem              used by a drilldown grid widget.
 rem
 rem AddonSoftware Version 15.00 - Apr2015
 rem Copyright BASIS International Ltd.  All Rights Reserved.
