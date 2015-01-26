@@ -143,8 +143,14 @@ rem ==============================================
 
 		incomeGridDashboardWidget! = acctDashboardCategory!.addGridDashboardWidget(name$,title$,previewText$,previewImage$,connectString$,sql$)
 		gridWidget!=incomeGridDashboardWidget!.getWidget()
-		gridWidget!.setColumnAlignment(3,GridWidget.getHORIZONTAL_ALIGNMENT_RIGHT())
 		gridWidget!.setColumnAlignment(0,GridWidget.getHORIZONTAL_ALIGNMENT_LEFT())
+        gridWidget!.setColumnAlignment(2,GridWidget.getHORIZONTAL_ALIGNMENT_RIGHT())
+        gridWidget!.setColumnMask(2,fngetmask$("gl_amt_mask","$###,###,##0.00-",masks$))
+        colHeaderVec!=BBjAPI().makeVector()
+        colHeaderVec!.addItem(Translate!.getTranslation("AON_DESCRIPTION"))
+        colHeaderVec!.addItem(Translate!.getTranslation("AON_YEAR"))
+        colHeaderVec!.addItem(Translate!.getTranslation("AON_TOTAL"))
+        gridWidget!.setColumnHeaderData(colHeaderVec!)
 
 		rem Create Filters 
 		filterName$ = Translate!.getTranslation("AON_INCOME_TOTALS_-_TIME_FRAME")
@@ -1871,6 +1877,23 @@ std_error: rem --- Standard error handler (18Nov2014)
     if pos("RETRY"=rd_err_act$) retry
     if pgm(-1)<>pgm(-2) status=999; exit 
     release
+    
+rem --- Functions
+
+    def fngetmask$(q1$,q2$,q3$)
+        rem --- q1$=mask name, q2$=default mask if not found in mask string, q3$=mask string from parameters
+        q$=q2$
+        if len(q1$)=0 return q$
+        if q1$(len(q1$),1)<>"^" q1$=q1$+"^"
+        q=pos(q1$=q3$)
+        if q=0 return q$
+        q$=q3$(q)
+        q=pos("^"=q$)
+        q$=q$(q+1)
+        q=pos("|"=q$)
+        q$=q$(1,q-1)
+        return q$
+    fnend
 
 rem ==============================================
 std_exit: rem --- Standard program end
