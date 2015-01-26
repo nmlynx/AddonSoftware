@@ -475,9 +475,8 @@ rem ==============================================
 	gosub get_security
 	if allow_widget$="Y" and installMap!.get("SA")="Y"
 		name$ = "SATOPCST_SBR"
-		title$ = Translate!.getTranslation("AON_PRODUCTS_FOR_TOP_CUSTOMERS")
-		previewText$=Translate!.getTranslation("AON_TOP_5_CUSTOMERS_DISPLAYED_IN_A_STACKED_BAR_CHART")
-		previewImage$=preview_path$+"satopcst_sbr.png"
+        title$ = Translate!.getTranslation("AON_TOP_CUSTOMERS_MULTIYEAR")
+        previewText$=Translate!.getTranslation("AON_TOP_CUSTOMERS_MULTIYEAR_DISPLAYED_IN_A_STACKED_BAR_CHART")
 		chartTitle$ = ""
 		domainTitle$ = ""
 		rangeTitle$ = ""
@@ -487,18 +486,36 @@ rem ==============================================
 		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
+        include_type$="1"
 		year$ = proc_date$(7,4)
 		num_to_list$ = "5"; rem <<============= HARDCODED =========
 	
-		sql$="CALL SATOPCST_SBR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"', '"+unspecified_prod_type$+"')"
+		sql$="CALL SATOPCST_SBR ('"+firm_id$+"', '"+include_type$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
 
-		topCustsSStackedBarChartDashboardWidget! = salesDashboardCategory!.addStackedBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
-		topCustsSWidget! = topCustsSStackedBarChartDashboardWidget!.getWidget()
-		topCustsSWidget!.setFontScalingFactor(0.45)
-		topCustsSWidget!.setDomainLabelAngle(1)
-        topCustsSWidget!.setChartRangeAxisToCurrency()
-rem		topCustsSWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
-rem		topCustsSWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
+		topCustsStackedBarChartDashboardWidget! = salesDashboardCategory!.addStackedBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		topCustsWidget! = topCustsStackedBarChartDashboardWidget!.getWidget()
+		
+		topCustsWidget!.setFontScalingFactor(0.45)
+		topCustsWidget!.setDomainLabelAngle(1)
+        topCustsWidget!.setLabelsInBarChartColor("#000000")
+        topCustsWidget!.setChartRangeAxisToCurrency()
+rem		topCustsWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
+rem		topCustsWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
+
+        rem Create Filters 
+        filterName$ = "SATOPCST_SBR_FILTER_TIMEFRAME"
+        filterHashMap! = new LinkedHashMap()
+        include_last$=Translate!.getTranslation("AON_INCLUDE")+" "+Translate!.getTranslation("AON_LAST")
+        aon_years$=Translate!.getTranslation("AON_YEARS") 
+        filterHashMap!.put("1",include_last$+" "+Translate!.getTranslation("AON_YEAR"))
+        filterHashMap!.put("2",include_last$+" 2 "+aon_years$)
+        filterHashMap!.put("3",include_last$+" 3 "+aon_years$)
+        filterHashMap!.put("4",include_last$+" 4 "+aon_years$)
+        filterHashMap!.put("5",include_last$+" 5 "+aon_years$)
+        toolTip$ = Translate!.getTranslation("AON_SELECT_TIME_FRAME")
+        dockLocation = DashboardWidget.getDOCK_LEFT()
+        filter! = topCustsStackedBarChartDashboardWidget!.addFilter(filterName$,filterHashMap!,toolTip$,dockLocation)
+        filter!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnSATOPCST_SBRFilterSelect")
 
 		gosub update_meter
 	endif	
@@ -1085,6 +1102,44 @@ rem     The inner widget gives us access to the dataset so that we can provide n
     incExpAWidget!.refresh()
 	
 	exit
+
+rem ==============================================   
+rem Handle filter select event for SATOPCST_SBR
+OnSATOPCST_SBRFilterSelect:
+rem ==============================================    
+rem The filter selection event for the Left filter on the Top Customers Over Multiple Years stacked bar graph
+rem Get the information from the filter event so we'll have our dashboard widget and the inner widget
+rem     The dashboard widget gives us access to the filters and links
+rem     The inner widget gives us access to the dataset so that we can provide new data
+
+    customEvent! = BBjAPI().getLastEvent()
+    filterSelectEvent! = customEvent!.getObject()
+    filterName$ = filterSelectEvent!.getFilterName()
+    
+    rem You can get the current filter value from the filter selection event
+    filterKey$ = filterSelectEvent!.getFilterKey()
+    filterValue$ = filterSelectEvent!.getFilterValue()
+    
+    rem Get the dashboard widget and inner widget
+    topCustsStackedBarChartDashboardWidget! = filterSelectEvent!.getDashboardWidget()
+    topCustsWidget! = topCustsStackedBarChartDashboardWidget!.getWidget()
+    
+    gosub get_masks
+    gosub get_sysinfo
+    include_type$=filterKey$
+    year$ = proc_date$(7,4)
+    num_to_list$ = "5"; rem <<============= HARDCODED =========
+
+    sql$="CALL SATOPCST_SBR ('"+firm_id$+"', '"+include_type$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+    
+    rem Clear out the old data from the inner widget
+    topCustsWidget!.clearDataSet()
+    
+    rem Refresh based on new sql
+    topCustsWidget!.setSQL(sql$)
+    topCustsWidget!.refresh()
+    
+    exit
 
 rem ==============================================   
 rem Handle filter select event for SATOPREP_SBR
