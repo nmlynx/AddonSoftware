@@ -146,6 +146,7 @@ rem ==============================================
 		gridWidget!.setColumnAlignment(0,GridWidget.getHORIZONTAL_ALIGNMENT_LEFT())
         gridWidget!.setColumnAlignment(2,GridWidget.getHORIZONTAL_ALIGNMENT_RIGHT())
         gridWidget!.setColumnMask(2,fngetmask$("gl_amt_mask","$###,###,##0.00-",masks$))
+        gridWidget!.setColumnStyle(2,GridWidget.getCELL_STYLE_INPUTN())
         colHeaderVec!=BBjAPI().makeVector()
         colHeaderVec!.addItem(Translate!.getTranslation("AON_DESCRIPTION"))
         colHeaderVec!.addItem(Translate!.getTranslation("AON_YEAR"))
