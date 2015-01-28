@@ -368,6 +368,11 @@ rem		expPieWidget!.setCustomChartColors(chartColors!)
 		browseOnSelect = 0
 		link! = expPieChartDashboardWidget!.addLink(url$,text$,toolTip$,dockLocation,browseOnSelect)
 		link!.setCallback(DashboardWidgetLink.getON_LINK_SELECT(),pgm(-2) + "::OnGLEXPTOT_PIEAppLink")
+        
+        dim chartState$:"CHART_TYPE:C(25*)"
+        chartState.chart_type$="YTDExpenseBreakdown_pie"
+        expPieWidget!.setUserData(chartState$)
+        expPieChartDashboardWidget!.setCallback(DashboardWidget.getON_WIDGET_CLICK(),pgm(-2) + "::YTDExpenseBreakdownChartWidgetClick")
 		
 		gosub update_meter
 	endif
@@ -1415,6 +1420,49 @@ OnIncCmpBarChartWidgetClick:
 	                widget!.showTip(msg$)
 	        endif
 	    endif	
+    endif
+   
+exit
+
+REM =============================================   
+REM Handle the click event for the YTD Expense Breakdown charts
+REM ============================================= 
+YTDExpenseBreakdownChartWidgetClick:
+
+    declare DashboardWidgetClickEvent   dbWidgetClickEvent!
+    declare DashboardWidget             dbWidget!
+    declare BBjMouseUpEvent             click!
+
+    rem Get the event and the object payload
+    event! = BBjAPI().getLastEvent()
+    dbWidgetClickEvent! = cast(DashboardWidgetClickEvent, event!.getObject())
+    
+    rem From the custom event we can get the dashboard widget and the click event
+    dbWidget! = cast(DashboardWidget, dbWidgetClickEvent!.getDashboardWidget())
+    click! = cast(BBjMouseUpEvent, dbWidgetClickEvent!.getBBjMouseUpEvent()) 
+
+    rem Get the chart widget and some of the widget properties
+    widget! = dbWidget!.getWidget()
+    widgetName$ = dbWidget!.getName()
+    widgetTitle$ = dbWidget!.getTitle()
+
+    rem Get information about the click event
+    button = click!.getMouseButton()
+    x = click!.getX()
+    y = click!.getY()  
+
+    dim chartState$:"CHART_TYPE:C(25*)"
+    chartState$ = widget!.getUserData()
+
+    rem For a Left click, drilldown
+    if (button = 1) then 
+        dataItem! = cast(KeyedValueDataItem, widget!.getChartDataItemFromPoint(x, y))
+        if (dataItem! <> null()) then
+            rem --- Show custom tip
+            gosub get_masks 
+            msg$=cvs(dataItem!.getKey(),3)+" = "+cvs(str(dataItem!.getValue(),fngetmask$("gl_amt_mask","$###,###,##0.00-",masks$)),3)
+            widget!.showTip(msg$)
+        endif   
     endif
    
 exit
