@@ -212,6 +212,7 @@ rem		incCmpWidget!.setChartColors("#00a4d9","#7fbe27",1.0,1.0); rem Colors for B
 rem		incCmpWidget!.setChartColors("#3cb6df,#4aca75,#91bd5d"); rem supplying three explicit colors due to issue in legend vs chart if range is used (CAH)
 		incCmpWidget!.setLabelsInBarChartColor("#000000")
 		
+        rem Widget click event             
 		dim chartState$:"CHART_TYPE:C(25*),INCLUDE_TYPE:C(1*),YEAR:C(4*),PERIOD:C(2*)"
 		chartState.CHART_TYPE$="IncomeCompare", chartState.INCLUDE_TYPE$="A",chartState.YEAR$="", chartState.period$=""
 		incCmpWidget!.setUserData(chartState$)
@@ -276,6 +277,12 @@ rem ==============================================
 rem		acctWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		acctWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 
+        rem Widget click event             
+        dim chartState$:"CHART_TYPE:C(25*)"
+        chartState.chart_type$="BankAccountBalances_bar"
+        acctWidget!.setUserData(chartState$)
+        bankacctBarChartDashboardWidget!.setCallback(DashboardWidget.getON_WIDGET_CLICK(),pgm(-2) + "::BankAccountBalancesChartWidgetClick")
+
 		gosub update_meter
 	endif
 
@@ -287,7 +294,7 @@ rem ==============================================
 	gosub get_security
 	if allow_widget$="Y" and installMap!.get("GL")="Y"
 		name$="GLBNKBAL_RNG"
-		title$ = Translate!.getTranslation("AON_BANK_BALANCES_RINGCHART")
+		title$ = Translate!.getTranslation("AON_BANK_ACCOUNT_BALANCES")
 		previewText$=Translate!.getTranslation("AON_BANK_ACCOUNT_BALANCES_DISPLAYED_IN_A_PIE_CHART")
 		previewImage$=preview_path$+"glbnkbal_rng.png"
 		chartTitle$ = ""
@@ -312,6 +319,12 @@ rem		ringChartWidget!.setChartColors(ringChartWidget!.getColorTheme(ChartWidget.
 	 
 		rem Ensure the labels aren't truncated by increasing the padding around the plot by 10%
 		ringChartWidget!.setPlotPadding(0.1)
+
+        rem Widget click event             
+        dim chartState$:"CHART_TYPE:C(25*)"
+        chartState.chart_type$="BankAccountBalances_ring"
+        ringChartWidget!.setUserData(chartState$)
+        bankacctRingChartDashboardWidget!.setCallback(DashboardWidget.getON_WIDGET_CLICK(),pgm(-2) + "::BankAccountBalancesChartWidgetClick")
 
 		rem Create Filters 
 		filterName$ = Translate!.getTranslation("AON_BANK_BALANCES_RINGCHART_-_TIMEFRAME")
@@ -369,6 +382,7 @@ rem		expPieWidget!.setCustomChartColors(chartColors!)
 		link! = expPieChartDashboardWidget!.addLink(url$,text$,toolTip$,dockLocation,browseOnSelect)
 		link!.setCallback(DashboardWidgetLink.getON_LINK_SELECT(),pgm(-2) + "::OnGLEXPTOT_PIEAppLink")
         
+        rem Widget click event             
         dim chartState$:"CHART_TYPE:C(25*)"
         chartState.chart_type$="YTDExpenseBreakdown_pie"
         expPieWidget!.setUserData(chartState$)
@@ -567,6 +581,7 @@ rem     repsalesWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
         repsalesWidget!.setLabelsInBarChartColor("#000000")
         repsalesWidget!.setChartRangeAxisToCurrency()
         
+        rem Widget click event             
         dim chartState$:"CHART_TYPE:C(25*)"
         chartState.chart_type$="TopSalesrepsYTD_bar"
         repsalesWidget!.setUserData(chartState$)
@@ -662,6 +677,7 @@ rem		toprepPWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		toprepPWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		toprepPWidget!.setLabelsInPieChartColor("#ffffff")
         
+        rem Widget click event             
         dim chartState$:"CHART_TYPE:C(25*)"
         chartState.chart_type$="TopSalesrepsYTD_pie"
         toprepPWidget!.setUserData(chartState$)
@@ -1233,34 +1249,10 @@ rem     The inner widget gives us access to the dataset so that we can provide n
 	
 	exit
 
-rem ==============================================   
-rem Handle filter select event for AR Drilldown Jasper widget
-OnSLSBYCST_JASFilterSelect:
-rem ==============================================    
-rem The filter selection event for the filters on the AR Drilldown Jasper widget
-rem Get the information from the filter event so we'll have our dashboard widget and the inner widget
-rem     The dashboard widget gives us access to the filters and links
-rem     The inner widget gives us access to the dataset so that we can provide new data
-
-    customEvent! = BBjAPI().getLastEvent()
-    filterSelectEvent! = customEvent!.getObject()
-    filterName$ = filterSelectEvent!.getFilterName()
     
-    salesJasperViewerDashboardWidget! = filterSelectEvent!.getDashboardWidget()
-    salesJasperViewerWidget! = salesJasperViewerDashboardWidget!.getWidget()
-    report! = salesJasperViewerWidget!.getReport()
-    
-    filterLeft! = salesJasperViewerDashboardWidget!.getDashboardWidgetFilterLeft()
-    month$ = filterLeft!.getKey()
-    report!.putParam("MONTH",month$)
-    
-    filterRight! = salesJasperViewerDashboardWidget!.getDashboardWidgetFilterRight()
-    year$ = filterRight!.getKey()
-    report!.putParam("YEAR",year$)
-    
-    salesJasperViewerWidget!.refresh()
-    
-    exit
+rem ==================================================================
+rem ===                      CLICK EVENTS                                 ===
+rem ==================================================================
 
 REM =============================================   
 REM Handle the click event for the Income Compare Bar Chart
@@ -1468,6 +1460,101 @@ YTDExpenseBreakdownChartWidgetClick:
 exit
 
 REM =============================================   
+REM Handle the click event for the Bank Account Balances charts
+REM ============================================= 
+BankAccountBalancesChartWidgetClick:
+
+    declare DashboardWidgetClickEvent   dbWidgetClickEvent!
+    declare DashboardWidget             dbWidget!
+    declare BBjMouseUpEvent             click!
+
+    rem Get the event and the object payload
+    event! = BBjAPI().getLastEvent()
+    dbWidgetClickEvent! = cast(DashboardWidgetClickEvent, event!.getObject())
+    
+    rem From the custom event we can get the dashboard widget and the click event
+    dbWidget! = cast(DashboardWidget, dbWidgetClickEvent!.getDashboardWidget())
+    click! = cast(BBjMouseUpEvent, dbWidgetClickEvent!.getBBjMouseUpEvent()) 
+
+    rem Get the chart widget and some of the widget properties
+    widget! = dbWidget!.getWidget()
+    widgetName$ = dbWidget!.getName()
+    widgetTitle$ = dbWidget!.getTitle()
+
+    rem Get information about the click event
+    button = click!.getMouseButton()
+    x = click!.getX()
+    y = click!.getY()  
+
+    dim chartState$:"CHART_TYPE:C(25*)"
+    chartState$ = widget!.getUserData()
+
+    rem For a Left click, drilldown
+    if (button = 1) then 
+        if pos("BankAccountBalances_bar"=chartState.chart_type$)=1 then
+            dataItem! = cast(CategoryDataItem, widget!.getChartDataItemFromPoint(x, y))
+        endif
+        if pos("BankAccountBalances_ring"=chartState.chart_type$)=1 then
+            dataItem! = cast(KeyedValueDataItem, widget!.getChartDataItemFromPoint(x, y))
+        endif
+        
+        gosub get_sysinfo
+        gosub get_translate_object
+    
+        if (dataItem! <> null()) then
+       
+            rem Get the data from the chart
+            if pos("BankAccountBalances_bar"=chartState.chart_type$)=1 then
+                gl_account$ = dataItem!.getColKey()
+            endif
+            if pos("BankAccountBalances_ring"=chartState.chart_type$)=1 then
+                gl_account$ = dataItem!.getKey()
+            endif
+
+            rem --- Remove non-numeric characters from GL account
+            tmp$=""
+            for i=1 to len(gl_account$)
+                tmp$=tmp$+str(num(gl_account$(i,1),err=*continue))
+            next i
+            gl_account$=tmp$
+            
+            rem --- Pad GL account to full element type size
+            account_desc$=""
+            files=1,begfile=1,endfile=files
+            dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+            files$[1]="glm-01",ids$[1]="GLM_ACCT"
+            call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
+            if !status then
+                dim glm01a$:templates$[1]
+                wk$=fattr(glm01a$,"gl_account")
+                gl_accnt_size=dec(wk$(10,2))
+            else
+                gl_accnt_size=10
+            endif
+            gl_account$=pad(gl_account$,gl_accnt_size,"0")               
+
+            rem --- Launch Account Summary Activity form for this GL account
+            rdNSAdmin! = BBjAPI().getNamespace("adminobjects", "barista", 1)
+            rdAdmin! = rdNSAdmin!.getValue("+bar_admin_" + cvs(stbl("+USER_ID"), 11))
+            query_user$=rdAdmin!.getUser()
+            query_pass$=rdAdmin!.getPassword()
+            
+            myConfig! = BBjAPI().getConfig().getCurrentCommandLineObject()
+            myConfig!.setProgramName(stbl("+DIR_SYP")+"bax_launch_task.bbj")
+            key_prefix$=firm_id$+gl_account$
+            myConfig!.setProgramArgs("-yT"+" -u"+query_user$+" -p"+query_pass$+" -tGLM_ACCTSUMHDR"+" -k"+key_prefix$)
+            
+            tmp=BBjAPI().newBBjSession(myConfig!)
+        else
+            rem They clicked on the chart, but not on a data entity so we'll show an instructional tip
+            msg$=Translate!.getTranslation("AON_WIDGET_LEFT_CLICK_GLBNKBAL")
+            widget!.showTip(msg$)
+        endif   
+    endif
+   
+exit
+
+REM =============================================   
 REM Handle the click event for the Top Salesreps YTD charts
 REM ============================================= 
 OnTopSalesrepsYTDChartWidgetClick:
@@ -1593,6 +1680,35 @@ rem ==============================================
 rem ==================================================================
 rem ===                     JASPER                                 ===
 rem ==================================================================
+
+rem ==============================================   
+rem Handle filter select event for AR Drilldown Jasper widget
+OnSLSBYCST_JASFilterSelect:
+rem ==============================================    
+rem The filter selection event for the filters on the AR Drilldown Jasper widget
+rem Get the information from the filter event so we'll have our dashboard widget and the inner widget
+rem     The dashboard widget gives us access to the filters and links
+rem     The inner widget gives us access to the dataset so that we can provide new data
+
+    customEvent! = BBjAPI().getLastEvent()
+    filterSelectEvent! = customEvent!.getObject()
+    filterName$ = filterSelectEvent!.getFilterName()
+    
+    salesJasperViewerDashboardWidget! = filterSelectEvent!.getDashboardWidget()
+    salesJasperViewerWidget! = salesJasperViewerDashboardWidget!.getWidget()
+    report! = salesJasperViewerWidget!.getReport()
+    
+    filterLeft! = salesJasperViewerDashboardWidget!.getDashboardWidgetFilterLeft()
+    month$ = filterLeft!.getKey()
+    report!.putParam("MONTH",month$)
+    
+    filterRight! = salesJasperViewerDashboardWidget!.getDashboardWidgetFilterRight()
+    year$ = filterRight!.getKey()
+    report!.putParam("YEAR",year$)
+    
+    salesJasperViewerWidget!.refresh()
+    
+    exit
 
 rem ==============================================    
 OnSLSBYCST_JASFileSave:
