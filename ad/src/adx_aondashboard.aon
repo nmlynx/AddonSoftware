@@ -919,6 +919,17 @@ rem ==============================================
 		woSOgridWidget!=woSOGridDashboardWidget!.getWidget()
 		woSOgridWidget!.setColumnAlignment(3,GridWidget.getHORIZONTAL_ALIGNMENT_RIGHT())
 		woSOgridWidget!.setColumnAlignment(0,GridWidget.getHORIZONTAL_ALIGNMENT_LEFT())
+        woSOgridWidget!.setColumnWidthPercentages("14,9,15,14,9,15,14,10")
+        colHeaderVec!=BBjAPI().makeVector()
+        colHeaderVec!.addItem(Translate!.getTranslation("AON_WORK_ORDER"))
+        colHeaderVec!.addItem(Translate!.getTranslation("AON_WO_STATUS"))
+        colHeaderVec!.addItem(Translate!.getTranslation("AON_EST")+" "+Translate!.getTranslation("AON_CMPLT"))
+        colHeaderVec!.addItem(Translate!.getTranslation("AON_SALES")+" "+Translate!.getTranslation("AON_ORDER"))
+        colHeaderVec!.addItem(Translate!.getTranslation("AON_ORDER")+" "+Translate!.getTranslation("AON_STATUS"))
+        colHeaderVec!.addItem(Translate!.getTranslation("AON_EST")+" "+Translate!.getTranslation("AON_SHIP"))
+        colHeaderVec!.addItem(Translate!.getTranslation("AON_ITEM"))
+        colHeaderVec!.addItem(Translate!.getTranslation("AON_QTY"))
+        woSOgridWidget!.setColumnHeaderData(colHeaderVec!)
 
 		rem Create Filters 
 		filterName$ = Translate!.getTranslation("AON_WO_STATUS")
