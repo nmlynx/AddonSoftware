@@ -88,7 +88,7 @@ rem --- masks$ will contain pairs of fields in a single string mask_name^mask|
 	
 rem --- create the in memory recordset for return
 
-    dataTemplate$ = "WO:C(7*), WO_Stat:C(1), Est_Cmplt:C(8*), SO:C(7*), SO_Stat:C(1), Est_Ship:C(8*), Item:C(20*), Quantity:C(7*)"
+    dataTemplate$ = "WO:C(7*), WO_Stat:C(1), Est_Cmplt:C(8*), Item:C(20*), Quantity:C(7*), SO:C(7*), SO_Stat:C(1), Est_Ship:C(8*)"
 
 	rs! = BBJAPI().createMemoryRecordSet(dataTemplate$)
 
@@ -200,6 +200,8 @@ rem --- get data
         else
             data!.setFieldValue("Est_Cmplt",fndate$(sfe01a.estcmp_date$))     
         endif
+        data!.setFieldValue("Item",sfe01a.item_id$)
+        data!.setFieldValue("Quantity",str(sfe01a.sch_prod_qty))
         data!.setFieldValue("SO",ope01a.order_no$)
         if ope01a.backord_flag$="B" then
             so_status$=ope01a.backord_flag$
@@ -221,8 +223,6 @@ rem --- get data
         else
             data!.setFieldValue("Est_Ship",fndate$(shipdate$))     
         endif
-        data!.setFieldValue("Item",sfe01a.item_id$)
-        data!.setFieldValue("Quantity",str(sfe01a.sch_prod_qty))
         rs!.insert(data!)
         got_at_least_one=1  
     wend
