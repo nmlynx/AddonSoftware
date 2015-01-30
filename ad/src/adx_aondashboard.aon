@@ -1464,9 +1464,13 @@ YTDExpenseBreakdownChartWidgetClick:
     if (button = 1) then 
         dataItem! = cast(KeyedValueDataItem, widget!.getChartDataItemFromPoint(x, y))
         if (dataItem! <> null()) then
+            rem Convert the sales value to a currency for the locale
+            currency! = java.text.NumberFormat.getCurrencyInstance()
+            value$ = str(currency!.format(dataItem!.getValue()))
+
             rem --- Show custom tip
             gosub get_masks 
-            msg$=cvs(dataItem!.getKey(),3)+" = "+cvs(str(dataItem!.getValue(),fngetmask$("gl_amt_mask","$###,###,##0.00-",masks$)),3)
+            msg$=cvs(dataItem!.getKey(),3)+" = "+value$
             widget!.showTip(msg$)
         endif   
     endif
