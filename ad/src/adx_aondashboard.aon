@@ -940,7 +940,10 @@ rem ==============================================
 		filterHashMap!.put("D",Translate!.getTranslation("AON_OPEN_AND_PLANNED_WOS"))
 		filterHashMap!.put("E",Translate!.getTranslation("AON_PLANNED_AND_QUOTED_WOS"))
 		filterHashMap!.put("F",Translate!.getTranslation("AON_OPEN_AND_QUOTED_WOS"))
-		filterHashMap!.put("G",Translate!.getTranslation("AON_ALL_OPEN/PLANNED/QUOTED"))
+        filterHashMap!.put("G",Translate!.getTranslation("AON_ALL_EXCEPT_CLOSED_WOS"))
+        filterHashMap!.put("H",Translate!.getTranslation("AON_CLOSED_WOS_ONLY"))
+        filterHashMap!.put("I",Translate!.getTranslation("AON_OPEN_AND_CLOSED_WOS"))
+        filterHashMap!.put("J",Translate!.getTranslation("AON_ALL_OPEN/PLANNED/QUOTED/CLOSED"))
 
 		toolTip$ = Translate!.getTranslation("AON_SELECT_WO_STATUS")
 		dockLocation = DashboardWidget.getDOCK_LEFT()
@@ -1242,7 +1245,7 @@ rem     The inner widget gives us access to the dataset so that we can provide n
     rem Get the current filter values from the dashboard widget, as that way we have access to all of them
     filterLeft! = woSOGridDashboardWidget!.getDashboardWidgetFilterLeft()
 	woSOWidgetFilterCompareKey$ = filterLeft!.getKey()
-	wo_include_type$=woSOWidgetFilterCompareKey$;rem A-G
+	wo_include_type$=woSOWidgetFilterCompareKey$;rem A-J
 	
 	filterRight! = woSOGridDashboardWidget!.getDashboardWidgetFilterRight()
 	woSOWidgetFilterCompareKey$ = filterRight!.getKey();rem A-G

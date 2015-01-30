@@ -1,9 +1,9 @@
 rem ----------------------------------------------------------------------------
 rem Program: SFWOSSOS_GRD.prc     
-rem Description: Stored Procedure to build a resultset that aon_dashboard.bbj
+rem Description: Stored Procedure to build a resultset that adx_aondashboard.bbj
 rem              can use to populate the given dashboard widget
 rem 
-rem              Data returned is for non-closed WOs that have links to SOs
+rem              Data returned is for WOs that have links to SOs
 rem              for the "WOs linked to SOs" grid widget
 rem
 rem Author(s): C. Hawkins, C. Johnson
@@ -14,7 +14,7 @@ rem Copyright BASIS International Ltd.
 rem ----------------------------------------------------------------------------
 
 GOTO SKIP_DEBUG
-Debug$= "C:\Dev_aon\aon\_SPROC-Debug\SFWOSSOS_GRD_DebugPRC.txt"	
+Debug$= "C:\Temp\SFWOSSOS_GRD_DebugPRC.txt"	
 string Debug$
 debugchan=unt
 open(debugchan)Debug$	
@@ -44,7 +44,10 @@ rem --- Get the IN parameters used by the procedure
 													  rem D = Open and Planned WOs
 													  rem E = Planned and Quoted WOs
 													  rem F = Open and Quoted WOs
-													  rem G = All (Open/Planned/Quoted)
+                                                      rem G = All except Closed WOs
+                                                      rem H = Closed WOs only
+                                                      rem I = Open and Closed WOs
+                                                      rem J = All (Open/Planned/Quoted/Closed)
 	so_include_type$ = sp!.getParameter("SO_INCLUDE_TYPE"); rem As listed below; used to filter SOs reported
 													  rem A = Sales (Open) SOs only
 													  rem B = Backorders only
@@ -54,7 +57,7 @@ rem --- Get the IN parameters used by the procedure
 													  rem F = Sales and Quotes (no B/Os)
 													  rem G = All uninvoiced (sales, B/Os and quotes)
 													  
-	if pos(wo_include_type$="ABCDEFG")=0
+	if pos(wo_include_type$="ABCDEFGHIJ")=0
 		wo_include_type$="A"; rem default to Open WOs only
 	endif
 	
@@ -122,14 +125,21 @@ rem --- get data
     wo_status$=""
     if pos(wo_include_type$="G") then wo_status$=wo_status$+"OPQ"
         
-    rem --- Open / Open and Planned / Open and Quotes
-    if pos(wo_include_type$="ADF") then wo_status$=wo_status$+"O"
+    rem --- Open / Open and Planned / Open and Quotes / Open and Closed
+    if pos(wo_include_type$="ADFI") then wo_status$=wo_status$+"O"
 
     rem --- Planned / Open and Planned / Planned and Quotes
     if pos(wo_include_type$="BDE") then wo_status$=wo_status$+"P"
 
     rem --- Quotes / Open and Quotes / Planned and Quotes
     if pos(wo_include_type$="CEF") then wo_status$=wo_status$+"Q"
+    
+    rem --- Closed / Open and Closed
+    wo_status$=""
+    if pos(wo_include_type$="HI") then wo_status$=wo_status$+"C"
+    
+    rem --- All WOs
+    if pos(wo_include_type$="J") then wo_status$=wo_status$+"COPQ"
 
     rem --- Get WOs linked to SOs
     got_at_least_one=0  
