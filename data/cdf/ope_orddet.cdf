@@ -251,6 +251,10 @@ rem --- Enable buttons
 	gosub able_lot_button
 	gosub enable_repricing
 	gosub enable_addl_opts
+
+if callpoint!.getDevObject("focusPrice")="Y"
+ 	callpoint!.setFocus(callpoint!.getValidationRow(),"OPE_ORDDET.UNIT_PRICE",1)
+endif
 [[OPE_ORDDET.QTY_ORDERED.AVAL]]
 rem --- Set shipped and back ordered
 
@@ -340,6 +344,10 @@ rem --- Has a valid whse/item been entered?
 		warn  = 1
 		gosub check_item_whse
 	endif
+
+rem --- init devobject for use when forcing focus to price, if need-be
+
+	callpoint!.setDevObject("focusPrice","")
 [[OPE_ORDDET.ITEM_ID.BINP]]
 rem --- Set previous item / enable repricing, options, lot
 
@@ -1331,6 +1339,7 @@ rem ==========================================================================
 
 	round_precision = num(callpoint!.getDevObject("precision"))
 	enter_price_message = 0
+	callpoint!.setDevObject("focusPrice","")
 
 	wh$   = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
 	item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
@@ -1380,11 +1389,12 @@ rem ==========================================================================
 	if price=0 then
 		msg_id$="ENTER_PRICE"
 		gosub disp_message
-		callpoint!.setFocus(callpoint!.getValidationRow(),"OPE_ORDDET.UNIT_PRICE",1)
 		enter_price_message = 1
+		callpoint!.setDevObject("focusPrice","Y")
 	else
 		callpoint!.setColumnData("OPE_ORDDET.UNIT_PRICE", str(round(price, round_precision)) )
 		callpoint!.setColumnData("OPE_ORDDET.DISC_PERCENT", str(disc))
+		callpoint!.setDevObject("focusPrice","")
 	endif
 
 	if disc=100 then
@@ -1394,7 +1404,7 @@ rem ==========================================================================
 	endif
 
 	rem callpoint!.setStatus("REFRESH")
-	callpoint!.setStatus("REFRESH:UNIT_PRICE")
+	callpoint!.setStatus("ACTIVATE-REFRESH:UNIT_PRICE")
 
 rem --- Recalc and display extended price
 
