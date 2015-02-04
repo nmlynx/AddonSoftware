@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2015-01-16
+ Report Date:   2015-02-03
  Report Branch: AddonSoftware 14.21
  Last Release:  AddonSoftware 14.20
 =======================================================================================================================================
@@ -213,3 +213,16 @@ Per bug 8175; corrected mask in Avg days to pay YTD element type.
 ----
 Modified: data/bar/arm_custpmts.xml
 Modified: data/bar/crm_custpmts.xml
+
+=======================================================================================================================================
+Revision: 3fe08c5ab47b158e363682a059d4a2f4243972c1
+Author: chawkins <chawkins@basis.com>
+Date: 2/3/2015 1:49:39 PM
+Message:
+Per bug 8179, corrected issue with setFocus() in the qty_ordered's AVAL
+causing entry loop between 0 quantity and 0 price messages.
+----
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/cdf/ope_invdet.cdf
+Modified: data/cdf/ope_orddet.cdf
