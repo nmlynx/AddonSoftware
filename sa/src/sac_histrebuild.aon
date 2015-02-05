@@ -37,7 +37,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=21,begfile=1,endfile=files
+    files=32,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="sas_params",ids$[1]="SAS_PARAMS"
     files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
@@ -60,6 +60,17 @@ rem --- Open/Lock files
     files$[19]="sam-10",ids$[19]="SAM_DISTCODE"
     files$[20]="sam-11",ids$[20]="SAM_NONSTOCK"
     files$[21]="ivs_params",ids$[21]="IVS_PARAMS"
+    files$[22]="sam_customer_tot",ids$[22]="SAM_CUSTOMER_TOT"
+    files$[23]="sam_territry_tot",ids$[23]="SAM_TERRITRY_TOT"
+    files$[24]="sam_salespsn_tot",ids$[24]="SAM_SALESPSN_TOT"
+    files$[25]="sam_custtype_tot",ids$[25]="SAM_CUSTTYPE_TOT"
+    files$[26]="sam_custship_tot",ids$[26]="SAM_CUSTSHIP_TOT"
+    files$[27]="sam_custsic_tot",ids$[27]="SAM_CUSTSIC_TOT"
+    files$[28]="sam_item_tot",ids$[28]="SAM_ITEM_TOT"
+    files$[29]="sam_warehse_tot",ids$[29]="SAM_WAREHSE_TOT"
+    files$[30]="sam_vendor_tot",ids$[30]="SAM_VENDOR_TOT"
+    files$[31]="sam_distcode_tot",ids$[31]="SAM_DISTCODE_TOT"
+    files$[32]="sam_nonstock_tot",ids$[32]="SAM_NONSTOCK_TOT"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -84,6 +95,17 @@ rem --- Open/Lock files
     sam10_dev=channels[19]
     sam11_dev=channels[20]
     ivs01_dev=channels[21]
+    sam01tot_dev=channels[22]
+    sam02tot_dev=channels[23]
+    sam03tot_dev=channels[24]
+    sam04tot_dev=channels[25]
+    sam05tot_dev=channels[26]
+    sam06tot_dev=channels[27]
+    sam07tot_dev=channels[28]
+    sam08tot_dev=channels[29]
+    sam09tot_dev=channels[30]
+    sam10tot_dev=channels[31]
+    sam11tot_dev=channels[32]
 
 rem --- Dimension string templates
 
@@ -93,7 +115,11 @@ rem --- Dimension string templates
 :       sam02a$:templates$[11],sam03a$:templates$[12],sam04a$:templates$[13],
 :       sam05a$:templates$[14],sam06a$:templates$[15],sam07a$:templates$[16],
 :       sam08a$:templates$[17],sam09a$:templates$[18],sam10a$:templates$[19],
-:       sam11a$:templates$[20],sas01a$:templates$[1],ivs01a$:templates$[21]
+:       sam11a$:templates$[20],sas01a$:templates$[1],ivs01a$:templates$[21],
+:       sam01tot$:templates$[22],sam02tot$:templates$[23],sam03tot$:templates$[24],
+:       sam04tot$:templates$[25],sam05tot$:templates$[26],sam06tot$:templates$[27],
+:       sam07tot$:templates$[28],sam08tot$:templates$[29],sam09tot$:templates$[30],
+:       sam10tot$:templates$[31],sam11tot$:templates$[32]
 
 rem --- Get types of sales analysis to rebuild
 
@@ -152,15 +178,15 @@ rem --- Update Sales Analysis
 
             if pos(opm02a.line_type$="SNPO")=0 continue
             if pos(opm02a.line_type$="NPO") and opm02a.prod_type_pr$="N" continue
-            dim ivm02a$:fattr(ivm01a$),ivm02a$:fattr(ivm02a$)
+            dim ivm01a$:fattr(ivm01a$),ivm02a$:fattr(ivm02a$)
             if opm02a.line_type$="N" ivm01a.sa_level$="P"
             find record (ivm01_dev,key=firm_id$+opt11a.item_id$,dom=*next) ivm01a$
             find record (ivm02_dev,key=firm_id$+opt11a.warehouse_id$+opt11a.item_id$,dom=*next) ivm02a$
             if ivm01a.stock_level$="W" vendor$=ivm02a.vendor_id$ else vendor$=ivm01a.vendor_id$
-            if opt01a.ordinv_flag$="O" and cvs(opt01a.invoice_date$,3)="" then
-                call pgmdir$+"adc_fiscalperyr.aon",firm_id$,gls01_dev,opt01a.order_date$,period$,year$
-            else
+            if opt11a.trans_status$="U" then
                 call pgmdir$+"adc_fiscalperyr.aon",firm_id$,gls01_dev,opt01a.invoice_date$,period$,year$
+            else
+                call pgmdir$+"adc_fiscalperyr.aon",firm_id$,gls01_dev,opt01a.shipmnt_date$,period$,year$
             endif
             period=num(period$)
 
@@ -186,6 +212,25 @@ rem --- Customer
             sam_key$=firm_id$+year$+sam01a.customer_id$+sam01a.product_type$+sam01a.item_id$
             sam$=sam01a$
             gosub write_rec
+            
+            rem --- Build sales totals by customer
+            dim sam$:fattr(sam01tot$)
+            sam01tot.firm_id$=firm_id$
+            sam01tot.year$=year$
+            sam01tot.customer_id$=opt01a.customer_id$
+            sam01tot.product_type$=""
+            sam_dev=sam01tot_dev
+            sam_key$=firm_id$+year$+sam01tot.customer_id$+sam01tot.product_type$
+            sam$=sam01tot$
+            gosub write_rec
+            
+            rem --- Build sales totals by customer/product type
+            if arm02a.sa_flag$<>"C" and sas01a.customer_lev$<>"C" 
+                sam01tot.product_type$=opt11a.product_type$
+                sam_key$=firm_id$+year$+sam01tot.customer_id$+sam01tot.product_type$
+                sam$=sam01tot$
+                gosub write_rec
+            endif
 
 territory: rem --- Territory
 
@@ -208,6 +253,25 @@ territory: rem --- Territory
             sam_key$=firm_id$+year$+sam02a.territory$+sam02a.product_type$+sam02a.item_id$
             sam$=sam02a$
             gosub write_rec
+            
+            rem --- Build sales totals by territory
+            dim sam$:fattr(sam02tot$)
+            sam02tot.firm_id$=firm_id$
+            sam02tot.year$=year$
+            sam02tot.territory$=opt01a.territory$
+            sam02tot.product_type$=""
+            sam_dev=sam02tot_dev
+            sam_key$=firm_id$+year$+sam02tot.territory$+sam02tot.product_type$
+            sam$=sam02tot$
+            gosub write_rec
+            
+            rem --- Build sales totals by territory/product type
+            if ivm01a.sa_level$<>"N" and sas01a.terrcode_lev$<>"T"
+                sam02tot.product_type$=opt11a.product_type$
+                sam_key$=firm_id$+year$+sam02tot.territory$+sam02tot.product_type$
+                sam$=sam02tot$
+                gosub write_rec
+            endif
 
 slspsn: rem --- Salesperson
 
@@ -230,6 +294,25 @@ slspsn: rem --- Salesperson
             sam_key$=firm_id$+year$+sam03a.slspsn_code$+sam03a.product_type$+sam03a.item_id$
             sam$=sam03a$
             gosub write_rec
+            
+            rem --- Build sales totals by salesperson
+            dim sam$:fattr(sam03tot$)
+            sam03tot.firm_id$=firm_id$
+            sam03tot.year$=year$
+            sam03tot.slspsn_code$=opt01a.slspsn_code$
+            sam03tot.product_type$=""
+            sam_dev=sam03tot_dev
+            sam_key$=firm_id$+year$+sam03tot.slspsn_code$+sam03tot.product_type$
+            sam$=sam03tot$
+            gosub write_rec
+            
+            rem --- Build sales totals by salesperson/product type
+            if ivm01a.sa_level$<>"N" and sas01a.salespsn_lev$<>"S"
+                sam03tot.product_type$=opt11a.product_type$
+                sam_key$=firm_id$+year$+sam03tot.slspsn_code$+sam03tot.product_type$
+                sam$=sam03tot$
+                gosub write_rec
+            endif
 
 custtype: rem --- Customer Type
 
@@ -252,6 +335,25 @@ custtype: rem --- Customer Type
             sam_key$=firm_id$+year$+sam04a.customer_type$+sam04a.product_type$+sam04a.item_id$
             sam$=sam04a$
             gosub write_rec
+            
+            rem --- Build sales totals by customer type
+            dim sam$:fattr(sam04tot$)
+            sam04tot.firm_id$=firm_id$
+            sam04tot.year$=year$
+            sam04tot.customer_type$=arm02a.customer_type$
+            sam04tot.product_type$=""
+            sam_dev=sam04tot_dev
+            sam_key$=firm_id$+year$+sam04tot.customer_type$+sam04tot.product_type$
+            sam$=sam04tot$
+            gosub write_rec
+            
+            rem --- Build sales totals by customer type/product type
+            if ivm01a.sa_level$<>"N" and sas01a.custtype_lev$<>"C"
+                sam04tot.product_type$=opt11a.product_type$
+                sam_key$=firm_id$+year$+sam04tot.customer_type$+sam04tot.product_type$
+                sam$=sam04tot$
+                gosub write_rec
+            endif
 
 shipto: rem --- Ship-To
 
@@ -274,6 +376,25 @@ shipto: rem --- Ship-To
             sam_key$=firm_id$+year$+sam05a.customer_id$+sam05a.shipto_no$+sam05a.item_id$
             sam$=sam05a$
             gosub write_rec
+            
+            rem --- Build sales totals by customer
+            dim sam$:fattr(sam05tot$)
+            sam05tot.firm_id$=firm_id$
+            sam05tot.year$=year$
+            sam05tot.customer_id$=opt01a.customer_id$
+            sam05tot.shipto_no$=opt01a.shipto_no$
+            sam_dev=sam05tot_dev
+            sam_key$=firm_id$+year$+sam05tot.customer_id$+sam05tot.shipto_no$
+            sam$=sam05tot$
+            gosub write_rec
+            
+            rem --- Build sales totals by customer/ship-to
+            if sas01a.shipto_lev$<>"C"
+                sam05tot.shipto_no$=""
+                sam_key$=firm_id$+year$+sam05tot.customer_id$+sam05tot.shipto_no$
+                sam$=sam05tot$
+                gosub write_rec
+            endif
 
 sic: rem --- Standard Industry Code
 
@@ -296,6 +417,25 @@ sic: rem --- Standard Industry Code
             sam_dev=sam06_dev
             sam$=sam06a$
             gosub write_rec
+            
+            rem --- Build sales totals by SIC
+            dim sam$:fattr(sam06tot$)
+            sam06tot.firm_id$=firm_id$
+            sam06tot.year$=year$
+            sam06tot.sic_code$=arm01a.sic_code$
+            sam06tot.product_type$=""               
+            sam_key$=firm_id$+year$+sam06tot.sic_code$+sam06tot.product_type$
+            sam_dev=sam06tot_dev
+            sam$=sam06tot$
+            gosub write_rec
+            
+            rem --- Build sales totals by SIC/product type
+            if ivm01a.sa_level$<>"N" and sas01a.sic_code_lev$<>"C"
+                sam06tot.product_type$=opt11a.product_type$               
+                sam_key$=firm_id$+year$+sam06tot.sic_code$+sam06tot.product_type$
+                sam$=sam06tot$
+                gosub write_rec
+            endif
 
 prodtype: rem --- Product Type
 
@@ -314,6 +454,16 @@ prodtype: rem --- Product Type
             endif
             sam_key$=firm_id$+year$+sam07a.product_type$+sam07a.item_id$
             sam$=sam07a$
+            gosub write_rec
+            
+            rem --- Build sales totals by product type
+            dim sam$:fattr(sam07tot$)
+            sam07tot.firm_id$=firm_id$
+            sam07tot.year$=year$
+            sam07tot.product_type$=opt11a.product_type$
+            sam_dev=sam07tot_dev
+            sam_key$=firm_id$+year$+sam07tot.product_type$
+            sam$=sam07tot$
             gosub write_rec
 
 warehouse: rem --- Warehouse
@@ -337,6 +487,25 @@ warehouse: rem --- Warehouse
             sam_key$=firm_id$+year$+sam08a.warehouse_id$+sam08a.product_type$+sam08a.item_id$
             sam$=sam08a$
             gosub write_rec
+            
+            rem --- Build sales totals by warehouse
+            dim sam$:fattr(sam08tot$)
+            sam08tot.firm_id$=firm_id$
+            sam08tot.year$=year$
+            sam08tot.warehouse_id$=opt11a.warehouse_id$
+            sam08tot.product_type$=""
+            sam_dev=sam08tot_dev
+            sam_key$=firm_id$+year$+sam08tot.warehouse_id$+sam08tot.product_type$
+            sam$=sam08tot$
+            gosub write_rec
+            
+            rem --- Build sales totals by warehouse/product type
+            if ivm01a.sa_level$<>"N" and sas01a.whse_lev$<>"W"
+                sam08tot.product_type$=opt11a.product_type$
+                sam_key$=firm_id$+year$+sam08tot.warehouse_id$+sam08tot.product_type$
+                sam$=sam08tot$
+                gosub write_rec
+            endif
 
 stockvend: rem --- Stocking Vendor
 
@@ -359,6 +528,25 @@ stockvend: rem --- Stocking Vendor
             sam_key$=firm_id$+year$+sam09a.vendor_id$+sam09a.product_type$+sam09a.item_id$
             sam$=sam09a$
             gosub write_rec
+            
+            rem --- Build sales totals by stocking vendor
+            dim sam$:fattr(sam09tot$)
+            sam09tot.firm_id$=firm_id$
+            sam09tot.year$=year$
+            sam09tot.vendor_id$=vendor$
+            sam09tot.product_type$=""
+            sam_dev=sam09tot_dev
+            sam_key$=firm_id$+year$+sam09tot.vendor_id$+sam09tot.product_type$
+            sam$=sam09tot$
+            gosub write_rec
+            
+            rem --- Build sales totals by stocking vendor/product type
+            if ivm01a.sa_level$<>"N" and sas01a.vendor_lev$<>"V"
+                sam09tot.product_type$=opt11a.product_type$
+                sam_key$=firm_id$+year$+sam09tot.vendor_id$+sam09tot.product_type$
+                sam$=sam09tot$
+                gosub write_rec
+            endif
 
 distcode: rem --- Distribution Code
 
@@ -381,6 +569,25 @@ distcode: rem --- Distribution Code
             sam_key$=firm_id$+year$+sam10a.ar_dist_code$+sam10a.product_type$+sam10a.item_id$
             sam$=sam10a$
             gosub write_rec
+            
+            rem --- Build sales totals by distribution code
+            dim sam$:fattr(sam10tot$)
+            sam10tot.firm_id$=firm_id$
+            sam10tot.year$=year$
+            sam10tot.ar_dist_code$=opt01a.ar_dist_code$
+            sam10tot.product_type$=""
+            sam_dev=sam10tot_dev
+            sam_key$=firm_id$+year$+sam10tot.ar_dist_code$+sam10tot.product_type$
+            sam$=sam10tot$
+            gosub write_rec
+            
+            rem --- Build sales totals by distribution code/product type
+            if ivm01a.sa_level$<>"N" and sas01a.distcode_lev$<>"D"
+                sam10tot.product_type$=opt11a.product_type$
+                sam_key$=firm_id$+year$+sam10tot.ar_dist_code$+sam10tot.product_type$
+                sam$=sam10tot$
+                gosub write_rec
+            endif
 
 nonstock: rem --- Non-Stock
 
@@ -400,6 +607,16 @@ nonstock: rem --- Non-Stock
             sam_key$=firm_id$+year$+sam11a.product_type$+sam11a.nonstock_no$
             sam$=sam11a$
             gosub write_rec
+            
+            rem --- Build sales totals by non-stock product type
+            dim sam$:fattr(sam11tot$)
+            sam11tot.firm_id$=firm_id$
+            sam11tot.year$=year$
+            sam11tot.product_type$=opt11a.product_type$
+            sam_dev=sam11tot_dev
+            sam_key$=firm_id$+year$+sam11tot.product_type$
+            sam$=sam11tot$
+            gosub write_rec
 
 rem --- Loop back for next line item
 
@@ -411,6 +628,7 @@ rem --- Loop back for next invoice
 
 done: rem --- All done
 
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
     goto std_exit
 
 init_firm: rem --- Firm specific initializations
@@ -425,17 +643,50 @@ init_firm: rem --- Firm specific initializations
     precision ivprecision
 
     rem --- Clear out records from selected files for this firm
-    if opt_cust$="Y" call pgm_dir$+"adc_clearpartial.aon","",sam01_dev,firm_id$,status
-    if opt_terr$="Y" call pgmdir$+"adc_clearpartial.aon","",sam02_dev,firm_id$,status
-    if opt_slspsn$="Y" call pgmdir$+"adc_clearpartial.aon","",sam03_dev,firm_id$,status
-    if opt_custtype$="Y" call pgmdir$+"adc_clearpartial.aon","",sam04_dev,firm_id$,status
-    if opt_shipto$="Y" call pgmdir$+"adc_clearpartial.aon","",sam05_dev,firm_id$,status
-    if opt_sic$="Y" call pgmdir$+"adc_clearpartial.aon","",sam06_dev,firm_id$,status
-    if opt_prod$="Y" call pgmdir$+"adc_clearpartial.aon","",sam07_dev,firm_id$,status
-    if opt_whse$="Y" call pgmdir$+"adc_clearpartial.aon","",sam08_dev,firm_id$,status
-    if opt_vend$="Y" call pgmdir$+"adc_clearpartial.aon","",sam09_dev,firm_id$,status
-    if opt_distcode$="Y" call pgmdir$+"adc_clearpartial.aon","",sam10_dev,firm_id$,status
-    if opt_nonstock$="Y" call pgmdir$+"adc_clearpartial.aon","",sam11_dev,firm_id$,status
+    if opt_cust$="Y" then
+        call pgm_dir$+"adc_clearpartial.aon","",sam01_dev,firm_id$,status
+        call pgm_dir$+"adc_clearpartial.aon","",sam01tot_dev,firm_id$,status
+    endif
+    if opt_terr$="Y" then
+        call pgmdir$+"adc_clearpartial.aon","",sam02_dev,firm_id$,status
+        call pgmdir$+"adc_clearpartial.aon","",sam02tot_dev,firm_id$,status
+    endif
+    if opt_slspsn$="Y" then
+        call pgmdir$+"adc_clearpartial.aon","",sam03_dev,firm_id$,status
+        call pgmdir$+"adc_clearpartial.aon","",sam03tot_dev,firm_id$,status
+    endif
+    if opt_custtype$="Y" then
+        call pgmdir$+"adc_clearpartial.aon","",sam04_dev,firm_id$,status
+        call pgmdir$+"adc_clearpartial.aon","",sam04tot_dev,firm_id$,status
+    endif
+    if opt_shipto$="Y" then
+        call pgmdir$+"adc_clearpartial.aon","",sam05_dev,firm_id$,status
+        call pgmdir$+"adc_clearpartial.aon","",sam05tot_dev,firm_id$,status
+    endif
+    if opt_sic$="Y" then
+        call pgmdir$+"adc_clearpartial.aon","",sam06_dev,firm_id$,status
+        call pgmdir$+"adc_clearpartial.aon","",sam06tot_dev,firm_id$,status
+    endif
+    if opt_prod$="Y" then
+        call pgmdir$+"adc_clearpartial.aon","",sam07_dev,firm_id$,status
+        call pgmdir$+"adc_clearpartial.aon","",sam07tot_dev,firm_id$,status
+    endif
+    if opt_whse$="Y" then
+        call pgmdir$+"adc_clearpartial.aon","",sam08_dev,firm_id$,status
+        call pgmdir$+"adc_clearpartial.aon","",sam08tot_dev,firm_id$,status
+    endif
+    if opt_vend$="Y" then
+        call pgmdir$+"adc_clearpartial.aon","",sam09_dev,firm_id$,status
+        call pgmdir$+"adc_clearpartial.aon","",sam09tot_dev,firm_id$,status
+    endif
+    if opt_distcode$="Y" then
+        call pgmdir$+"adc_clearpartial.aon","",sam10_dev,firm_id$,status
+        call pgmdir$+"adc_clearpartial.aon","",sam10tot_dev,firm_id$,status
+    endif
+    if opt_nonstock$="Y" then
+        call pgmdir$+"adc_clearpartial.aon","",sam11_dev,firm_id$,status
+        call pgmdir$+"adc_clearpartial.aon","",sam11tot_dev,firm_id$,status
+    endif
 
     return
 
