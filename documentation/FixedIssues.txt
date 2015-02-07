@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2015-02-05
+ Report Date:   2015-02-06
  Report Branch: AddonSoftware 14.21
  Last Release:  AddonSoftware 14.20
 =======================================================================================================================================
@@ -247,3 +247,22 @@ Bug 8182: Don't post to GL cash account when Cash Receipt payment is
 zero.
 ----
 Modified: ar/src/arr_cashreceipts.aon
+
+=======================================================================================================================================
+Revision: bae4a261f10e4e436619432adb4ac35887c9b5c7
+Author: chawkins <chawkins@basis.com>
+Date: 2/6/2015 4:25:19 PM
+Message:
+Per bug 8191; fixed issue causing err 252 in on-demand statement if
+there was no document generated (so no viewer window created).
+----
+Modified: ar/src/arr_stmt_demand.aon
+
+=======================================================================================================================================
+Revision: cb0cc0242295d029cd1d2880a0c9220028a636ed
+Author: chawkins <chawkins@basis.com>
+Date: 2/6/2015 4:41:12 PM
+Message:
+Per bug 8191; revised the fix with more efficient code.
+----
+Modified: ar/src/arr_stmt_demand.aon
