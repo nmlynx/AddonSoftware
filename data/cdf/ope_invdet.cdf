@@ -1387,6 +1387,7 @@ rem ==========================================================================
 		gosub disp_message
 		enter_price_message = 1
 		callpoint!.setDevObject("focusPrice","Y")
+		callpoint!.setStatus("ACTIVATE")
 	else
 		callpoint!.setColumnData("OPE_INVDET.UNIT_PRICE", str(round(price, round_precision)) )
 		callpoint!.setColumnData("OPE_INVDET.DISC_PERCENT", str(disc))
@@ -1400,7 +1401,7 @@ rem ==========================================================================
 	endif
 
 	rem callpoint!.setStatus("REFRESH")
-	callpoint!.setStatus("ACTIVATE-REFRESH:UNIT_PRICE")
+	callpoint!.setStatus("REFRESH:UNIT_PRICE")
 
 rem --- Recalc and display extended price
 
