@@ -1,3 +1,9 @@
+[[ARE_CASHHDR.AR_CHECK_NO.AVAL]]
+rem --- temporary workaround to Barista bug not padding ar_check_no when nothing is entered for it
+	dim are01a$:fnget_tpl$("ARE_CASHHDR")
+	wk$=fattr(are01a$,"ar_check_no")
+	ar_check_no$=pad(ar_check_no$,dec(wk$(10,2)))
+	callpoint!.setUserInput(ar_check_no$)
 [[ARE_CASHHDR.ARAR]]
 rem --- Enable/disable controls based on Cash Receipt code
 	wk_cash_cd$=callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")
@@ -128,7 +134,6 @@ endif
 [[ARE_CASHHDR.ADEL]]
 gosub delete_cashdet_cashbal
 [[ARE_CASHHDR.ADIS]]
-rem --- ADIS; existing are-01/11 tran
 tmp_cust_id$=callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")
 gosub get_customer_balance
 wk_cash_cd$=callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")
