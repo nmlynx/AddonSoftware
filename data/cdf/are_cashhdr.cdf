@@ -2,7 +2,7 @@
 rem --- temporary workaround to Barista bug not padding ar_check_no when nothing is entered for it
 	dim are01a$:fnget_tpl$("ARE_CASHHDR")
 	wk$=fattr(are01a$,"ar_check_no")
-	ar_check_no$=pad(ar_check_no$,dec(wk$(10,2)))
+	ar_check_no$=pad(callpoint!.getUserInput(),dec(wk$(10,2)))
 	callpoint!.setUserInput(ar_check_no$)
 [[ARE_CASHHDR.ARAR]]
 rem --- Enable/disable controls based on Cash Receipt code
