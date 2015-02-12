@@ -44,14 +44,18 @@ endif
 rem --- Line code may not be displayed correctly when selected via arrow key instead of mouse
 	callpoint!.setStatus("REFRESH:LINE_CODE")
 [[OPE_ORDDET.ITEM_ID.AINV]]
-print "Det:ITEM_ID.AINV"; rem debug
-
 rem --- Check for item synonyms
 
-	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::grid_entry"
-[[OPE_ORDDET.WAREHOUSE_ID.BINP]]
-print "Det:WAREHOUSE_ID.BINP"; rem debug
+	rem --- Get starting item so we know if it gets changed
+	item_id$=callpoint!.getUserInput()
 
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::grid_entry"
+
+	rem --- Item will not have changed if AVAL did an ABORT 
+	if item_id$=callpoint!.getUserInput() then
+		callpoint!.setFocus(num(callpoint!.getValidationRow()),"OPE_ORDDET.ITEM_ID",1)
+	endif
+[[OPE_ORDDET.WAREHOUSE_ID.BINP]]
 rem --- Enable repricing, options, lots
 
 	gosub enable_repricing
@@ -446,14 +450,10 @@ rem --- For uncommitted "O" line type sales (not quotes), move ext_price to unit
 		endif
 	endif
 [[OPE_ORDDET.WAREHOUSE_ID.AVEC]]
-print "Det:WAREHOUSE_ID.AVEC"; rem debug
-
 rem --- Set Recalc Price button
 
 	gosub enable_repricing
 [[OPE_ORDDET.ITEM_ID.AVEC]]
-print "Det:ITEM_ID.AVEC"; rem debug
-
 rem --- Set buttons
 
 	gosub enable_repricing
@@ -943,6 +943,8 @@ rem --- Set previous values
 	callpoint!.setDevObject("prior_qty",user_tpl.prev_qty_ord)
 	callpoint!.setDevObject("prior_commit",callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG"))
 
+	callpoint!.setDevObject("whse_item_warned","")
+
 rem --- Set buttons
 
 	gosub able_lot_button
@@ -982,7 +984,7 @@ rem --- Warehouse and Item must be correct, don't let user leave corrupt row
 	gosub check_item_whse	
 
 	if user_tpl.item_wh_failed then 
-		callpoint!.setFocus(this_row,"OPE_ORDDET.ITEM_ID",1)
+		callpoint!.setFocus(this_row,"OPE_ORDDET.WAREHOUSE_ID",1)
 		break; rem --- exit callpoint
 	endif
 
@@ -1112,11 +1114,21 @@ rem --- Check item/warehouse combination, Set Available
 
 	wh$   = callpoint!.getUserInput()
 
+	if wh$<>callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID") then
+		gosub clear_all_numerics
+		callpoint!.setStatus("REFRESH")
+	endif
+
 	item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
 	if cvs(item$,2)="" then
 		warn = 0
 	else
-		warn = 1
+		rem --- Skip warning if already warned for this whse-item combination
+		if callpoint!.getDevObject("whse_item_warned")=wh$+":"+item$ then
+			warn = 0
+		else
+			warn = 1
+		endif
 	endif
 	gosub check_item_whse
 
@@ -1136,7 +1148,12 @@ rem --- Check item/warehouse combination and setup values
 	if cvs(wh$,2)="" then
 		warn = 0
 	else
-		warn = 1
+		rem --- Skip warning if already warned for this whse-item combination
+		if callpoint!.getDevObject("whse_item_warned")=wh$+":"+item$ then
+			warn = 0
+		else
+			warn = 1
+		endif
 	endif
 	gosub check_item_whse
 
@@ -1669,7 +1686,7 @@ rem ===========================================================================
 			ivm02_dev = fnget_dev(file$)
 			dim ivm02a$:fnget_tpl$(file$)
 			user_tpl.item_wh_failed = 1
-			
+
 			if cvs(item$, 2) <> "" and cvs(wh$, 2) <> "" then
 				find record (ivm02_dev, key=firm_id$+wh$+item$, knum="PRIMARY", dom=*endif) ivm02a$
 				user_tpl.item_wh_failed = 0
@@ -1678,6 +1695,7 @@ rem ===========================================================================
 			if user_tpl.item_wh_failed and warn then 
 				callpoint!.setMessage("IV_NO_WHSE_ITEM")
 				callpoint!.setStatus("ABORT")
+				callpoint!.setDevObject("whse_item_warned",wh$+":"+item$)
 			endif
 		endif
 	endif
