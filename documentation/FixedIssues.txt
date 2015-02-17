@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2015-02-13
+ Report Date:   2015-02-17
  Report Branch: AddonSoftware 14.21
  Last Release:  AddonSoftware 14.20
 =======================================================================================================================================
@@ -355,3 +355,16 @@ bmc_getcost.aon.
 Modified: bm/src/bmc_explodephantoms.aon
 Modified: bm/src/bmc_getcost.aon
 Modified: bm/src/bmu_invproduction.aon
+
+=======================================================================================================================================
+Revision: 5ab956d95a029a1ffd83ead5ec316622e230172b
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 2/17/2015 3:35:11 PM
+Message:
+Bug 8201: Added new ado_util.src::getDev(BBjString table_alias$,
+BBjString prefix$) method in order to avoid removing record extracts in
+ado_order.src::calcOverCreditLimit() method.
+----
+Modified: ad/src/ado_order.src
+Modified: ad/src/ado_util.src
+
