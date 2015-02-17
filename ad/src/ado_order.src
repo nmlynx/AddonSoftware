@@ -711,8 +711,6 @@ method_error:rem --- Method error trap/handler
         methodend
 
     rem --- Order totals from disk records
-    rem --- Note: totalSalesDisk() does not extract the header record before updating the detail records.
-    rem --- NOte: That is the responsibility of the code using totalSalesDisk().
         method public void totalSalesDisk(BBjString p_cust_id$, BBjString p_order_no$)
             seterr method_error
 
@@ -722,12 +720,12 @@ method_error:rem --- Method error trap/handler
 
                 if #ordHeaderDev% = 0 then
                     data_name$ = "OPE_ORDHDR"
-                    #ordHeaderDev%  = int(util.getDev(data_name$),err=*endif)
+                    #ordHeaderDev%  = int(util.getDev(data_name$,"@"),err=*endif)
                     #ordHeaderTmpl$ = util.getTmpl(data_name$)
                 endif
                 if #ordHeaderDev% = 0 then
                     data_name$ = "OPE_INVHDR"
-                    #ordHeaderDev%  = int(util.getDev(data_name$),err=*endif)
+                    #ordHeaderDev%  = int(util.getDev(data_name$,"@"),err=*endif)
                     #ordHeaderTmpl$ = util.getTmpl(data_name$)
                 endif
 
@@ -1150,12 +1148,12 @@ method_error:rem --- Method error trap/handler
                 rem --- make sure OPE_ORDHDR is available
                 if #ordHeaderDev% = 0 then
                     data_name$ = "OPE_ORDHDR"
-                    #ordHeaderDev%  = int(util.getDev(data_name$),err=*endif)
+                    #ordHeaderDev%  = int(util.getDev(data_name$,"@"),err=*endif)
                     #ordHeaderTmpl$ = util.getTmpl(data_name$)
                 endif
                 if #ordHeaderDev% = 0 then
                     data_name$ = "OPE_INVHDR"
-                    #ordHeaderDev%  = int(util.getDev(data_name$),err=*endif)
+                    #ordHeaderDev%  = int(util.getDev(data_name$,"@"),err=*endif)
                     #ordHeaderTmpl$ = util.getTmpl(data_name$)
                 endif
 
@@ -1210,12 +1208,12 @@ method_error:rem --- Method error trap/handler
                 rem --- make sure OPE_ORDHDR is available
                 if #ordHeaderDev% = 0 then
                     data_name$ = "OPE_ORDHDR"
-                    #ordHeaderDev%  = int(util.getDev(data_name$),err=*next)
+                    #ordHeaderDev%  = int(util.getDev(data_name$,"@"),err=*next)
                     #ordHeaderTmpl$ = util.getTmpl(data_name$)
                 endif
                 if #ordHeaderDev% = 0 then
                     data_name$ = "OPE_INVHDR"
-                    #ordHeaderDev%  = int(util.getDev(data_name$),err=*next)
+                    #ordHeaderDev%  = int(util.getDev(data_name$,"@"),err=*next)
                     #ordHeaderTmpl$ = util.getTmpl(data_name$)
                 endif
 
@@ -1433,12 +1431,12 @@ method_error:rem --- Method error trap/handler
                 rem --- make sure OPE_ORDHDR is available
                 if #ordHeaderDev% = 0 then
                     data_name$ = "OPE_ORDHDR"
-                    #ordHeaderDev%  = int(util.getDev(data_name$),err=*endif)
+                    #ordHeaderDev%  = int(util.getDev(data_name$,"@"),err=*endif)
                     #ordHeaderTmpl$ = util.getTmpl(data_name$)
                 endif
                 if #ordHeaderDev% = 0 then
                     data_name$ = "OPE_INVHDR"
-                    #ordHeaderDev%  = int(util.getDev(data_name$),err=*endif)
+                    #ordHeaderDev%  = int(util.getDev(data_name$,"@"),err=*endif)
                     #ordHeaderTmpl$ = util.getTmpl(data_name$)
                 endif
 
