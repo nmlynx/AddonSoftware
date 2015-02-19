@@ -54,7 +54,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=29,begfile=1,endfile=files
+    files=40,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
 
     files$[1]="arm-01",ids$[1]="ARM_CUSTMAST"
@@ -85,6 +85,17 @@ rem --- Open/Lock files
     files$[26]="sam-10",ids$[26]="SAM_DISTCODE"
     files$[27]="sam-11",ids$[27]="SAM_NONSTOCK"
     files$[28]="ars_params",ids$[28]="ARS_PARAMS"
+    files$[29]="sam_customer_tot",ids$[29]="SAM_CUSTOMER_TOT"
+    files$[30]="sam_territry_tot",ids$[30]="SAM_TERRITRY_TOT"
+    files$[31]="sam_salespsn_tot",ids$[31]="SAM_SALESPSN_TOT"
+    files$[32]="sam_custtype_tot",ids$[32]="SAM_CUSTTYPE_TOT"
+    files$[33]="sam_custship_tot",ids$[33]="SAM_CUSTSHIP_TOT"
+    files$[34]="sam_custsic_tot",ids$[34]="SAM_CUSTSIC_TOT"
+    files$[35]="sam_item_tot",ids$[35]="SAM_ITEM_TOT"
+    files$[36]="sam_warehse_tot",ids$[36]="SAM_WAREHSE_TOT"
+    files$[37]="sam_vendor_tot",ids$[37]="SAM_VENDOR_TOT"
+    files$[38]="sam_distcode_tot",ids$[38]="SAM_DISTCODE_TOT"
+    files$[39]="sam_nonstock_tot",ids$[39]="SAM_NONSTOCK_TOT"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :       ids$[all],templates$[all],channels[all],batch,status
@@ -119,6 +130,17 @@ rem --- Open/Lock files
     sam10_dev=channels[26]
     sam11_dev=channels[27]
     ars01a_dev=channels[28]
+    sam01tot_dev=channels[29]
+    sam02tot_dev=channels[30]
+    sam03tot_dev=channels[31]
+    sam04tot_dev=channels[32]
+    sam05tot_dev=channels[33]
+    sam06tot_dev=channels[34]
+    sam07tot_dev=channels[35]
+    sam08tot_dev=channels[36]
+    sam09tot_dev=channels[37]
+    sam10tot_dev=channels[38]
+    sam11tot_dev=channels[39]
 
 rem --- Dimension string templates
 
@@ -131,7 +153,11 @@ rem --- Dimension string templates
 :       sam03a$:templates$[19],sam04a$:templates$[20],sam05a$:templates$[21],
 :       sam06a$:templates$[22],sam07a$:templates$[23],sam08a$:templates$[24],
 :       sam09a$:templates$[25],sam10a$:templates$[26],sam11a$:templates$[27],
-:       ars01a$:templates$[28]
+:       ars01a$:templates$[28],
+:       sam01tot$:templates$[29],sam02tot$:templates$[30],
+:       sam03tot$:templates$[31],sam04tot$:templates$[32],sam05tot$:templates$[33],
+:       sam06tot$:templates$[34],sam07tot$:templates$[35],sam08tot$:templates$[36],
+:       sam09tot$:templates$[37],sam10tot$:templates$[38],sam11tot$:templates$[39]
 
     rem dim opt01a$:templates$[13],opt31a$:templates$[15],opt41a$:templates$[16]
 
@@ -278,7 +304,7 @@ rem --- Main read
 
         rem ---Customer
 
-            if sas01a.by_customer$="Y" and pos(arm02a.sa_flag$="PI")<>0 and pos(ivm01a.sa_level$="PI")<>0 then
+            if sas01a.by_customer$="Y" and pos(arm02a.sa_flag$="PI") and pos(ivm01a.sa_level$="PI") then
                 dim sam01a$:fattr(sam01a$)
                 
                 sam01a.firm_id$=firm_id$
@@ -295,16 +321,32 @@ rem --- Main read
                     sam01a.product_type$=""
                     sam01a.item_id$(1)=""
                 endif
-                
-                extract record (sam01_dev, key=sam01a.firm_id$+sam01a.year$+sam01a.customer_id$+sam01a.product_type$+sam01a.item_id$, dom=*next) sam01a$; rem Advisory Locking
-                
-                field sam01a$, "qty_shipped_" + str(period:"00") = nfield(sam01a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
-                field sam01a$, "total_cost_" + str(period:"00") = nfield(sam01a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
-                field sam01a$, "total_sales_" + str(period:"00") = nfield(sam01a$, "total_sales_" + str(period:"00")) + ope11a.ext_price
-                
-                sam01a$ = field(sam01a$)
-                
-                write record (sam01_dev) sam01a$
+
+                rem --- Update sam_customer (sam-01)                
+                dim sam$:fattr(sam01a$)
+                sam_dev=sam01_dev
+                sam_key$=sam01a.firm_id$+sam01a.year$+sam01a.customer_id$+sam01a.product_type$+sam01a.item_id$
+                sam$=sam01a$
+                gosub write_sam_rec
+
+                rem --- Update sales totals by customer
+                dim sam$:fattr(sam01tot$)
+                sam01tot.firm_id$=sam01a.firm_id$
+                sam01tot.year$=sam01a.year$
+                sam01tot.customer_id$=sam01a.customer_id$
+                sam01tot.product_type$=""
+                sam_dev=sam01tot_dev
+                sam_key$=sam01tot.firm_id$+sam01tot.year$+sam01tot.customer_id$+sam01tot.product_type$
+                sam$=sam01tot$
+                gosub write_sam_rec
+
+                rem --- Update sales totals by customer/product type
+                if arm02a.sa_flag$<>"C" and sas01a.customer_lev$<>"C" 
+                    sam01tot.product_type$=sam01a.product_type$
+                    sam_key$=sam01tot.firm_id$+sam01tot.year$+sam01tot.customer_id$+sam01tot.product_type$
+                    sam$=sam01tot$
+                    gosub write_sam_rec
+                endif
             endif
 
         rem ---Territory
@@ -326,16 +368,32 @@ rem --- Main read
                     sam02a.product_type$=""
                     sam02a.item_id$(1)=""
                 endif               
-                
-                extract record (sam02_dev, key=sam02a.firm_id$+sam02a.year$+sam02a.territory$+sam02a.product_type$+sam02a.item_id$, dom=*next) sam02a$; rem Advisory Locking
-                                
-                field sam02a$, "qty_shipped_" + str(period:"00") = nfield(sam02a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
-                field sam02a$, "total_cost_" + str(period:"00") = nfield(sam02a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
-                field sam02a$, "total_sales_" + str(period:"00") = nfield(sam02a$, "total_sales_" + str(period:"00")) + ope11a.ext_price
-                
-                sam02a$ = field(sam02a$)
-                
-                write record (sam02_dev) sam02a$
+
+                rem --- Update sam_territry (sam-02)                
+                dim sam$:fattr(sam02a$)
+                sam_dev=sam02_dev
+                sam_key$=sam02a.firm_id$+sam02a.year$+sam02a.territory$+sam02a.product_type$+sam02a.item_id$
+                sam$=sam02a$
+                gosub write_sam_rec
+    
+                rem --- Update sales totals by territory
+                dim sam$:fattr(sam02tot$)
+                sam02tot.firm_id$=sam02a.firm_id$
+                sam02tot.year$=sam02a.year$
+                sam02tot.territory$=sam02a.territory$
+                sam02tot.product_type$=""
+                sam_dev=sam02tot_dev
+                sam_key$=sam02tot.firm_id$+sam02tot.year$+sam02tot.territory$+sam02tot.product_type$
+                sam$=sam02tot$
+                gosub write_sam_rec
+
+                rem --- Update sales totals by territory/product type
+                if ivm01a.sa_level$<>"N" and sas01a.terrcode_lev$<>"T"
+                    sam02tot.product_type$=sam02a.product_type$
+                    sam_key$=sam02tot.firm_id$+sam02tot.year$+sam02tot.territory$+sam02tot.product_type$
+                    sam$=sam02tot$
+                    gosub write_sam_rec
+                endif
             endif
 
         rem ---Salesperson
@@ -358,15 +416,31 @@ rem --- Main read
                  sam03a.item_id$(1)=""
                 endif               
 
-                extract record (sam03_dev, key=sam03a.firm_id$+sam03a.year$+sam03a.slspsn_code$+sam03a.product_type$+sam03a.item_id$, dom=*next) sam03a$; rem Advisory Locking
-                               
-                field sam03a$, "qty_shipped_" + str(period:"00") = nfield(sam03a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
-                field sam03a$, "total_cost_" + str(period:"00") = nfield(sam03a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
-                field sam03a$, "total_sales_" + str(period:"00") = nfield(sam03a$, "total_sales_" + str(period:"00")) + ope11a.ext_price
-                
-                sam03a$ = field(sam03a$)
-                
-                write record (sam03_dev) sam03a$
+                rem --- Update sam_salespsn (sam-03)                
+                dim sam$:fattr(sam03a$)
+                sam_dev=sam03_dev
+                sam_key$=sam03a.firm_id$+sam03a.year$+sam03a.slspsn_code$+sam03a.product_type$+sam03a.item_id$
+                sam$=sam03a$
+                gosub write_sam_rec
+    
+                rem --- Update sales totals by salesperson
+                dim sam$:fattr(sam03tot$)
+                sam03tot.firm_id$=sam03a.firm_id$
+                sam03tot.year$=sam03a.year$
+                sam03tot.slspsn_code$=sam03a.slspsn_code$
+                sam03tot.product_type$=""
+                sam_dev=sam03tot_dev
+                sam_key$=sam03tot.firm_id$+sam03tot.year$+sam03tot.slspsn_code$+sam03tot.product_type$
+                sam$=sam03tot$
+                gosub write_sam_rec
+            
+                rem --- Update sales totals by salesperson/product type
+                if ivm01a.sa_level$<>"N" and sas01a.salespsn_lev$<>"S"
+                    sam03tot.product_type$=sam03a.product_type$
+                    sam_key$=sam03tot.firm_id$+sam03tot.year$+sam03tot.slspsn_code$+sam03tot.product_type$
+                    sam$=sam03tot$
+                    gosub write_sam_rec
+                endif
             endif
 
         rem ---Customer Type
@@ -388,16 +462,32 @@ rem --- Main read
                  sam04a.product_type$=""
                  sam04a.item_id$(1)=""
                 endif               
-                
-                extract record (sam04_dev, key=sam04a.firm_id$+sam04a.year$+sam04a.customer_type$+sam04a.product_type$+sam04a.item_id$, dom=*next) sam04a$; rem Advisory Locking
-                
-                field sam04a$, "qty_shipped_" + str(period:"00") = nfield(sam04a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
-                field sam04a$, "total_cost_" + str(period:"00") = nfield(sam04a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
-                field sam04a$, "total_sales_" + str(period:"00") = nfield(sam04a$, "total_sales_" + str(period:"00")) + ope11a.ext_price
-                
-                sam04a$ = field(sam04a$)
-                
-                write record (sam04_dev) sam04a$
+
+                rem --- Update sam_custtype (sam-04)                
+                dim sam$:fattr(sam04a$)
+                sam_dev=sam04_dev
+                sam_key$=sam04a.firm_id$+sam04a.year$+sam04a.customer_type$+sam04a.product_type$+sam04a.item_id$
+                sam$=sam04a$
+                gosub write_sam_rec
+    
+                rem --- Update sales totals by customer type
+                dim sam$:fattr(sam04tot$)
+                sam04tot.firm_id$=sam04a.firm_id$
+                sam04tot.year$=sam04a.year$
+                sam04tot.customer_type$=sam04a.customer_type$
+                sam04tot.product_type$=""
+                sam_dev=sam04tot_dev
+                sam_key$=sam04tot.firm_id$+sam04tot.year$+sam04tot.customer_type$+sam04tot.product_type$
+                sam$=sam04tot$
+                gosub write_sam_rec
+            
+                rem --- Update sales totals by customer type/product type
+                if ivm01a.sa_level$<>"N" and sas01a.custtype_lev$<>"C"
+                    sam04tot.product_type$=sam04a.product_type$
+                    sam_key$=sam04tot.firm_id$+sam04tot.year$+sam04tot.customer_type$+sam04tot.product_type$
+                    sam$=sam04tot$
+                    gosub write_sam_rec
+                endif
             endif
 
         rem ---Ship-To
@@ -419,16 +509,32 @@ rem --- Main read
                  sam05a.shipto_no$=""
                  sam05a.item_id$(1)=""
                 endif               
-                
-                extract record (sam05_dev, key=sam05a.firm_id$+sam05a.year$+sam05a.customer_id$+sam05a.shipto_no$+sam05a.item_id$, dom=*next) sam05a$; rem Advisory Locking
-                
-                field sam05a$, "qty_shipped_" + str(period:"00") = nfield(sam05a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
-                field sam05a$, "total_cost_" + str(period:"00") = nfield(sam05a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
-                field sam05a$, "total_sales_" + str(period:"00") = nfield(sam05a$, "total_sales_" + str(period:"00")) + ope11a.ext_price
-                
-                sam05a$ = field(sam05a$)
-                
-                write record (sam05_dev) sam05a$
+
+                rem --- Update sam_custship (sam-05)                
+                dim sam$:fattr(sam05a$)
+                sam_dev=sam05_dev
+                sam_key$=sam05a.firm_id$+sam05a.year$+sam05a.customer_id$+sam05a.shipto_no$+sam05a.item_id$
+                sam$=sam05a$
+                gosub write_sam_rec
+            
+                rem --- Update sales totals by customer
+                dim sam$:fattr(sam05tot$)
+                sam05tot.firm_id$=sam05a.firm_id$
+                sam05tot.year$=sam05a.year$
+                sam05tot.customer_id$=sam05a.customer_id$
+                sam05tot.shipto_no$=sam05a.shipto_no$
+                sam_dev=sam05tot_dev
+                sam_key$=sam05tot.firm_id$+sam05tot.year$+sam05tot.customer_id$+sam05tot.shipto_no$
+                sam$=sam05tot$
+                gosub write_sam_rec
+
+                rem --- Update sales totals by customer/ship-to
+                if sas01a.shipto_lev$<>"C"
+                    sam05tot.shipto_no$=""
+                    sam_key$=sam05tot.firm_id$+sam05tot.year$+sam05tot.customer_id$+sam05tot.shipto_no$
+                    sam$=sam05tot$
+                    gosub write_sam_rec
+                endif
             endif
 
         rem ---Standard Industry Code
@@ -451,15 +557,31 @@ rem --- Main read
                  sam06a.item_id$(1)=""
                 endif                               
 
-                extract record (sam06_dev, key=sam06a.firm_id$+sam06a.year$+sam06a.sic_code$+sam06a.product_type$+sam06a.item_id$, dom=*next) sam06a$; rem Advisory Locking
-                
-                field sam06a$, "qty_shipped_" + str(period:"00") = nfield(sam06a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
-                field sam06a$, "total_cost_" + str(period:"00") = nfield(sam06a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
-                field sam06a$, "total_sales_" + str(period:"00") = nfield(sam06a$, "total_sales_" + str(period:"00")) + ope11a.ext_price
-                
-                sam06a$ = field(sam06a$)
-                
-                write record (sam06_dev) sam06a$
+                rem --- Update sam_custsic (sam-06)                
+                dim sam$:fattr(sam06a$)
+                sam_dev=sam06_dev
+                sam_key$=sam06a.firm_id$+sam06a.year$+sam06a.sic_code$+sam06a.product_type$+sam06a.item_id$
+                sam$=sam06a$
+                gosub write_sam_rec
+    
+                rem --- Update sales totals by SIC
+                dim sam$:fattr(sam06tot$)
+                sam06tot.firm_id$=sam06a.firm_id$
+                sam06tot.year$=sam06a.year$
+                sam06tot.sic_code$=sam06a.sic_code$
+                sam06tot.product_type$=""
+                sam_dev=sam06tot_dev
+                sam_key$=sam06tot.firm_id$+sam06tot.year$+sam06tot.sic_code$+sam06tot.product_type$
+                sam$=sam06tot$
+                gosub write_sam_rec
+            
+                rem --- Update sales totals by SIC/product type
+                if ivm01a.sa_level$<>"N" and sas01a.sic_code_lev$<>"C"
+                    sam06tot.product_type$=sam06a.product_type$
+                    sam_key$=sam06tot.firm_id$+sam06tot.year$+sam06tot.sic_code$+sam06tot.product_type$
+                    sam$=sam06tot$
+                    gosub write_sam_rec
+                endif
             endif
 
         rem --- Product Type
@@ -476,15 +598,22 @@ rem --- Main read
                  sam07a.item_id$(1)=""
                 endif
 
-                extract record (sam07_dev, key=sam07a.firm_id$+sam07a.year$+sam07a.product_type$+sam07a.item_id$, dom=*next) sam07a$; rem Advisory Locking
-                
-                field sam07a$, "qty_shipped_" + str(period:"00") = nfield(sam07a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
-                field sam07a$, "total_cost_" + str(period:"00") = nfield(sam07a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
-                field sam07a$, "total_sales_" + str(period:"00") = nfield(sam07a$, "total_sales_" + str(period:"00")) + ope11a.ext_price
-                
-                sam07a$ = field(sam07a$)
-                
-                write record (sam07_dev) sam07a$
+                rem --- Update sam_item (sam-07)                
+                dim sam$:fattr(sam07a$)
+                sam_dev=sam07_dev
+                sam_key$=sam07a.firm_id$+sam07a.year$+sam07a.product_type$+sam07a.item_id$
+                sam$=sam07a$
+                gosub write_sam_rec
+            
+                rem --- Update sales totals by product type
+                dim sam$:fattr(sam07tot$)
+                sam07tot.firm_id$=sam07a.firm_id$
+                sam07tot.year$=sam07a.year$
+                sam07tot.product_type$=sam07a.product_type$
+                sam_dev=sam07tot_dev
+                sam_key$=sam07tot.firm_id$+sam07tot.year$+sam07tot.product_type$
+                sam$=sam07tot$
+                gosub write_sam_rec
             endif
 
         rem --- Warehouse
@@ -506,16 +635,32 @@ rem --- Main read
                  sam08a.product_type$=""
                  sam08a.item_id$(1)=""
                 endif                               
-                
-                find record (sam08_dev, key=sam08a.firm_id$+sam08a.year$+sam08a.warehouse_id$+sam08a.product_type$+sam08a.item_id$, dom=*next) sam08a$; rem Advisory Locking
 
-                field sam08a$, "qty_shipped_" + str(period:"00") = nfield(sam08a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
-                field sam08a$, "total_cost_" + str(period:"00") = nfield(sam08a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
-                field sam08a$, "total_sales_" + str(period:"00") = nfield(sam08a$, "total_sales_" + str(period:"00")) + ope11a.ext_price
-                
-                sam08a$ = field(sam08a$)
-                
-                write record (sam08_dev) sam08a$
+                rem --- Update sam_warehse (sam-08)                
+                dim sam$:fattr(sam08a$)
+                sam_dev=sam08_dev
+                sam_key$=sam08a.firm_id$+sam08a.year$+sam08a.warehouse_id$+sam08a.product_type$+sam08a.item_id$
+                sam$=sam08a$
+                gosub write_sam_rec
+    
+                rem --- Update sales totals by warehouse
+                dim sam$:fattr(sam08tot$)
+                sam08tot.firm_id$=sam08a.firm_id$
+                sam08tot.year$=sam08a.year$
+                sam08tot.warehouse_id$=sam08a.warehouse_id$
+                sam08tot.product_type$=""
+                sam_dev=sam08tot_dev
+                sam_key$=sam08tot.firm_id$+sam08tot.year$+sam08tot.warehouse_id$+sam08tot.product_type$
+                sam$=sam08tot$
+                gosub write_sam_rec
+                       
+                rem --- Update sales totals by warehouse/product type
+                if ivm01a.sa_level$<>"N" and sas01a.whse_lev$<>"W"
+                    sam08a.product_type$=sam08a.product_type$
+                    sam_key$=sam08tot.firm_id$+sam08tot.year$+sam08tot.warehouse_id$+sam08tot.product_type$
+                    sam$=sam08tot$
+                    gosub write_sam_rec
+                endif
             endif
 
         rem --- Stocking Vendor
@@ -538,15 +683,31 @@ rem --- Main read
                  sam09a.item_id$(1)=""
                 endif                                               
 
-                extract record (sam09_dev, key=sam09a.firm_id$+sam09a.year$+sam09a.vendor_id$+sam09a.product_type$+sam09a.item_id$, dom=*next) sam09a$; rem Advisory Locking
-
-                field sam09a$, "qty_shipped_" + str(period:"00") = nfield(sam09a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
-                field sam09a$, "total_cost_" + str(period:"00") = nfield(sam09a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
-                field sam09a$, "total_sales_" + str(period:"00") = nfield(sam09a$, "total_sales_" + str(period:"00")) + ope11a.ext_price
+                rem --- Update sam_vendor (sam-09)                
+                dim sam$:fattr(sam09a$)
+                sam_dev=sam09_dev
+                sam_key$=sam09a.firm_id$+sam09a.year$+sam09a.vendor_id$+sam09a.product_type$+sam09a.item_id$
+                sam$=sam09a$
+                gosub write_sam_rec
                 
-                sam09a$ = field(sam09a$)
-                
-                write record (sam09_dev) sam09a$
+                rem --- Update sales totals by stocking vendor
+                dim sam$:fattr(sam09tot$)
+                sam09tot.firm_id$=sam09a.firm_id$
+                sam09tot.year$=sam09a.year$
+                sam09tot.vendor_id$=sam09a.vendor_id$
+                sam09tot.product_type$=""
+                sam_dev=sam09tot_dev
+                sam_key$=sam09tot.firm_id$+sam09tot.year$+sam09tot.vendor_id$+sam09tot.product_type$
+                sam$=sam09tot$
+                gosub write_sam_rec
+            
+                rem --- Update sales totals by stocking vendor/product type
+                if ivm01a.sa_level$<>"N" and sas01a.vendor_lev$<>"V"
+                    sam09tot.product_type$=sam09a.product_type$
+                    sam_key$=sam09tot.firm_id$+sam09tot.year$+sam09tot.vendor_id$+sam09tot.product_type$
+                    sam$=sam09tot$
+                    gosub write_sam_rec
+                endif
             endif
 
         rem --- Distribution Code
@@ -569,15 +730,31 @@ rem --- Main read
                  sam10a.item_id$(1)=""
                 endif                                               
 
-                extract record (sam10_dev, key=sam10a.firm_id$+sam10a.year$+sam10a.ar_dist_code$+sam10a.product_type$+sam10a.item_id$, dom=*next) sam10a$; rem Advisory Locking
-
-                field sam10a$, "qty_shipped_" + str(period:"00") = nfield(sam10a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
-                field sam10a$, "total_cost_" + str(period:"00") = nfield(sam10a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
-                field sam10a$, "total_sales_" + str(period:"00") = nfield(sam10a$, "total_sales_" + str(period:"00")) + ope11a.ext_price
-                
-                sam10a$ = field(sam10a$)
-                
-                write record (sam10_dev) sam10a$
+                rem --- Update sam_distcode (sam-10)                
+                dim sam$:fattr(sam10a$)
+                sam_dev=sam10_dev
+                sam_key$=sam10a.firm_id$+sam10a.year$+sam10a.ar_dist_code$+sam10a.product_type$+sam10a.item_id$
+                sam$=sam10a$
+                gosub write_sam_rec
+               
+                rem --- Update sales totals by distribution code
+                dim sam$:fattr(sam10tot$)
+                sam10tot.firm_id$=sam10a.firm_id$
+                sam10tot.year$=sam10a.year$
+                sam10tot.ar_dist_code$=sam10a.ar_dist_code$
+                sam10tot.product_type$=""
+                sam_dev=sam10tot_dev
+                sam_key$=sam10tot.firm_id$+sam10tot.year$+sam10tot.ar_dist_code$+sam10tot.product_type$
+                sam$=sam10tot$
+                gosub write_sam_rec
+            
+                rem --- Update sales totals by distribution code/product type
+                if ivm01a.sa_level$<>"N" and sas01a.distcode_lev$<>"D"
+                    sam10tot.product_type$=sam10a.product_type$
+                    sam_key$=sam10tot.firm_id$+sam10tot.year$+sam10tot.ar_dist_code$+sam10tot.product_type$
+                    sam$=sam10tot$
+                    gosub write_sam_rec
+                endif
             endif
 
         rem --- Non-Stock
@@ -593,16 +770,23 @@ rem --- Main read
                 if sas01a.nonstock_lev$="P" then 
                  sam11a.nonstock_no$(1)=""
                 endif
-                
-                extract record (sam11_dev, key=sam11a.firm_id$+sam11a.year$+sam11a.product_type$+sam11a.nonstock_no$, dom=*next) sam11a$; rem Advisory Locking
 
-                field sam11a$, "qty_shipped_" + str(period:"00") = nfield(sam11a$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
-                field sam11a$, "total_cost_" + str(period:"00") = nfield(sam11a$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
-                field sam11a$, "total_sales_" + str(period:"00") = nfield(sam11a$, "total_sales_" + str(period:"00")) + ope11a.ext_price
-                
-                sam11a$ = field(sam11a$)
-                
-                write record (sam11_dev) sam11a$
+                rem --- Update sam_nonstock (sam-11)                
+                dim sam$:fattr(sam11a$)
+                sam_dev=sam11_dev
+                sam_key$=sam11a.firm_id$+sam11a.year$+sam11a.product_type$+sam11a.nonstock_no$
+                sam$=sam11a$
+                gosub write_sam_rec
+            
+                rem --- Update sales totals by non-stock product type
+                dim sam$:fattr(sam11tot$)
+                sam11tot.firm_id$=sam11a.firm_id$
+                sam11tot.year$=sam11a.year$
+                sam11tot.product_type$=sam11a.product_type$
+                sam_dev=sam11tot_dev
+                sam_key$=sam11tot.firm_id$+sam11tot.year$+sam11tot.product_type$
+                sam$=sam11tot$
+                gosub write_sam_rec
             endif
 
         rem --- Inner Loop Ends
@@ -716,6 +900,20 @@ no_to_update: rem --- NO to Update: Clear On-Sales-Register Flags
     wend
 
     goto std_exit
+
+write_sam_rec: rem --- write Sales Analysis records
+
+    extract record (sam_dev,key=sam_key$,dom=*next) sam$;rem Advisory Locking
+    field sam$, "qty_shipped_" + str(period:"00") = nfield(sam$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
+    field sam$, "total_cost_" + str(period:"00") = nfield(sam$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
+    field sam$, "total_sales_" + str(period:"00") = nfield(sam$, "total_sales_" + str(period:"00")) + ope11a.ext_price
+rem wgh ... unREM when implementing maintenance of new ord_* numerics in Sales Analysis
+rem wgh ...     field sam$, "ord_qty_shipped_" + str(period:"00") = nfield(sam$, "ord_qty_shipped_" + str(period:"00")) - ope11a.qty_shipped
+rem wgh ...     field sam$, "ord_total_cost_" + str(period:"00") = nfield(sam$, "ord_total_cost_" + str(period:"00")) - round(ope11a.unit_cost*ope11a.qty_shipped, 2)
+rem wgh ...     field sam$, "ord_total_sales_" + str(period:"00") = nfield(sam$, "ord_total_sales_" + str(period:"00")) - ope11a.ext_price
+    sam$=field(sam$)
+    write record (sam_dev) sam$
+    return
 
 rem #include disp_message.src
 
