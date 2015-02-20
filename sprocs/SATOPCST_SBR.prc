@@ -66,7 +66,7 @@ rem --- Open/Lock files
 
     files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="sam-01",ids$[1]="SAM_CUSTOMER"
+    files$[1]="sam_customer_tot",ids$[1]="SAM_CUSTOMER_TOT"
     files$[2]="arm-01",ids$[2]="ARM_CUSTMAST"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
@@ -76,12 +76,12 @@ rem --- Open/Lock files
         throw "File open error.",1001
     endif
 
-    sam01a_dev=channels[1]
+    sam01tot_dev=channels[1]
     arm01a_dev=channels[2]
 
 rem --- Dimension string templates
 
-    dim sam01a$:templates$[1]
+    dim sam01tot$:templates$[1]
     dim arm01a$:templates$[2]
     
 rem --- Get sales by customer and customer + year
@@ -98,25 +98,29 @@ rem --- yearMap! key=year, holds customer sales for year
         this_year$=""
         gosub year_break
         trip_key$=firm_id$+year$+customer_id$
-        read(sam01a_dev,key=trip_key$,dom=*next)
+        read(sam01tot_dev,key=trip_key$,dom=*next)
         while 1
-            readrecord(sam01a_dev,end=*break)sam01a$
-            if pos(trip_key$=sam01a.firm_id$+sam01a.year$+sam01a.customer_id$)<>1 then
+            readrecord(sam01tot_dev,end=*break)sam01tot$
+            if pos(trip_key$=sam01tot.firm_id$+sam01tot.year$+sam01tot.customer_id$)<>1 then
                 if year$=current_year$ then break
                 rem --- Do next year now
                 year$=str(num(year$)+1)
                 gosub year_break
                 trip_key$=firm_id$+year$+customer_id$
-                read(sam01a_dev,key=trip_key$,dom=*continue)
+                read(sam01tot_dev,key=trip_key$,dom=*continue)
             endif
+            if cvs(sam01tot$.product_type$,2)<>"" then continue
     
-            thisSales=sam01a.total_sales_01+sam01a.total_sales_02+sam01a.total_sales_03+sam01a.total_sales_04+
-:               sam01a.total_sales_05+sam01a.total_sales_06+sam01a.total_sales_07+sam01a.total_sales_08+
-:               sam01a.total_sales_09+sam01a.total_sales_10+sam01a.total_sales_11+sam01a.total_sales_12+
-:               sam01a.total_sales_13
+            thisSales=sam01tot.total_sales_01+sam01tot.total_sales_02+sam01tot.total_sales_03+sam01tot.total_sales_04+
+:               sam01tot.total_sales_05+sam01tot.total_sales_06+sam01tot.total_sales_07+sam01tot.total_sales_08+
+:               sam01tot.total_sales_09+sam01tot.total_sales_10+sam01tot.total_sales_11+sam01tot.total_sales_12+
+:               sam01tot.total_sales_13
             thisSales=round(thisSales,2)
             custSales=custSales+thisSales
             yearSales=yearSales+thisSales
+        
+            rem --- Skip to next customer
+            read(sam01tot_dev,key=firm_id$+year$+customer_id$+$FF$,dom=*next)
         wend
         gosub customer_break
     wend
@@ -173,10 +177,10 @@ customer_break: rem --- Customer break
     endif
     
     rem --- Initialize for next customer
-    customer_id$=sam01a.customer_id$
+    customer_id$=sam01tot.customer_id$
     custSales=0
     yearMap!=new java.util.TreeMap()
-    this_year$=sam01a.year$
+    this_year$=sam01tot.year$
     yearSales=0
     return
     
