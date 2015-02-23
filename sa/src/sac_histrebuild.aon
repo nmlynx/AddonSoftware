@@ -692,6 +692,16 @@ init_firm: rem --- Firm specific initializations
 
 write_rec: rem --- write records
 
+    rem --- Initialize sales analysis numerics to zero to eliminate <null>s in SQL queries
+    for x=1 to 13
+        field sam$,"qty_shipped_"+str(x:"00")=0
+        field sam$,"total_cost_"+str(x:"00")=0
+        field sam$,"total_sales_"+str(x:"00")=0
+        field sam$,"ord_qty_shipped_"+str(x:"00")=0
+        field sam$,"ord_total_cost_"+str(x:"00")=0
+        field sam$,"ord_total_sales_"+str(x:"00")=0
+    next x
+
     extract record (sam_dev,key=sam_key$,dom=*next) sam$;rem Advisory Locking
     if opt11a.trans_status$="U" then
         field sam$,"QTY_SHIPPED_"+str(period:"00")=nfield(sam$,"QTY_SHIPPED_"+str(period:"00"))+opt11a.qty_shipped

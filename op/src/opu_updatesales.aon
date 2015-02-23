@@ -903,6 +903,16 @@ no_to_update: rem --- NO to Update: Clear On-Sales-Register Flags
 
 write_sam_rec: rem --- write Sales Analysis records
 
+    rem --- Initialize sales analysis numerics to zero to eliminate <null>s in SQL queries
+    for x=1 to 13
+        field sam$,"qty_shipped_"+str(x:"00")=0
+        field sam$,"total_cost_"+str(x:"00")=0
+        field sam$,"total_sales_"+str(x:"00")=0
+        field sam$,"ord_qty_shipped_"+str(x:"00")=0
+        field sam$,"ord_total_cost_"+str(x:"00")=0
+        field sam$,"ord_total_sales_"+str(x:"00")=0
+    next x
+
     extract record (sam_dev,key=sam_key$,dom=*next) sam$;rem Advisory Locking
     field sam$, "qty_shipped_" + str(period:"00") = nfield(sam$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
     field sam$, "total_cost_" + str(period:"00") = nfield(sam$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
