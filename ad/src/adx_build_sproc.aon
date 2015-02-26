@@ -34,7 +34,10 @@ rem --- OP_HIST_INVOICE_HDR
 rem --- OP_HIST_INVOICE_DET
 rem --- OP_HIST_INVOICE_DET_LOTSER
 
-rem ---      Dashboard SPROCs (4/2014)
+rem ---      Dashboard SPROCs
+rem --- ARAGINGTOT_BAR
+rem --- ARAGING_BAR
+
 rem --- GLINCTOT_GRD
 rem --- GLBNKBAL_BAR
 rem --- GLBNKBAL_RNG
@@ -46,7 +49,6 @@ rem --- GLINCEXP_ARE
 
 rem --- SATOPCST_BAR
 rem --- SATOPCST_SBR
-
 rem --- SAREPTOT_BAR
 rem --- SATOPREP_LIN
 rem --- SATOPREP_SAR
@@ -268,6 +270,14 @@ rem --- first drop all std Addon SPROCs
 	sproc_vw_name$="OP_HIST_INVOICE_DET_LOTSER"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
+        
+    sproc_vw_name$="ARAGINGTOT_BAR"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def      
+        
+    sproc_vw_name$="ARAGING_BAR"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def      
 		
 	sproc_vw_name$="GLINCTOT_GRD"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
@@ -674,6 +684,28 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 rem ==============================================
 rem --- Dashboard SPROC definitions
 rem ==============================================
+    
+    rem --- Dashboard: ARAGINGTOT_BAR
+    sproc_vw_name$="ARAGINGTOT_BAR"
+    sqlprep$="CREATE PROCEDURE ARAGINGTOT_BAR "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, "
+    sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)" 
+    sqlprep$=sqlprep$+"'"+sproc_path$+"ARAGINGTOT_BAR.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Company Totals For Last AR Agings - Bar Widget'"
+
+    gosub create_sproc_def      
+    
+    rem --- Dashboard: ARAGING_BAR
+    sproc_vw_name$="ARAGING_BAR"
+    sqlprep$="CREATE PROCEDURE ARAGING_BAR "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, AGING_PERIOD CHAR(10) IN, NUM_TO_LIST VARCHAR(1) IN, "
+    sqlprep$=sqlprep$+"MASKS VARCHAR(1) IN, BARISTA_WD VARCHAR(50) IN)" 
+    sqlprep$=sqlprep$+"'"+sproc_path$+"ARAGING_BAR.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'Company Totals For Last AR Agings - Bar Widget'"
+
+    gosub create_sproc_def      
 
 	rem --- Dashboard: GLINCTOT_GRD
     sproc_vw_name$="GLINCTOT_GRD"

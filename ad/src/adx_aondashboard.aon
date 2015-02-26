@@ -122,6 +122,42 @@ rem ==============================================
 	acctDashboardCategory! = aonDashboard!.addDashboardCategory("Accounting",Translate!.getTranslation("AON_ACCOUNTING"))
 
 rem ==============================================
+rem --- create an AR company aging totals bar chart
+rem ==============================================
+    dashboard_menu_id$="ADD_ARAGINGTOT_BAR"
+    gosub get_security
+    if allow_widget$="Y" and installMap!.get("GL")="Y"
+        name$="ARAGINGTOT_BAR"
+        title$ = Translate!.getTranslation("AON_AR_CO_LAST_AGING_TOTALS")
+        previewText$=Translate!.getTranslation("AON_AR_CO_TOTALS_LAST_AGING")
+        previewImage$=preview_path$+"aragingtot_bar.png"
+        chartTitle$ = ""
+        domainTitle$ = ""
+        rangeTitle$ = ""
+        flat=0 
+        orientation=BarChartWidget.getORIENTATION_VERTICAL() 
+        legend=0
+        connectString$=aon_url$
+
+        rem --- params for calling SPROC
+        sql$="CALL ARAGINGTOT_BAR ('"+firm_id$+"', '"+masks$+"', '"+barista_wd$+"')"
+
+        agingTotalsBarDashboardWidget! = acctDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+        agingTotalsWidget!=agingTotalsBarDashboardWidget!.getWidget()
+        agingTotalsWidget!.setFontScalingFactor(0.45)
+        agingTotalsWidget!.setChartRangeAxisToCurrency()
+        agingTotalsWidget!.setLabelsInBarChartColor("#000000")
+        
+        rem Widget click event             
+        dim chartState$:"CHART_TYPE:C(25*)"
+        chartState.chart_type$="ARLastAgingTotals_bar"
+        agingTotalsWidget!.setUserData(chartState$)
+        agingTotalsBarDashboardWidget!.setCallback(DashboardWidget.getON_WIDGET_CLICK(),pgm(-2) + "::OnARLastAgingTotalsChartWidgetClick")
+
+        gosub update_meter
+    endif
+    
+rem ==============================================
 rem --- create a yearly GL totals grid
 rem ==============================================
 
@@ -272,7 +308,7 @@ rem ==============================================
 		
 		bankacctBarChartDashboardWidget! = acctDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		acctWidget! = bankacctBarChartDashboardWidget!.getWidget()
-		acctWidget!.setDomainLabelAngle(1)
+		acctWidget!.setDomainLabelAngle(BarChartWidget.getLABEL_POSITION_DOWN_45())
         acctWidget!.setChartRangeAxisToCurrency()
 rem		acctWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		acctWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
@@ -421,7 +457,7 @@ rem =======================================
 		incExpAWidget! = incExpAAreaChartDashboardWidget!.getWidget()
 		
 		incExpAWidget!.setFontScalingFactor(0.45)
-		incExpAWidget!.setDomainLabelAngle(1)
+		incExpAWidget!.setDomainLabelAngle(LineChartWidget.getLABEL_POSITION_DOWN_45())
         incExpAWidget!.setChartRangeAxisToCurrency()
 
 		rem Create Filters 
@@ -496,7 +532,7 @@ rem ==============================================
 		topCustsBarChartDashboardWidget! = salesDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		topCustsWidget! = topCustsBarChartDashboardWidget!.getWidget()
 		topCustsWidget!.setFontScalingFactor(0.45)
-		topCustsWidget!.setDomainLabelAngle(1)
+		topCustsWidget!.setDomainLabelAngle(BarChartWidget.getLABEL_POSITION_DOWN_45())
         topCustsWidget!.setChartRangeAxisToCurrency()
 rem		topCustsWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		topCustsWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
@@ -533,7 +569,7 @@ rem ==============================================
 		topCustsWidget! = topCustsStackedBarChartDashboardWidget!.getWidget()
 		
 		topCustsWidget!.setFontScalingFactor(0.45)
-		topCustsWidget!.setDomainLabelAngle(1)
+		topCustsWidget!.setDomainLabelAngle(BarChartWidget.getLABEL_POSITION_DOWN_45())
         topCustsWidget!.setLabelsInBarChartColor("#000000")
         topCustsWidget!.setChartRangeAxisToCurrency()
 rem		topCustsWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
@@ -584,7 +620,7 @@ rem ==============================================
 
         repsalesBarChartDashboardWidget! = salesDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
         repsalesWidget! = repsalesBarChartDashboardWidget!.getWidget()
-        repsalesWidget!.setDomainLabelAngle(1)
+        repsalesWidget!.setDomainLabelAngle(BarChartWidget.getLABEL_POSITION_DOWN_45())
         repsalesWidget!.setFontScalingFactor(0.45)
 rem     repsalesWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem     repsalesWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
@@ -629,7 +665,7 @@ rem ==============================================
 		toprepSStackedBarChartDashboardWidget! = salesDashboardCategory!.addStackedBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
 		toprepWidget! = toprepSStackedBarChartDashboardWidget!.getWidget()
 		
-		toprepWidget!.setDomainLabelAngle(1)
+		toprepWidget!.setDomainLabelAngle(BarChartWidget.getLABEL_POSITION_DOWN_45())
 		toprepWidget!.setFontScalingFactor(0.45)
         toprepWidget!.setLabelsInBarChartColor("#000000")
         toprepWidget!.setChartRangeAxisToCurrency()
@@ -724,7 +760,7 @@ rem GOTO TMPSKIP_SAREPS
 		topRepsLWidget! = topRepsLLineChartDashboardWidget!.getWidget()
 		
 		topRepsLWidget!.setFontScalingFactor(0.45)
-		topRepsLWidget!.setDomainLabelAngle(1)
+		topRepsLWidget!.setDomainLabelAngle(LineChartWidget.getLABEL_POSITION_DOWN_45())
         topRepsLWidget!.setChartRangeAxisToCurrency()
 rem		topRepsLWidget!.setChartColors("#71a5d4","#6fd37c",1.0,1.0)
 rem		topRepsLWidget!.setChartRangeColors("#71a5d4","#6fd37c",1.0,1.0)
@@ -763,7 +799,7 @@ rem =======================================
 		topRepsSAWidget! = topRepsSAAreaChartDashboardWidget!.getWidget()
 		
 		topRepsSAWidget!.setFontScalingFactor(0.45)
-		topRepsSAWidget!.setDomainLabelAngle(1)
+		topRepsSAWidget!.setDomainLabelAngle(LineChartWidget.getLABEL_POSITION_DOWN_45())
         topRepsSAWidget!.setChartRangeAxisToCurrency()
 		
 		gosub update_meter
@@ -1268,6 +1304,91 @@ rem ===                      CLICK EVENTS                                 ===
 rem ==================================================================
 
 REM =============================================   
+REM Handle the click event for the AR Company Aging Totals Bar Chart
+REM ============================================= 
+OnARLastAgingTotalsChartWidgetClick:
+    
+    declare DashboardWidgetClickEvent   dbWidgetClickEvent!
+    declare DashboardWidget             dbWidget!
+    declare BBjMouseUpEvent             click!
+    declare BBjVector                   data!
+    
+    rem Get the event and the object payload
+    event! = BBjAPI().getLastEvent()
+    dbWidgetClickEvent! = cast(DashboardWidgetClickEvent, event!.getObject())
+    
+    rem From the custom event we can get the dashboard widget and the click event
+    dbWidget! = cast(DashboardWidget, dbWidgetClickEvent!.getDashboardWidget())
+    click! = cast(BBjMouseUpEvent, dbWidgetClickEvent!.getBBjMouseUpEvent()) 
+
+    rem Get the chart widget and some of the widget properties
+    widget! = dbWidget!.getWidget()
+    widgetName$ = dbWidget!.getName()
+    widgetTitle$ = dbWidget!.getTitle()
+
+    rem Get information about the click event
+    button = click!.getMouseButton()
+    x = click!.getX()
+    y = click!.getY()  
+                    
+    gosub get_sysinfo
+    gosub get_masks
+    gosub get_translate_object
+
+    dim chartState$:"CHART_TYPE:C(25*)"
+    chartState$ = widget!.getUserData()
+
+    rem For a Left click, drilldown
+    if (button = 1) then
+        dataItem! = cast(CategoryDataItem, widget!.getChartDataItemFromPoint(x, y))
+
+        if (dataItem! <> null()) then
+        
+            rem Get the data from the chart
+            rowKey$ = dataItem!.getRowKey()
+            colKey$ = dataItem!.getColKey()
+           
+            rem Build an SQL query to return customers with largest aging for selected aging period
+            aging_period$=pad(colKey$,10)
+            num_to_list$ = "5"; rem <<============= HARDCODED =========
+            sql$ = "CALL ARAGING_BAR ('"+firm_id$+"', '"+aging_period$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
+
+            rem Create an embedded bar chart widget with the agings for the customers
+            name$ = "ARAGING_BAR"
+            title$ = Translate!.getTranslation("AON_AR_LARGEST_AGING_CUSTOMERS")
+            previewText$=Translate!.getTranslation("AON_AR_LARGEST_LAST_AGING_CUSTOMERS")
+            chartTitle$ = ""
+            domainTitle$ = ""
+            rangeTitle$ = ""
+            flat=0 
+            orientation=BarChartWidget.getORIENTATION_VERTICAL() 
+            legend=1
+            connectString$ = widget!.getConnectString()
+                
+            embeddedBarChartWidget! = EmbeddedWidgetFactory.createBarChartEmbeddedWidget(name$,title$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+
+            agingWidget!=embeddedBarChartWidget!.getWidget()
+            agingWidget!.setFontScalingFactor(0.45)
+            agingWidget!.setChartRangeAxisToCurrency()
+            agingWidget!.setDomainLabelAngle(BarChartWidget.getLABEL_POSITION_DOWN_45())
+
+            rem Create an embedded widget window to display the grid in
+            embeddedWidgetWindow! = new EmbeddedWidgetWindow(embeddedBarChartWidget!, 500, 400)
+            embeddedWidgetWindow!.setTitle("WidgetWindow")
+            embeddedWidgetWindow!.doModal()
+            embeddedWidgetWindow!.destroy()
+            widget!.OnClearTip(null())
+            sql$ = ""
+        else
+            rem They clicked on the chart, but not on a data entity so we'll show an instructional tip
+            msg$=Translate!.getTranslation("AON_WIDGET_LEFT_CLICK_ARAGING")
+            widget!.showTip(msg$)
+        endif   
+    endif
+   
+exit
+
+REM =============================================   
 REM Handle the click event for the Income Compare Bar Chart
 REM ============================================= 
 OnIncCmpBarChartWidgetClick:
@@ -1614,7 +1735,7 @@ OnTopSalesrepsYTDChartWidgetClick:
         gosub get_translate_object
     
         if (dataItem! <> null()) then
-       
+
             rem Get the data from the chart
             if pos("TopSalesrepsYTD_bar"=chartState.chart_type$)=1 then
                 slspsn_desc$ = dataItem!.getColKey()
@@ -1650,7 +1771,7 @@ OnTopSalesrepsYTDChartWidgetClick:
             embeddedWidget!.setColumnHeaderData(colHeaderVec!)
 
             rem Create an embedded widget window to display the grid in
-            embeddedWidgetWindow! = new EmbeddedWidgetWindow(embeddedDBWidget!, 400, 230)
+            embeddedWidgetWindow! = new EmbeddedWidgetWindow(embeddedDBWidget!, 400, 250)
             embeddedWidgetWindow!.setTitle("WidgetWindow")
             embeddedWidgetWindow!.doModal()
             embeddedWidgetWindow!.destroy()
@@ -1816,7 +1937,7 @@ rem ==============================================
 init_prog_meter:
 rem ============================================== 
 
-	num_recs=5;rem current count of widgets being built
+	num_recs=16;rem current count of widgets being built
 	progress! = bbjAPI().getGroupNamespace()
 	progress!.setValue("+process_task",task_id$+"^C^"+sysinfo.task_desc$+"^CNC^"+str(num_recs)+"^")
 	curr_rec=0
