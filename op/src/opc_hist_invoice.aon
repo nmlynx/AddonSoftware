@@ -1,20 +1,14 @@
 rem --- Invoice Printing (Form)
 rem --- Program opc_hist_invoice.aon
-rem --- Created by adx_codeport.bbj v1.1.5 (06/12/2009 12:05:26)
 
 rem --- AddonSoftware
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
-
-rem --- Send in a list of customer IDs and order numbers to print.
-
-rem --- 4/2013 ------------------------
-rem --- Replaced BBjForm-based OP Invoice Print with Jasper-based
 
 rem --- 12/2014 -----------------------
 rem --- opc_hist_invoice.aon is used to print Historical Invoice
 rem --- from Historical Invoice Inquiry form
 
-rem --- at some point (after RTP mods have stabilized), this public and the three SPROCS/Jaspers
+rem --- at some point (after RTP mods are complete and QA'd), this public and the three SPROCS/Jaspers
 rem --- should be consolidated with the non-hist counterparts
 
 rem --- There are three sprocs and three .jaspers for this enhancement:
@@ -27,11 +21,11 @@ rem ----------------------------------------------------------------------------
 
 on_demand: rem --- Entry point for on-denamd invoices    
 
-goto all_done; rem --- only used for historical invoices until RTP is done
+goto all_done; rem --- currently only used for historical invoices
     setesc std_error
     seterr std_error
     
-    enter cust_id$, order_no$, callpoint!, table_chans$[all], status
+    enter cust_id$, order_no$, option!, table_chans$[all], status
  
     custIds! = BBjAPI().makeVector()
     orderNos! = BBjAPI().makeVector()
@@ -45,7 +39,7 @@ goto all_done; rem --- only used for historical invoices until RTP is done
     
 batch_inv: rem --- Batch printing of invoices
 
-goto all_done; rem --- only used for historical invoices until RTP is done
+goto all_done; rem --- currently only used for historical invoices
     setesc std_error
     seterr std_error
 
@@ -55,12 +49,12 @@ goto all_done; rem --- only used for historical invoices until RTP is done
     kw_pfx$="Batch "
     goto done_with_enter
  
-historical: rem --- Historical invoice printing
+historical: rem --- Historical Invoice printing
 
     setesc std_error
     seterr std_error
 
-    enter cust_id$, order_no$, invoice_no$, callpoint!, table_chans$[all], status
+    enter cust_id$, order_no$, invoice_no$, option!, table_chans$[all], status
  
     custIds! = BBjAPI().makeVector()
     orderNos! = BBjAPI().makeVector()
@@ -94,7 +88,8 @@ rem --- Use statements and Declares
     ScreenSize!   = bbjAPI().getSysGui().getSystemMetrics().getScreenSize()
     screen_width  = ScreenSize!.width - 75; rem keep it in the MDI w/ no scroll bars
     screen_height = ScreenSize!.height - 75
-	
+
+    use ::ado_rptControl.src::ReportControl	
     use ::ado_func.src::func
     use ::ado_pdf.src::PDFHelper
     use ::sys/prog/bao_callpoint.bbj::Callpoint
@@ -321,12 +316,23 @@ rem --- Initialize Data
     nothing_printed = 1
     
     if type = on_demand or type = historical then
-        alias$ = callpoint!.getAlias()
+        alias$ = option!.getAlias()
+        rptctl_alias$ = "OPR_INVOICE";rem --- use actual alias (i.e., OPE_INVHDR) when putting in doc archive so you know it was an on-demand invoice, but use OPR_INVOICE for report control so you don't need two report control records for each customer to handle on-demand vs. batch.        
 		master_document=0
     else
         alias$ = option!.getAlias()
 		master_document=1
     endif
+
+    emailFax! = BBjAPI().makeVector()
+
+rem --- See if this document is set up in Addon Report Control
+
+    reportControl!=new ReportControl()
+    reportControl!.setDocExtension("pdf")
+    rpt_ctl$=reportControl!.getReportControl(rptctl_alias$)
+    rpt_ctl$=iff(rpt_ctl$="","NO","YES")
+    rpt_id$=iff(rpt_ctl$="YES",reportControl!.getReportID(),"")
 
 rem --- Assign form input values to local variables
 
@@ -335,9 +341,10 @@ rem --- Assign form input values to local variables
 		restart_customer$ = option!.getOptionData("customer_id")  
         batch_adhoc_message$ = option!.getOptionData("pick_text")
     else
-		restart$ = ""
+    	restart$ = ""
 		restart_customer$ = ""
-        batch_adhoc_message$ = ""
+        batch_adhoc_message$ = option!.getOptionData("pick_text")
+        send_via_rpt_ctl$ = option!.getOptionData("pick_check")
     endif
 
 rem --- Start progress meter 
@@ -407,7 +414,7 @@ rem --- Main Read
         doc_name$="OPHistInvoice_Cust"+ope01a.customer_id$+"_"+alias$
         doc_keywords$=kw_pfx$+"Order: "+ope01a.order_no$+" Invoice: "+ope01a.ar_inv_no$
 
-        rem --- Get Next Document Number and update Document Audit for individual pdf
+    rem --- Get Next Document Number and update Document Audit for individual pdf
 
         call stbl("+DIR_SYP")+"bas_sequences.bbj","DOC_NO",new_doc_id$,rd_table_chans$[all] 
         new_doc_name$=new_doc_id$+"_"+doc_name$+".pdf"        
@@ -415,7 +422,7 @@ rem --- Main Read
         call stbl("+DIR_SYP")+"bac_documents.bbj",new_doc_id$,rep_date_stamp$,rep_time_stamp$,rd_doc_source$,rd_doc_ext$,docdir$,
 :           rd_source_type$,rd_source_alias$,rd_source_id$,rd_source_ref$,rd_table_chans$[all],"",new_doc_name$,doc_name$,doc_keywords$
 
-        rem --- Get Next Document Number and update Document Audit for master copy of pdf, if first time thru
+    rem --- Get Next Document Number and update Document Audit for master copy of pdf, if first time thru
 
         if master_document
             rd_doc_ext$="JAS"
@@ -425,6 +432,21 @@ rem --- Main Read
             rd_archive_action$=""
             master_doc_id$=rd_doc_id$
             master_doc_name$=master_doc_id$+"_"+masterBaseName$+".pdf"
+        endif
+
+    rem --- Use ReportControl object to see if customer wants print, email, or fax
+
+        add_to_print_report=1
+        if rpt_ctl$="YES"     
+            found=reportControl!.getRecipientInfo(rpt_id$,cust_id$,"")
+            if found         
+                if reportControl!.getPrintYN()<>"Y" then add_to_print_report=0
+                if reportControl!.getEmailYN()="Y" or reportControl!.getFaxYN()="Y"
+                    emailFax!.add(rpt_id$)
+                    emailFax!.add(cust_id$)
+                    emailFax!.add(new_doc_id$)
+                endif
+            endif
         endif
 
     rem --- Report parameters  (Master only processed once, followed by actual invoices)
@@ -492,7 +514,6 @@ rem --- Main Read
 
         if type = batch_inv
 			master_report!.appendReport(report!)	
-			call stbl("+DIR_PGM")+"adc_rptcontrol.aon",alias$,ope01a.customer_id$,"C",new_doc_id$,"pdf" 
 			report!.destroy()
 		endif
     rem --- Loop back for next Customer/Order
@@ -621,10 +642,24 @@ rem --- force exportToPDF first, in case it hasn't already been saved
 
 close_win:rem --- Viewer closed - do post-processing for batch vs single
 
+    if type=historical
+        if emailFax!.size() and send_via_rpt_ctl$="Y"
+            msg_id$ = "CONF_RPTCTL"
+            gosub disp_message
+            if msg_opt$="Y"
+                for email_fax=0 to emailFax!.size()-1 step 3
+                    reportControl!.addToDocQueue(emailFax!.get(email_fax),emailFax!.get(email_fax+1),"",emailFax!.get(email_fax+2))    
+                next email_fax
+            endif
+        endif
+        goto all_done
+    endif
+    
+    msg_id$ = "OP_INVOICE_UPDATE"
+    gosub disp_message
+    if msg_opt$<>"Y" then goto all_done
+    
     if type=batch_inv
-        msg_id$ = "OP_INVOICE_UPDATE"
-        gosub disp_message
-        if msg_opt$<>"Y" then goto all_done
 
         call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Updating","",0,0,1,0,status
         if status = 999 then goto all_done
@@ -651,19 +686,30 @@ close_win:rem --- Viewer closed - do post-processing for batch vs single
                 endif
             endif
         wend
-	endif
 
-    if type=on_demand
-		rem gosub open_cash_box
-		gosub order_update				
-    endif  
+        if emailFax!.size()
+            for email_fax=0 to emailFax!.size()-1 step 3
+                reportControl!.addToDocQueue(emailFax!.get(email_fax),emailFax!.get(email_fax+1),"",emailFax!.get(email_fax+2))    
+            next email_fax
+        endif
+    else
+		rem gosub open_cash_box... not implemented in Barista Addon
+		gosub order_update
+
+        if emailFax!.size() and send_via_rpt_ctl$="Y"
+            for email_fax=0 to emailFax!.size()-1 step 3
+                reportControl!.addToDocQueue(emailFax!.get(email_fax),emailFax!.get(email_fax+1),"",emailFax!.get(email_fax+2))    
+            next email_fax
+        endif
+	endif 
 
 all_done: rem --- Exit
 
     read(ope01_dev,knum="AO_STATUS",end=*next); rem release extract, and reset knum in case on-demand printing
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
-    
+
+    reportControl!.destroy(err=*next)       
     viewerWindow!.destroy()
     rdForm!.destroy(err=*next)
     if tcb(13) then exit

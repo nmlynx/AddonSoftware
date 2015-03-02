@@ -403,11 +403,26 @@ rem --- Display invoice total
 
 	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str(net_sales),1)
 [[OPT_INVHDR.AOPT-PRNT]]
-rem --- Print a counter Invoice
-
-	cust_id$  = callpoint!.getColumnData("OPT_INVHDR.CUSTOMER_ID")
-	order_no$ = callpoint!.getColumnData("OPT_INVHDR.ORDER_NO")
-	invoice_no$ = callpoint!.getColumnData("OPT_INVHDR.AR_INV_NO")
-
-	call pgmdir$+"opc_hist_invoice.aon::historical", cust_id$, order_no$, invoice_no$, callpoint!, table_chans$[all], status
-	if status = 999 then goto std_exit
+rem --- historical invoice
+ 
+	cp_cust_id$=callpoint!.getColumnData("OPT_INVHDR.CUSTOMER_ID")
+	cp_order_no$=callpoint!.getColumnData("OPT_INVHDR.ORDER_NO")
+	cp_invoice_no$=callpoint!.getColumnData("OPT_INVHDR.AR_INV_NO")
+	user_id$=stbl("+USER_ID")
+ 
+	dim dflt_data$[3,1]
+	dflt_data$[1,0]="CUSTOMER_ID"
+	dflt_data$[1,1]=cp_cust_id$
+	dflt_data$[2,0]="ORDER_NO"
+	dflt_data$[2,1]=cp_order_no$
+	dflt_data$[3,0]="AR_INV_NO"
+	dflt_data$[3,1]=cp_invoice_no$
+ 
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	                       "OPR_HIST_INV",
+:	                       user_id$,
+:	                       "",
+:	                       "",
+:	                       table_chans$[all],
+:	                       "",
+:	                       dflt_data$[all]
