@@ -288,9 +288,6 @@ rem --- Invoice History Header, set to void
 	opt_invhdr_rec.mod_user$=sysinfo.user_id$
 	opt_invhdr_rec.mod_date$=date(0:"%Yd%Mz%Dz")
 	opt_invhdr_rec.mod_time$=date(0:"%Hz%mz")
-
-	opt_invhdr_key$=opt_invhdr_rec.firm_id$+opt_invhdr_rec.ar_type$+opt_invhdr_rec.customer_id$+opt_invhdr_rec.order_no$+opt_invhdr_rec.ar_inv_no$
-	extractrecord(opt_invhdr_dev,key=opt_invhdr_key$,dom=*next)x$; rem Advisory Locking
 	opt_invhdr_rec.trans_status$="U"
 	opt_invhdr_rec$ = field(opt_invhdr_rec$)
 	write record (opt_invhdr_dev) opt_invhdr_rec$
