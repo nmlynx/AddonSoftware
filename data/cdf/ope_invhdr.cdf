@@ -1012,7 +1012,6 @@ rem --- clear availability
 	ope01_tpl$=fnget_tpl$(file_name$)
 	dim ope01a$:ope01_tpl$
 	ope01a$ = util.copyFields(ope01_tpl$, callpoint!)
-	ope01a.sequence_000$="000"
 	ope01a.invoice_type$ = "V"
 	ope01a.print_status$="Y"
 
@@ -1200,7 +1199,7 @@ rem --- Remove committments for detail records by calling ATAMO
 	ar_type$  = callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
 	cust$     = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	ord$      = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-	invoice$=callpoint!.getColumnData("OPE_INVDHDR.AR_INV_NO")
+	invoice$=callpoint!.getColumnData("OPE_INVHDR.AR_INV_NO")
 	ord_date$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_DATE")
 	inv_type$ = callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE")
 
