@@ -2003,6 +2003,7 @@ rem ==========================================================================
 			ivm01_dev=fnget_dev("IVM_ITEMMAST")
 			dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
 
+			read (opt11_dev,knum="PRIMARY",dom=*next);rem set opt11 to use primary key
 			read (opt11_dev, key=firm_id$+opt01a.ar_type$+opt01a.customer_id$+opt01a.order_no$+opt01a.ar_inv_no$, dom=*next)
 
 			opc_linecode_dev = fnget_dev("OPC_LINECODE")
@@ -2063,6 +2064,7 @@ rem ==========================================================================
 				endif
 
 				ope11a.order_no$     = ope01a.order_no$
+				ope11a.ar_inv_no$     = ""
 				ope11a.est_shp_date$ = ope01a.shipmnt_date$
 				ope11a.commit_flag$  = "Y"
 				ope11a.pick_flag$    = "N"
