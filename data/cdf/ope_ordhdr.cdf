@@ -523,7 +523,7 @@ rem --- Show customer data
 
 rem --- Enable buttons
 
-	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), 2) = "" then
+	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"), 2) = "" and callpoint!.isEditMode() then
 		callpoint!.setOptionEnabled("DINV",1)
 		callpoint!.setOptionEnabled("CINV",1)
 	endif
@@ -635,7 +635,16 @@ rem --- Enable buttons as appropriate
 			callpoint!.setOptionEnabled("RPRT",num(callpoint!.getDevObject("reprintable")))
 			callpoint!.setOptionEnabled("PRNT",1)
 			callpoint!.setOptionEnabled("TTLS",1)
+			callpoint!.setOptionEnabled("CRAT",1)
 		endif
+	endif
+
+	if !callpoint!.isEditMode() then
+		callpoint!.setOptionEnabled("CINV",0)
+		callpoint!.setOptionEnabled("DINV",0)
+		callpoint!.setOptionEnabled("CRAT",0)
+		callpoint!.setOptionEnabled("PRNT",0)
+		callpoint!.setOptionEnabled("RPRT",0)
 	endif
 
 rem --- Set Backordered text field
@@ -809,9 +818,12 @@ rem --- Set comm percent (if calling up a B/O, it will have been cleared);rem bu
 
 rem --- Enable buttons
 
-	callpoint!.setOptionEnabled("PRNT",1)
-	callpoint!.setOptionEnabled("RPRT",num(callpoint!.getDevObject("reprintable")))
+	if callpoint!.isEditMode() then
+		callpoint!.setOptionEnabled("PRNT",1)
+		callpoint!.setOptionEnabled("RPRT",num(callpoint!.getDevObject("reprintable")))
+	endif
 	callpoint!.setOptionEnabled("TTLS",1)
+
 
 rem --- Set all previous values
 
@@ -1609,6 +1621,14 @@ rem --- Write/Remove manual ship to file
 
 		ordship_tpl$ = field(ordship_tpl$)
 		write record (ordship_dev) ordship_tpl$
+	endif
+
+	if !callpoint!.isEditMode() then
+		callpoint!.setOptionEnabled("CINV",0)
+		callpoint!.setOptionEnabled("DINV",0)
+		callpoint!.setOptionEnabled("CRAT",0)
+		callpoint!.setOptionEnabled("PRNT",0)
+		callpoint!.setOptionEnabled("RPRT",0)
 	endif
 [[OPE_ORDHDR.<CUSTOM>]]
 rem ==========================================================================

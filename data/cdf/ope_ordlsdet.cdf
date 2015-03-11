@@ -436,7 +436,7 @@ rem --- Set a flag for non-inventoried items
 
 rem --- No Serial/lot lookup for non-invent items
 	
-	if user_tpl.non_inventory then callpoint!.setOptionEnabled("LLOK", 0)
+	if user_tpl.non_inventory or !callpoint!.isEditMode() then callpoint!.setOptionEnabled("LLOK", 0)
 
 rem --- Create a HashMap so that we know what's been committed during this session
 

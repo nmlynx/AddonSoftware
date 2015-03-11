@@ -511,7 +511,7 @@ rem --- Disable/enable based on status of closed/open
 
 rem --- Disable Options (buttons) for a Closed Work Order
 
-	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C"
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C" or !callpoint!.isEditMode() then
 		callpoint!.setOptionEnabled("SCHD",0)
 		callpoint!.setOptionEnabled("RELS",0)
 	else
@@ -535,7 +535,9 @@ rem --- Always disable these fields for an existing record
 
 rem --- disable Copy function if closed or not an N category
 
-	if callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")<>"N" or callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C"
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")<>"N" or 
+:	callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C" or
+:	!callpoint!.isEditMode() then
 		callpoint!.setOptionEnabled("COPY",0)
 	else
 		callpoint!.setOptionEnabled("COPY",1)
@@ -735,7 +737,7 @@ rem --- Verify minimum quantity > 0
 
 rem --- Enable Copy Button
 
-	if callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")="N" and num(callpoint!.getUserInput())>0
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")="N" and num(callpoint!.getUserInput())>0 and callpoint!.isEditMode() then
 		callpoint!.setOptionEnabled("COPY",1)
 	endif
 
@@ -1005,7 +1007,7 @@ rem --- If new order, check for type of Work Order and disable Item or Descripti
 
 rem --- Enable Copy Button
 
-	if typecode.wo_category$="N" and num(callpoint!.getColumnData("SFE_WOMASTR.SCH_PROD_QTY"))>0
+	if typecode.wo_category$="N" and num(callpoint!.getColumnData("SFE_WOMASTR.SCH_PROD_QTY"))>0 and callpoint!.isEditMode() then
 		callpoint!.setOptionEnabled("COPY",1)
 	else
 		callpoint!.setOptionEnabled("COPY",0)
@@ -1185,7 +1187,9 @@ rem --- Set new_rec to N and disable Item Number
 
 rem --- disable Copy function if closed or not an N category
 
-	if callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")<>"N" or callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C"
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")<>"N" or 
+:	callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C" or
+:	!callpoint!.isEditMode() then
 		callpoint!.setOptionEnabled("COPY",0)
 	else
 		callpoint!.setOptionEnabled("COPY",1)
@@ -1193,7 +1197,7 @@ rem --- disable Copy function if closed or not an N category
 
 rem --- enable Release/Commit
 
-	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")<>"C"
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")<>"C" and callpoint!.isEditMode() then
 		callpoint!.setOptionEnabled("RELS",1)
 		callpoint!.setOptionEnabled("SCHD",1)
 	endif

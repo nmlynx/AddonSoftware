@@ -1098,7 +1098,13 @@ rem --- Enable / Disable buttons
 			endif
 		endif
 	endif
-	if !callpoint!.isEditMode() then callpoint!.setOptionEnabled("UINV",0)
+	if !callpoint!.isEditMode() then
+		callpoint!.setOptionEnabled("CASH",0)
+		callpoint!.setOptionEnabled("CINV",0)
+		callpoint!.setOptionEnabled("DINV",0)
+		callpoint!.setOptionEnabled("PRNT",0)
+		callpoint!.setOptionEnabled("UINV",0)
+	endif
 
 
 rem --- Set Backordered text field
@@ -1422,7 +1428,13 @@ rem --- Write/Remove manual ship to file
 		write record (ordship_dev) ordship_tpl$
 	endif
 
-	if !callpoint!.isEditMode() then callpoint!.setOptionEnabled("UINV",0)
+	if !callpoint!.isEditMode() then
+		callpoint!.setOptionEnabled("CASH",0)
+		callpoint!.setOptionEnabled("CINV",0)
+		callpoint!.setOptionEnabled("DINV",0)
+		callpoint!.setOptionEnabled("PRNT",0)
+		callpoint!.setOptionEnabled("UINV",0)
+	endif
 [[OPE_INVHDR.ADIS]]
 rem --- Check locked status
 
@@ -1489,7 +1501,7 @@ rem --- Set comm percent (if calling up a B/O, it will have been cleared);rem bu
 
 rem --- Enable buttons
 
-	callpoint!.setOptionEnabled("PRNT", 1)
+	if callpoint!.isEditMode() then callpoint!.setOptionEnabled("PRNT", 1)
 	callpoint!.setOptionEnabled("TTLS",1)
 	gosub able_cash_sale
 
@@ -1769,7 +1781,7 @@ rem --- Show customer data
 
 rem --- Enable Duplicate buttons, printer
 
-	if cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2) = "" then
+	if cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2) = "" and callpoint!.isEditMode() then
 		callpoint!.setOptionEnabled("DINV", 1)
 		callpoint!.setOptionEnabled("CINV", 1)
 	endif
@@ -2990,11 +3002,11 @@ able_cash_sale: rem --- Enable/Disable Cash Sale button
 rem ==========================================================================
 
 	idx=form!.getControl(num(stbl("+TAB_CTL"))).getSelectedIndex()
-	if user_tpl.cash_sale$="Y" and idx=2 then
+	if user_tpl.cash_sale$="Y" and idx=2 and callpoint!.isEditMode() then
 		rem --- enable Cash Sale button when on Totals tab
 		callpoint!.setOptionEnabled("CASH",1)
 	else
-		rem --- enable Cash Sale button when on Totals tab
+		rem --- disable Cash Sale button when not on Totals tab
 		callpoint!.setOptionEnabled("CASH",0)
 	endif
 
