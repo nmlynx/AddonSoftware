@@ -13,7 +13,7 @@ enter rd_gui_dev,rdWindow!,rd_field_tvar$,rd_ddm_drill_defs$,rd_drill_pfx$,rd_ta
     if op$="Y"
         num_files=1
         dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-        open_tables$[1]="OPT_INVHDR",open_opts$[1]="OTA[D]";rem open on new channel w/ 'D' identifier (D for drilldown) to be sure we open/close on our own channel
+        open_tables$[1]="OPT_INVHDR",open_opts$[1]="OTA@"
         
         gosub open_tables
         
@@ -26,7 +26,7 @@ enter rd_gui_dev,rdWindow!,rd_field_tvar$,rd_ddm_drill_defs$,rd_drill_pfx$,rd_ta
 
         num_files=1
         dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-        open_tables$[1]="D"+"OPT_INVHDR",open_opts$[1]="CX"
+        open_tables$[1]="@"+"OPT_INVHDR",open_opts$[1]="CX"
         gosub open_tables;rem close OPT_INVHDR
     endif
 

@@ -10,12 +10,12 @@ rem --- currently used from Customer form's Future/Current/30/60/90/120 drilldow
 
     enter rd_gui_dev,rdWindow!,rd_field_tvar$,rd_ddm_drill_defs$,rd_drill_pfx$,rd_table_chans$[all]
 
-    ageBucket$=rd_field_tvar$
+    ageBucket$=cvs(rd_field_tvar$,2)
     objTable!=BBjAPI().getObjectTable()
     agedBalHash!=objTable!.get(str(rd_drill_pfx$))
     
     if agedBalHash!=null() then gosub do_aging;rem --- age this customer's invoices into a hash and store in object table so it doesn't need to be repeated to look at other age buckets  
-    
+  
     invoiceVect!=agedBalHash!.get(ageBucket$)
     firm_id$=agedBalHash!.get("FIRM_ID")
     ar_type$=agedBalHash!.get("AR_TYPE")
@@ -24,7 +24,7 @@ rem --- currently used from Customer form's Future/Current/30/60/90/120 drilldow
     rem --- create filter_defs$[ ] from the aged invoices hashmap built in do_aging subroutine (i.e., where ar_inv_no IN ('inv1','inv2','inv3'))
     rem --- then call the query program, filtering on these invoices
 
-    if invoiceVect!.size()
+    if invoiceVect!<>null() and invoiceVect!.size()
         invoices$="IN ("
         for x=0 to invoiceVect!.size()-1
             if x=invoiceVect!.size()-1
@@ -57,6 +57,8 @@ rem --- currently used from Customer form's Future/Current/30/60/90/120 drilldow
 :			"",
 :			filter_defs$[all],"",rd_drill_pfx$
 
+    endif
+
     goto exit_prog
 
 
@@ -74,8 +76,8 @@ rem --- processes all invoices this customer and loads non-zero bal inv#'s into 
 
     num_files=2
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="ART_INVHDR",open_opts$[1]="OTA[D]";rem open on new channel w/ 'D' identifier (D for drilldown) to be sure we open/close on our own channel
-    open_tables$[2]="ARM_CUSTDET",open_opts$[2]="OTA[D]"
+    open_tables$[1]="ART_INVHDR",open_opts$[1]="OTA@"
+    open_tables$[2]="ARM_CUSTDET",open_opts$[2]="OTA@"
     
     gosub open_tables
         
