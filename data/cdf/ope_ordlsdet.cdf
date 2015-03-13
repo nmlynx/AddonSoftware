@@ -1,3 +1,16 @@
+[[OPE_ORDLSDET.AGDS]]
+rem --- Can't use qty_shipped from ope_invdet and ope_orddet. Must total it up here.
+	qty_shipped=0
+	dim ope_ordlsdet$:fnget_tpl$("OPE_ORDLSDET")
+	grid! = Form!.getControl(num(stbl("+GRID_CTL")))
+	col_hdr$=callpoint!.getTableColumnAttribute("OPE_ORDLSDET.QTY_SHIPPED","LABS")
+	qtyShipped_column=util.getGridColumnNumber(grid!,col_hdr$)
+	if grid!.getNumRows()>0 then
+		for row=0 to grid!.getNumRows()-1
+			qty_shipped=qty_shipped+num(grid!.getCellText(row,qtyShipped_column))
+		next row
+	endif
+	user_tpl.left_to_ord=num(callpoint!.getDevObject("ord_qty"))-qty_shipped
 [[OPE_ORDLSDET.BWRI]]
 rem --- Initialize RTP modified fields for modified existing records
 	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())<>"Y" then
@@ -404,17 +417,16 @@ rem --- Keep track of what's been committed this session
 
 	return
 [[OPE_ORDLSDET.BSHO]]
-print "BSHO"; rem debug
-
 rem --- Inits
 
+	use ::ado_util.src::util
 	use java.util.HashMap
 
 	declare HashMap committedNow!
 
 	dim user_tpl$:"non_inventory:u(1), left_to_ord:n(1*), prev_ord:n(1*)"
 	user_tpl.non_inventory = 0
-	user_tpl.left_to_ord = num(callpoint!.getDevObject("ord_qty"))-num(callpoint!.getDevObject("qty_shipped"))
+	user_tpl.left_to_ord = 0; rem --- get initialized in AGDS
 	user_tpl.prev_ord = 0
 
 rem --- Set Lot/Serial button up properly
