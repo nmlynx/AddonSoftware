@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2015-03-12
+ Report Date:   2015-03-16
  Report Branch: AddonSoftware 14.21
  Last Release:  AddonSoftware 14.20
 =======================================================================================================================================
@@ -503,3 +503,100 @@ Per bug 8244, switched how vendor number and name are passed into GL
 recap in the memo$ and ref1$ fields.
 ----
 Modified: ap/src/apr_chkregister.aon
+
+=======================================================================================================================================
+Revision: 86918b7a45409a979000270c6b82750b384b4339
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 3/16/2015 10:22:25 AM
+Message:
+Bug 8235: Blocked access to AOPTs that could modify data on forms
+currently NOT in Edit mode.
+----
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/bar/ope_ordlsdet.xml
+Modified: data/bar/poe_invsel.xml
+Modified: data/bar/poe_reclsdet.xml
+Modified: data/bar/sam_customer.xml
+Modified: data/bar/sam_custship.xml
+Modified: data/bar/sam_custsic.xml
+Modified: data/bar/sam_custterr.xml
+Modified: data/bar/sam_custtype.xml
+Modified: data/bar/sam_distcode.xml
+Modified: data/bar/sam_item.xml
+Modified: data/bar/sam_nonstock.xml
+Modified: data/bar/sam_proditmcst.xml
+Modified: data/bar/sam_salespsn.xml
+Modified: data/bar/sam_territry.xml
+Modified: data/bar/sam_vendor.xml
+Modified: data/bar/sam_warehse.xml
+Modified: data/bar/sfe_wolotser.xml
+Modified: data/bar/sfe_womastr.xml
+Modified: data/bar/sfe_womatisd.xml
+Modified: data/bar/sfe_womatl.xml
+Modified: data/cdf/ope_invhdr.cdf
+Modified: data/cdf/ope_ordhdr.cdf
+Modified: data/cdf/ope_ordlsdet.cdf
+Modified: data/cdf/poe_invsel.cdf
+Modified: data/cdf/poe_reclsdet.cdf
+Modified: data/cdf/sam_customer.cdf
+Modified: data/cdf/sam_custship.cdf
+Modified: data/cdf/sam_custsic.cdf
+Modified: data/cdf/sam_custterr.cdf
+Modified: data/cdf/sam_custtype.cdf
+Modified: data/cdf/sam_distcode.cdf
+Modified: data/cdf/sam_item.cdf
+Modified: data/cdf/sam_nonstock.cdf
+Modified: data/cdf/sam_proditmcst.cdf
+Modified: data/cdf/sam_salespsn.cdf
+Modified: data/cdf/sam_territry.cdf
+Modified: data/cdf/sam_vendor.cdf
+Modified: data/cdf/sam_warehse.cdf
+Modified: data/cdf/sfe_wolotser.cdf
+Modified: data/cdf/sfe_womastr.cdf
+Modified: data/cdf/sfe_womatisd.cdf
+Modified: data/cdf/sfe_womatl.cdf
+
+=======================================================================================================================================
+Revision: 3ac77ccea62d95d3165517d749fac60a97ca0dfa
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 3/16/2015 11:17:27 AM
+Message:
+Bug 8236: Updated field_file_xref for v6 WOM-02 field name conversions
+to sfm-02.
+----
+Modified: util/dataport/files/field_file_xref
+
+=======================================================================================================================================
+Revision: 702f99c89084417453032f7812150aced39826a8
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 3/16/2015 11:34:10 AM
+Message:
+Bug 8245: Don't execute filter_recs subroutine in AVALs unless the field
+value has changed.
+----
+Modified: data/bar/ape_payselect.xml
+Modified: data/cdf/ape_payselect.cdf
+
+=======================================================================================================================================
+Revision: cfa7ab4681abe8512c378a29174aa2b1bd15b5e8
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 3/16/2015 11:49:19 AM
+Message:
+Bug 8217: Lock on new destination file shouldn't be necessary, so skip
+it if it errors.
+----
+Modified: util/dataport/DataPort_main.bbj
+
+=======================================================================================================================================
+Revision: bc7185391932e5520f5d05944d97f78d75e54d70
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 3/16/2015 12:01:26 PM
+Message:
+Bug 8028: Changed ope_ordlsdet to total up it's own qty_shipped rather
+than using the qty_shipped from ope_invdet and ope_orddet.
+----
+Modified: ad/src/ado_util.src
+Modified: data/bar/ope_ordlsdet.xml
+Modified: data/cdf/ope_ordlsdet.cdf
+
