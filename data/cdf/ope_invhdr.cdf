@@ -1103,6 +1103,7 @@ rem --- Enable / Disable buttons
 		callpoint!.setOptionEnabled("CINV",0)
 		callpoint!.setOptionEnabled("DINV",0)
 		callpoint!.setOptionEnabled("PRNT",0)
+		callpoint!.setOptionEnabled("RPRT",0)
 		callpoint!.setOptionEnabled("UINV",0)
 	endif
 
@@ -1433,6 +1434,7 @@ rem --- Write/Remove manual ship to file
 		callpoint!.setOptionEnabled("CINV",0)
 		callpoint!.setOptionEnabled("DINV",0)
 		callpoint!.setOptionEnabled("PRNT",0)
+		callpoint!.setOptionEnabled("RPRT",0)
 		callpoint!.setOptionEnabled("UINV",0)
 	endif
 [[OPE_INVHDR.ADIS]]
