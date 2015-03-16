@@ -21,9 +21,9 @@
 			<ASC_LICENSE_ID id="ddm_tables.apm_emailfax">163582805B50DED105EF9FFEFE61BA42</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.apm_emailfax">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.apm_emailfax">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.apm_emailfax">20150116</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.apm_emailfax">20150116</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.apm_emailfax">172830</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.apm_emailfax">20150316</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.apm_emailfax">20150316</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.apm_emailfax">113100</DD_LSTSYNC_TIME>
 			<DD_ATTR_ATAB id="ddm_tables.apm_emailfax"></DD_ATTR_ATAB>
 			<DD_ATTR_CPGM id="ddm_tables.apm_emailfax"></DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.apm_emailfax"></DD_ATTR_DKNM>
@@ -52,7 +52,7 @@
 		<RECORD id="ddm_table_tpls.apm_emailfax">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.apm_emailfax">APM_EMAILFAX    </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.apm_emailfax">apm-15</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.apm_emailfax">firm_id:c(2),vendor_id:c(6),email_to:c(60),email_cc:c(60),email_bcc:c(60),fax_to:c(60),fax_nos:c(60),web_page:c(60)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.apm_emailfax">firm_id:c(2),vendor_id:c(6),email_to:c(80),email_cc:c(80),email_bcc:c(80),fax_to:c(60),fax_nos:c(60),web_page:c(60)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -136,6 +136,7 @@
 			<SQL_COLUMN_NAME id="ddm_table_cols.apm_emailfax001">FIRM_ID</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.apm_emailfax001"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.apm_emailfax001"></DD_ATTR_STYL>
+			<DD_ATTR_FTSR id="ddm_table_cols.apm_emailfax001"></DD_ATTR_FTSR>
 		</RECORD>
 		<RECORD id="ddm_table_cols.apm_emailfax002">
 			<DD_TABLE_ALIAS id="ddm_table_cols.apm_emailfax002">APM_EMAILFAX    </DD_TABLE_ALIAS>
@@ -179,11 +180,12 @@
 			<SQL_COLUMN_NAME id="ddm_table_cols.apm_emailfax002">VENDOR_ID</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.apm_emailfax002"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.apm_emailfax002"></DD_ATTR_STYL>
+			<DD_ATTR_FTSR id="ddm_table_cols.apm_emailfax002"></DD_ATTR_FTSR>
 		</RECORD>
 		<RECORD id="ddm_table_cols.apm_emailfax003">
 			<DD_TABLE_ALIAS id="ddm_table_cols.apm_emailfax003">APM_EMAILFAX    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.apm_emailfax003">003</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.apm_emailfax003">EMAIL_TO        </DD_DATA_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.apm_emailfax003">EMAIL_ADDR      </DD_DATA_NAME>
 			<DD_DVAR_NAME id="ddm_table_cols.apm_emailfax003">EMAIL_TO        </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.apm_emailfax003">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.apm_emailfax003">0</DD_COL_OCCURS>
@@ -222,11 +224,12 @@
 			<SQL_COLUMN_NAME id="ddm_table_cols.apm_emailfax003">EMAIL_TO</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.apm_emailfax003"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.apm_emailfax003"></DD_ATTR_STYL>
+			<DD_ATTR_FTSR id="ddm_table_cols.apm_emailfax003">N</DD_ATTR_FTSR>
 		</RECORD>
 		<RECORD id="ddm_table_cols.apm_emailfax004">
 			<DD_TABLE_ALIAS id="ddm_table_cols.apm_emailfax004">APM_EMAILFAX    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.apm_emailfax004">004</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.apm_emailfax004">EMAIL_CC        </DD_DATA_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.apm_emailfax004">EMAIL_ADDR      </DD_DATA_NAME>
 			<DD_DVAR_NAME id="ddm_table_cols.apm_emailfax004">EMAIL_CC        </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.apm_emailfax004">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.apm_emailfax004">0</DD_COL_OCCURS>
@@ -265,11 +268,12 @@
 			<SQL_COLUMN_NAME id="ddm_table_cols.apm_emailfax004">EMAIL_CC</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.apm_emailfax004"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.apm_emailfax004"></DD_ATTR_STYL>
+			<DD_ATTR_FTSR id="ddm_table_cols.apm_emailfax004">N</DD_ATTR_FTSR>
 		</RECORD>
 		<RECORD id="ddm_table_cols.apm_emailfax005">
 			<DD_TABLE_ALIAS id="ddm_table_cols.apm_emailfax005">APM_EMAILFAX    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.apm_emailfax005">005</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.apm_emailfax005">EMAIL_CC        </DD_DATA_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.apm_emailfax005">EMAIL_ADDR      </DD_DATA_NAME>
 			<DD_DVAR_NAME id="ddm_table_cols.apm_emailfax005">EMAIL_BCC       </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.apm_emailfax005">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.apm_emailfax005">0</DD_COL_OCCURS>
@@ -308,6 +312,7 @@
 			<SQL_COLUMN_NAME id="ddm_table_cols.apm_emailfax005">EMAIL_BCC</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.apm_emailfax005"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.apm_emailfax005"></DD_ATTR_STYL>
+			<DD_ATTR_FTSR id="ddm_table_cols.apm_emailfax005"></DD_ATTR_FTSR>
 		</RECORD>
 		<RECORD id="ddm_table_cols.apm_emailfax006">
 			<DD_TABLE_ALIAS id="ddm_table_cols.apm_emailfax006">APM_EMAILFAX    </DD_TABLE_ALIAS>
@@ -351,6 +356,7 @@
 			<SQL_COLUMN_NAME id="ddm_table_cols.apm_emailfax006">FAX_TO</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.apm_emailfax006"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.apm_emailfax006"></DD_ATTR_STYL>
+			<DD_ATTR_FTSR id="ddm_table_cols.apm_emailfax006"></DD_ATTR_FTSR>
 		</RECORD>
 		<RECORD id="ddm_table_cols.apm_emailfax007">
 			<DD_TABLE_ALIAS id="ddm_table_cols.apm_emailfax007">APM_EMAILFAX    </DD_TABLE_ALIAS>
@@ -394,6 +400,7 @@
 			<SQL_COLUMN_NAME id="ddm_table_cols.apm_emailfax007">FAX_NOS</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.apm_emailfax007"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.apm_emailfax007"></DD_ATTR_STYL>
+			<DD_ATTR_FTSR id="ddm_table_cols.apm_emailfax007"></DD_ATTR_FTSR>
 		</RECORD>
 		<RECORD id="ddm_table_cols.apm_emailfax008">
 			<DD_TABLE_ALIAS id="ddm_table_cols.apm_emailfax008">APM_EMAILFAX    </DD_TABLE_ALIAS>
@@ -437,6 +444,7 @@
 			<SQL_COLUMN_NAME id="ddm_table_cols.apm_emailfax008">WEB_PAGE</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.apm_emailfax008"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.apm_emailfax008"></DD_ATTR_STYL>
+			<DD_ATTR_FTSR id="ddm_table_cols.apm_emailfax008"></DD_ATTR_FTSR>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_cpro">
@@ -570,103 +578,54 @@
 			<DD_ATTR_STEP id="ddm_elements.vendor_id"></DD_ATTR_STEP>
 			<DD_ATTR_FLPT id="ddm_elements.vendor_id"></DD_ATTR_FLPT>
 		</RECORD>
-		<RECORD id="ddm_elements.email_to">
-			<DD_DATA_NAME id="ddm_elements.email_to">EMAIL_TO        </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.email_to">Email "To" Address[es]</DD_DESCRIPTION>
-			<DD_DATA_TYPE id="ddm_elements.email_to">C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.email_to">60</DD_DATA_LENGTH>
-			<DD_MASK_TYPE id="ddm_elements.email_to"></DD_MASK_TYPE>
-			<DD_SYSTEM_REC id="ddm_elements.email_to"></DD_SYSTEM_REC>
-			<ASC_COMP_ID id="ddm_elements.email_to">01007514</ASC_COMP_ID>
-			<ASC_PROD_ID id="ddm_elements.email_to">ADB</ASC_PROD_ID>
-			<LOCALIZATION_EX id="ddm_elements.email_to"></LOCALIZATION_EX>
-			<DD_CREATE_DATE id="ddm_elements.email_to">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.email_to">20120326</DD_LSTREV_DATE>
-			<DD_AUTO_COMP id="ddm_elements.email_to"></DD_AUTO_COMP>
-			<DD_ATTR_BLNK id="ddm_elements.email_to"></DD_ATTR_BLNK>
-			<DD_ATTR_CDAT id="ddm_elements.email_to"></DD_ATTR_CDAT>
-			<DD_ATTR_CTLW id="ddm_elements.email_to"></DD_ATTR_CTLW>
-			<DD_ATTR_CTLH id="ddm_elements.email_to"></DD_ATTR_CTLH>
-			<DD_ATTR_CTYP id="ddm_elements.email_to">E</DD_ATTR_CTYP>
-			<DD_ATTR_DCOL id="ddm_elements.email_to"></DD_ATTR_DCOL>
-			<DD_ATTR_DCOM id="ddm_elements.email_to">            </DD_ATTR_DCOM>
-			<DD_ATTR_DEXP id="ddm_elements.email_to">            </DD_ATTR_DEXP>
-			<DD_ATTR_DFLT id="ddm_elements.email_to"></DD_ATTR_DFLT>
-			<DD_ATTR_DKNM id="ddm_elements.email_to"></DD_ATTR_DKNM>
-			<DD_ATTR_DKEY id="ddm_elements.email_to"></DD_ATTR_DKEY>
-			<DD_ATTR_DTAB id="ddm_elements.email_to"></DD_ATTR_DTAB>
-			<DD_ATTR_DINQ id="ddm_elements.email_to"></DD_ATTR_DINQ>
-			<DD_ATTR_ENCR id="ddm_elements.email_to"></DD_ATTR_ENCR>
-			<DD_ATTR_IDEF id="ddm_elements.email_to"></DD_ATTR_IDEF>
-			<DD_ATTR_LABL id="ddm_elements.email_to">Email To</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_elements.email_to">Email To</DD_ATTR_LABS>
-			<DD_ATTR_LDIS id="ddm_elements.email_to"></DD_ATTR_LDIS>
-			<DD_ATTR_MAXL id="ddm_elements.email_to"></DD_ATTR_MAXL>
-			<DD_ATTR_MAXR id="ddm_elements.email_to"></DD_ATTR_MAXR>
-			<DD_ATTR_MAXV id="ddm_elements.email_to"></DD_ATTR_MAXV>
-			<DD_ATTR_MINL id="ddm_elements.email_to"></DD_ATTR_MINL>
-			<DD_ATTR_MINV id="ddm_elements.email_to"></DD_ATTR_MINV>
-			<DD_ATTR_MSKI id="ddm_elements.email_to"></DD_ATTR_MSKI>
-			<DD_ATTR_MSKO id="ddm_elements.email_to"></DD_ATTR_MSKO>
-			<DD_ATTR_PADC id="ddm_elements.email_to"></DD_ATTR_PADC>
-			<DD_ATTR_PADJ id="ddm_elements.email_to"></DD_ATTR_PADJ>
-			<DD_ATTR_PREC id="ddm_elements.email_to">0</DD_ATTR_PREC>
-			<DD_ATTR_PROM id="ddm_elements.email_to"></DD_ATTR_PROM>
-			<DD_ATTR_PVAL id="ddm_elements.email_to"></DD_ATTR_PVAL>
-			<DD_ATTR_SDLG id="ddm_elements.email_to"></DD_ATTR_SDLG>
-			<DD_ATTR_SLEV id="ddm_elements.email_to"></DD_ATTR_SLEV>
-			<DD_ATTR_STYP id="ddm_elements.email_to"></DD_ATTR_STYP>
-			<DD_ATTR_STEP id="ddm_elements.email_to"></DD_ATTR_STEP>
-			<DD_ATTR_FLPT id="ddm_elements.email_to"></DD_ATTR_FLPT>
-		</RECORD>
-		<RECORD id="ddm_elements.email_cc">
-			<DD_DATA_NAME id="ddm_elements.email_cc">EMAIL_CC        </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.email_cc">Email "Cc" Address[es]</DD_DESCRIPTION>
-			<DD_DATA_TYPE id="ddm_elements.email_cc">C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.email_cc">60</DD_DATA_LENGTH>
-			<DD_MASK_TYPE id="ddm_elements.email_cc"></DD_MASK_TYPE>
-			<DD_SYSTEM_REC id="ddm_elements.email_cc"></DD_SYSTEM_REC>
-			<ASC_COMP_ID id="ddm_elements.email_cc">01007514</ASC_COMP_ID>
-			<ASC_PROD_ID id="ddm_elements.email_cc">ADB</ASC_PROD_ID>
-			<LOCALIZATION_EX id="ddm_elements.email_cc"></LOCALIZATION_EX>
-			<DD_CREATE_DATE id="ddm_elements.email_cc">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.email_cc">20120326</DD_LSTREV_DATE>
-			<DD_AUTO_COMP id="ddm_elements.email_cc"></DD_AUTO_COMP>
-			<DD_ATTR_BLNK id="ddm_elements.email_cc"></DD_ATTR_BLNK>
-			<DD_ATTR_CDAT id="ddm_elements.email_cc"></DD_ATTR_CDAT>
-			<DD_ATTR_CTLW id="ddm_elements.email_cc"></DD_ATTR_CTLW>
-			<DD_ATTR_CTLH id="ddm_elements.email_cc"></DD_ATTR_CTLH>
-			<DD_ATTR_CTYP id="ddm_elements.email_cc">E</DD_ATTR_CTYP>
-			<DD_ATTR_DCOL id="ddm_elements.email_cc"></DD_ATTR_DCOL>
-			<DD_ATTR_DCOM id="ddm_elements.email_cc">            </DD_ATTR_DCOM>
-			<DD_ATTR_DEXP id="ddm_elements.email_cc">            </DD_ATTR_DEXP>
-			<DD_ATTR_DFLT id="ddm_elements.email_cc"></DD_ATTR_DFLT>
-			<DD_ATTR_DKNM id="ddm_elements.email_cc"></DD_ATTR_DKNM>
-			<DD_ATTR_DKEY id="ddm_elements.email_cc"></DD_ATTR_DKEY>
-			<DD_ATTR_DTAB id="ddm_elements.email_cc"></DD_ATTR_DTAB>
-			<DD_ATTR_DINQ id="ddm_elements.email_cc"></DD_ATTR_DINQ>
-			<DD_ATTR_ENCR id="ddm_elements.email_cc"></DD_ATTR_ENCR>
-			<DD_ATTR_IDEF id="ddm_elements.email_cc"></DD_ATTR_IDEF>
-			<DD_ATTR_LABL id="ddm_elements.email_cc">Email Cc</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_elements.email_cc">Email Cc</DD_ATTR_LABS>
-			<DD_ATTR_LDIS id="ddm_elements.email_cc"></DD_ATTR_LDIS>
-			<DD_ATTR_MAXL id="ddm_elements.email_cc"></DD_ATTR_MAXL>
-			<DD_ATTR_MAXR id="ddm_elements.email_cc"></DD_ATTR_MAXR>
-			<DD_ATTR_MAXV id="ddm_elements.email_cc"></DD_ATTR_MAXV>
-			<DD_ATTR_MINL id="ddm_elements.email_cc"></DD_ATTR_MINL>
-			<DD_ATTR_MINV id="ddm_elements.email_cc"></DD_ATTR_MINV>
-			<DD_ATTR_MSKI id="ddm_elements.email_cc"></DD_ATTR_MSKI>
-			<DD_ATTR_MSKO id="ddm_elements.email_cc"></DD_ATTR_MSKO>
-			<DD_ATTR_PADC id="ddm_elements.email_cc"></DD_ATTR_PADC>
-			<DD_ATTR_PADJ id="ddm_elements.email_cc"></DD_ATTR_PADJ>
-			<DD_ATTR_PREC id="ddm_elements.email_cc">0</DD_ATTR_PREC>
-			<DD_ATTR_PROM id="ddm_elements.email_cc"></DD_ATTR_PROM>
-			<DD_ATTR_PVAL id="ddm_elements.email_cc"></DD_ATTR_PVAL>
-			<DD_ATTR_SDLG id="ddm_elements.email_cc"></DD_ATTR_SDLG>
-			<DD_ATTR_SLEV id="ddm_elements.email_cc"></DD_ATTR_SLEV>
-			<DD_ATTR_STYP id="ddm_elements.email_cc"></DD_ATTR_STYP>
-			<DD_ATTR_STEP id="ddm_elements.email_cc"></DD_ATTR_STEP>
-			<DD_ATTR_FLPT id="ddm_elements.email_cc"></DD_ATTR_FLPT>
+		<RECORD id="ddm_elements.email_addr">
+			<DD_DATA_NAME id="ddm_elements.email_addr">EMAIL_ADDR      </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.email_addr">Email Address</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.email_addr">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.email_addr">80</DD_DATA_LENGTH>
+			<DD_MASK_TYPE id="ddm_elements.email_addr"></DD_MASK_TYPE>
+			<DD_SYSTEM_REC id="ddm_elements.email_addr"></DD_SYSTEM_REC>
+			<ASC_COMP_ID id="ddm_elements.email_addr">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.email_addr">AD </ASC_PROD_ID>
+			<LOCALIZATION_EX id="ddm_elements.email_addr"></LOCALIZATION_EX>
+			<DD_CREATE_DATE id="ddm_elements.email_addr">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.email_addr">20150316</DD_LSTREV_DATE>
+			<DD_AUTO_COMP id="ddm_elements.email_addr"></DD_AUTO_COMP>
+			<DD_ATTR_BLNK id="ddm_elements.email_addr"></DD_ATTR_BLNK>
+			<DD_ATTR_CDAT id="ddm_elements.email_addr"></DD_ATTR_CDAT>
+			<DD_ATTR_CTLW id="ddm_elements.email_addr"></DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.email_addr"></DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.email_addr">E</DD_ATTR_CTYP>
+			<DD_ATTR_DCOL id="ddm_elements.email_addr"></DD_ATTR_DCOL>
+			<DD_ATTR_DCOM id="ddm_elements.email_addr">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.email_addr">            </DD_ATTR_DEXP>
+			<DD_ATTR_DFLT id="ddm_elements.email_addr"></DD_ATTR_DFLT>
+			<DD_ATTR_DKNM id="ddm_elements.email_addr"></DD_ATTR_DKNM>
+			<DD_ATTR_DKEY id="ddm_elements.email_addr"></DD_ATTR_DKEY>
+			<DD_ATTR_DTAB id="ddm_elements.email_addr"></DD_ATTR_DTAB>
+			<DD_ATTR_DINQ id="ddm_elements.email_addr"></DD_ATTR_DINQ>
+			<DD_ATTR_ENCR id="ddm_elements.email_addr"></DD_ATTR_ENCR>
+			<DD_ATTR_IDEF id="ddm_elements.email_addr"></DD_ATTR_IDEF>
+			<DD_ATTR_LABL id="ddm_elements.email_addr">Email Address</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.email_addr">Email Addr</DD_ATTR_LABS>
+			<DD_ATTR_LDIS id="ddm_elements.email_addr"></DD_ATTR_LDIS>
+			<DD_ATTR_MAXL id="ddm_elements.email_addr"></DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.email_addr"></DD_ATTR_MAXR>
+			<DD_ATTR_MAXV id="ddm_elements.email_addr"></DD_ATTR_MAXV>
+			<DD_ATTR_MINL id="ddm_elements.email_addr"></DD_ATTR_MINL>
+			<DD_ATTR_MINV id="ddm_elements.email_addr"></DD_ATTR_MINV>
+			<DD_ATTR_MSKI id="ddm_elements.email_addr"></DD_ATTR_MSKI>
+			<DD_ATTR_MSKO id="ddm_elements.email_addr"></DD_ATTR_MSKO>
+			<DD_ATTR_PADC id="ddm_elements.email_addr"></DD_ATTR_PADC>
+			<DD_ATTR_PADJ id="ddm_elements.email_addr"></DD_ATTR_PADJ>
+			<DD_ATTR_PREC id="ddm_elements.email_addr">0</DD_ATTR_PREC>
+			<DD_ATTR_PROM id="ddm_elements.email_addr"></DD_ATTR_PROM>
+			<DD_ATTR_PVAL id="ddm_elements.email_addr"></DD_ATTR_PVAL>
+			<DD_ATTR_SDLG id="ddm_elements.email_addr"></DD_ATTR_SDLG>
+			<DD_ATTR_SLEV id="ddm_elements.email_addr"></DD_ATTR_SLEV>
+			<DD_ATTR_STYP id="ddm_elements.email_addr"></DD_ATTR_STYP>
+			<DD_ATTR_STEP id="ddm_elements.email_addr">0</DD_ATTR_STEP>
+			<DD_ATTR_FLPT id="ddm_elements.email_addr"></DD_ATTR_FLPT>
 		</RECORD>
 		<RECORD id="ddm_elements.fax_to">
 			<DD_DATA_NAME id="ddm_elements.fax_to">FAX_TO          </DD_DATA_NAME>
