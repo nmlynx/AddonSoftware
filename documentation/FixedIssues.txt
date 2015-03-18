@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2015-03-16
+ Report Date:   2015-03-18
  Report Branch: AddonSoftware 14.21
  Last Release:  AddonSoftware 14.20
 =======================================================================================================================================
@@ -610,3 +610,14 @@ mode.
 ----
 Modified: data/bar/ope_invhdr.xml
 Modified: data/cdf/ope_invhdr.cdf
+
+=======================================================================================================================================
+Revision: 186c68e0b886aa9a0f4de0e32a1c214d50e148d6
+Author: chawkins <chawkins@basis.com>
+Date: 3/18/2015 11:24:04 AM
+Message:
+Per bug 8254; corrected the SPROC for the dashboard's GL Expense Pie
+Chart so it doesn't return more rows (most of them zeros) than the
+available JFreeChart default colors.
+----
+Modified: sprocs/GLEXPTOT_PIE.prc
