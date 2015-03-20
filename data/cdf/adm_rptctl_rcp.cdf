@@ -118,19 +118,25 @@ rem --- incoming: dd_table_alias$
 
 	readrecord (adm_rptctl,key=firm_id$+dd_table_alias$)adm_rptctl$
 
-	callpoint!.setColumnData("ADM_RPTCTL_RCP.RECIPIENT_TP",adm_rptctl.recipient_tp$)
+	if cvs(adm_rptctl.recipient_tp$,3)<>""
 
-	switch pos(adm_rptctl.recipient_tp$="CVO")
-		case 1;rem customer
-		case 2;rem vendor
-			callpoint!.setColumnEnabled("ADM_RPTCTL_RCP.PRINT_YN",1)
-		break
-		case 3;rem other
-		case default
-			callpoint!.setColumnEnabled("ADM_RPTCTL_RCP.PRINT_YN",0)
-		break
-	swend
+		callpoint!.setColumnData("ADM_RPTCTL_RCP.RECIPIENT_TP",adm_rptctl.recipient_tp$)
 
+		switch pos(adm_rptctl.recipient_tp$="CVO")
+			case 1;rem customer
+			case 2;rem vendor
+				callpoint!.setColumnEnabled("ADM_RPTCTL_RCP.PRINT_YN",1)
+			break
+			case 3;rem other
+			case default
+				callpoint!.setColumnEnabled("ADM_RPTCTL_RCP.PRINT_YN",0)
+			break
+		swend
+	else
+		msg_id$="AD_NORECIP"
+		gosub disp_message
+		callpoint!.setStatus("EXIT")
+	endif
 	return
 [[ADM_RPTCTL_RCP.BSHO]]
 rem --- table opens
