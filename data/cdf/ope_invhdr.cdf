@@ -555,8 +555,6 @@ rem --- Set data
 
 rem --- Set flags
 
-	user_tpl.user_entry$ = "N"; rem user entered an order (not navigated)
-
 	callpoint!.setDevObject("credit_status_done", "N")
 	callpoint!.setDevObject("credit_action_done", "N")
 
@@ -1532,7 +1530,6 @@ rem --- Check for order, force to an Invoice
 		if locked then
 			user_tpl.do_end_of_form = 0
 		endif
-		break; rem --- exit callpoint
 	endif
 
 rem --- Show customer data
@@ -1618,7 +1615,6 @@ rem --- Capture current totals so we can tell later if they were changed in the 
 rem --- Do we need to create a new order number?
 
 	new_seq$ = "N"
-	user_tpl.user_entry$ = "N"
 	order_no$ = callpoint!.getUserInput()
 
 	if cvs(order_no$, 2) = "" then 
@@ -1634,8 +1630,6 @@ rem --- Do we need to create a new order number?
 			callpoint!.setUserInput(order_no$)
 			new_seq$ = "Y"
 		endif
-	else
-		user_tpl.user_entry$ = "Y"
 	endif
 
 rem --- Does order exist?
@@ -1701,12 +1695,9 @@ rem --- Existing record
 	rem --- Check for order, force to an Invoice
 
 		if ope01a.ordinv_flag$ = "O" then
-			callpoint!.setColumnData("OPE_INVHDR.ORDER_NO",order_no$)
-			callpoint!.setColumnData("OPE_INVHDR.ORDINV_FLAG","O")
-			gosub make_invoice
-			if locked then
-				user_tpl.do_end_of_form = 0
-			endif
+			rem --- Force order to invoice in ADIS
+			inv_no$=callpoint!.getColumnData("OPE_INVHDR.AR_INV_NO")
+			callpoint!.setStatus("RECORD:["+firm_id$+trans_status$+ar_type$+cust_id$+order_no$+inv_no$+"]")
 			break; rem --- exit callpoint
 		endif
 
@@ -2770,6 +2761,21 @@ rem ==========================================================================
 	if !locked and cvs(customer_id$,2)<>"" and cvs(order_no$,2)<>"" and 
 :		callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "O" then
 
+		rem --- Can't create invoice if someone has the order extracted.
+		status$=callpoint!.getColumnData("OPE_INVHDR.TRANS_STATUS")
+		ar_type$=callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
+		old_inv_no$=callpoint!.getColumnData("OPE_INVHDR.AR_INV_NO")
+		lock_table$="OPT_INVHDR"
+		lock_record$=firm_id$+status$+ar_type$+customer_id$+order_no$+old_inv_no$
+		lock_type$="C"
+		lock_disp$="M"
+		lock_status$=""
+		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+		if lock_status$="ERR_LOCKED"
+			locked = 1
+			return
+		endif
+
 	rem --- Set Invoice number
 
 		call stbl("+DIR_SYP")+"bas_sequences.bbj","INVOICE_NO",inv_no$,table_chans$[all]
@@ -3344,7 +3350,6 @@ rem --- Setup user_tpl$
 :		"pgmdir:c(1*), " +
 :		"skip_whse:c(1), " +
 :		"warehouse_id:c(2), " +
-:		"user_entry:c(1), " +
 :		"cur_row:n(5), " +
 :		"skip_ln_code:c(1), " +
 :		"hist_ord:c(1), " +
