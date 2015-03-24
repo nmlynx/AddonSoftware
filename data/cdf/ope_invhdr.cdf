@@ -90,7 +90,7 @@ rem --- Check Ship-to's
 [[OPE_INVHDR.CUSTOMER_PO_NO.AVAL]]
 rem --- Check for duplicate PO numbers
 
-	if callpoint!.getDevObject("check_po_dupes")="Y"
+	if callpoint!.getDevObject("check_po_dupes")="Y" and cvs(callpoint!.getUserInput(),2)<>"" then
 		po_no$=pad(callpoint!.getUserInput(),num(callpoint!.getTableColumnAttribute("OPE_INVHDR.CUSTOMER_PO_NO","MAXL")))
 		cust_no$=callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 		order_no$=callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
@@ -105,7 +105,7 @@ rem --- Check for duplicate PO numbers
 				if opt_invlookup.trans_status$="U" then
 					found_dupe$=found_dupe$+"H"+opt_invlookup.ar_inv_no$
 				else
-					found_dupe$=found_dupe$+"O"+ope_polookup.order_no$
+					found_dupe$=found_dupe$+"O"+opt_invlookup.order_no$
 				endif
 			endif
 		wend
