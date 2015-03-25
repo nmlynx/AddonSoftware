@@ -90,6 +90,7 @@ rem --- Check Ship-to's
 [[OPE_INVHDR.CUSTOMER_PO_NO.AVAL]]
 rem --- Check for duplicate PO numbers
 
+	found_dupes! = BBjAPI().makeVector()
 	if callpoint!.getDevObject("check_po_dupes")="Y" and cvs(callpoint!.getUserInput(),2)<>"" then
 		po_no$=pad(callpoint!.getUserInput(),num(callpoint!.getTableColumnAttribute("OPE_INVHDR.CUSTOMER_PO_NO","MAXL")))
 		cust_no$=callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
@@ -102,21 +103,25 @@ rem --- Check for duplicate PO numbers
 			read record (opt_invlookup_dev,end=*break) opt_invlookup$
 			if pos(firm_id$+po_no$+cust_no$=opt_invlookup.firm_id$+opt_invlookup.customer_po_no$+opt_invlookup.customer_id$)<>1 break
 			if order_no$<>opt_invlookup.order_no$
+				dupePO! = BBjAPI().makeVector()
 				if opt_invlookup.trans_status$="U" then
-					found_dupe$=found_dupe$+"H"+opt_invlookup.ar_inv_no$
+					dupePO!.addItem("U")
 				else
-					found_dupe$=found_dupe$+"O"+opt_invlookup.order_no$
+					dupePO!.addItem("O")
 				endif
+				dupePO!.addItem(opt_invlookup.order_no$)
+				dupePO!.addItem(opt_invlookup.ar_inv_no$)
+				found_dupes!.addItem(dupePO!)
 			endif
 		wend
 	endif
 
-	if cvs(found_dupe$,2)<>""
+	if found_dupes!.size()>0 then
 		msg_id$="OP_DUPLICATE_POS"
 		gosub disp_message
 		if msg_opt$="D"
 			callpoint!.setDevObject("customer",callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"))
-			callpoint!.setDevObject("found_dupe",found_dupe$)
+			callpoint!.setDevObject("found_dupe",found_dupes!)
 			call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
 :				"OPE_DUPEPO", 
 :				stbl("+USER_ID"), 
@@ -3160,7 +3165,7 @@ rem                 = 1 -> user_tpl.hist_ord$ = "N"
 
 rem --- Open needed files
 
-	num_files=42
+	num_files=41
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 	open_tables$[1]="ARM_CUSTMAST",  open_opts$[1]="OTA"
@@ -3203,14 +3208,11 @@ rem --- Open needed files
 	open_tables$[39]="OPE_INVHDR",   open_opts$[39]="OTA"
 	open_tables$[40]="ARC_TERMCODE", open_opts$[40]="OTA"
 	open_tables$[41]="IVM_ITEMSYN",open_opts$[41]="OTA"
-	open_tables$[42]="OPE_INVHDR",open_opts$[42]="OTAN[2_]"
 
 	gosub open_tables
 
 	callpoint!.setDevObject("opt_invlookup",open_chans$[23])
 	callpoint!.setDevObject("opt_invlookup_tpl",open_tpls$[23])
-	callpoint!.setDevObject("ope_polookup",open_chans$[42])
-	callpoint!.setDevObject("ope_polookup_tpl",open_tpls$[42])
 
 rem --- Verify that there are line codes - abort if not.
 
