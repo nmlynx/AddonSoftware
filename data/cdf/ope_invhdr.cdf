@@ -263,6 +263,13 @@ rem --- Now we've been on the Totals tab
 rem --- Enable/Disable Cash Sale button
 	gosub able_cash_sale
 [[OPE_INVHDR.AOPT-UINV]]
+rem --- Must be in edit mode for this feature
+	if !callpoint!.isEditMode() then
+		msg_id$="AD_EDIT_MODE_REQUIRE"
+		gosub disp_message
+		break
+	endif
+
 rem --- Cannot undo if cash has been applied to invoice
 	cashrct_dev = fnget_dev("OPE_INVCASH")
 	ar_type$=callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
@@ -737,6 +744,13 @@ rem --- Set type in OrderHelper object
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ordHelp!.setInv_type(callpoint!.getUserInput())
 [[OPE_INVHDR.AOPT-PRNT]]
+rem --- Must be in edit mode for this feature
+	if !callpoint!.isEditMode() then
+		msg_id$="AD_EDIT_MODE_REQUIRE"
+		gosub disp_message
+		break
+	endif
+
 rem --- Get cash if needed for cash transaction
 
 	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") = "Y" then
@@ -1501,9 +1515,7 @@ rem --- Write/Remove manual ship to file
 		callpoint!.setOptionEnabled("CASH",0)
 		callpoint!.setOptionEnabled("CINV",0)
 		callpoint!.setOptionEnabled("DINV",0)
-		callpoint!.setOptionEnabled("PRNT",0)
 		callpoint!.setOptionEnabled("RPRT",0)
-		callpoint!.setOptionEnabled("UINV",0)
 	endif
 [[OPE_INVHDR.ADIS]]
 rem --- Check locked status
@@ -1570,11 +1582,11 @@ rem --- Set comm percent (if calling up a B/O, it will have been cleared);rem bu
 
 rem --- Enable buttons
 
-	if callpoint!.isEditMode() then callpoint!.setOptionEnabled("PRNT", 1)
+	callpoint!.setOptionEnabled("PRNT", 1)
 	callpoint!.setOptionEnabled("TTLS",1)
 	gosub able_cash_sale
 
-	if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "I" and callpoint!.isEditMode() then
+	if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "I" then
 		callpoint!.setOptionEnabled("UINV",1)
 	else
 		callpoint!.setOptionEnabled("UINV",0)

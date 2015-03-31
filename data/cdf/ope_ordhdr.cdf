@@ -451,6 +451,13 @@ rem --- Credit action
 		endif
 	endif
 [[OPE_ORDHDR.AOPT-PRNT]]
+rem --- Must be in edit mode for this feature
+	if !callpoint!.isEditMode() then
+		msg_id$="AD_EDIT_MODE_REQUIRE"
+		gosub disp_message
+		break
+	endif
+
 rem --- Print a counter Picking Slip
 
 	arm02_dev=fnget_dev("ARM_CUSTDET")
@@ -886,10 +893,8 @@ rem --- Set comm percent (if calling up a B/O, it will have been cleared);rem bu
 
 rem --- Enable buttons
 
-	if callpoint!.isEditMode() then
-		callpoint!.setOptionEnabled("PRNT",1)
-		callpoint!.setOptionEnabled("RPRT",num(callpoint!.getDevObject("reprintable")))
-	endif
+	callpoint!.setOptionEnabled("PRNT",1)
+	callpoint!.setOptionEnabled("RPRT",num(callpoint!.getDevObject("reprintable")))
 	callpoint!.setOptionEnabled("TTLS",1)
 
 
@@ -974,6 +979,13 @@ rem --- Restrict lookup to orders
 	endif
 	callpoint!.setStatus("ACTIVATE")
 [[OPE_ORDHDR.AOPT-RPRT]]
+rem --- Must be in edit mode for this feature
+	if !callpoint!.isEditMode() then
+		msg_id$="AD_EDIT_MODE_REQUIRE"
+		gosub disp_message
+		break
+	endif
+
 rem --- Check for printing in next batch and set
 
 	if user_tpl.credit_installed$="Y" and user_tpl.pick_hold$<>"Y" and
@@ -1695,8 +1707,6 @@ rem --- Write/Remove manual ship to file
 		callpoint!.setOptionEnabled("CINV",0)
 		callpoint!.setOptionEnabled("DINV",0)
 		callpoint!.setOptionEnabled("CRAT",0)
-		callpoint!.setOptionEnabled("PRNT",0)
-		callpoint!.setOptionEnabled("RPRT",0)
 	endif
 [[OPE_ORDHDR.<CUSTOM>]]
 rem ==========================================================================
