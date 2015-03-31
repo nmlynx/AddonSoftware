@@ -155,10 +155,9 @@ rem --- Loop thru materials detail - uncommit lot/serial only (i.e. atamo uncomm
 			items$[3]=""
 			refs[0]=max(0,sfe_womatdtl.qty_ordered-sfe_womatdtl.tot_qty_iss)
 			call stbl("+DIR_PGM")+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-rem escape;rem have uncommitted IV, now removing sfe23 - temp; remove after testing CAH
 			remove(sfe23_dev,key=sfe23_key$)
 		wend
-rem escape;rem have processed sfe23's and uncommitted, now removing sfe13 - temp; remove after testing CAH
+
 		remove (sfe13_dev,key=sfe13_key$);rem bottom of 13/23 loop
 		break; rem should only be one sfe-13 per work order
 	wend
@@ -511,7 +510,7 @@ rem --- Disable/enable based on status of closed/open
 
 rem --- Disable Options (buttons) for a Closed Work Order
 
-	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C" or !callpoint!.isEditMode() then
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C"
 		callpoint!.setOptionEnabled("SCHD",0)
 		callpoint!.setOptionEnabled("RELS",0)
 	else
@@ -536,8 +535,7 @@ rem --- Always disable these fields for an existing record
 rem --- disable Copy function if closed or not an N category
 
 	if callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")<>"N" or 
-:	callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C" or
-:	!callpoint!.isEditMode() then
+:	callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C"
 		callpoint!.setOptionEnabled("COPY",0)
 	else
 		callpoint!.setOptionEnabled("COPY",1)
@@ -647,6 +645,13 @@ rem --- Informational warning for category N WO's - requirements may need to be 
 	endif
 [[SFE_WOMASTR.AOPT-COPY]]
 rem --- Copy from other Work Order
+
+	rem --- Must be in edit mode for this feature
+	if !callpoint!.isEditMode() then
+		msg_id$="AD_EDIT_MODE_REQUIRE"
+		gosub disp_message
+		break
+	endif
 
 rem --- Check to make sure there aren't existing requirements
 
@@ -792,6 +797,13 @@ rem --- Display Job Status
 [[SFE_WOMASTR.AOPT-RELS]]
 rem --- Release/Commit the Work Order
 
+	rem --- Must be in edit mode for this feature
+	if !callpoint!.isEditMode() then
+		msg_id$="AD_EDIT_MODE_REQUIRE"
+		gosub disp_message
+		break
+	endif
+
 	callpoint!.setDevObject("wo_status",callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS"))
 
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
@@ -806,8 +818,16 @@ rem --- Release/Commit the Work Order
 	if callpoint!.getDevObject("wo_status")="O"
 		callpoint!.setStatus("RECORD:["+firm_id$+callpoint!.getDevObject("wo_loc")+callpoint!.getDevObject("wo_no")+"]")
 	endif
+
 [[SFE_WOMASTR.AOPT-SCHD]]
 rem --- Schedule the Work Order
+
+	rem --- Must be in edit mode for this feature
+	if !callpoint!.isEditMode() then
+		msg_id$="AD_EDIT_MODE_REQUIRE"
+		gosub disp_message
+		break
+	endif
 
 	callpoint!.setDevObject("wo_no",callpoint!.getColumnData("SFE_WOMASTR.WO_NO"))
 	callpoint!.setDevObject("wo_location",callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION"))
@@ -1058,7 +1078,7 @@ rem --- as far as I can see, this can only happen if BOM not installed, otherwis
 		wo_category$=callpoint!.getDevObject("wo_category")
 
 		if old_prod_qty<>new_prod_qty and wo_category$="I"
-rem escape;rem watch - temp; remove after testing CAH
+
 			rem --- initialize atamo
 			call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 			items$[1]=callpoint!.getColumnData("SFE_WOMASTR.WAREHOUSE_ID")
@@ -1188,8 +1208,7 @@ rem --- Set new_rec to N and disable Item Number
 rem --- disable Copy function if closed or not an N category
 
 	if callpoint!.getColumnData("SFE_WOMASTR.WO_CATEGORY")<>"N" or 
-:	callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C" or
-:	!callpoint!.isEditMode() then
+:	callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")="C"
 		callpoint!.setOptionEnabled("COPY",0)
 	else
 		callpoint!.setOptionEnabled("COPY",1)
@@ -1197,7 +1216,7 @@ rem --- disable Copy function if closed or not an N category
 
 rem --- enable Release/Commit
 
-	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")<>"C" and callpoint!.isEditMode() then
+	if callpoint!.getColumnData("SFE_WOMASTR.WO_STATUS")<>"C"
 		callpoint!.setOptionEnabled("RELS",1)
 		callpoint!.setOptionEnabled("SCHD",1)
 	endif
