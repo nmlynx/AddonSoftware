@@ -1440,42 +1440,50 @@ rem --- Do we need to create a new order number?
 rem --- Enable/Disable Cash Sale button
 	gosub able_cash_sale
 [[OPE_INVHDR.BOVE]]
-rem --- Restrict lookup to orders and invoices in Entry
+rem --- Restrict lookup to open orders and open invoices
 
-	alias_id$ = "OPE_INVHDR"
-	inq_mode$ = "EXM_ITEM"
-	key_id$   = "AO_STATUS"
 	rem bug 7564 --- cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	custControl!=callpoint!.getControl("OPE_INVHDR.CUSTOMER_ID")
 	cust_id$=custControl!.getText()
 
-	dim filter_defs$[3,1]
-	filter_defs$[1,0] = "OPE_INVHDR.TRANS_STATUS"
-	filter_defs$[1,1] = "='"+callpoint!.getColumnData("OPE_INVHDR.TRANS_STATUS")+"'"
-	filter_defs$[2,0] = "OPE_INVHDR.INVOICE_TYPE"
-	filter_defs$[2,1] = "<>'V' AND OPE_INVHDR.INVOICE_TYPE <>'P'"
-
+	selected_key$ = ""
+	dim filter_defs$[4,2]
+	filter_defs$[0,0]="OPT_INVHDR.FIRM_ID"
+	filter_defs$[0,1]="='"+firm_id$+"'"
+	filter_defs$[0,2]="LOCK"
+	filter_defs$[1,0]="OPT_INVHDR.TRANS_STATUS"
+	filter_defs$[1,1]="IN ('E','R')"
+	filter_defs$[1,2]=""
+	filter_defs$[2,0]="OPT_INVHDR.AR_TYPE"
+	filter_defs$[2,1]="='"+callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")+"'"
+	filter_defs$[2,2]="LOCK"
 	if cvs(cust_id$, 2) <> "" then
-		filter_defs$[3,0] = "OPE_INVHDR.CUSTOMER_ID"
+		filter_defs$[3,0] = "OPT_INVHDR.CUSTOMER_ID"
 		filter_defs$[3,1] = "='" + cust_id$ + "'"
+		filter_defs$[3,2]="LOCK"
 	endif
+	filter_defs$[4,0]="OPT_INVHDR.INVOICE_TYPE"
+	filter_defs$[4,1]="<>'V'"
+	filter_defs$[4,2]="LOCK"
 
-	key_pfx$  = firm_id$+callpoint!.getColumnData("OPE_INVHDR.TRANS_STATUS")
+	dim search_defs$[3]
 
-	call stbl("+DIR_SYP")+"bam_inquiry.bbj",
+	call stbl("+DIR_SYP")+"bax_query.bbj",
 :		gui_dev,
 :		Form!,
-:		alias_id$,
-:		inq_mode$,
+:		"OP_ENTRY",
+:		"",
 :		table_chans$[all],
-:		key_pfx$,
-:		key_id$,
-:		selected_key$,
+:		selected_keys$,
 :		filter_defs$[all],
-:		search_defs$[all]
+:		search_defs$[all],
+:		"",
+:		"AO_STATUS"
 
-	if selected_key$<>"" then 
-		callpoint!.setStatus("RECORD:[" + selected_key$ +"]")
+	if selected_keys$<>"" then 
+		call stbl("+DIR_SYP")+"bac_key_template.bbj","OPT_INVHDR","AO_STATUS",key_tpl$,table_chans$[all],status$
+		dim ao_status_key$:key_tpl$
+		callpoint!.setStatus("RECORD:[" + selected_keys$(1,len(ao_status_key$)) +"]")
 	else
 		callpoint!.setStatus("ABORT")
 	endif
@@ -1524,7 +1532,7 @@ rem --- Check locked status
 
 	if locked then
 		user_tpl.do_end_of_form = 0
-		callpoint!.setStatus("ABORT")
+		callpoint!.setStatus("NEWREC")
 		break; rem --- exit callpoint
 	endif
 
@@ -1536,7 +1544,7 @@ rem --- Check Print flag
 		rem --- invoice locked so skip it and start a new one
 		user_tpl.do_end_of_form = 0
 		callpoint!.clearStatus()
-		callpoint!.setStatus("ABORT")
+		callpoint!.setStatus("NEWREC")
 		break; rem --- exit callpoint
 	endif
 
@@ -2073,52 +2081,49 @@ rem ==========================================================================
 check_lock_flag: rem --- Check manual record lock
                  rem     OUT: locked = 1 or 0
 rem ==========================================================================
+	switch pos( callpoint!.getColumnData("OPE_INVHDR.LOCK_STATUS") = "NYS12" )
+		case 1
+			break
 
-	locked=0
-	on pos( callpoint!.getColumnData("OPE_INVHDR.LOCK_STATUS") = "NYS12" ) goto 
-:		end_lock,end_lock,locked,on_invoice,update_stat,update_stat,end_lock
+		case 2
+			msg_id$="ORD_LOCKED"
+			dim msg_tokens$[1]
 
-locked:
+			if callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS")="B" then 
+				msg_tokens$[1]=Translate!.getTranslation("AON__BY_BATCH_PRINT")
+				gosub disp_message
 
-	msg_id$="ORD_LOCKED"
-	dim msg_tokens$[1]
+				if msg_opt$="Y"
+					callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N")
+					callpoint!.setStatus("SAVE"); rem --- unlock at BWRI doesn't seem to work
+				else
+					locked=1
 
-	if callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS")="B" then 
-		msg_tokens$[1]=Translate!.getTranslation("AON__BY_BATCH_PRINT")
-		gosub disp_message
+				endif
+			endif
+			break
 
-		if msg_opt$="Y"
-			callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N")
-			callpoint!.setStatus("SAVE"); rem --- unlock at BWRI doesn't seem to work
-			print "---Clear lock"; rem debug
-		else
-			locked=1
+		case 3
+			msg_id$="ORD_ON_REG"
+			gosub disp_message
+			if pos("PASSVALID"=msg_opt$)=0
+				locked=1
+				callpoint!.setStatus("ABORT")
+			endif
+			break
 
-		endif
+		case 4
+		case 5
+			msg_id$="INVOICE_IN_UPDATE"
+			gosub disp_message
+			if pos("PASSVALID"=msg_opt$)=0
+				locked=1
+			endif
+			break
 
-	endif
-
-	goto end_lock
-
-on_invoice:
-
-	msg_id$="ORD_ON_REG"
-	gosub disp_message
-	if pos("PASSVALID"=msg_opt$)=0
-		locked=1
-		callpoint!.setStatus("ABORT")
-	endif
-	goto end_lock
-
-update_stat:
-
-	msg_id$="INVOICE_IN_UPDATE"
-	gosub disp_message
-	if pos("PASSVALID"=msg_opt$)=0
-		locked=1
-	endif
-
-end_lock:
+		case default
+			break
+	swend
 
 	return
 

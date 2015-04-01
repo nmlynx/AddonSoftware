@@ -850,7 +850,7 @@ rem --- Check locked status
 
 	if locked=1 then 
 		user_tpl.do_end_of_form = 0
-		callpoint!.setStatus("ABORT")
+		callpoint!.setStatus("NEWREC")
 		break; rem --- exit callpoint
 	endif
 
@@ -936,44 +936,50 @@ rem --- Capture current totals so we can tell later if they were changed in the 
 	callpoint!.setDevObject("total_cost",callpoint!.getColumnData("OPE_ORDHDR.TOTAL_COST"))
 	callpoint!.setDevObject("total_sales",callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
 [[OPE_ORDHDR.BOVE]]
-rem --- Restrict lookup to orders
+rem --- Restrict lookup to open orders and open invoices
 
-	alias_id$ = "OPE_ORDHDR"
-	inq_mode$ = "EXM_ITEM"
-	key_id$   = "AO_STATUS"
 	rem bug 7564 --- cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	custControl!=callpoint!.getControl("OPE_ORDHDR.CUSTOMER_ID")
 	cust_id$=custControl!.getText()
 
-	dim filter_defs$[4,1]
-	filter_defs$[1,0] = "OPE_ORDHDR.TRANS_STATUS"
-	filter_defs$[1,1] = "='"+callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")+"'"
-	filter_defs$[2,0] = "OPE_ORDHDR.ORDINV_FLAG"
-	filter_defs$[2,1] = "='O'"
-	filter_defs$[3,0] = "OPE_ORDHDR.INVOICE_TYPE"
-	filter_defs$[3,1] = "<>'V'"
-
+	selected_key$ = ""
+	dim filter_defs$[4,2]
+	filter_defs$[0,0]="OPT_INVHDR.FIRM_ID"
+	filter_defs$[0,1]="='"+firm_id$+"'"
+	filter_defs$[0,2]="LOCK"
+	filter_defs$[1,0]="OPT_INVHDR.TRANS_STATUS"
+	filter_defs$[1,1]="IN ('E','R')"
+	filter_defs$[1,2]=""
+	filter_defs$[2,0]="OPT_INVHDR.AR_TYPE"
+	filter_defs$[2,1]="='"+callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")+"'"
+	filter_defs$[2,2]="LOCK"
 	if cvs(cust_id$, 2) <> "" then
-		filter_defs$[4,0] = "OPE_ORDHDR.CUSTOMER_ID"
-		filter_defs$[4,1] = "='" + cust_id$ + "'"
+		filter_defs$[3,0] = "OPT_INVHDR.CUSTOMER_ID"
+		filter_defs$[3,1] = "='" + cust_id$ + "'"
+		filter_defs$[3,2]="LOCK"
 	endif
+	filter_defs$[4,0]="OPT_INVHDR.INVOICE_TYPE"
+	filter_defs$[4,1]="<>'V'"
+	filter_defs$[4,2]="LOCK"
 
-	key_pfx$  = firm_id$+callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")
+	dim search_defs$[3]
 
-	call stbl("+DIR_SYP")+"bam_inquiry.bbj",
+	call stbl("+DIR_SYP")+"bax_query.bbj",
 :		gui_dev,
 :		Form!,
-:		alias_id$,
-:		inq_mode$,
+:		"OP_ENTRY",
+:		"",
 :		table_chans$[all],
-:		key_pfx$,
-:		key_id$,
-:		selected_key$,
+:		selected_keys$,
 :		filter_defs$[all],
-:		search_defs$[all]
+:		search_defs$[all],
+:		"",
+:		"AO_STATUS"
 
-	if selected_key$<>"" then 
-		callpoint!.setStatus("RECORD:[" + selected_key$ +"]")
+	if selected_keys$<>"" then 
+		call stbl("+DIR_SYP")+"bac_key_template.bbj","OPT_INVHDR","AO_STATUS",key_tpl$,table_chans$[all],status$
+		dim ao_status_key$:key_tpl$
+		callpoint!.setStatus("RECORD:[" + selected_keys$(1,len(ao_status_key$)) +"]")
 	else
 		callpoint!.setStatus("ABORT")
 	endif
@@ -1293,7 +1299,11 @@ rem --- Existing record
 	rem --- Check for invoice
 		
 		if ope01a.ordinv_flag$ = "I" then
-			msg_id$ = "OP_IS_INVOICE"
+			if callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")="U" then
+				msg_id$ = "OP_IS_UPDATED_INV"
+			else
+				msg_id$ = "OP_IS_INVOICE"
+			endif
 			gosub disp_message
 			callpoint!.setStatus("NEWREC")
 			break; rem --- exit from callpoint			
@@ -1892,6 +1902,9 @@ rem ==========================================================================
 	locked=0
 
 	switch pos( callpoint!.getColumnData("OPE_ORDHDR.LOCK_STATUS") = "NYS12" )
+		case 1
+			break
+
 		case 2
 			msg_id$="ORD_LOCKED"
 			dim msg_tokens$[1]
@@ -1907,7 +1920,6 @@ rem ==========================================================================
 					locked=1
 				endif
 			endif
-
 			break
 
 		case 3
@@ -1921,6 +1933,9 @@ rem ==========================================================================
 			msg_id$="INVOICE_IN_UPDATE"
 			gosub disp_message
 			locked=1
+			break
+
+		case default
 			break
 	swend
 
