@@ -173,9 +173,6 @@ rem --- Read next invoice header --- Main Loop Starts
             ope01_key$=key(ope01_dev,end=*break)
             if pos(ope01_trip$=ope01_key$)<>1 then break
             extract record (ope01_dev) ope01a$; rem Advisory Locking
-        
-        
-            rem if ope01a.print_status$<>"Y" or (ope01a.lock_status$<>"1" and ope01a.lock_status$<>"2") then read(ope01_dev); continue
             if ope01a.print_status$<>"Y" or ope01a.lock_status$<>"1" then read(ope01_dev); continue
             if ope01a.trans_status$<>"R" then read(ope01_dev); continue
         
@@ -731,14 +728,11 @@ ar_open_invoice_detail: rem --- AR Open Invoice Detail
             write record (arm06_dev) arm06a$
         endif
 
-    rem --- Remove print record / Update history
-
-        remove (ope04_dev,key=firm_id$+"I  "+ope04a.customer_id$+ope04a.order_no$,dom=*next)
+    rem --- Update invoice total sales and cost
 
         ope01a.lock_status$="2"
         ope01a.total_sales=total_ext
         ope01a.total_cost=total_cost
-        ope01a.trans_status$="U"
         ope01a.mod_user$=sysinfo.user_id$
         ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
         ope01a.mod_time$=date(0:"%Hz%mz")
@@ -869,7 +863,7 @@ ar_open_invoice_detail: rem --- AR Open Invoice Detail
 
 rem --- Main Loop Ends
 
-rem --- End
+rem --- Update Month To Date Sales Totals
 
     precision 2
     ops10s.firm_id$=firm_id$
@@ -895,6 +889,36 @@ rem --- End
     ops10s$ = field(ops10s$)
 
     write record (ops10_dev) ops10s$
+
+rem --- Set LOCK_STATUS and TRANS_STATUS for update completed, and remove completed OPE_PRNTLIST records
+
+    read (ope04_dev,key=firm_id$+"I",dom=*next)
+    while more
+        read record (ope04_dev, end=*break) ope04a$
+        if ope04a.firm_id$+ope04a.ordinv_flag$<>firm_id$+"I" then break
+
+        ope01_found=0      
+        ope01_trip$=firm_id$+ope04a.ar_type$+ope04a.customer_id$+ope04a.order_no$
+        read(ope01_dev,key=ope01_trip$,dom=*next)
+        while 1
+            ope01_key$=key(ope01_dev,end=*break)
+            if pos(ope01_trip$=ope01_key$)<>1 then break
+            extract record (ope01_dev) ope01a$; rem Advisory Locking
+            if ope01a.lock_status$<>"2" or ope01a.trans_status$<>"R" then read(ope01_dev); continue
+
+            ope01a.lock_status$="3"
+            ope01a.trans_status$="U"
+            ope01a.mod_user$=sysinfo.user_id$
+            ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
+            ope01a.mod_time$=date(0:"%Hz%mz")
+            ope01a$ = field(ope01a$)
+            write record (ope01_dev) ope01a$
+            ope01_found=1      
+            break; rem --- new order can have at most just one new invoice, if any
+        wend
+        
+        if ope01_found then remove (ope04_dev,key=firm_id$+"I"+ope04a.ar_type$+ope04a.customer_id$+ope04a.order_no$,dom=*next)
+    wend
 
 rem --- Post the G/L Recap from the Sales Register directly to the Daily Detail
 

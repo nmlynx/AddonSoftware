@@ -1299,11 +1299,7 @@ rem --- Existing record
 	rem --- Check for invoice
 		
 		if ope01a.ordinv_flag$ = "I" then
-			if callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")="U" then
-				msg_id$ = "OP_IS_UPDATED_INV"
-			else
-				msg_id$ = "OP_IS_INVOICE"
-			endif
+			msg_id$ = "OP_IS_INVOICE"
 			gosub disp_message
 			callpoint!.setStatus("NEWREC")
 			break; rem --- exit from callpoint			
@@ -1901,7 +1897,7 @@ rem ==========================================================================
 
 	locked=0
 
-	switch pos( callpoint!.getColumnData("OPE_ORDHDR.LOCK_STATUS") = "NYS12" )
+	switch pos( callpoint!.getColumnData("OPE_ORDHDR.LOCK_STATUS") = "NYS123" )
 		case 1
 			break
 
@@ -1931,6 +1927,12 @@ rem ==========================================================================
 		case 4
 		case 5
 			msg_id$="INVOICE_IN_UPDATE"
+			gosub disp_message
+			locked=1
+			break
+
+		case 6
+			msg_id$="INVOICE_UPDATED"
 			gosub disp_message
 			locked=1
 			break

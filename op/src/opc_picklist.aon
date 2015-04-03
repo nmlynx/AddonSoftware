@@ -658,7 +658,7 @@ rem --- Clear Print Flags
 					ope01a.lock_status$="N" 
 				else
 					if pos(ope01a.print_status$="B")=0 then continue
-					if pos(ope01a.lock_status$="YS12")<>0 then continue
+					if pos(ope01a.lock_status$="YS123")<>0 then continue
 					after$="YES"
 					gosub valid_lines
 					ope01a.lock_status$="N"

@@ -794,6 +794,7 @@ op_rtp_data_conv: rem --- OP Real Time Processing (RTP) data conversion
         opt_key$=key(opt_dev,end=*break)
         readrecord(opt_dev)opt_tpl$
         if opt_tpl.trans_status$=" " then
+            if opt_table$="OPT_INVHDR" and opt_tpl.lock_status="2" then opt_tpl.lock_status="3"
             opt_tpl.trans_status$="U"
             if add_order_number and cvs(opt_tpl.order_no$,2)="" then
                 rem --- Set ORDER_NO from OPT_INVHDR via knum=AO_CUST_INV

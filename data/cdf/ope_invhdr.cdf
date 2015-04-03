@@ -2081,7 +2081,7 @@ rem ==========================================================================
 check_lock_flag: rem --- Check manual record lock
                  rem     OUT: locked = 1 or 0
 rem ==========================================================================
-	switch pos( callpoint!.getColumnData("OPE_INVHDR.LOCK_STATUS") = "NYS12" )
+	switch pos( callpoint!.getColumnData("OPE_INVHDR.LOCK_STATUS") = "NYS123" )
 		case 1
 			break
 
@@ -2108,7 +2108,6 @@ rem ==========================================================================
 			gosub disp_message
 			if pos("PASSVALID"=msg_opt$)=0
 				locked=1
-				callpoint!.setStatus("ABORT")
 			endif
 			break
 
@@ -2119,6 +2118,12 @@ rem ==========================================================================
 			if pos("PASSVALID"=msg_opt$)=0
 				locked=1
 			endif
+			break
+
+		case 6
+			msg_id$="INVOICE_UPDATED"
+			gosub disp_message
+			locked=1
 			break
 
 		case default

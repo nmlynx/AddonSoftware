@@ -222,6 +222,7 @@ rem --- Main read
             if ope01a.print_status$<>"Y" or ope01a.lock_status$<>"S" then read(ope01_dev); continue
             if ope01a.ordinv_flag$<>"I" then read(ope01_dev); continue
             if ope01a.trans_status$<>"R" then read(ope01_dev); continue
+            
             ope01a.lock_status$="1"
             ope01a.mod_user$=sysinfo.user_id$
             ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
@@ -917,10 +918,10 @@ write_sam_rec: rem --- write Sales Analysis records
     field sam$, "qty_shipped_" + str(period:"00") = nfield(sam$, "qty_shipped_" + str(period:"00")) + ope11a.qty_shipped
     field sam$, "total_cost_" + str(period:"00") = nfield(sam$, "total_cost_" + str(period:"00")) + round(ope11a.unit_cost*ope11a.qty_shipped, 2)
     field sam$, "total_sales_" + str(period:"00") = nfield(sam$, "total_sales_" + str(period:"00")) + ope11a.ext_price
-rem wgh ... unREM when implementing maintenance of new ord_* numerics in Sales Analysis
-rem wgh ...     field sam$, "ord_qty_shipped_" + str(period:"00") = nfield(sam$, "ord_qty_shipped_" + str(period:"00")) - ope11a.qty_shipped
-rem wgh ...     field sam$, "ord_total_cost_" + str(period:"00") = nfield(sam$, "ord_total_cost_" + str(period:"00")) - round(ope11a.unit_cost*ope11a.qty_shipped, 2)
-rem wgh ...     field sam$, "ord_total_sales_" + str(period:"00") = nfield(sam$, "ord_total_sales_" + str(period:"00")) - ope11a.ext_price
+rem ... unREM when implementing maintenance of new ord_* numerics in Sales Analysis
+rem ...     field sam$, "ord_qty_shipped_" + str(period:"00") = nfield(sam$, "ord_qty_shipped_" + str(period:"00")) - ope11a.qty_shipped
+rem ...     field sam$, "ord_total_cost_" + str(period:"00") = nfield(sam$, "ord_total_cost_" + str(period:"00")) - round(ope11a.unit_cost*ope11a.qty_shipped, 2)
+rem ...     field sam$, "ord_total_sales_" + str(period:"00") = nfield(sam$, "ord_total_sales_" + str(period:"00")) - ope11a.ext_price
     sam$=field(sam$)
     write record (sam_dev) sam$
     return

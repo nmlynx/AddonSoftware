@@ -241,7 +241,6 @@ rem --- Initialize Data
     clock$=""
     when$=sysinfo.system_date$
     nothing_posted = 1
-    no_records_prev_posted = 1
     dim t[6],u[6]
 
     if seq$="" then
@@ -362,12 +361,6 @@ rem --- Check to see if record is in use in Invoice Entry
         extract record (ope01_dev, key=firm_id$+"  "+read_tpl.customer_id$+read_tpl.order_no$+read_tpl.ar_inv_no$, dom=*continue) ope01a$; rem Advisory Locking
         if ope01a.print_status$<>"Y" then read(ope01_dev); continue
         if pos(ope01a.trans_status$="ER")=0 then read(ope01_dev); continue
-        
-        if pos(ope01a.lock_status$="12")<>0 then 
-            no_records_prev_posted = 0
-            read(ope01_dev)
-            continue
-        endif
 
         if ope01a.cash_sale$="Y" then
             dim ope41a$:fattr(ope41a$)
@@ -375,7 +368,8 @@ rem --- Check to see if record is in use in Invoice Entry
             if pos(ope41a.trans_status$="ER")=0 then dim ope41a$:fattr(ope41a$)
         endif
 
-        ope01a.lock_status$="S"
+        rem --- Don't change lock_status if re-running a failed update
+        if pos(ope01a.lock_status$="12")=0 then ope01a.lock_status$="S"
         ope01a.trans_status$="R"     
         ope01a.mod_user$=sysinfo.user_id$
         ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
@@ -588,7 +582,12 @@ rem --- Check to see if record is in use in Invoice Entry
         if t1<>0 then t=(t1-t[4])*100/t1
         if abs(t)>999 then t=sgn(t)*999.99
 
-        OutVect!.addItem(func.alphaMask(ope01a.customer_id$,m0$))
+        update_restart$=""
+        if pos(ope01a.lock_status$="12") then
+            update_restart$="   ***"+ope01a.lock_status$+"***"
+        endif
+
+        OutVect!.addItem(func.alphaMask(ope01a.customer_id$,m0$)+update_restart$)
         OutVect!.addItem(ope01a.order_no$)
         OutVect!.addItem(ope01a.ar_inv_no$)
         OutVect!.addItem(func.formatDate(ope01a.invoice_date$))
@@ -741,7 +740,7 @@ rem --- Check to see if record is in use in Invoice Entry
 
 rem --- Totals
 
-    if nothing_posted and no_records_prev_posted then
+    if nothing_posted then
         msg_id$ = "OP_NOTHING_POSTED"
         gosub disp_message
         goto std_exit
@@ -955,7 +954,6 @@ rem dim d2$(62),d[20],h[2]
 rem --- Standard G/L Recap Routine
 
 glrecap: 
-print account$
 
     if gl$="Y" then
         call pgmdir$+"glc_glpost.aon",glm01_dev,glw11_dev,0,account$,gldate$,ref1$,ref2$,ref3$,memo$,amount,units,status
