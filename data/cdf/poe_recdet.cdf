@@ -297,19 +297,19 @@ if callpoint!.getHeaderColumnData("POE_RECHDR.DROPSHIP")<>"Y" and cvs(callpoint!
 
 		rem --- Items or warehouses are different: reverse OO on previous
 
-		if (prior_whse$<>"" and prior_whse$<>curr_whse$) or 
-:		   (prior_item$<>"" and prior_item$<>curr_item$)
+		if (cvs(prior_whse$,2)<>"" and prior_whse$<>curr_whse$) or 
+:		   (cvs(prior_item$,2)<>"" and prior_item$<>curr_item$)
 :		then
 
 		rem --- reverse OO prior item and warehouse
 
-			if prior_whse$<>"" and prior_item$<>"" and prior_qty<>0 then
+			if cvs(prior_whse$,2)<>"" and cvs(prior_item$,2)<>"" and prior_qty<>0 then
 				items$[1] = prior_whse$
 				items$[2] = prior_item$
 				refs[0]   = -prior_qty
 
 				print "---reverse OO: item = ", cvs(items$[2], 2), ", WH: ", items$[1], ", qty =", refs[0]; rem debug
-				
+
 				call stbl("+DIR_PGM")+"ivc_itemupdt.aon","OO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 				if status then exitto std_exit
 			endif
@@ -331,8 +331,8 @@ if callpoint!.getHeaderColumnData("POE_RECHDR.DROPSHIP")<>"Y" and cvs(callpoint!
 
 		rem --- New record or item and warehouse haven't changed: update OO w difference
 
-		if	(prior_whse$="" or prior_whse$=curr_whse$) and 
-:			(prior_item$="" or prior_item$=curr_item$) 
+		if	(cvs(prior_whse$,2)="" or prior_whse$=curr_whse$) and 
+:			(cvs(prior_item$,2)="" or prior_item$=curr_item$) 
 :		then
 
 			rem --- Update OO quantity for current item and warehouse
@@ -423,6 +423,13 @@ if ivm_itemmast.lotser_item$="Y" and ivm_itemmast.inventoried$="Y"
 	callpoint!.setStatus("ACTIVATE")
 
 endif
+
+rem --- Re-set "prior" values to current values
+	callpoint!.setDevObject("prior_whse",callpoint!.getColumnData("POE_RECDET.WAREHOUSE_ID"))
+	callpoint!.setDevObject("prior_item",callpoint!.getColumnData("POE_RECDET.ITEM_ID"))
+	callpoint!.setDevObject("prior_qty_ordered",num(callpoint!.getColumnData("POE_RECDET.QTY_ORDERED")))
+	callpoint!.setDevObject("prior_prev_rec",num(callpoint!.getColumnData("POE_RECDET.QTY_PREV_REC")))
+	callpoint!.setDevObject("prior_conv_factor",num(callpoint!.getColumnData("POE_RECDET.CONV_FACTOR")))
 [[POE_RECDET.QTY_ORDERED.AVAL]]
 rem --- call poc_itemvend.aon (poc.ua) to retrieve unit cost from ivm-05
 
@@ -647,6 +654,10 @@ rem --- look at wo number; if different than it was when we entered the row, upd
 			endif
 		endif
 	endif
+
+rem --- Re-set "start" values to current values
+	callpoint!.setDevObject("start_wo_no",callpoint!.getColumnData("POE_RECDET.WO_NO"))
+	callpoint!.setDevObject("start_wo_seq_ref",callpoint!.getColumnData("POE_RECDET.WK_ORD_SEQ_REF"))
 [[POE_RECDET.AGRN]]
 rem --- save current qty/price this row
 
