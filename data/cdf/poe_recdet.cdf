@@ -430,6 +430,8 @@ rem --- Re-set "prior" values to current values
 	callpoint!.setDevObject("prior_qty_ordered",num(callpoint!.getColumnData("POE_RECDET.QTY_ORDERED")))
 	callpoint!.setDevObject("prior_prev_rec",num(callpoint!.getColumnData("POE_RECDET.QTY_PREV_REC")))
 	callpoint!.setDevObject("prior_conv_factor",num(callpoint!.getColumnData("POE_RECDET.CONV_FACTOR")))
+	callpoint!.setDevObject("start_wo_no",callpoint!.getColumnData("POE_RECDET.WO_NO"))
+	callpoint!.setDevObject("start_wo_seq_ref",callpoint!.getColumnData("POE_RECDET.WK_ORD_SEQ_REF"))
 [[POE_RECDET.QTY_ORDERED.AVAL]]
 rem --- call poc_itemvend.aon (poc.ua) to retrieve unit cost from ivm-05
 
@@ -705,6 +707,36 @@ if cvs(callpoint!.getColumnUndoData("POE_RECDET.PO_NO"),3)<>""
 	if curr_qty<>0 and callpoint!.getHeaderColumnData("POE_RECHDR.DROPSHIP")<>"Y" then gosub update_iv_oo
 
 endif
+
+rem --- If WO present, restore link in corresponding wo detail lines
+	wo_no_now$=callpoint!.getColumnData("POE_RECDET.WO_NO")
+	wo_seq_ref_now$=callpoint!.getColumnData("POE_RECDET.WK_ORD_SEQ_REF")
+	if cvs(wo_no_now$,3)<>""
+		poc_linecode_dev=fnget_dev("POC_LINECODE")
+		dim poc_linecode$:fnget_tpl$("POC_LINECODE")
+		po_line_code$=callpoint!.getColumnData("POE_RECDET.PO_LINE_CODE")
+		read record(poc_linecode_dev,key=firm_id$+po_line_code$,dom=*next)poc_linecode$
+		if poc_linecode.line_type$="S"
+			sfe_womatl=fnget_dev("SFE_WOMATL")
+			dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
+			find record (sfe_womatl,key=firm_id$+sfe_womatl.wo_location$+wo_no_now$+wo_seq_ref_now$,knum="AO_MAT_SEQ",dom=*endif)sfe_womatl$
+			sfe_womatl.po_no$=callpoint!.getColumnData("POE_RECDET.RECEIVER_NO")
+			sfe_womatl.pur_ord_seq_ref$=callpoint!.getColumnData("POE_RECDET.INTERNAL_SEQ_NO")
+			sfe_womatl$.po_status$="C"
+			sfe_womatl$=field(sfe_womatl$)
+			write record (sfe_womatl)sfe_womatl$
+		endif
+		if poc_linecode.line_type$="N"
+			sfe_wosub=fnget_dev("SFE_WOSUBCNT")
+			dim sfe_wosub$:fnget_tpl$("SFE_WOSUBCNT")
+				find record (sfe_wosub,key=firm_id$+sfe_wosub.wo_location$+wo_no_now$+wo_seq_ref_now$,knum="AO_SUBCONT_SEQ",dom=*endif)sfe_wosub$
+				sfe_wosub.po_no$=callpoint!.getColumnData("POE_RECDET.RECEIVER_NO")
+				sfe_wosub.pur_ord_seq_ref$=callpoint!.getColumnData("POE_RECDET.INTERNAL_SEQ_NO")
+				sfe_wosub.po_status$="C"
+				sfe_wosub$=field(sfe_wosub$)
+				write record (sfe_wosub)sfe_wosub$
+		endif
+	endif		
 [[POE_RECDET.ADEL]]
 gosub update_header_tots
 
@@ -729,14 +761,42 @@ receiver_no$=callpoint!.getColumnData("POE_RECDET.RECEIVER_NO")
 po_int_seq_ref$=callpoint!.getColumnData("POE_RECDET.INTERNAL_SEQ_NO")
 
 read (poe_reclsdet_dev,key=firm_id$+receiver_no$+po_int_seq_ref$,dom=*next)
-
 while 1
-	
 	read record (poe_reclsdet_dev,end=*break)poe_reclsdet$
 	if pos(firm_id$+receiver_no$+po_int_seq_ref$=poe_reclsdet$)<>1 then break
 	remove (poe_reclsdet_dev,key=firm_id$+poe_reclsdet.receiver_no$+poe_reclsdet.po_int_seq_ref$+poe_reclsdet.sequence_no$,dom=*next)
-	
 wend
+
+rem --- If WO present, remove link in corresponding wo detail lines
+rem --- Use start WO as WO may have been changed without saving before the delete.
+	wo_no_was$=callpoint!.getDevObject("start_wo_no")
+	wo_seq_ref_was$=callpoint!.getDevObject("start_wo_seq_ref")
+	if cvs(wo_no_was$,3)<>""
+		poc_linecode_dev=fnget_dev("POC_LINECODE")
+		dim poc_linecode$:fnget_tpl$("POC_LINECODE")
+		po_line_code$=callpoint!.getColumnData("POE_RECDET.PO_LINE_CODE")
+		read record(poc_linecode_dev,key=firm_id$+po_line_code$,dom=*next)poc_linecode$
+		if poc_linecode.line_type$="S"
+			sfe_womatl=fnget_dev("SFE_WOMATL")
+			dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
+			find record (sfe_womatl,key=firm_id$+sfe_womatl.wo_location$+wo_no_was$+wo_seq_ref_was$,knum="AO_MAT_SEQ",dom=*endif)sfe_womatl$
+			sfe_womatl.po_no$=""
+			sfe_womatl.pur_ord_seq_ref$=""
+			sfe_womatl.po_status$=""
+			sfe_womatl$=field(sfe_womatl$)
+			write record (sfe_womatl)sfe_womatl$
+		endif
+		if poc_linecode.line_type$="N"
+			sfe_wosub=fnget_dev("SFE_WOSUBCNT")
+			dim sfe_wosub$:fnget_tpl$("SFE_WOSUBCNT")
+			find record (sfe_wosub,key=firm_id$+sfe_wosub.wo_location$+wo_no_was$+wo_seq_ref_was$,knum="AO_SUBCONT_SEQ",dom=*endif)sfe_wosub$
+			sfe_wosub.po_no$=""
+			sfe_wosub.pur_ord_seq_ref$=""
+			sfe_wosub.po_status$=""
+			sfe_wosub$=field(sfe_wosub$)
+			write record (sfe_wosub)sfe_wosub$
+		endif
+	endif		
 [[POE_RECDET.ADGE]]
 rem --- if there are order lines to display/access in the sales order line item listbutton, set the LDAT and list display
 rem --- get the detail grid, then get the listbutton within the grid; set the list on the listbutton, and put the listbutton back in the grid
