@@ -243,6 +243,7 @@ rem ---  loop thru gridVect! -- for each row that isn't marked deleted:
 rem --- 1. call atamo to reverse OO qty for each dtl row that isn't from the original PO and isn't a dropship
 rem --- 2. get rid of poe_linked (poe-08) records, if applicable (will only exist on a dropship)
 rem --- 3. remove lot/serial records [removal of work order stuff not yet implemented (need)]
+rem --- 4. if WO present, remove link in corresponding wo detail lines
 
 	poe_reclsdet_dev=fnget_dev("POE_RECLSDET")
 	poe_linked_dev=fnget_dev("POE_LINKED")
@@ -286,7 +287,36 @@ rem --- 3. remove lot/serial records [removal of work order stuff not yet implem
 					if pos(firm_id$+poe_recdet.receiver_no$+poe_recdet.internal_seq_no$=poe_reclsdet$)<>1 then break
 					remove (poe_reclsdet_dev,key=poe_reclsdet.firm_id$+poe_reclsdet.receiver_no$+poe_reclsdet.po_int_seq_ref$+poe_reclsdet.sequence_no$)
 				wend
-				
+
+				rem --- If WO present, remove link in corresponding wo detail lines
+				wo_no$=poe_recdet.wo_no$
+				wo_seq_ref$=poe_recdet.wk_ord_seq_ref$
+				if cvs(wo_no$,3)<>""
+					poc_linecode_dev=fnget_dev("POC_LINECODE")
+					dim poc_linecode$:fnget_tpl$("POC_LINECODE")
+					po_line_code$=poe_recdet.po_line_code$
+					read record(poc_linecode_dev,key=firm_id$+po_line_code$,dom=*next)poc_linecode$
+					if poc_linecode.line_type$="S"
+						sfe_womatl=fnget_dev("SFE_WOMATL")
+						dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
+						find record (sfe_womatl,key=firm_id$+sfe_womatl.wo_location$+wo_no$+wo_seq_ref$,knum="AO_MAT_SEQ",dom=*endif)sfe_womatl$
+						sfe_womatl.po_no$=""
+						sfe_womatl.pur_ord_seq_ref$=""
+						sfe_womatl.po_status$=""
+						sfe_womatl$=field(sfe_womatl$)
+						write record (sfe_womatl)sfe_womatl$
+					endif
+					if poc_linecode.line_type$="N"
+						sfe_wosub=fnget_dev("SFE_WOSUBCNT")
+						dim sfe_wosub$:fnget_tpl$("SFE_WOSUBCNT")
+						find record (sfe_wosub,key=firm_id$+sfe_wosub.wo_location$+wo_no$+wo_seq_ref$,knum="AO_SUBCONT_SEQ",dom=*endif)sfe_wosub$
+						sfe_wosub.po_no$=""
+						sfe_wosub.pur_ord_seq_ref$=""
+						sfe_wosub.po_status$=""
+						sfe_wosub$=field(sfe_wosub$)
+						write record (sfe_wosub)sfe_wosub$
+					endif
+				endif		
 			endif
 		next x
 	endif
