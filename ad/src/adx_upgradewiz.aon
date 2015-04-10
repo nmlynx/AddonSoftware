@@ -418,8 +418,14 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
         endif
         convCtrl!.setProperty("start_version",start_version$)
 
-        rem --- Put initialized conversion control file in target data directory
+        rem --- Put initialized conversion control file in +DIR_DAT new target data directory
         convCtrlFilePath$=newAonDir$+"/data"
+        if stblMap!.containsKey("+DIR_DAT") then
+            aList! = cast(ArrayList, stblMap!.get("+DIR_DAT"))
+            target$ = cast(BBjString, aList!.get(1))
+            convCtrlFilePath$=FileObject.fixPath(target$, "/")
+            FileObject.removeEndSlash(convCtrlFilePath$)
+        endif
         convCtrlFileName$=convCtrlFilePath$+"/adx_conversionCtrl"
         convCtrlFile!=new File(convCtrlFileName$)
         rem --- Create path/file if doesn't exist
