@@ -302,10 +302,10 @@ if cols>0
 			break
 
 			case 2; rem units
-				glm02a.begin_units$=vectGLSummary!.getCellText(0)
+				glm02a.begin_units$=vectGLSummary!.getItem(0)
 				for x=1 to cols
 					field glm02a$,"PERIOD_UNITS_"+str(x:"00")=vectGLSummary!.getItem(x)
-				next y
+				next x
 			break
 		swend
 
