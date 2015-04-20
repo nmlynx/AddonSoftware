@@ -291,7 +291,7 @@ if cols>0
 	amt_units$=rec_id$(2,1)
 	glm02a.record_id$=rec_id$(1,1)
 	glm02_key$=glm02a.firm_id$+glm02a.gl_account$+glm02a.record_id$
-	extractrecord(glm02_dev,key=glm02_key$,dom=*next)x$; rem Advisory Locking
+	extractrecord(glm02_dev,key=glm02_key$,dom=*next)glm02a$; rem Advisory Locking
 
 		switch pos(amt_units$="AU")
 			case 1;rem amounts
