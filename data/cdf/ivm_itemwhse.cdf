@@ -227,10 +227,12 @@ find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 
 rem --- Disable Option menu options
 
-if pos(ivs01a.lifofifo$="LF")=0 disable_str$=disable_str$+"LIFO;"; rem --- these are AOPTions, give AOPT code only
-if pos(ivs01a.lotser_flag$="LS")=0 disable_str$=disable_str$+"IVM_LSMASTER;"
-
-if disable_str$<>"" call stbl("+DIR_SYP")+"bam_enable_pop.bbj",Form!,enable_str$,disable_str$
+if pos(ivs01a.lifofifo$="LF")=0 then callpoint!.setOptionEnabled("LIFO",0)
+if pos(ivs01a.lotser_flag$="LS")=0 or str(callpoint!.getDevObject("lot_serial_item"))<>"Y" then
+	callpoint!.setOptionEnabled("IVM_LSMASTER",0)
+else
+	callpoint!.setOptionEnabled("IVM_LSMASTER",1)
+endif
 
 rem --- Get item defaults
 
@@ -250,14 +252,6 @@ callpoint!.setTableColumnAttribute("IVM_ITEMWHSE.SAF_STK_CODE","DFLT",ivs10d.saf
 rem -- if AR dist by item param is not checked, disable the dist code field
 if callpoint!.getDevObject("di")<>"Y"
 	callpoint!.setColumnEnabled("AR_DIST_CODE",-1)
-endif
-
-
-rem --- disable lot/serial master if this isn't a lotted/serialized item
-if str(callpoint!.getDevObject("lot_serial_item"))<>"Y"
-	callpoint!.setOptionEnabled("IVM_LSMASTER",0)
-else
-	callpoint!.setOptionEnabled("IVM_LSMASTER",1)
 endif
 [[IVM_ITEMWHSE.AOPT-HIST]]
 iv_item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
