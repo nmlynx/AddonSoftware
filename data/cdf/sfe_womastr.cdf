@@ -285,10 +285,11 @@ rem --- Open tables
 	gls_params=num(open_chans$[12])
 	dim gls_params$:open_tpls$[12]
 	sf_prevper=num(sfs_params.current_per$)-1
+	sf_prevper_year=num(sfs_params.current_year$)
 	if sf_prevper=0 then
 		read record (gls_params,key=firm_id$+"GL00",dom=std_missing_params) gls_params$
 		sf_prevper=num(gls_params.total_pers$)
-		sf_prevper_year=num(sfs_params.current_year$)-1
+		sf_prevper_year=sf_prevper_year-1
 	endif
 	call stbl("+DIR_PGM")+"adc_perioddates.aon",gls_params,sf_prevper,sf_prevper_year,beg_date$,end_date$,status
 	callpoint!.setDevObject("sf_prevper_enddate",end_date$)
