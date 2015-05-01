@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2015-04-22
+ Report Date:   2015-04-30
  Report Branch: AddonSoftware 15.00
  Last Release:  AddonSoftware 14.22
 =======================================================================================================================================
@@ -442,3 +442,52 @@ Bug 7907: Clarified calculation of previous SF period.
 ----
 Modified: data/bar/sfe_womastr.xml
 Modified: data/cdf/sfe_womastr.cdf
+
+=======================================================================================================================================
+Revision: c3289ff86d646a663848ce43befa906121cf5c97
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/30/2015 5:04:14 PM
+Message:
+Bug 8000: Fixed precision, rounding and masks in BM.
+----
+Modified: ad/src/adx_build_sproc.aon
+Modified: bm/src/bmc_getcost.aon
+Modified: bm/src/bmo_AO_BmUtils.aon
+Modified: bm/src/bmr_costing.aon
+Modified: bm/src/bmr_detail.aon
+Deleted: bm/src/bmr_invcost.aon
+Modified: bm/src/bmr_invproduction.aon
+Modified: bm/src/bmu_invproduction.aon
+Modified: bm/src/bmu_ivcosting.aon
+Modified: bm/src/bmu_ivcosting_o1.aon
+Modified: data/bar/bme_totals.xml
+Modified: data/bar/bmm_availability.xml
+Modified: data/bar/bmm_billmast.xml
+Modified: data/bar/bmm_billmat.xml
+Modified: data/bar/bmm_billoper.xml
+Modified: data/bar/bmm_billsub.xml
+Modified: data/bar/bmu_compreplace.xml
+Modified: data/cdf/bme_totals.cdf
+Modified: data/cdf/bmm_availability.cdf
+Modified: data/cdf/bmm_billmast.cdf
+Modified: data/cdf/bmm_billmat.cdf
+Modified: data/cdf/bmm_billoper.cdf
+Modified: data/cdf/bmm_billsub.cdf
+Modified: data/cdf/bmu_compreplace.cdf
+Modified: reports/BOMCosting.jasper
+Modified: reports/BOMCosting.jrxml
+Modified: reports/BOMDetail.jasper
+Modified: reports/BOMDetail.jrxml
+Modified: reports/BOMMatlDet.jasper
+Modified: reports/BOMMatlDet.jrxml
+Modified: reports/BOMOpDet.jasper
+Modified: reports/BOMOpDet.jrxml
+Modified: reports/BOMSubDet.jasper
+Modified: reports/BOMSubDet.jrxml
+Modified: reports/BOMTotal.jasper
+Modified: reports/BOMTotal.jrxml
+Modified: sprocs/BOMCOSTING.prc
+Added: sprocs/BOMMATLDET.prc
+Added: sprocs/BOMOPDET.prc
+Added: sprocs/BOMSUBDET.prc
+Added: sprocs/BOMTOTAL.prc
