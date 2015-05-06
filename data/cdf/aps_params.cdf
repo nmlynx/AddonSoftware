@@ -278,18 +278,13 @@ rem --- check to see if main GL param rec (firm/GL/00) exists; if not, tell user
 rem --- Retrieve parameter data
 	gl_installed$=callpoint!.getDevObject("gl_installed")
 	po_installed$=callpoint!.getDevObject("po_installed")
-	call stbl("+DIR_PGM")+"adc_application.aon","AP",info$[all]
-	ap$=info$[20],br$=info$[9]
 	call stbl("+DIR_PGM")+"adc_application.aon","IV",info$[all]
 	iv$=info$[20]
-	dim user_tpl$:"app:c(2),gl_pers:c(2),gl_installed:c(1),"+
-:                  "ap_installed:c(1),iv_installed:c(1),bank_rec:c(1)"
+	dim user_tpl$:"app:c(2),gl_pers:c(2),gl_installed:c(1),iv_installed:c(1)"
 	user_tpl.app$="AP"
 	user_tpl.gl_pers$=gls01a.total_pers$
 	user_tpl.gl_installed$=gl_installed$
-	user_tpl.ap_installed$=ap$
 	user_tpl.iv_installed$=iv$
-	user_tpl.bank_rec$=br$
 	rem --- set some defaults (that I can't do via arde) if param doesn't yet exist
 	aps01a_key$=firm_id$+"AP00"
 	find record (aps01_dev,key=aps01a_key$,err=*next) aps01a$
@@ -302,11 +297,10 @@ rem --- Retrieve parameter data
 :			callpoint!.getColumnData("APS_PARAMS.MAX_VENDOR_LEN"))
 		callpoint!.setColumnUndoData("APS_PARAMS.VENDOR_SIZE",
 :                     	callpoint!.getColumnData("APS_PARAMS.MAX_VENDOR_LEN"))
-		if ap$="Y" and gl_installed$="Y" and br$="Y" 
+		if gl_installed$="Y" then
+			callpoint!.setColumnData("APS_PARAMS.POST_TO_GL","Y")
 			callpoint!.setColumnData("APS_PARAMS.BR_INTERFACE","Y")
-			callpoint!.setColumnUndoData("APS_PARAMS.BR_INTERFACE","Y")
 		endif
-		if gl_installed$="Y" then callpoint!.setColumnData("APS_PARAMS.POST_TO_GL","Y")
    		callpoint!.setStatus("MODIFIED-REFRESH")
 	else
 		rem --- Update post_to_gl if GL is uninstalled
