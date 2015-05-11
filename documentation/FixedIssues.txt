@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2015-05-07
+ Report Date:   2015-05-08
  Report Branch: AddonSoftware 15.00
  Last Release:  AddonSoftware 14.22
 =======================================================================================================================================
@@ -493,6 +493,35 @@ Added: sprocs/BOMSUBDET.prc
 Added: sprocs/BOMTOTAL.prc
 
 =======================================================================================================================================
+Revision: 4f958aaceca4c5b3b74312834c7f1db9da01c8b4
+Author: chawkins <chawkins@basis.com>
+Date: 5/4/2015 1:34:12 PM
+Message:
+Per bug 8166, converted PO to a Jasper report and brought up to date w/
+other similar documents re: report control.
+----
+Modified: ad/src/adx_build_sproc.aon
+Modified: data/bar/poe_pohdr.xml
+Added: data/bar/por_poprint_dmd.xml
+Modified: data/cdf/poe_pohdr.cdf
+Added: data/cdf/por_poprint_dmd.cdf
+Deleted: op/src/opc_invoicehist.aon
+Modified: po/src/por_poprint.aon
+Added: po/src/por_poprint_BBjForm.aon
+Added: reports/PurchaseOrderDet.jasper
+Added: reports/PurchaseOrderDet.jrxml
+Added: reports/PurchaseOrderHdr.jasper
+Added: reports/PurchaseOrderHdr.jrxml
+Added: reports/PurchaseOrderMaster.jasper
+Added: reports/PurchaseOrderMaster.jrxml
+Added: reports/PurchaseOrderPrint.jasper
+Added: reports/PurchaseOrderPrint.jrxml
+Deleted: sprocs/PICKLST_DETAIL.prc
+Deleted: sprocs/PICKLST_HEADER.prc
+Added: sprocs/PURCHASEORDER_DET.prc
+Added: sprocs/PURCHASEORDER_HDR.prc
+
+=======================================================================================================================================
 Revision: 6043f567299205acb7c5b55a10c0ecec02fb6292
 Author: Bill Halsted <bhalsted@basis.com>
 Date: 5/4/2015 1:54:58 PM
@@ -553,3 +582,12 @@ same directory as the source data directory.
 ----
 Modified: data/bar/adx_upgradewiz.xml
 Modified: data/cdf/adx_upgradewiz.cdf
+
+=======================================================================================================================================
+Revision: c64a82404900ba21be6ec30b07b0a7e91e35cee8
+Author: chawkins <chawkins@basis.com>
+Date: 5/8/2015 2:10:21 PM
+Message:
+Corrected three lines that had 'dangling parentheses'
+----
+Modified: sprocs/PURCHASEORDER_DET.prc
