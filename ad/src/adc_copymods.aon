@@ -89,12 +89,17 @@ rem  * Utility Class for copying a custom mods project from one location to anot
 rem  * including data files.
 rem  */
     use java.io.File
-    use java.util.ArrayList
-    use java.util.HashMap
+    use java.lang.reflect.Array
+    use java.nio.file.Files
+    use java.nio.file.StandardCopyOption
+    rem use java.util.ArrayList
+    rem use java.util.HashMap
     use java.util.Iterator
     use java.util.Vector
     use ::bbtranslator.bbj::BBTranslator
     use ::ado_file.src::FileObject
+
+    declare StandardCopyOption copyOption!
 
     class public CopyCustomMods
         field private BBjInt wait4ok% = 0
@@ -379,23 +384,10 @@ method_error:rem --- Method error trap/handler
                 rem --- skip if source and target are the same
                 if !FileObject.isSameFile(source!.getPath(),target!.getAbsolutePath()) then
                     rem --- copy file
-                    sourceChan=unt
-                    open(sourceChan,isz=-1,err=*endif)source!.getPath()
-
-                    rem --- target directory must exist in order to create file
-                    declare File targetParent!
-                    targetParent! = target!.getParentFile()
-                    if(! targetParent!.exists()) then
-                        FileObject.makeDirs(targetParent!)
-                    endif
-                    targetChan=unt
-                    open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getAbsolutePath()
-                    while 1
-                        readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
-                        writerecord(targetChan)record$
-                    wend
-                    close(sourceChan)
-                    close(targetChan)
+                    copyOption!=StandardCopyOption.COPY_ATTRIBUTES
+                    options!=Array.newInstance(copyOption!.getClass(),1)
+                    Array.set(options!,0,StandardCopyOption.COPY_ATTRIBUTES)
+                    Files.copy(source!.toPath(),target!.toPath(),options!)
                 endif
                 #log("    " + source!.getPath())
                
