@@ -80,10 +80,15 @@ rem  * Utility Class for copying and updating sync XML files created via Barista
 rem  * utility Create Sync File Backup
 rem  */
     use java.io.File
+    use java.lang.reflect.Array
+    use java.nio.file.Files
+    use java.nio.file.StandardCopyOption
     use java.util.HashMap
     use java.util.Vector
     use ::bbtranslator.bbj::BBTranslator
     use ::ado_file.src::FileObject
+
+    declare StandardCopyOption copyOption!
 
     class public UpdateSyncXmlFiles
         field private BBjInt wait4ok% = 0
@@ -236,16 +241,10 @@ method_error:rem --- Method error trap/handler
                     #incrementProgressMeter("copying: " + targetXml!.getPath())
                     rem --- skip if source and target are the same
                     if !FileObject.isSameFile(sourceXml!.getPath(),targetXml!.getPath()) then
-                        sourceChan=unt
-                        open(sourceChan,isz=-1)sourceXml!.getPath()
-                        targetChan=unt
-                        open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")targetXml!.getPath()
-                        while 1
-                            readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
-                            writerecord(targetChan)record$
-                        wend
-                        close(sourceChan)
-                        close(targetChan)
+                        copyOption!=StandardCopyOption.COPY_ATTRIBUTES
+                        options!=Array.newInstance(copyOption!.getClass(),1)
+                        Array.set(options!,0,StandardCopyOption.COPY_ATTRIBUTES)
+                        Files.copy(sourceXml!.toPath(),targetXml!.toPath(),options!)
                     endif
                     #log("COPIED: " + sourceXml!.getPath())
                 next i
@@ -652,16 +651,10 @@ method_error:rem --- Method error trap/handler
 					#incrementProgressMeter("copying: " + source!.getPath())
                     rem --- skip if source and target are the same
                     if !FileObject.isSameFile(source!.getPath(),target!.getPath()) then
-                        sourceChan=unt
-                        open(sourceChan,isz=-1,err=*endif)source!.getPath()
-                        targetChan=unt
-                        open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getPath()
-                        while 1
-                            readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
-                            writerecord(targetChan)record$
-                        wend
-                        close(sourceChan)
-                        close(targetChan)
+                        copyOption!=StandardCopyOption.COPY_ATTRIBUTES
+                        options!=Array.newInstance(copyOption!.getClass(),1)
+                        Array.set(options!,0,StandardCopyOption.COPY_ATTRIBUTES)
+                        Files.copy(source!.toPath(),target!.toPath(),options!)
                     endif
 					#log("COPIED: " + source!.getPath())
 				endif
