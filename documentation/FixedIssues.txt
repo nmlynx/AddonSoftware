@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2015-05-12
+ Report Date:   2015-05-14
  Report Branch: AddonSoftware 15.00
  Last Release:  AddonSoftware 14.22
 =======================================================================================================================================
@@ -599,6 +599,21 @@ Date: 5/12/2015 2:31:20 PM
 Message:
 Bug 8308: Modified all AIUW utilities to preserve the source file's last
 modified timestamp when making copies.
+----
+Modified: ad/src/adc_copyaon.aon
+Modified: ad/src/adc_copydir.aon
+Modified: ad/src/adc_copymods.aon
+Modified: ad/src/adc_updatexmlfiles.aon
+
+=======================================================================================================================================
+Revision: 0f587fb74382ccf2ddff7204de0fb8c5cdde138b
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/14/2015 2:13:44 PM
+Message:
+Bug 8308: Reverted to copying via BBj READ/WRITE because
+java.nio.files.Files::copy() method gets an error 252 on Windows
+machines when BBj has the source file open. Setting target file's last
+modified timestamp completion of copy.
 ----
 Modified: ad/src/adc_copyaon.aon
 Modified: ad/src/adc_copydir.aon
