@@ -119,51 +119,44 @@
     <target name="build.info">
 
         <!-- Gen package date/time -->
-        <exec executable="echo"
-              output="epoch.txt"
-              append="false">
-              <arg value="-n"/>
-              <arg value="addon.thedate="/>
-        </exec>
+        <!-- addon.theddate -->
+        <echo file="addon_info.properties"
+              message="addon.thedate="/>
         <exec executable="date"
-              output="epoch.txt"
+              output="addon_info.properties"
               append="true">
         </exec>
-        <property file="epoch.txt"/>
+        <property file="addon_info.properties"/>
         <echo message="addon.thedate: ${addon.thedate}"/>
-        <delete file="epoch.txt"/>
+        <delete file="addon_info.properties"/>
 
-        <!-- Get package epoch -->
-        <exec executable="echo"
-              output="epoch.txt"
-              append="false">
-              <arg value="-n"/>
-              <arg value="addon.epoch="/>
-        </exec>
+        <!-- addon.epoch -->
+        <echo file="addon_info.properties"
+              message="addon.epoch="/>
         <exec executable="date"
-              output="epoch.txt"
+              output="addon_info.properties"
               append="true">
               <arg value="--date"/>
               <arg value="${addon.thedate}"/>
               <arg value="+%s"/>
         </exec>
-        <exec executable="echo"
-              output="epoch.txt"
-              append="true">
-              <arg value="-n"/>
-              <arg value="addon.dtstamp="/>
-        </exec>
+        <property file="addon_info.properties"/>
+        <echo message="addon.epoch: ${addon.epoch}"/>
+        <delete file="addon_info.properties"/>
+
+        <!-- addon.dtstamp -->
+        <echo file="addon_info.properties"
+              message="addon.dtstamp="/>
         <exec executable="date"
-              output="epoch.txt"
+              output="addon_info.properties"
               append="true">
               <arg value="--date"/>
               <arg value="${addon.thedate}"/>
               <arg value="+%m-%d-%Y_%H%M"/>
         </exec>
-        <property file="epoch.txt"/>
-        <echo message="addon.epoch: ${addon.epoch}"/>
+        <property file="addon_info.properties"/>
         <echo message="addon.dtstamp: ${addon.dtstamp}"/>
-        <delete file="epoch.txt"/>
+        <delete file="addon_info.properties"/>
 
     </target>
     <!-- End of build.info -->
