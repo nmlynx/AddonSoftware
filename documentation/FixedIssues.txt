@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2015-05-21
+ Report Date:   2015-05-27
  Report Branch: AddonSoftware 15.01
  Last Release:  AddonSoftware 15.00
 =======================================================================================================================================
@@ -122,3 +122,14 @@ Modified: config/esp/addon.men
 Modified: config/fra/addon.men
 Modified: config/frc/addon.men
 Modified: config/ita/addon.men
+
+=======================================================================================================================================
+Revision: c93c775d50f54c7c513c1fd05dadbe1887e0566b
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/27/2015 9:21:30 AM
+Message:
+Bug 8319: Rather than deleting the conversion control file
+adx_conversionCtrl when auto-conversion task completes, moved it to
+aon/config directory so it can be re-used.
+----
+Modified: ad/src/adx_init_data.aon
