@@ -67,7 +67,7 @@ rem --- Locate aon/data directory, if possible
 
 rem --- There's nothing to do if data/adx_conversionCtrl isn’t found, i.e. new install or all required conversions already completed.
 
-    convCtrlFile!=new File(aonDir$+"data/adx_conversionCtrl",err=*next)
+    convCtrlFile!=new File(dataDir$+"adx_conversionCtrl",err=*next)
     if !convCtrlFile!.exists() then goto std_exit
     fileReader!=new FileReader(convCtrlFile!)
 
