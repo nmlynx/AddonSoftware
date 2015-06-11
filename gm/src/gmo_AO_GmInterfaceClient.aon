@@ -1,0 +1,590 @@
+rem ==========================================================================
+rem --- gmo_AO_GMInterfaceClient.aon 
+rem --- AO_GMInterfaceClient class (GMInterfaceClient superclass)
+rem --- Interface client to BBj web service on GoldMine server.
+rem --- 
+rem --- AddonSoftware Version 15.0
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem ==========================================================================
+
+    use ::ado_file.src::FileObject
+
+    use java.io.File
+    use java.io.StringReader
+    use java.io.StringWriter
+    use java.util.Properties
+    
+    use javax.xml.parsers.DocumentBuilder
+    use javax.xml.parsers.DocumentBuilderFactory
+    use javax.xml.transform.OutputKeys
+    use javax.xml.transform.Transformer
+    use javax.xml.transform.TransformerFactory
+    use javax.xml.transform.dom.DOMSource
+    use javax.xml.transform.stream.StreamResult
+
+    use org.apache.commons.httpclient.HttpClient
+    use org.apache.commons.httpclient.HttpStatus
+    use org.apache.commons.httpclient.methods.PostMethod
+
+    use org.w3c.dom.Attr
+    use org.w3c.dom.Document
+    use org.w3c.dom.Element
+    use org.w3c.dom.Node
+    use org.w3c.dom.NodeList
+    
+    use org.xml.sax.InputSource
+
+    class public AO_GMInterfaceClient
+        field private BBjInt devErrLog% = -1
+        field private BBjInt devGmqCustomer% = -1
+        field private BBjInt devGmxCustomer% = -1
+        field private BBjInt devSQL% = -1
+        field private BBjInt gmLoaded% = 0
+rem wgh ...
+        field private BBjString gmMasterPw$ = "wgh1Pw"
+rem wgh ...
+        field private BBjString gmMasterUser$ = "wgh1"
+rem wgh ...
+        field private BBjInt gmSessionId% = 49
+        field private BBjInt queueStarted% = 0
+        field private BBjString sqlDb$ = ""
+rem wgh ...
+        field private BBjString sqlPassword$ = "wgh2Pw"
+        field private BBjString sqlURL$ = ""
+rem wgh ...
+        field private BBjString sqlUser$ = "wgh2"
+        field private BBjString tplGmqCustomer$ = ""
+        field private BBjString tplGmxCustomer$ = ""
+        field private BBjNumber waitTime = 60
+rem wgh ...
+        field private BBjString webServiceURL$ = "https://bbjserver.basis.com:8443/servlet/ChileCustomer/json/balance?custnum=10"
+
+        rem /**
+        rem  * Constructor.
+        rem  *
+        rem  */
+        method public AO_GMInterfaceClient()
+            seterr GMInterfaceClient_error
+
+rem wgh ... Open GMS_PARAMS
+rem wgh ... Open ddm_table_tpls
+rem wgh ... Get template for GMS_PARAMS
+rem wgh ... Read parameters (does NOT depend on firm_id)
+rem wgh ... Initialize field variables 
+rem wgh ... ... gmMasterPw = GM_MASTER_PW
+rem wgh ... ... mMasterUser = GM_MASTER_USER
+rem wgh ... ... sqlDb = SQL_DB_ALIAS
+rem wgh ... ... sqlPassword = SQL_DB_PASSWORD
+rem wgh ... ... sqlURL = SQL_CONNECTION_URL
+rem wgh ... ... sqlUser = SQL_DB_USER
+rem wgh ... ... webServiceURL = WEBSERVICE_URL
+rem wgh ... ... Close GMS_PARAMS
+            
+            methodret
+            
+GMInterfaceClient_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Launch interface client to BBj web service on GoldMine server.
+        rem  *
+        rem  */
+        method public void launchClient()
+            seterr launchClient_error
+
+            rem --- Set Up Global Namespace to limit to ONLY ONE RUNNING INSTANCE
+            nsGlobal! = BBjAPI().getGlobalNamespace()
+            clientRunning$ = nsGlobal!.getValue("GMInterfaceClient_queue_processor",err=*next)
+print "clientRunning$="+clientRunning$
+escape; rem wgh ... test queue lock
+            if clientRunning$ <> "ON" then
+                nsGlobal!.setValue("GMInterfaceClient_queue_processor", "ON")
+                #queueStarted% = 1
+                
+                rem --- Start endless loop
+                while 1
+                    #pushCustomers()
+                    wait waitTime
+escape; rem wgh ... testing launchClient()
+                wend
+            endif
+            
+            methodret
+            
+launchClient_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Pushes Addon customers from table GMQ_CUSTOMER to GoldMine database using BBj web service.
+        rem  *
+        rem  */
+        method private void pushCustomers()
+            seterr pushCustomers_error
+
+            rem --- Make sure the GoldMine XML interface API is loaded and necessary files opened.
+            #gmLoadAPI()            
+            #gmqCustomerDev = #openGmqCustomer()
+rem wgh ... stopped here
+rem wgh ... openGmxCustomer()
+
+rem ... if #gmLoaded% and gmqCustomerDev >= 0 and gmxCustomerDev >= 0 then
+rem wgh ... Read thru GMQ_CUSTOMER (does NOT depend on firm_id)
+rem wgh ... ... Add non-blank fields to new java.util.Properties aonData
+rem wgh ... ... response = gmWriteContact(aonData)
+rem wgh ... ... If response is blank, then skip to next record
+rem wgh ... ... If response is blank, then get AccountNo and RecID from java.util.Properties response.
+rem wgh ... ... ... Write GMX_CUSTOMER record
+rem wgh ... ... ... Remove GMQ_CUSTOMER record
+rem wgh ... ... ... Log GMQ_CUSTOMER records written
+rem ... endif
+
+            methodret
+            
+pushCustomers_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Load the GoldMine XML interface API.
+        rem  *
+        rem  */
+        method private void gmLoadAPI()
+            seterr gmLoadAPI_error
+
+            rem --- Load API as necessary
+            if #gmSessionId% < 0 then
+                aonData! = new Properties()
+                aonData!.setProperty("User",#gmMasterUser$)
+                aonData!.setProperty("Password",#gmMasterPw$)
+rem wgh ... ... SysDir =
+rem wgh ... ... GoldDir =
+rem wgh ... ... ComDir =
+                aonData!.setProperty("SQLUser",#sqlUser$)
+                aonData!.setProperty("SQLPassword",#sqlPassword$)
+                
+                xmlRequest$ = #buildXMLRequest("LoadAPI", aonData!)
+                xmlResponse$ = #postRequest(xmlRequest$)
+                props!=#parseXMLResponse(xmlResponse$)
+
+                rem --- Log error
+                if props!.contains("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
+                    #logError("gmLoadAPI(): statusCode="+props!.getProperty("statusCode"),props!.getProperty("statusText"))
+                endif
+            endif
+
+            methodret
+            
+gmLoadAPI_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Logout of the GoldMine XML interface API.
+        rem  *
+        rem  */
+        method private void gmLogout()
+            seterr gmLogout_error
+
+            aonData! = new Properties()
+            xmlRequest$ = #buildXMLRequest("Logout", aonData!)
+            xmlResponse$ = #postRequest(xmlRequest$)
+            props!=#parseXMLResponse(xmlResponse$)
+
+            rem --- Log error
+            if props!.contains("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
+                #logError("gmLogout(): statusCode="+props!.getProperty("statusCode"),props!.getProperty("statusText"))
+            endif
+
+            methodret
+            
+gmLogout_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Unload the GoldMine XML interface API.
+        rem  *
+        rem  */
+        method private void gmUnloadAPI()
+            seterr gmUnloadAPI_error
+
+            aonData! = new Properties()
+            xmlRequest$ = #buildXMLRequest("UnloadAPI", aonData!)
+            xmlResponse$ = #postRequest(xmlRequest$)
+            props!=#parseXMLResponse(xmlResponse$)
+
+            rem --- Log error
+            if props!.contains("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
+                #logError("gmUnloadAPI(): statusCode="+props!.getProperty("statusCode"),props!.getProperty("statusText"))
+            endif
+
+            methodret
+            
+gmUnloadAPI_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Build XML request to post to the GoldMine XML interface API web service.
+        rem  *
+        rem  * @param BBjString apiFunction$
+        rem  * @param Properties aonData!
+        rem  *
+        rem  * @return BBjString xmlString$
+        rem  */
+        method private BBjString buildXMLRequest(BBjString apiFunction$,Properties aonData!)
+            seterr buildXMLRequest_error
+            xmlString$ = ""
+
+            rem --- Instantiate document
+            docFactory! = DocumentBuilderFactory.newInstance()
+            docBuilder! = docFactory!.newDocumentBuilder()
+            doc! = docBuilder!.newDocument()
+
+
+            rem --- Add GMAPI element
+            gmapi! = doc!.createElement("GMAPI")
+            doc!.appendChild(gmapi!)
+
+            rem --- Set attribute(s) to GMAPI element
+            attr! = doc!.createAttribute("call")
+            attr!.setValue(apiFunction$)
+            gmapi!.setAttributeNode(attr!)
+            if apiFunction$ <> "LoadAPI" then
+                attr! = doc!.createAttribute("SessionID")
+                attr!.setValue(str(#gmSessionId%))
+                gmapi!.setAttributeNode(attr!)
+            endif
+
+
+            rem --- Loop over aonData properties
+            properties! = aonData!.propertyNames() 
+            while properties!.hasMoreElements()
+                propertyName$ = properties!.nextElement()
+                propertyValue$ = aonData!.getProperty(propertyName$)
+
+                rem --- Add data element to GMAPI
+                data! = doc!.createElement("data")
+                gmapi!.appendChild(data!)
+ 
+                rem --- Set attribute and text to data element
+                attr! = doc!.createAttribute("name")
+                attr!.setValue(propertyName$)
+                data!.setAttributeNode(attr!)
+                data!.appendChild(doc!.createTextNode(propertyValue$))
+            wend
+
+            rem --- Transform XML Document object into XML string
+            transformerFactory! = TransformerFactory.newInstance()
+            transformer! = transformerFactory!.newTransformer()
+            transformer!.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes")
+            transformer!.setOutputProperty(OutputKeys.INDENT, "yes")
+            sw! = new StringWriter()
+            result! = new StreamResult(sw!)
+            source! = new DOMSource(doc!)
+            transformer!.transform(source!, result!)
+            xmlString$ = sw!.toString()
+
+            methodret xmlString$
+            
+buildXMLRequest_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * POST XML request to the GoldMine XML interface API web service.
+        rem  *
+        rem  * @param BBjString xmlRequest$
+        rem  *
+        rem  * @return BBjString xmlResponse$
+        rem  */
+        method private BBjString postRequest(BBjString xmlRequest$)
+            seterr postRequest_error
+            xmlResponse$ = ""
+
+            rem --- Create instance of HttpClient
+            client! = new HttpClient()
+
+            rem --- Create instance of PostMethod
+            method! = new PostMethod(#webServiceURL$)
+            method!.addParameter("XML", xmlRequest$)
+
+            rem --- Tell HttpClient to execute the PostMethod
+            sc% = client!.executeMethod(method!)
+            if sc% <> HttpStatus.SC_OK then
+                #logError("postRequest(): "+method!.getStatusText(),xmlRequest$)
+                xmlResponse$ = ""
+            else
+                rem --- Read response
+                xmlResponse$ = method!.getResponseBodyAsString()
+            endif
+
+            rem --- Release connection
+            method!.releaseConnection()
+
+            methodret xmlResponse$
+            
+postRequest_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Parse XML response from the GoldMine XML interface API web service.
+        rem  *
+        rem  * @param BBjString xmlResponse$
+        rem  *
+        rem  * @return Properties props!
+        rem  */
+        method private Properties parseXMLResponse(BBjString xmlResponse$)
+            seterr parseXMLResponse_error
+            props! = new Properties()
+
+            if cvs(xmlResponse$,2) <> "" then
+                rem --- Transform XML string into XML Document object
+                docFactory! = DocumentBuilderFactory.newInstance()
+                docBuilder! = docFactory!.newDocumentBuilder()
+
+                is! = new InputSource()
+                is!.setCharacterStream(new StringReader(xmlResponse$))
+
+                doc! = null()
+                doc! = docBuilder!.parse(is!,err=*next)
+                if doc! <> null() then
+                    rem --- Get GMAPI element attribute(s)
+                    gmapi! = doc!.getDocumentElement()
+                    sessionId$ = gmapi!.getAttribute("SessionID")
+                    function$ = gmapi!.getAttribute("call")
+                    if function$ = "LoadAPI" then
+                        #gmSessionId% = int(num(sessionID$))
+                    endif
+    
+                    rem --- Verify GoldMine session ID
+                    if int(num(sessionId$)) <> #gmSessionId% then
+                        props!.setProperty("statusCode","-100")
+                        props!.setProperty("statusText","Wrong session Id: "+sessionId$)
+                    else
+    
+                        rem --- Get status element attribute and text
+                        statusList! = doc!.getElementsByTagName("status")
+                        if statusList!.getLength() > 0 then
+                            status! = cast(Element,statusList!.item(0))
+                            props!.setProperty("statusCode",status!.getAttribute("code"))
+                            props!.setProperty("statusText",status!.getTextContent())
+                        else
+                            props!.setProperty("statusCode","")
+                            props!.setProperty("statusText","Status code missing.")
+                        endif
+    
+                        rem --- Loop over data elements
+                        dataList! = doc!.getElementsByTagName("data")
+                        if dataList!.getLength() > 0 then
+                            for i=0 to dataList!.getLength()-1
+                                rem --- Get data element attribute and text
+                                data! = cast(Element,dataList!.item(i))
+                                props!.setProperty(data!.getAttribute("name"),data!.getTextContent())
+                            next i
+                        endif
+                    endif
+                else
+                    rem --- Log error
+                    #logError("parseXMLResponse(): "+errmes(-1),xmlResponse$)
+                endif
+            endif
+
+            methodret props!
+            
+parseXMLResponse_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Write 2-line error messages to log file.
+        rem  *
+        rem  * @return BBjInt openChannel%
+        rem  */
+        method private BBjInt openGmqCustomer()
+            seterr openGmqCustomer_error
+            openChannel% = #devGmqCustomer%
+
+            if openChannel% < 0 then
+                rem --- Open gmq_customer
+                filename$ = "gmq_customer"
+                fileChan = unt
+                success = 0
+                open(fileChan,err=*next)stbl("+GMDATA")+filename$; success = 1
+                if success then
+                    rem --- Get record template for gmq_customer
+                    tplsChan = unt
+                    success = 0
+                    open(tplsChan,err=*next)stbl("+DIR_BRD")+"ddm_table_tpls.dat"; success = 1
+                    if success then
+                        read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
+                        if table_tpl$<>"" then
+                            rem --- Hold on to channel and record template for gmq_customer
+                            openChannel% = fileChan
+                            #devGmqCustomer% = openChannel%
+                            #tplGmqCustomer$ = table_tpl$
+                        else
+                            #logError("openGmqCustomer(): Failed to get gmq_customer record template","Error "+str(err)+": "+errmes(-1))
+                        endif
+                    endif
+                else
+                    rem --- Log error
+                    #logError("openGmqCustomer(): Failed to open gmq_customer","Error "+str(err)+": "+errmes(-1))
+                endif
+            endif
+
+            methodret openChannel%
+            
+openGmqCustomer_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Write 2-line error messages to log file.
+        rem  *
+        rem  * @param BBjString errMsg1$
+        rem  * @param BBjString errMsg2$
+        rem  */
+        method private void logError(BBjString errMsg1$,BBjString errMsg2$)
+            seterr logError_error
+
+            rem --- As needed, open log file
+            if #devErrLog% < 0 then 
+                rem --- Open log file in aon/logs directory, if possible
+                aonDir$ = ""
+                dataDir$ = FileObject.fixPath(stbl("+DIR_DAT",err=*next), "/")
+                xpos = pos("/aon/"=dataDir$,-1)
+                if xpos then
+                    aonDir$ = dataDir$(1,xpos+4)
+                endif
+                if aonDir$="" then
+                    xpos = pos("/data/"=dataDir$,-1)
+                    if xpos then
+                        aonDir$ = dataDir$(1,xpos)
+                    else
+                        aonDir$ = dataDir$
+                    endif
+                endif
+
+                rem --- Create logs directory
+                logDir$ = aonDir$ + "/logs"
+                FileObject.makeDirs(new File(logDir$))
+    
+                rem --- Create and open log file
+                log$ = logDir$+"/GmInterfaceClient_"+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")+".log"
+                erase log$,err=*next
+                string log$
+                log_dev = unt
+                open(log_dev)log$
+                #devErrLog% = int(log_dev)
+            endif
+
+            rem --- Write error messages to error log
+            write(#devErrLog%)errMsg1$
+            if cvs(errMsg2$,2) <> "" then write(#devErrLog%)errMsg2$
+
+            methodret
+            
+logError_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Cleanup on object's destruction and garbage collection.
+        rem  *
+        rem  */
+        method protected void finalize()
+            seterr finalize_error
+
+            if #queueStarted% then nsGlobal!.removeValue("GMInterfaceClient_queue_processor")
+            if #gmSessionId% >= 0 then
+                #gmLogout()
+                #gmUnloadAPI()
+            endif
+            if devErrLog% >= 0 then close(devErrLog%,err=*next)
+            if devGmqCustomer% >= 0 then close(devGmqCustomer%,err=*next)
+            if devGmxCustomer% >= 0 then close(devGmxCustomer%,err=*next)
+            if devSQL% >= 0 then close(devSQL%,err=*next)
+
+            methodret
+            
+finalize_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+    classend
