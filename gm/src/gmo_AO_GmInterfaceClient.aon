@@ -39,7 +39,6 @@ rem ==========================================================================
         field private BBjInt devGmqCustomer% = -1
         field private BBjInt devGmxCustomer% = -1
         field private BBjInt devSQL% = -1
-        field private BBjInt gmLoaded% = 0
 rem wgh ...
         field private BBjString gmMasterPw$ = "wgh1Pw"
 rem wgh ...
@@ -135,13 +134,15 @@ launchClient_error:rem --- Method error trap/handler
         method private void pushCustomers()
             seterr pushCustomers_error
 
-            rem --- Make sure the GoldMine XML interface API is loaded and necessary files opened.
+            rem --- Make sure the GoldMine XML interface API is loaded and GMQ_CUSTOMER opened.
             #gmLoadAPI()            
-            #gmqCustomerDev = #openGmqCustomer()
-rem wgh ... stopped here
-rem wgh ... openGmxCustomer()
+            gmqCustomerDev = #openGmqCustomer()
 
-rem ... if #gmLoaded% and gmqCustomerDev >= 0 and gmxCustomerDev >= 0 then
+            if gmSessionId% >= 0 and gmqCustomerDev > 0 then
+                gmxCustomerDev = #openGmxCustomer()
+                if gmxCustomerDev > 0 then
+rem wgh ... stopped here
+
 rem wgh ... Read thru GMQ_CUSTOMER (does NOT depend on firm_id)
 rem wgh ... ... Add non-blank fields to new java.util.Properties aonData
 rem wgh ... ... response = gmWriteContact(aonData)
@@ -150,7 +151,8 @@ rem wgh ... ... If response is blank, then get AccountNo and RecID from java.uti
 rem wgh ... ... ... Write GMX_CUSTOMER record
 rem wgh ... ... ... Remove GMQ_CUSTOMER record
 rem wgh ... ... ... Log GMQ_CUSTOMER records written
-rem ... endif
+                endif
+            endif
 
             methodret
             
@@ -454,7 +456,7 @@ parseXMLResponse_error:rem --- Method error trap/handler
         methodend
 
         rem /**
-        rem  * Write 2-line error messages to log file.
+        rem  * Open gmq_customer. Do NOT create it if it doesn't exist.
         rem  *
         rem  * @return BBjInt openChannel%
         rem  */
@@ -463,7 +465,7 @@ parseXMLResponse_error:rem --- Method error trap/handler
             openChannel% = #devGmqCustomer%
 
             if openChannel% < 0 then
-                rem --- Open gmq_customer
+                rem --- Open gmq_customer.
                 filename$ = "gmq_customer"
                 fileChan = unt
                 success = 0
@@ -493,6 +495,72 @@ parseXMLResponse_error:rem --- Method error trap/handler
             methodret openChannel%
             
 openGmqCustomer_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Open gmx_customer. Need to create it if it doesn't exist.
+        rem  *
+        rem  * @return BBjInt openChannel%
+        rem  */
+        method private BBjInt openGmxCustomer()
+            seterr openGmxCustomer_error
+            openChannel% = #devGmxCustomer%
+
+            if openChannel% < 0 then
+                rem --- Open gmx_customer and get record template. Create file if necessary.
+                num_files=1
+                dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                open_tables$[1]="GMX_CUSTOMER",open_opts$[1]="OTA"
+
+                call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
+
+                if open_status$ = "" then
+                    rem --- Hold on to channel and record template for gmx_customer
+                    openChannel% = num(open_chans$[1])
+                    #devGmxCustomer% = num(open_chans$[1])
+                    #tplGmxCustomer$ = open_tpls$[1]
+                else
+                    rem --- Log error
+                    #logError("openGmxCustomer(): Failed to open gmx_customer",open_status$)
+                endif
+            endif
+
+            methodret openChannel%
+            
+openGmxCustomer_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Write 2-line error messages to log file.
+        rem  *
+        rem  */
+        method public static void startClient()
+            seterr logError_error
+
+rem wgh ... per Jeff
+rem wgh ... From BBjAdminBase you can call getTaskQueue() to get started:
+rem wgh ... tq! = api!.getTaskQueue()
+rem wgh ... tg! = tq!.getTaskGroup("MyGroup")
+rem wgh ... tasks! = tg!.getTasks()
+rem wgh ... Then you can iterate over the tasks and call the execute() method on each task.  
+            
+            methodret
+            
+startClient_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
