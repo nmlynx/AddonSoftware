@@ -35,9 +35,11 @@ rem ==========================================================================
     use org.xml.sax.InputSource
 
     class public AO_GMInterfaceClient
+        field private BBjNumber BLOCKSIZE = 2^20
         field private BBjInt devErrLog% = -1
         field private BBjInt devGmqCustomer% = -1
         field private BBjInt devGmxCustomer% = -1
+        field private BBjInt devPushLog% = -1
         field private BBjInt devSQL% = -1
 rem wgh ...
         field private BBjString gmMasterPw$ = "wgh1Pw"
@@ -45,7 +47,6 @@ rem wgh ...
         field private BBjString gmMasterUser$ = "wgh1"
 rem wgh ...
         field private BBjInt gmSessionId% = 49
-        field private BBjInt queueStarted% = 0
         field private BBjString sqlDb$ = ""
 rem wgh ...
         field private BBjString sqlPassword$ = "wgh2Pw"
@@ -98,20 +99,50 @@ GMInterfaceClient_error:rem --- Method error trap/handler
         method public void launchClient()
             seterr launchClient_error
 
-            rem --- Set Up Global Namespace to limit to ONLY ONE RUNNING INSTANCE
-            nsGlobal! = BBjAPI().getGlobalNamespace()
-            clientRunning$ = nsGlobal!.getValue("GMInterfaceClient_queue_processor",err=*next)
-print "clientRunning$="+clientRunning$
-escape; rem wgh ... test queue lock
-            if clientRunning$ <> "ON" then
-                nsGlobal!.setValue("GMInterfaceClient_queue_processor", "ON")
-                #queueStarted% = 1
+            rem --- As needed, open push log file
+            if #devPushLog% < 0 then 
+                rem --- Open push log file in aon/logs directory, if possible
+                aonDir$ = ""
+                dataDir$ = FileObject.fixPath(stbl("+DIR_DAT",err=*next), "/")
+                xpos = pos("/aon/"=dataDir$,-1)
+                if xpos then
+                    aonDir$ = dataDir$(1,xpos+4)
+                endif
+                if aonDir$="" then
+                    xpos = pos("/data/"=dataDir$,-1)
+                    if xpos then
+                        aonDir$ = dataDir$(1,xpos)
+                    else
+                        aonDir$ = dataDir$
+                    endif
+                endif
+
+                rem --- Create logs directory
+                logDir$ = aonDir$ + "/logs"
+                FileObject.makeDirs(new File(logDir$))
+
+                rem --- Open/create push log file
+                log$ = logDir$+"/GmInterfaceClient_pushes.log"
+                string log$,err=*next
+                log_dev = unt
+                open(log_dev,err=*next)log$
+                #devPushLog% = int(log_dev)
                 
-                rem --- Start endless loop
+                rem --- Locate end of push log file so new messages are appended
+                while 1
+                    readrecord(#devPushLog%,siz=#BLOCKSIZE,end=*break)
+                wend
+            endif
+
+            rem --- Lock push log to ensure only one client instance is talking to web service
+            lock_successful = 0
+            lock(#devPushLog%,err=*next); lock_successful = 1
+                
+            rem --- Start endless loop if have exclusive access to push log
+            if lock_successful then
                 while 1
                     #pushCustomers()
-                    wait waitTime
-escape; rem wgh ... testing launchClient()
+                    wait #waitTime
                 wend
             endif
             
@@ -134,23 +165,112 @@ launchClient_error:rem --- Method error trap/handler
         method private void pushCustomers()
             seterr pushCustomers_error
 
-            rem --- Make sure the GoldMine XML interface API is loaded and GMQ_CUSTOMER opened.
+            rem --- Make sure the GoldMine XML interface API is loaded and GMQ_CUSTOMER open
             #gmLoadAPI()            
             gmqCustomerDev = #openGmqCustomer()
 
             if gmSessionId% >= 0 and gmqCustomerDev > 0 then
+                rem --- Make sure GMX_CUSTOMER is open
                 gmxCustomerDev = #openGmxCustomer()
                 if gmxCustomerDev > 0 then
-rem wgh ... stopped here
+                    dim gmqCustomerTpl$:#tplGmqCustomer$
 
-rem wgh ... Read thru GMQ_CUSTOMER (does NOT depend on firm_id)
-rem wgh ... ... Add non-blank fields to new java.util.Properties aonData
-rem wgh ... ... response = gmWriteContact(aonData)
-rem wgh ... ... If response is blank, then skip to next record
-rem wgh ... ... If response is blank, then get AccountNo and RecID from java.util.Properties response.
-rem wgh ... ... ... Write GMX_CUSTOMER record
-rem wgh ... ... ... Remove GMQ_CUSTOMER record
-rem wgh ... ... ... Log GMQ_CUSTOMER records written
+                    rem --- Send GMQ_CUSTOMER records to BBj web service on GoldMine server
+                    read(gmqCustomerDev,key="",dom=*next)
+                    while 1
+                        gmqCustomerKey$ = key(gmqCustomerDev,end=*break)
+                        readrecord(gmqCustomerDev)gmqCustomerTpl$
+                        
+                        rem --- Map non-blank fields to GoldMine fields
+                        aonData! = new Properties()
+                        rem --- Skip firm_id
+                        rem --- Skip customer_id
+                        if cvs(gmqCustomerTpl.gm_accountno$,2) <> "" then
+                            aonData!.setProperty("GM_ACCOUNTNO",gmqCustomerTpl.gm_accountno$)
+                        endif
+                        if cvs(gmqCustomerTpl.gm_recid$,2) <> "" then
+                            aonData!.setProperty("GM_RECID",gmqCustomerTpl.gm_recid$)
+                        endif
+                        if cvs(gmqCustomerTpl.customer_name$,2) <> "" then
+                            gmProps! = #mapToGoldMine("customer_name",gmqCustomerTpl.customer_name$)
+                            aonData!.setProperty(gmProps!.getProperty("field1"),gmProps!.getProperty("value1"))
+                            aonData!.setProperty(gmProps!.getProperty("field2"),gmProps!.getProperty("value2"))
+                        endif
+                        if cvs(gmqCustomerTpl.contact_name$,2) <> "" then
+                            gmProps! = #mapToGoldMine("contact_name",gmqCustomerTpl.contact_name$)
+                            aonData!.setProperty(gmProps!.getProperty("field1"),gmProps!.getProperty("value1"))
+                            aonData!.setProperty(gmProps!.getProperty("field2"),gmProps!.getProperty("value2"))
+                        endif
+                        if cvs(gmqCustomerTpl.phone_no$,2) <> "" then
+                            gmProps! = #mapToGoldMine("phone_no",gmqCustomerTpl.phone_no$)
+                            aonData!.setProperty(gmProps!.getProperty("field1"),gmProps!.getProperty("value1"))
+                        endif
+                        if cvs(gmqCustomerTpl.phone_exten$,2) <> "" then
+                            gmProps! = #mapToGoldMine("phone_exten",gmqCustomerTpl.phone_exten$)
+                            aonData!.setProperty(gmProps!.getProperty("field1"),gmProps!.getProperty("value1"))
+                        endif
+                        if cvs(gmqCustomerTpl.fax_no$,2) <> "" then
+                            gmProps! = #mapToGoldMine("fax_no",gmqCustomerTpl.fax_no$)
+                            aonData!.setProperty(gmProps!.getProperty("field1"),gmProps!.getProperty("value1"))
+                        endif
+                        if cvs(gmqCustomerTpl.addr_line_1$,2) <> "" then
+                            gmProps! = #mapToGoldMine("addr_line_1",gmqCustomerTpl.addr_line_1$)
+                            aonData!.setProperty(gmProps!.getProperty("field1"),gmProps!.getProperty("value1"))
+                        endif
+                        if cvs(gmqCustomerTpl.addr_line_2$,2) <> "" then
+                            gmProps! = #mapToGoldMine("addr_line_2",gmqCustomerTpl.addr_line_2$)
+                            aonData!.setProperty(gmProps!.getProperty("field1"),gmProps!.getProperty("value1"))
+                        endif
+                        if cvs(gmqCustomerTpl.addr_line_3$,2) <> "" then
+                            gmProps! = #mapToGoldMine("addr_line_3",gmqCustomerTpl.addr_line_3$)
+                            aonData!.setProperty(gmProps!.getProperty("field1"),gmProps!.getProperty("value1"))
+                        endif
+                        if cvs(gmqCustomerTpl.city$,2) <> "" then
+                            gmProps! = #mapToGoldMine("city",gmqCustomerTpl.city$)
+                            aonData!.setProperty(gmProps!.getProperty("field1"),gmProps!.getProperty("value1"))
+                            aonData!.setProperty(gmProps!.getProperty("field2"),gmProps!.getProperty("value2"))
+                        endif
+                        if cvs(gmqCustomerTpl.state_code$,2) <> "" then
+                            gmProps! = #mapToGoldMine("state_code",gmqCustomerTpl.state_code$)
+                            aonData!.setProperty(gmProps!.getProperty("field1"),gmProps!.getProperty("value1"))
+                            aonData!.setProperty(gmProps!.getProperty("field2"),gmProps!.getProperty("value2"))
+                        endif
+                        if cvs(gmqCustomerTpl.zip_code$,2) <> "" then
+                            gmProps! = #mapToGoldMine("zip_code",gmqCustomerTpl.zip_code$)
+                            aonData!.setProperty(gmProps!.getProperty("field1"),gmProps!.getProperty("value1"))
+                        endif
+                        if cvs(gmqCustomerTpl.cntry_id$,2) <> "" or cvs(gmqCustomerTpl.country$,2) <> "" then
+                            gmProps! = #mapToGoldMineCountry(gmqCustomerTpl.country$,gmqCustomerTpl.cntry_id$)
+                            aonData!.setProperty(gmProps!.getProperty("field1"),gmProps!.getProperty("value1"))
+                            aonData!.setProperty(gmProps!.getProperty("field2"),gmProps!.getProperty("value2"))
+                        endif
+
+                        rem --- Write contact data to GoldMine database
+                        gmData! = #gmWriteContact(aonData!)
+                        if gmData!.containsKey("statusCode") and cvs(gmData!.getProperty("statusCode"),3)="1" then
+                            rem --- On success, update GMX_CUSTOMER Addon-GoldMine cross reference file
+                            dim gmxCustomerTpl$:#tplGmxCustomer$
+                            gmxCustomerTpl.firm_id$ = gmqCustomerTpl.firm_id$
+                            gmxCustomerTpl.customer_id$ = gmqCustomerTpl.customer_id$
+                            if gmData!.containsKey("AccountNo") then
+                                gmxCustomerTpl.gm_accountno$ = gmData!.getProperty("AccountNo")
+                            endif
+                            if gmData!.containsKey("RecID") then
+                                gmxCustomerTpl.gm_recid$ = gmData!.getProperty("RecID")
+                            endif
+                            writerecord(gmxCustomerDev,dom=*next)gmxCustomerTpl$
+                            
+                            rem --- On success, remove GMQ_CUSTOMER record
+                            remove(gmqCustomerDev,key=gmqCustomerKey$,dom=*next)
+
+                            rem --- On success, log GMQ_CUSTOMER records written
+                            msg1$ = gmxCustomerTpl.firm_id$+"::"+gmxCustomerTpl.customer_id$
+                            msg2$ = gmxCustomerTpl.gm_accountno$+"::"+gmxCustomerTpl.gm_recid$
+                            #logPush(msg1$,msg2$)
+                        else
+                            rem --- Skip to next GMQ_CUSTOMER record
+                        endif
+                    wend
                 endif
             endif
 
@@ -189,7 +309,7 @@ rem wgh ... ... ComDir =
                 props!=#parseXMLResponse(xmlResponse$)
 
                 rem --- Log error
-                if props!.contains("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
+                if props!.containsKey("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
                     #logError("gmLoadAPI(): statusCode="+props!.getProperty("statusCode"),props!.getProperty("statusText"))
                 endif
             endif
@@ -197,6 +317,37 @@ rem wgh ... ... ComDir =
             methodret
             
 gmLoadAPI_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Write contact data via GoldMine XML interface API.
+        rem  *
+        rem  * @param Properties aonData!
+        rem  *
+        rem  * @return Properties gmData!
+        rem  */
+        method private Properties gmWriteContact(Properties aonData!)
+            seterr gmWriteContact_error
+
+            xmlRequest$ = #buildXMLRequest("WriteContact", aonData!)
+            xmlResponse$ = #postRequest(xmlRequest$)
+            gmData!=#parseXMLResponse(xmlResponse$)
+
+            rem --- Log error
+            if gmData!.containsKey("statusCode") and cvs(gmData!.getProperty("statusCode"),3)<>"1" then
+                #logError("gmWriteContact(): statusCode="+gmData!.getProperty("statusCode"),gmData!.getProperty("statusText"))
+            endif
+
+            methodret gmData!
+            
+gmWriteContact_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
@@ -219,7 +370,7 @@ gmLoadAPI_error:rem --- Method error trap/handler
             props!=#parseXMLResponse(xmlResponse$)
 
             rem --- Log error
-            if props!.contains("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
+            if props!.containsKey("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
                 #logError("gmLogout(): statusCode="+props!.getProperty("statusCode"),props!.getProperty("statusText"))
             endif
 
@@ -248,7 +399,7 @@ gmLogout_error:rem --- Method error trap/handler
             props!=#parseXMLResponse(xmlResponse$)
 
             rem --- Log error
-            if props!.contains("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
+            if props!.containsKey("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
                 #logError("gmUnloadAPI(): statusCode="+props!.getProperty("statusCode"),props!.getProperty("statusText"))
             endif
 
@@ -545,11 +696,142 @@ openGmxCustomer_error:rem --- Method error trap/handler
         methodend
 
         rem /**
-        rem  * Write 2-line error messages to log file.
+        rem  * Returns GoldMine field and value mapped to Addon field.
+        rem  *
+        rem  * @param BBjString aonField$
+        rem  * @param BBjString aonValue$
+        rem  *
+        rem  * @return Properties gmProps!
+        rem  */
+        method public Properties mapToGoldMine(BBjString aonField$, BBjString aonValue$)
+            seterr mapToGoldMine_error
+            gmProps! = new Properties()
+
+            switch (BBjAPI().TRUE)
+                case cvs(aonField$,10) = "customer_name"
+                    gmProps!.setProperty("field1","COMPANY")
+                    gmProps!.setProperty("value1",pad(aonValue$,40))
+                    gmProps!.setProperty("field2","U_COMPANY")
+                    gmProps!.setProperty("value2",pad(cvs(aonValue$,4),40))
+                    break
+                case cvs(aonField$,10) = "contact_name"
+                    gmProps!.setProperty("field1","CONTACT")
+                    gmProps!.setProperty("value1",pad(aonValue$,40))
+                    gmProps!.setProperty("field2","U_CONTACT")
+                    gmProps!.setProperty("value2",pad(cvs(aonValue$,4),40))
+                    break
+                case cvs(aonField$,10) = "phone_no"
+                    gmProps!.setProperty("field1","PHONE1")
+                    call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(aonValue$,2),"",phone_mask$
+                    phone$=cvs(aonValue$,2)
+                    phone$=str(phone$:phone_mask$,err=*next)
+                    gmProps!.setProperty("value1",pad(phone$,25))
+                    break
+                case cvs(aonField$,10) = "phone_exten"
+                    gmProps!.setProperty("field1","EXT1")
+                    gmProps!.setProperty("value1",pad(aonValue$,6))
+                    break
+                case cvs(aonField$,10) = "fax_no"
+                    gmProps!.setProperty("field1","FAX")
+                    call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(aonValue$,2),"",phone_mask$
+                    fax$=cvs(aonValue$,2)
+                    fax$=str(fax$:phone_mask$,err=*next)
+                    gmProps!.setProperty("value1",pad(fax$,25))
+                    break
+                case cvs(aonField$,10) = "addr_line_1"
+                    gmProps!.setProperty("field1","ADDRESS1")
+                    gmProps!.setProperty("value1",pad(aonValue$,40))
+                    break
+                case cvs(aonField$,10) = "addr_line_2"
+                    gmProps!.setProperty("field1","ADDRESS2")
+                    gmProps!.setProperty("value1",pad(aonValue$,40))
+                    break
+                case cvs(aonField$,10) = "addr_line_3"
+                    gmProps!.setProperty("field1","ADDRESS3")
+                    gmProps!.setProperty("value1",pad(aonValue$,40))
+                    break
+                case cvs(aonField$,10) = "city"
+                    gmProps!.setProperty("field1","CITY")
+                    gmProps!.setProperty("value1",pad(aonValue$,30))
+                    gmProps!.setProperty("field2","U_CITY")
+                    gmProps!.setProperty("value2",pad(cvs(aonValue$,4),30))
+                    break
+                case cvs(aonField$,10) = "state_code"
+                    gmProps!.setProperty("field1","STATE")
+                    gmProps!.setProperty("value1",pad(aonValue$,20))
+                    gmProps!.setProperty("field2","U_STATE")
+                    gmProps!.setProperty("value2",pad(cvs(aonValue$,4),20))
+                    break
+                case cvs(aonField$,10) = "zip_code"
+                    gmProps!.setProperty("field1","ZIP")
+                    call stbl("+DIR_SYP")+"bac_getmask.bbj","P",cvs(aonValue$,2),"",postal_mask$
+                    postal$=cvs(aonValue$,2)
+                    postal$=str(postal$:postal_mask$,err=*next)
+                    gmProps!.setProperty("value1",pad(postal$,10))
+                    break
+                case default
+                    rem --- No mapping available/needed
+                    gmProps!.setProperty("field1",aonField$)
+                    gmProps!.setProperty("value2",aonValue$)
+                    break
+            swend
+
+            methodret gmProps!
+            
+mapToGoldMine_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Returns GoldMine COUNTRY field and value mapped to Addon country and cntry_id fields.
+        rem  * Uses Addon's cntry_id if not blank, else uses Addon's country.
+        rem  *
+        rem  * @param BBjString aonCountry$
+        rem  * @param BBjString aonCntry_id$
+        rem  *
+        rem  * @return Properties gmProps!
+        rem  */
+        method public Properties mapToGoldMineCountry(BBjString aonCountry$, BBjString aonCntry_id$)
+            seterr mapToGoldMineCountry_error
+            gmProps! = new Properties()
+
+            if cvs(aonCntry_id$,2) <> "" then
+                gmProps!.setProperty("field1","COUNTRY")
+                gmProps!.setProperty("value1",pad(aonCntry_id$,20))
+                gmProps!.setProperty("field2","U_COUNTRY")
+                gmProps!.setProperty("value2",pad(cvs(aonCntry_id$,4),20))
+            else
+                gmProps!.setProperty("field1","COUNTRY")
+                gmProps!.setProperty("value1",pad(aonCountry$,20))
+                gmProps!.setProperty("field2","U_COUNTRY")
+                gmProps!.setProperty("value2",pad(cvs(aonCountry$,4),20))
+            endif
+
+            methodret gmProps!
+            
+mapToGoldMineCountry_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Starts EM scheduled task for running the interface client to BBj web service on GoldMine server.
+        rem  * Allows starting the GoldMine interface with a single client (not multi-threaded).
         rem  *
         rem  */
-        method public static void startClient()
-            seterr logError_error
+        method public void startClient()
+            seterr startClient_error
 
 rem wgh ... per Jeff
 rem wgh ... From BBjAdminBase you can call getTaskQueue() to get started:
@@ -571,6 +853,32 @@ startClient_error:rem --- Method error trap/handler
         methodend
 
         rem /**
+        rem  * Log successful pushes of Addon customers to GoldMine database.
+        rem  *
+        rem  * @param BBjString msg1$
+        rem  * @param BBjString msg2$
+        rem  */
+        method private void logPush(BBjString msg1$,BBjString msg2$)
+            seterr logPush_error
+
+            rem --- Write messages to push log
+            write(#devPushLog%)"["+DATE(0:"%Yd%Mz%Dz")+"  "+DATE(0:"%Hz%mz")+"]"
+            write(#devPushLog%)msg1$
+            if cvs(msg2$,2) <> "" then write(#devPushLog%)msg2$
+
+            methodret
+            
+logPush_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
         rem  * Write 2-line error messages to log file.
         rem  *
         rem  * @param BBjString errMsg1$
@@ -579,9 +887,9 @@ startClient_error:rem --- Method error trap/handler
         method private void logError(BBjString errMsg1$,BBjString errMsg2$)
             seterr logError_error
 
-            rem --- As needed, open log file
+            rem --- As needed, open error log file
             if #devErrLog% < 0 then 
-                rem --- Open log file in aon/logs directory, if possible
+                rem --- Open error log file in aon/logs directory, if possible
                 aonDir$ = ""
                 dataDir$ = FileObject.fixPath(stbl("+DIR_DAT",err=*next), "/")
                 xpos = pos("/aon/"=dataDir$,-1)
@@ -600,17 +908,22 @@ startClient_error:rem --- Method error trap/handler
                 rem --- Create logs directory
                 logDir$ = aonDir$ + "/logs"
                 FileObject.makeDirs(new File(logDir$))
-    
-                rem --- Create and open log file
-                log$ = logDir$+"/GmInterfaceClient_"+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")+".log"
-                erase log$,err=*next
-                string log$
+
+                rem --- Open/create error log file
+                log$ = logDir$+"/GmInterfaceClient_errors_"+DATE(0:"%Yd%Mz%Dz")+".log"
+                string log$,err=*next
                 log_dev = unt
-                open(log_dev)log$
+                open(log_dev,err=*next)log$
                 #devErrLog% = int(log_dev)
+                
+                rem --- Locate end of error log file so new messages are appended
+                while 1
+                    readrecord(#devErrLog%,siz=#BLOCKSIZE,end=*break)
+                wend
             endif
 
             rem --- Write error messages to error log
+            write(#devErrLog%)"["+DATE(0:"%Yd%Mz%Dz")+"  "+DATE(0:"%Hz%mz")+"]"
             write(#devErrLog%)errMsg1$
             if cvs(errMsg2$,2) <> "" then write(#devErrLog%)errMsg2$
 
@@ -633,7 +946,6 @@ logError_error:rem --- Method error trap/handler
         method protected void finalize()
             seterr finalize_error
 
-            if #queueStarted% then nsGlobal!.removeValue("GMInterfaceClient_queue_processor")
             if #gmSessionId% >= 0 then
                 #gmLogout()
                 #gmUnloadAPI()
