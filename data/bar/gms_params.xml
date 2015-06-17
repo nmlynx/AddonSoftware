@@ -21,9 +21,9 @@
 			<ASC_LICENSE_ID id="ddm_tables.gms_params"></ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.gms_params">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.gms_params">20150615</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.gms_params">20150616</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.gms_params">20150616</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.gms_params">172842</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.gms_params">20150617</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.gms_params">20150617</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.gms_params">102722</DD_LSTSYNC_TIME>
 			<DD_ATTR_ATAB id="ddm_tables.gms_params"></DD_ATTR_ATAB>
 			<DD_ATTR_CPGM id="ddm_tables.gms_params">C:/dev_projects/aon_dev1/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.gms_params"></DD_ATTR_DKNM>
@@ -47,11 +47,40 @@
 			<DD_ATTR_STYL id="ddm_tables.gms_params"></DD_ATTR_STYL>
 		</RECORD>
 	</ALIAS>
+	<ALIAS id="ddm_table_aopt">
+		<ID id="ddm_table_aopt">DDM_TABLE_AOPT</ID>
+		<RECORD id="ddm_table_aopt.gms_params01">
+			<DD_TABLE_ALIAS id="ddm_table_aopt.gms_params01">GMS_PARAMS      </DD_TABLE_ALIAS>
+			<DD_ATTR_SEQ id="ddm_table_aopt.gms_params01">01</DD_ATTR_SEQ>
+			<DD_ATTR_AOPT id="ddm_table_aopt.gms_params01">Test DB Connection</DD_ATTR_AOPT>
+			<DD_ATTR_AOPT_CD id="ddm_table_aopt.gms_params01">TCON</DD_ATTR_AOPT_CD>
+			<DD_ATTR_AOPT_FM id="ddm_table_aopt.gms_params01">B</DD_ATTR_AOPT_FM>
+		</RECORD>
+	</ALIAS>
 	<ALIAS id="ddm_table_cpro">
 		<ID id="ddm_table_cpro">DDM_TABLE_CPRO</ID>
+		<RECORD id="ddm_table_cpro.gms_paramsaopt-tcon">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.gms_paramsaopt-tcon">GMS_PARAMS      </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.gms_paramsaopt-tcon">AOPT-TCON</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_table_cpro.gms_paramsarec">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.gms_paramsarec">GMS_PARAMS      </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.gms_paramsarec">AREC</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.gms_paramsbsho">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.gms_paramsbsho">GMS_PARAMS      </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.gms_paramsbsho">BSHO</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.gms_paramsbwri">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.gms_paramsbwri">GMS_PARAMS      </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.gms_paramsbwri">BWRI</DD_ATTR_CPRO>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_table_opts">
+		<ID id="ddm_table_opts">DDM_TABLE_OPTS</ID>
+		<RECORD id="ddm_table_opts.gms_paramsw">
+			<DD_TABLE_ALIAS id="ddm_table_opts.gms_paramsw">GMS_PARAMS      </DD_TABLE_ALIAS>
+			<DD_ATTR_OPTS id="ddm_table_opts.gms_paramsw">W</DD_ATTR_OPTS>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_tpls">
@@ -59,7 +88,7 @@
 		<RECORD id="ddm_table_tpls.gms_params">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.gms_params">GMS_PARAMS      </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.gms_params">gms_params</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.gms_params">firm_id:c(2),webservice_url:c(256),gm_master_user:c(32),gm_master_pw:c(64),db_url:c(256),db_alias:c(30),db_user:c(32),db_password:c(64),bar_check_y_n:c(1),wait_time:n(5*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.gms_params">firm_id:c(2),webservice_url:c(256),gm_master_user:c(32),gm_master_pw:c(64),db_url:c(256),db_alias:c(30),db_user:c(32),db_password:c(64),wait_time:n(5*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -281,7 +310,7 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.gms_params005">20150615</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.gms_params005"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.gms_params005"></DD_ATTR_ABLV>
-			<DD_ATTR_CPGM id="ddm_table_cols.gms_params005"></DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.gms_params005">C:/dev_projects/aon_dev1/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_COLW id="ddm_table_cols.gms_params005">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.gms_params005"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.gms_params005"></DD_ATTR_CTLY>
@@ -369,7 +398,7 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.gms_params007">20150615</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.gms_params007"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.gms_params007"></DD_ATTR_ABLV>
-			<DD_ATTR_CPGM id="ddm_table_cols.gms_params007"></DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.gms_params007">C:/dev_projects/aon_dev1/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_COLW id="ddm_table_cols.gms_params007">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.gms_params007"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.gms_params007"></DD_ATTR_CTLY>
@@ -413,7 +442,7 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.gms_params008">20150615</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.gms_params008"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.gms_params008"></DD_ATTR_ABLV>
-			<DD_ATTR_CPGM id="ddm_table_cols.gms_params008"></DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.gms_params008">C:/dev_projects/aon_dev1/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_COLW id="ddm_table_cols.gms_params008">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.gms_params008"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.gms_params008"></DD_ATTR_CTLY>
@@ -444,17 +473,17 @@
 		<RECORD id="ddm_table_cols.gms_params009">
 			<DD_TABLE_ALIAS id="ddm_table_cols.gms_params009">GMS_PARAMS      </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.gms_params009">009</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.gms_params009">BAR_CHECK_Y_N   </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.gms_params009">BAR_CHECK_Y_N   </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.gms_params009">WAIT_TIME       </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.gms_params009">WAIT_TIME       </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.gms_params009">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.gms_params009">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.gms_params009">N</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.gms_params009"></DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.gms_params009">Y</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.gms_params009">0A</DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.gms_params009"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.gms_params009"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.gms_params009"></DD_MASK_TYPE>
-			<DD_CREATE_DATE id="ddm_table_cols.gms_params009">20150615</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.gms_params009">20150615</DD_LSTREV_DATE>
+			<DD_CREATE_DATE id="ddm_table_cols.gms_params009">20150616</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.gms_params009">20150616</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.gms_params009"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.gms_params009"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.gms_params009"></DD_ATTR_CPGM>
@@ -474,68 +503,42 @@
 			<DD_ATTR_MAXL id="ddm_table_cols.gms_params009"></DD_ATTR_MAXL>
 			<DD_ATTR_MINV id="ddm_table_cols.gms_params009"></DD_ATTR_MINV>
 			<DD_ATTR_MAXV id="ddm_table_cols.gms_params009"></DD_ATTR_MAXV>
-			<DD_ATTR_PROM id="ddm_table_cols.gms_params009"></DD_ATTR_PROM>
+			<DD_ATTR_PROM id="ddm_table_cols.gms_params009">Wait time (in seconds) before process queue again.</DD_ATTR_PROM>
 			<DD_ATTR_PVAL id="ddm_table_cols.gms_params009"></DD_ATTR_PVAL>
 			<DD_ATTR_SLEV id="ddm_table_cols.gms_params009"></DD_ATTR_SLEV>
 			<DD_ATTR_TABG id="ddm_table_cols.gms_params009"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.gms_params009">10</DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.gms_params009"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.gms_params009">BAR_CHECK_Y_N</SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.gms_params009">WAIT_TIME</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.gms_params009"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.gms_params009"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.gms_params009">N</DD_ATTR_FTSR>
 		</RECORD>
-		<RECORD id="ddm_table_cols.gms_params010">
-			<DD_TABLE_ALIAS id="ddm_table_cols.gms_params010">GMS_PARAMS      </DD_TABLE_ALIAS>
-			<DD_SEQUENCE id="ddm_table_cols.gms_params010">010</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.gms_params010">WAIT_TIME       </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.gms_params010">WAIT_TIME       </DD_DVAR_NAME>
-			<DD_COL_REPEATS id="ddm_table_cols.gms_params010">0</DD_COL_REPEATS>
-			<DD_COL_OCCURS id="ddm_table_cols.gms_params010">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.gms_params010">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.gms_params010">0A</DD_DELIM_CHAR>
-			<DD_SYSTEM_REC id="ddm_table_cols.gms_params010"></DD_SYSTEM_REC>
-			<DD_SYSTEM_ID id="ddm_table_cols.gms_params010"></DD_SYSTEM_ID>
-			<DD_MASK_TYPE id="ddm_table_cols.gms_params010"></DD_MASK_TYPE>
-			<DD_CREATE_DATE id="ddm_table_cols.gms_params010">20150616</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.gms_params010">20150616</DD_LSTREV_DATE>
-			<DD_ATTR_ABLC id="ddm_table_cols.gms_params010"></DD_ATTR_ABLC>
-			<DD_ATTR_ABLV id="ddm_table_cols.gms_params010"></DD_ATTR_ABLV>
-			<DD_ATTR_CPGM id="ddm_table_cols.gms_params010"></DD_ATTR_CPGM>
-			<DD_ATTR_COLW id="ddm_table_cols.gms_params010">0</DD_ATTR_COLW>
-			<DD_ATTR_CTLX id="ddm_table_cols.gms_params010"></DD_ATTR_CTLX>
-			<DD_ATTR_CTLY id="ddm_table_cols.gms_params010"></DD_ATTR_CTLY>
-			<DD_ATTR_CTLW id="ddm_table_cols.gms_params010"></DD_ATTR_CTLW>
-			<DD_ATTR_CTLH id="ddm_table_cols.gms_params010"></DD_ATTR_CTLH>
-			<DD_ATTR_DFLT id="ddm_table_cols.gms_params010"></DD_ATTR_DFLT>
-			<DD_ATTR_DRLE id="ddm_table_cols.gms_params010"></DD_ATTR_DRLE>
-			<DD_ATTR_GHDR id="ddm_table_cols.gms_params010"></DD_ATTR_GHDR>
-			<DD_ATTR_IDEF id="ddm_table_cols.gms_params010"></DD_ATTR_IDEF>
-			<DD_ATTR_LABL id="ddm_table_cols.gms_params010"></DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.gms_params010"></DD_ATTR_LABS>
-			<DD_ATTR_MLAN id="ddm_table_cols.gms_params010">N</DD_ATTR_MLAN>
-			<DD_ATTR_MINL id="ddm_table_cols.gms_params010"></DD_ATTR_MINL>
-			<DD_ATTR_MAXL id="ddm_table_cols.gms_params010"></DD_ATTR_MAXL>
-			<DD_ATTR_MINV id="ddm_table_cols.gms_params010"></DD_ATTR_MINV>
-			<DD_ATTR_MAXV id="ddm_table_cols.gms_params010"></DD_ATTR_MAXV>
-			<DD_ATTR_PROM id="ddm_table_cols.gms_params010">Wait time (in seconds) before process queue again.</DD_ATTR_PROM>
-			<DD_ATTR_PVAL id="ddm_table_cols.gms_params010"></DD_ATTR_PVAL>
-			<DD_ATTR_SLEV id="ddm_table_cols.gms_params010"></DD_ATTR_SLEV>
-			<DD_ATTR_TABG id="ddm_table_cols.gms_params010"></DD_ATTR_TABG>
-			<DD_ATTR_TIND id="ddm_table_cols.gms_params010">5</DD_ATTR_TIND>
-			<DD_ATTR_HELP id="ddm_table_cols.gms_params010"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.gms_params010">WAIT_TIME</SQL_COLUMN_NAME>
-			<DD_ATTR_FONT id="ddm_table_cols.gms_params010"></DD_ATTR_FONT>
-			<DD_ATTR_STYL id="ddm_table_cols.gms_params010"></DD_ATTR_STYL>
-			<DD_ATTR_FTSR id="ddm_table_cols.gms_params010">N</DD_ATTR_FTSR>
+	</ALIAS>
+	<ALIAS id="ddm_column_cpro">
+		<ID id="ddm_column_cpro">DDM_COLUMN_CPRO</ID>
+		<RECORD id="ddm_column_cpro.gms_paramsdb_urlaval">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.gms_paramsdb_urlaval">GMS_PARAMS      </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.gms_paramsdb_urlaval">DB_URL          </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.gms_paramsdb_urlaval">AVAL</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.gms_paramsdb_useraval">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.gms_paramsdb_useraval">GMS_PARAMS      </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.gms_paramsdb_useraval">DB_USER         </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.gms_paramsdb_useraval">AVAL</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.gms_paramsdb_passwordaval">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.gms_paramsdb_passwordaval">GMS_PARAMS      </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.gms_paramsdb_passwordaval">DB_PASSWORD     </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.gms_paramsdb_passwordaval">AVAL</DD_ATTR_CPRO>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_opts">
 		<ID id="ddm_column_opts">DDM_COLUMN_OPTS</ID>
-		<RECORD id="ddm_column_opts.gms_paramsbar_check_y_no">
-			<DD_TABLE_ALIAS id="ddm_column_opts.gms_paramsbar_check_y_no">GMS_PARAMS      </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_opts.gms_paramsbar_check_y_no">BAR_CHECK_Y_N   </DD_DVAR_NAME>
-			<DD_ATTR_OPTS id="ddm_column_opts.gms_paramsbar_check_y_no">O</DD_ATTR_OPTS>
+		<RECORD id="ddm_column_opts.gms_paramswait_timeo">
+			<DD_TABLE_ALIAS id="ddm_column_opts.gms_paramswait_timeo">GMS_PARAMS      </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.gms_paramswait_timeo">WAIT_TIME       </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.gms_paramswait_timeo">O</DD_ATTR_OPTS>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_elements">
@@ -784,55 +787,6 @@
 			<DD_ATTR_STYP id="ddm_elements.name"></DD_ATTR_STYP>
 			<DD_ATTR_STEP id="ddm_elements.name"></DD_ATTR_STEP>
 			<DD_ATTR_FLPT id="ddm_elements.name"></DD_ATTR_FLPT>
-		</RECORD>
-		<RECORD id="ddm_elements.bar_check_y_n">
-			<DD_DATA_NAME id="ddm_elements.bar_check_y_n">BAR_CHECK_Y_N   </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.bar_check_y_n">Checkbox Y/N</DD_DESCRIPTION>
-			<DD_DATA_TYPE id="ddm_elements.bar_check_y_n">C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.bar_check_y_n">1</DD_DATA_LENGTH>
-			<DD_MASK_TYPE id="ddm_elements.bar_check_y_n"></DD_MASK_TYPE>
-			<DD_SYSTEM_REC id="ddm_elements.bar_check_y_n"></DD_SYSTEM_REC>
-			<ASC_COMP_ID id="ddm_elements.bar_check_y_n">01007514</ASC_COMP_ID>
-			<ASC_PROD_ID id="ddm_elements.bar_check_y_n">ADB</ASC_PROD_ID>
-			<LOCALIZATION_EX id="ddm_elements.bar_check_y_n">N</LOCALIZATION_EX>
-			<DD_CREATE_DATE id="ddm_elements.bar_check_y_n">20080829</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.bar_check_y_n">20080829</DD_LSTREV_DATE>
-			<DD_AUTO_COMP id="ddm_elements.bar_check_y_n"></DD_AUTO_COMP>
-			<DD_ATTR_BLNK id="ddm_elements.bar_check_y_n">N</DD_ATTR_BLNK>
-			<DD_ATTR_CDAT id="ddm_elements.bar_check_y_n">Y;N</DD_ATTR_CDAT>
-			<DD_ATTR_CTLW id="ddm_elements.bar_check_y_n"></DD_ATTR_CTLW>
-			<DD_ATTR_CTLH id="ddm_elements.bar_check_y_n"></DD_ATTR_CTLH>
-			<DD_ATTR_CTYP id="ddm_elements.bar_check_y_n">C</DD_ATTR_CTYP>
-			<DD_ATTR_DCOL id="ddm_elements.bar_check_y_n"></DD_ATTR_DCOL>
-			<DD_ATTR_DCOM id="ddm_elements.bar_check_y_n"></DD_ATTR_DCOM>
-			<DD_ATTR_DEXP id="ddm_elements.bar_check_y_n"></DD_ATTR_DEXP>
-			<DD_ATTR_DFLT id="ddm_elements.bar_check_y_n"></DD_ATTR_DFLT>
-			<DD_ATTR_DKNM id="ddm_elements.bar_check_y_n"></DD_ATTR_DKNM>
-			<DD_ATTR_DKEY id="ddm_elements.bar_check_y_n"></DD_ATTR_DKEY>
-			<DD_ATTR_DTAB id="ddm_elements.bar_check_y_n"></DD_ATTR_DTAB>
-			<DD_ATTR_DINQ id="ddm_elements.bar_check_y_n"></DD_ATTR_DINQ>
-			<DD_ATTR_ENCR id="ddm_elements.bar_check_y_n"></DD_ATTR_ENCR>
-			<DD_ATTR_IDEF id="ddm_elements.bar_check_y_n"></DD_ATTR_IDEF>
-			<DD_ATTR_LABL id="ddm_elements.bar_check_y_n">Checkbox Y/N</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_elements.bar_check_y_n">Checkbox Y/N</DD_ATTR_LABS>
-			<DD_ATTR_LDIS id="ddm_elements.bar_check_y_n"></DD_ATTR_LDIS>
-			<DD_ATTR_MAXL id="ddm_elements.bar_check_y_n"></DD_ATTR_MAXL>
-			<DD_ATTR_MAXR id="ddm_elements.bar_check_y_n"></DD_ATTR_MAXR>
-			<DD_ATTR_MAXV id="ddm_elements.bar_check_y_n"></DD_ATTR_MAXV>
-			<DD_ATTR_MINL id="ddm_elements.bar_check_y_n"></DD_ATTR_MINL>
-			<DD_ATTR_MINV id="ddm_elements.bar_check_y_n"></DD_ATTR_MINV>
-			<DD_ATTR_MSKI id="ddm_elements.bar_check_y_n"></DD_ATTR_MSKI>
-			<DD_ATTR_MSKO id="ddm_elements.bar_check_y_n"></DD_ATTR_MSKO>
-			<DD_ATTR_PADC id="ddm_elements.bar_check_y_n"></DD_ATTR_PADC>
-			<DD_ATTR_PADJ id="ddm_elements.bar_check_y_n"></DD_ATTR_PADJ>
-			<DD_ATTR_PREC id="ddm_elements.bar_check_y_n">0</DD_ATTR_PREC>
-			<DD_ATTR_PROM id="ddm_elements.bar_check_y_n"></DD_ATTR_PROM>
-			<DD_ATTR_PVAL id="ddm_elements.bar_check_y_n"></DD_ATTR_PVAL>
-			<DD_ATTR_SDLG id="ddm_elements.bar_check_y_n"></DD_ATTR_SDLG>
-			<DD_ATTR_SLEV id="ddm_elements.bar_check_y_n"></DD_ATTR_SLEV>
-			<DD_ATTR_STYP id="ddm_elements.bar_check_y_n"></DD_ATTR_STYP>
-			<DD_ATTR_STEP id="ddm_elements.bar_check_y_n"></DD_ATTR_STEP>
-			<DD_ATTR_FLPT id="ddm_elements.bar_check_y_n"></DD_ATTR_FLPT>
 		</RECORD>
 		<RECORD id="ddm_elements.wait_time">
 			<DD_DATA_NAME id="ddm_elements.wait_time">WAIT_TIME       </DD_DATA_NAME>
