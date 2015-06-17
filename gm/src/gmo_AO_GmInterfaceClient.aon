@@ -41,23 +41,17 @@ rem ==========================================================================
         field private BBjInt devGmxCustomer% = -1
         field private BBjInt devPushLog% = -1
         field private BBjInt devSQL% = -1
-rem wgh ...
-        field private BBjString gmMasterPw$ = "wgh1Pw"
-rem wgh ...
-        field private BBjString gmMasterUser$ = "wgh1"
-rem wgh ...
-        field private BBjInt gmSessionId% = 49
+        field private BBjString gmMasterPw$ = ""
+        field private BBjString gmMasterUser$ = ""
+        field private BBjInt gmSessionId% = -1
         field private BBjString sqlDb$ = ""
-rem wgh ...
-        field private BBjString sqlPassword$ = "wgh2Pw"
+        field private BBjString sqlPassword$ = ""
         field private BBjString sqlURL$ = ""
-rem wgh ...
-        field private BBjString sqlUser$ = "wgh2"
+        field private BBjString sqlUser$ = ""
         field private BBjString tplGmqCustomer$ = ""
         field private BBjString tplGmxCustomer$ = ""
         field private BBjNumber waitTime = 60
-rem wgh ...
-        field private BBjString webServiceURL$ = "https://bbjserver.basis.com:8443/servlet/ChileCustomer/json/balance?custnum=10"
+        field private BBjString webServiceURL$ = ""
 
         rem /**
         rem  * Constructor.
@@ -66,20 +60,54 @@ rem wgh ...
         method public AO_GMInterfaceClient()
             seterr GMInterfaceClient_error
 
-rem wgh ... Open GMS_PARAMS
-rem wgh ... Open ddm_table_tpls
-rem wgh ... Get template for GMS_PARAMS
-rem wgh ... Read parameters (does NOT depend on firm_id)
-rem wgh ... Initialize field variables 
-rem wgh ... ... gmMasterPw = GM_MASTER_PW
-rem wgh ... ... mMasterUser = GM_MASTER_USER
-rem wgh ... ... sqlDb = SQL_DB_ALIAS
-rem wgh ... ... sqlPassword = SQL_DB_PASSWORD
-rem wgh ... ... sqlURL = SQL_CONNECTION_URL
-rem wgh ... ... sqlUser = SQL_DB_USER
-rem wgh ... ... webServiceURL = WEBSERVICE_URL
-rem wgh ... ... Close GMS_PARAMS
-            
+            rem --- Open gms_params
+            filename$ = "gms_params"
+            devGmsParams = unt
+            open(devGmsParams)stbl("+GMDATA")+filename$
+
+            rem --- Get record template for gms_params
+            tplsChan = unt
+            open(tplsChan)stbl("+DIR_BRD")+"ddm_table_tpls.dat"
+            read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
+            dim tplGmsParams$:table_tpl$
+
+            rem --- Retrieve sysinfo data
+            sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+            dim sysinfo$:sysinfo_template$
+            sysinfo$=stbl("+SYSINFO",err=*next)
+            firm_id$=sysinfo.firm_id$
+
+            rem --- Read GoldMine parameters
+            readrecord(devGmsParams,key=firm_id$)tplGmsParams$
+
+            rem --- Initialize field variables 
+            #webServiceURL$ = cvs(tplGmsParams.webservice_url$,2)
+            #gmMasterUser$ = cvs(tplGmsParams.gm_master_user$,2)
+            #gmMasterPw$ = cvs(tplGmsParams.gm_master_pw$,2)
+            #waitTime = tplGmsParams.wait_time
+            #sqlURL$ = cvs(tplGmsParams.db_url$,2)
+            #sqlDb$ = cvs(tplGmsParams.db_alias$,2)
+            #sqlPassword$ = cvs(tplGmsParams.db_password$,2)
+            #sqlUser$ = cvs(tplGmsParams.db_user$,2)
+
+            rem --- Close gms_params
+            close(devGmsParams,err=*next)
+
+rem wgh ... testing
+call stbl("+DIR_SYP")+"bac_encrypt.bbj","GMS_PARAMS.GM_MASTER_PW","","","D",#gmMasterPw$,pwAfter$,table_chans$[all],status$
+rem    rd_att_col_id$ - <table_id>.<column_id> used as source of encryption password via DDM_TABLE_COLS --> DDM_ELEMENTS --> ADS_CONFIGURE (Optional)
+rem    rd_att_elm_id$ - Element Type ID used as source of encryption password via DDM_ELEMENTS --> ADS_CONFIGURE (Optional)
+rem    rd_att_cfg_id$ - Configuration ID used as source of encryption password via ADS_CONFIGURE (Optional)
+rem    rd_action$- Action to perform (Required)
+rem        E - Encrypt source data
+rem        D - Decrypt source data
+rem    rd_source_data$ - Text string to encrypt/decrypt (Required)
+rem    rd_result_data$ - Text string after encrypt/decrypt (Returned)
+rem    rd_table_chans$[] - Opened table/channels array (Required)
+rem    rd_status$ - Returned status (Returned)
+rem            - Action performed correctly
+rem        CFG - Configuration record missing
+print "pwAfter$="+pwAfter$
             methodret
             
 GMInterfaceClient_error:rem --- Method error trap/handler
@@ -950,10 +978,11 @@ logError_error:rem --- Method error trap/handler
                 #gmLogout()
                 #gmUnloadAPI()
             endif
-            if devErrLog% >= 0 then close(devErrLog%,err=*next)
+            if devSQL% >= 0 then close(devSQL%,err=*next)
             if devGmqCustomer% >= 0 then close(devGmqCustomer%,err=*next)
             if devGmxCustomer% >= 0 then close(devGmxCustomer%,err=*next)
-            if devSQL% >= 0 then close(devSQL%,err=*next)
+            if devErrLog% >= 0 then close(devErrLog%,err=*next)
+            if devPushLog% >= 0 then close(devPushLog%,err=*next)
 
             methodret
             
