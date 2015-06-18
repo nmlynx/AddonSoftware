@@ -33,7 +33,7 @@ rem --- Test database connection
 	db_password$=callpoint!.getColumnData("GMS_PARAMS.DB_PASSWORD")
 
 	java.lang.Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver")
-	connURL$="jdbc:sqlserver://localhost:1433;"
+	connURL$=db_url$+";"
 	connURL$=connURL$+"databaseName="+db_alias$+";"
 	connURL$=connURL$+"user="+db_user$+";"
 	connURL$=connURL$+"password="+db_password$+";"

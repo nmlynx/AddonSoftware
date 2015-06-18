@@ -35,23 +35,23 @@ rem ==========================================================================
     use org.xml.sax.InputSource
 
     class public AO_GMInterfaceClient
-        field private BBjNumber BLOCKSIZE = 2^20
-        field private BBjInt devErrLog% = -1
-        field private BBjInt devGmqCustomer% = -1
-        field private BBjInt devGmxCustomer% = -1
-        field private BBjInt devPushLog% = -1
-        field private BBjInt devSQL% = -1
-        field private BBjString gmMasterPw$ = ""
-        field private BBjString gmMasterUser$ = ""
-        field private BBjInt gmSessionId% = -1
-        field private BBjString sqlDb$ = ""
-        field private BBjString sqlPassword$ = ""
-        field private BBjString sqlURL$ = ""
-        field private BBjString sqlUser$ = ""
-        field private BBjString tplGmqCustomer$ = ""
-        field private BBjString tplGmxCustomer$ = ""
-        field private BBjNumber waitTime = 60
-        field private BBjString webServiceURL$ = ""
+        field protected BBjNumber BLOCKSIZE = 2^20
+        field protected BBjInt devErrLog% = -1
+        field protected BBjInt devGmqCustomer% = -1
+        field protected BBjInt devGmxCustomer% = -1
+        field protected BBjInt devPushLog% = -1
+        field protected BBjInt devSQL% = -1
+        field protected BBjString gmMasterPw$ = ""
+        field protected BBjString gmMasterUser$ = ""
+        field protected BBjInt gmSessionId% = -1
+        field protected BBjString sqlDb$ = ""
+        field protected BBjString sqlPassword$ = ""
+        field protected BBjString sqlURL$ = ""
+        field protected BBjString sqlUser$ = ""
+        field protected BBjString tplGmqCustomer$ = ""
+        field protected BBjString tplGmxCustomer$ = ""
+        field protected BBjNumber waitTime = 60
+        field protected BBjString webServiceURL$ = ""
 
         rem /**
         rem  * Constructor.
@@ -93,21 +93,6 @@ rem ==========================================================================
             rem --- Close gms_params
             close(devGmsParams,err=*next)
 
-rem wgh ... testing
-call stbl("+DIR_SYP")+"bac_encrypt.bbj","GMS_PARAMS.GM_MASTER_PW","","","D",#gmMasterPw$,pwAfter$,table_chans$[all],status$
-rem    rd_att_col_id$ - <table_id>.<column_id> used as source of encryption password via DDM_TABLE_COLS --> DDM_ELEMENTS --> ADS_CONFIGURE (Optional)
-rem    rd_att_elm_id$ - Element Type ID used as source of encryption password via DDM_ELEMENTS --> ADS_CONFIGURE (Optional)
-rem    rd_att_cfg_id$ - Configuration ID used as source of encryption password via ADS_CONFIGURE (Optional)
-rem    rd_action$- Action to perform (Required)
-rem        E - Encrypt source data
-rem        D - Decrypt source data
-rem    rd_source_data$ - Text string to encrypt/decrypt (Required)
-rem    rd_result_data$ - Text string after encrypt/decrypt (Returned)
-rem    rd_table_chans$[] - Opened table/channels array (Required)
-rem    rd_status$ - Returned status (Returned)
-rem            - Action performed correctly
-rem        CFG - Configuration record missing
-print "pwAfter$="+pwAfter$
             methodret
             
 GMInterfaceClient_error:rem --- Method error trap/handler
@@ -190,7 +175,7 @@ launchClient_error:rem --- Method error trap/handler
         rem  * Pushes Addon customers from table GMQ_CUSTOMER to GoldMine database using BBj web service.
         rem  *
         rem  */
-        method private void pushCustomers()
+        method protected void pushCustomers()
             seterr pushCustomers_error
 
             rem --- Make sure the GoldMine XML interface API is loaded and GMQ_CUSTOMER open
@@ -318,7 +303,7 @@ pushCustomers_error:rem --- Method error trap/handler
         rem  * Load the GoldMine XML interface API.
         rem  *
         rem  */
-        method private void gmLoadAPI()
+        method protected void gmLoadAPI()
             seterr gmLoadAPI_error
 
             rem --- Load API as necessary
@@ -326,9 +311,6 @@ pushCustomers_error:rem --- Method error trap/handler
                 aonData! = new Properties()
                 aonData!.setProperty("User",#gmMasterUser$)
                 aonData!.setProperty("Password",#gmMasterPw$)
-rem wgh ... ... SysDir =
-rem wgh ... ... GoldDir =
-rem wgh ... ... ComDir =
                 aonData!.setProperty("SQLUser",#sqlUser$)
                 aonData!.setProperty("SQLPassword",#sqlPassword$)
                 
@@ -361,7 +343,7 @@ gmLoadAPI_error:rem --- Method error trap/handler
         rem  *
         rem  * @return Properties gmData!
         rem  */
-        method private Properties gmWriteContact(Properties aonData!)
+        method protected Properties gmWriteContact(Properties aonData!)
             seterr gmWriteContact_error
 
             xmlRequest$ = #buildXMLRequest("WriteContact", aonData!)
@@ -389,7 +371,7 @@ gmWriteContact_error:rem --- Method error trap/handler
         rem  * Logout of the GoldMine XML interface API.
         rem  *
         rem  */
-        method private void gmLogout()
+        method protected void gmLogout()
             seterr gmLogout_error
 
             aonData! = new Properties()
@@ -418,7 +400,7 @@ gmLogout_error:rem --- Method error trap/handler
         rem  * Unload the GoldMine XML interface API.
         rem  *
         rem  */
-        method private void gmUnloadAPI()
+        method protected void gmUnloadAPI()
             seterr gmUnloadAPI_error
 
             aonData! = new Properties()
@@ -451,7 +433,7 @@ gmUnloadAPI_error:rem --- Method error trap/handler
         rem  *
         rem  * @return BBjString xmlString$
         rem  */
-        method private BBjString buildXMLRequest(BBjString apiFunction$,Properties aonData!)
+        method protected BBjString buildXMLRequest(BBjString apiFunction$,Properties aonData!)
             seterr buildXMLRequest_error
             xmlString$ = ""
 
@@ -523,7 +505,7 @@ buildXMLRequest_error:rem --- Method error trap/handler
         rem  *
         rem  * @return BBjString xmlResponse$
         rem  */
-        method private BBjString postRequest(BBjString xmlRequest$)
+        method protected BBjString postRequest(BBjString xmlRequest$)
             seterr postRequest_error
             xmlResponse$ = ""
 
@@ -566,7 +548,7 @@ postRequest_error:rem --- Method error trap/handler
         rem  *
         rem  * @return Properties props!
         rem  */
-        method private Properties parseXMLResponse(BBjString xmlResponse$)
+        method protected Properties parseXMLResponse(BBjString xmlResponse$)
             seterr parseXMLResponse_error
             props! = new Properties()
 
@@ -625,95 +607,6 @@ postRequest_error:rem --- Method error trap/handler
             methodret props!
             
 parseXMLResponse_error:rem --- Method error trap/handler
-            rd_err_text$="", err_num=err
-            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
-            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-            if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
-            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
-        methodend
-
-        rem /**
-        rem  * Open gmq_customer. Do NOT create it if it doesn't exist.
-        rem  *
-        rem  * @return BBjInt openChannel%
-        rem  */
-        method private BBjInt openGmqCustomer()
-            seterr openGmqCustomer_error
-            openChannel% = #devGmqCustomer%
-
-            if openChannel% < 0 then
-                rem --- Open gmq_customer.
-                filename$ = "gmq_customer"
-                fileChan = unt
-                success = 0
-                open(fileChan,err=*next)stbl("+GMDATA")+filename$; success = 1
-                if success then
-                    rem --- Get record template for gmq_customer
-                    tplsChan = unt
-                    success = 0
-                    open(tplsChan,err=*next)stbl("+DIR_BRD")+"ddm_table_tpls.dat"; success = 1
-                    if success then
-                        read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
-                        if table_tpl$<>"" then
-                            rem --- Hold on to channel and record template for gmq_customer
-                            openChannel% = fileChan
-                            #devGmqCustomer% = openChannel%
-                            #tplGmqCustomer$ = table_tpl$
-                        else
-                            #logError("openGmqCustomer(): Failed to get gmq_customer record template","Error "+str(err)+": "+errmes(-1))
-                        endif
-                    endif
-                else
-                    rem --- Log error
-                    #logError("openGmqCustomer(): Failed to open gmq_customer","Error "+str(err)+": "+errmes(-1))
-                endif
-            endif
-
-            methodret openChannel%
-            
-openGmqCustomer_error:rem --- Method error trap/handler
-            rd_err_text$="", err_num=err
-            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
-            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-            if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
-            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
-        methodend
-
-        rem /**
-        rem  * Open gmx_customer. Need to create it if it doesn't exist.
-        rem  *
-        rem  * @return BBjInt openChannel%
-        rem  */
-        method private BBjInt openGmxCustomer()
-            seterr openGmxCustomer_error
-            openChannel% = #devGmxCustomer%
-
-            if openChannel% < 0 then
-                rem --- Open gmx_customer and get record template. Create file if necessary.
-                num_files=1
-                dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-                open_tables$[1]="GMX_CUSTOMER",open_opts$[1]="OTA"
-
-                call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
-
-                if open_status$ = "" then
-                    rem --- Hold on to channel and record template for gmx_customer
-                    openChannel% = num(open_chans$[1])
-                    #devGmxCustomer% = num(open_chans$[1])
-                    #tplGmxCustomer$ = open_tpls$[1]
-                else
-                    rem --- Log error
-                    #logError("openGmxCustomer(): Failed to open gmx_customer",open_status$)
-                endif
-            endif
-
-            methodret openChannel%
-            
-openGmxCustomer_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
@@ -854,6 +747,71 @@ mapToGoldMineCountry_error:rem --- Method error trap/handler
         methodend
 
         rem /**
+        rem  * Returns true if matching GoldMine contact exists, else returns false.
+        rem  * First checks the gmx_customer cross reference file, then if necessary
+        rem  * GoldMine's CONTACT1 table.
+        rem  *
+        rem  * @param BBjString aonFirmId$
+        rem  * @param BBjString aonCustomerId$
+        rem  * @param BBjString aonCustomerName$
+        rem  * @param BBjString aonContactName$
+        rem  *
+        rem  * @return boolean
+        rem  */
+        method public boolean isGmContact(BBjString aonFirmId$, BBjString aonCustomerId$, BBjString aonCustomerName$, BBjString aonContactName$)
+            seterr isGmContact_error
+            status$ = ""
+
+            rem --- Check if GMX_CUSTOMER has record(s) for the Addon firm_id and customer_id
+            #openGmxCustomer()
+            read(#devGmxCustomer%,key=aonFirmId$+aonCustomerId$,knum="PRIMARY",dom=*next)
+            gmxCustomerKey$ = key(#devGmxCustomer%,end=*next)
+            if pos(aonFirmId$+aonCustomerId$=gmxCustomerKey$)=1 then status$="TRUE"
+
+            rem --- As necessary, check if contact already exists in GoldMine database
+            if status$="" then
+                rem --- Map Addon customer_name and contact_name to GoldMine fields
+                gmProps! = #mapToGoldMine("customer_name", aonCustomerName$)
+                gmUCompanyField$ = gmProps!.getProperty("field2")
+                gmUCompanyValue$ = gmProps!.getProperty("value2")
+                gmProps! = #mapToGoldMine("contact_name", aonContactName$)
+                gmUContactField$ = gmProps!.getProperty("field2")
+                gmUContactValue$ = gmProps!.getProperty("value2")
+                
+                rem --- Build query
+                sql_prep$ = ""
+                sql_prep$ = sql_prep$+"SELECT "+gmUCompanyField$+","+gmUContactField$+" "
+                sql_prep$ = sql_prep$+"FROM CONTACT1 "
+                sql_prep$ = sql_prep$+"WHERE "+gmUCompanyField$+"='"+gmUCompanyValue$+"' "
+                sql_prep$ = sql_prep$+"  AND "+gmUContactField$+"='"+gmUContactValue$+"' "
+                
+                rem --- Query GoldMine database for this company and contact
+                #openSqlConn()
+                sqlprep(#devSQL%)sql_prep$
+                dim read_tpl$:sqltmpl(#devSQL%)
+                sqlexec(#devSQL%)
+                foundContact = 0
+                read_tpl$ = sqlfetch(#devSQL%,end=*next); foundContact = 1
+                if foundContact then status$="TRUE"
+            endif
+            
+            if status$="TRUE" then
+                methodret Boolean.valueOf("true")
+            else
+                methodret Boolean.valueOf("false")
+            endif
+            
+isGmContact_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
         rem  * Starts EM scheduled task for running the interface client to BBj web service on GoldMine server.
         rem  * Allows starting the GoldMine interface with a single client (not multi-threaded).
         rem  *
@@ -881,12 +839,175 @@ startClient_error:rem --- Method error trap/handler
         methodend
 
         rem /**
+        rem  * Close all open channels and connections.
+        rem  *
+        rem  */
+        method protected void close()
+            seterr close_error
+
+            if #gmSessionId% >= 0 then
+                #gmLogout()
+                #gmUnloadAPI()
+            endif
+            if devSQL% >= 0 then close(devSQL%,err=*next)
+            if devGmqCustomer% >= 0 then close(devGmqCustomer%,err=*next)
+            if devGmxCustomer% >= 0 then close(devGmxCustomer%,err=*next)
+            if devErrLog% >= 0 then close(devErrLog%,err=*next)
+            if devPushLog% >= 0 then close(devPushLog%,err=*next)
+
+            methodret
+            
+close_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Open gmq_customer. Do NOT create it if it doesn't exist.
+        rem  *
+        rem  * @return BBjInt openChannel%
+        rem  */
+        method protected BBjInt openGmqCustomer()
+            seterr openGmqCustomer_error
+            openChannel% = #devGmqCustomer%
+
+            if openChannel% < 0 then
+                rem --- Open gmq_customer.
+                filename$ = "gmq_customer"
+                fileChan = unt
+                success = 0
+                open(fileChan,err=*next)stbl("+GMDATA")+filename$; success = 1
+                if success then
+                    rem --- Get record template for gmq_customer
+                    tplsChan = unt
+                    success = 0
+                    open(tplsChan,err=*next)stbl("+DIR_BRD")+"ddm_table_tpls.dat"; success = 1
+                    if success then
+                        read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
+                        if table_tpl$<>"" then
+                            rem --- Hold on to channel and record template for gmq_customer
+                            openChannel% = fileChan
+                            #devGmqCustomer% = openChannel%
+                            #tplGmqCustomer$ = table_tpl$
+                        else
+                            #logError("openGmqCustomer(): Failed to get gmq_customer record template","Error "+str(err)+": "+errmes(-1))
+                        endif
+                    endif
+                else
+                    rem --- Log error
+                    #logError("openGmqCustomer(): Failed to open gmq_customer","Error "+str(err)+": "+errmes(-1))
+                endif
+            endif
+
+            methodret openChannel%
+            
+openGmqCustomer_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Open gmx_customer. Need to create it if it doesn't exist.
+        rem  *
+        rem  * @return BBjInt openChannel%
+        rem  */
+        method protected BBjInt openGmxCustomer()
+            seterr openGmxCustomer_error
+            openChannel% = #devGmxCustomer%
+
+            if openChannel% < 0 then
+                rem --- Open gmx_customer and get record template. Create file if necessary.
+                num_files=1
+                dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                open_tables$[1]="GMX_CUSTOMER",open_opts$[1]="OTA"
+
+                call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
+
+                if open_status$ = "" then
+                    rem --- Hold on to channel and record template for gmx_customer
+                    openChannel% = num(open_chans$[1])
+                    #devGmxCustomer% = num(open_chans$[1])
+                    #tplGmxCustomer$ = open_tpls$[1]
+                else
+                    rem --- Log error
+                    #logError("openGmxCustomer(): Failed to open gmx_customer",open_status$)
+                endif
+            endif
+
+            methodret openChannel%
+            
+openGmxCustomer_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Open SQL connection to GoldMine database.
+        rem  *
+        rem  * @return BBjInt openChannel%
+        rem  */
+        method protected BBjInt openSqlConn()
+            seterr openSqlConn_error
+            openChannel% = #devSQL%
+
+            if openChannel% < 0 then
+                rem --- Get SQL password
+                call stbl("+DIR_SYP")+"bac_encrypt.bbj","GMS_PARAMS.DB_PASSWORD","","","D",#sqlPassword$,pwAfter$,table_chans$[all],status$
+
+                rem --- Open SQL connection using GoldMine connection parameters
+                java.lang.Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver")
+                connURL$ = #sqlURL$+";"
+                connURL$ = connURL$+"databaseName="+#sqlDb$+";"
+                connURL$ = connURL$+"user="+#sqlUser$+";"
+                connURL$=connURL$+"password="+pwAfter$+";"
+                sqlChan=sqlunt
+                success = 0
+                sqlopen(sqlChan,err=*next)connURL$; success = 1
+
+                if success then
+                    rem --- Hold on to channel for SQL connection
+                    openChannel% = sqlChan
+                    #devSQL% = openChannel%
+                else
+                    rem --- Log error
+                    #logError("openSqlConn(): Failed to open SQL connection",open_status$)
+                endif
+            endif
+
+            methodret openChannel%
+            
+openSqlConn_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
         rem  * Log successful pushes of Addon customers to GoldMine database.
         rem  *
         rem  * @param BBjString msg1$
         rem  * @param BBjString msg2$
         rem  */
-        method private void logPush(BBjString msg1$,BBjString msg2$)
+        method protected void logPush(BBjString msg1$,BBjString msg2$)
             seterr logPush_error
 
             rem --- Write messages to push log
@@ -912,7 +1033,7 @@ logPush_error:rem --- Method error trap/handler
         rem  * @param BBjString errMsg1$
         rem  * @param BBjString errMsg2$
         rem  */
-        method private void logError(BBjString errMsg1$,BBjString errMsg2$)
+        method protected void logError(BBjString errMsg1$,BBjString errMsg2$)
             seterr logError_error
 
             rem --- As needed, open error log file
@@ -974,15 +1095,8 @@ logError_error:rem --- Method error trap/handler
         method protected void finalize()
             seterr finalize_error
 
-            if #gmSessionId% >= 0 then
-                #gmLogout()
-                #gmUnloadAPI()
-            endif
-            if devSQL% >= 0 then close(devSQL%,err=*next)
-            if devGmqCustomer% >= 0 then close(devGmqCustomer%,err=*next)
-            if devGmxCustomer% >= 0 then close(devGmxCustomer%,err=*next)
-            if devErrLog% >= 0 then close(devErrLog%,err=*next)
-            if devPushLog% >= 0 then close(devPushLog%,err=*next)
+            rem --- Close all open channels and connections
+            #close()
 
             methodret
             
