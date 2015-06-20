@@ -1,12 +1,12 @@
 rem ==========================================================================
-rem --- gmo_AO_GMInterfaceClient.aon 
-rem --- AO_GMInterfaceClient class (GMInterfaceClient superclass)
+rem --- gmo_AO_GmInterfaceClient.aon 
+rem --- AO_GmInterfaceClient class (GmInterfaceClient superclass)
 rem --- Interface client to BBj web service on GoldMine server.
 rem --- 
 rem --- AddonSoftware Version 15.0
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
-
+    
     use ::ado_file.src::FileObject
 
     use java.io.File
@@ -34,7 +34,7 @@ rem ==========================================================================
     
     use org.xml.sax.InputSource
 
-    class public AO_GMInterfaceClient
+    class public AO_GmInterfaceClient
         field protected BBjNumber BLOCKSIZE = 2^20
         field protected BBjInt devErrLog% = -1
         field protected BBjInt devGmqCustomer% = -1
@@ -57,8 +57,8 @@ rem ==========================================================================
         rem  * Constructor.
         rem  *
         rem  */
-        method public AO_GMInterfaceClient()
-            seterr GMInterfaceClient_error
+        method public AO_GmInterfaceClient()
+            seterr GmInterfaceClient_error
 
             rem --- Open gms_params
             filename$ = "gms_params"
@@ -95,7 +95,7 @@ rem ==========================================================================
 
             methodret
             
-GMInterfaceClient_error:rem --- Method error trap/handler
+GmInterfaceClient_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
@@ -192,7 +192,7 @@ launchClient_error:rem --- Method error trap/handler
                     read(gmqCustomerDev,key="",dom=*next)
                     while 1
                         gmqCustomerKey$ = key(gmqCustomerDev,end=*break)
-                        readrecord(gmqCustomerDev)gmqCustomerTpl$
+                        extractrecord(gmqCustomerDev,err=*continue)gmqCustomerTpl$
                         
                         rem --- Map non-blank fields to GoldMine fields
                         aonData! = new Properties()
@@ -818,13 +818,27 @@ isGmContact_error:rem --- Method error trap/handler
         rem  */
         method public void startClient()
             seterr startClient_error
-
-rem wgh ... per Jeff
-rem wgh ... From BBjAdminBase you can call getTaskQueue() to get started:
-rem wgh ... tq! = api!.getTaskQueue()
-rem wgh ... tg! = tq!.getTaskGroup("MyGroup")
-rem wgh ... tasks! = tg!.getTasks()
-rem wgh ... Then you can iterate over the tasks and call the execute() method on each task.  
+            
+            rem --- Get Barista's BBjAdminBase object for current user
+            barNSAdmin! = BBjAPI().getNamespace("adminobjects","barista",1)
+            barAdmin! = barNSAdmin!.getValue("+bar_admin_"+cvs(stbl("+USER_ID"),11),err=*next)
+            if barAdmin!<>null() then
+                rem --- Locate gmo_GmInterfaceClient.aon in EM's task queue
+                taskQueue! = barAdmin!.getTaskQueue()
+                groupList! = taskQueue!.getTaskGroups()
+                groupIter! = groupList!.iterator()
+                while groupIter!.hasNext()
+                    taskGroup! = groupIter!.next()
+                    taskList! = taskGroup!.getTasks()
+                    taskIter! = taskList!.iterator()
+                    while taskIter!.hasNext()
+                        task! = taskIter!.next()
+                        taskType$ = task!.getTaskTypeName()
+                        details$ = task!.getDetailString()
+                        if pos("gmo_GmInterfaceClient.aon"=details$) then task!.execute()
+                    wend
+                wend
+            endif            
             
             methodret
             
@@ -842,7 +856,7 @@ startClient_error:rem --- Method error trap/handler
         rem  * Close all open channels and connections.
         rem  *
         rem  */
-        method protected void close()
+        method public void close()
             seterr close_error
 
             if #gmSessionId% >= 0 then

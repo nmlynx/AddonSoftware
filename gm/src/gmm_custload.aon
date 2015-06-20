@@ -71,9 +71,9 @@ rem --- GoldMine connection parameters must exist
         gosub disp_message
     endif
     
-    use ::gmo_GMInterfaceClient.aon::GMInterfaceClient
-    declare GMInterfaceClient gmClient!
-    gmClient! = new GMInterfaceClient()
+    use ::gmo_GmInterfaceClient.aon::GmInterfaceClient
+    declare GmInterfaceClient gmClient!
+    gmClient! = new GmInterfaceClient()
     
 rem --- Get customer_id mask
 
@@ -137,7 +137,7 @@ rem --- Read through arm_custmast record for this firm
             rem gmqCustomer.gm_accountno$
             rem gmqCustomer.gm_recid$
             gmqCustomer_key$ = gmqCustomer.firm_id$+gmqCustomer.customer_id$+gmqCustomer.gm_accountno$+gmqCustomer.gm_recid$
-            readrecord(gmqCustomer_dev,key=gmqCustomer_key$)gmqCustomer$
+            extractrecord(gmqCustomer_dev,key=gmqCustomer_key$,dom=*next)gmqCustomer$
             
             if cvs(gmqCustomer.customer_name$,2)<>"" then gmqCustomer.customer_name$ = armCustmast.customer_name$
             if cvs(gmqCustomer.contact_name$,2)<>"" then gmqCustomer.contact_name$ = armCustmast.contact_name$
@@ -173,8 +173,7 @@ rem --- All done
     endif
 
     rem --- Start scheduled GoldMine interface client, and close this instance
-rem wgh ... stopped here
-rem wgh ... Start new GoldMine interface client (D7.1) via GmInterfaceClient.startClient().
+    gmClient!.startClient()
     gmClient!.close()
 
     goto std_exit

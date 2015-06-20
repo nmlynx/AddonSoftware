@@ -1,6 +1,6 @@
 rem ==========================================================================
-rem --- gmo_GMInterfaceClient.aon 
-rem --- GMInterfaceClient class (subclass of AO_GMInterfaceClient)
+rem --- gmo_GmInterfaceClient.aon 
+rem --- GmInterfaceClient class (subclass of AO_GmInterfaceClient)
 rem --- Interface client to BBj web service on GoldMine server.
 rem --- 
 rem --- AddonSoftware Version 15.0
@@ -12,8 +12,8 @@ rem ==========================================================================
 
 rem --- Launch interface client to BBj web service on GoldMine server
 
-    declare GMInterfaceClient gmClient!
-    gmClient! = new GMInterfaceClient()
+    declare GmInterfaceClient gmClient!
+    gmClient! = new GmInterfaceClient()
     gmClient!.launchClient()
     
 done: rem --- All done
@@ -59,10 +59,10 @@ std_exit: rem --- Standard program end (01Mar2006)
 
 rem --- Use statements and declares
 
-    use ::gmo_AO_GMInterfaceClient.aon::AO_GMInterfaceClient
+    use ::gmo_AO_GmInterfaceClient.aon::AO_GmInterfaceClient
 
 rem --- Customized interface client to BBj web service on GoldMine server.
 
-    class public GMInterfaceClient extends AO_GMInterfaceClient
+    class public GmInterfaceClient extends AO_GmInterfaceClient
 
     classend
