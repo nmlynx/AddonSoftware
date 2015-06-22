@@ -71,14 +71,8 @@ rem ==========================================================================
             read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
             dim tplGmsParams$:table_tpl$
 
-            rem --- Retrieve sysinfo data
-            sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-            dim sysinfo$:sysinfo_template$
-            sysinfo$=stbl("+SYSINFO",err=*next)
-            firm_id$=sysinfo.firm_id$
-
             rem --- Read GoldMine parameters
-            readrecord(devGmsParams,key=firm_id$)tplGmsParams$
+            readrecord(devGmsParams,key="GM")tplGmsParams$
 
             rem --- Initialize field variables 
             #webServiceURL$ = cvs(tplGmsParams.webservice_url$,2)
@@ -98,6 +92,7 @@ rem ==========================================================================
 GmInterfaceClient_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -164,6 +159,7 @@ GmInterfaceClient_error:rem --- Method error trap/handler
 launchClient_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -282,6 +278,7 @@ launchClient_error:rem --- Method error trap/handler
                             #logPush(msg1$,msg2$)
                         else
                             rem --- Skip to next GMQ_CUSTOMER record
+                            read(gmqCustomerDev,err=*next)
                         endif
                     wend
                 endif
@@ -292,6 +289,7 @@ launchClient_error:rem --- Method error trap/handler
 pushCustomers_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -329,6 +327,7 @@ pushCustomers_error:rem --- Method error trap/handler
 gmLoadAPI_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -360,6 +359,7 @@ gmLoadAPI_error:rem --- Method error trap/handler
 gmWriteContact_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -389,6 +389,7 @@ gmWriteContact_error:rem --- Method error trap/handler
 gmLogout_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -418,6 +419,7 @@ gmLogout_error:rem --- Method error trap/handler
 gmUnloadAPI_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -491,6 +493,7 @@ gmUnloadAPI_error:rem --- Method error trap/handler
 buildXMLRequest_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -534,6 +537,7 @@ buildXMLRequest_error:rem --- Method error trap/handler
 postRequest_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -609,6 +613,7 @@ postRequest_error:rem --- Method error trap/handler
 parseXMLResponse_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -702,6 +707,7 @@ parseXMLResponse_error:rem --- Method error trap/handler
 mapToGoldMine_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -739,6 +745,7 @@ mapToGoldMine_error:rem --- Method error trap/handler
 mapToGoldMineCountry_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -804,6 +811,7 @@ mapToGoldMineCountry_error:rem --- Method error trap/handler
 isGmContact_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -845,6 +853,7 @@ isGmContact_error:rem --- Method error trap/handler
 startClient_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -874,6 +883,7 @@ startClient_error:rem --- Method error trap/handler
 close_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -923,6 +933,7 @@ close_error:rem --- Method error trap/handler
 openGmqCustomer_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -963,6 +974,7 @@ openGmqCustomer_error:rem --- Method error trap/handler
 openGmxCustomer_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -1008,6 +1020,7 @@ openGmxCustomer_error:rem --- Method error trap/handler
 openSqlConn_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -1034,6 +1047,7 @@ openSqlConn_error:rem --- Method error trap/handler
 logPush_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -1078,12 +1092,12 @@ logPush_error:rem --- Method error trap/handler
                 log_dev = unt
                 open(log_dev,err=*next)log$
                 #devErrLog% = int(log_dev)
-                
-                rem --- Locate end of error log file so new messages are appended
-                while 1
-                    readrecord(#devErrLog%,siz=#BLOCKSIZE,end=*break)
-                wend
             endif
+                
+            rem --- Locate end of error log file so new messages are appended
+            while 1
+                readrecord(#devErrLog%,siz=#BLOCKSIZE,end=*break)
+            wend
 
             rem --- Write error messages to error log
             write(#devErrLog%)"["+DATE(0:"%Yd%Mz%Dz")+"  "+DATE(0:"%Hz%mz")+"]"
@@ -1095,6 +1109,7 @@ logPush_error:rem --- Method error trap/handler
 logError_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            rem #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
@@ -1107,21 +1122,11 @@ logError_error:rem --- Method error trap/handler
         rem  *
         rem  */
         method protected void finalize()
-            seterr finalize_error
 
             rem --- Close all open channels and connections
             #close()
 
             methodret
-            
-finalize_error:rem --- Method error trap/handler
-            rd_err_text$="", err_num=err
-            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
-            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-            if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
-            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
     classend
