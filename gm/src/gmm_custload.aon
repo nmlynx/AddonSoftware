@@ -130,28 +130,25 @@ rem --- Read through arm_custmast record for this firm
             rem --- Queue up new customers/contacts to add to GoldMine database
             status$="Queued"
             
-            rem --- Update existing record in queue
+            rem --- Write record to queue
             dim gmqCustomer$:fattr(gmqCustomer$)
             gmqCustomer.firm_id$ = armCustmast.firm_id$
             gmqCustomer.customer_id$ = armCustmast.customer_id$
             rem gmqCustomer.gm_accountno$
             rem gmqCustomer.gm_recid$
-            gmqCustomer_key$ = gmqCustomer.firm_id$+gmqCustomer.customer_id$+gmqCustomer.gm_accountno$+gmqCustomer.gm_recid$
-            extractrecord(gmqCustomer_dev,key=gmqCustomer_key$,dom=*next)gmqCustomer$
-            
-            if cvs(gmqCustomer.customer_name$,2)<>"" then gmqCustomer.customer_name$ = armCustmast.customer_name$
-            if cvs(gmqCustomer.contact_name$,2)<>"" then gmqCustomer.contact_name$ = armCustmast.contact_name$
-            if cvs(gmqCustomer.phone_no$,2)<>"" then gmqCustomer.phone_no$ = armCustmast.phone_no$
-            if cvs(gmqCustomer.phone_exten$,2)<>"" then gmqCustomer.phone_exten$ = armCustmast.phone_exten$
-            if cvs(gmqCustomer.fax_no$,2)<>"" then gmqCustomer.fax_no$ = armCustmast.fax_no$
-            if cvs(gmqCustomer.addr_line_1$,2)<>"" then gmqCustomer.addr_line_1$ = armCustmast.addr_line_1$
-            if cvs(gmqCustomer.addr_line_2$,2)<>"" then gmqCustomer.addr_line_2$ = armCustmast.addr_line_2$
-            if cvs(gmqCustomer.addr_line_3$,2)<>"" then gmqCustomer.addr_line_3$ = armCustmast.addr_line_3$
-            if cvs(gmqCustomer.city$,2)<>"" then gmqCustomer.city$ = armCustmast.city$
-            if cvs(gmqCustomer.state_code$,2)<>"" then gmqCustomer.state_code$ = armCustmast.state_code$
-            if cvs(gmqCustomer.zip_code$,2)<>"" then gmqCustomer.zip_code$ = armCustmast.zip_code$
-            if cvs(gmqCustomer.cntry_id$,2)<>"" then gmqCustomer.cntry_id$ = armCustmast.cntry_id$
-            if cvs(gmqCustomer.country$,2)<>"" then gmqCustomer.country$ = armCustmast.country$
+            gmqCustomer.customer_name$ = armCustmast.customer_name$
+            gmqCustomer.contact_name$ = armCustmast.contact_name$
+            gmqCustomer.phone_no$ = armCustmast.phone_no$
+            gmqCustomer.phone_exten$ = armCustmast.phone_exten$
+            gmqCustomer.fax_no$ = armCustmast.fax_no$
+            gmqCustomer.addr_line_1$ = armCustmast.addr_line_1$
+            gmqCustomer.addr_line_2$ = armCustmast.addr_line_2$
+            gmqCustomer.addr_line_3$ = armCustmast.addr_line_3$
+            gmqCustomer.city$ = armCustmast.city$
+            gmqCustomer.state_code$ = armCustmast.state_code$
+            gmqCustomer.zip_code$ = armCustmast.zip_code$
+            gmqCustomer.cntry_id$ = armCustmast.cntry_id$
+            gmqCustomer.country$ = armCustmast.country$
             writerecord(gmqCustomer_dev)gmqCustomer$
         endif
 
