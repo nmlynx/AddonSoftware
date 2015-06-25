@@ -1,3 +1,31 @@
+[[GMM_CUSTIMPORT.BSHO]]
+rem --- Define fields expected in the CSV file
+	numFields = 14
+	csvFieldNames! = Array.newInstance(Class.forName("java.lang.String"), numFields)
+	Array.set(csvFieldNames!, 0, "accountno")
+	Array.set(csvFieldNames!, 1, "recid")
+	Array.set(csvFieldNames!, 2, "company")
+	Array.set(csvFieldNames!, 3, "contact")
+	Array.set(csvFieldNames!, 4, "phone1")
+	Array.set(csvFieldNames!, 5, "fax")
+	Array.set(csvFieldNames!, 6, "ext1")
+	Array.set(csvFieldNames!, 7, "address1")
+	Array.set(csvFieldNames!, 8, "address2")
+	Array.set(csvFieldNames!, 9, "address3")
+	Array.set(csvFieldNames!, 10, "city")
+	Array.set(csvFieldNames!, 11, "state")
+	Array.set(csvFieldNames!, 12, "zip")
+	Array.set(csvFieldNames!, 13, "country")
+	callpoint!.setDevObject("csvFieldNames",csvFieldNames!)
+
+	jrFields! = Array.newInstance(Class.forName("net.sf.jasperreports.engine.design.JRDesignField"), numFields)
+	for i = 0 to numFields - 1
+		field! = new JRDesignField()
+		field!.setName(Array.get(csvFieldNames!,i))
+		field!.setValueClassName("java.lang.String")
+		Array.set(jrFields!, i, field!)
+	next i
+	callpoint!.setDevObject("jrFields",jrFields!)
 [[GMM_CUSTIMPORT.ASIZ]]
 rem --- Resize grid
 
@@ -176,10 +204,25 @@ format_grid: rem --- Use Barista program to format the grid
 
 
 build_CSV_vector: rem --- Build csvVect! vector from cvsFile$ to fill the grid
-	csvVect!=SysGUI!.makeVector()
+	csvVect! = SysGUI!.makeVector()
 
-rem wgh ... stopped here
-	
+	rem --- Get fields expected in the CSV file
+	csvFieldNames! = callpoint!.getDevObject("csvFieldNames")
+	jrFields! = callpoint!.getDevObject("jrFields")
+
+	rem --- Parse fields from CSV file
+	inStream! = JRLoader.getLocationInputStream(csvFile$)
+	ds! = new JRCsvDataSource(inStream!)
+	ds!.setRecordDelimiter(System.getProperty("line.separator"))
+	ds!.setColumnNames(csvFieldNames!)
+
+	rem --- Build csvVector! from parsed fields	
+	while ds!.next()
+		for i = 0 to Array.getLength(csvFieldNames!) - 1
+			csvVect!.addItem(cast(BBjString, ds!.getFieldValue(Array.get(jrFields!, i))))
+		next i
+	wend
+
 	return
 
 fill_grid: rem --- Fill the grid with data in csvVect! vector
@@ -190,24 +233,17 @@ rem wgh ... stopped here
 	endif
 
 	return
-
-rem wgh ... CSV file structure
-rem 1 accountno
-rem 2 recid
-rem 3 company
-rem 4 contact
-rem 5 phone1
-rem 6 fax
-rem 7 ext1
-rem 8 address1
-rem 9 address2
-rem 10 address3
-rem 11 city
-rem 12 state
-rem 13 zip
-rem 14 country
-rem wgh ... CSV file structure
 [[GMM_CUSTIMPORT.AWIN]]
+rem --- Needed classes
+	use ::ado_util.src::util
+
+	use java.lang.reflect.Array
+
+	use net.sf.jasperreports.engine.JRField
+	use net.sf.jasperreports.engine.data.JRCsvDataSource
+	use net.sf.jasperreports.engine.design.JRDesignField
+	use net.sf.jasperreports.engine.util.JRLoader
+
 rem --- Add grid to show customers/contacts in CSV file
 	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
 	importGrid! = Form!.addGrid(nxt_ctlID,5,60,1200,300); rem --- ID, x, y, width, height
@@ -222,7 +258,6 @@ rem --- Set callbacks - processed in ACUS callpoint
 	importGrid!.setCallback(importGrid!.ON_GRID_EDIT_STOP,"custom_event")
 
 rem --- Misc other init
-	use ::ado_util.src::util
 	util.resizeWindow(Form!, SysGui!)
 [[GMM_CUSTIMPORT.CSV_FILE.AVAL]]
 rem --- Verify CSV file exists
@@ -231,6 +266,7 @@ rem --- Verify CSV file exists
 	success=0
 	open(testChan,err=*next)csvFile$; success=1
 	if success then
+		close(testChan)
 		gosub build_CSV_vector
 		gosub fill_grid
 	else
