@@ -1,4 +1,11 @@
 [[GMM_CUSTIMPORT.BSHO]]
+rem --- Open/Lock files
+	num_files=2
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="GMX_CUSTOMER",open_opts$[1]="OTA"
+	open_tables$[2]="ARM_CUSTMAST",open_opts$[2]="OTA"
+	gosub open_tables
+
 rem --- Define fields expected in the CSV file
 	numFields = 14
 	csvFieldNames! = Array.newInstance(Class.forName("java.lang.String"), numFields)
@@ -145,19 +152,19 @@ format_grid: rem --- Use Barista program to format the grid
 	column_no = 15
 	attr_grid_col$[column_no,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="CITY"
 	attr_grid_col$[column_no,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_CITY")
-	attr_grid_col$[column_no,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="75"
+	attr_grid_col$[column_no,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="80"
 
 	rem --- GM state
 	column_no = 16
 	attr_grid_col$[column_no,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="STATE"
 	attr_grid_col$[column_no,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_STATE")
-	attr_grid_col$[column_no,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="75"
+	attr_grid_col$[column_no,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="55"
 
 	rem --- GM zip
 	column_no = 17
 	attr_grid_col$[column_no,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="ZIP"
 	attr_grid_col$[column_no,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_ZIP")
-	attr_grid_col$[column_no,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="50"
+	attr_grid_col$[column_no,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="65"
 
 	rem --- GM country
 	column_no = 18
@@ -222,15 +229,133 @@ build_CSV_vector: rem --- Build csvVect! vector from cvsFile$ to fill the grid
 			csvVect!.addItem(cast(BBjString, ds!.getFieldValue(Array.get(jrFields!, i))))
 		next i
 	wend
+	callpoint!.setDevObject("csvVect",csvVect!)
 
 	return
 
 fill_grid: rem --- Fill the grid with data in csvVect! vector
 	importGrid! = callpoint!.getDevObject("importGrid")
+	csvVect! = callpoint!.getDevObject("csvVect")
+
+rem wgh ... probably should have a progress meter for this
+
+	importGrid!.clearMainGrid()
+	if csvVect!.size() then
+		numCsvFields = Array.getLength(callpoint!.getDevObject("csvFieldNames"))
+		numrow=csvVect!.size()/numCsvFields
+		importGrid!.setNumRows(numrow)
+		gmxCustomer_dev=fnget_dev("GMX_CUSTOMER")
+		dim gmxCustomer$:fnget_tpl$("GMX_CUSTOMER")
+		armCustmast_dev=fnget_dev("ARM_CUSTMAST")
+		dim armCustmast$:fnget_tpl$("ARM_CUSTMAST")
+
+		rem --- Get background color for not selectable grid rows
+		RGB$="231,236,255"
+		RGB$=stbl("+GRID_NONEDIT_COLOR",err=*next)
+		gosub get_RGB
+		notSelectableColor! = BBjAPI().getSysGui().makeColor(R,G,B)
+
+		rem --- Get CSV fields for each grid row
+		for i=0 to csvVect!.size()-1 step numCsvFields
+			row=i/numCsvFields
+			customer_id$=""
+			customer_name$=""
+			contact_name$=""
+
+			rem --- Does GMX_CUSTOMER record already exist for this GoldMine customer/contact?
+			xrefExists=0
+			gmAccountno$=pad(csvVect!.getItem(i),20)
+			gmRecid$=pad(csvVect!.getItem(i+1),15)
+			read(gmxCustomer_dev,key=gmAccountno$+gmRecid$,knum="BY_GOLDMINE",dom=*next)
+			gmxCustomer_key$=""
+			gmxCustomer_key$=key(gmxCustomer_dev,end=*next)
+			if pos(gmAccountno$+gmRecid$=gmxCustomer_key$)=1 then
+				rem --- Do not allow selecting GoldMine customers/contacts that have an existing GMX_CUSTOMER record. 
+				rem --- Indicate them by displaying the row in Barista’s +GRID_NONEDIT_COLOR.
+				readrecord(gmxCustomer_dev)gmxCustomer$
+				armCustomer_key$=gmxCustomer.firm_id$+gmxCustomer.customer_id$
+				readrecord(armCustmast_dev,key=armCustomer_key$,dom=*next)armCustmast$; xrefExists=1
+				if xrefExists then
+					customer_id$=armCustmast.customer_id$
+					customer_name$=armCustmast.customer_name$
+					contact_name$=armCustmast.contact_name$
+					importGrid!.setRowBackColor(row, notSelectableColor!)
+					importGrid!.setRowEditable(row,0)
+				endif
+			endif
 
 rem wgh ... stopped here
-	if csvVect!.size() then
+rem wgh ... For GoldMine customers/contacts that have a match in the current firm, but no GMX_CUSTOMER 
+rem wgh ... record, show Addon customer_id, customer_name, and contact_name in bold red.
+			gmCompany$=csvVect!.getItem(i+2)
+			gmContact$=csvVect!.getItem(i+3)
+
+			rem --- Set cell text and properties for this grid row
+			for j=0 to importGrid!.getNumColumns()-1
+				switch j+1
+					case 1; rem --- Checkbox 1 - Add new Addon customer
+					case 2; rem --- Checkbox 2 - Update existing Addon customer
+					case 3; rem --- Checkbox 3 - Primary Addon contact
+						importGrid!.setCellText(row, j, "")
+						importGrid!.setCellStyle(row, j, SysGUI!.GRID_STYLE_UNCHECKED)
+					break
+					case 4; rem --- GM company
+						importGrid!.setCellText(row, j, gmCompany$)
+					break
+					case 5; rem --- GM contact
+						importGrid!.setCellText(row, j, gmContact$)
+					break
+					case 6; rem --- Addon customer_id
+						importGrid!.setCellText(row, j, customer_id$)
+					break
+					case 7; rem ---  Addon customer_name
+						importGrid!.setCellText(row, j, customer_name$)
+					break
+					case 8; rem --- Addon contact_name
+						importGrid!.setCellText(row, j, contact_name$)
+					break
+					case 9; rem ---  GM phone1
+						importGrid!.setCellText(row, j, csvVect!.getItem(i+j-4))
+					break
+					case 10; rem --- GM ext1
+						importGrid!.setCellText(row, j, csvVect!.getItem(i+j-3))
+					break
+					case 11; rem --- GM fax
+						importGrid!.setCellText(row, j, csvVect!.getItem(i+j-5))
+					break
+					case 12; rem --- GM address1
+					case 13; rem --- GM address2
+					case 14; rem --- GM address3
+					case 15; rem --- GM city
+					case 16; rem --- GM state
+					case 17; rem --- GM zip
+					case 18; rem --- GM country
+						importGrid!.setCellText(row, j, csvVect!.getItem(i+j-4))
+					break
+					case 19; rem --- GM accountno
+						importGrid!.setCellText(row, j, gmAccountno$)
+					break
+					case 20; rem --- GM recid
+						importGrid!.setCellText(row, j, gmRecid$)
+					break
+				swend
+			next j
+		next i
 	endif
+
+	return
+
+get_RGB: rem --- Parse Red, Green and Blue segments from RGB$ string
+	rem --- input: RGB$
+	rem --- output: R
+	rem --- output: G
+	rem --- output: B
+
+	comma1=pos(","=RGB$,1,1)
+	comma2=pos(","=RGB$,1,2)
+	R=num(RGB$(1,comma1-1))
+	G=num(RGB$(comma1+1,comma2-comma1-1))
+	B=num(RGB$(comma2+1))
 
 	return
 [[GMM_CUSTIMPORT.AWIN]]

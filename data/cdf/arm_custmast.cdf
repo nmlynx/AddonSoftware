@@ -388,6 +388,18 @@ done_checking:
 	if delete_msg$<>""
 		callpoint!.setMessage("NO_DELETE:"+delete_msg$)
 		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+rem --- If GM installed, remove cross reference(s) to GoldMine
+	if user_tpl.gm_installed$="Y" then
+		gmxCustomer_dev=fnget_dev("GMX_CUSTOMER")
+		dim gmxCustomer$:fnget_tpl$("GMX_CUSTOMER")
+		read(gmxCustomer_dev,key=firm_id$+customer_id$,dom=*next)
+		while 1
+			gmxCustomer_key$=key(gmxCustomer_dev,end=*break)
+			if pos(firm_id$+customer_id$=gmxCustomer_key$)<>1 then break
+			remove(gmxCustomer_dev,key=gmxCustomer_key$)
 	endif
 [[ARM_CUSTMAST.CUSTOMER_NAME.AVAL]]
 rem --- Set Alternate Sequence for new customers
