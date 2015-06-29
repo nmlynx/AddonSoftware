@@ -28,8 +28,7 @@ rem --- If GM installed, update GoldMine database as necessary
 		initQueueRecord$=gmqCustomer$
 
 		rem --- Check if this is a new GoldMine contact
-		declare GmInterfaceClient gmClient!
-		gmClient!=new GmInterfaceClient()
+		gmClient!=callpoint!.getDevObject("gmClient")
 		gmqCustomer_dev=fnget_dev("GMQ_CUSTOMER")
 		if !gmClient!.isGmContact(firm_id$,customer_id$,customer_name$,contact_name$) then
 			rem --- Add new contact to GoldMine database
@@ -67,9 +66,9 @@ rem --- If GM installed, update GoldMine database as necessary
 						gmqCustomer.contact_name$=""
 					endif
 
-					gmProps!=gmClient!.mapToGoldMine("phone_no",callpoint!.getColumnUndoData("ARM_CUSTMAST.PHONE_NO"))
-					if cvs(gmqCustomer.phone_no$,2)=cvs(callpoint!.getColumnUndoData("ARM_CUSTMAST.PHONE_NO"),2) or
-:					cvs(gmProps!.getProperty("value1"),2)<>cvs(contactInfo!.getProperty("PHONE1"),2) then
+					previousPhoneNo$=cvs(callpoint!.getColumnUndoData("ARM_CUSTMAST.PHONE_NO"),2)
+					if cvs(gmqCustomer.phone_no$,2)=previousPhoneNo$ or
+:					previousPhoneNo$<>cvs(gmClient!.mapToAddon("PHONE1",cvs(contactInfo!.getProperty("PHONE1"),2)).getProperty("value1"),2) then
 						gmqCustomer.phone_no$=""
 					endif
 
@@ -79,9 +78,9 @@ rem --- If GM installed, update GoldMine database as necessary
 						gmqCustomer.phone_exten$=""
 					endif
 
-					gmProps!=gmClient!.mapToGoldMine("fax_no",callpoint!.getColumnUndoData("ARM_CUSTMAST.FAX_NO"))
-					if cvs(gmqCustomer.fax_no$,2)=cvs(callpoint!.getColumnUndoData("ARM_CUSTMAST.FAX_NO"),2) or
-:					cvs(gmProps!.getProperty("value1"),2)<>cvs(contactInfo!.getProperty("FAX"),2) then
+					previousFaxNo$=cvs(callpoint!.getColumnUndoData("ARM_CUSTMAST.FAX_NO"),2)
+					if cvs(gmqCustomer.fax_no$,2)=previousFaxNo$ or
+:					previousFaxNo$<>cvs(gmClient!.mapToAddon("FAX",cvs(contactInfo!.getProperty("FAX"),2)).getProperty("value1"),2) then
 						gmqCustomer.fax_no$=""
 					endif
 
@@ -115,9 +114,9 @@ rem --- If GM installed, update GoldMine database as necessary
 						gmqCustomer.state_code$=""
 					endif
 
-					gmProps!=gmClient!.mapToGoldMine("zip_code",callpoint!.getColumnUndoData("ARM_CUSTMAST.ZIP_CODE"))
-					if cvs(gmqCustomer.zip_code$,2)=cvs(callpoint!.getColumnUndoData("ARM_CUSTMAST.ZIP_CODE"),2) or
-:					cvs(gmProps!.getProperty("value1"),2)<>cvs(contactInfo!.getProperty("ZIP"),2) then
+					previousZipCode$=cvs(callpoint!.getColumnUndoData("ARM_CUSTMAST.ZIP_CODE"),2)
+					if cvs(gmqCustomer.zip_code$,2)=previousZipCode$ or
+:					previousZipCode$<>cvs(gmClient!.mapToAddon("ZIP",cvs(contactInfo!.getProperty("ZIP"),2)).getProperty("value1"),2) then
 						gmqCustomer.zip_code$=""
 					endif
 
@@ -395,11 +394,12 @@ rem --- If GM installed, remove cross reference(s) to GoldMine
 	if user_tpl.gm_installed$="Y" then
 		gmxCustomer_dev=fnget_dev("GMX_CUSTOMER")
 		dim gmxCustomer$:fnget_tpl$("GMX_CUSTOMER")
-		read(gmxCustomer_dev,key=firm_id$+customer_id$,dom=*next)
+		read(gmxCustomer_dev,key=firm_id$+cust$,dom=*next)
 		while 1
 			gmxCustomer_key$=key(gmxCustomer_dev,end=*break)
-			if pos(firm_id$+customer_id$=gmxCustomer_key$)<>1 then break
+			if pos(firm_id$+cust$=gmxCustomer_key$)<>1 then break
 			remove(gmxCustomer_dev,key=gmxCustomer_key$)
+		wend
 	endif
 [[ARM_CUSTMAST.CUSTOMER_NAME.AVAL]]
 rem --- Set Alternate Sequence for new customers
@@ -510,9 +510,6 @@ rem --- clear out the contents of the widgets
 	agingBarWidgetControl!=callpoint!.getDevObject("dbBarWidgetControl")
 	agingBarWidgetControl!.setVisible(0)
 [[ARM_CUSTMAST.BSHO]]
-rem --- Class declarations
-	use ::gmo_GmInterfaceClient.aon::GmInterfaceClient
-
 rem --- Open/Lock files
 	dir_pgm$=stbl("+DIR_PGM")
 	sys_pgm$=stbl("+DIR_SYP")
@@ -615,6 +612,11 @@ rem --- Additional/optional opens
 		open_tables$[1]="GMQ_CUSTOMER",open_opts$[1]="OTA"
 		open_tables$[2]="GMX_CUSTOMER",open_opts$[2]="OTA"
 		gosub open_tables
+
+		rem --- Get GoldMine interface client
+		use ::gmo_GmInterfaceClient.aon::GmInterfaceClient
+		gmClient!=new GmInterfaceClient()
+		callpoint!.setDevObject("gmClient",gmClient!)
 	endif
 [[ARM_CUSTMAST.<CUSTOM>]]
 

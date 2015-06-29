@@ -754,6 +754,136 @@ mapToGoldMineCountry_error:rem --- Method error trap/handler
         methodend
 
         rem /**
+        rem  * Returns Addon field and value mapped to GoldMine field.
+        rem  *
+        rem  * @param BBjString gmField$
+        rem  * @param BBjString gmValue$
+        rem  *
+        rem  * @return Properties gmProps!
+        rem  */
+        method public Properties mapToAddon(BBjString gmField$, BBjString gmValue$)
+            seterr mapToAddon_error
+            aonProps! = new Properties()
+
+            switch (BBjAPI().TRUE)
+                case cvs(gmField$,6) = "COMPANY"
+                    aonProps!.setProperty("field1","customer_name")
+                    aonProps!.setProperty("value1",pad(gmValue$,30))
+                    break
+                case cvs(gmField$,6) = "CONTACT"
+                    aonProps!.setProperty("field1","contact_name")
+                    aonProps!.setProperty("value1",pad(gmValue$,20))
+                    break
+                case cvs(gmField$,6) = "PHONE1"
+                    aonProps!.setProperty("field1","phone_no")
+                    phone$=#onlyAlphNumericChars(cvs(gmValue$,2))
+                    if len(phone$)>20 then
+                        aonProps!.setProperty("value1","")
+                    else
+                        aonProps!.setProperty("value1",pad(phone$,20))
+                    endif
+                    break
+                case cvs(gmField$,6) = "EXT1"
+                    aonProps!.setProperty("field1","phone_exten")
+                    if len(gmValue$)>4 then
+                        aonProps!.setProperty("value1","")
+                    else
+                        aonProps!.setProperty("value1",pad(gmValue$,4))
+                    endif
+                    break
+                case cvs(gmField$,6) = "FAX"
+                    aonProps!.setProperty("field1","fax_no")
+                    fax$=#onlyAlphNumericChars(cvs(gmValue$,2))
+                    if len(fax$)>20 then
+                        aonProps!.setProperty("value1","")
+                    else
+                        aonProps!.setProperty("value1",pad(fax$,20))
+                    endif
+                    break
+                case cvs(gmField$,6) = "ADDRESS1"
+                    aonProps!.setProperty("field1","addr_line_1")
+                    aonProps!.setProperty("value1",pad(gmValue$,24))
+                    break
+                case cvs(gmField$,6) = "ADDRESS2"
+                    aonProps!.setProperty("field1","addr_line_2")
+                    aonProps!.setProperty("value1",pad(gmValue$,24))
+                    break
+                case cvs(gmField$,6) = "ADDRESS3"
+                    aonProps!.setProperty("field1","addr_line_3")
+                    aonProps!.setProperty("value1",pad(gmValue$,24))
+                    break
+                case cvs(gmField$,6) = "CITY"
+                    aonProps!.setProperty("field1","city")
+                    aonProps!.setProperty("value1",pad(gmValue$,22))
+                    break
+                case cvs(gmField$,6) = "STATEstate_code"
+rem wgh ... stopped here
+rem wgh ... If 2 chars, use as-is
+rem wgh ... Else, use United State Postal Service 2-letter code or leave blank if no match
+                    aonProps!.setProperty("field1","state_code")
+                    aonProps!.setProperty("value1",pad(gmValue$,2))
+                    break
+                case cvs(gmField$,6) = "ZIP"
+                    aonProps!.setProperty("field1","zip_code")
+                    postal$=#onlyAlphNumericChars(cvs(gmValue$,2))
+                    if len(postal$)>9 then
+                        aonProps!.setProperty("value1","")
+                    else
+                        aonProps!.setProperty("value1",pad(postal$,9))
+                    endif
+                    break
+                case default
+                    rem --- No mapping available/needed
+                    aonProps!.setProperty("field1",gmField$)
+                    aonProps!.setProperty("value1",gmValue$)
+                    break
+            swend
+
+            methodret aonProps!
+            
+mapToAddon_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Removes all non-alphanumeric characters from string.
+        rem  *
+        rem  * @param BBjString in$
+        rem  *
+        rem  * @return BBlString out$
+        rem  */
+        method protected BBjString onlyAlphNumericChars(BBjString in$)
+            seterr onlyAlphNumericChars_error
+            out$=""
+
+            for i=1 to len(in$)
+                x$=in$(i,1)
+                if pos(cvs(x$,4)="0123456789ABCDEFGHIJKLMONOPQRSTUVWXYZ") then
+                    out$=out$+x$
+                endif
+            next i
+
+            methodret out$
+            
+onlyAlphNumericChars_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
         rem  * Returns true if matching GoldMine contact exists, else returns false.
         rem  * First checks the gmx_customer cross reference file, then if necessary
         rem  * GoldMine's CONTACT1 table.

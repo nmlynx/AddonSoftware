@@ -1,4 +1,20 @@
 [[GMM_CUSTIMPORT.BSHO]]
+rem --- Get GoldMine interface client
+	use ::gmo_GmInterfaceClient.aon::GmInterfaceClient
+	gmClient!=new GmInterfaceClient()
+	callpoint!.setDevObject("gmClient",gmClient!)
+
+rem --- Get background color for not selectable grid rows
+	RGB$="231,236,255"
+	RGB$=stbl("+GRID_NONEDIT_COLOR",err=*next)
+	gosub get_RGB
+	callpoint!.setDevObject("notSelectableColor",BBjAPI().getSysGui().makeColor(R,G,B))
+
+rem --- Get RED color
+	RGB$="255,0,0"
+	gosub get_RGB
+	callpoint!.setDevObject("redColor",BBjAPI().getSysGui().makeColor(R,G,B))
+
 rem --- Open/Lock files
 	num_files=2
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
@@ -66,18 +82,18 @@ format_grid: rem --- Use Barista program to format the grid
 	attr_grid_col$[column_no,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]="1"
 	attr_grid_col$[column_no,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="C"
 
-	rem --- Checkbox 2 - Update existing Addon customer
+	rem --- Checkbox 2 - Link to existing Addon customer
 	column_no = 2
 	attr_grid_col$[column_no,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="LINK_CUSTOMER"
-	attr_grid_col$[column_no,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_UPDATE")
-	attr_grid_col$[column_no,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="80"
+	attr_grid_col$[column_no,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_LINK")
+	attr_grid_col$[column_no,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="65"
 	attr_grid_col$[column_no,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]="1"
 	attr_grid_col$[column_no,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="C"
 
-	rem --- Checkbox 3 - Primary Addon contact
+	rem --- Checkbox 3 - Update existing Addon customer+contact
 	column_no = 3
-	attr_grid_col$[column_no,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="THE_CONTACT"
-	attr_grid_col$[column_no,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_PRIMARY")
+	attr_grid_col$[column_no,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="UPDATE_CONTACT"
+	attr_grid_col$[column_no,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_UPDATE")
 	attr_grid_col$[column_no,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="80"
 	attr_grid_col$[column_no,fnstr_pos("MAXL",attr_def_col_str$[0,0],5)]="1"
 	attr_grid_col$[column_no,fnstr_pos("CTYP",attr_def_col_str$[0,0],5)]="C"
@@ -223,6 +239,8 @@ build_CSV_vector: rem --- Build csvVect! vector from cvsFile$ to fill the grid
 	ds!.setRecordDelimiter(System.getProperty("line.separator"))
 	ds!.setColumnNames(csvFieldNames!)
 
+rem wgh ... probably should have a progress meter for this
+
 	rem --- Build csvVector! from parsed fields	
 	while ds!.next()
 		for i = 0 to Array.getLength(csvFieldNames!) - 1
@@ -237,6 +255,7 @@ fill_grid: rem --- Fill the grid with data in csvVect! vector
 	importGrid! = callpoint!.getDevObject("importGrid")
 	csvVect! = callpoint!.getDevObject("csvVect")
 
+rem wgh ... stopped here
 rem wgh ... probably should have a progress meter for this
 
 	importGrid!.clearMainGrid()
@@ -244,16 +263,15 @@ rem wgh ... probably should have a progress meter for this
 		numCsvFields = Array.getLength(callpoint!.getDevObject("csvFieldNames"))
 		numrow=csvVect!.size()/numCsvFields
 		importGrid!.setNumRows(numrow)
+
+		gmClient!=callpoint!.getDevObject("gmClient")
+		notSelectableColor! = callpoint!.getDevObject("notSelectableColor")
+		redColor! = callpoint!.getDevObject("redColor")
+
 		gmxCustomer_dev=fnget_dev("GMX_CUSTOMER")
 		dim gmxCustomer$:fnget_tpl$("GMX_CUSTOMER")
 		armCustmast_dev=fnget_dev("ARM_CUSTMAST")
 		dim armCustmast$:fnget_tpl$("ARM_CUSTMAST")
-
-		rem --- Get background color for not selectable grid rows
-		RGB$="231,236,255"
-		RGB$=stbl("+GRID_NONEDIT_COLOR",err=*next)
-		gosub get_RGB
-		notSelectableColor! = BBjAPI().getSysGui().makeColor(R,G,B)
 
 		rem --- Get CSV fields for each grid row
 		for i=0 to csvVect!.size()-1 step numCsvFields
@@ -274,7 +292,7 @@ rem wgh ... probably should have a progress meter for this
 				rem --- Indicate them by displaying the row in Barista’s +GRID_NONEDIT_COLOR.
 				readrecord(gmxCustomer_dev)gmxCustomer$
 				armCustomer_key$=gmxCustomer.firm_id$+gmxCustomer.customer_id$
-				readrecord(armCustmast_dev,key=armCustomer_key$,dom=*next)armCustmast$; xrefExists=1
+				readrecord(armCustmast_dev,key=armCustomer_key$,knum="PRIMARY",dom=*next)armCustmast$; xrefExists=1
 				if xrefExists then
 					customer_id$=armCustmast.customer_id$
 					customer_name$=armCustmast.customer_name$
@@ -284,11 +302,37 @@ rem wgh ... probably should have a progress meter for this
 				endif
 			endif
 
-rem wgh ... stopped here
-rem wgh ... For GoldMine customers/contacts that have a match in the current firm, but no GMX_CUSTOMER 
-rem wgh ... record, show Addon customer_id, customer_name, and contact_name in bold red.
+			rem --- Is there a matching customer and contact in the current firm?
 			gmCompany$=csvVect!.getItem(i+2)
 			gmContact$=csvVect!.getItem(i+3)
+			if !xrefExists then
+				rem --- First map gmCompany$ to customer_name$, then check arm_custmast
+				matchNoXref=0
+				aonProp!=gmClient!.mapToAddon("COMPANY",csvVect!.getItem(i+2))
+				mappedAonCustomerName$=aonProp!.getProperty("value1")
+				read(armCustmast_dev,key=firm_id$+mappedAonCustomerName$,knum="AO_NAME_CUST",dom=*next)
+				while 1
+					armCustomer_key$=key(armCustmast_dev,end=*break)
+					if pos(firm_id$+mappedAonCustomerName$=armCustomer_key$)<>1 then break
+					readrecord(armCustmast_dev)armCustmast$
+					rem --- Does the mapped contact match for this customer?
+					aonProp!=gmClient!.mapToAddon("CONTACT",csvVect!.getItem(i+3))
+					mappedAonContactName$=aonProp!.getProperty("value1")
+					if cvs(armCustmast.contact_name$,2)=cvs(mappedAonContactName$,2) then
+						rem --- For GoldMine customers/contacts that have a match in the current firm, but no GMX_CUSTOMER 
+						rem --- record, show Addon customer_id, customer_name, and contact_name in red. Disable ADD check box.
+						matchNoXref=1
+						customer_name$=mappedAonCustomerName$
+						contact_name$=mappedAonContactName$
+						importGrid!.setCellForeColor(row,6,redColor!)
+						importGrid!.setCellForeColor(row,7,redColor!)
+						importGrid!.setCellEditable(row,0,0)
+						importGrid!.setCellEditable(row,1,1)
+						importGrid!.setCellEditable(row,2,1)
+					endif
+				wend
+
+			endif
 
 			rem --- Set cell text and properties for this grid row
 			for j=0 to importGrid!.getNumColumns()-1
