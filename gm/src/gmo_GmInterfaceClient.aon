@@ -60,9 +60,16 @@ std_exit: rem --- Standard program end (01Mar2006)
 rem --- Use statements and declares
 
     use ::gmo_AO_GmInterfaceClient.aon::AO_GmInterfaceClient
+    use ::gmo_AO_GmInterfaceClient.aon::AO_SortByCompanyContact
 
 rem --- Customized interface client to BBj web service on GoldMine server.
 
     class public GmInterfaceClient extends AO_GmInterfaceClient
+
+    classend
+    
+rem --- Customized sort for grid rows on gmm_custimport form.
+
+    class public SortByCompanyContact extends AO_SortByCompanyContact
 
     classend

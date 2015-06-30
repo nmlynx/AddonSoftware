@@ -1,6 +1,7 @@
 [[GMM_CUSTIMPORT.BSHO]]
 rem --- Get GoldMine interface client
 	use ::gmo_GmInterfaceClient.aon::GmInterfaceClient
+	use ::gmo_GmInterfaceClient.aon::SortByCompanyContact
 	gmClient!=new GmInterfaceClient()
 	callpoint!.setDevObject("gmClient",gmClient!)
 
@@ -226,8 +227,8 @@ format_grid: rem --- Use Barista program to format the grid
 	return
 
 
-build_CSV_vector: rem --- Build csvVect! vector from cvsFile$ to fill the grid
-	csvVect! = SysGUI!.makeVector()
+build_csv_rows: rem --- Build vector of csv rows for the grid from cvsFile$
+	csvRows! = SysGUI!.makeVector()
 
 	rem --- Get fields expected in the CSV file
 	csvFieldNames! = callpoint!.getDevObject("csvFieldNames")
@@ -239,30 +240,64 @@ build_CSV_vector: rem --- Build csvVect! vector from cvsFile$ to fill the grid
 	ds!.setRecordDelimiter(System.getProperty("line.separator"))
 	ds!.setColumnNames(csvFieldNames!)
 
-rem wgh ... probably should have a progress meter for this
+	rem --- Start Progress Meter
+	process_id$=cvs(sysinfo.task_id$,2)
+	title$=Translate!.getTranslation("AON_PARSE_CSV_FILE")
+	total_recs=Array.getLength(csvFieldNames!)
+	curr_rec=0
+	progress! = bbjAPI().getGroupNamespace()
+	progress!.setValue("+process_task",process_id$+"^C^"+title$+"^^"+str(total_recs)+"^")
+	milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+	if milestone>total_recs/10 then
+		milestone=int(total_recs/10)
+		if milestone<1 then milestone=1
+	endif
 
-	rem --- Build csvVector! from parsed fields	
+	rem --- Build csvRow! from parsed fields	
+	numCsvFields = Array.getLength(csvFieldNames!)
 	while ds!.next()
-		for i = 0 to Array.getLength(csvFieldNames!) - 1
-			csvVect!.addItem(cast(BBjString, ds!.getFieldValue(Array.get(jrFields!, i))))
-		next i
+		rowFields! = SysGUI!.makeVector()
+		for j=0 to numCsvFields-1
+			rowFields!.addItem(cast(BBjString, ds!.getFieldValue(Array.get(jrFields!, j))))
+		next j
+		csvRows!.addItem(rowFields!)
+
+		rem --- Update Progress Meter
+		curr_rec=curr_rec+1
+		if mod(curr_rec,milestone)=0
+			progress!.setValue("+process_task",process_id$+"^U^"+str(curr_rec)+"^")
+		endif
 	wend
-	callpoint!.setDevObject("csvVect",csvVect!)
+	java.util.Collections.sort(csvRows!, new SortByCompanyContact())
+	callpoint!.setDevObject("csvRows",csvRows!)
+
+	rem --- Stop/Delete Progress Meter
+	progress!.setValue("+process_task",process_id$+"^D^")
 
 	return
 
-fill_grid: rem --- Fill the grid with data in csvVect! vector
+fill_grid: rem --- Fill the grid with data in csvRows! vector
 	importGrid! = callpoint!.getDevObject("importGrid")
-	csvVect! = callpoint!.getDevObject("csvVect")
-
-rem wgh ... stopped here
-rem wgh ... probably should have a progress meter for this
+	csvRows! = callpoint!.getDevObject("csvRows")
 
 	importGrid!.clearMainGrid()
-	if csvVect!.size() then
-		numCsvFields = Array.getLength(callpoint!.getDevObject("csvFieldNames"))
-		numrow=csvVect!.size()/numCsvFields
-		importGrid!.setNumRows(numrow)
+	rem SysGUI!.setRepaintEnabled(0) ... not availble in BUI
+	
+	rem --- Start Progress Meter
+	process_id$=cvs(sysinfo.task_id$,2)
+	title$=Translate!.getTranslation("AON_BUILDING_GRID")
+	total_recs=csvRows!.size()
+	curr_rec=0
+	progress! = bbjAPI().getGroupNamespace()
+	progress!.setValue("+process_task",process_id$+"^C^"+title$+"^^"+str(total_recs)+"^")
+	milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+	if milestone>total_recs/10 then
+		milestone=int(total_recs/10)
+		if milestone<1 then milestone=1
+	endif
+
+	if csvRows!.size() then
+		importGrid!.setNumRows(csvRows!.size())
 
 		gmClient!=callpoint!.getDevObject("gmClient")
 		notSelectableColor! = callpoint!.getDevObject("notSelectableColor")
@@ -273,17 +308,28 @@ rem wgh ... probably should have a progress meter for this
 		armCustmast_dev=fnget_dev("ARM_CUSTMAST")
 		dim armCustmast$:fnget_tpl$("ARM_CUSTMAST")
 
+rem wgh ... stopped here
+rem wgh ... When the Addon customer does not exist, and there isn’t a GMX_CUSTOMER record, do not allow
+rem wgh ... the ADD and/or UPDATE check boxes to be checked multiple times when there is more than one 
+rem wgh ... contact for the customer.
+
 		rem --- Get CSV fields for each grid row
-		for i=0 to csvVect!.size()-1 step numCsvFields
-			row=i/numCsvFields
+		for row=0 to csvRows!.size()-1
+			rowFields!=csvRows!.getItem(row)
 			customer_id$=""
 			customer_name$=""
 			contact_name$=""
 
+			rem --- Update Progress Meter
+			curr_rec=row
+			if mod(curr_rec,milestone)=0
+				progress!.setValue("+process_task",process_id$+"^U^"+str(curr_rec)+"^")
+			endif
+
 			rem --- Does GMX_CUSTOMER record already exist for this GoldMine customer/contact?
 			xrefExists=0
-			gmAccountno$=pad(csvVect!.getItem(i),20)
-			gmRecid$=pad(csvVect!.getItem(i+1),15)
+			gmAccountno$=pad(rowFields!.getItem(0),20)
+			gmRecid$=pad(rowFields!.getItem(1),15)
 			read(gmxCustomer_dev,key=gmAccountno$+gmRecid$,knum="BY_GOLDMINE",dom=*next)
 			gmxCustomer_key$=""
 			gmxCustomer_key$=key(gmxCustomer_dev,end=*next)
@@ -303,89 +349,99 @@ rem wgh ... probably should have a progress meter for this
 			endif
 
 			rem --- Is there a matching customer and contact in the current firm?
-			gmCompany$=csvVect!.getItem(i+2)
-			gmContact$=csvVect!.getItem(i+3)
+			gmCompany$=rowFields!.getItem(2)
+			gmContact$=rowFields!.getItem(3)
 			if !xrefExists then
 				rem --- First map gmCompany$ to customer_name$, then check arm_custmast
 				matchNoXref=0
-				aonProp!=gmClient!.mapToAddon("COMPANY",csvVect!.getItem(i+2))
+				aonProp!=gmClient!.mapToAddon("COMPANY",gmCompany$)
 				mappedAonCustomerName$=aonProp!.getProperty("value1")
 				read(armCustmast_dev,key=firm_id$+mappedAonCustomerName$,knum="AO_NAME_CUST",dom=*next)
 				while 1
+					rem --- For GoldMine customers/contacts that have a match in the current firm, but no GMX_CUSTOMER 
+					rem --- record, show Addon customer_id, customer_name, and contact_name in red. Disable ADD check box.
 					armCustomer_key$=key(armCustmast_dev,end=*break)
 					if pos(firm_id$+mappedAonCustomerName$=armCustomer_key$)<>1 then break
 					readrecord(armCustmast_dev)armCustmast$
+					matchNoXref=1
+					customer_id$=armCustmast.customer_id$
+					customer_name$=mappedAonCustomerName$
+					importGrid!.setCellForeColor(row,5,redColor!)
+					importGrid!.setCellForeColor(row,6,redColor!)
+					importGrid!.setCellEditable(row,0,0)
+
 					rem --- Does the mapped contact match for this customer?
-					aonProp!=gmClient!.mapToAddon("CONTACT",csvVect!.getItem(i+3))
+					aonProp!=gmClient!.mapToAddon("CONTACT",gmContact$)
 					mappedAonContactName$=aonProp!.getProperty("value1")
 					if cvs(armCustmast.contact_name$,2)=cvs(mappedAonContactName$,2) then
-						rem --- For GoldMine customers/contacts that have a match in the current firm, but no GMX_CUSTOMER 
-						rem --- record, show Addon customer_id, customer_name, and contact_name in red. Disable ADD check box.
-						matchNoXref=1
-						customer_name$=mappedAonCustomerName$
 						contact_name$=mappedAonContactName$
-						importGrid!.setCellForeColor(row,6,redColor!)
 						importGrid!.setCellForeColor(row,7,redColor!)
-						importGrid!.setCellEditable(row,0,0)
-						importGrid!.setCellEditable(row,1,1)
-						importGrid!.setCellEditable(row,2,1)
 					endif
 				wend
 
+				rem --- Disable UPDATE check box if Addon customer does not exist.
+				if !matchNoXref then
+					importGrid!.setCellEditable(row,0,2)
+				endif
 			endif
 
 			rem --- Set cell text and properties for this grid row
-			for j=0 to importGrid!.getNumColumns()-1
-				switch j+1
-					case 1; rem --- Checkbox 1 - Add new Addon customer
-					case 2; rem --- Checkbox 2 - Update existing Addon customer
-					case 3; rem --- Checkbox 3 - Primary Addon contact
-						importGrid!.setCellText(row, j, "")
-						importGrid!.setCellStyle(row, j, SysGUI!.GRID_STYLE_UNCHECKED)
+			for cell=0 to importGrid!.getNumColumns()-1
+				switch cell
+					case 0; rem --- Checkbox 1 - Add new Addon customer
+					case 1; rem --- Checkbox 2 - Update existing Addon customer
+					case 2; rem --- Checkbox 3 - Primary Addon contact
+						importGrid!.setCellText(row, cell, "")
+						importGrid!.setCellStyle(row, cell, SysGUI!.GRID_STYLE_UNCHECKED)
 					break
-					case 4; rem --- GM company
-						importGrid!.setCellText(row, j, gmCompany$)
+					case 3; rem --- GM company
+						importGrid!.setCellText(row, cell, gmCompany$)
 					break
-					case 5; rem --- GM contact
-						importGrid!.setCellText(row, j, gmContact$)
+					case 4; rem --- GM contact
+						importGrid!.setCellText(row, cell, gmContact$)
 					break
-					case 6; rem --- Addon customer_id
-						importGrid!.setCellText(row, j, customer_id$)
+					case 5; rem --- Addon customer_id
+						importGrid!.setCellText(row, cell, customer_id$)
 					break
-					case 7; rem ---  Addon customer_name
-						importGrid!.setCellText(row, j, customer_name$)
+					case 6; rem ---  Addon customer_name
+						importGrid!.setCellText(row, cell, customer_name$)
 					break
-					case 8; rem --- Addon contact_name
-						importGrid!.setCellText(row, j, contact_name$)
+					case 7; rem --- Addon contact_name
+						importGrid!.setCellText(row, cell, contact_name$)
 					break
-					case 9; rem ---  GM phone1
-						importGrid!.setCellText(row, j, csvVect!.getItem(i+j-4))
+					case 8; rem ---  GM phone1
+						importGrid!.setCellText(row, cell, rowFields!.getItem(cell-4))
 					break
-					case 10; rem --- GM ext1
-						importGrid!.setCellText(row, j, csvVect!.getItem(i+j-3))
+					case 9; rem --- GM ext1
+						importGrid!.setCellText(row, cell, rowFields!.getItem(cell-3))
 					break
-					case 11; rem --- GM fax
-						importGrid!.setCellText(row, j, csvVect!.getItem(i+j-5))
+					case 10; rem --- GM fax
+						importGrid!.setCellText(row, cell, rowFields!.getItem(cell-5))
 					break
-					case 12; rem --- GM address1
-					case 13; rem --- GM address2
-					case 14; rem --- GM address3
-					case 15; rem --- GM city
-					case 16; rem --- GM state
-					case 17; rem --- GM zip
-					case 18; rem --- GM country
-						importGrid!.setCellText(row, j, csvVect!.getItem(i+j-4))
+					case 11; rem --- GM address1
+					case 12; rem --- GM address2
+					case 13; rem --- GM address3
+					case 14; rem --- GM city
+					case 15; rem --- GM state
+					case 16; rem --- GM zip
+					case 17; rem --- GM country
+						importGrid!.setCellText(row, cell, rowFields!.getItem(cell-4))
 					break
-					case 19; rem --- GM accountno
-						importGrid!.setCellText(row, j, gmAccountno$)
+					case 18; rem --- GM accountno
+						importGrid!.setCellText(row, cell, gmAccountno$)
 					break
-					case 20; rem --- GM recid
-						importGrid!.setCellText(row, j, gmRecid$)
+					case 19; rem --- GM recid
+						importGrid!.setCellText(row, cell, gmRecid$)
 					break
 				swend
-			next j
-		next i
+			next cell
+		next row
 	endif
+
+	rem --- Stop/Delete Progress Meter
+	progress!.setValue("+process_task",process_id$+"^D^")
+
+	rem SysGUI!.setRepaintEnabled(1) ... not availble in BUI
 
 	return
 
@@ -436,7 +492,7 @@ rem --- Verify CSV file exists
 	open(testChan,err=*next)csvFile$; success=1
 	if success then
 		close(testChan)
-		gosub build_CSV_vector
+		gosub build_csv_rows
 		gosub fill_grid
 	else
 		msg_id$="AD_FILE_NOT_FOUND"

@@ -1317,3 +1317,38 @@ logError_error:rem --- Method error trap/handler
         methodend
 
     classend
+
+rem /**
+rem  * Sorts rows by company-contact for grid on gmm_custimport form.
+rem  */
+    class public AO_SortByCompanyContact implements java.util.Comparator
+
+        method public static int compare(java.lang.Object o1!, java.lang.Object o2!)
+            v1! = cast(BBjVector, o1!)
+            v2! = cast(BBjVector, o2!)
+            company1$ = cast(BBjString, v1!.getItem(2))
+            company2$ = cast(BBjString, v2!.getItem(2))
+            if company1$=company2$ then
+                contact1$ = cast(BBjString, v1!.getItem(3))
+                contact2$ = cast(BBjString, v2!.getItem(3))
+                if contact1$=contact2$ then
+                    methodret 0
+                else
+                    if contact1$>contact2$ then
+                        methodret +1
+                    else
+                        methodret -1
+                    endif
+                endif
+            else
+                if company1$>company2$ then
+                    methodret +1
+                else
+                    methodret -1
+                endif
+            endif
+
+        methodend
+    
+    classend
+    
