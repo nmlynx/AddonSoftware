@@ -816,7 +816,7 @@ mapToGoldMineCountry_error:rem --- Method error trap/handler
                     aonProps!.setProperty("field1","city")
                     aonProps!.setProperty("value1",pad(gmValue$,22))
                     break
-                case cvs(gmField$,6) = "STATEstate_code"
+                case cvs(gmField$,6) = "STATE"
 rem wgh ... stopped here
 rem wgh ... If 2 chars, use as-is
 rem wgh ... Else, use United State Postal Service 2-letter code or leave blank if no match
@@ -842,6 +842,69 @@ rem wgh ... Else, use United State Postal Service 2-letter code or leave blank i
             methodret aonProps!
             
 mapToAddon_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Returns Addon country field and value mapped to GoldMine COUNTRY field. If the GoldMine COUNTRY is
+        rem  * 2-chars, uses short name for ISO 3166-1 Alpha-2 code or uses 2-char COUNTRY as-is if no match.
+        rem  *
+        rem  * @param BBjString gmValue$
+        rem  *
+        rem  * @return Properties gmProps!
+        rem  */
+        method public Properties mapToAddonCountry(BBjString gmValue$)
+            seterr mapToAddonCountry_error
+            aonProps! = new Properties()
+
+rem wgh ... stopped here
+rem If 2 chars, use short name for ISO 3166-1 Alpha-2 code or use as-is if no match
+rem wgh ... temp code for testing
+aonProps!.setProperty("field1","country")
+aonProps!.setProperty("value1",pad("Unknown Country",24))
+
+            methodret aonProps!
+            
+mapToAddonCountry_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Returns Addon cntry_id field and value mapped to GoldMine COUNTRY field. If the GoldMine COUNTRY is
+        rem  * 2-chars, uses 2-char COUNTRY as-is. Otherwise, uses ISO 3166-1 Alpha-2 code or leaves blank if no match.
+        rem  *
+        rem  * @param BBjString gmValue$
+        rem  *
+        rem  * @return Properties gmProps!
+        rem  */
+        method public Properties mapToAddonCntryId(BBjString gmValue$)
+            seterr mapToAddonCntryId_error
+            aonProps! = new Properties()
+
+rem wgh ... stopped here
+rem If 2 chars, use as-is.
+rem Else, use ISO 3166-1 Alpha-2 code or leave blank if no match
+rem wgh ... temp code for testing
+aonProps!.setProperty("field1","cntry_id")
+aonProps!.setProperty("value1",pad("??",2))
+
+            methodret aonProps!
+            
+mapToAddonCntryId_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
@@ -1326,11 +1389,11 @@ rem  */
         method public static int compare(java.lang.Object o1!, java.lang.Object o2!)
             v1! = cast(BBjVector, o1!)
             v2! = cast(BBjVector, o2!)
-            company1$ = cast(BBjString, v1!.getItem(2))
-            company2$ = cast(BBjString, v2!.getItem(2))
+            company1$ = cvs(cast(BBjString, v1!.getItem(2)),7)
+            company2$ = cvs(cast(BBjString, v2!.getItem(2)),7)
             if company1$=company2$ then
-                contact1$ = cast(BBjString, v1!.getItem(3))
-                contact2$ = cast(BBjString, v2!.getItem(3))
+                contact1$ = cvs(cast(BBjString, v1!.getItem(3)),7)
+                contact2$ = cvs(cast(BBjString, v2!.getItem(3)),7)
                 if contact1$=contact2$ then
                     methodret 0
                 else

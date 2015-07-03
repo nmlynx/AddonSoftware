@@ -7,12 +7,16 @@ rem --- AddonSoftware Version 15.0
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
 
+    use ::gmo_GmInterfaceClient.aon::GmInterfaceClient
+
     setesc std_error
     seterr std_error
 
-rem --- Retrieve the program path
+rem --- Initializations
 
-    pgmdir$=stbl("+DIR_PGM")
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+    dir_syp$=stbl("+DIR_SYP")
+    sysGUI! = BBjAPI().getSysGui()
 
 rem --- Retrieve sysinfo data
 
@@ -44,38 +48,36 @@ rem --- Run Report?
     msg_tokens$[1]=sysinfo.task_desc$
     gosub disp_message
     if msg_opt$<>"Y" then goto std_exit_no_report
-escape; rem wgh ... stopped here
 
 rem --- Open/Lock files
 
-    num_files=3
+    num_files=5
     dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
-    open_tables$[1] ="GMS_PARAMS",    open_opts$[1] = "OTA"
-    open_tables$[2] ="GMQ_CUSTOMER",  open_opts$[2] = "OTA"
-    open_tables$[3] ="ARM_CUSTMAST",  open_opts$[3] = "OTA"
+    open_tables$[1] ="GMX_CUSTOMER",  open_opts$[1] = "OTA"
+    open_tables$[2] ="ARM_CUSTMAST",  open_opts$[2] = "OTA"
+    open_tables$[3] ="ARM_CUSTDET",   open_opts$[3] = "OTA"
+    open_tables$[4] ="ARS_CUSTDFLT",  open_opts$[4] = "OTA"
+    open_tables$[5] ="ARS_CREDIT",    open_opts$[5]="OTA"
     
     gosub open_tables
     
-    gmsParams_dev = num(open_chans$[1])
-    gmqCustomer_dev = num(open_chans$[2])
-    armCustmast_dev = num(open_chans$[3])
+    gmxCustomer_dev = num(open_chans$[1])
+    armCustmast_dev = num(open_chans$[2])
+    armCustdet_dev = num(open_chans$[3])
+    arsCustdflt_dev = num(open_chans$[4])
+    arsCredit_dev = num(open_chans$[5])
     
-    dim gmsParams$:open_tpls$[1]
-    dim gmqCustomer$:open_tpls$[2]
-    dim armCustmast$:open_tpls$[3]
+    dim gmxCustomer$:open_tpls$[1]
+    dim armCustmast$:open_tpls$[2]
+    dim armCustdet$:open_tpls$[3]
+    dim arsCustdflt$:open_tpls$[4]
+    dim arsCredit$:open_tpls$[5]
 
-rem --- GoldMine connection parameters must exist
+rem --- Get parameters for new customer
 
-    findrecord(gmsParams_dev,key="GM",err=std_missing_params)gmsParams$
-    if cvs(gmsParams.webservice_url$,2)="" or cvs(gmsParams.db_url$,2)="" then
-        msg_id$="GM_MISS_CONN_PARAM"
-        gosub disp_message
-    endif
-    
-    use ::gmo_GmInterfaceClient.aon::GmInterfaceClient
-    declare GmInterfaceClient gmClient!
-    gmClient! = new GmInterfaceClient()
-    
+    find record (arsCustdflt_dev,key=firm_id$+"D",err=std_missing_params) arsCustdflt$
+    find record (arsCredit_dev,key=firm_id$+"AR01",err=std_missing_params) arsCredit$                
+
 rem --- Get customer_id mask
 
     call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
@@ -92,12 +94,14 @@ rem --- Document initializations
 
 rem --- Column headings
 
-    columns=3
+    columns=5
     dim columns$[columns,10]
-    columns$[0,0]=Translate!.getTranslation("AON_STATUS"),                               columns$[0,1]="C", columns$[0,2]="8"
-    columns$[1,0]=Translate!.getTranslation("DDM_ELEMENTS-FIRM_ID_ENTRY-DD_ATTR_LABL"),  columns$[1,1]="C", columns$[1,2]="8"
-    columns$[2,0]=Translate!.getTranslation("AON_CUST_NO"),                              columns$[2,1]="C", columns$[2,2]="8"
-    columns$[3,0]=Translate!.getTranslation("AON_CUSTOMER_NAME"),                        columns$[3,1]="C", columns$[3,2]="35"
+    columns$[0,0]=Translate!.getTranslation("AON_STATUS"),                               columns$[0,1]="C", columns$[0,2]="15"
+    columns$[1,0]=Translate!.getTranslation("AON_COMPANY"),                              columns$[1,1]="C", columns$[1,2]="35"
+    columns$[2,0]=Translate!.getTranslation("AON_CONTACT"),                              columns$[2,1]="C", columns$[2,2]="35"
+    columns$[3,0]=Translate!.getTranslation("DDM_ELEMENTS-FIRM_ID_ENTRY-DD_ATTR_LABL"),  columns$[3,1]="C", columns$[3,2]="6"
+    columns$[4,0]=Translate!.getTranslation("AON_CUST_NO"),                              columns$[4,1]="C", columns$[4,2]="8"
+    columns$[5,0]=Translate!.getTranslation("AON_CUSTOMER_NAME"),                        columns$[5,1]="C", columns$[5,2]="30"
 
     call stbl("+DIR_PGM",err=*next)+"adc_docout_adj.aon",columns$[all]
 
@@ -108,71 +112,301 @@ rem --- Report headings
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$ 
 
-rem --- Progress meter
+rem --- Get GoldMine interface client and the import grid
 
-    call pgmdir$+"adc_progress.aon","NC","GMM_CUSTLOAD","","","",0,armCustmast_dev,1,meter_num,status
-    recs=0
+    gmClient!=callpoint!.getDevObject("gmClient")
+    importGrid!=callpoint!.getDevObject("importGrid")
+    companyMap!=new java.util.HashMap()
+    
+rem --- Start progress meter
 
-rem --- Read through arm_custmast record for this firm
+    meter_title$=Translate!.getTranslation("AON_IMPORTING_SELECTED_RECORDS")
+    meter_total_recs=importGrid!.getNumRows()
+    meter_proc_recs=0
+    meter_text$=""
+    meter_action$="WIN-LST-OK"
+    gosub disp_meter
 
-    read(armCustmast_dev,key=firm_id$,dom=*next)
-    while 1
-        armCustmast_key$=key(armCustmast_dev,end=*break)
-        if pos(firm_id$=armCustmast_key$)<>1 then break
-        readrecord(armCustmast_dev)armCustmast$
+rem --- Read through GoldMine import grid processing records for this firm
 
-        call pgmdir$+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
+    for row=0 to importGrid!.getNumRows()-1
+        rem --- Capture cell data for this grid row in local variables
+        addCheckBox=importGrid!.getCellState(row,0)
+        linkCheckBox=importGrid!.getCellState(row,1)
+        updateCheckBox=importGrid!.getCellState(row,2)
+        gmCompany$=importGrid!.getCellText(row,3)
+        gmContact$=importGrid!.getCellText(row,4)
+        aon_firm_id$=firm_id$
+        aon_customer_id$=importGrid!.getCellText(row,5)
+        aon_customer_name$=importGrid!.getCellText(row,6)
+        aon_contact_name$=importGrid!.getCellText(row,7)
+        gmPhone1$=importGrid!.getCellText(row,8)
+        gmExt1$=importGrid!.getCellText(row,9)
+        gmFax$=importGrid!.getCellText(row,10)
+        gmAddress1$=importGrid!.getCellText(row,11)
+        gmAddress2$=importGrid!.getCellText(row,12)
+        gmAddress3$=importGrid!.getCellText(row,13)
+        gmCity$=importGrid!.getCellText(row,14)
+        gmState$=importGrid!.getCellText(row,15)
+        gmZip$=importGrid!.getCellText(row,16)
+        gmCountry$=importGrid!.getCellText(row,17)
+        gmAccountno$=importGrid!.getCellText(row,18)
+        gmRecid$=importGrid!.getCellText(row,19)
 
-        rem --- Skip arm_custmast record if GoldMine contact found
-        if gmClient!.isGmContact(armCustmast.firm_id$,armCustmast.customer_id$,armCustmast.customer_name$,armCustmast.contact_name$) then
-            rem --- Skip customers/contancts already in GoldMine
-            status$="Skipped"
-        else
-            rem --- Queue up new customers/contacts to add to GoldMine database
-            status$="Queued"
-            
-            rem --- Write record to queue
-            dim gmqCustomer$:fattr(gmqCustomer$)
-            gmqCustomer.firm_id$ = armCustmast.firm_id$
-            gmqCustomer.customer_id$ = armCustmast.customer_id$
-            rem gmqCustomer.gm_accountno$
-            rem gmqCustomer.gm_recid$
-            gmqCustomer.customer_name$ = armCustmast.customer_name$
-            gmqCustomer.contact_name$ = armCustmast.contact_name$
-            gmqCustomer.phone_no$ = armCustmast.phone_no$
-            gmqCustomer.phone_exten$ = armCustmast.phone_exten$
-            gmqCustomer.fax_no$ = armCustmast.fax_no$
-            gmqCustomer.addr_line_1$ = armCustmast.addr_line_1$
-            gmqCustomer.addr_line_2$ = armCustmast.addr_line_2$
-            gmqCustomer.addr_line_3$ = armCustmast.addr_line_3$
-            gmqCustomer.city$ = armCustmast.city$
-            gmqCustomer.state_code$ = armCustmast.state_code$
-            gmqCustomer.zip_code$ = armCustmast.zip_code$
-            gmqCustomer.cntry_id$ = armCustmast.cntry_id$
-            gmqCustomer.country$ = armCustmast.country$
-            writerecord(gmqCustomer_dev)gmqCustomer$
+        rem --- Add
+        if addCheckBox then
+            status$=Translate!.getTranslation("AON_ADDED")
+            meter_proc_recs=meter_proc_recs+1
+
+            rem --- Map GoldMine data to Addon
+            dim armCustmast$:fattr(armCustmast$)
+            armCustmast.firm_id$=aon_firm_id$
+            gosub getCustomerId
+            armCustmast.customer_id$=aon_customer_id$
+            aonProps! = gmClient!.mapToAddon("company",gmCompany$)
+            armCustmast.customer_name$=aonProps!.getProperty("value1")
+            aonProps! = gmClient!.mapToAddon("contact",gmContact$)
+            armCustmast.contact_name$=aonProps!.getProperty("value1")
+            aonProps! = gmClient!.mapToAddon("phone1",gmPhone1$)
+            armCustmast.phone_no$=aonProps!.getProperty("value1")
+            aonProps! = gmClient!.mapToAddon("ext1",gmExt1$)
+            armCustmast.phone_exten$=aonProps!.getProperty("value1")
+            aonProps! = gmClient!.mapToAddon("fax",gmFax$)
+            armCustmast.fax_no$=aonProps!.getProperty("value1")
+            aonProps! = gmClient!.mapToAddon("address1",gmAddress1$)
+            armCustmast.addr_line_1$=aonProps!.getProperty("value1")
+            aonProps! = gmClient!.mapToAddon("address2",gmAddress2$)
+            armCustmast.addr_line_2$=aonProps!.getProperty("value1")
+            aonProps! = gmClient!.mapToAddon("address3",gmAddress3$)
+            armCustmast.addr_line_3$=aonProps!.getProperty("value1")
+            aonProps! = gmClient!.mapToAddon("city",gmCity$)
+            armCustmast.city$=aonProps!.getProperty("value1")
+            aonProps! = gmClient!.mapToAddon("state",gmState$)
+            armCustmast.state_code$=aonProps!.getProperty("value1")
+            aonProps! = gmClient!.mapToAddon("zip",gmZip$)
+            armCustmast.zip_code$=aonProps!.getProperty("value1")
+            aonProps! = gmClient!.mapToAddonCntryId(gmCountry$)
+            armCustmast.cntry_id$=aonProps!.getProperty("value1")
+            aonProps! = gmClient!.mapToAddonCountry(gmCountry$)
+            armCustmast.country$=aonProps!.getProperty("value1")
+            armCustmast.opened_date$=date(0:"%Yd%Mz%Dz")
+            armCustmast.retain_cust$="Y"
+            writerecord(armCustmast_dev)armCustmast$
+
+            rem --- Initialize new customer defaults the same as in ARM_CUSTMAST AREC callpoint
+            dim armCustdet$:fattr(armCustdet$)
+            armCustdet.firm_id$=armCustmast.firm_id$
+            armCustdet.customer_id$=armCustmast.customer_id$
+            armCustdet.ar_terms_code$=arsCustdflt.ar_terms_code$
+            armCustdet.ar_dist_code$=arsCustdflt.ar_dist_code$
+            armCustdet.slspsn_code$=arsCustdflt.slspsn_code$
+            armCustdet.disc_code$=arsCustdflt.disc_code$
+            armCustdet.territory$=arsCustdflt.territory$
+            armCustdet.tax_code$=arsCustdflt.tax_code$
+            armCustdet.inv_hist_flg$="Y"
+            if arsCredit$.sys_install$="Y" and arsCredit.hold_new$="Y" 
+                armCustdet.cred_hold$="Y"
+            endif
+            writerecord(armCustdet_dev)armCustdet$
+
+            rem --- Write Addon-GoldMine cross reference record
+            dim gmxCustomer$:fattr(gmxCustomer$)
+            gmxCustomer.firm_id$=armCustmast.firm_id$
+            gmxCustomer.customer_id$=armCustmast.customer_id$
+            gmxCustomer.gm_accountno$=gmAccountno$
+            gmxCustomer.gm_recid$=gmRecid$
+            writerecord(gmxCustomer_dev)gmxCustomer$
+
+            rem --- Update log
+            OutVect!.addItem(status$)
+            OutVect!.addItem(gmCompany$)
+            OutVect!.addItem(gmContact$)
+            OutVect!.addItem(armCustmast.firm_id$)
+            OutVect!.addItem(fnmask$(armCustmast.customer_id$,m0$))
+            OutVect!.addItem(armCustmast.customer_name$)
         endif
 
-rem --- Write customer to log
+        rem --- Link
+        if linkCheckBox then
+            status$=Translate!.getTranslation("AON_LINKED")
+            meter_proc_recs=meter_proc_recs+1
 
-        recs=recs+1
-        OutVect!.addItem(status$)
-        OutVect!.addItem(armCustmast.firm_id$)
-        OutVect!.addItem(fnmask$(armCustmast.customer_id$(1,customer_size),m0$))
-        OutVect!.addItem(armCustmast.customer_name$)
-    wend
+            rem --- Write Addon-GoldMine cross reference record
+            dim gmxCustomer$:fattr(gmxCustomer$)
+            gmxCustomer.firm_id$=aon_firm_id$
+            gosub getCustomerId
+            gmxCustomer.customer_id$=aon_customer_id$
+            gmxCustomer.gm_accountno$=gmAccountno$
+            gmxCustomer.gm_recid$=gmRecid$
+            writerecord(gmxCustomer_dev)gmxCustomer$
+
+            rem --- Update log
+            OutVect!.addItem(status$)
+            OutVect!.addItem(gmCompany$)
+            OutVect!.addItem(gmContact$)
+            OutVect!.addItem(aon_firm_id$)
+            OutVect!.addItem(fnmask$(aon_customer_id$,m0$))
+            OutVect!.addItem(gmCompany$)
+        endif
+
+        rem --- Update
+        if updateCheckBox then
+            status$=Translate!.getTranslation("AON_UPDATED")
+            meter_proc_recs=meter_proc_recs+1
+            
+            rem --- Get existing Addon record
+            dim armCustmast$:fattr(armCustmast$)
+            dim beforeCustmast$:fattr(armCustmast$)
+            foundCustmast=0
+            extractrecord(armCustmast_dev,key=aon_firm_id$+aon_customer_id$,knum="PRIMARY",dom=*next)armCustmast$; foundCustmast=1
+            beforeCustmast$=armCustmast$
+
+            if foundCustmast then
+                rem --- Map non-blank GoldMine data to Addon
+                armCustmast.firm_id$=aon_firm_id$
+                gosub getCustomerId
+                armCustmast.customer_id$=aon_customer_id$
+                aonProps! = gmClient!.mapToAddon("company",gmCompany$)
+                customer_name$=aonProps!.getProperty("value1")
+                if cvs(customer_name$,2)<>"" then armCustmast.customer_name$=customer_name$
+                aonProps! = gmClient!.mapToAddon("contact",gmContact$)
+                contact_name$=aonProps!.getProperty("value1")
+                if cvs(contact_name$,2)<>"" then armCustmast.contact_name$=contact_name$
+                aonProps! = gmClient!.mapToAddon("phone1",gmPhone1$)
+                phone_no$=aonProps!.getProperty("value1")
+                if cvs(phone_no$,2)<>"" then armCustmast.phone_no$=phone_no$
+                aonProps! = gmClient!.mapToAddon("ext1",gmExt1$)
+                phone_exten$=aonProps!.getProperty("value1")
+                if cvs(phone_exten$,2)<>"" then armCustmast.phone_exten$=phone_exten$
+                aonProps! = gmClient!.mapToAddon("fax",gmFax$)
+                fax_no$=aonProps!.getProperty("value1")
+                if cvs(fax_no$,2)<>"" then armCustmast.fax_no$=fax_no$
+                aonProps! = gmClient!.mapToAddon("address1",gmAddress1$)
+                addr_line_1$=aonProps!.getProperty("value1")
+                if cvs(addr_line_1$,2)<>"" then armCustmast.addr_line_1$=addr_line_1$
+                aonProps! = gmClient!.mapToAddon("address2",gmAddress2$)
+                addr_line_2$=aonProps!.getProperty("value1")
+                if cvs(addr_line_2$,2)<>"" then armCustmast.addr_line_2$=addr_line_2$
+                aonProps! = gmClient!.mapToAddon("address3",gmAddress3$)
+                addr_line_3$=aonProps!.getProperty("value1")
+                if cvs(addr_line_3$,2)<>"" then armCustmast.addr_line_3$=addr_line_3$
+                aonProps! = gmClient!.mapToAddon("city",gmCity$)
+                city$=aonProps!.getProperty("value1")
+                if cvs(city$,2)<>"" then armCustmast.city$=city$
+                aonProps! = gmClient!.mapToAddon("state",gmState$)
+                state_code$=aonProps!.getProperty("value1")
+                if cvs(state_code$,2)<>"" then armCustmast.state_code$=state_code$
+                aonProps! = gmClient!.mapToAddon("zip",gmZip$)
+                zip_code$=aonProps!.getProperty("value1")
+                if cvs(zip_code$,2)<>"" then armCustmast.zip_code$=zip_code$
+                aonProps! = gmClient!.mapToAddonCntryId(gmCountry$)
+                cntry_id$=aonProps!.getProperty("value1")
+                if cvs(cntry_id$,2)<>"" then armCustmast.cntry_id$=cntry_id$
+                aonProps! = gmClient!.mapToAddonCountry(gmCountry$)
+                country$=aonProps!.getProperty("value1")
+                if cvs(country$,2)<>"" then armCustmast.country$=country$
+                writerecord(armCustmast_dev)armCustmast$
+    
+                rem --- Write Addon-GoldMine cross reference record
+                dim gmxCustomer$:fattr(gmxCustomer$)
+                gmxCustomer.firm_id$=armCustmast.firm_id$
+                gmxCustomer.customer_id$=armCustmast.customer_id$
+                gmxCustomer.gm_accountno$=gmAccountno$
+                gmxCustomer.gm_recid$=gmRecid$
+                writerecord(gmxCustomer_dev)gmxCustomer$
+            endif
+
+            rem --- Update log
+            OutVect!.addItem(status$)
+            OutVect!.addItem(gmCompany$)
+            OutVect!.addItem(gmContact$)
+            OutVect!.addItem(armCustmast.firm_id$)
+            OutVect!.addItem(fnmask$(armCustmast.customer_id$,m0$))
+            OutVect!.addItem(armCustmast.customer_name$)
+            if foundCustmast then
+                rem --- Show updated fields Before and After
+                OutVect!.addItem("")
+                OutVect!.addItem(Translate!.getTranslation("AON_BEFORE")+$00$+"CB")
+                OutVect!.addItem(Translate!.getTranslation("AON_AFTER")+$00$+"CB")
+                ignore=fnblank(3)
+                
+                rem --- Loop thru beforeCustmast$ and report what was changed in armCustmast$
+                fieldList$=fattr(beforeCustmast$,"")
+                while len(fieldList$)>0
+                    xpos=pos($0A$=fieldList$)
+                    field$=fieldList$(1,xpos-1)
+                    fieldList$=fieldList$(xpos+1)
+                    
+                    rem --- Fields we are interested in are all character fields
+                    wk$=fattr(beforeCustmast$,field$)
+                    if dec(wk$(1,1))<>1 then continue
+
+                    rem --- Report changes
+                    before$=field(beforeCustmast$,field$)
+                    after$=field(armCustmast$,field$)
+                    if after$<>before$ then
+                        OutVect!.addItem(field$+":"+$00$+"R")
+                        OutVect!.addItem(before$)
+                        OutVect!.addItem(after$)
+                        ignore=fnblank(3)
+                    endif
+                wend
+                
+                ignore=fnblank_line(void)
+            else
+                OutVect!.addItem(Translate!.getTranslation("AON_ERROR")+":"+$00$+"RB")
+                OutVect!.addItem(Translate!.getTranslation("AON_EXISTING_CUSTOMER_RECORD_NOT_FOUND")+$00$+"B")
+                ignore=fnblank(4)
+                
+                ignore=fnblank_line(void)
+            endif
+        endif
+
+        rem --- Skip
+        if addCheckBox+linkCheckBox+updateCheckBox=0 then
+            status$=Translate!.getTranslation("AON_SKIPPED")
+
+            rem --- Update log
+            OutVect!.addItem(status$)
+            OutVect!.addItem(gmCompany$)
+            OutVect!.addItem(gmContact$)
+            OutVect!.addItem(aon_firm_id$)
+            if cvs(aon_customer_id$,2)="" then
+                OutVect!.addItem(aon_customer_id$)
+            else
+                OutVect!.addItem(fnmask$(aon_customer_id$,m0$))
+            endif
+            OutVect!.addItem(aon_customer_name$)
+    
+            rem --- Update companyMap! as necessary
+            if cvs(aon_customer_id$,2)<>"" and !companyMap!.containsKey(gmCompany$) then
+                companyMap!.put(gmCompany$,aon_customer_id$)
+            endif
+        endif
+        
+        rem --- Increment progress meter
+        meter_text$=status$+" ... "+gmCompany$
+        meter_action$="MTR-LST"
+        gosub disp_meter
+    next row
 
 rem --- All done
 
-    if recs=0
-        msg_id$="DOC_OUTPUT_NODATA"
-        gosub disp_message
-        goto std_exit_no_report
+    if meter_proc_recs=0 then
+        ignore=fnblank_line(void)
+        
+        OutVect!.addItem(Translate!.getTranslation("AON_NO_RECORDS_SELECTED_FOR_IMPORTING")+$00$+"B")
+        ignore=fnblank(5)
     endif
 
-    rem --- Start scheduled GoldMine interface client, and close this instance
-    gmClient!.startClient()
-    gmClient!.close()
+    rem --- Stop progress meter
+    meter_text$=""
+    meter_proc_recs=meter_total_recs
+    meter_action$="LST-END"
+    gosub disp_meter
+
+    rem --- Enable DocOut special formatting
+    out_action$="FORMAT"
 
     goto std_exit
 
@@ -203,6 +437,51 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
         if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
         return str(q1$:q2$)
     fnend
+
+getCustomerId: rem --- Gets existing Addon Customer ID, or assigns a new one, for the GoldMine company
+    rem ... in: gmCompany$
+    rem ... in/out: aon_customer_id$
+
+    rem --- Already have Addon customer ID?
+    if cvs(aon_customer_id$,2)="" then
+        if companyMap!.containsKey(gmCompany$) then
+            rem --- Get existing Addon customer ID
+            aon_customer_id$=cast(BBjString, companyMap!.get(gmCompany$))
+        else
+            rem --- Get new Addon customer ID
+            call stbl("+DIR_SYP")+"bas_sequences.bbj","CUSTOMER_ID",aon_customer_id$,rd_table_chans$[all],"QUIET"
+        endif
+    endif
+    
+    rem --- Update companyMap! as necessary
+    if !companyMap!.containsKey(gmCompany$) then
+        companyMap!.put(gmCompany$,aon_customer_id$)
+    endif
+        
+    return
+    
+disp_meter:rem --- Display Progress Meter
+
+    rem --- sysGUI! is not declared in bam_prog_bar.bbj, so can't declare it here
+    rem declare BBjSysGui sysGUI!
+
+    rem --- rdForm! is not declared in bam_prog_bar.bbj, so can't declare it here
+    rem declare BBjTopLevelWindow rdForm!
+
+    rem --- meterWin! is not declared in bam_prog_bar.bbj, so can't declare it here
+    rem declare BBjTopLevelWindow meterWin!
+
+    call stbl("+DIR_SYP")+"bam_prog_bar.bbj",
+:       sysGUI!,
+:       rdForm!,
+:       meterWin!,
+:       meter_title$,
+:       meter_total_recs,
+:       meter_proc_recs,
+:       meter_text$,
+:       meter_action$
+
+    return
     
 open_tables:rem --- Open Tables
 

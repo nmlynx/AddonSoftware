@@ -1,3 +1,54 @@
+[[GMM_CUSTIMPORT.ACUS]]
+rem --- Process custom event
+
+rem This routine is executed when callbacks have been set to run a 'custom event'.
+rem Analyze gui_event$ and notice$ to see which control's callback triggered the event, and what kind of event it is.
+rem See basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info.
+
+	dim gui_event$:tmpl(gui_dev)
+	dim notify_base$:noticetpl(0,0)
+	gui_event$=SysGUI!.getLastEventString()
+	ctl_ID=dec(gui_event.ID$)
+
+	if gui_event.code$="N"
+		notify_base$=notice(gui_dev,gui_event.x%)
+		dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
+		notice$=notify_base$
+	endif
+
+	rem --- Edit app grid
+	if ctl_ID=num(callpoint!.getDevObject("importGridCtlID")) then
+
+		e!=SysGUI!.getLastEvent()
+		importGrid!=callpoint!.getDevObject("importGrid")
+rem wgh ... stopped here
+rem wgh ... 		appRowVect!=callpoint!.getDevObject("appRowVect")
+rem wgh ... 		app_grid_def_cols=num(callpoint!.getDevObject("app_grid_def_cols"))
+rem wgh ... 		index=e!.getRow()*app_grid_def_cols
+
+		switch notice.code
+			case 12; rem --- ON_GRID_KEY_PRESS
+				rem ---  Allow space-bar toggle of checkboxes
+				if (e!.getColumn()=2 or e!.getColumn()=3) and notice.wparam=32 then
+					onoff=iff(importGrid!.getCellState(e!.getRow(),e!.getColumn()),0,1)
+rem wgh ... 					gosub update_app_grid
+				endif
+			break
+			case 30; rem --- ON_GRID_CHECK_ON and ON_GRID_CHECK_OFF
+				rem --- isChecked() is the state when event sent before control is updated,
+				rem --- so use !isChecked() to get current state of control
+				if e!.getColumn()=2 or e!.getColumn()=3 then
+					onoff=!e!.isChecked()
+rem wgh ... 					gosub update_app_grid
+				endif
+			break
+		swend
+	endif
+[[GMM_CUSTIMPORT.ASVA]]
+rem --- Make sure we get all entries in the grid by setting focus on some control besides the grid
+
+	ctl!=callpoint!.getControl("GMM_CUSTIMPORT.CSV_FILE")
+	ctl!.focus()
 [[GMM_CUSTIMPORT.BSHO]]
 rem --- Get GoldMine interface client
 	use ::gmo_GmInterfaceClient.aon::GmInterfaceClient
@@ -60,12 +111,13 @@ rem --- Resize grid
 	gridXpos=importGrid!.getX()
 	availableHeight=formHeight-gridYpos
 	gridHeight=availableHeight-5
-rem	appHeight=int((availableHeight-15)/4)
 
 	importGrid!.setSize(formWidth-2*gridXpos,gridHeight)
 	importGrid!.setFitToGrid(1)
 [[GMM_CUSTIMPORT.<CUSTOM>]]
+rem ==========================================================================
 format_grid: rem --- Use Barista program to format the grid
+rem ==========================================================================
 	importGridCols = 20
 	importGridRows = 15
 	callpoint!.setDevObject("importGridCols",importGridCols)
@@ -226,8 +278,9 @@ format_grid: rem --- Use Barista program to format the grid
 
 	return
 
-
+rem ==========================================================================
 build_csv_rows: rem --- Build vector of csv rows for the grid from cvsFile$
+rem ==========================================================================
 	csvRows! = SysGUI!.makeVector()
 
 	rem --- Get fields expected in the CSV file
@@ -276,7 +329,9 @@ build_csv_rows: rem --- Build vector of csv rows for the grid from cvsFile$
 
 	return
 
+rem ==========================================================================
 fill_grid: rem --- Fill the grid with data in csvRows! vector
+rem ==========================================================================
 	importGrid! = callpoint!.getDevObject("importGrid")
 	csvRows! = callpoint!.getDevObject("csvRows")
 
@@ -389,8 +444,8 @@ rem wgh ... contact for the customer.
 			for cell=0 to importGrid!.getNumColumns()-1
 				switch cell
 					case 0; rem --- Checkbox 1 - Add new Addon customer
-					case 1; rem --- Checkbox 2 - Update existing Addon customer
-					case 2; rem --- Checkbox 3 - Primary Addon contact
+					case 1; rem --- Checkbox 2 - Link to existing Addon customer
+					case 2; rem --- Checkbox 3 - Update existing Addon customer+contact
 						importGrid!.setCellText(row, cell, "")
 						importGrid!.setCellStyle(row, cell, SysGUI!.GRID_STYLE_UNCHECKED)
 					break
@@ -445,17 +500,86 @@ rem wgh ... contact for the customer.
 
 	return
 
+rem ==========================================================================
 get_RGB: rem --- Parse Red, Green and Blue segments from RGB$ string
 	rem --- input: RGB$
 	rem --- output: R
 	rem --- output: G
 	rem --- output: B
-
+rem ==========================================================================
 	comma1=pos(","=RGB$,1,1)
 	comma2=pos(","=RGB$,1,2)
 	R=num(RGB$(1,comma1-1))
 	G=num(RGB$(comma1+1,comma2-comma1-1))
 	B=num(RGB$(comma2+1))
+
+	return
+
+rem ==========================================================================
+update_app_grid: rem --- Update app grid row when checkboxes are checked/unchecked
+	rem --- input: e!
+	rem --- input: importGrid!
+	rem --- input: appRowVect!
+	rem --- input: onoff
+rem ==========================================================================
+rem wgh ... stopped here
+return; rem wgh ... testing
+	rem SysGUI!.setRepaintEnabled(0) ... not availble in BUI
+    	app_grid_def_cols=callpoint!.getDevObject("app_grid_def_cols")
+	index=e!.getRow()*app_grid_def_cols
+
+	rem --- Install checkbox
+	if e!.getColumn()=2 then
+		if onoff then
+			rem --- Checked
+			importGrid!.setCellStyle(e!.getRow(),2,SysGUI!.GRID_STYLE_CHECKED); rem Install
+			sourceDir$=appRowVect!.get(index+4)
+			importGrid!.setCellText(e!.getRow(),4,sourceDir$); rem Source
+
+			rem --- Update appRowVect! for checked install
+			appRowVect!.removeItem(index+2)
+			appRowVect!.insertItem(index+2, "y"); rem Install
+			appRowVect!.removeItem(index+4)
+			appRowVect!.insertItem(index+4, sourceDir$); rem Source
+		else
+			rem --- Unchecked
+			importGrid!.setCellStyle(e!.getRow(),2,SysGUI!.GRID_STYLE_UNCHECKED); rem Install
+
+			rem --- Update appRowVect! for unchecked install
+			appRowVect!.removeItem(index+2)
+			appRowVect!.insertItem(index+2, "n"); rem Install
+		endif
+	endif
+
+	rem --- Copy checkbox
+	if e!.getColumn()=3 then
+		if onoff then
+			rem --- Checked
+			importGrid!.setCellStyle(e!.getRow(),3,SysGUI!.GRID_STYLE_CHECKED); rem Copy
+			sourceDir$=appRowVect!.get(index+4)
+			importGrid!.setCellText(e!.getRow(),5,targetDir$); rem Target
+			importGrid!.setCellEditable(e!.getRow(),5,1); rem Target
+
+			rem --- Update appRowVect! for checked copy
+			appRowVect!.removeItem(index+3)
+			appRowVect!.insertItem(index+3, "y"); rem Copy
+			appRowVect!.removeItem(index+5)
+			appRowVect!.insertItem(index+5, targetDir$); rem Target
+		else
+			rem --- Unchecked
+			importGrid!.setCellStyle(e!.getRow(),3,SysGUI!.GRID_STYLE_UNCHECKED); rem Copy
+			importGrid!.setCellText(e!.getRow(),5,""); rem Target
+			importGrid!.setCellEditable(e!.getRow(),5,0); rem Target
+
+			rem --- Update appRowVect! for unchecked copy
+			appRowVect!.removeItem(index+3)
+			appRowVect!.insertItem(index+3, "n"); rem Copy
+			appRowVect!.removeItem(index+5)
+			appRowVect!.insertItem(index+5, ""); rem Target
+		endif
+	endif
+
+	rem SysGUI!.setRepaintEnabled(1) ... not availble in BUI
 
 	return
 [[GMM_CUSTIMPORT.AWIN]]
@@ -487,20 +611,27 @@ rem --- Misc other init
 [[GMM_CUSTIMPORT.CSV_FILE.AVAL]]
 rem --- Verify CSV file exists
 	csvFile$=callpoint!.getUserInput()
-	testChan=unt
-	success=0
-	open(testChan,err=*next)csvFile$; success=1
-	if success then
-		close(testChan)
-		gosub build_csv_rows
-		gosub fill_grid
-	else
-		msg_id$="AD_FILE_NOT_FOUND"
-		dim msg_tokens$[1]
-		msg_tokens$[1]=csvFile$
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-	endif 
+	previousCsvFile$=callpoint!.getDevObject("previousCsvFile")
+	if csvFile$<>previousCsvFile$ then
+		testChan=unt
+		success=0
+		open(testChan,err=*next)csvFile$; success=1
+		if success then
+			callpoint!.setDevObject("previousCsvFile",csvFile$)
+			close(testChan)
+			gosub build_csv_rows
+			gosub fill_grid
+		else
+			msg_id$="AD_FILE_NOT_FOUND"
+			dim msg_tokens$[1]
+			msg_tokens$[1]=csvFile$
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
 [[GMM_CUSTIMPORT.AREC]]
 rem --- Initialize firm to current firm
 	callpoint!.setColumnData("GMM_CUSTIMPORT.FIRM_ID",firm_id$,1)
+
+rem --- Initialize previous CSV filename
+	callpoint!.setDevObject("previousCsvFile","")
