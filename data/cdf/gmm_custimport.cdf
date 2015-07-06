@@ -324,6 +324,10 @@ rem ==========================================================================
 	java.util.Collections.sort(csvRows!, new SortByCompanyContact())
 	callpoint!.setDevObject("csvRows",csvRows!)
 
+	rem --- Close resources
+	ds!.close()
+	inStream!.close()
+
 	rem --- Stop/Delete Progress Meter
 	progress!.setValue("+process_task",process_id$+"^D^")
 

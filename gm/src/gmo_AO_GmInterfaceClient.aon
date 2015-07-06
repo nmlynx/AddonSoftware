@@ -12,6 +12,8 @@ rem ==========================================================================
     use java.io.File
     use java.io.StringReader
     use java.io.StringWriter
+    use java.lang.reflect.Array
+    use java.net.URLEncoder
     use java.util.Properties
     
     use javax.xml.parsers.DocumentBuilder
@@ -25,14 +27,17 @@ rem ==========================================================================
     use org.apache.commons.httpclient.HttpClient
     use org.apache.commons.httpclient.HttpStatus
     use org.apache.commons.httpclient.methods.PostMethod
-
     use org.w3c.dom.Attr
     use org.w3c.dom.Document
     use org.w3c.dom.Element
     use org.w3c.dom.Node
     use org.w3c.dom.NodeList
-    
     use org.xml.sax.InputSource
+
+    use net.sf.jasperreports.engine.JRField
+    use net.sf.jasperreports.engine.data.JRCsvDataSource
+    use net.sf.jasperreports.engine.design.JRDesignField
+    use net.sf.jasperreports.engine.util.JRLoader
 
     class public AO_GmInterfaceClient
         field protected BBjNumber BLOCKSIZE = 2^20
@@ -41,6 +46,7 @@ rem ==========================================================================
         field protected BBjInt devGmxCustomer% = -1
         field protected BBjInt devPushLog% = -1
         field protected BBjInt devSQL% = -1
+        field protected Properties countryProps! = new Properties()
         field protected BBjString gmMasterPw$ = ""
         field protected BBjString gmMasterUser$ = ""
         field protected BBjInt gmSessionId% = -1
@@ -48,6 +54,7 @@ rem ==========================================================================
         field protected BBjString sqlPassword$ = ""
         field protected BBjString sqlURL$ = ""
         field protected BBjString sqlUser$ = ""
+        field protected Properties stateProps! = new Properties()
         field protected BBjString tplGmqCustomer$ = ""
         field protected BBjString tplGmxCustomer$ = ""
         field protected BBjNumber waitTime = 60
@@ -517,7 +524,7 @@ buildXMLRequest_error:rem --- Method error trap/handler
 
             rem --- Create instance of PostMethod
             method! = new PostMethod(#webServiceURL$)
-            method!.addParameter("XML", xmlRequest$)
+            method!.addParameter("XML", URLEncoder.encode(xmlRequest$,"UTF-8"))
 
             rem --- Tell HttpClient to execute the PostMethod
             sc% = client!.executeMethod(method!)
@@ -817,11 +824,19 @@ mapToGoldMineCountry_error:rem --- Method error trap/handler
                     aonProps!.setProperty("value1",pad(gmValue$,22))
                     break
                 case cvs(gmField$,6) = "STATE"
-rem wgh ... stopped here
-rem wgh ... If 2 chars, use as-is
-rem wgh ... Else, use United State Postal Service 2-letter code or leave blank if no match
                     aonProps!.setProperty("field1","state_code")
-                    aonProps!.setProperty("value1",pad(gmValue$,2))
+                    if len(cvs(gmValue$,3))=2 then
+                        rem --- Use 2-chars code as-is
+                        aonProps!.setProperty("value1",cvs(gmValue$,3))
+                    else
+                        rem --- Use United State Postal Service 2-letter state code or leave blank if no match
+                        stateProps!=#getStateCodes()
+                        if stateProps!.containsKey(cvs(gmValue$,7)) then
+                            aonProps!.setProperty("value1",pad(stateProps!.getProperty(cvs(gmValue$,7)),2))
+                        else
+                            aonProps!.setProperty("value1",pad(" ",2))
+                        endif
+                    endif
                     break
                 case cvs(gmField$,6) = "ZIP"
                     aonProps!.setProperty("field1","zip_code")
@@ -864,11 +879,19 @@ mapToAddon_error:rem --- Method error trap/handler
             seterr mapToAddonCountry_error
             aonProps! = new Properties()
 
-rem wgh ... stopped here
-rem If 2 chars, use short name for ISO 3166-1 Alpha-2 code or use as-is if no match
-rem wgh ... temp code for testing
-aonProps!.setProperty("field1","country")
-aonProps!.setProperty("value1",pad("Unknown Country",24))
+            aonProps!.setProperty("field1","country")
+            if len(cvs(gmValue$,3))=2 then
+                rem --- Use short name for ISO 3166-1 Alpha-2 code or use as-is if no match
+                countryProps!=#getCountryCodes()
+                if countryProps!.containsKey(cvs(gmValue$,7)) then
+                    aonProps!.setProperty("value1",pad(countryProps!.getProperty(cvs(gmValue$,7)),24))
+                else
+                    aonProps!.setProperty("value1",pad(cvs(gmValue$,3),24))
+                endif
+            else
+                rem --- Use country as-is
+                aonProps!.setProperty("value1",pad(cvs(gmValue$,3),24))
+            endif
 
             methodret aonProps!
             
@@ -895,12 +918,19 @@ mapToAddonCountry_error:rem --- Method error trap/handler
             seterr mapToAddonCntryId_error
             aonProps! = new Properties()
 
-rem wgh ... stopped here
-rem If 2 chars, use as-is.
-rem Else, use ISO 3166-1 Alpha-2 code or leave blank if no match
-rem wgh ... temp code for testing
-aonProps!.setProperty("field1","cntry_id")
-aonProps!.setProperty("value1",pad("??",2))
+            aonProps!.setProperty("field1","cntry_id")
+            if len(cvs(gmValue$,3))=2 then
+                rem --- Use 2-chars code as-is
+                aonProps!.setProperty("value1",cvs(gmValue$,3))
+            else
+                rem --- Use ISO 3166-1 Alpha-2 code or leave blank if no match
+                countryProps!=#getCountryCodes()
+                if countryProps!.containsKey(cvs(gmValue$,7)) then
+                    aonProps!.setProperty("value1",pad(countryProps!.getProperty(cvs(gmValue$,7)),2))
+                else
+                    aonProps!.setProperty("value1",pad(" ",2))
+                endif
+            endif
 
             methodret aonProps!
             
@@ -936,6 +966,117 @@ mapToAddonCntryId_error:rem --- Method error trap/handler
             methodret out$
             
 onlyAlphNumericChars_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Returns Properties object of United State Postal Service 2-letter state code keyed by both the codes
+        rem  * and state names.
+        rem  *
+        rem  * @return Properties state!
+        rem  */
+        method protected Properties getStateCodes()
+            seterr getStateCodes_error
+
+            state! = #stateProps!
+            if state!.size()=0 then
+                rem --- Fields expected in the USstates.csv file
+                numFields = 2
+                csvFieldNames! = Array.newInstance(Class.forName("java.lang.String"), numFields)
+                Array.set(csvFieldNames!, 0, "Name")
+                Array.set(csvFieldNames!, 1, "Code")
+                
+                jrFields! = Array.newInstance(Class.forName("net.sf.jasperreports.engine.design.JRDesignField"), numFields)
+                for i = 0 to numFields - 1
+                    field! = new JRDesignField()
+                    field!.setName(Array.get(csvFieldNames!,i))
+                    field!.setValueClassName("java.lang.String")
+                    Array.set(jrFields!, i, field!)
+                next i
+
+                rem --- Parse fields from USstates.csv file
+                inStream! = JRLoader.getLocationInputStream(stbl("+ADDON_LIB")+"USstates.csv")
+                ds! = new JRCsvDataSource(inStream!)
+                ds!.setRecordDelimiter(System.getProperty("line.separator"))
+                ds!.setColumnNames(csvFieldNames!)
+
+                rem --- Build states! Properties object from parsed fields    
+                while ds!.next()
+                    state!.setProperty(cvs(ds!.getFieldValue(Array.get(jrFields!, 0)),7),ds!.getFieldValue(Array.get(jrFields!, 1)))
+                    state!.setProperty(cvs(ds!.getFieldValue(Array.get(jrFields!, 1)),7),ds!.getFieldValue(Array.get(jrFields!, 0)))
+                wend
+
+                rem --- Close resources
+                ds!.close()
+                inStream!.close()
+            endif
+
+            methodret state!
+            
+getStateCodes_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Returns Properties object of ISO 3166-1 Alpha-2 codes keyed by both the codes and country names.
+        rem  *
+        rem  * @return Properties countries!
+        rem  */
+        method protected Properties getCountryCodes()
+            seterr getCountryCodes_error
+
+            countries! = #countryProps!
+            if countries!.size()=0 then
+                rem --- Fields expected in the countries.csv file
+                numFields = 4
+                csvFieldNames! = Array.newInstance(Class.forName("java.lang.String"), numFields)
+                Array.set(csvFieldNames!, 0, "Name")
+                Array.set(csvFieldNames!, 1, "Alpha2")
+                Array.set(csvFieldNames!, 2, "Alpha3")
+                Array.set(csvFieldNames!, 3, "Numeric")
+                
+                jrFields! = Array.newInstance(Class.forName("net.sf.jasperreports.engine.design.JRDesignField"), numFields)
+                for i = 0 to numFields - 1
+                    field! = new JRDesignField()
+                    field!.setName(Array.get(csvFieldNames!,i))
+                    field!.setValueClassName("java.lang.String")
+                    Array.set(jrFields!, i, field!)
+                next i
+
+                rem --- Parse fields from countries.csv file
+                inStream! = JRLoader.getLocationInputStream(stbl("+ADDON_LIB")+"countries.csv")
+                ds! = new JRCsvDataSource(inStream!)
+                ds!.setRecordDelimiter(System.getProperty("line.separator"))
+                ds!.setColumnNames(csvFieldNames!)
+
+                rem --- Build countries! Properties object from parsed fields    
+                while ds!.next()
+                    countries!.setProperty(cvs(ds!.getFieldValue(Array.get(jrFields!, 0)),7),ds!.getFieldValue(Array.get(jrFields!, 1)))
+                    countries!.setProperty(cvs(ds!.getFieldValue(Array.get(jrFields!, 1)),7),ds!.getFieldValue(Array.get(jrFields!, 0)))
+                wend
+
+                rem --- Close resources
+                ds!.close()
+                inStream!.close()
+            endif
+
+            methodret countries!
+            
+getCountryCodes_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
