@@ -314,6 +314,8 @@ rem --- Read through GoldMine import grid processing records for this firm
                 gmxCustomer.gm_accountno$=gmAccountno$
                 gmxCustomer.gm_recid$=gmRecid$
                 writerecord(gmxCustomer_dev)gmxCustomer$
+                
+                rem --- Do not remove cross reference for previous GoldMine accountno and recid
             endif
 
             rem --- Update log

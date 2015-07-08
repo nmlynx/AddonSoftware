@@ -21,25 +21,22 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 
 		e!=SysGUI!.getLastEvent()
 		importGrid!=callpoint!.getDevObject("importGrid")
-rem wgh ... stopped here
-rem wgh ... 		appRowVect!=callpoint!.getDevObject("appRowVect")
-rem wgh ... 		app_grid_def_cols=num(callpoint!.getDevObject("app_grid_def_cols"))
-rem wgh ... 		index=e!.getRow()*app_grid_def_cols
+ 		companyMap!=callpoint!.getDevObject("companyMap")
 
 		switch notice.code
 			case 12; rem --- ON_GRID_KEY_PRESS
 				rem ---  Allow space-bar toggle of checkboxes
-				if (e!.getColumn()=2 or e!.getColumn()=3) and notice.wparam=32 then
+				if (e!.getColumn()=0 or e!.getColumn()=1 or e!.getColumn()=2) and notice.wparam=32 then
 					onoff=iff(importGrid!.getCellState(e!.getRow(),e!.getColumn()),0,1)
-rem wgh ... 					gosub update_app_grid
+ 					gosub update_import_grid
 				endif
 			break
 			case 30; rem --- ON_GRID_CHECK_ON and ON_GRID_CHECK_OFF
 				rem --- isChecked() is the state when event sent before control is updated,
 				rem --- so use !isChecked() to get current state of control
-				if e!.getColumn()=2 or e!.getColumn()=3 then
+				if e!.getColumn()=0 or e!.getColumn()=1 or e!.getColumn()=2 then
 					onoff=!e!.isChecked()
-rem wgh ... 					gosub update_app_grid
+ 					gosub update_import_grid
 				endif
 			break
 		swend
@@ -66,6 +63,11 @@ rem --- Get RED color
 	RGB$="255,0,0"
 	gosub get_RGB
 	callpoint!.setDevObject("redColor",BBjAPI().getSysGui().makeColor(R,G,B))
+
+rem --- Get WHITE color
+	RGB$="255,255,255"
+	gosub get_RGB
+	callpoint!.setDevObject("whiteColor",BBjAPI().getSysGui().makeColor(R,G,B))
 
 rem --- Open/Lock files
 	num_files=2
@@ -341,6 +343,19 @@ rem ==========================================================================
 
 	importGrid!.clearMainGrid()
 	rem SysGUI!.setRepaintEnabled(0) ... not availble in BUI
+
+	rem --- Data structures for tracking and updating check boxes for each row
+	rem --- companyMap! is keyed by GoldMine company names and holds contactMap!
+	rem --- contactMap! is keyed by GoldMine contact names and holds cBoxVect!
+	rem --- cBoxVect! index 0 is type of contact where
+	rem ---                               M=GoldMine company and Addon customer match, but no existing xref record
+	rem ---                               N=GoldMine company does not match an existing Addon customer
+	rem ---                               X=Addon-GoldMine cross reference record already exist
+	rem --- cBoxVect! index 1 is row in grid (zero based)
+	rem --- cBoxVect! index 2 is state of Add checkbox (-1=disabled; 0=unchecked; 1=checked)
+	rem --- cBoxVect! index 3 is state of Link checkbox (-1=disabled; 0=unchecked; 1=checked) 
+	rem --- cBoxVect! index 4 is state of Update checkbox (-1=disabled; 0=unchecked; 1=checked) 
+	companyMap!=new HashMap()
 	
 	rem --- Start Progress Meter
 	process_id$=cvs(sysinfo.task_id$,2)
@@ -367,11 +382,6 @@ rem ==========================================================================
 		armCustmast_dev=fnget_dev("ARM_CUSTMAST")
 		dim armCustmast$:fnget_tpl$("ARM_CUSTMAST")
 
-rem wgh ... stopped here
-rem wgh ... When the Addon customer does not exist, and there isn’t a GMX_CUSTOMER record, do not allow
-rem wgh ... the ADD and/or UPDATE check boxes to be checked multiple times when there is more than one 
-rem wgh ... contact for the customer.
-
 		rem --- Get CSV fields for each grid row
 		for row=0 to csvRows!.size()-1
 			rowFields!=csvRows!.getItem(row)
@@ -383,6 +393,16 @@ rem wgh ... contact for the customer.
 			curr_rec=row
 			if mod(curr_rec,milestone)=0
 				progress!.setValue("+process_task",process_id$+"^U^"+str(curr_rec)+"^")
+			endif
+
+			rem --- Update companyMap!
+			gmCompany$=rowFields!.getItem(2)
+			gmContact$=rowFields!.getItem(3)
+			if companyMap!.containsKey(gmCompany$) then
+				contactMap!=cast(HashMap,companyMap!.get(gmCompany$))
+			else
+				contactMap!=new HashMap()
+				companyMap!.put(gmCompany$,contactMap!)
 			endif
 
 			rem --- Does GMX_CUSTOMER record already exist for this GoldMine customer/contact?
@@ -399,11 +419,21 @@ rem wgh ... contact for the customer.
 				armCustomer_key$=gmxCustomer.firm_id$+gmxCustomer.customer_id$
 				readrecord(armCustmast_dev,key=armCustomer_key$,knum="PRIMARY",dom=*next)armCustmast$; xrefExists=1
 				if xrefExists then
+					rem --- Addon-GoldMine cross reference exists (contact type X)
 					customer_id$=armCustmast.customer_id$
 					customer_name$=armCustmast.customer_name$
 					contact_name$=armCustmast.contact_name$
 					importGrid!.setRowBackColor(row, notSelectableColor!)
 					importGrid!.setRowEditable(row,0)
+
+					rem --- Update contactMap!
+					cBoxVect!=SysGUI!.makeVector()
+					cBoxVect!.addItem("X")
+					cBoxVect!.addItem(row)
+					cBoxVect!.addItem(-1)
+					cBoxVect!.addItem(-1)
+					cBoxVect!.addItem(-1)
+					contactMap!.put(gmContact$,cBoxVect!)
 				endif
 			endif
 
@@ -438,9 +468,34 @@ rem wgh ... contact for the customer.
 					endif
 				wend
 
-				rem --- Disable UPDATE check box if Addon customer does not exist.
+				rem --- Update companyMap! and disable check boxes
 				if !matchNoXref then
-					importGrid!.setCellEditable(row,0,2)
+					rem --- Addon customer does not exist (contact type N)
+					importGrid!.setCellEditable(row,1,0)
+					importGrid!.setCellEditable(row,2,0)
+					importGrid!.setCellBackColor(row,1,notSelectableColor!)
+					importGrid!.setCellBackColor(row,2,notSelectableColor!)
+
+					rem --- Update contactMap!
+					cBoxVect!=SysGUI!.makeVector()
+					cBoxVect!.addItem("N")
+					cBoxVect!.addItem(row)
+					cBoxVect!.addItem(0)
+					cBoxVect!.addItem(-1)
+					cBoxVect!.addItem(-1)
+					contactMap!.put(gmContact$,cBoxVect!)
+				else
+					rem --- Addon customer exists without cross reference (contact type M)
+					importGrid!.setCellEditable(row,0,0)
+					importGrid!.setCellBackColor(row,0,notSelectableColor!)
+					rem --- Update contactMap!
+					cBoxVect!=SysGUI!.makeVector()
+					cBoxVect!.addItem("M")
+					cBoxVect!.addItem(row)
+					cBoxVect!.addItem(-1)
+					cBoxVect!.addItem(0)
+					cBoxVect!.addItem(0)
+					contactMap!.put(gmContact$,cBoxVect!)
 				endif
 			endif
 
@@ -496,6 +551,7 @@ rem wgh ... contact for the customer.
 			next cell
 		next row
 	endif
+	callpoint!.setDevObject("companyMap",companyMap!)
 
 	rem --- Stop/Delete Progress Meter
 	progress!.setValue("+process_task",process_id$+"^D^")
@@ -520,66 +576,129 @@ rem ==========================================================================
 	return
 
 rem ==========================================================================
-update_app_grid: rem --- Update app grid row when checkboxes are checked/unchecked
+update_import_grid: rem --- Update app grid row when checkboxes are checked/unchecked
 	rem --- input: e!
 	rem --- input: importGrid!
-	rem --- input: appRowVect!
+	rem --- input: companyMap!
 	rem --- input: onoff
 rem ==========================================================================
-rem wgh ... stopped here
-return; rem wgh ... testing
 	rem SysGUI!.setRepaintEnabled(0) ... not availble in BUI
-    	app_grid_def_cols=callpoint!.getDevObject("app_grid_def_cols")
-	index=e!.getRow()*app_grid_def_cols
+	row=e!.getRow()
+	column=e!.getColumn()
+	gmCompany$=importGrid!.getCellText(row,3)
+	gmContact$=importGrid!.getCellText(row,4)
+	contactMap!=cast(HashMap,companyMap!.get(gmCompany$))
+	notSelectableColor! = callpoint!.getDevObject("notSelectableColor")
+	whiteColor!=callpoint!.getDevObject("whiteColor")
 
-	rem --- Install checkbox
-	if e!.getColumn()=2 then
+	rem --- Add checkbox
+	if column=0 then
 		if onoff then
 			rem --- Checked
-			importGrid!.setCellStyle(e!.getRow(),2,SysGUI!.GRID_STYLE_CHECKED); rem Install
-			sourceDir$=appRowVect!.get(index+4)
-			importGrid!.setCellText(e!.getRow(),4,sourceDir$); rem Source
+			importGrid!.setCellStyle(row,0,SysGUI!.GRID_STYLE_CHECKED); rem Add
 
-			rem --- Update appRowVect! for checked install
-			appRowVect!.removeItem(index+2)
-			appRowVect!.insertItem(index+2, "y"); rem Install
-			appRowVect!.removeItem(index+4)
-			appRowVect!.insertItem(index+4, sourceDir$); rem Source
+			rem --- Update companyMap! for checked Add
+			rem --- Disable other Adds and enable other Links for this GoldMine company
+			if contactMap!.size()>1 then
+				contactIter!=contactMap!.keySet().iterator()
+				while contactIter!.hasNext()
+					thisContact$=cast(BBjString, contactIter!.next())
+					if thisContact$=gmContact$ then continue
+					cBoxVect!=cast(BBjVector,contactMap!.get(thisContact$))
+					thisRow=cBoxVect!.get(1)
+					importGrid!.setCellEditable(thisRow,0,0)
+					importGrid!.setCellEditable(thisRow,1,1)
+					importGrid!.setCellBackColor(thisRow,0,notSelectableColor!)
+					importGrid!.setCellBackColor(thisRow,1,whiteColor!)
+				wend
+			endif
 		else
 			rem --- Unchecked
-			importGrid!.setCellStyle(e!.getRow(),2,SysGUI!.GRID_STYLE_UNCHECKED); rem Install
+			importGrid!.setCellStyle(row,0,SysGUI!.GRID_STYLE_UNCHECKED); rem Add
 
-			rem --- Update appRowVect! for unchecked install
-			appRowVect!.removeItem(index+2)
-			appRowVect!.insertItem(index+2, "n"); rem Install
+			rem --- Update companyMap! for unchecked Add
+			rem --- Enable other Adds and disable/clear other Links for this GoldMine company
+			if contactMap!.size()>1 then
+				contactIter!=contactMap!.keySet().iterator()
+				while contactIter!.hasNext()
+					thisContact$=cast(BBjString, contactIter!.next())
+					if thisContact$=gmContact$ then continue
+					cBoxVect!=cast(BBjVector,contactMap!.get(thisContact$))
+					thisRow=cBoxVect!.get(1)
+					importGrid!.setCellEditable(thisRow,0,1)
+					importGrid!.setCellEditable(thisRow,1,0)
+					importGrid!.setCellBackColor(thisRow,0,whiteColor!)
+					importGrid!.setCellBackColor(thisRow,1,notSelectableColor!)
+					importGrid!.setCellStyle(thisRow,1,SysGUI!.GRID_STYLE_UNCHECKED)
+				wend
+			endif
 		endif
 	endif
 
-	rem --- Copy checkbox
-	if e!.getColumn()=3 then
+	rem --- Link checkbox
+	if column=1 then
 		if onoff then
 			rem --- Checked
-			importGrid!.setCellStyle(e!.getRow(),3,SysGUI!.GRID_STYLE_CHECKED); rem Copy
-			sourceDir$=appRowVect!.get(index+4)
-			importGrid!.setCellText(e!.getRow(),5,targetDir$); rem Target
-			importGrid!.setCellEditable(e!.getRow(),5,1); rem Target
+			importGrid!.setCellStyle(row,1,SysGUI!.GRID_STYLE_CHECKED); rem Link
 
-			rem --- Update appRowVect! for checked copy
-			appRowVect!.removeItem(index+3)
-			appRowVect!.insertItem(index+3, "y"); rem Copy
-			appRowVect!.removeItem(index+5)
-			appRowVect!.insertItem(index+5, targetDir$); rem Target
+			rem --- Don't need to update companyMap! for checked Link
 		else
 			rem --- Unchecked
-			importGrid!.setCellStyle(e!.getRow(),3,SysGUI!.GRID_STYLE_UNCHECKED); rem Copy
-			importGrid!.setCellText(e!.getRow(),5,""); rem Target
-			importGrid!.setCellEditable(e!.getRow(),5,0); rem Target
+			importGrid!.setCellStyle(row,1,SysGUI!.GRID_STYLE_UNCHECKED); rem Link
 
-			rem --- Update appRowVect! for unchecked copy
-			appRowVect!.removeItem(index+3)
-			appRowVect!.insertItem(index+3, "n"); rem Copy
-			appRowVect!.removeItem(index+5)
-			appRowVect!.insertItem(index+5, ""); rem Target
+			rem --- Don't need to update companyMap! for unchecked Link
+		endif
+	endif
+
+	rem --- Update checkbox
+	if column=2 then
+		if onoff then
+			rem --- Checked
+			importGrid!.setCellStyle(row,2,SysGUI!.GRID_STYLE_CHECKED); rem Update
+
+			rem --- Update companyMap! for checked Update
+			rem --- Disable other Updates for this GoldMine company, and disable Link for this GoldMine contact
+			if contactMap!.size()>1 then
+				contactIter!=contactMap!.keySet().iterator()
+				while contactIter!.hasNext()
+					thisContact$=cast(BBjString, contactIter!.next())
+					cBoxVect!=cast(BBjVector,contactMap!.get(thisContact$))
+					rem --- Leave checkboxes disabled if cross reference exists
+					if cBoxVect!.get(0)="X" then continue
+					thisRow=cBoxVect!.get(1)
+					if thisContact$=gmContact$ then
+						importGrid!.setCellEditable(thisRow,1,0)
+						importGrid!.setCellBackColor(thisRow,1,notSelectableColor!)
+						importGrid!.setCellStyle(row,1,SysGUI!.GRID_STYLE_UNCHECKED)
+					else
+						importGrid!.setCellEditable(thisRow,2,0)
+						importGrid!.setCellBackColor(thisRow,2,notSelectableColor!)
+					endif
+				wend
+			endif
+		else
+			rem --- Unchecked
+			importGrid!.setCellStyle(row,2,SysGUI!.GRID_STYLE_UNCHECKED); rem Update
+
+			rem --- Update companyMap! for unchecked Add
+			rem --- Enable other Updates for this GoldMine company, and disable Link for this GoldMine contact
+			if contactMap!.size()>1 then
+				contactIter!=contactMap!.keySet().iterator()
+				while contactIter!.hasNext()
+					thisContact$=cast(BBjString, contactIter!.next())
+					cBoxVect!=cast(BBjVector,contactMap!.get(thisContact$))
+					rem --- Leave checkboxes disabled if cross reference exists
+					if cBoxVect!.get(0)="X" then continue
+					thisRow=cBoxVect!.get(1)
+					if thisContact$=gmContact$ then
+						importGrid!.setCellEditable(thisRow,1,1)
+						importGrid!.setCellBackColor(thisRow,1,whiteColor!)
+					else
+						importGrid!.setCellEditable(thisRow,2,1)
+						importGrid!.setCellBackColor(thisRow,2,whiteColor!)
+					endif
+				wend
+			endif
 		endif
 	endif
 
@@ -591,6 +710,7 @@ rem --- Needed classes
 	use ::ado_util.src::util
 
 	use java.lang.reflect.Array
+	use java.util.HashMap
 
 	use net.sf.jasperreports.engine.JRField
 	use net.sf.jasperreports.engine.data.JRCsvDataSource
@@ -606,9 +726,9 @@ rem --- Add grid to show customers/contacts in CSV file
 	gosub format_grid
 
 rem --- Set callbacks - processed in ACUS callpoint
+	importGrid!.setCallback(importGrid!.ON_GRID_CHECK_ON,"custom_event")
+	importGrid!.setCallback(importGrid!.ON_GRID_CHECK_OFF,"custom_event")
 	importGrid!.setCallback(importGrid!.ON_GRID_KEY_PRESS,"custom_event")
-	importGrid!.setCallback(importGrid!.ON_GRID_MOUSE_UP,"custom_event")
-	importGrid!.setCallback(importGrid!.ON_GRID_EDIT_STOP,"custom_event")
 
 rem --- Misc other init
 	util.resizeWindow(Form!, SysGui!)
