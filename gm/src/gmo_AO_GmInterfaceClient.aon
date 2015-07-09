@@ -313,11 +313,15 @@ pushCustomers_error:rem --- Method error trap/handler
 
             rem --- Load API as necessary
             if #gmSessionId% < 0 then
+                rem --- Decypt passwords for XML message
+                call stbl("+DIR_SYP")+"bac_encrypt.bbj","GMS_PARAMS.DB_PASSWORD","","","D",#gmMasterPw$,masterPwAfter$,table_chans$[all],status$
+                call stbl("+DIR_SYP")+"bac_encrypt.bbj","GMS_PARAMS.DB_PASSWORD","","","D",#sqlPassword$,sqlPwAfter$,table_chans$[all],status$
+
                 aonData! = new Properties()
                 aonData!.setProperty("User",#gmMasterUser$)
-                aonData!.setProperty("Password",#gmMasterPw$)
+                aonData!.setProperty("Password",masterPwAfter$)
                 aonData!.setProperty("SQLUser",#sqlUser$)
-                aonData!.setProperty("SQLPassword",#sqlPassword$)
+                aonData!.setProperty("SQLPassword",sqlPwAfter$)
                 
                 xmlRequest$ = #buildXMLRequest("LoadAPI", aonData!)
                 xmlResponse$ = #postRequest(xmlRequest$)
@@ -783,7 +787,7 @@ mapToGoldMineCountry_error:rem --- Method error trap/handler
                     break
                 case cvs(gmField$,6) = "PHONE1"
                     aonProps!.setProperty("field1","phone_no")
-                    phone$=#onlyAlphNumericChars(cvs(gmValue$,2))
+                    phone$=#onlyAlphaNumericChars(cvs(gmValue$,2))
                     if len(phone$)>20 then
                         aonProps!.setProperty("value1","")
                     else
@@ -800,7 +804,7 @@ mapToGoldMineCountry_error:rem --- Method error trap/handler
                     break
                 case cvs(gmField$,6) = "FAX"
                     aonProps!.setProperty("field1","fax_no")
-                    fax$=#onlyAlphNumericChars(cvs(gmValue$,2))
+                    fax$=#onlyAlphaNumericChars(cvs(gmValue$,2))
                     if len(fax$)>20 then
                         aonProps!.setProperty("value1","")
                     else
@@ -840,7 +844,7 @@ mapToGoldMineCountry_error:rem --- Method error trap/handler
                     break
                 case cvs(gmField$,6) = "ZIP"
                     aonProps!.setProperty("field1","zip_code")
-                    postal$=#onlyAlphNumericChars(cvs(gmValue$,2))
+                    postal$=#onlyAlphaNumericChars(cvs(gmValue$,2))
                     if len(postal$)>9 then
                         aonProps!.setProperty("value1","")
                     else
@@ -952,20 +956,22 @@ mapToAddonCntryId_error:rem --- Method error trap/handler
         rem  *
         rem  * @return BBlString out$
         rem  */
-        method protected BBjString onlyAlphNumericChars(BBjString in$)
-            seterr onlyAlphNumericChars_error
+        method protected BBjString onlyAlphaNumericChars(BBjString in$)
+            seterr onlyAlphaNumericChars_error
             out$=""
 
-            for i=1 to len(in$)
-                x$=in$(i,1)
-                if pos(cvs(x$,4)="0123456789ABCDEFGHIJKLMONOPQRSTUVWXYZ") then
-                    out$=out$+x$
-                endif
-            next i
+            if len(in$)>0 then
+                for i=1 to len(in$)
+                    x$=in$(i,1)
+                    if pos(cvs(x$,4)="0123456789ABCDEFGHIJKLMONOPQRSTUVWXYZ") then
+                        out$=out$+x$
+                    endif
+                next i
+            endif
 
             methodret out$
             
-onlyAlphNumericChars_error:rem --- Method error trap/handler
+onlyAlphaNumericChars_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)

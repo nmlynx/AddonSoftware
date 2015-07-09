@@ -10,6 +10,38 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 	gui_event$=SysGUI!.getLastEventString()
 	ctl_ID=dec(gui_event.ID$)
 
+	rem --- Catch PopUpMenu callbacks
+	if gui_event.code$="P" then
+		importGrid!=callpoint!.getDevObject("importGrid")
+
+		switch gui_event.y
+			case 202; rem --- Select all items
+				selectedRows! = SysGUI!.makeVector()
+				for i=0 to importGrid!.getNumRows()-1
+					selectedRows!.addItem(i)
+				next i
+				importGrid!.setSelectedRows(selectedRows!)
+			case 201; rem --- Select highlighted items
+				selectedRows!=importGrid!.getSelectedRows()
+				check=1
+				gosub check_selected_rows
+			break
+			case 204; rem --- Deselect all items
+				selectedRows! = SysGUI!.makeVector()
+				for i=0 to importGrid!.getNumRows()-1
+					selectedRows!.addItem(i)
+				next i
+				importGrid!.setSelectedRows(selectedRows!)
+			case 203; rem --- Deselect highlighted items
+				selectedRows!=importGrid!.getSelectedRows()
+				check=0
+				gosub check_selected_rows
+			break
+		swend
+
+		break
+	endif
+
 	if gui_event.code$="N"
 		notify_base$=notice(gui_dev,gui_event.x%)
 		dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
@@ -588,6 +620,7 @@ rem ==========================================================================
 	gmCompany$=importGrid!.getCellText(row,3)
 	gmContact$=importGrid!.getCellText(row,4)
 	contactMap!=cast(HashMap,companyMap!.get(gmCompany$))
+	cBoxVect!=cast(BBjVector,contactMap!.get(gmContact$))
 	notSelectableColor! = callpoint!.getDevObject("notSelectableColor")
 	whiteColor!=callpoint!.getDevObject("whiteColor")
 
@@ -595,10 +628,11 @@ rem ==========================================================================
 	if column=0 then
 		if onoff then
 			rem --- Checked
+			rem --- Update companyMap!
 			importGrid!.setCellStyle(row,0,SysGUI!.GRID_STYLE_CHECKED); rem Add
+			cBoxVect!.setItem(2,1)
 
-			rem --- Update companyMap! for checked Add
-			rem --- Disable other Adds and enable other Links for this GoldMine company
+			rem --- Disable other Adds, enable other Links, and update companyMap! for this GoldMine company
 			if contactMap!.size()>1 then
 				contactIter!=contactMap!.keySet().iterator()
 				while contactIter!.hasNext()
@@ -610,14 +644,19 @@ rem ==========================================================================
 					importGrid!.setCellEditable(thisRow,1,1)
 					importGrid!.setCellBackColor(thisRow,0,notSelectableColor!)
 					importGrid!.setCellBackColor(thisRow,1,whiteColor!)
+					cBoxVect!=cast(BBjVector,contactMap!.get(gmContact$))
+					cBoxVect!.setItem(2,-1)
+					cBoxVect!.setItem(3,0)
 				wend
 			endif
 		else
 			rem --- Unchecked
+			rem --- Update companyMap!
 			importGrid!.setCellStyle(row,0,SysGUI!.GRID_STYLE_UNCHECKED); rem Add
+			cBoxVect!.setItem(2,0)
 
 			rem --- Update companyMap! for unchecked Add
-			rem --- Enable other Adds and disable/clear other Links for this GoldMine company
+			rem --- Enable other Adds, disable/clear other Links, and update companyMap! for this GoldMine company
 			if contactMap!.size()>1 then
 				contactIter!=contactMap!.keySet().iterator()
 				while contactIter!.hasNext()
@@ -630,6 +669,9 @@ rem ==========================================================================
 					importGrid!.setCellBackColor(thisRow,0,whiteColor!)
 					importGrid!.setCellBackColor(thisRow,1,notSelectableColor!)
 					importGrid!.setCellStyle(thisRow,1,SysGUI!.GRID_STYLE_UNCHECKED)
+					cBoxVect!=cast(BBjVector,contactMap!.get(gmContact$))
+					cBoxVect!.setItem(2,0)
+					cBoxVect!.setItem(3,-1)
 				wend
 			endif
 		endif
@@ -639,12 +681,16 @@ rem ==========================================================================
 	if column=1 then
 		if onoff then
 			rem --- Checked
+			rem --- Update companyMap!
 			importGrid!.setCellStyle(row,1,SysGUI!.GRID_STYLE_CHECKED); rem Link
+			cBoxVect!.setItem(3,1)
 
 			rem --- Don't need to update companyMap! for checked Link
 		else
 			rem --- Unchecked
+			rem --- Update companyMap!
 			importGrid!.setCellStyle(row,1,SysGUI!.GRID_STYLE_UNCHECKED); rem Link
+			cBoxVect!.setItem(3,0)
 
 			rem --- Don't need to update companyMap! for unchecked Link
 		endif
@@ -654,55 +700,212 @@ rem ==========================================================================
 	if column=2 then
 		if onoff then
 			rem --- Checked
+			rem --- Disable/clear Link and update companyMap!
 			importGrid!.setCellStyle(row,2,SysGUI!.GRID_STYLE_CHECKED); rem Update
+			importGrid!.setCellEditable(row,1,0)
+			importGrid!.setCellBackColor(row,1,notSelectableColor!)
+			importGrid!.setCellStyle(row,1,SysGUI!.GRID_STYLE_UNCHECKED)
+			cBoxVect!.setItem(3,-1)
+			cBoxVect!.setItem(4,1)
 
-			rem --- Update companyMap! for checked Update
-			rem --- Disable other Updates for this GoldMine company, and disable Link for this GoldMine contact
+			rem --- Disable other Updates and update companyMap! for this GoldMine company
 			if contactMap!.size()>1 then
 				contactIter!=contactMap!.keySet().iterator()
 				while contactIter!.hasNext()
 					thisContact$=cast(BBjString, contactIter!.next())
+					if thisContact$=gmContact$ then continue
 					cBoxVect!=cast(BBjVector,contactMap!.get(thisContact$))
 					rem --- Leave checkboxes disabled if cross reference exists
 					if cBoxVect!.get(0)="X" then continue
 					thisRow=cBoxVect!.get(1)
-					if thisContact$=gmContact$ then
-						importGrid!.setCellEditable(thisRow,1,0)
-						importGrid!.setCellBackColor(thisRow,1,notSelectableColor!)
-						importGrid!.setCellStyle(row,1,SysGUI!.GRID_STYLE_UNCHECKED)
-					else
-						importGrid!.setCellEditable(thisRow,2,0)
-						importGrid!.setCellBackColor(thisRow,2,notSelectableColor!)
-					endif
+					importGrid!.setCellEditable(thisRow,2,0)
+					importGrid!.setCellBackColor(thisRow,2,notSelectableColor!)
+					cBoxVect!.setItem(4,-1)
 				wend
 			endif
 		else
 			rem --- Unchecked
+			rem --- Enable Link and update companyMap!
 			importGrid!.setCellStyle(row,2,SysGUI!.GRID_STYLE_UNCHECKED); rem Update
+			importGrid!.setCellEditable(row,1,1)
+			importGrid!.setCellBackColor(row,1,whiteColor!)
+			cBoxVect!.setItem(3,0)
 
-			rem --- Update companyMap! for unchecked Add
-			rem --- Enable other Updates for this GoldMine company, and disable Link for this GoldMine contact
+			rem --- Enable other Updates and update companyMap! for this GoldMine company
 			if contactMap!.size()>1 then
 				contactIter!=contactMap!.keySet().iterator()
 				while contactIter!.hasNext()
 					thisContact$=cast(BBjString, contactIter!.next())
+					if thisContact$=gmContact$ then continue
 					cBoxVect!=cast(BBjVector,contactMap!.get(thisContact$))
 					rem --- Leave checkboxes disabled if cross reference exists
 					if cBoxVect!.get(0)="X" then continue
 					thisRow=cBoxVect!.get(1)
-					if thisContact$=gmContact$ then
-						importGrid!.setCellEditable(thisRow,1,1)
-						importGrid!.setCellBackColor(thisRow,1,whiteColor!)
-					else
-						importGrid!.setCellEditable(thisRow,2,1)
-						importGrid!.setCellBackColor(thisRow,2,whiteColor!)
-					endif
+					importGrid!.setCellEditable(thisRow,2,1)
+					importGrid!.setCellBackColor(thisRow,2,whiteColor!)
+					cBoxVect!.setItem(4,0)
 				wend
 			endif
 		endif
 	endif
 
 	rem SysGUI!.setRepaintEnabled(1) ... not availble in BUI
+
+	return
+
+rem ==========================================================================
+check_selected_rows: rem --- Check/uncheck check boxes for selected grid rows
+	rem --- input: importGrid!
+	rem --- selectedRows!
+	rem --- input: check            0=uncheck    1=check
+rem ==========================================================================
+	if selectedRows!.size()=0 then return
+	companyMap!=callpoint!.getDevObject("companyMap")
+	warnedMap!=new HashMap()
+	notSelectableColor! = callpoint!.getDevObject("notSelectableColor")
+	whiteColor!=callpoint!.getDevObject("whiteColor")
+
+
+	rem --- Start Progress Meter
+	process_id$=cvs(sysinfo.task_id$,2)
+	title$=Translate!.getTranslation("AON_PROCESSING_GRID_ROWS")
+	total_recs=selectedRows!.size()
+	progress! = bbjAPI().getGroupNamespace()
+	progress!.setValue("+process_task",process_id$+"^C^"+title$+"^^"+str(total_recs)+"^")
+	milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+	if milestone>total_recs/10 then
+		milestone=int(total_recs/10)
+		if milestone<1 then milestone=1
+	endif
+
+	rem --- Process selected grid rows
+	for i=0 to selectedRows!.size()-1
+		row=selectedRows!.getItem(i)
+		rem --- Get cBoxVect! check box vector for this row
+		gmCompany$=importGrid!.getCellText(row,3)
+		gmContact$=importGrid!.getCellText(row,4)
+		contactMap!=cast(HashMap,companyMap!.get(gmCompany$))
+		cBoxVect!=cast(BBjVector,contactMap!.get(gmContact$))
+
+		rem --- Update Progress Meter
+		if mod(i,milestone)=0
+			progress!.setValue("+process_task",process_id$+"^U^"+str(i)+"^")
+		endif
+
+		rem --- Contact type X
+		if cBoxVect!.getItem(0)="X" then continue
+
+		rem --- Contact type M
+		if cBoxVect!.getItem(0)="M" then
+			if check then
+				rem --- Check type M Link
+				if !importGrid!.getCellState(row,1) and !importGrid!.getCellState(row,2) then
+					rem --- Link and Update currently unchecked, so check Link and update companyMap!
+					importGrid!.setCellStyle(row,1,SysGUI!.GRID_STYLE_CHECKED)
+					cBoxVect!.setItem(3,1)
+				endif
+			else
+				rem --- Uncheck type M Link
+				if importGrid!.getCellState(row,1) then
+					rem --- Link currently checked, so uncheck and update companyMap!
+					importGrid!.setCellStyle(row,1,SysGUI!.GRID_STYLE_UNCHECKED)
+					cBoxVect!.setItem(3,0)
+				endif
+
+				rem --- Uncheck type M Update
+				if importGrid!.getCellState(row,2) then
+					rem --- Update currently checked, so uncheck, enable Link and update companyMap!
+					importGrid!.setCellStyle(row,2,SysGUI!.GRID_STYLE_UNCHECKED)
+					importGrid!.setCellEditable(row,1,1)
+					importGrid!.setCellBackColor(row,1,whiteColor!)
+					cBoxVect!.setItem(3,0)
+					cBoxVect!.setItem(4,0)
+
+					if contactMap!.size()>1 then
+						rem --- More than one contact for this company and Update checked, 
+						rem --- enable other Updates and update companyMap!
+						contactIter!=contactMap!.keySet().iterator()
+						while contactIter!.hasNext()
+							thisContact$=cast(BBjString, contactIter!.next())
+							cBoxVect!=cast(BBjVector,contactMap!.get(thisContact$))
+							if cBoxVect!.get(0)="X" then continue
+							thisRow=cBoxVect!.get(1)
+							importGrid!.setCellEditable(thisRow,2,1)
+							importGrid!.setCellBackColor(thisRow,2,whiteColor!)
+							cBoxVect!.setItem(4,0)
+						wend
+					endif
+				endif
+			endif
+		endif
+
+		rem --- Contact type N
+		if cBoxVect!.getItem(0)="N" then
+			if check then
+				rem --- Check type N Add
+				if contactMap!.size()>1 then
+					rem --- More than one contact for this company
+					if importGrid!.isCellEditable(row,0) and !importGrid!.getCellState(row,0) then
+						rem --- Warn if no contact has Add checked, i.e. this Add enabled and unchecked,
+						rem --- Only warn once per company, not for each contact.
+						if !warnedMap!.containsKey(gmCompany$) then
+							warnedMap!.put(gmCompany$,"")
+
+							msg_id$="GM_CHECK_ADD_FOR_COMPANY"
+							dim msg_tokens$[1]
+							msg_tokens$[1]=gmCompany$
+							gosub disp_message
+						endif
+					endif
+				else
+					rem --- Only one contact for this company, so check Add and update companyMap!
+					importGrid!.setCellStyle(row,0,SysGUI!.GRID_STYLE_CHECKED)
+					cBoxVect!.setItem(2,1)
+				endif
+
+				rem --- Check type N Link
+				if importGrid!.isCellEditable(row,1) and !importGrid!.getCellState(row,1) then
+					rem --- Link currently enabled and unchecked, so check Link and update companyMap!
+					importGrid!.setCellStyle(row,1,SysGUI!.GRID_STYLE_CHECKED)
+					cBoxVect!.setItem(3,1)
+				endif
+			else
+				rem --- Uncheck type N Add
+				if contactMap!.size()>1 and importGrid!.getCellState(row,0) then
+					rem --- More than one contact for this company and Add checked, 
+					rem --- enable/clear all Adds, disable/clear all Links and update companyMap!
+					contactIter!=contactMap!.keySet().iterator()
+					while contactIter!.hasNext()
+						thisContact$=cast(BBjString, contactIter!.next())
+						cBoxVect!=cast(BBjVector,contactMap!.get(thisContact$))
+						thisRow=cBoxVect!.get(1)
+						importGrid!.setCellEditable(thisRow,0,1)
+						importGrid!.setCellEditable(thisRow,1,0)
+						importGrid!.setCellBackColor(thisRow,0,whiteColor!)
+						importGrid!.setCellBackColor(thisRow,1,notSelectableColor!)
+						importGrid!.setCellStyle(thisRow,0,SysGUI!.GRID_STYLE_UNCHECKED)
+						importGrid!.setCellStyle(thisRow,1,SysGUI!.GRID_STYLE_UNCHECKED)
+						cBoxVect!.setItem(2,0)
+						cBoxVect!.setItem(3,-1)
+					wend
+				else
+					rem --- Only one contact for this company, so uncheck Add and update companyMap!
+					importGrid!.setCellStyle(row,0,SysGUI!.GRID_STYLE_UNCHECKED)
+					cBoxVect!.setItem(2,0)
+				endif
+
+				rem --- Uncheck type N Link
+				if importGrid!.getCellState(row,1) then
+					rem --- Link currently checked, so uncheck Link and update companyMap!
+					importGrid!.setCellStyle(row,1,SysGUI!.GRID_STYLE_UNCHECKED)
+					cBoxVect!.setItem(3,0)
+				endif
+			endif
+		endif
+	next i
+
+	rem --- Stop/Delete Progress Meter
+	progress!.setValue("+process_task",process_id$+"^D^")
 
 	return
 [[GMM_CUSTIMPORT.AWIN]]
@@ -725,10 +928,23 @@ rem --- Add grid to show customers/contacts in CSV file
 
 	gosub format_grid
 
+rem --- Add PopUp menu to grid
+	popMenu!=SysGUI!.addPopupMenu()
+	popMenuItem1! = popMenu!.addMenuItem(201,Translate!.getTranslation("AON_SELECT_HIGHLIGHTED_ITEMS"))
+	popMenuItem2! = popMenu!.addMenuItem(202,Translate!.getTranslation("AON_SELECT_ALL_ITEMS"))
+	popMenu!.addSeparator()
+	popMenuItem3! = popMenu!.addMenuItem(203,Translate!.getTranslation("AON_DESELECT_HIGHLIGHTED_ITEMS"))
+	popMenuItem4! = popMenu!.addMenuItem(204,Translate!.getTranslation("AON_DESELECT_ALL_ITEMS"))
+	importGrid!.setPopupMenu(popMenu!)
+
 rem --- Set callbacks - processed in ACUS callpoint
 	importGrid!.setCallback(importGrid!.ON_GRID_CHECK_ON,"custom_event")
 	importGrid!.setCallback(importGrid!.ON_GRID_CHECK_OFF,"custom_event")
 	importGrid!.setCallback(importGrid!.ON_GRID_KEY_PRESS,"custom_event")
+	popMenuItem1!.setCallback(popMenuItem1!.ON_POPUP_ITEM_SELECT,"custom_event")
+	popMenuItem2!.setCallback(popMenuItem2!.ON_POPUP_ITEM_SELECT,"custom_event")
+	popMenuItem3!.setCallback(popMenuItem3!.ON_POPUP_ITEM_SELECT,"custom_event")
+	popMenuItem4!.setCallback(popMenuItem4!.ON_POPUP_ITEM_SELECT,"custom_event")
 
 rem --- Misc other init
 	util.resizeWindow(Form!, SysGui!)
