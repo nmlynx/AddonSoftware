@@ -15,6 +15,7 @@ rem --- Launch interface client to BBj web service on GoldMine server
     declare GmInterfaceClient gmClient!
     gmClient! = new GmInterfaceClient()
     gmClient!.launchClient()
+    gmClient!.close()
     
 done: rem --- All done
 
