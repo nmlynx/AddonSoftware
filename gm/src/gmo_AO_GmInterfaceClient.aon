@@ -47,18 +47,13 @@ rem ==========================================================================
         field protected BBjInt devPushLog% = -1
         field protected BBjInt devSQL% = -1
         field protected Properties countryProps! = new Properties()
-        field protected BBjString gmMasterPw$ = ""
-        field protected BBjString gmMasterUser$ = ""
-        field protected BBjInt gmSessionId% = -1
-        field protected BBjString sqlDb$ = ""
-        field protected BBjString sqlPassword$ = ""
-        field protected BBjString sqlURL$ = ""
-        field protected BBjString sqlUser$ = ""
+        field protected Properties gmsParams! = new Properties()
+        field protected Properties gmSessionIDs! = new Properties()
         field protected Properties stateProps! = new Properties()
         field protected BBjString tplGmqCustomer$ = ""
+        field protected BBjString tplGmsParams$ = ""
         field protected BBjString tplGmxCustomer$ = ""
         field protected BBjNumber waitTime = 60
-        field protected BBjString webServiceURL$ = ""
 
         rem /**
         rem  * Constructor.
@@ -76,20 +71,20 @@ rem ==========================================================================
             tplsChan = unt
             open(tplsChan)stbl("+DIR_BRD")+"ddm_table_tpls.dat"
             read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
-            dim tplGmsParams$:table_tpl$
+            #tplGmsParams$ = table_tpl$
+            dim gms_params$:#tplGmsParams$
 
-            rem --- Read GoldMine parameters
-            readrecord(devGmsParams,key="GM")tplGmsParams$
+            rem --- Read thru gms_params and stash params for each firm in gmsParams!
+            read(devGmsParams,key="",dom=*next)
+            while 1
+                readrecord(devGmsParams,end=*break)gms_params$
+                #gmsParams!.setProperty(gms_params.firm_id$,gms_params$)
 
-            rem --- Initialize field variables 
-            #webServiceURL$ = cvs(tplGmsParams.webservice_url$,2)
-            #gmMasterUser$ = cvs(tplGmsParams.gm_master_user$,2)
-            #gmMasterPw$ = cvs(tplGmsParams.gm_master_pw$,2)
-            #waitTime = tplGmsParams.wait_time
-            #sqlURL$ = cvs(tplGmsParams.db_url$,2)
-            #sqlDb$ = cvs(tplGmsParams.db_alias$,2)
-            #sqlPassword$ = cvs(tplGmsParams.db_password$,2)
-            #sqlUser$ = cvs(tplGmsParams.db_user$,2)
+                rem --- Get the minimum waitTime for all params
+                if gms_params.wait_time > 0 and gms_params.wait_time < #waitTime then
+                    #waitTime = gms_params.wait_time
+                endif
+            wend
 
             rem --- Close gms_params
             close(devGmsParams,err=*next)
@@ -181,21 +176,28 @@ launchClient_error:rem --- Method error trap/handler
         method protected void pushCustomers()
             seterr pushCustomers_error
 
-            rem --- Make sure the GoldMine XML interface API is loaded and GMQ_CUSTOMER open
-            #gmLoadAPI()            
+            rem --- Make sure GMQ_CUSTOMER is open
             gmqCustomerDev = #openGmqCustomer()
 
-            if gmSessionId% >= 0 and gmqCustomerDev > 0 then
+            if gmqCustomerDev > 0 then
                 rem --- Make sure GMX_CUSTOMER is open
                 gmxCustomerDev = #openGmxCustomer()
                 if gmxCustomerDev > 0 then
                     dim gmqCustomerTpl$:#tplGmqCustomer$
 
                     rem --- Send GMQ_CUSTOMER records to BBj web service on GoldMine server
+                    thisFirm$=""
                     read(gmqCustomerDev,key="",dom=*next)
                     while 1
                         gmqCustomerKey$ = key(gmqCustomerDev,end=*break)
                         extractrecord(gmqCustomerDev,err=*continue)gmqCustomerTpl$
+                        
+                        rem --- Make sure the GoldMine XML interface API is loaded for this firm
+                        if gmqCustomerTpl.firm_id$ <> thisFirm$ then
+                            thisFirm$ = gmqCustomerTpl.firm_id$
+                            #gmLoadAPI(thisFirm$)            
+                            if !#gmSessionIDs!.containsKey(thisFirm$) then continue
+                        endif
                         
                         rem --- Map non-blank fields to GoldMine fields
                         aonData! = new Properties()
@@ -262,7 +264,7 @@ launchClient_error:rem --- Method error trap/handler
                         endif
 
                         rem --- Write contact data to GoldMine database
-                        gmData! = #gmWriteContact(aonData!)
+                        gmData! = #gmWriteContact(aonData!,thisFirm$)
                         if gmData!.containsKey("statusCode") and cvs(gmData!.getProperty("statusCode"),3)="1" then
                             rem --- On success, update GMX_CUSTOMER Addon-GoldMine cross reference file
                             dim gmxCustomerTpl$:#tplGmxCustomer$
@@ -307,25 +309,38 @@ pushCustomers_error:rem --- Method error trap/handler
         rem /**
         rem  * Load the GoldMine XML interface API.
         rem  *
+        rem  * @param BBjString firmId$
         rem  */
-        method protected void gmLoadAPI()
+        method protected void gmLoadAPI(BBjString firmId$)
             seterr gmLoadAPI_error
 
             rem --- Load API as necessary
-            if #gmSessionId% < 0 then
+            if !#gmSessionIDs!.containsKey(firmId$) then
+                rem --- Get gms_params properties for this firm
+                dim gms_params$:#tplGmsParams$
+                gms_params$ = #gmsParams!.getProperty(firmId$)
+                
                 rem --- Decypt passwords for XML message
-                call stbl("+DIR_SYP")+"bac_encrypt.bbj","GMS_PARAMS.DB_PASSWORD","","","D",#gmMasterPw$,masterPwAfter$,table_chans$[all],status$
-                call stbl("+DIR_SYP")+"bac_encrypt.bbj","GMS_PARAMS.DB_PASSWORD","","","D",#sqlPassword$,sqlPwAfter$,table_chans$[all],status$
+                call stbl("+DIR_SYP")+"bac_encrypt.bbj","GMS_PARAMS.DB_PASSWORD","","","D",cvs(gms_params.gm_master_pw$,2),masterPwAfter$,table_chans$[all],status$
+                call stbl("+DIR_SYP")+"bac_encrypt.bbj","GMS_PARAMS.DB_PASSWORD","","","D",cvs(gms_params.db_password$,2),sqlPwAfter$,table_chans$[all],status$
+
+                gmGoldDir$ = cvs(gms_params.gm_golddir$,2)
+                if gmGoldDir$(len(gmGoldDir$),1) <> ":" then gmGoldDir$ = gmGoldDir$ + ":"
+                gmComDir$ = cvs(gms_params.gm_comdir$,2)
+                if gmComDir$(len(gmComDir$),1) <> ":" then gmComDir$ = gmComDir$ + ":"
 
                 aonData! = new Properties()
-                aonData!.setProperty("User",#gmMasterUser$)
+                aonData!.setProperty("SysDir",cvs(gms_params.gm_sysdir$,2))
+                aonData!.setProperty("GoldDir",gmGoldDir$)
+                aonData!.setProperty("CommonDir",gmComDir$)
+                aonData!.setProperty("User",cvs(gms_params.gm_master_user$,2))
                 aonData!.setProperty("Password",masterPwAfter$)
-                aonData!.setProperty("SQLUser",#sqlUser$)
+                aonData!.setProperty("SQLUser",cvs(gms_params.db_user$,2))
                 aonData!.setProperty("SQLPassword",sqlPwAfter$)
                 
-                xmlRequest$ = #buildXMLRequest("LoadAPI", aonData!)
-                xmlResponse$ = #postRequest(xmlRequest$)
-                props!=#parseXMLResponse(xmlResponse$)
+                xmlRequest$ = #buildXMLRequest("LoadAPI", aonData!, firmId$)
+                xmlResponse$ = #postRequest(xmlRequest$, firmId$)
+                props!=#parseXMLResponse(xmlResponse$, firmId$)
 
                 rem --- Log error
                 if props!.containsKey("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
@@ -350,15 +365,16 @@ gmLoadAPI_error:rem --- Method error trap/handler
         rem  * Write contact data via GoldMine XML interface API.
         rem  *
         rem  * @param Properties aonData!
+        rem  * @param BBjString firmId$
         rem  *
         rem  * @return Properties gmData!
         rem  */
-        method protected Properties gmWriteContact(Properties aonData!)
+        method protected Properties gmWriteContact(Properties aonData!, BBjString firmId$)
             seterr gmWriteContact_error
 
-            xmlRequest$ = #buildXMLRequest("WriteContact", aonData!)
-            xmlResponse$ = #postRequest(xmlRequest$)
-            gmData!=#parseXMLResponse(xmlResponse$)
+            xmlRequest$ = #buildXMLRequest("WriteContact", aonData!, firmId$)
+            xmlResponse$ = #postRequest(xmlRequest$, firmId$)
+            gmData!=#parseXMLResponse(xmlResponse$, firmId$)
 
             rem --- Log error
             if gmData!.containsKey("statusCode") and cvs(gmData!.getProperty("statusCode"),3)<>"1" then
@@ -385,15 +401,20 @@ gmWriteContact_error:rem --- Method error trap/handler
         method protected void gmLogout()
             seterr gmLogout_error
 
-            aonData! = new Properties()
-            xmlRequest$ = #buildXMLRequest("Logout", aonData!)
-            xmlResponse$ = #postRequest(xmlRequest$)
-            props!=#parseXMLResponse(xmlResponse$)
-
-            rem --- Log error
-            if props!.containsKey("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
-                #logError("gmLogout(): statusCode="+props!.getProperty("statusCode"),props!.getProperty("statusText"))
-            endif
+            rem --- Process all firms that have a GoldMine session
+            firmIter! = #gmSessionIDs!.keySet().iterator()
+            while firmIter!.hasNext()
+                firmId$ = firmIter!.next()
+                aonData! = new Properties()
+                xmlRequest$ = #buildXMLRequest("Logout", aonData!, firmId$)
+                xmlResponse$ = #postRequest(xmlRequest$, firmId$)
+                props!=#parseXMLResponse(xmlResponse$, firmId$)
+    
+                rem --- Log error
+                if props!.containsKey("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
+                    #logError("gmLogout(): statusCode="+props!.getProperty("statusCode"),props!.getProperty("statusText"))
+                endif
+            wend
 
             methodret
             
@@ -415,15 +436,20 @@ gmLogout_error:rem --- Method error trap/handler
         method protected void gmUnloadAPI()
             seterr gmUnloadAPI_error
 
-            aonData! = new Properties()
-            xmlRequest$ = #buildXMLRequest("UnloadAPI", aonData!)
-            xmlResponse$ = #postRequest(xmlRequest$)
-            props!=#parseXMLResponse(xmlResponse$)
-
-            rem --- Log error
-            if props!.containsKey("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
-                #logError("gmUnloadAPI(): statusCode="+props!.getProperty("statusCode"),props!.getProperty("statusText"))
-            endif
+            rem --- Process all firms that have a GoldMine session
+            firmIter! = #gmSessionIDs!.keySet().iterator()
+            while firmIter!.hasNext()
+                firmId$ = firmIter!.next()
+                aonData! = new Properties()
+                xmlRequest$ = #buildXMLRequest("UnloadAPI", aonData!, firmId$)
+                xmlResponse$ = #postRequest(xmlRequest$, firmId$)
+                props!=#parseXMLResponse(xmlResponse$, firmId$)
+    
+                rem --- Log error
+                if props!.containsKey("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
+                    #logError("gmUnloadAPI(): statusCode="+props!.getProperty("statusCode"),props!.getProperty("statusText"))
+                endif
+            wend
 
             methodret
             
@@ -443,10 +469,11 @@ gmUnloadAPI_error:rem --- Method error trap/handler
         rem  *
         rem  * @param BBjString apiFunction$
         rem  * @param Properties aonData!
+        rem  * @param BBjString firmId$
         rem  *
         rem  * @return BBjString xmlString$
         rem  */
-        method protected BBjString buildXMLRequest(BBjString apiFunction$,Properties aonData!)
+        method protected BBjString buildXMLRequest(BBjString apiFunction$,Properties aonData!,BBjString firmId$)
             seterr buildXMLRequest_error
             xmlString$ = ""
 
@@ -466,7 +493,7 @@ gmUnloadAPI_error:rem --- Method error trap/handler
             gmapi!.setAttributeNode(attr!)
             if apiFunction$ <> "LoadAPI" then
                 attr! = doc!.createAttribute("SessionID")
-                attr!.setValue(str(#gmSessionId%))
+                attr!.setValue(#gmSessionIDs!.getProperty(firmId$))
                 gmapi!.setAttributeNode(attr!)
             endif
 
@@ -516,18 +543,23 @@ buildXMLRequest_error:rem --- Method error trap/handler
         rem  * POST XML request to the GoldMine XML interface API web service.
         rem  *
         rem  * @param BBjString xmlRequest$
+        rem  * @param BBjString FirmId$
         rem  *
         rem  * @return BBjString xmlResponse$
         rem  */
-        method protected BBjString postRequest(BBjString xmlRequest$)
+        method protected BBjString postRequest(BBjString xmlRequest$, BBjString FirmId$)
             seterr postRequest_error
             xmlResponse$ = ""
 
+            rem --- Get gms_params properties for this firm
+            dim gms_params$:#tplGmsParams$
+            gms_params$ = #gmsParams!.getProperty(firmId$)
+                
             rem --- Create instance of HttpClient
             client! = new HttpClient()
 
             rem --- Create instance of PostMethod
-            method! = new PostMethod(#webServiceURL$)
+            method! = new PostMethod(gms_params.webservice_url$)
             method!.addParameter("XML", URLEncoder.encode(xmlRequest$,"UTF-8"))
 
             rem --- Tell HttpClient to execute the PostMethod
@@ -560,10 +592,11 @@ postRequest_error:rem --- Method error trap/handler
         rem  * Parse XML response from the GoldMine XML interface API web service.
         rem  *
         rem  * @param BBjString xmlResponse$
+        rem  * @param BBjString firmId$
         rem  *
         rem  * @return Properties props!
         rem  */
-        method protected Properties parseXMLResponse(BBjString xmlResponse$)
+        method protected Properties parseXMLResponse(BBjString xmlResponse$, BBjString firmId$)
             seterr parseXMLResponse_error
             props! = new Properties()
 
@@ -583,11 +616,11 @@ postRequest_error:rem --- Method error trap/handler
                     sessionId$ = gmapi!.getAttribute("SessionID")
                     function$ = gmapi!.getAttribute("call")
                     if function$ = "LoadAPI" then
-                        #gmSessionId% = int(num(sessionID$))
+                        #gmSessionIDs!.setProperty(firmId$,sessionID$)
                     endif
     
                     rem --- Verify GoldMine session ID
-                    if int(num(sessionId$)) <> #gmSessionId% then
+                    if sessionId$ <> #gmSessionIDs!.getProperty(firmId$) then
                         props!.setProperty("statusCode","-100")
                         props!.setProperty("statusText","Wrong session Id: "+sessionId$)
                     else
@@ -1133,7 +1166,7 @@ getCountryCodes_error:rem --- Method error trap/handler
                 sql_prep$ = sql_prep$+"  AND "+gmUContactField$+"='"+gmUContactValue$+"' "
                 
                 rem --- Query GoldMine database for this company and contact
-                #openSqlConn()
+                #openSqlConn(aonFirmId$)
                 sqlprep(#devSQL%)sql_prep$
                 dim read_tpl$:sqltmpl(#devSQL%)
                 sqlexec(#devSQL%)
@@ -1162,12 +1195,13 @@ isGmContact_error:rem --- Method error trap/handler
         rem /**
         rem  * Returns GoldMine contact information for the given GoldMine account number and record id.
         rem  *
-        rem  * @param BBjString gmAccountno
-        rem  * @param BBjString gmRecid
+        rem  * @param BBjString gmAccountno$
+        rem  * @param BBjString gmRecid$
+        rem  * @param BBjString firmId$
         rem  *
         rem  * @return Properties contactInfo!
         rem  */
-        method public Properties getGmContactInfo(BBjString gmAccountno$, BBjString gmRecid$)
+        method public Properties getGmContactInfo(BBjString gmAccountno$, BBjString gmRecid$, BBjString firmId$)
             seterr getGmContactInfo_error
             contactInfo! = new Properties()
 
@@ -1180,7 +1214,7 @@ isGmContact_error:rem --- Method error trap/handler
             sql_prep$ = sql_prep$+"  AND RECID='"+gmRecid$+"' "
             
             rem --- Query GoldMine database for this accountno and recid
-            #openSqlConn()
+            #openSqlConn(firmId$)
             sqlprep(#devSQL%)sql_prep$
             dim read_tpl$:sqltmpl(#devSQL%)
             sqlexec(#devSQL%)
@@ -1265,7 +1299,7 @@ startClient_error:rem --- Method error trap/handler
         method public void close()
             seterr close_error
 
-            if #gmSessionId% >= 0 then
+            if #gmSessionIDs!.size() > 0 then
                 #gmLogout()
                 #gmUnloadAPI()
             endif
@@ -1382,21 +1416,27 @@ openGmxCustomer_error:rem --- Method error trap/handler
         rem /**
         rem  * Open SQL connection to GoldMine database.
         rem  *
+        rem  * @param BBjString firmId$
+        rem  * 
         rem  * @return BBjInt openChannel%
         rem  */
-        method protected BBjInt openSqlConn()
+        method protected BBjInt openSqlConn(BBjString firmId$)
             seterr openSqlConn_error
             openChannel% = #devSQL%
 
             if openChannel% < 0 then
+                rem --- Get gms_params properties for this firm
+                dim gms_params$:#tplGmsParams$
+                gms_params$ = #gmsParams!.getProperty(firmId$)
+                
                 rem --- Get SQL password
-                call stbl("+DIR_SYP")+"bac_encrypt.bbj","GMS_PARAMS.DB_PASSWORD","","","D",#sqlPassword$,pwAfter$,table_chans$[all],status$
+                call stbl("+DIR_SYP")+"bac_encrypt.bbj","GMS_PARAMS.DB_PASSWORD","","","D",cvs(gms_params.db_password$,2),pwAfter$,table_chans$[all],status$
 
                 rem --- Open SQL connection using GoldMine connection parameters
                 java.lang.Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver")
-                connURL$ = #sqlURL$+";"
-                connURL$ = connURL$+"databaseName="+#sqlDb$+";"
-                connURL$ = connURL$+"user="+#sqlUser$+";"
+                connURL$ = cvs(gms_params.db_url$,2)+";"
+                connURL$ = connURL$+"databaseName="+cvs(gms_params.db_alias$,2)+";"
+                connURL$ = connURL$+"user="+cvs(gms_params.db_user$,2)+";"
                 connURL$=connURL$+"password="+pwAfter$+";"
                 sqlChan=sqlunt
                 success = 0

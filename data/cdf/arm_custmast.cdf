@@ -51,7 +51,7 @@ rem --- If GM installed, update GoldMine database as necessary
 				gmqCustomer.gm_recid$=gmxCustomer.gm_recid$
 
 				rem --- Get current GoldMine data for this contact
-				contactInfo!=gmClient!.getGmContactInfo(gmxCustomer.gm_accountno$,gmxCustomer.gm_recid$)
+				contactInfo!=gmClient!.getGmContactInfo(gmxCustomer.gm_accountno$,gmxCustomer.gm_recid$,firm_id$)
 				if !contactInfo!.isEmpty() then
 					rem --- If Barista's Undo data does NOT match the current GoldMine data, then do NOT add it to the queue
 					gmProps!=gmClient!.mapToGoldMine("customer_name",callpoint!.getColumnUndoData("ARM_CUSTMAST.CUSTOMER_NAME"))
