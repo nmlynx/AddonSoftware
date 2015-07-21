@@ -211,10 +211,10 @@ rem --- Read through GoldMine import grid processing records for this firm
 
             rem --- Write Addon-GoldMine cross reference record
             dim gmxCustomer$:fattr(gmxCustomer$)
-            gmxCustomer.firm_id$=armCustmast.firm_id$
-            gmxCustomer.customer_id$=armCustmast.customer_id$
             gmxCustomer.gm_accountno$=gmAccountno$
             gmxCustomer.gm_recid$=gmRecid$
+            gmxCustomer.firm_id$=armCustmast.firm_id$
+            gmxCustomer.customer_id$=armCustmast.customer_id$
             writerecord(gmxCustomer_dev)gmxCustomer$
 
             rem --- Update log
@@ -233,11 +233,11 @@ rem --- Read through GoldMine import grid processing records for this firm
 
             rem --- Write Addon-GoldMine cross reference record
             dim gmxCustomer$:fattr(gmxCustomer$)
+            gmxCustomer.gm_accountno$=gmAccountno$
+            gmxCustomer.gm_recid$=gmRecid$
             gmxCustomer.firm_id$=aon_firm_id$
             gosub getCustomerId
             gmxCustomer.customer_id$=aon_customer_id$
-            gmxCustomer.gm_accountno$=gmAccountno$
-            gmxCustomer.gm_recid$=gmRecid$
             writerecord(gmxCustomer_dev)gmxCustomer$
 
             rem --- Update log
@@ -309,10 +309,10 @@ rem --- Read through GoldMine import grid processing records for this firm
     
                 rem --- Write Addon-GoldMine cross reference record
                 dim gmxCustomer$:fattr(gmxCustomer$)
-                gmxCustomer.firm_id$=armCustmast.firm_id$
-                gmxCustomer.customer_id$=armCustmast.customer_id$
                 gmxCustomer.gm_accountno$=gmAccountno$
                 gmxCustomer.gm_recid$=gmRecid$
+                gmxCustomer.firm_id$=armCustmast.firm_id$
+                gmxCustomer.customer_id$=armCustmast.customer_id$
                 writerecord(gmxCustomer_dev)gmxCustomer$
                 
                 rem --- Do not remove cross reference for previous GoldMine accountno and recid

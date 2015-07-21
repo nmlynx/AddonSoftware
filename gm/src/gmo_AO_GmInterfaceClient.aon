@@ -1144,7 +1144,7 @@ getCountryCodes_error:rem --- Method error trap/handler
 
             rem --- Check if GMX_CUSTOMER has record(s) for the Addon firm_id and customer_id
             #openGmxCustomer()
-            read(#devGmxCustomer%,key=aonFirmId$+aonCustomerId$,knum="PRIMARY",dom=*next)
+            read(#devGmxCustomer%,key=aonFirmId$+aonCustomerId$,knum="BY_ADDON",dom=*next)
             gmxCustomerKey$ = key(#devGmxCustomer%,end=*next)
             if pos(aonFirmId$+aonCustomerId$=gmxCustomerKey$)=1 then status$="TRUE"
 

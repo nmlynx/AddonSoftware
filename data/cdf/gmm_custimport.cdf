@@ -441,10 +441,9 @@ rem ==========================================================================
 			xrefExists=0
 			gmAccountno$=pad(rowFields!.getItem(0),20)
 			gmRecid$=pad(rowFields!.getItem(1),15)
-			read(gmxCustomer_dev,key=gmAccountno$+gmRecid$,knum="BY_GOLDMINE",dom=*next)
-			gmxCustomer_key$=""
-			gmxCustomer_key$=key(gmxCustomer_dev,end=*next)
-			if pos(gmAccountno$+gmRecid$=gmxCustomer_key$)=1 then
+			dim gmxCustomer$:fattr(gmxCustomer$)
+			readrecord(gmxCustomer_dev,key=gmAccountno$+gmRecid$,knum="PRIMARY",dom=*next)gmxCustomer$
+			if cvs(gmxCustomer.firm_id$+gmxCustomer.customer_id$,2)<>"" then
 				rem --- Do not allow selecting GoldMine customers/contacts that have an existing GMX_CUSTOMER record. 
 				rem --- Indicate them by displaying the row in Barista’s +GRID_NONEDIT_COLOR.
 				readrecord(gmxCustomer_dev)gmxCustomer$

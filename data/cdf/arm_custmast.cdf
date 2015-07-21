@@ -38,7 +38,7 @@ rem --- If GM installed, update GoldMine database as necessary
 			rem --- Do NOT update existing un-imported GoldMine contact(s)
 			gmxCustomer_dev=fnget_dev("GMX_CUSTOMER")
 			dim gmxCustomer$:fnget_tpl$("GMX_CUSTOMER")
-			read(gmxCustomer_dev,key=firm_id$+customer_id$,dom=*next)
+			read(gmxCustomer_dev,key=firm_id$+customer_id$,knum="BY_ADDON",dom=*next)
 			while 1
 				gmxCustomer_key$=key(gmxCustomer_dev,end=*break)
 				if pos(firm_id$+customer_id$=gmxCustomer_key$)<>1 then break
@@ -394,11 +394,13 @@ rem --- If GM installed, remove cross reference(s) to GoldMine
 	if user_tpl.gm_installed$="Y" then
 		gmxCustomer_dev=fnget_dev("GMX_CUSTOMER")
 		dim gmxCustomer$:fnget_tpl$("GMX_CUSTOMER")
-		read(gmxCustomer_dev,key=firm_id$+cust$,dom=*next)
+		read(gmxCustomer_dev,key=firm_id$+cust$,knum="BY_ADDON",dom=*next)
 		while 1
 			gmxCustomer_key$=key(gmxCustomer_dev,end=*break)
 			if pos(firm_id$+cust$=gmxCustomer_key$)<>1 then break
-			remove(gmxCustomer_dev,key=gmxCustomer_key$)
+			readrecord(gmxCustomer_dev)gmxCustomer$
+			remove(gmxCustomer_dev,key=gmxCustomer.gm_accountno$+gmxCustomer.gm_recid$)
+			read(gmxCustomer_dev,key=firm_id$+cust$,knum="BY_ADDON",dom=*next)
 		wend
 	endif
 [[ARM_CUSTMAST.CUSTOMER_NAME.AVAL]]
