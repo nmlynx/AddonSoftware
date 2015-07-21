@@ -57,10 +57,12 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 
 		switch notice.code
 			case 12; rem --- ON_GRID_KEY_PRESS
-				rem ---  Allow space-bar toggle of checkboxes
+				rem ---  Allow space-bar toggle of checkboxes that aren't disabled
 				if (e!.getColumn()=0 or e!.getColumn()=1 or e!.getColumn()=2) and notice.wparam=32 then
-					onoff=iff(importGrid!.getCellState(e!.getRow(),e!.getColumn()),0,1)
- 					gosub update_import_grid
+					if importGrid!.isCellEditable(e!.getRow(),e!.getColumn()) then
+						onoff=iff(importGrid!.getCellState(e!.getRow(),e!.getColumn()),0,1)
+ 						gosub update_import_grid
+					endif
 				endif
 			break
 			case 30; rem --- ON_GRID_CHECK_ON and ON_GRID_CHECK_OFF
@@ -95,6 +97,11 @@ rem --- Get RED color
 	RGB$="255,0,0"
 	gosub get_RGB
 	callpoint!.setDevObject("redColor",BBjAPI().getSysGui().makeColor(R,G,B))
+
+rem --- Get LIGHT PINK color
+	RGB$="255,182,193"
+	gosub get_RGB
+	callpoint!.setDevObject("lightPinkColor",BBjAPI().getSysGui().makeColor(R,G,B))
 
 rem --- Get WHITE color
 	RGB$="255,255,255"
@@ -382,7 +389,8 @@ rem ==========================================================================
 	rem --- cBoxVect! index 0 is type of contact where
 	rem ---                               M=GoldMine company and Addon customer match, but no existing xref record
 	rem ---                               N=GoldMine company does not match an existing Addon customer
-	rem ---                               X=Addon-GoldMine cross reference record already exist
+	rem ---                               X=Addon-GoldMine cross reference record already exists in this firm
+	rem ---                               Z=Addon-GoldMine cross reference record already exists in a different firm
 	rem --- cBoxVect! index 1 is row in grid (zero based)
 	rem --- cBoxVect! index 2 is state of Add checkbox (-1=disabled; 0=unchecked; 1=checked)
 	rem --- cBoxVect! index 3 is state of Link checkbox (-1=disabled; 0=unchecked; 1=checked) 
@@ -408,6 +416,7 @@ rem ==========================================================================
 		gmClient!=callpoint!.getDevObject("gmClient")
 		notSelectableColor! = callpoint!.getDevObject("notSelectableColor")
 		redColor! = callpoint!.getDevObject("redColor")
+		lightPinkColor! = callpoint!.getDevObject("lightPinkColor")
 
 		gmxCustomer_dev=fnget_dev("GMX_CUSTOMER")
 		dim gmxCustomer$:fnget_tpl$("GMX_CUSTOMER")
@@ -445,27 +454,39 @@ rem ==========================================================================
 			readrecord(gmxCustomer_dev,key=gmAccountno$+gmRecid$,knum="PRIMARY",dom=*next)gmxCustomer$
 			if cvs(gmxCustomer.firm_id$+gmxCustomer.customer_id$,2)<>"" then
 				rem --- Do not allow selecting GoldMine customers/contacts that have an existing GMX_CUSTOMER record. 
-				rem --- Indicate them by displaying the row in Barista’s +GRID_NONEDIT_COLOR.
-				readrecord(gmxCustomer_dev)gmxCustomer$
+				xrefExists=1
+				dim armCustmast$:fattr(armCustmast$)
 				armCustomer_key$=gmxCustomer.firm_id$+gmxCustomer.customer_id$
-				readrecord(armCustmast_dev,key=armCustomer_key$,knum="PRIMARY",dom=*next)armCustmast$; xrefExists=1
-				if xrefExists then
-					rem --- Addon-GoldMine cross reference exists (contact type X)
-					customer_id$=armCustmast.customer_id$
-					customer_name$=armCustmast.customer_name$
-					contact_name$=armCustmast.contact_name$
-					importGrid!.setRowBackColor(row, notSelectableColor!)
-					importGrid!.setRowEditable(row,0)
+				readrecord(armCustmast_dev,key=armCustomer_key$,knum="PRIMARY",dom=*next)armCustmast$
+				customer_id$=armCustmast.customer_id$
+				customer_name$=armCustmast.customer_name$
+				contact_name$=armCustmast.contact_name$
 
-					rem --- Update contactMap!
-					cBoxVect!=SysGUI!.makeVector()
-					cBoxVect!.addItem("X")
-					cBoxVect!.addItem(row)
-					cBoxVect!.addItem(-1)
-					cBoxVect!.addItem(-1)
-					cBoxVect!.addItem(-1)
-					contactMap!.put(gmContact$,cBoxVect!)
+				rem --- If exists in current firm, indicate them by displaying the row in Barista’s +GRID_NONEDIT_COLOR.
+				rem --- If doesn't exist in current firm, indicate them by displaying the row in light pink.
+				if gmxCustomer.firm_id$=firm_id$ then
+					rem --- Addon-GoldMine cross reference exists in current firm (contact type X)
+					importGrid!.setRowBackColor(row, notSelectableColor!)
+				else
+					rem --- Addon-GoldMine cross reference doesn't exist in current firm (contact type Z)
+					importGrid!.setRowBackColor(row, lightPinkColor!)
 				endif
+				importGrid!.setRowEditable(row,0)
+
+				rem --- Update contactMap!
+				cBoxVect!=SysGUI!.makeVector()
+				if gmxCustomer.firm_id$=firm_id$ then
+					rem --- Addon-GoldMine cross reference exists in current firm (contact type X)
+					cBoxVect!.addItem("X")
+				else
+					rem --- Addon-GoldMine cross reference doesn't exist in current firm (contact type Z)
+					cBoxVect!.addItem("Z")
+				endif
+				cBoxVect!.addItem(row)
+				cBoxVect!.addItem(-1)
+				cBoxVect!.addItem(-1)
+				cBoxVect!.addItem(-1)
+				contactMap!.put(gmContact$,cBoxVect!)
 			endif
 
 			rem --- Is there a matching customer and contact in the current firm?
@@ -485,7 +506,8 @@ rem ==========================================================================
 					readrecord(armCustmast_dev)armCustmast$
 					matchNoXref=1
 					customer_id$=armCustmast.customer_id$
-					customer_name$=mappedAonCustomerName$
+					customer_name$=armCustmast.customer_name$
+					contact_name$=armCustmast.contact_name$
 					importGrid!.setCellForeColor(row,5,redColor!)
 					importGrid!.setCellForeColor(row,6,redColor!)
 					importGrid!.setCellEditable(row,0,0)
@@ -494,7 +516,6 @@ rem ==========================================================================
 					aonProp!=gmClient!.mapToAddon("CONTACT",gmContact$)
 					mappedAonContactName$=aonProp!.getProperty("value1")
 					if cvs(armCustmast.contact_name$,2)=cvs(mappedAonContactName$,2) then
-						contact_name$=mappedAonContactName$
 						importGrid!.setCellForeColor(row,7,redColor!)
 					endif
 				wend
@@ -715,7 +736,7 @@ rem ==========================================================================
 					if thisContact$=gmContact$ then continue
 					cBoxVect!=cast(BBjVector,contactMap!.get(thisContact$))
 					rem --- Leave checkboxes disabled if cross reference exists
-					if cBoxVect!.get(0)="X" then continue
+					if pos(cBoxVect!.get(0)="XZ") then continue
 					thisRow=cBoxVect!.get(1)
 					importGrid!.setCellEditable(thisRow,2,0)
 					importGrid!.setCellBackColor(thisRow,2,notSelectableColor!)
@@ -738,7 +759,7 @@ rem ==========================================================================
 					if thisContact$=gmContact$ then continue
 					cBoxVect!=cast(BBjVector,contactMap!.get(thisContact$))
 					rem --- Leave checkboxes disabled if cross reference exists
-					if cBoxVect!.get(0)="X" then continue
+					if pos(cBoxVect!.get(0)="XZ") then continue
 					thisRow=cBoxVect!.get(1)
 					importGrid!.setCellEditable(thisRow,2,1)
 					importGrid!.setCellBackColor(thisRow,2,whiteColor!)
@@ -791,8 +812,8 @@ rem ==========================================================================
 			progress!.setValue("+process_task",process_id$+"^U^"+str(i)+"^")
 		endif
 
-		rem --- Contact type X
-		if cBoxVect!.getItem(0)="X" then continue
+		rem --- Contact type X or Z
+		if pos(cBoxVect!.getItem(0)="XZ") then continue
 
 		rem --- Contact type M
 		if cBoxVect!.getItem(0)="M" then
@@ -827,7 +848,7 @@ rem ==========================================================================
 						while contactIter!.hasNext()
 							thisContact$=cast(BBjString, contactIter!.next())
 							cBoxVect!=cast(BBjVector,contactMap!.get(thisContact$))
-							if cBoxVect!.get(0)="X" then continue
+							if pos(cBoxVect!.get(0)="XZ") then continue
 							thisRow=cBoxVect!.get(1)
 							importGrid!.setCellEditable(thisRow,2,1)
 							importGrid!.setCellBackColor(thisRow,2,whiteColor!)
