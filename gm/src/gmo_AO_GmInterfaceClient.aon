@@ -203,11 +203,10 @@ launchClient_error:rem --- Method error trap/handler
                         
                         rem --- Make sure the GoldMine XML interface API is loaded for this firm
                         if gmqCustomerTpl.firm_id$ <> thisFirm$ then
-                            thisFirm$ = gmqCustomerTpl.firm_id$
                             if !#gmLoadAPI(thisFirm$) or !#gmSessionIDs!.containsKey(thisFirm$) then
-                                read(gmqCustomerDev,err=*continue)
-                                continue
+                                read(gmqCustomerDev,key=gmqCustomerTpl.firm_id$+$FF$,dom=*continue); rem --- skip to next firm
                             endif            
+                            thisFirm$ = gmqCustomerTpl.firm_id$
                         endif
                         
                         rem --- Map non-blank fields to GoldMine fields
