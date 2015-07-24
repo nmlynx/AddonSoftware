@@ -156,6 +156,7 @@ GmInterfaceClient_error:rem --- Method error trap/handler
             if lock_successful then
                 while 1
                     #pushCustomers()
+                    #terminateGmSessions()
                     wait #waitTime
                 wend
             endif
@@ -203,8 +204,10 @@ launchClient_error:rem --- Method error trap/handler
                         rem --- Make sure the GoldMine XML interface API is loaded for this firm
                         if gmqCustomerTpl.firm_id$ <> thisFirm$ then
                             thisFirm$ = gmqCustomerTpl.firm_id$
-                            #gmLoadAPI(thisFirm$)            
-                            if !#gmSessionIDs!.containsKey(thisFirm$) then continue
+                            if !#gmLoadAPI(thisFirm$) or !#gmSessionIDs!.containsKey(thisFirm$) then
+                                read(gmqCustomerDev,err=*continue)
+                                continue
+                            endif            
                         endif
                         
                         rem --- Map non-blank fields to GoldMine fields
@@ -322,9 +325,12 @@ pushCustomers_error:rem --- Method error trap/handler
         rem  * Load the GoldMine XML interface API.
         rem  *
         rem  * @param BBjString firmId$
+        rem  * 
+        rem  * @return BBjInt statusCode% (0=failure  1=success)
         rem  */
-        method protected void gmLoadAPI(BBjString firmId$)
+        method protected BBjInt gmLoadAPI(BBjString firmId$)
             seterr gmLoadAPI_error
+            statusCode% = int(1)
 
             rem --- Load API as necessary
             if !#gmSessionIDs!.containsKey(firmId$) then
@@ -357,10 +363,11 @@ pushCustomers_error:rem --- Method error trap/handler
                 rem --- Log error
                 if props!.containsKey("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
                     #logError("gmLoadAPI(): statusCode="+props!.getProperty("statusCode"),props!.getProperty("statusText"))
+                    statusCode% = int(0)
                 endif
             endif
 
-            methodret
+            methodret statusCode%
             
 gmLoadAPI_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
@@ -417,26 +424,27 @@ gmWriteContact_error:rem --- Method error trap/handler
         rem /**
         rem  * Logout of the GoldMine XML interface API.
         rem  *
+        rem  * @param BBjString firmId$
+        rem  * 
+        rem  * @return BBjInt statusCode% (0=failure  1=success)
         rem  */
-        method protected void gmLogout()
+        method protected BBjInt gmLogout(BBjString firmId$)
             seterr gmLogout_error
 
-            rem --- Process all firms that have a GoldMine session
-            firmIter! = #gmSessionIDs!.keySet().iterator()
-            while firmIter!.hasNext()
-                firmId$ = firmIter!.next()
-                aonData! = new Properties()
-                xmlRequest$ = #buildXMLRequest("Logout", aonData!, firmId$)
-                xmlResponse$ = #postRequest(xmlRequest$, firmId$)
-                props!=#parseXMLResponse(xmlResponse$, firmId$)
-    
-                rem --- Log error
-                if props!.containsKey("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
-                    #logError("gmLogout(): statusCode="+props!.getProperty("statusCode"),props!.getProperty("statusText"))
-                endif
-            wend
+            aonData! = new Properties()
+            xmlRequest$ = #buildXMLRequest("Logout", aonData!, firmId$)
+            xmlResponse$ = #postRequest(xmlRequest$, firmId$)
+            props!=#parseXMLResponse(xmlResponse$, firmId$)
 
-            methodret
+            rem --- Log error
+            if props!.containsKey("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
+                #logError("gmLogout(): statusCode="+props!.getProperty("statusCode"),props!.getProperty("statusText"))
+                statusCode% = int(0)
+            else
+                statusCode% = int(1)
+            endif
+
+            methodret statusCode%
             
 gmLogout_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
@@ -456,24 +464,25 @@ gmLogout_error:rem --- Method error trap/handler
         rem /**
         rem  * Unload the GoldMine XML interface API.
         rem  *
+        rem  * @param BBjString firmId$
+        rem  * 
+        rem  * @return BBjInt statusCode% (0=failure  1=success)
         rem  */
-        method protected void gmUnloadAPI()
+        method protected BBjInt gmUnloadAPI(BBjString firmId$)
             seterr gmUnloadAPI_error
 
-            rem --- Process all firms that have a GoldMine session
-            firmIter! = #gmSessionIDs!.keySet().iterator()
-            while firmIter!.hasNext()
-                firmId$ = firmIter!.next()
-                aonData! = new Properties()
-                xmlRequest$ = #buildXMLRequest("UnloadAPI", aonData!, firmId$)
-                xmlResponse$ = #postRequest(xmlRequest$, firmId$)
-                props!=#parseXMLResponse(xmlResponse$, firmId$)
-    
-                rem --- Log error
-                if props!.containsKey("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
-                    #logError("gmUnloadAPI(): statusCode="+props!.getProperty("statusCode"),props!.getProperty("statusText"))
-                endif
-            wend
+            aonData! = new Properties()
+            xmlRequest$ = #buildXMLRequest("UnloadAPI", aonData!, firmId$)
+            xmlResponse$ = #postRequest(xmlRequest$, firmId$)
+            props!=#parseXMLResponse(xmlResponse$, firmId$)
+
+            rem --- Log error
+            if props!.containsKey("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
+                #logError("gmUnloadAPI(): statusCode="+props!.getProperty("statusCode"),props!.getProperty("statusText"))
+                statusCode% = int(0)
+            else
+                statusCode% = int(1)
+            endif
 
             methodret
             
@@ -586,15 +595,13 @@ buildXMLRequest_error:rem --- Method error trap/handler
             rem --- Get gms_params properties for this firm
             dim gms_params$:#tplGmsParams$
             gms_params$ = #gmsParams!.getProperty(firmId$)
-                
-            rem --- Create instance of HttpClient
+
+            rem --- Create PostMethod for request
+            restUrl$ = cvs(gms_params.webservice_url$,2)+"/?XML="+URLEncoder.encode(xmlRequest$,"UTF-8")
+            method! = new PostMethod(restUrl$)
+
+            rem --- Have HttpClient to execute the PostMethod
             client! = new HttpClient()
-
-            rem --- Create instance of PostMethod
-            method! = new PostMethod(gms_params.webservice_url$)
-            method!.addParameter("XML", URLEncoder.encode(xmlRequest$,"UTF-8"))
-
-            rem --- Tell HttpClient to execute the PostMethod
             sc% = client!.executeMethod(method!)
             if sc% <> HttpStatus.SC_OK then
                 #logError("postRequest(): "+method!.getStatusText(),xmlRequest$)
@@ -664,11 +671,19 @@ postRequest_error:rem --- Method error trap/handler
                         rem --- Get status element attribute and text
                         statusList! = doc!.getElementsByTagName("status")
                         if statusList!.getLength() > 0 then
-                            status! = cast(Element,statusList!.item(0))
-                            props!.setProperty("statusCode",status!.getAttribute("code"))
-                            props!.setProperty("statusText",status!.getTextContent())
+                            innerStatusList! = doc!.getElementsByTagName("inner_status")
+                            if innerStatusList!.getLength() > 0 then
+                                rem --- Use inner status if present
+                                innerStatus! = cast(Element,innerStatusList!.item(0))
+                                props!.setProperty("statusCode",innerStatus!.getAttribute("code"))
+                                props!.setProperty("statusText","Inner Status: "+innerStatus!.getTextContent())
+                            else
+                                status! = cast(Element,statusList!.item(0))
+                                props!.setProperty("statusCode",status!.getAttribute("code"))
+                                props!.setProperty("statusText",status!.getTextContent())
+                            endif
                         else
-                            props!.setProperty("statusCode","")
+                            props!.setProperty("statusCode","?")
                             props!.setProperty("statusText","Status code missing.")
                         endif
     
@@ -686,6 +701,10 @@ postRequest_error:rem --- Method error trap/handler
                     rem --- Log error
                     #logError("parseXMLResponse(): "+errmes(-1),xmlResponse$)
                 endif
+            else
+                rem --- Treat blank xmlResponse$ as an error
+                props!.setProperty("statusCode","?")
+                props!.setProperty("statusText","Unknown. No response.")
             endif
 
             methodret props!
@@ -1383,10 +1402,7 @@ startClient_error:rem --- Method error trap/handler
         method public void close()
             seterr close_error
 
-            if #gmSessionIDs!.size() > 0 then
-                #gmLogout()
-                #gmUnloadAPI()
-            endif
+            #terminateGmSessions()
             if devSQL% >= 0 then close(devSQL%,err=*next)
             if devGmqCustomer% >= 0 then close(devGmqCustomer%,err=*next)
             if devGmxCustomer% >= 0 then close(devGmxCustomer%,err=*next)
@@ -1396,6 +1412,41 @@ startClient_error:rem --- Method error trap/handler
             methodret
             
 close_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Terminate all GoldMine sessions by sending Logout and UnloadAPI requests.
+        rem  *
+        rem  */
+        method public void terminateGmSessions()
+            seterr terminateGmSessions_error
+
+            rem --- Process all firms that have a GoldMine session
+            firmIter! = #gmSessionIDs!.keySet().iterator()
+            while firmIter!.hasNext()
+                firmId$ = firmIter!.next()
+                if #gmLogout(firmId$) then
+                    if #gmUnloadAPI(firmId$) then
+                        #gmSessonIDs!.remove(firmId$)
+                    endif
+                endif
+            wend
+
+            methodret
+            
+terminateGmSessions_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
