@@ -96,7 +96,8 @@ GmInterfaceClient_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -151,12 +152,11 @@ GmInterfaceClient_error:rem --- Method error trap/handler
             rem --- Lock push log to ensure only one client instance is talking to web service
             lock_successful = 0
             lock(#devPushLog%,err=*next); lock_successful = 1
-                
+
             rem --- Start endless loop if have exclusive access to push log
             if lock_successful then
                 while 1
                     #pushCustomers()
-                    #terminateGmSessions()
                     wait #waitTime
                 wend
             endif
@@ -168,7 +168,8 @@ launchClient_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -203,7 +204,8 @@ launchClient_error:rem --- Method error trap/handler
                         
                         rem --- Make sure the GoldMine XML interface API is loaded for this firm
                         if gmqCustomerTpl.firm_id$ <> thisFirm$ then
-                            if !#gmLoadAPI(thisFirm$) or !#gmSessionIDs!.containsKey(thisFirm$) then
+                            #terminateGmSessions()
+                            if !#gmLoadAPI(gmqCustomerTpl.firm_id$) or !#gmSessionIDs!.containsKey(gmqCustomerTpl.firm_id$) then
                                 read(gmqCustomerDev,key=gmqCustomerTpl.firm_id$+$FF$,dom=*continue); rem --- skip to next firm
                             endif            
                             thisFirm$ = gmqCustomerTpl.firm_id$
@@ -280,11 +282,11 @@ launchClient_error:rem --- Method error trap/handler
                             dim gmxCustomerTpl$:#tplGmxCustomer$
                             gmxCustomerTpl.firm_id$ = gmqCustomerTpl.firm_id$
                             gmxCustomerTpl.customer_id$ = gmqCustomerTpl.customer_id$
-                            if gmData!.containsKey("AccountNo") then
-                                gmxCustomerTpl.gm_accountno$ = gmData!.getProperty("AccountNo")
+                            if gmData!.containsKey("ACCOUNTNO") then
+                                gmxCustomerTpl.gm_accountno$ = gmData!.getProperty("ACCOUNTNO")
                             endif
-                            if gmData!.containsKey("RecID") then
-                                gmxCustomerTpl.gm_recid$ = gmData!.getProperty("RecID")
+                            if gmData!.containsKey("RECID") then
+                                gmxCustomerTpl.gm_recid$ = gmData!.getProperty("RECID")
                             endif
                             writerecord(gmxCustomerDev,dom=*next)gmxCustomerTpl$
                             
@@ -300,6 +302,7 @@ launchClient_error:rem --- Method error trap/handler
                             read(gmqCustomerDev,err=*next)
                         endif
                     wend
+                    #terminateGmSessions()
                 endif
             endif
 
@@ -310,7 +313,8 @@ pushCustomers_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -373,7 +377,8 @@ gmLoadAPI_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -410,7 +415,8 @@ gmWriteContact_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -450,7 +456,8 @@ gmLogout_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -483,14 +490,15 @@ gmLogout_error:rem --- Method error trap/handler
                 statusCode% = int(1)
             endif
 
-            methodret
+            methodret statusCode%
             
 gmUnloadAPI_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -569,7 +577,8 @@ buildXMLRequest_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -620,7 +629,8 @@ postRequest_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -713,7 +723,8 @@ parseXMLResponse_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -811,7 +822,8 @@ mapToGoldMine_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -853,7 +865,8 @@ mapToGoldMineCountry_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -964,7 +977,8 @@ mapToAddon_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1007,7 +1021,8 @@ mapToAddonCountry_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1050,7 +1065,8 @@ mapToAddonCntryId_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1087,7 +1103,8 @@ onlyAlphaNumericChars_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1146,7 +1163,8 @@ getStateCodes_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1206,7 +1224,8 @@ getCountryCodes_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1276,7 +1295,8 @@ isGmContact_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1338,7 +1358,8 @@ getGmContactInfo_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1384,7 +1405,8 @@ startClient_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1415,7 +1437,8 @@ close_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1431,16 +1454,22 @@ close_error:rem --- Method error trap/handler
         rem  */
         method public void terminateGmSessions()
             seterr terminateGmSessions_error
+            firmsRemoved! = bbjAPI().makeVector()
 
             rem --- Process all firms that have a GoldMine session
             firmIter! = #gmSessionIDs!.keySet().iterator()
             while firmIter!.hasNext()
                 firmId$ = firmIter!.next()
-                if #gmLogout(firmId$) then
-                    if #gmUnloadAPI(firmId$) then
-                        #gmSessonIDs!.remove(firmId$)
-                    endif
+                if #gmLogout(firmId$) and #gmUnloadAPI(firmId$) then
+                    firmsRemoved!.addItem(firmId$)
                 endif
+            wend
+
+            rem --- Remove closed GoldMine sessions
+            firmIter! = firmsRemoved!.iterator()
+            while firmIter!.hasNext()
+                firmId$ = cast(BBjString,firmIter!.next())
+                #gmSessionIDs!.remove(firmId$)
             wend
 
             methodret
@@ -1450,7 +1479,8 @@ terminateGmSessions_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1504,7 +1534,8 @@ openGmqCustomer_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1549,7 +1580,8 @@ openGmxCustomer_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1636,7 +1668,8 @@ logPush_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1702,7 +1735,8 @@ logError_error:rem --- Method error trap/handler
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
                 E!=BBjAPI().getLastException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
             endif
             rem #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1759,4 +1793,3 @@ rem  */
         methodend
     
     classend
-    
