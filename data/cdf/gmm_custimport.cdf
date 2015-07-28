@@ -81,6 +81,13 @@ rem --- Make sure we get all entries in the grid by setting focus on some contro
 	ctl!=callpoint!.getControl("GMM_CUSTIMPORT.CSV_FILE")
 	ctl!.focus()
 [[GMM_CUSTIMPORT.BSHO]]
+rem --- Verify GM parameters have been entered
+	num_files=1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="GMS_PARAMS",open_opts$[1]="OTA"
+	gosub open_tables
+	find (num(open_chans$[1]),key=firm_id$+"GM",err=std_missing_params) 
+
 rem --- Get GoldMine interface client
 	use ::gmo_GmInterfaceClient.aon::GmInterfaceClient
 	use ::gmo_GmInterfaceClient.aon::SortByCompanyContact
@@ -928,6 +935,8 @@ rem ==========================================================================
 	progress!.setValue("+process_task",process_id$+"^D^")
 
 	return
+
+#include std_missing_params.src
 [[GMM_CUSTIMPORT.AWIN]]
 rem --- Needed classes
 	use ::ado_util.src::util

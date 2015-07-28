@@ -609,11 +609,15 @@ rem --- Disable Option for Jobs if OP not installed or Job flag not set
 
 rem --- Additional/optional opens
 	if user_tpl.gm_installed$="Y" then
-		num_files=2
+		num_files=3
 		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-		open_tables$[1]="GMQ_CUSTOMER",open_opts$[1]="OTA"
-		open_tables$[2]="GMX_CUSTOMER",open_opts$[2]="OTA"
+		open_tables$[1]="GMS_PARAMS",open_opts$[1]="OTA"
+		open_tables$[2]="GMQ_CUSTOMER",open_opts$[2]="OTA"
+		open_tables$[3]="GMX_CUSTOMER",open_opts$[3]="OTA"
 		gosub open_tables
+
+		rem --- Verify GM parameters have been entered
+		find (num(open_chans$[1]),key=firm_id$+"GM",err=std_missing_params) 
 
 		rem --- Get GoldMine interface client
 		use ::gmo_GmInterfaceClient.aon::GmInterfaceClient
