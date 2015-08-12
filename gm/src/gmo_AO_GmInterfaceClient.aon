@@ -1558,7 +1558,7 @@ openGmqCustomer_error:rem --- Method error trap/handler
                 rem --- Open gmx_customer and get record template. Create file if necessary.
                 num_files=1
                 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-                open_tables$[1]="GMX_CUSTOMER",open_opts$[1]="OTA@"
+                open_tables$[1]="GMX_CUSTOMER",open_opts$[1]="OTA[1]"
 
                 call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
 
