@@ -152,6 +152,8 @@ rem --- Get Addon-GoldMine cross reference if one exists
 
                 rem --- Target is Item Maintenance
                 if target$="IVM_ITEMMAST"
+                    bar!.setTableId("IVM_ITEMMAST")
+
                     rem --- Make sure IV is installed
                     if iv_installed$<>"Y" then
                         msg_id$="AD_MODULE_NOT_INSTAL"
@@ -192,6 +194,11 @@ rem --- Get Addon-GoldMine cross reference if one exists
                         rem --- Create new Addon customer with GoldMine data
                         gosub add_aon_customer
                     endif
+                else
+                    rem --- Not launching arm_custmast. Cross reference required to get correct firm.
+                    msg_id$="GM_LINK_REQUIRED"
+                    gosub disp_message
+                    goto std_exit
                 endif
 
                 rem --- Launch bax_launch_task.bbj
@@ -354,6 +361,11 @@ rem --- Get Addon-GoldMine cross reference if one exists
                             swend
                         endif
                     endif
+                else
+                    rem --- Not launching arm_custmast. Cross reference required to get correct firm.
+                    msg_id$="GM_LINK_REQUIRED"
+                    gosub disp_message
+                    goto std_exit
                 endif
 
                 rem --- Launch bax_launch_task.bbj
@@ -381,6 +393,11 @@ rem --- Get Addon-GoldMine cross reference if one exists
                         rem --- Create new Addon customer with GoldMine data
                         gosub add_aon_customer
                     endif
+                else
+                    rem --- Not launching arm_custmast. Cross reference required to get correct firm.
+                    msg_id$="GM_LINK_REQUIRED"
+                    gosub disp_message
+                    goto std_exit
                 endif
 
                 rem --- Launch bax_launch_task.bbj
