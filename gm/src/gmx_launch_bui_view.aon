@@ -56,6 +56,9 @@ rem --- Get parameters passed in URL
     gmData!.setProperty("zip",gmZip$)
     gmData!.setProperty("country",gmCountry$)
 
+rem --- Other initializations
+    cookieExpireHrs = 12
+
 rem --- Verify modules are installed
     num_files=1
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
@@ -136,7 +139,7 @@ rem --- Get Addon-GoldMine cross reference if one exists
 
             rem --- Login to Barista with firm
             bar!=new Barista()
-            bar!.setCookieExpireHrs(12)
+            bar!.setCookieExpireHrs(cookieExpireHrs)
             bar!.setFirmId(firm_id$)
             bar!.setUserCredentials(gmUser$, "")
             
@@ -182,7 +185,7 @@ rem --- Get Addon-GoldMine cross reference if one exists
 
                     rem --- Login to Barista without specifying firm
                     bar!=new Barista()
-                    bar!.setCookieExpireHrs(12)
+                    bar!.setCookieExpireHrs(cookieExpireHrs)
                     bar!.setUserCredentials(gmUser$, "")
 
                     rem --- Ask if they want to create a new Addon customer for the GoldMine company.
@@ -238,7 +241,7 @@ rem --- Get Addon-GoldMine cross reference if one exists
                 if target$="ARM_CUSTMAST"
                     rem --- Login to Barista without specifying firm
                     bar!=new Barista()
-                    bar!.setCookieExpireHrs(12)
+                    bar!.setCookieExpireHrs(cookieExpireHrs)
                     bar!.setUserCredentials(gmUser$, "")
 
                     rem --- Can only work with firms user is authorized for
@@ -306,7 +309,7 @@ rem --- Get Addon-GoldMine cross reference if one exists
 
                             rem --- Login to Barista without firm and run AD_AUTH_FIRMS query
                             bar!=new Barista()
-                            bar!.setCookieExpireHrs(12)
+                            bar!.setCookieExpireHrs(cookieExpireHrs)
                             bar!.setUserCredentials(gmUser$, "")
                             bar!.setTaskType("Q")
                             bar!.setQueryId("GM_LINKCUSTOMER")
@@ -328,7 +331,7 @@ rem --- Get Addon-GoldMine cross reference if one exists
 
                                     rem --- Login to Barista with selected firm
                                     bar!=new Barista()
-                                    bar!.setCookieExpireHrs(12)
+                                    bar!.setCookieExpireHrs(cookieExpireHrs)
                                     bar!.setFirmId(gmw_linkcustomer.company_id$)
                                     bar!.setUserCredentials(gmUser$, "")
                                     
@@ -345,7 +348,7 @@ rem --- Get Addon-GoldMine cross reference if one exists
                                     
                                     rem --- Login to Barista with selected firm
                                     bar!=new Barista()
-                                    bar!.setCookieExpireHrs(12)
+                                    bar!.setCookieExpireHrs(cookieExpireHrs)
                                     bar!.setFirmId(gmw_linkcustomer.company_id$)
                                     bar!.setUserCredentials(gmUser$, "")
                                     
@@ -376,7 +379,7 @@ rem --- Get Addon-GoldMine cross reference if one exists
 
             rem --- Login to Barista without specifying firm
             bar!=new Barista()
-            bar!.setCookieExpireHrs(12)
+            bar!.setCookieExpireHrs(cookieExpireHrs)
             bar!.setUserCredentials(gmUser$, "")
             
             rem --- Launch target via bax_launch_task.bbj
@@ -442,7 +445,7 @@ add_aon_customer: rem --- Create new Addon customer with GoldMine data
 
     rem --- Login to Barista with selected firm
     bar!=new Barista()
-    bar!.setCookieExpireHrs(12)
+    bar!.setCookieExpireHrs(cookieExpireHrs)
     bar!.setFirmId(firm_id$)
     bar!.setUserCredentials(gmUser$, "")
 
