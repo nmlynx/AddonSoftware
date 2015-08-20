@@ -106,7 +106,7 @@ rem --- Open File(s)
     open_tables$[3]="ARS_PARAMS", open_opts$[3]="OTA"
     open_tables$[4]="ADM_FIRMS", open_opts$[4]="OTA"
     open_tables$[5]="ADM_USERFIRMS", open_opts$[5]="OTA"
-    open_tables$[6]="GMW_LINKCUSTOMER", open_opts$[6]="OTAI"
+    open_tables$[6]="GMW_LINKCUSTOMER", open_opts$[6]="OTA"
     if iv_installed$="Y" then
         open_tables$[7]="IVM_ITEMMAST", open_opts$[7]="OTA"
     endif
@@ -285,6 +285,14 @@ rem --- Get Addon-GoldMine cross reference if one exists
                         if msg_opt$<>"Y" then
                             goto std_exit
                         else
+                            rem --- Must clear current user from gmw_linkcustomer because can't use INITIFILE since gmw_linkcustomer might already be open.
+                            read(gmw_linkcustomer_dev,key=user_id$,dom=*next)
+                            while 1
+                                gmw_linkcustomer_key$=key(gmw_linkcustomer_dev,end=*break)
+                                if pos(user_id$=gmw_linkcustomer_key$)<>1 then break
+                                remove(gmw_linkcustomer_dev,key=gmw_linkcustomer_key$)
+                            wend
+
                             rem --- Provide list of all Addon customer’s whose name matches exactly the GoldMine company name so the user can select the one they want.
                             rem --- Build query work file with Addon customer names that match exactly the GoldMine company name.
                             for i=0 to aonCustomers!.size()-1
@@ -307,10 +315,7 @@ rem --- Get Addon-GoldMine cross reference if one exists
                                 writerecord(gmw_linkcustomer_dev)gmw_linkcustomer$
                             next i
 
-                            rem --- Login to Barista without firm and run AD_AUTH_FIRMS query
-                            bar!=new Barista()
-                            bar!.setCookieExpireHrs(cookieExpireHrs)
-                            bar!.setUserCredentials(gmUser$, "")
+                            rem --- Run AD_AUTH_FIRMS query
                             bar!.setTaskType("Q")
                             bar!.setQueryId("GM_LINKCUSTOMER")
                             bar!.setNamespaceId("gmx_launch_bui_view"+gmUser$)
