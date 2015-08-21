@@ -12,6 +12,7 @@ rem --- Translate!  : Translator object translations
 rem --- CONV_STATUS : Status code/0=No error (Returned)
 
     use java.io.File
+    use java.util.Properties
     use ::ado_file.src::FileObject
     
     setesc std_error
@@ -662,6 +663,7 @@ v1500_ivm02: rem --- Data initialization for product_type in ivm_itemwhse (ivm-0
 
 v1500_ope01: rem --- Data conversion for ope-01 (ope_ordhdr and ope_invhdr) and opt-01 (opt_invhdr)
 
+    invoiceMap!=new Properties()
     opt_table$="OPT_INVHDR"
     ope_table$="OPE_INVHDR"
     ope_file$="ope-01"
@@ -861,6 +863,13 @@ op_rtp_data_conv: rem --- OP Real Time Processing (RTP) data conversion
             opt_tpl$=ope_tpl$
         endif
         if opt_tpl.trans_status$=" " then
+            if ope_table$="OPE_INVHDR" then
+                invoiceMap!.setProperty(opt_tpl.order_no$,opt_tpl.ar_inv_no$)
+            else
+                if cvs(opt_tpl.ar_inv_no$,2)="" and invoiceMap!.containsKey(opt_tpl.order_no$) then
+                    opt_tpl.ar_inv_no$=invoiceMap.getProperty(opt_tpl.order_no$)
+                endif
+            endif
             opt_tpl.trans_status$="E"
             opt_tpl$=field(opt_tpl$)
             writerecord(opt_dev)opt_tpl$
