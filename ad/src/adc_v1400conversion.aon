@@ -123,7 +123,7 @@ rem --- For version 14.00, initialize invoice_bal in apt_invoicehdr
 
         rem --- Does conversion marker file exist for Initializeing invoice_bal in apt_invoicehdr?
         conv_marker_name$="v1400_apt-01"
-        conv_marker_file$=aonDir$+"data/"+conv_marker_name$
+        conv_marker_file$=dataDir$+conv_marker_name$
         convmarkerFile!=new File(conv_marker_file$)
         if convmarkerFile!.exists() then
             rem --- Verify required files are present
