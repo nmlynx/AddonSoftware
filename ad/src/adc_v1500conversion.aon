@@ -181,7 +181,7 @@ rem --- For version 15.00, initialize invoice_bal and disc_taken in art_invhdr
 
         rem --- Does conversion marker file exist for initializeing invoice_bal in art_invhdr?
         conv_marker_name$="v1500_art-01"
-        conv_marker_file$=aonDir$+"data/"+conv_marker_name$
+        conv_marker_file$=dataDir$+conv_marker_name$
         convmarkerFile!=new File(conv_marker_file$)
         if convmarkerFile!.exists() then
             rem --- Verify required files are present
@@ -266,7 +266,7 @@ rem --- For version 15.00, initialize product_type in ivm_itemwhse
 
         rem --- Does conversion marker file exist for initializeing product_type in ivm_itemwhse?
         conv_marker_name$="v1500_ivm-01"
-        conv_marker_file$=aonDir$+"data/"+conv_marker_name$
+        conv_marker_file$=dataDir$+conv_marker_name$
         convmarkerFile!=new File(conv_marker_file$)
         if convmarkerFile!.exists() then
             rem --- Verify required files are present
@@ -370,7 +370,7 @@ rem --- For version 15.00, data conversions for OP Real Time Processing (RTP) fi
 
         rem --- If data_source=OCJ and have v1500_ope-01 conversion marker file, verify can read old opt-11 for addon_source
         if convCtrl!.getProperty("data_source")="OCJ" then
-            conv_marker_file$=aonDir$+"data/v1500_ope-01"
+            conv_marker_file$=dataDir$+"v1500_ope-01"
             convmarkerFile!=new File(conv_marker_file$)
             if convmarkerFile!.exists() then
                 oldStbl$="+OPDATA"
@@ -402,7 +402,7 @@ rem --- For version 15.00, data conversions for OP Real Time Processing (RTP) fi
         for marker=0 to convMarkers!.size()-1
             rem --- Does conversion marker file exist?
             conv_marker_name$=convMarkers!.get(marker)
-            conv_marker_file$=aonDir$+"data/"+conv_marker_name$
+            conv_marker_file$=dataDir$+conv_marker_name$
             convmarkerFile!=new File(conv_marker_file$)
             if convmarkerFile!.exists() then
                 rem --- Verify required files are present
@@ -509,67 +509,67 @@ rem --- For version 15.00, data conversions for SA Real Time Processing (RTP) fi
 
         rem --- Identify types of Sales Analysis being used
         typeSA!=new java.util.HashMap()
-        saFile!=new File(aonDir$+"data/sam-01")
+        saFile!=new File(dataDir$+"sam-01")
         if saFile!.exists() then
             typeSA!.put("BY_CUSTOMER","Y") 
         else
             typeSA!.put("BY_CUSTOMER","") 
         endif
-        saFile!=new File(aonDir$+"data/sam-02")
+        saFile!=new File(dataDir$+"sam-02")
         if saFile!.exists() then
             typeSA!.put("BY_TERRITORY","Y") 
         else
             typeSA!.put("BY_TERRITORY","") 
         endif
-        saFile!=new File(aonDir$+"data/sam-03")
+        saFile!=new File(dataDir$+"sam-03")
         if saFile!.exists() then
             typeSA!.put("BY_SALESPSN","Y") 
         else
             typeSA!.put("BY_SALESPSN","") 
         endif
-        saFile!=new File(aonDir$+"data/sam-04")
+        saFile!=new File(dataDir$+"sam-04")
         if saFile!.exists() then
             typeSA!.put("BY_CUSTOMER_TYPE","Y") 
         else
             typeSA!.put("BY_CUSTOMER_TYPE","") 
         endif
-        saFile!=new File(aonDir$+"data/sam-05")
+        saFile!=new File(dataDir$+"sam-05")
         if saFile!.exists() then
             typeSA!.put("BY_SHIPTO","Y") 
         else
             typeSA!.put("BY_SHIPTO","") 
         endif
-        saFile!=new File(aonDir$+"data/sam-06")
+        saFile!=new File(dataDir$+"sam-06")
         if saFile!.exists() then
             typeSA!.put("BY_SIC_CODE","Y") 
         else
             typeSA!.put("BY_SIC_CODE","") 
         endif
-        saFile!=new File(aonDir$+"data/sam-07")
+        saFile!=new File(dataDir$+"sam-07")
         if saFile!.exists() then
             typeSA!.put("BY_PRODUCT","Y") 
         else
             typeSA!.put("BY_PRODUCT","") 
         endif
-        saFile!=new File(aonDir$+"data/sam-08")
+        saFile!=new File(dataDir$+"sam-08")
         if saFile!.exists() then
             typeSA!.put("BY_WHSE","Y") 
         else
             typeSA!.put("BY_WHSE","") 
         endif
-        saFile!=new File(aonDir$+"data/sam-09")
+        saFile!=new File(dataDir$+"sam-09")
         if saFile!.exists() then
             typeSA!.put("BY_VENDOR","Y") 
         else
             typeSA!.put("BY_VENDOR","") 
         endif
-        saFile!=new File(aonDir$+"data/sam-10")
+        saFile!=new File(dataDir$+"sam-10")
         if saFile!.exists() then
             typeSA!.put("BY_DIST_CODE","Y") 
         else
             typeSA!.put("BY_DIST_CODE","") 
         endif
-        saFile!=new File(aonDir$+"data/sam-11")
+        saFile!=new File(dataDir$+"sam-11")
         if saFile!.exists() then
             typeSA!.put("BY_NONSTOCK","Y") 
         else
