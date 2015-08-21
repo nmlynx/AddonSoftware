@@ -847,10 +847,11 @@ op_rtp_data_conv: rem --- OP Real Time Processing (RTP) data conversion
     endif
     read(ope_dev,key="",dom=*next)
     while 1
+        dim ope_tpl$:fattr(opt_tpl$)
         readrecord(ope_dev,end=*break)ope_tpl$
         if convCtrl!.getProperty("data_source")="OCJ" then
             rem --- Data upgraded via EM Update Wizard (OCJ)
-            rem --- New ope-* entry file has old ope-* entry file structure
+            rem --- New ope-* entry file has old ope-* entry file structure <<<=== this has changed, see Bug 8385
             dim opt_tpl$:fattr(opt_tpl$)
             call pgmdir$+"adc_copyfile.aon",ope_tpl$,opt_tpl$,status
             if status then break
