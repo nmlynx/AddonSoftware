@@ -251,6 +251,7 @@ rem --- Verify data_source
             rem --- Haven't run Distribute EM Update Wizard Files task yet
             err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
 :           Translate!.getTranslation("AON_DIST_UPDATE_WIZ_FILES","Distribute EM Update Wizard Files task was not run")+" *****"
+            no_close_mdi=1
             goto done
         else
             rem --- Unknown data_source
@@ -282,7 +283,6 @@ rem --- Process needed version conversion programs
             rem --- Report conversion program not found, skip other conversions
             err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
 :           Translate!.getTranslation("AON_CONV_PGM_NOT_FOUND","Conversion program not found")+": "+this_conv_pgm$+" *****"
-            no_close_mdi=1
             exitto done
         endif
         if conv_status<>0 then
