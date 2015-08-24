@@ -234,7 +234,11 @@ rem --- Update conversion control file data/adx_conversionCtrl, and create conve
             requiredFiles!.addAll(java.util.Arrays.asList(key!.split(";")))
             version$=fileDependencies!.get(key!)
             for i=0 to requiredFiles!.size()-1
-                file!=new File(fileLoc$+"/"+requiredFiles!.get(i))
+                filename$=requiredFiles!.get(i)
+                rem --- Because of v15.00 key and field changes to opt-11, it should always fail in OCJ.
+                rem --- So don't require opt-11 for v15.00 conversion using OCJ.
+                if version$="1500" and filename$="opt-11" then continue 
+                file!=new File(fileLoc$+"/"+filename$)
                 if !file!.exists() then
                     create_marker=0
                     break
