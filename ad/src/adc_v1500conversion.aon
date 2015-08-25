@@ -58,7 +58,7 @@ rem --- Start progress meter
     
 rem --- For version 15.00: - update drilldown definitions in ddm_drill_defs
 rem ---                    - consolidate vendor and customer report control into report control reciptients (adm_rptctl_rcp) file and update adm_rptctl with document type
-rem ---                    - remove old AONDEMONAG auto-launch tast (was renamed DEMONAG)
+rem ---                    - remove 'DEMONAG' auto-launch record with short keys
 
     this_module$="AD"
     if installMap!.get(this_module$)="Y" then 
@@ -77,7 +77,7 @@ rem ---                    - remove old AONDEMONAG auto-launch tast (was renamed
         open_tables$[3]="ADM_RPTCTL_RCP",   open_opts$[3]="OTA"
         open_tables$[4]="APM_VENDRPT_CTL",   open_opts$[4]="OTA"
         open_tables$[5]="ARM_CUSTRPT_CTL",   open_opts$[5]="OTA"
-        open_tables$[6]="ADS_AUTOLAUNCH",   open_opts$[6]="OTA"
+        open_tables$[6]="ADS_AUTOLAUNCH",   open_opts$[6]="OTA@"
         gosub open_tables
         ddm_drilldefs_dev=num(open_chans$[1])
         adm_rptctl_dev=num(open_chans$[2])
@@ -142,11 +142,8 @@ rem ---                    - remove old AONDEMONAG auto-launch tast (was renamed
             writerecord(adm_rptctl_dev)adm_rptctl$
         wend
 
-        rem --- Delete AONDEMONAG auto-launch tast
-        wk$=fattr(ads_autolaunch$,"PROCESS_ID")
-        dim process_id$(dec(wk$(10,2)))
-        process_id$(1)="AONDEMONAG"
-        remove(ads_autolaunch_dev,key=process_id$,dom=*next)
+        rem --- Remove 'DEMONAG' auto-launch record with short keys
+        remove(ads_autolaunch_dev,key="DEMONAG",dom=*next)
 
         rem --- Increment progress meter
         meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
