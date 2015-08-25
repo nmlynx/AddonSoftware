@@ -408,9 +408,13 @@ rem --- For version 15.00, data conversions for OP Real Time Processing (RTP) fi
                 requiredFiles!=BBjAPI().makeVector()
                 requiredFiles!.addAll(java.util.Arrays.asList(convCtrl!.getProperty(conv_marker_name$(2)).split(";")))
                 for i=0 to requiredFiles!.size()-1
-                    file!=new File(stbl("+"+this_module$+"DATA")+requiredFiles!.get(i))
+                    filename$=requiredFiles!.get(i)
+                    rem --- Because of v15.00 key and field changes to opt-11, it should always fail in OCJ.
+                    rem --- So don't require opt-11 for v15.00 conversion using OCJ.
+                    if convCtrl!.getProperty("data_source")="OCJ" and filename$="opt-11" then continue 
+                    file!=new File(stbl("+"+this_module$+"DATA")+filename$)
                     if !file!.exists() then
-                        missingFiles!.addItem(requiredFiles!.get(i))
+                        missingFiles!.addItem(filename$)
                     endif
                 next i
                 if missingFiles!.size()=0 then
@@ -865,7 +869,7 @@ op_rtp_data_conv: rem --- OP Real Time Processing (RTP) data conversion
                 invoiceMap!.setProperty(opt_tpl.order_no$,opt_tpl.ar_inv_no$)
             else
                 if cvs(opt_tpl.ar_inv_no$,2)="" and invoiceMap!.containsKey(opt_tpl.order_no$) then
-                    opt_tpl.ar_inv_no$=invoiceMap.getProperty(opt_tpl.order_no$)
+                    opt_tpl.ar_inv_no$=invoiceMap!.getProperty(opt_tpl.order_no$)
                 endif
             endif
             opt_tpl.trans_status$="E"
