@@ -37,6 +37,7 @@ rem --- Initializations
     err_msg$=""
     pgmdir$=stbl("+DIR_PGM",err=*next)
     dir_syp$=stbl("+DIR_SYP")
+    dataDir$=FileObject.fixPath(stbl("+DIR_DAT",err=*next), "/")
     
     rem --- Set needed STBLs if missing
     need_stbls=1
@@ -45,23 +46,6 @@ rem --- Initializations
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    
-rem --- Locate aon/data directory, if possible
-
-    aonDir$=""
-    dataDir$=FileObject.fixPath(stbl("+DIR_DAT",err=*next), "/")
-    xpos=pos("/aon/"=dataDir$,-1)
-    if xpos then
-        aonDir$=dataDir$(1,xpos+4)
-    endif
-    if aonDir$="" then
-        xpos=pos("/data/"=dataDir$,-1)
-        if xpos then
-            aonDir$=dataDir$(1,xpos)
-        else
-            aonDir$=dataDir$
-        endif
-    endif
 
 rem --- If conversion control file data/adx_conversionCtrl present and data_source=AIUW, launch Distribute EM Update Wizard Files form
 
