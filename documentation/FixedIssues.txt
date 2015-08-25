@@ -113,3 +113,22 @@ always fail in OCJ, so don't require opt-11 for v15.00 conversion using
 OCJ.
 ----
 Modified: ad/src/adc_mvupgrdfiles.aon
+
+=======================================================================================================================================
+Revision: 7bc60e045c4f7374c4d09027cc07b7e9ab08807b
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 8/24/2015 6:24:42 PM
+Message:
+Bug 8387: Use mount_dir in Barista's ddm_systems table to locate ADDON's
+home directory rather than trying to parse it out of the
+STBL("+DIR_DAT") path.
+----
+Modified: ad/src/adc_mvupgrdfiles.aon
+Modified: ad/src/adc_v1200conversion.aon
+Modified: ad/src/adc_v1400conversion.aon
+Modified: ad/src/adc_v1500conversion.aon
+Modified: ad/src/adx_disocjfiles.aon
+Modified: ad/src/adx_init_data.aon
+Modified: data/bar/adx_dataport.xml
+Modified: data/cdf/adx_dataport.cdf
+Modified: util/dataport/DataPort_main.bbj
