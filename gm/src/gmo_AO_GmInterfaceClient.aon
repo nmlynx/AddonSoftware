@@ -40,6 +40,7 @@ rem ==========================================================================
     use net.sf.jasperreports.engine.util.JRLoader
 
     class public AO_GmInterfaceClient
+        field protected BBjString aonDir$ = ""
         field protected BBjNumber BLOCKSIZE = 2^20
         field protected BBjInt devErrLog% = -1
         field protected BBjInt devGmqCustomer% = -1
@@ -86,8 +87,25 @@ rem ==========================================================================
                 endif
             wend
 
-            rem --- Close gms_params
+            rem --- Open Barista's ddm_systems
+            filename$ = "ddm_systems.dat"
+            ddm_systems = unt
+            open(ddm_systems)stbl("+DIR_BRD")+filename$
+
+            rem --- Get record template Barista's ddm_systems
+            read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
+            dim ddm_systems$:table_tpl$
+    
+            rem --- Get path for Addon's home aon directory
+            readrecord(ddm_systems,key=pad("ADDON",16," "),knum="SYSTEM_ID",err=*next)ddm_systems$
+            if cvs(ddm_systems.mount_dir$,2)<>"" then
+                #aonDir$=ddm_systems.mount_dir$
+            endif
+
+            rem --- Close files
+            close(tplsChan,err=*next)
             close(devGmsParams,err=*next)
+            close(ddm_systems,err=*next)
 
             methodret
             
@@ -117,23 +135,7 @@ GmInterfaceClient_error:rem --- Method error trap/handler
             rem --- As needed, open push log file
             if #devPushLog% < 0 then 
                 rem --- Open push log file in aon/logs directory, if possible
-                aonDir$ = ""
-                dataDir$ = FileObject.fixPath(stbl("+DIR_DAT",err=*next), "/")
-                xpos = pos("/aon/"=dataDir$,-1)
-                if xpos then
-                    aonDir$ = dataDir$(1,xpos+4)
-                endif
-                if aonDir$="" then
-                    xpos = pos("/data/"=dataDir$,-1)
-                    if xpos then
-                        aonDir$ = dataDir$(1,xpos)
-                    else
-                        aonDir$ = dataDir$
-                    endif
-                endif
-
-                rem --- Create logs directory
-                logDir$ = aonDir$ + "/logs"
+                logDir$ = #aonDir$ + "/logs"
                 FileObject.makeDirs(new File(logDir$))
 
                 rem --- Open/create push log file
@@ -1691,23 +1693,7 @@ logPush_error:rem --- Method error trap/handler
             rem --- As needed, open error log file
             if #devErrLog% < 0 then 
                 rem --- Open error log file in aon/logs directory, if possible
-                aonDir$ = ""
-                dataDir$ = FileObject.fixPath(stbl("+DIR_DAT",err=*next), "/")
-                xpos = pos("/aon/"=dataDir$,-1)
-                if xpos then
-                    aonDir$ = dataDir$(1,xpos+4)
-                endif
-                if aonDir$="" then
-                    xpos = pos("/data/"=dataDir$,-1)
-                    if xpos then
-                        aonDir$ = dataDir$(1,xpos)
-                    else
-                        aonDir$ = dataDir$
-                    endif
-                endif
-
-                rem --- Create logs directory
-                logDir$ = aonDir$ + "/logs"
+                logDir$ = #aonDir$ + "/logs"
                 FileObject.makeDirs(new File(logDir$))
 
                 rem --- Open/create error log file
