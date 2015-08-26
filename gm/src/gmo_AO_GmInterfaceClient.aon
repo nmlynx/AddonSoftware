@@ -93,7 +93,7 @@ rem ==========================================================================
             open(ddm_systems)stbl("+DIR_BRD")+filename$
 
             rem --- Get record template Barista's ddm_systems
-            read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
+            read(tplsChan,key=cvs(pad("DDM_SYSTEMS",16," "),4),dom=*next)*,*,table_tpl$
             dim ddm_systems$:table_tpl$
     
             rem --- Get path for Addon's home aon directory
