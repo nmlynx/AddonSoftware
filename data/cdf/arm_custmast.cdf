@@ -1,3 +1,126 @@
+[[ARM_CUSTMAST.AOPT-INVC]]
+rem --- Show invoices
+
+	custControl!=callpoint!.getControl("ARM_CUSTMAST.CUSTOMER_ID")
+	cust_id$=custControl!.getText()
+
+	selected_key$ = ""
+	dim filter_defs$[5,2]
+	filter_defs$[0,0]="OPT_INVHDR.FIRM_ID"
+	filter_defs$[0,1]="='"+firm_id$+"'"
+	filter_defs$[0,2]="LOCK"
+	filter_defs$[1,0]="OPT_INVHDR.TRANS_STATUS"
+	filter_defs$[1,1]="IN ('E','R','U')"
+	filter_defs$[1,2]=""
+	filter_defs$[2,0]="OPT_INVHDR.AR_TYPE"
+	filter_defs$[2,1]="='  '"
+	filter_defs$[2,2]="LOCK"
+	if cvs(cust_id$, 2) <> "" then
+		filter_defs$[3,0] = "OPT_INVHDR.CUSTOMER_ID"
+		filter_defs$[3,1] = "='" + cust_id$ + "'"
+		filter_defs$[3,2]="LOCK"
+	endif
+	filter_defs$[4,0]="OPT_INVHDR.INVOICE_TYPE"
+	filter_defs$[4,1]="NOT IN ('V','P')"
+	filter_defs$[4,2]="LOCK"
+	filter_defs$[5,0]="OPT_INVHDR.ORDINV_FLAG"
+	filter_defs$[5,1]="='I'"
+	filter_defs$[5,2]="LOCK"
+
+	dim search_defs$[3]
+
+	call stbl("+DIR_SYP")+"bax_query.bbj",
+:		gui_dev,
+:		Form!,
+:		"OP_INVOICES",
+:		"",
+:		table_chans$[all],
+:		selected_keys$,
+:		filter_defs$[all],
+:		search_defs$[all],
+:		"",
+:		"AO_STATUS"
+[[ARM_CUSTMAST.AOPT-ORDR]]
+rem --- Show orders
+
+	custControl!=callpoint!.getControl("ARM_CUSTMAST.CUSTOMER_ID")
+	cust_id$=custControl!.getText()
+
+	selected_key$ = ""
+	dim filter_defs$[5,2]
+	filter_defs$[0,0]="OPT_INVHDR.FIRM_ID"
+	filter_defs$[0,1]="='"+firm_id$+"'"
+	filter_defs$[0,2]="LOCK"
+	filter_defs$[1,0]="OPT_INVHDR.TRANS_STATUS"
+	filter_defs$[1,1]="IN ('E','R')"
+	filter_defs$[1,2]=""
+	filter_defs$[2,0]="OPT_INVHDR.AR_TYPE"
+	filter_defs$[2,1]="='  '"
+	filter_defs$[2,2]="LOCK"
+	if cvs(cust_id$, 2) <> "" then
+		filter_defs$[3,0] = "OPT_INVHDR.CUSTOMER_ID"
+		filter_defs$[3,1] = "='" + cust_id$ + "'"
+		filter_defs$[3,2]="LOCK"
+	endif
+	filter_defs$[4,0]="OPT_INVHDR.INVOICE_TYPE"
+	filter_defs$[4,1]="NOT IN ('V','P')"
+	filter_defs$[4,2]="LOCK"
+	filter_defs$[5,0]="OPT_INVHDR.ORDINV_FLAG"
+	filter_defs$[5,1]="='O'"
+	filter_defs$[5,2]="LOCK"
+
+	dim search_defs$[3]
+
+	call stbl("+DIR_SYP")+"bax_query.bbj",
+:		gui_dev,
+:		Form!,
+:		"OP_INVOICES",
+:		"",
+:		table_chans$[all],
+:		selected_keys$,
+:		filter_defs$[all],
+:		search_defs$[all],
+:		"",
+:		"AO_STATUS"
+[[ARM_CUSTMAST.AOPT-QUOT]]
+rem --- Show quotes
+
+	custControl!=callpoint!.getControl("ARM_CUSTMAST.CUSTOMER_ID")
+	cust_id$=custControl!.getText()
+
+	selected_key$ = ""
+	dim filter_defs$[4,2]
+	filter_defs$[0,0]="OPT_INVHDR.FIRM_ID"
+	filter_defs$[0,1]="='"+firm_id$+"'"
+	filter_defs$[0,2]="LOCK"
+	filter_defs$[1,0]="OPT_INVHDR.TRANS_STATUS"
+	filter_defs$[1,1]="IN ('E','R')"
+	filter_defs$[1,2]=""
+	filter_defs$[2,0]="OPT_INVHDR.AR_TYPE"
+	filter_defs$[2,1]="='  '"
+	filter_defs$[2,2]="LOCK"
+	if cvs(cust_id$, 2) <> "" then
+		filter_defs$[3,0] = "OPT_INVHDR.CUSTOMER_ID"
+		filter_defs$[3,1] = "='" + cust_id$ + "'"
+		filter_defs$[3,2]="LOCK"
+	endif
+	filter_defs$[4,0]="OPT_INVHDR.INVOICE_TYPE"
+	filter_defs$[4,1]="='P'"
+	filter_defs$[4,2]="LOCK"
+
+	dim search_defs$[3]
+
+	call stbl("+DIR_SYP")+"bax_query.bbj",
+:		gui_dev,
+:		Form!,
+:		"OP_INVOICES",
+:		"",
+:		table_chans$[all],
+:		selected_keys$,
+:		filter_defs$[all],
+:		search_defs$[all],
+:		"",
+:		"AO_STATUS"
 [[ARM_CUSTMAST.BWRI]]
 rem --- If GM installed, update GoldMine database as necessary
 	if user_tpl.gm_installed$="Y" then
@@ -590,6 +713,9 @@ rem --- Retrieve parameter data
 		dctl$[6]="ARM_CUSTDET.MESSAGE_CODE"
 		dctl$[7]="ARM_CUSTDET.DISC_CODE"
 		dctl$[8]="ARM_CUSTDET.PRICING_CODE"
+		callpoint!.setOptionEnabled("QUOT",0)
+		callpoint!.setOptionEnabled("ORDR",0)
+		callpoint!.setOptionEnabled("INVC",0)
 	endif
 	dctl$[9]="<<DISPLAY>>.DSP_BALANCE"
 	dctl$[10]="<<DISPLAY>>.DSP_MTD_PROFIT"
