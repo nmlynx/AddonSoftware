@@ -206,6 +206,30 @@ rem --- Verify end_version=ADM_MODULES.VERSION_ID for AD
     meter_action$="MTR-LST"
     gosub disp_meter
     print(log_dev)meter_text$
+    
+rem --- Verify data_source
+
+    if convCtrl!.getProperty("data_source")="DataPort" or convCtrl!.getProperty("data_source")="OCJ" then
+        rem --- Increment progress meter
+        meter_text$=Translate!.getTranslation("AON_CHECKED_DATA_SOURCE","Checked data source used")+": "+convCtrl!.getProperty("data_source")
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+    else
+        if convCtrl!.getProperty("data_source")="AIUW" then
+            rem --- Haven't run Distribute EM Update Wizard Files task yet
+            err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:           Translate!.getTranslation("AON_DIST_UPDATE_WIZ_FILES","Distribute EM Update Wizard Files task was not run")+" *****"
+            no_close_mdi=1
+            goto done
+        else
+            rem --- Unknown data_source
+            err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:           Translate!.getTranslation("AON_CONVERSIONCTRL_UNKNOWN","adx_conversionCtrl from unknown data source")+": "+convCtrl!.getProperty("data_source")+" *****"
+            goto done
+        endif
+    endif
 
 rem --- Following an upgrade, user may launch Addon before "copying" the data.
 rem --- Can't do anything if required files aren't present.
@@ -232,30 +256,6 @@ rem --- Can't do anything if required files aren't present.
     meter_action$="MTR-LST"
     gosub disp_meter
     print(log_dev)meter_text$
-    
-rem --- Verify data_source
-
-    if convCtrl!.getProperty("data_source")="DataPort" or convCtrl!.getProperty("data_source")="OCJ" then
-        rem --- Increment progress meter
-        meter_text$=Translate!.getTranslation("AON_CHECKED_DATA_SOURCE","Checked data source used")+": "+convCtrl!.getProperty("data_source")
-        meter_proc_recs=meter_proc_recs+1
-        meter_action$="MTR-LST"
-        gosub disp_meter
-        print(log_dev)meter_text$
-    else
-        if convCtrl!.getProperty("data_source")="AIUW" then
-            rem --- Haven't run Distribute EM Update Wizard Files task yet
-            err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
-:           Translate!.getTranslation("AON_DIST_UPDATE_WIZ_FILES","Distribute EM Update Wizard Files task was not run")+" *****"
-            no_close_mdi=1
-            goto done
-        else
-            rem --- Unknown data_source
-            err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
-:           Translate!.getTranslation("AON_CONVERSIONCTRL_UNKNOWN","adx_conversionCtrl from unknown data source")+": "+convCtrl!.getProperty("data_source")+" *****"
-            goto done
-        endif
-    endif
 
 rem --- Process needed version conversion programs
     for i=indexFirstConversion to versionsVect!.size()-1
