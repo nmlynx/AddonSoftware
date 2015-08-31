@@ -519,7 +519,7 @@ gmUnloadAPI_error:rem --- Method error trap/handler
         rem  *
         rem  * @return BBjString xmlString$
         rem  */
-        method protected BBjString buildXMLRequest(BBjString apiFunction$,Properties aonData!,BBjString firmId$)
+        method public BBjString buildXMLRequest(BBjString apiFunction$,Properties aonData!,BBjString firmId$)
             seterr buildXMLRequest_error
             xmlString$ = ""
 
@@ -598,7 +598,7 @@ buildXMLRequest_error:rem --- Method error trap/handler
         rem  *
         rem  * @return BBjString xmlResponse$
         rem  */
-        method protected BBjString postRequest(BBjString xmlRequest$, BBjString FirmId$)
+        method public BBjString postRequest(BBjString xmlRequest$, BBjString FirmId$)
             seterr postRequest_error
             xmlResponse$ = ""
 
@@ -650,7 +650,7 @@ postRequest_error:rem --- Method error trap/handler
         rem  *
         rem  * @return Properties props!
         rem  */
-        method protected Properties parseXMLResponse(BBjString xmlResponse$, BBjString firmId$)
+        method public Properties parseXMLResponse(BBjString xmlResponse$, BBjString firmId$)
             seterr parseXMLResponse_error
             props! = new Properties()
 
