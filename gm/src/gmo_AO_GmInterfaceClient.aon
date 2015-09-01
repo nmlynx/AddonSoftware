@@ -290,6 +290,7 @@ launchClient_error:rem --- Method error trap/handler
                             if gmData!.containsKey("RECID") then
                                 gmxCustomerTpl.gm_recid$ = gmData!.getProperty("RECID")
                             endif
+                            gmxCustomerTpl$=field(gmxCustomerTpl$)
                             writerecord(gmxCustomerDev,dom=*next)gmxCustomerTpl$
                             
                             rem --- On success, remove GMQ_CUSTOMER record

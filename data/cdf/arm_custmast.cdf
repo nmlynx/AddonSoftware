@@ -587,26 +587,61 @@ rem --- default arm02a.slspsn_code$,ar_terms_code$,disc_code$,ar_dist_code$,terr
 rem --- and inv_hist_flg$ per defaults in ops10d
 dim ars10d$:user_tpl.cust_dflt_tpl$
 ars10d$=user_tpl.cust_dflt_rec$
-callpoint!.setColumnData("ARM_CUSTDET.AR_TERMS_CODE",ars10d.ar_terms_code$)
-callpoint!.setColumnUndoData("ARM_CUSTDET.AR_TERMS_CODE",ars10d.ar_terms_code$)
-callpoint!.setColumnData("ARM_CUSTDET.AR_DIST_CODE",ars10d.ar_dist_code$)
-callpoint!.setColumnUndoData("ARM_CUSTDET.AR_DIST_CODE",ars10d.ar_dist_code$)
-callpoint!.setColumnData("ARM_CUSTDET.SLSPSN_CODE",ars10d.slspsn_code$)
-callpoint!.setColumnUndoData("ARM_CUSTDET.SLSPSN_CODE",ars10d.slspsn_code$)
-callpoint!.setColumnData("ARM_CUSTDET.DISC_CODE",ars10d.disc_code$)
-callpoint!.setColumnUndoData("ARM_CUSTDET.DISC_CODE",ars10d.disc_code$)
-callpoint!.setColumnData("ARM_CUSTDET.TERRITORY",ars10d.territory$)
-callpoint!.setColumnUndoData("ARM_CUSTDET.TERRITORY",ars10d.territory$)
-callpoint!.setColumnData("ARM_CUSTDET.TAX_CODE",ars10d.tax_code$)
-callpoint!.setColumnUndoData("ARM_CUSTDET.TAX_CODE",ars10d.tax_code$)
-callpoint!.setColumnData("ARM_CUSTDET.INV_HIST_FLG","Y")
-callpoint!.setColumnUndoData("ARM_CUSTDET.INV_HIST_FLG","Y")
+callpoint!.setColumnData("ARM_CUSTMAST.AR_SHIP_VIA",ars10d.ar_ship_via$,1)
+callpoint!.setColumnUndoData("ARM_CUSTMAST.AR_SHIP_VIA",ars10d.ar_ship_via$)
+callpoint!.setColumnData("ARM_CUSTMAST.FOB",ars10d.fob$,1)
+callpoint!.setColumnUndoData("ARM_CUSTMAST.FOB",ars10d.fob$)
 callpoint!.setColumnData("ARM_CUSTMAST.OPENED_DATE",date(0:"%Yd%Mz%Dz"))
 callpoint!.setColumnData("ARM_CUSTMAST.RETAIN_CUST","Y")
-if user_tpl.cm_installed$="Y" and user_tpl.dflt_cred_hold$="Y" 
-	callpoint!.setColumnData("ARM_CUSTDET.CRED_HOLD","Y")
-	callpoint!.setColumnUndoData("ARM_CUSTDET.CRED_HOLD","Y")
+
+callpoint!.setColumnData("ARM_CUSTDET.AR_TERMS_CODE",ars10d.ar_terms_code$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.AR_TERMS_CODE",ars10d.ar_terms_code$)
+callpoint!.setColumnData("ARM_CUSTDET.AR_DIST_CODE",ars10d.ar_dist_code$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.AR_DIST_CODE",ars10d.ar_dist_code$)
+callpoint!.setColumnData("ARM_CUSTDET.SLSPSN_CODE",ars10d.slspsn_code$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.SLSPSN_CODE",ars10d.slspsn_code$)
+callpoint!.setColumnData("ARM_CUSTDET.DISC_CODE",ars10d.disc_code$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.DISC_CODE",ars10d.disc_code$)
+callpoint!.setColumnData("ARM_CUSTDET.TERRITORY",ars10d.territory$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.TERRITORY",ars10d.territory$)
+callpoint!.setColumnData("ARM_CUSTDET.TAX_CODE",ars10d.tax_code$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.TAX_CODE",ars10d.tax_code$)
+if cvs(ars10d.inv_hist_flg$,2)<>"" then
+	callpoint!.setColumnData("ARM_CUSTDET.INV_HIST_FLG",ars10d.inv_hist_flg$,1)
+	callpoint!.setColumnUndoData("ARM_CUSTDET.INV_HIST_FLG",ars10d.inv_hist_flg$)
+else
+	callpoint!.setColumnData("ARM_CUSTDET.INV_HIST_FLG","Y",1)
+	callpoint!.setColumnUndoData("ARM_CUSTDET.INV_HIST_FLG","Y")
 endif
+if cvs(ars10d.cred_hold$,2)<>"" then
+	callpoint!.setColumnData("ARM_CUSTDET.CRED_HOLD",ars10d.cred_hold$,1)
+	callpoint!.setColumnUndoData("ARM_CUSTDET.CRED_HOLD",ars10d.cred_hold$)
+else
+	if user_tpl.cm_installed$="Y" and user_tpl.dflt_cred_hold$="Y" 
+		callpoint!.setColumnData("ARM_CUSTDET.CRED_HOLD","Y",1)
+		callpoint!.setColumnUndoData("ARM_CUSTDET.CRED_HOLD","Y")
+	endif
+endif
+callpoint!.setColumnData("ARM_CUSTDET.CUSTOMER_TYPE",ars10d.customer_type$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.CUSTOMER_TYPE",ars10d.customer_type$)
+callpoint!.setColumnData("ARM_CUSTDET.FRT_TERMS",ars10d.frt_terms$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.FRT_TERMS",ars10d.frt_terms$)
+callpoint!.setColumnData("ARM_CUSTDET.MESSAGE_CODE",ars10d.message_code$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.MESSAGE_CODE",ars10d.message_code$)
+callpoint!.setColumnData("ARM_CUSTDET.PRICING_CODE",ars10d.pricing_code$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.PRICING_CODE",ars10d.pricing_code$)
+callpoint!.setColumnData("ARM_CUSTDET.LABEL_CODE",ars10d.label_code$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.LABEL_CODE",ars10d.label_code$)
+callpoint!.setColumnData("ARM_CUSTDET.AR_CYCLECODE",ars10d.ar_cyclecode$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.AR_CYCLECODE",ars10d.ar_cyclecode$)
+callpoint!.setColumnData("ARM_CUSTDET.SA_FLAG",ars10d.sa_flag$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.SA_FLAG",ars10d.sa_flag$)
+callpoint!.setColumnData("ARM_CUSTDET.CREDIT_LIMIT",str(ars10d.credit_limit),1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.CREDIT_LIMIT",str(ars10d.credit_limit))
+callpoint!.setColumnData("ARM_CUSTDET.FINANCE_CHG",ars10d.finance_chg$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.FINANCE_CHG",ars10d.finance_chg$)
+callpoint!.setColumnData("ARM_CUSTDET.STATEMENTS",ars10d.statements$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.STATEMENTS",ars10d.statements$)
 
 rem --- clear out the contents of the widgets
 
