@@ -192,11 +192,15 @@ Gm2AonCustomer_error:rem --- Method error trap/handler
             endif
             armCustmast.opened_date$=date(0:"%Yd%Mz%Dz")
             armCustmast.retain_cust$="Y"
+            
+            dim arsCustdflt$:#tplArsCustdflt$
+            arsCustdflt$=#arsCustdflt$
+            armCustmast.ar_ship_via$=arsCustdflt.ar_ship_via$
+            armCustmast.fob$=arsCustdflt.fob$
+            armCustmast$=field(armCustmast$)
             writerecord(#devArmCustmast%)armCustmast$
 
             rem --- Initialize new customer defaults the same as in ARM_CUSTMAST AREC callpoint
-            dim arsCustdflt$:#tplArsCustdflt$
-            arsCustdflt$=#arsCustdflt$
             dim arsCredit$:#tplArsCredit$
             arsCredit$=#arsCredit$
             dim armCustdet$:#tplArmCustdet$
@@ -208,10 +212,29 @@ Gm2AonCustomer_error:rem --- Method error trap/handler
             armCustdet.disc_code$=arsCustdflt.disc_code$
             armCustdet.territory$=arsCustdflt.territory$
             armCustdet.tax_code$=arsCustdflt.tax_code$
-            armCustdet.inv_hist_flg$="Y"
-            if arsCredit.sys_install$="Y" and arsCredit.hold_new$="Y" 
-                armCustdet.cred_hold$="Y"
+            if cvs(arsCustdflt.inv_hist_flg$,2)<>"" then
+                armCustdet.inv_hist_flg$=arsCustdflt.inv_hist_flg$
+            else
+                armCustdet.inv_hist_flg$="Y"
             endif
+            if cvs(arsCustdflt.cred_hold$,2)<>"" then
+                    armCustdet.cred_hold$=arsCustdflt.cred_hold$
+            else
+                if arsCredit.sys_install$="Y" and arsCredit.hold_new$="Y" 
+                    armCustdet.cred_hold$="Y"
+                endif
+            endif
+            armCustdet.customer_type$=arsCustdflt.customer_type$
+            armCustdet.frt_terms$=arsCustdflt.frt_terms$
+            armCustdet.message_code$=arsCustdflt.message_code$
+            armCustdet.pricing_code$=arsCustdflt.pricing_code$
+            armCustdet.label_code$=arsCustdflt.label_code$
+            armCustdet.ar_cyclecode$=arsCustdflt.ar_cyclecode$
+            armCustdet.sa_flag$=arsCustdflt.sa_flag$
+            armCustdet.credit_limit=arsCustdflt.credit_limit
+            armCustdet.finance_chg$=arsCustdflt.finance_chg$
+            armCustdet.statements$=arsCustdflt.statements$
+            armCustdet$=field(armCustdet$)
             writerecord(#devArmCustdet%)armCustdet$
 
             rem --- Write Addon-GoldMine cross reference record
@@ -339,6 +362,7 @@ addCustomer_error:rem --- Method error trap/handler
                     country$=aonProps!.getProperty("value1")
                     if cvs(country$,2)<>"" then armCustmast.country$=country$
                 endif
+                armCustmast$=field(armCustmast$)
                 writerecord(#devArmCustmast%)armCustmast$
     
                 rem --- Write Addon-GoldMine cross reference record
@@ -391,6 +415,7 @@ updateCustomer_error:rem --- Method error trap/handler
             gmxCustomer.gm_recid$=gmRecid!
             gmxCustomer.firm_id$=#firmId$
             gmxCustomer.customer_id$=aonCustomerId$
+            gmxCustomer$=field(gmxCustomer$)
             writerecord(#devGmxCustomer%)gmxCustomer$
 
             methodret
