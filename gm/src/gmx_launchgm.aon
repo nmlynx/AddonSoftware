@@ -16,18 +16,69 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO")
     firm_id$=sysinfo.firm_id$
 
-rem --- Run Report?
+rem --- Open/Lock files
 
-    msg_id$="AD_TASK_NOT_AVAILABL"
-    dim msg_tokens$[1]
-    msg_tokens$[1]=sysinfo.task_desc$
-    gosub disp_message
+    num_files=1
+    dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
+    open_tables$[1] ="GMS_PARAMS",    open_opts$[1] = "OTA"
+    
+    gosub open_tables
+    
+    gmsParams_dev = num(open_chans$[1])
+    
+    dim gmsParams$:open_tpls$[1]
 
-rem ... Don’t allow attempting to launch GoldMine except on Windows machines
+rem --- GoldMine launch parameters must exist
+
+    findrecord(gmsParams_dev,key=firm_id$+"GM",err=std_missing_params)gmsParams$
+    if cvs(gmsParams.gm_launch_cmd$,2)="" or cvs(gmsParams.gm_working_dir$,2)="" then
+        msg_id$="AD_TASK_NOT_AVAILABL"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=sysinfo.task_desc$
+        gosub disp_message
+        goto std_exit
+    endif
+
+rem --- Use BBjThinClient::clientExec to launch GoldMine application
+
+    tc! = bbjapi().getThinClient()
+    if pos("Windows"=tc!.getClientOSName())<>1 then
+        rem --- Don’t allow attempting to launch GoldMine except on Windows machines
+        msg_id$="GM_WIN_OS_REQUIRED"
+        gosub disp_message
+        goto std_exit
+    endif
+    cmdLine! = bbjapi().makeVector()
+    cmdLine!.addItem(cvs(gmsParams.gm_launch_cmd$,2))
+    cmdLine!.addItem("&")
+    tc!.clientExec(cmdLine!, cvs(gmsParams.gm_working_dir$,2))
 
 rem --- All done
 
     goto std_exit
+    
+open_tables:rem --- Open Tables
+
+    call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:       open_beg,
+:       open_end,
+:       open_tables$[all],
+:       open_opts$[all],
+:       open_chans$[all],
+:       open_tpls$[all],
+:       rd_table_chans$[all],
+:       open_batch,
+:       open_status$
+
+    if open_status$<>""
+        msg_id$="ENTRY_OPEN_ERROR"
+        dim msg_tokens$[1]
+            msg_tokens$[1]=open_status$
+        gosub disp_message
+        goto std_exit
+    endif
+
+    return
 
 rem #include disp_message.src
 
