@@ -69,6 +69,7 @@ rem --- GoldMine connection parameters must exist
     if cvs(gmsParams.webservice_url$,2)="" or cvs(gmsParams.db_url$,2)="" then
         msg_id$="GM_MISS_CONN_PARAM"
         gosub disp_message
+        goto std_exit
     endif
     
     use ::gmo_GmInterfaceClient.aon::GmInterfaceClient
