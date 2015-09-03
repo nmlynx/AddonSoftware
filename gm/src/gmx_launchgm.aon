@@ -9,6 +9,13 @@ rem ==========================================================================
     setesc std_error
     seterr std_error
 
+rem --- This task is not available in BUI
+    if info(3,6)="5" then
+        msg_id$="AD_TASK_NOT_BUI"
+        gosub disp_message
+        goto std_exit
+    endif
+
 rem --- Retrieve sysinfo data
 
     sysinfo_template$=stbl("+SYSINFO_TPL")
