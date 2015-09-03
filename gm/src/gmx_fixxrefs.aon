@@ -33,20 +33,31 @@ rem --- Run Report?
 
 rem --- Open/Lock files
 
-    num_files=2
+    num_files=3
     dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
-    open_tables$[1] ="GMX_CUSTOMER",  open_opts$[1] = "OTA"
-    open_tables$[2] ="ARM_CUSTMAST",  open_opts$[2] = "OTA"
+    open_tables$[1] ="GMS_PARAMS",    open_opts$[1] = "OTA"
+    open_tables$[2] ="GMX_CUSTOMER",  open_opts$[2] = "OTA"
+    open_tables$[3] ="ARM_CUSTMAST",  open_opts$[3] = "OTA"
     
     gosub open_tables
     
-    gmxCustomer_dev = num(open_chans$[1])
-    armCustmast_dev = num(open_chans$[2])
+    gmsParams_dev = num(open_chans$[1])
+    gmxCustomer_dev = num(open_chans$[2])
+    armCustmast_dev = num(open_chans$[3])
     
-    dim gmxCustomer$:open_tpls$[1]
-    dim armCustmast$:open_tpls$[2]
+    dim gmsParams$:open_tpls$[1]
+    dim gmxCustomer$:open_tpls$[2]
+    dim armCustmast$:open_tpls$[3]
 
-    rem --- Get GoldMine interface client
+rem --- GoldMine connection parameters must exist
+
+    findrecord(gmsParams_dev,key=firm_id$+"GM",err=std_missing_params)gmsParams$
+    if cvs(gmsParams.webservice_url$,2)="" or cvs(gmsParams.db_url$,2)="" then
+        msg_id$="GM_MISS_CONN_PARAM"
+        gosub disp_message
+        goto std_exit
+    endif
+    
     use ::gmo_GmInterfaceClient.aon::GmInterfaceClient
     declare GmInterfaceClient gmClient!
     gmClient!=new GmInterfaceClient()
