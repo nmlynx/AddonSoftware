@@ -142,10 +142,6 @@ rem --- Test database connection
 	grpSpace!=BBjAPI().getGroupNamespace()
 	grpSpace!.setValue("+build_task","ON")
 
-	rem --- Create PostMethod for request
-	restUrl$ = cvs(callpoint!.getColumnData("GMS_PARAMS.WEBSERVICE_URL"),2)
-	method! = new PostMethod(restUrl$)
-
 	db_url$=callpoint!.getColumnData("GMS_PARAMS.DB_URL")
 	db_alias$=callpoint!.getColumnData("GMS_PARAMS.DB_ALIAS")
 	db_user$=callpoint!.getColumnData("GMS_PARAMS.DB_USER")
