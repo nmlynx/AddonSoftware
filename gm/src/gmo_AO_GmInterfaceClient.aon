@@ -673,9 +673,9 @@ postRequest_error:rem --- Method error trap/handler
                     if function$ = "LoadAPI" then
                         #gmSessionIDs!.setProperty(firmId$,sessionID$)
                     endif
-    
+
                     rem --- Verify GoldMine session ID
-                    if #gmSessionIDs!.getProperty(firmId$) = null() or sessionId$ <> #gmSessionIDs!.getProperty(firmId$) then
+                    if #gmSessionIDs!.getProperty(firmId$) <> null() and sessionId$ <> #gmSessionIDs!.getProperty(firmId$) then
                         props!.setProperty("statusCode","-100")
                         props!.setProperty("statusText","Wrong session Id: "+sessionId$)
                     else

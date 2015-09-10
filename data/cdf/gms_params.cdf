@@ -43,6 +43,7 @@ rem --- Test web service
 	rem --- Have HttpClient execute the PostMethod
 	client! = new HttpClient()
 	seterr connection_failed
+	errmsg$=""
 	sc% = client!.executeMethod(method!)
 	seterr std_error
 	method!.releaseConnection()
@@ -69,6 +70,7 @@ rem --- Test web service
 
 		rem --- Check status of LoadAPI method
 		if props!.containsKey("statusCode") and cvs(props!.getProperty("statusCode"),3)<>"1" then
+			errmsg$=cvs(props!.getProperty("statusText"),3)
 			goto connection_failed
 		else
 			rem --- Connection successful
@@ -80,14 +82,20 @@ rem --- Test web service
 			goto TSWB_done
 		endif
 	else
+		errmsg$="HTTP Error "+str(sc%)
 		goto connection_failed
 	endif
 
 connection_failed: rem --- Connection failed/error
 	grpSpace!.setValue("+build_task","OFF")
 	msg_id$="WEB_SERVICE_CONN_NOK"
-	dim msg_tokens$[1]
+	dim msg_tokens$[2]
 	msg_tokens$[1]="GoldMine web service."
+	if errmsg$="" then
+		msg_tokens$[2]=errmes(-1)
+	else
+		msg_tokens$[2]=errmsg$
+	endif
 	gosub disp_message
 
 TSWB_done: rem --- All done here
