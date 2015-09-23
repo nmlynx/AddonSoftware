@@ -231,7 +231,7 @@ while 1
 	recdet_key$=key(pot_recdet_dev,end=*break)
 	if pos(ky_po_rec$=recdet_key$)<>1 then break
 	read record (pot_recdet_dev)pot_recdet$
-	if cvs(receiver_no$,3)<>"" and pot_recdet.receiver_no$<>receiver_no$ then break
+	if cvs(receiver_no$,3)<>"" and pot_recdet.receiver_no$<>receiver_no$ then continue
 	find record (poc_linecode_dev,key=firm_id$+pot_recdet.po_line_code$,dom=*next)poc_linecode$
 	if pos(poc_linecode.line_type$="VM")<>0 then continue
 	if poc_linecode.line_type$<>"O"
