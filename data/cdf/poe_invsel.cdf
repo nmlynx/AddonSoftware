@@ -241,6 +241,7 @@ while 1
 	foundone=1
 	line_tot=line_tot+round(pot_recdet.qty_received*pot_recdet.unit_cost,2)
 	if pos(".AWRI"=event$)<>0 then gosub write_poe_invdet
+	if cvs(receiver_no$,3)<>"" break
 wend
 
 
