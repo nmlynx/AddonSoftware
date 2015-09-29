@@ -71,9 +71,9 @@ other=0
 dim x$:str(callpoint!.getDevObject("poe_invsel_key"))
 last$=""
 
+tot_dist=0
 ky$=firm_id$+callpoint!.getHeaderColumnData("POE_INVHDR.AP_TYPE")+callpoint!.getHeaderColumnData("POE_INVHDR.VENDOR_ID")+callpoint!.getHeaderColumnData("POE_INVHDR.AP_INV_NO")
 read (poe_invsel_dev,key=ky$,dom=*next)
-
 while 1
 	read record (poe_invsel_dev,end=*break)poe_invsel$
 	if pos(ky$=poe_invsel$)<>1 then break
@@ -91,9 +91,11 @@ while 1
 	poe_invsel.total_amount$=str(tot_invsel)
 	poe_invsel$=field(poe_invsel$)
 	write record (poe_invsel_dev)poe_invsel$
+	tot_dist=tot_dist+tot_invsel
 wend
 
 if other
+	tot_other=0
 	read (poe_invdet_dev,key=ky$,dom=*next)
 	while 1
 		read record (poe_invdet_dev,end=*break)poe_invdet$
@@ -112,9 +114,12 @@ if other
 	poe_invsel.total_amount$=str(tot_other)
 	poe_invsel$=field(poe_invsel$)
 	write record (poe_invsel_dev)poe_invsel$
+	tot_dist=tot_dist+tot_other
 endif
 
-	callpoint!.setStatus("REFGRID")
+callpoint!.setDevObject("tot_dist",str(tot_dist))
+callpoint!.setHeaderColumnData("POE_INVHDR.INVOICE_AMT",str(tot_dist))
+callpoint!.setStatus("REFGRID")
 [[POE_INVSEL.AREC]]
 rem --- Make sure new grid row is enabled
 util.enableGridRow(Form!,num(callpoint!.getValidationRow()))
