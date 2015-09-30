@@ -1,3 +1,6 @@
+[[POE_REQDET.BGDS]]
+rem --- Re-initialize requisition total amount before it's accumulated again for each detail row
+	callpoint!.setDevObject("total_amt","0")
 [[POE_REQDET.CONV_FACTOR.AVAL]]
 rem --- Recalc Unit Cost
 

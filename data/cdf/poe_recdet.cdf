@@ -1,3 +1,6 @@
+[[POE_RECDET.BGDS]]
+rem --- Re-initialize receipt total amount before it's accumulated again for each detail row
+	callpoint!.setDevObject("total_amt","0")
 [[POE_RECDET.WO_NO.AVAL]]
 rem --- need to use custom query so we get back both po# and line#
 rem --- throw message to user and abort manual entry
