@@ -644,11 +644,26 @@ rem --- Is previous record an order and not void?
 	ope01_dev = fnget_dev(file_name$)
 	dim ope01a$:fnget_tpl$(file_name$)
 
-	current_key$=callpoint!.getRecordKey()
-	read(ope01_dev,key=current_key$,dir=0,dom=*next)
+rem --- Position the file at the correct record
 
 	trans_status$=callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")
 	ar_type$=callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
+	if callpoint!.getDevObject("new_rec")="Y"
+		start_key$=firm_id$+trans_status$+ar_type$
+		cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+		if cvs(cust_id$,2)<>""
+			start_key$=start_key$+cust_id$
+			order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+			if cvs(order_no$,2)<>""
+				start_key$=start_key$+order_no$
+			endif
+		endif
+		read(ope01_dev,key=start_key$,dir=0,dom=*next)
+	else
+		current_key$=callpoint!.getRecordKey()
+		read(ope01_dev,key=current_key$,dir=0,dom=*next)
+	endif
+
 	hit_eof=0
 	while 1
 		p_key$ = keyp(ope01_dev, end=eof_pkey)
