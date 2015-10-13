@@ -132,6 +132,7 @@ else
 				write record (poe_reqdet_dev)poe_reqdet$
 			wend
 
+			rem --- Update links to Work Orders
 			if callpoint!.getDevObject("SF_installed")="Y"
 				sfe_womatl_dev=fnget_dev("SFE_WOMATL")
 				sfe_wosubcnt_dev=fnget_dev("SFE_WOSUBCNT")
@@ -150,6 +151,40 @@ else
 					new_wo$=old_wo$
 					new_woseq$=old_woseq$
 					call "poc_requpdate.aon",def_womatl_dev,sfe_wosubcnt_dev,req_no$,req_seq$,"R",line_type$,old_wo$,old_woseq$,new_wo$,new_woseq$,status
+				wend
+			endif
+		else		
+			rem --- Requisition NOT retained
+
+			rem --- Update links to Work Orders
+			if callpoint!.getDevObject("SF_installed")="Y" then
+				po_no$=callpoint!.getColumnData("POE_POHDR.PO_NO")
+				poe_podet_dev=fnget_dev("POE_PODET")
+				dim poe_podet$:fnget_tpl$("POE_PODET")
+				poc_linecode_dev=fnget_dev("POC_LINECODE")
+				dim poc_linecode$:fnget_tpl$("POC_LINECODE")
+				sfe_womatl_dev=fnget_dev("SFE_WOMATL")
+				sfe_wosubcnt_dev=fnget_dev("SFE_WOSUBCNT")
+
+				read (poe_podet_dev,key=firm_id$+po_no$,dom=*next)
+				while 1
+					poe_podet_key$=key(poe_podet_dev,end=*break)
+            				if pos(firm_id$+po_no$=poe_podet_key$)<>1 then break
+					read record (poe_podet_dev) poe_podet$
+					if cvs(poe_podet.wo_no$,2)="" then continue
+
+					dim poc_linecode$:fattr(poc_linecode$)
+					find record (poc_linecode_dev,key=firm_id$+poe_podet.po_line_code$,dom=*continue) poc_linecode$
+					if pos(poc_linecode.line_type$="NS")<>0 then
+						old_wo$=poe_podet.wo_no$
+						old_woseq$=poe_podet.wk_ord_seq_ref$
+						new_wo$=""
+						new_woseq$=""
+						po_no$=poe_podet.po_no$
+						po_seq$=poe_podet.internal_seq_no$
+						call pgmdir$+"poc_requpdate.aon",sfe_womatl_dev,sfe_wosubcnt_dev,
+:							po_no$,po_seq$,"P",poc_linecode.line_type$,old_wo$,old_woseq$,new_wo$,new_woseq$,status
+					endif
 				wend
 			endif
 		endif
