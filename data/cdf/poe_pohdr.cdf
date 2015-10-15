@@ -834,19 +834,23 @@ dropship_shipto: rem --- get and display shipto from Sales Order if dropship ind
 		read record (ope_ordhdr_dev)ope_ordhdr$
 		if pos(ope_ordhdr.trans_status$="ER") then break; rem --- new order can have at most just one new invoice, if any
 	wend
+	shipto_type$=ope_ordhdr.shipto_type$
 	shipto_no$=ope_ordhdr.shipto_no$
 	callpoint!.setColumnData("POE_POHDR.SHIPTO_NO",shipto_no$,1)
-	if cvs(shipto_no$,3)=""
+	if shipto_type$="B" then
+		rem --- Bill-To
 		gosub shipto_cust
 	endif
-	if num(shipto_no$,err=*endif)=99
+	if shipto_type$="M" then
+		rem --- Manual
 		read record (ope_ordship_dev,key=firm_id$+tmp_customer_id$+tmp_order_no$+ope_ordhdr.ar_inv_no$,dom=*next)ope_ordship$
 		dim rec$:fattr(ope_ordship$)
 		if pos(ope_ordship.trans_status$="ER") then rec$=ope_ordship$
 		gosub fill_dropship_address
 		callpoint!.setColumnData("POE_POHDR.DS_NAME",rec.name$,1)
 	endif
-	if num(shipto_no$,err=*endif)>0 and num(shipto_no$,err=*endif)<99
+	if shipto_type$="S" then
+		rem --- Ship-to
 		read record (arm_custship_dev,key=firm_id$+tmp_customer_id$+shipto_no$,dom=*next)arm_custship$
 		dim rec$:fattr(arm_custship$)
 		rec$=arm_custship$
