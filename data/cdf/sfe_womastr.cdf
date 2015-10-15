@@ -1,3 +1,6 @@
+[[SFE_WOMASTR.WAREHOUSE_ID.AVAL]]
+rem --- Reset default warehouse to this warehouse
+	callpoint!.setDevObject("default_wh",callpoint!.getUserInput())
 [[SFE_WOMASTR.AENA]]
 rem --- Disable Barista menu items
 	wctl$="31031"; rem --- Save-As menu item in barista.ini
