@@ -277,7 +277,8 @@ rem --- Update vendor info if vendor changed
 [[POE_POHDR.DROPSHIP.AVAL]]
 rem --- if turning off dropship flag, clear devObject items
 
-if callpoint!.getUserInput()="N"
+dropship$=callpoint!.getUserInput()
+if dropship$="N"
 	callpoint!.setDevObject("ds_orders","N")
 	callpoint!.setDevObject("so_ldat","")
 	callpoint!.setDevObject("so_lines_list","")
@@ -285,6 +286,7 @@ if callpoint!.getUserInput()="N"
 	callpoint!.setColumnData("POE_POHDR.SHIPTO_NO","",1)
 endif
 
+callpoint!.setColumnData("POE_POHDR.DROPSHIP",dropship$,1)
 gosub enable_dropship_fields
 [[POE_POHDR.CUSTOMER_ID.AVAL]]
 rem --- if dropshipping, retrieve/display specified shipto address
@@ -800,15 +802,17 @@ purch_addr_info: rem --- get and display Purchase Address Info
 	callpoint!.setColumnData("<<DISPLAY>>.PA_ZIP",apm05a.zip_code$,1)
 return
 
-whse_addr_info: rem --- get and display Warehouse Address Info
+whse_addr_info: rem --- get and display Warehouse Address Info when not a dropship
 	ivc_whsecode_dev=fnget_dev("IVC_WHSECODE")
 	dim ivc_whsecode$:fnget_tpl$("IVC_WHSECODE")
-	if pos("WAREHOUSE_ID.AVAL"=callpoint!.getCallpointEvent())<>0
-		warehouse_id$=callpoint!.getUserInput()
-	else
-		warehouse_id$=callpoint!.getColumnData("POE_POHDR.WAREHOUSE_ID")
+	if callpoint!.getColumnData("POE_POHDR.DROPSHIP")<>"Y" then
+		if pos("WAREHOUSE_ID.AVAL"=callpoint!.getCallpointEvent())<>0
+			warehouse_id$=callpoint!.getUserInput()
+		else
+			warehouse_id$=callpoint!.getColumnData("POE_POHDR.WAREHOUSE_ID")
+		endif
+		read record(ivc_whsecode_dev,key=firm_id$+"C"+warehouse_id$,dom=*next)ivc_whsecode$
 	endif
-	read record(ivc_whsecode_dev,key=firm_id$+"C"+warehouse_id$,dom=*next)ivc_whsecode$
 	callpoint!.setColumnData("<<DISPLAY>>.W_ADDR1",ivc_whsecode$.addr_line_1$,1)
 	callpoint!.setColumnData("<<DISPLAY>>.W_ADDR2",ivc_whsecode$.addr_line_2$,1)
 	callpoint!.setColumnData("<<DISPLAY>>.W_CITY",ivc_whsecode$.city$,1)
@@ -1009,6 +1013,7 @@ else
 		callpoint!.setColumnEnabled("POE_POHDR.ORDER_NO",0)
 		callpoint!.setColumnEnabled("POE_POHDR.SHIPTO_NO",0)
 	endif
+	gosub whse_addr_info
 endif
 return
 
