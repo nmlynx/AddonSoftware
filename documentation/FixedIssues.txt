@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2015-10-14
+ Report Date:   2015-10-16
  Report Branch: AddonSoftware 15.10
  Last Release:  AddonSoftware 15.02
 =======================================================================================================================================
@@ -841,3 +841,19 @@ Bug 7766: Clear warehouse address lines when dropship=Y.
 ----
 Modified: data/bar/poe_pohdr.xml
 Modified: data/cdf/poe_pohdr.cdf
+
+=======================================================================================================================================
+Revision: f7828f2ffc9fd34a8ea287f68a47e0699d28025d
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 10/16/2015 4:06:57 PM
+Message:
+Bug 7765: For drop ship, require that PO Line Type is compatible with OP
+Line Type.
+----
+Modified: data/bar/poe_podet.xml
+Modified: data/bar/poe_pohdr.xml
+Modified: data/cdf/poe_podet.cdf
+Modified: data/cdf/poe_pohdr.cdf
+Added: data/sync/ads_messages~po_bad_line_types.xml
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
