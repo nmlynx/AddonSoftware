@@ -587,6 +587,7 @@ rem print 'show';rem debug
 rem --- inits
 
 	use ::ado_util.src::util
+	use java.util.Properties
 
 rem --- Open Files
 	num_files=19
@@ -891,15 +892,18 @@ rem --- read thru selected sales order and build list of lines for which line co
 	ope_ordhdr_dev=fnget_dev("OPE_ORDHDR")
 	ope_orddet_dev=fnget_dev("OPE_ORDDET")
 	ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
+	opc_linecode_dev=fnget_dev("OPC_LINECODE")
 
 	dim ope_ordhdr$:fnget_tpl$("OPE_ORDHDR")
 	dim ope_orddet$:fnget_tpl$("OPE_ORDDET")
 	dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
+	dim opc_linecode$:fnget_tpl$("OPC_LINECODE")
 
 	order_lines!=SysGUI!.makeVector()
 	order_items!=SysGUI!.makeVector()
 	order_list!=SysGUI!.makeVector()
 	callpoint!.setDevObject("ds_orders","N")
+	soLineType!=callpoint!.getDevObject("so_line_type")
 
 	found_ope_ordhdr=0
 	read(ope_ordhdr_dev,key=firm_id$+ope_ordhdr.ar_type$+tmp_customer_id$+tmp_order_no$,knum="PRIMARY",dom=*next)
@@ -947,12 +951,19 @@ rem --- read thru selected sales order and build list of lines for which line co
 				order_list!.addItem(Translate!.getTranslation("AON_ITEM:_")+work_var$+" "+cvs(ivm_itemmast.display_desc$,3))
 			endif
 		endif
+
+		rem --- Get Line Type for this OP detail line
+		dim opc_linecode$:fattr(opc_linecode$)
+		read record (opc_linecode_dev,key=firm_id$+ope_orddet.line_code$,dom=*next)opc_linecode$
+		soLineType!.setProperty(ope_orddet.internal_seq_no$,opc_linecode.line_type$)
 	wend
 
+	callpoint!.setDevObject("so_line_type",soLineType!)
 	if order_lines!.size()=0 
 		callpoint!.setDevObject("ds_orders","N")
 		callpoint!.setDevObject("so_ldat","")
 		callpoint!.setDevObject("so_lines_list","")
+		callpoint!.setDevObject("so_line_type","")
 	else 
 		ldat$=""
 		for x=0 to order_lines!.size()-1
@@ -969,6 +980,8 @@ return
 form_inits:
 rem --- setting up for new rec or nav to diff rec
 
+soLineType!=new Properties()
+callpoint!.setDevObject("so_line_type",soLineType!)
 callpoint!.setDevObject("ds_orders","")
 callpoint!.setDevObject("so_ldat","")
 callpoint!.setDevObject("so_lines_list","")
