@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2015-10-19
+ Report Date:   2015-10-20
  Report Branch: AddonSoftware 15.10
  Last Release:  AddonSoftware 15.02
 =======================================================================================================================================
@@ -867,3 +867,18 @@ Bug 8437: Reset opt-11 file pointer for next invoice record after
 writing new record for the order, i.e. no invoice number.
 ----
 Modified: op/src/opu_updateinventory.aon
+
+=======================================================================================================================================
+Revision: 2400d33893b61e5053c460ebe892ed3a7ece6df3
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 10/20/2015 8:51:33 AM
+Message:
+Bug 7764: Excluded from list control Sales Order drop ship detail lines
+that already appear on another PO.
+----
+Modified: data/bar/poe_pohdr.xml
+Modified: data/cdf/poe_pohdr.cdf
+Added: data/sync/ads_messages~po_all_so_lines_used.xml
+Added: data/sync/ads_messages~po_so_lines_used.xml
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
