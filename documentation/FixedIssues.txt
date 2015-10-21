@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2015-10-20
+ Report Date:   2015-10-21
  Report Branch: AddonSoftware 15.10
  Last Release:  AddonSoftware 15.02
 =======================================================================================================================================
@@ -903,3 +903,15 @@ and increased report column width accordingly.
 ----
 Modified: data/sync/ads_masks~0101007514iv_u.xml
 Modified: iv/src/ivr_stkmovemt_o1.aon
+
+=======================================================================================================================================
+Revision: f52c47ab55192fbc2364c77b081758596f19fdeb
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 10/21/2015 9:04:31 AM
+Message:
+Bug 7676: When converting a quote to an order, recalculate discount and
+tax if total sales amount changes. Otherwise, leave discount amount
+alone as it may have been entered manually.
+----
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_ordhdr.cdf
