@@ -1590,6 +1590,8 @@ rem --- Convert Quote?
 
 				old_prec = tcb(14)
 				precision num(ivs01a.precision$)
+				total_sales=0
+				taxable_amt=0
 
 				trans_status$=callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")
 				ar_type$ = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
@@ -1642,9 +1644,29 @@ rem --- Convert Quote?
 						gosub update_totals
 					endif
 
+					total_sales=total_sales+ope11a.ext_price
+					taxable_amt=taxable_amt+ope11a.taxable_amt
 					ope11a$=field(ope11a$)
 					write record (ope11_dev) ope11a$
 				wend
+
+				rem --- Recalculate discount and tax if the total sales amount has changed.
+				rem --- Otherwise leave the discount amount alone as it may have been entered manually.
+				if total_sales<>num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")) then
+					rem --- Recalculate discount for current total sales
+					disccode_dev = fnget_dev("OPC_DISCCODE")
+					dim disccode_rec$:fnget_tpl$("OPC_DISCCODE")
+					find record (disccode_dev, key=firm_id$+user_tpl.disc_code$, dom=*next) disccode_rec$
+					disc_amt = round(disccode_rec.disc_percent * total_sales / 100, 2)
+					callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT",str(disc_amt))
+
+					rem --- Recalculate tax and update totals display
+					callpoint!.setColumnData("OPE_ORDHDR.TOTAL_SALES",str(total_sales))
+					callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",str(taxable_amt))
+					freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+					gosub calculate_tax
+					gosub disp_totals
+				endif
 
 				precision old_prec
 				rec_data.invoice_type$ = "S"
