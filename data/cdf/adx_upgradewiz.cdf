@@ -791,12 +791,12 @@ rem ==========================================================================
 				childProps! = cast(HashMap, descendentVect!.get(i))
 				appRowVect!.addItem(cast(BBjString, childProps!.get("mount_sys_id"))); rem App
 				appRowVect!.addItem(cast(BBjString, childProps!.get("parent_sys_id"))); rem Parent
-				appRowVect!.addItem("y"); rem Install
 				if rootApp$="ADDON" then
-					appRowVect!.addItem("y"); rem Copy
+					appRowVect!.addItem("n"); rem Install
 				else
-					appRowVect!.addItem("n"); rem Copy
+					appRowVect!.addItem("y"); rem Install
 				endif
+				appRowVect!.addItem("n"); rem Copy
 				appRowVect!.addItem(cast(BBjString, childProps!.get("mount_dir"))); rem Source
 				if rootApp$="ADDON" then
 					sourceDir$=cast(BBjString, childProps!.get("mount_dir"))
