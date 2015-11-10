@@ -423,14 +423,16 @@ get_translate_object: rem --- Get BBTranslator object Translate!
 
     adm_modules=num(open_chans$[1]);dim adm_modules$:open_tpls$[1]
     readrecord(adm_modules,key=pad("01007514AD",11),dom=*next)adm_modules$
+    if adm_modules.locale_resource$="" or adm_modules.locale_path$=""
+        readrecord(adm_modules,key=pad(sysinfo.lic_feature$,11),dom=*next)adm_modules$
+    endif
     if adm_modules.locale_resource$<>"" and adm_modules.locale_path$<>""
         locale_path$=adm_modules.locale_path$
-        Translate!=BBTranslator.getInstance(adm_modules.locale_resource$,stbl("+USER_LOCALE"),null(),locale_path$); rem ,err=*endif
-    else
-        readrecord(adm_modules,key=pad(sysinfo.lic_feature$,11),dom=*endif)adm_modules$
-        if adm_modules.locale_resource$<>"" and adm_modules.locale_path$<>""
-            locale_path$=adm_modules.locale_path$
-            Translate!=BBTranslator.getInstance(adm_modules.locale_resource$,stbl("+USER_LOCALE"),null(),locale_path$); rem ,err=*endif
+        rdTransSpaceKey$=adm_modules.locale_resource$+"_"+stbl("+USER_LOCALE")+"_BBTranslator"
+        Translate!=cast(BBTranslator,BBjAPI().getGroupNamespace().getValue(rdTransSpaceKey$,err=*next))
+        if Translate!=null()
+            Translate!=BBTranslator.getInstance(adm_modules.locale_resource$,stbl("+USER_LOCALE"),null(),locale_path$)
+            BBjAPI().getGroupNamespace().setValue(rdTransSpaceKey$,Translate!)
         endif
     endif
 
