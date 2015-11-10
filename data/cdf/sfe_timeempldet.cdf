@@ -32,8 +32,21 @@ rem --- Use this op_ref to initialize op_code and oper_seq_ref
 
 	gosub calc_header_hrs
 [[SFE_TIMEEMPLDET.AUDE]]
-
+rem --- Update hours
 	gosub calc_header_hrs
+
+rem --- Temporary workaround for Barista bug 8322 ... start
+	if callpoint!.getDevObject("time_clk_flg")<>"Y" then
+		callpoint!.setColumnEnabled("SFE_TIMEEMPLDET.START_TIME",-1)
+		callpoint!.setColumnEnabled("SFE_TIMEEMPLDET.STOP_TIME",-1)
+	else
+		callpoint!.setColumnEnabled(-1,"SFE_TIMEEMPLDET.HRS",-1)
+	endif
+	if callpoint!.getDevObject("pr")<>"Y" then
+		callpoint!.setColumnEnabled("SFE_TIMEEMPLDET.PAY_CODE",-1)
+		callpoint!.setColumnEnabled("SFE_TIMEEMPLDET.TITLE_CODE",-1)
+	endif
+rem --- Temporary workaround for Barista bug 8322 ... end
 [[SFE_TIMEEMPLDET.AGRE]]
 rem --- Display appropriate WO description
 	wo_no$=callpoint!.getColumnData("SFE_TIMEEMPLDET.WO_NO")
@@ -315,7 +328,9 @@ rem --- Initialize dev objects
 	callpoint!.setDevObject("previous_setup_time",0)
 
 rem --- Initialize column data
-	callpoint!.setColumnData("SFE_TIMEEMPLDET.START_TIME",str(callpoint!.getDevObject("prev_stoptime")),1)
+	if callpoint!.getDevObject("time_clk_flg")="Y" then
+		callpoint!.setColumnData("SFE_TIMEEMPLDET.START_TIME",str(callpoint!.getDevObject("prev_stoptime")),1)
+	endif
 	if callpoint!.getDevObject("pr")="Y" then
 		callpoint!.setColumnData("SFE_TIMEEMPLDET.TITLE_CODE",str(callpoint!.getDevObject("normal_title")),1)
 		callpoint!.setColumnData("SFE_TIMEEMPLDET.PAY_CODE",str(callpoint!.getDevObject("reg_pay_code")),1)
@@ -408,12 +423,14 @@ rem --- Display appropriate WO description
 [[SFE_TIMEEMPLDET.ADGE]]
 rem --- Disable fields
 	if callpoint!.getDevObject("time_clk_flg")<>"Y" then
-		callpoint!.setColumnEnabled(-1,"SFE_TIMEEMPLDET.START_TIME",0)
-		callpoint!.setColumnEnabled(-1,"SFE_TIMEEMPLDET.STOP_TIME",0)
+		callpoint!.setColumnEnabled(-1,"SFE_TIMEEMPLDET.START_TIME",-1)
+		callpoint!.setColumnEnabled(-1,"SFE_TIMEEMPLDET.STOP_TIME",-1)
+	else
+		callpoint!.setColumnEnabled(-1,"SFE_TIMEEMPLDET.HRS",-1)
 	endif
 	if callpoint!.getDevObject("pr")<>"Y" then
-		callpoint!.setColumnEnabled(-1,"SFE_TIMEEMPLDET.PAY_CODE",0)
-		callpoint!.setColumnEnabled(-1,"SFE_TIMEEMPLDET.TITLE_CODE",0)
+		callpoint!.setColumnEnabled(-1,"SFE_TIMEEMPLDET.PAY_CODE",-1)
+		callpoint!.setColumnEnabled(-1,"SFE_TIMEEMPLDET.TITLE_CODE",-1)
 	endif
 
 rem --- Initializations

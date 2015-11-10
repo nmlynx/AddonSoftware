@@ -1336,11 +1336,26 @@ rem --- Previous record must be an invoice
 	file_name$ = "OPE_INVHDR"
 	ope01_dev = fnget_dev(file_name$)
 	dim ope01a$:fnget_tpl$(file_name$)
+
+rem --- Position the file at the correct record
+
 	status$=callpoint!.getColumnData("OPE_INVHDR.TRANS_STATUS")
 	ar_type$=callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
-
-	current_key$=callpoint!.getRecordKey()
-	read(ope01_dev,key=current_key$,dir=0,dom=*next)
+	if callpoint!.getDevObject("new_rec")="Y"
+		start_key$=firm_id$+status$+ar_type$
+		cust_id$=callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+		if cvs(cust_id$,2)<>""
+			start_key$=start_key$+cust_id$
+			order_no$=callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+			if cvs(order_no$,2)<>""
+				start_key$=start_key$+order_no$
+			endif
+		endif
+		read(ope01_dev,key=start_key$,dir=0,dom=*next)
+	else
+		current_key$=callpoint!.getRecordKey()
+		read(ope01_dev,key=current_key$,dir=0,dom=*next)
+	endif
 
 	hit_eof=0
 	while 1
@@ -2012,10 +2027,17 @@ rem ==========================================================================
 
 		callpoint!.setColumnData("OPE_INVHDR.SHIPTO_NO","")
 		if ship_to_type$<>callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE") then
-			rem --- Initialize for change
-			callpoint!.setColumnData("OPE_INVHDR.SLSPSN_CODE",custdet.slspsn_code$)
-			callpoint!.setColumnData("OPE_INVHDR.TERRITORY",custdet.territory$)
-			callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",custdet.tax_code$)
+			if custdet.slspsn_code$<>callpoint!.getColumnData("OPE_INVHDR.SLSPSN_CODE") or
+:			custdet.territory$<>callpoint!.getColumnData("OPE_INVHDR.TERRITORY") or
+:			custdet.tax_code$<>callpoint!.getColumnData("OPE_INVHDR.TAX_CODE") then
+				msg_id$="OP_SHIPTO_CODE_CHGS"
+				gosub disp_message
+
+				rem --- Initialize for change
+				callpoint!.setColumnData("OPE_INVHDR.SLSPSN_CODE",custdet.slspsn_code$)
+				callpoint!.setColumnData("OPE_INVHDR.TERRITORY",custdet.territory$)
+				callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",custdet.tax_code$)
+			endif
 		endif
 
 		ordship_dev = fnget_dev("OPE_ORDSHIP")
