@@ -220,6 +220,18 @@ rem --- New Tran Date
 				endif
 				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+18,fndate$(input_value$))
 				gridOps!.setCellText(curr_row,curr_col,fndate$(input_value$))
+
+				rem --- When GL installed, verify date is in an open period.
+				if callpoint!.getDevObject("post_gl")="Y" then
+					call stbl("+DIR_PGM")+"glc_datecheck.aon",input_value$,"Y",per$,yr$,status
+					if status>99 then 
+						gridOps!.focus()
+						sysgui!.setContext(grid_ctx)
+						gridOps!.accept(0)
+						gridOps!.startEdit(curr_row,curr_col)
+						break
+					endif
+				endif
 			endif
 			gridOps!.accept(1)
 			break
