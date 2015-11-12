@@ -149,8 +149,8 @@ rem --- New Tran Date
 				endif
 				tran_date$=temp_date$
 				if len(cvs(tran_date$,2))=0
-					tran_date$=gridSubs!.getCellText(curr_row,0)
-					input_value$=vectSubs!.getItem((curr_row*num(user_tpl.gridSubsCols$)))
+					tran_date$=gridSubs!.getCellText(curr_row,1)
+					input_value$=tran_date$(7,4)+tran_date$(1,2)+tran_date$(4,2); rem --- assumes mm/dd/yyyy format
 				endif
 
 				vectSubs!.setItem((curr_row*num(user_tpl.gridSubsCols$))+12,fndate$(input_value$))
