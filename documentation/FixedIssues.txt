@@ -354,6 +354,18 @@ ID.
 Modified: data/bar/sfe_womatisd.xml
 
 =======================================================================================================================================
+Revision: c23ddaded05df1da71c5d5004abd974f3c30db72
+Author: chawkins <chawkins@basis.com>
+Date: 11/24/2015 11:21:40 AM
+Message:
+Change wording from "Maintenance" to "Inquiry and Maintenance" to
+clarify the function of these menus.
+----
+Modified: config/enc/addon.men
+Modified: config/enu/addon.men
+
+=======================================================================================================================================
+
 Revision: d19e566e056753f5b992ec9a9baca391b03a830e
 Author: Bill Halsted <bhalsted@basis.com>
 Date: 11/25/2015 10:42:24 AM
@@ -362,3 +374,15 @@ Bug 6262: Do not require a Vendor ID for a voided check.
 ----
 Modified: data/bar/ape_mancheckhdr.xml
 Modified: data/cdf/ape_mancheckhdr.cdf
+
+=======================================================================================================================================
+Revision: fbee81b22b2920abc1d28613ea59cfb772faeac2
+Author: chawkins <chawkins@basis.com>
+Date: 11/25/2015 1:53:48 PM
+Message:
+Per bug 7218, improved performance in the Copy Data from Firm to Firm
+utility by only doing the select count() query on demand. Also added
+logging of files processed.
+----
+Modified: data/bar/adx_copyfirm.xml
+Modified: data/cdf/adx_copyfirm.cdf
