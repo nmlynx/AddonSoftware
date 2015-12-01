@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2015-11-30
+ Report Date:   2015-12-01
  Report Branch: AddonSoftware 15.11
  Last Release:  AddonSoftware 15.10
 =======================================================================================================================================
@@ -419,3 +419,20 @@ Bug 4277: Required entry of Item valid for the warehouse and cycle code.
 ----
 Modified: data/bar/ive_count_entry.xml
 Modified: data/cdf/ive_count_entry.cdf
+
+=======================================================================================================================================
+Revision: d49231ab6eca98dcd4ba4e0d607ac9208104b66d
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 12/1/2015 10:57:37 AM
+Message:
+Bug 2756: When Credit Management isn't being used, the new customer
+default ARS_CUSTDFLT's CRED_HOLD is set to "N" and disabled. In
+ARM_CUSTMAST, CRED_HOLD is set to Credit Management's HOLD_NEW when it's
+being used, otherwise it is set "N".
+----
+Modified: data/bar/arm_custdet.xml
+Modified: data/bar/arm_custmast.xml
+Modified: data/bar/arm_custpmts.xml
+Modified: data/bar/ars_custdflt.xml
+Modified: data/cdf/arm_custmast.cdf
+Modified: data/cdf/ars_custdflt.cdf
