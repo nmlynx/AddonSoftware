@@ -450,3 +450,16 @@ Modified: data/cdf/aps_params.cdf
 Added: data/sync/ads_messages~ap_chg_mtype_param.xml
 Modified: prop/addon.properties
 Modified: prop/addon_en.properties
+
+=======================================================================================================================================
+Revision: 0b43bbce0966b6972124a941cefae118b4c29859
+Author: chawkins <chawkins@basis.com>
+Date: 12/1/2015 7:10:37 PM
+Message:
+Related to bug 7218, improved performance in the Clear Firm utility 
+similar to mods in Copy Data from Firm to Firm utility by only doing 
+the select count() query on demand. Also added logging of files processed.
+----
+Modified: ad/src/adc_clearpartial.aon
+Modified: data/bar/adx_clearfirm.xml
+Modified: data/cdf/adx_clearfirm.cdf
