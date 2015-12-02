@@ -775,6 +775,8 @@ rem --- Check for Lot/Serial number entry
 			if cvs(callpoint!.getColumnData("IVE_TRANSDET.LOTSER_NO"),3)=""
 				callpoint!.setMessage("OP_MISSING_LOTSER_NO")
 				callpoint!.setFocus(num(callpoint!.getValidationRow()),"IVE_TRANSDET.LOTSER_NO")
+				callpoint!.setStatus("ABORT")
+				break; rem --- exit callpoint
 			endif
 		endif
 	endif
