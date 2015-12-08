@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2015-12-03
+ Report Date:   2015-12-07
  Report Branch: AddonSoftware 15.11
  Last Release:  AddonSoftware 15.10
 =======================================================================================================================================
@@ -504,3 +504,17 @@ Bug 8369: Removed "Seq" (sequence number) column from printed PO
 requisition.
 ----
 Modified: po/src/por_reqprint.aon
+
+=======================================================================================================================================
+Revision: 87188333dbf6f34f0d92fb8d664c2f50419a649f
+Author: chawkins <chawkins@basis.com>
+Date: 12/4/2015 5:51:05 PM
+Message:
+Per bugs 8486 and 8487; corrected Sales Register Cash Sale summary
+report so it prints when it should; corrected the update to (once again)
+put out bank rec for cash sales. Fix for the sales register involved new
+key on the opw-41 sort file.
+----
+Modified: data/bar/opw_invcash.xml
+Modified: op/src/opr_salesregister_o1.aon
+Modified: op/src/opu_updateinventory.aon
