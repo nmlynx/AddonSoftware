@@ -8,22 +8,22 @@
 			<DD_FILE_NAME id="ddm_tables.ads_terminal"></DD_FILE_NAME>
 			<DD_TABLE_PATH id="ddm_tables.ads_terminal">[+ADDATA]</DD_TABLE_PATH>
 			<DD_ALIAS_TYPE id="ddm_tables.ads_terminal">V</DD_ALIAS_TYPE>
-			<DD_KEY_LENGTH id="ddm_tables.ads_terminal"></DD_KEY_LENGTH>
-			<DD_NBR_RECORD id="ddm_tables.ads_terminal"></DD_NBR_RECORD>
-			<DD_RECORD_LEN id="ddm_tables.ads_terminal"></DD_RECORD_LEN>
+			<DD_KEY_LENGTH id="ddm_tables.ads_terminal">0</DD_KEY_LENGTH>
+			<DD_NBR_RECORD id="ddm_tables.ads_terminal">0</DD_NBR_RECORD>
+			<DD_RECORD_LEN id="ddm_tables.ads_terminal">0</DD_RECORD_LEN>
 			<DD_SYSTEM_REC id="ddm_tables.ads_terminal">N</DD_SYSTEM_REC>
 			<RESTRICT_CREATE id="ddm_tables.ads_terminal"></RESTRICT_CREATE>
 			<RESTRICT_REBUILD id="ddm_tables.ads_terminal"></RESTRICT_REBUILD>
 			<RESTRICT_AUTOADD id="ddm_tables.ads_terminal"></RESTRICT_AUTOADD>
 			<ASC_COMP_ID id="ddm_tables.ads_terminal">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_tables.ads_terminal">AD </ASC_PROD_ID>
-			<ASC_VERSION_ID id="ddm_tables.ads_terminal">16.0      </ASC_VERSION_ID>
+			<ASC_VERSION_ID id="ddm_tables.ads_terminal">16.0</ASC_VERSION_ID>
 			<ASC_LICENSE_ID id="ddm_tables.ads_terminal">A085397F1869928450FD5FE12FC8CD07</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.ads_terminal">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.ads_terminal">20060404</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.ads_terminal">20090630</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.ads_terminal">20150116</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.ads_terminal">101834</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.ads_terminal">20160106</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.ads_terminal">20160104</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.ads_terminal">181858</DD_LSTSYNC_TIME>
 			<DD_ATTR_ATAB id="ddm_tables.ads_terminal"></DD_ATTR_ATAB>
 			<DD_ATTR_CPGM id="ddm_tables.ads_terminal"></DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.ads_terminal"></DD_ATTR_DKNM>
@@ -51,8 +51,8 @@
 		<ID id="ddm_table_tpls">DDM_TABLE_TPLS</ID>
 		<RECORD id="ddm_table_tpls.ads_terminal">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.ads_terminal">ADS_TERMINAL    </DD_TABLE_ALIAS>
-			<DD_FILE_NAME id="ddm_table_tpls.ads_terminal">ads-01</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.ads_terminal">record_id_t:c(1),terminal_id:c(4*),reserved_str:c(3),user_id:c(3),reserved_str_02:c(6),printer_id:c(2),security_lev:c(1),firm_id:c(2),reserved_str_03:c(6),printer_flag:c(1),printer_opt:c(1),system_date:c(8),current_date:c(8*),program_name:c(10*),menu_id:c(10),task_no:c(2*),task_params:c(60*),firm_name:c(40*),task_desc:c(35*)</DD_TABLE_TPL>
+			<DD_FILE_NAME id="ddm_table_tpls.ads_terminal"></DD_FILE_NAME>
+			<DD_TABLE_TPL id="ddm_table_tpls.ads_terminal">record_id_t:c(1),terminal_id:c(4),reserved_str:c(3),user_id:c(16),reserved_str_02:c(6),printer_id:c(2),security_lev:c(1),firm_id:c(2),reserved_str_03:c(6),printer_flag:c(1),printer_opt:c(1),system_date:c(8),current_date:c(8),program_name:c(24),menu_id:c(10),task_no:c(2),task_params:c(60),firm_name:c(40),task_desc:c(35)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -133,7 +133,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal001"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal001"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal001"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal001"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal001">RECORD_ID_T</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal001"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal001"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal001"></DD_ATTR_FTSR>
@@ -145,8 +145,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.ads_terminal002">TERMINAL_ID     </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.ads_terminal002">1</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.ads_terminal002">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.ads_terminal002">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.ads_terminal002">0A</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.ads_terminal002">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.ads_terminal002"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.ads_terminal002"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.ads_terminal002"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.ads_terminal002"></DD_MASK_TYPE>
@@ -177,7 +177,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal002"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal002"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal002"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal002"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal002">TERMINAL_ID</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal002"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal002"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal002"></DD_ATTR_FTSR>
@@ -221,7 +221,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal003"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal003"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal003"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal003"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal003">RESERVED_STR</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal003"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal003"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal003"></DD_ATTR_FTSR>
@@ -265,7 +265,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal004"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal004"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal004"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal004"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal004">USER_ID</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal004"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal004"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal004"></DD_ATTR_FTSR>
@@ -309,7 +309,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal005"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal005"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal005"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal005"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal005">RESERVED_STR</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal005"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal005"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal005"></DD_ATTR_FTSR>
@@ -353,7 +353,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal006"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal006"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal006"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal006"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal006">PRINTER_ID</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal006"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal006"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal006"></DD_ATTR_FTSR>
@@ -397,7 +397,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal007"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal007"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal007"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal007"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal007">SECURITY_LEV</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal007"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal007"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal007"></DD_ATTR_FTSR>
@@ -441,7 +441,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal008"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal008"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal008"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal008"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal008">FIRM_ID</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal008"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal008"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal008"></DD_ATTR_FTSR>
@@ -485,7 +485,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal009"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal009"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal009"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal009"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal009">RESERVED_STR</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal009"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal009"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal009"></DD_ATTR_FTSR>
@@ -529,7 +529,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal010"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal010"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal010"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal010"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal010">PRINTER_FLAG</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal010"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal010"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal010"></DD_ATTR_FTSR>
@@ -573,7 +573,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal011"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal011"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal011"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal011"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal011">PRINTER_OPT</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal011"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal011"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal011"></DD_ATTR_FTSR>
@@ -617,7 +617,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal012"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal012"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal012"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal012"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal012">SYSTEM_DATE</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal012"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal012"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal012"></DD_ATTR_FTSR>
@@ -629,8 +629,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.ads_terminal013">CURRENT_DATE    </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.ads_terminal013">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.ads_terminal013">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.ads_terminal013">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.ads_terminal013">0A</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.ads_terminal013">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.ads_terminal013"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.ads_terminal013"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.ads_terminal013"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.ads_terminal013"></DD_MASK_TYPE>
@@ -661,7 +661,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal013"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal013"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal013"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal013"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal013">CURRENT_DATE</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal013"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal013"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal013"></DD_ATTR_FTSR>
@@ -673,8 +673,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.ads_terminal014">PROGRAM_NAME    </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.ads_terminal014">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.ads_terminal014">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.ads_terminal014">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.ads_terminal014">0A</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.ads_terminal014">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.ads_terminal014"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.ads_terminal014"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.ads_terminal014"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.ads_terminal014"></DD_MASK_TYPE>
@@ -705,7 +705,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal014"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal014"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal014"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal014"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal014">PROGRAM_NAME</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal014"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal014"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal014"></DD_ATTR_FTSR>
@@ -749,7 +749,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal015"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal015"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal015"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal015"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal015">MENU_ID</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal015"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal015"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal015"></DD_ATTR_FTSR>
@@ -761,8 +761,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.ads_terminal016">TASK_NO         </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.ads_terminal016">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.ads_terminal016">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.ads_terminal016">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.ads_terminal016">0A</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.ads_terminal016">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.ads_terminal016"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.ads_terminal016"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.ads_terminal016"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.ads_terminal016"></DD_MASK_TYPE>
@@ -793,7 +793,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal016"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal016"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal016"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal016"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal016">TASK_NO</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal016"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal016"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal016"></DD_ATTR_FTSR>
@@ -805,8 +805,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.ads_terminal017">TASK_PARAMS     </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.ads_terminal017">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.ads_terminal017">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.ads_terminal017">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.ads_terminal017">0A</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.ads_terminal017">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.ads_terminal017"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.ads_terminal017"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.ads_terminal017"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.ads_terminal017"></DD_MASK_TYPE>
@@ -837,7 +837,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal017"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal017"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal017"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal017"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal017">TASK_PARAMS</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal017"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal017"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal017"></DD_ATTR_FTSR>
@@ -849,8 +849,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.ads_terminal018">FIRM_NAME       </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.ads_terminal018">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.ads_terminal018">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.ads_terminal018">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.ads_terminal018">0A</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.ads_terminal018">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.ads_terminal018"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.ads_terminal018"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.ads_terminal018"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.ads_terminal018"></DD_MASK_TYPE>
@@ -881,7 +881,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal018"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal018"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal018"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal018"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal018">FIRM_NAME</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal018"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal018"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal018"></DD_ATTR_FTSR>
@@ -893,8 +893,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.ads_terminal019">TASK_DESC       </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.ads_terminal019">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.ads_terminal019">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.ads_terminal019">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.ads_terminal019">0A</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.ads_terminal019">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.ads_terminal019"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.ads_terminal019"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.ads_terminal019"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.ads_terminal019"></DD_MASK_TYPE>
@@ -925,7 +925,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.ads_terminal019"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.ads_terminal019"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.ads_terminal019"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal019"></SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.ads_terminal019">TASK_DESC</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.ads_terminal019"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.ads_terminal019"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.ads_terminal019"></DD_ATTR_FTSR>
