@@ -1,3 +1,13 @@
+[[ARE_CASHHDR.AOPT-DPST]]
+rem --- Launch Bank Deposit Entry form if using Bank Rec.
+	if callpoint!.getDevObject("br_interface")="Y" then
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj", "ARE_DEPOSIT", stbl("+USER_ID"), "MNT", "", table_chans$[all]
+	endif
+[[ARE_CASHHDR.ASHO]]
+rem --- Launch Bank Deposit Entry form if using Bank Rec.
+	if callpoint!.getDevObject("br_interface")="Y" then
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj", "ARE_DEPOSIT", stbl("+USER_ID"), "MNT", "", table_chans$[all]
+	endif
 [[ARE_CASHHDR.AR_CHECK_NO.AVAL]]
 rem --- temporary workaround to Barista bug not padding ar_check_no when nothing is entered for it
 	dim are01a$:fnget_tpl$("ARE_CASHHDR")
@@ -89,6 +99,11 @@ rem --- disable display fields
 	dctl$[2]="<<DISPLAY>>.DISP_BAL"
 	dctl$[3]="<<DISPLAY>>.DISP_APPLIED"
 	gosub disable_ctls
+
+rem --- Disable New Deposit button if not using Bank Rec.
+	if callpoint!.getDevObject("br_interface")<>"Y" then
+		callpoint!.setOptionEnabled("DPST",0)
+	endif
 [[ARE_CASHHDR.ACUS]]
 data_present$="N"
 gosub check_required_fields
@@ -321,6 +336,7 @@ endif
 rem --- Retrieve parameter data - not keeping any of it here, just make sure params exist
 ars01a_key$=firm_id$+"AR00"
 find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+callpoint!.setDevObject("br_interface",ars01a.br_interface$)
 call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A",imsk$,omsk$,ilen,olen
 user_tpl.amt_msk$=imsk$
 gls01a_key$=firm_id$+"GL00"
