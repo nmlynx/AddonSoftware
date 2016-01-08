@@ -23,9 +23,9 @@
 			<DD_CREATE_DATE id="ddm_tables.are_deposit">20160107</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_tables.are_deposit">20160107</DD_LSTREV_DATE>
 			<DD_LSTSYNC_DATE id="ddm_tables.are_deposit">20160107</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.are_deposit">124702</DD_LSTSYNC_TIME>
+			<DD_LSTSYNC_TIME id="ddm_tables.are_deposit">185046</DD_LSTSYNC_TIME>
 			<DD_ATTR_ATAB id="ddm_tables.are_deposit">ART_DEPOSIT     </DD_ATTR_ATAB>
-			<DD_ATTR_CPGM id="ddm_tables.are_deposit"></DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_tables.are_deposit">/dev_projects/aon_dev1/aon/;C:/dev_projects/aon_dev1/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.are_deposit">AO_STATUS</DD_ATTR_DKNM>
 			<DD_ATTR_FIMG id="ddm_tables.are_deposit"></DD_ATTR_FIMG>
 			<DD_ATTR_FTYP id="ddm_tables.are_deposit">T</DD_ATTR_FTYP>
@@ -45,6 +45,28 @@
 			<SQL_TABLE id="ddm_tables.are_deposit"></SQL_TABLE>
 			<DD_ATTR_FONT id="ddm_tables.are_deposit"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_tables.are_deposit"></DD_ATTR_STYL>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_table_cpro">
+		<ID id="ddm_table_cpro">DDM_TABLE_CPRO</ID>
+		<RECORD id="ddm_table_cpro.are_depositarec">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.are_depositarec">ARE_DEPOSIT     </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.are_depositarec">AREC</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.are_depositawri">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.are_depositawri">ARE_DEPOSIT     </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.are_depositawri">AWRI</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.are_depositbwri">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.are_depositbwri">ARE_DEPOSIT     </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.are_depositbwri">BWRI</DD_ATTR_CPRO>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_table_opts">
+		<ID id="ddm_table_opts">DDM_TABLE_OPTS</ID>
+		<RECORD id="ddm_table_opts.are_depositd">
+			<DD_TABLE_ALIAS id="ddm_table_opts.are_depositd">ARE_DEPOSIT     </DD_TABLE_ALIAS>
+			<DD_ATTR_OPTS id="ddm_table_opts.are_depositd">d</DD_ATTR_OPTS>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_tpls">
@@ -691,14 +713,14 @@
 			<DD_ATTR_CTLY id="ddm_table_cols.are_deposit002"></DD_ATTR_CTLY>
 			<DD_ATTR_CTLW id="ddm_table_cols.are_deposit002"></DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_cols.are_deposit002"></DD_ATTR_CTLH>
-			<DD_ATTR_DFLT id="ddm_table_cols.are_deposit002"></DD_ATTR_DFLT>
+			<DD_ATTR_DFLT id="ddm_table_cols.are_deposit002">[%PDATE]</DD_ATTR_DFLT>
 			<DD_ATTR_DRLE id="ddm_table_cols.are_deposit002"></DD_ATTR_DRLE>
 			<DD_ATTR_GHDR id="ddm_table_cols.are_deposit002"></DD_ATTR_GHDR>
 			<DD_ATTR_IDEF id="ddm_table_cols.are_deposit002"></DD_ATTR_IDEF>
 			<DD_ATTR_LABL id="ddm_table_cols.are_deposit002"></DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_table_cols.are_deposit002"></DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.are_deposit002">N</DD_ATTR_MLAN>
-			<DD_ATTR_MINL id="ddm_table_cols.are_deposit002"></DD_ATTR_MINL>
+			<DD_ATTR_MINL id="ddm_table_cols.are_deposit002">1</DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.are_deposit002"></DD_ATTR_MAXL>
 			<DD_ATTR_MINV id="ddm_table_cols.are_deposit002"></DD_ATTR_MINV>
 			<DD_ATTR_MAXV id="ddm_table_cols.are_deposit002"></DD_ATTR_MAXV>
@@ -830,7 +852,7 @@
 			<DD_ATTR_LABL id="ddm_table_cols.are_deposit005"></DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_table_cols.are_deposit005"></DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.are_deposit005">N</DD_ATTR_MLAN>
-			<DD_ATTR_MINL id="ddm_table_cols.are_deposit005"></DD_ATTR_MINL>
+			<DD_ATTR_MINL id="ddm_table_cols.are_deposit005">1</DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.are_deposit005"></DD_ATTR_MAXL>
 			<DD_ATTR_MINV id="ddm_table_cols.are_deposit005"></DD_ATTR_MINV>
 			<DD_ATTR_MAXV id="ddm_table_cols.are_deposit005"></DD_ATTR_MAXV>
@@ -1420,6 +1442,11 @@
 	</ALIAS>
 	<ALIAS id="ddm_column_opts">
 		<ID id="ddm_column_opts">DDM_COLUMN_OPTS</ID>
+		<RECORD id="ddm_column_opts.are_depositdeposit_id#">
+			<DD_TABLE_ALIAS id="ddm_column_opts.are_depositdeposit_id#">ARE_DEPOSIT     </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.are_depositdeposit_id#">DEPOSIT_ID      </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.are_depositdeposit_id#">#</DD_ATTR_OPTS>
+		</RECORD>
 		<RECORD id="ddm_column_opts.are_depositcreated_usero">
 			<DD_TABLE_ALIAS id="ddm_column_opts.are_depositcreated_usero">ARE_DEPOSIT     </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_opts.are_depositcreated_usero">CREATED_USER    </DD_DVAR_NAME>
@@ -1599,13 +1626,13 @@
 			<DD_ATTR_CTLW id="ddm_elements.deposit_id"></DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_elements.deposit_id"></DD_ATTR_CTLH>
 			<DD_ATTR_CTYP id="ddm_elements.deposit_id">E</DD_ATTR_CTYP>
-			<DD_ATTR_DCOL id="ddm_elements.deposit_id"></DD_ATTR_DCOL>
+			<DD_ATTR_DCOL id="ddm_elements.deposit_id">DEPOSIT_ID</DD_ATTR_DCOL>
 			<DD_ATTR_DCOM id="ddm_elements.deposit_id"></DD_ATTR_DCOM>
 			<DD_ATTR_DEXP id="ddm_elements.deposit_id"></DD_ATTR_DEXP>
 			<DD_ATTR_DFLT id="ddm_elements.deposit_id"></DD_ATTR_DFLT>
-			<DD_ATTR_DKNM id="ddm_elements.deposit_id"></DD_ATTR_DKNM>
-			<DD_ATTR_DKEY id="ddm_elements.deposit_id"></DD_ATTR_DKEY>
-			<DD_ATTR_DTAB id="ddm_elements.deposit_id"></DD_ATTR_DTAB>
+			<DD_ATTR_DKNM id="ddm_elements.deposit_id">AO_STATUS       </DD_ATTR_DKNM>
+			<DD_ATTR_DKEY id="ddm_elements.deposit_id">[+FIRM_ID]+"E"+[DEPOSIT_DAT]+@</DD_ATTR_DKEY>
+			<DD_ATTR_DTAB id="ddm_elements.deposit_id">ARE_DEPOSIT     </DD_ATTR_DTAB>
 			<DD_ATTR_DINQ id="ddm_elements.deposit_id"></DD_ATTR_DINQ>
 			<DD_ATTR_ENCR id="ddm_elements.deposit_id"></DD_ATTR_ENCR>
 			<DD_ATTR_IDEF id="ddm_elements.deposit_id"></DD_ATTR_IDEF>
