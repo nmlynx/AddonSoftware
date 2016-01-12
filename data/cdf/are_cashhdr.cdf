@@ -7,6 +7,12 @@ rem --- Launch Bank Deposit Entry form if using Bank Rec.
 rem --- Launch Bank Deposit Entry form if using Bank Rec.
 	if callpoint!.getDevObject("br_interface")="Y" then
 		call stbl("+DIR_SYP")+"bam_run_prog.bbj", "ARE_DEPOSIT", stbl("+USER_ID"), "MNT", "", table_chans$[all]
+
+		rem --- DEPOSIT_ID is required, so terminate process if we don't have one.
+		if callpoint!.getDevObject("deposit_id")="" and callpoint!.getColumnData("ARE_CASHHDR.DEPOSIT_ID")=""  then
+			callpoint!.setStatus("EXIT")
+			break
+		endif
 	endif
 [[ARE_CASHHDR.AR_CHECK_NO.AVAL]]
 rem --- temporary workaround to Barista bug not padding ar_check_no when nothing is entered for it
@@ -56,6 +62,10 @@ rem --- remove software lock on batch, if batching
 		lock_disp$=""
 		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
 	endif
+
+rem wgh ... 8336 ... check the Deposit’s TOT_DEPOSIT_AMT when ending a Deposit
+rem wgh ... 8336 ... if zero, set it equal to the sum of the PAYMENT_AMTs
+rem wgh ... 8336 ... else, warn if it is not equal to the sum of the PAYMENT_AMTs
 [[ARE_CASHHDR.BTBL]]
 rem --- Get Batch information
 
@@ -100,9 +110,15 @@ rem --- disable display fields
 	dctl$[3]="<<DISPLAY>>.DISP_APPLIED"
 	gosub disable_ctls
 
-rem --- Disable New Deposit button if not using Bank Rec.
+rem --- Disable Bank Rec. related controls
 	if callpoint!.getDevObject("br_interface")<>"Y" then
+		rem --- Disable New Deposit button if not using Bank Rec.
 		callpoint!.setOptionEnabled("DPST",0)
+	else
+		rem --- Disable fields coming from Bank Rec deposit when using Bank Rec.
+		callpoint!.setColumnEnabled("ARE_CASHHDR.DEPOSIT_ID",-1)
+		callpoint!.setColumnEnabled("ARE_CASHHDR.RECEIPT_DATE",-1)
+		callpoint!.setColumnEnabled("ARE_CASHHDR.CASH_REC_CD",-1)
 	endif
 [[ARE_CASHHDR.ACUS]]
 data_present$="N"
@@ -259,6 +275,14 @@ Form!.getControl(num(user_tpl.GLind_id$)).setText("")
 Form!.getControl(num(user_tpl.GLstar_id$)).setText("")
 
 callpoint!.setColumnEnabled("ARE_CASHHDR.PAYMENT_AMT",0)
+
+rem --- Initialize fields coming from Bank Rec deposit.
+	if callpoint!.getDevObject("br_interface")="Y" then
+		callpoint!.setColumnData("ARE_CASHHDR.DEPOSIT_ID",str(callpoint!.getDevObject("deposit_id")),1)
+rem wgh ... 8336 ... why doesn't deposit_id description display (can the lookup button be eliminated?)
+		callpoint!.setColumnData("ARE_CASHHDR.RECEIPT_DATE",str(callpoint!.getDevObject("deposit_date")),1)
+		callpoint!.setColumnData("ARE_CASHHDR.CASH_REC_CD",str(callpoint!.getDevObject("cash_rec_id")),1)
+	endif
 [[ARE_CASHHDR.ASIZ]]
 if UserObj!<>null()
 	gridInvoice!=UserObj!.getItem(num(user_tpl.inv_grid$))
