@@ -1,19 +1,106 @@
-[[ARE_DEPOSIT.TOT_DEPOSIT_AMT.AVAL]]
-rem wgh ... 8336 ... check the Deposit’s TOT_DEPOSIT_AMT when ending a Deposit
-rem wgh ... 8336 ... if zero, set it equal to the sum of the PAYMENT_AMTs
-rem wgh ... 8336 ... else, warn if it is not equal to the sum of the PAYMENT_AMTs
+[[ARE_DEPOSIT.AOPT-SELD]]
+rem --- Check the Deposit’s TOT_DEPOSIT_AMT when ending a Deposit
+	deposit_id$=callpoint!.getDevObject("deposit_id")
+	if deposit_id$<>callpoint!.getColumnData("ARE_DEPOSIT.DEPOSIT_ID") then
+		tot_deposit_amt=num(callpoint!.getDevObject("tot_deposit_amt"))
+		tot_receipts_amt=num(callpoint!.getDevObject("tot_receipts_amt"))
+		if tot_deposit_amt=0 then
+			rem --- When TOT_DEPOSIT_AMT is zero, set it equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
+rem wgh ... 8336 ... test
+			gosub set_TotDepositAmt_to_TotReceiptsAmt
+		else
+			rem --- Warn TOT_DEPOSIT_AMT it is not equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
+			if tot_depost_amt<>tot_receipts_amt then
+				call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",AmtMsk$,0,0
+rem wgh ... 8336 ... stopped here
+msg_id$="AR_DEPOSIT<>RECEIPTS"
+rem wgh ... 8336 ... The deposit amount (%1) must equal the total of the receipt payments in the deposit (%2).
+rem wgh ... 8336 ... Do you want to Change Deposit amount, Edit Receipts, or Exit As-Is?
+				dim msg_tokens$[2]
+				msg_tokens$[1]=cvs(str(tot_depost_amt:AmtMsk$),3)
+				msg_tokens$[2]=cvs(str(tot_receipts_amt:AmtMsk$),3)
+				gosub disp_message
+				if msg_opt$="D" then
+					rem --- Change the deposit amount, set it equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
+rem wgh ... 8336 ... test
+					gosub set_TotDepositAmt_to_TotReceiptsAmt
+				endif
+				if msg_opt$="R" then
+					rem --- Edit the cash receipts for previously selected Deposit
+rem wgh ... 8336 ... test
+					callpoint!.setStatus("EXIT")
+					break
+				endif
+				if msg_opt$="E" then
+					rem --- Exit as-is
+rem wgh ... 8336 ... test
+				endif
+			endif
+		endif
+
+		rem --- Reset tot_receipts_amt for new Deposit.
+		rem --- When switching to an existing Deposit, need to total payment_amt for receipts already in that Deposit.
+		are01_dev=fnget_dev("@ARE_CASHHDR")
+		dim are01a$:fnget_tpl$("@ARE_CASHHDR")
+		tot_receipts_amt=0
+		batch_no$=are01a.batch_no$
+		batch_no$(1)=stbl("+BATCH_NO",err=*next)
+		are01_trip$=firm_id$+batch_no$+are01a.ar_type$+callpoint!.getColumnData("ARE_DEPOSIT.DEPOSIT_ID")
+		readrecord(are01_dev,key=are01_trip$,knum="AO_BATCH_DEPOSIT",dom=*next)are01a$
+		while 1
+			are01_key$=key(are01_dev,end=*break)
+			if pos(are01_trip$=are01_key$)<>1 then break
+			readrecord(are01_dev)are01a$
+			tot_receipts_amt=tot_receipts_amt+are01a.payment_amt
+		wend
+		callpoint!.setDevObject("tot_receipts_amt",tot_receipts_amt)
+	endif
+
+rem --- Set devObjects for data being returned
+	callpoint!.setDevObject("deposit_id",callpoint!.getColumnData("ARE_DEPOSIT.DEPOSIT_ID"))
+	callpoint!.setDevObject("deposit_date",callpoint!.getColumnData("ARE_DEPOSIT.DEPOSIT_DATE"))
+	callpoint!.setDevObject("cash_rec_cd",callpoint!.getColumnData("ARE_DEPOSIT.CASH_REC_CD"))
+	callpoint!.setDevObject("tot_deposit_amt",num(callpoint!.getColumnData("ARE_DEPOSIT.TOT_DEPOSIT_AMT")))
+
+rem --- Exit form
+	callpoint!.setStatus("EXIT")
+[[ARE_DEPOSIT.<CUSTOM>]]
+rem ==================================================================
+set_TotDepositAmt_to_TotReceiptsAmt:
+	rem --- input data:
+		rem --- tot_deposit_amt
+		rem --- tot_receipts_amt
+rem ==================================================================
+	rem --- Set Deposit's tot_deposit_amt equal the total of the receipt payments in the deposit tot_receipts_amt
+	deposit_dev=fnget_dev("ARE_DEPOSIT")
+	dim deposit_tpl$:fnget_tpl$("ARE_DEPOSIT")
+	deposit_date$=callpoint!.getDevObject("deposit_date")
+	readrecord(deposit_dev,key=firm_id$+deposit_date$+deposit_id$,dom=*next)deposit_tpl$
+	if deposit_tpl.deposit_id$=deposit_id$ then
+		deposit_tpl.tot_deposit_amt=tot_receipts_amt
+		deposit_tpl$=field(deposit_tpl$)
+		writerecord(deposit_dev)deposit_tpl$
+	endif
+	return
+[[ARE_DEPOSIT.DEPOSIT_DATE.AVAL]]
+rem --- Validate entered date
+	deposit_date$=callpoint!.getUserInput()        
+	call stbl("+DIR_PGM")+"glc_datecheck.aon",deposit_date$,"Y",per$,yr$,status
+	if status>99
+		callpoint!.setStatus("ABORT")
+		break
+	endif
 [[ARE_DEPOSIT.BSHO]]
 rem --- Open/Lock files
-	num_files=2
+	num_files=3
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ARC_CASHCODE",open_opts$[1]="OTA@"
-	open_tables$[2]="GLM_BANKMASTER",open_opts$[2]="OTA@"
+	open_tables$[2]="ARE_CASHHDR",open_opts$[2]="OTA@"
+	open_tables$[3]="GLM_BANKMASTER",open_opts$[3]="OTA@"
 
 	gosub open_tables
 	if status$ <> ""  then goto std_exit
 [[ARE_DEPOSIT.DEPOSIT_ID.AVAL]]
-rem wgh ... 8336 ... check the Deposit’s TOT_DEPOSIT_AMT
-
 rem wgh ... 8336 ... new deposit isn't working right ... should work same as new WO in WO entry
 
 rem wgh ... 8336 ... add deposit detail button
@@ -35,14 +122,6 @@ rem --- The Cash Receipts Code’s GL Cash Account must be set up in the Bank Acco
 		callpoint!.setStatus("ABORT")
 		break
 	endif
-[[ARE_DEPOSIT.ASVA]]
-rem --- Set devObjects for data being returned
-	callpoint!.setDevObject("deposit_id",callpoint!.getColumnData("ARE_DEPOSIT.DEPOSIT_ID"))
-	callpoint!.setDevObject("deposit_date",callpoint!.getColumnData("ARE_DEPOSIT.DEPOSIT_DATE"))
-	callpoint!.setDevObject("cash_rec_id",callpoint!.getColumnData("ARE_DEPOSIT.CASH_REC_CD"))
-[[ARE_DEPOSIT.AWRI]]
-rem --- Exit form
-	callpoint!.setStatus("EXIT")
 [[ARE_DEPOSIT.BWRI]]
 rem --- Initialize RTP modified fields for modified existing records
 	if callpoint!.getRecordMode()="C" then
@@ -51,8 +130,6 @@ rem --- Initialize RTP modified fields for modified existing records
 		rec_data.mod_time$=date(0:"%Hz%mz")
 		callpoint!.setDevObject("initial_rec_data$",rec_data$)
 	endif
-
-rem wgh ... 8336 ... after entering a new deposit have to click OK twice to exit
 [[ARE_DEPOSIT.AREC]]
 rem --- Initialize RTP trans_status and created fields
 	rem --- TRANS_STATUS set to "E" via form Preset Value
@@ -61,12 +138,14 @@ rem --- Initialize RTP trans_status and created fields
 	callpoint!.setColumnData("ARE_DEPOSIT.CREATED_TIME",date(0:"%Hz%mz"))
 	callpoint!.setColumnData("ARE_DEPOSIT.AUDIT_NUMBER","0")
 
-rem --- Initialize devObjects for data being returned, if not previously entered
+rem --- Continue using previously entered devObjects if Deposit entry is Cancelled/Aborted
 	if callpoint!.getDevObject("deposit_id")=null() then
-		rem --- Continue using previously entered devObjects if Deposit entry is Cancelled/Aborted
+		rem --- Initialize devObjects for data being returned for a new Deposit
 		callpoint!.setDevObject("deposit_id","")
 		callpoint!.setDevObject("deposit_date","")
-		callpoint!.setDevObject("cash_rec_id","")
+		callpoint!.setDevObject("cash_rec_cd","")
+		callpoint!.setDevObject("tot_deposit_amt",0)
+		callpoint!.setDevObject("tot_receipts_amt",0)
 	endif
 
 rem wgh ... 8336 ... when attempt to edit record, it shows as being locked

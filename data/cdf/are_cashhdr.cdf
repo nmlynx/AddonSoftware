@@ -2,6 +2,11 @@
 rem --- Launch Bank Deposit Entry form if using Bank Rec.
 	if callpoint!.getDevObject("br_interface")="Y" then
 		call stbl("+DIR_SYP")+"bam_run_prog.bbj", "ARE_DEPOSIT", stbl("+USER_ID"), "MNT", "", table_chans$[all]
+
+		rem --- Start a new Cash Receipt record if the deposit_id has changed
+		if callpoint!.getDevObject("deposit_id")<>callpoint!.getColumnData("ARE_CASHHDR.DEPOSIT_ID") then
+			callpoint!.setStatus("NEWREC")
+		endif
 	endif
 [[ARE_CASHHDR.ASHO]]
 rem --- Launch Bank Deposit Entry form if using Bank Rec.
@@ -63,9 +68,26 @@ rem --- remove software lock on batch, if batching
 		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
 	endif
 
-rem wgh ... 8336 ... check the Deposit’s TOT_DEPOSIT_AMT when ending a Deposit
-rem wgh ... 8336 ... if zero, set it equal to the sum of the PAYMENT_AMTs
+rem --- If using Bank Rec, check the Deposit’s TOT_DEPOSIT_AMT when ending a Deposit
+	if callpoint!.getDevObject("br_interface")="Y" then
+		tot_deposit_amt=num(callpoint!.getDevObject("tot_deposit_amt"))
+		tot_receipts_amt=num(callpoint!.getDevObject("tot_receipts_amt"))
+		if tot_deposit_amt=0 then
+			rem --- When TOT_DEPOSIT_AMT is zero, set it equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
+			deposit_dev=fnget_dev("@ARE_DEPOSIT")
+			dim deposit_tpl$:fnget_tpl$("@ARE_DEPOSIT")
+			deposit_date$=callpoint!.getDevObject("deposit_date")
+			deposit_id$=callpoint!.getDevObject("deposit_id")
+			readrecord(deposit_dev,key=firm_id$+deposit_date$+deposit_id$,dom=*endif)deposit_tpl$
+			deposit_tpl.tot_deposit_amt=tot_receipts_amt
+			deposit_tpl$=field(deposit_tpl$)
+			writerecord(deposit_dev)deposit_tpl$
+		else
+rem wgh ... 8336 ... stopped here
 rem wgh ... 8336 ... else, warn if it is not equal to the sum of the PAYMENT_AMTs
+rem wgh ... 8336 ... how to add/reduce/delete receipt to previously ended/totalled Deposit?
+		endif
+	endif
 [[ARE_CASHHDR.BTBL]]
 rem --- Get Batch information
 
@@ -89,6 +111,11 @@ callpoint!.setColumnData("<<DISPLAY>>.DISP_APPLIED",str(disp_applied))
 callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",str(disp_bal))
 gosub fill_bottom_grid
 callpoint!.setStatus("REFRESH-ABLEMAP")
+
+rem --- Disable New Deposit button if using Bank Rec.
+if callpoint!.getDevObject("br_interface")="Y" then
+	callpoint!.setOptionEnabled("DPST",0)
+endif
 [[ARE_CASHHDR.BWRI]]
 gosub validate_before_writing
 switch pos(validate_passed$="NO")
@@ -116,9 +143,9 @@ rem --- Disable Bank Rec. related controls
 		callpoint!.setOptionEnabled("DPST",0)
 	else
 		rem --- Disable fields coming from Bank Rec deposit when using Bank Rec.
-		callpoint!.setColumnEnabled("ARE_CASHHDR.DEPOSIT_ID",-1)
-		callpoint!.setColumnEnabled("ARE_CASHHDR.RECEIPT_DATE",-1)
-		callpoint!.setColumnEnabled("ARE_CASHHDR.CASH_REC_CD",-1)
+		callpoint!.setColumnEnabled("ARE_CASHHDR.DEPOSIT_ID",0)
+		callpoint!.setColumnEnabled("ARE_CASHHDR.RECEIPT_DATE",0)
+		callpoint!.setColumnEnabled("ARE_CASHHDR.CASH_REC_CD",0)
 	endif
 [[ARE_CASHHDR.ACUS]]
 data_present$="N"
@@ -244,6 +271,13 @@ callpoint!.setColumnData("<<DISPLAY>>.DISP_APPLIED",str(disp_applied))
 callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",str(disp_bal))
 gosub fill_bottom_grid
 callpoint!.setStatus("REFRESH")
+
+rem --- Disable New Deposit button if using Bank Rec.
+if callpoint!.getDevObject("br_interface")="Y" then
+	callpoint!.setOptionEnabled("DPST",0)
+endif
+
+rem wgh ... 8336 ... how to handle receipts not in current deposit?
 [[ARE_CASHHDR.AOPT-OACT]]
 gosub apply_on_acct
 [[ARE_CASHHDR.AOPT-GLED]]
@@ -276,12 +310,27 @@ Form!.getControl(num(user_tpl.GLstar_id$)).setText("")
 
 callpoint!.setColumnEnabled("ARE_CASHHDR.PAYMENT_AMT",0)
 
+rem wgh ... 8336 ... Receipt Date and Cash Receipt Code are not being disabled after a SAVE
 rem --- Initialize fields coming from Bank Rec deposit.
 	if callpoint!.getDevObject("br_interface")="Y" then
-		callpoint!.setColumnData("ARE_CASHHDR.DEPOSIT_ID",str(callpoint!.getDevObject("deposit_id")),1)
-rem wgh ... 8336 ... why doesn't deposit_id description display (can the lookup button be eliminated?)
-		callpoint!.setColumnData("ARE_CASHHDR.RECEIPT_DATE",str(callpoint!.getDevObject("deposit_date")),1)
-		callpoint!.setColumnData("ARE_CASHHDR.CASH_REC_CD",str(callpoint!.getDevObject("cash_rec_id")),1)
+		deposit_id$=callpoint!.getDevObject("deposit_id")
+		callpoint!.setColumnData("ARE_CASHHDR.DEPOSIT_ID",deposit_id$,1)
+rem wgh ... 8336 ... why doesn't deposit_id description display
+rem wgh ... 8336 ... can the deposit lookup button be eliminated?
+
+		recpt_date$=callpoint!.getDevObject("deposit_date")
+		callpoint!.setColumnData("ARE_CASHHDR.RECEIPT_DATE",recpt_date$,1)
+		call stbl("+DIR_PGM")+"glc_datecheck.aon",recpt_date$,"Y",per$,yr$,status
+		user_tpl.glyr$=yr$
+		user_tpl.glper$=per$
+
+		wk_cash_cd$=callpoint!.getDevObject("cash_rec_cd")
+		callpoint!.setColumnData("ARE_CASHHDR.CASH_REC_CD",wk_cash_cd$,1)
+		gosub get_cash_rec_cd
+		gosub able_controls
+
+		rem --- Enable New Deposit button
+		callpoint!.setOptionEnabled("DPST",1)
 	endif
 [[ARE_CASHHDR.ASIZ]]
 if UserObj!<>null()
@@ -320,6 +369,7 @@ if status$<>"" then
 endif
 ars01_dev=num(chans$[10])
 gls01_dev=num(chans$[11])
+
 rem --- Dimension miscellaneous string templates
 dim ars01a$:templates$[10],gls01a$:templates$[11]
 user_tpl_str$="firm_id:c(2),glint:c(1),glyr:c(4),glper:c(2),glworkfile:c(16),"
@@ -333,6 +383,17 @@ user_tpl_str$=user_tpl_str$+"applied_amt_ofst:c(5),disc_taken_ofst:c(5),new_bal_
 user_tpl_str$=user_tpl_str$+"existing_dtl:c(5),GLind_id:c(5),GLstar_id:c(5),gl_applied:c(10),binp_pay_amt:n(15)"
 dim user_tpl$:user_tpl_str$
 user_tpl.firm_id$=firm_id$
+
+rem --- Retrieve parameter data
+ars01a_key$=firm_id$+"AR00"
+find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+callpoint!.setDevObject("br_interface",ars01a.br_interface$)
+call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A",imsk$,omsk$,ilen,olen
+user_tpl.amt_msk$=imsk$
+
+gls01a_key$=firm_id$+"GL00"
+find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+
 rem --- Additional File Opens
 gl$="N"
 status=0
@@ -357,14 +418,15 @@ if gl$="Y"
 		release
 	endif
 endif
-rem --- Retrieve parameter data - not keeping any of it here, just make sure params exist
-ars01a_key$=firm_id$+"AR00"
-find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-callpoint!.setDevObject("br_interface",ars01a.br_interface$)
-call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A",imsk$,omsk$,ilen,olen
-user_tpl.amt_msk$=imsk$
-gls01a_key$=firm_id$+"GL00"
-find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+
+if ars01a.br_interface$="Y" then
+	num_files=1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="ARE_DEPOSIT",open_opts$[1]="OTA@"
+
+	gosub open_tables
+	if status$ <> ""  then goto std_exit
+endif
 
 rem --- add custom controls, checkboxes and grids
 UserObj!=SysGUI!.makeVector()
@@ -401,8 +463,10 @@ user_tpl.asel_chkbox_id$=str(nxt_ctlID+2)
 user_tpl.gridInvoice_id$=str(nxt_ctlID+3)
 user_tpl.GLind_id$=str(nxt_ctlID+4)
 user_tpl.GLstar_id$=str(nxt_ctlID+5)
+
 rem --- Reset window size
 util.resizeWindow(Form!, SysGui!)
+
 rem --- set user-friendly names for controls' positions in UserObj vector, num grid cols, data pos w/in vector, etc.				
 user_tpl.gridInvoice_cols$="12"				
 user_tpl.gridInvoice_rows$="10"				
@@ -417,12 +481,14 @@ user_tpl.new_bal_ofst$="10"
 user_tpl.pymt_dist$="3"
 user_tpl.existing_dtl$="4"
 gosub format_grids
+
 rem --- store grid, vectors, and existing/newly posted detail strings in UserObj!				
 UserObj!.addItem(gridInvoice!)				
 UserObj!.addItem(SysGUI!.makeVector());rem --- vector for open (and maybe closed) invoices				
 UserObj!.addItem(SysGUI!.makeVector());rem --- vector for open invoice grid's checkbox values
 UserObj!.addItem("");rem --- string for pymt_dist$, containing chk#/inv#/pd/disc, 10 char ea
 UserObj!.addItem("");rem --- string for existing_dtl$;same format as pymt_dist$,but corres to existing are-11's
+
 rem --- set callbacks - processed in ACUS callpoint
 gridInvoice!.setCallback(gridInvoice!.ON_GRID_EDIT_START,"custom_event")
 gridInvoice!.setCallback(gridInvoice!.ON_GRID_EDIT_STOP,"custom_event")
@@ -435,6 +501,7 @@ zbal_chkbox!.setCallback(zbal_chkbox!.ON_CHECK_OFF,"custom_event")
 zbal_chkbox!.setCallback(zbal_chkbox!.ON_CHECK_ON,"custom_event")	
 asel_chkbox!.setCallback(asel_chkbox!.ON_CHECK_OFF,"custom_event")
 asel_chkbox!.setCallback(asel_chkbox!.ON_CHECK_ON,"custom_event")
+
 rem --- misc other init
 gridInvoice!.setColumnEditable(0,1)
 gridInvoice!.setColumnEditable(8,1)
@@ -443,6 +510,14 @@ gridInvoice!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 gridInvoice!.setTabActionSkipsNonEditableCells(1)
 [[ARE_CASHHDR.AWRI]]
 gosub update_cashhdr_cashdet_cashbal
+
+rem wgh ... 8336 ... Are GL Distribution and/or Apply On Acct amounts included in tot_receipts_amt?
+rem ---  When using Bank Rec, sum up tot_receipts_amt for current Deposit
+if callpoint!.getDevObject("br_interface")="Y" then
+	tot_receipts_amt=num(callpoint!.getDevObject("tot_receipts_amt"))
+	tot_receipts_amt=tot_receipts_amt+num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT"))
+	callpoint!.setDevObject("tot_receipts_amt",tot_receipts_amt)
+endif
 [[ARE_CASHHDR.CASH_CHECK.AVAL]]
 if callpoint!.getUserInput()="$"
 	ctl_name$="ABA_NO"
