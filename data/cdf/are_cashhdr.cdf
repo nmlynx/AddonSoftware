@@ -78,7 +78,7 @@ rem --- If using Bank Rec, check the Deposit’s TOT_DEPOSIT_AMT when ending a Dep
 			dim deposit_tpl$:fnget_tpl$("@ARE_DEPOSIT")
 			deposit_date$=callpoint!.getDevObject("deposit_date")
 			deposit_id$=callpoint!.getDevObject("deposit_id")
-			readrecord(deposit_dev,key=firm_id$+deposit_date$+deposit_id$,dom=*endif)deposit_tpl$
+			readrecord(deposit_dev,key=firm_id$+"E"+deposit_date$+deposit_id$,knum="AO_STATUS",dom=*endif)deposit_tpl$
 			deposit_tpl.tot_deposit_amt=tot_receipts_amt
 			deposit_tpl$=field(deposit_tpl$)
 			writerecord(deposit_dev)deposit_tpl$
@@ -199,6 +199,8 @@ if data_present$="Y"
 endif
 [[ARE_CASHHDR.ADEL]]
 gosub delete_cashdet_cashbal
+
+rem wgh ... 8336 ... If using Bank Rec, adjust tot_receipts_amt when receipt is deleted
 [[ARE_CASHHDR.ADIS]]
 tmp_cust_id$=callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")
 gosub get_customer_balance
@@ -555,6 +557,8 @@ if old_pay<>new_pay
 	callpoint!.setStatus("REFRESH")
 	user_tpl.binp_pay_amt=new_pay
 endif
+
+rem wgh ... 8336 ... If using Bank Rec, adjust tot_receipts_amt when payment_amt is changed
 [[ARE_CASHHDR.RECEIPT_DATE.AVAL]]
 if len(callpoint!.getUserInput())<6 or pos("9"<>callpoint!.getUserInput())=0 then callpoint!.setUserInput(stbl("+SYSTEM_DATE"))
 gl$=user_tpl.glint$
