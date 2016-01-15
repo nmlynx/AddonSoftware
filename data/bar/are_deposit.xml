@@ -23,7 +23,7 @@
 			<DD_CREATE_DATE id="ddm_tables.are_deposit">20160107</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_tables.are_deposit">20160114</DD_LSTREV_DATE>
 			<DD_LSTSYNC_DATE id="ddm_tables.are_deposit">20160114</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.are_deposit">123326</DD_LSTSYNC_TIME>
+			<DD_LSTSYNC_TIME id="ddm_tables.are_deposit">181642</DD_LSTSYNC_TIME>
 			<DD_ATTR_ATAB id="ddm_tables.are_deposit">ART_DEPOSIT     </DD_ATTR_ATAB>
 			<DD_ATTR_CPGM id="ddm_tables.are_deposit">/dev_projects/aon_dev1/aon/;C:/dev_projects/aon_dev1/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.are_deposit">AO_STATUS</DD_ATTR_DKNM>
@@ -31,7 +31,7 @@
 			<DD_ATTR_FTYP id="ddm_tables.are_deposit">T</DD_ATTR_FTYP>
 			<DD_ATTR_HELP id="ddm_tables.are_deposit"></DD_ATTR_HELP>
 			<DD_ATTR_IKEY id="ddm_tables.are_deposit"></DD_ATTR_IKEY>
-			<DD_ATTR_IDEF id="ddm_tables.are_deposit"></DD_ATTR_IDEF>
+			<DD_ATTR_IDEF id="ddm_tables.are_deposit">AR_DEPOSITS</DD_ATTR_IDEF>
 			<DD_ATTR_MRES id="ddm_tables.are_deposit"></DD_ATTR_MRES>
 			<DD_ATTR_NOTE id="ddm_tables.are_deposit"></DD_ATTR_NOTE>
 			<DD_ATTR_PCAL id="ddm_tables.are_deposit"></DD_ATTR_PCAL>
@@ -762,14 +762,14 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.are_deposit003">20160107</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.are_deposit003"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.are_deposit003"></DD_ATTR_ABLV>
-			<DD_ATTR_CPGM id="ddm_table_cols.are_deposit003">/dev_projects/aon_dev1/aon/;C:/dev_projects/aon_dev1/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.are_deposit003"></DD_ATTR_CPGM>
 			<DD_ATTR_COLW id="ddm_table_cols.are_deposit003">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.are_deposit003"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.are_deposit003"></DD_ATTR_CTLY>
 			<DD_ATTR_CTLW id="ddm_table_cols.are_deposit003"></DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_cols.are_deposit003"></DD_ATTR_CTLH>
 			<DD_ATTR_DFLT id="ddm_table_cols.are_deposit003"></DD_ATTR_DFLT>
-			<DD_ATTR_DRLE id="ddm_table_cols.are_deposit003"></DD_ATTR_DRLE>
+			<DD_ATTR_DRLE id="ddm_table_cols.are_deposit003">AR_DEPOSITDET</DD_ATTR_DRLE>
 			<DD_ATTR_GHDR id="ddm_table_cols.are_deposit003"></DD_ATTR_GHDR>
 			<DD_ATTR_IDEF id="ddm_table_cols.are_deposit003"></DD_ATTR_IDEF>
 			<DD_ATTR_LABL id="ddm_table_cols.are_deposit003"></DD_ATTR_LABL>
@@ -1458,11 +1458,6 @@
 			<DD_DVAR_NAME id="ddm_column_cpro.are_depositdeposit_dateaval">DEPOSIT_DATE    </DD_DVAR_NAME>
 			<DD_ATTR_CPRO id="ddm_column_cpro.are_depositdeposit_dateaval">AVAL</DD_ATTR_CPRO>
 		</RECORD>
-		<RECORD id="ddm_column_cpro.are_depositdeposit_idaval">
-			<DD_TABLE_ALIAS id="ddm_column_cpro.are_depositdeposit_idaval">ARE_DEPOSIT     </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_cpro.are_depositdeposit_idaval">DEPOSIT_ID      </DD_DVAR_NAME>
-			<DD_ATTR_CPRO id="ddm_column_cpro.are_depositdeposit_idaval">AVAL</DD_ATTR_CPRO>
-		</RECORD>
 		<RECORD id="ddm_column_cpro.are_depositcash_rec_cdaval">
 			<DD_TABLE_ALIAS id="ddm_column_cpro.are_depositcash_rec_cdaval">ARE_DEPOSIT     </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_cpro.are_depositcash_rec_cdaval">CASH_REC_CD     </DD_DVAR_NAME>
@@ -2147,6 +2142,28 @@
 			<DD_ATTR_SEQ id="ddm_element_ldat.trans_status03">03</DD_ATTR_SEQ>
 			<DD_ATTR_LDAT id="ddm_element_ldat.trans_status03">U</DD_ATTR_LDAT>
 			<DD_ATTR_LDAT_DS id="ddm_element_ldat.trans_status03">Update</DD_ATTR_LDAT_DS>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_drill_defs">
+		<ID id="ddm_drill_defs">DDM_DRILL_DEFS</ID>
+		<RECORD id="ddm_drill_defs.ar_depositdet">
+			<DRILL_DEF_ID id="ddm_drill_defs.ar_depositdet">AR_DEPOSITDET   </DRILL_DEF_ID>
+			<DESCRIPTION id="ddm_drill_defs.ar_depositdet">Bank Deposit Detail</DESCRIPTION>
+			<DD_ATTR_DTAB id="ddm_drill_defs.ar_depositdet">ARE_CASHHDR     </DD_ATTR_DTAB>
+			<DD_ATTR_DKNM id="ddm_drill_defs.ar_depositdet">AO_DEPOSIT      </DD_ATTR_DKNM>
+			<DD_ATTR_DKEY id="ddm_drill_defs.ar_depositdet">[FIRM_ID]+[DEPOSIT_ID]</DD_ATTR_DKEY>
+			<DD_ATTR_SLEV id="ddm_drill_defs.ar_depositdet"></DD_ATTR_SLEV>
+			<ASC_COMP_ID id="ddm_drill_defs.ar_depositdet">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_drill_defs.ar_depositdet">AR </ASC_PROD_ID>
+			<DD_FILTER_COL_01 id="ddm_drill_defs.ar_depositdet"></DD_FILTER_COL_01>
+			<DD_FILTER_COL_02 id="ddm_drill_defs.ar_depositdet"></DD_FILTER_COL_02>
+			<DD_FILTER_COL_03 id="ddm_drill_defs.ar_depositdet"></DD_FILTER_COL_03>
+			<DD_FILTER_DEF_01 id="ddm_drill_defs.ar_depositdet"></DD_FILTER_DEF_01>
+			<DD_FILTER_DEF_02 id="ddm_drill_defs.ar_depositdet"></DD_FILTER_DEF_02>
+			<DD_FILTER_DEF_03 id="ddm_drill_defs.ar_depositdet"></DD_FILTER_DEF_03>
+			<FILTER_PROG id="ddm_drill_defs.ar_depositdet"></FILTER_PROG>
+			<DD_ATTR_DINQ id="ddm_drill_defs.ar_depositdet"></DD_ATTR_DINQ>
+			<DD_ATTR_IDEF id="ddm_drill_defs.ar_depositdet">AR_DEPOSITDET   </DD_ATTR_IDEF>
 		</RECORD>
 	</ALIAS>
 </ARE_DEPOSIT>

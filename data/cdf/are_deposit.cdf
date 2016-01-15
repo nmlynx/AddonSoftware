@@ -112,10 +112,6 @@ rem --- Open/Lock files
 
 	gosub open_tables
 	if status$ <> ""  then goto std_exit
-[[ARE_DEPOSIT.DEPOSIT_ID.AVAL]]
-rem wgh ... 8336 ... add deposit detail button
-
-rem wgh ... 8336 ... add drilldown to deposit lookup
 [[ARE_DEPOSIT.CASH_REC_CD.AVAL]]
 rem --- The Cash Receipts Code’s GL Cash Account must be set up in the Bank Account Master file GLM_BANKMASTER (glm-05)
 	cashcode_dev=fnget_dev("@ARC_CASHCODE")
