@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.0.final using JasperReports Library version 6.2.0  -->
-<!-- 2016-01-08T17:23:05 -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PickListMaster" pageWidth="612" pageHeight="792" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon" uuid="abcaa710-fcce-449c-9c73-f1b3ee2cc5e1">
+<!-- 2016-01-08T17:24:24 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PickListPrint" pageWidth="612" pageHeight="792" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon" uuid="abcaa710-fcce-449c-9c73-f1b3ee2cc5e1">
 	<property name="ireport.zoom" value="1.5"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="165"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
 	<parameter name="RESTART" class="java.lang.String"/>
 	<parameter name="RESTART_CUSTOMER" class="java.lang.String"/>
 	<parameter name="PRINT_PRICES" class="java.lang.String"/>
@@ -27,19 +28,19 @@
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Serif" size="30" isBold="true"/>
 				</textElement>
-				<text><![CDATA[PICKING LIST MASTER]]></text>
+				<text><![CDATA[PICKING LIST PRINT]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="12" y="15" width="550" height="39" forecolor="#000000" uuid="f4210451-1357-446c-a188-bf253fd64987"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Serif" size="30" isBold="true"/>
 				</textElement>
-				<text><![CDATA[PICKING LIST MASTER]]></text>
+				<text><![CDATA[PICKING LIST PRINT]]></text>
 			</staticText>
 		</band>
 	</title>
 	<pageHeader>
-		<band height="220" splitType="Stretch">
+		<band height="206" splitType="Stretch">
 			<rectangle radius="8">
 				<reportElement x="8" y="0" width="555" height="20" backcolor="#000000" uuid="e7ec1bf5-1f07-4434-bf62-06d95618f764"/>
 				<graphicElement>
@@ -60,7 +61,7 @@
 				<textFieldExpression><![CDATA[$R{AON_SUMMARY}]]></textFieldExpression>
 			</textField>
 			<rectangle radius="2">
-				<reportElement x="9" y="40" width="555" height="170" backcolor="#FAFAFA" uuid="2ae4aae2-42bb-4433-ad85-06bcd3eac636"/>
+				<reportElement x="9" y="40" width="555" height="166" backcolor="#FAFAFA" uuid="2ae4aae2-42bb-4433-ad85-06bcd3eac636"/>
 			</rectangle>
 			<textField>
 				<reportElement key="textField" x="12" y="97" width="100" height="25" forecolor="#000000" backcolor="#FFFFFF" uuid="6dc6b484-25a0-4943-b829-de3cbd7c9ecd">
@@ -185,13 +186,13 @@
 				<textFieldExpression><![CDATA[$P{PICKLIST_TYPE}]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement x="13" y="178" width="537" height="20" uuid="fab8b4ec-2724-4331-a24b-8b2e217e42a6">
+				<reportElement x="13" y="178" width="537" height="20" uuid="14f86874-9b08-47ec-b656-b8567dfcfb0f">
 					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
 				</reportElement>
 				<textElement textAlignment="Center">
 					<font size="12"/>
 				</textElement>
-				<text><![CDATA[This document includes all picking lists and/or quotations generated in this run.]]></text>
+				<text><![CDATA[This document includes picking lists only.]]></text>
 			</staticText>
 		</band>
 	</pageHeader>
