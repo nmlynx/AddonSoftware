@@ -369,27 +369,23 @@ rem --- Main Read
     
         cust_id$ = str( custIds!.getItem(next_item) )
         order_no$ = str( orderNos!.getItem(next_item) )
+        
+        dim ope01a$:fattr(ope01a$)
 
-		if type = on_demand
-            dim ope01a$:fattr(ope01a$)
-            extract record (ordhdr_dev, key=firm_id$+"E"+"  "+cust_id$+order_no$+ope01a.ar_inv_no$,knum="AO_STATUS", dom=std_exit) ope01a$; rem Advisory Locking
-		else
-			if pos(cust_id$+order_no$=printed_orders$,len(cust_id$)+len(order_no$))=0 goto next_read
-            dim ope01a$:fattr(ope01a$)
-			extract record (ordhdr_dev, key=firm_id$+"E"+"  "+cust_id$+order_no$+ope01a.ar_inv_no$,knum="AO_STATUS", dom=std_exit) ope01a$; rem Advisory Locking
-		endif
+		if type <> on_demand
+            if pos(cust_id$+order_no$=printed_orders$,len(cust_id$)+len(order_no$))=0 then continue
+        endif
+
+        extract record (ordhdr_dev, key=firm_id$+"E"+"  "+cust_id$+order_no$+ope01a.ar_inv_no$,knum="AO_STATUS", dom=std_exit) ope01a$; rem Advisory Locking
+
 		
 rem --- Misc setup and qualification
-
-		if cvs(ope01a.firm_id$,3)=""
-			ope01a.firm_id$ = firm_id$
-		endif
 		
         if ope01a.print_status$="Y" and type = batch_pick then 
             gosub is_still_printed
         endif
 
-        if ope01a.reprint_flag$="Y" then  
+        if ope01a.reprint_flag$="Y" then
             reprint$ = ope01a.print_status$
             ope01a.print_status$ = "N"
         endif
@@ -552,6 +548,8 @@ rem --- Misc setup and qualification
 		params!.put("LOGO_FILE",logo_filename$)
 		params!.put("IVS_LOTSER_FLAG",params_rec.lotser_flag$)
         params!.put("PICK_OR_QUOTE",pick_or_quote$)
+        params!.put("PRINT_PRICES",print_prices$)
+        params!.put("REPRINT",reprint$)
 		
 		params!.put("AR_ADDRESS1",comp$((comp_addrLine_len*0)+1,comp_addrLine_len))
 		params!.put("AR_ADDRESS2",comp$((comp_addrLine_len*1)+1,comp_addrLine_len))
@@ -691,7 +689,7 @@ rem --- bring up jasper viewers (master doc and print doc for Batch Invoices; si
 
         gosub OnQuotePrintSaveMenuButton; rem --- force save to doc archive
 
-        quotePrintViewerWindow! = new BBJasperViewerWindow(quote_print_report!,50,50,screen_width,screen_height,repTitle$,$00000093$)
+        quotePrintViewerWindow! = new BBJasperViewerWindow(quote_print_report!,80,80,screen_width,screen_height,repTitle$,$00000093$)
         quotePrintViewerControl! = quotePrintViewerWindow!.getViewerControl()
         quotePrintViewerControl!.setGoogleDefaultDocument(repTitle$)
         quotePrintViewerControl!.setDefaultSaveFolder(rd_doc_path$)
@@ -934,9 +932,9 @@ rem --- Updates and final processing
 		msg_tokens$[1]=sysinfo.task_desc$
 		gosub disp_message
 
-		if msg_opt$<>"Y" then goto std_exit
+		if msg_opt$<>"Y" then goto all_done
 		call pgmdir$+"adc_progress.aon","N","","","","",0,prntlist_dev,1,meter_num,status
-		if status = 999 then goto std_exit
+		if status = 999 then goto all_done
 		
 rem --- Position file for update    
     
