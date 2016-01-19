@@ -76,9 +76,8 @@ rem --- If using Bank Rec, check the Deposit’s TOT_DEPOSIT_AMT when ending a Dep
 			rem --- When TOT_DEPOSIT_AMT is zero, set it equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
 			deposit_dev=fnget_dev("@ARE_DEPOSIT")
 			dim deposit_tpl$:fnget_tpl$("@ARE_DEPOSIT")
-			deposit_date$=callpoint!.getDevObject("deposit_date")
 			deposit_id$=callpoint!.getDevObject("deposit_id")
-			readrecord(deposit_dev,key=firm_id$+"E"+deposit_date$+deposit_id$,knum="AO_STATUS",dom=*endif)deposit_tpl$
+			readrecord(deposit_dev,key=firm_id$+"E"+deposit_id$,knum="AO_STATUS",dom=*endif)deposit_tpl$
 			deposit_tpl.tot_deposit_amt=tot_receipts_amt
 			deposit_tpl$=field(deposit_tpl$)
 			writerecord(deposit_dev)deposit_tpl$

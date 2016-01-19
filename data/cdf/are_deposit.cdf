@@ -1,3 +1,5 @@
+[[ARE_DEPOSIT.DEPOSIT_ID.AVAL]]
+rem wgh ... 8336 ... Don't allow exiting deposit_id with trans_status R or U
 [[ARE_DEPOSIT.BDEL]]
 rem --- Cannot delete a Deposit that contains receipts
 	are01_dev=fnget_dev("@ARE_CASHHDR")
@@ -85,9 +87,8 @@ rem ==================================================================
 	rem --- Set Deposit's tot_deposit_amt equal the total of the receipt payments in the deposit tot_receipts_amt
 	deposit_dev=fnget_dev("ARE_DEPOSIT")
 	dim deposit_tpl$:fnget_tpl$("ARE_DEPOSIT")
-	deposit_date$=callpoint!.getDevObject("deposit_date")
 	rem --- Reading with knum=AO_STATUS already
-	readrecord(deposit_dev,key=firm_id$+"E"+deposit_date$+deposit_id$,dom=*next)deposit_tpl$
+	readrecord(deposit_dev,key=firm_id$+"E"+deposit_id$,dom=*next)deposit_tpl$
 	if deposit_tpl.deposit_id$=deposit_id$ then
 		deposit_tpl.tot_deposit_amt=tot_receipts_amt
 		deposit_tpl$=field(deposit_tpl$)

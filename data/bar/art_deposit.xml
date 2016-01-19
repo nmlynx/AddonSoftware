@@ -21,9 +21,9 @@
 			<ASC_LICENSE_ID id="ddm_tables.art_deposit"></ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.art_deposit">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.art_deposit">20160107</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.art_deposit">20160107</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.art_deposit">20160111</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.art_deposit">145946</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.art_deposit">20160118</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.art_deposit">20160118</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.art_deposit">150346</DD_LSTSYNC_TIME>
 			<DD_ATTR_ATAB id="ddm_tables.art_deposit"></DD_ATTR_ATAB>
 			<DD_ATTR_CPGM id="ddm_tables.art_deposit"></DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.art_deposit"></DD_ATTR_DKNM>
@@ -47,6 +47,14 @@
 			<DD_ATTR_STYL id="ddm_tables.art_deposit"></DD_ATTR_STYL>
 		</RECORD>
 	</ALIAS>
+	<ALIAS id="ddm_table_tpls">
+		<ID id="ddm_table_tpls">DDM_TABLE_TPLS</ID>
+		<RECORD id="ddm_table_tpls.art_deposit">
+			<DD_TABLE_ALIAS id="ddm_table_tpls.art_deposit">ART_DEPOSIT     </DD_TABLE_ALIAS>
+			<DD_FILE_NAME id="ddm_table_tpls.art_deposit">art_deposit</DD_FILE_NAME>
+			<DD_TABLE_TPL id="ddm_table_tpls.art_deposit">firm_id:c(2),deposit_id:c(7),deposit_date:c(8),description:c(30),cash_rec_cd:c(3),created_user:c(16),created_date:c(8),created_time:c(4),mod_user:c(16),mod_date:c(8),mod_time:c(4),trans_status:c(1),arc_user:c(16),arc_date:c(8),arc_time:c(4),batch_no:c(7),audit_number:n(7*),tot_deposit_amt:n(7*)</DD_TABLE_TPL>
+		</RECORD>
+	</ALIAS>
 	<ALIAS id="ddm_keys">
 		<ID id="ddm_keys">DDM_KEYS</ID>
 		<RECORD id="ddm_keys.art_deposit00">
@@ -59,8 +67,8 @@
 		<RECORD id="ddm_keys.art_deposit01">
 			<DD_TABLE_ALIAS id="ddm_keys.art_deposit01">ART_DEPOSIT     </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_keys.art_deposit01">01</DD_KEY_NUMBER>
-			<DD_KEY_DESC id="ddm_keys.art_deposit01">By Deposit ID</DD_KEY_DESC>
-			<DD_KEY_ID id="ddm_keys.art_deposit01">AO_DEPOSIT      </DD_KEY_ID>
+			<DD_KEY_DESC id="ddm_keys.art_deposit01">By Deposit Date + Deposit ID</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.art_deposit01">AO_DATE_DEPOSIT </DD_KEY_ID>
 			<DD_KEY_AUTO_GEN id="ddm_keys.art_deposit01"></DD_KEY_AUTO_GEN>
 		</RECORD>
 		<RECORD id="ddm_keys.art_deposit02">
@@ -138,25 +146,13 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0002">ART_DEPOSIT     </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0002">00</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0002">02</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0002">DEPOSIT_DATE</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0002">DEPOSIT_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0002">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0002">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0002">0</DD_SEGMENT_LEN>
 			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0002">N</DD_SEGMENT_SORT>
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0002">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0002">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.art_deposit0003">
-			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0003">ART_DEPOSIT     </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0003">00</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0003">03</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0003">DEPOSIT_ID</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0003">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0003">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0003">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0003">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0003">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0003">N</DD_SEGMENT_MATH>
 		</RECORD>
 		<RECORD id="ddm_key_segs.art_deposit0101">
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0101">ART_DEPOSIT     </DD_TABLE_ALIAS>
@@ -174,13 +170,25 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0102">ART_DEPOSIT     </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0102">01</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0102">02</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0102">DEPOSIT_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0102">DEPOSIT_DATE</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0102">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0102">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0102">0</DD_SEGMENT_LEN>
 			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0102">N</DD_SEGMENT_SORT>
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0102">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0102">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.art_deposit0103">
+			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0103">ART_DEPOSIT     </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0103">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0103">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0103">DEPOSIT_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0103">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0103">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0103">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0103">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0103">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0103">N</DD_SEGMENT_MATH>
 		</RECORD>
 		<RECORD id="ddm_key_segs.art_deposit0201">
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0201">ART_DEPOSIT     </DD_TABLE_ALIAS>
@@ -210,25 +218,13 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0203">ART_DEPOSIT     </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0203">02</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0203">03</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0203">DEPOSIT_DATE</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0203">DEPOSIT_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0203">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0203">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0203">0</DD_SEGMENT_LEN>
 			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0203">N</DD_SEGMENT_SORT>
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0203">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0203">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.art_deposit0204">
-			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0204">ART_DEPOSIT     </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0204">02</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0204">04</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0204">DEPOSIT_ID</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0204">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0204">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0204">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0204">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0204">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0204">N</DD_SEGMENT_MATH>
 		</RECORD>
 		<RECORD id="ddm_key_segs.art_deposit0301">
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0301">ART_DEPOSIT     </DD_TABLE_ALIAS>
@@ -270,25 +266,13 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0304">ART_DEPOSIT     </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0304">03</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0304">04</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0304">DEPOSIT_DATE</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0304">DEPOSIT_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0304">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0304">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0304">0</DD_SEGMENT_LEN>
 			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0304">N</DD_SEGMENT_SORT>
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0304">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0304">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.art_deposit0305">
-			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0305">ART_DEPOSIT     </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0305">03</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0305">05</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0305">DEPOSIT_ID</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0305">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0305">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0305">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0305">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0305">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0305">N</DD_SEGMENT_MATH>
 		</RECORD>
 		<RECORD id="ddm_key_segs.art_deposit0401">
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0401">ART_DEPOSIT     </DD_TABLE_ALIAS>
@@ -318,25 +302,13 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0403">ART_DEPOSIT     </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0403">04</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0403">03</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0403">DEPOSIT_DATE</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0403">DEPOSIT_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0403">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0403">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0403">0</DD_SEGMENT_LEN>
 			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0403">N</DD_SEGMENT_SORT>
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0403">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0403">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.art_deposit0404">
-			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0404">ART_DEPOSIT     </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0404">04</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0404">04</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0404">DEPOSIT_ID</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0404">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0404">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0404">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0404">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0404">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0404">N</DD_SEGMENT_MATH>
 		</RECORD>
 		<RECORD id="ddm_key_segs.art_deposit0501">
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0501">ART_DEPOSIT     </DD_TABLE_ALIAS>
@@ -378,25 +350,13 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0504">ART_DEPOSIT     </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0504">05</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0504">04</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0504">DEPOSIT_DATE</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0504">DEPOSIT_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0504">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0504">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0504">0</DD_SEGMENT_LEN>
 			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0504">N</DD_SEGMENT_SORT>
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0504">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0504">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.art_deposit0505">
-			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0505">ART_DEPOSIT     </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0505">05</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0505">05</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0505">DEPOSIT_ID</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0505">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0505">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0505">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0505">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0505">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0505">N</DD_SEGMENT_MATH>
 		</RECORD>
 		<RECORD id="ddm_key_segs.art_deposit0601">
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0601">ART_DEPOSIT     </DD_TABLE_ALIAS>
@@ -438,25 +398,13 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0604">ART_DEPOSIT     </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0604">06</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0604">04</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0604">DEPOSIT_DATE</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0604">DEPOSIT_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0604">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0604">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0604">0</DD_SEGMENT_LEN>
 			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0604">N</DD_SEGMENT_SORT>
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0604">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0604">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.art_deposit0605">
-			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0605">ART_DEPOSIT     </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0605">06</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0605">05</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0605">DEPOSIT_ID</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0605">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0605">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0605">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0605">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0605">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0605">N</DD_SEGMENT_MATH>
 		</RECORD>
 		<RECORD id="ddm_key_segs.art_deposit0701">
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0701">ART_DEPOSIT     </DD_TABLE_ALIAS>
@@ -498,25 +446,13 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0704">ART_DEPOSIT     </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0704">07</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0704">04</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0704">DEPOSIT_DATE</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0704">DEPOSIT_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0704">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0704">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0704">0</DD_SEGMENT_LEN>
 			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0704">N</DD_SEGMENT_SORT>
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0704">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0704">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.art_deposit0705">
-			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0705">ART_DEPOSIT     </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0705">07</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0705">05</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0705">DEPOSIT_ID</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0705">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0705">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0705">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0705">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0705">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0705">N</DD_SEGMENT_MATH>
 		</RECORD>
 		<RECORD id="ddm_key_segs.art_deposit0801">
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0801">ART_DEPOSIT     </DD_TABLE_ALIAS>
@@ -558,25 +494,13 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0804">ART_DEPOSIT     </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0804">08</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0804">04</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0804">DEPOSIT_DATE</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0804">DEPOSIT_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0804">0</DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0804">0</DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0804">0</DD_SEGMENT_LEN>
 			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0804">N</DD_SEGMENT_SORT>
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0804">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0804">N</DD_SEGMENT_MATH>
-		</RECORD>
-		<RECORD id="ddm_key_segs.art_deposit0805">
-			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0805">ART_DEPOSIT     </DD_TABLE_ALIAS>
-			<DD_KEY_NUMBER id="ddm_key_segs.art_deposit0805">08</DD_KEY_NUMBER>
-			<DD_SEGMENT_SEQ id="ddm_key_segs.art_deposit0805">05</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.art_deposit0805">DEPOSIT_ID</DD_SEGMENT_COL>
-			<DD_SEGMENT_POS id="ddm_key_segs.art_deposit0805">0</DD_SEGMENT_POS>
-			<DD_SEGMENT_OFF id="ddm_key_segs.art_deposit0805">0</DD_SEGMENT_OFF>
-			<DD_SEGMENT_LEN id="ddm_key_segs.art_deposit0805">0</DD_SEGMENT_LEN>
-			<DD_SEGMENT_SORT id="ddm_key_segs.art_deposit0805">N</DD_SEGMENT_SORT>
-			<DD_SEGMENT_UNIQ id="ddm_key_segs.art_deposit0805">N</DD_SEGMENT_UNIQ>
-			<DD_SEGMENT_MATH id="ddm_key_segs.art_deposit0805">N</DD_SEGMENT_MATH>
 		</RECORD>
 		<RECORD id="ddm_key_segs.art_deposit0901">
 			<DD_TABLE_ALIAS id="ddm_key_segs.art_deposit0901">ART_DEPOSIT     </DD_TABLE_ALIAS>
@@ -664,8 +588,8 @@
 		<RECORD id="ddm_table_cols.art_deposit002">
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_deposit002">ART_DEPOSIT     </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.art_deposit002">002</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.art_deposit002">TRNS_DATE       </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.art_deposit002">DEPOSIT_DATE    </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.art_deposit002">DEPOSIT_ID      </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_deposit002">DEPOSIT_ID      </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.art_deposit002">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.art_deposit002">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.art_deposit002">N</DD_FIELD_DELIM>
@@ -673,8 +597,8 @@
 			<DD_SYSTEM_REC id="ddm_table_cols.art_deposit002"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.art_deposit002"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.art_deposit002"></DD_MASK_TYPE>
-			<DD_CREATE_DATE id="ddm_table_cols.art_deposit002">20160107</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.art_deposit002">20160107</DD_LSTREV_DATE>
+			<DD_CREATE_DATE id="ddm_table_cols.art_deposit002">20160118</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.art_deposit002">20160118</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.art_deposit002"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.art_deposit002"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.art_deposit002"></DD_ATTR_CPGM>
@@ -700,7 +624,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.art_deposit002"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.art_deposit002"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.art_deposit002"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.art_deposit002">DEPOSIT_DATE</SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.art_deposit002">DEPOSIT_ID</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.art_deposit002"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.art_deposit002"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.art_deposit002">N</DD_ATTR_FTSR>
@@ -708,8 +632,8 @@
 		<RECORD id="ddm_table_cols.art_deposit003">
 			<DD_TABLE_ALIAS id="ddm_table_cols.art_deposit003">ART_DEPOSIT     </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.art_deposit003">003</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.art_deposit003">DEPOSIT_ID      </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.art_deposit003">DEPOSIT_ID      </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.art_deposit003">TRNS_DATE       </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.art_deposit003">DEPOSIT_DATE    </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.art_deposit003">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.art_deposit003">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.art_deposit003">N</DD_FIELD_DELIM>
@@ -744,7 +668,7 @@
 			<DD_ATTR_TABG id="ddm_table_cols.art_deposit003"></DD_ATTR_TABG>
 			<DD_ATTR_TIND id="ddm_table_cols.art_deposit003"></DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.art_deposit003"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.art_deposit003">DEPOSIT_ID</SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.art_deposit003">DEPOSIT_DATE</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.art_deposit003"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.art_deposit003"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.art_deposit003">N</DD_ATTR_FTSR>
@@ -1461,55 +1385,6 @@
 			<DD_ATTR_STEP id="ddm_elements.firm_id"></DD_ATTR_STEP>
 			<DD_ATTR_FLPT id="ddm_elements.firm_id"></DD_ATTR_FLPT>
 		</RECORD>
-		<RECORD id="ddm_elements.trns_date">
-			<DD_DATA_NAME id="ddm_elements.trns_date">TRNS_DATE       </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.trns_date">Transaction Date              </DD_DESCRIPTION>
-			<DD_DATA_TYPE id="ddm_elements.trns_date">C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.trns_date">8</DD_DATA_LENGTH>
-			<DD_MASK_TYPE id="ddm_elements.trns_date"> </DD_MASK_TYPE>
-			<DD_SYSTEM_REC id="ddm_elements.trns_date"></DD_SYSTEM_REC>
-			<ASC_COMP_ID id="ddm_elements.trns_date">01007514</ASC_COMP_ID>
-			<ASC_PROD_ID id="ddm_elements.trns_date">AD </ASC_PROD_ID>
-			<LOCALIZATION_EX id="ddm_elements.trns_date"></LOCALIZATION_EX>
-			<DD_CREATE_DATE id="ddm_elements.trns_date">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.trns_date">20060119</DD_LSTREV_DATE>
-			<DD_AUTO_COMP id="ddm_elements.trns_date"></DD_AUTO_COMP>
-			<DD_ATTR_BLNK id="ddm_elements.trns_date"></DD_ATTR_BLNK>
-			<DD_ATTR_CDAT id="ddm_elements.trns_date"></DD_ATTR_CDAT>
-			<DD_ATTR_CTLW id="ddm_elements.trns_date"></DD_ATTR_CTLW>
-			<DD_ATTR_CTLH id="ddm_elements.trns_date"></DD_ATTR_CTLH>
-			<DD_ATTR_CTYP id="ddm_elements.trns_date">D</DD_ATTR_CTYP>
-			<DD_ATTR_DCOL id="ddm_elements.trns_date"></DD_ATTR_DCOL>
-			<DD_ATTR_DCOM id="ddm_elements.trns_date">            </DD_ATTR_DCOM>
-			<DD_ATTR_DEXP id="ddm_elements.trns_date">            </DD_ATTR_DEXP>
-			<DD_ATTR_DFLT id="ddm_elements.trns_date"></DD_ATTR_DFLT>
-			<DD_ATTR_DKNM id="ddm_elements.trns_date"></DD_ATTR_DKNM>
-			<DD_ATTR_DKEY id="ddm_elements.trns_date"></DD_ATTR_DKEY>
-			<DD_ATTR_DTAB id="ddm_elements.trns_date"></DD_ATTR_DTAB>
-			<DD_ATTR_DINQ id="ddm_elements.trns_date"></DD_ATTR_DINQ>
-			<DD_ATTR_ENCR id="ddm_elements.trns_date"></DD_ATTR_ENCR>
-			<DD_ATTR_IDEF id="ddm_elements.trns_date"></DD_ATTR_IDEF>
-			<DD_ATTR_LABL id="ddm_elements.trns_date">Transaction Date</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_elements.trns_date">Trans Date</DD_ATTR_LABS>
-			<DD_ATTR_LDIS id="ddm_elements.trns_date"></DD_ATTR_LDIS>
-			<DD_ATTR_MAXL id="ddm_elements.trns_date"></DD_ATTR_MAXL>
-			<DD_ATTR_MAXR id="ddm_elements.trns_date"></DD_ATTR_MAXR>
-			<DD_ATTR_MAXV id="ddm_elements.trns_date"></DD_ATTR_MAXV>
-			<DD_ATTR_MINL id="ddm_elements.trns_date"></DD_ATTR_MINL>
-			<DD_ATTR_MINV id="ddm_elements.trns_date"></DD_ATTR_MINV>
-			<DD_ATTR_MSKI id="ddm_elements.trns_date"></DD_ATTR_MSKI>
-			<DD_ATTR_MSKO id="ddm_elements.trns_date"></DD_ATTR_MSKO>
-			<DD_ATTR_PADC id="ddm_elements.trns_date"></DD_ATTR_PADC>
-			<DD_ATTR_PADJ id="ddm_elements.trns_date"></DD_ATTR_PADJ>
-			<DD_ATTR_PREC id="ddm_elements.trns_date"></DD_ATTR_PREC>
-			<DD_ATTR_PROM id="ddm_elements.trns_date"></DD_ATTR_PROM>
-			<DD_ATTR_PVAL id="ddm_elements.trns_date"></DD_ATTR_PVAL>
-			<DD_ATTR_SDLG id="ddm_elements.trns_date"></DD_ATTR_SDLG>
-			<DD_ATTR_SLEV id="ddm_elements.trns_date"></DD_ATTR_SLEV>
-			<DD_ATTR_STYP id="ddm_elements.trns_date">1</DD_ATTR_STYP>
-			<DD_ATTR_STEP id="ddm_elements.trns_date"></DD_ATTR_STEP>
-			<DD_ATTR_FLPT id="ddm_elements.trns_date"></DD_ATTR_FLPT>
-		</RECORD>
 		<RECORD id="ddm_elements.deposit_id">
 			<DD_DATA_NAME id="ddm_elements.deposit_id">DEPOSIT_ID      </DD_DATA_NAME>
 			<DD_DESCRIPTION id="ddm_elements.deposit_id">Bank Deposit Number</DD_DESCRIPTION>
@@ -1558,6 +1433,55 @@
 			<DD_ATTR_STYP id="ddm_elements.deposit_id"></DD_ATTR_STYP>
 			<DD_ATTR_STEP id="ddm_elements.deposit_id">0</DD_ATTR_STEP>
 			<DD_ATTR_FLPT id="ddm_elements.deposit_id"></DD_ATTR_FLPT>
+		</RECORD>
+		<RECORD id="ddm_elements.trns_date">
+			<DD_DATA_NAME id="ddm_elements.trns_date">TRNS_DATE       </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.trns_date">Transaction Date              </DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.trns_date">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.trns_date">8</DD_DATA_LENGTH>
+			<DD_MASK_TYPE id="ddm_elements.trns_date"> </DD_MASK_TYPE>
+			<DD_SYSTEM_REC id="ddm_elements.trns_date"></DD_SYSTEM_REC>
+			<ASC_COMP_ID id="ddm_elements.trns_date">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.trns_date">AD </ASC_PROD_ID>
+			<LOCALIZATION_EX id="ddm_elements.trns_date"></LOCALIZATION_EX>
+			<DD_CREATE_DATE id="ddm_elements.trns_date">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.trns_date">20060119</DD_LSTREV_DATE>
+			<DD_AUTO_COMP id="ddm_elements.trns_date"></DD_AUTO_COMP>
+			<DD_ATTR_BLNK id="ddm_elements.trns_date"></DD_ATTR_BLNK>
+			<DD_ATTR_CDAT id="ddm_elements.trns_date"></DD_ATTR_CDAT>
+			<DD_ATTR_CTLW id="ddm_elements.trns_date"></DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.trns_date"></DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.trns_date">D</DD_ATTR_CTYP>
+			<DD_ATTR_DCOL id="ddm_elements.trns_date"></DD_ATTR_DCOL>
+			<DD_ATTR_DCOM id="ddm_elements.trns_date">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.trns_date">            </DD_ATTR_DEXP>
+			<DD_ATTR_DFLT id="ddm_elements.trns_date"></DD_ATTR_DFLT>
+			<DD_ATTR_DKNM id="ddm_elements.trns_date"></DD_ATTR_DKNM>
+			<DD_ATTR_DKEY id="ddm_elements.trns_date"></DD_ATTR_DKEY>
+			<DD_ATTR_DTAB id="ddm_elements.trns_date"></DD_ATTR_DTAB>
+			<DD_ATTR_DINQ id="ddm_elements.trns_date"></DD_ATTR_DINQ>
+			<DD_ATTR_ENCR id="ddm_elements.trns_date"></DD_ATTR_ENCR>
+			<DD_ATTR_IDEF id="ddm_elements.trns_date"></DD_ATTR_IDEF>
+			<DD_ATTR_LABL id="ddm_elements.trns_date">Transaction Date</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.trns_date">Trans Date</DD_ATTR_LABS>
+			<DD_ATTR_LDIS id="ddm_elements.trns_date"></DD_ATTR_LDIS>
+			<DD_ATTR_MAXL id="ddm_elements.trns_date"></DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.trns_date"></DD_ATTR_MAXR>
+			<DD_ATTR_MAXV id="ddm_elements.trns_date"></DD_ATTR_MAXV>
+			<DD_ATTR_MINL id="ddm_elements.trns_date"></DD_ATTR_MINL>
+			<DD_ATTR_MINV id="ddm_elements.trns_date"></DD_ATTR_MINV>
+			<DD_ATTR_MSKI id="ddm_elements.trns_date"></DD_ATTR_MSKI>
+			<DD_ATTR_MSKO id="ddm_elements.trns_date"></DD_ATTR_MSKO>
+			<DD_ATTR_PADC id="ddm_elements.trns_date"></DD_ATTR_PADC>
+			<DD_ATTR_PADJ id="ddm_elements.trns_date"></DD_ATTR_PADJ>
+			<DD_ATTR_PREC id="ddm_elements.trns_date"></DD_ATTR_PREC>
+			<DD_ATTR_PROM id="ddm_elements.trns_date"></DD_ATTR_PROM>
+			<DD_ATTR_PVAL id="ddm_elements.trns_date"></DD_ATTR_PVAL>
+			<DD_ATTR_SDLG id="ddm_elements.trns_date"></DD_ATTR_SDLG>
+			<DD_ATTR_SLEV id="ddm_elements.trns_date"></DD_ATTR_SLEV>
+			<DD_ATTR_STYP id="ddm_elements.trns_date">1</DD_ATTR_STYP>
+			<DD_ATTR_STEP id="ddm_elements.trns_date"></DD_ATTR_STEP>
+			<DD_ATTR_FLPT id="ddm_elements.trns_date"></DD_ATTR_FLPT>
 		</RECORD>
 		<RECORD id="ddm_elements.description">
 			<DD_DATA_NAME id="ddm_elements.description">DESCRIPTION     </DD_DATA_NAME>
