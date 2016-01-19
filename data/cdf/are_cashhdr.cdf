@@ -74,8 +74,8 @@ rem --- If using Bank Rec, check the Deposit’s TOT_DEPOSIT_AMT when ending a Dep
 		tot_receipts_amt=num(callpoint!.getDevObject("tot_receipts_amt"))
 		if tot_deposit_amt=0 then
 			rem --- When TOT_DEPOSIT_AMT is zero, set it equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
-			deposit_dev=fnget_dev("@ARE_DEPOSIT")
-			dim deposit_tpl$:fnget_tpl$("@ARE_DEPOSIT")
+			deposit_dev=fnget_dev("1ARE_DEPOSIT")
+			dim deposit_tpl$:fnget_tpl$("1ARE_DEPOSIT")
 			deposit_id$=callpoint!.getDevObject("deposit_id")
 			readrecord(deposit_dev,key=firm_id$+"E"+deposit_id$,knum="AO_STATUS",dom=*endif)deposit_tpl$
 			deposit_tpl.tot_deposit_amt=tot_receipts_amt
@@ -423,7 +423,7 @@ endif
 if ars01a.br_interface$="Y" then
 	num_files=1
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="ARE_DEPOSIT",open_opts$[1]="OTA@"
+	open_tables$[1]="ARE_DEPOSIT",open_opts$[1]="OTA[1]"
 
 	gosub open_tables
 	if status$ <> ""  then goto std_exit

@@ -1,5 +1,23 @@
 [[ARE_DEPOSIT.DEPOSIT_ID.AVAL]]
-rem wgh ... 8336 ... Don't allow exiting deposit_id with trans_status R or U
+rem --- Don't allow re-using deposit_id with trans_status R or U
+	deposit_id$ = callpoint!.getUserInput()
+	deposit_dev=fnget_dev("1ARE_DEPOSIT")
+	dim deposit_tpl$:fnget_tpl$("1ARE_DEPOSIT")
+	readrecord(deposit_dev,key=firm_id$+deposit_id$,knum="PRIMARY",dom=*next)deposit_tpl$
+	if deposit_tpl.trans_status$="R" then
+		rem --- Deposit is on the register, so can't use it.
+		msg_id$="AR_DEPOSIT_STATUS_R"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+	if deposit_tpl.trans_status$="U" then
+		rem --- Deposit has been updated, so can't use it.
+		msg_id$="AR_DEPOSIT_STATUS_U"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
 [[ARE_DEPOSIT.BDEL]]
 rem --- Cannot delete a Deposit that contains receipts
 	are01_dev=fnget_dev("@ARE_CASHHDR")
@@ -23,7 +41,7 @@ rem --- Check the Deposit’s TOT_DEPOSIT_AMT when ending a Deposit
 			tot_receipts_amt=num(callpoint!.getDevObject("tot_receipts_amt"))
 			if tot_deposit_amt=0 then
 				rem --- When TOT_DEPOSIT_AMT is zero, set it equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
-				gosub set_TotDepositAmt_to_TotReceiptsAmt
+				gosub updatePreviousDeposit
 			else
 				rem --- Warn TOT_DEPOSIT_AMT it is not equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
 				if tot_depost_amt<>tot_receipts_amt then
@@ -35,7 +53,7 @@ rem --- Check the Deposit’s TOT_DEPOSIT_AMT when ending a Deposit
 					gosub disp_message
 					if msg_opt$="C" then
 						rem --- Change the deposit amount, set it equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
-						gosub set_TotDepositAmt_to_TotReceiptsAmt
+						gosub updatePreviousDeposit
 					endif
 					if msg_opt$="E" then
 						rem --- Edit the cash receipts for previously selected Deposit
@@ -78,17 +96,15 @@ rem --- Exit form
 	callpoint!.setStatus("EXIT")
 [[ARE_DEPOSIT.<CUSTOM>]]
 rem ==================================================================
-set_TotDepositAmt_to_TotReceiptsAmt:
+updatePreviousDeposit:
 	rem --- input data:
-		rem --- deposit_date$
 		rem --- tot_deposit_amt
 		rem --- tot_receipts_amt
 rem ==================================================================
-	rem --- Set Deposit's tot_deposit_amt equal the total of the receipt payments in the deposit tot_receipts_amt
-	deposit_dev=fnget_dev("ARE_DEPOSIT")
-	dim deposit_tpl$:fnget_tpl$("ARE_DEPOSIT")
-	rem --- Reading with knum=AO_STATUS already
-	readrecord(deposit_dev,key=firm_id$+"E"+deposit_id$,dom=*next)deposit_tpl$
+	rem --- Set previous Deposit's tot_deposit_amt equal the total of the receipt payments in the deposit tot_receipts_amt
+	deposit_dev=fnget_dev("1ARE_DEPOSIT")
+	dim deposit_tpl$:fnget_tpl$("1ARE_DEPOSIT")
+	readrecord(deposit_dev,key=firm_id$+"E"+deposit_id$,knum="AO_STATUS",dom=*next)deposit_tpl$
 	if deposit_tpl.deposit_id$=deposit_id$ then
 		deposit_tpl.tot_deposit_amt=tot_receipts_amt
 		deposit_tpl$=field(deposit_tpl$)
@@ -105,11 +121,12 @@ rem --- Validate entered date
 	endif
 [[ARE_DEPOSIT.BSHO]]
 rem --- Open/Lock files
-	num_files=3
+	num_files=4
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="ARC_CASHCODE",open_opts$[1]="OTA@"
-	open_tables$[2]="ARE_CASHHDR",open_opts$[2]="OTA@"
-	open_tables$[3]="GLM_BANKMASTER",open_opts$[3]="OTA@"
+	open_tables$[1]="ARE_DEPOSIT",open_opts$[1]="[1]OTA@"
+	open_tables$[2]="ARC_CASHCODE",open_opts$[2]="OTA@"
+	open_tables$[3]="ARE_CASHHDR",open_opts$[3]="OTA@"
+	open_tables$[4]="GLM_BANKMASTER",open_opts$[4]="OTA@"
 
 	gosub open_tables
 	if status$ <> ""  then goto std_exit
