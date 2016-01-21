@@ -44,7 +44,7 @@ rem --- Check the Deposit’s TOT_DEPOSIT_AMT when ending a Deposit
 				gosub updatePreviousDeposit
 			else
 				rem --- Warn TOT_DEPOSIT_AMT it is not equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
-				if tot_depost_amt<>tot_receipts_amt then
+				if tot_deposit_amt<>tot_receipts_amt then
 					call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",AmtMsk$,0,0
 					msg_id$="AR_DEPOSIT_AMT_BAD"
 					dim msg_tokens$[2]
@@ -76,7 +76,7 @@ rem --- Check the Deposit’s TOT_DEPOSIT_AMT when ending a Deposit
 		dim are01a$:fnget_tpl$("@ARE_CASHHDR")
 		tot_receipts_amt=0
 		are01_trip$=firm_id$+callpoint!.getColumnData("ARE_DEPOSIT.DEPOSIT_ID")
-		readrecord(are01_dev,key=are01_trip$,knum="AO_DEPOSIT",dom=*next)are01a$
+		readrecord(are01_dev,key=are01_trip$,knum="AO_DEPOSIT",dir=0,dom=*next)are01a$
 		while 1
 			are01_key$=key(are01_dev,end=*break)
 			if pos(are01_trip$=are01_key$)<>1 then break
@@ -88,7 +88,7 @@ rem --- Check the Deposit’s TOT_DEPOSIT_AMT when ending a Deposit
 
 rem --- Set devObjects for data being returned
 	callpoint!.setDevObject("deposit_id",callpoint!.getColumnData("ARE_DEPOSIT.DEPOSIT_ID"))
-	callpoint!.setDevObject("deposit_date",callpoint!.getColumnData("ARE_DEPOSIT.DEPOSIT_DATE"))
+	callpoint!.setDevObject("deposit_desc",callpoint!.getColumnData("ARE_DEPOSIT.DESCRIPTION"))
 	callpoint!.setDevObject("cash_rec_cd",callpoint!.getColumnData("ARE_DEPOSIT.CASH_REC_CD"))
 	callpoint!.setDevObject("tot_deposit_amt",num(callpoint!.getColumnData("ARE_DEPOSIT.TOT_DEPOSIT_AMT")))
 
@@ -166,7 +166,7 @@ rem --- Continue using previously entered devObjects if Deposit entry is Cancell
 	if callpoint!.getDevObject("deposit_id")=null() then
 		rem --- Initialize devObjects for data being returned for a new Deposit
 		callpoint!.setDevObject("deposit_id","")
-		callpoint!.setDevObject("deposit_date","")
+		callpoint!.setDevObject("deposit_desc","")
 		callpoint!.setDevObject("cash_rec_cd","")
 		callpoint!.setDevObject("tot_deposit_amt",0)
 		callpoint!.setDevObject("tot_receipts_amt",0)
