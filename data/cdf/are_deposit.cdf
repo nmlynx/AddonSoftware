@@ -98,6 +98,7 @@ rem --- Exit form
 rem ==================================================================
 updatePreviousDeposit:
 	rem --- input data:
+		rem --- deposit_id$
 		rem --- tot_deposit_amt
 		rem --- tot_receipts_amt
 rem ==================================================================

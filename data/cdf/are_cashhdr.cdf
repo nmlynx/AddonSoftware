@@ -225,21 +225,37 @@ rem --- remove software lock on batch, if batching
 
 rem --- If using Bank Rec, check the Deposit’s TOT_DEPOSIT_AMT when ending a Deposit
 	if callpoint!.getDevObject("br_interface")="Y" then
+		deposit_id$=callpoint!.getDevObject("deposit_id")
 		tot_deposit_amt=num(callpoint!.getDevObject("tot_deposit_amt"))
 		tot_receipts_amt=num(callpoint!.getDevObject("tot_receipts_amt"))
 		if tot_deposit_amt=0 then
 			rem --- When TOT_DEPOSIT_AMT is zero, set it equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
-			deposit_dev=fnget_dev("1ARE_DEPOSIT")
-			dim deposit_tpl$:fnget_tpl$("1ARE_DEPOSIT")
-			deposit_id$=callpoint!.getDevObject("deposit_id")
-			readrecord(deposit_dev,key=firm_id$+"E"+deposit_id$,knum="AO_STATUS",dom=*endif)deposit_tpl$
-			deposit_tpl.tot_deposit_amt=tot_receipts_amt
-			deposit_tpl$=field(deposit_tpl$)
-			writerecord(deposit_dev)deposit_tpl$
+			gosub updateDepositAmt
 		else
-rem wgh ... 8336 ... check the Deposit’s TOT_DEPOSIT_AMT when ending a Deposit
-rem wgh ... 8336 ... else, warn if it is not equal to the sum of the PAYMENT_AMTs
-rem wgh ... 8336 ... how to add/reduce/delete receipt to previously ended/totalled Deposit?
+			rem --- Warn TOT_DEPOSIT_AMT it is not equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
+			if tot_deposit_amt<>tot_receipts_amt then
+				call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",AmtMsk$,0,0
+				msg_id$="AR_DEPOSIT_AMT_BAD"
+				dim msg_tokens$[2]
+				msg_tokens$[1]=cvs(str(tot_deposit_amt:AmtMsk$),3)
+				msg_tokens$[2]=cvs(str(tot_receipts_amt:AmtMsk$),3)
+				gosub disp_message
+				if msg_opt$="C" then
+					rem --- Change the deposit amount, set it equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
+					gosub updateDepositAmt
+				endif
+				if msg_opt$="E" then
+					rem --- Edit the cash receipts for this Deposit
+					callpoint!.setStatus("ABORT")
+					break
+				endif
+				if msg_opt$="L" then
+					rem --- Exit as-is
+					rem --- Warn that Cash Receipt Register can't be updated
+					msg_id$="AR_NO_UPDT_CSHRCPT"
+					gosub disp_message
+				endif
+			endif
 		endif
 	endif
 [[ARE_CASHHDR.BTBL]]
@@ -346,7 +362,12 @@ endif
 [[ARE_CASHHDR.ADEL]]
 gosub delete_cashdet_cashbal
 
-rem wgh ... 8336 ... If using Bank Rec, adjust tot_receipts_amt when receipt is deleted
+rem --- If using Bank Rec, adjust tot_receipts_amt when receipt is deleted
+	if callpoint!.getDevObject("br_interface")="Y" then
+		tot_receipts_amt=num(callpoint!.getDevObject("tot_receipts_amt"))
+		tot_receipts_amt=tot_receipts_amt-num(callpoint!.getDevObject("saved_payment_amt"))
+		callpoint!.setDevObject("tot_receipts_amt",tot_receipts_amt)
+	endif
 [[ARE_CASHHDR.ADIS]]
 tmp_cust_id$=callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")
 gosub get_customer_balance
@@ -433,6 +454,9 @@ if callpoint!.getDevObject("br_interface")="Y" then
 		callpoint!.setStatus("NEWREC")
 		break
 	endif
+
+	rem --- Capture currently saved payment_amt so can adjust tot_receipts_amt if payment_amt is changed
+	callpoint!.setDevObject("saved_payment_amt",num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT")))
 endif
 [[ARE_CASHHDR.AOPT-OACT]]
 gosub apply_on_acct
@@ -466,17 +490,20 @@ Form!.getControl(num(user_tpl.GLstar_id$)).setText("")
 
 callpoint!.setColumnEnabled("ARE_CASHHDR.PAYMENT_AMT",0)
 
-rem --- Initialize fields coming from Bank Rec deposit.
+rem --- Initialize fields for Bank Rec deposit.
 	if callpoint!.getDevObject("br_interface")="Y" then
 		deposit_id$=callpoint!.getDevObject("deposit_id")
 		callpoint!.setColumnData("ARE_CASHHDR.DEPOSIT_ID",deposit_id$,1)
-rem wgh ... 8336 ... stopped here ... why doesn't deposit_id description display
+		callpoint!.setColumnData("<<DISPLAY>>.DEPOSIT_DESC",str(callpoint!.getDevObject("deposit_desc")),1)
 
 		wk_cash_cd$=callpoint!.getDevObject("cash_rec_cd")
 		callpoint!.setColumnData("ARE_CASHHDR.CASH_REC_CD",wk_cash_cd$,1)
 		callpoint!.setColumnEnabled("ARE_CASHHDR.CASH_REC_CD",-1)
 		gosub get_cash_rec_cd
 		gosub able_controls
+
+		rem --- Capture currently saved payment_amt so can adjust tot_receipts_amt if payment_amt is changed
+		callpoint!.setDevObject("saved_payment_amt",0)
 	endif
 [[ARE_CASHHDR.ASIZ]]
 if UserObj!<>null()
@@ -657,13 +684,11 @@ gridInvoice!.setTabActionSkipsNonEditableCells(1)
 [[ARE_CASHHDR.AWRI]]
 gosub update_cashhdr_cashdet_cashbal
 
-rem wgh ... 8336 ... Are GL Distribution and/or Apply On Acct amounts included in tot_receipts_amt?
 rem ---  When using Bank Rec, sum up tot_receipts_amt for current Deposit
-if callpoint!.getDevObject("br_interface")="Y" then
-	tot_receipts_amt=num(callpoint!.getDevObject("tot_receipts_amt"))
-	tot_receipts_amt=tot_receipts_amt+num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT"))
-	callpoint!.setDevObject("tot_receipts_amt",tot_receipts_amt)
-endif
+	if callpoint!.getDevObject("br_interface")="Y" then
+		rem --- Adjust tot_receipts_amt for changes in payment_amt
+		gosub adjustTotReceiptsAmt
+	endif
 [[ARE_CASHHDR.CASH_CHECK.AVAL]]
 if callpoint!.getUserInput()="$"
 	ctl_name$="ABA_NO"
@@ -701,8 +726,6 @@ if old_pay<>new_pay
 	callpoint!.setStatus("REFRESH")
 	user_tpl.binp_pay_amt=new_pay
 endif
-
-rem wgh ... 8336 ... If using Bank Rec, adjust tot_receipts_amt when payment_amt is changed
 [[ARE_CASHHDR.RECEIPT_DATE.AVAL]]
 if len(callpoint!.getUserInput())<6 or pos("9"<>callpoint!.getUserInput())=0 then callpoint!.setUserInput(stbl("+SYSTEM_DATE"))
 gl$=user_tpl.glint$
@@ -889,6 +912,12 @@ rem --- cashhdr, are-01
 		are01a.payment_amt$=callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT")
 		are01a.cash_check$=callpoint!.getColumnData("ARE_CASHHDR.CASH_CHECK")
 		are01a.aba_no$=callpoint!.getColumnData("ARE_CASHHDR.ABA_NO")
+		rem --- Update deposit info if using Bank Rec
+		if callpoint!.getDevObject("br_interface")="Y" then
+			are01a.deposit_id$=callpoint!.getDevObject("deposit_id")
+			rem --- Adjust tot_receipts_amt for changes in payment_amt
+			gosub adjustTotReceiptsAmt
+		endif
 		are01a$=field(are01a$)
 		writerecord(are_cashhdr_dev)are01a$
 		extractrecord(are_cashhdr_dev,key=are01_key$)are01a$;rem Advisory Locking
@@ -1785,4 +1814,34 @@ rem ==================================================================
 		endif
 	next dctl
 	return
+
+rem ==================================================================
+updateDepositAmt: 	rem --- Set Deposit's tot_deposit_amt equal the total of the receipt payments in the deposit tot_receipts_amt
+	rem --- input data:
+		rem --- deposit_id$
+		rem --- tot_deposit_amt
+		rem --- tot_receipts_amt
+rem ==================================================================
+	deposit_dev=fnget_dev("1ARE_DEPOSIT")
+	dim deposit_tpl$:fnget_tpl$("1ARE_DEPOSIT")
+	readrecord(deposit_dev,key=firm_id$+"E"+deposit_id$,knum="AO_STATUS",dom=*next)deposit_tpl$
+	if deposit_tpl.deposit_id$=deposit_id$ then
+		deposit_tpl.tot_deposit_amt=tot_receipts_amt
+		deposit_tpl$=field(deposit_tpl$)
+		writerecord(deposit_dev)deposit_tpl$
+	endif
+	return
+
+rem ==================================================================
+adjustTotReceiptsAmt: 	rem --- Adjust tot_receipts_amt for changes in payment_amt
+rem ==================================================================
+	current_payment_amt=num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT"))
+	saved_payment_amt=num(callpoint!.getDevObject("saved_payment_amt"))
+	delta_payment_amt=current_payment_amt-saved_payment_amt
+	tot_receipts_amt=num(callpoint!.getDevObject("tot_receipts_amt"))
+	tot_receipts_amt=tot_receipts_amt+delta_payment_amt
+	callpoint!.setDevObject("tot_receipts_amt",tot_receipts_amt)
+	callpoint!.setDevObject("saved_payment_amt",current_payment_amt)
+	return
+
 #include std_missing_params.src
