@@ -143,20 +143,27 @@ rem --- OutVect! for DocOut, date/time
         rep_prog$=pgm(-2)
 
 rem --- column headings
-    columns=10
+    if br then
+        columns=11
+    else
+        columns=10
+    endif
     dim columns$[columns,10]
-        columns$[0,0]=Translate!.getTranslation("AON_CUSTOMER"),columns$[0,1]="C",columns$[0,2]="25"
-        columns$[1,0]=Translate!.getTranslation("AON_REC_CD"),columns$[1,1]="C",columns$[1,2]="7"
-        columns$[2,0]=Translate!.getTranslation("AON_CHECK_NO"),columns$[2,1]="C",columns$[2,2]="8"
-        columns$[3,0]=Translate!.getTranslation("AON_INV_NO"),columns$[3,1]="C",columns$[3,2]="8"
-        columns$[4,0]=Translate!.getTranslation("AON_AMT_APPLIED"),columns$[4,1]="N",columns$[4,2]=str(len(m1$)),columns$[4,3]=m1$,columns$[4,10]="T"
-        columns$[5,0]=Translate!.getTranslation("AON_DISC_AMT"),columns$[5,1]="N",columns$[5,2]=str(len(m1$)),columns$[5,3]=m1$,columns$[5,10]="T"
-        columns$[6,0]=Translate!.getTranslation("AON_TOT_CREDIT"),columns$[6,1]="N",columns$[6,2]=str(len(m1$)),columns$[6,3]=m1$,columns$[6,10]="T"
-        columns$[7,0]=Translate!.getTranslation("AON_MISC_ACCT"),columns$[7,1]="C",columns$[7,2]="10"
-        columns$[8,0]=Translate!.getTranslation("AON_MISC_AMT"),columns$[8,1]="N",columns$[8,2]=str(len(m1$)),columns$[8,3]=m1$,columns$[8,10]="T"
-        columns$[9,0]=Translate!.getTranslation("AON_ABA_NUMBER"),columns$[9,1]="C",columns$[9,2]="10"
-        columns$[10,0]=Translate!.getTranslation("AON_DEPOSIT"),columns$[10,1]="N",columns$[10,2]=str(len(m1$)),columns$[10,3]=m1$,columns$[10,10]="T"
-
+    columns$[0,0]=Translate!.getTranslation("AON_CUSTOMER"),columns$[0,1]="C",columns$[0,2]="25"
+    columns$[1,0]=Translate!.getTranslation("AON_REC_CD"),columns$[1,1]="C",columns$[1,2]="5"
+    columns$[2,0]=Translate!.getTranslation("AON_CHECK_NO"),columns$[2,1]="C",columns$[2,2]="7"
+    columns$[3,0]=Translate!.getTranslation("AON_INV_NO"),columns$[3,1]="C",columns$[3,2]="7"
+    columns$[4,0]=Translate!.getTranslation("AON_AMT_APPLIED"),columns$[4,1]="N",columns$[4,2]=str(len(m1$)),columns$[4,3]=m1$,columns$[4,10]="T"
+    columns$[5,0]=Translate!.getTranslation("AON_DISC_AMT"),columns$[5,1]="N",columns$[5,2]=str(len(m1$)),columns$[5,3]=m1$,columns$[5,10]="T"
+    columns$[6,0]=Translate!.getTranslation("AON_TOT_CREDIT"),columns$[6,1]="N",columns$[6,2]=str(len(m1$)),columns$[6,3]=m1$,columns$[6,10]="T"
+    columns$[7,0]=Translate!.getTranslation("AON_MISC_ACCT"),columns$[7,1]="C",columns$[7,2]="9"
+    columns$[8,0]=Translate!.getTranslation("AON_MISC_AMT"),columns$[8,1]="N",columns$[8,2]=str(len(m1$)),columns$[8,3]=m1$,columns$[8,10]="T"
+    columns$[9,0]=Translate!.getTranslation("AON_ABA_NUMBER"),columns$[9,1]="C",columns$[9,2]="9"
+    columns$[10,0]=Translate!.getTranslation("AON_PAYMENT"),columns$[10,1]="N",columns$[10,2]=str(len(m1$)),columns$[10,3]=m1$,columns$[10,10]="T"
+    if br then
+        columns$[11,0]=Translate!.getTranslation("AON_DEPOSIT"),columns$[11,1]="C",columns$[11,2]="7"
+    endif
+    
     call stbl("+DIR_PGM",err=*next)+"adc_docout_adj.aon",columns$[all]
 
     headings=2
@@ -302,6 +309,7 @@ rem --- Read the next Cash Receipt Header (are-01) record
           rem --- Format and store header fields, accumulate payment totals 
           rem --- and print receipt header information
 
+          deposit_id$=are01a.deposit_id$
           check$=are01a.ar_check_no$
           aba$=are01a.aba_no$
           payment=are01a.payment_amt
@@ -327,11 +335,7 @@ rem --- Read the next Cash Receipt Header (are-01) record
             nt[4]=nt[4]+payment
           endif
 
-          if first_tran>0 
-rem         xwk=fnblank(11);rem don't think it needs this.CAH
-          else
-            first_tran=1
-          endif
+          if first_tran<=0 then first_tran=1
 
           OutVect!.addItem(customer$+" "+name$)
           OutVect!.addItem(are01a.cash_rec_cd$) 
@@ -352,11 +356,18 @@ rem         xwk=fnblank(11);rem don't think it needs this.CAH
                 k$=key(are11_dev,end=*next)
                 if pos(receipt$=k$)<>1
                     if name$<>"" 
-                      OutVect!.addItem(check$)
-                      xwk=fnblank(6)
-                      OutVect!.addItem(aba$)
-                      OutVect!.addItem(payment$)
-                     endif
+                        OutVect!.addItem(check$)
+                        xwk=fnblank(6)
+                        OutVect!.addItem(aba$)
+                        OutVect!.addItem(payment$)
+                        if br then
+                            if cvs(payment$,3)<>"" then 
+                                OutVect!.addItem(deposit_id$)
+                            else
+                                OutVect!.addItem("")
+                            endif
+                        endif
+					endif
                     break
                 endif
                 read record (are11_dev) are11a$
@@ -376,6 +387,13 @@ rem         xwk=fnblank(11);rem don't think it needs this.CAH
                 xwk=fnblank(2)
                 OutVect!.addItem(aba$)
                 OutVect!.addItem(payment$)
+                if br then
+                    if cvs(payment$,3)<>"" then 
+                        OutVect!.addItem(deposit_id$)
+                    else
+                        OutVect!.addItem("")
+                    endif
+                endif
 
                 name$=""
                 check$=""
@@ -386,7 +404,7 @@ rem         xwk=fnblank(11);rem don't think it needs this.CAH
 :                                                           glstatus,lines,errors,status
                 if stbl("+DTWARN_MSG",err=*endif)<>""
                     OutVect!.addItem(stbl("+DTWARN_MSG"))
-                    xwk=fnblank(10)
+                    xwk=fnblank(columns)
                 endif
 
                 rem --- added by CH.3/26/07
@@ -477,13 +495,13 @@ rem         xwk=fnblank(11);rem don't think it needs this.CAH
                 OutVect!.addItem(fnmask$(account$(1,acct_length),g0$))
                 OutVect!.addItem(str(amount))
                 xwk=fnblank(2)
-
+                if br then OutVect!.addItem("")
 
                 if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,are01a.receipt_date$,
 :                                                           glstatus,lines,errors,status
                 if stbl("+DTWARN_MSG",err=*endif)<>""
                     OutVect!.addItem(stbl("+DTWARN_MSG"))
-                    xwk=fnblank(10)
+                    xwk=fnblank(columns)
                 endif
 
                 rem --- added by CH.3/26/07
@@ -543,14 +561,14 @@ rem --- All done
 
 rem --- Print register, MTD and next MTD totals
 
-    xwk=fnblank(11);rem --- blank line before totals
+    xwk=fnblank(columns+1);rem --- blank line before totals
     total$=Translate!.getTranslation("AON_REGISTER_TOTALS")
     for x=0 to 4
         pt[x]=rt[x]
     next x
     gosub register_totals
 
-    xwk=fnblank(11);rem --- blank line before totals
+    xwk=fnblank(columns+1);rem --- blank line before totals
     total$=Translate!.getTranslation("AON_MTD_TOTALS")
     for x=0 to 4
         pt[x]=mt[x]
@@ -620,18 +638,19 @@ print_totals: rem --- Print date or receipt code totals
     OutVect!.addItem(str(pt[2]))
     OutVect!.addItem("")
     OutVect!.addItem(str(pt[3]))
-    OutVect!.addItem(Translate!.getTranslation("AON_DEPOSIT"))
+    OutVect!.addItem(Translate!.getTranslation("AON_PAYMENTS"))
     OutVect!.addItem(str(pt[6]))
-
+    if br then OutVect!.addItem("")
 
     xwk=fnblank(9)
     OutVect!.addItem(Translate!.getTranslation("AON_CHECKS"))
     OutVect!.addItem(str(pt[4]))
-
+    if br then OutVect!.addItem("")
 
     xwk=fnblank(9)
     OutVect!.addItem(Translate!.getTranslation("AON_CASH"))
     OutVect!.addItem(str(pt[5]))
+    if br then OutVect!.addItem("")
 
 	if pt[0]-pt[3]<>pt[6]
 		bal_errors=bal_errors+1
@@ -643,7 +662,8 @@ print_totals: rem --- Print date or receipt code totals
 		msg$=msg$+Translate!.getTranslation("AON__IS_NOT_EQUAL_TO_")
 		msg$=msg$+Translate!.getTranslation("AON_DEPOSIT")+" ***"
 		OutVect!.addItem(msg$)
-		xwk=fnblank(10)
+		xwk=fnblank(columns)
+
 	endif
     return
 
@@ -660,7 +680,7 @@ register_totals: rem --- Print register, MTD and next MTD totals
     OutVect!.addItem(str(pt[3]))
     OutVect!.addItem("")
     OutVect!.addItem(str(pt[4]))
-
+    if br then OutVect!.addItem("")
 
     return
 
@@ -688,8 +708,8 @@ code_break: rem --- Cash Receipt Code break
 
     if lastcode$<>""
         OutVect!.addItem(Translate!.getTranslation("AON_RECEIPT_DATE_")+fndate$(are01a.receipt_date$))
-        xwk=fnblank(10)
-        xwk=fnblank(11)
+        xwk=fnblank(columns)
+        xwk=fnblank(columns+1)
     endif
 
     lastcode$=are01a.cash_rec_cd$
@@ -718,8 +738,7 @@ date_break: rem --- Receipt date break
     if sequence$="C"
         if code_brk$<>"Y"
             OutVect!.addItem(Translate!.getTranslation("AON_RECEIPT_DATE_")+fndate$(lastdate$))
-            xwk=fnblank(10)
-            rem --- xwk=fnblank(11);rem --- blank line after sub-head
+            xwk=fnblank(columns)
         endif
     endif
 
