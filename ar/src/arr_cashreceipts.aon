@@ -8,6 +8,8 @@ rem --- All Rights Reserved
 
 rem --- Still needs totals accumulation
 
+    use java.util.HashMap
+
     setesc std_error
     seterr std_error
 
@@ -119,7 +121,8 @@ rem --- Retrieve parameter records
     
 rem --- Is General Ledger installed and being used?
 rem --- as of v9, glw11$ no longer used.  Always use actual glw-11 file (batching.CAH)
-    
+
+    depositMap!=new HashMap()
     gl$="N"
     status=0
     rem --- use this form when running back-end pgm directly; source$=fnbasename$(pgm(-2),"")
@@ -129,6 +132,20 @@ rem --- as of v9, glw11$ no longer used.  Always use actual glw-11 file (batchin
     if gl$<>"Y" br$="N"
     gl=gl$="Y"
     br=br$="Y"
+
+rem --- Additional file opens
+    if br then
+        files=1,begfile=1,endfile=files
+        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+        files$[1]="art_deposit",ids$[1]="ARE_DEPOSIT"
+    
+        call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+        if status goto std_exit_no_report
+    
+        deposit_dev=channels[1]
+        dim deposit_tpl$:templates$[1]
+    endif
 
 rem --- OutVect! for DocOut, date/time 
 
@@ -363,6 +380,7 @@ rem --- Read the next Cash Receipt Header (are-01) record
                         if br then
                             if cvs(payment$,3)<>"" then 
                                 OutVect!.addItem(deposit_id$)
+                                gosub accumulateDepositPayments
                             else
                                 OutVect!.addItem("")
                             endif
@@ -390,6 +408,7 @@ rem --- Read the next Cash Receipt Header (are-01) record
                 if br then
                     if cvs(payment$,3)<>"" then 
                         OutVect!.addItem(deposit_id$)
+                        gosub accumulateDepositPayments
                     else
                         OutVect!.addItem("")
                     endif
@@ -618,9 +637,75 @@ rem     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
 		gl_overlay$=""
 		overlay$=""
 	endif
+
+rem --- When using Bank Rec, don't allow update if a Deposit’s TOT_DEPOSIT_AMT is not equal to
+rem --- the sum of the PAYMENT_AMTs for all the cash receipts in the Deposit.
+    if br then
+        rem --- Headings for deposit summary info
+        xwk=fnblank(columns+1); rem --- blank line
+        xwk=fnblank(columns+1); rem --- blank line
+        xwk=fnblank(3)
+        OutVect!.addItem(Translate!.getTranslation("AON_DEPOSIT")+$00$+"B")
+        OutVect!.addItem(Translate!.getTranslation("AON_DEPOSIT_AMT")+$00$+"B")
+        OutVect!.addItem(Translate!.getTranslation("AON_PAYMENTS")+$00$+"B")
+        xwk=fnblank(6)
+
+        rem --- Report deposit summary info, and check for out of balance deposits
+        deposit_errors=0
+        iter!=depositMap!.keySet().iterator()
+        while iter!.hasNext()
+            deposit_id$=iter!.next()
+            totalPayments=depositMap!.get(deposit_id$)
+            dim deposit_tpl$:fattr(deposit_tpl$)
+            readrecord(deposit_dev,key=firm_id$+deposit_id$,dom=*next)deposit_tpl$
+    
+            if deposit_tpl.tot_deposit_amt=totalPayments then
+                xwk=fnblank(3)
+            else
+                deposit_errors=deposit_errors+1
+                
+                xwk=fnblank(1)
+                OutVect!.addItem("***** "+Translate!.getTranslation("AON_ERROR")+" *****")
+                xwk=fnblank(1)
+            endif
+            OutVect!.addItem(deposit_id$)
+            OutVect!.addItem(str(deposit_tpl.tot_deposit_amt))
+            OutVect!.addItem(str(totalPayments))
+            if deposit_tpl.tot_deposit_amt=totalPayments then
+                xwk=fnblank(6)
+            else
+                OutVect!.addItem("***** "+Translate!.getTranslation("AON_ERROR")+" *****")
+                xwk=fnblank(5)
+            endif
+            
+            grand_total_deposits=grand_total_deposits+deposit_tpl.tot_deposit_amt
+            grand_total_payments=grand_total_payments+totalPayments
+        wend
+
+        rem --- Report deposit summary info, and check for out of balance deposits
+        xwk=fnblank(4)
+        OutVect!.addItem(fill(m1,"-"))
+        OutVect!.addItem(fill(m1,"-"))
+        xwk=fnblank(6)
+        
+        xwk=fnblank(3)
+        OutVect!.addItem(Translate!.getTranslation("AON_TOTALS"))
+        OutVect!.addItem(str(grand_total_deposits))
+        OutVect!.addItem(str(grand_total_payments))
+        xwk=fnblank(6)
+        
+        if deposit_errors then
+            msg_id$="AR_NO_UPDT_CSHRCPT"
+            gosub disp_message
+            update$=""
+            overlay$=""
+        endif
+    endif
+
+rem wgh ... 8336 ... when/where do we set trans_status=R  ???
 	
     next_overlay$=overlay$
-    out_action$="PRT"
+    out_action$="PRT-FORMAT"
     if update$=""
         goto std_exit_no_update
     else
@@ -785,6 +870,15 @@ distribution_code: rem --- Retrieve Distribution Code (arm-10d) record
     arm10d.code_desc$=nf$
     k$=arm10d.firm_id$+arm10d.record_id_d$+arm10d.ar_dist_code$ 
     find record (arc_distcode_dev,key=k$,dom=*next) arm10d$
+    return
+
+accumulateDepositPayments: rem --- Accumulate payments for the deposit
+    if depositMap!.containsKey(deposit_id$) then
+        totalPayments=depositMap!.get(deposit_id$)+num(payment$)
+    else
+        totalPayments=num(payment$)
+    endif
+    depositMap!.put(deposit_id$,totalPayments)
     return
 
 glrecap: rem --- Standard GL Recap Routine
