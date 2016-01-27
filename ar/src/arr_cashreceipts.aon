@@ -185,7 +185,7 @@ rem --- column headings
 
     headings=2
     dim headings$[headings+1],o[10],h[10]
-    dim pt[6],ct[6],dt[6],rt[4],mt[4],nt[4]
+    dim pt[6],ct[6],dt[6],depositTotals[6],rt[4],mt[4],nt[4]
     done=0
     page=0
     units=0
@@ -200,16 +200,25 @@ rem --- column headings
     when$=sysinfo.system_date$
     clock$=""
     lastcode$=""
+    lastdeposit$=""
     lastdate$=""
     subheading$=""
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
-    if sequence$="D"
-       headings$[1]=headings$[1]+Translate!.getTranslation("AON__BY_RECEIPT_DATE")
-    endif
-    if sequence$="C"
-       headings$[1]=headings$[1]+Translate!.getTranslation("AON__BY_RECEIPT_CODE")
-    endif
+    switch (BBjAPI().TRUE)
+        case sequence$="C"
+            rem --- By Receipt Code
+            headings$[1]=headings$[1]+Translate!.getTranslation("AON__BY_RECEIPT_CODE")
+            break
+        case sequence$="D"
+            rem --- By Receipt Date
+            headings$[1]=headings$[1]+Translate!.getTranslation("AON__BY_RECEIPT_DATE")
+            break
+        case sequence$="N"
+            rem --- By Deposit Number
+            headings$[1]=headings$[1]+Translate!.getTranslation("AON__BY_DEPOSIT_NUMBER")
+            break
+    swend
     if num(batch_no$)<>0 then headings$[1]=headings$[1]+ Translate!.getTranslation("AON__(BATCH:_")+batch_no$+")"        
     headings$[2]="[HEADER]"
     recs=0
@@ -287,7 +296,20 @@ rem --- Open printer and start progress meter
 
 rem --- Sort the cash receipts if the register is by receipt code
 
-    if sequence$="C" key_no$="AO_BATCH_RECCD" else key_no$="AO_BATCH_RECTDAT"
+    switch (BBjAPI().TRUE)
+        case sequence$="C"
+            rem --- By Receipt Code
+            key_no$="AO_BATCH_RECCD"
+            break
+        case sequence$="D"
+            rem --- By Receipt Date
+            key_no$="AO_BATCH_RECTDAT"
+            break
+        case sequence$="N"
+            rem --- By Deposit Number
+            key_no$="AO_BATCH_DEPOSIT"
+            break
+    swend
 
 rem --- Position the driver file
 
@@ -308,9 +330,15 @@ rem --- Read the next Cash Receipt Header (are-01) record
 
           rem --- Check for level breaks on receipt code and date
 
-          if sequence$="D" lastcode$=are01a.cash_rec_cd$
+          if sequence$="D" then
+            lastcode$=are01a.cash_rec_cd$
+            lastdeposit$=are01a.deposit_id$
+          endif
+            
           if are01a.cash_rec_cd$<>lastcode$ gosub code_break
+          if are01a.deposit_id$<>lastdeposit$ gosub deposit_break
           if are01a.receipt_date$<>lastdate$ gosub date_break
+          
 
           rem --- Retrieve Customer Master (arm-01) record
 
@@ -337,14 +365,17 @@ rem --- Read the next Cash Receipt Header (are-01) record
           if are01a.cash_check$="C" 
              ct[4]=ct[4]+payment
              dt[4]=dt[4]+payment
+             depositTotals[4]=depositTotals[4]+payment
           endif
           if are01a.cash_check$="$" 
              ct[5]=ct[5]+payment
              dt[5]=dt[5]+payment
+             depositTotals[5]=depositTotals[5]+payment
           endif
 
           ct[6]=ct[6]+payment
           dt[6]=dt[6]+payment
+          depositTotals[6]=depositTotals[6]+payment
           rt[4]=rt[4]+payment
           if are01a.receipt_date$ < endperiod$
             mt[4]=mt[4]+payment
@@ -434,6 +465,10 @@ rem --- Read the next Cash Receipt Header (are-01) record
                 dt[0]=dt[0]+applied
                 dt[1]=dt[1]+discount
                 dt[2]=dt[2]+credits
+                
+                depositTotals[0]=depositTotals[0]+applied
+                depositTotals[1]=depositTotals[1]+discount
+                depositTotals[2]=depositTotals[2]+credits
 
                 rt[0]=rt[0]+applied
                 rt[1]=rt[1]+discount
@@ -526,6 +561,7 @@ rem --- Read the next Cash Receipt Header (are-01) record
                 rem --- added by CH.3/26/07
                 ct[3]=ct[3]+amount
                 dt[3]=dt[3]+amount
+                depositTotals[3]=depositTotals[3]+amount
                 rt[3]=rt[3]+amount
 
                 if are01a.receipt_date$ < endperiod$
@@ -575,8 +611,20 @@ rem --- All done
     endif
 
     done=1
-    if sequence$="C" gosub code_break
-    if sequence$="D" gosub date_break
+    switch (BBjAPI().TRUE)
+        case sequence$="C"
+            rem --- By Receipt Code
+            gosub code_break
+            break
+        case sequence$="D"
+            rem --- By Receipt Date
+            gosub date_break
+            break
+        case sequence$="N"
+            rem --- By Deposit Number
+            gosub deposit_break
+            break
+    swend
 
 rem --- Print register, MTD and next MTD totals
 
@@ -794,10 +842,38 @@ code_break: rem --- Cash Receipt Code break
     if lastcode$<>""
         OutVect!.addItem(Translate!.getTranslation("AON_RECEIPT_DATE_")+fndate$(are01a.receipt_date$))
         xwk=fnblank(columns)
-        xwk=fnblank(columns+1)
     endif
 
     lastcode$=are01a.cash_rec_cd$
+    lines=maxlines+1
+    return
+
+deposit_break: rem --- Deposit Number break
+
+    if sequence$<>"N" return
+    while lastdeposit$<>"" 
+          deposit_brk$="Y"
+          gosub date_break
+          deposit_brk$=""
+          for x=0 to 6
+              pt[x]=depositTotals[x]
+          next x
+          total$=Translate!.getTranslation("AON_***TOTAL_FOR_DEPOSIT_NUMBER_")+lastdeposit$
+          gosub print_totals
+          break
+    wend
+    if done return
+    dim depositTotals[6]
+    subheading$=Translate!.getTranslation("AON_FOR_DEPOSIT_NUMBER_")+are01a.deposit_id$
+    BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+    HdrVect!.addItem(subheading$)
+
+    if lastdeposit$<>""
+        OutVect!.addItem(Translate!.getTranslation("AON_RECEIPT_DATE_")+fndate$(are01a.receipt_date$))
+        xwk=fnblank(columns)
+    endif
+
+    lastdeposit$=are01a.deposit_id$
     lines=maxlines+1
     return
 
@@ -814,17 +890,29 @@ date_break: rem --- Receipt date break
     if done return
     dim dt[6]
     lastdate$=are01a.receipt_date$
-    if sequence$="D"
-       subheading$=Translate!.getTranslation("AON_CASH_RECEIPTS_FOR_")+fndate$(lastdate$)
-        BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
-        HdrVect!.addItem(subheading$)
-       lines=maxlines+1
-    endif
-    if sequence$="C"
-        if code_brk$<>"Y"
-            OutVect!.addItem(Translate!.getTranslation("AON_RECEIPT_DATE_")+fndate$(lastdate$))
-            xwk=fnblank(columns)
-        endif
+    switch (BBjAPI().TRUE)
+        case sequence$="C"
+            rem --- By Receipt Code
+            if code_brk$<>"Y"
+                OutVect!.addItem(Translate!.getTranslation("AON_RECEIPT_DATE_")+fndate$(lastdate$))
+                xwk=fnblank(columns)
+            endif
+            break
+        case sequence$="D"
+            rem --- By Receipt Date
+            subheading$=Translate!.getTranslation("AON_CASH_RECEIPTS_FOR_")+fndate$(lastdate$)
+            BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
+            HdrVect!.addItem(subheading$)
+            lines=maxlines+1
+            break
+        case sequence$="N"
+            rem --- By Deposit Number
+            if deposit_brk$<>"Y"
+                OutVect!.addItem(Translate!.getTranslation("AON_RECEIPT_DATE_")+fndate$(lastdate$))
+                xwk=fnblank(columns)
+            endif
+            break
+    swend
     endif
 
     return
