@@ -1,3 +1,6 @@
+[[ARE_DEPOSIT.BTBL]]
+rem --- Get Batch information
+	callpoint!.setTableColumnAttribute("ARE_DEPOSIT.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
 [[ARE_DEPOSIT.DEPOSIT_ID.AVAL]]
 rem --- Don't allow re-using deposit_id with trans_status R or U
 	deposit_id$ = callpoint!.getUserInput()
@@ -14,6 +17,16 @@ rem --- Don't allow re-using deposit_id with trans_status R or U
 	if deposit_tpl.trans_status$="U" then
 		rem --- Deposit has been updated, so can't use it.
 		msg_id$="AR_DEPOSIT_STATUS_U"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+	if cvs(deposit_tpl.batch_no$,2)<>"" and deposit_tpl.batch_no$<>callpoint!.getColumnData("ARE_DEPOSIT.BATCH_NO") then
+		rem --- Deposit is in a different batch.
+		msg_id$="AR_DEPOSIT_BATCH_BAD"
+		dim msg_tokens$[2]
+		msg_tokens$[1]=deposit_id$
+		msg_tokens$[2]=deposit_tpl.batch_no$
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
 		break
@@ -105,7 +118,8 @@ rem ==================================================================
 	rem --- Set previous Deposit's tot_deposit_amt equal the total of the receipt payments in the deposit tot_receipts_amt
 	deposit_dev=fnget_dev("1ARE_DEPOSIT")
 	dim deposit_tpl$:fnget_tpl$("1ARE_DEPOSIT")
-	readrecord(deposit_dev,key=firm_id$+"E"+deposit_id$,knum="AO_STATUS",dom=*next)deposit_tpl$
+	batch_no$=callpoint!.getColumnData("ARE_DEPOSIT.BATCH_NO")
+	readrecord(deposit_dev,key=firm_id$+batch_no$+"E"+deposit_id$,knum="AO_BATCH_STAT",dom=*next)deposit_tpl$
 	if deposit_tpl.deposit_id$=deposit_id$ then
 		deposit_tpl.tot_deposit_amt=tot_receipts_amt
 		deposit_tpl$=field(deposit_tpl$)
@@ -124,7 +138,7 @@ rem --- Validate entered date
 rem --- Open/Lock files
 	num_files=4
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="ARE_DEPOSIT",open_opts$[1]="[1]OTA@"
+	open_tables$[1]="ARE_DEPOSIT",open_opts$[1]="OTA[1]"
 	open_tables$[2]="ARC_CASHCODE",open_opts$[2]="OTA@"
 	open_tables$[3]="ARE_CASHHDR",open_opts$[3]="OTA@"
 	open_tables$[4]="GLM_BANKMASTER",open_opts$[4]="OTA@"

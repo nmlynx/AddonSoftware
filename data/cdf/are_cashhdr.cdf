@@ -110,6 +110,17 @@ rem --- Launch Bank Deposit Entry form if using Bank Rec.
 		rem --- DEPOSIT_ID is required, so terminate process if we don't have one.
 		if callpoint!.getDevObject("deposit_id")="" and callpoint!.getColumnData("ARE_CASHHDR.DEPOSIT_ID")=""  then
 			callpoint!.setStatus("EXIT")
+
+			rem --- Remove software lock on batch, if batching
+			batch$=stbl("+BATCH_NO",err=*next)
+			if num(batch$)<>0
+				lock_table$="ADM_PROCBATCHES"
+				lock_record$=firm_id$+stbl("+PROCESS_ID")+batch$
+				lock_type$="X"
+				lock_status$=""
+				lock_disp$=""
+				call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+			endif
 			break
 		endif
 	endif
@@ -454,6 +465,7 @@ if callpoint!.getDevObject("br_interface")="Y" then
 		callpoint!.setStatus("NEWREC")
 		break
 	endif
+	callpoint!.setColumnData("<<DISPLAY>>.DEPOSIT_DESC",str(callpoint!.getDevObject("deposit_desc")),1)
 
 	rem --- Capture currently saved payment_amt so can adjust tot_receipts_amt if payment_amt is changed
 	callpoint!.setDevObject("saved_payment_amt",num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT")))
@@ -1824,7 +1836,8 @@ updateDepositAmt: 	rem --- Set Deposit's tot_deposit_amt equal the total of the 
 rem ==================================================================
 	deposit_dev=fnget_dev("1ARE_DEPOSIT")
 	dim deposit_tpl$:fnget_tpl$("1ARE_DEPOSIT")
-	readrecord(deposit_dev,key=firm_id$+"E"+deposit_id$,knum="AO_STATUS",dom=*next)deposit_tpl$
+	batch_no$=callpoint!.getColumnData("ARE_CASHHDR.BATCH_NO")
+	readrecord(deposit_dev,key=firm_id$+batch_no$+"E"+deposit_id$,knum="AO_BATCH_STAT",dom=*next)deposit_tpl$
 	if deposit_tpl.deposit_id$=deposit_id$ then
 		deposit_tpl.tot_deposit_amt=tot_receipts_amt
 		deposit_tpl$=field(deposit_tpl$)
