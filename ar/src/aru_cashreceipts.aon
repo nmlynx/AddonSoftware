@@ -20,7 +20,24 @@ rem --- Get user approval to update
     x$=stbl("+SYSINFO")                                                            
     msg_tokens$[1]=x.task_desc$
     gosub disp_message
-    if msg_opt$<>"Y" then goto std_exit_no_update
+    if msg_opt$<>"Y" then
+        rem --- If using Bank Rec, re-set deposit trans_status=E when not running the update.
+        if br then
+            iter!=depositMap!.keySet().iterator()
+            while iter!.hasNext()
+                deposit_id$=iter!.next()
+                extractrecord(deposit_dev,key=firm_id$+deposit_id$,dom=*continue)deposit_tpl$
+                rem --- Set deposit trans_status=E
+                deposit_tpl.trans_status$="E"     
+                deposit_tpl.mod_user$=sysinfo.user_id$
+                deposit_tpl.mod_date$=date(0:"%Yd%Mz%Dz")
+                deposit_tpl.mod_time$=date(0:"%Hz%mz")
+                deposit_tpl$ = field(deposit_tpl$)
+                writerecord(deposit_dev)deposit_tpl$
+            wend
+        endif
+        goto std_exit_no_update
+    endif
 
 rem --- Start progress meter and position header file
 

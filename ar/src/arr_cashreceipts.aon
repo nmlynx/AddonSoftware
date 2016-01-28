@@ -8,7 +8,7 @@ rem --- All Rights Reserved
 
 rem --- Still needs totals accumulation
 
-    use java.util.HashMap
+    use java.util.TreeMap
 
     setesc std_error
     seterr std_error
@@ -122,7 +122,7 @@ rem --- Retrieve parameter records
 rem --- Is General Ledger installed and being used?
 rem --- as of v9, glw11$ no longer used.  Always use actual glw-11 file (batching.CAH)
 
-    depositMap!=new HashMap()
+    depositMap!=new TreeMap()
     gl$="N"
     status=0
     rem --- use this form when running back-end pgm directly; source$=fnbasename$(pgm(-2),"")
@@ -137,7 +137,7 @@ rem --- Additional file opens
     if br then
         files=1,begfile=1,endfile=files
         dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-        files$[1]="art_deposit",ids$[1]="ARE_DEPOSIT"
+        files$[1]="art_deposit",ids$[1]="ART_DEPOSIT"
     
         call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -704,8 +704,14 @@ rem --- the sum of the PAYMENT_AMTs for all the cash receipts in the Deposit.
         while iter!.hasNext()
             deposit_id$=iter!.next()
             totalPayments=depositMap!.get(deposit_id$)
-            dim deposit_tpl$:fattr(deposit_tpl$)
-            readrecord(deposit_dev,key=firm_id$+deposit_id$,dom=*next)deposit_tpl$
+            extractrecord(deposit_dev,key=firm_id$+deposit_id$,dom=*continue)deposit_tpl$
+            rem --- Set deposit trans_status=R
+            deposit_tpl.trans_status$="R"     
+            deposit_tpl.mod_user$=sysinfo.user_id$
+            deposit_tpl.mod_date$=date(0:"%Yd%Mz%Dz")
+            deposit_tpl.mod_time$=date(0:"%Hz%mz")
+            deposit_tpl$ = field(deposit_tpl$)
+            writerecord(deposit_dev)deposit_tpl$
     
             if deposit_tpl.tot_deposit_amt=totalPayments then
                 xwk=fnblank(3)
@@ -749,12 +755,25 @@ rem --- the sum of the PAYMENT_AMTs for all the cash receipts in the Deposit.
             overlay$=""
         endif
     endif
-
-rem wgh ... 8336 ... when/where do we set trans_status=R  ???
 	
     next_overlay$=overlay$
     out_action$="PRT-FORMAT"
     if update$=""
+        rem --- If using Bank Rec, re-set deposit trans_status=E when not running the update.
+        if br then
+            iter!=depositMap!.keySet().iterator()
+            while iter!.hasNext()
+                deposit_id$=iter!.next()
+                extractrecord(deposit_dev,key=firm_id$+deposit_id$,dom=*continue)deposit_tpl$
+                rem --- Set deposit trans_status=E
+                deposit_tpl.trans_status$="E"     
+                deposit_tpl.mod_user$=sysinfo.user_id$
+                deposit_tpl.mod_date$=date(0:"%Yd%Mz%Dz")
+                deposit_tpl.mod_time$=date(0:"%Hz%mz")
+                deposit_tpl$ = field(deposit_tpl$)
+                writerecord(deposit_dev)deposit_tpl$
+            wend
+        endif
         goto std_exit_no_update
     else
         goto std_exit
