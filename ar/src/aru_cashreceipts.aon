@@ -113,18 +113,27 @@ rem --- Read next Cash Receipts Header (are-01) record
                 k$=arm10c.firm_id$+arm10c.record_id_c$+arm10c.cash_rec_cd$ 
                 find record (arc_cashcode_dev,key=k$,dom=*next) arm10c$
 
+                rem --- Retrieve Bank Deposit record
+                dim deposit_tpl$:fattr(deposit_tpl$)
+                findrecord(deposit_dev,key=firm_id$+are01a.deposit_id$,dom=*next)deposit_tpl$
+
                 rem --- Post this Bank Reconciliation (glt-15) record
 
                 dim glt15a$:fattr(glt15a$)
                 glt15a.firm_id$=firm_id$
                 glt15a.gl_account$=arm10c.gl_cash_acct$
-                glt15a.trans_no$="C"+are01a.receipt_date$(3,6)
+                glt15a.deposit_id$=are01a.deposit_id$
                 glt15a.trans_type$="D"
                 glt15a.posted_code$="O"
-                glt15a.description$=Translate!.getTranslation("AON_CASH_RECEIPTS_REGISTER")
+                if cvs(deposit_tpl.description$,2)<>"" then
+                    glt15a.description$=deposit_tpl.description$
+                else
+                    glt15a.description$=Translate!.getTranslation("AON_CASH_RECEIPTS_REGISTER")
+                endif
+                glt15a.cash_rec_cd$=deposit_tpl.cash_rec_cd$
                 glt15a.trns_date$=are01a.receipt_date$
                 glt15a$=field(glt15a$)
-                k$=glt15a.firm_id$+glt15a.gl_account$+glt15a.trans_no$
+                k$=glt15a.firm_id$+glt15a.gl_account$+glt15a.deposit_id$
                 extract record (glt15_dev,key=k$,dom=*next) glt15a$; rem Advisory Locking
                 glt15a.trans_amt=glt15a.trans_amt+are01a.payment_amt
                 glt15a$=field(glt15a$)
