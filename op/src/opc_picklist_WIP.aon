@@ -74,7 +74,7 @@ batch_pick: rem --- Batch printing of orders
 
     enter custIds!, orderNos!, option!, printed_orders$, table_chans$[all], status
     
-    type = 2	
+    type = 2
 	
 done_with_enter:
 
@@ -321,6 +321,8 @@ rem --- Initialize Data
 		restart$ = ""
 		restart_customer$ = ""
         print_prices$=option!.getOptionData("PRINT_PRICES")
+        whse$=""
+        print_what$=""
         send_via_rpt_ctl$ = option!.getOptionData("SEND_VIA_RPT_CTL")
 		master_document=0
         pick_print_document=0
@@ -329,7 +331,7 @@ rem --- Initialize Data
         alias$ = option!.getAlias()
         rptctl_alias$ = alias$
 		restart$ = option!.getOptionData("RESTART")
-		restart_customer$ = option!.getOptionData("CUSTOMER_ID")        
+		restart_customer$ = option!.getOptionData("CUSTOMER_ID")       
 		print_prices$=option!.getOptionData("PRINT_PRICE")   
         whse$=option!.getOptionData("WAREHOUSE_ID")
         print_what$=option!.getOptionData("PRINT_LIST");rem quotes, pick lists, or both
@@ -351,13 +353,14 @@ rem --- Will only be using rpt ctl for quotes, not for pick lists
     	
 rem --- Is this company multi-warehouse?
     
-    mult_wh=0
+    mult_wh$="N"
+    start_block=1
     read (whsecode_dev, key=firm_id$+"C", dom=*next)
 	read (whsecode_dev)
 
     if start_block then
         read record (whsecode_dev, end=*endif) whsecode_rec$
-        if whsecode_rec.firm_id$ = firm_id$ and whsecode_rec.record_id_c$ = "C" then mult_wh=1
+        if whsecode_rec.firm_id$ = firm_id$ and whsecode_rec.record_id_c$ = "C" then mult_wh$="Y"
     endif
 
     call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Printing","",0,0,1,0,status
@@ -380,7 +383,7 @@ rem --- Main Read
 
 		
 rem --- Misc setup and qualification
-		
+	
         if ope01a.print_status$="Y" and type = batch_pick then 
             gosub is_still_printed
         endif
@@ -510,7 +513,7 @@ rem --- Misc setup and qualification
 			master_params!.put("RESTART",restart$)
 			master_params!.put("RESTART_CUSTOMER",restart_customer$)
 			master_params!.put("PRINT_PRICES",print_prices$)
-            master_params!.put("WAREHOUSE",whse$)
+            master_params!.put("SELECTED_WHSE",whse$)
             master_params!.put("PICKLIST_TYPE",print_what$)
 		endif
 
@@ -518,7 +521,7 @@ rem --- Misc setup and qualification
 			pick_print_params!.put("RESTART",restart$)
 			pick_print_params!.put("RESTART_CUSTOMER",restart_customer$)
 			pick_print_params!.put("PRINT_PRICES",print_prices$)
-            pick_print_params!.put("WAREHOUSE",whse$)
+            pick_print_params!.put("SELECTED_WHSE",whse$)
             pick_print_params!.put("PICKLIST_TYPE",print_what$)            
 		endif
 
@@ -526,7 +529,7 @@ rem --- Misc setup and qualification
 			quote_print_params!.put("RESTART",restart$)
 			quote_print_params!.put("RESTART_CUSTOMER",restart_customer$)
 			quote_print_params!.put("PRINT_PRICES",print_prices$)
-            quote_print_params!.put("WAREHOUSE",whse$)
+            quote_print_params!.put("SELECTED_WHSE",whse$)
             quote_print_params!.put("PICKLIST_TYPE",print_what$)            
 		endif        
 
@@ -550,6 +553,8 @@ rem --- Misc setup and qualification
         params!.put("PICK_OR_QUOTE",pick_or_quote$)
         params!.put("PRINT_PRICES",print_prices$)
         params!.put("REPRINT",reprint$)
+        params!.put("SELECTED_WHSE",whse$)
+        params!.put("MULT_WH",mult_wh$)
 		
 		params!.put("AR_ADDRESS1",comp$((comp_addrLine_len*0)+1,comp_addrLine_len))
 		params!.put("AR_ADDRESS2",comp$((comp_addrLine_len*1)+1,comp_addrLine_len))
@@ -565,7 +570,7 @@ rem --- Misc setup and qualification
 		params!.put("REMIT2",remit$((remit_addrLine_len*1)+1,remit_addrLine_len))
 		params!.put("REMIT3",remit$((remit_addrLine_len*2)+1,remit_addrLine_len))
 		params!.put("REMIT4",remit$((remit_addrLine_len*3)+1,remit_addrLine_len))
-		
+
     rem --- invoke jasper
        
         if master_document

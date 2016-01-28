@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.0.final using JasperReports Library version 6.2.0  -->
-<!-- 2016-01-18T18:28:41 -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OPInvoiceDet" language="groovy" pageWidth="554" pageHeight="320" columnWidth="554" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="a46c6452-81bd-4023-bafb-8f0488b8a578">
+<!-- 2016-01-27T15:38:51 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OPPickListDet" language="groovy" pageWidth="554" pageHeight="320" columnWidth="554" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="a46c6452-81bd-4023-bafb-8f0488b8a578">
 	<property name="ireport.zoom" value="2.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
@@ -9,18 +9,20 @@
 	<parameter name="AR_TYPE" class="java.lang.String"/>
 	<parameter name="CUSTOMER_ID" class="java.lang.String"/>
 	<parameter name="ORDER_NO" class="java.lang.String"/>
+	<parameter name="AR_INV_NO" class="java.lang.String"/>
 	<parameter name="QTY_MASK" class="java.lang.String"/>
-	<parameter name="QTY_MASK_PATTERN" class="java.lang.String"/>
 	<parameter name="PRICE_MASK" class="java.lang.String"/>
+	<parameter name="SELECTED_WHSE" class="java.lang.String"/>
+	<parameter name="PICK_OR_QUOTE" class="java.lang.String"/>
+	<parameter name="PRINT_PRICES" class="java.lang.String"/>
+	<parameter name="MULT_WH" class="java.lang.String"/>
 	<parameter name="BARISTA_WD" class="java.lang.String"/>
 	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
 		<defaultValueExpression><![CDATA["C:\\Dev_aon\\aon\\reports\\"]]></defaultValueExpression>
 	</parameter>
 	<parameter name="IVS_LOTSER_FLAG" class="java.lang.String"/>
-	<parameter name="AR_INV_NO" class="java.lang.String"/>
-	<parameter name="WAREHOUSE" class="java.lang.String"/>
 	<queryString language="SQL">
-		<![CDATA[call OPPICKLIST_DET($P{FIRM_ID},$P{AR_TYPE},$P{CUSTOMER_ID},$P{ORDER_NO},$P{AR_INV_NO},$P{QTY_MASK},$P{AMT_MASK},$P{PRICE_MASK},$P{EXT_MASK},$P{BARISTA_WD})]]>
+		<![CDATA[call OPPICKLIST_DET($P{FIRM_ID},$P{AR_TYPE},$P{CUSTOMER_ID},$P{ORDER_NO},$P{AR_INV_NO},$P{QTY_MASK},$P{PRICE_MASK},$P{SELECTED_WHSE},$P{PICK_OR_QUOTE},$P{PRINT_PRICES},$P{MULT_WH},$P{BARISTA_WD})]]>
 	</queryString>
 	<field name="ORDER_QTY_MASKED" class="java.lang.String"/>
 	<field name="ITEM_ID" class="java.lang.String"/>
@@ -41,12 +43,22 @@
 	<field name="LOCATION" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
+	<field name="WHSE_MESSAGE" class="java.lang.String"/>
+	<variable name="PRICE_BigDec" class="java.math.BigDecimal">
+		<variableExpression><![CDATA[$F{PRICE_RAW} == "" ? 0 : new java.math.BigDecimal($F{PRICE_RAW})]]></variableExpression>
+	</variable>
+	<variable name="TOT_PRICE_BigDec_OUT" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$V{PRICE_BigDec}]]></variableExpression>
+	</variable>
+	<variable name="WHSE_MESSAGE_OUT" class="java.lang.String">
+		<variableExpression><![CDATA[$F{WHSE_MESSAGE}]]></variableExpression>
+	</variable>
 	<group name="LINE_ITEM">
 		<groupExpression><![CDATA[$F{INTERNAL_SEQ_NO}]]></groupExpression>
 		<groupFooter>
 			<band height="15" splitType="Stretch">
 				<printWhenExpression><![CDATA[($P{IVS_LOTSER_FLAG}=="L" || $P{IVS_LOTSER_FLAG}=="S")
-&& $F{ITEM_IS_LS} == "Y" && $F{LINETYPE_ALLOWS_LS} == "Y"]]></printWhenExpression>
+&& $F{ITEM_IS_LS} == "Y" && $F{LINETYPE_ALLOWS_LS} == "Y" && $P{PICK_OR_QUOTE} == "S"]]></printWhenExpression>
 			</band>
 		</groupFooter>
 	</group>
@@ -54,7 +66,9 @@
 		<band splitType="Stretch"/>
 	</columnHeader>
 	<detail>
-		<band height="39" splitType="Prevent">
+		<band height="25" splitType="Prevent">
+			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+			<printWhenExpression><![CDATA[$F{WHSE_MESSAGE}==""]]></printWhenExpression>
 			<rectangle>
 				<reportElement mode="Opaque" x="0" y="0" width="555" height="25" backcolor="#EBF0FA" uuid="626ec31b-09bc-48f4-9589-72823189b525">
 					<printWhenExpression><![CDATA[new Boolean( ($V{PAGE_COUNT}.intValue() + 1 ) % 2 == 0)]]></printWhenExpression>
@@ -161,7 +175,7 @@
 					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
 				</reportElement>
-				<textElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Serif" size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{WHSE}]]></textFieldExpression>
@@ -173,10 +187,30 @@
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 				</reportElement>
-				<textElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="Serif" size="9"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{LOCATION}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{LOCATION}=="*Dropship" ? $R{AON_DROPSHIP}:$F{LOCATION}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="447" y="0" width="1" height="25" isPrintWhenDetailOverflows="true" uuid="b7f15b2b-c06e-4f48-a797-959b797e1006">
+					<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+					<printWhenExpression><![CDATA[$P{PRINT_PRICES}=="Y"]]></printWhenExpression>
+				</reportElement>
+				<graphicElement>
+					<pen lineColor="#C0C0C0"/>
+				</graphicElement>
+			</line>
+			<textField>
+				<reportElement x="54" y="0" width="50" height="12" uuid="2aa122a1-fc74-4a09-9ad6-9018b055149e">
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Serif" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SHIP_QTY}]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>

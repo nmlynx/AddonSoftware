@@ -40,6 +40,7 @@ rem --- OP_HIST_INVOICE_DET_LOTSER
 rem --- PURCHASEORDER_HDR
 rem --- PURCHASEORDER_DET
 rem --- OPPICKLIST_HDR
+rem --- OPPICKLIST_DET
 
 rem ---      Dashboard SPROCs
 rem --- ARAGINGTOT_BAR
@@ -382,6 +383,9 @@ rem --- first drop all std Addon SPROCs
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def    
 
+	sproc_vw_name$="OPPICKLIST_DET"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
 	
 rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
@@ -772,6 +776,19 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"'"+sproc_path$+"OPPICKLIST_HDR.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'OP Pick List Header'"
+
+    gosub create_sproc_def
+
+	rem --- OPPICKLIST_DET
+    sproc_vw_name$="OPPICKLIST_DET"
+	sqlprep$="CREATE PROCEDURE OPPICKLIST_DET "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, AR_TYPE CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN, AR_INV_NO CHAR(7) IN, "
+	sqlprep$=sqlprep$+"QTY_MASK CHAR(20) IN, PRICE_MASK CHAR(20) IN, SELECTED_WHSE CHAR(2) IN, "
+    sqlprep$=sqlprep$+"PICK_OR_QUOTE CHAR(1) IN, PRINT_PRICES CHAR(1) IN, MULT_WH CHAR(1) IN, "
+	sqlprep$=sqlprep$+"BARISTA_WD VARCHAR(50) IN)"
+    sqlprep$=sqlprep$+"'"+sproc_path$+"OPPICKLIST_DET.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'OP Pick List Detail'"
 
     gosub create_sproc_def
 

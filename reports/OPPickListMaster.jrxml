@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.0.final using JasperReports Library version 6.2.0  -->
-<!-- 2016-01-08T17:23:05 -->
+<!-- 2016-01-27T17:54:54 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PickListMaster" pageWidth="612" pageHeight="792" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon" uuid="abcaa710-fcce-449c-9c73-f1b3ee2cc5e1">
 	<property name="ireport.zoom" value="1.5"/>
 	<property name="ireport.x" value="0"/>
@@ -8,7 +8,7 @@
 	<parameter name="RESTART" class="java.lang.String"/>
 	<parameter name="RESTART_CUSTOMER" class="java.lang.String"/>
 	<parameter name="PRINT_PRICES" class="java.lang.String"/>
-	<parameter name="WAREHOUSE" class="java.lang.String"/>
+	<parameter name="SELECTED_WHSE" class="java.lang.String"/>
 	<parameter name="PICKLIST_TYPE" class="java.lang.String"/>
 	<variable name="totalPagesInReport" class="java.lang.Integer" incrementType="Page" calculation="Count">
 		<variableExpression><![CDATA[$V{totalPagesInReport}]]></variableExpression>
@@ -112,7 +112,7 @@
 				<textElement verticalAlignment="Middle">
 					<font fontName="SansSerif" size="12"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$P{RESTART_CUSTOMER}==null ? "-- NA --":$P{RESTART_CUSTOMER}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$P{RESTART_CUSTOMER}.equals("") ? "-- NA --" : $P{RESTART_CUSTOMER} ]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="12" y="124" width="100" height="25" uuid="615b3251-1ad0-44bc-9525-8a7e7aabe1de">
@@ -154,7 +154,7 @@
 				<textElement verticalAlignment="Middle">
 					<font fontName="SansSerif" size="12"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$P{WAREHOUSE}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$P{SELECTED_WHSE}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="12" y="151" width="100" height="25" uuid="f6bc35e3-744a-4e93-853b-9f3692336a9a">
@@ -168,7 +168,7 @@
 				<textElement verticalAlignment="Middle">
 					<font fontName="Serif" size="12"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$R{AON_PICKLIST_QUOTE_BOTH:}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$R{AON_PICKLIST_TYPE:}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="110" y="151" width="100" height="25" uuid="a4a362fd-5cf9-4841-8385-ebf79e25401b">
