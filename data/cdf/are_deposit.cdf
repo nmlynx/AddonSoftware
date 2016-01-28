@@ -119,7 +119,7 @@ rem ==================================================================
 	deposit_dev=fnget_dev("1ARE_DEPOSIT")
 	dim deposit_tpl$:fnget_tpl$("1ARE_DEPOSIT")
 	batch_no$=callpoint!.getColumnData("ARE_DEPOSIT.BATCH_NO")
-	readrecord(deposit_dev,key=firm_id$+batch_no$+"E"+deposit_id$,knum="AO_BATCH_STAT",dom=*next)deposit_tpl$
+	extractrecord(deposit_dev,key=firm_id$+batch_no$+"E"+deposit_id$,knum="AO_BATCH_STAT",dom=*next)deposit_tpl$
 	if deposit_tpl.deposit_id$=deposit_id$ then
 		deposit_tpl.tot_deposit_amt=tot_receipts_amt
 		deposit_tpl$=field(deposit_tpl$)
