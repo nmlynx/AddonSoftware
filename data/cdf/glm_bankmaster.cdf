@@ -83,7 +83,7 @@ rem --- Remove Paid Transactions
 				if glt15a.gl_account$<>gl_acct$ break
 				if glt15a.posted_code$<>"P" continue
 				if glt15a.trns_date$>st_date$ continue
-				remove (glt15_dev,key=glt15a.firm_id$+glt15a.gl_account$+glt15a.deposit_id$,dom=*next)
+				remove (glt15_dev,key=glt15a.firm_id$+glt15a.gl_account$+glt15a.trans_no$,dom=*next)
 			wend
 		endif
 		callpoint!.setColumnData("GLM_BANKMASTER.PRI_END_DATE",callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE"))
