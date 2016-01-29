@@ -122,7 +122,7 @@ rem --- Read next Cash Receipts Header (are-01) record
                 dim glt15a$:fattr(glt15a$)
                 glt15a.firm_id$=firm_id$
                 glt15a.gl_account$=arm10c.gl_cash_acct$
-                glt15a.deposit_id$=are01a.deposit_id$
+                glt15a.trans_no$=are01a.deposit_id$
                 glt15a.trans_type$="D"
                 glt15a.posted_code$="O"
                 if cvs(deposit_tpl.description$,2)<>"" then
@@ -133,7 +133,7 @@ rem --- Read next Cash Receipts Header (are-01) record
                 glt15a.cash_rec_cd$=deposit_tpl.cash_rec_cd$
                 glt15a.trns_date$=are01a.receipt_date$
                 glt15a$=field(glt15a$)
-                k$=glt15a.firm_id$+glt15a.gl_account$+glt15a.deposit_id$
+                k$=glt15a.firm_id$+glt15a.gl_account$+glt15a.trans_no$
                 extract record (glt15_dev,key=k$,dom=*next) glt15a$; rem Advisory Locking
                 glt15a.trans_amt=glt15a.trans_amt+are01a.payment_amt
                 glt15a$=field(glt15a$)
