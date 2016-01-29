@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.0.final using JasperReports Library version 6.2.0  -->
-<!-- 2016-01-27T15:38:51 -->
+<!-- 2016-01-28T20:21:47 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OPPickListDet" language="groovy" pageWidth="554" pageHeight="320" columnWidth="554" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="a46c6452-81bd-4023-bafb-8f0488b8a578">
 	<property name="ireport.zoom" value="2.0"/>
 	<property name="ireport.x" value="0"/>
@@ -21,6 +21,7 @@
 		<defaultValueExpression><![CDATA["C:\\Dev_aon\\aon\\reports\\"]]></defaultValueExpression>
 	</parameter>
 	<parameter name="IVS_LOTSER_FLAG" class="java.lang.String"/>
+	<parameter name="QTY_MASK_PATTERN" class="java.lang.String"/>
 	<queryString language="SQL">
 		<![CDATA[call OPPICKLIST_DET($P{FIRM_ID},$P{AR_TYPE},$P{CUSTOMER_ID},$P{ORDER_NO},$P{AR_INV_NO},$P{QTY_MASK},$P{PRICE_MASK},$P{SELECTED_WHSE},$P{PICK_OR_QUOTE},$P{PRINT_PRICES},$P{MULT_WH},$P{BARISTA_WD})]]>
 	</queryString>
@@ -57,8 +58,53 @@
 		<groupExpression><![CDATA[$F{INTERNAL_SEQ_NO}]]></groupExpression>
 		<groupFooter>
 			<band height="15" splitType="Stretch">
+				<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 				<printWhenExpression><![CDATA[($P{IVS_LOTSER_FLAG}=="L" || $P{IVS_LOTSER_FLAG}=="S")
 && $F{ITEM_IS_LS} == "Y" && $F{LINETYPE_ALLOWS_LS} == "Y" && $P{PICK_OR_QUOTE} == "S"]]></printWhenExpression>
+				<subreport>
+					<reportElement x="0" y="0" width="555" height="15" uuid="6d8f6e7c-3c0e-450a-8c55-3b382272a115">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<subreportParameter name="FIRM_ID">
+						<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="AR_TYPE">
+						<subreportParameterExpression><![CDATA[$P{AR_TYPE}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="CUSTOMER_ID">
+						<subreportParameterExpression><![CDATA[$P{CUSTOMER_ID}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="ORDER_NO">
+						<subreportParameterExpression><![CDATA[$P{ORDER_NO}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="AR_INV_NO">
+						<subreportParameterExpression><![CDATA[$P{AR_INV_NO}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="QTY_MASK">
+						<subreportParameterExpression><![CDATA[$P{QTY_MASK}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="BARISTA_WD">
+						<subreportParameterExpression><![CDATA[$P{BARISTA_WD}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="IVS_LOTSER_FLAG">
+						<subreportParameterExpression><![CDATA[$P{IVS_LOTSER_FLAG}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="OPE11_QTY_SHIPPED">
+						<subreportParameterExpression><![CDATA[$F{ORDER_QTY_MASKED}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="ITEM_ID">
+						<subreportParameterExpression><![CDATA[$F{ITEM_ID}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="INTERNAL_SEQ_NO">
+						<subreportParameterExpression><![CDATA[$F{INTERNAL_SEQ_NO}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="QTY_MASK_PATTERN">
+						<subreportParameterExpression><![CDATA[$P{QTY_MASK_PATTERN}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression><![CDATA["OPPickListDet-LotSer.jasper"]]></subreportExpression>
+				</subreport>
 			</band>
 		</groupFooter>
 	</group>

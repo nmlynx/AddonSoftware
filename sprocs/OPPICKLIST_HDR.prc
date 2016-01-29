@@ -34,7 +34,7 @@ chdir barista_wd$
 rem --- create the in memory recordset for return
 
 dataTemplate$ = ""
-dataTemplate$ = dataTemplate$ + "order_no:C(7),order_date:C(10),"
+dataTemplate$ = dataTemplate$ + "order_no:C(9),order_date:C(10),"
 datatemplate$ = datatemplate$ + "bill_addr_line1:C(30),bill_addr_line2:C(30),bill_addr_line3:C(30),"
 datatemplate$ = datatemplate$ + "bill_addr_line4:C(30),bill_addr_line5:C(30),bill_addr_line6:C(30),"
 datatemplate$ = datatemplate$ + "bill_addr_line7:C(30),"
@@ -279,7 +279,7 @@ rem --- Format addresses to be bottom justified
 	c$=address$
 
     data! = rs!.getEmptyRecordData()
-    data!.setFieldValue("ORDER_NO", order_no$)
+    data!.setFieldValue("ORDER_NO", order_no$+" "+ope01a.backord_flag$)
     data!.setFieldValue("ORDER_DATE", order_date$)
 
     data!.setFieldValue("BILL_ADDR_LINE1", b$((bill_addrLine_len*0)+1,bill_addrLine_len))

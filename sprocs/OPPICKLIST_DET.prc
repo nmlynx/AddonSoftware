@@ -137,10 +137,10 @@ rem --- Main
             endif
 
             if pos(opm02a.line_type$=" SP") then
-				linetype_allows_ls$ = "Y"
+				if pos(pick_or_quote$="S") then linetype_allows_ls$ = "Y"
                 find record (ivm01_dev, key=firm_id$+ope11a.item_id$, dom=*next) ivm01a$
                 item_description$ = func.displayDesc(ivm01a.item_desc$)
-				item_is_ls$ = ivm01a.lotser_item$
+				if pos(pick_or_quote$="S") then item_is_ls$ = ivm01a.lotser_item$
                 find record (ivm02_dev,key=firm_id$+ope11a.warehouse_id$+ope11a.item_id$,dom=*next) ivm02a$
 			endif
 

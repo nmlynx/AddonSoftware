@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.0.final using JasperReports Library version 6.2.0  -->
-<!-- 2016-01-27T13:38:13 -->
+<!-- 2016-01-28T20:03:23 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OPPickListHdr" language="groovy" pageWidth="612" pageHeight="792" columnWidth="570" leftMargin="22" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon" uuid="b146e7c7-7794-48d0-bad4-a5da78d1668b">
 	<property name="ireport.zoom" value="3.0"/>
 	<property name="ireport.x" value="1095"/>
@@ -739,7 +739,7 @@
 					<font fontName="Serif"/>
 					<paragraph leftIndent="4"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$P{ORDER_NO}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{ORDER_NO}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="480" y="68" width="60" height="13" uuid="1d358563-9666-4659-b203-5cefac8bd0da">
@@ -1135,6 +1135,9 @@
 				</subreportParameter>
 				<subreportParameter name="BARISTA_WD">
 					<subreportParameterExpression><![CDATA[$P{BARISTA_WD}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="QTY_MASK_PATTERN">
+					<subreportParameterExpression><![CDATA[$P{QTY_MASK_PATTERN}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<returnValue subreportVariable="TOT_PRICE_BigDec_OUT" toVariable="TOTAL_PRICE_BigDec"/>
