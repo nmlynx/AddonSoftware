@@ -51,7 +51,7 @@ on_demand: rem --- Entry point for on-demand picklist
     goto done_with_enter
 
 on_demand_no_col_data: rem --- Entry point for on-demand picklist from Credit Management
-
+rem --- need to re-test coming from CM - how to update form?? CAH
     setesc std_error
     seterr std_error
     
@@ -75,7 +75,7 @@ batch_pick: rem --- Batch printing of orders
     enter custIds!, orderNos!, option!, printed_orders$, table_chans$[all], status
     
     type = 2
-	
+
 done_with_enter:
 
 rem --- Types of calls
@@ -134,7 +134,7 @@ rem --- Anything to print?
 
     if custIds!.size() = 0 or orderNos!.size() = 0 then
 		status=998
-        goto nothing_printed
+        goto all_done
     endif
 
 rem --- Derive/set path and filename for logo to go on form
@@ -314,6 +314,8 @@ rem --- Initialize Data
     func.setLen3( int(num(params_rec.desc_len_03$)) )
 	
     nothing_printed = 1
+    tot_picks = 0
+    tot_quotes = 0
     
     if type = on_demand then
         alias$ = option!.getAlias()
@@ -367,7 +369,7 @@ rem --- Is this company multi-warehouse?
     if status = 999 then goto std_exit
 
 rem --- Main Read
- 
+
     for next_item = 0 to custIds!.size() - 1
     
         cust_id$ = str( custIds!.getItem(next_item) )
@@ -393,16 +395,31 @@ rem --- Misc setup and qualification
             ope01a.print_status$ = "N"
         endif
 
-        pick_or_quote$=ope01a.invoice_type$
+        pick_or_quote$=ope01a.invoice_type$;rem for param output
         if ope01a.print_status$="Y" and type = batch_pick then continue
-        if pick_or_quote$="V" then continue
+        if ope01a.invoice_type$="V" then continue
         if credit_rec.sys_install$="Y" and ope01a.credit_flag$="C" and credit_rec.pick_hold$="N" then continue
 
         after$="NO"
 		if type = batch_pick then
 			gosub valid_lines
 			if print$="NO" then continue
-		endif	
+		endif
+
+        if type = batch_pick then
+		
+			if ope01a.reprint_flag$="Y"
+				ope01a.print_status$=reprint$ 
+			else 
+				ope01a.print_status$="B"
+			endif
+
+            ope01a.mod_user$=sysinfo.user_id$
+            ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
+            ope01a.mod_time$=date(0:"%Hz%mz")
+			ope01a$=field(ope01a$)
+			write record (ordhdr_dev) ope01a$     
+        endif
 
         nothing_printed = 0
         add_to_pick_print_report = 0
@@ -436,7 +453,7 @@ rem --- Misc setup and qualification
             call stbl("+DIR_SYP")+"bas_sequences.bbj","DOC_NO",new_doc_id$,rd_table_chans$[all] 
             new_doc_name$=new_doc_id$+"_"+doc_name$+".pdf"
 
-        if pick_or_quote$="P"            
+        if ope01a.invoice_type$="P"            
             
             call stbl("+DIR_SYP")+"bac_documents.bbj",new_doc_id$,rep_date_stamp$,rep_time_stamp$,rd_doc_source$,rd_doc_ext$,docdir$,
 :           rd_source_type$,rd_source_alias$,rd_source_id$,rd_source_ref$,rd_table_chans$[all],"",new_doc_name$,doc_name$,doc_keywords$
@@ -489,7 +506,7 @@ rem --- Misc setup and qualification
 
     rem --- For quotes, use ReportControl object to see if customer wants print, email, or fax
 
-        if pick_or_quote$="P"
+        if ope01a.invoice_type$="P"
             add_to_quote_print_report=1
             add_to_pick_print_report=0
             if rpt_ctl$="YES"     
@@ -605,20 +622,33 @@ rem --- Misc setup and qualification
         report!.setLocale(locale$)
      
         report!.fill()
-        if pick_or_quote$="P"
+        if ope01a.invoice_type$="P"
             report!.exportToPDF(BBjAPI().FALSE, docdir$+new_doc_name$)
         endif
 
         if type = batch_pick
 			master_report!.appendReport(report!)	
-            if add_to_pick_print_report then pick_print_report!.appendReport(report!)
-            if add_to_quote_print_report then quote_print_report!.appendReport(report!)            
+            if add_to_pick_print_report
+                pick_print_report!.appendReport(report!)
+                tot_picks=tot_picks+1
+            endif
+            
+            if add_to_quote_print_report
+                quote_print_report!.appendReport(report!)            
+                tot_quotes=tot_quotes+1
+            endif
 
 			report!.destroy()
 		endif
     rem --- Loop back for next Customer/Order
 
     next next_item
+
+    if nothing_printed then 
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto all_done
+    endif
 
 rem --- bring up jasper viewers (master doc and print doc for Batch Invoices; single doc for On-Demand)
 
@@ -636,6 +666,7 @@ rem --- bring up jasper viewers (master doc and print doc for Batch Invoices; si
     gosub doc_path
 
 	if type = batch_pick
+    
     rem --- master jasper - contains ALL pick lists and/or quotes
         repTitle$=masterBaseName$
         rd_doc_name$=master_doc_name$
@@ -662,55 +693,64 @@ rem --- bring up jasper viewers (master doc and print doc for Batch Invoices; si
 
         bbjWindowMaster!= masterViewerWindow!.getViewerWindow()
         bbjWindowMaster!.setCallback(bbjWindowMaster!.ON_CLOSE,"close_win")
-        
+       
     rem --- pick print jasper - contains only pick lists for hard copy and/or manual email (i.e., not via rpt ctl)
-        repTitle$=pickPrintBaseName$
-        rd_doc_name$=pick_print_doc_name$
-        rd_doc_id$=pick_print_doc_id$
+    rem --- if there are only picks (no quotes), or only quotes (no picks), then skip pick print copy
+        if tot_picks and tot_quotes
+            repTitle$=pickPrintBaseName$
+            rd_doc_name$=pick_print_doc_name$
+            rd_doc_id$=pick_print_doc_id$
 
-        gosub OnPickPrintSaveMenuButton; rem --- force save to doc archive
+            gosub OnPickPrintSaveMenuButton; rem --- force save to doc archive
 
-        pickPrintViewerWindow! = new BBJasperViewerWindow(pick_print_report!,50,50,screen_width,screen_height,repTitle$,$00000093$)
-        pickPrintViewerControl! = pickPrintViewerWindow!.getViewerControl()
-        pickPrintViewerControl!.setGoogleDefaultDocument(repTitle$)
-        pickPrintViewerControl!.setDefaultSaveFolder(rd_doc_path$)
-        pickPrintViewerControl!.setDefaultSaveFile(repTitle$)
+            pickPrintViewerWindow! = new BBJasperViewerWindow(pick_print_report!,50,50,screen_width,screen_height,repTitle$,$00000093$)
+            pickPrintViewerControl! = pickPrintViewerWindow!.getViewerControl()
+            pickPrintViewerControl!.setGoogleDefaultDocument(repTitle$)
+            pickPrintViewerControl!.setDefaultSaveFolder(rd_doc_path$)
+            pickPrintViewerControl!.setDefaultSaveFile(repTitle$)
 
-        pickPrintSaveMenuButton! = pickPrintViewerControl!.getControl(BBJasperViewerControl.getSAVE_MENU_BUTTON_NAME())
-        pickPrintSaveMenuButton!.setCallback(BBjMenuButton.ON_BUTTON_PUSH ,"OnPickPrintSaveMenuButton")
-        pickPrintEmailToolButton! = pickPrintViewerControl!.getControl(BBJasperViewerControl.getEMAIL_TOOL_BUTTON_NAME())
-        pickPrintEmailToolButton!.setCallback(BBjMenuButton.ON_TOOL_BUTTON_PUSH ,"OnPickPrintEmailToolButton")
+            pickPrintSaveMenuButton! = pickPrintViewerControl!.getControl(BBJasperViewerControl.getSAVE_MENU_BUTTON_NAME())
+            pickPrintSaveMenuButton!.setCallback(BBjMenuButton.ON_BUTTON_PUSH ,"OnPickPrintSaveMenuButton")
+            pickPrintEmailToolButton! = pickPrintViewerControl!.getControl(BBJasperViewerControl.getEMAIL_TOOL_BUTTON_NAME())
+            pickPrintEmailToolButton!.setCallback(BBjMenuButton.ON_TOOL_BUTTON_PUSH ,"OnPickPrintEmailToolButton")
 
-        pickPrintViewerWindow!.setReleaseOnClose(0)
-        pickPrintViewerWindow!.show(0)
+            pickPrintViewerWindow!.setReleaseOnClose(0)
+            pickPrintViewerWindow!.show(0)
 
-        bbjWindowPickPrint!= pickPrintViewerWindow!.getViewerWindow()
-        bbjWindowPickPrint!.setCallback(bbjWindowPickPrint!.ON_CLOSE,"close_pick_print_win")
-
+            bbjWindowPickPrint!= pickPrintViewerWindow!.getViewerWindow()
+            bbjWindowPickPrint!.setCallback(bbjWindowPickPrint!.ON_CLOSE,"close_pick_print_win")
+        else
+            pick_print_win_closed=1;rem no pick print window; set the closed flag so master close routine won't think it's still up
+        endif
+        
     rem --- quote print jasper - contains only quotes for hard copy
-        repTitle$=quotePrintBaseName$
-        rd_doc_name$=quote_print_doc_name$
-        rd_doc_id$=quote_print_doc_id$
+    rem --- if no quotes, skip the quote print copy
+        if tot_quotes
+            repTitle$=quotePrintBaseName$
+            rd_doc_name$=quote_print_doc_name$
+            rd_doc_id$=quote_print_doc_id$
 
-        gosub OnQuotePrintSaveMenuButton; rem --- force save to doc archive
+            gosub OnQuotePrintSaveMenuButton; rem --- force save to doc archive
 
-        quotePrintViewerWindow! = new BBJasperViewerWindow(quote_print_report!,80,80,screen_width,screen_height,repTitle$,$00000093$)
-        quotePrintViewerControl! = quotePrintViewerWindow!.getViewerControl()
-        quotePrintViewerControl!.setGoogleDefaultDocument(repTitle$)
-        quotePrintViewerControl!.setDefaultSaveFolder(rd_doc_path$)
-        quotePrintViewerControl!.setDefaultSaveFile(repTitle$)
+            quotePrintViewerWindow! = new BBJasperViewerWindow(quote_print_report!,80,80,screen_width,screen_height,repTitle$,$00000093$)
+            quotePrintViewerControl! = quotePrintViewerWindow!.getViewerControl()
+            quotePrintViewerControl!.setGoogleDefaultDocument(repTitle$)
+            quotePrintViewerControl!.setDefaultSaveFolder(rd_doc_path$)
+            quotePrintViewerControl!.setDefaultSaveFile(repTitle$)
 
-        quotePrintSaveMenuButton! = quotePrintViewerControl!.getControl(BBJasperViewerControl.getSAVE_MENU_BUTTON_NAME())
-        quotePrintSaveMenuButton!.setCallback(BBjMenuButton.ON_BUTTON_PUSH ,"OnQuotePrintSaveMenuButton")
-        quotePrintEmailToolButton! = quotePrintViewerControl!.getControl(BBJasperViewerControl.getEMAIL_TOOL_BUTTON_NAME())
-        quotePrintEmailToolButton!.setCallback(BBjMenuButton.ON_TOOL_BUTTON_PUSH ,"OnQuotePrintEmailToolButton")
+            quotePrintSaveMenuButton! = quotePrintViewerControl!.getControl(BBJasperViewerControl.getSAVE_MENU_BUTTON_NAME())
+            quotePrintSaveMenuButton!.setCallback(BBjMenuButton.ON_BUTTON_PUSH ,"OnQuotePrintSaveMenuButton")
+            quotePrintEmailToolButton! = quotePrintViewerControl!.getControl(BBJasperViewerControl.getEMAIL_TOOL_BUTTON_NAME())
+            quotePrintEmailToolButton!.setCallback(BBjMenuButton.ON_TOOL_BUTTON_PUSH ,"OnQuotePrintEmailToolButton")
 
-        quotePrintViewerWindow!.setReleaseOnClose(0)
-        quotePrintViewerWindow!.show(0)
+            quotePrintViewerWindow!.setReleaseOnClose(0)
+            quotePrintViewerWindow!.show(0)
 
-        bbjWindowQuotePrint!= quotePrintViewerWindow!.getViewerWindow()
-        bbjWindowQuotePrint!.setCallback(bbjWindowQuotePrint!.ON_CLOSE,"close_quote_print_win")        
-
+            bbjWindowQuotePrint!= quotePrintViewerWindow!.getViewerWindow()
+            bbjWindowQuotePrint!.setCallback(bbjWindowQuotePrint!.ON_CLOSE,"close_quote_print_win")
+        else
+            quote_print_win_closed=1;rem no quote print window; set the closed flag so master close routine won't think it's still up
+        endif
     else
 
         repTitle$=doc_name$
@@ -912,34 +952,16 @@ close_win:rem --- Master or On-demand viewer closed - do post-processing for bat
 
 rem --- Updates and final processing
 
-    if type = on_demand 
+    msg_id$="AON_UPDT_PICK_QUERY"
+    dim msg_tokens$[1]
+    msg_tokens$[1]=sysinfo.task_desc$
+    gosub disp_message
 
-		after$="YES"
-		ope01a.print_status$="Y"
-
-        ope01a.lock_status$="N";rem --- really?  If on-demand, I'll be returning to OE w/ order up... shouldn't it be locked?
-
-        ope01a.mod_user$=sysinfo.user_id$
-        ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
-        ope01a.mod_time$=date(0:"%Hz%mz")
-		ope01a$=field(ope01a$)
-		write record (ordhdr_dev) ope01a$
-
-        if ope01a.print_status$="Y"
-            remove (prntlist_dev,key=firm_id$+ope01a.ordinv_flag$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$,dom=*next)
-        endif 
-	endif
-
-	if type = batch_pick
-
-		msg_id$="AON_UPDT_PICK_QUERY"
-		dim msg_tokens$[1]
-		msg_tokens$[1]=sysinfo.task_desc$
-		gosub disp_message
-
-		if msg_opt$<>"Y" then goto all_done
-		call pgmdir$+"adc_progress.aon","N","","","","",0,prntlist_dev,1,meter_num,status
-		if status = 999 then goto all_done
+    if msg_opt$<>"Y" then goto all_done
+    
+    if type=batch_pick
+        call pgmdir$+"adc_progress.aon","N","","","","",0,prntlist_dev,1,meter_num,status
+        if status = 999 then goto all_done
 		
 rem --- Position file for update    
     
@@ -960,7 +982,7 @@ rem --- Clear Print Flags
 				if pos(ope04a.customer_id$+ope04a.order_no$=printed_orders$,len(ope04a.customer_id$)+len(ope04a.order_no$))=0 continue
                 dim ope01a$:fattr(ope01a$)
 				extract record (ordhdr_dev, key=ope04a.firm_id$+"E"+ope04a.ar_type$+ope04a.customer_id$+ope04a.order_no$+ope01a.ar_inv_no$,knum="AO_STATUS", dom=*endif) ope01a$
-				if (print_what$="P" and pick_or_quote$<>"S") or (print_what$="Q" and pick_or_quote$<>"P") then continue
+				if (print_what$="P" and ope01a.invoice_type$<>"S") or (print_what$="Q" and ope01a.invoice_type$<>"P") then continue
 
 				if ope01a.reprint_flag$="Y" then
 					ope01a.reprint_flag$=""
@@ -975,7 +997,6 @@ rem --- Clear Print Flags
 				endif
 
 				if ope01a.print_status$<>"Y" then ope01a.print_status$="N"
-				if status <> 999 and type = on_demand ope01a.print_status$="Y"
                 ope01a.mod_user$=sysinfo.user_id$
                 ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
                 ope01a.mod_time$=date(0:"%Hz%mz")
@@ -989,11 +1010,34 @@ rem --- Clear Print Flags
 			
 		wend
 
-		msg_id$="UPDATE_COMPLETE"
-		dim msg_tokens$[1]
-		msg_opt$=""
-		gosub disp_message
-		
+        if emailFax!.size()
+            for email_fax=0 to emailFax!.size()-1 step 3
+                reportControl!.addToDocQueue(emailFax!.get(email_fax),emailFax!.get(email_fax+1),"",emailFax!.get(email_fax+2))    
+            next email_fax
+        endif
+        
+    else 
+
+		after$="YES"
+		ope01a.print_status$="Y"
+        ope01a.lock_status$="N"
+
+        ope01a.mod_user$=sysinfo.user_id$
+        ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
+        ope01a.mod_time$=date(0:"%Hz%mz")
+		ope01a$=field(ope01a$)
+		write record (ordhdr_dev) ope01a$
+
+        if ope01a.print_status$="Y"
+            remove (prntlist_dev,key=firm_id$+ope01a.ordinv_flag$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$,dom=*next)
+        endif 
+        
+        if emailFax!.size() and send_via_rpt_ctl$="Y"
+            for email_fax=0 to emailFax!.size()-1 step 3
+                reportControl!.addToDocQueue(emailFax!.get(email_fax),emailFax!.get(email_fax+1),"",emailFax!.get(email_fax+2))    
+            next email_fax
+        endif
+        
 	endif
 		
 all_done:
@@ -1044,7 +1088,7 @@ valid_lines: rem --- Look for valid lines here
             continue
         endif
 
-        if pick_or_quote$<>"P"
+        if ope01a.invoice_type$<>"P"
             if ope11a.commit_flag$="N" then read(orddet_dev); continue
             if whse$<>"" and ope11a.warehouse_id$<>whse$
                 if ope11a.pick_flag$<>"Y" then allprint$="NO"
