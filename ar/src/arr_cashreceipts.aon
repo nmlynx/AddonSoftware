@@ -133,6 +133,15 @@ rem --- as of v9, glw11$ no longer used.  Always use actual glw-11 file (batchin
     gl=gl$="Y"
     br=br$="Y"
 
+rem --- Get GL Audit Number
+    gl_adt_no=0
+    if gl$="Y" then
+        glcontrol_tpl$=stbl("+GLCONTROL_TPL",err=*endif)
+        dim glcontrol$:glcontrol_tpl$
+        glcontrol$=stbl("+GLCONTROL",err=*endif)
+        gl_adt_no=num(glcontrol.gl_adt_no$)
+    endif
+
 rem --- Additional file opens
     if br then
         files=1,begfile=1,endfile=files
@@ -710,6 +719,7 @@ rem --- the sum of the PAYMENT_AMTs for all the cash receipts in the Deposit.
             deposit_tpl.mod_user$=sysinfo.user_id$
             deposit_tpl.mod_date$=date(0:"%Yd%Mz%Dz")
             deposit_tpl.mod_time$=date(0:"%Hz%mz")
+            if gl_adt_no then deposit_tpl.audit_number=gl_adt_no
             deposit_tpl$ = field(deposit_tpl$)
             writerecord(deposit_dev)deposit_tpl$
     
@@ -770,6 +780,7 @@ rem --- the sum of the PAYMENT_AMTs for all the cash receipts in the Deposit.
                 deposit_tpl.mod_user$=sysinfo.user_id$
                 deposit_tpl.mod_date$=date(0:"%Yd%Mz%Dz")
                 deposit_tpl.mod_time$=date(0:"%Hz%mz")
+                if gl_adt_no then deposit_tpl.audit_number=gl_adt_no
                 deposit_tpl$ = field(deposit_tpl$)
                 writerecord(deposit_dev)deposit_tpl$
             wend
