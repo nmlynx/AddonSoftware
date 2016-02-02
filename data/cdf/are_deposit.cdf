@@ -21,6 +21,20 @@ rem --- Don't allow re-using deposit_id with trans_status R or U
 		callpoint!.setStatus("ABORT")
 		break
 	endif
+
+rem --- Don't allow using manually entered deposits in glt_bankother
+	glt15_dev=fnget_dev("@GLT_BANKOTHER")
+	dim glt15a$:fnget_tpl$("@GLT_BANKOTHER")
+	readrecord(glt15_dev,key=firm_id$+deposit_id$,knum="AO_TRANS_NO",dom=*next)glt15a$
+	if glt15a.trans_no$=deposit_id$ and glt15a.trans_type$="D" then
+		rem --- This deposit is currently being used in Bank Reconciliation Other Transactions.
+		msg_id$="AR_DEPOSIT_BANK_REC"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+rem --- Don't allow using deposit not in this batch
 	if cvs(deposit_tpl.batch_no$,2)<>"" and deposit_tpl.batch_no$<>callpoint!.getColumnData("ARE_DEPOSIT.BATCH_NO") then
 		rem --- Deposit is in a different batch.
 		msg_id$="AR_DEPOSIT_BATCH_BAD"
@@ -136,12 +150,13 @@ rem --- Validate entered date
 	endif
 [[ARE_DEPOSIT.BSHO]]
 rem --- Open/Lock files
-	num_files=4
+	num_files=5
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ARE_DEPOSIT",open_opts$[1]="OTA[1]"
 	open_tables$[2]="ARC_CASHCODE",open_opts$[2]="OTA@"
 	open_tables$[3]="ARE_CASHHDR",open_opts$[3]="OTA@"
 	open_tables$[4]="GLM_BANKMASTER",open_opts$[4]="OTA@"
+	open_tables$[5]="GLT_BANKOTHER",open_opts$[5]="OTA@"
 
 	gosub open_tables
 	if status$ <> ""  then goto std_exit
