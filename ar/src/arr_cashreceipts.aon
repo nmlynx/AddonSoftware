@@ -760,6 +760,8 @@ rem --- the sum of the PAYMENT_AMTs for all the cash receipts in the Deposit.
         
         if deposit_errors then
             msg_id$="AR_NO_UPDT_CSHRCPT"
+            dim msg_tokens$[1]
+            msg_tokens$[1]=Translate!.getTranslation("AON_CASH_RECEIPTS_REGISTER")
             gosub disp_message
             update$=""
             overlay$=""
