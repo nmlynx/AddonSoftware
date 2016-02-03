@@ -13,6 +13,7 @@ rem --- All Rights Reserved
 
 rem --- Use statements
 
+    use java.util.HashMap
     use ::ado_func.src::func
     use ::sys/prog/bao_valid_card.bbj::CreditCard
 
@@ -74,6 +75,11 @@ rem --- Inits
 
     if ars01a.cash_sale$<>"N" then
 
+        if br$="Y" then
+            datecodeMap!=new HashMap()
+            depositMap!=new HashMap()
+        endif
+
         dim columns$[8,10]
         columns = 8
 
@@ -117,6 +123,14 @@ rem --- Inits
             opw41a.customer_id$  = ope41a.customer_id$
             opw41a.order_no$     = ope41a.order_no$
             write record (opw41_dev) opw41a$
+
+            rem --- If didn't update previous register, the opt_invcash record will already have a deposit assigned.
+            rem --- If opt_invcash deposit already exists, remove it and the art_deposit record.
+            rem --- They may have changed the original invoice_date or cash_rec_cd.
+            if cvs(ope41a.deposit_id$,2)<>"" then
+                remove(deposit_dev,key=firm_id$+ope41a.deposit_id$,dom=*next)
+                ope41a.deposit_id$=""
+            endif
         wend
 
     rem --- Print
@@ -144,10 +158,79 @@ rem --- Inits
             endif
 
             extractrecord (ope41_dev,key=opw41a_key.firm_id$+opw41a_key.ar_type$+opw41a_key.customer_id$+opw41a_key.order_no$+opw41a_key.ar_inv_no$,knum="PRIMARY",dom=*continue) ope41a$
+            
+        rem --- Get Deposit when using Bank Rec, and update the total deposit amount for that Deposit
+            deposit_id$=""
+            if br$="Y" then
+                rem --- Use the same DEPOSIT_ID for all cash sales with the same INVOICE_DATE and CASH_REC_CD
+                if datecodeMap!.containsKey(ope41a.invoice_date$+ope41a.cash_rec_cd$) then
+                    rem --- Update total deposit amount for this depoist
+                    deposit_id$=datecodeMap!.get(ope41a.invoice_date$+ope41a.cash_rec_cd$)
+                    totalPayments=depositMap!.get(deposit_id$)+ope41a.invoice_amt
+                    depositMap!.put(deposit_id$,totalPayments)
+
+                    rem --- Update art_deposit tot_deposit_amt
+                    extractrecord(deposit_dev,key=firm_id$+deposit_id$,dom=*endif)deposit_tpl$
+                    deposit_tpl.tot_deposit_amt=totalPayments
+                    deposit_tpl$=field(deposit_tpl$)
+                    writerecord(deposit_dev)deposit_tpl$
+                else
+                    rem --- Get a new deposit
+                    start_deposit_id$=""
+                    while 1
+                        call stbl("+DIR_SYP")+"bas_sequences.bbj","DEPOSIT_ID",deposit_id$,rd_table_chans$[all],"QUIET"
+                        rem --- handle running out of deposit numbers
+                        if start_deposit_id$="" then
+                            start_deposit_id$=deposit_id$
+                        else
+                            if start_deposit_id$=deposit_id$ then
+                                rem --- Ran out of deposit numbers
+                                deposit_id$=pad(len(deposit_tpl.deposit_id$),"?")
+                                break
+                            endif
+                        endif
+
+                        rem --- Don't allow using manually entered deposits from glt_bankother
+                        dim glt15a$:fattr(glt15a$)
+                        readrecord(glt15_dev,key=firm_id$+deposit_id$,knum="AO_TRANS_NO",dom=*next)glt15a$
+                        if glt15a.trans_no$=deposit_id$ and glt15a.trans_type$="D" then continue
+
+                        rem --- Prevent re-using an existing deposit_id
+                        find(deposit_dev,key=firm_id$+deposit_id$,dom=*break)
+                    wend
+
+                    rem --- Update total deposit amount for this depoist
+                    totalPayments=ope41a.invoice_amt
+                    depositMap!.put(deposit_id$,totalPayments)
+                    datecodeMap!.put(ope41a.invoice_date$+ope41a.cash_rec_cd$,deposit_id$)
+
+                    rem --- Write new art_deposit record
+                    dim deposit_tpl$:fattr(deposit_tpl$)
+                    deposit_tpl.firm_id$=firm_id$
+                    deposit_tpl.deposit_id$=deposit_id$
+                    deposit_tpl.deposit_date$=ope41a.invoice_date$
+                    deposit_tpl.description$="Sales Register: "+ope41a.invoice_date$+"-"+ope41a.cash_rec_cd$
+                    deposit_tpl.cash_rec_cd$=ope41a.cash_rec_cd$
+                    deposit_tpl.created_user$=sysinfo.user_id$
+                    deposit_tpl.created_date$=date(0:"%Yd%Mz%Dz")
+                    deposit_tpl.created_time$=date(0:"%Hz%mz")
+                    deposit_tpl.trans_status$="R"
+                    deposit_tpl.batch_no$=batch_no$
+                    if gl_adt_no then deposit_tpl.audit_number=gl_adt_no
+                    deposit_tpl.tot_deposit_amt=totalPayments
+                    deposit_tpl$=field(deposit_tpl$)
+                    writerecord(deposit_dev)deposit_tpl$
+                endif
+            endif
+
+        rem --- Update opt_invcash
+            ope41a.deposit_id$=deposit_id$
             ope41a.trans_status$="R"     
             ope41a.mod_user$=sysinfo.user_id$
             ope41a.mod_date$=date(0:"%Yd%Mz%Dz")
             ope41a.mod_time$=date(0:"%Hz%mz")
+            ope41a.batch_no$=batch_no$
+            if gl_adt_no then ope41a.audit_number=gl_adt_no
             ope41a$ = field(ope41a$)
             write record (ope41_dev) ope41a$
 
