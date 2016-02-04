@@ -168,8 +168,8 @@ line_detail: rem --- Item Detail
 			endif
 
 			if pos(opm02a.line_type$=" SRDNPO") and print_prices$="Y" 
-				price_raw$=   str(ope11a.unit_price)
-				price_masked$=str(ope11a.unit_price:price_mask$)
+				price_raw$=   str(ope11a.unit_price*ope11a.qty_ordered)
+				price_masked$=str(num(price_raw$):price_mask$)
 			endif
 
             if pick_or_quote$<>"P"
