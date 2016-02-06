@@ -30,7 +30,7 @@ rem --- Assign form input values to local variables
 
     cust_id$ = option!.getOptionData("customer_id")
     order_no$ = option!.getOptionData("order_no")
-    
+  
 rem --- Call the pick list printing program with the vectors
     
     call pgmdir$+"opc_picklist.aon::on_demand", cust_id$, order_no$, option!, table_chans$[all], status
