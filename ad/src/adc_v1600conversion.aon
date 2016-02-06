@@ -11,10 +11,8 @@ rem --- rdForm!     : Window object to hold progress meter
 rem --- Translate!  : Translator object translations
 rem --- CONV_STATUS : Status code/0=No error (Returned)
 
-rem wgh ... 8336 ... stopped here
-goto std_exit
-
     use java.io.File
+    use java.util.HashMap
     use ::ado_file.src::FileObject
     
     setesc std_error
@@ -48,15 +46,15 @@ rem --- Open log file in aon/logs directory
     
 rem --- Start progress meter
 
-    meter_title$="adc_v1400conversion.aon"
+    meter_title$="adc_v1600conversion.aon"
     meter_proc_recs=0
     meter_text$=""
     meter_action$="WIN-LST"
     gosub disp_meter
     
-rem --- For version 14.10, update drilldown definitions in ddm_drill_defs
+rem --- For version 16.00, initialize changes for Bank Reconciliation
 
-    this_module$="AD"
+    this_module$="AR"
     if installMap!.get(this_module$)="Y" then 
         rem --- Increment progress meter
         meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
@@ -66,125 +64,107 @@ rem --- For version 14.10, update drilldown definitions in ddm_drill_defs
         gosub disp_meter
         print(log_dev)meter_text$
 
-        num_files=1
+        rem --- Retrieve sysinfo data
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+        dim sysinfo$:sysinfo_template$
+        sysinfo$=stbl("+SYSINFO",err=*next)
+
+        rem --- Open File(s)
+        num_files=5
         dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-        open_tables$[1]="DDM_DRILL_DEFS",   open_opts$[1]="OTA"
+        open_tables$[1]="ADM_FIRMS",   open_opts$[1]="OTA"
+        open_tables$[2]="ARS_PARAMS",   open_opts$[2]="OTA"
+        open_tables$[3]="ARE_CASHHDR",   open_opts$[3]="OTA"
+        open_tables$[4]="ART_DEPOSIT",   open_opts$[4]="OTA"
+        open_tables$[5]="GLT_BANKOTHER",   open_opts$[5]="OTA"
+
         gosub open_tables
-        ddm_drilldefs_dev=num(open_chans$[1])
-        dim ddm_drilldefs$:open_tpls$[1]
+
+        admFirms_dev=num(open_chans$[1])
+        arsParams_dev=num(open_chans$[2])
+        areCashhdr_dev=num(open_chans$[3])
+        artDeposit_dev=num(open_chans$[4])
+        glt15_dev=num(open_chans$[5])
+        dim admFirms$:open_tpls$[1]
+        dim arsParams$:open_tpls$[2]
+        dim areCashhdr$:open_tpls$[3]
+        dim artDeposit$:open_tpls$[4]
+        dim glt15a$:open_tpls$[5]
+
+        rem --- Only process firms that are using Bank Reconciliation in AR
+        read(admFirms_dev,key="",dom=*next)
+        while 1
+            readrecord(admFirms_dev,end=*break)admFirms$
+            firm_id$=admFirms.company_id$
         
-        rem --- Update AP_INVOICES drilldown definition
-        wk$=fattr(ddm_drilldefs$,"DRILL_DEF_ID")
-        dim drill_def_id$(dec(wk$(10,2)))
-        drill_def_id$(1)="AP_INVOICES"
-        readrecord(ddm_drilldefs_dev,key=drill_def_id$,dom=*next)ddm_drilldefs$
-        if ddm_drilldefs.drill_def_id$=drill_def_id$ then
-            ddm_drilldefs.dd_filter_col_01$="INVOICE_BAL"
-            ddm_drilldefs.dd_filter_def_01$="<>0"
-            ddm_drilldefs.filter_prog$=""
-            writerecord(ddm_drilldefs_dev)ddm_drilldefs$
-        endif
-        
-        rem --- Update GL_YTD_AMT drilldown definition
-        drill_def_id$(1)="GL_YTD_AMT"
-        readrecord(ddm_drilldefs_dev,key=drill_def_id$,dom=*next)ddm_drilldefs$
-        if ddm_drilldefs.drill_def_id$=drill_def_id$ then
-            ddm_drilldefs.filter_prog$="glf_ytdamts.aon"
-            writerecord(ddm_drilldefs_dev)ddm_drilldefs$
-        endif
+            rem --- Is this firm using Bank Reconciliation in AR?
+            findrecord(arsParams_dev,key=firm_id$+"AR00",dom=*continue)arsParams$
+            if arsParams.br_interface$<>"Y" then continue
 
-        rem --- Increment progress meter
-        meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
-:       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+this_module$
-        meter_proc_recs=meter_proc_recs+1
-        meter_action$="MTR-LST"
-        gosub disp_meter
-        print(log_dev)meter_text$
-    else
-        rem --- Increment progress meter
-        meter_text$=this_module$+" "+Translate!.getTranslation("AON_NOT","Not")+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
-:       Translate!.getTranslation("AON_SKIP","SKIP")+" "+Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
-        meter_proc_recs=meter_proc_recs+1
-        meter_action$="MTR-LST"
-        gosub disp_meter
-        print(log_dev)meter_text$
-    endif
-    
-rem --- For version 14.00, initialize invoice_bal in apt_invoicehdr
+            rem --- Generate Deposit for each unique receipt date and cash receipt code in ARE_CASHHDR (are-01).
+            datecodeMap!=new HashMap()
+            depositMap!=new HashMap()
+            read(areCashhdr_dev,key=firm_id$,dom=*next)
+            while 1
+                areCashhdr_key$=key(areCashhdr_dev,end=*break)
+                if pos(firm_id$=areCashhdr_key$)<>1 then break
+                readrecord(areCashhdr_dev)areCashhdr$
 
-    this_module$="AP"
-    if installMap!.get(this_module$)="Y" then 
-        rem --- Increment progress meter
-        meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
-:       Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
-        meter_proc_recs=meter_proc_recs+1
-        meter_action$="MTR-LST"
-        gosub disp_meter
-        print(log_dev)meter_text$
+                rem --- Use the same Deposit for all cash sales with the same receipt date and cash receipt code
+                if datecodeMap!.containsKey(areCashhdr.receipt_date$+areCashhdr.cash_rec_cd$) then
+                    rem --- Update total deposit amount for this depoist
+                    deposit_id$=datecodeMap!.get(areCashhdr.receipt_date$+areCashhdr.cash_rec_cd$)
+                    totalPayments=depositMap!.get(deposit_id$)+areCashhdr.payment_amt
+                    depositMap!.put(deposit_id$,totalPayments)
 
-        rem --- Does conversion marker file exist for Initializeing invoice_bal in apt_invoicehdr?
-        conv_marker_name$="v1400_apt-01"
-        conv_marker_file$=dataDir$+conv_marker_name$
-        convmarkerFile!=new File(conv_marker_file$)
-        if convmarkerFile!.exists() then
-            rem --- Verify required files are present
-            missingFiles!=BBjAPI().makeVector()
-            requiredFiles!=BBjAPI().makeVector()
-            requiredFiles!.addAll(java.util.Arrays.asList(convCtrl!.getProperty(conv_marker_name$(2)).split(";")))
-            for i=0 to requiredFiles!.size()-1
-                file!=new File(stbl("+"+this_module$+"DATA")+requiredFiles!.get(i))
-                if !file!.exists() then
-                    missingFiles!.addItem(requiredFiles!.get(i))
-                endif
-            next i
-            if missingFiles!.size()=0 then
-                rem --- Initialize invoice_bal in apt_invoicehdr
-                theFirm$=""
-                call pgmdir$+"apc_rebuildinvbal.aon",theFirm$,status
-                if status=0 then
-                    rem --- Conversion completed successfully
-                    rem --- Increment progress meter
-                    meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
-:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+convCtrl!.getProperty(conv_marker_name$(2))
-                    meter_proc_recs=meter_proc_recs+1
-                    meter_action$="MTR-LST"
-                    gosub disp_meter
-                    print(log_dev)meter_text$
-
-                    rem --- Delete conversion marker file
-                    if convmarkerFile!.delete() then
-                        rem --- Increment progress meter
-                        meter_text$=Translate!.getTranslation("AON_CONV_MARKER_DELETED","Conversion marker file deleted")+": "+conv_marker_file$
-                        meter_proc_recs=meter_proc_recs+1
-                        meter_action$="MTR-LST"
-                        gosub disp_meter
-                        print(log_dev)meter_text$
-                    endif
+                    rem --- Update art_deposit tot_deposit_amt
+                    extractrecord(artDeposit_dev,key=firm_id$+deposit_id$,dom=*endif)artDeposit$
+                    artDeposit.tot_deposit_amt=totalPayments
+                    artDeposit$=field(artDeposit$)
+                    writerecord(artDeposit_dev)artDeposit$
                 else
-                    rem --- Conversion did NOT complete successfully, exit with error message
-                    err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
-:                   Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
-:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+convCtrl!.getProperty(conv_marker_name$(2))+" *****"
-                    goto done
+                    rem --- Get a new deposit
+                    while 1
+                        call stbl("+DIR_SYP")+"bas_sequences.bbj","DEPOSIT_ID",deposit_id$,rd_table_chans$[all],"QUIET"
+
+                        rem --- Don't allow using manually entered deposits from glt_bankother
+                        dim glt15a$:fattr(glt15a$)
+                        readrecord(glt15_dev,key=firm_id$+deposit_id$,knum="AO_TRANS_NO",dom=*next)glt15a$
+                        if glt15a.trans_no$=deposit_id$ and glt15a.trans_type$="D" then continue
+
+                        rem --- Prevent re-using an existing deposit_id
+                        find(artDeposit_dev,key=firm_id$+deposit_id$,dom=*break)
+                    wend
+
+                    rem --- Update total deposit amount for this depoist
+                    totalPayments=areCashhdr.payment_amt
+                    depositMap!.put(deposit_id$,totalPayments)
+                    datecodeMap!.put(areCashhdr.receipt_date$+areCashhdr.cash_rec_cd$,deposit_id$)
+
+                    rem --- Write new art_deposit record
+                    dim artDeposit$:fattr(artDeposit$)
+                    artDeposit.firm_id$=firm_id$
+                    artDeposit.deposit_id$=deposit_id$
+                    artDeposit.deposit_date$=areCashhdr.receipt_date$
+                    artDeposit.description$="v16.00 conversion: "+areCashhdr.receipt_date$+"-"+areCashhdr.cash_rec_cd$
+                    artDeposit.cash_rec_cd$=areCashhdr.cash_rec_cd$
+                    artDeposit.created_user$=sysinfo.user_id$
+                    artDeposit.created_date$=date(0:"%Yd%Mz%Dz")
+                    artDeposit.created_time$=date(0:"%Hz%mz")
+                    artDeposit.trans_status$="E"
+                    artDeposit.batch_no$=areCashhdr.batch_no$
+                    artDeposit.audit_number=0
+                    artDeposit.tot_deposit_amt=totalPayments
+                    artDeposit$=field(artDeposit$)
+                    writerecord(artDeposit_dev)artDeposit$
                 endif
-            else
-                rem --- Required file missing
-                msg_id$="AD_FILE_MISSING"
-                dim msg_tokens$[1]
-                msg_tokens$[1]=missingFiles!.get(0)
-                gosub disp_message
-                err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
-:               Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+missingFiles!.get(0)+" *****"
-                goto done
-            endif
-        else
-            rem --- Increment progress meter
-            meter_text$=Translate!.getTranslation("AON_CONV_MARKER_NOT_FOUND","Conversion marker file not found")+": "+conv_marker_file$
-            meter_proc_recs=meter_proc_recs+1
-            meter_action$="MTR-LST"
-            gosub disp_meter
-            print(log_dev)meter_text$
-        endif
+
+                areCashhdr.deposit_id$=deposit_id$
+                areCashhdr$=field(areCashhdr$)
+                writerecord(areCashhdr_dev)areCashhdr$
+            wend
+        wend
+rem escape; rem wgh ... 8336 ... stopped here
     else
         rem --- Increment progress meter
         meter_text$=this_module$+" "+Translate!.getTranslation("AON_NOT","Not")+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
@@ -217,7 +197,7 @@ done: rem --- Done, close things up
 
     rem --- Complete and close log file
     print(log_dev)
-    print(log_dev)"v1400conversion log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
+    print(log_dev)"v1600conversion log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     close(log_dev)
 
     if completed_successfully then conv_status=0; rem --- no errors encountered
@@ -230,14 +210,14 @@ open_log: rem --- Open log file
     FileObject.makeDirs(new File(logDir$))
 
     rem --- create and open log file
-    log$=logDir$+"/v1400conversion_"+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")+".log"
+    log$=logDir$+"/v1600conversion_"+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")+".log"
     erase log$,err=*next
     string log$
     log_dev=unt
     open(log_dev)log$
             
     rem --- write log header info
-    print(log_dev)"v1400conversion log started: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
+    print(log_dev)"v1600conversion log started: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     print(log_dev)
 
     return
