@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-08-03
+ Report Date:   2016-02-09
  Report Branch: AddonSoftware 15.12
  Last Release:  AddonSoftware 15.11
 =======================================================================================================================================
@@ -358,3 +358,16 @@ Bug 8528: Re-DIM glm02a$ template before reading next record so that
 data from previous record isn't used if the current record isn't found.
 ----
 Modified: gl/src/glu_financials.aon
+
+=======================================================================================================================================
+Revision: 72f167b7f1fdadfbd5ae4df670ab700f66120819
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 2/9/2016 10:24:58 AM
+Message:
+Bug 8525: Handle enabling Credit Action CRAT button in opc_creditmsg.aon
+call instead of ope_ordhdr APFE. Added callpoint!.isEditMode() check to
+opc_creditmsg.aon before enabling CRAT button.
+----
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_ordhdr.cdf
+Modified: op/src/opc_creditmsg.aon
