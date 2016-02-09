@@ -733,21 +733,21 @@ rem --- Enable buttons as appropriate
 			callpoint!.setOptionEnabled("RPRT",0)
 			callpoint!.setOptionEnabled("PRNT",0)
 			callpoint!.setOptionEnabled("TTLS",0)
-			callpoint!.setOptionEnabled("CRAT",0)
+			rem callpoint!.setOptionEnabled("CRAT",0); rem --- handled via opc_creditmsg.aon call below
 		else
 			callpoint!.setOptionEnabled("DINV",0)
 			callpoint!.setOptionEnabled("CINV",0)
 			callpoint!.setOptionEnabled("RPRT",num(callpoint!.getDevObject("reprintable")))
 			callpoint!.setOptionEnabled("PRNT",1)
 			callpoint!.setOptionEnabled("TTLS",1)
-			callpoint!.setOptionEnabled("CRAT",1)
+			rem callpoint!.setOptionEnabled("CRAT",1); rem --- handled via opc_creditmsg.aon call below
 		endif
 	endif
 
 	if !callpoint!.isEditMode() then
 		callpoint!.setOptionEnabled("CINV",0)
 		callpoint!.setOptionEnabled("DINV",0)
-		callpoint!.setOptionEnabled("CRAT",0)
+		rem callpoint!.setOptionEnabled("CRAT",0); rem --- handled via opc_creditmsg.aon call below
 		callpoint!.setOptionEnabled("PRNT",0)
 		callpoint!.setOptionEnabled("RPRT",0)
 	endif
@@ -777,7 +777,7 @@ rem --- Set MODIFIED if totals were changed in the grid
 		endif
 	endif	
 [[OPE_ORDHDR.BPFX]]
-rem --- Disable buttons
+rem --- Disable header buttons
 
 	callpoint!.setOptionEnabled("CRCH",0)
 	callpoint!.setOptionEnabled("COMM",0)
