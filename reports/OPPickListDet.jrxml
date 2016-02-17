@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.0.final using JasperReports Library version 6.2.0  -->
-<!-- 2016-01-28T20:21:47 -->
+<!-- 2016-02-17T11:53:02 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OPPickListDet" language="groovy" pageWidth="554" pageHeight="320" columnWidth="554" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="a46c6452-81bd-4023-bafb-8f0488b8a578">
 	<property name="ireport.zoom" value="2.0"/>
 	<property name="ireport.x" value="0"/>
@@ -45,6 +45,9 @@
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
 	<field name="WHSE_MESSAGE" class="java.lang.String"/>
+	<field name="WHSE_MSG_SFX" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
 	<variable name="PRICE_BigDec" class="java.math.BigDecimal">
 		<variableExpression><![CDATA[$F{PRICE_RAW} == "" ? 0 : new java.math.BigDecimal($F{PRICE_RAW})]]></variableExpression>
 	</variable>
@@ -53,6 +56,9 @@
 	</variable>
 	<variable name="WHSE_MESSAGE_OUT" class="java.lang.String">
 		<variableExpression><![CDATA[$F{WHSE_MESSAGE}]]></variableExpression>
+	</variable>
+	<variable name="WHSE_MSG_SFX_OUT" class="java.lang.String">
+		<variableExpression><![CDATA[$F{WHSE_MSG_SFX}]]></variableExpression>
 	</variable>
 	<group name="LINE_ITEM">
 		<groupExpression><![CDATA[$F{INTERNAL_SEQ_NO}]]></groupExpression>

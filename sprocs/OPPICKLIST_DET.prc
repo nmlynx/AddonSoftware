@@ -45,7 +45,8 @@ rem --- create the in memory recordset for return
 	dataTemplate$ = dataTemplate$ + "item_id:c(1*), item_desc:c(1*), whse:c(2*), "
 	dataTemplate$ = dataTemplate$ + "price_raw:c(1*), price_masked:c(1*), "
 	dataTemplate$ = dataTemplate$ + "location:c(1*),internal_seq_no:c(1*), "
-	dataTemplate$ = dataTemplate$ + "item_is_ls:c(1), linetype_allows_ls:c(1), carton:c(1*), whse_message:c(1*)"
+	dataTemplate$ = dataTemplate$ + "item_is_ls:c(1), linetype_allows_ls:c(1), carton:c(1*), "
+    dataTemplate$ = dataTemplate$ + "whse_message:c(1*), whse_msg_sfx:c(1*)"
 
 	rs! = BBJAPI().createMemoryRecordSet(dataTemplate$)
 	
@@ -106,6 +107,7 @@ rem --- Main
 			linetype_allows_ls$ = "N"
 			item_is_ls$ =         "N"
             whse_message$ =       ""
+            whse_msg_sfx$ =       ""
 			
             read record (ope11_dev, end=*break) ope11a$
 
@@ -207,6 +209,7 @@ line_detail: rem --- Item Detail
 			data!.setFieldValue("ITEM_IS_LS",item_is_ls$)
 			data!.setFieldValue("LINETYPE_ALLOWS_LS",linetype_allows_ls$)
             data!.setFieldValue("WHSE_MESSAGE",whse_message$)
+            data!.setFieldValue("WHSE_MSG_SFX",whse_msg_sfx$)
 
 			rs!.insert(data!)		
 
@@ -217,6 +220,7 @@ line_detail: rem --- Item Detail
 rem --- Determine the warehouse message to send back to header report
 
     whse_message$=iff(pick_or_quote$="P","no_message_for_quotes","")
+    whse_msg_sfx$=""
     
     if mult_wh$="Y" and pick_or_quote$<>"P"
         
@@ -227,22 +231,17 @@ rem --- Determine the warehouse message to send back to header report
         endif
 
         if selected_whse$="" and len(othwhse$)>whse_len
-            whse_message$="All of this order to be filled from these warehouses."
+            whse_message$="AON_ALL_FROM_THESE_WHSES"
         else
             if selected_whse$="" or (selected_whse$<>"" and othwhse$="")
-                whse_message$="All of this order to be filled from this warehouse."
+                whse_message$="AON_ALL_FROM_THIS_WHSE"
             else
-                whse_message$="Portions of this order are to be filled from warehouse "
+                whse_message$="AON_PORTIONS_FROM_WHSES"
                 while len(othwhse$)
-                    whse_message$=whse_message$+othwhse$(1,whse_len)+", "
+                    whse_msg_sfx$=whse_msg_sfx$+othwhse$(1,whse_len)+", "
                     othwhse$=othwhse$(whse_len+1)                    
                 wend
-                whse_message$=whse_message$(1,len(whse_message$)-2)+".";rem strip trailing comma and add period
-
-                if pos(","=whse_message$)>0
-                    rem --- insert grammatical 'and' after final comma
-                    whse_message$=whse_message$(1,pos(","=whse_message$,-1)-1)+" and"+whse_message$(pos(","=whse_message$,-1)+1)
-                endif
+                whse_msg_sfx$=whse_msg_sfx$(1,len(whse_msg_sfx$)-2)+".";rem strip trailing comma and add period
              endif
         endif
     endif
@@ -263,8 +262,9 @@ rem --- return a final row that's empty except for the whse_message$, which will
     data!.setFieldValue("INTERNAL_SEQ_NO","")
     data!.setFieldValue("ITEM_IS_LS","")
     data!.setFieldValue("LINETYPE_ALLOWS_LS","")
-    data!.setFieldValue("WHSE_MESSAGE",whse_message$);rem whse_message$, eventually will contain key to message and get translated back in main report using str() function
-
+    data!.setFieldValue("WHSE_MESSAGE",whse_message$);rem whse_message$ contains key to prop file and gets translated back in main report using str() function
+    data!.setFieldValue("WHSE_MSG_SFX",whse_msg_sfx$)
+    
 	rs!.insert(data!)    
 
 rem --- Tell the stored procedure to return the result set.
