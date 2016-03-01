@@ -52,6 +52,113 @@ rem --- Start progress meter
     meter_action$="WIN-LST"
     gosub disp_meter
     
+rem --- For version 16.00, initialize 3-char sequence_no in ape_invoicedet, ape_recurringdet and apt_invoicedet
+
+    this_module$="AP"
+    if installMap!.get(this_module$)="Y" then 
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:       Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+
+        rem --- If data_source=OCJ, verify can read DDM_TABLE_TPLS for barista_source
+        if convCtrl!.getProperty("data_source")="OCJ" then
+            ddm_table_tpls$=convCtrl!.getProperty("barista_source")+"/barista/sys/data/ddm_table_tpls.dat"
+            open_success=0
+            ddm_table_tpls=unt
+            open(ddm_table_tpls,err=*next)ddm_table_tpls$; open_success=1
+            if open_success then
+                dim ddm_table_tpls$:"table_name:c(16*),file_name:c(30*),template:c(10230*)"
+            else
+                rem --- Required file missing
+                msg_id$="AD_FILE_MISSING"
+                dim msg_tokens$[1]
+                msg_tokens$[1]=ddm_table_tpls$
+                gosub disp_message
+                err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                   Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+ddm_table_tpls$+" *****"
+                goto done
+            endif
+        endif
+
+        rem --- If data_source=OCJ, process ape-11, ape-13 and apt-11 if they exist in addon_source
+        rem --- Because of v16.00 key changes to ape-11, ape-13 and apt-11, they should always fail in OCJ.
+        rem --- So don't bother looking for these files immediately following v16.00 conversion using OCJ.
+        if convCtrl!.getProperty("data_source")="OCJ" then
+            sourceFileVec!=BBjAPI().makeVector()
+            tablealiasVec!=BBjAPI().makeVector()
+            sourceFileVec!.addItem("ape-11");tableAliasVec!.addItem("APE_INVOICEDET")
+            sourceFileVec!.addItem("ape-13");tableAliasVec!.addItem("APE_RECURRINGDET")
+            sourceFileVec!.addItem("apt-11");tableAliasVec!.addItem("APT_INVOICEDET")
+            for source=0 to sourcefileVec!.size()-1
+                rem --- Does source file exist?
+                oldStbl$="+APDATA"
+                oldFile$=sourceFileVec!.get(source)
+                tableAlias$=tableAliasVec!.get(source)
+                gosub get_path_to_old_file
+                source_file$=oldPathToFile$
+                open_success=0
+                source_dev=unt
+                open(source_dev,err=*next)source_file$; open_success=1
+                if open_success then
+                    rem --- Increment progress meter
+                    meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": "+oldFile$
+                    meter_proc_recs=meter_proc_recs+1
+                    meter_action$="MTR-LST"
+                    gosub disp_meter
+                    print(log_dev)meter_text$
+                    
+                    rem --- Get record template for source file
+                    tpl_found=0
+                    findrecord(ddm_table_tpls,key=pad(tableAlias$,16),dom=*next)ddm_table_tpls$;tpl_found=1
+                    if tpl_found then
+                        dim source_tpl$:ddm_table_tpls.template$
+                    else
+                        rem --- Required template missing
+                        meter_text$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+Translate!.getTranslation("AON_VERSION","Verion")+" "+convCtrl!.getProperty("start_version")+
+                    :           " "+Translate!.getTranslation("AON_TEMPLATE_NOT_FOUND","Template not found")+": "+tableAlias$+" *****"
+                        meter_proc_recs=meter_proc_recs+1
+                        meter_action$="MTR-LST"
+                        gosub disp_meter
+                        print(log_dev)meter_text$
+                        continue
+                    endif
+
+                    rem --- Open file in new data dictionary
+                    num_files=1
+                    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                    open_tables$[1]=tableAlias$, open_opts$[1]="OTA"
+                    gosub open_tables
+                    target_dev=num(open_chans$[1])
+                    dim target_tpl$:open_tpls$[1]
+                    wk$=fattr(target_tpl$,"sequence_no")
+                    
+                    rem --- Copy source records to target, converting 2-char sequence_num to 3-char zero filled sequence_no
+                    read(source_dev,key="",dom=*next)
+                    while 1
+                        readrecord(source_dev,end=*break)source_tpl$
+                        call stbl("+DIR_PGM")+"adc_copyfile.aon",source_tpl$,target_tpl$,status
+                        target_tpl.sequence_no$=pad(source_tpl.sequence_num$, dec(wk$(10,2)), "R", "0")
+
+                        rem --- Write target record
+                        writerecord(target_dev)target_tpl$
+                    wend
+                endif
+            next source
+        endif
+    else
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_NOT","Not")+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:       Translate!.getTranslation("AON_SKIP","SKIP")+" "+Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+    endif
+    
 rem --- For version 16.00, initialize changes for Bank Reconciliation
 
     this_module$="AR"
@@ -201,6 +308,32 @@ done: rem --- Done, close things up
 
     if completed_successfully then conv_status=0; rem --- no errors encountered
 	goto std_exit
+
+get_path_to_old_file: rem --- Locate data directory in old Addon installation
+    rem --- IN: oldStbl$ - STBL in old addon.syn that points to the data directory where the old file is located
+    rem --- IN: oldFile$ - name of old file to get path for
+    rem --- OUT: oldPathToFile$ - full path to requested file, including the file name
+    oldPathToFile$=oldFile$
+
+    rem --- Open old aon/config/addon.syn
+    open_success=0
+    old_addonsyn_dev=unt
+    open(old_addonsyn_dev,isz=-1,err=*next)convCtrl!.getProperty("addon_source")+"/aon/config/addon.syn"; open_success=1
+    if !open_success then return
+
+    rem --- Get specified data directory from old addon.syn
+    key$="=SET "+oldStbl$+"="
+    while 1
+        read(old_addonsyn_dev,end=*break)record$
+        if(pos(key$=record$)) then
+            xpos=pos(key$=record$)
+            oldPathToFile$=record$(xpos+len(key$))+oldFile$
+            break
+        endif
+    wend
+    close(old_addonsyn_dev)
+
+    return
 
 open_log: rem --- Open log file
            

@@ -833,6 +833,7 @@ rem --- Retrieve value$ if applicable
 
         if new_fieldlist.name$[field]=$$ then continue
         value$=field(old_rec$,old_fieldlist.name$[field],err=*continue)
+
 rem --- Populate new internal sequence from old display sequence
 
         keyval$ = table_alias$+"."+new_fieldlist.name$[field]
@@ -1115,6 +1116,13 @@ rem --- Initialize NS_ITEM_ID in POE_REQDET, POE_PODET, POE_QADET, POE_RECDET, a
         else
             new_rec.ns_item_id$(1)=""
         endif
+    endif
+
+rem --- In ARE_INVOICEDET, ARE_RECURRINGDET and ART_INVOICEDET, convert 2-char SEQUENCE_NUM to 3-char zero filled SEQUENCE_NO.
+    
+    if pos(cvs(datafile$,8)="ape-11;ape-13;apt-11",7) then
+        wk$=fattr(new_rec$,"sequence_no")
+        new_rec.sequence_no$=pad(cvs(new_rec.sequence_no$,3), dec(wk$(10,2)), "R", "0")
     endif
 
 rem --- Initialize BMM_BILLOPER.WO_OP_REF and SFE_WOOPRTN.WO_OP_REF
