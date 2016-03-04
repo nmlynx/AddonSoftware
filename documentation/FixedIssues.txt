@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-03-02
+ Report Date:   2016-03-03
  Report Branch: AddonSoftware 15.13
  Last Release:  AddonSoftware 15.12
 =======================================================================================================================================
@@ -58,7 +58,6 @@ By" date is past the aging date.
 ----
 Modified: ap/src/apr_agingreport.aon
 
-
 =======================================================================================================================================
 Revision: 1bfd6856aaa24f4fd8197661f0be3b1fd32188f9
 Author: Bill Halsted <bhalsted@basis.com>
@@ -70,3 +69,14 @@ getColumnData() instead of getControl().
 Modified: data/bar/opm_frtterms.xml
 Modified: data/cdf/opm_frtterms.cdf
 
+=======================================================================================================================================
+Revision: 87cb9154b789963e0e0eea510e352314222e5847
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 3/3/2016 5:05:07 PM
+Message:
+Bug 8541: For a 12 period fiscal calendar, the 1st and 13th columns are
+for the filter selection period but different years.
+----
+Modified: gl/src/gle_13period.aon
+Modified: gl/src/glr_13period.aon
+Modified: gl/src/glu_13period.aon
