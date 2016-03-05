@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-03-03
+ Report Date:   2016-03-04
  Report Branch: AddonSoftware 15.13
  Last Release:  AddonSoftware 15.12
 =======================================================================================================================================
@@ -80,3 +80,26 @@ for the filter selection period but different years.
 Modified: gl/src/gle_13period.aon
 Modified: gl/src/glr_13period.aon
 Modified: gl/src/glu_13period.aon
+
+=======================================================================================================================================
+Revision: 2145566fa04ef9fff8b8db1da6b270baf31adea5
+Author: chawkins <chawkins@basis.com>
+Date: 3/4/2016 10:49:37 AM
+Message:
+Per bug 8555, set the "don't print if blank" property for the subreport
+element in the Invoice Detail report.
+----
+Modified: reports/OPInvoiceDet.jasper
+Modified: reports/OPInvoiceDet.jrxml
+
+=======================================================================================================================================
+Revision: 35d2629e514a3217588065fcecda8d2de43eda15
+Author: chawkins <chawkins@basis.com>
+Date: 3/4/2016 4:04:25 PM
+Message:
+Per bug 8510; moved code to test check for existing open check from ARNF
+to the CHECK_NO AVAL.
+----
+Modified: data/bar/ape_mancheckhdr.xml
+Modified: data/cdf/ape_mancheckhdr.cdf
+
