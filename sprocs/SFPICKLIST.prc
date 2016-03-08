@@ -423,9 +423,6 @@ sproc_error:rem --- SPROC error trap/handler
     rd_err_text$="", err_num=err
     if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     x$=stbl("+THROWN_ERR","TRUE")
-    gns!=BBjAPI().getExistingNamespace("SFPickList.Session_"+info31$)
-    gns!.setValue("THROWN_ERR", "[pgm "+pgm(-2)+"] err "+str(err_num)+" at "+str(tcb(5))+": "+rd_err_text$)
-
     throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
 	
 std_exit:

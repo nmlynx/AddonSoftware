@@ -18,9 +18,6 @@ rem --- All Rights Reserved
     seterr std_error
     setesc std_error
 
-    gns!=BBjAPI().getNamespace("SFPickList","Session_"+hta(info(3,1)),1)
-    gns!.setValue("THROWN_ERR","")
-
     use ::bbjasper.bbj::BBJasperReport
     use ::bbjasper.bbj::BBJasperViewerWindow
     use ::bbjasper.bbj::BBJasperViewerControl
@@ -452,16 +449,7 @@ std_error: rem --- Standard error handler (18Nov2014)
     endif
 
     rd_err_text$=""
-
-    gns!=BBjAPI().getExistingNamespace("SFPickList.Session_"+hta(info(3,1)),err=*next)
-    if gns!<>null()
-        rd_err_text$=gns!.getValue("THROWN_ERR",err=*endif)
-    endif
-
-    if rd_err_text$=""
-        if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    endif
-
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$,lock_byte,lock_chan
     if pos("ESCAPE"=rd_err_act$) seterr 0; setesc 0
     if pos("RETRY"=rd_err_act$) retry
