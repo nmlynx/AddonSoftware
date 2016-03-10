@@ -312,7 +312,7 @@ rem --- Initialize new detail
     apt11a.ap_type$=ape04a.ap_type$
     apt11a.vendor_id$=ape04a.vendor_id$
     apt11a.ap_inv_no$=ape04a.ap_inv_no$
-    apt11a.sequence_n0$=str(lastseq+1:"000")
+    apt11a.sequence_no$=str(lastseq+1:"000")
     
     extract record (apt11_dev,key=apt11a.firm_id$+apt11a.ap_type$+apt11a.vendor_id$+apt11a.ap_inv_no$+apt11a.sequence_no$,dom=*next)xwk$;rem Advisory Locking
 
