@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-03-09
+ Report Date:   2016-03-14
  Report Branch: AddonSoftware 15.13
  Last Release:  AddonSoftware 15.12
 =======================================================================================================================================
@@ -209,3 +209,15 @@ Per bug 8566; corrected issue that will return incorrect fiscal year
 when not running on a calendar-based FY.
 ----
 Modified: ad/src/adc_fiscalperyr.aon
+
+=======================================================================================================================================
+Revision: 30a8456debec973d53b24164b6d6744dbab17b75
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 3/14/2016 3:49:52 PM
+Message:
+Bug 8570: Initialized the default "GL Period" to the SF Current Period
+instead of that month's numeric value, and displayed Date Range for the
+entered period.
+----
+Modified: data/bar/sfr_clsdwovar.xml
+Modified: data/cdf/sfr_clsdwovar.cdf
