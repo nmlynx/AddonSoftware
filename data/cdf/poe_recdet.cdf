@@ -781,6 +781,7 @@ wend
 
 rem --- If WO present, remove link in corresponding wo detail lines
 rem --- Use start WO as WO may have been changed without saving before the delete.
+if callpoint!.getDevObject("SF_installed")="Y" then
 	wo_no_was$=callpoint!.getDevObject("start_wo_no")
 	wo_seq_ref_was$=callpoint!.getDevObject("start_wo_seq_ref")
 	if cvs(wo_no_was$,3)<>""
@@ -809,6 +810,7 @@ rem --- Use start WO as WO may have been changed without saving before the delet
 			write record (sfe_wosub)sfe_wosub$
 		endif
 	endif		
+endif
 [[POE_RECDET.ADGE]]
 rem --- if there are order lines to display/access in the sales order line item listbutton, set the LDAT and list display
 rem --- get the detail grid, then get the listbutton within the grid; set the list on the listbutton, and put the listbutton back in the grid
