@@ -50,7 +50,7 @@ rem --- Cannot delete a Deposit that contains receipts
 	are01_dev=fnget_dev("@ARE_CASHHDR")
 	dim are01a$:fnget_tpl$("@ARE_CASHHDR")
 	are01_trip$=firm_id$+callpoint!.getColumnData("ARE_DEPOSIT.DEPOSIT_ID")
-	readrecord(are01_dev,key=are01_trip$,knum="AO_DEPOSIT",dom=*next)are01a$
+	readrecord(are01_dev,key=are01_trip$,knum="AO_DEPOSIT",dir=0,dom=*next)are01a$
 	are01_key$=key(are01_dev,end=*next)
 	if pos(are01_trip$=are01_key$)=1 then
 		rem --- Warn Deposit contains receipts
