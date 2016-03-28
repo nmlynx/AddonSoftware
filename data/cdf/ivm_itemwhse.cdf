@@ -9,6 +9,8 @@ rem --- Get total on Open PO lines
 
 	podet_dev=fnget_dev("POE_PODET")
 	dim podet_tpl$:fnget_tpl$("POE_PODET")
+	pohdr_dev=fnget_dev("POE_POHDR")
+	dim pohdr_tpl$:fnget_tpl$("POE_POHDR")
 
 	whse$=callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
 	item$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
@@ -24,6 +26,11 @@ rem --- Get total on Open PO lines
 		if firm_id$<>podet_tpl.firm_id$ break
 		if whse$<>podet_tpl.warehouse_id$ break
 		if item$<>podet_tpl.item_id$ break
+
+		rem --- Skip if this is a drop ship item
+		findrecord(pohdr_dev,key=firm_id$+podet_tpl.po_no$,dom=*continue)pohdr_tpl$
+		if pohdr_tpl.dropship$="Y" then continue
+
 		po_qty = po_qty + (podet_tpl.qty_ordered - podet_tpl.qty_received)*podet_tpl.conv_factor
 	wend
 
@@ -228,7 +235,7 @@ if (callpoint!.getUserInput()<"A" or callpoint!.getUserInput()>"Z") and cvs(call
 [[IVM_ITEMWHSE.BSHO]]
 rem --- Open extra tables
 
-num_files=9
+num_files=10
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="POE_PODET",open_opts$[1]="OTA"
 open_tables$[2]="OPE_ORDDET",open_opts$[2]="OTA"
@@ -241,6 +248,7 @@ open_tables$[6]="OPE_ORDHDR",open_opts$[6]="OTA"
 open_tables$[7]="OPC_LINECODE",open_opts$[7]="OTA"
 open_tables$[8]="POE_RECHDR",open_opts$[8]="OTA"
 open_tables$[9]="POE_RECDET",open_opts$[9]="OTA"
+open_tables$[10]="POE_POHDR",open_opts$[10]="OTA"
 gosub open_tables
 
 rem --- Get IV params
