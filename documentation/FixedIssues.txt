@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-03-29
+ Report Date:   2016-03-30
  Report Branch: AddonSoftware 15.13
  Last Release:  AddonSoftware 15.12
 =======================================================================================================================================
@@ -384,3 +384,15 @@ Bug 8586: Correct padding of OP Standard Message Codes in SPROCs.
 Modified: sprocs/OPINVOICE_HDR.prc
 Modified: sprocs/OPPICKLIST_HDR.prc
 Modified: sprocs/OP_HIST_INVOICE_HDR.prc
+
+=======================================================================================================================================
+Revision: 5b927f13e2c88f70e9303753f4fdd51cbf6a4176
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 3/30/2016 8:52:11 AM
+Message:
+Bug 8589: Eliminated use of Production Variance Account for GL postings
+for negative inventory production quantities. Now GL postings for
+negative inventory production quantities simply revers GL postings for
+positive quantities.
+----
+Modified: bm/src/bmr_invproduction.aon
