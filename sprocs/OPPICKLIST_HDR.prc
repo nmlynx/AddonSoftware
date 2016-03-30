@@ -363,8 +363,8 @@ get_stdMessage: rem --- Get Standard Message lines
         wend
     endif
 
-	stdMessage$ = stdMessage$ + PAD(" ", (max_stdMsg_lines * stdMsg_len) - LEN(stdMessage$))
-	
+	stdMessage$ = pad(stdMessage$, (max_stdMsg_lines * stdMsg_len))
+		
     return
 
 rem --- Functions
