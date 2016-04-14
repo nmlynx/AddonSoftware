@@ -28,6 +28,7 @@ rem --- Addon dashboards
 	use ::reporting/bbjasper/bbjasper.bbj::BBJasperReport
 	use ::BBUtils.bbj::BBUtils
     use ::bbtranslator.bbj::BBTranslator
+    use ::sys/prog/bao_utilities.bbj::BarUtils
 
 	use java.awt.Color
 	use java.awt.Font
@@ -137,12 +138,11 @@ rem ==============================================
         flat=0 
         orientation=BarChartWidget.getORIENTATION_VERTICAL() 
         legend=0
-        connectString$=aon_url$
 
         rem --- params for calling SPROC
         sql$="CALL ARAGINGTOT_BAR ('"+firm_id$+"', '"+masks$+"', '"+barista_wd$+"')"
 
-        agingTotalsBarDashboardWidget! = acctDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+        agingTotalsBarDashboardWidget! = BarUtils.addBarChartDashboardWidget(acctDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,sql$)
         agingTotalsWidget!=agingTotalsBarDashboardWidget!.getWidget()
         agingTotalsWidget!.setFontScalingFactor(0.45)
         agingTotalsWidget!.setChartRangeAxisToCurrency()
@@ -168,7 +168,6 @@ rem ==============================================
 		title$ = Translate!.getTranslation("AON_GL_INCOME_ACCOUNT_TOTALS")
 		previewText$=Translate!.getTranslation("AON_GENERAL_LEDGER_INCOME_ACCOUNT_TOTALS_BY_YEAR_DISPLAYED_IN_A_GRID")
 		previewImage$=preview_path$+"glinctot_grd.png"
-		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
 		include_type$="J"; rem "Include Current and Prior Actual summaries; includes GL Record IDs 0, 2
@@ -177,7 +176,7 @@ rem ==============================================
 
 		sql$="CALL GLINCTOT_GRD ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
 
-		incomeGridDashboardWidget! = acctDashboardCategory!.addGridDashboardWidget(name$,title$,previewText$,previewImage$,connectString$,sql$)
+		incomeGridDashboardWidget! = BarUtils.addGridDashboardWidget(acctDashboardCategory!,name$,title$,previewText$,previewImage$,sql$)
 		gridWidget!=incomeGridDashboardWidget!.getWidget()
 		gridWidget!.setColumnAlignment(0,GridWidget.getHORIZONTAL_ALIGNMENT_LEFT())
         gridWidget!.setColumnAlignment(2,GridWidget.getHORIZONTAL_ALIGNMENT_RIGHT())
@@ -231,7 +230,6 @@ rem ==============================================
 		legend=1
 		chartTitle$ = ""
 		flat=0
-		connectString$=aon_url$
 
 		rem --- params for calling SPROC
 		include_type$="A"; rem "Include Current vs Prior years' data; summarized by period (filter values A/0)
@@ -240,7 +238,7 @@ rem ==============================================
 
 		sql$="CALL GLCMPINC_BAR ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
 
-		incomeComparisonBarDashboardWidget! = acctDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		incomeComparisonBarDashboardWidget! = BarUtils.addBarChartDashboardWidget(acctDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,sql$)
 		incCmpWidget!=incomeComparisonBarDashboardWidget!.getWidget()
 		incCmpWidget!.setFontScalingFactor(0.45)
         incCmpWidget!.setChartRangeAxisToCurrency()
@@ -299,14 +297,13 @@ rem ==============================================
 		flat=0 
 		orientation=BarChartWidget.getORIENTATION_VERTICAL() 
 		legend=0
-		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
 		include_type$="A"; rem "Include Current Year Actual totals (no data/period filtering)
 
 		sql$="CALL GLBNKBAL_BAR ('"+firm_id$+"', '"+include_type$+"', '"+masks$+"', '"+barista_wd$+"')"
 		
-		bankacctBarChartDashboardWidget! = acctDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		bankacctBarChartDashboardWidget! = BarUtils.addBarChartDashboardWidget(acctDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,sql$)
 		acctWidget! = bankacctBarChartDashboardWidget!.getWidget()
 		acctWidget!.setDomainLabelAngle(BarChartWidget.getLABEL_POSITION_DOWN_45())
         acctWidget!.setChartRangeAxisToCurrency()
@@ -336,7 +333,6 @@ rem ==============================================
 		chartTitle$ = ""
 		flat=1 
 		legend=0		
-		connectString$=aon_url$
 				
 		rem --- params for calling SPROC
 		include_type$="A"; rem "Include Current Year Actual totals
@@ -344,7 +340,7 @@ rem ==============================================
 
 		sql$="CALL GLBNKBAL_RNG ('"+firm_id$+"', '"+include_type$+"', '"+str(min_amt)+"', '"+masks$+"', '"+barista_wd$+"')"
 
-		bankacctRingChartDashboardWidget! = acctDashboardCategory!.addRingChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,flat,legend,connectString$,sql$)
+		bankacctRingChartDashboardWidget! = BarUtils.addRingChartDashboardWidget(acctDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,flat,legend,sql$)
 		
 		rem Modify the chart
 		ringChartWidget! = bankacctRingChartDashboardWidget!.getWidget()
@@ -387,10 +383,12 @@ rem ==============================================
 		previewText$=Translate!.getTranslation("AON_EXPENSE_YEAR_TO_DATE_BREAKDOWN_DISPLAYED_IN_A_PIE_CHART")
 		previewImage$=preview_path$+"glexptot_pie.png"
 		chartTitle$ = ""
+		domainTitle$=""
+		rangeTitle$=""
 		flat = 0
+		orientation=0
 		legend=0
 		numSlices=8
-		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
 		include_type$="A"; rem "Include Current Year Actual totals (no data/period filtering)
@@ -399,7 +397,7 @@ rem ==============================================
 
 		sql$="CALL GLEXPTOT_PIE ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
 
-		expPieChartDashboardWidget! = acctDashboardCategory!.addPieChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,flat,legend,connectString$,sql$)
+		expPieChartDashboardWidget! = BarUtils.addPieChartDashboardWidget(acctDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,flat,legend,sql$)
 		expPieWidget! = expPieChartDashboardWidget!.getWidget()
 rem		expPieWidget!.setChartColors("#860102,#cc2200,#e14900,#fe7600,#ff9c01,#fdce2e")
 		expPieWidget!.setGradientShadingAmount(.05)
@@ -445,7 +443,6 @@ rem =======================================
 		flat=1 
 		orientation=LineChartWidget.getORIENTATION_VERTICAL() 
 		legend=1
-		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
 
@@ -453,7 +450,7 @@ rem =======================================
 
 		sql$="CALL GLINCEXP_ARE ('"+firm_id$+"', '"+include_type$+"', '"+masks$+"', '"+barista_wd$+"')"
 
-		incExpAAreaChartDashboardWidget! = acctDashboardCategory!.addAreaChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,orientation,legend,connectString$,sql$)
+		incExpAAreaChartDashboardWidget! = BarUtils.addAreaChartDashboardWidget(acctDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,orientation,legend,sql$)
 		incExpAWidget! = incExpAAreaChartDashboardWidget!.getWidget()
 		
 		incExpAWidget!.setFontScalingFactor(0.45)
@@ -522,14 +519,13 @@ rem ==============================================
 		flat=0 
 		orientation=BarChartWidget.getORIENTATION_VERTICAL() 
 		legend=0
-		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
 		num_to_list$ = "5"; rem <<============= HARDCODED =========
 	
 		sql$="CALL SATOPCST_BAR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
 		
-		topCustsBarChartDashboardWidget! = salesDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		topCustsBarChartDashboardWidget! = BarUtils.addBarChartDashboardWidget(salesDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,sql$)
 		topCustsWidget! = topCustsBarChartDashboardWidget!.getWidget()
 		topCustsWidget!.setFontScalingFactor(0.45)
 		topCustsWidget!.setDomainLabelAngle(BarChartWidget.getLABEL_POSITION_DOWN_45())
@@ -557,7 +553,6 @@ rem ==============================================
 		flat=0 
 		orientation=BarChartWidget.getORIENTATION_HORIZONTAL() 
 		legend=1
-		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
         include_type$="1"
@@ -565,7 +560,7 @@ rem ==============================================
 	
 		sql$="CALL SATOPCST_SBR ('"+firm_id$+"', '"+include_type$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
 
-		topCustsStackedBarChartDashboardWidget! = salesDashboardCategory!.addStackedBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		topCustsStackedBarChartDashboardWidget! = BarUtils.addStackedBarChartDashboardWidget(salesDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,sql$)
 		topCustsWidget! = topCustsStackedBarChartDashboardWidget!.getWidget()
 		
 		topCustsWidget!.setFontScalingFactor(0.45)
@@ -611,14 +606,13 @@ rem ==============================================
         flat=0 
         orientation=BarChartWidget.getORIENTATION_VERTICAL() 
         legend=0
-        connectString$=aon_url$
         
         rem --- params for calling SPROC
         num_to_list$ = "5"; rem <<============= HARDCODED =========
     
         sql$="CALL SAREPTOT_BAR ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
 
-        repsalesBarChartDashboardWidget! = salesDashboardCategory!.addBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+        repsalesBarChartDashboardWidget! = BarUtils.addBarChartDashboardWidget(salesDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,sql$)
         repsalesWidget! = repsalesBarChartDashboardWidget!.getWidget()
         repsalesWidget!.setDomainLabelAngle(BarChartWidget.getLABEL_POSITION_DOWN_45())
         repsalesWidget!.setFontScalingFactor(0.45)
@@ -654,7 +648,6 @@ rem ==============================================
 		flat=0 
 		orientation=BarChartWidget.getORIENTATION_HORIZONTAL() 
 		legend=1
-		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
         include_type$="1"
@@ -662,7 +655,7 @@ rem ==============================================
 	
 		sql$="CALL SATOPREP_SBR ('"+firm_id$+"', '"+include_type$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
 
-		toprepSStackedBarChartDashboardWidget! = salesDashboardCategory!.addStackedBarChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		toprepSStackedBarChartDashboardWidget! = BarUtils.addStackedBarChartDashboardWidget(salesDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,sql$)
 		toprepWidget! = toprepSStackedBarChartDashboardWidget!.getWidget()
 		
 		toprepWidget!.setDomainLabelAngle(BarChartWidget.getLABEL_POSITION_DOWN_45())
@@ -706,14 +699,13 @@ rem ==============================================
 		flat=0 
 		legend=0
 		numSlices=8
-		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
 		num_to_list$ = "5"; rem <<============= HARDCODED =========
 	
 		sql$="CALL SATOPREP_PIE ('"+firm_id$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
 
-		toprepPPieChartDashboardWidget! = salesDashboardCategory!.addPieChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,flat,legend,connectString$,sql$)
+		toprepPPieChartDashboardWidget! = BarUtils.addPieChartDashboardWidget(salesDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,flat,legend,sql$)
 		toprepPWidget! = toprepPPieChartDashboardWidget!.getWidget()
 
 		toprepPWidget!.setFontScalingFactor(0.45)
@@ -748,7 +740,6 @@ rem GOTO TMPSKIP_SAREPS
 		flat=1 
 		orientation=LineChartWidget.getORIENTATION_VERTICAL() 
 		legend=1
-		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
 		num_to_list$ = "5"; rem <<============= HARDCODED =========. Also Note: SATOPREP_LIN sets a MAX of 5
@@ -756,7 +747,7 @@ rem GOTO TMPSKIP_SAREPS
 		
 		sql$="CALL SATOPREP_LIN ('"+firm_id$+"', '"+include_type$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
 
-		topRepsLLineChartDashboardWidget! = salesDashboardCategory!.addLineChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,connectString$,sql$)
+		topRepsLLineChartDashboardWidget! = BarUtils.addLineChartDashboardWidget(salesDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,sql$)
 		topRepsLWidget! = topRepsLLineChartDashboardWidget!.getWidget()
 		
 		topRepsLWidget!.setFontScalingFactor(0.45)
@@ -787,7 +778,6 @@ rem =======================================
 		flat=1 
 		orientation=LineChartWidget.getORIENTATION_VERTICAL() 
 		legend=1
-		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
 		num_to_list$ = "5"; rem <<============= HARDCODED =========. Also Note: SATOPREP_SAR sets a MAX of 5
@@ -795,7 +785,7 @@ rem =======================================
 		
 		sql$="CALL SATOPREP_SAR ('"+firm_id$+"', '"+include_type$+"', '"+year$+"', '"+num_to_list$+"', '"+masks$+"', '"+barista_wd$+"')"
 
-		topRepsSAAreaChartDashboardWidget! = salesDashboardCategory!.addStackedAreaChartDashboardWidget(name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,orientation,legend,connectString$,sql$)
+		topRepsSAAreaChartDashboardWidget! = BarUtils.addStackedAreaChartDashboardWidget(salesDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,orientation,legend,sql$)
 		topRepsSAWidget! = topRepsSAAreaChartDashboardWidget!.getWidget()
 		
 		topRepsSAWidget!.setFontScalingFactor(0.45)
@@ -857,8 +847,7 @@ rem --- Assign input values to local variables
 		previewText$=Translate!.getTranslation("AON_DRILLDOWN_SALES_REPORT_FOR_MONTH/YEAR_DISPLAYED_IN_A_JASPER_VIEWER")
 		previewImage$=preview_path$+"slsbycst_jas.png"
 		reportFile$ = report_path$+"SalesByCustType.jasper"
-		connectString$=aon_url$
-		report! = new BBJasperReport(reportFile$,connectString$)
+		report! = BarUtils.getBBJasperReport(reportFile$)
 
 		report!.putParam("FIRM_ID",firm_id$)
 		report!.putParam("FIRM_NAME",firm_name$)
@@ -942,7 +931,6 @@ rem ==============================================
 		title$ = Translate!.getTranslation("AON_WOS_LINKED_TO_SOS")
 		previewText$=Translate!.getTranslation("AON_WORK_ORDERS_LINKED_TO_SALES_ORDERS_DISPLAYED_IN_A_GRID")
 		previewImage$=preview_path$+"sfwossos_grd.png"
-		connectString$=aon_url$
 		
 		rem --- params for calling SPROC
 		wo_include_type$="A"; rem "Default to Open WOs only
@@ -950,7 +938,7 @@ rem ==============================================
 
 		sql$="CALL SFWOSSOS_GRD ('"+firm_id$+"', '"+wo_include_type$+"', '"+so_include_type$+"', '"+masks$+"', '"+barista_wd$+"')"
 
-		woSOGridDashboardWidget! = mfgDashboardCategory!.addGridDashboardWidget(name$,title$,previewText$,previewImage$,connectString$,sql$)
+		woSOGridDashboardWidget! = BarUtils.addGridDashboardWidget(mfgDashboardCategory!,name$,title$,previewText$,previewImage$,sql$)
 		woSOgridWidget!=woSOGridDashboardWidget!.getWidget()
 		woSOgridWidget!.setColumnAlignment(3,GridWidget.getHORIZONTAL_ALIGNMENT_RIGHT())
 		woSOgridWidget!.setColumnAlignment(0,GridWidget.getHORIZONTAL_ALIGNMENT_LEFT())
