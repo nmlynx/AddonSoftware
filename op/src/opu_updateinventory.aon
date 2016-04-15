@@ -795,7 +795,7 @@ ar_open_invoice_detail: rem --- AR Open Invoice Detail
             rem --- Write Manual Ship-To History
             if ih$="Y" and inv_hist_flg$="Y" then
                 extract record (ope31_dev,key=ope01a.firm_id$+ope01a.customer_id$+ope01a.order_no$+ope01a.ar_inv_no$,dom=*endif) ope31a$; rem Advisory Locking
-                if ope31_found and ope31a.trans_status$="R" then
+                if ope31a.trans_status$="R" then
                     ope31a.trans_status$="U"     
                     ope31a.mod_user$=sysinfo.user_id$
                     ope31a.mod_date$=date(0:"%Yd%Mz%Dz")

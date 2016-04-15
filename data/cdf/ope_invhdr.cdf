@@ -1520,6 +1520,7 @@ rem --- Write/Remove manual ship to file
 		ordship_tpl.firm_id$     = firm_id$
 		ordship_tpl.customer_id$ = cust_id$
 		ordship_tpl.order_no$    = order_no$
+		ordship_tpl.ar_inv_no$ = invoice_no$
 		ordship_tpl.name$        = callpoint!.getColumnData("<<DISPLAY>>.SNAME")
 		ordship_tpl.addr_line_1$ = callpoint!.getColumnData("<<DISPLAY>>.SADD1")
 		ordship_tpl.addr_line_2$ = callpoint!.getColumnData("<<DISPLAY>>.SADD2")
@@ -1529,6 +1530,19 @@ rem --- Write/Remove manual ship to file
 		ordship_tpl.state_code$  = callpoint!.getColumnData("<<DISPLAY>>.SSTATE")
 		ordship_tpl.zip_code$    = callpoint!.getColumnData("<<DISPLAY>>.SZIP")
 		ordship_tpl.cntry_id$    = callpoint!.getColumnData("<<DISPLAY>>.SCNTRY_ID")
+
+		ordship_tpl.created_user$   = sysinfo.user_id$
+		ordship_tpl.created_date$   = date(0:"%Yd%Mz%Dz")
+		ordship_tpl.created_time$   = date(0:"%Hz%mz")
+		ordship_tpl.mod_user$   = ""
+		ordship_tpl.mod_date$   = ""
+		ordship_tpl.mod_time$   = ""
+		ordship_tpl.trans_status$   = "E"
+		ordship_tpl.arc_user$   = ""
+		ordship_tpl.arc_date$   = ""
+		ordship_tpl.arc_time$   = ""
+		ordship_tpl.batch_no$   = ""
+		ordship_tpl.audit_number   = 0
 
 		ordship_tpl$ = field(ordship_tpl$)
 		write record (ordship_dev) ordship_tpl$
