@@ -1,12 +1,174 @@
 =======================================================================================================================================
-Report Branch: AddonSoftware Development Build
+ Report Date:   2016-04-18
+ Report Branch: AddonSoftware 16.00
+ Last Release:  AddonSoftware 15.14
 =======================================================================================================================================
-Development builds are generated daily.
 
-AddonSoftware Co-op Developers can access code changes and bug fixes for the Development Builds via Git.
+=======================================================================================================================================
+Revision: 48dacd43bd7b9cb561a701f9b902b23300a559dc
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/4/2016 1:11:10 PM
+Message:
+Bug 7517: Removed FEDERAL_ID column from ARS_REPORT table.
+----
+Modified: data/ars_report
+Modified: data/bar/ars_report.xml
 
-Information about code changes and bug fixes for RELEASE builds can be found at:
+=======================================================================================================================================
+Revision: 3d6a543863a75f17604f0b48cf1ce5cab64ad864
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/7/2016 9:32:10 AM
+Message:
+Bug 6650: Added missing deliminator character for numeric fields. For
+character fields, removed bogus deliminator definition where there was
+no deliminator character.
+----
+Modified: data/apm-01
+Modified: data/apm-02
+Modified: data/apm-06
+Modified: data/apt-01
+Modified: data/are-01
+Modified: data/are-02
+Modified: data/are-21
+Modified: data/bar/ape_payselect.xml
+Modified: data/bar/apm_payaddr.xml
+Modified: data/bar/apm_vendhist.xml
+Modified: data/bar/apm_vendmast.xml
+Modified: data/bar/apm_vendrepl.xml
+Modified: data/bar/apr_receipts.xml
+Modified: data/bar/apr_vendinv.xml
+Modified: data/bar/apt_invoicehdr.xml
+Modified: data/bar/apw_purchjrn.xml
+Modified: data/bar/apx_export1099.xml
+Modified: data/bar/are_cashgl.xml
+Modified: data/bar/are_cashhdr.xml
+Modified: data/bar/are_cnvinv.xml
+Modified: data/bar/are_finchg.xml
+Modified: data/bar/are_invdet.xml
+Modified: data/bar/are_invhdr.xml
+Modified: data/bar/ivc_itemavail.xml
+Modified: data/bar/ivm_itemmast.xml
+Modified: data/bar/ivm_itemvend.xml
+Modified: data/bar/ivm_itemwhse.xml
+Modified: data/bar/ivm_lsmaster.xml
+Modified: data/bar/ope_ordship.xml
+Modified: data/bar/opt_invship.xml
+Modified: data/bar/sfe_timedatedet.xml
+Modified: data/ivm-01
+Modified: data/ivm-05
+Modified: data/ivm-07
+Modified: data/opt-31
 
-https://bugs.basis.com
+=======================================================================================================================================
+Revision: b75b8a9a1c43d3a6eab6ff73130d4083d1814cc6
+Author: chawkins <chawkins@basis.com>
+Date: 2/4/2016 2:27:43 PM
+Message:
+As part of Jasper Pick List enhancement:
+Fixed Bug 8521 by correcting callpoint!.setStatus(“RECORD:”...) in do_picklist subroutine of the ope_ordhdr callpoint code.
+Fixed Bug 8523 by reading ope_ordhdr (opt-01) in ope_creditaction form with the correct KNUM and KEY.
+----
+Modified: data/bar/ope_creditaction.xml
+Modified: data/bar/ope_credmaint.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/bar/opr_oderpickdmd.xml
+Modified: data/cdf/ope_creditaction.cdf
+Modified: data/cdf/ope_credmaint.cdf
+Modified: data/cdf/ope_ordhdr.cdf
+Added: data/cdf/opr_oderpickdmd.cdf
+Modified: op/src/opc_creditaction.aon
+Modified: op/src/opc_picklist.aon
+Modified: op/src/opr_pick_demand.aon
+Modified: op/src/opr_picklist.aon
+Modified: sprocs/OPPICKLIST_DET.prc
 
+=======================================================================================================================================
+Revision: 26cef78d095231a022df6a674a4f757e07746b09
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 3/10/2016 2:00:53 PM
+Message:
+Bug 8567: Corrected 'apt11a.sequence_no$' typo from ER 8543.
+----
+Modified: ap/src/apu_chkregister.aon
+Revision: c04c5e50ba3349c4f2e5841fd2953ab88ba3cc2d
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 3/28/2016 9:55:46 AM
+Message:
+Bug 8563: Added table_chans$[all] to the parameters passed to
 
+ado_func::formatAddress() method.
+----
+Modified: ad/src/ado_func.src
+Modified: ar/src/arr_invoices_BBjForm.aon
+Modified: ar/src/arr_labels.aon
+Modified: data/cdf/are_invhdr.cdf
+Modified: op/src/opc_invoice_BBjForm.aon
+Modified: op/src/opc_invoicehist_BBjForm.aon
+Modified: op/src/opc_picklist_BBjForm.aon
+Modified: sprocs/OPINVOICE_HDR.prc
+Modified: sprocs/OPPICKLIST_HDR.prc
+Modified: sprocs/OP_HIST_INVOICE_HDR.prc
+
+=======================================================================================================================================
+Revision: aefc58195c214b1f3ac7e40136111d771e58a7de
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/14/2016 9:29:37 AM
+Message:
+Bug 7791: Eliminated hardcoded "guest" user in connection string for all
+Jasper reports and most Dashboard widgets. Provided default
+setup/configuration for a Report User.
+----
+Modified: ad/src/adx_aondashboard.aon
+Modified: ap/src/apr_apchecks.aon
+Modified: ap/src/apr_detail.aon
+Modified: ar/src/arr_detail.aon
+Modified: ar/src/arr_invoices.aon
+Modified: ar/src/arr_statements.aon
+Modified: ar/src/arr_stmt_demand.aon
+Modified: bm/src/bmr_costing.aon
+Modified: bm/src/bmr_detail.aon
+Modified: config/addon.syn
+Added: data/sync/ads_configure~+report_user_id.xml
+Added: data/sync/ads_configure~+report_user_pwd.xml
+Modified: iv/src/ivr_itemdetail.aon
+Modified: op/src/opc_hist_invoice.aon
+Modified: op/src/opc_invoice.aon
+Modified: op/src/opc_picklist.aon
+Deleted: op/src/opc_picklist_WIP.aon
+Modified: po/src/por_calendar.aon
+Modified: po/src/por_poprint.aon
+Modified: po/src/por_reqprint.aon
+Modified: sf/src/sfr_calendar.aon
+Modified: sf/src/sfr_clsdwodet.aon
+Modified: sf/src/sfr_picklist_o1.aon
+Modified: sf/src/sfr_wodetrpt.aon
+Modified: sf/src/sfr_wohardcopy.aon
+Modified: sf/src/sfr_wotrav.aon
+Modified: sprocs/OPINVOICE_DET_LOTSER.prc
+Modified: sprocs/OPPICKLIST_DET_LOTSER.prc
+Modified: sprocs/OP_HIST_INVOICE_DET_LOTSER.prc
+
+=======================================================================================================================================
+Revision: bd56b9a1fbae7d4d136ae56c1370e90cf172eff2
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/14/2016 7:40:30 PM
+Message:
+Bug 7791: Eliminated hardcoded "guest" user in connection string for
+BBjAPI().createSQLRecordSet(aon_url$,"",sql$)
+----
+Modified: ar/digitalDashboard/arr_digitalDashboard.gbf
+Modified: ar/digitalDashboard/arr_digitalDashboard.src
+Modified: ar/src/arr_drillDownSalesReport.aon
+Modified: ar/src/arr_graphicSalesReport.aon
+Deleted: ar/src/arr_runDrillDownReport.aon
+Modified: sprocs/SALES_INVOICE_DETAILS.prc
+
+=======================================================================================================================================
+Revision: 1fcf55c9c4ea4f6f049d20c8d4dbc9f0ced8a0b9
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/18/2016 12:09:21 PM
+Message:
+Bug 7791: Eliminated hardcoded "guest" user in connection string for
+gridWidget!.fill(aon_url$,sql$) in adx_aondashboard.aon
+----
+Modified: ad/src/adx_aondashboard.aon
