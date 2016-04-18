@@ -105,39 +105,6 @@ REM ========================================================================
     
     rem ' addImageList
     sysgui!.addImageList(1,44,imageMgr!.loadImageFromFile(imageshome$ + imageslist$))
-    
-    rem ' set the database URL
-    dbserver$="localhost"
-    dbsqlport$=":2001"
-    dbtimeout$="&socket_timeout=5000"
-  
-    dbserver$=stbl("+DBSERVER",err=*next)
-    dbsqlport$=":"+stbl("+DBSQLPORT",err=*next)
-    dbssl=num(stbl("+DBSSL",err=*next))
-    dbtimeout$="&socket_timeout="+stbl("+DBTIMEOUT")
-    
-    if dbssl
-        dbssl$="&ssl=true"
-    else
-        dbssl$="&ssl=false"
-    endif
-
-    url_user$="&user=guest"
-    if stbl("!DSUDDB",err=*endif)<>"" then
-        url_user$=""
-    endif
-	
-    dbname$ = stbl("+DBNAME")
-    dbname_api$ = stbl("+DBNAME_API")
-    if pos("jdbc:apache"=cvs(dbname$,8))=1 then
-        url$ = dbname$
-    else
-	if pos("jdbc:"=cvs(dbname$,8))=1 then			
-		url$=dbname$+url_user$+dbssl$+dbtimeout$
-	else
-		url$ = "jdbc:basis:"+dbserver$+dbsqlport$+"?database="+dbname_api$+url_user$+dbssl$+dbtimeout$
-	endif
-    endif
 
     rem --- If BUI, initialize Barista processes
     if info(3,6)="5" then
@@ -455,8 +422,24 @@ REM ========================================================================
     sql$ = sql$ + "WHERE T1.FIRM_ID = '" + firm_id$ + "' AND (T1.INVOICE_DATE BETWEEN '" + inputDStart$ + "' AND '" + inputDFinish$ + "') "
     sql$ = sql$ + "GROUP BY T1.SLSPSN_CODE, T2.CODE_DESC "
     sql$ = sql$ + "ORDER BY TOTAL_SALES DESC"
+        
+    sql_chan=sqlunt
+    sqlopen(sql_chan)stbl("+DBNAME")
+    sqlprep(sql_chan)sql$
+    dim read_tpl$:sqltmpl(sql_chan)
+    sqlexec(sql_chan)
 
-    rs! = BBjAPI().createSQLRecordSet(url$,"",sql$)
+    rs! = BBJAPI().createMemoryRecordSet("SLSPSN_CODE:C(3),SLSPSN_NAME:C(20),TOTAL_SALES:N(1*)")
+
+    while 1
+        read_tpl$ = sqlfetch(sql_chan,err=*break)
+        data! = rs!.getEmptyRecordData()    
+        data!.setFieldValue("SLSPSN_CODE",read_tpl$.slspsn_code$)
+        data!.setFieldValue("SLSPSN_NAME",read_tpl$.slspsn_name$)
+        data!.setFieldValue("TOTAL_SALES",str(read_tpl$.total_sales))
+        rs!.insert(data!)
+    wend
+    sqlclose(sql_chan)
 
     rem ' create a new treemap to hold the saleman
     salesperson! = new TreeMap()
@@ -466,6 +449,7 @@ REM ========================================================================
     counter = 0
     
     if !(rs!.isEmpty()) then
+        rs!.first()
 	    while 1
 
 		data! = rs!.getCurrentRecordData()
@@ -508,17 +492,33 @@ REM ========================================================================
 	sql$ = sql$ + "FROM OPT_INVHDR T1 "
 	sql$ = sql$ + "WHERE T1.FIRM_ID = '" + firm_id$ + "' AND (T1.INVOICE_DATE BETWEEN '" + inputDStart$ + "' AND '" + inputDFinish$ + "') AND T1.SLSPSN_CODE = '" + salespersonCode!.get(salesperson$+"_code") + "' "
 	sql$ = sql$ + "GROUP BY T1.INVOICE_DATE "
+        
+    sql_chan=sqlunt
+    sqlopen(sql_chan)stbl("+DBNAME")
+    sqlprep(sql_chan)sql$
+    dim read_tpl$:sqltmpl(sql_chan)
+    sqlexec(sql_chan)
 
-    	rs! = BBjAPI().createSQLRecordSet(url$,"",sql$)
+    rs! = BBJAPI().createMemoryRecordSet("INVDATE:C(8),TOTAL_SALES:N(1*)")
+
+    while 1
+        read_tpl$ = sqlfetch(sql_chan,err=*break)
+        data! = rs!.getEmptyRecordData()    
+        data!.setFieldValue("INVDATE",read_tpl$.invdate$)
+        data!.setFieldValue("TOTAL_SALES",str(read_tpl$.total_sales))
+        rs!.insert(data!)
+    wend
+    sqlclose(sql_chan)
 
         rem ' Iterate over the result set of daily sales for the specified salesperson
+        rs!.first()
         while 1
 
-	    data! = rs!.getCurrentRecordData()
+            data! = rs!.getCurrentRecordData()
         
             rem ' Get the HashMap associated with the date.  If one doesn't exist yet, then create it
             invDate$ = data!.getFieldValue("INVDATE")
-	    if salesData!.containsKey(invDate$)
+            if salesData!.containsKey(invDate$)
                 salespersonData! = cast(HashMap, salesData!.get(invDate$))
             else
                 salespersonData! = new HashMap()
@@ -529,7 +529,7 @@ REM ========================================================================
             salesData!.put(invDate$, salespersonData!)
             salespersonTotalSales = salespersonTotalSales + num(data!.getFieldValue("TOTAL_SALES"))
                         
-	    rs!.next(err=*break)
+            rs!.next(err=*break)
 	    
         wend
     	rs!.close()
