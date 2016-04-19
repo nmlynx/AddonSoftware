@@ -746,6 +746,15 @@ rem --- Set type in OrderHelper object
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ordHelp!.setInv_type(callpoint!.getUserInput())
 [[OPE_INVHDR.AOPT-PRNT]]
+rem --- Check to see if record has been modified (don't print until rec is saved)
+
+	if pos("M"=callpoint!.getRecordStatus())
+		callpoint!.setOptionEnabled("PRNT",0)
+		msg_id$="AD_SAVE_BEFORE_PRINT"
+		gosub disp_message
+		break
+	endif
+
 rem --- Must be in edit mode for this feature
 	if !callpoint!.isEditMode() then
 		msg_id$="AD_EDIT_MODE_REQUIRE"
