@@ -686,10 +686,12 @@ rem --- Do we need to print an invoice first?
 		gosub do_invoice
 	endif
 
-rem --- Now start a new record
+rem --- Start a new record after a cash sale
 
-	user_tpl.do_end_of_form = 0
-	callpoint!.setStatus("NEWREC")
+	if callpoint!.getDevObject("cash_code_type")<>"" then
+		user_tpl.do_end_of_form = 0
+		callpoint!.setStatus("NEWREC")
+	endif
 [[OPE_INVHDR.AOPT-RPRT]]
 rem --- Check for printing in next batch and set
 
@@ -2976,7 +2978,13 @@ rem ==========================================================================
 :		"",
 :		dflt_data$[all]
 
-	callpoint!.setColumnData("OPE_INVHDR.CASH_SALE", "Y")
+rem --- Update CASH_SALE flag
+
+	if (user_tpl.cash_sale$="Y" or user_tpl.cash_cust$<>cust_id$) and callpoint!.getDevObject("cash_code_type")="" then
+		callpoint!.setColumnData("OPE_INVHDR.CASH_SALE", "")
+	else
+		callpoint!.setColumnData("OPE_INVHDR.CASH_SALE", "Y")
+	endif
 
 rem --- Write flag to disk
 

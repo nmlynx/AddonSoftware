@@ -1,3 +1,10 @@
+[[OPE_INVCASH.ADEL]]
+rem --- Set devObjects to tell ope_invhdr there aren't any ope_invcash transactions for this invoice.
+	callpoint!.setDevObject("print_invoice", "N")
+	callpoint!.setDevObject("cash_code_type","")
+
+rem --- There is only one ope_invcash recprd per invoice, so exit form after record deleted.
+	callpoint!.setStatus("EXIT")
 [[OPE_INVCASH.BWRI]]
 rem --- Initialize RTP modified fields for modified existing records
 	if callpoint!.getRecordMode()="C" then
