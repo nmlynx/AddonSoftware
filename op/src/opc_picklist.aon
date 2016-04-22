@@ -398,13 +398,13 @@ rem --- Misc setup and qualification
     rem --- Only add individual quotes to doc warehouse, not individual pick lists,
     rem ---   because quotes may be subject to report control (email/faxing) to individual customers
 
-            call stbl("+DIR_SYP")+"bas_sequences.bbj","DOC_NO",new_doc_id$,rd_table_chans$[all] 
+            call stbl("+DIR_SYP")+"bas_sequences.bbj","DOC_NO",new_doc_id$,table_chans$[all] 
             new_doc_name$=new_doc_id$+"_"+doc_name$+".pdf"
 
         if ope01a.invoice_type$="P"            
             
             call stbl("+DIR_SYP")+"bac_documents.bbj",new_doc_id$,rep_date_stamp$,rep_time_stamp$,rd_doc_source$,rd_doc_ext$,docdir$,
-:           rd_source_type$,rd_source_alias$,rd_source_id$,rd_source_ref$,rd_table_chans$[all],"",new_doc_name$,doc_name$,doc_keywords$
+:           rd_source_type$,rd_source_alias$,rd_source_id$,rd_source_ref$,table_chans$[all],"",new_doc_name$,doc_name$,doc_keywords$
         endif
 
     rem --- Get Next Document Number and update Document Audit with JAS entry for master doc, if first time thru
@@ -744,7 +744,7 @@ document_whse:rem --- Write record to Barista document warehouse (ads_documents)
 :       rd_source_alias$,
 :       rd_source_id$,
 :       rd_source_ref$,
-:       rd_table_chans$[all],
+:       table_chans$[all],
 :       rd_archive_action$,
 :       rd_doc_name$,
 :       rep_title$,
@@ -795,7 +795,7 @@ rem --- force exportToPDF first, in case it hasn't already been saved
     gosub OnMasterSaveMenuButton
 
     if rd_doc_id$<>"" and rd_doc_ext$<>""
-        call stbl("+DIR_SYP")+"bac_faxemail_jasper.bbj",rd_doc_id$,rd_doc_ext$,rd_table_chans$[all]
+        call stbl("+DIR_SYP")+"bac_faxemail_jasper.bbj",rd_doc_id$,rd_doc_ext$,table_chans$[all]
     endif
     return
 
@@ -824,7 +824,7 @@ rem --- force exportToPDF first, in case it hasn't already been saved
     gosub OnPrintSaveMenuButton
 
     if rd_doc_id$<>"" and rd_doc_ext$<>""
-        call stbl("+DIR_SYP")+"bac_faxemail_jasper.bbj",rd_doc_id$,rd_doc_ext$,rd_table_chans$[all]
+        call stbl("+DIR_SYP")+"bac_faxemail_jasper.bbj",rd_doc_id$,rd_doc_ext$,table_chans$[all]
     endif
     return
 
@@ -853,7 +853,7 @@ rem --- force exportToPDF first, in case it hasn't already been saved
     gosub OnQuoteSaveMenuButton
 
     if rd_doc_id$<>"" and rd_doc_ext$<>""
-        call stbl("+DIR_SYP")+"bac_faxemail_jasper.bbj",rd_doc_id$,rd_doc_ext$,rd_table_chans$[all]
+        call stbl("+DIR_SYP")+"bac_faxemail_jasper.bbj",rd_doc_id$,rd_doc_ext$,table_chans$[all]
     endif
     return    
 
@@ -881,7 +881,7 @@ rem --- force exportToPDF first, in case it hasn't already been saved
 
 
     if rd_doc_id$<>"" and rd_doc_ext$<>""
-        call stbl("+DIR_SYP")+"bac_faxemail_jasper.bbj",rd_doc_id$,rd_doc_ext$,rd_table_chans$[all]
+        call stbl("+DIR_SYP")+"bac_faxemail_jasper.bbj",rd_doc_id$,rd_doc_ext$,table_chans$[all]
     endif
     return
 
