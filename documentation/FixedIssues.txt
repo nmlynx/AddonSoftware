@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-04-20
+ Report Date:   2016-04-21
  Report Branch: AddonSoftware 16.00
  Last Release:  AddonSoftware 15.14
 =======================================================================================================================================
@@ -469,3 +469,15 @@ Bug 7977: Modified DataPort to check value of new field for quotes if
 part of primary key or file verified field.
 ----
 Modified: util/dataport/DataPort_main.bbj
+
+=======================================================================================================================================
+Revision: c545916f1bfd35c2ca29075cceb0e4963f71b8ee
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/21/2016 5:20:47 PM
+Message:
+Bug 8641: Changed glc_filecheck.aon to use Barista's bac_open_tables.bbj
+instead of Addon's adc_fileopen.aon.
+----
+Modified: gl/src/glc_filecheck.aon
+Modified: gl/src/gle_yearend.aon
+Modified: gl/src/glu_periodend.aon
