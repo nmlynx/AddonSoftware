@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-04-21
+ Report Date:   2016-04-25
  Report Branch: AddonSoftware 16.00
  Last Release:  AddonSoftware 15.14
 =======================================================================================================================================
@@ -492,3 +492,34 @@ OP_REPRINT_INVOICE in ADIS.
 ----
 Modified: data/bar/ope_invhdr.xml
 Modified: data/cdf/ope_invhdr.cdf
+
+=======================================================================================================================================
+Revision: d277315b9a98ab0f3e2670afeea3a49f770c9e78
+Author: chawkins <chawkins@bagadata.ftrdhcpuser.net>
+Date: 4/22/2016 9:14:46 AM
+Message:
+Per bug 8630; made corrections in on-demand documents to eliminate
+increasing number of open files with each iteration.
+----
+Modified: ar/src/arr_stmt_demand.aon
+Modified: data/bar/arr_stmt_demand.xml
+Modified: data/bar/poe_reqhdr.xml
+Modified: data/bar/por_poprint_dmd.xml
+Modified: data/cdf/arr_stmt_demand.cdf
+Modified: data/cdf/poe_reqhdr.cdf
+Modified: data/cdf/por_poprint_dmd.cdf
+Modified: op/src/opc_picklist.aon
+Modified: op/src/opr_pick_demand.aon
+Modified: op/src/opr_picklist.aon
+Modified: po/src/por_poprint.aon
+Modified: po/src/por_reqprint.aon
+
+=======================================================================================================================================
+Revision: 7ee17a54f4395b39293545163fb701dbb030d0a1
+Author: chawkins <chawkins@bagadata.ftrdhcpuser.net>
+Date: 4/25/2016 6:25:09 PM
+Message:
+Per bug 8643; corrected problem causing lifo/fifo related files to be
+opened on new channels with each detail line.
+----
+Modified: op/src/opr_invoiceedit_o1.aon
