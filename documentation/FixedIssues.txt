@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-04-25
+ Report Date:   2016-04-27
  Report Branch: AddonSoftware 16.00
  Last Release:  AddonSoftware 15.14
 =======================================================================================================================================
@@ -523,3 +523,46 @@ Per bug 8643; corrected problem causing lifo/fifo related files to be
 opened on new channels with each detail line.
 ----
 Modified: op/src/opr_invoiceedit_o1.aon
+
+=======================================================================================================================================
+Revision: b063ce38f5cca7c0536a4ea72de640c3fbfe317e
+Author: RalphLance <rlance@basis.com>
+Date: 4/27/2016 8:05:52 AM
+Message:
+No-op correction of program name in header
+----
+Modified: gl/src/glf_ytdamts.aon
+
+=======================================================================================================================================
+Revision: 50f4b760653205349c9f51074e3d5e819dd6f790
+Author: RalphLance <rlance@basis.com>
+Date: 4/27/2016 8:07:27 AM
+Message:
+Updated data/sync files.
+
+Updated the files in the data/sync directory to have the current format.
+Includes removal of those that had the wrong file name format before the
+fix to replace blanks (usually in keys) with underscores in the "Create
+Sync XML Files" program.
+----
+Not listing individual files for brevity: Adds, changes, deletes to all files in data/sync directory
+
+=======================================================================================================================================
+Revision: ddd5df21d85004ea9e87cdd9064f873f7ffd2d5b
+Author: RalphLance <rlance@basis.com>
+Date: 4/27/2016 8:36:46 AM
+Message:
+Reset process status to "N"ot processed
+----
+Modified: data/sync/ads_autolaunch~aondemonag.xml
+Modified: data/sync/ads_autolaunch~buildsproc.xml
+
+=======================================================================================================================================
+Revision: 649170218dd74f9e098ed9468e4a6b0c4935b01d
+Author: chawkins <chawkins@192.168.1.3>
+Date: 4/27/2016 10:15:47 AM
+Message:
+Per bug 8644; changed product ID of SFE_WOMASTR to AD since it can be
+opened from PO entry forms even if SF isn't installed.
+----
+Modified: data/bar/sfe_womastr.xml
