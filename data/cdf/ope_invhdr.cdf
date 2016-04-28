@@ -1504,7 +1504,7 @@ rem --- Restrict lookup to open orders and open invoices
 	call stbl("+DIR_SYP")+"bax_query.bbj",
 :		gui_dev,
 :		Form!,
-:		"OP_ENTRY",
+:		"OP_ENTRY_1",
 :		"",
 :		table_chans$[all],
 :		selected_keys$,
