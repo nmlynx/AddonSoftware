@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-04-27
+ Report Date:   2016-04-28
  Report Branch: AddonSoftware 16.00
  Last Release:  AddonSoftware 15.14
 =======================================================================================================================================
@@ -566,3 +566,17 @@ Per bug 8644; changed product ID of SFE_WOMASTR to AD since it can be
 opened from PO entry forms even if SF isn't installed.
 ----
 Modified: data/bar/sfe_womastr.xml
+
+=======================================================================================================================================
+Revision: f6e43801c1a28f0adf2a15b30a9aa90cb3b37364
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/28/2016 5:56:05 PM
+Message:
+Bug 6867: Posting just delta transactions for the Adjust Date rather
+than backing out the original transactions and creating new transactions
+for the total cost.
+----
+Modified: sf/src/sfe_transhist.aon
+Modified: sf/src/sfr_costadjust.aon
+Modified: sf/src/sfr_costadjust_o1.aon
+Modified: sf/src/sfu_costadjust.aon
