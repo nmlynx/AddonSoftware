@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-04-28
+ Report Date:   2016-05-02
  Report Branch: AddonSoftware 16.00
  Last Release:  AddonSoftware 15.14
 =======================================================================================================================================
@@ -580,3 +580,18 @@ Modified: sf/src/sfe_transhist.aon
 Modified: sf/src/sfr_costadjust.aon
 Modified: sf/src/sfr_costadjust_o1.aon
 Modified: sf/src/sfu_costadjust.aon
+
+=======================================================================================================================================
+Revision: ed42df0432ac6fec53d82c6b5ed9bc2d98618cf0
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/2/2016 3:19:16 PM
+Message:
+Bug 8646: When Barista switches to edit mode, use
+BBjGrid::setColumnEditable method to make individual columns editable
+rather than using BBjGrid::setEditable method to set the entire grid
+editable.
+----
+Modified: data/bar/are_cashhdr.xml
+Modified: data/bar/ivs_setcarry.xml
+Modified: data/cdf/are_cashhdr.cdf
+Modified: data/cdf/ivs_setcarry.cdf
