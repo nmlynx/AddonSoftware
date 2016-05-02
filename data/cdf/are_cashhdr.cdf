@@ -362,7 +362,14 @@ if data_present$="Y"
 		case num(user_tpl.gridInvoice_id$)
 			gridInvoice!=UserObj!.getItem(num(user_tpl.inv_grid$))                             
 			if callpoint!.isEditMode() then
-				gridInvoice!.setEditable(1)
+				gridInvoice!.setColumnEditable(0,1)
+				gridInvoice!.setColumnEditable(8,1)
+				gridInvoice!.setColumnEditable(9,1)
+				if user_tpl.disc_flag$="Y" then
+					gridInvoice!.setColumnEditable(num(user_tpl.disc_taken_ofst$),1)
+				else
+					gridInvoice!.setColumnEditable(num(user_tpl.disc_taken_ofst$),0)
+				endif
 			else
 				gridInvoice!.setEditable(0)
 			endif
