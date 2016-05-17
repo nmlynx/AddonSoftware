@@ -644,3 +644,14 @@ Message:
 Per bug 8666, corrected typo.
 ----
 Modified: po/src/por_invreg.aon
+
+=======================================================================================================================================
+Revision: 8784595473bfbeaeba33c2f931216c4858098979
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/17/2016 12:49:08 PM
+Message:
+Bug 8665: Use pad() on pot_recdet (pot-14) item_id to avoid error 47 on
+non-stock lines that don't use item_id. For non-stock lines the item_id
+length is zero because of the field terminator in the record.
+----
+Modified: po/src/por_invreg.aon
