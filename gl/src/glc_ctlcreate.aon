@@ -84,7 +84,6 @@ rem --- Remaining initializations
     more=1
     action=0
     message$=""
-    app_comp$=stbl("+AON_APPCOMPANY")
 
     while more
 
@@ -166,11 +165,22 @@ rem --- Remaining initializations
         k$=firm_id$+"GL03"
         find record (gls01d_dev,key=k$,err=*next) gls01d$
 
-    rem --- Retrieve application (adm-04) record for the calling application
+    rem --- Retrieve application (adm-04) record for the calling module
 
-        adm04_key$=app_comp$+pad(application$,3)
-        message$=Translate!.getTranslation("AON_MISSING_APPLICATION_RECORD_FOR_")+adm04_key$+"."
-        find record (adm04_dev,key=adm04_key$,dom=*break) adm04a$
+        message$=Translate!.getTranslation("AON_MISSING_APPLICATION_RECORD_FOR_")+module$+"."
+        find record (adm04_dev,key=stbl("+AON_APPCOMPANY")+pad(module$,3),dom=*next) adm04a$
+        if adm04a.asc_prod_id$<>pad(module$,3) then
+            rem --- Look for product in other companies besides Addon
+            prod_id$=pad(module$,3)
+            read(adm04_dev,key="",dom=*next)
+            while 1
+                redim adm04a$
+                readrecord(adm04_dev,end=*break)adm04a$
+                if adm04a.asc_prod_id$=prod_id$ then break
+                if module$="PR" and adm04a.asc_prod_id$="PRB" then break
+            wend
+        endif
+        if cvs(adm04a.asc_comp_id$,2)="" then goto break
 
     rem --- Retrieve the current period and year for the calling application
 
