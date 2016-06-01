@@ -31,7 +31,7 @@ dim ddm04$:"file_name:c(6),record_id:c(1),layout_seq:c(3*),data_name:c(12),reser
 
 rem --- Open files and/or retrieve templates that may be needed for PO file conversion
 
-    num_files=9
+    num_files=10
     dim rd_open_tables$[1:num_files],rd_open_opts$[1:num_files],rd_open_chans$[1:num_files],rd_open_tpls$[1:num_files]
     rd_open_tables$[1]="ADS_SEQUENCES",rd_open_opts$[1]="OTA"
     rd_open_tables$[2]="ARM_CUSTMAST",rd_open_opts$[2]="T"
@@ -42,6 +42,7 @@ rem --- Open files and/or retrieve templates that may be needed for PO file conv
     rd_open_tables$[7]="DDM_SYSTEMS",rd_open_opts$[7]="OTA"
     rd_open_tables$[8]="DDM_ELEMENTS",rd_open_opts$[8]="OTA"
     rd_open_tables$[9]="ADM_MODULES",rd_open_opts$[9]="OTA"
+    rd_open_tables$[10]="DDM_TABLE_COLS",rd_open_opts$[10]="OTA"
     
     gosub open_tables
     
@@ -54,6 +55,7 @@ rem --- Open files and/or retrieve templates that may be needed for PO file conv
     ddm_systems=num(rd_open_chans$[7]);dim ddm_systems$:rd_open_tpls$[7]
     ddm_elements=num(rd_open_chans$[8]);dim ddm_elements$:rd_open_tpls$[8]
     adm_modules_dev=num(rd_open_chans$[9]);dim adm_modules$:rd_open_tpls$[9]
+    ddm_table_cols=num(rd_open_chans$[10]);dim ddm_table_cols$:rd_open_tpls$[10]
     
 rem --- initialization
 
@@ -1027,7 +1029,11 @@ rem --- if this field.value is listed in flat file "field_translations" then tra
 
         rem --- Check value of new field for quotes if part of primary key or file verified field
         redim ddm_elements$
-        readrecord(ddm_elements,key=pad(new_fieldlist.name$[field],16))ddm_elements$
+        readrecord(ddm_elements,key=pad(new_fieldlist.name$[field],16),dom=*next)ddm_elements$
+        if cvs(ddm_elements.dd_data_name$,2)="" then
+            readrecord(ddm_table_cols,key=pad(new_fieldlist.name$[field],16)+pad(cvs(new_datafile$,4),16),knum="DBVAR_NAME",dom=*endif)ddm_table_cols$
+            readrecord(ddm_elements,key=pad(ddm_table_cols.dd_data_name$[field],16),dom=*next)ddm_elements$
+        endif
         if pos($0a$+new_fieldlist.name$[field]+$0a$=$0a$+key_temp$+$0a$)>0 or cvs(ddm_elements.dd_attr_dtab$,2)<>"" then
             if pos($22$=value$) then
                 print (err_dev) "field "+new_fieldlist.name$[field]+" in file "+new_datafile$+" contains a quote that can cause problems." 
