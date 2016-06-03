@@ -24,8 +24,10 @@
 
     <!-- Now let's set specific properties -->
     <property name="addon.build.dir"   value="${addon.dir}/apps/aon"/>
+    <property name="prbabs.build.dir"  value="${addon.dir}/apps/prbabs"/>
     <property name="barista.build.dir" value="${addon.dir}/barista"/>
     <property name="addon.bbj.dir"     value="${install.dir}/apps/aon"/>
+    <property name="prbabs.bbj.dir"    value="${install.dir}/apps/prbabs"/>
     <property name="barista.bbj.dir"   value="${install.dir}/barista"/>
     <property name="log.bbj.dir"       value="${install.dir}/log"/>
 
@@ -176,15 +178,15 @@
         <!-- Addon source tree  -->
         <copy preserveLastModified="true"
               todir="${addon.bbj.dir}">
-              <fileset dir="${src.dir}"
+              <fileset dir="${src.dir.aon}"
                   excludes="build.xml,
                             user.build.properties.default,
                             user.build.properties,
                             basis.build.properties,
                             InstallResponse.properties,
                             config/barista.syn.example"/>
-              <fileset file="${src.dir}/${doc.dir}/readme.htm"/>
-              <fileset file="${src.dir}/${doc.dir}/relnotes.htm"/>
+              <fileset file="${src.dir.aon}/${doc.dir}/readme.htm"/>
+              <fileset file="${src.dir.aon}/${doc.dir}/relnotes.htm"/>
         </copy>
 
         <!-- Update config files to include Adddon install -->
@@ -218,7 +220,7 @@
 
         <copy preserveLastModified="true"
               todir="${addon.bbj.dir}/documentation">
-              <fileset dir="${src.dir}/documentation"
+              <fileset dir="${src.dir.aon}/documentation"
                        includes="readme.htm,
                                  relnotes.htm"/>
         </copy>
@@ -229,8 +231,8 @@
 
 
     <!-- ====================================== -->
-    <!-- copyBase -->
-    <target name="copyBase">
+    <!-- copyAddon -->
+    <target name="copyAddon">
         <!-- Addon source tree  -->
         <!--   Programs in ${prog.dir} and ${callpoints.dir} -->
         <!--   are compiled so there is no need to copy them -->
@@ -245,7 +247,28 @@
                             config/barista.syn.example"/>
         </copy>
     </target>
-    <!-- End of copyBase -->
+    <!-- End of copyAddon -->
+    <!-- ====================================== -->
+
+
+    <!-- ====================================== -->
+    <!-- copyPRbabs -->
+    <target name="copyPRbabs">
+
+        <!-- prbabs source tree  -->
+        <copy preserveLastModified="true"
+              todir="${prbabs.build.dir}">
+              <fileset dir="${prbabs.bbj.dir}"
+                  excludes="build.xml,
+                            user.build.properties.default,
+                            user.build.properties,
+                            basis.build.properties,
+                            InstallResponse.properties,
+                            config/barista.syn.example"/>
+        </copy>
+
+    </target>
+    <!-- End of copyPRbabs -->
     <!-- ====================================== -->
 
 
@@ -346,7 +369,7 @@
         <!-- If successful, the addon_sync.log has      -->
         <!-- "Process_completed" at the end of the file -->
         <echo message="verifying addon sync"/>
-        <exec executable="${src.dir}/sync_chk" failonerror="true">
+        <exec executable="${src.dir.aon}/sync_chk" failonerror="true">
               <arg value="${log.bbj.dir}/addon_sync.log"/>
         </exec>
         <echo message="addon sync verified"/>
@@ -441,7 +464,7 @@
         </jar>
 
         <!-- Update the JENKINS_BUILD_DIR marker with the Jenkins build directory -->
-        <replace file="${src.dir}/InstallResponse.properties"
+        <replace file="${src.dir.aon}/InstallResponse.properties"
                  encoding="ISO-8859-1"
                  token="BBJ_INSTALL_DIR"
                  value="${install.dir}"/>
@@ -449,7 +472,7 @@
         <!-- Run BBj installer -->
         <java jar="${work.dir}/installBBj.jar" fork="true">
             <arg value="-pl"/>
-            <arg value="${src.dir}/InstallResponse.properties"/>
+            <arg value="${src.dir.aon}/InstallResponse.properties"/>
         </java>
 
         <!-- Clean up -->
@@ -462,8 +485,58 @@
 
 
     <!-- ====================================== -->
-    <!-- copySync -->
-    <target name="copySync">
+    <!-- installPRbabs -->
+    <target name="installPRbabs">
+
+        <!-- Clear out stuff from last build -->
+        <delete dir="${prbabs.bbj.dir}"/>
+        <mkdir  dir="${prbabs.bbj.dir}"/>
+
+        <!-- prbabs source tree  -->
+        <copy preserveLastModified="true"
+              todir="${prbabs.bbj.dir}">
+              <fileset dir="${src.dir.prbabs}"/>
+        </copy>
+
+    </target>
+    <!-- End of installPRbabs -->
+    <!-- ====================================== -->
+
+    <!-- ====================================== -->
+    <!-- PRbabs sync -->
+    <target name="syncPRbabs" depends="sleep15">
+
+        <!-- Run BBj session to sync prbabs -->
+        <exec executable="${install.dir}/bin/bbj" failonerror="true">
+            <env key="DISPLAY" value="${display}"/>
+            <arg value="-q"/>
+            <arg value="-WD${barista.bbj.dir}"/>
+            <arg value="-c${barista.bbj.dir}/sys/config/enu/barista.cfg"/>
+            <arg value="-CPbarista"/>
+            <arg value="${barista.bbj.dir}/sys/prog/bax_build_sync.bbj"/>
+            <arg value="-"/>
+            <arg value="-s../apps/aon/config/prbabs.syn"/>
+            <arg value="-log${log.bbj.dir}/prbabs_sync.log"/>
+        </exec>
+
+        <!-- Make sure the sync was successful          -->
+        <!-- If successful, the addon_sync.log has      -->
+        <!-- "Process_completed" at the end of the file -->
+        <echo message="verifying addon sync"/>
+        <exec executable="${src.dir.aon}/sync_chk" failonerror="true">
+              <arg value="${log.bbj.dir}/prbabs_sync.log"/>
+        </exec>
+        <echo message="prbabs sync verified"/>
+
+    </target>
+    <!-- End of syncPRbabs -->
+    <!-- ====================================== -->
+
+
+
+    <!-- ====================================== -->
+    <!-- copyAddonSync -->
+    <target name="copyAddonSync">
         <copy preserveLastModified="true"
               todir="${addon.build.dir}/callpoints">
               <fileset dir="${addon.bbj.dir}/callpoints"
@@ -504,7 +577,7 @@
         </copy>
 
     </target>
-    <!-- End of copySync -->
+    <!-- End of copyAddonSync -->
     <!-- ====================================== -->
 
 
@@ -557,12 +630,15 @@
                      build.info,
                      installBBj,
                      installAddon,
+                     installPRbabs,
                      startBBj,
                      syncAddon,
+                     syncPRbabs,
                      stopBBj,
                      rmSynMen,
-                     copyBase,
-                     copySync,
+                     copyAddon,
+                     copyPRbabs,
+                     copyAddonSync,
                      copyImages,
                      copyScripts,
                      jar">
