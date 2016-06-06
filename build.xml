@@ -430,6 +430,12 @@
                      excludes="config/???/addon.men,
                                config/???/addon.syn,
                                config/addon.syn"/>
+            <fileset dir="${install.dir}/prbabs/aon"
+                     includes="*.men,**/*.men,
+                               *.syn,**/*.syn"
+                     excludes="config/???/prbabs.men,
+                               config/???/prbabs.syn,
+                               config/prbabs.syn"/>
         </delete>
     </target>
     <!-- End of rmSynMen -->
@@ -515,7 +521,7 @@
             <arg value="-CPbarista"/>
             <arg value="${barista.bbj.dir}/sys/prog/bax_build_sync.bbj"/>
             <arg value="-"/>
-            <arg value="-s../apps/aon/config/prbabs.syn"/>
+            <arg value="-s../apps/prbabs/config/prbabs.syn"/>
             <arg value="-log${log.bbj.dir}/prbabs_sync.log"/>
         </exec>
 
