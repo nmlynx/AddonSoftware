@@ -75,7 +75,7 @@ rem --- Is Addon being installed, or is it already installed?
     endif
 
 rem --- Is PRB Payroll being installed?
-    find(adm_modules_dev,key="01004419"+"PRB",dom=*next)adm_modules$
+    findrecord(adm_modules_dev,key="01004419"+"PRB",dom=*next)adm_modules$
     if adm_modules.sys_install$="Y" then
         mountedSys!.add(newAonLoc$+"/prbabs")
         synFile!.add(newAonLoc$+"/prbabs/config/prbabs.syn")
