@@ -1905,6 +1905,7 @@ rem ==========================================================================
 			callpoint!.setHeaderColumnData("OPE_ORDHDR.CREDIT_FLAG","C")
 			callpoint!.setDevObject("msg_exceeded","Y")
 			user_tpl.credit_limit_warned = 1
+			callpoint!.setStatus("ACTIVATE")
 		endif
 	endif
 	return
