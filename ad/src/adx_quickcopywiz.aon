@@ -57,6 +57,15 @@ rem --- Main processing
 	gosub update_barista_installs
 
 done: rem --- All done
+
+    rem --- before exiting, launch utility to rebuild any Full Text Indexes in silent mode
+        rd_run_arg$="bbj "+stbl("+DIR_SYP")+"bam_dd_export_FTI.bbj - -auto"
+        rd_scall_result=scall(rd_run_arg$,err=*next)
+        meter_text$=Translate!.getTranslation("AON_FULL_TEXT_INDEX","Full Text Indexes (re)created.")
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
     
     rem --- Stop progress meter
     meter_text$=""
@@ -409,8 +418,9 @@ rem --- also reset mount path in ddm_systems (mounted systems) for new database
 
 reset_auto_sync:
 rem --- reset auto-launch record for the auto-sync process
+rem --- also now resets for new Payroll module's license agreement/disclaimer
 
-	sql_prep$="UPDATE ADS_AUTOLAUNCH SET PROCESS_STATUS='N',TRANS_DATE='',TRANS_TIME='' WHERE PROCESS_ID='50AUTOSYNC' OR PROCESS_ID='BUILDSPROC'"
+	sql_prep$="UPDATE ADS_AUTOLAUNCH SET PROCESS_STATUS='N',TRANS_DATE='',TRANS_TIME='' WHERE PROCESS_ID='50AUTOSYNC' OR PROCESS_ID='BUILDSPROC' OR PROCESS_ID='01PAYDISC'"
 	sql_chan=sqlunt
 	sqlopen(sql_chan,err=*next)dbName$
     sqlprep(sql_chan)sql_prep$
@@ -442,7 +452,7 @@ rem --- Update XML Configuration File barista_installs.xml
     rd_temp_tag$=$09$+"<RECORD id="+$22$+cvs(dbName$,136)+$22$+">"
 
     rd_xml_chan=unt
-    open (rd_xml_chan,err=*return)rd_install_file$
+    open (rd_xml_chan,err=create_installs)rd_install_file$
         rd_xml_chan_fin$=fin(rd_xml_chan)
         read record(rd_xml_chan,siz=dec($00$+rd_xml_chan_fin$(1,4)))rd_xml_data$
     close (rd_xml_chan)
@@ -483,6 +493,32 @@ rem --- Update XML Configuration File barista_installs.xml
     close(rd_xml_chan)
 
 	return
+
+create_installs:rem --- Create Installations File
+
+    rd_xml_dir$=dsk("")+dir("")
+
+    rd_xml_data$=
+:       "<?xml version='1.0' encoding='UTF-8' ?>"+rd_line_sep$+
+:       "<INSTALLATIONS>"+rd_line_sep$+
+:       $09$+"<RECORD id="+$22$+"barista"+$22$+">"+rd_line_sep$+
+:       $0909$+"<ID id="+$22$+"barista"+$22$+">BARISTA</ID>"+rd_line_sep$+
+:       $0909$+"<DESCRIPTION id="+$22$+"barista"+$22$+">Barista Application Framework</DESCRIPTION>"+rd_line_sep$+
+:       $0909$+"<LOCATION id="+$22$+"barista"+$22$+">"+rd_xml_dir$+"</LOCATION>"+rd_line_sep$+
+:       $0909$+"<VERSION id="+$22$+"barista"+$22$+">"+rd_version_id$+"."+stbl("+BUILD_ID")+"</VERSION>"+rd_line_sep$+
+:       $0909$+"<DATE_CREATED id="+$22$+"barista"+$22$+">"+date(0:"%Yd%Mz%Dz%Hz%mz%sz")+"</DATE_CREATED>"+rd_line_sep$+
+:       $0909$+"<PROPERTIES id="+$22$+"barista"+$22$+">-tT0 -q"+rd_base_cpnm$+" -WD"+$22$+rd_xml_dir$+$22$+" -c"+$22$+rd_xml_dir$+"sys/config/enu/barista.cfg"+$22$+" "+$22$+rd_xml_dir$+"sys/prog/bar_login.bbj"+$22$+"</PROPERTIES>"+rd_line_sep$+
+:       $09$+"</RECORD>"+rd_line_sep$+
+:       "</INSTALLATIONS>"
+
+    string rd_install_file$
+
+    rd_xml_chan=unt
+    open (rd_xml_chan)rd_install_file$
+    write record(rd_xml_chan)rd_xml_data$
+    close(rd_xml_chan)
+
+    retry
 
 create_sscp:
 rem --- Create new session specific classpath (SSCP) in Enterprise Manager
