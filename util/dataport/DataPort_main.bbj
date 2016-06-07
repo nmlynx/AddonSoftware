@@ -157,6 +157,7 @@ rem --- Get current Customer and Vendor number sizes
 
 	custSizeMap! = new java.util.HashMap()
 	vendSizeMap! = new java.util.HashMap()
+    prYearMap! = new java.util.HashMap()
 	dim key$(6)
     sys01_dev=unt
     open (sys01_dev)source_folder$+"/"+cvs("sys-01",version_cvs)
@@ -183,7 +184,7 @@ rem --- Get current Customer and Vendor number sizes
                 read(sys01_dev)*,*,*,*,p4$(1)
                 value$=p4$(3,2)
                 gosub fix_yymmdd_date
-                src_pr_curr_yr$=value$
+                prYearMap!.put(firm$,value$)
 			    break
     		case default
 				read(sys01_dev)
@@ -1199,6 +1200,14 @@ rem --- "prt-02 and prt-03 have new sequence number in new file only"
         call stbl("+DIR_SYP")+"bas_sequences.bbj",dflt_seq_key$,new_seq$,table_chans$[all]
         new_rec.internal_seq_no$=new_seq$
     endif
+
+rem wgh ... 8675
+rem --- If new_field_defaults not set for Payroll year, use Current Year from source Payroll parameters.
+        if pos(";"+cvs(new_datafile$,11)+";"=";prc_taxcode;prc_contcode;prc_taxtable;prc_w2box;prt-01;prt-05;prt-11;prt-21;prt-31;")>0 and cvs(default_pr_year$,2)="" then
+            if prYearMap!.containsKey(thisFirm$) then
+                new_rec.year$=prYearMap!.get(thisFirm$)
+            endif
+        endif
 
     new_rec$=field(new_rec$)
 
@@ -2250,6 +2259,7 @@ check_for_definition:
     rem --- see if this table has any new fields (i.e., that weren't in v6 (or Payroll))
     rem --- if so, set default value based on new_field_defaults flat file
     rem --- new_rec$ only dim'd once/file, so setting the values once here should carry into every record
+rem wgh ... 8675
     if source_version=6 or pos(";"+cvs(new_datafile$,11)+";"=";prc_taxcode;prc_contcode;prc_taxtable;prc_w2box;prt-01;prt-05;prt-11;prt-21;prt-31;")>0 then
         new_rec_fields!=new_field_defaults!.keySet().iterator()
         while new_rec_fields!.hasNext()
@@ -2260,11 +2270,12 @@ check_for_definition:
                 field new_rec$,new_rec_fieldname$=new_rec_value$
             endif
         wend
-    endif
-
-    rem --- If new_field_defaults not set for Payroll year, use Current Year from source Payroll parameters.
-    if pos(";"+cvs(new_datafile$,11)+";"=";prc_taxcode;prc_contcode;prc_taxtable;prc_w2box;prt-01;prt-05;prt-11;prt-21;prt-31;")>0 and cvs(new_rec.year$,2)="" then
-        new_rec.year$=src_pr_curr_yr$
+    
+rem wgh ... 8675
+rem --- If new_field_defaults not set for Payroll year, will need to use Current Year from source Payroll parameters.
+if pos(";"+cvs(new_datafile$,11)+";"=";prc_taxcode;prc_contcode;prc_taxtable;prc_w2box;prt-01;prt-05;prt-11;prt-21;prt-31;")>0 then
+    default_pr_year$=new_rec.year$
+endif
     endif
 return
 
@@ -3134,7 +3145,6 @@ verify_translation_master: rem --- Verify master file records exist for used tra
 split_prm10w_recs: rem --- Split old w2Box Detail File into separate files
     prc_w2box_trgt=new_file;rem "Header Table"
     prc_w2box_tpl$=fattr(new_rec$)
-    w2year$=new_rec.year$
 
     rem --- Create and open new files in target directory
     table_alias$="PRC_W2BOX_CONT",new_datafile$="prc_w2box_cont",file_id$=new_datafile$
@@ -3168,118 +3178,128 @@ split_prm10w_recs: rem --- Split old w2Box Detail File into separate files
     findrecord(ddm_table_tpls,key=pad(table_alias$,16),dom=*next)ddm_table_tpls$
     prc_w2box_tax_tpl$=ddm_table_tpls.template$
 
-   while 1
-     readrecord(old_file,end=*break)old_rec$
-     if field(old_rec$,record_id_field$,err=*continue)<>"W" then
-       continue
-     endif
-     dim  prc_w2box$:prc_w2box_tpl$
-       field_name$="FIRM_ID"
-       field prc_w2box$,field_name$=field(old_rec$,field_name$)
+    while 1
+        readrecord(old_file,end=*break)old_rec$
+        if field(old_rec$,record_id_field$,err=*continue)<>"W" then continue
+        if pos(old_rec.firm_id$=firms$,2)=0 then continue
 
-       field_name$="RECORD_ID_W"
-       field prc_w2box$,field_name$=field(old_rec$,field_name$)
+        dim  prc_w2box$:prc_w2box_tpl$
+        field_name$="FIRM_ID"
+        field prc_w2box$,field_name$=field(old_rec$,field_name$)
 
-       field prc_w2box$,"year"=w2year$
+        field_name$="RECORD_ID_W"
+        field prc_w2box$,field_name$=field(old_rec$,field_name$)
 
-       field_name$="W2_BOX_ID"
-       field prc_w2box$,field_name$=field(old_rec$,field_name$)
+rem wgh ... 8675
+        rem --- If new_field_defaults not set for Payroll year, use Current Year from source Payroll parameters.
+        if cvs(new_rec.year$,2)="" then
+            if prYearMap!.containsKey(old_rec.firm_id$) then
+                w2year$=prYearMap!.get(old_rec.firm_id$)
+            endif
+        else
+            w2year$=new_rec.year$
+        endif
 
-       rem "Box Renumbers after 2012"
-       box_num=0 
-       box_num=num(prc_w2box.w2_box_id$,err=*next)
-       if box_num > 9 then
-           prc_w2box.w2_box_id$=str(box_num-1:"00")
-       endif
+rem wgh ... 8675
+        field prc_w2box$,"year"=w2year$
 
-       field_name$="W2_BXLN_ID"
-       field prc_w2box$,field_name$=field(old_rec$,field_name$)
+        field_name$="W2_BOX_ID"
+        field prc_w2box$,field_name$=field(old_rec$,field_name$)
 
-       field_name$="W2_STATE_ID"
-       field prc_w2box$,field_name$=field(old_rec$,field_name$)
+        rem "Box Renumbers after 2012"
+        box_num=0 
+        box_num=num(prc_w2box.w2_box_id$,err=*next)
+        if box_num > 9 then
+            prc_w2box.w2_box_id$=str(box_num-1:"00")
+        endif
 
-       field prc_w2box$,"W2_LOCAL_ID"=field(old_rec$,"W2_LOC_CODE")
-       prc_w2box$=field(prc_w2box$)
-       writerecord(prc_w2box_trgt)prc_w2box$
+        field_name$="W2_BXLN_ID"
+        field prc_w2box$,field_name$=field(old_rec$,field_name$)
 
-       for x=1 to 10
-        datatype$=cvs(field(old_rec$,"w2_code_type_"+str(x:"00")),2)
+        field_name$="W2_STATE_ID"
+        field prc_w2box$,field_name$=field(old_rec$,field_name$)
+
+        field prc_w2box$,"W2_LOCAL_ID"=field(old_rec$,"W2_LOC_CODE")
+        prc_w2box$=field(prc_w2box$)
+        writerecord(prc_w2box_trgt)prc_w2box$
+
+        for x=1 to 10
+            datatype$=cvs(field(old_rec$,"w2_code_type_"+str(x:"00")),2)
         
-        switch (BBjAPI().TRUE)
-            case datatype$ = "A"
-                            rem "Earnings"
-                             dim prc_w2box_earn$:prc_w2box_earn_tpl$
-                              prc_w2box_earn.firm_id$=prc_w2box.firm_id$
-                              prc_w2box_earn.record_id_w$=prc_w2box.record_id_w$
-                              prc_w2box_earn.year$=prc_w2box.year$
-                              prc_w2box_earn.w2_box_id$=prc_w2box.w2_box_id$
-                              prc_w2box_earn.w2_bxln_id$=prc_w2box.w2_bxln_id$
-                              prc_w2box_earn.w2_state_id$=prc_w2box.w2_state_id$
-                              prc_w2box_earn.w2_local_id$=prc_w2box.w2_local_id$
-                              prc_w2box_earn.pay_code$=field(old_rec$,"w2_code_id_"+str(x:"00"))
-                              prc_w2box_earn.operator$=field(old_rec$,"w2_code_oper_"+str(x:"00"))
-                              prc_w2box_earn.multiplier=nfield(old_rec$,"w2_code_mult_"+str(x:"00"))
-                              prc_w2box_earn$=field(prc_w2box_earn$)
-                              writerecord(prc_w2box_earn_trgt)prc_w2box_earn$
-                        break
-            case datatype$ = "B"
-                            rem "Deductions"
-                             dim prc_w2box_ddct$:prc_w2box_ddct_tpl$
-                              prc_w2box_ddct.firm_id$=prc_w2box.firm_id$
-                              prc_w2box_ddct.record_id_w$=prc_w2box.record_id_w$
-                              prc_w2box_ddct.year$=prc_w2box.year$
-                              prc_w2box_ddct.w2_box_id$=prc_w2box.w2_box_id$
-                              prc_w2box_ddct.w2_bxln_id$=prc_w2box.w2_bxln_id$
-                              prc_w2box_ddct.w2_state_id$=prc_w2box.w2_state_id$
-                              prc_w2box_ddct.w2_local_id$=prc_w2box.w2_local_id$
+            switch (BBjAPI().TRUE)
+                case datatype$ = "A"
+                    rem "Earnings"
+                    dim prc_w2box_earn$:prc_w2box_earn_tpl$
+                    prc_w2box_earn.firm_id$=prc_w2box.firm_id$
+                    prc_w2box_earn.record_id_w$=prc_w2box.record_id_w$
+                    prc_w2box_earn.year$=prc_w2box.year$
+                    prc_w2box_earn.w2_box_id$=prc_w2box.w2_box_id$
+                    prc_w2box_earn.w2_bxln_id$=prc_w2box.w2_bxln_id$
+                    prc_w2box_earn.w2_state_id$=prc_w2box.w2_state_id$
+                    prc_w2box_earn.w2_local_id$=prc_w2box.w2_local_id$
+                    prc_w2box_earn.pay_code$=field(old_rec$,"w2_code_id_"+str(x:"00"))
+                    prc_w2box_earn.operator$=field(old_rec$,"w2_code_oper_"+str(x:"00"))
+                    prc_w2box_earn.multiplier=nfield(old_rec$,"w2_code_mult_"+str(x:"00"))
+                    prc_w2box_earn$=field(prc_w2box_earn$)
+                    writerecord(prc_w2box_earn_trgt)prc_w2box_earn$
+                    break
+                case datatype$ = "B"
+                    rem "Deductions"
+                    dim prc_w2box_ddct$:prc_w2box_ddct_tpl$
+                    prc_w2box_ddct.firm_id$=prc_w2box.firm_id$
+                    prc_w2box_ddct.record_id_w$=prc_w2box.record_id_w$
+                    prc_w2box_ddct.year$=prc_w2box.year$
+                    prc_w2box_ddct.w2_box_id$=prc_w2box.w2_box_id$
+                    prc_w2box_ddct.w2_bxln_id$=prc_w2box.w2_bxln_id$
+                    prc_w2box_ddct.w2_state_id$=prc_w2box.w2_state_id$
+                    prc_w2box_ddct.w2_local_id$=prc_w2box.w2_local_id$
 
-                              prc_w2box_ddct.deduct_code$=field(old_rec$,"w2_code_id_"+str(x:"00"))
-                              prc_w2box_ddct.operator$=field(old_rec$,"w2_code_oper_"+str(x:"00"))
-                              prc_w2box_ddct.multiplier=nfield(old_rec$,"w2_code_mult_"+str(x:"00"))
-                             prc_w2box_ddct$=field(prc_w2box_ddct$)
-                             writerecord(prc_w2box_ddct_trgt)prc_w2box_ddct$
-                        break
-            case datatype$ = "C"
-                            rem "Contributions"
-                             dim prc_w2box_cont$:prc_w2box_cont_tpl$
-                              prc_w2box_cont.year$=prc_w2box.year$
-                              prc_w2box_cont.w2_box_id$=prc_w2box.w2_box_id$
-                              prc_w2box_cont.w2_bxln_id$=prc_w2box.w2_bxln_id$
-                              prc_w2box_cont.w2_state_id$=prc_w2box.w2_state_id$
-                              prc_w2box_cont.w2_local_id$=prc_w2box.w2_local_id$
+                    prc_w2box_ddct.deduct_code$=field(old_rec$,"w2_code_id_"+str(x:"00"))
+                    prc_w2box_ddct.operator$=field(old_rec$,"w2_code_oper_"+str(x:"00"))
+                    prc_w2box_ddct.multiplier=nfield(old_rec$,"w2_code_mult_"+str(x:"00"))
+                    prc_w2box_ddct$=field(prc_w2box_ddct$)
+                    writerecord(prc_w2box_ddct_trgt)prc_w2box_ddct$
+                    break
+                case datatype$ = "C"
+                    rem "Contributions"
+                    dim prc_w2box_cont$:prc_w2box_cont_tpl$
+                    prc_w2box_cont.year$=prc_w2box.year$
+                    prc_w2box_cont.w2_box_id$=prc_w2box.w2_box_id$
+                    prc_w2box_cont.w2_bxln_id$=prc_w2box.w2_bxln_id$
+                    prc_w2box_cont.w2_state_id$=prc_w2box.w2_state_id$
+                    prc_w2box_cont.w2_local_id$=prc_w2box.w2_local_id$
 
-                              prc_w2box_cont.contrib_code$=field(old_rec$,"w2_code_id_"+str(x:"00"))
-                              prc_w2box_cont.operator$=field(old_rec$,"w2_code_oper_"+str(x:"00"))
-                              prc_w2box_cont.multiplier=nfield(old_rec$,"w2_code_mult_"+str(x:"00"))
-                              temp_flag$="GBA"
-                              prc_w2box_cont.src_column$=temp_flag$(nfield(old_rec$,"w2_amt_type_"+str(x:"00")),1)
-                             prc_w2box_cont$=field(prc_w2box_cont$)
-                             writerecord(prc_w2box_cont_trgt)prc_w2box_cont$
-                        break
-            case datatype$ = "D"
-                            rem "Taxes"
-                             dim prc_w2box_tax$:prc_w2box_tax_tpl$
-                              prc_w2box_tax.firm_id$=prc_w2box.firm_id$
-                              prc_w2box_tax.record_id_w$=prc_w2box.record_id_w$
-                              prc_w2box_tax.year$=prc_w2box.year$
-                              prc_w2box_tax.w2_box_id$=prc_w2box.w2_box_id$
-                              prc_w2box_tax.w2_bxln_id$=prc_w2box.w2_bxln_id$
-                              prc_w2box_tax.w2_state_id$=prc_w2box.w2_state_id$
-                              prc_w2box_tax.w2_local_id$=prc_w2box.w2_local_id$
+                    prc_w2box_cont.contrib_code$=field(old_rec$,"w2_code_id_"+str(x:"00"))
+                    prc_w2box_cont.operator$=field(old_rec$,"w2_code_oper_"+str(x:"00"))
+                    prc_w2box_cont.multiplier=nfield(old_rec$,"w2_code_mult_"+str(x:"00"))
+                    temp_flag$="GBA"
+                    prc_w2box_cont.src_column$=temp_flag$(nfield(old_rec$,"w2_amt_type_"+str(x:"00")),1)
+                    prc_w2box_cont$=field(prc_w2box_cont$)
+                    writerecord(prc_w2box_cont_trgt)prc_w2box_cont$
+                    break
+                case datatype$ = "D"
+                    rem "Taxes"
+                    dim prc_w2box_tax$:prc_w2box_tax_tpl$
+                    prc_w2box_tax.firm_id$=prc_w2box.firm_id$
+                    prc_w2box_tax.record_id_w$=prc_w2box.record_id_w$
+                    prc_w2box_tax.year$=prc_w2box.year$
+                    prc_w2box_tax.w2_box_id$=prc_w2box.w2_box_id$
+                    prc_w2box_tax.w2_bxln_id$=prc_w2box.w2_bxln_id$
+                    prc_w2box_tax.w2_state_id$=prc_w2box.w2_state_id$
+                    prc_w2box_tax.w2_local_id$=prc_w2box.w2_local_id$
 
-                              prc_w2box_tax.tax_code$=field(old_rec$,"w2_code_id_"+str(x:"00"))
-                              prc_w2box_tax.operator$=field(old_rec$,"w2_code_oper_"+str(x:"00"))
-                              prc_w2box_tax.multiplier=nfield(old_rec$,"w2_code_mult_"+str(x:"00"))
-                              temp_flag$="GTA"
-                              prc_w2box_tax.src_column$=temp_flag$(nfield(old_rec$,"w2_amt_type_"+str(x:"00")),1)
-                             prc_w2box_tax$=field(prc_w2box_tax$)
-                             writerecord(prc_w2box_tax_trgt)prc_w2box_tax$
-
-                        break
-        swend
-       next x
-   wend
-   return
+                    prc_w2box_tax.tax_code$=field(old_rec$,"w2_code_id_"+str(x:"00"))
+                    prc_w2box_tax.operator$=field(old_rec$,"w2_code_oper_"+str(x:"00"))
+                    prc_w2box_tax.multiplier=nfield(old_rec$,"w2_code_mult_"+str(x:"00"))
+                    temp_flag$="GTA"
+                    prc_w2box_tax.src_column$=temp_flag$(nfield(old_rec$,"w2_amt_type_"+str(x:"00")),1)
+                    prc_w2box_tax$=field(prc_w2box_tax$)
+                    writerecord(prc_w2box_tax_trgt)prc_w2box_tax$
+                    break
+            swend
+        next x
+    wend
+    return
 
 header_pre02_recs: rem --- Create Header for pre02_recs"
     pre_02_trgt=new_file;rem "Header Table"
