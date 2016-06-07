@@ -57,16 +57,7 @@ rem --- Main processing
 	gosub update_barista_installs
 
 done: rem --- All done
-
-    rem --- before exiting, launch utility to rebuild any Full Text Indexes in silent mode
-        rd_run_arg$="bbj "+stbl("+DIR_SYP")+"bam_dd_export_FTI.bbj - -auto"
-        rd_scall_result=scall(rd_run_arg$,err=*next)
-        meter_text$=Translate!.getTranslation("AON_FULL_TEXT_INDEX","Full Text Indexes (re)created.")
-        meter_proc_recs=meter_proc_recs+1
-        meter_action$="MTR-LST"
-        gosub disp_meter
-        print(log_dev)meter_text$
-    
+   
     rem --- Stop progress meter
     meter_text$=""
     meter_proc_recs=meter_total_recs
