@@ -1201,7 +1201,6 @@ rem --- "prt-02 and prt-03 have new sequence number in new file only"
         new_rec.internal_seq_no$=new_seq$
     endif
 
-rem wgh ... 8675
 rem --- If new_field_defaults not set for Payroll year, use Current Year from source Payroll parameters.
         if pos(";"+cvs(new_datafile$,11)+";"=";prc_taxcode;prc_contcode;prc_taxtable;prc_w2box;prt-01;prt-05;prt-11;prt-21;prt-31;")>0 and cvs(default_pr_year$,2)="" then
             if prYearMap!.containsKey(thisFirm$) then
@@ -2259,7 +2258,6 @@ check_for_definition:
     rem --- see if this table has any new fields (i.e., that weren't in v6 (or Payroll))
     rem --- if so, set default value based on new_field_defaults flat file
     rem --- new_rec$ only dim'd once/file, so setting the values once here should carry into every record
-rem wgh ... 8675
     if source_version=6 or pos(";"+cvs(new_datafile$,11)+";"=";prc_taxcode;prc_contcode;prc_taxtable;prc_w2box;prt-01;prt-05;prt-11;prt-21;prt-31;")>0 then
         new_rec_fields!=new_field_defaults!.keySet().iterator()
         while new_rec_fields!.hasNext()
@@ -2271,11 +2269,10 @@ rem wgh ... 8675
             endif
         wend
     
-rem wgh ... 8675
-rem --- If new_field_defaults not set for Payroll year, will need to use Current Year from source Payroll parameters.
-if pos(";"+cvs(new_datafile$,11)+";"=";prc_taxcode;prc_contcode;prc_taxtable;prc_w2box;prt-01;prt-05;prt-11;prt-21;prt-31;")>0 then
-    default_pr_year$=new_rec.year$
-endif
+        rem --- If new_field_defaults not set for Payroll year, will need to use Current Year from source Payroll parameters.
+        if pos(";"+cvs(new_datafile$,11)+";"=";prc_taxcode;prc_contcode;prc_taxtable;prc_w2box;prt-01;prt-05;prt-11;prt-21;prt-31;")>0 then
+            default_pr_year$=new_rec.year$
+        endif
     endif
 return
 
@@ -3190,7 +3187,6 @@ split_prm10w_recs: rem --- Split old w2Box Detail File into separate files
         field_name$="RECORD_ID_W"
         field prc_w2box$,field_name$=field(old_rec$,field_name$)
 
-rem wgh ... 8675
         rem --- If new_field_defaults not set for Payroll year, use Current Year from source Payroll parameters.
         if cvs(new_rec.year$,2)="" then
             if prYearMap!.containsKey(old_rec.firm_id$) then
@@ -3200,7 +3196,6 @@ rem wgh ... 8675
             w2year$=new_rec.year$
         endif
 
-rem wgh ... 8675
         field prc_w2box$,"year"=w2year$
 
         field_name$="W2_BOX_ID"
