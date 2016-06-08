@@ -116,12 +116,14 @@ rem  */
             rem --- data/def
             rem --- help/WebHelp
             rem --- info
+            rem --- .textsearch (data/<filename>.textsearch directories are for Full Text Indexes and will be re-created later)
             sep$ = File.separator
             #skipDirs!.add(sep$+"callpoints")
             #skipDirs!.add(sep$+"data"+sep$+"arc")
             #skipDirs!.add(sep$+"data"+sep$+"def")
             #skipDirs!.add(sep$+"help"+sep$+"WebHelp")
             #skipDirs!.add(sep$+"info")
+            #skipDirs!.add(".textsearch")
             methodret
             
 method_error:rem --- Method error trap/handler
