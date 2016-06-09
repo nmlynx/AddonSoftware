@@ -57,3 +57,43 @@ exceeded message.
 ----
 Modified: data/bar/ope_orddet.xml
 Modified: data/cdf/ope_orddet.cdf
+
+=======================================================================================================================================
+Revision: 2a2660850d1e4f83aae71b9836ede3d7f9de420d
+Author: chawkins <chawkins@192.168.1.14>
+Date: 6/7/2016 3:06:41 PM
+Message:
+Per bug 8686; Added code to have the barista_installs.xml open go to the
+create_installs routine if the open fails, rather than err=*return.
+
+Also added code to clear the '01PAYDISC' record from ads_autolaunch
+along w/ other records it's clearing.
+
+Also added code to call the FTI rebuild utility when done because the
+pgm copied the data files, .sync files, and .textsearch directories, but
+EM complained when trying to view the tables, didn't recognize that FTI
+was created.
+----
+Modified: ad/src/adx_quickcopywiz.aon
+
+=======================================================================================================================================
+Revision: b05fa3b10fbc5b3932c0ab722dd10310ef8e50b4
+Author: chawkins <chawkins@192.168.1.14>
+Date: 6/7/2016 4:46:22 PM
+Message:
+Per bug 8686, follow-up testing showed that the call to re-create the
+FTI's wasn't needed. Removed.
+----
+Modified: ad/src/adx_quickcopywiz.aon
+
+=======================================================================================================================================
+Revision: 810bac6c7a547f0b414b56d47ddad19255e1bca0
+Author: chawkins <chawkins@192.168.1.14>
+Date: 6/7/2016 6:12:26 PM
+Message:
+Altered the copy portion of the AIUW to not copy
+data/<filename>.textsearch directories. These are associated with Full
+Text Indexes and will be re-created later in the AIUW process.
+----
+Modified: ad/src/adc_copyaon.aon
+
