@@ -467,10 +467,16 @@ rem --- Calculate Taxes
 
 	discount_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
-	tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt,
-:										num(callpoint!.getColumnData("OPE_INVHDR.TAXABLE_AMT")),
+	taxable_sales = ordHelp!.getTaxableSales()
+	taxAndTaxableVect! = ordHelp!.calculateTax(discount_amt, freight_amt,
+:										taxable_sales,
 :										num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")))
+
+	tax_amount = taxAndTaxableVect!.getItem(0)
+	taxable_amt = taxAndTaxableVect!.getItem(1)
+
 	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",str(tax_amount))
+	callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",str(taxable_amt))
 	callpoint!.setStatus("REFRESH")
 [[OPE_INVHDR.ARAR]]
 rem --- If First/Last Record was used, did it return an Invoice?
@@ -873,10 +879,14 @@ rem --- Calculate taxes and write it back
 
 	discount_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+	taxable_sales = ordHelp!.getTaxableSales()
 	gosub get_disk_rec
-	ordhdr_rec.tax_amount = ordHelp!.calculateTax(discount_amt, freight_amt,
-:												num(callpoint!.getColumnData("OPE_INVHDR.TAXABLE_AMT")),
+	taxAndTaxableVect! = ordHelp!.calculateTax(discount_amt, freight_amt,
+:												taxable_sales,
 :												num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")))
+
+	ordhdr_rec.tax_amount = taxAndTaxableVect!.getItem(0)
+	ordhdr_rec.taxable_amt = taxAndTaxableVect!.getItem(1)
 	ordhdr_rec$ = field(ordhdr_rec$)
 	write record (ordhdr_dev) ordhdr_rec$
 	ordhdr_key$=ordhdr_rec.firm_id$+ordhdr_rec.trans_status$+ordhdr_rec.ar_type$+ordhdr_rec.customer_id$+ordhdr_rec.order_no$+ordhdr_rec.ar_inv_no$
@@ -3099,11 +3109,16 @@ rem ==========================================================================
 	if cvs(callpoint!.getColumnData("OPE_INVHDR.TAX_CODE"),2) <> ""
 		ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 		ordHelp!.setTaxCode(callpoint!.getColumnData("OPE_INVHDR.TAX_CODE"))
-		tax_amount = ordHelp!.calculateTax(disc_amt, freight_amt,
-:											num(callpoint!.getColumnData("OPE_INVHDR.TAXABLE_AMT")),
+		taxable_sales = ordHelp!.getTaxableSales()
+		taxAndTaxableVect! = ordHelp!.calculateTax(disc_amt, freight_amt,
+:											taxable_sales,
 :											num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")))
 
+		tax_amount = taxAndTaxableVect!.getItem(0)
+		taxable_amt = taxAndTaxableVect!.getItem(1)
+
 		callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",str(tax_amount))
+		callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",str(taxable_amt))
 		callpoint!.setStatus("REFRESH")
 	endif
 	return
