@@ -298,7 +298,6 @@
             <arg value="${prbabs.bbj.dir}/prog/lcheck01004419PRB.aon"/>
         </java>
 
-
     </target>
     <!-- End of copyPRbabs -->
     <!-- ====================================== -->
@@ -308,106 +307,7 @@
     <!-- ====================================== -->
     <!-- copy Images -->
     <target name="copyImages">
-        <copy preserveLastModified="true"
-              todir="${addon.dir}/unix/images">
-              <fileset file="${images.dir}/AddonSoftware.xpm"/>
-              <fileset file="${images.dir}/AddonDev.png"/>
-              <fileset file="${images.dir}/Documentation.xpm"/>
-        </copy>
-        <copy preserveLastModified="true"
-              todir="${addon.dir}/${port.MAC}/images">
-              <fileset file="${images.dir}/AddonDev.icns"/>
-              <fileset file="${images.dir}/AddonSoftware.icns"/>
-        </copy>
-        <copy preserveLastModified="true"
-              todir="${addon.dir}/${port.WIN}/images">
-              <fileset file="${images.dir}/AddonDev.ico"/>
-              <fileset file="${images.dir}/AddonSoftware.ico"/>
-              <fileset file="${images.dir}/Documentation.ico"/>
-        </copy>
-    </target>
-    <!-- End of copy Images -->
-    <!-- ====================================== -->
 
-
-
-    <!-- ====================================== -->
-    <!-- copy Scripts -->
-    <target name="copyScripts">
-        <!-- Generic Unix Scripts -->
-        <copy preserveLastModified="true"
-              todir="${addon.dir}/unix/bin">
-              <fileset file="${templates.dir}/addon"/>
-        </copy>
-        <copy preserveLastModified="true"
-              todir="${addon.dir}/unix/bin">
-              <fileset file="${templates.dir}/addondeveloper"/>
-        </copy>
-
-        <!-- Specific Unix Scripts -->
-
-        <!-- Mac Shortcuts -->
-        <copy preserveLastModified="true"
-              todir="${addon.dir}/${port.MAC}/apps">
-              <fileset dir="${templates.dir}/mac"
-                       includes="AddonSoftware.app/"/>
-        </copy>
-        <copy preserveLastModified="true"
-              todir="${addon.dir}/${port.MAC}/apps">
-              <fileset dir="${templates.dir}/mac"
-                       includes="AddonSoftwareDeveloper.app/"/>
-        </copy>
-    </target>
-    <!-- End of copyScripts -->
-    <!-- ====================================== -->
-
-
-    <!-- ====================================== -->
-    <!-- Addon sync -->
-    <target name="syncAddon" depends="sleep15">
-
-        <!-- Run BBj session to sync AddonSoftware -->
-        <if>
-            <equals arg1="${use.locale}" arg2="true"/>
-            <then>
-                <exec executable="${install.dir}/bin/bbj" failonerror="true">
-                    <env key="DISPLAY" value="${display}"/>
-                    <arg value="-q"/>
-                    <arg value="-WD${barista.bbj.dir}"/>
-                    <arg value="-c${barista.bbj.dir}/sys/config/enu/barista.cfg"/>
-                    <arg value="-CPbarista"/>
-                    <arg value="${barista.bbj.dir}/sys/prog/bax_build_sync.bbj"/>
-                    <arg value="-"/>
-                    <arg value="-s../apps/aon/config/addon.syn"/>
-                    <arg value="-loc${addon.langs}"/>
-                    <arg value="-log${log.bbj.dir}/addon_sync.log"/>
-                </exec>
-            </then>
-            <else>
-
-        <!-- Compile programs -->
-        <java classname="com.basis.bbj.BBjCpl" fork="true" failonerror="true">
-            <classpath refid="path.bbj"/>
-            <jvmarg value="${bbjcpl.heapdump}"/>
-            <jvmarg value="${bbjcpl.printargs}"/>
-            <arg value="-p"/>
-            <arg value="-r"/>
-            <arg value="-d${prbabs.build.dir}/prog"/>
-            <arg value="-xbbj"/>
-            <arg value="-eprbabs.err"/>
-            <arg value="${prbabs.bbj.dir}/prog/lcheck01004419PRB.aon"/>
-        </java>
-
-
-    </target>
-    <!-- End of copyPRbabs -->
-    <!-- ====================================== -->
-
-
-
-    <!-- ====================================== -->
-    <!-- copy Images -->
-    <target name="copyImages">
         <copy preserveLastModified="true"
               todir="${addon.dir}/unix/images">
               <fileset file="${images.dir}/AddonSoftware.xpm"/>
