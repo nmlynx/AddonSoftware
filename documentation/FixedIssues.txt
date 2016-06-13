@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-06-07
+ Report Date:   2016-06-13
  Report Branch: AddonSoftware 16.01
  Last Release:  AddonSoftware 16.00
 =======================================================================================================================================
@@ -96,4 +96,32 @@ data/<filename>.textsearch directories. These are associated with Full
 Text Indexes and will be re-created later in the AIUW process.
 ----
 Modified: ad/src/adc_copyaon.aon
+
+=======================================================================================================================================
+Revision: b23864e969b7131e8b71c81ba6c33b891027a4fe
+Author: chawkins <chawkins@bagadata.ftrdhcpuser.net>
+Date: 6/10/2016 5:43:19 PM
+Message:
+Per bug 8690; made corrections to ensure taxable amount carried in
+order/invoice header is correct, i.e., includes freight amount if
+specified by tax code.
+----
+Modified: ad/src/ado_order.src
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_invdet.cdf
+Modified: data/cdf/ope_invhdr.cdf
+Modified: data/cdf/ope_orddet.cdf
+Modified: data/cdf/ope_ordhdr.cdf
+
+=======================================================================================================================================
+Revision: 9586457a08d29cfef2a7ec42555693f501a22b26
+Author: chawkins <chawkins@bagadata.ftrdhcpuser.net>
+Date: 6/10/2016 6:03:41 PM
+Message:
+Per bug 8691; corrected to use ope21 instead of opt21.
+----
+Modified: op/src/opu_updatesales.aon
 
