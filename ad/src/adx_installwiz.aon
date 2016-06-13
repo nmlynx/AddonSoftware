@@ -77,9 +77,12 @@ rem --- Is Addon being installed, or is it already installed?
 rem --- Is PRB Payroll being installed?
     findrecord(adm_modules_dev,key="01004419"+"PRB",dom=*next)adm_modules$
     if adm_modules.sys_install$="Y" then
+        install_prbabs=0
         mountedSys!.add(newAonLoc$+"/prbabs")
         synFile!.add(newAonLoc$+"/prbabs/config/prbabs.syn")
         oldLocation!.add(bbjHome$+"/apps/prbabs")
+    else
+        install_prbabs=0
     endif
     
 rem --- Start progress meter
@@ -127,6 +130,38 @@ rem --- Update new addon.syn file
         gosub update_addon_syn
     next syscnt
     
+rem --- Create new session specific classpath (SSCP) in Enterprise Manager
+    sscpName$=cvs(dbName$,8)
+    needBaristaprop=1
+    needAddonprop=1
+    needPrbabsprop=1
+    paths!=BBjAPI().makeVector()
+    env!=BBjAPI().getAdmin(rdAdmin!.getUser(), rdAdmin!.getPassword()).getEnvironment()
+    paths!=env!.getClasspath(BBjAPI().getConfig().getCurrentCommandLineObject().getOriginalClasspathName(),err=*next)
+    if paths!.size()>0 then
+        for i=0 to paths!.size()-1
+            if pos("baristaprop.jar"=paths!.getItem(i)) and install_aon then
+                rem --- Update path to baristaprop.jar
+                paths!.setItem(i,newAonLoc$+"/barista/sys/prop/baristaprop.jar")
+                needBaristaprop=0
+            endif
+            if pos("addonprop.jar"=paths!.getItem(i)) and install_aon then
+                rem --- Update path to addonprop.jar
+                paths!.setItem(i,newAonLoc$+"/aon/prop/addonprop.jar")
+                needAddonprop=0
+            endif
+            if pos("prbabsprop.jar"=paths!.getItem(i)) and install_prbabs then
+                rem --- Update path to prbabsprop.jar
+                paths!.setItem(i,newAonLoc$+"/prbabs/prop/prbabsprop.jar")
+                needPrbabsprop=0
+            endif
+        next i
+    endif
+    if needBaristaprop then paths!.addItem(newAonLoc$+"/barista/sys/prop/baristaprop.jar")
+    if needAddonprop then paths!.addItem(newAonLoc$+"/aon/prop/addonprop.jar")
+    if needPrbabsprop then paths!.addItem(newAonLoc$+"/prbabs/prop/prbabsprop.jar")
+    env!.setClasspath(sscpName$, paths!)
+    
 rem --- Add new application to Barista Installation Manager
 rem --- Run BIM bai_install_manager.bbj program via synchronous system call because of its terminating release
 
@@ -138,32 +173,7 @@ rem --- Run BIM bai_install_manager.bbj program via synchronous system call beca
         gosub disp_meter
         print(log_dev)meter_text$
     
-        rem --- Create new session specific classpath (SSCP) in Enterprise Manager
-        sscpName$=cvs(dbName$,8)
-        needAddonprop=1
-        needBaristaprop=1
-        paths!=BBjAPI().makeVector()
-        env!=BBjAPI().getAdmin(rdAdmin!.getUser(), rdAdmin!.getPassword()).getEnvironment()
-        paths!=env!.getClasspath(BBjAPI().getConfig().getCurrentCommandLineObject().getOriginalClasspathName(),err=*next)
-        if paths!.size()>0 then
-            for i=0 to paths!.size()-1
-                if pos("addonprop.jar"=paths!.getItem(i)) then
-                    rem --- Update path to addonprop.jar
-                    paths!.setItem(i,newAonLoc$+"/aon/prop/addonprop.jar")
-                    needAddonprop=0
-                endif
-                if pos("baristaprop.jar"=paths!.getItem(i)) then
-                    rem --- Update path to baristaprop.jar
-                    paths!.setItem(i,newAonLoc$+"/barista/sys/prop/baristaprop.jar")
-                    needBaristaprop=0
-                endif
-            next i
-        endif
-        if needBaristaprop then paths!.addItem(newAonLoc$+"/barista/sys/prop/baristaprop.jar")
-        if needAddonprop then paths!.addItem(newAonLoc$+"/aon/prop/addonprop.jar")
-        env!.setClasspath(sscpName$, paths!)
-    
-        rem --- Launch bai_install_manager.bbj
+        rem --- Launch bai_install_manager.bbj if installing Addon
     	bar_dir$=dir("")
     	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
     	run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
