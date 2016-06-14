@@ -2492,7 +2492,7 @@ rem ==========================================================================
 
 	while 1
 		read record (ope11_dev, end=*break) ope11a$
-		if pos(firm_id$+trans_status$+ar_type$+cust_id$+order_no$ = ope11a$) <> 1 then break
+		if pos(firm_id$+trans_status$+ar_type$+cust_id$+order_no$ = ope11a.firm_id$+ope11a.trans_status$+ope11a.ar_type$+ope11a.customer_id$+ope11a.order_no$) <> 1 then break
 
 		if ope11a.pick_flag$ = "Y" then 
 			reprintable = 1
