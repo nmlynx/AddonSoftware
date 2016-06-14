@@ -266,13 +266,7 @@
         <copy preserveLastModified="true"
               todir="${prbabs.build.dir}">
               <fileset dir="${prbabs.bbj.dir}"
-                  excludes="build.xml,
-                            user.build.properties.default,
-                            user.build.properties,
-                            basis.build.properties,
-                            InstallResponse.properties,
-                            config/barista.syn.example,
-                            prog/lcheck01004419PRB.aon"/>
+                  excludes="prog/lcheck_01004419PRB.bbj"/>
         </copy>
 
         <!-- Copy some config files from addon to payroll -->
@@ -295,7 +289,7 @@
             <arg value="-d${prbabs.build.dir}/prog"/>
             <arg value="-xbbj"/>
             <arg value="-eprbabs.err"/>
-            <arg value="${prbabs.bbj.dir}/prog/lcheck01004419PRB.aon"/>
+            <arg value="${prbabs.bbj.dir}/prog/lcheck_01004419PRB.bbj"/>
         </java>
 
     </target>
