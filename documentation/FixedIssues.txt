@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-06-13
+ Report Date:   2016-06-14
  Report Branch: AddonSoftware 16.01
  Last Release:  AddonSoftware 16.00
 =======================================================================================================================================
@@ -158,3 +158,21 @@ for trans_status$ in the key.
 ----
 Modified: data/bar/ope_ordhdr.xml
 Modified: data/cdf/ope_ordhdr.cdf
+
+=======================================================================================================================================
+Revision: 1e0de26bc016844937167ceb66586dce9dd92261
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 6/14/2016 12:17:33 PM
+Message:
+Bug 2810:When "Lotted or Serialized item?" is checked, it cannot be
+un-checked if "Inventoried?" is checked.
+
+"Inventoried?" cannot be checked unless "Lotted or Serialized item?" is
+checked and there is zero quantity on hand for the item in all
+warehouses.
+
+When "Inventoried?" is checked, it cannot be un-checked unless there is
+zero quantity on hand for the item in all warehouses.
+----
+Modified: data/bar/ivm_itemmast.xml
+Modified: data/cdf/ivm_itemmast.cdf
