@@ -272,11 +272,11 @@
         <!-- Copy some config files from addon to payroll -->
         <copy preserveLastModified="true"
               file="${addon.bbj.dir}/prop/addon.properties"
-              tofile="${prbabs.bbj.dir}/prop/prbabs.properties">
+              tofile="${prbabs.build.dir}/prop/prbabs.properties">
         </copy>
         <copy preserveLastModified="true"
               file="${addon.bbj.dir}/prop/addon_en.properties"
-              tofile="${prbabs.bbj.dir}/prop/prbabs_en.properties">
+              tofile="${prbabs.build.dir}/prop/prbabs_en.properties">
         </copy>
 
         <!-- Compile programs -->
@@ -623,9 +623,15 @@
             <entry key="addon.dtstamp" value="${addon.dtstamp}"/>
         </propertyfile>
 
-        <!-- Jar it up property files -->
+        <!-- Jar it up, addon property files -->
         <jar destfile="${addon.dir}/apps/aon/prop/addonprop.jar">
              <fileset dir="${addon.dir}/apps/aon/prop"
+                      includes="*.properties" />
+        </jar>
+
+        <!-- Jar it up, payroll property files -->
+        <jar destfile="${addon.dir}/apps/prbabs/prop/addonprop.jar">
+             <fileset dir="${addon.dir}/apps/prbabs/prop"
                       includes="*.properties" />
         </jar>
 
