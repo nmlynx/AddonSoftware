@@ -2976,6 +2976,9 @@ rem ==========================================================================
 	callpoint!.setDevObject("tax_amount",   callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
 	callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+	rem --- Init devObjects set by OPE_INVCASH in case user doesn't have access to that form
+	callpoint!.setDevObject("print_invoice", "N")
+	callpoint!.setDevObject("cash_code_type","")
 
 	trans_status$=callpoint!.getColumnData("OPE_INVHDR.TRANS_STATUS")
 	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
