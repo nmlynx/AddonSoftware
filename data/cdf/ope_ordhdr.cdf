@@ -1781,6 +1781,14 @@ rem --- Write/Remove manual ship to file
 		callpoint!.setOptionEnabled("DINV",0)
 		callpoint!.setOptionEnabled("CRAT",0)
 	endif
+
+rem --- Update devObjects with current values written to file
+	callpoint!.setDevObject("discount_amt",num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT")))
+	callpoint!.setDevObject("freight_amt",num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT")))
+	callpoint!.setDevObject("tax_amount",num(callpoint!.getColumnData("OPE_ORDHDR.TAX_AMOUNT")))
+	callpoint!.setDevObject("taxable_amt",num(callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT")))
+	callpoint!.setDevObject("total_cost",num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_COST")))
+	callpoint!.setDevObject("total_sales",num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")))
 [[OPE_ORDHDR.<CUSTOM>]]
 rem ==========================================================================
 display_customer: rem --- Get and display Bill To Information
