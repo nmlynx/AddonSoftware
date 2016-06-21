@@ -1582,6 +1582,14 @@ rem --- Write/Remove manual ship to file
 		callpoint!.setOptionEnabled("DINV",0)
 		callpoint!.setOptionEnabled("RPRT",0)
 	endif
+
+rem --- Update devObjects with current values written to file
+	callpoint!.setDevObject("discount_amt",num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT")))
+	callpoint!.setDevObject("freight_amt",num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT")))
+	callpoint!.setDevObject("tax_amount",num(callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT")))
+	callpoint!.setDevObject("taxable_amt",num(callpoint!.getColumnData("OPE_INVHDR.TAXABLE_AMT")))
+	callpoint!.setDevObject("total_cost",num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_COST")))
+	callpoint!.setDevObject("total_sales",num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")))
 [[OPE_INVHDR.ADIS]]
 rem --- Check locked status
 
