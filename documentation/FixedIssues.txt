@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-06-23
+ Report Date:   2016-06-25
  Report Branch: AddonSoftware 16.01
  Last Release:  AddonSoftware 16.00
 =======================================================================================================================================
@@ -335,3 +335,14 @@ Per bug 8718; corrected method (getTaxable() > getTaxableSales()).
 ----
 Modified: data/bar/ope_invcash.xml
 Modified: data/cdf/ope_invcash.cdf
+
+=======================================================================================================================================
+Revision: 65037f9ef24e76aaaa2caf38f5ed169f6638adbc
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 6/25/2016 4:57:41 PM
+Message:
+Bug 8721: Set ope01a.print_status$="B" in opr_invoice.aon at the same
+time ope01a.lock_status$="Y" is set.
+----
+Modified: op/src/opc_invoice.aon
+Modified: op/src/opr_invoice.aon
