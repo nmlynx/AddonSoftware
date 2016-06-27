@@ -774,7 +774,7 @@ by_terr_cust: rem --- (Action = 12) Territory/Customer/Product/Item
     let levels$[2]="C"
     let levels$[3]="P"
     let levels$[4]="I"
-    let segments=pos(level$=levels$[1]+levels$[2]+levels$[3]+levels$[4])
+    let segments=pos(sas01a.customer_lev$=levels$[1]+levels$[2]+levels$[3]+levels$[4])
     let literals$[1]=Translate!.getTranslation("AON_TERRITORY")
     let literals$[2]=Translate!.getTranslation("AON_CUSTOMER")
     let literals$[3]=Translate!.getTranslation("AON_PRODUCT_TYPE")
