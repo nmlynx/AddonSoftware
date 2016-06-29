@@ -1313,6 +1313,7 @@ check_payroll_install: rem --- Check if PRB Payroll should be installed
 	dim adm_modules$:fnget_tpl$("ADM_MODULES")
 	findrecord(adm_modules_dev,key="01004419"+"PRB",dom=*next)adm_modules$
 	install_prbabs=0
+	hybridPR_installed=0
 	if adm_modules.sys_install$="Y" then
 		install_prbabs=1
 
@@ -1334,10 +1335,12 @@ check_payroll_install: rem --- Check if PRB Payroll should be installed
 			if old_adm_modules.sys_install$="Y" then
 				rem --- Hybrid Payroll installed at old location, so don't install PRB Payroll
 				install_prbabs=0
+				hybridPR_installed=1
 			endif
 		endif
 	endif
 	callpoint!.setDevObject("install_prbabs",install_prbabs)
+	callpoint!.setDevObject("hybridPR_installed",hybridPR_installed)
 
 	return
 [[ADX_UPGRADEWIZ.NEW_AON_LOC.AVAL]]
