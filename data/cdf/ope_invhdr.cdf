@@ -263,6 +263,15 @@ rem --- Now we've been on the Totals tab
 rem --- Enable/Disable Cash Sale button
 	gosub able_cash_sale
 [[OPE_INVHDR.AOPT-UINV]]
+rem --- Check to see if record has been modified (don't undo until rec is saved)
+
+	if pos("M"=callpoint!.getRecordStatus())
+		callpoint!.setOptionEnabled("UINV",0)
+		msg_id$="AD_SAVE_BEFORE_UNDO"
+		gosub disp_message
+		break
+	endif
+
 rem --- Must be in edit mode for this feature
 	if !callpoint!.isEditMode() then
 		msg_id$="AD_EDIT_MODE_REQUIRE"
