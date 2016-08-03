@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-08-02
+ Report Date:   2016-08-03
  Report Branch: AddonSoftware 16.10
  Last Release:  AddonSoftware 16.02
 =======================================================================================================================================
@@ -171,3 +171,13 @@ Bug 8788: Added end=*next error branch to READs without an existing
 error branch.
 ----
 Modified: iv/src/ivu_physupdate.aon
+
+=======================================================================================================================================
+Revision: a44c5bcdc6f519a2cf2b062318a5a94a4c9ac6b7
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 8/3/2016 11:57:50 AM
+Message:
+Removed 3 trailing blanks ($20$) at the end-of-file that can apparently
+cause problems when the file is edited with vi on Linux.
+----
+Modified: util/dataport/files/field_file_xref
