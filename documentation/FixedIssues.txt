@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-08-08
+ Report Date:   2016-08-09
  Report Branch: AddonSoftware 16.10
  Last Release:  AddonSoftware 16.02
 =======================================================================================================================================
@@ -238,3 +238,14 @@ Bug 8407: Clear Check Number when using previously saved selections.
 ----
 Modified: data/bar/apr_checks.xml
 Modified: data/cdf/apr_checks.cdf
+
+=======================================================================================================================================
+Revision: 849132f1b362e802bd1a34b075224a4db29e637a
+Author: Christine <chawkins@basis.com>
+Date: 8/9/2016 12:52:56 PM
+Message:
+Per bug 8795; added code to update aging date, age by, and age credits
+fields in arm-02 so drilldowns work correctly after running Age
+Transactions (already working correctly after running Aging Report).
+----
+Modified: ar/src/aru_agingupdate.aon
