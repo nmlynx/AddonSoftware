@@ -609,11 +609,10 @@ rem --- First line
 :       ivm01a.lotser_item$="Y" 
 :   then 
         gosub average_item_cost
-    endif
-    
-    if ser_qty then
-        ope11a.unit_cost=ser_cost/ser_qty
-    endif
+        if ser_qty then
+            ope11a.unit_cost=ser_cost/ser_qty
+        endif
+    endif    
     
 	if pos(opm02a.line_type$="SPN")<>0
 		OutVect!.addItem(str(ope11a.qty_ordered:m2$)+$00$+"R")
