@@ -668,6 +668,7 @@ lifo_fifo: rem --- LIFO/FIFO
     call pgmdir$+"ivc_lifofifo.aon",lf_action$,"R",lf_date$,lf_channels[all],lf_tmpls$[all],lf_item$[all],ivs01_precision,abs(sfe25a.qty_issued),q7,ret_cost,status
     if ret_cost<>0 icost=ret_cost
     dim ivw05a$:fattr(ivw05a$)
+    ivw05a.firm_id$=sfe25a.firm_id$
     ivw05a.item_id$=sfe25a.item_id$
     ivw05a.line_no$=sfe25a.material_seq$
     ivw05a.unit_cost=icost

@@ -898,7 +898,7 @@ rem --- Inquiry On Tier Cost For Returned Items
     if ope11a.qty_shipped<0 then
         lf_action$(2,1)="R"
         call pgmdir$+"ivc_lifofifo.aon",lf_action$,"I",lf_date$,lf_channels[all],lf_tmpls$[all],lf_item$[all],i[2],abs(ope11a.qty_shipped),cost,ret_cost,status
-        if status = 999 then exitto std_exit
+        if status then exitto std_exit
         if ret_cost<>0 then cost=ret_cost
     endif
 
