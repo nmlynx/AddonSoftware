@@ -444,6 +444,7 @@ item_break: rem --- Item Break
             lf_cost  = 0
             if lf_qnty < 0 then lf_act$=lf$+"I" else lf_act$=lf$+"R"
             call pgmdir$+"ivc_lifofifo.aon",lf_act$,lf_type$,lf_date$,lf_chans[all],lf_tmpls$[all],lf_item$[all],p[1],abs(lf_qnty),cost,lf_cost,status
+            if status then exitto std_exit
             if lf_qnty < 0 and lf_cost <> 0 then cost=lf_cost
         endif
     endif
