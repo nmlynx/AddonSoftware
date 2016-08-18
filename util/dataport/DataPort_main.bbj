@@ -1651,7 +1651,7 @@ write_gls_calendar_recs: rem --- Write GLS_CALENDAR for GLS-01A records
         if len(cvs(value$,3)) then
             value$=str(asc(value$)-32+1900+add_year)+str(asc(value$(2))-32:"00")+str(mod(asc(value$(3))-32,100):"00")
         else
-            value$=pad("",4)
+            value$=pad("",8)
         endif
         field gls_calendar_rec$,locked_date$=value$
     next i
