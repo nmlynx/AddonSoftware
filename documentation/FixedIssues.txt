@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-08-16
+ Report Date:   2016-08-18
  Report Branch: AddonSoftware 16.10
  Last Release:  AddonSoftware 16.02
 =======================================================================================================================================
@@ -392,6 +392,23 @@ Modified: bm/src/bmr_invproduction.aon
 Modified: bm/src/bmu_invproduction.aon
 Modified: iv/src/ivc_lifofifo.aon
 Modified: iv/src/ivr_physregister.aon
+Modified: op/src/opr_invoiceedit_o1.aon
+Modified: op/src/opr_salesregister.aon
+Modified: sf/src/sfr_womatissu.aon
+
+=======================================================================================================================================
+Revision: e9d9426730db2648dfe0030705a2ede9d9530fcd
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 8/18/2016 4:35:35 PM
+Message:
+Bug 8806: Locked and cleared ivw_lsdet (ivw-04) LIFO/FIFO Tier Work file
+in first program of process, then passed the locked ivw_lsdet (ivw-04)
+channel to ivc_lifofifo.aon so it wouldn't try to lock it again.
+----
+Modified: bm/src/bmc_getcost.aon
+Modified: bm/src/bmu_invproduction.aon
+Modified: iv/src/ivr_physregister.aon
+Modified: op/src/opr_invoiceedit.aon
 Modified: op/src/opr_invoiceedit_o1.aon
 Modified: op/src/opr_salesregister.aon
 Modified: sf/src/sfr_womatissu.aon
