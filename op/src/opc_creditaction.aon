@@ -109,7 +109,8 @@ rem --- This section will never be executed from Order Entry. Maybe from Invoice
         
         rem if msg_opt$ = "N" then
             action$ = "S"
-            backorderedControl!.setText("Order/Invoice is Printed")
+            backorderedControl!.setText("")
+            callpoint!.setColumnData("PRINT_STATUS","N",1)
             goto std_exit
         rem endif
     endif
