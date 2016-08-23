@@ -1,7 +1,7 @@
 =======================================================================================================================================
- Report Date:   2016-08-18
- Report Branch: AddonSoftware 16.10
- Last Release:  AddonSoftware 16.02
+ Report Date:   2016-08-22
+ Report Branch: AddonSoftware 16.11
+ Last Release:  AddonSoftware 16.10
 =======================================================================================================================================
 
 =======================================================================================================================================
@@ -412,3 +412,22 @@ Modified: op/src/opr_invoiceedit.aon
 Modified: op/src/opr_invoiceedit_o1.aon
 Modified: op/src/opr_salesregister.aon
 Modified: sf/src/sfr_womatissu.aon
+
+=======================================================================================================================================
+Revision: 3fd05e70be6cafe1fe5e3ed269b84f8cc3739ea3
+Author: Christine <chawkins@basis.com>
+Date: 8/19/2016 10:30:02 AM
+Message:
+Per bug 8806, additional change to not clear/lock ivw-05, as the update
+tries to open it again. See ER 8808 for related info on ivw-05.
+----
+Modified: op/src/opr_salesregister.aon
+
+=======================================================================================================================================
+Revision: 997988730b47cdef910abd210e649dce5027cf32
+Author: Christine <chawkins@basis.com>
+Date: 8/22/2016 4:17:17 PM
+Message:
+Per bug 8809; correct situation that can cause processing loop.
+----
+Modified: op/src/opc_creditaction.aon
