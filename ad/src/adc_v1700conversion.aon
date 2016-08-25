@@ -365,7 +365,16 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
             writerecord(glsCalendar_dev)glsCalendar$
         wend
 
-rem wgh ... 4394 ... set Barista security for new Fiscal Calendar task
+        rem --- Set Barista security for new Fiscal Calendar task
+        sql_prep$=""
+        sql_prep$=sql_prep$+"DELETE "
+        sql_prep$=sql_prep$+"FROM adm_rolealias "
+        sql_prep$=sql_prep$+"WHERE menu_option_id like 'GLS_CALENDAR' or menu_option_id like '%]_GLS_CALENDAR'"
+        sql_chan=sqlunt
+        sqlopen(sql_chan,err=*next)stbl("+DBNAME")
+        sqlprep(sql_chan)sql_prep$
+        sqlexec(sql_chan)
+
     else
         rem --- Increment progress meter
         meter_text$=this_module$+" "+Translate!.getTranslation("AON_NOT","Not")+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
