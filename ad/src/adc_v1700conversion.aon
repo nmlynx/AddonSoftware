@@ -91,6 +91,18 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
         dim glsParams$:open_tpls$[3]
         dim gltTransdetail$:open_tpls$[4]
 
+        rem --- Initialize new CREATE_NEXT_CAL field in GLS_PARAMS
+
+        read(glsParams_dev,key="",dom=*next)
+        while 1
+            readrecord(glsParams_dev,end=*break)glsParams$
+            if glsParams.gl$+glsParams.sequence_00$<>"GL00" then continue
+            glsParams.create_next_cal=1
+            
+            glsParams$=field(glsParams$)
+            writerecord(glsParams_dev)glsParams$
+        wend
+
         if convCtrl!.getProperty("data_source")="OCJ" then
             rem --- Data upgraded via EM Update Wizard (OCJ)
             rem --- Need to build re-purposed GLS_CALENDAR from old GLS_PARAMS
