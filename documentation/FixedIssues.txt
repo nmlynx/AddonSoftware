@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-08-25
+ Report Date:   2016-08-29
  Report Branch: AddonSoftware 16.11
  Last Release:  AddonSoftware 16.10
 =======================================================================================================================================
@@ -441,3 +441,23 @@ Per bug 8809 (reopened); altered the previous fix to stop the looping
 without altering the order's status codes.
 ----
 Modified: op/src/opc_creditaction.aon
+
+=======================================================================================================================================
+Revision: e84e5fb5fc41df55b9e5a2f444658b92f9a57634
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 8/29/2016 10:35:00 AM
+Message:
+Bug 8812: Need to setStatus("ACTIVATE") following call toe item sysnonym
+lookup ivc_itemsyn.
+----
+Modified: data/bar/ivm_itempric.xml
+Modified: data/cdf/ivm_itempric.cdf
+
+=======================================================================================================================================
+Revision: 1e81500bd531dd7013232af1f65f3f74468761f0
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 8/29/2016 12:15:44 PM
+Message:
+Bug 8813: Added "end=" error branch on READs for releasing an EXTRACT.
+----
+Modified: op/src/opr_salesregister.aon
