@@ -403,8 +403,8 @@ rem --- Check to see if record is in use in Invoice Entry
 		endif
 
         extract record (ope01_dev, key=firm_id$+"  "+read_tpl.customer_id$+read_tpl.order_no$+read_tpl.ar_inv_no$, dom=*continue) ope01a$; rem Advisory Locking
-        if ope01a.print_status$<>"Y" then read(ope01_dev); continue
-        if pos(ope01a.trans_status$="ER")=0 then read(ope01_dev); continue
+        if ope01a.print_status$<>"Y" then read(ope01_dev,end=*continue); continue
+        if pos(ope01a.trans_status$="ER")=0 then read(ope01_dev,end=*continue); continue
 
         if ope01a.cash_sale$="Y" then
             dim ope41a$:fattr(ope41a$)
@@ -436,7 +436,7 @@ rem --- Check to see if record is in use in Invoice Entry
             ope31a$ = field(ope31a$)
             write record (ope31_dev) ope31a$
         else
-            read(ope31_dev)
+            read(ope31_dev,end=*next); rem release extract
         endif
 
     rem --- Breaks
