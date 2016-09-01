@@ -260,10 +260,11 @@ rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
 	if abort then break
 [[GLS_CALENDAR.BSHO]]
 rem -- Get GL parameters
-	num_files=2
+	num_files=3
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="GLT_TRANSDETAIL",open_opts$[2]="OTA"
+	open_tables$[3]="GLM_ACCTSUMMARY",open_opts$[3]="OTA"
 	gosub open_tables
 	gls_params_dev=num(open_chans$[1])
 	dim gls_params$:open_tpls$[1]
@@ -273,8 +274,6 @@ rem -- Get GL parameters
 
 rem --- Need to know later if form was just launched
 	callpoint!.setDevObject("justLaunched","1")
-[[GLS_CALENDAR.ADEL]]
-rem wgh ... remove deleted year from fiscal year ListButton
 [[GLS_CALENDAR.LOCKED_FLAG_02.AVAL]]
 rem wgh ... 4394 ... 3.c.iv <<< ?????
 [[GLS_CALENDAR.BWRI]]
@@ -311,7 +310,38 @@ rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
 	next per
 	if abort then break
 [[GLS_CALENDAR.BDEL]]
-rem wgh ... 4394 ... 3.c.xi
+rem --- Never allow deleting the calendar for the prior/current/next fiscal year.
+	dim gls_params$:fnget_tpl$("GLS_PARAMS")
+	gls_params$=callpoint!.getDevObject("gls_params")
+	current_year=num(gls_params.current_year$)
+	year=num(callpoint!.getColumnData("GLS_CALENDAR.YEAR"))
+	if year=current_year-1 or year=current_year or year=current_year+1 then
+		msg_id$="GL_NOT_DEL_PCN_CAL"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+rem --- Can only delete fiscal calendars where there is no corresponding data in 
+rem --- GLM_ACCTSUMMARY (glm-02), GLM_ACCTBUDGET and GLM_BUDGETPLANS.
+	glm_acctsummary_dev=fnget_dev("GLM_ACCTSUMMARY")
+	dim glm_acctsummary$:fnget_tpl$("GLM_ACCTSUMMARY")
+
+	cal_in_use=0
+	read(glm_acctsummary_dev,key=firm_id$,dom=*next)
+	while 1
+		readrecord(glm_acctsummary_dev,end=*break)glm_acctsummary$
+		if pos(glm_acctsummary.record_id$="012345") then
+			cal_in_use=1
+			break
+		endif
+	wend
+	if cal_in_use then
+		msg_id$="GL_CANNOT_DEL_CAL"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
 [[GLS_CALENDAR.PER_ENDING_01.AVAL]]
 rem --- The last period must end on the day before the calendar start date of the next year.
 	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="01" then
