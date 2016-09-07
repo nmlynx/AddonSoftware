@@ -489,18 +489,21 @@ rem	salesDashboardCategory!.setMinWidgetWidth(500)
 rem	salesDashboardCategory!.setMaxWidgetWidth(2000)
 
     rem --- Open GL parameters file
-    files=1,begfile=1,endfile=files
+    files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="gls_params",ids$[1]="GLS_PARAMS"  
+    files$[1]="gls_params",ids$[1]="GLS_PARAMS"
+    files$[2]="gls_params",ids$[2]="GLS_PARAMS"
     
     call stbl("+DIR_PGM")+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     
     gls01_dev=channels[1]
     dim gls01a$:templates$[1]
+    gls_calendar_dev=channels[1]
+    dim gls_calendar$:templates$[1]
     
     rem --- Convert processing date into fiscal period and year for Sales Analysis
-    call stbl("+DIR_PGM")+"adc_fiscalperyr.aon",firm_id$,gls01_dev,sysinfo.system_date$,period$,year$
+    call stbl("+DIR_PGM")+"adc_fiscalperyr.aon",firm_id$,sysinfo.system_date$,period$,year$,table_chans$[all]
 
 rem ==============================================
 rem --- create SA Top Customers bar chart
@@ -811,6 +814,7 @@ rem ==============================================
 rem --- get the accounting periods
 
         readrecord(gls01_dev,key=firm_id$+"GL00",dom=*next)gls01a$
+        readrecord(gls_calendar_dev,key=firm_id$+gls01a.current_year$,dom=*next)gls_calendar$
 
 rem --- Assign input values to local variables
 
@@ -818,19 +822,19 @@ rem --- Assign input values to local variables
         year$=gls01a.current_year$
 
         switch num(period$)
-			case 1; ending$ = gls01a.per_ending_01$; break
-			case 2; ending$ = gls01a.per_ending_02$; break
-			case 3; ending$ = gls01a.per_ending_03$; break
-			case 4; ending$ = gls01a.per_ending_04$; break
-			case 5; ending$ = gls01a.per_ending_05$; break
-			case 6; ending$ = gls01a.per_ending_06$; break
-			case 7; ending$ = gls01a.per_ending_07$; break
-			case 8; ending$ = gls01a.per_ending_08$; break
-			case 9; ending$ = gls01a.per_ending_09$; break
-			case 10; ending$ = gls01a.per_ending_10$; break
-			case 11; ending$ = gls01a.per_ending_11$; break
-			case 12; ending$ = gls01a.per_ending_12$; break
-			case 13; ending$ = gls01a.per_ending_13$; break
+			case 1; ending$ = gls_calendar.per_ending_01$; break
+			case 2; ending$ = gls_calendar.per_ending_02$; break
+			case 3; ending$ = gls_calendar.per_ending_03$; break
+			case 4; ending$ = gls_calendar.per_ending_04$; break
+			case 5; ending$ = gls_calendar.per_ending_05$; break
+			case 6; ending$ = gls_calendar.per_ending_06$; break
+			case 7; ending$ = gls_calendar.per_ending_07$; break
+			case 8; ending$ = gls_calendar.per_ending_08$; break
+			case 9; ending$ = gls_calendar.per_ending_09$; break
+			case 10; ending$ = gls_calendar.per_ending_10$; break
+			case 11; ending$ = gls_calendar.per_ending_11$; break
+			case 12; ending$ = gls_calendar.per_ending_12$; break
+			case 13; ending$ = gls_calendar.per_ending_13$; break
             case default; ending$ = "    "; break
 		swend
 
