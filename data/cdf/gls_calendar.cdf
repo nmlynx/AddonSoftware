@@ -349,10 +349,7 @@ rem --- Check United States (US) specific requirements for fiscal calendars
 	ads_compinfo_dev=fnget_dev("ADS_COMPINFO")
 	dim ads_compinfo$:fnget_tpl$("ADS_COMPINFO")
 	readrecord(ads_compinfo_dev,key=firm_id$,dom=*next)ads_compinfo$
-	if ads_compinfo.country_id$="US" then
-		gosub validate_us_requirements
-		if abort then break
-	endif
+	if ads_compinfo.country_id$="US" then gosub validate_us_requirements
 
 rem --- When fiscal calendar for the initial fiscal year is saved, create duplicate fiscal calendars for the prior and next fiscal years.
 	gls_calendar_dev=fnget_dev("GLS_CALENDAR")
@@ -945,8 +942,6 @@ validate_mo_day: rem --- validate period ending date (month/day - doesn't check 
 return
 
 validate_us_requirements: rem --- Check United States (US) specific requirements for fiscal calendars
-                                             rem --- Output: abourt = 1 (true) or 0 (false) for callpoint!.setStatus("ABORT")
-	abort=1
 
 	rem --- Per US Tax Code, fiscal calendar must include at least a minimum of 359 days ( 13 periods * 4 weeks – less 5 days),
         rem --- but not more than a maximum of 371 days (53 weeks * 7 days).
@@ -959,17 +954,17 @@ validate_us_requirements: rem --- Check United States (US) specific requirements
 	ending_mmdd$=callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_"+total_pers$)
 
 	rem --- 359 days may span zero or one year end. 371 days may span one or two year ends.
+	bad_calendar=1
 	for span=0 to 2
 		end_julian=jul(fiscal_year+span,num(ending_mmdd$(1,2)),num(ending_mmdd$(3,2)))
 		if end_julian>=minimum_julian and end_julian<=maximum_julian then
-			abort=0
+			bad_calendar=0
 			break
 		endif
 	next span
 
-	if abort then
+	if bad_calendar then
 		msg_id$="GL_US_CAL_REQ_1"
 		gosub disp_message
-		callpoint!.setStatus("ABORT")
 	endif
 return
