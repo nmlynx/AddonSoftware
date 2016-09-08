@@ -149,7 +149,7 @@ rem --- Which glm-02 record?
 
 rem --- Get posting date, retrieve journal record and position file
 
-        call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,x$,gldate$,status
+        call pgmdir$+"adc_perioddates.aon",period,year,x$,gldate$,table_chans$[all],status
         glm03_key$=firm_id$+glcontrol.journal_id$
         glm03a.code_desc$=Translate!.getTranslation("AON_UNKNOWN_JOURNAL_ID")
         find record (glm03_dev,key=glm03_key$,dom=*next)glm03a$

@@ -49,8 +49,7 @@ rem --- Retrieve parameter records
     extract record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$; rem Advisory Locking
     current_period=num(gls01a.current_per$)
     current_year=num(gls01a.current_year$)
-    call pgmdir$+"adc_perioddates.aon",gls01_dev,current_period,current_year,begdate$,
-:                                      enddate$,status
+    call pgmdir$+"adc_perioddates.aon",current_period,current_year,begdate$,enddate$,table_chans$[all],status
 
 rem --- Parameters
 

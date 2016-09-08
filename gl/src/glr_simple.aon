@@ -32,7 +32,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=5,begfile=1,endfile=files
+    files=6,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="gls_params",ids$[1]="GLS_PARAMS"
     files$[2]="glm-01",ids$[2]="GLM_ACCT"
@@ -40,6 +40,7 @@ rem --- Open/Lock files
     files$[4]="glm-10",ids$[4]="GLM_ACCTBREAKS"
     files$[5]="glw-02",ids$[5]="GLW_FINSORT"
     options$[5]="LC"
+    files$[6]="gls_calendar",ids$[6]="GLS_CALENDAR"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -47,17 +48,19 @@ rem --- Open/Lock files
     glm01_dev=channels[2]
     glm02_dev=channels[3]
     glm10_dev=channels[4]
-    glw02_dev=channels[endfile]
+    glw02_dev=channels[5]
+    gls_calendar_dev=channels[6]
 
 rem --- Dimension string templates
 
     dim gls01a$:templates$[1],glm01a$:templates$[2],glm02a$:templates$[3]
-    dim glw02a$:templates$[5]
+    dim glw02a$:templates$[5],gls_calendar$:templates$[6]
 
 rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"   
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=std_missing_params) gls_calendar$
     rem m0$=gls01a.acct_output$ -- using mask from Barista system masks file
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,m1
@@ -108,10 +111,10 @@ rem --- Initializations
     if bs$="Y" j1$="",width=o[1]-1
     mtdhdr=o[0]+m1-len(mtdhdr$)
     ytdhdr=o[1]+m1-len(ytdhdr$)
-    call pgmdir$+"adc_perioddates.aon",gls01_dev,period,year,begdate$,enddate$,status
+    call pgmdir$+"adc_perioddates.aon",period,year,begdate$,enddate$,table_chans$[all],status
     headings$[0]=cvs(sysinfo.firm_name$,2)
     headings$[1]=cvs(sysinfo.task_desc$,2)
-    headings$[2]=Translate!.getTranslation("AON_FOR_")+cvs(field(gls01a$,"period_name_"+str(period:"00")),2)+" "+begyear$+Translate!.getTranslation("AON__(PERIOD_")+
+    headings$[2]=Translate!.getTranslation("AON_FOR_")+cvs(field(gls_calendar$,"period_name_"+str(period:"00")),2)+" "+begyear$+Translate!.getTranslation("AON__(PERIOD_")+
 :                str(period:"00")+")"
     headings$[3]=fndate$(begdate$)+Translate!.getTranslation("AON__THROUGH_")+fndate$(enddate$)
 
