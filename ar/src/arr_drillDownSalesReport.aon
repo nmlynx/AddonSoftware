@@ -54,13 +54,13 @@ rem --- Retrieve sysinfo data
 rem --- Open GL parameters file
     files=1,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
-    files$[1]="gls_params",ids$[1]="GLS_PARAMS"  
+    files$[1]="gls_calendar",ids$[1]="GLS_CALENDAR"  
     
     call stbl("+DIR_PGM")+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     
-    gls01_dev=channels[1]
-    dim gls01a$:templates$[1]
+    gls_calendar_dev=channels[1]
+    dim gls_calendar$:templates$[1]
 
 rem --- Common information
 
@@ -78,14 +78,14 @@ rem --- Common information
 	call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",custIdMask$,0,custIdLen
 	custIdMaskLen = len(custIdMask$)
 
-rem --- get the accounting periods
-
-    readrecord(gls01_dev,key=firm_id$+"GL00",dom=*next)gls01a$
-
 rem --- Assign input values to local variables
 
     period$=Option!.getOptionData("PICK_GL_PER")
     year$=Option!.getOptionData("PICK_YEAR")
+
+rem --- get the accounting periods
+
+    readrecord(gls_calendar_dev,key=firm_id$+year$,dom=*next)gls_calendar$
     
 rem --- Make Document Archive Record and Get ID
  
@@ -104,22 +104,22 @@ rem --- Make Document Archive Record and Get ID
 
 rem - establish the month 
     
-    firstPerEnding$ = gls01a.per_ending_01$
+    firstPerEnding$ = gls_calendar.per_ending_01$
     
     switch num(period$)
-        case 1; ending$ = gls01a.per_ending_01$; break
-        case 2; ending$ = gls01a.per_ending_02$; break
-        case 3; ending$ = gls01a.per_ending_03$; break
-        case 4; ending$ = gls01a.per_ending_04$; break
-        case 5; ending$ = gls01a.per_ending_05$; break
-        case 6; ending$ = gls01a.per_ending_06$; break
-        case 7; ending$ = gls01a.per_ending_07$; break
-        case 8; ending$ = gls01a.per_ending_08$; break
-        case 9; ending$ = gls01a.per_ending_09$; break
-        case 10; ending$ = gls01a.per_ending_10$; break
-        case 11; ending$ = gls01a.per_ending_11$; break
-        case 12; ending$ = gls01a.per_ending_12$; break
-        case 13; ending$ = gls01a.per_ending_13$; break
+        case 1; ending$ = gls_calendar.per_ending_01$; break
+        case 2; ending$ = gls_calendar.per_ending_02$; break
+        case 3; ending$ = gls_calendar.per_ending_03$; break
+        case 4; ending$ = gls_calendar.per_ending_04$; break
+        case 5; ending$ = gls_calendar.per_ending_05$; break
+        case 6; ending$ = gls_calendar.per_ending_06$; break
+        case 7; ending$ = gls_calendar.per_ending_07$; break
+        case 8; ending$ = gls_calendar.per_ending_08$; break
+        case 9; ending$ = gls_calendar.per_ending_09$; break
+        case 10; ending$ = gls_calendar.per_ending_10$; break
+        case 11; ending$ = gls_calendar.per_ending_11$; break
+        case 12; ending$ = gls_calendar.per_ending_12$; break
+        case 13; ending$ = gls_calendar.per_ending_13$; break
         case default; ending$ = "    "; break
     swend
   
