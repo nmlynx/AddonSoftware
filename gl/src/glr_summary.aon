@@ -46,13 +46,14 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=5,begfile=1,endfile=files
+    files=6,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="gls_params",ids$[1]="GLS_PARAMS"
     files$[2]="glm-01",ids$[2]="GLM_ACCT"
     files$[3]="glm-02",ids$[3]="GLM_ACCTSUMMARY"
     files$[4]="glm-08",ids$[4]="GLM_BUDGETMASTER"
     files$[5]="glm-18",ids$[5]="GLM_RECORDTYPES"
+    files$[6]="gls_calendar",ids$[6]="GLS_CALENDAR"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -61,17 +62,20 @@ rem --- Open/Lock files
     glm02_dev=channels[3]
     glm08_dev=channels[4]
     glm18_dev=channels[5]
+    gls_calendar_dev=channels[6]
 
 rem --- Dimension string templates
 
     dim gls01a$:templates$[1],glm01a$:templates$[2],glm02a$:templates$[3],glm08a$:templates$[4],glm18a$:templates$[5]
+    dim gls_calendar$:templates$[6]
 
 rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=std_missing_params) gls_calendar$
     units_flag$=gls01a.units_flag$
-    total_pers=num(gls01a.total_pers$)
+    total_pers=num(gls_calendar.total_pers$)
     rem m0$=gls01a.acct_output$ -- using mask from Barista system masks file
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
     m1$="#,###,##0-";rem using mask that drops cents to fit better on page
@@ -128,7 +132,7 @@ rem --- Document columns
     rem was [1,2]=str(len(m1$)), but that overflows onto another page
 
     for x=2 to columns-1
-        columns$[x,0]=Translate!.getTranslation("AON_PER_")+str(x-1:"00")+"^"+field(gls01a$,"abbr_name_"+str(x-1:"00")),columns$[x,1]="N",columns$[x,2]="8",columns$[x,3]=m1$
+        columns$[x,0]=Translate!.getTranslation("AON_PER_")+str(x-1:"00")+"^"+field(gls_calendar$,"abbr_name_"+str(x-1:"00")),columns$[x,1]="N",columns$[x,2]="8",columns$[x,3]=m1$
 		rem --- above used to set columns$[x,2] to str(m1), but that causes overflow onto another page
 		rem --- hard-code '8' makes it work 'out of the box' w/o needing to adjust columns manually
 	next x
@@ -150,7 +154,7 @@ rem --- Initialize report subheadings
     buffer$(1)=h1$
     buffer$(o[1]+tm-10)=Translate!.getTranslation("AON_BEGINNING")
     for x=2 to max-1
-        buffer$(o[x]+mm-4)=field(gls01a$,"abbr_name_"+str(x-1:"00"))
+        buffer$(o[x]+mm-4)=field(gls_calendar$,"abbr_name_"+str(x-1:"00"))
     next x
     buffer$(width-6)=Translate!.getTranslation("AON_ENDING")
     subheadings$[subheadings]=buffer$

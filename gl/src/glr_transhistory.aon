@@ -28,13 +28,14 @@ rem --- Retrieve sysinfo data
     
 rem --- Open/Lock files
 
-    files=5,begfile=1,endfile=files
+    files=6,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="gls_params",ids$[1]="GLS_PARAMS"
     files$[2]="glm-01",ids$[2]="GLM_ACCT"
     files$[3]="glm-02",ids$[3]="GLM_ACCTSUMMARY"
     files$[4]="glm-03",ids$[4]="GLC_JOURNALCODE"
     files$[5]="glt-06",ids$[5]="GLT_TRANSDETAIL"
+    files$[6]="gls_calendar",ids$[6]="GLS_CALENDAR"
     call stbl("+DIR_PGM")+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -43,10 +44,12 @@ rem --- Open/Lock files
     glm02_dev=channels[3]
     glm03_dev=channels[4]
     glt06_dev=channels[5]
+    gls_calendar_dev=channels[6]
 
 rem --- Dimension string templates
 
     dim gls01a$:templates$[1],glm01a$:templates$[2],glm02a$:templates$[3],glm03a$:templates$[4],glt06a$:templates$[5]
+    dim gls_calendar$:templates$[6]
 
 rem --- Assign input values to local variables
 
@@ -73,8 +76,9 @@ rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+    find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=std_missing_params) gls_calendar$
     units_flag$=gls01a.units_flag$
-    total_pers=num(gls01a.total_pers$)
+    total_pers=num(gls_calendar.total_pers$)
     call "adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
     call "adc_getmask.aon","","GL","A","",m1$,0,m1
     call "adc_getmask.aon","","GL","U","",m2$,0,m2
@@ -179,8 +183,8 @@ rem --- Initialize report headings
     if cvs(wildcard$,2)<>"" then x$=x$+Translate!.getTranslation("AON__(WILDCARD_")+$22$+cvs(wildcard$,2)+$22$+")"
     headings$[2]=x$
     x$="",y$=""
-    x$=field(gls01a$,"period_name_"+begper$,err=*next)
-    y$=field(gls01a$,"period_name_"+endper$,err=*next)
+    x$=field(gls_calendar$,"period_name_"+begper$,err=*next)
+    y$=field(gls_calendar$,"period_name_"+endper$,err=*next)
     if x$<>"" and y$<>""
         headings$[3]=Translate!.getTranslation("AON_FROM_")+cvs(x$,2)+Translate!.getTranslation("AON__(PERIOD_")+begper$+") "+begyear$+Translate!.getTranslation("AON__THROUGH_")+
 :           cvs(y$,2)+Translate!.getTranslation("AON__(PERIOD_")+endper$+") "+endyear$
@@ -526,8 +530,9 @@ period_break: rem --- Period break
     if t1$="" goto new_period
     if detail$="D" and l1<1 goto period_balance
     gosub journal_break
-    x$=field(gls01a$,"abbr_name_"+str(num(t1$(5,2)):"00"))
     y$=t1$(1,4)
+    find record (gls_calendar_dev,key=firm_id$+y$,err=std_missing_params) gls_calendar$
+    x$=field(gls_calendar$,"abbr_name_"+str(num(t1$(5,2)):"00"))
     if export_format$="Y"
         total$=Translate!.getTranslation("AON_TOTAL")
     else
@@ -558,7 +563,7 @@ new_period: rem --- New period
     dim pt[2]
     m$=glt06a.posting_per$
     period=num(m$)
-    x$=field(gls01a$,"abbr_name_"+str(period:"00"))
+    x$=field(gls_calendar$,"abbr_name_"+str(period:"00"))
     y$=glt06a.posting_year$
     t1$=y$+m$
     h1$=x$+" "+y$
@@ -771,6 +776,7 @@ std_exit: rem --- Standard program end (01Mar2006)
     close (glm02_dev,err=*next)
     close (glm03_dev,err=*next)
     close (glt06_dev,err=*next)
+    close (gls_calendar_dev,err=*next)
     
     run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
     release
