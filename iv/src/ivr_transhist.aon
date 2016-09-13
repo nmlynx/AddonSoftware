@@ -55,7 +55,6 @@ rem --- Open files
     files$[8]="ivt-04",ids$[8]="IVT_ITEMTRAN"
     files$[9]="aps_params",ids$[9]="APS_PARAMS"
     files$[10]="ars_params",ids$[10]="ARS_PARAMS"
-    files$[11]="gls_params",ids$[11]="GLS_PARAMS"
     files$[12]="ivt-04",ids$[12]="IVT_ITEMTRAN"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
@@ -71,15 +70,14 @@ rem --- Open files
     ivt04_dev=channels[8]
     aps01_dev=channels[9]
     ars01_dev=channels[10]
-    gls01_dev=channels[11]
     ivt04_dev2=channels[12]
 
 rem --- Dimension string templates
 
     dim ivs01a$:templates$[1],apm01a$:templates$[2],ivm01a$:templates$[3]
     dim arm01a$:templates$[4],ivm10c$:templates$[5],ivm10a$:templates$[6]
-    dim ivm10b$:templates$[7],ivt04a$:templates$[8],ivt04b$:templates$[12]
-    dim	aps01a$:templates$[9],ars01a$:templates$[10],gls01a$:templates$[11]
+    dim ivm10b$:templates$[7],ivt04a$:templates$[8]
+    dim	aps01a$:templates$[9],ars01a$:templates$[10],ivt04b$:templates$[12]
 
 rem --- Assign form input values to local variables
     dim ttypes$[9]
@@ -150,7 +148,6 @@ rem --- Initializations
         x7=len(x7$)
     endif
 
-    find record (gls01_dev,key=firm_id$+"GL00",dom=std_missing_params) gls01a$
     call pgmdir$+"adc_getmask.aon","GLACCT","","",imask$,g5$,0,g2
 
     alltypes$="POOPITPHTITOWIWOBM"
