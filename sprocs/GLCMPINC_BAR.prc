@@ -78,11 +78,12 @@ rem --- create the in memory recordset for return
 
 rem --- Open/Lock files
 
-    files=3,begfile=1,endfile=files
+    files=4,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="glm-01",ids$[1]="GLM_ACCT"
     files$[2]="glm-02",ids$[2]="GLM_ACCTSUMMARY"
     files$[3]="gls_params",ids$[3]="GLS_PARAMS"
+    files$[4]="gls_calendar",ids$[4]="GLS_CALENDAR"
    
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
     if status then
@@ -94,16 +95,19 @@ rem --- Open/Lock files
     glm01a_dev=channels[1]
     glm02a_dev=channels[2]
     gls01a_dev=channels[3]
+    gls_calendar_dev=channels[4]
    
 rem --- Dimension string templates
 
     dim glm01a$:templates$[1]
     dim glm02a$:templates$[2]
     dim gls01a$:templates$[3]
+    dim gls_calendar$:templates$[4]
 
 rem --- get data
 
     readrecord(gls01a_dev,key=firm_id$+"GL00",dom=*next)gls01a$
+    readrecord(gls_calendar_dev,key=firm_id$+gls01a.current_year$,dom=*next)gls_calendar$
 
     idsVec! = BBjAPI().makeVector()
     yearsVec! = BBjAPI().makeVector()
@@ -142,7 +146,7 @@ rem --- get data
             rem --- Add up tatal for each GL record ID
             for i=0 to idsVec!.size()-1
                 rem --- Add up total for all GL accounts of specified account type
-                dim totals[1+num(gls01a.total_pers$)]
+                dim totals[1+num(gls_calendar.total_pers$)]
                 for j=0 to acctsVec!.size()-1
                     dim glm02a$:fattr(glm02a$)
                     readrecord(glm02a_dev,key=firm_id$+acctsVec!.getItem(j)+idsVec!.getItem(i),dom=*next)glm02a$
@@ -151,7 +155,7 @@ rem --- get data
 :                       +glm02a.period_amt_05 +glm02a.period_amt_06+glm02a.period_amt_07 +glm02a.period_amt_08 +glm02a.period_amt_09
 :                       +glm02a.period_amt_10 +glm02a.period_amt_11 +glm02a.period_amt_12 +glm02a.period_amt_13
                     else
-                        for per=1 to num(gls01a.total_pers$)
+                        for per=1 to num(gls_calendar.total_pers$)
                             per_num$=str(per:"00")
                             totals[per]=totals[per]+nfield(glm02a$,"PERIOD_AMT_"+per_num$)
                         next per
@@ -164,11 +168,11 @@ rem --- get data
                     data!.setFieldValue("TOTAL",str(abs(round(totals[0]/1000,2))))
                     rs!.insert(data!)
                 else
-                    for per=1 to num(gls01a.total_pers$)
+                    for per=1 to num(gls_calendar.total_pers$)
                         per_num$=str(per:"00")
                         data! = rs!.getEmptyRecordData()
                         data!.setFieldValue("YEAR",yearsVec!.getItem(i))
-                        data!.setFieldValue("PERIOD",per_num$+"-"+field(gls01a$,"ABBR_NAME_"+per_num$))
+                        data!.setFieldValue("PERIOD",per_num$+"-"+field(gls_calendar$,"ABBR_NAME_"+per_num$))
                         data!.setFieldValue("TOTAL",str(abs(round(totals[per]/1000,2))))
                         rs!.insert(data!)
                     next per
