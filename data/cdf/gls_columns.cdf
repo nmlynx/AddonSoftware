@@ -1,17 +1,11 @@
 [[GLS_COLUMNS.BFMC]]
-num_files=2
+num_files=1
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
-open_tables$[2]="GLM_RECORDTYPES",open_opts$[2]="OTA"
+open_tables$[1]="GLM_RECORDTYPES",open_opts$[1]="OTA"
 gosub open_tables
 
-gls01_dev=num(open_chans$[1])
-glm18_dev=num(open_chans$[2])
-
-dim gls01a$:open_tpls$[1]
-dim glm18a$:open_tpls$[2]
-
-readrecord(gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
+glm18_dev=num(open_chans$[1])
+dim glm18a$:open_tpls$[1]
 
 rem create list for column zero of grid -- column type drop-down
 more=1

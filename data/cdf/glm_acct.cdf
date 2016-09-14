@@ -394,10 +394,11 @@ rem --- Display MTD and YTD
 [[GLM_ACCT.BSHO]]
 rem --- Open/Lock files
 
-files=2,begfile=1,endfile=files
+files=3,begfile=1,endfile=files
 dim files$[files],options$[files],chans$[files],templates$[files]
 files$[1]="GLS_PARAMS",options$[1]="OTA"
 files$[2]="GLM_ACCTSUMMARY",options$[2]="OTA"
+files$[3]="GLS_CALENDAR",options$[3]="OTA"
 
 call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                 chans$[all],templates$[all],table_chans$[all],batch,status$
@@ -411,13 +412,16 @@ if status$<>"" then
 endif
 
 gls01_dev=num(chans$[1])
+gls_calendar_dev=num(chans$[3])
 dim gls01a$:templates$[1]
+dim gls_calendar$:templates$[3]
 
 
 rem --- init/parameters
 
 gls01a_key$=firm_id$+"GL00"
 find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=std_missing_params) gls_calendar$
 
 	glyear=num(gls01a.current_year$)
 	if gls01a.gl_yr_closed$ <> "Y" then 
@@ -430,7 +434,7 @@ find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
 	callpoint!.setDevObject("cur_year",gls01a.current_year$)
 	x$=stbl("+YEAR",gls01a.current_year$)
 	x$=stbl("+PER",gls01a.current_per$)
-	callpoint!.setDevObject("tot_pers",gls01a.total_pers$)
+	callpoint!.setDevObject("tot_pers",gls_calendar.total_pers$)
 	callpoint!.setDevObject("gl_yr_closed",gls01a.gl_yr_closed$)
 	callpoint!.setDevObject("gls_cur_yr",gls01a.current_year$)
 	callpoint!.setDevObject("gls_cur_per",gls01a.current_per$)

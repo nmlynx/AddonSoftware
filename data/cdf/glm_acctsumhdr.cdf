@@ -160,29 +160,34 @@ rem set the 4 listbuttons accordingly, and read/display corres glm02 data
 rem --- init...open tables, define custom grid, etc.
 
 	use ::ado_util.src::util
-	num_files=3
+	num_files=4
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="GLM_ACCTSUMMARY",open_opts$[2]="OTA"
 	open_tables$[3]="GLM_RECORDTYPES",open_opts$[3]="OTA"
+	open_tables$[4]="GLS_CALENDAR",open_opts$[4]="OTA"
+
 	gosub open_tables
 
 	gls01_dev=num(open_chans$[1])
 	glm18_dev=num(open_chans$[3])
+	gls_calendar_dev=num(open_chans$[4])
 
 	dim gls01a$:open_tpls$[1]
 	dim glm18a$:open_tpls$[3]
+	dim gls_calendar$:open_tpls$[4]
 
 	readrecord(gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
+	readrecord(gls_calendar_dev,key=firm_id$+gls01a.current_year$,dom=std_missing_params)gls_calendar$
 
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,0
 
 rem --- load up period abbr names from gls_params
 
-	num_pers=num(gls01a.total_pers$)
+	num_pers=num(gls_calendar.total_pers$)
 	per_names!=SysGUI!.makeVector()
 	for x=1 to num_pers
-		per_names!.addItem(field(gls01a$,"ABBR_NAME_"+str(x:"00")))
+		per_names!.addItem(field(gls_calendar$,"ABBR_NAME_"+str(x:"00")))
 	next x
 
 rem ---  load up budget column codes and types from gls_params
@@ -272,10 +277,11 @@ rem --- Set initial values for period and year
 [[GLM_ACCTSUMHDR.BSHO]]
 rem --- Open/Lock files
 
-files=2,begfile=1,endfile=files
+files=3,begfile=1,endfile=files
 dim files$[files],options$[files],chans$[files],templates$[files]
 files$[1]="GLS_PARAMS",options$[1]="OTA"
 files$[2]="GLM_ACCTSUMMARY",options$[2]="OTA"
+files$[3]="GLS_CALENDAR",options$[3]="OTA"
 
 call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                 chans$[all],templates$[all],table_chans$[all],batch,status$
@@ -289,13 +295,15 @@ if status$<>"" then
 endif
 
 gls01_dev=num(chans$[1])
+gls_calendar_dev=num(chans$[3])
 dim gls01a$:templates$[1]
-
+dim gls_calendar$:templates$[3]
 
 rem --- init/parameters
 
 gls01a_key$=firm_id$+"GL00"
 find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=std_missing_params) gls_calendar$
 
 	glyear=num(gls01a.current_year$)
 	if gls01a.gl_yr_closed$ <> "Y" then 
@@ -308,7 +316,7 @@ find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
 	callpoint!.setDevObject("cur_year",gls01a.current_year$)
 	x$=stbl("+YEAR",gls01a.current_year$)
 	x$=stbl("+PER",gls01a.current_per$)
-	callpoint!.setDevObject("tot_pers",gls01a.total_pers$)
+	callpoint!.setDevObject("tot_pers",gls_calendar.total_pers$)
 	callpoint!.setDevObject("gl_yr_closed",gls01a.gl_yr_closed$)
 	callpoint!.setDevObject("gls_cur_yr",gls01a.current_year$)
 	callpoint!.setDevObject("gls_cur_per",gls01a.current_per$)

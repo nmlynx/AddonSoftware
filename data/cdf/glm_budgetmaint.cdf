@@ -1,18 +1,22 @@
 [[GLM_BUDGETMAINT.AWIN]]
 use ::ado_util.src::util
 
-num_files=3
+num_files=4
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
 open_tables$[2]="GLM_ACCTSUMMARY",open_opts$[2]="OTA"
 open_tables$[3]="GLM_RECORDTYPES",open_opts$[3]="OTA"
+open_tables$[4]="GLS_CALENDAR",open_opts$[4]="OTA"
+
 gosub open_tables
 
 gls01_dev=num(open_chans$[1])
 glm18_dev=num(open_chans$[3])
+gls_calendar_dev=num(open_chans$[4])
 
 dim gls01a$:open_tpls$[1]
 dim glm18a$:open_tpls$[3]
+dim gls_calendar$:open_tpls$[4]
 
 readrecord(gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
 if gls01a.budget_flag$<>"Y"
@@ -28,10 +32,11 @@ endif
 call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,0
 
 rem load up period abbr names from gls_params
-num_pers=num(gls01a.total_pers$)
+readrecord(gls_calendar_dev,key=firm_id$+gls01a.current_year$,dom=std_missing_params)gls_calendar$
+num_pers=num(gls_calendar.total_pers$)
 per_names!=SysGUI!.makeVector()
 for x=1 to num_pers
-	per_names!.addItem(field(gls01a$,"ABBR_NAME_"+str(x:"00")))
+	per_names!.addItem(field(gls_calendar$,"ABBR_NAME_"+str(x:"00")))
 next x
 
 rem load up budget column codes and types from gls_params

@@ -1,3 +1,69 @@
+[[GLR_TRANSHISTORY.BEG_GL_PER.AVAL]]
+rem --- Verify haven't exceeded calendar total periods for beginning fiscal year
+	period$=callpoint!.getUserInput()
+	if cvs(period$,2)<>"" and period$<>callpoint!.getColumnData("GLR_TRANSHISTORY.BEG_GL_PER") then
+		period=num(period$)
+		total_pers=num(callpoint!.getDevObject("beginning_total_pers"))
+		if period<1 or period>total_pers then
+			msg_id$="AD_BAD_FISCAL_PERIOD"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=str(total_pers)
+			msg_tokens$[2]=callpoint!.getColumnData("GLR_TRANSHISTORY.BEG_YEAR")
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
+[[GLR_TRANSHISTORY.END_GL_PER.AVAL]]
+rem --- Verify haven't exceeded calendar total periods for ending fiscal year
+	period$=callpoint!.getUserInput()
+	if cvs(period$,2)<>"" and period$<>callpoint!.getColumnData("GLR_TRANSHISTORY.END_GL_PER") then
+		period=num(period$)
+		total_pers=num(callpoint!.getDevObject("ending_total_pers"))
+		if period<1 or period>total_pers then
+			msg_id$="AD_BAD_FISCAL_PERIOD"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=str(total_pers)
+			msg_tokens$[2]=callpoint!.getColumnData("GLR_TRANSHISTORY.END_YEAR")
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
+[[GLR_TRANSHISTORY.BEG_YEAR.AVAL]]
+rem --- Verify calendar exists for entered beginning fiscal year
+	year$=callpoint!.getUserInput()
+	if cvs(year$,2)<>"" and year$<>callpoint!.getColumnData("GLR_TRANSHISTORY.BEG_YEAR") then
+		gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+		dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+		readrecord(gls_calendar_dev,key=firm_id$+year$,dom=*next)gls_calendar$
+		if cvs(gls_calendar.year$,2)="" then
+			msg_id$="AD_NO_FISCAL_CAL"
+			dim msg_tokens$[1]
+			msg_tokens$[1]=year$
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+		callpoint!.setDevObject("total_pers",gls_calendar.total_pers$)
+	endif
+[[GLR_TRANSHISTORY.END_YEAR.AVAL]]
+rem --- Verify calendar exists for entered ending fiscal year
+	year$=callpoint!.getUserInput()
+	if cvs(year$,2)<>"" and year$<>callpoint!.getColumnData("GLR_TRANSHISTORY.END_YEAR") then
+		gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+		dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+		readrecord(gls_calendar_dev,key=firm_id$+year$,dom=*next)gls_calendar$
+		if cvs(gls_calendar.year$,2)="" then
+			msg_id$="AD_NO_FISCAL_CAL"
+			dim msg_tokens$[1]
+			msg_tokens$[1]=year$
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+		callpoint!.setDevObject("total_pers",gls_calendar.total_pers$)
+	endif
 [[GLR_TRANSHISTORY.GL_WILDCARD.AVAL]]
 rem --- Check length of wildcard against defined mask for GL Account
 	if callpoint!.getUserInput()<>""
@@ -31,15 +97,26 @@ rem --- Set default values
 	callpoint!.setColumnData("GLR_TRANSHISTORY.BEG_YEAR",gls01a.current_year$)
 	callpoint!.setColumnData("GLR_TRANSHISTORY.END_GL_PER",gls01a.current_per$)
 	callpoint!.setColumnData("GLR_TRANSHISTORY.END_YEAR",gls01a.current_year$)
-	callpoint!.setTableColumnAttribute("GLR_TRANSHISTORY.BEG_GL_PER","MINV","01")
-	callpoint!.setTableColumnAttribute("GLR_TRANSHISTORY.BEG_GL_PER","MAXV",str(num(gls01a.total_pers$):"00"))
-	callpoint!.setTableColumnAttribute("GLR_TRANSHISTORY.END_GL_PER","MINV","01")
-	callpoint!.setTableColumnAttribute("GLR_TRANSHISTORY.END_GL_PER","MAXV",str(num(gls01a.total_pers$):"00"))
 	callpoint!.setStatus("REFRESH")
+
+rem --- Set maximum number of periods allowed for beginning fiscal year
+	gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+	dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+	current_year$=callpoint!.getColumnData("GLR_TRANSHISTORY.BEG_YEAR")
+	readrecord(gls_calendar_dev,key=firm_id$+current_year$,dom=*next)gls_calendar$
+	callpoint!.setDevObject("beginning_total_pers",gls_calendar.total_pers$)
+
+rem --- Set maximum number of periods allowed for ending fiscal year
+	gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+	dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+	current_year$=callpoint!.getColumnData("GLR_TRANSHISTORY.END_YEAR")
+	readrecord(gls_calendar_dev,key=firm_id$+current_year$,dom=*next)gls_calendar$
+	callpoint!.setDevObject("ending_total_pers",gls_calendar.total_pers$)
 [[GLR_TRANSHISTORY.BSHO]]
 rem --- Open and get Current Period/Year parameters
-	num_files=1
+	num_files=2
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
+	open_tables$[2]="GLS_CALENDAR",open_opts$[2]="OTA"
+
 	gosub open_tables
-	gls_params_dev=num(open_chans$[1]),gls_params_tpl$=open_tpls$[1]
