@@ -534,7 +534,7 @@ endif
 [[ARE_CASHHDR.AWIN]]
 rem --- Open/Lock files
 use ::ado_util.src::util
-files=30,begfile=1,endfile=11
+files=30,begfile=1,endfile=10
 dim files$[files],options$[files],chans$[files],templates$[files]
 files$[1]="ARE_CASHHDR";rem --- "are-01"
 files$[2]="ARE_CASHDET";rem --- "are-11"
@@ -546,7 +546,6 @@ files$[7]="ARM_CUSTMAST";rem --- "arm-01"
 files$[8]="ARM_CUSTDET";rem --- "arm-02
 files$[9]="ARC_CASHCODE";rem --- "arm-10C"
 files$[10]="ARS_PARAMS";rem --- "ars-01"
-files$[11]="GLS_PARAMS";rem --- gls-01"
 for wkx=begfile to endfile
 	options$[wkx]="OTA"
 next wkx
@@ -560,10 +559,9 @@ if status$<>"" then
 	release
 endif
 ars01_dev=num(chans$[10])
-gls01_dev=num(chans$[11])
 
 rem --- Dimension miscellaneous string templates
-dim ars01a$:templates$[10],gls01a$:templates$[11]
+dim ars01a$:templates$[10]
 user_tpl_str$="firm_id:c(2),glint:c(1),glyr:c(4),glper:c(2),glworkfile:c(16),"
 user_tpl_str$=user_tpl_str$+"cash_flag:c(1),disc_flag:c(1),arglboth:c(1),amt_msk:c(15),existing_chk:c(1),"
 user_tpl_str$=user_tpl_str$+"OA_chkbox_id:c(5),zbal_chkbox_id:c(5),asel_chkbox_id:c(5),"
@@ -582,9 +580,6 @@ find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
 callpoint!.setDevObject("br_interface",ars01a.br_interface$)
 call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A",imsk$,omsk$,ilen,olen
 user_tpl.amt_msk$=imsk$
-
-gls01a_key$=firm_id$+"GL00"
-find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
 
 rem --- Additional File Opens
 gl$="N"

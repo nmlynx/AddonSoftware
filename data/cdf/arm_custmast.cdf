@@ -687,7 +687,6 @@ rem --- Open/Lock files
 	num_files=7
 
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="ARS_PARAMS",open_opts$[2]="OTA"
 	open_tables$[3]="ARS_CUSTDFLT",open_opts$[3]="OTA"
 	open_tables$[4]="ARS_CREDIT",open_opts$[4]="OTA"
@@ -696,7 +695,6 @@ rem --- Open/Lock files
 	open_tables$[7]="ART_INVDET",open_opts$[7]="OTA"
 	gosub open_tables
 
-	gls01_dev=num(open_chans$[1])
 	ars01_dev=num(open_chans$[2])
 	ars10_dev=num(open_chans$[3])
 	ars01c_dev=num(open_chans$[4])
@@ -704,7 +702,7 @@ rem --- Open/Lock files
 
 rem --- Dimension miscellaneous string templates
 
-	dim gls01a$:open_tpls$[1],ars01a$:open_tpls$[2],ars10d$:open_tpls$[3],ars01c$:open_tpls$[4]
+	dim ars01a$:open_tpls$[2],ars10d$:open_tpls$[3],ars01c$:open_tpls$[4]
 	dim arm02_tpl$:open_tpls$[5]
 
 rem --- Retrieve parameter data
@@ -715,8 +713,6 @@ rem --- Retrieve parameter data
 	find record (ars01c_dev,key=ars01c_key$,err=std_missing_params) ars01c$                
 	cm$=ars01c.sys_install$
 	dflt_cred_hold$=ars01c.hold_new$
-	gls01a_key$=firm_id$+"GL00"
-	find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$ 
 	find record (ars10_dev,key=firm_id$+"D",err=std_missing_params) ars10d$
 	call stbl("+DIR_PGM")+"adc_application.aon","GL",info$[all]
 	gl$=info$[20]

@@ -552,7 +552,7 @@ rem #endinclude fnget_control.src
 #include std_missing_params.src
 [[APE_INVOICEHDR.BSHO]]
 rem --- Open/Lock files
-files=11,begfile=1,endfile=files
+files=12,begfile=1,endfile=files
 dim files$[files],options$[files],chans$[files],templates$[files]
 files$[1]="APT_INVOICEHDR";rem --- "apt-01"
 files$[2]="APT_INVOICEDET";rem --- "apt-11"
@@ -565,6 +565,7 @@ files$[8]="APE_CHECKS"
 files$[9]="APE_MANCHECKDET"
 files$[10]="APS_PAYAUTH"
 files$[11]="APT_INVIMAGE"
+files$[12]="GLS_CALENDAR"
 for wkx=begfile to endfile
 	options$[wkx]="OTA"
 next wkx
@@ -589,7 +590,8 @@ if status$<>"" then
 endif
 aps01_dev=num(chans$[6])
 gls01_dev=num(chans$[7])
-dim aps01a$:templates$[6],gls01a$:templates$[7]
+gls_calendar_dev=num(chans$[12])
+dim aps01a$:templates$[6],gls01a$:templates$[7],gls_calendar$:templates$[12]
 user_tpl_str$="glint:c(1),glyr:c(4),glper:c(2),gl_tot_pers:c(2),"
 user_tpl_str$=user_tpl_str$+"amt_msk:c(15),multi_types:c(1),multi_dist:c(1),ret_flag:c(1),units_flag:c(1),"
 user_tpl_str$=user_tpl_str$+"misc_entry:c(1),inv_in_ape01:c(1),inv_in_apt01:c(1),"
@@ -635,10 +637,11 @@ user_tpl.ret_flag$=aps01a.ret_flag$
 user_tpl.misc_entry$=aps01a.misc_entry$
 gls01a_key$=firm_id$+"GL00"
 find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
+find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=std_missing_params) gls_calendar$
 user_tpl.units_flag$=gls01a.units_flag$
 user_tpl.glyr$=gls01a.current_year$
 user_tpl.glper$=gls01a.current_per$
-user_tpl.gl_tot_pers$=gls01a.total_pers$
+user_tpl.gl_tot_pers$=gls_calendar.total_pers$
 rem --- may need to disable some ctls based on params
 if user_tpl.multi_types$="N" 
 	user_tpl.dflt_ap_type$=aps01a.ap_type$
