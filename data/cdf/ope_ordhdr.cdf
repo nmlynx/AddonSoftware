@@ -2814,8 +2814,6 @@ rem --- Open needed files
 	open_tables$[6]="OPE_INVCASH",   open_opts$[6]="OTA"
 	open_tables$[7]="ARS_CREDIT",    open_opts$[7]="OTA"
 	open_tables$[8]="OPC_LINECODE",  open_opts$[8]="OTA"
-	open_tables$[9]="GLS_PARAMS",    open_opts$[9]="OTA"
-	open_tables$[10]="GLS_PARAMS",   open_opts$[10]="OTA"
 	open_tables$[11]="IVM_LSMASTER", open_opts$[11]="OTA"
 	open_tables$[12]="IVX_LSCUST",   open_opts$[12]="OTA"
 	open_tables$[13]="IVM_ITEMMAST", open_opts$[13]="OTA"

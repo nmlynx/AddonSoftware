@@ -24,7 +24,7 @@ rem -- setting a delete flag so we know in BREX not to bother checking if out of
 callpoint!.setDevObject("deleted","Y")
 [[POE_INVHDR.BTBL]]
 rem --- Open/Lock files
-files=16,begfile=1,endfile=files
+files=17,begfile=1,endfile=files
 dim files$[files],options$[files],chans$[files],templates$[files]
 
 files$[1]="APM_VENDCMTS";rem --- "apm-09
@@ -43,6 +43,7 @@ files$[13]="IVM_ITEMMAST";rem --- "ivm-01"
 files$[14]="POC_LINECODE";rem --- "pom-02"
 files$[15]="APC_TERMSCODE"
 files$[16]="APC_TYPECODE"
+files$[17]="GLS_CALENDAR"
 
 for wkx=begfile to endfile
 	options$[wkx]="OTA"
@@ -70,9 +71,10 @@ aps01_dev=num(chans$[4])
 gls01_dev=num(chans$[5])
 pos01_dev=num(chans$[6])
 ivs01_dev=num(chans$[7])
+gls_calendar_dev=num(chans$[17])
 
 dim aps01a$:templates$[4],gls01a$:templates$[5],pos01a$:templates$[6],ivs01a$:templates$[7]
-
+dim gls_calendar$:templates$[17]
 
 rem --- Additional File Opens
 gl$="N"
@@ -143,11 +145,12 @@ rem --- check to see if main GL param rec (firm/GL/00) exists; if not, tell user
 		gosub remove_process_bar
 		release
 	endif
+	find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=*next) gls_calendar$
 
 	callpoint!.setDevObject("units_flag",gls01a.units_flag$)
 	callpoint!.setDevObject("gl_year",gls01a.current_year$)
 	callpoint!.setDevObject("gl_per",gls01a.current_per$)
-	callpoint!.setDevObject("gl_tot_pers",gls01a.total_pers$)
+	callpoint!.setDevObject("gl_tot_pers",gls_calendar.total_pers$)
 
 call stbl("+DIR_SYP")+"bac_key_template.bbj","POE_INVSEL","PRIMARY",poe_invsel_key_tpl$,table_chans$[all],status$
 callpoint!.setDevObject("poe_invsel_key",poe_invsel_key_tpl$)
