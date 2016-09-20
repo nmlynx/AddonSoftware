@@ -91,10 +91,8 @@ REM - get firm id and firm name
     title$ = title$ + " - " + firm_name$
     window!.setTitle(title$)
 
-REM - get the accounting periods
-    sql$ = "SELECT TOTAL_PERS, CURRENT_PER, CURRENT_YEAR, "
-    sql$ = sql$ + "PER_ENDING_01, PER_ENDING_02, PER_ENDING_03, PER_ENDING_04, PER_ENDING_05, PER_ENDING_06, "
-    sql$ = sql$ + "PER_ENDING_07, PER_ENDING_08, PER_ENDING_09, PER_ENDING_10, PER_ENDING_11, PER_ENDING_12, PER_ENDING_13 "
+REM - get current accounting period and year
+    sql$ = "SELECT CURRENT_PER, CURRENT_YEAR "
     sql$ = sql$ + "FROM GLS_PARAMS "
     sql$ = sql$ + "WHERE FIRM_ID = '" + firm_id$ + "'"
         
@@ -110,9 +108,24 @@ REM - get the accounting periods
     
     read_tpl$ = sqlfetch(sql_chan,err=*break)
     periods! = rs!.getEmptyRecordData()    
-    periods!.setFieldValue("TOTAL_PERS",read_tpl.total_pers$)
     periods!.setFieldValue("CURRENT_PER",read_tpl.current_per$)
     periods!.setFieldValue("CURRENT_YEAR",pad(read_tpl.current_year$,4))
+
+REM - get the accounting periods
+    sql$ = "SELECT TOTAL_PERS, "
+    sql$ = sql$ + "PER_ENDING_01, PER_ENDING_02, PER_ENDING_03, PER_ENDING_04, PER_ENDING_05, PER_ENDING_06, "
+    sql$ = sql$ + "PER_ENDING_07, PER_ENDING_08, PER_ENDING_09, PER_ENDING_10, PER_ENDING_11, PER_ENDING_12, PER_ENDING_13 "
+    sql$ = sql$ + "FROM GLS_CALENDAR "
+    sql$ = sql$ + "WHERE FIRM_ID = '" + firm_id$ + "' AND YEAR = '" + periods!.getFieldValue("CURRENT_YEAR") + "'"
+        
+    sql_chan=sqlunt
+    sqlopen(sql_chan)stbl("+DBNAME")
+    sqlprep(sql_chan)sql$
+    dim read_tpl$:sqltmpl(sql_chan)
+    sqlexec(sql_chan)
+    
+    read_tpl$ = sqlfetch(sql_chan,err=*break)
+    periods!.setFieldValue("TOTAL_PERS",read_tpl.total_pers$)
     periods!.setFieldValue("PER_ENDING_01",pad(read_tpl.per_ending_01$,4))
     periods!.setFieldValue("PER_ENDING_02",pad(read_tpl.per_ending_02$,4))
     periods!.setFieldValue("PER_ENDING_03",pad(read_tpl.per_ending_03$,4))
@@ -777,7 +790,7 @@ set_up_period:
 
     rem ' adjust the start by one day
     if startMonth = 12 and startDay = 31 then
-	startDate = jul(startYear - 1, startMonth, startDay)
+		startDate = jul(startYear - 1, startMonth, startDay)
     else
     	startDate = jul(startYear, startMonth, startDay)
     fi
