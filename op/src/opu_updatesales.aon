@@ -298,7 +298,8 @@ rem --- Main read
                 vendor$=ivm01a.vendor_id$
             endif
             
-            call pgmdir$+"adc_fiscalperyr.aon",firm_id$,ope01a.invoice_date$,period$,year$,table_chans$[all]
+            call pgmdir$+"adc_fiscalperyr.aon",firm_id$,ope01a.invoice_date$,period$,year$,table_chans$[all],status
+            if status goto std_exit
             period=num(period$)
 
         rem ---Customer

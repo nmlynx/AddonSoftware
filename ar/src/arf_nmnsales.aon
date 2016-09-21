@@ -39,7 +39,8 @@ rem --- Main process
     opt_invhdr=fnget_dev("@"+"OPT_INVHDR")
     
     inv_date$=rec_tpl.invoice_date$
-    call pgmdir$+"adc_fiscalperyr.aon",firm_id$,rec_tpl.invoice_date$,period$,year$,table_chans$[all]    
+    call pgmdir$+"adc_fiscalperyr.aon",firm_id$,rec_tpl.invoice_date$,period$,year$,table_chans$[all],status
+    if status goto exit_prog    
     readrecord(ars01a_dev,key=rec_tpl.firm_id$+"AR00",dom=exit_prog)ars_params$
     nmn_per$=str(num(ars_params.current_per$)+1:"00")
     curr_year$=ars_params.current_year$

@@ -10,11 +10,12 @@ rem --- WHEN$         : YYYYMMDD Date (Input)
 rem --- PERIOD$       : Fiscal period MM (Returned - blank if incoming date was invalid)
 rem --- YEAR$         : Fiscal year YYYY (Returned - blank if incoming date was invalid)
 rem --- TABLE_CHANS$[]: Barista opened channels array
+rem --- STATUS        : Zero=No Error/Not Zero=Error (Returned)
 
     seterr std_error
     setesc std_error
     
-    enter firm_id$,when$,period$,year$,table_chans$[all]
+    enter firm_id$,when$,period$,year$,table_chans$[all],status
 
 rem --- Validate WHEN$ date
 
@@ -49,7 +50,15 @@ rem --- Open/Lock files
 
 get_calendar: rem --- Get calendar for the fiscal year
 
-    find record (gls_calendar_dev,key=firm_id$+fiscal_year$,dom=std_missing_params)gls_calendar$
+    find record (gls_calendar_dev,key=firm_id$+fiscal_year$,dom=*next)gls_calendar$
+    if cvs(gls_calendar.firm_id$,2)="" then
+        msg_id$="AD_NO_FISCAL_CAL"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=fiscal_year$
+        gosub disp_message
+        status=1
+        goto std_exit
+    endif
     periods=num(gls_calendar.total_pers$)
 
 rem --- Make sure we used the fiscal calendar for the correct year.

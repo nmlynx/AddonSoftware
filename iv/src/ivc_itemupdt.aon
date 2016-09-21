@@ -172,7 +172,8 @@ rem --- Validate arguments
     if fndate(refs$[0]) then ymd$=refs$[0]
 
     if pos(action$="IC,PO,OE,CO,UC,TA,OO,PI",3)=0
-        call pgmdir$+"adc_fiscalperyr.aon",firm_id$,ymd$,period$,year$,table_chans$[all]
+        call pgmdir$+"adc_fiscalperyr.aon",firm_id$,ymd$,period$,year$,table_chans$[all],status
+        if status then goto std_exit
         if period$="" then period$=current_per$,year$=current_year$
         clock$=fntime$(clock$)
     endif

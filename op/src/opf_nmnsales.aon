@@ -19,7 +19,8 @@ rem --- Main process
     status$=""
     
     inv_date$=rec_tpl.invoice_date$
-    call pgmdir$+"adc_fiscalperyr.aon",firm_id$,rec_tpl.invoice_date$,period$,year$,table_chans$[all]    
+    call pgmdir$+"adc_fiscalperyr.aon",firm_id$,rec_tpl.invoice_date$,period$,year$,table_chans$[all],status
+    if status goto exit_prog
 
     gls01a_dev=fnget_dev("GLS_PARAMS")
     dim gls_params$:fnget_tpl$("GLS_PARAMS")

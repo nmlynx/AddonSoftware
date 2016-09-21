@@ -503,7 +503,8 @@ rem	salesDashboardCategory!.setMaxWidgetWidth(2000)
     dim gls_calendar$:templates$[1]
     
     rem --- Convert processing date into fiscal period and year for Sales Analysis
-    call stbl("+DIR_PGM")+"adc_fiscalperyr.aon",firm_id$,sysinfo.system_date$,period$,year$,table_chans$[all]
+    call stbl("+DIR_PGM")+"adc_fiscalperyr.aon",firm_id$,sysinfo.system_date$,period$,year$,table_chans$[all],status
+    if status goto std_exit
 
 rem ==============================================
 rem --- create SA Top Customers bar chart

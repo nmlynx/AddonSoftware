@@ -51,7 +51,15 @@ rem --- Retrieve parameter records
     status=0
     gls01a_key$=firm_id$+"GL00"
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    readrecord(gls_calendar_dev,key=firm_id$+str(year),err=std_missing_params)gls_calendar$
+    readrecord(gls_calendar_dev,key=firm_id$+str(year),err=*next)gls_calendar$
+    if cvs(gls_calendar.firm_id$,2)="" then
+        msg_id$="AD_NO_FISCAL_CAL"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=str(year)
+        gosub disp_message
+        status=1
+        goto std_exit
+    endif
     total_periods=num(gls_calendar.total_pers$)
 
 rem --- Determine End Of Period

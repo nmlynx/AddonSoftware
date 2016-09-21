@@ -88,7 +88,8 @@ rem --- Background
 rem --- Report headings
 
     gosub init_headings
-    call pgmdir$+"adc_fiscalperyr.aon",firm_id$,when$,period$,year$,table_chans$[all]
+    call pgmdir$+"adc_fiscalperyr.aon",firm_id$,when$,period$,year$,table_chans$[all],status
+    if status then goto std_exit
     base$=period$+year$
 
 rem --- Position files
