@@ -176,6 +176,7 @@ rem --- Determine period beginning and ending dates based on the aging method se
 
                 if agingdate$(5,2)<periodend$(1,2) year=year-1
                 call pgmdir$+"adc_perioddates.aon",period,year,begperiod$,endperiod$,table_chans$[all],status
+                if status goto std_exit
                 begdates$=begperiod$
                 enddates$=endperiod$
 
@@ -190,6 +191,7 @@ rem --- Determine period beginning and ending dates based on the aging method se
                        year=base_yr+1
                     endif
                     call pgmdir$+"adc_perioddates.aon",period,year,begperiod$,endperiod$,table_chans$[all],status
+                    if status goto std_exit
                     begdates$=begdates$+begperiod$
                     enddates$=enddates$+endperiod$
                 next x

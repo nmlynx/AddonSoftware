@@ -331,7 +331,7 @@ rem --- Open tables
 		sf_prevper_year=sf_prevper_year-1
 	endif
 	call stbl("+DIR_PGM")+"adc_perioddates.aon",sf_prevper,sf_prevper_year,beg_date$,end_date$,table_chans$[all],status
-	callpoint!.setDevObject("sf_prevper_enddate",end_date$)
+	if status=0 then callpoint!.setDevObject("sf_prevper_enddate",end_date$)
 
 	ivs_params=num(open_chans$[1])
 	dim ivs_params$:open_tpls$[1]

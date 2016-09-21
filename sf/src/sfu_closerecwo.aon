@@ -85,6 +85,7 @@ rem --- Retrieve parameter records
 	current_period=num(sfs01a.current_per$)
     current_year=num(sfs01a.current_year$)
     call stbl("+DIR_PGM")+"adc_perioddates.aon",current_period,current_year,begdate$,enddate$,table_chans$[all],status
+    if status then goto std_exit_no_update
     sf_per_begdate$=begdate$
     sf_per_enddate$=enddate$
 

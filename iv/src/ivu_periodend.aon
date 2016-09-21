@@ -90,6 +90,7 @@ rem --- Parameters
     current_year   = num(ivs01a.current_year$)
 
     call pgmdir$+"adc_perioddates.aon",current_period,current_year,begdate$,enddate$,table_chans$[all],status
+    if status then goto std_exit_no_update
 
 rem --- Get user approval to proceed
 
@@ -136,7 +137,7 @@ rem --- Check on Replenishment
 rem --- Determine Period Limits
 
     call pgmdir$+"adc_perioddates.aon",current_period,current_year,start_date$,end_date$,table_chans$[all],status
-	if status = 999 then goto std_exit_no_update
+	if status then goto std_exit_no_update
     call pgmdir$+"adc_daydates.aon",end_date$,when$,1
     refs$[0]=when$
 

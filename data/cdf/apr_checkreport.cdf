@@ -33,5 +33,7 @@ rem --- Retrieve parameter data
 	year=num(aps01a.current_year$)
 
 	call stbl("+DIR_PGM")+"adc_perioddates.aon",period,year,begdate$,enddate$,table_chans$[all],status
-	callpoint!.setColumnData("APR_CHECKREPORT.CHECK_DATE_1",begdate$,1)
-	callpoint!.setColumnData("APR_CHECKREPORT.CHECK_DATE_2",enddate$,1)
+	if status=0 then
+		callpoint!.setColumnData("APR_CHECKREPORT.CHECK_DATE_1",begdate$,1)
+		callpoint!.setColumnData("APR_CHECKREPORT.CHECK_DATE_2",enddate$,1)
+	endif

@@ -298,7 +298,7 @@ calc_heads: rem --- Calculate from/thru date column headings
 
             if datefrom$(5,2)<periodend$(1,2) year=year-1
             call pgmdir$+"adc_perioddates.aon",period,year,begperiod$,endperiod$,table_chans$[all],status
-
+            if status then goto std_exit_no_report
             begdates$=begperiod$
             enddates$=endperiod$
 
@@ -315,6 +315,7 @@ calc_heads: rem --- Calculate from/thru date column headings
                 endif
                 
                 call pgmdir$+"adc_perioddates.aon",period,year,begperiod$,endperiod$,table_chans$[all],status
+                if status then goto std_exit_no_report
                 begdates$=begdates$+begperiod$
                 enddates$=enddates$+endperiod$
             next x

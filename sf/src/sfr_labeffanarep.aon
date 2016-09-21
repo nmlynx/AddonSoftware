@@ -129,6 +129,7 @@ rem --- Find last (prior) Period End Date
         prioryear=curyear-1
     endif
     call pgmdir$+"adc_perioddates.aon",priorper,prioryear,v0$,priorperenddt$,table_chans$[all],status
+    if status then goto std_exit
 
 rem --- Sort It Here
 

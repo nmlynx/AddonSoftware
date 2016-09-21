@@ -82,6 +82,7 @@ rem --- Assign form input values to local variables
     
     
     call pgmdir$+"adc_perioddates.aon",period,year,begdate$,enddate$,table_chans$[all],status
+    if status goto std_exit
 
 rem --- Retrieve parameter records
 

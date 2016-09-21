@@ -458,7 +458,6 @@ rem --- or returned.
         period=num(glcontrol.current_per$)
         year=num(glcontrol.current_year$)
         call pgmdir$+"adc_perioddates.aon",period,year,begdate$,enddate$,table_chans$[all],status
-
         if status=0 
             glcontrol.app_per_beg$=begdate$
             glcontrol.app_per_end$=enddate$
@@ -467,7 +466,6 @@ rem --- or returned.
         period=num(glcontrol.gl_period$)
         year=num(glcontrol.gl_year$)
         call pgmdir$+"adc_perioddates.aon",period,year,begdate$,enddate$,table_chans$[all],status
-
         if status=0 
             glcontrol.gl_per_beg$=begdate$
             glcontrol.gl_per_end$=enddate$

@@ -97,6 +97,7 @@ rem --- Update initializations
     period=num(period$)
     year=num(year$)
     call pgmdir$+"adc_perioddates.aon",period,year,when$,x$,table_chans$[all],status
+    if status goto std_exit_no_update
     if rebuildlot$="N" ls$="N"
     call pgmdir$+"adc_progress.aon","N","IVM_ITEMWHSE","","","",7+p[0],0,1,meter_num,status
     

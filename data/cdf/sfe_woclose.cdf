@@ -672,5 +672,5 @@ rem --- Additional file opens
 	if gl$="Y" then
 		rem --- Get GL period start date for current SF period
 		call stbl("+DIR_PGM")+"adc_perioddates.aon",num(sfs_params.current_per$),num(sfs_params.current_year$),beg_date$,end_date$,table_chans$[all],status
-		callpoint!.setDevObject("gl_beg_date",beg_date$)
+		if status=0 then callpoint!.setDevObject("gl_beg_date",beg_date$)
 	endif

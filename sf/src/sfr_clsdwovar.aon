@@ -143,6 +143,7 @@ rem --- Init Data
         if period$="" then period$=sfs01a.current_per$
 
 		call "adc_perioddates.aon",num(period$),num(sfs01a.current_year$),begdate$,enddate$,table_chans$[all],status
+		if status then goto std_exit
 
 rem --- Retrieve key templates
 

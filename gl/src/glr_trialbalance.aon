@@ -101,6 +101,7 @@ rem --- Initializations
     period=num(begper$)
     year=num(begyear$)
     call pgmdir$+"adc_perioddates.aon",period,year,begdate$,enddate$,table_chans$[all],status
+    if status goto std_exit
     headings$[0]=cvs(sysinfo.firm_name$,2)
     headings$[1]=cvs(sysinfo.task_desc$,2)
     headings$[2]=Translate!.getTranslation("AON_FOR_") + cvs(field(gls_calendar$,"period_name_"+str(period:"00")),2) + " " + begyear$ + Translate!.getTranslation("AON__(PERIOD_") + str(period:"00") + ")"

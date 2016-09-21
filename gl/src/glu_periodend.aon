@@ -54,6 +54,7 @@ rem --- Retrieve parameter records
     current_period=num(gls01a.current_per$)
     current_year=num(gls01a.current_year$)
     call pgmdir$+"adc_perioddates.aon",current_period,current_year,begdate$,enddate$,table_chans$[all],status
+    if status goto std_exit
 
 rem --- Parameters
 

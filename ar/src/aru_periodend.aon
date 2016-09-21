@@ -119,6 +119,7 @@ rem --- Retrieve parameter records
     current_year=num(ars01a.current_year$)
     total_periods=num(gls_calendar.total_pers$)
     call pgmdir$+"adc_perioddates.aon",current_period,current_year,begdate$,enddate$,table_chans$[all],status
+    if staus then goto std_exit_no_update
     period=current_period
     mp=13
 

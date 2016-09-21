@@ -267,6 +267,7 @@ rem --- Miscellaneous and deposit headers are based on the extension mask length
 rem --- Get the beginning and ending dates for the current AR period
 
     call pgmdir$+"adc_perioddates.aon",period,year,begperiod$,endperiod$,table_chans$[all],status
+    if status goto std_exit_no_report
 
 rem --- Additional file opens
 

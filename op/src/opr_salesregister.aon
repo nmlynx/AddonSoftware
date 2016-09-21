@@ -166,6 +166,7 @@ rem --- Parameters
     p[3]=num(ars01a.current_year$)
 
 	call pgmdir$+"adc_perioddates.aon",p[2],p[3],x$,g9$,table_chans$[all],status
+    if status goto std_exit
 	
     start_block = 1
 

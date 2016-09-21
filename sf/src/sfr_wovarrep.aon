@@ -168,6 +168,7 @@ rem --- Init Data
         p0=p0-1
         if p0=0 then p0=num(gls_calendar.total_pers$),p1=p1-1; rem "Find LAST PERIOD end date
         call pgmdir$+"adc_perioddates.aon",p0,p1,v0$,g9$,table_chans$[all],status
+        if status then goto std_exit
         sfs01a.current_per$=""
         sfs01a.current_year$=""
         desc[1]=num(ivs01a.desc_len_01$)
