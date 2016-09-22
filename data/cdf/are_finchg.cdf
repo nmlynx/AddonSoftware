@@ -69,7 +69,15 @@ rem --- Retrieve parameter data/see if OP is installed
 	find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
 	gls01a_key$=firm_id$+"GL00"
 	find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$ 
-	find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=std_missing_params) gls_calendar$ 
+	find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=*next) gls_calendar$ 
+	if cvs(gls_calendar.firm_id$,2)="" then
+		msg_id$="AD_NO_FISCAL_CAL"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=gls01a.current_year$
+		gosub disp_message
+		callpoint!.setStatus("EXIT")
+		break
+	endif
 	user_tpl.glyr$=gls01a.current_year$
 	user_tpl.glper$=gls01a.current_per$
 	user_tpl.no_glpers$=gls_calendar.total_pers$

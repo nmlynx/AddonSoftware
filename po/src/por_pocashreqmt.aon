@@ -82,7 +82,14 @@ rem --- Retrieve parameter records
 
 get_calendar: rem --- Get calendar for the fiscal year
 
-    find record (gls_calendar_dev,key=firm_id$+fiscal_year$,err=std_missing_params) gls_calendar$
+    find record (gls_calendar_dev,key=firm_id$+fiscal_year$,err=*next) gls_calendar$
+    if cvs(gls_calendar.firm_id$,2)="" then
+        msg_id$="AD_NO_FISCAL_CAL"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=fiscal_year$
+        gosub disp_message
+        goto std_exit
+    endif
     periods=num(gls_calendar.total_pers$)
 
 rem --- Make sure we used the fiscal calendar for the correct year.
@@ -187,6 +194,11 @@ rem --- fnglobal$: Return string value of passed STBL variable
     fnend
 
 rem #endinclude std_functions.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+return
 
 rem #include std_error.src
 

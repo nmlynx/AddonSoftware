@@ -71,7 +71,14 @@ rem --- Retrieve parameter records
     find record (aps01a_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     ivs01a_key$=firm_id$+"IV00"
     find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    find record (gls_calendar_dev,key=firm_id$+ivs01a.current_year$,err=std_missing_params) gls_calendar$
+    find record (gls_calendar_dev,key=firm_id$+ivs01a.current_year$,err=*next) gls_calendar$
+    if cvs(gls_calendar.firm_id$,2)="" then
+        msg_id$="AD_NO_FISCAL_CAL"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=ivs01a.current_year$
+        gosub disp_message
+        goto std_exit_no_update
+    endif
 
 rem --- Parameters
 

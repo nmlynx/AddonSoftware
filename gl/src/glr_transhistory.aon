@@ -76,7 +76,14 @@ rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=std_missing_params) gls_calendar$
+    find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=*next) gls_calendar$
+    if cvs(gls_calendar.firm_id$,2)="" then
+        msg_id$="AD_NO_FISCAL_CAL"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=gls01a.current_year$
+        gosub disp_message
+        goto std_exit_no_report
+    endif
     units_flag$=gls01a.units_flag$
     total_pers=num(gls_calendar.total_pers$)
     call "adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
@@ -531,7 +538,14 @@ period_break: rem --- Period break
     if detail$="D" and l1<1 goto period_balance
     gosub journal_break
     y$=t1$(1,4)
-    find record (gls_calendar_dev,key=firm_id$+y$,err=std_missing_params) gls_calendar$
+    find record (gls_calendar_dev,key=firm_id$+y$,err=*next) gls_calendar$
+    if cvs(gls_calendar.firm_id$,2)="" then
+        msg_id$="AD_NO_FISCAL_CAL"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=y$
+        gosub disp_message
+        goto std_exit_no_report
+    endif
     x$=field(gls_calendar$,"abbr_name_"+str(num(t1$(5,2)):"00"))
     if export_format$="Y"
         total$=Translate!.getTranslation("AON_TOTAL")

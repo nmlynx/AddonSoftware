@@ -81,7 +81,14 @@ rem --- Retrieve parameter records
 
     ivs01a_key$=firm_id$+"IV00"
     find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
-    find record (gls_calendar_dev,key=firm_id$+year$,err=std_missing_params) gls_calendar$
+    find record (gls_calendar_dev,key=firm_id$+year$,err=*next) gls_calendar$
+    if cvs(gls_calendar.firm_id$,2)="" then
+        msg_id$="AD_NO_FISCAL_CAL"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=year$
+        gosub disp_message
+        goto std_exit
+    endif
 
 rem --- Parameters
 
@@ -130,6 +137,11 @@ rem --- Retrieve key template
 rem --- Run overlay
 
     run pgmdir$+"ivr_itemturns_o1.aon"
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+return
 
 rem #include std_error.src
 

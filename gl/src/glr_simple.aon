@@ -60,7 +60,14 @@ rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"   
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=std_missing_params) gls_calendar$
+    find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=*next) gls_calendar$
+    if cvs(gls_calendar.firm_id$,2)="" then
+        msg_id$="AD_NO_FISCAL_CAL"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=gls01a.current_year$
+        gosub disp_message
+        goto std_exit
+    endif
     rem m0$=gls01a.acct_output$ -- using mask from Barista system masks file
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,m1
@@ -429,6 +436,11 @@ rem --- fnglobal$: Return string value of passed STBL variable
         globalstr_exit:
         return q1$
     fnend
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+return
 
 rem #include std_missing_params.src
 

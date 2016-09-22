@@ -113,7 +113,14 @@ rem --- Retrieve parameter records
 		m3$=m2$;m3=len(m3$)
         rem m3=len(sfs01a.rate_mask$); rate mask is blank in the data file sfs-01
 
-        find record (gls_calendar_dev,key=firm_id$+sfs01a.current_year$,err=std_missing_params) gls_calendar$
+        find record (gls_calendar_dev,key=firm_id$+sfs01a.current_year$,err=*next) gls_calendar$
+        if cvs(gls_calendar.firm_id$,2)="" then
+            msg_id$="AD_NO_FISCAL_CAL"
+            dim msg_tokens$[1]
+            msg_tokens$[1]=sfs01a.current_year$
+            gosub disp_message
+            goto std_exit
+        endif
         
 rem --- Parameters
 

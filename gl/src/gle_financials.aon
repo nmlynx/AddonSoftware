@@ -118,7 +118,14 @@ rem --- Assign input values to local variables
     if cvs(begper$,2)="" begper$=gls01a.current_per$
     if cvs(begyear$,2)="" begyear$=gls01a.current_year$
     reprint=reprint$="Y"
-    find record (gls_calendar_dev,key=firm_id$+begyear$,err=std_missing_params) gls_calendar$
+    find record (gls_calendar_dev,key=firm_id$+begyear$,err=*next) gls_calendar$
+    if cvs(gls_calendar.firm_id$,2)="" then
+        msg_id$="AD_NO_FISCAL_CAL"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=begyear$
+        gosub disp_message
+        goto std_exit
+    endif
     total_pers=num(gls_calendar.total_pers$)
 
 rem --- Retrieve GL Financial Report Parameter record and either update it
@@ -160,6 +167,11 @@ rem --- Position file and run next overlay (report or update)
 
     read (gle04_dev,key=firm_id$,dom=*next)
     run pgmdir$+overlay$,err=std_exit
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+return
 
 rem #include std_error.src
 

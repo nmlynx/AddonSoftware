@@ -178,7 +178,15 @@ rem --- init...open tables, define custom grid, etc.
 	dim gls_calendar$:open_tpls$[4]
 
 	readrecord(gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
-	readrecord(gls_calendar_dev,key=firm_id$+gls01a.current_year$,dom=std_missing_params)gls_calendar$
+	readrecord(gls_calendar_dev,key=firm_id$+gls01a.current_year$,dom=*next)gls_calendar$
+	if cvs(gls_calendar.firm_id$,2)="" then
+		msg_id$="AD_NO_FISCAL_CAL"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=gls01a.current_year$
+		gosub disp_message
+		callpoint!.setStatus("EXIT")
+		break
+	endif
 
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,0
 
@@ -303,7 +311,15 @@ rem --- init/parameters
 
 gls01a_key$=firm_id$+"GL00"
 find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=std_missing_params) gls_calendar$
+find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=*next) gls_calendar$
+if cvs(gls_calendar.firm_id$,2)="" then
+	msg_id$="AD_NO_FISCAL_CAL"
+	dim msg_tokens$[1]
+	msg_tokens$[1]=gls01a.current_year$
+	gosub disp_message
+	callpoint!.setStatus("EXIT")
+	break
+endif
 
 	glyear=num(gls01a.current_year$)
 	if gls01a.gl_yr_closed$ <> "Y" then 

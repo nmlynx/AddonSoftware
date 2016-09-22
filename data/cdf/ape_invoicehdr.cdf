@@ -622,7 +622,10 @@ gl$="N"
 status=0
 source$=pgm(-2)
 call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"AP",glw11$,gl$,status
-if status<>0 goto std_exit
+if status<>0 then
+	callpoint!.setStatus("EXIT")
+	break
+endif
 user_tpl.glint$=gl$
 
 rem --- Retrieve parameter data
@@ -637,7 +640,15 @@ user_tpl.ret_flag$=aps01a.ret_flag$
 user_tpl.misc_entry$=aps01a.misc_entry$
 gls01a_key$=firm_id$+"GL00"
 find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=std_missing_params) gls_calendar$
+find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=*next) gls_calendar$
+if cvs(gls_calendar.firm_id$,2)="" then
+	msg_id$="AD_NO_FISCAL_CAL"
+	dim msg_tokens$[1]
+	msg_tokens$[1]=gls01a.current_year$
+	gosub disp_message
+	callpoint!.setStatus("EXIT")
+	break
+endif
 user_tpl.units_flag$=gls01a.units_flag$
 user_tpl.glyr$=gls01a.current_year$
 user_tpl.glper$=gls01a.current_per$
