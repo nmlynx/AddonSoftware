@@ -2132,7 +2132,7 @@ rem ==========================================================================
 
 	while more
 		read record (arm05_dev, end=*break) arm05a$
-		if arm05a.firm_id$+arm05a.customer_id$ <> firm_id$+cust$ then break
+		if arm05a.firm_id$+arm05a.customer_id$ <> firm_id$+cust_id$ then break
 		cmt_text$ = cmt_text$ + cvs(arm05a.std_comments$,3) + $0A$
 	wend
 
