@@ -492,15 +492,15 @@ rem	salesDashboardCategory!.setMaxWidgetWidth(2000)
     files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="gls_params",ids$[1]="GLS_PARAMS"
-    files$[2]="gls_params",ids$[2]="GLS_PARAMS"
+    files$[2]="gls_calendar",ids$[2]="GLS_CALENDAR"
     
     call stbl("+DIR_PGM")+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     
     gls01_dev=channels[1]
     dim gls01a$:templates$[1]
-    gls_calendar_dev=channels[1]
-    dim gls_calendar$:templates$[1]
+    gls_calendar_dev=channels[2]
+    dim gls_calendar$:templates$[2]
     
     rem --- Convert processing date into fiscal period and year for Sales Analysis
     call stbl("+DIR_PGM")+"adc_fiscalperyr.aon",firm_id$,sysinfo.system_date$,period$,year$,table_chans$[all],status
