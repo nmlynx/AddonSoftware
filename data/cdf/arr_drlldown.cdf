@@ -34,13 +34,13 @@ rem --- Verify haven't exceeded calendar total periods for current AR fiscal yea
 [[ARR_DRLLDOWN.<CUSTOM>]]
 #include std_missing_params.src
 [[ARR_DRLLDOWN.ARAR]]
-gls01_dev=fnget_dev("GLS_PARAMS")
-gls01_tpl$=fnget_tpl$("GLS_PARAMS")
-dim gls01a$:gls01_tpl$
+ars01_dev=fnget_dev("ARS_PARAMS")
+ars01_tpl$=fnget_tpl$("ARS_PARAMS")
+dim ars01a$:ars01_tpl$
 
-read record (gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
-callpoint!.setColumnData("ARR_DRLLDOWN.PICK_GL_PER",gls01a.current_per$)
-callpoint!.setColumnData("ARR_DRLLDOWN.PICK_YEAR",gls01a.current_year$)
+read record (ars01_dev,key=firm_id$+"AR00",dom=std_missing_params)ars01a$
+callpoint!.setColumnData("ARR_DRLLDOWN.PICK_GL_PER",ars01a.current_per$)
+callpoint!.setColumnData("ARR_DRLLDOWN.PICK_YEAR",ars01a.current_year$)
 callpoint!.setStatus("REFRESH")
 
 rem --- Set maximum number of periods allowed for this fiscal year
@@ -54,7 +54,7 @@ rem --- Open/Lock files
 
 	num_files=2
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
+	open_tables$[1]="ARS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="GLS_CALENDAR",open_opts$[2]="OTA"
 
 	gosub open_tables

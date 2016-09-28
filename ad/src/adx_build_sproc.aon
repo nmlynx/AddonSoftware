@@ -423,8 +423,8 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     sproc_vw_name$="SALES_CUSTOMER"
 	sqlprep$="CREATE PROCEDURE SALES_CUSTOMER "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUSTOMER_NBR CHAR(6) IN, MONTH CHAR(2) IN, "
-    sqlprep$=sqlprep$+"YEAR CHAR(4) IN, BARISTA_WD VARCHAR(50) IN) "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUSTOMER_NBR CHAR(6) IN, BEGDATE CHAR(8) IN, "
+    sqlprep$=sqlprep$+"ENDDATE CHAR(8) IN, BARISTA_WD VARCHAR(50) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SALES_CUSTOMER.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'Sales for a Customer'"
@@ -433,7 +433,7 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
     
     sproc_vw_name$="SALES_CUST_TYPE"
 	sqlprep$="CREATE PROCEDURE SALES_CUST_TYPE "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, MONTH CHAR(2) IN, YEAR CHAR(4) IN, BARISTA_WD VARCHAR(50) IN) "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, BEGDATE CHAR(8) IN, ENDDATE CHAR(8) IN, BARISTA_WD VARCHAR(50) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SALES_CUST_TYPE.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'Sales by Customer Type'"
@@ -442,7 +442,7 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
     
     sproc_vw_name$="SALES_CUST_TYPE_CUST"
 	sqlprep$="CREATE PROCEDURE SALES_CUST_TYPE_CUST "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUST_TYPE CHAR(3) IN, MONTH CHAR(2) IN, YEAR CHAR(4) IN, "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, CUST_TYPE CHAR(3) IN, BEGDATE CHAR(8) IN, ENDDATE CHAR(8) IN, "
     sqlprep$=sqlprep$+"CUST_ID_MASK CHAR(10) IN, CUST_ID_LEN CHAR(3) IN, BARISTA_WD VARCHAR(50) IN) "
     sqlprep$=sqlprep$+"'"+sproc_path$+"SALES_CUST_TYPE_CUST.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
