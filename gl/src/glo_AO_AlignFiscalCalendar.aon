@@ -1,0 +1,280 @@
+rem ==========================================================================
+rem --- bmo_AlignFiscalCalendar.aon 
+rem --- AO_AlignFiscalCalendar class (AlignFiscalCalendar superclass)
+rem --- GL superclass for re-aligning fiscal periods to facilitate comparative
+rem --- financial reports.
+rem --- 
+rem --- AddonSoftware Version 17.0
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem ==========================================================================
+
+rem /**
+rem  * This class provides for re-aligning periods in a previous fiscal year to 
+rem  * facilitate comparative financial reports with the current fiscal year.
+rem  */
+
+    class public AO_AlignFiscalCalendar
+        field protected BBjVector currentFiscalCalPerEnding! = BBjAPI().makeVector()
+        field protected BBjString currentFiscalCalStartDate$
+        field protected BBjString currentFiscalCalTotalPers$
+        field protected BBjString currentFiscalYear$
+        field protected BBjNumber devGlsCalendar = -1
+        field protected BBjNumber devGltTransDetail = -1
+        field protected BBjNumber devGlwAcctSummary = -1
+        field protected BBjString firmID$
+        field protected BBjString tplGlsCalendar$
+        field protected BBjString tplGltTransDetail$
+        field protected BBjString tplGlwAcctSummary$
+        field protected BBjString unitsFlag$
+
+        rem /**
+        rem  * Constructor.
+        rem  *
+        rem  * @param BBjString firmId$
+        rem  */
+        method public AO_AlignFiscalCalendar(BBjString firmID$)
+            seterr AlignFiscalCalendar_error
+
+            rem --- Open gls_params
+            filename$ = "gls_params"
+            devGlsParams = unt
+            open(devGlsParams)stbl("+GLDATA")+filename$
+
+            rem --- Get record template for gls_params
+            tplsChan = unt
+            open(tplsChan)stbl("+DIR_BRD")+"ddm_table_tpls.dat"
+            read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
+            tplGlsParams$ = table_tpl$
+            dim gls_params$:tplGlsParams$
+
+            rem --- Open gls_calendar
+            filename$ = "gls_calendar"
+            devGlsCalendar = unt
+            open(devGlsCalendar)stbl("+GLDATA")+filename$
+
+            rem --- Get record template for gls_calendar
+            read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
+            tplGlsCalendar$ = table_tpl$
+            dim gls_calendar$:tplGlsCalendar$
+            
+            rem --- Get gls_params GL00 record for firmId$
+            readrecord(devGlsParams,key=firmID$+"GL00")gls_params$
+            
+            rem --- Initialize field variables
+            #firmID$ = firmID$
+            #devGlsCalendar = devGlsCalendar
+            #tplGlsCalendar$ = tplGlsCalendar$
+            #currentFiscalYear$ = gls_params.current_year$
+            #unitsFlag$ = gls_params.units_flag$
+            #getFiscalYearInfo()
+
+            rem --- Close files
+            close(tplsChan,err=*next)
+            close(devGlsParams,err=*next)
+
+            methodret
+            
+AlignFiscalCalendar_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Terminate all GoldMine sessions by sending Logout and UnloadAPI requests.
+        rem  *
+        rem  */
+        method protected void getFiscalYearInfo()
+            seterr getFiscalYearInfo_error
+
+            rem --- Get gls_calendar record for #currentFiscalYear$
+            dim gls_calendar$:#tplGlsCalendar$
+            readrecord(#devGlsCalendar,key=#firmID$+#currentFiscalYear$)gls_calendar$
+            
+            rem --- Initialize field variables
+            #currentFiscalCalStartDate$ = gls_calendar.cal_start_date$
+            #currentFiscalCalTotalPers$ = gls_calendar.total_pers$
+            for per=1 to num(#currentFiscalCalTotalPers$)
+                #currentFiscalCalPerEnding!.addItem(field(gls_calendar$,"PER_ENDING_"+str(per:"00")))
+            next per
+
+            methodret
+            
+getFiscalYearInfo_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Checks if the fiscal calendar for thisYear$ is the same as the calendar for the current
+        rem  * fiscal year. Returns true if the calendars are different and can be aligned. Returns false
+        rem  * if the calendars are the same and cannot be aligned.
+        rem  * 
+        rem  * Returns GoldMine contact information for the given GoldMine account number and record id.
+        rem  *
+        rem  * @param BBjString thisYear$
+        rem  *
+        rem  * @return boolean true (can be aligned) or false (cannot be aligned)
+        rem  */
+        method public boolean canAlignCalendar(BBjString thisYear$)
+            seterr canAlignCalendar_error
+            canAlign = 0
+
+            rem --- Get fiscal calendar for thisYear$
+            dim thisCalendar$:#tplGlsCalendar$
+            readrecord(#devGlsCalendar,key=#firmID$+thisYear$)thisCalendar$
+
+            rem --- Get fiscal calendar for current fiscal year
+            dim currFiscalCalendar$:#tplGlsCalendar$
+            readrecord(#devGlsCalendar,key=#firmID$+#currentFiscalYear$)currFiscalCalendar$
+
+            rem --- Can the fiscal calendars be aligned (i.e. they are different)?
+            if thisCalendar.total_pers$ <> currFiscalCalendar.total_pers$ then
+                canAlign = 1
+            else
+                if thisCalendar.cal_start_date$ <> currFiscalCalendar.cal_start_date$ then
+                    canAlign = 1
+                else
+                    for per=1 to num(thisCalendar.total_pers$)
+                        if field(thisCalendar$,"PER_ENDING_"+str(per:"00")) <> field(currFiscalCalendar$,"PER_ENDING_"+str(per:"00")) then
+                            canAlign = 1
+                            break
+                        endif
+                    next per
+                endif
+            endif
+
+            if canAlign then
+                methodret Boolean.valueOf("true")
+            else
+                methodret Boolean.valueOf("false")
+            endif
+             
+canAlignCalendar_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Open files and get templates for all tables needed to align fiscal calendars.
+        rem  *
+        rem  */
+        method protected void openWorkFiles()
+            seterr openWorkFiles_error
+
+            rem --- Open glt_transdetail
+            filename$ = "glt_transdetail"
+            devGltTransDetail = unt
+            open(devGltTransDetail)stbl("+GLDATA")+filename$
+
+            rem --- Get record template for glt_transdetail
+            tplsChan = unt
+            open(tplsChan)stbl("+DIR_BRD")+"ddm_table_tpls.dat"
+            read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
+            tplGltTransDetail$ = table_tpl$
+
+            rem --- Open glw_acctsummary
+            filename$ = "gls_acctsummary"
+            devGlwAcctSummary = unt
+            open(devGlwAcctSummary)stbl("+GLDATA")+filename$
+
+            rem --- Get record template for glw_acctsummary
+            read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
+            tplGlwAcctSummary$ = table_tpl$
+            
+            rem --- Initialize field variables
+            #devGltTransDetail = devGltTransDetail
+            #devGlwAcctSummary = devGlwAcctSummary
+            #tplGltTransDetail$ = tplGltTransDetail$
+            #tplGlwAcctSummary$ = tplGlwAcctSummary$
+
+            rem --- Close files
+            close(tplsChan,err=*next)
+
+            methodret
+            
+openWorkFiles_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Close all open channels and connections.
+        rem  *
+        rem  */
+        method public void close()
+            seterr close_error
+
+            if #devGlsCalendar > 0 then close(#devGlsCalendar,err=*next)
+            if #devGltTransDetail > 0 then close(#devGltTransDetail,err=*next)
+            if #devGlwAcctSummary > 0 then close(#devGlwAcctSummary,err=*next)
+
+            methodret
+            
+close_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Cleanup on object's destruction and garbage collection.
+        rem  *
+        rem  */
+        method protected void finalize()
+
+            rem --- Close all open channels and connections
+            #close()
+
+            methodret
+        methodend
+	
+classend
