@@ -30,8 +30,15 @@ rem --- Verify calendar exists for entered GL fiscal year
 			break
 		endif
 		callpoint!.setDevObject("total_pers",gls_calendar.total_pers$)
+
+		rem --- Re-initialize align_periods for new pick_year
+		pick_year$=year$
+		gosub init_align_periods
 	endif
 [[GLR_BALANCE.AWIN]]
+rem --- Needed classes
+	use ::glo_AlignFiscalCalendar.aon::AlignFiscalCalendar
+
 rem --- Open/Lock files
 
 	num_files=2
@@ -42,6 +49,23 @@ rem --- Open/Lock files
 	gosub open_tables
 [[GLR_BALANCE.<CUSTOM>]]
 #include std_missing_params.src
+
+rem ==========================================================================
+init_align_periods: rem --- Initialize align_periods for pick_year
+rem		pick_year$: input
+rem ==========================================================================
+	alignCalendar! = new AlignFiscalCalendar(firm_id$)
+	if alignCalendar!.canAlignCalendar(pick_year$) then
+		rem --- can align calendar
+		callpoint!.setColumnData("GLR_BALANCE.ALIGN_PERIODS","Y",1)
+		callpoint!.setColumnEnabled("GLR_BALANCE.ALIGN_PERIODS",1)
+	else
+		rem --- canNOT align calendar
+		callpoint!.setColumnData("GLR_BALANCE.ALIGN_PERIODS","N",1)
+		callpoint!.setColumnEnabled("GLR_BALANCE.ALIGN_PERIODS",0)
+	endif
+
+	return
 [[GLR_BALANCE.ARAR]]
 gls01_dev=fnget_dev("GLS_PARAMS")
 gls01_tpl$=fnget_tpl$("GLS_PARAMS")
@@ -58,3 +82,7 @@ rem --- Set maximum number of periods allowed for this fiscal year
 	current_year$=callpoint!.getColumnData("GLR_BALANCE.PICK_YEAR")
 	readrecord(gls_calendar_dev,key=firm_id$+current_year$,dom=*next)gls_calendar$
 	callpoint!.setDevObject("total_pers",gls_calendar.total_pers$)
+
+rem --- Initialize align_periods for pick_year
+	pick_year$=gls01a.current_year$
+	gosub init_align_periods

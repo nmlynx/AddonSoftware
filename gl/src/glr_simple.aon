@@ -83,6 +83,32 @@ rem --- Assign input values to local variables
     begper$=Option!.getOptionData("PICK_GL_PER")
     begyear$=Option!.getOptionData("PICK_YEAR")
     include$=Option!.getOptionData("YN_PROMPT")
+    alignPeriods$=Option!.getOptionData("ALIGN_PERIODS")
+
+    rem --- If aligning fiscal periods, need to update GLW_ACCTSUMMARY using
+    rem --- transactions from GLT_TRANSDETAIL for the selected fiscal year.
+    if alignPeriods$="Y" then
+        use ::glo_AlignFiscalCalendar.aon::AlignFiscalCalendar
+        alignCalendar!=new AlignFiscalCalendar(firm_id$)
+        tripKey$=alignCalendar!.alignCalendar(begyear$)
+        rem --- Check tripKey$ in case of error
+        if tripKey$<>"" then
+            files=1,begfile=1,endfile=files
+            dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+            files$[1]="glw_acctsummary",ids$[1]="GLW_ACCTSUMMARY"
+            call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                                   ids$[all],templates$[all],channels[all],batch,status
+            if status goto std_exit
+            glwAcctSummary_dev=channels[1]
+            dim glwAcctSummary$:templates$[1]
+        else
+            msg_id$="GL_CANNOT_ALIGN_PERS"
+            dim msg_tokens$[1]
+            msg_tokens$[1]=begyear$
+            gosub disp_message
+            alignPeriods$="N"
+        endif
+    endif
 
 rem --- Document initializations
 
@@ -215,10 +241,17 @@ rem --- Read next sort record
 
           dim a[13],u[13]
           glm01_key$=glw02a.firm_id$+glw02a.gl_account$
-          glm02_key$=glm01_key$+record$
           find record (glm01_dev,key=glm01_key$,dom=*continue)glm01a$
-          find record (glm02_dev,key=glm02_key$,dom=level_break)glm02a$
-          call pgmdir$+"glc_summary.aon",action$,glm02a$,a[all],u[all],status
+          if alignPeriods$="Y" then
+              rem --- Align fiscal periods
+              glwAcctSummary_key$=glm01_key$+begyear$+gls01a.current_year$
+              findrecord(glwAcctSummary_dev,key=glwAcctSummary_key$,dom=level_break,knum="BY_ACCOUNT_YEAR")glwAcctSummary$
+              call pgmdir$+"glc_summary.aon",action$,glwAcctSummary$,a[all],u[all],status
+          else
+              glm02_key$=glm01_key$+record$
+              find record (glm02_dev,key=glm02_key$,dom=level_break)glm02a$
+              call pgmdir$+"glc_summary.aon",action$,glm02a$,a[all],u[all],status
+          endif
 
 level_break: rem --- Account Break?
 

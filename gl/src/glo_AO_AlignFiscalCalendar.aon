@@ -9,19 +9,22 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
 
 rem /**
-rem  * This class provides for re-aligning periods in a previous fiscal year to 
-rem  * facilitate comparative financial reports with the current fiscal year.
+rem  * This class provides for re-aligning periods in a fiscal year to facilitate
+rem  * comparative financial reports with a different "base" fiscal year.
 rem  */
 
     class public AO_AlignFiscalCalendar
-        field protected BBjVector currentFiscalCalPerEnding! = BBjAPI().makeVector()
-        field protected BBjString currentFiscalCalStartDate$
-        field protected BBjString currentFiscalCalTotalPers$
-        field protected BBjString currentFiscalYear$
+        field protected BBjVector baseFiscalCalPerEnding! = BBjAPI().makeVector()
+        field protected BBjString baseFiscalCalStartDate$
+        field protected BBjString baseFiscalCalTotalPers$
+        field protected BBjString baseFiscalYear$
+        field protected BBjNumber devGlmAcctSummary = -1
         field protected BBjNumber devGlsCalendar = -1
         field protected BBjNumber devGltTransDetail = -1
+        field protected BBjNumber devGltTransDetail2 = -1
         field protected BBjNumber devGlwAcctSummary = -1
         field protected BBjString firmID$
+        field protected BBjString tplGlmAcctSummary$
         field protected BBjString tplGlsCalendar$
         field protected BBjString tplGltTransDetail$
         field protected BBjString tplGlwAcctSummary$
@@ -64,9 +67,8 @@ rem  */
             #firmID$ = firmID$
             #devGlsCalendar = devGlsCalendar
             #tplGlsCalendar$ = tplGlsCalendar$
-            #currentFiscalYear$ = gls_params.current_year$
             #unitsFlag$ = gls_params.units_flag$
-            #getFiscalYearInfo()
+            #setBaseFiscalYear(gls_params.current_year$)
 
             rem --- Close files
             close(tplsChan,err=*next)
@@ -90,26 +92,62 @@ AlignFiscalCalendar_error:rem --- Method error trap/handler
         methodend
 
         rem /**
-        rem  * Terminate all GoldMine sessions by sending Logout and UnloadAPI requests.
+        rem  * Updates glw_acctsummary using transactions from glt_transdetail for the selected fiscal year.
         rem  *
+        rem  * Returns trip read key for glw_acctsummary (#firmID$ + thisYear$ + #baseFiscalYear$).
+        rem  * Note: tripKey$ will be blank if an error is encountered.
+        rem  *
+        rem  * @param BBjString thisYear$
+        rem  *
+        rem  * @return BBjString tripKey$
         rem  */
-        method protected void getFiscalYearInfo()
-            seterr getFiscalYearInfo_error
-
-            rem --- Get gls_calendar record for #currentFiscalYear$
-            dim gls_calendar$:#tplGlsCalendar$
-            readrecord(#devGlsCalendar,key=#firmID$+#currentFiscalYear$)gls_calendar$
+        method public BBjString alignCalendar(BBjString thisYear$)
+            seterr alignCalendar_error
+            tripKey$=""
             
-            rem --- Initialize field variables
-            #currentFiscalCalStartDate$ = gls_calendar.cal_start_date$
-            #currentFiscalCalTotalPers$ = gls_calendar.total_pers$
-            for per=1 to num(#currentFiscalCalTotalPers$)
-                #currentFiscalCalPerEnding!.addItem(field(gls_calendar$,"PER_ENDING_"+str(per:"00")))
-            next per
+            rem --- Open necessary files, and verify success
+            #openWorkFiles()
+            if #devGlwAcctSummary>0 and #devGltTransDetail>0 and #devGlwAcctSummary>0 then
 
-            methodret
-            
-getFiscalYearInfo_error:rem --- Method error trap/handler
+                rem --- Done if glw_acctsummary already has the aligned calendar
+                testKey$=#firmID$+thisYear$+#baseFiscalYear$
+                read(#devGlwAcctSummary,key=testKey$,dom=*next)
+                glwAcctSummary_key$=key(#devGlwAcctSummary,end=*next)
+                if pos(#firmID$=glwAcctSummary_key$)<>1 then
+
+                    rem --- If the current fiscal year ends in a different calendar year than it started,
+                    rem --- apply that same delta to thisYear$ to get the year it ends in.
+                    lastPeriod=num(#baseFiscalCalTotalPers$)
+                    fiscalYear=num(#baseFiscalYear$)
+                    call stbl("+DIR_PGM")+"adc_perioddates.aon",lastPeriod,fiscalYear,begdate$,enddate$,table_chans$[all],status
+                    if status then methodret ""
+                    delta=num(enddate$(1,4))-fiscalYear
+                    newFiscalCalEndDate$=str(num(thisYear$)+delta:"0000")+enddate$(5)
+
+                    rem --- Build glw_acctsummary records from glt_transdetail transactions
+                    newFiscalCalStartDate$=thisYear$+#baseFiscalCalStartDate$(5)
+                    read(#devGltTransDetail,key=#firmID$+newFiscalCalStartDate$,knum="BY_TRANS_DATE",dom=*next)
+                    while 1
+                        dim gltTransDetail$:#tplGltTransDetail$
+                        readrecord(#devGltTransDetail,end=*break)gltTransDetail$
+                        if gltTransDetail.firm_id$<>#firmID$ then break
+                        if gltTransDetail.trns_date$>newFiscalCalEndDate$ then break
+
+                        rem --- Get "aligned period" for this transaction
+                        period=#getAlignedPeriod(gltTransDetail.trns_date$)
+                        
+                        rem --- Update/write glw_acctsummary record
+                        #updateAcctSummary(gltTransDetail$, thisYear$, period)
+
+rem wgh ... 4394 ... need progress meter
+                    wend
+                endif
+                tripKey$=#firmID$+thisYear$+#baseFiscalYear$
+            endif
+
+            methodret tripKey$
+             
+alignCalendar_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
@@ -145,7 +183,7 @@ getFiscalYearInfo_error:rem --- Method error trap/handler
 
             rem --- Get fiscal calendar for current fiscal year
             dim currFiscalCalendar$:#tplGlsCalendar$
-            readrecord(#devGlsCalendar,key=#firmID$+#currentFiscalYear$)currFiscalCalendar$
+            readrecord(#devGlsCalendar,key=#firmID$+#baseFiscalYear$)currFiscalCalendar$
 
             rem --- Can the fiscal calendars be aligned (i.e. they are different)?
             if thisCalendar.total_pers$ <> currFiscalCalendar.total_pers$ then
@@ -185,40 +223,283 @@ canAlignCalendar_error:rem --- Method error trap/handler
         methodend
 
         rem /**
+        rem  * Determines the fiscal period a transaction occurs in ignoring the year and using the 
+        rem  * calendar for the current fiscal year.
+        rem  * 
+        rem  * @param BBjString transDate$
+        rem  *
+        rem  * @return BBjNumber period
+        rem  */
+        method protected BBjNumber getAlignedPeriod(BBjString transDate$)
+            seterr getAlignedPeriod_error
+            mmdd$=transDate$(5)
+            totalPers=num(#baseFiscalCalTotalPers$)
+
+            period=totalPers
+            for i=0 to totalPers-1
+                if mmdd$>#baseFiscalCalPerEnding!.getItem(i) then continue
+                period=i+1
+                break
+            next i
+
+            methodret period
+             
+getAlignedPeriod_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Set fiscal calendar data for the given base fiscal year.
+        rem  *
+        rem  * @param BBjString baseYear$
+        rem  */
+        method public void setBaseFiscalYear(BBjString baseYear$)
+            seterr setBaseFiscalYear_error
+
+            rem --- Get gls_calendar record for baseYear$
+            dim glsCalendar$:#tplGlsCalendar$
+            readrecord(#devGlsCalendar,key=#firmID$+baseYear$)glsCalendar$
+            
+            rem --- Initialize field variables
+            #baseFiscalYear$ = baseYear$
+            #baseFiscalCalStartDate$ = glsCalendar.cal_start_date$
+            #baseFiscalCalTotalPers$ = glsCalendar.total_pers$
+            for per=1 to num(#baseFiscalCalTotalPers$)
+                #baseFiscalCalPerEnding!.addItem(field(glsCalendar$,"PER_ENDING_"+str(per:"00")))
+            next per
+
+            methodret
+            
+setBaseFiscalYear_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Sum glt_transdetail trans_amt and units for the given GL account from the start date to
+        rem  * (not through) the end date.
+        rem  *
+        rem  * @param BBjString glAccoutn$
+        rem  * @param BBjString startDate$
+        rem  * @param BBjString endDate$
+        rem  *
+        rem  * @return BBjVector! sumVect!.get(0) = sum of transaction amounts
+        rem  *                    sumVect!.get(1) = sum of units
+        rem  */
+        method protected BBjVector sumGltTransactions(BBjString glAccount$,BBjString startDate$,BBjString endDate$)
+            seterr sumGltTransactions_error
+            sumVect!=BBjAPI().makeVector()
+            beginAmt=0
+            beginUnits=0
+
+            dim transDetail2$:#tplGltTransDetail$
+            read(#devGltTransDetail2,key=#firmID$+startDate$,knum="BY_TRANS_DATE",dom=*next)
+            while 1
+                readrecord(#devGltTransDetail2,end=*break)transDetail2$
+                if transDetail2.firm_id$<>#firmID$ then break
+                if transDetail2.trns_date$>endDate$ then break
+                if transDetail2.gl_account$<>glAccount$ then continue
+                beginAmt=beginAmt+transDetail2.trans_amt
+                beginUnits=beginUnits+transDetail2.units
+            wend
+            sumVect!.addItem(beginAmt)
+            sumVect!.addItem(beginUnits)
+
+            methodret sumVect!
+            
+sumGltTransactions_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Updates/writes glw_acctsummary period_amt (and period_units) for the given glt_transdetail 
+        rem  * record using the given period and year. 
+        rem  * 
+        rem  * @param BBjString gltTransDetail$
+        rem  * @param BBjString thisYear$
+        rem  * @param BBjNumber period
+        rem  */
+        method protected void updateAcctSummary(BBjString gltTransDetail$, BBjString thisYear$, BBjNumber period)
+            seterr updateAcctSummary_error
+            dim glt06$:#tplGltTransDetail$
+            glt06$=gltTransDetail$
+
+            dim glwAcctSummary$:#tplGlwAcctSummary$
+            findrecord(#devGlwAcctSummary,key=glt06.firm_id$+thisYear$+#baseFiscalYear$+glt06.gl_account$,dom=*next)glwAcctSummary$
+            if glwAcctSummary.firm_id$<>glt06.firm_id$ then
+                rem --- Initialize new glw_acctsummary record
+                glwAcctSummary.firm_id$=glt06.firm_id$
+                glwAcctSummary.year$=thisYear$
+                glwAcctSummary.gl_year$=#baseFiscalYear$
+                glwAcctSummary.gl_account$=glt06.gl_account$
+                glwAcctSummary.begin_amt=0
+                glwAcctSummary.begin_units=0
+                for per=1 to 13
+                    field glwAcctSummary$,"PERIOD_AMT_"+str(per:"00")=0
+                    field glwAcctSummary$,"PERIOD_UNITS_"+str(per:"00")=0
+                next per
+
+                rem --- If available, use existing glm_acctsummary data to initialize begin_amt and begin_units
+                recordId$=$FF$
+                if thisYear$=#baseFiscalYear$ then recordId$="0"; rem --- current year actual
+                if num(thisYear$)=num(#baseFiscalYear$)-1 then recordId$="2"; rem --- prior year actual
+                if num(thisYear$)=num(#baseFiscalYear$)+1 then recordId$="4"; rem --- next year actual
+                dim glmAcctSummary$:#tplGlmAcctSummary$
+                findrecord(#devGlmAcctSummary,key=glwAcctSummary.firm_id$+glwAcctSummary.gl_account$+recordId$,dom=*next)glmAcctSummary$
+                if glmAcctSummary.firm_id$=glwAcctSummary.firm_id$ then
+                    begin_amt=glmAcctSummary.begin_amt
+                    begin_units=glmAcctSummary.begin_units
+
+                    rem --- If this cal_start_date is not the same as the base cal_start_date, then adjust begin_amt and begin_units
+                    dim glsCalendar$:#tplGlsCalendar$ 
+                    readrecord(#devGlsCalendar,key=glmAcctSummary.firm_id$+thisYear$)glsCalendar$
+                    if glsCalendar.cal_start_date$<>#baseFiscalCalStartDate$ then
+
+                        rem --- If this cal_start_date is later than base cal_start_date, then subtract transactions in that date range.
+                        if glsCalendar.cal_start_date$>#baseFiscalCalStartDate$ then
+                            startDate$=thisYear$+#baseFiscalCalStartDate$
+                            endDate$=thisYear$+glsCalendar.cal_start_date$
+
+                            adjustVect!=#sumGltTransactions(glwAcctSummary.gl_account$,startDate$,endDate$)
+                            
+                            begin_amt=begin_amt-adjustVect!.get(0)
+                            begin_units=begin_units-adjustVect!.get(1)
+                        endif
+
+                        rem --- If this cal_start_date is earlier than base cal_start_date, then add transactions in that date range.
+                        if glsCalendar.cal_start_date$<#baseFiscalCalStartDate$ then
+                            startDate$=thisYear$+glsCalendar.cal_start_date$
+                            endDate$=thisYear$+#baseFiscalCalStartDate$
+                            
+                            adjustVect!=#sumGltTransactions(glwAcctSummary.gl_account$,startDate$,endDate$)
+                            
+                            begin_amt=begin_amt+adjustVect!.get(0)
+                            begin_units=begin_units+adjustVect!.get(1)
+                        endif
+                    endif
+
+                    glwAcctSummary.begin_amt=begin_amt
+                    glwAcctSummary.begin_units=begin_units
+                else
+                    rem --- What should we do if/when glm_acctsummary data isn't available?
+                    rem --- ER 8492 will eliminate this issue since all glt_transdetail records will be summarized into glm_acctsummary.
+                endif
+            endif
+
+            rem --- Update and write glw_acctsummary record
+            field glwAcctSummary$,"PERIOD_AMT_"+str(period:"00")=nfield(glwAcctSummary$,"PERIOD_AMT_"+str(period:"00"))+glt06.trans_amt
+            if #unitsFlag$="Y" then
+                field glwAcctSummary$,"PERIOD_UNITS_"+str(period:"00")=nfield(glwAcctSummary$,"PERIOD_UNITS_"+str(period:"00"))+glt06.units
+            endif
+            writerecord(#devGlwAcctSummary)glwAcctSummary$
+
+            methodret
+            
+updateAcctSummary_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
         rem  * Open files and get templates for all tables needed to align fiscal calendars.
         rem  *
+        rem  * Note: #devGlwAcctSummary, #devGltTransDetail and/or #devGlwAcctSummary will be 
+        rem  * less than zero if an error is encounterd.
         rem  */
         method protected void openWorkFiles()
             seterr openWorkFiles_error
 
-            rem --- Open glt_transdetail
-            filename$ = "glt_transdetail"
-            devGltTransDetail = unt
-            open(devGltTransDetail)stbl("+GLDATA")+filename$
+            rem --- Open glm_acctsummary
+            if #devGlmAcctSummary < 0 then
+                rem --- Open glm_acctsummary and get record template. Create file if necessary.
+                num_files=1
+                dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                open_tables$[1]="GLM_ACCTSUMMARY",open_opts$[1]="OTA[1]"
 
-            rem --- Get record template for glt_transdetail
-            tplsChan = unt
-            open(tplsChan)stbl("+DIR_BRD")+"ddm_table_tpls.dat"
-            read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
-            tplGltTransDetail$ = table_tpl$
+                call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
+
+                if open_status$ = "" then
+                    rem --- Hold on to channel and record template for glw_acctsummary
+                    #devGlmAcctSummary = num(open_chans$[1])
+                    #tplGlmAcctSummary$ = open_tpls$[1]
+                endif
+            endif
+
+            rem --- Open glt_transdetail
+            if #devGltTransDetail < 0 then
+                rem --- Open glt_transdetail and get record template. Create file if necessary.
+                num_files=2
+                dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                open_tables$[1]="GLT_TRANSDETAIL",open_opts$[1]="OTA[1]"
+                open_tables$[2]="GLT_TRANSDETAIL",open_opts$[2]="OTA[2]"
+
+                call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
+
+                if open_status$ = "" then
+                    rem --- Hold on to channel and record template for glt_transdetail
+                    #devGltTransDetail = num(open_chans$[1])
+                    #devGltTransDetail2 = num(open_chans$[2])
+                    #tplGltTransDetail$ = open_tpls$[1]
+                endif
+            endif
 
             rem --- Open glw_acctsummary
-            filename$ = "gls_acctsummary"
-            devGlwAcctSummary = unt
-            open(devGlwAcctSummary)stbl("+GLDATA")+filename$
+            if #devGlwAcctSummary < 0 then
+                rem --- Open glw_acctsummary and get record template. Create file if necessary.
+                num_files=1
+                dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                open_tables$[1]="GLW_ACCTSUMMARY",open_opts$[1]="OTA[1]"
 
-            rem --- Get record template for glw_acctsummary
-            read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
-            tplGlwAcctSummary$ = table_tpl$
-            
-            rem --- Initialize field variables
-            #devGltTransDetail = devGltTransDetail
-            #devGlwAcctSummary = devGlwAcctSummary
-            #tplGltTransDetail$ = tplGltTransDetail$
-            #tplGlwAcctSummary$ = tplGlwAcctSummary$
+                call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
 
-            rem --- Close files
-            close(tplsChan,err=*next)
+                if open_status$ = "" then
+                    rem --- Hold on to channel and record template for glw_acctsummary
+                    #devGlwAcctSummary = num(open_chans$[1])
+                    #tplGlwAcctSummary$ = open_tpls$[1]
+                endif
+            endif
 
             methodret
             
@@ -239,13 +520,14 @@ openWorkFiles_error:rem --- Method error trap/handler
 
         rem /**
         rem  * Close all open channels and connections.
-        rem  *
         rem  */
         method public void close()
             seterr close_error
 
+            if #devGlmAcctSummary > 0 then close(#devGlmAcctSummary,err=*next)
             if #devGlsCalendar > 0 then close(#devGlsCalendar,err=*next)
             if #devGltTransDetail > 0 then close(#devGltTransDetail,err=*next)
+            if #devGltTransDetail2 > 0 then close(#devGltTransDetail2,err=*next)
             if #devGlwAcctSummary > 0 then close(#devGlwAcctSummary,err=*next)
 
             methodret
@@ -267,7 +549,6 @@ close_error:rem --- Method error trap/handler
 
         rem /**
         rem  * Cleanup on object's destruction and garbage collection.
-        rem  *
         rem  */
         method protected void finalize()
 
