@@ -45,13 +45,12 @@ rem ==========================================================================
 	alignCalendar! = new AlignFiscalCalendar(firm_id$)
 	if alignCalendar!.canAlignCalendar(pick_year$) then
 		rem --- can align calendar
-		callpoint!.setColumnData("GLR_PROFITLOSS.ALIGN_PERIODS","Y",1)
 		callpoint!.setColumnEnabled("GLR_PROFITLOSS.ALIGN_PERIODS",1)
 	else
 		rem --- canNOT align calendar
-		callpoint!.setColumnData("GLR_PROFITLOSS.ALIGN_PERIODS","N",1)
 		callpoint!.setColumnEnabled("GLR_PROFITLOSS.ALIGN_PERIODS",0)
 	endif
+	callpoint!.setColumnData("GLR_PROFITLOSS.ALIGN_PERIODS","N",1)
 
 	return
 [[GLR_PROFITLOSS.AWIN]]
