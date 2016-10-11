@@ -13,6 +13,8 @@ rem  * This class provides for re-aligning periods in a fiscal year to facilitat
 rem  * comparative financial reports with a different "base" fiscal year.
 rem  */
 
+    use ::bbtranslator.bbj::BBTranslator
+
     class public AO_AlignFiscalCalendar
         field protected BBjVector baseFiscalCalPerEnding! = BBjAPI().makeVector()
         field protected BBjString baseFiscalCalStartDate$
@@ -28,6 +30,7 @@ rem  */
         field protected BBjString tplGlsCalendar$
         field protected BBjString tplGltTransDetail$
         field protected BBjString tplGlwAcctSummary$
+        field protected BBTranslator Translate!
         field protected BBjString unitsFlag$
 
         rem /**
@@ -69,6 +72,14 @@ rem  */
             #tplGlsCalendar$ = tplGlsCalendar$
             #unitsFlag$ = gls_params.units_flag$
             #setBaseFiscalYear(gls_params.current_year$)
+
+            rem --- Initialize BBTranslator Translate! object
+            rdTransSpaceKey$=stbl("+PROPS_NAME")+"_"+stbl("+USER_LOCALE")+"_BBTranslator"
+            #Translate!=cast(BBTranslator,BBjAPI().getGroupNamespace().getValue(rdTransSpaceKey$,err=*next))
+            if #Translate!=null()
+                #Translate!=BBTranslator.getInstance(stbl("+PROPS_NAME"),stbl("+USER_LOCALE"),null(),stbl("+PROPS_PATH"))
+                BBjAPI().getGroupNamespace().setValue(rdTransSpaceKey$,#Translate!)
+            endif
 
             rem --- Close files
             close(tplsChan,err=*next)
@@ -115,6 +126,13 @@ AlignFiscalCalendar_error:rem --- Method error trap/handler
                 glwAcctSummary_key$=key(#devGlwAcctSummary,end=*next)
                 if pos(#firmID$=glwAcctSummary_key$)<>1 then
 
+                    rem --- Start progress meter
+                    milestone=10
+                    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
+                    total_recs=0
+                    meter_text$=#Translate!.getTranslation("AON_ALIGNING_PERIODS","Aligning Fiscal Periods")
+                    call stbl("+DIR_PGM")+"adc_progress.aon","NC","GLT_TRANSDETAIL",meter_text$,"","",0,#devGltTransDetail,10,meter_num,status
+
                     rem --- If the current fiscal year ends in a different calendar year than it started,
                     rem --- apply that same delta to thisYear$ to get the year it ends in.
                     lastPeriod=num(#baseFiscalCalTotalPers$)
@@ -128,6 +146,10 @@ AlignFiscalCalendar_error:rem --- Method error trap/handler
                     newFiscalCalStartDate$=thisYear$+#baseFiscalCalStartDate$(5)
                     read(#devGltTransDetail,key=#firmID$+newFiscalCalStartDate$,knum="BY_TRANS_DATE",dom=*next)
                     while 1
+                        rem --- Increment progress meter
+                        total_recs=total_recs+1
+                        if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
+
                         dim gltTransDetail$:#tplGltTransDetail$
                         readrecord(#devGltTransDetail,end=*break)gltTransDetail$
                         if gltTransDetail.firm_id$<>#firmID$ then break
@@ -138,9 +160,10 @@ AlignFiscalCalendar_error:rem --- Method error trap/handler
                         
                         rem --- Update/write glw_acctsummary record
                         #updateAcctSummary(gltTransDetail$, thisYear$, period)
-
-rem wgh ... 4394 ... need progress meter
                     wend
+
+                    rem --- Stop progress meter
+                    call stbl("+DIR_PGM")+"adc_progress.aon","D","","","","",0,0,0,0,status
                 endif
                 tripKey$=#firmID$+thisYear$+#baseFiscalYear$
             endif
