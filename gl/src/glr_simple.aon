@@ -72,7 +72,6 @@ rem --- Retrieve parameter records
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,m1
     glyear=num(gls01a.current_year$)
-    headings=3
     break$=""
     desc$=""
     call pgmdir$+"glc_regroup.aon",glm10_dev,firm_id$,break$,desc$
@@ -122,6 +121,7 @@ rem --- Document initializations
 
 rem --- Initializations
 
+    headings=4
     dim j1$(m1,"-"),j2$(m1,"-"),headings$[headings],a[13],t[3],s[10],o[1]
     action$="R"
     more=1
@@ -144,13 +144,26 @@ rem --- Initializations
     if bs$="Y" j1$="",width=o[1]-1
     mtdhdr=o[0]+m1-len(mtdhdr$)
     ytdhdr=o[1]+m1-len(ytdhdr$)
-    call pgmdir$+"adc_perioddates.aon",period,year,begdate$,enddate$,table_chans$[all],status
-    if status goto std_exit
     headings$[0]=cvs(sysinfo.firm_name$,2)
     headings$[1]=cvs(sysinfo.task_desc$,2)
     headings$[2]=Translate!.getTranslation("AON_FOR_")+cvs(field(gls_calendar$,"period_name_"+str(period:"00")),2)+" "+begyear$+Translate!.getTranslation("AON__(PERIOD_")+
-:                str(period:"00")+")"
-    headings$[3]=fndate$(begdate$)+Translate!.getTranslation("AON__THROUGH_")+fndate$(enddate$)
+:       str(period:"00")+")"
+    if alignPeriods$="Y" then
+        call pgmdir$+"adc_perioddates.aon",period,glyear,begdate$,enddate$,table_chans$[all],status
+        if status goto std_exit
+        delta=num(begdate$(1,4))-glyear
+        begdate$=str(num(begyear$)+delta:"0000")+begdate$(5)
+        delta=num(enddate$(1,4))-glyear
+        enddate$=str(num(begyear$)+delta:"0000")+enddate$(5)
+        headings$[3]=Translate!.getTranslation("AON_ALIGNED_WITH","Aligned With")+" "+str(glyear:"0000")+" "+
+:           Translate!.getTranslation("AON_PERIOD")+" "+str(period:"00")
+        headings$[4]=fndate$(begdate$)+Translate!.getTranslation("AON__THROUGH_")+fndate$(enddate$)
+    else
+        call pgmdir$+"adc_perioddates.aon",period,year,begdate$,enddate$,table_chans$[all],status
+        if status goto std_exit
+        headings$[3]=fndate$(begdate$)+Translate!.getTranslation("AON__THROUGH_")+fndate$(enddate$)
+        headings$[4]=""
+    endif
 
 rem --- Which glm-02 record?
     
