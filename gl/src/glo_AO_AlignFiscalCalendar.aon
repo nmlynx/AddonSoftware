@@ -163,7 +163,16 @@ AlignFiscalCalendar_error:rem --- Method error trap/handler
                         period=#getAlignedPeriod(gltTransDetail.trns_date$)
                         
                         rem --- Update/write glw_acctsummary record
-                        #updateAcctSummary(gltTransDetail$, thisYear$, period)
+                        success=0
+                        #updateAcctSummary(gltTransDetail$, thisYear$, period,err=*next); success=1
+                        if !success then
+                            err_num=err
+                            if err_num=901 then
+                                methodret ""
+                            else
+                                goto alignCalendar_error
+                            endif
+                        endif
                     wend
 
                     rem --- Stop progress meter
