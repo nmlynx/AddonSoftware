@@ -1,5 +1,5 @@
 rem ==========================================================================
-rem --- bmo_AlignFiscalCalendar.aon 
+rem --- glo_AO_AlignFiscalCalendar.aon 
 rem --- AO_AlignFiscalCalendar class (AlignFiscalCalendar superclass)
 rem --- GL superclass for re-aligning fiscal periods to facilitate comparative
 rem --- financial reports.
@@ -14,12 +14,15 @@ rem  * comparative financial reports with a different "base" fiscal year.
 rem  */
 
     use ::bbtranslator.bbj::BBTranslator
+    use java.util.GregorianCalendar
 
     class public AO_AlignFiscalCalendar
+        field protected BBjNumber adjustFebruary
         field protected BBjVector baseFiscalCalPerEnding! = BBjAPI().makeVector()
         field protected BBjString baseFiscalCalStartDate$
         field protected BBjString baseFiscalCalTotalPers$
         field protected BBjString baseFiscalYear$
+        field protected GregorianCalendar Calendar! = new GregorianCalendar()
         field protected BBjNumber devGlmAcctSummary = -1
         field protected BBjNumber devGlsCalendar = -1
         field protected BBjNumber devGltTransDetail = -1
@@ -67,6 +70,7 @@ rem  */
             readrecord(devGlsParams,key=firmID$+"GL00")gls_params$
             
             rem --- Initialize field variables
+            #adjustFebruary = gls_params.adjust_february
             #firmID$ = firmID$
             #devGlsCalendar = devGlsCalendar
             #tplGlsCalendar$ = tplGlsCalendar$
@@ -240,12 +244,24 @@ canAlignCalendar_error:rem --- Method error trap/handler
         rem  */
         method protected BBjNumber getAlignedPeriod(BBjString transDate$)
             seterr getAlignedPeriod_error
-            mmdd$=transDate$(5)
+            yyyy$=transDate$(1,4)
+            mm$=transDate$(5,2)
+            dd$=transDate$(7)
             totalPers=num(#baseFiscalCalTotalPers$)
 
             period=totalPers
             for i=0 to totalPers-1
-                if mmdd$>#baseFiscalCalPerEnding!.getItem(i) then continue
+                rem --- Adjust last day of February for leap year
+                if mm$="02" then
+                    if dd$="28" then
+                        if #adjustFebruary and #Calendar!.isLeapYear(num(yyyy$)) then dd$="29"
+                    else
+                        if dd$="29" and !#Calendar!.isLeapYear(num(yyyy$)) then dd$="28"
+                    endif
+                endif
+
+                rem --- Is date after this period?
+                if mm$+dd$>#baseFiscalCalPerEnding!.getItem(i) then continue
                 period=i+1
                 break
             next i
