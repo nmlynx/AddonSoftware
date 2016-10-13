@@ -231,7 +231,23 @@ alignCalendar_error:rem --- Method error trap/handler
                     for per=1 to num(thisCalendar.total_pers$)
                         if field(thisCalendar$,"PER_ENDING_"+str(per:"00")) <> field(currFiscalCalendar$,"PER_ENDING_"+str(per:"00")) then
                             canAlign = 1
-                            break
+
+                            rem --- Adjust last day of February for leap year
+                            mmdd$=field(currFiscalCalendar$,"PER_ENDING_"+str(per:"00"))
+                            mm$=mmdd$(1,2)
+                            if mm$="02" then
+                                dd$=mmdd$(3)
+                                if dd$="28" then
+                                    if #adjustFebruary and #Calendar!.isLeapYear(num(thisYear$)) then dd$="29"
+                                else
+                                    if dd$="29" and !#Calendar!.isLeapYear(num(thisYear$)) then dd$="28"
+                                endif
+                                if field(thisCalendar$,"PER_ENDING_"+str(per:"00")) = mm$+dd$ then
+                                    canAlign = 0
+                                endif
+                            endif
+
+                            if canAlign then break
                         endif
                     next per
                 endif

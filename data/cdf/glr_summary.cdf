@@ -9,6 +9,8 @@ rem --- Check length of wildcard against defined mask for GL Account
 		endif
 	endif
 [[GLR_SUMMARY.BFMC]]
+rem --- Needed classes
+use ::glo_AlignFiscalCalendar.aon::AlignFiscalCalendar
 use ::ado_util.src::util
 
 rem --- creating a drop-down list of glm18 codes; not using a simple element that validates to glm18
@@ -57,6 +59,28 @@ for x=1 to 4
 	callpoint!.setColumnData("<<DISPLAY>>.RECORD_CD_"+str(x),cd$+tp$)
 next x
 
+rem --- Initialize align_periods for prior and next year
+pick_year$=gls01a.current_year$
+gosub init_align_periods
+
 callpoint!.setStatus("REFRESH")
 [[GLR_SUMMARY.<CUSTOM>]]
 #include std_missing_params.src
+
+rem ==========================================================================
+init_align_periods: rem --- Initialize align_periods for prior and next year
+rem		pick_year$: input
+rem ==========================================================================
+	alignCalendar! = new AlignFiscalCalendar(firm_id$)
+	align_prior=alignCalendar!.canAlignCalendar(str(num(pick_year$)-1))
+	align_next=alignCalendar!.canAlignCalendar(str(num(pick_year$)+1))
+	if align_prior or align_next then
+		rem --- can align calendar
+		callpoint!.setColumnEnabled("GLR_SUMMARY.ALIGN_PERIODS",1)
+	else
+		rem --- canNOT align calendar
+		callpoint!.setColumnEnabled("GLR_SUMMARY.ALIGN_PERIODS",0)
+	endif
+	callpoint!.setColumnData("GLR_SUMMARY.ALIGN_PERIODS","N",1)
+
+	return
