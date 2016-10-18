@@ -743,6 +743,10 @@ rem --- clear availability
 	callpoint!.setDevObject("initial_rec_data$",rec_data$)
 
 	gosub init_msgs
+
+rem --- Set flag
+
+	user_tpl.record_deleted = 0
 [[OPE_INVHDR.INVOICE_TYPE.AVAL]]
 print "Hdr:INVOICE_TYPE.AVAL"; rem debug
 
@@ -844,6 +848,12 @@ rem --- Are both Customer and Order entered?
 
 	if ordHelp!.getCust_id() = "" or ordHelp!.getOrder_no() = "" then
 		callpoint!.setStatus("EXIT")
+		break; rem --- exit callpoint
+	endif
+
+rem --- Is record deleted?
+
+	if user_tpl.record_deleted then
 		break; rem --- exit callpoint
 	endif
 
@@ -1097,6 +1107,10 @@ rem --- Set user template info
 
 	user_tpl.order_date$=callpoint!.getUserInput()
 [[OPE_INVHDR.ADEL]]
+rem --- Set flag
+
+	user_tpl.record_deleted = 1
+
 rem --- clear availability
 
 	gosub clear_avail
@@ -1661,6 +1675,7 @@ rem --- Set other codes
 	user_tpl.order_date$   = callpoint!.getColumnData("OPE_INVHDR.ORDER_DATE")
 	user_tpl.disc_code$    = callpoint!.getColumnData("OPE_INVHDR.DISC_CODE")
 	user_tpl.new_order     = 0
+	user_tpl.record_deleted = 0
 
 rem --- Set OrderHelper object fields
 
@@ -3477,6 +3492,7 @@ rem --- Setup user_tpl$
 :		"prev_sales_total:n(7*), " +
 :		"prev_unitprice:n(7*), " +
 :		"detail_modified:u(1), " +
+:		"record_deleted:u(1), " +
 :		"item_wh_failed:u(1), " +
 :		"do_end_of_form:u(1), " +
 :		"picklist_warned:u(1), " +
@@ -3509,6 +3525,7 @@ rem --- Setup user_tpl$
 	user_tpl.pgmdir$           = stbl("+DIR_PGM",err=*next)
 	user_tpl.cur_row           = -1
 	user_tpl.detail_modified   = 0
+	user_tpl.record_deleted    = 0
 	user_tpl.item_wh_failed    = 1
 	user_tpl.do_end_of_form    = 1
 	user_tpl.picklist_warned   = 0
