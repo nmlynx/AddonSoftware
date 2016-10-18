@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-10-17
+ Report Date:   2016-10-18
  Report Branch: AddonSoftware 16.20
  Last Release:  AddonSoftware 16.12
 =======================================================================================================================================
@@ -120,3 +120,18 @@ Modified: data/bar/ope_ordhdr.xml
 Modified: data/cdf/ope_invhdr.cdf
 Modified: data/cdf/ope_ordhdr.cdf
 Modified: data/cdf/opt_invhdr.cdf
+
+=======================================================================================================================================
+Revision: 1f9fd22e6339f90e0da987a2b9361a46b35d2223
+Author: Bill Halsted <bhalsted@192.168.1.46>
+Date: 10/18/2016 9:34:03 AM
+Message:
+Bug 8845: Put back code used to track whether or not an order was
+deleted. Re-initialized user_tpl.record_deleted flag to zero in ADIS and
+AREC callpoints so the "Credit Action" form appears for other held
+orders.
+----
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_invhdr.cdf
+Modified: data/cdf/ope_ordhdr.cdf
