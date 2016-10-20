@@ -29,6 +29,7 @@ rem  */
         field protected BBjNumber devGltTransDetail2 = -1
         field protected BBjNumber devGlwAcctSummary = -1
         field protected BBjString firmID$
+        field protected BBjString priorFiscalYearClosed$
         field protected BBjString tplGlmAcctSummary$
         field protected BBjString tplGlsCalendar$
         field protected BBjString tplGltTransDetail$
@@ -75,6 +76,7 @@ rem  */
             #devGlsCalendar = devGlsCalendar
             #tplGlsCalendar$ = tplGlsCalendar$
             #unitsFlag$ = gls_params.units_flag$
+            #priorFiscalYearClosed$ = gls_params.gl_yr_closed$
             #setBaseFiscalYear(gls_params.current_year$)
 
             rem --- Initialize BBTranslator Translate! object
@@ -124,7 +126,36 @@ AlignFiscalCalendar_error:rem --- Method error trap/handler
             #openWorkFiles()
             if #devGlwAcctSummary>0 and #devGltTransDetail>0 and #devGlwAcctSummary>0 then
 
-                rem --- Done if glw_acctsummary already has the aligned calendar
+                rem --- Always update glw_acctsummary if (1) the selected year is the next fiscal year, or (2) the selected year 
+                rem --- is the prior fiscal year and it has not been closed or shares dates with the current fiscal year.
+                update_glwAcctsummary=0
+                if thisYear$=#baseFiscalYear$ then update_glwAcctsummary=1
+                if num(thisYear$)=num(#baseFiscalYear$)-1 then
+                    if #priorFiscalYearClosed$<>"Y" then
+                        update_glwAcctsummary=1
+                    else
+                        rem --- Does the last day of the aligned prior fiscal year and the first day of the current fiscal year overlap?
+                        lastPeriod=num(#baseFiscalCalTotalPers$)
+                        fiscalYear=num(#baseFiscalYear$)
+                        call stbl("+DIR_PGM")+"adc_perioddates.aon",lastPeriod,fiscalYear,begdate$,enddate$,table_chans$[all],status
+                        if status then methodret ""
+                        delta=num(enddate$(1,4))-fiscalYear
+                        alignedFiscalCalEndDate$=str(num(thisYear$)+delta:"0000")+enddate$(5)
+                        currentFiscalCalStartDate$=#baseFiscalYear$+#baseFiscalCalStartDate$
+                        if alignedFiscalCalEndDate$>=currentFiscalCalStartDate$ then
+                            update_glwAcctsummary=1
+                        endif
+                    endif
+                endif
+                if update_glwAcctsummary then
+                    rem --- Remove existing glw_acctsummary records for thisYear$ so that it will get aligned with 
+                    rem --- current glt_transdetail (glt-06) data.
+                    rec_pfx$=#firmID$+thisYear$+#baseFiscalYear$
+                    call stbl("+DIR_PGM")+"adc_clearpartial.aon","",#devGlwAcctSummary,rec_pfx$,status
+                    if status then methodret ""
+                endif
+
+                rem --- Done if glw_acctsummary already has the aligned calendar.
                 testKey$=#firmID$+thisYear$+#baseFiscalYear$
                 read(#devGlwAcctSummary,key=testKey$,dom=*next)
                 glwAcctSummary_key$=key(#devGlwAcctSummary,end=*next)
@@ -147,7 +178,7 @@ AlignFiscalCalendar_error:rem --- Method error trap/handler
                     newFiscalCalEndDate$=str(num(thisYear$)+delta:"0000")+enddate$(5)
 
                     rem --- Build glw_acctsummary records from glt_transdetail transactions
-                    newFiscalCalStartDate$=thisYear$+#baseFiscalCalStartDate$(5)
+                    newFiscalCalStartDate$=thisYear$+#baseFiscalCalStartDate$
                     read(#devGltTransDetail,key=#firmID$+newFiscalCalStartDate$,knum="BY_TRANS_DATE",dom=*next)
                     while 1
                         rem --- Increment progress meter
@@ -445,6 +476,11 @@ sumGltTransactions_error:rem --- Method error trap/handler
                 if glmAcctSummary.firm_id$=glwAcctSummary.firm_id$ then
                     begin_amt=glmAcctSummary.begin_amt
                     begin_units=glmAcctSummary.begin_units
+
+rem wgh ... 4394 ... stopped here ... setting beginning balance needs more work, see glr_beginbalance.aon/glu_geginbalance.aon
+rem --- Income and expense account balances will be accumulated, and the difference between income and expense will be posted to
+rem --- the retained earnings account specified in the parameters. The ending balances for Asset, Liability, and Capital accounts 
+rem --- will become beginning balances for the New Year. Income and expense account balances will be set to zero.
 
                     rem --- If this cal_start_date is not the same as the base cal_start_date, then adjust begin_amt and begin_units
                     dim glsCalendar$:#tplGlsCalendar$ 
