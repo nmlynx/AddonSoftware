@@ -156,3 +156,16 @@ first column, i.e. the Record Type.
 ----
 Modified: data/bar/glm_acctsumhdr.xml
 Modified: data/cdf/glm_acctsumhdr.cdf
+
+=======================================================================================================================================
+Revision: 2dea7db094383c6d7a28bde427f68b7c78b1e620
+Author: Bill Halsted <bhalsted@192.168.1.46>
+Date: 10/19/2016 5:17:18 PM
+Message:
+Bug 8846: Changed OPE11_QTY_SHIPPED to an un-masked quantity so can take
+the NUM() of it and not get an error 26 when it's a negative value.
+----
+Modified: reports/OPPickListDet-LotSer.jasper
+Modified: reports/OPPickListDet.jasper
+Modified: reports/OPPickListDet.jrxml
+Modified: sprocs/OPPICKLIST_DET.prc
