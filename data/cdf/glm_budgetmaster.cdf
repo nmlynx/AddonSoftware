@@ -15,6 +15,24 @@ rem --- Initialize displayColumns! object
 rem --- Initialize revision_src ListButton
 	ldat_list$=displayColumns!.getStringButtonList()
 	callpoint!.setTableColumnAttribute("GLM_BUDGETMASTER.REVISION_SRC","LDAT",ldat_list$)
+[[GLM_BUDGETMASTER.GL_ACCOUNT.AVAL]]
+rem "GL INACTIVE FEATURE"
+   glm01_dev=fnget_dev("GLM_ACCT")
+   glm01_tpl$=fnget_tpl$("GLM_ACCT")
+   dim glm01a$:glm01_tpl$
+   glacctinput$=callpoint!.getUserInput()
+   glm01a_key$=firm_id$+glacctinput$
+   find record (glm01_dev,key=glm01a_key$,err=*break) glm01a$
+   if glm01a.acct_inactive$="Y" then
+      call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,gl_size
+      msg_id$="GL_ACCT_INACTIVE"
+      dim msg_tokens$[2]
+      msg_tokens$[1]=fnmask$(glm01a.gl_account$(1,gl_size),m0$)
+      msg_tokens$[2]=cvs(glm01a.gl_acct_desc$,2)
+      gosub disp_message
+      callpoint!.setStatus("ACTIVATE")
+   endif
+   
 [[GLM_BUDGETMASTER.GL_WILDCARD.AVAL]]
 rem --- Check length of wildcard against defined mask for GL Account
 	if callpoint!.getUserInput()<>""
@@ -65,6 +83,7 @@ endif
 rev_src$=callpoint!.getColumnData("GLM_BUDGETMASTER.REVISION_SRC")
 gosub validate_revision_source
 [[GLM_BUDGETMASTER.<CUSTOM>]]
+#include std_functions.src
 validate_revision_source:
 	rem --- rev_src$ set prior to gosub
 	amt_units$=callpoint!.getColumnData("GLM_BUDGETMASTER.AMT_OR_UNITS")

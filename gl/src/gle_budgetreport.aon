@@ -48,6 +48,16 @@ rem --- Assign input values to local variables
     endacct$=Option!.getOptionData("GL_ACCOUNT_2")
     wildcard$=Option!.getOptionData("GL_WILDCARD")
     alignPeriods$=Option!.getOptionData("ALIGN_PERIODS")
+    rem "GL INACTIVE FEATURE"
+    inactive$=Option!.getOptionData("ACCT_INACTIVE")
+	id1$=pad(callpoint!.getDevObject("id1"),2)
+	id2$=pad(callpoint!.getDevObject("id2"),2)
+	id3$=pad(callpoint!.getDevObject("id3"),2)
+	id4$=pad(callpoint!.getDevObject("id4"),2)
+    au1$=id1$(2,1),id1$=id1$(1,1)
+    au2$=id2$(2,1),id2$=id2$(1,1)
+    au3$=id3$(2,1),id3$=id3$(1,1)
+    au4$=id4$(2,1),id4$=id4$(1,1)
 
     dim id$[3]
     i=0
@@ -88,14 +98,14 @@ rem --- Initialize report headings
 rem --- If no record id's or types were specified, use parameter defaults
 
     if cvs(id$,2)=":"
-        for x=1 to 4
+       for x=1 to 4
             cols$=field(gls01a$,"acct_mn_cols_"+str(x:"00"))
             if cvs(cols$,2)="" then continue
             id$[i]=cols$
             id$=id$+id$[i]+":"
             au$=au$+field(gls01a$,"acct_mn_type_"+str(x:"00"))
             i=i+1
-        next x
+       next x
     endif
 
 rem --- Run report overlay

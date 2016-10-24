@@ -7,6 +7,23 @@ callpoint!.setDevObject("align_fiscal_periods","N")
 callpoint!.setDevObject("alignCalendar",new AlignFiscalCalendar(firm_id$))
 pick_year$=callpoint!.getDevObject("current_fiscal_year")
 gosub init_align_periods
+[[GLR_BUDGETREPORT.GL_ACCOUNT.AVAL]]
+rem "GL INACTIVE FEATURE"
+   glm01_dev=fnget_dev("GLM_ACCT")
+   glm01_tpl$=fnget_tpl$("GLM_ACCT")
+   dim glm01a$:glm01_tpl$
+   glacctinput$=callpoint!.getUserInput()
+   glm01a_key$=firm_id$+glacctinput$
+   find record (glm01_dev,key=glm01a_key$,err=*break) glm01a$
+   if glm01a.acct_inactive$="Y" then
+      call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,gl_size
+      msg_id$="GL_ACCT_INACTIVE"
+      dim msg_tokens$[2]
+      msg_tokens$[1]=fnmask$(glm01a.gl_account$(1,gl_size),m0$)
+      msg_tokens$[2]=cvs(glm01a.gl_acct_desc$,2)
+      gosub disp_message
+      callpoint!.setStatus("ACTIVATE")
+   endif
 [[GLR_BUDGETREPORT.GL_WILDCARD.AVAL]]
 rem --- Check length of wildcard against defined mask for GL Account
 	if callpoint!.getUserInput()<>""
@@ -46,14 +63,14 @@ rem --- Initialize displayColumns! object
 
 rem create list for column zero of grid -- column type drop-down
 
-	codes!=SysGUI!.makeVector()
+codes!=SysGUI!.makeVector()
 	none_list$=pad(Translate!.getTranslation("AON_(NONE)"),20)+"~"+"  ;"
 	button_list$=displayColumns!.getStringButtonList()
 	ldat_list$=none_list$+button_list$
 
-	for x=1 to 4
-		callpoint!.setTableColumnAttribute("<<DISPLAY>>.BUD_CD_"+str(x),"LDAT",ldat_list$)
-	next x
+for x=1 to 4
+	callpoint!.setTableColumnAttribute("<<DISPLAY>>.BUD_CD_"+str(x),"LDAT",ldat_list$)
+next x
 
 	while len(button_list$)>0
 		xpos=pos(";"=button_list$)
@@ -109,6 +126,7 @@ next x
 
 callpoint!.setStatus("REFRESH")
 [[GLR_BUDGETREPORT.<CUSTOM>]]
+#include std_functions.src
 disable_fields:
 	rem --- used to disable/enable controls
 	rem --- ctl_name$ sent in with name of control to enable/disable (format "ALIAS.CONTROL_NAME")
@@ -127,7 +145,7 @@ rem ==========================================================================
 init_align_periods: rem --- Initialize align_periods for prior and next year
 rem		pick_year$: input
 rem ==========================================================================
-	
+
 	alignCalendar! = callpoint!.getDevObject("alignCalendar")
 	align_prior=alignCalendar!.canAlignCalendar(str(num(pick_year$)-1))
 	align_next=alignCalendar!.canAlignCalendar(str(num(pick_year$)+1))

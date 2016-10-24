@@ -71,6 +71,23 @@ rem --- Only need to SAVE record if gl_acct_desc, gl_acct_type or detail_flag ch
 rem --- Only need to SAVE record if gl_acct_desc, gl_acct_type or detail_flag changed
 
 	gosub check_modified
+[[GLM_ACCTSUMHDR.GL_ACCOUNT.AVAL]]
+rem "GL INACTIVE FEATURE"
+   glm01_dev=fnget_dev("GLM_ACCT")
+   glm01_tpl$=fnget_tpl$("GLM_ACCT")
+   dim glm01a$:glm01_tpl$
+   glacctinput$=callpoint!.getUserInput()
+   glm01a_key$=firm_id$+glacctinput$
+   find record (glm01_dev,key=glm01a_key$,err=*break) glm01a$
+   if glm01a.acct_inactive$="Y" then
+      call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,gl_size
+      msg_id$="GL_ACCT_INACTIVE"
+      dim msg_tokens$[2]
+      msg_tokens$[1]=fnmask$(glm01a.gl_account$(1,gl_size),m0$)
+      msg_tokens$[2]=cvs(glm01a.gl_acct_desc$,2)
+      gosub disp_message
+      callpoint!.setStatus("ACTIVATE")
+   endif
 [[GLM_ACCTSUMHDR.AOPT-DETL]]
 rem --- Run the custom query to show details about the current cell
 
@@ -181,7 +198,7 @@ rem analyze gui_event$ and notice$ to see which control's callback triggered the
 										for per=num(gls_calendar.total_pers$)+1 to num(user_tpl.pers$)
 											gridActivity!.setCellEditable(x,per+1,0)
 										next per
-									endif
+								endif
 								endif
 								break
 							else
@@ -195,7 +212,7 @@ rem analyze gui_event$ and notice$ to see which control's callback triggered the
 			endif
 
 			switch notice.code
-
+	
 				case 7;rem edit stop
 					if curr_col=0
 						label$=gridActivity!.getCellText(curr_row,curr_col)
@@ -233,7 +250,7 @@ rem analyze gui_event$ and notice$ to see which control's callback triggered the
 								for per=num(gls_calendar.total_pers$)+1 to num(user_tpl.pers$)
 									gridActivity!.setCellEditable(curr_row,per+1,0)
 								next per
-							endif
+						endif
 						endif
 
 						rem --- May need to update the list of records in the grid
@@ -252,13 +269,13 @@ rem analyze gui_event$ and notice$ to see which control's callback triggered the
 						end_cell_text$=gridActivity!.getCellText(curr_row,curr_col)
 						if num(end_cell_text$)<>num(start_cell_text$) then
 							callpoint!.setStatus("MODIFIED")
-							vectGLSummary!=SysGUI!.makeVector() 
-							for x=1 to num(user_tpl.pers$)+1
-								vectGLSummary!.addItem(gridActivity!.getCellText(curr_row,x))
-							next x
-							gosub calculate_end_bal
-							gridActivity!.setCellText(curr_row,1,vectGLSummary!)
-						endif
+						vectGLSummary!=SysGUI!.makeVector() 
+						for x=1 to num(user_tpl.pers$)+1
+							vectGLSummary!.addItem(gridActivity!.getCellText(curr_row,x))
+						next x
+						gosub calculate_end_bal
+						gridActivity!.setCellText(curr_row,1,vectGLSummary!)
+					endif
 					endif
 				break
 
@@ -327,7 +344,7 @@ rem set the 4 listbuttons accordingly, and read/display corres glm02 data
 						for per=num(gls_calendar.total_pers$)+1 to num(user_tpl.pers$)
 							gridActivity!.setCellEditable(x,per+1,0)
 						next per
-					endif
+				endif
 				endif
 				break
 			else
@@ -350,12 +367,13 @@ rem --- Initialize displayColumns! object
 
 rem --- init...open tables, define custom grid, etc.
 
-	num_files=4
+	num_files=5
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="GLM_ACCTSUMMARY",open_opts$[2]="OTA"
 	open_tables$[4]="GLS_CALENDAR",open_opts$[4]="OTA"
 
+	open_tables$[5]="GLM_ACCT",open_opts$[5]="OTA"
 	gosub open_tables
 
 	gls01_dev=num(open_chans$[1])
@@ -385,7 +403,7 @@ rem ---  load up budget column codes and types from gls_params
 		cols!.addItem(field(gls01a$,"acct_mn_cols_"+str(x:"00")))
 		tps!.addItem(field(gls01a$,"acct_mn_type_"+str(x:"00")))
 	next x
-
+			
 rem --- Need to handle possible year in grid with more periods than the current fiscal year
 
 	num_pers=num(gls_calendar.total_pers$)
@@ -607,6 +625,7 @@ rem --- Set proper record ID
 
 	gosub display_mtd_ytd
 [[GLM_ACCTSUMHDR.<CUSTOM>]]
+#include std_functions.src
 rem ======================================================
 check_modified:
 rem ======================================================
@@ -833,8 +852,8 @@ rem =======================================================
 		readrecord(glm_budgetplans_dev,key=glm02_key$,dom=*next)glm_budgetplans$
 	else
 		if actbud$="A" then
-			glm02_dev=fnget_dev("GLM_ACCTSUMMARY")
-			glm02_tpl$=fnget_tpl$("GLM_ACCTSUMMARY")
+	glm02_dev=fnget_dev("GLM_ACCTSUMMARY")
+	glm02_tpl$=fnget_tpl$("GLM_ACCTSUMMARY")
 			dim glm02a$:glm02_tpl$
 
 			glm02_key_len=len(glm02a.firm_id$)+len(glm02a.gl_account$)+len(glm02a.year$)	
@@ -842,7 +861,7 @@ rem =======================================================
 				rem --- Use GLW_ACCTSUMMARY when fiscal periods are aligned
 				glm02_dev=fnget_dev("GLW_ACCTSUMMARY")
 				glm02_tpl$=fnget_tpl$("GLW_ACCTSUMMARY")
-				dim glm02a$:glm02_tpl$
+	dim glm02a$:glm02_tpl$
 			endif
 		else
 			glm02_dev=fnget_dev("GLM_ACCTBUDGET")
@@ -873,10 +892,10 @@ rem =======================================================
 					vectGLSummary!.addItem(str(num(field(glm_budgetplans$,"PERIOD_AMT_"+str(x1:"00")))))
 				next x1
 			else
-				vectGLSummary!.addItem(str(num(glm02a.begin_amt$)))
-				for x1=1 to num_pers
-					vectGLSummary!.addItem(str(num(field(glm02a$,"PERIOD_AMT_"+str(x1:"00")))))
-				next x1
+			vectGLSummary!.addItem(str(num(glm02a.begin_amt$)))
+			for x1=1 to num_pers
+				vectGLSummary!.addItem(str(num(field(glm02a$,"PERIOD_AMT_"+str(x1:"00")))))
+			next x1
 			endif
 			gosub calculate_end_bal			
 		break
@@ -887,10 +906,10 @@ rem =======================================================
 					vectGLSummary!.addItem(field(glm_budgetplans$,"PERIOD_UNITS_"+str(x1:"00")))
 				next x1
 			else
-				vectGLSummary!.addItem(glm02a.begin_units$)
-				for x1=1 to num_pers
-					vectGLSummary!.addItem(field(glm02a$,"PERIOD_UNITS_"+str(x1:"00")))
-				next x1
+			vectGLSummary!.addItem(glm02a.begin_units$)
+			for x1=1 to num_pers
+				vectGLSummary!.addItem(field(glm02a$,"PERIOD_UNITS_"+str(x1:"00")))
+			next x1
 			endif
 			gosub calculate_end_bal
 		break

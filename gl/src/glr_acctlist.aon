@@ -8,6 +8,9 @@ rem  |  Copyright BASIS International Ltd.  All Rights Reserved.
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
 
+rem --- Portions Copyright 2016 by Assorted Business Services Inc.
+rem ---  All Rights Reserved.
+
     setesc std_error
     seterr std_error
 
@@ -53,6 +56,8 @@ rem --- Assign input values to local variables
     begacct$=cvs(Option!.getOptionData("GL_ACCOUNT_1"),2)
     endacct$=cvs(Option!.getOptionData("GL_ACCOUNT_2"),2)
     wildcard$=Option!.getOptionData("GL_WILDCARD")
+    rem "GL INACTIVE FEATURE"
+    inactive$=Option!.getOptionData("ACCT_INACTIVE")
 
   rem --- Document initializations
 
@@ -116,6 +121,10 @@ rem --- Top Of Loop
           if endacct$<>"" if glm01a.gl_account$>endacct$ break
           gosub wildcard
           if status continue
+		  
+          rem "GL INACTIVE FEATURE"
+	  if inactive$="Y" and glm01a.acct_inactive$="Y" then Continue
+		  
           total_recs=total_recs+1
           if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
           number=number+1

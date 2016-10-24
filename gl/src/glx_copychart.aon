@@ -60,6 +60,8 @@ rem --- Assign input values to local variables
     endacct$=Option!.getOptionData("GL_ACCOUNT_2")
     wildcard$=Option!.getOptionData("GL_WILDCARD")
     overwrite$=Option!.getOptionData("YN_PROMPT")
+    rem "GL INACTIVE FEATURE"
+    inactive$=Option!.getOptionData("ACCT_INACTIVE")
 
 rem --- Initializations
 
@@ -80,6 +82,8 @@ rem --- Copy accounts
           call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
           if begacct$<>"" if k$(3)<begacct$ continue
           if endacct$<>"" if k$(3)>endacct$ break
+          rem "GL INACTIVE FEATURE"
+	  if inactive$="Y" and glm01a.acct_inactive$="Y" then Continue
           gosub wildcard
           if status continue
           glm01a.firm_id$=endfirm$

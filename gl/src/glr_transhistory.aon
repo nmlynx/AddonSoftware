@@ -66,6 +66,8 @@ rem --- Assign input values to local variables
     detail$=Option!.getOptionData("PICK_LISTBUTTON")
     export_format$=Option!.getOptionData("EXPORT_FORMAT")
     rd_alias_id$=Option!.getAlias()    
+    rem "GL INACTIVE FEATURE"
+    inactive$=Option!.getOptionData("ACCT_INACTIVE")
     if export_format$="Y"
         if len(rd_alias_id$)>15 rd_alias_id$=rd_alias_id$(1,15)
         rd_alias_id$=rd_alias_id$+"X"
@@ -262,6 +264,10 @@ rem --- Read next transaction history (glt-06) record
           rem --- Level breaks?
 
           if glt06a.gl_account$<>t0$ gosub account_break
+
+    rem "GL INACTIVE FEATURE"
+    if gl_inactive_acct$>"" and glt06a.gl_account$=gl_inactive_acct$ then continue
+
           if transdate$<>t1$ gosub period_break
           if detail$="S" if glt06a.trns_date$+glt06a.journal_id$<>t2$ gosub journal_break
 
@@ -499,6 +505,10 @@ new_account: rem --- New account
     desc$=glm01a.gl_acct_desc$
     export_acct$=acct$
     export_desc$=glm01a.gl_acct_desc$
+
+    rem "GL INACTIVE FEATURE"
+    gl_inactive_acct$=""
+    if inactive$="Y" and glm01a.acct_inactive$="Y" then gl_inactive_acct$=glm01a.gl_account$,t0$=""
 
 rem --- Load summary activity for account
 
