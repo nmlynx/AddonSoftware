@@ -858,11 +858,10 @@ check_cal_start_date: rem --- CAL_START_DATE must be <= first trns_date in glt_t
 	if cal_start_date$>first_mmdd$ then
 		msg_id$="GL_BAD_CAL_START"
 		dim msg_tokens$[2]
-		msg_tokens$[1]=mmdd$(1,2)+"/"+mmdd$(3)
-		msg_tokens$[2]=mmdd$(1,2)+"/"+mmdd$(3)
+		msg_tokens$[1]=first_mmdd$(1,2)+"/"+first_mmdd$(3)
+		msg_tokens$[2]=first_mmdd$(1,2)+"/"+first_mmdd$(3)
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
-		break
 	endif
 return
 
