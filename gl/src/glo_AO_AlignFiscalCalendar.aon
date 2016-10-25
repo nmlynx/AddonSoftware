@@ -23,6 +23,7 @@ rem  */
         field protected BBjString baseFiscalCalTotalPers$
         field protected BBjString baseFiscalYear$
         field protected GregorianCalendar Calendar! = new GregorianCalendar()
+        field protected BBjNumber devGlmAcctSumHdr = -1
         field protected BBjNumber devGlmAcctSummary = -1
         field protected BBjNumber devGlsCalendar = -1
         field protected BBjNumber devGltTransDetail = -1
@@ -30,6 +31,8 @@ rem  */
         field protected BBjNumber devGlwAcctSummary = -1
         field protected BBjString firmID$
         field protected BBjString priorFiscalYearClosed$
+        field protected BBjString retainedEarningsAccount$
+        field protected BBjString tplGlmAcctSumHdr$
         field protected BBjString tplGlmAcctSummary$
         field protected BBjString tplGlsCalendar$
         field protected BBjString tplGltTransDetail$
@@ -44,6 +47,18 @@ rem  */
         rem  */
         method public AO_AlignFiscalCalendar(BBjString firmID$)
             seterr AlignFiscalCalendar_error
+
+            rem --- Open gls_earnings
+            filename$ = "gls_earnings"
+            devGlsEarnings = unt
+            open(devGlsEarnings)stbl("+GLDATA")+filename$
+
+            rem --- Get record template for gls_earnings
+            tplsChan = unt
+            open(tplsChan)stbl("+DIR_BRD")+"ddm_table_tpls.dat"
+            read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
+            tplGlsEarnings$ = table_tpl$
+            dim gls_earnings$:tplGlsEarnings$
 
             rem --- Open gls_params
             filename$ = "gls_params"
@@ -67,6 +82,9 @@ rem  */
             tplGlsCalendar$ = table_tpl$
             dim gls_calendar$:tplGlsCalendar$
             
+            rem --- Get gls_earnings GL01 record for firmId$
+            readrecord(devGlsEarnings,key=firmID$+"GL01",dom=*next)gls_earnings$
+            
             rem --- Get gls_params GL00 record for firmId$
             readrecord(devGlsParams,key=firmID$+"GL00")gls_params$
             
@@ -74,9 +92,10 @@ rem  */
             #adjustFebruary = gls_params.adjust_february
             #firmID$ = firmID$
             #devGlsCalendar = devGlsCalendar
+            #priorFiscalYearClosed$ = gls_params.gl_yr_closed$
+            #retainedEarningsAccount$ = gls_earnings.gl_account$
             #tplGlsCalendar$ = tplGlsCalendar$
             #unitsFlag$ = gls_params.units_flag$
-            #priorFiscalYearClosed$ = gls_params.gl_yr_closed$
             #setBaseFiscalYear(gls_params.current_year$)
 
             rem --- Initialize BBTranslator Translate! object
@@ -477,10 +496,14 @@ sumGltTransactions_error:rem --- Method error trap/handler
                     begin_amt=glmAcctSummary.begin_amt
                     begin_units=glmAcctSummary.begin_units
 
-rem wgh ... 4394 ... stopped here ... setting beginning balance needs more work, see glr_beginbalance.aon/glu_geginbalance.aon
-rem --- Income and expense account balances will be accumulated, and the difference between income and expense will be posted to
-rem --- the retained earnings account specified in the parameters. The ending balances for Asset, Liability, and Capital accounts 
-rem --- will become beginning balances for the New Year. Income and expense account balances will be set to zero.
+                    rem --- When initializing glwAcctSummary for retained earnings account, use balance if record already exits.
+                    if glwAcctSummary.gl_account$=#retainedEarningsAccount$ then
+                        dim retainedEarnings_glwAcctSummary$:#tplGlwAcctSummary$
+                        retainedEarings_key$=glwAcctSummary.firm_id$+glwAcctSummary.year$+glwAcctSummary.gl_year$+#retainedEarningsAccount$
+                        findrecord(#devGlwAcctSummary,key=retainedEarings_key$,dom=*next)retainedEarnings_glwAcctSummary$
+                        begin_amt=retainedEarnings_glwAcctSummary.begin_amt+glmAcctSummary.begin_amt
+                        begin_units=retainedEarnings_glwAcctSummary.begin_units+glmAcctSummary.begin_units
+                    endif
 
                     rem --- If this cal_start_date is not the same as the base cal_start_date, then adjust begin_amt and begin_units
                     dim glsCalendar$:#tplGlsCalendar$ 
@@ -496,6 +519,8 @@ rem --- will become beginning balances for the New Year. Income and expense acco
                             
                             begin_amt=begin_amt-adjustVect!.get(0)
                             begin_units=begin_units-adjustVect!.get(1)
+                            glt06.trans_amt=glt06.trans_amt+adjustVect!.get(0)
+                            glt06.units=glt06.units+adjustVect!.get(1)
                         endif
 
                         rem --- If this cal_start_date is earlier than base cal_start_date, then add transactions in that date range.
@@ -518,14 +543,42 @@ rem --- will become beginning balances for the New Year. Income and expense acco
                             
                             begin_amt=begin_amt+adjustVect!.get(0)
                             begin_units=begin_units+adjustVect!.get(1)
+                            glt06.trans_amt=glt06.trans_amt-adjustVect!.get(0)
+                            glt06.units=glt06.units-adjustVect!.get(1)
+                        endif
+
+                        rem --- Post adjustments for income and expense accounts to the retained earnings account balance,
+                        rem --- and set income and expense account balances to zero.
+                        dim glmAcctSumHdr$:#tplGlmAcctSumHdr$
+                        findrecord(#devGlmAcctSumHdr,key=glwAcctSummary.firm_id$+glwAcctSummary.gl_account$,dom=*next)glmAcctSumHdr$
+                        if pos(glmAcctSumHdr.gl_acct_type$="ALC")=0 or glmAcctSumHdr.gl_account$=#retainedEarningsAccount$ then
+                            rem --- Post adjustments for income and expense accounts to the retained earnings account balance.
+                            dim retainedEarnings_glwAcctSummary$:#tplGlwAcctSummary$
+                            retainedEarnings_glwAcctSummary.firm_id$=glwAcctSummary.firm_id$
+                            retainedEarnings_glwAcctSummary.year$=glwAcctSummary.year$
+                            retainedEarnings_glwAcctSummary.gl_year$=glwAcctSummary.gl_year$
+                            retainedEarnings_glwAcctSummary.gl_account$=#retainedEarningsAccount$
+                            retainedEarnings_key$=glwAcctSummary.firm_id$+glwAcctSummary.year$+glwAcctSummary.gl_year$+#retainedEarningsAccount$
+                            findrecord(#devGlwAcctSummary,key=retainedEarnings_key$,dom=*next)retainedEarnings_glwAcctSummary$
+                            retainedEarnings_glwAcctSummary.begin_amt=retainedEarnings_glwAcctSummary.begin_amt+begin_amt
+                            if #unitsFlag$="Y" then retainedEarnings_glwAcctSummary.begin_units=retainedEarnings_glwAcctSummary.begin_units+begin_units
+                            writerecord(#devGlwAcctSummary)retainedEarnings_glwAcctSummary$
+
+                            rem --- Set income and expense account balances to zero.
+                            begin_amt=0
+                            begin_units=0
                         endif
                     endif
 
                     glwAcctSummary.begin_amt=begin_amt
-                    glwAcctSummary.begin_units=begin_units
+                    if #unitsFlag$="Y" then glwAcctSummary.begin_units=begin_units
                 else
                     rem --- What should we do if/when glm_acctsummary data isn't available?
-                    rem --- ER 8492 will eliminate this issue since all glt_transdetail records will be summarized into glm_acctsummary.
+                    rem --- ER 8492 D6 will insure glm_acctsummary data exists for all fiscal calendars with existing glt_transdetail (glt-06) data.
+
+                    rem --- Handle case where there is no glt_transdetail (glt-06) data to create glm_acctsummary records
+                    glwAcctSummary.begin_amt=0
+                    if #unitsFlag$="Y" then glwAcctSummary.begin_units=0
                 endif
             endif
 
@@ -556,11 +609,27 @@ updateAcctSummary_error:rem --- Method error trap/handler
         rem /**
         rem  * Open files and get templates for all tables needed to align fiscal calendars.
         rem  *
-        rem  * Note: #devGlwAcctSummary, #devGltTransDetail and/or #devGlwAcctSummary will be 
-        rem  * less than zero if an error is encounterd.
+        rem  * Note: #devGlwAcctSummary, #devGlwAcctSummary, #devGltTransDetail and/or #devGlwAcctSummary
+        rem  * will be less than zero if an error is encounterd.
         rem  */
         method protected void openWorkFiles()
             seterr openWorkFiles_error
+
+            rem --- Open glm_acctsummary
+            if #devGlmAcctSumHdr < 0 then
+                rem --- Open glm_acctsumhdr and get record template. Create file if necessary.
+                num_files=1
+                dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                open_tables$[1]="GLM_ACCTSUMHDR",open_opts$[1]="OTA[1]"
+
+                call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
+
+                if open_status$ = "" then
+                    rem --- Hold on to channel and record template for glw_acctsummary
+                    #devGlmAcctSumHdr = num(open_chans$[1])
+                    #tplGlmAcctSumHdr$ = open_tpls$[1]
+                endif
+            endif
 
             rem --- Open glm_acctsummary
             if #devGlmAcctSummary < 0 then
@@ -635,6 +704,7 @@ openWorkFiles_error:rem --- Method error trap/handler
         method public void close()
             seterr close_error
 
+            if #devGlmAcctSumHdr > 0 then close(#devGlmAcctSumHdr,err=*next)
             if #devGlmAcctSummary > 0 then close(#devGlmAcctSummary,err=*next)
             if #devGlsCalendar > 0 then close(#devGlsCalendar,err=*next)
             if #devGltTransDetail > 0 then close(#devGltTransDetail,err=*next)
