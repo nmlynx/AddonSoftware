@@ -1,3 +1,45 @@
+[[GLM_SUMMACTIVITY.ALIGN_PERIODS.AVAL]]
+rem --- Update grid data when leave checkbox and value has changed
+
+	alignPeriods$=callpoint!.getUserInput()
+	if align_periods$<>callpoint!.getColumnData("GLM_SUMMACTIVITY.ALIGN_PERIODS") then
+		callpoint!.setDevObject("align_fiscal_periods",alignPeriods$)
+
+		rem --- If aligning fiscal periods, need to update GLW_ACCTSUMMARY using
+		rem --- transactions from GLT_TRANSDETAIL for non-aligned selected fiscal years.
+		if alignPeriods$="Y" then
+			cols!=UserObj!.getItem(num(user_tpl.cols_ofst$))
+			for i=0 to cols!.size()-1
+				recordType$=recordType$+cols!.getItem(i)
+			next i
+			alignCalendar! = callpoint!.getDevObject("alignCalendar")
+			if pos("2"=recordType$) then
+				priorYear$=str(num(callpoint!.getDevObject("gls_cur_yr"))-1:"0000")
+				align_prior=alignCalendar!.canAlignCalendar(priorYear$)
+				if align_prior then priorTripKey$=alignCalendar!.alignCalendar(priorYear$)
+			endif
+			if pos("4"=recordType$) then
+				nextYear$=str(num(callpoint!.getDevObject("gls_cur_yr"))+1:"0000")
+				align_next=alignCalendar!.canAlignCalendar(nextYear$)
+				if align_next then nextTripKey$=alignCalendar!.alignCalendar(nextYear$)
+			endif
+			rem --- Check tripKey$ in case of error
+			if (prorYear$<>"" and priorTripKey$="") or (nextYear$<>"" and nextTripKey$="") then
+				msg_id$="GL_CANNOT_ALIGN_PERS"
+				dim msg_tokens$[1]
+				msg_tokens$[1]=begyear$
+				gosub disp_message
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+
+			rem --- Update grid rows from not aligned to aligned
+			gosub fill_gridActivity
+		else
+			rem --- Update grid rows from aligned to not aligned
+			gosub fill_gridActivity
+		endif
+	endif
 [[GLM_SUMMACTIVITY.AOPT-DETL]]
 rem --- Run the custom query to show details about the current cell
 
@@ -49,16 +91,18 @@ rem --- Set proper record ID
 :			filter_defs$[all]
 	endif
 [[GLM_SUMMACTIVITY.AWIN]]
-rem print 'show'
+rem --- Needed classes
+use ::glo_AlignFiscalCalendar.aon::AlignFiscalCalendar
+use ::ado_util.src::util
 
 rem --- init...open tables, define custom grid, etc.
-use ::ado_util.src::util
-num_files=4
+num_files=5
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
 open_tables$[2]="GLM_ACCTSUMMARY",open_opts$[2]="OTA"
 open_tables$[3]="GLM_RECORDTYPES",open_opts$[3]="OTA"
 open_tables$[4]="GLS_CALENDAR",open_opts$[4]="OTA"
+open_tables$[5]="GLW_ACCTSUMMARY",open_opts$[5]="OTA"
 
 gosub open_tables
 
@@ -71,16 +115,9 @@ dim glm18a$:open_tpls$[3]
 dim gls_calendar$:open_tpls$[4]
 
 readrecord(gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
+readrecord(gls_calendar_dev,key=firm_id$+gls01a.current_year$,dom=std_missing_params)gls_calendar$
 
 call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,0
-
-rem --- load up period abbr names from gls_params
-readrecord(gls_calendar_dev,key=firm_id$+gls01a.current_year$,dom=std_missing_params)gls_calendar$
-num_pers=num(gls_calendar.total_pers$)
-per_names!=SysGUI!.makeVector()
-for x=1 to num_pers
-	per_names!.addItem(field(gls_calendar$,"ABBR_NAME_"+str(x:"00")))
-next x
 
 rem ---  load up budget column codes and types from gls_params
 cols!=SysGUI!.makeVector()
@@ -88,6 +125,30 @@ tps!=SysGUI!.makeVector()
 for x=1 to 4
 	cols!.addItem(field(gls01a$,"acct_mn_cols_"+str(x:"00")))
 	tps!.addItem(field(gls01a$,"acct_mn_type_"+str(x:"00")))
+next x
+
+rem --- Need to handle possible year in grid with more periods than the current fiscal year
+num_pers=num(gls_calendar.total_pers$)
+for i=0 to cols!.size()-1
+	recordType$=cols!.getItem(i)
+	if pos(recordType$="23") then
+		dim priorCalendar$:fattr(gls_calendar$)
+		priorYear$=str(num(gls01a.current_year$)-1)
+		readrecord(gls_calendar_dev,key=firm_id$+priorYear$,dom=*next)priorCalendar$
+		if num(priorCalendar.total_pers$)>num_pers then num_pers=num(priorCalendar.total_pers$)
+	endif
+	if pos(recordType$="45") then
+		dim nextCalendar$:fattr(gls_calendar$)
+		nextYear$=str(num(gls01a.current_year$)+1)
+		readrecord(gls_calendar_dev,key=firm_id$+nextYear$,dom=*next)nextCalendar$
+		if num(nextCalendar.total_pers$)>num_pers then num_pers=num(nextCalendar.total_pers$)
+	endif
+next i
+
+rem --- load up period abbr names from gls_params
+per_names!=SysGUI!.makeVector()
+for x=1 to num_pers
+	per_names!.addItem(field(gls_calendar$,"ABBR_NAME_"+str(x:"00")))
 next x
 			
 rem ---  create list for column zero of grid -- column type drop-down
@@ -103,7 +164,7 @@ wend
 
 rem ---  set up grid
 nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
-gridActivity!=Form!.addGrid(nxt_ctlID,5,100,1000,100)
+gridActivity!=Form!.addGrid(nxt_ctlID,5,120,1000,105)
 gridActivity!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 gridActivity!.setSelectionMode(gridActivity!.GRID_SELECT_CELL)
 gridActivity!.setSelectedRow(0)
@@ -147,6 +208,12 @@ gosub set_column1_list
 util.resizeWindow(Form!, SysGui!)
 
 callpoint!.setOptionEnabled("DETL",0)
+
+rem --- Initialize align_periods
+callpoint!.setDevObject("align_fiscal_periods","N")
+callpoint!.setDevObject("alignCalendar",new AlignFiscalCalendar(firm_id$))
+pick_year$=gls01a.current_year$
+gosub init_align_periods
 [[GLM_SUMMACTIVITY.AREC]]
 rem compare budget columns/types from gls01 with 1st/3rd char of key of glm18
 rem set the 4 listbuttons accordingly, and read/display corres glm02 data
@@ -241,16 +308,43 @@ if ctl_ID=num(user_tpl.grid_ctlID$)
 				if curr_col=0
 					record_type$=gridActivity!.getCellText(curr_row,curr_col)
 					record_type$=record_type$(pos("("=record_type$,-1,1)+1,2)
-					glm02_key$=firm_id$+callpoint!.getColumnData("GLM_SUMMACTIVITY.GL_ACCOUNT")+record_type$(1,1)
+
+					if callpoint!.getDevObject("align_fiscal_periods")="Y" and pos(record_type$(1,1)="24") then
+						rem --- Use GLW_ACCTSUMMARY when fiscal periods are aligned
+						gls_cur_yr$=callpoint!.getDevObject("gls_cur_yr")
+						if record_type$(1,1)="2" then
+							rem --- Prior year
+							thisYear$=str(num(gls_cur_yr$)-1:"0000")
+						else
+							rem --- Next year
+							thisYear$=str(num(gls_cur_yr$)+1:"0000")
+						endif
+						glm02_key$=firm_id$+thisYear$+gls_cur_yr$+callpoint!.getColumnData("GLM_SUMMACTIVITY.GL_ACCOUNT")
+					else
+						glm02_key$=firm_id$+callpoint!.getColumnData("GLM_SUMMACTIVITY.GL_ACCOUNT")+record_type$(1,1)
+					endif
+
 					col_type$=record_type$(2,1)
 					x=curr_row
 					gosub build_vectGLSummary
 					gridActivity!.setCellText(curr_row,1,vectGLSummary!)
-					if pos(record_type$(1,1)="024",1)<>0
+					if pos(record_type$(1,1)="024")<>0
 						gridActivity!.setRowEditable(curr_row,0)
 						gridActivity!.setCellEditable(curr_row,curr_col,1)
 					else
 						gridActivity!.setRowEditable(curr_row,1)
+					endif
+
+					rem --- May need to update the list of records in the grid
+					cols!=UserObj!.getItem(num(user_tpl.cols_ofst$))
+					if record_type$(1,1)<>cols!.getItem(curr_row) then
+						cols!.setItem(curr_row,record_type$(1,1))
+						UserObj!.setItem(num(user_tpl.cols_ofst$),cols!)
+					endif
+					tps!=UserObj!.getItem(num(user_tpl.tps_ofst$))
+					if record_type$(2,1)<>tps!.getItem(curr_row) then
+						tps!.setItem(curr_row,record_type$(2,1))
+						UserObj!.setItem(num(user_tpl.tps_ofst$),tps!)
 					endif
 				else
 					vectGLSummary!=SysGUI!.makeVector() 
@@ -397,27 +491,28 @@ fill_gridActivity:
 	gl_account$=callpoint!.getColumnData("GLM_SUMMACTIVITY.GL_ACCOUNT")
 
 	for x=0 to num_cols-1
-		glm02_key$=firm_id$+gl_account$+cols!.getItem(x)
+		recordType$=cols!.getItem(x)
+		if callpoint!.getDevObject("align_fiscal_periods")="Y" and pos(recordType$="24") then
+			rem --- Use GLW_ACCTSUMMARY when fiscal periods are aligned
+			gls_cur_yr$=callpoint!.getDevObject("gls_cur_yr")
+			if recordType$="2" then
+				rem --- Prior year
+				thisYear$=str(num(gls_cur_yr$)-1:"0000")
+			else
+				rem --- Next year
+				thisYear$=str(num(gls_cur_yr$)+1:"0000")
+			endif
+			glm02_key$=firm_id$+thisYear$+gls_cur_yr$+gl_account$
+		else
+			glm02_key$=firm_id$+gl_account$+recordType$
+		endif
+
 		col_type$=tps!.getItem(x)
 		gosub build_vectGLSummary
 		gridActivity!.setCellText(x,1,vectGLSummary!)
 	next x
 
 	callpoint!.setStatus("REFRESH")
-
-return
-
-build_vectActivity:
-rem -- this vector is refreshed from grid after an edit - used to drive glm-02 update in ASVA
-	vectActivity!=SysGUI!.makeVector()
-	gridActivity!=UserObj!.getItem(num(user_tpl.grid_ofst$))
-	for x=0 to gridActivity!.getNumRows()-1
-		for y=0 to gridActivity!.getNumColumns()-1
-			vectActivity!.addItem(gridActivity!.getCellText(x,y))
-		next y
-	next x
-escape;rem ? vectActivity!
-	UserObj!.setItem(num(user_tpl.vectActivity_ofst$),vectActivity!)
 
 return
 
@@ -429,8 +524,24 @@ rem =======================================================
 
 	glm02_dev=fnget_dev("GLM_ACCTSUMMARY")
 	glm02_tpl$=fnget_tpl$("GLM_ACCTSUMMARY")
-
 	dim glm02a$:glm02_tpl$
+
+	glm02_key_len=len(glm02a.firm_id$)+len(glm02a.gl_account$)+len(glm02a.record_id$)	
+	if callpoint!.getDevObject("align_fiscal_periods")="Y" and len(glm02_key$)>glm02_key_len then
+		rem --- Use GLW_ACCTSUMMARY when fiscal periods are aligned
+		glm02_dev=fnget_dev("GLW_ACCTSUMMARY")
+		glm02_tpl$=fnget_tpl$("GLW_ACCTSUMMARY")
+		dim glm02a$:glm02_tpl$
+	endif
+
+	rem --- Display message when calendars have been aligned
+	if callpoint!.getDevObject("align_fiscal_periods")="Y" then
+		align_message$=Translate!.getTranslation("AON_ACTUALS")+" "+Translate!.getTranslation("AON_ALIGNED_WITH","Aligned With")+" "+callpoint!.getDevObject("gls_cur_yr")
+	else
+		align_message$=""
+	endif
+	callpoint!.setColumnData("GLM_SUMMACTIVITY.ALIGN_MESSAGE",align_message$,1)
+
 	num_pers=num(user_tpl.pers$)
 	vectGLSummary!=SysGUI!.makeVector()
 	m1$=user_tpl.amt_mask$
@@ -526,5 +637,25 @@ disable_fields:
 
 return
 
+rem ==========================================================================
+init_align_periods: rem --- Initialize align_periods for prior and next year
+rem		pick_year$: input
+rem ==========================================================================
+	
+	alignCalendar! = callpoint!.getDevObject("alignCalendar")
+	align_prior=alignCalendar!.canAlignCalendar(str(num(pick_year$)-1))
+	align_next=alignCalendar!.canAlignCalendar(str(num(pick_year$)+1))
+	if align_prior or align_next then
+		rem --- can align calendar
+		callpoint!.setColumnEnabled("GLM_SUMMACTIVITY.ALIGN_PERIODS",1)
+	else
+		rem --- canNOT align calendar
+		callpoint!.setColumnEnabled("GLM_SUMMACTIVITY.ALIGN_PERIODS",0)
+		callpoint!.setDevObject("align_fiscal_periods","N")
+	endif
+	align_fiscal_periods$=callpoint!.getDevObject("align_fiscal_periods")
+	callpoint!.setColumnData("GLM_SUMMACTIVITY.ALIGN_PERIODS",align_fiscal_periods$,1)
+
+	return
 
 #include std_missing_params.src
