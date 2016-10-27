@@ -1,3 +1,12 @@
+[[GLR_BUDGETREPORT.AWIN]]
+rem --- Needed classes
+use ::glo_AlignFiscalCalendar.aon::AlignFiscalCalendar
+
+rem --- Initialize align_periods
+callpoint!.setDevObject("align_fiscal_periods","N")
+callpoint!.setDevObject("alignCalendar",new AlignFiscalCalendar(firm_id$))
+pick_year$=callpoint!.getDevObject("current_fiscal_year")
+gosub init_align_periods
 [[GLR_BUDGETREPORT.GL_WILDCARD.AVAL]]
 rem --- Check length of wildcard against defined mask for GL Account
 	if callpoint!.getUserInput()<>""
@@ -22,6 +31,7 @@ dim gls01a$:open_tpls$[1]
 dim glm18a$:open_tpls$[2]
 
 readrecord(gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
+callpoint!.setDevObject("current_fiscal_year",gls01a.current_year$)
 
 if gls01a.budget_flag$<>"Y"
 	msg_id$="GL_NO_BUDG"
@@ -107,5 +117,25 @@ disable_fields:
 
 return
 
+rem ==========================================================================
+init_align_periods: rem --- Initialize align_periods for prior and next year
+rem		pick_year$: input
+rem ==========================================================================
+	
+	alignCalendar! = callpoint!.getDevObject("alignCalendar")
+	align_prior=alignCalendar!.canAlignCalendar(str(num(pick_year$)-1))
+	align_next=alignCalendar!.canAlignCalendar(str(num(pick_year$)+1))
+	if align_prior or align_next then
+		rem --- can align calendar
+		callpoint!.setColumnEnabled("GLR_BUDGETREPORT.ALIGN_PERIODS",1)
+	else
+		rem --- canNOT align calendar
+		callpoint!.setColumnEnabled("GLR_BUDGETREPORT.ALIGN_PERIODS",0)
+		callpoint!.setDevObject("align_fiscal_periods","N")
+	endif
+	align_fiscal_periods$=callpoint!.getDevObject("align_fiscal_periods")
+	callpoint!.setColumnData("GLR_BUDGETREPORT.ALIGN_PERIODS",align_fiscal_periods$,1)
+
+	return
 
 #include std_missing_params.src
