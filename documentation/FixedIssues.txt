@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-10-24
+ Report Date:   2016-10-28
  Report Branch: AddonSoftware 16.20
  Last Release:  AddonSoftware 16.12
 =======================================================================================================================================
@@ -190,3 +190,17 @@ Bug 8854: Added "dom=*continue" to the FIND statement getting the error
 11.
 ----
 Modified: util/dataport/DataPort_main.bbj
+
+=======================================================================================================================================
+Revision: 9b58e43f2e470dc660e481a5a648f0f59406ecd0
+Author: Christine <chawkins@basis.com>
+Date: 10/28/2016 6:19:18 PM
+Message:
+Per bug 8862; altered to handle the case where Distribute EM Update
+Wizard Files step has been skipped, and there are no post-upgrade
+conversions to do. Common on minor upgrade where mods are installed.
+This fix ensures that after installing mods and then getting data in
+place via EM Update Wizard, the next launch will once again prompt to
+Distribute the EM Update Wizard Files.
+----
+Modified: ad/src/adx_init_data.aon
