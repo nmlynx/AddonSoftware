@@ -519,8 +519,6 @@ sumGltTransactions_error:rem --- Method error trap/handler
                             
                             begin_amt=begin_amt-adjustVect!.get(0)
                             begin_units=begin_units-adjustVect!.get(1)
-                            glt06.trans_amt=glt06.trans_amt+adjustVect!.get(0)
-                            glt06.units=glt06.units+adjustVect!.get(1)
                         endif
 
                         rem --- If this cal_start_date is earlier than base cal_start_date, then add transactions in that date range.
@@ -543,8 +541,6 @@ sumGltTransactions_error:rem --- Method error trap/handler
                             
                             begin_amt=begin_amt+adjustVect!.get(0)
                             begin_units=begin_units+adjustVect!.get(1)
-                            glt06.trans_amt=glt06.trans_amt-adjustVect!.get(0)
-                            glt06.units=glt06.units-adjustVect!.get(1)
                         endif
 
                         rem --- Post adjustments for income and expense accounts to the retained earnings account balance,
