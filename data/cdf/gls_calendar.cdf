@@ -58,6 +58,25 @@ rem --- When fiscal calendar for the initial fiscal year is saved, create duplic
 		rem --- Reset file pointer for saved record
 		read(gls_calendar_dev,key=firm_id$+year$,dom=*next)
 	endif
+
+rem --- Remove glw_acctsummary records if the fiscal calendar was changed.
+	if callpoint!.getDevObject("calendar_changed") then
+		dim gls_params$:fnget_tpl$("GLS_PARAMS")
+		gls_params$=callpoint!.getDevObject("gls_params")
+		if callpoint!.getColumnData("GLS_CALENDAR.YEAR")=gls_params.current_year$ then
+			rem --- Remove all glw_acctsummary records for the FIRM if the fiscal calendar (total_pers, cal_start_date, or per_ending_nn)
+			rem --- for the CURRENT FISCAL YEAR changes.
+			call stbl("+DIR_PGM")+"adc_clearpartial.aon","",fnget_dev("GLW_ACCTSUMMARY"),firm_id$,status
+		else
+			rem --- Remove all glw_acctsummary records for a YEAR if the fiscal calendar (total_pers, cal_start_date, or per_ending_nn)
+			rem --- changes for THAT FISCAL YEAR.
+			call stbl("+DIR_PGM")+"adc_clearpartial.aon","",fnget_dev("GLW_ACCTSUMMARY"),firm_id$+callpoint!.getColumnData("GLS_CALENDAR.YEAR"),status
+		endif
+		if status then
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
 [[GLS_CALENDAR.PER_ENDING_03.AVAL]]
 rem --- The last period must end on the day before the calendar start date of the next year.
 	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="03" then
@@ -310,12 +329,13 @@ rem --- Validate period ending date
 	if abort then break
 [[GLS_CALENDAR.BSHO]]
 rem -- Get GL parameters
-	num_files=4
+	num_files=5
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="GLT_TRANSDETAIL",open_opts$[2]="OTA"
 	open_tables$[3]="GLM_ACCTSUMMARY",open_opts$[3]="OTA"
 	open_tables$[4]="ADS_COMPINFO",open_opts$[4]="OTA"
+	open_tables$[5]="GLW_ACCTSUMMARY",open_opts$[5]="OTA"
 	gosub open_tables
 	gls_params_dev=num(open_chans$[1])
 	dim gls_params$:open_tpls$[1]
@@ -361,6 +381,23 @@ rem --- When fiscal calendar for the initial fiscal year is saved, create duplic
 		callpoint!.setDevObject("copy_calendar",callpoint!.getColumnData("GLS_CALENDAR.YEAR"))
 	else
 		callpoint!.setDevObject("copy_calendar","")
+	endif
+
+rem --- Was this fiscal calendar changed (total_pers, cal_start_date, or per_ending_nn)?
+	callpoint!.setDevObject("calendar_changed",0)
+	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")<>callpoint!.getColumnUndoData("GLS_CALENDAR.TOTAL_PERS") then
+		callpoint!.setDevObject("calendar_changed",1)
+	else
+		if callpoint!.getColumnData("GLS_CALENDAR.CAL_START_DATE")<>callpoint!.getColumnUndoData("GLS_CALENDAR.CAL_START_DATE") then
+			callpoint!.setDevObject("calendar_changed",1)
+		else
+			for per=1 to num(callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS"))
+				if callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_"+str(per:"00"))<>callpoint!.getColumnUndoData("GLS_CALENDAR.PER_ENDING_"+str(per:"00")) then
+					callpoint!.setDevObject("calendar_changed",1)
+                            		break
+				endif
+			next per
+		endif
 	endif
 [[GLS_CALENDAR.BDEL]]
 rem --- Never allow deleting the calendar for the prior/current/next fiscal year.
@@ -927,7 +964,7 @@ validate_mo_day: rem --- validate period ending date (month/day - doesn't check 
 		case 6
 		case 9
 		case 11
-			if num(per_ending$(3,2))>=1 and num(per_endingy$(3,2))<=30 then abort=0
+			if num(per_ending$(3,2))>=1 and num(per_ending$(3,2))<=30 then abort=0
 			break
 		case default
 			break
