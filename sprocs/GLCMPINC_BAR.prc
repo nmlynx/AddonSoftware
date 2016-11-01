@@ -60,6 +60,11 @@ rem --- Get the IN parameters used by the procedure
 	firm_id$ = sp!.getParameter("FIRM_ID")
 	barista_wd$ = sp!.getParameter("BARISTA_WD")
 	masks$ = sp!.getParameter("MASKS")
+    props_name$ = sp!.getParameter("PROPS_NAME")
+    props_path$ = sp!.getParameter("PROPS_PATH")
+    user_locale$ = sp!.getParameter("USER_LOCALE")
+    sysinfo_tpl$ = sp!.getParameter("SYSINFO_TPL")
+    sysinfo$ = sp!.getParameter("SYSINFO")
 
 rem --- dirs	
 	sv_wd$=dir("")
@@ -69,6 +74,16 @@ rem --- Get Barista System Program directory
 	sypdir$=""
 	sypdir$=stbl("+DIR_SYP",err=*next)
 	pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Get AlignFiscalCalendar object
+
+    x$=stbl("+PROPS_NAME",props_name$)
+    x$=stbl("+PROPS_PATH",props_path$)
+    x$=stbl("+USER_LOCALE",user_locale$)
+    x$=stbl("+SYSINFO_TPL",sysinfo_tpl$)
+    x$=stbl("+SYSINFO",sysinfo$)
+    use ::glo_AlignFiscalCalendar.aon::AlignFiscalCalendar
+    alignCalendar!=new AlignFiscalCalendar(firm_id$)
 	
 rem --- create the in memory recordset for return
 
@@ -113,9 +128,16 @@ rem --- get data
     yearsVec! = BBjAPI().makeVector()
 
     rem --- Prior Year (Actual)
+    alignPeriods$="N"
     if pos(include_type$="ABEF")
         idsVec!.addItem("2")
-        yearsVec!.addItem(str(num(gls01a.current_year$)-1))
+        priorYear$=str(num(gls01a.current_year$)-1:"0000")
+        yearsVec!.addItem(priorYear$)
+        align_prior=alignCalendar!.canAlignCalendar(priorYear$)
+        if align_prior then 
+            priorTripKey$=alignCalendar!.alignCalendar(priorYear$)
+            alignPeriods$="Y"
+        endif
     endif   
 
     rem --- Current Year (Actual)
@@ -127,9 +149,30 @@ rem --- get data
     rem --- Next Year (Actual)
     if pos(include_type$="CDEF")
         idsVec!.addItem("4")
-        yearsVec!.addItem(str(num(gls01a.current_year$)+1))
+        nextYear$=str(num(gls01a.current_year$)+1:"0000")
+        yearsVec!.addItem(nextYear$)
+        align_next=alignCalendar!.canAlignCalendar(nextYear$)
+        if align_next then 
+            nextTripKey$=alignCalendar!.alignCalendar(nextYear$)
+            alignPeriods$="Y"
         endif
     endif   
+
+    rem --- Check tripKey$ in case of error
+    if priorTripKey$<>"" or nextTripKey$<>"" then
+        files=1,begfile=1,endfile=files
+        dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+        files$[1]="glw_acctsummary",ids$[1]="GLW_ACCTSUMMARY"
+        call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
+:                           ids$[all],templates$[all],channels[all],batch,status
+        if status then
+            seterr 0
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "File open error.",1001
+        endif
+        glwAcctSummary_dev=channels[1]
+        dim glwAcctSummary$:templates$[1]
+    endif
 
     if idsVec!.size()>0 then
         rem --- Get accounts
@@ -150,6 +193,21 @@ rem --- get data
                 for j=0 to acctsVec!.size()-1
                     dim glm02a$:fattr(glm02a$)
                     readrecord(glm02a_dev,key=firm_id$+acctsVec!.getItem(j)+idsVec!.getItem(i),dom=*next)glm02a$
+                    if alignPeriods$="Y" then
+                        tripKey$=""
+                        if idsVec!.getItem(i)="2" and priorTripKey$<>"" then tripKey$=priorTripKey$
+                        if idsVec!.getItem(i)="4" and nextTripKey$<>"" then tripKey$=nextTripKey$
+                        if tripKey$<>""
+                            redim glwAcctSummary$
+                            readrecord(glwAcctSummary_dev,key=tripKey$+acctsVec!.getItem(j),dom=*next)glwAcctSummary$
+                            redim glm02a$
+                            glm02a.begin_amt=glwAcctSummary.begin_amt
+                            for per=1 to num(gls_calendar.total_pers$)
+                                per_num$=str(per:"00")
+                                field glm02a$,"PERIOD_AMT_"+per_num$ = nfield(glwAcctSummary$,"PERIOD_AMT_"+per_num$)
+                            next per
+                        endif
+                    endif
                     if pos(include_type$="BDF")
                         totals[0]=totals[0]+glm02a.begin_amt +glm02a.period_amt_01 +glm02a.period_amt_02 +glm02a.period_amt_03 +glm02a.period_amt_04 
 :                       +glm02a.period_amt_05 +glm02a.period_amt_06+glm02a.period_amt_07 +glm02a.period_amt_08 +glm02a.period_amt_09

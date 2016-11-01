@@ -236,7 +236,15 @@ rem ==============================================
 		acct_type$="I"; rem "Income accounts only
 		do_coa_join$="N"; rem "Change to Y to JOIN w/Chart of Accts to filter by account grouping
 
-		sql$="CALL GLCMPINC_BAR ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
+        gosub get_translate_object
+        props_name$=stbl("+PROPS_NAME")
+        props_path$=stbl("+PROPS_PATH")
+        user_locale$=stbl("+USER_LOCALE")
+        sysinfo_tpl$=stbl("+SYSINFO_TPL")
+        sysinfo$=stbl("+SYSINFO")
+
+		sql$="CALL GLCMPINC_BAR ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+
+:           "', '"+props_name$+"', '"+props_path$+"', '"+user_locale$+"', '"+sysinfo_tpl$+"', '"+sysinfo$+"')"
 
 		incomeComparisonBarDashboardWidget! = BarUtils.addBarChartDashboardWidget(acctDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,sql$)
 		incCmpWidget!=incomeComparisonBarDashboardWidget!.getWidget()
@@ -1094,9 +1102,17 @@ rem     The inner widget gives us access to the dataset so that we can provide n
 	include_type$=chr(asc(include_type$)+num(incCmpWidgetFilterCompareKey$));rem A,B,C,D,E,F
 	acct_type$="I"; rem "Income accounts only
 	do_coa_join$="N"; rem "Change to Y to JOIN w/Chart of Accts to filter by account grouping
+
+    gosub get_translate_object
+    props_name$=stbl("+PROPS_NAME")
+    props_path$=stbl("+PROPS_PATH")
+    user_locale$=stbl("+USER_LOCALE")
+    sysinfo_tpl$=stbl("+SYSINFO_TPL")
+    sysinfo$=stbl("+SYSINFO")
 	
 	rem ' when changing filter values the chart reverts to the base chart
-	sql$="CALL GLCMPINC_BAR ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
+    sql$="CALL GLCMPINC_BAR ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+
+:       "', '"+props_name$+"', '"+props_path$+"', '"+user_locale$+"', '"+sysinfo_tpl$+"', '"+sysinfo$+"')"
 	dim chartState$:"CHART_TYPE:C(25*),INCLUDE_TYPE:C(1*),YEAR:C(4*),PERIOD:C(2*)"
 	chartState.CHART_TYPE$="IncomeCompare", chartState.INCLUDE_TYPE$ = include_type$,chartState.YEAR$ = ""; chartState.PERIOD$=""
 	
@@ -1388,9 +1404,18 @@ OnIncCmpBarChartWidgetClick:
 	   rem --- params for calling SPROC
 	   gosub get_sysinfo
 	   gosub get_masks
-    	   acct_type$="I", do_coa_join$="N"
-    	   include_type$=chartState.INCLUDE_TYPE$, acct_type$="I", do_coa_join$="N"
-	   sql$="CALL GLCMPINC_BAR ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
+	   acct_type$="I", do_coa_join$="N"
+	   include_type$=chartState.INCLUDE_TYPE$, acct_type$="I", do_coa_join$="N"
+
+        gosub get_translate_object
+        props_name$=stbl("+PROPS_NAME")
+        props_path$=stbl("+PROPS_PATH")
+        user_locale$=stbl("+USER_LOCALE")
+        sysinfo_tpl$=stbl("+SYSINFO_TPL")
+        sysinfo$=stbl("+SYSINFO")
+
+        sql$="CALL GLCMPINC_BAR ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+
+:           "', '"+props_name$+"', '"+props_path$+"', '"+user_locale$+"', '"+sysinfo_tpl$+"', '"+sysinfo$+"')"
 	   chartState.CHART_TYPE$="IncomeCompare", chartState.INCLUDE_TYPE$=include_type$,chartState.YEAR$="", chartState.period$=""
 	   widget!.setUserData(chartState$)
 	   widget!.setSQL(sql$)
