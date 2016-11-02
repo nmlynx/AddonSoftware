@@ -66,8 +66,6 @@ rem  */
             open(devGlsParams)stbl("+GLDATA")+filename$
 
             rem --- Get record template for gls_params
-            tplsChan = unt
-            open(tplsChan)stbl("+DIR_BRD")+"ddm_table_tpls.dat"
             read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
             tplGlsParams$ = table_tpl$
             dim gls_params$:tplGlsParams$
