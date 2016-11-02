@@ -1,0 +1,206 @@
+rem ==========================================================================
+rem --- glo_AO_DisplayColumns.aon 
+rem --- AO_DisplayColumns class (DisplayColumns superclass)
+rem --- GL superclass that provides GL Display Columns previously provided in
+rem --- glm_recordtypes (glm-18) file.
+rem --- 
+rem --- AddonSoftware Version 17.0
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem ==========================================================================
+
+rem /**
+rem  * This class provides GL Display Columns, previously provided in glm_recordtypes
+rem  * (glm-18) file, that are used for selecting Record Codes and Budget Codes in the
+rem  * GL Default Display Columns paramters task.
+rem  */
+
+    use ::bbtranslator.bbj::BBTranslator
+    use java.util.HashMap
+
+    class public AO_DisplayColumns
+        field protected BBjString currentFiscalYear$
+        field protected HashMap displayColumns!
+        field protected BBjString firmID$
+        field protected BBTranslator Translate!
+        field protected BBjString useBudgets$
+        field protected BBjString useUnits$
+
+        rem /**
+        rem  * Constructor.
+        rem  *
+        rem  * @param BBjString firmId$
+        rem  */
+        method public AO_DisplayColumns(BBjString firmID$)
+            seterr DisplayColumns_error
+
+            rem --- Open gls_params
+            filename$ = "gls_params"
+            devGlsParams = unt
+            open(devGlsParams)stbl("+GLDATA")+filename$
+
+            rem --- Get record template for gls_params
+            tplsChan = unt
+            open(tplsChan)stbl("+DIR_BRD")+"ddm_table_tpls.dat"
+            read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
+            tplGlsParams$ = table_tpl$
+            dim gls_params$:tplGlsParams$
+            
+            rem --- Get gls_params GL00 record for firmId$
+            readrecord(devGlsParams,key=firmID$+"GL00")gls_params$
+            
+            rem --- Initialize field variables
+            #currentFiscalYear$ = gls_params.current_year$
+            #firmID$ = firmID$
+            #useBudgets$ = gls_params.budget_flag$
+            #useUnits$ = gls_params.units_flag$
+            #initDisplayColumns()
+
+            rem --- Get Translate! object
+            rdTransSpaceKey$=stbl("+PROPS_NAME")+"_"+stbl("+USER_LOCALE")+"_BBTranslator"
+            #Translate!=cast(BBTranslator,BBjAPI().getGroupNamespace().getValue(rdTransSpaceKey$,err=*next))
+            if #Translate!=null()
+                #Translate!=BBTranslator.getInstance(stbl("+PROPS_NAME"),stbl("+USER_LOCALE"),null(),stbl("+PROPS_PATH"))
+                BBjAPI().getGroupNamespace().setValue(rdTransSpaceKey$,Translate!)
+            endif
+
+
+            rem --- Close files
+            close(tplsChan,err=*next)
+            close(devGlsParams,err=*next)
+
+            methodret
+            
+DisplayColumns_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Initializes a HashMap of HashMaps that hold information for the display columns.
+        rem  * 
+        rem  * The displayColumns! HashMap is keyed by the old glm-18 keys (RECORD_ID+’::’+AMT_OR_UNITS),
+        rem  * and holds fields! HashMaps that are keyed by the old glm-18 field names (RECORD_ID, ACTBUD,
+        rem  * AMT_OR_UNITS, DESCRIPTION, REV_TITLE, and a new field YEAR_INC).
+        rem  */
+        method protected void initDisplayColumns()
+            seterr initDisplayColumns_error
+            #displayColumns! = new HashMap()
+            
+            field! = new HashMap()
+            field!.put("RECORD_ID","0"); field!.put("ACTBUD","A"); field!.put("AMT_OR_UNITS","A")
+            field!.put("DESCRIPTION","Current Year Actual Amounts"); field!.put("REV_TITLE","Cur Actual Amt")
+            field!.put("YEAR_INC",0)
+            #displayColumns!.put("0::A",field!)
+
+            field! = new HashMap()
+            field!.put("RECORD_ID","0"); field!.put("ACTBUD","A"); field!.put("AMT_OR_UNITS","U")
+            field!.put("DESCRIPTION","Current Year Actual Units"); field!.put("REV_TITLE","Cur Actual Unit")
+            field!.put("YEAR_INC",0)
+            #displayColumns!.put("0::U",field!)
+
+            field! = new HashMap()
+            field!.put("RECORD_ID","1"); field!.put("ACTBUD","B"); field!.put("AMT_OR_UNITS","A")
+            field!.put("DESCRIPTION","Current Year Budget Amounts"); field!.put("REV_TITLE","Cur Budget Amt")
+            field!.put("YEAR_INC",0)
+            #displayColumns!.put("1::A",field!)
+
+            field! = new HashMap()
+            field!.put("RECORD_ID","1"); field!.put("ACTBUD","B"); field!.put("AMT_OR_UNITS","U")
+            field!.put("DESCRIPTION","Current Year Budget Units"); field!.put("REV_TITLE","Cur Budget Unit")
+            field!.put("YEAR_INC",0)
+            #displayColumns!.put("1::U",field!)
+
+            field! = new HashMap()
+            field!.put("RECORD_ID","2"); field!.put("ACTBUD","A"); field!.put("AMT_OR_UNITS","A")
+            field!.put("DESCRIPTION","Prior Year Actual Amounts"); field!.put("REV_TITLE","Pri Actual Amt")
+            field!.put("YEAR_INC",-1)
+            #displayColumns!.put("2::A",field!)
+
+            field! = new HashMap()
+            field!.put("RECORD_ID","2"); field!.put("ACTBUD","A"); field!.put("AMT_OR_UNITS","U")
+            field!.put("DESCRIPTION","Prior Year Actual Units"); field!.put("REV_TITLE","Pri Actual Unit")
+            field!.put("YEAR_INC",-1)
+            #displayColumns!.put("2::U",field!)
+
+            field! = new HashMap()
+            field!.put("RECORD_ID","3"); field!.put("ACTBUD","B"); field!.put("AMT_OR_UNITS","A")
+            field!.put("DESCRIPTION","Prior Year Budget Amounts"); field!.put("REV_TITLE","Pri Budget Amt")
+            field!.put("YEAR_INC",-1)
+            #displayColumns!.put("3::A",field!)
+
+            field! = new HashMap()
+            field!.put("RECORD_ID","3"); field!.put("ACTBUD","B"); field!.put("AMT_OR_UNITS","U")
+            field!.put("DESCRIPTION","Prior Year Budget Units"); field!.put("REV_TITLE","Pri Budget Unit")
+            field!.put("YEAR_INC",-1)
+            #displayColumns!.put("3::U",field!)
+
+            field! = new HashMap()
+            field!.put("RECORD_ID","4"); field!.put("ACTBUD","A"); field!.put("AMT_OR_UNITS","A")
+            field!.put("DESCRIPTION","Next Year Actual Amounts"); field!.put("REV_TITLE","Nxt Actual Amt")
+            field!.put("YEAR_INC",1)
+            #displayColumns!.put("4::A",field!)
+
+            field! = new HashMap()
+            field!.put("RECORD_ID","4"); field!.put("ACTBUD","A"); field!.put("AMT_OR_UNITS","U")
+            field!.put("DESCRIPTION","Next Year Actual Units"); field!.put("REV_TITLE","Nxt Actual Unit")
+            field!.put("YEAR_INC",1)
+            #displayColumns!.put("4::U",field!)
+
+            field! = new HashMap()
+            field!.put("RECORD_ID","5"); field!.put("ACTBUD","B"); field!.put("AMT_OR_UNITS","A")
+            field!.put("DESCRIPTION","Next Year Budget Amounts"); field!.put("REV_TITLE","Nxt Budget Amt")
+            field!.put("YEAR_INC",1)
+            #displayColumns!.put("5::A",field!)
+
+            field! = new HashMap()
+            field!.put("RECORD_ID","5"); field!.put("ACTBUD","B"); field!.put("AMT_OR_UNITS","U")
+            field!.put("DESCRIPTION","Next Year Budget Units"); field!.put("REV_TITLE","Nxt Budget Unit")
+            field!.put("YEAR_INC",1)
+            #displayColumns!.put("5::U",field!)
+
+            field! = new HashMap()
+            field!.put("RECORD_ID","B"); field!.put("ACTBUD","B"); field!.put("AMT_OR_UNITS","A")
+            field!.put("DESCRIPTION","Best Case (Up 10%)"); field!.put("REV_TITLE","Best Case")
+            field!.put("YEAR_INC",0)
+            #displayColumns!.put("B::A",field!)
+
+            field! = new HashMap()
+            field!.put("RECORD_ID","W"); field!.put("ACTBUD","B"); field!.put("AMT_OR_UNITS","A")
+            field!.put("DESCRIPTION","Worst Case (Down 10%)"); field!.put("REV_TITLE","Worst Case")
+            field!.put("YEAR_INC",0)
+            #displayColumns!.put("W::A",field!)
+
+            field! = new HashMap()
+            field!.put("RECORD_ID","W"); field!.put("ACTBUD","B"); field!.put("AMT_OR_UNITS","A")
+            field!.put("DESCRIPTION","Prior Down 15%"); field!.put("REV_TITLE","Prior Down 15%")
+            field!.put("YEAR_INC",0)
+            #displayColumns!.put("Z::A",field!)
+
+            methodret
+            
+initDisplayColumns_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+	
+classend
