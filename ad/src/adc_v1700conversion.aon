@@ -445,7 +445,6 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
             if tpl_found then
                 dim old_glm02_tpl$:ddm_table_tpls.template$
 
-goto wgh2_8492; rem wgh ... 8492 ... GLM_ACCTSUMMARY
                 rem --- Clear and open new GLM_ACCTSUMMARY (glm-02) file
                 num_files=1
                 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
@@ -453,7 +452,6 @@ goto wgh2_8492; rem wgh ... 8492 ... GLM_ACCTSUMMARY
                 gosub open_tables
                 glmAcctSummary_dev=num(open_chans$[1])
                 dim glmAcctSummary$:open_tpls$[1]
-wgh2_8492: rem wgh ... 8492 ... GLM_ACCTSUMMARY
 
                 rem --- Loop thru old/source GLM_ACCTSUMMARY (glm-02) and write records to appropriate new file
                 firm_id$=""
@@ -467,9 +465,11 @@ wgh2_8492: rem wgh ... 8492 ... GLM_ACCTSUMMARY
 
                     if displayColumns!.getActBud(old_glm02_tpl.record_id$)="A" then
                         rem --- Actuals, GLM_ACCTSUMMARY
-rem wgh ... 8492 ... GLM_ACCTSUMMARY
-rem ... ... if A, write to GLM_ACCTSUMMARY
-rem ... ... ... YEAR=DisplayColumns!.getYear(RECORD_ID)
+                        redim glmAcctSummary$
+                        call pgmdir$+"adc_copyfile.aon",old_glm02_tpl$,glmAcctSummary$,status
+                        if status then break
+                        glmAcctSummary.year$=DisplayColumns!.getYear(old_glm02_tpl.record_id$)
+                        writerecord(glmAcctSummary_dev)glmAcctSummary$
                     else
                         if pos(old_glm02_tpl.record_id$="012345") then
                             rem --- Budget, GLM_ACCTBUDGET
