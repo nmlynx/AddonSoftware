@@ -325,9 +325,9 @@ getYearInc_error:rem --- Method error trap/handler
             #displayColumns!.put("W::A",field!)
 
             field! = new HashMap()
-            field!.put("RECORD_ID","W"); field!.put("ACTBUD","B"); field!.put("AMT_OR_UNITS","A")
+            field!.put("RECORD_ID","Z"); field!.put("ACTBUD","B"); field!.put("AMT_OR_UNITS","A")
             field!.put("DESCRIPTION","Prior Down 15%"); field!.put("REV_TITLE","Prior Down 15%")
-            field!.put("YEAR_INC",0)
+            field!.put("YEAR_INC",-1)
             #displayColumns!.put("Z::A",field!)
 
             methodret
