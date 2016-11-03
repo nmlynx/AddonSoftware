@@ -63,7 +63,6 @@ rem  */
                 BBjAPI().getGroupNamespace().setValue(rdTransSpaceKey$,Translate!)
             endif
 
-
             rem --- Close files
             close(tplsChan,err=*next)
             close(devGlsParams,err=*next)
@@ -159,6 +158,106 @@ getActBud_error:rem --- Method error trap/handler
         methodend
 
         rem /**
+        rem  * Builds a HashMap with the same structure as the displayColumns! HashMap using
+        rem  * data from glm_budgetmaster (glm-08) and glm_recordtypes (glm-18).
+        rem  *
+        rem  * @return HashMap budgetMaster!
+        rem  */
+        method public HashMap getBudgetMaster()
+            seterr getBudgetMaster_error
+            budgetMaster! = new HashMap()
+
+            rem --- Open glm_budgetmaster (glm-08)
+            filename$ = "glm-08"
+            glm08Dev = unt
+            open(glm08Dev)stbl("+GLDATA")+filename$
+            filename$ = "glm_budgetmaster"
+
+            rem --- Get record template for glm_budgetmaster (glm-08)
+            tplsChan = unt
+            open(tplsChan)stbl("+DIR_BRD")+"ddm_table_tpls.dat"
+            read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
+            tplGlsParams$ = table_tpl$
+            dim glm08$:tplGlsParams$
+
+            rem --- Open glm_recordtypes (glm-18)
+            filename$ = "glm-18"
+            glm18Dev = unt
+            open(glm18Dev)stbl("+GLDATA")+filename$
+            filename$ = "glm_recordtypes"
+
+            rem --- Get record template for glm_recordtypes (glm-18)
+            read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
+            tplGlsParams$ = table_tpl$
+            dim glm18$:tplGlsParams$
+
+            rem --- Load all the planned budgets for the current firm.
+            read(glm08Dev,key=#firmID$,dom=*next)
+            while 1
+                glm08Key$=key(glm08Dev,end=*break)
+                if pos(#firmID$=glm08Key$)<>1 then break
+                readrecord(glm08Dev)glm08$
+                
+                redim glm18$
+                glm18.record_id$=glm08.budget_code$
+                glm18.actbud$="B"
+                glm18.amt_or_units$=glm08.amt_or_units$
+                glm18Key$=glm18.record_id$+glm18.actbud$+glm18.amt_or_units$
+                readrecord(glm18Dev,key=glm18Key$,dom=*next)glm18$
+
+                field! = new HashMap()
+                field!.put("RECORD_ID",glm18.record_id$)
+                field!.put("ACTBUD",glm18.actbud$)
+                field!.put("AMT_OR_UNITS",glm18.amt_or_units$)
+                field!.put("DESCRIPTION",glm18.description$)
+                field!.put("REV_TITLE",glm18.rev_title$)
+                key$=glm08.revision_src$(1,1)
+                switch (BBjAPI().TRUE)
+                    case key$ = "0"
+                    case key$ = "1"
+                        year_inc=0
+                        break
+                    case key$ = "2"
+                    case key$ = "3"
+                        year_inc=-1
+                        break
+                    case key$ = "4"
+                    case key$ = "5"
+                        year_inc=1
+                        break
+                    case default
+                        rem --- unknown
+                        year_inc=0
+                        break
+                swend
+                field!.put("YEAR_INC",year_inc)
+
+                #displayColumns!.put(glm18.record_id$+"::"+glm18.amt_or_units$,field!)
+            wend
+
+            rem --- Close files
+            close(tplsChan,err=*next)
+            close(glm08Dev,err=*next)
+            close(glm18Dev,err=*next)
+
+            methodret budgetMaster!
+            
+getBudgetMaster_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
         rem  * Returns the fiscal year (YYYY) the given displayColumns! key is for. Returns an empty string
         rem  * if displayColumns! doesn't contain the key.
         rem  *
@@ -232,8 +331,8 @@ getYearInc_error:rem --- Method error trap/handler
         rem /**
         rem  * Initializes a HashMap of HashMaps that hold information for the display columns.
         rem  * 
-        rem  * The displayColumns! HashMap is keyed by the old glm-18 keys (RECORD_ID+’::’+AMT_OR_UNITS),
-        rem  * and holds fields! HashMaps that are keyed by the old glm-18 field names (RECORD_ID, ACTBUD,
+        rem  * The displayColumns! HashMap is keyed by glm_recordtypes (glm-18) keys (RECORD_ID+’::’+AMT_OR_UNITS),
+        rem  * and holds fields! HashMaps that are keyed by glm_recordtypes (glm-18) field names (RECORD_ID, ACTBUD,
         rem  * AMT_OR_UNITS, DESCRIPTION, REV_TITLE, and a new field YEAR_INC).
         rem  */
         method protected void initDisplayColumns()
@@ -312,23 +411,9 @@ getYearInc_error:rem --- Method error trap/handler
             field!.put("YEAR_INC",1)
             #displayColumns!.put("5::U",field!)
 
-            field! = new HashMap()
-            field!.put("RECORD_ID","B"); field!.put("ACTBUD","B"); field!.put("AMT_OR_UNITS","A")
-            field!.put("DESCRIPTION","Best Case (Up 10%)"); field!.put("REV_TITLE","Best Case")
-            field!.put("YEAR_INC",0)
-            #displayColumns!.put("B::A",field!)
-
-            field! = new HashMap()
-            field!.put("RECORD_ID","W"); field!.put("ACTBUD","B"); field!.put("AMT_OR_UNITS","A")
-            field!.put("DESCRIPTION","Worst Case (Down 10%)"); field!.put("REV_TITLE","Worst Case")
-            field!.put("YEAR_INC",0)
-            #displayColumns!.put("W::A",field!)
-
-            field! = new HashMap()
-            field!.put("RECORD_ID","Z"); field!.put("ACTBUD","B"); field!.put("AMT_OR_UNITS","A")
-            field!.put("DESCRIPTION","Prior Down 15%"); field!.put("REV_TITLE","Prior Down 15%")
-            field!.put("YEAR_INC",-1)
-            #displayColumns!.put("Z::A",field!)
+            rem --- Add budget records from glm-08/glm18
+            budgetMaster!=#getBudgetMaster()
+            #displayColumns!.putAll(budgetMaster!)
 
             methodret
             
