@@ -159,7 +159,7 @@ getActBud_error:rem --- Method error trap/handler
 
         rem /**
         rem  * Builds a HashMap with the same structure as the displayColumns! HashMap using
-        rem  * data from glm_budgetmaster (glm-08) and glm_recordtypes (glm-18).
+        rem  * data from glm_budgetmaster (glm-08).
         rem  *
         rem  * @return HashMap budgetMaster!
         rem  */
@@ -180,37 +180,19 @@ getActBud_error:rem --- Method error trap/handler
             tplGlsParams$ = table_tpl$
             dim glm08$:tplGlsParams$
 
-            rem --- Open glm_recordtypes (glm-18)
-            filename$ = "glm-18"
-            glm18Dev = unt
-            open(glm18Dev)stbl("+GLDATA")+filename$
-            filename$ = "glm_recordtypes"
-
-            rem --- Get record template for glm_recordtypes (glm-18)
-            read(tplsChan,key=cvs(pad(filename$,16," "),4),dom=*next)*,*,table_tpl$
-            tplGlsParams$ = table_tpl$
-            dim glm18$:tplGlsParams$
-
             rem --- Load all the planned budgets for the current firm.
             read(glm08Dev,key=#firmID$,dom=*next)
             while 1
                 glm08Key$=key(glm08Dev,end=*break)
                 if pos(#firmID$=glm08Key$)<>1 then break
                 readrecord(glm08Dev)glm08$
-                
-                redim glm18$
-                glm18.record_id$=glm08.budget_code$
-                glm18.actbud$="B"
-                glm18.amt_or_units$=glm08.amt_or_units$
-                glm18Key$=glm18.record_id$+glm18.actbud$+glm18.amt_or_units$
-                readrecord(glm18Dev,key=glm18Key$,dom=*next)glm18$
 
                 field! = new HashMap()
-                field!.put("RECORD_ID",glm18.record_id$)
-                field!.put("ACTBUD",glm18.actbud$)
-                field!.put("AMT_OR_UNITS",glm18.amt_or_units$)
-                field!.put("DESCRIPTION",glm18.description$)
-                field!.put("REV_TITLE",glm18.rev_title$)
+                field!.put("RECORD_ID",glm08.budget_code$)
+                field!.put("ACTBUD","B")
+                field!.put("AMT_OR_UNITS",glm08.amt_or_units$)
+                field!.put("DESCRIPTION",glm08.description$)
+                field!.put("REV_TITLE",glm08.rev_title$)
                 key$=glm08.revision_src$(1,1)
                 switch (BBjAPI().TRUE)
                     case key$ = "0"
@@ -238,7 +220,6 @@ getActBud_error:rem --- Method error trap/handler
             rem --- Close files
             close(tplsChan,err=*next)
             close(glm08Dev,err=*next)
-            close(glm18Dev,err=*next)
 
             methodret budgetMaster!
             
