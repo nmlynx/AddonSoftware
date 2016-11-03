@@ -416,33 +416,28 @@ rem --- Never allow deleting the calendar for the prior/current/next fiscal year
 
 rem --- Can only delete fiscal calendars where there is no corresponding data in 
 rem --- GLM_ACCTSUMMARY (glm-02), GLM_ACCTBUDGET and GLM_BUDGETPLANS.
+	cal_in_use=0
+	year$=callpoint!.getColumnData("GLS_CALENDAR.YEAR")
+
 	glm_acctsummary_dev=fnget_dev("GLM_ACCTSUMMARY")
 	dim glm_acctsummary$:fnget_tpl$("GLM_ACCTSUMMARY")
-	cal_in_use=0
-	read(glm_acctsummary_dev,key=firm_id$,dom=*next)
-	while 1
-		readrecord(glm_acctsummary_dev,end=*break)glm_acctsummary$
-		if pos(glm_acctsummary.record_id$="012345") then
-			cal_in_use=1
-			break
-		endif
-	wend
+	read(glm_acctsummary_dev,key=firm_id$+year$,knum="BY_YEAR_ACCT",dom=*next)
+	readrecord(glm_acctsummary_dev,end=*next)glm_acctsummary$
+	if glm_acctsummary.year$=year$ then cal_in_use=1
 
 	if !cal_in_use then
-		year$=callpoint!.getColumnData("GLS_CALENDAR.YEAR")
 		glm_acctbudget_dev=fnget_dev("GLM_ACCTBUDGET")
 		dim glm_acctbudget$:fnget_tpl$("GLM_ACCTBUDGET")
 		read(glm_acctbudget_dev,key=firm_id$+year$,knum="BY_YEAR_ACCT",dom=*next)
-		readrecord(glm_acctbudget_dev)glm_acctbudget$
+		readrecord(glm_acctbudget_dev,end=*next)glm_acctbudget$
 		if glm_acctbudget.year$=year$ then cal_in_use=1
 	endif
 
 	if !cal_in_use then
-		year$=callpoint!.getColumnData("GLS_CALENDAR.YEAR")
 		glm_budgetplans_dev=fnget_dev("GLM_BUDGETPLANS")
 		dim glm_budgetplans$:fnget_tpl$("GLM_BUDGETPLANS")
 		read(glm_budgetplans_dev,key=firm_id$+year$,knum="BY_YR_BUDGT_ACCT",dom=*next)
-		readrecord(glm_budgetplans_dev)glm_budgetplans$
+		readrecord(glm_budgetplans_dev,end=*next)glm_budgetplans$
 		if glm_budgetplans.year$=year$ then cal_in_use=1
 	endif
 
