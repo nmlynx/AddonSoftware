@@ -22,8 +22,8 @@
 			<DD_EXPORT_DATA id="ddm_tables.glm_budgetplans">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.glm_budgetplans">20161102</DD_CREATE_DATE>
 			<DD_LSTREV_DATE id="ddm_tables.glm_budgetplans">20161102</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.glm_budgetplans">20161008</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.glm_budgetplans">190422</DD_LSTSYNC_TIME>
+			<DD_LSTSYNC_DATE id="ddm_tables.glm_budgetplans">20161102</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.glm_budgetplans">180454</DD_LSTSYNC_TIME>
 			<DD_ATTR_ATAB id="ddm_tables.glm_budgetplans"></DD_ATTR_ATAB>
 			<DD_ATTR_CPGM id="ddm_tables.glm_budgetplans"></DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.glm_budgetplans"></DD_ATTR_DKNM>
@@ -47,6 +47,14 @@
 			<DD_ATTR_STYL id="ddm_tables.glm_budgetplans"></DD_ATTR_STYL>
 		</RECORD>
 	</ALIAS>
+	<ALIAS id="ddm_table_tpls">
+		<ID id="ddm_table_tpls">DDM_TABLE_TPLS</ID>
+		<RECORD id="ddm_table_tpls.glm_budgetplans">
+			<DD_TABLE_ALIAS id="ddm_table_tpls.glm_budgetplans">GLM_BUDGETPLANS </DD_TABLE_ALIAS>
+			<DD_FILE_NAME id="ddm_table_tpls.glm_budgetplans"></DD_FILE_NAME>
+			<DD_TABLE_TPL id="ddm_table_tpls.glm_budgetplans">firm_id:c(2),gl_account:c(10),year:c(4),budget_code:c(1),begin_amt:n(7*),period_amt_01:n(7*),period_amt_02:n(7*),period_amt_03:n(7*),period_amt_04:n(7*),period_amt_05:n(7*),period_amt_06:n(7*),period_amt_07:n(7*),period_amt_08:n(7*),period_amt_09:n(7*),period_amt_10:n(7*),period_amt_11:n(7*),period_amt_12:n(7*),period_amt_13:n(7*),begin_units:n(7*),period_units_01:n(7*),period_units_02:n(7*),period_units_03:n(7*),period_units_04:n(7*),period_units_05:n(7*),period_units_06:n(7*),period_units_07:n(7*),period_units_08:n(7*),period_units_09:n(7*),period_units_10:n(7*),period_units_11:n(7*),period_units_12:n(7*),period_units_13:n(7*)</DD_TABLE_TPL>
+		</RECORD>
+	</ALIAS>
 	<ALIAS id="ddm_keys">
 		<ID id="ddm_keys">DDM_KEYS</ID>
 		<RECORD id="ddm_keys.glm_budgetplans00">
@@ -55,6 +63,13 @@
 			<DD_KEY_DESC id="ddm_keys.glm_budgetplans00">Primary</DD_KEY_DESC>
 			<DD_KEY_ID id="ddm_keys.glm_budgetplans00">PRIMARY         </DD_KEY_ID>
 			<DD_KEY_AUTO_GEN id="ddm_keys.glm_budgetplans00"></DD_KEY_AUTO_GEN>
+		</RECORD>
+		<RECORD id="ddm_keys.glm_budgetplans01">
+			<DD_TABLE_ALIAS id="ddm_keys.glm_budgetplans01">GLM_BUDGETPLANS </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_keys.glm_budgetplans01">01</DD_KEY_NUMBER>
+			<DD_KEY_DESC id="ddm_keys.glm_budgetplans01">By Year + Budget Cd + GL Accnt</DD_KEY_DESC>
+			<DD_KEY_ID id="ddm_keys.glm_budgetplans01">BY_YR_BUDGT_ACCT</DD_KEY_ID>
+			<DD_KEY_AUTO_GEN id="ddm_keys.glm_budgetplans01"></DD_KEY_AUTO_GEN>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_key_segs">
@@ -106,6 +121,54 @@
 			<DD_SEGMENT_SORT id="ddm_key_segs.glm_budgetplans0004">N</DD_SEGMENT_SORT>
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.glm_budgetplans0004">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.glm_budgetplans0004">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.glm_budgetplans0101">
+			<DD_TABLE_ALIAS id="ddm_key_segs.glm_budgetplans0101">GLM_BUDGETPLANS </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.glm_budgetplans0101">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.glm_budgetplans0101">01</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.glm_budgetplans0101">FIRM_ID</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.glm_budgetplans0101">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.glm_budgetplans0101">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.glm_budgetplans0101">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.glm_budgetplans0101">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.glm_budgetplans0101">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.glm_budgetplans0101">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.glm_budgetplans0102">
+			<DD_TABLE_ALIAS id="ddm_key_segs.glm_budgetplans0102">GLM_BUDGETPLANS </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.glm_budgetplans0102">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.glm_budgetplans0102">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.glm_budgetplans0102">YEAR</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.glm_budgetplans0102">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.glm_budgetplans0102">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.glm_budgetplans0102">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.glm_budgetplans0102">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.glm_budgetplans0102">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.glm_budgetplans0102">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.glm_budgetplans0103">
+			<DD_TABLE_ALIAS id="ddm_key_segs.glm_budgetplans0103">GLM_BUDGETPLANS </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.glm_budgetplans0103">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.glm_budgetplans0103">03</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.glm_budgetplans0103">BUDGET_CODE</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.glm_budgetplans0103">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.glm_budgetplans0103">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.glm_budgetplans0103">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.glm_budgetplans0103">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.glm_budgetplans0103">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.glm_budgetplans0103">N</DD_SEGMENT_MATH>
+		</RECORD>
+		<RECORD id="ddm_key_segs.glm_budgetplans0104">
+			<DD_TABLE_ALIAS id="ddm_key_segs.glm_budgetplans0104">GLM_BUDGETPLANS </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.glm_budgetplans0104">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.glm_budgetplans0104">04</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.glm_budgetplans0104">GL_ACCOUNT</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.glm_budgetplans0104">0</DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.glm_budgetplans0104">0</DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.glm_budgetplans0104">0</DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.glm_budgetplans0104">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.glm_budgetplans0104">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.glm_budgetplans0104">N</DD_SEGMENT_MATH>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cols">
