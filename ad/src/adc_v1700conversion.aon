@@ -73,12 +73,14 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
         sysinfo$=stbl("+SYSINFO",err=*next)
 
         rem --- Open File(s)
-        num_files=4
+        num_files=6
         dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
         open_tables$[1]="ADM_FIRMS",      open_opts$[1]="OTA"
         open_tables$[2]="GLS_CALENDAR",   open_opts$[2]="OTA"
         open_tables$[3]="GLS_PARAMS",     open_opts$[3]="OTA"
         open_tables$[4]="GLT_TRANSDETAIL",open_opts$[4]="OTA"
+        open_tables$[5]="GLM_ACCTBUDGET", open_opts$[5]="OTA"
+        open_tables$[6]="GLM_BUDGETPLANS",open_opts$[6]="OTA"
 
         gosub open_tables
 
@@ -86,13 +88,16 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
         glsCalendar_dev=num(open_chans$[2])
         glsParams_dev=num(open_chans$[3])
         gltTransdetail_dev=num(open_chans$[4])
+        glmAcctBudget_dev=num(open_chans$[5])
+        glmBudgetPlans_dev=num(open_chans$[6])
         dim admFirms$:open_tpls$[1]
         dim glsCalendar$:open_tpls$[2]
         dim glsParams$:open_tpls$[3]
         dim gltTransdetail$:open_tpls$[4]
+        dim glmAcctBudget$:open_tpls$[5]
+        dim glmBudgetPlans$:open_tpls$[6]
 
         rem --- Initialize new CREATE_NEXT_CAL field in GLS_PARAMS
-
         read(glsParams_dev,key="",dom=*next)
         while 1
             readrecord(glsParams_dev,end=*break)glsParams$
@@ -310,7 +315,7 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
         rem --- If there are no next year transactions in GLT_TRANSDETAIL (glt-06), then
         rem --- copy current fiscal year's calendar to next year's fiscal calendar.
 
-            rem --- Increment progress meter
+        rem --- Increment progress meter
         meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": GLS_CALENDAR "+
 :           Translate!.getTranslation("AON_NEXT_YEAR","Next Year")+" "+
 :           Translate!.getTranslation("DDM_TABLES-GLS_CALENDAR-DD_ATTR_WINT","Fiscal Calendar")
@@ -397,6 +402,126 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
         sqlprep(sql_chan)sql_prep$
         sqlexec(sql_chan)
 
+        rem --- Split GLM_ACCTSUMMARY (glm-02) into three files
+
+        use ::glo_DisplayColumns.aon::DisplayColumns
+
+        if convCtrl!.getProperty("data_source")="OCJ" then
+            rem --- Data upgraded via EM Update Wizard (OCJ)
+            rem --- Need to build GLM_ACCTSUMMARY, GLM_ACCTBUDGET and GLM_BUDGETPLANS from old/source GLM_ACCTSUMMARY (glm-02)
+
+            rem --- Open old/source GLM_ACCTSUMMARY (glm-02)
+            oldStbl$="+OPDATA"
+            oldFile$="glm-02"
+            gosub get_path_to_old_file
+            old_glm02$=oldPathToFile$
+            open_success=0
+            old_glm02_dev=unt
+            open(old_glm02_dev,err=*next)old_glm02$; open_success=1
+            if !open_success then
+                rem --- Required file missing
+                msg_id$="AD_FILE_MISSING"
+                dim msg_tokens$[1]
+                msg_tokens$[1]=old_opt11$
+                gosub disp_message
+                err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                   Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+old_glm02$+" *****"
+                goto done
+            endif
+
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": GLM_ACCTSUMMARY, GLM_ACCTBUDGET and GLM_BUDGETPLANS "+
+:               Translate!.getTranslation("AON_FROM_","From ")+old_glm02$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+
+            rem --- Get record template for old/source GLM_ACCTSUMMARY (glm-02) file
+            old_table$="GLM_ACCTSUMMARY"
+            tpl_found=0
+            rem --- ddm_table_tpls and ddm_table_tpls$ previously initialized for old GLS_PARAMS
+            findrecord(ddm_table_tpls,key=pad(old_table$,16),dom=*next)ddm_table_tpls$;tpl_found=1
+            if tpl_found then
+                dim old_glm02_tpl$:ddm_table_tpls.template$
+
+goto wgh2_8492; rem wgh ... 8492 ... GLM_ACCTSUMMARY
+                rem --- Clear and open new GLM_ACCTSUMMARY (glm-02) file
+                num_files=1
+                dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                open_tables$[1]="GLM_ACCTSUMMARY", open_opts$[1]="IOTA"
+                gosub open_tables
+                glmAcctSummary_dev=num(open_chans$[1])
+                dim glmAcctSummary$:open_tpls$[1]
+wgh2_8492: rem wgh ... 8492 ... GLM_ACCTSUMMARY
+
+                rem --- Loop thru old/source GLM_ACCTSUMMARY (glm-02) and write records to appropriate new file
+                firm_id$=""
+                read(old_glm02_dev,key="",dom=*next)
+                while 1
+                    readrecord(old_glm02_dev,end=*break)old_glm02_tpl$
+                    if old_glm02_tpl.firm_id$<>firm_id$ then
+                        firm_id$=old_glm02_tpl.firm_id$
+                        displayColumns!=new DisplayColumns(firm_id$)
+                    endif
+
+                    if displayColumns!.getActBud(old_glm02_tpl.record_id$)="A" then
+                        rem --- Actuals, GLM_ACCTSUMMARY
+rem wgh ... 8492 ... GLM_ACCTSUMMARY
+rem ... ... if A, write to GLM_ACCTSUMMARY
+rem ... ... ... YEAR=DisplayColumns!.getYear(RECORD_ID)
+                    else
+                        if pos(old_glm02_tpl.record_id$="012345") then
+                            rem --- Budget, GLM_ACCTBUDGET
+                            redim glmAcctBudget$
+                            call pgmdir$+"adc_copyfile.aon",old_glm02_tpl$,glmAcctBudget$,status
+                            if status then break
+                            glmAcctBudget.year$=DisplayColumns!.getYear(old_glm02_tpl.record_id$)
+                            writerecord(glmAcctBudget_dev)glmAcctBudget$
+                        else
+                            rem --- Planned budget, GLM_BUDGETPLANS
+                            redim glmBudgetPlans$
+                            call pgmdir$+"adc_copyfile.aon",old_glm02_tpl$,glmBudgetPlans$,status
+                            if status then break
+                            glmBudgetPlans.year$=DisplayColumns!.getYear(old_glm02_tpl.record_id$)
+                            glmBudgetPlans.budget_code$=old_glm02_tpl.record_id$
+                            writerecord(glmBudgetPlans_dev)glmBudgetPlans$
+                        endif
+                    endif
+                    if status then break
+                wend
+                if status then
+                    rem --- Conversion did NOT complete successfully, exit with error message
+                    err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                       Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
+:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+convCtrl!.getProperty(conv_marker_name$(2))+" *****"
+                    goto done
+                endif
+            else
+                rem --- Required template missing
+                meter_text$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+Translate!.getTranslation("AON_VERSION","Verion")+" "+convCtrl!.getProperty("start_version")+
+:                   " "+Translate!.getTranslation("AON_TEMPLATE_NOT_FOUND","Template not found")+": "+ope_table$+" *****"
+                meter_proc_recs=meter_proc_recs+1
+                meter_action$="MTR-LST"
+                gosub disp_meter
+                print(log_dev)meter_text$
+                status=1
+                return
+            endif
+        else
+            rem --- Data upgraded via DataPort
+            rem --- Need to build GLM_ACCTBUDGET and GLM_BUDGETPLANS from GLM_ACCTSUMMARY
+
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": GLM_ACCTBUDGET and GLM_BUDGETPLANS "+
+:               Translate!.getTranslation("AON_FROM_","From ")+"GLM_ACCTSUMMARY"
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+
+rem wgh ... 8492 ... do DataPort stuff here
+        endif
     else
         rem --- Increment progress meter
         meter_text$=this_module$+" "+Translate!.getTranslation("AON_NOT","Not")+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
@@ -434,7 +559,8 @@ done: rem --- Done, close things up
 
     rem --- Close opened files
     if ddm_table_tpls then close(ddm_table_tpls,err=*next)
-    if old_glsParams_dev then close(old_opt11_dev,err=*next)
+    if old_glsParams_dev then close(old_glsParams_dev,err=*next)
+    if old_glm02_dev then close(old_glm02_dev,err=*next)
 
     if completed_successfully then conv_status=0; rem --- no errors encountered
 	goto std_exit
