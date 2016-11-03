@@ -329,13 +329,15 @@ rem --- Validate period ending date
 	if abort then break
 [[GLS_CALENDAR.BSHO]]
 rem -- Get GL parameters
-	num_files=5
+	num_files=7
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="GLT_TRANSDETAIL",open_opts$[2]="OTA"
 	open_tables$[3]="GLM_ACCTSUMMARY",open_opts$[3]="OTA"
 	open_tables$[4]="ADS_COMPINFO",open_opts$[4]="OTA"
 	open_tables$[5]="GLW_ACCTSUMMARY",open_opts$[5]="OTA"
+	open_tables$[6]="GLM_ACCTBUDGET",open_opts$[6]="OTA"
+	open_tables$[7]="GLM_BUDGETPLANS",open_opts$[7]="OTA"
 	gosub open_tables
 	gls_params_dev=num(open_chans$[1])
 	dim gls_params$:open_tpls$[1]
@@ -416,7 +418,6 @@ rem --- Can only delete fiscal calendars where there is no corresponding data in
 rem --- GLM_ACCTSUMMARY (glm-02), GLM_ACCTBUDGET and GLM_BUDGETPLANS.
 	glm_acctsummary_dev=fnget_dev("GLM_ACCTSUMMARY")
 	dim glm_acctsummary$:fnget_tpl$("GLM_ACCTSUMMARY")
-
 	cal_in_use=0
 	read(glm_acctsummary_dev,key=firm_id$,dom=*next)
 	while 1
@@ -426,6 +427,25 @@ rem --- GLM_ACCTSUMMARY (glm-02), GLM_ACCTBUDGET and GLM_BUDGETPLANS.
 			break
 		endif
 	wend
+
+	if !cal_in_use then
+		year$=callpoint!.getColumnData("GLS_CALENDAR.YEAR")
+		glm_acctbudget_dev=fnget_dev("GLM_ACCTBUDGET")
+		dim glm_acctbudget$:fnget_tpl$("GLM_ACCTBUDGET")
+		read(glm_acctbudget_dev,key=firm_id$+year$,knum="BY_YEAR_ACCT",dom=*next)
+		readrecord(glm_acctbudget_dev)glm_acctbudget$
+		if glm_acctbudget.year$=year$ then cal_in_use=1
+	endif
+
+	if !cal_in_use then
+		year$=callpoint!.getColumnData("GLS_CALENDAR.YEAR")
+		glm_budgetplans_dev=fnget_dev("GLM_BUDGETPLANS")
+		dim glm_budgetplans$:fnget_tpl$("GLM_BUDGETPLANS")
+		read(glm_budgetplans_dev,key=firm_id$+year$,knum="BY_YR_BUDGT_ACCT",dom=*next)
+		readrecord(glm_budgetplans_dev)glm_budgetplans$
+		if glm_budgetplans.year$=year$ then cal_in_use=1
+	endif
+
 	if cal_in_use then
 		msg_id$="GL_CANNOT_DEL_CAL"
 		gosub disp_message
