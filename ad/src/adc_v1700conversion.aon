@@ -403,7 +403,7 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
         sqlexec(sql_chan)
 
         rem --- Does conversion marker file exist for splitting GLM_ACCTSUMMARY (glm-02) into three files?
-        conv_marker_name$="1700_glm-02"
+        conv_marker_name$="v1700_glm-02"
         conv_marker_file$=dataDir$+conv_marker_name$
         convmarkerFile!=new File(conv_marker_file$)
         if convmarkerFile!.exists() then
@@ -502,15 +502,8 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
                                     writerecord(glmBudgetPlans_dev)glmBudgetPlans$
                                 endif
                             endif
-                            if status then break
+
                         wend
-                        if status then
-                            rem --- Conversion did NOT complete successfully, exit with error message
-                            err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
-:                               Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
-:                               Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+convCtrl!.getProperty(conv_marker_name$(2))+" *****"
-                            goto done
-                        endif
                     else
                         rem --- Required template missing
                         meter_text$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+Translate!.getTranslation("AON_VERSION","Verion")+" "+convCtrl!.getProperty("start_version")+
@@ -520,7 +513,7 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
                         gosub disp_meter
                         print(log_dev)meter_text$
                         status=1
-                        return
+                        goto done
                     endif
                 else
                     rem --- Data upgraded via DataPort
@@ -533,8 +526,80 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
                     meter_action$="MTR-LST"
                     gosub disp_meter
                     print(log_dev)meter_text$
+
+                    rem --- Open File(s)
+                    num_files=1
+                    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                    open_tables$[1]="GLM_ACCTSUMMARY", open_opts$[1]="OTA"
+            
+                    gosub open_tables
+            
+                    glmAcctSummary_dev=num(open_chans$[1])
+                    dim glmAcctSummary$:open_tpls$[1]
+
+                    rem --- Replace old RECORD_ID with correct YEAR, and split budgets into separate files
+                    firm_id$=""
+                    read(glmAcctSummary_dev,key="",dom=*next)
+                    while 1
+                        glmAcctSummary_key$=key(glmAcctSummary_dev,end=*break)
+                        readrecord(glmAcctSummary_dev,end=*break)glmAcctSummary$
+                        if glmAcctSummary.firm_id$<>firm_id$ then
+                            firm_id$=glmAcctSummary.firm_id$
+                            displayColumns!=new DisplayColumns(firm_id$)
+                        endif
+                        record_id$=cvs(glmAcctSummary.year$,2)
+                        if len(record_id$)<>1 then continue
         
-rem wgh ... 8492 ... do DataPort stuff here
+                        if displayColumns!.getActBud(record_id$)="A" then
+                            rem --- Actuals, GLM_ACCTSUMMARY
+                            glmAcctSummary.year$=DisplayColumns!.getYear(record_id$)
+                            writerecord(glmAcctSummary_dev)glmAcctSummary$
+                        else
+                            if pos(record_id$="135") then
+                                rem --- Budget, GLM_ACCTBUDGET
+                                rem --- NOTE: Can write glmAccSummary$ record directly to glm_acctbudget file
+                                rem --- since templates are the same for both files.
+                                glmAcctSummary.year$=DisplayColumns!.getYear(record_id$)
+                                writerecord(glmAcctBudget_dev)glmAcctSummary$
+                            else
+                                rem --- Planned budget, GLM_BUDGETPLANS
+                                redim glmBudgetPlans$
+                                call pgmdir$+"adc_copyfile.aon",glmAcctSummary$,glmBudgetPlans$,status
+                                if status then break
+                                glmBudgetPlans.year$=DisplayColumns!.getYear(record_id$)
+                                glmBudgetPlans.budget_code$=record_id$
+                                writerecord(glmBudgetPlans_dev)glmBudgetPlans$
+                            endif
+                        endif
+
+                        remove(glmAcctSummary_dev,key=glmAcctSummary_key$)
+                    wend
+                endif
+                if status=0 then
+                    rem --- Conversion completed successfully
+                    rem --- Increment progress meter
+                    meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+convCtrl!.getProperty(conv_marker_name$(2))
+                    meter_proc_recs=meter_proc_recs+1
+                    meter_action$="MTR-LST"
+                    gosub disp_meter
+                    print(log_dev)meter_text$
+
+                    rem --- Delete conversion marker file
+                    if convmarkerFile!.delete() then
+                        rem --- Increment progress meter
+                        meter_text$=Translate!.getTranslation("AON_CONV_MARKER_DELETED","Conversion marker file deleted")+": "+conv_marker_file$
+                        meter_proc_recs=meter_proc_recs+1
+                        meter_action$="MTR-LST"
+                        gosub disp_meter
+                        print(log_dev)meter_text$
+                    endif
+                else
+                    rem --- Conversion did NOT complete successfully, exit with error message
+                    err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                       Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
+:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+convCtrl!.getProperty(conv_marker_name$(2))+" *****"
+                    goto done
                 endif
             else
                 rem --- Required file missing
