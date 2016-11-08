@@ -14,11 +14,14 @@ rem --- program is only run if the user has chosen NOT to reprint
 rem --- existing reports. The next overlay is glr_headings, which
 rem --- assembles the custom headings for the financial reports.
 
+    use ::glo_DisplayColumns.aon::DisplayColumns
+
     setesc std_error
     seterr std_error
 
 rem --- Initializations
 
+    displayColumns!=new DisplayColumns(firm_id$)
     records$=""
     currec$=""
     prirec$=""
@@ -161,8 +164,8 @@ summary_activity: rem --- Retrieve either current or prior year Summary Activity
     dim a[mp],u[mp]
     glm02a.firm_id$=glm01a.firm_id$
     glm02a.gl_account$=glm01a.gl_account$
-    glm02a.record_id$=record_id$
-    glm02_key$=glm02a.firm_id$+glm02a.gl_account$+glm02a.record_id$
+    glm02a.year$=displayColumns!.getYear(record_id$)
+    glm02_key$=glm02a.firm_id$+glm02a.gl_account$+glm02a.year$
     find record (glm02_dev,key=glm02_key$,dom=*next) glm02a$
     call pgmdir$+"glc_summary.aon","R",glm02a$,a[all],u[all],status
     return

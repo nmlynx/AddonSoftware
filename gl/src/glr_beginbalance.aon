@@ -27,6 +27,8 @@ rem --- UPDATE$ : Y=Year End Update (user prompted for permission to close year)
 rem ---         : N=Update Beginning Balances (user prompted for approval to
 rem ---         :   produce the register).
 
+    use ::glo_DisplayColumns.aon::DisplayColumns
+
     setesc std_error
     seterr std_error
 
@@ -110,6 +112,8 @@ rem --- Retrieve parameter records
         gosub disp_message
         goto std_exit_no_print
     endif
+
+    displayColumns!=new DisplayColumns(firm_id$)
 
 rem --- Check Daily Detail file
 
@@ -196,7 +200,7 @@ rem --- Read next account master
 
           rem --- Retrieve account summary record
 
-          glm02_key$=firm_id$+glm01a.gl_account$+record$
+          glm02_key$=firm_id$+glm01a.gl_account$+displayColumns!.getYear(record$)
           find record (glm02_dev,key=glm02_key$,dom=*continue)glm02a$
           call pgmdir$+"glc_summary.aon",action$,glm02a$,a[all],u[all],status
 

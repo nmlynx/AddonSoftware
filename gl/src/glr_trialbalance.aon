@@ -8,6 +8,8 @@ rem  |  Copyright BASIS International Ltd.  All Rights Reserved.
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
 
+    use ::glo_DisplayColumns.aon::DisplayColumns
+
     setesc std_error
     seterr std_error
 
@@ -60,6 +62,8 @@ rem --- Retrieve parameter records
         gosub disp_message
         goto std_exit
     endif
+
+    displayColumns!=new DisplayColumns(firm_id$)
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,0
     m1=len(m1$)
@@ -174,7 +178,7 @@ rem --- Read next glm-01 record
           rem --- Read glm-02 record
 
           action$="R"
-          glm02_key$=firm_id$+glm01a.gl_account$+record$
+          glm02_key$=firm_id$+glm01a.gl_account$+displayColumns!.getYear(record$)
 
           find record (glm02_dev,key=glm02_key$,dom=*continue)glm02a$
           call pgmdir$+"glc_summary.aon",action$,glm02a$,a[all],u[all],status

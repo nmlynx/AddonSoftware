@@ -14,6 +14,8 @@ rem --- program is only run if the user has chosen NOT to reprint
 rem --- existing reports. The next overlay is glr_headings, which
 rem --- assembles the custom headings for the financial reports.
 
+    use ::glo_DisplayColumns.aon::DisplayColumns
+
     setesc std_error
     seterr std_error
 
@@ -28,6 +30,7 @@ rem --- Parameters
 
 rem --- Initializations
 
+    displayColumns!=new DisplayColumns(firm_id$)
     dim a[mp],u[mp],d[mt],y[mt]
     cpn$="CPN"
     pqy$="PQY"
@@ -108,8 +111,9 @@ rem --- Read next GL Account Master (glm-01) record
               redim glm02a$
               glm02a.firm_id$=glm01a.firm_id$
               glm02a.gl_account$=glm01a.gl_account$
-              glm02a.record_id$=records$(r,1)
-              glm02_key$=glm02a.firm_id$+glm02a.gl_account$+glm02a.record_id$
+              glm02a.year$=displayColumns!.getYear(records$(r,1))
+              glm02_key$=glm02a.firm_id$+glm02a.gl_account$+glm02a.year$
+              if displayColumns!.getActBud(records$(r,1))="B" then glm02_dev=glm_acctbudget_dev
               find record (glm02_dev,key=glm02_key$,dom=*next) glm02a$
               call pgmdir$+"glc_summary.aon","R",glm02a$,a[all],u[all],status
               for x=0 to mp

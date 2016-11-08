@@ -8,6 +8,8 @@ rem  |  Copyright BASIS International Ltd.  All Rights Reserved.
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
 
+    use ::glo_DisplayColumns.aon::DisplayColumns
+
     setesc std_error
     seterr std_error
 
@@ -84,6 +86,8 @@ rem --- Retrieve parameter records
         gosub disp_message
         goto std_exit_no_report
     endif
+    
+    displayColumns!=new DisplayColumns(firm_id$)
     units_flag$=gls01a.units_flag$
     total_pers=num(gls_calendar.total_pers$)
     call "adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
@@ -501,7 +505,7 @@ rem --- Load summary activity for account
     for x=1 to records
         dim a[mp],u[mp]
         y=(x-1)*mp+(x-1)*1
-        glm02_key$=glm01a.firm_id$+glm01a.gl_account$+records$(x,1)
+        glm02_key$=glm01a.firm_id$+glm01a.gl_account$+displayColumns!.getYear(records$(x,1))
         find record (glm02_dev,key=glm02_key$,dom=*continue) glm02a$
         call stbl("+DIR_PGM")+"glc_summary.aon","R",glm02a$,a[all],u[all],status
         for p=0 to mp
