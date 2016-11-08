@@ -8,6 +8,8 @@ rem  |  Copyright BASIS International Ltd.  All Rights Reserved.
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
 
+    use ::glo_DisplayColumns.aon::DisplayColumns
+
     setesc std_error
     seterr std_error
 
@@ -26,19 +28,24 @@ rem --- Open/Lock files
 
     files=4,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="glm_acctbudget",ids$[1]="GLM_ACCTBUDGET"
     files$[2]="glm-01",ids$[2]="GLM_ACCT"
-    files$[3]="glm-02",ids$[3]="GLM_ACCTSUMMARY"
+    files$[3]="glm_budgetplans",ids$[3]="GLM_BUDGETPLANS"
     files$[4]="glm-08",ids$[4]="GLM_BUDGETMASTER"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
+    glm_acctbudget_dev=channels[1]
     glm01_dev=channels[2]
-    glm02_dev=channels[3]
+    glm_budgetplans_dev=channels[3]
     glm08_dev=channels[4]
 
 rem --- Dimension string templates
 
-    dim glm01a$:templates$[2],glm02a$:templates$[3],glm08a$:templates$[4]
+    dim glm_acctbudget$:templates$[1]
+    dim glm01a$:templates$[2]
+    dim glm_budgetplans$:templates$[3]
+    dim glm08a$:templates$[4]
 
 rem --- Assign input values to local variables
 
@@ -63,6 +70,7 @@ rem --- Retrieve parameter and budget revision records
 
 rem --- Initializations
 
+    displayColumns!=new DisplayColumns(firm_id$)
     factor=10^pos(glm08a.rounding$="D-HT")/10
     wildcard$=cvs(glm08a.gl_wildcard$,2)
     k$=firm_id$+glm08a.gl_account_01$
@@ -89,12 +97,12 @@ rem --- Get next account master
           if status continue
   
 
-          rem --- Retrieve source glm-02 record
+          rem --- Retrieve source record
 
           dim a[mp],u[mp]
-          glm02_key$=glm01a.firm_id$+glm01a.gl_account$+glm08a.revision_src$(1,1)
-          find record (glm02_dev,key=glm02_key$,dom=*next) glm02a$
-          call pgmdir$+"glc_summary.aon","R",glm02a$,a[all],u[all],status
+          glm_budgetplans_key$=glm01a.firm_id$+glm01a.gl_account$+displayColumns!.getYear(glm08a.revision_src$(1,1))+glm08a.revision_src$(1,1)
+          find record (glm_budgetplans_dev,key=glm_budgetplans_key$,dom=*next) glm_budgetplans$
+          call pgmdir$+"glc_summary.aon","R",glm_budgetplans$,a[all],u[all],status
 
           rem --- Amounts or Units?
 
@@ -115,23 +123,23 @@ rem --- Get next account master
           rem --- Retrieve current budget summary record
 
           dim a[mp],u[mp]
-          glm02a.firm_id$=glm01a.firm_id$
-          glm02a.gl_account$=glm01a.gl_account$
-          glm02a.record_id$=glm08a.budget_code$
-          extract record (glm02_dev,key=glm02a.firm_id$+glm02a.gl_account$+
-:           glm02a.record_id$,dom=update_budget) glm02a$; rem Advisory Locking
-          if glm08a.overwrite$<>"Y" then read(glm02_dev); continue
+          glm_acctbudget.firm_id$=glm01a.firm_id$
+          glm_acctbudget.gl_account$=glm01a.gl_account$
+          glm_acctbudget.year$=displayColumns!.getYear(glm08a.budget_code$)
+          extract record (glm_acctbudget_dev,key=glm_acctbudget.firm_id$+glm_acctbudget.gl_account$+
+:           glm_acctbudget.year$,dom=update_budget) glm_acctbudget$; rem Advisory Locking
+          if glm08a.overwrite$<>"Y" then read(glm_acctbudget_dev); continue
 
           update_budget: rem --- Update/create summary record for this account/budget revision
 
-          call pgmdir$+"glc_summary.aon","R",glm02a$,a[all],u[all],status
+          call pgmdir$+"glc_summary.aon","R",glm_acctbudget$,a[all],u[all],status
           for x=0 to mp
               if type$="A" a[x]=b[x]
               if type$="U" u[x]=b[x]
           next x
-          call pgmdir$+"glc_summary.aon","U",glm02a$,a[all],u[all],status
-          glm02a$=field(glm02a$)
-          write record (glm02_dev) glm02a$
+          call pgmdir$+"glc_summary.aon","U",glm_acctbudget$,a[all],u[all],status
+          glm_acctbudget$=field(glm_acctbudget$)
+          write record (glm_acctbudget_dev) glm_acctbudget$
 
           rem --- Loop back for next account master record
 

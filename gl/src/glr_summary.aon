@@ -27,6 +27,8 @@ rem --- AU$      : Up to four flags for amounts or units
 rem --- At least one id and corresponding amount/units flag must be
 rem --- specified.
 
+    use ::glo_DisplayColumns.aon::DisplayColumns
+
     setesc std_error
     seterr std_error
 
@@ -46,7 +48,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=6,begfile=1,endfile=files
+    files=8,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="gls_params",ids$[1]="GLS_PARAMS"
     files$[2]="glm-01",ids$[2]="GLM_ACCT"
@@ -54,20 +56,24 @@ rem --- Open/Lock files
     files$[4]="glm-08",ids$[4]="GLM_BUDGETMASTER"
     files$[5]="glm-18",ids$[5]="GLM_RECORDTYPES"
     files$[6]="gls_calendar",ids$[6]="GLS_CALENDAR"
+    files$[7]="glm_acctbudget",ids$[7]="GLM_ACCTBUDGET"
+    files$[8]="glm_budgetplans",ids$[8]="GLM_BUDGETPLANS"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     gls01_dev=channels[1]
     glm01_dev=channels[2]
-    glm02_dev=channels[3]
+    glm_acctsummary_dev=channels[3]
     glm08_dev=channels[4]
     glm18_dev=channels[5]
     gls_calendar_dev=channels[6]
+    glm_acctbudget_dev=channels[7]
+    glm_budgetplans_dev=channels[8]
 
 rem --- Dimension string templates
 
     dim gls01a$:templates$[1],glm01a$:templates$[2],glm02a$:templates$[3],glm08a$:templates$[4],glm18a$:templates$[5]
-    dim gls_calendar$:templates$[6]
+    dim gls_calendar$:templates$[6],glm_budgetplans$:templates$[8]
 
 rem --- Retrieve parameter records
 
@@ -81,6 +87,8 @@ rem --- Retrieve parameter records
         gosub disp_message
         goto std_exit
     endif
+    
+    displayColumns!=new DisplayColumns(firm_id$)
     units_flag$=gls01a.units_flag$
     rem m0$=gls01a.acct_output$ -- using mask from Barista system masks file
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
@@ -284,9 +292,20 @@ rem --- Get next GL Account Master (glm-01) record
                 findrecord(glwAcctSummary_dev,key=glwAcctSummary_key$,dom=build_detail,knum="BY_ACCOUNT_YEAR")glwAcctSummary$
                 call pgmdir$+"glc_summary.aon","R",glwAcctSummary$,a[all],u[all],status
             else
-                glm02_key$=glm01a.firm_id$+glm01a.gl_account$+record_id$
-                find record (glm02_dev,key=glm02_key$,dom=build_detail)glm02a$
-                call pgmdir$+"glc_summary.aon","R",glm02a$,a[all],u[all],status
+                if displayColumns!.getActBud(record_id$)="P" then
+                    glm_budgetplans_key$=glm01a.firm_id$+glm01a.gl_account$+displayColumns!.getYear(record_id$)+record_id$
+                    find record (glm_budgetplans_dev,key=glm_budgetplans_key$,dom=build_detail)glm_budgetplans$
+                    call pgmdir$+"glc_summary.aon","R",glm_budgetplans$,a[all],u[all],status
+                else
+                    if displayColumns!.getActBud(record_id$)="A" then
+                        glm02_dev=glm_acctsummary_dev
+                    else
+                        glm02_dev=glm_acctbudget_dev
+                    endif
+                    glm02_key$=glm01a.firm_id$+glm01a.gl_account$+displayColumns!.getYear(record_id$)
+                    find record (glm02_dev,key=glm02_key$,dom=build_detail)glm02a$
+                    call pgmdir$+"glc_summary.aon","R",glm02a$,a[all],u[all],status
+                endif
             endif
     
               build_detail: rem --- Build detail line array

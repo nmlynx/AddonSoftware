@@ -8,6 +8,8 @@ rem  |  Copyright BASIS International Ltd.  All Rights Reserved.
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
 
+    use ::glo_DisplayColumns.aon::DisplayColumns
+
     setesc std_error
     seterr std_error
 
@@ -32,19 +34,24 @@ rem --- Open/Lock files
 
     files=4,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="glm_acctbudget",ids$[1]="GLM_ACCTBUDGET"
     files$[2]="glm-01",ids$[2]="GLM_ACCT"
-    files$[3]="glm-02",ids$[3]="GLM_ACCTSUMMARY"
+    files$[3]="glm_budgetplans",ids$[3]="GLM_BUDGETPLANS"
     files$[4]="glm-08",ids$[4]="GLM_BUDGETMASTER"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
+    glm_acctbudget_dev=channels[1]
     glm01_dev=channels[2]
-    glm02_dev=channels[3]
+    glm_budgetplans_dev=channels[3]
     glm08_dev=channels[4]
 
 rem --- Dimension string templates
 
-    dim glm01a$:templates$[2],glm02a$:templates$[3],glm08a$:templates$[4]
+    dim glm_acctbudget$:templates$[1]
+    dim glm01a$:templates$[2]
+    dim glm_budgetplans$:templates$[3]
+    dim glm08a$:templates$[4]
 
 
 rem --- Retrieve parameter records
@@ -57,6 +64,7 @@ rem --- Retrieve parameter records
 
 rem --- Initializations
 
+    displayColumns!=new DisplayColumns(firm_id$)
     dim a[mp],u[mp]
     more=1
     record$="1"
@@ -94,12 +102,12 @@ rem --- Get next GL account master
           gosub wildcard
           if status continue
 
-          rem --- Retrieve budget (glm-02) record
+          rem --- Retrieve budget record
 
           dim a[mp],u[mp]
-          glm02_key$=firm_id$+glm01a.gl_account$+id$
-          find record (glm02_dev,key=glm02_key$,dom=*continue) glm02a$
-          call pgmdir$+"glc_summary.aon","R",glm02a$,a[all],u[all],status
+          glm_budgetplans_key$=firm_id$+glm01a.gl_account$+displayColumns!.getYear(id$)+id$
+          find record (glm_budgetplans_dev,key=glm_budgetplans_key$,dom=*continue) glm_budgetplans$
+          call pgmdir$+"glc_summary.aon","R",glm_budgetplans$,a[all],u[all],status
 
           rem --- Amounts or Units?
 
@@ -109,19 +117,21 @@ rem --- Get next GL account master
               if au$="U" b[x]=u[x]
           next x
 
-          rem --- Update current/next year GL Account Summary (glm-02) record
+          rem --- Update current/next year budget record
 
           dim a[mp],u[mp]
-          glm02_key$=firm_id$+glm01a.gl_account$+record$
-          glm02a.firm_id$=firm_id$,glm02a.gl_account$=glm01a.gl_account$,glm02a.record_id$=record$
-          extract record (glm02_dev,key=glm02_key$,dom=*next) glm02a$; rem Advisory Locking
+          glm_acctbudget_key$=firm_id$+glm01a.gl_account$+record$
+          glm_acctbudget.firm_id$=firm_id$
+          glm_acctbudget.gl_account$=glm01a.gl_account$
+          glm_acctbudget.year$=displayColumns!.getYear(record$)
+          extract record (glm_acctbudget_dev,key=glm_acctbudget_key$,dom=*next) glm_acctbudget$; rem Advisory Locking
           for x=0 to mp
               if au$="A" a[x]=b[x]
               if au$="U" u[x]=b[x]
           next x
-          call pgmdir$+"glc_summary.aon","U",glm02a$,a[all],u[all],status
-          glm02a$=field(glm02a$)
-          write record (glm02_dev) glm02a$
+          call pgmdir$+"glc_summary.aon","U",glm_acctbudget$,a[all],u[all],status
+          glm_acctbudget$=field(glm_acctbudget$)
+          write record (glm_acctbudget_dev) glm_acctbudget$
 
           rem --- Loop back for next glm-01 record
 
