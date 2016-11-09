@@ -95,14 +95,21 @@ rem --- Needed classes
 use ::glo_AlignFiscalCalendar.aon::AlignFiscalCalendar
 use ::ado_util.src::util
 
+rem --- Initialize displayColumns! object
+use ::glo_DisplayColumns.aon::DisplayColumns
+displayColumns!=new DisplayColumns(firm_id$)
+callpoint!.setDevObject("displayColumns",displayColumns!)
+
 rem --- init...open tables, define custom grid, etc.
-num_files=5
+num_files=7
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
 open_tables$[2]="GLM_ACCTSUMMARY",open_opts$[2]="OTA"
 open_tables$[3]="GLM_RECORDTYPES",open_opts$[3]="OTA"
 open_tables$[4]="GLS_CALENDAR",open_opts$[4]="OTA"
 open_tables$[5]="GLW_ACCTSUMMARY",open_opts$[5]="OTA"
+open_tables$[6]="GLM_ACCTBUDGET",open_opts$[6]="OTA"
+open_tables$[7]="GLM_BUDGETPLANS",open_opts$[7]="OTA"
 
 gosub open_tables
 
@@ -309,19 +316,16 @@ if ctl_ID=num(user_tpl.grid_ctlID$)
 					record_type$=gridActivity!.getCellText(curr_row,curr_col)
 					record_type$=record_type$(pos("("=record_type$,-1,1)+1,2)
 
+					displayColumns!=callpoint!.getDevObject("displayColumns")
+					thisYear$=displayColumns!.getYear(record_type$(1,1))
+					actbud$=displayColumns!.getActBud(record_type$(1,1))
 					if callpoint!.getDevObject("align_fiscal_periods")="Y" and pos(record_type$(1,1)="24") then
 						rem --- Use GLW_ACCTSUMMARY when fiscal periods are aligned
 						gls_cur_yr$=callpoint!.getDevObject("gls_cur_yr")
-						if record_type$(1,1)="2" then
-							rem --- Prior year
-							thisYear$=str(num(gls_cur_yr$)-1:"0000")
-						else
-							rem --- Next year
-							thisYear$=str(num(gls_cur_yr$)+1:"0000")
-						endif
 						glm02_key$=firm_id$+thisYear$+gls_cur_yr$+callpoint!.getColumnData("GLM_SUMMACTIVITY.GL_ACCOUNT")
 					else
-						glm02_key$=firm_id$+callpoint!.getColumnData("GLM_SUMMACTIVITY.GL_ACCOUNT")+record_type$(1,1)
+						glm02_key$=firm_id$+callpoint!.getColumnData("GLM_SUMMACTIVITY.GL_ACCOUNT")+thisYear$
+						if actbud$="P" then glm02_key$=glm02_key$+record_type$(1,1)
 					endif
 
 					col_type$=record_type$(2,1)
@@ -377,41 +381,55 @@ if ctl_ID=num(user_tpl.grid_ctlID$)
 endif
 [[GLM_SUMMACTIVITY.<CUSTOM>]]
 update_glm_acctsummary:
-rem ---  parse thru gridActivity! and write back any budget recs to glm-02
+rem ---  Parse thru gridActivity! and write back any budget recs to glm-02
+rem --- Only budget and planned budget rows are editable. Actual rows are disabled
 
-rec_id$=gridActivity!.getCellText(curr_row,0)
 cols=vectGLSummary!.size()-2
 if cols>0
-	glm02_dev=fnget_dev("GLM_ACCTSUMMARY")
-	dim glm02a$:fnget_tpl$("GLM_ACCTSUMMARY")
-	glm02a.firm_id$=firm_id$
-	glm02a.gl_account$=callpoint!.getColumnData("GLM_SUMMACTIVITY.GL_ACCOUNT")
-	rec_id$=rec_id$(pos("("=rec_id$,-1,1)+1,2)
-	amt_units$=rec_id$(2,1)
-	glm02a.record_id$=rec_id$(1,1)
-	glm02_key$=glm02a.firm_id$+glm02a.gl_account$+glm02a.record_id$
-	extractrecord(glm02_dev,key=glm02_key$,dom=*next)glm02a$; rem Advisory Locking
+		rec_id$=gridActivity!.getCellText(curr_row,0)
+		rec_id$=rec_id$(pos("("=rec_id$,-1,1)+1,2)
+		amt_units$=rec_id$(2,1)
+		record_id$=rec_id$(1,1)
+		displayColumns!=callpoint!.getDevObject("displayColumns")
+		actbud$=displayColumns!.getActBud(record_id$)
+		if actbud$="P" then
+			budget_dev=fnget_dev("GLM_BUDGETPLANS")
+			dim budget$:fnget_tpl$("GLM_BUDGETPLANS")
+		else
+			budget_dev=fnget_dev("GLM_ACCTBUDGET")
+			dim budget$:fnget_tpl$("GLM_ACCTBUDGET")
+		endif
+
+		budget.firm_id$=firm_id$
+		budget.gl_account$=callpoint!.getColumnData("GLM_SUMMACTIVITY.GL_ACCOUNT")
+		budget.year$=displayColumns!.getYear(record_id$)
+		budget_key$=budget.firm_id$+budget.gl_account$+budget.year$
+		if actbud$="P" then
+			budget.budget_code$=record_id$
+			budget_key$=budget_key$+budget.budget_code$
+		endif
+		extractrecord(budget_dev,key=budget_key$,dom=*next)budget$; rem Advisory Locking
 
 		switch pos(amt_units$="AU")
 			case 1;rem amounts
-				glm02a.begin_amt$=vectGLSummary!.getItem(0)
+				budget.begin_amt$=vectGLSummary!.getItem(0)
 				for x=1 to cols
-					field glm02a$,"PERIOD_AMT_"+str(x:"00")=vectGLSummary!.getItem(x)
+					field budget$,"PERIOD_AMT_"+str(x:"00")=vectGLSummary!.getItem(x)
 				next x
 			break
 
 			case 2; rem units
-				glm02a.begin_units$=vectGLSummary!.getItem(0)
+				budget.begin_units$=vectGLSummary!.getItem(0)
 				for x=1 to cols
-					field glm02a$,"PERIOD_UNITS_"+str(x:"00")=vectGLSummary!.getItem(x)
+					field budget$,"PERIOD_UNITS_"+str(x:"00")=vectGLSummary!.getItem(x)
 				next x
 			break
 		swend
 
-	rem --- write glm-02
+	rem --- write budget
 
-	glm02a$=field(glm02a$)
-	writerecord(glm02_dev)glm02a$
+	budget$=field(budget$)
+	writerecord(budget_dev)budget$
 
 endif
 
@@ -492,19 +510,16 @@ fill_gridActivity:
 
 	for x=0 to num_cols-1
 		recordType$=cols!.getItem(x)
+		displayColumns!=callpoint!.getDevObject("displayColumns")
+		thisYear$=displayColumns!.getYear(recordType$)
+		actbud$=displayColumns!.getActBud(recordType$)
 		if callpoint!.getDevObject("align_fiscal_periods")="Y" and pos(recordType$="24") then
 			rem --- Use GLW_ACCTSUMMARY when fiscal periods are aligned
 			gls_cur_yr$=callpoint!.getDevObject("gls_cur_yr")
-			if recordType$="2" then
-				rem --- Prior year
-				thisYear$=str(num(gls_cur_yr$)-1:"0000")
-			else
-				rem --- Next year
-				thisYear$=str(num(gls_cur_yr$)+1:"0000")
-			endif
-			glm02_key$=firm_id$+thisYear$+gls_cur_yr$+gl_account$
+			glm02_key$=firm_id$+thisYear$+gls_cur_yr$+callpoint!.getColumnData("GLM_SUMMACTIVITY.GL_ACCOUNT")
 		else
-			glm02_key$=firm_id$+gl_account$+recordType$
+			glm02_key$=firm_id$+callpoint!.getColumnData("GLM_SUMMACTIVITY.GL_ACCOUNT")+thisYear$
+			if actbud$="P" then glm02_key$=glm02_key$+recordType$
 		endif
 
 		col_type$=tps!.getItem(x)
@@ -519,19 +534,35 @@ return
 rem =======================================================
 build_vectGLSummary:
 rem glm02_key$:	input
+rem actbud$:		input
 rem col_type$:		input
 rem =======================================================
+	if actbud$="P" then
+		glm_budgetplans_dev=fnget_dev("GLM_BUDGETPLANS")
+		glm_budgetplans_tpl$=fnget_tpl$("GLM_BUDGETPLANS")
+		dim glm_budgetplans$:glm_budgetplans_tpl$
 
-	glm02_dev=fnget_dev("GLM_ACCTSUMMARY")
-	glm02_tpl$=fnget_tpl$("GLM_ACCTSUMMARY")
-	dim glm02a$:glm02_tpl$
+		readrecord(glm_budgetplans_dev,key=glm02_key$,dom=*next)glm_budgetplans$
+	else
+		if actbud$="A" then
+			glm02_dev=fnget_dev("GLM_ACCTSUMMARY")
+			glm02_tpl$=fnget_tpl$("GLM_ACCTSUMMARY")
+			dim glm02a$:glm02_tpl$
 
-	glm02_key_len=len(glm02a.firm_id$)+len(glm02a.gl_account$)+len(glm02a.record_id$)	
-	if callpoint!.getDevObject("align_fiscal_periods")="Y" and len(glm02_key$)>glm02_key_len then
-		rem --- Use GLW_ACCTSUMMARY when fiscal periods are aligned
-		glm02_dev=fnget_dev("GLW_ACCTSUMMARY")
-		glm02_tpl$=fnget_tpl$("GLW_ACCTSUMMARY")
-		dim glm02a$:glm02_tpl$
+			glm02_key_len=len(glm02a.firm_id$)+len(glm02a.gl_account$)+len(glm02a.year$)	
+			if callpoint!.getDevObject("align_fiscal_periods")="Y" and len(glm02_key$)>glm02_key_len then
+				rem --- Use GLW_ACCTSUMMARY when fiscal periods are aligned
+				glm02_dev=fnget_dev("GLW_ACCTSUMMARY")
+				glm02_tpl$=fnget_tpl$("GLW_ACCTSUMMARY")
+				dim glm02a$:glm02_tpl$
+			endif
+		else
+			glm02_dev=fnget_dev("GLM_ACCTBUDGET")
+			glm02_tpl$=fnget_tpl$("GLM_ACCTBUDGET")
+			dim glm02a$:glm02_tpl$
+		endif
+
+		readrecord(glm02_dev,key=glm02_key$,dom=*next)glm02a$
 	endif
 
 	rem --- Display message when calendars have been aligned
@@ -546,21 +577,33 @@ rem =======================================================
 	vectGLSummary!=SysGUI!.makeVector()
 	m1$=user_tpl.amt_mask$
 
-	readrecord(glm02_dev,key=glm02_key$,dom=*next)glm02a$
-
 	switch pos(col_type$="AU")
 		case 1
-			vectGLSummary!.addItem(str(num(glm02a.begin_amt$)))
-			for x1=1 to num_pers
-				vectGLSummary!.addItem(str(num(field(glm02a$,"PERIOD_AMT_"+str(x1:"00")))))
-			next x1
+			if actbud$="P" then
+				vectGLSummary!.addItem(str(num(glm_budgetplans.begin_amt$)))
+				for x1=1 to num_pers
+					vectGLSummary!.addItem(str(num(field(glm_budgetplans$,"PERIOD_AMT_"+str(x1:"00")))))
+				next x1
+			else
+				vectGLSummary!.addItem(str(num(glm02a.begin_amt$)))
+				for x1=1 to num_pers
+					vectGLSummary!.addItem(str(num(field(glm02a$,"PERIOD_AMT_"+str(x1:"00")))))
+				next x1
+			endif
 			gosub calculate_end_bal			
 		break
 		case 2
-			vectGLSummary!.addItem(glm02a.begin_units$)
-			for x1=1 to num_pers
-				vectGLSummary!.addItem(field(glm02a$,"PERIOD_UNITS_"+str(x1:"00")))
-			next x1
+			if actbud$="P" then
+				vectGLSummary!.addItem(glm_budgetplans.begin_units$)
+				for x1=1 to num_pers
+					vectGLSummary!.addItem(field(glm_budgetplans$,"PERIOD_UNITS_"+str(x1:"00")))
+				next x1
+			else
+				vectGLSummary!.addItem(glm02a.begin_units$)
+				for x1=1 to num_pers
+					vectGLSummary!.addItem(field(glm02a$,"PERIOD_UNITS_"+str(x1:"00")))
+				next x1
+			endif
 			gosub calculate_end_bal
 		break
 		case default

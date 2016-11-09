@@ -89,6 +89,8 @@ rem --- Check for activity
 
 rem --- Check glm-02 for activity
 
+	displayColumns!=callpoint!.getDevObject("displayColumns")
+	current_prior_next$=displayColumns!.getYear("0")+":"+displayColumns!.getYear("2")+":"+displayColumns!.getYear("4")
 	glm02_dev=fnget_dev("GLM_ACCTSUMMARY")
 	dim glm02a$:fnget_tpl$("GLM_ACCTSUMMARY")
 	this_acct$=callpoint!.getColumnData("GLM_ACCT.GL_ACCOUNT")
@@ -96,7 +98,7 @@ rem --- Check glm-02 for activity
 	while 1
 		readrecord (glm02_dev,end=*break)glm02a$
 		if pos(firm_id$+this_acct$=glm02a.firm_id$+glm02a.gl_account$)<>1 break
-		if pos(glm02a.record_id$="024")=0 continue
+		if pos(glm02a.year$=current_prior_next$)=0 continue
 		for x=1 to mp
 			if nfield(glm02a$,"period_amt_"+str(x:"00"))<>0 okay$="N"
 			if nfield(glm02a$,"period_units_"+str(x:"00"))<>0 okay$="N"
@@ -375,9 +377,11 @@ rem --- Display MTD and YTD
 	dim glm02$:fnget_tpl$("GLM_ACCTSUMMARY")
 	acct_no$=callpoint!.getColumnData("GLM_ACCT.GL_ACCOUNT")
 	rec_id$=callpoint!.getDevObject("rec_id")
+	displayColumns!=callpoint!.getDevObject("displayColumns")
+	year$=displayColumns!.getYear(rec_id$)
 	cur_per=num(callpoint!.getDevObject("cur_per"))
 
-	read record (glm02_dev,key=firm_id$+acct_no$+rec_id$,dom=*next) glm02$
+	read record (glm02_dev,key=firm_id$+acct_no$+year$,dom=*next) glm02$
 	cur_amt=nfield(glm02$,"period_amt_"+str(cur_per:"00"))
 	ytd_amt=0
 	for x=1 to cur_per
@@ -392,6 +396,12 @@ rem --- Display MTD and YTD
 
 #include std_missing_params.src
 [[GLM_ACCT.BSHO]]
+rem --- Initialize displayColumns! object
+
+	use ::glo_DisplayColumns.aon::DisplayColumns
+	displayColumns!=new DisplayColumns(firm_id$)
+	callpoint!.setDevObject("displayColumns",displayColumns!)
+
 rem --- Open/Lock files
 
 files=3,begfile=1,endfile=files
