@@ -172,8 +172,12 @@ rem ==============================================
 		include_type$="J"; rem "Include Current and Prior Actual summaries; includes GL Record IDs 0, 2
 		acct_type$="I"; rem "Income accounts only
 		do_coa_join$="N"; rem "Change to Y to include a column for Chart of Accts Category 
+        props_name$=stbl("+PROPS_NAME")
+        props_path$=stbl("+PROPS_PATH")
+        user_locale$=stbl("+USER_LOCALE")
 
-		sql$="CALL GLINCTOT_GRD ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
+		sql$="CALL GLINCTOT_GRD ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+
+:       "', '"+props_name$+"', '"+props_path$+"', '"+user_locale$+"')"
 
 		incomeGridDashboardWidget! = BarUtils.addGridDashboardWidget(acctDashboardCategory!,name$,title$,previewText$,previewImage$,sql$)
 		gridWidget!=incomeGridDashboardWidget!.getWidget()
@@ -308,8 +312,12 @@ rem ==============================================
 		
 		rem --- params for calling SPROC
 		include_type$="A"; rem "Include Current Year Actual totals (no data/period filtering)
+        props_name$=stbl("+PROPS_NAME")
+        props_path$=stbl("+PROPS_PATH")
+        user_locale$=stbl("+USER_LOCALE")
 
-		sql$="CALL GLBNKBAL_BAR ('"+firm_id$+"', '"+include_type$+"', '"+masks$+"', '"+barista_wd$+"')"
+		sql$="CALL GLBNKBAL_BAR ('"+firm_id$+"', '"+include_type$+"', '"+masks$+"', '"+barista_wd$+
+:       "', '"+props_name$+"', '"+props_path$+"', '"+user_locale$+"')"
 		
 		bankacctBarChartDashboardWidget! = BarUtils.addBarChartDashboardWidget(acctDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend,sql$)
 		acctWidget! = bankacctBarChartDashboardWidget!.getWidget()
@@ -345,8 +353,12 @@ rem ==============================================
 		rem --- params for calling SPROC
 		include_type$="A"; rem "Include Current Year Actual totals
 		min_amt = 600; rem Hardcoded for now
+        props_name$=stbl("+PROPS_NAME")
+        props_path$=stbl("+PROPS_PATH")
+        user_locale$=stbl("+USER_LOCALE")
 
-		sql$="CALL GLBNKBAL_RNG ('"+firm_id$+"', '"+include_type$+"', '"+str(min_amt)+"', '"+masks$+"', '"+barista_wd$+"')"
+		sql$="CALL GLBNKBAL_RNG ('"+firm_id$+"', '"+include_type$+"', '"+str(min_amt)+"', '"+masks$+"', '"+barista_wd$+
+:       "', '"+props_name$+"', '"+props_path$+"', '"+user_locale$+"')"
 
 		bankacctRingChartDashboardWidget! = BarUtils.addRingChartDashboardWidget(acctDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,flat,legend,sql$)
 		
@@ -402,8 +414,12 @@ rem ==============================================
 		include_type$="A"; rem "Include Current Year Actual totals (no data/period filtering)
 		acct_type$="E"; rem "Expense accounts only
 		do_coa_join$="N"; rem "No Op. Chart of Acocunts is integral part of this SPROC
+        props_name$=stbl("+PROPS_NAME")
+        props_path$=stbl("+PROPS_PATH")
+        user_locale$=stbl("+USER_LOCALE")
 
-		sql$="CALL GLEXPTOT_PIE ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
+		sql$="CALL GLEXPTOT_PIE ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+
+:       "', '"+props_name$+"', '"+props_path$+"', '"+user_locale$+"')"
 
 		expPieChartDashboardWidget! = BarUtils.addPieChartDashboardWidget(acctDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,flat,legend,sql$)
 		expPieWidget! = expPieChartDashboardWidget!.getWidget()
@@ -453,10 +469,13 @@ rem =======================================
 		legend=1
 		
 		rem --- params for calling SPROC
-
 		include_type$ = "A"; rem Default to Current year
+        props_name$=stbl("+PROPS_NAME")
+        props_path$=stbl("+PROPS_PATH")
+        user_locale$=stbl("+USER_LOCALE")
 
-		sql$="CALL GLINCEXP_ARE ('"+firm_id$+"', '"+include_type$+"', '"+masks$+"', '"+barista_wd$+"')"
+		sql$="CALL GLINCEXP_ARE ('"+firm_id$+"', '"+include_type$+"', '"+masks$+"', '"+barista_wd$+
+:       "', '"+props_name$+"', '"+props_path$+"', '"+user_locale$+"')"
 
 		incExpAAreaChartDashboardWidget! = BarUtils.addAreaChartDashboardWidget(acctDashboardCategory!,name$,title$,previewText$,previewImage$,chartTitle$,domainTitle$,rangeTitle$,orientation,legend,sql$)
 		incExpAWidget! = incExpAAreaChartDashboardWidget!.getWidget()
@@ -1022,8 +1041,12 @@ rem     The inner widget gives us access to the dataset so that we can provide n
 	acct_type$="I"; rem "Income accounts only
 	do_coa_join$="N"; rem "Change to Y to include a column for Chart of Accts Category
 	include_type$=filterKey$
+    props_name$=stbl("+PROPS_NAME")
+    props_path$=stbl("+PROPS_PATH")
+    user_locale$=stbl("+USER_LOCALE")
 
-	sql$="CALL GLINCTOT_GRD ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+"')"
+	sql$="CALL GLINCTOT_GRD ('"+firm_id$+"', '"+include_type$+"', '"+acct_type$+"', '"+do_coa_join$+"', '"+masks$+"', '"+barista_wd$+
+:   "', '"+props_name$+"', '"+props_path$+"', '"+user_locale$+"')"
 	
 	rem Refresh based on new sql
 	BarUtils.fill(gridWidget!,sql$)
@@ -1056,8 +1079,12 @@ rem     The inner widget gives us access to the dataset so that we can provide n
 	gosub get_sysinfo
 	min_amt=600; rem using same hard-coded as code that initially creates the ring chart (above)
 	include_type$=filterKey$
+    props_name$=stbl("+PROPS_NAME")
+    props_path$=stbl("+PROPS_PATH")
+    user_locale$=stbl("+USER_LOCALE")
 
-	sql$="CALL GLBNKBAL_RNG ('"+firm_id$+"', '"+include_type$+"', '"+str(min_amt)+"', '"+masks$+"', '"+barista_wd$+"')"
+	sql$="CALL GLBNKBAL_RNG ('"+firm_id$+"', '"+include_type$+"', '"+str(min_amt)+"', '"+masks$+"', '"+barista_wd$+
+:       "', '"+props_name$+"', '"+props_path$+"', '"+user_locale$+"')"
 	
 	rem Clear out the old data from the inner widget
 	ringChartWidget!.clearDataSet()
@@ -1150,8 +1177,12 @@ rem     The inner widget gives us access to the dataset so that we can provide n
 	gosub get_masks
 	gosub get_sysinfo
 	include_type$=filterKey$
+    props_name$=stbl("+PROPS_NAME")
+    props_path$=stbl("+PROPS_PATH")
+    user_locale$=stbl("+USER_LOCALE")
 
-		sql$="CALL GLINCEXP_ARE ('"+firm_id$+"', '"+include_type$+"', '"+masks$+"', '"+barista_wd$+"')"
+		sql$="CALL GLINCEXP_ARE ('"+firm_id$+"', '"+include_type$+"', '"+masks$+"', '"+barista_wd$+
+:       "', '"+props_name$+"', '"+props_path$+"', '"+user_locale$+"')"
 	
 	rem Clear out the old data from the inner widget
 	incExpAWidget!.clearDataSet()
@@ -1441,9 +1472,13 @@ OnIncCmpBarChartWidgetClick:
 				
 			year$ = rowKey$
 			if len(colKey$) > 2 then period$ = colKey$(1,2) else period$ = ""
+                props_name$=stbl("+PROPS_NAME")
+                props_path$=stbl("+PROPS_PATH")
+                user_locale$=stbl("+USER_LOCALE")
 			
 	                rem Build an SQL query to return the accounts totals for the selected year and period
-	                sql$ = "CALL GLINCACCT_BAR ('"+firm_id$+"', '"+year$+"', '"+period$+"', '"+masks$+"', '"+barista_wd$+"')"
+	                sql$ = "CALL GLINCACCT_BAR ('"+firm_id$+"', '"+year$+"', '"+period$+"', '"+masks$+"', '"+barista_wd$+
+:                   "', '"+props_name$+"', '"+props_path$+"', '"+user_locale$+"')"
 	
                 	rem Change the font size for the domain axis and leave the other elements at their default size
                 	rem ' widget!.setChartFontSizes(0,0,0,0,8,0,0)

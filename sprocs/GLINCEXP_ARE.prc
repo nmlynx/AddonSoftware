@@ -49,6 +49,9 @@ rem --- Get the IN parameters used by the procedure
 	firm_id$ = sp!.getParameter("FIRM_ID")
 	barista_wd$ = sp!.getParameter("BARISTA_WD")
 	masks$ = sp!.getParameter("MASKS")
+    props_name$ = sp!.getParameter("PROPS_NAME")
+    props_path$ = sp!.getParameter("PROPS_PATH")
+    user_locale$ = sp!.getParameter("USER_LOCALE")
 
 rem --- dirs	
 	sv_wd$=dir("")
@@ -58,6 +61,16 @@ rem --- Get Barista System Program directory
 	sypdir$=""
 	sypdir$=stbl("+DIR_SYP",err=*next)
 	pgmdir$=stbl("+DIR_PGM",err=*next)
+
+rem --- Get DisplayColumns object
+
+    brddir$=stbl("+DIR_BRD",err=*next)
+    x$=stbl("+DIR_BRD",barista_wd$+brddir$)
+    x$=stbl("+PROPS_NAME",props_name$)
+    x$=stbl("+PROPS_PATH",props_path$)
+    x$=stbl("+USER_LOCALE",user_locale$)
+    use ::glo_DisplayColumns.aon::DisplayColumns
+    displayColumns!=new DisplayColumns(firm_id$)
 	
 rem --- create the in memory recordset for return
 
@@ -100,19 +113,19 @@ rem --- get data
     rem --- Prior Year (Actual)
     if pos(include_type$="C")
         gl_record_id$="2"
-        year$=str(num(gls01a.current_year$)-1)
+        year$=displayColumns!.getYear(gl_record_id$)
     endif   
 
     rem --- Current Year (Actual)
     if pos(include_type$="A")
         gl_record_id$="0"
-        year$=gls01a.current_year$
+        year$=displayColumns!.getYear(gl_record_id$)
     endif
 
     rem --- Next Year (Actual)
     if pos(include_type$="B")
         gl_record_id$="4"
-        year$=str(num(gls01a.current_year$)+1)
+        year$=displayColumns!.getYear(gl_record_id$)
         endif
     endif   
 
@@ -141,7 +154,7 @@ rem --- get data
             dim totals[1+num(gls_calendar.total_pers$)]
             for j=0 to acctsVec!.size()-1
                 dim glm02a$:fattr(glm02a$)
-                readrecord(glm02a_dev,key=firm_id$+acctsVec!.getItem(j)+gl_record_id$,dom=*next)glm02a$
+                readrecord(glm02a_dev,key=firm_id$+acctsVec!.getItem(j)+year$,dom=*next)glm02a$
                     for per=1 to num(gls_calendar.total_pers$)
                         per_num$=str(per:"00")
                         totals[per]=totals[per]+nfield(glm02a$,"PERIOD_AMT_"+per_num$)

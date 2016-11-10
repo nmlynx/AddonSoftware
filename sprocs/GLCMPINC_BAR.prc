@@ -75,8 +75,10 @@ rem --- Get Barista System Program directory
 	sypdir$=stbl("+DIR_SYP",err=*next)
 	pgmdir$=stbl("+DIR_PGM",err=*next)
 
-rem --- Get AlignFiscalCalendar object
+rem --- Get AlignFiscalCalendar and DisplayColumns objects
 
+    brddir$=stbl("+DIR_BRD",err=*next)
+    x$=stbl("+DIR_BRD",barista_wd$+brddir$)
     x$=stbl("+PROPS_NAME",props_name$)
     x$=stbl("+PROPS_PATH",props_path$)
     x$=stbl("+USER_LOCALE",user_locale$)
@@ -84,6 +86,8 @@ rem --- Get AlignFiscalCalendar object
     x$=stbl("+SYSINFO",sysinfo$)
     use ::glo_AlignFiscalCalendar.aon::AlignFiscalCalendar
     alignCalendar!=new AlignFiscalCalendar(firm_id$)
+    use ::glo_DisplayColumns.aon::DisplayColumns
+    displayColumns!=new DisplayColumns(firm_id$)
 	
 rem --- create the in memory recordset for return
 
@@ -192,7 +196,7 @@ rem --- get data
                 dim totals[1+num(gls_calendar.total_pers$)]
                 for j=0 to acctsVec!.size()-1
                     dim glm02a$:fattr(glm02a$)
-                    readrecord(glm02a_dev,key=firm_id$+acctsVec!.getItem(j)+idsVec!.getItem(i),dom=*next)glm02a$
+                    readrecord(glm02a_dev,key=firm_id$+acctsVec!.getItem(j)+displayColumns!.getYear(idsVec!.getItem(i)),dom=*next)glm02a$
                     if alignPeriods$="Y" then
                         tripKey$=""
                         if idsVec!.getItem(i)="2" and priorTripKey$<>"" then tripKey$=priorTripKey$
