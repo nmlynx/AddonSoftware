@@ -66,14 +66,15 @@ rem --- Run the custom query to show details about the current cell
 	gridActivity!=UserObj!.getItem(num(user_tpl.grid_ofst$))
 	curr_row=gridActivity!.getSelectedRow()
 	curr_col=gridActivity!.getSelectedColumn()
-	record_type$=gridActivity!.getCellText(curr_row,0)
-	record_type$=record_type$(pos("("=record_type$,-1,1)+1,1)
+	label$=gridActivity!.getCellText(curr_row,0)
+	record_type$=label$(pos(" ("=label$,-1)+2)
+	record_type$=record_type$(1,len(record_type$)-2)
 
 rem --- call custom query
 
 	post_per$=str(curr_col-1:"00")
 
-	if pos(record_type$="024")>0
+	if len(cvs(record_type$,2))=1 and pos(record_type$="024")>0
 rem --- Set proper record ID
 		record$=" "
 		current_year=num(callpoint!.getDevObject("gls_cur_yr"))
@@ -168,26 +169,28 @@ rem analyze gui_event$ and notice$ to see which control's callback triggered the
 
 				case 7;rem edit stop
 					if curr_col=0
-						record_type$=gridActivity!.getCellText(curr_row,curr_col)
-						record_type$=record_type$(pos("("=record_type$,-1,1)+1,2)
+						label$=gridActivity!.getCellText(curr_row,curr_col)
+						record_type$=label$(pos(" ("=label$,-1)+2)
+						record_type$=record_type$(1,len(record_type$)-2)
+						amt_or_units$=label$(len(label$)-1,1)
 
 						displayColumns!=callpoint!.getDevObject("displayColumns")
-						thisYear$=displayColumns!.getYear(record_type$(1,1))
-						actbud$=displayColumns!.getActBud(record_type$(1,1))
-						if callpoint!.getDevObject("align_fiscal_periods")="Y" and pos(record_type$(1,1)="24") then
+						thisYear$=displayColumns!.getYear(record_type$)
+						actbud$=displayColumns!.getActBud(record_type$)
+						if callpoint!.getDevObject("align_fiscal_periods")="Y" and len(cvs(record_type$,2))=1 and pos(record_type$="24") then
 							rem --- Use GLW_ACCTSUMMARY when fiscal periods are aligned
 							gls_cur_yr$=callpoint!.getDevObject("gls_cur_yr")
 							glm02_key$=firm_id$+thisYear$+gls_cur_yr$+callpoint!.getColumnData("GLM_ACCTSUMHDR.GL_ACCOUNT")
 						else
 							glm02_key$=firm_id$+callpoint!.getColumnData("GLM_ACCTSUMHDR.GL_ACCOUNT")+thisYear$
-							if actbud$="P" then glm02_key$=glm02_key$+record_type$(1,1)
+							if actbud$="P" then glm02_key$=glm02_key$+record_type$
 						endif
 
-						col_type$=record_type$(2,1)
+						col_type$=amt_or_units$
 						x=curr_row
 						gosub build_vectGLSummary
 						gridActivity!.setCellText(curr_row,1,vectGLSummary!)
-						if pos(record_type$(1,1)="024")<>0
+						if len(cvs(record_type$,2))=1 and pos(record_type$="024")<>0
 							gridActivity!.setRowEditable(curr_row,0)
 							gridActivity!.setCellEditable(curr_row,curr_col,1)
 						else
@@ -196,13 +199,13 @@ rem analyze gui_event$ and notice$ to see which control's callback triggered the
 
 						rem --- May need to update the list of records in the grid
 						cols!=UserObj!.getItem(num(user_tpl.cols_ofst$))
-						if record_type$(1,1)<>cols!.getItem(curr_row) then
-							cols!.setItem(curr_row,record_type$(1,1))
+						if record_type$<>cols!.getItem(curr_row) then
+							cols!.setItem(curr_row,record_type$)
 							UserObj!.setItem(num(user_tpl.cols_ofst$),cols!)
 						endif
 						tps!=UserObj!.getItem(num(user_tpl.tps_ofst$))
-						if record_type$(2,1)<>tps!.getItem(curr_row) then
-							tps!.setItem(curr_row,record_type$(2,1))
+						if amt_or_units$<>tps!.getItem(curr_row) then
+							tps!.setItem(curr_row,amt_or_units$)
 							UserObj!.setItem(num(user_tpl.tps_ofst$),tps!)
 						endif
 					else
@@ -221,9 +224,13 @@ rem analyze gui_event$ and notice$ to see which control's callback triggered the
 				break
 
 				case 14;rem mouse up on a cell
-					record_type$=gridActivity!.getCellText(curr_row,0)
-					if record_type$<>"" then record_type$=record_type$(pos("("=record_type$,-1,1)+1,1)
-					if curr_col=0 or curr_col=1 or curr_col=num(callpoint!.getDevObject("tot_pers"))+2 or pos(record_type$="024")=0
+					label$=gridActivity!.getCellText(curr_row,0)
+					if label$<>"" then
+						record_type$=label$(pos(" ("=label$,-1)+2)
+						record_type$=record_type$(1,len(record_type$)-2)
+					endif
+					if curr_col=0 or curr_col=1 or curr_col=num(callpoint!.getDevObject("tot_pers"))+2 or
+:					(len(cvs(record_type$,2))=1 and pos(record_type$="024")=0) then
 						callpoint!.setOptionEnabled("DETL",0)
 					else
 						callpoint!.setOptionEnabled("DETL",1)
@@ -239,7 +246,7 @@ rem analyze gui_event$ and notice$ to see which control's callback triggered the
 		gridActivity!.setSize(Form!.getWidth()-(gridActivity!.getX()*2),Form!.getHeight()-(gridActivity!.getY()+40))
 	endif
 [[GLM_ACCTSUMHDR.AREC]]
-rem compare budget columns/types from gls01 with 1st/3rd char of key of glm18
+rem compare budget columns/types from gls01 with defined display columns
 rem set the 4 listbuttons accordingly, and read/display corres glm02 data
 
 	cols!=UserObj!.getItem(num(user_tpl.cols_ofst$))
@@ -277,23 +284,26 @@ rem --- Needed classes
 	use ::glo_AlignFiscalCalendar.aon::AlignFiscalCalendar
 	use ::ado_util.src::util
 
+rem --- Initialize displayColumns! object
+
+	use ::glo_DisplayColumns.aon::DisplayColumns
+	displayColumns!=new DisplayColumns(firm_id$)
+	callpoint!.setDevObject("displayColumns",displayColumns!)
+
 rem --- init...open tables, define custom grid, etc.
 
 	num_files=4
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="GLM_ACCTSUMMARY",open_opts$[2]="OTA"
-	open_tables$[3]="GLM_RECORDTYPES",open_opts$[3]="OTA"
 	open_tables$[4]="GLS_CALENDAR",open_opts$[4]="OTA"
 
 	gosub open_tables
 
 	gls01_dev=num(open_chans$[1])
-	glm18_dev=num(open_chans$[3])
 	gls_calendar_dev=num(open_chans$[4])
 
 	dim gls01a$:open_tpls$[1]
-	dim glm18a$:open_tpls$[3]
 	dim gls_calendar$:open_tpls$[4]
 
 	readrecord(gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
@@ -346,15 +356,17 @@ rem --- load up period abbr names from gls_calendar
 			
 rem ---  create list for column zero of grid -- column type drop-down
 
-	more=1
-	codeList!=SysGUI!.makeVector()
+	displayColumns!=new DisplayColumns(firm_id$)
+	codeList!=displayColumns!.getVectorButtonList()
 	codes!=SysGUI!.makeVector()
-	read(glm18_dev,key="",dom=*next)
-	while more
-		readrecord(glm18_dev,end=*break)glm18a$
-		codeList!.addItem(glm18a.rev_title$+"("+glm18a.record_id$+glm18a.amt_or_units$+")")
-		codes!.addItem(glm18a.record_id$+glm18a.amt_or_units$)
-	wend
+	for i=0 to codeList!.size()-1
+		rem ... label$=rev_title$+" ("+record_id$+amt_or_units$+")"
+		label$=codeList!.getItem(i)
+		record_id$=label$(pos(" ("=label$,-1)+2)
+		record_id$=record_id$(1,len(record_id$)-2)
+		amt_or_units$=label$(len(label$)-1,1)
+		codes!.addItem(record_id$+amt_or_units$)
+	next i
 
 rem ---  set up grid
 
@@ -427,12 +439,6 @@ rem --- Initialize align_periods
 	pick_year$=fiscal_yr$
 	gosub init_align_periods
 [[GLM_ACCTSUMHDR.BSHO]]
-rem --- Initialize displayColumns! object
-
-	use ::glo_DisplayColumns.aon::DisplayColumns
-	displayColumns!=new DisplayColumns(firm_id$)
-	callpoint!.setDevObject("displayColumns",displayColumns!)
-
 rem --- Open/Lock files
 
 files=6,begfile=1,endfile=files
@@ -597,12 +603,12 @@ rem --- Only budget and planned budget rows are editable. Actual rows are disabl
 
 	cols=vectGLSummary!.size()-2
 	if cols>0
-		rec_id$=gridActivity!.getCellText(curr_row,0)
-		rec_id$=rec_id$(pos("("=rec_id$,-1,1)+1,2)
-		amt_units$=rec_id$(2,1)
-		record_id$=rec_id$(1,1)
+		label$=gridActivity!.getCellText(curr_row,0)
+		record_type$=label$(pos(" ("=label$,-1)+2)
+		record_type$=record_type$(1,len(record_type$)-2)
+		amt_or_units$=label$(len(label$)-1,1)
 		displayColumns!=callpoint!.getDevObject("displayColumns")
-		actbud$=displayColumns!.getActBud(record_id$)
+		actbud$=displayColumns!.getActBud(record_type$)
 		if actbud$="P" then
 			budget_dev=fnget_dev("GLM_BUDGETPLANS")
 			dim budget$:fnget_tpl$("GLM_BUDGETPLANS")
@@ -613,15 +619,15 @@ rem --- Only budget and planned budget rows are editable. Actual rows are disabl
 
 		budget.firm_id$=firm_id$
 		budget.gl_account$=callpoint!.getColumnData("GLM_ACCTSUMHDR.GL_ACCOUNT")
-		budget.year$=displayColumns!.getYear(record_id$)
+		budget.year$=displayColumns!.getYear(record_type$)
 		budget_key$=budget.firm_id$+budget.gl_account$+budget.year$
 		if actbud$="P" then
-			budget.budget_code$=record_id$
+			budget.budget_code$=record_type$
 			budget_key$=budget_key$+budget.budget_code$
 		endif
 		extractrecord(budget_dev,key=budget_key$,dom=*next)budget$; rem Advisory Locking
 
-			switch pos(amt_units$="AU")
+			switch pos(amt_or_units$="AU")
 				case 1;rem amounts
 					budget.begin_amt$=vectGLSummary!.getItem(0)
 					for x=1 to cols

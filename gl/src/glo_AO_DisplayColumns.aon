@@ -393,12 +393,12 @@ getRevTitle_error:rem --- Method error trap/handler
             while iter!.hasNext()
                 fields! = cast(HashMap,#displayColumns!.get(iter!.next()))
                 rev_title$ = fields!.get("REV_TITLE")
-                actbud$ = fields!.getActBud("ACTBUD")
+                actbud$ = fields!.get("ACTBUD")
                 if actbud$="B" and #useBudgets$="N" then continue
                 amt_or_units$ = fields!.get("AMT_OR_UNITS")
                 if amt_or_units$="U" and #useUnits$="N" then continue
                 record_id$ = fields!.get("RECORD_ID")
-                buttonList$ = buttonList$+pad(rev_title$,20)+"~"+record_id$+actbud$+amt_or_units$+";"
+                buttonList$ = buttonList$+pad(rev_title$,20)+"~"+record_id$+amt_or_units$+";"
             wend
 
             methodret buttonList$
@@ -431,12 +431,12 @@ getStringButtonList_error:rem --- Method error trap/handler
             while iter!.hasNext()
                 fields! = cast(HashMap,#displayColumns!.get(iter!.next()))
                 rev_title$ = fields!.get("REV_TITLE")
-                actbud$ = fields!.getActBud("ACTBUD")
+                actbud$ = fields!.get("ACTBUD")
                 if actbud$="B" and #useBudgets$="N" then continue
                 amt_or_units$ = fields!.get("AMT_OR_UNITS")
                 if amt_or_units$="U" and #useUnits$="N" then continue
                 record_id$ = fields!.get("RECORD_ID")
-                buttonList!.addItem(rev_title$+" ("+record_id$+actbude$+amt_or_units$+")")
+                buttonList!.addItem(rev_title$+" ("+record_id$+amt_or_units$+")")
             wend
 
             methodret buttonList!

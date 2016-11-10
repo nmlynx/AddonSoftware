@@ -24,20 +24,17 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=3,begfile=1,endfile=files
+    files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[2]="glm-08",ids$[2]="GLM_BUDGETMASTER"
-    files$[3]="glm-18",ids$[3]="GLM_RECORDTYPES"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     glm08_dev=channels[2]
-    glm18_dev=channels[3]
 
 rem --- Dimension string templates
 
     dim glm08a$:templates$[2]
-    dim glm18a$:templates$[3]
 
 rem --- Retrieve parameter records
 
@@ -70,7 +67,10 @@ rem --- Initializations
 
 rem --- Retrieve budget title
 
-    call pgmdir$+"glc_suminfo.aon",glm08_dev,glm18_dev,firm_id$,id$,au$,description$,x$,status
+    use ::glo_DisplayColumns.aon::DisplayColumns
+    displayColumns!=new DisplayColumns(firm_id$)
+    description$=displayColumns!.getDescription(id$+"::"+au$)
+    x$=displayColumns!.getgetRevTitle(id$+"::"+au$)
 
 rem --- Initialize report headings
 
@@ -91,7 +91,6 @@ rem --- Initialize report headings
 rem --- Run report overlay
 
     close (glm08_dev,err=*next)
-    close (glm18_dev,err=*next)
     run pgmdir$+"glr_summary.aon"
 
 rem --- Functions

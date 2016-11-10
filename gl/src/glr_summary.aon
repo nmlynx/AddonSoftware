@@ -53,8 +53,6 @@ rem --- Open/Lock files
     files$[1]="gls_params",ids$[1]="GLS_PARAMS"
     files$[2]="glm-01",ids$[2]="GLM_ACCT"
     files$[3]="glm-02",ids$[3]="GLM_ACCTSUMMARY"
-    files$[4]="glm-08",ids$[4]="GLM_BUDGETMASTER"
-    files$[5]="glm-18",ids$[5]="GLM_RECORDTYPES"
     files$[6]="gls_calendar",ids$[6]="GLS_CALENDAR"
     files$[7]="glm_acctbudget",ids$[7]="GLM_ACCTBUDGET"
     files$[8]="glm_budgetplans",ids$[8]="GLM_BUDGETPLANS"
@@ -64,15 +62,13 @@ rem --- Open/Lock files
     gls01_dev=channels[1]
     glm01_dev=channels[2]
     glm_acctsummary_dev=channels[3]
-    glm08_dev=channels[4]
-    glm18_dev=channels[5]
     gls_calendar_dev=channels[6]
     glm_acctbudget_dev=channels[7]
     glm_budgetplans_dev=channels[8]
 
 rem --- Dimension string templates
 
-    dim gls01a$:templates$[1],glm01a$:templates$[2],glm02a$:templates$[3],glm08a$:templates$[4],glm18a$:templates$[5]
+    dim gls01a$:templates$[1],glm01a$:templates$[2],glm02a$:templates$[3]
     dim gls_calendar$:templates$[6],glm_budgetplans$:templates$[8]
 
 rem --- Retrieve parameter records
@@ -246,8 +242,7 @@ rem --- Retrieve and store titles
     for x=1 to records
         record$=id$(x,1)
         flag$=au$(x,1)
-        call stbl("+DIR_PGM")+"glc_suminfo.aon",glm08_dev,glm18_dev,firm_id$,record$,flag$,x$,title$,status
-        if status=0 titles$[x]=title$
+        titles$[x]=displayColumns!.getRevTitle(record$+"::"+flag$)
     next x
 
 rem --- Start progress meter
