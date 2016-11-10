@@ -1,3 +1,11 @@
+[[GLM_BUDGETMASTER.BFMC]]
+rem --- Initialize displayColumns! object
+	use ::glo_DisplayColumns.aon::DisplayColumns
+	displayColumns!=new DisplayColumns(firm_id$)
+
+rem --- Initialize revision_src list button
+	ldat_list$=displayColumns!.getStringButtonList()
+	callpoint!.setTableColumnAttribute("GLM_BUDGETMASTER.REVISION_SRC","LDAT",ldat_list$)
 [[GLM_BUDGETMASTER.GL_WILDCARD.AVAL]]
 rem --- Check length of wildcard against defined mask for GL Account
 	if callpoint!.getUserInput()<>""
@@ -45,27 +53,6 @@ if callpoint!.getRecordStatus()<>"M"
 		endif
 	endif
 endif
-[[GLM_BUDGETMASTER.ADEL]]
-glm18_dev=fnget_dev("GLM_RECORDTYPES")
-glm18_tpl$=fnget_tpl$("GLM_RECORDTYPES")
-dim glm18a$:glm18_tpl$
-glm18a.record_id$=callpoint!.getColumnData("GLM_BUDGETMASTER.BUDGET_CODE")
-glm18a.actbud$="B"
-glm18a.amt_or_units$=callpoint!.getColumnData("GLM_BUDGETMASTER.AMT_OR_UNITS")
-remove(glm18_dev,key=glm18a.record_id$+glm18a.actbud$+glm18a.amt_or_units$,dom=*next)
-[[GLM_BUDGETMASTER.AWRI]]
-glm18_dev=fnget_dev("GLM_RECORDTYPES")
-glm18_tpl$=fnget_tpl$("GLM_RECORDTYPES")
-dim glm18a$:glm18_tpl$
-glm18a.record_id$=callpoint!.getColumnData("GLM_BUDGETMASTER.BUDGET_CODE")
-glm18a.actbud$="B"
-glm18a.amt_or_units$=callpoint!.getColumnData("GLM_BUDGETMASTER.AMT_OR_UNITS")
-glm18_key$=glm18a.record_id$+glm18a.actbud$+glm18a.amt_or_units$
-extractrecord(glm18_dev,key=glm18_key$,dom=*next)x$; rem Advisory Locking
-glm18a.description$=callpoint!.getColumnData("GLM_BUDGETMASTER.DESCRIPTION")
-glm18a.rev_title$=callpoint!.getColumnData("GLM_BUDGETMASTER.REV_TITLE")
-glm18a$=field(glm18a$)
-writerecord(glm18_dev)glm18a$
 [[GLM_BUDGETMASTER.BWRI]]
 rev_src$=callpoint!.getColumnData("GLM_BUDGETMASTER.REVISION_SRC")
 gosub validate_revision_source

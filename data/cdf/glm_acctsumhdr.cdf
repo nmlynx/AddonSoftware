@@ -230,7 +230,7 @@ rem analyze gui_event$ and notice$ to see which control's callback triggered the
 						record_type$=record_type$(1,len(record_type$)-2)
 					endif
 					if curr_col=0 or curr_col=1 or curr_col=num(callpoint!.getDevObject("tot_pers"))+2 or
-:					(len(cvs(record_type$,2))=1 and pos(record_type$="024")=0) then
+:					len(cvs(record_type$,2))>1 or pos(record_type$="024")=0 then
 						callpoint!.setOptionEnabled("DETL",0)
 					else
 						callpoint!.setOptionEnabled("DETL",1)
