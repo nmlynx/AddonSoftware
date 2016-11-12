@@ -92,6 +92,9 @@ rem --- Build sql statement
     if altthru$<>"" where_clause$=where_clause$+" AND apm_vendmast.alt_sequence <= '" +altthru$+ "'"
     if datefrom$<>"" where_clause$=where_clause$+ " AND pot_rechdr.recpt_date >= '" + datefrom$+ "'"
     if datethru$<>"" where_clause$=where_clause$+ " AND pot_rechdr.recpt_date <= '" + datethru$+ "'"
+    if inactive$="Y" then
+       where_clause$=where_clause$+" AND apm_vendmast.vend_inactive<>'Y' "
+    endif
 
     order_by$=" order by pot_rechdr.vendor_id,pot_rechdr.recpt_date,pot_rechdr.po_no,pot_rechdr.receiver_no"
 
