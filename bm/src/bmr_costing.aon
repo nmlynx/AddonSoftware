@@ -119,6 +119,15 @@ rem --- Add masks to params!
     
     params!.put("MASKS",masks$)
 
+rem --- Inventory In-Active Parameters
+        rem "ITEM INACTIVE FEATURE"
+        inactive$=option!.getOptionData("IV_ITEM_INACTIVE")
+        if inactive$="Y" then
+          params!.put("OPTION_ACTIVE","Y")
+        else
+          params!.put("OPTION_ACTIVE","N")
+        endif
+
 rem --- Make Document Archive Record and Get ID
 
     rep_date$=date(0:stbl("+DATE_MASK"))
@@ -167,7 +176,6 @@ rem --- Set Report Locale
     report!.setLocale(locale$)
 
 rem --- Fill Report and Show
-
     rc=report!.fill(1)
     if rc<>BBJasperReport.getSUCCESS() then goto close_win
     

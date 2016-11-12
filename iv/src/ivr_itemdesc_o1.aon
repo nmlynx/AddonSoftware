@@ -71,6 +71,8 @@ rem --- Position files
         if begprod$<>"" if ivm01a.product_type$<begprod$ continue
         if endprod$<>"" if ivm01a.product_type$>endprod$ continue
         if type$<>"" if ivm01a.item_class$<>type$ continue
+        rem -- Check for inactive item
+        if inactive$="Y" and ivm01a.item_inactive$="Y" then continue
 
     rem --- Print detail line
 

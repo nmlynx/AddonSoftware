@@ -124,6 +124,8 @@ rem --- Next Synonym
         if begprod$<>"" and ivm01a.product_type$<begprod$ then continue
         if endprod$<>"" and ivm01a.product_type$>endprod$ then continue
         if type$<>"" and ivm01a.item_type$<>type$ then continue
+        rem -- Check for inactive item
+        if inactive$="Y" and ivm01a.item_inactive$="Y" then continue
 
     rem --- Format detail line
 

@@ -86,6 +86,8 @@ rem --- Get next sort record
 		recptdate$=pot04a.recpt_date$
         find record (ivm01a_dev,key=firm_id$+item$,dom=brnch1) ivm01a$
         product$=ivm01a.product_type$
+        rem -- Check for inactive item
+        if inactive$="Y" and ivm01a.item_inactive$="Y" then goto next_item
 
     brnch1: rem --- Valid Item/Wh/Product/Type?
 

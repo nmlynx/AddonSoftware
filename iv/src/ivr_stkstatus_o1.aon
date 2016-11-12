@@ -85,6 +85,8 @@ rem --- Main Read
         if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
         readrecord(ivm01_dev,key=firm_id$+item$,dom=*continue)ivm01a$
         if type$<>"" and ivm01a.item_type$ <> type$ then continue
+        rem -- Check for inactive item
+        if inactive$="Y" and ivm01a.item_inactive$="Y" then continue
         
         dataHash!=new java.util.HashMap()
         dataHash!.put("warehouse_id",whse$)

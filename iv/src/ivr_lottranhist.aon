@@ -139,6 +139,8 @@ rem --- Assign form input values to local variables
     ttypes$[7]=option!.getOptionData("tran_hst_wi")
     ttypes$[8]=option!.getOptionData("tran_hst_wo")
     ttypes$[9]=option!.getOptionData("tran_hst_bm")
+    rem "ITEM INACTIVE FEATURE"
+    inactive$=Option!.getOptionData("ITEM_INACTIVE")
 
 	if ttypes$[0]="N" and ttypes$[1]="N" and ttypes$[2]="N" and ttypes$[3]="N" and ttypes$[4]="N" and 
 :	   ttypes$[5]="N" and ttypes$[6]="N" and ttypes$[7]="N" and ttypes$[8]="N" and ttypes$[9]="N"
@@ -331,6 +333,8 @@ rem --- Get next record
         if item_type$<>"" and ivm01a.item_type$<>item_type$ then read(ivt01_dev); continue
         if beg_prod$<>"" and ivm01a.product_type$<beg_prod$ then read(ivt01_dev); continue
         if end_prod$<>"" and ivm01a.product_type$>end_prod$ then read(ivt01_dev); continue
+        rem -- Check for inactive item
+        if inactive$="Y" and ivm01a.item_inactive$="Y" then read(ivt01_dev); continue
 
     rem --- Open or Closed Lots?
 

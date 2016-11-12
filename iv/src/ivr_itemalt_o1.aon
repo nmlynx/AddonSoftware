@@ -70,6 +70,8 @@ rem --- Next Item
         if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
         
         if ivm01a.alt_sup_flag$<>selection$ continue
+        rem -- Check for inactive item
+        if inactive$="Y" and ivm01a.item_inactive$="Y" then continue
         if cvs(ivm01a.alt_sup_item$,2)="" continue
         if begprod$<>"" if ivm01a.product_type$<begprod$ continue 
         if endprod$<>"" if ivm01a.product_type$>endprod$ continue

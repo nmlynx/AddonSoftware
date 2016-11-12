@@ -105,6 +105,13 @@ main_read: rem --- Main Read
         lot=bmm01a.std_lot_size,yield=bmm01a.est_yield
         if billthru$<>"" then if bmm01a.bill_no$>pad(billthru$,20) then goto done
 
+
+        rem -- Check for inactive item
+        if inactive$="Y" then
+          ivm01_key$=bmm01a.firm_id$+bmm01a.bill_no$
+          find record (ivm01_dev,key=ivm01_key$,dom=*next) ivm01a$
+          if ivm01a.item_inactive$="Y" then continue
+        endif
 rem --- Breaks
 
         gosub find_description
@@ -143,6 +150,14 @@ rem --- Find Parts
                 if cvs(bmm02a.effect_date$,3)<>"" then if bmm02a.effect_date$>pdate$ then continue
                 if cvs(bmm02a.obsolt_date$,3)<>"" then if bmm02a.obsolt_date$<=pdate$ then continue
                 x0$=bmm02a.firm_id$+bmm02a.item_id$
+
+                rem -- Check for inactive item
+                if inactive$="Y" then
+                   ivm01_key$=bmm02a.firm_id$+bmm02a.item_id$
+                   find record (ivm01_dev,key=ivm01_key$,dom=*next) ivm01a$
+                   if ivm01a.item_inactive$="Y" then continue
+                endif
+
                 gosub find_description
 
 rem --- Any Pieces??

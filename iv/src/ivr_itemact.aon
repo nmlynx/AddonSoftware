@@ -92,6 +92,8 @@ rem --- Assign form input values to local variables
     begitem$=option!.getOptionData("item_id_1")
     enditem$=option!.getOptionData("item_id_2")
     type$=option!.getOptionData("item_type")
+    rem "ITEM INACTIVE FEATURE"
+    inactive$=Option!.getOptionData("ITEM_INACTIVE")
 
 rem --- Retrieve parameter records
 
@@ -215,6 +217,8 @@ rem --- Retrieve item and activity
         dim description$(dw)
         find record (ivm01a_dev, key=firm_id$+item$, dom=*continue) ivm01a$
         if type$<>"" and ivm01a.item_type$<>type$ then continue
+        rem -- Check for inactive item
+        if inactive$="Y" and ivm01a.item_inactive$="Y" then continue
         description$(1) = func.displayDesc(ivm01a.item_desc$, p[3], p[4], p[5])
         item$[0]=firm_id$
         item$[1]=whse$

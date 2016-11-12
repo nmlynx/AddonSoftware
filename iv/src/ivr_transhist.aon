@@ -104,6 +104,8 @@ rem --- Assign form input values to local variables
     ttypes$[7]=option!.getOptionData("tran_hst_wi")
     ttypes$[8]=option!.getOptionData("tran_hst_wo")
     ttypes$[9]=option!.getOptionData("tran_hst_bm")
+    rem "ITEM INACTIVE FEATURE"
+    inactive$=Option!.getOptionData("ITEM_INACTIVE")
 
 rem --- Retrieve parameter records
 
@@ -270,6 +272,8 @@ rem --- Valid Product/Type/Date?
         if beg_prod$<>"" if ivm01a.product_type$<beg_prod$ continue
         if end_prod$<>"" if ivm01a.product_type$>end_prod$ continue
         if itype$<>"" if ivm01a.item_type$<>itype$ continue
+        rem -- Check for inactive item
+        if inactive$="Y" and ivm01a.item_inactive$="Y" then continue
 
 rem --- Level breaks?
 

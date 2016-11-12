@@ -149,6 +149,8 @@ rem --- Get next lot/serial master
         if type$<>"" and ivm01a.item_type$<>type$ continue
         if begprod$<>"" and ivm01a.product_type$<begprod$ continue
         if endprod$<>"" and ivm01a.product_type$>endprod$ continue
+        rem -- Check for inactive item
+        if inactive$="Y" and ivm01a.item_inactive$="Y" then continue
 
     activity: rem --- Retrieve item and activity
 

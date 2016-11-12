@@ -84,6 +84,8 @@ rem --- Breaks
             call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
             let ivm01a.item_desc$=Translate!.getTranslation("AON_***_NOT_ON_FILE_***")
             find record (ivm01a_dev,key=bmm01a.firm_id$+bmm01a.bill_no$,dom=printing) ivm01a$
+        rem -- Check for inactive item
+        if inactive$="Y" and ivm01a.item_inactive$="Y" then continue
             ivm01a.item_desc$=fnitem$(ivm01a.item_desc$,desc[1],desc[2],desc[3])+fill(60)
 
 printing: rem --- Print

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
+<!-- 2016-11-11T17:18:36 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BOMDetail" language="groovy" pageWidth="612" pageHeight="792" columnWidth="572" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="50" resourceBundle="addon" uuid="35db722b-b90a-4ec2-a088-fab4a509863b">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -19,10 +21,11 @@
 	<parameter name="IV_PRECISION" class="java.lang.String"/>
 	<parameter name="BARISTA_WD" class="java.lang.String"/>
 	<parameter name="MASKS" class="java.lang.String"/>
+	<parameter name="OPTION_ACTIVE" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[select firm_id, bill_no, drawing_no, drawing_rev, bill_rev, phantom_bill, source_code, unit_measure, lstrvs_date, lstact_date, create_date, est_yield, std_lot_size, ivm_itemmast.item_desc as itemdesc from bmm_billmast
+		<![CDATA[select firm_id, bill_no, drawing_no, drawing_rev, bill_rev, phantom_bill, source_code, unit_measure, lstrvs_date, lstact_date, create_date, est_yield, std_lot_size, ivm_itemmast.item_desc as itemdesc, ivm_itemmast.item_inactive as item_inactive from bmm_billmast
 left join ivm_itemmast on bmm_billmast.firm_id = ivm_itemmast.firm_id and bmm_billmast.bill_no = ivm_itemmast.item_id
-where bmm_billmast.firm_id = $P{FIRM_ID} and bmm_billmast.bill_no >= $P{BILL_NO_1} and bmm_billmast.bill_no <= $P{BILL_NO_2}]]>
+where bmm_billmast.firm_id = $P{FIRM_ID} and bmm_billmast.bill_no >= $P{BILL_NO_1} and bmm_billmast.bill_no <= $P{BILL_NO_2} $P!{OPTION_ACTIVE}]]>
 	</queryString>
 	<field name="FIRM_ID" class="java.lang.String"/>
 	<field name="BILL_NO" class="java.lang.String"/>
@@ -38,6 +41,7 @@ where bmm_billmast.firm_id = $P{FIRM_ID} and bmm_billmast.bill_no >= $P{BILL_NO_
 	<field name="EST_YIELD" class="java.math.BigDecimal"/>
 	<field name="STD_LOT_SIZE" class="java.math.BigDecimal"/>
 	<field name="ITEMDESC" class="java.lang.String"/>
+	<field name="ITEM_INACTIVE" class="java.lang.String"/>
 	<variable name="TOT_MAT_COST" class="java.math.BigDecimal"/>
 	<variable name="TOT_DIR_COST" class="java.math.BigDecimal"/>
 	<variable name="TOT_OH_COST" class="java.math.BigDecimal"/>
@@ -180,6 +184,17 @@ where bmm_billmast.firm_id = $P{FIRM_ID} and bmm_billmast.bill_no >= $P{BILL_NO_
 						<printWhenExpression><![CDATA[new Boolean ($P{PROD_DATE}.trim().isEmpty())]]></printWhenExpression>
 					</reportElement>
 					<textFieldExpression><![CDATA[$R{AON_INCLUDE_ALL_DATES}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="382" y="103" width="73" height="13" uuid="c992bacb-9070-493e-b783-1513876f0ca3"/>
+					<textElement textAlignment="Right"/>
+					<textFieldExpression><![CDATA["Item InActive:"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="465" y="103" width="70" height="13" uuid="b795f2b0-1f65-4c9e-9063-7743b2723fd6">
+						<printWhenExpression><![CDATA[new Boolean (!$F{CREATE_DATE}.trim().isEmpty())]]></printWhenExpression>
+					</reportElement>
+					<textFieldExpression><![CDATA[$F{ITEM_INACTIVE}]]></textFieldExpression>
 				</textField>
 			</band>
 		</groupHeader>

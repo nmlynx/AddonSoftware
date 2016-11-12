@@ -1,3 +1,6 @@
+[[SFR_CLSDWOVAR.BILL_NO.BINQ]]
+	whse$=callpoint!.getColumnData("SFR_CLSDWOVAR.WAREHOUSE_ID")
+        callpoint!.setDevObject("whse",whse$)
 [[SFR_CLSDWOVAR.PERIOD.AVAL]]
 rem --- Show date range for entered period
 
@@ -68,11 +71,6 @@ rem --- Validate against BOM_BILLMAST
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
 	endif
-[[SFR_CLSDWOVAR.BFMC]]
-rem --- Set Custom Query for BOM Item Number
-
-	callpoint!.setTableColumnAttribute("SFR_CLSDWOVAR.BILL_NO_1", "IDEF", "BOM_LOOKUP")
-	callpoint!.setTableColumnAttribute("SFR_CLSDWOVAR.BILL_NO_2", "IDEF", "BOM_LOOKUP")
 [[SFR_CLSDWOVAR.BSHO]]
 rem --- Open needed IV tables
 rem --- Get default warehouse from IV params
