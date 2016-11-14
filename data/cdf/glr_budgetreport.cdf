@@ -18,17 +18,14 @@ rem --- Check length of wildcard against defined mask for GL Account
 		endif
 	endif
 [[GLR_BUDGETREPORT.BFMC]]
-num_files=2
+num_files=1
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
-open_tables$[2]="GLM_RECORDTYPES",open_opts$[2]="OTA"
 gosub open_tables
 
 gls01_dev=num(open_chans$[1])
-glm18_dev=num(open_chans$[2])
 
 dim gls01a$:open_tpls$[1]
-dim glm18a$:open_tpls$[2]
 
 readrecord(gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
 callpoint!.setDevObject("current_fiscal_year",gls01a.current_year$)
@@ -43,22 +40,31 @@ if gls01a.budget_flag$<>"Y"
 	release
 endif
 
+rem --- Initialize displayColumns! object
+	use ::glo_DisplayColumns.aon::DisplayColumns
+	displayColumns!=new DisplayColumns(firm_id$)
+
 rem create list for column zero of grid -- column type drop-down
 
-more=1
-codes!=SysGUI!.makeVector()
-ldat_list$=pad(Translate!.getTranslation("AON_(NONE)"),20)+"~"+"  ;"
+	codes!=SysGUI!.makeVector()
+	none_list$=pad(Translate!.getTranslation("AON_(NONE)"),20)+"~"+"  ;"
+	button_list$=displayColumns!.getStringButtonList()
+	ldat_list$=none_list$+button_list$
 
-read(glm18_dev,key="",dom=*next)
-while more
-	readrecord(glm18_dev,end=*break)glm18a$
-	codes!.addItem(glm18a.record_id$+glm18a.amt_or_units$)
-	ldat_list$=ldat_list$+pad(glm18a.rev_title$,20)+"~"+glm18a.record_id$+glm18a.amt_or_units$+";"
-wend
+	for x=1 to 4
+		callpoint!.setTableColumnAttribute("<<DISPLAY>>.BUD_CD_"+str(x),"LDAT",ldat_list$)
+	next x
 
-for x=1 to 4
-	callpoint!.setTableColumnAttribute("<<DISPLAY>>.BUD_CD_"+str(x),"LDAT",ldat_list$)
-next x
+	while len(button_list$)>0
+		xpos=pos(";"=button_list$)
+		this_button$=button_list$(1,xpos)
+		button_list$=button_list$(xpos+1)
+
+		record_id$=this_button$(pos("~"=this_button$)+1)
+		record_id$=record_id$(1,len(record_id$)-2)
+		amt_or_units$=this_button$(len(this_button$)-1,1)
+		codes!.addItem(record_id$+amt_or_units$)
+	wend
 
 rem store desired data in user_tpl
 tpl_str$="codes_ofst:c(5)"

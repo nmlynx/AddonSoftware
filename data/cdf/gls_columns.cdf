@@ -1,20 +1,12 @@
 [[GLS_COLUMNS.BFMC]]
-num_files=1
-dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-open_tables$[1]="GLM_RECORDTYPES",open_opts$[1]="OTA"
-gosub open_tables
-
-glm18_dev=num(open_chans$[1])
-dim glm18a$:open_tpls$[1]
+rem --- Initialize displayColumns! object
+use ::glo_DisplayColumns.aon::DisplayColumns
+displayColumns!=new DisplayColumns(firm_id$)
 
 rem create list for column zero of grid -- column type drop-down
-more=1
-ldat_list$=pad(Translate!.getTranslation("AON_(NONE)"),20)+"~"+"  ;"
-read(glm18_dev,key="",dom=*next)
-while more
-	readrecord(glm18_dev,end=*break)glm18a$
-	ldat_list$=ldat_list$+pad(glm18a.rev_title$,20)+"~"+glm18a.record_id$+glm18a.amt_or_units$+";"
-wend
+none_list$=pad(Translate!.getTranslation("AON_(NONE)"),20)+"~"+"  ;"
+button_list$=displayColumns!.getStringButtonList()
+ldat_list$=none_list$+button_list$
 
 for x=1 to 4
 	callpoint!.setTableColumnAttribute("<<DISPLAY>>.RECORD_CD_"+str(x),"LDAT",ldat_list$)

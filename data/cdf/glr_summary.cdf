@@ -18,28 +18,26 @@ rem ---	because glm18 contains record id/actual vs budget/amt or units, whereas 
 rem ---	first and 3rd character (record id/amt or units)... this mismatch should be resolved at some point
 rem ---	by either revising glm18 or the param file
 
-num_files=2
+num_files=1
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
-open_tables$[2]="GLM_RECORDTYPES",open_opts$[2]="OTA"
 gosub open_tables
 
 gls01_dev=num(open_chans$[1])
-glm18_dev=num(open_chans$[2])
 
 dim gls01a$:open_tpls$[1]
-dim glm18a$:open_tpls$[2]
 
 readrecord(gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
 
+
+rem --- Initialize displayColumns! object
+use ::glo_DisplayColumns.aon::DisplayColumns
+displayColumns!=new DisplayColumns(firm_id$)
+
 rem create list for column zero of grid -- column type drop-down
-more=1
-ldat_list$=pad(Translate!.getTranslation("AON_(NONE)"),20)+"~"+"  ;"
-read(glm18_dev,key="",dom=*next)
-while more
-	readrecord(glm18_dev,end=*break)glm18a$
-	ldat_list$=ldat_list$+pad(glm18a.rev_title$,20)+"~"+glm18a.record_id$+glm18a.amt_or_units$+";"
-wend
+none_list$=pad(Translate!.getTranslation("AON_(NONE)"),20)+"~"+"  ;"
+button_list$=displayColumns!.getStringButtonList()
+ldat_list$=none_list$+button_list$
 
 for x=1 to 4
 	callpoint!.setTableColumnAttribute("<<DISPLAY>>.RECORD_CD_"+str(x),"LDAT",ldat_list$)
