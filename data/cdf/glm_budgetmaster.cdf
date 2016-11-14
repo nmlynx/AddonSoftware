@@ -17,10 +17,9 @@ rem --- Check length of wildcard against defined mask for GL Account
 		endif
 	endif
 [[GLM_BUDGETMASTER.ASHO]]
-num_files=2
+num_files=1
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
-open_tables$[2]="GLM_RECORDTYPES",open_opts$[2]="OTA"
 gosub open_tables
 gls01_dev=num(open_chans$[1])
 dim gls01a$:open_tpls$[1]

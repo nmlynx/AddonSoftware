@@ -52,8 +52,12 @@
 			.style6 {
 				FONT-SIZE: 10px; COLOR: #339900; FONT-STYLE: italic; 
 			}
-		
-		.style7 {font-family: "Courier New", Courier, mono}
+		    .style7 {
+		        font-family: "Courier New", Courier, mono
+		    }
+		    .style8 {
+		        FONT-WEIGHT:bolder; FONT-SIZE: 12px; COLOR: #FF0000; FONT-STYLE: italic;
+		    }
         </STYLE>
         
     </head>
@@ -143,10 +147,6 @@
                 <td>glc_journalcode</td>
                 <td>glm-03</td>
               </tr>              
-              <tr>
-                <td>glm_recordtypes</td>
-                <td>glm-18</td>
-              </tr>
               <tr>
                 <td>ivc_whsecode</td>
                 <td>ivc_whsecode </td>
@@ -941,7 +941,7 @@
                 <td></td>
                 <td>opt_invdet</td>
                 <td>Added new Real Time Processing fields</td>
-                <td>EM Update Wizard may log failure for this file. Auto-Launch Data Conversion will correctly restructure the file.</td>
+                <td><span class="style8">EM Update Wizard may log failure for this file (opt-11). Auto-Launch Data Conversion will correctly restructure the file.</span></td>
               </tr>              
               <tr>
                 <td></td>
@@ -1221,14 +1221,14 @@
                 <td></td>
                 <td>ape_invoicedet</td>
                 <td>Replaced 2-char SEQUENCE_NUM with 3-char SEQUENCE_NO.</td>
-                <td>EM Update Wizard may log failure for this file. Auto-Launch Data Conversion will correctly restructure the file.</td>
+                <td><span class="style8">EM Update Wizard may log failure for this file (ape-11). Auto-Launch Data Conversion will correctly restructure the file.</span></td>
               </tr>            
               <tr>
                 <td></td>
                 <td></td>
                 <td>ape_recurringdet</td>
                 <td>Replaced 2-char SEQUENCE_NUM with 3-char SEQUENCE_NO.</td>
-                <td>EM Update Wizard may log failure for this file. Auto-Launch Data Conversion will correctly restructure the file.</td>
+                <td><span class="style8">EM Update Wizard may log failure for this file (ape-13). Auto-Launch Data Conversion will correctly restructure the file.</span></td>
               </tr>
               <tr>
                 <td></td>
@@ -1313,7 +1313,7 @@
                 <td></td>
                 <td>apt_invoicedet</td>
                 <td>Replaced 2-char SEQUENCE_NUM with 3-char SEQUENCE_NO.</td>
-                <td>EM Update Wizard may log failure for this file. Auto-Launch Data Conversion will correctly restructure the file.</td>
+                <td><span class="style8">EM Update Wizard may log failure for this file (apt-11). Auto-Launch Data Conversion will correctly restructure the file.</span></td>
               </tr>
               <tr>
                 <td></td>
@@ -1904,8 +1904,50 @@
                 <td>None </td>
               </tr>
               <tr>
+                <td>16.11 </td>
+                <td>16.12 </td>
+                <td> </td>
+                <td>No structural changes</td>
+                <td>None </td>
+              </tr>
+              <tr>
+                <td>16.12 </td>
+                <td>16.20 </td>
+                <td> </td>
+                <td>No structural changes</td>
+                <td>None </td>
+              </tr>
+              <tr>
                 <td>16.?? </td>
                 <td>17.00 </td>
+                <td>glm_acctbudget</td>
+                <td>New table for approved budget amounts and units split out of glm_acctsummary (glm-02). RECORD_ID replaced with YEAR.</td>
+                <td>EM Update Wizard and Auto-Launch Data Conversion.</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td>glm_acctsummary</td>
+                <td> Split into three tables: glm_acctbudget, glm_acctsummary and glm_budgetplans.  Re-purposed glm_acctsummary (glm-02) for only actual amounts and units. Replaced RECORD_ID with YEAR. Changed PRIMARY key and added new alternate key BY_YEAR_ACCT.</td>
+                <td>EM Update Wizard and Auto-Launch Data Conversion.</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td>glm_budgetplans</td>
+                <td>New table for planned budget amounts and units split out of glm_acctsummary (glm-02). RECORD_ID replaced with YEAR, and added BUDGET_CODE.</td>
+                <td>EM Update Wizard and Auto-Launch Data Conversion.</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td>glm_recordtypes</td>
+                <td>Deleted table/file (glm-18). Replaced by DisplayColumns class (glo_DisplayColumns.aon).</td>
+                <td>None </td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
                 <td>gls_calendar</td>
                 <td>No longer a child of gls_params, and now holds only fiscal calendar info.</td>
                 <td>EM Update Wizard and Auto-Launch Data Conversion.</td>
@@ -1916,6 +1958,13 @@
                 <td>glt_transdetail</td>
                 <td>Added new keys BY_TRANS_DATE and BY_YEAR_PERIOD.</td>
                 <td>EM Update Wizard</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td>glw_acctsummary</td>
+                <td>New table to hold account summary information for re-aligned fiscal years.</td>
+                <td>None </td>
               </tr>
           </table>
 		</div>
