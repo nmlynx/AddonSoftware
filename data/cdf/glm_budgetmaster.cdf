@@ -60,7 +60,7 @@ validate_revision_source:
 	rem --- rev_src$ set prior to gosub
 	amt_units$=callpoint!.getColumnData("GLM_BUDGETMASTER.AMT_OR_UNITS")
 	if cvs(rev_src$,3)<>"" and cvs(amt_units$,3)<>""
-		if rev_src$(len(rev_src$),1)<>amt_units$ or rev_src$(1,1)<"0" or rev_src$(1,1)>"5"
+		if rev_src$(len(rev_src$),1)<>amt_units$ or cvs(rev_src$(1,len(rev_src$)-1),2)<"0" or cvs(rev_src$(1,len(rev_src$)-1),2)>"5"
 			msg_id$="GL_BAD_RECID"
 			gosub disp_message
 			callpoint!.setStatus("ABORT")
@@ -77,4 +77,3 @@ if callpoint!.getUserInput()<="5"
 	gosub disp_message
 	callpoint!.setStatus("ABORT")
 endif
-

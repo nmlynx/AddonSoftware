@@ -57,8 +57,8 @@ rem --- Assign input values to local variables
         rem --- from Create Budget Revisions menu item
         budget_revs$=option!.getOptionData("BUDGET_REVS")
     endif
-    budget_code$=budget_revs$(1,1)
-    type$=budget_revs$(2,1)
+    budget_code$=budget_revs$(1,len(budget_revs$)-1)
+    type$=budget_revs$(len(budget_revs$))
 
 rem --- Retrieve parameter and budget revision records
 
@@ -100,7 +100,7 @@ rem --- Get next account master
           rem --- Retrieve source record
 
           dim a[mp],u[mp]
-          glm_budgetplans_key$=glm01a.firm_id$+glm01a.gl_account$+displayColumns!.getYear(glm08a.revision_src$(1,1))+glm08a.revision_src$(1,1)
+          glm_budgetplans_key$=glm01a.firm_id$+glm01a.gl_account$+displayColumns!.getYear(budget_code$)+budget_code$
           find record (glm_budgetplans_dev,key=glm_budgetplans_key$,dom=*next) glm_budgetplans$
           call pgmdir$+"glc_summary.aon","R",glm_budgetplans$,a[all],u[all],status
 

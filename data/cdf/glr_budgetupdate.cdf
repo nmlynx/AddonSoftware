@@ -32,9 +32,9 @@ return
 glm08_dev=fnget_dev("GLM_BUDGETMASTER")
 dim glm08a$:fnget_tpl$("GLM_BUDGETMASTER")
 glm08a.firm_id$=firm_id$
-budget_code$=callpoint!.getUserInput()
-glm08a.budget_code$=budget_code$(1,1)
-glm08a.amt_or_units$=budget_code$(2,1)
+budget_revs$=callpoint!.getUserInput()
+glm08a.budget_code$=budget_revs$(1,len(budget_revs$)-1)
+glm08a.amt_or_units$=budget_revs$(len(budget_revs$))
 read record (glm08_dev,key=glm08a.firm_id$+glm08a.budget_code$+glm08a.amt_or_units$,dom=*next)glm08a$
 callpoint!.setColumnData("GLR_BUDGETUPDATE.GL_ACCOUNT_1",glm08a.gl_account_01$)
 callpoint!.setColumnData("GLR_BUDGETUPDATE.GL_ACCOUNT_2",glm08a.gl_account_02$)
