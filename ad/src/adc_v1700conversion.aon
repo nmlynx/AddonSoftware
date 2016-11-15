@@ -619,6 +619,90 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
             gosub disp_meter
             print(log_dev)meter_text$
         endif
+
+        rem --- Does conversion marker file exist for converting REVISION_SRC in GLM_BUDGETMASTER (glm-08)?
+        rem --- Needs a marker file to prevent converting more than once, which would scramble data.
+        conv_marker_name$="v1700_glm-08"
+        conv_marker_file$=dataDir$+conv_marker_name$
+        convmarkerFile!=new File(conv_marker_file$)
+        if convmarkerFile!.exists() then
+            rem --- Verify required files are present
+            missingFiles!=BBjAPI().makeVector()
+            requiredFiles!=BBjAPI().makeVector()
+            requiredFiles!.addAll(java.util.Arrays.asList(convCtrl!.getProperty(conv_marker_name$(2)).split(";")))
+            for i=0 to requiredFiles!.size()-1
+                file!=new File(stbl("+"+this_module$+"DATA")+requiredFiles!.get(i))
+                if !file!.exists() then
+                    missingFiles!.addItem(requiredFiles!.get(i))
+                endif
+            next i
+            if missingFiles!.size()=0 then
+                rem --- Convert 3-char REVISION_SRC in GLM_BUDGETMASTER (glm-08) to 6-chars (without actual or budget flag)
+        
+                rem --- Increment progress meter
+                meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": GLM_BUDGETMASTER"
+                meter_proc_recs=meter_proc_recs+1
+                meter_action$="MTR-LST"
+                gosub disp_meter
+                print(log_dev)meter_text$
+
+                rem --- Open File(s)
+                num_files=1
+                dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                open_tables$[1]="GLM_BUDGETMASTER", open_opts$[1]="OTA"
+        
+                gosub open_tables
+        
+                glmBudgetMaster_dev=num(open_chans$[1])
+                dim glmBudgetMaster$:open_tpls$[1]
+
+                rem --- Convert 1-char budget_code + 1-char actual_or_budget +1-char amt_or_units REVISION_SRC
+                rem --- into 5-char budget_code + 1-char amt_or_units REVISION_SRC.
+                read(glmBudgetMaster_dev,key="",dom=*next)
+                while 1
+                    readrecord(glmBudgetMaster_dev,end=*break)glmBudgetMaster$
+                    budgetCode$=pad(glmBudgetMaster.revision_src$(1,1),len(glmBudgetMaster.budget_code$))
+                    amtOrUnits$=glmBudgetMaster.revision_src$(3,1)
+                    glmBudgetMaster.revision_src$=budgetCode$+amtOrUnits$
+                    writerecord(glmBudgetMaster_dev)glmBudgetMaster$
+                wend
+
+                rem --- Conversion completed successfully
+                rem --- Increment progress meter
+                meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+convCtrl!.getProperty(conv_marker_name$(2))
+                meter_proc_recs=meter_proc_recs+1
+                meter_action$="MTR-LST"
+                gosub disp_meter
+                print(log_dev)meter_text$
+
+                rem --- Delete conversion marker file
+                if convmarkerFile!.delete() then
+                    rem --- Increment progress meter
+                    meter_text$=Translate!.getTranslation("AON_CONV_MARKER_DELETED","Conversion marker file deleted")+": "+conv_marker_file$
+                    meter_proc_recs=meter_proc_recs+1
+                    meter_action$="MTR-LST"
+                    gosub disp_meter
+                    print(log_dev)meter_text$
+                endif
+            else
+                rem --- Required file missing
+                msg_id$="AD_FILE_MISSING"
+                dim msg_tokens$[1]
+                msg_tokens$[1]=missingFiles!.get(0)
+                gosub disp_message
+                err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:               Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+missingFiles!.get(0)+" *****"
+                goto done
+            endif
+        else
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_CONV_MARKER_NOT_FOUND","Conversion marker file not found")+": "+conv_marker_file$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+        endif
     else
         rem --- Increment progress meter
         meter_text$=this_module$+" "+Translate!.getTranslation("AON_NOT","Not")+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
