@@ -5,6 +5,24 @@ rem --- Initialize displayColumns! object
 
 rem --- Initialize revision_src list button
 	ldat_list$=displayColumns!.getStringButtonList()
+	rem --- Convert 2-char list codes to 6-char revision_src codes
+	new_ldat_list$=""
+	while len(ldat_list$)>0
+		xpos=pos(";"=ldat_list$)
+		this_button$=ldat_list$(1,xpos)
+		ldat_list$=ldat_list$(xpos+1)
+
+		record_id$=this_button$(pos("~"=this_button$)+1)
+		if len(record_id$)<7 then
+			record_id$=record_id$(1,len(record_id$)-2)
+			amt_or_units$=this_button$(len(this_button$)-1,1)
+			this_button$=this_button$(1,pos("~"=this_button$))+pad(record_id$,5)+amt_or_units$+";"
+		endif
+
+		new_ldat_list$=new_ldat_list$+this_button$
+	wend
+	ldat_list$=new_ldat_list$
+
 	callpoint!.setTableColumnAttribute("GLM_BUDGETMASTER.REVISION_SRC","LDAT",ldat_list$)
 [[GLM_BUDGETMASTER.GL_WILDCARD.AVAL]]
 rem --- Check length of wildcard against defined mask for GL Account
