@@ -8,15 +8,11 @@ rem  |  Copyright BASIS International Ltd.  All Rights Reserved.
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
 
-rem --- This program is run from four places:
+rem --- This program is run from three places:
 
-rem wgh ... 8492 ... stopped here
 rem --- 1) GL Summary Activity Report (gle_summary)
 rem --- 2) Budget Revision Report (gle_budgetreport)
-rem wgh ... 8492 ... stopped here
 rem --- 3) Budget Revision Register (gle_budgetupdate)
-rem wgh ... 8492 ... stopped here
-rem --- 4) GL Account Maintenance
 
 rem --- Pick screens for each of these tasks are different, but the
 rem --- front end programs must provide the following values:
@@ -249,7 +245,7 @@ rem --- Retrieve and store titles
     if records=0 goto done
     dim titles$[records]
     for x=1 to records
-        record$=id$[x]
+        record$=id$[x-1]
         flag$=au$(x,1)
         titles$[x]=displayColumns!.getRevTitle(record$+"::"+flag$)
     next x
@@ -285,7 +281,7 @@ rem --- Get next GL Account Master (glm-01) record
 
           for r=1 to records
               dim a[mp],u[mp],x[max]
-              record_id$=id$[r]
+              record_id$=id$[r-1]
               flag$=au$(r,1)
             if (record_id$="2" and priorTripKey$<>"") or (record_id$="4" and nextTripKey$<>"") then
                 rem --- Align fiscal periods
