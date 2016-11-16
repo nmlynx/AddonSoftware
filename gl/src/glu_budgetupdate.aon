@@ -56,7 +56,7 @@ rem --- Dimension string templates
 
 rem --- Retrieve parameter records
 
-    glm08_key$=firm_id$+id$+au$
+    glm08_key$=firm_id$+this_id$+au$
     find record (glm08_dev,key=glm08_key$,dom=std_exit) glm08a$
     mp=13
     
@@ -105,7 +105,7 @@ rem --- Get next GL account master
           rem --- Retrieve budget record
 
           dim a[mp],u[mp]
-          glm_budgetplans_key$=firm_id$+glm01a.gl_account$+displayColumns!.getYear(id$)+id$
+          glm_budgetplans_key$=firm_id$+glm01a.gl_account$+displayColumns!.getYear(this_id$)+this_id$
           find record (glm_budgetplans_dev,key=glm_budgetplans_key$,dom=*continue) glm_budgetplans$
           call pgmdir$+"glc_summary.aon","R",glm_budgetplans$,a[all],u[all],status
 

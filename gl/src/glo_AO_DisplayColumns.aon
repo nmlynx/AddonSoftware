@@ -98,12 +98,21 @@ DisplayColumns_error:rem --- Method error trap/handler
         method protected BBjString fixDisplayColumnsKey(BBjString displayColumnsKey$)
             seterr fixDisplayColumnsKey_error
             
-            xPos = pos("::"=displayColumnsKey$)
+            xPos=pos("::"=displayColumnsKey$)
             if xPos=0 then
-                fixedKey$=cvs(displayColumnsKey$,2)+"::A"
+                code$=cvs(displayColumnsKey$,2)
+                if len(code$)=1 and pos(code$="012345") then
+                    fixedKey$=code$+"::A"
+                else
+                    fixedKey$=displayColumnsKey$+"::A"
+                endif
             else 
-                code$ = cvs(displayColumnsKey$(1,xPos-1),2)
-                fixedKey$ = code$+displayColumnsKey$(xPos)
+                code$=cvs(displayColumnsKey$(1,xPos-1),2)
+                if len(code$)=1 and pos(code$="012345") then
+                    fixedKey$=code$+displayColumnsKey$(xPos)
+                else
+                    fixedKey$=displayColumnsKey$(1,xPos-1)+displayColumnsKey$(xPos)
+                endif
             endif
 
             methodret fixedKey$
@@ -467,7 +476,7 @@ getVectorButtonList_error:rem --- Method error trap/handler
         method public BBjString getYear(BBjString displayColumnsKey$)
             seterr getYear_error
             year$=""
-        
+
             key$=#fixDisplayColumnsKey(displayColumnsKey$)
             if #displayColumns!.containsKey(key$) then
                 year = num(#currentFiscalYear$) + #getYearInc(key$)

@@ -10,9 +10,12 @@ rem  +-----------------------------------------+
 
 rem --- This program is run from four places:
 
+rem wgh ... 8492 ... stopped here
 rem --- 1) GL Summary Activity Report (gle_summary)
 rem --- 2) Budget Revision Report (gle_budgetreport)
+rem wgh ... 8492 ... stopped here
 rem --- 3) Budget Revision Register (gle_budgetupdate)
+rem wgh ... 8492 ... stopped here
 rem --- 4) GL Account Maintenance
 
 rem --- Pick screens for each of these tasks are different, but the
@@ -21,7 +24,7 @@ rem --- front end programs must provide the following values:
 rem --- BEGACCT$ : Optional beginning account number
 rem --- ENDACCT$ : Optional ending account number
 rem --- WILDCARD$: Optional wildcard mask
-rem --- ID$      : Up to four record id's (summary or budget)
+rem --- ID$[n]   : Up to four record id's (summary or budget)
 rem --- AU$      : Up to four flags for amounts or units
 
 rem --- At least one id and corresponding amount/units flag must be
@@ -93,12 +96,19 @@ rem --- Retrieve parameter records
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","U","",m2$,0,m2
     mp=13
     subheadings=1
+    id$=":"
+    records=0
+    for i=0 to 3
+        if cvs(id$[i],2)="" then break
+        id$=id$+id$[i]+":"
+        records=records+1
+    next i
 
 rem --- Determine the maximum number of fiscal periods the report must handle
 
     total_pers=num(gls_calendar.total_pers$)
     rem --- If reporting budget, or fiscal periods aren't being aligned, then must check total_pers for that fiscal year.
-    if pos("3"=id$) or (alignPeriods$="N" and pos("2"=id$)) then
+    if pos(":3:"=id$) or (alignPeriods$="N" and pos(":2:"=id$)) then
         rem --- Get total_pers for the prior fiscal year
         dim priorCalendar$:fattr(gls_calendar$)
         find record (gls_calendar_dev,key=firm_id$+str(num(gls01a.current_year$)-1:"0000"),err=*next) priorCalendar$
@@ -111,7 +121,7 @@ rem --- Determine the maximum number of fiscal periods the report must handle
         endif
         if num(priorCalendar.total_pers$)>total_pers then total_pers=num(priorCalendar.total_pers$)
     endif
-    if pos("5"=id$) or (alignPeriods$="N" and pos("4"=id$)) then
+    if pos(":5:"=id$) or (alignPeriods$="N" and pos(":4:"=id$)) then
         rem --- Get total_pers for the next fiscal year
         dim nextCalendar$:fattr(gls_calendar$)
         find record (gls_calendar_dev,key=firm_id$+str(num(gls01a.current_year$)+1:"0000"),err=*next) nextCalendar$
@@ -132,12 +142,12 @@ rem --- transactions from GLT_TRANSDETAIL for non-aligned selected fiscal years.
     if alignPeriods$="Y" then
         use ::glo_AlignFiscalCalendar.aon::AlignFiscalCalendar
         alignCalendar!=new AlignFiscalCalendar(firm_id$)
-        if pos("2"=id$) then
+        if pos(":2:"=id$) then
             priorYear$=str(num(gls01a.current_year$)-1:"0000")
             align_prior=alignCalendar!.canAlignCalendar(priorYear$)
             if align_prior then priorTripKey$=alignCalendar!.alignCalendar(priorYear$)
         endif
-        if pos("4"=id$) then
+        if pos(":4:"=id$) then
             nextYear$=str(num(gls01a.current_year$)+1:"0000")
             align_next=alignCalendar!.canAlignCalendar(nextYear$)
             if align_next then nextTripKey$=alignCalendar!.alignCalendar(nextYear$)
@@ -192,7 +202,6 @@ rem --- Initializations
     mm$="###,##0-"
     tm=len(tm$)
     mm=len(mm$)
-    records=len(cvs(id$,2))
     if total_pers>12 h1$=Translate!.getTranslation("AON_ACCT"),lines=records*2+2
     recs=0
     total_recs=0
@@ -240,7 +249,7 @@ rem --- Retrieve and store titles
     if records=0 goto done
     dim titles$[records]
     for x=1 to records
-        record$=id$(x,1)
+        record$=id$[x]
         flag$=au$(x,1)
         titles$[x]=displayColumns!.getRevTitle(record$+"::"+flag$)
     next x
@@ -276,9 +285,8 @@ rem --- Get next GL Account Master (glm-01) record
 
           for r=1 to records
               dim a[mp],u[mp],x[max]
-              record_id$=id$(r,1)
+              record_id$=id$[r]
               flag$=au$(r,1)
-              if pos(record_id$="012345ABCDEFGHIJKLMNOPQRSTUVWXYZ")=0 continue
             if (record_id$="2" and priorTripKey$<>"") or (record_id$="4" and nextTripKey$<>"") then
                 rem --- Align fiscal periods
                 if record_id$="2" then theYear$=priorYear$
