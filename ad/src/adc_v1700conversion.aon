@@ -497,7 +497,6 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
                                     redim glmBudgetPlans$
                                     call pgmdir$+"adc_copyfile.aon",old_glm02_tpl$,glmBudgetPlans$,status
                                     if status then break
-                                    glmBudgetPlans.year$=DisplayColumns!.getYear(old_glm02_tpl.record_id$)
                                     glmBudgetPlans.budget_code$=old_glm02_tpl.record_id$
                                     writerecord(glmBudgetPlans_dev)glmBudgetPlans$
                                 endif
@@ -566,7 +565,6 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
                                 redim glmBudgetPlans$
                                 call pgmdir$+"adc_copyfile.aon",glmAcctSummary$,glmBudgetPlans$,status
                                 if status then break
-                                glmBudgetPlans.year$=DisplayColumns!.getYear(record_id$)
                                 glmBudgetPlans.budget_code$=record_id$
                                 writerecord(glmBudgetPlans_dev)glmBudgetPlans$
                             endif
