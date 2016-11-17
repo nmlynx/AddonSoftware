@@ -1929,7 +1929,7 @@
                 <td></td>
                 <td>glm_acctsummary</td>
                 <td> Split into three tables: glm_acctbudget, glm_acctsummary and glm_budgetplans.  Re-purposed glm_acctsummary (glm-02) for only actual amounts and units. Replaced RECORD_ID with YEAR. Changed PRIMARY key and added new alternate key BY_YEAR_ACCT.</td>
-                <td>EM Update Wizard and Auto-Launch Data Conversion.</td>
+                <td><span class="style8">EM Update Wizard may log failure for this file (glm-02). EM Update Wizard and Auto-Launch Data Conversion.</td>
               </tr>
               <tr>
                 <td></td>
@@ -1957,6 +1957,20 @@
                 <td></td>
                 <td>gls_calendar</td>
                 <td>No longer a child of gls_params, and now holds only fiscal calendar info.</td>
+                <td>EM Update Wizard and Auto-Launch Data Conversion.</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td>gls_columns</td>
+                <td>Expanded BUD_MN_COLS element type from 1-char to 5-char.</td>
+                <td>EM Update Wizard</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td></td>
+                <td>gls_params</td>
+                <td>Fiscal calendar fields moved to gls_calendar, which no longer a child table. Expanded BUD_MN_COLS element type from 1-char to 5-char.</td>
                 <td>EM Update Wizard and Auto-Launch Data Conversion.</td>
               </tr>
               <tr>
