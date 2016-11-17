@@ -292,7 +292,7 @@ rem --- Get next GL Account Master (glm-01) record
                 call pgmdir$+"glc_summary.aon","R",glwAcctSummary$,a[all],u[all],status
             else
                 if displayColumns!.getActBud(record_id$)="P" then
-                    glm_budgetplans_key$=glm01a.firm_id$+glm01a.gl_account$+displayColumns!.getYear(record_id$)+record_id$
+                    glm_budgetplans_key$=glm01a.firm_id$+glm01a.gl_account$+record_id$
                     find record (glm_budgetplans_dev,key=glm_budgetplans_key$,dom=build_detail)glm_budgetplans$
                     call pgmdir$+"glc_summary.aon","R",glm_budgetplans$,a[all],u[all],status
                 else

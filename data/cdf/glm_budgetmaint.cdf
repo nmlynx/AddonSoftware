@@ -280,8 +280,11 @@ switch notice.code
 				gls_cur_yr$=callpoint!.getDevObject("gls_cur_yr")
 				glm02_key$=firm_id$+thisYear$+gls_cur_yr$+callpoint!.getColumnData("GLM_BUDGETMAINT.GL_ACCOUNT")
 			else
-				glm02_key$=firm_id$+callpoint!.getColumnData("GLM_BUDGETMAINT.GL_ACCOUNT")+thisYear$
-				if actbud$="P" then glm02_key$=glm02_key$+record_type$
+				if actbud$="P" then
+					glm02_key$=firm_id$+callpoint!.getColumnData("GLM_BUDGETMAINT.GL_ACCOUNT")+record_type$
+				else
+					glm02_key$=firm_id$+callpoint!.getColumnData("GLM_BUDGETMAINT.GL_ACCOUNT")+thisYear$
+				endif
 			endif
 
 			col_type$=amt_or_units$
@@ -350,11 +353,12 @@ if cols>0
 
 	budget.firm_id$=firm_id$
 	budget.gl_account$=callpoint!.getColumnData("GLM_BUDGETMAINT.GL_ACCOUNT")
-	budget.year$=displayColumns!.getYear(record_type$)
-	budget_key$=budget.firm_id$+budget.gl_account$+budget.year$
 	if actbud$="P" then
 		budget.budget_code$=record_type$
-		budget_key$=budget_key$+budget.budget_code$
+		budget_key$=budget.firm_id$+budget.gl_account$+budget.budget_code$
+	else
+		budget.year$=displayColumns!.getYear(record_type$)
+		budget_key$=budget.firm_id$+budget.gl_account$+budget.year$
 	endif
 	extractrecord(budget_dev,key=budget_key$,dom=*next)budget$; rem Advisory Locking
 
@@ -465,8 +469,11 @@ rem gl_account$:	input
 			gls_cur_yr$=callpoint!.getDevObject("gls_cur_yr")
 			glm02_key$=firm_id$+thisYear$+gls_cur_yr$+gl_account$
 		else
-			glm02_key$=firm_id$+gl_account$+thisYear$
-			if actbud$="P" then glm02_key$=glm02_key$+budgetType$
+			if actbud$="P" then
+				glm02_key$=firm_id$+gl_account$+budgetType$
+			else
+				glm02_key$=firm_id$+gl_account$+thisYear$
+			endif
 		endif
 
 		col_type$=tps!.getItem(x)

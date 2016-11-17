@@ -107,7 +107,7 @@ rem --- Get next account master
 
         if displayColumns!.getActBud(source$)="P" then
             redim glm_budgetplans$
-            glm_budgetplans_key$=glm01a.firm_id$+glm01a.gl_account$+displayColumns!.getYear(source$)+source$
+            glm_budgetplans_key$=glm01a.firm_id$+glm01a.gl_account$+source$
             find record (glm_budgetplans_dev,key=glm_budgetplans_key$,dom=*next)glm_budgetplans$
             call pgmdir$+"glc_summary.aon","R",glm_budgetplans$,a[all],u[all],status
         else
@@ -144,10 +144,9 @@ rem --- Get next account master
           dim a[mp],u[mp]
           glm_budgetplans.firm_id$=glm01a.firm_id$
           glm_budgetplans.gl_account$=glm01a.gl_account$
-          glm_budgetplans.year$=displayColumns!.getYear(budget_code$)
           glm_budgetplans.budget_code$=budget_code$
           extract record (glm_budgetplans_dev,key=glm_budgetplans.firm_id$+glm_budgetplans.gl_account$+
-:           glm_budgetplans.year$+glm_budgetplans.budget_code$,dom=update_budget) glm_budgetplans$; rem Advisory Locking
+:           glm_budgetplans.budget_code$,dom=update_budget) glm_budgetplans$; rem Advisory Locking
           if glm08a.overwrite$<>"Y" then read(glm_budgetplans_dev); continue
 
           update_budget: rem --- Update/create summary record for this account/budget revision

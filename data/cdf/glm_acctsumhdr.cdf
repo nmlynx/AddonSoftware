@@ -182,8 +182,11 @@ rem analyze gui_event$ and notice$ to see which control's callback triggered the
 							gls_cur_yr$=callpoint!.getDevObject("gls_cur_yr")
 							glm02_key$=firm_id$+thisYear$+gls_cur_yr$+callpoint!.getColumnData("GLM_ACCTSUMHDR.GL_ACCOUNT")
 						else
-							glm02_key$=firm_id$+callpoint!.getColumnData("GLM_ACCTSUMHDR.GL_ACCOUNT")+thisYear$
-							if actbud$="P" then glm02_key$=glm02_key$+record_type$
+							if actbud$="P" then
+								glm02_key$=firm_id$+callpoint!.getColumnData("GLM_ACCTSUMHDR.GL_ACCOUNT")+record_type$
+							else
+								glm02_key$=firm_id$+callpoint!.getColumnData("GLM_ACCTSUMHDR.GL_ACCOUNT")+thisYear$
+							endif
 						endif
 
 						col_type$=amt_or_units$
@@ -619,11 +622,12 @@ rem --- Only budget and planned budget rows are editable. Actual rows are disabl
 
 		budget.firm_id$=firm_id$
 		budget.gl_account$=callpoint!.getColumnData("GLM_ACCTSUMHDR.GL_ACCOUNT")
-		budget.year$=displayColumns!.getYear(record_type$)
-		budget_key$=budget.firm_id$+budget.gl_account$+budget.year$
 		if actbud$="P" then
 			budget.budget_code$=record_type$
-			budget_key$=budget_key$+budget.budget_code$
+			budget_key$=budget.firm_id$+budget.gl_account$+budget.budget_code$
+		else
+		budget.year$=displayColumns!.getYear(record_type$)
+		budget_key$=budget.firm_id$+budget.gl_account$+budget.year$
 		endif
 		extractrecord(budget_dev,key=budget_key$,dom=*next)budget$; rem Advisory Locking
 
@@ -742,8 +746,11 @@ rem ======================================================
 			gls_cur_yr$=callpoint!.getDevObject("gls_cur_yr")
 			glm02_key$=firm_id$+thisYear$+gls_cur_yr$+callpoint!.getColumnData("GLM_ACCTSUMHDR.GL_ACCOUNT")
 		else
-			glm02_key$=firm_id$+callpoint!.getColumnData("GLM_ACCTSUMHDR.GL_ACCOUNT")+thisYear$
-			if actbud$="P" then glm02_key$=glm02_key$+recordType$
+			if actbud$="P" then
+				glm02_key$=firm_id$+callpoint!.getColumnData("GLM_ACCTSUMHDR.GL_ACCOUNT")+recordType$
+			else
+				glm02_key$=firm_id$+callpoint!.getColumnData("GLM_ACCTSUMHDR.GL_ACCOUNT")+thisYear$
+			endif
 		endif
 
 		col_type$=tps!.getItem(x)
