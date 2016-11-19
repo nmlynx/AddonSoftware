@@ -10,16 +10,17 @@ rem --- Update grid data when leave checkbox and value has changed
 		rem --- transactions from GLT_TRANSDETAIL for non-aligned selected fiscal years.
 		if alignPeriods$="Y" then
 			cols!=UserObj!.getItem(num(user_tpl.cols_ofst$))
+			recordType$=":"
 			for i=0 to cols!.size()-1
-				recordType$=recordType$+cols!.getItem(i)
+				recordType$=recordType$+cols!.getItem(i)+":"
 			next i
 			alignCalendar! = callpoint!.getDevObject("alignCalendar")
-			if pos("2"=recordType$) then
+			if pos(":2:"=recordType$) then
 				priorYear$=str(num(callpoint!.getDevObject("gls_cur_yr"))-1:"0000")
 				align_prior=alignCalendar!.canAlignCalendar(priorYear$)
 				if align_prior then priorTripKey$=alignCalendar!.alignCalendar(priorYear$)
 			endif
-			if pos("4"=recordType$) then
+			if pos(":4:"=recordType$) then
 				nextYear$=str(num(callpoint!.getDevObject("gls_cur_yr"))+1:"0000")
 				align_next=alignCalendar!.canAlignCalendar(nextYear$)
 				if align_next then nextTripKey$=alignCalendar!.alignCalendar(nextYear$)
@@ -95,13 +96,13 @@ readrecord(gls_calendar_dev,key=firm_id$+gls01a.current_year$,dom=std_missing_pa
 num_pers=num(gls_calendar.total_pers$)
 for i=0 to cols!.size()-1
 	recordType$=cols!.getItem(i)
-	if pos(recordType$="23") then
+	if len(recordType$)=1 and pos(recordType$="23") then
 		dim priorCalendar$:fattr(gls_calendar$)
 		priorYear$=str(num(gls01a.current_year$)-1)
 		readrecord(gls_calendar_dev,key=firm_id$+priorYear$,dom=*next)priorCalendar$
 		if num(priorCalendar.total_pers$)>num_pers then num_pers=num(priorCalendar.total_pers$)
 	endif
-	if pos(recordType$="45") then
+	if len(recordType$)=1 and pos(recordType$="45") then
 		dim nextCalendar$:fattr(gls_calendar$)
 		nextYear$=str(num(gls01a.current_year$)+1)
 		readrecord(gls_calendar_dev,key=firm_id$+nextYear$,dom=*next)nextCalendar$
@@ -222,16 +223,17 @@ codes!=UserObj!.getItem(num(user_tpl.codes_ofst$))
 gridBudgets!=UserObj!.getItem(num(user_tpl.grid_ofst$))
 gridBudgets!.clearMainGrid()
 
-num_codes=codes!.size()
-num_cols=cols!.size()
-
-for x=0 to num_cols-1
+for x=0 to cols!.size()-1
+	this_col$=cols!.getItem(x)
+	this_tp$=tps!.getItem(x)
 	x1=0
-	while x1<num_codes-1
+	while x1<codes!.size()-1
 		wcd$=codes!.getItem(x1)
-		if cols!.getItem(x)=wcd$(1,1) and tps!.getItem(x)=wcd$(2,1)
+		col$=pad(wcd$(1,len(wcd$)-1),len(this_col$))
+		tp$=wcd$(len(wcd$))
+		if col$=this_col$ and tp$=this_tp$
 			gridBudgets!.setCellListSelection(x,0,x1,1)
-			if pos(wcd$(1,1)="024",1)<>0
+			if len(col$)=1 and pos(col$="024") then
 				gridBudgets!.setRowEditable(x,0)
 			endif
 			break
@@ -239,7 +241,6 @@ for x=0 to num_cols-1
 			x1=x1+1
 		endif
 	wend
-	
 next x
 [[GLM_BUDGETMAINT.ACUS]]
 rem process custom event
@@ -457,14 +458,13 @@ rem gl_account$:	input
 	gridBudgets!=UserObj!.getItem(num(user_tpl.grid_ofst$))
 	cols!=UserObj!.getItem(num(user_tpl.cols_ofst$))
 	tps!=UserObj!.getItem(num(user_tpl.tps_ofst$))
-	num_cols=cols!.size()	
 	
-	for x=0 to num_cols-1
+	for x=0 to cols!.size()-1
 		budgetType$=cols!.getItem(x)
 		displayColumns!=callpoint!.getDevObject("displayColumns")
 		thisYear$=displayColumns!.getYear(budgetType$)
 		actbud$=displayColumns!.getActBud(budgetType$)
-		if callpoint!.getDevObject("align_fiscal_periods")="Y" and pos(budgetType$="24") then
+		if callpoint!.getDevObject("align_fiscal_periods")="Y" and len(budgetType$)=1 and pos(budgetType$="24") then
 			rem --- Use GLW_ACCTSUMMARY when fiscal periods are aligned
 			gls_cur_yr$=callpoint!.getDevObject("gls_cur_yr")
 			glm02_key$=firm_id$+thisYear$+gls_cur_yr$+gl_account$

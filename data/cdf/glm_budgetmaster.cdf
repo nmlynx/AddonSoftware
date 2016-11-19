@@ -1,22 +1,12 @@
 [[GLM_BUDGETMASTER.ADIS]]
-rem --- Revision_src does not match ListButton codes, so must select the appropriate index.
+rem --- Revision_src does not match ListButton codes, so must parse out record_id$ and amt_or_units$.
 	revision_src$=callpoint!.getColumnData("GLM_BUDGETMASTER.REVISION_SRC")
 	record_id$=revision_src$(1,len(revision_src$)-1)
 	amt_or_units$=revision_src$(len(revision_src$))
 	temp_id$=cvs(record_id$,2)
 	if len(temp_id$)=1 and pos(temp_id$="012345") then record_id$=temp_id$
 
-	index=0
-	codes!=callpoint!.getDevObject("codes")
-	for i=0 to codes!.size()-1
-		if codes!.getItem(i)=record_id$+amt_or_units$ then
-			index=i
-			break
-		endif
-	next i
-
-	revisionListButton!=callpoint!.getControl("GLM_BUDGETMASTER.REVISION_SRC")
-	revisionListButton!.selectIndex(index)
+ 	callpoint!.setColumnData("GLM_BUDGETMASTER.REVISION_SRC",record_id$+amt_or_units$,1)
 [[GLM_BUDGETMASTER.BFMC]]
 rem --- Initialize displayColumns! object
 	use ::glo_DisplayColumns.aon::DisplayColumns
@@ -25,20 +15,6 @@ rem --- Initialize displayColumns! object
 rem --- Initialize revision_src ListButton
 	ldat_list$=displayColumns!.getStringButtonList()
 	callpoint!.setTableColumnAttribute("GLM_BUDGETMASTER.REVISION_SRC","LDAT",ldat_list$)
-
-rem --- Make vector of ListButton codes for quick searching
-	codes!=SysGUI!.makeVector()
-	while len(ldat_list$)>0
-		xpos=pos(";"=ldat_list$)
-		this_button$=ldat_list$(1,xpos)
-		ldat_list$=ldat_list$(xpos+1)
-
-		record_id$=this_button$(pos("~"=this_button$)+1)
-		record_id$=record_id$(1,len(record_id$)-2)
-		amt_or_units$=this_button$(len(this_button$)-1,1)
-		codes!.addItem(record_id$+amt_or_units$)
-	wend
-	callpoint!.setDevObject("codes",codes!)
 [[GLM_BUDGETMASTER.GL_WILDCARD.AVAL]]
 rem --- Check length of wildcard against defined mask for GL Account
 	if callpoint!.getUserInput()<>""
