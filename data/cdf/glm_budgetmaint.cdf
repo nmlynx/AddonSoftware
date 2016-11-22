@@ -123,9 +123,9 @@ for i=0 to cols!.size()-1
 			year$=displayColumns!.getYear(source$)
 			findrecord(gls_calendar_dev,key=firm_id$+year$,dom=*continue)nextCalendar$
 			if num(nextCalendar.total_pers$)>num_pers then num_pers=num(nextCalendar.total_pers$)
-			if num_pers=13 then break
 		endif
 	endif
+	if num_pers=13 then break
 next i
 
 rem load up period abbr names from gls_params

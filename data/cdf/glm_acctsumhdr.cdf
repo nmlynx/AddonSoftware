@@ -336,25 +336,31 @@ rem --- Need to handle possible year in grid with more periods than the current 
 	num_pers=num(gls_calendar.total_pers$)
 	for i=0 to cols!.size()-1
 		recordType$=cols!.getItem(i)
-		if pos(recordType$="23") then
+		if num_pers<13 and len(recordType$)=1 and pos(recordType$="23") then
 			dim priorCalendar$:fattr(gls_calendar$)
 			priorYear$=str(num(gls01a.current_year$)-1)
 			readrecord(gls_calendar_dev,key=firm_id$+priorYear$,dom=*next)priorCalendar$
 			if num(priorCalendar.total_pers$)>num_pers then num_pers=num(priorCalendar.total_pers$)
 		endif
-		if pos(recordType$="45") then
+		if num_pers<13 and len(recordType$)=1 and pos(recordType$="45") then
 			dim nextCalendar$:fattr(gls_calendar$)
 			nextYear$=str(num(gls01a.current_year$)+1)
 			readrecord(gls_calendar_dev,key=firm_id$+nextYear$,dom=*next)nextCalendar$
 			if num(nextCalendar.total_pers$)>num_pers then num_pers=num(nextCalendar.total_pers$)
 		endif
+		if num_pers=13 then break
 	next i
 
 rem --- load up period abbr names from gls_calendar
 
 	per_names!=SysGUI!.makeVector()
 	for x=1 to num_pers
-		per_names!.addItem(field(gls_calendar$,"ABBR_NAME_"+str(x:"00")))
+		abbr_name$=field(gls_calendar$,"ABBR_NAME_"+str(x:"00"))
+		if cvs(abbr_name$,2)<>"" then
+			per_names!.addItem(abbr_name$)
+		else
+			per_names!.addItem(str(x:"00"))
+		endif
 	next x
 			
 rem ---  create list for column zero of grid -- column type drop-down
