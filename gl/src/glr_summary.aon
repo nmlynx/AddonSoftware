@@ -147,7 +147,7 @@ rem --- Determine the maximum number of fiscal periods the report must handle
             else
                 dim nextCalendar$:fattr(gls_calendar$)
                 year$=displayColumns!.getYear(source$)
-                findrecord(gls_calendar_dev,key=firm_id$+year$,dom=*continue)nextCalendar$
+                findrecord(gls_calendar_dev,key=firm_id$+year$,dom=*next)nextCalendar$
                 if cvs(gls_calendar.firm_id$,2)="" then
                     msg_id$="AD_NO_FISCAL_CAL"
                     dim msg_tokens$[1]
@@ -155,9 +155,8 @@ rem --- Determine the maximum number of fiscal periods the report must handle
                     gosub disp_message
                     goto std_exit
                 endif
-                if num(nextCalendar.total_pers$)>total_pers then
-                    total_pers=num(nextCalendar.total_pers$)
-                    break
+                if num(nextCalendar.total_pers$)>total_pers then total_pers=num(nextCalendar.total_pers$)
+                if total_pers=13 then break
                 endif
             endif
         next i

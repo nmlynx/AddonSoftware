@@ -52,7 +52,7 @@ rem --- Needed classes
 use ::glo_AlignFiscalCalendar.aon::AlignFiscalCalendar
 use ::ado_util.src::util
 
-num_files=7
+num_files=8
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
 open_tables$[2]="GLM_ACCTSUMMARY",open_opts$[2]="OTA"
@@ -60,14 +60,17 @@ open_tables$[4]="GLS_CALENDAR",open_opts$[4]="OTA"
 open_tables$[5]="GLW_ACCTSUMMARY",open_opts$[5]="OTA"
 open_tables$[6]="GLM_ACCTBUDGET",open_opts$[6]="OTA"
 open_tables$[7]="GLM_BUDGETPLANS",open_opts$[7]="OTA"
+open_tables$[8]="GLM_BUDGETMASTER",open_opts$[8]="OTA"
 
 gosub open_tables
 
 gls01_dev=num(open_chans$[1])
 gls_calendar_dev=num(open_chans$[4])
+glm_budgetmaster_dev=num(open_chans$[8])
 
 dim gls01a$:open_tpls$[1]
 dim gls_calendar$:open_tpls$[4]
+dim glm_budgetmaster$:open_tpls$[8]
 
 readrecord(gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
 if gls01a.budget_flag$<>"Y"
@@ -96,24 +99,44 @@ readrecord(gls_calendar_dev,key=firm_id$+gls01a.current_year$,dom=std_missing_pa
 num_pers=num(gls_calendar.total_pers$)
 for i=0 to cols!.size()-1
 	recordType$=cols!.getItem(i)
-	if len(recordType$)=1 and pos(recordType$="23") then
+	if num_pers<13 and len(recordType$)=1 and pos(recordType$="23") then
 		dim priorCalendar$:fattr(gls_calendar$)
 		priorYear$=str(num(gls01a.current_year$)-1)
 		readrecord(gls_calendar_dev,key=firm_id$+priorYear$,dom=*next)priorCalendar$
 		if num(priorCalendar.total_pers$)>num_pers then num_pers=num(priorCalendar.total_pers$)
 	endif
-	if len(recordType$)=1 and pos(recordType$="45") then
+	if num_pers<13 and len(recordType$)=1 and pos(recordType$="45") then
 		dim nextCalendar$:fattr(gls_calendar$)
 		nextYear$=str(num(gls01a.current_year$)+1)
 		readrecord(gls_calendar_dev,key=firm_id$+nextYear$,dom=*next)nextCalendar$
 		if num(nextCalendar.total_pers$)>num_pers then num_pers=num(nextCalendar.total_pers$)
+	endif
+	rem --- If reporting planned budgets, must check total_pers for the fiscal year of the revision source.
+	if num_pers<13 and len(recordType$)=5 then
+		findrecord(glm_budgetmaster_dev,key=firm_id$+recordType$+tps!.getItem(i),dom=*continue)glm_budgetmaster$
+		source$=glm_budgetmaster.revision_src$
+		source$=source$(1,pos(" "<>source$,-1)-1)
+		if displayColumns!.getActBud(source$)="P" then
+			continue
+		else
+			dim nextCalendar$:fattr(gls_calendar$)
+			year$=displayColumns!.getYear(source$)
+			findrecord(gls_calendar_dev,key=firm_id$+year$,dom=*continue)nextCalendar$
+			if num(nextCalendar.total_pers$)>num_pers then num_pers=num(nextCalendar.total_pers$)
+			if num_pers=13 then break
+		endif
 	endif
 next i
 
 rem load up period abbr names from gls_params
 per_names!=SysGUI!.makeVector()
 for x=1 to num_pers
-	per_names!.addItem(field(gls_calendar$,"ABBR_NAME_"+str(x:"00")))
+	abbr_name$=field(gls_calendar$,"ABBR_NAME_"+str(x:"00"))
+	if cvs(abbr_name$,2)<>"" then
+		per_names!.addItem(abbr_name$)
+	else
+		per_names!.addItem(str(x:"00"))
+	endif
 next x
 			
 rem create list for column zero of grid -- column type drop-down
