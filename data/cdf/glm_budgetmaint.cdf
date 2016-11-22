@@ -256,8 +256,10 @@ for x=0 to cols!.size()-1
 		tp$=wcd$(len(wcd$))
 		if col$=this_col$ and tp$=this_tp$
 			gridBudgets!.setCellListSelection(x,0,x1,1)
+			col$=cvs(col$,2)
 			if len(col$)=1 and pos(col$="024") then
 				gridBudgets!.setRowEditable(x,0)
+				gridBudgets!.setCellEditable(x,0,1)
 			endif
 			break
 		else

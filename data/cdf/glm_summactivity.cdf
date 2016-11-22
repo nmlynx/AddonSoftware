@@ -242,12 +242,17 @@ num_cols=cols!.size()
 any_budget_cols=0
 
 for x=0 to num_cols-1
+	this_col$=cols!.getItem(x)
+	this_tp$=tps!.getItem(x)
 	x1=0
 	while x1<num_codes-1
 		wcd$=codes!.getItem(x1)
-		if cols!.getItem(x)=wcd$(1,1) and tps!.getItem(x)=wcd$(2,1)
+		col$=pad(wcd$(1,len(wcd$)-1),len(this_col$))
+		tp$=wcd$(len(wcd$))
+		if col$=this_col$ and tp$=this_tp$
 			gridActivity!.setCellListSelection(x,0,x1,1)
-			if pos(wcd$(1,1)="024",1)<>0
+			col$=cvs(col$,2)
+			if len(col$)=1 and pos(col$="024") then
 				gridActivity!.setRowEditable(x,0)
 				gridActivity!.setCellEditable(x,0,1)
 			else
