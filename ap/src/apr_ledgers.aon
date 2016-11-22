@@ -68,6 +68,8 @@ rem --- Assign form input values to local variables
     thrudate$=Option!.getOptionData("REPORT_DATE")
     export_fmt$=Option!.getOptionData("EXPORT_FMT")
     vend_type$=Option!.getOptionData("VENDOR_TYPE")
+    rem "VENDOR INACTIVE FEATURE"
+    inactive$=Option!.getOptionData("VEND_INACTIVE")
 
 rem --- Retrieve parameter records
 
@@ -160,6 +162,8 @@ rem --- Read next Vendor Master (apm-01) record
           
           if vend_type$="P" and apm01a.temp_vend$="Y" then continue
           if vend_type$="T" and apm01a.temp_vend$<>"Y" then continue          
+          rem "VENDOR INACTIVE FEATURE"
+          if inactive$="Y" and apm01a.vend_inactive$="Y" then continue
 
           total_recs=total_recs+1
           if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status

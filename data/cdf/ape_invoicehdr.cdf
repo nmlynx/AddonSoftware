@@ -42,40 +42,22 @@ rem --- Select invoice image and upload
 	call "apc_imageupload.aon", channels[all],templates$[all],ap_type$,vendor_id$,ap_inv_no$,man_check$,scan_docs_to$,status
 [[APE_INVOICEHDR.VENDOR_ID.BINQ]]
 rem --- Call custom query to only select vendors with selected AP Type
+rem -- Set to use the Custome Query Mode Instead for Both Lookups - Inactive Feature
+if user_tpl.multi_types$="Y" then
+   ap_type$=callpoint!.getColumnData("APE_INVOICEHDR.AP_TYPE")
+   if cvs(ap_type$,2)<>"" then
+      myapi!=BBjAPI()
+      myNS!=myapi!.getNamespace("ap_type","query",1)
+      myNS!.setValue("ap_type",ap_type$)
+      callpoint!.setTableColumnAttribute("APE_INVOICEHDR.VENDOR_ID","IDEF","AP_INV_VEND")
+   else
+      callpoint!.setTableColumnAttribute("APE_INVOICEHDR.VENDOR_ID","IDEF","AP_VEND_ACTIVE")
+   endif
+else
+   callpoint!.setTableColumnAttribute("APE_INVOICEHDR.VENDOR_ID","IDEF","AP_VEND_ACTIVE")
+endif
+callpoint!.setStatus("ACTIVATE")
 
-	ap_type$=callpoint!.getColumnData("APE_INVOICEHDR.AP_TYPE")
-	if cvs(ap_type$,2)<>""
-		myapi! = BBjAPI()
-		myNS! = myapi!.getNamespace("ap_type","query",1)
-		myNS!.setValue("ap_type",ap_type$)
-
-		dim filter_defs$[1,2]
-		filter_defs$[1,0]="APM_VENDMAST.FIRM_ID"
-		filter_defs$[1,1]="='"+firm_id$+"'"
-		filter_defs$[1,2]="LOCK"
-
-		call STBL("+DIR_SYP")+"bax_query.bbj",
-:			gui_dev, 
-:			form!,
-:			"AP_INV_VEND",
-:			"DEFAULT",
-:			table_chans$[all],
-:			sel_key$,
-:			filter_defs$[all]
-
-		if sel_key$<>""
-			call stbl("+DIR_SYP")+"bac_key_template.bbj",
-:				"APM_VENDMAST",
-:				"PRIMARY",
-:				apm_vend_key$,
-:				table_chans$[all],
-:				status$
-			dim apm_vend_key$:apm_vend_key$
-			apm_vend_key$=sel_key$
-			callpoint!.setColumnData("APE_INVOICEHDR.VENDOR_ID",apm_vend_key.vendor_id$,1)
-		endif
-		callpoint!.setStatus("ACTIVATE-ABORT")
-	endif
 [[APE_INVOICEHDR.AWIN]]
 rem --- setup utility
 
@@ -377,11 +359,29 @@ rem "check vend hist file to be sure this vendor/ap type ok and to set some defa
 vendor_id$ = callpoint!.getUserInput()
 gosub disp_vendor_comments
 gosub get_vendor_history
+rem "VENDOR INACTIVE - FEATURE"
+apm01_dev=fnget_dev("APM_VENDMAST")
+apm01_tpl$=fnget_tpl$("APM_VENDMAST")
+dim apm01a$:apm01_tpl$
+apm01a_key$=firm_id$+vendor_id$
+find record (apm01_dev,key=apm01a_key$,err=*break) apm01a$
+if apm01a.vend_inactive$="Y" then
+   call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+   msg_id$="AP_VEND_INACTIVE"
+   dim msg_tokens$[2]
+   msg_tokens$[1]=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
+   msg_tokens$[2]=cvs(apm01a.vendor_name$,2)
+   gosub disp_message
+   callpoint!.setStatus("ACTIVATE-ABORT")
+   goto std_exit
+endif
+
 if vend_hist$="" and user_tpl.multi_types$="Y"
 	msg_id$="AP_VEND_BAD_APTYPE"
 	gosub disp_message
 	callpoint!.setStatus("CLEAR;NEWREC;ABORT")
 endif
+
 [[APE_INVOICEHDR.ACCTING_DATE.AVAL]]
 rem make sure accting date is in an appropriate GL period
 gl$=user_tpl.glint$
@@ -438,6 +438,7 @@ gosub calc_grid_tots
 gosub disp_dist_bal
 callpoint!.setStatus("REFRESH")
 [[APE_INVOICEHDR.<CUSTOM>]]
+#include std_functions.src
 rem --------------------------------------------------------------------------------------------------------------
 disable_fields:
 rem --------------------------------------------------------------------------------------------------------------

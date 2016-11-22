@@ -103,6 +103,8 @@ rem --- Additional Reads
         if beg_prod$<>"" and ivm01a.product_type$<beg_prod$ then continue
         if end_prod$<>"" and ivm01a.product_type$>end_prod$ then continue
         if item_type$<>"" and ivm01a.item_type$<>item_type$ then continue  
+        rem "Inactive Vendor Feature"
+        if inactive$="Y" and apm01a.vend_inactive$="Y" then continue
 
 rem --- Breaks
 

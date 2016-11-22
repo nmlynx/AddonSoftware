@@ -70,6 +70,8 @@ rem --- Assign form input values to local variables
     endvend$=Option!.getOptionData("VENDOR_ID_2")
     export_fmt$=Option!.getOptionData("EXPORT_FMT")
     vend_type$=Option!.getOptionData("VENDOR_TYPE")
+    rem "VENDOR INACTIVE FEATURE"
+    inactive$=Option!.getOptionData("VEND_INACTIVE")
 
 rem --- Document initializations
 
@@ -135,6 +137,8 @@ rem --- Get next key
         
         if vend_type$="P" and apm01a.temp_vend$="Y" then continue
         if vend_type$="T" and apm01a.temp_vend$<>"Y" then continue
+        rem "VENDOR INACTIVE FEATURE"
+        if inactive$="Y" and apm01a.vend_inactive$="Y" then continue
         
         record_count=record_count+1
         if mod(record_count,milestone)=0 

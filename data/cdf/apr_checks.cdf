@@ -1,3 +1,38 @@
+[[APR_CHECKS.VENDOR_ID.AVAL]]
+rem "VENDOR INACTIVE - FEATURE"
+vendor_id$ = callpoint!.getUserInput()
+apm01_dev=fnget_dev("APM_VENDMAST")
+apm01_tpl$=fnget_tpl$("APM_VENDMAST")
+dim apm01a$:apm01_tpl$
+apm01a_key$=firm_id$+vendor_id$
+find record (apm01_dev,key=apm01a_key$,err=*break) apm01a$
+if apm01a.vend_inactive$="Y" then
+   call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+   msg_id$="AP_VEND_INACTIVE"
+   dim msg_tokens$[2]
+   msg_tokens$[1]=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
+   msg_tokens$[2]=cvs(apm01a.vendor_name$,2)
+   gosub disp_message
+   callpoint!.setStatus("ACTIVATE")
+endif
+
+[[APR_CHECKS.VENDOR_ID.BINQ]]
+rem --- Call custom query to only select vendors with selected AP Type
+rem -- Set to use the Custome Query Mode Instead for Both Lookups - Inactive Feature
+if cast(BBjString,callpoint!.getDevObject("multi_types"))="Y" then
+   ap_type$=callpoint!.getColumnData("APR_CHECKS.AP_TYPE")
+   if cvs(ap_type$,2)<>"" then
+      myapi!=BBjAPI()
+      myNS!=myapi!.getNamespace("ap_type","query",1)
+      myNS!.setValue("ap_type",ap_type$)
+      callpoint!.setTableColumnAttribute("APR_CHECKS.VENDOR_ID","IDEF","AP_INV_VEND")
+   else
+      callpoint!.setTableColumnAttribute("APR_CHECKS.VENDOR_ID","IDEF","AP_VEND_ACTIVE")
+   endif
+else
+   callpoint!.setTableColumnAttribute("APR_CHECKS.VENDOR_ID","IDEF","AP_VEND_ACTIVE")
+endif
+callpoint!.setStatus("ACTIVATE")
 [[APR_CHECKS.ADIS]]
 rem --- Clear Check Number when using previously saved selections.
 	callpoint!.setColumnData("APR_CHECKS.CHECK_NO","",1)
@@ -76,6 +111,7 @@ rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space 
 	callpoint!.setStatus("ABLEMAP-REFRESH")
 return
 #include std_missing_params.src
+#include std_functions.src
 [[APR_CHECKS.ASVA]]
 rem --- Validate Check Number
 if num(callpoint!.getColumnData("APR_CHECKS.CHECK_NO")) = 0 then

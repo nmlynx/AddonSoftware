@@ -1,3 +1,20 @@
+[[APE_PAYSELECT.VENDOR_ID.BINQ]]
+rem --- Call custom query to only select vendors with selected AP Type
+rem -- Set to use the Custome Query Mode Instead for Both Lookups - Inactive Feature
+if cast(BBjString,callpoint!.getDevObject("multi_types"))="Y" then
+   ap_type$=callpoint!.getColumnData("APE_PAYSELECT.AP_TYPE")
+   if cvs(ap_type$,2)<>"" then
+      myapi!=BBjAPI()
+      myNS!=myapi!.getNamespace("ap_type","query",1)
+      myNS!.setValue("ap_type",ap_type$)
+      callpoint!.setTableColumnAttribute("APE_PAYSELECT.VENDOR_ID","IDEF","AP_INV_VEND")
+   else
+      callpoint!.setTableColumnAttribute("APE_PAYSELECT.VENDOR_ID","IDEF","AP_VEND_ACTIVE")
+   endif
+else
+   callpoint!.setTableColumnAttribute("APE_PAYSELECT.VENDOR_ID","IDEF","AP_VEND_ACTIVE")
+endif
+callpoint!.setStatus("ACTIVATE")
 [[APE_PAYSELECT.VENDOR_ID.BINP]]
 rem --- Capture current value so will know in AVAL if it's changed
 	callpoint!.setDevObject("prev_vendor_id",callpoint!.getColumnData("APE_PAYSELECT.VENDOR_ID"))
@@ -349,6 +366,24 @@ rem --- Set filters on grid if value was changed
 		endif
 	endif
 [[APE_PAYSELECT.VENDOR_ID.AVAL]]
+rem "VENDOR INACTIVE - FEATURE"
+vendor_id$ = callpoint!.getUserInput()
+apm01_dev=fnget_dev("APM_VENDMAST")
+apm01_tpl$=fnget_tpl$("APM_VENDMAST")
+dim apm01a$:apm01_tpl$
+apm01a_key$=firm_id$+vendor_id$
+find record (apm01_dev,key=apm01a_key$,err=*break) apm01a$
+if apm01a.vend_inactive$="Y" then
+   call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+   msg_id$="AP_VEND_INACTIVE"
+   dim msg_tokens$[2]
+   msg_tokens$[1]=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
+   msg_tokens$[2]=cvs(apm01a.vendor_name$,2)
+   gosub disp_message
+   callpoint!.setStatus("ACTIVATE")
+   goto std_exit
+endif
+
 rem --- Set filters on grid if value was changed
 	if callpoint!.getUserInput()<>callpoint!.getDevObject("prev_vendor_id") then
 		gosub filter_recs
@@ -1828,6 +1863,7 @@ rem --- Set Discount and Payment Amount in InvoiceMaster vector
 
 rem ==========================================================================
 #include std_missing_params.src
+#include std_functions.src
 rem ==========================================================================
 [[APE_PAYSELECT.ASVA]]
 rem --- Update apt-01 (remove/write) based on what's checked in the grid
