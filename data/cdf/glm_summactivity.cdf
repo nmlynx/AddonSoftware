@@ -222,6 +222,10 @@ gosub init_align_periods
 rem compare budget columns/types from gls01 with 1st/3rd char of key of glm18
 rem set the 4 listbuttons accordingly, and read/display corres glm02 data
 
+gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+displayColumns!=callpoint!.getDevObject("displayColumns")
+
 cols!=UserObj!.getItem(num(user_tpl.cols_ofst$))
 tps!=UserObj!.getItem(num(user_tpl.tps_ofst$))
 codes!=UserObj!.getItem(num(user_tpl.codes_ofst$))
@@ -248,6 +252,15 @@ for x=0 to num_cols-1
 				gridActivity!.setCellEditable(x,0,1)
 			else
 				any_budget_cols=any_budget_cols+1
+
+				rem --- Disable periods not in this fiscal calendar
+				thisYear$=displayColumns!.getYear(this_col$)
+				findrecord(gls_calendar_dev,key=firm_id$+thisYear$,dom=*next)gls_calendar$
+				if num(gls_calendar.total_pers$)<num(user_tpl.pers$) then
+					for per=num(gls_calendar.total_pers$)+1 to num(user_tpl.pers$)
+						gridActivity!.setCellEditable(x,per+1,0)
+					next per
+				endif
 			endif
 			break
 		else
@@ -344,6 +357,16 @@ if ctl_ID=num(user_tpl.grid_ctlID$)
 						gridActivity!.setCellEditable(curr_row,curr_col,1)
 					else
 						gridActivity!.setRowEditable(curr_row,1)
+
+						rem --- Disable periods not in this fiscal calendar
+						gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+						dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+						findrecord(gls_calendar_dev,key=firm_id$+thisYear$,dom=*next)gls_calendar$
+						if num(gls_calendar.total_pers$)<num(user_tpl.pers$) then
+							for per=num(gls_calendar.total_pers$)+1 to num(user_tpl.pers$)
+								gridActivity!.setCellEditable(curr_row,per+1,0)
+							next per
+						endif
 					endif
 
 					rem --- May need to update the list of records in the grid

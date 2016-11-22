@@ -217,6 +217,10 @@ endif
 rem compare budget columns/types from gls01 with defined display columns
 rem set the 4 listbuttons accordingly, and read/display corres glm02 data
 
+gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+displayColumns!=callpoint!.getDevObject("displayColumns")
+
 cols!=UserObj!.getItem(num(user_tpl.cols_ofst$))
 tps!=UserObj!.getItem(num(user_tpl.tps_ofst$))
 codes!=UserObj!.getItem(num(user_tpl.codes_ofst$))
@@ -237,6 +241,15 @@ for x=0 to cols!.size()-1
 			if len(col$)=1 and pos(col$="024") then
 				gridBudgets!.setRowEditable(x,0)
 				gridBudgets!.setCellEditable(x,0,1)
+			else
+				rem --- Disable periods not in this fiscal calendar
+				thisYear$=displayColumns!.getYear(this_col$)
+				findrecord(gls_calendar_dev,key=firm_id$+thisYear$,dom=*next)gls_calendar$
+				if num(gls_calendar.total_pers$)<num(user_tpl.pers$) then
+					for per=num(gls_calendar.total_pers$)+1 to num(user_tpl.pers$)
+						gridBudgets!.setCellEditable(x,per+1,0)
+					next per
+				endif
 			endif
 			break
 		else
@@ -295,11 +308,22 @@ switch notice.code
 			if len(cvs(record_type$,2))>1 or pos(record_type$="024")=0
 				gosub build_vectGLSummary
 				gridBudgets!.setCellText(curr_row,1,vectGLSummary!)
+				gridBudgets!.setRowEditable(curr_row,1)
+
+
+				rem --- Disable periods not in this fiscal calendar
+				gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+				dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+				findrecord(gls_calendar_dev,key=firm_id$+thisYear$,dom=*next)gls_calendar$
+				if num(gls_calendar.total_pers$)<num(user_tpl.pers$) then
+					for per=num(gls_calendar.total_pers$)+1 to num(user_tpl.pers$)
+						gridBudgets!.setCellEditable(curr_row,per+1,0)
+					next per
+				endif
 			else
 				msg_id$="GL_RECID_BUD"
 				gosub disp_message
 				gridBudgets!.setCellText(curr_row,curr_col,user_tpl.sv_budget_tp$)
-
 			endif
 
 			rem --- May need to update the list of records in the grid

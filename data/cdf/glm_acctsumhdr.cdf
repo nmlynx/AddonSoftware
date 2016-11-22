@@ -131,6 +131,10 @@ rem analyze gui_event$ and notice$ to see which control's callback triggered the
 			curr_row=dec(notice.row$)
 			curr_col=dec(notice.col$)
 
+			gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+			dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+			displayColumns!=callpoint!.getDevObject("displayColumns")
+
 			rem --- Update grid if Edit mode has changed
 			if user_tpl.curr_editMode$<>str(callpoint!.isEditMode()) then
 				user_tpl.curr_editMode$=str(callpoint!.isEditMode())
@@ -158,6 +162,15 @@ rem analyze gui_event$ and notice$ to see which control's callback triggered the
 									gridActivity!.setCellEditable(x,0,1)
 								else
 									gridActivity!.setRowEditable(x,1)
+
+									rem --- Disable periods not in this fiscal calendar
+									thisYear$=displayColumns!.getYear(this_col$)
+									findrecord(gls_calendar_dev,key=firm_id$+thisYear$,dom=*next)gls_calendar$
+									if num(gls_calendar.total_pers$)<num(user_tpl.pers$) then
+										for per=num(gls_calendar.total_pers$)+1 to num(user_tpl.pers$)
+											gridActivity!.setCellEditable(x,per+1,0)
+										next per
+									endif
 								endif
 								break
 							else
@@ -179,7 +192,6 @@ rem analyze gui_event$ and notice$ to see which control's callback triggered the
 						record_type$=record_type$(1,len(record_type$)-2)
 						amt_or_units$=label$(len(label$)-1,1)
 
-						displayColumns!=callpoint!.getDevObject("displayColumns")
 						thisYear$=displayColumns!.getYear(record_type$)
 						actbud$=displayColumns!.getActBud(record_type$)
 						if callpoint!.getDevObject("align_fiscal_periods")="Y" and len(cvs(record_type$,2))=1 and pos(record_type$="24") then
@@ -203,6 +215,14 @@ rem analyze gui_event$ and notice$ to see which control's callback triggered the
 							gridActivity!.setCellEditable(curr_row,curr_col,1)
 						else
 							gridActivity!.setRowEditable(curr_row,1)
+
+							rem --- Disable periods not in this fiscal calendar
+							findrecord(gls_calendar_dev,key=firm_id$+thisYear$,dom=*next)gls_calendar$
+							if num(gls_calendar.total_pers$)<num(user_tpl.pers$) then
+								for per=num(gls_calendar.total_pers$)+1 to num(user_tpl.pers$)
+									gridActivity!.setCellEditable(curr_row,per+1,0)
+								next per
+							endif
 						endif
 
 						rem --- May need to update the list of records in the grid
@@ -257,6 +277,10 @@ rem analyze gui_event$ and notice$ to see which control's callback triggered the
 rem compare budget columns/types from gls01 with defined display columns
 rem set the 4 listbuttons accordingly, and read/display corres glm02 data
 
+	gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+	dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+	displayColumns!=callpoint!.getDevObject("displayColumns")
+
 	cols!=UserObj!.getItem(num(user_tpl.cols_ofst$))
 	tps!=UserObj!.getItem(num(user_tpl.tps_ofst$))
 	codes!=UserObj!.getItem(num(user_tpl.codes_ofst$))
@@ -280,6 +304,15 @@ rem set the 4 listbuttons accordingly, and read/display corres glm02 data
 				if len(col$)=1 and pos(col$="024") then
 					gridActivity!.setRowEditable(x,0)
 					gridActivity!.setCellEditable(x,0,1)
+				else
+					rem --- Disable periods not in this fiscal calendar
+					thisYear$=displayColumns!.getYear(this_col$)
+					findrecord(gls_calendar_dev,key=firm_id$+thisYear$,dom=*next)gls_calendar$
+					if num(gls_calendar.total_pers$)<num(user_tpl.pers$) then
+						for per=num(gls_calendar.total_pers$)+1 to num(user_tpl.pers$)
+							gridActivity!.setCellEditable(x,per+1,0)
+						next per
+					endif
 				endif
 				break
 			else
