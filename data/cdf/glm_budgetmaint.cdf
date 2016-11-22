@@ -98,34 +98,11 @@ rem --- Need to handle possible year in grid with more periods than the current 
 readrecord(gls_calendar_dev,key=firm_id$+gls01a.current_year$,dom=std_missing_params)gls_calendar$
 num_pers=num(gls_calendar.total_pers$)
 for i=0 to cols!.size()-1
-	recordType$=cols!.getItem(i)
-	if num_pers<13 and len(recordType$)=1 and pos(recordType$="23") then
-		dim priorCalendar$:fattr(gls_calendar$)
-		priorYear$=str(num(gls01a.current_year$)-1)
-		readrecord(gls_calendar_dev,key=firm_id$+priorYear$,dom=*next)priorCalendar$
-		if num(priorCalendar.total_pers$)>num_pers then num_pers=num(priorCalendar.total_pers$)
-	endif
-	if num_pers<13 and len(recordType$)=1 and pos(recordType$="45") then
-		dim nextCalendar$:fattr(gls_calendar$)
-		nextYear$=str(num(gls01a.current_year$)+1)
-		readrecord(gls_calendar_dev,key=firm_id$+nextYear$,dom=*next)nextCalendar$
-		if num(nextCalendar.total_pers$)>num_pers then num_pers=num(nextCalendar.total_pers$)
-	endif
-	rem --- If reporting planned budgets, must check total_pers for the fiscal year of the revision source.
-	if num_pers<13 and len(recordType$)=5 then
-		findrecord(glm_budgetmaster_dev,key=firm_id$+recordType$+tps!.getItem(i),dom=*continue)glm_budgetmaster$
-		source$=glm_budgetmaster.revision_src$
-		source$=source$(1,pos(" "<>source$,-1)-1)
-		if displayColumns!.getActBud(source$)="P" then
-			continue
-		else
-			dim nextCalendar$:fattr(gls_calendar$)
-			year$=displayColumns!.getYear(source$)
-			findrecord(gls_calendar_dev,key=firm_id$+year$,dom=*continue)nextCalendar$
-			if num(nextCalendar.total_pers$)>num_pers then num_pers=num(nextCalendar.total_pers$)
-		endif
-	endif
 	if num_pers=13 then break
+	dim thisCalendar$:fattr(gls_calendar$)
+	thisYear$=displayColumns!.getYear(cols!.getItem(i))
+	readrecord(gls_calendar_dev,key=firm_id$+thisYear$,dom=*continue)thisCalendar$
+	if num(thisCalendar.total_pers$)>num_pers then num_pers=num(thisCalendar.total_pers$)
 next i
 
 rem load up period abbr names from gls_params

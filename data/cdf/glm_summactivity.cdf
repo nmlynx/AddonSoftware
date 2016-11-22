@@ -135,20 +135,11 @@ next x
 rem --- Need to handle possible year in grid with more periods than the current fiscal year
 num_pers=num(gls_calendar.total_pers$)
 for i=0 to cols!.size()-1
-	recordType$=cols!.getItem(i)
-	if num_pers<13 and len(recordType$)=1 and pos(recordType$="23") then
-		dim priorCalendar$:fattr(gls_calendar$)
-		priorYear$=str(num(gls01a.current_year$)-1)
-		readrecord(gls_calendar_dev,key=firm_id$+priorYear$,dom=*next)priorCalendar$
-		if num(priorCalendar.total_pers$)>num_pers then num_pers=num(priorCalendar.total_pers$)
-	endif
-	if num_pers<13 and len(recordType$)=1 and pos(recordType$="45") then
-		dim nextCalendar$:fattr(gls_calendar$)
-		nextYear$=str(num(gls01a.current_year$)+1)
-		readrecord(gls_calendar_dev,key=firm_id$+nextYear$,dom=*next)nextCalendar$
-		if num(nextCalendar.total_pers$)>num_pers then num_pers=num(nextCalendar.total_pers$)
-	endif
-	if num_pers=3 then break
+	if num_pers=13 then break
+	dim thisCalendar$:fattr(gls_calendar$)
+	thisYear$=displayColumns!.getYear(cols!.getItem(i))
+	readrecord(gls_calendar_dev,key=firm_id$+thisYear$,dom=*continue)thisCalendar$
+	if num(thisCalendar.total_pers$)>num_pers then num_pers=num(thisCalendar.total_pers$)
 next i
 
 rem --- load up period abbr names from gls_params
