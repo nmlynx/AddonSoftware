@@ -47,7 +47,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=8,begfile=1,endfile=files
+    files=9,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="gls_params",ids$[1]="GLS_PARAMS"
     files$[2]="glm-01",ids$[2]="GLM_ACCT"
@@ -55,6 +55,7 @@ rem --- Open/Lock files
     files$[6]="gls_calendar",ids$[6]="GLS_CALENDAR"
     files$[7]="glm_acctbudget",ids$[7]="GLM_ACCTBUDGET"
     files$[8]="glm_budgetplans",ids$[8]="GLM_BUDGETPLANS"
+    files$[9]="glm-08",ids$[9]="GLM_BUDGETMASTER"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -64,11 +65,12 @@ rem --- Open/Lock files
     gls_calendar_dev=channels[6]
     glm_acctbudget_dev=channels[7]
     glm_budgetplans_dev=channels[8]
+    glm_budgetmaster_dev=channels[9]
 
 rem --- Dimension string templates
 
     dim gls01a$:templates$[1],glm01a$:templates$[2],glm02a$:templates$[3]
-    dim gls_calendar$:templates$[6],glm_budgetplans$:templates$[8]
+    dim gls_calendar$:templates$[6],glm_budgetplans$:templates$[8],glm_budgetmaster$:templates$[9]
 
 rem --- Retrieve parameter records
 
@@ -103,8 +105,9 @@ rem --- Retrieve parameter records
 rem --- Determine the maximum number of fiscal periods the report must handle
 
     total_pers=num(gls_calendar.total_pers$)
+    
     rem --- If reporting budget, or fiscal periods aren't being aligned, then must check total_pers for that fiscal year.
-    if pos(":3:"=id$) or (alignPeriods$="N" and pos(":2:"=id$)) then
+    if total_pers<13 and pos(":3:"=id$) or (alignPeriods$="N" and pos(":2:"=id$)) then
         rem --- Get total_pers for the prior fiscal year
         dim priorCalendar$:fattr(gls_calendar$)
         find record (gls_calendar_dev,key=firm_id$+str(num(gls01a.current_year$)-1:"0000"),err=*next) priorCalendar$
@@ -117,7 +120,7 @@ rem --- Determine the maximum number of fiscal periods the report must handle
         endif
         if num(priorCalendar.total_pers$)>total_pers then total_pers=num(priorCalendar.total_pers$)
     endif
-    if pos(":5:"=id$) or (alignPeriods$="N" and pos(":4:"=id$)) then
+    if total_pers<13 and pos(":5:"=id$) or (alignPeriods$="N" and pos(":4:"=id$)) then
         rem --- Get total_pers for the next fiscal year
         dim nextCalendar$:fattr(gls_calendar$)
         find record (gls_calendar_dev,key=firm_id$+str(num(gls01a.current_year$)+1:"0000"),err=*next) nextCalendar$
@@ -130,6 +133,36 @@ rem --- Determine the maximum number of fiscal periods the report must handle
         endif
         if num(nextCalendar.total_pers$)>total_pers then total_pers=num(nextCalendar.total_pers$)
     endif
+    
+    rem --- If reporting planned budgets, must check total_pers for the fiscal year of the revision source.
+    if total_pers<13 then
+        for i=0 to 3
+            plannedBudget$=id$[i]
+            if len(plannedBudget$)<5 then continue
+            findrecord(glm_budgetmaster_dev,key=firm_id$+plannedBudget$+au$(i,1),dom=*continue)glm_budgetmaster$
+            source$=glm_budgetmaster.revision_src$
+            source$=source$(1,pos(" "<>source$,-1)-1)
+            if displayColumns!.getActBud(source$)="P" then
+                continue
+            else
+                dim nextCalendar$:fattr(gls_calendar$)
+                year$=displayColumns!.getYear(source$)
+                findrecord(gls_calendar_dev,key=firm_id$+year$,dom=*continue)nextCalendar$
+                if cvs(gls_calendar.firm_id$,2)="" then
+                    msg_id$="AD_NO_FISCAL_CAL"
+                    dim msg_tokens$[1]
+                    msg_tokens$[1]=str(num(gls01a.current_year$)+1:"0000")
+                    gosub disp_message
+                    goto std_exit
+                endif
+                if num(nextCalendar.total_pers$)>total_pers then
+                    total_pers=num(nextCalendar.total_pers$)
+                    break
+                endif
+            endif
+        next i
+    endif
+
     max=total_pers+2
 
 rem --- If aligning fiscal periods, need to update GLW_ACCTSUMMARY using

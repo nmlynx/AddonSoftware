@@ -103,7 +103,8 @@ rem --- Get next account master
           rem --- Retrieve source record
 
           dim a[mp],u[mp]
-          source$=glm08a.revision_src$(1,len(glm08a.revision_src$)-1)
+          source$=glm08a.revision_src$
+          source$=source$(1,pos(" "<>source$,-1)-1)
 
         if displayColumns!.getActBud(source$)="P" then
             redim glm_budgetplans$
