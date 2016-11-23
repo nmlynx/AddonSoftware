@@ -1,3 +1,15 @@
+[[GLM_BUDGETMAINT.ASVA]]
+rem --- Save changes to grid
+	gridBudgets!=UserObj!.getItem(num(user_tpl.grid_ofst$))
+	numRows=gridBudgets!.getNumRows()
+	for curr_row=0 to numRows-1
+		vectGLSummary!=SysGUI!.makeVector() 
+		for x=1 to num(user_tpl.pers$)+1
+			vectGLSummary!.addItem(gridBudgets!.getCellText(curr_row,x))
+		next x
+		gosub update_glm_acctsummary
+	next curr_row
+	
 [[GLM_BUDGETMAINT.ALIGN_PERIODS.AVAL]]
 rem --- Update grid data when leave checkbox and value has changed
 
@@ -344,7 +356,6 @@ switch notice.code
 			next x
 			gosub calculate_end_bal
 			gridBudgets!.setCellText(curr_row,1,vectGLSummary!)
-			gosub update_glm_acctsummary
 		endif
 		
 	break
@@ -374,8 +385,12 @@ if cols>0
 		budget_dev=fnget_dev("GLM_BUDGETPLANS")
 		dim budget$:fnget_tpl$("GLM_BUDGETPLANS")
 	else
-		budget_dev=fnget_dev("GLM_ACCTBUDGET")
-		dim budget$:fnget_tpl$("GLM_ACCTBUDGET")
+		if actbud$="B" then
+			budget_dev=fnget_dev("GLM_ACCTBUDGET")
+			dim budget$:fnget_tpl$("GLM_ACCTBUDGET")
+		else
+			return
+		endif
 	endif
 
 	budget.firm_id$=firm_id$
@@ -409,7 +424,6 @@ if cols>0
 
 	budget$=field(budget$)
 	writerecord(budget_dev)budget$
-
 endif
 
 return

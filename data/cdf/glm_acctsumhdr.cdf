@@ -1,3 +1,14 @@
+[[GLM_ACCTSUMHDR.ASVA]]
+rem --- Save changes to grid
+	gridActivity!=UserObj!.getItem(num(user_tpl.grid_ofst$))
+	numRows=gridActivity!.getNumRows()
+	for curr_row=0 to numRows-1
+		vectGLSummary!=SysGUI!.makeVector() 
+		for x=1 to num(user_tpl.pers$)+1
+			vectGLSummary!.addItem(gridActivity!.getCellText(curr_row,x))
+		next x
+		gosub update_glm_acctsummary
+	next curr_row
 [[<<DISPLAY>>.ALIGN_PERIODS.AMOD]]
 rem --- Only need to SAVE record if gl_acct_desc, gl_acct_type or detail_flag changed
 
@@ -237,18 +248,22 @@ rem analyze gui_event$ and notice$ to see which control's callback triggered the
 							UserObj!.setItem(num(user_tpl.tps_ofst$),tps!)
 						endif
 					else
-						vectGLSummary!=SysGUI!.makeVector() 
-						for x=1 to num(user_tpl.pers$)+1
-							vectGLSummary!.addItem(gridActivity!.getCellText(curr_row,x))
-						next x
-						gosub calculate_end_bal
-						gridActivity!.setCellText(curr_row,1,vectGLSummary!)
-						gosub update_glm_acctsummary		
+						start_cell_text$=callpoint!.getDevObject("start_cell_text")
+						end_cell_text$=gridActivity!.getCellText(curr_row,curr_col)
+						if num(end_cell_text$)<>num(start_cell_text$) then
+							callpoint!.setStatus("MODIFIED")
+							vectGLSummary!=SysGUI!.makeVector() 
+							for x=1 to num(user_tpl.pers$)+1
+								vectGLSummary!.addItem(gridActivity!.getCellText(curr_row,x))
+							next x
+							gosub calculate_end_bal
+							gridActivity!.setCellText(curr_row,1,vectGLSummary!)
+						endif
 					endif
 				break
 
 				case 8;rem edit start
-					if curr_col=0 then user_tpl.sv_record_tp$=gridActivity!.getCellText(curr_row,curr_col)
+					callpoint!.setDevObject("start_cell_text",gridActivity!.getCellText(curr_row,curr_col))
 				break
 
 				case 14;rem mouse up on a cell
@@ -424,7 +439,7 @@ rem ---  set up grid
 rem ---  store desired data (mostly offsets of items in UserObj) in user_tpl
 
 	tpl_str$="pers:c(5),pers_ofst:c(5),codes_ofst:c(5),codeList_ofst:c(5),grid_ctlID:c(5),grid_ofst:c(5),"+
-:			"cols_ofst:c(5),tps_ofst:c(5),amt_mask:c(15),sv_record_tp:c(30*),vectActivity_ofst:c(5),"+
+:			"cols_ofst:c(5),tps_ofst:c(5),amt_mask:c(15),vectActivity_ofst:c(5),"+
 :			"curr_editMode:c(1)"
 
 	dim user_tpl$:tpl_str$
@@ -653,8 +668,12 @@ rem --- Only budget and planned budget rows are editable. Actual rows are disabl
 			budget_dev=fnget_dev("GLM_BUDGETPLANS")
 			dim budget$:fnget_tpl$("GLM_BUDGETPLANS")
 		else
-			budget_dev=fnget_dev("GLM_ACCTBUDGET")
-			dim budget$:fnget_tpl$("GLM_ACCTBUDGET")
+			if actbud$="B" then
+				budget_dev=fnget_dev("GLM_ACCTBUDGET")
+				dim budget$:fnget_tpl$("GLM_ACCTBUDGET")
+			else
+				return
+			endif
 		endif
 
 		budget.firm_id$=firm_id$

@@ -1,3 +1,14 @@
+[[GLM_SUMMACTIVITY.ASVA]]
+rem --- Save changes to grid
+	gridActivity!=UserObj!.getItem(num(user_tpl.grid_ofst$))
+	numRows=gridActivity!.getNumRows()
+	for curr_row=0 to numRows-1
+		vectGLSummary!=SysGUI!.makeVector() 
+		for x=1 to num(user_tpl.pers$)+1
+			vectGLSummary!.addItem(gridActivity!.getCellText(curr_row,x))
+		next x
+		gosub update_glm_acctsummary
+	next curr_row
 [[GLM_SUMMACTIVITY.ALIGN_PERIODS.AVAL]]
 rem --- Update grid data when leave checkbox and value has changed
 
@@ -180,7 +191,7 @@ gridActivity!.setCallback(gridActivity!.ON_GRID_MOUSE_UP,"custom_event")
 
 rem ---  store desired data (mostly offsets of items in UserObj) in user_tpl
 tpl_str$="pers:c(5),pers_ofst:c(5),codes_ofst:c(5),codeList_ofst:c(5),grid_ctlID:c(5),grid_ofst:c(5),"+
-:		  "cols_ofst:c(5),tps_ofst:c(5),amt_mask:c(15),sv_record_tp:c(30*),vectActivity_ofst:c(5)"
+:		  "cols_ofst:c(5),tps_ofst:c(5),amt_mask:c(15),vectActivity_ofst:c(5)"
 
 dim user_tpl$:tpl_str$
 
@@ -387,13 +398,8 @@ if ctl_ID=num(user_tpl.grid_ctlID$)
 					next x
 					gosub calculate_end_bal
 					gridActivity!.setCellText(curr_row,1,vectGLSummary!)
-					gosub update_glm_acctsummary		
 				endif
 				gosub check_for_budgets
-			break
-
-			case 8;rem edit start
-				if curr_col=0 then user_tpl.sv_record_tp$=gridActivity!.getCellText(curr_row,curr_col)
 			break
 
 			case 14;rem mouse up on a cell
@@ -431,8 +437,12 @@ if cols>0
 			budget_dev=fnget_dev("GLM_BUDGETPLANS")
 			dim budget$:fnget_tpl$("GLM_BUDGETPLANS")
 		else
-			budget_dev=fnget_dev("GLM_ACCTBUDGET")
-			dim budget$:fnget_tpl$("GLM_ACCTBUDGET")
+			if actbud$="B" then
+				budget_dev=fnget_dev("GLM_ACCTBUDGET")
+				dim budget$:fnget_tpl$("GLM_ACCTBUDGET")
+			else
+				return
+			endif
 		endif
 
 		budget.firm_id$=firm_id$
