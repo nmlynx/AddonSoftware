@@ -176,7 +176,7 @@ AlignFiscalCalendar_error:rem --- Method error trap/handler
                 testKey$=#firmID$+thisYear$+#baseFiscalYear$
                 read(#devGlwAcctSummary,key=testKey$,dom=*next)
                 glwAcctSummary_key$=key(#devGlwAcctSummary,end=*next)
-                if pos(#firmID$=glwAcctSummary_key$)<>1 then
+                if pos(testKey$=glwAcctSummary_key$)<>1 then
 
                     rem --- Start progress meter
                     milestone=10
@@ -263,7 +263,10 @@ alignCalendar_error:rem --- Method error trap/handler
 
             rem --- Get fiscal calendar for thisYear$
             dim thisCalendar$:#tplGlsCalendar$
-            readrecord(#devGlsCalendar,key=#firmID$+thisYear$)thisCalendar$
+            readrecord(#devGlsCalendar,key=#firmID$+thisYear$,dom=*next)thisCalendar$
+            if thisCalendar.firm_id$<>#firmID$ or thisCalendar.year$<>thisYear$ then
+                methodret Boolean.valueOf("false")
+            endif
 
             rem --- Get fiscal calendar for current fiscal year
             dim currFiscalCalendar$:#tplGlsCalendar$
