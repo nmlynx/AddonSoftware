@@ -1,3 +1,14 @@
+[[GLM_SUMMACTIVITY.ASVA]]
+rem --- Save changes to grid
+	gridActivity!=UserObj!.getItem(num(user_tpl.grid_ofst$))
+	numRows=gridActivity!.getNumRows()
+	for curr_row=0 to numRows-1
+		vectGLSummary!=SysGUI!.makeVector() 
+		for x=1 to num(user_tpl.pers$)+1
+			vectGLSummary!.addItem(gridActivity!.getCellText(curr_row,x))
+		next x
+		gosub update_glm_acctsummary
+	next curr_row
 [[GLM_SUMMACTIVITY.ALIGN_PERIODS.AVAL]]
 rem --- Update grid data when leave checkbox and value has changed
 
@@ -135,25 +146,22 @@ next x
 rem --- Need to handle possible year in grid with more periods than the current fiscal year
 num_pers=num(gls_calendar.total_pers$)
 for i=0 to cols!.size()-1
-	recordType$=cols!.getItem(i)
-	if pos(recordType$="23") then
-		dim priorCalendar$:fattr(gls_calendar$)
-		priorYear$=str(num(gls01a.current_year$)-1)
-		readrecord(gls_calendar_dev,key=firm_id$+priorYear$,dom=*next)priorCalendar$
-		if num(priorCalendar.total_pers$)>num_pers then num_pers=num(priorCalendar.total_pers$)
-	endif
-	if pos(recordType$="45") then
-		dim nextCalendar$:fattr(gls_calendar$)
-		nextYear$=str(num(gls01a.current_year$)+1)
-		readrecord(gls_calendar_dev,key=firm_id$+nextYear$,dom=*next)nextCalendar$
-		if num(nextCalendar.total_pers$)>num_pers then num_pers=num(nextCalendar.total_pers$)
-	endif
+	if num_pers=13 then break
+	dim thisCalendar$:fattr(gls_calendar$)
+	thisYear$=displayColumns!.getYear(cols!.getItem(i))
+	readrecord(gls_calendar_dev,key=firm_id$+thisYear$,dom=*continue)thisCalendar$
+	if num(thisCalendar.total_pers$)>num_pers then num_pers=num(thisCalendar.total_pers$)
 next i
 
 rem --- load up period abbr names from gls_params
 per_names!=SysGUI!.makeVector()
 for x=1 to num_pers
-	per_names!.addItem(field(gls_calendar$,"ABBR_NAME_"+str(x:"00")))
+	abbr_name$=field(gls_calendar$,"ABBR_NAME_"+str(x:"00"))
+	if cvs(abbr_name$,2)<>"" then
+		per_names!.addItem(abbr_name$)
+	else
+		per_names!.addItem(str(x:"00"))
+	endif
 next x
 			
 rem ---  create list for column zero of grid -- column type drop-down
@@ -183,7 +191,7 @@ gridActivity!.setCallback(gridActivity!.ON_GRID_MOUSE_UP,"custom_event")
 
 rem ---  store desired data (mostly offsets of items in UserObj) in user_tpl
 tpl_str$="pers:c(5),pers_ofst:c(5),codes_ofst:c(5),codeList_ofst:c(5),grid_ctlID:c(5),grid_ofst:c(5),"+
-:		  "cols_ofst:c(5),tps_ofst:c(5),amt_mask:c(15),sv_record_tp:c(30*),vectActivity_ofst:c(5)"
+:		  "cols_ofst:c(5),tps_ofst:c(5),amt_mask:c(15),vectActivity_ofst:c(5)"
 
 dim user_tpl$:tpl_str$
 
@@ -225,6 +233,10 @@ gosub init_align_periods
 rem compare budget columns/types from gls01 with 1st/3rd char of key of glm18
 rem set the 4 listbuttons accordingly, and read/display corres glm02 data
 
+gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+displayColumns!=callpoint!.getDevObject("displayColumns")
+
 cols!=UserObj!.getItem(num(user_tpl.cols_ofst$))
 tps!=UserObj!.getItem(num(user_tpl.tps_ofst$))
 codes!=UserObj!.getItem(num(user_tpl.codes_ofst$))
@@ -236,16 +248,30 @@ num_cols=cols!.size()
 any_budget_cols=0
 
 for x=0 to num_cols-1
+	this_col$=cols!.getItem(x)
+	this_tp$=tps!.getItem(x)
 	x1=0
 	while x1<num_codes-1
 		wcd$=codes!.getItem(x1)
-		if cols!.getItem(x)=wcd$(1,1) and tps!.getItem(x)=wcd$(2,1)
+		col$=pad(wcd$(1,len(wcd$)-1),len(this_col$))
+		tp$=wcd$(len(wcd$))
+		if col$=this_col$ and tp$=this_tp$
 			gridActivity!.setCellListSelection(x,0,x1,1)
-			if pos(wcd$(1,1)="024",1)<>0
+			col$=cvs(col$,2)
+			if len(col$)=1 and pos(col$="024") then
 				gridActivity!.setRowEditable(x,0)
 				gridActivity!.setCellEditable(x,0,1)
 			else
 				any_budget_cols=any_budget_cols+1
+
+				rem --- Disable periods not in this fiscal calendar
+				thisYear$=displayColumns!.getYear(this_col$)
+				findrecord(gls_calendar_dev,key=firm_id$+thisYear$,dom=*next)gls_calendar$
+				if num(gls_calendar.total_pers$)<num(user_tpl.pers$) then
+					for per=num(gls_calendar.total_pers$)+1 to num(user_tpl.pers$)
+						gridActivity!.setCellEditable(x,per+1,0)
+					next per
+				endif
 			endif
 			break
 		else
@@ -342,6 +368,16 @@ if ctl_ID=num(user_tpl.grid_ctlID$)
 						gridActivity!.setCellEditable(curr_row,curr_col,1)
 					else
 						gridActivity!.setRowEditable(curr_row,1)
+
+						rem --- Disable periods not in this fiscal calendar
+						gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+						dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+						findrecord(gls_calendar_dev,key=firm_id$+thisYear$,dom=*next)gls_calendar$
+						if num(gls_calendar.total_pers$)<num(user_tpl.pers$) then
+							for per=num(gls_calendar.total_pers$)+1 to num(user_tpl.pers$)
+								gridActivity!.setCellEditable(curr_row,per+1,0)
+							next per
+						endif
 					endif
 
 					rem --- May need to update the list of records in the grid
@@ -362,13 +398,8 @@ if ctl_ID=num(user_tpl.grid_ctlID$)
 					next x
 					gosub calculate_end_bal
 					gridActivity!.setCellText(curr_row,1,vectGLSummary!)
-					gosub update_glm_acctsummary		
 				endif
 				gosub check_for_budgets
-			break
-
-			case 8;rem edit start
-				if curr_col=0 then user_tpl.sv_record_tp$=gridActivity!.getCellText(curr_row,curr_col)
 			break
 
 			case 14;rem mouse up on a cell
@@ -406,8 +437,12 @@ if cols>0
 			budget_dev=fnget_dev("GLM_BUDGETPLANS")
 			dim budget$:fnget_tpl$("GLM_BUDGETPLANS")
 		else
-			budget_dev=fnget_dev("GLM_ACCTBUDGET")
-			dim budget$:fnget_tpl$("GLM_ACCTBUDGET")
+			if actbud$="B" then
+				budget_dev=fnget_dev("GLM_ACCTBUDGET")
+				dim budget$:fnget_tpl$("GLM_ACCTBUDGET")
+			else
+				return
+			endif
 		endif
 
 		budget.firm_id$=firm_id$
@@ -494,7 +529,7 @@ format_gridActivity:
 
 	attr_disp_col$=attr_grid_col$[0,1]
 
-	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridActivity!,"DESC-COLH-ROWH-EDIT-LINES-LIGHT-HIGHO-CELL",num_rows,
+	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,gridActivity!,"COLH-EDIT-LINES-LIGHT-HIGHO-CELL",num_rows,
 :		attr_def_col_str$[all],attr_disp_col$,attr_grid_col$[all]
 
 return
