@@ -194,7 +194,7 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
     rem --- Does this customer meet the selection criteria?
 
         rem -- Check for inactive customer
-        if arm01a.cust_inactive$="Y" then continue
+        if inactive$="Y" and arm01a.cust_inactive$="Y" then continue
 
         if option$<>"S" then if arm02a.statements$<>"Y" continue
 
