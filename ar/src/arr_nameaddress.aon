@@ -51,6 +51,8 @@ rem --- Assign form input values to local variables
     endcust$=option!.getOptionData("CUSTOMER_ID_2")
     begalt$=option!.getOptionData("ALT_SEQUENCE_1")
     endalt$=option!.getOptionData("ALT_SEQUENCE_2")
+    rem "CUSTOMER INACTIVE FEATURE"
+    inactive$=Option!.getOptionData("CUST_INACTIVE")
 
 rem --- Retrieve parameter records
 
@@ -137,6 +139,9 @@ rem --- Read next Customer Master (arm-01) record
           total_recs=total_recs+1
           if mod(total_recs,milestone)=0 then call pgmdir$+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
           read record (arm01_dev) arm01a$
+
+          rem -- Check for inactive customer
+           if inactive$="Y" and arm01a.cust_inactive$="Y" then continue
 
           rem --- Prepare Address lines
 

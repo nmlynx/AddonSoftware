@@ -87,6 +87,8 @@ rem --- Assign form input values to local variables
     endtype$=option!.getOptionData("CUSTOMER_TYPE_2")
     page_break$=option!.getOptionData("PAGE_BREAK")
     export_format$=option!.getOptionData("EXPORT_FORMAT")
+    rem "CUSTOMER INACTIVE FEATURE"
+    inactive$=Option!.getOptionData("CUST_INACTIVE")
 
 rem --- Retrieve parameter records
 
@@ -231,6 +233,9 @@ rem --- Read next Customer Detail (arm-02) record
         arm01a.customer_name$=nf$
         k$=firm_id$+arm02a.customer_id$
         find record (arm01_dev,key=k$,dom=*next) arm01a$
+
+    rem -- Line To Skip Inactive Customers
+        if inactive$="Y" and arm01a.cust_inactive$="Y" then  continue
 
     rem --- Prepare Address lines
 

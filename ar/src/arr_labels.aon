@@ -72,6 +72,8 @@ rem --- Assign form input values to local variables
     endzip$=option!.getOptionData("ZIP_CODE_2")
     labels=num(labels$)
     col_format$=option!.getOptionData("COL_FORMAT")
+    rem "CUSTOMER INACTIVE FEATURE"
+    inactive$=Option!.getOptionData("CUST_INACTIVE")
 
 rem --- Retrieve parameter records
 
@@ -226,6 +228,9 @@ rem --- Read next Customer Master (arm-01) record
         if cvs(labelcode$,3)<>""
             if cvs(arm02a.label_code$,3)<>cvs(labelcode$,3) continue
         endif
+
+        rem -- Check for inactive customer
+        if inactive$="Y" and arm01a.cust_inactive$="Y" then continue
 
     rem --- Print the label(s) for this customer
 

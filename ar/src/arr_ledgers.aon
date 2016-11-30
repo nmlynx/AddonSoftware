@@ -64,6 +64,8 @@ rem --- Assign form input values to local variables
         begcustomer$=option!.getOptionData("customer_id_1")
         endcustomer$=option!.getOptionData("customer_id_2")
         thrudate$=option!.getOptionData("report_date")
+        rem "CUSTOMER INACTIVE FEATURE"
+        inactive$=Option!.getOptionData("CUST_INACTIVE")
 
 rem --- Retrieve parameter records
 
@@ -147,6 +149,10 @@ rem --- Read next Customer Master (arm-01) record
           if pos(firm_id$=arm01_key$)<>1 break
           read record (arm01_dev,key=arm01_key$) arm01a$
           if endcustomer$<>"" if arm01a.customer_id$>endcustomer$ break
+
+          rem -- Check for inactive customer
+          if inactive$="Y" and arm01a.cust_inactive$="Y" then continue
+
           total_recs=total_recs+1
           if mod(total_recs,milestone)=0 then call pgmdir$+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
 
