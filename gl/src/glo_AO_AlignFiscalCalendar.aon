@@ -146,7 +146,7 @@ AlignFiscalCalendar_error:rem --- Method error trap/handler
                 rem --- Always update glw_acctsummary if (1) the selected year is the next fiscal year, or (2) the selected year 
                 rem --- is the prior fiscal year and it has not been closed or shares dates with the current fiscal year.
                 update_glwAcctsummary=0
-                if thisYear$=#baseFiscalYear$ then update_glwAcctsummary=1
+                if num(thisYear$)=num(#baseFiscalYear$)+1 then update_glwAcctsummary=1
                 if num(thisYear$)=num(#baseFiscalYear$)-1 then
                     if #priorFiscalYearClosed$<>"Y" then
                         update_glwAcctsummary=1
@@ -168,7 +168,7 @@ AlignFiscalCalendar_error:rem --- Method error trap/handler
                     rem --- Remove existing glw_acctsummary records for thisYear$ so that it will get aligned with 
                     rem --- current glt_transdetail (glt-06) data.
                     rec_pfx$=#firmID$+thisYear$+#baseFiscalYear$
-                    call stbl("+DIR_PGM")+"adc_clearpartial.aon","",#devGlwAcctSummary,rec_pfx$,status
+                    call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",#devGlwAcctSummary,rec_pfx$,status
                     if status then methodret ""
                 endif
 

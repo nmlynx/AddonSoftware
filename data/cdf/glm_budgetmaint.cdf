@@ -201,9 +201,7 @@ gosub init_align_periods
 [[GLM_BUDGETMAINT.AOPT-REPL]]
 gosub replicate_amt
 
-if vectGLSummary!<>null()
-	gosub update_glm_acctsummary
-else
+if vectGLSummary!=null()
 	callpoint!.setMessage("GL_REPLICATE")
 	callpoint!.setStatus("ABORT")
 endif
@@ -311,28 +309,20 @@ switch notice.code
 			displayColumns!=callpoint!.getDevObject("displayColumns")
 			thisYear$=displayColumns!.getYear(record_type$)
 			actbud$=displayColumns!.getActBud(record_type$)
+			gl_account$=callpoint!.getColumnData("GLM_BUDGETMAINT.GL_ACCOUNT")
 			alignCalendar! = callpoint!.getDevObject("alignCalendar")
 			if actbud$="P" then
-					glm02_key$=firm_id$+callpoint!.getColumnData("GLM_BUDGETMAINT.GL_ACCOUNT")+record_type$
+				glm02_key$=firm_id$+gl_account$+record_type$
 			else
 				if actbud$="A" then
-					glm02_key$=firm_id$+callpoint!.getColumnData("GLM_BUDGETMAINT.GL_ACCOUNT")+thisYear$
+					glm02_key$=firm_id$+gl_account$+thisYear$
 					if callpoint!.getDevObject("align_fiscal_periods")="Y" and alignCalendar!.canAlignCalendar(thisYear$) then
 						rem --- Use GLW_ACCTSUMMARY when fiscal periods are aligned
 						gls_cur_yr$=callpoint!.getDevObject("gls_cur_yr")
-						glm02_key$=firm_id$+callpoint!.getColumnData("GLM_BUDGETMAINT.GL_ACCOUNT")+thisYear$+gls_cur_yr$
+						glm02_key$=firm_id$+gl_account$+thisYear$+gls_cur_yr$
 					endif
 				else
-						glm02_key$=firm_id$+callpoint!.getColumnData("GLM_BUDGETMAINT.GL_ACCOUNT")+thisYear$
-				endif
-			endif
-
-			if callpoint!.getDevObject("align_fiscal_periods")="Y" and len(cvs(record_type$,2))=1 and pos(record_type$="24") then
-				rem --- Use GLW_ACCTSUMMARY when fiscal periods are aligned
-				gls_cur_yr$=callpoint!.getDevObject("gls_cur_yr")
-			else
-				if actbud$="P" then
-				else
+					glm02_key$=firm_id$+gl_account$+thisYear$
 				endif
 			endif
 
@@ -382,7 +372,7 @@ switch notice.code
 					rem --- Get extra rows description
 					gosub extraRowsDescriptions
 					callpoint!.setDevObject("extraRows",extraRows!)
-					rem ... Display extra rows
+					rem --- Display extra rows
 					gosub displayExtraRows
 				endif
 			endif
@@ -587,6 +577,7 @@ rem alignCalendar!:	input
 		dim glm_budgetplans$:fnget_tpl$("GLM_BUDGETPLANS")
 		readrecord(glm_budgetplans_dev,key=glm02_key$,dom=*next)glm_budgetplans$
 	else
+		periodsAligned=0
 		if actbud$="A" then
 			glm02_dev=fnget_dev("GLM_ACCTSUMMARY")
 			glm02_tpl$=fnget_tpl$("GLM_ACCTSUMMARY")
@@ -603,6 +594,7 @@ rem alignCalendar!:	input
 		if periodsAligned then
 			gls_cur_yr$=callpoint!.getDevObject("gls_cur_yr")
 			readrecord(glw_acctsummary_dev,key=glm02_key$,knum="BY_ACCOUNT_YEAR",dom=*next)glw_acctsummary$
+			dim glm02a$:glm02_tpl$
 			call stbl("+DIR_PGM")+"adc_copyfile.aon",glw_acctsummary$,glm02a$,status
 			if status then dim glm02a$:glm02_tpl$
 		else
@@ -676,28 +668,31 @@ replicate_amt:
 		curr_col=gridBudgets!.getSelectedColumn()
 		curr_amt$=gridBudgets!.getCellText(curr_row,curr_col)
 		vectGLSummary!=SysGUI!.makeVector()		
-		num_pers=num(user_tpl.pers$)
 
-		valid_num$="N"
-		while 1
-			valid_num=num(curr_amt$,err=*break)
-			valid_num$="Y"
-			break
-		wend
+		rem --- Get max periods for this year
+		gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+		dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+		label$=gridBudgets!.getCellText(curr_row,0)
+		record_type$=label$(pos(" ("=label$,-1)+2)
+		record_type$=record_type$(1,len(record_type$)-2)
+		displayColumns!=callpoint!.getDevObject("displayColumns")
+		thisYear$=displayColumns!.getYear(record_type$)
+		findrecord(gls_calendar_dev,key=firm_id$+thisYear$,dom=*next)gls_calendar$
+		num_pers=num(gls_calendar.total_pers$)
 
-		if valid_num$="Y"
-			for x=1 to num_pers+1
-				if x>=curr_col
+		for x=1 to 14
+			if x>=curr_col then
+				if x-1<=num_pers then
 					vectGLSummary!.addItem(curr_amt$)
 				else
-					vectGLSummary!.addItem(gridBudgets!.getCellText(curr_row,x))
+					vectGLSummary!.addItem(str(0:user_tpl.amt_mask$))
 				endif
-			next x
-			gosub calculate_end_bal
-			gridBudgets!.setCellText(curr_row,1,vectGLSummary!)
-		else
-			vectGLSummary!=null()
-		endif
+			else
+				vectGLSummary!.addItem(gridBudgets!.getCellText(curr_row,x))
+			endif
+		next x
+		gosub calculate_end_bal
+		gridBudgets!.setCellText(curr_row,1,vectGLSummary!)
 	endif
 return
 
@@ -797,6 +792,7 @@ rem ==========================================================================
 
 rem ==========================================================================
 displayExtraRows: rem --- Display extra rows descriptions and data
+rem		input: gl_account$	
 rem		input: gridBudgets!
 rem ==========================================================================
 
@@ -825,6 +821,7 @@ rem ==========================================================================
 		if periodsAligned then
 			gls_cur_yr$=callpoint!.getDevObject("gls_cur_yr")
 			readrecord(glw_acctsummary_dev,key=firm_id$+gl_account$+thisYear$+gls_cur_yr$,knum="BY_ACCOUNT_YEAR",dom=*next)glw_acctsummary$
+			dim glm02a$:glm02_tpl$
 			call stbl("+DIR_PGM")+"adc_copyfile.aon",glw_acctsummary$,glm02a$,status
 			if status then dim glm02a$:glm02_tpl$
 		else
