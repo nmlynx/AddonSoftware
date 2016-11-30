@@ -49,7 +49,7 @@ if user_tpl.multi_types$="Y" then
       myapi!=BBjAPI()
       myNS!=myapi!.getNamespace("ap_type","query",1)
       myNS!.setValue("ap_type",ap_type$)
-      callpoint!.setTableColumnAttribute("APE_INVOICEHDR.VENDOR_ID","IDEF","AP_INV_VEND")
+      callpoint!.setTableColumnAttribute("APE_INVOICEHDR.VENDOR_ID","IDEF","AP_INV_VEND_1")
    else
       callpoint!.setTableColumnAttribute("APE_INVOICEHDR.VENDOR_ID","IDEF","AP_VEND_ACTIVE")
    endif
@@ -57,7 +57,6 @@ else
    callpoint!.setTableColumnAttribute("APE_INVOICEHDR.VENDOR_ID","IDEF","AP_VEND_ACTIVE")
 endif
 callpoint!.setStatus("ACTIVATE")
-
 [[APE_INVOICEHDR.AWIN]]
 rem --- setup utility
 

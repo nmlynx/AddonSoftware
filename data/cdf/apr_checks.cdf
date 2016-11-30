@@ -25,7 +25,7 @@ if cast(BBjString,callpoint!.getDevObject("multi_types"))="Y" then
       myapi!=BBjAPI()
       myNS!=myapi!.getNamespace("ap_type","query",1)
       myNS!.setValue("ap_type",ap_type$)
-      callpoint!.setTableColumnAttribute("APR_CHECKS.VENDOR_ID","IDEF","AP_INV_VEND")
+      callpoint!.setTableColumnAttribute("APR_CHECKS.VENDOR_ID","IDEF","AP_INV_VEND_1")
    else
       callpoint!.setTableColumnAttribute("APR_CHECKS.VENDOR_ID","IDEF","AP_VEND_ACTIVE")
    endif

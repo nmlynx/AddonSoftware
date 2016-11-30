@@ -1,9 +1,9 @@
-[[AP_INV_VEND.ASVA]]
+[[AP_INV_VEND_1.ASVA]]
 gosub convert_userObj_to_array
 callpoint!.setDevObject("selected_key",selected_key$)
 gosub convert_array_to_userObj
 
-[[AP_INV_VEND.AOPT-ACTI]]
+[[AP_INV_VEND_1.AOPT-ACTI]]
 rem - Inactive Flag
 gosub convert_userObj_to_array
 
@@ -21,7 +21,7 @@ callpoint!.setStatus("REFRESH")
 gosub convert_array_to_userObj
 
 
-[[AP_INV_VEND.BOVE]]
+[[AP_INV_VEND_1.BOVE]]
 gosub convert_userObj_to_array
 gosub enum_popup
 dim filter_defs$[3,2]
@@ -61,7 +61,7 @@ gosub convert_array_to_userObj
 gosub set_popup_menu
 callpoint!.setStatus("")
 
-[[AP_INV_VEND.<CUSTOM>]]
+[[AP_INV_VEND_1.<CUSTOM>]]
 rem --- Portions Copyright 2016 by Assorted Business Services Inc.
 rem ---  All Rights Reserved.
 
