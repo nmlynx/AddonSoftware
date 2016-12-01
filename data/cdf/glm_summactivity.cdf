@@ -31,7 +31,6 @@ rem --- Update grid data when leave checkbox and value has changed
 				align_next=alignCalendar!.canAlignCalendar(nextYear$)
 				if align_next then nextTripKey$=alignCalendar!.alignCalendar(nextYear$)
 			endif
-			extra_row_types$=callpoint!.getDevObject("extra_row_types")
 			for i=1 to 5
 				priorYear$=str(gls_cur_yr-i:"0000")
 				align_prior=alignCalendar!.canAlignCalendar(priorYear$)
@@ -63,29 +62,51 @@ rem --- Run the custom query to show details about the current cell
 	gridActivity!=UserObj!.getItem(num(user_tpl.grid_ofst$))
 	curr_row=gridActivity!.getSelectedRow()
 	curr_col=gridActivity!.getSelectedColumn()
-	label$=gridActivity!.getCellText(curr_row,0)
-	record_type$=label$(pos(" ("=label$,-1)+2)
-	record_type$=record_type$(1,len(record_type$)-2)
 
-rem --- call custom query
+	record_type$=""
+	cols!=UserObj!.getItem(num(user_tpl.cols_ofst$))
+	if curr_row<cols!.size() then
+		label$=gridActivity!.getCellText(curr_row,0)
+		if label$<>"" then
+			record_type$=label$(pos(" ("=label$,-1)+2)
+			record_type$=record_type$(1,len(record_type$)-2)
+		endif
+	else
+		extraRows!=callpoint!.getDevObject("extraRows")
+		extraRow$=extraRows!.getItem(curr_row-cols!.size())
+		thisYear$=extraRow$(1,pos(":"=extraRow$)-1)
+		extra_row_type$=extraRow$(pos(":"=extraRow$)+1)
+		if extra_row_type$(1,1)="A" then record_type$="A"
+	endif
 
-	post_per$=str(curr_col-1:"00")
-
-	if len(cvs(record_type$,2))=1 and pos(record_type$="024")>0
-rem --- Set proper record ID
-		record$=" "
-		current_year=num(callpoint!.getDevObject("gls_cur_yr"))
-		if record_type$="2"
-			current_year=current_year-1
+	if len(cvs(record_type$,2))=1 and pos(record_type$="024A") then
+		if record_type$="A" then
+			current_year=num(thisYear$)
 		else
-			if record_type$="4"
+			current_year=num(callpoint!.getDevObject("gls_cur_yr"))
+			if record_type$="2"
+				current_year=current_year-1
+			else
+				if record_type$="4"
+					current_year=current_year+1
+				endif
+			endif
+			if callpoint!.getDevObject("gl_yr_closed") <> "Y"
 				current_year=current_year+1
 			endif
 		endif
-		if callpoint!.getDevObject("gl_yr_closed") <> "Y"
-			current_year=current_year+1
+		posting_year$=str(current_year:"0000")
+		posting_per$=str(curr_col-1:"00")
+
+		if callpoint!.getDevObject("align_fiscal_periods")="Y" then
+			fiscalYear=num(callpoint!.getDevObject("cur_year"))
+			call stbl("+DIR_PGM")+"adc_perioddates.aon",num(posting_per$),fiscalYear,begdate$,enddate$,table_chans$[all],status
+			delta=num(begdate$(1,4))-fiscalYear
+			start_trns_date$=str(num(posting_year$)+delta:"0000")+begdate$(5)
+			delta=num(enddate$(1,4))-fiscalYear
+			end_trns_date$=str(num(posting_year$)+delta:"0000")+enddate$(5)
 		endif
-		post_year$=str(current_year:"0000")
+
 		dim filter_defs$[3,2]
 		filter_defs$[0,0]="GLT_TRANSDETAIL.FIRM_ID"
 		filter_defs$[0,1]="='"+firm_id$+"'"
@@ -93,12 +114,18 @@ rem --- Set proper record ID
 		filter_defs$[1,0]="GLT_TRANSDETAIL.GL_ACCOUNT"
 		filter_defs$[1,1]="='"+callpoint!.getColumnData("GLM_SUMMACTIVITY.GL_ACCOUNT")+"'"
 		filter_defs$[1,2]="LOCK"
-		filter_defs$[2,0]="GLT_TRANSDETAIL.POSTING_YEAR"
-		filter_defs$[2,1]="='"+post_year$+"'"
-		filter_defs$[2,2]="LOCK"
-		filter_defs$[3,0]="GLT_TRANSDETAIL.POSTING_PER"
-		filter_defs$[3,1]="='"+post_per$+"'"
-		filter_defs$[3,2]="LOCK"
+		if callpoint!.getDevObject("align_fiscal_periods")<>"Y" then
+			filter_defs$[2,0]="GLT_TRANSDETAIL.POSTING_YEAR"
+			filter_defs$[2,1]="='"+posting_year$+"'"
+			filter_defs$[2,2]="LOCK"
+			filter_defs$[3,0]="GLT_TRANSDETAIL.POSTING_PER"
+			filter_defs$[3,1]="='"+posting_per$+"'"
+			filter_defs$[3,2]="LOCK"
+		else
+			filter_defs$[2,0]="GLT_TRANSDETAIL.TRNS_DATE"
+			filter_defs$[2,1]=">='"+start_trns_date$+"' AND  GLT_TRANSDETAIL.TRNS_DATE<='"+end_trns_date$+"'"
+			filter_defs$[2,2]="LOCK"
+		endif
 
 		call stbl("+DIR_SYP")+"bax_query.bbj",
 :			gui_dev, form!,
@@ -231,6 +258,13 @@ userobj!.addItem(SysGUI!.makeVector());rem placeholder for vectActivity! that wi
 rem format the grid, and set first column to be a pull-down
 gosub format_gridActivity
 gosub set_column1_list
+font!=gridActivity!.getCellFont(0,0)
+boldFont!=SysGUI!.makeFont("Bold"+font!.getName(),font!.getSize(),SysGUI!.BOLD)
+blueColor!=SysGUI!.makeColor(SysGUI!.BLUE)
+for row=0 to cols!.size()-1
+	gridActivity!.setCellFont(row,0,boldFont!)
+	gridActivity!.setCellForeColor(row,0,blueColor!)
+next row
 util.resizeWindow(Form!, SysGui!)
 
 callpoint!.setOptionEnabled("DETL",0)
@@ -342,6 +376,10 @@ if ctl_ID=num(user_tpl.grid_ctlID$)
 		curr_row=dec(notice.row$)
 		curr_col=dec(notice.col$)
 
+		gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+		dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+		displayColumns!=callpoint!.getDevObject("displayColumns")
+
 		switch notice.code
 	
 			case 7;rem edit stop
@@ -352,7 +390,6 @@ if ctl_ID=num(user_tpl.grid_ctlID$)
 					record_type$=record_type$(1,len(record_type$)-2)
 					amt_or_units$=label$(len(label$)-1,1)
 
-					displayColumns!=callpoint!.getDevObject("displayColumns")
 					thisYear$=displayColumns!.getYear(record_type$)
 					actbud$=displayColumns!.getActBud(record_type$)
 					gl_account$=callpoint!.getColumnData("GLM_SUMMACTIVITY.GL_ACCOUNT")
@@ -383,8 +420,6 @@ if ctl_ID=num(user_tpl.grid_ctlID$)
 						gridActivity!.setRowEditable(curr_row,1)
 
 						rem --- Disable periods not in this fiscal calendar
-						gls_calendar_dev=fnget_dev("GLS_CALENDAR")
-						dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
 						findrecord(gls_calendar_dev,key=firm_id$+thisYear$,dom=*next)gls_calendar$
 						if num(gls_calendar.total_pers$)<num(user_tpl.pers$) then
 							for per=num(gls_calendar.total_pers$)+1 to num(user_tpl.pers$)
@@ -432,17 +467,32 @@ if ctl_ID=num(user_tpl.grid_ctlID$)
 			break
 
 			case 14;rem mouse up on a cell
-				label$=gridActivity!.getCellText(curr_row,0)
-				if record_type$<>"" then
-					record_type$=label$(pos(" ("=label$,-1)+2)
-					record_type$=record_type$(1,len(record_type$)-2)
-				endif
-				if curr_col=0 or curr_col=1 or curr_col=num(callpoint!.getDevObject("tot_pers"))+2 or
-:				len(cvs(record_type$,2))>1 or pos(record_type$="024")=0 then
-					callpoint!.setOptionEnabled("DETL",0)
-				else
-					callpoint!.setOptionEnabled("DETL",1)
-				endif
+					if curr_col=0 or curr_col=1 then
+						callpoint!.setOptionEnabled("DETL",0)
+					else
+						record_type$=""
+						cols!=UserObj!.getItem(num(user_tpl.cols_ofst$))
+						if curr_row<cols!.size() then
+							label$=gridActivity!.getCellText(curr_row,0)
+							if label$<>"" then
+								record_type$=label$(pos(" ("=label$,-1)+2)
+								record_type$=record_type$(1,len(record_type$)-2)
+								thisYear$=displayColumns!.getYear(record_type$)
+							endif
+						else
+							extraRows!=callpoint!.getDevObject("extraRows")
+							extraRow$=extraRows!.getItem(curr_row-cols!.size())
+							thisYear$=extraRow$(1,pos(":"=extraRow$)-1)
+							extra_row_type$=extraRow$(pos(":"=extraRow$)+1)
+							if extra_row_type$(1,1)="A" then record_type$="A"
+						endif
+ 						findrecord(gls_calendar_dev,key=firm_id$+thisYear$,dom=*next)gls_calendar$
+						if len(cvs(record_type$,2))>1 or pos(record_type$="024A")=0 or curr_col>num(gls_calendar.total_pers$)+1 then
+							callpoint!.setOptionEnabled("DETL",0)
+						else
+							callpoint!.setOptionEnabled("DETL",1)
+						endif
+					endif
 			break
 
 		swend
@@ -523,7 +573,7 @@ format_gridActivity:
 	attr_grid_col$[1,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="RECORD TP"
 	attr_grid_col$[1,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_RECORD_TYPE")
 	attr_grid_col$[1,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="C"
-	attr_grid_col$[1,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="100"
+	attr_grid_col$[1,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="115"
 
 	attr_grid_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="BEGIN BAL"
 	attr_grid_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_BEGINNING")
