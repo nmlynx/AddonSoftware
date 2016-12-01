@@ -45,7 +45,23 @@ rem --- Verify calendar exists for entered beginning fiscal year
 			callpoint!.setStatus("ABORT")
 			break
 		endif
-		callpoint!.setDevObject("total_pers",gls_calendar.total_pers$)
+		callpoint!.setDevObject("beginning_total_pers",gls_calendar.total_pers$)
+
+		rem --- Verify haven't exceeded calendar total periods for beginning fiscal year
+		period$=callpoint!.getColumnData("GLR_TRANSHISTORY.BEG_GL_PER")
+		if cvs(period$,2)<>"" then
+			period=num(period$)
+			total_pers=num(callpoint!.getDevObject("beginning_total_pers"))
+			if period<1 or period>total_pers then
+				msg_id$="AD_BAD_FISCAL_PERIOD"
+				dim msg_tokens$[2]
+				msg_tokens$[1]=str(total_pers)
+				msg_tokens$[2]=year$
+				gosub disp_message
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+		endif
 	endif
 [[GLR_TRANSHISTORY.END_YEAR.AVAL]]
 rem --- Verify calendar exists for entered ending fiscal year
@@ -62,7 +78,23 @@ rem --- Verify calendar exists for entered ending fiscal year
 			callpoint!.setStatus("ABORT")
 			break
 		endif
-		callpoint!.setDevObject("total_pers",gls_calendar.total_pers$)
+		callpoint!.setDevObject("ending_total_pers",gls_calendar.total_pers$)
+
+		rem --- Verify haven't exceeded calendar total periods for ending fiscal year
+		period$=callpoint!.getColumnData("GLR_TRANSHISTORY.END_GL_PER")
+		if cvs(period$,2)<>"" then
+			period=num(period$)
+			total_pers=num(callpoint!.getDevObject("ending_total_pers"))
+			if period<1 or period>total_pers then
+				msg_id$="AD_BAD_FISCAL_PERIOD"
+				dim msg_tokens$[2]
+				msg_tokens$[1]=str(total_pers)
+				msg_tokens$[2]=year$
+				gosub disp_message
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+		endif
 	endif
 [[GLR_TRANSHISTORY.GL_WILDCARD.AVAL]]
 rem --- Check length of wildcard against defined mask for GL Account
