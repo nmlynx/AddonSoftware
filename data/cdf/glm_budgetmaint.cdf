@@ -33,7 +33,6 @@ rem --- Update grid data when leave checkbox and value has changed
 				align_next=alignCalendar!.canAlignCalendar(nextYear$)
 				if align_next then nextTripKey$=alignCalendar!.alignCalendar(nextYear$)
 			endif
-			extra_row_types$=callpoint!.getDevObject("extra_row_types")
 			for i=1 to 5
 				priorYear$=str(gls_cur_yr-i:"0000")
 				align_prior=alignCalendar!.canAlignCalendar(priorYear$)
@@ -191,6 +190,13 @@ UserObj!.addItem(tps!)
 rem format the grid, and set first column to be a pull-down
 gosub format_gridBudgets
 gosub set_column1_list
+font!=gridBudgets!.getCellFont(0,0)
+boldFont!=SysGUI!.makeFont("Bold"+font!.getName(),font!.getSize(),SysGUI!.BOLD)
+blueColor!=SysGUI!.makeColor(SysGUI!.BLUE)
+for row=0 to cols!.size()-1
+	gridBudgets!.setCellFont(row,0,boldFont!)
+	gridBudgets!.setCellForeColor(row,0,blueColor!)
+next row
 util.resizeWindow(Form!, SysGUI!)
 
 rem --- Initialize align_periods
@@ -485,7 +491,7 @@ format_gridBudgets:
 
 	attr_grid_col$[1,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="BUDGET TP"
 	attr_grid_col$[1,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_BUDGET_TYPE")
-	attr_grid_col$[1,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="100"
+	attr_grid_col$[1,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="115"
 
 	attr_grid_col$[2,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="BEGIN BAL"
 	attr_grid_col$[2,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_BEGINNING")

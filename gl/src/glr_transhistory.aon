@@ -80,11 +80,21 @@ rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=*next) gls_calendar$
-    if cvs(gls_calendar.firm_id$,2)="" then
+    dim begCalendar$:fattr(gls_calendar$)
+    find record (gls_calendar_dev,key=firm_id$+begyear$,err=*next) begCalendar$
+    if cvs(begCalendar.firm_id$,2)="" then
         msg_id$="AD_NO_FISCAL_CAL"
         dim msg_tokens$[1]
-        msg_tokens$[1]=gls01a.current_year$
+        msg_tokens$[1]=begyear$
+        gosub disp_message
+        goto std_exit_no_report
+    endif
+    dim endCalendar$:fattr(gls_calendar$)
+    find record (gls_calendar_dev,key=firm_id$+endyear$,err=*next) endCalendar$
+    if cvs(endCalendar.firm_id$,2)="" then
+        msg_id$="AD_NO_FISCAL_CAL"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=endyear$
         gosub disp_message
         goto std_exit_no_report
     endif
@@ -196,8 +206,8 @@ rem --- Initialize report headings
     if cvs(wildcard$,2)<>"" then x$=x$+Translate!.getTranslation("AON__(WILDCARD_")+$22$+cvs(wildcard$,2)+$22$+")"
     headings$[2]=x$
     x$="",y$=""
-    x$=field(gls_calendar$,"period_name_"+begper$,err=*next)
-    y$=field(gls_calendar$,"period_name_"+endper$,err=*next)
+    x$=field(begCalendar$,"period_name_"+begper$,err=*next)
+    y$=field(endCalendar$,"period_name_"+endper$,err=*next)
     if x$<>"" and y$<>""
         headings$[3]=Translate!.getTranslation("AON_FROM_")+cvs(x$,2)+Translate!.getTranslation("AON__(PERIOD_")+begper$+") "+begyear$+Translate!.getTranslation("AON__THROUGH_")+
 :           cvs(y$,2)+Translate!.getTranslation("AON__(PERIOD_")+endper$+") "+endyear$
@@ -589,10 +599,11 @@ new_period: rem --- New period
 
     if done return
     dim pt[2]
+    y$=glt06a.posting_year$
     m$=glt06a.posting_per$
     period=num(m$)
+    find record (gls_calendar_dev,key=firm_id$+y$,err=*next) gls_calendar$
     x$=field(gls_calendar$,"abbr_name_"+str(period:"00"))
-    y$=glt06a.posting_year$
     t1$=y$+m$
     h1$=x$+" "+y$
     l1=0

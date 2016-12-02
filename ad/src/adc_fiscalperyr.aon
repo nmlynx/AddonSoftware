@@ -70,16 +70,6 @@ rem --- Make sure we used the fiscal calendar for the correct year.
         goto get_calendar
     endif
 
-    end_year$=gls_calendar.year$
-    end_mmdd$=field(gls_calendar$,"per_ending_"+str(periods:"00"))
-    if end_mmdd$<gls_calendar.cal_start_date$ then end_year$=str(num(end_year$)+1)
-    end_date$=end_year$+end_mmdd$
-    end_jul=jul(num(end_date$(1,4)),num(end_date$(5,2)),num(end_date$(7,2)))
-    if when_jul>end_jul then
-        fiscal_year$=str(num(fiscal_year$)+1)
-        goto get_calendar
-    endif
-
 rem --- Initializations
 
     numbers$="01020304050607080910111213"
