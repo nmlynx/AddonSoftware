@@ -62,10 +62,10 @@ rem --- Retrieve parameter records
         status=1
         goto std_exit
     endif
-    total_periods=num(gls01a.total_pers$)
+    total_periods=num(gls_calendar.total_pers$)
 
-	fullname$=field(gls01a$,"PERIOD_NAME_"+str(period:"00"))
-	abbrname$=field(gls01a$,"ABBR_NAME_"+str(period:"00"))
+	fullname$=field(gls_calendar$,"PERIOD_NAME_"+str(period:"00"))
+	abbrname$=field(gls_calendar$,"ABBR_NAME_"+str(period:"00"))
 
 rem --- Determine End Of Period
 

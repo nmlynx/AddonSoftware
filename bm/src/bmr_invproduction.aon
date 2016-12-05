@@ -55,7 +55,7 @@ rem --- set rd_alias_id$
 
 rem --- Prepare for call to bmc_explodephantoms.aon
 
-	dim template$[16]
+	dim template$[17]
 	
 rem --- Open/Lock files
 
@@ -107,6 +107,7 @@ rem --- Dimension string templates
 	template$[7]=open_tpls$[6]; rem bms01a
 	template$[15]=open_tpls$[3]; rem bmm02a
 	template$[16]=open_tpls$[11]; rem gls01a
+    template$[17]=open_tpls$[12]; rem gls_calendar
 
 rem --- Is General Ledger installed and being used?
  
@@ -783,7 +784,7 @@ reference: rem --- Reference Total
 
 explodephantoms: rem --- Explode Phantoms
 
-        dim channel[16],info$[20],info[20]
+        dim channel[17],info$[20],info[20]
         channel[0]=bmm01_dev
         channel[1]=bmm03_dev,channel[2]=bmm05_dev
         channel[3]=bmm08_dev
@@ -795,6 +796,7 @@ explodephantoms: rem --- Explode Phantoms
         channel[12]=ivm04_dev,channel[13]=ivw04_dev,channel[14]=ivw05_dev
         channel[15]=bmm02_dev
 		channel[16]=gls01a_dev
+		channel[17]=gls_calendar_dev
         info$[0]=bmm02a.item_id$,info$[1]=ref1$,info$[2]=ref2$,info$[3]=ap$,info$[4]=ar_dist$
         info$[5]=o2$,info$[6]=bme01a.warehouse_id$,info$[7]=bme01a.prod_date$,info$[8]=bme01a.update_flag$
         info$[9]=gl$,info$[10]=t1$,info$[11]=ivacct$
