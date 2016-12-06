@@ -31,6 +31,22 @@ rem --- Verify calendar exists for entered GL fiscal year
 		endif
 		callpoint!.setDevObject("total_pers",gls_calendar.total_pers$)
 	endif
+
+rem --- Verify haven't exceeded calendar total periods for current GL fiscal year
+	period$=callpoint!.getColumnData("GLR_FINANCIALS.PERIOD")
+	if cvs(period$,2)<>"" then
+		period=num(period$)
+		total_pers=num(callpoint!.getDevObject("total_pers"))
+		if period<1 or period>total_pers then
+			msg_id$="AD_BAD_FISCAL_PERIOD"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=str(total_pers)
+			msg_tokens$[2]=year$
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
 [[GLR_FINANCIALS.ASVA]]
 rem --- update GLE_FINANCIALRPT (gle-04) -- remove/write -- based on what's checked in the grid
 rem --- also update GLS_FINANCIALS w/ period/year from form, first updt sequence '9', first print flag 'N'
