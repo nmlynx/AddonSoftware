@@ -58,15 +58,22 @@ rem --- Dimension string templates
     dim gls01a$:templates$[1],glm01a$:templates$[2],glm02a$:templates$[3]
     dim glw02a$:templates$[5],gls_calendar$:templates$[6]
 
+rem --- Assign input values to local variables
+
+    begper$=Option!.getOptionData("PICK_GL_PER")
+    begyear$=Option!.getOptionData("PICK_YEAR")
+    include$=Option!.getOptionData("YN_PROMPT")
+    alignPeriods$=Option!.getOptionData("ALIGN_PERIODS")
+
 rem --- Retrieve parameter records
 
     gls01a_key$=firm_id$+"GL00"   
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
-    find record (gls_calendar_dev,key=firm_id$+gls01a.current_year$,err=*next) gls_calendar$
+    find record (gls_calendar_dev,key=firm_id$+begyear$,err=*next) gls_calendar$
     if cvs(gls_calendar.firm_id$,2)="" then
         msg_id$="AD_NO_FISCAL_CAL"
         dim msg_tokens$[1]
-        msg_tokens$[1]=gls01a.current_year$
+        msg_tokens$[1]=begyear$
         gosub disp_message
         goto std_exit
     endif
@@ -87,8 +94,8 @@ rem --- Assign input values to local variables
     include$=Option!.getOptionData("YN_PROMPT")
     alignPeriods$=Option!.getOptionData("ALIGN_PERIODS")
 
-    rem --- If aligning fiscal periods, need to update GLW_ACCTSUMMARY using
-    rem --- transactions from GLT_TRANSDETAIL for the selected fiscal year.
+rem --- If aligning fiscal periods, need to update GLW_ACCTSUMMARY using
+rem --- transactions from GLT_TRANSDETAIL for the selected fiscal year.
     if alignPeriods$="Y" then
         use ::glo_AlignFiscalCalendar.aon::AlignFiscalCalendar
         alignCalendar!=new AlignFiscalCalendar(firm_id$)
