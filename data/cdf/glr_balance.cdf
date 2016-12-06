@@ -31,6 +31,22 @@ rem --- Verify calendar exists for entered GL fiscal year
 		endif
 		callpoint!.setDevObject("total_pers",gls_calendar.total_pers$)
 
+rem --- Verify haven't exceeded calendar total periods for current GL fiscal year
+	period$=callpoint!.getColumnData("GLR_BALANCE.PICK_GL_PER")
+	if cvs(period$,2)<>"" then
+		period=num(period$)
+		total_pers=num(callpoint!.getDevObject("total_pers"))
+		if period<1 or period>total_pers then
+			msg_id$="AD_BAD_FISCAL_PERIOD"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=str(total_pers)
+			msg_tokens$[2]=year$
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
+
 		rem --- Re-initialize align_periods for new pick_year
 		pick_year$=year$
 		gosub init_align_periods
