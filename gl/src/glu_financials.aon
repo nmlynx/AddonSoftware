@@ -30,6 +30,7 @@ rem --- Parameters
 
 rem --- Initializations
 
+    glm_acctsummary_dev=glm02_dev
     displayColumns!=new DisplayColumns(firm_id$)
     dim a[mp],u[mp],d[mt],y[mt]
     cpn$="CPN"
@@ -109,6 +110,7 @@ rem --- Read next GL Account Master (glm-01) record
 :                if pos(records$(r,1)="135") continue
               dim a[mp],u[mp]
               redim glm02a$
+              glm02_dev=glm_acctsummary_dev
               glm02a.firm_id$=glm01a.firm_id$
               glm02a.gl_account$=glm01a.gl_account$
               glm02a.year$=displayColumns!.getYear(records$(r,1))
