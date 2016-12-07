@@ -164,6 +164,7 @@ rem --- Run report headings overlay
 summary_activity: rem --- Retrieve either current or prior year Summary Activity (glm-02) record
 
     dim a[mp],u[mp]
+    redim glm02a$
     glm02a.firm_id$=glm01a.firm_id$
     glm02a.gl_account$=glm01a.gl_account$
     glm02a.year$=displayColumns!.getYear(record_id$)
