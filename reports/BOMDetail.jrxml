@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2016-11-11T17:18:36 -->
+<!-- 2016-12-07T12:44:45 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BOMDetail" language="groovy" pageWidth="612" pageHeight="792" columnWidth="572" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="50" resourceBundle="addon" uuid="35db722b-b90a-4ec2-a088-fab4a509863b">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -188,7 +188,7 @@ where bmm_billmast.firm_id = $P{FIRM_ID} and bmm_billmast.bill_no >= $P{BILL_NO_
 				<textField>
 					<reportElement x="382" y="103" width="73" height="13" uuid="c992bacb-9070-493e-b783-1513876f0ca3"/>
 					<textElement textAlignment="Right"/>
-					<textFieldExpression><![CDATA["Item InActive:"]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$R{AON_ITEM}+$R{AON_INACTIVE?}]]></textFieldExpression>
 				</textField>
 				<textField>
 					<reportElement x="465" y="103" width="70" height="13" uuid="b795f2b0-1f65-4c9e-9063-7743b2723fd6">
