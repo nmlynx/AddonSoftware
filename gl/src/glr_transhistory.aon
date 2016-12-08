@@ -139,7 +139,6 @@ rem --- Give unique rd_alias_id$ for summary and detail reports so columns can b
 rem --- Initializations
 
     dim headings$[headings],stars$(m2,"*")
-    dim as[(mp+1)*3],us[(mp+1)*3],o[10],at[2],et[2],pt[2],jt[2],rt[2],n[2]
     when$=sysinfo.system_date$
     l1=0
     nothing_to_print=1
@@ -151,9 +150,17 @@ rem --- Initializations
     h0$=""
     h1$=""
     last$=""
+    bb$=Translate!.getTranslation("AON_BEGINNING_BALANCE")
     starting$=begyear$+begper$
     ending$=endyear$+endper$
-    bb$=Translate!.getTranslation("AON_BEGINNING_BALANCE")
+    begper=num(begper$)-1
+    endper=num(endper$)
+    begyear=num(begyear$)
+    endyear=num(endyear$)
+    numYears=endyear-begyear+1
+    begindex=0
+    endindex=(mp+1)*(numYears-1)
+    dim as[(mp+1)*numYears],us[(mp+1)*numYears],o[10],at[2],et[2],pt[2],jt[2],rt[2],n[2]
 
 rem --- Document columns
 
@@ -221,29 +228,6 @@ rem --- Initialize report headings
 :           else y$=Translate!.getTranslation("AON_JOURNAL_ID_")+glm03a.journal_id$+" "+cvs(glm03a.code_desc$,2)
         headings$[3]=x$+Translate!.getTranslation("AON__REPORT_FOR_")+y$
     endif
-
-rem --- Determine which years for GL summary (glm-02) records
-
-    year1=num(gls01a.current_year$)-1
-    if gls01a.gl_yr_closed$<>"Y" then year1=year1-1
-    begper=0
-    endper=total_pers
-    year2=year1+1
-    year3=year2+1    
-    begyear=num(begyear$)
-    endyear=num(endyear$)
-    begper=num(begper$)-1
-    endper=num(endper$)
-    records$="204"
-    records=len(records$)
-    begoffset=0
-    endoffset=0
-    if begyear=year2 begoffset=1
-    if begyear=year3 begoffset=2
-    if endyear=year2 endoffset=1
-    if endyear=year3 endoffset=2
-    begindex=mp*begoffset+begoffset
-    endindex=mp*endoffset+endoffset
 
 rem --- Start progress meter
 
@@ -503,7 +487,7 @@ rem --- Print warning if calculated balance doesn't match transaction total
 new_account: rem --- New account
 
     if done return
-    dim as[(mp+1)*3],us[(mp+1)*3],at[2],et[2]
+    dim as[(mp+1)*numYears],us[(mp+1)*numYears],at[2],et[2]
     t0$=glt06a.gl_account$
     glm01a.firm_id$=firm_id$
     glm01a.gl_account$=glt06a.gl_account$
@@ -522,10 +506,10 @@ new_account: rem --- New account
 
 rem --- Load summary activity for account
 
-    for x=1 to records
+        for x=0 to numYears-1
         dim a[mp],u[mp]
-        y=(x-1)*mp+(x-1)*1
-        glm02_key$=glm01a.firm_id$+glm01a.gl_account$+displayColumns!.getYear(records$(x,1))
+        y=(mp+1)*x
+        glm02_key$=glm01a.firm_id$+glm01a.gl_account$+str(begyear+x:"0000")
         find record (glm02_dev,key=glm02_key$,dom=*continue) glm02a$
         call stbl("+DIR_PGM")+"glc_summary.aon","R",glm02a$,a[all],u[all],status
         for p=0 to mp
