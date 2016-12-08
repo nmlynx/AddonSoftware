@@ -14,44 +14,13 @@ rem --- program is only run if the user has chosen NOT to reprint
 rem --- existing reports. The next overlay is glr_headings, which
 rem --- assembles the custom headings for the financial reports.
 
-    use ::glo_DisplayColumns.aon::DisplayColumns
-
     setesc std_error
     seterr std_error
 
 rem --- Initializations
 
-    displayColumns!=new DisplayColumns(firm_id$)
-    records$=""
-    currec$=""
-    prirec$=""
     last$=""
-    more=1
-    moredetail=1
-    year=0
-    year=num(begyear$,err=*next)
     total_recs=0
-    
-    closed=1
-    notclosed=0
-    status=gls01a.gl_yr_closed$="Y"
-    curr_year=num(gls01a.current_year$)
-    switch status
-           case notclosed
-                if year=curr_year records$="40"
-                if year=curr_year-1 records$="02"
-                if year=curr_year-2 records$="2 "
-           break
-           case closed
-                if year=curr_year records$="02"
-                if year=curr_year-1 records$="2 "
-                if year=curr_year+1 records$="40"
-           break
-    swend
-    if records$<>""
-       currec$=records$(1,1)
-       prirec$=records$(2,1)
-    endif
 
 rem --- Start progress meter
 
@@ -70,7 +39,7 @@ rem --- Position GL Account Master (glm-01)
 
 rem --- Read next GL Account Master (glm-01) record
 
-    while more
+    while 1
           glm01_key$=key(glm01_dev,end=*break)
           if firm_id$<>"99"
 :            if pos(firm_id$=glm01_key$)<>1 break
@@ -84,7 +53,7 @@ rem --- Read next GL Account Master (glm-01) record
           amount=0
           units=0
           number=0
-          record_id$=prirec$
+          this_year$=prior_year$
           gosub summary_activity
 
           rem --- Fill prior year buckets
@@ -101,7 +70,7 @@ rem --- Read next GL Account Master (glm-01) record
           next x
           rem --- Retrieve current year Summary Activity (glm-02) record
 
-          record_id$=currec$
+          this_year$=begyear$
           gosub summary_activity
 
           rem --- Fill current year buckets
@@ -121,7 +90,7 @@ rem --- Read next GL Account Master (glm-01) record
 
           if firm_id$="99" read (glm21_dev,key=glm01_key$,dom=*next) 
 :                     else read (glm11_dev,key=glm01_key$,dom=*next)
-          while moredetail
+          while 1
                 if firm_id$="99" k$=key(glm21_dev,end=*break) 
 :                           else k$=key(glm11_dev,end=*break)
                 if pos(glm01_key$=k$)<>1 break
@@ -164,7 +133,7 @@ summary_activity: rem --- Retrieve either current or prior year Summary Activity
     redim glm02a$
     glm02a.firm_id$=glm01a.firm_id$
     glm02a.gl_account$=glm01a.gl_account$
-    glm02a.year$=displayColumns!.getYear(record_id$)
+    glm02a.year$=this_year$
     glm02_key$=glm02a.firm_id$+glm02a.gl_account$+glm02a.year$
     find record (glm02_dev,key=glm02_key$,dom=*next) glm02a$
     call pgmdir$+"glc_summary.aon","R",glm02a$,a[all],u[all],status
