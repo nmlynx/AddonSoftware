@@ -67,7 +67,7 @@ rem --- Determine End Of Period
     if period>total_periods period=total_periods
     enddate$=field(gls_calendar$,"per_ending_"+str(period:"00"))
     calendar_year=year
-    if enddate$(1,2)<gls_calendar.per_ending_01$(1,2) calendar_year=calendar_year+1
+    if enddate$<gls_calendar.per_ending_01$ then calendar_year=calendar_year+1
     enddate$=str(calendar_year:"0000")+enddate$
     if len(enddate$)>7 then
         yyyy$=enddate$(1,4)
