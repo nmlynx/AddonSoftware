@@ -90,12 +90,15 @@ rem --- Read next GL Account Master (glm-01) record
           rem --- Fill prior year buckets
 
           first_col=period+(13-fiscal_pers)
-          for x=first_col to fiscal_pers+1
+          last_col=fiscal_pers+1
+          rem --- Adjustment for different number of periods in fiscal years
+          first_col=first_col-(fiscal_pers-prior_year_pers)
+          last_col=last_col-(fiscal_pers-prior_year_pers)
+          for x=first_col to last_col
               ta[number]=a[x-1]
               tu[number]=u[x-1]
               number=number+1
           next x
-
           rem --- Retrieve current year Summary Activity (glm-02) record
 
           record_id$=currec$
