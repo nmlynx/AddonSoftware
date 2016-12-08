@@ -8,8 +8,6 @@ rem  |  Copyright BASIS International Ltd.  All Rights Reserved.
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
 
-    use ::glo_DisplayColumns.aon::DisplayColumns
-
     setesc std_error
     seterr std_error
 
@@ -64,12 +62,11 @@ rem --- Retrieve parameter records
     if cvs(gls_calendar.firm_id$,2)="" then
         msg_id$="AD_NO_FISCAL_CAL"
         dim msg_tokens$[1]
-        msg_tokens$[1]=gls01a.current_year$
+        msg_tokens$[1]=begyear$
         gosub disp_message
         goto std_exit
     endif
 
-    displayColumns!=new DisplayColumns(firm_id$)
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,0
     m1=len(m1$)
@@ -131,18 +128,6 @@ rem --- Print positions
     w=o[3]-o[2]
     if w>35 w=35
 
-rem --- Which glm-02 record?
-    
-    if gls01a.gl_yr_closed$ <> "Y" then 
-        if year=glyear record$="4"
-        if year=glyear-1 record$="0"
-        if year=glyear-2 record$="2"
-    else
-        if year=glyear record$="0"
-        if year=glyear-1 record$="2"
-        if year=glyear+1 record$="4"
-    endif
-
 rem --- Document columns
 
     columns=7
@@ -178,7 +163,7 @@ rem --- Read next glm-01 record
           rem --- Read glm-02 record
 
           action$="R"
-          glm02_key$=firm_id$+glm01a.gl_account$+displayColumns!.getYear(record$)
+          glm02_key$=firm_id$+glm01a.gl_account$+begyear$
 
           find record (glm02_dev,key=glm02_key$,dom=*continue)glm02a$
           call pgmdir$+"glc_summary.aon",action$,glm02a$,a[all],u[all],status

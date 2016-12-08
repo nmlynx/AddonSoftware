@@ -8,8 +8,6 @@ rem  |  Copyright BASIS International Ltd.  All Rights Reserved.
 rem  |          All Rights Reserved            |
 rem  +-----------------------------------------+
 
-    use ::glo_DisplayColumns.aon::DisplayColumns
-
     setesc std_error
     seterr std_error
 
@@ -99,7 +97,6 @@ rem --- Retrieve parameter records
         goto std_exit_no_report
     endif
     
-    displayColumns!=new DisplayColumns(firm_id$)
     units_flag$=gls01a.units_flag$
     total_pers=num(gls_calendar.total_pers$)
     call "adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
