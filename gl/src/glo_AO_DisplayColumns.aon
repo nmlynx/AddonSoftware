@@ -22,6 +22,7 @@ rem  */
         field protected BBjString currentFiscalYear$
         field protected TreeMap displayColumns!
         field protected BBjString firmID$
+        field protected BBjString glYearClosed$
         field protected BBTranslator Translate!
         field protected BBjString useBudgets$
         field protected BBjString useUnits$
@@ -51,6 +52,7 @@ rem  */
             
             rem --- Initialize field variables
             #currentFiscalYear$ = gls_params.current_year$
+            #glYearClosed$ = gls_params.gl_yr_closed$
             #firmID$ = firmID$
             #useBudgets$ = gls_params.budget_flag$
             #useUnits$ = gls_params.units_flag$
@@ -482,6 +484,7 @@ getVectorButtonList_error:rem --- Method error trap/handler
             key$=#fixDisplayColumnsKey(displayColumnsKey$)
             if #displayColumns!.containsKey(key$) then
                 year = num(#currentFiscalYear$) + #getYearInc(key$)
+                if #glYearClosed$<>"Y" then year = year - 1
                 year$ = str(year)
             endif
 
