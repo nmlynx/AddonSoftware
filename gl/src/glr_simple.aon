@@ -175,18 +175,6 @@ rem --- Initializations
         headings$[4]=""
     endif
 
-rem --- Which glm-02 record?
-    
-    if gls01a.gl_yr_closed$ <> "Y" then 
-        if year=glyear record$="4"
-        if year=glyear-1 record$="0"
-        if year=glyear-2 record$="2"
-    else
-        if year=glyear record$="0"
-        if year=glyear-1 record$="2"
-        if year=glyear+1 record$="4"
-    endif
-
 rem --- Document columns
 
     if bs$<>"Y"
@@ -271,7 +259,7 @@ rem --- Read next sort record
               findrecord(glwAcctSummary_dev,key=glwAcctSummary_key$,dom=level_break,knum="BY_ACCOUNT_YEAR")glwAcctSummary$
               call pgmdir$+"glc_summary.aon",action$,glwAcctSummary$,a[all],u[all],status
           else
-              glm02_key$=glm01_key$+displayColumns!.getYear(record$)
+              glm02_key$=glm01_key$+begyear$
               find record (glm02_dev,key=glm02_key$,dom=level_break)glm02a$
               call pgmdir$+"glc_summary.aon",action$,glm02a$,a[all],u[all],status
           endif
