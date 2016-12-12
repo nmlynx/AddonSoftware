@@ -13,8 +13,6 @@ rem --- Sheet and P&L Statement). It's run by two different front ends,
 rem --- glr_balance (for the Balance Sheet) and glr_profitloss (for the
 rem --- Profit & Loss Statement).
 
-    use ::glo_DisplayColumns.aon::DisplayColumns
-
     setesc std_error
     seterr std_error
 
@@ -77,8 +75,7 @@ rem --- Retrieve parameter records
         gosub disp_message
         goto std_exit
     endif
-    
-    displayColumns!=new DisplayColumns(firm_id$)
+
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","A","",m1$,0,m1
     glyear=num(gls01a.current_year$)
