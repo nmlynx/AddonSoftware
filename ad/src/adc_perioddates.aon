@@ -86,8 +86,9 @@ rem --- Determine Start Of Period
         rem --- Get calendar start date and subtract one day from it
         begdate$=field(gls_calendar$,"cal_start_date")
         julian=jul(calendar_year,num(begdate$(1,2)),num(begdate$(3,2)))-1
-        begdate$=date(julian:"%Mz%Dz")
-        calendar_year=year
+        prior_yr_end$=date(julian:"%Yl%Mz%Dz")
+        calendar_year=num(prior_yr_end$(1,4))
+        begdate$=prior_yr_end$(5)
     else
         rem --- Get ending date of previous period
         begdate$=field(gls_calendar$,"per_ending_"+str(period-1:"00"))
