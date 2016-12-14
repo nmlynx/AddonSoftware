@@ -1,0 +1,243 @@
+rem ==========================================================================
+rem --- glx_buildactsum.aon 
+rem --- Utility to build GL Account Summary glm_acctsummary (glm-02) from
+rem --- glt_transdetail (glt-06).
+rem --- 
+rem --- AddonSoftware Version 17.0
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem ==========================================================================
+
+    setesc std_error
+    seterr std_error
+
+rem --- Initializations
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+    dir_syp$=stbl("+DIR_SYP")
+    sysGUI! = BBjAPI().getSysGui()
+
+rem --- Get user inputs
+
+    beginYear$=Option!.getOptionData("BEG_YEAR")
+    endYear$=Option!.getOptionData("END_YEAR")
+
+rem --- Open/Lock files
+
+    num_files=2
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="GLM_ACCTSUMMARY",open_opts$[1]="OTA"
+    open_tables$[2]="GLT_TRANSDETAIL",open_opts$[2]="OTA"
+
+    gosub open_tables
+
+    glmAcctSummary_dev=num(open_chans$[1])
+    gltTransDetail_dev=num(open_chans$[2])
+    dim glmAcctSummary$:open_tpls$[1]
+    dim gltTransDetail$:open_tpls$[2]
+    
+rem --- Start main progress meter
+    meter_title$=Translate!.getTranslation("DDM_TABLES-GLX_BUILDACTSUM-DD_ATTR_WINT")
+    mainTotalRecs=3
+    meter_total_recs=mainTotalRecs
+    mainRecCount=0
+    meter_proc_recs=mainRecCount
+    meter_text$=""
+    meter_action$="WIN-LST-OK"
+    gosub disp_meter
+    mainMeter!=meterWin!
+
+    rem --- Increment main progress meter
+    meterWin!=mainMeter!
+    meter_text$=Translate!.getTranslation("AON_PROCESSING")+" GLT_TRANSDETAIL (glt-06) "+Translate!.getTranslation("AON_RECORDS")
+    mainRecCount=mainRecCount+1
+    meter_proc_recs=mainRecCount
+    meter_action$="MTR-LST"
+    gosub disp_meter
+
+rem --- Get record count for GLT_TRANSDETAIL (glt-06) progress meter
+    sql_prep$=""
+    sql_prep$=sql_prep$+"SELECT count(*) "
+    sql_prep$=sql_prep$+"FROM glt_transdetail "
+    sql_prep$=sql_prep$+"WHERE posting_year>='"+beginYear$+"' and posting_year<='"+endYear$+"'"
+    sql_chan=sqlunt
+    sqlopen(sql_chan)stbl("+DBNAME")
+    sqlprep(sql_chan)sql_prep$
+    sqlexec(sql_chan)
+    read_tpl$=sqlfetch(sql_chan) 
+    recCount$=read_tpl$
+    
+rem --- Start glt_transdetail progress meter
+    meter_title$="GLT_TRANSDETAIL (glt-06) "+Translate!.getTranslation("AON_RECORDS")
+    transdetailTotalRecs=num(recCount$)
+    meter_total_recs=transdetailTotalRecs
+    transdetailRecCount=0
+    meter_proc_recs=transdetailRecCount
+    meter_text$=""
+    meter_action$="WIN-LST"
+    gosub disp_meter
+    transdetailMeter!=meterWin!
+
+rem wgh ... 8492 ... stopped here
+
+    rem --- Increment glt_transdetail progress meter
+    meterWin!=transdetailMeter!
+rem wgh ... 8492
+    meter_text$="glt_transdetail meter text"
+    transdetailRecCount=transdetailRecCount+1
+    meter_proc_recs=transdetailRecCount
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    
+    rem --- Stop glt_transdetail progress meter
+    meterWin!=transdetailMeter!
+    meter_text$=""
+    meter_proc_recs=transdetailTotalRecs
+    meter_action$="LST-END"
+    gosub disp_meter
+
+    rem --- Increment main progress meter
+rem wgh ... 8492 ... why is progress bar being cleared?
+    meterWin!=mainMeter!
+    meter_text$=Translate!.getTranslation("AON_PROCESSING")+" GLM_ACCTSUMMARY (glm-02) "+Translate!.getTranslation("AON_RECORDS")
+    mainRecCount=mainRecCount+1
+    meter_proc_recs=mainRecCount
+    meter_action$="MTR-LST"
+    gosub disp_meter
+
+rem --- Get record count for GLM_ACCTSUMMARY (glm-02) progress meter
+rem wgh ... 8492
+recCount$="100"
+    
+rem --- Start glm_acctsummary progress meter
+    meter_title$="GLM_ACCTSUMMARY (glm-02) "+Translate!.getTranslation("AON_RECORDS")
+    acctsummaryTotalRecs=num(recCount$)
+    meter_total_recs=acctsummaryTotalRecs
+    acctsummaryRecCount=0
+    meter_proc_recs=acctsummaryRecCount
+    meter_text$=""
+    meter_action$="WIN-LST"
+    gosub disp_meter
+    acctsummaryMeter!=meterWin!
+
+rem wgh ... 8492 ... stopped here
+
+    rem --- Increment glm_acctsummary progress meter
+    meterWin!=acctsummaryMeter!
+rem wgh ... 8492
+    meter_text$="glm_acctsummary meter text"
+    acctsummaryRecCount=acctsummaryRecCount+1
+    meter_proc_recs=acctsummaryRecCount
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    
+    rem --- Stop glm_acctsummary progress meter
+    meterWin!=acctsummaryMeter!
+    meter_text$=""
+    meter_proc_recs=acctsummaryTotalRecs
+    meter_action$="LST-END"
+    gosub disp_meter
+    
+done: rem --- All done
+    
+    rem --- Stop main progress meter
+    meterWin!=mainMeter!
+    meter_text$=""
+    meter_proc_recs=mainTotalRecs
+    meter_action$="LST-END"
+    gosub disp_meter
+
+    goto std_exit
+	
+disp_meter:rem --- Display Progress Meter
+
+    rem --- sysGUI! is not declared in bam_prog_bar.bbj, so can't declare it here
+    rem declare BBjSysGui sysGUI!
+
+    rem --- rdForm! is not declared in bam_prog_bar.bbj, so can't declare it here
+    rem declare BBjTopLevelWindow rdForm!
+
+    rem --- meterWin! is not declared in bam_prog_bar.bbj, so can't declare it here
+    rem declare BBjTopLevelWindow meterWin!
+
+    call dir_syp$+"bam_prog_bar.bbj",
+:       sysGUI!,
+:       rdForm!,
+:       meterWin!,
+:       meter_title$,
+:       meter_total_recs,
+:       meter_proc_recs,
+:       meter_text$,
+:       meter_action$
+
+    return
+
+open_tables:rem --- Open Tables
+
+    call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:       open_beg,
+:       open_end,
+:       open_tables$[all],
+:       open_opts$[all],
+:       open_chans$[all],
+:       open_tpls$[all],
+:       rd_table_chans$[all],
+:       open_batch,
+:       open_status$
+
+    if open_status$<>"" then
+        msg_id$="ENTRY_OPEN_ERROR"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=open_status$
+        gosub disp_message
+        rdFuncSpace!=bbjAPI().getGroupNamespace().setValue("+build_task","OFF")
+        release
+    endif
+
+    return
+    
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
+
+    return
+    
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (18Nov2014)
+
+    if tcb(19)>0
+        rem --- Escape handler
+        if and(chr(tcb(19)),$08$)=$08$
+            release
+        else
+            setesc std_error
+            return
+        endif
+    endif
+
+    if err=0   
+        rem --- Get tcb(12) and tcb(10) to send into bac_error
+        lock_byte=tcb(10)
+        lock_chan=tcb(12)  
+    endif
+
+    rd_err_text$=""
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$,lock_byte,lock_chan
+    if pos("ESCAPE"=rd_err_act$) seterr 0; setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+    if pgm(-1)<>pgm(-2) status=999; exit 
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    release
+
+rem #endinclude std_end.src
+    
+    end
