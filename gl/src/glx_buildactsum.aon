@@ -11,29 +11,46 @@ rem ==========================================================================
     seterr std_error
 
 rem --- Initializations
-
     pgmdir$=stbl("+DIR_PGM",err=*next)
     dir_syp$=stbl("+DIR_SYP")
     sysGUI! = BBjAPI().getSysGui()
+    max_pers=13
+    dim a[max_pers],u[max_pers]
+
+rem --- Retrieve sysinfo data
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    firm_id$=sysinfo.firm_id$
 
 rem --- Get user inputs
-
     beginYear$=Option!.getOptionData("BEG_YEAR")
     endYear$=Option!.getOptionData("END_YEAR")
 
 rem --- Open/Lock files
-
-    num_files=2
+    num_files=5
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="GLM_ACCTSUMMARY",open_opts$[1]="OTA"
-    open_tables$[2]="GLT_TRANSDETAIL",open_opts$[2]="OTA"
+    open_tables$[1]="GLS_EARNINGS",open_opts$[1]="OTA@"
+    open_tables$[2]="GLM_ACCTSUMMARY",open_opts$[2]="OTA[1]"
+    open_tables$[3]="GLT_TRANSDETAIL",open_opts$[3]="OTA[1]"
+    open_tables$[4]="GLM_ACCTSUMHDR",open_opts$[4]="OTA@"
+    open_tables$[5]="GLM_ACCTSUMMARY",open_opts$[5]="OTA[2]"
 
     gosub open_tables
 
-    glmAcctSummary_dev=num(open_chans$[1])
-    gltTransDetail_dev=num(open_chans$[2])
-    dim glmAcctSummary$:open_tpls$[1]
-    dim gltTransDetail$:open_tpls$[2]
+    glsEarnings_dev=num(open_chans$[1])
+    glmAcctSummary_dev=num(open_chans$[2])
+    gltTransDetail_dev=num(open_chans$[3])
+    glmAcctSumHdr_dev=num(open_chans$[4])
+    glmAcctSummary2_dev=num(open_chans$[5])
+    dim glsEarnings$:open_tpls$[1]
+    dim glmAcctSummary$:open_tpls$[2]
+    dim gltTransDetail$:open_tpls$[3]
+    dim glmAcctSumHdr$:open_tpls$[4]
+    dim glmAcctSummary2$:open_tpls$[5]
+
+rem --- Retrieve parameter records
+    findrecord(glsEarnings_dev,key=firm_id$+"GL01",err=std_missing_params)glsEarnings$
     
 rem --- Start main progress meter
     meter_title$=Translate!.getTranslation("DDM_TABLES-GLX_BUILDACTSUM-DD_ATTR_WINT")
@@ -58,7 +75,7 @@ rem --- Get record count for GLT_TRANSDETAIL (glt-06) progress meter
     sql_prep$=""
     sql_prep$=sql_prep$+"SELECT count(*) "
     sql_prep$=sql_prep$+"FROM glt_transdetail "
-    sql_prep$=sql_prep$+"WHERE posting_year>='"+beginYear$+"' and posting_year<='"+endYear$+"'"
+    sql_prep$=sql_prep$+"WHERE firm_id='"+firm_id$+"' and posting_year>='"+beginYear$+"' and posting_year<='"+endYear$+"'"
     sql_chan=sqlunt
     sqlopen(sql_chan)stbl("+DBNAME")
     sqlprep(sql_chan)sql_prep$
@@ -67,6 +84,7 @@ rem --- Get record count for GLT_TRANSDETAIL (glt-06) progress meter
     recCount$=read_tpl$
     
 rem --- Start glt_transdetail progress meter
+    meterWin!=null()
     meter_title$="GLT_TRANSDETAIL (glt-06) "+Translate!.getTranslation("AON_RECORDS")
     transdetailTotalRecs=num(recCount$)
     meter_total_recs=transdetailTotalRecs
@@ -77,16 +95,45 @@ rem --- Start glt_transdetail progress meter
     gosub disp_meter
     transdetailMeter!=meterWin!
 
-rem wgh ... 8492 ... stopped here
+    rem --- Build glm_acctsummary records from glt_transdetail transactions
+    read(gltTransDetail_dev,key=firm_id$+beginYear$,knum="BY_YEAR_PERIOD",dom=*next)
+    while 1
+        readrecord(gltTransDetail_dev,end=*break)gltTransDetail$
+        if gltTransDetail.firm_id$+gltTransDetail.posting_year$<>firm_id$+beginYear$ then break
 
-    rem --- Increment glt_transdetail progress meter
-    meterWin!=transdetailMeter!
-rem wgh ... 8492
-    meter_text$="glt_transdetail meter text"
-    transdetailRecCount=transdetailRecCount+1
-    meter_proc_recs=transdetailRecCount
-    meter_action$="MTR-LST"
-    gosub disp_meter
+        rem --- Increment glt_transdetail progress meter
+        meterWin!=transdetailMeter!
+        meter_text$=gltTransDetail.trns_date$+"-"+gltTransDetail.gl_account$+"-"+gltTransDetail.journal_id$+
+:           "-"+gltTransDetail.gl_adt_no$+"-"+gltTransDetail.seq_no$
+        transdetailRecCount=transdetailRecCount+1
+        meter_proc_recs=transdetailRecCount
+        meter_action$="MTR-LST"
+        gosub disp_meter
+
+        rem --- Get existing glm_acctsummary record, or initialize a new one
+        redim glmAcctSummary$
+        glmAcctSummary_key$=gltTransDetail.firm_id$+gltTransDetail.gl_account$+gltTransDetail.posting_year$
+        findrecord(glmAcctSummary_dev,key=glmAcctSummary_key$,knum="PRIMARY",dom=*next)glmAcctSummary$
+        if glmAcctSummary.firm_id$<>gltTransDetail.firm_id$ then
+            rem --- Initialize new glm_acctsummary record
+            glmAcctSummary.firm_id$=gltTransDetail.firm_id$
+            glmAcctSummary.gl_account$=gltTransDetail.gl_account$
+            glmAcctSummary.year$=gltTransDetail.posting_year$
+            glmAcctSummary.begin_amt=0
+            glmAcctSummary.begin_units=0
+            for per=1 to max_pers
+                field glmAcctSummary$,"PERIOD_AMT_"+str(per:"00")=0
+                field glmAcctSummary$,"PERIOD_UNITS_"+str(per:"00")=0
+            next per
+        endif
+
+        rem --- Update and write glm_acctsummary record
+        posting_per$=gltTransDetail.posting_per$
+        field glmAcctSummary$,"PERIOD_AMT_"+posting_per$=nfield(glmAcctSummary$,"PERIOD_AMT_"+posting_per$)+gltTransDetail.trans_amt
+        field glmAcctSummary$,"PERIOD_UNITS_"+posting_per$=nfield(glmAcctSummary$,"PERIOD_UNITS_"+posting_per$)+gltTransDetail.units
+        glmAcctSummary$=field(glmAcctSummary$)
+        writerecord(glmAcctSummary_dev)glmAcctSummary$
+    wend
     
     rem --- Stop glt_transdetail progress meter
     meterWin!=transdetailMeter!
@@ -96,19 +143,27 @@ rem wgh ... 8492
     gosub disp_meter
 
     rem --- Increment main progress meter
-rem wgh ... 8492 ... why is progress bar being cleared?
     meterWin!=mainMeter!
     meter_text$=Translate!.getTranslation("AON_PROCESSING")+" GLM_ACCTSUMMARY (glm-02) "+Translate!.getTranslation("AON_RECORDS")
     mainRecCount=mainRecCount+1
     meter_proc_recs=mainRecCount
+    meter_total_recs=mainTotalRecs
     meter_action$="MTR-LST"
     gosub disp_meter
 
 rem --- Get record count for GLM_ACCTSUMMARY (glm-02) progress meter
-rem wgh ... 8492
-recCount$="100"
+    sql_prep$=""
+    sql_prep$=sql_prep$+"SELECT count(*) "
+    sql_prep$=sql_prep$+"FROM glm_acctsummary "
+    sql_prep$=sql_prep$+"WHERE firm_id='"+firm_id$+"' and year>='"+beginYear$+"' and year<='"+endYear$+"'"
+    sqlprep(sql_chan)sql_prep$
+    sqlexec(sql_chan)
+    read_tpl$=sqlfetch(sql_chan)
+    close(sql_chan)
+    recCount$=read_tpl$
     
 rem --- Start glm_acctsummary progress meter
+    meterWin!=null()
     meter_title$="GLM_ACCTSUMMARY (glm-02) "+Translate!.getTranslation("AON_RECORDS")
     acctsummaryTotalRecs=num(recCount$)
     meter_total_recs=acctsummaryTotalRecs
@@ -119,17 +174,95 @@ rem --- Start glm_acctsummary progress meter
     gosub disp_meter
     acctsummaryMeter!=meterWin!
 
-rem wgh ... 8492 ... stopped here
-
-    rem --- Increment glm_acctsummary progress meter
-    meterWin!=acctsummaryMeter!
-rem wgh ... 8492
-    meter_text$="glm_acctsummary meter text"
-    acctsummaryRecCount=acctsummaryRecCount+1
-    meter_proc_recs=acctsummaryRecCount
-    meter_action$="MTR-LST"
-    gosub disp_meter
+    rem --- Update glm_acctsummary BEGIN_AMT and BEGIN_UNITS for the new records
+    for yr=num(endYear$) to num(beginYear$) step -1
+        retained_amt=0
+        retained_units=0
     
+        thisYear$=str(yr)
+        read(glmAcctSummary_dev,key=firm_id$+thisYear$,knum="BY_YEAR_ACCT",dom=*next)
+        while 1
+            readrecord(glmAcctSummary_dev,end=*break)glmAcctSummary$
+            if glmAcctSummary.firm_id$+glmAcctSummary.year$<>firm_id$+thisYear$ then break
+
+            rem --- Increment glm_acctsummary progress meter
+            meterWin!=acctsummaryMeter!
+            meter_text$=glmAcctSummary.year$+"-"+glmAcctSummary.gl_account$
+            acctsummaryRecCount=acctsummaryRecCount+1
+            meter_proc_recs=acctsummaryRecCount
+            meter_action$="MTR-LST"
+            gosub disp_meter
+
+            rem --- Don't update BEGIN_AMT and BEGIN_UNITS if this is NOT an asset, liability or capital acct,
+            rem --- or if it IS the retained earnings account.
+            redim glmAcctSumHdr$
+            findrecord(glmAcctSumHdr_dev,key=glmAcctSummary.firm_id$+glmAcctSummary.gl_account$,dom=*next)glmAcctSumHdr$
+            if pos(glmAcctSumHdr.gl_acct_type$="ALC")=0 or glmAcctSumHdr.gl_account$=glsEarnings.gl_account$ then
+                rem --- Accummulate income, expense and retained earnings accounts for retained earnings beginning balance.
+                call pgmdir$+"glc_summary.aon","R",glmAcctSummary$,a[all],u[all],status
+                for per=1 to max_pers
+                    retained_amt=retained_amt-a[per]
+                    retained_units=retained_units-u[per]
+                next per
+
+                continue
+            endif
+
+            rem --- Get beginning balances for the next year
+            redim glmAcctSummary2$
+            glmAcctSummary2_key$=glmAcctSummary.firm_id$+glmAcctSummary.gl_account$+str(num(glmAcctSummary.year$)+1)
+            readrecord(glmAcctSummary2_dev,key=glmAcctSummary2_key$,knum="PRIMARY",end=*next)glmAcctSummary2$
+            begin_amt=glmAcctSummary2.begin_amt
+            begin_units=glmAcctSummary2.begin_amt
+            
+            rem --- Calculate this year's beginning balances by subtracting this year's transactions
+            rem --- from next year's beginning balance.
+            call pgmdir$+"glc_summary.aon","R",glmAcctSummary$,a[all],u[all],status
+            for per=1 to max_pers
+                begin_amt=begin_amt-a[per]
+                begin_units=begin_units-u[per]
+            next per
+
+            rem --- Write updated glm_acctsummary record for this year
+            glmAcctSummary.begin_amt=begin_amt
+            glmAcctSummary.begin_units=begin_units
+            glmAcctSummary$=field(glmAcctSummary$)
+            glmAcctSummary$=field(glmAcctSummary$)
+            writerecord(glmAcctSummary_dev)glmAcctSummary$
+        wend
+
+        rem --- Calculate this year's retained earnings beginning balances by subtracting this year's transactions
+        rem --- from next year's beginning balance, and subtracting this year's ending balances for income and expense accounts.
+        redim glmAcctSummary2$
+        glmAcctSummary2_key$=firm_id$+glsEarnings.gl_account$+str(num(thisYear$)+1)
+        findrecord(glmAcctSummary2_dev,key=glmAcctSummary2_key$,knum="PRIMARY",end=*next)glmAcctSummary2$
+        begin_amt=glmAcctSummary2.begin_amt
+        begin_units=glmAcctSummary2.begin_amt
+
+        rem --- Get existing retained earnings glm_acctsummary record for this year, or initialize a new one
+        redim glmAcctSummary$
+        glmAcctSummary_key$=firm_id$+glsEarnings.gl_account$+thisYear$
+        findrecord(glmAcctSummary_dev,key=glmAcctSummary_key$,knum="PRIMARY",dom=*next)glmAcctSummary$
+        if glmAcctSummary.firm_id$<>firm_id$ then
+            rem --- Initialize new glm_acctsummary record
+            glmAcctSummary.firm_id$=firm_id$
+            glmAcctSummary.gl_account$=glsEarnings.gl_account$
+            glmAcctSummary.year$=thisYear$
+            glmAcctSummary.begin_amt=0
+            glmAcctSummary.begin_units=0
+            for per=1 to max_pers
+                field glmAcctSummary$,"PERIOD_AMT_"+str(per:"00")=0
+                field glmAcctSummary$,"PERIOD_UNITS_"+str(per:"00")=0
+            next per
+        endif
+
+        rem --- Update and write retained earnings glm_acctsummary record for this year
+        glmAcctSummary.begin_amt=begin_amt-retained_amt
+        glmAcctSummary.begin_amt=begin_units-retained_units
+        glmAcctSummary$=field(glmAcctSummary$)
+        writerecord(glmAcctSummary_dev)glmAcctSummary$
+    next yr
+
     rem --- Stop glm_acctsummary progress meter
     meterWin!=acctsummaryMeter!
     meter_text$=""
@@ -200,6 +333,28 @@ disp_message:rem --- Display Message Dialog
     call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
 
     return
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:                                   str(err),rd_err_text$,rd_err_act$
+std_missing_params_exit:
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release:
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
     
 rem #include std_error.src
 
