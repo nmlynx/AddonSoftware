@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2016-12-13
+ Report Date:   2016-12-27
  Report Branch: AddonSoftware 16.21
  Last Release:  AddonSoftware 16.20
 =======================================================================================================================================
@@ -115,3 +115,14 @@ Bug 8892: Do not attempt to use fiscal period names for periods greater
 than the number of fiscal periods.
 ----
 Modified: gl/src/glr_13period.aon
+
+=======================================================================================================================================
+Revision: b8f4ab8e2d1ea3699c75954986f80d1a3d718353
+Author: Bill Halsted <bhalsted@bhalsted-PC2.myhome.westell.com>
+Date: 12/27/2016 1:13:37 PM
+Message:
+Bug 8917: Unnecessary field deliminators were eliminated in
+ivm_itemmaster 1/6/2016, so can no longer simply test if
+display_desc$="".
+----
+Modified: iv/src/ivx_builddisplaydesc.aon
