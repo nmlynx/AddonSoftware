@@ -166,7 +166,7 @@ rem --- Position File Pointer
         rem --- Calculate commission due
 
             gosub Search_Invoice
-            if paid=0 then continue
+            if paid=0 and opt71a.TOTAL_SALES<>0 then continue
             a[9]=0
             if commission$="S" and  sold<>0 then a[9]=(-paid)/sold*opt71a.TOTAL_SALES*opt71a.COMM_PERCENT/100
             if commission$="P" and  sold<>0 then a[9]=(-paid)/sold*(opt71a.TOTAL_SALES-opt71a.TOTAL_COST)*opt71a.COMM_PERCENT/100
