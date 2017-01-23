@@ -12,28 +12,50 @@ rem ==========================================================================
     setesc std_error
     seterr std_error
 
+rem --- Get program arguments
+
+    if argc>1
+        for curr_argv=1 to argc-1
+            temp_argv$=argv(curr_argv)
+            if pos("-u"=temp_argv$)=1 user_id$=temp_argv$(3);rem User ID
+        next curr_argv
+    endif
+
+    if user_id$=""
+        use ::sys/prog/bao_security.bbj::Security
+        user_id$=Security.getURLUser()
+        if cvs(user_id$,2)="" then user_id$=stbl("+USER_ID",err=*next)
+        if cvs(user_id$,2)="" then user_id$="ADMIN"
+    endif
+
+rem --- Initializations
+
+    err_msg$=""
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+    dir_syp$=stbl("+DIR_SYP")
+    
+    rem --- Make sure needed STBLs are set
+    call stbl("+DIR_SYP")+"bas_process_beg.bbj",user_id$,rd_table_chans$[all]
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+
 rem --- Get BBTranslator object Translate!
 
     if Translate!=null() then 
-        num_files=1
-        dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-        open_tables$[1]="ADM_MODULES", open_opts$[1]="OTA"
-        gosub open_tables
-        if status then return
-    
-        adm_modules=num(open_chans$[1]);dim adm_modules$:open_tpls$[1]
-        readrecord(adm_modules,key=pad("01007514AD",11),dom=*next)adm_modules$
-        if adm_modules.locale_resource$="" or adm_modules.locale_path$=""
-            readrecord(adm_modules,key=pad(sysinfo.lic_feature$,11),dom=*next)adm_modules$
-        endif
-        if adm_modules.locale_resource$<>"" and adm_modules.locale_path$<>""
-            locale_path$=adm_modules.locale_path$
-            rdTransSpaceKey$=adm_modules.locale_resource$+"_"+stbl("+USER_LOCALE")+"_BBTranslator"
-            Translate!=cast(BBTranslator,BBjAPI().getGroupNamespace().getValue(rdTransSpaceKey$,err=*next))
-            if Translate!=null()
-                Translate!=BBTranslator.getInstance(adm_modules.locale_resource$,stbl("+USER_LOCALE"),null(),locale_path$)
-                BBjAPI().getGroupNamespace().setValue(rdTransSpaceKey$,Translate!)
+        gosub get_translate_object
+        if status then
+            err_msg$="Cannot open Barista file adm_modules.dat. Status="+str(status)
+            err_no$="12"
+        else
+            if Translate!=null() then
+                err_msg$="Cannot create BBTranslator object Translate!"
+                err_no$="999"
             endif
+        endif
+        if err_msg$<>"" then
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),"",err_no$,err_msg$,err_act$
+            goto done
         endif
     endif
 
