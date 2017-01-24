@@ -48,19 +48,18 @@ if show_all_vendors$<>"Y" then
    filter_defs$[3,0]="APM_VENDMAST.VEND_INACTIVE"
    filter_defs$[3,1]="<>'Y'"
    filter_defs$[3,2]="LOCK"
-   window_title$="AP Invoice Vendor Lookup - Active Vendors"
+   window_title$=Translate!.getTranslation("AON_AP_VEND_LOOKUP")+" - "+Translate!.getTranslation("AON_ACTIVE")+" "+Translate!.getTranslation("AON_VENDORS");rem "AP Invoice Vendor Lookup - Active Vendors"
    menu_opt$="OPT-ACTI"
-   menu_desc$="Show All Vendors"
+   menu_desc$=Translate!.getTranslation("AON_SHOW")+" "+Translate!.getTranslation("AON_ALL")+" "+Translate!.getTranslation("AON_VENDORS");rem "Show All Vendors"
 else
-   window_title$="AP Invoice Vendor Lookup - All Vendors"
+   window_title$=Translate!.getTranslation("AON_AP_VEND_LOOKUP")+" - "+Translate!.getTranslation("AON_ALL")+" "+Translate!.getTranslation("AON_VENDORS");rem "AP Invoice Vendor Lookup - All Vendors"
    menu_opt$="OPT-ACTI"
-   menu_desc$="Show Active Vendors"
+   menu_desc$=Translate!.getTranslation("AON_SHOW")+" "+Translate!.getTranslation("AON_ACTIVE")+" "+Translate!.getTranslation("AON_VENDORS");rem "Show Active Vendors"
 endif
 Form!.setTitle(window_title$)
 gosub convert_array_to_userObj
 gosub set_popup_menu
 callpoint!.setStatus("")
-
 [[AP_INV_VEND_1.<CUSTOM>]]
 rem --- Portions Copyright 2016 by Assorted Business Services Inc.
 rem ---  All Rights Reserved.

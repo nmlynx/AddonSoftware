@@ -35,19 +35,18 @@ if show_all_gl_accts$<>"Y" then
    filter_defs$[2,0]="GLM_ACCT.ACCT_INACTIVE"
    filter_defs$[2,1]="<>'Y'"
    filter_defs$[2,2]="LOCK"
-   window_title$="GL Accounts Lookup - Active Accounts"
+   window_title$=Translate!.getTranslation("AON_GL_ACCT_LOOKUP")+" - "+Translate!.getTranslation("AON_ACTIVE")+" "+Translate!.getTranslation("AON_ACCOUNTS");rem "GL Accounts Lookup - Active Accounts"
    menu_opt$="OPT-ACTI"
-   menu_desc$="Show All Accounts"
+   menu_desc$=Translate!.getTranslation("AON_SHOW")+" "+Translate!.getTranslation("AON_ALL")+" "+Translate!.getTranslation("AON_ACCOUNTS");rem "Show All Accounts"
 else
-   window_title$="GL Accounts Lookup - All Accounts"
+   window_title$=Translate!.getTranslation("AON_GL_ACCT_LOOKUP")+" - "+Translate!.getTranslation("AON_ALL")+" "+Translate!.getTranslation("AON_ACCOUNTS");rem "GL Accounts Lookup - All Accounts"
    menu_opt$="OPT-ACTI"
-   menu_desc$="Show Active Accounts"
+   menu_desc$=Translate!.getTranslation("AON_SHOW")+" "+Translate!.getTranslation("AON_ACTIVE")+" "+Translate!.getTranslation("AON_ACCOUNTS");rem "Show Active Accounts"
 endif
 Form!.setTitle(window_title$)
 gosub convert_array_to_userObj
 gosub set_popup_menu
 callpoint!.setStatus("")
-
 [[GL_ACCT_ACTIVE.<CUSTOM>]]
 rem --- Portions Copyright 2016 by Assorted Business Services Inc.
 rem ---  All Rights Reserved.

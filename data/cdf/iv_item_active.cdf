@@ -35,13 +35,13 @@ if show_all_items$<>"Y" then
    filter_defs$[2,0]="IVM_ITEMMAST.ITEM_INACTIVE"
    filter_defs$[2,1]="<>'Y'"
    filter_defs$[2,2]="LOCK"
-   window_title$="IV Item Lookup - Active Inventory Items"
+   window_title$=Translate!.getTranslation("AON_IV_ITEM_LOOKUP")+" - "+Translate!.getTranslation("AON_ACTIVE")+" "+Translate!.getTranslation("AON_IV_ITEMS");rem "IV Item Lookup - Active Inventory Items"
    menu_opt$="OPT-ACTI"
-   menu_desc$="Show All Items"
+   menu_desc$=Translate!.getTranslation("AON_SHOW")+" "+Translate!.getTranslation("AON_ALL")+" "+Translate!.getTranslation("AON_IV_ITEMS");rem "Show All Items"
 else
-   window_title$="IV Item Lookup - All Inventory Items"
+   window_title$=Translate!.getTranslation("AON_IV_ITEM_LOOKUP")+" - "+Translate!.getTranslation("AON_ALL")+" "+Translate!.getTranslation("AON_IV_ITEMS");rem "IV Item Lookup - All Inventory Items"
    menu_opt$="OPT-ACTI"
-   menu_desc$="Show Active Items"
+   menu_desc$=Translate!.getTranslation("AON_SHOW")+" "+Translate!.getTranslation("AON_ACTIVE")+" "+Translate!.getTranslation("AON_IV_ITEMS");rem "Show Active Items"
 endif
 Form!.setTitle(window_title$)
 gosub convert_array_to_userObj

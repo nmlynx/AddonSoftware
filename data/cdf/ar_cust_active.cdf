@@ -35,13 +35,13 @@ if show_all_customers$<>"Y" then
    filter_defs$[2,0]="ARM_CUSTMAST.CUST_INACTIVE"
    filter_defs$[2,1]="<>'Y'"
    filter_defs$[2,2]="LOCK"
-   window_title$="AR Customer Lookup - Active Customers"
+   window_title$=Translate!.getTranslation("AON_AR_CUST_LOOKUP")+" - "+Translate!.getTranslation("AON_ACTIVE")+" "+Translate!.getTranslation("AON_CUSTOMERS");rem "AR Customer Lookup - Active Customers"
    menu_opt$="OPT-ACTI"
-   menu_desc$="Show All Customers"
+   menu_desc$=Translate!.getTranslation("AON_SHOW")+" "+Translate!.getTranslation("AON_ALL")+" "+Translate!.getTranslation("AON_CUSTOMERS");rem "Show All Customers"
 else
-   window_title$="AR Customer Lookup - All Customers"
+   window_title$=Translate!.getTranslation("AON_AR_CUST_LOOKUP")+" - "+Translate!.getTranslation("AON_ALL")+" "+Translate!.getTranslation("AON_CUSTOMERS");rem "AR Customer Lookup - All Customers"
    menu_opt$="OPT-ACTI"
-   menu_desc$="Show Active Customers"
+   menu_desc$=Translate!.getTranslation("AON_SHOW")+" "+Translate!.getTranslation("AON_ACTIVE")+" "+Translate!.getTranslation("AON_CUSTOMERS");rem "Show Active Customers"
 endif
 Form!.setTitle(window_title$)
 gosub convert_array_to_userObj
