@@ -120,7 +120,9 @@ rem --- Retrieve parameter records
         dim msg_tokens$[1]
         msg_tokens$[1]=str(num(gls01a.current_year$)-1:"0000")
         gosub disp_message
-        goto std_exit_no_print
+        if pos("PASSVALID"=msg_opt$)=0
+            goto std_exit_no_print
+        endif
     endif
 
     displayColumns!=new DisplayColumns(firm_id$)
