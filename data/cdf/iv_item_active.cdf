@@ -26,6 +26,11 @@ filter_defs$[1,0]="IVM_ITEMMAST.FIRM_ID"
 filter_defs$[1,1]="='"+stbl("+FIRM_ID")+"'"
 filter_defs$[1,2]="LOCK"
 
+expresso_prefix$=""
+if pos("EXPRESSO"=query_mode$) then
+   expresso_prefix$="Expresso - "
+endif
+
 rem - Inactive Flag
 show_all_items$=""
 gosub get_groupid
@@ -35,11 +40,11 @@ if show_all_items$<>"Y" then
    filter_defs$[2,0]="IVM_ITEMMAST.ITEM_INACTIVE"
    filter_defs$[2,1]="<>'Y'"
    filter_defs$[2,2]="LOCK"
-   window_title$=Translate!.getTranslation("AON_IV_ITEM_LOOKUP")+" - "+Translate!.getTranslation("AON_ACTIVE")+" "+Translate!.getTranslation("AON_IV_ITEMS");rem "IV Item Lookup - Active Inventory Items"
+   window_title$=expresso_prefix$+Translate!.getTranslation("AON_IV_ITEM_LOOKUP")+" - "+Translate!.getTranslation("AON_ACTIVE")+" "+Translate!.getTranslation("AON_IV_ITEMS");rem "IV Item Lookup - Active Inventory Items"
    menu_opt$="OPT-ACTI"
    menu_desc$=Translate!.getTranslation("AON_SHOW")+" "+Translate!.getTranslation("AON_ALL")+" "+Translate!.getTranslation("AON_IV_ITEMS");rem "Show All Items"
 else
-   window_title$=Translate!.getTranslation("AON_IV_ITEM_LOOKUP")+" - "+Translate!.getTranslation("AON_ALL")+" "+Translate!.getTranslation("AON_IV_ITEMS");rem "IV Item Lookup - All Inventory Items"
+   window_title$=expresso_prefix$+Translate!.getTranslation("AON_IV_ITEM_LOOKUP")+" - "+Translate!.getTranslation("AON_ALL")+" "+Translate!.getTranslation("AON_IV_ITEMS");rem "IV Item Lookup - All Inventory Items"
    menu_opt$="OPT-ACTI"
    menu_desc$=Translate!.getTranslation("AON_SHOW")+" "+Translate!.getTranslation("AON_ACTIVE")+" "+Translate!.getTranslation("AON_IV_ITEMS");rem "Show Active Items"
 endif
@@ -47,7 +52,6 @@ Form!.setTitle(window_title$)
 gosub convert_array_to_userObj
 gosub set_popup_menu
 callpoint!.setStatus("")
-
 [[IV_ITEM_ACTIVE.<CUSTOM>]]
 rem --- Portions Copyright 2016 by Assorted Business Services Inc.
 rem ---  All Rights Reserved.
@@ -88,6 +92,11 @@ endif
 if UserObj!.containsKey("popmenuwin") then
    PopMenuWin!=UserObj!.get("popmenuwin")
 endif
+
+if UserObj!.containsKey("query_mode") then
+   query_mode$=UserObj!.get("query_mode")
+endif
+
 return
 
 rem -- enumerate user options in Popup Menu
@@ -128,4 +137,3 @@ if GroupID=0 then
 endif
 grpid$=str(GroupID)
 return
-

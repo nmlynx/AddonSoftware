@@ -26,6 +26,11 @@ filter_defs$[1,0]="APM_VENDMAST.FIRM_ID"
 filter_defs$[1,1]="='"+stbl("+FIRM_ID")+"'"
 filter_defs$[1,2]="LOCK"
 
+expresso_prefix$=""
+if pos("EXPRESSO"=query_mode$) then
+   expresso_prefix$="Expresso - "
+endif
+
 rem - Inactive Flag
 show_all_vendors$=""
 gosub get_groupid
@@ -35,11 +40,11 @@ if show_all_vendors$<>"Y" then
    filter_defs$[2,0]="APM_VENDMAST.VEND_INACTIVE"
    filter_defs$[2,1]="<>'Y'"
    filter_defs$[2,2]="LOCK"
-   window_title$=Translate!.getTranslation("AON_AP_VEND_LOOKUP")+" - "+Translate!.getTranslation("AON_ACTIVE")+" "+Translate!.getTranslation("AON_VENDORS");rem "AP Invoice Vendor Lookup - Active Vendors"
+   window_title$=expresso_prefix$+Translate!.getTranslation("AON_AP_VEND_LOOKUP")+" - "+Translate!.getTranslation("AON_ACTIVE")+" "+Translate!.getTranslation("AON_VENDORS");rem "AP Invoice Vendor Lookup - Active Vendors"
    menu_opt$="OPT-ACTI"
    menu_desc$=Translate!.getTranslation("AON_SHOW")+" "+Translate!.getTranslation("AON_ALL")+" "+Translate!.getTranslation("AON_VENDORS");rem "Show All Vendors"
 else
-   window_title$=Translate!.getTranslation("AON_AP_VEND_LOOKUP")+" - "+Translate!.getTranslation("AON_ALL")+" "+Translate!.getTranslation("AON_VENDORS");rem "AP Invoice Vendor Lookup - All Vendors"
+   window_title$=expresso_prefix$+Translate!.getTranslation("AON_AP_VEND_LOOKUP")+" - "+Translate!.getTranslation("AON_ALL")+" "+Translate!.getTranslation("AON_VENDORS");rem "AP Invoice Vendor Lookup - All Vendors"
    menu_opt$="OPT-ACTI"
    menu_desc$=Translate!.getTranslation("AON_SHOW")+" "+Translate!.getTranslation("AON_ACTIVE")+" "+Translate!.getTranslation("AON_VENDORS");rem "Show Active Vendors"
 endif
@@ -47,7 +52,6 @@ Form!.setTitle(window_title$)
 gosub convert_array_to_userObj
 gosub set_popup_menu
 callpoint!.setStatus("")
-
 [[AP_VEND_ACTIVE.<CUSTOM>]]
 rem --- Portions Copyright 2016 by Assorted Business Services Inc.
 rem ---  All Rights Reserved.
@@ -88,6 +92,11 @@ endif
 if UserObj!.containsKey("popmenuwin") then
    PopMenuWin!=UserObj!.get("popmenuwin")
 endif
+
+if UserObj!.containsKey("query_mode") then
+   query_mode$=UserObj!.get("query_mode")
+endif
+
 return
 
 rem -- enumerate user options in Popup Menu
