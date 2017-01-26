@@ -140,10 +140,11 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
                         dim old_glsParams_tpl$:ddm_table_tpls.template$
                     else
                         rem --- Required template missing
-                        meter_text$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+Translate!.getTranslation("AON_VERSION","Verion")+" "+convCtrl!.getProperty("start_version")+
+                        err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+Translate!.getTranslation("AON_VERSION","Verion")+" "+convCtrl!.getProperty("start_version")+
 :                           " "+Translate!.getTranslation("AON_TEMPLATE_NOT_FOUND","Template not found")+": "+oldFile$+" *****"
                         meter_proc_recs=meter_proc_recs+1
                         meter_action$="MTR-LST"
+                        meter_text$=err_msg$
                         gosub disp_meter
                         print(log_dev)meter_text$
                         goto done
@@ -505,13 +506,13 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
                         wend
                     else
                         rem --- Required template missing
-                        meter_text$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+Translate!.getTranslation("AON_VERSION","Verion")+" "+convCtrl!.getProperty("start_version")+
+                        err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+Translate!.getTranslation("AON_VERSION","Verion")+" "+convCtrl!.getProperty("start_version")+
 :                           " "+Translate!.getTranslation("AON_TEMPLATE_NOT_FOUND","Template not found")+": "+ope_table$+" *****"
                         meter_proc_recs=meter_proc_recs+1
                         meter_action$="MTR-LST"
+                        meter_text$=err_msg$
                         gosub disp_meter
                         print(log_dev)meter_text$
-                        status=1
                         goto done
                     endif
                 else
