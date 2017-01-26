@@ -135,7 +135,7 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
                 if open_success then
                     dim ddm_table_tpls$:"table_name:c(16*),file_name:c(30*),template:c(10230*)"
                     tpl_found=0
-                    findrecord(ddm_table_tpls,key=pad(oldFile$,16),dom=*next)ddm_table_tpls$;tpl_found=1
+                    findrecord(ddm_table_tpls,key=pad(cvs(oldFile$,4),16),dom=*next)ddm_table_tpls$;tpl_found=1
                     if tpl_found then
                         dim old_glsParams_tpl$:ddm_table_tpls.template$
                     else
