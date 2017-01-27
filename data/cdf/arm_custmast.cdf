@@ -1,12 +1,3 @@
-[[ARM_CUSTMAST.BEND]]
-rem --- set widget-related devObjects to null
-rem --- needed in case more than one instance of cust form is up
-rem --- ADIS tests if null() in order to know if aging widgets should be re-created
-
-	callpoint!.setDevObject("dbPieWidget",null())
-	callpoint!.setDevObject("dbPieWidgetControl",null())
-	callpoint!.setDevObject("dbBarWidget",null())
-	callpoint!.setDevObject("dbBarWidgetControl",null())
 [[ARM_CUSTDET.AR_TERMS_CODE.AVAL]]
 rem --- look up terms code, arm10A...if cred_hold is Y for this terms code,
 rem --- and cm$ is Y, set arm_custdet.cred_hold to Y as well
@@ -318,7 +309,6 @@ rem --- If GM installed, update GoldMine database as necessary
 rem --- Create/embed widgets to show aged balance
 
 	gosub create_widgets
-
 [[ARM_CUSTMAST.ADIS]]
 rem --- retrieve dashboard pie or bar chart widget and refresh for current customer/balances
 rem --- pie if all balances >=0, bar if any negatives, hide if all bals are 0
@@ -329,7 +319,7 @@ rem --- pie if all balances >=0, bar if any negatives, hide if all bals are 0
 	agingPieWidgetControl!=callpoint!.getDevObject("dbPieWidgetControl")
 	agingBarWidgetControl!=callpoint!.getDevObject("dbBarWidgetControl")
 
-	if agingPieWidgetControl!=null() or agingBarWidgetControl!=null()
+	if agingPieWidgetControl!.isDestroyed() or agingBarWidgetControl!.isDestroyed()
 		gosub create_widgets
 	endif
 
