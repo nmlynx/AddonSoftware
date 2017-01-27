@@ -403,125 +403,127 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
         sqlprep(sql_chan)sql_prep$
         sqlexec(sql_chan)
 
-        rem --- Does conversion marker file exist for splitting GLM_ACCTSUMMARY (glm-02) into three files?
-        conv_marker_name$="v1700_glm-02"
-        conv_marker_file$=dataDir$+conv_marker_name$
-        convmarkerFile!=new File(conv_marker_file$)
-        if convmarkerFile!.exists() then
-            rem --- Verify required files are present
-            missingFiles!=BBjAPI().makeVector()
-            requiredFiles!=BBjAPI().makeVector()
-            requiredFiles!.addAll(java.util.Arrays.asList(convCtrl!.getProperty(conv_marker_name$(2)).split(";")))
-            for i=0 to requiredFiles!.size()-1
-                file!=new File(stbl("+"+this_module$+"DATA")+requiredFiles!.get(i))
-                if !file!.exists() then
-                    missingFiles!.addItem(requiredFiles!.get(i))
-                endif
-            next i
-            if missingFiles!.size()=0 then
-                use ::glo_DisplayColumns.aon::DisplayColumns
-        
-                if convCtrl!.getProperty("data_source")="OCJ" then
-                    rem --- Data upgraded via EM Update Wizard (OCJ)
-                    rem --- Need to build GLM_ACCTSUMMARY, GLM_ACCTBUDGET and GLM_BUDGETPLANS from old/source GLM_ACCTSUMMARY (glm-02)
-        
-                    rem --- Open old/source GLM_ACCTSUMMARY (glm-02)
-                    oldStbl$="+OPDATA"
-                    oldFile$="glm-02"
-                    gosub get_path_to_old_file
-                    old_glm02$=oldPathToFile$
-                    open_success=0
-                    old_glm02_dev=unt
-                    open(old_glm02_dev,err=*next)old_glm02$; open_success=1
-                    if !open_success then
-                        rem --- Required file missing
-                        msg_id$="AD_FILE_MISSING"
-                        dim msg_tokens$[1]
-                        msg_tokens$[1]=old_opt11$
-                        gosub disp_message
-                        err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
-:                           Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+old_glm02$+" *****"
-                        goto done
-                    endif
-        
-                    rem --- Increment progress meter
-                    meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": GLM_ACCTSUMMARY, GLM_ACCTBUDGET and GLM_BUDGETPLANS "+
-:                       Translate!.getTranslation("AON_FROM_","From ")+old_glm02$
-                    meter_proc_recs=meter_proc_recs+1
-                    meter_action$="MTR-LST"
-                    gosub disp_meter
-                    print(log_dev)meter_text$
-        
-                    rem --- Get record template for old/source GLM_ACCTSUMMARY (glm-02) file
-                    old_table$="GLM_ACCTSUMMARY"
-                    tpl_found=0
-                    rem --- ddm_table_tpls and ddm_table_tpls$ previously initialized for old GLS_PARAMS
-                    findrecord(ddm_table_tpls,key=pad(old_table$,16),dom=*next)ddm_table_tpls$;tpl_found=1
-                    if tpl_found then
-                        dim old_glm02_tpl$:ddm_table_tpls.template$
-        
-                        rem --- Clear and open new GLM_ACCTSUMMARY (glm-02) file
-                        num_files=1
-                        dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-                        open_tables$[1]="GLM_ACCTSUMMARY", open_opts$[1]="IOTA"
-                        gosub open_tables
-                        glmAcctSummary_dev=num(open_chans$[1])
-                        dim glmAcctSummary$:open_tpls$[1]
-        
-                        rem --- Loop thru old/source GLM_ACCTSUMMARY (glm-02) and write records to appropriate new file
-                        firm_id$=""
-                        read(old_glm02_dev,key="",dom=*next)
-                        while 1
-                            readrecord(old_glm02_dev,end=*break)old_glm02_tpl$
-                            if old_glm02_tpl.firm_id$<>firm_id$ then
-                                firm_id$=old_glm02_tpl.firm_id$
-                                displayColumns!=new DisplayColumns(firm_id$)
-                            endif
-        
-                            if displayColumns!.getActBud(old_glm02_tpl.record_id$)="A" then
-                                rem --- Actuals, GLM_ACCTSUMMARY
-                                redim glmAcctSummary$
-                                call pgmdir$+"adc_copyfile.aon",old_glm02_tpl$,glmAcctSummary$,status
-                                if status then break
-                                glmAcctSummary.year$=DisplayColumns!.getYear(old_glm02_tpl.record_id$)
-                                writerecord(glmAcctSummary_dev)glmAcctSummary$
-                            else
-                                if pos(old_glm02_tpl.record_id$="012345") then
-                                    rem --- Budget, GLM_ACCTBUDGET
-                                    redim glmAcctBudget$
-                                    call pgmdir$+"adc_copyfile.aon",old_glm02_tpl$,glmAcctBudget$,status
-                                    if status then break
-                                    glmAcctBudget.year$=DisplayColumns!.getYear(old_glm02_tpl.record_id$)
-                                    writerecord(glmAcctBudget_dev)glmAcctBudget$
-                                else
-                                    rem --- Planned budget, GLM_BUDGETPLANS
-                                    redim glmBudgetPlans$
-                                    call pgmdir$+"adc_copyfile.aon",old_glm02_tpl$,glmBudgetPlans$,status
-                                    if status then break
-                                    glmBudgetPlans.budget_code$=old_glm02_tpl.record_id$
-                                    writerecord(glmBudgetPlans_dev)glmBudgetPlans$
-                                endif
-                            endif
+        rem --- Need to build GLM_ACCTSUMMARY, GLM_ACCTBUDGET and GLM_BUDGETPLANS from old/source GLM_ACCTSUMMARY (glm-02)
+        rem --- v1700_glm-02 marker file will never exist with OCJ, but might with DataPort
+        use ::glo_DisplayColumns.aon::DisplayColumns
+        if convCtrl!.getProperty("data_source")="OCJ" then
+            rem --- Data upgraded via EM Update Wizard (OCJ)
+            rem --- Need to build GLM_ACCTSUMMARY, GLM_ACCTBUDGET and GLM_BUDGETPLANS from old/source GLM_ACCTSUMMARY (glm-02)
 
-                        wend
-                    else
-                        rem --- Required template missing
-                        err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+Translate!.getTranslation("AON_VERSION","Verion")+" "+convCtrl!.getProperty("start_version")+
-:                           " "+Translate!.getTranslation("AON_TEMPLATE_NOT_FOUND","Template not found")+": "+ope_table$+" *****"
-                        meter_proc_recs=meter_proc_recs+1
-                        meter_action$="MTR-LST"
-                        meter_text$=err_msg$
-                        gosub disp_meter
-                        print(log_dev)meter_text$
-                        goto done
+            rem --- Open old/source GLM_ACCTSUMMARY (glm-02)
+            oldStbl$="+OPDATA"
+            oldFile$="glm-02"
+            gosub get_path_to_old_file
+            old_glm02$=oldPathToFile$
+            open_success=0
+            old_glm02_dev=unt
+            open(old_glm02_dev,err=*next)old_glm02$; open_success=1
+            if !open_success then
+                rem --- Required file missing
+                msg_id$="AD_FILE_MISSING"
+                dim msg_tokens$[1]
+                msg_tokens$[1]=old_opt11$
+                gosub disp_message
+                err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                           Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+old_glm02$+" *****"
+                goto done
+            endif
+
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": GLM_ACCTSUMMARY, GLM_ACCTBUDGET and GLM_BUDGETPLANS "+
+:                       Translate!.getTranslation("AON_FROM_","From ")+old_glm02$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+
+            rem --- Get record template for old/source GLM_ACCTSUMMARY (glm-02) file
+            old_table$="GLM_ACCTSUMMARY"
+            tpl_found=0
+            rem --- ddm_table_tpls and ddm_table_tpls$ previously initialized for old GLS_PARAMS
+            findrecord(ddm_table_tpls,key=pad(old_table$,16),dom=*next)ddm_table_tpls$;tpl_found=1
+            if tpl_found then
+                dim old_glm02_tpl$:ddm_table_tpls.template$
+
+                rem --- Clear and open new GLM_ACCTSUMMARY (glm-02) file
+                num_files=1
+                dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                open_tables$[1]="GLM_ACCTSUMMARY", open_opts$[1]="IOTA"
+                gosub open_tables
+                glmAcctSummary_dev=num(open_chans$[1])
+                dim glmAcctSummary$:open_tpls$[1]
+
+                rem --- Loop thru old/source GLM_ACCTSUMMARY (glm-02) and write records to appropriate new file
+                firm_id$=""
+                read(old_glm02_dev,key="",dom=*next)
+                while 1
+                    readrecord(old_glm02_dev,end=*break)old_glm02_tpl$
+                    if old_glm02_tpl.firm_id$<>firm_id$ then
+                        firm_id$=old_glm02_tpl.firm_id$
+                        displayColumns!=new DisplayColumns(firm_id$)
                     endif
-                else
-                    rem --- Data upgraded via DataPort
-                    rem --- Need to build GLM_ACCTBUDGET and GLM_BUDGETPLANS from GLM_ACCTSUMMARY
+
+                    if displayColumns!.getActBud(old_glm02_tpl.record_id$)="A" then
+                        rem --- Actuals, GLM_ACCTSUMMARY
+                        redim glmAcctSummary$
+                        call pgmdir$+"adc_copyfile.aon",old_glm02_tpl$,glmAcctSummary$,status
+                        if status then break
+                        glmAcctSummary.year$=DisplayColumns!.getYear(old_glm02_tpl.record_id$)
+                        writerecord(glmAcctSummary_dev)glmAcctSummary$
+                    else
+                        if pos(old_glm02_tpl.record_id$="012345") then
+                            rem --- Budget, GLM_ACCTBUDGET
+                            redim glmAcctBudget$
+                            call pgmdir$+"adc_copyfile.aon",old_glm02_tpl$,glmAcctBudget$,status
+                            if status then break
+                            glmAcctBudget.year$=DisplayColumns!.getYear(old_glm02_tpl.record_id$)
+                            writerecord(glmAcctBudget_dev)glmAcctBudget$
+                        else
+                            rem --- Planned budget, GLM_BUDGETPLANS
+                            redim glmBudgetPlans$
+                            call pgmdir$+"adc_copyfile.aon",old_glm02_tpl$,glmBudgetPlans$,status
+                            if status then break
+                            glmBudgetPlans.budget_code$=old_glm02_tpl.record_id$
+                            writerecord(glmBudgetPlans_dev)glmBudgetPlans$
+                        endif
+                    endif
+
+                wend
+            else
+                rem --- Required template missing
+                err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+Translate!.getTranslation("AON_VERSION","Verion")+" "+convCtrl!.getProperty("start_version")+
+:                           " "+Translate!.getTranslation("AON_TEMPLATE_NOT_FOUND","Template not found")+": "+ope_table$+" *****"
+                meter_proc_recs=meter_proc_recs+1
+                meter_action$="MTR-LST"
+                meter_text$=err_msg$
+                gosub disp_meter
+                print(log_dev)meter_text$
+                goto done
+            endif
+        else
+            rem --- Data upgraded via DataPort
+            rem --- Need to build GLM_ACCTBUDGET and GLM_BUDGETPLANS from GLM_ACCTSUMMARY
+
+            rem --- Does conversion marker file exist for splitting GLM_ACCTSUMMARY (glm-02) into three files?
+            conv_marker_name$="v1700_glm-02"
+            conv_marker_file$=dataDir$+conv_marker_name$
+            convmarkerFile!=new File(conv_marker_file$)
+            if convmarkerFile!.exists() then
+                rem --- Verify required files are present
+                missingFiles!=BBjAPI().makeVector()
+                requiredFiles!=BBjAPI().makeVector()
+                requiredFiles!.addAll(java.util.Arrays.asList(convCtrl!.getProperty(conv_marker_name$(2)).split(";")))
+                for i=0 to requiredFiles!.size()-1
+                    file!=new File(stbl("+"+this_module$+"DATA")+requiredFiles!.get(i))
+                    if !file!.exists() then
+                        missingFiles!.addItem(requiredFiles!.get(i))
+                    endif
+                next i
+                if missingFiles!.size()=0 then
         
                     rem --- Increment progress meter
                     meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": GLM_ACCTBUDGET and GLM_BUDGETPLANS "+
-:                       Translate!.getTranslation("AON_FROM_","From ")+"GLM_ACCTSUMMARY"
+:                               Translate!.getTranslation("AON_FROM_","From ")+"GLM_ACCTSUMMARY"
                     meter_proc_recs=meter_proc_recs+1
                     meter_action$="MTR-LST"
                     gosub disp_meter
@@ -573,50 +575,51 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
 
                         remove(glmAcctSummary_dev,key=glmAcctSummary_key$)
                     wend
-                endif
-                if status=0 then
-                    rem --- Conversion completed successfully
-                    rem --- Increment progress meter
-                    meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
-:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+convCtrl!.getProperty(conv_marker_name$(2))
-                    meter_proc_recs=meter_proc_recs+1
-                    meter_action$="MTR-LST"
-                    gosub disp_meter
-                    print(log_dev)meter_text$
-
-                    rem --- Delete conversion marker file
-                    if convmarkerFile!.delete() then
-                        rem --- Increment progress meter
-                        meter_text$=Translate!.getTranslation("AON_CONV_MARKER_DELETED","Conversion marker file deleted")+": "+conv_marker_file$
-                        meter_proc_recs=meter_proc_recs+1
-                        meter_action$="MTR-LST"
-                        gosub disp_meter
-                        print(log_dev)meter_text$
-                    endif
                 else
-                    rem --- Conversion did NOT complete successfully, exit with error message
+                    rem --- Required file missing
+                    msg_id$="AD_FILE_MISSING"
+                    dim msg_tokens$[1]
+                    msg_tokens$[1]=missingFiles!.get(0)
+                    gosub disp_message
                     err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
-:                       Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
-:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+convCtrl!.getProperty(conv_marker_name$(2))+" *****"
+:                               Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+missingFiles!.get(0)+" *****"
                     goto done
                 endif
             else
-                rem --- Required file missing
-                msg_id$="AD_FILE_MISSING"
-                dim msg_tokens$[1]
-                msg_tokens$[1]=missingFiles!.get(0)
-                gosub disp_message
-                err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
-:               Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+missingFiles!.get(0)+" *****"
-                goto done
+                rem --- Increment progress meter
+                meter_text$=Translate!.getTranslation("AON_CONV_MARKER_NOT_FOUND","Conversion marker file not found")+": "+conv_marker_file$
+                meter_proc_recs=meter_proc_recs+1
+                meter_action$="MTR-LST"
+                gosub disp_meter
+                print(log_dev)meter_text$
             endif
-        else
+        endif
+
+        if status=0 then
+            rem --- Conversion completed successfully
             rem --- Increment progress meter
-            meter_text$=Translate!.getTranslation("AON_CONV_MARKER_NOT_FOUND","Conversion marker file not found")+": "+conv_marker_file$
+            meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+convCtrl!.getProperty(conv_marker_name$(2))
             meter_proc_recs=meter_proc_recs+1
             meter_action$="MTR-LST"
             gosub disp_meter
             print(log_dev)meter_text$
+
+            rem --- Delete conversion marker file
+            if convmarkerFile!.delete() then
+                rem --- Increment progress meter
+                meter_text$=Translate!.getTranslation("AON_CONV_MARKER_DELETED","Conversion marker file deleted")+": "+conv_marker_file$
+                meter_proc_recs=meter_proc_recs+1
+                meter_action$="MTR-LST"
+                gosub disp_meter
+                print(log_dev)meter_text$
+            endif
+        else
+            rem --- Conversion did NOT complete successfully, exit with error message
+            err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                       Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
+:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+convCtrl!.getProperty(conv_marker_name$(2))+" *****"
+            goto done
         endif
 
         rem --- Does conversion marker file exist for converting REVISION_SRC in GLM_BUDGETMASTER (glm-08)?
