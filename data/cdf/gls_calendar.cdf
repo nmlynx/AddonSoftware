@@ -849,7 +849,7 @@ get_transdetail_period_dates: rem --- Get the earliest and latest trns_date in G
 	for per=1 to 13
 		period$=str(per:"00")
 		read(glt_transdetail_dev,key=firm_id$+year$+period$+$FF$,knum="BY_YEAR_PERIOD",dom=*next)
-		readrecord(glt_transdetail_dev,dir=-1)
+		readrecord(glt_transdetail_dev,dir=-1,end=*next)
 		redim glt_transdetail$
 		readrecord(glt_transdetail_dev,end=*next)glt_transdetail$
 		if firm_id$+year$+period$=glt_transdetail.firm_id$+glt_transdetail.posting_year$+glt_transdetail.posting_per$ then
