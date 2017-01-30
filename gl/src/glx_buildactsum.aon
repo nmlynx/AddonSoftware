@@ -211,7 +211,7 @@ rem --- Start glm_acctsummary progress meter
             rem --- Get beginning balances for the next year
             redim glmAcctSummary2$
             glmAcctSummary2_key$=glmAcctSummary.firm_id$+glmAcctSummary.gl_account$+str(num(glmAcctSummary.year$)+1)
-            readrecord(glmAcctSummary2_dev,key=glmAcctSummary2_key$,knum="PRIMARY",end=*next)glmAcctSummary2$
+            readrecord(glmAcctSummary2_dev,key=glmAcctSummary2_key$,knum="PRIMARY",dom=*next)glmAcctSummary2$
             begin_amt=glmAcctSummary2.begin_amt
             begin_units=glmAcctSummary2.begin_amt
             
@@ -235,7 +235,7 @@ rem --- Start glm_acctsummary progress meter
         rem --- from next year's beginning balance, and subtracting this year's ending balances for income and expense accounts.
         redim glmAcctSummary2$
         glmAcctSummary2_key$=firm_id$+glsEarnings.gl_account$+str(num(thisYear$)+1)
-        findrecord(glmAcctSummary2_dev,key=glmAcctSummary2_key$,knum="PRIMARY",end=*next)glmAcctSummary2$
+        findrecord(glmAcctSummary2_dev,key=glmAcctSummary2_key$,knum="PRIMARY",dom=*next)glmAcctSummary2$
         begin_amt=glmAcctSummary2.begin_amt
         begin_units=glmAcctSummary2.begin_amt
 
