@@ -99,7 +99,7 @@ rem --- Start glt_transdetail progress meter
     read(gltTransDetail_dev,key=firm_id$+beginYear$,knum="BY_YEAR_PERIOD",dom=*next)
     while 1
         readrecord(gltTransDetail_dev,end=*break)gltTransDetail$
-        if gltTransDetail.firm_id$+gltTransDetail.posting_year$<>firm_id$+beginYear$ then break
+        if gltTransDetail.firm_id$+gltTransDetail.posting_year$>firm_id$+endYear$ then break
 
         rem --- Increment glt_transdetail progress meter
         meterWin!=transdetailMeter!
