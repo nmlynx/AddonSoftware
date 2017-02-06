@@ -21,16 +21,12 @@ rem --- Initialize data
     status$=""
 
 rem --- Open tables
-        ivc_whsecode_dev=fnget_dev("@"+"IVC_WHSECODE")
-        ivm_itemmast_dev=fnget_dev("@"+"IVM_ITEMMAST")
-        poc_linecode_dev=fnget_dev("@"+"POC_LINECODE")
-        poe_podet_dev=fnget_dev("@"+"POE_PODET")
-        sfe_womastr_dev=fnget_dev("@"+"SFE_WOMASTR")
-        sfe_womatl_dev=fnget_dev("@"+"SFE_WOMATL")
-        sfe_wosubcnt_dev=fnget_dev("@"+"SFE_WOSUBCNT")
+    ivm_itemmast_dev=fnget_dev("@"+"IVM_ITEMMAST")
+    poc_linecode_dev=fnget_dev("@"+"POC_LINECODE")
+    sfe_womastr_dev=fnget_dev("@"+"SFE_WOMASTR")
+    sfe_wosubcnt_dev=fnget_dev("@"+"SFE_WOSUBCNT")
 
-    if ivc_whsecode_dev=0 or ivm_itemmast_dev=0 or po_linecode_dev=0 or poe_podet_dev=0 or sfe_womastr_dev=0 
-:   or sfe_womatl_dev=0 or sfe_wosubcnt_dev=0 then
+    if ivm_itemmast_dev=0 or po_linecode_dev=0 or sfe_womastr_dev=0 or sfe_wosubcnt_dev=0 then
         rem --- PO installed? SF installed? Both already require IV.
         call dir_pgm$+"adc_application.aon","IV",info$[all]
         iv$=info$[20]
@@ -41,33 +37,24 @@ rem --- Open tables
             goto exit_prog
         endif
 
-        num_files=7
+        num_files=4
         dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-        open_tables$[1]="IVC_WHSECODE",open_opts$[1]="OTA@"
-        open_tables$[2]="IVM_ITEMMAST",open_opts$[2]="OTA@"
-        open_tables$[3]="POC_LINECODE",open_opts$[3]="OTA@"
-        open_tables$[4]="POE_PODET",open_opts$[4]="OTA@"
-        open_tables$[5]="SFE_WOMASTR",open_opts$[5]="OTA@"
-        open_tables$[6]="SFE_WOMATL",open_opts$[6]="OTA@"
-        open_tables$[7]="SFE_WOSUBCNT",open_opts$[7]="OTA@"
+        open_tables$[1]="IVM_ITEMMAST",open_opts$[1]="OTA@"
+        open_tables$[2]="POC_LINECODE",open_opts$[2]="OTA@"
+        open_tables$[3]="SFE_WOMASTR",open_opts$[3]="OTA@"
+        open_tables$[4]="SFE_WOSUBCNT",open_opts$[4]="OTA@"
                 
         gosub open_tables        
 
-        ivc_whsecode_dev=fnget_dev("@"+"IVC_WHSECODE")
         ivm_itemmast_dev=fnget_dev("@"+"IVM_ITEMMAST")
         poc_linecode_dev=fnget_dev("@"+"POC_LINECODE")
-        poe_podet_dev=fnget_dev("@"+"POE_PODET")
         sfe_womastr_dev=fnget_dev("@"+"SFE_WOMASTR")
-        sfe_womatl_dev=fnget_dev("@"+"SFE_WOMATL")
         sfe_wosubcnt_dev=fnget_dev("@"+"SFE_WOSUBCNT")
     endif
 
-    dim ivc_whsecode$:fnget_tpl$("@"+"IVC_WHSECODE")
     dim ivm_itemmast$:fnget_tpl$("@"+"IVM_ITEMMAST")
     dim poc_linecode$:fnget_tpl$("@"+"POC_LINECODE")
-    dim poe_podet$:fnget_tpl$("@"+"POE_PODET")
     dim sfe_womastr$:fnget_tpl$("@"+"SFE_WOMASTR")
-    dim sfe_womatl$:fnget_tpl$("@"+"SFE_WOMATL")
     dim sfe_wosubcnt$:fnget_tpl$("@"+"SFE_WOSUBCNT")
 
 rem --- PO line code's line type must be Standard (S) or Non-Stock (N)
