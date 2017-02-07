@@ -85,21 +85,21 @@ rem --- Remove Paid Transactions
 				if glt15a.trns_date$>st_date$ continue
 				remove (glt15_dev,key=glt15a.firm_id$+glt15a.gl_account$+glt15a.trans_no$,dom=*next)
 			wend
-		endif
-		callpoint!.setColumnData("GLM_BANKMASTER.PRI_END_DATE",callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE"))
-		callpoint!.setColumnData("GLM_BANKMASTER.CURSTM_DATE","")
-		callpoint!.setColumnData("GLM_BANKMASTER.PRI_END_AMT",callpoint!.getColumnData("GLM_BANKMASTER.CUR_STMT_AMT"))
-		callpoint!.setColumnData("GLM_BANKMASTER.CUR_STMT_AMT","0")
-		callpoint!.setColumnData("GLM_BANKMASTER.BOOK_BALANCE","0")
-		rec_data.pri_end_date$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_DATE")
-		rec_data.curstm_date$=callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE")
-		rec_data.pri_end_amt$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_AMT")
-		rec_data.cur_stmt_amt$=callpoint!.getColumnData("GLM_BANKMASTER.CUR_STMT_AMT")
-		rec_data.book_balance$=callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE")
-		writerecord(fnget_dev("GLM_BANKMASTER"))rec_data$
-		glm05_key$=rec_data.firm_id$+rec_data.gl_account$
-		extractrecord(fnget_dev("GLM_BANKMASTER"),key=glm05_key$)x$; rem Advisory Locking
 
+			callpoint!.setColumnData("GLM_BANKMASTER.PRI_END_DATE",callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE"))
+			callpoint!.setColumnData("GLM_BANKMASTER.CURSTM_DATE","")
+			callpoint!.setColumnData("GLM_BANKMASTER.PRI_END_AMT",callpoint!.getColumnData("GLM_BANKMASTER.CUR_STMT_AMT"))
+			callpoint!.setColumnData("GLM_BANKMASTER.CUR_STMT_AMT","0")
+			callpoint!.setColumnData("GLM_BANKMASTER.BOOK_BALANCE","0")
+			rec_data.pri_end_date$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_DATE")
+			rec_data.curstm_date$=callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE")
+			rec_data.pri_end_amt$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_AMT")
+			rec_data.cur_stmt_amt$=callpoint!.getColumnData("GLM_BANKMASTER.CUR_STMT_AMT")
+			rec_data.book_balance$=callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE")
+			writerecord(fnget_dev("GLM_BANKMASTER"))rec_data$
+			glm05_key$=rec_data.firm_id$+rec_data.gl_account$
+			extractrecord(fnget_dev("GLM_BANKMASTER"),key=glm05_key$)x$; rem Advisory Locking
+		endif
 	endif
 [[GLM_BANKMASTER.CUR_STMT_AMT.AVAL]]
 rem " --- Recalc Summary Info
