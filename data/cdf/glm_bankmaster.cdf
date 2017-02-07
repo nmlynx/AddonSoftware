@@ -184,6 +184,7 @@ rem ====================================================
 	call stbl("+DIR_PGM")+"glc_ctlcreate.aon",pgm(-2),"GL","","",status
 	if status release
 	call stbl("+DIR_PGM")+"glc_datecheck.aon",stmtdate$,"Y",stmtperiod$,stmtyear$,status
+	if status>100 then return
 	stmtperiod=num(stmtperiod$)
 	stmtperiod$=str(stmtperiod:"00")
 	stmtyear=num(stmtyear$)
@@ -288,7 +289,10 @@ rem --- Find G/L Record"
 	gls01_dev=user_tpl.gls01_dev
 	readrecord(gls01_dev,key=firm_id$+"GL00")gls01a$
 	gosub check_date
-	if status exit
+	if status>100 then
+		callpoint!.setStatus("ABORT")
+		break
+	endif
 
 	r0$=firm_id$+callpoint!.getColumnData("GLM_BANKMASTER.GL_ACCOUNT"),s0$=""
 	if stmtyear=priorgl s0$=r0$+"2"; rem "Use prior year actual
@@ -328,7 +332,7 @@ rem --- Back out transactions for period after statement date"
 
 rem --- All Done"
 	callpoint!.setColumnData("GLM_BANKMASTER.BOOK_BALANCE",str(total_amt),1)
-	callpoint!.setStatus("MODIFIED")
+	callpoint!.setStatus("SAVE")
 
 rem " --- Recalc Summary Info
 
