@@ -62,7 +62,7 @@ rem --- PO line code's line type must be Standard (S) or Non-Stock (N)
     switch (BBjAPI().TRUE)
         case poc_linecode.line_type$="N"
             rem --- Non-Stock PO line type
-            findrecord(sfe_wosubcnt_dev,key=rec_tpl.firm_id$+"  "+rec_tpl.wo_no$+rec_tpl.wo_int_seq_no$,knum="AO_SUBCONT_SEQ",dom=*next)sfe_wosubcnt$
+            findrecord(sfe_wosubcnt_dev,key=rec_tpl.firm_id$+"  "+rec_tpl.wo_no$+rec_tpl.wk_ord_seq_ref$,knum="AO_SUBCONT_SEQ",dom=*next)sfe_wosubcnt$
             rec_tpl.require_date$=sfe_wosubcnt.require_date$
             rec_tpl.mat_sub$="Sub"
             break
