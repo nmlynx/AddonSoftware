@@ -17,22 +17,41 @@ if apm01a.vend_inactive$="Y" then
 endif
 
 [[APR_CHECKS.VENDOR_ID.BINQ]]
-rem --- Call custom query to only select vendors with selected AP Type
-rem -- Set to use the Custome Query Mode Instead for Both Lookups - Inactive Feature
-if cast(BBjString,callpoint!.getDevObject("multi_types"))="Y" then
-   ap_type$=callpoint!.getColumnData("APR_CHECKS.AP_TYPE")
-   if cvs(ap_type$,2)<>"" then
-      myapi!=BBjAPI()
-      myNS!=myapi!.getNamespace("ap_type","query",1)
-      myNS!.setValue("ap_type",ap_type$)
-      callpoint!.setTableColumnAttribute("APR_CHECKS.VENDOR_ID","IDEF","AP_INV_VEND_1")
-   else
-      callpoint!.setTableColumnAttribute("APR_CHECKS.VENDOR_ID","IDEF","AP_VEND_ACTIVE")
-   endif
-else
-   callpoint!.setTableColumnAttribute("APR_CHECKS.VENDOR_ID","IDEF","AP_VEND_ACTIVE")
-endif
-callpoint!.setStatus("ACTIVATE")
+rem --- Set filter_defs$[] to only show vendors of given AP Type
+
+ap_type$=callpoint!.getColumnData("APR_CHECKS.AP_TYPE")
+
+dim filter_defs$[2,2]
+filter_defs$[0,0]="APM_VENDMAST.FIRM_ID"
+filter_defs$[0,1]="='"+firm_id$+"'"
+filter_defs$[0,2]="LOCK"
+
+filter_defs$[1,0]="APM_VENDHIST.AP_TYPE"
+filter_defs$[1,1]="='"+ap_type$+"'"
+filter_defs$[1,2]="LOCK"
+
+
+call STBL("+DIR_SYP")+"bax_query.bbj",
+:		gui_dev, 
+:		form!,
+:		"AP_VEND_LK",
+:		"DEFAULT",
+:		table_chans$[all],
+:		sel_key$,
+:		filter_defs$[all]
+
+if sel_key$<>""
+	call stbl("+DIR_SYP")+"bac_key_template.bbj",
+:		"APM_VENDMAST",
+:		"PRIMARY",
+:		apm_vend_key$,
+:		table_chans$[all],
+:		status$
+	dim apm_vend_key$:apm_vend_key$
+	apm_vend_key$=sel_key$
+	callpoint!.setColumnData("APR_CHECKS.VENDOR_ID",apm_vend_key.vendor_id$,1)
+endif	
+callpoint!.setStatus("ACTIVATE-ABORT")
 [[APR_CHECKS.ADIS]]
 rem --- Clear Check Number when using previously saved selections.
 	callpoint!.setColumnData("APR_CHECKS.CHECK_NO","",1)
