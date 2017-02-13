@@ -754,7 +754,7 @@ return
 validate_cal_end: rem --- The ending day of the last period must be the day before the start of
                               rem --- the next year when a fiscal calendar exists for the next year.
                               rem --- Input: per_ending$ = mmdd period ending date
-                              rem --- Output: abourt = 1 (true) or 0 (false) for callpoint!.setStatus("ABORT")
+                              rem --- Output: abort = 1 (true) or 0 (false) for callpoint!.setStatus("ABORT")
 	gls_calendar_dev=fnget_dev("GLS_CALENDAR")
 	dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
 	abort=0
@@ -769,7 +769,7 @@ validate_cal_end: rem --- The ending day of the last period must be the day befo
 			msg_id$="GL_BAD_END_DATE"
 			gosub disp_message
 			callpoint!.setStatus("ABORT")
-			abourt=1
+			abort=1
 		endif
 	endif
 return
@@ -865,7 +865,7 @@ return
 
 check_total_pers: rem --- TOTAL_PERS must be >= last period in glt_transdetail (glt-06) for this fiscal year
                                                        rem --- Input: total_per = total number of periods in the fiscal year
-                                                       rem --- Output: abourt = 1 (true) or 0 (false) for callpoint!.setStatus("ABORT")
+                                                       rem --- Output: abort = 1 (true) or 0 (false) for callpoint!.setStatus("ABORT")
 	latestTransDate!=callpoint!.getDevObject("latestTransDate")
 	last_period=-1
 	for per=13 to 1 step -1
@@ -888,7 +888,7 @@ return
 
 check_cal_start_date: rem --- CAL_START_DATE must be <= first trns_date in glt_transdetail (glt-06) for this fiscal year
                                                        rem --- Input: cal_start_date$ = the calendar start date to be checked
-                                                       rem --- Output: abourt = 1 (true) or 0 (false) for callpoint!.setStatus("ABORT")
+                                                       rem --- Output: abort = 1 (true) or 0 (false) for callpoint!.setStatus("ABORT")
 	earliestTransDate!=callpoint!.getDevObject("earliestTransDate")
 	first_mmdd$="9999"
 	for per=1 to 13
@@ -911,7 +911,7 @@ return
 check_transdetail_period_dates: rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
                                                        rem --- Input: period$ = period the per_ending$ date is for
                                                        rem --- Input: per_ending$ = mmdd period ending date
-                                                       rem --- Output: abourt = 1 (true) or 0 (false) for callpoint!.setStatus("ABORT")
+                                                       rem --- Output: abort = 1 (true) or 0 (false) for callpoint!.setStatus("ABORT")
 
 	rem --- Period cannot end before this date
 	abort=0
@@ -951,7 +951,7 @@ return
 rem --- validate period ending date
 validate_mo_day: rem --- validate period ending date (month/day - doesn't check for Feb 28 vs 29)
                               rem --- Input: per_ending$ = mmdd period ending date
-                              rem --- Output: abourt = 1 (true) or 0 (false) for callpoint!.setStatus("ABORT")
+                              rem --- Output: abort = 1 (true) or 0 (false) for callpoint!.setStatus("ABORT")
 	abort=1
 	switch num(per_ending$(1,2))
 		case 1
