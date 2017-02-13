@@ -78,6 +78,46 @@ information for non-stock items.
 Modified: ap/src/apr_receipts.aon
 
 =======================================================================================================================================
+Revision: b0dfed7bd319449b6dbbb062217ae93be076a420
+Author: Christine <chawkins@basis.com>
+Date: 1/25/2017 2:22:41 PM
+Message:
+Per bug 8939; fixed issue where launching customer master twice in a
+session (i.e., launch, then go to expresso and launch it again) can
+result in err 252 after closing 2nd instance, returning to the first and
+moving to a new record, because closing second instance destroys the
+aging widgets.
+----
+Modified: data/bar/arm_custdet.xml
+Modified: data/bar/arm_custmast.xml
+Modified: data/bar/arm_custpmts.xml
+Modified: data/cdf/arm_custmast.cdf
+
+=======================================================================================================================================
+Revision: 3b2164e73e809dbabb45f6c9845202298bd96c3f
+Author: Christine <chawkins@basis.com>
+Date: 1/27/2017 11:32:04 AM
+Message:
+Per bug 8949; correct mask for CHECK_AMOUNT element type.
+----
+Modified: data/bar/glt_bankchecks.xml
+
+=======================================================================================================================================
+Revision: d38b45509b0059c0673b1724a3ace8fdebcd4374
+Author: Christine <chawkins@basis.com>
+Date: 1/27/2017 6:19:16 PM
+Message:
+Per bugs 8950 and 8951; changed logic after exiting grid row to no longer 
+complain if required date is empty, and to allow negative receipt qty so 
+long as ordered qty is also negative. Also added non-fatal warning if 
+you've received more than ordered less previously received.
+----
+Modified: data/bar/poe_recdet.xml
+Modified: data/cdf/poe_recdet.cdf
+Added: data/sync/ads_messages~po_rec_qty_warn.xml
+Modified: data/sync/ads_messages~po_reqd_det.xml
+
+=======================================================================================================================================
 Revision: 61d962a2a1e7943447a19da083873852aa121365
 Author: Bill Halsted <bhalsted@bhalsted-PC2.myhome.westell.com>
 Date: 2/2/2017 2:27:21 PM
