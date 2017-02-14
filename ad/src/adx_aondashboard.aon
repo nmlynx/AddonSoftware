@@ -849,6 +849,7 @@ rem --- Assign input values to local variables
 
         period$=ars01a.current_per$
         year$=ars01a.current_year$
+        total_pers$=gls_calendar.total_pers$
 
         rem --- Get beginning and ending date for the accounting period
         call stbl("+DIR_PGM")+"adc_perioddates.aon",num(period$),num(year$),begdate$,enddate$,table_chans$[all],status
@@ -882,7 +883,7 @@ rem --- Assign input values to local variables
 		rem Create Filters
 		filterName$ = Translate!.getTranslation("AON_PERIOD","Period",1)
 		filterHashMap! = new LinkedHashMap()
-        for per=1 to 13
+        for per=1 to num(total_pers$)
             filterHashMap!.put(str(per:"00"),str(per:"00"))
         next per
 		
@@ -1853,13 +1854,30 @@ rem     The inner widget gives us access to the dataset so that we can provide n
     salesJasperViewerWidget! = salesJasperViewerDashboardWidget!.getWidget()
     report! = salesJasperViewerWidget!.getReport()
     
-    filterLeft! = salesJasperViewerDashboardWidget!.getDashboardWidgetFilterLeft()
-    period$ = filterLeft!.getKey()
-    report!.putParam("PERIOD",period$)
-    
     filterRight! = salesJasperViewerDashboardWidget!.getDashboardWidgetFilterRight()
     year$ = filterRight!.getKey()
     report!.putParam("YEAR",year$)
+
+    rem --- Get total number of periods in the selected year and update period filter
+    files=1,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="gls_calendar",ids$[1]="GLS_CALENDAR"
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
+    gosub get_sysinfo
+    gls_calendar_dev=channels[1]; dim gls_calendar$:templates$[1]
+    readrecord(gls_calendar_dev,key=firm_id$+year$,dom=*next)gls_calendar$
+    total_pers$=gls_calendar.total_pers$
+
+    filterLeft! = salesJasperViewerDashboardWidget!.getDashboardWidgetFilterLeft()
+    period$ = filterLeft!.getKey()
+    filterLeftEntries! = filterLeft!.getEntries()
+    filterLeftEntries!.clear()
+    for per=1 to num(total_pers$)
+        filterLeftEntries!.put(str(per:"00"),str(per:"00"))
+    next per
+    if num(period$)>num(total_pers$) then period$=total_pers$
+    filterLeft!.selectFilter(period$)
+    report!.putParam("PERIOD",period$)
 
     rem --- Get beginning and ending date for the accounting period
     call stbl("+DIR_PGM")+"adc_perioddates.aon",num(period$),num(year$),begdate$,enddate$,table_chans$[all],status
@@ -1868,7 +1886,7 @@ rem     The inner widget gives us access to the dataset so that we can provide n
     
     report!.fill()
    
-    salesJasperViewerWidget!.refresh()
+    salesJasperViewerDashboardWidget!.refresh()
     
     exit
 
