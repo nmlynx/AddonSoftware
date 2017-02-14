@@ -1,3 +1,16 @@
+[[IVM_ITEMMAST.AOPT-SHST]]
+rem --- Launch item sales analysis form
+	user_id$=stbl("+USER_ID")
+	year$=sysinfo.system_date$(1,4)
+	product_type$=callpoint!.getColumnData("IVM_ITEMMAST.PRODUCT_TYPE")
+	item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+	sam_item_key$=firm_id$+year$+product_type$+item_id$
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"SAM_ITEM",
+:		user_id$,
+:		"EXP-INQ",
+:		sam_item_key$,
+:		table_chans$[all]
 [[IVM_ITEMMAST.GL_PUR_ACCT.AVAL]]
 gosub gl_active
 [[IVM_ITEMMAST.GL_PPV_ACCT.AVAL]]
