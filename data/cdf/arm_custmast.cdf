@@ -1,3 +1,15 @@
+[[ARM_CUSTMAST.AOPT-SHST]]
+rem --- Launch customer sales analysis form
+	user_id$=stbl("+USER_ID")
+	year$=sysinfo.system_date$(1,4)
+	customer_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+	key_pfx$=firm_id$+year$+customer_id$
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"SAM_CUSTOMER",
+:		user_id$,
+:		"",
+:		key_pfx$,
+:		table_chans$[all]
 [[ARM_CUSTDET.AR_TERMS_CODE.AVAL]]
 rem --- look up terms code, arm10A...if cred_hold is Y for this terms code,
 rem --- and cm$ is Y, set arm_custdet.cred_hold to Y as well
