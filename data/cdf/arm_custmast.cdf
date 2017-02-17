@@ -1,3 +1,19 @@
+[[ARM_CUSTMAST.AOPT-PRIC]]
+rem --- Launch Price Quote Inquiry form
+	dim dflt_data$[2,1]
+	dflt_data$[1,0]="FIRM_ID"
+	dflt_data$[1,1]=firm_id$
+	dflt_data$[2,0]="CUSTOMER_ID"
+	dflt_data$[2,1]=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"OPE_PRICEQUOTE",
+:		stbl("+USER_ID"),
+:		"MNT",
+:		"",
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
 [[ARM_CUSTMAST.AOPT-SHST]]
 rem --- Launch customer sales analysis form
 	user_id$=stbl("+USER_ID")
