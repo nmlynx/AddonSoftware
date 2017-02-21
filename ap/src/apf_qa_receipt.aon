@@ -1,10 +1,9 @@
-rem --- Work Order By Vendor Query filter program
-rem --- Program ID: sff_wobyvend.aon
+rem --- PO QA Receipt By Vendor Query filter program
+rem --- Program ID: apf_qa_recipt.aon
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 
-rem --- Run by Barista as part of the SF_WOBYVEND query.
-rem --- For each row in the result set, this program runs to get WO data from sfe_womatl for stock items
-rem --- or from sfe_wosubcnt for non-stock items.
+rem --- Run by Barista as part of the AP_QA_RECEIPT query.
+rem --- For each row in the result set, this program runs to calculate the WIP Amount.
 
     setesc std_error
     seterr std_error
@@ -21,82 +20,53 @@ rem --- Initialize data
     status$=""
 
 rem --- Open tables
-    ivm_itemmast_dev=fnget_dev("@"+"IVM_ITEMMAST")
+    poe_qadet_dev=fnget_dev("@"+"POE_QADET")
     poc_linecode_dev=fnget_dev("@"+"POC_LINECODE")
-    sfe_womastr_dev=fnget_dev("@"+"SFE_WOMASTR")
-    sfe_wosubcnt_dev=fnget_dev("@"+"SFE_WOSUBCNT")
 
-    if ivm_itemmast_dev=0 or poc_linecode_dev=0 or sfe_womastr_dev=0 or sfe_wosubcnt_dev=0 then
-        rem --- PO installed? SF installed? Both already require IV.
+    if poe_qadet_dev_dev=0 or poc_linecode_dev=0 then
+        rem --- PO installed?
         call dir_pgm$+"adc_application.aon","PO",info$[all]
         po$=info$[20]
-        call dir_pgm$+"adc_application.aon","SF",info$[all]
-        sf$=info$[20]
-        if po$<>"Y" or sf$<>"Y" then
+        if po$<>"Y" then
             status$="SKIP"
             goto exit_prog
         endif
 
-        num_files=4
+        num_files=2
         dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-        open_tables$[1]="IVM_ITEMMAST",open_opts$[1]="OTA@"
+        open_tables$[1]="POE_QADET",open_opts$[1]="OTA@"
         open_tables$[2]="POC_LINECODE",open_opts$[2]="OTA@"
-        open_tables$[3]="SFE_WOMASTR",open_opts$[3]="OTA@"
-        open_tables$[4]="SFE_WOSUBCNT",open_opts$[4]="OTA@"
                 
         gosub open_tables        
 
-        ivm_itemmast_dev=fnget_dev("@"+"IVM_ITEMMAST")
+        poe_qadet_dev=fnget_dev("@"+"POE_QADET")
         poc_linecode_dev=fnget_dev("@"+"POC_LINECODE")
-        sfe_womastr_dev=fnget_dev("@"+"SFE_WOMASTR")
-        sfe_wosubcnt_dev=fnget_dev("@"+"SFE_WOSUBCNT")
     endif
 
-    dim ivm_itemmast$:fnget_tpl$("@"+"IVM_ITEMMAST")
+    dim poe_qadet$:fnget_tpl$("@"+"POE_QADET")
     dim poc_linecode$:fnget_tpl$("@"+"POC_LINECODE")
-    dim sfe_womastr$:fnget_tpl$("@"+"SFE_WOMASTR")
-    dim sfe_wosubcnt$:fnget_tpl$("@"+"SFE_WOSUBCNT")
 
-rem --- PO line code's line type must be Standard (S) or Non-Stock (N)
-    findrecord(poc_linecode_dev,key=rec_tpl.firm_id$+rec_tpl.po_line_code$,dom=*next)poc_linecode$
-    switch (BBjAPI().TRUE)
-        case poc_linecode.line_type$="N"
-            rem --- Non-Stock PO line type
-            findrecord(sfe_wosubcnt_dev,key=rec_tpl.firm_id$+"  "+rec_tpl.wo_no$+rec_tpl.wk_ord_seq_ref$,knum="AO_SUBCONT_SEQ",dom=*next)sfe_wosubcnt$
-            rec_tpl.require_date$=sfe_wosubcnt.require_date$
-            rec_tpl.mat_sub$="Sub"
-            break
-        case poc_linecode.line_type$="S"
-            rem --- Standard PO line type
-            findrecord(ivm_itemmast_dev,key=rec_tpl.firm_id$+rec_tpl.item_id$,knum="PRIMARY",dom=*next)ivm_itemmast$
-            rec_tpl.item_desc$=ivm_itemmast.item_desc$
-            rec_tpl.mat_sub$="Mat"
-            break
-        case default
-            status$="SKIP"
-            goto exit_prog
-            break
-    swend
-
-rem --- Get status for this work order
-    findrecord(sfe_womastr_dev,key=rec_tpl.firm_id$+"  "+rec_tpl.wo_no$,knum="PRIMARY",dom=*next)sfe_womastr$
-    switch (BBjAPI().TRUE)
-        case sfe_womastr.wo_status$="C"
-            rec_tpl.wo_status$="Cls"
-            break
-        case sfe_womastr.wo_status$="O"
-            rec_tpl.wo_status$="Opn"
-            break
-        case sfe_womastr.wo_status$="P"
-            rec_tpl.wo_status$="Pln"
-            break
-        case sfe_womastr.wo_status$="Q"
-            rec_tpl.wo_status$="Quo"
-            break
-        case default
-            rec_tpl.wo_status$=""
-            break
-    swend
+    rem --- Sum up WIP amount for this PO in this Receiver
+    wip_total_amt=0
+    read(poe_qadet_dev,key=rec_tpl.firm_id$+rec_tpl.receiver_no$+rec_tpl.po_no$,dom=*next)
+    while 1
+        readrecord(poe_qadet_dev,end=*break)poe_qadet$
+        if poe_qadet.firm_id$+poe_qadet.receiver_no$+poe_qadet.po_no$<>rec_tpl.firm_id$+rec_tpl.receiver_no$+rec_tpl.po_no$ then break
+        
+        rem --- Get Line Type for this Line Code
+        if poc_linecode.po_line_code$<>poe_qadet.po_line_code$ then
+            findrecord(poc_linecode_dev,key=poe_qadet.firm_id$+poe_qadet.po_line_code$,dom=*continue)poc_linecode$
+        endif
+        
+        if poc_linecode.line_type$="O" then
+            qty=1
+        else
+            qty=poe_qadet.qa_wip_qty
+        endif
+        wip_total_amt=wip_total_amt+(qty*poe_qadet.unit_cost)
+    wend
+    
+    rec_tpl.wip_amt=wip_total_amt
 
 rem --- Done
     goto exit_prog
