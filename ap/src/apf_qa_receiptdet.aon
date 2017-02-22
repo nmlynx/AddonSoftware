@@ -1,10 +1,10 @@
-rem --- Work Order By Vendor Query filter program
-rem --- Program ID: sff_wobyvend.aon
+rem --- PO QA Receipt Detail Query filter program
+rem --- Program ID: apf_qa_reciptdet.aon
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 
-rem --- Run by Barista as part of the SF_WOBYVEND query.
-rem --- For each row in the result set, this program runs to get WO data from sfe_womatl for stock items
-rem --- or from sfe_wosubcnt for non-stock items.
+rem --- Run by Barista as part of the AP_QA_RECEIPTDET query.
+rem --- For each row in the result set, this program runs to calculate the WIP Amount, and
+rem --- get the Item and it's description.
 
     setesc std_error
     seterr std_error
@@ -21,50 +21,57 @@ rem --- Initialize data
     status$=""
 
 rem --- Open tables
-    ivm_itemmast_dev=fnget_dev("@"+"IVM_ITEMMAST")
+    poe_qadet_dev=fnget_dev("@"+"POE_QADET")
     poc_linecode_dev=fnget_dev("@"+"POC_LINECODE")
-    sfe_womastr_dev=fnget_dev("@"+"SFE_WOMASTR")
-    sfe_wosubcnt_dev=fnget_dev("@"+"SFE_WOSUBCNT")
+    ivs_params_dev=fnget_dev("@"+"IVS_PARAMS")
 
-    if ivm_itemmast_dev=0 or poc_linecode_dev=0 or sfe_womastr_dev=0 or sfe_wosubcnt_dev=0 then
-        rem --- PO installed? SF installed? Both already require IV.
+    if poe_qadet_dev_dev=0 or poc_linecode_dev=0 or ivm_itemmast_dev then
+        rem --- PO installed? PO already requires IV.
         call dir_pgm$+"adc_application.aon","PO",info$[all]
         po$=info$[20]
-        call dir_pgm$+"adc_application.aon","SF",info$[all]
-        sf$=info$[20]
-        if po$<>"Y" or sf$<>"Y" then
+        if po$<>"Y" then
             status$="SKIP"
             goto exit_prog
         endif
 
-        num_files=4
+        num_files=3
         dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-        open_tables$[1]="IVM_ITEMMAST",open_opts$[1]="OTA@"
+        open_tables$[1]="POE_QADET",open_opts$[1]="OTA@"
         open_tables$[2]="POC_LINECODE",open_opts$[2]="OTA@"
-        open_tables$[3]="SFE_WOMASTR",open_opts$[3]="OTA@"
-        open_tables$[4]="SFE_WOSUBCNT",open_opts$[4]="OTA@"
+        open_tables$[3]="IVS_PARAMS",open_opts$[3]="OTA@"
                 
         gosub open_tables        
 
-        ivm_itemmast_dev=fnget_dev("@"+"IVM_ITEMMAST")
+        poe_qadet_dev=fnget_dev("@"+"POE_QADET")
         poc_linecode_dev=fnget_dev("@"+"POC_LINECODE")
-        sfe_womastr_dev=fnget_dev("@"+"SFE_WOMASTR")
-        sfe_wosubcnt_dev=fnget_dev("@"+"SFE_WOSUBCNT")
+        ivs_params_dev=fnget_dev("@"+"IVS_PARAMS")
     endif
 
-    dim ivm_itemmast$:fnget_tpl$("@"+"IVM_ITEMMAST")
+    dim poe_qadet$:fnget_tpl$("@"+"POE_QADET")
     dim poc_linecode$:fnget_tpl$("@"+"POC_LINECODE")
-    dim sfe_womastr$:fnget_tpl$("@"+"SFE_WOMASTR")
-    dim sfe_wosubcnt$:fnget_tpl$("@"+"SFE_WOSUBCNT")
-
-rem --- PO line code's line type must be Standard (S) or Non-Stock (N)
+    dim ivs_params$:fnget_tpl$("@"+"IVS_PARAMS")
+        
+    rem --- Get Line Type for this Line Code
     findrecord(poc_linecode_dev,key=rec_tpl.firm_id$+rec_tpl.po_line_code$,dom=*next)poc_linecode$
+
+    rem --- Calculate WIP Amount
+    if poc_linecode.line_type$="O" then
+        qty=1
+    else
+        qty=rec_tpl.qa_wip_qty
+    endif
+    rec_tpl.wip_amt=qty*rec_tpl.unit_cost
+
+    rem --- Get the Item
+    if pos(poc_linecode.line_type$="MO") then
+        rec_tpl.item_id$=rec_tpl.order_memo$
+    endif
+
+    rem --- Get the Item's Description
     switch (BBjAPI().TRUE)
         case poc_linecode.line_type$="N"
             rem --- Non-Stock PO line type
-            findrecord(sfe_wosubcnt_dev,key=rec_tpl.firm_id$+"  "+rec_tpl.wo_no$+rec_tpl.wk_ord_seq_ref$,knum="AO_SUBCONT_SEQ",dom=*next)sfe_wosubcnt$
-            rec_tpl.require_date$=sfe_wosubcnt.require_date$
-            rec_tpl.mat_sub$="Sub"
+            rec_tpl.item_desc$=rec_tpl.order_memo$
             break
         case poc_linecode.line_type$="S"
             rem --- Standard PO line type
@@ -77,34 +84,10 @@ rem --- PO line code's line type must be Standard (S) or Non-Stock (N)
                 p[4]=num(ivs_params.desc_len_02$)
                 p[5]=num(ivs_params.desc_len_03$)
             
-                findrecord(ivm_itemmast_dev,key=rec_tpl.firm_id$+rec_tpl.item_id$,knum="PRIMARY",dom=*next)ivm_itemmast$
-                rec_tpl.item_desc$=fnitem$(ivm_itemmast.item_desc$,p[3],p[4],p[5])
+                rec_tpl.item_desc$=fnitem$(rec_tpl.item_desc$,p[3],p[4],p[5])
             endif
-            rec_tpl.mat_sub$="Mat"
             break
         case default
-            status$="SKIP"
-            goto exit_prog
-            break
-    swend
-
-rem --- Get status for this work order
-    findrecord(sfe_womastr_dev,key=rec_tpl.firm_id$+"  "+rec_tpl.wo_no$,knum="PRIMARY",dom=*next)sfe_womastr$
-    switch (BBjAPI().TRUE)
-        case sfe_womastr.wo_status$="C"
-            rec_tpl.wo_status$="Cls"
-            break
-        case sfe_womastr.wo_status$="O"
-            rec_tpl.wo_status$="Opn"
-            break
-        case sfe_womastr.wo_status$="P"
-            rec_tpl.wo_status$="Pln"
-            break
-        case sfe_womastr.wo_status$="Q"
-            rec_tpl.wo_status$="Quo"
-            break
-        case default
-            rec_tpl.wo_status$=""
             break
     swend
 
