@@ -13,8 +13,10 @@ rem --- CONV_STATUS : Status code/0=No error (Returned)
 
     use java.io.File
     use java.util.HashMap
-    use ::ado_file.src::FileObject
     use java.util.GregorianCalendar
+
+    use ::ado_file.src::FileObject
+    use ::ado_SyncRecords.aon::SyncRecords
     
     setesc std_error
     seterr std_error
@@ -54,6 +56,31 @@ rem --- Start progress meter
     meter_text$=""
     meter_action$="WIN-LST"
     gosub disp_meter
+
+rem --- For version 17.00, re-sync modified sync files in order to update the changed records
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+" "+Translate!.getTranslation("AON_MODIFIED_SYNC_FILES")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    syncFiles!=BBjAPI().makeVector()
+    syncFiles!.addItem("adm_searches~customers0010.xml")
+    syncFiles!.addItem("adm_searches~customers0020.xml")
+    syncFiles!.addItem("adm_searches~customers0030.xml")
+    syncFiles!.addItem("adm_searches~customers0040.xml")
+    syncFiles!.addItem("adm_searches~{customers0070}.xml"); rem --- deleting this one
+    syncFiles!.addItem("adm_searches~customers0080.xml")
+    syncFiles!.addItem("adm_searches~customers0090.xml")
+    syncFiles!.addItem("adm_searches~inventory0030.xml")
+    syncFiles!.addItem("adm_searches~zz_customers.xml")
+    syncFiles!.addItem("adm_searches~zz_inventory.xml")
+    syncFiles!.addItem("adm_searches~zz_vendors.xml")
+    
+    syncRecs!=new SyncRecords(aonDir$)
+    syncRecs!.updateRecords(syncFiles!)
 
 rem --- For version 17.00, initialize changes for Fiscal Calendars
 
