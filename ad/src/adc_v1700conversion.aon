@@ -65,7 +65,18 @@ rem --- For version 17.00, re-sync modified sync files in order to update the ch
     meter_action$="MTR-LST"
     gosub disp_meter
     print(log_dev)meter_text$
+    
+    rem --- Add temporary "delete" sync files for obsolete records being eliminated
+    tmpSync_dev=unt
+    open(tmpSync_dev,isz=-1,mode="O_CREATE,O_TRUNC")aonDir$+"/data/sync/adm_searches~{customers0070}.xml"
+    write(tmpSync_dev)"<?xml version='1.0' encoding='UTF-8' ?>"
+    write(tmpSync_dev)"<barista_admin_record>"
+    write(tmpSync_dev)"    <barista_record_table>ADM_SEARCHES</barista_record_table>"
+    write(tmpSync_dev)"    <SEARCH_DEF_ID>CUSTOMERS0070       </SEARCH_DEF_ID>"
+    write(tmpSync_dev)"</barista_admin_record>"
+    close(tmpSync_dev)
 
+    rem --- List modified sync files
     syncFiles!=BBjAPI().makeVector()
     syncFiles!.addItem("adm_searches~customers0010.xml")
     syncFiles!.addItem("adm_searches~customers0020.xml")
@@ -78,9 +89,13 @@ rem --- For version 17.00, re-sync modified sync files in order to update the ch
     syncFiles!.addItem("adm_searches~zz_customers.xml")
     syncFiles!.addItem("adm_searches~zz_inventory.xml")
     syncFiles!.addItem("adm_searches~zz_vendors.xml")
-    
+
+    rem --- Update table records for modified sync files
     syncRecs!=new SyncRecords(aonDir$)
     syncRecs!.updateRecords(syncFiles!)
+    
+    rem --- Erase temporary "delete" sync files
+    erase aonDir$+"/data/sync/adm_searches~{customers0070}.xml",err=*next
 
 rem --- For version 17.00, initialize changes for Fiscal Calendars
 
