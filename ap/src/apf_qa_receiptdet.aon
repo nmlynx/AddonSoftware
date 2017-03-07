@@ -25,7 +25,7 @@ rem --- Open tables
     poc_linecode_dev=fnget_dev("@"+"POC_LINECODE")
     ivs_params_dev=fnget_dev("@"+"IVS_PARAMS")
 
-    if poe_qadet_dev_dev=0 or poc_linecode_dev=0 or ivm_itemmast_dev then
+    if poe_qadet_dev_dev=0 or poc_linecode_dev=0 or ivs_params_dev then
         rem --- PO installed? PO already requires IV.
         call dir_pgm$+"adc_application.aon","PO",info$[all]
         po$=info$[20]
