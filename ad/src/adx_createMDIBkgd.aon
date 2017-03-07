@@ -42,6 +42,12 @@ done: rem --- All done
 
     msg_id$="UPDATE_COMPLETE"
     gosub disp_message
+
+    mdi! = bbjapi().getMDI()
+    loc=3
+    loc = num(stbl("+MDI_BKGD_LOC",err=*next),err=*next)
+
+    mdi!.setBackgroundImageFile(loc,imFile$) 
     
     goto std_exit
 
