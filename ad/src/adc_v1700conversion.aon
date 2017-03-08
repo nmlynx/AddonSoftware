@@ -76,6 +76,14 @@ rem --- For version 17.00, re-sync modified sync files in order to update the ch
         write(tmpSync_dev)"    <SEARCH_DEF_ID>CUSTOMERS0070       </SEARCH_DEF_ID>"
         write(tmpSync_dev)"</barista_admin_record>"
         close(tmpSync_dev)
+
+        open(tmpSync_dev,isz=-1,mode="O_CREATE,O_TRUNC")aonDir$+"/data/sync/adm_searches~{vendors0010}.xml"
+        write(tmpSync_dev)"<?xml version='1.0' encoding='UTF-8' ?>"
+        write(tmpSync_dev)"<barista_admin_record>"
+        write(tmpSync_dev)"    <barista_record_table>ADM_SEARCHES</barista_record_table>"
+        write(tmpSync_dev)"    <SEARCH_DEF_ID>VENDORS0010         </SEARCH_DEF_ID>"
+        write(tmpSync_dev)"</barista_admin_record>"
+        close(tmpSync_dev)
     
         rem --- List modified sync files
         syncFiles!=BBjAPI().makeVector()
@@ -91,6 +99,7 @@ rem --- For version 17.00, re-sync modified sync files in order to update the ch
         syncFiles!.addItem("adm_searches~inventory0030.xml")
         syncFiles!.addItem("adm_searches~inventory0040.xml")
         syncFiles!.addItem("adm_searches~inventory0050.xml")
+        syncFiles!.addItem("adm_searches~{vendors0010}.xml"); rem --- deleting this one
         syncFiles!.addItem("adm_searches~vendors0020.xml")
         syncFiles!.addItem("adm_searches~vendors0030.xml")
         syncFiles!.addItem("adm_searches~vendors0040.xml")
@@ -108,6 +117,7 @@ rem --- For version 17.00, re-sync modified sync files in order to update the ch
         
         rem --- Erase temporary "delete" sync files
         erase aonDir$+"/data/sync/adm_searches~{customers0070}.xml",err=*next
+        erase aonDir$+"/data/sync/adm_searches~{vendors0010}.xml",err=*next
     endif
 
 rem --- For version 17.00, initialize changes for Fiscal Calendars
