@@ -20,6 +20,12 @@ rem status$        - Returned status: "SKIP" = Skip current record
 rem --- Initialize data
     status$=""
 
+rem --- Make sure +PROPS_NAME STBL is set
+    testSTBL$=stbl("+PROPS_NAME",err=*next)
+    if testSTBL$="" then
+        call stbl("+DIR_SYP")+"bas_process_beg.bbj",stbl("+USER_ID"),table_chans$[all]
+    endif
+
 rem --- Open tables
     ivm01_dev=fnget_dev("@"+"IVM_ITEMMAST")
     ivm10a_dev=fnget_dev("@"+"IVC_PRODCODE")
