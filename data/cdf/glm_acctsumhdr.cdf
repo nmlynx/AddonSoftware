@@ -667,6 +667,9 @@ endif
 	callpoint!.setDevObject("align_fiscal_periods","N")
 	callpoint!.setDevObject("alignCalendar",new AlignFiscalCalendar(firm_id$))
 	callpoint!.setDevObject("gridModified","0")
+
+	tns!=BBjAPI().getNamespace("GLM_ACCT","drill",1)
+	tns!.setValue("cur_per",gls01a.current_per$)
 [[<<DISPLAY>>.CURRENT_PER.AVAL]]
 rem --- set variables
 
