@@ -94,46 +94,62 @@ rem --- Start glt_transdetail progress meter
     meter_action$="WIN-LST"
     gosub disp_meter
     transdetailMeter!=meterWin!
+    current_gl_acct$=""
+    current_gl_year$=""
+    milestone=50
+    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
 
     rem --- Build glm_acctsummary records from glt_transdetail transactions
-    read(gltTransDetail_dev,key=firm_id$+beginYear$,knum="BY_YEAR_PERIOD",dom=*next)
+    read(gltTransDetail_dev,key=firm_id$,knum="PRIMARY",dom=*next)
     while 1
         readrecord(gltTransDetail_dev,end=*break)gltTransDetail$
-        if gltTransDetail.firm_id$+gltTransDetail.posting_year$>firm_id$+endYear$ then break
+        if gltTransDetail.firm_id$<>firm_id$ then break
+        if gltTransDetail.posting_year$<beginYear$ then read(gltTransDetail_dev,key=firm_id$+gltTransDetail.gl_account$+beginyear$,dom=*continue)
+        if gltTransDetail.posting_year$>endYear$ then read(gltTransDetail_dev,key=firm_id$+gltTransDetail.gl_account$+$ff$,dom=*continue)
 
         rem --- Increment glt_transdetail progress meter
-        meterWin!=transdetailMeter!
-        meter_text$=gltTransDetail.trns_date$+"-"+gltTransDetail.gl_account$+"-"+gltTransDetail.journal_id$+
-:           "-"+gltTransDetail.gl_adt_no$+"-"+gltTransDetail.seq_no$
         transdetailRecCount=transdetailRecCount+1
-        meter_proc_recs=transdetailRecCount
-        meter_action$="MTR-LST"
-        gosub disp_meter
+        if mod(transdetailRecCount,milestone)=0 then
+            meterWin!=transdetailMeter!
+            meter_text$=gltTransDetail.gl_account$+"-"+gltTransDetail.trns_date$+"-"+gltTransDetail.journal_id$+"-"+gltTransDetail.gl_adt_no$+"-"+gltTransDetail.seq_no$
+            meter_proc_recs=transdetailRecCount
+            meter_action$="MTR-LST"
+            gosub disp_meter
+        endif
 
-        rem --- Get existing glm_acctsummary record, or initialize a new one
-        redim glmAcctSummary$
-        glmAcctSummary_key$=gltTransDetail.firm_id$+gltTransDetail.gl_account$+gltTransDetail.posting_year$
-        findrecord(glmAcctSummary_dev,key=glmAcctSummary_key$,knum="PRIMARY",dom=*next)glmAcctSummary$
-        if glmAcctSummary.firm_id$<>gltTransDetail.firm_id$ then
+        if gltTransDetail.posting_year$<>current_gl_year$  or gltTransDetail.gl_account$<>current_gl_acct$ then
+            rem --- Write this glm_acctsummary record
+            if current_gl_acct$<>"" or current_gl_year$<>"" then
+                glmAcctSummary$=field(glmAcctSummary$)
+                write record(glmAcctSummary_dev)glmAcctSummary$
+            endif
+            current_gl_year$=gltTransDetail.posting_year$
+            current_gl_acct$=gltTransDetail.gl_account$
             rem --- Initialize new glm_acctsummary record
+            redim glmAcctSummary$
             glmAcctSummary.firm_id$=gltTransDetail.firm_id$
             glmAcctSummary.gl_account$=gltTransDetail.gl_account$
             glmAcctSummary.year$=gltTransDetail.posting_year$
             glmAcctSummary.begin_amt=0
             glmAcctSummary.begin_units=0
-            for per=1 to max_pers
+            rem --- Set numerics to zero to avoid nulls
+            for per=1 to 13
                 field glmAcctSummary$,"PERIOD_AMT_"+str(per:"00")=0
                 field glmAcctSummary$,"PERIOD_UNITS_"+str(per:"00")=0
             next per
         endif
 
-        rem --- Update and write glm_acctsummary record
+        rem --- Accumulate amount and units for this glm_acctsummary record
         posting_per$=gltTransDetail.posting_per$
         field glmAcctSummary$,"PERIOD_AMT_"+posting_per$=nfield(glmAcctSummary$,"PERIOD_AMT_"+posting_per$)+gltTransDetail.trans_amt
         field glmAcctSummary$,"PERIOD_UNITS_"+posting_per$=nfield(glmAcctSummary$,"PERIOD_UNITS_"+posting_per$)+gltTransDetail.units
-        glmAcctSummary$=field(glmAcctSummary$)
-        writerecord(glmAcctSummary_dev)glmAcctSummary$
     wend
+
+    rem --- Write last glm_acctsummary record
+    if current_gl_acct$<>"" or current_gl_year$<>"" then
+       glmAcctSummary$=field(glmAcctSummary$)
+       write record(glmAcctSummary_dev)glmAcctSummary$
+    endif
     
     rem --- Stop glt_transdetail progress meter
     meterWin!=transdetailMeter!
