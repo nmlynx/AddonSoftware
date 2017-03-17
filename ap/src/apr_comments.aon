@@ -69,7 +69,7 @@ rem --- Retrieve parameter records
 
 rem --- Initializations
 
-    headings=2
+    headings=3
     dim headings$[headings],o[3]
     page=0
     width=80
@@ -83,6 +83,7 @@ rem --- Initializations
     clock$=""
     headings$[0]=sysinfo.firm_name$
     headings$[1]=sysinfo.task_desc$
+    headings$[2]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_VENDORS")+" = "+inactive$
     total_recs=0
 
 rem --- Column Headings

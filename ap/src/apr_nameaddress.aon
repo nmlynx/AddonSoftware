@@ -62,7 +62,7 @@ rem --- Retrieve parameter records
     m0=len(m0$)
     vendlen=m0
     
-    headings=1
+    headings=2
 
 rem --- Assign form input values to local variables
 
@@ -87,6 +87,7 @@ rem --- Initializations
     dim headings$[headings],o[3]
     headings$[0]=cvs(sysinfo.firm_name$,2)
     headings$[1]=cvs(sysinfo.task_desc$,2)
+    headings$[2]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_VENDORS")+" = "+inactive$
     m8$="(###) ###-####"
     more=1
     record_count=0

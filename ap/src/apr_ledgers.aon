@@ -84,7 +84,7 @@ rem --- Retrieve parameter records
 
 rem --- Initializations
 
-    headings=4
+    headings=5
     dim headings$[headings],o[8]
     more=1
     page=0
@@ -110,6 +110,7 @@ rem --- Initializations
     headings$[2]=x$
     if cvs(thrudate$,2)="" headings$[3]=Translate!.getTranslation("AON_INCLUDES_ALL_TRANSACTIONS")
 :       else headings$[3]=Translate!.getTranslation("AON_INCLUDES_TRANSACTIONS_THROUGH_")+fndate$(thrudate$)
+    headings$[4]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_VENDORS")+" = "+inactive$
     x$=""
     if retention$="Y" x$=Translate!.getTranslation("AON_RETENTION")
 
