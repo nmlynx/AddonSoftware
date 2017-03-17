@@ -97,12 +97,13 @@ rem --- Set additional params
         params!.put("COMMENT_YN","")
     endif
 
-rem --- Customer In-Active Parameters
-        if inactive$="Y" then
-          params!.put("OPTION_ACTIVE"," AND ARM_CUSTMAST.CUST_INACTIVE<>'Y'")
-        else
-          params!.put("OPTION_ACTIVE","")
-        endif
+rem --- Customer Inactive Parameters
+    if inactive$="Y" then
+      params!.put("OPTION_ACTIVE"," AND ARM_CUSTMAST.CUST_INACTIVE<>'Y'")
+    else
+      params!.put("OPTION_ACTIVE","")
+    endif
+    params!.put("INACTIVE_CUST",Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_CUSTOMERS")+" = "+inactive$)
 
 rem --- Make Document Archive Record and Get ID
 

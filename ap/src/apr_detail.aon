@@ -102,12 +102,12 @@ rem --- Set additional params
     swend
 
 rem --- Vendor In-Active Parameters
-        if inactive$="Y" then
-          params!.put("OPTION_ACTIVE"," AND APM_VENDMAST.VEND_INACTIVE<>'Y'")
-        else
-          params!.put("OPTION_ACTIVE","")
-        endif
-        params!.put("INACTIVE_VEND",Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_VENDORS")+" = "+inactive$)
+    if inactive$="Y" then
+      params!.put("OPTION_ACTIVE"," AND APM_VENDMAST.VEND_INACTIVE<>'Y'")
+    else
+      params!.put("OPTION_ACTIVE","")
+    endif
+    params!.put("INACTIVE_VEND",Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_VENDORS")+" = "+inactive$)
 
 rem --- Make Document Archive Record and Get ID
 
