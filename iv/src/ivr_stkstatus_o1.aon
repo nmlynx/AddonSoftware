@@ -25,12 +25,13 @@ rem --- Document initializations
 rem --- Initialize HEADINGS$
 
     headings$[1]=headings$[1]+Translate!.getTranslation("AON__BY_WAREHOUSE")
-    headings$[6]="[HEADER]"
+    headings$[7]="[HEADER]"
     if begitem$="" headings$[3]=Translate!.getTranslation("AON_FROM_ITEM:_FIRST") else headings$[3]=Translate!.getTranslation("AON_FROM_ITEM:_")+begitem$
     if enditem$="" headings$[3]=headings$[3]+Translate!.getTranslation("AON__--_TO_ITEM:_LAST") else headings$[3]=headings$[3]+Translate!.getTranslation("AON__--_TO_ITEM:_")+enditem$
     if begprod$="" headings$[4]=Translate!.getTranslation("AON_FROM_PRODUCT:_FIRST") else headings$[4]=Translate!.getTranslation("AON_FROM_PRODUCT:_")+begprod$                
     if endprod$="" headings$[4]=headings$[4]+Translate!.getTranslation("AON__--_TO_PRODUCT:_LAST") else headings$[4]=headings$[4]+Translate!.getTranslation("AON__--_TO_PRODUCT:_")+endprod$
     if type$="" headings$[5]=Translate!.getTranslation("AON_ALL_ITEM_TYPES") else headings$[5]=Translate!.getTranslation("AON_ITEM_TYPE:_")+type$
+    headings$[6]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_ITEMS")+" = "+inactive$
 
     dim columns$[9,10]
     columns=10

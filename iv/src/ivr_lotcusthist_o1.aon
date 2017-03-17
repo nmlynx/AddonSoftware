@@ -71,6 +71,7 @@ rem --- Headings
     if end_cust$="" headings$[5]=headings$[5] + Translate!.getTranslation("AON__--_TO_CUSTOMER:_LAST") else headings$[5]= headings$[5] + Translate!.getTranslation("AON__--_TO_CUSTOMER:") + fnmask$(end_cust$,custmask$)
     if beg_prod$="" headings$[6]=Translate!.getTranslation("AON_FROM_PRODUCT:_FIRST") else headings$[6]=Translate!.getTranslation("AON_FROM_PRODUCT:_") + beg_prod$
     if end_prod$="" headings$[6]=headings$[6] + Translate!.getTranslation("AON__--_TO_PRODUCT:_LAST") else headings$[6]= headings$[6] + Translate!.getTranslation("AON__--_TO_PRODUCT:") + end_prod$
+    headings$[7]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_ITEMS")+" = "+inactive$
 
 rem --- Column Heading
 

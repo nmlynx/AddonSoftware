@@ -216,7 +216,7 @@ rem --- Check for vendor masterfile
     total_recs=0
 
     precision p[2]
-    headings=7
+    headings=8
 
     dim headings$[headings]
     dim item_qty[9],item_ext[9]
@@ -271,7 +271,8 @@ rem --- Headings
     if begprod$="" then headings$[5]=Translate!.getTranslation("AON_FROM_PRODUCT:_FIRST") else headings$[5]=Translate!.getTranslation("AON_FROM_PRODUCT:_")+begprod$                
     if endprod$="" then headings$[5]=headings$[5]+Translate!.getTranslation("AON__--_TO_PRODUCT:_LAST") else headings$[5]=headings$[5]+Translate!.getTranslation("AON__--_TO_PRODUCT:_")+endprod$
     if type$="" then headings$[6]=Translate!.getTranslation("AON_ALL_ITEM_TYPES") else headings$[6]=Translate!.getTranslation("AON_ITEM_TYPE_")+type$
-    headings$[7]="[HEADER]"
+    headings$[7]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_ITEMS")+" = "+inactive$
+    headings$[8]="[HEADER]"
 
 rem --- column headings
 

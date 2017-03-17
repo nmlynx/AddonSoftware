@@ -76,6 +76,7 @@ rem --- Report headings
     if enditem$="" headings$[5]=headings$[5]+Translate!.getTranslation("AON__--_TO_ITEM:_LAST") else headings$[5]=headings$[5]+Translate!.getTranslation("AON__--_TO_ITEM:_")+enditem$
     if begprod$="" headings$[6]=Translate!.getTranslation("AON_FROM_PRODUCT:_FIRST") else headings$[6]=Translate!.getTranslation("AON_FROM_PRODUCT:_")+begprod$                
     if endprod$="" headings$[6]=headings$[6]+Translate!.getTranslation("AON__--_TO_PRODUCT:_LAST") else headings$[6]=headings$[6]+Translate!.getTranslation("AON__--_TO_PRODUCT:_")+endprod$
+    headings$[7]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_ITEMS")+" = "+inactive$
     if format<>1 then headings$[4]="[HEADER]"
 
 rem --- Column Headings

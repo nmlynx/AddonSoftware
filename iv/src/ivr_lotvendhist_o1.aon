@@ -24,7 +24,7 @@ rem --- Document initializations
 rem --- Initializations
 
     precision p[2]
-    headings=9
+    headings=8
     when$=sysinfo.system_date$
     clock$=""
     h9$=""
@@ -70,6 +70,7 @@ rem --- Headings
     if end_vendor$="" headings$[5]=headings$[5] + Translate!.getTranslation("AON__--_TO_VENDOR:_LAST") else headings$[5]= headings$[5] + Translate!.getTranslation("AON__--_TO_VENDOR:") + fnmask$(end_vendor$,vendmask$)
     if beg_prod$="" headings$[6]=Translate!.getTranslation("AON_FROM_PRODUCT:_FIRST") else headings$[6]=Translate!.getTranslation("AON_FROM_PRODUCT:_") + beg_prod$
     if end_prod$="" headings$[6]=headings$[6] + Translate!.getTranslation("AON__--_TO_PRODUCT:_LAST") else headings$[6]= headings$[6] + Translate!.getTranslation("AON__--_TO_PRODUCT:") + end_prod$
+    headings$[7]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_ITEMS")+" = "+inactive$
 
 rem --- Column Headings
 

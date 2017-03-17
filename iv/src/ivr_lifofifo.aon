@@ -111,7 +111,7 @@ rem --- LIFO/FIFO not set in parameter record
     call pgmdir$+"adc_sizemask.aon",m2$,m2,10,15
     call pgmdir$+"adc_sizemask.aon",m3$,m3,10,15
 
-    dim headings$[5],product[1],report[1],item[1],total[1],warehouse[1],types$[10]
+    dim headings$[6],product[1],report[1],item[1],total[1],warehouse[1],types$[10]
  
     headings$[0]=firm_name$
     headings$[1]=task_desc$
@@ -129,7 +129,8 @@ rem --- Headings
     if begprod$="" headings$[3]=Translate!.getTranslation("AON_FROM_PRODUCT:_FIRST") else headings$[3]=Translate!.getTranslation("AON_FROM_PRODUCT:_")+begprod$                
     if endprod$="" headings$[3]=headings$[3]+Translate!.getTranslation("AON__--_TO_PRODUCT:_LAST") else headings$[3]=headings$[3]+Translate!.getTranslation("AON__--_TO_PRODUCT:_")+endprod$
     if type$=""    headings$[4]=Translate!.getTranslation("AON_ALL_ITEM_TYPES") else headings$[4]=Translate!.getTranslation("AON_ITEM_TYPE:_")+type$
-    headings$[5]="[HEADER]"
+    headings$[5]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_ITEMS")+" = "+inactive$
+    headings$[6]="[HEADER]"
 
 rem --- column headings
 
