@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2016-11-11T16:14:37 -->
+<!-- 2017-03-17T12:07:14 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BOM Costing" language="groovy" pageWidth="612" pageHeight="792" columnWidth="572" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="50" resourceBundle="addon" uuid="15323f89-8b32-4024-887e-a6bf52ebffb3">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -56,6 +56,7 @@
 	<parameter name="OPTION_ACTIVE" class="java.lang.String">
 		<defaultValueExpression><![CDATA["Y"]]></defaultValueExpression>
 	</parameter>
+	<parameter name="INACTIVE_ITEM" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[call bomcosting($P{FIRM_ID},$P{BILL_NO_1},$P{BILL_NO_2},$P{BARISTA_WD},$P{WHSE},$P{ALL_DATES},$P{PROD_DATE},$P{OPTION_ACTIVE})]]>
 	</queryString>
@@ -275,7 +276,8 @@
 		<band height="1" splitType="Stretch"/>
 	</title>
 	<pageHeader>
-		<band height="29">
+		<band height="40">
+			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 			<textField>
 				<reportElement x="455" y="10" width="100" height="9" uuid="3c9338df-148a-4750-8a3b-b61a7951b8fd"/>
 				<textElement textAlignment="Right">
@@ -317,6 +319,16 @@
 					<font size="7"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{REPORT_NAME}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="30" width="100" height="9" uuid="4ccc70f8-0281-4b5b-8963-dbf899364380">
+					<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
+				</reportElement>
+				<textElement>
+					<font size="7"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{INACTIVE_ITEM}]]></textFieldExpression>
 			</textField>
 		</band>
 	</pageHeader>

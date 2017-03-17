@@ -55,6 +55,7 @@ rem --- Headings
         headings$[2]=Translate!.getTranslation("AON_LEVEL_SELECTION:_")
         if level$="" then headings$[2]=headings$[2]+Translate!.getTranslation("AON_ALL_LEVELS_SELECTED") else headings$[2]=headings$[2]+Translate!.getTranslation("AON_ALL_LEVELS_UP_TO_")+level$
 		headings$[2]=headings$[2]+", "+Translate!.getTranslation("AON_WHSE_")+whse$
+        headings$[3]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_ITEMS")+" = "+inactive$
 
 		call pgmdir$+"adc_getmask.aon","","BM","U","",m2$,0,0
 		call pgmdir$+"adc_getmask.aon","","BM","C","",m3$,0,0

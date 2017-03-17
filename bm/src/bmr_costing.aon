@@ -127,6 +127,7 @@ rem --- Inventory In-Active Parameters
         else
           params!.put("OPTION_ACTIVE","N")
         endif
+        params!.put("INACTIVE_ITEM",Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_ITEMS")+" = "+inactive$)
 
 rem --- Make Document Archive Record and Get ID
 
