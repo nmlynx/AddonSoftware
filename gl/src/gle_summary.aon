@@ -74,7 +74,7 @@ rem --- Assign input values to local variables
 
 rem --- Initializations
 
-    headings=3
+    headings=4
     dim headings$[headings]
     update$=""
 
@@ -89,10 +89,11 @@ rem --- Initialize report headings
     x$=Translate!.getTranslation("AON_FROM_")+x$+Translate!.getTranslation("AON__THROUGH_")+y$
     if cvs(wildcard$,2)<>"" then x$=x$+Translate!.getTranslation("AON__(WILDCARD_")+$22$+cvs(wildcard$,2)+$22$+")"
     headings$[2]=x$
+    headings$[3]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_GENERAL_LEDGER_ACCOUNTS")+" = "+inactive$
     if alignPeriods$="Y" then
-        headings$[3]=Translate!.getTranslation("AON_ACTUALS")+" "+Translate!.getTranslation("AON_ALIGNED_WITH","Aligned With")+" "+gls01a.current_year$
+        headings$[4]=Translate!.getTranslation("AON_ACTUALS")+" "+Translate!.getTranslation("AON_ALIGNED_WITH","Aligned With")+" "+gls01a.current_year$
     else
-        headings$[3]=""
+        headings$[4]=""
     endif
 
 rem --- If no record id's or types were specified, use parameter defaults

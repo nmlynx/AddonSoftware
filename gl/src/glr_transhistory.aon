@@ -103,7 +103,7 @@ rem --- Retrieve parameter records
     call "adc_getmask.aon","","GL","A","",m1$,0,m1
     call "adc_getmask.aon","","GL","U","",m2$,0,m2
     mp=13
-    headings=4
+    headings=5
     inquiry$=cvs(inquiry$,2)
     if inquiry$<>"" then headings=3
 
@@ -225,6 +225,7 @@ rem --- Initialize report headings
 :           else y$=Translate!.getTranslation("AON_JOURNAL_ID_")+glm03a.journal_id$+" "+cvs(glm03a.code_desc$,2)
         headings$[3]=x$+Translate!.getTranslation("AON__REPORT_FOR_")+y$
     endif
+    headings$[5]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_GENERAL_LEDGER_ACCOUNTS")+" = "+inactive$
 
 rem --- Start progress meter
 

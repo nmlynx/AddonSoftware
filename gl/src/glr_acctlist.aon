@@ -49,7 +49,7 @@ rem --- Parameters
     break$=""
     desc$=""
     call pgmdir$+"glc_regroup.aon",glm10_dev,firm_id$,break$,desc$
-    headings=2
+    headings=3
 
 rem --- Assign input values to local variables
 
@@ -93,6 +93,7 @@ rem --- Account range heading
     x$=x$+Translate!.getTranslation("AON__THROUGH_"),y$=""
     if endacct$="" y$=Translate!.getTranslation("AON_LAST"),x$=x$+y$+Translate!.getTranslation("AON__ACCOUNT")      else y$=fnmask$(endacct$(1,m0),m0$),x$=x$+Translate!.getTranslation("AON_ACCOUNT_")+y$
     headings$[2]=x$
+    headings$[3]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_GENERAL_LEDGER_ACCOUNTS")+" = "+inactive$
 
 rem --- Document columns
 
