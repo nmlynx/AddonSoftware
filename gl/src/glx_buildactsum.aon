@@ -211,7 +211,7 @@ rem --- Start glm_acctsummary progress meter
                     glmAcctSummary2.year$=thisYear$
                     glmAcctSummary2.begin_amt=0
                     glmAcctSummary2.begin_units=0
-                    for per=1 to max_pers
+                    for per=1 to 13
                         field glmAcctSummary2$,"PERIOD_AMT_"+str(per:"00")=0
                         field glmAcctSummary2$,"PERIOD_UNITS_"+str(per:"00")=0
                     next per
@@ -297,7 +297,7 @@ rem --- Start glm_acctsummary progress meter
             glmAcctSummary.year$=thisYear$
             glmAcctSummary.begin_amt=0
             glmAcctSummary.begin_units=0
-            for per=1 to max_pers
+            for per=1 to 13
                 field glmAcctSummary$,"PERIOD_AMT_"+str(per:"00")=0
                 field glmAcctSummary$,"PERIOD_UNITS_"+str(per:"00")=0
             next per
