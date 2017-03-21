@@ -79,11 +79,13 @@ rem ==========================================================================
                     if pos(pad(file_name$, 30, $00$) = k$) = 1 then
                         alias$ = cvs( k$(31,16), 2 )
                     else
+                        seterr 0
                         throw "FileObject: could not find """ + file_name$ + """ in ddm_tables.bat", 11
                     endif
                 endif
                 
                 if eof then
+                    seterr 0
                     throw "FileObject: could not find """ + file_name$ + """ in ddm_tables.bat", 11
                 endif
             wend
@@ -99,6 +101,7 @@ rem ==========================================================================
             endif
             
             if !found then
+                seterr 0
                 throw "FileObject: could not find template for """ + alias$ + """ in ddm_table_tpls.bat", 11
             endif
             
@@ -172,6 +175,7 @@ method_error:rem --- Method error trap/handler
                 endif
                 
                 if !opened then
+                    seterr 0
                     throw "FileObject: could not open """ + #baristaDataPath$ + "ddm_tables.dat""", err
                 endif
                 
@@ -188,6 +192,7 @@ method_error:rem --- Method error trap/handler
                 endif
                 
                 if !opened then
+                    seterr 0
                     throw "FileObject: could not open """ + #baristaDataPath$ + "ddm_table_tpls.dat""", err
                 endif
                 
@@ -226,6 +231,7 @@ method_error:rem --- Method error trap/handler
             endif
             
             if !opened then
+                seterr 0
                 throw "FileObject: could not open file """ + p_file!.getFullPath() + """", err
             endif
             
