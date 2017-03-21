@@ -1,12 +1,222 @@
 =======================================================================================================================================
-Report Branch: AddonSoftware Development Build
+ Report Date:   2017-03-21
+ Report Branch: AddonSoftware 17.00
+ Last Release:  AddonSoftware 16.24
 =======================================================================================================================================
-Development builds are generated daily.
 
-AddonSoftware Co-op Developers can access code changes and bug fixes for the Development Builds via Git.
+=======================================================================================================================================
+Revision: 30d44c512b1f57083117afe9e3a35971da9a14a7
+Author: Christine <chawkins@basis.com>
+Date: 1/23/2017 6:00:04 PM
+Message:
+Per bug 8937; Fine tuning for Inactive Flag mods; altered custom query callpoint code to use translator instead of hard-coded literals.
+----
+Modified: data/bar/ap_inv_vend_1.xml
+Modified: data/bar/ap_vend_active.xml
+Modified: data/bar/ar_cust_active.xml
+Modified: data/bar/gl_acct_active.xml
+Modified: data/bar/iv_item_active.xml
+Modified: data/cdf/ap_inv_vend_1.cdf
+Modified: data/cdf/ap_vend_active.cdf
+Modified: data/cdf/ar_cust_active.cdf
+Modified: data/cdf/gl_acct_active.cdf
+Modified: data/cdf/iv_item_active.cdf
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
 
-Information about code changes and bug fixes for RELEASE builds can be found at:
+=======================================================================================================================================
+Revision: 6954e6a35ba2b728a87c3bcac8549734e093dd9e
+Author: Christine <chawkins@basis.com>
+Date: 1/24/2017 11:11:09 AM
+Message:
+Per bug 8937; altered query callpoint code to use getTranslation() instead of literals, and to test query_mode$ returned from bax_query in order to preface window title with 'Expresso' if applicable.
+----
+Modified: data/bar/ap_vend_active.xml
+Modified: data/bar/ar_cust_active.xml
+Modified: data/bar/iv_item_active.xml
+Modified: data/cdf/ap_vend_active.cdf
+Modified: data/cdf/ar_cust_active.cdf
+Modified: data/cdf/iv_item_active.cdf
 
-https://bugs.basis.com
+=======================================================================================================================================
+Revision: b0dfed7bd319449b6dbbb062217ae93be076a420
+Author: Christine <chawkins@basis.com>
+Date: 1/25/2017 2:22:41 PM
+Message:
+Per bug 8939; fixed issue where launching customer master twice in a
+session (i.e., launch, then go to expresso and launch it again) can
+result in err 252 after closing 2nd instance, returning to the first and
+moving to a new record, because closing second instance destroys the
+aging widgets.
+----
+Modified: data/bar/arm_custdet.xml
+Modified: data/bar/arm_custmast.xml
+Modified: data/bar/arm_custpmts.xml
+Modified: data/cdf/arm_custmast.cdf
 
+=======================================================================================================================================
+Revision: 93bb4f916d70dddd2a10d77fd1c9db8e4edd51ff
+Author: Christine <chawkins@basis.com>
+Date: 1/26/2017 5:06:11 PM
+Message:
+Per bug 8939; new isDestroyed() method in BBj provides better fix.
+----
+Modified: data/bar/arm_custdet.xml
+Modified: data/bar/arm_custmast.xml
+Modified: data/bar/arm_custpmts.xml
+Modified: data/cdf/arm_custmast.cdf
 
+=======================================================================================================================================
+Revision: 6bbda6cee133eac14ae3050aac357d3ee7b8d22b
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/26/2017 11:36:04 AM
+Message:
+Bug 8940: Corrected upper case GLS_PARAMS filename to lower case
+gls_params.
+----
+Modified: ad/src/adc_v1700conversion.aon
+
+=======================================================================================================================================
+Revision: 4d6ddedc078745cbb6e3c9accd63936c83630d36
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/26/2017 12:47:55 PM
+Message:
+Bug 8940: Barista template names must be upper case.
+----
+Modified: ad/src/adc_v1700conversion.aon
+
+=======================================================================================================================================
+Revision: da57735c1611da34d7e5e0ecdf660ecd97fd2bec
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/26/2017 1:28:25 PM
+Message:
+Bug 8943: Corrected setting of err_msg$ so that conversion process will
+not report success when a fatal error is encountered.
+----
+Modified: ad/src/adc_v1700conversion.aon
+
+=======================================================================================================================================
+Revision: 2520f1d2f5770f45084789fc18d34a1fbc3a3091
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/26/2017 4:59:44 PM
+Message:
+Bug 8944: Skip checking for v1700_glm-02 marker file when upgrade uses
+EM Update Wizard (an OCJ).
+----
+Modified: ad/src/adc_v1700conversion.aon
+
+=======================================================================================================================================
+Revision: 344c30634a89cf67de2f310d95f7c2312c9e2c2d
+Author: Christine <chawkins@basis.com>
+Date: 1/27/2017 6:30:35 PM
+Message:
+Per bug 8952, corrected issue with gls_calendar$ being empty in the update.
+----
+Modified: po/src/pou_recptreg.aon
+
+=======================================================================================================================================
+Revision: c631758bd15a7a7ef062c53de2d8db852f8a30a4
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/30/2017 1:05:50 PM
+Message:
+Bug 8946: Handle EOF when reading glt_transdetail (glt-06) backwards to
+get the earliest period end date.
+----
+Modified: data/bar/gls_calendar.xml
+Modified: data/cdf/gls_calendar.cdf
+
+=======================================================================================================================================
+Revision: 380bf80ea202a2c5e7e81ec28968294b2149d52f
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/30/2017 1:44:22 PM
+Message:
+Bug 8947: Handle possible error 11 when record not found.
+----
+Modified: gl/src/glx_buildactsum.aon
+
+=======================================================================================================================================
+Revision: b22dd4d970667630aa88ffed0413a5b7d91db6ed
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/30/2017 2:10:23 PM
+Message:
+Bug 8948: Corrected break logic so that all years from Beginning through
+Ending are processed.
+----
+Modified: gl/src/glx_buildactsum.aon
+
+=======================================================================================================================================
+Revision: 953d97beb87dff238fafef49f51f1a5c8eb7ed10
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 2/13/2017 1:56:15 PM
+Message:
+Bug 8963: Inserted missing glm_acctsummary records for accounts that
+didn't have any transactions during the year. This should also avoid
+similar problems in the AO_AlignFiscalCalendar::updateAcctSummary()
+method since it insures glm_acctsummary records exist for all accounts
+in all fiscal calendars.
+----
+Modified: gl/src/glx_buildactsum.aon
+
+=======================================================================================================================================
+Revision: 27db27c6242ef5c9b06f08bda989637083f3aecf
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 2/13/2017 2:11:55 PM
+Message:
+Bug 8974: Corrected typo in spelling of ABORT variable.
+----
+Modified: data/bar/gls_calendar.xml
+Modified: data/cdf/gls_calendar.cdf
+
+=======================================================================================================================================
+Revision: 97cecee3bbe0dbfe5614c43147aedad67ef774fd
+Author: Christine <chawkins@basis.com>
+Date: 3/7/2017 11:41:09 AM
+Message:
+Per bug 9005; altered quick copy to correctly initialize the PREFIX in barista.cfg files. Also removed resetting PAYDISC from auto-sync since it's no longer used.
+----
+Modified: ad/src/adx_quickcopywiz.aon
+
+=======================================================================================================================================
+Revision: c017af1cc6a6dce840822d03bb4357bc1b3955a6
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 3/14/2017 5:14:30 PM
+Message:
+Bug 8953: Sped up this utility by reading glt_transdetail (glt-06) with
+PRIMARY key instead of with BY_YEAR_PERIOD so that glm_acctsummary
+(glm-02) doesn't have to be written for each glt_transdetail record.
+Also, not updating progress record for each record.
+----
+Modified: gl/src/glx_buildactsum.aon
+
+=======================================================================================================================================
+Revision: fc31cf507bf56157ac812270d7b5a6607ee18417
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 3/14/2017 7:31:17 PM
+Message:
+Bug 9018: Added "cur_per" to the namespace in BSHO.
+----
+Modified: data/bar/glm_acctsumhdr.xml
+Modified: data/cdf/glm_acctsumhdr.cdf
+
+=======================================================================================================================================
+Revision: 26c75e711f4acb730f811c6c5d13278366efbef3
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 3/20/2017 4:15:54 PM
+Message:
+Bug 9012: Sped up AO_AlignFiscalCalendar::alignCalendar method by reading
+glt_transdetail (glt-06) with PRIMARY key instead of with BY_YEAR_PERIOD so that
+glm_acctsummary (glm-02) doesn't have to be written for each glt_transdetail record.
+----
+Modified: gl/src/glo_AO_AlignFiscalCalendar.aon
+Modified: gl/src/glx_buildactsum.aon
+
+=======================================================================================================================================
+Revision: d9453ba1d2f03d47621897a56f0e9c45e9445ebd
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 3/21/2017 2:26:51 PM
+Message:
+Bug 9024: Added missing "SETERR 0" to exceptions thrown outside a
+method's default error handler.
+----
+Modified: ad/src/ado_file.src
+Modified: gm/src/gmo_AO_Gm2AonCustomer.aon
