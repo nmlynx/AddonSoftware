@@ -148,7 +148,7 @@ rem --- Main read
         read record (opt01_dev,end=*break) opt01a$
         if cvs(theFirm$,2)<>"" and opt01a.firm_id$<>theFirm$ break
         if firm_id$<>opt01a.firm_id$ then gosub init_firm
-        if opt01a.invoice_type$<>"S" then continue
+        if skip_firm or opt01a.invoice_type$<>"S" then continue
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
 rem --- Position Invoice History Detail File
@@ -602,11 +602,13 @@ done: rem --- All done
 init_firm: rem --- Firm specific initializations
 
     firm_id$=opt01a.firm_id$
+    skip_firm=1
 
     rem --- Retrieve parameter records for this firm
     sas01a_key$=firm_id$+"SA00"
-    find record (sas01_dev,key=sas01a_key$,err=std_missing_params) sas01a$
-    find record (ivs01_dev,key=firm_id$+"IV00",err=std_missing_params) ivs01a$
+    find record (sas01_dev,key=sas01a_key$,err=*return) sas01a$
+    skip_firm=0
+    find record (ivs01_dev,key=firm_id$+"IV00",err=std_missing_params) ivs01a$; rem --- OP requires IV
     ivprecision=num(ivs01a.precision$)
     precision ivprecision
 
