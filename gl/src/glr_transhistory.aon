@@ -584,6 +584,17 @@ new_period: rem --- New period
     y$=glt06a.posting_year$
     m$=glt06a.posting_per$
     period=num(m$)
+
+    rem --- Reset beginning balance for Period 1 if not an Asset/Liability/Capital account
+    if period=1 and pos(glm01a.gl_acct_type$="ALC")=0 then
+       rem --- Reset beginning balance to zero
+       credits=0
+       debits=0
+       endbal=0
+       units=0
+       dim et[2],n[2]
+    endif
+
     find record (gls_calendar_dev,key=firm_id$+y$,err=*next) gls_calendar$
     x$=field(gls_calendar$,"abbr_name_"+str(period:"00"))
     t1$=y$+m$
