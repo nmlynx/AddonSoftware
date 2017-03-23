@@ -1613,11 +1613,13 @@ rem ==========================================================================
 	rows = 0
 	tot_payments=0
 
-	for x=1 to vect_size step user_tpl.MasterCols
-		if vectInvoicesMaster!.getItem(x-1)="Y"
-			rows=rows+1
-		endif
-	next x
+	if vectInvoicesMaster!.size() > 0 then
+		for x=1 to vect_size step user_tpl.MasterCols
+			if vectInvoicesMaster!.getItem(x-1)="Y"
+				rows=rows+1
+			endif
+		next x
+	endif
 
 	if rows > 0 then
 		for curr_row=1 to rows
@@ -1659,7 +1661,7 @@ rem				endif
 					apt01a.invoice_amt = apt01a.invoice_amt + apt11a.trans_amt
 					apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
 				wend
-                if apt01a.discount_amt<0 and apt01a.invoice_amt>0 then apt01a.discount_amt=0
+                			if apt01a.discount_amt<0 and apt01a.invoice_amt>0 then apt01a.discount_amt=0
 
 				gridInvoices!.setCellState(row_no,0,1)
 
@@ -1691,7 +1693,7 @@ rem				endif
 :					str(payment_amt)
 :				)
 
-		rem --- Checked -> not checked
+				rem --- Checked -> not checked
 
 			else
 				rem --- re-initialize
@@ -1714,7 +1716,7 @@ rem				endif
 					apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
 					apt01a.retention = apt01a.retention + apt11a.trans_ret
 				wend
-                if apt01a.discount_amt<0 and apt01a.invoice_amt>0 then apt01a.discount_amt=0
+                			if apt01a.discount_amt<0 and apt01a.invoice_amt>0 then apt01a.discount_amt=0
 				inv_amt = apt01a.invoice_amt
 				disc_amt = apt01a.discount_amt
 				ret_amt = apt01a.retention
@@ -1745,12 +1747,12 @@ rem				endif
 	endif
 rem --- Calculate current value of selected invoices
 	tot_payments=0
-	if vectInvoicesMaster!.size() > 0
-	for x=1 to vect_size step user_tpl.MasterCols
-		if vectInvoicesMaster!.getItem(x)="Y"
-			tot_payments=tot_payments+num(vectInvoicesMaster!.getItem(x+12))
-		endif
-	next x
+	if vectInvoicesMaster!.size() > 0 then
+		for x=1 to vect_size step user_tpl.MasterCols
+			if vectInvoicesMaster!.getItem(x)="Y"
+				tot_payments=tot_payments+num(vectInvoicesMaster!.getItem(x+12))
+			endif
+		next x
 	endif
 
 	callpoint!.setDevObject("tot_payments",str(tot_payments))
