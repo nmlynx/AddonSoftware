@@ -788,10 +788,10 @@ rem --- Create either a pie chart or bar chart - the latter if any of the aging 
 	flat = 0
 	legend=0
 	numSlices=6
-	widgetX=ctl3!.getX()
 	widgetY=ctl1!.getY()
 	widgetHeight=ctl2!.getY()+ctl2!.getHeight()-ctl1!.getY()
-	widgetWidth=widgetHeight+widgetHeight*.5
+	widgetWidth=widgetHeight+widgetHeight*.75
+	widgetX=ctl3!.getX()+ctl3!.getWidth()-widgetWidth
 
 	agingDashboardPieWidget! = EmbeddedWidgetFactory.createPieChartEmbeddedWidget(name$,title$,chartTitle$,flat,legend,numSlices)
   	agingPieWidget! = agingDashboardPieWidget!.getWidget()
