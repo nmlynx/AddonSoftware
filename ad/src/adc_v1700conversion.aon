@@ -473,6 +473,9 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
 
         rem --- Need to build GLM_ACCTSUMMARY, GLM_ACCTBUDGET and GLM_BUDGETPLANS from old/source GLM_ACCTSUMMARY (glm-02)
         rem --- v1700_glm-02 marker file will never exist with OCJ, but might with DataPort
+        conv_marker_name$="v1700_glm-02"
+        conv_marker_file$=dataDir$+conv_marker_name$
+        convmarkerFile!=new File(conv_marker_file$)
         use ::glo_DisplayColumns.aon::DisplayColumns
         if convCtrl!.getProperty("data_source")="OCJ" then
             rem --- Data upgraded via EM Update Wizard (OCJ)
@@ -573,9 +576,6 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
             rem --- Need to build GLM_ACCTBUDGET and GLM_BUDGETPLANS from GLM_ACCTSUMMARY
 
             rem --- Does conversion marker file exist for splitting GLM_ACCTSUMMARY (glm-02) into three files?
-            conv_marker_name$="v1700_glm-02"
-            conv_marker_file$=dataDir$+conv_marker_name$
-            convmarkerFile!=new File(conv_marker_file$)
             if convmarkerFile!.exists() then
                 rem --- Verify required files are present
                 missingFiles!=BBjAPI().makeVector()
