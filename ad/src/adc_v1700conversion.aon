@@ -336,7 +336,7 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
                 if enddate$(1,2)="02" then
                     if enddate$(1,2)<glsCalendar.per_ending_01$(1,2) then calendar_year=calendar_year+1
                     if enddate$="0229" and !Calendar!.isLeapYear(calendar_year) then field glsCalendar$,per_ending$="0228"
-                    if enddate$="0228" and Calendar!.isLeapYear(calendar_year) and glsCalendar.adjust_february then field glsCalendar$,per_ending$="0229"
+                    if enddate$="0228" and Calendar!.isLeapYear(calendar_year) and glsParams.adjust_february then field glsCalendar$,per_ending$="0229"
                 endif
             next i
             
@@ -424,7 +424,7 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
                 if enddate$(1,2)="02" then
                     if enddate$(1,2)<glsCalendar.per_ending_01$(1,2) then calendar_year=calendar_year+1
                     if enddate$="0229" and !Calendar!.isLeapYear(calendar_year) then field glsCalendar$,per_ending$="0228"
-                    if enddate$="0228" and Calendar!.isLeapYear(calendar_year) and glsCalendar.adjust_february then field glsCalendar$,per_ending$="0229"
+                    if enddate$="0228" and Calendar!.isLeapYear(calendar_year) and glsParams.adjust_february then field glsCalendar$,per_ending$="0229"
                 endif
             next i
             
