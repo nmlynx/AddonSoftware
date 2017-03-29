@@ -179,11 +179,15 @@ rem --- Now display all of these things and disable key fields
 	if cvs(callpoint!.getColumnData("SAM_WAREHSE.YEAR"),3)<>""
 		SAWidget!=callpoint!.getDevObject("barWidget")
 		widget!=SAWidget!.getWidget()
-		gosub set_widget_sales_data
+		filterLeft! = SAWidget!.getDashboardWidgetFilterLeft()
+		if filterLeft!.getKey()="sales"
+			gosub set_widget_sales_data
+		else
+			gosub set_widget_units_data
+		endif
 		SAWidgetControl!=callpoint!.getDevObject("barWidgetControl")
 		SAWidgetControl!.setVisible(1)
 	endif
-
 [[SAM_WAREHSE.ARAR]]
 rem --- Create totals
 
@@ -192,11 +196,15 @@ rem --- Create totals
 	if cvs(callpoint!.getColumnData("SAM_WAREHSE.YEAR"),3)<>""
 		SAWidget!=callpoint!.getDevObject("barWidget")
 		widget!=SAWidget!.getWidget()
-		gosub set_widget_sales_data
+		filterLeft! = SAWidget!.getDashboardWidgetFilterLeft()
+		if filterLeft!.getKey()="sales"
+			gosub set_widget_sales_data
+		else
+			gosub set_widget_units_data
+		endif
 		SAWidgetControl!=callpoint!.getDevObject("barWidgetControl")
 		SAWidgetControl!.setVisible(1)
 	endif
-
 [[SAM_WAREHSE.AREC]]
 rem --- Enable key fields
 	callpoint!.setColumnEnabled("SAM_WAREHSE.YEAR",1)
@@ -435,6 +443,7 @@ rem --- create StackedBarChartEmbeddedWidget to show sales and cost for selected
 	toolTip$ = "Select an analysis type for the chart"
 	filterListButton! = SAWidget!.addFilter(filterName$, filterHashMap!, toolTip$, DashboardWidget.getDOCK_LEFT(), DashboardWidget.getFILTER_TYPE_LISTBUTTON())
 	filterListButton!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnFilterSelectAnalysisType")
+	filterListButton!.selectFilter("sales")
 
 	SAWidgetControl! = new EmbeddedWidgetControl(SAWidget!,Form!,widgetX,widgetY,widgetWidth,widgetHeight,$$)
 	SAWidgetControl!.setVisible(0)
@@ -493,7 +502,8 @@ rem ========================================================
 	    widget!.setDataSetValue(str(x:"00"),"Prior Cost",round(num(hshLastYear!.get("cost"+str(x:"00")))/rangeDivisor,2))
 	next x
 
-	widget!.refresh()
+	filterLeft!.selectFilter("sales")
+	SAWidget!.refresh()
 
 return
 
@@ -523,6 +533,7 @@ rem ========================================================
 	    widget!.setDataSetValue(str(x:"00"),"Prior Units",num(hshLastYear!.get("units"+str(x:"00")))/rangeDivisor)
 	next x
 
-	widget!.refresh()
+	filterLeft!.selectFilter("units")
+	SAWidget!.refresh()
 
 return
