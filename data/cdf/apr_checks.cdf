@@ -1,3 +1,18 @@
+[[APR_CHECKS.ARER]]
+rem --- Use default check form order if available
+	default_form_order$=callpoint!.getDevObject("default_form_order")
+	if cvs(default_form_order$,2)<>"" then
+		formorderListButton!=callpoint!.getControl("APR_CHECKS.FORM_ORDER")
+		formorderVector!=formorderListButton!.getAllItems()
+		for i=0 to formorderVector!.size()-1
+			if pos(default_form_order$=formorderVector!.getItem(i)) then
+				formorderListButton!.selectIndex(i)
+				break
+			endif
+		next i
+	endif
+[[APR_CHECKS.AREC]]
+
 [[APR_CHECKS.VENDOR_ID.AVAL]]
 rem "VENDOR INACTIVE - FEATURE"
 vendor_id$ = callpoint!.getUserInput()
@@ -92,6 +107,7 @@ rem --- Get parameters
 	aps01_key$=firm_id$+"AP00"
 	readrecord(aps01_dev,key=aps01_key$,dom=std_missing_params)aps01a$
 	callpoint!.setDevObject("multi_types",aps01a.multi_types$)
+	callpoint!.setDevObject("default_form_order",aps01a.form_order$)
 	if aps01a.multi_types$ <> "Y" then
 		ctl_name$="APR_CHECKS.AP_TYPE"
 		ctl_stat$="I"
