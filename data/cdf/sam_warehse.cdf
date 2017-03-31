@@ -1,3 +1,20 @@
+[[SAM_WAREHSE.ADIS]]
+rem --- Create totals
+
+	gosub calc_totals
+
+	if cvs(callpoint!.getColumnData("SAM_WAREHSE.YEAR"),3)<>""
+		cwin!=callpoint!.getDevObject("cwin")
+		SAWidget!=callpoint!.getDevObject("barWidget")
+		widget!=SAWidget!.getWidget()
+		filterLeft! = SAWidget!.getDashboardWidgetFilterLeft()
+		if filterLeft!.getKey()="sales"
+			gosub set_widget_sales_data
+		else
+			gosub set_widget_units_data
+		endif
+		cwin!.setVisible(1)
+	endif
 [[SAM_WAREHSE.ASHO]]
 rem - create stacked bar chart widget
 
@@ -177,6 +194,7 @@ rem --- Now display all of these things and disable key fields
 	callpoint!.setDevObject("hiCount",hi_count)
 
 	if cvs(callpoint!.getColumnData("SAM_WAREHSE.YEAR"),3)<>""
+		cwin!=callpoint!.getDevObject("cwin")
 		SAWidget!=callpoint!.getDevObject("barWidget")
 		widget!=SAWidget!.getWidget()
 		filterLeft! = SAWidget!.getDashboardWidgetFilterLeft()
@@ -185,25 +203,7 @@ rem --- Now display all of these things and disable key fields
 		else
 			gosub set_widget_units_data
 		endif
-		SAWidgetControl!=callpoint!.getDevObject("barWidgetControl")
-		SAWidgetControl!.setVisible(1)
-	endif
-[[SAM_WAREHSE.ARAR]]
-rem --- Create totals
-
-	gosub calc_totals
-
-	if cvs(callpoint!.getColumnData("SAM_WAREHSE.YEAR"),3)<>""
-		SAWidget!=callpoint!.getDevObject("barWidget")
-		widget!=SAWidget!.getWidget()
-		filterLeft! = SAWidget!.getDashboardWidgetFilterLeft()
-		if filterLeft!.getKey()="sales"
-			gosub set_widget_sales_data
-		else
-			gosub set_widget_units_data
-		endif
-		SAWidgetControl!=callpoint!.getDevObject("barWidgetControl")
-		SAWidgetControl!.setVisible(1)
+		cwin!.setVisible(1)
 	endif
 [[SAM_WAREHSE.AREC]]
 rem --- Enable key fields
@@ -226,6 +226,13 @@ rem --- Enable key fields
 	callpoint!.setColumnData("<<DISPLAY>>.LY_SALES_TOT","0")
 	callpoint!.setColumnData("<<DISPLAY>>.LY_SHIP_TOT","0")
 
+rem --- Enable/Disable Summary button
+
+	whse$=callpoint!.getColumnData("SAM_WAREHSE.WAREHOUSE_ID")
+	prod_type$=callpoint!.getColumnData("SAM_WAREHSE.PRODUCT_TYPE")
+	item_no$=callpoint!.getColumnData("SAM_WAREHSE.ITEM_ID")
+	gosub summ_button
+
 rem --- clear out the widget
 
 	SAWidget!=callpoint!.getDevObject("barWidget")
@@ -233,8 +240,8 @@ rem --- clear out the widget
 	widget!.clearDataSet()
 	widget!.refresh()
 
-	SAWidgetControl!=callpoint!.getDevObject("barWidgetControl")
-	SAWidgetControl!.setVisible(0)
+	cwin!=callpoint!.getDevObject("cwin")
+	cwin!.setVisible(0)
 
 	callpoint!.setStatus("REFRESH")
 [[SAM_WAREHSE.BSHO]]
@@ -264,8 +271,6 @@ rem --- disable total elements
 	callpoint!.setColumnEnabled("<<DISPLAY>>.TCST",-1)
 	callpoint!.setColumnEnabled("<<DISPLAY>>.TSLS",-1)
 
-rem --- Disable Summary Button
-	callpoint!.setOptionEnabled("SUMM",0)
 [[SAM_WAREHSE.<CUSTOM>]]
 rem ========================================================
 calc_totals:
@@ -400,15 +405,17 @@ rem ========================================================
 	use ::dashboard/widget.bbj::ChartWidget
 	use java.util.LinkedHashMap
 
-	ctl_name$="SAM_WAREHSE.YEAR"
-	ctlContext=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLC"))
-	ctlID=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI"))
-	ctl1!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
+	ctl1!=callpoint!.getControl("SAM_WAREHSE.YEAR")
+	ctl2!=callpoint!.getControl("<<DISPLAY>>.LY_SALES_01")
 
-	ctl_name$="<<DISPLAY>>.LY_SALES_01"
-	ctlContext=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLC"))
-	ctlID=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI"))
-	ctl2!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
+	widgetY=ctl1!.getY()
+	widgetHeight=ctl2!.getY()-ctl2!.getHeight()-ctl1!.getY()-5
+	widgetWidth=widgetHeight+widgetHeight*.75
+	widgetX=ctl2!.getX()+ctl2!.getWidth()-widgetWidth
+
+	ctxt=SysGUI!.getAvailableContext()
+	custom_ctl=num(stbl("+CUSTOM_CTL"))
+	cwin!=form!.addChildWindow(custom_ctl,widgetX,widgetY,widgetWidth,widgetHeight, "", $00000810$, ctxt)
 
 rem --- create StackedBarChartEmbeddedWidget to show sales and cost for selected and prior years
 
@@ -420,12 +427,6 @@ rem --- create StackedBarChartEmbeddedWidget to show sales and cost for selected
 	flat=0
 	orientation=StackedBarChartWidget.getORIENTATION_HORIZONTAL() 
 	legend=1
-
-	rem widgetX=ctl2!.getX()
-	widgetY=ctl1!.getY()
-	widgetHeight=ctl2!.getY()-ctl2!.getHeight()-ctl1!.getY()-5
-	widgetWidth=widgetHeight+widgetHeight*.75
-	widgetX=ctl2!.getX()+ctl2!.getWidth()-widgetWidth
 
 	SAWidget! = EmbeddedWidgetFactory.createStackedBarChartEmbeddedWidget(widgetName$,title$,chartTitle$,domainTitle$,rangeTitle$,flat,orientation,legend)
 	widget! = SAWidget!.getWidget()
@@ -445,11 +446,10 @@ rem --- create StackedBarChartEmbeddedWidget to show sales and cost for selected
 	filterListButton!.setCallback(DashboardWidgetFilter.getON_FILTER_SELECT(),pgm(-2) + "::OnFilterSelectAnalysisType")
 	filterListButton!.selectFilter("sales")
 
-	SAWidgetControl! = new EmbeddedWidgetControl(SAWidget!,Form!,widgetX,widgetY,widgetWidth,widgetHeight,$$)
-	SAWidgetControl!.setVisible(0)
+	SAWidgetControl! = new EmbeddedWidgetControl(SAWidget!,cwin!,0,0,widgetWidth,widgetHeight,$$)
 
+	callpoint!.setDevObject("cwin",cwin!)
 	callpoint!.setDevObject("barWidget",SAWidget!)
-	callpoint!.setDevObject("barWidgetControl",SAWidgetControl!)
 
 return
 
