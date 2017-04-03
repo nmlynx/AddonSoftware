@@ -1866,6 +1866,9 @@ rem ==========================================================================
 	callpoint!.setColumnData("<<DISPLAY>>.AGING_FUTURE", custdet_tpl.aging_future$)
 	callpoint!.setColumnData("<<DISPLAY>>.TOT_AGING",    user_tpl.balance$)
 
+	rem --- also display cust type
+	callpoint!.setColumnData("<<DISPLAY>>.CUST_TP",   custdet_tpl.customer_type$)
+
 	user_tpl.credit_limit = custdet_tpl.credit_limit
 
 	return
