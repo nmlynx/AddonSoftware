@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-03-29
+ Report Date:   2017-04-03
  Report Branch: AddonSoftware 17.00
  Last Release:  AddonSoftware 16.24
 =======================================================================================================================================
@@ -282,3 +282,16 @@ Bug 9033: Moved initialization of conv_marker_name$ so that it shouldn't
 ever be blank and cause an error 47.
 ----
 Modified: ad/src/adc_v1700conversion.aon
+
+=======================================================================================================================================
+Revision: 38c391fc55d5d0e099b55343cd37509cb29ee015
+Author: Christine <chawkins@basis.com>
+Date: 4/3/2017 2:10:00 PM
+Message:
+Per bug 9038; add display field for cust type (read from arm_custdet) and un-hide the pricing code field. Both are display only. In Historical Invoices, did not add the cust type since there is no other code to pull values from arm_custdet.
+----
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/bar/opt_invhdr.xml
+Modified: data/cdf/ope_invhdr.cdf
+Modified: data/cdf/ope_ordhdr.cdf
