@@ -304,3 +304,21 @@ Message:
 Bug 9039: Added '0000000' Sequence Mask for AR_INV_NO Sequence Number.
 ----
 Modified: data/sync/ads_sequences~01ar_inv_no.xml
+
+=======================================================================================================================================
+Revision: b316da1b2473cd513f596494f6fe10229b3ef908
+Author: Christine <chawkins@basis.com>
+Date: 4/4/2017 10:54:39 AM
+Message:
+Per bugs 9037 and 7372; altered AP Payment Selection to:
+1. Allow selection of individual invoices that are on hold and let user continue or cancel.
+2. Warn user just once if their selection contains one or more invoices that are on hold, instead of popping the warning for each held invoice.
+
+(cherry picked from commit 55c68171620da372004d10bd796beb5d544fcc13)
+----
+Modified: data/bar/ape_payselect.xml
+Modified: data/cdf/ape_payselect.cdf
+Added: data/sync/ads_messages~ap_inv_rmvhold.xml
+Added: data/sync/ads_messages~ap_inv_sel_hold.xml
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
