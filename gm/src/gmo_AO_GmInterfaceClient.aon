@@ -1381,8 +1381,7 @@ getGmContactInfo_error:rem --- Method error trap/handler
             seterr startClient_error
             
             rem --- Get Barista's BBjAdminBase object for current user
-            barNSAdmin! = BBjAPI().getNamespace("adminobjects","barista",1)
-            barAdmin! = barNSAdmin!.getValue("+bar_admin_"+cvs(stbl("+USER_ID"),11),err=*next)
+            barAdmin! = BBjAPI().getGroupNamespace().getValue("+bar_admin_"+cvs(stbl("+USER_ID"),11),err=*next)
             if barAdmin!<>null() then
                 rem --- Locate gmo_GmInterfaceClient.aon in EM's task queue
                 taskQueue! = barAdmin!.getTaskQueue()

@@ -1691,8 +1691,7 @@ BankAccountBalancesChartWidgetClick:
             gl_account$=pad(gl_account$,gl_accnt_size,"0")               
 
             rem --- Launch Account Summary Activity form for this GL account
-            rdNSAdmin! = BBjAPI().getNamespace("adminobjects", "barista", 1)
-            rdAdmin! = rdNSAdmin!.getValue("+bar_admin_" + cvs(stbl("+USER_ID"), 11))
+            rdAdmin! = BBjAPI().getGroupNamespace().getValue("+bar_admin_" + cvs(stbl("+USER_ID"), 11))
             query_user$=rdAdmin!.getUser()
             query_pass$=rdAdmin!.getPassword()
             
@@ -1819,8 +1818,7 @@ rem ==============================================
 	dashboardWidget! = linkSelectEvent!.getDashboardWidget()
 	widget! = dashboardWidget!.getWidget()
 	
-	rdNSAdmin! = BBjAPI().getNamespace("adminobjects", "barista", 1)
-	rdAdmin! = rdNSAdmin!.getValue("+bar_admin_" + cvs(stbl("+USER_ID"), 11))
+	rdAdmin! = BBjAPI().getGroupNamespace().getValue("+bar_admin_" + cvs(stbl("+USER_ID"), 11))
 	query_user$=rdAdmin!.getUser()
 	query_pass$=rdAdmin!.getPassword()
 
