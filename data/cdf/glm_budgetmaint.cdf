@@ -31,13 +31,19 @@ rem --- Update grid data when leave checkbox and value has changed
 			if pos(":4:"=recordType$) then
 				nextYear$=str(gls_cur_yr+1:"0000")
 				align_next=alignCalendar!.canAlignCalendar(nextYear$)
-				if align_next then nextTripKey$=alignCalendar!.alignCalendar(nextYear$)
+				if align_next then
+					Form!.setCursor(Form!.CURSOR_WAIT)
+					nextTripKey$=alignCalendar!.alignCalendar(nextYear$)
+					Form!.setCursor(Form!.CURSOR_NORMAL)
+				endif
 			endif
 			for i=1 to 5
 				priorYear$=str(gls_cur_yr-i:"0000")
 				align_prior=alignCalendar!.canAlignCalendar(priorYear$)
 				if align_prior then
+					Form!.setCursor(Form!.CURSOR_WAIT)
 					priorTripKey$=alignCalendar!.alignCalendar(priorYear$)
+					Form!.setCursor(Form!.CURSOR_NORMAL)
 					if priorTripKey$="" then break
 				endif
 			next i
