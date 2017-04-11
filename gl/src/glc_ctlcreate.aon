@@ -306,7 +306,7 @@ rem --- or returned.
     rem --- values from the parameter records
 
         glcontrol.firm_id$=firm_id$
-        glcontrol.system_id$=adm04_key$
+        glcontrol.system_id$=stbl("+AON_APPCOMPANY")+pad(module$,3)
         glcontrol.post_gl$="Y"
         glcontrol.current_per$=sysperiod$
         glcontrol.current_year$=sysyear$
