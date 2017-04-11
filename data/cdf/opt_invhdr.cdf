@@ -1,3 +1,24 @@
+[[OPT_INVHDR.AR_INV_NO.AVAL]]
+rem --- If missing, set the customer for this invoice.
+	if cvs(callpoint!.getColumnData("OPT_INVHDR.CUSTOMER_ID"),3)="" then
+		opt_invhdr_dev = fnget_dev("OPT_INVHDR")
+		dim opt_invhdr$:fnget_tpl$("OPT_INVHDR")
+		ar_inv_no$=callpoint!.getUserInput()
+
+		rem --- Find customer for this historical invioce
+		customer_id$=""
+		read(opt_invhdr_dev,key=firm_id$+"  "+ar_inv_no$,knum="AO_INV_CUST",dom=*next)
+		while 1
+			readrecord(opt_invhdr_dev,end=*break)opt_invhdr$
+			if opt_invhdr.firm_id$+opt_invhdr.ar_type$+opt_invhdr.ar_inv_no$<>firm_id$+"  "+ar_inv_no$ then break
+			if opt_invhdr.trans_status$<>"U" then continue
+			callpoint!.setColumnData("OPT_INVHDR.CUSTOMER_ID",opt_invhdr.customer_id$,1)
+			break
+		wend
+
+		rem --- Reset index back to AO_STAT_CUST_INV.
+		read(opt_invhdr_dev,key=firm_id$,knum="AO_STAT_CUST_INV",dom=*next)
+	endif
 [[OPT_INVHDR.AOPT-COMM]]
 rem --- Display Comments form
 
