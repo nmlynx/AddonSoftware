@@ -431,3 +431,27 @@ customer ID too.
 ----
 Modified: data/bar/opt_invhdr.xml
 Modified: data/cdf/opt_invhdr.cdf
+
+=======================================================================================================================================
+Revision: 7a12934b3fda57d7b306d582a2a534c9f6ba4338
+Author: Christine <chawkins@basis.com>
+Date: 4/10/2017 5:08:04 PM
+Message:
+Per bug 9047; corrected issue that was leaving module (AP, AR, etc.) out of +GLCONTROL.
+----
+Modified: gl/src/glc_ctlcreate.aon
+
+=======================================================================================================================================
+Revision: 810269402e324aa3bede773963b3e42db6316964
+Author: Christine <chawkins@basis.com>
+Date: 4/10/2017 5:29:10 PM
+Message:
+Per bug 8431; changed icon for GENERIC_OK message to be an info instead of warning icon, then created a GENERIC_WARN message just like GENERIC_OK, except it uses a warning icon. Corrected places in the system where GENERIC_OK is used when GENERIC_WARN would be more appropriate.
+----
+Modified: ad/src/adx_init_data.aon
+Modified: ap/src/apc_imageupload.aon
+Modified: data/bar/ape_payselect.xml
+Modified: data/cdf/ape_payselect.cdf
+Modified: data/sync/ads_messages~generic_ok.xml
+Added: data/sync/ads_messages~generic_warn.xml
+Modified: gl/src/glc_datecheck.aon
