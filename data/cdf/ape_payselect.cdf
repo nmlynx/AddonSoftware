@@ -73,7 +73,7 @@ rem --- Display the images associated with the selected invoices in the grid.
 		break
 	endif
 
-rem --- Displaye invoice images in the browser
+rem --- Display invoice images in the browser
 	invimage_dev=fnget_dev("@APT_INVIMAGE")
 	dim invimage$:fnget_tpl$("@APT_INVIMAGE")
 	image_count =0
@@ -154,7 +154,7 @@ rem --- Approve the invoice selected in the grid
 	endif
 
 	if rowsSelected!.size() =  0 then
-		msg_id$="GENERIC_OK"
+		msg_id$="GENERIC_WARN"
 		dim msg_tokens$[1]
 		msg_tokens$[1]=Translate!.getTranslation("AON_MUST_SELECT_INVOICE_ROW")
 		gosub disp_message
@@ -903,7 +903,7 @@ rem ==========================================================================
 	if usertype$ = "R" and not_reviewed<>0 then
 		rem --- Report it and go, all invoices must be reviewed prior to emailing the approvers
 		msg$ = msg$ + Translate!.getTranslation("AON_INV_AWAITING_REVIEW")
-		msg_id$="GENERIC_OK"
+		msg_id$="GENERIC_WARN"
 		dim msg_tokens$[1]
 		msg_tokens$[1]=msg$
 		gosub disp_message
