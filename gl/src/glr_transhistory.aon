@@ -53,6 +53,7 @@ rem --- Dimension string templates
 
 rem --- Assign input values to local variables
 
+    audit_no$=Option!.getOptionData("GL_ADT_NO")
     begper$=Option!.getOptionData("BEG_GL_PER")
     begyear$=Option!.getOptionData("BEG_YEAR")
     endper$=Option!.getOptionData("END_GL_PER")
@@ -80,7 +81,7 @@ rem --- Retrieve parameter records
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     dim begCalendar$:fattr(gls_calendar$)
     find record (gls_calendar_dev,key=firm_id$+begyear$,err=*next) begCalendar$
-    if cvs(begCalendar.firm_id$,2)="" then
+    if audit_no$="" and cvs(begCalendar.firm_id$,2)="" then
         msg_id$="AD_NO_FISCAL_CAL"
         dim msg_tokens$[1]
         msg_tokens$[1]=begyear$
@@ -89,7 +90,7 @@ rem --- Retrieve parameter records
     endif
     dim endCalendar$:fattr(gls_calendar$)
     find record (gls_calendar_dev,key=firm_id$+endyear$,err=*next) endCalendar$
-    if cvs(endCalendar.firm_id$,2)="" then
+    if audit_no$="" and cvs(endCalendar.firm_id$,2)="" then
         msg_id$="AD_NO_FISCAL_CAL"
         dim msg_tokens$[1]
         msg_tokens$[1]=endyear$
@@ -103,7 +104,6 @@ rem --- Retrieve parameter records
     call "adc_getmask.aon","","GL","A","",m1$,0,m1
     call "adc_getmask.aon","","GL","U","",m2$,0,m2
     mp=13
-    headings=5
     inquiry$=cvs(inquiry$,2)
     if inquiry$<>"" then headings=3
 
@@ -135,7 +135,7 @@ rem --- Give unique rd_alias_id$ for summary and detail reports so columns can b
 
 rem --- Initializations
 
-    dim headings$[headings],stars$(m2,"*")
+    dim stars$(m2,"*")
     when$=sysinfo.system_date$
     l1=0
     nothing_to_print=1
@@ -200,39 +200,52 @@ rem --- Document columns
 
 rem --- Initialize report headings
 
+    if audit_no$="" then
+        headings=5
+        dim headings$[headings]
+        if cvs(begacct$,2)="" x$=Translate!.getTranslation("AON_FIRST_ACCOUNT")
+:                    else x$=Translate!.getTranslation("AON_ACCOUNT_")+fnmask$(begacct$(1,m0),m0$)
+        if cvs(endacct$,2)="" y$=Translate!.getTranslation("AON_LAST_ACCOUNT")
+:                    else y$=Translate!.getTranslation("AON_ACCOUNT_")+fnmask$(endacct$(1,m0),m0$)
+        x$=Translate!.getTranslation("AON_FROM_")+x$+Translate!.getTranslation("AON__THROUGH_")+y$
+        if cvs(wildcard$,2)<>"" then x$=x$+Translate!.getTranslation("AON__(WILDCARD_")+$22$+cvs(wildcard$,2)+$22$+")"
+        headings$[2]=x$
+        x$="",y$=""
+        x$=field(begCalendar$,"period_name_"+begper$,err=*next)
+        y$=field(endCalendar$,"period_name_"+endper$,err=*next)
+        if x$<>"" and y$<>""
+            headings$[3]=Translate!.getTranslation("AON_FROM_")+cvs(x$,2)+Translate!.getTranslation("AON__(PERIOD_")+begper$+") "+begyear$+Translate!.getTranslation("AON__THROUGH_")+
+:           cvs(y$,2)+Translate!.getTranslation("AON__(PERIOD_")+endper$+") "+endyear$
+            if detail$="D" x$=Translate!.getTranslation("AON_DETAIL") else x$=Translate!.getTranslation("AON_SUMMARY")
+            if cvs(journal$,2)="" y$=Translate!.getTranslation("AON_ALL_JOURNALS") 
+:           else y$=Translate!.getTranslation("AON_JOURNAL_ID_")+glm03a.journal_id$+" "+cvs(glm03a.code_desc$,2)
+            headings$[4]=x$+Translate!.getTranslation("AON__REPORT_FOR_")+y$
+        else
+            if detail$="D" x$=Translate!.getTranslation("AON_DETAIL") else x$=Translate!.getTranslation("AON_SUMMARY")
+            if cvs(journal$,2)="" y$=Translate!.getTranslation("AON_ALL_JOURNALS") 
+:           else y$=Translate!.getTranslation("AON_JOURNAL_ID_")+glm03a.journal_id$+" "+cvs(glm03a.code_desc$,2)
+            headings$[3]=x$+Translate!.getTranslation("AON__REPORT_FOR_")+y$
+        endif
+        headings$[5]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_GENERAL_LEDGER_ACCOUNTS")+" = "+inactive$
+    else
+        headings=3
+        dim headings$[headings]
+        headings$[3]=Translate!.getTranslation("AON_AUDIT_NUMBER")+": "+audit_no$
+    endif
     headings$[0]=cvs(sysinfo.firm_name$,2)
     headings$[1]=cvs(sysinfo.task_desc$,2)
-    if cvs(begacct$,2)="" x$=Translate!.getTranslation("AON_FIRST_ACCOUNT")
-:                    else x$=Translate!.getTranslation("AON_ACCOUNT_")+fnmask$(begacct$(1,m0),m0$)
-    if cvs(endacct$,2)="" y$=Translate!.getTranslation("AON_LAST_ACCOUNT")
-:                    else y$=Translate!.getTranslation("AON_ACCOUNT_")+fnmask$(endacct$(1,m0),m0$)
-    x$=Translate!.getTranslation("AON_FROM_")+x$+Translate!.getTranslation("AON__THROUGH_")+y$
-    if cvs(wildcard$,2)<>"" then x$=x$+Translate!.getTranslation("AON__(WILDCARD_")+$22$+cvs(wildcard$,2)+$22$+")"
-    headings$[2]=x$
-    x$="",y$=""
-    x$=field(begCalendar$,"period_name_"+begper$,err=*next)
-    y$=field(endCalendar$,"period_name_"+endper$,err=*next)
-    if x$<>"" and y$<>""
-        headings$[3]=Translate!.getTranslation("AON_FROM_")+cvs(x$,2)+Translate!.getTranslation("AON__(PERIOD_")+begper$+") "+begyear$+Translate!.getTranslation("AON__THROUGH_")+
-:           cvs(y$,2)+Translate!.getTranslation("AON__(PERIOD_")+endper$+") "+endyear$
-        if detail$="D" x$=Translate!.getTranslation("AON_DETAIL") else x$=Translate!.getTranslation("AON_SUMMARY")
-        if cvs(journal$,2)="" y$=Translate!.getTranslation("AON_ALL_JOURNALS") 
-:           else y$=Translate!.getTranslation("AON_JOURNAL_ID_")+glm03a.journal_id$+" "+cvs(glm03a.code_desc$,2)
-        headings$[4]=x$+Translate!.getTranslation("AON__REPORT_FOR_")+y$
-    else
-        if detail$="D" x$=Translate!.getTranslation("AON_DETAIL") else x$=Translate!.getTranslation("AON_SUMMARY")
-        if cvs(journal$,2)="" y$=Translate!.getTranslation("AON_ALL_JOURNALS") 
-:           else y$=Translate!.getTranslation("AON_JOURNAL_ID_")+glm03a.journal_id$+" "+cvs(glm03a.code_desc$,2)
-        headings$[3]=x$+Translate!.getTranslation("AON__REPORT_FOR_")+y$
-    endif
-    headings$[5]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_GENERAL_LEDGER_ACCOUNTS")+" = "+inactive$
 
 rem --- Start progress meter
 
     call stbl("+DIR_PGM")+"adc_progress.aon","NC","GLT_TRANSDETAIL","","","",0,glt06_dev,1,meter_num,status
     glt06_key$=firm_id$
-    if cvs(begacct$,2)<>"" then glt06_key$=glt06_key$+begacct$
-    read (glt06_dev,key=glt06_key$,dom=*next)
+    if audit_no$="" then
+        if cvs(begacct$,2)<>"" then glt06_key$=glt06_key$+begacct$
+        read (glt06_dev,key=glt06_key$,knum="PRIMARY",dom=*next)
+    else
+        glt06_key$=glt06_key$+audit_no$
+        read (glt06_dev,key=glt06_key$,knum="BY_AUDIT_NO",dom=*next)
+    endif
 
 rem --- Read next transaction history (glt-06) record
 
@@ -243,10 +256,14 @@ rem --- Read next transaction history (glt-06) record
           total_recs=total_recs+1
           if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
           transdate$=glt06a.posting_year$+glt06a.posting_per$
-          if endacct$<>"" if glt06a.gl_account$>endacct$ break
-          if transdate$<starting$ continue
-          if transdate$>ending$ continue
-          if journal$<>"" if glt06a.journal_id$<>journal$ continue
+          if audit_no$="" then
+            if endacct$<>"" if glt06a.gl_account$>endacct$ break
+            if transdate$<starting$ continue
+            if transdate$>ending$ continue
+            if journal$<>"" if glt06a.journal_id$<>journal$ continue
+          else
+            if glt06a.gl_adt_no$<>audit_no$ then break
+          endif
 
           gosub wildcard
           if status continue
@@ -257,8 +274,8 @@ rem --- Read next transaction history (glt-06) record
 
           if glt06a.gl_account$<>t0$ gosub account_break
 
-    rem "GL INACTIVE FEATURE"
-    if gl_inactive_acct$>"" and glt06a.gl_account$=gl_inactive_acct$ then continue
+          rem "GL INACTIVE FEATURE"
+          if gl_inactive_acct$>"" and glt06a.gl_account$=gl_inactive_acct$ then continue
 
           if transdate$<>t1$ gosub period_break
           if detail$="S" if glt06a.trns_date$+glt06a.journal_id$<>t2$ gosub journal_break

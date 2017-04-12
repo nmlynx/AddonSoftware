@@ -1,3 +1,39 @@
+[[GLR_TRANSHISTORY.GL_ADT_NO.AVAL]]
+rem --- Validate audit number
+	gl_adt_no$=cvs(callpoint!.getUserInput(),2)
+	audit_num=-1
+	audit_num=num(gl_adt_no$,err=*next)
+	if gl_adt_no$<>"" and (audit_num<=0 or audit_num>9999999) then
+		msg_id$="ENTRY_INVALID"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=Translate!.getTranslation("AON_AUDIT_NUMBER")+" 0000001 - 9999999"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+rem --- Clear and disable fields when audit number entered
+	if gl_adt_no$<>"" then
+		rem --- Only EXPORT_FORMAT and PICK_LISTBUTTON remain enabled
+		callpoint!.setColumnData("GLR_TRANSHISTORY.BEG_GL_PER","",1)
+		callpoint!.setColumnEnabled("GLR_TRANSHISTORY.BEG_GL_PER",0)
+		callpoint!.setColumnData("GLR_TRANSHISTORY.BEG_YEAR","",1)
+		callpoint!.setColumnEnabled("GLR_TRANSHISTORY.BEG_YEAR",0)
+		callpoint!.setColumnData("GLR_TRANSHISTORY.END_GL_PER","",1)
+		callpoint!.setColumnEnabled("GLR_TRANSHISTORY.END_GL_PER",0)
+		callpoint!.setColumnData("GLR_TRANSHISTORY.END_YEAR","",1)
+		callpoint!.setColumnEnabled("GLR_TRANSHISTORY.END_YEAR",0)
+		callpoint!.setColumnData("GLR_TRANSHISTORY.GL_ACCOUNT_1","",1)
+		callpoint!.setColumnEnabled("GLR_TRANSHISTORY.GL_ACCOUNT_1",0)
+		callpoint!.setColumnData("GLR_TRANSHISTORY.GL_ACCOUNT_2","",1)
+		callpoint!.setColumnEnabled("GLR_TRANSHISTORY.GL_ACCOUNT_2",0)
+		callpoint!.setColumnData("GLR_TRANSHISTORY.GL_WILDCARD","",1)
+		callpoint!.setColumnEnabled("GLR_TRANSHISTORY.GL_WILDCARD",0)
+		callpoint!.setColumnData("GLR_TRANSHISTORY.PICK_JOURNAL_ID","",1)
+		callpoint!.setColumnEnabled("GLR_TRANSHISTORY.PICK_JOURNAL_ID",0)
+		callpoint!.setColumnData("GLR_TRANSHISTORY.ACCT_INACTIVE","N",1)
+		callpoint!.setColumnEnabled("GLR_TRANSHISTORY.ACCT_INACTIVE",0)
+	endif
 [[GLR_TRANSHISTORY.BEG_GL_PER.AVAL]]
 rem --- Verify haven't exceeded calendar total periods for beginning fiscal year
 	period$=callpoint!.getUserInput()
