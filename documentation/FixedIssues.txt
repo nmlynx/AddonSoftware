@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-04-10
+ Report Date:   2017-04-12
  Report Branch: AddonSoftware 17.00
  Last Release:  AddonSoftware 16.24
 =======================================================================================================================================
@@ -455,3 +455,14 @@ Modified: data/cdf/ape_payselect.cdf
 Modified: data/sync/ads_messages~generic_ok.xml
 Added: data/sync/ads_messages~generic_warn.xml
 Modified: gl/src/glc_datecheck.aon
+
+=======================================================================================================================================
+Revision: 10429545e975681590d11320c8e2cfc997e84a8e
+Author: Christine <chawkins@basis.com>
+Date: 4/12/2017 12:53:49 PM
+Message:
+Per bug 6130; Getting the correct font is a configuration issue. Sample alias entries are listed in the bug. In addition, made minor change in label programs to set first=0 (instead of 1) to avoid losing the top set of labels. Also corrected minor issue in AR labels query that's used to see if there are any labels to print, and fixed err 17 caused by using table_chans$[all] instead of rd_table_chans$[all].
+----
+Modified: ap/src/apr_labels.aon
+Modified: ar/src/arr_labels.aon
+Modified: iv/src/ivr_itemlabels_o1.aon
