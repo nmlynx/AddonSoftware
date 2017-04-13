@@ -227,7 +227,7 @@ initheads: rem --- Initialize HEADINGS$[]
     if begwhse$="" headings$[4]=Translate!.getTranslation("AON_FROM_WAREHOUSE:_FIRST") else headings$[4]=Translate!.getTranslation("AON_FROM_WAREHOUSE:_")+begwhse$
     if endwhse$="" headings$[4]=headings$[4]+Translate!.getTranslation("AON__--_TO_WAREHOUSE:_LAST") else headings$[4]=headings$[4]+Translate!.getTranslation("AON__--_TO_WAREHOUSE:_")+endwhse$
     if begdate$="" headings$[5]=Translate!.getTranslation("AON_FROM_RECEIPT_DATE:_FIRST") else headings$[5]=Translate!.getTranslation("AON_FROM_RECEIPT_DATE:_")+fndate$(begdate$)
-    if enddate$="" headings$[5]=headings$[5]+Translate!.getTranslation("AON__--_TO_RECEIPT_DATE:_LAST") else headings$[5]=headings$[5]+Translate!.getTranslation("AON__--_TO_RECEIPT_DATE:_")+fndate$(begdate$)
+    if enddate$="" headings$[5]=headings$[5]+Translate!.getTranslation("AON__--_TO_RECEIPT_DATE:_LAST") else headings$[5]=headings$[5]+Translate!.getTranslation("AON__--_TO_RECEIPT_DATE:_")+fndate$(enddate$)
     if type$   ="" headings$[6]=Translate!.getTranslation("AON_ALL_ITEM_TYPES") else headings$[6]=Translate!.getTranslation("AON_ITEM_TYPE:_")+type$
     headings$[7]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_ITEMS")+" = "+inactive$
     return
