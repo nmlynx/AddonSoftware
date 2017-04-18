@@ -1108,7 +1108,7 @@ rem --- Set header order totals
 
 rem --- Has customer credit been exceeded?
 
-	if user_tpl.balance - user_tpl.prev_ext_price + ttl_ext_price > user_tpl.credit_limit then 
+	if num(callpoint!.getHeaderColumnData("<<DISPLAY>>.NET_SALES")) > callpoint!.getDevObject("credit_remaining") then 
 		gosub credit_exceeded
 	endif
 
@@ -1971,7 +1971,7 @@ rem ==========================================================================
 
 	callpoint!.setColumnData("OPE_ORDDET.TAXABLE_AMT", "0")
 
-   if user_tpl.balance + ttl_ext_price > user_tpl.credit_limit then 
+   if num(callpoint!.getHeaderColumnData("<<DISPLAY>>.NET_SALES")) > callpoint!.getDevObject("credit_remaining") then 
 		gosub credit_exceeded
 	endif
 

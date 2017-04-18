@@ -69,7 +69,9 @@ rem --- Determine if over credit limit
     if callpoint! <> null() then
         ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
         over_credit_limit = ordHelp!.calcOverCreditLimit()
-        
+        creditRemaining = ordHelp!.getCreditLimit()-ordHelp!.getTotalAging()-ordHelp!.getOpenOrderAmount()-ordHelp!.getOpenBoAmount()-ordHelp!.getHeldOrderAmount()
+        callpoint!.setDevObject("credit_remaining",creditRemaining)
+
     else
     
     rem --- Set credit limit w/o the callpoint object
