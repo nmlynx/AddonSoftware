@@ -54,6 +54,7 @@ rem --- Dimension string templates
 rem --- Assign input values to local variables
 
     audit_no$=Option!.getOptionData("GL_ADT_NO")
+    trns_date$=Option!.getOptionData("TRNS_DATE")
     begper$=Option!.getOptionData("BEG_GL_PER")
     begyear$=Option!.getOptionData("BEG_YEAR")
     endper$=Option!.getOptionData("END_GL_PER")
@@ -81,7 +82,7 @@ rem --- Retrieve parameter records
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     dim begCalendar$:fattr(gls_calendar$)
     find record (gls_calendar_dev,key=firm_id$+begyear$,err=*next) begCalendar$
-    if audit_no$="" and cvs(begCalendar.firm_id$,2)="" then
+    if audit_no$="" and trns_date$="" and cvs(begCalendar.firm_id$,2)="" then
         msg_id$="AD_NO_FISCAL_CAL"
         dim msg_tokens$[1]
         msg_tokens$[1]=begyear$
@@ -90,7 +91,7 @@ rem --- Retrieve parameter records
     endif
     dim endCalendar$:fattr(gls_calendar$)
     find record (gls_calendar_dev,key=firm_id$+endyear$,err=*next) endCalendar$
-    if audit_no$="" and cvs(endCalendar.firm_id$,2)="" then
+    if audit_no$="" and trns_date$="" and cvs(endCalendar.firm_id$,2)="" then
         msg_id$="AD_NO_FISCAL_CAL"
         dim msg_tokens$[1]
         msg_tokens$[1]=endyear$
@@ -216,16 +217,14 @@ rem --- Initialize report headings
         if x$<>"" and y$<>""
             headings$[3]=Translate!.getTranslation("AON_FROM_")+cvs(x$,2)+Translate!.getTranslation("AON__(PERIOD_")+begper$+") "+begyear$+Translate!.getTranslation("AON__THROUGH_")+
 :           cvs(y$,2)+Translate!.getTranslation("AON__(PERIOD_")+endper$+") "+endyear$
-            if detail$="D" x$=Translate!.getTranslation("AON_DETAIL") else x$=Translate!.getTranslation("AON_SUMMARY")
-            if cvs(journal$,2)="" y$=Translate!.getTranslation("AON_ALL_JOURNALS") 
-:           else y$=Translate!.getTranslation("AON_JOURNAL_ID_")+glm03a.journal_id$+" "+cvs(glm03a.code_desc$,2)
-            headings$[4]=x$+Translate!.getTranslation("AON__REPORT_FOR_")+y$
         else
-            if detail$="D" x$=Translate!.getTranslation("AON_DETAIL") else x$=Translate!.getTranslation("AON_SUMMARY")
-            if cvs(journal$,2)="" y$=Translate!.getTranslation("AON_ALL_JOURNALS") 
-:           else y$=Translate!.getTranslation("AON_JOURNAL_ID_")+glm03a.journal_id$+" "+cvs(glm03a.code_desc$,2)
-            headings$[3]=x$+Translate!.getTranslation("AON__REPORT_FOR_")+y$
+            rem --- Report for specific transaction date
+            headings$[3]=Translate!.getTranslation("AON_TRANSACTION_DATE")+": "+fndate$(trns_date$)
         endif
+        if detail$="D" x$=Translate!.getTranslation("AON_DETAIL") else x$=Translate!.getTranslation("AON_SUMMARY")
+        if cvs(journal$,2)="" y$=Translate!.getTranslation("AON_ALL_JOURNALS") 
+:       else y$=Translate!.getTranslation("AON_JOURNAL_ID_")+glm03a.journal_id$+" "+cvs(glm03a.code_desc$,2)
+        headings$[4]=x$+Translate!.getTranslation("AON__REPORT_FOR_")+y$
         headings$[5]=Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_GENERAL_LEDGER_ACCOUNTS")+" = "+inactive$
     else
         headings=3
@@ -239,12 +238,17 @@ rem --- Start progress meter
 
     call stbl("+DIR_PGM")+"adc_progress.aon","NC","GLT_TRANSDETAIL","","","",0,glt06_dev,1,meter_num,status
     glt06_key$=firm_id$
-    if audit_no$="" then
+    if audit_no$="" and trns_date$="" then
         if cvs(begacct$,2)<>"" then glt06_key$=glt06_key$+begacct$
         read (glt06_dev,key=glt06_key$,knum="PRIMARY",dom=*next)
     else
-        glt06_key$=glt06_key$+audit_no$
-        read (glt06_dev,key=glt06_key$,knum="BY_AUDIT_NO",dom=*next)
+        if audit_no$<>"" then
+            glt06_key$=glt06_key$+audit_no$
+            read (glt06_dev,key=glt06_key$,knum="BY_AUDIT_NO",dom=*next)
+        else
+            glt06_key$=glt06_key$+trns_date$
+            read (glt06_dev,key=glt06_key$,knum="BY_TRANS_DATE",dom=*next)
+        endif
     endif
 
 rem --- Read next transaction history (glt-06) record
@@ -256,13 +260,17 @@ rem --- Read next transaction history (glt-06) record
           total_recs=total_recs+1
           if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
           transdate$=glt06a.posting_year$+glt06a.posting_per$
-          if audit_no$="" then
+          if audit_no$="" and trns_date$="" then
             if endacct$<>"" if glt06a.gl_account$>endacct$ break
             if transdate$<starting$ continue
             if transdate$>ending$ continue
             if journal$<>"" if glt06a.journal_id$<>journal$ continue
           else
-            if glt06a.gl_adt_no$<>audit_no$ then break
+            if audit_no$<>"" then
+                if glt06a.gl_adt_no$<>audit_no$ then break
+            else
+                if glt06a.trns_date$<>trns_date$ then break
+            endif
           endif
 
           gosub wildcard
