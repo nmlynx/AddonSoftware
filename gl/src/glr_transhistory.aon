@@ -482,6 +482,8 @@ account_break: rem --- Account number break
     else
         total$=Translate!.getTranslation("AON_TOTAL_FOR_ACCOUNT_")+fnmask$(glm01a.gl_account$(1,m0),m0$)
     endif
+    if audit_no$<>"" then total$=Translate!.getTranslation("AON_AUDIT_NUMBER")+" "+total$
+    if trns_date$<>"" then total$=fndate$(trns_date$)+" "+total$
     debits=at[0]
     credits=at[1]
     units=at[2]
@@ -505,7 +507,7 @@ rem --- Print warning if calculated balance doesn't match transaction total
     units=et[2]-units
     if debits<0 credits=debits,debits=0
     total$=Translate!.getTranslation("AON_WARNING:_TRANSACTION_TOTAL_DIFFERS_FROM_SUMMARY_ACTIVITY_BY")
-    gosub print_totals
+    if audit_no$="" and trns_date$="" then gosub print_totals
 
 new_account: rem --- New account
 
@@ -583,10 +585,11 @@ period_break: rem --- Period break
     else
         total$=Translate!.getTranslation("AON_TOTAL_FOR_")+x$+" "+y$
     endif
+    if audit_no$<>"" then total$=Translate!.getTranslation("AON_AUDIT_NUMBER")+" "+total$
     debits=pt[0]
     credits=pt[1]
     units=pt[2]
-    gosub print_totals
+    if trns_date$="" then gosub print_totals
 
 period_balance: rem --- Print ending balance for period
 
@@ -600,7 +603,7 @@ period_balance: rem --- Print ending balance for period
     credits=0
     units=et[2]
     if endbal<0 credits=endbal,debits=0
-    gosub print_totals
+    if audit_no$="" and trns_date$="" then gosub print_totals
 
 new_period: rem --- New period
 
