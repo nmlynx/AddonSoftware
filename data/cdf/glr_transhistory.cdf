@@ -1,3 +1,18 @@
+[[GLR_TRANSHISTORY.TRNS_DATE.AVAL]]
+rem --- Clear and disable fields when transaction date entered
+	if cvs(callpoint!.getUserInput(),2)<>"" then
+		rem --- Clear and disable Audit Number, Period and Year fields
+		callpoint!.setColumnData("GLR_TRANSHISTORY.GL_ADT_NO","",1)
+		callpoint!.setColumnEnabled("GLR_TRANSHISTORY.GL_ADT_NO",0)
+		callpoint!.setColumnData("GLR_TRANSHISTORY.BEG_GL_PER","",1)
+		callpoint!.setColumnEnabled("GLR_TRANSHISTORY.BEG_GL_PER",0)
+		callpoint!.setColumnData("GLR_TRANSHISTORY.BEG_YEAR","",1)
+		callpoint!.setColumnEnabled("GLR_TRANSHISTORY.BEG_YEAR",0)
+		callpoint!.setColumnData("GLR_TRANSHISTORY.END_GL_PER","",1)
+		callpoint!.setColumnEnabled("GLR_TRANSHISTORY.END_GL_PER",0)
+		callpoint!.setColumnData("GLR_TRANSHISTORY.END_YEAR","",1)
+		callpoint!.setColumnEnabled("GLR_TRANSHISTORY.END_YEAR",0)
+	endif
 [[GLR_TRANSHISTORY.GL_ADT_NO.AVAL]]
 rem --- Validate audit number
 	gl_adt_no$=cvs(callpoint!.getUserInput(),2)
@@ -15,6 +30,8 @@ rem --- Validate audit number
 rem --- Clear and disable fields when audit number entered
 	if gl_adt_no$<>"" then
 		rem --- Only EXPORT_FORMAT and PICK_LISTBUTTON remain enabled
+		callpoint!.setColumnData("GLR_TRANSHISTORY.TRNS_DATE","",1)
+		callpoint!.setColumnEnabled("GLR_TRANSHISTORY.TRNS_DATE",0)
 		callpoint!.setColumnData("GLR_TRANSHISTORY.BEG_GL_PER","",1)
 		callpoint!.setColumnEnabled("GLR_TRANSHISTORY.BEG_GL_PER",0)
 		callpoint!.setColumnData("GLR_TRANSHISTORY.BEG_YEAR","",1)
