@@ -46,6 +46,10 @@ rem --- Check for fiscal calendars for current firm
         if cvs(theFirm$,2)<>"" and  gls_params.firm_id$<>theFirm$ then break
         fiscal_year=num(gls_params.current_year$)
 
+        if gls_params.gl_yr_closed$<>"Y" 
+            fiscal_year=fiscal_year-1
+        endif
+
         rem --- Check for fiscal calendars for prior/current/next year
         for yr=-1 to 1
             calendar_missing=1
