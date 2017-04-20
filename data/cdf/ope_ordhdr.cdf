@@ -1883,7 +1883,9 @@ rem ==========================================================================
 	read record (arm02_dev,key=firm_id$+cust_id$+"  ",dom=*next) arm02a$
 
 	if arm02a.cred_hold$<>"E"
-		if user_tpl.credit_limit<>0 and !user_tpl.credit_limit_warned and user_tpl.balance>=user_tpl.credit_limit then
+		ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+		creditRemaining = ordHelp!.getCreditLimit()-ordHelp!.getTotalAging()-ordHelp!.getOpenOrderAmount()-ordHelp!.getOpenBoAmount()-ordHelp!.getHeldOrderAmount()
+		if user_tpl.credit_limit<>0 and !user_tpl.credit_limit_warned and num(callpoint!.getColumnData("<<DISPLAY>>.NET_SALES")) > creditRemaining then
    			if user_tpl.credit_installed$ <> "Y" then
 			      	msg_id$ = "OP_OVER_CREDIT_LIMIT"
 				dim msg_tokens$[1]

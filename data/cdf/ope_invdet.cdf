@@ -1104,7 +1104,9 @@ rem --- Set header order totals
 
 rem --- Has customer credit been exceeded?
 
-	if num(callpoint!.getHeaderColumnData("<<DISPLAY>>.NET_SALES")) > callpoint!.getDevObject("credit_remaining") then 
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	creditRemaining = ordHelp!.getCreditLimit()-ordHelp!.getTotalAging()-ordHelp!.getOpenOrderAmount()-ordHelp!.getOpenBoAmount()-ordHelp!.getHeldOrderAmount()
+	if num(callpoint!.getHeaderColumnData("<<DISPLAY>>.NET_SALES")) > creditRemaining then 
 		gosub credit_exceeded
 	endif
 
@@ -1963,7 +1965,9 @@ rem ==========================================================================
 
 	callpoint!.setColumnData("OPE_INVDET.TAXABLE_AMT", "0")
 
-	if num(callpoint!.getHeaderColumnData("<<DISPLAY>>.NET_SALES")) > callpoint!.getDevObject("credit_remaining") then 
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	creditRemaining = ordHelp!.getCreditLimit()-ordHelp!.getTotalAging()-ordHelp!.getOpenOrderAmount()-ordHelp!.getOpenBoAmount()-ordHelp!.getHeldOrderAmount()
+	if num(callpoint!.getHeaderColumnData("<<DISPLAY>>.NET_SALES")) > creditRemaining then 
 		gosub credit_exceeded
 	endif
 
