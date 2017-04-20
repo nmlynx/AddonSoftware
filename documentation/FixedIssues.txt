@@ -475,3 +475,14 @@ Message:
 Per bug 9053; adjusted auto launch task that checks for required fiscal calendars to compensate for prior year not yet being closed.
 ----
 Modified: gl/src/glc_checkfiscalcalendars.aon
+
+=======================================================================================================================================
+Revision: 921b29273406f2574ec987fd55cdc55d058238ea
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/19/2017 6:27:20 PM
+Message:
+Bug 9055: glc_datecheck.aon does not need to adjust locked periods in
+STBL("+GLCONTROL") when the prior fiscal year is not closed. They were
+already set correctly by glc_ctlcreate.aon.
+----
+Modified: gl/src/glc_datecheck.aon
