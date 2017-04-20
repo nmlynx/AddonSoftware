@@ -320,6 +320,7 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
             if glsParams.gl$+glsParams.sequence_00$<>"GL00" then continue
             prior_yr$=str(num(glsParams.current_year$)-1)
             gl_yr_closed$=glsParams.gl_yr_closed$
+            if gl_yer_close$<>"Y" then prior_yr$=str(num(prior_yr$)-1)
             
             rem --- Copy current fiscal year's calendar only if there are no GLT_TRANSDETAIL transactions for the prior year.
             read(gltTransdetail_dev,key=glsParams.firm_id$+prior_yr$,knum="BY_TRANS_DATE",dom=*next)
@@ -408,6 +409,8 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
             readrecord(glsParams_dev,end=*break)glsParams$
             if glsParams.gl$+glsParams.sequence_00$<>"GL00" then continue
             next_yr$=str(num(glsParams.current_year$)+1)
+            gl_yr_closed$=glsParams.gl_yr_closed$
+            if gl_yer_close$<>"Y" then next_yr$=str(num(next_yr$)-1)
             
             rem --- Copy current fiscal year's calendar only if there are no GLT_TRANSDETAIL transactions for the next year.
             read(gltTransdetail_dev,key=glsParams.firm_id$+next_yr$,knum="BY_TRANS_DATE",dom=*next)
