@@ -2023,17 +2023,19 @@ check_credit: rem --- Check credit limit of customer
               rem     (ope_cb, 5400-5499)
 rem ==========================================================================
 
-	if user_tpl.credit_limit<>0 and !user_tpl.credit_limit_warned and user_tpl.balance>=user_tpl.credit_limit then
-   	if user_tpl.credit_installed$ <> "Y" then
-      	msg_id$ = "OP_OVER_CREDIT_LIMIT"
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+	creditRemaining = ordHelp!.getCreditLimit()-ordHelp!.getTotalAging()-ordHelp!.getOpenOrderAmount()-ordHelp!.getOpenBoAmount()-ordHelp!.getHeldOrderAmount()
+	if user_tpl.credit_limit<>0 and !user_tpl.credit_limit_warned and num(callpoint!.getColumnData("<<DISPLAY>>.NET_SALES")) > creditRemaining then
+   		if user_tpl.credit_installed$ <> "Y" then
+      			msg_id$ = "OP_OVER_CREDIT_LIMIT"
 			dim msg_tokens$[1]
 			msg_tokens$[1] = str(custdet_tpl.credit_limit:user_tpl.amount_mask$)
-         gosub disp_message
-      endif  
+         		gosub disp_message
+     		endif  
    
 		callpoint!.setDevObject("msg_exceeded","Y")
 		user_tpl.credit_limit_warned = 1
-   endif
+	endif
 
 	return
 
