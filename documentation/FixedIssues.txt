@@ -559,7 +559,7 @@ Modified: op/src/opc_creditmgmnt.aon
 =======================================================================================================================================
 Revision: 17206f5075e135c7e8e082e3cfa3650ee6880186
 Author: Bill Halsted <bhalsted@basis.com>
-Date: 4/18/2017 5:33:36 PM
+Date: 4/26/2017 5:33:36 PM
 Message:
 ER 5987: Added Transaction Date filter to the GL Transaction History
 Report.
@@ -571,9 +571,29 @@ Modified: gl/src/glr_transhistory.aon
 =======================================================================================================================================
 Revision: 3ac699d81fcbe4929127ebc11dc3bf1c53b9b686
 Author: Bill Halsted <bhalsted@basis.com>
-Date: 4/19/2017 11:39:31 AM
+Date: 4/26/2017 11:39:31 AM
 Message:
 ER 2747 and ER 5987: Modified labels/descriptions on totals lines to
 better suit reports by Audit Number and Transaction Date.
 ----
 Modified: gl/src/glr_transhistory.aon
+
+=======================================================================================================================================
+Revision: 76903a4a620c2116dd6d7554fc1da11239860836
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/26/2017 12:18:46 PM
+Message:
+ER 7125: Used ordHelp! to calculate the remaining credit rather than a
+Barista callpoint devObject ("credit_remaining") set in
+opc_creditmgmnt.aon.
+----
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_invdet.cdf
+Modified: data/cdf/ope_invhdr.cdf
+Modified: data/cdf/ope_orddet.cdf
+Modified: data/cdf/ope_ordhdr.cdf
+Modified: op/src/opc_creditmgmnt.aon
+
