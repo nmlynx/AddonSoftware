@@ -1,0 +1,218 @@
+rem ==========================================================================
+rem --- opo_AO_SalesOrderCreateWO.aon 
+rem --- AO_SalesOrderCreateWO class (SalesOrderCreateWO superclass)
+rem --- OP superclass that creates planned Work Orders for items (BOMs) ordered
+rem --- in Order Entry.
+rem --- 
+rem --- AddonSoftware Version 17.0
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem ==========================================================================
+
+rem /**
+rem  * This class creates planned Work Orders for items (BOMs) ordered
+rem  * in Order Entry.
+rem  */
+
+rem --- Use statements and declares
+
+    use ::ado_func.src::func
+    use java.util.ArrayList
+    use java.util.HashMap
+    use java.util.TreeMap
+
+    class public AO_SalesOrderCreateWO
+        field protected BBjString customerId$
+        field protected BBjNumber devBmcOpCodes = -1
+        field protected BBjNumber devBmmBillCmts = -1
+        field protected BBjNumber devBmmBillMast = -1
+        field protected BBjNumber devBmmBillMat = -1
+        field protected BBjNumber devBmmBillOper = -1
+        field protected BBjNumber devBmmBillSub = -1
+        field protected BBjNumber devIvmItemMast = -1
+        field protected BBjNumber devIvmItemWhse = -1
+        field protected BBjNumber devSfeWOCmnt = -1
+        field protected BBjNumber devSfeWOMastr = -1
+        field protected BBjNumber devSfeWOMatl = -1
+        field protected BBjNumber devSfeWOOprtn = -1
+        field protected BBjNumber devSfeWOSubcnt = -1
+        field protected BBjString firmId$
+        field protected HashMap isnWOMap! = new HashMap()
+        field protected BBjString orderNo$
+        field protected BBjString tplBmcOpCodes$
+        field protected BBjString tplBmmBillCmts$
+        field protected BBjString tplBmmBillMast$
+        field protected BBjString tplBmmBillMat$
+        field protected BBjString tplBmmBillOper$
+        field protected BBjString tplBmmBillSub$
+        field protected BBjString tplIvmItemMast$
+        field protected BBjString tplIvmItemWhse$
+        field protected BBjString tplOpeOrdDet$
+        field protected BBjString tplSfeWOCmnt$
+        field protected BBjString tplSfeWOMastr$
+        field protected BBjString tplSfeWOMatl$
+        field protected BBjString tplSfeWOOprtn$
+        field protected BBjString tplSfeWOSubcnt$
+        field protected BBjString userId$
+        field protected BBjString woCategory$
+        field protected BBjString woType$
+
+        rem --- Constants for woVect! indexes
+        field public static BBjNumber ASKED = 0
+        field public static BBjNumber CREATE_WO = 1
+        field public static BBjNumber SOLINE_NO = 2
+        field public static BBjNumber SOLINE_ITEM = 3
+        field public static BBjNumber SOLINE_ITEMDESC = 4
+        field public static BBjNumber SOLINE_WHSE = 5
+        field public static BBjNumber SOLINE_SHIPQTY = 6
+        field public static BBjNumber SOLINE_SHIPDATE = 7
+        field public static BBjNumber WO_NO = 8
+        field public static BBjNumber WO_SCHPRODQTY = 9
+        field public static BBjNumber WO_ESTCMPDATE = 10
+        field public static BBjNumber WARNINGS = 11
+
+        rem /**
+        rem  * Constructor.
+        rem  *
+        rem  * @param BBjString firmId$
+        rem  * @param BBjString customerId$
+        rem  * @param BBjString orderNo$
+        rem  */
+        method public AO_SalesOrderCreateWO(BBjString firmID$, BBjString customerId$, BBjString orderNo$)
+            seterr AO_SalesOrderCreateWO_error
+
+            rem --- Initialize field variables
+            #firmId$ = firmId$
+            #customerId$ = customerId$
+            #orderNo$ = orderNo$
+
+            rem --- Open needed files          
+            num_files=10
+            dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
+            open_tables$[1] ="BMC_OPCODES",   open_opts$[1] = "OTA@"
+            open_tables$[2] ="BMM_BILLMAST",  open_opts$[2] = "OTA@"
+            open_tables$[3] ="IVM_ITEMMAST",  open_opts$[3] = "OTA@"
+            open_tables$[4] ="IVM_ITEMWHSE",  open_opts$[4] = "OTA@"
+            open_tables$[5] ="IVS_PARAMS",    open_opts$[5] = "OTA@"
+            open_tables$[6] ="OPE_ORDDET",    open_opts$[6] = "OTA@"
+            open_tables$[7] ="OPS_PARAMS",    open_opts$[7] = "OTA@"
+            open_tables$[8] ="SFE_WOCOMNT",   open_opts$[8] = "OTA[1]"
+            open_tables$[9] ="SFE_WOMASTR",   open_opts$[9] = "OTA[1]"
+            open_tables$[10] ="SFC_WOTYPECD", open_opts$[10] = "OTA@"
+        
+            call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
+        
+            if open_status$ = "" then
+                rem --- Hold on to channels and record templates
+                #devBmcOpCodes = num(open_chans$[1])
+                #devBmmBillMast = num(open_chans$[2])
+                #devIvmItemMast = num(open_chans$[3])
+                #devIvmItemWhse = num(open_chans$[4])
+                devIvsParams = num(open_chans$[5])
+                devOpeOrdDet = num(open_chans$[6])
+                devOpsParams = num(open_chans$[7])
+                #devSfeWOCmnt = num(open_chans$[8])
+                #devSfeWOMastr = num(open_chans$[9])
+                devSfcWOTypeCd = num(open_chans$[10])
+
+                #tplBmcOpCodes$ = open_tpls$[1]
+                #tplBmmBillMast$ = open_tpls$[2]
+                #tplIvmItemMast$ = open_tpls$[3]
+                #tplIvmItemWhse$ = open_tpls$[4]
+                tplIvsParams$= open_tpls$[5]
+                #tplOpeOrdDet$ = open_tpls$[6]
+                tplOpsParams$ = open_tpls$[7]
+                #tplSfeWOCmnt$ = open_tpls$[8]
+                #tplSfeWOMastr$ = open_tpls$[9]
+                tplSfcWOTypeCd$ = open_tpls$[10]
+            else
+                rem --- Throw error
+                err_num=err
+                err_num=num(open_status$,err=*next)
+                seterr 0
+                throw "["+pgm(-2)+"] Constructor failed to open files: "+open_status$,err_num
+            endif
+
+            rem --- Get User ID
+            userId$ ="?????"
+            userId$ = stbl("+USER_ID",err=*next)
+            #userId$ = userId$
+
+            rem --- Get needed IV params
+            dim ivsParamsRec$:tplIvsParams$
+            readrecord(devIvsParams,key=firmId$+"IV00")ivsParamsRec$
+            func.setLen1(num(ivsParamsRec.desc_len_01$))
+            func.setLen2(num(ivsParamsRec.desc_len_02$))
+            func.setLen3(num(ivsParamsRec.desc_len_03$))
+
+            rem --- Get needed OP params
+            dim opsParamsRec$:tplOpsParams$
+            readrecord(devOpsParams,key=firmId$+"AR00")opsParamsRec$
+            #woType$ = opsParamsRec.op_create_wo_typ$
+            dim sfcWOTypeCdRec$:tplSfcWOTypeCd$
+            readrecord(devSfcWOTypeCd,key=firmId$+"A"+#woType$,dom=*next)sfcWOTypeCdRec$
+            #woCategory$ = sfcWOTypeCdRec.wo_category$
+
+            rem --- Close files
+            close(devIvsParams,err=*next)
+            close(devOpsParams,err=*next)
+            close(devSfcWOTypeCd,err=*next)
+
+            methodret
+            
+AO_SalesOrderCreateWO_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Close all open channels and connections.
+        rem  */
+        method public void close()
+            seterr close_error
+
+            if #devBmcOpCodes > 0 then close(#devBmcOpCodes,err=*next)
+            if #devBmmBillMast > 0 then close(#devBmmBillMast,err=*next)
+            if #devIvmItemMast > 0 then close(#devIvmItemMast,err=*next)
+            if #devIvmItemWhse > 0 then close(#devIvmItemWhse,err=*next)
+            if #devSfeWOCmnt > 0 then close(#devSfeWOCmnt,err=*next)
+            if #devSfeWOMastr > 0 then close(#devSfeWOMastr,err=*next)
+
+            methodret
+            
+close_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Cleanup on object's destruction and garbage collection.
+        rem  */
+        method protected void finalize()
+
+            rem --- Close all open channels and connections
+            #close()
+
+            methodret
+        methodend
+	
+classend

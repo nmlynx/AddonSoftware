@@ -276,6 +276,16 @@ rem --- Clear availability information
 rem --- Set flags
 
 	user_tpl.record_deleted = 0
+
+rem --- Create soCreateWO! instance if needed
+
+	op_create_wo$=callpoint!.getDevObject("op_create_wo")
+	if op_create_wo$="A" then
+		customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+		order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+		soCreateWO!=new SalesOrderCreateWO(firm_id$,customer_id$,order_no$)
+		callpoint!.setDevObject("soCreateWO",soCreateWO!)
+	endif
 [[OPE_ORDHDR.ARAR]]
 rem --- If First/Last Record was used, did it return an Order?
 
@@ -466,6 +476,14 @@ rem --- Credit action
 			callpoint!.setDevObject("cred_action_from_print_now","")
 			gosub do_credit_action
 		endif
+	endif
+
+rem --- Close files that may be open in soCreateWO! instance
+
+	op_create_wo$=callpoint!.getDevObject("op_create_wo")
+	if op_create_wo$="A" then
+		soCreateWO!=callpoint!.getDevObject("soCreateWO")
+		soCreateWO!.close()
 	endif
 [[OPE_ORDHDR.AOPT-PRNT]]
 rem --- Check to see if record has been modified (don't print until rec is saved)
@@ -933,7 +951,7 @@ rem --- Show customer data
 
 	if callpoint!.getColumnData("OPE_ORDHDR.CASH_SALE") <> "Y" then 
 		gosub display_aging
-      gosub check_credit
+		gosub check_credit
 	endif
 
 	gosub disp_cust_comments
@@ -1001,6 +1019,29 @@ rem --- Fix bad records with missing ordinv_flag
 	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDINV_FLAG"),2)="" then
 		callpoint!.setColumnData("OPE_ORDHDR.ORDINV_FLAG","O")
 		callpoint!.setStatus("SAVE")
+	endif
+
+rem --- Create soCreateWO! instance if needed
+
+	op_create_wo$=callpoint!.getDevObject("op_create_wo")
+	if op_create_wo$="A" then
+		customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+		order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+		soCreateWO!=new SalesOrderCreateWO(firm_id$,customer_id$,order_no$)
+
+		rem --- Initialize soCreateWO! if order NOT on Credit Hold
+		if callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG")<>"C" then
+			soCreateWO!.initIsnWOMap(GridVect!.getItem(0))
+		endif
+
+rem --- If order was created via Duplicate Invoice, and isn’t a Quote, then create all possible Work Orders.
+
+		if user_tpl.hist_ord$="Y" and callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" then
+			soCreateWO!.setCreateWO(Boolean.valueOf("true"))
+			user_tpl.hist_ord$=""
+		endif
+
+		callpoint!.setDevObject("soCreateWO",soCreateWO!)
 	endif
 [[OPE_ORDHDR.BOVE]]
 rem --- Restrict lookup to open orders and open invoices
@@ -1150,6 +1191,7 @@ rem --- Inits
 	use ::ado_util.src::util
 	use ::ado_order.src::OrderHelper
 	use ::adc_array.aon::ArrayObject
+	use ::opo_SalesOrderCreateWO.aon::SalesOrderCreateWO
 
 rem --- Create Inventory Availability window
 
@@ -2912,6 +2954,7 @@ rem --- get AR Params
 	if ars01a.op_totals_warn$="" ars01a.op_totals_warn$="4"
 	callpoint!.setDevObject("totals_warn",ars01a.op_totals_warn$)
 	callpoint!.setDevObject("check_po_dupes",ars01a.op_check_dupe_po$)
+	callpoint!.setDevObject("op_create_wo",ars01a.op_create_wo$)
 
 	dim ars_credit$:open_tpls$[7]
 	read record (num(open_chans$[7]), key=firm_id$+"AR01") ars_credit$
