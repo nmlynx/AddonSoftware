@@ -1029,16 +1029,16 @@ rem --- Create soCreateWO! instance if needed
 		order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 		soCreateWO!=new SalesOrderCreateWO(firm_id$,customer_id$,order_no$)
 
-		rem --- Initialize soCreateWO! if order NOT on Credit Hold
-		if callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG")<>"C" then
+		rem --- Initialize soCreateWO! only if order NOT on Credit Hold and NOT a Quote
+		if callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG")<>"C" and
+:		callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" then
 			soCreateWO!.initIsnWOMap(GridVect!.getItem(0))
-		endif
 
-rem --- If order was created via Duplicate Invoice, and isn’t a Quote, then create all possible Work Orders.
-
-		if user_tpl.hist_ord$="Y" and callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" then
-			soCreateWO!.setCreateWO(Boolean.valueOf("true"))
-			user_tpl.hist_ord$=""
+			rem --- If order was created via Duplicate Invoice, then create all possible Work Orders.
+			if user_tpl.hist_ord$="Y" and callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" then
+				soCreateWO!.setCreateWO(Boolean.valueOf("true"))
+				user_tpl.hist_ord$=""
+			endif
 		endif
 
 		callpoint!.setDevObject("soCreateWO",soCreateWO!)
