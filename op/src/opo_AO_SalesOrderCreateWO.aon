@@ -375,6 +375,102 @@ initIsnWOMap_error:rem --- Method error trap/handler
         methodend
 
         rem /**
+        rem  * Updates CREATE_WO in all woVect! in isnWOMap! to either true (create WO) or false (do NOT create WO)
+        rem  * based on the input value (1=true, 0=false).
+        rem  * 
+        rem  * @param boolean true_false
+        rem  */
+        method public void setCreateWO(BBjNumber true_false)
+            seterr setCreateWO_error
+
+            mapKeys!=#isnWOMap!.keySet()
+            iter!=mapKeys!.iterator()
+            while iter!.hasNext()
+                isn$=iter!.next()
+                woVect! = #isnWOMap!.get(isn$)
+                woVect!.setItem(#CREATE_WO, true_false)
+            wend
+
+            methodret
+            
+setCreateWO_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Updates SOLINE_NO in all woVect! in isnWOMap! with the CURRENT Sales Order detail grid line numbers.
+        rem  * This is needed to sort the woVect!'s in isnWOMap! in the same order as the Sales Order detail grid rows. 
+        rem  * 
+        rem  * @param BBjVector gridRowVect!
+        rem  */
+        method public void updateLineNo(BBjVector gridRowVect!)
+            seterr updateLineNo_error
+            dim rowData$:#tplOpeOrdDet$
+
+            rem --- Loop thru gridRowVect! to get current line_no for updating isn’s woVect!
+            iter!=gridRowVect!.iterator()
+            while iter!.hasNext()
+                rowData$=iter!.next()
+                if #isnWOMap!.containsKey(rowData.internal_seq_no$) then
+                    woVect! = #isnWOMap!.get(rowData.internal_seq_no$)
+                    woVect!.setItem(#SOLINE_NO, rowData.line_no$)
+                endif
+            wend
+
+            methodret
+            
+updateLineNo_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Provides the number of existing and potential Work Order links for this Sales Order.
+        rem  * 
+        rem  * @return BBjNumber Number of existing and potential WO links for this SO
+        rem  */
+        method public BBjNumber woCount()
+            seterr woCount_error
+
+            methodret #isnWOMap!.size()
+            
+woCount_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
         rem  * Close all open channels and connections.
         rem  */
         method public void close()

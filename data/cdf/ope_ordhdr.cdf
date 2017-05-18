@@ -478,11 +478,59 @@ rem --- Credit action
 		endif
 	endif
 
-rem --- Close files that may be open in soCreateWO! instance
+rem --- Launch ope_createwos form to create selected work orders
 
 	op_create_wo$=callpoint!.getDevObject("op_create_wo")
 	if op_create_wo$="A" then
 		soCreateWO!=callpoint!.getDevObject("soCreateWO")
+
+		rem --- Re-initialize soCreateWO! if SO was released from Credit Hold and create all possible Work Orders
+		if action$="R" then
+			soCreateWO!.initIsnWOMap(GridVect!.getItem(0))
+			soCreateWO!.setCreateWO(Boolean.valueOf("true"))
+		endif
+
+		rem --- Skip unless there are validate candidate WOs could be created
+		if soCreateWO!.woCount() then
+
+			rem --- Update soCreateWO! with CURRENT detail grid line_no so ope_createwos grid sorts in the same order.
+			soCreateWO!.updateLineNo(GridVect!.getItem(0))
+
+			customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+			order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+
+			dim dflt_data$[2,1]
+			dflt_data$[1,0] = "CUSTOMER_ID"
+			dflt_data$[1,1] = customer_id$
+			dflt_data$[2,0] = "ORDER_NO"
+			dflt_data$[2,1] = order_no$
+			key_pfx$=firm_id$+customer_id$+order_no$
+
+			call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
+:				"OPE_CREATEWOS", 
+:				stbl("+USER_ID"), 
+:				"", 
+:				key_pfx$,
+:				table_chans$[all],
+:				"",
+:				dflt_data$[all]
+
+			rem --- Make sure focus returns to this form
+			callpoint!.setStatus("ACTIVATE")
+
+			rem --- Handle Cancel from ope_createwos form
+			if callpoint!.getDevObject("createWOs_status")="Cancel" then
+				rem --- Barista always goes to the next record at this point in BREX. Cannot stay where we are now via ABORT.
+				rem --- Using short key for RECORD so when Barista goes to the next record it will end up on this current record.
+				callpoint!.setStatus("RECORD:["+firm_id$+"E"+"  "+callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")+"]")
+
+				rem --- A new soCreateWO! instance will be created, so need to close files in this one.
+				soCreateWO!.close()
+				break
+			endif
+		endif
+
+		rem --- Close files that may be open in soCreateWO! instance
 		soCreateWO!.close()
 	endif
 [[OPE_ORDHDR.AOPT-PRNT]]
