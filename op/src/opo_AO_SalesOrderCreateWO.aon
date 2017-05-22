@@ -315,6 +315,52 @@ canCreateWO_error:rem --- Method error trap/handler
         methodend
 
         rem /**
+        rem  * Returns an ArrayList of woVect! BBjVectors in the isnWOMap! HashMap sorted by the Sales Order detail
+        rem  * grid line number instead of the grid row's internal sequence number (isn).
+        rem  * 
+        rem  * @return ArrayList woList!
+        rem  */
+        method public ArrayList getWOList()
+            seterr getWOList_error
+            woList!=new java.util.ArrayList()
+
+            rem --- Sort by line_no instead of isn
+            lineNoTree!=new java.util.TreeMap()
+            isnKeys!=#isnWOMap!.keySet()
+            iter!=isnKeys!.iterator()
+            while iter!.hasNext()
+                isn$=iter!.next()
+                woVect!=#isnWOMap!.get(isn$)
+                lineNoTree!.put(woVect!.getItem(#SOLINE_NO),woVect!)
+            wend
+            
+            rem --- Put sorted woVect! in an ArrayList
+            lineNoKeys!=lineNoTree!.keySet()
+            iter!=lineNoKeys!.iterator()
+            while iter!.hasNext()
+                lineNo$=iter!.next()
+                woVect!=lineNoTree!.get(lineNo$)
+                woList!.add(woVect!)
+            wend
+            
+            methodret woList!
+            
+getWOList_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
         rem  * Initializes isnWOMap! HashMap with Sale Order detail lines that are candidates for creating Work Orders, and
         rem  * includes information on Work Orders that have already been created, i.e. linked to one of the Sales Order detail
         rem  * lines.
