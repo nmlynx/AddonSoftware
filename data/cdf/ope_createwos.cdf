@@ -1,3 +1,64 @@
+[[OPE_CREATEWOS.ACUS]]
+rem --- Process custom event
+
+rem This routine is executed when callbacks have been set to run a 'custom event'.
+rem Analyze gui_event$ and notice$ to see which control's callback triggered the event, and what kind of event it is.
+rem See basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info.
+
+	dim gui_event$:tmpl(gui_dev)
+	dim notify_base$:noticetpl(0,0)
+	gui_event$=SysGUI!.getLastEventString()
+	ctl_ID=dec(gui_event.ID$)
+
+	if gui_event.code$="N"
+		notify_base$=notice(gui_dev,gui_event.x%)
+		dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
+		notice$=notify_base$
+	endif
+
+	rem --- Edit wo grid
+	if ctl_ID=num(callpoint!.getDevObject("wo_grid_id")) then
+
+		e!=SysGUI!.getLastEvent()
+		woGrid!=callpoint!.getDevObject("woGrid")
+		soCreateWO!=callpoint!.getDevObject("soCreateWO")
+		woList!=soCreateWO!.getWOList()
+		woVect! = woList!.get(e!.getRow())
+
+		switch notice.code
+			case 12; rem --- ON_GRID_KEY_PRESS
+				rem ---  Allow space-bar toggle of checkbox
+				if e!.getColumn()=0 and notice.wparam=32 then
+					onoff=iff(woGrid!.getCellState(e!.getRow(),e!.getColumn()),0,1)
+					if onoff then
+						rem --- Checked
+						woVect!.setItem(soCreateWO!.getCREATE_WO(),1)
+					else
+						rem --- Unchecked
+						woVect!.setItem(soCreateWO!.getCREATE_WO(),0)
+					endif
+				endif
+			break
+			case 30; rem --- ON_GRID_CHECK_ON and ON_GRID_CHECK_OFF
+				rem --- isChecked() is the state when event sent before control is updated,
+				rem --- so use !isChecked() to get current state of control
+				if e!.getColumn()=0 then
+					onoff=!e!.isChecked()
+					if onoff then
+						rem --- Checked
+						woVect!.setItem(soCreateWO!.getCREATE_WO(),1)
+					else
+						rem --- Unchecked
+						woVect!.setItem(soCreateWO!.getCREATE_WO(),0)
+					endif
+				endif
+			break
+		swend
+	endif
+[[OPE_CREATEWOS.ASVA]]
+rem --- Create selected Work Orders
+	soCreateWO! = callpoint!.getDevObject("soCreateWO")
+	soCreateWO!.createWOs()
 [[OPE_CREATEWOS.ASIZ]]
 rem --- Resize grids
 
@@ -108,16 +169,22 @@ rem --- Add grid to form
 	aon_warnings_label$=Translate!.getTranslation("AON_WARNINGS")
 
 	rem --- Add grid to form for candidate Work Orders that could be created
+	soCreateWO!=callpoint!.getDevObject("soCreateWO")
 	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
-	woGrid!=Form!.addGrid(nxt_ctlID,10,60,1200,200); rem --- ID, x, y, width, height
+	woGrid!=Form!.addGrid(nxt_ctlID,10,60,1200,125); rem --- ID, x, y, width, height
 	callpoint!.setDevObject("woGrid",woGrid!)
 	callpoint!.setDevObject("wo_grid_id",str(nxt_ctlID))
 	callpoint!.setDevObject("wo_grid_def_cols",10)
-	callpoint!.setDevObject("wo_grid_min_rows",10)
+	callpoint!.setDevObject("wo_grid_min_rows",soCreateWO!.woCount())
 	gosub format_wo_grid
 	woGrid!.setColumnStyle(0,SysGUI!.GRID_STYLE_UNCHECKED)
 	woGrid!.setColumnEditable(0,1)
 	woGrid!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
+
+	rem --- set callbacks - processed in ACUS callpoint
+	woGrid!.setCallback(woGrid!.ON_GRID_CHECK_ON,"custom_event")
+	woGrid!.setCallback(woGrid!.ON_GRID_CHECK_OFF,"custom_event")
+	woGrid!.setCallback(woGrid!.ON_GRID_KEY_PRESS,"custom_event")
 
 	rem --- misc other init
 	util.resizeWindow(Form!, SysGui!)
@@ -127,6 +194,20 @@ rem --- Set form exit status for Cancel
 [[OPE_CREATEWOS.BSHO]]
 rem --- Set form's default exit status for OK
 	callpoint!.setDevObject("createWOs_status","OK")
+
+rem --- Open needed files          
+	num_files=1
+	dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
+	open_tables$[1] ="OPS_PARAMS",    open_opts$[1] = "OTA"
+        
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
+        
+	ops_params_dev = num(open_chans$[1])
+	dim ops_params$:open_tpls$[1]
+
+ rem --- Get needed OP params
+	readrecord(ops_params_dev,key=firm_id$+"AR00")ops_params$
+	wo_type$ = ops_params.op_create_wo_typ$
 
 rem --- Disable all fields except the custom grid
 	callpoint!.setColumnEnabled("OPE_CREATEWOS.CUSTOMER_ID",-1)
@@ -138,16 +219,6 @@ rem --- Initialize woGrid! with info in soCreateWo!
 	soCreateWO!=callpoint!.getDevObject("soCreateWO")
 	woList!=soCreateWO!.getWOList()
 	if woList!.size()
-		rem --- Disable extra grid rows
-		if woList!.size()<callpoint!.getDevObject("wo_grid_min_rows") then 
-			for row=woList!.size() to callpoint!.getDevObject("wo_grid_min_rows")-1
-				woGrid!.setRowEditable(row, 0)
-				continue
-			next row
-		else
-			woGrid!.setNumRows(woList!.size())
-		endif
-
 		rem --- Get warning highlight color
 		RGB$="255,182,193"
 		RGB$=stbl("+ENTRY_ERROR_COLOR",err=*next)
@@ -161,6 +232,10 @@ rem --- Initialize woGrid! with info in soCreateWo!
 			rem --- Set WO checkbox
 			if woVect!.getItem(soCreateWO!.getCREATE_WO()) then 
 				woGrid!.setCellStyle(row, 0, SysGUI!.GRID_STYLE_CHECKED)
+				rem --- Disable checkbox if WO is wrong type
+				if woVect!.getItem(soCreateWO!.getWO_TYPE())<>wo_type$ then
+					woGrid!.setCellEditable(row, 0, 0)
+				endif
 			else
 				woGrid!.setCellStyle(row, 0, SysGUI!.GRID_STYLE_UNCHECKED)
 			endif
