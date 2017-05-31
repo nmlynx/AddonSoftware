@@ -1,3 +1,14 @@
+[[OPE_ORDHDR.BEND]]
+rem --- As necessary, handle Cancel and new warnings from ope_createwos form
+
+	op_create_wo$=callpoint!.getDevObject("op_create_wo")
+	if op_create_wo$="A" then
+		soCreateWO!=callpoint!.getDevObject("soCreateWO")
+
+		if callpoint!.getDevObject("createWOs_status")="Cancel" or soCreateWO!.getWarn() then
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
 [[OPE_ORDHDR.BLST]]
 rem --- Set flag that Last Record has been selected
 	callpoint!.setDevObject("FirstLastRecord","LAST")
@@ -518,8 +529,8 @@ rem --- Launch ope_createwos form to create selected work orders
 			rem --- Make sure focus returns to this form
 			callpoint!.setStatus("ACTIVATE")
 
-			rem --- Handle Cancel from ope_createwos form
-			if callpoint!.getDevObject("createWOs_status")="Cancel" then
+			rem --- Handle Cancel and new warnings from ope_createwos form
+			if callpoint!.getDevObject("createWOs_status")="Cancel" or soCreateWO!.getWarn() then
 				rem --- Barista always goes to the next record at this point in BREX. Cannot stay where we are now via ABORT.
 				rem --- Using short key for RECORD so when Barista goes to the next record it will end up on this current record.
 				callpoint!.setStatus("RECORD:["+firm_id$+"E"+"  "+callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")+"]")
