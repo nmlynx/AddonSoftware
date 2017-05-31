@@ -213,10 +213,13 @@ rem --- Disable all fields except the custom grid
 	callpoint!.setColumnEnabled("OPE_CREATEWOS.CUSTOMER_ID",-1)
 	callpoint!.setColumnEnabled("OPE_CREATEWOS.ORDER_NO",-1)
 
+rem --- Reset soCreateWO! warn flag
+	soCreateWO!=callpoint!.getDevObject("soCreateWO")
+	soCreateWO!.setWarn(0)
+
 rem --- Initialize woGrid! with info in soCreateWo!
 	SysGUI!.setRepaintEnabled(0)
 	woGrid!=callpoint!.getDevObject("woGrid")
-	soCreateWO!=callpoint!.getDevObject("soCreateWO")
 	woList!=soCreateWO!.getWOList()
 	if woList!.size()
 		rem --- Get warning highlight color

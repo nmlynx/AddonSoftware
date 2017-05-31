@@ -75,6 +75,7 @@ rem --- Use statements and declares
         field protected BBjString tplSfeWOSubcnt$
         field protected BBTranslator Translate!
         field protected BBjString userId$
+        field public BBjNumber Warn = 0
         field protected BBjString woCategory$
         field protected BBjString woType$
 
@@ -362,6 +363,7 @@ addWOCmnt_error:rem --- Method error trap/handler
                 cmnt$=cmnt$+" "+cmpDate$
                 #addWOCmnt(wo_no$,cmnt$)
                 
+                #Warn=1
                 msg_id$="OP_WO_CMPDATE_LATE"
                 dim msg_tokens$[4]
                 msg_tokens$[1]=cvs(itemId$,2)
