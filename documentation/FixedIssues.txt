@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-05-26
+ Report Date:   2017-05-31
  Report Branch: AddonSoftware 17.00
  Last Release:  AddonSoftware 16.24
 =======================================================================================================================================
@@ -636,4 +636,13 @@ Bug 9080 - AP - Receipt History Inquiry has an incorrect report heading. Changed
 ----
 Modified: ap/src/apr_receipts.aon
 
-
+=======================================================================================================================================
+Revision: 1731ce4ef681cb03a15bb1791875f45bb3c98fb5
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/31/2017 12:57:41 PM
+Message:
+Bug 9081: Renamed FISCAL_CAL auto-launch task WARNFISCAL so that it
+executes after the INIT_1DATA and INIT_DATA tasks.
+----
+Modified: ad/src/adx_check_fiscal_cal.aon
+Rename: data/sync/ads_autolaunch~warnfiscal.xml (from data/sync/ads_autolaunch~fiscal_cal.xml)
