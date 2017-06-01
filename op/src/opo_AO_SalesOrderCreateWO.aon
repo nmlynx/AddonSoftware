@@ -213,13 +213,15 @@ AO_SalesOrderCreateWO_error:rem --- Method error trap/handler
         rem  * Creates a new woVect! BBjVector for the given SO detail line and adds it to the isnWOMap! HashMap
         rem  * if its not already in isnWOMap!. Returns the new or existing woVect!.
         rem  * 
-        rem  * @param BBjString rowData$
+        rem  * @param BBjString rowDataIn$
         rem  * @param BBjString item_description$
         rem  *
         rem  * @return BBjVector woVect!
         rem  */
-        method public BBjVector addSODetailLine(BBjString rowData$, BBjString item_description$)
+        method public BBjVector addSODetailLine(BBjString rowDataIn$, BBjString item_description$)
             seterr addSODetailLine_error
+            dim rowData$:#tplOpeOrdDet$
+            rowData$=rowDataIn$
 
             rem --- Return existing rowVect! for given SO detail line, or create a new one.
             if #isnWOMap!.containsKey(rowData.internal_seq_no$) then
@@ -448,12 +450,14 @@ calculateSchProdQty_error:rem --- Method error trap/handler
         rem  * Note: Do NOT use this method if the SO is a Quote.
         rem  * Note: Do NOT use this method if the SO is on Credit Hold.
         rem  * 
-        rem  * @param BBjString rowData$
+        rem  * @param BBjString rowDataIn$
         rem  *
         rem  * @return BBjString itemDescription$
         rem  */
-        method public BBjString canCreateWO(BBjString rowData$)
+        method public BBjString canCreateWO(BBjString rowDataIn$)
             seterr canCreateWO_error
+            dim rowData$:#tplOpeOrdDet$
+            rowData$=rowDataIn$
             valid=1
 
             rem --- Sales Order detail line shipped quantity must be positive.
@@ -696,6 +700,37 @@ createWOs_error:rem --- Method error trap/handler
             methodret woList!
             
 getWOList_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Gets the woVect! BBjVector from isnWOMap! HashMap for the given Sale Order detail line internal
+        rem  * sequence number (isn). Return null() if isnWOMap! does not contain the isn key.
+        rem  * 
+        rem  * @param BBjString isn$
+        rem  * 
+        rem  * @return BBjVector woVect!
+        rem  */
+        method public BBjVector getWOVect(BBjString isn$)
+            seterr getWOVect_error
+            woVect! = null()
+
+            if #isnWOMap!.containsKey(isn$) then woVect! = #isnWOMap!.get(isn$)
+
+            methodret woVect!
+            
+getWOVect_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
