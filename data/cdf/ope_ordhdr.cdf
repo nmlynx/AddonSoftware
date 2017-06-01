@@ -5,8 +5,14 @@ rem --- As necessary, handle Cancel and new warnings from ope_createwos form
 	if op_create_wo$="A" then
 		soCreateWO!=callpoint!.getDevObject("soCreateWO")
 
-		if callpoint!.getDevObject("createWOs_status")="Cancel" or soCreateWO!.getWarn() then
-			callpoint!.setStatus("ABORT")
+		createWOs_status$=callpoint!.getDevObject("createWOs_status",err=*next)
+		if createWOs_status$="Cancel" or soCreateWO!.getWarn()then
+			rem --- Handle Cancel and warn the same as it must be handled in BREX
+			callpoint!.setStatus("RECORD:["+firm_id$+"E"+"  "+callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")+"]")
+
+			rem --- A new soCreateWO! instance will be created, so need to close files in this one.
+			soCreateWO!.close()
+			break
 		endif
 	endif
 [[OPE_ORDHDR.BLST]]

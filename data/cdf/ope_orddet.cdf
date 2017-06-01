@@ -650,6 +650,9 @@ rem --- Initialize inventory item update
 
 	endif
 
+rem --- If creating WOs from OP, when appropriate ask about creating a WO for this detail line
+	gosub ask_create_WO
+
 awri_update_hdr: rem --- Update header
 
 	rem --- disp_grid_totals already executed in AGRE, so no need to do it again here
@@ -1001,6 +1004,7 @@ rem --- Skip if (not a new row and not row modifed) or row deleted
 
 	this_row = callpoint!.getValidationRow()
 	if callpoint!.getGridRowNewStatus(this_row) <> "Y" and callpoint!.getGridRowModifyStatus(this_row) <> "Y" then
+
 		break; rem --- exit callpoint
 	endif
 
@@ -1277,6 +1281,53 @@ rem --- Don't extend price until grid vector has been updated
 	rem unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 	rem gosub disp_ext_amt
 [[OPE_ORDDET.<CUSTOM>]]
+rem ==========================================================================
+ask_create_WO: rem --- If creating WOs from OP, when appropriate ask about creating a WO for this detail line
+rem ==========================================================================
+
+	rem --- Is OP parameter set for asking about creating Work Order?
+	op_create_wo$=callpoint!.getDevObject("op_create_wo")
+	if op_create_wo$="A" then
+		soCreateWO!=callpoint!.getDevObject("soCreateWO")
+		gridRowVect! = GridVect!.getItem(0)
+		rowData$ = gridRowVect!.get(callpoint!.getValidationRow())
+
+		rem -- Is SO detail line a validate candidate to create a WO?
+		item_description$ = soCreateWO!.canCreateWO(rowData$)
+		if item_description$ <> "" then
+			rem --- Ask about creating WO if haven't asked yet and there isn't an existing WO link
+			woVect! = soCreateWO!.getWOVect(callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
+			if woVect!<>null() then
+				rem --- SO detail line already exists in soCreateWO!
+				if woVect!.getItem(soCreateWO!.getWO_NO()) <> "" then
+					rem --- Linked WO already exists for the SO detail line, so WO creation was previously approved
+					woVect!.setItem(soCreateWO!.getCREATE_WO(),1)
+					woVect!.setItem(soCreateWO!.getASKED(),1)
+				endif
+			else
+				rem --- SO detail line does NOT already exist in soCreateWO!, so add it
+				woVect! = soCreateWO!.addSODetailLine(rowData$, item_description$)
+			endif
+
+			rem --- Ask about creating WO if NOT previously asked
+			if !woVect!.getItem(soCreateWO!.getASKED()) then
+				msg_id$ = "OP_ASK_CREATE_WO"
+				dim msg_tokens$[2]
+				msg_tokens$[1] = cvs(callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"),2)
+				msg_tokens$[2] = callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED")
+				gosub disp_message
+				if msg_opt$="Y" then
+					woVect!.setItem(soCreateWO!.getCREATE_WO(),1)
+				else
+					woVect!.setItem(soCreateWO!.getCREATE_WO(),0)
+				endif
+				woVect!.setItem(soCreateWO!.getASKED(),1)
+			endif
+		endif
+	endif
+
+	return
+
 rem ==========================================================================
 disp_grid_totals: rem --- Get order totals and display, save header totals
 rem ==========================================================================
