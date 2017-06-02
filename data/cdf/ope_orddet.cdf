@@ -917,6 +917,17 @@ rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 		action$="UC"
 		gosub uncommit_iv
 	endif
+
+rem --- 
+	op_create_wo$=callpoint!.getDevObject("op_create_wo")
+	if op_create_wo$="A" then
+		soCreateWO!=callpoint!.getDevObject("soCreateWO")
+		isn$ = callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
+		if !soCreateWO!.unlinkWO(isn$) then
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
 [[OPE_ORDDET.AGRN]]
 rem (Fires regardles of new or existing row.  Use callpoint!.getGridRowNewStatus(callpoint!.getValidationRow()) to distinguish the two)
 
