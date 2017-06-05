@@ -917,7 +917,7 @@ setCreateWO_error:rem --- Method error trap/handler
         rem  * @param BBjString isn$
         rem  * 
         rem  * @return boolean  1=true: woVect! removed
-        rem  *                 0=false: woVect! not removed
+        rem  *                 0=false: woVect! not removed, operator didn't approve
         rem  */
         method public boolean unlinkWO(BBjString isn$)
             seterr unlinkWO_error
@@ -950,6 +950,63 @@ setCreateWO_error:rem --- Method error trap/handler
             methodret true_false
             
 unlinkWO_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Removes all existings woVect! BBjVectors from isnWOMap! HashMap for the Sales Order.
+        rem  * Asks operator approval before removing woVect! BBjVectors if there are any existing
+        rem  * linked Work Order.
+        rem  * 
+        rem  * @return boolean  1=true: all woVect! removed
+        rem  *                 0=false: no woVect! removed, operator didn't approve
+        rem  */
+        method public boolean unlinkWOs()
+            seterr unlinkWOs_error
+            true_false=Boolean.valueOf("true")
+
+            if #isnWOMap!.size() > 0 
+                linkedIsn! = BBjAPI().makeVector()
+                isnKeys! = #isnWOMap!.keySet()
+                iter! = isnKeys!.iterator()
+                while iter!.hasNext()
+                    isn$ = iter!.next()
+                    woVect! = #isnWOMap!.get(isn$)
+                    wo_no$ = woVect!.getItem(#WO_NO)
+                    if cvs(wo_no$,2)<>"" then linkedIsn!.addItem(isn$)
+                wend
+                if linkedIsn!.size() then
+                    rem --- Warn there is an existing WO linked to this Sales Order detail line.
+                    rem --- Ask if they want to continue with the delete.
+                    msg_id$="OP_DEL_LINKED_WOS_Q"
+                    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+                    
+                    if msg_opt$="Y" then
+                        iter!=linkedIsn!.iterator()
+                        while iter!.hasNext()
+                            isn$ = iter!.next()
+                            #removeLinkedWO(isn$)
+                        wend
+                    else
+                        true_false=Boolean.valueOf("false")
+                    endif
+                endif
+            endif
+
+            methodret true_false
+            
+unlinkWOs_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then

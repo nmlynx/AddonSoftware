@@ -918,7 +918,8 @@ rem --- remove and uncommit Lot/Serial records (if any) and detail lines if not
 		gosub uncommit_iv
 	endif
 
-rem --- 
+rem --- Get user approval to delete if there is a WO linked to this detail line
+
 	op_create_wo$=callpoint!.getDevObject("op_create_wo")
 	if op_create_wo$="A" then
 		soCreateWO!=callpoint!.getDevObject("soCreateWO")
