@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-05-31
+ Report Date:   2017-06-05
  Report Branch: AddonSoftware 17.00
  Last Release:  AddonSoftware 16.24
 =======================================================================================================================================
@@ -646,3 +646,14 @@ executes after the INIT_1DATA and INIT_DATA tasks.
 ----
 Modified: ad/src/adx_check_fiscal_cal.aon
 Rename: data/sync/ads_autolaunch~warnfiscal.xml (from data/sync/ads_autolaunch~fiscal_cal.xml)
+
+=======================================================================================================================================
+Revision: 1ef5a3e33bf841704bc22736c7f4d5d1eceb8a48
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 6/5/2017 10:56:21 AM
+Message:
+Bug 9083: Handle EOF error when op code file (bmc_opcodes (bmm-08) or
+sfc_oprtncod (sfm-02)) is empty.
+----
+Modified: data/bar/sfe_loadbal.xml
+Modified: data/cdf/sfe_loadbal.cdf
