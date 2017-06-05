@@ -302,6 +302,7 @@ rem --- Create soCreateWO! instance if needed
 		order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 		soCreateWO!=new SalesOrderCreateWO(firm_id$,customer_id$,order_no$)
 		callpoint!.setDevObject("soCreateWO",soCreateWO!)
+		callpoint!.setDevObject("createWOs_status","")
 	endif
 [[OPE_ORDHDR.ARAR]]
 rem --- If First/Last Record was used, did it return an Order?
@@ -1107,6 +1108,7 @@ rem --- Create soCreateWO! instance if needed
 		endif
 
 		callpoint!.setDevObject("soCreateWO",soCreateWO!)
+		callpoint!.setDevObject("createWOs_status","")
 	endif
 [[OPE_ORDHDR.BOVE]]
 rem --- Restrict lookup to open orders and open invoices
@@ -1290,6 +1292,17 @@ rem --- Save controls in the global userObj! (vector)
 	userObj!.addItem(mwin!.addStaticText(15108,695,35,160,15,"",$0000$)); rem Manual Price  (9)
  	userObj!.addItem(mwin!.addStaticText(15109,695,50,160,15,"",$0000$)); rem Alt/Super (10)
 [[OPE_ORDHDR.BDEL]]
+rem --- Get user approval to delete if there are any WOs linked to this Sales Order
+
+	op_create_wo$=callpoint!.getDevObject("op_create_wo")
+	if op_create_wo$="A" then
+		soCreateWO! = callpoint!.getDevObject("soCreateWO")
+		if !soCreateWO!.unlinkWOs() then
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
+
 rem --- Remove committments for detail records by calling ATAMO
 
 	ope11_dev = fnget_dev("OPE_ORDDET")
