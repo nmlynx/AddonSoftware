@@ -235,8 +235,8 @@ rem --- Initialize woGrid! with info in soCreateWo!
 			rem --- Set WO checkbox
 			if woVect!.getItem(soCreateWO!.getCREATE_WO()) then
 				woGrid!.setCellStyle(row, 0, SysGUI!.GRID_STYLE_CHECKED)
-				rem --- Disable checkbox if WO is wrong type
-				if woVect!.getItem(soCreateWO!.getWO_TYPE())<>wo_type$ then
+				rem --- Disable checkbox if WO exists and is wrong type
+				if woVect!.getItem(soCreateWO!.getWO_NO())<>"" and woVect!.getItem(soCreateWO!.getWO_TYPE())<>wo_type$ then
 					woGrid!.setCellEditable(row, 0, 0)
 				else
 					woGrid!.setCellEditable(row, 0, 1)
