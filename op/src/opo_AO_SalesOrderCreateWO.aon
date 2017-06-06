@@ -817,8 +817,8 @@ initIsnWOMap_error:rem --- Method error trap/handler
         methodend
 
         rem /**
-        rem  * Removes existing planned Work Order, or link to existing released Work Order, for the given
-        rem  * Sales Order detail line internal sequence number (isn).
+        rem  * Removes existing planned (or quote) Work Order, or link to existing open (released) Work Order,
+        rem  * for the given Sales Order detail line internal sequence number (isn).
         rem  * 
         rem  * @param BBjString isn$
         rem  */
@@ -829,7 +829,7 @@ initIsnWOMap_error:rem --- Method error trap/handler
             wo_no$=woVect!.getItem(#WO_NO)
             dim sfeWOMastrRec$:#tplSfeWOMastr$
             extractrecord(#devSfeWOMastr,key=#firmId$+"  "+wo_no$,knum="PRIMARY",dom=*next)sfeWOMastrRec$
-            if sfeWOMastrRec.wo_status$="P" then
+            if pos(sfeWOMastrRec.wo_status$="PQ") then
                 rem --- Remove existing Planned WO
                 remove(#devSfeWOMastr,key=#firmId$+"  "+wo_no$,err=*next)
 
@@ -853,7 +853,7 @@ initIsnWOMap_error:rem --- Method error trap/handler
                 sfeWOMastrRec.sls_ord_seq_ref$=""
                 writerecord(#devSfeWOMastr,err=*next)sfeWOMastrRec$
             endif
-            if pos(sfeWOMastrRec.wo_status$="OP")=0 then
+            if sfeWOMastrRec.wo_status$="C" then
                 rem --- Make sure the extracted record is released
                 read(#devSfeWOMastr,err=*next)
             endif

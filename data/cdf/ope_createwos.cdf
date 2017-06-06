@@ -233,14 +233,17 @@ rem --- Initialize woGrid! with info in soCreateWo!
 			woVect! = woList!.get(row)
 
 			rem --- Set WO checkbox
-			if woVect!.getItem(soCreateWO!.getCREATE_WO()) then 
+			if woVect!.getItem(soCreateWO!.getCREATE_WO()) then
 				woGrid!.setCellStyle(row, 0, SysGUI!.GRID_STYLE_CHECKED)
 				rem --- Disable checkbox if WO is wrong type
 				if woVect!.getItem(soCreateWO!.getWO_TYPE())<>wo_type$ then
 					woGrid!.setCellEditable(row, 0, 0)
+				else
+					woGrid!.setCellEditable(row, 0, 1)
 				endif
 			else
 				woGrid!.setCellStyle(row, 0, SysGUI!.GRID_STYLE_UNCHECKED)
+				woGrid!.setCellEditable(row, 0, 1)
 			endif
 			woGrid!.setCellText(row, 0, "")
 
