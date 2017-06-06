@@ -1849,6 +1849,14 @@ rem --- Convert Quote?
 
 				rem --- Reload detail grid with updated ope-11 (ope_orddet) records
 				callpoint!.setStatus("REFGRID")
+
+				rem --- Create all possible Work Orders when Quote changed to Sale
+				op_create_wo$=callpoint!.getDevObject("op_create_wo")
+				if op_create_wo$="A" then
+					soCreateWO!=callpoint!.getDevObject("soCreateWO")
+					soCreateWO!.initIsnWOMap(GridVect!.getItem(0))
+					soCreateWO!.setCreateWO(Boolean.valueOf("true"))
+				endif
 			else
 				rem --- Changed their mind about converting a quote
 				inv_type$="P"
