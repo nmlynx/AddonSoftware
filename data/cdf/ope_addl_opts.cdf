@@ -73,6 +73,20 @@ rem --- Send back to caller
 	disc_perc  = num(callpoint!.getUserInput())
 	gosub recalc
 [[OPE_ADDL_OPTS.COMMIT_FLAG.AVAL]]
+rem --- Is OP parameter set for asking about creating Work Order?
+
+	if callpoint!.getDevObject("op_create_wo")<>null() and callpoint!.getDevObject("op_create_wo")="A" then
+		if callpoint!.getUserInput()="N" and callpoint!.getColumnUndoData("OPE_ADDL_OPTS.COMMIT_FLAG")="Y" then
+			isn$ = UserObj!.getFieldAsString("INTERNAL_SEQ_NO")
+			soCreateWO! = callpoint!.getDevObject("soCreateWO")
+			if !soCreateWO!.unlinkWO(isn$) then
+				callpoint!.setColumnData("OPE_ADDL_OPTS.COMMIT_FLAG","Y",1)
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+		endif
+	endif
+
 rem --- Send back to caller
 
 	UserObj!.setFieldValue("COMMIT_FLAG", callpoint!.getUserInput())

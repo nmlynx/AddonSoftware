@@ -97,6 +97,7 @@ rem --- Setup a templated string to pass information back and forth from form
 :				"MAN_PRICE:C(1)," +
 :				"PRINT_FLAG:C(1)," +
 :				"EST_SHP_DATE:C(8)," +
+:				"INTERNAL_SEQ_NO:c(12)," +
 :				"STD_LIST_PRC:N(7*)," +
 :				"DISC_PERCENT:N(7*)," +
 :				"UNIT_PRICE:N(7*)," +
@@ -130,6 +131,7 @@ rem --- Setup a templated string to pass information back and forth from form
 	a!.setFieldValue("MAN_PRICE",    callpoint!.getColumnData("OPE_ORDDET.MAN_PRICE"))
 	a!.setFieldValue("PRINT_FLAG",   callpoint!.getColumnData("OPE_ORDDET.PICK_FLAG"))
 	a!.setFieldValue("isEditMode",   callpoint!.isEditMode())
+	a!.setFieldValue("INTERNAL_SEQ_NO",   callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
 
 	callpoint!.setDevObject("additional_options", a!)
 
