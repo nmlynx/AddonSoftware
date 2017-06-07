@@ -334,6 +334,81 @@ addWOCmnt_error:rem --- Method error trap/handler
         methodend
 
         rem /**
+        rem  * Warns if the new Estimated Ship Date for the Sales Order detail line is after the
+        rem  * linked Work Orders Estimated Completion Date, and asks operator for approval to
+        rem  * continue. 
+        rem  * 
+        rem  * @param BBjString isn$
+        rem  * @param BBjString newEstShpDate$
+        rem  * 
+        rem  * @return boolean  1=true: date change approved
+        rem  *                 0=false: date change not approved
+        rem  */
+        method public boolean adjustEstShpDate(BBjString isn$, BBjString newEstShpDate$)
+            seterr adjustEstShpDate_error
+            true_false=1
+
+            if #isnWOMap!.containsKey(isn$) then
+                woVect! = #isnWOMap!.get(isn$)
+                wo_no$ = woVect!.getItem(#WO_NO)
+                estCmpDate$ = woVect!.getItem(#WO_ESTCMPDATE)
+                if cvs(wo_no$,2)<>"" and newEstShpDate$ < estCmpDate$ then
+                    rem --- Warn the new estimated ship date is before the linked Work Order's estmated completion date. 
+                    rem --- Ask if they want to continue with changing the estimated ship date. 
+                    newShpDate$=date(jul(newEstShpDate$,"%Yd%Mz%Dz"):stbl("+DATE_MASK"))
+                    cmpDate$=date(jul(estCmpDate$,"%Yd%Mz%Dz"):stbl("+DATE_MASK"))
+                    rem ... The new est ship date %1 is before linked WO %2 est completion date %3.
+                    rem ... Are you sure you want to use %1 for the est ship date for item %4?
+                    msg_id$="OP_EST_SHIP_DATE_Q"
+                    dim msg_tokens$[4]
+                    msg_tokens$[1]=newShpDate$
+                    msg_tokens$[2]=wo_no$
+                    msg_tokens$[3]=cmpDate$
+                    msg_tokens$[4]=cvs(woVect!.getItem(#SOLINE_ITEM),2)
+                    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+                    
+                    if msg_opt$="Y" then
+                        woVect!.setItem(#SOLINE_SHIPDATE, newEstShpDate$)
+                        dim sfeWOMastrRec$:#tplSfeWOMastr$
+                        readrecord(#devSfeWOMastr,key=#firmId$+"  "+wo_no$,knum="PRIMARY",dom=*next)sfeWOMastrRec$
+                        if pos(sfeWOMastrRec.wo_status$="OPQ") then
+                            oldEstShpDate$ = woVect!.getItem(#SOLINE_SHIPDATE)
+                            oldShpDate$=date(jul(oldEstShpDate$,"%Yd%Mz%Dz"):stbl("+DATE_MASK"))
+                            cmnt$=#Translate!.getTranslation("AON_LINKED")+" "+#Translate!.getTranslation("AON_SALES")+" "+#Translate!.getTranslation("AON_ORDER")
+                            cmnt$=cmnt$+" "+#orderNo$+" "
+                            cmnt$=cmnt$+#Translate!.getTranslation("AON_EST")+" "+#Translate!.getTranslation("AON_SHIP_DATE")
+                            cmnt$=cmnt$+" "+oldShpDate$+" "
+                            cmnt$=cmnt$+#Translate!.getTranslation("AON_CHANGED_TO")
+                            cmnt$=cmnt$+" "+newShpDate$
+                            #addWOCmnt(wo_no$,cmnt$)
+                        endif
+                    else
+                        true_false=Boolean.valueOf("false")
+                    endif
+                else
+                    rem --- No existing linked WO so just woVect! with new estmated ship date
+                    woVect!.setItem(#SOLINE_SHIPDATE, newEstShpDate$)
+                endif
+            endif
+
+            methodret true_false
+            
+adjustEstShpDate_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
         rem  * Calculates the Work Order estimated completion date for the woVect! BBjVector from
         rem  * isnWOMap! HashMap. Issues warning and adds a Work Order comment (SFE_WOCOMNT record) if the Sales Order 
         rem  * detail line estimated ship date is BEFORE the estimated completion date.
