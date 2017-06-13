@@ -1,3 +1,31 @@
+[[OPE_ORDHDR.AOPT-WOLN]]
+rem --- Launch ope_createwos form to create selected work orders
+
+	rem --- Update soCreateWO! with CURRENT detail grid line_no so ope_createwos grid sorts in the same order.
+	soCreateWO!=callpoint!.getDevObject("soCreateWO")
+	soCreateWO!.updateLineNo(GridVect!.getItem(0))
+
+	customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+
+	dim dflt_data$[2,1]
+	dflt_data$[1,0] = "CUSTOMER_ID"
+	dflt_data$[1,1] = customer_id$
+	dflt_data$[2,0] = "ORDER_NO"
+	dflt_data$[2,1] = order_no$
+	key_pfx$=firm_id$+customer_id$+order_no$
+
+	call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
+:		"OPE_CREATEWOS", 
+:		stbl("+USER_ID"), 
+:		"", 
+:		key_pfx$,
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
+	rem --- Make sure focus returns to this form
+	callpoint!.setStatus("ACTIVATE")
 [[OPE_ORDHDR.BEND]]
 rem --- As necessary, handle Cancel and new warnings from ope_createwos form
 
@@ -404,6 +432,7 @@ rem --- Set flags
 	callpoint!.setOptionEnabled("CRCH",0)
 	callpoint!.setOptionEnabled("COMM",0)
 	callpoint!.setOptionEnabled("TTLS",0)
+	callpoint!.setOptionEnabled("WOLN",0)
 
 rem --- Clear order helper object
 
@@ -864,6 +893,7 @@ rem --- Enable buttons as appropriate
 			callpoint!.setOptionEnabled("PRNT",0)
 			callpoint!.setOptionEnabled("TTLS",0)
 			rem callpoint!.setOptionEnabled("CRAT",0); rem --- handled via opc_creditmsg.aon call below
+			callpoint!.setOptionEnabled("WOLN",0)
 		else
 			callpoint!.setOptionEnabled("DINV",0)
 			callpoint!.setOptionEnabled("CINV",0)
@@ -871,6 +901,20 @@ rem --- Enable buttons as appropriate
 			callpoint!.setOptionEnabled("PRNT",1)
 			callpoint!.setOptionEnabled("TTLS",1)
 			rem callpoint!.setOptionEnabled("CRAT",1); rem --- handled via opc_creditmsg.aon call below
+
+			op_create_wo$=callpoint!.getDevObject("op_create_wo")
+			if op_create_wo$="A" then
+				soCreateWO!=callpoint!.getDevObject("soCreateWO")
+				if soCreateWO!<>null() and soCreateWO!.woCount() then
+					rem --- Enable Work Order Links button only if order NOT on Credit Hold and NOT a Quote
+					if callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG")<>"C" and
+:					callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" then
+						callpoint!.setOptionEnabled("WOLN",1)
+					endif
+				else
+					callpoint!.setOptionEnabled("WOLN",0)
+				endif
+			endif
 		endif
 	endif
 
@@ -917,6 +961,7 @@ rem --- Disable header buttons
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("RPRT",0)
 	callpoint!.setOptionEnabled("TTLS",0)
+	callpoint!.setOptionEnabled("WOLN",0)
 
 rem --- Capture current totals so we can tell later if they were changed in the grid
 
@@ -1112,6 +1157,11 @@ rem --- Create soCreateWO! instance if needed
 		if callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG")<>"C" and
 :		callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" then
 			soCreateWO!.initIsnWOMap(GridVect!.getItem(0))
+				if soCreateWO!.woCount() then
+					callpoint!.setOptionEnabled("WOLN",1)
+				else
+					callpoint!.setOptionEnabled("WOLN",0)
+				endif
 
 			rem --- If order was created via Duplicate Invoice, then create all possible Work Orders.
 			if user_tpl.hist_ord$="Y" and callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" then
@@ -3299,6 +3349,7 @@ rem --- Set up Lot/Serial button (and others) properly
 	callpoint!.setOptionEnabled("CRCH",0)
 	callpoint!.setOptionEnabled("COMM",0)
 	callpoint!.setOptionEnabled("CRAT",0)
+	callpoint!.setOptionEnabled("WOLN",0)
 
 rem --- Parse table_chans$[all] into an object
 
