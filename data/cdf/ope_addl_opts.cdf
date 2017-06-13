@@ -84,10 +84,11 @@ rem --- Is OP parameter set for asking about creating Work Order?
 			soCreateWO! = callpoint!.getDevObject("soCreateWO")
 			if !soCreateWO!.adjustEstShpDate(isn$, newEstShpDate$) then
 				callpoint!.setColumnData("OPE_ADDL_OPTS.EST_SHP_DATE",oldEstShpDate$,1)
-				callpoint!.setStatus("ABORT")
+				callpoint!.setStatus("ACTIVATE-ABORT")
 				callpoint!.setDevObject("exit_ok","N")
 				break
 			endif
+			callpoint!.setStatus("ACTIVATE")
 		endif
 	endif
 
@@ -112,10 +113,11 @@ rem --- Is OP parameter set for asking about creating Work Order?
 			soCreateWO! = callpoint!.getDevObject("soCreateWO")
 			if !soCreateWO!.unlinkWO(isn$) then
 				callpoint!.setColumnData("OPE_ADDL_OPTS.COMMIT_FLAG","Y",1)
-				callpoint!.setStatus("ABORT")
+				callpoint!.setStatus("ACTIVATE-ABORT")
 				callpoint!.setDevObject("exit_ok","N")
 				break
 			endif
+			callpoint!.setStatus("ACTIVATE")
 		endif
 	endif
 

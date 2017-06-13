@@ -59,6 +59,7 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 rem --- Create selected Work Orders
 	soCreateWO! = callpoint!.getDevObject("soCreateWO")
 	soCreateWO!.createWOs()
+	callpoint!.setStatus("ACTIVATE")
 [[OPE_CREATEWOS.ASIZ]]
 rem --- Resize grids
 
@@ -238,12 +239,9 @@ rem --- Initialize woGrid! with info in soCreateWo!
 				rem --- Disable checkbox if WO exists and is wrong type
 				if woVect!.getItem(soCreateWO!.getWO_NO())<>"" and woVect!.getItem(soCreateWO!.getWO_TYPE())<>wo_type$ then
 					woGrid!.setCellEditable(row, 0, 0)
-				else
-					woGrid!.setCellEditable(row, 0, 1)
 				endif
 			else
 				woGrid!.setCellStyle(row, 0, SysGUI!.GRID_STYLE_UNCHECKED)
-				woGrid!.setCellEditable(row, 0, 1)
 			endif
 			woGrid!.setCellText(row, 0, "")
 

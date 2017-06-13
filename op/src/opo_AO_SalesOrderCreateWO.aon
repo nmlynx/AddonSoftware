@@ -23,19 +23,18 @@ rem --- Use statements and declares
 
     class public AO_SalesOrderCreateWO
         field protected BBjString customerId$
+        field protected BBjNumber devAdsMasks = -1
         field protected BBjNumber devBmcOpCodes = -1
         field protected BBjNumber devBmmBillCmts = -1
         field protected BBjNumber devBmmBillMast = -1
-        field protected BBjNumber devBmmBillMat = -1
-        field protected BBjNumber devBmmBillOper = -1
-        field protected BBjNumber devBmmBillSub = -1
         field protected BBjNumber devIvmItemMast = -1
         field protected BBjNumber devIvmItemWhse = -1
+        field protected BBjNumber devIvsParams = -1
+        field protected BBjNumber devOpeOrdDet = -1
+        field protected BBjNumber devOpsParams = -1
+        field protected BBjNumber devSfcWOTypeCd = -1
         field protected BBjNumber devSfeWOComnt = -1
         field protected BBjNumber devSfeWOMastr = -1
-        field protected BBjNumber devSfeWOMatl = -1
-        field protected BBjNumber devSfeWOOprtn = -1
-        field protected BBjNumber devSfeWOSubcnt = -1
         field protected BBjString firmId$
         field protected HashMap isnWOMap! = new HashMap()
             rem  isnWOMap! structure
@@ -58,21 +57,21 @@ rem --- Use statements and declares
                     rem  woVect! index = 10 (WO_ESTCMPDATE): WO estimated completion date when linked WO exists
                     rem  woVect! index = 11 (WO_TYPE): WO Type when linked WO exists
                     rem  woVect! index = 12 (WARNINGS): Warnings
+        field protected BBjString maskIvU$
+        field protected BBjString maskSfU$
         field protected BBjString orderNo$
+        field protected BBjString tplAdsMasks$
         field protected BBjString tplBmcOpCodes$
         field protected BBjString tplBmmBillCmts$
         field protected BBjString tplBmmBillMast$
-        field protected BBjString tplBmmBillMat$
-        field protected BBjString tplBmmBillOper$
-        field protected BBjString tplBmmBillSub$
         field protected BBjString tplIvmItemMast$
         field protected BBjString tplIvmItemWhse$
+        field protected BBjString tplIvsParams$
         field protected BBjString tplOpeOrdDet$
+        field protected BBjString tplOpsParams$
+        field protected BBjString tplSfcWOTypeCd$
         field protected BBjString tplSfeWOComnt$
         field protected BBjString tplSfeWOMastr$
-        field protected BBjString tplSfeWOMatl$
-        field protected BBjString tplSfeWOOprtn$
-        field protected BBjString tplSfeWOSubcnt$
         field protected BBTranslator Translate!
         field protected BBjString userId$
         field public BBjNumber Warn = 0
@@ -110,47 +109,50 @@ rem --- Use statements and declares
             #orderNo$ = orderNo$
 
             rem --- Open needed files          
-            num_files=11
+            num_files=12
             dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
-            open_tables$[1] ="BMC_OPCODES",   open_opts$[1] = "OTA@"
-            open_tables$[2] ="BMM_BILLCMTS",  open_opts$[2] = "OTA@"
-            open_tables$[3] ="BMM_BILLMAST",  open_opts$[3] = "OTA@"
-            open_tables$[4] ="IVM_ITEMMAST",  open_opts$[4] = "OTA@"
-            open_tables$[5] ="IVM_ITEMWHSE",  open_opts$[5] = "OTA@"
-            open_tables$[6] ="IVS_PARAMS",    open_opts$[6] = "OTA@"
-            open_tables$[7] ="OPE_ORDDET",    open_opts$[7] = "OTA@"
-            open_tables$[8] ="OPS_PARAMS",    open_opts$[8] = "OTA@"
-            open_tables$[9] ="SFE_WOCOMNT",   open_opts$[9] = "OTA[1]"
-            open_tables$[10] ="SFE_WOMASTR",   open_opts$[10] = "OTA[1]"
-            open_tables$[11] ="SFC_WOTYPECD", open_opts$[11] = "OTA@"
+            open_tables$[1] ="ADS_MASKS",     open_opts$[1] = "OTA@"
+            open_tables$[2] ="BMC_OPCODES",   open_opts$[2] = "OTA@"
+            open_tables$[3] ="BMM_BILLCMTS",  open_opts$[3] = "OTA@"
+            open_tables$[4] ="BMM_BILLMAST",  open_opts$[4] = "OTA@"
+            open_tables$[5] ="IVM_ITEMMAST",  open_opts$[5] = "OTA@"
+            open_tables$[6] ="IVM_ITEMWHSE",  open_opts$[6] = "OTA@"
+            open_tables$[7] ="IVS_PARAMS",    open_opts$[7] = "OTA@"
+            open_tables$[8] ="OPE_ORDDET",    open_opts$[8] = "OTA@"
+            open_tables$[9] ="OPS_PARAMS",    open_opts$[9] = "OTA@"
+            open_tables$[10] ="SFC_WOTYPECD", open_opts$[10] = "OTA@"
+            open_tables$[11] ="SFE_WOCOMNT",  open_opts$[11] = "OTA[1]"
+            open_tables$[12] ="SFE_WOMASTR",  open_opts$[12] = "OTA[1]"
         
             call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
         
             if open_status$ = "" then
                 rem --- Hold on to channels and record templates
-                #devBmcOpCodes = num(open_chans$[1])
-                #devBmmBillCmts = num(open_chans$[2])
-                #devBmmBillMast = num(open_chans$[3])
-                #devIvmItemMast = num(open_chans$[4])
-                #devIvmItemWhse = num(open_chans$[5])
-                devIvsParams = num(open_chans$[6])
-                devOpeOrdDet = num(open_chans$[7])
-                devOpsParams = num(open_chans$[8])
-                #devSfeWOComnt = num(open_chans$[9])
-                #devSfeWOMastr = num(open_chans$[10])
-                devSfcWOTypeCd = num(open_chans$[11])
+                #devAdsMasks = num(open_chans$[1])
+                #devBmcOpCodes = num(open_chans$[2])
+                #devBmmBillCmts = num(open_chans$[3])
+                #devBmmBillMast = num(open_chans$[4])
+                #devIvmItemMast = num(open_chans$[5])
+                #devIvmItemWhse = num(open_chans$[6])
+                #devIvsParams = num(open_chans$[7])
+                #devOpeOrdDet = num(open_chans$[8]); rem --- need template
+                #devOpsParams = num(open_chans$[9])
+                #devSfcWOTypeCd = num(open_chans$[10])
+                #devSfeWOComnt = num(open_chans$[11])
+                #devSfeWOMastr = num(open_chans$[12])
 
-                #tplBmcOpCodes$ = open_tpls$[1]
-                #tplBmmBillCmts$ = open_tpls$[2]
-                #tplBmmBillMast$ = open_tpls$[3]
-                #tplIvmItemMast$ = open_tpls$[4]
-                #tplIvmItemWhse$ = open_tpls$[5]
-                tplIvsParams$= open_tpls$[6]
-                #tplOpeOrdDet$ = open_tpls$[7]
-                tplOpsParams$ = open_tpls$[8]
-                #tplSfeWOComnt$ = open_tpls$[9]
-                #tplSfeWOMastr$ = open_tpls$[10]
-                tplSfcWOTypeCd$ = open_tpls$[11]
+                #tplAdsMasks$ = open_tpls$[1]
+                #tplBmcOpCodes$ = open_tpls$[2]
+                #tplBmmBillCmts$ = open_tpls$[3]
+                #tplBmmBillMast$ = open_tpls$[4]
+                #tplIvmItemMast$ = open_tpls$[5]
+                #tplIvmItemWhse$ = open_tpls$[6]
+                #tplIvsParams$= open_tpls$[7]
+                #tplOpeOrdDet$ = open_tpls$[8]
+                #tplOpsParams$ = open_tpls$[9]
+                #tplSfcWOTypeCd$ = open_tpls$[10]
+                #tplSfeWOComnt$ = open_tpls$[11]
+                #tplSfeWOMastr$ = open_tpls$[12]
             else
                 rem --- Throw error
                 err_num=err
@@ -165,19 +167,29 @@ rem --- Use statements and declares
             #userId$ = userId$
 
             rem --- Get needed IV params
-            dim ivsParamsRec$:tplIvsParams$
-            readrecord(devIvsParams,key=firmId$+"IV00")ivsParamsRec$
+            dim ivsParamsRec$:#tplIvsParams$
+            readrecord(#devIvsParams,key=#firmId$+"IV00")ivsParamsRec$
             func.setLen1(num(ivsParamsRec.desc_len_01$))
             func.setLen2(num(ivsParamsRec.desc_len_02$))
             func.setLen3(num(ivsParamsRec.desc_len_03$))
 
             rem --- Get needed OP params
-            dim opsParamsRec$:tplOpsParams$
-            readrecord(devOpsParams,key=firmId$+"AR00")opsParamsRec$
+            dim opsParamsRec$:#tplOpsParams$
+            readrecord(#devOpsParams,key=#firmId$+"AR00")opsParamsRec$
             #woType$ = opsParamsRec.op_create_wo_typ$
-            dim sfcWOTypeCdRec$:tplSfcWOTypeCd$
-            readrecord(devSfcWOTypeCd,key=firmId$+"A"+#woType$,dom=*next)sfcWOTypeCdRec$
+            dim sfcWOTypeCdRec$:#tplSfcWOTypeCd$
+            readrecord(#devSfcWOTypeCd,key=#firmId$+"A"+#woType$,dom=*next)sfcWOTypeCdRec$
             #woCategory$ = sfcWOTypeCdRec.wo_category$
+
+            rem --- Get IV Unit mask
+            dim adsMasksRec$:#tplAdsMasks$
+            readrecord(#devAdsMasks,key=#firmId$+"01007514"+"IV "+"U",dom=*next)adsMasksRec$
+            #maskIvU$=cvs(adsMasksRec.dd_attr_msko$,2)
+
+            rem --- Get SF Unit mask
+            dim adsMasksRec$:#tplAdsMasks$
+            readrecord(#devAdsMasks,key=#firmId$+"01007514"+"SF "+"U",dom=*next)adsMasksRec$
+            #maskSfU$=cvs(adsMasksRec.dd_attr_msko$,2)
 
             rem --- Get Translate! object
             rdTransSpaceKey$=stbl("+PROPS_NAME")+"_"+stbl("+USER_LOCALE")+"_BBTranslator"
@@ -186,11 +198,6 @@ rem --- Use statements and declares
                 #Translate!=BBTranslator.getInstance(stbl("+PROPS_NAME"),stbl("+USER_LOCALE"),null(),stbl("+PROPS_PATH"))
                 BBjAPI().getGroupNamespace().setValue(rdTransSpaceKey$,#Translate!)
             endif
-
-            rem --- Close files
-            close(devIvsParams,err=*next)
-            close(devOpsParams,err=*next)
-            close(devSfcWOTypeCd,err=*next)
 
             methodret
             
@@ -225,8 +232,10 @@ AO_SalesOrderCreateWO_error:rem --- Method error trap/handler
 
             rem --- Return existing rowVect! for given SO detail line, or create a new one.
             if #isnWOMap!.containsKey(rowData.internal_seq_no$) then
-                rem --- Return existing rowVect!
+                rem --- Return existing rowVect! with updated ship quantity and date
                 woVect!=#isnWOMap!.get(rowData.internal_seq_no$)
+                woVect!.setItem(#SOLINE_SHIPQTY, rowData.qty_shipped)
+                woVect!.setItem(#SOLINE_SHIPDATE, rowData.est_shp_date$)
             else
                 rem --- Create a new rowVect! for given SO detail line
                 woVect! = BBjAPI().makeVector()
@@ -341,12 +350,12 @@ addWOCmnt_error:rem --- Method error trap/handler
         rem  * @param BBjString isn$
         rem  * @param BBjString newEstShpDate$
         rem  * 
-        rem  * @return boolean  1=true: date change approved
-        rem  *                 0=false: date change not approved
+        rem  * @return boolean  1=true: ship date change approved
+        rem  *                 0=false: ship date change not approved
         rem  */
         method public boolean adjustEstShpDate(BBjString isn$, BBjString newEstShpDate$)
             seterr adjustEstShpDate_error
-            true_false=1
+            true_false=Boolean.valueOf("true")
 
             if #isnWOMap!.containsKey(isn$) then
                 woVect! = #isnWOMap!.get(isn$)
@@ -357,8 +366,6 @@ addWOCmnt_error:rem --- Method error trap/handler
                     rem --- Ask if they want to continue with changing the estimated ship date. 
                     newShpDate$=date(jul(newEstShpDate$,"%Yd%Mz%Dz"):stbl("+DATE_MASK"))
                     cmpDate$=date(jul(estCmpDate$,"%Yd%Mz%Dz"):stbl("+DATE_MASK"))
-                    rem ... The new est ship date %1 is before linked WO %2 est completion date %3.
-                    rem ... Are you sure you want to use %1 for the est ship date for item %4?
                     msg_id$="OP_EST_SHIP_DATE_Q"
                     dim msg_tokens$[4]
                     msg_tokens$[1]=newShpDate$
@@ -368,7 +375,6 @@ addWOCmnt_error:rem --- Method error trap/handler
                     call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
                     
                     if msg_opt$="Y" then
-                        woVect!.setItem(#SOLINE_SHIPDATE, newEstShpDate$)
                         dim sfeWOMastrRec$:#tplSfeWOMastr$
                         readrecord(#devSfeWOMastr,key=#firmId$+"  "+wo_no$,knum="PRIMARY",dom=*next)sfeWOMastrRec$
                         if pos(sfeWOMastrRec.wo_status$="OPQ") then
@@ -385,15 +391,154 @@ addWOCmnt_error:rem --- Method error trap/handler
                     else
                         true_false=Boolean.valueOf("false")
                     endif
-                else
-                    rem --- No existing linked WO so just woVect! with new estmated ship date
-                    woVect!.setItem(#SOLINE_SHIPDATE, newEstShpDate$)
                 endif
+
+                rem --- Use new ship date
+                if true_false=Boolean.valueOf("true") then woVect!.setItem(#SOLINE_SHIPDATE, newEstShpDate$)
             endif
 
             methodret true_false
             
 adjustEstShpDate_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Warns if the quantity needed for the Sales Order detail line's new Quantity Shipped is greater than
+        rem  * the linked Work Orders Scheduled Production Quantity, and asks operator for approval to continue.
+        rem  * 
+        rem  * Calculates quantity needed AFTER the inventory committed quantity has been updated for the quantity ordered. 
+        rem  * 
+        rem  * @param BBjString isn$
+        rem  * @param BBjNumber newQtyShipped
+        rem  * 
+        rem  * @return boolean  1=true: ship quantity change approved
+        rem  *                 0=false: ship quantity not approved
+        rem  */
+        method public boolean adjustQtyShipped(BBjString isn$, BBjNumber newQtyShipped)
+            seterr adjustQtyShipped_2_error
+
+            methodret #adjustQtyShipped(isn$, newQtyShipped, 1)
+            
+adjustQtyShipped_2_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Warns if the quantity needed for the Sales Order detail line's new Quantity Shipped is greater than
+        rem  * the linked Work Orders Scheduled Production Quantity, and asks operator for approval to continue.
+        rem  * 
+        rem  * Can calculate quantity needed either BEFORE (ivCommitted=0) or AFTER (ivCommitted=1) the inventory committed
+        rem  * quantity has been updated for the quantity ordered. 
+        rem  * 
+        rem  * @param BBjString isn$
+        rem  * @param BBjNumber newQtyShipped
+        rem  * @param BBjNumber ivCommitted
+        rem  * 
+        rem  * @return boolean  1=true: ship quantity change approved
+        rem  *                 0=false: ship quantity not approved
+        rem  */
+        method public boolean adjustQtyShipped(BBjString isn$, BBjNumber newQtyShipped, BBjNumber ivCommitted)
+            seterr adjustQtyShipped_1_error
+            true_false=Boolean.valueOf("true")
+
+            if #isnWOMap!.containsKey(isn$) then
+                woVect! = #isnWOMap!.get(isn$)
+                wo_no$ = woVect!.getItem(#WO_NO)
+                if cvs(wo_no$,2)<>"" then
+
+                    rem --- Calculate the quantity needed to fill the Sales Order detail line shipped quantity
+                    whsId$=woVect!.getItem(#SOLINE_WHSE)
+                    itemId$=woVect!.getItem(#SOLINE_ITEM)
+                    dim ivmItemWhseRec$:#tplIvmItemWhse$
+                    readrecord(#devIvmItemWhse,key=#firmId$+whsId$+itemId$,dom=*next)ivmItemWhseRec$
+
+                    rem --- When WO released, qty on order already includes sch prod qty
+                    dim sfeWOMastrRec$:#tplSfeWOMastr$
+                    readrecord(#devSfeWOMastr,key=#firmId$+"  "+wo_no$,knum="PRIMARY",dom=*next)sfeWOMastrRec$
+                    if sfeWOMastrRec.wo_status$="O" then
+                        qtyOnOrder=ivmItemWhseRec.qty_on_order-sfeWOMastrRec.sch_prod_qty
+                    else
+                        qtyOnOrder=ivmItemWhseRec.qty_on_order
+                    endif
+                    if ivCommitted then
+                        rem --- Shipped quantity is already included in ivmItemWhseRec.qty_commit
+                        qty_committed=ivmItemWhseRec.qty_commit-newQtyShipped
+                    else
+                        qty_committed=ivmItemWhseRec.qty_commit
+                    endif
+                    oldQtyShipped=woVect!.getItem(#SOLINE_SHIPQTY)
+                    startAvailable=(ivmItemWhseRec.qty_on_hand+oldQtyShipped)-qty_committed
+                    qtyNeeded=newQtyShipped-(startAvailable+qtyOnOrder)
+                    if qtyNeeded<0 then qtyNeeded=0
+
+                    rem --- Warn if the quantity needed for the new ship quantity is greater than linked Work Order's scheduled production quantity. 
+                    rem --- And, ask if they want to continue with changing the estimated ship date. 
+                    schProdQty=woVect!.getItem(#WO_SCHPRODQTY)
+                    if qtyNeeded > schProdQty or startAvailable+qtyOnOrder < 0 then
+                        msg_id$="OP_SHIP_QTY_Q"
+                        dim msg_tokens$[6]
+                        msg_tokens$[1]=cvs(str(qtyNeeded:#maskIvU$),3)
+                        msg_tokens$[2]=cvs(str(newQtyShipped:#maskIvU$),3)
+                        msg_tokens$[3]=wo_no$
+                        msg_tokens$[4]=cvs(str(schProdQty:#maskSfU$),3)
+                        msg_tokens$[5]=cvs(str(oldQtyShipped:#maskIvU$),3)
+                        msg_tokens$[6]=cvs(woVect!.getItem(#SOLINE_ITEM),2)
+                        call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+                        
+                        if msg_opt$="Y" then
+                            dim sfeWOMastrRec$:#tplSfeWOMastr$
+                            extractrecord(#devSfeWOMastr,key=#firmId$+"  "+wo_no$,knum="PRIMARY",dom=*next)sfeWOMastrRec$
+                            if sfeWOMastrRec.wo_status$="P" then
+                                sfeWOMastrRec.sch_prod_qty = #calculateSchProdQty(woVect!, newQtyShipped, ivCommitted)
+                                writerecord(#devSfeWOMastr)sfeWOMastrRec$
+                                woVect!.setItem(#WO_SCHPRODQTY,sfeWOMastrRec.sch_prod_qty)
+                            endif
+                            if pos(sfeWOMastrRec.wo_status$="OQ") then
+                                cmnt$=#Translate!.getTranslation("AON_LINKED")+" "+#Translate!.getTranslation("AON_SALES")+" "+#Translate!.getTranslation("AON_ORDER")
+                                cmnt$=cmnt$+" "+#orderNo$+" "
+                                cmnt$=cmnt$+#Translate!.getTranslation("AON_SHIPPED")+" "+#Translate!.getTranslation("AON_QUANTITY")
+                                cmnt$=cmnt$+" "+cvs(str(oldQtyShipped:#maskIvU$),3)+" "
+                                cmnt$=cmnt$+#Translate!.getTranslation("AON_CHANGED_TO")
+                                cmnt$=cmnt$+" "+cvs(str(newQtyShipped:#maskIvU$),3)
+                                #addWOCmnt(wo_no$,cmnt$)
+                            endif
+                            read(#devSfeWOMastr,end=*next)
+                        else
+                            true_false=Boolean.valueOf("false")
+                        endif
+                    endif
+                endif
+
+                rem --- Use new ship quantity
+                if true_false=Boolean.valueOf("true") then woVect!.setItem(#SOLINE_SHIPQTY,newQtyShipped)
+            endif
+
+            methodret true_false
+            
+adjustQtyShipped_1_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
@@ -472,13 +617,49 @@ calculateEstCmpDate_error:rem --- Method error trap/handler
         rem  * isnWOMap! HashMap. Uses the largest between the item's Bill Of Materials standard lot size
         rem  * and the quantity needed to fill the Sales Order detail line shipped quantity.
         rem  * 
+        rem  * Calculates quantity needed AFTER the inventory committed quantity has been updated for the quantity ordered. 
+        rem  * 
         rem  * @param BBjVector woVect!
         rem  * @param BBjNumber qtyShipped
         rem  * 
         rem  * @return BBjNumber schProdQty
         rem  */
         method protected BBjNumber calculateSchProdQty(BBjVector woVect!, BBjNumber qtyShipped)
-            seterr calculateSchProdQty_error
+            seterr calculateSchProdQty_2_error
+
+            methodret #calculateSchProdQty(woVect!, qtyShipped, 1)
+            
+calculateSchProdQty_2_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Calculates the Work Order scheduled production quantity for the woVect! BBjVector from
+        rem  * isnWOMap! HashMap. Uses the largest between the item's Bill Of Materials standard lot size
+        rem  * and the quantity needed to fill the Sales Order detail line shipped quantity.
+        rem  * 
+        rem  * Can calculate quantity needed either BEFORE (ivCommitted=0) or AFTER (ivCommitted=1) the inventory committed
+        rem  * quantity has been updated for the quantity ordered. 
+        rem  * 
+        rem  * @param BBjVector woVect!
+        rem  * @param BBjNumber qtyShipped
+        rem  * @param BBjNumber ivCommitted
+        rem  * 
+        rem  * @return BBjNumber schProdQty
+        rem  */
+        method protected BBjNumber calculateSchProdQty(BBjVector woVect!, BBjNumber qtyShipped, BBjNumber ivCommitted)
+            seterr calculateSchProdQty_1_error
             schProdQty=0
 
             rem --- Get item's Bill Of Materials standard lot size
@@ -491,8 +672,26 @@ calculateEstCmpDate_error:rem --- Method error trap/handler
             whsId$=woVect!.getItem(#SOLINE_WHSE)
             dim ivmItemWhseRec$:#tplIvmItemWhse$
             readrecord(#devIvmItemWhse,key=#firmId$+whsId$+itemId$,dom=*next)ivmItemWhseRec$
-            startAvailable=ivmItemWhseRec.qty_on_hand-(ivmItemWhseRec.qty_commit-qtyShipped); rem --- current qty_commit includes the qtyShipped
-            qtyNeeded=qtyShipped-(startAvailable+ivmItemWhseRec.qty_on_order)
+
+            rem --- When WO released, qty on order already includes sch prod qty
+            qtyOnOrder=ivmItemWhseRec.qty_on_order
+            wo_no$ = woVect!.getItem(#WO_NO)
+            if wo_no$<>"" then
+                dim sfeWOMastrRec$:#tplSfeWOMastr$
+                readrecord(#devSfeWOMastr,key=#firmId$+"  "+wo_no$,knum="PRIMARY",dom=*next)sfeWOMastrRec$
+                if sfeWOMastrRec.wo_status$="O" then
+                    qtyOnOrder=ivmItemWhseRec.qty_on_order-sfeWOMastrRec.sch_prod_qty
+                endif
+            endif
+            if ivCommitted then
+                rem --- Shipped quantity is already included in ivmItemWhseRec.qty_commit
+                qty_committed=ivmItemWhseRec.qty_commit-qtyShipped
+            else
+                qty_committed=ivmItemWhseRec.qty_commit
+            endif
+            oldQtyShipped=woVect!.getItem(#SOLINE_SHIPQTY)
+            startAvailable=(ivmItemWhseRec.qty_on_hand+oldQtyShipped)-qty_committed
+            qtyNeeded=qtyShipped-(startAvailable+qtyOnOrder)
             if qtyNeeded<0 then qtyNeeded=0
 
             rem --- Return the largest quantity
@@ -504,7 +703,7 @@ calculateEstCmpDate_error:rem --- Method error trap/handler
 
             methodret schProdQty
             
-calculateSchProdQty_error:rem --- Method error trap/handler
+calculateSchProdQty_1_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
@@ -525,12 +724,48 @@ calculateSchProdQty_error:rem --- Method error trap/handler
         rem  * Note: Do NOT use this method if the SO is a Quote.
         rem  * Note: Do NOT use this method if the SO is on Credit Hold.
         rem  * 
+        rem  * Calculates quantity needed AFTER the inventory committed quantity has been updated for the quantity ordered. 
+        rem  * 
         rem  * @param BBjString rowDataIn$
         rem  *
         rem  * @return BBjString itemDescription$
         rem  */
         method public BBjString canCreateWO(BBjString rowDataIn$)
-            seterr canCreateWO_error
+            seterr canCreateWO_2_error
+
+            methodret #canCreateWO(rowDataIn$, 1)
+            
+canCreateWO_2_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Determines whether or not the given SO detail line is a valid candidate for creating a Work Order.
+        rem  * Returns the item description for valid candidates. Otherwise returns blank (empty) string.
+        rem  * Note: Do NOT use this method if the SO is a Quote.
+        rem  * Note: Do NOT use this method if the SO is on Credit Hold.
+        rem  * 
+        rem  * Can calculate quantity needed either BEFORE (ivCommitted=0) or AFTER (ivCommitted=1) the inventory committed
+        rem  * quantity has been updated for the quantity ordered. 
+        rem  * 
+        rem  * @param BBjString rowDataIn$
+        rem  * @param BBjNumber ivCommitted
+        rem  *
+        rem  * @return BBjString itemDescription$
+        rem  */
+        method public BBjString canCreateWO(BBjString rowDataIn$, BBjNumber ivCommitted)
+            seterr canCreateWO_1_error
             dim rowData$:#tplOpeOrdDet$
             rowData$=rowDataIn$
             valid=1
@@ -566,8 +801,14 @@ calculateSchProdQty_error:rem --- Method error trap/handler
                     dim ivmItemWhseRec$:#tplIvmItemWhse$
                     readrecord(#devIvmItemWhse,key=#firmId$+rowData.warehouse_id$+rowData.item_id$,dom=*next)ivmItemWhseRec$
                     if ivmItemWhseRec.firm_id$+ivmItemWhseRec.warehouse_id$+ivmItemWhseRec.item_id$<>#firmId$+rowData.warehouse_id$+rowData.item_id$ then valid=0
+                    if ivCommitted then
+                        rem --- Shipped quantity is already included in ivmItemWhseRec.qty_commit
+                        qty_committed=ivmItemWhseRec.qty_commit-rowData.qty_shipped
+                    else
+                        qty_committed=ivmItemWhseRec.qty_commit
+                    endif
                     rem --- Note: shipped quantity is already included in ivmItemWhseRec.qty_commit
-                    if (ivmItemWhseRec.qty_on_hand - ivmItemWhseRec.qty_commit) + ivmItemWhseRec.qty_on_order > 0 then valid=0
+                    if ((ivmItemWhseRec.qty_on_hand - qty_committed) + ivmItemWhseRec.qty_on_order) - rowData.qty_shipped > 0 then valid=0
                 endif
             endif
             
@@ -581,7 +822,7 @@ calculateSchProdQty_error:rem --- Method error trap/handler
 
             methodret itemDescription$
             
-canCreateWO_error:rem --- Method error trap/handler
+canCreateWO_1_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
@@ -904,7 +1145,7 @@ initIsnWOMap_error:rem --- Method error trap/handler
             wo_no$=woVect!.getItem(#WO_NO)
             dim sfeWOMastrRec$:#tplSfeWOMastr$
             extractrecord(#devSfeWOMastr,key=#firmId$+"  "+wo_no$,knum="PRIMARY",dom=*next)sfeWOMastrRec$
-            if pos(sfeWOMastrRec.wo_status$="PQ") then
+            if sfeWOMastrRec.wo_status$="P" then
                 rem --- Remove existing Planned WO
                 remove(#devSfeWOMastr,key=#firmId$+"  "+wo_no$,err=*next)
 
@@ -916,7 +1157,7 @@ initIsnWOMap_error:rem --- Method error trap/handler
                     remove(#devSfeWOComnt,key=key$,err=*next)
                 wend
             endif
-            if sfeWOMastrRec.wo_status$="O" then
+            if pos(sfeWOMastrRec.wo_status$="OQ") then
                 rem --- Unlink existing Open (Released) WO
                 cmnt$=#Translate!.getTranslation("AON_REMOVED")+" "+#Translate!.getTranslation("AON_SALES")+" "+#Translate!.getTranslation("AON_LINK")
                 cmnt$=cmnt$+" "+sfeWOMastrRec.customer_id$+":"+sfeWOMastrRec.order_no$+":"+sfeWOMastrRec.sls_ord_seq_ref$+" "
@@ -1164,14 +1405,23 @@ woCount_error:rem --- Method error trap/handler
         method public void close()
             seterr close_error
 
-            if #devBmcOpCodes > 0 then close(#devBmcOpCodes,err=*next)
-            if #devBmmBillCmts > 0 then close(#devBmmBillCmts,err=*next)
-            if #devBmmBillMast > 0 then close(#devBmmBillMast,err=*next)
-            if #devIvmItemMast > 0 then close(#devIvmItemMast,err=*next)
-            if #devIvmItemWhse > 0 then close(#devIvmItemWhse,err=*next)
-            if #devSfeWOComnt > 0 then close(#devSfeWOComnt,err=*next)
-            if #devSfeWOMastr > 0 then close(#devSfeWOMastr,err=*next)
-
+            num_files=12
+            dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
+            open_tables$[1] ="ADS_MASKS",     open_opts$[1] = "C@"
+            open_tables$[2] ="BMC_OPCODES",   open_opts$[2] = "C@"
+            open_tables$[3] ="BMM_BILLCMTS",  open_opts$[3] = "C@"
+            open_tables$[4] ="BMM_BILLMAST",  open_opts$[4] = "C@"
+            open_tables$[5] ="IVM_ITEMMAST",  open_opts$[5] = "C@"
+            open_tables$[6] ="IVM_ITEMWHSE",  open_opts$[6] = "C@"
+            open_tables$[7] ="IVS_PARAMS",    open_opts$[7] = "C@"
+            open_tables$[8] ="OPE_ORDDET",    open_opts$[8] = "C@"
+            open_tables$[9] ="OPS_PARAMS",    open_opts$[9] = "C@"
+            open_tables$[10] ="SFC_WOTYPECD", open_opts$[10] = "C@"
+            open_tables$[11] ="SFE_WOCOMNT",  open_opts$[11] = "C[1]"
+            open_tables$[12] ="SFE_WOMASTR",  open_opts$[12] = "C[1]"
+        
+            call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
+ 
             methodret
             
 close_error:rem --- Method error trap/handler

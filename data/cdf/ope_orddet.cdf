@@ -263,6 +263,7 @@ rem --- Enable buttons
 if callpoint!.getDevObject("focusPrice")="Y"
  	callpoint!.setFocus(callpoint!.getValidationRow(),"OPE_ORDDET.UNIT_PRICE",1)
 endif
+
 [[OPE_ORDDET.QTY_ORDERED.AVAL]]
 rem --- Set shipped and back ordered
 
@@ -291,6 +292,27 @@ rem --- Set shipped and back ordered
 			callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_ord))
 		else
 			callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", "0")
+		endif
+	endif
+
+rem --- When OP parameter set for asking about creating Work Order, check if the quantity shipped was changed.
+
+	op_create_wo$=callpoint!.getDevObject("op_create_wo")
+	if op_create_wo$="A" and callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y" then
+		qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+		if qty_shipped <> user_tpl.prev_shipqty then
+			rem --- Warn when ship quantity changed for committed detail line with an existing linked WO.
+			isn$ = callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
+			soCreateWO! = callpoint!.getDevObject("soCreateWO")
+			rem --- Inventory committed quantity has NOT been updated yet.
+			if !soCreateWO!.adjustQtyShipped(isn$, qty_shipped, 0) then
+ 				callpoint!.setColumnData("OPE_ORDDET.QTY_ORDERED",str(user_tpl.prev_qty_ord),1)
+				callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD",str(user_tpl.prev_boqty),1)
+				callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED",str(user_tpl.prev_shipqty),1)
+				callpoint!.setStatus("ACTIVATE-ABORT")
+				break
+			endif
+			callpoint!.setStatus("ACTIVATE")
 		endif
 	endif
 
@@ -652,8 +674,45 @@ rem --- Initialize inventory item update
 
 	endif
 
-rem --- If creating WOs from OP, when appropriate ask about creating a WO for this detail line
-	gosub ask_create_WO
+rem --- When OP parameter set for asking about creating Work Order, check if SO detail line a validate candidate to create a WO.
+
+	op_create_wo$=callpoint!.getDevObject("op_create_wo")
+	if op_create_wo$="A" and callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y" then
+		soCreateWO!=callpoint!.getDevObject("soCreateWO")
+		gridRowVect! = GridVect!.getItem(0)
+		rowData$ = gridRowVect!.get(callpoint!.getValidationRow())
+		item_description$ = soCreateWO!.canCreateWO(rowData$)
+		if item_description$ <> "" then
+			rem --- Ask about creating WO if haven't asked yet and there isn't an existing WO link
+			woVect! = soCreateWO!.getWOVect(callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
+			if woVect!<>null() then
+				rem --- SO detail line already exists in soCreateWO!
+				if woVect!.getItem(soCreateWO!.getWO_NO()) <> "" then
+					rem --- Linked WO already exists for the SO detail line, so WO creation was previously approved
+					woVect!.setItem(soCreateWO!.getCREATE_WO(),1)
+					woVect!.setItem(soCreateWO!.getASKED(),1)
+				endif
+			else
+				rem --- SO detail line does NOT already exist in soCreateWO!, so add it
+				woVect! = soCreateWO!.addSODetailLine(rowData$, item_description$)
+			endif
+
+			rem --- Ask about creating WO if NOT previously asked
+			if !woVect!.getItem(soCreateWO!.getASKED()) then
+				msg_id$ = "OP_ASK_CREATE_WO"
+				dim msg_tokens$[2]
+				msg_tokens$[1] = cvs(callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"),2)
+				msg_tokens$[2] = callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED")
+				gosub disp_message
+				if msg_opt$="Y" then
+					woVect!.setItem(soCreateWO!.getCREATE_WO(),1)
+				else
+					woVect!.setItem(soCreateWO!.getCREATE_WO(),0)
+				endif
+				woVect!.setItem(soCreateWO!.getASKED(),1)
+			endif
+		endif
+	endif
 
 awri_update_hdr: rem --- Update header
 
@@ -907,7 +966,7 @@ rem --- Require modified rows be saved before deleting so can't uncommit quantit
 	if callpoint!.getGridRowModifyStatus(num(callpoint!.getValidationRow()))="Y" then
 		msg_id$="OP_MODIFIED_DELETE"
 		gosub disp_message
-		callpoint!.setStatus("ABORT")
+		callpoint!.setStatus("ACTIVATE-ABORT")
 		break
 	endif
 
@@ -927,9 +986,10 @@ rem --- Get user approval to delete if there is a WO linked to this detail line
 		soCreateWO!=callpoint!.getDevObject("soCreateWO")
 		isn$ = callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
 		if !soCreateWO!.unlinkWO(isn$) then
-			callpoint!.setStatus("ABORT")
+			callpoint!.setStatus("ACTIVATE-ABORT")
 			break
 		endif
+		callpoint!.setStatus("ACTIVATE")
 	endif
 [[OPE_ORDDET.AGRN]]
 rem (Fires regardles of new or existing row.  Use callpoint!.getGridRowNewStatus(callpoint!.getValidationRow()) to distinguish the two)
@@ -1266,6 +1326,27 @@ rem --- recalc quantities and extended price
 		endif
 	endif
 
+rem --- When OP parameter set for asking about creating Work Order, check if the quantity shipped was changed.
+
+	op_create_wo$=callpoint!.getDevObject("op_create_wo")
+	if op_create_wo$="A" and callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y" then
+		qty_shipped = num(callpoint!.getUserInput())
+		if qty_shipped <> user_tpl.prev_shipqty then
+			rem --- Warn when ship quantity changed for committed detail line with an existing linked WO.
+			isn$ = callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
+			soCreateWO! = callpoint!.getDevObject("soCreateWO")
+			rem --- Inventory committed quantity has NOT been updated yet.
+			if !soCreateWO!.adjustQtyShipped(isn$, qty_shipped, 0) then
+				callpoint!.setColumnData("OPE_ORDDET.QTY_ORDERED",str(user_tpl.prev_qty_ord),1)
+				callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD",str(user_tpl.prev_boqty),1)
+				callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED",str(user_tpl.prev_shipqty),1)
+				callpoint!.setStatus("ACTIVATE-ABORT")
+				break
+			endif
+			callpoint!.setStatus("ACTIVATE")
+		endif
+	endif
+
 rem --- Don't extend price until grid vector has been updated
 	rem qty_shipped = shipqty
 	rem unit_price  = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
@@ -1291,57 +1372,31 @@ rem --- Recalc quantities and extended price
 
 	callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED", str(qty_shipped))
 
+rem --- When OP parameter set for asking about creating Work Order, check if the quantity shipped was changed.
+
+	op_create_wo$=callpoint!.getDevObject("op_create_wo")
+	if op_create_wo$="A" and callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y" then
+		qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
+		if qty_shipped <> user_tpl.prev_shipqty then
+			rem --- Warn when ship quantity changed for committed detail line with an existing linked WO.
+			isn$ = callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
+			soCreateWO! = callpoint!.getDevObject("soCreateWO")
+			rem --- Inventory committed quantity has NOT been updated yet.
+			if !soCreateWO!.adjustQtyShipped(isn$, qty_shipped, 0) then
+				callpoint!.setColumnData("OPE_ORDDET.QTY_ORDERED",str(user_tpl.prev_qty_ord),1)
+				callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD",str(user_tpl.prev_boqty),1)
+				callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED",str(user_tpl.prev_shipqty),1)
+				callpoint!.setStatus("ACTIVATE-ABORT")
+				break
+			endif
+			callpoint!.setStatus("ACTIVATE")
+		endif
+	endif
+
 rem --- Don't extend price until grid vector has been updated
 	rem unit_price = num(callpoint!.getColumnData("OPE_ORDDET.UNIT_PRICE"))
 	rem gosub disp_ext_amt
 [[OPE_ORDDET.<CUSTOM>]]
-rem ==========================================================================
-ask_create_WO: rem --- If creating WOs from OP, when appropriate ask about creating a WO for this detail line
-rem ==========================================================================
-
-	rem --- Is OP parameter set for asking about creating Work Order?
-	op_create_wo$=callpoint!.getDevObject("op_create_wo")
-	if op_create_wo$="A" then
-		soCreateWO!=callpoint!.getDevObject("soCreateWO")
-		gridRowVect! = GridVect!.getItem(0)
-		rowData$ = gridRowVect!.get(callpoint!.getValidationRow())
-
-		rem -- Is SO detail line a validate candidate to create a WO?
-		item_description$ = soCreateWO!.canCreateWO(rowData$)
-		if item_description$ <> "" then
-			rem --- Ask about creating WO if haven't asked yet and there isn't an existing WO link
-			woVect! = soCreateWO!.getWOVect(callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
-			if woVect!<>null() then
-				rem --- SO detail line already exists in soCreateWO!
-				if woVect!.getItem(soCreateWO!.getWO_NO()) <> "" then
-					rem --- Linked WO already exists for the SO detail line, so WO creation was previously approved
-					woVect!.setItem(soCreateWO!.getCREATE_WO(),1)
-					woVect!.setItem(soCreateWO!.getASKED(),1)
-				endif
-			else
-				rem --- SO detail line does NOT already exist in soCreateWO!, so add it
-				woVect! = soCreateWO!.addSODetailLine(rowData$, item_description$)
-			endif
-
-			rem --- Ask about creating WO if NOT previously asked
-			if !woVect!.getItem(soCreateWO!.getASKED()) then
-				msg_id$ = "OP_ASK_CREATE_WO"
-				dim msg_tokens$[2]
-				msg_tokens$[1] = cvs(callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"),2)
-				msg_tokens$[2] = callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED")
-				gosub disp_message
-				if msg_opt$="Y" then
-					woVect!.setItem(soCreateWO!.getCREATE_WO(),1)
-				else
-					woVect!.setItem(soCreateWO!.getCREATE_WO(),0)
-				endif
-				woVect!.setItem(soCreateWO!.getASKED(),1)
-			endif
-		endif
-	endif
-
-	return
-
 rem ==========================================================================
 disp_grid_totals: rem --- Get order totals and display, save header totals
 rem ==========================================================================
