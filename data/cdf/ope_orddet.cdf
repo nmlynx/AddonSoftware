@@ -710,6 +710,7 @@ rem --- When OP parameter set for asking about creating Work Order, check if SO 
 					woVect!.setItem(soCreateWO!.getCREATE_WO(),0)
 				endif
 				woVect!.setItem(soCreateWO!.getASKED(),1)
+				callpoint!.setStatus("ACTIVATE")
 			endif
 		endif
 	endif
@@ -1230,8 +1231,31 @@ rem --- Check item/warehouse combination, Set Available
 	wh$   = callpoint!.getUserInput()
 
 	if wh$<>callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID") then
-		gosub clear_all_numerics
-		callpoint!.setStatus("REFRESH")
+		rem --- Do not allow changing warehouse when OP parameter set for asking about creating Work Order and item is committed.
+		op_create_wo$=callpoint!.getDevObject("op_create_wo")
+		if op_create_wo$="A" and callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y" then
+			soCreateWO! = callpoint!.getDevObject("soCreateWO")
+			woVect! = soCreateWO!.getWOVect(callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
+			if woVect!<>null() then
+				wo_no$ =  woVect!.getItem(soCreateWO!.getWO_NO())
+				if cvs(wo_no$,2)<>"" then
+					msg_id$ = "OP_LINKED_WO_CHANGE"
+					dim msg_tokens$[2]
+					msg_tokens$[1] = wo_no$
+					msg_tokens$[2] = Translate!.getTranslation("AON_WAREHOUSE")
+					gosub disp_message
+					callpoint!.setStatus("ACTIVATE-ABORT")
+					break
+				else
+					rem --- Remove existing woVect! with previous warehouse
+					soCreateWo!.unlinkWO(callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
+				endif
+			endif
+		else
+			rem --- Okay to change warehouse
+			gosub clear_all_numerics
+			callpoint!.setStatus("REFRESH")
+		endif
 	endif
 
     item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
@@ -1251,28 +1275,52 @@ rem --- Item probably isn't set yet, but we don't know for sure
 	if !user_tpl.item_wh_failed then gosub set_avail
 [[OPE_ORDDET.ITEM_ID.AVAL]]
 rem "Inventory Inactive Feature"
-item_id$=callpoint!.getUserInput()
-ivm01_dev=fnget_dev("IVM_ITEMMAST")
-ivm01_tpl$=fnget_tpl$("IVM_ITEMMAST")
-dim ivm01a$:ivm01_tpl$
-ivm01a_key$=firm_id$+item_id$
-find record (ivm01_dev,key=ivm01a_key$,err=*break)ivm01a$
-if ivm01a.item_inactive$="Y" then
-   msg_id$="IV_ITEM_INACTIVE"
-   dim msg_tokens$[2]
-   msg_tokens$[1]=cvs(ivm01a.item_id$,2)
-   msg_tokens$[2]=cvs(ivm01a.display_desc$,2)
-   gosub disp_message
-   callpoint!.setStatus("ACTIVATE-ABORT")
-   goto std_exit
-endif
+
+	item_id$=callpoint!.getUserInput()
+	ivm01_dev=fnget_dev("IVM_ITEMMAST")
+	ivm01_tpl$=fnget_tpl$("IVM_ITEMMAST")
+	dim ivm01a$:ivm01_tpl$
+	ivm01a_key$=firm_id$+item_id$
+	find record (ivm01_dev,key=ivm01a_key$,err=*break)ivm01a$
+	if ivm01a.item_inactive$="Y" then
+		msg_id$="IV_ITEM_INACTIVE"
+		dim msg_tokens$[2]
+		msg_tokens$[1]=cvs(ivm01a.item_id$,2)
+		msg_tokens$[2]=cvs(ivm01a.display_desc$,2)
+		gosub disp_message
+		callpoint!.setStatus("ACTIVATE-ABORT")
+		break
+	endif
 
 rem --- Check item/warehouse combination and setup values
 
 	item$ = callpoint!.getUserInput()
 
 	if item$<>user_tpl.prev_item$ then
-		gosub clear_all_numerics
+		rem --- Do not allow changing item when OP parameter set for asking about creating Work Order and item is committed.
+		op_create_wo$=callpoint!.getDevObject("op_create_wo")
+		if op_create_wo$="A" and callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y" then
+			soCreateWO! = callpoint!.getDevObject("soCreateWO")
+			woVect! = soCreateWO!.getWOVect(callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
+			if woVect!<>null() then
+				wo_no$ =  woVect!.getItem(soCreateWO!.getWO_NO())
+				if cvs(wo_no$,2)<>"" then
+					msg_id$ = "OP_LINKED_WO_CHANGE"
+					dim msg_tokens$[2]
+					msg_tokens$[1] = wo_no$
+					msg_tokens$[2] = Translate!.getTranslation("AON_ITEM")
+					gosub disp_message
+					callpoint!.setStatus("ACTIVATE-ABORT")
+					break
+				else
+					rem --- Remove existing woVect! with previous item
+					soCreateWo!.unlinkWO(callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO"))
+				endif
+			endif
+		else
+			rem --- Okay to change item
+			gosub clear_all_numerics
+		endif
 	endif
 
 	wh$   = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
