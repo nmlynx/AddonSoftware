@@ -18,9 +18,15 @@ rem --- As necessary, handle Cancel and new warnings from ope_createwos form
 [[OPE_ORDHDR.BLST]]
 rem --- Set flag that Last Record has been selected
 	callpoint!.setDevObject("FirstLastRecord","LAST")
+
+rem --- Set flag to NOT show summary SO-WO link grid when using navigation buttons
+	callpoint!.setDevObject("wolink_grid","hide")
 [[OPE_ORDHDR.BFST]]
 rem --- Set flag that First Record has been selected
 	callpoint!.setDevObject("FirstLastRecord","FIRST")
+
+rem --- Set flag to NOT show summary SO-WO link grid when using navigation buttons
+	callpoint!.setDevObject("wolink_grid","hide")
 [[OPE_ORDHDR.BPRI]]
 rem --- Check for Order Total
 
@@ -48,6 +54,9 @@ rem --- Check for Order Total
 			endif
 		endif
 	endif
+
+rem --- Set flag to NOT show summary SO-WO link grid when using navigation buttons
+	callpoint!.setDevObject("wolink_grid","hide")
 [[OPE_ORDHDR.BNEX]]
 rem --- Check for Order Total
 
@@ -75,6 +84,9 @@ rem --- Check for Order Total
 			endif
 		endif
 	endif
+
+rem --- Set flag to NOT show summary SO-WO link grid when using navigation buttons
+	callpoint!.setDevObject("wolink_grid","hide")
 [[OPE_ORDHDR.ASVA]]
 rem --- Check Ship-to's
 
@@ -499,7 +511,7 @@ rem --- Credit action
 rem --- Launch ope_createwos form to create selected work orders
 
 	op_create_wo$=callpoint!.getDevObject("op_create_wo")
-	if op_create_wo$="A" then
+	if op_create_wo$="A" and callpoint!.getDevObject("wolink_grid")="show" then
 		soCreateWO!=callpoint!.getDevObject("soCreateWO")
 
 		rem --- Re-initialize soCreateWO! if SO was released from Credit Hold and create all possible Work Orders
@@ -551,6 +563,7 @@ rem --- Launch ope_createwos form to create selected work orders
 		rem --- Close files that may be open in soCreateWO! instance
 		soCreateWO!.close()
 	endif
+	callpoint!.setDevObject("wolink_grid","show")
 [[OPE_ORDHDR.AOPT-PRNT]]
 rem --- Check to see if record has been modified (don't print until rec is saved)
 
@@ -3311,6 +3324,7 @@ rem --- Set object for which customer number is being shown and that details hav
 	callpoint!.setDevObject("current_customer","")
 	callpoint!.setDevObject("details_changed","N")
 	callpoint!.setDevObject("rcpr_row","")
+	callpoint!.setDevObject("wolink_grid","show")
 
 rem --- setup message_tpl$
 
