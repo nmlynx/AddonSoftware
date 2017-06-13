@@ -1298,9 +1298,10 @@ rem --- Get user approval to delete if there are any WOs linked to this Sales Or
 	if op_create_wo$="A" then
 		soCreateWO! = callpoint!.getDevObject("soCreateWO")
 		if !soCreateWO!.unlinkWOs() then
-			callpoint!.setStatus("ABORT")
+			callpoint!.setStatus("ACTIVATE-ABORT")
 			break
 		endif
+		callpoint!.setStatus("ACTIVATE")
 	endif
 
 rem --- Remove committments for detail records by calling ATAMO
