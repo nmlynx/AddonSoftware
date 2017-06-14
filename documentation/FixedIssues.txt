@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-06-05
+ Report Date:   2017-06-14
  Report Branch: AddonSoftware 17.00
  Last Release:  AddonSoftware 16.24
 =======================================================================================================================================
@@ -668,7 +668,6 @@ Payroll Enabled.
 ----
 Modified: sf/src/sfr_wotranshist.aon
 
-
 =======================================================================================================================================
 Revision: 2906d5078b40c9c5ab4d38c1f2910967e985f447
 Author: Bill Halsted <bhalsted@basis.com>
@@ -678,3 +677,21 @@ Bug 9085: Use passed in record template rather than always using the
 ivt_itemtran (ivt-04) record template.
 ----
 Modified: iv/src/ivc_transdata.aon
+
+=======================================================================================================================================
+Revision: d7b5a8b817c8726bb216d256e89dd6fea070cc33
+Author: Christine <chawkins@basis.com>
+Date: 6/14/2017 3:43:46 PM
+Message:
+Bug 7537 - A better way to specify Logo files in multi-firm environment; enabled use of the Logo File Name field that was added to Report Control back in v15. Documents will use firm-specific logo, fall back to single default logo from config file if no firm-specific logo is defined, or no logo if neither are defined.
+----
+Modified: ad/src/ado_rptControl.src
+Modified: ar/src/arr_invoices.aon
+Modified: ar/src/arr_statements.aon
+Modified: ar/src/arr_stmt_demand.aon
+Modified: op/src/opc_hist_invoice.aon
+Modified: op/src/opc_invoice.aon
+Modified: op/src/opc_picklist.aon
+Modified: po/src/por_poprint.aon
+Modified: po/src/por_reqprint.aon
+
