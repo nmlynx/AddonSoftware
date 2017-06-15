@@ -541,7 +541,9 @@ rem --- Credit action
 rem --- Launch ope_createwos form to create selected work orders
 
 	op_create_wo$=callpoint!.getDevObject("op_create_wo")
-	if op_create_wo$="A" and (callpoint!.getDevObject("force_wolink_grid") or callpoint!.getDevObject("wolink_grid")="show") then
+	if op_create_wo$="A" and (callpoint!.getDevObject("force_wolink_grid") or callpoint!.getDevObject("wolink_grid")="show") and
+:	callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" and callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG")<>"C" then
+		rem --- Order NOT on Credit Hold and Order NOT a Quote, and there is something new to show (a change)
 		soCreateWO!=callpoint!.getDevObject("soCreateWO")
 
 		rem --- Re-initialize soCreateWO! if SO was released from Credit Hold and create all possible Work Orders

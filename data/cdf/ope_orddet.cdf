@@ -674,10 +674,12 @@ rem --- Initialize inventory item update
 
 	endif
 
-rem --- When OP parameter set for asking about creating Work Order, check if SO detail line a validate candidate to create a WO.
+rem --- When OP parameter set for asking about creating Work Order, check if SO detail line is a validate candidate to create a WO.
 
 	op_create_wo$=callpoint!.getDevObject("op_create_wo")
-	if op_create_wo$="A" and callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y" then
+	if op_create_wo$="A" and callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y" and
+:	callpoint!.getHeaderColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" and callpoint!.getHeaderColumnData("OPE_ORDHDR.CREDIT_FLAG")<>"C" then
+		rem ---Order is NOT on Credit Hold, Order is NOT a Quote and detail line IS commited.
 		soCreateWO!=callpoint!.getDevObject("soCreateWO")
 		gridRowVect! = GridVect!.getItem(0)
 		rowData$ = gridRowVect!.get(callpoint!.getValidationRow())
