@@ -37,6 +37,7 @@ rem --- Use statements and declares
         field protected BBjNumber devSfeWOMastr = -1
         field protected BBjString firmId$
         field protected HashMap isnWOMap! = new HashMap()
+        field protected HashMap isnWOMap_initial! = new HashMap()
             rem  isnWOMap! structure
                 rem  Key = SO detail line ISN
                 rem  Value = woVect! BBjVector
@@ -1162,9 +1163,49 @@ getWOVect_error:rem --- Method error trap/handler
                 endif
             wend
 
+            rem --- Save copy of initialized isnWOMap! so we can tell later if it's been changed
+            keys!=#isnWOMap!.keySet()
+            iter!=keys!.iterator()
+            while iter!.hasNext()
+                isn$=iter!.next()
+                woVect!=#isnWOMap!.get(isn$)
+                tmpVect!=BBjAPI().makeVector()
+                for i=0 to woVect!.size()-1
+                    tmpVect!.addItem(woVect!.getItem(i))
+                next i
+                #isnWOMap_initial!.put(isn$,tmpVect!)
+            wend
+
             methodret
             
 initIsnWOMap_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Reports whether or not the isnWOMap! HashMap has changed since it was intialized in the
+        rem  * initIsnWOMap() method.
+        rem  * 
+        rem  * @return boolean  1=true: #isnWOMap! has changed
+        rem  *                 0=false: #isnWOMap! has NOT changed
+        rem  */
+        method public boolean isChanged()
+            seterr isChanged_error
+
+            methodret !#isnWOMap!.equals(#isnWOMap_initial!)
+            
+isChanged_error:rem --- Method error trap/handler
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then

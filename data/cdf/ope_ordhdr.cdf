@@ -46,15 +46,9 @@ rem --- As necessary, handle Cancel and new warnings from ope_createwos form
 [[OPE_ORDHDR.BLST]]
 rem --- Set flag that Last Record has been selected
 	callpoint!.setDevObject("FirstLastRecord","LAST")
-
-rem --- Set flag to NOT show summary SO-WO link grid when using navigation buttons
-	callpoint!.setDevObject("wolink_grid","hide")
 [[OPE_ORDHDR.BFST]]
 rem --- Set flag that First Record has been selected
 	callpoint!.setDevObject("FirstLastRecord","FIRST")
-
-rem --- Set flag to NOT show summary SO-WO link grid when using navigation buttons
-	callpoint!.setDevObject("wolink_grid","hide")
 [[OPE_ORDHDR.BPRI]]
 rem --- Check for Order Total
 
@@ -82,9 +76,6 @@ rem --- Check for Order Total
 			endif
 		endif
 	endif
-
-rem --- Set flag to NOT show summary SO-WO link grid when using navigation buttons
-	callpoint!.setDevObject("wolink_grid","hide")
 [[OPE_ORDHDR.BNEX]]
 rem --- Check for Order Total
 
@@ -112,9 +103,6 @@ rem --- Check for Order Total
 			endif
 		endif
 	endif
-
-rem --- Set flag to NOT show summary SO-WO link grid when using navigation buttons
-	callpoint!.setDevObject("wolink_grid","hide")
 [[OPE_ORDHDR.ASVA]]
 rem --- Check Ship-to's
 
@@ -541,61 +529,61 @@ rem --- Credit action
 rem --- Launch ope_createwos form to create selected work orders
 
 	op_create_wo$=callpoint!.getDevObject("op_create_wo")
-	if op_create_wo$="A" and (callpoint!.getDevObject("force_wolink_grid") or callpoint!.getDevObject("wolink_grid")="show") and
-:	callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" and callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG")<>"C" then
-		rem --- Order NOT on Credit Hold and Order NOT a Quote, and there is something new to show (a change)
+	if op_create_wo$="A" then
 		soCreateWO!=callpoint!.getDevObject("soCreateWO")
+		if callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" and callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG")<>"C"
+:		and (soCreateWO!.isChanged() or callpoint!.getDevObject("force_wolink_grid"))then
+			rem --- Order NOT on Credit Hold and Order NOT a Quote, and there is something new to show (a change)
 
-		rem --- Re-initialize soCreateWO! if SO was released from Credit Hold and create all possible Work Orders
-		if action$="R" then
-			soCreateWO!.initIsnWOMap(GridVect!.getItem(0))
-			soCreateWO!.setCreateWO(Boolean.valueOf("true"))
-		endif
-
-		rem --- Skip unless there are validate candidate WOs could be created
-		if soCreateWO!.woCount() then
-
-			rem --- Update soCreateWO! with CURRENT detail grid line_no so ope_createwos grid sorts in the same order.
-			soCreateWO!.updateLineNo(GridVect!.getItem(0))
-
-			customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-			order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-
-			dim dflt_data$[2,1]
-			dflt_data$[1,0] = "CUSTOMER_ID"
-			dflt_data$[1,1] = customer_id$
-			dflt_data$[2,0] = "ORDER_NO"
-			dflt_data$[2,1] = order_no$
-			key_pfx$=firm_id$+customer_id$+order_no$
-
-			call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
-:				"OPE_CREATEWOS", 
-:				stbl("+USER_ID"), 
-:				"", 
-:				key_pfx$,
-:				table_chans$[all],
-:				"",
-:				dflt_data$[all]
-
-			rem --- Make sure focus returns to this form
-			callpoint!.setStatus("ACTIVATE")
-
-			rem --- Handle Cancel and new warnings from ope_createwos form
-			if callpoint!.getDevObject("createWOs_status")="Cancel" or soCreateWO!.getWarn() then
-				rem --- Barista always goes to the next record at this point in BREX. Cannot stay where we are now via ABORT.
-				rem --- Using short key for RECORD so when Barista goes to the next record it will end up on this current record.
-				callpoint!.setStatus("RECORD:["+firm_id$+"E"+"  "+callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")+"]")
-
-				rem --- A new soCreateWO! instance will be created, so need to close files in this one.
-				soCreateWO!.close()
-				break
+			rem --- Re-initialize soCreateWO! if SO was released from Credit Hold and create all possible Work Orders
+			if action$="R" then
+				soCreateWO!.initIsnWOMap(GridVect!.getItem(0))
+				soCreateWO!.setCreateWO(Boolean.valueOf("true"))
 			endif
-		endif
 
-		rem --- Close files that may be open in soCreateWO! instance
-		soCreateWO!.close()
+			rem --- Skip unless there are validate candidate WOs could be created
+			if soCreateWO!.woCount() then
+
+				rem --- Update soCreateWO! with CURRENT detail grid line_no so ope_createwos grid sorts in the same order.
+				soCreateWO!.updateLineNo(GridVect!.getItem(0))
+
+				customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+				order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+
+				dim dflt_data$[2,1]
+				dflt_data$[1,0] = "CUSTOMER_ID"
+				dflt_data$[2,0] = "ORDER_NO"
+				dflt_data$[2,1] = order_no$
+				key_pfx$=firm_id$+customer_id$+order_no$
+
+				call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
+:					"OPE_CREATEWOS", 
+:					stbl("+USER_ID"), 
+:					"", 
+:					key_pfx$,
+:					table_chans$[all],
+:					"",
+:					dflt_data$[all]
+
+				rem --- Make sure focus returns to this form
+				callpoint!.setStatus("ACTIVATE")
+
+				rem --- Handle Cancel and new warnings from ope_createwos form
+				if callpoint!.getDevObject("createWOs_status")="Cancel" or soCreateWO!.getWarn() then
+					rem --- Barista always goes to the next record at this point in BREX. Cannot stay where we are now via ABORT.
+					rem --- Using short key for RECORD so when Barista goes to the next record it will end up on this current record.
+					callpoint!.setStatus("RECORD:["+firm_id$+"E"+"  "+callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")+"]")
+
+					rem --- A new soCreateWO! instance will be created, so need to close files in this one.
+					soCreateWO!.close()
+					break
+				endif
+			endif
+
+			rem --- Close files that may be open in soCreateWO! instance
+			soCreateWO!.close()
+		endif
 	endif
-	callpoint!.setDevObject("wolink_grid","show")
 	callpoint!.setDevObject("force_wolink_grid",0)
 [[OPE_ORDHDR.AOPT-PRNT]]
 rem --- Check to see if record has been modified (don't print until rec is saved)
@@ -3382,7 +3370,6 @@ rem --- Set object for which customer number is being shown and that details hav
 	callpoint!.setDevObject("current_customer","")
 	callpoint!.setDevObject("details_changed","N")
 	callpoint!.setDevObject("rcpr_row","")
-	callpoint!.setDevObject("wolink_grid","show")
 	callpoint!.setDevObject("force_wolink_grid",0)
 
 rem --- setup message_tpl$
