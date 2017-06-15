@@ -135,7 +135,7 @@ rem --- Use statements and declares
                 #devIvmItemMast = num(open_chans$[5])
                 #devIvmItemWhse = num(open_chans$[6])
                 #devIvsParams = num(open_chans$[7])
-                #devOpeOrdDet = num(open_chans$[8]); rem --- need template
+                #devOpeOrdDet = num(open_chans$[8])
                 #devOpsParams = num(open_chans$[9])
                 #devSfcWOTypeCd = num(open_chans$[10])
                 #devSfeWOComnt = num(open_chans$[11])
@@ -483,12 +483,17 @@ adjustQtyShipped_2_error:rem --- Method error trap/handler
                     else
                         qtyOnOrder=ivmItemWhseRec.qty_on_order
                     endif
-                    if ivCommitted then
+
+                    rem --- Inventory committed quantity may already include this shipped quantity
+                    dim rowData$:#tplOpeOrdDet$
+                    rowData$=#getSODetailRow(isn$)
+                    if ivCommitted and rowData.commit_flag$="Y" then
                         rem --- Shipped quantity is already included in ivmItemWhseRec.qty_commit
                         qty_committed=ivmItemWhseRec.qty_commit-newQtyShipped
                     else
                         qty_committed=ivmItemWhseRec.qty_commit
                     endif
+                    
                     oldQtyShipped=woVect!.getItem(#SOLINE_SHIPQTY)
                     startAvailable=(ivmItemWhseRec.qty_on_hand+oldQtyShipped)-qty_committed
                     qtyNeeded=newQtyShipped-(startAvailable+qtyOnOrder)
@@ -683,12 +688,17 @@ calculateSchProdQty_2_error:rem --- Method error trap/handler
                     qtyOnOrder=ivmItemWhseRec.qty_on_order-sfeWOMastrRec.sch_prod_qty
                 endif
             endif
-            if ivCommitted then
+
+            rem --- Inventory committed quantity may already include this shipped quantity
+            dim rowData$:#tplOpeOrdDet$
+            rowData$=#getSODetailRow(isn$)
+            if ivCommitted and rowData.commit_flag$="Y" then
                 rem --- Shipped quantity is already included in ivmItemWhseRec.qty_commit
                 qty_committed=ivmItemWhseRec.qty_commit-qtyShipped
             else
                 qty_committed=ivmItemWhseRec.qty_commit
             endif
+            
             oldQtyShipped=woVect!.getItem(#SOLINE_SHIPQTY)
             startAvailable=(ivmItemWhseRec.qty_on_hand+oldQtyShipped)-qty_committed
             qtyNeeded=qtyShipped-(startAvailable+qtyOnOrder)
@@ -801,13 +811,12 @@ canCreateWO_2_error:rem --- Method error trap/handler
                     dim ivmItemWhseRec$:#tplIvmItemWhse$
                     readrecord(#devIvmItemWhse,key=#firmId$+rowData.warehouse_id$+rowData.item_id$,dom=*next)ivmItemWhseRec$
                     if ivmItemWhseRec.firm_id$+ivmItemWhseRec.warehouse_id$+ivmItemWhseRec.item_id$<>#firmId$+rowData.warehouse_id$+rowData.item_id$ then valid=0
-                    if ivCommitted then
+                    if ivCommitted and rowData.commit_flag$="Y" then
                         rem --- Shipped quantity is already included in ivmItemWhseRec.qty_commit
                         qty_committed=ivmItemWhseRec.qty_commit-rowData.qty_shipped
                     else
                         qty_committed=ivmItemWhseRec.qty_commit
                     endif
-                    rem --- Note: shipped quantity is already included in ivmItemWhseRec.qty_commit
                     if ((ivmItemWhseRec.qty_on_hand - qty_committed) + ivmItemWhseRec.qty_on_order) - rowData.qty_shipped > 0 then valid=0
                 endif
             endif
@@ -985,6 +994,38 @@ createWOs_error:rem --- Method error trap/handler
         methodend
 
         rem /**
+        rem  * Returns the Sales Order detail record (OPT_INVDET) for the given internal sequence number (isn),
+        rem  * and the currrent customer and order.
+        rem  * 
+        rem  * @param BBjString isn$
+        rem  * 
+        rem  * @return BBjString rowData$
+        rem  */
+        method protected BBjString getSODetailRow(BBjString isn$)
+            seterr getSODetailRow_error
+            dim rowData$:#tplOpeOrdDet$
+
+            thisKey$=#firmId$+rowData.ar_type$+#customerId$+#orderNo$+rowData.ar_inv_no$+isn$
+            readrecord(#devOpeOrdDet,key=thisKey$,dom=*next)rowData$
+            
+            methodret rowData$
+            
+getSODetailRow_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
         rem  * Returns an ArrayList of woVect! BBjVectors in the isnWOMap! HashMap sorted by the Sales Order detail
         rem  * grid line number instead of the grid row's internal sequence number (isn).
         rem  * 
@@ -1099,7 +1140,13 @@ getWOVect_error:rem --- Method error trap/handler
                     dim ivmItemWhseRec$:#tplIvmItemWhse$
                     readrecord(#devIvmItemWhse,key=#firmId$+whsId$+itemId$,dom=*next)ivmItemWhseRec$
                     qtyShipped=woVect!.getItem(#SOLINE_SHIPQTY)
-                    startAvailable=ivmItemWhseRec.qty_on_hand-(ivmItemWhseRec.qty_commit-qtyShipped); rem --- current qty_commit includes the qtyShipped
+                    if rowData.commit_flag$="Y" then
+                        rem --- Shipped quantity is already included in ivmItemWhseRec.qty_commit
+                        qty_committed=ivmItemWhseRec.qty_commit-rowData.qty_shipped
+                    else
+                        qty_committed=ivmItemWhseRec.qty_commit
+                    endif
+                    startAvailable=ivmItemWhseRec.qty_on_hand-qty_committed
                     qtyNeeded=qtyShipped-(startAvailable+ivmItemWhseRec.qty_on_order)
 
                     rem --- Warn if sch_prod_qty isn’t enough
