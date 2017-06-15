@@ -327,6 +327,7 @@ rem --- Clear availability information
 	callpoint!.setDevObject("new_rec","Y")
 	callpoint!.setDevObject("create_quote","S")
 	callpoint!.setDevObject("initial_rec_data$",rec_data$)
+	callpoint!.setDevObject("force_wolink_grid",0)
 
 	gosub init_msgs
 
@@ -540,7 +541,7 @@ rem --- Credit action
 rem --- Launch ope_createwos form to create selected work orders
 
 	op_create_wo$=callpoint!.getDevObject("op_create_wo")
-	if op_create_wo$="A" and callpoint!.getDevObject("wolink_grid")="show" then
+	if op_create_wo$="A" and (callpoint!.getDevObject("force_wolink_grid") or callpoint!.getDevObject("wolink_grid")="show") then
 		soCreateWO!=callpoint!.getDevObject("soCreateWO")
 
 		rem --- Re-initialize soCreateWO! if SO was released from Credit Hold and create all possible Work Orders
@@ -593,6 +594,7 @@ rem --- Launch ope_createwos form to create selected work orders
 		soCreateWO!.close()
 	endif
 	callpoint!.setDevObject("wolink_grid","show")
+	callpoint!.setDevObject("force_wolink_grid",0)
 [[OPE_ORDHDR.AOPT-PRNT]]
 rem --- Check to see if record has been modified (don't print until rec is saved)
 
@@ -1072,6 +1074,7 @@ rem --- Show customer data
 	cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	gosub display_customer
+	gosub add_to_batch_print
 
 	if callpoint!.getColumnData("OPE_ORDHDR.CASH_SALE") <> "Y" then 
 		gosub display_aging
@@ -1157,11 +1160,11 @@ rem --- Create soCreateWO! instance if needed
 		if callpoint!.getColumnData("OPE_ORDHDR.CREDIT_FLAG")<>"C" and
 :		callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" then
 			soCreateWO!.initIsnWOMap(GridVect!.getItem(0))
-				if soCreateWO!.woCount() then
-					callpoint!.setOptionEnabled("WOLN",1)
-				else
-					callpoint!.setOptionEnabled("WOLN",0)
-				endif
+			if soCreateWO!.woCount() then
+				callpoint!.setOptionEnabled("WOLN",1)
+			else
+				callpoint!.setOptionEnabled("WOLN",0)
+			endif
 
 			rem --- If order was created via Duplicate Invoice, then create all possible Work Orders.
 			if user_tpl.hist_ord$="Y" and callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" then
@@ -2707,7 +2710,9 @@ rem ==========================================================================
 	ope_prntlist.customer_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	ope_prntlist.order_no$    = order_no$
 	ope_prntlist_key$=ope_prntlist.firm_id$+ope_prntlist.ordinv_flag$+ope_prntlist.ar_type$+ope_prntlist.customer_id$+ope_prntlist.order_no$
-	extractrecord(ope_prntlist_dev,key=ope_prntlist_key$,dom=*next)x$; rem Advisory Lockint
+	rec_missing=1
+	extractrecord(ope_prntlist_dev,key=ope_prntlist_key$,dom=*next); rec_missing=0
+	if rec_missing then callpoint!.setDevObject("force_wolink_grid",1)
 
 	ope_prntlist$ = field(ope_prntlist$)
 	write record (ope_prntlist_dev) ope_prntlist$
@@ -3376,6 +3381,7 @@ rem --- Set object for which customer number is being shown and that details hav
 	callpoint!.setDevObject("details_changed","N")
 	callpoint!.setDevObject("rcpr_row","")
 	callpoint!.setDevObject("wolink_grid","show")
+	callpoint!.setDevObject("force_wolink_grid",0)
 
 rem --- setup message_tpl$
 
