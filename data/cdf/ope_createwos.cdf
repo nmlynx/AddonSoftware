@@ -86,8 +86,10 @@ format_wo_grid: rem --- Format Work Order grid
 
 	dim wo_rpts_col$[wo_grid_def_cols,len(wo_def_col_str$[0,0])/5]
 	wo_rpts_col$[1,fnstr_pos("DVAR",wo_def_col_str$[0,0],5)]="CREATE_WO"
-	wo_rpts_col$[1,fnstr_pos("LABS",wo_def_col_str$[0,0],5)]=aon_create_wo_label$
-	wo_rpts_col$[1,fnstr_pos("CTLW",wo_def_col_str$[0,0],5)]="20"
+	wo_rpts_col$[1,fnstr_pos("LABS",wo_def_col_str$[0,0],5)]=""
+	wo_rpts_col$[1,fnstr_pos("CTLW",wo_def_col_str$[0,0],5)]="25"
+	wo_rpts_col$[1,fnstr_pos("MAXL",wo_def_col_str$[0,0],5)]="1"
+	wo_rpts_col$[1,fnstr_pos("CTYP",wo_def_col_str$[0,0],5)]="C"
 
 	wo_rpts_col$[2,fnstr_pos("DVAR",wo_def_col_str$[0,0],5)]="LINE_NO"
 	wo_rpts_col$[2,fnstr_pos("LABS",wo_def_col_str$[0,0],5)]=aon_line_no_label$
@@ -134,9 +136,8 @@ format_wo_grid: rem --- Format Work Order grid
 
 	wo_disp_col$=wo_rpts_col$[0,1]
 
-	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,woGrid!,"COLH-LINES-LIGHT-AUTO-MULTI-SIZEC-HSCROLL",wo_rpts_rows,
+	call stbl("+DIR_SYP")+"bam_grid_init.bbj",gui_dev,woGrid!,"COLH-LINES-LIGHT-SIZEC-HSCROLL-CHECKS-HIGHO",wo_rpts_rows,
 :		wo_def_col_str$[all],wo_disp_col$,wo_rpts_col$[all]
-
 	return
 
 rem =========================================================
@@ -229,6 +230,15 @@ rem --- Initialize woGrid! with info in soCreateWo!
 		gosub get_RGB
 		warningHighlight! = BBjAPI().getSysGui().makeColor(R,G,B)
 
+		rem --- Get bold font for warning text
+		font!=woGrid!.getCellFont(0,9)
+		boldFont!=SysGui!.makeFont(font!.getName(),font!.getSize(),SysGui!.BOLD)
+
+		rem --- Get red color for warning text
+		RGB$="220,20,60"
+		gosub get_RGB
+		redColor! = BBjAPI().getSysGui().makeColor(R,G,B)
+
 		rem --- Set cell properties in each grid row
 		for row=0 to woList!.size()-1
 			woVect! = woList!.get(row)
@@ -274,6 +284,9 @@ rem --- Initialize woGrid! with info in soCreateWo!
 			rem  --- Set Warnings
 			warnings$=woVect!.getItem(soCreateWO!.getWARNINGS())
 			if cvs(warnings$,3)<>"" then
+				rem --- Bold red warning
+				woGrid!.setCellFont(row,9,boldFont!)
+				woGrid!.setCellForeColor(row,9,redColor!)
 				woGrid!.setCellText(row, 9, warnings$)
 
 				rem --- Highlight row
