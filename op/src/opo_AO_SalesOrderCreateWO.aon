@@ -350,6 +350,7 @@ addWOCmnt_error:rem --- Method error trap/handler
         methodend
 
         rem /**
+        rem  * Updates woVect! SOLINE_SHIPDATE and WARNINGS for the new Estimated Ship Date.
         rem  * Warns if the new Estimated Ship Date for the Sales Order detail line is after the
         rem  * linked Work Orders Estimated Completion Date, and asks operator for approval to
         rem  * continue. 
@@ -368,20 +369,44 @@ addWOCmnt_error:rem --- Method error trap/handler
                 woVect! = #isnWOMap!.get(isn$)
                 wo_no$ = woVect!.getItem(#WO_NO)
                 estCmpDate$ = woVect!.getItem(#WO_ESTCMPDATE)
-                if cvs(wo_no$,2)<>"" and newEstShpDate$ < estCmpDate$ then
-                    rem --- Warn the new estimated ship date is before the linked Work Order's estmated completion date. 
-                    rem --- Ask if they want to continue with changing the estimated ship date. 
+                if cvs(wo_no$,2)<>"" then
                     newShpDate$=date(jul(newEstShpDate$,"%Yd%Mz%Dz"):stbl("+DATE_MASK"))
-                    cmpDate$=date(jul(estCmpDate$,"%Yd%Mz%Dz"):stbl("+DATE_MASK"))
-                    msg_id$="OP_EST_SHIP_DATE_Q"
-                    dim msg_tokens$[4]
-                    msg_tokens$[1]=newShpDate$
-                    msg_tokens$[2]=wo_no$
-                    msg_tokens$[3]=cmpDate$
-                    msg_tokens$[4]=cvs(woVect!.getItem(#SOLINE_ITEM),2)
-                    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
-                    
-                    if msg_opt$="Y" then
+
+                    if newEstShpDate$ < estCmpDate$ then
+                        rem --- Warn the new estimated ship date is before the linked Work Order's estmated completion date. 
+                        rem --- Ask if they want to continue with changing the estimated ship date. 
+                        cmpDate$=date(jul(estCmpDate$,"%Yd%Mz%Dz"):stbl("+DATE_MASK"))
+                        msg_id$="OP_EST_SHIP_DATE_Q"
+                        dim msg_tokens$[4]
+                        msg_tokens$[1]=newShpDate$
+                        msg_tokens$[2]=wo_no$
+                        msg_tokens$[3]=cmpDate$
+                        msg_tokens$[4]=cvs(woVect!.getItem(#SOLINE_ITEM),2)
+                        call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+                        
+                        if msg_opt$<>"Y" then true_false=Boolean.valueOf("false")
+                    endif
+
+                    rem --- Update warnings and WO Comments for new estimated ship date.
+                    if true_false=Boolean.valueOf("true") then
+                        rem --- Update late date warning
+                        warning$=woVect!.getItem(#WARNINGS)
+                        lateDate$=#Translate!.getTranslation("AON_SCH_PROD_DATE_LATE")+". "
+                        warningPos=pos(lateDate$=warning$)
+                        if warningPos then
+                            if newEstShpDate$ >= estCmpDate$ then
+                                rem --- Remove existing late date warning
+                                warning$=warning$(1,warningPos-1)+warning$(warningPos+len(lateDate$))
+                            endif
+                        else
+                            if newEstShpDate$ < estCmpDate$ then
+                                rem --- Add late date warning
+                                warning$=warning$+lateDate$
+                            endif
+                        endif
+                        woVect!.setItem(#WARNINGS,warning$)
+
+                        rem --- Update WO Comments
                         dim sfeWOMastrRec$:#tplSfeWOMastr$
                         readrecord(#devSfeWOMastr,key=#firmId$+"  "+wo_no$,knum="PRIMARY",dom=*next)sfeWOMastrRec$
                         if pos(sfeWOMastrRec.wo_status$="OPQ") then
@@ -395,8 +420,6 @@ addWOCmnt_error:rem --- Method error trap/handler
                             cmnt$=cmnt$+" "+newShpDate$
                             #addWOCmnt(wo_no$,cmnt$)
                         endif
-                    else
-                        true_false=Boolean.valueOf("false")
                     endif
                 endif
 
@@ -422,8 +445,10 @@ adjustEstShpDate_error:rem --- Method error trap/handler
         methodend
 
         rem /**
-        rem  * Warns if the quantity needed for the Sales Order detail line's new Quantity Shipped is greater than
-        rem  * the linked Work Orders Scheduled Production Quantity, and asks operator for approval to continue.
+        rem  * Updates woVect! SOLINE_SHIPQTY and WARNINGS for the new Quantity Shipped, and WO_SCHPRODQTY for
+        rem  * linked planned Work Orders. Warns if the quantity needed for the Sales Order detail line's new
+        rem  * Quantity Shipped is greater than the linked Work Orders Scheduled Production Quantity, and asks
+        rem  * operator for approval to continue.
         rem  * 
         rem  * Calculates quantity needed AFTER the inventory committed quantity has been updated for the quantity ordered. 
         rem  * 
@@ -454,8 +479,10 @@ adjustQtyShipped_2_error:rem --- Method error trap/handler
         methodend
 
         rem /**
-        rem  * Warns if the quantity needed for the Sales Order detail line's new Quantity Shipped is greater than
-        rem  * the linked Work Orders Scheduled Production Quantity, and asks operator for approval to continue.
+        rem  * Updates woVect! SOLINE_SHIPQTY and WARNINGS for the new Quantity Shipped, and WO_SCHPRODQTY for
+        rem  * linked planned Work Orders. Warns if the quantity needed for the Sales Order detail line's new
+        rem  * Quantity Shipped is greater than the linked Work Orders Scheduled Production Quantity, and asks
+        rem  * operator for approval to continue.
         rem  * 
         rem  * Can calculate quantity needed either BEFORE (ivCommitted=0) or AFTER (ivCommitted=1) the inventory committed
         rem  * quantity has been updated for the quantity ordered. 
@@ -507,7 +534,7 @@ adjustQtyShipped_2_error:rem --- Method error trap/handler
                     if qtyNeeded<0 then qtyNeeded=0
 
                     rem --- Warn if the quantity needed for the new ship quantity is greater than linked Work Order's scheduled production quantity. 
-                    rem --- And, ask if they want to continue with changing the estimated ship date. 
+                    rem --- And, ask if they want to continue with changing the ship quantity. 
                     schProdQty=woVect!.getItem(#WO_SCHPRODQTY)
                     if qtyNeeded > schProdQty or startAvailable+qtyOnOrder < 0 then
                         msg_id$="OP_SHIP_QTY_Q"
@@ -520,27 +547,46 @@ adjustQtyShipped_2_error:rem --- Method error trap/handler
                         msg_tokens$[6]=cvs(woVect!.getItem(#SOLINE_ITEM),2)
                         call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
                         
-                        if msg_opt$="Y" then
-                            dim sfeWOMastrRec$:#tplSfeWOMastr$
-                            extractrecord(#devSfeWOMastr,key=#firmId$+"  "+wo_no$,knum="PRIMARY",dom=*next)sfeWOMastrRec$
-                            if sfeWOMastrRec.wo_status$="P" then
-                                sfeWOMastrRec.sch_prod_qty = #calculateSchProdQty(woVect!, newQtyShipped, ivCommitted)
-                                writerecord(#devSfeWOMastr)sfeWOMastrRec$
-                                woVect!.setItem(#WO_SCHPRODQTY,sfeWOMastrRec.sch_prod_qty)
+                        if msg_opt$<>"Y" then true_false=Boolean.valueOf("false")
+                    endif
+                    
+                    rem --- Update warnings and WO Comments for new ship quantity.
+                    if true_false=Boolean.valueOf("true") then
+                        rem --- Update quantity short warning
+                        warning$=woVect!.getItem(#WARNINGS)
+                        shortQty$=#Translate!.getTranslation("AON_SCH_PROD_QTY_SHORT")+". "
+                        warningPos=pos(shortQty$=warning$)
+                        if warningPos then
+                            if qtyNeeded <= schProdQty and startAvailable+qtyOnOrder >= 0 then
+                                rem --- Remove existing quantity short warning
+                                warning$=warning$(1,warningPos-1)+warning$(warningPos+len(shortQty$))
                             endif
-                            if pos(sfeWOMastrRec.wo_status$="OQ") then
-                                cmnt$=#Translate!.getTranslation("AON_LINKED")+" "+#Translate!.getTranslation("AON_SALES")+" "+#Translate!.getTranslation("AON_ORDER")
-                                cmnt$=cmnt$+" "+#orderNo$+" "
-                                cmnt$=cmnt$+#Translate!.getTranslation("AON_SHIPPED")+" "+#Translate!.getTranslation("AON_QUANTITY")
-                                cmnt$=cmnt$+" "+cvs(str(oldQtyShipped:#maskIvU$),3)+" "
-                                cmnt$=cmnt$+#Translate!.getTranslation("AON_CHANGED_TO")
-                                cmnt$=cmnt$+" "+cvs(str(newQtyShipped:#maskIvU$),3)
-                                #addWOCmnt(wo_no$,cmnt$)
-                            endif
-                            read(#devSfeWOMastr,end=*next)
                         else
-                            true_false=Boolean.valueOf("false")
+                            if qtyNeeded > schProdQty or startAvailable+qtyOnOrder < 0 then
+                                rem --- Add quantity short warning
+                                warning$=shortQty$+warning$
+                            endif
                         endif
+                        woVect!.setItem(#WARNINGS,warning$)
+
+                        rem --- Update WO Comments
+                        dim sfeWOMastrRec$:#tplSfeWOMastr$
+                        extractrecord(#devSfeWOMastr,key=#firmId$+"  "+wo_no$,knum="PRIMARY",dom=*next)sfeWOMastrRec$
+                        if sfeWOMastrRec.wo_status$="P" then
+                            sfeWOMastrRec.sch_prod_qty = #calculateSchProdQty(woVect!, newQtyShipped, ivCommitted)
+                            writerecord(#devSfeWOMastr)sfeWOMastrRec$
+                            woVect!.setItem(#WO_SCHPRODQTY,sfeWOMastrRec.sch_prod_qty)
+                        endif
+                        if pos(sfeWOMastrRec.wo_status$="OQ") then
+                            cmnt$=#Translate!.getTranslation("AON_LINKED")+" "+#Translate!.getTranslation("AON_SALES")+" "+#Translate!.getTranslation("AON_ORDER")
+                            cmnt$=cmnt$+" "+#orderNo$+" "
+                            cmnt$=cmnt$+#Translate!.getTranslation("AON_SHIPPED")+" "+#Translate!.getTranslation("AON_QUANTITY")
+                            cmnt$=cmnt$+" "+cvs(str(oldQtyShipped:#maskIvU$),3)+" "
+                            cmnt$=cmnt$+#Translate!.getTranslation("AON_CHANGED_TO")
+                            cmnt$=cmnt$+" "+cvs(str(newQtyShipped:#maskIvU$),3)
+                            #addWOCmnt(wo_no$,cmnt$)
+                        endif
+                        read(#devSfeWOMastr,end=*next)
                     endif
                 endif
 
@@ -1165,7 +1211,7 @@ getWOVect_error:rem --- Method error trap/handler
                     if sfeWOMastrRec.estcmp_date$>woVect!.getItem(#SOLINE_SHIPDATE) then
                         warning$=warning$+#Translate!.getTranslation("AON_SCH_PROD_DATE_LATE")+". "
                     endif
-                    woVect!.setItem(#WARNINGS,  warning$)
+                    woVect!.setItem(#WARNINGS,warning$)
                 endif
             wend
 
