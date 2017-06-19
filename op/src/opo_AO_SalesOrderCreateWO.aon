@@ -313,8 +313,14 @@ addSODetailLine_error:rem --- Method error trap/handler
                     thisCmnt$=tmpCmnt$
                     tmpCmnt$=""
                 else
-                    thisCmnt$=tmpCmnt$(1,cmntSize-auditLen)
-                    tmpCmnt$=tmpCmnt$(1+cmntSize-auditLen)
+                    blankPos=pos(" "=tmpCmnt$(1,cmntSize-auditLen),-1)
+                    if blankPos then
+                        thisCmnt$=tmpCmnt$(1,blankPos-1)
+                        tmpCmnt$=tmpCmnt$(blankPos+1)
+                    else
+                        thisCmnt$=tmpCmnt$(1,cmntSize-auditLen)
+                        tmpCmnt$=tmpCmnt$(1+cmntSize-auditLen)
+                    endif
                 endif
                 SfeWOComntRec.sequence_no$=str(seqNo:cmntSeqMask$)
                 SfeWOComntRec.ext_comments$=auditInfo$+thisCmnt$
