@@ -26,6 +26,11 @@ rem --- Launch ope_createwos form to create selected work orders
 
 	rem --- Make sure focus returns to this form
 	callpoint!.setStatus("ACTIVATE")
+
+	rem --- Re-initialize soCreateWO! if ope_createwos form not Cancelled and no new warnings
+	if callpoint!.getDevObject("createWOs_status")<>"Cancel" or !soCreateWO!.getWarn() then
+		soCreateWO!.initIsnWOMap(GridVect!.getItem(0))
+	endif
 [[OPE_ORDHDR.BEND]]
 rem --- As necessary, handle Cancel and new warnings from ope_createwos form
 
