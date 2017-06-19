@@ -600,10 +600,10 @@ adjustQtyShipped_1_error:rem --- Method error trap/handler
                 #Warn=1
                 msg_id$="OP_WO_CMPDATE_LATE"
                 dim msg_tokens$[4]
-                msg_tokens$[1]=cvs(itemId$,2)
-                msg_tokens$[2]=shpDate$
-                msg_tokens$[3]=wo_no$
-                msg_tokens$[4]=cmpDate$
+                msg_tokens$[1]=wo_no$
+                msg_tokens$[2]=cmpDate$
+                msg_tokens$[3]=shpDate$
+                msg_tokens$[4]=cvs(itemId$,2)
                 call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
             endif
 
