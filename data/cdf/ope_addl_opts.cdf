@@ -78,7 +78,8 @@ rem --- Is OP parameter set for asking about creating Work Order?
 	if callpoint!.getDevObject("op_create_wo")<>null() and callpoint!.getDevObject("op_create_wo")="A" then
 		newEstShpDate$ = callpoint!.getUserInput()
 		oldEstShpDate$ = callpoint!.getColumnUndoData("OPE_ADDL_OPTS.EST_SHP_DATE")
-		if callpoint!.getColumnData("OPE_ADDL_OPTS.COMMIT_FLAG")="Y" and newEstShpDate$ <> oldEstShpDate$ then
+		if callpoint!.getColumnData("OPE_ADDL_OPTS.COMMIT_FLAG")="Y" and newEstShpDate$ <> oldEstShpDate$ and
+:		callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow())) <> "Y" then
 			rem --- Estimated Ship Date changed for a committed detail line
 			isn$ = UserObj!.getFieldAsString("INTERNAL_SEQ_NO")
 			soCreateWO! = callpoint!.getDevObject("soCreateWO")
