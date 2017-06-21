@@ -300,7 +300,7 @@ rem --- When OP parameter set for asking about creating Work Order, check if the
 	op_create_wo$=callpoint!.getDevObject("op_create_wo")
 	if op_create_wo$="A" and callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y" then
 		qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
-		if qty_shipped <> user_tpl.prev_shipqty then
+		if qty_shipped <> user_tpl.prev_shipqty and callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow())) <> "Y" then
 			rem --- Warn when ship quantity changed for committed detail line with an existing linked WO.
 			isn$ = callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
 			soCreateWO! = callpoint!.getDevObject("soCreateWO")
@@ -1389,7 +1389,7 @@ rem --- When OP parameter set for asking about creating Work Order, check if the
 	op_create_wo$=callpoint!.getDevObject("op_create_wo")
 	if op_create_wo$="A" and callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y" then
 		qty_shipped = num(callpoint!.getUserInput())
-		if qty_shipped <> user_tpl.prev_shipqty then
+		if qty_shipped <> user_tpl.prev_shipqty and callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow())) <> "Y" then
 			rem --- Warn when ship quantity changed for committed detail line with an existing linked WO.
 			isn$ = callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
 			soCreateWO! = callpoint!.getDevObject("soCreateWO")
@@ -1435,7 +1435,7 @@ rem --- When OP parameter set for asking about creating Work Order, check if the
 	op_create_wo$=callpoint!.getDevObject("op_create_wo")
 	if op_create_wo$="A" and callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")="Y" then
 		qty_shipped = num(callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED"))
-		if qty_shipped <> user_tpl.prev_shipqty then
+		if qty_shipped <> user_tpl.prev_shipqty and callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow())) <> "Y" then
 			rem --- Warn when ship quantity changed for committed detail line with an existing linked WO.
 			isn$ = callpoint!.getColumnData("OPE_ORDDET.INTERNAL_SEQ_NO")
 			soCreateWO! = callpoint!.getDevObject("soCreateWO")
