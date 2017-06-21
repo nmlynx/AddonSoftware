@@ -687,7 +687,8 @@ rem --- Force focus on the Totals tab
 
 	if pos(callpoint!.getDevObject("totals_warn")="24")>0
 		if pos(callpoint!.getDevObject("was_on_tot_tab")="N") > 0
-			if callpoint!.getDevObject("details_changed")="Y" and callpoint!.getDevObject("rcpr_row")=""
+			if callpoint!.getDevObject("details_changed")="Y" and callpoint!.getDevObject("rcpr_row")="" and
+:			callpoint!.getDevObject("OP_TOTALS_TAB_msg") then
 				callpoint!.setMessage("OP_TOTALS_TAB")
 				callpoint!.setFocus("OPE_ORDHDR.FREIGHT_AMT")
 				callpoint!.setDevObject("was_on_tot_tab","Y")
@@ -696,6 +697,7 @@ rem --- Force focus on the Totals tab
 			endif
 		endif
 	endif
+	callpoint!.setDevObject("OP_TOTALS_TAB_msg",1)
 
 rem --- Initialize RTP modified fields for modified existing records
 	if callpoint!.getRecordMode()="C" then
@@ -3379,6 +3381,7 @@ rem --- Set object for which customer number is being shown and that details hav
 	callpoint!.setDevObject("details_changed","N")
 	callpoint!.setDevObject("rcpr_row","")
 	callpoint!.setDevObject("force_wolink_grid",0)
+	callpoint!.setDevObject("OP_TOTALS_TAB_msg",1)
 
 rem --- setup message_tpl$
 
