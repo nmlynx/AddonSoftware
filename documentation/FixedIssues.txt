@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-06-14
+ Report Date:   2017-06-21
  Report Branch: AddonSoftware 17.00
  Last Release:  AddonSoftware 16.24
 =======================================================================================================================================
@@ -694,4 +694,14 @@ Modified: op/src/opc_invoice.aon
 Modified: op/src/opc_picklist.aon
 Modified: po/src/por_poprint.aon
 Modified: po/src/por_reqprint.aon
+
+=======================================================================================================================================
+Revision: 2c41aea08e5dfc6a530a799f4298f0385499a649
+Author: Christine <chawkins@basis.com>
+Date: 6/21/2017 10:42:46 AM
+Message:
+Bug 9095 - BOM Costing report should be using calculated net_qty instead of qty_required; corrected to use net_qty, and also to calculate net_qty using the BmUtils.netSubQtyReq() method for consistency.
+----
+Modified: sprocs/BOMSUBDET.prc
+
 
