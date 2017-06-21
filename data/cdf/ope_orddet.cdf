@@ -713,6 +713,10 @@ rem --- When OP parameter set for asking about creating Work Order, check if SO 
 				endif
 				woVect!.setItem(soCreateWO!.getASKED(),1)
 				callpoint!.setStatus("ACTIVATE")
+
+				rem --- Prevent OP_TOTALS_TAB message from being displayed in ope_ordhdr BWRI at this time.
+				rem --- Above message appears after the header has focus, and causes a loss of focus which results in ope_ordhdr BWRI firing.
+				callpoint!.setDevObject("OP_TOTALS_TAB_msg",0)
 			endif
 		endif
 	endif
@@ -1005,6 +1009,10 @@ rem --- See if we're coming back from Recalc button
 		callpoint!.setDevObject("details_changed","Y")
 		break
 	endif
+
+rem --- Allow displaying OP_TOTALS_TAB message in ope_ordhdr BWRI when after header gains focus again
+
+	callpoint!.setDevObject("OP_TOTALS_TAB_msg",1)
 
 rem --- Disable by line type (Needed because Barista is skipping Line Code)
 
