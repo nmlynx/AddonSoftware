@@ -35,6 +35,7 @@ rem --- Use statements and declares
         field protected BBjNumber devSfcWOTypeCd = -1
         field protected BBjNumber devSfeWOComnt = -1
         field protected BBjNumber devSfeWOMastr = -1
+        field protected BBjNumber devSfeWOMatl = -1
         field protected BBjString firmId$
         field protected HashMap isnWOMap! = new HashMap()
         field protected HashMap isnWOMap_initial! = new HashMap()
@@ -73,6 +74,7 @@ rem --- Use statements and declares
         field protected BBjString tplSfcWOTypeCd$
         field protected BBjString tplSfeWOComnt$
         field protected BBjString tplSfeWOMastr$
+        field protected BBjString tplSfeWOMatl$
         field protected BBTranslator Translate!
         field protected BBjString userId$
         field public BBjNumber Warn = 0
@@ -110,7 +112,7 @@ rem --- Use statements and declares
             #orderNo$ = orderNo$
 
             rem --- Open needed files          
-            num_files=12
+            num_files=13
             dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
             open_tables$[1] ="ADS_MASKS",     open_opts$[1] = "OTA@"
             open_tables$[2] ="BMC_OPCODES",   open_opts$[2] = "OTA@"
@@ -124,6 +126,7 @@ rem --- Use statements and declares
             open_tables$[10] ="SFC_WOTYPECD", open_opts$[10] = "OTA@"
             open_tables$[11] ="SFE_WOCOMNT",  open_opts$[11] = "OTA[1]"
             open_tables$[12] ="SFE_WOMASTR",  open_opts$[12] = "OTA[1]"
+            open_tables$[13] ="SFE_WOMATL",  open_opts$[13] = "OTA@"
         
             call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
         
@@ -141,6 +144,7 @@ rem --- Use statements and declares
                 #devSfcWOTypeCd = num(open_chans$[10])
                 #devSfeWOComnt = num(open_chans$[11])
                 #devSfeWOMastr = num(open_chans$[12])
+                #devSfeWOMatl = num(open_chans$[13])
 
                 #tplAdsMasks$ = open_tpls$[1]
                 #tplBmcOpCodes$ = open_tpls$[2]
@@ -154,6 +158,7 @@ rem --- Use statements and declares
                 #tplSfcWOTypeCd$ = open_tpls$[10]
                 #tplSfeWOComnt$ = open_tpls$[11]
                 #tplSfeWOMastr$ = open_tpls$[12]
+                #tplSfeWOMatl$ = open_tpls$[13]
             else
                 rem --- Throw error
                 err_num=err
@@ -537,17 +542,38 @@ adjustQtyShipped_2_error:rem --- Method error trap/handler
                     rem --- And, ask if they want to continue with changing the ship quantity. 
                     schProdQty=woVect!.getItem(#WO_SCHPRODQTY)
                     if qtyNeeded > schProdQty or startAvailable+qtyOnOrder < 0 then
-                        msg_id$="OP_SHIP_QTY_Q"
-                        dim msg_tokens$[6]
-                        msg_tokens$[1]=cvs(str(qtyNeeded:#maskIvU$),3)
-                        msg_tokens$[2]=cvs(str(newQtyShipped:#maskIvU$),3)
-                        msg_tokens$[3]=wo_no$
-                        msg_tokens$[4]=cvs(str(schProdQty:#maskSfU$),3)
-                        msg_tokens$[5]=cvs(str(oldQtyShipped:#maskIvU$),3)
-                        msg_tokens$[6]=cvs(woVect!.getItem(#SOLINE_ITEM),2)
-                        call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
-                        
-                        if msg_opt$<>"Y" then true_false=Boolean.valueOf("false")
+                        rem --- Check for existing material requirements for this WO
+                        sfeWomastrKey$=#firmId$+"  "+wo_no$
+                        read(#devSfeWOMatl,key=sfeWomastrKey$,dom=*next)
+                        sfeWomatlKey$=key(#devSfeWOMatl,end=*next)
+                        if pos(sfeWomastrKey$=sfeWomatlKey$)=1 then
+                            rem --- Material requirements alreay exist
+rem wgh ... 9036 ... stopped here
+rem ... The quantity needed %1 for the new ship quantity %2 is greater than linked WO %3 scheduled production quantity %4.
+rem ... Linked Work Order %3 has existing material requirements, so its scheduled production quantity %4 cannot be changed.
+                            msg_id$="OP_MAT_REQS_EXIST"
+                            dim msg_tokens$[4]
+                            msg_tokens$[1]=cvs(str(qtyNeeded:#maskIvU$),3)
+                            msg_tokens$[2]=cvs(str(newQtyShipped:#maskIvU$),3)
+                            msg_tokens$[3]=wo_no$
+                            msg_tokens$[4]=cvs(str(schProdQty:#maskSfU$),3)
+                            call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+                            
+                            true_false=Boolean.valueOf("false")
+                        else
+                            rem --- No material requirements yet
+                            msg_id$="OP_SHIP_QTY_Q"
+                            dim msg_tokens$[6]
+                            msg_tokens$[1]=cvs(str(qtyNeeded:#maskIvU$),3)
+                            msg_tokens$[2]=cvs(str(newQtyShipped:#maskIvU$),3)
+                            msg_tokens$[3]=wo_no$
+                            msg_tokens$[4]=cvs(str(schProdQty:#maskSfU$),3)
+                            msg_tokens$[5]=cvs(str(oldQtyShipped:#maskIvU$),3)
+                            msg_tokens$[6]=cvs(woVect!.getItem(#SOLINE_ITEM),2)
+                            call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+                            
+                            if msg_opt$<>"Y" then true_false=Boolean.valueOf("false")
+                        endif
                     endif
                     
                     rem --- Update warnings and WO Comments for new ship quantity.
@@ -1545,7 +1571,7 @@ woCount_error:rem --- Method error trap/handler
         method public void close()
             seterr close_error
 
-            num_files=12
+            num_files=13
             dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
             open_tables$[1] ="ADS_MASKS",     open_opts$[1] = "C@"
             open_tables$[2] ="BMC_OPCODES",   open_opts$[2] = "C@"
@@ -1559,6 +1585,7 @@ woCount_error:rem --- Method error trap/handler
             open_tables$[10] ="SFC_WOTYPECD", open_opts$[10] = "C@"
             open_tables$[11] ="SFE_WOCOMNT",  open_opts$[11] = "C[1]"
             open_tables$[12] ="SFE_WOMASTR",  open_opts$[12] = "C[1]"
+            open_tables$[13] ="SFE_WOMATL",  open_opts$[13] = "C@"
         
             call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
  
