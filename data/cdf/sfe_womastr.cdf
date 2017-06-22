@@ -154,6 +154,22 @@ rem --- WO Detail Report (Hard Copy)
 :		"",
 :		dflt_data$[all]
 [[SFE_WOMASTR.BDEL]]
+rem --- Warn if this WO is linked to a Sales Order
+
+	if cvs(callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID"),2)<>"" and 
+:	cvs(callpoint!.getColumnData("SFE_WOMASTR.ORDER_NO"),2)<>"" and 
+:	cvs(callpoint!.getColumnData("SFE_WOMASTR.SLS_ORD_SEQ_REF"),2)<>"" then
+		msg_id$="SF_DELETE_LINKED_WO"
+		dim msg_tokens$[2]
+		msg_tokens$[1]=callpoint!.getColumnData("SFE_WOMASTR.ORDER_NO")
+		msg_tokens$[2]=callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID")
+		gosub disp_message
+		if msg_opt$<>"Y" then
+			callpoint!.setStatus("ACTIVATE-ABORT")
+			break
+		endif
+	endif
+
 rem --- cascade delete will take care of removing:
 rem ---   requirements (sfe_wooprtn/sfe-02, sfe_womatl/sfe-22, sfe_wosubcnt/sfe-32)
 rem ---   comments (sfe_wocomnt/sfe-07)
