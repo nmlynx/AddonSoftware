@@ -330,17 +330,6 @@ rem --- Clear availability information
 rem --- Set flags
 
 	user_tpl.record_deleted = 0
-
-rem --- Create soCreateWO! instance if needed
-
-	op_create_wo$=callpoint!.getDevObject("op_create_wo")
-	if op_create_wo$="A" then
-		customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-		order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-		soCreateWO!=new SalesOrderCreateWO(firm_id$,customer_id$,order_no$)
-		callpoint!.setDevObject("soCreateWO",soCreateWO!)
-		callpoint!.setDevObject("createWOs_status","")
-	endif
 [[OPE_ORDHDR.ARAR]]
 rem --- If First/Last Record was used, did it return an Order?
 
@@ -1502,6 +1491,15 @@ rem --- Do we need to create a new order number?
 		else
 			callpoint!.setUserInput(order_no$)
 			new_seq$ = "Y"
+
+			rem --- Create soCreateWO! instance if needed
+			op_create_wo$=callpoint!.getDevObject("op_create_wo")
+			if op_create_wo$="A" then
+				customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+				soCreateWO!=new SalesOrderCreateWO(firm_id$,customer_id$,order_no$)
+				callpoint!.setDevObject("soCreateWO",soCreateWO!)
+				callpoint!.setDevObject("createWOs_status","")
+			endif
 		endif
 	endif
 
