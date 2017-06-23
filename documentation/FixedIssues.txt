@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-06-21
+ Report Date:   2017-06-23
  Report Branch: AddonSoftware 17.00
  Last Release:  AddonSoftware 16.24
 =======================================================================================================================================
@@ -704,4 +704,19 @@ Bug 9095 - BOM Costing report should be using calculated net_qty instead of qty_
 ----
 Modified: sprocs/BOMSUBDET.prc
 
-
+=======================================================================================================================================
+Revision: 648294510ada617e5e1164e93cf06b6249e5858d
+Author: Christine <chawkins@basis.com>
+Date: 6/23/2017 11:48:56 AM
+Message:
+Bug 7537 - A better way to specify Logo files in multi-firm environment; further enhanced to use company-wide logo from ADS_COMPINFO file. So will use doc-specific logo if there is one, otherwise company-specific logo if there is one, otherwise the logo from the config file.
+----
+Modified: ad/src/ado_func.src
+Modified: ar/src/arr_invoices.aon
+Modified: ar/src/arr_statements.aon
+Modified: ar/src/arr_stmt_demand.aon
+Modified: op/src/opc_hist_invoice.aon
+Modified: op/src/opc_invoice.aon
+Modified: op/src/opc_picklist.aon
+Modified: po/src/por_poprint.aon
+Modified: po/src/por_reqprint.aon
