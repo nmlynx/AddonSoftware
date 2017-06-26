@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-06-23
+ Report Date:   2017-06-26
  Report Branch: AddonSoftware 17.00
  Last Release:  AddonSoftware 16.24
 =======================================================================================================================================
@@ -705,6 +705,19 @@ Bug 9095 - BOM Costing report should be using calculated net_qty instead of qty_
 Modified: sprocs/BOMSUBDET.prc
 
 =======================================================================================================================================
+Revision: ea490031ac5b3138149f53d0062ca863819cf742
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 6/21/2017 5:21:07 PM
+Message:
+Bug 9099: Fixed trip read for "Next Record" to actually advance the file
+pointer to the next record after a NEW record.
+----
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_invhdr.cdf
+Modified: data/cdf/ope_ordhdr.cdf
+
+=======================================================================================================================================
 Revision: 648294510ada617e5e1164e93cf06b6249e5858d
 Author: Christine <chawkins@basis.com>
 Date: 6/23/2017 11:48:56 AM
@@ -722,14 +735,10 @@ Modified: po/src/por_poprint.aon
 Modified: po/src/por_reqprint.aon
 
 =======================================================================================================================================
-Revision: ea490031ac5b3138149f53d0062ca863819cf742
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 6/21/2017 5:21:07 PM
+Revision: ba3c3ba494ba6660df81eb735f9166db722c6c6b
+Author: Christine <chawkins@basis.com>
+Date: 6/26/2017 4:25:27 PM
 Message:
-Bug 9099: Fixed trip read for "Next Record" to actually advance the file
-pointer to the next record after a NEW record.
+Bug 9079 - AIUW Upgrade Wizard may place adx_conversionCtrl in wrong directory; bug was re-opened because the fix caused problems if trying to copy/install a vertical. Corrected so the map is back to being cleared, but the value needed to properly place adx_conversionCtrl is harvested for later use.
 ----
-Modified: data/bar/ope_invhdr.xml
-Modified: data/bar/ope_ordhdr.xml
-Modified: data/cdf/ope_invhdr.cdf
-Modified: data/cdf/ope_ordhdr.cdf
+Modified: ad/src/adx_upgradewiz.aon
