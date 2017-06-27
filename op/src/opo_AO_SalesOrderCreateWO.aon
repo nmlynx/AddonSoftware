@@ -1320,7 +1320,7 @@ isChanged_error:rem --- Method error trap/handler
                 readrecord(#devSfeWOMastr)sfeWOMastrRec$
                 if sfeWOMastrRec.wo_status$<>"P" then continue
                 rem --- Don't count WOs not linked to a Sals Order because quantity has not been committed in inventory.
-                if cvs(sfeWOMastrRec.customer_id$+sfeWOMastrRec.order_no$+sfeWOMastrRec.sls_ord_seq_ref$,2)="" then continue
+                if cvs(sfeWOMastrRec.customer_id$+sfeWOMastrRec.order_no$,2)="" and num(sfeWOMastrRec.sls_ord_seq_ref$)=0 then continue
                 plannedQty=plannedQty+sfeWOMastrRec.sch_prod_qty
             wend
 
