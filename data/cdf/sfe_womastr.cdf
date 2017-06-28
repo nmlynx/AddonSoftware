@@ -1577,13 +1577,13 @@ add_wo_comment: rem --- Add comment to next SFE_WOCMNT record(s)
 rem 	wo_comment$		input
 rem =========================================================
 
-	if soCreateWO!=null() then
-		customer_id$=callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID")
-		order_no$=callpoint!.getColumnData("SFE_WOMASTR.ORDER_NO")
-		wo_no$=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
-		soCreateWO!=new SalesOrderCreateWO(firm_id$,customer_id$,order_no$)
-		soCreateWO!.addWOCmnt(wo_no$,wo_comment$)
-	endif
+	customer_id$=callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID")
+	order_no$=callpoint!.getColumnData("SFE_WOMASTR.ORDER_NO")
+	wo_no$=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+	soCreateWO!=new SalesOrderCreateWO(firm_id$,customer_id$,order_no$)
+	soCreateWO!.addWOCmnt(wo_no$,wo_comment$)
+	soCreateWO!.close()
+	soCreateWO!=null()
 
 	return
 
