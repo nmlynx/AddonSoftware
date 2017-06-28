@@ -314,6 +314,10 @@ rem --- prior to deleting a work order, need to check for open transactions; if 
 rem --- The type of code seen below is often done in BSHO, but the code at the end that changes the prompt for the Bill/Item control
 rem --- won't work there (too late).
 
+rem --- Initializations
+
+	use ::opo_SalesOrderCreateWO.aon::SalesOrderCreateWO
+
 rem --- Set new record flag
 
 	callpoint!.setDevObject("new_rec","Y")
@@ -1008,6 +1012,10 @@ rem --- Schedule the Work Order
 	callpoint!.setDevObject("wo_location",callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION"))
 	callpoint!.setDevObject("order_no",callpoint!.getColumnData("SFE_WOMASTR.ORDER_NO"))
 	callpoint!.setDevObject("item_id",callpoint!.getColumnData("SFE_WOMASTR.ITEM_ID"))
+	callpoint!.setDevObject("customer_id",callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID"))
+	callpoint!.setDevObject("order_no",callpoint!.getColumnData("SFE_WOMASTR.ORDER_NO"))
+	callpoint!.setDevObject("sls_ord_seq_ref",callpoint!.getColumnData("SFE_WOMASTR.SLS_ORD_SEQ_REF"))
+	callpoint!.setDevObject("prev_estcmp_date",callpoint!.getColumnData("SFE_WOMASTR.ESTCMP_DATE"))
 
 	sched_flag$=callpoint!.getColumnData("SFE_WOMASTR.SCHED_FLAG")
 	eststt_date$=callpoint!.getColumnData("SFE_WOMASTR.ESTSTT_DATE")
@@ -1569,58 +1577,13 @@ add_wo_comment: rem --- Add comment to next SFE_WOCMNT record(s)
 rem 	wo_comment$		input
 rem =========================================================
 
-	rem --- Get audit info for this comment
-	userId$ ="?????"
-	userId$ = stbl("+USER_ID",err=*next)
-	auditInfo$="["+date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")+" "+userId$+"] "
-	auditLen=len(auditInfo$)
-
-	rem --- Add comment to next SFE_WOCMNT record for this Work Order
-	sfe07_dev=fnget_dev("SFE_WOCOMNT")
-	dim sfe_wocomnt$:fnget_tpl$("SFE_WOCOMNT")
-	seqNo=1
-	wo_no$=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
-	keyPrefix$=firm_id$+"  "+wo_no$
-	read(sfe07_dev,key=keyPrefix$+$FF$,dom=*next)
-	previous_key$=""
-	previous_key$=keyp(sfe07_dev,end=*next)
-	if pos(keyPrefix$=previous_key$)=1 then seqNo=1+num(previous_key$(1+len(keyPrefix$)),err=*next)
-
-	rem --- As necessary split comment into multiple lines
-	dim sfe_wocomnt$:fnget_tpl$("SFE_WOCOMNT")
-	sfe_wocomnt.firm_id$=firm_id$
-	sfe_wocomnt.wo_location$="  "
-	sfe_wocomnt.wo_no$=wo_no$
-	wk$=fattr(sfe_wocomnt$,"ext_comments")
-	cmntSize=dec(wk$(10,2))
-	wk$=fattr(sfe_wocomnt$,"sequence_no")
-	seqSize=dec(wk$(10,2))
-	cmntSeqMask$=fill(seqSize,"0")
-	maxSeqNo$=fill(seqSize,"9")
-	tmpCmnt$=cvs(wo_comment$,3)
-	while len(tmpCmnt$)>0 and seqNo<=num(maxSeqNo$)
-		if len(tmpCmnt$)<=cmntSize-auditLen
-			thisCmnt$=tmpCmnt$
-			tmpCmnt$=""
-		else
-			blankPos=pos(" "=tmpCmnt$(1,cmntSize-auditLen),-1)
-			if blankPos then
-				thisCmnt$=tmpCmnt$(1,blankPos-1)
-				tmpCmnt$=tmpCmnt$(blankPos+1)
-			else
-				thisCmnt$=tmpCmnt$(1,cmntSize-auditLen)
-				tmpCmnt$=tmpCmnt$(1+cmntSize-auditLen)
-			endif
-		endif
-		sfe_wocomnt.sequence_no$=str(seqNo:cmntSeqMask$)
-		sfe_wocomnt.ext_comments$=auditInfo$+thisCmnt$
-		writerecord(sfe07_dev)sfe_wocomnt$
-		seqNo=seqNo+1
-                
-		rem --- Remove timestamp from auditInfo after first line
-		auditInfo$="["+userId$+"] "
-		auditLen=len(auditInfo$)
-	wend
+	if soCreateWO!=null() then
+		customer_id$=callpoint!.getColumnData("SFE_WOMASTR.CUSTOMER_ID")
+		order_no$=callpoint!.getColumnData("SFE_WOMASTR.ORDER_NO")
+		wo_no$=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
+		soCreateWO!=new SalesOrderCreateWO(firm_id$,customer_id$,order_no$)
+		soCreateWO!.addWOCmnt(wo_no$,wo_comment$)
+	endif
 
 	return
 
