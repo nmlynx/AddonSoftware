@@ -191,38 +191,38 @@ rem ========================================================
 				rem --- warn if the new date is after the linked SO detail line ship date.
 				prev_estcmp_date$=callpoint!.getDevObject("prev_estcmp_date")
 				if new_date$<>prev_estcmp_date$ then
+					customer_id$=callpoint!.getDevObject("customer_id")
+					order_no$=callpoint!.getDevObject("order_no")
+					sls_ord_seq_ref$=callpoint!.getDevObject("sls_ord_seq_ref")
 					if soCreateWO!=null() then
-						customer_id$=callpoint!.getDevObject("customer_id")
-						order_no$=callpoint!.getDevObject("order_no")
-						sls_ord_seq_ref$=callpoint!.getDevObject("sls_ord_seq_ref")
 						soCreateWO!=new SalesOrderCreateWO(firm_id$,customer_id$,order_no$)
+					endif
 
-						dim opeOrdDetRec$:soCreateWO!.gettplOpeOrdDet()
-						opeOrdDetRec$=soCreateWO!.getSODetailRow(sls_ord_seq_ref$)
-						if num(opeOrdDetRec.internal_seq_no$)>0 and new_date$>opeOrdDetRec.est_shp_date$ then
-							msg_id$="SF_EST_COMP_DATE_Q"
-							dim msg_tokens$[5]
-							msg_tokens$[1]=order_no$
-							msg_tokens$[2]=customer_id$
-							msg_tokens$[3]=fndate$(new_date$)
-							msg_tokens$[4]=fndate$(opeOrdDetRec.est_shp_date$)
-							msg_tokens$[5]=fndate$(prev_estcmp_date$)
-							gosub disp_message
-							if msg_opt$<>"Y" then
-								status$(2,1)="6"
-							else
-								rem --- Add WO comment with the changed estimated completion date info plus audit info.
-								wo_comment$ =Translate!.getTranslation("AON_EST")+" "+Translate!.getTranslation("AON_COMP")+" "
-								wo_comment$ =wo_comment$+Translate!.getTranslation("AON_DATE")+" "+fndate$(new_date$)+" "
-								wo_comment$ =wo_comment$+Translate!.getTranslation("AON_CHANGED_TO")+" "+Translate!.getTranslation("AON_AFTER")+" "
-								wo_comment$ =wo_comment$+Translate!.getTranslation("AON_LINKED")+" "+Translate!.getTranslation("AON_SALES_ORDER")+" "
-								wo_comment$ =wo_comment$+Translate!.getTranslation("AON_SHIP_DATE")+" "+fndate$(opeOrdDetRec.est_shp_date$)
-								soCreateWO!.addWOCmnt(wo_no$,wo_comment$)
-								soCreateWO!.close()
-								soCreateWO!=null()
-							endif
+					dim opeOrdDetRec$:soCreateWO!.gettplOpeOrdDet()
+					opeOrdDetRec$=soCreateWO!.getSODetailRow(sls_ord_seq_ref$)
+					if num(sls_ord_seq_ref$)>0 and new_date$>opeOrdDetRec.est_shp_date$ then
+						msg_id$="SF_EST_COMP_DATE_Q"
+						dim msg_tokens$[5]
+						msg_tokens$[1]=order_no$
+						msg_tokens$[2]=customer_id$
+						msg_tokens$[3]=fndate$(new_date$)
+						msg_tokens$[4]=fndate$(opeOrdDetRec.est_shp_date$)
+						msg_tokens$[5]=fndate$(prev_estcmp_date$)
+						gosub disp_message
+						if msg_opt$<>"Y" then
+							status$(2,1)="6"
+						else
+							rem --- Add WO comment with the changed estimated completion date info plus audit info.
+							wo_comment$ =Translate!.getTranslation("AON_EST")+" "+Translate!.getTranslation("AON_COMP")+" "
+							wo_comment$ =wo_comment$+Translate!.getTranslation("AON_DATE")+" "+fndate$(new_date$)+" "
+							wo_comment$ =wo_comment$+Translate!.getTranslation("AON_CHANGED_TO")+" "+Translate!.getTranslation("AON_AFTER")+" "
+							wo_comment$ =wo_comment$+Translate!.getTranslation("AON_LINKED")+" "+Translate!.getTranslation("AON_SALES_ORDER")+" "
+							wo_comment$ =wo_comment$+Translate!.getTranslation("AON_SHIP_DATE")+" "+fndate$(opeOrdDetRec.est_shp_date$)
+							soCreateWO!.addWOCmnt(wo_no$,wo_comment$)
 						endif
 					endif
+					soCreateWO!.close()
+					soCreateWO!=null()
 				endif
 				callpoint!.setColumnData("SFR_SCHEDWO.ESTCMP_DATE",new_date$,1)
 			else
