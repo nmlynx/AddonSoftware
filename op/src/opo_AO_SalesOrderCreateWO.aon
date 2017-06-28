@@ -69,7 +69,7 @@ rem --- Use statements and declares
         field protected BBjString tplIvmItemMast$
         field protected BBjString tplIvmItemWhse$
         field protected BBjString tplIvsParams$
-        field protected BBjString tplOpeOrdDet$
+        field public BBjString tplOpeOrdDet$
         field protected BBjString tplOpsParams$
         field protected BBjString tplSfcWOTypeCd$
         field protected BBjString tplSfeWOComnt$
@@ -286,7 +286,7 @@ addSODetailLine_error:rem --- Method error trap/handler
         rem  * @param BBjString wo_no$
         rem  * @param BBjString cmnt$
         rem  */
-        method protected void addWOCmnt(BBjString wo_no$, BBjString cmnt$)
+        method public void addWOCmnt(BBjString wo_no$, BBjString cmnt$)
             seterr addWOCmnt_error
 
             rem --- Get audit info for this comment
@@ -1079,7 +1079,7 @@ createWOs_error:rem --- Method error trap/handler
         rem  * 
         rem  * @return BBjString rowData$
         rem  */
-        method protected BBjString getSODetailRow(BBjString isn$)
+        method public BBjString getSODetailRow(BBjString isn$)
             seterr getSODetailRow_error
             dim rowData$:#tplOpeOrdDet$
 
