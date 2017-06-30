@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-06-26
+ Report Date:   2017-06-30
  Report Branch: AddonSoftware 17.01
  Last Release:  AddonSoftware 17.00
 =======================================================================================================================================
@@ -495,3 +495,14 @@ Message:
 Bug 9079 - AIUW Upgrade Wizard may place adx_conversionCtrl in wrong directory; bug was re-opened because the fix caused problems if trying to copy/install a vertical. Corrected so the map is back to being cleared, but the value needed to properly place adx_conversionCtrl is harvested for later use.
 ----
 Modified: ad/src/adx_upgradewiz.aon
+
+=======================================================================================================================================
+Revision: 67908edb9a5c517325c137687e4fb4421c9381a4
+Author: Christine <chawkins@basis.com>
+Date: 6/30/2017 4:44:08 PM
+Message:
+Bug 9103 - AD - GoldMine interface client doing a close instead of sqlclose; changed to use sqlclose for #devSQL%.
+(cherry picked from commit fe8fb7385429125bb185814f0482e77f43a87b82)
+----
+Modified: gm/src/gmo_AO_GmInterfaceClient.aon
+
