@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2017-07-03T18:13:38 -->
+<!-- 2017-07-04T09:11:17 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OPPickListDet" language="groovy" pageWidth="554" pageHeight="320" columnWidth="554" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="a46c6452-81bd-4023-bafb-8f0488b8a578">
 	<property name="ireport.zoom" value="2.0"/>
 	<property name="ireport.x" value="0"/>
@@ -80,7 +80,7 @@
 						<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
 						<printWhenExpression><![CDATA[($P{IVS_LOTSER_FLAG}=="L" || $P{IVS_LOTSER_FLAG}=="S")
-&& $F{ITEM_IS_LS} == "Y" && $F{LINETYPE_ALLOWS_LS} == "Y" && $P{PICK_OR_QUOTE} == "S"	]]></printWhenExpression>
+&& $F{ITEM_IS_LS} == "Y" && $F{LINETYPE_ALLOWS_LS} == "Y" && $P{PICK_OR_QUOTE} == "S"]]></printWhenExpression>
 					</reportElement>
 					<subreportParameter name="FIRM_ID">
 						<subreportParameterExpression><![CDATA[$P{FIRM_ID}]]></subreportParameterExpression>
@@ -297,11 +297,11 @@
 		<groupHeader>
 			<band height="51" splitType="Prevent">
 				<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
-				<printWhenExpression><![CDATA[$F{WO_INFO1}!=""	]]></printWhenExpression>
+				<printWhenExpression><![CDATA[$F{WO_INFO1}!=""]]></printWhenExpression>
 				<rectangle>
 					<reportElement mode="Opaque" x="0" y="0" width="555" height="51" backcolor="#EBF0FA" uuid="7ea2d0ac-db0a-4b54-8f2c-fbd5f8af5041">
 						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
-						<printWhenExpression><![CDATA[new Boolean( ($V{PAGE_COUNT}.intValue() + 1 ) % 2 == 0) && $F{WO_INFO1}!=""]]></printWhenExpression>
+						<printWhenExpression><![CDATA[new Boolean( ($V{PAGE_COUNT}.intValue() + 1 ) % 2 == 0)]]></printWhenExpression>
 					</reportElement>
 					<graphicElement>
 						<pen lineColor="#C0C0C0"/>
@@ -310,7 +310,6 @@
 				<rectangle>
 					<reportElement mode="Transparent" x="0" y="0" width="555" height="51" uuid="f62e7209-5238-4b99-b7eb-30a85eb320ac">
 						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
-						<printWhenExpression><![CDATA[$F{WO_INFO1}!=""]]></printWhenExpression>
 					</reportElement>
 					<graphicElement>
 						<pen lineColor="#C0C0C0"/>
@@ -394,7 +393,6 @@
 						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
-						<printWhenExpression><![CDATA[$F{WO_INFO1}!=""]]></printWhenExpression>
 					</reportElement>
 					<graphicElement>
 						<pen lineColor="#C0C0C0"/>
@@ -403,7 +401,6 @@
 				<textField isBlankWhenNull="false">
 					<reportElement x="158" y="26" width="200" height="12" uuid="b9909303-b781-4dae-b138-18782c9c6564">
 						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
-						<printWhenExpression><![CDATA[$F{WO_INFO1}!=""]]></printWhenExpression>
 					</reportElement>
 					<textElement verticalAlignment="Middle">
 						<font fontName="Serif" size="9"/>
@@ -414,7 +411,6 @@
 				<textField isBlankWhenNull="false">
 					<reportElement x="158" y="39" width="200" height="12" uuid="055661c0-81c0-4130-9ba5-950f0179aa8c">
 						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
-						<printWhenExpression><![CDATA[$F{WO_INFO2}!=""]]></printWhenExpression>
 					</reportElement>
 					<textElement verticalAlignment="Middle">
 						<font fontName="Serif" size="9"/>
@@ -427,7 +423,6 @@
 						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
-						<printWhenExpression><![CDATA[$F{WO_INFO1}!=""]]></printWhenExpression>
 					</reportElement>
 					<graphicElement>
 						<pen lineColor="#C0C0C0"/>
@@ -438,7 +433,6 @@
 						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
-						<printWhenExpression><![CDATA[$F{WO_INFO1}!=""]]></printWhenExpression>
 					</reportElement>
 					<graphicElement>
 						<pen lineColor="#C0C0C0"/>
@@ -449,7 +443,6 @@
 						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
-						<printWhenExpression><![CDATA[$F{WO_INFO1}!=""]]></printWhenExpression>
 					</reportElement>
 					<graphicElement>
 						<pen lineColor="#C0C0C0"/>
@@ -460,7 +453,6 @@
 						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
-						<printWhenExpression><![CDATA[$F{WO_INFO1}!=""]]></printWhenExpression>
 					</reportElement>
 					<graphicElement>
 						<pen lineColor="#C0C0C0"/>
@@ -471,7 +463,6 @@
 						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
-						<printWhenExpression><![CDATA[$F{WO_INFO1}!=""]]></printWhenExpression>
 					</reportElement>
 					<graphicElement>
 						<pen lineColor="#C0C0C0"/>
@@ -482,7 +473,7 @@
 						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
-						<printWhenExpression><![CDATA[$P{PRINT_PRICES}=="Y" && $F{WO_INFO1}!=""]]></printWhenExpression>
+						<printWhenExpression><![CDATA[$P{PRINT_PRICES}=="Y"]]></printWhenExpression>
 					</reportElement>
 					<graphicElement>
 						<pen lineColor="#C0C0C0"/>
@@ -493,7 +484,6 @@
 						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
-						<printWhenExpression><![CDATA[$F{WO_INFO1}!=""]]></printWhenExpression>
 					</reportElement>
 					<graphicElement>
 						<pen lineColor="#C0C0C0"/>
