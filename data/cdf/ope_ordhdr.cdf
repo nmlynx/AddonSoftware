@@ -576,10 +576,10 @@ rem --- Launch ope_createwos form to create selected work orders
 					break
 				endif
 			endif
-
-			rem --- Close files that may be open in soCreateWO! instance
-			soCreateWO!.close()
 		endif
+
+		rem --- Close files that may be open in soCreateWO! instance
+		soCreateWO!.close()
 	endif
 	callpoint!.setDevObject("force_wolink_grid",0)
 [[OPE_ORDHDR.AOPT-PRNT]]
@@ -1141,6 +1141,9 @@ rem --- Create soCreateWO! instance if needed
 
 	op_create_wo$=callpoint!.getDevObject("op_create_wo")
 	if op_create_wo$="A" then
+		rem --- Clean up previous instance as necessary
+		if soCreateWO!<>null() then soCreateWO!.close()
+
 		customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 		order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 		soCreateWO!=new SalesOrderCreateWO(firm_id$,customer_id$,order_no$)
@@ -1495,6 +1498,9 @@ rem --- Do we need to create a new order number?
 			rem --- Create soCreateWO! instance if needed
 			op_create_wo$=callpoint!.getDevObject("op_create_wo")
 			if op_create_wo$="A" then
+				rem --- Clean up previous instance as necessary
+				if soCreateWO!<>null() then soCreateWO!.close()
+
 				customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 				soCreateWO!=new SalesOrderCreateWO(firm_id$,customer_id$,order_no$)
 				callpoint!.setDevObject("soCreateWO",soCreateWO!)

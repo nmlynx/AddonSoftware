@@ -104,6 +104,7 @@ rem --- Use statements and declares
         rem  * @param BBjString orderNo$
         rem  */
         method public AO_SalesOrderCreateWO(BBjString firmID$, BBjString customerId$, BBjString orderNo$)
+            def fnget_dev1(tmp0$)=num(rd_table_chans$[0,0](pos(pad(tmp0$,17)=rd_table_chans$[0,0],20)+17,3))
             seterr AO_SalesOrderCreateWO_error
 
             rem --- Initialize field variables
@@ -114,21 +115,28 @@ rem --- Use statements and declares
             rem --- Open needed files          
             num_files=13
             dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
-            open_tables$[1] ="ADS_MASKS",     open_opts$[1] = "OTA@"
-            open_tables$[2] ="BMC_OPCODES",   open_opts$[2] = "OTA@"
-            open_tables$[3] ="BMM_BILLCMTS",  open_opts$[3] = "OTA@"
-            open_tables$[4] ="BMM_BILLMAST",  open_opts$[4] = "OTA@"
-            open_tables$[5] ="IVM_ITEMMAST",  open_opts$[5] = "OTA@"
-            open_tables$[6] ="IVM_ITEMWHSE",  open_opts$[6] = "OTA@"
-            open_tables$[7] ="IVS_PARAMS",    open_opts$[7] = "OTA@"
-            open_tables$[8] ="OPE_ORDDET",    open_opts$[8] = "OTA@"
-            open_tables$[9] ="OPS_PARAMS",    open_opts$[9] = "OTA@"
-            open_tables$[10] ="SFC_WOTYPECD", open_opts$[10] = "OTA@"
+            open_tables$[1] ="ADS_MASKS",     open_opts$[1] = "OTA[1]"
+            open_tables$[2] ="BMC_OPCODES",   open_opts$[2] = "OTA[1]"
+            open_tables$[3] ="BMM_BILLCMTS",  open_opts$[3] = "OTA[1]"
+            open_tables$[4] ="BMM_BILLMAST",  open_opts$[4] = "OTA[1]"
+            open_tables$[5] ="IVM_ITEMMAST",  open_opts$[5] = "OTA[1]"
+            open_tables$[6] ="IVM_ITEMWHSE",  open_opts$[6] = "OTA[1]"
+            open_tables$[7] ="IVS_PARAMS",    open_opts$[7] = "OTA[1]"
+            open_tables$[8] ="OPE_ORDDET",    open_opts$[8] = "OTA[1]"
+            open_tables$[9] ="OPS_PARAMS",    open_opts$[9] = "OTA[1]"
+            open_tables$[10] ="SFC_WOTYPECD", open_opts$[10] = "OTA[1]"
             open_tables$[11] ="SFE_WOCOMNT",  open_opts$[11] = "OTA[1]"
             open_tables$[12] ="SFE_WOMASTR",  open_opts$[12] = "OTA[1]"
-            open_tables$[13] ="SFE_WOMATL",  open_opts$[13] = "OTA@"
+            open_tables$[13] ="SFE_WOMATL",   open_opts$[13] = "OTA[1]"
         
+            rem --- Note that rd_table_chans$[all] is NOT being shared/passed.
             call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
+
+            rem --- Make sure ddm_tables and ddm_table_tpls get closed
+            devDdmTables=fnget_dev1("DDM_TABLES")
+            devDdmTableTpls=fnget_dev1("DDM_TABLE_TPLS")
+            if devDdmTables >= 0 then close(devDdmTables,err=*next)
+            if devDdmTableTpls >= 0 then close(devDdmTableTpls,err=*next)
         
             if open_status$ = "" then
                 rem --- Hold on to channels and record templates
@@ -1614,23 +1622,20 @@ woCount_error:rem --- Method error trap/handler
         method public void close()
             seterr close_error
 
-            num_files=13
-            dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
-            open_tables$[1] ="ADS_MASKS",     open_opts$[1] = "C@"
-            open_tables$[2] ="BMC_OPCODES",   open_opts$[2] = "C@"
-            open_tables$[3] ="BMM_BILLCMTS",  open_opts$[3] = "C@"
-            open_tables$[4] ="BMM_BILLMAST",  open_opts$[4] = "C@"
-            open_tables$[5] ="IVM_ITEMMAST",  open_opts$[5] = "C@"
-            open_tables$[6] ="IVM_ITEMWHSE",  open_opts$[6] = "C@"
-            open_tables$[7] ="IVS_PARAMS",    open_opts$[7] = "C@"
-            open_tables$[8] ="OPE_ORDDET",    open_opts$[8] = "C@"
-            open_tables$[9] ="OPS_PARAMS",    open_opts$[9] = "C@"
-            open_tables$[10] ="SFC_WOTYPECD", open_opts$[10] = "C@"
-            open_tables$[11] ="SFE_WOCOMNT",  open_opts$[11] = "C[1]"
-            open_tables$[12] ="SFE_WOMASTR",  open_opts$[12] = "C[1]"
-            open_tables$[13] ="SFE_WOMATL",  open_opts$[13] = "C@"
-        
-            call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
+            rem --- Note that even though tables were opened using bac_open_tables.bbj, rd_table_chans$[all] is NOT being shared/passed.
+            if #devAdsMasks >= 0 then close(#devAdsMasks,err=*next)
+            if #devBmcOpCodes >= 0 then close(#devBmcOpCodes,err=*next)
+            if #devBmmBillCmts >= 0 then close(#devBmmBillCmts,err=*next)
+            if #devBmmBillMast >= 0 then close(#devBmmBillMast,err=*next)
+            if #devIvmItemMast >= 0 then close(#devIvmItemMast,err=*next)
+            if #devIvmItemWhse >= 0 then close(#devIvmItemWhse,err=*next)
+            if #devIvsParams >= 0 then close(#devIvsParams,err=*next)
+            if #devOpeOrdDet >= 0 then close(#devOpeOrdDet,err=*next)
+            if #devOpsParams >= 0 then close(#devOpsParams,err=*next)
+            if #devSfcWOTypeCd >= 0 then close(#devSfcWOTypeCd,err=*next)
+            if #devSfeWOComnt >= 0 then close(#devSfeWOComnt,err=*next)
+            if #devSfeWOMastr >= 0 then close(#devSfeWOMastr,err=*next)
+            if #devSfeWOMatl >= 0 then close(#devSfeWOMatl,err=*next)
  
             methodret
             
