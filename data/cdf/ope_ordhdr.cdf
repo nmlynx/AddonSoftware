@@ -549,6 +549,7 @@ rem --- Launch ope_createwos form to create selected work orders
 
 				dim dflt_data$[2,1]
 				dflt_data$[1,0] = "CUSTOMER_ID"
+				dflt_data$[1,1] = customer_id$
 				dflt_data$[2,0] = "ORDER_NO"
 				dflt_data$[2,1] = order_no$
 				key_pfx$=firm_id$+customer_id$+order_no$
