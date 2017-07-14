@@ -142,7 +142,7 @@ GmInterfaceClient_error:rem --- Method error trap/handler
                 log$ = logDir$+"/GmInterfaceClient_pushes.log"
                 string log$,err=*next
                 log_dev = unt
-                open(log_dev,err=*next)log$
+                open(log_dev,err=*endif)log$
                 #devPushLog% = int(log_dev)
                 
                 rem --- Locate end of push log file so new messages are appended
@@ -1379,7 +1379,7 @@ getGmContactInfo_error:rem --- Method error trap/handler
         rem  */
         method public void startClient()
             seterr startClient_error
-            
+
             rem --- Get Barista's BBjAdminBase object for current user
             barAdmin! = BBjAPI().getGroupNamespace().getValue("+bar_admin_"+cvs(stbl("+USER_ID"),11),err=*next)
             if barAdmin!<>null() then
@@ -1431,6 +1431,12 @@ startClient_error:rem --- Method error trap/handler
             if #devGmxCustomer% >= 0 then close(#devGmxCustomer%,err=*next)
             if #devErrLog% >= 0 then close(#devErrLog%,err=*next)
             if #devPushLog% >= 0 then close(#devPushLog%,err=*next)
+
+            #devSQL% = -1
+            #devGmqCustomer% = -1
+            #devGmxCustomer% = -1
+            #devErrLog% = -1
+            #devPushLog% = -1
 
             methodret
             
@@ -1563,12 +1569,28 @@ openGmqCustomer_error:rem --- Method error trap/handler
                 open_tables$[1]="GMX_CUSTOMER",open_opts$[1]="OTA[1]"
 
                 call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
+                table_tpl$=open_tpls$[1]
 
                 if open_status$ = "" then
-                    rem --- Hold on to channel and record template for gmx_customer
-                    openChannel% = num(open_chans$[1])
-                    #devGmxCustomer% = num(open_chans$[1])
-                    #tplGmxCustomer$ = open_tpls$[1]
+                    rem --- Close gmx_customer opened/created by Barista because we can NOT share the same channel between multiple instances of GmInterfaceClient.
+                    open_tables$[1]="GMX_CUSTOMER",open_opts$[1]="C[1]"
+                    call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
+
+                    rem --- Open gmx_customer on a unique channel so closing it does NOT close it for other instances of GmInterfaceClient.
+                    filename$ = "gmx_customer"
+                    fileChan = unt
+                    success = 0
+                    open(fileChan,err=*next)stbl("+GMDATA")+filename$; success = 1
+                    if success then
+                        rem --- Hold on to channel and record template for gmx_customer
+
+
+                        openChannel% = fileChan
+                        #devGmxCustomer% = openChannel%
+                        #tplGmxCustomer$ = table_tpl$
+                    else
+                        #logError("openGmxCustomer(): Failed to get gmx_customer","Error "+str(err)+": "+errmes(-1))
+                    endif
                 else
                     rem --- Log error
                     #logError("openGmxCustomer(): Failed to open gmx_customer",open_status$)
