@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-06-30
+ Report Date:   2017-07-17
  Report Branch: AddonSoftware 17.01
  Last Release:  AddonSoftware 17.00
 =======================================================================================================================================
@@ -506,3 +506,18 @@ Bug 9103 - AD - GoldMine interface client doing a close instead of sqlclose; cha
 ----
 Modified: gm/src/gmo_AO_GmInterfaceClient.aon
 
+=======================================================================================================================================
+Revision: 9efa7e61a935a10518caddf96749bd2cd3faf184
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 7/17/2017 11:37:51 AM
+Message:
+ER 9119: Close ddm_tables and ddm_table_tpls when done with
+rd_table_chans$[all] in classes.
+----
+Modified: ad/src/ado_AO_SyncRecords.aon
+Modified: ad/src/ado_func.src
+Modified: ad/src/ado_util.src
+Modified: gl/src/glo_AO_AlignFiscalCalendar.aon
+Modified: gm/src/gmo_AO_Gm2AonCustomer.aon
+Modified: gm/src/gmo_AO_GmInterfaceClient.aon
+Modified: op/src/opo_AO_SalesOrderCreateWO.aon
