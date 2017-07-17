@@ -134,13 +134,13 @@ rem --- Use statements and declares
             rem --- Note that rd_table_chans$[all] is NOT being shared/passed.
             call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
 
+            if open_status$ = "" then
             rem --- Make sure ddm_tables and ddm_table_tpls get closed
             devDdmTables=fnget_dev1("DDM_TABLES")
             devDdmTableTpls=fnget_dev1("DDM_TABLE_TPLS")
             if devDdmTables >= 0 then close(devDdmTables,err=*next)
             if devDdmTableTpls >= 0 then close(devDdmTableTpls,err=*next)
 
-            if open_status$ = "" then
                 rem --- Hold on to channels and record templates
                 #devAdsMasks = num(open_chans$[1])
                 #devBmcOpCodes = num(open_chans$[2])
