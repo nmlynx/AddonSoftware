@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-07-17
+ Report Date:   2017-07-18
  Report Branch: AddonSoftware 17.01
  Last Release:  AddonSoftware 17.00
 =======================================================================================================================================
@@ -521,3 +521,16 @@ Modified: gl/src/glo_AO_AlignFiscalCalendar.aon
 Modified: gm/src/gmo_AO_Gm2AonCustomer.aon
 Modified: gm/src/gmo_AO_GmInterfaceClient.aon
 Modified: op/src/opo_AO_SalesOrderCreateWO.aon
+
+=======================================================================================================================================
+Revision: b96defa6561c56e722070d1ec7a465f317444a9d
+Author: Christine <chawkins@basis.com>
+Date: 7/18/2017 6:08:29 PM
+Message:
+Bug 9110 - GL - Journal Entry using REFRESH for each debit/credit entry, and can cause lost characters
+Changed the credit and debit AVALs to use the newer setColumnData() method signature to refresh just the column that was changed.
+(cherry picked from commit 0696d4ceedcfa9f093e4e20e1a3f2f014f814ebc)
+----
+Modified: data/bar/gle_jrnldet.xml
+Modified: data/cdf/gle_jrnldet.cdf
+
