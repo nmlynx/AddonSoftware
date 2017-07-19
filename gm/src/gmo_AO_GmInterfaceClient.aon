@@ -218,10 +218,10 @@ launchClient_error:rem --- Method error trap/handler
                         rem --- Skip firm_id
                         rem --- Skip customer_id
                         if cvs(gmqCustomerTpl.gm_accountno$,2) <> "" then
-                            aonData!.setProperty("GM_ACCOUNTNO",gmqCustomerTpl.gm_accountno$)
+                            aonData!.setProperty("ACCOUNTNO",gmqCustomerTpl.gm_accountno$);rem CAH
                         endif
                         if cvs(gmqCustomerTpl.gm_recid$,2) <> "" then
-                            aonData!.setProperty("GM_RECID",gmqCustomerTpl.gm_recid$)
+                            aonData!.setProperty("RECID",gmqCustomerTpl.gm_recid$);rem CAH
                         endif
                         if cvs(gmqCustomerTpl.customer_name$,2) <> "" then
                             gmProps! = #mapToGoldMine("customer_name",gmqCustomerTpl.customer_name$)
@@ -608,8 +608,9 @@ buildXMLRequest_error:rem --- Method error trap/handler
             gms_params$ = #gmsParams!.getProperty(firmId$)
 
             rem --- Create PostMethod for request
-            restUrl$ = cvs(gms_params.webservice_url$,2)+"/?XML="+URLEncoder.encode(xmlRequest$,"UTF-8")
+            restUrl$ = cvs(gms_params.webservice_url$,2)
             method! = new PostMethod(restUrl$)
+            method!.addParameter("XML",xmlRequest$)
 
             rem --- Have HttpClient to execute the PostMethod
             client! = new HttpClient()
@@ -1256,7 +1257,7 @@ getCountryCodes_error:rem --- Method error trap/handler
 
             rem --- Check if GMX_CUSTOMER has record(s) for the Addon firm_id and customer_id
             #openGmxCustomer()
-            read(#devGmxCustomer%,key=aonFirmId$+aonCustomerId$,knum="BY_ADDON",dom=*next)
+            read(#devGmxCustomer%,key=aonFirmId$+aonCustomerId$,dir=0,knum="BY_ADDON",dom=*next)
             gmxCustomerKey$ = key(#devGmxCustomer%,end=*next)
             if pos(aonFirmId$+aonCustomerId$=gmxCustomerKey$)=1 then status$="TRUE"
 
