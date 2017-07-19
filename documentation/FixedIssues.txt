@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-07-18
+ Report Date:   2017-07-19
  Report Branch: AddonSoftware 17.01
  Last Release:  AddonSoftware 17.00
 =======================================================================================================================================
@@ -533,4 +533,31 @@ Changed the credit and debit AVALs to use the newer setColumnData() method signa
 ----
 Modified: data/bar/gle_jrnldet.xml
 Modified: data/cdf/gle_jrnldet.cdf
+
+=======================================================================================================================================
+Revision: 8082676f1386608d80c12e5e10b86924077ca254
+Author: Christine <chawkins@basis.com>
+Date: 7/19/2017 1:11:31 PM
+Message:
+Bug 9114 - GM - Individual updates between Addon and GoldMine not working correctly
+Corrects issue that was causing Addon updates to create new, blank, GM contacts instead of updating the intended contact. Also corrects issue that was causing some calls to WriteContact to abort because of characters in the recID. Uses setParameter()/getBody() for xml string rather then putting it all in the URL.
+(cherry picked from commit fabe7f74bbbb42a91c57ea81fff71694c17d9b78)
+----
+Notes:
+Note that the getBody() change is in the goldMineWebService.bbj code.
+----
+Modified: gm/src/gmo_AO_GmInterfaceClient.aon
+
+=======================================================================================================================================
+Revision: 9142e41e7116cc96a171b65f8687613713431d10
+Author: Christine <chawkins@basis.com>
+Date: 7/19/2017 4:12:07 PM
+Message:
+Bug 9114 - GM - Individual updates between Addon and GoldMine not working correctly
+Corrects issue that was keeping some GM contacts from getting added to Addon via the GMplusCustomers BUI view.
+(cherry picked from commit 7689ed0ede3f47289272774662042034ed3332d7)
+----
+Modified: gm/html/GMplusCustomers.html
+Modified: gm/src/gmx_launch_bui_view.aon
+
 
