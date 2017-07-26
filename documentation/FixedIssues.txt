@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-07-21
+ Report Date:   2017-07-26
  Report Branch: AddonSoftware 17.01
  Last Release:  AddonSoftware 17.00
 =======================================================================================================================================
@@ -582,5 +582,19 @@ Corrected typo in bao_barista.bbj class (bug 9124) that was causing problem with
 ----
 Modified: gm/html/GMplusCustomers.html
 Modified: gm/html/GMplusItems.html
+
+=======================================================================================================================================
+Revision: c484ca629bfe62ec197e5254487eb8c84ad76057
+Author: Christine <chawkins@basis.com>
+Date: 7/26/2017 10:48:25 AM
+Message:
+Bug 9112 - OP - Error loading an Order/Invoice that has no detail lines
+Use cvs() on cust_id$ and order_no$ to avoid getting ordHelp! object to calculate totals when there's no detail on the order.
+----
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/cdf/ope_invdet.cdf
+Modified: data/cdf/ope_orddet.cdf
+
 
 
