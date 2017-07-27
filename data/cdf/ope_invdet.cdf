@@ -1,3 +1,11 @@
+[[OPE_INVDET.ORDER_MEMO.BINP]]
+rem --- invoke the comments dialog
+
+	gosub comment_entry
+[[OPE_INVDET.AOPT-COMM]]
+rem --- invoke the comments dialog
+
+	gosub comment_entry
 [[OPE_INVDET.EXT_PRICE.BINP]]
 rem --- Set previous extended price
 
@@ -673,6 +681,7 @@ rem --- Disable detail-only buttons
 	callpoint!.setOptionEnabled("LENT",0)
 	callpoint!.setOptionEnabled("RCPR",0)
 	callpoint!.setOptionEnabled("ADDL",0)
+	callpoint!.setOptionEnabled("COMM",0)
 
 rem --- Set header total amounts
 
@@ -890,6 +899,7 @@ rem --- Buttons start disabled
 	callpoint!.setOptionEnabled("LENT",0)
 	callpoint!.setOptionEnabled("RCPR",0)
 	callpoint!.setOptionEnabled("ADDL",0)
+	callpoint!.setOptionEnabled("COMM",0)
 	callpoint!.setStatus("REFRESH")
 [[OPE_INVDET.BDEL]]
 rem --- Require modified rows be saved before deleting so can't uncommit quantity different from what was committed (bug 8087)
@@ -1663,7 +1673,7 @@ rem ==========================================================================
 	file$ = "OPC_LINECODE"
 	dim opc_linecode$:fnget_tpl$(file$)
 	find record (fnget_dev(file$), key=firm_id$+line_code$, dom=*endif) opc_linecode$
-	callpoint!.setStatus("ENABLE:"+opc_linecode.line_type$)
+
 	rem --- Shouldn't be possible to have a bad line_code$ at this point.
 	rem --- If it happens, add error trap to send to OPE_INVDDET.LINE_CODE.
 
@@ -1721,6 +1731,10 @@ rem --- Disable Back orders if necessary
 rem --- Disable qty shipped if necessary
 
 	gosub able_qtyshipped
+
+rem --- Enable Comment button
+
+	callpoint!.setOptionEnabled("COMM",1)
 
 	return
 
@@ -1993,7 +2007,6 @@ rem ==========================================================================
 		callpoint!.setColumnData("OPE_INVDET.PRODUCT_TYPE", "")
 		callpoint!.setColumnData("OPE_INVDET.WAREHOUSE_ID", user_tpl.def_whse$)
 		callpoint!.setColumnData("OPE_INVDET.ITEM_ID", "")
-		callpoint!.setColumnData("OPE_INVDET.ORDER_MEMO", "")
 		callpoint!.setColumnData("OPE_INVDET.EST_SHP_DATE", callpoint!.getHeaderColumnData("OPE_INVHDR.SHIPMNT_DATE"))
 		callpoint!.setColumnData("OPE_INVDET.PICK_FLAG", "")
 		callpoint!.setColumnData("OPE_INVDET.VENDOR_ID", "")
@@ -2009,7 +2022,8 @@ rem ==========================================================================
 
 		if opc_linecode.line_type$="O" then
 			if cvs(callpoint!.getColumnData("OPE_INVDET.ORDER_MEMO"),3) = "" then
-				callpoint!.setColumnData("OPE_INVDET.ORDER_MEMO",opc_linecode.code_desc$)
+				callpoint!.setColumnData("OPE_INVDET.ORDER_MEMO",cvs(opc_linecode.code_desc$,3))
+				callpoint!.setColumnData("OPE_INVDET.MEMO_1024",cvs(opc_linecode.code_desc$,3))
 			endif
 		endif
 
@@ -2025,6 +2039,53 @@ rem ==========================================================================
 	if opc_linecode.prod_type_pr$ = "N"
 		callpoint!.setColumnData("OPE_INVDET.PRODUCT_TYPE", "")
 	endif
+
+	return
+
+rem ==========================================================================
+comment_entry:
+rem --- on a line where you can access the memo/non-stock (order_memo) field, pop the new memo_1024 editor instead
+rem --- the editor can be popped on demand for any line using the Comments button (alt-C),
+rem --- but will automatically pop for lines where the order_memo field is enabled.
+rem ==========================================================================
+
+	disp_text$=callpoint!.getColumnData("OPE_INVDET.MEMO_1024")
+	sv_disp_text$=disp_text$
+
+	editable$="YES"
+	force_loc$="NO"
+	baseWin!=null()
+	startx=0
+	starty=0
+	shrinkwrap$="NO"
+	html$="NO"
+	dialog_result$=""
+
+	call stbl("+DIR_SYP")+ "bax_display_text.bbj",
+:		"Pick List/Invoice Comments",
+:		disp_text$, 
+:		table_chans$[all], 
+:		editable$, 
+:		force_loc$, 
+:		baseWin!, 
+:		startx, 
+:		starty, 
+:		shrinkwrap$, 
+:		html$, 
+:		dialog_result$
+
+	if disp_text$<>sv_disp_text$
+		memo_len=len(callpoint!.getColumnData("OPE_INVDET.ORDER_MEMO"))
+		order_memo$=disp_text$
+		order_memo$=order_memo$(1,min(memo_len,(pos($0A$=order_memo$+$0A$)-1)))
+
+		callpoint!.setColumnData("OPE_INVDET.MEMO_1024",disp_text$)
+		callpoint!.setColumnData("OPE_INVDET.ORDER_MEMO",order_memo$,1)
+
+		callpoint!.setStatus("MODIFIED")
+	endif
+
+	callpoint!.setStatus("ACTIVATE")
 
 	return
 
