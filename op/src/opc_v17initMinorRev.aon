@@ -128,6 +128,38 @@ rem --- Start progress meter
     meter_action$="WIN-LST"
     gosub disp_meter
 
+rem --- Initialize OPT_INVHDR new MEMO_1024 field
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" "+"OPT_INVHDR.MEMO_1024"
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+    
+    rem --- Populate OPT_INVHDR new MEMO_1024 field from OPE_ORDCOMMENTS records
+    currentFirm$=""
+    currentCustomerOrder$=""
+    memo$=""
+    read(opeOrdComments_dev,key=theFirm$,dom=*next)
+    while 1
+        opeOrdComments_key$=key(opeOrdComments_dev,end=*break)
+        if cvs(theFirm$,2)<>"" and pos(theFirm$=opeOrdComments_key$)<>1 then break
+        if pos(currentCustomerOrder$=opeOrdComments_key$)<>1 then
+            if currentCustomerOrder$<>"" then gosub writeOptInvHdrMemo1024
+            currentCustomerOrder$=opeOrdComments.firm_id$+opeOrdComments.ar_type$+opeOrdComments.customer_id$+opeOrdComments.order_no$
+            memo$=cvs(opeOrdComments.comment$,2)+$0A$
+        endif
+        readrecord(opeOrdComments_dev)opeOrdComments$
+        if opeOrdComments.firm_id$<>currentFirm$ then
+            rem --- Log next firm processed
+            print(log_dev)"    OPE_ORDCOMMENTS.FIRM_ID = "+opeOrdComments.firm_id$
+            currentFirm$=opeOrdComments.firm_id$
+        endif
+        memo$=memo$+cvs(opeOrdComments.comment$,2)+$0A$
+    wend
+    if currentCustomerOrder$<>"" then gosub writeOptInvHdrMemo1024
+
 rem --- Initialize OPT_INVDET new MEMO_1024 field
 
     rem --- Increment progress meter
@@ -135,6 +167,7 @@ rem --- Initialize OPT_INVDET new MEMO_1024 field
     meter_proc_recs=meter_proc_recs+1
     meter_action$="MTR-LST"
     gosub disp_meter
+    print(log_dev)
     print(log_dev)meter_text$
 
     rem --- Populate OPT_INVDET new MEMO_1024 field with old ORDER_MEMO field
@@ -149,12 +182,81 @@ rem --- Initialize OPT_INVDET new MEMO_1024 field
             print(log_dev)"    OPT_INVDET.FIRM_ID = "+optInvDet.firm_id$
             currentFirm$=optInvDet.firm_id$
         endif
-        if cvs(optInvDet.memo_1024$,2)="" then
-            optInvDet.memo_1024$=optInvDet.order_memo$
+        if cvs(optInvDet.order_memo$,2)<>"" and cvs(optInvDet.memo_1024$,2)="" then
+            optInvDet.memo_1024$=cvs(optInvDet.order_memo$,2)
             writerecord(optInvDet_dev)optInvDet$
         else
             read(optInvDet_dev)
         endif
+    wend
+
+rem --- Initialize blank OPC_LINECODE MESSAGE_TYPE fields
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" "+"OPC_LINECODE.MESSAGE_TYPE"
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+
+    rem --- Set blank OPC_LINECODE MESSAGE_TYPE fields to 'B'
+    currentFirm$=""
+    read(opcLineCode_dev,key=theFirm$,dom=*next)
+    while 1
+        opcLineCode_key$=key(opcLineCode_dev,end=*break)
+        if cvs(theFirm$,2)<>"" and pos(theFirm$=opcLineCode_key$)<>1 then break
+        extractrecord(opcLineCode_dev)opcLineCode$; rem Advisory Locking
+        if opcLineCode.firm_id$<>currentFirm$ then
+            rem --- Log next firm processed
+            print(log_dev)"    OPC_LINECODE.FIRM_ID = "+opcLineCode.firm_id$
+            currentFirm$=opcLineCode.firm_id$
+        endif
+        if opcLineCode.message_type$=" " then
+            opcLineCode.message_type$="B"
+            writerecord(opcLineCode_dev)opcLineCode$
+        else
+            read(opcLineCode_dev)
+        endif
+    wend
+
+rem --- Initialize new OPC_MESSAGE table
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" "+"OPC_MESSAGE"
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+
+    rem --- Build new OPC_MESSAGE table from OPC_MSG_HDR and OPC_MSG_DET tables
+    currentFirm$=""
+    read(opcMsgHdr_dev,key=theFirm$,dom=*next)
+    while 1
+        opcMsgHdr_key$=key(opcMsgHdr_dev,end=*break)
+        if cvs(theFirm$,2)<>"" and pos(theFirm$=opcMsgHdr_key$)<>1 then break
+        readrecord(opcMsgHdr_dev)opcMsgHdr$
+        if opcMsgHdr.firm_id$<>currentFirm$ then
+            rem --- Log next firm processed
+            print(log_dev)"    OPC_MSG_HDR.FIRM_ID = "+opcLineCode.firm_id$
+            currentFirm$=opcMsgHdr.firm_id$
+        endif
+        readrecord(opcMessage_dev,key=opcMsgHdr_key$,dom=*next); continue; rem --- Do NOT overwrite existing OPC_MESSAGE records
+        memo$=""
+        read(opcMsgDet_dev,key=opcMsgHdr_key$,dom=*next)
+        while 1
+            readrecord(opcMsgDet_dev,end=*break)opcMsgDet$
+            if pos(opcMsgDet.firm_id$+opcMsgDet.message_code$=opcMsgHdr_key$)<>1 then break
+            memo$=memo$+cvs(opcMsgDet.message_text$,2)+$0A$
+        wend
+        redim opcMessage$
+        opcMessage.firm_id$=opcMsgHdr.firm_id$
+        opcMessage.message_code$=opcMsgHdr.message_code$
+        opcMessage.code_desc$=opcMsgHdr.code_desc$
+        opcMessage.code_inactive$=opcMsgHdr.code_inactive$
+        opcMessage.memo_1024$=memo$
+        writerecord(opcMessage_dev)opcMessage$
     wend
 
 done: rem --- All done
@@ -170,6 +272,23 @@ done: rem --- All done
     close(log_dev)
 
     goto std_exit
+
+writeOptInvHdrMemo1024: rem --- Write OPT_INVHDR new MEMO_1024 field
+
+    read(optInvHdr_dev,key=currentCustomerOrder$,dom=*next)
+    while 1
+        optInvHdr_key$=key(optInvHdr_dev,end=*break)
+        if pos(currentCustomerOrder$=optInvHdr_key$)<>1 then break
+        extractrecord(optInvHdr_dev)optInvHdr$; rem Advisory Locking
+        if cvs(optInvHdr.memo_1024$,2)="" then
+            optInvHdr.memo_1024$=memo$
+            writerecord(optInvHdr_dev)optInvHdr$
+        else
+            read(optInvHdr_dev)
+        endif
+    wend
+
+    return
 
 open_log: rem --- Open log file
            
