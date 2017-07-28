@@ -1,6 +1,5 @@
-rem Customer Detail Listing
-rem Proprietary Software. BASIS International Ltd.
-rem Program ID: arr_CustDetail_irpt.aon  <Feb 24, 2011>
+rem --- rem Standard Message Code Listing
+rem --- Program opr_stdmsglist 
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 
     setesc std_error
@@ -15,12 +14,6 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
     ScreenSize!   = bbjAPI().getSysGui().getSystemMetrics().getScreenSize()
     screen_width  = ScreenSize!.width - 50; rem -50 keeps it in the MDI w/ no scroll bars
     screen_height = ScreenSize!.height - 50
-    
-rem --- Get HashMap of Values in Options Entry Form
-
-    params! = Option!.getOptionMap()
-    rem "CUSTOMER INACTIVE FEATURE"
-    inactive$=Option!.getOptionData("CUST_INACTIVE")
 
 rem --- Retrieve sysinfo data
 
@@ -31,79 +24,22 @@ rem --- Retrieve sysinfo data
     proc_date$=date(jul(num(sysinfo.system_date$(1,4)),num(sysinfo.system_date$(5,2)),num(sysinfo.system_date$(7,2))):stbl("+DATE_MASK"))
     firm_id$=sysinfo.firm_id$
     firm_name$=sysinfo.firm_name$
-    
-rem --- Open files
 
-    num_files=16
-    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="ARS_PARAMS",     open_opts$[1]="OTA"
-    open_tables$[2]="ARC_SALECODE",   open_opts$[2]="OTA@"
-    open_tables$[3]="ARC_TERMCODE",   open_opts$[3]="OTA@"
-    open_tables$[4]="ARC_TERRCODE",   open_opts$[4]="OTA@"
-    open_tables$[5]="ARC_DISTCODE",   open_opts$[5]="OTA@"
-    open_tables$[6]="OPC_MESSAGE",   open_opts$[6]="OTA@"
-    open_tables$[7]="OPC_DISCCODE",   open_opts$[7]="OTA@"
-    open_tables$[8]="OPC_TAXCODE",   open_opts$[8]="OTA@"
-    open_tables$[9]="OPC_PRICECDS",   open_opts$[9]="OTA@"
-    open_tables$[10]="ARC_CUSTTYPE",   open_opts$[10]="OTA@"
-    open_tables$[11]="ARM_CUSTPMTS",   open_opts$[11]="OTA@"
-    open_tables$[12]="ART_INVHDR",   open_opts$[12]="OTA@"
-    open_tables$[13]="ART_INVDET",   open_opts$[13]="OTA@"
-    open_tables$[14]="ARM_CUSTSHIP",   open_opts$[14]="OTA@"
-    open_tables$[15]="OPM_CUSTJOBS",   open_opts$[15]="OTA@"
-    open_tables$[16]="ARM_CUSTCMTS",   open_opts$[16]="OTA@"
-
-    gosub open_tables
-
-    ars_params_dev=num(open_chans$[1])
-    dim ars_params$:open_tpls$[1]
-
-rem --- Close files after ensuring they exist
-
-    num_files=15
-    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="ARC_SALECODE",   open_opts$[1]="C@"
-    open_tables$[2]="ARC_TERMCODE",   open_opts$[2]="C@"
-    open_tables$[3]="ARC_TERRCODE",   open_opts$[3]="C@"
-    open_tables$[4]="ARC_DISTCODE",   open_opts$[4]="C@"
-    open_tables$[5]="OPC_MESSAGE",   open_opts$[5]="C@"
-    open_tables$[6]="OPC_DISCCODE",   open_opts$[6]="C@"
-    open_tables$[7]="OPC_TAXCODE",   open_opts$[7]="C@"
-    open_tables$[8]="OPC_PRICECDS",   open_opts$[8]="C@"
-    open_tables$[9]="ARC_CUSTTYPE",   open_opts$[9]="C@"
-    open_tables$[10]="ARM_CUSTPMTS",   open_opts$[10]="C@"
-    open_tables$[11]="ART_INVHDR",   open_opts$[11]="C@"
-    open_tables$[12]="ART_INVDET",   open_opts$[12]="C@"
-    open_tables$[13]="ARM_CUSTSHIP",   open_opts$[13]="C@"
-    open_tables$[14]="OPM_CUSTJOBS",   open_opts$[14]="C@"
-    open_tables$[15]="ARM_CUSTCMTS",   open_opts$[15]="C@"
-
-    gosub open_tables
-
-rem --- retrieve retention value from param file
-
-    readrecord(ars_params_dev,key=firm_id$+"AR00",dom=*next)ars_params$
-    
-rem --- Set additional params
-
-    params!.put("FIRM_ID",firm_id$)
-	params!.put("FIRM_NAME",firm_name$)
-    params!.put("REPORT_NAME",sysinfo.task_desc$)
-    params!.put("BARISTA_WD",dir(""))       
-    if params!.get("CUSTOMER_ID_2")="" then params!.put("CUSTOMER_ID_2","~~~~~~")    
-    if params!.get("PICK_CHECK")="Y"
-        params!.put("COMMENT_YN","Y")
-    else
-        params!.put("COMMENT_YN","")
-    endif
+rem --- Get info from Option Entry form
+rem --- Firm, beginning/ending message code, skip inactive
+    params!=Option!.getOptionMap()
+    inactive$=Option!.getOptionData("CODE_INACTIVE")
+    if params!.get("MESSAGE_CODE_2")="" then params!.put("MESSAGE_CODE_2","~~~~~~")
 
 rem --- Customer Inactive Parameters
     if inactive$="Y" then
-      params!.put("OPTION_ACTIVE"," AND ARM_CUSTMAST.CUST_INACTIVE<>'Y'")
+      params!.put("OPTION_ACTIVE"," AND OPC_MESSAGE.CODE_INACTIVE<>'Y'")
     else
       params!.put("OPTION_ACTIVE","")
     endif
-    params!.put("INACTIVE_CUST",Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_CUSTOMERS")+" = "+inactive$)
+    params!.put("INACTIVE_MSG",Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_MESSAGES","Messages",1)+" = "+inactive$)
+    params!.put("FIRM_NAME",firm_name$)
+    params!.put("REPORT_NAME",sysinfo.task_desc$)
 
 rem --- Make Document Archive Record and Get ID
 
@@ -125,42 +61,12 @@ rem --- Document Output Report Parameters
     params!.put("DOC_NO",rd_doc_id$)
     params!.put("DATE_REP",rep_date$+"  "+rep_time$)
 
-rem --- Build Pattern and Replacement string from Vendor Mask
-
-	call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",msk$,0,0
-	pattern=pos("-"=msk$,1,0)
-	replacement$=""
-	if pattern=0
-		pattern$="("+pad(".",len(msk$))+")"
-		replacement$="$1"
-	else
-		pattern$="("
-		for x9=1 to len(msk$)
-			if msk$(x9,1)<>"-"
-				pattern$=pattern$+"."
-			else
-				pattern$=pattern$+")("
-			endif
-		next x9
-		pattern$=pattern$+")"
-		for x9=1 to pattern+1
-			replacement$=replacement$+"$"+str(x9)+"-"
-		next x9
-		replacement$=replacement$(1,len(replacement$)-1)
-	endif
-	params!.put("CUST_PATTERN",pattern$)
-	params!.put("CUST_REPLACE",replacement$)
-
 rem --- Set Report Name & Subreport directory
 
-    reportDir$ = stbl("+DIR_REPORTS",err=*next)
+    reportDir$ = BBjAPI().getFileSystem().resolvePath(stbl("+DIR_REPORTS",err=*next))+"/"
     repTitle!=sysinfo.task_desc$+"_"+rd_doc_id$
     repTitle$=repTitle!.replace(" ","_")
-    temp = unt
-    open (temp)reportDir$
-    reportDir$ = fid(temp)(9)+"/"
-    close (temp)
-    reportBaseName$ = "CustDetail"
+    reportBaseName$ = "OPStdMessages"
     filename$ = reportDir$ + reportBaseName$ + ".jasper"
 
     declare BBJasperReport report!
@@ -281,18 +187,6 @@ close_win:rem --- Viewer Window Closed
     if tcb(13) then exit
     release
 
-connect_err:rem --- Connection Error
-
-    declare java.lang.Exception Exception!
-    Exception! = bbjapi().getLastException()
-    if Exception! = null() then 
-       x = msgbox(errmes(-1),16,"Connection Failed")
-    else
-       x = msgbox(Exception!.getLocalizedMessage(),16,"Connection Failed")
-    endif
-
-    release
-    
 open_tables:rem --- Open Tables
 
     call stbl("+DIR_SYP")+"bac_open_tables.bbj",
@@ -316,7 +210,7 @@ open_tables:rem --- Open Tables
     endif
 
     return
-    
+
 disp_message:rem --- Display Message Dialog
 
     call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
@@ -350,5 +244,3 @@ std_error: rem --- Standard error handler (18Nov2014)
     if pos("RETRY"=rd_err_act$) retry
     if pgm(-1)<>pgm(-2) status=999; exit 
     release
-
-rem #endinclude std_error.src
