@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2016-10-12T15:45:22 -->
+<!-- 2017-07-28T18:30:03 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OPInvoiceHdr" language="groovy" pageWidth="612" pageHeight="792" columnWidth="570" leftMargin="22" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon" uuid="b146e7c7-7794-48d0-bad4-a5da78d1668b">
 	<property name="ireport.zoom" value="3.0"/>
 	<property name="ireport.x" value="1095"/>
@@ -63,19 +63,12 @@
 	<field name="DISCOUNT_AMT_RAW" class="java.lang.String"/>
 	<field name="TAX_AMT_RAW" class="java.lang.String"/>
 	<field name="FREIGHT_AMT_RAW" class="java.lang.String"/>
-	<field name="INV_MESSAGE_LINE1" class="java.lang.String"/>
-	<field name="INV_MESSAGE_LINE2" class="java.lang.String"/>
-	<field name="INV_MESSAGE_LINE3" class="java.lang.String"/>
-	<field name="INV_MESSAGE_LINE4" class="java.lang.String"/>
-	<field name="INV_MESSAGE_LINE5" class="java.lang.String"/>
-	<field name="INV_MESSAGE_LINE6" class="java.lang.String"/>
-	<field name="INV_MESSAGE_LINE7" class="java.lang.String"/>
-	<field name="INV_MESSAGE_LINE8" class="java.lang.String"/>
-	<field name="INV_MESSAGE_LINE9" class="java.lang.String"/>
-	<field name="INV_MESSAGE_LINE10" class="java.lang.String"/>
 	<field name="PAID_TEXT1" class="java.lang.String"/>
 	<field name="PAID_TEXT2" class="java.lang.String"/>
 	<field name="PAID_DESC" class="java.lang.String"/>
+	<field name="INV_STD_MESSAGE" class="java.lang.String">
+		<fieldDescription><![CDATA[]]></fieldDescription>
+	</field>
 	<variable name="TOTAL_SALE_BigDec" class="java.math.BigDecimal">
 		<variableExpression><![CDATA[]]></variableExpression>
 	</variable>
@@ -307,74 +300,16 @@
 					</graphicElement>
 				</rectangle>
 				<textField>
-					<reportElement x="6" y="2" width="180" height="11" uuid="b794fb25-f3f7-4076-9ea2-88ec26765c20"/>
+					<reportElement x="1" y="1" width="375" height="62" uuid="b794fb25-f3f7-4076-9ea2-88ec26765c20">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
 					<textElement>
 						<font fontName="Serif" size="8"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$F{INV_MESSAGE_LINE1}]]></textFieldExpression>
-				</textField>
-				<textField>
-					<reportElement x="6" y="14" width="180" height="11" uuid="d123ab71-f6e5-438a-8c29-1777949f9394"/>
-					<textElement>
-						<font fontName="Serif" size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[$F{INV_MESSAGE_LINE2}]]></textFieldExpression>
-				</textField>
-				<textField>
-					<reportElement x="6" y="26" width="180" height="11" uuid="1d560fb7-80d0-4d20-823c-3af949cd9ea3"/>
-					<textElement>
-						<font fontName="Serif" size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[$F{INV_MESSAGE_LINE3}]]></textFieldExpression>
-				</textField>
-				<textField>
-					<reportElement x="6" y="38" width="180" height="11" uuid="f08b6c81-0f6e-4a72-9686-78f827d41dae"/>
-					<textElement>
-						<font fontName="Serif" size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[$F{INV_MESSAGE_LINE4}]]></textFieldExpression>
-				</textField>
-				<textField>
-					<reportElement x="6" y="50" width="180" height="11" uuid="2816a63d-bb2c-4ff7-873d-065c191a241d"/>
-					<textElement>
-						<font fontName="Serif" size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[$F{INV_MESSAGE_LINE5}]]></textFieldExpression>
-				</textField>
-				<textField>
-					<reportElement x="190" y="38" width="180" height="11" uuid="fd7d190d-0207-462e-91df-c5e028ba6c79"/>
-					<textElement>
-						<font fontName="Serif" size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[$F{INV_MESSAGE_LINE9}]]></textFieldExpression>
-				</textField>
-				<textField>
-					<reportElement x="190" y="50" width="180" height="11" uuid="8c1555d4-bfed-4b6a-905f-0ca6ed8b3ba0"/>
-					<textElement>
-						<font fontName="Serif" size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[$F{INV_MESSAGE_LINE10}]]></textFieldExpression>
-				</textField>
-				<textField>
-					<reportElement x="190" y="2" width="180" height="11" uuid="0d789a54-a819-4d9c-a18d-0d8af3af45a5"/>
-					<textElement>
-						<font fontName="Serif" size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[$F{INV_MESSAGE_LINE6}]]></textFieldExpression>
-				</textField>
-				<textField>
-					<reportElement x="190" y="14" width="180" height="11" uuid="de3f0067-17ae-4704-a557-601da9544305"/>
-					<textElement>
-						<font fontName="Serif" size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[$F{INV_MESSAGE_LINE7}]]></textFieldExpression>
-				</textField>
-				<textField>
-					<reportElement x="190" y="26" width="180" height="11" uuid="cb04229a-8e34-4e56-865d-30bee94e7007"/>
-					<textElement>
-						<font fontName="Serif" size="8"/>
-					</textElement>
-					<textFieldExpression><![CDATA[$F{INV_MESSAGE_LINE8}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$F{INV_STD_MESSAGE}]]></textFieldExpression>
 				</textField>
 			</band>
 		</groupFooter>
