@@ -729,6 +729,13 @@ rem --- Did we change rows?
 		wh$   = callpoint!.getColumnData("OPE_INVDET.WAREHOUSE_ID")
 		gosub set_avail
 	endif
+
+rem --- Set column size for memo_1024 field very small so it doesn't take up room, but still available for hover-over of memo contents
+
+	grid! = util.getGrid(Form!)
+	col_hdr$=callpoint!.getTableColumnAttribute("OPE_INVDET.MEMO_1024","LABS")
+	memo_1024_col=util.getGridColumnNumber(grid!, col_hdr$)
+	grid!.setColumnWidth(memo_1024_col,15)
 [[OPE_INVDET.AOPT-LENT]]
 rem --- Save current context so we'll know where to return from lot lookup
 
