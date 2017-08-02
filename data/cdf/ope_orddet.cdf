@@ -1,3 +1,19 @@
+[[OPE_ORDDET.MEMO_1024.AVAL]]
+rem --- store first part of memo_1024 in order_memo
+rem --- this AVAL is hit if user navigates via arrows or clicks on the memo_1024 field, and double-clicks or ctrl-F to bring up editor
+rem --- if on a memo line or using ctrl-C or Comments button, code in the comment_entry: subroutine is hit instead
+
+	disp_text$=callpoint!.getUserInput()
+	if disp_text$<>callpoint!.getColumnUndoData("OPE_ORDDET.MEMO_1024")
+		memo_len=len(callpoint!.getColumnData("OPE_ORDDET.ORDER_MEMO"))
+		order_memo$=disp_text$
+		order_memo$=order_memo$(1,min(memo_len,(pos($0A$=order_memo$+$0A$)-1)))
+
+		callpoint!.setColumnData("OPE_ORDDET.MEMO_1024",disp_text$)
+		callpoint!.setColumnData("OPE_ORDDET.ORDER_MEMO",order_memo$,1)
+
+		callpoint!.setStatus("MODIFIED")
+	endif
 [[OPE_ORDDET.AOPT-COMM]]
 rem --- invoke the comments dialog
 
