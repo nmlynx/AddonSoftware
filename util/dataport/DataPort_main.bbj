@@ -607,6 +607,7 @@ next_ddm03:
           goto next_file
        endif
     endif
+
     rem --- Open/create ARS_CUSTDFLT and ARS_PARAMS for ARS-01A record
     if ddm03.file_name$="ARS-01" and ddm03.record_id$="A" then
         rem --- Add ARS_CUSTDFLT to file_xref! HashMap for ARS-01A key
@@ -617,6 +618,7 @@ next_ddm03:
         rem --- Reset ARS_PARAMS to file_xref! HashMap for ARS-01A key
         file_xref!.put("ARS-01A","ARS_PARAMS")
     endif
+
     rem --- Open/create GLS_CALENDAR and GLS_PARAMS for GLS-01A record
     if ddm03.file_name$="GLS-01" and ddm03.record_id$="A" then
         rem --- Add GLS_CALENDAR to file_xref! HashMap for GLS-01A key
@@ -627,16 +629,65 @@ next_ddm03:
         rem --- Reset GLS_PARAMS to file_xref! HashMap for GLS-01A key
         file_xref!.put("GLS-01A","GLS_PARAMS")
     endif
-    rem --- Open/create opm-04 (OPC_MSG_HDR) and opm-14(OPC_MSG_DET) for version 6 ARM-10G records
-    if source_version=6 and ddm03.file_name$="ARM-10" and ddm03.record_id$="G" then
-        rem --- Add opm-04A (OPC_MSG_HDR) to file_xref! HashMap for ARM-10G key
-        file_xref!.put("ARM-10G","opm-04A")
-        gosub get_new_template
-        opm04_dev=new_file
-        dim opm04_rec$:fattr(new_rec$)
-        rem --- Reset opm-14A (OPC_MSG_DET) to file_xref! HashMap for ARM-10G key
-        file_xref!.put("ARM-10G","opm-14A")
+
+    rem --- Initialize opc_message file introduced in verision 17.10 to replace opc_msg_hdr (opm-04) and opc_msg_det (opm-14).
+    rem --- Build opc_message from version 7 opm-04 and opm-14 records. Both opc_msg_hdr and opc_msg_det will NOT exist in v19 Addon.
+    if source_version=7 and pos(cvs(datafile$,8)="opm-04;opm-14;",7) then
+        print "   Copying data from  "+ddm03.file_name$+ddm03.record_id$
+        print(log_dev)"   Copying data from    "+ddm03.file_name$+ddm03.record_id$
+        if !opcMessage_done then
+            rem --- Open opc_message file in Barista-Addon's data directory
+            num_files=1
+            dim rd_open_tables$[1:num_files],rd_open_opts$[1:num_files],rd_open_chans$[1:num_files],rd_open_tpls$[1:num_files]
+            rd_open_tables$[1]="OPC_MESSAGE",rd_open_opts$[1]="OTA"
+            
+            gosub open_tables
+            
+            opcMessage_dev=num(rd_open_chans$[1]);dim opcMessage$:rd_open_tpls$[1]
+
+            rem --- Create and open opc_message in target directory
+            table_alias$="OPC_MESSAGE",new_datafile$="opc_message",file_id$=new_datafile$
+            erase destin_folder$+"/"+cvs(new_datafile$,version_cvs),err=*next
+            gosub check_for_definition
+            opcMessage_trgt=new_file
+
+            rem --- Open v7 opm-04 and opm-14 source files
+            opm04_dev=unt
+            open (opm04_dev)source_folder$+"/opm-04"
+            lock (opm04_dev)
+            opm14_dev=unt
+            open (opm14_dev)source_folder$+"/opm-14"
+            lock (opm14_dev)
+
+            rem --- Build v17.10 opc_message file from v7 opm-04 and opm-14 files
+            dim opm04_rec$(36),opm14_rec$(46)
+            read(opm04_dev,key="",dom=*next)
+            while 1
+                opm04_key$=key(opm04_dev,end=*break)
+                readrecord(opm04_dev)opm04_rec$(1)
+                memo$=""
+                read(opm14_dev,key=opm04_key$,dom=*next)
+                while 1
+                    readrecord(opm14_dev,end=*break)opm14_rec$(1)
+                    if pos(opm14_rec$(1,4)=opm04_key$)<>1 then break
+                    memo$=memo$+cvs(opm14_rec$(7),2)+$0A$
+                wend
+                redim opcMessage$
+                opcMessage.firm_id$=opm04_rec$(1,2)
+                opcMessage.message_code$=opm04_rec$(3,2)
+                opcMessage.code_desc$=opm04_rec$(5,20)
+                opcMessage.code_inactive$=""
+                opcMessage.memo_1024$=memo$
+                writerecord(opcMessage_trgt)opcMessage$
+            wend
+
+            unlock (opm04_dev)
+            unlock (opm14_dev)
+            opcMessage_done=1
+        endif
+        goto next_file
     endif
+
     gosub get_new_template
     rd_gen_table_tpl$=""
     data_seq_str$=""
@@ -857,11 +908,12 @@ next_rec:
         gosub write_gls_calendar_recs
     endif
 
+    rem --- Initialize opc_message file introduced in verision 17.10 to replace opc_msg_hdr (opm-04) and opc_msg_det (opm-14).
+    rem --- Build opc_message from version 6 ARM-10G records.
     if source_version=6 and datafile$="ARM-10" and record_id_field$="RECORD_ID_G" then
-        rem --- Write opm-04 (OPC_MSG_HDR) and opm-14(OPC_MSG_DET) records from version 6 ARM-10G records
-        opm14_dev=new_file
-        dim opm14_rec$:fattr(new_rec$)
-        gosub write_opc_msg_recs
+        opcMessage_trgt=new_file
+        dim opcMessage$:fattr(new_rec$)
+        gosub write_opcMessage_recs
         goto next_rec
     endif
 
@@ -1537,39 +1589,45 @@ done: rem --- Done
 
     release
 
-write_opc_msg_recs: rem --- Write opm-04 (OPC_MSG_HDR) and opm-14(OPC_MSG_DET) records from version 6 ARM-10G records
+write_opcMessage_recs: rem --- Build v17.10 opc_message file from v6 ARM-10G records
 
-    rem --- Write opm-04 (OPC_MSG_HDR) record
+    rem --- Translate message_code as necessary
+    translate_value!=field_translations!.get("MESSAGE_CODE."+cvs(old_rec.message_code$,3))
+    if translate_value!<>null() then old_rec.message_code$=str(translate_value!)
+
+    rem --- Write opc_mesage "header" info (prior to v17.10 was opm-04 (OPC_MSG_HDR) record)
     rec=5
     if old_rec.record_id$="1" then
         rec=0
-        redim opm04_rec$
-        opm04_rec.firm_id$=old_rec.firm_id$
-        translate_value!=field_translations!.get("MESSAGE_CODE."+cvs(old_rec.message_code$,3))
-        if translate_value!<>null() then old_rec.message_code$=str(translate_value!)
-        opm04_rec.message_code$=old_rec.message_code$
-        opm04_rec.code_desc$=old_rec.code_desc$
-        opm04_rec$=field(opm04_rec$)
-        writerecord(opm04_dev)opm04_rec$
+        redim opcMessage$
+        opcMessage.firm_id$=old_rec.firm_id$
+        opcMessage.message_code$=old_rec.message_code$
+        opcMessage.code_desc$=old_rec.code_desc$
+        opcMessage.code_inactive$=""
+        opcMessage.memo_1024$=""
+        opcMessage$=field(opcMessage$)
+        writerecord(opcMessage_trgt)opcMessage$
     endif
 
-    rem --- Write opm-14(OPC_MSG_DET) records
-    write_opm14_recs=0
-    for i=5 to 1 step -1
-        redim opm14_rec$
-        opm14_rec.firm_id$=old_rec.firm_id$
-        translate_value!=field_translations!.get("MESSAGE_CODE."+cvs(old_rec.message_code$,3))
-        if translate_value!<>null() then old_rec.message_code$=str(translate_value!)
-        opm14_rec.message_code$=old_rec.message_code$
-        opm14_rec.message_seq$=str(i+rec:"00")
-        opm14_rec.message_text$=field(old_rec$,"MESSAGE_TEXT_"+str(i:"00"))
-        rem --- Skip trailing blank message lines
-        if cvs(opm14_rec.message_text$,2)<>"" or write_opm14_recs then
-            write_opm14_recs=1
-            opm14_rec$=field(opm14_rec$)
-            writerecord(opm14_dev)opm14_rec$
-        endif
-    next i
+    rem --- Write opc_message "detail"/memo info, (prior to v17.10 was opm-14(OPC_MSG_DET) records)
+    redim opcMessage$
+    opcMessage_key$=old_rec.firm_id$+old_rec.message_code$
+    readrecord(opcMessage_trgt,key=opcMessage_key$,dom=*next)opcMessage$
+    if opcMessage.firm_id$+opcMessage.message_code$=opcMessage_key$ then
+        memo$=""
+        write_recs=0
+        for i=5 to 1 step -1
+            message_text$=cvs(field(old_rec$,"MESSAGE_TEXT_"+str(i:"00")),2)
+            rem --- Skip trailing blank message lines
+            if message_text$<>"" or write_recs then
+                write_recs=1
+                memo$=message_text$+$0A$+memo$
+            endif
+        next i
+        opcMessage.memo_1024$=opcMessage.memo_1024$+memo$
+        opcMessage$=field(opcMessage$)
+        writerecord(opcMessage_trgt)opcMessage$
+    endif
 
     return
 
