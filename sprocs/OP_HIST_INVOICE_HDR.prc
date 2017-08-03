@@ -205,8 +205,8 @@ rem --- Main Read
 			arm10c.trans_type$ = "C"
 
 			if ope41_dev then
-				find record (ope41_dev, key=firm_id$+ar_type$+ope01a.customer_id$+opt01a.ar_inv_no$, dom=*endif, err=*endif) ope41a$; rem z0$, z1$
-				find record (arm10c_dev, key=firm_id$+"C"+opt41a.cash_rec_cd$, dom=*next) arm10c$; rem y7$, y9$                
+				find record (ope41_dev, key=firm_id$+"U"+ar_type$+ope01a.customer_id$+ope01a.order_no$+ope01a.ar_inv_no$,knum="AO_STATUS", dom=*endif, err=*endif) ope41a$; rem z0$, z1$
+				find record (arm10c_dev, key=firm_id$+"C"+ope41a.cash_rec_cd$, dom=*next) arm10c$; rem y7$, y9$                
 			endif
 		endif
 		

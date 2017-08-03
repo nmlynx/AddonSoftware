@@ -164,6 +164,7 @@ line_detail: rem --- Item Detail
 
 			if pos(opm02a.line_type$=" SP") then 
 				item_desc$=cvs(ope11a.item_id$,3)
+                item_id$=cvs(ope11a.item_id$,3)
 			endif
 
 			if pos(opm02a.line_type$=" SNP") then 
