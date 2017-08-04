@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-07-26
+ Report Date:   2017-08-04
  Report Branch: AddonSoftware 17.01
  Last Release:  AddonSoftware 17.00
 =======================================================================================================================================
@@ -606,6 +606,26 @@ Set Hide in Form and Hide in Grid props to be consistent w/ OPE_ORDDET and OPE_I
 (cherry picked from commit 23c3d92b4e937b02f4e09f4a652a89080e0e471a)
 ----
 Modified: data/bar/opt_invdet.xml
+
+=======================================================================================================================================
+Revision: 539404037946518355579496def93593f8254ea5
+Author: Christine <chawkins@basis.com>
+Date: 8/4/2017 2:27:37 PM
+Message:
+Bug 9135 - PO - Requisition Entry header date entry and detail grid line codes not behaving:
+
+Made several changes to bring Requisitions more in line w/ how POs work.
+
+1. In POE_REQHDR, got rid of all the REFRESHes and used the ,1 on setColumnData() method instead.
+2. In POE_REQDET, Eliminated all of the <<CALLPOINT>>-based column enabling, so no longer using callpoint!.setStatus("ENABLE:...")
+3. Found where PO_LINE_CODE setColumnData needed to be set
+4. Otherwise sanity checked callpoint code against that in POs and lined them up where it made sense.
+----
+Modified: data/bar/poe_reqdet.xml
+Modified: data/bar/poe_reqhdr.xml
+Modified: data/cdf/poe_reqdet.cdf
+Modified: data/cdf/poe_reqhdr.cdf
+
 
 
 
