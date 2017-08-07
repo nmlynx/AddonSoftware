@@ -1,7 +1,7 @@
-rem --- OP Initialize Data File Changes Implemented During Minor Releases of v17
-rem --- Program opc_v17initMinorRev.aon
+rem --- PO Initialize Data File Changes Implemented During Minor Releases of v17
+rem --- Program poc_v17initMinorRev.aon
 
-rem --- AddonSoftware Version 17.10 - Jul2017
+rem --- AddonSoftware Version 17.10 - Aug2017
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 
 rem --- theFirm$     : The firm ID to rebuild. Use blank ("") for all firms. (input)
@@ -43,33 +43,41 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    num_files=8
+    num_files=12
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="DDM_SYSTEMS",      open_opts$[1]="OTA"
-    open_tables$[2]="OPC_LINECODE",     open_opts$[2]="OTA"
-    open_tables$[3]="OPC_MESSAGE",      open_opts$[3]="OTA"
-    open_tables$[4]="OPE_ORDCOMMENTS",  open_opts$[4]="OTA"
-    open_tables$[5]="OPT_INVDET",       open_opts$[5]="OTA"
-    open_tables$[6]="OPT_INVHDR",       open_opts$[6]="OTA"
-    open_tables$[7]="OPC_MSG_HDR",      open_opts$[7]="OTAS"
-    open_tables$[8]="OPC_MSG_DET",      open_opts$[8]="OTAS"
+    open_tables$[2]="POC_MESSAGE",      open_opts$[2]="OTA"
+    open_tables$[3]="POE_INVDET",       open_opts$[3]="OTA"
+    open_tables$[4]="POE_ORDHDR",       open_opts$[4]="OTA"
+    open_tables$[5]="POE_PODET",        open_opts$[5]="OTA"
+    open_tables$[6]="POE_QADET",        open_opts$[6]="OTA"
+    open_tables$[7]="POE_RECDET",       open_opts$[7]="OTA"
+    open_tables$[8]="POE_REQDET",       open_opts$[8]="OTA"
+    open_tables$[9]="POT_INVDET",       open_opts$[9]="OTA"
+    open_tables$[10]="POT_RECDET",      open_opts$[10]="OTA"
+    open_tables$[11]="POC_MSGCODE",     open_opts$[11]="OTAS"
+    open_tables$[12]="POC_MSGLINE",     open_opts$[12]="OTAS"
 
     gosub open_tables
 
-    ddm_systems=num(open_chans$[1]); dim ddm_systems$:open_tpls$[1]
-    opcLineCode_dev=num(open_chans$[2]); dim opcLineCode$:open_tpls$[2]
-    opcMessage_dev=num(open_chans$[3]); dim opcMessage$:open_tpls$[3]
-    opeOrdComments_dev=num(open_chans$[4]); dim opeOrdComments$:open_tpls$[4]
-    optInvDet_dev=num(open_chans$[5]); dim optInvDet$:open_tpls$[5]
-    optInvHdr_dev=num(open_chans$[6]); dim optInvHdr$:open_tpls$[6]
+    ddm_systems=num(open_chans$[1]);    dim ddm_systems$:open_tpls$[1]
+    pocMessage_dev=num(open_chans$[2]); dim pocMessage$:open_tpls$[2]
+    poeInvDet_dev=num(open_chans$[3]);  dim poeInvDet$:open_tpls$[3]
+    poeOrdHdr_dev=num(open_chans$[4]);  dim poeOrdHdr$:open_tpls$[4]
+    poePODet_dev=num(open_chans$[5]);   dim poePODet$:open_tpls$[5]
+    poeQADet_dev=num(open_chans$[6]);   dim poeQADet$:open_tpls$[6]
+    poeRecDet_dev=num(open_chans$[7]);  dim poeRecDet$:open_tpls$[7]
+    poeReqDet_dev=num(open_chans$[8]);  dim poeReqDet$:open_tpls$[8]
+    potInvDet_dev=num(open_chans$[9]);  dim potInvDet$:open_tpls$[9]
+    potRecDet_dev=num(open_chans$[10]); dim potRecDet$:open_tpls$[10]
 
-rem --- Table definitions for OPC_MSG_HDR and OPC_MSG_DET may be deleted in v19 (see Addon Bug 9127). So they may not
-rem --- exist when upgrading from before v17 to after v18 and adc_v1700conversion.aon executes opc_v17initMinorRev.aon.
+rem --- Table definitions for POC_MSGCODE and POC_MSGLINE may be deleted in v19 (see Addon Bug 9127). So they may not
+rem --- exist when upgrading from before v17 to after v18 and adc_v1700conversion.aon executes poc_v17initMinorRev.aon.
 
-    opcMsgHdr_dev=num(open_chans$[7])
-    if opcMsgHdr_dev dim opcMsgHdr$:open_tpls$[7]
-    opcMsgDet_dev=num(open_chans$[8])
-    if opcMsgDet_dev dim opcMsgDet$:open_tpls$[8]
+    pocMsgCode_dev=num(open_chans$[11])
+    if pocMsgCode_dev dim pocMsgCode$:open_tpls$[11]
+    pocMsgLine_dev=num(open_chans$[12])
+    if pocMsgLine_dev dim pocMsgLine$:open_tpls$[12]
     
 rem --- Open log file in aon/logs directory
     
@@ -131,43 +139,11 @@ rem --- As necessary, creating a small invisible window to hold progress meter
     
 rem --- Start progress meter
 
-    meter_title$="opc_v17initMinorRev.aon"
+    meter_title$="poc_v17initMinorRev.aon"
     meter_proc_recs=0
     meter_text$=""
     meter_action$="WIN-LST"
     gosub disp_meter
-
-rem --- Initialize OPT_INVHDR new MEMO_1024 field
-
-    rem --- Increment progress meter
-    meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" "+"OPT_INVHDR.MEMO_1024"
-    meter_proc_recs=meter_proc_recs+1
-    meter_action$="MTR-LST"
-    gosub disp_meter
-    print(log_dev)meter_text$
-    
-    rem --- Populate OPT_INVHDR new MEMO_1024 field from OPE_ORDCOMMENTS records
-    currentFirm$=""
-    currentCustomerOrder$=""
-    memo$=""
-    read(opeOrdComments_dev,key=theFirm$,dom=*next)
-    while 1
-        opeOrdComments_key$=key(opeOrdComments_dev,end=*break)
-        if cvs(theFirm$,2)<>"" and pos(theFirm$=opeOrdComments_key$)<>1 then break
-        if pos(currentCustomerOrder$=opeOrdComments_key$)<>1 then
-            if currentCustomerOrder$<>"" then gosub writeOptInvHdrMemo1024
-            currentCustomerOrder$=opeOrdComments.firm_id$+opeOrdComments.ar_type$+opeOrdComments.customer_id$+opeOrdComments.order_no$
-            memo$=cvs(opeOrdComments.comment$,2)+$0A$
-        endif
-        readrecord(opeOrdComments_dev)opeOrdComments$
-        if opeOrdComments.firm_id$<>currentFirm$ then
-            rem --- Log next firm processed
-            print(log_dev)"    OPE_ORDCOMMENTS.FIRM_ID = "+opeOrdComments.firm_id$
-            currentFirm$=opeOrdComments.firm_id$
-        endif
-        memo$=memo$+cvs(opeOrdComments.comment$,2)+$0A$
-    wend
-    if currentCustomerOrder$<>"" then gosub writeOptInvHdrMemo1024
 
 rem --- Initialize OPT_INVDET new MEMO_1024 field
 
@@ -179,96 +155,143 @@ rem --- Initialize OPT_INVDET new MEMO_1024 field
     print(log_dev)
     print(log_dev)meter_text$
 
-    rem --- Populate OPT_INVDET new MEMO_1024 field with old ORDER_MEMO field
+    rem --- Populate POE_ORDHDR new MEMO_1024 field with old REP_COMMENTS field
     currentFirm$=""
-    read(optInvDet_dev,key=theFirm$,dom=*next)
+    read(poeOrdHdr_dev,key=theFirm$,dom=*next)
     while 1
-        optInvDet_key$=key(optInvDet_dev,end=*break)
-        if cvs(theFirm$,2)<>"" and pos(theFirm$=optInvDet_key$)<>1 then break
-        extractrecord(optInvDet_dev)optInvDet$; rem Advisory Locking
-        if optInvDet.firm_id$<>currentFirm$ then
+        poeOrdHdr_key$=key(poeOrdHdr_dev,end=*break)
+        if cvs(theFirm$,2)<>"" and pos(theFirm$=poeOrdHdr_key$)<>1 then break
+        extractrecord(poeOrdHdr_dev)poeOrdHdr$; rem Advisory Locking
+        if poeOrdHdr.firm_id$<>currentFirm$ then
             rem --- Log next firm processed
-            print(log_dev)"    OPT_INVDET.FIRM_ID = "+optInvDet.firm_id$
-            currentFirm$=optInvDet.firm_id$
+            print(log_dev)"    POE_ORDHDR.FIRM_ID = "+poeOrdHdr.firm_id$
+            currentFirm$=poeOrdHdr.firm_id$
         endif
-        if cvs(optInvDet.order_memo$,2)<>"" and cvs(optInvDet.memo_1024$,2)="" then
-            optInvDet.memo_1024$=cvs(optInvDet.order_memo$,2)
-            writerecord(optInvDet_dev)optInvDet$
+        if cvs(poeOrdHdr.order_memo$,2)<>"" and cvs(poeOrdHdr.memo_1024$,2)="" then
+            poeOrdHdr.memo_1024$=cvs(poeOrdHdr.order_memo$,2)
+            writerecord(poeOrdHdr_dev)poeOrdHdr$
         else
-            read(optInvDet_dev)
+            read(poeOrdHdr_dev)
         endif
     wend
 
-rem --- Initialize blank OPC_LINECODE MESSAGE_TYPE fields
+rem --- Initialize new MEMO_1024 field in selected files
 
-    rem --- Increment progress meter
-    meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" "+"OPC_LINECODE.MESSAGE_TYPE"
-    meter_proc_recs=meter_proc_recs+1
-    meter_action$="MTR-LST"
-    gosub disp_meter
-    print(log_dev)
-    print(log_dev)meter_text$
+    rem --- Identify files to initialize MEMO_1024 in
+    selectedFiles!=new java.util.TreeMap()
+    
+    fileVec!=BBjAPI().makeVector()
+    fileVec!.addItem(poeInvDet_dev)
+    fileVec!.addItem(fattr(poeInvDet$))
+    selectedFiles!.put("POE_INVDET",fileVec!)
+    
+    fileVec!=BBjAPI().makeVector()
+    fileVec!.addItem(poePODet_dev)
+    fileVec!.addItem(fattr(poePODet$))
+    selectedFiles!.put("POE_PODET",fileVec!)
+    
+    fileVec!=BBjAPI().makeVector()
+    fileVec!.addItem(poeQADet_dev)
+    fileVec!.addItem(fattr(poeQADet$))
+    selectedFiles!.put("POE_QADET",fileVec!)
+    
+    fileVec!=BBjAPI().makeVector()
+    fileVec!.addItem(poeRecDet_dev)
+    fileVec!.addItem(fattr(poeRecDet$))
+    selectedFiles!.put("POE_RECDET",fileVec!)
+    
+    fileVec!=BBjAPI().makeVector()
+    fileVec!.addItem(poeReqDet_dev)
+    fileVec!.addItem(fattr(poeReqDet$))
+    selectedFiles!.put("POE_REQDET",fileVec!)
+    
+    fileVec!=BBjAPI().makeVector()
+    fileVec!.addItem(potInvDet_dev)
+    fileVec!.addItem(fattr(potInvDet$))
+    selectedFiles!.put("POT_INVDET",fileVec!)
+    
+    fileVec!=BBjAPI().makeVector()
+    fileVec!.addItem(potRecDet_dev)
+    fileVec!.addItem(fattr(potRecDet$))
+    selectedFiles!.put("POT_RECDET",fileVec!)
 
-    rem --- Set blank OPC_LINECODE MESSAGE_TYPE fields to 'B'
-    currentFirm$=""
-    read(opcLineCode_dev,key=theFirm$,dom=*next)
-    while 1
-        opcLineCode_key$=key(opcLineCode_dev,end=*break)
-        if cvs(theFirm$,2)<>"" and pos(theFirm$=opcLineCode_key$)<>1 then break
-        extractrecord(opcLineCode_dev)opcLineCode$; rem Advisory Locking
-        if opcLineCode.firm_id$<>currentFirm$ then
-            rem --- Log next firm processed
-            print(log_dev)"    OPC_LINECODE.FIRM_ID = "+opcLineCode.firm_id$
-            currentFirm$=opcLineCode.firm_id$
-        endif
-        if opcLineCode.message_type$=" " then
-            opcLineCode.message_type$="B"
-            writerecord(opcLineCode_dev)opcLineCode$
-        else
-            read(opcLineCode_dev)
-        endif
-    wend
+    filesIter!=selectedFiles!.keySet().iterator()
+    while filesIter!.hasNext()
+        thisFile$=filesIter!.next()
+        fileVec!=selectedFiles!.get(thisFile$)
+        thisChan=fileVec!.getItem(0)
+        dim thisTpl$:fileVec!.getItem(1)
+        currentFirm$=""
 
-rem --- Initialize new OPC_MESSAGE table
-
-    rem --- As of v17.10, DataPort handles initializing OPC_MESSAGE from OPC_MSG_HDR (opm-04) and OPC_MSG_DET (opm-14).
-    rem --- And, OPC_MSG_HDR and OPC_MSG_DET may not exist when upgrading via DataPort.
-    if opcMsgHdr_dev then
         rem --- Increment progress meter
-        meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" "+"OPC_MESSAGE"
+        meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" "+thisFile$+".MEMO_1024"
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)
+        print(log_dev)meter_text$
+
+        rem --- Populate new MEMO_1024 field with old ORDER_MEMO field
+        read(thisChan,key=theFirm$,dom=*next)
+        while 1
+            this_key$=key(thisChan,end=*break)
+            if cvs(theFirm$,2)<>"" and pos(theFirm$=this_key$)<>1 then break
+            extractrecord(thisChan)thisTpl$; rem Advisory Locking
+            if thisTpl.firm_id$<>currentFirm$ then
+                rem --- Log next firm processed
+                print(log_dev)"    "+thisFile$+".FIRM_ID = "+thisTpl.firm_id$
+                currentFirm$=thisTpl.firm_id$
+            endif
+            if cvs(thisTpl.order_memo$,2)<>"" and cvs(thisTpl.memo_1024$,2)="" then
+                thisTpl.memo_1024$=cvs(thisTpl.order_memo$,2)
+                writerecord(thisChan)thisTpl$
+            else
+                read(thisChan)
+            endif
+        wend
+    wend
+
+rem --- Initialize new POC_MESSAGE table
+
+    rem --- As of v17.10, DataPort handles initializing POC_MESSAGE from POC_MSGCODE (pom-04) and POC_MSGLINE (pom-14).
+    rem --- And, POC_MSGCODE and POC_MSGLINE may not exist when upgrading via DataPort.
+    if pocMsgCode_dev then
+        rem --- Increment progress meter
+        meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" "+"POC_MESSAGE"
         meter_proc_recs=meter_proc_recs+1
         meter_action$="MTR-LST"
         gosub disp_meter
         print(log_dev)
         print(log_dev)meter_text$
     
-        rem --- Build new OPC_MESSAGE table from OPC_MSG_HDR and OPC_MSG_DET tables
+        rem --- Build new POC_MESSAGE table from POC_MSGCODE and POC_MSGLINE tables
         currentFirm$=""
-        read(opcMsgHdr_dev,key=theFirm$,dom=*next)
+        read(pocMsgCode_dev,key=theFirm$,dom=*next)
         while 1
-            opcMsgHdr_key$=key(opcMsgHdr_dev,end=*break)
-            if cvs(theFirm$,2)<>"" and pos(theFirm$=opcMsgHdr_key$)<>1 then break
-            readrecord(opcMsgHdr_dev)opcMsgHdr$
-            if opcMsgHdr.firm_id$<>currentFirm$ then
+            pocMsgCode_key$=key(pocMsgCode_dev,end=*break)
+            if cvs(theFirm$,2)<>"" and pos(theFirm$=pocMsgCode_key$)<>1 then break
+            readrecord(pocMsgCode_dev)pocMsgCode$
+            if pocMsgCode.firm_id$<>currentFirm$ then
                 rem --- Log next firm processed
-                print(log_dev)"    OPC_MSG_HDR.FIRM_ID = "+opcMsgHdr.firm_id$
-                currentFirm$=opcMsgHdr.firm_id$
+                print(log_dev)"    POC_MSGCODE.FIRM_ID = "+pocMsgCode.firm_id$
+                currentFirm$=pocMsgCode.firm_id$
             endif
-            readrecord(opcMessage_dev,key=opcMsgHdr_key$,dom=*next); continue; rem --- Do NOT overwrite existing OPC_MESSAGE records
+            readrecord(pocMessage_dev,key=pocMsgCode_key$,dom=*next); continue; rem --- Do NOT overwrite existing POC_MESSAGE records
             memo$=""
-            read(opcMsgDet_dev,key=opcMsgHdr_key$,dom=*next)
+            read(pocMsgLine_dev,key=pocMsgCode_key$,dom=*next)
             while 1
-                readrecord(opcMsgDet_dev,end=*break)opcMsgDet$
-                if pos(opcMsgDet.firm_id$+opcMsgDet.message_code$=opcMsgHdr_key$)<>1 then break
-                memo$=memo$+cvs(opcMsgDet.message_text$,2)+$0A$
+                readrecord(pocMsgLine_dev,end=*break)pocMsgLine$
+                if pos(pocMsgLine.firm_id$+pocMsgLine.po_msg_code$=pocMsgCode_key$)<>1 then break
+                memo$=memo$+cvs(pocMsgLine.message_text$,2)+$0A$
             wend
-            redim opcMessage$
-            opcMessage.firm_id$=opcMsgHdr.firm_id$
-            opcMessage.message_code$=opcMsgHdr.message_code$
-            opcMessage.code_desc$=opcMsgHdr.code_desc$
-            opcMessage.code_inactive$=opcMsgHdr.code_inactive$
-            opcMessage.memo_1024$=memo$
-            writerecord(opcMessage_dev)opcMessage$
+            redim pocMessage$
+            pocMessage.firm_id$=pocMsgCode.firm_id$
+            pocMessage.po_msg_code$=pocMsgCode.po_msg_code$
+            pocMessage.code_desc$=pocMsgCode.code_desc$
+            pocMessage.message_type$=pocMsgCode.message_type$
+            pocMessage.code_inactive$=pocMsgCode.code_inactive$
+            pocMessage.memo_1024$=memo$
+            writerecord(pocMessage_dev)pocMessage$
         wend
     endif
 
@@ -281,7 +304,7 @@ done: rem --- All done
 
     rem --- Complete and close log file
     print(log_dev)
-    print(log_dev)"v17initMinorRevOP log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
+    print(log_dev)"v17initMinorRevPO log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     close(log_dev)
 
     goto std_exit
@@ -310,14 +333,14 @@ open_log: rem --- Open log file
     FileObject.makeDirs(new File(logDir$))
 
     rem --- create and open log file
-    log$=logDir$+"/v17initMinorRevOP_"+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")+".log"
+    log$=logDir$+"/v17initMinorRevPO_"+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")+".log"
     erase log$,err=*next
     string log$
     log_dev=unt
     open(log_dev)log$
             
     rem --- write log header info
-    print(log_dev)"v17initMinorRevOP log started: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
+    print(log_dev)"v17initMinorRevPO log started: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     print(log_dev)
 
     return
