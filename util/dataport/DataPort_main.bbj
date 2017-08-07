@@ -688,6 +688,66 @@ next_ddm03:
         goto next_file
     endif
 
+rem wgh ... 9131 ... stopped here
+    rem --- Initialize poc_message file introduced in verision 17.10 to replace poc_msgcode (pom-04) and poc_msgline (pom-14).
+    rem --- Both poc_msgcode and poc_msgline will NOT exist in v19 Addon.
+    if pos(cvs(datafile$,8)="pom-04;pom-14;",7) then
+        print "   Copying data from  "+ddm03.file_name$+ddm03.record_id$
+        print(log_dev)"   Copying data from    "+ddm03.file_name$+ddm03.record_id$
+        if !pocMessage_done then
+            rem --- Open poc_message file in Barista-Addon's data directory
+            num_files=1
+            dim rd_open_tables$[1:num_files],rd_open_opts$[1:num_files],rd_open_chans$[1:num_files],rd_open_tpls$[1:num_files]
+            rd_open_tables$[1]="POC_MESSAGE",rd_open_opts$[1]="OTA"
+            
+            gosub open_tables
+            
+            pocMessage_dev=num(rd_open_chans$[1]);dim pocMessage$:rd_open_tpls$[1]
+
+            rem --- Create and open poc_message in target directory
+            table_alias$="POC_MESSAGE",new_datafile$="poc_message",file_id$=new_datafile$
+            erase destin_folder$+"/"+cvs(new_datafile$,version_cvs),err=*next
+            gosub check_for_definition
+            pocMessage_trgt=new_file
+
+            rem --- Open pom-04 and pom-14 source files
+            pom04_dev=unt
+            open (pom04_dev)source_folder$+"/pom-04"
+            lock (pom04_dev)
+            pom14_dev=unt
+            open (pom14_dev)source_folder$+"/pom-14"
+            lock (pom14_dev)
+
+            rem --- Build v17.10 poc_message file pom-04 and pom-14 files
+            dim pom04_rec$(28),pom14_rec$(47)
+            read(pom04_dev,key="",dom=*next)
+            while 1
+                pom04_key$=key(pom04_dev,end=*break)
+                readrecord(pom04_dev)pom04_rec$(1)
+                memo$=""
+                read(pom14_dev,key=pom04_key$,dom=*next)
+                while 1
+                    readrecord(pom14_dev,end=*break)pom14_rec$(1)
+                    if pos(pom14_rec$(1,5)=pom04_key$)<>1 then break
+                    memo$=memo$+cvs(pom14_rec$(8),2)+$0A$
+                wend
+                redim pocMessage$
+                pocMessage.firm_id$=pom04_rec$(1,2)
+                pocMessage.po_msg_code$=pom04_rec$(3,3)
+                pocMessage.code_desc$=pom04_rec$(6,20)
+                pocMessage.message_type$=pom04_rec$(26,1)
+                pocMessage.code_inactive$=pom04_rec$(28,1)
+                pocMessage.memo_1024$=memo$
+                writerecord(pocMessage_trgt)pocMessage$
+            wend
+
+            unlock (pom04_dev)
+            unlock (pom14_dev)
+            pocMessage_done=1
+        endif
+        goto next_file
+    endif
+
     gosub get_new_template
     rd_gen_table_tpl$=""
     data_seq_str$=""
