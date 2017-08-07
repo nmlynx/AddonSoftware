@@ -145,10 +145,10 @@ rem --- Start progress meter
     meter_action$="WIN-LST"
     gosub disp_meter
 
-rem --- Initialize OPT_INVDET new MEMO_1024 field
+rem --- Initialize POE_ORDHDR new MEMO_1024 field
 
     rem --- Increment progress meter
-    meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" "+"OPT_INVDET.MEMO_1024"
+    meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" "+"POE_ORDHDR.MEMO_1024"
     meter_proc_recs=meter_proc_recs+1
     meter_action$="MTR-LST"
     gosub disp_meter
