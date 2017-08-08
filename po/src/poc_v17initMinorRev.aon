@@ -43,41 +43,39 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    num_files=12
+    num_files=11
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="DDM_SYSTEMS",      open_opts$[1]="OTA"
     open_tables$[2]="POC_MESSAGE",      open_opts$[2]="OTA"
     open_tables$[3]="POE_INVDET",       open_opts$[3]="OTA"
-    open_tables$[4]="POE_ORDHDR",       open_opts$[4]="OTA"
-    open_tables$[5]="POE_PODET",        open_opts$[5]="OTA"
-    open_tables$[6]="POE_QADET",        open_opts$[6]="OTA"
-    open_tables$[7]="POE_RECDET",       open_opts$[7]="OTA"
-    open_tables$[8]="POE_REQDET",       open_opts$[8]="OTA"
-    open_tables$[9]="POT_INVDET",       open_opts$[9]="OTA"
-    open_tables$[10]="POT_RECDET",      open_opts$[10]="OTA"
-    open_tables$[11]="POC_MSGCODE",     open_opts$[11]="OTAS"
-    open_tables$[12]="POC_MSGLINE",     open_opts$[12]="OTAS"
+    open_tables$[4]="POE_PODET",        open_opts$[4]="OTA"
+    open_tables$[5]="POE_QADET",        open_opts$[5]="OTA"
+    open_tables$[6]="POE_RECDET",       open_opts$[6]="OTA"
+    open_tables$[7]="POE_REQDET",       open_opts$[7]="OTA"
+    open_tables$[8]="POT_INVDET",       open_opts$[8]="OTA"
+    open_tables$[9]="POT_RECDET",       open_opts$[9]="OTA"
+    open_tables$[10]="POC_MSGCODE",     open_opts$[10]="OTAS"
+    open_tables$[11]="POC_MSGLINE",     open_opts$[11]="OTAS"
 
     gosub open_tables
 
     ddm_systems=num(open_chans$[1]);    dim ddm_systems$:open_tpls$[1]
     pocMessage_dev=num(open_chans$[2]); dim pocMessage$:open_tpls$[2]
     poeInvDet_dev=num(open_chans$[3]);  dim poeInvDet$:open_tpls$[3]
-    poeOrdHdr_dev=num(open_chans$[4]);  dim poeOrdHdr$:open_tpls$[4]
-    poePODet_dev=num(open_chans$[5]);   dim poePODet$:open_tpls$[5]
-    poeQADet_dev=num(open_chans$[6]);   dim poeQADet$:open_tpls$[6]
-    poeRecDet_dev=num(open_chans$[7]);  dim poeRecDet$:open_tpls$[7]
-    poeReqDet_dev=num(open_chans$[8]);  dim poeReqDet$:open_tpls$[8]
-    potInvDet_dev=num(open_chans$[9]);  dim potInvDet$:open_tpls$[9]
-    potRecDet_dev=num(open_chans$[10]); dim potRecDet$:open_tpls$[10]
+    poePODet_dev=num(open_chans$[4]);   dim poePODet$:open_tpls$[4]
+    poeQADet_dev=num(open_chans$[5]);   dim poeQADet$:open_tpls$[5]
+    poeRecDet_dev=num(open_chans$[6]);  dim poeRecDet$:open_tpls$[6]
+    poeReqDet_dev=num(open_chans$[7]);  dim poeReqDet$:open_tpls$[7]
+    potInvDet_dev=num(open_chans$[8]);  dim potInvDet$:open_tpls$[8]
+    potRecDet_dev=num(open_chans$[9]);  dim potRecDet$:open_tpls$[9]
 
 rem --- Table definitions for POC_MSGCODE and POC_MSGLINE may be deleted in v19 (see Addon Bug 9127). So they may not
 rem --- exist when upgrading from before v17 to after v18 and adc_v1700conversion.aon executes poc_v17initMinorRev.aon.
 
-    pocMsgCode_dev=num(open_chans$[11])
-    if pocMsgCode_dev dim pocMsgCode$:open_tpls$[11]
-    pocMsgLine_dev=num(open_chans$[12])
-    if pocMsgLine_dev dim pocMsgLine$:open_tpls$[12]
+    pocMsgCode_dev=num(open_chans$[10])
+    if pocMsgCode_dev dim pocMsgCode$:open_tpls$[10]
+    pocMsgLine_dev=num(open_chans$[11])
+    if pocMsgLine_dev dim pocMsgLine$:open_tpls$[11]
     
 rem --- Open log file in aon/logs directory
     
@@ -154,26 +152,6 @@ rem --- Initialize POE_ORDHDR new MEMO_1024 field
     gosub disp_meter
     print(log_dev)
     print(log_dev)meter_text$
-
-    rem --- Populate POE_ORDHDR new MEMO_1024 field with old REP_COMMENTS field
-    currentFirm$=""
-    read(poeOrdHdr_dev,key=theFirm$,dom=*next)
-    while 1
-        poeOrdHdr_key$=key(poeOrdHdr_dev,end=*break)
-        if cvs(theFirm$,2)<>"" and pos(theFirm$=poeOrdHdr_key$)<>1 then break
-        extractrecord(poeOrdHdr_dev)poeOrdHdr$; rem Advisory Locking
-        if poeOrdHdr.firm_id$<>currentFirm$ then
-            rem --- Log next firm processed
-            print(log_dev)"    POE_ORDHDR.FIRM_ID = "+poeOrdHdr.firm_id$
-            currentFirm$=poeOrdHdr.firm_id$
-        endif
-        if cvs(poeOrdHdr.order_memo$,2)<>"" and cvs(poeOrdHdr.memo_1024$,2)="" then
-            poeOrdHdr.memo_1024$=cvs(poeOrdHdr.order_memo$,2)
-            writerecord(poeOrdHdr_dev)poeOrdHdr$
-        else
-            read(poeOrdHdr_dev)
-        endif
-    wend
 
 rem --- Initialize new MEMO_1024 field in selected files
 
