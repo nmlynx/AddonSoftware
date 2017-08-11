@@ -17,7 +17,7 @@ rem --- if on a memo line or using ctrl-C or Comments button, code in the commen
 		order_memo$=disp_text$
 		order_memo$=order_memo$(1,min(memo_len,(pos($0A$=order_memo$+$0A$)-1)))
 
-		callpoint!.setColumnData("POE_REQDET.MEMO_1024",disp_text$)
+		callpoint!.setColumnData("POE_REQDET.MEMO_1024",disp_text$,1)
 		callpoint!.setColumnData("POE_REQDET.ORDER_MEMO",order_memo$,1)
 
 		callpoint!.setStatus("MODIFIED")
@@ -573,7 +573,8 @@ if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))="Y" or cvs
 			dim ivm_itemvend$:fnget_tpl$("IVM_ITEMVEND")
 			vendor_id$=callpoint!.getHeaderColumnData("POE_REQHDR.VENDOR_ID")
 			read record(ivm_itemvend_dev,key=firm_id$+vendor_id$+prev_row_item_id$,dom=*next)ivm_itemvend$
-			callpoint!.setColumnData("POE_REQDET.ORDER_MEMO",ivm_itemvend.vendor_item$)
+			callpoint!.setColumnData("POE_REQDET.ORDER_MEMO",ivm_itemvend.vendor_item$,1)
+			callpoint!.setColumnData("POE_REQDET.MEMO_1024",ivm_itemvend.vendor_item$,1)
 		endif
 	endif
 endif
@@ -609,7 +610,7 @@ status=0
 
 call stbl("+DIR_PGM")+"poc_itemvend.aon","R","R",vendor_id$,ord_date$,item_id$,conv_factor,unit_cost,req_qty,callpoint!.getDevObject("iv_prec"),status
 
-callpoint!.setColumnData("POE_REQDET.UNIT_COST",str(unit_cost))
+callpoint!.setColumnData("POE_REQDET.UNIT_COST",str(unit_cost),1)
 
 gosub update_header_tots
 callpoint!.setDevObject("qty_this_row",num(callpoint!.getUserInput()))
@@ -994,7 +995,7 @@ rem ==========================================================================
 		order_memo$=disp_text$
 		order_memo$=order_memo$(1,min(memo_len,(pos($0A$=order_memo$+$0A$)-1)))
 
-		callpoint!.setColumnData("POE_REQDET.MEMO_1024",disp_text$)
+		callpoint!.setColumnData("POE_REQDET.MEMO_1024",disp_text$,1)
 		callpoint!.setColumnData("POE_REQDET.ORDER_MEMO",order_memo$,1)
 
 		callpoint!.setStatus("MODIFIED")
