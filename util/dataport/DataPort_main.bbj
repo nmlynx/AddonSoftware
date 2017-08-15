@@ -436,21 +436,27 @@ if !convCtrlIniFile!.exists() then
     goto done
 endif
 
-rd_meter_data$="Processing files . . ."
-rd_meter_total_recs=iff(vectPort!=null(),0,vectPort!.size())
-rd_meter_action$="LST"
-gosub disp_meter
-
 rem --- Read the v6/v7 data directory
 old_dir=unt
 open (old_dir)source_folder$
+if vectPort! = null() then
+    vectPort!=BBjAPI().makeVector()
+    while 1
+        readrecord (old_dir,end=*break)datafile$
+        vectPort!.addItem(datafile$)
+    wend
+endif
+
+rem --- The order files are ported in can be important (see ivm-01 and ivm-09 for v18). Sort vectPort! to get consistent ordering.
+java.util.Collections.sort(vectPort!)
+
+rd_meter_data$="Processing files . . ."
+rd_meter_total_recs=vectPort!.size()
+rd_meter_action$="LST"
+gosub disp_meter
 
 next_file:
-    if vectPort! = null() then
-       readrecord (old_dir,end=end_read_loop)datafile$
-    else
-       datafile$ = str(vectPort!.removeItem(0),err=end_read_loop)
-    endif
+   datafile$ = str(vectPort!.removeItem(0),err=end_read_loop)
 
     datafile$=cvs(datafile$,version_cvs)
     rd_meter_data$="   "+datafile$
@@ -519,6 +525,12 @@ next_file:
     rem --- Initialize and update glm-06 and adm-09/19/39
     if cvs(datafile$,8)="glm-06" then
         gosub init_update_glm06
+        goto next_file
+    endif
+
+    rem --- Build IVM_ITEMMAST.MEMO_1024 (ivm-01) from ivm-09 (IVM_ITEMCMTS) Item Comments
+    if cvs(datafile$,8)="ivm-09" then
+        gosub init_ivm01_memo1024
         goto next_file
     endif
 
@@ -653,24 +665,23 @@ next_ddm03:
 
             rem --- Open v7 opm-04 and opm-14 source files
             opm04_dev=unt
-            open (opm04_dev)source_folder$+"/opm-04"
+            open (opm04_dev)source_folder$+"/"+cvs("opm-04",version_cvs)
             lock (opm04_dev)
             opm14_dev=unt
-            open (opm14_dev)source_folder$+"/opm-14"
+            open (opm14_dev)source_folder$+"/"+cvs("opm-14",version_cvs)
             lock (opm14_dev)
 
             rem --- Build v17.10 opc_message file from v7 opm-04 and opm-14 files
-            dim opm04_rec$(36),opm14_rec$(46)
             read(opm04_dev,key="",dom=*next)
             while 1
                 opm04_key$=key(opm04_dev,end=*break)
-                readrecord(opm04_dev)opm04_rec$(1)
+                readrecord(opm04_dev)opm04_rec$
                 memo$=""
                 read(opm14_dev,key=opm04_key$,dom=*next)
                 while 1
                     readrecord(opm14_dev,end=*break)opm14_rec$(1)
                     if pos(opm14_rec$(1,4)=opm04_key$)<>1 then break
-                    memo$=memo$+cvs(opm14_rec$(7),2)+$0A$
+                    memo$=memo$+cvs(opm14_rec$(8),2); rem --- opm14_rec$ record already includes ending $0A$ separator
                 wend
                 redim opcMessage$
                 opcMessage.firm_id$=opm04_rec$(1,2)
@@ -681,8 +692,10 @@ next_ddm03:
                 writerecord(opcMessage_trgt)opcMessage$
             wend
 
-            unlock (opm04_dev)
-            unlock (opm14_dev)
+            unlock (opm04_dev,err=*next)
+            close (opm04_dev,err=*next)
+            unlock (opm14_dev,err=*next)
+            close (opm14_dev,err=*next)
             opcMessage_done=1
         endif
         goto next_file
@@ -711,37 +724,38 @@ next_ddm03:
 
             rem --- Open pom-04 and pom-14 source files
             pom04_dev=unt
-            open (pom04_dev)source_folder$+"/pom-04"
+            open (pom04_dev)source_folder$+"/"+cvs("pom-04",version_cvs)
             lock (pom04_dev)
             pom14_dev=unt
-            open (pom14_dev)source_folder$+"/pom-14"
+            open (pom14_dev)source_folder$+"/"+cvs("pom-14",version_cvs)
             lock (pom14_dev)
 
             rem --- Build v17.10 poc_message file pom-04 and pom-14 files
-            dim pom04_rec$(28),pom14_rec$(47)
             read(pom04_dev,key="",dom=*next)
             while 1
                 pom04_key$=key(pom04_dev,end=*break)
-                readrecord(pom04_dev)pom04_rec$(1)
+                readrecord(pom04_dev)pom04_rec$
                 memo$=""
                 read(pom14_dev,key=pom04_key$,dom=*next)
                 while 1
-                    readrecord(pom14_dev,end=*break)pom14_rec$(1)
+                    readrecord(pom14_dev,end=*break)pom14_rec$
                     if pos(pom14_rec$(1,5)=pom04_key$)<>1 then break
-                    memo$=memo$+cvs(pom14_rec$(8),2)+$0A$
+                    memo$=memo$+cvs(pom14_rec$(9),2); rem --- pom14_rec$ record already includes ending $0A$ separator
                 wend
                 redim pocMessage$
                 pocMessage.firm_id$=pom04_rec$(1,2)
                 pocMessage.po_msg_code$=pom04_rec$(3,3)
                 pocMessage.code_desc$=pom04_rec$(6,20)
                 pocMessage.message_type$=pom04_rec$(26,1)
-                pocMessage.code_inactive$=pom04_rec$(28,1)
+                pocMessage.code_inactive$=pom04_rec$(29,1)
                 pocMessage.memo_1024$=memo$
                 writerecord(pocMessage_trgt)pocMessage$
             wend
 
-            unlock (pom04_dev)
-            unlock (pom14_dev)
+            unlock (pom04_dev,err=*next)
+            close (pom04_dev,err=*next)
+            unlock (pom14_dev,err=*next)
+            close (pom14_dev,err=*next)
             pocMessage_done=1
         endif
         goto next_file
@@ -1481,7 +1495,7 @@ rem --- Now go populate masks and sequences as needed
     
     if temp_vend_ok$="N"
         rd_meter_data$="Temporary vendor records found not ported. See error file."
-        rd_meter_total_recs=iff(vectPort!=null(),0,vectPort!.size())
+        rd_meter_total_recs=vectPort!.size()
         rd_meter_action$="LST"
         gosub disp_meter
         print "   Temporary vendor records found. See err file"
@@ -1492,7 +1506,7 @@ rem --- Now go populate masks and sequences as needed
 
     if len(blank_fields$)>0
         rd_meter_data$="Blank values for elements in primary keys exist. See error file for details."
-        rd_meter_total_recs=iff(vectPort!=null(),0,vectPort!.size())
+        rd_meter_total_recs=vectPort!.size()
         rd_meter_action$="LST"
         gosub disp_meter        
         print "   Blank values for elements in primary keys exist. See error file for details."
@@ -1505,7 +1519,7 @@ rem --- Now go populate masks and sequences as needed
 
     if dupe_rec$="Y" 
         rd_meter_data$="Duplicate keys exist in the ported data. See error file for details."
-        rd_meter_total_recs=iff(vectPort!=null(),0,vectPort!.size())
+        rd_meter_total_recs=vectPort!.size()
         rd_meter_action$="LST"
         gosub disp_meter        
         print "   Duplicate keys exist in the ported data. See error file for details."
@@ -1513,7 +1527,7 @@ rem --- Now go populate masks and sequences as needed
 
     if invalid_date$="Y" 
         rd_meter_data$="Invalid dates exist in the ported data. See error file for details."
-        rd_meter_total_recs=iff(vectPort!=null(),0,vectPort!.size())
+        rd_meter_total_recs=vectPort!.size()
         rd_meter_action$="LST"
         gosub disp_meter        
         print "   Invalid dates exist in the ported data. See error file for details."
@@ -2339,7 +2353,7 @@ return
     hdr_open_err:
     
     rd_meter_data$="PO header file" + po_hdr_file$ + "not found in destination directory. Dropship info not converted."
-    rd_meter_total_recs=iff(vectPort!=null(),0,vectPort!.size())
+    rd_meter_total_recs=vectPort!.size()
     rd_meter_action$="LST"
     gosub disp_meter
     print (err_dev)"Processing PO detail file " + new_datafile$ + ", record: " + old_rec$+"."+$0a$+"Cannot convert dropship fields because corresponding PO header file not found."
@@ -2349,7 +2363,7 @@ return
     addr_open_err:
     
     rd_meter_data$="File" + addr_file$ + "not found in destination directory. Dropship address not converted."
-    rd_meter_total_recs=iff(vectPort!=null(),0,vectPort!.size())
+    rd_meter_total_recs=vectPort!.size()
     rd_meter_action$="LST"
     gosub disp_meter
     print (err_dev)"Processing PO detail file " + new_datafile$ + ", record: " + old_rec$+"."+$0a$+"Cannot insert dropship address in header file because file "+addr_file$+" not found."
@@ -3170,6 +3184,73 @@ init_update_glm06: rem --- Initialize and update glm-06 and adm-09/19/39
     if port_sym09 then close(sym09_src)
     if port_sym19 then close(sym19_src)
     if port_sym39 then close(sym39_src)
+    return
+
+init_ivm01_memo1024: rem --- Build IVM_ITEMMAST.MEMO_1024 (ivm-01) from ivm-09 (IVM_ITEMCMTS) Item Comments
+
+    rem --- Get current record template for IVM_ITEMMAST
+    num_files=1
+    dim rd_open_tables$[1:num_files],rd_open_opts$[1:num_files],rd_open_chans$[1:num_files],rd_open_tpls$[1:num_files]
+    rd_open_tables$[1]="IVM_ITEMMAST",rd_open_opts$[1]="T"
+    
+    gosub open_tables
+    
+    dim ivmItemMast$:rd_open_tpls$[1]
+
+    rem --- Open destination ivm-01 (IVM_ITEMMAST) that has already been ported
+    ivmItemMast_found=0
+    ivmItemMast_dev=unt
+    open (ivmItemMast_dev,err=*next)destin_folder$+"/ivm-01"; ivmItemMast_found=1
+    if ivmItemMast_found then
+        print "   Building IVM_ITEMMAST (ivm-01) MEMO_1024 field  "+cvs("ivm-09",version_cvs)+" (IVM_ITEMCMTS) table"
+        print(log_dev)"   Building IVM_ITEMMAST (ivm-01) MEMO_1024 field from "+cvs("ivm-09",version_cvs)+" (IVM_ITEMCMTS) table"
+
+        rem --- Open and lock source ivm-09 (IVM_ITEMCMTS)
+        ivm09_dev=unt
+        open (ivm09_dev)source_folder$+"/"+cvs("ivm-09",version_cvs)
+        lock (ivm09_dev)
+
+        rem --- Build new IVM_ITEMMAST.MEMO_1024 field from ivm-09 (IVM_ITEMCMTS) table
+        currentFirm$=""
+        currentItem$=""
+        memo$=""
+        read(ivm09_dev,key="",dom=*next)
+        while 1
+            ivm09_key$=key(ivm09_dev,end=*break)
+            readrecord(ivm09_dev)ivm09_rec$
+            if ivm09_rec$(1,22)<>currentFirm$+currentItem$ then
+                record_found=0
+                readrecord(ivmItemMast_dev,key=currentFirm$+currentItem$,dom=*next)ivmItemMast$; record_found=1
+                if record_found then
+                    ivmItemMast.memo_1024$=memo$
+                    writerecord(ivmItemMast_dev)ivmItemMast$
+                endif
+                memo$=""
+                currentItem$=ivm09_rec$(3,20)
+                if ivm09_rec$(1,2)<>currentFirm$ then
+                    currentFirm$=ivm09_rec$(1,2)
+                endif
+            endif
+            memo$=memo$+cvs(ivm09_rec$(26),2); rem --- ivm09_rec$ record already includes ending $0A$ separator
+        wend
+        record_found=0
+        readrecord(ivmItemMast_dev,key=currentFirm$+currentItem$,dom=*next)ivmItemMast$; record_found=1
+        if record_found then
+            ivmItemMast.memo_1024$=memo$
+            writerecord(ivmItemMast_dev)ivmItemMast$
+        endif
+        
+        close (ivmItemMast_dev,err=*next)
+        unlock (ivm09_dev,err=*next)
+        close (ivm09_dev,err=*next)
+    else
+        rd_meter_data$="Inventory Item Master file ivm-01 not found in destination directory. Item Comments ("+cvs("ivm-09",version_cvs)+") could not be ported."
+        rd_meter_total_recs=vectPort!.size()
+        rd_meter_action$="LST"
+        gosub disp_meter
+        print (err_dev)"Inventory Item Master file ivm-01 not found in destination directory."+$0a$+"Item Comments ("+cvs("ivm-09",version_cvs)+") could not be ported."
+    endif
+
     return
 
 split_header_detail_recs: rem --- Split old header/detail files into separate files
