@@ -9,7 +9,7 @@ rem --- if on a memo line or using ctrl-C or Comments button, code in the commen
 		order_memo$=disp_text$
 		order_memo$=order_memo$(1,min(memo_len,(pos($0A$=order_memo$+$0A$)-1)))
 
-		callpoint!.setColumnData("POE_PODET.MEMO_1024",disp_text$)
+		callpoint!.setColumnData("POE_PODET.MEMO_1024",disp_text$,1)
 		callpoint!.setColumnData("POE_PODET.ORDER_MEMO",order_memo$,1)
 
 		callpoint!.setStatus("MODIFIED")
@@ -811,7 +811,8 @@ if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))="Y" or cvs
 			dim ivm_itemvend$:fnget_tpl$("IVM_ITEMVEND")
 			vendor_id$=callpoint!.getHeaderColumnData("POE_POHDR.VENDOR_ID")
 			read record(ivm_itemvend_dev,key=firm_id$+vendor_id$+prev_row_item_id$,dom=*next)ivm_itemvend$
-			callpoint!.setColumnData("POE_PODET.ORDER_MEMO",ivm_itemvend.vendor_item$)
+			callpoint!.setColumnData("POE_PODET.ORDER_MEMO",ivm_itemvend.vendor_item$,1)
+			callpoint!.setColumnData("POE_PODET.MEMO_1024",ivm_itemvend.vendor_item$,1)
 		endif
 	endif
 endif
@@ -1264,7 +1265,7 @@ rem ==========================================================================
 		order_memo$=disp_text$
 		order_memo$=order_memo$(1,min(memo_len,(pos($0A$=order_memo$+$0A$)-1)))
 
-		callpoint!.setColumnData("POE_PODET.MEMO_1024",disp_text$)
+		callpoint!.setColumnData("POE_PODET.MEMO_1024",disp_text$,1)
 		callpoint!.setColumnData("POE_PODET.ORDER_MEMO",order_memo$,1)
 
 		callpoint!.setStatus("MODIFIED")
@@ -1273,4 +1274,3 @@ rem ==========================================================================
 	callpoint!.setStatus("ACTIVATE")
 
 	return
-
