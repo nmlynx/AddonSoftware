@@ -1290,7 +1290,7 @@ rem --- Retain Order is No
 	prntlist_key$=prntlist_rec.firm_id$+prntlist_rec.ordinv_flag$+prntlist_rec.ar_type$+prntlist_rec.customer_id$+prntlist_rec.order_no$
 	remove(prntlist_dev,key=prntlist_key$,dom=*next)
 
-	callpoint!.setStatus("SAVE-NEWREC-REFRESH")
+	callpoint!.setStatus("SAVE")
 
 rem --- Remove committments for detail records by calling ATAMO
 
