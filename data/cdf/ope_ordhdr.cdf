@@ -1176,7 +1176,7 @@ rem --- Restrict lookup to open orders and open invoices
 	if selected_keys$<>"" then 
 		call stbl("+DIR_SYP")+"bac_key_template.bbj","OPT_INVHDR","AO_STATUS",key_tpl$,table_chans$[all],status$
 		dim ao_status_key$:key_tpl$
-		callpoint!.setStatus("RECORD:[" + selected_keys$(1,len(ao_status_key$)) +"]")
+		callpoint!.setStatus("SAVE-RECORD:[" + selected_keys$(1,len(ao_status_key$)) +"]")
 	else
 		callpoint!.setStatus("ABORT")
 	endif
