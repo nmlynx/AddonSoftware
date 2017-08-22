@@ -521,6 +521,12 @@ next_file:
         seq_no_files!.put(cvs(datafile$,8),"y")
         do_sequence_numbers=1
     endif
+
+    rem --- Build APM_VENDMAST.MEMO_1024 (apm-01) from apm-09 (APM_VENDCMTS) Vendor Comments
+    if cvs(datafile$,8)="apm-09" then
+        gosub init_apm01_memo1024
+        goto next_file
+    endif
     
     rem --- Initialize and update glm-06 and adm-09/19/39
     if cvs(datafile$,8)="glm-06" then
@@ -681,7 +687,7 @@ next_ddm03:
                 while 1
                     readrecord(opm14_dev,end=*break)opm14_rec$(1)
                     if pos(opm14_rec$(1,4)=opm04_key$)<>1 then break
-                    memo$=memo$+cvs(opm14_rec$(8),2); rem --- opm14_rec$ record already includes ending $0A$ separator
+                    memo$=memo$+cvs(opm14_rec$(8,40),2)+$0A$; rem --- must trim all trailing $00$ from record
                 wend
                 redim opcMessage$
                 opcMessage.firm_id$=opm04_rec$(1,2)
@@ -689,6 +695,7 @@ next_ddm03:
                 opcMessage.code_desc$=opm04_rec$(5,20)
                 opcMessage.code_inactive$=""
                 opcMessage.memo_1024$=memo$
+                opcMessage$=field(opcMessage$)
                 writerecord(opcMessage_trgt)opcMessage$
             wend
 
@@ -740,7 +747,7 @@ next_ddm03:
                 while 1
                     readrecord(pom14_dev,end=*break)pom14_rec$
                     if pos(pom14_rec$(1,5)=pom04_key$)<>1 then break
-                    memo$=memo$+cvs(pom14_rec$(9),2); rem --- pom14_rec$ record already includes ending $0A$ separator
+                    memo$=memo$+cvs(pom14_rec$(9,40),2)+$0A$; rem --- must trim all trailing $00$ from record
                 wend
                 redim pocMessage$
                 pocMessage.firm_id$=pom04_rec$(1,2)
@@ -749,6 +756,7 @@ next_ddm03:
                 pocMessage.message_type$=pom04_rec$(26,1)
                 pocMessage.code_inactive$=pom04_rec$(29,1)
                 pocMessage.memo_1024$=memo$
+                pocMessage$=field(pocMessage$)
                 writerecord(pocMessage_trgt)pocMessage$
             wend
 
@@ -2237,7 +2245,7 @@ init_params_post_gl: rem --- Initialize *s_params.post_to_gl with SYM-04's post_
             key$=key(param_dev,end=*break)
             readrecord(param_dev)param$
             param.post_to_gl$=r1$(46,1)
-            param$=field(param$)
+            param$=field(param$)         
             writerecord(param_dev,key=key$)param$
             endif
         wend
@@ -2687,6 +2695,7 @@ init_glm08: rem --- Initialize glm-08 (GLM_BUDGETMASTER.REVISION_SRC)
         if pos(old_rev_src$="1;3;5") then
             new_rec.revision_src$=old_rev_src$+"B"+new_rec.amt_or_units$
         endif
+        new_rec$=field(new_rec$)         
         writerecord(glm08_dev)new_rec$
     wend
 
@@ -2700,6 +2709,7 @@ init_glm08: rem --- Initialize glm-08 (GLM_BUDGETMASTER.REVISION_SRC)
         gosub get_revision_src
         
         if pos(next_rec.revision_src$(1,1)="0;1;2;3;4;5") then new_rec.revision_src$=next_rec.revision_src$
+        new_rec$=field(new_rec$)         
         writerecord(glm08_dev)new_rec$
     wend
 
@@ -3186,6 +3196,75 @@ init_update_glm06: rem --- Initialize and update glm-06 and adm-09/19/39
     if port_sym39 then close(sym39_src)
     return
 
+init_apm01_memo1024: rem --- Build APM_VENDMAST.MEMO_1024 (apm-01) from apm-09 (APM_VENDCMTS) Vendor Comments
+
+    rem --- Get current record template for APM_VENDMAST
+    num_files=1
+    dim rd_open_tables$[1:num_files],rd_open_opts$[1:num_files],rd_open_chans$[1:num_files],rd_open_tpls$[1:num_files]
+    rd_open_tables$[1]="APM_VENDMAST",rd_open_opts$[1]="T"
+    
+    gosub open_tables
+    
+    dim apmVendMast$:rd_open_tpls$[1]
+
+    rem --- Open destination apm-01 (APM_VENDMAST) that has already been ported
+    apmVendMast_found=0
+    apmVendMast_dev=unt
+    open (apmVendMast_dev,err=*next)destin_folder$+"/apm-01"; apmVendMast_found=1
+    if apmVendMast_found then
+        print "   Building APM_VENDMAST (apm-01) MEMO_1024 field from "+cvs("apm-09",version_cvs)+" (APM_VENDCMTS) table"
+        print(log_dev)"   Building APM_VENDMAST (apm-01) MEMO_1024 field from "+cvs("apm-09",version_cvs)+" (APM_VENDCMTS) table"
+
+        rem --- Open and lock source apm-09 (APM_VENDCMTS)
+        apm09_dev=unt
+        open (apm09_dev)source_folder$+"/"+cvs("apm-09",version_cvs)
+        lock (apm09_dev)
+
+        rem --- Build new APM_VENDMAST.MEMO_1024 field from apm-09 (APM_VEMDCMTS) table
+        currentFirm$=""
+        currentVendor$=""
+        memo$=""
+        read(apm09_dev,key="",dom=*next)
+        while 1
+            apm09_key$=key(apm09_dev,end=*break)
+            readrecord(apm09_dev)apm09_rec$
+            if apm09_rec$(1,8)<>currentFirm$+currentVendor$ then
+                record_found=0
+                readrecord(apmVendMast_dev,key=currentFirm$+currentVendor$,dom=*next)apmVendMast$; record_found=1
+                if record_found then
+                    apmVendMast.memo_1024$=memo$
+                    apmVendMast$=field(apmVendMast$)
+                    writerecord(apmVendMast_dev)apmVendMast$
+                endif
+                memo$=""
+                currentVendor$=apm09_rec$(3,6)
+                if apm09_rec$(1,2)<>currentFirm$ then
+                    currentFirm$=apm09_rec$(1,2)
+                endif
+            endif
+            memo$=memo$+cvs(apm09_rec$(12,48),2)+$0A$; rem --- must trim all trailing $00$ from record
+        wend
+        record_found=0
+        readrecord(apmVendMast_dev,key=currentFirm$+currentVendor$,dom=*next)apvmVendMast$; record_found=1
+        if record_found then
+            apmVendMast.memo_1024$=memo$
+            apmVendMast$=field(apmVendMast$)
+            writerecord(apmVendMast_dev)apmVendMast$
+        endif
+        
+        close (apmVendMast_dev,err=*next)
+        unlock (apm09_dev,err=*next)
+        close (apm09_dev,err=*next)
+    else
+        rd_meter_data$="Vendor Master file apm-01 not found in destination directory. Vendor Comments ("+cvs("apm-09",version_cvs)+") could not be ported."
+        rd_meter_total_recs=vectPort!.size()
+        rd_meter_action$="LST"
+        gosub disp_meter
+        print (err_dev)"Vendor Master file apm-01 not found in destination directory."+$0a$+"Vendor Comments ("+cvs("apm-09",version_cvs)+") could not be ported."
+    endif
+
+    return
+
 init_ivm01_memo1024: rem --- Build IVM_ITEMMAST.MEMO_1024 (ivm-01) from ivm-09 (IVM_ITEMCMTS) Item Comments
 
     rem --- Get current record template for IVM_ITEMMAST
@@ -3202,7 +3281,7 @@ init_ivm01_memo1024: rem --- Build IVM_ITEMMAST.MEMO_1024 (ivm-01) from ivm-09 (
     ivmItemMast_dev=unt
     open (ivmItemMast_dev,err=*next)destin_folder$+"/ivm-01"; ivmItemMast_found=1
     if ivmItemMast_found then
-        print "   Building IVM_ITEMMAST (ivm-01) MEMO_1024 field  "+cvs("ivm-09",version_cvs)+" (IVM_ITEMCMTS) table"
+        print "   Building IVM_ITEMMAST (ivm-01) MEMO_1024 field from "+cvs("ivm-09",version_cvs)+" (IVM_ITEMCMTS) table"
         print(log_dev)"   Building IVM_ITEMMAST (ivm-01) MEMO_1024 field from "+cvs("ivm-09",version_cvs)+" (IVM_ITEMCMTS) table"
 
         rem --- Open and lock source ivm-09 (IVM_ITEMCMTS)
@@ -3223,6 +3302,7 @@ init_ivm01_memo1024: rem --- Build IVM_ITEMMAST.MEMO_1024 (ivm-01) from ivm-09 (
                 readrecord(ivmItemMast_dev,key=currentFirm$+currentItem$,dom=*next)ivmItemMast$; record_found=1
                 if record_found then
                     ivmItemMast.memo_1024$=memo$
+                    ivmItemMast$=field(ivmItemMast$)         
                     writerecord(ivmItemMast_dev)ivmItemMast$
                 endif
                 memo$=""
@@ -3231,12 +3311,13 @@ init_ivm01_memo1024: rem --- Build IVM_ITEMMAST.MEMO_1024 (ivm-01) from ivm-09 (
                     currentFirm$=ivm09_rec$(1,2)
                 endif
             endif
-            memo$=memo$+cvs(ivm09_rec$(26),2); rem --- ivm09_rec$ record already includes ending $0A$ separator
+            memo$=memo$+cvs(ivm09_rec$(26,48),2)+$0A$; rem --- must trim all trailing $00$ from record
         wend
         record_found=0
         readrecord(ivmItemMast_dev,key=currentFirm$+currentItem$,dom=*next)ivmItemMast$; record_found=1
         if record_found then
             ivmItemMast.memo_1024$=memo$
+            ivmItemMast$=field(ivmItemMast$)         
             writerecord(ivmItemMast_dev)ivmItemMast$
         endif
         
@@ -3268,6 +3349,7 @@ split_header_detail_recs: rem --- Split old header/detail files into separate fi
     split_ddm03.file_name$=cvs(split_temp_file$,version_cvs)
     split_ddm03.record_id$=split_record_id$
     split_ddm03.description$=split_temp_file_desc$
+    split_ddm03$=field(split_ddm03$)         
     writerecord(ddm03,key=split_ddm03.file_name$+split_ddm03.record_id$)split_ddm03$
 
     rem --- Copy ddm-04 records for datafile to ddm-04 records for the temporary file    
@@ -3278,6 +3360,7 @@ split_header_detail_recs: rem --- Split old header/detail files into separate fi
         if pos(datafile$+split_record_id$=ddm04_key$)<>1 then break
         readrecord(ddm04,key=ddm04_key$)split_ddm04$
         split_ddm04.file_name$=cvs(split_temp_file$,version_cvs)
+        split_ddm04$=field(split_ddm04$)         
         writerecord(ddm04,key=split_ddm04.file_name$+split_ddm04.record_id$+split_ddm04.layout_seq$)split_ddm04$
         
         rem --- Reset file pointer to get next ddm-04 record for datafile
