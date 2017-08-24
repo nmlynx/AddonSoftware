@@ -43,22 +43,26 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    num_files=3
+    num_files=5
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="DDM_SYSTEMS",      open_opts$[1]="OTA"
-    open_tables$[2]="IVM_ITEMMAST",     open_opts$[2]="OTA"
-    open_tables$[3]="IVM_ITEMCMTS",     open_opts$[3]="OTA"
+    open_tables$[2]="IVE_TRANSDET",     open_opts$[2]="OTA"
+    open_tables$[3]="IVM_LSMASTER",     open_opts$[3]="OTA"
+    open_tables$[4]="IVM_ITEMMAST",     open_opts$[4]="OTA"
+    open_tables$[5]="IVM_ITEMCMTS",     open_opts$[5]="OTA"
 
     gosub open_tables
 
     ddm_systems=num(open_chans$[1]);     dim ddm_systems$:open_tpls$[1]
-    ivmItemMast_dev=num(open_chans$[2]); dim ivmItemMast$:open_tpls$[2]
+    iveTransDet_dev=num(open_chans$[2]); dim iveTransDet$:open_tpls$[2]
+    ivmLSMaster_dev=num(open_chans$[3]); dim ivmLSMaster$:open_tpls$[3]
+    ivmItemMast_dev=num(open_chans$[4]); dim ivmItemMast$:open_tpls$[4]
 
 rem --- Table definition for IVM_ITEMCMTS (ivm-09) may be deleted in v19 (see Addon Bug 9127). So it may not
 rem --- exist when upgrading from before v17 to after v18, and adc_v1700conversion.aon executes ivc_v17initMinorRev.aon.
 
-    ivmItemCmts_dev=num(open_chans$[3])
-    if ivmItemCmts_dev dim ivmItemCmts$:open_tpls$[3]
+    ivmItemCmts_dev=num(open_chans$[5])
+    if ivmItemCmts_dev dim ivmItemCmts$:open_tpls$[5]
     
 rem --- Open log file in aon/logs directory
     
@@ -125,6 +129,57 @@ rem --- Start progress meter
     meter_text$=""
     meter_action$="WIN-LST"
     gosub disp_meter
+
+rem --- Initialize new MEMO_1024 field in selected files
+
+    rem --- Identify files to initialize MEMO_1024 in
+    selectedFiles!=new java.util.TreeMap()
+    
+    fileVec!=BBjAPI().makeVector()
+    fileVec!.addItem(iveTransDet_dev)
+    fileVec!.addItem(fattr(iveTransDet$))
+    selectedFiles!.put("IVE_TRANSDET",fileVec!)
+    
+    fileVec!=BBjAPI().makeVector()
+    fileVec!.addItem(ivmLSMaster_dev)
+    fileVec!.addItem(fattr(ivmLSMaster$))
+    selectedFiles!.put("IVM_LSMASTER",fileVec!)
+
+    filesIter!=selectedFiles!.keySet().iterator()
+    while filesIter!.hasNext()
+        thisFile$=filesIter!.next()
+        fileVec!=selectedFiles!.get(thisFile$)
+        thisChan=fileVec!.getItem(0)
+        dim thisTpl$:fileVec!.getItem(1)
+        currentFirm$=""
+
+        rem --- Increment progress meter
+        meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" "+thisFile$+".MEMO_1024"
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)
+        print(log_dev)meter_text$
+
+        rem --- Populate new MEMO_1024 field with old LS_COMMENTS field
+        read(thisChan,key=theFirm$,dom=*next)
+        while 1
+            this_key$=key(thisChan,end=*break)
+            if cvs(theFirm$,2)<>"" and pos(theFirm$=this_key$)<>1 then break
+            extractrecord(thisChan)thisTpl$; rem Advisory Locking
+            if thisTpl.firm_id$<>currentFirm$ then
+                rem --- Log next firm processed
+                print(log_dev)"    "+thisFile$+".FIRM_ID = "+thisTpl.firm_id$
+                currentFirm$=thisTpl.firm_id$
+            endif
+            if cvs(thisTpl.ls_comments$,2)<>"" and cvs(thisTpl.memo_1024$,2)="" then
+                thisTpl.memo_1024$=cvs(thisTpl.ls_comments$,2)
+                writerecord(thisChan)thisTpl$
+            else
+                read(thisChan)
+            endif
+        wend
+    wend
 
 rem --- Initialize IVM_ITEMMAST new MEMO_1024 field
 

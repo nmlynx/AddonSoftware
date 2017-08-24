@@ -143,16 +143,6 @@ rem --- Start progress meter
     meter_action$="WIN-LST"
     gosub disp_meter
 
-rem --- Initialize POE_ORDHDR new MEMO_1024 field
-
-    rem --- Increment progress meter
-    meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" "+"POE_ORDHDR.MEMO_1024"
-    meter_proc_recs=meter_proc_recs+1
-    meter_action$="MTR-LST"
-    gosub disp_meter
-    print(log_dev)
-    print(log_dev)meter_text$
-
 rem --- Initialize new MEMO_1024 field in selected files
 
     rem --- Identify files to initialize MEMO_1024 in
