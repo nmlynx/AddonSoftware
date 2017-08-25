@@ -1,3 +1,27 @@
+[[IVE_TRANSDET.MEMO_1024.AVAL]]
+rem --- Store first part of memo_1024 in ls_comments.
+rem --- This AVAL is hit if user navigates via arrows or clicks on the memo_1024 field, and double-clicks or ctrl-F to bring up editor.
+rem --- If use ls_comments field, or use ctrl-C or Comments button, code in the comment_entry: subroutine is hit instead.
+
+	disp_text$=callpoint!.getUserInput()
+	if disp_text$<>callpoint!.getColumnUndoData("IVE_TRANSDET.MEMO_1024")
+		ls_comments$=disp_text$(1,pos($0A$=disp_text$+$0A$)-1)
+		callpoint!.setColumnData("IVE_TRANSDET.MEMO_1024",disp_text$,1)
+		callpoint!.setColumnData("IVE_TRANSDET.LS_COMMENTS",ls_comments$,1)
+		callpoint!.setStatus("MODIFIED")
+	endif
+[[IVE_TRANSDET.LS_COMMENTS.BINP]]
+rem --- Invoke the comments dialog
+
+	gosub comment_entry
+[[IVE_TRANSDET.BDGX]]
+rem --- Disable detail-only buttons
+
+	callpoint!.setOptionEnabled("COMM",0)
+[[IVE_TRANSDET.AOPT-COMM]]
+rem --- Invoke the comments dialog
+
+	gosub comment_entry
 [[IVE_TRANSDET.GL_ACCOUNT.AVAL]]
 rem "GL INACTIVE FEATURE"
    glm01_dev=fnget_dev("GLM_ACCT")
@@ -28,13 +52,15 @@ rem --- Display defaults for this row
 
 	if user_tpl.multi_whse$ <> "Y" then
 		callpoint!.setTableColumnAttribute("IVE_TRANSDET.WAREHOUSE_ID","DFLT",user_tpl.warehouse_id$)
-		print "Set default warehouse"; rem debug
 	endif
 
 	if user_tpl.gl$ = "Y" and user_tpl.trans_post_gl$ = "Y" then
 		callpoint!.setTableColumnAttribute("IVE_TRANSDET.GL_ACCOUNT","DFLT",user_tpl.trans_adj_acct$)
-		print "Set default GL account"; rem debug
 	endif
+
+rem --- Enable detail-only buttons
+
+	callpoint!.setOptionEnabled("COMM",1)
 [[IVE_TRANSDET.ARAR]]
 rem --- Setup for whether to test at end of line
 
@@ -54,7 +80,11 @@ rem --- Set item/warehouse defaults
 
 rem --- Disable cost entry until we know it's legal
 
-	util.disableGridCell(Form!, 10); rem --- Cost
+	util.disableGridCell(Form!, 11); rem --- Cost
+
+rem --- Enable detail-only buttons
+
+	callpoint!.setOptionEnabled("COMM",1)
 [[IVE_TRANSDET.LOTSER_NO.AVAL]]
 print "in LOTSER_NO.AVAL"; rem debug
 
@@ -220,7 +250,7 @@ rem --- Check the transaction qty
 
 		rem --- Enter cost only for receipts and adjusting up (that is, incoming)
 		if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$ = "A" and trans_qty > 0) then
-			util.enableGridCell(Form!, 10); rem --- Cost
+			util.enableGridCell(Form!, 11); rem --- Cost
 		endif
 
 		rem --- Re-commit quantity
@@ -318,14 +348,19 @@ print "after new record (AREC)"; rem debug
 
 	gosub clear_display_fields
 [[IVE_TRANSDET.AGCL]]
-rem --- set preset val for batch_no
-callpoint!.setTableColumnAttribute("IVE_TRANSDET.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
-
-print "after grid clear (AGCL)"; rem debug
-
-	rem --- We'll be using the "util" object throughout.
-	rem --- It doesn't matter where the "use" statement is
+rem --- We'll be using the "util" object throughout.
+rem --- It doesn't matter where the "use" statement is
 	use ::ado_util.src::util
+
+rem --- set preset val for batch_no
+	callpoint!.setTableColumnAttribute("IVE_TRANSDET.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
+
+rem --- Set column size for memo_1024 field very small so it doesn't take up room, but still available for hover-over of memo contents
+
+	grid! = util.getGrid(Form!)
+	col_hdr$=callpoint!.getTableColumnAttribute("IVE_TRANSDET.MEMO_1024","LABS")
+	memo_1024_col=util.getGridColumnNumber(grid!, col_hdr$)
+	grid!.setColumnWidth(memo_1024_col,15)
 [[IVE_TRANSDET.TRANS_QTY.BINP]]
 print "in TRANS_QTY.BINP"; rem debug
 
@@ -421,13 +456,12 @@ print "ivm02 commit: ",commit;rem debug
 		cols!.addItem(7); rem --- lot
 		cols!.addItem(8); rem --- location
 		cols!.addItem(9); rem --- comment
+		cols!.addItem(10); rem --- memo_1024
 		this_row = callpoint!.getValidationRow()
 	
 		if user_tpl.this_item_lot_or_ser then
-			print "enabling lot/serial fields"; rem debug
 			util.enableGridCells(Form!, cols!, this_row)
 		else
-			print "disabling lot/serial fields"; rem debug
 			util.disableGridCells(Form!, cols!, this_row)
 		endif
 
@@ -704,6 +738,7 @@ rem ==========================================================================
 		cols! = BBjAPI().makeVector()
 		cols!.addItem(8); rem --- lot loc
 		cols!.addItem(9); rem -- lot comment
+		cols!.addItem(10); rem -- memo_1024
 
 		if user_tpl.ls_found then
 			util.disableGridCells(Form!, cols!)
@@ -713,6 +748,48 @@ rem ==========================================================================
 	endif
 
 return
+
+comment_entry:
+rem --- on a line where you can access the ls_comments field, pop the new memo_1024 editor instead
+rem --- the editor can be popped on demand for any line using the Comments button (alt-C),
+rem --- but will automatically pop for lines where the ls_comments field is enabled.
+rem ==========================================================================
+
+	disp_text$=callpoint!.getColumnData("IVE_TRANSDET.MEMO_1024")
+	sv_disp_text$=disp_text$
+
+	editable$="YES"
+	force_loc$="NO"
+	baseWin!=null()
+	startx=0
+	starty=0
+	shrinkwrap$="NO"
+	html$="NO"
+	dialog_result$=""
+
+	call stbl("+DIR_SYP")+ "bax_display_text.bbj",
+:		"Lot/Serial Comments",
+:		disp_text$, 
+:		table_chans$[all], 
+:		editable$, 
+:		force_loc$, 
+:		baseWin!, 
+:		startx, 
+:		starty, 
+:		shrinkwrap$, 
+:		html$, 
+:		dialog_result$
+
+	if disp_text$<>sv_disp_text$
+		ls_comments$=disp_text$(1,pos($0A$=disp_text$+$0A$)-1)
+		callpoint!.setColumnData("IVE_TRANSDET.MEMO_1024",disp_text$,1)
+		callpoint!.setColumnData("IVE_TRANSDET.LS_COMMENTS",ls_comments$,1)
+		callpoint!.setStatus("MODIFIED")
+	endif
+
+	callpoint!.setStatus("ACTIVATE")
+
+	return
 [[IVE_TRANSDET.TRANS_QTY.AVAL]]
 print "in TRANS_QTY.AVAL"; rem debug
 
@@ -736,7 +813,7 @@ rem --- Check the transaction qty
 
 		rem --- Enter cost only for receipts and adjusting up (that is, incoming)
 		if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$ = "A" and trans_qty > 0) then
-			util.enableGridCell(Form!, 10); rem --- Cost
+			util.enableGridCell(Form!, 11); rem --- Cost
 		endif
 
 		rem --- Display adjusted warehouse quantities
