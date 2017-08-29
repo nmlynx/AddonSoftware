@@ -527,6 +527,12 @@ next_file:
         gosub init_apm01_memo1024
         goto next_file
     endif
+
+    rem --- Build ARM_CUSTMAST.MEMO_1024 (arm-01) from arm-05 (ARM_CUSTCMTS) Customer Comments
+    if cvs(datafile$,8)="arm-05" then
+        gosub init_arm01_memo1024
+        goto next_file
+    endif
     
     rem --- Initialize and update glm-06 and adm-09/19/39
     if cvs(datafile$,8)="glm-06" then
@@ -3261,6 +3267,75 @@ init_apm01_memo1024: rem --- Build APM_VENDMAST.MEMO_1024 (apm-01) from apm-09 (
         rd_meter_action$="LST"
         gosub disp_meter
         print (err_dev)"Vendor Master file apm-01 not found in destination directory."+$0a$+"Vendor Comments ("+cvs("apm-09",version_cvs)+") could not be ported."
+    endif
+
+    return
+
+init_arm01_memo1024: rem --- Build ARM_CUSTMAST.MEMO_1024 (arm-01) from arm-05 (ARM_CUSTCMTS) Customer Comments
+
+    rem --- Get current record template for ARM_CUSTMAST
+    num_files=1
+    dim rd_open_tables$[1:num_files],rd_open_opts$[1:num_files],rd_open_chans$[1:num_files],rd_open_tpls$[1:num_files]
+    rd_open_tables$[1]="ARM_CUSTMAST",rd_open_opts$[1]="T"
+    
+    gosub open_tables
+    
+    dim armCustMast$:rd_open_tpls$[1]
+
+    rem --- Open destination arm-01 (ARM_CUSTMAST) that has already been ported
+    armCustMast_found=0
+    armCustMast_dev=unt
+    open (armCustMast_dev,err=*next)destin_folder$+"/arm-01"; armCustMast_found=1
+    if armCustMast_found then
+        print "   Building ARM_CUSTMAST (arm-01) MEMO_1024 field from "+cvs("arm-05",version_cvs)+" (ARM_CUSTCMTS) table"
+        print(log_dev)"   Building ARM_CUSTMAST (arm-01) MEMO_1024 field from "+cvs("arm-05",version_cvs)+" (ARM_CUSTCMTS) table"
+
+        rem --- Open and lock source arm-05 (ARM_CUSTCMTS)
+        arm05_dev=unt
+        open (arm05_dev)source_folder$+"/"+cvs("arm-05",version_cvs)
+        lock (arm05_dev)
+
+        rem --- Build new ARM_CUSTMAST.MEMO_1024 field from arm-05 (ARM_CUSTCMTS) table
+        currentFirm$=""
+        currentCustomer$=""
+        memo$=""
+        read(arm05_dev,key="",dom=*next)
+        while 1
+            arm05_key$=key(arm05_dev,end=*break)
+            readrecord(arm05_dev)arm05_rec$
+            if arm05_rec$(1,8)<>currentFirm$+currentCustomer$ then
+                record_found=0
+                readrecord(armCustMast_dev,key=currentFirm$+currentCustomer$,dom=*next)armCustMast$; record_found=1
+                if record_found then
+                    armCustMast.memo_1024$=memo$
+                    armCustMast$=field(armCustMast$)
+                    writerecord(armCustMast_dev)armCustMast$
+                endif
+                memo$=""
+                currentCustomer$=arm05_rec$(3,6)
+                if arm05_rec$(1,2)<>currentFirm$ then
+                    currentFirm$=arm05_rec$(1,2)
+                endif
+            endif
+            memo$=memo$+cvs(arm05_rec$(12,48),2)+$0A$; rem --- must trim all trailing $00$ from record
+        wend
+        record_found=0
+        readrecord(armCustMast_dev,key=currentFirm$+currentCustomer$,dom=*next)armCustMast$; record_found=1
+        if record_found then
+            armCustMast.memo_1024$=memo$
+            armCustMast$=field(armCustMast$)
+            writerecord(armCustMast_dev)armCustMast$
+        endif
+        
+        close (armCustMast_dev,err=*next)
+        unlock (arm05_dev,err=*next)
+        close (arm05_dev,err=*next)
+    else
+        rd_meter_data$="Customer Master file arm-01 not found in destination directory. Customer Comments ("+cvs("arm-05",version_cvs)+") could not be ported."
+        rd_meter_total_recs=vectPort!.size()
+        rd_meter_action$="LST"
+        gosub disp_meter
+        print (err_dev)"Customer Master file arm-01 not found in destination directory."+$0a$+"Customer Comments ("+cvs("arm-05",version_cvs)+") could not be ported."
     endif
 
     return
