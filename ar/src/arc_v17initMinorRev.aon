@@ -1,5 +1,5 @@
-rem --- AP Initialize Data File Changes Implemented During Minor Releases of v17
-rem --- Program apc_v17initMinorRev.aon
+rem --- AR Initialize Data File Changes Implemented During Minor Releases of v17
+rem --- Program arc_v17initMinorRev.aon
 
 rem --- AddonSoftware Version 17.10 - Aug2017
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
@@ -46,19 +46,19 @@ rem --- Open/Lock files
     num_files=3
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="DDM_SYSTEMS",      open_opts$[1]="OTA"
-    open_tables$[2]="APM_VENDMAST",     open_opts$[2]="OTA"
-    open_tables$[3]="APM_VENDCMTS",     open_opts$[3]="OTA"
+    open_tables$[2]="ARM_CUSTMAST",     open_opts$[2]="OTA"
+    open_tables$[3]="ARM_CUSTCMTS",     open_opts$[3]="OTA"
 
     gosub open_tables
 
     ddm_systems=num(open_chans$[1]);     dim ddm_systems$:open_tpls$[1]
-    apmVendMast_dev=num(open_chans$[2]); dim apmVendMast$:open_tpls$[2]
+    armCustMast_dev=num(open_chans$[2]); dim armCustMast$:open_tpls$[2]
 
-rem --- Table definition for APM_VENDCMTS (apm-09) may be deleted in v19 (see Addon Bug 9127). So it may not
-rem --- exist when upgrading from before v17 to after v18, and adc_v1700conversion.aon executes apc_v17initMinorRev.aon.
+rem --- Table definition for ARM_CUSTCMTS (arm-05) may be deleted in v19 (see Addon Bug 9127). So it may not
+rem --- exist when upgrading from before v17 to after v18, and adc_v1700conversion.aon executes arc_v17initMinorRev.aon.
 
-    apmVendCmts_dev=num(open_chans$[3])
-    if apmVendCmts_dev dim apmVendCmts$:open_tpls$[3]
+    armCustCmts_dev=num(open_chans$[3])
+    if armCustCmts_dev dim armCustCmts$:open_tpls$[3]
     
 rem --- Open log file in aon/logs directory
     
@@ -120,47 +120,47 @@ rem --- As necessary, creating a small invisible window to hold progress meter
     
 rem --- Start progress meter
 
-    meter_title$="apc_v17initMinorRev.aon"
+    meter_title$="arc_v17initMinorRev.aon"
     meter_proc_recs=0
     meter_text$=""
     meter_action$="WIN-LST"
     gosub disp_meter
 
-rem --- Initialize APM_VENDMAST new MEMO_1024 field
+rem --- Initialize ARM_CUSTMAST new MEMO_1024 field
 
-    rem --- As of v17.10, DataPort handles initializing APM_VENDMAST.MEMO_1024 from APM_VENDCMTS (apm-09).
-    rem --- And, APM_VENDCMTS (apm-09) may not exist when upgrading via DataPort.
-    if apmVendCmts_dev then
+    rem --- As of v17.10, DataPort handles initializing ARM_CUSTMAST.MEMO_1024 from ARM_CUSTCMTS (arm-05).
+    rem --- And, ARM_CUSTCMTS (arm-05) may not exist when upgrading via DataPort.
+    if armCustCmts_dev then
         rem --- Increment progress meter
-        meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" "+"APM_VENDMAST.MEMO_1024"
+        meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" "+"ARM_CUSTMAST.MEMO_1024"
         meter_proc_recs=meter_proc_recs+1
         meter_action$="MTR-LST"
         gosub disp_meter
         print(log_dev)
         print(log_dev)meter_text$
     
-        rem --- Build new APM_VENDMAST.MEMO_1024 field from APM_VENDCMTS (apm-09) table
+        rem --- Build new ARM_CUSTMAST.MEMO_1024 field from ARM_CUSTCMTS (arm-05) table
         currentFirm$=""
-        currentVendor$=""
+        currentCustomer$=""
         memo$=""
-        read(apmVendCmts_dev,key=theFirm$,dom=*next)
+        read(armCustCmts_dev,key=theFirm$,dom=*next)
         while 1
-            apmVendCmts_key$=key(apmVendCmts_dev,end=*break)
-            if cvs(theFirm$,2)<>"" and pos(theFirm$=apmVendCmts_key$)<>1 then break
-            readrecord(apmVendCmts_dev)apmVendCmts$
-            if apmVendCmts.firm_id$+apmVendCmts.vendor_id$<>currentFirm$+currentVendor$ then
-                gosub writeApmVendMastMemo1024
+            armCustCmts_key$=key(armCustCmts_dev,end=*break)
+            if cvs(theFirm$,2)<>"" and pos(theFirm$=armCustCmts_key$)<>1 then break
+            readrecord(armCustCmts_dev)armCustCmts$
+            if armCustCmts.firm_id$+armCustCmts.customer_id$<>currentFirm$+currentCustomer$ then
+                gosub writeArmCustMastMemo1024
                 memo$=""
-                currentVendor$=apmVendCmts.vendor_id$
-                if apmVendCmts.firm_id$<>currentFirm$ then
+                currentCustomer$=armCustCmts.customer_id$
+                if armCustCmts.firm_id$<>currentFirm$ then
                     rem --- Log next firm processed
-                    print(log_dev)"    APM_VENDCMTS.FIRM_ID = "+apmVendCmts.firm_id$
-                    currentFirm$=apmVendCmts.firm_id$
+                    print(log_dev)"    ARM_CUSTCMTS.FIRM_ID = "+armCustCmts.firm_id$
+                    currentFirm$=armCustCmts.firm_id$
                 endif
             endif
-            memo$=memo$+cvs(apmVendCmts.std_comments$,2)+$0A$
+            memo$=memo$+cvs(armCustCmts.std_comments$,2)+$0A$
         wend
-        gosub writeApmVendMastMemo1024
+        gosub writeArmCustMastMemo1024
     endif
 
 done: rem --- All done
@@ -172,16 +172,16 @@ done: rem --- All done
 
     rem --- Complete and close log file
     print(log_dev)
-    print(log_dev)"v17initMinorRevAP log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
+    print(log_dev)"v17initMinorRevAR log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     close(log_dev)
 
     goto std_exit
 
-writeApmVendMastMemo1024: rem --- Write APM_VENDMAST new MEMO_1024 field
+writeArmCustMastMemo1024: rem --- Write ARM_CUSTMAST new MEMO_1024 field
 
-    extractrecord(apmVendMast_dev,key=currentFirm$+currentVendor$,dom=*return)apmVendMast$
-    apmVendMast.memo_1024$=memo$
-    writerecord(apmVendMast_dev)apmVendMast$
+    extractrecord(armCustMast_dev,key=currentFirm$+currentCustomer$,dom=*return)armCustMast$
+    armCustMast.memo_1024$=memo$
+    writerecord(armCustMast_dev)armCustMast$
 
     return
 
@@ -192,14 +192,14 @@ open_log: rem --- Open log file
     FileObject.makeDirs(new File(logDir$))
 
     rem --- create and open log file
-    log$=logDir$+"/v17initMinorRevAP_"+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")+".log"
+    log$=logDir$+"/v17initMinorRevAR_"+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")+".log"
     erase log$,err=*next
     string log$
     log_dev=unt
     open(log_dev)log$
             
     rem --- write log header info
-    print(log_dev)"v17initMinorRevAP log started: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
+    print(log_dev)"v17initMinorRevAR log started: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     print(log_dev)
 
     return
