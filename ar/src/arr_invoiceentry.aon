@@ -9,6 +9,7 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
+    use ::ado_func.src::func
     use ::ado_rptControl.src::ReportControl
 
 rem --- Retrieve the program path
@@ -286,12 +287,27 @@ rem --- Print the invoice
           OutVect!.addItem(arm10d.ar_dist_code$+" "+arm10d.code_desc$)
           OutVect!.addItem(str(extension))
 
+          lineVect!=func.splitMultiLineField(are05a.memo_1024$,60)
+          invCmt_1$=""
+          if lineVect!.size() then invCmt_1$=lineVect!.getItem(0)
+
           OutVect!.addItem("")
           OutVect!.addItem(adjustment$)
-          OutVect!.addItem("")
+          OutVect!.addItem(invCmt_1$)
           OutVect!.addItem("")
           OutVect!.addItem(arm10a.ar_terms_code$+" "+arm10a.code_desc$)
           OutVect!.addItem("")
+  
+          if lineVect!.size()>1 then
+              for i=1 to lineVect!.size()-1
+                  OutVect!.addItem("")
+                  OutVect!.addItem("")
+                  OutVect!.addItem(lineVect!.getItem(i))
+                  OutVect!.addItem("")
+                  OutVect!.addItem("")
+                  OutVect!.addItem("")
+              next i
+          endif
 
           xwk=fnblank(6);rem --- blank line
 
