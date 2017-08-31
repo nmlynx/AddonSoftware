@@ -55,7 +55,7 @@ rem --- Open needed files
 	open_tables$[29]="IVS_PARAMS",   open_opts$[29]="OTA"
 	open_tables$[31]="IVM_ITEMPRIC", open_opts$[31]="OTA"
 	open_tables$[32]="IVC_PRICCODE", open_opts$[32]="OTA"
-	open_tables$[33]="ARM_CUSTCMTS", open_opts$[33]="OTA"
+	rem open_tables$[33]="", open_opts$[33]=""
 	open_tables$[35]="OPM_POINTOFSALE", open_opts$[35]="OTA"
 	open_tables$[36]="ARC_SALECODE", open_opts$[36]="OTA"
 	open_tables$[37]="OPC_DISCCODE", open_opts$[37]="OTA"

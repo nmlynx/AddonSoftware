@@ -1929,7 +1929,6 @@ rem --- Enable Duplicate buttons, printer
 	if user_tpl.credit_installed$="Y"
 		callpoint!.setOptionEnabled("CRCH",1)
 	endif
-
 [[OPE_INVHDR.CUSTOMER_ID.AINP]]
 print "Hdr:CUSTOMER_ID.AINP"; rem debug
 
@@ -2131,21 +2130,10 @@ disp_cust_comments: rem --- Display customer comments
                     rem      IN: cust_id$
 rem ==========================================================================
 
-	cmt_text$ = ""
-	arm05_dev = fnget_dev("ARM_CUSTCMTS")
-	dim arm05a$:fnget_tpl$("ARM_CUSTCMTS")
-	more = 1
-
-	read (arm05_dev, key=firm_id$+cust_id$, dom=*next)
-
-	while more
-		read record (arm05_dev, end=*break) arm05a$
-		if arm05a.firm_id$+arm05a.customer_id$ <> firm_id$+cust_id$ then break
-		cmt_text$ = cmt_text$ + cvs(arm05a.std_comments$,3) + $0A$
-	wend
-
-	callpoint!.setColumnData("<<DISPLAY>>.comments", cmt_text$)
-	callpoint!.setStatus("REFRESH")
+	arm01_dev=fnget_dev("ARM_CUSTMAST")
+	dim arm01a$:fnget_tpl$("ARM_CUSTMAST")
+	read record (arm01_dev, key=firm_id$+cust_id$, dom=*next) arm01a$
+	callpoint!.setColumnData("<<DISPLAY>>.comments", arm01a.memo_1024$,1)
 
 	return
 
@@ -3307,7 +3295,7 @@ rem --- Open needed files
 	open_tables$[30]="OPE_ORDLSDET", open_opts$[30]="OTA"
 	open_tables$[31]="IVM_ITEMPRIC", open_opts$[31]="OTA"
 	open_tables$[32]="IVC_PRICCODE", open_opts$[32]="OTA"
-	open_tables$[33]="ARM_CUSTCMTS", open_opts$[33]="OTA"
+	rem open_tables$[33]="", open_opts$[33]=""
 	open_tables$[34]="OPE_PRNTLIST", open_opts$[34]="OTA"
 	open_tables$[35]="OPM_POINTOFSALE", open_opts$[35]="OTA"
 	open_tables$[36]="ARC_SALECODE", open_opts$[36]="OTA"
