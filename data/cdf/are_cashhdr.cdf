@@ -623,8 +623,8 @@ nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
 
 base_ctl!=callpoint!.getControl("<<DISPLAY>>.DISP_CUST_BAL")
 base_x=base_ctl!.getX()
-tmp_x=base_x+base_ctl!.getWidth()+10
-tmp_y=base_ctl!.getY()+base_ctl!.getHeight()
+tmp_x=base_x+base_ctl!.getWidth()+95
+tmp_y=base_ctl!.getY()+55
 tmp_h=base_ctl!.getHeight()
 tmp_w=200
 
@@ -639,13 +639,13 @@ OA_chkbox!=Form!.addCheckBox(nxt_ctlID,tmp_x,tmp_y,tmp_w,tmp_h,Translate!.getTra
 zbal_chkbox!=Form!.addCheckBox(nxt_ctlID+1,tmp_x,tmp_y+tmp_h+1,tmp_w,tmp_h,Translate!.getTranslation("AON_SHOW_ZERO-BALANCE_INVOICES?"),$$)
 asel_chkbox!=Form!.addCheckBox(nxt_ctlID+2,tmp_x,tmp_y+(tmp_h+1)*2,tmp_w,tmp_h,Translate!.getTranslation("AON_AUTO-SELECT_BY_INVOICE?"),$$)
 
-gridInvoice!=Form!.addGrid(nxt_ctlID+3,5,160,700,210)
+gridInvoice!=Form!.addGrid(nxt_ctlID+3,5,220,700,210)
 
 rem --- position the static text (to show when there is a GL dist included) relative to the Applied Amt control
-Form!.addStaticText(nxt_ctlID+4,app_x,app_y+app_h+3,tmp_w,tmp_h,"")
-Form!.addStaticText(nxt_ctlID+5,app_x+app_w+5,app_y,20,tmp_h,"")
+Form!.addStaticText(nxt_ctlID+4,app_x,195,tmp_w,tmp_h,"")
+Form!.addStaticText(nxt_ctlID+5,app_x+app_w+10,175,20,tmp_h,"")
 
-rem --- store ctl ID's of custom controls				
+rem --- store ctl ID's of custom controls #3				
 user_tpl.OA_chkbox_id$=str(nxt_ctlID)
 user_tpl.zbal_chkbox_id$=str(nxt_ctlID+1)
 user_tpl.asel_chkbox_id$=str(nxt_ctlID+2)				

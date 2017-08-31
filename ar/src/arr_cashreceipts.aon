@@ -9,6 +9,7 @@ rem --- All Rights Reserved
 rem --- Still needs totals accumulation
 
     use java.util.TreeMap
+    use ::ado_func.src::func
 
     setesc std_error
     seterr std_error
@@ -346,7 +347,9 @@ rem --- Read the next Cash Receipt Header (are-01) record
           if are01a.cash_rec_cd$<>lastcode$ gosub code_break
           if are01a.deposit_id$<>lastdeposit$ gosub deposit_break
           if are01a.receipt_date$<>lastdate$ gosub date_break
-          
+
+          rem --- Split Cash Receipts header comments into multiple lines
+          lineVect!=func.splitMultiLineField(are01a.memo_1024$,50)
 
           rem --- Retrieve Customer Master (arm-01) record
 
@@ -435,7 +438,15 @@ rem --- Read the next Cash Receipt Header (are-01) record
                 discount=are11a.discount_amt
                 credits=applied+discount
 
-                if cvs(name$,3)="" xwk=fnblank(2)
+                if cvs(name$,3)="" then
+                    if lineVect!.size() then
+                        OutVect!.addItem("     "+lineVect!.getItem(0))
+                        OutVect!.addItem("")
+                        lineVect!.removeItem(0)
+                    else
+                        xwk=fnblank(2)
+                    endif
+                endif
                 OutVect!.addItem(check$)
                 OutVect!.addItem(are11a.ar_inv_no$)
                 OutVect!.addItem(str(applied))
@@ -553,7 +564,13 @@ rem --- Read the next Cash Receipt Header (are-01) record
                 
                 amount=are21a.gl_post_amt
                 account$=are21a.gl_account$
-                xwk=fnblank(7)
+                    if lineVect!.size() then
+                        OutVect!.addItem("     "+lineVect!.getItem(0))
+                        xwk=fnblank(6)
+                        lineVect!.removeItem(0)
+                    else
+                        xwk=fnblank(7)
+                    endif
                 OutVect!.addItem(fnmask$(account$(1,acct_length),g0$))
                 OutVect!.addItem(str(amount))
                 xwk=fnblank(2)
@@ -606,8 +623,19 @@ rem --- Read the next Cash Receipt Header (are-01) record
 
           wend
 
-          rem --- Loop back for next Cash Receipt Header (are-01) record
+          rem --- Print Cash Receipts header comments 
+          if lineVect!.size() then
+              for i=0 to lineVect!.size()-1
+                  OutVect!.addItem("     "+lineVect!.getItem(i))
+                  if br then
+                      xwk=fnblank(11)
+                  else
+                      xwk=fnblank(10)
+                  endif
+              next i
+          endif
 
+          rem --- Loop back for next Cash Receipt Header (are-01) record
     wend
 
 rem --- All done
