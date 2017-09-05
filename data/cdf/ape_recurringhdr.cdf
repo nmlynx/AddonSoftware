@@ -315,7 +315,7 @@ disp_vendor_comments:
 	
 	apm01_dev=fnget_dev("APM_VENDMAST")
 	dim apm01a$:fnget_tpl$("APM_VENDMAST")
-	readrecord(apm01_dev,key=firm_id$+tmp_vendor_id$,end=*next)apm01a$
+	readrecord(apm01_dev,key=firm_id$+tmp_vendor_id$,dom=*next)apm01a$
 	callpoint!.setColumnData("<<DISPLAY>>.comments",apm01a.memo_1024$,1)
 return
 

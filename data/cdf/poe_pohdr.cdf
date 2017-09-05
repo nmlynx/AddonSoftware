@@ -809,7 +809,7 @@ disp_vendor_comments:
 	rem --- You must pass in vendor_id$ because we don't know whether it's verified or not
 	apm_vendmast_dev=fnget_dev("APM_VENDMAST")
 	dim apm_vendmast$:fnget_tpl$("APM_VENDMAST")
-	readrecord(apm_vendmast_dev,key=firm_id$+vendor_id$,end=*next)apm_vendmast$		 
+	readrecord(apm_vendmast_dev,key=firm_id$+vendor_id$,dom=*next)apm_vendmast$		 
 	callpoint!.setColumnData("<<DISPLAY>>.comments",apm_vendmast.memo_1024$,1)
 return
 

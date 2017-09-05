@@ -343,7 +343,7 @@ disp_cust_comments:
 rem --- You must pass in cust_id$ because we don't know whether it's verified or not
 	arm01_dev=fnget_dev("ARM_CUSTMAST")
 	dim arm01a$:fnget_tpl$("ARM_CUSTMAST")
-	readrecord(arm01_dev,key=firm_id$+cust_id$,end=*next)arm01a$
+	readrecord(arm01_dev,key=firm_id$+cust_id$,dom=*next)arm01a$
 	callpoint!.setColumnData("<<DISPLAY>>.comments",arm01a.memo_1024$,1)
 return
 
