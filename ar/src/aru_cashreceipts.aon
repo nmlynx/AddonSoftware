@@ -166,13 +166,13 @@ rem --- Read next Cash Receipts Header (are-01) record
                 art16a.cash_rec_cd$=are11a.cash_rec_cd$
                 art16a.ar_check_no$=are11a.ar_check_no$
                 art16a.ar_inv_no$=are11a.ar_inv_no$
-                art16a$=field(art16a$)
                 k$=art16a.firm_id$+art16a.ar_type$+art16a.reserved_key_01$+art16a.customer_id$+
 :                  art16a.receipt_date$+art16a.cash_rec_cd$+art16a.ar_check_no$+
 :                  art16a.reserved_key_02$+art16a.ar_inv_no$
                 extract record (art16_dev,key=k$,dom=*next) art16a$; rem Advisory Locking
                 art16a.apply_amt=art16a.apply_amt+are11a.apply_amt
                 art16a.discount_amt=art16a.discount_amt+are11a.discount_amt
+                art16a.memo_1024$=are11a.memo_1024$
                 art16a$=field(art16a$)
                 write record (art16_dev) art16a$
 
