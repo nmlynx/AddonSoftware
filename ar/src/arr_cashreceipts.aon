@@ -597,6 +597,13 @@ rem --- Read the next Cash Receipt Header (are-01) record
                 k$=key(are21_dev,end=*break)
                 if pos(receipt$=k$)<>1 break
                 read record (are21_dev) are21a$
+                
+                rem --- Split GL Distribution detail comments into multiple lines
+                if doComments$="Y" then
+                    glCmts!=func.splitMultiLineField(are21a.memo_1024$,35)
+                else
+                    glCmts!=BBjAPI().makeVector()
+                endif
 
                 rem --- Print this detail record
                 
@@ -611,8 +618,31 @@ rem --- Read the next Cash Receipt Header (are-01) record
                     endif
                 OutVect!.addItem(fnmask$(account$(1,acct_length),g0$))
                 OutVect!.addItem(str(amount))
-                xwk=fnblank(2)
+                if glCmts!.size() then
+                    OutVect!.addItem(glCmts!.getItem(0))
+                    OutVect!.addItem("")
+                    glCmts!.removeItem(0)
+                else
+                    xwk=fnblank(2)
+                endif
                 if br then OutVect!.addItem("")
+
+                rem --- Print GL Distribution detail comments 
+                if glCmts!.size() then
+                    for i=0 to glCmts!.size()-1
+                        if headerCmts!.size() then
+                            OutVect!.addItem("     "+headerCmts!.getItem(0))
+                            OutVect!.addItem("")
+                            headerCmts!.removeItem(0)
+                        else
+                            xwk=fnblank(2)
+                        endif
+                        xwk=fnblank(7)
+                        OutVect!.addItem(glCmts!.getItem(i))
+                        OutVect!.addItem("")
+                        if br then OutVect!.addItem("")
+                    next i
+                endif
 
                 if glstatus call pgmdir$+"glc_datewarn.aon",printer_dev,are01a.receipt_date$,
 :                                                           glstatus,lines,errors,status
