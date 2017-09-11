@@ -58,6 +58,7 @@ rem --- Assign form input values to local variables
     cust_id$=fnget_fld_data$(table$,"CUSTOMER_ID")
     beg_inv_no$=fnget_fld_data$(table$,"AR_INV_NO")
     inv_type$=fnget_fld_data$(table$,"PD_UNPD_BOTH")
+    doComments$=option!.getOptionData("PICK_CHECK")
 
 rem --- Retrieve parameter records
 
@@ -163,7 +164,11 @@ rem --- Header record
     
     rem --- Internal Invoice Comments
 
-    lineVect!=func.splitMultiLineField(art01a.memo_1024$,60)
+    if doComments$="Y" then
+        lineVect!=func.splitMultiLineField(art01a.memo_1024$,60)
+    else
+        lineVect!=BBjAPI().makeVector()
+    endif
     if lineVect!.size() then
         for i=0 to lineVect!.size()-1
             OutVect!.addItem("")
