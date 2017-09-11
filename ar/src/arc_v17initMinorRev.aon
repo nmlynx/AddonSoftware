@@ -43,16 +43,21 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    num_files=3
+    num_files=5
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="DDM_SYSTEMS",      open_opts$[1]="OTA"
     open_tables$[2]="ARM_CUSTMAST",     open_opts$[2]="OTA"
     open_tables$[3]="ARM_CUSTCMTS",     open_opts$[3]="OTA"
+    open_tables$[4]="ART_INVHDR",       open_opts$[4]="OTA"
+    open_tables$[5]="ART_INVDET",       open_opts$[5]="OTA"
 
     gosub open_tables
 
     ddm_systems=num(open_chans$[1]);     dim ddm_systems$:open_tpls$[1]
     armCustMast_dev=num(open_chans$[2]); dim armCustMast$:open_tpls$[2]
+    rem armCustCmts_dev=num(open_chans$[3])
+    artInvHdr_dev=num(open_chans$[4]); dim artInvHdr$:open_tpls$[4]
+    artInvDet_dev=num(open_chans$[5]); dim artInvDet$:open_tpls$[5]
 
 rem --- Table definition for ARM_CUSTCMTS (arm-05) may be deleted in v19 (see Addon Bug 9127). So it may not
 rem --- exist when upgrading from before v17 to after v18, and adc_v1700conversion.aon executes arc_v17initMinorRev.aon.
@@ -162,6 +167,38 @@ rem --- Initialize ARM_CUSTMAST new MEMO_1024 field
         wend
         gosub writeArmCustMastMemo1024
     endif
+    
+rem --- Rebuild ART_INVHDR for new AO_INVIOCE alternat key
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" ART_INVHDR "+Translate!.getTranslation("AON_ALTERNATE_KEY","Alternate Key")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+
+    rem --- Use Barista's table rebuild utility
+    call stbl("+DIR_SYP")+"bax_rebuild_table.bbj","ART_INVHDR",rdForm!,null(),rd_table_chans$[all],rd_rebuild_action$,rd_rebuild_stat$
+            if rd_rebuild_stat$<>""
+                print(log_dev)"    ****bax_rebuild_table.bbj error: "+rd_rebuild_stat$+" ****"
+            endif
+    
+rem --- Rebuild ART_INVDET for new AO_INVIOCE alternat key
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" ART_INVDET "+Translate!.getTranslation("AON_ALTERNATE_KEY","Alternate Key")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+
+    rem --- Use Barista's table rebuild utility
+    call stbl("+DIR_SYP")+"bax_rebuild_table.bbj","ART_INVDET",rdForm!,null(),rd_table_chans$[all],rd_rebuild_action$,rd_rebuild_stat$
+            if rd_rebuild_stat$<>""
+                print(log_dev)"    ****bax_rebuild_table.bbj error: "+rd_rebuild_stat$+" ****"
+            endif
 
 done: rem --- All done
     
