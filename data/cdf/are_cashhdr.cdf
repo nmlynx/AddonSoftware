@@ -979,7 +979,7 @@ rem --- cashdet, are-11
 		endif
 		are11a.apply_amt$=str(apply_amt)
 		are11a.discount_amt$=str(disc_amt)
-		if apply_amt<>0 or disc_amt<>0
+		if apply_amt<>0 or disc_amt<>0 then
 			are11a.batch_no$=stbl("+BATCH_NO")
 			are11a$=field(are11a$)
 			writerecord(are_cashdet_dev)are11a$
@@ -1002,6 +1002,7 @@ rem --- cashbal, are-31
 	next updt_loop
 	endif
 
+	rem --- Save chanded detail comments
 	vectInvoice!=UserObj!.getItem(num(user_tpl.inv_vect$))
 	if vectInvoice!.size() then
 		dim are11a$:fnget_tpl$("ARE_CASHDET")
@@ -1019,9 +1020,13 @@ rem --- cashbal, are-31
 			are11a.ar_inv_no$=vectInvoice!.getItem(voffset+1)
 			extractrecord(are_cashdet_dev,key=are11a.firm_id$+are11a.ar_type$+are11a.reserved_key_01$+are11a.receipt_date$+
 :			are11a.customer_id$+are11a.cash_rec_cd$+are11a.ar_check_no$+are11a.reserved_key_02$+are11a.ar_inv_no$,dom=*next)are11a$;rem Advisory Locking
-			are11a.memo_1024$=vectInvoice!.getItem(voffset+num(user_tpl.cmt_ofst$))
-			are11a$=field(are11a$)
-			writerecord(are_cashdet_dev)are11a$
+			if are11a.memo_1024$<>vectInvoice!.getItem(voffset+num(user_tpl.cmt_ofst$)) then
+				are11a.memo_1024$=vectInvoice!.getItem(voffset+num(user_tpl.cmt_ofst$))
+				are11a$=field(are11a$)
+				writerecord(are_cashdet_dev)are11a$
+			else
+				read(are_cashdet_dev)
+			endif
 		next voffset
 	endif
 
@@ -1130,7 +1135,7 @@ rem ---  so delete are-11 and 31 manually here.
 		
 			rem --- cashbal, are-31
 			extractrecord(are_cashbal_dev,key=are31a.firm_id$+are31a.ar_type$+are31a.reserved_str$+are31a.customer_id$+
-:				are31a.ar_inv_no$)are31a$;rem Advisory Locking
+:				are31a.ar_inv_no$,dom=*next)are31a$;rem Advisory Locking
 			are31a.apply_amt$=str(num(are31a.apply_amt)-del_pay)
 			are31a.discount_amt$=str(num(are31a.discount_amt$)-del_disc)
 			if num(are31a.apply_amt$)<>0 or num(are31a.discount_amt$)<>0
@@ -1138,7 +1143,7 @@ rem ---  so delete are-11 and 31 manually here.
 				writerecord(are_cashbal_dev)are31a$
 			else
 				remove(are_cashbal_dev,key=are31a.firm_id$+are31a.ar_type$+are31a.reserved_str$+are31a.customer_id$+
-:					are31a.ar_inv_no$)
+:					are31a.ar_inv_no$,dom=*next)
 			endif
 		else
 			more_dtl=0
