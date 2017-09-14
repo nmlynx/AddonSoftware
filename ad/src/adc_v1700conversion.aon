@@ -1127,6 +1127,163 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
             gosub disp_meter
             print(log_dev)meter_text$
         endif
+
+        rem --- Initialize GL data file changes implemented during minor releases of v17
+        rem --- As of v17.10, DataPort handles initializing GLM_ACCT.MEMO_1024 from GLM_ACCTCOMMENTS (glm-09)
+        if convCtrl!.getProperty("data_source")="OCJ" then
+
+            rem --- Increment progress meter
+            meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:               Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+
+            rem --- Make sure GLM_ACCTCOMMENTS (glm-09) exists
+            open_success=0
+            glm09_dev=unt
+            open(glm09_dev,err=*next)dataDir$+"/glm-09"; open_success=1
+            if !open_success then
+                rem --- Copy GLM_ACCTCOMMENTS (glm-09) from old source to the new install
+
+                rem --- Open ddm_tables and ddm_table_tpls in new install
+                num_files=2
+                dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                open_tables$[1]="DDM_TABLES",open_opts$[1]="OTA"
+                open_tables$[2]="DDM_TABLE_TPLS",open_opts$[2]="OTA"
+                gosub open_tables
+                new_ddmTables=num(open_chans$[1]);dim new_ddmTables$:open_tpls$[1]
+                new_ddmTableTpls=num(open_chans$[2]);dim new_ddmTableTpls$:open_tpls$[2]
+    
+                rem --- Open ddm_tables in old source
+                old_ddm_table$=convCtrl!.getProperty("barista_source")+"/barista/sys/data/ddm_tables.dat"
+                open_success=0
+                old_ddmTables=unt
+                open(old_ddmTables,err=*next)old_ddm_table$; open_success=1
+                if !open_success then
+                    rem --- Required file missing
+                    msg_id$="AD_FILE_MISSING"
+                    dim msg_tokens$[1]
+                    msg_tokens$[1]=old_ddm_table$
+                    gosub disp_message
+                    err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                       Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+old_ddm_table$+" *****"
+                    goto done
+                endif
+
+                rem --- Open ddm_table_tpls in old source
+                old_ddm_table_tpls$=convCtrl!.getProperty("barista_source")+"/barista/sys/data/ddm_table_tpls.dat"
+                open_success=0
+                old_ddmTableTpls=unt
+                open(old_ddmTableTpls,err=*next)old_ddm_table_tpls$; open_success=1
+                if !open_success then
+                    rem --- Required file missing
+                    msg_id$="AD_FILE_MISSING"
+                    dim msg_tokens$[1]
+                    msg_tokens$[1]=old_ddm_table_tpls$
+                    gosub disp_message
+                    err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                       Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+old_ddm_table_tpls$+" *****"
+                    goto done
+                endif
+    
+                rem --- Get table definition for old source GLM_ACCTCOMMENTS file, and add it to new install
+                oldFile$="GLM_ACCTCOMMENTS"
+                table_found=0
+                findrecord(old_ddmTables,key=pad(cvs(oldFile$,4),16),dom=*next)table_rec$;table_found=1
+                if table_found then
+                    writerecord(new_ddmTables,key=pad(cvs(oldFile$,4),16),dom=*next)table_rec$
+                else
+                    rem --- Required table missing
+                    err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+Translate!.getTranslation("AON_VERSION","Verion")+" "+convCtrl!.getProperty("start_version")+
+:                       " "+Translate!.getTranslation("AON_TABLE_NOT_FOUND","Table not found")+": "+oldFile$+" *****"
+                    meter_proc_recs=meter_proc_recs+1
+                    meter_action$="MTR-LST"
+                    meter_text$=err_msg$
+                    gosub disp_meter
+                    print(log_dev)meter_text$
+                    goto done
+                endif
+    
+                rem --- Get record template for old source GLM_ACCTCOMMENTS file, and add it to new install
+                oldFile$="GLM_ACCTCOMMENTS"
+                tpl_found=0
+                findrecord(old_ddmTableTpls,key=pad(cvs(oldFile$,4),16),dom=*next)tpl_rec$;tpl_found=1
+                if tpl_found then
+                    writerecord(new_ddmTableTpls,key=pad(cvs(oldFile$,4),16),dom=*next)tpl_rec$
+                else
+                    rem --- Required template missing
+                    err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+Translate!.getTranslation("AON_VERSION","Verion")+" "+convCtrl!.getProperty("start_version")+
+:                       " "+Translate!.getTranslation("AON_TEMPLATE_NOT_FOUND","Template not found")+": "+oldFile$+" *****"
+                    meter_proc_recs=meter_proc_recs+1
+                    meter_action$="MTR-LST"
+                    meter_text$=err_msg$
+                    gosub disp_meter
+                    print(log_dev)meter_text$
+                    goto done
+                endif
+
+                sourceFileVec!=BBjAPI().makeVector()
+                tablealiasVec!=BBjAPI().makeVector()
+                sourceFileVec!.addItem("glm-09");tableAliasVec!.addItem("GLM_ACCTCOMMENTS")
+                for source=0 to sourcefileVec!.size()-1
+                    rem --- Does source file exist?
+                    oldStbl$="+GLDATA"
+                    oldFile$=sourceFileVec!.get(source)
+                    tableAlias$=tableAliasVec!.get(source)
+                    gosub get_path_to_old_file
+                    source_file$=oldPathToFile$
+                    open_success=0
+                    source_dev=unt
+                    open(source_dev,err=*next)source_file$; open_success=1
+                    if open_success then
+                
+                        rem --- Open file in new data dictionary
+                        num_files=1
+                        dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                        open_tables$[1]=tableAlias$, open_opts$[1]="OTA"
+                        gosub open_tables
+                        target_dev=num(open_chans$[1])
+                        
+                        rem --- Copy source records to target
+                        read(source_dev,key="",dom=*next)
+                        while 1
+                            readrecord(source_dev,end=*break)record$
+                            writerecord(target_dev)record$
+                        wend
+                    endif
+                next source
+            endif
+
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": GLM_ACCT.MEMO_1024 "+
+:               Translate!.getTranslation("AON_FROM_","From ")+"GLM_ACCTCOMMENTS"
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+    
+            rem --- Execute GL upgrade conversion utility for minor releases of v17
+            theFirm$=""
+            call pgmdir$+"glc_v17initMinorRev.aon",theFirm$,rdForm!,status
+            if status=0 then
+                rem --- Conversion completed successfully
+                rem --- Increment progress meter
+                meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": GLM_ACCTCOMMENTS"
+                meter_proc_recs=meter_proc_recs+1
+                meter_action$="MTR-LST"
+                gosub disp_meter
+                print(log_dev)meter_text$
+            else
+                rem --- Conversion did NOT complete successfully, exit with error message
+                err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                   Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": GLM_ACCTCOMMENTS"+" *****"
+                goto done
+            endif
+        endif
     else
         rem --- Increment progress meter
         meter_text$=this_module$+" "+Translate!.getTranslation("AON_NOT","Not")+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
