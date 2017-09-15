@@ -540,6 +540,12 @@ next_file:
         goto next_file
     endif
 
+    rem --- Build GLM_ACCT.MEMO_1024 (glm-01) from glm-09 (GLM_ACCTCOMMENTS) Account Comments
+    if cvs(datafile$,8)="glm-09" then
+        gosub init_glm01_memo1024
+        goto next_file
+    endif
+
     rem --- Build IVM_ITEMMAST.MEMO_1024 (ivm-01) from ivm-09 (IVM_ITEMCMTS) Item Comments
     if cvs(datafile$,8)="ivm-09" then
         gosub init_ivm01_memo1024
@@ -3336,6 +3342,75 @@ init_arm01_memo1024: rem --- Build ARM_CUSTMAST.MEMO_1024 (arm-01) from arm-05 (
         rd_meter_action$="LST"
         gosub disp_meter
         print (err_dev)"Customer Master file arm-01 not found in destination directory."+$0a$+"Customer Comments ("+cvs("arm-05",version_cvs)+") could not be ported."
+    endif
+
+    return
+
+init_glm01_memo1024: rem --- Build GLM_ACCT.MEMO_1024 (glm-01) from glm-09 (GLM_ACCTCOMMENTS) Accounts Comments
+
+    rem --- Get current record template for GLM_ACCT
+    num_files=1
+    dim rd_open_tables$[1:num_files],rd_open_opts$[1:num_files],rd_open_chans$[1:num_files],rd_open_tpls$[1:num_files]
+    rd_open_tables$[1]="GLM_ACCT",rd_open_opts$[1]="T"
+    
+    gosub open_tables
+    
+    dim glmAcct$:rd_open_tpls$[1]
+
+    rem --- Open destination glm-01 (GLM_ACCT) that has already been ported
+    glmAcct_found=0
+    glmAcct_dev=unt
+    open (glmAcct_dev,err=*next)destin_folder$+"/glm-01"; glmAcct_found=1
+    if glmAcct_found then
+        print "   Building GLM_ACCT (glm-01) MEMO_1024 field from "+cvs("glm-09",version_cvs)+" (GLM_ACCTCOMMENTS) table"
+        print(log_dev)"   Building GLM_ACCT (glm-01) MEMO_1024 field from "+cvs("glm-09",version_cvs)+" (GLM_ACCTCOMMENTS) table"
+
+        rem --- Open and lock source glm-09 (GLM_ACCTCOMMENTS)
+        glm09_dev=unt
+        open (glm09_dev)source_folder$+"/"+cvs("glm-09",version_cvs)
+        lock (glm09_dev)
+
+        rem --- Build new GLM_ACCT.MEMO_1024 field from glm-09 (GLM_ACCTCOMMENTS) table
+        currentFirm$=""
+        currentAccount$=""
+        memo$=""
+        read(glm09_dev,key="",dom=*next)
+        while 1
+            glm09_key$=key(glm09_dev,end=*break)
+            readrecord(glm09_dev)glm09_rec$
+            if glm09_rec$(1,12)<>currentFirm$+currentAccount$ then
+                record_found=0
+                readrecord(glmAcct_dev,key=currentFirm$+currentAccount$,dom=*next)glmAcct$; record_found=1
+                if record_found then
+                    glmAcct.memo_1024$=memo$
+                    glmAcct$=field(glmAcct$)         
+                    writerecord(glmAcct_dev)glmAcct$
+                endif
+                memo$=""
+                currentAccount$=glm09_rec$(3,10)
+                if glm09_rec$(1,2)<>currentFirm$ then
+                    currentFirm$=glm09_rec$(1,2)
+                endif
+            endif
+            memo$=memo$+cvs(glm09_rec$(16,48),2)+$0A$; rem --- must trim all trailing $00$ from record
+        wend
+        record_found=0
+        readrecord(glmAcct_dev,key=currentFirm$+currentAccount$,dom=*next)glmAcct$; record_found=1
+        if record_found then
+            glmAcct.memo_1024$=memo$
+            glmAcct$=field(glmAcct$)         
+            writerecord(glmAcct_dev)glmAcct$
+        endif
+        
+        close (glmAcct_dev,err=*next)
+        unlock (glm09_dev,err=*next)
+        close (glm09_dev,err=*next)
+    else
+        rd_meter_data$="GL Account Master file glm-01 not found in destination directory. Account Comments ("+cvs("glm-09",version_cvs)+") could not be ported."
+        rd_meter_total_recs=vectPort!.size()
+        rd_meter_action$="LST"
+        gosub disp_meter
+        print (err_dev)"GL Account Master file glm-01 not found in destination directory."+$0a$+"Account Comments ("+cvs("glm-09",version_cvs)+") could not be ported."
     endif
 
     return
