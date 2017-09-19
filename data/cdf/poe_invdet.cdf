@@ -1,3 +1,7 @@
+[[POE_INVDET.MEMO_1024.BINQ]]
+rem --- Launch Comments dialog
+	gosub comment_entry
+	callpoint!.setStatus("ABORT")
 [[POE_INVDET.AOPT-COMM]]
 rem --- invoke the comments dialog
 
@@ -22,7 +26,17 @@ rem ==========================================================================
 	disp_text$=callpoint!.getColumnData("POE_INVDET.MEMO_1024")
 	sv_disp_text$=disp_text$
 
-	editable$="YES"
+	rem --- Allow editing comments only for line codes of type "O"
+	poc_linecode_dev=fnget_dev("POC_LINECODE")
+	dim poc_linecode$:fnget_tpl$("POC_LINECODE")
+	po_line_code$=callpoint!.getColumnData("POE_INVDET.PO_LINE_CODE")
+	read record (poc_linecode_dev,key=firm_id$+po_line_code$,dom=*next)poc_linecode$
+	if poc_linecode.line_type$="O"
+		editable$="YES"
+	else
+		editable$="NO"
+	endif
+
 	force_loc$="NO"
 	baseWin!=null()
 	startx=0
@@ -62,22 +76,6 @@ rem ==========================================================================
 rem --- invoke the comments dialog
 
 	gosub comment_entry
-[[POE_INVDET.MEMO_1024.AVAL]]
-rem --- store first part of memo_1024 in order_memo
-rem --- this AVAL is hit if user navigates via arrows or clicks on the memo_1024 field, and double-clicks or ctrl-F to bring up editor
-rem --- if on a memo line or using ctrl-C or Comments button, code in the comment_entry: subroutine is hit instead
-
-	disp_text$=callpoint!.getUserInput()
-	if disp_text$<>callpoint!.getColumnUndoData("POE_INVDET.MEMO_1024")
-		memo_len=len(callpoint!.getColumnData("POE_INVDET.ORDER_MEMO"))
-		order_memo$=disp_text$
-		order_memo$=order_memo$(1,min(memo_len,(pos($0A$=order_memo$+$0A$)-1)))
-
-		callpoint!.setColumnData("POE_INVDET.MEMO_1024",disp_text$,1)
-		callpoint!.setColumnData("POE_INVDET.ORDER_MEMO",order_memo$,1)
-
-		callpoint!.setStatus("MODIFIED")
-	endif
 [[POE_INVDET.BEND]]
 rem --- Reset Header Balance
 
