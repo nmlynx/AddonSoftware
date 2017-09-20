@@ -1025,7 +1025,7 @@ rem --- cashbal, are-31
 				are11a$=field(are11a$)
 				writerecord(are_cashdet_dev)are11a$
 			else
-				read(are_cashdet_dev)
+				read(are_cashdet_dev,end=*next)
 			endif
 		next voffset
 	endif
