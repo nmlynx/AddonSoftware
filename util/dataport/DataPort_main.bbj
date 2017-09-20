@@ -552,6 +552,12 @@ next_file:
         goto next_file
     endif
 
+    rem --- Build SFE_WOMASTR.MEMO_1024 (sfe-01) from woe-07 (SFE_WOCOMNT (sfe-07)) Work Order Comments
+    if cvs(datafile$,8)="woe-07" then
+        gosub init_sfe01_memo1024
+        goto next_file
+    endif
+
     rem --- Split old header/detail files into separate files
     switch pos(cvs(datafile$,8)="woe-11;woe-21;woe-31;",7)
         case 1; rem --- woe-11
@@ -3480,6 +3486,75 @@ init_ivm01_memo1024: rem --- Build IVM_ITEMMAST.MEMO_1024 (ivm-01) from ivm-09 (
         rd_meter_action$="LST"
         gosub disp_meter
         print (err_dev)"Inventory Item Master file ivm-01 not found in destination directory."+$0a$+"Item Comments ("+cvs("ivm-09",version_cvs)+") could not be ported."
+    endif
+
+    return
+
+init_sfe01_memo1024: rem --- Build SFE_WOMASTR.MEMO_1024 (sfe-01) from woe-07 (SFE_WOCOMNT (sfe-07)) Work Order Comments
+
+    rem --- Get current record template for SFE_WOMASTR
+    num_files=1
+    dim rd_open_tables$[1:num_files],rd_open_opts$[1:num_files],rd_open_chans$[1:num_files],rd_open_tpls$[1:num_files]
+    rd_open_tables$[1]="SFE_WOMASTR",rd_open_opts$[1]="T"
+    
+    gosub open_tables
+    
+    dim sfeWOMastr$:rd_open_tpls$[1]
+
+    rem --- Open destination sfe-01 (SFE_WOMASTR) that has already been ported
+    sfeWOMastr_found=0
+    sfeWOMastr_dev=unt
+    open (sfeWOMastr_dev,err=*next)destin_folder$+"/sfe-01"; sfeWOMastr_found=1
+    if sfeWOMastr_found then
+        print "   Building SFE_WOMASTR (sfe-01) MEMO_1024 field from "+cvs("woe-07",version_cvs)+" (SFE_WOCOMNT) table"
+        print(log_dev)"   Building SFE_WOMASTR (sfe-01) MEMO_1024 field from "+cvs("woe-07",version_cvs)+" (SFE_WOCOMNT) table"
+
+        rem --- Open and lock source woe-07 (SFE_WOCOMNT (sfe-07))
+        woe07_dev=unt
+        open (woe07_dev)source_folder$+"/"+cvs("woe-07",version_cvs)
+        lock (woe07_dev)
+
+        rem --- Build new SFE_WOMASTR.MEMO_1024 field from woe-07 (SFE_WOCOMNT (sfe-07)) table
+        currentFirm$=""
+        currentLocation$=""
+        currentWO$=""
+        memo$=""
+        read(woe07_dev,key="",dom=*next)
+        while 1
+            woe07_key$=key(woe07_dev,end=*break)
+            readrecord(woe07_dev)woe07_rec$
+            if woe07_rec$(1,11)<>currentFirm$+currentLocation$+currentWO$ then
+                record_found=0
+                readrecord(sfeWOMastr_dev,key=currentFirm$+currentLocation$+currentWO$,dom=*next)sfeWOMastr$; record_found=1
+                if record_found then
+                    sfeWOMastr.memo_1024$=memo$
+                    sfeWOMastr$=field(sfeWOMastr$)         
+                    writerecord(sfeWOMastr_dev)sfeWOMastr$
+                endif
+                memo$=""
+                currentFirm$=woe07_rec$(1,2)
+                currentLocation$=woe07_rec$(3,2)
+                currentWO$=woe07_rec$(5,7)
+            endif
+            memo$=memo$+cvs(woe07_rec$(16,60),2)+$0A$; rem --- must trim all trailing $00$ from record
+        wend
+        record_found=0
+        readrecord(sfeWOMastr_dev,key=currentFirm$+currentLocation$+currentWO$,dom=*next)sfeWOMastr$; record_found=1
+        if record_found then
+            sfeWOMastr.memo_1024$=memo$
+            sfeWOMastr$=field(sfeWOMastr$)
+            writerecord(sfeWOMastr_dev)sfeWOMastr$
+        endif
+        
+        close (sfeWOMastr_dev,err=*next)
+        unlock (woe07_dev,err=*next)
+        close (woe07_dev,err=*next)
+    else
+        rd_meter_data$="Work Order Entry file sfe-01 not found in destination directory. Work Order Comments ("+cvs("woe-07",version_cvs)+") could not be ported."
+        rd_meter_total_recs=vectPort!.size()
+        rd_meter_action$="LST"
+        gosub disp_meter
+        print (err_dev)"Work Order Entry file sfe-01 not found in destination directory."+$0a$+"Work Order Comments ("+cvs("woe-07",version_cvs)+") could not be ported."
     endif
 
     return
