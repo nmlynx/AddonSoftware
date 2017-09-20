@@ -1,15 +1,7 @@
-[[IVE_TRANSDET.MEMO_1024.AVAL]]
-rem --- Store first part of memo_1024 in ls_comments.
-rem --- This AVAL is hit if user navigates via arrows or clicks on the memo_1024 field, and double-clicks or ctrl-F to bring up editor.
-rem --- If use ls_comments field, or use ctrl-C or Comments button, code in the comment_entry: subroutine is hit instead.
-
-	disp_text$=callpoint!.getUserInput()
-	if disp_text$<>callpoint!.getColumnUndoData("IVE_TRANSDET.MEMO_1024")
-		ls_comments$=disp_text$(1,pos($0A$=disp_text$+$0A$)-1)
-		callpoint!.setColumnData("IVE_TRANSDET.MEMO_1024",disp_text$,1)
-		callpoint!.setColumnData("IVE_TRANSDET.LS_COMMENTS",ls_comments$,1)
-		callpoint!.setStatus("MODIFIED")
-	endif
+[[IVE_TRANSDET.MEMO_1024.BINQ]]
+rem --- Launch Comments dialog
+	gosub comment_entry
+	callpoint!.setStatus("ABORT")
 [[IVE_TRANSDET.LS_COMMENTS.BINP]]
 rem --- Invoke the comments dialog
 
@@ -57,10 +49,6 @@ rem --- Display defaults for this row
 	if user_tpl.gl$ = "Y" and user_tpl.trans_post_gl$ = "Y" then
 		callpoint!.setTableColumnAttribute("IVE_TRANSDET.GL_ACCOUNT","DFLT",user_tpl.trans_adj_acct$)
 	endif
-
-rem --- Enable detail-only buttons
-
-	callpoint!.setOptionEnabled("COMM",1)
 [[IVE_TRANSDET.ARAR]]
 rem --- Setup for whether to test at end of line
 
@@ -81,10 +69,6 @@ rem --- Set item/warehouse defaults
 rem --- Disable cost entry until we know it's legal
 
 	util.disableGridCell(Form!, 11); rem --- Cost
-
-rem --- Enable detail-only buttons
-
-	callpoint!.setOptionEnabled("COMM",1)
 [[IVE_TRANSDET.LOTSER_NO.AVAL]]
 print "in LOTSER_NO.AVAL"; rem debug
 
@@ -203,6 +187,7 @@ ls_lookup: rem --- Call the lot lookup window and set default lot, lot location,
 		callpoint!.setColumnData( "IVE_TRANSDET.LOTSER_NO",   str(callpoint!.getDevObject("selected_lot"))  )
 		callpoint!.setColumnData( "IVE_TRANSDET.LS_LOCATION", str(callpoint!.getDevObject("selected_lot_loc")) )
 		callpoint!.setColumnData( "IVE_TRANSDET.LS_COMMENTS", str(callpoint!.getDevObject("selected_lot_cmt")) )
+		callpoint!.setColumnData( "IVE_TRANSDET.MEMO_1024", str(callpoint!.getDevObject("selected_lot_cmt")) )
 		rem user_tpl.avail = num( callpoint!.getDevObject("selected_lot_avail") )
 		rem callpoint!.setStatus("MODIFIED-REFRESH")
 		callpoint!.setStatus("REFRESH")
@@ -342,11 +327,13 @@ rem --- Uncommit quantity
 		call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
 	endif
 [[IVE_TRANSDET.AREC]]
-print "after new record (AREC)"; rem debug
-
 	callpoint!.setDevObject("qty_ok","")
 
 	gosub clear_display_fields
+
+rem --- Disable detail-only buttons
+
+	callpoint!.setOptionEnabled("COMM",0)
 [[IVE_TRANSDET.AGCL]]
 rem --- We'll be using the "util" object throughout.
 rem --- It doesn't matter where the "use" statement is
@@ -444,7 +431,6 @@ rem ==========================================================================
 			prev_qty=num(callpoint!.getColumnUndoData("IVE_TRANSDET.TRANS_QTY"))
 			commit=commit-(curr_qty-prev_qty)
 		endif
-print "ivm02 commit: ",commit;rem debug
 		user_tpl.avail  = qoh - commit
 		user_tpl.commit = commit
 		user_tpl.qoh    = qoh
@@ -461,8 +447,10 @@ print "ivm02 commit: ",commit;rem debug
 	
 		if user_tpl.this_item_lot_or_ser then
 			util.enableGridCells(Form!, cols!, this_row)
+			callpoint!.setOptionEnabled("COMM",1)
 		else
 			util.disableGridCells(Form!, cols!, this_row)
+			callpoint!.setOptionEnabled("COMM",0)
 		endif
 
 		rem --- Get lot/serial# info, if any
@@ -738,7 +726,6 @@ rem ==========================================================================
 		cols! = BBjAPI().makeVector()
 		cols!.addItem(8); rem --- lot loc
 		cols!.addItem(9); rem -- lot comment
-		cols!.addItem(10); rem -- memo_1024
 
 		if user_tpl.ls_found then
 			util.disableGridCells(Form!, cols!)
@@ -758,7 +745,13 @@ rem ==========================================================================
 	disp_text$=callpoint!.getColumnData("IVE_TRANSDET.MEMO_1024")
 	sv_disp_text$=disp_text$
 
-	editable$="YES"
+	rem --- Comments are only editable for lot/serial item
+	if user_tpl.this_item_lot_or_ser then
+		editable$="YES"
+	else
+		editable$="NO"
+	endif
+
 	force_loc$="NO"
 	baseWin!=null()
 	startx=0
