@@ -193,7 +193,6 @@ rem --- Warn if this WO is linked to a Sales Order
 
 rem --- cascade delete will take care of removing:
 rem ---   requirements (sfe_wooprtn/sfe-02, sfe_womatl/sfe-22, sfe_wosubcnt/sfe-32)
-rem ---   comments (sfe_wocomnt/sfe-07)
 rem ---   sfe_closedwo, sfe_openedwo, sfe_wocommit, sfe_wotrans (the old sfe-04 A/B/C/D recs)
 rem --- otherwise, need to:
 rem --- 1. remove sfe_womathdr/sfe_womatdtl (sfe-13/23) and uncommit inventory
@@ -908,6 +907,12 @@ rem --- Set LOCK_REF_NUM=Y for copied WO
 	lockRefNum!=callpoint!.getControl("SFE_WOMASTR.LOCK_REF_NUM")
 	lockRefNum!.setSelected(1)
 
+rem --- Get memo_1024 comments from WO that was copied
+	memo_1024$=callpoint!.getDevObject("memo_1024")
+	callpoint!.setColumnData("SFE_WOMASTR.MEMO_1024",memo_1024$,1)
+	memoRefNum!=callpoint!.getControl("SFE_WOMASTR.MEMO_1024")
+	memoRefNum!.setText(memo_1024$)
+
 	callpoint!.setStatus("SAVE")
 [[SFE_WOMASTR.SCH_PROD_QTY.AVAL]]
 rem --- Verify minimum quantity > 0
@@ -1285,29 +1290,16 @@ rem --- Disable Drawing and Revision Number if Recurring type
 rem --- create WO comments from BOM comments
 
 	if callpoint!.getDevObject("bm")="Y" and callpoint!.getDevObject("new_rec")="Y"
-	
+		comments$=""	
 		bmm09_dev=fnget_dev("BMM_BILLCMTS")
 		dim bmm_billcmts$:fnget_tpl$("BMM_BILLCMTS")
-		sfe07_dev=fnget_dev("SFE_WOCOMNT")
-		dim sfe_wocomnt$:fnget_tpl$("SFE_WOCOMNT")
-
-		sfe_wocomnt.firm_id$=firm_id$
-		sfe_wocomnt.wo_location$=callpoint!.getColumnData("SFE_WOMASTR.WO_LOCATION")
-		sfe_wocomnt.wo_no$=callpoint!.getColumnData("SFE_WOMASTR.WO_NO")
-
 		read (bmm09_dev,key=firm_id$+callpoint!.getColumnData("SFE_WOMASTR.ITEM_ID"),dom=*next)
-
 		while 1
 			read record (bmm09_dev,end=*break)bmm_billcmts$
 			if bmm_billcmts.firm_id$+bmm_billcmts.bill_no$<>firm_id$+callpoint!.getColumnData("SFE_WOMASTR.ITEM_ID") then break
-			wk$=fattr(sfe_wocomnt$,"SEQUENCE_NO")
-			seq_mask$=fill(dec(wk$(10,2)),"0")
-			sfe_wocomnt.sequence_no$=str(num(bmm_billcmts.sequence_num$):seq_mask$)
-			sfe_wocomnt.ext_comments$=bmm_billcmts.std_comments$
-			sfe_wocomnt$=field(sfe_wocomnt$)
-			write record (sfe07_dev)sfe_wocomnt$
+			comments$=comments$+cvs(bmm_billcmts.std_comments$,2)+$0A$
 		wend
-
+		if cvs(comments$,2)<>"" then callpoint!.setColumnData("SFE_WOMASTR.MEMO_1024",comments$,1)
 	endif
 
 rem --- adjust OO if qty has changed on an open WO
