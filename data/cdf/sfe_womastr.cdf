@@ -1565,7 +1565,7 @@ rem =========================================================
 	return
 
 rem =========================================================
-add_wo_comment: rem --- Add comment to next SFE_WOCMNT record(s)
+add_wo_comment: rem --- Add work order comment
 rem 	wo_comment$		input
 rem =========================================================
 
