@@ -43,22 +43,24 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    num_files=3
+    num_files=4
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="DDM_SYSTEMS",      open_opts$[1]="OTA"
-    open_tables$[2]="SFE_WOMASTR",      open_opts$[2]="OTA"
-    open_tables$[3]="SFE_WOCOMNT",      open_opts$[3]="OTA"
+    open_tables$[2]="SFE_WOSUBCNT",     open_opts$[2]="OTA"
+    open_tables$[3]="SFE_WOMASTR",      open_opts$[3]="OTA"
+    open_tables$[4]="SFE_WOCOMNT",      open_opts$[4]="OTA"
 
     gosub open_tables
 
-    ddm_systems=num(open_chans$[1]);    dim ddm_systems$:open_tpls$[1]
-    sfeWOMastr_dev=num(open_chans$[2]); dim sfeWOMastr$:open_tpls$[2]
+    ddm_systems=num(open_chans$[1]);     dim ddm_systems$:open_tpls$[1]
+    sfeWOSubCnt_dev=num(open_chans$[2]); dim sfeWOSubCnt$:open_tpls$[2]
+    sfeWOMastr_dev=num(open_chans$[3]);  dim sfeWOMastr$:open_tpls$[3]
 
 rem --- Table definition for SFE_WOCOMNT (sfe-o7) may be deleted in v19 (see Addon Bug 9127). So it may not
 rem --- exist when upgrading from before v17 to after v18, and adc_v1700conversion.aon executes sfc_v17initMinorRev.aon.
 
-    sfeWOComnt_dev=num(open_chans$[3])
-    if sfeWOComnt_dev dim sfeWOComnt$:open_tpls$[3]
+    sfeWOComnt_dev=num(open_chans$[4])
+    if sfeWOComnt_dev dim sfeWOComnt$:open_tpls$[4]
     
 rem --- Open log file in aon/logs directory
     
@@ -125,6 +127,35 @@ rem --- Start progress meter
     meter_text$=""
     meter_action$="WIN-LST"
     gosub disp_meter
+
+rem --- Initialize new SFE_WOSUBCNT MEMO_1024 field with EXT_COMMENTS
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" SFE_WOSUBCNT.MEMO_1024"
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+
+    rem --- Populate new MEMO_1024 field with old EXT_COMMENTS field
+    read(sfeWOSubCnt_dev,key=theFirm$,dom=*next)
+    while 1
+        sfeWOSubCnt_key$=key(sfeWOSubCnt_dev,end=*break)
+        if cvs(theFirm$,2)<>"" and pos(theFirm$=sfeWOSubCnt_key$)<>1 then break
+        extractrecord(sfeWOSubCnt_dev)sfeWOSubCnt$; rem Advisory Locking
+        if sfeWOSubCnt.firm_id$<>currentFirm$ then
+            rem --- Log next firm processed
+            print(log_dev)"    "+thisFile$+".FIRM_ID = "+sfeWOSubCnt.firm_id$
+            currentFirm$=sfeWOSubCnt.firm_id$
+        endif
+        if cvs(sfeWOSubCnt.ext_comments$,2)<>"" and cvs(sfeWOSubCnt.memo_1024$,2)="" then
+            sfeWOSubCnt.memo_1024$=cvs(sfeWOSubCnt.ext_comments$,2)
+            writerecord(sfeWOSubCnt_dev)sfeWOSubCnt$
+        else
+            read(sfeWOSubCnt_dev)
+        endif
+    wend
 
 rem --- Initialize SFE_WOMASTR new MEMO_1024 field
 
