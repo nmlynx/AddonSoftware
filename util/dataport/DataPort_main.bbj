@@ -533,6 +533,12 @@ next_file:
         gosub init_arm01_memo1024
         goto next_file
     endif
+
+    rem --- Build BMM_BILLMAST.MEMO_1024 (bmm-01) from bmm-09 (BMM_BILLCMTS) BOM Comments
+    if cvs(datafile$,8)="bmm-09" then
+        gosub init_bmm01_memo1024
+        goto next_file
+    endif
     
     rem --- Initialize and update glm-06 and adm-09/19/39
     if cvs(datafile$,8)="glm-06" then
@@ -3351,6 +3357,76 @@ init_arm01_memo1024: rem --- Build ARM_CUSTMAST.MEMO_1024 (arm-01) from arm-05 (
     endif
 
     return
+
+init_bmm01_memo1024: rem --- Build BMM_BILLMAST.MEMO_1024 (bmm-01) from bmm-09 (BMM_BILLCMTS) BOM Comments
+
+    rem --- Get current record template for BMM_BILLMAST
+    num_files=1
+    dim rd_open_tables$[1:num_files],rd_open_opts$[1:num_files],rd_open_chans$[1:num_files],rd_open_tpls$[1:num_files]
+    rd_open_tables$[1]="BMM_BILLMAST",rd_open_opts$[1]="T"
+    
+    gosub open_tables
+    
+    dim bmmBillMast$:rd_open_tpls$[1]
+
+    rem --- Open destination bmm-01 (BMM_BILLMAST) that has already been ported
+    bmmBillMast_found=0
+    bmmBillMast_dev=unt
+    open (bmmBillMast_dev,err=*next)destin_folder$+"/bmm-01"; bmmBillMast_found=1
+    if bmmBillMast_found then
+        print "   Building BMM_BILLMAST (bmm-01) MEMO_1024 field from "+cvs("bmm-09",version_cvs)+" (BMM_BILLCMTS) table"
+        print(log_dev)"   Building BMM_BILLMAST (bmm-01) MEMO_1024 field from "+cvs("bmm-09",version_cvs)+" (BMM_BILLCMTS) table"
+
+        rem --- Open and lock source bmm-09 (BMM_BILLCMTS)
+        bmm09_dev=unt
+        open (bmm09_dev)source_folder$+"/"+cvs("bmm-09",version_cvs)
+        lock (bmm09_dev)
+
+        rem --- Build new BMM_BILLMAST.MEMO_1024 field from bmm-09 (BMM_BILLCMTS) table
+        currentFirm$=""
+        currentBill$=""
+        memo$=""
+        read(bmm09_dev,key="",dom=*next)
+        while 1
+            bmm09_key$=key(bmm09_dev,end=*break)
+            readrecord(bmm09_dev)bmm09_rec$
+            if bmm09_rec$(1,22)<>currentFirm$+currentBill$ then
+                record_found=0
+                readrecord(bmmBillMast_dev,key=currentFirm$+currentBill$,dom=*next)bmmBillMast$; record_found=1
+                if record_found then
+                    bmmBillMast.memo_1024$=memo$
+                    bmmBillMast$=field(bmmBillMast$)
+                    writerecord(bmmBillMast_dev)bmmBillMast$
+                endif
+                memo$=""
+                currentBill$=bmm09_rec$(3,20)
+                if bmm09_rec$(1,2)<>currentFirm$ then
+                    currentFirm$=bmm09_rec$(1,2)
+                endif
+            endif
+            memo$=memo$+cvs(bmm09_rec$(26,48),2)+$0A$; rem --- must trim all trailing $00$ from record
+        wend
+        record_found=0
+        readrecord(bmmBillMast_dev,key=currentFirm$+currentBill$,dom=*next)bmmBillMast$; record_found=1
+        if record_found then
+            bmmBillMast.memo_1024$=memo$
+            bmmBillMast$=field(bmmBillMast$)
+            writerecord(bmmBillMast_dev)bmmBillMast$
+        endif
+        
+        close (bmmBillMast_dev,err=*next)
+        unlock (bmm09_dev,err=*next)
+        close (bmm09_dev,err=*next)
+    else
+        rd_meter_data$="BOM Master file bmm-01 not found in destination directory. BOM Comments ("+cvs("bmm-09",version_cvs)+") could not be ported."
+        rd_meter_total_recs=vectPort!.size()
+        rd_meter_action$="LST"
+        gosub disp_meter
+        print (err_dev)"BOM Master file bmm-01 not found in destination directory."+$0a$+"BOM Comments ("+cvs("bmm-09",version_cvs)+") could not be ported."
+    endif
+
+    return
+rem wgh ... 9177 ... stopped here
 
 init_glm01_memo1024: rem --- Build GLM_ACCT.MEMO_1024 (glm-01) from glm-09 (GLM_ACCTCOMMENTS) Accounts Comments
 
