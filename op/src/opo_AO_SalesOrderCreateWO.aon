@@ -25,7 +25,6 @@ rem --- Use statements and declares
         field protected BBjString customerId$
         field protected BBjNumber devAdsMasks = -1
         field protected BBjNumber devBmcOpCodes = -1
-        field protected BBjNumber devBmmBillCmts = -1
         field protected BBjNumber devBmmBillMast = -1
         field protected BBjNumber devIvmItemMast = -1
         field protected BBjNumber devIvmItemWhse = -1
@@ -64,7 +63,6 @@ rem --- Use statements and declares
         field protected BBjString orderNo$
         field protected BBjString tplAdsMasks$
         field protected BBjString tplBmcOpCodes$
-        field protected BBjString tplBmmBillCmts$
         field protected BBjString tplBmmBillMast$
         field protected BBjString tplIvmItemMast$
         field protected BBjString tplIvmItemWhse$
@@ -117,7 +115,7 @@ rem --- Use statements and declares
             dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
             open_tables$[1] ="ADS_MASKS",     open_opts$[1] = "OTA[1]"
             open_tables$[2] ="BMC_OPCODES",   open_opts$[2] = "OTA[1]"
-            open_tables$[3] ="BMM_BILLCMTS",  open_opts$[3] = "OTA[1]"
+            rem open_tables$[3] ="",  open_opts$[3] = ""
             open_tables$[4] ="BMM_BILLMAST",  open_opts$[4] = "OTA[1]"
             open_tables$[5] ="IVM_ITEMMAST",  open_opts$[5] = "OTA[1]"
             open_tables$[6] ="IVM_ITEMWHSE",  open_opts$[6] = "OTA[1]"
@@ -142,7 +140,6 @@ rem --- Use statements and declares
                 rem --- Hold on to channels and record templates
                 #devAdsMasks = num(open_chans$[1])
                 #devBmcOpCodes = num(open_chans$[2])
-                #devBmmBillCmts = num(open_chans$[3])
                 #devBmmBillMast = num(open_chans$[4])
                 #devIvmItemMast = num(open_chans$[5])
                 #devIvmItemWhse = num(open_chans$[6])
@@ -155,7 +152,6 @@ rem --- Use statements and declares
 
                 #tplAdsMasks$ = open_tpls$[1]
                 #tplBmcOpCodes$ = open_tpls$[2]
-                #tplBmmBillCmts$ = open_tpls$[3]
                 #tplBmmBillMast$ = open_tpls$[4]
                 #tplIvmItemMast$ = open_tpls$[5]
                 #tplIvmItemWhse$ = open_tpls$[6]
@@ -954,13 +950,11 @@ canCreateWO_1_error:rem --- Method error trap/handler
 
             rem --- Get Bill comments
             comments$=""
-            dim bmmBillCmtsRec$:#tplBmmBillCmts$
-            read(#devBmmBillCmts,key=#firmId$+woVect!.getItem(#SOLINE_ITEM),dom=*next)
-            while 1
-                readrecord(#devBmmBillCmts,end=*break)bmmBillCmtsRec$
-                if bmmBillCmtsRec.firm_id$+bmmBillCmtsRec.bill_no$<>#firmId$+woVect!.getItem(#SOLINE_ITEM) then break
-                comments$=comments$+cvs(bmmBillCmtsRec.std_comments$,2)+$0A$
-            wend
+            dim bmmBillMastRec$:#tplBmmBillMast$
+            read(#devBmmBillMast,key=#firmId$+woVect!.getItem(#SOLINE_ITEM),dom=*next)bmmBillMastRec$
+            if bmmBillMastRec.firm_id$+bmmBillMastRec.bill_no$=#firmId$+woVect!.getItem(#SOLINE_ITEM) then
+                comments$=comments$+cvs(bmmBillMastRec.memo_1024$,2)
+            endif
 
             rem --- Get the item's IVM_ITEMMAST record
             dim ivmItemMastRec$:#tplIvmItemMast$
@@ -1565,7 +1559,6 @@ woCount_error:rem --- Method error trap/handler
             rem --- Note that even though tables were opened using bac_open_tables.bbj, rd_table_chans$[all] is NOT being shared/passed.
             if #devAdsMasks >= 0 then close(#devAdsMasks,err=*next)
             if #devBmcOpCodes >= 0 then close(#devBmcOpCodes,err=*next)
-            if #devBmmBillCmts >= 0 then close(#devBmmBillCmts,err=*next)
             if #devBmmBillMast >= 0 then close(#devBmmBillMast,err=*next)
             if #devIvmItemMast >= 0 then close(#devIvmItemMast,err=*next)
             if #devIvmItemWhse >= 0 then close(#devIvmItemWhse,err=*next)
