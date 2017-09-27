@@ -407,7 +407,7 @@ rem --- Open tables
 	else
 		open_tables$[1]="BMC_OPCODES",open_opts$[1]="OTA"
 		open_tables$[2]="BMM_BILLMAST",open_opts$[2]="OTA"
-		open_tables$[3]="BMM_BILLCMTS",open_opts$[3]="OTA"
+		rem open_tables$[3]="",open_opts$[3]=""
 		open_tables$[4]="BMM_BILLMAT",open_opts$[4]="OTA"
 		open_tables$[5]="BMM_BILLOPER",open_opts$[5]="OTA"
 		open_tables$[6]="BMM_BILLSUB",open_opts$[6]="OTA"
@@ -1291,15 +1291,14 @@ rem --- create WO comments from BOM comments
 
 	if callpoint!.getDevObject("bm")="Y" and callpoint!.getDevObject("new_rec")="Y"
 		comments$=""	
-		bmm09_dev=fnget_dev("BMM_BILLCMTS")
-		dim bmm_billcmts$:fnget_tpl$("BMM_BILLCMTS")
-		read (bmm09_dev,key=firm_id$+callpoint!.getColumnData("SFE_WOMASTR.ITEM_ID"),dom=*next)
-		while 1
-			read record (bmm09_dev,end=*break)bmm_billcmts$
-			if bmm_billcmts.firm_id$+bmm_billcmts.bill_no$<>firm_id$+callpoint!.getColumnData("SFE_WOMASTR.ITEM_ID") then break
-			comments$=comments$+cvs(bmm_billcmts.std_comments$,2)+$0A$
-		wend
-		if cvs(comments$,2)<>"" then callpoint!.setColumnData("SFE_WOMASTR.MEMO_1024",comments$,1)
+		bmm01_dev=fnget_dev("BMM_BILLMAST")
+		dim bmm01a$:fnget_tpl$("BMM_BILLMAST")
+		item_id$=callpoint!.getColumnData("SFE_WOMASTR.ITEM_ID")
+		readrecord(bmm01_dev,key=firm_id$+item_id$,dom=*next)bmm01a$
+		if bmm01a.firm_id$+bmm01a.bill_no$=firm_id$+item_id$ then
+			comments$=cvs(bmm01a.memo_1024$,3)
+		endif
+		callpoint!.setColumnData("SFE_WOMASTR.MEMO_1024",comments$,1)
 	endif
 
 rem --- adjust OO if qty has changed on an open WO
