@@ -145,10 +145,12 @@ rem --- Inventory In-Active Parameters
         inactive$=Option!.getOptionData("IV_ITEM_INACTIVE")
         if inactive$="Y" then
           params!.put("OPTION_ACTIVE"," AND ivm_itemmast.item_inactive<>'Y' ")
+          exclude$="Y"
         else
           params!.put("OPTION_ACTIVE","")
+          exclude$="N"
         endif
-        params!.put("INACTIVE_ITEM",Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_ITEMS")+" = "+inactive$)
+        params!.put("INACTIVE_ITEM",Translate!.getTranslation("AON_EXCLUDE_INACTIVE")+Translate!.getTranslation("AON_ITEMS")+" = "+exclude$)
 
 rem --- Set Report Name & Subreport directory
 
