@@ -191,34 +191,34 @@ rem --- Initialize data file changes implemented during minor releases of v17
                         endif
                     next source
                 endif
+            endif
     
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": APM_VENDMAST.MEMO_1024 "+
+:               Translate!.getTranslation("AON_FROM_","From ")+"APM_VENDCMTS"
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+    
+            rem --- Execute AP upgrade conversion utility for minor releases of v17
+            theFirm$=""
+            call pgmdir$+"apc_v17initMinorRev.aon",theFirm$,rdForm!,status
+            if status=0 then
+                rem --- Conversion completed successfully
                 rem --- Increment progress meter
-                meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": APM_VENDMAST.MEMO_1024 "+
-:                   Translate!.getTranslation("AON_FROM_","From ")+"APM_VENDCMTS"
+                meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": APM_VENDCMTS"
                 meter_proc_recs=meter_proc_recs+1
                 meter_action$="MTR-LST"
                 gosub disp_meter
                 print(log_dev)meter_text$
-        
-                rem --- Execute AP upgrade conversion utility for minor releases of v17
-                theFirm$=""
-                call pgmdir$+"apc_v17initMinorRev.aon",theFirm$,rdForm!,status
-                if status=0 then
-                    rem --- Conversion completed successfully
-                    rem --- Increment progress meter
-                    meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
-:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": APM_VENDCMTS"
-                    meter_proc_recs=meter_proc_recs+1
-                    meter_action$="MTR-LST"
-                    gosub disp_meter
-                    print(log_dev)meter_text$
-                else
-                    rem --- Conversion did NOT complete successfully, exit with error message
-                    err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
-:                       Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
-:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": APM_VENDCMTS"+" *****"
-                    goto done
-                endif
+            else
+                rem --- Conversion did NOT complete successfully, exit with error message
+                err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                   Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": APM_VENDCMTS"+" *****"
+                goto done
             endif
         else
             rem --- Increment progress meter
@@ -359,34 +359,34 @@ rem --- Initialize data file changes implemented during minor releases of v17
                         endif
                     next source
                 endif
+            endif
     
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": ARM_CUSTMAST.MEMO_1024 "+
+:               Translate!.getTranslation("AON_FROM_","From ")+"ARM_CUSTCMTS"
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+    
+            rem --- Execute AR upgrade conversion utility for minor releases of v17
+            theFirm$=""
+            call pgmdir$+"arc_v17initMinorRev.aon",theFirm$,rdForm!,status
+            if status=0 then
+                rem --- Conversion completed successfully
                 rem --- Increment progress meter
-                meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": ARM_CUSTMAST.MEMO_1024 "+
-:                   Translate!.getTranslation("AON_FROM_","From ")+"ARM_CUSTCMTS"
+                meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": ARM_CUSTCMTS"
                 meter_proc_recs=meter_proc_recs+1
                 meter_action$="MTR-LST"
                 gosub disp_meter
                 print(log_dev)meter_text$
-        
-                rem --- Execute AR upgrade conversion utility for minor releases of v17
-                theFirm$=""
-                call pgmdir$+"arc_v17initMinorRev.aon",theFirm$,rdForm!,status
-                if status=0 then
-                    rem --- Conversion completed successfully
-                    rem --- Increment progress meter
-                    meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
-:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": ARM_CUSTCMTS"
-                    meter_proc_recs=meter_proc_recs+1
-                    meter_action$="MTR-LST"
-                    gosub disp_meter
-                    print(log_dev)meter_text$
-                else
-                    rem --- Conversion did NOT complete successfully, exit with error message
-                    err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
-:                       Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
-:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": ARM_CUSTCMTS"+" *****"
-                    goto done
-                endif
+            else
+                rem --- Conversion did NOT complete successfully, exit with error message
+                err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                   Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": ARM_CUSTCMTS"+" *****"
+                goto done
             endif
         else
             rem --- Increment progress meter
@@ -527,34 +527,34 @@ rem --- Initialize data file changes implemented during minor releases of v17
                         endif
                     next source
                 endif
+            endif
     
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": BMM_BILLMAST.MEMO_1024 "+
+:               Translate!.getTranslation("AON_FROM_","From ")+"BMM_BILLCMTS"
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+    
+            rem --- Execute BM upgrade conversion utility for minor releases of v17
+            theFirm$=""
+            call pgmdir$+"bmc_v17initMinorRev.aon",theFirm$,rdForm!,status
+            if status=0 then
+                rem --- Conversion completed successfully
                 rem --- Increment progress meter
-                meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": BMM_BILLMAST.MEMO_1024 "+
-:                   Translate!.getTranslation("AON_FROM_","From ")+"BMM_BILLCMTS"
+                meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": BMM_BILLCMTS"
                 meter_proc_recs=meter_proc_recs+1
                 meter_action$="MTR-LST"
                 gosub disp_meter
                 print(log_dev)meter_text$
-        
-                rem --- Execute BM upgrade conversion utility for minor releases of v17
-                theFirm$=""
-                call pgmdir$+"bmc_v17initMinorRev.aon",theFirm$,rdForm!,status
-                if status=0 then
-                    rem --- Conversion completed successfully
-                    rem --- Increment progress meter
-                    meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
-:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": BMM_BILLCMTS"
-                    meter_proc_recs=meter_proc_recs+1
-                    meter_action$="MTR-LST"
-                    gosub disp_meter
-                    print(log_dev)meter_text$
-                else
-                    rem --- Conversion did NOT complete successfully, exit with error message
-                    err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
-:                       Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
-:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": BMM_BILLCMTS"+" *****"
-                    goto done
-                endif
+            else
+                rem --- Conversion did NOT complete successfully, exit with error message
+                err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                   Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": BMM_BILLCMTS"+" *****"
+                goto done
             endif
         else
             rem --- Increment progress meter
@@ -695,34 +695,34 @@ rem --- Initialize data file changes implemented during minor releases of v17
                         endif
                     next source
                 endif
+            endif
     
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": GLM_ACCT.MEMO_1024 "+
+:               Translate!.getTranslation("AON_FROM_","From ")+"GLM_ACCTCOMMENTS"
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+    
+            rem --- Execute GL upgrade conversion utility for minor releases of v17
+            theFirm$=""
+            call pgmdir$+"glc_v17initMinorRev.aon",theFirm$,rdForm!,status
+            if status=0 then
+                rem --- Conversion completed successfully
                 rem --- Increment progress meter
-                meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": GLM_ACCT.MEMO_1024 "+
-:                   Translate!.getTranslation("AON_FROM_","From ")+"GLM_ACCTCOMMENTS"
+                meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": GLM_ACCTCOMMENTS"
                 meter_proc_recs=meter_proc_recs+1
                 meter_action$="MTR-LST"
                 gosub disp_meter
                 print(log_dev)meter_text$
-        
-                rem --- Execute GL upgrade conversion utility for minor releases of v17
-                theFirm$=""
-                call pgmdir$+"glc_v17initMinorRev.aon",theFirm$,rdForm!,status
-                if status=0 then
-                    rem --- Conversion completed successfully
-                    rem --- Increment progress meter
-                    meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
-:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": GLM_ACCTCOMMENTS"
-                    meter_proc_recs=meter_proc_recs+1
-                    meter_action$="MTR-LST"
-                    gosub disp_meter
-                    print(log_dev)meter_text$
-                else
-                    rem --- Conversion did NOT complete successfully, exit with error message
-                    err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
-:                       Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
-:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": GLM_ACCTCOMMENTS"+" *****"
-                    goto done
-                endif
+            else
+                rem --- Conversion did NOT complete successfully, exit with error message
+                err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                   Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": GLM_ACCTCOMMENTS"+" *****"
+                goto done
             endif
         else
             rem --- Increment progress meter
@@ -863,34 +863,34 @@ rem --- Initialize data file changes implemented during minor releases of v17
                         endif
                     next source
                 endif
+            endif
     
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": IVM_ITEMMAST.MEMO_1024 "+
+:               Translate!.getTranslation("AON_FROM_","From ")+"IVM_ITEMCMTS"
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+    
+            rem --- Execute IV upgrade conversion utility for minor releases of v17
+            theFirm$=""
+            call pgmdir$+"ivc_v17initMinorRev.aon",theFirm$,rdForm!,status
+            if status=0 then
+                rem --- Conversion completed successfully
                 rem --- Increment progress meter
-                meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": IVM_ITEMMAST.MEMO_1024 "+
-:                   Translate!.getTranslation("AON_FROM_","From ")+"IVM_ITEMCMTS"
+                meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": IVM_ITEMCMTS"
                 meter_proc_recs=meter_proc_recs+1
                 meter_action$="MTR-LST"
                 gosub disp_meter
                 print(log_dev)meter_text$
-        
-                rem --- Execute IV upgrade conversion utility for minor releases of v17
-                theFirm$=""
-                call pgmdir$+"ivc_v17initMinorRev.aon",theFirm$,rdForm!,status
-                if status=0 then
-                    rem --- Conversion completed successfully
-                    rem --- Increment progress meter
-                    meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
-:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": IVM_ITEMCMTS"
-                    meter_proc_recs=meter_proc_recs+1
-                    meter_action$="MTR-LST"
-                    gosub disp_meter
-                    print(log_dev)meter_text$
-                else
-                    rem --- Conversion did NOT complete successfully, exit with error message
-                    err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
-:                       Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
-:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": IVM_ITEMCMTS"+" *****"
-                    goto done
-                endif
+            else
+                rem --- Conversion did NOT complete successfully, exit with error message
+                err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                   Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": IVM_ITEMCMTS"+" *****"
+                goto done
             endif
         else
             rem --- Increment progress meter
@@ -1443,34 +1443,34 @@ rem --- Initialize data file changes implemented during minor releases of v17
                         endif
                     next source
                 endif
+            endif
     
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": SFE_WOMASTR.MEMO_1024 "+
+:               Translate!.getTranslation("AON_FROM_","From ")+"SFE_WOCOMNT"
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+    
+            rem --- Execute SF upgrade conversion utility for minor releases of v17
+            theFirm$=""
+            call pgmdir$+"sfc_v17initMinorRev.aon",theFirm$,rdForm!,status
+            if status=0 then
+                rem --- Conversion completed successfully
                 rem --- Increment progress meter
-                meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": SFE_WOMASTR.MEMO_1024 "+
-:                   Translate!.getTranslation("AON_FROM_","From ")+"SFE_WOCOMNT"
+                meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": SFE_WOCOMNT"
                 meter_proc_recs=meter_proc_recs+1
                 meter_action$="MTR-LST"
                 gosub disp_meter
                 print(log_dev)meter_text$
-        
-                rem --- Execute SF upgrade conversion utility for minor releases of v17
-                theFirm$=""
-                call pgmdir$+"sfc_v17initMinorRev.aon",theFirm$,rdForm!,status
-                if status=0 then
-                    rem --- Conversion completed successfully
-                    rem --- Increment progress meter
-                    meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
-:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": SFE_WOCOMNT"
-                    meter_proc_recs=meter_proc_recs+1
-                    meter_action$="MTR-LST"
-                    gosub disp_meter
-                    print(log_dev)meter_text$
-                else
-                    rem --- Conversion did NOT complete successfully, exit with error message
-                    err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
-:                       Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
-:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": SFE_WOCOMNT"+" *****"
-                    goto done
-                endif
+            else
+                rem --- Conversion did NOT complete successfully, exit with error message
+                err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                   Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": SFE_WOCOMNT"+" *****"
+                goto done
             endif
         else
             rem --- Increment progress meter
