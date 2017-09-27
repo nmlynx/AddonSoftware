@@ -16,6 +16,8 @@ rem --- status       : Status/0=No error (returned)
     setesc std_error
     
     enter theFirm$,rdForm!,status
+rem wgh ... 9177
+theFirm$=""
 
 rem --- Initializations
 
@@ -43,22 +45,28 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    num_files=3
+    num_files=6
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="DDM_SYSTEMS",      open_opts$[1]="OTA"
-    open_tables$[2]="BMM_BILLMAST",     open_opts$[2]="OTA"
-    open_tables$[3]="BMM_BILLCMTS",     open_opts$[3]="OTA"
+    open_tables$[2]="BMM_BILLMAT",     open_opts$[2]="OTA"
+    open_tables$[3]="BMM_BILLOPER",     open_opts$[3]="OTA"
+    open_tables$[4]="BMM_BILLSUB",     open_opts$[4]="OTA"
+    open_tables$[5]="BMM_BILLMAST",     open_opts$[5]="OTA"
+    open_tables$[6]="BMM_BILLCMTS",     open_opts$[6]="OTA"
 
     gosub open_tables
 
     ddm_systems=num(open_chans$[1]);     dim ddm_systems$:open_tpls$[1]
-    bmmBillMast_dev=num(open_chans$[2]);  dim bmmBillMast$:open_tpls$[2]
+    bmmBillMat_dev=num(open_chans$[2]);  dim bmmBillMat$:open_tpls$[2]
+    bmmBillOper_dev=num(open_chans$[3]); dim bmmBillOper$:open_tpls$[3]
+    bmmBillSub_dev=num(open_chans$[4]);  dim bmmBillSub$:open_tpls$[4]
+    bmmBillMast_dev=num(open_chans$[5]); dim bmmBillMast$:open_tpls$[5]
 
 rem --- Table definition for BMM_BILLCMTS (bmm-09) may be deleted in v19 (see Addon Bug 9127). So it may not
 rem --- exist when upgrading from before v17 to after v18, and adc_v1700conversion.aon executes bmc_v17initMinorRev.aon.
 
-    bmmBillCmts_dev=num(open_chans$[3])
-    if bmmBillCmts_dev dim bmmBillCmts$:open_tpls$[3]
+    bmmBillCmts_dev=num(open_chans$[6])
+    if bmmBillCmts_dev dim bmmBillCmts$:open_tpls$[6]
     
 rem --- Open log file in aon/logs directory
     
@@ -125,6 +133,63 @@ rem --- Start progress meter
     meter_text$=""
     meter_action$="WIN-LST"
     gosub disp_meter
+
+rem --- Initialize new MEMO_1024 field in selected files
+
+    rem --- Identify files to initialize MEMO_1024 in
+    selectedFiles!=new java.util.TreeMap()
+    
+rem    fileVec!=BBjAPI().makeVector()
+rem    fileVec!.addItem(bmmBillMat_dev)
+rem    fileVec!.addItem(fattr(bmmBillMat$))
+rem    selectedFiles!.put("BMM_BILLMAT",fileVec!)
+    
+rem    fileVec!=BBjAPI().makeVector()
+rem    fileVec!.addItem(bmmBillOper_dev)
+rem    fileVec!.addItem(fattr(bmmBillOper$))
+rem    selectedFiles!.put("BMM_BILLOPER,fileVec!)
+    
+    fileVec!=BBjAPI().makeVector()
+    fileVec!.addItem(bmmBillSub_dev)
+    fileVec!.addItem(fattr(bmmBillSub$))
+    selectedFiles!.put("BMM_BILLSUB",fileVec!)
+
+    filesIter!=selectedFiles!.keySet().iterator()
+    while filesIter!.hasNext()
+        thisFile$=filesIter!.next()
+        fileVec!=selectedFiles!.get(thisFile$)
+        thisChan=fileVec!.getItem(0)
+        dim thisTpl$:fileVec!.getItem(1)
+        currentFirm$=""
+
+        rem --- Increment progress meter
+        meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" "+thisFile$+".MEMO_1024"
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)
+        print(log_dev)meter_text$
+
+        rem --- Populate new MEMO_1024 field with old EXT_COMMENTS field
+        read(thisChan,key=theFirm$,dom=*next)
+        while 1
+            this_key$=key(thisChan,end=*break)
+            if cvs(theFirm$,2)<>"" and pos(theFirm$=this_key$)<>1 then break
+            extractrecord(thisChan)thisTpl$; rem Advisory Locking
+            if thisTpl.firm_id$<>currentFirm$ then
+                rem --- Log next firm processed
+                print(log_dev)"    "+thisFile$+".FIRM_ID = "+thisTpl.firm_id$
+                currentFirm$=thisTpl.firm_id$
+            endif
+            if cvs(thisTpl.ext_comments$,2)<>"" and cvs(thisTpl.memo_1024$,2)="" then
+                thisTpl.memo_1024$=cvs(thisTpl.ext_comments$,2)
+                writerecord(thisChan)thisTpl$
+            else
+                read(thisChan)
+            endif
+        wend
+    wend
+goto done; rem wgh ... 9177
 
 rem --- Initialize BMM_BILLMAST new MEMO_1024 field
 
