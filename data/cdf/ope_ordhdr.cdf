@@ -2750,27 +2750,23 @@ rem --- Should we call Credit Action?
 rem ==========================================================================
 do_picklist: rem --- Print a Pick List
 rem ==========================================================================
-
-	print "in do_picklist..."; rem debug
-
-	ope_ordhdr=fnget_dev("OPE_ORDHDR")
-	read (ope_ordhdr);rem release extract so Pick List print can re-extract it
-
-	rem --- check if reprint
-	set_reprint_flag$=""
-	set_reprint_flag_old_value$=""
-	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then 
-		set_reprint_flag$="Y"
-		set_reprint_flag_value$=callpoint!.getColumnData("OPE_ORDHDR.REPRINT_FLAG")
-		callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y")
-	endif
-
-rem --- on demand pick list (or quote)
  
 	cp_cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	cp_order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	cp_invoice_no$=callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")
 	user_id$=stbl("+USER_ID")
+
+	rem	rem --- Check if reprint
+	ope01_dev=fnget_dev("OPE_ORDHDR")
+	dim ope01a$:fnget_tpl$("OPE_ORDHDR")
+	if callpoint!.getColumnData("OPE_ORDHDR.PRINT_STATUS") = "Y" then 
+		extract record (ope01_dev, key=firm_id$+"E"+"  "+cp_cust_id$+cp_order_no$+cp_invoice_no$) ope01a$; rem Advisory Locking
+		ope01a.reprint_flag$="Y"
+		writerecord(ope01_dev)ope01a$
+		callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG", "Y",1)
+	else
+		read (ope01_dev);rem release extract so Pick List print can re-extract it
+	endif
  
 	dim dflt_data$[3,1]
 	dflt_data$[1,0]="CUSTOMER_ID"
@@ -2789,7 +2785,9 @@ rem --- on demand pick list (or quote)
 :	                       "",
 :	                       dflt_data$[all]	
 
-	callpoint!.setStatus("RECORD:["+firm_id$+"E"+"  "+cp_cust_id$+cp_order_no$+cp_invoice_no$+"]")
+	rem --- Update print_status
+	extract record (ope01_dev, key=firm_id$+"E"+"  "+cp_cust_id$+cp_order_no$+cp_invoice_no$) ope01a$; rem Advisory Locking
+	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS",ope01a.print_status$,1)
 
 	return
 
