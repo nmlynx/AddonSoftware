@@ -79,3 +79,15 @@ Bug 9141: Made sure (ado_funct.src) func.getCompanyLogo() always closes
 the ddm_tables.dat and ddm_table_tpls.dat files.
 ----
 Modified: ad/src/ado_func.src
+
+=======================================================================================================================================
+Revision: bf55ff852592343c846b24d44de54bc4f5c891cd
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 10/10/2017 6:30:08 PM
+Message:
+Bug 9172: Eliminated the callpoint!.setStatus("RECORD:...") that use to
+follow the launch of the OPR_ODERPICKDMD form that executed
+opc_picklist.aon where the OPT_INVHDR record is updated.
+----
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_ordhdr.cdf
