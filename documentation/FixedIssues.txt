@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-10-11
+ Report Date:   2017-10-12
  Report Branch: AddonSoftware 17.10
  Last Release:  AddonSoftware 17.02
 =======================================================================================================================================
@@ -110,3 +110,29 @@ Bug 7911: Aligned Ext Price and Invoice Total amounts.
 ----
 Modified: reports/SalesInvoiceDetails.jasper
 Modified: reports/SalesInvoiceDetails.jrxml
+
+=======================================================================================================================================
+Revision: ae458c72925c022f866706e6e4bb0a50fb441828
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 10/12/2017 10:09:37 AM
+Message:
+Bug 8171: Replaced date(0) with stbl("+SYSTEM_DATE") where accounting
+transaction type dates are wanted.
+----
+Modified: ad/src/ads_execsummary.aon
+Modified: data/bar/adm_procbatches.xml
+Modified: data/bar/ape_invdate.xml
+Modified: data/bar/ape_orddate.xml
+Modified: data/bar/gls_params.xml
+Modified: data/bar/poe_invdate.xml
+Modified: data/bar/poe_replenselect.xml
+Modified: data/cdf/adm_procbatches.cdf
+Modified: data/cdf/ape_invdate.cdf
+Modified: data/cdf/ape_orddate.cdf
+Modified: data/cdf/gls_params.cdf
+Modified: data/cdf/poe_invdate.cdf
+Modified: data/cdf/poe_replenselect.cdf
+Modified: gl/src/glu_recurring.aon
+Modified: op/src/opo_AO_SalesOrderCreateWO.aon
+Modified: po/src/pom_calendar.aon
+Modified: sf/src/sfm_calendar.aon
