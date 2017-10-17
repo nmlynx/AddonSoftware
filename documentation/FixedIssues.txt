@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-10-16
+ Report Date:   2017-10-17
  Report Branch: AddonSoftware 17.10
  Last Release:  AddonSoftware 17.02
 =======================================================================================================================================
@@ -138,6 +138,17 @@ Modified: po/src/pom_calendar.aon
 Modified: sf/src/sfm_calendar.aon
 
 =======================================================================================================================================
+Revision: 3650671f94ab60e1c4250c9832af496c3c8d1ed4
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 10/12/2017 12:21:18 PM
+Message:
+ER 974: Made the Beginning and Ending Dates required, and defaulted them
+to the current system month/year.
+----
+Modified: data/bar/opr_salestax.xml
+Added: data/cdf/opr_salestax.cdf
+
+=======================================================================================================================================
 Revision: 05590dc5cce7c9258d60bc3e564585f5e08e46e8
 Author: Bill Halsted <bhalsted@basis.com>
 Date: 10/16/2017 11:18:08 AM
@@ -154,7 +165,7 @@ Revision: 7ae1faf866319c1655fbdf605a1a041ec2affcb2
 Author: Bill Halsted <bhalsted@basis.com>
 Date: 10/16/2017 5:57:08 PM
 Message:
-Bug 4289: Do not print previously printed items on a Picking List unless
+ER 4289: Do not print previously printed items on a Picking List unless
 the Picking List is labeled "REPRINT". And, only print previously
 printed items on a Picking List labeled "REPRINT".
 ----
@@ -168,3 +179,14 @@ Modified: reports/OPPickListDet.jrxml
 Modified: reports/OPPickListHdr.jasper
 Modified: reports/OPPickListHdr.jrxml
 Modified: sprocs/OPPICKLIST_DET.prc
+
+=======================================================================================================================================
+Revision: cc719334f09936e34c15ce119837ec7933bde51a
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 10/17/2017 10:18:44 AM
+Message:
+ER 974: When GL is installed, set default Beginning and Ending Dates to
+month/year for the prior AR fiscal period.
+----
+Modified: data/bar/opr_salestax.xml
+Modified: data/cdf/opr_salestax.cdf
