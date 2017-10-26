@@ -298,3 +298,18 @@ Modified: config/fra/addon.men
 Modified: config/frc/addon.men
 Modified: config/ita/addon.men
 Added: data/bar/arr_slspsncalls.xml
+
+=======================================================================================================================================
+Revision: 928b1c96244335cba47692dcf2107205fefa5ccc
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 10/26/2017 1:28:28 PM
+Message:
+ER 7699: In Payment Authorization allowed an individual to be both a
+reviewer and an approver. But didn't let them approve invoices they've
+reviewed. Require the approver to be different from the reviewer.
+----
+Modified: data/bar/ape_payselect.xml
+Modified: data/bar/apm_approvers.xml
+Modified: data/cdf/ape_payselect.cdf
+Modified: data/cdf/apm_approvers.cdf
+Added: data/sync/ads_messages~ap_inv_pay_revw_appv.xml
