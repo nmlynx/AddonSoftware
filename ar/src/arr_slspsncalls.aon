@@ -84,7 +84,7 @@ rem --- Retrieve parameter records
     m1=len(m1$)
 
 rem -- Heading Initialization
-    columns=6; if op$="Y" then columns=7
+    columns=7; if op$="Y" then columns=8
     dim columns$[columns,10]
     customer_phone_contact$=Translate!.getTranslation("AON_CUSTOMER")+"^"+Translate!.getTranslation("AON_PHONE")+" & "+
 :       Translate!.getTranslation("AON_CONTACT")
@@ -93,15 +93,17 @@ rem -- Heading Initialization
     col=1; if op$="Y" then col=col+1
     columns$[col,0]=Translate!.getTranslation("AON_INVOICE"),columns$[col,1]="C",columns$[col,2]="10"
     col=2; if op$="Y" then col=col+1
-        columns$[col,0]=Translate!.getTranslation("AON_INVOICE")+"^"+Translate!.getTranslation("AON_DATE"),columns$[col,1]="C",columns$[col,2]="10"
+    columns$[col,0]=Translate!.getTranslation("AON_INVOICE")+"^"+Translate!.getTranslation("AON_DATE"),columns$[col,1]="C",columns$[col,2]="10"
     col=3; if op$="Y" then col=col+1
-        columns$[col,0]=Translate!.getTranslation("AON_TERMS"),columns$[col,1]="C",columns$[col,2]="20"
+    columns$[col,0]=Translate!.getTranslation("AON_TERMS"),columns$[col,1]="C",columns$[col,2]="20"
     col=4; if op$="Y" then col=col+1
-        columns$[col,0]=Translate!.getTranslation("AON_DUE_DATE"),columns$[col,1]="C",columns$[col,2]="10"
+    columns$[col,0]=Translate!.getTranslation("AON_DUE_DATE"),columns$[col,1]="C",columns$[col,2]="10"
     col=5; if op$="Y" then col=col+1
-        columns$[col,0]=Translate!.getTranslation("AON_INVOICE_AMOUNT"),columns$[col,1]="N",columns$[col,2]="12",columns$[col,3]=m1$
+    columns$[col,0]=Translate!.getTranslation("AON_INVOICE_AMOUNT"),columns$[col,1]="N",columns$[col,2]="12",columns$[col,3]=m1$
     col=6; if op$="Y" then col=col+1
-        columns$[col,0]=Translate!.getTranslation("AON_BALANCE_DUE"),columns$[col,1]="N",columns$[col,2]="12",columns$[col,3]=m1$
+    columns$[col,0]=Translate!.getTranslation("AON_BALANCE_DUE"),columns$[col,1]="N",columns$[col,2]="12",columns$[col,3]=m1$
+    col=7; if op$="Y" then col=col+1
+    columns$[col,0]=Translate!.getTranslation("AON_DAYS")+"^"+Translate!.getTranslation("AON_PAST_DUE"),columns$[col,1]="N",columns$[col,2]="10"
 
     call stbl("+DIR_PGM",err=*next)+"adc_docout_adj.aon",columns$[all]
 
@@ -208,9 +210,9 @@ rem --- Read next Customer Detail (arm-02) record
             invoiceProp!=new Properties()
             invoiceProp!.setProperty("order_no",opt01a.order_no$)
             invoiceProp!.setProperty("ar_inv_no",art01a.ar_inv_no$)
-            invoiceProp!.setProperty("invoice_date",fndate$(art01a.invoice_date$))
+            invoiceProp!.setProperty("invoice_date",art01a.invoice_date$)
             invoiceProp!.setProperty("terms",arm10a.code_desc$)
-            invoiceProp!.setProperty("inv_due_date",fndate$(art01a.inv_due_date$))
+            invoiceProp!.setProperty("inv_due_date",art01a.inv_due_date$)
             invoiceProp!.setProperty("invoice_amt",str(art01a.invoice_amt))
             invoiceProp!.setProperty("invoice_bal",str(art01a.invoice_bal))
             invoiceMap!.put(art01a.ar_inv_no$,invoiceProp!)
@@ -270,11 +272,14 @@ rem --- Read next Customer Detail (arm-02) record
                     endif
                     if op$="Y" then outVect!.addItem(invoiceProp!.getProperty("order_no"))
                     outVect!.addItem(invoiceProp!.getProperty("ar_inv_no"))
-                    outVect!.addItem(invoiceProp!.getProperty("invoice_date"))          
+                    outVect!.addItem(fndate$(invoiceProp!.getProperty("invoice_date")))          
                     outVect!.addItem(invoiceProp!.getProperty("terms"))
-                    outVect!.addItem(invoiceProp!.getProperty("inv_due_date"))
+                    outVect!.addItem(fndate$(invoiceProp!.getProperty("inv_due_date")))
                     outVect!.addItem(invoiceProp!.getProperty("invoice_amt"))
                     outVect!.addItem(invoiceProp!.getProperty("invoice_bal"))
+                    daysPastDue=0
+                    call pgmdir$+"adc_daydates.aon",invoiceProp!.getProperty("inv_due_date"),stbl("+SYSTEM_DATE"),daysPastDue
+                    outVect!.addItem(str(daysPastDue))
                 wend; rem --- invoices
             wend; rem --- customers
         wend; rem --- salespersons
