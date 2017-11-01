@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-10-31
+ Report Date:   2017-11-01
  Report Branch: AddonSoftware 17.10
  Last Release:  AddonSoftware 17.02
 =======================================================================================================================================
@@ -364,3 +364,18 @@ in order to clarify what they do.
 Modified: data/bar/apm_vendmast.xml
 Modified: prop/addon.properties
 Modified: prop/addon_en.properties
+
+=======================================================================================================================================
+Revision: 47e31769a94778d6eee143a7b081a278f679e2ab
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 11/1/2017 12:19:54 PM
+Message:
+Bug 9175: Modified adc_v1500conversion.aon task to get fiscal calendar
+period end dates from either the new installation's gls_params for v15
+and v16, or the old installation's gls_params for v17 and later. The
+fiscal calendar perios end dates are now passed to
+adc_histrebuild_v15.aon in a string array.
+----
+Modified: ad/src/adc_fiscalperyr_v15.aon
+Modified: ad/src/adc_v1500conversion.aon
+Modified: sa/src/sac_histrebuild_v15.aon
