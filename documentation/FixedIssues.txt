@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-11-09
+ Report Date:   2017-11-13
  Report Branch: AddonSoftware 17.10
  Last Release:  AddonSoftware 17.02
 =======================================================================================================================================
@@ -449,3 +449,13 @@ to the BM Operations Where Used Listing report.
 Modified: bm/src/bmr_oplist.aon
 Modified: bm/src/bmr_oplist_o1.aon
 Modified: data/bar/bmr_oplist.xml
+
+=======================================================================================================================================
+Revision: 5f8cb18be1aa1ed83042acb041b142a04e1dd00f
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 11/13/2017 12:07:47 PM
+Message:
+Bug 9222: Modified sales register query of ope_prtlist to use the full
+PRIMARY key for ope_invhdr in the INNER JOIN.
+----
+Modified: op/src/opr_salesregister.aon
