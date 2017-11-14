@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-11-13
+ Report Date:   2017-11-14
  Report Branch: AddonSoftware 17.10
  Last Release:  AddonSoftware 17.02
 =======================================================================================================================================
@@ -457,5 +457,18 @@ Date: 11/13/2017 12:07:47 PM
 Message:
 Bug 9222: Modified sales register query of ope_prtlist to use the full
 PRIMARY key for ope_invhdr in the INNER JOIN.
+----
+Modified: op/src/opr_salesregister.aon
+
+=======================================================================================================================================
+Revision: f9da1cef87775f5fe0aa66bca750de82e66ca65e
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 11/14/2017 1:33:48 PM
+Message:
+Bug 9222: Further optimize that sales register query by using the
+AO_STAT_CUST_ORD index on ope_invhdr instead of the PRIMARY index. With
+the AO_STAT_CUST_ORD index we can limit the ope_invhdr query to just
+records in 'E'ntry or 'R'egister status, and skip the vast majority that
+will be in 'U'pdate status.
 ----
 Modified: op/src/opr_salesregister.aon
