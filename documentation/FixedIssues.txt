@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-11-14
+ Report Date:   2017-11-16
  Report Branch: AddonSoftware 17.10
  Last Release:  AddonSoftware 17.02
 =======================================================================================================================================
@@ -472,3 +472,19 @@ records in 'E'ntry or 'R'egister status, and skip the vast majority that
 will be in 'U'pdate status.
 ----
 Modified: op/src/opr_salesregister.aon
+
+=======================================================================================================================================
+Revision: 12a33390706f15525c5d66c5d901c603f5d53ff7
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 11/16/2017 3:27:51 PM
+Message:
+Bug 9172: Reverted previous fix for this Bug 9172. Instead,
+re-positioned callpoint!.setStatus("RECORD:...") statements and
+eliminated unnecessary callpoint!.setStatus("SAVE") statements. Also,
+some general code clean-up.
+----
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_invhdr.cdf
+Modified: data/cdf/ope_ordhdr.cdf
+Modified: op/src/opc_creditaction.aon
