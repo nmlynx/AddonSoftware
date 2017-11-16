@@ -774,42 +774,12 @@ rem --- Print a counter Invoice
 		break
 	endif
 
-	if user_tpl.credit_installed$ <> "Y" or callpoint!.getColumnData("OPE_INVHDR.CASH_SALE") = "Y" then
+rem --- No need to check credit first
 
-	rem --- No need to check credit first
-
-		gosub do_invoice
-		user_tpl.do_end_of_form = 0
-		callpoint!.clearStatus()
-		callpoint!.setStatus("NEWREC-ACTIVATE")
-	else
-
-	rem --- Can't print until released from credit
-
-		gosub force_print_status
-		gosub do_credit_action
-
-		print "---Print Status: """, callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS"), """"; rem debug
-
-		if pos(action$ = "XU") or (action$ = "R" and callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS") = "N") then 
-
-		rem --- Couldn't do credit action, or did credit action w/ no problem, or released from credit but didn't print
-
-			gosub do_invoice
-			user_tpl.do_end_of_form = 0
-			callpoint!.clearStatus()
-			callpoint!.setStatus("NEWREC-ACTIVATE")
-		else
-			if action$ = "R" and callpoint!.getColumnData("OPE_INVHDR.PRINT_STATUS") = "Y" then 
-
-			rem --- Released from credit and did print
-
-				user_tpl.do_end_of_form = 0
-				callpoint!.clearStatus()
-				callpoint!.setStatus("NEWREC")
-			endif
-		endif
-	endif
+	gosub do_invoice
+	user_tpl.do_end_of_form = 0
+	callpoint!.clearStatus()
+	callpoint!.setStatus("NEWREC-ACTIVATE")
 [[OPE_INVHDR.BREX]]
 rem --- Are both Customer and Order entered?
 
@@ -882,16 +852,6 @@ rem --- Calculate taxes and write it back
 	ordhdr_key$=ordhdr_rec.firm_id$+ordhdr_rec.trans_status$+ordhdr_rec.ar_type$+ordhdr_rec.customer_id$+ordhdr_rec.order_no$+ordhdr_rec.ar_inv_no$
 	extractrecord(ordhdr_dev,key=ordhdr_key$)ordhdr_rec$; rem Advisory Locking
 	callpoint!.setStatus("SETORIG")
-
-rem --- Credit action
-
-	rem --- Temporay work around to avoid error 11 when no record exists re Barista bug 5743
-	rem --- Header record will exist if at least one detail line has been entered.
-	if GridVect!.getItem(0).size()>0 then
-		if ordHelp!.calcOverCreditLimit() and callpoint!.getDevObject("credit_action_done") <> "Y" then
-			gosub do_credit_action
-		endif
-	endif
 
 rem --- Does the total of lot/serial# match the qty shipped for each detail line?
 
@@ -2718,84 +2678,8 @@ rem ==========================================================================
 	return
 
 rem ==========================================================================
-do_credit_action: rem --- Launch the credit action program / form
-rem ==========================================================================
-
-rem --- Invoicing should only allow this if already on Credit Hold.
-
-rem --- The following line will prevent credit action from ever being called.
-action$="U"
-return
-
-	if callpoint!.getColumnData("OPE_INVHDR.CREDIT_FLAG") <> "C"
-		action$="U"
-		return
-	endif
-
-	print "in do_credit_action..."; rem debug
-
-	inv_type$ = callpoint!.getColumnData("OPE_INVHDR.INVOICE_TYPE")
-	cust_id$  = callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
-	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-
-rem --- Should we call Credit Action?
-
-	if user_tpl.credit_installed$ = "Y" and inv_type$ <> "P" and cvs(cust_id$, 2) <> "" and cvs(order_no$, 2) <> "" then
-		callpoint!.setDevObject("run_by", "invoice")
-		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, order_no$, table_chans$[all], callpoint!, action$, status
-		callpoint!.setStatus("ACTIVATE")
-		if status = 999 then goto std_exit
-
-	rem --- Delete the order
-
-		if action$ = "D" then 
-			callpoint!.setStatus("DELETE")
-			return
-		endif
-
-		if pos(action$="HC")<>0 then
-
-		rem --- Order on hold
-
-			callpoint!.setColumnData("OPE_INVHDR.CREDIT_FLAG","C")
-		else
-			if action$="R" then
-
-			rem --- Order released
-
-				callpoint!.setColumnData("OPE_INVHDR.CREDIT_FLAG","R")
-				terms$ = str(callpoint!.getDevObject("new_terms_code"))
-
-				if terms$ <> "" then
-					callpoint!.setColumnData("OPE_INVHDR.TERMS_CODE", terms$)
-				endif
-				callpoint!.setDevObject("msg_released","Y")
-				callpoint!.setDevObject("msg_hold","")
-				call user_tpl.pgmdir$+"opc_creditmsg.aon","H",callpoint!,UserObj!
-			else
-				callpoint!.setColumnData("OPE_INVHDR.CREDIT_FLAG","")			
-			endif
-		endif
-
-	rem --- Order was printed within the credit action program
-
-		if str(callpoint!.getDevObject("document_printed")) = "Y" then 
-			callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS", "Y")
-			print "---Print Status: Y"; rem debug
-		endif
-
-	endif
-
-	print "---action$: """, action$, """"; rem debug
-	print "out"; rem debug
-
-	return
-
-rem ==========================================================================
 do_invoice: rem --- Print an Invoice
 rem ==========================================================================
-
-	print "in do_invoice..."; rem debug
 
 rem --- Make sure everything's written back to disk
 
@@ -3042,6 +2926,7 @@ rem --- Write flag to disk
 	ordhdr_key$=ordhdr_rec.firm_id$+ordhdr_rec.trans_status$+ordhdr_rec.ar_type$+ordhdr_rec.customer_id$+ordhdr_rec.order_no$+ordhdr_rec.ar_inv_no$
 	extractrecord(ordhdr_dev,key=ordhdr_key$)ordhdr_rec$; rem Advisory Locking
 
+	callpoint!.setStatus("SETORIG")
 	return
 
 rem ==========================================================================

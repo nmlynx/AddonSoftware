@@ -600,12 +600,14 @@ rem --- Print a counter Picking Slip
 			rem --- Released from credit and did print
 
 				user_tpl.do_end_of_form = 0
-				callpoint!.setStatus("RECORD:["+firm_id$+"E"+"  "+callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")+callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")+"]")
 			else
-				print "---Not printing because there was no credit action"; rem debug
+				rem --- Not printed because there was no credit action
 			endif
 		endif
 	endif
+
+rem --- Refresh form with current data on disk that might have been updated elsewhere
+	callpoint!.setStatus("RECORD:["+firm_id$+"E"+"  "+callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")+callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")+callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")+"]")
 [[OPE_ORDHDR.BWRI]]
 rem --- Has customer and order number been entered?
 
@@ -2710,6 +2712,7 @@ rem ==========================================================================
 	inv_type$ = callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
 	cust_id$  = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	invoice_no$=callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")
 	action$   = "X"; rem Never called opc_creditaction.aon
 
 rem --- Should we call Credit Action?
@@ -2717,7 +2720,7 @@ rem --- Should we call Credit Action?
 	if user_tpl.credit_installed$ = "Y" and inv_type$ <> "P" and cvs(cust_id$, 2) <> "" and cvs(order_no$, 2) <> "" and
 :			callpoint!.getColumnData("CREDIT_FLAG") <> "R" then
 		callpoint!.setDevObject("run_by", "order")
-		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, order_no$, table_chans$[all], callpoint!, action$, status
+		call user_tpl.pgmdir$+"opc_creditaction.aon", cust_id$, order_no$, invoice_no$, table_chans$[all], callpoint!, action$, status
 		callpoint!.setStatus("ACTIVATE")
 		if status = 999 then goto std_exit
 
@@ -2728,38 +2731,12 @@ rem --- Should we call Credit Action?
 			return
 		endif
 
-		if pos(action$="HC")<>0 then
-
-		rem --- Order on hold
-
-			callpoint!.setColumnData("OPE_ORDHDR.CREDIT_FLAG","C")
-		else
-			if action$="R" then
-
+		if action$="R" then
 			rem --- Order released
-
-				callpoint!.setColumnData("OPE_ORDHDR.CREDIT_FLAG","R")
-				terms$ = str(callpoint!.getDevObject("new_terms_code"))
-
-				if terms$ <> "" then
-					callpoint!.setColumnData("OPE_ORDHDR.TERMS_CODE", terms$)
-				endif
-				callpoint!.setDevObject("msg_released","Y")
-				callpoint!.setDevObject("msg_hold","")
-				call user_tpl.pgmdir$+"opc_creditmsg.aon","H",callpoint!,UserObj!
-			else
-				callpoint!.setColumnData("OPE_ORDHDR.CREDIT_FLAG","")			
-			endif
+			callpoint!.setDevObject("msg_released","Y")
+			callpoint!.setDevObject("msg_hold","")
+			call user_tpl.pgmdir$+"opc_creditmsg.aon","H",callpoint!,UserObj!
 		endif
-
-	rem --- Order was printed within the credit action program
-
-		if str(callpoint!.getDevObject("document_printed")) = "Y" then 
-			callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "Y")
-		endif
-
-		callpoint!.setStatus("SAVE")
-
 	else
 		action$ = "U"
 	endif
@@ -2782,7 +2759,7 @@ rem ==========================================================================
 	dflt_data$[2,1]=cp_order_no$
 	dflt_data$[3,0]="INVOICE_TYPE"
 	dflt_data$[3,1]=callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")
- 
+
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	                       "OPR_ODERPICKDMD",
 :	                       user_id$,
@@ -2791,13 +2768,6 @@ rem ==========================================================================
 :	                       table_chans$[all],
 :	                       "",
 :	                       dflt_data$[all]	
-
-	rem --- Update print_status
-	ope01_dev=fnget_dev("OPE_ORDHDR")
-	dim ope01a$:fnget_tpl$("OPE_ORDHDR")
-	extract record (ope01_dev, key=firm_id$+"E"+"  "+cp_cust_id$+cp_order_no$+cp_invoice_no$) ope01a$; rem Advisory Locking
-	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS",ope01a.print_status$,1)
-	callpoint!.setColumnData("OPE_ORDHDR.REPRINT_FLAG",ope01a.reprint_flag$,1)
 
 	return
 
@@ -2814,22 +2784,6 @@ rem ==========================================================================
 	userObj!.getItem(user_tpl.dropship_flag).setText("")
 	userObj!.getItem(user_tpl.manual_price).setText("")
 	userObj!.getItem(user_tpl.alt_super).setText("")
-
-	return
-
-rem ==========================================================================
-force_print_status: rem --- Force print status to N and write
-rem ==========================================================================
-
-	print "in force_print_status..."; rem debug
-
-	callpoint!.setColumnData("OPE_ORDHDR.PRINT_STATUS", "N")
-
-rem --- Write flag to file so opc_creditaction can see it
-
-	callpoint!.setStatus("SAVE")
-	print "---Print status written, """, ordhdr_rec.print_status$, """"; rem debug
-	print "out"; rem debug
 
 	return
 
