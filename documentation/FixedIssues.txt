@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2017-11-20
+ Report Date:   2017-11-21
  Report Branch: AddonSoftware 17.10
  Last Release:  AddonSoftware 17.02
 =======================================================================================================================================
@@ -545,3 +545,17 @@ Modified: data/bar/glt_bankchecks.xml
 Modified: data/bar/glt_bankother.xml
 Modified: data/cdf/glt_bankchecks.cdf
 Modified: data/cdf/glt_bankother.cdf
+
+=======================================================================================================================================
+Revision: 5dfef224cce113c9dfd33faf874982567aa83227
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 11/21/2017 1:29:08 PM
+Message:
+Bug 9234: Use items$[all], refs$[all] and refs[all] DIMed via
+ivc_itemupdt.aon::init rather than reDIMing these arrays or DIMing new
+arrays.
+----
+Modified: bm/src/bmc_explodeupdate.aon
+Modified: bm/src/bmu_invproduction.aon
+Modified: iv/src/ivu_physupdate.aon
+Modified: sf/src/sfu_womatissu.aon
