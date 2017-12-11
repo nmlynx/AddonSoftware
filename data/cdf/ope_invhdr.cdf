@@ -246,15 +246,16 @@ rem --- Undo Invoice
 	order_no$ = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 	old_inv_no$=callpoint!.getColumnData("OPE_INVHDR.AR_INV_NO")
 
-rem --- Check to see if record has been modified (don't undo until rec is saved)
-
+rem --- Make sure modified records are saved before un-doing
 	if pos("M"=callpoint!.getRecordStatus())
-		callpoint!.setOptionEnabled("UINV",0)
-		msg_id$="AD_SAVE_BEFORE_UNDO"
-		gosub disp_message
-		break
-	endif
+		gosub get_disk_rec
+		write record (ordhdr_dev) ordhdr_rec$
+		ordhdr_key$=ordhdr_rec.firm_id$+ordhdr_rec.trans_status$+ordhdr_rec.ar_type$+ordhdr_rec.customer_id$+ordhdr_rec.order_no$+ordhdr_rec.ar_inv_no$
+		extractrecord(ordhdr_dev,key=ordhdr_key$)ordhdr_rec$; rem Advisory Locking
 
+		rem --- Do not need to callpoint!.setStatus("SETORIG") here because the
+		rem --- callpoint!.setStatus("RECORD:["+ ... "]") at the end of this callpoint will do it.
+	endif
 
 rem --- Add Barista soft lock for this record if not already in edit mode
 	if !callpoint!.isEditMode() then
@@ -774,14 +775,15 @@ rem --- Print Now
 	order_no$=callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 	ar_inv_no$=callpoint!.getColumnData("OPE_INVHDR.AR_INV_NO")
 
-rem --- Check to see if record has been modified (don't print until rec is saved)
-
+rem --- Make sure modified records are saved before printing
 	if pos("M"=callpoint!.getRecordStatus())
-		rem --- Manual SAVE is needed until Barista Bug 9236 is fixed
-		callpoint!.setOptionEnabled("PRNT",0)
-		msg_id$="AD_SAVE_BEFORE_PRINT"
-		gosub disp_message
-		break
+		gosub get_disk_rec
+		write record (ordhdr_dev) ordhdr_rec$
+		ordhdr_key$=ordhdr_rec.firm_id$+ordhdr_rec.trans_status$+ordhdr_rec.ar_type$+ordhdr_rec.customer_id$+ordhdr_rec.order_no$+ordhdr_rec.ar_inv_no$
+		extractrecord(ordhdr_dev,key=ordhdr_key$)ordhdr_rec$; rem Advisory Locking
+
+		rem --- Do not need to callpoint!.setStatus("SETORIG") here because the
+		rem --- callpoint!.setStatus("RECORD:["+ ... "]") at the end of this callpoint will do it.
 	endif
 
 rem --- Add Barista soft lock for this record if not already in edit mode

@@ -554,14 +554,15 @@ rem --- Print Now
 	order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	ar_inv_no$=callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")
 
-rem --- Check to see if record has been modified (don't print until rec is saved)
-
+rem --- Make sure modified records are saved before printing
 	if pos("M"=callpoint!.getRecordStatus())
-		rem --- Manual SAVE is needed until Barista Bug 9236 is fixed
-		callpoint!.setOptionEnabled("PRNT",0)
-		msg_id$="AD_SAVE_BEFORE_PRINT"
-		gosub disp_message
-		break
+		gosub get_disk_rec
+		write record (ordhdr_dev) ordhdr_rec$
+		ordhdr_key$=ordhdr_rec.firm_id$+ordhdr_rec.trans_status$+ordhdr_rec.ar_type$+ordhdr_rec.customer_id$+ordhdr_rec.order_no$+ordhdr_rec.ar_inv_no$
+		extractrecord(ordhdr_dev,key=ordhdr_key$)ordhdr_rec$; rem Advisory Locking
+
+		rem --- Do not need to callpoint!.setStatus("SETORIG") here because the
+		rem --- callpoint!.setStatus("RECORD:["+ ... "]") at the end of this callpoint will do it.
 	endif
 
 rem --- Add Barista soft lock for this record if not already in edit mode
@@ -2869,7 +2870,6 @@ rem ==========================================================================
 	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 	invoice_no$=callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")
 	record_found = 0
-	start_block = 1
 
 	found = 0
 	extract record (ordhdr_dev, key=firm_id$+trans_status$+"  "+cust_id$+order_no$+invoice_no$, dom=*next) ordhdr_rec$; found = 1; rem Advisory Locking
