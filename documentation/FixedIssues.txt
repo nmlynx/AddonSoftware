@@ -588,4 +588,16 @@ Altered to pad out the order number for tickler records.
 Modified: data/bar/ope_credrev.xml
 Modified: data/cdf/ope_credrev.cdf
 
+=======================================================================================================================================
+Revision: d24b93079eb41578c231ffa10787fd6bd968e8db
+Author: Christine <chawkins@basis.com>
+Date: 12/21/2017 3:41:50 PM
+Message:
+Bug 9252 - GL - Error 47 printing budgets via GL Summary Activity or budget reports
+
+Corrected au$(i,1) to be au$(i+1,1), since i runs from 0 to 3.
+----
+Modified: gl/src/glr_summary.aon
+
+
 
