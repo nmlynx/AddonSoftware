@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2018-01-02
+ Report Date:   2018-01-08
  Report Branch: AddonSoftware 17.11
  Last Release:  AddonSoftware 17.10
 =======================================================================================================================================
@@ -669,3 +669,15 @@ Bug 9261: Corrected size of key field MSG_ID in
 ads_messages~iv_lf_adjust_warn.xml.
 ----
 Modified: data/sync/ads_messages~iv_lf_adjust_warn.xml
+
+=======================================================================================================================================
+Revision: eab0abe03ec93a7f57228c156be454e2c6c48a24
+Author: Christine <chawkins@basis.com>
+Date: 1/8/2018 1:00:10 PM
+Message:
+Bug 9262 - If glr_recap.aon encounters errors, it will not clear the batch lock.
+Altered to call the unlock routine if there is no update taking place (i.e., update$="" because errors encountered).
+(cherry picked from commit 9d5d625fc299f80b7703455a02d51a3761cc7618)
+----
+Modified: gl/src/glr_recap.aon
+
