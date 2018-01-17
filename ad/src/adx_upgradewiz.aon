@@ -92,9 +92,8 @@ rem --- Open File(s)
     gosub open_tables
 
     adm_modules=num(open_chans$[1]);dim adm_modules$:open_tpls$[1]
-    
-rem --- Launch Create Sync File Backup utility in OLD barista
-rem --- Run bax_sync_backup.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the OLD barista
+
+rem --- Skip Barista’s Create Sync File Backup bax_sync_backup.bbj unless upgrading from a pre-v18 version.
     if doSyncBackup% then
         rem --- Increment progress meter
         meter_text$=Translate!.getTranslation("AON_SYNC_BACKUP")
@@ -103,20 +102,8 @@ rem --- Run bax_sync_backup.bbj program via bax_launch_task.bbj to bypass bar_lo
         gosub disp_meter
         print(log_dev)meter_text$
 
-        rem --- Launch bax_sync_backup.bbj
-        bar_dir$=oldBarDir$
-        if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
-        run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
-:       +" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
-:       +" "+$22$+bar_dir$+"/sys/prog/bax_launch_task.bbj"+$22$
-        user_arg$=" - "
-:       +" -u"+rdAdmin!.getUser()
-:       +" -p"+rdAdmin!.getPassword()
-:       +" -t"+"DDM_TABLES"
-:       +" -y"+"A"
-:       +" -a" +"bax_sync_backup.bbj"+$22$+" - "+" -b"+$22$
-:       +" -w"
-        scall_result=scall(run_arg$+user_arg$,err=*next)
+        rem --- Pass bax_sync_backup.bbj the full path to the pre-v18 application’s Barista instance
+        call stbl("+DIR_SYP")+"bax_sync_backup.bbj","AUTO",oldBarDir$,sysGUI!,rdForm!,null(),rd_table_chans$[all]
     endif
     
 rem --- Recursively copy oldLocation to newAonDir
@@ -701,7 +688,7 @@ open_tables:rem -----<Open Tables
 
 disp_message: rem --- Display Message Dialog
 
-    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
 
     return
     

@@ -698,8 +698,8 @@ able_backup_sync_dir: rem --- Enable/disable input field for sync backup directo
 	adb_version$=cvs(select_tpl.version_id$,3)
 	sqlclose(sql_chan)
 
-	rem --- Automatically do Create Sync File Backup if old Barista is at least version 12
-	if num(adb_version$)>=12 then
+	rem --- Automatically do Create Sync File Backup if old Barista is pre-version 18
+	if num(adb_version$)<18 then
 		do_sync_backup=1
 	else
 		do_sync_backup=0
