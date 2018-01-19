@@ -1,7 +1,7 @@
 rem ==========================================================================
-rem --- adc_docout_adj.aon 
+rem --- adc_docout_adj.aon
 rem --- Call to make standard adjustment to DocOut column widths.
-rem --- 
+rem ---
 rem --- AddonSoftware Version 13.0
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
@@ -11,13 +11,15 @@ rem --- COLUMNS[ALL]$: Barista's DocOut columns$[] array
 
     seterr std_error
     setesc std_error
-    
+
     enter columns$[all]
 
 rem --- Addon's reports were originally designed for 7 pt font, and DocOut used a hard-coded font adjustment of 0.8.
-rem --- v13.03 DocOut was changed to use a font adjustment based on font size/10, so now it's 0.7 for Addon's standard 
-rem --- reports. This has the effect of crowding and sometimes wrapping columns in Addon's reports. Using this method 
+rem --- v13.03 DocOut was changed to use a font adjustment based on font size/10, so now it's 0.7 for Addon's standard
+rem --- reports. This has the effect of crowding and sometimes wrapping columns in Addon's reports. Using this method
 rem --- to bump up DocOut column size by 8/7 14.2857%, restores Addon's reports back to their original design.
+rem --- v17.12 DocOut was changed again to compute positioning based on page format and font choice, but still different
+rem --- than our last adjustment here, so changed to simply add one the the number of characters. All is well again.
 
     adjustment=8/7
     dim dims$:"dimen:i(1),d0elem:i(4),d0base:i(4),d1elem:i(4),d1base:i(4),d2elem:i(4),d2base:i(4)"
@@ -44,10 +46,10 @@ std_error: rem --- Standard error handler (18Nov2014)
         endif
     endif
 
-    if err=0   
+    if err=0
         rem --- Get tcb(12) and tcb(10) to send into bac_error
         lock_byte=tcb(10)
-        lock_chan=tcb(12)  
+        lock_chan=tcb(12)
     endif
 
     rd_err_text$=""
@@ -55,7 +57,7 @@ std_error: rem --- Standard error handler (18Nov2014)
     call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$,lock_byte,lock_chan
     if pos("ESCAPE"=rd_err_act$) seterr 0; setesc 0
     if pos("RETRY"=rd_err_act$) retry
-    if pgm(-1)<>pgm(-2) status=999; exit 
+    if pgm(-1)<>pgm(-2) status=999; exit
     release
 
 rem #endinclude std_error.src
