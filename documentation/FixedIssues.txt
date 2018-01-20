@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2018-01-17
+ Report Date:   2018-01-19
  Report Branch: AddonSoftware 17.12
  Last Release:  AddonSoftware 17.11
 =======================================================================================================================================
@@ -142,4 +142,15 @@ Bug 9265: Added translated "Sales Analysis" to report heading.
 Modified: sa/src/sar_ac.aon
 Modified: sa/src/sar_ac_export.aon
 Modified: sa/src/sar_ad.aon
+
+=======================================================================================================================================
+Revision: 0b96aaeaef5e3fdcf48333086bc62b410c597481
+Author: Christine <chawkins@basis.com>
+Date: 1/19/2018 4:29:55 PM
+Message:
+Bug 9275 - OP - Pick List can throw an error 47 if a non-stock or memo line has no text
+Corrected to make sure item_desc$ isn't "" before trying to strip trailing $0A$.
+(cherry picked from commit dd6fea31d1a0a7dc0777df89949aeb63f19169a5)
+----
+Modified: sprocs/OPPICKLIST_DET.prc
 
