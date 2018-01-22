@@ -13,11 +13,13 @@ rem --- COLUMNS[ALL]$: Barista's DocOut columns$[] array
     setesc std_error
 
     enter columns$[all]
+goto done; rem --- see Bug 9272
 
 rem --- Addon's reports were originally designed for 7 pt font, and DocOut used a hard-coded font adjustment of 0.8.
 rem --- v13.03 DocOut was changed to use a font adjustment based on font size/10, so now it's 0.7 for Addon's standard
 rem --- reports. This has the effect of crowding and sometimes wrapping columns in Addon's reports. Using this method
 rem --- to bump up DocOut column size by 8/7 14.2857%, restores Addon's reports back to their original design.
+
 rem --- v17.12 DocOut was changed again to compute positioning based on page format and font choice, but still different
 rem --- than our last adjustment here, so changed to simply add one to the number of characters. All is well again.
 
