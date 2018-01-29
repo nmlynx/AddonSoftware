@@ -365,6 +365,17 @@
         <if>
             <equals arg1="${use.locale}" arg2="true"/>
             <then>
+                <echo message="set DISPLAY=${display}"/>
+                <echo message="${install.dir}/bin/bbj"/>
+                <echo message="  -q"/>
+                <echo message="  -WD${barista.bbj.dir}"/>
+                <echo message="  -c${barista.bbj.dir}/sys/config/enu/barista.cfg"/>
+                <echo message="  -CPbarista"/>
+                <echo message="  ${barista.bbj.dir}/sys/prog/bax_build_sync.bbj"/>
+                <echo message="  -"/>
+                <echo message="  -s../apps/aon/config/addon.syn"/>
+                <echo message="  -loc${addon.langs}"/>
+                <echo message="  -log${log.bbj.dir}/addon_sync.log"/>
                 <exec executable="${install.dir}/bin/bbj" failonerror="true">
                     <env key="DISPLAY" value="${display}"/>
                     <arg value="-q"/>
@@ -379,6 +390,15 @@
                 </exec>
             </then>
             <else>
+                <echo message="set DISPLAY=${display}"/>
+                <echo message="${install.dir}/bin/bbj"/>
+                <echo message="  -q"/>
+                <echo message="  -WD${barista.bbj.dir}"/>
+                <echo message="  -c${barista.bbj.dir}/sys/config/enu/barista.cfg"/>
+                <echo message="  ${barista.bbj.dir}/sys/prog/bax_build_sync.bbj"/>
+                <echo message="  -"/>
+                <echo message="  -s../apps/aon/config/addon.syn"/>
+                <echo message="  -log${log.bbj.dir}/addon_sync.log"/>
                 <exec executable="${install.dir}/bin/bbj" failonerror="true">
                     <env key="DISPLAY" value="${display}"/>
                     <arg value="-q"/>
