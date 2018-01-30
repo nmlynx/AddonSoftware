@@ -363,26 +363,27 @@ method_error: rem --- Method error trap/handler
 				declare Vector fileVector!
 				declare File xml!
 				fileVector! = new Vector(java.util.Arrays.asList(dir!.list(new AdmModulesFileter())))
-                rem --- May have both consolidated and non-consolidate XMLs for the same table. Process the consolidated sync XML last.
-                consolidated_file$=""
-                for i=0 to fileVector!.size()-1
-                    file_name$ = cast(BBjString, fileVector!.get(i))
-                    if pos("~["=file_name$)=0 then continue
-                    consolidated_file$=fileVector!.remove(i)
-                    break
-                next i
-                if consolidated_file$<>"" then fileVector!.add(consolidated_file$)
 				
-				appDir$ = #parseAppPath(dir!.getPath())
-				startProdIdTag$ = "<ASC_PROD_ID>"
-				startProdIdTagLen = len(startProdIdTag$)
-				endProdIdTag$ = "</ASC_PROD_ID>"
-				startVersionTag$ = "<VERSION_ID>"
-				startVersionTagLen = len(startVersionTag$)
-				endVersionTag$ = "</VERSION_ID>"
-
-				rem --- read non-consolidated adm_modules~[^\[].*\.xml files
-				if(fileVector!.size()>0) then
+                if(fileVector!.size()>0) then
+                    rem --- May have both consolidated and non-consolidate XMLs for the same table. Process the consolidated sync XML last.
+                    consolidated_file$=""
+                    for i=0 to fileVector!.size()-1
+                        file_name$ = cast(BBjString, fileVector!.get(i))
+                        if pos("~["=file_name$)=0 then continue
+                        consolidated_file$=fileVector!.remove(i)
+                        break
+                    next i
+                    if consolidated_file$<>"" then fileVector!.add(consolidated_file$)
+    				
+    				appDir$ = #parseAppPath(dir!.getPath())
+    				startProdIdTag$ = "<ASC_PROD_ID>"
+    				startProdIdTagLen = len(startProdIdTag$)
+    				endProdIdTag$ = "</ASC_PROD_ID>"
+    				startVersionTag$ = "<VERSION_ID>"
+    				startVersionTagLen = len(startVersionTag$)
+    				endVersionTag$ = "</VERSION_ID>"
+    
+    				rem --- read non-consolidated adm_modules~[^\[].*\.xml files
 					for i=0 to fileVector!.size()-1
 						module$=""
 						version$=""
