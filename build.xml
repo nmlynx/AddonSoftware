@@ -376,6 +376,7 @@
                 <echo message="  -s../apps/aon/config/addon.syn"/>
                 <echo message="  -loc${addon.langs}"/>
                 <echo message="  -log${log.bbj.dir}/addon_sync.log"/>
+                <echo message="  -t"/> <!-- debug trace in {barista.bbj.dir}/workarea/ -->
                 <exec executable="${install.dir}/bin/bbj" failonerror="true">
                     <env key="DISPLAY" value="${display}"/>
                     <arg value="-q"/>
@@ -387,6 +388,7 @@
                     <arg value="-s../apps/aon/config/addon.syn"/>
                     <arg value="-loc${addon.langs}"/>
                     <arg value="-log${log.bbj.dir}/addon_sync.log"/>
+                    <arg value="-t"/> <!-- debug trace in {barista.bbj.dir}/workarea/ -->
                 </exec>
             </then>
             <else>
@@ -399,6 +401,7 @@
                 <echo message="  -"/>
                 <echo message="  -s../apps/aon/config/addon.syn"/>
                 <echo message="  -log${log.bbj.dir}/addon_sync.log"/>
+                <echo message="  -t"/> <!-- debug trace in {barista.bbj.dir}/workarea/ -->
                 <exec executable="${install.dir}/bin/bbj" failonerror="true">
                     <env key="DISPLAY" value="${display}"/>
                     <arg value="-q"/>
@@ -408,6 +411,7 @@
                     <arg value="-"/>
                     <arg value="-s../apps/aon/config/addon.syn"/>
                     <arg value="-log${log.bbj.dir}/addon_sync.log"/>
+                    <arg value="-t"/> <!-- debug trace in {barista.bbj.dir}/workarea/ -->
                 </exec>
             </else>
         </if>
@@ -570,6 +574,7 @@
         <echo message="  -"/>
         <echo message="  -s../apps/prbabs/config/prbabs.syn"/>
         <echo message="  -log${log.bbj.dir}/prbabs_sync.log"/>
+        <echo message="  -t"/> <!-- debug trace in {barista.bbj.dir}/workarea/ -->
         <exec executable="${install.dir}/bin/bbj" failonerror="true">
             <env key="DISPLAY" value="${display}"/>
             <arg value="-q"/>
@@ -580,6 +585,7 @@
             <arg value="-"/>
             <arg value="-s../apps/prbabs/config/prbabs.syn"/>
             <arg value="-log${log.bbj.dir}/prbabs_sync.log"/>
+            <arg value="-t"/> <!-- debug trace in {barista.bbj.dir}/workarea/ -->
         </exec>
 
         <!-- Make sure the sync was successful          -->
