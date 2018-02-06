@@ -97,8 +97,6 @@ rem --- For version 18.00, initialize um_sold and conv_factor in opt_invdet
         gosub disp_meter
         print(log_dev)meter_text$
     endif
-goto done; rem wgh ... 8922 ... testing
-
 rem --- Initialize data file changes implemented during minor releases of v17
 
     if num(convCtrl!.getProperty("start_version"))>=17 then

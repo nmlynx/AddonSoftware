@@ -59,7 +59,6 @@ rem --- Initialize UM_SOLD And CONV_FACTOR In OPT_INVDET
         if cvs(theFirm$,2)<>"" and optInvDet.firm_id$<>theFirm$ break
         writerecord=0
 
-rem wgh ... 8922 ... test
         rem --- If UM_SOLD is blank, set it to IVM_ITEMMAST UNIT_OF_SALE for Regular Sale and Special Distribution lines.
         if cvs(optInvDet.um_sold$,2)="" then
             readrecord(opcLineCode_dev,key=optInvDet.firm_id$+optInvDet.line_code$,dom=*endif)opcLineCode$
@@ -70,7 +69,6 @@ rem wgh ... 8922 ... test
             endif
         endif
         
-rem wgh ... 8922 ... test
         rem --- If CONV_FACTOR is zero, set it to one for non-Memo lines.
         if optInvDet.conv_factor=0 then
             readrecord(opcLineCode_dev,key=optInvDet.firm_id$+optInvDet.line_code$,dom=*endif)opcLineCode$
