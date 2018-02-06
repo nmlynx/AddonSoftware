@@ -57,6 +57,48 @@ rem --- Start progress meter
     meter_action$="WIN-LST"
     gosub disp_meter
 
+rem --- For version 18.00, initialize um_sold and conv_factor in opt_invdet
+
+    this_module$="OP"
+    if installMap!.get(this_module$)="Y" then 
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:       Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+        
+        rem --- Execute initialization utility for um_sold and conv_factor in opt_invdet
+        theFirm$=""
+        call pgmdir$+"opc_initUmSold.aon",theFirm$,rdForm!,status
+        if status=0 then
+            rem --- Conversion completed successfully
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_DATA_INIT","Data initialization")+" "+
+:               Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": OPT_INVDET"
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+        else
+            rem --- Conversion did NOT complete successfully, exit with error message
+            err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:               Translate!.getTranslation("AON_DATA_INIT","Data initialization")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
+:               Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": OPT_INVDET"+" *****"
+            goto done
+        endif
+    else
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_NOT","Not")+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:           Translate!.getTranslation("AON_SKIP","SKIP")+" "+Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+    endif
+goto done; rem wgh ... 8922 ... testing
+
 rem --- Initialize data file changes implemented during minor releases of v17
 
     if num(convCtrl!.getProperty("start_version"))>=17 then
