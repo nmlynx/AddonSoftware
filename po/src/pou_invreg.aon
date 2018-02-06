@@ -264,7 +264,7 @@ l3100: rem --- Loop back for next line item
 
     rem --- first create pot25 from poe25, then set sequence no for key to the one we've assigned to pot05 key
     call stbl("+DIR_PGM")+"adc_copyfile.aon",poe25a$,pot25a$,status
-    pot25a.sequence_no$=pot05a.sequence_no$
+    pot25a.sequence_ref$=pot05a.sequence_no$
     write record (pot25_dev) pot25a$
     remove (poe25_dev,key=poe25a.firm_id$+poe25a.ap_type$+poe25a.vendor_id$+poe25a.ap_inv_no$+poe25a.line_no$,dom=*next)
 
