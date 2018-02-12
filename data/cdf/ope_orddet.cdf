@@ -264,6 +264,48 @@ rem --- Disable by line type
 
 	line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
 	gosub disable_by_linetype
+
+rem --- Initialize UM_SOLD ListButton
+	dtlGrid!=util.getGrid(Form!)
+	col_hdr$=callpoint!.getTableColumnAttribute("OPE_ORDDET.UM_SOLD","LABS")
+	col_ref=util.getGridColumnNumber(dtlGrid!, col_hdr$)
+	row=callpoint!.getValidationRow()
+	nxt_ctlID=callpoint!.getDevObject("nxt_ctlID")
+	umList!=Form!.addListButton(nxt_ctlID,10,10,100,100,"",$0810$)
+	umList!.addItem("")
+	dtlGrid!.setCellListControl(row,col_ref,umList!)
+	dtlGrid!.setCellListSelection(row,col_ref,0,0)
+	callpoint!.setDevObject("nxt_ctlID",nxt_ctlID+1)
+	if cvs(callpoint!.getColumnData("OPE_ORDDET.UM_SOLD"),2)<>"" then
+		ivm01_dev=fnget_dev("IVM_ITEMMAST")
+		ivm01_tpl$=fnget_tpl$("IVM_ITEMMAST")
+		dim ivm01a$:ivm01_tpl$
+		ivm01a_key$=firm_id$+callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+		find record (ivm01_dev,key=ivm01a_key$,err=*endif)ivm01a$
+
+		rem --- Add IVM_ITEMMAST.UNIT_OF_SALE to the ListButton
+		umList!.removeAllItems()
+		umList!.addItem(ivm01a.unit_of_sale$)
+		if callpoint!.getDevObject("sell_purch_um")="Y" and ivm01a.sell_purch_um$="Y" then
+			rem --- Add PURCHASE_UM to the ListButton
+			umList!.addItem(ivm01a.purchase_um$)
+		endif
+
+	endif
+	dtlGrid!.setCellListControl(row,col_ref,umList!)
+	if umList!.getItemCount()>1 then
+		rem --- Set existing UM_SOLD as the default.
+		if callpoint!.getColumnData("OPE_ORDDET.UM_SOLD")=umList!.getItemAt(0) then
+			dtlGrid!.setCellListSelection(row,col_ref,0,1)
+		else
+			dtlGrid!.setCellListSelection(row,col_ref,1,1)
+		endif
+		callpoint!.setColumnEnabled(row,"OPE_ORDDET.UM_SOLD",1)
+		callpoint!.setColumnEnabled(row,"OPE_ORDDET.UM_SOLD",1)
+	else
+		callpoint!.setColumnData("OPE_ORDDET.UM_SOLD",umList!.getItemAt(0),1)
+		callpoint!.setColumnEnabled(row,"OPE_ORDDET.UM_SOLD",0)
+	endif
 [[OPE_ORDDET.UNIT_PRICE.BINP]]
 rem --- Set previous unit price / enable repricing, options, lots
 
@@ -1004,6 +1046,18 @@ rem --- Set defaults for new record
 		callpoint!.setColumnData("OPE_ORDDET.COMMIT_FLAG", "Y")
  	endif
 
+	rem --- Initialize UM_SOLD ListButton with a blank item for ALL new rows (line type doesn’t matter)
+	dtlGrid!=util.getGrid(Form!)
+	col_hdr$=callpoint!.getTableColumnAttribute("OPE_ORDDET.UM_SOLD","LABS")
+	col_ref=util.getGridColumnNumber(dtlGrid!, col_hdr$)
+	row=callpoint!.getValidationRow()
+	nxt_ctlID=callpoint!.getDevObject("nxt_ctlID")
+	umList!=Form!.addListButton(nxt_ctlID,10,10,100,100,"",$0810$)
+	umList!.addItem("")
+	dtlGrid!.setCellListControl(row,col_ref,umList!)
+	dtlGrid!.setCellListSelection(row,col_ref,0,0)
+	callpoint!.setDevObject("nxt_ctlID",nxt_ctlID+1)
+
 rem --- Buttons start disabled
 
 	callpoint!.setOptionEnabled("LENT",0)
@@ -1432,6 +1486,34 @@ rem --- Check item/warehouse combination and setup values
 		endif
 
 		callpoint!.setStatus("REFRESH")
+	endif
+
+rem --- Initialize UM_SOLD ListButton for a new or changed item
+	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" or item$<>user_tpl.prev_item$ then
+		dtlGrid!=util.getGrid(Form!)
+		col_hdr$=callpoint!.getTableColumnAttribute("OPE_ORDDET.UM_SOLD","LABS")
+		col_ref=util.getGridColumnNumber(dtlGrid!, col_hdr$)
+		row=callpoint!.getValidationRow()
+		umList!=dtlGrid!.getCellListControl(row,col_ref)
+		umList!.removeAllItems()
+		if pos(user_tpl.line_type$="SP") then
+			rem --- Add IVM_ITEMMAST.UNIT_OF_SALE to the ListButton
+			umList!.addItem(ivm01a.unit_of_sale$)
+			if callpoint!.getDevObject("sell_purch_um")="Y" and ivm01a.sell_purch_um$="Y" then
+				rem --- Add PURCHASE_UM to the ListButton
+				umList!.addItem(ivm01a.purchase_um$)
+			endif
+		else
+			rem --- Add blank line to the ListButton
+			umList!.addItem("")
+		endif
+		dtlGrid!.setCellListControl(row,col_ref,umList!)
+		if umList!.getItemCount()>1 then
+			dtlGrid!.setCellListSelection(row,col_ref,0,1)
+			callpoint!.setColumnEnabled(row,"OPE_ORDDET.UM_SOLD",1)
+		else
+			callpoint!.setColumnData("OPE_ORDDET.UM_SOLD",umList!.getItemAt(0),1)
+		endif
 	endif
 [[OPE_ORDDET.QTY_SHIPPED.AVAL]]
 rem --- recalc quantities and extended price
@@ -1926,6 +2008,19 @@ rem ============================================================================
 	else
 		callpoint!.setOptionEnabled("RCPR",0)
 	endif
+
+rem --- Disable/enable UM Sold
+	enable_UmSold=0
+	if callpoint!.getDevObject("sell_purch_um")="Y" then
+		item_id$=callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+		if pos(opc_linecode.line_type$="SP")>0 and cvs(item_id$,2)<>"" then
+			ivm_itemmast_dev=fnget_dev("IVM_ITEMMAST")
+			dim ivm_itemmast$:fnget_tpl$("IVM_ITEMMAST")
+			readrecord(ivm_itemmast_dev,key=firm_id$+item_id$,dom=*endif)ivm_itemmast$
+			if ivm_itemmast.sell_purch_um$="Y" then enable_UmSold=1
+		endif
+	endif
+	callpoint!.setColumnEnabled(num(callpoint!.getValidationRow()),"OPE_ORDDET.UM_SOLD", enable_UmSold)
 
 rem --- Disable/enable unit cost (can't just enable/disable this field by line type)
 
