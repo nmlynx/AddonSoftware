@@ -1,3 +1,26 @@
+[[OPE_ORDDET.UM_SOLD.BINP]]
+rem --- Get current CONV_FACTOR so we'll know if it gets changed
+	dtlGrid!=util.getGrid(Form!)
+	col_hdr$=callpoint!.getTableColumnAttribute("OPE_ORDDET.UM_SOLD","LABS")
+	col_ref=util.getGridColumnNumber(dtlGrid!, col_hdr$)
+	row=callpoint!.getValidationRow()
+	prev_um_sold$=dtlGrid!.getCellText(row,col_ref)
+	callpoint!.setDevObject("prev_um_sold",prev_um_sold$)
+[[OPE_ORDDET.UM_SOLD.AVAL]]
+rem --- Initialize CONV_FACTOR when UM_SOLD changed
+	um_sold$=callpoint!.getUserInput()
+	prev_um_sold$=callpoint!.getDevObject("prev_um_sold")
+	if um_sold$<>prev_um_sold$ then
+		callpoint!.setColumnData("OPE_ORDDET.CONV_FACTOR","1")
+
+		ivm01_dev=fnget_dev("IVM_ITEMMAST")
+		dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+		ivm01a_key$=firm_id$+callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
+		find record (ivm01_dev,key=ivm01a_key$,err=*endif)ivm01a$
+		if um_sold$=ivm01a.purchase_um$ then
+			callpoint!.setColumnData("OPE_ORDDET.CONV_FACTOR",str(ivm01a.conv_factor))
+		endif
+	endif
 [[OPE_ORDDET.MEMO_1024.AVAL]]
 rem --- store first part of memo_1024 in order_memo
 rem --- this AVAL is hit if user navigates via arrows or clicks on the memo_1024 field, and double-clicks or ctrl-F to bring up editor
@@ -1058,6 +1081,9 @@ rem --- Set defaults for new record
 	dtlGrid!.setCellListSelection(row,col_ref,0,0)
 	callpoint!.setDevObject("nxt_ctlID",nxt_ctlID+1)
 
+	rem --- Initialize CONV_FACTOR
+	callpoint!.setColumnData("OPE_ORDDET.CONV_FACTOR","1")
+
 rem --- Buttons start disabled
 
 	callpoint!.setOptionEnabled("LENT",0)
@@ -1514,6 +1540,9 @@ rem --- Initialize UM_SOLD ListButton for a new or changed item
 		else
 			callpoint!.setColumnData("OPE_ORDDET.UM_SOLD",umList!.getItemAt(0),1)
 		endif
+
+		rem --- Initialize CONV_FACTOR
+		callpoint!.setColumnData("OPE_ORDDET.CONV_FACTOR","1")
 	endif
 [[OPE_ORDDET.QTY_SHIPPED.AVAL]]
 rem --- recalc quantities and extended price
@@ -2370,6 +2399,11 @@ rem ==========================================================================
 				callpoint!.setColumnData("OPE_ORDDET.ORDER_MEMO",cvs(opc_linecode.code_desc$,3))
 				callpoint!.setColumnData("OPE_ORDDET.MEMO_1024",cvs(opc_linecode.code_desc$,3))
 			endif
+		endif
+
+		if opc_linecode.line_type$="M" then
+			rem --- Initialize CONV_FACTOR for memo lines
+			callpoint!.setColumnData("OPE_ORDDET.CONV_FACTOR","0")
 		endif
 
 		gosub clear_all_numerics
