@@ -797,7 +797,7 @@ rem --- Get current and prior values
 
 	curr_whse$ = callpoint!.getColumnData("OPE_ORDDET.WAREHOUSE_ID")
 	curr_item$ = callpoint!.getColumnData("OPE_ORDDET.ITEM_ID")
-	curr_qty   = num(callpoint!.getColumnData("<<DISPLAY>>.QTY_ORDERED_DSP"))
+	curr_qty   = num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
 	line_ship_date$=callpoint!.getColumnData("OPE_ORDDET.EST_SHP_DATE")
 	curr_commit$=callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG")
 
@@ -910,6 +910,7 @@ rem --- Initialize inventory item update
 			items$[2] = curr_item$
 			refs[0]   = curr_qty*conv_factor
 			call user_tpl.pgmdir$+"ivc_itemupdt.aon",action$,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			if status then goto awri_update_hdr
 		endif
 
 	endif
@@ -944,7 +945,7 @@ rem --- When OP parameter set for asking about creating Work Order, check if SO 
 				msg_id$ = "OP_ASK_CREATE_WO"
 				dim msg_tokens$[2]
 				msg_tokens$[1] = cvs(callpoint!.getColumnData("OPE_ORDDET.ITEM_ID"),2)
-				msg_tokens$[2] = callpoint!.getColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP")
+				msg_tokens$[2] = callpoint!.getColumnData("OPE_ORDDET.QTY_SHIPPED")
 				gosub disp_message
 				if msg_opt$="Y" then
 					woVect!.setItem(soCreateWO!.getCREATE_WO(),1)
