@@ -3303,6 +3303,9 @@ rem --- get IV Params
 	dim ivs01a$:open_tpls$[29]
 	read record (num(open_chans$[29]), key=firm_id$+"IV00") ivs01a$
 
+	callpoint!.setDevObject("precision",ivs01a.precision$)
+	callpoint!.setDevObject("sell_purch_um",ivs01a.sell_purch_um$)
+
 rem --- See if blank warehouse exists
 
 	blank_whse$ = "N"
@@ -3534,7 +3537,6 @@ rem --- Save the indices of the controls for the Avail Window, setup in AFMC
 	callpoint!.setDevObject("total_sales_disp","14")
 	callpoint!.setDevObject("total_cost","15")
 	callpoint!.setDevObject("tax_amt_disp","16")
-	callpoint!.setDevObject("precision",ivs01a.precision$)
 	callpoint!.setDevObject("disc_amt_disp","17")
 	callpoint!.setDevObject("backord_disp","18")
 	callpoint!.setDevObject("credit_disp","19")
@@ -3592,6 +3594,9 @@ rem --- Set object for which customer number is being shown and that details hav
 rem --- setup message_tpl$
 
 	gosub init_msgs
+
+rem --- Get next available control ID
+	callpoint!.setDevObject("nxt_ctlID",num(stbl("+CUSTOM_CTL",err=std_error)))
 [[OPE_INVHDR.AFMC]]
 rem print 'show', "Hdr:AFMC"; rem debug
 
