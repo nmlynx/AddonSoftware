@@ -332,7 +332,7 @@ rem --- Initialize CONV_FACTOR when UM_SOLD changed
 		callpoint!.setColumnData("<<DISPLAY>>.UNIT_COST_DSP", str(ivm02a.unit_cost*conv_factor))
 
 		rem --- Re-calculate price
-		qty_ord=num(callpoint!.getColumnData("OPE_ORDDET.QTY_ORDERED"))
+		qty_ord=num(callpoint!.getColumnData("<<DISPLAY>>.QTY_ORDERED_DSP"))
 		gosub pricing
 	endif
 [[OPE_ORDDET.MEMO_1024.AVAL]]

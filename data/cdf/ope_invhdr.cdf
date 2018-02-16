@@ -2779,6 +2779,9 @@ rem ==========================================================================
 	userObj!.getItem(user_tpl.manual_price).setText("")
 	userObj!.getItem(user_tpl.alt_super).setText("")
 
+	inv_avail_title!=callpoint!.getDevObject("inv_avail_title")
+	inv_avail_title!.setVisible(0)
+
 	return
 
 rem ==========================================================================
@@ -3621,6 +3624,9 @@ rem --- Create Inventory Availability window
 	mwin!.addStaticText(15004,215,40,75,15,Translate!.getTranslation("AON_ON_ORDER:"),$$)
 	mwin!.addStaticText(15005,415,25,75,15,Translate!.getTranslation("AON_WAREHOUSE:"),$$)
 	mwin!.addStaticText(15006,415,40,75,15,Translate!.getTranslation("AON_TYPE:"),$$)
+
+	inv_avail_title!=mwin!.addStaticText(15010,125,5,100,15,"",$4010$)
+	callpoint!.setDevObject("inv_avail_title",inv_avail_title!)
 
 rem --- Save controls in the global userObj! (vector)
 
