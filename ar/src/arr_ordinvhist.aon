@@ -186,6 +186,7 @@ rem --- Detail Headings
         dtlhdg$[3]="WH"
         dtlhdg$[4]=Translate!.getTranslation("AON_ORDERED")
         dtlhdg$[5]=Translate!.getTranslation("AON_COMMITTED")
+        dtlhdg$[6]="UM"
         dtlhdg$[7]=Translate!.getTranslation("AON_SHIP")
         dtlhdg$[8]=Translate!.getTranslation("AON_PRICE")
         dtlhdg$[9]=Translate!.getTranslation("AON_EXTENSION")
@@ -311,11 +312,11 @@ make_dtl_line: rem --- Store Detail Line
     else
         committed$=Translate!.getTranslation("AON_YES")
         if dtlrec.commit_flag$<>"Y" committed$=Translate!.getTranslation("AON_NO")
-        OutVect!.addItem(str(dtlrec.qty_ordered:m2$))
+        OutVect!.addItem(str(dtlrec.qty_ordered/dtlrec.conv_factor:m2$))
         OutVect!.addItem(committed$)
-        OutVect!.addItem("")
-        OutVect!.addItem(str(dtlrec.qty_shipped:m2$))
-        OutVect!.addItem(str(dtlrec.unit_price:m2$))
+        OutVect!.addItem(dtlrec.um_sold$)
+        OutVect!.addItem(str(dtlrec.qty_shipped/dtlrec.conv_factor:m2$))
+        OutVect!.addItem(str(dtlrec.unit_price*dtlrec.conv_factor:m2$))
         OutVect!.addItem(str(dtlrec.ext_price:m1$))
     endif
     
