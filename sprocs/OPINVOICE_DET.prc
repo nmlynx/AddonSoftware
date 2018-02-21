@@ -152,10 +152,10 @@ rem --- Main
 line_detail: rem --- Item Detail
 
 			if pos(opm02a.line_type$="MO")=0 then
-				order_qty_masked$= str(ope11a.qty_ordered:qty_mask$)
-				ship_qty_masked$= str(ope11a.qty_shipped:qty_mask$)
-				ship_qty$= str(ope11a.qty_shipped)
-				backord_qty_masked$= str(ope11a.qty_backord:qty_mask$)
+				order_qty_masked$= str(ope11a.qty_ordered/ope11a.conv_factor:qty_mask$)
+				ship_qty_masked$= str(ope11a.qty_shipped/ope11a.conv_factor:qty_mask$)
+				ship_qty$= str(ope11a.qty_shipped/ope11a.conv_factor)
+				backord_qty_masked$= str(ope11a.qty_backord/ope11a.conv_factor:qty_mask$)
 			endif
 
 			if pos(opm02a.line_type$="MNO") then
@@ -168,8 +168,8 @@ line_detail: rem --- Item Detail
 			endif
 
 			if pos(opm02a.line_type$=" SNP") then 
-				price_raw$=   str(ope11a.unit_price)
-				price_masked$=str(ope11a.unit_price:price_mask$)
+				price_raw$=   str(ope11a.unit_price*ope11a.conv_factor)
+				price_masked$=str(ope11a.unit_price*ope11a.conv_factor:price_mask$)
 			endif
 
 			if opm02a.line_type$<>"M" then 
@@ -178,7 +178,7 @@ line_detail: rem --- Item Detail
 			endif
 
 			if opm02a.line_type$="S" then 
-				um$= ivm01a.unit_of_sale$
+				um$=ope11a.um_sold$
 			endif
 
 			if pos(opm02a.line_type$="SP") then
