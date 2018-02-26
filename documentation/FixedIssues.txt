@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2018-02-23
+ Report Date:   2018-02-26
  Report Branch: AddonSoftware 17.12
  Last Release:  AddonSoftware 17.11
 =======================================================================================================================================
@@ -281,3 +281,20 @@ Modified: config/ita/addon.men
 Modified: iv/src/ivr_physregister.aon
 Modified: iv/src/ivu_physupdate.aon
 
+=======================================================================================================================================
+Revision: 44fba7554d807366d9c2590adec35f0025e07d2b
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 2/26/2018 1:01:41 PM
+Message:
+Bug 9287: Use opt11a.order_no$ corresponding to pot14a.so_int_seq_ref$
+instead of pot14a.order_no$. Added warnings about PO dropship line codes
+no longer being supported.
+----
+Modified: data/bar/poe_podet.xml
+Modified: data/bar/poe_recdet.xml
+Modified: data/bar/poe_reqdet.xml
+Added: data/sync/ads_messages~po_dropship_line_cd.xml
+Modified: po/src/por_histbyvend.aon
+Modified: po/src/por_histbyvend_o2d.aon
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
