@@ -983,6 +983,12 @@ update_line_type_info:
 	callpoint!.setDevObject("line_type",poc_linecode.line_type$)
 	gosub enable_by_line_type
 
+	rem --- Dropship PO line codes are no longer supported. Now the entire PO must be dropshipped.
+	if poc_linecode.dropship$="Y" then
+		msg_id$="PO_DROPSHIP_LINE_CD "
+		gosub disp_message
+	endif
+
 return
 
 validate_whse_item:
