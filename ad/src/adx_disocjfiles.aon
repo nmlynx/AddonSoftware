@@ -40,7 +40,7 @@ rem --- Initializations
     dataDir$=FileObject.fixPath(stbl("+DIR_DAT",err=*next), "/")
     
     rem --- Make sure needed STBLs are set
-    call stbl("+DIR_SYP")+"bas_process_beg.bbj",user_id$,rd_table_chans$[all]
+    call stbl("+DIR_SYP")+"bas_process_beg.bbj",user_id$,table_chans$[all]
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
@@ -66,7 +66,24 @@ rem --- If conversion control file data/adx_conversionCtrl present and data_sour
         gosub open_tables
         ads_autolaunch_dev=num(open_chans$[1]); dim ads_autolaunch$:open_tpls$[1]
 
-        remove(ads_autolaunch_dev,key="INIT_DATA",dom=*next)
+        extractrecord(ads_autolaunch_dev,key="INIT_DATA",dom=*next)ads_autolaunch$
+        if ads_utolaunch.process_id$="INIT_DATA" then
+            remove(ads_autolaunch_dev,key="INIT_DATA",dom=*endif)
+            
+            rem --- Use bax_mount_sel to get rdMountVect! containing hashes of mounted system and backup directory info for use in bax_xmlrec_exp.bbj
+            dev_mode$=""
+            call stbl("+DIR_SYP")+"bax_mount_sel.bbj",rdMountVect!,table_chans$[all],rd_dev_mode$
+
+            rem --- Update admin xml file
+            if rdMountVect!<>null() and rdMountVect!.size()>0
+                xml_alias$="ADS_AUTOLAUNCH"
+                dim xml_rec$:fattr(ads_autolaunch$)
+                xml_rec$=ads_autolaunch$
+                exp_action$="D"
+                exp_add_only$=""
+                call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj",xml_alias$,xml_rec$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
+            endif
+        endif
     endif
     
 done: rem --- All done
@@ -82,7 +99,7 @@ open_tables: rem --- Open Tables
 :       open_opts$[all],
 :       open_chans$[all],
 :       open_tpls$[all],
-:       rd_table_chans$[all],
+:       table_chans$[all],
 :       open_batch,
 :       open_status$
 

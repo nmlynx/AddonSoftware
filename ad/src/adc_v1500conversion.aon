@@ -143,7 +143,24 @@ rem ---                    - remove 'DEMONAG' auto-launch record with short keys
         wend
 
         rem --- Remove 'DEMONAG' auto-launch record with short keys
-        remove(ads_autolaunch_dev,key="DEMONAG",dom=*next)
+        extractrecord(ads_autolaunch_dev,key="DEMONAG",dom=*next)ads_autolaunch$
+        if ads_utolaunch.process_id$="DEMONAG" then
+            remove(ads_autolaunch_dev,key="DEMONAG",dom=*endif)
+            
+            rem --- Use bax_mount_sel to get rdMountVect! containing hashes of mounted system and backup directory info for use in bax_xmlrec_exp.bbj
+            dev_mode$=""
+            call stbl("+DIR_SYP")+"bax_mount_sel.bbj",rdMountVect!,table_chans$[all],rd_dev_mode$
+
+            rem --- Update admin xml file
+            if rdMountVect!<>null() and rdMountVect!.size()>0
+                xml_alias$="ADS_AUTOLAUNCH"
+                dim xml_rec$:fattr(ads_autolaunch$)
+                xml_rec$=ads_autolaunch$
+                exp_action$="D"
+                exp_add_only$=""
+                call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj",xml_alias$,xml_rec$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
+            endif
+        endif
 
         rem --- Increment progress meter
         meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
@@ -969,7 +986,7 @@ open_tables: rem --- Open Tables
 :       open_opts$[all],
 :       open_chans$[all],
 :       open_tpls$[all],
-:       rd_table_chans$[all],
+:       table_chans$[all],
 :       open_batch,
 :       open_status$
 

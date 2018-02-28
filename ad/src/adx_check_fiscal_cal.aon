@@ -35,7 +35,7 @@ rem --- Initializations
     dir_syp$=stbl("+DIR_SYP")
     
     rem --- Make sure needed STBLs are set
-    call stbl("+DIR_SYP")+"bas_process_beg.bbj",user_id$,rd_table_chans$[all]
+    call stbl("+DIR_SYP")+"bas_process_beg.bbj",user_id$,table_chans$[all]
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
@@ -51,17 +51,43 @@ rem --- Need to remove the old FISCAL_CAL record that might still be in ads_auto
 
     wk$=fattr(ads_autolaunch$,"PROCESS_ID")
     process_id$=pad("FISCAL_CAL",dec(wk$(10,2)))
-        
+
     extractrecord(ads_autolaunch_dev,key=process_id$,dom=*next)ads_autolaunch$
     if ads_autolaunch.process_id$=process_id$ then
+
+        rem --- Use bax_mount_sel to get rdMountVect! containing hashes of mounted system and backup directory info for use in bax_xmlrec_exp.bbj
+        dev_mode$=""
+        call stbl("+DIR_SYP")+"bax_mount_sel.bbj",rdMountVect!,table_chans$[all],rd_dev_mode$
+
         if ads_autolaunch.process_status$="C" then
             rem --- Remove Completed old FISCAL_CAL task
             rem --- Can't remove in FISCAL_CAL task because causes error 11 in Barista's bax_auto_launch.bbj
             remove(ads_autolaunch_dev,key=process_id$,dom=*next)
+
+            rem --- Update admin xml file
+            if rdMountVect!<>null() and rdMountVect!.size()>0
+                xml_alias$="ADS_AUTOLAUNCH"
+                dim xml_rec$:fattr(ads_autolaunch$)
+                xml_rec$=ads_autolaunch$
+                exp_action$="D"
+                exp_add_only$=""
+                call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj",xml_alias$,xml_rec$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
+            endif
         else
             rem --- Set old FISCAL_CAL task as Completed, then exit this task
             ads_autolaunch.process_status$="C"
             ads_autolaunch$ = field(ads_autolaunch$)
+
+            rem --- Update admin xml file
+            if rdMountVect!<>null() and rdMountVect!.size()>0
+                xml_alias$="ADS_AUTOLAUNCH"
+                dim xml_rec$:fattr(ads_autolaunch$)
+                xml_rec$=ads_autolaunch$
+                exp_action$="C"
+                exp_add_only$=""
+                call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj",xml_alias$,xml_rec$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
+            endif
+
             writerecord(ads_autolaunch_dev)ads_autolaunch$
             goto done
         endif
@@ -129,7 +155,7 @@ open_tables:rem -----<Open Tables
 :       open_opts$[all],
 :       open_chans$[all],
 :       open_tpls$[all],
-:       rd_table_chans$[all],
+:       table_chans$[all],
 :       open_batch,
 :       open_status$
 

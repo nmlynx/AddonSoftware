@@ -105,7 +105,7 @@ rem --- Retrieve the program path
 
 rem --- Retrieve sysinfo data
 
-    call stbl("+DIR_SYP")+"bas_process_beg.bbj",stbl("+USER_ID"),rd_table_chans$[all]
+    call stbl("+DIR_SYP")+"bas_process_beg.bbj",stbl("+USER_ID"),table_chans$[all]
 
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
@@ -1094,6 +1094,21 @@ update_status:rem --- Update AutoLaunch Status
     ads_autolaunch.trans_date$=date(0:"%Yl%Mz%Dz")
     ads_autolaunch.trans_time$=date(0:"%Hz%mz%sz")
     ads_autolaunch$=field(ads_autolaunch$)
+
+    rem --- Use bax_mount_sel to get rdMountVect! containing hashes of mounted system and backup directory info for use in bax_xmlrec_exp.bbj
+    dev_mode$=""
+    call stbl("+DIR_SYP")+"bax_mount_sel.bbj",rdMountVect!,table_chans$[all],rd_dev_mode$
+
+    rem --- Update admin xml file
+    if rdMountVect!<>null() and rdMountVect!.size()>0
+        xml_alias$="ADS_AUTOLAUNCH"
+        dim xml_rec$:fattr(ads_autolaunch$)
+        xml_rec$=ads_autolaunch$
+        exp_action$="C"
+        exp_add_only$=""
+        call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj",xml_alias$,xml_rec$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
+    endif
+
     writerecord(ads_autolaunch)ads_autolaunch$
 
 goto std_exit
@@ -1149,7 +1164,7 @@ open_tables:rem -----<Open Tables
 :       open_opts$[all],
 :       open_chans$[all],
 :       open_tpls$[all],
-:       rd_table_chans$[all],
+:       table_chans$[all],
 :       open_batch,
 :       open_status$
 
