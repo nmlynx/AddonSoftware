@@ -144,7 +144,7 @@ rem ---                    - remove 'DEMONAG' auto-launch record with short keys
 
         rem --- Remove 'DEMONAG' auto-launch record with short keys
         extractrecord(ads_autolaunch_dev,key="DEMONAG",dom=*next)ads_autolaunch$
-        if ads_utolaunch.process_id$="DEMONAG" then
+        if ads_autolaunch.process_id$="DEMONAG" then
             remove(ads_autolaunch_dev,key="DEMONAG",dom=*endif)
             
             rem --- Use bax_mount_sel to get rdMountVect! containing hashes of mounted system and backup directory info for use in bax_xmlrec_exp.bbj

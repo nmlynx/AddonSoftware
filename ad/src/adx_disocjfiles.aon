@@ -67,7 +67,7 @@ rem --- If conversion control file data/adx_conversionCtrl present and data_sour
         ads_autolaunch_dev=num(open_chans$[1]); dim ads_autolaunch$:open_tpls$[1]
 
         extractrecord(ads_autolaunch_dev,key="INIT_DATA",dom=*next)ads_autolaunch$
-        if ads_utolaunch.process_id$="INIT_DATA" then
+        if ads_autolaunch.process_id$="INIT_DATA" then
             remove(ads_autolaunch_dev,key="INIT_DATA",dom=*endif)
             
             rem --- Use bax_mount_sel to get rdMountVect! containing hashes of mounted system and backup directory info for use in bax_xmlrec_exp.bbj
