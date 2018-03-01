@@ -109,19 +109,20 @@ rem ==========================================================================
 
             methodret
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+GmInterfaceClient_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -164,19 +165,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
             
             methodret
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+launchClient_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -309,19 +311,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+pushCustomers_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -372,19 +375,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret statusCode%
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+gmLoadAPI_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -409,19 +413,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret gmData!
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+gmWriteContact_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -449,19 +454,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret statusCode%
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+gmLogout_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -489,19 +495,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret statusCode%
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+gmUnloadAPI_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -568,19 +575,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret xmlString$
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+buildXMLRequest_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -620,19 +628,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret xmlResponse$
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+postRequest_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -713,19 +722,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret props!
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+parseXMLResponse_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -811,19 +821,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret gmProps!
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+mapToGoldMine_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -853,19 +864,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret gmProps!
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+mapToGoldMineCountry_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -964,19 +976,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret aonProps!
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+mapToAddon_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -1007,19 +1020,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret aonProps!
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+mapToAddonCountry_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -1050,19 +1064,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret aonProps!
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+mapToAddonCntryId_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -1087,19 +1102,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret out$
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+onlyAlphaNumericChars_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -1146,19 +1162,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret state!
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+getStateCodes_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -1206,19 +1223,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret countries!
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+getCountryCodes_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -1276,19 +1294,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
                 methodret Boolean.valueOf("false")
             endif
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+isGmContact_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -1338,19 +1357,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret contactInfo!
              
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+getGmContactInfo_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -1383,19 +1403,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
             
             methodret
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+startClient_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -1421,19 +1442,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+close_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -1462,19 +1484,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+terminateGmSessions_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -1516,19 +1539,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret openChannel%
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+openGmqCustomer_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -1583,19 +1607,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret openChannel%
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+openGmxCustomer_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -1639,19 +1664,19 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret openChannel%
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+openSqlConn_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -1670,19 +1695,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+logPush_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
@@ -1720,19 +1746,20 @@ SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret
             
-SyncRecords_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+logError_error:rem --- Method error trap/handler
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            rem #logError(pgm(-2)+": Error "+str(err_num)+" Line "+str(tcb(5)),rd_err_text$)
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
