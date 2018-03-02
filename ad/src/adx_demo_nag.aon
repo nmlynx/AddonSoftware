@@ -53,7 +53,7 @@ rem --- Get Addon install location
     
 	readrecord(ddm_systems,key=pad("ADDON",16),err=done)ddm_systems$
 	aonHome$ = ddm_systems.mount_dir$
-	chdir(aonHome$)
+	chdir(aonHome$),err=std_exit
 	aonHome$ = dir(""); rem --- remove possible drive letter from path
 	
 rem --- Get current BASIS product download location
@@ -98,7 +98,7 @@ done:rem --- Update AutoLaunch Status
 
     rem --- Use bax_mount_sel to get rdMountVect! containing hashes of mounted system and backup directory info for use in bax_xmlrec_exp.bbj
     dev_mode$=""
-    call stbl("+DIR_SYP")+"bax_mount_sel.bbj",rdMountVect!,table_chans$[all],rd_dev_mode$
+    call stbl("+DIR_SYP")+"bax_mount_sel.bbj",rdMountVect!,table_chans$[all],dev_mode$
 
     rem --- Update admin xml file
     if rdMountVect!<>null() and rdMountVect!.size()>0
