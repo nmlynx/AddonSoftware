@@ -539,6 +539,7 @@ mats_loop:
 		if bmm_billmat.line_type$="M"
 			sfe_womatl.line_type$="M"
 			sfe_womatl.ext_comments$=bmm_billmat.ext_comments$
+			sfe_womatl.memo_1024$=bmm_billmat.memo_1024$
 			phantom_bill$="N"
 		else
 			sfe_womatl.unit_measure$=ivm_itemmast.unit_of_sale$
