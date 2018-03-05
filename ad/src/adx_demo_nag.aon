@@ -102,12 +102,9 @@ done:rem --- Update AutoLaunch Status
 
     rem --- Update admin xml file
     if rdMountVect!<>null() and rdMountVect!.size()>0
-        xml_alias$="ADS_AUTOLAUNCH"
-        dim xml_rec$:fattr(ads_autolaunch$)
-        xml_rec$=ads_autolaunch$
         exp_action$="C"
         exp_add_only$=""
-        call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj",xml_alias$,xml_rec$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
+        call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj","ADS_AUTOLAUNCH",ads_autolaunch$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
     endif
 
     writerecord(ads_autolaunch)ads_autolaunch$
