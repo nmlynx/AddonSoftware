@@ -57,7 +57,7 @@ rem --- Need to remove the old FISCAL_CAL record that might still be in ads_auto
 
         rem --- Use bax_mount_sel to get rdMountVect! containing hashes of mounted system and backup directory info for use in bax_xmlrec_exp.bbj
         dev_mode$=""
-        call stbl("+DIR_SYP")+"bax_mount_sel.bbj",rdMountVect!,table_chans$[all],rd_dev_mode$
+        call stbl("+DIR_SYP")+"bax_mount_sel.bbj",rdMountVect!,table_chans$[all],dev_mode$
 
         if ads_autolaunch.process_status$="C" then
             rem --- Remove Completed old FISCAL_CAL task
@@ -66,12 +66,9 @@ rem --- Need to remove the old FISCAL_CAL record that might still be in ads_auto
 
             rem --- Update admin xml file
             if rdMountVect!<>null() and rdMountVect!.size()>0
-                xml_alias$="ADS_AUTOLAUNCH"
-                dim xml_rec$:fattr(ads_autolaunch$)
-                xml_rec$=ads_autolaunch$
                 exp_action$="D"
                 exp_add_only$=""
-                call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj",xml_alias$,xml_rec$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
+                call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj","ADS_AUTOLAUNCH",ads_autolaunch$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
             endif
         else
             rem --- Set old FISCAL_CAL task as Completed, then exit this task
@@ -80,12 +77,9 @@ rem --- Need to remove the old FISCAL_CAL record that might still be in ads_auto
 
             rem --- Update admin xml file
             if rdMountVect!<>null() and rdMountVect!.size()>0
-                xml_alias$="ADS_AUTOLAUNCH"
-                dim xml_rec$:fattr(ads_autolaunch$)
-                xml_rec$=ads_autolaunch$
                 exp_action$="C"
                 exp_add_only$=""
-                call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj",xml_alias$,xml_rec$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
+                call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj","ADS_AUTOLAUNCH",ads_autolaunch$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
             endif
 
             writerecord(ads_autolaunch_dev)ads_autolaunch$
