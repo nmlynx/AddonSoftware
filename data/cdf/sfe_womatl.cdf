@@ -744,6 +744,7 @@ do_operations:
 
 		if sfe_wooprtn.line_type$="M"
 			sfe_wooprtn.ext_comments$=bmm_billoper.ext_comments$
+			sfe_wooprtn.memo_1024$=bmm_billoper.memo_1024$
 		else
 			read record (op_code_dev,key=firm_id$+bmm_billoper.op_code$,dom=*next)op_code$
 			sfe_wooprtn.code_desc$=op_code.code_desc$
@@ -962,6 +963,7 @@ rem ==========================================================================
 	checked$=""
 	return
 
+rem ==========================================================================
 comment_entry:
 rem --- on a line where you can access the ls_comments field, pop the new memo_1024 editor instead
 rem --- the editor can be popped on demand for any line using the Comments button (alt-C),
