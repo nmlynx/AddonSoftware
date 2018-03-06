@@ -138,7 +138,7 @@ rem --- Build SQL statement
 	sql_prep$=sql_prep$+"SELECT op_code, wo_op_ref, require_date, runtime_hrs "+$0a$
 	sql_prep$=sql_prep$+"     , pcs_per_hour, direct_rate, ovhd_rate, setup_time "+$0a$
 	sql_prep$=sql_prep$+"     , hrs_per_pce, unit_cost, total_time, tot_std_cost "+$0a$
-	sql_prep$=sql_prep$+"     , line_type, ext_comments "+$0a$
+	sql_prep$=sql_prep$+"     , line_type, memo_1024 "+$0a$
 	sql_prep$=sql_prep$+"  FROM sfe_wooprtn "+$0a$
 	sql_prep$=sql_prep$+" WHERE firm_id = '"+firm_id$+"' "+$0a$
 	sql_prep$=sql_prep$+"   AND wo_location = '"+wo_loc$+"' "+$0a$
@@ -168,7 +168,7 @@ rem --- Trip Read
 				
 		if read_tpl.line_type$="M"
 			Rem --- Send data row for Memos
-			data!.setFieldValue("COMMENTS",read_tpl.ext_comments$)
+			data!.setFieldValue("COMMENTS",read_tpl.memo_1024$)
 			rs!.insert(data!)
 		else
 			rem --- Send data row for non-Memos
