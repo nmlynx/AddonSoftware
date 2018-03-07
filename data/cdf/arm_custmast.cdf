@@ -800,6 +800,7 @@ rem --- Retrieve parameter data
 		callpoint!.setOptionEnabled("QUOT",0)
 		callpoint!.setOptionEnabled("ORDR",0)
 		callpoint!.setOptionEnabled("INVC",0)
+		callpoint!.setOptionEnabled("CRDT",0)
 	endif
 	dctl$[9]="<<DISPLAY>>.DSP_BALANCE"
 	dctl$[10]="<<DISPLAY>>.DSP_MTD_PROFIT"
