@@ -56,6 +56,49 @@ rem --- Start progress meter
     meter_action$="WIN-LST"
     gosub disp_meter
 
+rem --- For version 18.00, initialize MEMO_1024 in ARE_INVDET
+
+    this_module$="AR"
+    if installMap!.get(this_module$)="Y" then
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:       Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+
+        rem --- Open File(s)
+        num_files=1
+        dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+        open_tables$[1]="ARE_INVDET",   open_opts$[1]="OTA"
+
+        gosub open_tables
+
+        areInvDet_dev=num(open_chans$[1])
+        dim areInvDet$:open_tpls$[1]
+
+        rem --- Identify files to initialize MEMO_1024 in
+        selectedFiles!=new java.util.TreeMap()
+        
+        fileVec!=BBjAPI().makeVector()
+        fileVec!.addItem(areInvDet_dev)
+        fileVec!.addItem(fattr(areInvDet$))
+        fileVec!.addItem("DESCRIPTION")
+        selectedFiles!.put("ARE_INVDET",fileVec!)
+
+        rem --- Initialize new MEMO_1024 field with old comment field
+        gosub initMemo1024
+    else
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_NOT","Not")+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:           Translate!.getTranslation("AON_SKIP","SKIP")+" "+Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+    endif
+
 rem --- For version 18.00, initialize MEMO_1024 in GLE_JRNLDET, GLE_DAILYDETAIL and GLT_TRANSDETAIL
 
     this_module$="GL"
