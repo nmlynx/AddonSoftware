@@ -80,10 +80,13 @@ rem --- Initializations
     glref1$=ref1$
     glref2$=ref2$
     glref3$=ref3$
-    glmemo$=memo$
     glyear$="  "
     glperiod$="  "
     gldate$=when$
+    glmemo_len=len(glt04a.description$)
+    glmemo$=memo$
+    glmemo$=glmemo$(1,min(glmemo_len,(pos($0A$=glmemo$+$0A$)-1)))
+
 
 rem --- Determine period and year
 
@@ -158,6 +161,7 @@ update_glt04: rem --- Format remaining glt-04 fields
     glt04a.reference_02$=glref2$
     glt04a.reference_03$=glref3$
     glt04a.description$=glmemo$
+    glt04a.memo_1024$=memo$
     glt04a.trans_amt=glt04a.trans_amt+amount
     if glcontrol.units_flag$="Y" glt04a.units=glt04a.units+units
 

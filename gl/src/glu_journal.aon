@@ -149,7 +149,7 @@ rem --- Read through the work file and post the records to the daily detail file
 
               call pgmdir$+"glc_glpost.aon",glm01_dev,glt04_dev,notused,gle11a.gl_account$,gle01a.trans_date$,
 :               gle01a.je_trans_id$,gle11a.line_no$,ref3$,
-:               gle11a.gl_post_memo$,post_amt,gle11a.units,status
+:               gle11a.memo_1024$,post_amt,gle11a.units,status
 	        if bankrec then
                   trans_date$=gle01a.trans_date$
                   gosub bank_rec
@@ -163,7 +163,7 @@ rem --- Read through the work file and post the records to the daily detail file
                 call pgmdir$+"glc_glpost.aon",glm01_dev,glt04_dev,notused,
 :                   gle11a.gl_account$,gle01a.reverse_date$,
 :                   gle01a.je_trans_id$,gle11a.line_no$,
-:                   ref3$,gle11a.gl_post_memo$,
+:                   ref3$,gle11a.memo_1024$,
 :                   post_amt,gle11a.units,status
 	            if bankrec then
                        trans_date$=gle01a.reverse_date$
