@@ -6,6 +6,7 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 
+    use ::ado_func.src::func
     use java.util.Iterator
     use java.util.TreeMap
 
@@ -42,6 +43,7 @@ rem --- Document initializations
 rem --- Assign form input values to local variables
 
     level$=Option!.getOptionData("REPORT_SEQUENCE")
+    doComments$=option!.getOptionData("PICK_CHECK")
 
 rem --- Open/Lock Files
 
@@ -254,7 +256,7 @@ rem --- Column headings
 	columns$[6,0]=Translate!.getTranslation("AON_HOLD"),columns$[6,1]="C",columns$[6,2]="5"
 	columns$[7,0]=Translate!.getTranslation("AON_INV_DATE")+"^"+Translate!.getTranslation("AON_DUE_DATE"),columns$[7,1]="C",columns$[7,2]="10"
 	columns$[8,0]=Translate!.getTranslation("AON_ACCT_DATE")+"^"+Translate!.getTranslation("AON_DISC_DATE"),columns$[8,1]="C",columns$[8,2]="10"
-	columns$[9,0]=Translate!.getTranslation("AON_REF/")+"^"+Translate!.getTranslation("AON_MEMO"),columns$[9,1]="C",columns$[9,2]="10"
+	columns$[9,0]=Translate!.getTranslation("AON_REF/")+"^"+Translate!.getTranslation("AON_MEMO"),columns$[9,1]="C",columns$[9,2]="25"
 	columns$[10,0]=Translate!.getTranslation("AON_INVOICE")+"^"+Translate!.getTranslation("AON_AMOUNT"),columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m1$
 	columns$[11,0]=rh1$+"^"+rh2$,columns$[11,1]="N",columns$[11,2]="10",columns$[11,3]=m1$
 
@@ -435,6 +437,19 @@ rem --- Print invoice header
 	outVect!.addItem(poe05a.ap_inv_memo$)
 	outVect!.addItem("")
 	outVect!.addItem(retention$)
+       
+    if doComments$="Y" then
+        lineVect!=func.splitMultiLineField(poe05a.memo_1024$,40)
+    else
+        lineVect!=BBjAPI().makeVector()
+    endif
+    if lineVect!.size()>1 then
+        for i=0 to lineVect!.size()-1
+            xwk=fnblank(9)
+            OutVect!.addItem(lineVect!.getItem(i))
+            xwk=fnblank(2)
+        next i
+    endif
 
     recs=recs+1
     glskip=0
