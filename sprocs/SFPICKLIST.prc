@@ -330,7 +330,9 @@ get_mat_line_cmnts: rem --- Get comments for this material line
 		redim sfe_womatl$
         read record (sfe_womatl,key=sfe_womatl_key$) sfe_womatl$
         if sfe_womatl.line_type$<>"M" then break 
-		line_comm$=line_comm$+sfe_womatl.memo_1024$
+        memo_1024$=sfe_womatl.memo_1024$
+        if memo_1024$(len(memo_1024$))=$0A$ then memo_1024$=memo_1024$(1,len(memo_1024$)-1); rem --- trim trailing newline
+		line_comm$=line_comm$+memo_1024$
     wend
     return
 
@@ -343,7 +345,9 @@ get_wo_hdr_cmnts: rem --- Get header comments for this Work Order, i.e. memo lin
 		redim sfe_womatl$
         read record (sfe_womatl) sfe_womatl$
         if sfe_womatl.line_type$<>"M" then break
-		head_comm$=head_comm$+sfe_womatl.memo_1024$		
+        memo_1024$=sfe_womatl.memo_1024$
+        if memo_1024$(len(memo_1024$))=$0A$ then memo_1024$=memo_1024$(1,len(memo_1024$)-1); rem --- trim trailing newline
+		head_comm$=head_comm$+memo_1024$		
     wend
     return
 

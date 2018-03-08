@@ -151,6 +151,9 @@ rem --- Main
 
 line_detail: rem --- Item Detail
 
+    memo_1024$=ope11a.memo_1024$
+    if memo_1024$(len(memo_1024$))=$0A$ then memo_1024$=memo_1024$(1,len(memo_1024$)-1); rem --- trim trailing newline
+
 			if pos(opm02a.line_type$="MO")=0 then
 				order_qty_masked$= str(ope11a.qty_ordered/ope11a.conv_factor:qty_mask$)
 				ship_qty_masked$= str(ope11a.qty_shipped/ope11a.conv_factor:qty_mask$)
@@ -159,7 +162,7 @@ line_detail: rem --- Item Detail
 			endif
 
 			if pos(opm02a.line_type$="MNO") then
-				item_desc$=cvs(ope11a.memo_1024$,3)
+				item_desc$=cvs(memo_1024$,3)
 			endif
 
 			if pos(opm02a.line_type$=" SP") then 
@@ -182,7 +185,7 @@ line_detail: rem --- Item Detail
 			endif
 
 			if pos(opm02a.line_type$="SP") then
-				item_desc$=item_desc$+" "+cvs(item_description$,3)+iff(cvs(ope11a.memo_1024$,3)="",""," - "+cvs(ope11a.memo_1024$,3))
+				item_desc$=item_desc$+" "+cvs(item_description$,3)+iff(cvs(memo_1024$,3)="",""," - "+cvs(memo_1024$,3))
 			endif
             
             if len(item_desc$) then if item_desc$(len(item_desc$),1)=$0A$ then item_desc$=item_desc$(1,len(item_desc$)-1)
