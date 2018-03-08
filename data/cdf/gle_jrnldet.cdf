@@ -1,3 +1,7 @@
+[[GLE_JRNLDET.BDGX]]
+rem --- Disable comments
+	callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"GLE_JRNLDET.MEMO_1024",0)
+	callpoint!.setOptionEnabled("COMM",0)
 [[GLE_JRNLDET.MEMO_1024.AVAL]]
 rem --- store first part of memo_1024 in gl_post_memo
 rem --- this AVAL is hit if user navigates via arrows or clicks on the memo_1024 field, and double-clicks or ctrl-F to bring up editor
@@ -57,9 +61,6 @@ rem --- recal/display tots when leaving a grid row
 	gosub calc_grid_tots
 	gosub disp_totals
 
-rem --- Disable comments
-	callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"GLE_JRNLDET.MEMO_1024",0)
-	callpoint!.setOptionEnabled("COMM",0)
 [[GLE_JRNLDET.ADGE]]
 rem --- set default value for memo lines to the description entered in the header
 	description$=callpoint!.getHeaderColumnData("GLE_JRNLHDR.DESCRIPTION")
