@@ -187,9 +187,6 @@ rem --- Main
 
 line_detail: rem --- Item Detail
 
-            memo_1024$=ope11a.memo_1024$
-            if memo_1024$(len(memo_1024$))=$0A$ then memo_1024$=memo_1024$(1,len(memo_1024$)-1); rem --- trim trailing newline
-
 			if pos(opm02a.line_type$="MO")=0 then
                 qtyOrdered_salesUM=ope11a.qty_ordered
 				order_qty_masked$= str(ope11a.qty_ordered:qty_mask$)

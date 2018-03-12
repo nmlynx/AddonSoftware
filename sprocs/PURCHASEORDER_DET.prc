@@ -107,7 +107,7 @@ rem --- Main
         if pos(firm_id$+po_no$=poe_podet$)<>1 then break
         
         memo_1024$=poe_podet.memo_1024$
-        if memo_1024$(len(memo_1024$))=$0A$ then memo_1024$=memo_1024$(1,len(memo_1024$)-1); rem --- trim trailing newline
+        if len(memo_1024$) and memo_1024$(len(memo_1024$))=$0A$ then memo_1024$=memo_1024$(1,len(memo_1024$)-1); rem --- trim trailing newline
 
         qty=poe_podet.qty_ordered-poe_podet.qty_received
         
@@ -301,7 +301,7 @@ process_messages:rem --- Header or Detail level message codes
     find record (poc_message,key=firm_id$+msg_cd$,dom=*return) poc_message$
     rem --- if type isn't Both or Purchase Order, skip it (other types R=Reqs, N=neither)
     memo$=poc_message.memo_1024$
-    if memo$(len(memo$))=$0A$ then memo$=memo$(1,len(memo$)-1); rem --- trim trailing newline
+    if len(memo$) and memo$(len(memo$))=$0A$ then memo$=memo$(1,len(memo$)-1); rem --- trim trailing newline
     if pos(poc_message.message_type$ = "BP")<>0 then item_id_desc_msg$=memo$
     gosub add_to_recordset
     

@@ -169,7 +169,7 @@ rem --- Trip Read
 		if read_tpl.line_type$="M"
 			Rem --- Send data row for Memos
             memo_1024$=read_tpl.memo_1024$
-            if memo_1024$(len(memo_1024$))=$0A$ then memo_1024$=memo_1024$(1,len(memo_1024$)-1); rem --- trim trailing newline
+            if len(memo_1024$) and memo_1024$(len(memo_1024$))=$0A$ then memo_1024$=memo_1024$(1,len(memo_1024$)-1); rem --- trim trailing newline
 			data!.setFieldValue("COMMENTS",memo_1024$)
 			rs!.insert(data!)
 		else
