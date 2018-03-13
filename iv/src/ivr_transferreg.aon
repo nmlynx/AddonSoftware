@@ -521,7 +521,7 @@ get_item_data: rem --- Get item data
 
     if ivm01a$<>"" then 
         item_desc$ = fnitem$(ivm01a.item_desc$, p[3], p[4], p[5])
-        um$ = ivm01a.purchase_um$
+        um$ = ivm01a.unit_of_sale$
     endif
 
     return

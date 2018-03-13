@@ -493,7 +493,7 @@ rem ===========================================================================
 
 	find record (fnget_dev(item_file$), key=firm_id$+item$) ivm01a$
 
-	callpoint!.setColumnData("<<DISPLAY>>.PURCHASE_UM",ivm01a.purchase_um$)
+	callpoint!.setColumnData("<<DISPLAY>>.UNIT_OF_SALE",ivm01a.unit_of_sale$)
 	callpoint!.setStatus("REFRESH")
 
 return
