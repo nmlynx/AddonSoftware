@@ -173,5 +173,17 @@ Moved controls on the right side of the form over a bit more.
 ----
 Modified: data/bar/glm_acctsumhdr.xml
 
+=======================================================================================================================================
+Revision: 96b5ae74fe4217e1e737f36442b57cdb8116b118
+Author: Christine <chawkins@basis.com>
+Date: 3/12/2018 4:43:51 PM
+Message:
+Bug 9093 - OP - Order Entry header changes are lost when binoculars used to select a different order.
 
+Original fix didn't go quite far enough. Changed to test both customer ID and order number when deciding on whether to use setStatus("SAVE-RECORD or just setStatus("RECORD.
+----
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_invhdr.cdf
+Modified: data/cdf/ope_ordhdr.cdf
 
