@@ -16,7 +16,7 @@ rem --- CONV_STATUS : Status code/0=No error (Returned)
     use java.util.GregorianCalendar
 
     use ::ado_file.src::FileObject
-    
+   
     setesc std_error
     seterr std_error
     
@@ -55,6 +55,63 @@ rem --- Start progress meter
     meter_text$=""
     meter_action$="WIN-LST"
     gosub disp_meter
+
+rem --- Prior to v17.12 the MSG_ID key field size in aon/data/sync/ads_messages~iv_lf_adjust_warn.xml was 22 instead of 20 (Bug 9261).
+rem --- This can result in two bogus records for that bad key in aon/data/admin_backup/ads_messages~[01007517IV].xml following an upgrade
+rem --- to v18. The following code removes those bogus "IV_LF_ADJUST_WARN     " records (22-char instead of 20-char).
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+" "+Translate!.getTranslation("AON_MODIFIED_SYNC_FILES")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Remove bogus 22-char IV_LF_ADJUST_WARN records in admin_backup/ads_messages~[01007517IV].xml
+    xml_file$=aonDir$+"data/admin_backup/ads_messages~[01007514IV].xml"
+    file_exists=0
+    xml_doc$=""
+    xml_chan=unt
+    open(xml_chan,err=*next)xml_file$; file_exists=1
+    if file_exists then
+        rem --- Get current XML document
+        xml_fin$=fin(xml_chan)
+        xml_size=dec($00$+xml_fin$(1,4))
+        if xml_size
+            readrecord(xml_chan,siz=xml_size)xml_doc$
+        endif
+        close(xml_chan)
+    endif
+    if xml_doc$<>"" then
+        rem --- Snip out unwanted records
+        xml_key$=$09$+"<barista_record>"+$0a$+$09$+$09$+"<MSG_ID>IV_LF_ADJUST_WARN     </MSG_ID>"+$0a$
+        start_pos=pos(xml_key$=xml_doc$)
+        while start_pos
+            end_pos=pos("</barista_record>"=xml_doc$(start_pos))
+            if end_pos then
+                xml_doc$=xml_doc$(1,start_pos-2)+xml_doc$(start_pos+end_pos+(len("</barista_record>")-1))
+                start_pos=pos(xml_key$=xml_doc$)
+            else
+                start_pos=0
+            endif
+        wend
+
+        rem --- Erase XML file if no records in the XML document, else save the updated XML document.
+        if pos($09$+"<barista_record>"+$0a$=xml_doc$)=0 then
+            erase xml_file$,err=*next
+        else
+            tmp_xml_file$=xml_file$+"~"+str(int(tim*100000):"0000000")+".tmp"
+            rename xml_file$,tmp_xml_file$
+            string xml_file$
+    
+            xml_chan=unt
+            open (xml_chan)xml_file$
+            write record(xml_chan)xml_doc$
+            close(xml_chan)
+    
+            erase tmp_xml_file$
+        endif
+    endif
 
 rem --- For version 18.00, initialize MEMO_1024 in ARE_INVDET
 
