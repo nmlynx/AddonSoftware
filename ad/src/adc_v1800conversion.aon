@@ -16,6 +16,7 @@ rem --- CONV_STATUS : Status code/0=No error (Returned)
     use java.util.GregorianCalendar
 
     use ::ado_file.src::FileObject
+    use ::ado_SyncRecords.aon::SyncRecords
    
     setesc std_error
     seterr std_error
@@ -58,7 +59,9 @@ rem --- Start progress meter
 
 rem --- Prior to v17.12 the MSG_ID key field size in aon/data/sync/ads_messages~iv_lf_adjust_warn.xml was 22 instead of 20 (Bug 9261).
 rem --- This can result in two bogus records for that bad key in aon/data/admin_backup/ads_messages~[01007517IV].xml following an upgrade
-rem --- to v18. The following code removes those bogus "IV_LF_ADJUST_WARN     " records (22-char instead of 20-char).
+rem --- to v18, and the actual IV_LF_ADJUST_WARN being removed from ads_messages.
+rem --- The following code removes those bogus "IV_LF_ADJUST_WARN     " sync xml records (22-char instead of 20-char),
+rem --- and restores the IV_LF_ADJUST_WARN message record to the ads_messages table.
 
     rem --- Increment progress meter
     meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+" "+Translate!.getTranslation("AON_MODIFIED_SYNC_FILES")
@@ -112,6 +115,12 @@ rem --- to v18. The following code removes those bogus "IV_LF_ADJUST_WARN     " 
             erase tmp_xml_file$
         endif
     endif
+
+    rem --- have removed bad xml's, now restore the deleted message to the ads_messages file
+    syncFiles!=BBjAPI().makeVector()
+    syncFiles!.addItem("ads_messages~iv_lf_adjust_warn.xml")
+    syncRecs!=new SyncRecords(aonDir$)
+    syncRecs!.insertRecords(syncFiles!)
 
 rem --- For version 18.00, initialize MEMO_1024 in ARE_INVDET
 
