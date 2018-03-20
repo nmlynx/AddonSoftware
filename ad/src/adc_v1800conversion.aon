@@ -120,7 +120,7 @@ rem --- and restores the IV_LF_ADJUST_WARN message record to the ads_messages ta
     syncFiles!=BBjAPI().makeVector()
     syncFiles!.addItem("ads_messages~iv_lf_adjust_warn.xml")
     syncRecs!=new SyncRecords(aonDir$)
-    syncRecs!.insertRecords(syncFiles!)
+    syncRecs!.updateRecords(syncFiles!)
 
 rem --- For version 18.00, initialize MEMO_1024 in ARE_INVDET
 

@@ -61,42 +61,42 @@ rem --- For version 17.00, re-sync modified sync files in order to update the ch
 rem --- This is not necessary in later version because of changes in Barista.
 
     if convCtrl!.getProperty("data_source")="OCJ" then
+        rem --- Increment progress meter
+        meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+" "+Translate!.getTranslation("AON_MODIFIED_SYNC_FILES")
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+
+        rem --- Add temporary "delete" sync files for obsolete records being eliminated
+        tmpSync_dev=unt
+        open(tmpSync_dev,isz=-1,mode="O_CREATE,O_TRUNC")aonDir$+"/data/sync/adm_searches~{customers0070}.xml"
+        write(tmpSync_dev)"<?xml version='1.0' encoding='UTF-8' ?>"
+        write(tmpSync_dev)"<barista_admin_record>"
+        write(tmpSync_dev)"    <barista_record_table>ADM_SEARCHES</barista_record_table>"
+        write(tmpSync_dev)"    <SEARCH_DEF_ID>CUSTOMERS0070       </SEARCH_DEF_ID>"
+        write(tmpSync_dev)"</barista_admin_record>"
+        close(tmpSync_dev)
+
+        open(tmpSync_dev,isz=-1,mode="O_CREATE,O_TRUNC")aonDir$+"/data/sync/adm_searches~{vendors0010}.xml"
+        write(tmpSync_dev)"<?xml version='1.0' encoding='UTF-8' ?>"
+        write(tmpSync_dev)"<barista_admin_record>"
+        write(tmpSync_dev)"    <barista_record_table>ADM_SEARCHES</barista_record_table>"
+        write(tmpSync_dev)"    <SEARCH_DEF_ID>VENDORS0010         </SEARCH_DEF_ID>"
+        write(tmpSync_dev)"</barista_admin_record>"
+        close(tmpSync_dev)
+
+        open(tmpSync_dev,isz=-1,mode="O_CREATE,O_TRUNC")aonDir$+"/data/sync/ads_autolaunch~{setprinter}.xml"
+        write(tmpSync_dev)"<?xml version='1.0' encoding='UTF-8' ?>"
+        write(tmpSync_dev)"<barista_admin_record>"
+        write(tmpSync_dev)"    <barista_record_table>ADS_AUTOLAUNCH</barista_record_table>"
+        write(tmpSync_dev)"    <PROCESS_ID>SETPRINTER</PROCESS_ID>"
+        write(tmpSync_dev)"</barista_admin_record>"
+        close(tmpSync_dev)
+        
         gosub get_AD_version
         if num(adm_modules.version_id$)<18 then
-            rem --- Increment progress meter
-            meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+" "+Translate!.getTranslation("AON_MODIFIED_SYNC_FILES")
-            meter_proc_recs=meter_proc_recs+1
-            meter_action$="MTR-LST"
-            gosub disp_meter
-            print(log_dev)meter_text$
-    
-            rem --- Add temporary "delete" sync files for obsolete records being eliminated
-            tmpSync_dev=unt
-            open(tmpSync_dev,isz=-1,mode="O_CREATE,O_TRUNC")aonDir$+"/data/sync/adm_searches~{customers0070}.xml"
-            write(tmpSync_dev)"<?xml version='1.0' encoding='UTF-8' ?>"
-            write(tmpSync_dev)"<barista_admin_record>"
-            write(tmpSync_dev)"    <barista_record_table>ADM_SEARCHES</barista_record_table>"
-            write(tmpSync_dev)"    <SEARCH_DEF_ID>CUSTOMERS0070       </SEARCH_DEF_ID>"
-            write(tmpSync_dev)"</barista_admin_record>"
-            close(tmpSync_dev)
-    
-            open(tmpSync_dev,isz=-1,mode="O_CREATE,O_TRUNC")aonDir$+"/data/sync/adm_searches~{vendors0010}.xml"
-            write(tmpSync_dev)"<?xml version='1.0' encoding='UTF-8' ?>"
-            write(tmpSync_dev)"<barista_admin_record>"
-            write(tmpSync_dev)"    <barista_record_table>ADM_SEARCHES</barista_record_table>"
-            write(tmpSync_dev)"    <SEARCH_DEF_ID>VENDORS0010         </SEARCH_DEF_ID>"
-            write(tmpSync_dev)"</barista_admin_record>"
-            close(tmpSync_dev)
-    
-            open(tmpSync_dev,isz=-1,mode="O_CREATE,O_TRUNC")aonDir$+"/data/sync/ads_autolaunch~{setprinter}.xml"
-            write(tmpSync_dev)"<?xml version='1.0' encoding='UTF-8' ?>"
-            write(tmpSync_dev)"<barista_admin_record>"
-            write(tmpSync_dev)"    <barista_record_table>ADS_AUTOLAUNCH</barista_record_table>"
-            write(tmpSync_dev)"    <PROCESS_ID>SETPRINTER</PROCESS_ID>"
-            write(tmpSync_dev)"</barista_admin_record>"
-            close(tmpSync_dev)
-        
-            rem --- List modified sync files
+            rem --- List modified/deleted sync files
             syncFiles!=BBjAPI().makeVector()
             syncFiles!.addItem("adm_searches~customers0010.xml")
             syncFiles!.addItem("adm_searches~customers0020.xml")
@@ -138,16 +138,27 @@ rem --- This is not necessary in later version because of changes in Barista.
             syncFiles!.addItem("adm_query~podetail.xml")
             syncFiles!.addItem("adm_query~reqdetail.xml")
             syncFiles!.addItem("adm_query~sf_wobyvend.xml")
-    
-            rem --- Update table records for modified sync files
-            syncRecs!=new SyncRecords(aonDir$)
-            syncRecs!.updateRecords(syncFiles!)
-            
-            rem --- Erase temporary "delete" sync files
-            erase aonDir$+"/data/sync/adm_searches~{customers0070}.xml",err=*next
-            erase aonDir$+"/data/sync/adm_searches~{vendors0010}.xml",err=*next
-            erase aonDir$+"/data/sync/ads_autolaunch~{setprinter}.xml",err=*next
+        else
+            rem --- With ER 9233 v18 Barista handles administrative data differently than before.
+            rem --- When running v18 it is only necessary to remove the deleted sync records and data.
+            rem --- List deleted sync files
+            syncFiles!=BBjAPI().makeVector()
+            syncFiles!.addItem("adm_searches~{customers0070}.xml"); rem --- deleting this one
+            syncFiles!.addItem("adm_searches~{vendors0010}.xml"); rem --- deleting this one
+            syncFiles!.addItem("ads_autolaunch~{setprinter}.xml"); rem --- deleting this one
         endif
+    
+        rem --- Update table records for modified/deleted sync files
+        syncRecs!=new SyncRecords(aonDir$)
+        syncRecs!.updateRecords(syncFiles!)
+        
+        rem --- Erase temporary "delete" sync files and corresponding sync files we want to get rid of.
+        erase aonDir$+"/data/sync/adm_searches~{customers0070}.xml",err=*next
+        erase aonDir$+"/data/sync/adm_searches~customers0070.xml",err=*next
+        erase aonDir$+"/data/sync/adm_searches~{vendors0010}.xml",err=*next
+        erase aonDir$+"/data/sync/adm_searches~vendors0010.xml",err=*next
+        erase aonDir$+"/data/sync/ads_autolaunch~{setprinter}.xml",err=*next
+        erase aonDir$+"/data/sync/ads_autolaunch~setprinter.xml",err=*next
     endif
 
 rem --- Initialize AP data file changes implemented during minor releases of v17
