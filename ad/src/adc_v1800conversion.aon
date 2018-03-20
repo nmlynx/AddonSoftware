@@ -71,56 +71,33 @@ rem --- and restores the IV_LF_ADJUST_WARN message record to the ads_messages ta
     print(log_dev)meter_text$
 
     rem --- Remove bogus 22-char IV_LF_ADJUST_WARN records in admin_backup/ads_messages~[01007517IV].xml
+    rem --- Remove no-longer-used SETPRINTER record in admin_backup/ads_autolaunch~[01007514AD].xml
     xml_file$=aonDir$+"data/admin_backup/ads_messages~[01007514IV].xml"
-    file_exists=0
-    xml_doc$=""
-    xml_chan=unt
-    open(xml_chan,err=*next)xml_file$; file_exists=1
-    if file_exists then
-        rem --- Get current XML document
-        xml_fin$=fin(xml_chan)
-        xml_size=dec($00$+xml_fin$(1,4))
-        if xml_size
-            readrecord(xml_chan,siz=xml_size)xml_doc$
-        endif
-        close(xml_chan)
-    endif
-    if xml_doc$<>"" then
-        rem --- Snip out unwanted records
-        xml_key$=$09$+"<barista_record>"+$0a$+$09$+$09$+"<MSG_ID>IV_LF_ADJUST_WARN     </MSG_ID>"+$0a$
-        start_pos=pos(xml_key$=xml_doc$)
-        while start_pos
-            end_pos=pos("</barista_record>"=xml_doc$(start_pos))
-            if end_pos then
-                xml_doc$=xml_doc$(1,start_pos-2)+xml_doc$(start_pos+end_pos+(len("</barista_record>")-1))
-                start_pos=pos(xml_key$=xml_doc$)
-            else
-                start_pos=0
-            endif
-        wend
+    xml_key$=$09$+"<barista_record>"+$0a$+$09$+$09$+"<MSG_ID>IV_LF_ADJUST_WARN     </MSG_ID>"+$0a$
+    gosub remove_from_xml
+    xml_file$=aonDir$+"data/admin_backup/ads_autolaunch~[01007514AD].xml"
+    xml_key$=$09$+"<barista_record>"+$0a$+$09$+$09$+"<PROCESS_ID>SETPRINTER</PROCESS_ID>"+$0a$
+    gosub remove_from_xml
 
-        rem --- Erase XML file if no records in the XML document, else save the updated XML document.
-        if pos($09$+"<barista_record>"+$0a$=xml_doc$)=0 then
-            erase xml_file$,err=*next
-        else
-            tmp_xml_file$=xml_file$+"~"+str(int(tim*100000):"0000000")+".tmp"
-            rename xml_file$,tmp_xml_file$
-            string xml_file$
-    
-            xml_chan=unt
-            open (xml_chan)xml_file$
-            write record(xml_chan)xml_doc$
-            close(xml_chan)
-    
-            erase tmp_xml_file$
-        endif
-    endif
+    rem --- Add temporary "delete" sync files for obsolete records being eliminated
+    tmpSync_dev=unt
+    open(tmpSync_dev,isz=-1,mode="O_CREATE,O_TRUNC")aonDir$+"/data/sync/ads_autolaunch~{setprinter}.xml"
+    write(tmpSync_dev)"<?xml version='1.0' encoding='UTF-8' ?>"
+    write(tmpSync_dev)"<barista_admin_record>"
+    write(tmpSync_dev)"    <barista_record_table>ADS_AUTOLAUNCH</barista_record_table>"
+    write(tmpSync_dev)"    <PROCESS_ID>SETPRINTER</PROCESS_ID>"
+    write(tmpSync_dev)"</barista_admin_record>"
+    close(tmpSync_dev)
 
-    rem --- have removed bad xml's, now restore the deleted message to the ads_messages file
+    rem --- restore the IV_LF_ADJUST_WARN message to the data table, and delete the SETPRINTER autolaunch record from the table
     syncFiles!=BBjAPI().makeVector()
     syncFiles!.addItem("ads_messages~iv_lf_adjust_warn.xml")
+    syncFiles!.addItem("ads_autolaunch~{setprinter}.xml"); rem --- also deleting this one (is no longer in data/sync/, but can come across in v17 to v18 upgrade)
     syncRecs!=new SyncRecords(aonDir$)
     syncRecs!.updateRecords(syncFiles!)
+
+    rem --- Erase temporary "delete" sync file
+    erase aonDir$+"/data/sync/ads_autolaunch~{setprinter}.xml",err=*next
 
 rem --- For version 18.00, initialize MEMO_1024 in ARE_INVDET
 
@@ -1983,6 +1960,52 @@ done: rem --- Done, close things up
 
     if completed_successfully then conv_status=0; rem --- no errors encountered
 	goto std_exit
+
+remove_from_xml: rem --- remove incorrect or not-used admin_backup/*.xml entries that came over from conversion sync file backup
+    rem --- in: xml_file$, xml_key$
+    file_exists=0
+    xml_doc$=""
+    xml_chan=unt
+    open(xml_chan,err=*next)xml_file$; file_exists=1
+    if file_exists then
+        rem --- Get current XML document
+        xml_fin$=fin(xml_chan)
+        xml_size=dec($00$+xml_fin$(1,4))
+        if xml_size
+            readrecord(xml_chan,siz=xml_size)xml_doc$
+        endif
+        close(xml_chan)
+    endif
+    if xml_doc$<>"" then
+        rem --- Snip out unwanted records
+        start_pos=pos(xml_key$=xml_doc$)
+        while start_pos
+            end_pos=pos("</barista_record>"=xml_doc$(start_pos))
+            if end_pos then
+                xml_doc$=xml_doc$(1,start_pos-2)+xml_doc$(start_pos+end_pos+(len("</barista_record>")-1))
+                start_pos=pos(xml_key$=xml_doc$)
+            else
+                start_pos=0
+            endif
+        wend
+
+        rem --- Erase XML file if no records in the XML document, else save the updated XML document.
+        if pos($09$+"<barista_record>"+$0a$=xml_doc$)=0 then
+            erase xml_file$,err=*next
+        else
+            tmp_xml_file$=xml_file$+"~"+str(int(tim*100000):"0000000")+".tmp"
+            rename xml_file$,tmp_xml_file$
+            string xml_file$
+    
+            xml_chan=unt
+            open (xml_chan)xml_file$
+            write record(xml_chan)xml_doc$
+            close(xml_chan)
+    
+            erase tmp_xml_file$
+        endif
+    endif
+    return
 
 initMemo1024: rem --- Initialize new MEMO_1024 field with old comment field
     rem --- IN: selectedFiles! - TreeMap of Vectors with needed info
