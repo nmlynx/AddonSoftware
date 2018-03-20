@@ -109,21 +109,20 @@ rem --- Recursively copy oldLocation to newAonLoc
 
     for syscnt=0 to mountedSys!.size()-1
         call pgmdir$+"adc_copyaon.aon",oldLocation!.getItem(syscnt),mountedSys!.getItem(syscnt),copyData%,help%,rdForm!,0,status
-    next syscnt
 
-    rem --- Clear aon/data/admin_backup directory copied from oldLocation
-    admin_backup_dir$=newAonLoc$+"/aon/data/admin_backup/"
-    admin_backup_dir!=new java.io.File(admin_backup_dir$)
-    if admin_backup_dir!.exists() and admin_backup_dir!.isDirectory()
-        admin_backup_files!=new java.util.Vector(java.util.Arrays.asList(admin_backup_dir!.list()))
-        if(admin_backup_files!.size()>0) then
-            for i=0 to admin_backup_files!.size()-1
-                admin_backup_files$ = admin_backup_dir$+cast(BBjString, admin_backup_files!.get(i))
-                erase admin_backup_dir$+admin_backup_files!.get(i),err=*next
-            next i
+        rem --- Clear data/admin_backup directory copied from oldLocation
+        admin_backup_dir$=mountedSys!.getItem(syscnt)+"/data/admin_backup/"
+        admin_backup_dir!=new java.io.File(admin_backup_dir$)
+        if admin_backup_dir!.exists() and admin_backup_dir!.isDirectory()
+            admin_backup_files!=new java.util.Vector(java.util.Arrays.asList(admin_backup_dir!.list()))
+            if(admin_backup_files!.size()>0) then
+                for i=0 to admin_backup_files!.size()-1
+                    admin_backup_files$ = admin_backup_dir$+cast(BBjString, admin_backup_files!.get(i))
+                    erase admin_backup_dir$+admin_backup_files!.get(i),err=*next
+                next i
+            endif
         endif
-    endif
-
+    next syscnt
     
 rem --- Update new addon.syn file
 
