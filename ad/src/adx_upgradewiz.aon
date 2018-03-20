@@ -130,7 +130,22 @@ rem --- Recursively copy oldLocation to newAonDir
     for syscnt=0 to appName!.size()-1
         oldLocation$=bbjHomeLocation!.getItem(syscnt)
         call pgmdir$+"adc_copyaon.aon",bbjHomeLocation!.getItem(syscnt),newAonDir!.getItem(syscnt),copyData%,help%,rdForm!,0,status
-rem wgh ... 9233 ... need to clear data/admin_backup directories
+    next syscnt
+
+    rem --- Clear data/admin_backup directories in new upgraded installation
+    newAonDir!.add(newAonLoc$+"/aon")
+    for syscnt=0 to newAonDir!.size()-1
+        admin_backup_dir$=newAonDir!.getItem(syscnt)+"/data/admin_backup/"
+        admin_backup_dir!=new java.io.File(admin_backup_dir$)
+        if admin_backup_dir!.exists() and admin_backup_dir!.isDirectory()
+            admin_backup_files!=new java.util.Vector(java.util.Arrays.asList(admin_backup_dir!.list()))
+            if(admin_backup_files!.size()>0) then
+                for i=0 to admin_backup_files!.size()-1
+                    admin_backup_files$ = admin_backup_dir$+cast(BBjString, admin_backup_files!.get(i))
+                    erase admin_backup_dir$+admin_backup_files!.get(i),err=*next
+                next i
+            endif
+        endif
     next syscnt
     
 rem --- Update new addon.syn file
