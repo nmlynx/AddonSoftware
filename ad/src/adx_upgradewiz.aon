@@ -130,6 +130,7 @@ rem --- Recursively copy oldLocation to newAonDir
     for syscnt=0 to appName!.size()-1
         oldLocation$=bbjHomeLocation!.getItem(syscnt)
         call pgmdir$+"adc_copyaon.aon",bbjHomeLocation!.getItem(syscnt),newAonDir!.getItem(syscnt),copyData%,help%,rdForm!,0,status
+rem wgh ... 9233 ... need to clear data/admin_backup directories
     next syscnt
     
 rem --- Update new addon.syn file
