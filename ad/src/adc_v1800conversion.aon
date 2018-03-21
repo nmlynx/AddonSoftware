@@ -452,6 +452,22 @@ rem --- Initialize data file changes implemented during minor releases of v17
                 meter_action$="MTR-LST"
                 gosub disp_meter
                 print(log_dev)meter_text$
+        
+                rem --- Delete conversion marker files associated with this conversion
+                conv_marker_name$="v1800_apm-01"
+                conv_marker_file$=dataDir$+conv_marker_name$
+                convmarkerFile!=new File(conv_marker_file$)
+                if convmarkerFile!.exists() then
+                    rem --- Delete conversion marker file
+                    if convmarkerFile!.delete() then
+                        rem --- Increment progress meter
+                        meter_text$=Translate!.getTranslation("AON_CONV_MARKER_DELETED","Conversion marker file deleted")+": "+conv_marker_file$
+                        meter_proc_recs=meter_proc_recs+1
+                        meter_action$="MTR-LST"
+                        gosub disp_meter
+                        print(log_dev)meter_text$
+                    endif
+                endif
             else
                 rem --- Conversion did NOT complete successfully, exit with error message
                 err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
@@ -620,6 +636,22 @@ rem --- Initialize data file changes implemented during minor releases of v17
                 meter_action$="MTR-LST"
                 gosub disp_meter
                 print(log_dev)meter_text$
+        
+                rem --- Delete conversion marker files associated with this conversion
+                conv_marker_name$="v1800_arm-01"
+                conv_marker_file$=dataDir$+conv_marker_name$
+                convmarkerFile!=new File(conv_marker_file$)
+                if convmarkerFile!.exists() then
+                    rem --- Delete conversion marker file
+                    if convmarkerFile!.delete() then
+                        rem --- Increment progress meter
+                        meter_text$=Translate!.getTranslation("AON_CONV_MARKER_DELETED","Conversion marker file deleted")+": "+conv_marker_file$
+                        meter_proc_recs=meter_proc_recs+1
+                        meter_action$="MTR-LST"
+                        gosub disp_meter
+                        print(log_dev)meter_text$
+                    endif
+                endif
             else
                 rem --- Conversion did NOT complete successfully, exit with error message
                 err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
@@ -788,6 +820,22 @@ rem --- Initialize data file changes implemented during minor releases of v17
                 meter_action$="MTR-LST"
                 gosub disp_meter
                 print(log_dev)meter_text$
+        
+                rem --- Delete conversion marker files associated with this conversion
+                conv_marker_name$="v1800_bmm-01"
+                conv_marker_file$=dataDir$+conv_marker_name$
+                convmarkerFile!=new File(conv_marker_file$)
+                if convmarkerFile!.exists() then
+                    rem --- Delete conversion marker file
+                    if convmarkerFile!.delete() then
+                        rem --- Increment progress meter
+                        meter_text$=Translate!.getTranslation("AON_CONV_MARKER_DELETED","Conversion marker file deleted")+": "+conv_marker_file$
+                        meter_proc_recs=meter_proc_recs+1
+                        meter_action$="MTR-LST"
+                        gosub disp_meter
+                        print(log_dev)meter_text$
+                    endif
+                endif
             else
                 rem --- Conversion did NOT complete successfully, exit with error message
                 err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
@@ -956,6 +1004,22 @@ rem --- Initialize data file changes implemented during minor releases of v17
                 meter_action$="MTR-LST"
                 gosub disp_meter
                 print(log_dev)meter_text$
+        
+                rem --- Delete conversion marker files associated with this conversion
+                conv_marker_name$="v1800_glm-01"
+                conv_marker_file$=dataDir$+conv_marker_name$
+                convmarkerFile!=new File(conv_marker_file$)
+                if convmarkerFile!.exists() then
+                    rem --- Delete conversion marker file
+                    if convmarkerFile!.delete() then
+                        rem --- Increment progress meter
+                        meter_text$=Translate!.getTranslation("AON_CONV_MARKER_DELETED","Conversion marker file deleted")+": "+conv_marker_file$
+                        meter_proc_recs=meter_proc_recs+1
+                        meter_action$="MTR-LST"
+                        gosub disp_meter
+                        print(log_dev)meter_text$
+                    endif
+                endif
             else
                 rem --- Conversion did NOT complete successfully, exit with error message
                 err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
@@ -1124,6 +1188,22 @@ rem --- Initialize data file changes implemented during minor releases of v17
                 meter_action$="MTR-LST"
                 gosub disp_meter
                 print(log_dev)meter_text$
+        
+                rem --- Delete conversion marker files associated with this conversion
+                conv_marker_name$="v1800_ivm-01"
+                conv_marker_file$=dataDir$+conv_marker_name$
+                convmarkerFile!=new File(conv_marker_file$)
+                if convmarkerFile!.exists() then
+                    rem --- Delete conversion marker file
+                    if convmarkerFile!.delete() then
+                        rem --- Increment progress meter
+                        meter_text$=Translate!.getTranslation("AON_CONV_MARKER_DELETED","Conversion marker file deleted")+": "+conv_marker_file$
+                        meter_proc_recs=meter_proc_recs+1
+                        meter_action$="MTR-LST"
+                        gosub disp_meter
+                        print(log_dev)meter_text$
+                    endif
+                endif
             else
                 rem --- Conversion did NOT complete successfully, exit with error message
                 err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
@@ -1151,7 +1231,7 @@ rem --- Initialize data file changes implemented during minor releases of v17
             meter_action$="MTR-LST"
             gosub disp_meter
             print(log_dev)meter_text$
-    
+
             rem --- As of v17.10, DataPort handles initializing OPC_MESSAGE from OPC_MSG_HDR (opm-04) and OPC_MSG_DET (opm-14)
             if convCtrl!.getProperty("data_source")="OCJ" then
     
@@ -1908,6 +1988,22 @@ rem --- Initialize data file changes implemented during minor releases of v17
                 meter_action$="MTR-LST"
                 gosub disp_meter
                 print(log_dev)meter_text$
+        
+                rem --- Delete conversion marker files associated with this conversion
+                conv_marker_name$="v1800_woe-01"
+                conv_marker_file$=dataDir$+conv_marker_name$
+                convmarkerFile!=new File(conv_marker_file$)
+                if convmarkerFile!.exists() then
+                    rem --- Delete conversion marker file
+                    if convmarkerFile!.delete() then
+                        rem --- Increment progress meter
+                        meter_text$=Translate!.getTranslation("AON_CONV_MARKER_DELETED","Conversion marker file deleted")+": "+conv_marker_file$
+                        meter_proc_recs=meter_proc_recs+1
+                        meter_action$="MTR-LST"
+                        gosub disp_meter
+                        print(log_dev)meter_text$
+                    endif
+                endif
             else
                 rem --- Conversion did NOT complete successfully, exit with error message
                 err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
