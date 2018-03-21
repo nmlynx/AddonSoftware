@@ -1,3 +1,7 @@
+[[<<DISPLAY>>.UNIT_COST_DSP.AVAL]]
+	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
+	callpoint!.setColumnData("OPE_INVDET.UNIT_COST",str(callpoint!.getUserInput()))
+	gosub update_record_fields
 [[OPE_INVDET.UM_SOLD.AVAL]]
 rem --- Initialize CONV_FACTOR when UM_SOLD changed
 	um_sold$=callpoint!.getUserInput()
@@ -48,9 +52,9 @@ rem --- Set Manual Price flag and round price
 		gosub manual_price_flag
 	endif
 
-rem --- Don't extend price until grid vector has been updated
-	rem qty_shipped = num(callpoint!.getColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP"))
-	rem gosub disp_ext_amt
+	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
+	callpoint!.setColumnData("OPE_INVDET.UNIT_PRICE",str(unit_price))
+	gosub update_record_fields
 [[<<DISPLAY>>.UNIT_PRICE_DSP.AVEC]]
 rem --- Extend price now that grid vector has been updated, if the unit price has changed
 unit_price = num(callpoint!.getColumnData("<<DISPLAY>>.UNIT_PRICE_DSP"))
@@ -107,10 +111,9 @@ print "---Ordered:", ordqty
 		endif
 	endif
 
-rem --- Don't extend price until grid vector has been updated
-	rem qty_shipped = shipqty
-	rem unit_price  = num(callpoint!.getColumnData("<<DISPLAY>>.UNIT_PRICE_DSP"))
-	rem gosub disp_ext_amt
+	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
+	callpoint!.setColumnData("OPE_INVDET.QTY_SHIPPED",str(shipqty))
+	gosub update_record_fields
 [[<<DISPLAY>>.QTY_SHIPPED_DSP.AVEC]]
 rem --- Extend price now that grid vector has been updated, if the shipped quantity has changed
 qty_shipped = num(callpoint!.getColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP"))
@@ -155,9 +158,9 @@ rem --- Recalc quantities and extended price
 
 	callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", str(qty_shipped))
 
-rem --- Don't extend price until grid vector has been updated
-	rem unit_price = num(callpoint!.getColumnData("<<DISPLAY>>.UNIT_PRICE_DSP"))
-	rem gosub disp_ext_amt
+	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
+	callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD",str(boqty))
+	gosub update_record_fields
 [[<<DISPLAY>>.QTY_BACKORD_DSP.AVEC]]
 rem --- Extend price now that grid vector has been updated, if the backorder quantity has changed
 if num(callpoint!.getColumnData("<<DISPLAY>>.QTY_BACKORD_DSP")) <> user_tpl.prev_boqty then
@@ -224,6 +227,10 @@ rem --- Recalc quantities and extended price
 		conv_factor=num(callpoint!.getColumnData("OPE_INVDET.CONV_FACTOR"))
 		gosub pricing
 	endif
+
+	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
+	callpoint!.setColumnData("OPE_INVDET.QTY_ORDERED",str(qty_ord))
+	gosub update_record_fields
 [[<<DISPLAY>>.QTY_ORDERED_DSP.AVEC]]
 rem --- Extend price now that grid vector has been updated, if the order quantity has changed
 if num(callpoint!.getColumnData("<<DISPLAY>>.UNIT_PRICE_DSP")) <> user_tpl.prev_qty_ord then
@@ -1327,6 +1334,9 @@ rem --- For uncommitted "O" line type sales (not quotes), move ext_price to unit
 		callpoint!.setColumnData("OPE_INVDET.TAXABLE_AMT", "0")
 	endif
 
+rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
+	gosub update_record_fields
+
 rem --- Set header order totals
 
 	gosub disp_grid_totals
@@ -1340,22 +1350,6 @@ rem --- Has customer credit been exceeded?
 	endif
 
 	callpoint!.setStatus("MODIFIED;REFRESH")
-
-rem --- Use UM_SOLD related <DISPLAY> fields to update the real fields
-	conv_factor=num(callpoint!.getColumnData("OPE_INVDET.CONV_FACTOR"))
-	if conv_factor=0 then conv_factor=1
-	unit_cost=num(callpoint!.getColumnData("<<DISPLAY>>.UNIT_COST_DSP"))/conv_factor
-	callpoint!.setColumnData("OPE_INVDET.UNIT_COST",str(unit_cost))
-	qty_ordered=num(callpoint!.getColumnData("<<DISPLAY>>.QTY_ORDERED_DSP"))*conv_factor
-	callpoint!.setColumnData("OPE_INVDET.QTY_ORDERED",str(qty_ordered))
-	unit_price=num(callpoint!.getColumnData("<<DISPLAY>>.UNIT_PRICE_DSP"))/conv_factor
-	callpoint!.setColumnData("OPE_INVDET.UNIT_PRICE",str(unit_price))
-	qty_backord=num(callpoint!.getColumnData("<<DISPLAY>>.QTY_BACKORD_DSP"))*conv_factor
-	callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD",str(qty_backord))
-	qty_shipped=num(callpoint!.getColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP"))*conv_factor
-	callpoint!.setColumnData("OPE_INVDET.QTY_SHIPPED",str(qty_shipped))
-	std_list_prc=num(callpoint!.getColumnData("OPE_INVDET.STD_LIST_PRC"))/conv_factor
-	callpoint!.setColumnData("OPE_INVDET.STD_LIST_PRC",str(std_list_prc))
 [[OPE_INVDET.AUDE]]
 print "Det:AUDE"; rem debug
 
@@ -1519,6 +1513,27 @@ rem ---display extended price
 	callpoint!.setStatus("MODIFIED-REFRESH")
 [[OPE_INVDET.<CUSTOM>]]
 rem ==========================================================================
+update_record_fields: rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
+rem ==========================================================================
+
+	conv_factor=num(callpoint!.getColumnData("OPE_INVDET.CONV_FACTOR"))
+	if conv_factor=0 then conv_factor=1
+	unit_cost=num(callpoint!.getColumnData("<<DISPLAY>>.UNIT_COST_DSP"))/conv_factor
+	callpoint!.setColumnData("OPE_INVDET.UNIT_COST",str(unit_cost))
+	qty_ordered=num(callpoint!.getColumnData("<<DISPLAY>>.QTY_ORDERED_DSP"))*conv_factor
+	callpoint!.setColumnData("OPE_INVDET.QTY_ORDERED",str(qty_ordered))
+	unit_price=num(callpoint!.getColumnData("<<DISPLAY>>.UNIT_PRICE_DSP"))/conv_factor
+	callpoint!.setColumnData("OPE_INVDET.UNIT_PRICE",str(unit_price))
+	qty_backord=num(callpoint!.getColumnData("<<DISPLAY>>.QTY_BACKORD_DSP"))*conv_factor
+	callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD",str(qty_backord))
+	qty_shipped=num(callpoint!.getColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP"))*conv_factor
+	callpoint!.setColumnData("OPE_INVDET.QTY_SHIPPED",str(qty_shipped))
+	std_list_prc=num(callpoint!.getColumnData("OPE_INVDET.STD_LIST_PRC"))/conv_factor
+	callpoint!.setColumnData("OPE_INVDET.STD_LIST_PRC",str(std_list_prc))
+
+	return
+
+rem ==========================================================================
 disp_grid_totals: rem --- Get order totals and display, save header totals
 rem ==========================================================================
 	gosub calculate_discount
@@ -1596,7 +1611,11 @@ rem ==========================================================================
 		callpoint!.setHeaderColumnData("OPE_INVHDR.DISCOUNT_AMT",str(disc_amt))
 	endif
 
-	disc_amt=num(callpoint!.getHeaderColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+	rem --- Calculate tax
+	freight_amt = num(callpoint!.getHeaderColumnData("OPE_INVHDR.FREIGHT_AMT"))
+	taxAndTaxableVect! = ordHelp!.calculateTax(disc_amt, freight_amt, ttl_taxable_sales, ttl_ext_price)
+	ttl_tax = taxAndTaxableVect!.getItem(0)
+	ttl_taxable = taxAndTaxableVect!.getItem(1)
 
 	return
 
@@ -1617,12 +1636,6 @@ rem ==========================================================================
 		ttl_ext_cost=totalsVect!.getItem(1)
 		ttl_taxable_sales=totalsVect!.getItem(2)
 	endif
-
-	freight_amt = num(callpoint!.getHeaderColumnData("OPE_INVHDR.FREIGHT_AMT"))
-	taxAndTaxableVect! = ordHelp!.calculateTax(disc_amt, freight_amt, ttl_taxable_sales, ttl_ext_price)
-
-	ttl_tax = taxAndTaxableVect!.getItem(0)
-	ttl_taxable = taxAndTaxableVect!.getItem(1)
 
 	return
 
@@ -2212,6 +2225,7 @@ rem ==========================================================================
 		rem if user_tpl.new_detail then...
 
 		if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow()) = "Y" then
+			callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD", "0")
 			callpoint!.setColumnData("<<DISPLAY>>.QTY_BACKORD_DSP", "0")
 		endif
 	endif
