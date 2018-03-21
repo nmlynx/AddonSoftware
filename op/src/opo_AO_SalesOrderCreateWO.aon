@@ -948,21 +948,13 @@ canCreateWO_1_error:rem --- Method error trap/handler (11Oct2017)
             rem --- Get next WO number
             call stbl("+DIR_SYP")+"bas_sequences.bbj","WO_NO",next_wo_no$,rd_table_chans$[all],"QUIET"
 
-            rem --- Get Bill comments
-            comments$=""
-            dim bmmBillMastRec$:#tplBmmBillMast$
-            read(#devBmmBillMast,key=#firmId$+woVect!.getItem(#SOLINE_ITEM),dom=*next)bmmBillMastRec$
-            if bmmBillMastRec.firm_id$+bmmBillMastRec.bill_no$=#firmId$+woVect!.getItem(#SOLINE_ITEM) then
-                comments$=comments$+cvs(bmmBillMastRec.memo_1024$,2)
-            endif
-
             rem --- Get the item's IVM_ITEMMAST record
             dim ivmItemMastRec$:#tplIvmItemMast$
             readrecord(#devIvmItemMast,key=#firmId$+woVect!.getItem(#SOLINE_ITEM),dom=*next)ivmItemMastRec$
 
             rem --- Get the item's BMM_BILLMAST record
             dim bmmBillMastRec$:#tplBmmBillMast$
-            readrecord(#devBmmBillMast,key= #firmId$+woVect!.getItem(#SOLINE_ITEM),dom=*next)bmmBillMastRec$
+            readrecord(#devBmmBillMast,key=#firmId$+woVect!.getItem(#SOLINE_ITEM),dom=*next)bmmBillMastRec$
 
             rem --- Initialize and write new SFE_WOMASTR record for planned Work Order
             dim sfeWOMastrRec$:#tplSfeWOMastr$
@@ -1011,7 +1003,7 @@ canCreateWO_1_error:rem --- Method error trap/handler (11Oct2017)
             sfeWOMastrRec.cls_inp_qty=0
             sfeWOMastrRec.closed_cost=0
             sfeWOMastrRec.est_yield=bmmBillMastRec.est_yield
-            sfeWOMastrRec.memo_1024$=comments$
+            sfeWOMastrRec.memo_1024$=cvs(bmmBillMastRec.memo_1024$,2)
             writerecord(#devSfeWOMastr)sfeWOMastrRec$
 
             methodret
