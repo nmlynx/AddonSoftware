@@ -168,7 +168,7 @@ rem --- Initialize ARM_CUSTMAST new MEMO_1024 field
         gosub writeArmCustMastMemo1024
     endif
     
-rem --- Rebuild ART_INVHDR for new AO_INVIOCE alternat key
+rem --- Rebuild ART_INVHDR for new AO_INVOICE alternate key
 
     rem --- Increment progress meter
     meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" ART_INVHDR "+Translate!.getTranslation("AON_ALTERNATE_KEY","Alternate Key")
@@ -184,7 +184,7 @@ rem --- Rebuild ART_INVHDR for new AO_INVIOCE alternat key
                 print(log_dev)"    ****bax_rebuild_table.bbj error: "+rd_rebuild_stat$+" ****"
             endif
     
-rem --- Rebuild ART_INVDET for new AO_INVIOCE alternat key
+rem --- Rebuild ART_INVDET for new AO_INVOICE alternate key
 
     rem --- Increment progress meter
     meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" ART_INVDET "+Translate!.getTranslation("AON_ALTERNATE_KEY","Alternate Key")
@@ -218,6 +218,7 @@ writeArmCustMastMemo1024: rem --- Write ARM_CUSTMAST new MEMO_1024 field
 
     extractrecord(armCustMast_dev,key=currentFirm$+currentCustomer$,dom=*return)armCustMast$
     armCustMast.memo_1024$=memo$
+    armCustMast$=field(armCustMast$)
     writerecord(armCustMast_dev)armCustMast$
 
     return
