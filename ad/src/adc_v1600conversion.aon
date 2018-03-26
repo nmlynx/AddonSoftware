@@ -149,6 +149,29 @@ rem --- For version 16.00, initialize 3-char sequence_no in ape_invoicedet, ape_
                 endif
             next source
         endif
+
+        rem --- If starting conversion from v14 or earlier, need to initialize invoice_bal in apt_invoicehdr (see Bug 9294 for details).
+        if num(convCtrl!.getProperty("start_version"))<15 then
+            rem --- Rebuild AP Invoice Balance
+            theFirm$=""
+            call pgmdir$+"apc_rebuildinvbal.aon",theFirm$,status
+            if status=0 then
+                rem --- Conversion completed successfully
+                rem --- Increment progress meter
+                meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+"Rebuild AP Invoice Balance"
+                meter_proc_recs=meter_proc_recs+1
+                meter_action$="MTR-LST"
+                gosub disp_meter
+                print(log_dev)meter_text$
+            else
+                rem --- Conversion did NOT complete successfully, exit with error message
+                err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                   Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+Translate!.getTranslation("AON_NOT","Not")+" "+
+:                   Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+"Rebuild AP Invoice Balance"+" *****"
+                goto done
+            endif
+        endif
     else
         rem --- Increment progress meter
         meter_text$=this_module$+" "+Translate!.getTranslation("AON_NOT","Not")+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+

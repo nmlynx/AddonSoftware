@@ -175,12 +175,15 @@ rem --- For version 14.00, initialize invoice_bal in apt_invoicehdr
                 goto done
             endif
         else
-            rem --- Increment progress meter
-            meter_text$=Translate!.getTranslation("AON_CONV_MARKER_NOT_FOUND","Conversion marker file not found")+": "+conv_marker_file$
-            meter_proc_recs=meter_proc_recs+1
-            meter_action$="MTR-LST"
-            gosub disp_meter
-            print(log_dev)meter_text$
+            rem --- If ending conversion at v16 or later, apt_invoicehdr and v1400_apt-01 marker file will be missing (see Bug 9294 for details).
+            if num(convCtrl!.getProperty("end_version"))<16 then
+                rem --- Increment progress meter
+                meter_text$=Translate!.getTranslation("AON_CONV_MARKER_NOT_FOUND","Conversion marker file not found")+": "+conv_marker_file$
+                meter_proc_recs=meter_proc_recs+1
+                meter_action$="MTR-LST"
+                gosub disp_meter
+                print(log_dev)meter_text$
+            endif
         endif
     else
         rem --- Increment progress meter
