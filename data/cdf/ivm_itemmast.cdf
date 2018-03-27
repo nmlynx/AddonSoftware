@@ -797,11 +797,6 @@ rem --- additional file opens, depending on which apps are installed, param valu
 		files=files+3
 	endif
 
-	if ivs01a.master_flag_01$="Y" or ivs01a.master_flag_02$="Y" or ivs01a.master_flag_03$="Y"
-		more_files$=more_files$+"IVM_DESCRIP1;IVM_DESCRIP2;IVM_DESCRIP3;"
-		files=files+3
-	endif 
-
 	if ar$="Y" then 
 		more_files$=more_files$+"ARM_CUSTMAST;ARC_DISTCODE;"
 		files=files+2
