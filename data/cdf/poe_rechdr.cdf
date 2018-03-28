@@ -716,7 +716,7 @@ rem --- read thru selected sales order and build list of lines for which line co
 		ope_ordhdr_key$=key(ope_ordhdr_dev,end=*break)
 		if pos(firm_id$+ope_ordhdr.ar_type$+tmp_customer_id$+tmp_order_no$=ope_ordhdr_key$)<>1 then break
 		readrecord(ope_ordhdr_dev)ope_ordhdr$
-		if pos(ope_ordhdr$="ER")=0 then continue
+		if pos(ope_ordhdr.trans_status$="ER")=0 then continue
 		found_ope_ordhdr=1
 		break
 	wend
@@ -727,7 +727,7 @@ rem --- read thru selected sales order and build list of lines for which line co
 		ope_orddet_key$=key(ope_orddet_dev,end=*break)
 		if pos(ope_ordhdr_key$=ope_orddet_key$)<>1 then break
 		read record (ope_orddet_dev)ope_orddet$
-		if pos(oope_orddet.trans_status$="ER")=0 then continue
+		if pos(ope_orddet.trans_status$="ER")=0 then continue
 		if pos(ope_orddet.line_code$=callpoint!.getDevObject("oe_ds_line_codes"))<>0
 			if cvs(ope_orddet.item_id$,2)="" then
 				rem --- Non-stock item
