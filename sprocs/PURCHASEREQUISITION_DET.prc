@@ -173,8 +173,9 @@ rem --- Main
 
         case vend_part_num; rem --- Vendor Part Number
         
-            item_id_desc_msg$=vend_item_prompt$+memo_1024$
-            gosub add_to_recordset
+            rem --- Vendor part number now added to the item description
+            rem item_id_desc_msg$=vend_item_prompt$+memo_1024$
+            rem gosub add_to_recordset
                 
             break
 
