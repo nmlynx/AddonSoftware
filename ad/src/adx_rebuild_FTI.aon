@@ -93,8 +93,6 @@ rem --- Start progress meter
         if err_msg$<>"" then
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),"",err_no$,err_msg$,err_act$
             print(log_dev)"***** Error: "+err_msg$+" *****"
-            gosub show_error_message
-            print(log_dev)"***** "+error_message$+" *****"
             print(log_dev)
             print(log_dev)"Post-upgrade FTI rebuild finished UNSUCCESSFULLY: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
             close(log_dev)
@@ -124,10 +122,7 @@ rem --- Call the FTI rebuild
     print(log_dev)meter_text$
 
 rem --- Complete and close log file
-    if err_msg$<>"" then 
-        gosub show_error_message
-        print(log_dev)"***** "+error_message$+" *****"
-    endif
+
     print(log_dev)
     print(log_dev)"Post-upgrade FTI rebuild finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     close(log_dev)
