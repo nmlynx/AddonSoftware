@@ -1,6 +1,6 @@
 [[<<DISPLAY>>.UNIT_COST_DSP.AVAL]]
 	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
-	callpoint!.setColumnData("OPE_INVDET.UNIT_COST",str(callpoint!.getUserInput()))
+	callpoint!.setColumnData("<<DISPLAY>>.UNIT_COST_DSP",str(callpoint!.getUserInput()))
 	gosub update_record_fields
 [[OPE_INVDET.UM_SOLD.AVAL]]
 rem --- Initialize CONV_FACTOR when UM_SOLD changed
@@ -53,7 +53,7 @@ rem --- Set Manual Price flag and round price
 	endif
 
 	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
-	callpoint!.setColumnData("OPE_INVDET.UNIT_PRICE",str(unit_price))
+	callpoint!.setColumnData("<<DISPLAY>>.UNIT_PRICE_DSP",str(unit_price))
 	gosub update_record_fields
 [[<<DISPLAY>>.UNIT_PRICE_DSP.AVEC]]
 rem --- Extend price now that grid vector has been updated, if the unit price has changed
@@ -112,7 +112,7 @@ print "---Ordered:", ordqty
 	endif
 
 	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
-	callpoint!.setColumnData("OPE_INVDET.QTY_SHIPPED",str(shipqty))
+	callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP",str(shipqty))
 	gosub update_record_fields
 [[<<DISPLAY>>.QTY_SHIPPED_DSP.AVEC]]
 rem --- Extend price now that grid vector has been updated, if the shipped quantity has changed
@@ -159,7 +159,7 @@ rem --- Recalc quantities and extended price
 	callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", str(qty_shipped))
 
 	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
-	callpoint!.setColumnData("OPE_INVDET.QTY_BACKORD",str(boqty))
+	callpoint!.setColumnData("<<DISPLAY>>.QTY_BACKORD_DSP",str(boqty))
 	gosub update_record_fields
 [[<<DISPLAY>>.QTY_BACKORD_DSP.AVEC]]
 rem --- Extend price now that grid vector has been updated, if the backorder quantity has changed
@@ -229,7 +229,7 @@ rem --- Recalc quantities and extended price
 	endif
 
 	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
-	callpoint!.setColumnData("OPE_INVDET.QTY_ORDERED",str(qty_ord))
+	callpoint!.setColumnData("<<DISPLAY>>.QTY_ORDERED_DSP",str(qty_ord))
 	gosub update_record_fields
 [[<<DISPLAY>>.QTY_ORDERED_DSP.AVEC]]
 rem --- Extend price now that grid vector has been updated, if the order quantity has changed

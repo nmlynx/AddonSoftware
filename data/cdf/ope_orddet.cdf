@@ -1,6 +1,6 @@
 [[<<DISPLAY>>.UNIT_COST_DSP.AVAL]]
 	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
-	callpoint!.setColumnData("OPE_ORDDET.UNIT_COST",str(callpoint!.getUserInput()))
+	callpoint!.setColumnData("<<DISPLAY>>.UNIT_COST_DSP",str(callpoint!.getUserInput()))
 	gosub update_record_fields
 [[OPE_ORDDET.STD_LIST_PRC.BINP]]
 rem --- Enable the Recalc Price button, Additional Options, Lots
@@ -55,7 +55,7 @@ rem --- When OP parameter set for asking about creating Work Order, check if the
 	endif
 
 	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
-	callpoint!.setColumnData("OPE_ORDDET.QTY_SHIPPED",str(shipqty))
+	callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP",str(shipqty))
 	gosub update_record_fields
 [[<<DISPLAY>>.QTY_SHIPPED_DSP.AVEC]]
 rem --- Extend price now that grid vector has been updated, if the shipped quantity has changed
@@ -123,7 +123,7 @@ rem --- When OP parameter set for asking about creating Work Order, check if the
 	endif
 
 	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
-	callpoint!.setColumnData("OPE_ORDDET.QTY_BACKORD",str(boqty))
+	callpoint!.setColumnData("<<DISPLAY>>.QTY_BACKORD_DSP",str(boqty))
 	gosub update_record_fields
 [[<<DISPLAY>>.QTY_BACKORD_DSP.AVEC]]
 rem --- Extend price now that grid vector has been updated, if the backorder quantity has changed
@@ -212,7 +212,7 @@ rem --- Recalc quantities
 	endif
 
 	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
-	callpoint!.setColumnData("OPE_ORDDET.QTY_ORDERED",str(qty_ord))
+	callpoint!.setColumnData("<<DISPLAY>>.QTY_ORDERED_DSP",str(qty_ord))
 	gosub update_record_fields
 [[<<DISPLAY>>.QTY_ORDERED_DSP.AVEC]]
 rem --- Extend price now that grid vector has been updated, if the order quantity has changed
@@ -268,7 +268,7 @@ rem --- Set Manual Price flag and round price
 	endif
 
 	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
-	callpoint!.setColumnData("OPE_ORDDET.UNIT_PRICE",str(unit_price))
+	callpoint!.setColumnData("<<DISPLAY>>.UNIT_PRICE_DSP",str(unit_price))
 	gosub update_record_fields
 [[<<DISPLAY>>.UNIT_PRICE_DSP.AVEC]]
 rem --- Extend price now that grid vector has been updated, if the unit price has changed
@@ -2355,6 +2355,8 @@ rem ==========================================================================
 		dtlVect!=cast(BBjVector, GridVect!.getItem(0))
 		dim dtl_rec$:dtlg_param$[1,3]
 		dtl_rec$=cast(BBjString, dtlVect!.getItem(callpoint!.getValidationRow()))
+		dtl_rec.unit_price=unit_price
+		dtl_rec.qty_shipped=qty_shipped
 		dtl_rec.ext_price=ext_price
 		dtlVect!.setItem(callpoint!.getValidationRow(),dtl_rec$)
 		GridVect!.setItem(0,dtlVect!)
