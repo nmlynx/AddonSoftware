@@ -79,35 +79,39 @@ rem --- Has a valid whse/item been entered?
 		gosub check_item_whse
 	endif
 [[<<DISPLAY>>.QTY_SHIPPED_DSP.AVAL]]
-print "Det:QTY_SHIPPED.AVAL"; rem debug
+rem --- Skip if qty_shipped not changed
+	shipqty  = num(callpoint!.getUserInput())
+	if shipqty = user_tpl.prev_shipqty then break
 
 rem --- recalc quantities and extended price
 
-	shipqty    = num(callpoint!.getUserInput())
-	ordqty     = num(callpoint!.getColumnData("<<DISPLAY>>.QTY_ORDERED_DSP"))
-	cash_sale$ = callpoint!.getHeaderColumnData("OPE_INVHDR.CASH_SALE")
-
-print "---Shipped:", shipqty; rem debug
-print "---Prev   :", user_tpl.prev_shipqty
-print "---Ordered:", ordqty
-
-	if shipqty > ordqty then
-		callpoint!.setUserInput(str(user_tpl.prev_shipqty))
+rem --- Warn if ship quantity is more than order quantity
+	ordqty = num(callpoint!.getColumnData("<<DISPLAY>>.QTY_ORDERED_DSP"))
+	if shipqty > ordqty  then
 		msg_id$="SHIP_EXCEEDS_ORD"
+		dim msg_tokens$[1]
+		if ordqty=0 then
+			msg_tokens$[1] = "???"
+		else
+			msg_tokens$[1] = str(round(100*(ordqty-shipqty)/ordqty,1):"###0.0 ")
+		endif
 		gosub disp_message
-		callpoint!.setStatus("ABORT-REFRESH")
-		break; rem --- exit callpoint
+		if msg_opt$="C" then
+			callpoint!.setUserInput(str(user_tpl.prev_shipqty))
+			callpoint!.setStatus("ABORT-REFRESH")
+			break; rem --- exit callpoint
+		endif
+		callpoint!.setStatus("ACTIVATE")
 	endif
 
+	cash_sale$ = callpoint!.getHeaderColumnData("OPE_INVHDR.CASH_SALE")
 	if user_tpl.allow_bo$ = "N" or cash_sale$ = "Y" then
-		callpoint!.setColumnData("<<DISPLAY>>.QTY_BACKORD_DSP", "0")
-		callpoint!.setStatus("REFRESH")
-		print "---BO set to zero"; rem debug
+		callpoint!.setColumnData("<<DISPLAY>>.QTY_BACKORD_DSP", "0",1)
 	else
-		if user_tpl.prev_shipqty <> shipqty then
-			callpoint!.setColumnData("<<DISPLAY>>.QTY_BACKORD_DSP", str(max(0, ordqty - shipqty)) )
-			callpoint!.setStatus("REFRESH")
-			print "---BO set to", max(0, ordqty - shipqty); rem debug
+		rem --- Re-calculate qty_shipped and ext_price unless already shipping extra or it's a new line.
+		boqty = num(callpoint!.getColumnData("<<DISPLAY>>.QTY_BACKORD_DSP"))
+		if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" or user_tpl.prev_shipqty<=ordqty - boqty then
+			callpoint!.setColumnData("<<DISPLAY>>.QTY_BACKORD_DSP", str(max(0, ordqty - shipqty)),1)
 		endif
 	endif
 
@@ -138,25 +142,26 @@ rem --- Has a valid whse/item been entered?
 		gosub check_item_whse
 	endif
 [[<<DISPLAY>>.QTY_BACKORD_DSP.AVAL]]
-rem --- Recalc quantities and extended price
-
+rem --- Skip if qty_backord not changed
 	boqty  = num(callpoint!.getUserInput())
+	if boqty = user_tpl.prev_boqty then break
+
+rem --- Re-calculate qty_shipped and ext_price unless already shipping extra or it's a new line.
 	ordqty = num(callpoint!.getColumnData("<<DISPLAY>>.QTY_ORDERED_DSP"))
-	qtyshipped = num(callpoint!.getColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP"))
-
-	qty_shipped = ordqty - boqty
-
-	if boqty <> user_tpl.prev_boqty then
-		if qty_shipped < 0 then
-			callpoint!.setUserInput(str(user_tpl.prev_boqty))
-			msg_id$ = "BO_EXCEEDS_ORD"
-			gosub disp_message
-			callpoint!.setStatus("ABORT-REFRESH")
-			break; rem --- exit callpoint
-		endif
+	qty_shipped = num(callpoint!.getColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP"))
+	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" or qty_shipped<=ordqty - user_tpl.prev_boqty then
+		qty_shipped = ordqty - boqty
 	endif
 
-	callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", str(qty_shipped))
+	if qty_shipped < 0 then
+		callpoint!.setUserInput(str(user_tpl.prev_boqty))
+		msg_id$ = "BO_EXCEEDS_ORD"
+		gosub disp_message
+		callpoint!.setStatus("ABORT-REFRESH")
+		break; rem --- exit callpoint
+		endif
+
+	callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", str(qty_shipped),1)
 
 	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
 	callpoint!.setColumnData("<<DISPLAY>>.QTY_BACKORD_DSP",str(boqty))
@@ -185,9 +190,9 @@ rem --- Has a valid whse/item been entered?
 		gosub check_item_whse
 	endif
 [[<<DISPLAY>>.QTY_ORDERED_DSP.AVAL]]
-rem --- Set shipped and back ordered
-
-	qty_ord    = num(callpoint!.getUserInput())
+rem --- Skip if qty_ordered not changed
+	qty_ord  = num(callpoint!.getUserInput())
+	if qty_ord = user_tpl.prev_qty_ord then break
 
 	if qty_ord = 0 then
 		msg_id$="OP_QTY_ZERO"
@@ -196,24 +201,21 @@ rem --- Set shipped and back ordered
 		break; rem --- exit callpoint
 	endif
 
-	if qty_ord < 0 then
-		callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", str(qty_ord))
-		callpoint!.setColumnData("<<DISPLAY>>.QTY_BACKORD_DSP", "0")
-		util.disableGridColumn(Form!, user_tpl.bo_col)
-		util.disableGridColumn(Form!, user_tpl.shipped_col)
-	endif
-
-
-
-	if qty_ord<>user_tpl.prev_qty_ord then
-		callpoint!.setColumnData("<<DISPLAY>>.QTY_BACKORD_DSP", "0")
-
-		if callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "Y" or
-:			callpoint!.getHeaderColumnData("OPE_INVHDR.INVOICE_TYPE") = "P"
-:		then
-			callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", str(qty_ord))
+rem --- Re-calculate qty_shipped and ext_price unless already shipping extra or it's a new line.
+	boqty = num(callpoint!.getColumnData("<<DISPLAY>>.QTY_BACKORD_DSP"))
+	qty_shipped = num(callpoint!.getColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP"))
+	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" or qty_shipped<=user_tpl.prev_qty_ord - boqty then
+		callpoint!.setColumnData("<<DISPLAY>>.QTY_BACKORD_DSP", "0",1)
+		if qty_ord < 0 then
+			callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", str(qty_ord),1)
+			util.disableGridColumn(Form!, user_tpl.bo_col)
+			util.disableGridColumn(Form!, user_tpl.shipped_col)
 		else
-			callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", "0")
+			if callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "Y" or callpoint!.getHeaderColumnData("OPE_INVHDR.INVOICE_TYPE") = "P" then
+				callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", str(qty_ord),1)
+			else
+				callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", "0",1)
+			endif
 		endif
 	endif
 
@@ -972,7 +974,6 @@ rem --- Is this item lot/serial?
 			callpoint!.setDevObject("wh",            callpoint!.getColumnData("OPE_INVDET.WAREHOUSE_ID"))
 			callpoint!.setDevObject("item",          callpoint!.getColumnData("OPE_INVDET.ITEM_ID"))
 			callpoint!.setDevObject("ord_qty",       callpoint!.getColumnData("<<DISPLAY>>.QTY_ORDERED_DSP"))
-			callpoint!.setDevObject("qty_shipped",callpoint!.getColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP"))
 			callpoint!.setDevObject("dropship_line", user_tpl.line_dropship$)
 			callpoint!.setDevObject("invoice_type",  callpoint!.getHeaderColumnData("OPE_INVHDR.INVOICE_TYPE"))
 			callpoint!.setDevObject("unit_cost",       callpoint!.getColumnData("<<DISPLAY>>.UNIT_COST_DSP"))
@@ -1001,46 +1002,76 @@ rem --- Is this item lot/serial?
 				proc_mode$="MNT-LCK"
 			endif
 
-			call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
-:				"OPE_ORDLSDET", 
-:				stbl("+USER_ID"), 
-:				proc_mode$, 
-:				lot_pfx$, 
-:				table_chans$[all], 
-:				dflt_data$[all]
+			do_opeOrdlsdet=1
+			while do_opeOrdlsdet
+				do_opeOrdlsdet=0
+				call stbl("+DIR_SYP") + "bam_run_prog.bbj", 
+:					"OPE_ORDLSDET", 
+:					stbl("+USER_ID"), 
+:					proc_mode$, 
+:					lot_pfx$, 
+:					table_chans$[all], 
+:					dflt_data$[all]
 
-		rem --- Updated qty shipped, backordered, extension
+				rem --- Updated backordered and extension if qty shipped changed
+				qty_shipped = num(callpoint!.getDevObject("total_shipped"))
+				prev_ship_qty=num(callpoint!.getColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP"))
+				if qty_shipped<>prev_ship_qty then
+					rem --- Warn if ship quantity is more than order quantity
+					ordqty = num(callpoint!.getColumnData("<<DISPLAY>>.QTY_ORDERED_DSP"))
+					if qty_shipped > ordqty then
+						msg_id$="SHIP_EXCEEDS_ORD"
+						dim msg_tokens$[1]
+						if ordqty=0 then
+							msg_tokens$[1] = "???"
+						else
+							msg_tokens$[1] = str(round(100*(ordqty-qty_shipped)/ordqty,1):"###0.0 ")
+						endif
+						gosub disp_message
+						if msg_opt$="C" then
+							rem --- Back to OPE_ORDLSDET form so user can correct the ship quantity
+							do_opeOrdlsdet=1
+						endif
+					endif
+				endif
+			wend
 
-			qty_shipped = num(callpoint!.getDevObject("total_shipped"))
-			unit_price  = num(callpoint!.getColumnData("<<DISPLAY>>.UNIT_PRICE_DSP"))
-			callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", str(qty_shipped))
-			callpoint!.setColumnData("OPE_INVDET.EXT_PRICE", str(round(qty_shipped * unit_price, 2)))
 
-			qty_ordered = num(callpoint!.getColumnData("<<DISPLAY>>.QTY_ORDERED_DSP"))
-			if qty_ordered > 0 then
-				qty_backord=max(qty_ordered - qty_shipped, 0)
-			else
-				qty_backord=min(qty_ordered - qty_shipped, 0)
+			if qty_shipped<>prev_ship_qty then
+				unit_price  = num(callpoint!.getColumnData("<<DISPLAY>>.UNIT_PRICE_DSP"))
+				callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", str(qty_shipped),1)
+				callpoint!.setColumnData("OPE_INVDET.EXT_PRICE", str(round(qty_shipped * unit_price, 2)),1)
+
+				rem --- Re-calculate qty_backord unless already shipping extra or it's a new line.
+				qty_ordered = num(callpoint!.getColumnData("<<DISPLAY>>.QTY_ORDERED_DSP"))
+				qty_backord = num(callpoint!.getColumnData("<<DISPLAY>>.QTY_BACKORD_DSP"))
+				if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" or prev_ship_qty<=qty_ordered - boqty then
+					if qty_ordered > 0 then
+						qty_backord=max(qty_ordered - qty_shipped, 0)
+					else
+						qty_backord=min(qty_ordered - qty_shipped, 0)
+					endif
+					callpoint!.setColumnData("<<DISPLAY>>.QTY_BACKORD_DSP", str(qty_backord),1)
+				endif
+
+				rem --- Grid vector must be updated before updating the discount amount
+				declare BBjVector dtlVect!
+				dtlVect!=cast(BBjVector, GridVect!.getItem(0))
+				dim dtl_rec$:dtlg_param$[1,3]
+				dtl_rec$=cast(BBjString, dtlVect!.getItem(callpoint!.getValidationRow()))
+				if dtl_rec.qty_shipped=qty_shipped
+					qty_shipped_changed=0
+				else
+					dtl_rec.qty_shipped=qty_shipped
+					dtl_rec.qty_backord=qty_backord
+					dtl_rec.ext_price=round(qty_shipped * unit_price, 2)
+					qty_shipped_changed=1
+					dtlVect!.setItem(callpoint!.getValidationRow(),dtl_rec$)
+					GridVect!.setItem(0,dtlVect!)
+				endif
+
+				gosub disp_ext_amt
 			endif
-			callpoint!.setColumnData("<<DISPLAY>>.QTY_BACKORD_DSP", str(qty_backord))
-
-			rem --- Grid vector must be updated before updating the discount and tax amounts
-			declare BBjVector dtlVect!
-			dtlVect!=cast(BBjVector, GridVect!.getItem(0))
-			dim dtl_rec$:dtlg_param$[1,3]
-			dtl_rec$=cast(BBjString, dtlVect!.getItem(callpoint!.getValidationRow()))
-			if dtl_rec.qty_shipped=qty_shipped
-				qty_shipped_changed=0
-			else
-				dtl_rec.qty_shipped=qty_shipped
-				dtl_rec.qty_backord=qty_backord
-				dtl_rec.ext_price=round(qty_shipped * unit_price, 2)
-				qty_shipped_changed=1
-				dtlVect!.setItem(callpoint!.getValidationRow(),dtl_rec$)
-				GridVect!.setItem(0,dtlVect!)
-			endif
-			gosub disp_ext_amt
-			callpoint!.setStatus("REFRESH")
 
 		rem --- Return focus to where we were (Detail line grid)
 
