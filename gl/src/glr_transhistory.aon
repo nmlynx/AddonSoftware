@@ -272,6 +272,9 @@ rem --- Read next transaction history (glt-06) record
                 if glt06a.gl_adt_no$<>audit_no$ then break
             else
                 if glt06a.trns_date$<>trns_date$ then break
+                if begacct$<>"" and glt06a.gl_account$<begacct$ then continue
+                if endacct$<>"" and glt06a.gl_account$>endacct$ then break
+                if journal$<>"" and glt06a.journal_id$<>journal$ then continue
             endif
           endif
 
