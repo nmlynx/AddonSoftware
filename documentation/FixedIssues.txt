@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2018-04-11
+ Report Date:   2018-04-16
  Report Branch: AddonSoftware 18.00
  Last Release:  AddonSoftware 17.13
 =======================================================================================================================================
@@ -274,3 +274,15 @@ because the form has not updated the file yet with the current fields.
 Instead, must use callpoint!.getColumnData(<field>).
 ----
 Modified: op/src/opc_creditaction.aon
+
+=======================================================================================================================================
+Revision: 57d48304b77da22a8661b7f080b960fe08005628
+Author: Christine <chawkins@basis.com>
+Date: 4/16/2018 11:02:13 AM
+Message:
+Bug 9335 - AP - Payment selection vendor lookup
+Don't include ap_type in filter if it's empty.
+----
+Modified: data/bar/ape_payselect.xml
+Modified: data/cdf/ape_payselect.cdf
+
