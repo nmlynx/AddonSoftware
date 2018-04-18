@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2018-04-16
+ Report Date:   2018-04-17
  Report Branch: AddonSoftware 18.00
  Last Release:  AddonSoftware 17.13
 =======================================================================================================================================
@@ -306,3 +306,13 @@ Bug 9337: Filter Transaction History Report by GL Account and Journal ID
 even when the report is for a specific Transaction Date.
 ----
 Modified: gl/src/glr_transhistory.aon
+
+=======================================================================================================================================
+Revision: 62fd7f2327c59aa0ce2ce0ca615f1a726eed09d9
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/17/2018 5:12:56 PM
+Message:
+ER 9328: When the ship qty exceeds the order qty, do not uncommit more
+than the order qty in the Sales Register Update.
+----
+Modified: op/src/opu_updateinventory.aon
