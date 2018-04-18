@@ -339,9 +339,9 @@ rem --- Read next invoice header --- Main Loop Starts
 
                     rem --- Serialized/Lotted Items
 
+                        ls_qnty=0
                         if opm02a.line_type$<>"N" 
                             ls_nbr$=""
-                            ls_qnty=0
                             cost=ope11a.unit_cost
                             qnty=ope11a.qty_shipped
 
@@ -352,7 +352,7 @@ rem --- Read next invoice header --- Main Loop Starts
                                     ope21a_key$=key(ope21_dev,end=*break)
                                     if pos(ls_start$=ope21a_key$)<>1 then break
                                     extract record (ope21_dev) ope21a$; rem Advisory Locking
-                                    if ope21a.trans_status$<>"R" then read(ope21_dev); continue
+                                    if pos(ope21a.trans_status$="ER")=0 then read (ope21_dev); continue
                                     ls_nbr$=ope21a.lotser_no$
                                     cost=ope21a.unit_cost
                                     qnty=ope21a.qty_shipped
@@ -361,6 +361,13 @@ rem --- Read next invoice header --- Main Loop Starts
                                 rem --- Inventory Item Update
 
                                     gosub inventory_item_update
+
+                                    rem --- Were more shipped (uncommitted) than ordered (committed)?
+                                    if ope21a.qty_shipped>ope21a.qty_ordered then
+                                        rem --- Adjust committed quantity for difference between ordered and shipped quantities.
+                                        overshipped=ope21a.qty_shipped-ope21a.qty_ordered
+                                        gosub recommit_overshipped
+                                    endif
 
                                 rem --- Lot/Serial Invoice History
 
@@ -378,14 +385,23 @@ rem --- Read next invoice header --- Main Loop Starts
                             endif
                         endif
 
-                    rem --- Post G/L Cost
-
                         if ls_qnty<>ope11a.qty_shipped then
                             qnty=ope11a.qty_shipped-ls_qnty
                             cost=ope11a.unit_cost
                             ls_nbr$=""
                             gosub inventory_item_update
                         endif
+
+                        rem --- Were more shipped (uncommitted) than ordered (committed)?
+                        if ope11a.qty_shipped>ope11a.qty_ordered then
+                            rem --- Adjust committed quantity for difference between ordered and shipped quantities.
+                            overshipped=ope11a.qty_shipped-ope11a.qty_ordered
+                            cost=ope11a.unit_cost
+                            ls_nbr$=""
+                            gosub recommit_overshipped
+                        endif
+
+                    rem --- Post G/L Cost
 
                         precision 2
                         amount=(-ope11a.unit_cost)*ope11a.qty_shipped
@@ -1012,6 +1028,16 @@ rem --- ope-21 lot/serial entries are always shipped
 
     return
 
+recommit_overshipped: rem --- Re-commit overshipped quantity
+
+    iv_items$[1]=ope11a.warehouse_id$
+    iv_items$[2]=ope11a.item_id$
+    iv_items$[3]=ls_nbr$
+    iv_refs[0]=overshipped
+    call pgmdir$+"ivc_itemupdt.aon","CO",iv_files[all],ivs01a$,iv_items$[all],iv_refs$[all],iv_refs[all],table_chans$[all],iv_status
+    if iv_status = 999 then exitto std_exit
+
+    return
 remove_tickler: rem --- Remove ope-03 Credit Manager Tickler File Records
 
     read (ope03_dev, key=ope04a.firm_id$+ope04a.customer_id$+ope04a.order_no$, knum="BY_ORDER", dom=*next)
