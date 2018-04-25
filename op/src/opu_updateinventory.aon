@@ -38,7 +38,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=33,begfile=1,endfile=files
+    files=34,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="arm-01",ids$[1]="ARM_CUSTMAST"
     files$[2]="arm-02",ids$[2]="ARM_CUSTDET"
@@ -72,6 +72,7 @@ rem --- Open/Lock files
     files$[31]="poe-08",ids$[31]="POE_LINKED"
     files$[32]="poe-12",ids$[32]="POE_PODET"
     files$[33]="poe-02",ids$[33]="POE_POHDR"
+    files$[34]="opm-03",ids$[34]="OPC_DISCCODE"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :       ids$[all],templates$[all],channels[all],batch,status
@@ -109,6 +110,7 @@ rem --- Open/Lock files
     poe08_dev=channels[31]
     poe12_dev=channels[32]
     poe02_dev=channels[33]
+    opm03_dev=channels[34]
 
 rem --- Dimension string templates
 
@@ -123,7 +125,7 @@ rem --- Dimension string templates
 :       ope41a$:templates$[23],opm02a$:templates$[24],opm06a$:templates$[25],
 :       ops10s$:templates$[27],
 :       opt71a$:templates$[30],poe08a$:templates$[31],poe12a$:templates$[32],
-:       poe02a$:templates$[33]
+:       poe02a$:templates$[33],opm03a$:templates$[34]
 
     rem dim opt01a$:templates$[28],opt21a$:templates$[29]
 
@@ -833,7 +835,6 @@ ar_open_invoice_detail: rem --- AR Open Invoice Detail
             ope01a.ordinv_flag$="O"
             ope01a.invoice_date$=""
             ope01a.ar_inv_no$=""
-            ope01a.freight_amt=0
             ope01a.print_status$="N"
             ope01a.lock_status$="N"
             ope01a.tax_amount=0
@@ -847,6 +848,9 @@ ar_open_invoice_detail: rem --- AR Open Invoice Detail
 
             if something_backord then
                 ope01a.backord_flag$="B"
+                rem --- Calculate discount amount for backorder
+                findrecord(opm03_dev,key=ope01a.firm_id$+ope01a.disc_code$,dom=*endif)opm03a$
+                ope01a.discount_amt=round(opm03a.disc_percent*ope01a.total_sales/100,2)
             else
                 ope01a.backord_flag$=""; rem "Are there B/O items?
             endif
