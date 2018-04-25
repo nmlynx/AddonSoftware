@@ -1138,27 +1138,13 @@ rem --- Allow changing shipto_type when abort shipto_no
 [[OPE_INVHDR.AOPT-CINV]]
 rem --- Credit Historical Invoice
 
-	if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2)="" or
-:	   cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2)<>""
-:	then
-		msg_id$="OP_NO_HIST"
-		gosub disp_message
-	else
-		line_sign=-1
-		gosub copy_order
-	endif
+	line_sign=-1
+	gosub copy_order
 [[OPE_INVHDR.AOPT-DINV]]
 rem --- Duplicate Historical Invoice
 
-	if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2)="" or
-:	   cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2)<>""
-:	then 
-		msg_id$="OP_NO_HIST"
-		gosub disp_message
-	else
-		line_sign=1
-		gosub copy_order
-	endif
+	line_sign=1
+	gosub copy_order
 [[OPE_INVHDR.APFE]]
 print "Hdr:APFE"; rem debug
 
@@ -2398,6 +2384,12 @@ rem ==========================================================================
 			opt01_dev = fnget_dev("OPT_INVHDR")
 			dim opt01a$:fnget_tpl$("OPT_INVHDR")
 			read record (opt01_dev, key=key_opt$) opt01a$
+			if opt01a.trans_status$<>"U" then
+				rem --- Can only duplicate historical invoices
+				msg_id$="OP_NO_HIST"
+				gosub disp_message
+				copy_ok$="N"
+			endif
 			break
 		else
 			copy_ok$="N"

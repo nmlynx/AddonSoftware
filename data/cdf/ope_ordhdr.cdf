@@ -1426,27 +1426,13 @@ rem --- Remove committments for detail records by calling ATAMO
 [[OPE_ORDHDR.AOPT-CINV]]
 rem --- Credit Historical Invoice
 
-	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),2)="" or
-:	   cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)<>""
-:	then
-		msg_id$="OP_NO_HIST"
-		gosub disp_message
-	else
-		line_sign=-1
-		gosub copy_order
-	endif
+	line_sign=-1
+	gosub copy_order
 [[OPE_ORDHDR.AOPT-DINV]]
 rem --- Duplicate Historical Invoice
 
-	if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),2)="" or
-:	   cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)<>""
-:	then 
-		msg_id$="OP_NO_HIST"
-		gosub disp_message
-	else
-		line_sign=1
-		gosub copy_order
-	endif
+	line_sign=1
+	gosub copy_order
 [[OPE_ORDHDR.SHIPTO_NO.AVAL]]
 rem --- Check Ship-to's
 
@@ -2311,6 +2297,12 @@ rem ==========================================================================
 			opt01_dev = fnget_dev("OPT_INVHDR")
 			dim opt01a$:fnget_tpl$("OPT_INVHDR")
 			read record (opt01_dev, key=key_opt$) opt01a$
+			if opt01a.trans_status$<>"U" then
+				rem --- Can only duplicate historical invoices
+				msg_id$="OP_NO_HIST"
+				gosub disp_message
+				copy_ok$="N"
+			endif
 			break
 		else
 			copy_ok$="N"
