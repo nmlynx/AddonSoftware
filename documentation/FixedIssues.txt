@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2018-04-17
+ Report Date:   2018-04-24
  Report Branch: AddonSoftware 18.00
  Last Release:  AddonSoftware 17.13
 =======================================================================================================================================
@@ -316,3 +316,16 @@ ER 9328: When the ship qty exceeds the order qty, do not uncommit more
 than the order qty in the Sales Register Update.
 ----
 Modified: op/src/opu_updateinventory.aon
+
+=======================================================================================================================================
+Revision: 547f7ec0dc61701bec7a4f058b34aebf45d5e256
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/24/2018 5:31:02 PM
+Message:
+Bug 9348: Only allow duplicating invoices that have been through the
+Sales Register Update.
+----
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_invhdr.cdf
+Modified: data/cdf/ope_ordhdr.cdf
