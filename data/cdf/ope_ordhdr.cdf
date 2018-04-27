@@ -490,12 +490,12 @@ rem --- Is flag down?
 
 rem --- Credit action
 
-	rem --- Temporay work around to avoid error 11 when no record exists re Barista bug 5743
 	rem --- Header record will exist if at least one detail line has been entered.
 	if GridVect!.getItem(0).size()>0 then
 		if ordHelp!.calcOverCreditLimit() and callpoint!.getDevObject("credit_action_done") <> "Y" then
 			callpoint!.setDevObject("cred_action_from_print_now","")
 			gosub do_credit_action
+			if action$="R" then callpoint!.setStatus("SAVE")
 		endif
 	endif
 
