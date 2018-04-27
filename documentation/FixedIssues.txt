@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2018-04-25
+ Report Date:   2018-04-27
  Report Branch: AddonSoftware 18.00
  Last Release:  AddonSoftware 17.13
 =======================================================================================================================================
@@ -339,3 +339,20 @@ Bug 9349: In Sales Register Update calculate and save the discount for
 backorders.
 ----
 Modified: op/src/opu_updateinventory.aon
+
+=======================================================================================================================================
+Revision: 618520e06e495c930d96377b5a559aab1b85980f
+Author: Christine <chawkins@basis.com>
+Date: 4/27/2018 2:12:19 PM
+Message:
+Bug 9329 - OP - Closing the form may not prompt for credit action
+
+The initial fix saw to it that when closing the form, the credit action form would pop, but had the unintended side effect of not saving credit action changes *unless* the form was closed.
+
+Added a setStatus("SAVE") in the BREX where credit action is called.
+
+(cherry picked from commit 42f0bf39acfdebeab6bfc5557c7c04f73edbff0f)
+----
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_ordhdr.cdf
+
