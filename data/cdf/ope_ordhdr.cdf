@@ -307,6 +307,11 @@ rem --- Clear availability information
 rem --- Set flags
 
 	user_tpl.record_deleted = 0
+
+rem --- Disable Ship To fields
+
+	ship_to_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
+	gosub disable_shipto
 [[OPE_ORDHDR.ARAR]]
 rem --- If First/Last Record was used, did it return an Order?
 
@@ -1161,6 +1166,11 @@ rem --- Create soCreateWO! instance if needed
 		callpoint!.setDevObject("soCreateWO",soCreateWO!)
 		callpoint!.setDevObject("createWOs_status","")
 	endif
+
+rem --- Disable Ship To fields
+
+	ship_to_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
+	gosub disable_shipto
 [[OPE_ORDHDR.BOVE]]
 rem --- Restrict lookup to open orders and open invoices
 
@@ -1695,36 +1705,7 @@ rem -- Deal with which Ship To type
 
 rem --- Disable Ship To fields
 
-	declare BBjVector column!
-	column! = BBjAPI().makeVector()
-	
-	column!.addItem("OPE_ORDHDR.SHIPTO_NO")
-	if ship_to_type$="S"
-		status = 1
-	else
-		status = 0
-	endif
-	callpoint!.setColumnEnabled(column!, status)
-	callpoint!.setDevObject("abort_shipto_no",0)
-
-	column!.clear()
-	column!.addItem("<<DISPLAY>>.SNAME")
-	column!.addItem("<<DISPLAY>>.SADD1")
-	column!.addItem("<<DISPLAY>>.SADD2")
-	column!.addItem("<<DISPLAY>>.SADD3")
-	column!.addItem("<<DISPLAY>>.SADD4")
-	column!.addItem("<<DISPLAY>>.SCITY")
-	column!.addItem("<<DISPLAY>>.SSTATE")
-	column!.addItem("<<DISPLAY>>.SZIP")
-	column!.addItem("<<DISPLAY>>.SCNTRY_ID")
-
-	if ship_to_type$="M"
-		status = 1
-	else
-		status = 0
-	endif
-
-	callpoint!.setColumnEnabled(column!, status)
+	gosub disable_shipto
 [[OPE_ORDHDR.ASHO]]
 rem --- Get default dates, POS station
 
@@ -2974,6 +2955,44 @@ rem ==========================================================================
 	endif
 		
 	return
+
+rem ==========================================================================
+disable_shipto: rem --- Disable Ship To fields
+rem IN: ship_to_type$
+rem ==========================================================================
+
+	declare BBjVector column!
+	column! = BBjAPI().makeVector()
+	
+	column!.addItem("OPE_ORDHDR.SHIPTO_NO")
+	if ship_to_type$="S"
+		status = 1
+	else
+		status = 0
+	endif
+	callpoint!.setColumnEnabled(column!, status)
+	callpoint!.setDevObject("abort_shipto_no",0)
+
+	column!.clear()
+	column!.addItem("<<DISPLAY>>.SNAME")
+	column!.addItem("<<DISPLAY>>.SADD1")
+	column!.addItem("<<DISPLAY>>.SADD2")
+	column!.addItem("<<DISPLAY>>.SADD3")
+	column!.addItem("<<DISPLAY>>.SADD4")
+	column!.addItem("<<DISPLAY>>.SCITY")
+	column!.addItem("<<DISPLAY>>.SSTATE")
+	column!.addItem("<<DISPLAY>>.SZIP")
+	column!.addItem("<<DISPLAY>>.SCNTRY_ID")
+
+	if ship_to_type$="M"
+		status = 1
+	else
+		status = 0
+	endif
+
+	callpoint!.setColumnEnabled(column!, status)
+
+	return
 [[OPE_ORDHDR.BSHO]]
 rem --- Documentation
 rem     Old s$(7,1) = 0 -> user_tpl.hist_ord$ = "Y" - order came from history
@@ -3341,4 +3360,3 @@ rem --- setup message_tpl$
 
 rem --- Get next available control ID
 	callpoint!.setDevObject("nxt_ctlID",num(stbl("+CUSTOM_CTL",err=std_error)))
-
