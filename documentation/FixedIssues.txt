@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2018-04-30
+ Report Date:   2018-05-01
  Report Branch: AddonSoftware 18.00
  Last Release:  AddonSoftware 17.13
 =======================================================================================================================================
@@ -369,3 +369,14 @@ Modified: data/bar/ope_invhdr.xml
 Modified: data/bar/ope_ordhdr.xml
 Modified: data/cdf/ope_invhdr.cdf
 Modified: data/cdf/ope_ordhdr.cdf
+
+=======================================================================================================================================
+Revision: 7058cfc2fdc64073961a31d367f8460ca0fd92a0
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/1/2018 9:48:45 AM
+Message:
+Bug 8969: For Income and Expense accounts, reset the Period 1 beginning
+balance to zero when the first transaction for the year may not occur
+until after Period 1.
+----
+Modified: gl/src/glr_transhistory.aon
