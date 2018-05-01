@@ -110,6 +110,8 @@ rem --- Retrieve parameter records
     inquiry$=cvs(inquiry$,2)
     if inquiry$<>"" then headings=3
 
+rem --- Save report end year for Revenue/Expense account resets
+    report_end_year=num(endyear$)
 rem --- Retrieve Journal ID record if one was specified
 
     glm03a.firm_id$=firm_id$
@@ -491,6 +493,18 @@ period_heading: rem --- Period Heading
         l1=l1+1
     endif
 
+    rem --- Reset beginning balance for Period 1 or First Period if not an Asset/Liability/Capital account
+    year=num(glt06a.posting_year$)
+    if  pos(glm01a.gl_acct_type$="ALC")=0 and (year<>last_year_reported and last_year_reported<>0)  then
+        credits=0
+        debits=0
+        endbal=0
+        units=0
+        dim et[2],n[2],at[2]
+    endif
+
+    last_year_reported=year
+
     h1$=""
     return
 
@@ -520,6 +534,16 @@ rem --- Calculate account ending balance
         amount=amount+as[endindex+x]
         units=units+us[endindex+x]
     next x
+
+    rem --- EndBal may not represent Sum of Revenue and Expense Accounts for Ending Period/Year ---
+    if  pos(glm01a.gl_acct_type$="ALC")=0 and (report_end_year<>last_year_reported and last_year_reported<>0) then
+        rem --- Reset beginning balance to zero
+        credits=0
+        debits=0
+        endbal=0
+        units=0
+        dim et[2],n[2],at[2]
+    endif
 
 rem --- Print warning if calculated balance doesn't match transaction total
 
@@ -585,6 +609,8 @@ rem --- Initialize account totals
        begdebit$=str(et[0])
        begcredit$=""
     endif
+    last_year_reported=0
+    
     return
 
 period_break: rem --- Period break
@@ -634,16 +660,6 @@ new_period: rem --- New period
     y$=glt06a.posting_year$
     m$=glt06a.posting_per$
     period=num(m$)
-
-    rem --- Reset beginning balance for Period 1 if not an Asset/Liability/Capital account
-    if period=1 and pos(glm01a.gl_acct_type$="ALC")=0 then
-       rem --- Reset beginning balance to zero
-       credits=0
-       debits=0
-       endbal=0
-       units=0
-       dim et[2],n[2]
-    endif
 
     find record (gls_calendar_dev,key=firm_id$+y$,err=*next) gls_calendar$
     x$=field(gls_calendar$,"abbr_name_"+str(period:"00"))
