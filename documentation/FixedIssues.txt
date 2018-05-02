@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2018-05-01
+ Report Date:   2018-05-02
  Report Branch: AddonSoftware 18.00
  Last Release:  AddonSoftware 17.13
 =======================================================================================================================================
@@ -380,3 +380,25 @@ balance to zero when the first transaction for the year may not occur
 until after Period 1.
 ----
 Modified: gl/src/glr_transhistory.aon
+
+=======================================================================================================================================
+Revision: 2311c1488325e1a3976d317042a20888d048fd87
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/2/2018 4:09:39 PM
+Message:
+Bug 7289: Restrict the Closed Recurring WO Detail Report to just
+recurring/permanent WOs.
+----
+Modified: ad/src/adx_build_sproc.aon
+Modified: data/bar/sfr_clsdrecwodet.xml
+Modified: data/bar/sfr_clsdwodet.xml
+Added: data/cdf/sfr_clsdrecwodet.cdf
+Modified: reports/SFHardCopy.jasper
+Modified: reports/SFHardCopy.jrxml
+Modified: reports/SFHardCopyClsdDet.jasper
+Modified: reports/SFHardCopyCmnts.jasper
+Modified: reports/SFHardCopyMatStd.jasper
+Modified: reports/SFHardCopyOpStd.jasper
+Modified: reports/SFHardCopySubStd.jasper
+Modified: sf/src/sfr_clsdwodet.aon
+Modified: sprocs/SFHARDCOPY.prc
