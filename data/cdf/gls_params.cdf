@@ -1,3 +1,8 @@
+[[GLS_PARAMS.CURRENT_YEAR.AVAL]]
+rem --- Enable gl_yr_closed when current_year is changed
+	if callpoint!.getUserInput()<>callpoint!.getColumnData("GLS_PARAMS.CURRENT_YEAR") then
+		callpoint!.setColumnEnabled("GLS_PARAMS.GL_YR_CLOSED",1)
+	endif
 [[GLS_PARAMS.BSHO]]
 rem -- Open/lock files
 	num_files=1
