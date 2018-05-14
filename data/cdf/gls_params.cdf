@@ -5,9 +5,11 @@ rem --- Enable gl_yr_closed when current_year is changed
 	endif
 [[GLS_PARAMS.BSHO]]
 rem -- Open/lock files
-	num_files=1
+	num_files=3
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="GLS_CALENDAR",open_opts$[1]="OTA"
+	open_tables$[2]="GLS_EARNINGS",open_opts$[2]="OTA"; rem --- Create file here to minimize risk of Error 12 in glo_AO_AlignFiscalCalendar.aon
+	open_tables$[3]="GLM_BUDGETMASTER",open_opts$[3]="OTA"; rem --- Create file here to minimize risk of Error 12 in glo_AO_DisplayColumns.aon
 	gosub open_tables
 [[GLS_PARAMS.CURRENT_PER.AVAL]]
 rem --- CURRENT_PER cannot be greater than TOTAL_PERS for the current fiscal year
