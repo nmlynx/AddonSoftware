@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2018-05-07
+ Report Date:   2018-05-14
  Report Branch: AddonSoftware 18.01
  Last Release:  AddonSoftware 18.00
 =======================================================================================================================================
@@ -185,3 +185,37 @@ Missing Parameter Record Error Handler.
 ----
 Modified: ap/src/apr_agingreport.aon
 Modified: sa/src/sar_item.aon
+
+=======================================================================================================================================
+Revision: ca4c5931729b58fb31c176c2cb4dfc1d80f9d7df
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/14/2018 11:42:45 AM
+Message:
+Bug 9376: Modified missing fiscal calendar message to account for
+whether or not the prior fiscal year has been closed.
+----
+Modified: gl/src/glc_checkfiscalcalendars.aon
+
+=======================================================================================================================================
+Revision: 6b5d52f8a825d0ee58b4e71ad619a91bd4f248ac
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/14/2018 12:04:27 PM
+Message:
+Bug 9377: Enable "Prior Fiscal Year Closed?" CheckBox for new gls_params
+records, and when the Current Year is changed.
+----
+Modified: data/bar/gls_params.xml
+Modified: data/cdf/gls_params.cdf
+
+=======================================================================================================================================
+Revision: 3f5872d71cdcc574b4bb6b05de269ceaf352c0eb
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/14/2018 12:40:02 PM
+Message:
+Bug 9378: Created required files in module parameter maintenance to
+minimize risk of Error 12 in custom classes.
+----
+Modified: data/bar/gls_params.xml
+Modified: data/cdf/gls_params.cdf
+Modified: gl/src/glo_AO_AlignFiscalCalendar.aon
+Modified: gl/src/glo_AO_DisplayColumns.aon
