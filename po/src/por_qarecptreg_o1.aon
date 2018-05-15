@@ -548,13 +548,14 @@ rem --- Print list of lines with lot/serial number differences
 
 rem --- Notify user of errors
 
-        dim message$[2]
-        message$[0]=Translate!.getTranslation("AON_ERRORS_WERE_REPORTED_DURING_THE_GENERATION_OF_THE_QA_RECEIPT")
-        message$[1]=Translate!.getTranslation("AON_REGISTER._THE_UPDATE_WILL_NOT_BE_RUN._REVIEW_THE_REGISTER,")
-        message$[2]=Translate!.getTranslation("AON_CORRECT_THE_ERRORS_AND_REPRINT_(<ENTER>=CONTINUE)")
-        call pgmdir$+"adc_stdmessage.aon",2,message$[all],2,22,-1,v$,v3
-        if v$<>"SPECIAL" goto std_exit
-
+        message$=Translate!.getTranslation("AON_ERRORS_WERE_REPORTED_DURING_THE_GENERATION_OF_THE_QA_RECEIPT")
+        message$=message$+$0A$+Translate!.getTranslation("AON_REGISTER._THE_UPDATE_WILL_NOT_BE_RUN._REVIEW_THE_REGISTER,")
+        message$=message$+$0A$+Translate!.getTranslation("AON_CORRECT_THE_ERRORS_AND_REPRINT_(<ENTER>=CONTINUE)")
+        msg_id$="GENERIC_WARN"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=message$
+        gosub disp_message
+        goto std_exit
     endif    
 
 run_next: rem --- Run next overlay
@@ -706,6 +707,12 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
     fnend
 
 rem #endinclude std_functions.src
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
+
+    return
 
 rem #include std_error.src
 

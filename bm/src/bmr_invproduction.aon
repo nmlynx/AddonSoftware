@@ -515,18 +515,22 @@ rem --- Totals
 		goto std_exit_no_update
 	endif
 
+
+short=2; rem wgh ... 5778 ... testing
 	if short<>0 then
 		xwk=fnblank(columns+1)
 		OutVect!.addItem("*** "+Translate!.getTranslation("AON_WARNING")+": "+Translate!.getTranslation("AON_AMOUNTS_IN_THE_SHORTAGE_COLUMN_WILL_CREATE_NEGATIVE"))
         xwk=fnblank(columns)
         OutVect!.addItem(Translate!.getTranslation("AON_ON_HAND_BALANCES_IN_INVENTORY"))
 		xwk=fnblank(columns)
-		
-		dim message$[1]
-		message$[0]=Translate!.getTranslation("AON_AMOUNTS_IN_THE_SHORTAGE_COLUMN_WILL_CREATE_NEGATIVE")
-		message$[1]=Translate!.getTranslation("AON_ON_HAND_BALANCES_IN_INVENTORY")+" "+Translate!.getTranslation("AON_(<ENTER>=CONTINUE)")
-		call pgmdir$+"adc_stdmessage.aon",2,message$[all],1,22,-1,v$,v3
-		if v3=4 then goto std_exit_no_update
+
+        message$=Translate!.getTranslation("AON_AMOUNTS_IN_THE_SHORTAGE_COLUMN_WILL_CREATE_NEGATIVE")
+        message$=message$+" "+Translate!.getTranslation("AON_ON_HAND_BALANCES_IN_INVENTORY")
+        msg_id$="GENERIC_WARN_CANCEL"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=message$
+        gosub disp_message
+        if msg_opt$="C" then goto std_exit_no_update
 	endif
 	channel=bmw01_dev
 	width=132
