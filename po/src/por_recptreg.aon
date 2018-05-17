@@ -360,12 +360,6 @@ rem --- Clear trans for this firm/process/batch from glw-11 work file (if not ba
         dim sfe01a$:templates$[1],sfe04a$:templates$[2],sfm10a$:templates$[3]
     endif
 
-rem --- Resize masks and set print positions
-
-    call pgmdir$+"adc_sizemask.aon",m1$,m1,10,15
-    call pgmdir$+"adc_sizemask.aon",m2$,m2,9,12
-    call pgmdir$+"adc_sizemask.aon",m3$,m3,6,12
-
 rem --- Position file
 
     call pgmdir$ + "adc_progress.aon","N","","","","",0,poe04_dev,1,meter_num,status
@@ -752,7 +746,6 @@ rem --- Any missing lot/serial numbers?
     if ls$="N" goto l4900
     if lotser=0 goto l4900
     let ls=1,headings=headings-1,m2$=i7$
-    call pgmdir$+"adc_sizemask.aon",m2$,m2,13,13
     gosub l5400
 
 rem --- Print list of lines with lot/serial number differences

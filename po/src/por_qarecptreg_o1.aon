@@ -67,19 +67,6 @@ rem --- Initializations
         if ivs01a.lotser_flag$="L" lsdesc$=Translate!.getTranslation("AON_LOT_NBR")
         more=1
 
-resize_mask: rem --- Resize masks
-
-        while more
-            x=m1+(m2*4)+m3+i[0]+52
-            if x<=width break
-            call pgmdir$+"adc_sizemask.aon",m1$,m1,10,x1
-            call pgmdir$+"adc_sizemask.aon",m2$,m2,9,x2
-            call pgmdir$+"adc_sizemask.aon",m3$,m3,6,x3
-            x1=x1-1
-            x2=x2-1
-            x3=x3-1
-        wend
-
 rem --- Background
 
         call pgmdir$+"adc_progress.aon","N","","","","",0,poe03_dev,1,meter_num,status
