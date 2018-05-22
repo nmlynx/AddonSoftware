@@ -150,9 +150,9 @@ rem --- Retrieve parameter records
 
 rem --- masks
 
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,0
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,0
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,m1
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,m2
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,m3
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","V","",m5$,0,m5
 
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",m0$,0,vendlen
