@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2018-05-22
+ Report Date:   2018-05-23
  Report Branch: AddonSoftware 18.01
  Last Release:  AddonSoftware 18.00
 =======================================================================================================================================
@@ -441,3 +441,15 @@ ER 6585: Corrected handling of lotted/serialized items that have no
 activity in the current IV period.
 ----
 Modified: iv/src/ivr_valuation_o1.aon
+
+=======================================================================================================================================
+Revision: 4af939f892289cbed7293861ff6b272289ea2b9e
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/23/2018 11:36:10 AM
+Message:
+Bug 9386: Added rd_table_chans$[all] to bmc_packinglist.aon CALL/ENTER
+list to avoid opening/closing the same files over and over again, and
+possibly running out of channels.
+----
+Modified: bm/src/bmc_packinglist.aon
+Modified: bm/src/bmr_packinglist.aon
