@@ -74,7 +74,7 @@ rem --- Assign input values to local variables
 
 rem --- Get beginning and ending date for the accounting period
 
-    call stbl("+DIR_PGM")+"adc_perioddates.aon",num(period$),num(year$),begdate$,enddate$,table_chans$[all],status
+    call stbl("+DIR_PGM")+"adc_perioddates.aon",num(period$),num(year$),begdate$,enddate$,rd_table_chans$[all],status
     
 rem --- Make Document Archive Record and Get ID
  
@@ -243,6 +243,12 @@ close_win:rem --- Viewer Window Closed
     rdForm!.destroy(err=*next)  
     if tcb(13) then exit
     release
+    
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
+
+    return
 
 std_error: rem --- Standard error handler (11Oct2017)
 
