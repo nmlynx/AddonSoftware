@@ -224,9 +224,9 @@ rem --- Validate old barista install location
 	callpoint!.setColumnData("ADX_UPGRADEWIZ.OLD_BAR_LOC",old_bar_loc$)
 	if abort then break
 
-rem --- Validate sync backup directory when not doing Create Sync File Backup
+rem --- Validate sync backup directory when doing Create Sync File Backup
 
-	if callpoint!.getDevObject("do_sync_backup")=0 then
+	if callpoint!.getDevObject("do_sync_backup")<>0 then
 		sync_backup_dir$ = callpoint!.getColumnData("ADX_UPGRADEWIZ.SYNC_BACKUP_DIR")
 		gosub validate_sync_backup_dir
 		callpoint!.setColumnData("ADX_UPGRADEWIZ.SYNC_BACKUP_DIR",sync_backup_dir$)
