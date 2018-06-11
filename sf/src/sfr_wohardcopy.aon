@@ -114,6 +114,7 @@ rem --- Assign needed jasper params
  	wo_quoted$="Y"
  	wostatus$="OCPQ"
 
+    include_image$="N"
 	include_standards$=option!.getOptionData("include_standard"); rem From O/E
 	include_costsummary$=option!.getOptionData("include_costsum"); rem From O/E
 	include_comments$=option!.getOptionData("include_comment"); rem From O/E
@@ -148,6 +149,7 @@ rem --- Add to params!
 	params!.put("WOSTATUS",wostatus$)
 	params!.put("WO_LOCATION",wo_location$)
 
+    params!.put("INCLUDE_IMAGE",include_image$)
 	params!.put("INCLUDE_STANDARDS",include_standards$)
 	params!.put("INCLUDE_COSTSUMMARY",include_costsummary$)
 	params!.put("INCLUDE_COMMENTS",include_comments$)

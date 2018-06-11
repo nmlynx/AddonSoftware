@@ -134,6 +134,8 @@ rem --- Assign needed jasper params
  	wo_quoted$="Y"
  	wostatus$="OCPQ"; rem Status doesn't matter. All recs in SFE_OPENEDWO print
 
+ 	include_image$="Y"
+    include_image$=option!.getOptionData("include_image"); rem From O/E
 	include_standards$="Y"
 	include_costsummary$="N"
 	include_comments$="Y"
@@ -161,6 +163,7 @@ rem --- Add to params!
 	params!.put("WOSTATUS",wostatus$)
 	params!.put("WO_LOCATION",wo_location$)
 
+    params!.put("INCLUDE_IMAGE",include_image$)
 	params!.put("INCLUDE_STANDARDS",include_standards$)
 	params!.put("INCLUDE_COSTSUMMARY",include_costsummary$)
 	params!.put("INCLUDE_COMMENTS",include_comments$)

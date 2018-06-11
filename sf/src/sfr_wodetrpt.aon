@@ -132,6 +132,7 @@ rem --- Assign needed jasper params
     if wo_planned$="Y" then wostatus$=wostatus$+"P"
     if wo_quoted$="Y" then wostatus$=wostatus$+"Q"
 	
+    include_image$="N"
 	include_standards$="Y"
 	include_costsummary$="Y"
 	include_comments$="N"
@@ -159,6 +160,7 @@ rem --- Add to params!
 	params!.put("WOSTATUS",wostatus$)
 	params!.put("WO_LOCATION",wo_location$)
 
+    params!.put("INCLUDE_IMAGE",include_image$)
 	params!.put("INCLUDE_STANDARDS",include_standards$)
 	params!.put("INCLUDE_COSTSUMMARY",include_costsummary$)
 	params!.put("INCLUDE_COMMENTS",include_comments$)
