@@ -192,6 +192,7 @@ rem --- Parameters (confirm params aren't missing, so no error in subsequent pgm
     op$=sfs_params$.ar_interface$
     po$=sfs_params$.po_interface$
     pr$=sfs_params$.pr_interface$
+    params!.put("POST_TO_GL",sfs_params$.post_to_gl$)
 
     find record (gls_calendar_dev,key=firm_id$+sfs_params.current_year$,dom=std_missing_params) gls_calendar$
 	
