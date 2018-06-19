@@ -381,14 +381,6 @@ rem --- Disable ap type control if param for multi-types is N
 		ctl_stat$="I"
 		gosub disable_fields
 	endif
-			
-rem --- Disable some grid columns
-
-	w!=Form!.getChildWindow(1109)
-	c!=w!.getControl(5900)
-	c!.setColumnEditable(6,0)
-	c!.setColumnEditable(7,0)
-	if user_tpl.multi_types$="N" c!.setColumnEditable(2,0)
 
 rem --- Disable button
 
@@ -568,21 +560,10 @@ rem --- Get Payment Authorization parameter record
 	callpoint!.setDevObject("use_pay_auth",aps_payauth.use_pay_auth)
 	callpoint!.setDevObject("scan_docs_to",aps_payauth.scan_docs_to$)
 [[APE_MANCHECKHDR.AREC]]
-print "Head: AREC (After New Record)"; rem debug
-print "open_check$ reset"; rem debug
-
 user_tpl.reuse_chk$=""
 user_tpl.open_check$=""
 user_tpl.dflt_gl_account$=""
 callpoint!.setColumnData("<<DISPLAY>>.comments","")
-rem --- enable/disable grid cells
-w!=Form!.getChildWindow(1109)
-c!=w!.getControl(5900)
-c!.setColumnEditable(0,1)
-c!.setColumnEditable(1,1)
-c!.setColumnEditable(6,0)
-c!.setColumnEditable(7,0)
-if user_tpl.multi_dist$="N" c!.setColumnEditable(2,0)
 
 rem --- if not multi-type then set the defalut AP Type
 if user_tpl.multi_types$="N" then
