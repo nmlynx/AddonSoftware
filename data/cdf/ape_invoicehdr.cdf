@@ -695,8 +695,6 @@ c!=w!.getControl(5900)
 if gl$="N" 
 	c!.setFocusable(0)
 endif
-if user_tpl.misc_entry$="N" c!.setColumnEditable(2,0)
-if user_tpl.units_flag$="N" c!.setColumnEditable(4,0)
 
 rem --- Get Payment Authorization parameter record
 
