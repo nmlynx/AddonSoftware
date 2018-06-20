@@ -450,8 +450,9 @@ rem --- in: rowsSelected!
 		rem --- Get grid row background colors
 		gosub get_grid_back_colors
 
-		rem --- Get the approval vector
+		rem --- Get the approval vector and approvalsUndone hash
 		approvalsEntered! = callpoint!.getDevObject("approvalsEntered")
+        approvalsUndone!=callpoint!.getDevObject("approvalsUndone")
 
 		rem --- Process each selected row
 		vendorTotalsMap!=callpoint!.getDevObject("vendorTotalsMap")
@@ -502,13 +503,20 @@ rem --- in: rowsSelected!
 
 			rem --- Not reviewed, and user is a reviewer
 			if !reviewed and apm_approvers.prelim_approval then
-				rem --- Set approval type to reviewed
-				apt_invapproval.approval_type$ = "R"
+                previously_undone!=null()
+                rem --- If re-doing a review/approval that is in the approvalsUndone! hash, just remove it from there. No need to add into approvalsEntered!
+                previously_undone!=approvalsUndone!.remove(apt_invapproval.firm_id$+apt_invapproval.vendor_id$+apt_invapproval.ap_inv_no$+apt_invapproval.sequence_num$,err=*next)
+                
+                if previously_undone!=null()
+                    rem --- Set approval type to reviewed
+                    apt_invapproval.approval_type$ = "R"
 
-				rem --- Update approvalsEntered!, grid, and vectors
-				apt_invapproval! = BBjAPI().makeTemplatedString(fattr(apt_invapproval$))
-				apt_invapproval!.setString(apt_invapproval$)
-				approvalsEntered!.addItem(apt_invapproval!)
+                    rem --- Update approvalsEntered!, grid, and vectors
+                    apt_invapproval! = BBjAPI().makeTemplatedString(fattr(apt_invapproval$))
+                    apt_invapproval!.setString(apt_invapproval$)
+                    approvalsEntered!.addItem(apt_invapproval!)
+                endif
+                
                 gridInvoices!.setCellText(curr_row,0,statusVect!.get(2))
 				gridInvoices!.setRowBackColor(curr_row, reviewedColor!)
 				vectInvoices!.setItem(curr_row * numcols, "2")
@@ -534,7 +542,6 @@ rem --- in: rowsSelected!
 
 			rem --- Not approved, and user is an approver
 			if !approved and apm_approvers.check_signer then
-
 				rem --- Is check over approvers limit?
 				if apm_approvers.limit_auth and thisVendor_total+inv_amt>num(apm_approvers.max_auth_amt) then
                     msg_id$="GENERIC_WARN"
@@ -543,14 +550,21 @@ rem --- in: rowsSelected!
                     gosub disp_message
 					continue
 				endif
+                
+                previously_undone!=null()
+                rem --- If re-doing a review/approval that is in the approvalsUndone! hash, remove it from there. No need to add into approvalsEntered!
+                previously_undone!=approvalsUndone!.remove(apt_invapproval.firm_id$+apt_invapproval.vendor_id$+apt_invapproval.ap_inv_no$+apt_invapproval.sequence_num$,err=*next)
+                
+                if previously_undone!=null()
+                    rem --- Set approval type
+                    apt_invapproval.approval_type$ = "S"
 
-				rem --- Set approval type
-				apt_invapproval.approval_type$ = "S"
+                    rem --- Update approvalsEntered!, grid, and vectors
+                    apt_invapproval! = BBjAPI().makeTemplatedString(fattr(apt_invapproval$))
+                    apt_invapproval!.setString(apt_invapproval$)
+                    approvalsEntered!.addItem(apt_invapproval!)
+                endif
 
-				rem --- Update approvalsEntered!, grid, and vectors
-				apt_invapproval! = BBjAPI().makeTemplatedString(fattr(apt_invapproval$))
-				apt_invapproval!.setString(apt_invapproval$)
-				approvalsEntered!.addItem(apt_invapproval!)
 				approved = approved + 1
 				vendorTotalsMap!.put(vendor_id$,num(vendorTotalsMap!.get(vendor_id$))+inv_amt)
 				thisVendor_total = cast(BBjNumber, vendorTotalsMap!.get(vendor_id$))
@@ -580,13 +594,20 @@ rem --- in: rowsSelected!
 					continue
 				endif
 
-				rem --- Set approval type
-				apt_invapproval.approval_type$ = "S"
+                previously_undone!=null()
+                rem --- If re-doing a review/approval that is in the approvalsUndone! hash, remove it from there. No need to add into approvalsEntered!
+                previously_undone!=approvalsUndone!.remove(apt_invapproval.firm_id$+apt_invapproval.vendor_id$+apt_invapproval.ap_inv_no$+apt_invapproval.sequence_num$,err=*next)
+                
+                if previously_undone!=null()
+                    rem --- Set approval type
+                    apt_invapproval.approval_type$ = "S"
 
-				rem --- Update approvalsEntered! and grid row background color
-				apt_invapproval! = BBjAPI().makeTemplatedString(fattr(apt_invapproval$))
-				apt_invapproval!.setString(apt_invapproval$)
-				approvalsEntered!.addItem(apt_invapproval!)
+                    rem --- Update approvalsEntered! and grid row background color
+                    apt_invapproval! = BBjAPI().makeTemplatedString(fattr(apt_invapproval$))
+                    apt_invapproval!.setString(apt_invapproval$)
+                    approvalsEntered!.addItem(apt_invapproval!)
+                endif
+
 				approved = approved + 1			
 				gosub set_invoice_row_approval_status
 				continue
@@ -733,7 +754,6 @@ rem --- note: if user is both a reviewer and approver, does not currently allow 
 		endif
 
 		newRowsSelected! = BBjAPI().makeVector()
-
 		for item = 0 to rowsSelected!.size() - 1
 			row = num(rowsSelected!.getItem(item))
 			vendor_id$ = gridInvoices!.getCellText(row,3)
@@ -1991,7 +2011,7 @@ rem --- also promotes remaining invoice(s) for same vendor if the undo has put u
                     rem -- if newly-promoted invoice is showing in the grid, set vectInvoices and grid, too
                         if vectInvoices!.get(vect_offset)="3"
                             gridInvoices!.setSelectedRow(vect_offset/numcols);rem switch selected row to newly-promoted row
-                            gridInvoices!.setRowBackColor(vect_offset, fullyApproved!)
+                            gridInvoices!.setRowBackColor(vect_offset/numcols, fullyApproved!)
                             selected=1
                             gosub selected_or_fully_approved
                         endif
@@ -2306,7 +2326,6 @@ rem --- Payment Authorization needs to write approvals to file and send emails
 		rem --- Send notification emails
         if approvalsEntered!.size()>0 or callpoint!.getDevObject("undo_flag")="Y" then gosub send_payauth_email
     endif
-
 [[APE_PAYSELECT.AWIN]]
 rem --- Open/Lock files
 
@@ -2319,7 +2338,7 @@ rem --- Open/Lock files
 	open_tables$[1]="APT_INVOICEHDR",open_opts$[1]="OTA"
 	open_tables$[2]="APT_INVOICEDET",open_opts$[2]="OTA"
 	open_tables$[3]="APM_VENDMAST",open_opts$[3]="OTA"
-	open_tables$[4]="APE_CHECKS",open_opts$[4]="OTA"
+	open_tables$[4]="APE_CHECKS",open_opts$[4]="OTAL"
 	open_tables$[5]="APW_CHECKINVOICE",open_opts$[5]="OTA"
 	open_tables$[6]="APE_INVOICEHDR",open_opts$[6]="OTA"
 	open_tables$[7]="APS_PARAMS",open_opts$[7]="OTA"
