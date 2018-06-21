@@ -542,6 +542,7 @@ rem --- in: rowsSelected!
 
 			rem --- Not approved, and user is an approver
 			if !approved and apm_approvers.check_signer then
+
 				rem --- Is check over approvers limit?
 				if apm_approvers.limit_auth and thisVendor_total+inv_amt>num(apm_approvers.max_auth_amt) then
                     msg_id$="GENERIC_WARN"
@@ -586,13 +587,16 @@ rem --- in: rowsSelected!
 			if approved = 1 and thisVendor_total >= callpoint!.getDevObject("two_sig_amt") and apm_approvers.check_signer then
 
 				rem --- Is check over approvers limit?
-				if apm_approvers.limit_auth and thisVendor_total+inv_amt>num(apm_approvers.max_auth_amt) then
+                rem --- Not currently using this routine; an approver w/ an individual limit should be able to provide second approval, just not first approval
+                while skipping
+				if apm_approvers.limit_auth and thisVendor_total>num(apm_approvers.max_auth_amt) then
                     msg_id$="GENERIC_WARN"
                     dim msg_tokens$[1]
                     msg_tokens$[1]=Translate!.getTranslation("AON_AP_OVER_APPROVER_LIMIT")
                     gosub disp_message
 					continue
 				endif
+                wend
 
                 previously_undone!=null()
                 rem --- If re-doing a review/approval that is in the approvalsUndone! hash, remove it from there. No need to add into approvalsEntered!
@@ -2470,7 +2474,7 @@ rem --- Add grid to store invoices
     if !callpoint!.getDevObject("use_pay_auth")
         option_text$=Translate!.getTranslation("AON_SELECT_DESELECT")
     else
-        option_text$=Translate!.getTranslation("AON_REVIEW_APPROVE")
+        option_text$="&"+Translate!.getTranslation("AON_REVIEW_APPROVE")
         callpoint!.setOptionText("PROC",option_text$)
     endif
     
