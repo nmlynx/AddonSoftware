@@ -1749,6 +1749,7 @@ rem ==========================================================================
 	rem --- Display invoice images in the browser
 	invimage_dev=fnget_dev("@APT_INVIMAGE")
 	dim invimage$:fnget_tpl$("@APT_INVIMAGE")
+    
 	image_count =0
 	for rowCount = 0 to rowsSelected!.size()-1
 		rem --- get the row data needed
@@ -1765,6 +1766,10 @@ rem ==========================================================================
 			switch (BBjAPI().TRUE)
 				case invimage.scan_docs_to$="BDA"
 					rem --- Do Barista Doc Archive
+                    rem --- show all files in the browser
+                    sslReq = BBUtils.isWebServerSSLEnabled()
+                    url$ = BBUtils.copyFileToWebServer(cvs(invimage.doc_url$,2),"appreviewtemp", sslReq)
+                    BBjAPI().getThinClient().browse(url$)
 					break
 				case invimage.scan_docs_to$="GD "
 					rem --- Do Google Docs
@@ -2329,6 +2334,7 @@ rem --- Payment Authorization needs to write approvals to file and send emails
 [[APE_PAYSELECT.AWIN]]
 rem --- Open/Lock files
 
+    use ::BBUtils.bbj::BBUtils
 	use ::ado_util.src::util
     use java.util.Iterator
 

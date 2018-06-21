@@ -66,6 +66,9 @@ rem --- Displaye invoice images in the browser
 			switch (BBjAPI().TRUE)
 				case invimage.scan_docs_to$="BDA"
 					rem --- Do Barista Doc Archive
+					sslReq = BBUtils.isWebServerSSLEnabled()
+					url$ = BBUtils.copyFileToWebServer(cvs(invimage.doc_url$,2),"appreviewtemp", sslReq)
+					BBjAPI().getThinClient().browse(url$)
 					break
 				case invimage.scan_docs_to$="GD "
 					rem --- Do Google Docs
@@ -118,6 +121,8 @@ rem --- Should Open Invoice button be enabled?
 rem --- Inits
 
 	use ::ado_util.src::util
+	use ::BBUtils.bbj::BBUtils
+
 [[APE_MANCHECKDET.AOPT-OINV]]
 rem -- Call inquiry program to view open invoices this vendor
 rem -- only allow if trans_type is manual (vs reversal/void)

@@ -1,5 +1,5 @@
 [[APE_INVOICEHDR.AOPT-VIDI]]
-rem --- Displaye invoice images in the browser
+rem --- Display invoice images in the browser
 	invimage_dev=fnget_dev("1APT_INVIMAGE")
 	dim invimage$:fnget_tpl$("1APT_INVIMAGE")
 	vendor_id$ = callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
@@ -15,6 +15,9 @@ rem --- Displaye invoice images in the browser
 		switch (BBjAPI().TRUE)
 			case invimage.scan_docs_to$="BDA"
 				rem --- Do Barista Doc Archive
+				sslReq = BBUtils.isWebServerSSLEnabled()
+				url$ = BBUtils.copyFileToWebServer(cvs(invimage.doc_url$,2),"appreviewtemp", sslReq)
+				BBjAPI().getThinClient().browse(url$)
 				break
 			case invimage.scan_docs_to$="GD "
 				rem --- Do Google Docs
@@ -25,8 +28,6 @@ rem --- Displaye invoice images in the browser
 				break
 		swend
 	wend
-
-
 [[APE_INVOICEHDR.AOPT-LIIM]]
 rem --- Select invoice image and upload
 	files=2
@@ -82,6 +83,7 @@ callpoint!.setStatus("ACTIVATE-ABORT")
 rem --- setup utility
 
 	use ::ado_util.src::util
+	use ::BBUtils.bbj::BBUtils
 [[APE_INVOICEHDR.ARNF]]
 if user_tpl.multi_dist$<>"Y"
 	callpoint!.setColumnData("APE_INVOICEHDR.AP_DIST_CODE",user_tpl.dflt_dist_cd$)
