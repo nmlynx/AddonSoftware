@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2018-06-19
+ Report Date:   2018-06-20
  Report Branch: AddonSoftware 18.02
  Last Release:  AddonSoftware 18.01
 =======================================================================================================================================
@@ -377,3 +377,35 @@ Modified: data/cdf/gle_jrnldet.cdf
 Modified: data/cdf/gle_jrnlhdr.cdf
 Modified: data/cdf/gle_recjedet.cdf
 Modified: data/cdf/gle_recjehdr.cdf
+
+=======================================================================================================================================
+Revision: e13d246a0bdc5ddd2b80fc568169bed6979b60b6
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 6/20/2018 6:24:56 PM
+Message:
+Bug 8753: Created and used new func::buildListButtonList() method to
+build strings (free of Barista special characters, semicolon ';' and
+tilde '~') used to initialize a ListButton created with Barista's
+callpoint method
+callpoint!.setTableColumnAttribute(<Table.Column>,"LDAT",ldatString$)
+----
+Modified: ad/src/ado_func.src
+Modified: data/bar/bmm_billmat.xml
+Modified: data/bar/bmm_billsub.xml
+Modified: data/bar/poe_pohdr.xml
+Modified: data/bar/poe_rechdr.xml
+Modified: data/bar/poe_reqhdr.xml
+Modified: data/bar/sfe_womastr.xml
+Modified: data/bar/sfe_womatl.xml
+Modified: data/bar/sfe_wosubcnt.xml
+Modified: data/cdf/bmm_billmat.cdf
+Modified: data/cdf/bmm_billsub.cdf
+Modified: data/cdf/poe_pohdr.cdf
+Modified: data/cdf/poe_rechdr.cdf
+Modified: data/cdf/poe_reqhdr.cdf
+Modified: data/cdf/sfe_womastr.cdf
+Modified: data/cdf/sfe_womatl.cdf
+Modified: data/cdf/sfe_wosubcnt.cdf
+Modified: data/sync/ads_messages~[01007514AD].xml
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
