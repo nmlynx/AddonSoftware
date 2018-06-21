@@ -735,6 +735,7 @@ if bad_date$="" then gosub warn_dates
 rem print 'show';rem debug
 rem --- inits
 
+	use ::ado_func.src::func
 	use ::ado_util.src::util
 	use java.util.Properties
 
@@ -1128,9 +1129,13 @@ rem --- read thru selected sales order and build list of lines for which line co
 		endif
 	else 
 		ldat$=""
+		descVect!=BBjAPI().makeVector()
+		codeVect!=BBjAPI().makeVector()
 		for x=0 to order_lines!.size()-1
-			ldat$=ldat$+order_items!.getItem(x)+"~"+order_lines!.getItem(x)+";"
+			descVect!.addItem(order_items!.getItem(x))
+			codeVect!.addItem(order_lines!.getItem(x))
 		next x
+		ldat$=func.buildListButtonList(descVect!,codeVect!)
 
 		callpoint!.setDevObject("ds_orders","Y")		
 		callpoint!.setDevObject("so_ldat",ldat$)
