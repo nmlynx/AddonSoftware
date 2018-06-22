@@ -1753,6 +1753,8 @@ rem ==========================================================================
 	rem --- Display invoice images in the browser
 	invimage_dev=fnget_dev("@APT_INVIMAGE")
 	dim invimage$:fnget_tpl$("@APT_INVIMAGE")
+
+    urlVect!=BBjAPI().makeVector()
     
 	image_count =0
 	for rowCount = 0 to rowsSelected!.size()-1
@@ -1773,6 +1775,7 @@ rem ==========================================================================
                     rem --- show all files in the browser
                     sslReq = BBUtils.isWebServerSSLEnabled()
                     url$ = BBUtils.copyFileToWebServer(cvs(invimage.doc_url$,2),"appreviewtemp", sslReq)
+                    urlVect!.add(url$)
                     BBjAPI().getThinClient().browse(url$)
 					break
 				case invimage.scan_docs_to$="GD "
@@ -1795,6 +1798,12 @@ rem ==========================================================================
 		msg_tokens$[1]=Translate!.getTranslation("AON_NO_IMAGES_FOUND")
 	endif
 	gosub disp_message
+    
+    if urlVect!.size()
+        for wk=0 to urlVect!.size()-1
+            BBUtils.deleteFromWebServer(urlVect!.get(wk))
+        next wk
+    endif
 
 	return
 

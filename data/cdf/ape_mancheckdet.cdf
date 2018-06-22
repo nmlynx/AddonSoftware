@@ -69,6 +69,9 @@ rem --- Displaye invoice images in the browser
 					sslReq = BBUtils.isWebServerSSLEnabled()
 					url$ = BBUtils.copyFileToWebServer(cvs(invimage.doc_url$,2),"appreviewtemp", sslReq)
 					BBjAPI().getThinClient().browse(url$)
+					urlVect!=callpoint!.getDevObject("urlVect")
+					urlVect!.add(url$)
+					callpoint!.setDevObject("urlVect",urlVect!)
 					break
 				case invimage.scan_docs_to$="GD "
 					rem --- Do Google Docs
@@ -123,6 +126,8 @@ rem --- Inits
 	use ::ado_util.src::util
 	use ::BBUtils.bbj::BBUtils
 
+
+	
 [[APE_MANCHECKDET.AOPT-OINV]]
 rem -- Call inquiry program to view open invoices this vendor
 rem -- only allow if trans_type is manual (vs reversal/void)
