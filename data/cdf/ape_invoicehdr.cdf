@@ -18,6 +18,9 @@ rem --- Display invoice images in the browser
 				sslReq = BBUtils.isWebServerSSLEnabled()
 				url$ = BBUtils.copyFileToWebServer(cvs(invimage.doc_url$,2),"appreviewtemp", sslReq)
 				BBjAPI().getThinClient().browse(url$)
+				urlVect!=callpoint!.getDevObject("urlVect")
+				urlVect!.add(url$)
+				callpoint!.setDevObject("urlVect",urlVect!)
 				break
 			case invimage.scan_docs_to$="GD "
 				rem --- Do Google Docs
@@ -106,6 +109,15 @@ rem --- remove software lock on batch, if batching
 		lock_status$=""
 		lock_disp$=""
 		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+	endif
+
+rem --- remove images copied temporarily to web servier for viewing
+
+	urlVect!=callpoint!.getDevObject("urlVect")
+	if urlVect!.size()
+		for wk=0 to urlVect!.size()-1
+			BBUtils.deleteFromWebServer(urlVect!.get(wk))
+		next wk
 	endif
 [[APE_INVOICEHDR.REFERENCE.AVAL]]
 callpoint!.setStatus("REFRESH");REM TEST
@@ -711,5 +723,10 @@ rem --- Disable Load Image and View Images options as needed
 			callpoint!.setOptionEnabled("LIIM",0)
 			callpoint!.setOptionEnabled("VIDI",0)
 	endif
+
+rem --- Init a vector to store urls for viewed images
+
+	urlVect!=BBjAPI().makeVector()
+	callpoint!.setDevObject("urlVect",urlVect!)
 
 		

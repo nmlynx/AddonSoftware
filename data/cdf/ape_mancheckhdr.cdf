@@ -174,6 +174,15 @@ rem --- remove software lock on batch, if batching
 		lock_disp$=""
 		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
 	endif
+
+rem --- remove images copied temporarily to web servier for viewing
+
+	urlVect!=callpoint!.getDevObject("urlVect")
+	if urlVect!.size()
+		for wk=0 to urlVect!.size()-1
+			BBUtils.deleteFromWebServer(urlVect!.get(wk))
+		next wk
+	endif
 [[APE_MANCHECKHDR.BTBL]]
 rem --- Get Batch information
 
@@ -388,6 +397,8 @@ rem --- Disable button
 [[APE_MANCHECKHDR.AWIN]]
 rem print 'show',; rem debug
 
+	use ::BBUtils.bbj::BBUtils
+
 rem --- Open/Lock files
 	files=30,begfile=1,endfile=15
 	dim files$[files],options$[files],chans$[files],templates$[files]
@@ -559,6 +570,11 @@ rem --- Get Payment Authorization parameter record
 	readrecord(aps_payauth,key=firm_id$+"AP00",dom=*next)aps_payauth$
 	callpoint!.setDevObject("use_pay_auth",aps_payauth.use_pay_auth)
 	callpoint!.setDevObject("scan_docs_to",aps_payauth.scan_docs_to$)
+
+rem --- Create vector of urls for viewed invoice images
+
+	urlVect!=BBjAPI().makeVector()
+	callpoint!.setDevObject("urlVect",urlVect!)
 [[APE_MANCHECKHDR.AREC]]
 user_tpl.reuse_chk$=""
 user_tpl.open_check$=""
