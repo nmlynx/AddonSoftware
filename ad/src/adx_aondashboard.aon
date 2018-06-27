@@ -2132,6 +2132,7 @@ rem ==============================================
     if rd_doc_path$="" then
         rd_doc_path$=dsk("")+dir("")
         rd_doc_path$=BBjAPI().getFileSystem().resolvePath(stbl("+DOC_DIR_PDF",err=*next),err=*next)+"/"
+        mkdir rd_doc_path$,err=*next
     endif
 
     return
