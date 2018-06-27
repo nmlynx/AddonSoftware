@@ -98,6 +98,7 @@ rem --- Save selected image on server
     tempFileLocation$=cf!.copyFromClient()
 	nameOnServer$=response$
 	serverPath$ = stbl("+DOC_DIR_PDF")
+	mkdir serverPath$,err=*next
 
     rem --- strip the path and get the ordinary file name of the uploaded file
     filePath$=nameOnServer$
