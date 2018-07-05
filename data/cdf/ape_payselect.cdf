@@ -855,7 +855,7 @@ rem ==========================================================================
 	endif
 
 	rem --- Set the from, cc, bcc and replyto email addresses
-	read record(adm_user,key=apm_approvers.user_id$)adm_user$
+	read record(adm_user,key=apm_approvers.user_id$,dom=*next)adm_user$
 	rem -- for both usertype$ the current user will be a cc
 	from$=cvs(adm_user.email_address$,3)
 	cc$=cvs(adm_user.email_address$,3)
@@ -2572,7 +2572,7 @@ rem --- Misc other init
 		rem --- Get current user's user record
 		adm_user=fnget_dev("@ADM_USER")
 		dim adm_user$:fnget_tpl$("@ADM_USER")
-		read record(adm_user,key=apm_approvers.user_id$)adm_user$
+		read record(adm_user,key=apm_approvers.user_id$,dom=*next)adm_user$
 		callpoint!.setDevObject("adm_user",adm_user$)
         
 		popUpMenu!.addSeparator()
