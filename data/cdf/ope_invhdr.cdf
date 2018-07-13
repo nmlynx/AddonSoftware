@@ -1787,6 +1787,8 @@ rem --- New record, set default
 		callpoint!.setColumnData("OPE_INVHDR.INVOICE_DATE",sysinfo.system_date$)
 		callpoint!.setColumnData("OPE_INVHDR.SHIPMNT_DATE",sysinfo.system_date$)
 		callpoint!.setColumnData("OPE_INVHDR.AR_SHIP_VIA",arm01a.ar_ship_via$)
+		callpoint!.setColumnData("OPE_INVHDR.SHIPPING_ID",arm01a.shipping_id$)
+		callpoint!.setColumnData("OPE_INVHDR.SHIPPING_EMAIL",arm01a.shipping_email$)
 		callpoint!.setColumnData("OPE_INVHDR.SLSPSN_CODE",arm02a.slspsn_code$)
 		callpoint!.setColumnData("OPE_INVHDR.TERMS_CODE",arm02a.ar_terms_code$)
 		callpoint!.setColumnData("OPE_INVHDR.DISC_CODE",arm02a.disc_code$)
@@ -2005,6 +2007,10 @@ ship_to_info: rem --- Get and display Bill To Information
               rem          order_no$
 rem ==========================================================================
 
+	custmast_dev=fnget_dev("ARM_CUSTMAST")
+	dim custmast$:fnget_tpl$("ARM_CUSTMAST")
+	findrecord(custmast_dev,key=firm_id$+cust_id$,dom=*next)custmast$
+
 	ar_type$=callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
 	custdet_dev=fnget_dev("ARM_CUSTDET")
 	dim custdet$:fnget_tpl$("ARM_CUSTDET")
@@ -2033,6 +2039,9 @@ rem ==========================================================================
 				callpoint!.setColumnData("OPE_INVHDR.SLSPSN_CODE",custship_tpl.slspsn_code$)
 				callpoint!.setColumnData("OPE_INVHDR.TERRITORY",custship_tpl.territory$)
 				callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",custship_tpl.tax_code$)
+				if cvs(custship_tpl.ar_ship_via$,2)<>"" then callpoint!.setColumnData("OPE_INVHDR.AR_SHIP_VIA",custship_tpl.ar_ship_via$)
+				if cvs(custship_tpl.shipping_id$,2)<>"" then callpoint!.setColumnData("OPE_INVHDR.SHIPPING_ID",custship_tpl.shipping_id$)
+				if cvs(custship_tpl.shipping_email$,2)<>"" then callpoint!.setColumnData("OPE_INVHDR.SHIPPING_EMAIL",custship_tpl.shipping_email$)
 			endif
 		else
 			callpoint!.setColumnData("OPE_INVHDR.SHIPTO_NO","")
@@ -2050,6 +2059,9 @@ rem ==========================================================================
 				callpoint!.setColumnData("OPE_INVHDR.SLSPSN_CODE",custdet.slspsn_code$)
 				callpoint!.setColumnData("OPE_INVHDR.TERRITORY",custdet.territory$)
 				callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",custdet.tax_code$)
+				if cvs(custmast.ar_ship_via$,2)<>"" then callpoint!.setColumnData("OPE_INVHDR.AR_SHIP_VIA",custmast.ar_ship_via$,1)
+				if cvs(custmast.shipping_id$,2)<>"" then callpoint!.setColumnData("OPE_INVHDR.SHIPPING_ID",custmast.shipping_id$)
+				if cvs(custmast.shipping_email$,2)<>"" then callpoint!.setColumnData("OPE_INVHDR.SHIPPING_EMAIL",custmast.shipping_email$)
 			endif
 		endif
 
@@ -2059,7 +2071,10 @@ rem ==========================================================================
 		if ship_to_type$<>callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE") then
 			if custdet.slspsn_code$<>callpoint!.getColumnData("OPE_INVHDR.SLSPSN_CODE") or
 :			custdet.territory$<>callpoint!.getColumnData("OPE_INVHDR.TERRITORY") or
-:			custdet.tax_code$<>callpoint!.getColumnData("OPE_INVHDR.TAX_CODE") then
+:			custdet.tax_code$<>callpoint!.getColumnData("OPE_INVHDR.TAX_CODE") OR
+:			(cvs(custmast.ar_ship_via$,2)<>"" and cvs(custmast.ar_ship_via$,2)<>callpoint!.getColumnData("OPE_INVHDR.AR_SHIP_VIA")) or
+:			(cvs(custmast.shipping_id$,2)<>"" and cvs(custmast.shipping_id$,2)<>callpoint!.getColumnData("OPE_INVHDR.SHIPPING_ID")) or
+:			(cvs(custmast.shipping_email$,2)<>"" and cvs(custmast.shipping_email$,2)<>callpoint!.getColumnData("OPE_INVHDR.SHIPPING_EMAIL")) then
 				msg_id$="OP_SHIPTO_CODE_CHGS"
 				gosub disp_message
 
@@ -2067,6 +2082,9 @@ rem ==========================================================================
 				callpoint!.setColumnData("OPE_INVHDR.SLSPSN_CODE",custdet.slspsn_code$)
 				callpoint!.setColumnData("OPE_INVHDR.TERRITORY",custdet.territory$)
 				callpoint!.setColumnData("OPE_INVHDR.TAX_CODE",custdet.tax_code$)
+				if cvs(custmast.ar_ship_via$,2)<>"" then callpoint!.setColumnData("OPE_INVHDR.AR_SHIP_VIA",custmast.ar_ship_via$,1)
+				if cvs(custmast.shipping_id$,2)<>"" then callpoint!.setColumnData("OPE_INVHDR.SHIPPING_ID",custmast.shipping_id$)
+				if cvs(custmast.shipping_email$,2)<>"" then callpoint!.setColumnData("OPE_INVHDR.SHIPPING_EMAIL",custmast.shipping_email$)
 			endif
 		endif
 
