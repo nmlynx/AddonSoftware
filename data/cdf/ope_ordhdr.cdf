@@ -1358,6 +1358,39 @@ rem --- Save controls in the global userObj! (vector)
 	userObj!.addItem(mwin!.addStaticText(15108,695,35,160,15,"",$0000$)); rem Manual Price  (9)
  	userObj!.addItem(mwin!.addStaticText(15109,695,50,160,15,"",$0000$)); rem Alt/Super (10)
 [[OPE_ORDHDR.BDEL]]
+rem --- User approval required if packages have already been shipped
+
+	rem --- Assumes ship_seq_no$ is blank until order is invoiced and sales register is updated.
+	trackingNos!=new java.util.HashMap()
+	ar_type$=callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
+	customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	ship_seq_no$=callpoint!.getColumnData("OPE_ORDHDR.SHIP_SEQ_NO")
+	optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
+	dim optShipTrack$:fnget_tpl$("OPT_SHIPTRACK")
+	read(optShipTrack_dev,key=firm_id$+ar_type$+customer_id$+order_no$+ship_seq_no$,dom=*next)
+	while 1
+		optShipTrack_key$=key(optShipTrack_dev,end=*break)
+		if pos(firm_id$+ar_type$+customer_id$+order_no$+ship_seq_no$=optShipTrack_key$)<>1 then break
+		readrecord(optShipTrack_dev)optShipTrack$
+		if optShipTrack.void_flag$="Y" then
+			trackingNos!.remove(optShipTrack.tracking_no$)
+		else
+			trackingNos!.put(optShipTrack.tracking_no$,"")
+		endif
+	wend
+
+	rem --- If packages shipped, need user approval to delete order.
+	if trackingNos!.size()>0 then
+		msg_id$="OP_PACKAGE_SHIPPED"
+		gosub disp_message
+		if msg_opt$="N" then
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+		callpoint!.setStatus("ACTIVATE")
+	endif
+
 rem --- Get user approval to delete if there are any WOs linked to this Sales Order
 
 	op_create_wo$=callpoint!.getDevObject("op_create_wo")
@@ -2366,6 +2399,7 @@ rem ==========================================================================
 			ope01a.arc_time$   = ""
 			ope01a.batch_no$   = ""
 			ope01a.audit_number   = 0
+			ope01a.ship_seq_no$=""
 
 			ope01a$=field(ope01a$)
 			write record (ope01_dev) ope01a$
@@ -3017,7 +3051,7 @@ rem                 = 1 -> user_tpl.hist_ord$ = "N"
 
 rem --- Open needed files
 
-	num_files=42
+	num_files=43
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	
 	open_tables$[1]="ARM_CUSTMAST",  open_opts$[1]="OTA"
@@ -3059,6 +3093,7 @@ rem --- Open needed files
 	open_tables$[40]="ARC_TERMCODE", open_opts$[40]="OTA"
 	open_tables$[41]="IVM_ITEMSYN",open_opts$[41]="OTA"
 	open_tables$[42]="OPT_INVHDR",open_opts$[42]="OTAN[2_]"
+	open_tables$[43]="OPT_SHIPTRACK",open_opts$[43]="OTA"
 
 	gosub open_tables
 

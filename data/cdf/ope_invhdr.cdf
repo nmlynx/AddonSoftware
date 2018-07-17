@@ -1225,6 +1225,39 @@ rem --- Display more meaningful deletion message
 		break
 	endif
 
+rem --- User approval required if packages have already been shipped
+
+	rem --- Assumes ship_seq_no$ is blank until order is invoiced and sales register is updated.
+	trackingNos!=new java.util.HashMap()
+	ar_type$=callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
+	customer_id$=callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	order_no$=callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+	ship_seq_no$=callpoint!.getColumnData("OPE_INVHDR.SHIP_SEQ_NO")
+	optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
+	dim optShipTrack$:fnget_tpl$("OPT_SHIPTRACK")
+	read(optShipTrack_dev,key=firm_id$+ar_type$+customer_id$+order_no$+ship_seq_no$,dom=*next)
+	while 1
+		optShipTrack_key$=key(optShipTrack_dev,end=*break)
+		if pos(firm_id$+ar_type$+customer_id$+order_no$+ship_seq_no$=optShipTrack_key$)<>1 then break
+		readrecord(optShipTrack_dev)optShipTrack$
+		if optShipTrack.void_flag$="Y" then
+			trackingNos!.remove(optShipTrack.tracking_no$)
+		else
+			trackingNos!.put(optShipTrack.tracking_no$,"")
+		endif
+	wend
+
+	rem --- If packages shipped, need user approval to delete order.
+	if trackingNos!.size()>0 then
+		msg_id$="OP_PACKAGE_SHIPPED"
+		gosub disp_message
+		if msg_opt$="N" then
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+		callpoint!.setStatus("ACTIVATE")
+	endif
+
 rem --- Set table variables
 	file_name$ = "OPE_PRNTLIST"
 	prntlist_dev = fnget_dev(file_name$)
@@ -2448,6 +2481,7 @@ rem ==========================================================================
 			ope01a.arc_time$   = ""
 			ope01a.batch_no$   = ""
 			ope01a.audit_number   = 0
+			ope01a.ship_seq_no$=""
 
 			ope01a$=field(ope01a$)
 			write record (ope01_dev) ope01a$
@@ -3247,7 +3281,7 @@ rem                 = 1 -> user_tpl.hist_ord$ = "N"
 
 rem --- Open needed files
 
-	num_files=41
+	num_files=42
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 	open_tables$[1]="ARM_CUSTMAST",  open_opts$[1]="OTA"
@@ -3288,6 +3322,7 @@ rem --- Open needed files
 	open_tables$[39]="OPE_INVHDR",   open_opts$[39]="OTA"
 	open_tables$[40]="ARC_TERMCODE", open_opts$[40]="OTA"
 	open_tables$[41]="IVM_ITEMSYN",open_opts$[41]="OTA"
+	open_tables$[42]="OPT_SHIPTRACK",open_opts$[42]="OTA"
 
 	gosub open_tables
 
