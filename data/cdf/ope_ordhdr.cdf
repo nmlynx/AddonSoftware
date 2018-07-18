@@ -1365,7 +1365,7 @@ rem --- User approval required if packages have already been shipped
 	ar_type$=callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
 	customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-	ship_seq_no$=callpoint!.getColumnData("OPE_ORDHDR.SHIP_SEQ_NO")
+	ship_seq_no$=""
 	optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
 	dim optShipTrack$:fnget_tpl$("OPT_SHIPTRACK")
 	read(optShipTrack_dev,key=firm_id$+ar_type$+customer_id$+order_no$+ship_seq_no$,dom=*next)
@@ -1376,7 +1376,7 @@ rem --- User approval required if packages have already been shipped
 		if optShipTrack.void_flag$="Y" then
 			trackingNos!.remove(optShipTrack.tracking_no$)
 		else
-			trackingNos!.put(optShipTrack.tracking_no$,"")
+			trackingNos!.put(optShipTrack.tracking_no$,optShipTrack.tracking_no$)
 		endif
 	wend
 

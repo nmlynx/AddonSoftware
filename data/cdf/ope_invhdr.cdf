@@ -1232,7 +1232,7 @@ rem --- User approval required if packages have already been shipped
 	ar_type$=callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
 	customer_id$=callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	order_no$=callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-	ship_seq_no$=callpoint!.getColumnData("OPE_INVHDR.SHIP_SEQ_NO")
+	ship_seq_no$=""
 	optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
 	dim optShipTrack$:fnget_tpl$("OPT_SHIPTRACK")
 	read(optShipTrack_dev,key=firm_id$+ar_type$+customer_id$+order_no$+ship_seq_no$,dom=*next)
@@ -1243,7 +1243,7 @@ rem --- User approval required if packages have already been shipped
 		if optShipTrack.void_flag$="Y" then
 			trackingNos!.remove(optShipTrack.tracking_no$)
 		else
-			trackingNos!.put(optShipTrack.tracking_no$,"")
+			trackingNos!.put(optShipTrack.tracking_no$,optShipTrack.tracking_no$)
 		endif
 	wend
 
@@ -1850,7 +1850,6 @@ rem --- New record, set default
 		user_tpl.order_date$   = sysinfo.system_date$
 
 		callpoint!.setOptionEnabled("UINV",0)
-
 	endif
 
 rem --- New or existing order
@@ -2930,6 +2929,45 @@ rem ==========================================================================
 				ope01a.mod_user$=sysinfo.user_id$
 				ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
 				ope01a.mod_time$=date(0:"%Hz%mz")
+
+				rem --- Do NOT overwrite existing FREIGH_AMT previously entered in Order Entry.
+				if ope01a.freight_amt=0 then
+					rem --- Initialize FREIGHT_AMT when freight charges are available in OPT_SHIPTRACK
+					rem --- Assumes ship_seq_no$ is blank until order is invoiced and sales register is updated.
+					trackingNos!=new java.util.HashMap()
+					ar_type$=ope01a.ar_type$
+					customer_id$=ope01a.customer_id$
+					order_no$=ope01a.order_no$
+					ship_seq_no$=""
+					optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
+					dim optShipTrack$:fnget_tpl$("OPT_SHIPTRACK")
+					read(optShipTrack_dev,key=firm_id$+ar_type$+customer_id$+order_no$+ship_seq_no$,dom=*next)
+					while 1
+						optShipTrack_key$=key(optShipTrack_dev,end=*break)
+						if pos(firm_id$+ar_type$+customer_id$+order_no$+ship_seq_no$=optShipTrack_key$)<>1 then break
+						readrecord(optShipTrack_dev)optShipTrack$
+						if optShipTrack.void_flag$="Y" then
+							trackingNos!.remove(optShipTrack.tracking_no$)
+						else
+							trackingNos!.put(optShipTrack.tracking_no$,optShipTrack.cust_freight_amt)
+						endif
+					wend
+					if trackingNos!.size()>0 then
+						freight_amt=0
+						trackingIter!=trackingNos!.keySet().iterator()
+						while trackingIter!.hasNext()
+							freight_amt=freight_amt+trackingNos!.get(trackingIter!.next())
+						wend
+						ope01a.freight_amt=freight_amt
+
+						rem --- TAXABLE_AMT can/may include FREIGHT_AMT, which would affect TAX_AMOUNT
+						disc_amt=ope01a.discount_amt
+						gosub calculate_tax
+						ope01a.taxable_amt=taxable_amt
+						ope01a.tax_amount=tax_amount
+					endif
+				endif
+
 				ope01a$=field(ope01a$)
 				writerecord(ope01_dev)ope01a$
 				ope01_primary$=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$+old_inv_no$
