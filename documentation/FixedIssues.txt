@@ -229,6 +229,13 @@ Modified: data/bar/glm_summactivity.xml
 Modified: data/cdf/glm_acctsumhdr.cdf
 Modified: data/cdf/glm_summactivity.cdf
 
-
-
-
+=======================================================================================================================================
+Revision: 946ee4b06c9cb03bc642e8d9f460ab3f6cca9f3f
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 7/30/2018 3:17:29 PM
+Message:
+Bug 9430: Modified splitMultiLineField() method to add a blank item to
+the returned vector when the input string field is blank, rather than
+return a vector of size zero.
+----
+Modified: ad/src/ado_func.src
