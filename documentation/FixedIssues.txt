@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2018-07-13
+ Report Date:   2018-07-30
  Report Branch: AddonSoftware 18.03
  Last Release:  AddonSoftware 18.02
 =======================================================================================================================================
@@ -200,6 +200,35 @@ Bug 9418 - GL - Budget Maintenance does not save changes in final period cell
 ----
 Modified: data/bar/glm_budgetmaint.xml
 Modified: data/cdf/glm_budgetmaint.cdf
+
+=======================================================================================================================================
+Revision: 3b416d22b63c1453d8f26540b8c9c5102ed4282e
+Author: Christine <chawkins@basis.com>
+Date: 7/13/2018 3:30:50 PM
+Message:
+Bug 9414 - AR - Bank Deposit form needs keyboard shortcut for the 'Select Deposit' button
+
+  - Added hotkey (&Select Deposit) to button text, and changed AOPT to be on both form and menu, so either ctl-O,S or alt-S will work.
+----
+Modified: data/bar/are_deposit.xml
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
+
+=======================================================================================================================================
+Revision: ce70925e1d800663f45e5bf6905bf8b6f1ed601e
+Author: Christine <chawkins@basis.com>
+Date: 7/19/2018 9:36:14 AM
+Message:
+Bug 9418 - GL - Budget Maintenance does not save changes in final period cell. Also applies to the regular GL Account Summary grids when viewing a budget amount.
+
+  - corrected calculation of cols in update_glm_acctsummary routine
+  - applied to other account summary forms
+----
+Modified: data/bar/glm_acctsumhdr.xml
+Modified: data/bar/glm_summactivity.xml
+Modified: data/cdf/glm_acctsumhdr.cdf
+Modified: data/cdf/glm_summactivity.cdf
+
 
 
 
