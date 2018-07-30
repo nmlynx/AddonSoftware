@@ -1,3 +1,10 @@
+[[<<DISPLAY>>.VOID.AVAL]]
+rem --- Update VOID_FLAG
+	if callpoint!.getUserInput()="Y" then
+		callpoint!.setColumnData("OPT_SHIPTRACK.VOID_FLAG","Y",1)
+	else
+		callpoint!.setColumnData("OPT_SHIPTRACK.VOID_FLAG"," ",1)
+	endif
 [[OPT_SHIPTRACK.AREC]]
 rem --- Initialize SHIP_SEQ_NO
 	callpoint!.setColumnData("OPT_SHIPTRACK.SHIP_SEQ_NO","000")
@@ -25,6 +32,9 @@ rem --- Enable non-key fields if order has NOT been invoiced and updated (when t
 		callpoint!.setColumnEnabled("OPT_SHIPTRACK.ACT_FREIGHT_AMT",0)
 		callpoint!.setColumnEnabled("OPT_SHIPTRACK.CUST_FREIGHT_AMT",0)
 	endif
+
+rem --- Initialize VOID CheckBox
+	if callpoint!.getColumnData("OPT_SHIPTRACK.VOID_FLAG")="Y" then callpoint!.setColumnData("<<DISPLAY>>.VOID","Y",1)
 [[OPT_SHIPTRACK.ORDER_NO.AVAL]]
 rem --- Does order exist?
 	order_no$=callpoint!.getUserInput()
