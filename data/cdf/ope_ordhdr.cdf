@@ -1360,12 +1360,12 @@ rem --- Save controls in the global userObj! (vector)
 [[OPE_ORDHDR.BDEL]]
 rem --- User approval required if packages have already been shipped
 
-	rem --- Assumes ship_seq_no$ is blank until order is invoiced and sales register is updated.
+	rem --- Assumes num(ship_seq_no$)=0 until order is invoiced and sales register is updated.
 	trackingNos!=new java.util.HashMap()
 	ar_type$=callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
 	customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-	ship_seq_no$=""
+	ship_seq_no$="000"
 	optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
 	dim optShipTrack$:fnget_tpl$("OPT_SHIPTRACK")
 	read(optShipTrack_dev,key=firm_id$+ar_type$+customer_id$+order_no$+ship_seq_no$,dom=*next)
@@ -2399,7 +2399,7 @@ rem ==========================================================================
 			ope01a.arc_time$   = ""
 			ope01a.batch_no$   = ""
 			ope01a.audit_number   = 0
-			ope01a.ship_seq_no$=""
+			ope01a.ship_seq_no$="000"
 
 			ope01a$=field(ope01a$)
 			write record (ope01_dev) ope01a$

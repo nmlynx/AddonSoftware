@@ -15,7 +15,7 @@ rem --- Initialize ship date
 
 	callpoint!.setStatus("MODIFIED")
 [[OPT_SHIPTRACK.ADIS]]
-rem --- Enable non-key fields if order has NOT been invoiced and updated (when the SHIP_SEQ_NO is not blank)
+rem --- Enable non-key fields if order has NOT been invoiced and updated (when the num(SHIP_SEQ_NO)=0)
 	if num(callpoint!.getColumnData("OPT_SHIPTRACK.SHIP_SEQ_NO"))=0 then
 		rem --- Enable all non-key fields
 		callpoint!.setColumnEnabled("OPT_SHIPTRACK.SCAC_CODE",1)
