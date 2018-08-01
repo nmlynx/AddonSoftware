@@ -45,6 +45,7 @@ rem --- Get 'IN' SPROC parameters
 	ar_type$ =               sp!.getParameter("AR_TYPE")
 	customer_id$ =           sp!.getParameter("CUSTOMER_ID")
 	order_no$ =              sp!.getParameter("ORDER_NO")
+    ship_seq_no$ =           sp!.getParameter("SHIP_SEQ_NO")
 	barista_wd$ =            sp!.getParameter("BARISTA_WD")
 
 	chdir barista_wd$
@@ -94,7 +95,7 @@ rem --- Get any associated Lots/SerialNumbers
 	sqlprep$=sqlprep$+"   AND ar_type="       +"'"+ ar_type$+"'"
 	sqlprep$=sqlprep$+"   AND customer_id="   +"'"+ customer_id$+"'"
 	sqlprep$=sqlprep$+"   AND order_no="      +"'"+ order_no$+"'"
-    sqlprep$=sqlprep$+"   AND ship_seq_no="   +"''"
+    sqlprep$=sqlprep$+"   AND ship_seq_no="   +"'"+ ship_seq_no$+"'"
 
 	sql_chan=sqlunt
 	sqlopen(sql_chan,mode="PROCEDURE",err=*next)stbl("+DBNAME")

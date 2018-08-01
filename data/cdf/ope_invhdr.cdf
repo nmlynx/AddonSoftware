@@ -1232,7 +1232,7 @@ rem --- User approval required if packages have already been shipped
 	ar_type$=callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
 	customer_id$=callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	order_no$=callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-	ship_seq_no$="000"
+	ship_seq_no$=callpoint!.getColumnData("OPE_INVHDR.SHIP_SEQ_NO")
 	optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
 	dim optShipTrack$:fnget_tpl$("OPT_SHIPTRACK")
 	read(optShipTrack_dev,key=firm_id$+ar_type$+customer_id$+order_no$+ship_seq_no$,dom=*next)
@@ -2480,7 +2480,7 @@ rem ==========================================================================
 			ope01a.arc_time$   = ""
 			ope01a.batch_no$   = ""
 			ope01a.audit_number   = 0
-			ope01a.ship_seq_no$="000"
+			ope01a.ship_seq_no$="001"
 
 			ope01a$=field(ope01a$)
 			write record (ope01_dev) ope01a$
@@ -2933,12 +2933,11 @@ rem ==========================================================================
 				rem --- Do NOT overwrite existing FREIGH_AMT previously entered in Order Entry.
 				if ope01a.freight_amt=0 then
 					rem --- Initialize FREIGHT_AMT when freight charges are available in OPT_SHIPTRACK
-					rem --- Assumes num(ship_seq_no$)=0 until order is invoiced and sales register is updated.
 					trackingNos!=new java.util.HashMap()
 					ar_type$=ope01a.ar_type$
 					customer_id$=ope01a.customer_id$
 					order_no$=ope01a.order_no$
-					ship_seq_no$="000"
+					ship_seq_no$=callpoint!.getColumnData("OPE_INVHDR.SHIP_SEQ_NO")
 					optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
 					dim optShipTrack$:fnget_tpl$("OPT_SHIPTRACK")
 					read(optShipTrack_dev,key=firm_id$+ar_type$+customer_id$+order_no$+ship_seq_no$,dom=*next)

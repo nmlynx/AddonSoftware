@@ -757,7 +757,7 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
     rem --- OPINVOICE_SHIPTRACK
     sproc_vw_name$="OPINVOICE_SHIPTRACK"
     sqlprep$="CREATE PROCEDURE OPINVOICE_SHIPTRACK "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, AR_TYPE CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN, "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, AR_TYPE CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN, SHIP_SEQ_NO CHAR(3) IN, "
     sqlprep$=sqlprep$+"BARISTA_WD VARCHAR(50) IN)"  
     sqlprep$=sqlprep$+"'"+sproc_path$+"OPINVOICE_SHIPTRACK.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "

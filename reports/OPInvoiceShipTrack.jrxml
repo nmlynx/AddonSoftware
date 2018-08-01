@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2018-07-23T18:03:57 -->
+<!-- 2018-07-31T17:29:17 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OPInvoiceShipTrack" language="groovy" pageWidth="555" pageHeight="802" columnWidth="555" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" resourceBundle="addon" uuid="d0f2d81a-f232-44c4-9e01-14fc226174e5">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
@@ -8,8 +8,9 @@
 	<parameter name="CUSTOMER_ID" class="java.lang.String"/>
 	<parameter name="ORDER_NO" class="java.lang.String"/>
 	<parameter name="BARISTA_WD" class="java.lang.String"/>
+	<parameter name="SHIP_SEQ_NO" class="java.lang.String"/>
 	<queryString>
-		<![CDATA[call OPINVOICE_SHIPTRACK($P{FIRM_ID},$P{AR_TYPE},$P{CUSTOMER_ID},$P{ORDER_NO},$P{BARISTA_WD})]]>
+		<![CDATA[call OPINVOICE_SHIPTRACK($P{FIRM_ID},$P{AR_TYPE},$P{CUSTOMER_ID},$P{ORDER_NO},$P{SHIP_SEQ_NO},$P{BARISTA_WD})]]>
 	</queryString>
 	<field name="TRACKING_NO" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>
