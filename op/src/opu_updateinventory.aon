@@ -848,6 +848,8 @@ ar_open_invoice_detail: rem --- AR Open Invoice Detail
 
             if something_backord then
                 ope01a.backord_flag$="B"
+                shipSeqNo_mask$=fill(len(ope01a.ship_seq_no$),"0")
+                ope01a.ship_seq_no$=str(num(ope01a.ship_seq_no$)+1:shipSeqNo_mask$)
                 rem --- Calculate discount amount for backorder
                 findrecord(opm03_dev,key=ope01a.firm_id$+ope01a.disc_code$,dom=*endif)opm03a$
                 ope01a.discount_amt=round(opm03a.disc_percent*ope01a.total_sales/100,2)
