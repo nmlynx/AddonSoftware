@@ -1,3 +1,35 @@
+[[OPE_INVHDR.AOPT-SHPT]]
+rem --- Launch Shipment Tracking Information inquiry
+	selected_key$ = ""
+	dim filter_defs$[4,2]
+	filter_defs$[0,0]="OPT_SHIPTRACK.FIRM_ID"
+	filter_defs$[0,1]="='"+firm_id$+"'"
+	filter_defs$[0,2]="LOCK"
+	filter_defs$[1,0]="OPT_SHIPTRACK.AR_TYPE"
+	filter_defs$[1,1]="='"+callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")+"'"
+	filter_defs$[1,2]="LOCK"
+	filter_defs$[2,0]="OPT_SHIPTRACK.CUSTOMER_ID"
+	filter_defs$[2,1]="='"+callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")+"'"
+	filter_defs$[2,2]="LOCK"
+	filter_defs$[3,0] ="OPT_SHIPTRACK.ORDER_NO"
+	filter_defs$[3,1] ="='"+callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")+"'"
+	filter_defs$[3,2]="LOCK"
+	filter_defs$[4,0]="OPT_SHIPTRACK.SHIP_SEQ_NO"
+	filter_defs$[4,1]="='"+callpoint!.getColumnData("OPE_INVHDR.SHIP_SEQ_NO")+"'"
+	filter_defs$[4,2]="LOCK"
+	dim search_defs$[3]
+
+	call stbl("+DIR_SYP")+"bax_query.bbj",
+:		gui_dev,
+:		Form!,
+:		"OP_SHIPTRACK",
+:		"",
+:		table_chans$[all],
+:		selected_keys$,
+:		filter_defs$[all],
+:		search_defs$[all],
+:		"",
+:		"AO_STATUS"
 [[OPE_INVHDR.BLST]]
 rem --- Set flag that Last Record has been selected
 	callpoint!.setDevObject("FirstLastRecord","LAST")
@@ -596,6 +628,7 @@ rem --- Set flags
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("CRCH",0)
 	callpoint!.setOptionEnabled("TTLS",0)
+	callpoint!.setOptionEnabled("SHPT",0)
 
 rem --- Clear order helper object
 
@@ -1690,6 +1723,19 @@ rem --- Disable Ship To fields
 
 	ship_to_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
 	gosub disable_shipto
+
+rem --- Enable SHPT additional options if shipment tracking info exists
+	optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
+	ar_type$=callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
+	ship_seq_no$=callpoint!.getColumnData("OPE_INVHDR.SHIP_SEQ_NO")
+	trip_key$=firm_id$+ar_type$+cust_id$+order_no$+ship_seq_no$
+	read(optShipTrack_dev,key=trip_key$,dom=*next)
+	optShipTrack_key$=key(optShipTrack_dev,end=*next)
+	if pos(trip_key$=optShipTrack_key$)=1 then
+		callpoint!.setOptionEnabled("SHPT",1)
+	else
+		callpoint!.setOptionEnabled("SHPT",0)
+	endif
 [[OPE_INVHDR.ORDER_NO.AVAL]]
 rem --- Do we need to create a new order number?
 
