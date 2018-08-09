@@ -21,14 +21,14 @@
 			<ASC_LICENSE_ID id="ddm_tables.opt_shiptrack"></ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.opt_shiptrack">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.opt_shiptrack">20180403</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.opt_shiptrack">20180731</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.opt_shiptrack">20180730</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.opt_shiptrack">173604</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.opt_shiptrack">20180808</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.opt_shiptrack">20180808</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.opt_shiptrack">162514</DD_LSTSYNC_TIME>
 			<DD_ATTR_ATAB id="ddm_tables.opt_shiptrack"></DD_ATTR_ATAB>
 			<DD_ATTR_CPGM id="ddm_tables.opt_shiptrack">C:/dev_projects/aon_dev1/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.opt_shiptrack">PRIMARY</DD_ATTR_DKNM>
 			<DD_ATTR_FIMG id="ddm_tables.opt_shiptrack"></DD_ATTR_FIMG>
-			<DD_ATTR_FTYP id="ddm_tables.opt_shiptrack">T</DD_ATTR_FTYP>
+			<DD_ATTR_FTYP id="ddm_tables.opt_shiptrack">G</DD_ATTR_FTYP>
 			<DD_ATTR_HELP id="ddm_tables.opt_shiptrack"></DD_ATTR_HELP>
 			<DD_ATTR_IKEY id="ddm_tables.opt_shiptrack"></DD_ATTR_IKEY>
 			<DD_ATTR_IDEF id="ddm_tables.opt_shiptrack"></DD_ATTR_IDEF>
@@ -48,23 +48,36 @@
 			<DD_ADMIN_BACKUP id="ddm_tables.opt_shiptrack"></DD_ADMIN_BACKUP>
 		</RECORD>
 	</ALIAS>
+	<ALIAS id="ddm_table_aopt">
+		<ID id="ddm_table_aopt">DDM_TABLE_AOPT</ID>
+		<RECORD id="ddm_table_aopt.opt_shiptrack01">
+			<DD_TABLE_ALIAS id="ddm_table_aopt.opt_shiptrack01">OPT_SHIPTRACK   </DD_TABLE_ALIAS>
+			<DD_ATTR_SEQ id="ddm_table_aopt.opt_shiptrack01">01</DD_ATTR_SEQ>
+			<DD_ATTR_AOPT id="ddm_table_aopt.opt_shiptrack01">Shipment &Tracking</DD_ATTR_AOPT>
+			<DD_ATTR_AOPT_CD id="ddm_table_aopt.opt_shiptrack01">SHPT</DD_ATTR_AOPT_CD>
+			<DD_ATTR_AOPT_FM id="ddm_table_aopt.opt_shiptrack01">B</DD_ATTR_AOPT_FM>
+		</RECORD>
+	</ALIAS>
 	<ALIAS id="ddm_table_cpro">
 		<ID id="ddm_table_cpro">DDM_TABLE_CPRO</ID>
-		<RECORD id="ddm_table_cpro.opt_shiptrackadis">
-			<DD_TABLE_ALIAS id="ddm_table_cpro.opt_shiptrackadis">OPT_SHIPTRACK   </DD_TABLE_ALIAS>
-			<DD_ATTR_CPRO id="ddm_table_cpro.opt_shiptrackadis">ADIS</DD_ATTR_CPRO>
+		<RECORD id="ddm_table_cpro.opt_shiptrackaopt-shpt">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.opt_shiptrackaopt-shpt">OPT_SHIPTRACK   </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.opt_shiptrackaopt-shpt">AOPT-SHPT</DD_ATTR_CPRO>
 		</RECORD>
 		<RECORD id="ddm_table_cpro.opt_shiptrackarec">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.opt_shiptrackarec">OPT_SHIPTRACK   </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.opt_shiptrackarec">AREC</DD_ATTR_CPRO>
 		</RECORD>
-		<RECORD id="ddm_table_cpro.opt_shiptrackarnf">
-			<DD_TABLE_ALIAS id="ddm_table_cpro.opt_shiptrackarnf">OPT_SHIPTRACK   </DD_TABLE_ALIAS>
-			<DD_ATTR_CPRO id="ddm_table_cpro.opt_shiptrackarnf">ARNF</DD_ATTR_CPRO>
-		</RECORD>
 		<RECORD id="ddm_table_cpro.opt_shiptrackbsho">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.opt_shiptrackbsho">OPT_SHIPTRACK   </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.opt_shiptrackbsho">BSHO</DD_ATTR_CPRO>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_table_opts">
+		<ID id="ddm_table_opts">DDM_TABLE_OPTS</ID>
+		<RECORD id="ddm_table_opts.opt_shiptrackh">
+			<DD_TABLE_ALIAS id="ddm_table_opts.opt_shiptrackh">OPT_SHIPTRACK   </DD_TABLE_ALIAS>
+			<DD_ATTR_OPTS id="ddm_table_opts.opt_shiptrackh">H</DD_ATTR_OPTS>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_tpls">
@@ -382,7 +395,7 @@
 			<DD_ATTR_LABL id="ddm_table_cols.opt_shiptrack003"></DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_table_cols.opt_shiptrack003"></DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.opt_shiptrack003">N</DD_ATTR_MLAN>
-			<DD_ATTR_MINL id="ddm_table_cols.opt_shiptrack003">1</DD_ATTR_MINL>
+			<DD_ATTR_MINL id="ddm_table_cols.opt_shiptrack003"></DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.opt_shiptrack003"></DD_ATTR_MAXL>
 			<DD_ATTR_MINV id="ddm_table_cols.opt_shiptrack003"></DD_ATTR_MINV>
 			<DD_ATTR_MAXV id="ddm_table_cols.opt_shiptrack003"></DD_ATTR_MAXV>
@@ -409,11 +422,11 @@
 			<DD_SYSTEM_REC id="ddm_table_cols.opt_shiptrack004"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.opt_shiptrack004"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.opt_shiptrack004"></DD_MASK_TYPE>
-			<DD_CREATE_DATE id="ddm_table_cols.opt_shiptrack004">20180403</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.opt_shiptrack004">20180403</DD_LSTREV_DATE>
+			<DD_CREATE_DATE id="ddm_table_cols.opt_shiptrack004">20180806</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.opt_shiptrack004">20180806</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.opt_shiptrack004"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.opt_shiptrack004"></DD_ATTR_ABLV>
-			<DD_ATTR_CPGM id="ddm_table_cols.opt_shiptrack004">C:/dev_projects/aon_dev1/aon/;</DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.opt_shiptrack004"></DD_ATTR_CPGM>
 			<DD_ATTR_COLW id="ddm_table_cols.opt_shiptrack004">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.opt_shiptrack004"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.opt_shiptrack004"></DD_ATTR_CTLY>
@@ -423,10 +436,10 @@
 			<DD_ATTR_DRLE id="ddm_table_cols.opt_shiptrack004"></DD_ATTR_DRLE>
 			<DD_ATTR_GHDR id="ddm_table_cols.opt_shiptrack004"></DD_ATTR_GHDR>
 			<DD_ATTR_IDEF id="ddm_table_cols.opt_shiptrack004"></DD_ATTR_IDEF>
-			<DD_ATTR_LABL id="ddm_table_cols.opt_shiptrack004">Order No</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.opt_shiptrack004">Order No</DD_ATTR_LABS>
+			<DD_ATTR_LABL id="ddm_table_cols.opt_shiptrack004"></DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.opt_shiptrack004"></DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.opt_shiptrack004">N</DD_ATTR_MLAN>
-			<DD_ATTR_MINL id="ddm_table_cols.opt_shiptrack004">1</DD_ATTR_MINL>
+			<DD_ATTR_MINL id="ddm_table_cols.opt_shiptrack004"></DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.opt_shiptrack004"></DD_ATTR_MAXL>
 			<DD_ATTR_MINV id="ddm_table_cols.opt_shiptrack004"></DD_ATTR_MINV>
 			<DD_ATTR_MAXV id="ddm_table_cols.opt_shiptrack004"></DD_ATTR_MAXV>
@@ -470,7 +483,7 @@
 			<DD_ATTR_LABL id="ddm_table_cols.opt_shiptrack005">Sequence No</DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_table_cols.opt_shiptrack005">Seq No</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.opt_shiptrack005">N</DD_ATTR_MLAN>
-			<DD_ATTR_MINL id="ddm_table_cols.opt_shiptrack005">1</DD_ATTR_MINL>
+			<DD_ATTR_MINL id="ddm_table_cols.opt_shiptrack005"></DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.opt_shiptrack005"></DD_ATTR_MAXL>
 			<DD_ATTR_MINV id="ddm_table_cols.opt_shiptrack005"></DD_ATTR_MINV>
 			<DD_ATTR_MAXV id="ddm_table_cols.opt_shiptrack005"></DD_ATTR_MAXV>
@@ -512,7 +525,7 @@
 			<DD_ATTR_GHDR id="ddm_table_cols.opt_shiptrack006"></DD_ATTR_GHDR>
 			<DD_ATTR_IDEF id="ddm_table_cols.opt_shiptrack006"></DD_ATTR_IDEF>
 			<DD_ATTR_LABL id="ddm_table_cols.opt_shiptrack006">Shipment Tracking No</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.opt_shiptrack006"></DD_ATTR_LABS>
+			<DD_ATTR_LABS id="ddm_table_cols.opt_shiptrack006">Tracking Number</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.opt_shiptrack006">N</DD_ATTR_MLAN>
 			<DD_ATTR_MINL id="ddm_table_cols.opt_shiptrack006">1</DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.opt_shiptrack006"></DD_ATTR_MAXL>
@@ -522,7 +535,7 @@
 			<DD_ATTR_PVAL id="ddm_table_cols.opt_shiptrack006"></DD_ATTR_PVAL>
 			<DD_ATTR_SLEV id="ddm_table_cols.opt_shiptrack006"></DD_ATTR_SLEV>
 			<DD_ATTR_TABG id="ddm_table_cols.opt_shiptrack006"></DD_ATTR_TABG>
-			<DD_ATTR_TIND id="ddm_table_cols.opt_shiptrack006">7</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.opt_shiptrack006">6</DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.opt_shiptrack006"></DD_ATTR_HELP>
 			<SQL_COLUMN_NAME id="ddm_table_cols.opt_shiptrack006">TRACKING_NO</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.opt_shiptrack006"></DD_ATTR_FONT>
@@ -547,8 +560,8 @@
 			<DD_ATTR_ABLV id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_CPGM>
 			<DD_ATTR_COLW id="ddm_table_cols.opt_shiptrack007">0</DD_ATTR_COLW>
-			<DD_ATTR_CTLX id="ddm_table_cols.opt_shiptrack007">0</DD_ATTR_CTLX>
-			<DD_ATTR_CTLY id="ddm_table_cols.opt_shiptrack007">0</DD_ATTR_CTLY>
+			<DD_ATTR_CTLX id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_CTLX>
+			<DD_ATTR_CTLY id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_CTLY>
 			<DD_ATTR_CTLW id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_CTLH>
 			<DD_ATTR_DFLT id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_DFLT>
@@ -556,7 +569,7 @@
 			<DD_ATTR_GHDR id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_GHDR>
 			<DD_ATTR_IDEF id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_IDEF>
 			<DD_ATTR_LABL id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_LABS>
+			<DD_ATTR_LABS id="ddm_table_cols.opt_shiptrack007">Void?</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.opt_shiptrack007">N</DD_ATTR_MLAN>
 			<DD_ATTR_MINL id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_MAXL>
@@ -566,7 +579,7 @@
 			<DD_ATTR_PVAL id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_PVAL>
 			<DD_ATTR_SLEV id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_SLEV>
 			<DD_ATTR_TABG id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_TABG>
-			<DD_ATTR_TIND id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.opt_shiptrack007">7</DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_HELP>
 			<SQL_COLUMN_NAME id="ddm_table_cols.opt_shiptrack007">VOID_FLAG</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.opt_shiptrack007"></DD_ATTR_FONT>
@@ -600,7 +613,7 @@
 			<DD_ATTR_GHDR id="ddm_table_cols.opt_shiptrack008"></DD_ATTR_GHDR>
 			<DD_ATTR_IDEF id="ddm_table_cols.opt_shiptrack008"></DD_ATTR_IDEF>
 			<DD_ATTR_LABL id="ddm_table_cols.opt_shiptrack008">SCAC Code</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.opt_shiptrack008"></DD_ATTR_LABS>
+			<DD_ATTR_LABS id="ddm_table_cols.opt_shiptrack008">SCAC Code</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.opt_shiptrack008">N</DD_ATTR_MLAN>
 			<DD_ATTR_MINL id="ddm_table_cols.opt_shiptrack008"></DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.opt_shiptrack008"></DD_ATTR_MAXL>
@@ -610,7 +623,7 @@
 			<DD_ATTR_PVAL id="ddm_table_cols.opt_shiptrack008"></DD_ATTR_PVAL>
 			<DD_ATTR_SLEV id="ddm_table_cols.opt_shiptrack008"></DD_ATTR_SLEV>
 			<DD_ATTR_TABG id="ddm_table_cols.opt_shiptrack008"></DD_ATTR_TABG>
-			<DD_ATTR_TIND id="ddm_table_cols.opt_shiptrack008">9</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.opt_shiptrack008">13</DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.opt_shiptrack008"></DD_ATTR_HELP>
 			<SQL_COLUMN_NAME id="ddm_table_cols.opt_shiptrack008">SCAC_CODE</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.opt_shiptrack008"></DD_ATTR_FONT>
@@ -644,7 +657,7 @@
 			<DD_ATTR_GHDR id="ddm_table_cols.opt_shiptrack009"></DD_ATTR_GHDR>
 			<DD_ATTR_IDEF id="ddm_table_cols.opt_shiptrack009"></DD_ATTR_IDEF>
 			<DD_ATTR_LABL id="ddm_table_cols.opt_shiptrack009"></DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.opt_shiptrack009"></DD_ATTR_LABS>
+			<DD_ATTR_LABS id="ddm_table_cols.opt_shiptrack009">Carrier Service Code</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.opt_shiptrack009">N</DD_ATTR_MLAN>
 			<DD_ATTR_MINL id="ddm_table_cols.opt_shiptrack009"></DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.opt_shiptrack009"></DD_ATTR_MAXL>
@@ -654,7 +667,7 @@
 			<DD_ATTR_PVAL id="ddm_table_cols.opt_shiptrack009"></DD_ATTR_PVAL>
 			<DD_ATTR_SLEV id="ddm_table_cols.opt_shiptrack009"></DD_ATTR_SLEV>
 			<DD_ATTR_TABG id="ddm_table_cols.opt_shiptrack009"></DD_ATTR_TABG>
-			<DD_ATTR_TIND id="ddm_table_cols.opt_shiptrack009">10</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.opt_shiptrack009">12</DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.opt_shiptrack009"></DD_ATTR_HELP>
 			<SQL_COLUMN_NAME id="ddm_table_cols.opt_shiptrack009">CARRIER_CODE</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.opt_shiptrack009"></DD_ATTR_FONT>
@@ -742,7 +755,7 @@
 			<DD_ATTR_PVAL id="ddm_table_cols.opt_shiptrack011"></DD_ATTR_PVAL>
 			<DD_ATTR_SLEV id="ddm_table_cols.opt_shiptrack011"></DD_ATTR_SLEV>
 			<DD_ATTR_TABG id="ddm_table_cols.opt_shiptrack011"></DD_ATTR_TABG>
-			<DD_ATTR_TIND id="ddm_table_cols.opt_shiptrack011">12</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.opt_shiptrack011">8</DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.opt_shiptrack011"></DD_ATTR_HELP>
 			<SQL_COLUMN_NAME id="ddm_table_cols.opt_shiptrack011">WEIGHT</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.opt_shiptrack011"></DD_ATTR_FONT>
@@ -776,7 +789,7 @@
 			<DD_ATTR_GHDR id="ddm_table_cols.opt_shiptrack012"></DD_ATTR_GHDR>
 			<DD_ATTR_IDEF id="ddm_table_cols.opt_shiptrack012"></DD_ATTR_IDEF>
 			<DD_ATTR_LABL id="ddm_table_cols.opt_shiptrack012">Customer Freight Amount</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.opt_shiptrack012">Cust Freight Amt</DD_ATTR_LABS>
+			<DD_ATTR_LABS id="ddm_table_cols.opt_shiptrack012">Customer Freight Amt</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.opt_shiptrack012">N</DD_ATTR_MLAN>
 			<DD_ATTR_MINL id="ddm_table_cols.opt_shiptrack012"></DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.opt_shiptrack012"></DD_ATTR_MAXL>
@@ -786,7 +799,7 @@
 			<DD_ATTR_PVAL id="ddm_table_cols.opt_shiptrack012"></DD_ATTR_PVAL>
 			<DD_ATTR_SLEV id="ddm_table_cols.opt_shiptrack012"></DD_ATTR_SLEV>
 			<DD_ATTR_TABG id="ddm_table_cols.opt_shiptrack012"></DD_ATTR_TABG>
-			<DD_ATTR_TIND id="ddm_table_cols.opt_shiptrack012">14</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.opt_shiptrack012">10</DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.opt_shiptrack012"></DD_ATTR_HELP>
 			<SQL_COLUMN_NAME id="ddm_table_cols.opt_shiptrack012">CUST_FREIGHT_AMT</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.opt_shiptrack012"></DD_ATTR_FONT>
@@ -820,7 +833,7 @@
 			<DD_ATTR_GHDR id="ddm_table_cols.opt_shiptrack013"></DD_ATTR_GHDR>
 			<DD_ATTR_IDEF id="ddm_table_cols.opt_shiptrack013"></DD_ATTR_IDEF>
 			<DD_ATTR_LABL id="ddm_table_cols.opt_shiptrack013">Actual Freight Amount</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.opt_shiptrack013">Act Freight Amt</DD_ATTR_LABS>
+			<DD_ATTR_LABS id="ddm_table_cols.opt_shiptrack013">Actual Freight Amt</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.opt_shiptrack013">N</DD_ATTR_MLAN>
 			<DD_ATTR_MINL id="ddm_table_cols.opt_shiptrack013"></DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.opt_shiptrack013"></DD_ATTR_MAXL>
@@ -830,7 +843,7 @@
 			<DD_ATTR_PVAL id="ddm_table_cols.opt_shiptrack013"></DD_ATTR_PVAL>
 			<DD_ATTR_SLEV id="ddm_table_cols.opt_shiptrack013"></DD_ATTR_SLEV>
 			<DD_ATTR_TABG id="ddm_table_cols.opt_shiptrack013"></DD_ATTR_TABG>
-			<DD_ATTR_TIND id="ddm_table_cols.opt_shiptrack013">13</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.opt_shiptrack013">9</DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.opt_shiptrack013"></DD_ATTR_HELP>
 			<SQL_COLUMN_NAME id="ddm_table_cols.opt_shiptrack013">ACT_FREIGHT_AMT</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.opt_shiptrack013"></DD_ATTR_FONT>
@@ -838,34 +851,8 @@
 			<DD_ATTR_FTSR id="ddm_table_cols.opt_shiptrack013">N</DD_ATTR_FTSR>
 		</RECORD>
 	</ALIAS>
-	<ALIAS id="ddm_table_disp">
-		<ID id="ddm_table_disp">DDM_TABLE_DISP</ID>
-		<RECORD id="ddm_table_disp.opt_shiptrack001">
-			<DD_TABLE_ALIAS id="ddm_table_disp.opt_shiptrack001">OPT_SHIPTRACK   </DD_TABLE_ALIAS>
-			<DD_SEQUENCE id="ddm_table_disp.opt_shiptrack001">001</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_disp.opt_shiptrack001">CHECK_YES_NO    </DD_DATA_NAME>
-			<DD_CTRL_NAME id="ddm_table_disp.opt_shiptrack001">VOID            </DD_CTRL_NAME>
-			<DD_ATTR_LABL id="ddm_table_disp.opt_shiptrack001">Void</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_disp.opt_shiptrack001">Void</DD_ATTR_LABS>
-			<DD_ATTR_CALC id="ddm_table_disp.opt_shiptrack001"></DD_ATTR_CALC>
-			<DD_ATTR_CTLX id="ddm_table_disp.opt_shiptrack001">0</DD_ATTR_CTLX>
-			<DD_ATTR_CTLY id="ddm_table_disp.opt_shiptrack001">0</DD_ATTR_CTLY>
-			<DD_ATTR_CTLW id="ddm_table_disp.opt_shiptrack001"></DD_ATTR_CTLW>
-			<DD_ATTR_CTLH id="ddm_table_disp.opt_shiptrack001"></DD_ATTR_CTLH>
-			<DD_ATTR_DRLE id="ddm_table_disp.opt_shiptrack001"></DD_ATTR_DRLE>
-			<DD_ATTR_GHDR id="ddm_table_disp.opt_shiptrack001"></DD_ATTR_GHDR>
-			<DD_ATTR_SLEV id="ddm_table_disp.opt_shiptrack001"></DD_ATTR_SLEV>
-			<DD_ATTR_TABG id="ddm_table_disp.opt_shiptrack001"></DD_ATTR_TABG>
-			<DD_ATTR_TIND id="ddm_table_disp.opt_shiptrack001">6</DD_ATTR_TIND>
-		</RECORD>
-	</ALIAS>
 	<ALIAS id="ddm_column_cpro">
 		<ID id="ddm_column_cpro">DDM_COLUMN_CPRO</ID>
-		<RECORD id="ddm_column_cpro.opt_shiptrackorder_noaval">
-			<DD_TABLE_ALIAS id="ddm_column_cpro.opt_shiptrackorder_noaval">OPT_SHIPTRACK   </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_cpro.opt_shiptrackorder_noaval">ORDER_NO        </DD_DVAR_NAME>
-			<DD_ATTR_CPRO id="ddm_column_cpro.opt_shiptrackorder_noaval">AVAL</DD_ATTR_CPRO>
-		</RECORD>
 		<RECORD id="ddm_column_cpro.opt_shiptrackact_freight_amtaval">
 			<DD_TABLE_ALIAS id="ddm_column_cpro.opt_shiptrackact_freight_amtaval">OPT_SHIPTRACK   </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_cpro.opt_shiptrackact_freight_amtaval">ACT_FREIGHT_AMT </DD_DVAR_NAME>
@@ -874,10 +861,30 @@
 	</ALIAS>
 	<ALIAS id="ddm_column_opts">
 		<ID id="ddm_column_opts">DDM_COLUMN_OPTS</ID>
-		<RECORD id="ddm_column_opts.opt_shiptrackvoid_flagw">
-			<DD_TABLE_ALIAS id="ddm_column_opts.opt_shiptrackvoid_flagw">OPT_SHIPTRACK   </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_opts.opt_shiptrackvoid_flagw">VOID_FLAG       </DD_DVAR_NAME>
-			<DD_ATTR_OPTS id="ddm_column_opts.opt_shiptrackvoid_flagw">W</DD_ATTR_OPTS>
+		<RECORD id="ddm_column_opts.opt_shiptrackcustomer_idg">
+			<DD_TABLE_ALIAS id="ddm_column_opts.opt_shiptrackcustomer_idg">OPT_SHIPTRACK   </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.opt_shiptrackcustomer_idg">CUSTOMER_ID     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.opt_shiptrackcustomer_idg">G</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.opt_shiptrackorder_nog">
+			<DD_TABLE_ALIAS id="ddm_column_opts.opt_shiptrackorder_nog">OPT_SHIPTRACK   </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.opt_shiptrackorder_nog">ORDER_NO        </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.opt_shiptrackorder_nog">G</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.opt_shiptrackship_seq_nog">
+			<DD_TABLE_ALIAS id="ddm_column_opts.opt_shiptrackship_seq_nog">OPT_SHIPTRACK   </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.opt_shiptrackship_seq_nog">SHIP_SEQ_NO     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.opt_shiptrackship_seq_nog">G</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.opt_shiptrackvoid_flagc">
+			<DD_TABLE_ALIAS id="ddm_column_opts.opt_shiptrackvoid_flagc">OPT_SHIPTRACK   </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.opt_shiptrackvoid_flagc">VOID_FLAG       </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.opt_shiptrackvoid_flagc">C</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.opt_shiptrackcreate_datec">
+			<DD_TABLE_ALIAS id="ddm_column_opts.opt_shiptrackcreate_datec">OPT_SHIPTRACK   </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.opt_shiptrackcreate_datec">CREATE_DATE     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.opt_shiptrackcreate_datec">C</DD_ATTR_OPTS>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_elements">
@@ -901,8 +908,8 @@
 			<DD_ATTR_CTLH id="ddm_elements.firm_id"></DD_ATTR_CTLH>
 			<DD_ATTR_CTYP id="ddm_elements.firm_id">H</DD_ATTR_CTYP>
 			<DD_ATTR_DCOL id="ddm_elements.firm_id"></DD_ATTR_DCOL>
-			<DD_ATTR_DCOM id="ddm_elements.firm_id"></DD_ATTR_DCOM>
-			<DD_ATTR_DEXP id="ddm_elements.firm_id"></DD_ATTR_DEXP>
+			<DD_ATTR_DCOM id="ddm_elements.firm_id">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.firm_id">            </DD_ATTR_DEXP>
 			<DD_ATTR_DFLT id="ddm_elements.firm_id"></DD_ATTR_DFLT>
 			<DD_ATTR_DKNM id="ddm_elements.firm_id"></DD_ATTR_DKNM>
 			<DD_ATTR_DKEY id="ddm_elements.firm_id"></DD_ATTR_DKEY>
@@ -1469,55 +1476,6 @@
 			<DD_ATTR_STYP id="ddm_elements.freight_amt"></DD_ATTR_STYP>
 			<DD_ATTR_STEP id="ddm_elements.freight_amt"></DD_ATTR_STEP>
 			<DD_ATTR_FLPT id="ddm_elements.freight_amt"></DD_ATTR_FLPT>
-		</RECORD>
-		<RECORD id="ddm_elements.check_yes_no">
-			<DD_DATA_NAME id="ddm_elements.check_yes_no">CHECK_YES_NO    </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.check_yes_no">Checkbox Yes/No</DD_DESCRIPTION>
-			<DD_DATA_TYPE id="ddm_elements.check_yes_no">C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.check_yes_no">1</DD_DATA_LENGTH>
-			<DD_MASK_TYPE id="ddm_elements.check_yes_no"></DD_MASK_TYPE>
-			<DD_SYSTEM_REC id="ddm_elements.check_yes_no"></DD_SYSTEM_REC>
-			<ASC_COMP_ID id="ddm_elements.check_yes_no">01007514</ASC_COMP_ID>
-			<ASC_PROD_ID id="ddm_elements.check_yes_no">ADB</ASC_PROD_ID>
-			<LOCALIZATION_EX id="ddm_elements.check_yes_no"></LOCALIZATION_EX>
-			<DD_CREATE_DATE id="ddm_elements.check_yes_no">20080602</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.check_yes_no">20080602</DD_LSTREV_DATE>
-			<DD_AUTO_COMP id="ddm_elements.check_yes_no"></DD_AUTO_COMP>
-			<DD_ATTR_BLNK id="ddm_elements.check_yes_no"></DD_ATTR_BLNK>
-			<DD_ATTR_CDAT id="ddm_elements.check_yes_no">Y;N</DD_ATTR_CDAT>
-			<DD_ATTR_CTLW id="ddm_elements.check_yes_no"></DD_ATTR_CTLW>
-			<DD_ATTR_CTLH id="ddm_elements.check_yes_no"></DD_ATTR_CTLH>
-			<DD_ATTR_CTYP id="ddm_elements.check_yes_no">C</DD_ATTR_CTYP>
-			<DD_ATTR_DCOL id="ddm_elements.check_yes_no"></DD_ATTR_DCOL>
-			<DD_ATTR_DCOM id="ddm_elements.check_yes_no"></DD_ATTR_DCOM>
-			<DD_ATTR_DEXP id="ddm_elements.check_yes_no"></DD_ATTR_DEXP>
-			<DD_ATTR_DFLT id="ddm_elements.check_yes_no"></DD_ATTR_DFLT>
-			<DD_ATTR_DKNM id="ddm_elements.check_yes_no"></DD_ATTR_DKNM>
-			<DD_ATTR_DKEY id="ddm_elements.check_yes_no"></DD_ATTR_DKEY>
-			<DD_ATTR_DTAB id="ddm_elements.check_yes_no"></DD_ATTR_DTAB>
-			<DD_ATTR_DINQ id="ddm_elements.check_yes_no"></DD_ATTR_DINQ>
-			<DD_ATTR_ENCR id="ddm_elements.check_yes_no"></DD_ATTR_ENCR>
-			<DD_ATTR_IDEF id="ddm_elements.check_yes_no"></DD_ATTR_IDEF>
-			<DD_ATTR_LABL id="ddm_elements.check_yes_no">Checkbox Yes/No</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_elements.check_yes_no">Checkbox Yes/No</DD_ATTR_LABS>
-			<DD_ATTR_LDIS id="ddm_elements.check_yes_no"></DD_ATTR_LDIS>
-			<DD_ATTR_MAXL id="ddm_elements.check_yes_no"></DD_ATTR_MAXL>
-			<DD_ATTR_MAXR id="ddm_elements.check_yes_no"></DD_ATTR_MAXR>
-			<DD_ATTR_MAXV id="ddm_elements.check_yes_no"></DD_ATTR_MAXV>
-			<DD_ATTR_MINL id="ddm_elements.check_yes_no"></DD_ATTR_MINL>
-			<DD_ATTR_MINV id="ddm_elements.check_yes_no"></DD_ATTR_MINV>
-			<DD_ATTR_MSKI id="ddm_elements.check_yes_no"></DD_ATTR_MSKI>
-			<DD_ATTR_MSKO id="ddm_elements.check_yes_no"></DD_ATTR_MSKO>
-			<DD_ATTR_PADC id="ddm_elements.check_yes_no"></DD_ATTR_PADC>
-			<DD_ATTR_PADJ id="ddm_elements.check_yes_no"></DD_ATTR_PADJ>
-			<DD_ATTR_PREC id="ddm_elements.check_yes_no">0</DD_ATTR_PREC>
-			<DD_ATTR_PROM id="ddm_elements.check_yes_no"></DD_ATTR_PROM>
-			<DD_ATTR_PVAL id="ddm_elements.check_yes_no"></DD_ATTR_PVAL>
-			<DD_ATTR_SDLG id="ddm_elements.check_yes_no"></DD_ATTR_SDLG>
-			<DD_ATTR_SLEV id="ddm_elements.check_yes_no"></DD_ATTR_SLEV>
-			<DD_ATTR_STYP id="ddm_elements.check_yes_no"></DD_ATTR_STYP>
-			<DD_ATTR_STEP id="ddm_elements.check_yes_no"></DD_ATTR_STEP>
-			<DD_ATTR_FLPT id="ddm_elements.check_yes_no"></DD_ATTR_FLPT>
 		</RECORD>
 	</ALIAS>
 </OPT_SHIPTRACK>

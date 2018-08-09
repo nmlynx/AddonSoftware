@@ -1,35 +1,17 @@
 [[OPE_INVHDR.AOPT-SHPT]]
-rem --- Launch Shipment Tracking Information inquiry
-	selected_key$ = ""
-	dim filter_defs$[4,2]
-	filter_defs$[0,0]="OPT_SHIPTRACK.FIRM_ID"
-	filter_defs$[0,1]="='"+firm_id$+"'"
-	filter_defs$[0,2]="LOCK"
-	filter_defs$[1,0]="OPT_SHIPTRACK.AR_TYPE"
-	filter_defs$[1,1]="='"+callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")+"'"
-	filter_defs$[1,2]="LOCK"
-	filter_defs$[2,0]="OPT_SHIPTRACK.CUSTOMER_ID"
-	filter_defs$[2,1]="='"+callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")+"'"
-	filter_defs$[2,2]="LOCK"
-	filter_defs$[3,0] ="OPT_SHIPTRACK.ORDER_NO"
-	filter_defs$[3,1] ="='"+callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")+"'"
-	filter_defs$[3,2]="LOCK"
-	filter_defs$[4,0]="OPT_SHIPTRACK.SHIP_SEQ_NO"
-	filter_defs$[4,1]="='"+callpoint!.getColumnData("OPE_INVHDR.SHIP_SEQ_NO")+"'"
-	filter_defs$[4,2]="LOCK"
-	dim search_defs$[3]
+rem --- Launch Shipment Tracking maintenance grid
+	ar_type$=callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
+	customer_id$=callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
+	order_no$=callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+	ship_seq_no$=callpoint!.getColumnData("OPE_INVHDR.SHIP_SEQ_NO")
+	key_pfx$=firm_id$+ar_type$+customer_id$+order_no$+ship_seq_no$
 
-	call stbl("+DIR_SYP")+"bax_query.bbj",
-:		gui_dev,
-:		Form!,
-:		"OP_SHIPTRACK",
-:		"",
-:		table_chans$[all],
-:		selected_keys$,
-:		filter_defs$[all],
-:		search_defs$[all],
-:		"",
-:		"AO_STATUS"
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	"OPT_SHIPTRACK",
+:       stbl("+USER_ID"),
+:       "MNT",
+:       key_pfx$,
+:       table_chans$[all]
 [[OPE_INVHDR.BLST]]
 rem --- Set flag that Last Record has been selected
 	callpoint!.setDevObject("FirstLastRecord","LAST")

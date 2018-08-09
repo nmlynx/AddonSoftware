@@ -1,3 +1,17 @@
+[[OPE_ORDHDR.AOPT-SHPT]]
+rem --- Launch Shipment Tracking maintenance grid
+	ar_type$=callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
+	customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	ship_seq_no$=callpoint!.getColumnData("OPE_ORDHDR.SHIP_SEQ_NO")
+	key_pfx$=firm_id$+ar_type$+customer_id$+order_no$+ship_seq_no$
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	"OPT_SHIPTRACK",
+:       stbl("+USER_ID"),
+:       "MNT",
+:       key_pfx$,
+:       table_chans$[all]
 [[OPE_ORDHDR.AOPT-WOLN]]
 rem --- Launch ope_createwos form to create selected work orders
 
@@ -400,6 +414,7 @@ rem --- Set flags
 	callpoint!.setOptionEnabled("CRCH",0)
 	callpoint!.setOptionEnabled("TTLS",0)
 	callpoint!.setOptionEnabled("WOLN",0)
+	callpoint!.setOptionEnabled("SHPT",0)
 
 rem --- Clear order helper object
 
@@ -1170,6 +1185,19 @@ rem --- Disable Ship To fields
 
 	ship_to_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
 	gosub disable_shipto
+
+rem --- Enable SHPT additional options if shipment tracking info exists
+	optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
+	ar_type$=callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
+	ship_seq_no$=callpoint!.getColumnData("OPE_ORDHDR.SHIP_SEQ_NO")
+	trip_key$=firm_id$+ar_type$+cust_id$+order_no$+ship_seq_no$
+	read(optShipTrack_dev,key=trip_key$,dom=*next)
+	optShipTrack_key$=key(optShipTrack_dev,end=*next)
+	if pos(trip_key$=optShipTrack_key$)=1 then
+		callpoint!.setOptionEnabled("SHPT",1)
+	else
+		callpoint!.setOptionEnabled("SHPT",0)
+	endif
 [[OPE_ORDHDR.BOVE]]
 rem --- Restrict lookup to open orders and open invoices
 
