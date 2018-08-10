@@ -1,3 +1,43 @@
+[[OPM_SHIPTRACK.ORDER_NO.BINQ]]
+rem --- Use AR_OPEN_ORDERS custom quiry instead of default order_no lookup in order to parse selected key
+	customer_id$=callpoint!.getColumnData("OPM_SHIPTRACK.CUSTOMER_ID")
+
+	dim filter_defs$[3,2]
+	filter_defs$[0,0]="OPT_INVHDR.FIRM_ID"
+	filter_defs$[0,1]="='"+firm_id$+"'"
+	filter_defs$[0,2]="LOCK"
+	filter_defs$[1,0]="OPT_INVHDR.AR_TYPE"
+	filter_defs$[1,1]="='"+callpoint!.getColumnData("OPM_SHIPTRACK.AR_TYPE")+"'"
+	filter_defs$[1,2]="LOCK"
+	if cvs(customer_id$,2)<>"" then
+		filter_defs$[0,0]="OPT_INVHDR.CUSTOMER_ID"
+		filter_defs$[0,1]="='"+customer_id$+"'"
+		filter_defs$[0,2]="LOCK"
+	endif
+
+	call STBL("+DIR_SYP")+"bax_query.bbj",
+:		gui_dev, 
+:		Form!,
+:		"AR_OPEN_ORDERS",
+:		"DEFAULT",
+:		table_chans$[all],
+:		sel_key$,
+:		filter_defs$[all]
+
+	if sel_key$<>""
+		call stbl("+DIR_SYP")+"bac_key_template.bbj",
+:			"OPT_INVHDR",
+:			"PRIMARY",
+:			optInvHdr_key$,
+:			table_chans$[all],
+:			status$
+		dim optInvHdr_key$:optInvHdr_key$
+		optInvHdr_key$=sel_key$
+		callpoint!.setColumnData("OPM_SHIPTRACK.CUSTOMER_ID",optInvHdr_key.customer_id$,1)
+		callpoint!.setColumnData("OPM_SHIPTRACK.ORDER_NO",optInvHdr_key.order_no$,1)
+	endif	
+
+	callpoint!.setStatus("ACTIVATE-ABORT")
 [[OPM_SHIPTRACK.AOPT-SHPT]]
 rem --- Launches carrier's shipment tracking web page for a package (tracking number)
 	shipTrack_grid!=callpoint!.getDevObject("shipTrack_grid")
@@ -263,7 +303,7 @@ rem --- Get shipping and tracking information for this order
 		break
 	else
 		rem --- Customer for this order
-		callpoint!.setColumnData("<<DISPLAY>>.CUSTOMER_ID",optInvHdr.customer_id$,1)
+		callpoint!.setColumnData("OPM_SHIPTRACK.CUSTOMER_ID",optInvHdr.customer_id$,1)
 		callpoint!.setColumnData("<<DISPLAY>>.SHIPPING_ID",optInvHdr.shipping_id$,1)
 		callpoint!.setColumnData("<<DISPLAY>>.SHIPPING_EMAIL",optInvHdr.shipping_email$,1)
 		callpoint!.setColumnData("<<DISPLAY>>.AR_SHIP_VIA",optInvHdr.ar_ship_via$,1)
