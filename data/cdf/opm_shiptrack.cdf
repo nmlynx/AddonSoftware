@@ -1,3 +1,25 @@
+[[OPM_SHIPTRACK.ORDER_NO.AINV]]
+rem --- Warn order not found without allowing user to create it.
+	msg_id$="OP_ORDER_TYPE"
+	gosub disp_message
+	callpoint!.setStatus("ABORT-QUIET")
+[[OPM_SHIPTRACK.ORDER_NO.AINP]]
+rem --- As necessary, get customer for this order
+	if cvs(callpoint!.getColumnData("OPM_SHIPTRACK.CUSTOMER_ID"),2)="" then
+		optInvHdr_dev=fnget_dev("@OPT_INVHDR")
+		dim optInvHdr$:fnget_tpl$("@OPT_INVHDR")
+		order_no$=pad(callpoint!.getUserInput(),len(optInvHdr.order_no$),"R","0")
+		trip_key$=firm_id$+"  "+order_no$
+		read(optInvHdr_dev,key=trip_key$,knum="AO_ORD_CUST",dom=*next)
+		while 1
+			optInvHdr_key$=key(optInvHdr_dev,end=*break)
+			if pos(trip_key$=optInvHdr_key$)<>1 then break
+			readrecord(optInvHdr_dev)optInvHdr$
+			if optInvHdr.trans_status$<>"E" then continue
+			callpoint!.setColumnData("OPM_SHIPTRACK.CUSTOMER_ID",optInvHdr.customer_id$,1)
+			break
+		wend
+	endif
 [[OPM_SHIPTRACK.ORDER_NO.BINQ]]
 rem --- Use AR_OPEN_ORDERS custom quiry instead of default order_no lookup in order to parse selected key
 	customer_id$=callpoint!.getColumnData("OPM_SHIPTRACK.CUSTOMER_ID")
