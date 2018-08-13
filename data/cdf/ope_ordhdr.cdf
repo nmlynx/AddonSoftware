@@ -1101,6 +1101,7 @@ rem --- Enable buttons
 	callpoint!.setOptionEnabled("PRNT",1)
 	callpoint!.setOptionEnabled("RPRT",num(callpoint!.getDevObject("reprintable")))
 	callpoint!.setOptionEnabled("TTLS",1)
+	callpoint!.setOptionEnabled("SHPT",1)
 
 
 rem --- Set all previous values
@@ -1185,19 +1186,6 @@ rem --- Disable Ship To fields
 
 	ship_to_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
 	gosub disable_shipto
-
-rem --- Enable SHPT additional options if shipment tracking info exists
-	optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
-	ar_type$=callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
-	ship_seq_no$=callpoint!.getColumnData("OPE_ORDHDR.SHIP_SEQ_NO")
-	trip_key$=firm_id$+ar_type$+cust_id$+order_no$+ship_seq_no$
-	read(optShipTrack_dev,key=trip_key$,dom=*next)
-	optShipTrack_key$=key(optShipTrack_dev,end=*next)
-	if pos(trip_key$=optShipTrack_key$)=1 then
-		callpoint!.setOptionEnabled("SHPT",1)
-	else
-		callpoint!.setOptionEnabled("SHPT",0)
-	endif
 [[OPE_ORDHDR.BOVE]]
 rem --- Restrict lookup to open orders and open invoices
 

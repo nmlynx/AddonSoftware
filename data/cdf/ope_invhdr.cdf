@@ -1655,6 +1655,7 @@ rem --- Enable buttons
 
 	callpoint!.setOptionEnabled("PRNT", 1)
 	callpoint!.setOptionEnabled("TTLS",1)
+	callpoint!.setOptionEnabled("SHPT",1)
 	gosub able_cash_sale
 
 	if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG") = "I" then
@@ -1705,19 +1706,6 @@ rem --- Disable Ship To fields
 
 	ship_to_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
 	gosub disable_shipto
-
-rem --- Enable SHPT additional options if shipment tracking info exists
-	optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
-	ar_type$=callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
-	ship_seq_no$=callpoint!.getColumnData("OPE_INVHDR.SHIP_SEQ_NO")
-	trip_key$=firm_id$+ar_type$+cust_id$+order_no$+ship_seq_no$
-	read(optShipTrack_dev,key=trip_key$,dom=*next)
-	optShipTrack_key$=key(optShipTrack_dev,end=*next)
-	if pos(trip_key$=optShipTrack_key$)=1 then
-		callpoint!.setOptionEnabled("SHPT",1)
-	else
-		callpoint!.setOptionEnabled("SHPT",0)
-	endif
 [[OPE_INVHDR.ORDER_NO.AVAL]]
 rem --- Do we need to create a new order number?
 
