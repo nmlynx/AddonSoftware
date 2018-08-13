@@ -1,3 +1,19 @@
+[[OPM_SHIPTRACK.ASVA]]
+rem --- Launch Shipment Tracking Maintenance form
+	ar_type$=callpoint!.getDevObject("ar_type")
+	customer_id$=callpoint!.getDevObject("customer_id")
+	order_no$=callpoint!.getDevObject("order_no")
+	ship_seq_no$=callpoint!.getDevObject("ship_seq_no")
+	key_pfx$=firm_id$+ar_type$+customer_id$+order_no$+ship_seq_no$
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"OPT_SHIPTRACK",
+:		stbl("+USER_ID"),
+:       	"MNT",
+:      		key_pfx$,
+:       	table_chans$[all]
+
+	callpoint!.setStatus("ACTIVATE-ABORT")
 [[OPM_SHIPTRACK.ORDER_NO.AINV]]
 rem --- Warn order not found without allowing user to create it.
 	msg_id$="OP_ORDER_TYPE"
@@ -86,18 +102,20 @@ rem --- Launches carrier's shipment tracking web page for a package (tracking nu
 	endif
 [[OPM_SHIPTRACK.AOPT-EDIT]]
 rem --- Launch Shipment Tracking Maintenance form
-    ar_type$=callpoint!.getDevObject("ar_type")
-    customer_id$=callpoint!.getDevObject("customer_id")
-    order_no$=callpoint!.getDevObject("order_no")
-    ship_seq_no$=callpoint!.getDevObject("ship_seq_no")
-    key_pfx$=firm_id$+ar_type$+customer_id$+order_no$+ship_seq_no$
+	ar_type$=callpoint!.getDevObject("ar_type")
+	customer_id$=callpoint!.getDevObject("customer_id")
+	order_no$=callpoint!.getDevObject("order_no")
+	ship_seq_no$=callpoint!.getDevObject("ship_seq_no")
+	key_pfx$=firm_id$+ar_type$+customer_id$+order_no$+ship_seq_no$
 
-    call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:       "OPT_SHIPTRACK",
-:       stbl("+USER_ID"),
-:       "MNT",
-:       key_pfx$,
-:       table_chans$[all]
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"OPT_SHIPTRACK",
+:		stbl("+USER_ID"),
+:       	"MNT",
+:      		key_pfx$,
+:       	table_chans$[all]
+
+	callpoint!.setStatus("ACTIVATE")
 [[OPM_SHIPTRACK.ACUS]]
 rem --- Process custom event
 rem This routine is executed when callbacks have been set to run a 'custom event'.
