@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2018-08-14
+ Report Date:   2018-08-17
  Report Branch: AddonSoftware 18.10
  Last Release:  AddonSoftware 18.03
 =======================================================================================================================================
@@ -120,4 +120,18 @@ Bug 9444 - Error 47 changing stocking Vendor on Warehouse Master
 ----
 Modified: data/bar/ivm_itemwhse.xml
 Modified: data/cdf/ivm_itemwhse.cdf
+
+=======================================================================================================================================
+Revision: 88638150a64a3c6fa2849dbdd8988e78acc2cf7f
+Author: Christine <chawkins@basis.com>
+Date: 8/17/2018 5:03:03 PM
+Message:
+Bug 9445 - OP - Memo lines no longer printing on Pick List, Invoice, Historical Invoice
+ - Corrected to once again set item_desc$ to ope11a.memo_1024$ instead of memo_1024$ (which isn't set to anything).
+
+(cherry picked from commit 119d076cbd479b91e764e9b7eb431ba5616a2a52)
+----
+Modified: sprocs/OPINVOICE_DET.prc
+Modified: sprocs/OPPICKLIST_DET.prc
+Modified: sprocs/OP_HIST_INVOICE_DET.prc
 
