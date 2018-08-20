@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2018-08-17
+ Report Date:   2018-08-20
  Report Branch: AddonSoftware 18.10
  Last Release:  AddonSoftware 18.03
 =======================================================================================================================================
@@ -135,3 +135,14 @@ Modified: sprocs/OPINVOICE_DET.prc
 Modified: sprocs/OPPICKLIST_DET.prc
 Modified: sprocs/OP_HIST_INVOICE_DET.prc
 
+=======================================================================================================================================
+Revision: 41336c03ede958142b6953ae93472115868af49c
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 8/20/2018 4:46:49 PM
+Message:
+Bug 9438: Corrected key for reading ope_ordhdr (opt-01) using alternate
+key AO_STATUS. Also, skipped tax calculation in ope_invhdr BREX
+callpoint when there is no sales, freight or discount.
+----
+Modified: data/bar/ope_invhdr.xml
+Modified: data/cdf/ope_invhdr.cdf
