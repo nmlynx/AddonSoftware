@@ -1155,12 +1155,15 @@ rem --- Enable / Disable buttons
 		endif
 		callpoint!.setOptionEnabled("PRNT",0)
 		callpoint!.setOptionEnabled("UINV",0)
+		callpoint!.setOptionEnabled("SHPT",0)
 	else
 		if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2) = "" then
 			callpoint!.setOptionEnabled("PRNT",0)
+			callpoint!.setOptionEnabled("SHPT",0)
 			callpoint!.setOptionEnabled("CASH",0)
 		else
 			callpoint!.setOptionEnabled("PRNT",1)
+			callpoint!.setOptionEnabled("SHPT",1)
 			callpoint!.setOptionEnabled("TTLS",1)
 			if user_tpl.credit_installed$="Y"
 				callpoint!.setOptionEnabled("CRCH",1)
@@ -1222,6 +1225,7 @@ rem --- Disable buttons
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("CASH",0)
 	callpoint!.setOptionEnabled("TTLS",0)
+	callpoint!.setOptionEnabled("SHPT",1)
 
 rem --- Capture current totals so we can tell later if they were changed in the grid
 
