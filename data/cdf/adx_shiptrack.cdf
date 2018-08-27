@@ -73,12 +73,12 @@ rem --- Create view for company_id
 :				WHEN 'B' THEN cust.cntry_id 
 :				WHEN 'M' THEN cust.cntry_id 
 :			END AS cntry_id, 
-:			HDR.AR_SHIP_VIA,
-:			HDR.SHIPPING_ID, 
-:			VIA.SCAC_CODE, 
-:			VIA.CARRIER_CODE, 
-:			HDR.SHIPTO_TYPE,
-:			HDR.CUSTOMER_PO_No
+:			hdr.ar_ship_via,
+:			hdr.shipping_id,
+:			via.scac_code,
+:			via.carrier_code,
+:			hdr.shipto_type,
+:			hdr.customer_po_no
 :		FROM ope_invhdr hdr
 :		LEFT OUTER JOIN arm_custmast cust ON cust.firm_id=hdr.firm_id AND cust.customer_id=hdr.customer_id 
 :		LEFT OUTER JOIN arm_custship ship ON ship.firm_id=hdr.firm_id AND ship.customer_id=hdr.customer_id AND ship.shipto_no=hdr.shipto_no 
