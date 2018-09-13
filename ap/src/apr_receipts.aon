@@ -98,6 +98,7 @@ rem --- Initializations
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2iv$,0,0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3iv$,0,0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","V","",mconvf$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 
     dashes$=fill(9,"-")
 
@@ -248,7 +249,7 @@ rem --- Load display string - common parts
 stock: rem --- Load display strings - Standard Line
         ivm01a.firm_id$=firm_id$,ivm01a.item_id$=pot14a.item_id$
         find record (ivm01_dev,key=ivm01a.firm_id$+ivm01a.item_id$,dom=stock_buildline) ivm01a$
-        itemdesc$=cvs(ivm01a.item_id$,3)+" "+cvs(ivm01a.item_desc$,3)
+        itemdesc$=cvs(fnmask$(ivm01a.item_id$,ivIMask$),3)+" "+cvs(ivm01a.item_desc$,3)
 stock_buildline:
         OutVect!.addItem(itemdesc$)
         OutVect!.addItem(fndate$(pot14a.reqd_date$))

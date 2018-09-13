@@ -112,6 +112,7 @@ rem --- Initializations
     m9$="-###0.00%"
     m9=len(m9$)
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,m3
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 
 rem --- Print positions
    
@@ -256,7 +257,7 @@ rem --- Print detail line
             descr_hold$ = description$
         endif
         
-        OutVect!.addItem(costchg_rec.item_id$)
+        OutVect!.addItem(fnmask$(costchg_rec.item_id$,ivIMask$))
         OutVect!.addItem(descr_hold$)
         OutVect!.addItem(itemmast_rec.unit_of_sale$)
         OutVect!.addItem( str(itemwhse_rec.unit_cost) )

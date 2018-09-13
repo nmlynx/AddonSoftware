@@ -118,6 +118,7 @@ rem --- Initializations
 rem --- Resize masks
 
     call pgmdir$+"adc_getmask.aon","","IV","U",x$,m2$,0,m2
+    call pgmdir$+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 
 rem --- Retrieve warehouse and build HEADINGS$
 
@@ -255,7 +256,7 @@ rem --- Print detail line (non-lotted/serialized)
 				
 				if split then x$="" else x$=description$
 				if quantity$="Y" then qty$=str(physical_rec.freeze_qty) else qty$=" "
-				OutVect!.addItem(physical_rec.item_id$)
+				OutVect!.addItem(fnmask$(physical_rec.item_id$,ivIMask$))
 				OutVect!.addItem(x$)
 				OutVect!.addItem("")
 				OutVect!.addItem(itemmast_rec.unit_of_sale$)
@@ -351,7 +352,7 @@ item_subhead: rem --- Item subheading (lotted/serialized)
     if nl then ignore=fnblank_line(void)
 	
     if split then x$="" else x$=description$ 
-	OutVect!.addItem(physical_rec.item_id$)
+	OutVect!.addItem(fnmask$(physical_rec.item_id$,ivIMask$))
 	OutVect!.addItem(x$)
 	OutVect!.addItem("")
 	OutVect!.addItem(itemmast_rec.unit_of_sale$)

@@ -146,6 +146,7 @@ rem --- Other initializations
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,m1
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,m2
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,m3
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 
     if ls$ = "Y" then p8$=Translate!.getTranslation("AON__AND_LOT/SERIAL") else p8$ = ""
 
@@ -275,7 +276,7 @@ rem --- Breaks
             endif
         endif
 
-        call pgmdir$+"adc_progress.aon","S","","","",ive02a.warehouse_id$+" "+ive02a.item_id$,0,0,1,meter_num,ignore_status
+        call pgmdir$+"adc_progress.aon","S","","","",ive02a.warehouse_id$+" "+fnmask$(ive02a.item_id$,ivIMask$),0,0,1,meter_num,ignore_status
 
         gosub get_item_data
         
@@ -315,7 +316,7 @@ rem --- Detail line
         tot_cost=round(ive02a.ext_cost, 2)
         OutVect!.addItem(ive02a.warehouse_id_to$)
         OutVect!.addItem(ivm10c.short_name$)
-        OutVect!.addItem(ive02a.item_id$+" "+ive02a.lotser_no$)
+        OutVect!.addItem(cvs(fnmask$(ive02a.item_id$,ivIMask$),2)+" "+ive02a.lotser_no$)
         OutVect!.addItem(um$)
         OutVect!.addItem(str(cost))
         OutVect!.addItem(str(ive02a.trans_qty))
@@ -354,7 +355,7 @@ rem --- From Warehouse
 
         gldate$=ive02a.trans_date$
         ref1$=Translate!.getTranslation("AON_XFR_")+ive02a.inv_xfer_no$
-        memo$=ive02a.item_id$+" "+item_desc$
+        memo$=cvs(fnmask$(ive02a.item_id$,ivIMask$),2)+" "+item_desc$
         ref2$=Translate!.getTranslation("AON_FR_WHSE_")+ive02a.warehouse_id$
         ref3$=Translate!.getTranslation("AON_TO_WHSE_")+ive02a.warehouse_id_to$
 

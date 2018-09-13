@@ -132,6 +132,7 @@ rem --- Parameters
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,m1
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,m2
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,m3
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
     
     ar$="N"
     dist_gl_by_item$="N"
@@ -369,7 +370,7 @@ rem --- Print detail line
             if ls$="Y" and ivm01a.inventoried$="Y" then lotser$=ive11a.lotser_no$
             
             OutVect!.addItem(ive11a.warehouse_id$)
-            OutVect!.addItem(ive11a.item_id$)
+            OutVect!.addItem(fnmask$(ive11a.item_id$,ivIMask$))
             OutVect!.addItem(description$)
             OutVect!.addItem(str(ive11a.trans_qty))
             OutVect!.addItem(str(ive11a.unit_cost))
@@ -424,7 +425,7 @@ rem --- Distribute by Item?
 rem --- Post summary record
 
                 gldate$=ive01a.trans_date$
-                memo$=ive11a.item_id$+" "+description$
+                memo$=cvs(fnmask$(ive11a.item_id$,ivIMask$),2)+" "+description$
                 ref1$=Translate!.getTranslation("AON_INV_TRN_")+ive01a.trans_code$
                 ref2$=ive11a.iv_trans_no$
                 ref3$=ive11a.sequence_no$

@@ -133,6 +133,7 @@ rem --- Parameters
 	p[3]=num(ivs01a.ls_no_len$)
 	p[5]=num(ivs01a.current_per$)
 	p[6]=num(ivs01a.current_year$)
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 
 rem --- Init Data
 
@@ -256,10 +257,10 @@ update_gl: rem --- Update G/L
 		units=fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)*quant
 		precision 2
 		amount=amount*1
-		value=value+amount,memo$=Translate!.getTranslation("AON_ITEM_")+parent$
+		value=value+amount,memo$=Translate!.getTranslation("AON_ITEM_")+fnmask$(parent$,ivIMask$)
 		gosub glpost
 		account$=childgl$
-		amount=-amount,units=-units,memo$=Translate!.getTranslation("AON_ITEM_")+bmm02a.item_id$(1,p[0])
+		amount=-amount,units=-units,memo$=Translate!.getTranslation("AON_ITEM_")+fnmask$(bmm02a.item_id$,ivIMask$)
 		gosub glpost
 		precision num(ivs01a.precision$)
 
@@ -357,7 +358,7 @@ subcontracts: rem --- Subcontracts
 		account$=parentgl$
 		amount=a0
 		value=value+amount
-		memo$=cvs(parent$,2)+" "+bmm05a.ext_comments$
+		memo$=cvs(fnmask$(parent$,ivIMask$),2)+" "+bmm05a.ext_comments$
 		gosub glpost
 		account$=bms01a.gl_pur_acct$
 		amount=-a0
@@ -432,7 +433,7 @@ rem ----------- Direct Labor
 		when$=pdate$
 		amount=-directcost
 		units=-units
-		memo$=parent$+" "+bmm08a.code_desc$
+		memo$=cvs(fnmask$(parent$,ivIMask$),2)+" "+bmm08a.code_desc$
 		gosub glpost
 		account$=parentgl$
 		amount=directcost,units=-units,value=value+directcost

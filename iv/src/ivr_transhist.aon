@@ -136,6 +136,7 @@ rem --- Initializations
     call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,0
     call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,0
     call pgmdir$+"adc_getmask.aon","","IV","C",imask$,m3$,0,0
+    call pgmdir$+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 
     if ar$="Y" then
         find record (ars01_dev,key=firm_id$+"AR00",dom=std_missing_params) ars01a$
@@ -213,8 +214,8 @@ init_headings: rem --- Initialize HEADINGS$
         headings$[3]=cvs(headings$[3],2)
     endif
 
-    if beg_item$="" then headings$[4]=Translate!.getTranslation("AON_FROM_ITEM:_FIRST") else headings$[4]=Translate!.getTranslation("AON_FROM_ITEM:_")+beg_item$
-    if end_item$="" then headings$[4]=headings$[4]+Translate!.getTranslation("AON__--_TO_ITEM:_LAST") else headings$[4]=headings$[4]+Translate!.getTranslation("AON__--_TO_ITEM:_")+end_item$
+    if beg_item$="" then headings$[4]=Translate!.getTranslation("AON_FROM_ITEM:_FIRST") else headings$[4]=Translate!.getTranslation("AON_FROM_ITEM:_")+fnmask$(beg_item$,ivIMask$)
+    if end_item$="" then headings$[4]=headings$[4]+Translate!.getTranslation("AON__--_TO_ITEM:_LAST") else headings$[4]=headings$[4]+Translate!.getTranslation("AON__--_TO_ITEM:_")+fnmask$(end_item$,ivIMask$)
     if beg_prod$="" then headings$[5]=Translate!.getTranslation("AON_FROM_PRODUCT:_FIRST") else headings$[5]=Translate!.getTranslation("AON_FROM_PRODUCT:_")+beg_prod$                
     if end_prod$="" then headings$[5]=headings$[5]+Translate!.getTranslation("AON__--_TO_PRODUCT:_LAST") else headings$[5]=headings$[5]+Translate!.getTranslation("AON__--_TO_PRODUCT:_")+end_prod$
     if itype$="" then headings$[6]=Translate!.getTranslation("AON_ALL_ITEM_TYPES") else headings$[6]=Translate!.getTranslation("AON_ITEM_TYPE_")+itype$
@@ -403,7 +404,7 @@ item_break: rem --- Item Break
     wkdesc$=fnitem$(ivm01a.item_desc$,p[5],p[6],p[7])
     if all$="Y" then gosub get_beg_bal
 
-    subhead1$=t1$(1,p[0])+" "+wkdesc$
+    subhead1$=cvs(fnmask$(t1$,ivIMask$),2)+" "+wkdesc$
     subhead2$=Translate!.getTranslation("AON_PRODUCT_TYPE:_")+ivm01a.product_type$
     return
     

@@ -59,6 +59,7 @@ rem --- Headings
 
 		call pgmdir$+"adc_getmask.aon","","BM","U","",m2$,0,0
 		call pgmdir$+"adc_getmask.aon","","BM","C","",m3$,0,0
+		call pgmdir$+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 
 rem ---  column heading
     if showcost$="Y" then
@@ -182,7 +183,7 @@ print_parts: rem --- Print Parts
 
                     if bmm02a.divisor=0 then let bmm02a.divisor=1
                     OutVect!.addItem(dots$+str(cur_level:"0"))
-					OutVect!.addItem(bmm02a.item_id$)
+					OutVect!.addItem(fnmask$(bmm02a.item_id$,ivIMask$))
                     OutVect!.addItem(ivdesc$)
                     OutVect!.addItem(um$)
                     value=fnqty(bmm02a.qty_required,bmm02a.alt_factor,bmm02a.divisor,yield,bmm02a.scrap_factor)

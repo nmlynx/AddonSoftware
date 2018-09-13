@@ -42,6 +42,8 @@ rem --- Initializations
         x$=" No Bill Of Materials Defined "
         more=1
 
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+
 rem ---  column heading
 
         dim columns$[11,10]
@@ -66,8 +68,8 @@ rem --- Background
 rem --- Finalize headings
 
         h6$="Warehouse: "+cvs(whse$,2)
-        if begitem$<> "" then h7$="From Item: "+cvs(begitem$,2) else h7$="From Item: First"
-        if enditem$<> "" then h7$=h7$+"   To Item: "+cvs(enditem$,2) else h7$=h7$+"   To Item: Last"
+        if begitem$<> "" then h7$="From Item: "+cvs(fnmask$(begitem$,ivIMask$),2) else h7$="From Item: First"
+        if enditem$<> "" then h7$=h7$+"   To Item: "+cvs(fnmask$(enditem$,ivIMask$),2) else h7$=h7$+"   To Item: Last"
         if buyer$="" then h9$="Buyer Code: All" else h9$="Buyer Code: "+cvs(buyer$,2)
         if begper=1 and endper=mpm01a.no_of_pers then p9$="All Periods" else p9$="Periods "+str(begper)+" Through "+str(endper)
         headings$[2]=h6$
@@ -181,7 +183,7 @@ item_heading: rem --- Item heading
 
     xwk=fnblank(12)
     if bill$<>"" then 
-        OutVect!.addItem(ivm01a.item_id$)
+        OutVect!.addItem(fnmask$(ivm01a.item_id$,ivIMask$))
         OutVect!.addItem(desc$)
         OutVect!.addItem(str(leadtime:m5$))
         OutVect!.addItem(revcode$)
@@ -194,7 +196,7 @@ item_heading: rem --- Item heading
         OutVect!.addItem(used$)
         xwk=fnblank(1)
     else
-        OutVect!.addItem(ivm01a.item_id$)
+        OutVect!.addItem(fnmask$(ivm01a.item_id$,ivIMask$))
         OutVect!.addItem(desc$)
         OutVect!.addItem(str(leadtime:m5$))
         OutVect!.addItem("")
