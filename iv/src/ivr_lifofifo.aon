@@ -108,6 +108,7 @@ rem --- LIFO/FIFO not set in parameter record
     if len(m2$)<15 then m2$=fill(15-len(m2$),"#")+m2$
     m2=len(m2$)
     call pgmdir$+"adc_getmask.aon","","IV","C",imask$,m3$,0,m3
+    call pgmdir$+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 
     dim headings$[6],product[1],report[1],item[1],total[1],warehouse[1],types$[10]
  
@@ -122,8 +123,8 @@ rem --- LIFO/FIFO not set in parameter record
     
 rem --- Headings
 
-    if begitem$="" headings$[2]=Translate!.getTranslation("AON_FROM_ITEM:_FIRST") else headings$[2]=Translate!.getTranslation("AON_FROM_ITEM:_")+begitem$
-    if enditem$="" headings$[2]=headings$[2]+Translate!.getTranslation("AON__--_TO_ITEM:_LAST") else headings$[2]=headings$[2]+Translate!.getTranslation("AON__--_TO_ITEM:_")+enditem$
+    if begitem$="" headings$[2]=Translate!.getTranslation("AON_FROM_ITEM:_FIRST") else headings$[2]=Translate!.getTranslation("AON_FROM_ITEM:_")+fnmask$(begitem$,ivIMask$)
+    if enditem$="" headings$[2]=headings$[2]+Translate!.getTranslation("AON__--_TO_ITEM:_LAST") else headings$[2]=headings$[2]+Translate!.getTranslation("AON__--_TO_ITEM:_")+fnmask$(enditem$,ivIMask$)
     if begprod$="" headings$[3]=Translate!.getTranslation("AON_FROM_PRODUCT:_FIRST") else headings$[3]=Translate!.getTranslation("AON_FROM_PRODUCT:_")+begprod$                
     if endprod$="" headings$[3]=headings$[3]+Translate!.getTranslation("AON__--_TO_PRODUCT:_LAST") else headings$[3]=headings$[3]+Translate!.getTranslation("AON__--_TO_PRODUCT:_")+endprod$
     if type$=""    headings$[4]=Translate!.getTranslation("AON_ALL_ITEM_TYPES") else headings$[4]=Translate!.getTranslation("AON_ITEM_TYPE:_")+type$
@@ -236,7 +237,7 @@ rem --- Print detail line
                 xwk=fnblank(columns+1)
             endif
 			
-            OutVect!.addItem(item_id$+"   "+description$)
+            OutVect!.addItem(fnmask$(item_id$,ivIMask$)+"   "+description$)
             OutVect!.addItem(um$)
             OutVect!.addItem(str(tier:"##0"))
             OutVect!.addItem(fndate$(ivm04a.receipt_date$))
@@ -272,7 +273,7 @@ rem --- Print item totals
 	        endif
 			
 	        if tier<>1 then
-		        total$=Translate!.getTranslation("AON_TOTAL_FOR_ITEM_")+ivm01a.item_id$
+		        total$=Translate!.getTranslation("AON_TOTAL_FOR_ITEM_")+fnmask$(ivm01a.item_id$,ivIMask$)
 		        total[0]=item[0]
 		        total[1]=item[1]
 		        gosub print_total

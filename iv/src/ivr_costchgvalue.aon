@@ -114,6 +114,7 @@ rem --- Initializations
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,m1
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,m2
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,m3
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
             
     width=132
     o[1]=p[0]
@@ -290,7 +291,7 @@ rem --- Print detail line
 
         nl=nl+1
         
-        OutVect!.addItem(itemmast_rec.item_id$)
+        OutVect!.addItem(fnmask$(itemmast_rec.item_id$,ivIMask$))
         OutVect!.addItem(description$)
         OutVect!.addItem(itemmast_rec.unit_of_sale$)
         OutVect!.addItem( str(onhand) )

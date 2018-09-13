@@ -40,6 +40,8 @@ rem --- Init Data
     recs=0
     total_recs=0
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+
 rem --- Column headings
 
     dim columns$[9,10]
@@ -137,7 +139,7 @@ rem --- Main Read
         endif
 
         OutVect!.addItem(ivt05a.warehouse_id$)
-        OutVect!.addItem(ivt05a.item_id$)
+        OutVect!.addItem(fnmask$(ivt05a.item_id$,ivIMask$))
         OutVect!.addItem(ivm01a.product_type$)
         OutVect!.addItem(ivm02a.pi_cyclecode$)
         OutVect!.addItem(ivm02a.location$)

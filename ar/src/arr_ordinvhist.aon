@@ -92,6 +92,7 @@ rem --- Get masks
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,m2
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,m3
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","P","",m4$,0,m4
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
     
     if len(cust_id$) >= m0 then
         cust_id_display$ = fnmask$(cust_id$(1,m0),m0$)
@@ -288,7 +289,7 @@ rem --- Item Description
     if pos(opm02a.line_type$="SP")=0 goto make_dtl_line
     u0$="",u1$=""
     find record (ivm01_dev,key=firm_id$+dtlrec.item_id$,dom=*next) ivm01a$
-    u0$=ivm01a.item_id$,u1$=ivm01a.item_desc$
+    u0$=fnmask$(ivm01a.item_id$,ivIMask$),u1$=ivm01a.item_desc$
 
 make_dtl_line: rem --- Store Detail Line
 

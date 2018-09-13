@@ -59,6 +59,7 @@ rem --- Resize masks
         call pgmdir$+"adc_getmask.aon","","IV","A",imask$,m1$,0,m1
         call pgmdir$+"adc_getmask.aon","","IV","U",imask$,m2$,0,m2
         call pgmdir$+"adc_getmask.aon","","IV","C",imask$,m3$,0,m3
+        call pgmdir$+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 
 rem ---  column heading
 
@@ -133,7 +134,7 @@ rem --- Print it
         if enddate$<>"" and mpe05a.trns_date$>enddate$ then continue 
         extension=qty*cost
         l=l+1,l1=l1+1
-        OutVect!.addItem(item$)
+        OutVect!.addItem(fnmask$(item$,ivIMask$))
         OutVect!.addItem(desc$)
         OutVect!.addItem(um$)
         OutVect!.addItem(buyer$)

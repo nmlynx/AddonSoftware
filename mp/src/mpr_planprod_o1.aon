@@ -37,6 +37,8 @@ rem --- Open the file corresponding to mpe-03 and the selected forecast type and
     
 rem --- Initializations
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+
     more=1
     precision ivs01_precision
     prefix$=firm_id$+forecast$+whse$
@@ -49,8 +51,8 @@ rem --- Initializations
     headings$[1]=headings$[1]+" For "+h5$
     headings$[3]="Warehouse Code: "+whse$
     if buyer$="" then headings$[4]="Buyer Code: All" else headings$[4]="Buyer Code: "+buyer$
-    if begitem$="" then headings$[5]="Item: From First" else headings$[5]="From "+begitem$
-    if enditem$="" then headings$[5]=headings$[5]+" To Last" else headings$[5]=headings$[5]+" To "+enditem$
+    if begitem$="" then headings$[5]="Item: From First" else headings$[5]="From "+fnmask$(begitem$,ivIMask$)
+    if enditem$="" then headings$[5]=headings$[5]+" To Last" else headings$[5]=headings$[5]+" To "+fnmask$(enditem$,ivIMask$)
     headings$[6]="Period: From "+str(begper)+" To "+str(endper)
 
 rem --- Print positions
@@ -357,7 +359,7 @@ done: rem --- All done
 item_heading: rem --- Item Heading
 
     if bill$<>"" then
-        OutVect!.addItem(ivm01a.item_id$)
+        OutVect!.addItem(fnmask$(ivm01a.item_id$,ivIMask$))
         OutVect!.addItem(desc$)
         OutVect!.addItem(str(ivm01a.lead_time))
         OutVect!.addItem(revcode$)
@@ -370,7 +372,7 @@ item_heading: rem --- Item Heading
         OutVect!.addItem(used$)
     else
         a=fnblank(13)
-        OutVect!.addItem(ivm01a.item_id$)
+        OutVect!.addItem(fnmask$(ivm01a.item_id$,ivIMask$))
         OutVect!.addItem(desc$)
         OutVect!.addItem(str(ivm01a.lead_time))
         a=fnblank(1)

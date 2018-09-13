@@ -50,6 +50,8 @@ rem --- Initializations
     xlimit=percents[iv_class]
     letters$="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+
 rem --- Headings
 
     if value$="U" then column_head$=Translate!.getTranslation("AON_ESTIMATED^ANNUAL_USAGE")
@@ -141,7 +143,7 @@ rem --- Print detail line
     sequence=sequence+1,l=l+1,newabc$=letters$(iv_class+1,1)
     total=total+amount,warehouse=warehouse+amount,l1=l1+1
     OutVect!.addItem(str(sequence:m7$))
-    OutVect!.addItem(ivm01a.item_id$)
+    OutVect!.addItem(fnmask$(ivm01a.item_id$,ivIMask$))
     OutVect!.addItem(description$)
     OutVect!.addItem(ivm01a.product_type$)
     OutVect!.addItem(str(quantity:m2$))
