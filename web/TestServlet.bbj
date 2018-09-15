@@ -1,0 +1,26 @@
+CLASS PUBLIC TestServlet
+
+    field private BBjspWebRequest request!
+    field private BBjspWebResponse response!
+    field private BBjspWebSession session!
+    field private BBjspSessionData data!
+  
+    method public void service(BBjspServletContext context!)
+	       
+        #request! = context!.getRequest()
+        #response! = context!.getResponse()
+        
+        if (#request!.getMethod()="POST") then 
+            content!=#request!.getBody()
+			rspFile$="C:/bbj/apps/aon/responses/PayPal_response.txt"
+			erase rspFile$,err=*next
+			string rspFile$
+			rsp_chan=unt
+			open(rsp_chan)rspFile$
+			writerecord(rsp_chan)content!
+			close(rsp_chan)
+        endif 
+
+    METHODEND
+    
+CLASSEND

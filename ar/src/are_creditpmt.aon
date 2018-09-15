@@ -1,0 +1,257 @@
+rem --- are_creditpmt.aon - process credit card payment using J2Pay library
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+
+    use org.json.JSONObject
+
+rem    use com.tranxactive.j2pay.gateways.AuthorizeGateway
+    use com.tranxactive.j2pay.gateways.parameters.Customer
+    use com.tranxactive.j2pay.gateways.parameters.CustomerCard
+    use com.tranxactive.j2pay.gateways.parameters.Currency
+    use com.tranxactive.j2pay.gateways.parameters.Country
+
+    use com.tranxactive.j2pay.gateways.core.Gateway
+    use com.tranxactive.j2pay.gateways.core.GatewayFactory
+    use com.tranxactive.j2pay.gateways.core.AvailableGateways
+    use com.tranxactive.j2pay.gateways.core.GatewaySampleParameters
+
+    use com.tranxactive.j2pay.net.HTTPResponse
+    use com.tranxactive.j2pay.net.JSONHelper
+
+    setesc std_error
+    seterr std_error
+
+rem --- Retrieve sysinfo data
+
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open/Lock files
+
+    num_files=4
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="ART_RESPONSE",open_opts$[1]="OTA"
+    open_tables$[2]="ARE_CASHHDR",open_opts$[2]="OTA"
+    open_tables$[3]="ARE_CASHDET",open_opts$[3]="OTA"
+    open_tables$[4]="ARE_CASHBAL",open_opts$[4]="OTA"
+
+    gosub open_tables
+
+    art_response=num(open_chans$[1])
+    are_cashhdr=num(open_chans$[2])
+    are_cashdet=num(open_chans$[3])
+    are_cashbal=num(open_chans$[4])
+
+    dim art_response$:open_tpls$[1]
+    dim are_cashhdr$:open_tpls$[2]
+    dim are_cashdet$:open_tpls$[3]
+    dim are_cashbal$:open_tpls$[4]
+
+rem --- Assign form input values to local variables
+
+    cust_id$=option!.getOptionData("CUSTOMER_ID")
+    name_first$=option!.getOptionData("NAME_FIRST")
+    name_last$=option!.getOptionData("NAME_LAST")
+    card_no$=option!.getOptionData("CARD_NO")
+    security_cd$=option!.getOptionData("SECURITY_CD")
+    month$=option!.getOptionData("MONTH")
+    year$=option!.getOptionData("YEAR")
+    address_line_1$=option!.getOptionData("ADDRESS_LINE_1")
+    address_line_2$=option!.getOptionData("ADDRESS_LINE_2")
+    city$=option!.getOptionData("CITY")
+    state_code$=option!.getOptionData("STATE_CODE")
+    zip_code$=option!.getOptionData("ZIP_CODE")
+    cntry_id$=option!.getOptionData("CNTRY_ID")
+    phone_no$=option!.getOptionData("PHONE_NO")
+    email_addr$=option!.getOptionData("EMAIL_ADDR")
+    apply_amt!=cast(BBjNumber, num(option!.getOptionData("<<DISPLAY>>.APPLY_AMT")))
+
+    ip$="127.0.0.1"
+
+    vectInvoices!=callpoint!.getDevObject("vectInvoices")
+
+rem --- Create purchase transaction
+
+    gw! = new GatewayFactory()
+    apiSampleParameters! = new JSONObject()
+    
+    rem --- hard-coding for now; eventually will need to get gateway info based on config/params
+    if cust_id$="000100"
+        gateway!=gw!.getGateway(AvailableGateways.AUTHORIZE)
+        apiSampleParameters! = gateway!.getApiSampleParameters()
+        apiSampleParameters!.put("name", "58rvyVe2Ns")
+        apiSampleParameters!.put("transactionKey", "23bm952fK8UR74FM")
+    else
+        gateway!=gw!.getGateway(AvailableGateways.PAYFLOWPRO)
+        apiSampleParameters! = gateway!.getApiSampleParameters()
+        apiSampleParameters!.put("PARTNER", "PayPal")
+        apiSampleParameters!.put("VENDOR", "AONtesting")
+        apiSampleParameters!.put("USER", "CHawkins")
+        apiSampleParameters!.put("PWD", "Titp4CH")
+    endif
+
+    gateway!.setTestMode(BBjAPI.TRUE)
+
+    customer! = new Customer()
+    customer!.setFirstName(name_first$)
+    customer!.setLastName(name_last$)
+    customer!.setCountry(Country.valueOf(cntry_id$))
+    customer!.setState(state_code$)
+    customer!.setCity(city$)
+    customer!.setAddress(address_line_1$+" "+address_line_2$)
+    customer!.setZip(zip_code$)
+    customer!.setPhoneNumber(phone_no$)
+    customer!.setEmail(email_addr$)
+    customer!.setIp("127.0.0.1");rem only required by BillPro AFAIK
+
+    customerCard! = new CustomerCard()
+    customerCard!.setName(name_first$+" "+name_last$)
+    customerCard!.setNumber("4111111111111111")
+    customerCard!.setCvv(security_cd$)
+    customerCard!.setExpiryMonth(month$)
+    customerCard!.setExpiryYear(year$)
+ 
+    response! = new HTTPResponse()
+    response! = gateway!.purchase(apiSampleParameters!, customer!, customerCard!, Currency.USD, apply_amt!.floatValue())
+ 
+rem --- write response to history file
+    trans_id$=""
+    full_response!=response!.getJSONResponse()
+    trans_id$=full_response!.get("lr").get("transactionId",err=*next)
+    trans_msg$=full_response!.get("lr").get("message")
+    if trans_id$<>""
+        art_response.firm_id$=firm_id$
+        art_response.customer_id$=cust_id$
+        art_response.transaction_id$=trans_id$
+        art_response.response_text$=full_response!.toString()
+        art_response$=field(art_response$)
+        writerecord(art_response)art_response$
+    endif
+
+    rem --- if transaction was approved, create cash receipt
+    cash_msg$=""
+    if response!.isSuccessful()
+        cash_msg$="Cash Receipt has been entered.";rem --- needs localization CAH
+        rem --- write are_cashhdr
+        are_cashhdr$.firm_id$=firm_id$
+        are_cashhdr.receipt_date$=stbl("+SYSTEM_DATE")
+        are_cashhdr.customer_id$=cust_id$
+        are_cashhdr.cash_rec_cd$="C"
+        are_cashhdr.payment_amt=apply_amt!
+        are_cashhdr.batch_no$="0000000"
+        are_cashhdr.transaction_id$=trans_id$
+        are_cashhdr.memo_1024$=$01$
+        are_cashhdr$=field(are_cashhdr$)
+        writerecord(are_cashhdr)are_cashhdr$
+
+        rem --- now write are_cashdet and are_cashbal recs for each invoice in vectInvoices!
+        for inv_row=0 to vectInvoices!.size()-1 step 6
+            pay_flag$=vectInvoices!.get(inv_row)
+            if pay_flag$="Y"
+                ar_inv_no$=vectInvoices!.get(inv_row+1)
+                invoice_bal$=vectInvoices!.get(inv_row+5)
+
+                redim are_cashdet$
+                redim are_cashbal$
+
+                are_cashdet.firm_id$=firm_id$
+                are_cashdet.receipt_date$=are_cashhdr.receipt_date$
+                are_cashdet.customer_id$=are_cashhdr.customer_id$
+                are_cashdet.cash_rec_cd$=are_cashhdr.cash_rec_cd$
+                are_cashdet.ar_inv_no$=ar_inv_no$
+                are_cashdet.apply_amt$=invoice_bal$
+                are_cashdet.batch_no$=are_cashhdr.batch_no$
+                are_cashdet.memo_1024$=$01$
+                are_cashdet.firm_id$=field(are_cashdet$)
+                writerecord(are_cashdet)are_cashdet$
+
+                are_cashbal.firm_id$=firm_id$
+                are_cashbal.customer_id$=are_cashhdr.customer_id$
+                are_cashbal.ar_inv_no$=ar_inv_no$
+                are_cashbal.apply_amt$=invoice_bal$
+                are_cashbal$=field(are_cashbal$)
+                writerecord(are_cashbal)are_cashbal$
+            endif
+        next inv_row
+    endif
+
+    dim msg_tokens$[1]
+    msg_tokens$[0]=trans_msg$+$0A$+cash_msg$
+    msg_id$="GENERIC_OK"
+    gosub disp_message
+    
+    goto std_exit
+
+open_tables:rem --- Open Tables
+
+	call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		rd_table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>""
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+			msg_tokens$[1]=open_status$
+		gosub disp_message
+		goto std_exit
+	endif
+
+	return
+
+disp_message:rem --- Display Message Dialog
+
+	call stbl("+DIR_SYP")+"bac_message.bbj",
+:		msg_id$,
+:		msg_tokens$[all],
+:		msg_opt$,
+:		rd_table_chans$[all]
+
+	return
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (11Oct2017)
+
+    if tcb(19)>0
+        rem --- Escape handler
+        if and(chr(tcb(19)),$08$)=$08$
+            release
+        else
+            setesc std_error
+            return
+        endif
+    endif
+
+    if err=0   
+        rem --- Get tcb(12) and tcb(10) to send into bac_error
+        lock_byte=tcb(10)
+        lock_chan=tcb(12)  
+    endif
+
+    rd_err_text$="",err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$,lock_byte,lock_chan
+    if pos("ESCAPE"=rd_err_act$) seterr 0; setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+    if pgm(-1)<>pgm(-2) status=999; exit 
+    release
+
+rem #endinclude std_error.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run stbl("+DIR_SYP",err=*next)+"bas_process_end.bbj",err=*next
+    release
