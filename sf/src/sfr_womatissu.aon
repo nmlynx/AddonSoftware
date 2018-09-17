@@ -225,6 +225,7 @@ rem --- Initializations
     precision ivs01_precision
     
     call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,m0    
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 
     c0=0,c$="",dist_by_item$="N"
     if ar$="Y" then
@@ -682,7 +683,7 @@ issue_detail: rem --- Issue Detail
     recs=recs+1
     desc$=fnitem$(ivm01a.item_desc$,desc[1],desc[2],desc[3])
     OutVect!.addItem(sfe23a.wo_mat_ref$)
-    OutVect!.addItem(sfe25a.item_id$)
+    OutVect!.addItem(fnmask$(sfe25a.item_id$,ivIMask$))
     OutVect!.addItem(desc$(1,min(len(desc$),31)))
     OutVect!.addItem(sfe25a.unit_measure$)
     OutVect!.addItem(fndate$(sfe25a.require_date$))

@@ -35,6 +35,8 @@ rem --- Init Data
     recs=0
     total_recs=0
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+
 rem --- Headings and print positions
 
     headings=5
@@ -269,7 +271,7 @@ printdetail: rem --- Re-loop through detail & print whole PO
                 OutVect!.addItem("")
             rem --- dropping isn/line# per VARs; OutVect!.addItem(poe12a.po_line_no$)
                 OutVect!.addItem(whse_detail$)
-                OutVect!.addItem(cvs(itemnum$,2))
+                OutVect!.addItem(cvs(fnmask$(itemnum$,ivIMask$),2))
                 OutVect!.addItem(item_desc$(1,27))
                 OutVect!.addItem(unitmeas$)
                 OutVect!.addItem(datereq$)

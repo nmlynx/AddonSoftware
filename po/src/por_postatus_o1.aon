@@ -37,6 +37,8 @@ rem --- Init Data
     recs=0
     total_recs=0
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+
 rem --- Headings and print positions
 
     headings=5
@@ -364,7 +366,7 @@ rem --- Print Line Types 'M', 'O' & 'V'
             OutVect!.addItem(poe12a.po_line_code$)
             OutVect!.addItem(whse_detail$)
 
-            OutVect!.addItem(cvs(itemnum$,2) + " " + itemdesc$)
+            OutVect!.addItem(cvs(fnmask$(itemnum$,ivIMask$),2) + " " + itemdesc$)
             OutVect!.addItem(unitmeas$)
             OutVect!.addItem(datereq$)
 

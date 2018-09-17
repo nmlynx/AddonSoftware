@@ -59,6 +59,8 @@ rem --- Init Data
 
 	more=1
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+
 rem --- Background
 
 	call pgmdir$+"adc_progress.aon","N","","","","",0,sfw10_dev,1,meter_num,status
@@ -96,7 +98,7 @@ rem --- Print
 		outVect!.addItem(str(req_qty))
 		xvk=fnblank(4)
 		if sfe01a.wo_category$="I" then 
-			outVect!.addItem(sfe01a.item_id$)
+			outVect!.addItem(fnmask$(sfe01a.item_id$,ivIMask$))
 		else
 			outVect!.addItem(sfe01a.description_01$)
 		endif
@@ -120,7 +122,7 @@ rem --- End
 
 itm_hd: rem --- Item Heading
 
-	outVect!.addItem(ivm01a.item_id$)
+	outVect!.addItem(fnmask$(ivm01a.item_id$,ivIMask$))
 	outVect!.addItem(ivm01a.product_type$)
 	outVect!.addItem(ivm01a.unit_of_sale$)
 	xvk=fnblank(10)

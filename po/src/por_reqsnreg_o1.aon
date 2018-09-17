@@ -61,6 +61,8 @@ rem --- Initializations
     recs=0
     errors=0
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+
 rem --- Document columns
 
     dim columns$[13,10]
@@ -281,7 +283,7 @@ rem --- Calculate extensions and branch based on line type
                     xwk=fnblank(1)
                     OutVect!.addItem(poe_reqdet.po_line_code$)
                     OutVect!.addItem(poe_reqdet.warehouse_id$)
-                    OutVect!.addItem(poe_reqdet.item_id$)
+                    OutVect!.addItem(fnmask$(poe_reqdet.item_id$,ivIMask$))
                     OutVect!.addItem(before$)
                     OutVect!.addItem(fndate$(poe_reqdet.reqd_date$))
                     OutVect!.addItem(promised$)
@@ -307,7 +309,7 @@ rem --- Calculate extensions and branch based on line type
                     xwk=fnblank(1)
                     OutVect!.addItem(poe_reqdet.po_line_code$)
                     OutVect!.addItem(poe_reqdet.warehouse_id$)
-                    OutVect!.addItem(poe_reqdet.item_id$)
+                    OutVect!.addItem(fnmask$(poe_reqdet.item_id$,ivIMask$))
                     OutVect!.addItem(before$)
                     OutVect!.addItem(fndate$(poe_reqdet.reqd_date$))
                     OutVect!.addItem(promised$)
@@ -333,7 +335,7 @@ rem --- Calculate extensions and branch based on line type
                     xwk=fnblank(1)
                     OutVect!.addItem(poe_reqdet.po_line_code$)
                     OutVect!.addItem(poe_reqdet.warehouse_id$)
-                    OutVect!.addItem(poe_reqdet.item_id$)
+                    OutVect!.addItem(fnmask$(poe_reqdet.item_id$,ivIMask$))
                     OutVect!.addItem(before$)
                     OutVect!.addItem(fndate$(poe_reqdet.reqd_date$))
                     OutVect!.addItem(promised$)
@@ -377,7 +379,7 @@ rem --- Calculate extensions and branch based on line type
                     xwk=fnblank(1)
                     OutVect!.addItem(poe_reqdet.po_line_code$)
                     OutVect!.addItem(poe_reqdet.warehouse_id$)
-                    OutVect!.addItem(poe_reqdet.item_id$)
+                    OutVect!.addItem(fnmask$(poe_reqdet.item_id$,ivIMask$))
                     OutVect!.addItem(before$)
                     OutVect!.addItem(fndate$(poe_reqdet.reqd_date$))
                     OutVect!.addItem(promised$)

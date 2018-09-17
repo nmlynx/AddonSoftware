@@ -37,6 +37,7 @@ rem --- retrieve masks
 
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","I","",gl_acct_mask$,0,gl_acct_mask
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",c1$,0,custmask
+		call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 		
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","H","",sf_hours_mask$,0,m2
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","R","",sf_rate_mask$,0,0
@@ -388,8 +389,7 @@ rem --- Calculate Totals, Variance, etc.
         endif
 		
         if sfe01a.wo_category$="I" then 
-            x$=sfe01a.item_id$
-            x$=x$(1,pos("   "=x$+"   ")-1)
+            x$=cvs(fnmask$(sfe01a.item_id$,ivIMask$),2)
             sfe01a.description_01$=x$+" "+sfe01a.description_01$
         endif
 

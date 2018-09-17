@@ -34,6 +34,8 @@ rem --- Retrieve sysinfo data
 
 rem --- Init Data
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+
 	more=1
 	headings=6
 	dim headings$[headings]
@@ -147,7 +149,7 @@ rem --- Print
             dim desc$(30)
             desc$(1)=ivm01a.item_desc$
             OutVect!.addItem(desc$)
-            OutVect!.addItem(sfe01a.item_id$)
+            OutVect!.addItem(fnmask$(sfe01a.item_id$,ivIMask$))
         endif
         
         desc$(1)=sfe01a.description_01$

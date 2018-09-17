@@ -134,7 +134,7 @@ rem --- Calculate extension
 
 rem --- Print detail line
 
-        OutVect!.addItem(poe14a.item_id$)
+        OutVect!.addItem(fnmask$(poe14a.item_id$,ivIMask$))
         OutVect!.addItem(code$)
         OutVect!.addItem(poe14a.unit_measure$)
         OutVect!.addItem(str(poe14a.qty_received:m2$)+$00$+"R")
@@ -227,7 +227,7 @@ l3400: rem --- Calculate extensions
 rem --- Print non-stock detail line
 
         if pom02a.line_type$="N"
-            OutVect!.addItem(poe14a.item_id$)
+            OutVect!.addItem(fnmask$(poe14a.item_id$,ivIMask$))
             OutVect!.addItem("")
             OutVect!.addItem(poe14a.unit_measure$)
             OutVect!.addItem(str(poe14a.qty_received:m2$)+$00$+"R")
@@ -377,6 +377,7 @@ l6700: rem --- Report Initializations
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",m0$,0,vendlen
     call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",customask$,0,custlen

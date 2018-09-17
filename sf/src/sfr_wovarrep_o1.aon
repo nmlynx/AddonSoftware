@@ -37,7 +37,7 @@ rem --- retrieve masks
 
 		call stbl("+DIR_PGM")+"adc_getmask.aon","","GL","I","",g5$,0,acctmask
         call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",c1$,0,custmask
-
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 
 rem --- Check & Adjust Masks
 
@@ -414,8 +414,7 @@ rem --- Calc Totals, Variance, Etc.
         endif
 		
         if sfe01a.wo_category$="I" then 
-            x$=sfe01a.item_id$
-            x$=x$(1,pos("   "=x$+"   ")-1)
+            x$=cvs(fnmask$(sfe01a.item_id$,ivIMask$),2)
             sfe01a.description_01$=x$+" "+sfe01a.description_01$
         endif
 
@@ -894,7 +893,7 @@ first_sub_tot:   rem --- First Sub Total
                     OutVect!.addItem(Translate!.getTranslation("AON_CUSTOMER"))
                     OutVect!.addItem(str(fnmask$(t0$(1,custmask),c1$))+Translate!.getTranslation("AON__TOTALS"))
                 else
-                    OutVect!.addItem(Translate!.getTranslation("AON_ITEM_")+cvs(t0$(3),2)+Translate!.getTranslation("AON__TOTALS:"))
+                    OutVect!.addItem(Translate!.getTranslation("AON_ITEM_")+cvs(fnmask$(t0$(3),ivIMask$),2)+" "+Translate!.getTranslation("AON__TOTALS:"))
                     blank=fnblank(1)
                 endif
             endif

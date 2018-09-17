@@ -33,6 +33,8 @@ rem --- Retrieve sysinfo data
         milestone=num(stbl("+MILESTONE",err=*next),err=*next)
         firm_id$=sysinfo.firm_id$
 
+        call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+
 rem --- Retrieve key templates
 
         call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMASTR","PRIMARY",sfe01a_key_tpl$,rd_table_chans$[all],status$
@@ -230,7 +232,7 @@ rem --- Main Read
         OutVect!.addItem(str(accum_cost))
         if sfe01a.wo_category$="I" then 
             OutVect!.addItem(d1$(1,desclen))
-            OutVect!.addItem(sfe01a.item_id$)
+            OutVect!.addItem(fnmask$(sfe01a.item_id$,ivIMask$))
         endif
         if pos(sfe01a.wo_category$="R")>0 then 
             OutVect!.addItem(sfe01a.description_01$)

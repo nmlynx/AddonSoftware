@@ -57,6 +57,8 @@ rem --- Init Data
 	op_len$=op_len$(1,pos("),"=op_len$)-1)
 	op_len=num(op_len$)
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+
 rem --- Headings and print positions
 
  
@@ -114,7 +116,7 @@ rem --- Print Data
 
         dim desc$(20)
         if sfe01a.wo_category$="I" then
-            desc$(1)=sfe01a.item_id$
+            desc$(1)=fnmask$(sfe01a.item_id,ivIMask$)
         else
             desc$(1)=cvs(sfe01a.description_01$,2)+" "+cvs(sfe01a.description_02$,2)
         endif

@@ -49,6 +49,7 @@ rem --- Initializations
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",m0$,0,vendlen
     call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",customask$,0,custlen
@@ -180,7 +181,7 @@ rem --- Calculate extensions and branch based on line type
 rem --- Print detail line
 
         OutVect!.addItem(poe04a.order_no$);rem +"-"+poe14a.so_int_seq_ref$)
-        OutVect!.addItem(poe14a.item_id$)
+        OutVect!.addItem(fnmask$(poe14a.item_id$,ivIMask$))
         OutVect!.addItem(um$)
         OutVect!.addItem(str(ope11a.qty_ordered:m2$)+$00$+"R")
         OutVect!.addItem(str(qty:m2$)+$00$+"R")

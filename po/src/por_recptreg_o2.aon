@@ -49,6 +49,7 @@ rem --- Initializations
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",m0$,0,vendlen
     call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",customask$,0,custlen
@@ -154,7 +155,7 @@ l1560:
 l1600: rem --- Print detail line
 
         OutVect!.addItem(wo$+mark$)
-        OutVect!.addItem(poe14a.item_id$)
+        OutVect!.addItem(fnmask$(poe14a.item_id$,ivIMask$))
         OutVect!.addItem(poe14a.unit_measure$)
         OutVect!.addItem(str(poe14a.qty_received:m2$)+$00$+"R")
         OutVect!.addItem(str(poe14a.unit_cost:m3$)+$00$+"R")
