@@ -92,6 +92,7 @@ rem --- Initializations
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","U","",m2$,0,0
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","R","",m3$,0,0
 	call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",vend_mask$,0,vendor_size
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 	
 rem --- Headings and print positions
 
@@ -142,7 +143,7 @@ rem --- Do Materials
               if type_m$="Y"
   				outVect!.addItem(fndate$(wotran.trans_date$))
   				outVect!.addItem("M")
-  				outVect!.addItem(wotran.item_id$)
+  				outVect!.addItem(fnmask$(wotran.item_id$,ivIMask$))
   				outVect!.addItem(ivm_itemmast.item_desc$)
   				outVect!.addItem("")
   				outVect!.addItem(str(wotran.units))

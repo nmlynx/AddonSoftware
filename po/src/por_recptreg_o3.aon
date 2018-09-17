@@ -49,6 +49,7 @@ rem --- Initializations
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
 
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",m0$,0,vendlen
     call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",customask$,0,custlen
@@ -246,7 +247,7 @@ l6200: rem --- Item break
     xvf=fnblank(13)
 
     xvf=fnblank(1)
-    OutVect!.addItem(Translate!.getTranslation("AON_TOTALS_FOR_ITEM_")+t1$)
+    OutVect!.addItem(Translate!.getTranslation("AON_TOTALS_FOR_ITEM_")+fnmask$(t1$,ivIMask$))
     xvf=fnblank(3)
     OutVect!.addItem(str(totals[1]:m2$)+$00$+"R")
     OutVect!.addItem(str(pow03a.qty_received:m2$)+$00$+"R")
@@ -266,7 +267,7 @@ l6300:
     ivm01a.firm_id$=firm_id$
     ivm01a.item_id$=t1$
     find record (ivm01_dev,key=ivm01a.firm_id$+ivm01a.item_id$,dom=*next) ivm01a$
-    let subhead$=Translate!.getTranslation("AON_ITEM_")+t1$+" "+fnitem$(ivm01a.item_desc$,i[3],i[4],i[5])
+    let subhead$=Translate!.getTranslation("AON_ITEM_")+cvs(fnmask$(t1$,ivIMask$),2)+" "+fnitem$(ivm01a.item_desc$,i[3],i[4],i[5])
     let item$[0]=firm_id$,item$[1]=ope11a.warehouse_id$,item$[2]=ope11a.item_id$
     call pgmdir$+"ivc_whseinfo.aon","",files[all],item$[all],whse$[all],curwhse[all],x,rd_table_chans$[all],whseinfo_tpls$[all],status
     call pgmdir$+"ivc_whseinfo.aon","A",files[all],item$[all],whse$[all],allwhse[all],x,rd_table_chans$[all],whseinfo_tpls$[all],status

@@ -120,6 +120,8 @@ rem --- Initializations
     ppvqty=0,adjqty=0,apqty=0
     if gls01a.units_flag$="Y" then let apqty=qty
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+
 rem --- Retrieve AP distribution code
 
     
@@ -141,7 +143,7 @@ rem --- Branch based on action code/line code
         case 1
             accnt_numbers: rem --- Account numbers for Standard Lines
 
-                ivmemo$=ivitem$(1,i[0])+" "+fnitem$(ivdesc$,i[3],i[4],i[5])
+                ivmemo$=cvs(fnmask$(ivitem$(1,i[0]),ivIMask$),2)+" "+fnitem$(ivdesc$,i[3],i[4],i[5])
                 ref3$=Translate!.getTranslation("AON_LINE_")+w0.line_no$
                 poacct$=ivm01a.gl_pur_acct$
                 ivacct$=ivm01a.gl_inv_acct$

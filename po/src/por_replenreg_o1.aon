@@ -57,6 +57,8 @@ rem --- Init data
     more=1
     recs=0
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+
 rem --- Headings and print positions
 rem --- because of the non-columnar nature of this report, it has been converted to DocOut
 rem --- using a single column, and print lines are built by constructing pbuf$, then an entire
@@ -483,7 +485,7 @@ newitem: rem --- New Item
         if l+1>l9 printptot$="N"; gosub newprodtype
 
                 dim pbuf$(width)
-        pbuf$(1)=estimated$+"  "+itemnum$(1,itemlen)+"  "+itemdesc$
+        pbuf$(1)=estimated$+"  "+cvs(fnmask$(itemnum$(1,itemlen),ivIMask$),2)+"  "+itemdesc$
         pbuf$(51)=Translate!.getTranslation("AON_STOCKED_BY:_")+stocklevel$
         OutVect!.addItem(pbuf$)
 

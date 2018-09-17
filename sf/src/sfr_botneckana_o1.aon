@@ -41,6 +41,8 @@ rem --- Init Data
 	headings$[4]="[HEADER]"
 	more=1
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+
 rem --- Headings and print positions
 
     dim columns$[17,10]
@@ -263,7 +265,7 @@ print_data: rem --- Print Data
 				OutVect!.addItem(sfe01a.wo_status$)
 				
 				if sfe01a.wo_category$="I" then 
-					OutVect!.addItem(sfe01a.item_id$)
+					OutVect!.addItem(fnmask$(sfe01a.item_id$,ivIMask$))
 				else 
 					OutVect!.addItem(sfe01a.description_01$)
 				endif

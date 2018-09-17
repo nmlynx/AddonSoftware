@@ -49,10 +49,12 @@ rem --- Parameters
     extension=params[0]
     g[4]=params[1],i[0]=params[2],method$=params$[12]
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+
 rem --- Initializations
 
     dim s[11]
-    memo$=poe14a.item_id$
+    memo$=fnmask$(poe14a.item_id$,ivIMask$)
     ref1$=fnmask$(vendor$,m0$),invamount=extension
 
 rem --- Branch based on line code

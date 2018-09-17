@@ -48,6 +48,8 @@ rem --- Initializations
     xm3=12
     dw=max(i[3]+i[4]+i[5],40)
 
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+
 rem --- Resize masks if needed
 
     o[0]=0
@@ -187,7 +189,7 @@ l2200: rem --- Standard or Non-stock line
 	outVect!.addItem(poe25a.po_no$)
 	outVect!.addItem(poe25a.receiver_no$)
 	if len(ivm01a.item_id$) >= i[0]
-		outVect!.addItem(ivm01a.item_id$(1,i[0]))
+		outVect!.addItem(cvs(fnmask$(ivm01a.item_id$(1,i[0]),ivIMask$),2))
 	else
 		outVect!.addItem("")
 	endif
