@@ -30,6 +30,7 @@ rem --- get SPROC parameters
     wo_location$=sp!.getParameter("WO_LOCATION")
     wo_no$=sp!.getParameter("WO_NO")
     cust_mask$=sp!.getParameter("CUST_MASK")
+    ivIMask$=sp!.getParameter("ITEM_MASK")
     qty_mask$=sp!.getParameter("QTY_MASK")
     bm$=sp!.getParameter("BOM_INTERFACE")
     key_num$=sp!.getParameter("KEY_NUM")
@@ -298,7 +299,7 @@ add_to_recordset: rem --- add header, detail and/or comment info to recordset
     
     data!.setFieldValue("wh_loc",wh_loc$)
     data!.setFieldValue("req_qty",req_qty$)
-    data!.setFieldValue("item_no",item_no$)
+    data!.setFieldValue("item_no",fnmask$(item_no$,ivIMask$))
     data!.setFieldValue("item_desc",item_desc$)
     data!.setFieldValue("lotser_prompt",lot_ser$)
     data!.setFieldValue("lotser_prompt2",lot_ser2$)

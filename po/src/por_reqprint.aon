@@ -164,6 +164,7 @@ rem --- Initializations
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,m1
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,m2
     call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,m3
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",vend_mask$,0,vendlen
 
     ext_mask$ = m1$
@@ -328,6 +329,7 @@ rem --- Process SQL fetch results
         params!.put("MESSAGE",pomessage$)
         params!.put("QTY_MASK",m2$)
         params!.put("COST_MASK",m3$)
+        params!.put("ITEM_MASK",ivIMask$)
         params!.put("VEND_MASK",str(vend_mask$))
 		params!.put("EXT_MASK",ext_mask$)
 		params!.put("EXT_MASK_PATTERN",ext_mask_pattern$)
