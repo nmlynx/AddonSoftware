@@ -225,6 +225,8 @@ rem --- Add masks to params!
 	masks$=masks$+"vendor_mask^"+msk$+"|"
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","AD","U","",msk$,0,0
 	masks$=masks$+"ad_units_mask^"+msk$+"|"
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",ivIMask$,0,0
+    masks$=masks$+"iv_item_mask^"+ivIMask$+"|"
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","H","",msk$,0,0
 	masks$=masks$+"sf_hours_mask^"+msk$+"|"
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","SF","R","",msk$,0,0
