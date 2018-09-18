@@ -34,7 +34,7 @@ rem - write out transaction log; if approved, also create C/R entryl for the CC 
 	dim are_cashbal$:fnget_tpl$("ARE_CASHBAL")
 
 	cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
-escape;rem in ACUS
+
 	ev!=BBjAPI().getLastEvent()
 	if ev!<>null()
 		if ev!.getEventName()="BBjNamespaceEvent"

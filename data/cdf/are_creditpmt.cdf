@@ -1,3 +1,45 @@
+[[ARE_CREDITPMT.ZIP_CODE.AVAL]]
+gosub reset_timer
+[[ARE_CREDITPMT.YEAR.AINV]]
+gosub reset_timer
+[[ARE_CREDITPMT.STATE_CODE.AVAL]]
+gosub reset_timer
+[[ARE_CREDITPMT.SECURITY_CD.AVAL]]
+gosub reset_timer
+[[ARE_CREDITPMT.PHONE_NO.AVAL]]
+gosub reset_timer
+[[ARE_CREDITPMT.NAME_LAST.AVAL]]
+gosub reset_timer
+[[ARE_CREDITPMT.NAME_FIRST.AVAL]]
+gosub reset_timer
+[[ARE_CREDITPMT.MONTH.AVAL]]
+gosub reset_timer
+[[ARE_CREDITPMT.EMAIL_ADDR.AVAL]]
+gosub reset_timer
+[[ARE_CREDITPMT.CNTRY_ID.AVAL]]
+gosub reset_timer
+[[ARE_CREDITPMT.ADDRESS_LINE_2.AVAL]]
+gosub reset_timer
+[[ARE_CREDITPMT.ADDRESS_LINE_1.AVAL]]
+gosub reset_timer
+[[ARE_CREDITPMT.BEND]]
+rem --- if vectInvoices! contains any selected items, get confirmation that user really wants to exit
+
+	vectInvoices!=callpoint!.getDevObject("vectInvoices")
+	selected=0
+	if vectInvoices!.size()
+		for wk=0 to vectInvoices!.size()-1 step 6
+			selected=selected+iff(vectInvoices!.get(wk)="Y",1,0)
+		next wk
+	endif
+
+	if selected
+		msg_id$="GENERIC_WARN_CANCEL"
+		dim msg_tokens$[1]
+		msg_tokens$[0]="Exit without processing this payment?"+$0A$+"Select OK to exit, or Cancel to return to the form."
+		gosub disp_message
+		if msg_opt$<>"O" then callpoint!.setStatus("ABORT")
+	endif
 [[ARE_CREDITPMT.AREC]]
 rem --- load up open invoices
 
@@ -27,6 +69,8 @@ rem ==============================================
 		callpoint!.setMessage("INVALID_CREDIT_CARD")
 		callpoint!.setStatus("ABORT")
 	endif
+
+gosub reset_timer
 [[ARE_CREDITPMT.ASVA]]
 rem --- check for mandatory data, confirm, then process
 
@@ -62,6 +106,17 @@ rem --- check for mandatory data, confirm, then process
 	gosub disp_message
 	if msg_opt$<>"Y"
 		callpoint!.setStatus("ABORT-ACTIVATE")
+	else
+		rem --- store card info in memory and clear from callpoint! so it doesn't get saved in ads_selopt in !LAST_PROCESS
+		callpoint!.setDevObject("card_no",cvs(callpoint!.getColumnData("ARE_CREDITPMT.CARD_NO"),3))
+		callpoint!.setDevObject("security_cd",cvs(callpoint!.getColumnData("ARE_CREDITPMT.SECURITY_CD"),3))
+		callpoint!.setDevObject("month",cvs(callpoint!.getColumnData("ARE_CREDITPMT.MONTH"),3))
+		callpoint!.setDevObject("year",cvs(callpoint!.getColumnData("ARE_CREDITPMT.YEAR"),3))
+
+		callpoint!.setColumnData("ARE_CREDITPMT.CARD_NO","")
+		callpoint!.setColumnData("ARE_CREDITPMT.SECURITY_CD","")
+		callpoint!.setColumnData("ARE_CREDITPMT.MONTH","")
+		callpoint!.setColumnData("ARE_CREDITPMT.YEAR","")
 	endif
 [[ARE_CREDITPMT.ACUS]]
 rem --- Process custom event -- used in this pgm to select/de-select checkboxes in grid
@@ -89,11 +144,10 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 			break
 		swend
 	endif
-[[ARE_CREDITPMT.CUSTOMER_ID.AVAL]]
-rem --- load up open invoices
-escape;rem getting here?
-	gosub get_open_invoices
-	gosub fill_grid
+	if gui_event.code$="T" and gui_event.y=10000
+		BBjAPI().removeTimer(10000)
+		callpoint!.setStatus("EXIT")
+	endif
 [[ARE_CREDITPMT.ASIZ]]
 rem --- Resize grids
 	formHeight=Form!.getHeight()
@@ -108,6 +162,11 @@ rem --- Resize grids
 [[ARE_CREDITPMT.AWIN]]
 rem --- Declare classes used
 	use ::ado_util.src::util
+	use ::adc_array.aon::ArrayObject
+
+rem --- Set timer for form - closes after 2 minutes *regardless* of active/inactive
+	timer_key!=10000
+	BBjAPI().createTimer(timer_key!,120,"custom_event")
 
 rem --- get/store mask
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",ar_a_mask$,0,0
@@ -280,5 +339,18 @@ rem ==========================================================================
 	callpoint!.setColumnData("<<DISPLAY>>.APPLY_AMT",str(tot_pay),1)
 
 	if info(3,6)<>"5" then SysGUI!.setRepaintEnabled(1)
+
+	gosub reset_timer
+
+	return
+
+rem ==========================================================================
+reset_timer: rem --- reset timer for another 10 seconds from each AVAL, or from grid switch_value
+rem ==========================================================================
+
+rem --- Set timer for form - closes after 2 minutes *regardless* of active/inactive
+	timer_key!=10000
+	BBjAPI().removeTimer(10000)
+	BBjAPI().createTimer(timer_key!,10,"custom_event")
 
 	return

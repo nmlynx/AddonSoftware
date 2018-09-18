@@ -21,7 +21,7 @@ rem    use com.tranxactive.j2pay.gateways.AuthorizeGateway
     seterr std_error
 
 rem --- Retrieve sysinfo data
-
+escape;rem CAH
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
@@ -53,10 +53,6 @@ rem --- Assign form input values to local variables
     cust_id$=option!.getOptionData("CUSTOMER_ID")
     name_first$=option!.getOptionData("NAME_FIRST")
     name_last$=option!.getOptionData("NAME_LAST")
-    card_no$=option!.getOptionData("CARD_NO")
-    security_cd$=option!.getOptionData("SECURITY_CD")
-    month$=option!.getOptionData("MONTH")
-    year$=option!.getOptionData("YEAR")
     address_line_1$=option!.getOptionData("ADDRESS_LINE_1")
     address_line_2$=option!.getOptionData("ADDRESS_LINE_2")
     city$=option!.getOptionData("CITY")
@@ -66,6 +62,16 @@ rem --- Assign form input values to local variables
     phone_no$=option!.getOptionData("PHONE_NO")
     email_addr$=option!.getOptionData("EMAIL_ADDR")
     apply_amt!=cast(BBjNumber, num(option!.getOptionData("<<DISPLAY>>.APPLY_AMT")))
+    
+    card_no$=callpoint!.getDevObject("card_no")
+    security_cd$=callpoint!.getDevObject("security_cd")
+    month$=callpoint!.getDevObject("month")
+    year$=callpoint!.getDevObject("year")
+
+    callpoint!.setDevObject("card_no","")
+    callpoint!.setDevObject("security_cd","")
+    callpoint!.setDevObject("month","")
+    callpoint!.setDevObject("year","") 
 
     ip$="127.0.0.1"
 
