@@ -18,343 +18,46 @@ rem --- view electronic receipt response, if applicable
 :		table_chans$[all],
 :		"",
 :		dflt_data$[all]
-[[ARM_CUSTMAST.ACUS]]
-rem - write out transaction log; if approved, also create C/R entryl for the CC payment
-
-	use java.util.Iterator
-
-	art_response=fnget_dev("ART_RESPONSE")
-	are_cashhdr=fnget_dev("ARE_CASHHDR")
-	are_cashdet=fnget_dev("ARE_CASHDET")
-	are_cashbal=fnget_dev("ARE_CASHBAL")
-
-	dim art_response$:fnget_tpl$("ART_RESPONSE")
-	dim are_cashhdr$:fnget_tpl$("ARE_CASHHDR")
-	dim are_cashdet$:fnget_tpl$("ARE_CASHDET")
-	dim are_cashbal$:fnget_tpl$("ARE_CASHBAL")
-
-	cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
-
-	ev!=BBjAPI().getLastEvent()
-	if ev!<>null()
-		if ev!.getEventName()="BBjNamespaceEvent"
-			ev_ns$=ev!.getNamespaceName()
-			if ev_ns$="aon.credit_receipt"
-				sid$=ev!.getVariableName()
-				if sid$=callpoint!.getDevObject("sid",err=*endif)
-					old_value$=ev!.getOldValue()
-					if old_value$="init"
-						new_value$=ev!.getNewValue()
-						trans_id$=fnparse$(new_value$,"PNREF=","&");rem for PayPal
-						if cvs(trans_id$,3)<>""
-							art_response.firm_id$=firm_id$
-							art_response.customer_id$=cust_id$
-							art_response.transaction_id$=trans_id$
-							art_response.response_text$=new_value$
-							art_response$=field(art_response$)
-							writerecord(art_response)art_response$
-							if fnparse$(new_value$,"RESULT=","&")="0"
-								rem --- write are_cashhdr
-								are_cashhdr$.firm_id$=firm_id$
-								are_cashhdr.receipt_date$=stbl("+SYSTEM_DATE")
-								are_cashhdr.customer_id$=cust_id$
-								are_cashhdr.cash_rec_cd$="C"
-								are_cashhdr.payment_amt$=str(num(fnparse$(new_value$,"AMT=","&")))
-								are_cashhdr.batch_no$="0000000"
-								are_cashhdr.transaction_id$=trans_id$
-								are_cashhdr.memo_1024$=$01$
-								are_cashhdr$=field(are_cashhdr$)
-								writerecord(are_cashhdr)are_cashhdr$
-
-								rem --- now write are_cashdet and are_cashbal recs for each invoice
-								inv_hash!=callpoint!.getDevObject("inv_hash")
-           							wk_iter!=inv_hash!.keySet().iterator()
-            							while wk_iter!.hasNext()
-                								ar_inv_no$=wk_iter!.next()
-									apply_amt$=inv_hash!.get(ar_inv_no$)
-
-									redim are_cashdet$
-									redim are_cashbal$
-
-									are_cashdet.firm_id$=firm_id$
-									are_cashdet.receipt_date$=are_cashhdr.receipt_date$
-									are_cashdet.customer_id$=are_cashhdr.customer_id$
-									are_cashdet.cash_rec_cd$=are_cashhdr.cash_rec_cd$
-									are_cashdet.ar_inv_no$=ar_inv_no$
-									are_cashdet.apply_amt$=apply_amt$
-									are_cashdet.batch_no$=are_cashhdr.batch_no$
-									are_cashdet.memo_1024$=$01$
-									are_cashdet.firm_id$=field(are_cashdet$)
-									writerecord(are_cashdet)are_cashdet$
-
-									are_cashbal.firm_id$=firm_id$
-									are_cashbal.customer_id$=are_cashhdr.customer_id$
-									are_cashbal.ar_inv_no$=ar_inv_no$
-									are_cashbal.apply_amt$=apply_amt$
-									are_cashbal$=field(are_cashbal$)
-									writerecord(are_cashbal)are_cashbal$
-								wend
-							endif
-						endif
-					endif
-				endif
-			endif
-		endif
-	endif
-rem --- parse response text
-rem --- wkx0$=response, wkx1$=key to look for, wkx2$=delim used to separate key/value pairs
-
-def fnparse$(wkx0$,wkx1$,wkx2$)
-
-	wkx3$=""
-	wk1=pos(wkx1$=wkx0$)
-	if wk1
-		wkx3$=wkx0$(wk1+len(wkx1$))
-		wk2=pos(wkx2$=wkx3$)
-		if wk2
-			wkx3$=wkx3$(1,wk2-1)
-		endif
-	endif
-	return wkx3$
-	fnend
 [[ARM_CUSTMAST.AOPT-PYMT]]
 rem --- Select invoice(s) for credit card payment
 rem --- May be done via PayPal or Authorize.net hosted page
-rem --- or using internal form and J2Pay library
-rem --- Config file should contain which method and which gateway are in use - hard coding for now
+rem --- or using J2Pay library, as specified in ars_cc_custsvc
 
-	cc_config_method$="0";rem --- 0 internal API J2Pay, 1=hosted
+	cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+	user_id$=stbl("+USER_ID")
 
-	if cc_config_method$="0"
+	arm_emailfax=fnget_dev("ARM_EMAILFAX")
+	dim arm_emailfax$:fnget_tpl$("ARM_EMAILFAX")
+	readrecord(arm_emailfax,key=firm_id$+cp_cust_id$,dom=*next)arm_emailfax$
 
-		cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
-		user_id$=stbl("+USER_ID")
-
-		arm_emailfax=fnget_dev("ARM_EMAILFAX")
-		dim arm_emailfax$:fnget_tpl$("ARM_EMAILFAX")
-		readrecord(arm_emailfax,key=firm_id$+cp_cust_id$,dom=*next)arm_emailfax$
-
-		dim dflt_data$[9,1]
-		dflt_data$[1,0]="CUSTOMER_ID"
-		dflt_data$[1,1]=cp_cust_id$
-		dflt_data$[2,0]="ADDRESS_LINE_1"
-		dflt_data$[2,1]=callpoint!.getColumnData("ARM_CUSTMAST.ADDR_LINE_1")
-		dflt_data$[3,0]="ADDRESS_LINE_2"
-		dflt_data$[3,1]=callpoint!.getColumnData("ARM_CUSTMAST.ADDR_LINE_2")
-		dflt_data$[4,0]="CITY"
-		dflt_data$[4,1]=callpoint!.getColumnData("ARM_CUSTMAST.CITY")
-		dflt_data$[5,0]="STATE_CODE"
-		dflt_data$[5,1]=callpoint!.getColumnData("ARM_CUSTMAST.STATE_CODE")
-		dflt_data$[6,0]="ZIP_CODE"
-		dflt_data$[6,1]=callpoint!.getColumnData("ARM_CUSTMAST.ZIP_CODE")
-		dflt_data$[7,0]="CNTRY_ID"
-		dflt_data$[7,1]=callpoint!.getColumnData("ARM_CUSTMAST.CNTRY_ID")
-		dflt_data$[8,0]="PHONE_NO"
-		dflt_data$[8,1]=callpoint!.getColumnData("ARM_CUSTMAST.PHONE_NO")
-		dflt_data$[9,0]="EMAIL_ADDR"
-		dflt_data$[9,1]=arm_emailfax.email_to$
-		key_pfx$=cp_cust_id$
-		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:			"ARE_CREDITPMT",
-:	                user_id$,
-:	                "",
-:	                key_pfx$,
-:	                table_chans$[all],
-:	                "",
-:	                dflt_data$[all]
-
-	else
-
-		use java.util.UUID
-
-		use ::REST/BBWebClient.bbj::BBWebClient
-		use ::REST/BBWebClient.bbj::BBWebRequest
-		use ::REST/BBWebClient.bbj::BBWebResponse
-
-		use java.math.BigDecimal
-		use java.math.RoundingMode
-
-		use net.authorize.Environment
-		use net.authorize.api.contract.v1.MerchantAuthenticationType
-		use net.authorize.api.contract.v1.TransactionRequestType
-		use net.authorize.api.contract.v1.SettingType
-		use net.authorize.api.contract.v1.ArrayOfSetting
-		use net.authorize.api.contract.v1.MessageTypeEnum
-		use net.authorize.api.contract.v1.TransactionTypeEnum
-		use net.authorize.api.contract.v1.GetHostedPaymentPageRequest
-		use net.authorize.api.contract.v1.GetHostedPaymentPageResponse
-		use net.authorize.api.controller.base.ApiOperationBase
-		use net.authorize.api.controller.GetHostedPaymentPageController
-
-		custControl!=callpoint!.getControl("ARM_CUSTMAST.CUSTOMER_ID")
-		cust_id$=custControl!.getText()
-		inv_hash!=new java.util.HashMap()
-
-		if cust_id$="000100" then cc_gateway$="Authorize"
-		if cust_id$="000200" then  cc_gateway$="PayPal";rem --- hard coded for now CAH
-
-		if cvs(cust_id$,3)<>""
-
-			selected_key$ = ""
-			dim filter_defs$[2,2]
-			filter_defs$[0,0]="ART_INVHDR.FIRM_ID"
-			filter_defs$[0,1]="='"+firm_id$+"'"
-			filter_defs$[0,2]="LOCK"
-			filter_defs$[1,0]="ART_INVHDR.AR_TYPE"
-			filter_defs$[1,1]="='  '"
-			filter_defs$[1,2]="LOCK"
-			filter_defs$[2,0] = "ART_INVHDR.CUSTOMER_ID"
-			filter_defs$[2,1] = "='" + cust_id$ + "'"
-			filter_defs$[2,2]="LOCK"
-
-			dim search_defs$[3]
-
-			call stbl("+DIR_SYP")+"bax_query.bbj",
-:				gui_dev,
-:				Form!,
-:				"AR_CUSTBALHDR_1",
-:				"",
-:				table_chans$[all],
-:				selected_keys$,
-:				filter_defs$[all],
-:				search_defs$[all],
-:				"",
-:				"AO_STATUS"
-
-			if len(selected_keys$)<>0
-				msg_id$="GENERIC_WARN_CANCEL"
-				dim msg_tokens$[1]
-				msg_opt$=""
-				msg_text$=""
-				parm_text$=""
-				tot_bal=0
-
-				art_invhdr=fnget_dev("ART_INVHDR")
-				dim art_invhdr$:fnget_tpl$("ART_INVHDR")
-
-				while pos("^"=selected_keys$)
-					hdr_key$=selected_keys$(1,pos("^"=selected_keys$)-1)
-					selected_keys$=selected_keys$(pos("^"=selected_keys$)+1)
-					readrecord(art_invhdr,key=hdr_key$,dom=*continue)art_invhdr$
-					inv_hash!.put(art_invhdr.ar_inv_no$,str(art_invhdr.invoice_bal))
-					tot_bal=tot_bal+art_invhdr.invoice_bal
-					msg_text$=msg_text$+"Invoice: "+art_invhdr.ar_inv_no$+", with a balance of: "+str(art_invhdr.invoice_bal:"###,###.00")+$0a$
-					parm_text$=parm_text$+"INVNUM="+art_invhdr.ar_inv_no$+"&AMT="+str(art_invhdr.invoice_bal:"###,###.00")+"&"
-				wend
-				parm_text$=parm_text$(len(parm_text$)-1)
-				msg_tokens$[0]="Do you want to accept payment for these invoices?"+$0a0a$+msg_text$+$0a$+"Total payment amount will be: "+str(tot_bal:"###,###.00")+"."
-				callpoint!.setDevObject("inv_hash",inv_hash!)
-			
-				gosub disp_message
-				if msg_opt$="O"
-					switch cc_gateway$
-						case "PayPal"
-							declare BBWebClient client!
-							declare BBWebRequest request!
-							declare BBWebResponse response!
-							declare BBjNumber readSize!
-							declare BBjString content!
-							declare UUID sid!
-
-							sid!=UUID.randomUUID()
-							sid$=sid!.toString()
-							callpoint!.setDevObject("sid",sid$)
-							ns!=BBjAPI().getNamespace("aon","credit_receipt",1)
-							ns!.setValue(sid$,"init")
-							ns!.setCallbackForVariableChange(sid$,"custom_event")
-			       
-							client!=new BBWebClient()
-							request!=new BBWebRequest()
-							request!.setURI("https://pilot-payflowpro.paypal.com")
-							request!.setMethod("POST") 
-							request!.setContent("PARTNER=PayPal&VENDOR=AONtesting&USER=CHawkins&PWD=Titp4CH&TRXTYPE=S&AMT="+str(tot_bal:"###,###.00")+"&CREATESECURETOKEN=Y&SECURETOKENID="+sid!.toString())
-							response! = client!.sendRequest(request!) 
-							content!=response!.getBody()
-							response!.close()
-
-							tokenID!=content!.substring(content!.indexOf("SECURETOKEN=")+11)
-							tokenID!=tokenID!.substring(1,tokenID!.indexOf("&"))
-
-							if content!.contains("RESULT=0")
-								BBjAPI().getThinClient().browse("https://pilot-payflowlink.paypal.com?SECURETOKENID="+sid!.toString()+"&SECURETOKEN="+tokenID!)
-							else
-								msg_id$="GENERIC_WARN"
-								dim msg_tokens$[0]
-								msg_tokens$[0]="Unable to acquire secure token. Response: "+$0a$+content!
-								gosub disp_message
-							endif
-						break
-						case "Authorize"
-
-							declare BBWebClient client!
-							declare BBWebRequest request!
-							declare BBWebResponse response!
-							declare BBjNumber readSize!
-							declare BBjString content!
-
-							ApiOperationBase.setEnvironment(Environment.SANDBOX)
-
-							merchantAuthenticationType!  = new MerchantAuthenticationType() 
-							merchantAuthenticationType!.setName("58rvyVe2Ns")
-							merchantAuthenticationType!.setTransactionKey("23bm952fK8UR74FM")
-							ApiOperationBase.setMerchantAuthentication(merchantAuthenticationType!)
-	        
-							rem Create the payment transaction request
-							amount=129.99
-							txnRequest! = new TransactionRequestType()
-							txnRequest!.setTransactionType(TransactionTypeEnum.AUTH_CAPTURE_TRANSACTION.value())
-							txnRequest!.setAmount(new BigDecimal(amount).setScale(2, RoundingMode.CEILING))
-
-							setting1! = new SettingType()
-							setting1!.setSettingName("hostedPaymentButtonOptions")
-							setting1!.setSettingValue("{"+$22$+"text"+$22$+": "+$22$+"Pay"+$22$+"}")
-							        
-							setting2! = new SettingType()
-							setting2!.setSettingName("hostedPaymentOrderOptions")
-							setting2!.setSettingValue("{"+$22$+"show"+$22$+": false}")
-
-							setting3! = new SettingType()
-							setting3!.setSettingName("hostedPaymentReturnOptions")
-							setting3!.setSettingValue("{"+$22$+"showReceipt"+$22$+": true, "+$22$+"url"+$22$+": "+$22$+"http://13.56.11.126:8888/bbjsp/authnettest"+$22$+", "+$22$+"urlText"+$22$+": "+$22$+"All Done"+$22$+"}")
-	rem						setting3!.setSettingValue("{"+$22$+"showReceipt"+$22$+": false, }")
-
-							setting4!=new SettingType()
-							setting4!.setSettingName("hostedPaymentIFrameCommunicatorUrl")
-							setting4!.setSettingValue("{"+$22$+"url"+$22$+": "+$22$+"https://13.56.11.126:8443/AuthIFrameCommunicator.htm"+$22$+"}")
-
-							alist! = new ArrayOfSetting()
-							alist!.getSetting().add(setting1!)
-							alist!.getSetting().add(setting2!)
-							alist!.getSetting().add(setting3!)
-	rem						alist!.getSetting().add(setting4!)
-
-							apiRequest! = new GetHostedPaymentPageRequest()
-							apiRequest!.setTransactionRequest(txnRequest!)
-							apiRequest!.setHostedPaymentSettings(alist!)
-
-							controller! = new GetHostedPaymentPageController(apiRequest!)
-							controller!.execute()
-							       
-							response! = new GetHostedPaymentPageResponse()
-							response! = controller!.getApiResponse()
-
-							if response!.getMessages().getResultCode()=MessageTypeEnum.OK
-								BBjAPI().getThinClient().browse("http://13.56.11.126:8888/AuthorizeHostedPayment.htm?authtoken="+response!.getToken())
-							else
-								msg_id$="GENERIC_WARN"
-								dim msg_tokens$[0]
-								msg_tokens$[0]="Unable to acquire secure token. Response: "+$0a$+response!.getMessages().getMessage().get(0).getCode()+$0a$+response!.getMessages().getMessage().get(0).getText()
-								gosub disp_message
-							endif	
-						break
-						case default
-							escape;rem shouldn't get here
-						break
-					swend
-				endif
-			endif
-		endif
-	endif
+	dim dflt_data$[9,1]
+	dflt_data$[1,0]="CUSTOMER_ID"
+	dflt_data$[1,1]=cp_cust_id$
+	dflt_data$[2,0]="ADDRESS_LINE_1"
+	dflt_data$[2,1]=callpoint!.getColumnData("ARM_CUSTMAST.ADDR_LINE_1")
+	dflt_data$[3,0]="ADDRESS_LINE_2"
+	dflt_data$[3,1]=callpoint!.getColumnData("ARM_CUSTMAST.ADDR_LINE_2")
+	dflt_data$[4,0]="CITY"
+	dflt_data$[4,1]=callpoint!.getColumnData("ARM_CUSTMAST.CITY")
+	dflt_data$[5,0]="STATE_CODE"
+	dflt_data$[5,1]=callpoint!.getColumnData("ARM_CUSTMAST.STATE_CODE")
+	dflt_data$[6,0]="ZIP_CODE"
+	dflt_data$[6,1]=callpoint!.getColumnData("ARM_CUSTMAST.ZIP_CODE")
+	dflt_data$[7,0]="CNTRY_ID"
+	dflt_data$[7,1]=callpoint!.getColumnData("ARM_CUSTMAST.CNTRY_ID")
+	dflt_data$[8,0]="PHONE_NO"
+	dflt_data$[8,1]=callpoint!.getColumnData("ARM_CUSTMAST.PHONE_NO")
+	dflt_data$[9,0]="EMAIL_ADDR"
+	dflt_data$[9,1]=arm_emailfax.email_to$
+	key_pfx$=cp_cust_id$
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"ARE_CREDITPMT",
+:                user_id$,
+:                "",
+:                key_pfx$,
+:                table_chans$[all],
+:                "",
+:                dflt_data$[all]
 [[ARM_CUSTMAST.AOPT-CRDT]]
 rem --- Launch Customer Maitenance form for this customer
 	user_id$=stbl("+USER_ID")
@@ -1301,6 +1004,53 @@ rem --- Create either a pie chart or bar chart - the latter if any of the aging 
 
 	return
 
+rem ==================================================
+create_cash_receipt: rem --- create cash receipt from approved credit card transaction
+rem --- in: cust_id, trans_id$, payment_amt$, inv_hash!
+rem ==================================================
+
+	rem --- write are_cashhdr
+	are_cashhdr$.firm_id$=firm_id$
+	are_cashhdr.receipt_date$=stbl("+SYSTEM_DATE")
+	are_cashhdr.customer_id$=cust_id$
+	are_cashhdr.cash_rec_cd$="C"
+	are_cashhdr.payment_amt$=payment_amt$
+	are_cashhdr.batch_no$="0000000"
+	are_cashhdr.transaction_id$=trans_id$
+	are_cashhdr.memo_1024$=$01$
+	are_cashhdr$=field(are_cashhdr$)
+	writerecord(are_cashhdr)are_cashhdr$
+
+	rem --- now write are_cashdet and are_cashbal recs for each invoice
+	inv_hash!=callpoint!.getDevObject("inv_hash")
+           wk_iter!=inv_hash!.keySet().iterator()
+            while wk_iter!.hasNext()
+                	ar_inv_no$=wk_iter!.next()
+		apply_amt$=inv_hash!.get(ar_inv_no$)
+
+		redim are_cashdet$
+		redim are_cashbal$
+
+		are_cashdet.firm_id$=firm_id$
+		are_cashdet.receipt_date$=are_cashhdr.receipt_date$
+		are_cashdet.customer_id$=are_cashhdr.customer_id$
+		are_cashdet.cash_rec_cd$=are_cashhdr.cash_rec_cd$
+		are_cashdet.ar_inv_no$=ar_inv_no$
+		are_cashdet.apply_amt$=apply_amt$
+		are_cashdet.batch_no$=are_cashhdr.batch_no$
+		are_cashdet.memo_1024$=$01$
+		are_cashdet.firm_id$=field(are_cashdet$)
+		writerecord(are_cashdet)are_cashdet$
+
+		are_cashbal.firm_id$=firm_id$
+		are_cashbal.customer_id$=are_cashhdr.customer_id$
+		are_cashbal.ar_inv_no$=ar_inv_no$
+		are_cashbal.apply_amt$=apply_amt$
+		are_cashbal$=field(are_cashbal$)
+		writerecord(are_cashbal)are_cashbal$
+	wend
+
+	return
 rem ===================================
 disable_ctls:rem --- disable selected control
 rem ===================================
@@ -1317,5 +1067,22 @@ rem ===================================
         endif
     next dctl
     return
+
+rem --- parse PayPal response text
+rem --- wkx0$=response, wkx1$=key to look for, wkx2$=delim used to separate key/value pairs
+
+def fnparse$(wkx0$,wkx1$,wkx2$)
+
+	wkx3$=""
+	wk1=pos(wkx1$=wkx0$)
+	if wk1
+		wkx3$=wkx0$(wk1+len(wkx1$))
+		wk2=pos(wkx2$=wkx3$)
+		if wk2
+			wkx3$=wkx3$(1,wk2-1)
+		endif
+	endif
+	return wkx3$
+	fnend
 
 #include std_missing_params.src
