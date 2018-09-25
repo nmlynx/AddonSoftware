@@ -1,4 +1,4 @@
-rem --- are_creditpmt.aon - process credit card payment using J2Pay library
+rem --- are_creditpmt.aon - process credit card payment using J2Pay library or hosted page (PayPal or Authorize.net)
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 
     use org.json.JSONObject
@@ -52,12 +52,13 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    num_files=4
+    num_files=5
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="ART_RESPONSE",open_opts$[1]="OTA"
     open_tables$[2]="ARE_CASHHDR",open_opts$[2]="OTA"
     open_tables$[3]="ARE_CASHDET",open_opts$[3]="OTA"
     open_tables$[4]="ARE_CASHBAL",open_opts$[4]="OTA"
+    open_tables$[5]="ARS_CC_CUSTSVC",open_opts$[5]="OTA"
 
     gosub open_tables
 
@@ -65,50 +66,49 @@ rem --- Open/Lock files
     are_cashhdr=num(open_chans$[2])
     are_cashdet=num(open_chans$[3])
     are_cashbal=num(open_chans$[4])
+    ars_cc_custsvc=num(open_chans$[5])
 
     dim art_response$:open_tpls$[1]
     dim are_cashhdr$:open_tpls$[2]
     dim are_cashdet$:open_tpls$[3]
     dim are_cashbal$:open_tpls$[4]
+    dim ars_cc_custsvc$:open_tpls$[5]
 
-rem --- Assign form input values to local variables
-
-    cust_id$=option!.getOptionData("CUSTOMER_ID")
-    name_first$=option!.getOptionData("NAME_FIRST")
-    name_last$=option!.getOptionData("NAME_LAST")
-    address_line_1$=option!.getOptionData("ADDRESS_LINE_1")
-    address_line_2$=option!.getOptionData("ADDRESS_LINE_2")
-    city$=option!.getOptionData("CITY")
-    state_code$=option!.getOptionData("STATE_CODE")
-    zip_code$=option!.getOptionData("ZIP_CODE")
-    cntry_id$=option!.getOptionData("CNTRY_ID")
-    phone_no$=option!.getOptionData("PHONE_NO")
-    email_addr$=option!.getOptionData("EMAIL_ADDR")
-    apply_amt!=cast(BBjNumber, num(option!.getOptionData("<<DISPLAY>>.APPLY_AMT")))
-
-    interface_tp$=callpoint!.getDevObject("interface_tp")
-    gateway$=callpoint!.getDevObject("gateway")
-    
-    card_no$=callpoint!.getDevObject("card_no")
-    security_cd$=callpoint!.getDevObject("security_cd")
-    month$=callpoint!.getDevObject("month")
-    year$=callpoint!.getDevObject("year")
-
-    callpoint!.setDevObject("card_no","")
-    callpoint!.setDevObject("security_cd","")
-    callpoint!.setDevObject("month","")
-    callpoint!.setDevObject("year","") 
-
-    ip$="127.0.0.1"
+rem --- read params to get interface type (internal API via J2Pay, or hosted page), which gateway, and list of invoices/payment amount specified to pay
+    readrecord(ars_cc_custsvc,key=firm_id$+"AR00",dom=*next)ars_cc_custsvc$
+    interface_tp$=ars_cc_custsvc.interface_tp$
+    gateway$=cvs(ars_cc_custsvc.gateway$,7)
 
     vectInvoices!=callpoint!.getDevObject("vectInvoices")
+    apply_amt!=cast(BBjNumber, num(option!.getOptionData("<<DISPLAY>>.APPLY_AMT")))
 
-rem --- Create purchase transaction based on config
+rem --- Assign form input values to local variables
+    if interface_tp$="A"
+        cust_id$=option!.getOptionData("CUSTOMER_ID")
+        name_first$=option!.getOptionData("NAME_FIRST")
+        name_last$=option!.getOptionData("NAME_LAST")
+        address_line_1$=option!.getOptionData("ADDRESS_LINE_1")
+        address_line_2$=option!.getOptionData("ADDRESS_LINE_2")
+        city$=option!.getOptionData("CITY")
+        state_code$=option!.getOptionData("STATE_CODE")
+        zip_code$=option!.getOptionData("ZIP_CODE")
+        cntry_id$=option!.getOptionData("CNTRY_ID")
+        phone_no$=option!.getOptionData("PHONE_NO")
+        email_addr$=option!.getOptionData("EMAIL_ADDR")
 
-    if interface_tp$="Internal"
-    
+        card_no$=callpoint!.getDevObject("card_no")
+        security_cd$=callpoint!.getDevObject("security_cd")
+        month$=callpoint!.getDevObject("month")
+        year$=callpoint!.getDevObject("year")
+
+        callpoint!.setDevObject("card_no","")
+        callpoint!.setDevObject("security_cd","")
+        callpoint!.setDevObject("month","")
+        callpoint!.setDevObject("year","")
+
+        ip$="127.0.0.1"
+
         rem --- Use J2Pay library
-
         gw! = new GatewayFactory()
         apiSampleParameters! = new JSONObject()
         
@@ -148,7 +148,7 @@ rem --- Create purchase transaction based on config
 
         customerCard! = new CustomerCard()
         customerCard!.setName(name_first$+" "+name_last$)
-        customerCard!.setNumber("4111111111111111")
+        customerCard!.setNumber(card_no$);rem note - only certain credit card numbers allowed for testing
         customerCard!.setCvv(security_cd$)
         customerCard!.setExpiryMonth(month$)
         customerCard!.setExpiryYear(year$)
@@ -175,9 +175,16 @@ rem --- Create purchase transaction based on config
             cash_msg$=""
         endif
 
+		dim msg_tokens$[1]
+		msg_tokens$[0]=trans_msg$+$0A$+cash_msg$
+		msg_id$="GENERIC_OK"
+		gosub disp_message
+
+		goto std_exit
+
     else
 
-        rem --- using Authorize.net or PayPal hosted page
+        rem --- using Authorize.net or PayPal hosted page (interface_tp$="H")
         switch gateway$
             case "PAYFLOWPRO"
                 rem --- get random number to send when requesting secure token
@@ -196,7 +203,7 @@ rem --- Create purchase transaction based on config
                 request!=new BBWebRequest()
                 request!.setURI("https://pilot-payflowpro.paypal.com")
                 request!.setMethod("POST") 
-                request!.setContent("PARTNER=PayPal&VENDOR=AONtesting&USER=CHawkins&PWD=Titp4CH&TRXTYPE=S&AMT="+str(tot_bal:"###,###.00")+"&CREATESECURETOKEN=Y&SECURETOKENID="+sid!.toString())
+                request!.setContent("PARTNER=PayPal&VENDOR=AONtesting&USER=CHawkins&PWD=Titp4CH&TRXTYPE=S&AMT="+str(apply_amt!:"###,###.00")+"&CREATESECURETOKEN=Y&SECURETOKENID="+sid!.toString())
                 response! = client!.sendRequest(request!) 
                 content!=response!.getBody()
                 response!.close()
@@ -214,7 +221,6 @@ rem --- Create purchase transaction based on config
                 else
                     trans_msg$="Unable to acquire secure token from PayPal."
                 endif
-escape;rem CAH waiting to get response? or need process_events?
             break
             case "AUTHORIZE"
                 ns!=BBjAPI().getNamespace("aon","credit_receipt_authorize",1)
@@ -244,7 +250,7 @@ escape;rem CAH waiting to get response? or need process_events?
                 rem Create the payment transaction request
                 txnRequest! = new TransactionRequestType()
                 txnRequest!.setTransactionType(TransactionTypeEnum.AUTH_CAPTURE_TRANSACTION.value())
-                txnRequest!.setAmount(new BigDecimal(tot_bal).setScale(2, RoundingMode.CEILING))
+                txnRequest!.setAmount(new BigDecimal(apply_amt!).setScale(2, RoundingMode.CEILING))
                 txnRequest!.setOrder(order!)
 
                 setting1! = new SettingType()
@@ -286,10 +292,8 @@ escape;rem CAH waiting to get response? or need process_events?
                 if authResponse!.getMessages().getResultCode()=MessageTypeEnum.OK
                     BBjAPI().getThinClient().browse("https://test.basis.com:443/AuthorizeHostedPayment.htm?authtoken="+authResponse!.getToken())
                 else
-                    msg_id$="GENERIC_WARN"
-                    trans_msg$="Unable to acquire secure token. Response: "+$0a$+response!.getMessages().getMessage().get(0).getCode()+$0a$+response!.getMessages().getMessage().get(0).getText();rem --- TODO CAH needs localization
-                    gosub disp_message
-                endif	
+                    trans_msg$="Unable to acquire secure token. Response: "+$0a$+authResponse!.getMessages().getMessage().get(0).getCode()+$0a$+authResponse!.getMessages().getMessage().get(0).getText();rem --- TODO CAH needs localization
+                endif
             break
             case default
                 escape;rem shouldn't get here
@@ -297,6 +301,8 @@ escape;rem CAH waiting to get response? or need process_events?
         swend
     
     endif
+	
+	process_events,err=*same
     
     goto std_exit
 
@@ -312,9 +318,9 @@ rem --- in: firm_id$, cust_id$, trans_id$, response_text$, vectInvoices!
             art_response.ar_inv_no$=ar_inv_no$
             art_response.transaction_id$=trans_id$
             art_response.response_text$=response_text$
-            art_response.created_user$=sysinfo.user_id$)
-            art_response.created_date$=date(0:"%Yd%Mz%Dz"))
-            art_response.created_time$=date(0:"%Hz%mz"))
+            art_response.created_user$=sysinfo.user_id$
+            art_response.created_date$=date(0:"%Yd%Mz%Dz")
+            art_response.created_time$=date(0:"%Hz%mz")
             art_response$=field(art_response$)
             writerecord(art_response)art_response$
         endif
@@ -342,12 +348,13 @@ rem --- in: firm_id$, cust_id$, apply_amt!, trans_id$, vectInvoices!
     writerecord(are_cashhdr)are_cashhdr$
 
     rem --- now write are_cashdet and are_cashbal recs for each invoice in vectInvoices!
-    for inv_row=0 to vectInvoices!.size()-1 step 6
+    for inv_row=0 to vectInvoices!.size()-1 step 7
         pay_flag$=vectInvoices!.get(inv_row)
         if pay_flag$="Y"
             ar_inv_no$=vectInvoices!.get(inv_row+1)
             invoice_bal$=vectInvoices!.get(inv_row+5)
-
+            invoice_pay$=vectInvoices!.get(inv_row+6)
+            
             redim are_cashdet$
             redim are_cashbal$
 
@@ -356,7 +363,7 @@ rem --- in: firm_id$, cust_id$, apply_amt!, trans_id$, vectInvoices!
             are_cashdet.customer_id$=are_cashhdr.customer_id$
             are_cashdet.cash_rec_cd$=are_cashhdr.cash_rec_cd$
             are_cashdet.ar_inv_no$=ar_inv_no$
-            are_cashdet.apply_amt$=invoice_bal$
+            are_cashdet.apply_amt$=invoice_pay$
             are_cashdet.batch_no$=are_cashhdr.batch_no$
             are_cashdet.transaction_id$=trans_id$
             are_cashdet.memo_1024$=$01$
@@ -366,9 +373,10 @@ rem --- in: firm_id$, cust_id$, apply_amt!, trans_id$, vectInvoices!
             are_cashbal.firm_id$=firm_id$
             are_cashbal.customer_id$=are_cashhdr.customer_id$
             are_cashbal.ar_inv_no$=ar_inv_no$
-            are_cashbal.apply_amt$=invoice_bal$
+            are_cashbal.apply_amt$=invoice_pay$
             are_cashbal$=field(are_cashbal$)
             writerecord(are_cashbal)are_cashbal$
+
         endif
     next inv_row
     cash_msg$="Cash Receipt has been entered.";rem --- TODO CAH needs localization
@@ -376,10 +384,10 @@ rem --- in: firm_id$, cust_id$, apply_amt!, trans_id$, vectInvoices!
     return
 
 paypal_response:rem --- process silent post response from PayPal
-    ns!=BBjAPI().getNamespaceName("aon.credit_receipt_paypal",1)
-    old_value$=ns!.getVariableName(saved_sid$).getOldValue()
+	ev!=BBjAPI().getLastEvent()
+	old_value$=ev!.getOldValue()
     if old_value$="init"
-        new_value$=ns!.getVariableName(saved_sid$).getNewValue()
+        new_value$=ev!.getNewValue()
         trans_id$=fnparse$(new_value$,"PNREF=","&")
         payment_amt$=str(num(fnparse$(new_value$,"AMT=","&")))
         trans_msg$=fnparse$(new_value$,"RESPMSG","&")
@@ -394,13 +402,15 @@ paypal_response:rem --- process silent post response from PayPal
         endif
     endif
 
+	exitto std_exit
+
     return
 
 authorize_response:rem --- process webhook response from Authorize.net
-    ns!=BBjAPI().getNamespaceName("aon.credit_receipt_authorize",1)
-    old_value$=ns!.getVariableName("authresp").getOldValue()
+	ev!=BBjAPI().getLastEvent()
+	old_value$=ev!.getOldValue()
     if old_value$="init"
-        newValue! = new JSONObject(ns!.getVariableName("authresp").getNewValue())
+        newValue! = new JSONObject(ev!.getNewValue())
         trans_id$=newValue!.get("payload").get("id")
 
         ApiOperationBase.setEnvironment(Environment.SANDBOX)
@@ -430,7 +440,7 @@ authorize_response:rem --- process webhook response from Authorize.net
             rem instead of just using the returned webhook
             rem may want to always get full response to record in art_response, since webhook payload is abridged
         
-            if resp_sid$=saved_sid$
+            if resp_sid$=sid$
                 response_text$=newValue!.toString()
                 gosub write_to_response_log
             endif
@@ -443,6 +453,8 @@ authorize_response:rem --- process webhook response from Authorize.net
             rem --- TODO CAH should put something in a message here about not being successful at getting the message response
         endif
     endif
+	
+	exitto std_exit
 
     return
 
@@ -516,10 +528,7 @@ rem #endinclude std_error.src
 
 std_exit: rem --- Standard program end (01Mar2006)
 
-    dim msg_tokens$[1]
-    msg_tokens$[0]=trans_msg$+$0A$+cash_msg$
-    msg_id$="GENERIC_OK"
-    gosub disp_message
+
 
     run stbl("+DIR_SYP",err=*next)+"bas_process_end.bbj",err=*next
     release

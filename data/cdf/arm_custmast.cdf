@@ -1,3 +1,66 @@
+[[ARM_CUSTMAST.AOPT-PYMT]]
+rem --- Select invoice(s) for credit card payment
+rem --- May be done via PayPal or Authorize.net hosted page
+rem --- or using J2Pay library, as specified in ars_cc_custsvc
+
+	cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+	user_id$=stbl("+USER_ID")
+	interface_tp$=callpoint!.getDevObject("interface_tp")
+
+	if interface_tp$="A"
+
+		arm_emailfax=fnget_dev("ARM_EMAILFAX")
+		dim arm_emailfax$:fnget_tpl$("ARM_EMAILFAX")
+		readrecord(arm_emailfax,key=firm_id$+cp_cust_id$,dom=*next)arm_emailfax$
+
+		cntry_id$=cvs(callpoint!.getColumnData("ARM_CUSTMAST.CNTRY_ID"),3)
+
+		dim dflt_data$[9,1]
+		dflt_data$[1,0]="CUSTOMER_ID"
+		dflt_data$[1,1]=cp_cust_id$
+		dflt_data$[2,0]="ADDRESS_LINE_1"
+		dflt_data$[2,1]=callpoint!.getColumnData("ARM_CUSTMAST.ADDR_LINE_1")
+		dflt_data$[3,0]="ADDRESS_LINE_2"
+		dflt_data$[3,1]=callpoint!.getColumnData("ARM_CUSTMAST.ADDR_LINE_2")
+		dflt_data$[4,0]="CITY"
+		dflt_data$[4,1]=callpoint!.getColumnData("ARM_CUSTMAST.CITY")
+		dflt_data$[5,0]="STATE_CODE"
+		dflt_data$[5,1]=callpoint!.getColumnData("ARM_CUSTMAST.STATE_CODE")
+		dflt_data$[6,0]="ZIP_CODE"
+		dflt_data$[6,1]=callpoint!.getColumnData("ARM_CUSTMAST.ZIP_CODE")
+		dflt_data$[7,0]="CNTRY_ID"
+		dflt_data$[7,1]=iff(cntry_id$<>"",cntry_id$,callpoint!.getDevObject("dflt_cntry_id"))
+		dflt_data$[8,0]="PHONE_NO"
+		dflt_data$[8,1]=callpoint!.getColumnData("ARM_CUSTMAST.PHONE_NO")
+		dflt_data$[9,0]="EMAIL_ADDR"
+		dflt_data$[9,1]=arm_emailfax.email_to$
+
+		key_pfx$=cp_cust_id$
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:			"ARE_CCPMT_API",
+:	                user_id$,
+:	                "",
+:	                key_pfx$,
+:	                table_chans$[all],
+:	                "",
+:	                dflt_data$[all]
+
+	else
+
+		dim dflt_data$[1,1]
+		dflt_data$[1,0]="CUSTOMER_ID"
+		dflt_data$[1,1]=cp_cust_id$
+		key_pfx$=cp_cust_id$
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:			"ARE_CCPMT_HOST",
+:	                user_id$,
+:	                "",
+:	                key_pfx$,
+:	                table_chans$[all],
+:	                "",
+:	                dflt_data$[all]
+
+	endif
 [[ARM_CUSTMAST.AOPT-RESP]]
 rem --- view electronic receipt response, if applicable 
 	user_id$=stbl("+USER_ID")  
@@ -18,46 +81,6 @@ rem --- view electronic receipt response, if applicable
 :		table_chans$[all],
 :		"",
 :		dflt_data$[all]
-[[ARM_CUSTMAST.AOPT-PYMT]]
-rem --- Select invoice(s) for credit card payment
-rem --- May be done via PayPal or Authorize.net hosted page
-rem --- or using J2Pay library, as specified in ars_cc_custsvc
-
-	cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
-	user_id$=stbl("+USER_ID")
-
-	arm_emailfax=fnget_dev("ARM_EMAILFAX")
-	dim arm_emailfax$:fnget_tpl$("ARM_EMAILFAX")
-	readrecord(arm_emailfax,key=firm_id$+cp_cust_id$,dom=*next)arm_emailfax$
-
-	dim dflt_data$[9,1]
-	dflt_data$[1,0]="CUSTOMER_ID"
-	dflt_data$[1,1]=cp_cust_id$
-	dflt_data$[2,0]="ADDRESS_LINE_1"
-	dflt_data$[2,1]=callpoint!.getColumnData("ARM_CUSTMAST.ADDR_LINE_1")
-	dflt_data$[3,0]="ADDRESS_LINE_2"
-	dflt_data$[3,1]=callpoint!.getColumnData("ARM_CUSTMAST.ADDR_LINE_2")
-	dflt_data$[4,0]="CITY"
-	dflt_data$[4,1]=callpoint!.getColumnData("ARM_CUSTMAST.CITY")
-	dflt_data$[5,0]="STATE_CODE"
-	dflt_data$[5,1]=callpoint!.getColumnData("ARM_CUSTMAST.STATE_CODE")
-	dflt_data$[6,0]="ZIP_CODE"
-	dflt_data$[6,1]=callpoint!.getColumnData("ARM_CUSTMAST.ZIP_CODE")
-	dflt_data$[7,0]="CNTRY_ID"
-	dflt_data$[7,1]=callpoint!.getColumnData("ARM_CUSTMAST.CNTRY_ID")
-	dflt_data$[8,0]="PHONE_NO"
-	dflt_data$[8,1]=callpoint!.getColumnData("ARM_CUSTMAST.PHONE_NO")
-	dflt_data$[9,0]="EMAIL_ADDR"
-	dflt_data$[9,1]=arm_emailfax.email_to$
-	key_pfx$=cp_cust_id$
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:		"ARE_CREDITPMT",
-:                user_id$,
-:                "",
-:                key_pfx$,
-:                table_chans$[all],
-:                "",
-:                dflt_data$[all]
 [[ARM_CUSTMAST.AOPT-CRDT]]
 rem --- Launch Customer Maitenance form for this customer
 	user_id$=stbl("+USER_ID")
@@ -786,7 +809,7 @@ rem --- clear out the contents of the widgets
 rem --- Open/Lock files
 	dir_pgm$=stbl("+DIR_PGM")
 	sys_pgm$=stbl("+DIR_SYP")
-	num_files=8
+	num_files=9
 
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[2]="ARS_PARAMS",open_opts$[2]="OTA"
@@ -795,19 +818,20 @@ rem --- Open/Lock files
 	open_tables$[5]="ARM_CUSTDET",open_opts$[5]="OTA"
 	open_tables$[6]="ART_INVHDR",open_opts$[6]="OTA"
 	open_tables$[7]="ART_INVDET",open_opts$[7]="OTA"
-	open_tables$[8]="ARM_EMAILFAX",open_opts$[8]="OTA"
-
+	open_tables$[8]="ARS_CC_CUSTSVC",open_opts$[8]="OTA"
+	open_tables$[9]="ARM_EMAILFAX",open_opts$[9]="OTA"
 	gosub open_tables
 
 	ars01_dev=num(open_chans$[2])
 	ars10_dev=num(open_chans$[3])
 	ars01c_dev=num(open_chans$[4])
 	arm02_dev=num(open_chans$[5])
+	ars_cc_custsvc=num(open_chans$[8])
 
 rem --- Dimension miscellaneous string templates
 
 	dim ars01a$:open_tpls$[2],ars10d$:open_tpls$[3],ars01c$:open_tpls$[4]
-	dim arm02_tpl$:open_tpls$[5]
+	dim arm02_tpl$:open_tpls$[5],ars_cc_custsvc$:open_tpls$[8]
 
 rem --- Retrieve parameter data
 	dim info$[20]
@@ -898,17 +922,18 @@ rem --- Additional/optional opens
 		callpoint!.setDevObject("gmClient",gmClient!)
 	endif
 
-rem --- Set up to handle credit card payments
-	callpoint!.setDevObject("sid","")
-	callpoint!.setDevObject("inv_hash","")
+rem --- disable credit card payment and view response options if param not set
 
-	num_file=4
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="ART_RESPONSE",open_opts$[1]="OTA"
-	open_tables$[2]="ARE_CASHHDR",open_opts$[2]="OTA"
-	open_tables$[3]="ARE_CASHDET",open_opts$[3]="OTA"
-	open_tables$[4]="ARE_CASHBAL",open_opts$[4]="OTA"
-	gosub open_tables
+	readrecord(ars_cc_custsvc,key=firm_id$+"AR00",dom=*next)ars_cc_custsvc$
+	if ars_cc_custsvc.use_custsvc_cc$="Y"
+		callpoint!.setOptionEnabled("PYMT",1)
+		callpoint!.setOptionEnabled("RESP",1)
+		callpoint!.setDevObject("interface_tp",ars_cc_custsvc.interface_tp$)
+		callpoint!.setDevObject("dflt_cntry_id",ars_cc_custsvc.dflt_cntry_id$)
+	else
+		callpoint!.setOptionEnabled("PYMT",0)
+		callpoint!.setOptionEnabled("RESP",0)
+	endif
 [[ARM_CUSTMAST.<CUSTOM>]]
 rem =======================================================
 create_widgets:rem --- create pie and bar widgets to show aged balance (bar in case credits)
@@ -1004,53 +1029,6 @@ rem --- Create either a pie chart or bar chart - the latter if any of the aging 
 
 	return
 
-rem ==================================================
-create_cash_receipt: rem --- create cash receipt from approved credit card transaction
-rem --- in: cust_id, trans_id$, payment_amt$, inv_hash!
-rem ==================================================
-
-	rem --- write are_cashhdr
-	are_cashhdr$.firm_id$=firm_id$
-	are_cashhdr.receipt_date$=stbl("+SYSTEM_DATE")
-	are_cashhdr.customer_id$=cust_id$
-	are_cashhdr.cash_rec_cd$="C"
-	are_cashhdr.payment_amt$=payment_amt$
-	are_cashhdr.batch_no$="0000000"
-	are_cashhdr.transaction_id$=trans_id$
-	are_cashhdr.memo_1024$=$01$
-	are_cashhdr$=field(are_cashhdr$)
-	writerecord(are_cashhdr)are_cashhdr$
-
-	rem --- now write are_cashdet and are_cashbal recs for each invoice
-	inv_hash!=callpoint!.getDevObject("inv_hash")
-           wk_iter!=inv_hash!.keySet().iterator()
-            while wk_iter!.hasNext()
-                	ar_inv_no$=wk_iter!.next()
-		apply_amt$=inv_hash!.get(ar_inv_no$)
-
-		redim are_cashdet$
-		redim are_cashbal$
-
-		are_cashdet.firm_id$=firm_id$
-		are_cashdet.receipt_date$=are_cashhdr.receipt_date$
-		are_cashdet.customer_id$=are_cashhdr.customer_id$
-		are_cashdet.cash_rec_cd$=are_cashhdr.cash_rec_cd$
-		are_cashdet.ar_inv_no$=ar_inv_no$
-		are_cashdet.apply_amt$=apply_amt$
-		are_cashdet.batch_no$=are_cashhdr.batch_no$
-		are_cashdet.memo_1024$=$01$
-		are_cashdet.firm_id$=field(are_cashdet$)
-		writerecord(are_cashdet)are_cashdet$
-
-		are_cashbal.firm_id$=firm_id$
-		are_cashbal.customer_id$=are_cashhdr.customer_id$
-		are_cashbal.ar_inv_no$=ar_inv_no$
-		are_cashbal.apply_amt$=apply_amt$
-		are_cashbal$=field(are_cashbal$)
-		writerecord(are_cashbal)are_cashbal$
-	wend
-
-	return
 rem ===================================
 disable_ctls:rem --- disable selected control
 rem ===================================
@@ -1067,22 +1045,5 @@ rem ===================================
         endif
     next dctl
     return
-
-rem --- parse PayPal response text
-rem --- wkx0$=response, wkx1$=key to look for, wkx2$=delim used to separate key/value pairs
-
-def fnparse$(wkx0$,wkx1$,wkx2$)
-
-	wkx3$=""
-	wk1=pos(wkx1$=wkx0$)
-	if wk1
-		wkx3$=wkx0$(wk1+len(wkx1$))
-		wk2=pos(wkx2$=wkx3$)
-		if wk2
-			wkx3$=wkx3$(1,wk2-1)
-		endif
-	endif
-	return wkx3$
-	fnend
 
 #include std_missing_params.src

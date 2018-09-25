@@ -1,26 +1,3 @@
-[[ARE_CASHHDR.AOPT-RESP]]
-rem --- view electronic receipt response, if applicable 
-	user_id$=stbl("+USER_ID")  
-	trans_id$=cvs(callpoint!.getColumnData("ARE_CASHHDR.TRANSACTION_ID"),3)
-	cust_id$=callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")
-
-	dim dflt_data$[2,1]
-	dflt_data$[0,0]="ART_RESPONSE.FIRM_ID"
-	dflt_data$[0,1]=firm_id$
-	dflt_data$[1,0]="ART_RESPONSE.CUSTOMER_ID"
-	dflt_data$[1,1]=cust_id$
-	dflt_data$[2,0]="ART_RESPONSE.TRANSACTION_ID"
-	dflt_data$[2,1]=trans_id$
-
-	key_pfx$=callpoint!.getColumnData("ARE_CASHHDR.FIRM_ID")+callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")+callpoint!.getColumnData("ARE_CASHHDR.TRANSACTION_ID")
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:		"ART_RESPONSE",
-:		user_id$,
-:		"",
-:		key_pfx$,
-:		table_chans$[all],
-:		"",
-:		dflt_data$[all]
 [[ARE_CASHHDR.BPRK]]
 rem --- Is previous record for the current deposit?
 	are01_dev=fnget_dev("ARE_CASHHDR")
@@ -508,12 +485,6 @@ if callpoint!.getDevObject("br_interface")="Y" then
 	rem --- Capture currently saved payment_amt so can adjust tot_receipts_amt if payment_amt is changed
 	callpoint!.setDevObject("saved_payment_amt",num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT")))
 endif
-
-if cvs(callpoint!.getColumnData("ARE_CASHHDR.TRANSACTION_ID"),3)<>""
-	callpoint!.setOptionEnabled("RESP",1)
-else
-	callpoint!.setOptionEnabled("RESP",0)
-endif
 [[ARE_CASHHDR.AOPT-OACT]]
 gosub apply_on_acct
 [[ARE_CASHHDR.AOPT-GLED]]
@@ -566,8 +537,6 @@ rem --- Initialize fields for Bank Rec deposit.
 	else
 		callpoint!.setDevObject("deposit_id",callpoint!.getColumnData("ARE_CASHHDR.DEPOSIT_ID"))
 	endif
-
-callpoint!.setOptionEnabled("RESP",0)
 [[ARE_CASHHDR.ASIZ]]
 if UserObj!<>null()
 	gridInvoice!=UserObj!.getItem(num(user_tpl.inv_grid$))

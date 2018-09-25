@@ -1,28 +1,28 @@
-[[ARE_CREDITPMT.ZIP_CODE.AVAL]]
+[[ARE_CCPMT_API.ZIP_CODE.AVAL]]
 gosub reset_timer
-[[ARE_CREDITPMT.YEAR.AINV]]
+[[ARE_CCPMT_API.YEAR.AINV]]
 gosub reset_timer
-[[ARE_CREDITPMT.STATE_CODE.AVAL]]
+[[ARE_CCPMT_API.STATE_CODE.AVAL]]
 gosub reset_timer
-[[ARE_CREDITPMT.SECURITY_CD.AVAL]]
+[[ARE_CCPMT_API.SECURITY_CD.AVAL]]
 gosub reset_timer
-[[ARE_CREDITPMT.PHONE_NO.AVAL]]
+[[ARE_CCPMT_API.PHONE_NO.AVAL]]
 gosub reset_timer
-[[ARE_CREDITPMT.NAME_LAST.AVAL]]
+[[ARE_CCPMT_API.NAME_LAST.AVAL]]
 gosub reset_timer
-[[ARE_CREDITPMT.NAME_FIRST.AVAL]]
+[[ARE_CCPMT_API.NAME_FIRST.AVAL]]
 gosub reset_timer
-[[ARE_CREDITPMT.MONTH.AVAL]]
+[[ARE_CCPMT_API.MONTH.AVAL]]
 gosub reset_timer
-[[ARE_CREDITPMT.EMAIL_ADDR.AVAL]]
+[[ARE_CCPMT_API.EMAIL_ADDR.AVAL]]
 gosub reset_timer
-[[ARE_CREDITPMT.CNTRY_ID.AVAL]]
+[[ARE_CCPMT_API.CNTRY_ID.AVAL]]
 gosub reset_timer
-[[ARE_CREDITPMT.ADDRESS_LINE_2.AVAL]]
+[[ARE_CCPMT_API.ADDRESS_LINE_2.AVAL]]
 gosub reset_timer
-[[ARE_CREDITPMT.ADDRESS_LINE_1.AVAL]]
+[[ARE_CCPMT_API.ADDRESS_LINE_1.AVAL]]
 gosub reset_timer
-[[ARE_CREDITPMT.BEND]]
+[[ARE_CCPMT_API.BEND]]
 rem --- if vectInvoices! contains any selected items, get confirmation that user really wants to exit
 
 	vectInvoices!=callpoint!.getDevObject("vectInvoices")
@@ -40,12 +40,12 @@ rem --- if vectInvoices! contains any selected items, get confirmation that user
 		gosub disp_message
 		if msg_opt$<>"O" then callpoint!.setStatus("ABORT")
 	endif
-[[ARE_CREDITPMT.AREC]]
+[[ARE_CCPMT_API.AREC]]
 rem --- load up open invoices
 
 	gosub get_open_invoices
 	gosub fill_grid
-[[ARE_CREDITPMT.CARD_NO.AVAL]]
+[[ARE_CCPMT_API.CARD_NO.AVAL]]
 rem ==============================================
 rem -- mod10_check; see if card number field contains valid cc# format
 rem ==============================================
@@ -71,24 +71,24 @@ rem ==============================================
 	endif
 
 gosub reset_timer
-[[ARE_CREDITPMT.ASVA]]
+[[ARE_CCPMT_API.ASVA]]
 rem --- check for mandatory data, confirm, then process
 
-	if cvs(callpoint!.getColumnData("ARE_CREDITPMT.ADDRESS_LINE_1"),3)="" or
-:		cvs(callpoint!.getColumnData("ARE_CREDITPMT.CARD_NO"),3)="" or
-:		cvs(callpoint!.getColumnData("ARE_CREDITPMT.CITY"),3)="" or
-:		cvs(callpoint!.getColumnData("ARE_CREDITPMT.CNTRY_ID"),3)="" or
-:		cvs(callpoint!.getColumnData("ARE_CREDITPMT.CUSTOMER_ID"),3)="" or
-:		cvs(callpoint!.getColumnData("ARE_CREDITPMT.EMAIL_ADDR"),3)="" or
-:		cvs(callpoint!.getColumnData("ARE_CREDITPMT.FIRM_ID"),3)="" or
-:		cvs(callpoint!.getColumnData("ARE_CREDITPMT.MONTH"),3)="" or
-:		cvs(callpoint!.getColumnData("ARE_CREDITPMT.NAME_FIRST"),3)="" or
-:		cvs(callpoint!.getColumnData("ARE_CREDITPMT.NAME_LAST"),3)="" or
-:		cvs(callpoint!.getColumnData("ARE_CREDITPMT.PHONE_NO"),3)="" or
-:		cvs(callpoint!.getColumnData("ARE_CREDITPMT.SECURITY_CD"),3)="" or
-:		cvs(callpoint!.getColumnData("ARE_CREDITPMT.STATE_CODE"),3)="" or
-:		cvs(callpoint!.getColumnData("ARE_CREDITPMT.YEAR"),3)="" or
-:		cvs(callpoint!.getColumnData("ARE_CREDITPMT.ZIP_CODE"),3)="" or
+	if cvs(callpoint!.getColumnData("are_ccpmt_api.ADDRESS_LINE_1"),3)="" or
+:		cvs(callpoint!.getColumnData("are_ccpmt_api.CARD_NO"),3)="" or
+:		cvs(callpoint!.getColumnData("are_ccpmt_api.CITY"),3)="" or
+:		cvs(callpoint!.getColumnData("are_ccpmt_api.CNTRY_ID"),3)="" or
+:		cvs(callpoint!.getColumnData("are_ccpmt_api.CUSTOMER_ID"),3)="" or
+:		cvs(callpoint!.getColumnData("are_ccpmt_api.EMAIL_ADDR"),3)="" or
+:		cvs(callpoint!.getColumnData("are_ccpmt_api.FIRM_ID"),3)="" or
+:		cvs(callpoint!.getColumnData("are_ccpmt_api.MONTH"),3)="" or
+:		cvs(callpoint!.getColumnData("are_ccpmt_api.NAME_FIRST"),3)="" or
+:		cvs(callpoint!.getColumnData("are_ccpmt_api.NAME_LAST"),3)="" or
+:		cvs(callpoint!.getColumnData("are_ccpmt_api.PHONE_NO"),3)="" or
+:		cvs(callpoint!.getColumnData("are_ccpmt_api.SECURITY_CD"),3)="" or
+:		cvs(callpoint!.getColumnData("are_ccpmt_api.STATE_CODE"),3)="" or
+:		cvs(callpoint!.getColumnData("are_ccpmt_api.YEAR"),3)="" or
+:		cvs(callpoint!.getColumnData("are_ccpmt_api.ZIP_CODE"),3)="" or
 :		num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT"))=0
 
 		dim msg_tokens$[1]
@@ -108,17 +108,17 @@ rem --- check for mandatory data, confirm, then process
 		callpoint!.setStatus("ABORT-ACTIVATE")
 	else
 		rem --- store card info in memory and clear from callpoint! so it doesn't get saved in ads_selopt in !LAST_PROCESS
-		callpoint!.setDevObject("card_no",cvs(callpoint!.getColumnData("ARE_CREDITPMT.CARD_NO"),3))
-		callpoint!.setDevObject("security_cd",cvs(callpoint!.getColumnData("ARE_CREDITPMT.SECURITY_CD"),3))
-		callpoint!.setDevObject("month",cvs(callpoint!.getColumnData("ARE_CREDITPMT.MONTH"),3))
-		callpoint!.setDevObject("year",cvs(callpoint!.getColumnData("ARE_CREDITPMT.YEAR"),3))
+		callpoint!.setDevObject("card_no",cvs(callpoint!.getColumnData("are_ccpmt_api.CARD_NO"),3))
+		callpoint!.setDevObject("security_cd",cvs(callpoint!.getColumnData("are_ccpmt_api.SECURITY_CD"),3))
+		callpoint!.setDevObject("month",cvs(callpoint!.getColumnData("are_ccpmt_api.MONTH"),3))
+		callpoint!.setDevObject("year",cvs(callpoint!.getColumnData("are_ccpmt_api.YEAR"),3))
 
-		callpoint!.setColumnData("ARE_CREDITPMT.CARD_NO","")
-		callpoint!.setColumnData("ARE_CREDITPMT.SECURITY_CD","")
-		callpoint!.setColumnData("ARE_CREDITPMT.MONTH","")
-		callpoint!.setColumnData("ARE_CREDITPMT.YEAR","")
+		callpoint!.setColumnData("are_ccpmt_api.CARD_NO","")
+		callpoint!.setColumnData("are_ccpmt_api.SECURITY_CD","")
+		callpoint!.setColumnData("are_ccpmt_api.MONTH","")
+		callpoint!.setColumnData("are_ccpmt_api.YEAR","")
 	endif
-[[ARE_CREDITPMT.ACUS]]
+[[ARE_CCPMT_API.ACUS]]
 rem --- Process custom event -- used in this pgm to select/de-select checkboxes in grid
 rem --- See basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info
 rem --- This routine is executed when callbacks have been set to run a 'custom event'
@@ -134,6 +134,8 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 			notify_base$=notice(gui_dev,gui_event.x%)
 			dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
 			notice$=notify_base$
+			curr_row = dec(notice.row$)
+			curr_col = dec(notice.col$)
 		endif
 		switch notice.code
 			case 12;rem grid_key_press
@@ -142,13 +144,36 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 			case 14;rem grid_mouse_up
 				if notice.col=0 gosub switch_value
 			break
+			case 7;rem edit stop
+				if curr_col = 6 then
+					vectInvoices!=callpoint!.getDevObject("vectInvoices")
+					openInvoicesGrid!=callpoint!.getDevObject("openInvoicesGrid")
+					grid_cols = num(callpoint!.getDevObject("grid_cols"))
+					tot_pay=num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT"))
+					vect_pay_amt=num(vectInvoices!.get(curr_row*grid_cols+grid_cols-1))
+					grid_pay_amt = num(openInvoicesGrid!.getCellText(curr_row,grid_cols-1))
+					if grid_pay_amt<0 then grid_pay_amt=0
+					tot_pay=tot_pay-vect_pay_amt+grid_pay_amt
+					vectInvoices!.set(curr_row*grid_cols+grid_cols-1,str(grid_pay_amt))
+					callpoint!.setColumnData("<<DISPLAY>>.APPLY_AMT",str(tot_pay),1)
+					if grid_pay_amt>0
+						vectInvoices!.set(curr_row*grid_cols,"Y")
+						openInvoicesGrid!.setCellState(curr_row,0,1)
+					else
+						vectInvoices!.set(curr_row*grid_cols,"")
+						openInvoicesGrid!.setCellState(curr_row,0,0)
+						openInvoicesGrid!.setCellText(curr_row,grid_cols-1,"0")
+					endif
+					gosub reset_timer
+				endif
+			break
 		swend
 	endif
 	if gui_event.code$="T" and gui_event.y=10000
 		BBjAPI().removeTimer(10000)
 		callpoint!.setStatus("EXIT")
 	endif
-[[ARE_CREDITPMT.ASIZ]]
+[[ARE_CCPMT_API.ASIZ]]
 rem --- Resize grids
 	formHeight=Form!.getHeight()
 	formWidth=Form!.getWidth()
@@ -159,7 +184,7 @@ rem --- Resize grids
 
 	openInvoicesGrid!.setSize(formWidth-2*gridXpos,availableHeight-8)
 	openInvoicesGrid!.setFitToGrid(1)
-[[ARE_CREDITPMT.AWIN]]
+[[ARE_CCPMT_API.AWIN]]
 rem --- Declare classes used
 	use ::ado_util.src::util
 	use ::adc_array.aon::ArrayObject
@@ -182,23 +207,25 @@ gosub open_tables
 
 rem --- Add open invoice grid to form
 	nxt_ctlID = util.getNextControlID()
-	tmpCtl!=callpoint!.getControl("ARE_CREDITPMT.EMAIL_ADDR")
+	tmpCtl!=callpoint!.getControl("are_ccpmt_api.EMAIL_ADDR")
 	grid_y=tmpCtl!.getY()+tmpCtl!.getHeight()+5
 	openInvoicesGrid! = Form!.addGrid(nxt_ctlID,5,grid_y,895,125); rem --- ID, x, y, width, height
 	callpoint!.setDevObject("openInvoicesGrid",openInvoicesGrid!)
 	callpoint!.setDevObject("openInvoicesGridId",str(nxt_ctlID))
-	callpoint!.setDevObject("grid_cols","6")
+	callpoint!.setDevObject("grid_cols","7")
 	callpoint!.setDevObject("grid_rows","10")
 
 	gosub format_grid
 
 	openInvoicesGrid!.setTabAction(SysGUI!.GRID_NAVIGATE_GRID)
 	openInvoicesGrid!.setTabActionSkipsNonEditableCells(1)
+	openInvoicesGrid!.setColumnEditable(6,1)
 
 rem --- set callbacks - processed in ACUS callpoint
 	openInvoicesGrid!.setCallback(openInvoicesGrid!.ON_GRID_KEY_PRESS,"custom_event")
 	openInvoicesGrid!.setCallback(openInvoicesGrid!.ON_GRID_MOUSE_UP,"custom_event")
-[[ARE_CREDITPMT.<CUSTOM>]]
+	openInvoicesGrid!.setCallback(openInvoicesGrid!.ON_GRID_EDIT_STOP,"custom_event")
+[[ARE_CCPMT_API.<CUSTOM>]]
 rem ==========================================================================
 format_grid: rem --- Let Barista create/format the grid
 rem ==========================================================================
@@ -252,9 +279,17 @@ rem ==========================================================================
 	attr_grid_col$[column_no,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="20"
 	attr_grid_col$[column_no,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=ar_a_mask$
 
+
+	column_no = column_no +1
+	attr_grid_col$[column_no,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="PAY_AMOUNT"
+	attr_grid_col$[column_no,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_PAYMENT_AMT")
+	attr_grid_col$[column_no,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
+	attr_grid_col$[column_no,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="20"
+	attr_grid_col$[column_no,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=ar_a_mask$
+
 	for curr_attr=1 to grid_cols
 		attr_grid_col$[0,1] = attr_grid_col$[0,1] + 
-:			pad("ARE_CREDITPMT." + attr_grid_col$[curr_attr, fnstr_pos("DVAR", attr_def_col_str$[0,0], 5)], 40)
+:			pad("are_ccpmt_api." + attr_grid_col$[curr_attr, fnstr_pos("DVAR", attr_def_col_str$[0,0], 5)], 40)
 	next curr_attr
 
 	attr_disp_col$=attr_grid_col$[0,1]
@@ -271,7 +306,7 @@ rem ==========================================================================
 	art_invhdr=fnget_dev("ART_INVHDR")
 	dim art_invhdr$:fnget_tpl$("ART_INVHDR")
 
-	cust_id$=callpoint!.getColumnData("ARE_CREDITPMT.CUSTOMER_ID")
+	cust_id$=callpoint!.getColumnData("are_ccpmt_api.CUSTOMER_ID")
 	ar_type$=art_invhdr.ar_type$;rem --- ar_type always '  '
 
 	vectInvoices!=BBjAPI().makeVector()
@@ -289,6 +324,7 @@ rem ==========================================================================
 		vectInvoices!.add(date(jul(art_invhdr.inv_due_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID")))
 		vectInvoices!.add(art_invhdr.invoice_amt$)
 		vectInvoices!.add(art_invhdr.invoice_bal$)
+		vectInvoices!.add(".00")
 	wend
 
 	callpoint!.setDevObject("vectInvoices",vectInvoices!)
@@ -326,12 +362,18 @@ rem ==========================================================================
 		for curr_row=1 to TempRows!.size()
 			if openInvoicesGrid!.getCellState(TempRows!.getItem(curr_row-1),0)=0
 				openInvoicesGrid!.setCellState(TempRows!.getItem(curr_row-1),0,1)
+				inv_bal=num(vectInvoices!.get(TempRows!.getItem(curr_row-1)*grid_cols+5))
 				vectInvoices!.set(TempRows!.getItem(curr_row-1)*grid_cols,"Y")
-				tot_pay=tot_pay+num(vectInvoices!.get(TempRows!.getItem(curr_row-1)*grid_cols+5))
+				vectInvoices!.set(TempRows!.getItem(curr_row-1)*grid_cols+grid_cols-1,str(inv_bal))
+				openInvoicesGrid!.setCellText(TempRows!.getItem(curr_row-1),grid_cols-1,str(inv_bal))
+				tot_pay=tot_pay+inv_bal
 			else
 				openInvoicesGrid!.setCellState(num(TempRows!.getItem(curr_row-1)),0,0)
+				grid_pay_amt=num(vectInvoices!.get(TempRows!.getItem(curr_row-1)*grid_cols+6))
 				vectInvoices!.set(TempRows!.getItem(curr_row-1)*grid_cols,"")
-				tot_pay=tot_pay-num(vectInvoices!.get(TempRows!.getItem(curr_row-1)*grid_cols+5))
+				vectInvoices!.set(TempRows!.getItem(curr_row-1)*grid_cols+grid_cols-1,"0")
+				openInvoicesGrid!.setCellText(TempRows!.getItem(curr_row-1),grid_cols-1,"0")
+				tot_pay=tot_pay-grid_pay_amt
 			endif
 		next curr_row
 	endif
@@ -351,6 +393,6 @@ rem ==========================================================================
 rem --- Set timer for form - closes after 2 minutes *regardless* of active/inactive
 	timer_key!=10000
 	BBjAPI().removeTimer(10000)
-	BBjAPI().createTimer(timer_key!,10,"custom_event")
+	BBjAPI().createTimer(timer_key!,60,"custom_event")
 
 	return
