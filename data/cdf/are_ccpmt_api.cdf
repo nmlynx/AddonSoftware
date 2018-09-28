@@ -13,7 +13,15 @@ gosub reset_timer
 [[ARE_CCPMT_API.NAME_FIRST.AVAL]]
 gosub reset_timer
 [[ARE_CCPMT_API.MONTH.AVAL]]
-gosub reset_timer
+rem --- validate month
+
+	month$=cvs(callpoint!.getUserInput(),3)
+
+	if month$<>""
+		if num(month$)<1 or num(month$)>12 then callpoint!.setStatus("ABORT")
+	endif
+
+	gosub reset_timer
 [[ARE_CCPMT_API.EMAIL_ADDR.AVAL]]
 gosub reset_timer
 [[ARE_CCPMT_API.CNTRY_ID.AVAL]]
@@ -26,9 +34,10 @@ gosub reset_timer
 rem --- if vectInvoices! contains any selected items, get confirmation that user really wants to exit
 
 	vectInvoices!=callpoint!.getDevObject("vectInvoices")
+	grid_cols = num(callpoint!.getDevObject("grid_cols"))
 	selected=0
 	if vectInvoices!.size()
-		for wk=0 to vectInvoices!.size()-1 step 6
+		for wk=0 to vectInvoices!.size()-1 step grid_cols
 			selected=selected+iff(vectInvoices!.get(wk)="Y",1,0)
 		next wk
 	endif
@@ -54,23 +63,25 @@ rem ==============================================
 	cc_curr_digit = 0
 	cc_card$=callpoint!.getUserInput()
 
-	for cc_temp = len(cc_card$) to 1 step -1
-	cc_curr_digit = cc_curr_digit + 1
-	cc_no = num(cc_card$(cc_temp,1)) * iff(mod(cc_curr_digit,2)=0, 2, 1)
-	cc_digits$ = str(cc_no) + cc_digits$
-	next cc_temp
+	if cvs(cc_card$,3)<>""
+		for cc_temp = len(cc_card$) to 1 step -1
+		cc_curr_digit = cc_curr_digit + 1
+		cc_no = num(cc_card$(cc_temp,1)) * iff(mod(cc_curr_digit,2)=0, 2, 1)
+		cc_digits$ = str(cc_no) + cc_digits$
+		next cc_temp
 
-	cc_total = 0
-	for cc_temp = 1 to len(cc_digits$)
-	cc_total = cc_total + num(cc_digits$(cc_temp, 1))
-	next cc_temp
+		cc_total = 0
+		for cc_temp = 1 to len(cc_digits$)
+		cc_total = cc_total + num(cc_digits$(cc_temp, 1))
+		next cc_temp
 
-	if mod(cc_total, 10) <> 0
-		callpoint!.setMessage("INVALID_CREDIT_CARD")
-		callpoint!.setStatus("ABORT")
+		if mod(cc_total, 10) <> 0
+			callpoint!.setMessage("INVALID_CREDIT_CARD")
+			callpoint!.setStatus("ABORT")
+		endif
 	endif
 
-gosub reset_timer
+	gosub reset_timer
 [[ARE_CCPMT_API.ASVA]]
 rem --- check for mandatory data, confirm, then process
 
@@ -92,7 +103,17 @@ rem --- check for mandatory data, confirm, then process
 :		num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT"))=0
 
 		dim msg_tokens$[1]
-		msg_tokens$[0]="Please fill in all required fields."
+		msg_tokens$[0]="Please fill in all required fields.";rem --- TODO CAH localize
+		msg_id$="GENERIC_WARN"
+		gosub disp_message
+		callpoint!.setStatus("ABORT-ACTIVATE")
+		break
+	endif
+
+	curr$=date(0:"%Yd%Mz")
+	if curr$>callpoint!.getColumnData("are_ccpmt_api.YEAR")+callpoint!.getColumnData("are_ccpmt_api.MONTH")
+		dim msg_tokens$[1]
+		msg_tokens$[0]="According to month/year entered, this card has expired.";rem --- TODO CAH localize
 		msg_id$="GENERIC_WARN"
 		gosub disp_message
 		callpoint!.setStatus("ABORT-ACTIVATE")
@@ -102,7 +123,7 @@ rem --- check for mandatory data, confirm, then process
 	msg_id$="CONF_CC_PAYMENT"
 	msg_opt$=""
 	dim msg_tokens$[1]
-	msg_tokens$[0]=callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT")
+	msg_tokens$[0]=cvs(str(num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT")):callpoint!.getDevObject("ar_a_mask")),3)
 	gosub disp_message
 	if msg_opt$<>"Y"
 		callpoint!.setStatus("ABORT-ACTIVATE")
@@ -153,8 +174,10 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 					vect_pay_amt=num(vectInvoices!.get(curr_row*grid_cols+grid_cols-1))
 					grid_pay_amt = num(openInvoicesGrid!.getCellText(curr_row,grid_cols-1))
 					if grid_pay_amt<0 then grid_pay_amt=0
+					if grid_pay_amt>num(vectInvoices!.get(curr_row*grid_cols+5)) then grid_pay_amt=num(vectInvoices!.get(curr_row*grid_cols+5)) 
 					tot_pay=tot_pay-vect_pay_amt+grid_pay_amt
-					vectInvoices!.set(curr_row*grid_cols+grid_cols-1,str(grid_pay_amt))
+					vectInvoices!.set(curr_row*grid_cols+6,str(grid_pay_amt))
+					openInvoicesGrid!.setCellText(curr_row,grid_cols-1,str(grid_pay_amt))
 					callpoint!.setColumnData("<<DISPLAY>>.APPLY_AMT",str(tot_pay),1)
 					if grid_pay_amt>0
 						vectInvoices!.set(curr_row*grid_cols,"Y")
@@ -162,7 +185,6 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 					else
 						vectInvoices!.set(curr_row*grid_cols,"")
 						openInvoicesGrid!.setCellState(curr_row,0,0)
-						openInvoicesGrid!.setCellText(curr_row,grid_cols-1,"0")
 					endif
 					gosub reset_timer
 				endif
