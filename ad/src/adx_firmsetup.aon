@@ -8,6 +8,8 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 rem ==========================================================================
 
+    use java.util.Properties
+
     setesc std_error
     seterr std_error
 
@@ -17,19 +19,14 @@ rem --- Initializations
 
 rem --- Get user inputs
 
-    dataLoc$=Option!.getOptionData("DATA_LOCATION")
-    newFirm$=Option!.getOptionData("NEW_FIRM_ID")
-
-rem --- Set oldLocation to aon directory under the current download directory
-
-    sep$ = java.io.File.separator
-    bbjHome$=java.lang.System.getProperty("basis.BBjHome")
-    oldLocation$ = bbjHome$ + sep$ + "apps" + sep$ + "aon"
+    formData! = new Properties()
+    formData!.setProperty("DATA_LOCATION",Option!.getOptionData("DATA_LOCATION"))
+    formData!.setProperty("NEW_FIRM_ID",Option!.getOptionData("NEW_FIRM_ID"))
     
 rem --- Setup new firm
-    demoData%=1; rem --- Always assume they are using demo data
 
-    call pgmdir$+"adc_firmsetup.aon",dataLoc$,newFirm$,demoData%,rdForm!,1,status
+    demoData%=0; rem --- This is always for an existing install, not new install with demo data.
+    call pgmdir$+"adc_firmsetup.aon",formData!,demoData%,rdForm!,1,status
     
 done: rem --- All done
 
