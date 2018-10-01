@@ -1,4 +1,4 @@
-rem --- Launch PayPal Hosted Payment Page
+rem --- Launch PayPal or Authorize.net Hosted Payment Page
 rem --- Program are_paypal.aon
 
 rem --- AddonSoftware Version 18.10 - 11Sep2018
@@ -11,7 +11,7 @@ rem --- Get progarm arguments
     if argc>1
         for i=1 to argc-1
             arg$=argv(i)
-			if pos("-g"=arg$)=1 then gateway$=arg(3)
+			if pos("-g"=arg$)=1 then gateway$=arg$(3)
             if pos("-s"=arg$)=1 then sid$=arg$(3)
             if pos("-t"=arg$)=1 then tokenID$=arg$(3)
         next i
@@ -48,7 +48,7 @@ rem --- Add BBjHtmlView control package tracking URL
     htmlView!=htmlWin!.addHtmlView(ctrlID,1,1,htmlWin!.getWidth()-2,htmlWin!.getHeight()-2,"")
     htmlView!.setUrl(hostedURL$)
 
-    process_events;rem ,err=*same
+    process_events,err=*same
 
     goto std_exit
 

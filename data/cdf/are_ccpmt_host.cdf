@@ -473,7 +473,7 @@ rem					BBjAPI().getThinClient().browse("https://pilot-payflowlink.paypal.com?SE
                         
 				setting2! = new SettingType()
 				setting2!.setSettingName("hostedPaymentOrderOptions")
-				setting2!.setSettingValue("{"+$22$+"show"+$22$+": false}");rem --- CAH what if true?
+				setting2!.setSettingValue("{"+$22$+"show"+$22$+": true}");rem --- CAH what if true?
 
 				setting3! = new SettingType()
 				setting3!.setSettingName("hostedPaymentReturnOptions")
