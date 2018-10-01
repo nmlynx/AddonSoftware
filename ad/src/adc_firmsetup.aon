@@ -99,26 +99,24 @@ rem --- Count files to process so can size progress meter
 	meterSize=requiredFiles!.size()
 
 	if cvs(newFirm$,3)<>"" then
-rem wgh ... 9470 ... change 99 to ZZ 
-		rem --- Get/count ads_masks~99*.xml files in aon/data/sync directory
+		rem --- Get/count ads_masks~ZZ*.xml files in aon/data/sync directory
 		declare File syncDir!
-		declare Vector masks99Files!
+		declare Vector masksZZFiles!
 		syncDir! = new File(dataDir$ + "/sync")
-		if syncDir!.listFiles(new Masks99Filter())<>null() then
-    		masks99Files! = new Vector(java.util.Arrays.asList(syncDir!.listFiles(new Masks99Filter())))
-    		meterSize=meterSize+masks99Files!.size()
+		if syncDir!.listFiles(new MasksZZFilter())<>null() then
+    		masksZZFiles! = new Vector(java.util.Arrays.asList(syncDir!.listFiles(new MasksZZFilter())))
+    		meterSize=meterSize+masksZZFiles!.size()
 		else
-		    masks99Files! = new Vector()
+		    masksZZFiles! = new Vector()
 		endif
 
-rem wgh ... 9470 ... change 99 to ZZ 
-		rem --- Get/count ads_sequences~99*.xml files in aon/data/sync directory
-		declare Vector sequences99Files!
-        if syncDir!.listFiles(new Sequences99Filter())<>null() then
-    		sequences99Files! = new Vector(java.util.Arrays.asList(syncDir!.listFiles(new Sequences99Filter())))
-    		meterSize=meterSize+sequences99Files!.size()
+		rem --- Get/count ads_sequences~ZZ*.xml files in aon/data/sync directory
+		declare Vector sequencesZZFiles!
+        if syncDir!.listFiles(new SequencesZZFilter())<>null() then
+    		sequencesZZFiles! = new Vector(java.util.Arrays.asList(syncDir!.listFiles(new SequencesZZFilter())))
+    		meterSize=meterSize+sequencesZZFiles!.size()
 		else
-		    sequences99Files! = new Vector()
+		    sequencesZZFiles! = new Vector()
 		endif
 	endif
 
@@ -269,19 +267,18 @@ rem wgh ... 9470 ... create admin_backup file for removed sync file
 		wend
 	endif
 
-rem wgh ... 9470 ... change 99 to ZZ 
-rem --- Process ads_masks99Files!, if new firm not blank
+rem --- Process ads_masksZZFiles!, if new firm not blank
 	if cvs(newFirm$,3)<>"" then 
 		print(log_dev)""
-		print(log_dev)"process sync ads_masks~99*.xml files"
-		iter! = masks99Files!.iterator()
+		print(log_dev)"process sync ads_masks~ZZ*.xml files"
+		iter! = masksZZFiles!.iterator()
 		while iter!.hasNext()
 			aFile! = cast(File, iter!.next())
 		
-			rem --- Copy firm 99 to new firm
-			if aFile!.getName().startsWith("ads_masks~99") then
+			rem --- Copy firm ZZ to new firm
+			if aFile!.getName().startsWith("ads_masks~ZZ") then
 				source$=aFile!.getPath()
-				target$=source$(1,pos("99"=source$)-1)+newFirm$+source$(pos("99"=source$)+2)
+				target$=source$(1,pos("ZZ"=source$)-1)+newFirm$+source$(pos("ZZ"=source$)+2)
 						
 rem wgh ... 9470 ... create admin_backup files for new ads_masks records
 				rem --- copy source file to target file, making necessary updates
@@ -354,19 +351,18 @@ rem wgh ... 9470 ... create admin_backup file for removed sync file
 		wend
 	endif
 
-rem wgh ... 9470 ... change 99 to ZZ 
-rem --- Process ads_sequences99Files!
+rem --- Process ads_sequencesZZFiles!
 	if cvs(newFirm$,3)<>"" then 
 		print(log_dev)""
-		print(log_dev)"process sync ads_sequences~99*.xml files"
-		iter! = sequences99Files!.iterator()
+		print(log_dev)"process sync ads_sequences~ZZ*.xml files"
+		iter! = sequencesZZFiles!.iterator()
 		while iter!.hasNext()
 			aFile! = cast(File, iter!.next())
 
-			rem --- Copy firm 99 to new firm
-			if aFile!.getName().startsWith("ads_sequences~99") then
+			rem --- Copy firm ZZ to new firm
+			if aFile!.getName().startsWith("ads_sequences~ZZ") then
 				source$=aFile!.getPath()
-				target$=source$(1,pos("99"=source$)-1)+newFirm$+source$(pos("99"=source$)+2)
+				target$=source$(1,pos("ZZ"=source$)-1)+newFirm$+source$(pos("ZZ"=source$)+2)
 						
 rem wgh ... 9470 ... create admin_backup files for new ads_sequences records
 				rem --- copy source file to target file, making necessary updates
@@ -715,14 +711,13 @@ rem  */
     classend
 
 rem /**
-rem  * FilenameFilter Class to filter ads_masks~99.xml files.
+rem  * FilenameFilter Class to filter ads_masks~ZZ.xml files.
 rem  */
 
-rem wgh ... 9470 ... change 99 to ZZ 
-    class public Masks99Filter implements java.io.FilenameFilter
+    class public MasksZZFilter implements java.io.FilenameFilter
 
         method public boolean accept(File dir!, String file!)
-			if file!.startsWith("ads_masks~99") and file!.endsWith(".xml")
+			if file!.startsWith("ads_masks~ZZ") and file!.endsWith(".xml")
 				methodret Boolean.valueOf("true")
 			else
 				methodret Boolean.valueOf("false")
@@ -764,14 +759,13 @@ rem  */
     classend
 
 rem /**
-rem  * FilenameFilter Class to filter ads_sequences~99.xml files.
+rem  * FilenameFilter Class to filter ads_sequences~ZZ.xml files.
 rem  */
 
-rem wgh ... 9470 ... change 99 to ZZ 
-    class public Sequences99Filter implements java.io.FilenameFilter
+    class public SequencesZZFilter implements java.io.FilenameFilter
 
         method public boolean accept(File dir!, String file!)
-			if file!.startsWith("ads_sequences~99") and file!.endsWith(".xml")
+			if file!.startsWith("ads_sequences~ZZ") and file!.endsWith(".xml")
 				methodret Boolean.valueOf("true")
 			else
 				methodret Boolean.valueOf("false")
