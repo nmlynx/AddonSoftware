@@ -16,41 +16,53 @@ rem --- RDFORM!     : Parent BBjTopLevelWindow object, the form (Input)
 rem --- WAIT4OK%    : Wait for user's OK when done, 0=don't wait/1=wait (Input)
 rem --- STATUS      : Status code/0=No error (Returned)
 
-    enter dataDir$,newFirm$,demoData%,rdForm!,wait4ok%,status,err=oldLocation
-    goto init
-
-oldLocation:
-    enter oldLocation$,dataDir$,newFirm$,demoData%,rdForm!,wait4ok%,status
-
-init: rem --- Initializations
     use java.io.File
     use java.util.Vector
     use java.util.HashMap
     use java.util.Iterator
     use ::bbtranslator.bbj::BBTranslator
     use ::ado_file.src::FileObject
+    use ::adc_copyaon.aon::CopyAonDir
 
     seterr std_error
     setesc std_error
 
+    enter formData!,demoData%,rdForm!,wait4ok%,status,err=oldLocation
+    newInstall=0
+    goto init
+
+oldLocation:
+    enter oldLocation$,formData!,demoData%,rdForm!,wait4ok%,status
+    newInstall=1
+
+init: rem --- Initializations
     status=0
     BLOCKSIZE = 2^20
     dir_syp$=stbl("+DIR_SYP")
     sysGUI! = BBjAPI().getSysGui()
 	declare File aFile!
 	declare Iterator iter!
+
+	rem --- Retrieve sysinfo data
+    sysinfo_tpl$=stbl("+SYSINFO_TPL",err=*next)
+    dim sysinfo$:sysinfo_tpl$
+    sysinfo$=stbl("+SYSINFO",err=*next)
+    systemYear$=sysinfo.system_date$(1,4)
+    systemMonth$=sysinfo.system_date$(5,2)
+
+	rem --- Get user inputs
+    dataDir$=formData!.getProperty("DATA_LOCATION")
+    newFirm$=formData!.getProperty("NEW_FIRM_ID")
 	
 	rem --- Initialize HashMap with files required for a clean new install
+	declare Vector fileVect!
 	declare HashMap requiredFiles!
+	fileVect! = CopyAonDir.getRequiredFiles()
 	requiredFiles! = new HashMap()
-	requiredFiles!.put("adm_rptctl","")
-	requiredFiles!.put("adm-09",""); rem --- adm_procmaster
-	requiredFiles!.put("adm-19",""); rem --- adm_procdetail
-    requiredFiles!.put("adm-39",""); rem --- adm_proctables
-	requiredFiles!.put("glm-06",""); rem --- adm_auditcontrol
-	requiredFiles!.put("glm-03",""); rem --- glc_journalcode
-	requiredFiles!.put("ivc_whsecode","")
-	requiredFiles!.put("opm_pointofsale","")
+	for i=0 to fileVect!.size()-1
+	    thisFile$=fileVect!.get(i)
+	    requiredFiles!.put(thisFile$,"")
+	next i
     
 	rem --- Flip directory path separators
     filePath$=dataDir$
@@ -69,6 +81,16 @@ init: rem --- Initializations
 	    oldData$=oldLocation$
 	endif
 
+rem --- Open files
+    num_files=1
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="DDM_TABLE_TPLS",open_opts$[1]="OTA"
+
+    gosub open_tables
+
+    ddmTableTpls_dev=num(open_chans$[1])
+    dim ddmTableTpls$:open_tpls$[1]
+
 rem --- Count files to process so can size progress meter
 	declare File dataDir!
 	dataDir! = new File(dataDir$)
@@ -76,7 +98,8 @@ rem --- Count files to process so can size progress meter
 	rem --- Count requiredFiles!
 	meterSize=requiredFiles!.size()
 
-	if cvs(newFirm$,3)<>"" then 
+	if cvs(newFirm$,3)<>"" then
+rem wgh ... 9470 ... change 99 to ZZ 
 		rem --- Get/count ads_masks~99*.xml files in aon/data/sync directory
 		declare File syncDir!
 		declare Vector masks99Files!
@@ -88,6 +111,7 @@ rem --- Count files to process so can size progress meter
 		    masks99Files! = new Vector()
 		endif
 
+rem wgh ... 9470 ... change 99 to ZZ 
 		rem --- Get/count ads_sequences~99*.xml files in aon/data/sync directory
 		declare Vector sequences99Files!
         if syncDir!.listFiles(new Sequences99Filter())<>null() then
@@ -97,10 +121,8 @@ rem --- Count files to process so can size progress meter
 		    sequences99Files! = new Vector()
 		endif
 	endif
-	
-	if !demodata% then
-		rem --- Count requiredFiles! again
-		meterSize=meterSize+requiredFiles!.size()
+
+	if newInstall and !demodata% then
 
 		rem --- Get/count ads_masks~01*.xml files in aon/data/sync directory
         declare File syncDir!
@@ -184,30 +206,8 @@ rem --- Open log file
     location$ = aonDir$
     gosub open_log
 
-rem --- When not using demo data, remove inventory item image (except addon_logo32.png)
-	if !demodata% then
-		print(log_dev)""
-		print(log_dev)"remove inventory item images"
-		iter! = imagesFiles!.iterator()
-		while iter!.hasNext()
-			aFile! = cast(File, iter!.next())
-		
-			rem --- Remove inventory item image (except addon_logo32.png)
-			if aFile!.getName()<>"addon_logo32.png" then
-				aFile!.delete()
-
-				rem --- Increment progress meter
-				meter_text$="removed: "+aFile!.getPath()
-				meter_proc_recs=meter_proc_recs+1
-				meter_action$="MTR-LST"
-				gosub disp_meter
-				print(log_dev)meter_text$
-			endif
-		wend
-	endif
-
-rem --- When not using demo data, remove demo data files (except requiredFiles!)
-	if !demodata% then
+rem --- When new install not using demo data, remove demo data files (except requiredFiles!)
+	if newInstall and !demodata% then
 		print(log_dev)""
 		print(log_dev)"remove demo data files"
 		iter! = dataFiles!.iterator()
@@ -230,93 +230,16 @@ rem --- When not using demo data, remove demo data files (except requiredFiles!)
 			endif
 		wend
 	endif
-	
-rem --- Process requiredFiles!
-	print(log_dev)""
-	print(log_dev)"process required data files"
-	iter! = requiredFiles!.keySet().iterator()
-	while iter!.hasNext()
-		aFile! = new File(dataDir!, cast(String, iter!.next()))
 
-		rem --- Need to copy requiredFiles! if they are missing
-		missing=1
-		file_dev=unt
-		open(file_dev,err=*next)aFile!.getPath();missing=0
-		close(file_dev)
-		if missing then
-			rem --- Copy files
-			sourceChan=unt
-			open(sourceChan,isz=-1,err=*continue)oldData$+"/"+aFile!.getName()
-			targetChan=unt
-			open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")aFile!.getPath()
-			while 1
-				readrecord(sourceChan,siz=BLOCKSIZE,end=*break)record$
-				writerecord(targetChan)record$
-			wend
-			close(sourceChan)
-			close(targetChan)
-    
-			rem --- Increment progress meter
-			meter_text$="copied: "+oldData$+"/"+aFile!.getName()
-			meter_proc_recs=meter_proc_recs+1
-			meter_action$="MTR-LST"
-			gosub disp_meter
-			print(log_dev)meter_text$
-		endif
-		
-		rem --- Open file
-		file_dev=unt
-		open(file_dev)aFile!.getPath()
-
-		rem --- When not using demo data, remove firm 01 and 02 data
-		if !demodata% then
-			read(file_dev,key="01",dom=*next)
-			while 1
-				key$=key(file_dev,end=*break)
-				if len(key$)>=2 and pos(key$(1,2)="0102",2) then
-					remove(file_dev,key=key$)
-				else
-					read(file_dev,end=*break)
-				endif
-			wend
-		endif
-		
-		rem --- Copy firm 99 to new firm, if new firm not blank
-		if cvs(newFirm$,3)<>"" then 
-			write_dev=unt
-			open(write_dev)aFile!.getPath()
-			read(file_dev,key="99",dom=*next)
-			while 1
-				key$=key(file_dev,err=*break)
-				if len(key$)>=2 and key$(1,2)="99"
-					readrecord(file_dev,key=key$)record$
-					writerecord(write_dev,key=newFirm$+key$(3),dom=*next)newFirm$+record$(3)
-				else
-					read(file_dev,end=*break)
-				endif
-			wend
-
-			rem --- Close files
-			close(write_dev)
-			close(file_dev)
-		
-			rem --- Increment progress meter
-			meter_text$="copied firm 99 to "+newFirm$+": "+aFile!.getPath()
-			meter_proc_recs=meter_proc_recs+1
-			meter_action$="MTR-LST"
-			gosub disp_meter
-			print(log_dev)meter_text$
-		endif
-	wend
-
-	rem --- When not using demo data, remove ads_masks~01*.xml files 
-	if !demodata% then
+rem --- When new install not using demo data, remove ads_masks~01*.xml files 
+	if newInstall and !demodata% then
 		print(log_dev)""
 		print(log_dev)"remove ads_masks~01*.xml files"
 		iter! = masks01Files!.iterator()
 		while iter!.hasNext()
 			aFile! = cast(File, iter!.next())
 			aFile!.delete()
+rem wgh ... 9470 ... create admin_backup file for removed sync file
 
 			rem --- Increment progress meter
 			meter_text$="removed: "+aFile!.getPath()
@@ -327,14 +250,15 @@ rem --- Process requiredFiles!
 		wend
 	endif
 
-	rem --- When not using demo data, remove ads_masks~02*.xml files 
-	if !demodata% then
+rem --- When new install not using demo data, remove ads_masks~02*.xml files 
+	if newInstall and !demodata% then
 		print(log_dev)""
 		print(log_dev)"remove ads_masks~02*.xml files"
 		iter! = masks02Files!.iterator()
 		while iter!.hasNext()
 			aFile! = cast(File, iter!.next())
 			aFile!.delete()
+rem wgh ... 9470 ... create admin_backup file for removed sync file
 
 			rem --- Increment progress meter
 			meter_text$="removed: "+aFile!.getPath()
@@ -345,6 +269,7 @@ rem --- Process requiredFiles!
 		wend
 	endif
 
+rem wgh ... 9470 ... change 99 to ZZ 
 rem --- Process ads_masks99Files!, if new firm not blank
 	if cvs(newFirm$,3)<>"" then 
 		print(log_dev)""
@@ -358,6 +283,7 @@ rem --- Process ads_masks99Files!, if new firm not blank
 				source$=aFile!.getPath()
 				target$=source$(1,pos("99"=source$)-1)+newFirm$+source$(pos("99"=source$)+2)
 						
+rem wgh ... 9470 ... create admin_backup files for new ads_masks records
 				rem --- copy source file to target file, making necessary updates
 				sourceChan=unt
 				open(sourceChan,isz=-1)source$
@@ -390,14 +316,15 @@ rem --- Process ads_masks99Files!, if new firm not blank
 		wend
 	endif
 
-	rem --- When not using demo data, remove ads_sequences~01*.xml files 
-	if !demodata% then
+rem --- When new install not using demo data, remove ads_sequences~01*.xml files 
+	if newInstall and !demodata% then
 		print(log_dev)""
 		print(log_dev)"remove ads_sequences~01*.xml files"
 		iter! = sequences01Files!.iterator()
 		while iter!.hasNext()
 			aFile! = cast(File, iter!.next())
 			aFile!.delete()
+rem wgh ... 9470 ... create admin_backup file for removed sync file
 
 			rem --- Increment progress meter
 			meter_text$="removed: "+aFile!.getPath()
@@ -408,14 +335,15 @@ rem --- Process ads_masks99Files!, if new firm not blank
 		wend
 	endif
 
-	rem --- When not using demo data, remove ads_sequences~02*.xml files 
-	if !demodata% then
+rem --- When new install not using demo data, remove ads_sequences~02*.xml files 
+	if newInstall and !demodata% then
 		print(log_dev)""
 		print(log_dev)"remove ads_sequences~02*.xml files"
 		iter! = sequences02Files!.iterator()
 		while iter!.hasNext()
 			aFile! = cast(File, iter!.next())
 			aFile!.delete()
+rem wgh ... 9470 ... create admin_backup file for removed sync file
 
 			rem --- Increment progress meter
 			meter_text$="removed: "+aFile!.getPath()
@@ -426,6 +354,7 @@ rem --- Process ads_masks99Files!, if new firm not blank
 		wend
 	endif
 
+rem wgh ... 9470 ... change 99 to ZZ 
 rem --- Process ads_sequences99Files!
 	if cvs(newFirm$,3)<>"" then 
 		print(log_dev)""
@@ -439,6 +368,7 @@ rem --- Process ads_sequences99Files!
 				source$=aFile!.getPath()
 				target$=source$(1,pos("99"=source$)-1)+newFirm$+source$(pos("99"=source$)+2)
 						
+rem wgh ... 9470 ... create admin_backup files for new ads_sequences records
 				rem --- copy source file to target file, making necessary updates
 				sourceChan=unt
 				open(sourceChan,isz=-1)source$
@@ -470,6 +400,138 @@ rem --- Process ads_sequences99Files!
 			endif
 		wend
 	endif
+
+rem wgh ... 9470 ... create needed admin_backup/adm_firms~*.xml files
+
+rem wgh ... 9470 ... initialize ads_compinfo, aps_reports and ars_reports with form’s Firm and Report data
+
+rem --- Process requiredFiles!
+    print(log_dev)""
+    print(log_dev)"process required data files"
+    iter! = requiredFiles!.keySet().iterator()
+    while iter!.hasNext()
+        aFile! = new File(dataDir!, cast(String, iter!.next()))
+        
+        rem --- Open file
+        file_dev=unt
+        open(file_dev)aFile!.getPath()
+
+        rem --- When new install not using demo data, remove firm 01 and 02 data
+        if newInstall and !demodata% then
+            read(file_dev,key="01",dom=*next)
+            while 1
+                key$=key(file_dev,end=*break)
+                if len(key$)>=2 and pos(key$(1,2)="0102",2) then
+                    remove(file_dev,key=key$)
+                else
+                    read(file_dev,end=*break)
+                endif
+            wend
+        endif
+        
+rem wgh ... 9470 ... change 99 to ZZ 
+        rem --- Copy firm 99 to new firm, if new firm not blank
+        if cvs(newFirm$,3)<>"" then 
+            write_dev=unt
+            open(write_dev)aFile!.getPath()
+            read(file_dev,key="99",dom=*next)
+            while 1
+                key$=key(file_dev,err=*break)
+                if len(key$)>=2 and key$(1,2)="99"
+                    readrecord(file_dev,key=key$)record$
+                    writerecord(write_dev,key=newFirm$+key$(3),dom=*next)newFirm$+record$(3)
+                else
+                    read(file_dev,end=*break)
+                endif
+            wend
+
+            rem --- Use system date to set current year, current period, etc. 
+            thisFile$=aFile!.getName()
+            if pos(":"+thisFile$+":"=":aps_params:ars_params:gls_calendar:gls_financials:gls_params:ivs_params:sfs_params:") then
+                findrecord(ddmTableTpls_dev,key=pad(cvs(thisFile$,4),16),dom=*endif)ddmTableTpls$
+                dim record$:ddmTableTpls.dd_table_tpl$
+            
+                switch (BBjAPI().TRUE)
+                    case thisFile$ = "aps_params"
+                        findrecord(file_dev,key=newFirm$+"AP00")record$
+                        record.current_per$=systemMonth$
+                        record.current_year$=systemYear$
+                        record.cur_1099_yr$=systemYear$
+                        writerecord(file_dev)record$
+                        break
+                    case thisFile$ = "ars_params"
+                        findrecord(file_dev,key=newFirm$+"AR00")record$
+                        record.current_per$=systemMonth$
+                        record.current_year$=systemYear$
+                        record.lstcom_date$=""
+                        writerecord(file_dev)record$
+                        break
+                    case thisFile$ = "gls_calendar"
+                        read(file_dev,key=newFirm$,dom=*next)
+                        while 1
+                            thisKey$=key(file_dev,end=*break)
+                            if pos(newFirm$=thisKey$)<>1 then break
+                            findrecord(file_dev,key=thisKey$)record$
+                            remove(file_dev,key=thisKey$,err=*next)
+                        wend
+                        if record.firm_id$=newFirm$ then
+                            for per=1 to 13
+                                    locked_flag$="locked_flag_"+str(per:"00")
+                                    field record$,locked_flag$="N"
+                                    locked_date$="locked_date_"+str(per:"00")
+                                    field record$,locked_date$=""
+                            next per
+                        endif
+                        record.year$=str(num(systemYear$)-1)
+                        writerecord(file_dev)record$
+                        record.year$=systemYear$
+                        writerecord(file_dev)record$
+                        record.year$=str(num(systemYear$)+1)
+                        writerecord(file_dev)record$
+                        break
+                    case thisFile$ = "gls_financials"
+                        findrecord(file_dev,key=newFirm$+"GL02")record$
+                        record.period$=systemMonth$
+                        record.year$=systemYear$
+                        writerecord(file_dev)record$
+                        break
+                    case thisFile$ = "gls_params"
+                        findrecord(file_dev,key=newFirm$+"GL00")record$
+                        record.current_per$=systemMonth$
+                        record.current_year$=systemYear$
+                        writerecord(file_dev)record$
+                        break
+                    case thisFile$ = "ivs_params"
+                        findrecord(file_dev,key=newFirm$+"IV00")record$
+                        record.current_per$=systemMonth$
+                        record.current_year$=systemYear$
+                        writerecord(file_dev)record$
+                        break
+                    case thisFile$ = "sfs_params"
+                        findrecord(file_dev,key=newFirm$+"SF00")record$
+                        record.current_per$=systemMonth$
+                        record.current_year$=systemYear$
+                        writerecord(file_dev)record$
+                        break
+                        break
+                    case default
+                        break
+                swend
+            endif
+
+            rem --- Close files
+            close(write_dev)
+            close(file_dev)
+        
+rem wgh ... 9470 ... change 99 to ZZ 
+            rem --- Increment progress meter
+            meter_text$="copied firm 99 to "+newFirm$+": "+aFile!.getPath()
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+        endif
+    wend
     
 done: rem --- All done
     
@@ -482,6 +544,8 @@ done: rem --- All done
 	print(log_dev)""
     print(log_dev)"Firmsetup log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     close(log_dev)
+    
+    close(ddmTableTpls_dev,err=*next)
 
     goto std_exit
 
@@ -542,6 +606,36 @@ open_log:rem --- Open log file
         print(log_dev)"Without demo data."
     endif
     print(log_dev)
+
+    return
+    
+open_tables:rem --- Open Tables
+
+    call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:       open_beg,
+:       open_end,
+:       open_tables$[all],
+:       open_opts$[all],
+:       open_chans$[all],
+:       open_tpls$[all],
+:       rd_table_chans$[all],
+:       open_batch,
+:       open_status$
+
+    if open_status$<>"" then
+        msg_id$="ENTRY_OPEN_ERROR"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=open_status$
+        gosub disp_message
+        rdFuncSpace!=bbjAPI().getGroupNamespace().setValue("+build_task","OFF")
+        release
+    endif
+
+    return
+    
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
 
     return
     
@@ -624,6 +718,7 @@ rem /**
 rem  * FilenameFilter Class to filter ads_masks~99.xml files.
 rem  */
 
+rem wgh ... 9470 ... change 99 to ZZ 
     class public Masks99Filter implements java.io.FilenameFilter
 
         method public boolean accept(File dir!, String file!)
@@ -672,6 +767,7 @@ rem /**
 rem  * FilenameFilter Class to filter ads_sequences~99.xml files.
 rem  */
 
+rem wgh ... 9470 ... change 99 to ZZ 
     class public Sequences99Filter implements java.io.FilenameFilter
 
         method public boolean accept(File dir!, String file!)
