@@ -5,21 +5,18 @@ CLASS PUBLIC TestServlet
     field private BBjspWebSession session!
     field private BBjspSessionData data!
   
-    method public void service(BBjspServletContext context!)
-	       
+    method public void service(BBjspServletContext context!) 
+       
         #request! = context!.getRequest()
         #response! = context!.getResponse()
-        
-        if (#request!.getMethod()="POST") then 
-            content!=#request!.getBody()
-			rspFile$="C:/bbj/apps/aon/responses/PayPal_response.txt"
-			erase rspFile$,err=*next
-			string rspFile$
-			rsp_chan=unt
-			open(rsp_chan)rspFile$
-			writerecord(rsp_chan)content!
-			close(rsp_chan)
-        endif 
+        #data! = context!.getBBjspSession()
+
+        s! = #response!.getOutputStream()
+        s!.write("<html>")
+        s!.write("<body>")
+        s!.write("<h1>OK</h1>")
+        s!.write("</body>")
+        s!.write("</html>")
 
     METHODEND
     

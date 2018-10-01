@@ -102,8 +102,32 @@ rem --- Assign form input values to local variables
                 apiSampleParameters!.put("USER", "CHawkins")
                 apiSampleParameters!.put("PWD", "Titp4CH")
             break
+			case "PAYEEZY"
+                gateway!=gw!.getGateway(AvailableGateways.PAYEEZY)
+                apiSampleParameters! = gateway!.getApiSampleParameters()
+			    apiSampleParameters!.put("exactId","MJ3300-35")
+                apiSampleParameters!.put("password","Y1GpWQfuRlS0iPK64uZ2Kavzyz3vSFg5")
+			break
+			case "EASYPAY"
+                gateway!=gw!.getGateway(AvailableGateways.EASYPAY)
+                apiSampleParameters! = gateway!.getApiSampleParameters()
+                apiSampleParameters!.put("username", "EPDDemo")
+                apiSampleParameters!.put("password", "EPDDemoAccount5!")			
+			break
+			case "BILLPRO"
+                gateway!=gw!.getGateway(AvailableGateways.BILLPRO)
+                apiSampleParameters! = gateway!.getApiSampleParameters()
+                apiSampleParameters!.put("AccountID","12254632")
+                apiSampleParameters!.put("AccountAuth","fJkFwzeGasScyzIV")			
+			break
+			case "NMI"
+                gateway!=gw!.getGateway(AvailableGateways.NMI)
+                apiSampleParameters! = gateway!.getApiSampleParameters()
+                apiSampleParameters!.put("username", "demo")
+                apiSampleParameters!.put("password", "password")			
+			break
             case default
-                rem other J2Pay gateways: PAYEEZY, EASYPAY, BILLPRO, NMI
+                rem shouldn't get here
             break
         swend
 
