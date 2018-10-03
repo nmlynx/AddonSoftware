@@ -17,9 +17,9 @@ rem --- WAIT4OK%    : Wait for user's OK when done, 0=don't wait/1=wait (Input)
 rem --- STATUS      : Status code/0=No error (Returned)
 
     use java.io.File
-    use java.util.Vector
-    use java.util.HashMap
     use java.util.Iterator
+    use java.util.TreeMap
+    use java.util.Vector
     use ::bbtranslator.bbj::BBTranslator
     use ::ado_file.src::FileObject
     use ::adc_copyaon.aon::CopyAonDir
@@ -54,11 +54,11 @@ init: rem --- Initializations
     dataDir$=formData!.getProperty("DATA_LOCATION")
     newFirm$=formData!.getProperty("NEW_FIRM_ID")
 	
-	rem --- Initialize HashMap with files required for a clean new install
+	rem --- Initialize TreeMap with files required for a clean new install
 	declare Vector fileVect!
-	declare HashMap requiredFiles!
+	declare TreeMap requiredFiles!
 	fileVect! = CopyAonDir.getRequiredFiles()
-	requiredFiles! = new HashMap()
+	requiredFiles! = new TreeMap()
 	for i=0 to fileVect!.size()-1
 	    thisFile$=fileVect!.get(i)
 	    requiredFiles!.put(thisFile$,"")
