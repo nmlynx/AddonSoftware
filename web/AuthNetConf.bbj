@@ -1,0 +1,51 @@
+CLASS PUBLIC AuthNetConf
+
+    field private BBjspWebRequest request!
+    field private BBjspWebResponse response!
+    field private BBjspWebSession session!
+    field private BBjspSessionData data!
+  
+    method public void service(BBjspServletContext context!)
+	
+	    #request! = context!.getRequest()
+        #response! = context!.getResponse()
+	
+		rspFile$="C:/bbj/apps/aon/responses/AuthorizeNetConfirmationTest.txt"
+		erase rspFile$,err=*next
+		string rspFile$
+		rsp_chan=unt
+		open(rsp_chan)rspFile$
+		
+		writerecord(rsp_chan)"In Authorize.net Confirmation servlet..."+$0D0A$
+ 		writerecord(rsp_chan)"Method is: "+#request!.getMethod()+$0D0A$
+        
+        if (#request!.getMethod()="POST") then 
+            content!=#request!.getBody()
+			writerecord(rsp_chan)content!
+		else
+			vectParamNames! = #request!.getParameterNames()
+			if vectParamNames!.size()
+				writerecord(rsp_chan)"Returned parameters..."+$0D0A$
+				for wk=0 to vectParamNames!.size()-1
+					writerecord(rsp_chan)vectParamNames!.get(wk)+$0D0A$
+				next wk
+			else
+				writerecord(rsp_chan)"No params sent..."
+				content!=#request!.getBody()
+				writerecord(rsp_chan)"Body??"+$0D0A$
+				writerecord(rsp_chan)content!
+			endif
+        endif 
+		
+		close(rsp_chan)
+		
+		s! = #response!.getOutputStream()
+        s!.write("<html>")
+        s!.write("<body>")
+		s!.write("<h3><span style="+$22$+"color: Navy;"+$22$+">Thank you for your business.</span></h3>")
+        s!.write("</body>")
+        s!.write("</html>")
+
+    METHODEND
+    
+CLASSEND

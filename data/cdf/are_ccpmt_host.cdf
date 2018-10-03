@@ -372,6 +372,8 @@ rem --- Resize grids
 rem --- check for mandatory data, confirm, then process
 
 	apply_amt!=cast(BBjNumber, num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT")))
+	masked_amt$=cvs(str(num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT")):callpoint!.getDevObject("ar_a_mask")),3)
+
 	if apply_amt!=0
 		dim msg_tokens$[1]
 		msg_tokens$[0]="Please select invoices for payment."
@@ -384,7 +386,7 @@ rem --- check for mandatory data, confirm, then process
 	msg_id$="CONF_CC_PAYMENT"
 	msg_opt$=""
 	dim msg_tokens$[1]
-	msg_tokens$[0]=cvs(str(num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT")):callpoint!.getDevObject("ar_a_mask")),3)
+	msg_tokens$[0]=masked_amt$
 	gosub disp_message
 	if msg_opt$<>"Y"
 		callpoint!.setStatus("EXIT")
@@ -473,16 +475,21 @@ rem					BBjAPI().getThinClient().browse("https://pilot-payflowlink.paypal.com?SE
                         
 				setting2! = new SettingType()
 				setting2!.setSettingName("hostedPaymentOrderOptions")
-				setting2!.setSettingValue("{"+$22$+"show"+$22$+": true}");rem --- CAH what if true?
+				setting2!.setSettingValue("{"+$22$+"show"+$22$+": false}")
 
 				setting3! = new SettingType()
 				setting3!.setSettingName("hostedPaymentReturnOptions")
 				setting3!.setSettingValue("{"+$22$+"showReceipt"+$22$+": true, "+$22$+"url"+$22$+": "+$22$+"https://test.basis.com:443/bbjsp/authnetconf"+$22$+", "+$22$+"urlText"+$22$+": "+$22$+"Continue"+$22$+"}")
 
+				setting4! = new SettingType()
+				setting4!.setSettingName("hostedPaymentPaymentOptions")
+				setting4!.setSettingValue("{"+$22$+"showBankAccount"+$22$+": false}")
+
 				alist! = new ArrayOfSetting()
 				alist!.getSetting().add(setting1!)
 				alist!.getSetting().add(setting2!)
 				alist!.getSetting().add(setting3!)
+				alist!.getSetting().add(setting4!)
 
 				apiRequest! = new GetHostedPaymentPageRequest()
 				apiRequest!.setTransactionRequest(txnRequest!)
@@ -505,7 +512,7 @@ rem					BBjAPI().getThinClient().browse("https://pilot-payflowlink.paypal.com?SE
 				rem --- assuming this is our response, record the Webhook response in art_response and create cash receipt, if applicable
 
 				if authResponse!.getMessages().getResultCode()=MessageTypeEnum.OK
-					returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -gauthorize -t"+authResponse!.getToken())
+					returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -gauthorize -t"+authResponse!.getToken()+" -a"+masked_amt$)
 rem					BBjAPI().getThinClient().browse("https://test.basis.com:443/AuthorizeHostedPayment.htm?authtoken="+authResponse!.getToken())
 				else
 					trans_msg$="Unable to acquire secure token. Response: "+$0a$+authResponse!.getMessages().getMessage().get(0).getCode()+$0a$+authResponse!.getMessages().getMessage().get(0).getText();rem --- TODO CAH needs localization

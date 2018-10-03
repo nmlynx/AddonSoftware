@@ -13,12 +13,19 @@
 	</script>
   </head>
   <body>
+	
+    <h2>Processing payment </h2>
+	
+	<p id="paid"></p>
 
-    <p>Going to Authorize.net Hosted Payment page...</p>
+	<script type="text/javascript">
+		var pd = getUrlVars()["amount"];
+		document.getElementById("paid").innerHTML = pd;
+	</script>
 
     <form method="post" action="https://test.authorize.net/payment/payment" > 
         <input id="mytoken" type="hidden" name="token" value= "" > 
-        <input type="submit" value="Proceed to Checkout">
+        <input type="submit" value="Continue to Authorize.net Hosted Payment Page">
 	
 		
 	<script type="text/javascript">

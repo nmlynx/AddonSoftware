@@ -14,12 +14,13 @@ rem --- Get progarm arguments
 			if pos("-g"=arg$)=1 then gateway$=arg$(3)
             if pos("-s"=arg$)=1 then sid$=arg$(3)
             if pos("-t"=arg$)=1 then tokenID$=arg$(3)
+			if pos("-a"=arg$)=1 then amt$=arg$(3)
         next i
     endif
 
 rem --- set URL based on gateway (ultimately will come out of config files)
 	if pos("authorize"=gateway$)
-		hostedURL$="https://test.basis.com:443/AuthorizeHostedPayment.htm?authtoken="+tokenID$
+		hostedURL$="https://test.basis.com:443/AuthorizeHostedPayment.htm?authtoken="+tokenID$+"&amount="+amt$
 	else
 		hostedURL$="https://pilot-payflowlink.paypal.com?SECURETOKENID="+sid$+"&SECURETOKEN="+tokenID$
 	endif
