@@ -1,4 +1,4 @@
-CLASS PUBLIC AuthNetConf
+CLASS PUBLIC PayPalSilentPost
 
     field private BBjspWebRequest request!
     field private BBjspWebResponse response!
@@ -9,14 +9,25 @@ CLASS PUBLIC AuthNetConf
 	
 	    #request! = context!.getRequest()
         #response! = context!.getResponse()
+
+		content!=#request!.getBody()
+		token_id$=fnparse$(content!,"SECURETOKENID=","&")
+		
+		ns!=BBjAPI().getNamespace("aon","credit_receipt_paypal",1)
+		wk$=ns!.getValue(token_id$,err=*next)
+		if wk$="init"
+			ns!.setValue(token_id$,content!)
+		else
+			ns!.setValue(token_id$,"Namespace value not as expected.")
+		endif
 	
-		rspFile$="C:/bbj/apps/aon/responses/AuthorizeNetConfirmationTest.txt"
+		rspFile$="C:/bbj/apps/aon/responses/PayPalSilentPostTest.txt"
 		erase rspFile$,err=*next
 		string rspFile$
 		rsp_chan=unt
 		open(rsp_chan)rspFile$
 		
-		writerecord(rsp_chan)"In Authorize.net Confirmation servlet..."+$0D0A$
+		writerecord(rsp_chan)"In Silent Post servlet..."+$0D0A$
  		writerecord(rsp_chan)"Method is: "+#request!.getMethod()+$0D0A$
         
         if (#request!.getMethod()="POST") then 
@@ -38,13 +49,23 @@ CLASS PUBLIC AuthNetConf
         endif 
 		
 		close(rsp_chan)
-		
-		s! = #response!.getOutputStream()
-        s!.write("<html>")
-        s!.write("<body>")
-		s!.write("<h3><span style="+$22$+"color: Navy;"+$22$+">Thank you for your business.</span></h3>")
-        s!.write("</body>")
-        s!.write("</html>")
+
+		rem --- parse response text
+		rem --- wkx0$=response, wkx1$=key to look for, wkx2$=delim used to separate key/value pairs
+
+		def fnparse$(wkx0$,wkx1$,wkx2$)
+
+			wkx3$=""
+			wk1=pos(wkx1$=wkx0$)
+			if wk1
+				wkx3$=wkx0$(wk1+len(wkx1$))
+				wk2=pos(wkx2$=wkx3$)
+				if wk2
+					wkx3$=wkx3$(1,wk2-1)
+				endif
+			endif
+			return wkx3$
+		fnend
 
     METHODEND
     

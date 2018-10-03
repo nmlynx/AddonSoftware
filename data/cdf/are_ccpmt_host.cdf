@@ -479,7 +479,7 @@ rem					BBjAPI().getThinClient().browse("https://pilot-payflowlink.paypal.com?SE
 
 				setting3! = new SettingType()
 				setting3!.setSettingName("hostedPaymentReturnOptions")
-				setting3!.setSettingValue("{"+$22$+"showReceipt"+$22$+": true, "+$22$+"url"+$22$+": "+$22$+"https://test.basis.com:443/bbjsp/authnetconf"+$22$+", "+$22$+"urlText"+$22$+": "+$22$+"Continue"+$22$+"}")
+				setting3!.setSettingValue("{"+$22$+"showReceipt"+$22$+": true, "+$22$+"url"+$22$+": "+$22$+"https://test.basis.com:443/dev_aon_er9410/AuthorizeConfirmation.htm"+$22$+", "+$22$+"urlText"+$22$+": "+$22$+"Continue"+$22$+"}")
 
 				setting4! = new SettingType()
 				setting4!.setSettingName("hostedPaymentPaymentOptions")
