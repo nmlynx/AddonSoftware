@@ -408,15 +408,14 @@ rem --- Process requiredFiles!
             wend
         endif
         
-rem wgh ... 9470 ... change 99 to ZZ 
-        rem --- Copy firm 99 to new firm, if new firm not blank
+        rem --- Copy firm ZZ to new firm, if new firm not blank
         if cvs(newFirm$,3)<>"" then 
             write_dev=unt
             open(write_dev)aFile!.getPath()
-            read(file_dev,key="99",dom=*next)
+            read(file_dev,key="ZZ",dom=*next)
             while 1
                 key$=key(file_dev,err=*break)
-                if len(key$)>=2 and key$(1,2)="99"
+                if len(key$)>=2 and key$(1,2)="ZZ"
                     readrecord(file_dev,key=key$)record$
                     writerecord(write_dev,key=newFirm$+key$(3),dom=*next)newFirm$+record$(3)
                 else
@@ -502,9 +501,8 @@ rem wgh ... 9470 ... change 99 to ZZ
             close(write_dev)
             close(file_dev)
         
-rem wgh ... 9470 ... change 99 to ZZ 
             rem --- Increment progress meter
-            meter_text$="copied firm 99 to "+newFirm$+": "+aFile!.getPath()
+            meter_text$="copied firm ZZ to "+newFirm$+": "+aFile!.getPath()
             meter_proc_recs=meter_proc_recs+1
             meter_action$="MTR-LST"
             gosub disp_meter
