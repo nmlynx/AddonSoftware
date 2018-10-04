@@ -1,6 +1,7 @@
 rem --- are_ccpmtapi.aon - process credit card payment using J2Pay library (i.e., internal API)
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 
+	use java.util.Iterator
     use org.json.JSONObject
 
     use com.tranxactive.j2pay.gateways.parameters.Customer
@@ -15,6 +16,8 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 
     use com.tranxactive.j2pay.net.HTTPResponse
     use com.tranxactive.j2pay.net.JSONHelper
+	
+    use ::sys/prog/bao_encryptor.bbj::Encryptor
 
     setesc std_error
     seterr std_error
@@ -28,13 +31,14 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    num_files=5
+    num_files=6
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="ART_RESPONSE",open_opts$[1]="OTA"
     open_tables$[2]="ARE_CASHHDR",open_opts$[2]="OTA"
     open_tables$[3]="ARE_CASHDET",open_opts$[3]="OTA"
     open_tables$[4]="ARE_CASHBAL",open_opts$[4]="OTA"
     open_tables$[5]="ARS_CC_CUSTSVC",open_opts$[5]="OTA"
+	open_tables$[6]="ARC_GATEWAYDET",open_opts$[6]="OTA"
 
     gosub open_tables
 
@@ -43,16 +47,25 @@ rem --- Open/Lock files
     are_cashdet=num(open_chans$[3])
     are_cashbal=num(open_chans$[4])
     ars_cc_custsvc=num(open_chans$[5])
+	arc_gatewaydet=num(open_chans$[6])
 
     dim art_response$:open_tpls$[1]
     dim are_cashhdr$:open_tpls$[2]
     dim are_cashdet$:open_tpls$[3]
     dim are_cashbal$:open_tpls$[4]
     dim ars_cc_custsvc$:open_tpls$[5]
+	dim arc_gatewaydet$:open_tpls$[6]
+
+rem --- init
+
+    encryptor! = new Encryptor()
+    config_id$ = "GATEWAY_AUTH"
+    encryptor!.setConfiguration(config_id$)
 
 rem --- read params to get gateway, and get list of invoices/payment amount specified to pay and other inputs from option entry form
+
     readrecord(ars_cc_custsvc,key=firm_id$+"AR00",dom=*next)ars_cc_custsvc$
-    gateway$=cvs(ars_cc_custsvc.gateway$,7)
+    gateway$=ars_cc_custsvc.gateway_id$
 
     vectInvoices!=callpoint!.getDevObject("vectInvoices")
     apply_amt!=cast(BBjNumber, num(option!.getOptionData("<<DISPLAY>>.APPLY_AMT")))
@@ -60,126 +73,92 @@ rem --- read params to get gateway, and get list of invoices/payment amount spec
 
 rem --- Assign form input values to local variables
 
-        name_first$=option!.getOptionData("NAME_FIRST")
-        name_last$=option!.getOptionData("NAME_LAST")
-        address_line_1$=option!.getOptionData("ADDRESS_LINE_1")
-        address_line_2$=option!.getOptionData("ADDRESS_LINE_2")
-        city$=option!.getOptionData("CITY")
-        state_code$=option!.getOptionData("STATE_CODE")
-        zip_code$=option!.getOptionData("ZIP_CODE")
-        cntry_id$=option!.getOptionData("CNTRY_ID")
-        phone_no$=option!.getOptionData("PHONE_NO")
-        email_addr$=option!.getOptionData("EMAIL_ADDR")
+	name_first$=option!.getOptionData("NAME_FIRST")
+	name_last$=option!.getOptionData("NAME_LAST")
+	address_line_1$=option!.getOptionData("ADDRESS_LINE_1")
+	address_line_2$=option!.getOptionData("ADDRESS_LINE_2")
+	city$=option!.getOptionData("CITY")
+	state_code$=option!.getOptionData("STATE_CODE")
+	zip_code$=option!.getOptionData("ZIP_CODE")
+	cntry_id$=option!.getOptionData("CNTRY_ID")
+	phone_no$=option!.getOptionData("PHONE_NO")
+	email_addr$=option!.getOptionData("EMAIL_ADDR")
 
-        card_no$=callpoint!.getDevObject("card_no")
-        security_cd$=callpoint!.getDevObject("security_cd")
-        month$=callpoint!.getDevObject("month")
-        year$=callpoint!.getDevObject("year")
+	card_no$=callpoint!.getDevObject("card_no")
+	security_cd$=callpoint!.getDevObject("security_cd")
+	month$=callpoint!.getDevObject("month")
+	year$=callpoint!.getDevObject("year")
 
-        callpoint!.setDevObject("card_no","")
-        callpoint!.setDevObject("security_cd","")
-        callpoint!.setDevObject("month","")
-        callpoint!.setDevObject("year","")
+	callpoint!.setDevObject("card_no","")
+	callpoint!.setDevObject("security_cd","")
+	callpoint!.setDevObject("month","")
+	callpoint!.setDevObject("year","")
 
-        ip$="127.0.0.1"
+	ip$="127.0.0.1"
 
-        rem --- Use J2Pay library
-        gw! = new GatewayFactory()
-        apiSampleParameters! = new JSONObject()
-        
-        switch gateway$
-            case "AUTHORIZE"
-                gateway!=gw!.getGateway(AvailableGateways.AUTHORIZE)
-                apiSampleParameters! = gateway!.getApiSampleParameters()
-                apiSampleParameters!.put("name", "58rvyVe2Ns")
-                apiSampleParameters!.put("transactionKey", "23bm952fK8UR74FM")
-            break
-            case "PAYFLOWPRO"
-                gateway!=gw!.getGateway(AvailableGateways.PAYFLOWPRO)
-                apiSampleParameters! = gateway!.getApiSampleParameters()
-                apiSampleParameters!.put("PARTNER", "PayPal")
-                apiSampleParameters!.put("VENDOR", "AONtesting")
-                apiSampleParameters!.put("USER", "CHawkins")
-                apiSampleParameters!.put("PWD", "Titp4CH")
-            break
-			case "PAYEEZY"
-                gateway!=gw!.getGateway(AvailableGateways.PAYEEZY)
-                apiSampleParameters! = gateway!.getApiSampleParameters()
-			    apiSampleParameters!.put("exactId","MJ3300-35")
-                apiSampleParameters!.put("password","Y1GpWQfuRlS0iPK64uZ2Kavzyz3vSFg5")
-			break
-			case "EASYPAY"
-                gateway!=gw!.getGateway(AvailableGateways.EASYPAY)
-                apiSampleParameters! = gateway!.getApiSampleParameters()
-                apiSampleParameters!.put("username", "EPDDemo")
-                apiSampleParameters!.put("password", "EPDDemoAccount5!")			
-			break
-			case "BILLPRO"
-                gateway!=gw!.getGateway(AvailableGateways.BILLPRO)
-                apiSampleParameters! = gateway!.getApiSampleParameters()
-                apiSampleParameters!.put("AccountID","12254632")
-                apiSampleParameters!.put("AccountAuth","fJkFwzeGasScyzIV")			
-			break
-			case "NMI"
-                gateway!=gw!.getGateway(AvailableGateways.NMI)
-                apiSampleParameters! = gateway!.getApiSampleParameters()
-                apiSampleParameters!.put("username", "demo")
-                apiSampleParameters!.put("password", "password")			
-			break
-            case default
-                rem shouldn't get here
-            break
-        swend
+	rem --- Use J2Pay library
+	gw! = new GatewayFactory()
+	apiSampleParameters! = new JSONObject()
+	
+	gateway! = gw!.getGateway(AvailableGateways.valueOf(cvs(gateway$,3)))
+	apiSampleParameters! = gateway!.getApiSampleParameters()
+	paramKeys! = apiSampleParameters!.keys()
+	if !paramKeys!.hasNext() then goto std_exit;rem --- shouldn't happen
+	while paramKeys!.hasNext()
+		gw_attrib$=paramKeys!.next()
+		read record (arc_gatewaydet,key=firm_id$+gateway$+pad(gw_attrib$,len(arc_gatewaydet.config_attr$)),knum="AO_ATTRIBUTE",err=std_exit)arc_gatewaydet$
+		apiSampleParameters!.put(gw_attrib$,encryptor!.decryptData(cvs(arc_gatewaydet.config_value$,3)))
+	wend
 
-        gateway!.setTestMode(BBjAPI.TRUE)
+	gateway!.setTestMode(BBjAPI.TRUE)
 
-        customer! = new Customer()
-        customer!.setFirstName(name_first$)
-        customer!.setLastName(name_last$)
-        customer!.setCountry(Country.valueOf(cntry_id$))
-        customer!.setState(state_code$)
-        customer!.setCity(city$)
-        customer!.setAddress(address_line_1$+" "+address_line_2$)
-        customer!.setZip(zip_code$)
-        customer!.setPhoneNumber(phone_no$)
-        customer!.setEmail(email_addr$)
-        customer!.setIp("127.0.0.1");rem only required by BillPro AFAIK
+	customer! = new Customer()
+	customer!.setFirstName(name_first$)
+	customer!.setLastName(name_last$)
+	customer!.setCountry(Country.valueOf(cntry_id$))
+	customer!.setState(state_code$)
+	customer!.setCity(city$)
+	customer!.setAddress(address_line_1$+" "+address_line_2$)
+	customer!.setZip(zip_code$)
+	customer!.setPhoneNumber(phone_no$)
+	customer!.setEmail(email_addr$)
+	customer!.setIp("127.0.0.1");rem only required by BillPro AFAIK
 
-        customerCard! = new CustomerCard()
-        customerCard!.setName(name_first$+" "+name_last$)
-        customerCard!.setNumber(card_no$);rem note - only certain credit card numbers allowed for testing
-        customerCard!.setCvv(security_cd$)
-        customerCard!.setExpiryMonth(month$)
-        customerCard!.setExpiryYear(year$)
-     
-        response! = new HTTPResponse()
-        response! = gateway!.purchase(apiSampleParameters!, customer!, customerCard!, Currency.USD, apply_amt!.floatValue())
-     
-        rem --- write response to history file
-        trans_id$=""
-        full_response!=response!.getJSONResponse()
-        trans_id$=full_response!.get("lr").get("transactionId",err=*next)
-        trans_msg$=full_response!.get("lr").get("message")
+	customerCard! = new CustomerCard()
+	customerCard!.setName(name_first$+" "+name_last$)
+	customerCard!.setNumber(card_no$);rem note - only certain credit card numbers allowed for testing
+	customerCard!.setCvv(security_cd$)
+	customerCard!.setExpiryMonth(month$)
+	customerCard!.setExpiryYear(year$)
+ 
+	response! = new HTTPResponse()
+	response! = gateway!.purchase(apiSampleParameters!, customer!, customerCard!, Currency.USD, apply_amt!.floatValue())
+ 
+	rem --- write response to history file
+	trans_id$=""
+	full_response!=response!.getJSONResponse()
+	trans_id$=full_response!.get("lr").get("transactionId",err=*next)
+	trans_msg$=full_response!.get("lr").get("message")
 
-        rem --- write response text to art_response
-        if trans_id$<>""
-            response_text$=full_response!.toString()
-            gosub write_to_response_log
-        endif
+	rem --- write response text to art_response
+	if trans_id$<>""
+		response_text$=full_response!.toString()
+		gosub write_to_response_log
+	endif
 
-        rem --- if transaction was approved, create cash receipt
-        if response!.isSuccessful()
-            gosub create_cash_receipt
-        else
-            cash_msg$=""
-        endif
+	rem --- if transaction was approved, create cash receipt
+	if response!.isSuccessful()
+		gosub create_cash_receipt
+	else
+		cash_msg$=""
+	endif
 
-		dim msg_tokens$[1]
-		msg_tokens$[0]=trans_msg$+$0A$+cash_msg$
-		msg_id$="GENERIC_OK"
-		gosub disp_message
+	dim msg_tokens$[1]
+	msg_tokens$[0]=trans_msg$+$0A$+cash_msg$
+	msg_id$="GENERIC_OK"
+	gosub disp_message
 
-		goto std_exit
+	goto std_exit
 
 write_to_response_log:rem --- write to art_response
 rem --- in: firm_id$, cust_id$, trans_id$, response_text$, vectInvoices!

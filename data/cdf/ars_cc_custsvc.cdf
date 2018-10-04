@@ -2,16 +2,13 @@
 rem --- populate list of supported gateways based on the interface type
 
 	interface_tp$=callpoint!.getColumnData("ARS_CC_CUSTSVC.INTERFACE_TP")
-	column$="ARS_CC_CUSTSVC.GATEWAY"
+	column$="ARS_CC_CUSTSVC.GATEWAY_ID"
 	gosub get_gateways
 	callpoint!.setStatus("REFRESH")
-
-[[ARS_CC_CUSTSVC.AREA]]
-
 [[ARS_CC_CUSTSVC.<CUSTOM>]]
 rem ============================================================
 get_gateways:rem --- load up listbutton with supported gateways for given or selected interface type
-rem --- in: interface_tp$, column$ (ars_cc_custsvc.gateway or ars_cc_customer.gateway) to set list for
+rem --- in: interface_tp$, column$ (ars_cc_custsvc.gateway_id or ars_cc_customer.gateway_id) to set list for
 rem ============================================================
 
 	arc_gatewayhdr=fnget_dev("ARC_GATEWAYHDR")
@@ -85,12 +82,12 @@ rem --- open tables
 rem --- populate list of supported gateways based on the interface type
 
 	interface_tp$=callpoint!.getUserInput()
-	column$="ARS_CC_CUSTSVC.GATEWAY"
+	column$="ARS_CC_CUSTSVC.GATEWAY_ID"
 	gosub get_gateways
 [[ARS_CC_CUSTSVC.AOPT-GTWY]]
 rem --- launch config form for selected gateway
 
-	gateway$=callpoint!.getColumnData("ARS_CC_CUSTSVC.GATEWAY")
+	gateway$=callpoint!.getColumnData("ARS_CC_CUSTSVC.GATEWAY_ID")
 
 	dim dflt_data$[1,1]
 	dflt_data$[0,0]="FIRM_ID"

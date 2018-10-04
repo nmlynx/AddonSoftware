@@ -85,21 +85,21 @@ rem ==============================================
 [[ARE_CCPMT_API.ASVA]]
 rem --- check for mandatory data, confirm, then process
 
-	if cvs(callpoint!.getColumnData("are_ccpmt_api.ADDRESS_LINE_1"),3)="" or
-:		cvs(callpoint!.getColumnData("are_ccpmt_api.CARD_NO"),3)="" or
-:		cvs(callpoint!.getColumnData("are_ccpmt_api.CITY"),3)="" or
-:		cvs(callpoint!.getColumnData("are_ccpmt_api.CNTRY_ID"),3)="" or
-:		cvs(callpoint!.getColumnData("are_ccpmt_api.CUSTOMER_ID"),3)="" or
-:		cvs(callpoint!.getColumnData("are_ccpmt_api.EMAIL_ADDR"),3)="" or
-:		cvs(callpoint!.getColumnData("are_ccpmt_api.FIRM_ID"),3)="" or
-:		cvs(callpoint!.getColumnData("are_ccpmt_api.MONTH"),3)="" or
-:		cvs(callpoint!.getColumnData("are_ccpmt_api.NAME_FIRST"),3)="" or
-:		cvs(callpoint!.getColumnData("are_ccpmt_api.NAME_LAST"),3)="" or
-:		cvs(callpoint!.getColumnData("are_ccpmt_api.PHONE_NO"),3)="" or
-:		cvs(callpoint!.getColumnData("are_ccpmt_api.SECURITY_CD"),3)="" or
-:		cvs(callpoint!.getColumnData("are_ccpmt_api.STATE_CODE"),3)="" or
-:		cvs(callpoint!.getColumnData("are_ccpmt_api.YEAR"),3)="" or
-:		cvs(callpoint!.getColumnData("are_ccpmt_api.ZIP_CODE"),3)="" or
+	if cvs(callpoint!.getColumnData("ARE_CCPMT_API.ADDRESS_LINE_1"),3)="" or
+:		cvs(callpoint!.getColumnData("ARE_CCPMT_API.CARD_NO"),3)="" or
+:		cvs(callpoint!.getColumnData("ARE_CCPMT_API.CITY"),3)="" or
+:		cvs(callpoint!.getColumnData("ARE_CCPMT_API.CNTRY_ID"),3)="" or
+:		cvs(callpoint!.getColumnData("ARE_CCPMT_API.CUSTOMER_ID"),3)="" or
+:		cvs(callpoint!.getColumnData("ARE_CCPMT_API.EMAIL_ADDR"),3)="" or
+:		cvs(callpoint!.getColumnData("ARE_CCPMT_API.FIRM_ID"),3)="" or
+:		cvs(callpoint!.getColumnData("ARE_CCPMT_API.MONTH"),3)="" or
+:		cvs(callpoint!.getColumnData("ARE_CCPMT_API.NAME_FIRST"),3)="" or
+:		cvs(callpoint!.getColumnData("ARE_CCPMT_API.NAME_LAST"),3)="" or
+:		cvs(callpoint!.getColumnData("ARE_CCPMT_API.PHONE_NO"),3)="" or
+:		cvs(callpoint!.getColumnData("ARE_CCPMT_API.SECURITY_CD"),3)="" or
+:		cvs(callpoint!.getColumnData("ARE_CCPMT_API.STATE_CODE"),3)="" or
+:		cvs(callpoint!.getColumnData("ARE_CCPMT_API.YEAR"),3)="" or
+:		cvs(callpoint!.getColumnData("ARE_CCPMT_API.ZIP_CODE"),3)="" or
 :		num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT"))=0
 
 		dim msg_tokens$[1]
@@ -111,7 +111,7 @@ rem --- check for mandatory data, confirm, then process
 	endif
 
 	curr$=date(0:"%Yd%Mz")
-	if curr$>callpoint!.getColumnData("are_ccpmt_api.YEAR")+callpoint!.getColumnData("are_ccpmt_api.MONTH")
+	if curr$>callpoint!.getColumnData("ARE_CCPMT_API.YEAR")+callpoint!.getColumnData("ARE_CCPMT_API.MONTH")
 		dim msg_tokens$[1]
 		msg_tokens$[0]="According to month/year entered, this card has expired.";rem --- TODO CAH localize
 		msg_id$="GENERIC_WARN"
@@ -129,15 +129,15 @@ rem --- check for mandatory data, confirm, then process
 		callpoint!.setStatus("ABORT-ACTIVATE")
 	else
 		rem --- store card info in memory and clear from callpoint! so it doesn't get saved in ads_selopt in !LAST_PROCESS
-		callpoint!.setDevObject("card_no",cvs(callpoint!.getColumnData("are_ccpmt_api.CARD_NO"),3))
-		callpoint!.setDevObject("security_cd",cvs(callpoint!.getColumnData("are_ccpmt_api.SECURITY_CD"),3))
-		callpoint!.setDevObject("month",cvs(callpoint!.getColumnData("are_ccpmt_api.MONTH"),3))
-		callpoint!.setDevObject("year",cvs(callpoint!.getColumnData("are_ccpmt_api.YEAR"),3))
+		callpoint!.setDevObject("card_no",cvs(callpoint!.getColumnData("ARE_CCPMT_API.CARD_NO"),3))
+		callpoint!.setDevObject("security_cd",cvs(callpoint!.getColumnData("ARE_CCPMT_API.SECURITY_CD"),3))
+		callpoint!.setDevObject("month",cvs(callpoint!.getColumnData("ARE_CCPMT_API.MONTH"),3))
+		callpoint!.setDevObject("year",cvs(callpoint!.getColumnData("ARE_CCPMT_API.YEAR"),3))
 
-		callpoint!.setColumnData("are_ccpmt_api.CARD_NO","")
-		callpoint!.setColumnData("are_ccpmt_api.SECURITY_CD","")
-		callpoint!.setColumnData("are_ccpmt_api.MONTH","")
-		callpoint!.setColumnData("are_ccpmt_api.YEAR","")
+		callpoint!.setColumnData("ARE_CCPMT_API.CARD_NO","")
+		callpoint!.setColumnData("ARE_CCPMT_API.SECURITY_CD","")
+		callpoint!.setColumnData("ARE_CCPMT_API.MONTH","")
+		callpoint!.setColumnData("ARE_CCPMT_API.YEAR","")
 	endif
 [[ARE_CCPMT_API.ACUS]]
 rem --- Process custom event -- used in this pgm to select/de-select checkboxes in grid
@@ -229,7 +229,7 @@ gosub open_tables
 
 rem --- Add open invoice grid to form
 	nxt_ctlID = util.getNextControlID()
-	tmpCtl!=callpoint!.getControl("are_ccpmt_api.EMAIL_ADDR")
+	tmpCtl!=callpoint!.getControl("ARE_CCPMT_API.EMAIL_ADDR")
 	grid_y=tmpCtl!.getY()+tmpCtl!.getHeight()+5
 	openInvoicesGrid! = Form!.addGrid(nxt_ctlID,5,grid_y,895,125); rem --- ID, x, y, width, height
 	callpoint!.setDevObject("openInvoicesGrid",openInvoicesGrid!)
@@ -311,7 +311,7 @@ rem ==========================================================================
 
 	for curr_attr=1 to grid_cols
 		attr_grid_col$[0,1] = attr_grid_col$[0,1] + 
-:			pad("are_ccpmt_api." + attr_grid_col$[curr_attr, fnstr_pos("DVAR", attr_def_col_str$[0,0], 5)], 40)
+:			pad("ARE_CCPMT_API." + attr_grid_col$[curr_attr, fnstr_pos("DVAR", attr_def_col_str$[0,0], 5)], 40)
 	next curr_attr
 
 	attr_disp_col$=attr_grid_col$[0,1]
@@ -328,7 +328,7 @@ rem ==========================================================================
 	art_invhdr=fnget_dev("ART_INVHDR")
 	dim art_invhdr$:fnget_tpl$("ART_INVHDR")
 
-	cust_id$=callpoint!.getColumnData("are_ccpmt_api.CUSTOMER_ID")
+	cust_id$=callpoint!.getColumnData("ARE_CCPMT_API.CUSTOMER_ID")
 	ar_type$=art_invhdr.ar_type$;rem --- ar_type always '  '
 
 	vectInvoices!=BBjAPI().makeVector()
