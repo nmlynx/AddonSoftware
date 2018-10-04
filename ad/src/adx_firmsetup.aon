@@ -22,6 +22,20 @@ rem --- Get user inputs
     formData! = new Properties()
     formData!.setProperty("DATA_LOCATION",Option!.getOptionData("DATA_LOCATION"))
     formData!.setProperty("NEW_FIRM_ID",Option!.getOptionData("NEW_FIRM_ID"))
+    formData!.setProperty("FIRM_NAME",Option!.getOptionData("FIRM_NAME"))
+    formData!.setProperty("ADDR_LINE_1",Option!.getOptionData("ADDR_LINE_1"))
+    formData!.setProperty("ADDR_LINE_2",Option!.getOptionData("ADDR_LINE_2"))
+    formData!.setProperty("CITY",Option!.getOptionData("CITY"))
+    formData!.setProperty("STATE_CODE",Option!.getOptionData("STATE_CODE"))
+    formData!.setProperty("ZIP_CODE",Option!.getOptionData("ZIP_CODE"))
+    formData!.setProperty("CNTRY_ID",Option!.getOptionData("CNTRY_ID"))
+    formData!.setProperty("PHONE_NO",Option!.getOptionData("PHONE_NO"))
+    formData!.setProperty("FEDERAL_ID",Option!.getOptionData("FEDERAL_ID"))
+    formData!.setProperty("INSTALL_TYPE",Option!.getOptionData("INSTALL_TYPE"))
+
+rem wgh ... 9470 ... if adx_installwiz.aon launched adx_firmsetup form, return formData! to adx_installwiz.aon and exit
+
+rem wgh ... 9470 ... otherwise call adc_firmsetup.aon
     
 rem --- Setup new firm
 
