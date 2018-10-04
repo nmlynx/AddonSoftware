@@ -8,13 +8,13 @@ rem --- Open adm_procmaster (adm-09)
 [[ADX_FIRMSETUP.<CUSTOM>]]
 validate_firm_id: rem --- Validate New Firm ID
 
-	rem --- Can't use an existing firm (including firm 99)
+	rem --- Can't use an existing firm (including firms 99 and ZZ)
 	rem --- Check for firm in adm_procmaster (adm-09)
 	adm09_dev=fnget_dev("ADM_PROCMASTER")
 	dim adm09a$:fnget_tpl$("ADM_PROCMASTER")
 	read(adm09_dev,key=firm_id$,dom=*next)
 	readrecord(adm09_dev,err=*next)adm09a$
-	if adm09a$.firm_id$=firm_id$ then
+	if adm09a$.firm_id$=firm_id$ or pos(firm_id$="99ZZ",2) then
 		msg_id$="AD_FIRM_ID_USED"
 		dim msg_tokens$[1]
 		msg_tokens$[1]=firm_id$
