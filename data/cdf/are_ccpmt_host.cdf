@@ -161,27 +161,29 @@ rem ==========================================================================
 
 rem ==========================================================================
 get_gateway_config:rem --- get config for specified gateway
-rem --- in: gateway$; out: hashmap gw_config! containing config entries
+rem --- in: gateway_id$; out: hashmap gw_config! containing config entries
 rem ==========================================================================
 
 	encryptor! = new Encryptor()
 	config_id$ = "GATEWAY_AUTH"
 	encryptor!.setConfiguration(config_id$)
 
-	read(arc_gatewaydet,key=firm_id$+gateway$,dom=*next)
+	read(arc_gatewaydet,key=firm_id$+gateway_id$,dom=*next)
 	gw_config!=new java.util.HashMap()
 
 	while 1
 		readrecord(arc_gatewaydet,end=*break)arc_gatewaydet$
-		if pos(firm_id$+gateway$=arc_gatewaydet$)<>1 then break
+		if pos(firm_id$+gateway_id$=arc_gatewaydet$)<>1 then break
+		if gw_config!.get("gateway_id")=null() then gw_config!.put("gateway_id",gateway_id$)
 		gw_config!.put(cvs(arc_gatewaydet.config_attr$,3),encryptor!.decryptData(cvs(arc_gatewaydet.config_value$,3)))
 	wend
+
+	callpoint!.setDevObject("gw_config",gw_config!)
 
 	return
 
 rem ==========================================================================
 write_to_response_log:rem --- write to art_response
-rem --- in: trans_id$, response_text$
 rem ==========================================================================
 
 	art_response=fnget_dev("ART_RESPONSE")
@@ -276,7 +278,7 @@ rem ==========================================================================
 			writerecord(are_cashbal)are_cashbal$
 		endif
 	next inv_row
-	cash_msg$="Cash Receipt has been entered.";rem --- TODO CAH needs localization
+	cash_msg$=Translate!.getTranslation("AON_CASH_RECEIPT_HAS_BEEN_ENTERED")
 
 	return
 
@@ -378,6 +380,9 @@ rem --- Add open invoice grid to form
 	openInvoicesGrid!.setTabActionSkipsNonEditableCells(1)
 	openInvoicesGrid!.setColumnEditable(6,1)
 
+rem --- Reset window size
+	util.resizeWindow(Form!, SysGui!)
+
 rem --- set callbacks - processed in ACUS callpoint
 	openInvoicesGrid!.setCallback(openInvoicesGrid!.ON_GRID_KEY_PRESS,"custom_event")
 	openInvoicesGrid!.setCallback(openInvoicesGrid!.ON_GRID_MOUSE_UP,"custom_event")
@@ -425,28 +430,26 @@ rem --- check for mandatory data, confirm, then process
 		dim arc_gatewaydet$:fnget_tpl$("ARC_GATEWAYDET")
 	
 		readrecord(ars_cc_custsvc,key=firm_id$+"AR00",dom=*next)ars_cc_custsvc$
-		gateway$=ars_cc_custsvc.gateway_id$
+		gateway_id$=ars_cc_custsvc.gateway_id$
 		gosub get_gateway_config
 
 		vectInvoices!=callpoint!.getDevObject("vectInvoices")
 		cust_id$=callpoint!.getColumnData("ARE_CCPMT_HOST.CUSTOMER_ID")
 
 	        rem --- using Authorize.net or PayPal hosted page (interface_tp$="H")
-	        switch gateway$
+	        switch gateway_id$
 			case "PAYFLOWPRO"
-
 				rem --- get random number to send when requesting secure token
 				rem --- set namespace variable using that number
 				rem --- PayPal returns that number in the response, so can match number in response to number we're sending to be sure we're processing our payment and not someone else's (multi-user)
 				sid!=UUID.randomUUID()
 				sid$=sid!.toString()
 				callpoint!.setDevObject("sid",sid$)
-				ns!=BBjAPI().getNamespace("aon","credit_receipt_paypal",1)
+				ns!=BBjAPI().getNamespace("aon","credit_receipt_payflowpro",1)
 				ns!.setValue(sid$,"init")
 				ns!.setCallbackForVariableChange(sid$,"custom_event")
 	           
 				rem --- use BBj's REST API to send sid$ and receive back secure token
-				rem --- TODO CAH put error trapping in case of any missing config
 				client!=new BBWebClient()
 				request!=new BBWebRequest()
 				request!.setURI(gw_config!.get("requestTokenURL"))
@@ -466,7 +469,7 @@ rem --- check for mandatory data, confirm, then process
 				rem --- which will record response in art_response and post cash receipt, if applicable.
 
 				if content!.contains("RESULT=0")
-					returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway$+" -t"+tokenID$+" -s"+sid$+" -l"+gw_config!.get("launchURL"))
+					returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway_id$+" -t"+tokenID$+" -s"+sid$+" -l"+gw_config!.get("launchURL"))
 				else
 					trans_msg$="Unable to acquire secure token from PayPal."
 				endif
@@ -478,8 +481,6 @@ rem --- check for mandatory data, confirm, then process
 				rem --- Create the order object to add to transaction request
 				rem --- Currently filling with unique ID so we can link this auth-capture to returned response
 				rem --- Authorize.net next API version should allow refID to be passed that will be returned in Webhook, obviating need for unique ID in order
-				rem --- TODO CAH will need to change Environment.SANDBOX to LIVE --- when? After VAR tests? 
-				rem --- TODO CAH get Name and TransactionKey from ars_authorize, along with URLs for our 'starter' payment page and confirmation pages
 
 				sid!=UUID.randomUUID()
 				sid$=sid!.toString()
@@ -488,7 +489,7 @@ rem --- check for mandatory data, confirm, then process
 				order!.setInvoiceNumber(cust_id$)
 				order!.setDescription(sid$)
 
-				ApiOperationBase.setEnvironment(Environment.SANDBOX)
+				ApiOperationBase.setEnvironment(Environment.valueOf(gw_config!.get("environment")))
 
 				merchantAuthenticationType!  = new MerchantAuthenticationType() 
 				merchantAuthenticationType!.setName(gw_config!.get("name"))
@@ -544,13 +545,13 @@ rem --- check for mandatory data, confirm, then process
 				rem --- assuming this is our response, record the Webhook response in art_response and create cash receipt, if applicable
 
 				if authResponse!.getMessages().getResultCode()=MessageTypeEnum.OK
-					returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway$+" -t"+authResponse!.getToken()+" -a"+masked_amt$+" -l"+gw_config!.get("launchURL"))
+					returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway_id$+" -t"+authResponse!.getToken()+" -a"+masked_amt$+" -l"+gw_config!.get("launchURL")+" -u"+gw_config!.get("gatewayURL"))
 				else
-					trans_msg$="Unable to acquire secure token. Response: "+$0a$+authResponse!.getMessages().getMessage().get(0).getCode()+$0a$+authResponse!.getMessages().getMessage().get(0).getText();rem --- TODO CAH needs localization
+					trans_msg$=Translate!.getTranslation("AON_UNABLE_TO_ACQUIRE_SECURE_TOKEN")+$0a$+authResponse!.getMessages().getMessage().get(0).getCode()+$0a$+authResponse!.getMessages().getMessage().get(0).getText()
 				endif
 			break
 			case default
-				escape;rem shouldn't get here CAH
+				rem --- shouldn't get here unless new hosted gateway is specified in params, added to adc_gatewayhdr, and no case has been built for handling it
 			break
 		swend
 	endif
@@ -592,18 +593,24 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 	ev!=BBjAPI().getLastEvent()
 
 	if ev!.getEventName()="BBjNamespaceEvent"
+
+		gw_config!=callpoint!.getDevObject("gw_config")
+		gateway_id$=gw_config!.get("gateway_id")
+
+		trans_msg$=Translate!.getTranslation("AON_UNTRAPPED_NAMESPACE_EVENT")
+		cash_msg$=""
+
 		ns_name$=ev!.getNamespaceName()
 		if pos("authorize"=ns_name$)
 			rem --- response (webhook) from Authorize.net
 			newValue! = new JSONObject(ev!.getNewValue())
 			trans_id$=newValue!.get("payload").get("id")
-			gateway_id$="AUTHORIZE ";rem TODO CAH get from ars_cc_custsvc
 
-			ApiOperationBase.setEnvironment(Environment.SANDBOX)
+			ApiOperationBase.setEnvironment(Environment.valueOf(gw_config!.get("environment")))
 
 			merchantAuthenticationType!  = new MerchantAuthenticationType() 
-			merchantAuthenticationType!.setName("58rvyVe2Ns");rem TODO CAH get from arc_gatewaydet
-			merchantAuthenticationType!.setTransactionKey("23bm952fK8UR74FM")
+			merchantAuthenticationType!.setName(gw_config!.get("name"))
+			merchantAuthenticationType!.setTransactionKey(gw_config!.get("transactionKey"))
 			ApiOperationBase.setMerchantAuthentication(merchantAuthenticationType!)
 
 			getRequest! = new GetTransactionDetailsRequest()
@@ -625,7 +632,7 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 				rem until then, don't know if this event got triggered by us, or someone else processing a credit card payment
 				rem so we have to put the sid$ in something that gets returned in the full response, and get that full response
 				rem instead of just using the returned webhook
-				rem may want to always get full response to record in art_response, since webhook payload is abridged   
+				rem may want to always get full response to record in art_response anyway, since webhook payload is abridged   
    
 				if resp_sid$=callpoint!.getDevObject("sid")
 					response_text$=newValue!.toString()
@@ -639,29 +646,30 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 					endif
 				endif
 			else
-				escape;rem --- TODO CAH should put something in a message here about not being successful at getting the message response
+				trans_msg$=Translate!.getTranslation("AON_UNABLE_TO_PROCESS_GETTRANSACTIONDETAILSREQUEST_METHOD")
 			endif
 
 		else
-			rem --- response (silent post) from PayPal
-			old_value$=ev!.getOldValue()
-			if old_value$="init"
-				new_value$=ev!.getNewValue()
-				trans_id$=fnparse$(new_value$,"PNREF=","&")
-				payment_amt$=str(num(fnparse$(new_value$,"AMT=","&")))
-				trans_msg$=fnparse$(new_value$,"RESPMSG=","&")
-				gateway_id$="PAYFLOWPRO";rem TODO CAH get from ars_cc_custsvc
-				result$=fnparse$(new_value$,"RESULT=","&")
-				if cvs(trans_id$,3)<>""
-					response_text$=new_value$
-					trans_amount$=payment_amt$
-					trans_approved$=iff(result$="0","A","D");rem A=approved, D=declined
-					gosub write_to_response_log
-				endif
-				if result$="0"
-					gosub create_cash_receipt
-				else
-					cash_msg$=""
+			if pos("payflowpro"=ns_name$)
+				rem --- response (silent post) from PayPal
+				old_value$=ev!.getOldValue()
+				if old_value$="init"
+					new_value$=ev!.getNewValue()
+					trans_id$=fnparse$(new_value$,"PNREF=","&")
+					payment_amt$=str(num(fnparse$(new_value$,"AMT=","&")))
+					trans_msg$=fnparse$(new_value$,"RESPMSG=","&")
+					result$=fnparse$(new_value$,"RESULT=","&")
+					if cvs(trans_id$,3)<>""
+						response_text$=new_value$
+						trans_amount$=payment_amt$
+						trans_approved$=iff(result$="0","A","D");rem A=approved, D=declined
+						gosub write_to_response_log
+					endif
+					if result$="0"
+						gosub create_cash_receipt
+					else
+						cash_msg$=""
+					endif
 				endif
 			endif
 		endif
@@ -716,8 +724,6 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 						endif
 					break
 				swend
-			else
-escape;rem event?
 			endif
 		endif
 	endif

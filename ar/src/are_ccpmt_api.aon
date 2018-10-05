@@ -94,8 +94,6 @@ rem --- Assign form input values to local variables
 	callpoint!.setDevObject("month","")
 	callpoint!.setDevObject("year","")
 
-	ip$="127.0.0.1";rem currently only required by BillPro. TODO CAH add this to BillPro config in arc_gatewaydet
-
 	rem --- Use J2Pay library
 	gw! = new GatewayFactory()
 	apiSampleParameters! = new JSONObject()
@@ -109,7 +107,14 @@ rem --- Assign form input values to local variables
 		read record (arc_gatewaydet,key=firm_id$+gateway$+pad(gw_attrib$,len(arc_gatewaydet.config_attr$)),knum="AO_ATTRIBUTE",err=std_exit)arc_gatewaydet$
 		apiSampleParameters!.put(gw_attrib$,encryptor!.decryptData(cvs(arc_gatewaydet.config_value$,3)))
 	wend
-
+	redim arc_gatewaydet$
+	readrecord (arc_gatewaydet,key=firm_id$+gateway$+pad("ip",len(arc_gatewaydet.config_attr$)),knum="AO_ATTRIBUTE",err=*next)arc_gatewaydet$
+	if cvs(arc_gatewaydet.config_value$,3)=""
+		ip$="127.0.0.1"
+	else
+		ip$=encryptor!.decryptData(cvs(arc_gatewaydet.config_value$,3))
+	endif
+	
 	gateway!.setTestMode(BBjAPI.TRUE)
 
 	customer! = new Customer()
@@ -122,8 +127,7 @@ rem --- Assign form input values to local variables
 	customer!.setZip(zip_code$)
 	customer!.setPhoneNumber(phone_no$)
 	customer!.setEmail(email_addr$)
-	customer!.setIp(ip$)
-
+	customer!.setIp(ip$);rem --- only required by BillPro
 	customerCard! = new CustomerCard()
 	customerCard!.setName(name_first$+" "+name_last$)
 	customerCard!.setNumber(card_no$);rem note - only certain credit card numbers allowed for testing
@@ -238,7 +242,7 @@ rem --- in: firm_id$, cust_id$, apply_amt!, trans_id$, vectInvoices!
 
         endif
     next inv_row
-    cash_msg$="Cash Receipt has been entered.";rem --- TODO CAH needs localization
+    cash_msg$=Translate!.getTranslation("AON_CASH_RECEIPT_HAS_BEEN_ENTERED")
     
     return
 

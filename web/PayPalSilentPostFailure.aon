@@ -2,15 +2,27 @@ CLASS PUBLIC PayPalSilentPostFailure
 
     field private BBjspWebRequest request!
     field private BBjspWebResponse response!
-    field private BBjspWebSession session!
-    field private BBjspSessionData data!
   
     method public void service(BBjspServletContext context!)
 	
 	    #request! = context!.getRequest()
         #response! = context!.getResponse()
-	
-		rspFile$="C:/bbj/apps/aon/responses/PayPalSilentPostFailTest.txt"
+
+		s! = #response!.getOutputStream()
+        s!.write("<html>")
+        s!.write("<body>")
+		s!.write("<h3><span style="+$22$+"color: Navy;"+$22$+">Silent Post Failure.</span></h3>")
+        s!.write("</body>")
+        s!.write("</html>")
+
+		goto end_logging;rem --- rem this line to enable output to .txt for troubleshooting
+
+		response_path!=pgm(-2)
+		response_path$=response_path!.replace("\","/")
+		response_path$=response_path$(1,pos("/"=response_path$,-1,1))+"responselog/"
+		mkdir response_path$,err=*next
+		
+		rspFile$=response_path$+"PayPalSilentPostFailTest_"+str(int(tim*100000):"0000000")+".txt"
 		erase rspFile$,err=*next
 		string rspFile$
 		rsp_chan=unt
@@ -39,12 +51,7 @@ CLASS PUBLIC PayPalSilentPostFailure
 		
 		close(rsp_chan)
 		
-		s! = #response!.getOutputStream()
-        s!.write("<html>")
-        s!.write("<body>")
-		s!.write("<h3><span style="+$22$+"color: Navy;"+$22$+">Silent Post Failure.</span></h3>")
-        s!.write("</body>")
-        s!.write("</html>")
+end_logging:
 
     METHODEND
     

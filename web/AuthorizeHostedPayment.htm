@@ -23,15 +23,20 @@
 		document.getElementById("paid").innerHTML = pd;
 	</script>
 
-    <form method="post" action="https://test.authorize.net/payment/payment" > 
+	<script type="text/javascript">
+		function get_action() { 
+		var form_action = getUrlVars()["gatewayURL"];
+		return form_action;
+	}
+	</script>
+
+    <form method="post" action="" onsubmit="this.action=get_action();"> <!-- "https://test.authorize.net/payment/payment" from adc_gatewaydet config file -->
         <input id="mytoken" type="hidden" name="token" value= "" > 
-        <input type="submit" value="Continue to Authorize.net Hosted Payment Page">
-	
+        <input type="submit" value="Continue to Authorize.net Hosted Payment Page">	
 		
 	<script type="text/javascript">
 		var mytoken = getUrlVars()["authtoken"];
 		document.getElementById('mytoken').value = mytoken;
-		console.log("in framed page, mytoken is: "+mytoken);
 	</script>
 	
     </form>

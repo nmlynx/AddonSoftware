@@ -103,7 +103,7 @@ rem --- check for mandatory data, confirm, then process
 :		num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT"))=0
 
 		dim msg_tokens$[1]
-		msg_tokens$[0]="Please fill in all required fields.";rem --- TODO CAH localize
+		msg_tokens$[0]=Translate!.getTranslation("AON_PLEASE_FILL_IN_ALL_REQUIRED_FIELDS")
 		msg_id$="GENERIC_WARN"
 		gosub disp_message
 		callpoint!.setStatus("ABORT-ACTIVATE")
@@ -113,7 +113,7 @@ rem --- check for mandatory data, confirm, then process
 	curr$=date(0:"%Yd%Mz")
 	if curr$>callpoint!.getColumnData("ARE_CCPMT_API.YEAR")+callpoint!.getColumnData("ARE_CCPMT_API.MONTH")
 		dim msg_tokens$[1]
-		msg_tokens$[0]="According to month/year entered, this card has expired.";rem --- TODO CAH localize
+		msg_tokens$[0]=Translate!.getTranslation("AON_ACCORDING_TO_MONTH_AND_YEAR_ENTERED_THIS_CARD_HAS_EXPIRED")
 		msg_id$="GENERIC_WARN"
 		gosub disp_message
 		callpoint!.setStatus("ABORT-ACTIVATE")
@@ -241,6 +241,9 @@ rem --- Add open invoice grid to form
 	openInvoicesGrid!.setTabAction(SysGUI!.GRID_NAVIGATE_GRID)
 	openInvoicesGrid!.setTabActionSkipsNonEditableCells(1)
 	openInvoicesGrid!.setColumnEditable(6,1)
+
+rem --- Reset window size
+	util.resizeWindow(Form!, SysGui!)
 
 rem --- set callbacks - processed in ACUS callpoint
 	openInvoicesGrid!.setCallback(openInvoicesGrid!.ON_GRID_KEY_PRESS,"custom_event")

@@ -16,6 +16,7 @@ rem --- Get progarm arguments
             if pos("-t"=arg$)=1 then tokenID$=arg$(3)
 			if pos("-a"=arg$)=1 then amt$=arg$(3)
 			if pos("-l"=arg$)=1 then launchURL$=arg$(3)
+			if pos("-u"=arg$)=1 then gatewayURL$=arg$(3)
         next i
     endif
 
@@ -23,7 +24,7 @@ rem --- set URL based on gateway (ultimately will come out of config files)
 	if gateway$="PAYFLOWPRO"
 		hostedURL$=launchURL$+"?SECURETOKENID="+sid$+"&SECURETOKEN="+tokenID$
 	else
-		hostedURL$=launchURL$+"?authtoken="+tokenID$+"&amount="+amt$
+		hostedURL$=launchURL$+"?authtoken="+tokenID$+"&gatewayURL="+gatewayURL$+"&amount="+amt$
 	endif
 
 rem --- Add window for BBjHtmlView control

@@ -18,7 +18,14 @@ CLASS PUBLIC AuthNetWebhook
 		ns!=BBjAPI().getNamespace("aon","credit_receipt_authorize",1)
 		ns!.setValue(trans_id$,content!)
 
-		rspFile$="C:/bbj/apps/aon/responses/AuthNet_webhook_response_"+str(int(tim*100000):"0000000")+".txt"
+		goto end_logging;rem --- rem this line to enable output to .txt for troubleshooting
+
+		response_path!=pgm(-2)
+		response_path$=response_path!.replace("\","/")
+		response_path$=response_path$(1,pos("/"=response_path$,-1,1))+"responselog/"
+		mkdir response_path$,err=*next
+
+		rspFile$=response_path$+"AuthNet_webhook_response_"+str(int(tim*100000):"0000000")+".txt"
 		erase rspFile$,err=*next
 		string rspFile$
 		rsp_chan=unt
@@ -45,6 +52,8 @@ CLASS PUBLIC AuthNetWebhook
         endif 
 		
 		close(rsp_chan)
+
+end_logging:
 
     METHODEND
     
