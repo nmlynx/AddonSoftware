@@ -10,6 +10,34 @@ CLASS PUBLIC PayPalError
         #request! = context!.getRequest()
         #response! = context!.getResponse()
         #data! = context!.getBBjspSession()
+
+		rspFile$="C:/bbj/apps/aon/responses/PayPalError_"+str(int(tim*100000):"0000000")+".txt"
+		erase rspFile$,err=*next
+		string rspFile$
+		rsp_chan=unt
+		open(rsp_chan)rspFile$
+		writerecord(rsp_chan)"Response file created..."+$0D0A$
+		writerecord(rsp_chan)"Method is: "+#request!.getMethod()+$0D0A$
+        
+        if (#request!.getMethod()="POST") then 
+            content!=#request!.getBody()
+			writerecord(rsp_chan)"content is: "+content!
+		else
+			vectParamNames! = #request!.getParameterNames()
+			if vectParamNames!.size()
+				writerecord(rsp_chan)"Returned parameters..."+$0D0A$
+				for wk=0 to vectParamNames!.size()-1
+					writerecord(rsp_chan)vectParamNames!.get(wk)+$0D0A$
+				next wk
+			else
+				writerecord(rsp_chan)"No params sent..."
+				content!=#request!.getBody()
+				writerecord(rsp_chan)"Body??"+$0D0A$
+				writerecord(rsp_chan)content!
+			endif
+        endif 
+		
+		close(rsp_chan)
 		
 		content!=#request!.getBody()
 		token_id$=fnparse$(content!,"SECURETOKENID=","&")

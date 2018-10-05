@@ -160,6 +160,26 @@ rem ==========================================================================
 	return
 
 rem ==========================================================================
+get_gateway_config:rem --- get config for specified gateway
+rem --- in: gateway$; out: hashmap gw_config! containing config entries
+rem ==========================================================================
+
+	encryptor! = new Encryptor()
+	config_id$ = "GATEWAY_AUTH"
+	encryptor!.setConfiguration(config_id$)
+
+	read(arc_gatewaydet,key=firm_id$+gateway$,dom=*next)
+	gw_config!=new java.util.HashMap()
+
+	while 1
+		readrecord(arc_gatewaydet,end=*break)arc_gatewaydet$
+		if pos(firm_id$+gateway$=arc_gatewaydet$)<>1 then break
+		gw_config!.put(cvs(arc_gatewaydet.config_attr$,3),encryptor!.decryptData(cvs(arc_gatewaydet.config_value$,3)))
+	wend
+
+	return
+
+rem ==========================================================================
 write_to_response_log:rem --- write to art_response
 rem --- in: trans_id$, response_text$
 rem ==========================================================================
@@ -180,6 +200,9 @@ rem ==========================================================================
 			art_response.ar_inv_no$=ar_inv_no$
 			art_response.transaction_id$=trans_id$
 			art_response.response_text$=response_text$
+			art_response.gateway_id$=gateway_id$
+			art_response.approve_decline$=trans_approved$
+			art_response.amount$=trans_amount$
 			art_response.created_user$=sysinfo.user_id$
 			art_response.created_date$=date(0:"%Yd%Mz%Dz")
 			art_response.created_time$=date(0:"%Hz%mz")
@@ -241,7 +264,6 @@ rem ==========================================================================
 			are_cashdet.ar_inv_no$=ar_inv_no$
 			are_cashdet.apply_amt$=invoice_pay$
 			are_cashdet.batch_no$=are_cashhdr.batch_no$
-			are_cashdet.transaction_id$=trans_id$
 			are_cashdet.memo_1024$=$01$
 			are_cashdet.firm_id$=field(are_cashdet$)
 			writerecord(are_cashdet)are_cashdet$
@@ -290,6 +312,7 @@ def fnparse$(wkx0$,wkx1$,wkx2$)
 rem --- Declare classes used
 
 	use ::ado_util.src::util
+	use ::sys/prog/bao_encryptor.bbj::Encryptor
 
 	use ::REST/BBWebClient.bbj::BBWebClient
 	use ::REST/BBWebClient.bbj::BBWebRequest
@@ -327,7 +350,7 @@ rem --- get/store mask
 
 rem --- Open files
 
-	num_files=6
+	num_files=8
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ART_INVHDR",open_opts$[1]="OTA"
 	open_tables$[2]="ART_RESPONSE",open_opts$[2]="OTA"
@@ -335,6 +358,8 @@ rem --- Open files
 	open_tables$[4]="ARE_CASHDET",open_opts$[4]="OTA"
 	open_tables$[5]="ARE_CASHBAL",open_opts$[5]="OTA"
 	open_tables$[6]="ARS_CC_CUSTSVC",open_opts$[6]="OTA"
+	open_tables$[7]="ARC_GATEWAYHDR",open_opts$[7]="OTA"
+	open_tables$[8]="ARC_GATEWAYDET",open_opts$[8]="OTA"
 	gosub open_tables
 
 rem --- Add open invoice grid to form
@@ -392,9 +417,16 @@ rem --- check for mandatory data, confirm, then process
 		callpoint!.setStatus("EXIT")
 	else
 		ars_cc_custsvc=fnget_dev("ARS_CC_CUSTSVC")
+		arc_gatewayhdr=fnget_dev("ARC_GATEWAYHDR")
+		arc_gatewaydet=fnget_dev("ARC_GATEWAYDET")
+
 		dim ars_cc_custsvc$:fnget_tpl$("ARS_CC_CUSTSVC")
+		dim arc_gatewayhdr$:fnget_tpl$("ARC_GATEWAYHDR")
+		dim arc_gatewaydet$:fnget_tpl$("ARC_GATEWAYDET")
+	
 		readrecord(ars_cc_custsvc,key=firm_id$+"AR00",dom=*next)ars_cc_custsvc$
-		gateway$=cvs(ars_cc_custsvc.gateway$,7)
+		gateway$=ars_cc_custsvc.gateway_id$
+		gosub get_gateway_config
 
 		vectInvoices!=callpoint!.getDevObject("vectInvoices")
 		cust_id$=callpoint!.getColumnData("ARE_CCPMT_HOST.CUSTOMER_ID")
@@ -402,6 +434,7 @@ rem --- check for mandatory data, confirm, then process
 	        rem --- using Authorize.net or PayPal hosted page (interface_tp$="H")
 	        switch gateway$
 			case "PAYFLOWPRO"
+
 				rem --- get random number to send when requesting secure token
 				rem --- set namespace variable using that number
 				rem --- PayPal returns that number in the response, so can match number in response to number we're sending to be sure we're processing our payment and not someone else's (multi-user)
@@ -413,12 +446,12 @@ rem --- check for mandatory data, confirm, then process
 				ns!.setCallbackForVariableChange(sid$,"custom_event")
 	           
 				rem --- use BBj's REST API to send sid$ and receive back secure token
-				rem --- TODO CAH the setURI(), setContent(), and browse() methods need to get info from ars_payflowpro
+				rem --- TODO CAH put error trapping in case of any missing config
 				client!=new BBWebClient()
 				request!=new BBWebRequest()
-				request!.setURI("https://pilot-payflowpro.paypal.com")
-				request!.setMethod("POST") 
-				request!.setContent("PARTNER=PayPal&VENDOR=AONtesting&USER=CHawkins&PWD=Titp4CH&TRXTYPE=S&AMT="+str(apply_amt!:"###,###.00")+"&CREATESECURETOKEN=Y&SECURETOKENID="+sid!.toString())
+				request!.setURI(gw_config!.get("requestTokenURL"))
+				request!.setMethod("POST")
+				request!.setContent("PARTNER="+gw_config!.get("PARTNER")+"&VENDOR="+gw_config!.get("VENDOR")+"&USER="+gw_config!.get("USER")+"&PWD="+gw_config!.get("PWD")+"&TRXTYPE=S&AMT="+str(apply_amt!:"###,###.00")+"&CREATESECURETOKEN=Y&SECURETOKENID="+sid!.toString())
 				response! = client!.sendRequest(request!) 
 				content!=response!.getBody()
 				response!.close()
@@ -426,20 +459,19 @@ rem --- check for mandatory data, confirm, then process
 				tokenID!=content!.substring(content!.indexOf("SECURETOKEN=")+11)
 				tokenID$=tokenID!.substring(1,tokenID!.indexOf("&"))
 
-				rem --- if successful in getting secure token, launch hosted page
-				rem --- PayPal Silent Post configuration will contain return URL that runs a BBJSP servlet once payment is completed (or declined)
-				rem --- servlet updates namespace variable sid$ with response text
-				rem --- registered callback for variable change will cause paypal_response routine to get executed
-				rem --- paypal_response will record response in art_response and post cash receipt, if applicable
+				rem --- If successful in getting secure token, launch hosted page.
+				rem --- PayPal Silent Post configuration will contain return URL that runs a BBJSP servlet once payment is completed (or declined).
+				rem --- Servlet updates namespace variable sid$ with response text.
+				rem --- Registered callback for namespace variable change will cause PayPal response routine in ACUS to get executed,
+				rem --- which will record response in art_response and post cash receipt, if applicable.
 
 				if content!.contains("RESULT=0")
-					returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -gpayflowpro -t"+tokenID$+" -s"+sid$)
-rem					BBjAPI().getThinClient().browse("https://pilot-payflowlink.paypal.com?SECURETOKENID="+sid!.toString()+"&SECURETOKEN="+tokenID!)
+					returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway$+" -t"+tokenID$+" -s"+sid$+" -l"+gw_config!.get("launchURL"))
 				else
 					trans_msg$="Unable to acquire secure token from PayPal."
 				endif
 			break
-			case "AUTHORIZE"
+			case "AUTHORIZE "
 				ns!=BBjAPI().getNamespace("aon","credit_receipt_authorize",1)
 				ns!.setCallbackForNamespace("custom_event")
 
@@ -459,8 +491,8 @@ rem					BBjAPI().getThinClient().browse("https://pilot-payflowlink.paypal.com?SE
 				ApiOperationBase.setEnvironment(Environment.SANDBOX)
 
 				merchantAuthenticationType!  = new MerchantAuthenticationType() 
-				merchantAuthenticationType!.setName("58rvyVe2Ns")
-				merchantAuthenticationType!.setTransactionKey("23bm952fK8UR74FM")
+				merchantAuthenticationType!.setName(gw_config!.get("name"))
+				merchantAuthenticationType!.setTransactionKey(gw_config!.get("transactionKey"))
 				ApiOperationBase.setMerchantAuthentication(merchantAuthenticationType!)
 
 				rem Create the payment transaction request
@@ -479,7 +511,7 @@ rem					BBjAPI().getThinClient().browse("https://pilot-payflowlink.paypal.com?SE
 
 				setting3! = new SettingType()
 				setting3!.setSettingName("hostedPaymentReturnOptions")
-				setting3!.setSettingValue("{"+$22$+"showReceipt"+$22$+": true, "+$22$+"url"+$22$+": "+$22$+"https://test.basis.com:443/dev_aon_er9410/AuthorizeConfirmation.htm"+$22$+", "+$22$+"urlText"+$22$+": "+$22$+"Continue"+$22$+"}")
+				setting3!.setSettingValue("{"+$22$+"showReceipt"+$22$+": true, "+$22$+"url"+$22$+": "+$22$+gw_config!.get("confirmationURL")+$22$+", "+$22$+"urlText"+$22$+": "+$22$+"Continue"+$22$+"}")
 
 				setting4! = new SettingType()
 				setting4!.setSettingName("hostedPaymentPaymentOptions")
@@ -512,8 +544,7 @@ rem					BBjAPI().getThinClient().browse("https://pilot-payflowlink.paypal.com?SE
 				rem --- assuming this is our response, record the Webhook response in art_response and create cash receipt, if applicable
 
 				if authResponse!.getMessages().getResultCode()=MessageTypeEnum.OK
-					returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -gauthorize -t"+authResponse!.getToken()+" -a"+masked_amt$)
-rem					BBjAPI().getThinClient().browse("https://test.basis.com:443/AuthorizeHostedPayment.htm?authtoken="+authResponse!.getToken())
+					returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway$+" -t"+authResponse!.getToken()+" -a"+masked_amt$+" -l"+gw_config!.get("launchURL"))
 				else
 					trans_msg$="Unable to acquire secure token. Response: "+$0a$+authResponse!.getMessages().getMessage().get(0).getCode()+$0a$+authResponse!.getMessages().getMessage().get(0).getText();rem --- TODO CAH needs localization
 				endif
@@ -566,11 +597,12 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 			rem --- response (webhook) from Authorize.net
 			newValue! = new JSONObject(ev!.getNewValue())
 			trans_id$=newValue!.get("payload").get("id")
+			gateway_id$="AUTHORIZE ";rem TODO CAH get from ars_cc_custsvc
 
 			ApiOperationBase.setEnvironment(Environment.SANDBOX)
 
 			merchantAuthenticationType!  = new MerchantAuthenticationType() 
-			merchantAuthenticationType!.setName("58rvyVe2Ns");rem TODO CAH get from ars_authorize
+			merchantAuthenticationType!.setName("58rvyVe2Ns");rem TODO CAH get from arc_gatewaydet
 			merchantAuthenticationType!.setTransactionKey("23bm952fK8UR74FM")
 			ApiOperationBase.setMerchantAuthentication(merchantAuthenticationType!)
 
@@ -597,6 +629,8 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
    
 				if resp_sid$=callpoint!.getDevObject("sid")
 					response_text$=newValue!.toString()
+					trans_amount$=payment_amt$
+					trans_approved$=iff(resp_code,"A","D");rem A=approved, D=declined
 					gosub write_to_response_log
 					if resp_code
 						gosub create_cash_receipt
@@ -616,11 +650,15 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 				trans_id$=fnparse$(new_value$,"PNREF=","&")
 				payment_amt$=str(num(fnparse$(new_value$,"AMT=","&")))
 				trans_msg$=fnparse$(new_value$,"RESPMSG=","&")
+				gateway_id$="PAYFLOWPRO";rem TODO CAH get from ars_cc_custsvc
+				result$=fnparse$(new_value$,"RESULT=","&")
 				if cvs(trans_id$,3)<>""
 					response_text$=new_value$
+					trans_amount$=payment_amt$
+					trans_approved$=iff(result$="0","A","D");rem A=approved, D=declined
 					gosub write_to_response_log
 				endif
-				if fnparse$(new_value$,"RESULT=","&")="0"
+				if result$="0"
 					gosub create_cash_receipt
 				else
 					cash_msg$=""

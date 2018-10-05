@@ -15,14 +15,15 @@ rem --- Get progarm arguments
             if pos("-s"=arg$)=1 then sid$=arg$(3)
             if pos("-t"=arg$)=1 then tokenID$=arg$(3)
 			if pos("-a"=arg$)=1 then amt$=arg$(3)
+			if pos("-l"=arg$)=1 then launchURL$=arg$(3)
         next i
     endif
 
 rem --- set URL based on gateway (ultimately will come out of config files)
-	if pos("authorize"=gateway$)
-		hostedURL$="https://test.basis.com:443/AuthorizeHostedPayment.htm?authtoken="+tokenID$+"&amount="+amt$
+	if gateway$="PAYFLOWPRO"
+		hostedURL$=launchURL$+"?SECURETOKENID="+sid$+"&SECURETOKEN="+tokenID$
 	else
-		hostedURL$="https://pilot-payflowlink.paypal.com?SECURETOKENID="+sid$+"&SECURETOKEN="+tokenID$
+		hostedURL$=launchURL$+"?authtoken="+tokenID$+"&amount="+amt$
 	endif
 
 rem --- Add window for BBjHtmlView control

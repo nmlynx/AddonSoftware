@@ -94,7 +94,7 @@ rem --- Assign form input values to local variables
 	callpoint!.setDevObject("month","")
 	callpoint!.setDevObject("year","")
 
-	ip$="127.0.0.1"
+	ip$="127.0.0.1";rem currently only required by BillPro. TODO CAH add this to BillPro config in arc_gatewaydet
 
 	rem --- Use J2Pay library
 	gw! = new GatewayFactory()
@@ -122,7 +122,7 @@ rem --- Assign form input values to local variables
 	customer!.setZip(zip_code$)
 	customer!.setPhoneNumber(phone_no$)
 	customer!.setEmail(email_addr$)
-	customer!.setIp("127.0.0.1");rem only required by BillPro AFAIK
+	customer!.setIp(ip$)
 
 	customerCard! = new CustomerCard()
 	customerCard!.setName(name_first$+" "+name_last$)
@@ -140,9 +140,12 @@ rem --- Assign form input values to local variables
 	trans_id$=full_response!.get("lr").get("transactionId",err=*next)
 	trans_msg$=full_response!.get("lr").get("message")
 
+
 	rem --- write response text to art_response
 	if trans_id$<>""
 		response_text$=full_response!.toString()
+		trans_amount$=str(full_response!.get("lr").get("amount",err=*next))
+		trans_approved$=iff(response!.isSuccessful(),"A","D");rem A=approved, D=declined
 		gosub write_to_response_log
 	endif
 
@@ -171,6 +174,9 @@ rem --- in: firm_id$, cust_id$, trans_id$, response_text$, vectInvoices!
             art_response.customer_id$=cust_id$
             art_response.ar_inv_no$=ar_inv_no$
             art_response.transaction_id$=trans_id$
+			art_response.gateway_id$=gateway$
+			art_response.amount$=trans_amount$
+			art_response.approve_decline$=trans_approved$
             art_response.response_text$=response_text$
             art_response.created_user$=sysinfo.user_id$
             art_response.created_date$=date(0:"%Yd%Mz%Dz")
@@ -219,7 +225,6 @@ rem --- in: firm_id$, cust_id$, apply_amt!, trans_id$, vectInvoices!
             are_cashdet.ar_inv_no$=ar_inv_no$
             are_cashdet.apply_amt$=invoice_pay$
             are_cashdet.batch_no$=are_cashhdr.batch_no$
-            are_cashdet.transaction_id$=trans_id$
             are_cashdet.memo_1024$=$01$
             are_cashdet.firm_id$=field(are_cashdet$)
             writerecord(are_cashdet)are_cashdet$

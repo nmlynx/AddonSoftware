@@ -209,7 +209,6 @@ rem --- Resize grids
 [[ARE_CCPMT_API.AWIN]]
 rem --- Declare classes used
 	use ::ado_util.src::util
-	use ::adc_array.aon::ArrayObject
 
 rem --- Set timer for form - closes after 2 minutes *regardless* of active/inactive
 	timer_key!=10000
