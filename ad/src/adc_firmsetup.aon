@@ -29,11 +29,37 @@ rem --- STATUS      : Status code/0=No error (Returned)
 
     enter formData!,demoData%,rdForm!,wait4ok%,status,err=oldLocation
     newInstall=0
+rem wgh ... 9470 ... move to "Get user inputs" after adx_installwiz.aon updated to use adx_firmsetup form
+    dataDir$=formData!.getProperty("DATA_LOCATION")
+    newFirm$=formData!.getProperty("NEW_FIRM_ID")
+    firmName$=formData!.getProperty("FIRM_NAME")
+    addrLine1$=formData!.getProperty("ADDR_LINE_1")
+    addrLine2$=formData!.getProperty("ADDR_LINE_2")
+    city$=formData!.getProperty("CITY")
+    stateCode$=formData!.getProperty("STATE_CODE")
+    zipCode$=formData!.getProperty("ZIP_CODE")
+    countryId$=formData!.getProperty("CNTRY_ID")
+    phoneNo$=formData!.getProperty("PHONE_NO")
+    federalId$=formData!.getProperty("FEDERAL_ID")
+    installType$=formData!.getProperty("INSTALL_TYPE")
     goto init
 
 oldLocation:
     enter oldLocation$,formData!,demoData%,rdForm!,wait4ok%,status
     newInstall=1
+rem wgh ... 9470 ... replace with "Get user inputs" after adx_installwiz.aon updated to use adx_firmsetup form
+    dataDir$=formData!.getProperty("DATA_LOCATION")
+    newFirm$=formData!.getProperty("NEW_FIRM_ID")
+    firmName$=""
+    addrLine1$=""
+    addrLine2$=""
+    city$=""
+    stateCode$=""
+    zipCode$=""
+    countryId$=""
+    phoneNo$=""
+    federalId$=""
+    installType$=""
 
 init: rem --- Initializations
     status=0
@@ -82,12 +108,15 @@ init: rem --- Initializations
 	endif
 
 rem --- Open files
-    num_files=4
+    num_files=7
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="DDM_TABLE_TPLS",open_opts$[1]="OTA"
     open_tables$[2]="ADM_FIRMS",open_opts$[2]="OTA"
     open_tables$[3]="ADS_MASKS",open_opts$[3]="OTA"
     open_tables$[4]="ADS_SEQUENCES",open_opts$[4]="OTA"
+    open_tables$[5]="ADS_COMPINFO",open_opts$[5]="OTA"
+    open_tables$[6]="APS_REPORT",open_opts$[6]="OTA"
+    open_tables$[7]="ARS_REPORT",open_opts$[7]="OTA"
 
     gosub open_tables
 
@@ -95,6 +124,9 @@ rem --- Open files
     admFirms_dev=num(open_chans$[2]); dim admFirms$:open_tpls$[2]
     adsMasks_dev=num(open_chans$[3]); dim adsMasks$:open_tpls$[3]
     adsSequences_dev=num(open_chans$[4]); dim adsSequences$:open_tpls$[4]
+    adsCompInfo_dev=num(open_chans$[5]); dim adsCompInfo$:open_tpls$[5]
+    apsReport_dev=num(open_chans$[6]); dim apsReport$:open_tpls$[6]
+    arsReport_dev=num(open_chans$[7]); dim arsReport$:open_tpls$[7]
             
 rem --- Use bax_mount_sel to get rdMountVect! containing hashes of mounted system and backup directory info for use in bax_xmlrec_exp.bbj
     dev_mode$=""
@@ -229,7 +261,7 @@ rem --- Create Barista's adm_firms.dat record for new firm
         print(log_dev)"create Barista's adm_firms.dat record for new firm "+newFirm$
         redim admFirms$
         admFirms.company_id$=newFirm$
-        admFirms.firm_name$="New Firm's Name"
+        admFirms.firm_name$=firmName$
         admFirms.help_flag$="Y"
         admFirms.batch_entry$="N"
         writerecord(admFirms_dev)admFirms$
@@ -382,7 +414,48 @@ rem --- Copy Barista's ads_sequences.dat firm ZZ records to new firm
         print(log_dev)meter_text$
     endif
 
-rem wgh ... 9470 ... initialize ads_compinfo, aps_reports and ars_reports with form’s Firm and Report data
+rem --- Initialize ads_compinfo form’s Firm and Report data
+    redim adsCompInfo$
+    adsCompInfo.firm_id$=newFirm$
+    adsCompInfo.firm_name$=firmName$
+    adsCompInfo.addr_line_1$=addrLine1$
+    adsCompInfo.addr_line_2$=addrLine2$
+    adsCompInfo.city$=city$
+    adsCompInfo.state_code$=stateCode$
+    adsCompInfo.country_id$=countryId$
+    adsCompInfo.postal_code$=zipCode$
+    adsCompInfo.phone_no$=phoneNo$
+    adsCompInfo.own_tax_id$=federalId$
+    writerecord(adsCompInfo_dev)adsCompInfo$
+
+rem --- Initialize aps_report with form’s Firm and Report data
+    redim apsReport$
+    apsReport.firm_id$=newFirm$
+    apsReport.ap$="AP"
+    apsReport.sequence_02$="02"
+    apsReport.name$=firmName$
+    apsReport.addr_line_1$=addrLine1$
+    apsReport.addr_line_2$=addrLine2$
+    apsReport.city$=city$
+    apsReport.state_code$=stateCode$
+    apsReport.zip_code$=zipCode$
+    apsReport.phone_no$=phoneNo$
+    apsReport.federal_id$=federalId$
+    writerecord(apsReport_dev)apsReport$
+
+rem --- Initialize ars_report with form’s Firm and Report data
+    redim arsReport$
+    arsReport.firm_id$=newFirm$
+    arsReport.ar$="AR"
+    arsReport.sequence_02$="02"
+    arsReport.name$=firmName$
+    arsReport.addr_line_1$=addrLine1$
+    arsReport.addr_line_2$=addrLine2$
+    arsReport.city$=city$
+    arsReport.state_code$=stateCode$
+    arsReport.zip_code$=zipCode$
+    arsReport.phone_no$=phoneNo$
+    writerecord(arsReport_dev)arsReport$
 
 rem --- Process requiredFiles!
     print(log_dev)""
