@@ -1,9 +1,12 @@
 [[POE_POHDR.AOPT-DREC]]
 rem --- Duplicate Historical Receipt
-	dim filter_defs$[1,2]
-	filter_defs$[1,0] = "POE_POHDR.FIRM_ID"
+	dim filter_defs$[2,2]
+	filter_defs$[1,0] = "POT_RECHDR.FIRM_ID"
 	filter_defs$[1,1] = "='"+firm_id$+"'"
 	filter_defs$[1,2] = "LOCK"
+	filter_defs$[2,0] = "POT_RECHDR.VENDOR_ID"
+	filter_defs$[2,1] = "='"+callpoint!.getColumnData("POE_POHDR.VENDOR_ID")+"'"
+	filter_defs$[2,2] = "LOCK"
 
 	call stbl("+DIR_SYP")+"bax_query.bbj",
 :		gui_dev,
