@@ -83,7 +83,13 @@ init: rem --- Initializations
 	rem --- Initialize TreeMap with files required for a clean new install
 	declare Vector fileVect!
 	declare TreeMap requiredFiles!
-	fileVect! = CopyAonDir.getRequiredFiles()
+	if installType$="X" then
+	    rem --- Without data
+	    fileVect! = CopyAonDir.getRequiredFiles(1); rem --- Only required files listed in readme.htm
+	else
+	    rem --- With default parameters and codes
+        fileVect! = CopyAonDir.getRequiredFiles(3); rem --- Required files listed in readme.htm plus files with firm ZZ default data
+	endif
 	requiredFiles! = new TreeMap()
 	for i=0 to fileVect!.size()-1
 	    thisFile$=fileVect!.get(i)
