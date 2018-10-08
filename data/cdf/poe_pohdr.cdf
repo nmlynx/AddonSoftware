@@ -84,9 +84,9 @@ rem --- Duplicate Historical Receipt
 
 					poe_podet.po_no$=poe_pohdr.po_no$
 					poe_podet.internal_seq_no$=int_seq_no$
-					if cvs(pot_recdet.reqd_date$,2)<>"" poe_podet.reqd_date$=date(today_jul+(recdet_reqd_date_jul-recdet_ord_date_jul):"%Yl%Mz%Dz")
-					if cvs(pot_recdet.promise_date$,2)<>"" then poe_podet.promise_date$=date(today_jul+(recdet_promise_date_jul-recdet_ord_date_jul):"%Yl%Mz%Dz")
-					if cvs(pot_recdet.not_b4_date$,2)<>"" poe_podet.not_b4_date$=date(today_jul+(recdet_not_b4_date_jul-recdet_ord_date_jul):"%Yl%Mz%Dz")
+					if cvs(pot_recdet.reqd_date$,2)<>"" poe_podet.reqd_date$=date(today_jul+(recdet_reqd_date_jul-rec_ord_date_jul):"%Yl%Mz%Dz")
+					if cvs(pot_recdet.promise_date$,2)<>"" then poe_podet.promise_date$=date(today_jul+(recdet_promise_date_jul-rec_ord_date_jul):"%Yl%Mz%Dz")
+					if cvs(pot_recdet.not_b4_date$,2)<>"" poe_podet.not_b4_date$=date(today_jul+(recdet_not_b4_date_jul-rec_ord_date_jul):"%Yl%Mz%Dz")
 					poe_podet.req_no$=""
 					poe_podet.wo_no$=""
 					poe_podet.wk_ord_seq_ref$=""
