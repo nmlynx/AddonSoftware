@@ -4,9 +4,11 @@ rem --- Duplicate Historical Receipt
 	filter_defs$[1,0] = "POT_RECHDR.FIRM_ID"
 	filter_defs$[1,1] = "='"+firm_id$+"'"
 	filter_defs$[1,2] = "LOCK"
-	filter_defs$[2,0] = "POT_RECHDR.VENDOR_ID"
-	filter_defs$[2,1] = "='"+callpoint!.getColumnData("POE_POHDR.VENDOR_ID")+"'"
-	filter_defs$[2,2] = "LOCK"
+	if cvs(callpoint!.getColumnData("POE_POHDR.VENDOR_ID"),2)<>"" then
+		filter_defs$[2,0] = "POT_RECHDR.VENDOR_ID"
+		filter_defs$[2,1] = "='"+callpoint!.getColumnData("POE_POHDR.VENDOR_ID")+"'"
+		filter_defs$[2,2] = "LOCK"
+	endif
 
 	call stbl("+DIR_SYP")+"bax_query.bbj",
 :		gui_dev,
@@ -25,7 +27,11 @@ rem --- Duplicate Historical Receipt
 :			table_chans$[all],
 :			status$
 
-		call stbl("+DIR_SYP")+"bas_sequences.bbj","PO_NO",seq_id$,rd_table_chans$[all]
+		if cvs(callpoint!.getColumnData("POE_POHDR.PO_NO"),2)="" then
+			call stbl("+DIR_SYP")+"bas_sequences.bbj","PO_NO",seq_id$,rd_table_chans$[all]
+		else
+			seq_id$=callpoint!.getColumnData("POE_POHDR.PO_NO")
+		endif
 		if seq_id$<>"" then
 			rem --- Copy header record
 			poe_pohdr_dev = fnget_dev("POE_POHDR")
