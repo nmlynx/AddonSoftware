@@ -150,6 +150,7 @@ rem --- Assign form input values to local variables
 		response_text$=full_response!.toString()
 		trans_amount$=str(full_response!.get("lr").get("amount",err=*next))
 		trans_approved$=iff(response!.isSuccessful(),"A","D");rem A=approved, D=declined
+		if trans_approved$="D" and trans_amount$="" then trans_amount$=str(apply_amt!);rem use amount we submitted if it isn't in the return response
 		gosub write_to_response_log
 	endif
 
