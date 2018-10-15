@@ -8,9 +8,7 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 rem ==========================================================================
 
-rem --- OLDLOCATION$: (Optional) Path to data directory under the current download directory (Input)
-rem --- DATADIR$    : Absolute path to the aon/data directory (Input)
-rem --- NEWFIRM$    : New firm ID, not required when with demo data (Input)
+rem --- FORMDATA!   : Property object with form data from Barista's Option! object (Input)
 rem --- DEMODATA%   : 0=Without demo data/1=With demo data (Input)
 rem --- RDFORM!     : Parent BBjTopLevelWindow object, the form (Input)
 rem --- WAIT4OK%    : Wait for user's OK when done, 0=don't wait/1=wait (Input)
@@ -27,41 +25,9 @@ rem --- STATUS      : Status code/0=No error (Returned)
     seterr std_error
     setesc std_error
 
-    enter formData!,demoData%,rdForm!,wait4ok%,status,err=oldLocation
-    newInstall=0
-rem wgh ... 9470 ... move to "Get user inputs" after adx_installwiz.aon updated to use adx_firmsetup form
-    dataDir$=formData!.getProperty("DATA_LOCATION")
-    newFirm$=formData!.getProperty("NEW_FIRM_ID")
-    firmName$=formData!.getProperty("FIRM_NAME")
-    addrLine1$=formData!.getProperty("ADDR_LINE_1")
-    addrLine2$=formData!.getProperty("ADDR_LINE_2")
-    city$=formData!.getProperty("CITY")
-    stateCode$=formData!.getProperty("STATE_CODE")
-    zipCode$=formData!.getProperty("ZIP_CODE")
-    countryId$=formData!.getProperty("CNTRY_ID")
-    phoneNo$=formData!.getProperty("PHONE_NO")
-    federalId$=formData!.getProperty("FEDERAL_ID")
-    installType$=formData!.getProperty("INSTALL_TYPE")
-    goto init
+    enter formData!,demoData%,rdForm!,wait4ok%,status
 
-oldLocation:
-    enter oldLocation$,formData!,demoData%,rdForm!,wait4ok%,status
-    newInstall=1
-rem wgh ... 9470 ... replace with "Get user inputs" after adx_installwiz.aon updated to use adx_firmsetup form
-    dataDir$=formData!.getProperty("DATA_LOCATION")
-    newFirm$=formData!.getProperty("NEW_FIRM_ID")
-    firmName$=""
-    addrLine1$=""
-    addrLine2$=""
-    city$=""
-    stateCode$=""
-    zipCode$=""
-    countryId$=""
-    phoneNo$=""
-    federalId$=""
-    installType$=""
-
-init: rem --- Initializations
+rem --- Initializations
     status=0
     BLOCKSIZE = 2^20
     dir_syp$=stbl("+DIR_SYP")
@@ -79,6 +45,17 @@ init: rem --- Initializations
 	rem --- Get user inputs
     dataDir$=formData!.getProperty("DATA_LOCATION")
     newFirm$=formData!.getProperty("NEW_FIRM_ID")
+    firmName$=formData!.getProperty("FIRM_NAME")
+    addrLine1$=formData!.getProperty("ADDR_LINE_1")
+    addrLine2$=formData!.getProperty("ADDR_LINE_2")
+    city$=formData!.getProperty("CITY")
+    stateCode$=formData!.getProperty("STATE_CODE")
+    zipCode$=formData!.getProperty("ZIP_CODE")
+    countryId$=formData!.getProperty("CNTRY_ID")
+    phoneNo$=formData!.getProperty("PHONE_NO")
+    federalId$=formData!.getProperty("FEDERAL_ID")
+    installType$=formData!.getProperty("INSTALL_TYPE")
+    newInstall=num(formData!.getProperty("NEW_INSTALL"))
 	
 	rem --- Initialize TreeMap with files required for a clean new install
 	declare Vector fileVect!
@@ -103,40 +80,18 @@ init: rem --- Initializations
 
 	rem --- Get aon directory location from aon/data path
 	aonDir$=dataDir$(1, pos("/data"=dataDir$,-1)-1)
-	
-	rem --- Get aon/data directory under the current download directory
-	if oldLocation$="" then
-    	sep$ = java.io.File.separator
-    	bbjHome$=java.lang.System.getProperty("basis.BBjHome")
-    	oldData$ = bbjHome$ + sep$ + "apps" + sep$ + "aon" + sep$ + "data"
-	else
-	    oldData$=oldLocation$
-	endif
+
+    rem --- Get barista directory location from aon directory
+    barDir$=aonDir$(1, pos("/aon"=dataDir$,-1)-1)+"/barista"
 
 rem --- Open files
-    num_files=7
+    num_files=1
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="DDM_TABLE_TPLS",open_opts$[1]="OTA"
-    open_tables$[2]="ADM_FIRMS",open_opts$[2]="OTA"
-    open_tables$[3]="ADS_MASKS",open_opts$[3]="OTA"
-    open_tables$[4]="ADS_SEQUENCES",open_opts$[4]="OTA"
-    open_tables$[5]="ADS_COMPINFO",open_opts$[5]="OTA"
-    open_tables$[6]="APS_REPORT",open_opts$[6]="OTA"
-    open_tables$[7]="ARS_REPORT",open_opts$[7]="OTA"
 
     gosub open_tables
 
     ddmTableTpls_dev=num(open_chans$[1]); dim ddmTableTpls$:open_tpls$[1]
-    admFirms_dev=num(open_chans$[2]); dim admFirms$:open_tpls$[2]
-    adsMasks_dev=num(open_chans$[3]); dim adsMasks$:open_tpls$[3]
-    adsSequences_dev=num(open_chans$[4]); dim adsSequences$:open_tpls$[4]
-    adsCompInfo_dev=num(open_chans$[5]); dim adsCompInfo$:open_tpls$[5]
-    apsReport_dev=num(open_chans$[6]); dim apsReport$:open_tpls$[6]
-    arsReport_dev=num(open_chans$[7]); dim arsReport$:open_tpls$[7]
-            
-rem --- Use bax_mount_sel to get rdMountVect! containing hashes of mounted system and backup directory info for use in bax_xmlrec_exp.bbj
-    dev_mode$=""
-    call stbl("+DIR_SYP")+"bax_mount_sel.bbj",rdMountVect!,table_chans$[all],dev_mode$
 
 rem --- Count files to process so can size progress meter
 	declare File dataDir!
@@ -182,6 +137,8 @@ rem --- Count files to process so can size progress meter
 		
 		rem --- Get/count demo data files in aon/data directory
 		declare Vector dataFiles!
+        declare File syncDir!
+        syncDir! = new File(dataDir$ + "/sync")
         if syncDir!.listFiles(new DataFilter())<>null() then
     		dataFiles! = new Vector(java.util.Arrays.asList(syncDir!.listFiles(new DataFilter())))
     		meterSize=meterSize+dataFiles!.size()
@@ -236,21 +193,18 @@ rem --- When new install not using demo data, remove demo data files (except req
 	endif
 
 rem --- When new install not using demo data, remove firms 01 and 02 from Barista's adm_firms.dat file
-    if newInstall and !demodata% then
+    admFirms_found=0
+    admFirms_dev=unt
+    open(admFirms_dev,err=*next)barDir$+"/sys/data/adm_firms.dat"; admFirms_found=1
+    if newInstall and !demodata% and admFirms_found then
+        findrecord(ddmTableTpls_dev,key=pad(cvs("ADM_FIRMS",4),16),dom=*endif)ddmTableTpls$
+        dim admFirms$:ddmTableTpls.dd_table_tpl$
         for i=1 to 2
             firm_id$=str(i:"00")
             print(log_dev)""
             print(log_dev)"remove "+firm_id$+" from Barista's adm_firms.dat file"
             readrecord(admFirms_dev,key=firm_id$,dom=*continue)admFirms$
             remove(admFirms_dev,key=firm_id$)
-
-rem wgh ... 9470 ... make sure it does NOT create data/sync/ads_sequences~[all].xml
-            rem --- Update admin xml file
-            if rdMountVect!<>null() and rdMountVect!.size()>0
-                exp_action$="D"
-                exp_add_only$=""
-                call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj","ADM_FIRMS",admFirms$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
-            endif
 
             rem --- Increment progress meter
             meter_text$="removed firms "+firm_id$+" from adm_firms.dat"
@@ -262,26 +216,21 @@ rem wgh ... 9470 ... make sure it does NOT create data/sync/ads_sequences~[all].
     endif
 
 rem --- Create Barista's adm_firms.dat record for new firm
-    if cvs(newFirm$,3)<>"" then 
+    if cvs(newFirm$,3)<>"" and admFirms_found then 
         print(log_dev)""
         print(log_dev)"create Barista's adm_firms.dat record for new firm "+newFirm$
-        redim admFirms$
+        findrecord(ddmTableTpls_dev,key=pad(cvs("ADM_FIRMS",4),16),dom=*endif)ddmTableTpls$
+        dim admFirms$:ddmTableTpls.dd_table_tpl$
         admFirms.company_id$=newFirm$
         admFirms.firm_name$=firmName$
         admFirms.help_flag$="Y"
         admFirms.batch_entry$="N"
-        writerecord(admFirms_dev)admFirms$
-    
-        rem --- Update admin xml file
-        if rdMountVect!<>null() and rdMountVect!.size()>0
-                if pos(newFirm$="0102",2) then
-                    exp_action$="M"
-                else
-                    exp_action$="A"
-                endif
-            exp_add_only$=""
-            call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj","ADM_FIRMS",admFirms$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
+        if pos(newFirm$="0102",2) then
+            admFirms.user_modified$="M"
+        else
+            admFirms.user_modified$="A"
         endif
+        writerecord(admFirms_dev)admFirms$
 
         rem --- Increment progress meter
         meter_text$="created adm_firms.dat record for new firm "+newFirm$
@@ -290,9 +239,15 @@ rem --- Create Barista's adm_firms.dat record for new firm
         gosub disp_meter
         print(log_dev)meter_text$
     endif
+    close(admFirms_dev,err=*next)
 
 rem --- When new install not using demo data, remove firms 01 and 02 from Barista's ads_masks.dat file
-    if newInstall and !demodata% then
+    adsMasks_found=0
+    adsMasks_dev=unt
+    open(adsMasks_dev,err=*next)barDir$+"/sys/data/ads_masks.dat"; adsMasks_found=1
+    if newInstall and !demodata% and adsMasks_found then
+        findrecord(ddmTableTpls_dev,key=pad(cvs("ADS_MASKS",4),16),dom=*endif)ddmTableTpls$
+        dim adsMasks$:ddmTableTpls.dd_table_tpl$
         for i=1 to 2
             firm_id$=str(i:"00")
             print(log_dev)""
@@ -303,13 +258,6 @@ rem --- When new install not using demo data, remove firms 01 and 02 from Barist
                 if pos(firm_id$=masksKey$)<>1 then break
                 readrecord(adsMasks_dev,end=*break)adsMasks$
                 remove(adsMasks_dev,key=masksKey$)
-
-                rem --- Update admin xml file
-                if rdMountVect!<>null() and rdMountVect!.size()>0
-                    exp_action$="D"
-                    exp_add_only$=""
-                    call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj","ADS_MASKS",adsMasks$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
-                endif
             wend
 
             rem --- Increment progress meter
@@ -322,29 +270,25 @@ rem --- When new install not using demo data, remove firms 01 and 02 from Barist
     endif
 
 rem --- Copy Barista's ads_masks.dat firm ZZ records to new firm
-    if cvs(newFirm$,3)<>"" then 
+    if cvs(newFirm$,3)<>"" and adsMasks_found then 
         print(log_dev)""
         print(log_dev)"copy Barista's ads_masks.dat firm ZZ records to new firm "+newFirm$
+        findrecord(ddmTableTpls_dev,key=pad(cvs("ADS_MASKS",4),16),dom=*endif)ddmTableTpls$
+        dim adsMasks$:ddmTableTpls.dd_table_tpl$
         read(adsMasks_dev,key="ZZ",dom=*next)
         while 1
             masksKey$=key(adsMasks_dev,end=*break)
             if pos("ZZ"=masksKey$)<>1 then break
             readrecord(adsMasks_dev)adsMasks$
             adsMasks.firm_id$=newFirm$
+            if pos(newFirm$="0102",2) then
+                adsMasks.user_modified$="M"
+            else
+                adsMasks.user_modified$="A"
+            endif
             writerecord(adsMasks_dev)adsMasks$
             rem --- Re-set file pointer to next ZZ record
             read(adsMasks_dev,key=masksKey$)
-        
-            rem --- Update admin xml file
-            if rdMountVect!<>null() and rdMountVect!.size()>0
-                if pos(newFirm$="0102",2) then
-                    exp_action$="M"
-                else
-                    exp_action$="A"
-                endif
-                exp_add_only$=""
-                call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj","ADS_MASKS",adsMasks$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
-            endif
         wend
 
         rem --- Increment progress meter
@@ -354,9 +298,15 @@ rem --- Copy Barista's ads_masks.dat firm ZZ records to new firm
         gosub disp_meter
         print(log_dev)meter_text$
     endif
+    close(adsMasks_dev,err=*next)
 
 rem --- When new install not using demo data, remove firms 01 and 02 from Barista's ads_sequences.dat file
-    if newInstall and !demodata% then
+    adsSequences_found=0
+    adsSequences_dev=unt
+    open(adsSequences_dev,err=*next)barDir$+"/sys/data/ads_sequences.dat"; adsSequences_found=1
+    if newInstall and !demodata% and adsSequences_found then
+        findrecord(ddmTableTpls_dev,key=pad(cvs("ADS_SEQUENCES",4),16),dom=*endif)ddmTableTpls$
+        dim adsSequences$:ddmTableTpls.dd_table_tpl$
         for i=1 to 2
             firm_id$=str(i:"00")
             print(log_dev)""
@@ -367,14 +317,6 @@ rem --- When new install not using demo data, remove firms 01 and 02 from Barist
                 if pos(firm_id$=sequencesKey$)<>1 then break
                 readrecord(adsSequences_dev,end=*break)adsSequences$
                 remove(adsSequences_dev,key=sequencesKey$)
-
-rem wgh ... 9470 ... make sure it does NOT create data/sync/ads_sequences~[all].xml
-                rem --- Update admin xml file
-                if rdMountVect!<>null() and rdMountVect!.size()>0
-                    exp_action$="D"
-                    exp_add_only$=""
-                    call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj","ADS_SEQUENCES",adsSequences$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
-                endif
             wend
 
             rem --- Increment progress meter
@@ -387,29 +329,25 @@ rem wgh ... 9470 ... make sure it does NOT create data/sync/ads_sequences~[all].
     endif
 
 rem --- Copy Barista's ads_sequences.dat firm ZZ records to new firm
-    if cvs(newFirm$,3)<>"" then 
+    if cvs(newFirm$,3)<>"" and adsSequences_found then 
         print(log_dev)""
         print(log_dev)"copy Barista's ads_sequences.dat firm ZZ records to new firm "+newFirm$
+        findrecord(ddmTableTpls_dev,key=pad(cvs("ADS_SEQUENCES",4),16),dom=*endif)ddmTableTpls$
+        dim adsSequences$:ddmTableTpls.dd_table_tpl$
         read(adsSequences_dev,key="ZZ",dom=*next)
         while 1
             sequencesKey$=key(adsSequences_dev,end=*break)
             if pos("ZZ"=sequencesKey$)<>1 then break
             readrecord(adsSequences_dev)adsSequences$
             adsSequences.firm_id$=newFirm$
+            if pos(newFirm$="0102",2) then
+                adsSequences.user_modified$="M"
+            else
+                adsSequences.user_modified$="A"
+            endif
             writerecord(adsSequences_dev)adsSequences$
             rem --- Re-set file pointer to next ZZ record
             read(adsSequences_dev,key=sequencesKey$)
-        
-            rem --- Update admin xml file
-            if rdMountVect!<>null() and rdMountVect!.size()>0
-                if pos(newFirm$="0102",2) then
-                    exp_action$="M"
-                else
-                    exp_action$="A"
-                endif
-                exp_add_only$=""
-                call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj","ADS_SEQUENCES",adsSequences$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
-            endif
         wend
 
         rem --- Increment progress meter
@@ -419,49 +357,14 @@ rem --- Copy Barista's ads_sequences.dat firm ZZ records to new firm
         gosub disp_meter
         print(log_dev)meter_text$
     endif
+    close(adsSequences_dev,err=*next)
 
-rem --- Initialize ads_compinfo form’s Firm and Report data
-    redim adsCompInfo$
-    adsCompInfo.firm_id$=newFirm$
-    adsCompInfo.firm_name$=firmName$
-    adsCompInfo.addr_line_1$=addrLine1$
-    adsCompInfo.addr_line_2$=addrLine2$
-    adsCompInfo.city$=city$
-    adsCompInfo.state_code$=stateCode$
-    adsCompInfo.country_id$=countryId$
-    adsCompInfo.postal_code$=zipCode$
-    adsCompInfo.phone_no$=phoneNo$
-    adsCompInfo.own_tax_id$=federalId$
-    writerecord(adsCompInfo_dev)adsCompInfo$
+rem --- Create admin_backup records for admin data (adm_firms, ads_masks and ads_sequences) changes
+    print(log_dev)""
+    print(log_dev)"create admin_backup records for admin data changes"
 
-rem --- Initialize aps_report with form’s Firm and Report data
-    redim apsReport$
-    apsReport.firm_id$=newFirm$
-    apsReport.ap$="AP"
-    apsReport.sequence_02$="02"
-    apsReport.name$=firmName$
-    apsReport.addr_line_1$=addrLine1$
-    apsReport.addr_line_2$=addrLine2$
-    apsReport.city$=city$
-    apsReport.state_code$=stateCode$
-    apsReport.zip_code$=zipCode$
-    apsReport.phone_no$=phoneNo$
-    apsReport.federal_id$=federalId$
-    writerecord(apsReport_dev)apsReport$
-
-rem --- Initialize ars_report with form’s Firm and Report data
-    redim arsReport$
-    arsReport.firm_id$=newFirm$
-    arsReport.ar$="AR"
-    arsReport.sequence_02$="02"
-    arsReport.name$=firmName$
-    arsReport.addr_line_1$=addrLine1$
-    arsReport.addr_line_2$=addrLine2$
-    arsReport.city$=city$
-    arsReport.state_code$=stateCode$
-    arsReport.zip_code$=zipCode$
-    arsReport.phone_no$=phoneNo$
-    writerecord(arsReport_dev)arsReport$
+    rem --- Pass bax_sync_backup.bbj the full path to the installation’s Barista directory
+    call stbl("+DIR_SYP")+"bax_sync_backup.bbj","AUTO",barDir$,sysGUI!,rdForm!,null(),table_chans$[all]
 
 rem --- Process requiredFiles!
     print(log_dev)""
@@ -472,7 +375,7 @@ rem --- Process requiredFiles!
         
         rem --- Open file
         file_dev=unt
-        open(file_dev)aFile!.getPath()
+        open(file_dev,err=*continue)aFile!.getPath()
 
         rem --- When new install not using demo data, remove firm 01 and 02 data
         if newInstall and !demodata% then
@@ -502,79 +405,116 @@ rem --- Process requiredFiles!
                 endif
             wend
 
-            rem --- Use system date to set current year, current period, etc. 
+            rem --- Handle files with special initialization requirements 
             thisFile$=aFile!.getName()
-            if pos(":"+thisFile$+":"=":aps_params:ars_params:gls_calendar:gls_financials:gls_params:ivs_params:sfs_params:") then
-                findrecord(ddmTableTpls_dev,key=pad(cvs(thisFile$,4),16),dom=*endif)ddmTableTpls$
-                dim record$:ddmTableTpls.dd_table_tpl$
-            
-                switch (BBjAPI().TRUE)
-                    case thisFile$ = "aps_params"
-                        findrecord(file_dev,key=newFirm$+"AP00")record$
-                        record.current_per$=systemMonth$
-                        record.current_year$=systemYear$
-                        record.cur_1099_yr$=systemYear$
-                        writerecord(file_dev)record$
-                        break
-                    case thisFile$ = "ars_params"
-                        findrecord(file_dev,key=newFirm$+"AR00")record$
-                        record.current_per$=systemMonth$
-                        record.current_year$=systemYear$
-                        record.lstcom_date$=""
-                        writerecord(file_dev)record$
-                        break
-                    case thisFile$ = "gls_calendar"
-                        read(file_dev,key=newFirm$,dom=*next)
-                        while 1
-                            thisKey$=key(file_dev,end=*break)
-                            if pos(newFirm$=thisKey$)<>1 then break
-                            findrecord(file_dev,key=thisKey$)record$
-                            remove(file_dev,key=thisKey$,err=*next)
-                        wend
-                        if record.firm_id$=newFirm$ then
-                            for per=1 to 13
-                                    locked_flag$="locked_flag_"+str(per:"00")
-                                    field record$,locked_flag$="N"
-                                    locked_date$="locked_date_"+str(per:"00")
-                                    field record$,locked_date$=""
-                            next per
-                        endif
-                        record.year$=str(num(systemYear$)-1)
-                        writerecord(file_dev)record$
-                        record.year$=systemYear$
-                        writerecord(file_dev)record$
-                        record.year$=str(num(systemYear$)+1)
-                        writerecord(file_dev)record$
-                        break
-                    case thisFile$ = "gls_financials"
-                        findrecord(file_dev,key=newFirm$+"GL02")record$
-                        record.period$=systemMonth$
-                        record.year$=systemYear$
-                        writerecord(file_dev)record$
-                        break
-                    case thisFile$ = "gls_params"
-                        findrecord(file_dev,key=newFirm$+"GL00")record$
-                        record.current_per$=systemMonth$
-                        record.current_year$=systemYear$
-                        writerecord(file_dev)record$
-                        break
-                    case thisFile$ = "ivs_params"
-                        findrecord(file_dev,key=newFirm$+"IV00")record$
-                        record.current_per$=systemMonth$
-                        record.current_year$=systemYear$
-                        writerecord(file_dev)record$
-                        break
-                    case thisFile$ = "sfs_params"
-                        findrecord(file_dev,key=newFirm$+"SF00")record$
-                        record.current_per$=systemMonth$
-                        record.current_year$=systemYear$
-                        writerecord(file_dev)record$
-                        break
-                        break
-                    case default
-                        break
-                swend
-            endif
+            findrecord(ddmTableTpls_dev,key=pad(cvs(thisFile$,4),16),dom=*endif)ddmTableTpls$
+            dim record$:ddmTableTpls.dd_table_tpl$
+            switch (BBjAPI().TRUE)
+                case thisFile$ = "ads_compinfo"
+                    record.firm_id$=newFirm$
+                    record.firm_name$=firmName$
+                    record.addr_line_1$=addrLine1$
+                    record.addr_line_2$=addrLine2$
+                    record.city$=city$
+                    record.state_code$=stateCode$
+                    record.country_id$=countryId$
+                    record.postal_code$=zipCode$
+                    record.phone_no$=phoneNo$
+                    record.own_tax_id$=federalId$
+                    writerecord(file_dev)record$
+                    break
+                case thisFile$ = "aps_params"
+                    findrecord(file_dev,key=newFirm$+"AP00")record$
+                    record.current_per$=systemMonth$
+                    record.current_year$=systemYear$
+                    record.cur_1099_yr$=systemYear$
+                    writerecord(file_dev)record$
+                    break
+                case thisFile$ = "aps_report"
+                    record.firm_id$=newFirm$
+                    record.ap$="AP"
+                    record.sequence_02$="02"
+                    record.name$=firmName$
+                    record.addr_line_1$=addrLine1$
+                    record.addr_line_2$=addrLine2$
+                    record.city$=city$
+                    record.state_code$=stateCode$
+                    record.zip_code$=zipCode$
+                    record.phone_no$=phoneNo$
+                    record.federal_id$=federalId$
+                    writerecord(file_dev)record$
+                    break
+                case thisFile$ = "ars_params"
+                    findrecord(file_dev,key=newFirm$+"AR00")record$
+                    record.current_per$=systemMonth$
+                    record.current_year$=systemYear$
+                    record.lstcom_date$=""
+                    writerecord(file_dev)record$
+                    break
+                case thisFile$ = "ars_report"
+                    record.firm_id$=newFirm$
+                    record.ar$="AR"
+                    record.sequence_02$="02"
+                    record.name$=firmName$
+                    record.addr_line_1$=addrLine1$
+                    record.addr_line_2$=addrLine2$
+                    record.city$=city$
+                    record.state_code$=stateCode$
+                    record.zip_code$=zipCode$
+                    record.phone_no$=phoneNo$
+                    writerecord(file_dev)record$
+                    break
+                case thisFile$ = "gls_calendar"
+                    read(file_dev,key=newFirm$,dom=*next)
+                    while 1
+                        thisKey$=key(file_dev,end=*break)
+                        if pos(newFirm$=thisKey$)<>1 then break
+                        findrecord(file_dev,key=thisKey$)record$
+                        remove(file_dev,key=thisKey$,err=*next)
+                    wend
+                    if record.firm_id$=newFirm$ then
+                        for per=1 to 13
+                                locked_flag$="locked_flag_"+str(per:"00")
+                                field record$,locked_flag$="N"
+                                locked_date$="locked_date_"+str(per:"00")
+                                field record$,locked_date$=""
+                        next per
+                    endif
+                    record.year$=str(num(systemYear$)-1)
+                    writerecord(file_dev)record$
+                    record.year$=systemYear$
+                    writerecord(file_dev)record$
+                    record.year$=str(num(systemYear$)+1)
+                    writerecord(file_dev)record$
+                    break
+                case thisFile$ = "gls_financials"
+                    findrecord(file_dev,key=newFirm$+"GL02")record$
+                    record.period$=systemMonth$
+                    record.year$=systemYear$
+                    writerecord(file_dev)record$
+                    break
+                case thisFile$ = "gls_params"
+                    findrecord(file_dev,key=newFirm$+"GL00")record$
+                    record.current_per$=systemMonth$
+                    record.current_year$=systemYear$
+                    writerecord(file_dev)record$
+                    break
+                case thisFile$ = "ivs_params"
+                    findrecord(file_dev,key=newFirm$+"IV00")record$
+                    record.current_per$=systemMonth$
+                    record.current_year$=systemYear$
+                    writerecord(file_dev)record$
+                    break
+                case thisFile$ = "sfs_params"
+                    findrecord(file_dev,key=newFirm$+"SF00")record$
+                    record.current_per$=systemMonth$
+                    record.current_year$=systemYear$
+                    writerecord(file_dev)record$
+                    break
+                    break
+                case default
+                    break
+            swend
 
             rem --- Close files
             close(write_dev)

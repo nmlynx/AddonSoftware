@@ -9,19 +9,20 @@ rem --- All Rights Reserved
 rem ==========================================================================
 
 
-rem --- OLDLOCATION$ : Location of source aon directory being copied (Input)
-rem --- NEWLOCATION$ : Location of target aon directory (Input)
-rem --- DEMODATA%    : 0=Do not copy demo data/1=Copy demo data (Input)
-rem --- HELP%        : 0=Do not copy AddonHelp.jar/1=Copy AddonHelp.jar (Input)
-rem --- RDFORM!      : Parent BBjTopLevelWindow object, the form (Input)
-rem --- WAIT4OK%     : Wait for user's OK when done, 0=don't wait/1=wait (Input)
-rem --- STATUS       : Status code/0=No error (Returned)
+rem --- OLDLOCATION$   : Location of source aon directory being copied (Input)
+rem --- NEWLOCATION$   : Location of target aon directory (Input)
+rem --- REQUIREDFILES% : 
+rem --- DEMODATA%      : 0=Do not copy demo data/1=Copy demo data (Input)
+rem --- HELP%          : 0=Do not copy AddonHelp.jar/1=Copy AddonHelp.jar (Input)
+rem --- RDFORM!        : Parent BBjTopLevelWindow object, the form (Input)
+rem --- WAIT4OK%       : Wait for user's OK when done, 0=don't wait/1=wait (Input)
+rem --- STATUS         : Status code/0=No error (Returned)
 
     declare BBjTopLevelWindow rdForm!
 
     seterr std_error
     setesc std_error
-    enter oldLocation$,newLocation$,demoData%,help%,rdForm!,wait4ok%,status
+    enter oldLocation$,newLocation$,requiredFiles%,demoData%,help%,rdForm!,wait4ok%,status
 
 rem --- Initializations
 
@@ -31,7 +32,7 @@ rem --- Recursively copy oldLocation to newLocation
 
     declare CopyAonDir utility!
     utility! = new CopyAonDir(rdForm!, wait4ok%)
-    utility!.copyAonDirectory(oldLocation$, newLocation$, demoData%, help%)
+    utility!.copyAonDirectory(oldLocation$, newLocation$, requiredFiles%, demoData%, help%)
     
 done: rem --- All done
     
@@ -149,16 +150,17 @@ method_error:rem --- Method error trap/handler (11Oct2017)
         rem  *
         rem  * @param BBjString oldLocation$
         rem  * @param BBjString newLocation$
-        rem  * @param BBjInt demoData
-        rem  * @param BBjInt helpFile
+        rem  * @param BBjInt requiredFiles%
+        rem  * @param BBjInt demoData%
+        rem  * @param BBjInt helpFile%
         rem  */
-        method public void copyAonDirectory(BBjString oldLocation$, BBjString newLocation$, BBjInt demoData%, BBjInt helpFile%)
+        method public void copyAonDirectory(BBjString oldLocation$, BBjString newLocation$, BBjInt requiredFiles%, BBjInt demoData%, BBjInt helpFile%)
             seterr method_error
             if demoData% then #meter_total_recs = #meter_total_recs + 500
             #meter! = #createProgressMeter()
             #openLog(demoData%, oldLocation$, newLocation$)
 
-            #copyAonDirectory(new File(oldLocation$), new File(newLocation$), demoData%, helpFile%)
+            #copyAonDirectory(new File(oldLocation$), new File(newLocation$), requiredFiles%, demoData%, helpFile%)
 
 			if !demoData% then
 
@@ -219,7 +221,8 @@ method_error:rem --- Method error trap/handler (11Oct2017)
 				rem wend
 
 				rem --- When not using demo data, copy requiredFiles!
-				requiredFiles! = #getRequiredFiles(3)
+                declare Vector requiredFiles!
+				requiredFiles! = #getRequiredFiles(requiredFiles%)
 				iter! = requiredFiles!.iterator()
 				while iter!.hasNext()
 					aFile! = new File(newLocation$ + "/data", cast(String, iter!.next()))
@@ -267,10 +270,11 @@ method_error:rem --- Method error trap/handler (11Oct2017)
         rem  *
         rem  * @param File source
         rem  * @param File target
-        rem  * @param BBjNumber demoData
-        rem  * @param BBjInt helpFile
+        rem  * @param BBjInt requiredFiles%
+        rem  * @param BBjInt demoData%
+        rem  * @param BBjInt helpFile%
         rem  */
-        method private void copyAonDirectory(File source!, File target!, BBjInt demoData%, BBjInt helpFile%)
+        method private void copyAonDirectory(File source!, File target!, BBjInt requiredFiles%, BBjInt demoData%, BBjInt helpFile%)
             seterr method_error
     
             rem -- recursively process directories and copy files
@@ -292,7 +296,7 @@ method_error:rem --- Method error trap/handler (11Oct2017)
                     for i=0 to fileVector!.size()-1
                         #copyAonDirectory(new File(source!, cast(BBjString, fileVector!.get(i))), 
 :                                         new File(target!, cast(BBjString, fileVector!.get(i))), 
-:                                         demoData%, helpFile%)
+:                                         requiredFiles%, demoData%, helpFile%)
                     next i
                 endif
                 
@@ -424,11 +428,13 @@ method_error:rem --- Method error trap/handler (11Oct2017)
                 if fileType%=2 then requiredFiles!.add("adm-09"); rem --- adm_procmaster
                 if fileType%=2 then requiredFiles!.add("adm-19"); rem --- adm_procdetail
                 if fileType%=2 then requiredFiles!.add("adm-39"); rem --- adm_proctables
+                requiredFiles!.add("ads_compinfo")
                 requiredFiles!.add("apc_distribution")
                 requiredFiles!.add("apc_paymentgroup")
                 requiredFiles!.add("apc_termscode")
                 requiredFiles!.add("apc_typecode")
                 requiredFiles!.add("aps_params")
+                requiredFiles!.add("aps_report")
                 requiredFiles!.add("arc_carriercode")
                 requiredFiles!.add("arc_cashcode")
                 requiredFiles!.add("arc_custtype")
@@ -439,6 +445,7 @@ method_error:rem --- Method error trap/handler (11Oct2017)
                 requiredFiles!.add("arc_termcode")
                 requiredFiles!.add("arc_terrcode")
                 requiredFiles!.add("ars_params")
+                requiredFiles!.add("ars_report")
                 requiredFiles!.add("bmm-08"); rem --- bmc_opcodes
                 requiredFiles!.add("bms_params")
                 requiredFiles!.add("glm-01"); rem --- glm_acct

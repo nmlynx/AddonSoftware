@@ -123,13 +123,14 @@ rem --- Recursively copy oldLocation to newAonDir
     if installPrbabs% then bbjHomeLocation!.add(bbjHome$ + sep$ + "apps" + sep$ + "prbabs")
 
 	rem --- Do not copy data or help file
+	requiredFiles%=1
 	copyData%=0
 	help%=0
 	
     rem --- Launch adc_copyaon.aon
     for syscnt=0 to appName!.size()-1
         oldLocation$=bbjHomeLocation!.getItem(syscnt)
-        call pgmdir$+"adc_copyaon.aon",bbjHomeLocation!.getItem(syscnt),newAonDir!.getItem(syscnt),copyData%,help%,rdForm!,0,status
+        call pgmdir$+"adc_copyaon.aon",bbjHomeLocation!.getItem(syscnt),newAonDir!.getItem(syscnt),requiredFiles%,copyData%,help%,rdForm!,0,status
     next syscnt
     
 rem --- Update new addon.syn file
