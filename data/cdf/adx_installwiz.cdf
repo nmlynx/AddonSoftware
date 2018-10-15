@@ -141,6 +141,7 @@ validate_aon_dir: rem --- Validate directory for aon new install location
 	rem --- Fix path for this OS
 	current_dir$=dir("")
 	current_drive$=dsk("",err=*next)
+    	FileObject.makeDirs(new File(new_loc$))
 	chdir(new_loc$)
 	new_loc$=current_drive$+dir("")
 	chdir(current_dir$)
