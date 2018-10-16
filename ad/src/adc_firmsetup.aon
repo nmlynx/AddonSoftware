@@ -92,6 +92,10 @@ rem --- Open files
     gosub open_tables
 
     ddmTableTpls_dev=num(open_chans$[1]); dim ddmTableTpls$:open_tpls$[1]
+            
+rem --- Use bax_mount_sel to get rdMountVect! containing hashes of mounted system and backup directory info for use in bax_xmlrec_exp.bbj
+    dev_mode$=""
+    call stbl("+DIR_SYP")+"bax_mount_sel.bbj",rdMountVect!,table_chans$[all],dev_mode$
 
 rem --- Count files to process so can size progress meter
 	declare File dataDir!
@@ -232,6 +236,14 @@ rem --- Create Barista's adm_firms.dat record for new firm
         endif
         writerecord(admFirms_dev)admFirms$
 
+        rem --- When an existing installation, create admin_backup records using bax_xmlrec_exp.bbj
+        if !newInstall and rdMountVect!<>null() and rdMountVect!.size()>0 then
+            rem --- Create admin_backup records for admin data (adm_firms, ads_masks and ads_sequences) changes
+            exp_action$=admFirms.user_modified$
+            exp_add_only$=""
+            call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj","ADM_FIRMS",admFirms$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
+        endif
+
         rem --- Increment progress meter
         meter_text$="created adm_firms.dat record for new firm "+newFirm$
         meter_proc_recs=meter_proc_recs+1
@@ -289,6 +301,14 @@ rem --- Copy Barista's ads_masks.dat firm ZZ records to new firm
             writerecord(adsMasks_dev)adsMasks$
             rem --- Re-set file pointer to next ZZ record
             read(adsMasks_dev,key=masksKey$)
+
+            rem --- When an existing installation, create admin_backup records using bax_xmlrec_exp.bbj
+            if !newInstall and rdMountVect!<>null() and rdMountVect!.size()>0 then
+                rem --- Create admin_backup records for admin data (adm_firms, ads_masks and ads_sequences) changes
+                exp_action$=adsMasks.user_modified$
+                exp_add_only$=""
+                call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj","ADS_MASKS",adsMasks$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
+            endif
         wend
 
         rem --- Increment progress meter
@@ -348,6 +368,14 @@ rem --- Copy Barista's ads_sequences.dat firm ZZ records to new firm
             writerecord(adsSequences_dev)adsSequences$
             rem --- Re-set file pointer to next ZZ record
             read(adsSequences_dev,key=sequencesKey$)
+
+            rem --- When an existing installation, create admin_backup records using bax_xmlrec_exp.bbj
+            if !newInstall and rdMountVect!<>null() and rdMountVect!.size()>0 then
+                rem --- Create admin_backup records for admin data (adm_firms, ads_masks and ads_sequences) changes
+                exp_action$=adsSequences.user_modified$
+                exp_add_only$=""
+                call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj","ADS_SEQUENCES",adsSequences$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
+            endif
         wend
 
         rem --- Increment progress meter
@@ -359,12 +387,15 @@ rem --- Copy Barista's ads_sequences.dat firm ZZ records to new firm
     endif
     close(adsSequences_dev,err=*next)
 
-rem --- Create admin_backup records for admin data (adm_firms, ads_masks and ads_sequences) changes
-    print(log_dev)""
-    print(log_dev)"create admin_backup records for admin data changes"
-
-    rem --- Pass bax_sync_backup.bbj the full path to the installation’s Barista directory
-    call stbl("+DIR_SYP")+"bax_sync_backup.bbj","AUTO",barDir$,sysGUI!,rdForm!,null(),table_chans$[all]
+rem --- When new install not using demo data, create admin_backup records using bax_sync_backup.bbj
+    if newInstall and !demodata% then
+        rem --- Create admin_backup records for admin data (adm_firms, ads_masks and ads_sequences) changes
+        print(log_dev)""
+        print(log_dev)"create admin_backup records for admin data changes"
+    
+        rem --- Pass bax_sync_backup.bbj the full path to the installation’s Barista directory
+        call stbl("+DIR_SYP")+"bax_sync_backup.bbj","AUTO",barDir$,sysGUI!,rdForm!,null(),table_chans$[all]
+    endif
 
 rem --- Process requiredFiles!
     print(log_dev)""
