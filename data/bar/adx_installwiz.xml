@@ -21,9 +21,9 @@
 			<ASC_LICENSE_ID id="ddm_tables.adx_installwiz"></ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.adx_installwiz">N</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.adx_installwiz">20110413</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.adx_installwiz">20181004</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.adx_installwiz">20181004</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.adx_installwiz">105659</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.adx_installwiz">20181015</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.adx_installwiz">20181012</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.adx_installwiz">122000</DD_LSTSYNC_TIME>
 			<DD_ATTR_ATAB id="ddm_tables.adx_installwiz"></DD_ATTR_ATAB>
 			<DD_ATTR_CPGM id="ddm_tables.adx_installwiz">C:/dev_projects/aon_dev1/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.adx_installwiz"></DD_ATTR_DKNM>
@@ -50,6 +50,10 @@
 	</ALIAS>
 	<ALIAS id="ddm_table_cpro">
 		<ID id="ddm_table_cpro">DDM_TABLE_CPRO</ID>
+		<RECORD id="ddm_table_cpro.adx_installwizarec">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.adx_installwizarec">ADX_INSTALLWIZ  </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.adx_installwizarec">AREC</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_table_cpro.adx_installwizasho">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.adx_installwizasho">ADX_INSTALLWIZ  </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.adx_installwizasho">ASHO</DD_ATTR_CPRO>
@@ -228,7 +232,7 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.adx_installwiz004">20140205</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.adx_installwiz004"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.adx_installwiz004"></DD_ATTR_ABLV>
-			<DD_ATTR_CPGM id="ddm_table_cols.adx_installwiz004"></DD_ATTR_CPGM>
+			<DD_ATTR_CPGM id="ddm_table_cols.adx_installwiz004">C:/dev_projects/aon_dev1/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_COLW id="ddm_table_cols.adx_installwiz004">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.adx_installwiz004"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.adx_installwiz004"></DD_ATTR_CTLY>
@@ -357,6 +361,11 @@
 			<DD_DVAR_NAME id="ddm_column_cpro.adx_installwiznew_install_locaval">NEW_INSTALL_LOC </DD_DVAR_NAME>
 			<DD_ATTR_CPRO id="ddm_column_cpro.adx_installwiznew_install_locaval">AVAL</DD_ATTR_CPRO>
 		</RECORD>
+		<RECORD id="ddm_column_cpro.adx_installwizinstall_typeaval">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.adx_installwizinstall_typeaval">ADX_INSTALLWIZ  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.adx_installwizinstall_typeaval">INSTALL_TYPE    </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.adx_installwizinstall_typeaval">AVAL</DD_ATTR_CPRO>
+		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_ldat">
 		<ID id="ddm_column_ldat">DDM_COLUMN_LDAT</ID>
@@ -371,8 +380,23 @@
 			<DD_TABLE_ALIAS id="ddm_column_ldat.adx_installwizinstall_type02">ADX_INSTALLWIZ  </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_ldat.adx_installwizinstall_type02">INSTALL_TYPE    </DD_DVAR_NAME>
 			<DD_ATTR_SEQ id="ddm_column_ldat.adx_installwizinstall_type02">02</DD_ATTR_SEQ>
-			<DD_ATTR_LDAT id="ddm_column_ldat.adx_installwizinstall_type02">P</DD_ATTR_LDAT>
-			<DD_ATTR_LDAT_DS id="ddm_column_ldat.adx_installwizinstall_type02">Production</DD_ATTR_LDAT_DS>
+			<DD_ATTR_LDAT id="ddm_column_ldat.adx_installwizinstall_type02">D</DD_ATTR_LDAT>
+			<DD_ATTR_LDAT_DS id="ddm_column_ldat.adx_installwizinstall_type02">Production With Default Data</DD_ATTR_LDAT_DS>
+		</RECORD>
+		<RECORD id="ddm_column_ldat.adx_installwizinstall_type03">
+			<DD_TABLE_ALIAS id="ddm_column_ldat.adx_installwizinstall_type03">ADX_INSTALLWIZ  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_ldat.adx_installwizinstall_type03">INSTALL_TYPE    </DD_DVAR_NAME>
+			<DD_ATTR_SEQ id="ddm_column_ldat.adx_installwizinstall_type03">03</DD_ATTR_SEQ>
+			<DD_ATTR_LDAT id="ddm_column_ldat.adx_installwizinstall_type03">X</DD_ATTR_LDAT>
+			<DD_ATTR_LDAT_DS id="ddm_column_ldat.adx_installwizinstall_type03">Production Without Data</DD_ATTR_LDAT_DS>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_column_opts">
+		<ID id="ddm_column_opts">DDM_COLUMN_OPTS</ID>
+		<RECORD id="ddm_column_opts.adx_installwiznew_firm_idc">
+			<DD_TABLE_ALIAS id="ddm_column_opts.adx_installwiznew_firm_idc">ADX_INSTALLWIZ  </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.adx_installwiznew_firm_idc">NEW_FIRM_ID     </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.adx_installwiznew_firm_idc">C</DD_ATTR_OPTS>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_elements">
