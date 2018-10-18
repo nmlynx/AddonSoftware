@@ -155,8 +155,6 @@ rem ==========================================================================
 
 	if info(3,6)<>"5" then SysGUI!.setRepaintEnabled(1)
 
-	gosub reset_timer
-
 	return
 
 rem ==========================================================================
@@ -282,17 +280,6 @@ rem ==========================================================================
 
 	return
 
-rem ==========================================================================
-reset_timer: rem --- reset timer for another 10 seconds from each AVAL, or from grid switch_value
-rem ==========================================================================
-
-rem --- Set timer for form - closes after 2 minutes *regardless* of active/inactive
-	timer_key!=10000
-	BBjAPI().removeTimer(10000)
-	BBjAPI().createTimer(timer_key!,60,"custom_event")
-
-	return
-
 rem =====================================================================
 rem --- parse PayPal response text
 rem --- wkx0$=response, wkx1$=key to look for, wkx2$=delim used to separate key/value pairs
@@ -342,13 +329,10 @@ rem --- Declare classes used
 
 	use org.json.JSONObject
 
-rem --- Set timer for form - closes after 2 minutes *regardless* of active/inactive
-	timer_key!=10000
-	BBjAPI().createTimer(timer_key!,600,"custom_event")
-
-rem --- get/store mask
+rem --- init
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",ar_a_mask$,0,0
 	callpoint!.setDevObject("ar_a_mask",ar_a_mask$)
+	callpoint!.setDevObject("payment_status","")
 
 rem --- Open files
 
@@ -439,6 +423,9 @@ rem --- check for mandatory data, confirm, then process
 	        rem --- using Authorize.net or PayPal hosted page (interface_tp$="H")
 	        switch gateway_id$
 			case "PAYFLOWPRO"
+				rem --- set devObject to indicate 'payment' status
+				callpoint!.setDevObject("payment_status","payment")
+
 				rem --- get random number to send when requesting secure token
 				rem --- set namespace variable using that number
 				rem --- PayPal returns that number in the response, so can match number in response to number we're sending to be sure we're processing our payment and not someone else's (multi-user)
@@ -573,10 +560,18 @@ rem --- if vectInvoices! contains any selected items, get confirmation that user
 		next wk
 	endif
 
+	if callpoint!.getDevObject("payment_status")="payment"
+		msg_id$="GENERIC_WARN"
+		dim msg_tokens$[1]
+		msg_tokens$[0]="Payment transaction in process. Response not yet received.";rem TODO CAH localize
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
+
 	if selected
 		msg_id$="GENERIC_WARN_CANCEL"
 		dim msg_tokens$[1]
-		msg_tokens$[0]="Exit without processing this payment?"+$0A$+"Select OK to exit, or Cancel to return to the form."
+		msg_tokens$[0]="Exit without processing this payment?"+$0A$+"Select OK to exit, or Cancel to return to the form.";rem TODO CAH localize
 		gosub disp_message
 		if msg_opt$<>"O" then callpoint!.setStatus("ABORT")
 	endif
@@ -670,6 +665,8 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 					else
 						cash_msg$=""
 					endif
+					rem --- set devObject to indicate 'response' status
+					callpoint!.setDevObject("payment_status","response")
 				endif
 			endif
 		endif
@@ -679,51 +676,45 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 		gosub disp_message
 		callpoint!.setStatus("EXIT")
 	else
-		if ev!.getEventName()="BBjTimerEvent" and gui_event.y=10000
-			BBjAPI().removeTimer(10000)
-			callpoint!.setStatus("EXIT")
-		else
-			ctl_ID=dec(gui_event.ID$)
-			if ctl_ID=num(callpoint!.getDevObject("openInvoicesGridId"))
-				if gui_event.code$="N"
-					notify_base$=notice(gui_dev,gui_event.x%)
-					dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
-					notice$=notify_base$
-					curr_row = dec(notice.row$)
-					curr_col = dec(notice.col$)
-				endif
-				switch notice.code
-					case 12;rem grid_key_press
-						if notice.wparam=32 gosub switch_value
-					break
-					case 14;rem grid_mouse_up
-						if notice.col=0 gosub switch_value
-					break
-					case 7;rem edit stop
-						if curr_col = 6 then
-							vectInvoices!=callpoint!.getDevObject("vectInvoices")
-							openInvoicesGrid!=callpoint!.getDevObject("openInvoicesGrid")
-							grid_cols = num(callpoint!.getDevObject("grid_cols"))
-							tot_pay=num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT"))
-							vect_pay_amt=num(vectInvoices!.get(curr_row*grid_cols+grid_cols-1))
-							grid_pay_amt = num(openInvoicesGrid!.getCellText(curr_row,grid_cols-1))
-							if grid_pay_amt<0 then grid_pay_amt=0
-							if grid_pay_amt>num(vectInvoices!.get(curr_row*grid_cols+5)) then grid_pay_amt=num(vectInvoices!.get(curr_row*grid_cols+5)) 
-							tot_pay=tot_pay-vect_pay_amt+grid_pay_amt
-							vectInvoices!.set(curr_row*grid_cols+6,str(grid_pay_amt))
-							openInvoicesGrid!.setCellText(curr_row,grid_cols-1,str(grid_pay_amt))
-							callpoint!.setColumnData("<<DISPLAY>>.APPLY_AMT",str(tot_pay),1)
-							if grid_pay_amt>0
-								vectInvoices!.set(curr_row*grid_cols,"Y")
-								openInvoicesGrid!.setCellState(curr_row,0,1)
-							else
-								vectInvoices!.set(curr_row*grid_cols,"")
-								openInvoicesGrid!.setCellState(curr_row,0,0)
-							endif
-							gosub reset_timer
-						endif
-					break
-				swend
+		ctl_ID=dec(gui_event.ID$)
+		if ctl_ID=num(callpoint!.getDevObject("openInvoicesGridId"))
+			if gui_event.code$="N"
+				notify_base$=notice(gui_dev,gui_event.x%)
+				dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
+				notice$=notify_base$
+				curr_row = dec(notice.row$)
+				curr_col = dec(notice.col$)
 			endif
+			switch notice.code
+				case 12;rem grid_key_press
+					if notice.wparam=32 gosub switch_value
+				break
+				case 14;rem grid_mouse_up
+					if notice.col=0 gosub switch_value
+				break
+				case 7;rem edit stop
+					if curr_col = 6 then
+						vectInvoices!=callpoint!.getDevObject("vectInvoices")
+						openInvoicesGrid!=callpoint!.getDevObject("openInvoicesGrid")
+						grid_cols = num(callpoint!.getDevObject("grid_cols"))
+						tot_pay=num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT"))
+						vect_pay_amt=num(vectInvoices!.get(curr_row*grid_cols+grid_cols-1))
+						grid_pay_amt = num(openInvoicesGrid!.getCellText(curr_row,grid_cols-1))
+						if grid_pay_amt<0 then grid_pay_amt=0
+						if grid_pay_amt>num(vectInvoices!.get(curr_row*grid_cols+5)) then grid_pay_amt=num(vectInvoices!.get(curr_row*grid_cols+5)) 
+						tot_pay=tot_pay-vect_pay_amt+grid_pay_amt
+						vectInvoices!.set(curr_row*grid_cols+6,str(grid_pay_amt))
+						openInvoicesGrid!.setCellText(curr_row,grid_cols-1,str(grid_pay_amt))
+						callpoint!.setColumnData("<<DISPLAY>>.APPLY_AMT",str(tot_pay),1)
+						if grid_pay_amt>0
+							vectInvoices!.set(curr_row*grid_cols,"Y")
+							openInvoicesGrid!.setCellState(curr_row,0,1)
+						else
+							vectInvoices!.set(curr_row*grid_cols,"")
+							openInvoicesGrid!.setCellState(curr_row,0,0)
+						endif
+					endif
+				break
+			swend
 		endif
 	endif
