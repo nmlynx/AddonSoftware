@@ -67,14 +67,14 @@ rem --- view electronic receipt response, if applicable
 	cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
 
 	dim dflt_data$[1,1]
-	dflt_data$[0,0]="ART_RESPONSE.FIRM_ID"
+	dflt_data$[0,0]="ART_RESPHDR.FIRM_ID"
 	dflt_data$[0,1]=firm_id$
-	dflt_data$[1,0]="ART_RESPONSE.CUSTOMER_ID"
+	dflt_data$[1,0]="ART_RESPHDR.CUSTOMER_ID"
 	dflt_data$[1,1]=cust_id$
 
 	key_pfx$=callpoint!.getColumnData("ARM_CUSTMAST.FIRM_ID")+callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:		"ART_RESPONSE",
+:		"ART_RESPHDR",
 :		user_id$,
 :		"",
 :		key_pfx$,
@@ -922,18 +922,23 @@ rem --- Additional/optional opens
 		callpoint!.setDevObject("gmClient",gmClient!)
 	endif
 
-rem --- disable credit card payment and view response options if param not set
+rem --- disable credit card payment and view response options if not processing credit card payments
 
-	readrecord(ars_cc_custsvc,key=firm_id$+"AR00",dom=*next)ars_cc_custsvc$
-	if ars_cc_custsvc.use_custsvc_cc$="Y"
-		callpoint!.setOptionEnabled("PYMT",1)
-		callpoint!.setOptionEnabled("RESP",1)
-		callpoint!.setDevObject("interface_tp",ars_cc_custsvc.interface_tp$)
-		callpoint!.setDevObject("dflt_cntry_id",ars_cc_custsvc.dflt_cntry_id$)
-	else
-		callpoint!.setOptionEnabled("PYMT",0)
-		callpoint!.setOptionEnabled("RESP",0)
-	endif
+	read(ars_cc_custsvc,key=firm_id$,dom=*next)
+	while 1
+		readrecord(ars_cc_custsvc,end=*break)ars_cc_custsvc$
+		if ars_cc_custsvc.firm_id$<>firm_id$ then break
+		if ars_cc_custsvc.use_custsvc_cc$="Y"
+			callpoint!.setOptionEnabled("PYMT",1)
+			callpoint!.setOptionEnabled("RESP",1)
+			callpoint!.setDevObject("interface_tp",ars_cc_custsvc.interface_tp$)
+			callpoint!.setDevObject("dflt_cntry_id",ars_cc_custsvc.dflt_cntry_id$)
+		else
+			callpoint!.setOptionEnabled("PYMT",0)
+			callpoint!.setOptionEnabled("RESP",0)
+		endif
+	wend
+
 [[ARM_CUSTMAST.<CUSTOM>]]
 rem =======================================================
 create_widgets:rem --- create pie and bar widgets to show aged balance (bar in case credits)

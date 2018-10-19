@@ -1,3 +1,32 @@
+[[ARE_CCPMT_API.CASH_REC_CD.BINQ]]
+rem --- restrict inquiry to cash rec codes associated with credit card payments
+
+	dim filter_defs$[2,2]
+	filter_defs$[0,0]="ARC_CASHCODE.FIRM_ID"
+	filter_defs$[0,1]="='"+firm_id$+"'"
+	filter_defs$[0,2]="LOCK"
+	filter_defs$[1,0]="ARS_CC_CUSTSVC.USE_CUSTSVC_CC"
+	filter_defs$[1,1]="='Y'"
+	filter_defs$[1,2]="LOCK"
+	filter_defs$[1,0]="ARS_CC_CUSTSVC.INTERFACE_TP"
+	filter_defs$[1,1]="='A'"
+	filter_defs$[1,2]="LOCK"
+
+	dim search_defs$[3]
+
+	call stbl("+DIR_SYP")+"bax_query.bbj",
+:		gui_dev,
+:		Form!,
+:		"AR_CREDIT_CODES",
+:		"",
+:		table_chans$[all],
+:		selected_keys$,
+:		filter_defs$[all],
+:		search_defs$[all],
+:		"",
+:		""
+
+ESCAPE
 [[ARE_CCPMT_API.ZIP_CODE.AVAL]]
 gosub reset_timer
 [[ARE_CCPMT_API.YEAR.AINV]]
