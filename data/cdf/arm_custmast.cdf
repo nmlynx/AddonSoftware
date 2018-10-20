@@ -6,8 +6,8 @@ rem --- or using J2Pay library, as specified in ars_cc_custsvc
 	cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
 	user_id$=stbl("+USER_ID")
 	interface_tp$=callpoint!.getDevObject("interface_tp")
-
-	if interface_tp$="A"
+rem forcing for testing CAH
+	if interface_tp$<>""
 
 		arm_emailfax=fnget_dev("ARM_EMAILFAX")
 		dim arm_emailfax$:fnget_tpl$("ARM_EMAILFAX")
@@ -37,7 +37,7 @@ rem --- or using J2Pay library, as specified in ars_cc_custsvc
 
 		key_pfx$=cp_cust_id$
 		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:			"ARE_CCPMT_API",
+:			"ARE_CCPMT",
 :	                user_id$,
 :	                "",
 :	                key_pfx$,
