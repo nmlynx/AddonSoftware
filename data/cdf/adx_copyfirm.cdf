@@ -69,7 +69,7 @@ rem --- Copy selected data
 		meter_title$=Form!.getTitle()
 		meter_total_recs=numSelected
 		meter_proc_recs=0
-		meter_data$=""
+		table_alias$=""
 		meter_action$="WIN-LST-OK"
 		gosub disp_meter
 
@@ -106,6 +106,12 @@ rem --- Copy selected data
 		endif
 		print (log_dev)
 
+            
+		rem --- Use bax_mount_sel to get rdMountVect! containing hashes of mounted system and backup directory info for use in bax_xmlrec_exp.bbj
+		exp_add_only$=""
+		dev_mode$=""
+		call stbl("+DIR_SYP")+"bax_mount_sel.bbj",rdMountVect!,table_chans$[all],dev_mode$
+
 		rem --- Process selected files
 		sql_chan=sqlunt
 		sqlopen(sql_chan,err=*endif)stbl("+DBNAME")
@@ -113,6 +119,7 @@ rem --- Copy selected data
 		for curr_row=0 to vectFiles!.size()/(numcols)-1
 			rem --- Increment progress meter
 			meter_data$=cvs(vectFiles!.getItem(curr_row * numcols + 3),2)
+			table_alias$=meter_data$
 			meter_proc_recs=meter_proc_recs+1
 			meter_action$="MTR-LST"
 			gosub disp_meter
@@ -140,7 +147,7 @@ rem --- Copy selected data
 					read_tpl$=sqlfetch(sql_chan,err=*endif)
 					from_recs$=str(read_tpl.col001)
 				endif
-				print (log_dev)"File: "+meter_data$+"("+open_tables$[1]+")"
+				print (log_dev)"File: "+table_alias$+"("+open_tables$[1]+")"
 				print (log_dev)"Firm "+from_firm$+" records in file: "+from_recs$
 
 				rem --- Now copy the records
@@ -148,10 +155,25 @@ rem --- Copy selected data
 					tot_recs_copied=0
 					read(from_table_dev,key=from_firm$,dom=*next)
 					while 1
+						rem --- Read from record
 						dim rec_tpl$:table_tpl$
 						readrecord (from_table_dev,end=*break)rec_tpl$
 						if rec_tpl.firm_id$ <> from_firm$ break
 						rec_tpl.firm_id$ = to_firm$
+
+						rem --- Create admin_backup records for admin data (adm_firms, ads_masks and ads_sequences) changes
+						if callpoint!.getColumnData("ADX_COPYFIRM.ASC_PROD_ID")="ADB" and
+:						(table_alias$="ADM_FIRMS" or table_alias$="ADS_MASKS" or table_alias$="ADS_SEQUENCES") then
+							if pos(newFirm$="0102",2) then
+								rec_tpl.user_modified$="M"
+							else
+								rec_tpl.user_modified$="A"
+							endif
+							exp_action$=rec_tpl.user_modified$
+							call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj",table_alias$,rec_tpl$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
+						endif
+
+						rem --- Write to record
 						writerecord (to_table_dev)rec_tpl$
 						tot_recs_copied=tot_recs_copied+1
 					wend
@@ -165,7 +187,7 @@ rem --- Copy selected data
 					print (log_dev)
 				endif
 			else
-				print (log_dev)"Table "+meter_data$+" skipped"
+				print (log_dev)"Table "+table_alias$+" skipped"
 				print (log_dev)
 			endif
 		next curr_row
@@ -457,9 +479,9 @@ rem ==========================================================================
 
 		if pos(ddm_tables.dd_alias_type$="MXVSD")>0 and pos(ddm_tables.asc_prod_id$=modules$,3) > 0 then
 			if ddm_tables.asc_prod_id$ <> "ADB" or
-:				((ddm_tables.asc_prod_id$="ADB") and
-:				 (cvs(ddm_tables.dd_table_alias$,2)="ADS_MASKS") or
-:				 (cvs(ddm_tables.dd_table_alias$,2)="ADS_SEQUENCES"))
+:				(ddm_tables.asc_prod_id$="ADB" and
+:				 (cvs(ddm_tables.dd_table_alias$,2)="ADS_MASKS" or
+:				 cvs(ddm_tables.dd_table_alias$,2)="ADS_SEQUENCES"))
 
 				rem --- Skip files that haven't been created yet
 				tablePath$=cvs(ddm_tables.dd_table_path$,3)
