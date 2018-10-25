@@ -5,62 +5,43 @@ rem --- or using J2Pay library, as specified in ars_cc_custsvc
 
 	cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
 	user_id$=stbl("+USER_ID")
-	interface_tp$=callpoint!.getDevObject("interface_tp")
-rem forcing for testing CAH
-	if interface_tp$<>""
 
-		arm_emailfax=fnget_dev("ARM_EMAILFAX")
-		dim arm_emailfax$:fnget_tpl$("ARM_EMAILFAX")
-		readrecord(arm_emailfax,key=firm_id$+cp_cust_id$,dom=*next)arm_emailfax$
+	arm_emailfax=fnget_dev("ARM_EMAILFAX")
+	dim arm_emailfax$:fnget_tpl$("ARM_EMAILFAX")
+	readrecord(arm_emailfax,key=firm_id$+cp_cust_id$,dom=*next)arm_emailfax$
 
-		cntry_id$=cvs(callpoint!.getColumnData("ARM_CUSTMAST.CNTRY_ID"),3)
+	cntry_id$=cvs(callpoint!.getColumnData("ARM_CUSTMAST.CNTRY_ID"),3)
 
-		dim dflt_data$[9,1]
-		dflt_data$[1,0]="CUSTOMER_ID"
-		dflt_data$[1,1]=cp_cust_id$
-		dflt_data$[2,0]="ADDRESS_LINE_1"
-		dflt_data$[2,1]=callpoint!.getColumnData("ARM_CUSTMAST.ADDR_LINE_1")
-		dflt_data$[3,0]="ADDRESS_LINE_2"
-		dflt_data$[3,1]=callpoint!.getColumnData("ARM_CUSTMAST.ADDR_LINE_2")
-		dflt_data$[4,0]="CITY"
-		dflt_data$[4,1]=callpoint!.getColumnData("ARM_CUSTMAST.CITY")
-		dflt_data$[5,0]="STATE_CODE"
-		dflt_data$[5,1]=callpoint!.getColumnData("ARM_CUSTMAST.STATE_CODE")
-		dflt_data$[6,0]="ZIP_CODE"
-		dflt_data$[6,1]=callpoint!.getColumnData("ARM_CUSTMAST.ZIP_CODE")
-		dflt_data$[7,0]="CNTRY_ID"
-		dflt_data$[7,1]=iff(cntry_id$<>"",cntry_id$,callpoint!.getDevObject("dflt_cntry_id"))
-		dflt_data$[8,0]="PHONE_NO"
-		dflt_data$[8,1]=callpoint!.getColumnData("ARM_CUSTMAST.PHONE_NO")
-		dflt_data$[9,0]="EMAIL_ADDR"
-		dflt_data$[9,1]=arm_emailfax.email_to$
+	dim dflt_data$[9,1]
+	dflt_data$[1,0]="CUSTOMER_ID"
+	dflt_data$[1,1]=cp_cust_id$
+	dflt_data$[2,0]="ADDRESS_LINE_1"
+	dflt_data$[2,1]=callpoint!.getColumnData("ARM_CUSTMAST.ADDR_LINE_1")
+	dflt_data$[3,0]="ADDRESS_LINE_2"
+	dflt_data$[3,1]=callpoint!.getColumnData("ARM_CUSTMAST.ADDR_LINE_2")
+	dflt_data$[4,0]="CITY"
+	dflt_data$[4,1]=callpoint!.getColumnData("ARM_CUSTMAST.CITY")
+	dflt_data$[5,0]="STATE_CODE"
+	dflt_data$[5,1]=callpoint!.getColumnData("ARM_CUSTMAST.STATE_CODE")
+	dflt_data$[6,0]="ZIP_CODE"
+	dflt_data$[6,1]=callpoint!.getColumnData("ARM_CUSTMAST.ZIP_CODE")
+	dflt_data$[7,0]="CNTRY_ID"
+	dflt_data$[7,1]=iff(cntry_id$<>"",cntry_id$,callpoint!.getDevObject("dflt_cntry_id"))
+	dflt_data$[8,0]="PHONE_NO"
+	dflt_data$[8,1]=callpoint!.getColumnData("ARM_CUSTMAST.PHONE_NO")
+	dflt_data$[9,0]="EMAIL_ADDR"
+	dflt_data$[9,1]=arm_emailfax.email_to$
 
-		key_pfx$=cp_cust_id$
-		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:			"ARE_CCPMT",
-:	                user_id$,
-:	                "",
-:	                key_pfx$,
-:	                table_chans$[all],
-:	                "",
-:	                dflt_data$[all]
+	key_pfx$=cp_cust_id$
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"ARE_CCPMT",
+:                user_id$,
+:                "",
+:                key_pfx$,
+:                table_chans$[all],
+:                "",
+:                dflt_data$[all]
 
-	else
-
-		dim dflt_data$[1,1]
-		dflt_data$[1,0]="CUSTOMER_ID"
-		dflt_data$[1,1]=cp_cust_id$
-		key_pfx$=cp_cust_id$
-		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:			"ARE_CCPMT_HOST",
-:	                user_id$,
-:	                "",
-:	                key_pfx$,
-:	                table_chans$[all],
-:	                "",
-:	                dflt_data$[all]
-
-	endif
 [[ARM_CUSTMAST.AOPT-RESP]]
 rem --- view electronic receipt response, if applicable 
 	user_id$=stbl("+USER_ID")  

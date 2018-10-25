@@ -13,6 +13,9 @@ rem --- get cash rec code and associated credit card params; if hosted, disable 
 	readrecord(ars_cc_custsvc,key=firm_id$+cash_cd$,dom=std_missing_params)ars_cc_custsvc$
 	callpoint!.setDevObject("interface_tp",ars_cc_custsvc.interface_tp$)
 	if ars_cc_custsvc.interface_tp$="A"
+		rem --- Set timer for form when interface_tp$="A" (using internal API, so collecting sensitive info)
+		timer_key!=10000
+		BBjAPI().createTimer(timer_key!,60,"custom_event")
 		enable_flag=1
 	else
 		enable_flag=0
@@ -120,19 +123,29 @@ rem --- if vectInvoices! contains any selected items, get confirmation that user
 	vectInvoices!=callpoint!.getDevObject("vectInvoices")
 	grid_cols = num(callpoint!.getDevObject("grid_cols"))
 	selected=0
-	if vectInvoices!.size()
+	if vectInvoices!.size(err=*endif)
 		for wk=0 to vectInvoices!.size()-1 step grid_cols
 			selected=selected+iff(vectInvoices!.get(wk)="Y",1,0)
 		next wk
 	endif
 
+	if callpoint!.getDevObject("payment_status")="payment"
+		msg_id$="GENERIC_WARN"
+		dim msg_tokens$[1]
+		msg_tokens$[0]=Translate!.getTranslation("AON_PAYMENT_TRANSACTION_IN_PROCESS","Payment transaction in process. Response not yet received.",1)
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
+
 	if selected
 		msg_id$="GENERIC_WARN_CANCEL"
 		dim msg_tokens$[1]
-		msg_tokens$[0]="Exit without processing this payment?"+$0A$+"Select OK to exit, or Cancel to return to the form."
+		msg_tokens$[0]=Translate!.getTranslation("AON_EXIT_WITHOUT_PROCESSING_THIS_PAYMENT","Exit without processing this payment?",1)+$0A$+Translate!.getTranslation("AON_SELECT_OK_OR_CANCEL","Select OK to exit, or Cancel to return to the form.",1)
 		gosub disp_message
 		if msg_opt$<>"O" then callpoint!.setStatus("ABORT")
 	endif
+
+	BBjAPI().removeTimer(10000,err=*next)
 [[ARE_CCPMT.AREC]]
 
 [[ARE_CCPMT.CARD_NO.AVAL]]
@@ -319,12 +332,166 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 		msg_id$="GENERIC_OK"
 		gosub disp_message
 		callpoint!.setStatus("EXIT")
-else
-	escape; rem hosted goes here
-endif
+	else
+		rem --- interface_tp$="H" (hosted page), check to make sure one or more invoices selected, confirm, then process
 
+		apply_amt!=cast(BBjNumber, num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT")))
+		masked_amt$=cvs(str(num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT")):callpoint!.getDevObject("ar_a_mask")),3)
 
+		if apply_amt!=0
+			dim msg_tokens$[1]
+			msg_tokens$[0]=Translate!.getTranslation("AON_PLEASE_SELECT_INVOICES_FOR_PAYMENT","Please select invoices for payment.",1)
+			msg_id$="GENERIC_WARN"
+			gosub disp_message
+			callpoint!.setStatus("ABORT-ACTIVATE")
+			break
+		endif
+
+		msg_id$="CONF_CC_PAYMENT"
+		msg_opt$=""
+		dim msg_tokens$[1]
+		msg_tokens$[0]=masked_amt$
+		gosub disp_message
+
+		if msg_opt$<>"Y"
+			callpoint!.setStatus("ABORT-ACTIVATE")
+		else
+			ars_cc_custsvc=fnget_dev("ARS_CC_CUSTSVC")
+			arc_gatewaydet=fnget_dev("ARC_GATEWAYDET")
+
+			dim ars_cc_custsvc$:fnget_tpl$("ARS_CC_CUSTSVC")
+			dim arc_gatewaydet$:fnget_tpl$("ARC_GATEWAYDET")
 		
+			readrecord(ars_cc_custsvc,key=firm_id$+callpoint!.getColumnData("ARE_CCPMT.CASH_REC_CD"),dom=std_missing_params)ars_cc_custsvc$
+			gateway_id$=ars_cc_custsvc.gateway_id$
+			gosub get_gateway_config
+
+			vectInvoices!=callpoint!.getDevObject("vectInvoices")
+			cust_id$=callpoint!.getColumnData("ARE_CCPMT.CUSTOMER_ID")
+
+		        rem --- using Authorize.net or PayPal hosted page
+		        switch gateway_id$
+				case "PAYFLOWPRO"
+					rem --- set devObject to indicate 'payment' status
+					callpoint!.setDevObject("payment_status","payment")
+
+					rem --- get random number to send when requesting secure token
+					rem --- set namespace variable using that number
+					rem --- PayPal returns that number in the response, so can match number in response to number we're sending to be sure we're processing our payment and not someone else's (multi-user)
+					sid!=UUID.randomUUID()
+					sid$=sid!.toString()
+					callpoint!.setDevObject("sid",sid$)
+					ns!=BBjAPI().getNamespace("aon","credit_receipt_payflowpro",1)
+					ns!.setValue(sid$,"init")
+					ns!.setCallbackForVariableChange(sid$,"custom_event")
+		           
+					rem --- use BBj's REST API to send sid$ and receive back secure token
+					client!=new BBWebClient()
+					request!=new BBWebRequest()
+					request!.setURI(gw_config!.get("requestTokenURL"))
+					request!.setMethod("POST")
+					request!.setContent("PARTNER="+gw_config!.get("PARTNER")+"&VENDOR="+gw_config!.get("VENDOR")+"&USER="+gw_config!.get("USER")+"&PWD="+gw_config!.get("PWD")+"&TRXTYPE=S&AMT="+str(apply_amt!:"###,###.00")+"&CREATESECURETOKEN=Y&SECURETOKENID="+sid!.toString())
+					response! = client!.sendRequest(request!) 
+					content!=response!.getBody()
+					response!.close()
+
+					tokenID!=content!.substring(content!.indexOf("SECURETOKEN=")+11)
+					tokenID$=tokenID!.substring(1,tokenID!.indexOf("&"))
+
+					rem --- If successful in getting secure token, launch hosted page.
+					rem --- PayPal Silent Post configuration will contain return URL that runs a BBJSP servlet once payment is completed (or declined).
+					rem --- Servlet updates namespace variable sid$ with response text.
+					rem --- Registered callback for namespace variable change will cause PayPal response routine in ACUS to get executed,
+					rem --- which will record response in art_response and post cash receipt, if applicable.
+
+					if content!.contains("RESULT=0")
+						returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway_id$+" -t"+tokenID$+" -s"+sid$+" -l"+gw_config!.get("launchURL"))
+					else
+						trans_msg$="Unable to acquire secure token from PayPal."
+					endif
+				break
+				case "AUTHORIZE "
+					ns!=BBjAPI().getNamespace("aon","credit_receipt_authorize",1)
+					ns!.setCallbackForNamespace("custom_event")
+
+					rem --- Create the order object to add to transaction request
+					rem --- Currently filling with unique ID so we can link this auth-capture to returned response
+					rem --- Authorize.net next API version should allow refID to be passed that will be returned in Webhook, obviating need for unique ID in order
+
+					sid!=UUID.randomUUID()
+					sid$=sid!.toString()
+					callpoint!.setDevObject("sid",sid$)
+					order! = new OrderType()
+					order!.setInvoiceNumber(cust_id$)
+					order!.setDescription(sid$)
+
+					ApiOperationBase.setEnvironment(Environment.valueOf(gw_config!.get("environment")))
+
+					merchantAuthenticationType!  = new MerchantAuthenticationType() 
+					merchantAuthenticationType!.setName(gw_config!.get("name"))
+					merchantAuthenticationType!.setTransactionKey(gw_config!.get("transactionKey"))
+					ApiOperationBase.setMerchantAuthentication(merchantAuthenticationType!)
+
+					rem Create the payment transaction request
+					txnRequest! = new TransactionRequestType()
+					txnRequest!.setTransactionType(TransactionTypeEnum.AUTH_CAPTURE_TRANSACTION.value())
+					txnRequest!.setAmount(new BigDecimal(apply_amt!).setScale(2, RoundingMode.CEILING))
+					txnRequest!.setOrder(order!)
+
+					setting1! = new SettingType()
+					setting1!.setSettingName("hostedPaymentButtonOptions")
+					setting1!.setSettingValue("{"+$22$+"text"+$22$+": "+$22$+"Pay"+$22$+"}")
+	                        
+					setting2! = new SettingType()
+					setting2!.setSettingName("hostedPaymentOrderOptions")
+					setting2!.setSettingValue("{"+$22$+"show"+$22$+": false}")
+
+					setting3! = new SettingType()
+					setting3!.setSettingName("hostedPaymentReturnOptions")
+					setting3!.setSettingValue("{"+$22$+"showReceipt"+$22$+": true, "+$22$+"url"+$22$+": "+$22$+gw_config!.get("confirmationURL")+$22$+", "+$22$+"urlText"+$22$+": "+$22$+"Continue"+$22$+"}")
+
+					setting4! = new SettingType()
+					setting4!.setSettingName("hostedPaymentPaymentOptions")
+					setting4!.setSettingValue("{"+$22$+"showBankAccount"+$22$+": false}")
+
+					alist! = new ArrayOfSetting()
+					alist!.getSetting().add(setting1!)
+					alist!.getSetting().add(setting2!)
+					alist!.getSetting().add(setting3!)
+					alist!.getSetting().add(setting4!)
+
+					apiRequest! = new GetHostedPaymentPageRequest()
+					apiRequest!.setTransactionRequest(txnRequest!)
+					apiRequest!.setHostedPaymentSettings(alist!)
+
+					controller! = new GetHostedPaymentPageController(apiRequest!)
+					controller!.execute()
+
+					authResponse! = new GetHostedPaymentPageResponse()
+					authResponse! = controller!.getApiResponse()
+
+					rem --- if GetHostedPaymentPageResponse() indicates success, launch our 'starter' page.
+					rem --- 'starter' page gets passed the token, and has a 'proceed to checkout' button, which does a POST to https://test.authorize.net/payment/payment, passing along the token.
+					rem --- Authorize.net is configured with Webhook for the auth-capture transaction. Webhook contains URL that runs our BBJSP servlet.
+					rem --- Servlet updates namespace variable 'authresp' with response text
+					rem --- registered callback for variable change will cause authorize_response routine to get executed
+					rem --- authorize_response will parse trans_id from the webhook, then send a getTransactionDetailsRequest
+					rem --- returned getTransactionDetailsResponse should contain order with our sid$ in the order description
+					rem --- if sid$ matches saved_sid$, then this is our response (and not someone else's who might also be processing payments)
+					rem --- assuming this is our response, record the Webhook response in art_response and create cash receipt, if applicable
+
+					if authResponse!.getMessages().getResultCode()=MessageTypeEnum.OK
+						returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway_id$+" -t"+authResponse!.getToken()+" -a"+masked_amt$+" -l"+gw_config!.get("launchURL")+" -u"+gw_config!.get("gatewayURL"))
+					else
+						trans_msg$=Translate!.getTranslation("AON_UNABLE_TO_ACQUIRE_SECURE_TOKEN")+$0a$+authResponse!.getMessages().getMessage().get(0).getCode()+$0a$+authResponse!.getMessages().getMessage().get(0).getText()
+					endif
+				break
+				case default
+					rem --- shouldn't get here unless new hosted gateway is specified in params, added to adc_gatewayhdr, and no case has been built for handling it
+				break
+			swend
+		endif
+	endif
 [[ARE_CCPMT.ACUS]]
 rem --- Process custom event -- used in this pgm to select/de-select checkboxes in grid
 rem --- See basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info
@@ -335,100 +502,226 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 	dim gui_event$:tmpl(gui_dev)
 	dim notify_base$:noticetpl(0,0)
 	gui_event$=SysGUI!.getLastEventString()
-	ctl_ID=dec(gui_event.ID$)
-	if ctl_ID=num(callpoint!.getDevObject("openInvoicesGridId"))
-		if gui_event.code$="N"
-			notify_base$=notice(gui_dev,gui_event.x%)
-			dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
-			notice$=notify_base$
-			curr_row = dec(notice.row$)
-			curr_col = dec(notice.col$)
-		endif
-		switch notice.code
-			case 12;rem grid_key_press
-				if notice.wparam=32 gosub switch_value
-			break
-			case 14;rem grid_mouse_up
-				if notice.col=0 gosub switch_value
-			break
-			case 7;rem edit stop
-				if curr_col = num(callpoint!.getDevObject("pay_col")) then
-					vectInvoices!=callpoint!.getDevObject("vectInvoices")
-					openInvoicesGrid!=callpoint!.getDevObject("openInvoicesGrid")
-					grid_cols = num(callpoint!.getDevObject("grid_cols"))
-					inv_bal_col=num(callpoint!.getDevObject("inv_bal_col"))
-					disc_col=num(callpoint!.getDevObject("disc_col"))
-					pay_col=num(callpoint!.getDevObject("pay_col"))
-					oa_inv$=callpoint!.getDevObject("oa_inv")
-					tot_pay=num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT"))
-					vect_pay_amt=num(vectInvoices!.get(curr_row*grid_cols+pay_col))
-					grid_pay_amt = num(openInvoicesGrid!.getCellText(curr_row,pay_col))
-					if grid_pay_amt<0 then grid_pay_amt=0
-					if grid_pay_amt>num(vectInvoices!.get(curr_row*grid_cols+inv_bal_col))-num(vectInvoices!.get(curr_row*grid_cols+disc_col)) and vectInvoices!.get(curr_row*grid_cols+1)<>oa_inv$
-						grid_pay_amt=num(vectInvoices!.get(curr_row*grid_cols+inv_bal_col))-num(vectInvoices!.get(curr_row*grid_cols+disc_col)) 
-					endif
-					tot_pay=tot_pay-vect_pay_amt+grid_pay_amt
-					vectInvoices!.set(curr_row*grid_cols+pay_col,str(grid_pay_amt))
-					openInvoicesGrid!.setCellText(curr_row,pay_col,str(grid_pay_amt))
-					callpoint!.setColumnData("<<DISPLAY>>.APPLY_AMT",str(tot_pay),1)
-					if grid_pay_amt>0
-						vectInvoices!.set(curr_row*grid_cols,"Y")
-						openInvoicesGrid!.setCellState(curr_row,0,1)
+	ev!=BBjAPI().getLastEvent()
+
+	if ev!.getEventName()="BBjNamespaceEvent"
+
+		art_resphdr=fnget_dev("ART_RESPHDR")
+		art_respdet=fnget_dev("ART_RESPDET")
+		are_cashhdr=fnget_dev("ARE_CASHHDR")
+		are_cashdet=fnget_dev("ARE_CASHDET")
+		are_cashbal=fnget_dev("ARE_CASHBAL")
+
+		dim art_resphdr$:fnget_tpl$("ART_RESPHDR")
+		dim art_respdet$:fnget_tpl$("ART_RESPDET")
+		dim are_cashhdr$:fnget_tpl$("ARE_CASHHDR")
+		dim are_cashdet$:fnget_tpl$("ARE_CASHDET")
+		dim are_cashbal$:fnget_tpl$("ARE_CASHBAL")
+
+		vectInvoices!=callpoint!.getDevObject("vectInvoices")
+		apply_amt!=cast(BBjNumber, num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT")))
+		cust_id$=callpoint!.getColumnData("ARE_CCPMT.CUSTOMER_ID")
+
+		gw_config!=callpoint!.getDevObject("gw_config")
+		gateway_id$=gw_config!.get("gateway_id")
+
+		trans_msg$=Translate!.getTranslation("AON_UNTRAPPED_NAMESPACE_EVENT")
+		cash_msg$=""
+
+		ns_name$=ev!.getNamespaceName()
+		if pos("authorize"=ns_name$)
+			rem --- response (webhook) from Authorize.net
+			newValue! = new JSONObject(ev!.getNewValue())
+			trans_id$=newValue!.get("payload").get("id")
+
+			ApiOperationBase.setEnvironment(Environment.valueOf(gw_config!.get("environment")))
+
+			merchantAuthenticationType!  = new MerchantAuthenticationType() 
+			merchantAuthenticationType!.setName(gw_config!.get("name"))
+			merchantAuthenticationType!.setTransactionKey(gw_config!.get("transactionKey"))
+			ApiOperationBase.setMerchantAuthentication(merchantAuthenticationType!)
+
+			getRequest! = new GetTransactionDetailsRequest()
+			getRequest!.setMerchantAuthentication(merchantAuthenticationType!)
+			getRequest!.setTransId(trans_id$)
+
+			controller! = new GetTransactionDetailsController(getRequest!)
+			controller!.execute()
+			authResponse! = controller!.getApiResponse()
+			if authResponse!.getMessages().getResultCode()=MessageTypeEnum.OK
+				resp_cust$=authResponse!.getTransaction().getOrder().getInvoiceNumber()
+				resp_sid$=authResponse!.getTransaction().getOrder().getDescription()
+				resp_code=authResponse!.getTransaction().getResponseCode()
+				payment_amt$=str(authResponse!.getTransaction().getAuthAmount())
+				trans_msg$=authResponse!.getMessages().getMessage().get(0).getCode()+$0a$+authResponse!.getMessages().getMessage().get(0).getText()
+
+				rem if resp_sid$ matches callpoint!.getDevObject("sid") then this is a response to OUR payment
+				rem this is a workaround until Authorize.net returns our assigned refID in the webhook response
+				rem until then, don't know if this event got triggered by us, or someone else processing a credit card payment
+				rem so we have to put the sid$ in something that gets returned in the full response, and get that full response
+				rem instead of just using the returned webhook
+				rem may want to always get full response to record in art_response anyway, since webhook payload is abridged   
+   
+				if resp_sid$=callpoint!.getDevObject("sid")
+					response_text$=newValue!.toString()
+					trans_amount$=payment_amt$
+					trans_approved$=iff(resp_code,"A","D");rem A=approved, D=declined
+					if resp_code
+						gosub create_cash_receipt
 					else
-						vectInvoices!.set(curr_row*grid_cols,"")
-						openInvoicesGrid!.setCellState(curr_row,0,0)
+						cash_msg$=""
 					endif
-					gosub reset_timer
+					gosub write_to_response_log
 				endif
-			break
-			case 8;rem edit start
-				grid_cols = num(callpoint!.getDevObject("grid_cols"))
-				comment_col=grid_cols-1
- 				if curr_col=comment_col
-					vectInvoices!=callpoint!.getDevObject("vectInvoices")
-					openInvoicesGrid!=callpoint!.getDevObject("openInvoicesGrid")
-					disp_text$=openInvoicesGrid!.getCellText(clicked_row,comment_col)
-					sv_disp_text$=disp_text$
+			else
+				trans_msg$=Translate!.getTranslation("AON_UNABLE_TO_PROCESS_GETTRANSACTIONDETAILSREQUEST_METHOD")
+			endif
 
-					editable$="YES"
-					force_loc$="NO"
-					baseWin!=null()
-					startx=0
-					starty=0
-					shrinkwrap$="NO"
-					html$="NO"
-					dialog_result$=""
-					spellcheck=1
-
-					call stbl("+DIR_SYP")+ "bax_display_text.bbj",
-:						"Cash Receipts Detail Comments",
-:						disp_text$, 
-:						table_chans$[all], 
-:						editable$, 
-:						force_loc$, 
-:						baseWin!, 
-:						startx, 
-:						starty, 
-:						shrinkwrap$, 
-:						html$, 
-:						dialog_result$,
-:						spellcheck
-
-					if disp_text$<>sv_disp_text$
-						openInvoicesGrid!.setCellText(curr_row,comment_col,disp_text$)
-						vectInvoices!.setItem(curr_row*grid_cols+comment_col,disp_text$)
+		else
+			if pos("payflowpro"=ns_name$)
+				rem --- response (silent post) from PayPal
+				old_value$=ev!.getOldValue()
+				if old_value$="init"
+					new_value$=ev!.getNewValue()
+					trans_id$=fnparse$(new_value$,"PNREF=","&")
+					payment_amt$=str(num(fnparse$(new_value$,"AMT=","&")))
+					trans_msg$=fnparse$(new_value$,"RESPMSG=","&")
+					result$=fnparse$(new_value$,"RESULT=","&")
+					if result$="0"
+						gosub create_cash_receipt
+					else
+						cash_msg$=""
 					endif
-
-					callpoint!.setStatus("ACTIVATE")
+					if cvs(trans_id$,3)<>""
+						response_text$=new_value$
+						trans_amount$=payment_amt$
+						trans_approved$=iff(result$="0","A","D");rem A=approved, D=declined
+						gosub write_to_response_log
+					endif
+					rem --- set devObject to indicate 'response' status
+					callpoint!.setDevObject("payment_status","response")
 				endif
-			break
-			case default
-			break
-		swend
-	endif
-	if gui_event.code$="T" and gui_event.y=10000
-		BBjAPI().removeTimer(10000)
+			endif
+		endif
+		dim msg_tokens$[1]
+		msg_tokens$[0]=trans_msg$+$0A$+cash_msg$
+		msg_id$="GENERIC_OK"
+		gosub disp_message
 		callpoint!.setStatus("EXIT")
+	else
+		if ev!.getEventName()="BBjTimerEvent" and gui_event.y=10000
+			BBjAPI().removeTimer(10000)
+			callpoint!.setStatus("EXIT")
+		else
+			ctl_ID=dec(gui_event.ID$)
+			if ctl_ID=num(callpoint!.getDevObject("openInvoicesGridId"))
+				if gui_event.code$="N"
+					notify_base$=notice(gui_dev,gui_event.x%)
+					dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
+					notice$=notify_base$
+					curr_row = dec(notice.row$)
+					curr_col = dec(notice.col$)
+				endif
+				switch notice.code
+					case 12;rem grid_key_press
+						if notice.wparam=32 gosub switch_value
+					break
+					case 14;rem grid_mouse_up
+						if notice.col=0 gosub switch_value
+					break
+					case 7;rem edit stop - can only edit pay and disc taken cols
+						if curr_col=num(callpoint!.getDevObject("pay_col")) or curr_col=num(callpoint!.getDevObject("disc_taken_col"))  then
+							vectInvoices!=callpoint!.getDevObject("vectInvoices")
+							openInvoicesGrid!=callpoint!.getDevObject("openInvoicesGrid")
+							grid_cols = num(callpoint!.getDevObject("grid_cols"))
+							inv_bal_col=num(callpoint!.getDevObject("inv_bal_col"))
+							disc_col=num(callpoint!.getDevObject("disc_col"))
+							pay_col=num(callpoint!.getDevObject("pay_col"))
+							disc_taken_col=num(callpoint!.getDevObject("disc_taken_col"))
+							end_bal_col=num(callpoint!.getDevObject("end_bal_col"))
+							oa_inv$=callpoint!.getDevObject("oa_inv")
+							tot_pay=num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT"))
+							vect_pay_amt=num(vectInvoices!.get(curr_row*grid_cols+pay_col))
+							vect_disc_taken=num(vectInvoices!.get(curr_row*grid_cols+disc_taken_col))
+							vect_inv_bal=num(vectInvoices!.get(curr_row*grid_cols+inv_bal_col))
+							grid_pay_amt = num(openInvoicesGrid!.getCellText(curr_row,pay_col))
+							grid_disc_taken = num(openInvoicesGrid!.getCellText(curr_row,disc_taken_col))
+							if grid_pay_amt<0 then grid_pay_amt=0
+							if grid_disc_taken<0 then grid_disc_taken=0
+							if grid_pay_amt<=0 then grid_disc_taken=0
+							openInvoicesGrid!.setCellText(curr_row,end_bal_col,str(vect_inv_bal-grid_pay_amt-grid_disc_taken))
+							if vectInvoices!.get(curr_row*grid_cols+1)<>oa_inv$ and num(openInvoicesGrid!.getCellText(curr_row,end_bal_col))<0
+								msg_id$="GENERIC_WARN"
+								dim msg_tokens$[1]
+								msg_tokens$[1]=Translate!.getTranslation("AON_CREDIT_BALANCE_PLEASE_CORRECT","You have created a credit balance. Please correct the payment or discount amounts.",1)
+								gosub disp_message
+								grid_pay_amt=0
+								grid_disc_taken=0
+							endif
+							tot_pay=tot_pay-vect_pay_amt+grid_pay_amt
+							vectInvoices!.set(curr_row*grid_cols+pay_col,str(grid_pay_amt))
+							vectInvoices!.set(curr_row*grid_cols+disc_taken_col,str(grid_disc_taken))
+							vectInvoices!.set(curr_row*grid_cols+end_bal_col,str(vect_inv_bal-grid_pay_amt-grid_disc_taken))
+							openInvoicesGrid!.setCellText(curr_row,pay_col,str(grid_pay_amt))
+							openInvoicesGrid!.setCellText(curr_row,disc_taken_col,str(grid_disc_taken))
+							openInvoicesGrid!.setCellText(curr_row,end_bal_col,str(vect_inv_bal-grid_pay_amt-grid_disc_taken))
+							callpoint!.setColumnData("<<DISPLAY>>.APPLY_AMT",str(tot_pay),1)
+							if grid_pay_amt>0
+								vectInvoices!.set(curr_row*grid_cols,"Y")
+								openInvoicesGrid!.setCellState(curr_row,0,1)
+							else
+								vectInvoices!.set(curr_row*grid_cols,"")
+								openInvoicesGrid!.setCellState(curr_row,0,0)
+							endif
+							gosub reset_timer
+						endif
+					break
+					case 8;rem edit start
+						grid_cols = num(callpoint!.getDevObject("grid_cols"))
+						comment_col=grid_cols-1
+		 				if curr_col=comment_col
+							vectInvoices!=callpoint!.getDevObject("vectInvoices")
+							openInvoicesGrid!=callpoint!.getDevObject("openInvoicesGrid")
+							disp_text$=openInvoicesGrid!.getCellText(clicked_row,comment_col)
+							sv_disp_text$=disp_text$
+
+							editable$="YES"
+							force_loc$="NO"
+							baseWin!=null()
+							startx=0
+							starty=0
+							shrinkwrap$="NO"
+							html$="NO"
+							dialog_result$=""
+							spellcheck=1
+
+							call stbl("+DIR_SYP")+ "bax_display_text.bbj",
+:								"Cash Receipts Detail Comments",
+:								disp_text$, 
+:								table_chans$[all], 
+:								editable$, 
+:								force_loc$, 
+:								baseWin!, 
+:								startx, 
+:								starty, 
+:								shrinkwrap$, 
+:								html$, 
+:								dialog_result$,
+:								spellcheck
+
+							if disp_text$<>sv_disp_text$
+								openInvoicesGrid!.setCellText(curr_row,comment_col,disp_text$)
+								vectInvoices!.setItem(curr_row*grid_cols+comment_col,disp_text$)
+							endif
+
+							callpoint!.setStatus("ACTIVATE")
+						endif
+					break
+					case default
+					break
+				swend
+			endif
+		endif
 	endif
 [[ARE_CCPMT.ASIZ]]
 rem --- Resize grids
@@ -444,7 +737,11 @@ rem --- Resize grids
 [[ARE_CCPMT.AWIN]]
 rem --- Declare classes used
 
+	use java.math.BigDecimal
+	use java.math.RoundingMode
 	use java.util.Iterator
+	use java.util.UUID
+
 	use org.json.JSONObject
 
 	use com.tranxactive.j2pay.gateways.parameters.Customer
@@ -460,16 +757,33 @@ rem --- Declare classes used
 	use com.tranxactive.j2pay.net.HTTPResponse
 	use com.tranxactive.j2pay.net.JSONHelper
 
+	use net.authorize.Environment
+	use net.authorize.api.contract.v1.MerchantAuthenticationType
+	use net.authorize.api.contract.v1.TransactionRequestType
+	use net.authorize.api.contract.v1.SettingType
+	use net.authorize.api.contract.v1.ArrayOfSetting
+	use net.authorize.api.contract.v1.MessageTypeEnum
+	use net.authorize.api.contract.v1.TransactionTypeEnum
+	use net.authorize.api.contract.v1.GetHostedPaymentPageRequest
+	use net.authorize.api.contract.v1.GetHostedPaymentPageResponse
+	use net.authorize.api.contract.v1.GetTransactionDetailsRequest
+	use net.authorize.api.contract.v1.OrderType
+	use net.authorize.api.controller.base.ApiOperationBase
+	use net.authorize.api.controller.GetHostedPaymentPageController
+	use net.authorize.api.controller.GetTransactionDetailsController
+
 	use ::ado_util.src::util	
 	use ::sys/prog/bao_encryptor.bbj::Encryptor
 
-rem --- Set timer for form - closes after 2 minutes *regardless* of active/inactive
-	timer_key!=10000
-	BBjAPI().createTimer(timer_key!,120,"custom_event")
+	use ::REST/BBWebClient.bbj::BBWebClient
+	use ::REST/BBWebClient.bbj::BBWebRequest
+	use ::REST/BBWebClient.bbj::BBWebResponse
 
 rem --- get/store mask
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",ar_a_mask$,0,0
 	callpoint!.setDevObject("ar_a_mask",ar_a_mask$)
+	callpoint!.setDevObject("payment_status","")
+	callpoint!.setDevObject("vectInvoices","")
 
 rem --- Open files
 
@@ -494,11 +808,13 @@ rem --- Add open invoice grid to form
 	openInvoicesGrid! = Form!.addGrid(nxt_ctlID,5,grid_y,895,125); rem --- ID, x, y, width, height
 	callpoint!.setDevObject("openInvoicesGrid",openInvoicesGrid!)
 	callpoint!.setDevObject("openInvoicesGridId",str(nxt_ctlID))
-	callpoint!.setDevObject("grid_cols","10")
+	callpoint!.setDevObject("grid_cols","12")
 	callpoint!.setDevObject("grid_rows","10")
 	callpoint!.setDevObject("inv_bal_col","5")
 	callpoint!.setDevObject("disc_col","6")
 	callpoint!.setDevObject("pay_col","8")
+	callpoint!.setDevObject("disc_taken_col","9")
+	callpoint!.setDevObject("end_bal_col","10")
 	callpoint!.setDevObject("interface_tp","")
 
 	gosub format_grid
@@ -507,6 +823,7 @@ rem --- Add open invoice grid to form
 	openInvoicesGrid!.setTabActionSkipsNonEditableCells(1)
 	openInvoicesGrid!.setColumnEditable(8,1)
 	openInvoicesGrid!.setColumnEditable(9,1)
+	openInvoicesGrid!.setColumnEditable(11,1)
 
 rem --- Reset window size
 	util.resizeWindow(Form!, SysGui!)
@@ -592,6 +909,20 @@ rem ==========================================================================
 	attr_grid_col$[column_no,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=ar_a_mask$
 
 	column_no = column_no +1
+	attr_grid_col$[column_no,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="DISC_TAKEN"
+	attr_grid_col$[column_no,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_DISC_AMT")
+	attr_grid_col$[column_no,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
+	attr_grid_col$[column_no,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="20"
+	attr_grid_col$[column_no,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=ar_a_mask$
+
+	column_no = column_no +1
+	attr_grid_col$[column_no,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="END_BALANCE"
+	attr_grid_col$[column_no,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_END_BALANCE")
+	attr_grid_col$[column_no,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="N"
+	attr_grid_col$[column_no,fnstr_pos("CTLW",attr_def_col_str$[0,0],5)]="20"
+	attr_grid_col$[column_no,fnstr_pos("MSKO",attr_def_col_str$[0,0],5)]=ar_a_mask$
+
+	column_no = column_no +1
 	attr_grid_col$[column_no,fnstr_pos("DVAR",attr_def_col_str$[0,0],5)]="COMMENT"
 	attr_grid_col$[column_no,fnstr_pos("LABS",attr_def_col_str$[0,0],5)]=Translate!.getTranslation("AON_COMMENTS")
 	attr_grid_col$[column_no,fnstr_pos("DTYP",attr_def_col_str$[0,0],5)]="C"
@@ -610,7 +941,7 @@ rem ==========================================================================
 	return
 
 rem ==========================================================================
-get_open_invoices: rem --- create vector of unpaid invoices this customer, taking into account anything entered but not yet posted
+get_open_invoices: rem --- create vector of invoices with bal>0, taking into account anything entered but not yet posted
 rem ==========================================================================
 
 	art_invhdr=fnget_dev("ART_INVHDR")
@@ -641,11 +972,12 @@ rem ==========================================================================
 		endif
 
 		rem --- applied but not yet posted
+		redim are_cashbal$
 		read record(are_cashbal,key=firm_id$+ar_type$+are_cashbal.reserved_str$+cust_id$+art_invhdr.ar_inv_no$,dom=*next)are_cashbal$
 		if arc_cashcode.disc_flag$="Y" then disc_amt=disc_amt-num(are_cashbal.discount_amt$)
 		inv_bal=inv_bal-num(are_cashbal.apply_amt$)-num(are_cashbal.discount_amt$)
 
-		if art_invhdr.invoice_bal=0 then continue
+		if inv_bal<=0 then continue
 		vectInvoices!.add("")
 		vectInvoices!.add(art_invhdr.ar_inv_no$)
 		vectInvoices!.add(date(jul(art_invhdr.invoice_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID")))
@@ -654,7 +986,9 @@ rem ==========================================================================
 		vectInvoices!.add(str(inv_bal))
 		vectInvoices!.add(str(disc_amt))
 		vectInvoices!.add(date(jul(art_invhdr.disc_date$,"%Yd%Mz%Dz"):stbl("+DATE_GRID")))
-		vectInvoices!.add(".00")
+		vectInvoices!.add("0")
+		vectInvoices!.add("0")
+		vectInvoices!.add(str(inv_bal))
 		vectInvoices!.add(art_invhdr.memo_1024$)
 		if art_invhdr.ar_inv_no$=oa_inv$ then oa_flag=1
 	wend
@@ -664,11 +998,13 @@ rem ==========================================================================
 		vectInvoices!.add(oa_inv$)
 		vectInvoices!.add(date(jul(stbl("+SYSTEM_DATE"),"%Yd%Mz%Dz"):stbl("+DATE_GRID")))
 		vectInvoices!.add(date(jul(stbl("+SYSTEM_DATE"),"%Yd%Mz%Dz"):stbl("+DATE_GRID")))
-		vectInvoices!.add(".00")
-		vectInvoices!.add(".00")
-		vectInvoices!.add(".00")
+		vectInvoices!.add("0")
+		vectInvoices!.add("0")
+		vectInvoices!.add("0")
 		vectInvoices!.add(date(jul(stbl("+SYSTEM_DATE"),"%Yd%Mz%Dz"):stbl("+DATE_GRID")))
-		vectInvoices!.add(".00")
+		vectInvoices!.add("0")
+		vectInvoices!.add("0")
+		vectInvoices!.add("0")
 		vectInvoices!.add("")
 	endif
 
@@ -703,6 +1039,9 @@ rem ==========================================================================
 	inv_bal_col=num(callpoint!.getDevObject("inv_bal_col"))
 	disc_col=num(callpoint!.getDevObject("disc_col"))
 	pay_col=num(callpoint!.getDevObject("pay_col"))
+	disc_taken_col=num(callpoint!.getDevObject("disc_taken_col"))
+	end_bal_col=num(callpoint!.getDevObject("end_bal_col"))
+
 	TempRows!=openInvoicesGrid!.getSelectedRows()
 	tot_pay=num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT"))
 
@@ -710,18 +1049,28 @@ rem ==========================================================================
 		for curr_row=1 to TempRows!.size()
 			if openInvoicesGrid!.getCellState(TempRows!.getItem(curr_row-1),0)=0
 				openInvoicesGrid!.setCellState(TempRows!.getItem(curr_row-1),0,1)
-				inv_bal=num(vectInvoices!.get(TempRows!.getItem(curr_row-1)*grid_cols+inv_bal_col))-num(vectInvoices!.get(TempRows!.getItem(curr_row-1)*grid_cols+disc_col))
+				inv_disc_taken=num(vectInvoices!.get(TempRows!.getItem(curr_row-1)*grid_cols+disc_col))
+				inv_pay=num(vectInvoices!.get(TempRows!.getItem(curr_row-1)*grid_cols+inv_bal_col))-inv_disc_taken
 				vectInvoices!.set(TempRows!.getItem(curr_row-1)*grid_cols,"Y")
-				vectInvoices!.set(TempRows!.getItem(curr_row-1)*grid_cols+pay_col,str(inv_bal))
-				openInvoicesGrid!.setCellText(TempRows!.getItem(curr_row-1),pay_col,str(inv_bal))
-				tot_pay=tot_pay+inv_bal
+				vectInvoices!.set(TempRows!.getItem(curr_row-1)*grid_cols+pay_col,str(inv_pay))
+				vectInvoices!.set(TempRows!.getItem(curr_row-1)*grid_cols+disc_taken_col,str(inv_disc_taken))
+				vectInvoices!.set(TempRows!.getItem(curr_row-1)*grid_cols+end_bal_col,"0")
+				openInvoicesGrid!.setCellText(TempRows!.getItem(curr_row-1),pay_col,str(inv_pay))
+				openInvoicesGrid!.setCellText(TempRows!.getItem(curr_row-1),disc_taken_col,str(inv_disc_taken))
+				openInvoicesGrid!.setCellText(TempRows!.getItem(curr_row-1),end_bal_col,"0")
+				tot_pay=tot_pay+inv_pay
 			else
 				openInvoicesGrid!.setCellState(num(TempRows!.getItem(curr_row-1)),0,0)
-				grid_pay_amt=num(vectInvoices!.get(TempRows!.getItem(curr_row-1)*grid_cols+pay_col))
+				inv_pay=num(vectInvoices!.get(TempRows!.getItem(curr_row-1)*grid_cols+pay_col))
+				inv_bal=num(vectInvoices!.get(TempRows!.getItem(curr_row-1)*grid_cols+inv_bal_col))
 				vectInvoices!.set(TempRows!.getItem(curr_row-1)*grid_cols,"")
 				vectInvoices!.set(TempRows!.getItem(curr_row-1)*grid_cols+pay_col,"0")
+				vectInvoices!.set(TempRows!.getItem(curr_row-1)*grid_cols+disc_taken_col,"0")
+				vectInvoices!.set(TempRows!.getItem(curr_row-1)*grid_cols+end_bal_col,str(inv_bal))
 				openInvoicesGrid!.setCellText(TempRows!.getItem(curr_row-1),pay_col,"0")
-				tot_pay=tot_pay-grid_pay_amt
+				openInvoicesGrid!.setCellText(TempRows!.getItem(curr_row-1),disc_taken_col,"0")
+				openInvoicesGrid!.setCellText(TempRows!.getItem(curr_row-1),end_bal_col,str(inv_bal))
+				tot_pay=tot_pay-inv_pay
 			endif
 		next curr_row
 	endif
@@ -839,14 +1188,59 @@ rem ==========================================================================
 	return
 
 rem ==========================================================================
+get_gateway_config:rem --- get config for specified gateway
+rem --- in: gateway_id$; out: hashmap gw_config! containing config entries
+rem ==========================================================================
+
+	encryptor! = new Encryptor()
+	config_id$ = "GATEWAY_AUTH"
+	encryptor!.setConfiguration(config_id$)
+
+	read(arc_gatewaydet,key=firm_id$+gateway_id$,dom=*next)
+	gw_config!=new java.util.HashMap()
+
+	while 1
+		readrecord(arc_gatewaydet,end=*break)arc_gatewaydet$
+		if pos(firm_id$+gateway_id$=arc_gatewaydet$)<>1 then break
+		if gw_config!.get("gateway_id")=null() then gw_config!.put("gateway_id",gateway_id$)
+		gw_config!.put(cvs(arc_gatewaydet.config_attr$,3),encryptor!.decryptData(cvs(arc_gatewaydet.config_value$,3)))
+	wend
+
+	callpoint!.setDevObject("gw_config",gw_config!)
+
+	return
+
+rem ==========================================================================
 reset_timer: rem --- reset timer for another 10 seconds from each AVAL, or from grid switch_value
 rem ==========================================================================
 
-rem --- Set timer for form - closes after 2 minutes *regardless* of active/inactive
-	timer_key!=10000
-	BBjAPI().removeTimer(10000)
-	BBjAPI().createTimer(timer_key!,60,"custom_event")
+rem --- Set timer for form - closes after a minute of inactivity
+rem --- Only used when interface_tp$="A" (so sensitive info like credit card number and cvv don't remain visible)
+
+	if callpoint!.getDevObject("interface_tp")="A"
+		timer_key!=10000
+		BBjAPI().removeTimer(10000)
+		BBjAPI().createTimer(timer_key!,60,"custom_event")
+	endif
 
 	return
+
+rem =====================================================================
+rem --- parse PayPal response text
+rem --- wkx0$=response, wkx1$=key to look for, wkx2$=delim used to separate key/value pairs
+
+def fnparse$(wkx0$,wkx1$,wkx2$)
+
+	wkx3$=""
+	wk1=pos(wkx1$=wkx0$)
+	if wk1
+		wkx3$=wkx0$(wk1+len(wkx1$))
+		wk2=pos(wkx2$=wkx3$)
+		if wk2
+			wkx3$=wkx3$(1,wk2-1)
+		endif
+	endif
+	return wkx3$
+	fnend
 
 #include std_missing_params.src
