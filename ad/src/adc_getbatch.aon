@@ -9,10 +9,11 @@ rem  +-----------------------------------------+
 
 rem --- ALIAS$    : Alias if from form (in)
 rem --- PROG_NAME$: Program Name if from back end program (in)
+rem --- dflt_batch_desc$ added (along with err=*next) for ER9410 to supply default description for credit card payment from ars_cc_custsvc params (in)
 
     seterr std_error
     setesc std_error
-    enter alias$,prog_name$,table_chans$[all]
+    enter alias$,prog_name$,table_chans$[all],dflt_batch_desc$,err=*next
     
 rem --- Retrieve the program path
 
@@ -78,9 +79,8 @@ rem --- See if batching is turned on for this process
 
     read record (adm09_dev,key=firm_id$+proc_id$,dom=done)adm09a$
     if adm09a.batch_entry$<>"Y" goto done
-    
-    x$=stbl("+BATCH_DESC",adm09a.description$)
-
+   
+    x$=stbl("+BATCH_DESC",iff(dflt_batch_desc$<>"",dflt_batch_desc$,adm09a.description$))
 
 rem --- Here's where we call the batch setup/select form (allow new or not)
 rem --- The +BATCH_NO stbl will be set in this form's callpoint 

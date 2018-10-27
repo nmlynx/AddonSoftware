@@ -1,50 +1,97 @@
 [[ARE_CCPMT.CASH_REC_CD.AVAL]]
 rem --- get cash rec code and associated credit card params; if hosted, disable data collection fields
+rem --- only execute if vectInvoices! not yet populated
+rem --- this avoids re-running this code via the ASVA (Barista re-validates last enabled control?)
 
-	ars_cc_custsvc=fnget_dev("ARS_CC_CUSTSVC")
-	arc_cashcode=fnget_dev("ARC_CASHCODE")
+	vectInvoices!=callpoint!.getDevObject("vectInvoices")
+	if !vectInvoices!.size()
 
-	dim ars_cc_custsvc$:fnget_tpl$("ARS_CC_CUSTSVC")
-	dim arc_cashcode$:fnget_tpl$("ARC_CASHCODE")
+		ars_cc_custsvc=fnget_dev("ARS_CC_CUSTSVC")
+		arc_cashcode=fnget_dev("ARC_CASHCODE")
 
-	cash_cd$=callpoint!.getUserInput()
+		dim ars_cc_custsvc$:fnget_tpl$("ARS_CC_CUSTSVC")
+		dim arc_cashcode$:fnget_tpl$("ARC_CASHCODE")
 
-	readrecord(arc_cashcode,key=firm_id$+"C"+cash_cd$,dom=std_missing_params)arc_cashcode$
-	readrecord(ars_cc_custsvc,key=firm_id$+cash_cd$,dom=std_missing_params)ars_cc_custsvc$
-	callpoint!.setDevObject("interface_tp",ars_cc_custsvc.interface_tp$)
-	if ars_cc_custsvc.interface_tp$="A"
-		rem --- Set timer for form when interface_tp$="A" (using internal API, so collecting sensitive info)
-		timer_key!=10000
-		BBjAPI().createTimer(timer_key!,60,"custom_event")
-		enable_flag=1
-	else
-		enable_flag=0
-		callpoint!.setColumnData("ARE_CCPMT.CARD_NO","",1)
-		callpoint!.setColumnData("ARE_CCPMT.SECURITY_CD","",1)
-		callpoint!.setColumnData("ARE_CCPMT.NAME_FIRST","",1)
-		callpoint!.setColumnData("ARE_CCPMT.NAME_LAST","",1)
-		callpoint!.setColumnData("ARE_CCPMT.MONTH","",1)
-		callpoint!.setColumnData("ARE_CCPMT.YEAR","",1)
+		cash_cd$=callpoint!.getUserInput()
+
+		readrecord(arc_cashcode,key=firm_id$+"C"+cash_cd$,dom=std_missing_params)arc_cashcode$
+		readrecord(ars_cc_custsvc,key=firm_id$+cash_cd$,dom=std_missing_params)ars_cc_custsvc$
+		callpoint!.setDevObject("ars_cc_custsvc",ars_cc_custsvc$)
+		callpoint!.setDevObject("interface_tp",ars_cc_custsvc.interface_tp$)
+		if ars_cc_custsvc.interface_tp$="A"
+			rem --- Set timer for form when interface_tp$="A" (using internal API, so collecting sensitive info)
+			timer_key!=10000
+			BBjAPI().createTimer(timer_key!,60,"custom_event")
+			enable_flag=1
+		else
+			enable_flag=0
+			callpoint!.setColumnData("ARE_CCPMT.CARD_NO","",1)
+			callpoint!.setColumnData("ARE_CCPMT.SECURITY_CD","",1)
+			callpoint!.setColumnData("ARE_CCPMT.NAME_FIRST","",1)
+			callpoint!.setColumnData("ARE_CCPMT.NAME_LAST","",1)
+			callpoint!.setColumnData("ARE_CCPMT.MONTH","",1)
+			callpoint!.setColumnData("ARE_CCPMT.YEAR","",1)
+		endif
+		callpoint!.setColumnEnabled("ARE_CCPMT.ADDRESS_LINE_1",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.ADDRESS_LINE_2",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.CARD_NO",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.CITY",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.CNTRY_ID",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.EMAIL_ADDR",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.MONTH",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.NAME_FIRST",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.NAME_LAST",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.PHONE_NO",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.SECURITY_CD",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.STATE_CODE",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.YEAR",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.ZIP_CODE",enable_flag)
+
+	rem --- load up open invoices
+
+		gosub get_open_invoices
+		gosub fill_grid
+
+	rem --- if batching, or using bank rec, create and/or select batch and deposit
+
+		dflt_batch_desc$=cvs(ars_cc_custsvc.batch_desc$,3)
+		dflt_deposit_desc$=cvs(ars_cc_custsvc.deposit_desc$,3)
+
+	rem --- Get Batch information
+		call stbl("+DIR_PGM")+"adc_getbatch.aon","ARE_CASHHDR","",table_chans$[all],dflt_batch_desc$
+		callpoint!.setColumnData("ARE_CCPMT.BATCH_NO",stbl("+BATCH_NO"),1)
+
+	rem --- Launch Bank Deposit Entry form if using Bank Rec.
+		if callpoint!.getDevObject("br_interface")="Y" then
+			dim dflt_data$[3,1]
+			dflt_data$[1,0]="DESCRIPTION"
+			dflt_data$[1,1]=dflt_deposit_desc$
+			dflt_data$[2,0]="CASH_REC_CD"
+			dflt_data$[2,1]=ars_cc_custsvc.cash_rec_cd$
+			dflt_data$[3,0]="BATCH_NO"
+			dflt_data$[3,1]=stbl("+BATCH_NO")
+
+			call stbl("+DIR_SYP")+"bam_run_prog.bbj", "ARE_DEPOSIT", stbl("+USER_ID"), "MNT", "", table_chans$[all],"",dflt_data$[all]
+			callpoint!.setColumnData("ARE_CCPMT.DEPOSIT_ID",str(callpoint!.getDevObject("deposit_id")),1)
+
+			rem --- DEPOSIT_ID is required, so terminate process if we don't have one.
+			if callpoint!.getDevObject("deposit_id")=""
+				callpoint!.setStatus("EXIT")
+
+				rem --- Remove software lock on batch, if batching
+				batch$=stbl("+BATCH_NO",err=*next)
+				if num(batch$)<>0
+					lock_table$="ADM_PROCBATCHES"
+					lock_record$=firm_id$+stbl("+PROCESS_ID")+batch$
+					lock_type$="X"
+					lock_status$=""
+					lock_disp$=""
+					call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+				endif
+				break
+			endif
+		endif
 	endif
-	callpoint!.setColumnEnabled("ARE_CCPMT.ADDRESS_LINE_1",enable_flag)
-	callpoint!.setColumnEnabled("ARE_CCPMT.ADDRESS_LINE_2",enable_flag)
-	callpoint!.setColumnEnabled("ARE_CCPMT.CARD_NO",enable_flag)
-	callpoint!.setColumnEnabled("ARE_CCPMT.CITY",enable_flag)
-	callpoint!.setColumnEnabled("ARE_CCPMT.CNTRY_ID",enable_flag)
-	callpoint!.setColumnEnabled("ARE_CCPMT.EMAIL_ADDR",enable_flag)
-	callpoint!.setColumnEnabled("ARE_CCPMT.MONTH",enable_flag)
-	callpoint!.setColumnEnabled("ARE_CCPMT.NAME_FIRST",enable_flag)
-	callpoint!.setColumnEnabled("ARE_CCPMT.NAME_LAST",enable_flag)
-	callpoint!.setColumnEnabled("ARE_CCPMT.PHONE_NO",enable_flag)
-	callpoint!.setColumnEnabled("ARE_CCPMT.SECURITY_CD",enable_flag)
-	callpoint!.setColumnEnabled("ARE_CCPMT.STATE_CODE",enable_flag)
-	callpoint!.setColumnEnabled("ARE_CCPMT.YEAR",enable_flag)
-	callpoint!.setColumnEnabled("ARE_CCPMT.ZIP_CODE",enable_flag)
-
-rem --- load up open invoices
-
-	gosub get_open_invoices
-	gosub fill_grid
 [[ARE_CCPMT.CASH_REC_CD.BINQ]]
 rem --- restrict inquiry to cash rec codes associated with credit card payments
 
@@ -74,17 +121,16 @@ rem --- restrict inquiry to cash rec codes associated with credit card payments
 		call stbl("+DIR_SYP")+"bac_key_template.bbj",
 :			"ARC_CASHCODE",
 :			"PRIMARY",
-:			apc_cashcode_key$,
+:			arc_cashcode_key$,
 :			table_chans$[all],
 :			status$
-		dim apc_cashcode_key$:apc_cashcode_key$
-		apc_cashcode_key$=selected_keys$
-		callpoint!.setColumnData("ARE_CCPMT.CASH_REC_CD",apc_cashcode_key.cash_rec_cd$,1)
+		dim arc_cashcode_key$:arc_cashcode_key$
+		arc_cashcode_key$=selected_keys$
+		callpoint!.setColumnData("ARE_CCPMT.CASH_REC_CD",arc_cashcode_key.cash_rec_cd$,1)
 	endif
 
 	callpoint!.setDevObject("cash_rec_cd",selected_keys$)
 	callpoint!.setStatus("ACTIVATE-ABORT")
-
 [[ARE_CCPMT.ZIP_CODE.AVAL]]
 gosub reset_timer
 [[ARE_CCPMT.YEAR.AINV]]
@@ -146,6 +192,18 @@ rem --- if vectInvoices! contains any selected items, get confirmation that user
 	endif
 
 	BBjAPI().removeTimer(10000,err=*next)
+
+rem --- remove software lock on batch, if batching
+
+	batch$=stbl("+BATCH_NO",err=*next)
+	if num(batch$)<>0
+		lock_table$="ADM_PROCBATCHES"
+		lock_record$=firm_id$+stbl("+PROCESS_ID")+batch$
+		lock_type$="X"
+		lock_status$=""
+		lock_disp$=""
+		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+	endif
 [[ARE_CCPMT.AREC]]
 
 [[ARE_CCPMT.CARD_NO.AVAL]]
@@ -180,6 +238,7 @@ rem ==============================================
 rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, then process
 
 	interface_tp$=callpoint!.getDevObject("interface_tp")
+
 	if interface_tp$="A"
 		if cvs(callpoint!.getColumnData("ARE_CCPMT.ADDRESS_LINE_1"),3)="" or
 :			cvs(callpoint!.getColumnData("ARE_CCPMT.CARD_NO"),3)="" or
@@ -221,8 +280,11 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 		dim msg_tokens$[1]
 		msg_tokens$[0]=cvs(str(num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT")):callpoint!.getDevObject("ar_a_mask")),3)
 		gosub disp_message
-		if msg_opt$<>"Y" then callpoint!.setStatus("ABORT-ACTIVATE")
-		
+		if msg_opt$<>"Y"
+			callpoint!.setStatus("ABORT-ACTIVATE")
+			break
+		endif
+
 		art_resphdr=fnget_dev("ART_RESPHDR")
 		art_respdet=fnget_dev("ART_RESPDET")
 		are_cashhdr=fnget_dev("ARE_CASHHDR")
@@ -243,7 +305,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 		config_id$ = "GATEWAY_AUTH"
 		encryptor!.setConfiguration(config_id$)
 
-		readrecord(ars_cc_custsvc,key=firm_id$+callpoint!.getColumnData("ARE_CCPMT.CASH_REC_CD"),dom=std_missing_params)ars_cc_custsvc$
+		ars_cc_custsvc$=callpoint!.getDevObject("ars_cc_custsvc")
 		gateway$=ars_cc_custsvc.gateway_id$
 
 		vectInvoices!=callpoint!.getDevObject("vectInvoices")
@@ -362,7 +424,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 			dim ars_cc_custsvc$:fnget_tpl$("ARS_CC_CUSTSVC")
 			dim arc_gatewaydet$:fnget_tpl$("ARC_GATEWAYDET")
 		
-			readrecord(ars_cc_custsvc,key=firm_id$+callpoint!.getColumnData("ARE_CCPMT.CASH_REC_CD"),dom=std_missing_params)ars_cc_custsvc$
+			ars_cc_custsvc$=callpoint!.getDevObject("ars_cc_custsvc")
 			gateway_id$=ars_cc_custsvc.gateway_id$
 			gosub get_gateway_config
 
@@ -521,6 +583,7 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 		vectInvoices!=callpoint!.getDevObject("vectInvoices")
 		apply_amt!=cast(BBjNumber, num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT")))
 		cust_id$=callpoint!.getColumnData("ARE_CCPMT.CUSTOMER_ID")
+		cash_rec_cd$=callpoint!.getColumnData("ARE_CCPMT.CASH_REC_CD")
 
 		gw_config!=callpoint!.getDevObject("gw_config")
 		gateway_id$=gw_config!.get("gateway_id")
@@ -573,6 +636,7 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 					endif
 					gosub write_to_response_log
 				endif
+				callpoint!.setDevObject("payment_status","response")
 			else
 				trans_msg$=Translate!.getTranslation("AON_UNABLE_TO_PROCESS_GETTRANSACTIONDETAILSREQUEST_METHOD")
 			endif
@@ -674,6 +738,8 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 								openInvoicesGrid!.setCellState(curr_row,0,0)
 							endif
 							gosub reset_timer
+							callpoint!.setDevObject("vectInvoices",vectInvoices!)
+							callpoint!.setDevObject("openInvoicesGrid",openInvoicesGrid!)
 						endif
 					break
 					case 8;rem edit start
@@ -783,22 +849,29 @@ rem --- get/store mask
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",ar_a_mask$,0,0
 	callpoint!.setDevObject("ar_a_mask",ar_a_mask$)
 	callpoint!.setDevObject("payment_status","")
-	callpoint!.setDevObject("vectInvoices","")
+	callpoint!.setDevObject("vectInvoices",BBjAPI().makeVector())
 
 rem --- Open files
 
-num_files=8
-dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-open_tables$[1]="ART_INVHDR",open_opts$[1]="OTA"
-open_tables$[2]="ART_RESPHDR",open_opts$[2]="OTA"
-open_tables$[3]="ART_RESPDET",open_opts$[3]="OTA"	
-open_tables$[4]="ARE_CASHHDR",open_opts$[4]="OTA"
-open_tables$[5]="ARE_CASHDET",open_opts$[5]="OTA"
-open_tables$[6]="ARE_CASHBAL",open_opts$[6]="OTA"
-open_tables$[7]="ARS_CC_CUSTSVC",open_opts$[7]="OTA"
-open_tables$[8]="ARC_GATEWAYDET",open_opts$[8]="OTA"
+	num_files=9
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="ART_INVHDR",open_opts$[1]="OTA"
+	open_tables$[2]="ART_RESPHDR",open_opts$[2]="OTA"
+	open_tables$[3]="ART_RESPDET",open_opts$[3]="OTA"	
+	open_tables$[4]="ARE_CASHHDR",open_opts$[4]="OTA"
+	open_tables$[5]="ARE_CASHDET",open_opts$[5]="OTA"
+	open_tables$[6]="ARE_CASHBAL",open_opts$[6]="OTA"
+	open_tables$[7]="ARS_CC_CUSTSVC",open_opts$[7]="OTA"
+	open_tables$[8]="ARC_GATEWAYDET",open_opts$[8]="OTA"
+	open_tables$[9]="ARS_PARAMS",open_opts$[9]="OTA"
 
-gosub open_tables
+	gosub open_tables
+
+rem --- Get Bank Rec interface flag
+	ars_params=fnget_dev("ARS_PARAMS")
+	dim ars_params$:fnget_tpl$("ARS_PARAMS")
+	readrecord(ars_params,key=firm_id$+"AR00",dom=std_missing_params)ars_params$
+	callpoint!.setDevObject("br_interface",ars_params.br_interface$)
 
 
 rem --- Add open invoice grid to form
@@ -1073,6 +1146,9 @@ rem ==========================================================================
 				tot_pay=tot_pay-inv_pay
 			endif
 		next curr_row
+		callpoint!.setDevObject("openInvoicesGrid",openInvoicesGrid!)
+		callpoint!.setDevObject("vectInvoices",vectInvoices!)
+
 	endif
 
 	callpoint!.setColumnData("<<DISPLAY>>.APPLY_AMT",str(tot_pay),1)
@@ -1085,23 +1161,32 @@ rem ==========================================================================
 
 rem ==========================================================================
 create_cash_receipt:
-rem --- in: firm_id$, cust_id$, apply_amt!, trans_id$, vectInvoices!
+rem --- in: firm_id$, cust_id$, cash_rec_cd$, apply_amt!, trans_id$, vectInvoices!
 rem ==========================================================================
 
-    rem --- write are_cashhdr
     rem --- TODO CAH need to read/update, not just create, as >1 payment could have been made so header already exists
     rem --- TODO CAH same for are_cashbal/are_cashdet, don't just create them
-    rem --- TODO CAH also need to add logic to use deposit_ID and batch_no, and update ars_cc_custsvc with same
     rem --- TODO CAH if there is already an are_cashdet for this invoice with balance < pay amount, apply on account
-	
-	deposit_id$=""
-	batch_no$="0000000"
 
-	are_cashhdr$.firm_id$=firm_id$
+	call stbl("+DIR_SYP")+"bac_key_template.bbj",
+:		"ARE_CASHHDR",
+:		"PRIMARY",
+:		are_cashhdr_key$,
+:		table_chans$[all],
+:		status$
+
+	are_cashhdr_key.firm_id$=firm_id$
+	are_cashhdr_key.receipt_date$=stbl("+SYSTEM_DATE")
+	are_cashhdr_key.customer_id$=cust_id$
+	are_cashhdr_key.cash_rec_cd$=cash_rec_cd$
+
+	extractrecord(are_cashhdr,key=are_cashhdr_key$,dom=*next)are_cashhdr$
+rem --- **** LEFT OFF HERE  if cashhdr exists, but is from different deposit and/or batch than what we've established, need to switch CAH
+	are_cashhdr.firm_id$=firm_id$
 	are_cashhdr.receipt_date$=stbl("+SYSTEM_DATE")
 	are_cashhdr.customer_id$=cust_id$
-	are_cashhdr.cash_rec_cd$="C"
-	are_cashhdr.payment_amt=apply_amt!
+	are_cashhdr.cash_rec_cd$=cash_rec_cd$
+	are_cashhdr.payment_amt=are_cashhdr.payment_amt+apply_amt!
 	are_cashhdr.batch_no$=batch_no$
 	are_cashhdr.deposit_id$=deposit_id$
 	are_cashhdr.memo_1024$=$01$
