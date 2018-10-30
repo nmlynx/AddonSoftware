@@ -9,6 +9,27 @@ rem --- Get record counts for from firm
 	callpoint!.setColumnData("ADX_CLEARFIRM.UPDT_REC_COUNT",updt_rec_count$,1)
 	gosub fill_grid
 [[ADX_CLEARFIRM.AREC]]
+rem --- Warn when other users are on the system
+	sql_chan=sqlunt
+	sqlopen(sql_chan,err=*endif)stbl("+DBNAME")
+	sysinfo_recs=0
+	sql_prep$="select count (*) from ADS_SYSINFO"
+	if 1 then
+		sqlprep(sql_chan,err=*endif)sql_prep$
+		dim read_tpl$:sqltmpl(sql_chan)
+		sqlexec(sql_chan,err=*endif)
+		read_tpl$=sqlfetch(sql_chan,err=*endif)
+		sysinfo_recs=read_tpl.col001
+	endif
+	sqlclose(sql_chan,err=*next)
+
+	rem --- If number of records in ads_sysinfo is greater than one, then someone else is on the system
+	if sysinfo_recs>1 then
+		msg_id$="AD_SYSTEM_IN_USE"
+		gosub disp_message
+		if msg_opt$<>"Y" then release
+	endif
+
 rem --- Initializations
 	rem --- Set asc_comp_id and files_to_copy
 	callpoint!.setColumnData("ADX_CLEARFIRM.ASC_COMP_ID","01007514")
@@ -92,13 +113,21 @@ rem --- Clear firms selected data
 		print (log_dev)"Firm ID: "+firm$
 		print (log_dev)
 
+            
+		rem --- Use bax_mount_sel to get rdMountVect! containing hashes of mounted system and backup directory info for use in bax_xmlrec_exp.bbj
+		exp_action$="D"
+		exp_add_only$=""
+		dev_mode$=""
+		call stbl("+DIR_SYP")+"bax_mount_sel.bbj",rdMountVect!,table_chans$[all],dev_mode$
+
 		rem --- Process selected files
 		sql_chan=sqlunt
 		sqlopen(sql_chan,err=*endif)stbl("+DBNAME")
 		numcols = num(user_tpl.gridFilesCols$)
 		for curr_row=0 to vectFiles!.size()/(numcols)-1
 			rem --- Increment progress meter
-			meter_data$=vectFiles!.getItem(curr_row * numcols + 3)
+			meter_data$=cvs(vectFiles!.getItem(curr_row * numcols + 3),2)
+			table_alias$=meter_data$
 			meter_proc_recs=meter_proc_recs+1
 			meter_action$="MTR-LST"
 			gosub disp_meter
@@ -106,7 +135,7 @@ rem --- Clear firms selected data
 			if vectFiles!.getItem(curr_row*numcols)="Y"
 				num_files=1
 				dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-				open_tables$[1]=vectFiles!.getItem(curr_row * numcols + 3)
+				open_tables$[1]=table_alias$
 				open_opts$[1]="OTASN"
 				gosub open_tables
 				table_dev=num(open_chans$[1])
@@ -114,26 +143,64 @@ rem --- Clear firms selected data
 				rem --- Update log w/ file name and number of recs in file
 				table_fin$=xfin(table_dev)
 				tot_recs=dec(table_fin$(77,4))
-				print (log_dev)"File: "+cvs(meter_data$,2)+"("+open_tables$[1]+")"
+				print (log_dev)"File: "+table_alias$+"("+open_tables$[1]+")"
 				print (log_dev)"Records in file: "+str(tot_recs)
 
 				rem --- Get number of records in file for this firm
 				firm_recs=0
-				sql_prep$="select count (firm_id) from "+vectFiles!.getItem(curr_row * numcols + 3) + " where "
-				sql_prep$=sql_prep$+"firm_id = '"+firm$+"'"
+				if table_alias$="ADM_FIRMS" then
+					sql_prep$="select count (company_id) from "+table_alias$ + " where "
+					sql_prep$=sql_prep$+"company_id = '"+firm$+"'"
+				else
+					sql_prep$="select count (firm_id) from "+table_alias$ + " where "
+					sql_prep$=sql_prep$+"firm_id = '"+firm$+"'"
+				endif
 				if 1 then
-					sqlprep(sql_chan,err=*next)sql_prep$
+					sqlprep(sql_chan,err=*endif)sql_prep$
 					dim read_tpl$:sqltmpl(sql_chan)
-					sqlexec(sql_chan,err=*next)
-					read_tpl$=sqlfetch(sql_chan,err=*break)
+					sqlexec(sql_chan,err=*endif)
+					read_tpl$=sqlfetch(sql_chan,err=*endif)
 					firm_recs=read_tpl.col001
 				endif
 				print (log_dev)"Records for firm "+firm$+": "+str(firm_recs)
 
-rem wgh ... 9470 ... Write admin_backup for adm_firms, ads_masks and ads_sequences
-				rem --- Now clear the records
+				rem --- Process the records
 				xwk$=stbl("ADX_CLEARFIRM_RECS","0")
-				if firm_recs<>0 then call "adc_clearpartial.aon","N",table_dev,firm$,status
+				if firm_recs<>0 then
+					rem --- Create admin_backup records for admin data (adm_firms, ads_masks and ads_sequences) changes
+					if table_alias$="ADM_FIRMS" or table_alias$="ADS_MASKS" or table_alias$="ADS_SEQUENCES" then
+						rem --- Get records being deleted in current table
+						num_files=1
+						dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+						open_tables$[1]=table_alias$
+						open_opts$[1]="OTASN"
+						gosub open_tables
+						table_dev=num(open_chans$[1])
+						table_tpl$=open_tpls$[1]
+
+						if table_alias$="ADM_FIRMS" then
+							read(table_dev,key=firm$,dir=0,dom=*next)
+						else
+							read(table_dev,key=firm$,dom=*next)
+						endif
+						while 1
+							rem --- Read record
+							dim rec_tpl$:table_tpl$
+							readrecord (table_dev,end=*break)rec_tpl$
+							if table_alias$="ADM_FIRMS" then
+								if rec_tpl.company_id$ <> firm$ break
+							else
+								if rec_tpl.firm_id$ <> firm$ break
+							endif
+
+							rem --- Create admin_backup records
+							call stbl("+DIR_SYP")+"bax_xmlrec_exp.bbj",table_alias$,rec_tpl$,exp_action$,exp_add_only$,dev_mode$,rdMountVect!,table_chans$[all]
+						wend
+					endif
+
+					rem --- Clear the records
+					call "adc_clearpartial.aon","N",table_dev,firm$,status
+				endif
                 
 				rem --- Close file
 				open_tables$[1]=vectFiles!.getItem(curr_row * numcols + 3)
@@ -142,7 +209,7 @@ rem wgh ... 9470 ... Write admin_backup for adm_firms, ads_masks and ads_sequenc
  				print (log_dev)"Records cleared: "+stbl("ADX_CLEARFIRM_RECS")
 				print (log_dev)
 			else
-				print (log_dev)"Table "+cvs(meter_data$,2)+" skipped"
+				print (log_dev)"Table "+table_alias$+" skipped"
 				print (log_dev)
 			endif
 		next curr_row
@@ -364,14 +431,19 @@ rem ==========================================================================
 
 		if pos(ddm_tables.dd_alias_type$="MXVSD")>0 and pos(ddm_tables.asc_prod_id$=modules$,3) > 0 then
 			if ddm_tables.asc_prod_id$ <> "ADB" or
-:				((ddm_tables.asc_prod_id$="ADB") and
-:				 (cvs(ddm_tables.dd_table_alias$,2)="ADQ_FAXEMAIL") or
-:				 (cvs(ddm_tables.dd_table_alias$,2)="ADS_MASKS") or
-:				 (cvs(ddm_tables.dd_table_alias$,2)="ADS_SEQUENCES"))
+:				(ddm_tables.asc_prod_id$="ADB" and
+:				 (cvs(ddm_tables.dd_table_alias$,2)="ADM_FIRMS" or
+:				 cvs(ddm_tables.dd_table_alias$,2)="ADQ_FAXEMAIL" or
+:				 cvs(ddm_tables.dd_table_alias$,2)="ADS_MASKS" or
+:				 cvs(ddm_tables.dd_table_alias$,2)="ADS_SEQUENCES"))
 
 				rem --- Update count of records in file
 				tot_recs$=""
-				sql_prep$="select count (firm_id) from "+ddm_tables.dd_table_alias$ 
+				if cvs(ddm_tables.dd_table_alias$,2)="ADM_FIRMS" then
+					sql_prep$="select count (company_id) from "+ddm_tables.dd_table_alias$ 
+				else
+					sql_prep$="select count (firm_id) from "+ddm_tables.dd_table_alias$ 
+				endif
 				sqlprep(sql_chan,err=*continue)sql_prep$
 				dim read_tpl$:sqltmpl(sql_chan)
 				sqlexec(sql_chan,err=*continue)
@@ -624,8 +696,14 @@ rem ==========================================================================
 			call pgmdir$+"adc_progress.aon","S","","","","",0,curr_row,1,meter_num,status
 			if updt_rec_count$="Y" then
 				rem --- Update record count
-				sql_prep$="select count (firm_id) from "+vectFiles!.getItem(curr_row * numcols + 3) + " where "
-				sql_prep$=sql_prep$+"firm_id = '"+firm$+"'"
+				table_alias$=cvs(vectFiles!.getItem(curr_row * numcols + 3),2)
+				if table_alias$="ADM_FIRMS" then
+					sql_prep$="select count (company_id) from "+table_alias$ + " where "
+					sql_prep$=sql_prep$+"company_id = '"+firm$+"'"
+				else
+					sql_prep$="select count (firm_id) from "+table_alias$ + " where "
+					sql_prep$=sql_prep$+"firm_id = '"+firm$+"'"
+				endif
 				sqlprep(sql_chan,err=*continue)sql_prep$
 				dim read_tpl$:sqltmpl(sql_chan)
 				sqlexec(sql_chan,err=*continue)
