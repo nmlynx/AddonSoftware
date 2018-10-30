@@ -4,13 +4,16 @@ rem --- only execute if vectInvoices! not yet populated
 rem --- this avoids re-running this code via the ASVA (Barista re-validates last enabled control?)
 
 	vectInvoices!=callpoint!.getDevObject("vectInvoices")
+	rem --- only execute if vectInvoices! hasn't yet been built - i.e., don't execute again in ASVA final validation check
 	if !vectInvoices!.size()
 
 		ars_cc_custsvc=fnget_dev("ARS_CC_CUSTSVC")
 		arc_cashcode=fnget_dev("ARC_CASHCODE")
+		are_cashhdr=fnget_dev("ARE_CASHHDR")
 
 		dim ars_cc_custsvc$:fnget_tpl$("ARS_CC_CUSTSVC")
 		dim arc_cashcode$:fnget_tpl$("ARC_CASHCODE")
+		dim are_cashhdr$:fnget_tpl$("ARE_CASHHDR")
 
 		cash_cd$=callpoint!.getUserInput()
 
@@ -47,48 +50,83 @@ rem --- this avoids re-running this code via the ASVA (Barista re-validates last
 		callpoint!.setColumnEnabled("ARE_CCPMT.YEAR",enable_flag)
 		callpoint!.setColumnEnabled("ARE_CCPMT.ZIP_CODE",enable_flag)
 
-	rem --- load up open invoices
+		rem --- load up open invoices
 
 		gosub get_open_invoices
 		gosub fill_grid
 
-	rem --- if batching, or using bank rec, create and/or select batch and deposit
+		rem --- if batching and/or using bank rec, create and/or select batch and deposit, if need be
+		rem --- check are_cashhdr first - if firm/date/cust/cash rec cd that has been specified matches existing record primary key, use that batch/deposit
+		
+		are_cashhdr.firm_id$=firm_id$
+		are_cashhdr.receipt_date$=stbl("+SYSTEM_DATE")
+		are_cashhdr.customer_id$=cust_id$
+		are_cashhdr.cash_rec_cd$=cash_rec_cd$
+		are_cashhdr.payment_amt=are_cashhdr.payment_amt+apply_amt!
+		are_cashhdr.batch_no$=batch_no$
+		are_cashhdr.deposit_id$=deposit_id$
+		are_cashhdr.memo_1024$=$01$
+		are_cashhdr$=field(are_cashhdr$)
+		writerecord(are_cashhdr,dom=cash_hdr_exists)are_cashhdr$
 
-		dflt_batch_desc$=cvs(ars_cc_custsvc.batch_desc$,3)
-		dflt_deposit_desc$=cvs(ars_cc_custsvc.deposit_desc$,3)
+		extractrecord(are_cashhdr,key=
+:			are_cashhdr.firm_id$+
+:			are_cashhdr.ar_type$+
+:			are_cashhdr.reserved_key_01$+
+:			are_cashhdr.receipt_date$+
+:			are_cashhdr.customer_id$+
+:			are_cashhdr.cash_rec_cd$+
+:			are_cashhdr.ar_check_no$+
+:			are_cashhdr.reserved_key_02$)are_cashhdr$
 
-	rem --- Get Batch information
-		call stbl("+DIR_PGM")+"adc_getbatch.aon","ARE_CASHHDR","",table_chans$[all],dflt_batch_desc$
-		callpoint!.setColumnData("ARE_CCPMT.BATCH_NO",stbl("+BATCH_NO"),1)
+			x$=stbl("+BATCH_NO",are_cashhdr.batch_no$)
+			process_id$="AR Csh Rcp";rem --- may want to get process_id from adm_procdetail using ARE_CASHHDR for lookup
+			lock_table$="ADM_PROCBATCHES"
+			lock_record$=firm_id$+process_id$+batch_no$
+			lock_type$="S"
+			lock_status$=""
+			lock_disp$="M"
+			call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_lock_chan,table_chans$[all],lock_status$
+			if lock_status$<>""
+				cash_msg$=Translate!.getTranslation("AON_CANNOT_LOCK_BATCH_CASH_RECEIPT_NOT_ENTERED","Unable to lock batch associated with this receipt. Cash Receipt has NOT been entered.",1)
+				callpoint!.setStatus("ABORT")
+			endif
+		else
+rem --- TODO CAH write out the cash header now and extract to make sure no one else writes it? 
+rem --- TODO CAH need DOM on write in case someone else has snuck in
+rem --- TODO CAH also need to remove the record if for whatever reason we don't end up completing the cash receipt
 
-	rem --- Launch Bank Deposit Entry form if using Bank Rec.
-		if callpoint!.getDevObject("br_interface")="Y" then
-			dim dflt_data$[3,1]
-			dflt_data$[1,0]="DESCRIPTION"
-			dflt_data$[1,1]=dflt_deposit_desc$
-			dflt_data$[2,0]="CASH_REC_CD"
-			dflt_data$[2,1]=ars_cc_custsvc.cash_rec_cd$
-			dflt_data$[3,0]="BATCH_NO"
-			dflt_data$[3,1]=stbl("+BATCH_NO")
+			dflt_batch_desc$=cvs(ars_cc_custsvc.batch_desc$,3)
+			dflt_deposit_desc$=cvs(ars_cc_custsvc.deposit_desc$,3)
 
-			call stbl("+DIR_SYP")+"bam_run_prog.bbj", "ARE_DEPOSIT", stbl("+USER_ID"), "MNT", "", table_chans$[all],"",dflt_data$[all]
-			callpoint!.setColumnData("ARE_CCPMT.DEPOSIT_ID",str(callpoint!.getDevObject("deposit_id")),1)
+			rem --- Get Batch information
+			call stbl("+DIR_PGM")+"adc_getbatch.aon","ARE_CASHHDR","",table_chans$[all],dflt_batch_desc$
+			callpoint!.setColumnData("ARE_CCPMT.BATCH_NO",stbl("+BATCH_NO"),1)
 
-			rem --- DEPOSIT_ID is required, so terminate process if we don't have one.
-			if callpoint!.getDevObject("deposit_id")=""
-				callpoint!.setStatus("EXIT")
+			rem --- Launch Bank Deposit Entry form if using Bank Rec.
+			if callpoint!.getDevObject("br_interface")="Y" then
+				dim dflt_data$[3,1]
+				dflt_data$[1,0]="DESCRIPTION"
+				dflt_data$[1,1]=dflt_deposit_desc$
+				dflt_data$[2,0]="CASH_REC_CD"
+				dflt_data$[2,1]=ars_cc_custsvc.cash_rec_cd$
+				dflt_data$[3,0]="BATCH_NO"
+				dflt_data$[3,1]=stbl("+BATCH_NO")
 
-				rem --- Remove software lock on batch, if batching
-				batch$=stbl("+BATCH_NO",err=*next)
-				if num(batch$)<>0
-					lock_table$="ADM_PROCBATCHES"
-					lock_record$=firm_id$+stbl("+PROCESS_ID")+batch$
-					lock_type$="X"
-					lock_status$=""
-					lock_disp$=""
-					call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+				call stbl("+DIR_SYP")+"bam_run_prog.bbj", "ARE_DEPOSIT", stbl("+USER_ID"), "MNT", "", table_chans$[all],"",dflt_data$[all]
+				callpoint!.setColumnData("ARE_CCPMT.DEPOSIT_ID",str(callpoint!.getDevObject("deposit_id")),1)
+
+				rem --- DEPOSIT_ID is required, so terminate process if we don't have one.
+				if callpoint!.getDevObject("deposit_id")=""
+					callpoint!.setStatus("EXIT")
+
+					rem --- Remove software lock on batch, if batching
+					batch$=stbl("+BATCH_NO",err=*next)
+					if num(batch$)<>0
+						gosub remove_batch_lock
+						break
+					endif
 				endif
-				break
 			endif
 		endif
 	endif
@@ -193,17 +231,7 @@ rem --- if vectInvoices! contains any selected items, get confirmation that user
 
 	BBjAPI().removeTimer(10000,err=*next)
 
-rem --- remove software lock on batch, if batching
-
-	batch$=stbl("+BATCH_NO",err=*next)
-	if num(batch$)<>0
-		lock_table$="ADM_PROCBATCHES"
-		lock_record$=firm_id$+stbl("+PROCESS_ID")+batch$
-		lock_type$="X"
-		lock_status$=""
-		lock_disp$=""
-		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
-	endif
+	gosub remove_batch_lock
 [[ARE_CCPMT.AREC]]
 
 [[ARE_CCPMT.CARD_NO.AVAL]]
@@ -1168,20 +1196,8 @@ rem ==========================================================================
     rem --- TODO CAH same for are_cashbal/are_cashdet, don't just create them
     rem --- TODO CAH if there is already an are_cashdet for this invoice with balance < pay amount, apply on account
 
-	call stbl("+DIR_SYP")+"bac_key_template.bbj",
-:		"ARE_CASHHDR",
-:		"PRIMARY",
-:		are_cashhdr_key$,
-:		table_chans$[all],
-:		status$
+	cash_msg$=Translate!.getTranslation("AON_CASH_RECEIPT_HAS_BEEN_ENTERED","Cash Receipt has been entered.",1)
 
-	are_cashhdr_key.firm_id$=firm_id$
-	are_cashhdr_key.receipt_date$=stbl("+SYSTEM_DATE")
-	are_cashhdr_key.customer_id$=cust_id$
-	are_cashhdr_key.cash_rec_cd$=cash_rec_cd$
-
-	extractrecord(are_cashhdr,key=are_cashhdr_key$,dom=*next)are_cashhdr$
-rem --- **** LEFT OFF HERE  if cashhdr exists, but is from different deposit and/or batch than what we've established, need to switch CAH
 	are_cashhdr.firm_id$=firm_id$
 	are_cashhdr.receipt_date$=stbl("+SYSTEM_DATE")
 	are_cashhdr.customer_id$=cust_id$
@@ -1224,7 +1240,6 @@ rem --- **** LEFT OFF HERE  if cashhdr exists, but is from different deposit and
 
 		endif
 	next inv_row
-	cash_msg$=Translate!.getTranslation("AON_CASH_RECEIPT_HAS_BEEN_ENTERED","Cash Receipt has been entered.")
     
 	return
 
@@ -1269,6 +1284,22 @@ rem ==========================================================================
 			next_seq=next_seq+1
 		endif
 	next inv_row
+
+	return
+
+rem ==========================================================================
+remove_batch_lock:rem --- remove software lock on batch, if batching
+rem ==========================================================================
+
+	batch$=stbl("+BATCH_NO",err=*next)
+	if num(batch$)<>0
+		lock_table$="ADM_PROCBATCHES"
+		lock_record$=firm_id$+stbl("+PROCESS_ID")+batch$
+		lock_type$="X"
+		lock_status$=""
+		lock_disp$=""
+		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+	endif
 
 	return
 
