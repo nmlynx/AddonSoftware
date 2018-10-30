@@ -162,8 +162,7 @@ rem --- Copy selected data
 						rec_tpl.firm_id$ = to_firm$
 
 						rem --- Create admin_backup records for admin data (adm_firms, ads_masks and ads_sequences) changes
-						if callpoint!.getColumnData("ADX_COPYFIRM.ASC_PROD_ID")="ADB" and
-:						(table_alias$="ADM_FIRMS" or table_alias$="ADS_MASKS" or table_alias$="ADS_SEQUENCES") then
+						if table_alias$="ADM_FIRMS" or table_alias$="ADS_MASKS" or table_alias$="ADS_SEQUENCES" then
 							if pos(newFirm$="0102",2) then
 								rec_tpl.user_modified$="M"
 							else
