@@ -1,3 +1,16 @@
+[[ARE_CCPMT.RECEIPT_DATE.AVAL]]
+rem --- validate receipt date
+
+	gl$=callpoint!.getDevObject("gl_interface")
+	recpt_date$=callpoint!.getUserInput()        
+	if gl$="Y" 
+		call stbl("+DIR_PGM")+"glc_datecheck.aon",recpt_date$,"Y",per$,yr$,status
+		if status>99
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
+
+gosub reset_timer
 [[ARE_CCPMT.CASH_REC_CD.AVAL]]
 rem --- get cash rec code and associated credit card params; if hosted, disable data collection fields
 rem --- only execute if vectInvoices! not yet populated
@@ -72,7 +85,7 @@ rem --- this avoids re-running this code via the ASVA (Barista re-validates last
 :			are_cashhdr.customer_id$+
 :			are_cashhdr.cash_rec_cd$+
 :			are_cashhdr.ar_check_no$+
-:			are_cashhdr.reserved_key_02$,dom=*next)are_cashhdr$;receipt_found=1;rem advisory locking
+:			are_cashhdr.reserved_key_02$,dom=*next)are_cashhdr$;receipt_found=1
 
 		if receipt_found
 			if num(are_cashhdr.batch_no$)<>0
@@ -91,8 +104,12 @@ rem --- this avoids re-running this code via the ASVA (Barista re-validates last
 
 		call stbl("+DIR_PGM")+"adc_getbatch.aon","ARE_CASHHDR","",table_chans$[all],dflt_batch_desc$,dflt_batch_no$
 		callpoint!.setColumnData("ARE_CCPMT.BATCH_NO",stbl("+BATCH_NO"),1)
-		if receipt_found then read(are_cashhdr);rem release extract
-REM ******* CAH LEFT OFF HERE - SAYING DEPOSIT USED IN BATCH 0000000 AND MUST BE USED THERE...
+		if receipt_found then read(are_cashhdr);rem --- can release temp extract on are_cashhdr now that batch is soft-locked (or if not batching)
+
+		rem --- Get deposit info, supplying deposit number that must be used if this receipt already exists and contains a deposit ID
+
+		callpoint!.setDevObject("deposit_id","")
+
 		if callpoint!.getDevObject("br_interface")="Y" then
 			dim dflt_data$[4,1]
 			dflt_data$[1,0]="DESCRIPTION"
@@ -100,13 +117,13 @@ REM ******* CAH LEFT OFF HERE - SAYING DEPOSIT USED IN BATCH 0000000 AND MUST BE
 			dflt_data$[2,0]="CASH_REC_CD"
 			dflt_data$[2,1]=ars_cc_custsvc.cash_rec_cd$
 			dflt_data$[3,0]="BATCH_NO"
-			dflt_data$[3,1]=iff(num(stbl("+BATCH_NO"))=0,"",stbl("+BATCH_NO"))
+			dflt_data$[3,1]=stbl("+BATCH_NO")
 			if dflt_deposit_id$<>""
 				dflt_data$[4,0]="DEPOSIT_ID"
 				dflt_data$[4,1]=dflt_deposit_id$
-				key_pfx$=firm_id$+dflt_deposit_id$
+				key_pfx$=firm_id$+stbl("+BATCH_NO")+"E"+dflt_deposit_id$;rem --- 'E' is trans status Entry
 			else
-				key_pfx$=firm_id$
+				key_pfx$=firm_id$+stbl("+BATCH_NO")+"E"
 			endif
 
 			call stbl("+DIR_SYP")+"bam_run_prog.bbj", "ARE_DEPOSIT", stbl("+USER_ID"), "MNT", key_pfx$, table_chans$[all],"",dflt_data$[all]
@@ -268,7 +285,6 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 :			cvs(callpoint!.getColumnData("ARE_CCPMT.CITY"),3)="" or
 :			cvs(callpoint!.getColumnData("ARE_CCPMT.CNTRY_ID"),3)="" or
 :			cvs(callpoint!.getColumnData("ARE_CCPMT.CUSTOMER_ID"),3)="" or
-:			cvs(callpoint!.getColumnData("ARE_CCPMT.EMAIL_ADDR"),3)="" or
 :			cvs(callpoint!.getColumnData("ARE_CCPMT.FIRM_ID"),3)="" or
 :			cvs(callpoint!.getColumnData("ARE_CCPMT.MONTH"),3)="" or
 :			cvs(callpoint!.getColumnData("ARE_CCPMT.NAME_FIRST"),3)="" or
@@ -279,6 +295,9 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 :			cvs(callpoint!.getColumnData("ARE_CCPMT.YEAR"),3)="" or
 :			cvs(callpoint!.getColumnData("ARE_CCPMT.ZIP_CODE"),3)="" or
 :			num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT"))=0
+
+			rem only BillPro requires email, so not making mandatory for all...add to statement above if desired
+			rem cvs(callpoint!.getColumnData("ARE_CCPMT.EMAIL_ADDR"),3)="" or
 
 			dim msg_tokens$[1]
 			msg_tokens$[0]=Translate!.getTranslation("AON_PLEASE_FILL_IN_ALL_REQUIRED_FIELDS")
@@ -334,6 +353,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 		vectInvoices!=callpoint!.getDevObject("vectInvoices")
 		apply_amt!=cast(BBjNumber, num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT")))
 		cust_id$=callpoint!.getColumnData("ARE_CCPMT.CUSTOMER_ID")
+		cash_rec_cd$=callpoint!.getColumnData("ARE_CCPMT.CASH_REC_CD")
 
 		rem --- Use J2Pay library
 		gw! = new GatewayFactory()
@@ -896,6 +916,13 @@ rem --- Get Bank Rec interface flag
 	readrecord(ars_params,key=firm_id$+"AR00",dom=std_missing_params)ars_params$
 	callpoint!.setDevObject("br_interface",ars_params.br_interface$)
 
+rem --- Interface to gl?
+	gl$="N"
+	status=0
+	call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,"ARE_CASHHDR","AR",glw11$,gl$,status
+	if status<>0 goto std_exit
+
+	callpoint!.setDevObject("gl_interface",gl$)
 
 rem --- Add open invoice grid to form
 	nxt_ctlID = util.getNextControlID()
@@ -1187,16 +1214,38 @@ create_cash_receipt:
 rem --- in: firm_id$, cust_id$, cash_rec_cd$, apply_amt!, trans_id$, vectInvoices!
 rem ==========================================================================
 
-    rem --- TODO CAH need to read/update, not just create, as >1 payment could have been made so header already exists
-    rem --- TODO CAH same for are_cashbal/are_cashdet, don't just create them
-    rem --- TODO CAH if there is already an are_cashdet for this invoice with balance < pay amount, apply on account
-
 	cash_msg$=Translate!.getTranslation("AON_CASH_RECEIPT_HAS_BEEN_ENTERED","Cash Receipt has been entered.",1)
 
+	batch_no$=stbL("+BATCH_NO")
+	deposit_id$=callpoint!.getDevObject("deposit_id")
+
+	redim are_cashhdr$
+
 	are_cashhdr.firm_id$=firm_id$
-	are_cashhdr.receipt_date$=stbl("+SYSTEM_DATE")
+	are_cashhdr.receipt_date$=callpoint!.getColumnData("ARE_CCPMT.RECEIPT_DATE")
 	are_cashhdr.customer_id$=cust_id$
 	are_cashhdr.cash_rec_cd$=cash_rec_cd$
+
+	receipt_found=0
+
+	extractrecord(are_cashhdr,key=
+:		are_cashhdr.firm_id$+
+:		are_cashhdr.ar_type$+
+:		are_cashhdr.reserved_key_01$+
+:		are_cashhdr.receipt_date$+
+:		are_cashhdr.customer_id$+
+:		are_cashhdr.cash_rec_cd$+
+:		are_cashhdr.ar_check_no$+
+:		are_cashhdr.reserved_key_02$,dom=*next)are_cashhdr$;receipt_found=1
+
+	if receipt_found
+		if cvs(are_cashhdr.batch_no$,3)<>batch_no$ or cvs(are_cashhdr.deposit_id$,3)<>deposit_id$
+			cash_msg$=Translate!.getTranslation("AON_BATCH_DEPOSIT_MISMATCH_CASH_RECEIPT_NOT_ENTERED",
+:				"A cash receipt matching this customer, date and cash receipt code has already been entered using a different batch and/or deposit."+$0A$+
+:				"You will need to MANUALLY adjust that cash receipt to reflect this credit card transaction.",1) 
+		endif
+	endif
+
 	are_cashhdr.payment_amt=are_cashhdr.payment_amt+apply_amt!
 	are_cashhdr.batch_no$=batch_no$
 	are_cashhdr.deposit_id$=deposit_id$
@@ -1209,8 +1258,8 @@ rem ==========================================================================
 		pay_flag$=vectInvoices!.get(inv_row)
 		if pay_flag$="Y"
 			ar_inv_no$=vectInvoices!.get(inv_row+1)
-			invoice_bal$=vectInvoices!.get(inv_row+num(callpoint!.getDevObject("inv_bal_col")))
 			invoice_pay$=vectInvoices!.get(inv_row+num(callpoint!.getDevObject("pay_col")))
+			invoice_disc$=vectInvoices!.get(inv_row+num(callpoint!.getDevObject("disc_taken_col")))
             
 			redim are_cashdet$
 			redim are_cashbal$
@@ -1220,7 +1269,20 @@ rem ==========================================================================
 			are_cashdet.customer_id$=are_cashhdr.customer_id$
 			are_cashdet.cash_rec_cd$=are_cashhdr.cash_rec_cd$
 			are_cashdet.ar_inv_no$=ar_inv_no$
-			are_cashdet.apply_amt$=invoice_pay$
+
+			extractrecord(are_cashdet,key=
+:				are_cashdet.firm_id$+
+:				are_cashdet.ar_type$+
+:				are_cashdet.reserved_key_01$+
+:				are_cashdet.receipt_date$+
+:				are_cashdet.customer_id$+
+:				are_cashdet.cash_rec_cd$+
+:				are_cashdet.ar_check_no$+
+:				are_cashdet.reserved_key_02$+
+:				are_cashdet.ar_inv_no$,dom=*next)are_cashdet$;rem advisory locking
+
+			are_cashdet.apply_amt=are_cashdet.apply_amt+num(invoice_pay$)
+			are_cashdet.discount_amt=are_cashdet.discount_amt+num(invoice_disc$)
 			are_cashdet.batch_no$=are_cashhdr.batch_no$
 			are_cashdet.memo_1024$=$01$
 			are_cashdet.firm_id$=field(are_cashdet$)
@@ -1229,7 +1291,15 @@ rem ==========================================================================
 			are_cashbal.firm_id$=firm_id$
 			are_cashbal.customer_id$=are_cashhdr.customer_id$
 			are_cashbal.ar_inv_no$=ar_inv_no$
-			are_cashbal.apply_amt$=invoice_pay$
+
+			extractrecord(are_cashbal,key=
+:				are_cashbal.firm_id$+
+:				are_cashbal.ar_type$+
+:				are_cashbal.reserved_str$+
+:				are_cashbal.customer_id$+
+:				are_cashbal.ar_inv_no$,dom=*next)are_cashbal$
+
+			are_cashbal.apply_amt=are_cashbal.apply_amt+num(invoice_pay$)
 			are_cashbal$=field(are_cashbal$)
 			writerecord(are_cashbal)are_cashbal$
 
