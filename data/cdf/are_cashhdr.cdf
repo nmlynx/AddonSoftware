@@ -1364,9 +1364,15 @@ rem --- will add information for the OA tran to both vectInvoice! and vectInvSel
 	vectInvoice!.addItem(str(currdtl$(21,10)))
 	vectInvoice!.addItem(str(0))
 	vectInvoice!.addItem(str(0))
-	vectInvoice!.addItem("")				
+	commentMap!=callpoint!.getDevObject("commentMap")
+	if commentMap!.get(cvs(currdtl$(11,10),3))<>null() then
+		vectInvoice!.addItem(commentMap!.get(cvs(currdtl$(11,10),3)))
+	else
+		vectInvoice!.addItem("")
+	endif		
 	vectInvSel!.addItem("Y")
 	chk_applied=chk_applied+num(currdtl$(21,10))
+
 return
 
 rem ==================================================================

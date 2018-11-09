@@ -18,7 +18,9 @@ rem --- this avoids re-running this code via the ASVA (Barista re-validates last
 
 	vectInvoices!=callpoint!.getDevObject("vectInvoices")
 	rem --- only execute if vectInvoices! hasn't yet been built - i.e., don't execute again in ASVA final validation check
-	if !vectInvoices!.size()
+	rem --- or if cash rec code has been changed
+
+	if !vectInvoices!.size() or callpoint!.getUserInput()<>callpoint!.getColumnData("ARE_CCPMT.CASH_REC_CD")
 
 		ars_cc_custsvc=fnget_dev("ARS_CC_CUSTSVC")
 		arc_cashcode=fnget_dev("ARC_CASHCODE")
@@ -32,6 +34,15 @@ rem --- this avoids re-running this code via the ASVA (Barista re-validates last
 
 		readrecord(arc_cashcode,key=firm_id$+"C"+cash_cd$,dom=std_missing_params)arc_cashcode$
 		readrecord(ars_cc_custsvc,key=firm_id$+cash_cd$,dom=std_missing_params)ars_cc_custsvc$
+
+		if cvs(callpoint!.getColumnData("ARE_CCPMT.CNTRY_ID"),3)=""
+			callpoint!.setColumnData("ARE_CCPMT.CNTRY_ID",ars_cc_custsvc.dflt_cntry_id$,1)
+		endif
+
+		gateway_id$=ars_cc_custsvc.gateway_id$
+		gosub get_gateway_config
+		if msg_id$<>"" then break; rem --- 'token' string found in config; needs to be substituted for legit value before continuing
+
 		callpoint!.setDevObject("ars_cc_custsvc",ars_cc_custsvc$)
 		callpoint!.setDevObject("interface_tp",ars_cc_custsvc.interface_tp$)
 		if ars_cc_custsvc.interface_tp$="A"
@@ -47,6 +58,40 @@ rem --- this avoids re-running this code via the ASVA (Barista re-validates last
 			callpoint!.setColumnData("ARE_CCPMT.NAME_LAST","",1)
 			callpoint!.setColumnData("ARE_CCPMT.MONTH","",1)
 			callpoint!.setColumnData("ARE_CCPMT.YEAR","",1)
+
+			rem --- for hosted, make sure expected config attributes exist
+			config_attribs!=BBjAPI().makeVector()
+			if gateway_id$="PAYFLOWPRO"
+				config_attribs!.add("PARTNER")
+				config_attribs!.add("VENDOR")
+				config_attribs!.add("USER")
+				config_attribs!.add("PWD")
+				config_attribs!.add("testMode")
+				config_attribs!.add("requestTokenURL")
+				config_attribs!.add("launchURL")
+				config_attribs!.add("silentPostURL")
+				config_attribs!.add("silentPostFailureURL")
+				config_attribs!.add("silentPostFailureURL")
+			else
+				config_attribs!.add("name")
+				config_attribs!.add("transactionKey")
+				config_attribs!.add("launchURL")
+				config_attribs!.add("gatewayURL")
+				config_attribs!.add("confirmationURL")
+				config_attribs!.add("webhookURL")
+				config_attribs!.add("environment")
+				config_attribs!.add("testMode")
+			endif
+			for wk=0 to config_attribs!.size()-1
+				if gw_config!.get(config_attribs!.get(wk))=null()
+					dim msg_tokens$[1]
+					msg_tokens$[0]=Translate!.getTranslation("AON_MISSING_GATEWAY_CONFIG","One or more configuration values for the payment gateway are missing.",1)+$0A$+"("+gateway_id$+")"
+					msg_id$="GENERIC_WARN"
+					gosub disp_message
+					callpoint!.setStatus("EXIT")
+					break
+				endif
+			next wk
 		endif
 		callpoint!.setColumnEnabled("ARE_CCPMT.ADDRESS_LINE_1",enable_flag)
 		callpoint!.setColumnEnabled("ARE_CCPMT.ADDRESS_LINE_2",enable_flag)
@@ -226,11 +271,12 @@ rem --- if vectInvoices! contains any selected items, get confirmation that user
 	endif
 
 	if callpoint!.getDevObject("payment_status")="payment"
-		msg_id$="GENERIC_WARN"
+		msg_id$="GENERIC_WARN_CANCEL"
 		dim msg_tokens$[1]
 		msg_tokens$[0]=Translate!.getTranslation("AON_PAYMENT_TRANSACTION_IN_PROCESS","Payment transaction in process. Response not yet received.",1)
+		msg_tokens$[0]=msg_tokens$[0]+Translate!.getTranslation("AON_MANUALLY_CREATE_CASH_RECEIPT","If you click OK to exit, you will need to manually confirm successful payment and enter the Cash Receipt.",1)
 		gosub disp_message
-		callpoint!.setStatus("ABORT")
+		if msg_opt$<>"O" then callpoint!.setStatus("ABORT")
 	endif
 
 	if selected
@@ -280,6 +326,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 	interface_tp$=callpoint!.getDevObject("interface_tp")
 
 	if interface_tp$="A"
+
 		if cvs(callpoint!.getColumnData("ARE_CCPMT.ADDRESS_LINE_1"),3)="" or
 :			cvs(callpoint!.getColumnData("ARE_CCPMT.CARD_NO"),3)="" or
 :			cvs(callpoint!.getColumnData("ARE_CCPMT.CITY"),3)="" or
@@ -327,28 +374,10 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 			break
 		endif
 
-		art_resphdr=fnget_dev("ART_RESPHDR")
-		art_respdet=fnget_dev("ART_RESPDET")
-		are_cashhdr=fnget_dev("ARE_CASHHDR")
-		are_cashdet=fnget_dev("ARE_CASHDET")
-		are_cashbal=fnget_dev("ARE_CASHBAL")
-		ars_cc_custsvc=fnget_dev("ARS_CC_CUSTSVC")
-		arc_gatewaydet=fnget_dev("ARC_GATEWAYDET")
-
-		dim art_resphdr$:fnget_tpl$("ART_RESPHDR")
-		dim art_respdet$:fnget_tpl$("ART_RESPDET")
-		dim are_cashhdr$:fnget_tpl$("ARE_CASHHDR")
-		dim are_cashdet$:fnget_tpl$("ARE_CASHDET")
-		dim are_cashbal$:fnget_tpl$("ARE_CASHBAL")
 		dim ars_cc_custsvc$:fnget_tpl$("ARS_CC_CUSTSVC")
-		dim arc_gatewaydet$:fnget_tpl$("ARC_GATEWAYDET")
-
-		encryptor! = new Encryptor()
-		config_id$ = "GATEWAY_AUTH"
-		encryptor!.setConfiguration(config_id$)
-
 		ars_cc_custsvc$=callpoint!.getDevObject("ars_cc_custsvc")
-		gateway$=ars_cc_custsvc.gateway_id$
+		gateway_id$=ars_cc_custsvc.gateway_id$
+		gw_config!=callpoint!.getDevObject("gw_config")
 
 		vectInvoices!=callpoint!.getDevObject("vectInvoices")
 		apply_amt!=cast(BBjNumber, num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT")))
@@ -359,24 +388,28 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 		gw! = new GatewayFactory()
 		apiSampleParameters! = new JSONObject()
 	
-		gateway! = gw!.getGateway(AvailableGateways.valueOf(cvs(gateway$,3)))
+		gateway! = gw!.getGateway(AvailableGateways.valueOf(cvs(gateway_id$,3)))
 		apiSampleParameters! = gateway!.getApiSampleParameters()
 		paramKeys! = apiSampleParameters!.keys()
+		msg_id$=""
 
 		while paramKeys!.hasNext()
 			gw_attrib$=paramKeys!.next()
-			read record (arc_gatewaydet,key=firm_id$+gateway$+pad(gw_attrib$,len(arc_gatewaydet.config_attr$)),knum="AO_ATTRIBUTE",err=std_missing_params)arc_gatewaydet$
-			apiSampleParameters!.put(gw_attrib$,encryptor!.decryptData(cvs(arc_gatewaydet.config_value$,3)))
+			param!=gw_config!.get(gw_attrib$)
+			if param!=null()
+				dim msg_tokens$[1]
+				msg_tokens$[0]=Translate!.getTranslation("AON_MISSING_GATEWAY_CONFIG")+$0A$+"("+gateway_id$+")"
+				msg_id$="GENERIC_WARN"
+				gosub disp_message
+				callpoint!.setStatus("EXIT")
+				break
+			endif
+			apiSampleParameters!.put(gw_attrib$,param!.toString())
 		wend
-		redim arc_gatewaydet$
-		readrecord (arc_gatewaydet,key=firm_id$+gateway$+pad("ip",len(arc_gatewaydet.config_attr$)),knum="AO_ATTRIBUTE",err=*next)arc_gatewaydet$
-		if cvs(arc_gatewaydet.config_value$,3)=""
-			ip$="127.0.0.1"
-		else
-			ip$=encryptor!.decryptData(cvs(arc_gatewaydet.config_value$,3))
-		endif
-		readrecord(arc_gatewaydet,key=firm_id$+gateway$+pad("testMode",len(arc_gatewaydet.config_attr$)),knum="AO_ATTRIBUTE",err=*next)arc_gatewaydet$
-		gateway!.setTestMode(Boolean.valueOf(encryptor!.decryptData(cvs(arc_gatewaydet.config_value$,3))))
+		if msg_id$<>"" then break
+
+		ip$=iff(gw_config!.get("ip")=null(),"127.0.0.1",gw_config!.get("ip"))
+		gateway!.setTestMode(Boolean.valueOf(gw_config!.get("testMode")))
 
 		customer! = new Customer()
 		customer!.setFirstName(cvs(callpoint!.getColumnData("ARE_CCPMT.NAME_FIRST"),3))
@@ -432,6 +465,8 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 			endif
 		endif
 
+		gosub remove_batch_lock
+
 		dim msg_tokens$[1]
 		msg_tokens$[0]=trans_msg$+$0A$+cash_msg$
 		msg_id$="GENERIC_OK"
@@ -461,15 +496,11 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 		if msg_opt$<>"Y"
 			callpoint!.setStatus("ABORT-ACTIVATE")
 		else
-			ars_cc_custsvc=fnget_dev("ARS_CC_CUSTSVC")
-			arc_gatewaydet=fnget_dev("ARC_GATEWAYDET")
 
 			dim ars_cc_custsvc$:fnget_tpl$("ARS_CC_CUSTSVC")
-			dim arc_gatewaydet$:fnget_tpl$("ARC_GATEWAYDET")
-		
 			ars_cc_custsvc$=callpoint!.getDevObject("ars_cc_custsvc")
 			gateway_id$=ars_cc_custsvc.gateway_id$
-			gosub get_gateway_config
+			gw_config!=callpoint!.getDevObject("gw_config")
 
 			vectInvoices!=callpoint!.getDevObject("vectInvoices")
 			cust_id$=callpoint!.getColumnData("ARE_CCPMT.CUSTOMER_ID")
@@ -477,8 +508,6 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 		        rem --- using Authorize.net or PayPal hosted page
 		        switch gateway_id$
 				case "PAYFLOWPRO"
-					rem --- set devObject to indicate 'payment' status
-					callpoint!.setDevObject("payment_status","payment")
 
 					rem --- get random number to send when requesting secure token
 					rem --- set namespace variable using that number
@@ -510,9 +539,16 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 					rem --- which will record response in art_response and post cash receipt, if applicable.
 
 					if content!.contains("RESULT=0")
+						rem --- set devObject to indicate 'payment' status - check when exiting and warn if still in "payment" status (i.e., no response received yet)
+						callpoint!.setDevObject("payment_status","payment")
 						returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway_id$+" -t"+tokenID$+" -s"+sid$+" -l"+gw_config!.get("launchURL"))
 					else
-						trans_msg$="Unable to acquire secure token from PayPal."
+						trans_msg$=Translate!.getTranslation("AON_UNABLE_TO_ACQUIRE_SECURE_TOKEN")+$0A$+content!
+						dim msg_tokens$[1]
+						msg_tokens$[0]=trans_msg$
+						msg_id$="GENERIC_WARN"
+						gosub disp_message
+						callpoint!.setStatus("EXIT")
 					endif
 				break
 				case "AUTHORIZE "
@@ -586,9 +622,16 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 					rem --- assuming this is our response, record the Webhook response in art_response and create cash receipt, if applicable
 
 					if authResponse!.getMessages().getResultCode()=MessageTypeEnum.OK
+						rem --- set devObject to indicate 'payment' status - check when exiting and warn if still in "payment" status (i.e., no response received yet)
+						callpoint!.setDevObject("payment_status","payment")
 						returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway_id$+" -t"+authResponse!.getToken()+" -a"+masked_amt$+" -l"+gw_config!.get("launchURL")+" -u"+gw_config!.get("gatewayURL"))
 					else
 						trans_msg$=Translate!.getTranslation("AON_UNABLE_TO_ACQUIRE_SECURE_TOKEN")+$0a$+authResponse!.getMessages().getMessage().get(0).getCode()+$0a$+authResponse!.getMessages().getMessage().get(0).getText()
+						dim msg_tokens$[1]
+						msg_tokens$[0]=trans_msg$
+						msg_id$="GENERIC_WARN"
+						gosub disp_message
+						callpoint!.setStatus("EXIT")
 					endif
 				break
 				case default
@@ -610,18 +653,6 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 	ev!=BBjAPI().getLastEvent()
 
 	if ev!.getEventName()="BBjNamespaceEvent"
-
-		art_resphdr=fnget_dev("ART_RESPHDR")
-		art_respdet=fnget_dev("ART_RESPDET")
-		are_cashhdr=fnget_dev("ARE_CASHHDR")
-		are_cashdet=fnget_dev("ARE_CASHDET")
-		are_cashbal=fnget_dev("ARE_CASHBAL")
-
-		dim art_resphdr$:fnget_tpl$("ART_RESPHDR")
-		dim art_respdet$:fnget_tpl$("ART_RESPDET")
-		dim are_cashhdr$:fnget_tpl$("ARE_CASHHDR")
-		dim are_cashdet$:fnget_tpl$("ARE_CASHDET")
-		dim are_cashbal$:fnget_tpl$("ARE_CASHBAL")
 
 		vectInvoices!=callpoint!.getDevObject("vectInvoices")
 		apply_amt!=cast(BBjNumber, num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT")))
@@ -710,6 +741,9 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 				endif
 			endif
 		endif
+
+		gosub remove_batch_lock
+
 		dim msg_tokens$[1]
 		msg_tokens$[0]=trans_msg$+$0A$+cash_msg$
 		msg_id$="GENERIC_OK"
@@ -1214,6 +1248,14 @@ create_cash_receipt:
 rem --- in: firm_id$, cust_id$, cash_rec_cd$, apply_amt!, trans_id$, vectInvoices!
 rem ==========================================================================
 
+	are_cashhdr=fnget_dev("ARE_CASHHDR")
+	are_cashdet=fnget_dev("ARE_CASHDET")
+	are_cashbal=fnget_dev("ARE_CASHBAL")
+
+	dim are_cashhdr$:fnget_tpl$("ARE_CASHHDR")
+	dim are_cashdet$:fnget_tpl$("ARE_CASHDET")
+	dim are_cashbal$:fnget_tpl$("ARE_CASHBAL")
+
 	cash_msg$=Translate!.getTranslation("AON_CASH_RECEIPT_HAS_BEEN_ENTERED","Cash Receipt has been entered.",1)
 
 	batch_no$=stbL("+BATCH_NO")
@@ -1249,7 +1291,6 @@ rem ==========================================================================
 	are_cashhdr.payment_amt=are_cashhdr.payment_amt+apply_amt!
 	are_cashhdr.batch_no$=batch_no$
 	are_cashhdr.deposit_id$=deposit_id$
-	are_cashhdr.memo_1024$=$01$
 	are_cashhdr$=field(are_cashhdr$)
 	writerecord(are_cashhdr)are_cashhdr$
 
@@ -1260,6 +1301,7 @@ rem ==========================================================================
 			ar_inv_no$=vectInvoices!.get(inv_row+1)
 			invoice_pay$=vectInvoices!.get(inv_row+num(callpoint!.getDevObject("pay_col")))
 			invoice_disc$=vectInvoices!.get(inv_row+num(callpoint!.getDevObject("disc_taken_col")))
+			invoice_cmt$=vectInvoices!.get(inv_row+num(callpoint!.getDevObject("grid_cols"))-1)
             
 			redim are_cashdet$
 			redim are_cashbal$
@@ -1284,7 +1326,7 @@ rem ==========================================================================
 			are_cashdet.apply_amt=are_cashdet.apply_amt+num(invoice_pay$)
 			are_cashdet.discount_amt=are_cashdet.discount_amt+num(invoice_disc$)
 			are_cashdet.batch_no$=are_cashhdr.batch_no$
-			are_cashdet.memo_1024$=$01$
+			are_cashdet.memo_1024$=iff(cvs(are_cashdet.memo_1024$,3)="",invoice_cmt$,are_cashdet.memo_1024$+invoice_cmt$)
 			are_cashdet.firm_id$=field(are_cashdet$)
 			writerecord(are_cashdet)are_cashdet$
 
@@ -1313,10 +1355,16 @@ write_to_response_log:rem --- write to art_resphdr/det
 rem --- in: firm_id$, cust_id$, trans_id$, response_text$, vectInvoices!
 rem ==========================================================================
 
+	art_resphdr=fnget_dev("ART_RESPHDR")
+	art_respdet=fnget_dev("ART_RESPDET")
+
+	dim art_resphdr$:fnget_tpl$("ART_RESPHDR")
+	dim art_respdet$:fnget_tpl$("ART_RESPDET")
+
 	art_resphdr.firm_id$=firm_id$
 	art_resphdr.customer_id$=cust_id$
 	art_resphdr.transaction_id$=trans_id$
-	art_resphdr.gateway_id$=gateway$
+	art_resphdr.gateway_id$=gateway_id$
 	art_resphdr.amount$=trans_amount$
 	art_resphdr.approve_decline$=trans_approved$
 	art_resphdr.response_text$=response_text$
@@ -1373,18 +1421,32 @@ get_gateway_config:rem --- get config for specified gateway
 rem --- in: gateway_id$; out: hashmap gw_config! containing config entries
 rem ==========================================================================
 
+	arc_gatewaydet=fnget_dev("ARC_GATEWAYDET")
+	dim arc_gatewaydet$:fnget_tpl$("ARC_GATEWAYDET")
+
 	encryptor! = new Encryptor()
 	config_id$ = "GATEWAY_AUTH"
 	encryptor!.setConfiguration(config_id$)
 
-	read(arc_gatewaydet,key=firm_id$+gateway_id$,dom=*next)
+	read(arc_gatewaydet,key=firm_id$+gateway_id$,knum=0,dom=*next)
 	gw_config!=new java.util.HashMap()
 
 	while 1
 		readrecord(arc_gatewaydet,end=*break)arc_gatewaydet$
 		if pos(firm_id$+gateway_id$=arc_gatewaydet$)<>1 then break
 		if gw_config!.get("gateway_id")=null() then gw_config!.put("gateway_id",gateway_id$)
-		gw_config!.put(cvs(arc_gatewaydet.config_attr$,3),encryptor!.decryptData(cvs(arc_gatewaydet.config_value$,3)))
+		cfg_value$=encryptor!.decryptData(cvs(arc_gatewaydet.config_value$,3))
+		if pos("token>"=cfg_value$)
+			dim msg_tokens$[1]
+			msg_tokens$[0]=Translate!.getTranslation("AON_INVALID_GATEWAY_CONFIG","One or more configuration values for the payment gateway are invalid.",1)+$0A$+"("+gateway_id$+")"
+			msg_id$="GENERIC_WARN"
+			gosub disp_message
+			callpoint!.setStatus("EXIT")
+			break
+		else
+			msg_id$=""
+			gw_config!.put(cvs(arc_gatewaydet.config_attr$,3),cfg_value$)
+		endif
 	wend
 
 	callpoint!.setDevObject("gw_config",gw_config!)

@@ -109,12 +109,18 @@ while 1
 	open_tables$[1]=adm_proctables.dd_table_alias$,open_opts$[1]="OTA"
 	gosub open_tables
 	file_dev=num(open_chans$[1])
+	dim rec$:open_tpls$[1]
+
+	read (file_dev,key=firm_id$,dom=*next)
 
 	while file_dev
-		read (file_dev,key=firm_id$+batch_no$,knum=1,dom=*next,err=*break)
 		k$=key(file_dev,end=*break)
-		if pos(firm_id$+batch_no$=k$)=1 then callpoint!.setDevObject("can_delete","NO")		
-		break
+		if pos(firm_id$=k$)<>1 then break
+		readrecord(file_dev)rec$
+		if rec.batch_no$=batch_no$
+			callpoint!.setDevObject("can_delete","NO")
+			break
+		endif
 	wend
 
 	if file_dev

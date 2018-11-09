@@ -10,8 +10,6 @@ rem --- or using J2Pay library, as specified in ars_cc_custsvc
 	dim arm_emailfax$:fnget_tpl$("ARM_EMAILFAX")
 	readrecord(arm_emailfax,key=firm_id$+cp_cust_id$,dom=*next)arm_emailfax$
 
-	cntry_id$=cvs(callpoint!.getColumnData("ARM_CUSTMAST.CNTRY_ID"),3)
-
 	dim dflt_data$[9,1]
 	dflt_data$[1,0]="CUSTOMER_ID"
 	dflt_data$[1,1]=cp_cust_id$
@@ -26,7 +24,7 @@ rem --- or using J2Pay library, as specified in ars_cc_custsvc
 	dflt_data$[6,0]="ZIP_CODE"
 	dflt_data$[6,1]=callpoint!.getColumnData("ARM_CUSTMAST.ZIP_CODE")
 	dflt_data$[7,0]="CNTRY_ID"
-	dflt_data$[7,1]=iff(cntry_id$<>"",cntry_id$,callpoint!.getDevObject("dflt_cntry_id"))
+	dflt_data$[7,1]=callpoint!.getColumnData("ARM_CUSTMAST.CNTRY_ID")
 	dflt_data$[8,0]="PHONE_NO"
 	dflt_data$[8,1]=callpoint!.getColumnData("ARM_CUSTMAST.PHONE_NO")
 	dflt_data$[9,0]="EMAIL_ADDR"
@@ -41,7 +39,6 @@ rem --- or using J2Pay library, as specified in ars_cc_custsvc
 :                table_chans$[all],
 :                "",
 :                dflt_data$[all]
-
 [[ARM_CUSTMAST.AOPT-RESP]]
 rem --- view electronic receipt response, if applicable 
 	user_id$=stbl("+USER_ID")  
@@ -912,14 +909,11 @@ rem --- disable credit card payment and view response options if not processing 
 		if ars_cc_custsvc.use_custsvc_cc$="Y"
 			callpoint!.setOptionEnabled("PYMT",1)
 			callpoint!.setOptionEnabled("RESP",1)
-			callpoint!.setDevObject("interface_tp",ars_cc_custsvc.interface_tp$)
-			callpoint!.setDevObject("dflt_cntry_id",ars_cc_custsvc.dflt_cntry_id$)
 		else
 			callpoint!.setOptionEnabled("PYMT",0)
 			callpoint!.setOptionEnabled("RESP",0)
 		endif
 	wend
-
 [[ARM_CUSTMAST.<CUSTOM>]]
 rem =======================================================
 create_widgets:rem --- create pie and bar widgets to show aged balance (bar in case credits)
