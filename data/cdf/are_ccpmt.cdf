@@ -115,7 +115,7 @@ rem --- this avoids re-running this code via the ASVA (Barista re-validates last
 
 		are_cashhdr.firm_id$=firm_id$
 		are_cashhdr.customer_id$=callpoint!.getColumnData("ARE_CCPMT.CUSTOMER_ID")
-		are_cashhdr.receipt_date$=stbl("+SYSTEM_DATE")
+		are_cashhdr.receipt_date$=callpoint!.getColumnData("ARE_CCPMT.RECEIPT_DATE")
 		are_cashhdr.cash_rec_cd$=cash_cd$
 
 		receipt_found=0
@@ -153,9 +153,12 @@ rem --- this avoids re-running this code via the ASVA (Barista re-validates last
 
 		rem --- Get deposit info, supplying deposit number that must be used if this receipt already exists and contains a deposit ID
 
-		callpoint!.setDevObject("deposit_id","")
-
 		if callpoint!.getDevObject("br_interface")="Y" then
+
+			callpoint!.setDevObject("deposit_id","")
+			xwk$=stbl("+cc_cash_rec_cd",ars_cc_custsvc.cash_rec_cd$);rem --- don't allow cash rec code to be changed on deposit form
+			xwk$=stbl("+cc_receipt_date",callpoint!.getColumnData("ARE_CCPMT.RECEIPT_DATE"))
+
 			dim dflt_data$[4,1]
 			dflt_data$[1,0]="DESCRIPTION"
 			dflt_data$[1,1]=dflt_deposit_desc$
@@ -173,6 +176,9 @@ rem --- this avoids re-running this code via the ASVA (Barista re-validates last
 
 			call stbl("+DIR_SYP")+"bam_run_prog.bbj", "ARE_DEPOSIT", stbl("+USER_ID"), "MNT", key_pfx$, table_chans$[all],"",dflt_data$[all]
 			callpoint!.setColumnData("ARE_CCPMT.DEPOSIT_ID",str(callpoint!.getDevObject("deposit_id")),1)
+
+			xwk$=stbl("!CLEAR","+cc_cash_rec_cd")
+			xwk$=stbl("!CLEAR","+cc_receipt_date")		
 
 			rem --- DEPOSIT_ID is required, so terminate process if we don't have one.
 			if callpoint!.getDevObject("deposit_id")=""
@@ -939,7 +945,7 @@ rem --- Open files
 	open_tables$[5]="ARE_CASHDET",open_opts$[5]="OTA"
 	open_tables$[6]="ARE_CASHBAL",open_opts$[6]="OTA"
 	open_tables$[7]="ARS_CC_CUSTSVC",open_opts$[7]="OTA"
-	open_tables$[8]="ARC_GATEWAYDET",open_opts$[8]="OTA"
+	open_tables$[8]="ARS_GATEWAYDET",open_opts$[8]="OTA"
 	open_tables$[9]="ARS_PARAMS",open_opts$[9]="OTA"
 
 	gosub open_tables
@@ -1421,21 +1427,21 @@ get_gateway_config:rem --- get config for specified gateway
 rem --- in: gateway_id$; out: hashmap gw_config! containing config entries
 rem ==========================================================================
 
-	arc_gatewaydet=fnget_dev("ARC_GATEWAYDET")
-	dim arc_gatewaydet$:fnget_tpl$("ARC_GATEWAYDET")
+	ars_gatewaydet=fnget_dev("ARS_GATEWAYDET")
+	dim ars_gatewaydet$:fnget_tpl$("ARS_GATEWAYDET")
 
 	encryptor! = new Encryptor()
 	config_id$ = "GATEWAY_AUTH"
 	encryptor!.setConfiguration(config_id$)
 
-	read(arc_gatewaydet,key=firm_id$+gateway_id$,knum=0,dom=*next)
+	read(ars_gatewaydet,key=firm_id$+gateway_id$,knum=0,dom=*next)
 	gw_config!=new java.util.HashMap()
 
 	while 1
-		readrecord(arc_gatewaydet,end=*break)arc_gatewaydet$
-		if pos(firm_id$+gateway_id$=arc_gatewaydet$)<>1 then break
+		readrecord(ars_gatewaydet,end=*break)ars_gatewaydet$
+		if pos(firm_id$+gateway_id$=ars_gatewaydet$)<>1 then break
 		if gw_config!.get("gateway_id")=null() then gw_config!.put("gateway_id",gateway_id$)
-		cfg_value$=encryptor!.decryptData(cvs(arc_gatewaydet.config_value$,3))
+		cfg_value$=encryptor!.decryptData(cvs(ars_gatewaydet.config_value$,3))
 		if pos("token>"=cfg_value$)
 			dim msg_tokens$[1]
 			msg_tokens$[0]=Translate!.getTranslation("AON_INVALID_GATEWAY_CONFIG","One or more configuration values for the payment gateway are invalid.",1)+$0A$+"("+gateway_id$+")"
@@ -1445,7 +1451,7 @@ rem ==========================================================================
 			break
 		else
 			msg_id$=""
-			gw_config!.put(cvs(arc_gatewaydet.config_attr$,3),cfg_value$)
+			gw_config!.put(cvs(ars_gatewaydet.config_attr$,3),cfg_value$)
 		endif
 	wend
 

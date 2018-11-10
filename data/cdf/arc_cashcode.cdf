@@ -15,7 +15,7 @@ rem --- launch config form for selected gateway
 	key_pfx$=firm_id$+gateway$
 
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:		"ARC_GATEWAYHDR",
+:		"ARS_GATEWAYHDR",
 :		stbl("+USER_ID"),
 :		"",
 :		key_pfx$,
@@ -53,7 +53,7 @@ rem --- open tables
 
 	num_files=4
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="ARC_GATEWAYHDR",open_opts$[1]="OTA"
+	open_tables$[1]="ARS_GATEWAYHDR",open_opts$[1]="OTA"
 	open_tables$[2]="ARS_PARAMS",open_opts$[2]="OTA"
 	open_tables$[3]="ADM_PROCMASTER",open_opts$[3]="OTA"
 	open_tables$[4]="ADM_PROCDETAIL",open_opts$[4]="OTA"
@@ -108,24 +108,24 @@ rem --- Disable G/L Accounts if G/L not installed
 
 rem ============================================================
 get_gateways:rem --- load up listbutton with supported gateways for given or selected interface type
-rem --- in: interface_tp$, column$ (ars_cc_custsvc.gateway_id or ars_cc_customer.gateway_id) to set list for
+rem --- in: interface_tp$, column$ in ars_cc_custsvc to set list for
 rem ============================================================
 
-	arc_gatewayhdr=fnget_dev("ARC_GATEWAYHDR")
-	dim arc_gatewayhdr$:fnget_tpl$("ARC_GATEWAYHDR")
+	ars_gatewayhdr=fnget_dev("ARS_GATEWAYHDR")
+	dim ars_gatewayhdr$:fnget_tpl$("ARS_GATEWAYHDR")
 
 	ldat$=""
 
 	codeVect!=BBjAPI().makeVector()
 	descVect!=BBjAPI().makeVector()
 
-	read(arc_gatewayhdr,key=firm_id$,dom=*next)
+	read(ars_gatewayhdr,key=firm_id$,dom=*next)
 	while 1
-		readrecord(arc_gatewayhdr,end=*break)arc_gatewayhdr$
-		if pos(firm_id$=arc_gatewayhdr$)<>1 then break
-		if pos(arc_gatewayhdr.interface_tp$=interface_tp$+"B")
-			codeVect!.add(arc_gatewayhdr.gateway_id$)
-			descVect!.add(arc_gatewayhdr.description$)
+		readrecord(ars_gatewayhdr,end=*break)ars_gatewayhdr$
+		if pos(firm_id$=ars_gatewayhdr$)<>1 then break
+		if pos(ars_gatewayhdr.interface_tp$=interface_tp$+"B")
+			codeVect!.add(ars_gatewayhdr.gateway_id$)
+			descVect!.add(ars_gatewayhdr.description$)
 		endif
 	wend
 

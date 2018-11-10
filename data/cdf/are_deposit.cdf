@@ -1,3 +1,18 @@
+[[ARE_DEPOSIT.ADIS]]
+rem --- if coming from Credit Card Payment form, make sure selected deposit is for same cash rec cd and date
+
+	cc_cash_rec_cd$=stbl("+cc_cash_rec_cd",err=*next)
+	cc_receipt_date$=stbl("+cc_receipt_date",err=*next)
+
+	if cc_cash_rec_cd$<>"" and cc_cash_rec_cd$<>callpoint!.getColumnData("ARE_DEPOSIT.CASH_REC_CD")
+		escape;rem CAH rec cd <> cc form
+	endif
+
+	if cc_receipt_date$<>"" and cc_receipt_date$<>callpoint!.getColumnData("ARE_DEPOSIT.DEPOSIT_DATE")
+		escape;rem CAH date <> cc form
+	endif	
+[[ARE_DEPOSIT.ARNF]]
+callpoint!.setStatus("MODIFIED")
 [[ARE_DEPOSIT.BTBL]]
 rem --- Get Batch information
 	callpoint!.setTableColumnAttribute("ARE_DEPOSIT.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
@@ -160,6 +175,7 @@ rem --- Open/Lock files
 
 	gosub open_tables
 	if status$ <> ""  then goto std_exit
+
 [[ARE_DEPOSIT.CASH_REC_CD.AVAL]]
 rem --- The Cash Receipts Code’s GL Cash Account must be set up in the Bank Account Master file GLM_BANKMASTER (glm-05)
 	cashcode_dev=fnget_dev("@ARC_CASHCODE")
