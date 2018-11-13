@@ -12,9 +12,11 @@ rem ==========================================================================
     use java.io.FileWriter
     use java.util.HashMap
     use java.util.Properties
+    use java.util.Vector
     use ::bbtranslator.bbj::BBTranslator
     use ::ado_file.src::FileObject
-    
+    use ::adc_copyaon.aon::CopyAonDir
+
     setesc std_error
     seterr std_error
 
@@ -306,6 +308,43 @@ rem --- Process needed version conversion programs
         meter_action$="MTR-LST"
         gosub disp_meter
         print(log_dev)meter_text$
+    next i
+
+rem --- Update firm ZZ records in "required" data files
+    declare Vector fileVect!
+    defaultDataDir$=""
+    defaultDataDir$=FileObject.fixPath(stbl("+DIR_DAT",err=*next), "/")
+    bbjHome$=java.lang.System.getProperty("basis.BBjHome")
+    
+    fileVect! = CopyAonDir.getRequiredFiles(2)
+    for i=0 to fileVect!.size()-1
+        thisFile$=fileVect!.get(i)
+        
+        rem --- Open file in this installation
+        thisFile_dev=unt
+        dataDir$=defaultDataDir$
+        dataDir$=stbl("+"+cvs(thisFile$(1,2),4)+"DATA",err=*next)
+        open(thisFile_dev,err=*continue)dataDir$+thisFile$
+
+        rem --- Open demo data file in BBjHome installation
+        demoFile_dev=unt
+        demoFile$=(new File(bbjHome$+"/apps/aon/data/"+thisFile$)).getAbsolutePath()
+        open(demoFile_dev,err=*continue)demoFile$
+
+        rem --- Copy demo data ZZ records to installation's data files
+        read(demoFile_dev,key="ZZ",dom=*next)
+        while 1
+            key$=key(demoFile_dev,err=*break)
+            if len(key$)>=2 and key$(1,2)="ZZ"
+                readrecord(demoFile_dev,key=key$)record$
+                writerecord(thisFile_dev)record$
+            else
+                read(thisFile_dev,end=*break)
+            endif
+        wend
+
+        close(thisFile_dev,err=*next)
+        close(demoFile_dev,err=*next)
     next i
 	
 done: rem --- All done
