@@ -141,7 +141,7 @@ rem --- init
 
 rem --- init progress meter
 
-    total_recs=10;rem alter as more 'create procedure' statements are added - eventually will be table driven
+    total_recs=60;rem alter as more 'create procedure' statements are added - eventually will be table driven
     curr_rec=0
     task_val$="BUILDSPROC"
     task_desc$="Create SPROC Defs"
@@ -1092,10 +1092,39 @@ rem ==============================================
 
     gosub create_sproc_def		
 	
-	
 rem --- Done with SPROCs. Now do VIEWs
-rem --- As of 10/2013, no VIEWs are needed
+rem --- As of 11/2018, no VIEWs are needed
 
+rem --- Add AddonSoftware Web Context for demo installation
+
+    use java.io.File
+    declare BBjAdmin admin!
+    declare BBjJettyServerConfiguration serverConfig!
+    declare BBjJettyContextConfiguration contextConfig!
+    
+    admin! = BBJAPI().getAdmin("admin","admin123")
+    serverConfig! = admin!.getJettyServerConfig()
+    bbjHome$=java.lang.System.getProperty("basis.BBjHome")
+    
+    rem --- Make sure we start with a clean fresh context
+    serverConfig!.removeCustomContext("AddonSoftware")
+    contextConfig! = serverConfig!.createCustomContext("AddonSoftware")
+
+    contextConfig!.enable()
+    contextConfig!.setDocBase((new File(bbjHome$+"/app/aon/web")).getAbsolutePath())
+    contextConfig!.setPath("/AddonSoftware ")
+    contextConfig!.setHTTP(0); rem --- Protocol: Allow insecure HPPT connections
+    contextConfig!.setHttpPort(8888)
+    
+    rem --- BBJSP Servlets
+    contextConfig!.addBBjspServlet("AuthNetWebhook", "/AuthNetWebhook", (new File(bbjHome$+"/app/aon/web/AuthNetWebhook.aon")).getAbsolutePath())
+    contextConfig!.addBBjspServlet("PayPalSilentPost", "/PayPalSilentPost", (new File(bbjHome$+"/app/aon/web/PayPalSilentPost.aon")).getAbsolutePath())
+    contextConfig!.addBBjspServlet("PayPalSilentPostFailure", "/PayPalSilentPostFailure", (new File(bbjHome$+"/app/aon/web/PayPalSilentPostFailure.aon")).getAbsolutePath())
+    contextConfig!.addBBjspServlet("PayPalError", "/PayPalError", (new File(bbjHome$+"/app/aon/web/PayPalError.aon")).getAbsolutePath())
+    
+    rem --- Session Cookie
+    contextConfig!.setSessionCookieHttpOnly(1)
+    contextConfig!.setSessionCookieSecure(1)
 
 done:
 
