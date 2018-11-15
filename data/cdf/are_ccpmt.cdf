@@ -67,18 +67,20 @@ rem --- this avoids re-running this code via the ASVA (Barista re-validates last
 				config_attribs!.add("USER")
 				config_attribs!.add("PWD")
 				config_attribs!.add("testMode")
+				config_attribs!.add("server")
 				config_attribs!.add("requestTokenURL")
 				config_attribs!.add("launchURL")
-				config_attribs!.add("silentPostURL")
-				config_attribs!.add("silentPostFailureURL")
-				config_attribs!.add("silentPostFailureURL")
+				config_attribs!.add("silentPostServlet")
+				config_attribs!.add("silentPostFailureServlet")
+				config_attribs!.add("silentPostFailureServlet")
 			else
 				config_attribs!.add("name")
 				config_attribs!.add("transactionKey")
-				config_attribs!.add("launchURL")
+				config_attribs!.add("server")
+				config_attribs!.add("launchPage")
 				config_attribs!.add("gatewayURL")
-				config_attribs!.add("confirmationURL")
-				config_attribs!.add("webhookURL")
+				config_attribs!.add("confirmationPage")
+				config_attribs!.add("webhookServlet")
 				config_attribs!.add("environment")
 				config_attribs!.add("testMode")
 			endif
@@ -155,9 +157,12 @@ rem --- this avoids re-running this code via the ASVA (Barista re-validates last
 
 		if callpoint!.getDevObject("br_interface")="Y" then
 
-			callpoint!.setDevObject("deposit_id","")
+			rem --- init temp stbls for use inside deposit form
+
 			xwk$=stbl("+cc_cash_rec_cd",ars_cc_custsvc.cash_rec_cd$);rem --- don't allow cash rec code to be changed on deposit form
 			xwk$=stbl("+cc_receipt_date",callpoint!.getColumnData("ARE_CCPMT.RECEIPT_DATE"))
+
+			callpoint!.setDevObject("deposit_id","")
 
 			dim dflt_data$[4,1]
 			dflt_data$[1,0]="DESCRIPTION"
@@ -175,22 +180,16 @@ rem --- this avoids re-running this code via the ASVA (Barista re-validates last
 			endif
 
 			call stbl("+DIR_SYP")+"bam_run_prog.bbj", "ARE_DEPOSIT", stbl("+USER_ID"), "MNT", key_pfx$, table_chans$[all],"",dflt_data$[all]
-			callpoint!.setColumnData("ARE_CCPMT.DEPOSIT_ID",str(callpoint!.getDevObject("deposit_id")),1)
+			callpoint!.setColumnData("ARE_CCPMT.DEPOSIT_ID",str(callpoint!.getDevObject("deposit_id")),1)	
 
-			xwk$=stbl("!CLEAR","+cc_cash_rec_cd")
-			xwk$=stbl("!CLEAR","+cc_receipt_date")		
-
-			rem --- DEPOSIT_ID is required, so terminate process if we don't have one.
+			rem --- DEPOSIT_ID is required, so ABORT if we didn't select one
 			if callpoint!.getDevObject("deposit_id")=""
-				callpoint!.setStatus("EXIT")
-
-				rem --- Remove software lock on batch, if batching
-				batch$=stbl("+BATCH_NO",err=*next)
-				if num(batch$)<>0
-					gosub remove_batch_lock
-					break
-				endif
+				callpoint!.setStatus("ABORT")
 			endif
+
+			rem --- clear temp stbls
+			xwk$=stbl("!CLEAR","+cc_cash_rec_cd")
+			xwk$=stbl("!CLEAR","+cc_receipt_date")	
 		endif
 	endif
 [[ARE_CCPMT.CASH_REC_CD.BINQ]]
@@ -572,6 +571,9 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 					order!.setInvoiceNumber(cust_id$)
 					order!.setDescription(sid$)
 
+					confirmation_page$=fnbuildURL$(gw_config!.get("confirmationPage"))
+					launch_page$=fnbuildURL$(gw_config!.get("launchPage"))
+
 					ApiOperationBase.setEnvironment(Environment.valueOf(gw_config!.get("environment")))
 
 					merchantAuthenticationType!  = new MerchantAuthenticationType() 
@@ -595,7 +597,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 
 					setting3! = new SettingType()
 					setting3!.setSettingName("hostedPaymentReturnOptions")
-					setting3!.setSettingValue("{"+$22$+"showReceipt"+$22$+": true, "+$22$+"url"+$22$+": "+$22$+gw_config!.get("confirmationURL")+$22$+", "+$22$+"urlText"+$22$+": "+$22$+"Continue"+$22$+"}")
+					setting3!.setSettingValue("{"+$22$+"showReceipt"+$22$+": true, "+$22$+"url"+$22$+": "+$22$+confirmation_page$+$22$+", "+$22$+"urlText"+$22$+": "+$22$+"Continue"+$22$+"}")
 
 					setting4! = new SettingType()
 					setting4!.setSettingName("hostedPaymentPaymentOptions")
@@ -630,7 +632,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 					if authResponse!.getMessages().getResultCode()=MessageTypeEnum.OK
 						rem --- set devObject to indicate 'payment' status - check when exiting and warn if still in "payment" status (i.e., no response received yet)
 						callpoint!.setDevObject("payment_status","payment")
-						returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway_id$+" -t"+authResponse!.getToken()+" -a"+masked_amt$+" -l"+gw_config!.get("launchURL")+" -u"+gw_config!.get("gatewayURL"))
+						returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway_id$+" -t"+authResponse!.getToken()+" -a"+masked_amt$+" -l"+launch_page$+" -u"+gw_config!.get("gatewayURL"))
 					else
 						trans_msg$=Translate!.getTranslation("AON_UNABLE_TO_ACQUIRE_SECURE_TOKEN")+$0a$+authResponse!.getMessages().getMessage().get(0).getCode()+$0a$+authResponse!.getMessages().getMessage().get(0).getText()
 						dim msg_tokens$[1]
@@ -749,6 +751,7 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 		endif
 
 		gosub remove_batch_lock
+		if callpoint!.getDevObject("br_interface")="Y" then gosub update_deposit
 
 		dim msg_tokens$[1]
 		msg_tokens$[0]=trans_msg$+$0A$+cash_msg$
@@ -936,7 +939,7 @@ rem --- get/store mask
 
 rem --- Open files
 
-	num_files=9
+	num_files=10
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ART_INVHDR",open_opts$[1]="OTA"
 	open_tables$[2]="ART_RESPHDR",open_opts$[2]="OTA"
@@ -947,6 +950,7 @@ rem --- Open files
 	open_tables$[7]="ARS_CC_CUSTSVC",open_opts$[7]="OTA"
 	open_tables$[8]="ARS_GATEWAYDET",open_opts$[8]="OTA"
 	open_tables$[9]="ARS_PARAMS",open_opts$[9]="OTA"
+	open_tables$[10]="ARE_DEPOSIT",open_opts$[10]="OTA"
 
 	gosub open_tables
 
@@ -955,6 +959,7 @@ rem --- Get Bank Rec interface flag
 	dim ars_params$:fnget_tpl$("ARS_PARAMS")
 	readrecord(ars_params,key=firm_id$+"AR00",dom=std_missing_params)ars_params$
 	callpoint!.setDevObject("br_interface",ars_params.br_interface$)
+	callpoint!.setDevObject("deposit_id","")
 
 rem --- Interface to gl?
 	gl$="N"
@@ -1264,7 +1269,7 @@ rem ==========================================================================
 
 	cash_msg$=Translate!.getTranslation("AON_CASH_RECEIPT_HAS_BEEN_ENTERED","Cash Receipt has been entered.",1)
 
-	batch_no$=stbL("+BATCH_NO")
+	batch_no$=stbl("+BATCH_NO")
 	deposit_id$=callpoint!.getDevObject("deposit_id")
 
 	redim are_cashhdr$
@@ -1423,6 +1428,22 @@ rem ==========================================================================
 	return
 
 rem ==========================================================================
+update_deposit:rem --- update deposit record
+rem ==========================================================================
+
+	are_deposit=fnget_dev("ARE_DEPOSIT")
+	dim are_deposit$:fnget_tpl$("ARE_DEPOSIT")
+	batch_no$=callpoint!.getColumnData("ARE_CCPMT.BATCH_NO")
+	deposit_id$=callpoint!.getColumnData("ARE_CCPMT.DEPOSIT_ID")
+	extractrecord(are_deposit,key=firm_id$+batch_no$+"E"+deposit_id$,knum="AO_BATCH_STAT",dom=*next)are_deposit$
+	if are_deposit.deposit_id$=deposit_id$ then
+		are_deposit.tot_deposit_amt=are_deposit.tot_deposit_amt+num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT"))
+		writerecord(are_deposit)are_deposit$
+	endif
+
+	return
+
+rem ==========================================================================
 get_gateway_config:rem --- get config for specified gateway
 rem --- in: gateway_id$; out: hashmap gw_config! containing config entries
 rem ==========================================================================
@@ -1475,6 +1496,8 @@ rem --- Only used when interface_tp$="A" (so sensitive info like credit card num
 	return
 
 rem =====================================================================
+rem functions
+rem =====================================================================
 rem --- parse PayPal response text
 rem --- wkx0$=response, wkx1$=key to look for, wkx2$=delim used to separate key/value pairs
 
@@ -1490,6 +1513,14 @@ def fnparse$(wkx0$,wkx1$,wkx2$)
 		endif
 	endif
 	return wkx3$
+	fnend
+
+def fnbuildURL$(config_value$)
+
+	wkURL$="https://"+gw_config!.get("server")
+	wkURL$=iff(wkURL$(len(wkURL$),1)="/",wkURL$,wkURL$+"/")
+	wkURL$=wkURL$+cvs(stbl("+DBNAME_API"),11)+"/"+config_value$
+	return wkURL$
 	fnend
 
 #include std_missing_params.src

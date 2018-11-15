@@ -17,6 +17,7 @@
     <h2>Processing payment </h2>
 	
 	<p id="paid"></p>
+	<p>Redirecting...</p>
 
 	<script type="text/javascript">
 		var pd = getUrlVars()["amount"];
@@ -30,17 +31,16 @@
 	}
 	</script>
 
-    <form method="post" action="" onsubmit="this.action=get_action();"> <!-- "https://test.authorize.net/payment/payment" from adc_gatewaydet config file -->
+    <form id="payment" method="post" action=""> <!-- "https://test.authorize.net/payment/payment" from adc_gatewaydet config file -->
         <input id="mytoken" type="hidden" name="token" value= "" > 
-        <input type="submit" value="Continue to Authorize.net Hosted Payment Page">	
-		
+        <!-- input type="submit" value="Redirecting to Authorize.net Hosted Payment Page">	-->	
+	
 	<script type="text/javascript">
 		var mytoken = getUrlVars()["authtoken"];
 		document.getElementById('mytoken').value = mytoken;
+		$("#payment").attr("action", get_action());
+		$("#payment").submit();
 	</script>
-	
-    </form>
-
-	
+	</form>	
   </body>
 </html>
