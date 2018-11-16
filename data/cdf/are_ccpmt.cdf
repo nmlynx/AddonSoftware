@@ -266,6 +266,9 @@ gosub reset_timer
 [[ARE_CCPMT.BEND]]
 rem --- if vectInvoices! contains any selected items, get confirmation that user really wants to exit
 
+	progWin!=callpoint!.getDevObject("progwin")
+	if progWin!<>null() then progWin!.destroy()
+
 	vectInvoices!=callpoint!.getDevObject("vectInvoices")
 	grid_cols = num(callpoint!.getDevObject("grid_cols"))
 	selected=0
@@ -546,6 +549,9 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 					if content!.contains("RESULT=0")
 						rem --- set devObject to indicate 'payment' status - check when exiting and warn if still in "payment" status (i.e., no response received yet)
 						callpoint!.setDevObject("payment_status","payment")
+						setprogbar!=BBjAPI().getNamespace("aon","credit_progbar",1)
+						setprogbar!.setValue(sid$,"init")
+						setprogbar!.setCallbackForVariableChange(sid$,"custom_event")
 						returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway_id$+" -t"+tokenID$+" -s"+sid$+" -l"+gw_config!.get("launchURL"))
 					else
 						trans_msg$=Translate!.getTranslation("AON_UNABLE_TO_ACQUIRE_SECURE_TOKEN")+$0A$+content!
@@ -572,6 +578,8 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 					order!.setDescription(sid$)
 
 					confirmation_page$=fnbuildURL$(gw_config!.get("confirmationPage"))
+					embed_info$="sid="+sid$
+					confirmation_page$=confirmation_page$+"?"+URLEncoder.encode(embed_info$, "UTF-8")
 					launch_page$=fnbuildURL$(gw_config!.get("launchPage"))
 
 					ApiOperationBase.setEnvironment(Environment.valueOf(gw_config!.get("environment")))
@@ -632,7 +640,10 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 					if authResponse!.getMessages().getResultCode()=MessageTypeEnum.OK
 						rem --- set devObject to indicate 'payment' status - check when exiting and warn if still in "payment" status (i.e., no response received yet)
 						callpoint!.setDevObject("payment_status","payment")
-						returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway_id$+" -t"+authResponse!.getToken()+" -a"+masked_amt$+" -l"+launch_page$+" -u"+gw_config!.get("gatewayURL"))
+						setprogbar!=BBjAPI().getNamespace("aon","credit_progbar",1)
+						setprogbar!.setValue(sid$,"init")
+						setprogbar!.setCallbackForVariableChange(sid$,"custom_event")
+						returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway_id$+" -t"+authResponse!.getToken()+" -a"+masked_amt$+" -l"+launch_page$+" -u"+gw_config!.get("gatewayURL")+" -s"+sid$)
 					else
 						trans_msg$=Translate!.getTranslation("AON_UNABLE_TO_ACQUIRE_SECURE_TOKEN")+$0a$+authResponse!.getMessages().getMessage().get(0).getCode()+$0a$+authResponse!.getMessages().getMessage().get(0).getText()
 						dim msg_tokens$[1]
@@ -674,6 +685,7 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 		cash_msg$=""
 
 		ns_name$=ev!.getNamespaceName()
+		ns!=BBjAPI().getExistingNamespace(ns_name$)
 		if pos("authorize"=ns_name$)
 			rem --- response (webhook) from Authorize.net
 			newValue! = new JSONObject(ev!.getNewValue())
@@ -722,6 +734,7 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 			else
 				trans_msg$=Translate!.getTranslation("AON_UNABLE_TO_PROCESS_GETTRANSACTIONDETAILSREQUEST_METHOD")
 			endif
+			ns!.removeCallbackForNamespace()
 
 		else
 			if pos("payflowpro"=ns_name$)
@@ -747,17 +760,37 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 					rem --- set devObject to indicate 'response' status
 					callpoint!.setDevObject("payment_status","response")
 				endif
+				sid$=callpoint!.getDevObject("sid")
+				ns!.removeCallbackForVariableChange(sid$)
+			else
+				if pos("credit_progbar"=ns_name$)
+					bbjHome$ =  System.getProperty("basis.BBjHome")
+					title$=form!.getTitle()
+					progtext$=Translate!.getTranslation("AON_AWAITING_RESPONSE","Awaiting response",1)+"..."
+					progWin! = SysGui!.addWindow(SysGUI!.getAvailableContext(),Form!.getX()+Form!.getWidth()/2,Form!.getY()+Form!.getHeight()/2,300,75,title$,$00040000$)
+					progWin!.addImageCtrl(100,15,15,33,33,bbjHome$+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+					sText!=progWin!.addStaticText(101,75,20,150,50,progtext$)
+					font! = sText!.getFont()
+					fontBold! = SysGui!.makeFont(font!.getName(), font!.getSize()+2, SysGui!.BOLD)
+					sText!.setFont(fontBold!)
+					callpoint!.setDevObject("progwin",progWin!)
+					break
+				endif
 			endif
 		endif
 
 		gosub remove_batch_lock
 		if callpoint!.getDevObject("br_interface")="Y" then gosub update_deposit
 
+		progWin!=callpoint!.getDevObject("progwin")
+		if progWin!<>null() then progWin!.destroy()
+
 		dim msg_tokens$[1]
 		msg_tokens$[0]=trans_msg$+$0A$+cash_msg$
 		msg_id$="GENERIC_OK"
 		gosub disp_message
 		callpoint!.setStatus("EXIT")
+
 	else
 		if ev!.getEventName()="BBjTimerEvent" and gui_event.y=10000
 			BBjAPI().removeTimer(10000)
@@ -891,6 +924,7 @@ rem --- Declare classes used
 
 	use java.math.BigDecimal
 	use java.math.RoundingMode
+	use java.net.URLEncoder
 	use java.util.Iterator
 	use java.util.UUID
 
@@ -931,7 +965,7 @@ rem --- Declare classes used
 	use ::REST/BBWebClient.bbj::BBWebRequest
 	use ::REST/BBWebClient.bbj::BBWebResponse
 
-rem --- get/store mask
+rem --- set devObjects
 	call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",ar_a_mask$,0,0
 	callpoint!.setDevObject("ar_a_mask",ar_a_mask$)
 	callpoint!.setDevObject("payment_status","")
