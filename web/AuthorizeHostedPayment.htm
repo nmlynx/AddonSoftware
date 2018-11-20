@@ -1,7 +1,6 @@
 <html>
   <head>
     <title></title>
-    <script type="text/javascript" src="/files/basis/clouds/js/jquery.js"></script> <!-- JQUERY: LIBRARY -->
 	<script type="text/javascript">
 	function getUrlVars() {
 		var vars = {};
@@ -41,8 +40,9 @@
 	<script type="text/javascript">
 		var mytoken = getUrlVars()["authtoken"];
 		document.getElementById('mytoken').value = mytoken;
-		$("#payment").attr("action", get_action());
-		$("#payment").submit();
+        var paymentForm = document.getElementById('payment');
+        paymentForm.setAttribute('action', get_action());
+		paymentForm.submit();
 	</script>
 	</form>	
   </body>

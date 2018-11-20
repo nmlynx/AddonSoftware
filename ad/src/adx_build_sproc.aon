@@ -1119,22 +1119,25 @@ rem --- Add AddonSoftware Web Context for demo installation
     serverConfig! = admin!.getJettyServerConfig()
     bbjHome$=java.lang.System.getProperty("basis.BBjHome")
 
+	db_name$="AddonSoftware"
+	db_path$=bbjHome$+"/apps/aon/web"
+
     rem --- Make sure we start with a clean fresh context
-    serverConfig!.removeCustomContext("AddonSoftware")
-    contextConfig! = serverConfig!.createCustomContext("AddonSoftware")
+    serverConfig!.removeCustomContext(db_name$)
+    contextConfig! = serverConfig!.createCustomContext(db_name$)
 
     contextConfig!.enable()
-    contextConfig!.setDocBase((new File(bbjHome$+"/apps/aon/web")).getAbsolutePath())
-    contextConfig!.setPath("/AddonSoftware ")
+    contextConfig!.setDocBase((new File(db_path$)).getAbsolutePath())
+    contextConfig!.setPath("/"+db_name$)
     contextConfig!.setHTTP(0); rem --- Protocol: Allow insecure HPPT connections
     contextConfig!.setHttpPort(8888)
     
     rem --- BBJSP Servlets
-    contextConfig!.addBBjspServlet("AuthorizeWebhook", "/AuthorizeWebhook", (new File(bbjHome$+"/apps/aon/web/AuthorizeWebhook.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("AuthorizeConfirmation", "/AuthorizeConfirmation", (new File(bbjHome$+"/apps/aon/web/AuthorizeConfirmation.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("PayPalSilentPost", "/PayPalSilentPost", (new File(bbjHome$+"/apps/aon/web/PayPalSilentPost.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("PayPalSilentPostFailure", "/PayPalSilentPostFailure", (new File(bbjHome$+"/apps/aon/web/PayPalSilentPostFailure.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("PayPalError", "/PayPalError", (new File(bbjHome$+"/apps/aon/web/PayPalError.aon")).getAbsolutePath())
+    contextConfig!.addBBjspServlet("AuthorizeWebhook", "/AuthorizeWebhook", (new File(db_path$+"/AuthorizeWebhook.aon")).getAbsolutePath())
+    contextConfig!.addBBjspServlet("AuthorizeConfirmation", "/AuthorizeConfirmation", (new File(db_path$+"/AuthorizeConfirmation.aon")).getAbsolutePath())
+    contextConfig!.addBBjspServlet("PayPalSilentPost", "/PayPalSilentPost", (new File(db_path$+"/PayPalSilentPost.aon")).getAbsolutePath())
+    contextConfig!.addBBjspServlet("PayPalSilentPostFailure", "/PayPalSilentPostFailure", (new File(db_path$+"/PayPalSilentPostFailure.aon")).getAbsolutePath())
+    contextConfig!.addBBjspServlet("PayPalError", "/PayPalError", (new File(db_path$+"/PayPalError.aon")).getAbsolutePath())
     
     rem --- Session Cookie
     contextConfig!.setSessionCookieHttpOnly(1)
