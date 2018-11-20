@@ -252,7 +252,8 @@ rem --- Run BIM bai_install_manager.bbj program via synchronous system call beca
     contextConfig!.setHttpPort(8888)
 
     rem --- BBJSP Servlets
-    contextConfig!.addBBjspServlet("AuthNetWebhook", "/AuthNetWebhook", (new File(newAonLoc$+"/aon/web/AuthNetWebhook.aon")).getAbsolutePath())
+    contextConfig!.addBBjspServlet("AuthorizeWebhook", "/AuthorizeWebhook", (new File(newAonLoc$+"/aon/web/AuthorizeWebhook.aon")).getAbsolutePath())
+	contextConfig!.addBBjspServlet("AuthorizeConfirmation", "/AuthorizeConfirmation", (new File(newAonLoc$+"/aon/web/AuthorizeConfirmation.aon")).getAbsolutePath())
     contextConfig!.addBBjspServlet("PayPalSilentPost", "/PayPalSilentPost", (new File(newAonLoc$+"/aon/web/PayPalSilentPost.aon")).getAbsolutePath())
     contextConfig!.addBBjspServlet("PayPalSilentPostFailure", "/PayPalSilentPostFailure", (new File(newAonLoc$+"/aon/web/PayPalSilentPostFailure.aon")).getAbsolutePath())
     contextConfig!.addBBjspServlet("PayPalError", "/PayPalError", (new File(newAonLoc$+"/aon/web/PayPalError.aon")).getAbsolutePath())
