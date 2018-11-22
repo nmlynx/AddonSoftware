@@ -1128,7 +1128,7 @@ rem --- Add AddonSoftware Web Context for demo installation
 
     contextConfig!.enable()
     contextConfig!.setDocBase((new File(db_path$)).getAbsolutePath())
-    contextConfig!.setPath("/"+db_name$)
+    contextConfig!.setPath("/"+cvs(db_name$,11))
     contextConfig!.setHTTP(0); rem --- Protocol: Allow insecure HPPT connections
     contextConfig!.setHttpPort(8888)
     

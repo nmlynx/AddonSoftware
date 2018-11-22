@@ -267,7 +267,7 @@ gosub reset_timer
 rem --- if vectInvoices! contains any selected items, get confirmation that user really wants to exit
 
 	progWin!=callpoint!.getDevObject("progwin")
-	if progWin!<>null() then progWin!.destroy()
+	if progWin!<>null() then progWin!.destroy(err=*next)
 
 	vectInvoices!=callpoint!.getDevObject("vectInvoices")
 	grid_cols = num(callpoint!.getDevObject("grid_cols"))
@@ -783,7 +783,7 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 		if callpoint!.getDevObject("br_interface")="Y" then gosub update_deposit
 
 		progWin!=callpoint!.getDevObject("progwin")
-		if progWin!<>null() then progWin!.destroy()
+		if progWin!<>null() then progWin!.destroy(err=*next)
 
 		dim msg_tokens$[1]
 		msg_tokens$[0]=trans_msg$+$0A$+cash_msg$
