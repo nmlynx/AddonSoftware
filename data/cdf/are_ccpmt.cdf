@@ -282,7 +282,7 @@ rem --- if vectInvoices! contains any selected items, get confirmation that user
 		msg_id$="GENERIC_WARN_CANCEL"
 		dim msg_tokens$[1]
 		msg_tokens$[0]=Translate!.getTranslation("AON_PAYMENT_TRANSACTION_IN_PROCESS","Payment transaction in process. Response not yet received.",1)
-		msg_tokens$[0]=msg_tokens$[0]+Translate!.getTranslation("AON_MANUALLY_CREATE_CASH_RECEIPT","If you click OK to exit, you will need to manually confirm successful payment and enter the Cash Receipt.",1)
+		msg_tokens$[0]=msg_tokens$[0]+$0A$+Translate!.getTranslation("AON_MANUALLY_CREATE_CASH_RECEIPT","If you click OK to exit, you will need to manually confirm successful payment and enter the Cash Receipt.",1)
 		gosub disp_message
 		if msg_opt$<>"O" then callpoint!.setStatus("ABORT")
 	endif
@@ -474,6 +474,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 		endif
 
 		gosub remove_batch_lock
+		if callpoint!.getDevObject("br_interface")="Y" then gosub update_deposit
 
 		dim msg_tokens$[1]
 		msg_tokens$[0]=trans_msg$+$0A$+cash_msg$
@@ -767,12 +768,18 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 					bbjHome$ =  System.getProperty("basis.BBjHome")
 					title$=form!.getTitle()
 					progtext$=Translate!.getTranslation("AON_AWAITING_RESPONSE","Awaiting response",1)+"..."
-					progWin! = SysGui!.addWindow(SysGUI!.getAvailableContext(),Form!.getX()+Form!.getWidth()/2,Form!.getY()+Form!.getHeight()/2,300,75,title$,$00040000$)
-					progWin!.addImageCtrl(100,15,15,33,33,bbjHome$+"/utils/reporting/bbjasper/images/CreatingReport.gif")
-					sText!=progWin!.addStaticText(101,75,20,150,50,progtext$)
+					progWin! = SysGui!.addWindow(SysGUI!.getAvailableContext(),Form!.getX()+Form!.getWidth()/2,Form!.getY()+Form!.getHeight()/2,300,100,title$,$000C0000$)
+					nxt_ctlID=util.getNextControlID()
+					progWin!.addImageCtrl(nxt_ctlID,15,15,33,33,bbjHome$+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+					nxt_ctlID=util.getNextControlID()
+					sText!=progWin!.addStaticText(nxt_ctlID,75,20,150,50,progtext$)
 					font! = sText!.getFont()
 					fontBold! = SysGui!.makeFont(font!.getName(), font!.getSize()+2, SysGui!.BOLD)
 					sText!.setFont(fontBold!)
+					nxt_ctlID=util.getNextControlID()
+					cncl!=progWin!.addButton(nxt_ctlID,100,70,75,25,Translate!.getTranslation("AON_CANCEL"))
+					cncl!.setCallback(cncl!.ON_BUTTON_PUSH,"custom_event")
+					callpoint!.setDevObject("progwincancel",nxt_ctlID)
 					callpoint!.setDevObject("progwin",progWin!)
 					break
 				endif
@@ -905,6 +912,11 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 					case default
 					break
 				swend
+			else
+				if ev!.getEventName()="BBjButtonPushEvent" and ctl_ID=callpoint!.getDevObject("progwincancel")
+					progwin!=callpoint!.getDevObject("progwin")
+					progwin!.destroy()
+				endif
 			endif
 		endif
 	endif

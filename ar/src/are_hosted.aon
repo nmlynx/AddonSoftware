@@ -50,7 +50,7 @@ rem --- Add window for BBjHtmlView control
     htmlWin!.setCallback(htmlWin!.ON_CLOSE,"on_close")
     htmlWin!.setCallback(htmlWin!.ON_RESIZE,"on_resize")
 
-rem --- Add BBjHtmlView control package tracking URL
+rem --- Add BBjHtmlView control containing Authorize.net or PayFlow Pro hosted payment page
     ctrlID=100
     htmlView!=htmlWin!.addHtmlView(ctrlID,1,1,htmlWin!.getWidth()-2,htmlWin!.getHeight()-2,"")
     htmlView!.setUrl(hostedURL$)
