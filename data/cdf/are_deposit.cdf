@@ -7,8 +7,8 @@ rem --- if coming from Credit Card Payment form, must use cash rec cd and deposi
 	if cc_cash_rec_cd$<>"" or cc_receipt_date$<>"" 
 		callpoint!.setColumnEnabled("ARE_DEPOSIT.CASH_REC_CD",-1)
 		callpoint!.setColumnEnabled("ARE_DEPOSIT.DEPOSIT_DATE",-1)
+		callpoint!.setColumnEnabled("ARE_DEPOSIT.TOT_DEPOSIT_AMT",-1);rem --- deposit amt will be updated by credit card form
 	endif
-
 [[ARE_DEPOSIT.BOVE]]
 rem -- if coming from credit card payment, where date and cash rec code already established, create filters for those fields
 
