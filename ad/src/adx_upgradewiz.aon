@@ -609,7 +609,7 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
                 start_version$=iff(start_version$<>"",start_version$,end_version$)
     
                 xpos=pos("start_version="=line$)
-                line$=line$(1,xpos+len("start_version=")-1)+str(source_version:"00.00")+line$(xpos+len("start_version="))
+                line$=line$(1,xpos+len("start_version=")-1)+start_version$+line$(xpos+len("start_version="))
             endif
             if pos("modules="=line$) then
                 xpos=pos("modules="=line$)
