@@ -730,6 +730,10 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 						cash_msg$=""
 					endif
 					gosub write_to_response_log
+				else
+					rem --- if webhook response came in for a different transaction, just resume (keep waiting for OUR response)
+					rem --- this could happen if >1 session is accepting a credit card payment at the same time
+					break
 				endif
 				callpoint!.setDevObject("payment_status","response")
 			else
