@@ -60,7 +60,7 @@ rem -- setting a delete flag so we know in BREX not to bother checking if out of
 callpoint!.setDevObject("deleted","Y")
 [[POE_INVHDR.BTBL]]
 rem --- Open/Lock files
-files=18,begfile=1,endfile=files
+files=17,begfile=1,endfile=files
 dim files$[files],options$[files],chans$[files],templates$[files]
 
 rem files$[1]="",options$[1]=""
@@ -80,7 +80,6 @@ files$[14]="POC_LINECODE",options$[14]="OTA"
 files$[15]="APC_TERMSCODE",options$[15]="OTA"
 files$[16]="APC_TYPECODE",options$[16]="OTA"
 files$[17]="GLS_CALENDAR",options$[17]="OTA"
-files$[18]="POT_INVDET",options$[18]="OTA"
 
 call stbl("+DIR_SYP")+"bac_open_tables.bbj",
 :	begfile,
