@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2018-11-14
+ Report Date:   2018-11-29
  Report Branch: AddonSoftware 18.11
  Last Release:  AddonSoftware 18.10
 =======================================================================================================================================
@@ -593,3 +593,17 @@ check if there are any batches not in the batch file.
 ----
 Modified: data/bar/adm_procbatchmnt.xml
 Modified: data/cdf/adm_procbatchmnt.cdf
+
+=======================================================================================================================================
+Revision: 48abb2e526635d9b3e753a48d4aa54978b974b0f
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 11/29/2018 7:38:34 PM
+Message:
+Bug 9521: When initializing the receiver_no after entering a new po_no,
+skip receiver_no if pot_invdet (pot-25) record exists for the same
+firm_id+vendor_id+po_no+receiver_no+ap_type
+----
+Modified: data/bar/poe_invhdr.xml
+Modified: data/bar/poe_invsel.xml
+Modified: data/cdf/poe_invhdr.cdf
+Modified: data/cdf/poe_invsel.cdf
