@@ -386,7 +386,8 @@ done: rem --- All done
         if convCtrl!.getProperty("data_source")="AIUW" and indexFirstConversion<0 then goto std_exit
 
         rem --- Re-set data_source and remove completed conversion tasks so adx_conversionCtrl is ready to use for final go live data conversion.
-        close(convCtrlFileChan)
+        close(convCtrlFileChan,err=*next)
+        convCtrlFileChan=unt
         open(convCtrlFileChan,isz=-1)convCtrlFileName$
         targetFile$=convCtrlFileName$+".tmp"
         targetChan=unt
