@@ -88,6 +88,17 @@ rem --- setup utility
 	use ::ado_util.src::util
 	use ::BBUtils.bbj::BBUtils
 [[APE_INVOICEHDR.ARNF]]
+if num(stbl("+BATCH_NO"),err=*next)<>0
+	rem --- Check if this record exists in a different batch
+	tableAlias$=callpoint!.getAlias()
+	primaryKey$=callpoint!.getColumnData("APE_INVOICEHDR.FIRM_ID")+
+:		callpoint!.getColumnData("APE_INVOICEHDR.AP_TYPE")+
+:		callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")+
+:		callpoint!.getColumnData("APE_INVOICEHDR.AP_INV_NO")
+	call stbl("+DIR_PGM")+"adc_findbatch.aon",tableAlias$,primaryKey$,Translate!,table_chans$[all],existingBatchNo$,status
+	if status or existingBatchNo$<>"" then callpoint!.setStatus("NEWREC")
+endif
+
 if user_tpl.multi_dist$<>"Y"
 	callpoint!.setColumnData("APE_INVOICEHDR.AP_DIST_CODE",user_tpl.dflt_dist_cd$)
 	callpoint!.setStatus("REFRESH")
