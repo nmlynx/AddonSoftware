@@ -20,18 +20,16 @@ rem --- Initialize data
     status$=""
 
 rem --- Open tables
-    apt_invoicedet_dev=fnget_dev("@"+"APT_INVOICEDET")
 
-    if apt_invoicedet_dev=0 then
+    if pos(pad("@"+"APT_INVOICEDET",17)=table_chans$[0,0],20)=0 then
         num_files=1
         dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
         open_tables$[1]="APT_INVOICEDET",open_opts$[1]="OTA@"
                 
         gosub open_tables        
-
-        apt_invoicedet_dev=fnget_dev("@"+"APT_INVOICEDET")
     endif
 
+    apt_invoicedet_dev=fnget_dev("@"+"APT_INVOICEDET")
     dim apt_invoicedet$:fnget_tpl$("@"+"APT_INVOICEDET")
 
 rem --- Sum up adjustment amounts for this invoice
