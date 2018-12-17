@@ -46,6 +46,8 @@ rem --- Sum up adjustment amounts for this invoice
     wend
 
 rem --- Done
+
+    if rec_tpl.invoice_bal=0 then status$="SKIP"
     goto exit_prog
 
 open_tables:rem --- Open Tables
