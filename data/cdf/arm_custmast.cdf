@@ -480,10 +480,6 @@ rem --- If GM installed, update GoldMine database as necessary
 		endif
 
 	endif
-[[ARM_CUSTMAST.ASHO]]
-rem --- Create/embed widgets to show aged balance
-
-	gosub create_widgets
 [[ARM_CUSTMAST.ADIS]]
 rem --- retrieve dashboard pie or bar chart widget and refresh for current customer/balances
 rem --- pie if all balances >=0, bar if any negatives, hide if all bals are 0
@@ -914,6 +910,10 @@ rem --- disable credit card payment and view response options if not processing 
 			callpoint!.setOptionEnabled("RESP",0)
 		endif
 	wend
+
+rem --- Create/embed widgets to show aged balance
+
+	gosub create_widgets
 [[ARM_CUSTMAST.<CUSTOM>]]
 rem =======================================================
 create_widgets:rem --- create pie and bar widgets to show aged balance (bar in case credits)
