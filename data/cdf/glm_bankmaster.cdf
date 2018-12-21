@@ -1,3 +1,7 @@
+[[GLM_BANKMASTER.ADTW]]
+rem " --- Recalc Summary Info
+
+	gosub calc_totals
 [[GLM_BANKMASTER.GL_ACCOUNT.AVAL]]
 rem "GL INACTIVE FEATURE"
    glm01_dev=fnget_dev("GLM_ACCT")
