@@ -1244,7 +1244,9 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
                         readrecord(old_glm02_dev,end=*break)old_glm02_tpl$
                         if old_glm02_tpl.firm_id$<>firm_id$ then
                             firm_id$=old_glm02_tpl.firm_id$
-                            displayColumns!=new DisplayColumns(firm_id$)
+                            valid_firm=0
+                            displayColumns!=new DisplayColumns(firm_id$,err=*next); valid_firm=1
+                            if !valid_firm then continue
                         endif
     
                         if displayColumns!.getActBud(old_glm02_tpl.record_id$)="A" then
