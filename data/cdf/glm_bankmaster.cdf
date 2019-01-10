@@ -361,10 +361,10 @@ rem --- Accumulate transactions for period after statement date"
 	while 1
 		k$=key(glt06_dev,END=*break)
 		if pos(r0$=k$)<>1 break
-		if k$(13,4)<>stmtyear$+stmtperiod$ break
+		if k$(13,6)<>stmtyear$+stmtperiod$ break
 		dim glt06a$:fattr(glt06a$)
-		read record (glt06_dev,key=K$)glt06a$
-		amount=amount+glto6a.trans_amt
+		read record (glt06_dev,key=k$)glt06a$
+		amount=amount+glt06a.trans_amt
 	wend
 
 rem --- Back out transactions for period after statement date"
