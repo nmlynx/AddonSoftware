@@ -372,7 +372,7 @@ endif
 	
 [[APE_INVOICEHDR.NET_INV_AMT.AVAL]]
 rem re-calc discount amount based on net x disc %
-disc_amt=num(callpoint!.getUserInput())*(num(user_tpl.disc_pct$)/100)
+disc_amt=round(num(callpoint!.getUserInput())*(num(user_tpl.disc_pct$)/100),2)
 callpoint!.setColumnData("APE_INVOICEHDR.DISCOUNT_AMT",str(disc_amt))
 callpoint!.setStatus("REFRESH:APE_INVOICEHDR.DISCOUNT_AMT")
 [[APE_INVOICEHDR.PAYMENT_GRP.AVAL]]
@@ -471,7 +471,7 @@ rem --- re-calc due and discount dates based on terms code
 	invdate$=callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_DATE")
 	tmp_inv_date$=callpoint!.getColumnData("APE_INVOICEHDR.INVOICE_DATE")
 	gosub calculate_due_and_discount
-	disc_amt=num(callpoint!.getColumnData("APE_INVOICEHDR.NET_INV_AMT"))*(num(user_tpl.disc_pct$)/100)
+	disc_amt=round(num(callpoint!.getColumnData("APE_INVOICEHDR.NET_INV_AMT"))*(num(user_tpl.disc_pct$)/100),2)
 	callpoint!.setColumnData("APE_INVOICEHDR.DISCOUNT_AMT",str(disc_amt))
 	callpoint!.setStatus("REFRESH")
 [[APE_INVOICEHDR.INVOICE_AMT.AVAL]]
