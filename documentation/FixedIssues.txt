@@ -1,12 +1,286 @@
 =======================================================================================================================================
-Report Branch: AddonSoftware Development Build
+ Report Date:   2019-01-16
+ Report Branch: AddonSoftware 18.20
+ Last Release:  AddonSoftware 18.11
 =======================================================================================================================================
-Development builds are generated daily.
 
-AddonSoftware Co-op Developers can access code changes and bug fixes for the Development Builds via Git.
+=======================================================================================================================================
+Revision: 131d8991a1f21c166e61e13641eb5d1d7f7cd419
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 12/10/2018 11:57:07 AM
+Message:
+Bug 9514: Modified callpoint programs that allow entering/selecting a
+batch to check if the entered record is already used in a different
+batch.
+----
+Added: ad/src/adc_findbatch.aon
+Modified: data/bar/ape_invoicehdr.xml
+Modified: data/bar/ape_mancheckhdr.xml
+Modified: data/bar/are_cashhdr.xml
+Modified: data/bar/are_cnvinv.xml
+Modified: data/bar/are_finchg.xml
+Modified: data/bar/are_invhdr.xml
+Modified: data/bar/bme_order.xml
+Modified: data/bar/bme_product.xml
+Modified: data/bar/gle_allochdr.xml
+Modified: data/bar/gle_jrnlhdr.xml
+Modified: data/bar/ive_costchg.xml
+Modified: data/bar/ive_pricechg.xml
+Modified: data/bar/ive_transfer.xml
+Modified: data/bar/ive_transhdr.xml
+Modified: data/bar/sfe_timedate.xml
+Modified: data/bar/sfe_timeempl.xml
+Modified: data/bar/sfe_timewo.xml
+Modified: data/bar/sfe_woconvrn.xml
+Modified: data/bar/sfe_womatish.xml
+Modified: data/cdf/ape_invoicehdr.cdf
+Modified: data/cdf/ape_mancheckhdr.cdf
+Modified: data/cdf/are_cashhdr.cdf
+Modified: data/cdf/are_cnvinv.cdf
+Modified: data/cdf/are_finchg.cdf
+Modified: data/cdf/are_invhdr.cdf
+Modified: data/cdf/bme_order.cdf
+Modified: data/cdf/bme_product.cdf
+Modified: data/cdf/gle_allochdr.cdf
+Modified: data/cdf/gle_jrnlhdr.cdf
+Modified: data/cdf/ive_costchg.cdf
+Modified: data/cdf/ive_pricechg.cdf
+Modified: data/cdf/ive_transfer.cdf
+Modified: data/cdf/ive_transhdr.cdf
+Modified: data/cdf/sfe_timedate.cdf
+Modified: data/cdf/sfe_timeempl.cdf
+Modified: data/cdf/sfe_timewo.cdf
+Modified: data/cdf/sfe_woconvrn.cdf
+Modified: data/cdf/sfe_womatish.cdf
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
 
-Information about code changes and bug fixes for RELEASE builds can be found at:
+=======================================================================================================================================
+Revision: b149de1de8254a2fc170d151317fbe04b8bed273
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 12/10/2018 5:40:55 PM
+Message:
+Bug 9539: Replaced tests for fnget_dev("@"+<table alias>)=0 in query
+filter programs with pos(pad("@"+<table
+alias>,17)=table_chans$[0,0],20)=0
+----
+Modified: ad/src/adf_authfirms.aon
+Modified: ap/src/apf_invbyvend.aon
+Modified: ap/src/apf_qa_receipt.aon
+Modified: ap/src/apf_qa_receiptdet.aon
+Modified: ar/src/arf_hist_inv_det.aon
+Modified: ar/src/arf_mtdsales.aon
+Modified: ar/src/arf_nmnsales.aon
+Modified: ar/src/arf_pyrsales.aon
+Modified: ar/src/arf_wobycust.aon
+Modified: ar/src/arf_ytdsales.aon
+Modified: bm/src/bmf_components.aon
+Modified: iv/src/ivf_itemtrans.aon
+Modified: po/src/pof_pobyvend.aon
+Modified: po/src/pof_podetail.aon
+Modified: po/src/pof_rec_hist_det.aon
+Modified: po/src/pof_receipt_hist.aon
+Modified: po/src/pof_reqbyvend.aon
+Modified: po/src/pof_reqdetail.aon
+Modified: sf/src/sff_matusagebywo.aon
+Modified: sf/src/sff_wobyvend.aon
 
-https://bugs.basis.com
+=======================================================================================================================================
+Revision: d25ede45b6f700ea60f8421a61aeeac71d2aed3c
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 12/11/2018 2:40:54 PM
+Message:
+Bug 6870: When cost adjustment is made using a different WO, rather than
+remove transaction for old WO, adjust old WO to zero with new
+transaction.
+----
+Modified: sf/src/sfu_costadjust.aon
 
+=======================================================================================================================================
+Revision: ed3806dd574f1e74ec78993c01bfaefe0bfa5d84
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 12/12/2018 1:42:14 PM
+Message:
+Bug 9540: Skip ape_mancheckdet.ap_inv_no AVAL callpoint if the invoice
+number wasn't changed AND it's not a new detail line.
+----
+Modified: data/bar/ape_mancheckdet.xml
+Modified: data/cdf/ape_mancheckdet.cdf
 
+=======================================================================================================================================
+Revision: e3e4e40c41dd0cfd033d4b3cce0e8482ff1892ba
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 12/17/2018 10:47:36 AM
+Message:
+Bug 9544: Use IVM_LSMASTER (ivm-07) qty_on_hand for the Quantity on
+physical inventory Count Sheets.
+----
+Modified: iv/src/ivr_physcountsheets.aon
+
+=======================================================================================================================================
+Revision: d4dd3728218add74966cbfef8387c42b5fb86d4b
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 12/17/2018 12:44:50 PM
+Message:
+Bug 9545: SKIP query rows where the invoice balance is zero.
+----
+Modified: ap/src/apf_invbyvend.aon
+
+=======================================================================================================================================
+Revision: 0a4f4ea849b3ea7a09b9a1a20d595b152a2b48d2
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 12/17/2018 1:13:28 PM
+Message:
+Bug 9543: Open old ddm_table_tpls for 1700_GL_glm-02 processing if not
+previously opened.
+----
+Modified: ad/src/adc_v1700conversion.aon
+
+=======================================================================================================================================
+Revision: c8b8bc5c64f7930d5c8a06392eb28344452c3615
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 12/17/2018 3:24:54 PM
+Message:
+Bug 6811: Added material costs for individual components in a bill on
+the Inventory Production Register. Note that the cost of a bill includes
+operation and subcontract costs as well as the material costs.
+----
+Modified: bm/src/bmr_invproduction.aon
+
+=======================================================================================================================================
+Revision: 3bbeefd3097e235f30ac78ace3980cb99ba2fb5b
+Author: Christine <chawkins@basis.com>
+Date: 12/20/2018 9:40:23 AM
+Message:
+Bug 9507 - Customer Master Maintenance - Fields not ready when Screen Up - Due to Widgets being Built
+
+ - corrected as suggested, by moving widget creation to end of BSHO instead of ASHO
+----
+Modified: data/bar/arm_custdet.xml
+Modified: data/bar/arm_custmast.xml
+Modified: data/bar/arm_custpmts.xml
+Modified: data/cdf/arm_custmast.cdf
+
+=======================================================================================================================================
+Revision: c31a611b2cd2eb9ec7c2eba56e264c95597cde25
+Author: Christine <chawkins@basis.com>
+Date: 12/21/2018 3:10:27 PM
+Message:
+Bug 9424 - GL - Bank Rec form doesn't always update outstanding transactions
+ - corrected by adding gosub calc_totals to the ADTW callpoint
+----
+Modified: data/bar/glm_bankmaster.xml
+Modified: data/cdf/glm_bankmaster.cdf
+
+=======================================================================================================================================
+Revision: f3c67b7f02b4452bdd3e4631b6850c64e546c9f3
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/2/2019 4:10:17 PM
+Message:
+Bug 9549: There is no translation for an empty string (i.e., ""), so
+initialized the warehouse message to "AON_ALL_FROM_THIS_WHSE".
+----
+Modified: sprocs/OPPICKLIST_DET.prc
+
+=======================================================================================================================================
+Revision: 14fcabce218d1404a916d7813ee5d736b843494a
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/2/2019 6:23:50 PM
+Message:
+Bug 9550: Use IVS_PARAMS.MULTI_WHSE to determine if there are multiple
+warehouses.
+----
+Modified: op/src/opc_picklist.aon
+
+=======================================================================================================================================
+Revision: f128692fe6ae21324eec4b70e40b3a81dcdeeddd
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/7/2019 11:58:36 AM
+Message:
+Bug 9542: Skip invalid firms and continue with next record.
+----
+Modified: ad/src/adc_v1700conversion.aon
+Modified: gl/src/glo_AO_DisplayColumns.aon
+
+=======================================================================================================================================
+Revision: ce8a8fa6dc8b0c67721ed2c467d68571011fd4e9
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/7/2019 12:10:40 PM
+Message:
+Bug 9542: Add firm ID to thrown error message.
+----
+Modified: gl/src/glo_AO_DisplayColumns.aon
+
+=======================================================================================================================================
+Revision: f3c9d095ea0b62376657a520cdcebb4a9e219fbb
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/7/2019 2:39:44 PM
+Message:
+Bug 9546: Removed POE_QADET from the list of tables that have a
+MEMO_1024 field.
+----
+Modified: po/src/poc_v17initMinorRev.aon
+
+=======================================================================================================================================
+Revision: bdcf397ed6d0bc1d0eb8b57fb26d3bf5a3bc9fd4
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/9/2019 10:38:38 AM
+Message:
+Bug 9554: Changed OP Invoice Printing to use the IV Units mask for
+printing quantities.
+----
+Modified: op/src/opc_invoice.aon
+
+=======================================================================================================================================
+Revision: cc48de671a5550b1049b7214c5d50fbeb8a4488d
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/9/2019 7:42:53 PM
+Message:
+Bug 9555: Corrected a couple of typos in the Recalculate routine.
+----
+Modified: data/bar/glm_bankmaster.xml
+Modified: data/cdf/glm_bankmaster.cdf
+
+=======================================================================================================================================
+Revision: bf26c30aef406eba400c2689c38c290e6ce9314d
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/10/2019 12:14:15 PM
+Message:
+Bug 9556: Rounded to the nearest whole penny the calculated discount_amt
+in ape_invoicehdr.
+----
+Modified: data/bar/ape_invoicehdr.xml
+Modified: data/cdf/ape_invoicehdr.cdf
+
+=======================================================================================================================================
+Revision: bcb00d4b11fb8d0640601100b6d8c3fcd1d55280
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/14/2019 2:21:28 PM
+Message:
+Bug 9557: Corrected check number and vendor ID assigned to void checks.
+----
+Modified: ap/src/apr_apchecks.aon
+
+=======================================================================================================================================
+Revision: 33ebecf183ddfe8650b660df2368b7ad54385649
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/14/2019 6:39:44 PM
+Message:
+Bug 9552: Allowed changing item warehouse (ivm_itemwhse (ivm-02)) costs
+when there are no inventory transactions (in ivt_itemtran (ivt-04)) for
+that warehouse item.
+----
+Modified: data/bar/ivm_itemmast.xml
+Modified: data/bar/ivm_itemwhse.xml
+Modified: data/cdf/ivm_itemmast.cdf
+Modified: data/cdf/ivm_itemwhse.cdf
+
+=======================================================================================================================================
+Revision: ff2b272b610ef9c940b5e760a470de78922e5b58
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/15/2019 3:05:36 PM
+Message:
+Bug 9560: Clear APW_CHECKINVOICE in AP Check Printing before it gets
+built.
+----
+Modified: ap/src/apr_apchecks.aon
