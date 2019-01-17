@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2019-01-16
+ Report Date:   2019-01-17
  Report Branch: AddonSoftware 18.20
  Last Release:  AddonSoftware 18.11
 =======================================================================================================================================
@@ -305,3 +305,14 @@ Bug 9559: Fixed ivIMaske$ typo. Should have been ivIMask$ without the
 trailing "e".
 ----
 Modified: iv/src/ivr_lotvendhist_o1.aon
+
+=======================================================================================================================================
+Revision: cf6acd0f0093b551620a6dafbd662d8d7ad1bcff
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/17/2019 10:24:59 AM
+Message:
+Bug 9562: In PO Invoice Register and update, skipped use of arm_distcode
+string template arm10d$ when sales not distributed by item.
+----
+Modified: po/src/poc_invglpost.aon
+Modified: po/src/pou_invreg.aon
