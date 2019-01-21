@@ -326,3 +326,13 @@ Bug 9566: Added missing default BM Unit mask for firm ZZ.
 ----
 Added: data/sync/ads_masks~ZZ01007514bm_u.xml
 
+=======================================================================================================================================
+Revision: 74da2875497b7f841b4929ee58b26938825e48d4
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/21/2019 1:10:46 PM
+Message:
+Bug 9560: Do NOT clear APW_CHECKINVOICE before printing checks because
+printing may have been restarted. The Check Register update clears
+APW_CHECKINVOICE as each check is updated.
+----
+Modified: ap/src/apr_apchecks.aon
