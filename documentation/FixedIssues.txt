@@ -336,3 +336,15 @@ printing may have been restarted. The Check Register update clears
 APW_CHECKINVOICE as each check is updated.
 ----
 Modified: ap/src/apr_apchecks.aon
+
+=======================================================================================================================================
+Revision: 53c464d6790fade3bfcb38e058f85f7d5ed360a7
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/21/2019 3:22:58 PM
+Message:
+Bug 9557: Backed out previous changes committed for this bug on
+2019-01-14. Modified AP Check Printing to use void_check subroutine only
+for overflow void checks. Zero amount void checks are now printed using
+the "normal" check_face subroutine.
+----
+Modified: ap/src/apr_apchecks.aon
