@@ -744,10 +744,14 @@ check_face: rem --- Print Check
 	chk_amt=t[3]
     check_tot_cents$=str(fpt(chk_amt)*100:"00")
     if check_tot_cents$="00" then check_tot_cents$="NO"
-	
-    chk_exactly$=Translate!.getTranslation("AON_EXACTLY*")+str(int(chk_amt):exactly_amt_mask$)+Translate!.getTranslation("AON_*DOLLARS*AND*")+check_tot_cents$+Translate!.getTranslation("AON_*CENTS")
-    
-    chk_amt_str$=str(chk_amt:check_amt_mask$)
+
+    if t[3] <= 0 then 
+        chk_exactly$=Translate!.getTranslation("AON_***VOID***VOID***VOID***VOID***")
+        chk_amt_str$=Translate!.getTranslation("AON_***VOID***")
+    else 
+        chk_exactly$=Translate!.getTranslation("AON_EXACTLY*")+str(int(chk_amt):exactly_amt_mask$)+Translate!.getTranslation("AON_*DOLLARS*AND*")+check_tot_cents$+Translate!.getTranslation("AON_*CENTS")
+        chk_amt_str$=str(chk_amt:check_amt_mask$)
+    endif
 
     dim apw01a$:fattr(apw01a$)
     apw01a.firm_id$=firm_id$
@@ -857,19 +861,20 @@ overflow: rem --- Overflow
 
 void_check: rem --- Void check
 
+    rem  --- Use only for overflow (i.e. more invoices than fit on one stub) void checks, not zero amount checks
     chk_exactly$=Translate!.getTranslation("AON_***VOID***VOID***VOID***VOID***")
     chk_amt_str$=Translate!.getTranslation("AON_***VOID***")
 
 rem --- Write Void
 
     apw01a.firm_id$=     firm_id$
-    apw01a.ap_type$=     prev_aptype_vend_t1$(1,2)
+    apw01a.ap_type$=     ape04a.ap_type$
     apw01a.check_no$=    check_no$
     apw01a.comp_or_void$="V"
-    apw01a.vendor_id$=   prev_aptype_vend_t1$(3,6)
+    apw01a.vendor_id$=   ape04a.vendor_id$
     apw01a.check_date$=  check_date$
-    apw01a.ap_inv_no$=t2.ap_inv_no$
-    if aps01a.multi_types$="Y" remove (apw01_dev,key=firm_id$+"  "+apw01a.check_no$,dom=*next)
+    apw01a.ap_inv_no$=   ape04a.ap_inv_no$
+    if aps01a.multi_types$<>"Y" apw01a.ap_type$=""
     write record (apw01_dev) apw01a$
 
 	rem --- Write VOID record to jasper print file
@@ -877,14 +882,14 @@ rem --- Write Void
     dim apw_chkprn$:fattr(apw_chkprn$)
 	
     apw_chkprn.firm_id$=       firm_id$
-    apw_chkprn.ap_type$=       prev_aptype_vend_t1$(1,2)
+    apw_chkprn.ap_type$=       ape04a.ap_type$
     apw_chkprn.check_no$=      check_no$
     apw_chkprn.chk_pagenum$=   str(chk_pagenum:chk_pagenum_mask$)
     apw_chkprn.section_type$=  "C"
 	apw_chkprn.section_detseq$=str(1:section_detseq_mask$); rem Check itself has only one rec
 	
 	apw_chkprn.check_date$=    check_date$
-	apw_chkprn.vendor_id$=     prev_aptype_vend_t1$(3,6)
+	apw_chkprn.vendor_id$=     ape04a.vendor_id$
 	
 	apw_chkprn.stub_inv_no$=    ""
 	apw_chkprn.stub_inv_date$=  ""
@@ -905,6 +910,8 @@ rem --- Write Void
 	apw_chkprn.chk_amt=chk_amt
 	
     write record (apw_chkprn_dev) apw_chkprn$
+
+    gosub increment_check
 	
     return
 
@@ -928,11 +935,7 @@ new_vendor: rem --- New Vendor
 		gosub stub_total; rem vendor stub
 		vendstub_rowcnt=1
 
-        if t[3] <= 0 then 
-            gosub void_check 
-        else 
-            gosub check_face
-        endif
+		gosub check_face
 
 rem --- Now go back and re-write ape-04 using ape04_dev2 and ape04b$
 rem --- using the current check number and firm_id$ + prev_aptype_vend_t1$ (ap type and vendor number)
