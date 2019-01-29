@@ -244,7 +244,7 @@ rem --- Done with line item or line messages, wrap up with header level message 
         item_id_desc_msg$=""
         gosub add_to_recordset;rem add blank line before shipfrom
     
-        shipfrom_addrLines=4
+        shipfrom_addrLines=5
         shipfrom_addrLine_len=30
         dim shipfrom$(shipfrom_addrLines*shipfrom_addrLine_len)
         
@@ -257,6 +257,7 @@ rem --- Done with line item or line messages, wrap up with header level message 
         
         for x=0 to shipfrom_addrLines-1
             item_id_desc_msg$=shipfrom$(x*shipfrom_addrLine_len+1,shipfrom_addrLine_len)
+            if cvs(item_id_desc_msg$,2)="" then continue
             gosub add_to_recordset
         next x
     
