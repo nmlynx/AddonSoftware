@@ -500,6 +500,7 @@ vendor_info: rem --- get and display Vendor Information
 	callpoint!.setColumnData("<<DISPLAY>>.V_ADDR1",apm01a.addr_line_1$)
 	callpoint!.setColumnData("<<DISPLAY>>.V_ADDR2",apm01a.addr_line_2$)
 	callpoint!.setColumnData("<<DISPLAY>>.V_CITY",cvs(apm01a.city$,3)+", "+apm01a.state_code$+"  "+apm01a.zip_code$)
+	callpoint!.setColumnData("<<DISPLAY>>.V_CNTRY_ID",apm01a.cntry_id$)
 	callpoint!.setColumnData("<<DISPLAY>>.V_CONTACT",apm01a.contact_name$)
 	callpoint!.setColumnData("<<DISPLAY>>.V_PHONE",apm01a.phone_no$)
 	callpoint!.setColumnData("<<DISPLAY>>.V_FAX",apm01a.fax_no$)
