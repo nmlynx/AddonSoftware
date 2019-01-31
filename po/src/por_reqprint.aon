@@ -129,7 +129,7 @@ rem --- Retrieve parameter records
     comp_phone$=cvs(aps_report.phone_no$,2)
     comp_phone$=str(comp_phone$:phone_mask$,err=*next)
     comp_fax$=cvs(aps_report.fax_no$,2)
-    comp_fax$=str(comp_fax$:phone_mask$,err=*next)
+    if comp_fax$<>"" then comp_fax$=str(comp_fax$:phone_mask$,err=*next)
 
 rem --- Assign form input values to local variables
 
