@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2019-01-22
+ Report Date:   2019-02-05
  Report Branch: AddonSoftware 18.20
  Last Release:  AddonSoftware 18.11
 =======================================================================================================================================
@@ -358,3 +358,15 @@ Bug 9568: Modified ivc_itemupdt.aon to update the ivm_lsmaster (ivm-07)
 std_cost with the ivm_itemwhse (ivm-02) std_cost.
 ----
 Modified: iv/src/ivc_itemupdt.aon
+
+=======================================================================================================================================
+Revision: 9c73fce732e970b594a63c156134c1271f3a8580
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 2/5/2019 12:27:35 PM
+Message:
+Bug 9581: Changed the GL Recap to remove Barista soft locks in lockKeys!
+via "U" instead of "X" since the Barista soft locks were created via "L"
+not "S". (As of v19.00, lockKeys! is only built in por_recptreg.aon and
+por_invreg.aon.)
+----
+Modified: gl/src/glr_recap.aon
