@@ -53,6 +53,7 @@ rem --- Assign form input values to local variables
 	checkno$=Option!.getOptionData("CHECK_NO")
 	inv_no$=Option!.getOptionData("INV_NO")
     vend_type$=Option!.getOptionData("VENDOR_TYPE")
+    type_breaks=num(Option!.getOptionData("TYPE_BREAKS"))
 
 rem --- Retrieve parameter records
 
@@ -60,12 +61,11 @@ rem --- Retrieve parameter records
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","A","",m1$,0,0
-    multitypes=aps01a.multi_types$="Y"
     retention=aps01a.ret_flag$="Y"
     m0=len(m0$)
     m1=len(m1$)
     headings=3
-    if multitypes headings=4
+    if type_breaks headings=4
 
 rem --- Initializations
 
@@ -112,7 +112,7 @@ rem --- Initializations
 	if cvs(checkno$,3)<>"" headings$[2]=headings$[2]+" "+Translate!.getTranslation("AON_CHECK_NO")+" "+checkno$
 	if cvs(inv_no$,3)<>"" headings$[2]=headings$[2]+" "+Translate!.getTranslation("AON_INVOICE_#")+" "+inv_no$
 
-    if multitypes then headings$[3]="[HEADER]"
+    if type_breaks then headings$[3]="[HEADER]"
     types$[0]=Translate!.getTranslation("AON_UNKNOWN")
     types$[1]=Translate!.getTranslation("AON_VOID")
     types$[2]=Translate!.getTranslation("AON_REVERSAL")
@@ -163,7 +163,11 @@ rem --- column headings
 rem --- Open printer, start progress meter and position the file
 
     call pgmdir$+"adc_progress.aon","NC","APT_CHECKHISTORY","","","",0,apt05_dev,1,meter_num,status
-    read (apt05_dev,key=firm_id$,dom=*next)
+    if type_breaks
+        read (apt05_dev,key=firm_id$,knum="PRIMARY",dom=*next)
+    else
+        read (apt05_dev,key=firm_id$,knum="CHECK_VENDOR_INV",dom=*next)
+    endif
 
 rem --- Read the next Check History (apt-05) record
 
@@ -221,7 +225,11 @@ rem --- Read the next Check History (apt-05) record
                 detail[1]=apt05a.invoice_amt
                 detail[2]=apt05a.discount_amt
                 detail[3]=apt05a.retention
-                thischeck$=apt05a.firm_id$+apt05a.ap_type$+apt05a.check_no$+apt05a.vendor_id$
+    if type_breaks
+        thischeck$=apt05a.firm_id$+apt05a.ap_type$+apt05a.check_no$+apt05a.vendor_id$
+    else
+        thischeck$=apt05a.firm_id$+apt05a.check_no$+apt05a.vendor_id$
+    endif
 
                 rem --- Additional records for this check?
 
@@ -319,7 +327,7 @@ print_total: rem --- Print totals
 
 type_break: rem --- AP type break
 
-    if multitypes=0 return
+    if type_breaks=0 return
     while lasttype$<>""
           total$=Translate!.getTranslation("AON_TOTAL_FOR_")+aptype$
           for x=0 to 3
