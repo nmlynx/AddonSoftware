@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2019-02-05
+ Report Date:   2019-02-06
  Report Branch: AddonSoftware 18.20
  Last Release:  AddonSoftware 18.11
 =======================================================================================================================================
@@ -370,3 +370,13 @@ not "S". (As of v19.00, lockKeys! is only built in por_recptreg.aon and
 por_invreg.aon.)
 ----
 Modified: gl/src/glr_recap.aon
+
+=======================================================================================================================================
+Revision: 0485fee51043df9d0fd698da91cab66e953a9093
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 2/6/2019 4:48:47 PM
+Message:
+Bug 9585: REDIM'd the apm02a$ record template before it's EXTRACT'd in
+case the record doesn't exist and the DOM branch is taken.
+----
+Modified: ap/src/apu_invoiceentry.aon
