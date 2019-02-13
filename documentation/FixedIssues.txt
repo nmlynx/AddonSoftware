@@ -360,6 +360,65 @@ std_cost with the ivm_itemwhse (ivm-02) std_cost.
 Modified: iv/src/ivc_itemupdt.aon
 
 =======================================================================================================================================
+Revision: 338c0c86bd1bf8e862c0d372cba84896759c70c4
+Author: Christine <chawkins@basis.com>
+Date: 1/30/2019 9:49:38 AM
+Message:
+Bug 9576 - AR - Gateway configuration correction needed for BillPro
+ - corrected casing on accountId and accountAuth attributes for BillPro
+
+(cherry picked from commit 6ec2358776c5017e7e05e484e331858ad4a89698)
+----
+Modified: data/ars_gatewaydet
+Modified: data/ars_gatewayhdr
+
+=======================================================================================================================================
+Revision: cbfc3c9362cd4f39cf06e5c39ec6b01a7c7542fe
+Author: Christine <chawkins@basis.com>
+Date: 1/30/2019 6:19:28 PM
+Message:
+Bug 9577 - OP - Using IV Units mask on Invoices makes quantities too large to fit
+ - adjusted sizes on the detail lines to accommodate larger quantity fields
+
+(cherry picked from commit 43065ff82afd937f360c3bd791e1b4f7d564b3d5)
+----
+Modified: reports/OPInvoiceDet.jasper
+Modified: reports/OPInvoiceDet.jrxml
+Modified: reports/OPInvoiceHdr.jasper
+Modified: reports/OPInvoiceHdr.jrxml
+
+=======================================================================================================================================
+Revision: 2ff2c0c98593171fbd531af82af00562a725720f
+Author: Christine <chawkins@basis.com>
+Date: 1/30/2019 6:33:26 PM
+Message:
+Bug 9577 - OP - Using IV Units mask on Invoices makes quantities too large to fit
+ - adjusted sizes on the lot/serial lines to match changes made in detail lines
+----
+Modified: reports/OPInvoiceDet-LotSer.jasper
+Modified: reports/OPInvoiceDet-LotSer.jrxml
+
+=======================================================================================================================================
+Revision: 4b1753c535c3b1ee7ccd9c39e24108e2d9d49301
+Author: Christine <chawkins@basis.com>
+Date: 1/31/2019 3:09:43 PM
+Message:
+Bug 9578 - OP - Possible to save an ope_invcash record with zero amount, but shows as Paid on invoice
+ - Altered to only print 'Paid' info if tendered amt <> 0.
+----
+Modified: sprocs/OPINVOICE_HDR.prc
+
+=======================================================================================================================================
+Revision: 92426dd938a414e02795bb87638ef834542f97ea
+Author: Christine <chawkins@basis.com>
+Date: 2/1/2019 3:26:27 PM
+Message:
+Bug 9579 - IV - Disallow inquiry changes option incorrectly set on IVC_ITEMAVAIL child alias
+ - removed the 'Disallow inquiry changes' optional def
+----
+Modified: data/bar/ivc_itemavail.xml
+
+=======================================================================================================================================
 Revision: 9c73fce732e970b594a63c156134c1271f3a8580
 Author: Bill Halsted <bhalsted@basis.com>
 Date: 2/5/2019 12:27:35 PM
@@ -413,3 +472,17 @@ Modified: data/bar/ope_invdet.xml
 Modified: data/bar/ope_orddet.xml
 Modified: data/cdf/ope_invdet.cdf
 Modified: data/cdf/ope_orddet.cdf
+
+=======================================================================================================================================
+Revision: fce23829e69fa7376fd6c9fbaac33eab205c770b
+Author: Christine <chawkins@basis.com>
+Date: 2/13/2019 10:43:52 AM
+Message:
+Bug 9590 - OP - Picking Lists are printing extension, not price, when 'print price' option is selected
+ - Altered to print price (based on UM, i.e., sale or purchase)
+
+(cherry picked from commit b85a5420acc4054959d2202e683c67078b571d8a)
+----
+Modified: sprocs/OPPICKLIST_DET.prc
+
+
