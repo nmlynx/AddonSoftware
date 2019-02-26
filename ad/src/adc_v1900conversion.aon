@@ -58,6 +58,203 @@ rem --- Start progress meter
     meter_action$="WIN-LST"
     gosub disp_meter
 
+rem --- For version 19.00, initialize PAYMENT_TYPE in APM_VENDMAST (apm-01)
+
+    this_module$="AP"
+    if installMap!.get(this_module$)="Y" then
+        task$="1900_AP_apm_vendmast"
+        if convCtrl!.getProperty(task$)<>"Completed" then
+            rem --- Increment progress meter
+            meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:               Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+    
+            rem --- Open File(s)
+            num_files=1
+            dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+            open_tables$[1]="APM_VENDMAST",   open_opts$[1]="OTA"
+    
+            gosub open_tables
+    
+            apmVendMast_dev=num(open_chans$[1])
+            dim apmVendMast$:open_tpls$[1]
+
+            rem --- Make sure PAYMENT_TYPE in APM_VENDMAST (apm-01) is initialized
+            read(apmVendMast_dev,key="",dom=*next)
+            while 1
+                readrecord(apmVendMast_dev,end=*break)apmVendMast$
+                if cvs(apmVendMast.payment_type$,2)="" then
+                    apmVendMast.payment_type$="P"
+                    writerecord(apmVendMast_dev)apmVendMast$
+                endif
+            wend
+        else
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_CONV_PREVIOUSLY","Conversion previously completed for")+" "+task$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+        endif
+    else
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_NOT","Not")+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:           Translate!.getTranslation("AON_SKIP","SKIP")+" "+Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+    endif
+
+rem --- For version 19.00, Build ADC_BANKACCTCODE from GLM_BANKMASTER (glm-05)
+
+    this_module$="GL"
+    if installMap!.get(this_module$)="Y" then
+        task$="1900_GL_glm_bankmaster"
+        if convCtrl!.getProperty(task$)<>"Completed" then
+            if convCtrl!.getProperty("data_source")="OCJ" then
+                rem --- Data upgraded via EM Update Wizard (OCJ)
+        
+                rem --- Increment progress meter
+                meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:                   Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+                meter_proc_recs=meter_proc_recs+1
+                meter_action$="MTR-LST"
+                gosub disp_meter
+                print(log_dev)meter_text$
+
+                rem --- Open File(s)
+                num_files=3
+                dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                open_tables$[1]="ADC_BANKACCTCODE", open_opts$[1]="OTA"
+                open_tables$[2]="GLM_BANKMASTER",   open_opts$[2]="OTA"
+                open_tables$[3]="GLM_ACCT",         open_opts$[3]="OTA"
+        
+                gosub open_tables
+        
+                adcBankAcctCode_dev=num(open_chans$[1])
+                glmBankMaster_dev=num(open_chans$[2])
+                glmAcct_dev=num(open_chans$[3])
+                dim adcBankAcctCode$:open_tpls$[1]
+                dim glmBankMaster$:open_tpls$[2]
+                dim glmAcct$:open_tpls$[3]
+
+                rem --- Verify can read DDM_TABLE_TPLS for barista_source
+                ddm_table_tpls$=convCtrl!.getProperty("barista_source")+"/barista/sys/data/ddm_table_tpls.dat"
+                open_success=0
+                ddm_table_tpls=unt
+                open(ddm_table_tpls,err=*next)ddm_table_tpls$; open_success=1
+                if open_success then
+                    dim ddm_table_tpls$:"table_name:c(16*),file_name:c(30*),template:c(10230*)"
+                else
+                    rem --- Required file missing
+                    msg_id$="AD_FILE_MISSING"
+                    dim msg_tokens$[1]
+                    msg_tokens$[1]=ddm_table_tpls$
+                    gosub disp_message
+                    err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+
+:                       Translate!.getTranslation("AON_FILE_NOT_FOUND","Required file not found")+": "+ddm_table_tpls$+" *****"
+                    goto done
+                endif
+
+                rem --- Does source GLM_BANKMASTER (glm-05) file exist?
+                oldStbl$="+GLDATA"
+                oldFile$="glm-05"
+                tableAlias$="GLM_BANKMASTER"
+                gosub get_path_to_old_file
+                source_file$=oldPathToFile$
+                open_success=0
+                source_dev=unt
+                open(source_dev,err=*next)source_file$; open_success=1
+                if open_success then
+                    rem --- Increment progress meter
+                    meter_text$=Translate!.getTranslation("AON_UPDATING","Updating")+": "+oldFile$
+                    meter_proc_recs=meter_proc_recs+1
+                    meter_action$="MTR-LST"
+                    gosub disp_meter
+                    print(log_dev)meter_text$
+                        
+                    rem --- Get record template for source file
+                    tpl_found=0
+                    findrecord(ddm_table_tpls,key=pad(tableAlias$,16),dom=*next)ddm_table_tpls$;tpl_found=1
+                    if tpl_found then
+                        dim source_tpl$:ddm_table_tpls.template$
+                    else
+                        rem --- Required template missing
+                        meter_text$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+Translate!.getTranslation("AON_VERSION","Verion")+" "+convCtrl!.getProperty("start_version")+
+:                           " "+Translate!.getTranslation("AON_TEMPLATE_NOT_FOUND","Template not found")+": "+tableAlias$+" *****"
+                        meter_proc_recs=meter_proc_recs+1
+                        meter_action$="MTR-LST"
+                        gosub disp_meter
+                        print(log_dev)meter_text$
+                        continue
+                    endif
+
+                    rem --- For every unique bank account (non-blank BANK_NAME + non-blank BNK_ACCT_NO) in source GLM_BANKMASTER (glm-05),
+                    rem --- copy source data to ADC_BANKACCTCODE and assign a unique BNK_ACCT_CD
+                    bnkAcctCd_mask$=fill(len(adcBankAcctCode.bnk_acct_cd$),"0")
+                    next_bnkAcctCd=1
+                    read(source_dev,key="",dom=*next)
+                    while 1
+                        readrecord(source_dev,end=*break)source_tpl$
+                        if cvs(source_tpl.name$,2)<>"" and cvs(source_tpl.bnk_acct_no$,2)<>"" then
+                            redim adcBankAcctCode$
+                            adcBankAcctCode.firm_id$=source_tpl.firm_id$
+                            adcBankAcctCode.bnk_acct_cd$=str(next_bnkAcctCd:bnkAcctCd_mask$)
+                            adcBankAcctCode.acct_desc$=source_tpl.description$
+                            if cvs(adcBankAcctCode.acct_desc$,2)="" then
+                                rem --- If ACCT_DESC is blank, use GL_ACCT_DESC from GLM_ACCT (glm-01) for the GLM_BANKMASTER (glm-05) GL_ACCOUNT
+                                redim glmAcct$
+                                readrecord(glmAcct_dev,key=source_tpl.firm_id$+source_tpl.gl_account$,dom=*next)glmAcct$
+                                if cvs(glmAcct.gl_acct_desc$,2)<>"" then
+                                    adcBankAcctCode.acct_desc$=glmAcct.gl_acct_desc$
+                                else
+                                    adcBankAcctCode.acct_desc$=cvs(source_tpl.bnk_acct_no$,2)+" -- "+ cvs(source_tpl.name$,2)
+                                endif
+                            endif
+                            adcBankAcctCode.bank_name$=source_tpl.name$
+                            adcBankAcctCode.address_line_1$=source_tpl.address_line_1$
+                            adcBankAcctCode.address_line_2$=source_tpl.address_line_2$
+                            adcBankAcctCode.address_line_3$=source_tpl.address_line_3$
+                            adcBankAcctCode.aba_no$=""
+                            adcBankAcctCode.bnk_acct_no$=source_tpl.bnk_acct_no$
+                            adcBankAcctCode.bnk_acct_type$=""
+                            adcBankAcctCode$=field(adcBankAcctCode$)
+                            writerecord(adcBankAcctCode_dev)adcBankAcctCode$
+                        
+                            rem --- Initialize new GLM_BANKMASTER.BNK_ACCT_CD with the ADC_BANKACCTCODE.BNK_ACCT_CD for the matching BANK_NAME + BNK_ACCT_NO
+                            readrecord(glmBankMaster_dev,key=source_tpl.firm_id$+source_tpl.gl_account$,dom=*endif)glmBankMaster$
+                            glmBankMaster.bnk_acct_cd$=adcBankAcctCode.bnk_acct_cd$
+                            writerecord(glmBankMaster_dev)glmBankMaster$
+                            next_bnkAcctCd=next_bnkAcctCd+1
+                        endif
+                    wend
+                endif
+            else
+                rem --- Data upgraded via DataPort
+                rem --- ADC_BANKACCTCODE built from glm-05 (GLM_BANKMASTER) Bank Account Master, which was apm-13 in v6
+            endif
+        else
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_CONV_PREVIOUSLY","Conversion previously completed for")+" "+task$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+        endif
+    else
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_NOT","Not")+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:           Translate!.getTranslation("AON_SKIP","SKIP")+" "+Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+    endif
+
 rem --- Initialize data file changes implemented during minor releases of v18
 
     if num(convCtrl!.getProperty("start_version"))>=18 then
@@ -124,7 +321,7 @@ rem --- Initialize data file changes implemented during minor releases of v18
         endif
 
     endif
-	
+    
 done: rem --- Done, close things up
 
     rem --- Complete progress meter
@@ -159,6 +356,32 @@ done: rem --- Done, close things up
 
     if completed_successfully then conv_status=0; rem --- no errors encountered
 	goto std_exit
+
+get_path_to_old_file: rem --- Locate data directory in old Addon installation
+    rem --- IN: oldStbl$ - STBL in old addon.syn that points to the data directory where the old file is located
+    rem --- IN: oldFile$ - name of old file to get path for
+    rem --- OUT: oldPathToFile$ - full path to requested file, including the file name
+    oldPathToFile$=oldFile$
+
+    rem --- Open old aon/config/addon.syn
+    open_success=0
+    old_addonsyn_dev=unt
+    open(old_addonsyn_dev,isz=-1,err=*next)convCtrl!.getProperty("addon_source")+"/aon/config/addon.syn"; open_success=1
+    if !open_success then return
+
+    rem --- Get specified data directory from old addon.syn
+    key$="=SET "+oldStbl$+"="
+    while 1
+        read(old_addonsyn_dev,end=*break)record$
+        if(pos(key$=record$)) then
+            xpos=pos(key$=record$)
+            oldPathToFile$=record$(xpos+len(key$))+oldFile$
+            break
+        endif
+    wend
+    close(old_addonsyn_dev)
+
+    return
 
 open_log: rem --- Open log file
            
