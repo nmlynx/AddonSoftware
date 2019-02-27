@@ -136,6 +136,8 @@ rem --- Display Bank Account Information
 	callpoint!.setColumnData("<<DISPLAY>>.ADDRESS_LINE_2",adcBankAcctCode.address_line_2$,1)
 	callpoint!.setColumnData("<<DISPLAY>>.ADDRESS_LINE_3",adcBankAcctCode.address_line_3$,1)
 	callpoint!.setColumnData("<<DISPLAY>>.ACCT_DESC",adcBankAcctCode.acct_desc$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.BNK_ACCT_TYPE",adcBankAcctCode.bnk_acct_type$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.ABA_NO",adcBankAcctCode.aba_no$,1)
 	callpoint!.setColumnData("<<DISPLAY>>.BNK_ACCT_NO",adcBankAcctCode.bnk_acct_no$,1)
 
 rem --- Calculate Summary info
@@ -220,19 +222,21 @@ rem --- Set up user_tpl$
 
 rem - Set up disabled controls
 
-	dim dctl$[12]
+	dim dctl$[14]
 	dctl$[1]="<<DISPLAY>>.BANK_NAME"
 	dctl$[2]="<<DISPLAY>>.ADDRESS_LINE_1"
 	dctl$[3]="<<DISPLAY>>.ADDRESS_LINE_2"
 	dctl$[4]="<<DISPLAY>>.ADDRESS_LINE_3"
-	dctl$[5]="<<DISPLAY>>.BNK_ACCT_NO"
-	dctl$[6]="<<DISPLAY>>.STMT_AMT"
-	dctl$[7]="<<DISPLAY>>.STMT_AMT"
-	dctl$[8]="<<DISPLAY>>.CHECKS_OUT"
-	dctl$[9]="<<DISPLAY>>.TRANS_OUT"
-	dctl$[10]="<<DISPLAY>>.END_BAL"
-	dctl$[11]="<<DISPLAY>>.NO_CHECKS"
-	dctl$[12]="<<DISPLAY>>.NO_TRANS"
+	dctl$[5]="<<DISPLAY>>.ACCT_DESC"
+	dctl$[6]="<<DISPLAY>>.BNK_ACCT_TYPE"
+	dctl$[7]="<<DISPLAY>>.ABA_NO"
+	dctl$[8]="<<DISPLAY>>.BNK_ACCT_NO"
+	dctl$[9]="<<DISPLAY>>.STMT_AMT"
+	dctl$[10]="<<DISPLAY>>.CHECKS_OUT"
+	dctl$[11]="<<DISPLAY>>.TRANS_OUT"
+	dctl$[12]="<<DISPLAY>>.END_BAL"
+	dctl$[13]="<<DISPLAY>>.NO_CHECKS"
+	dctl$[14]="<<DISPLAY>>.NO_TRANS"
 	gosub disable_ctls
 [[GLM_BANKMASTER.<CUSTOM>]]
 #include std_functions.src
@@ -308,7 +312,7 @@ rem ====================================================
 disable_ctls:rem --- disable selected control
 rem ====================================================
 
-	for dctl=1 to 6
+	for dctl=1 to 14
 		dctl$=dctl$[dctl]
 		if dctl$<>""
 			wctl$=str(num(callpoint!.getTableColumnAttribute(dctl$,"CTLI")):"00000")
