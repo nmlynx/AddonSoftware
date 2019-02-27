@@ -193,44 +193,41 @@ rem --- For version 19.00, Build ADC_BANKACCTCODE from GLM_BANKMASTER (glm-05)
                         continue
                     endif
 
-                    rem --- For every unique bank account (non-blank BANK_NAME + non-blank BNK_ACCT_NO) in source GLM_BANKMASTER (glm-05),
-                    rem --- copy source data to ADC_BANKACCTCODE and assign a unique BNK_ACCT_CD
+                    rem --- For every GLM_BANKMASTER (glm-05) record, copy source data to ADC_BANKACCTCODE and assign a unique BNK_ACCT_CD
                     bnkAcctCd_mask$=fill(len(adcBankAcctCode.bnk_acct_cd$),"0")
                     next_bnkAcctCd=1
                     read(source_dev,key="",dom=*next)
                     while 1
                         readrecord(source_dev,end=*break)source_tpl$
-                        if cvs(source_tpl.name$,2)<>"" and cvs(source_tpl.bnk_acct_no$,2)<>"" then
-                            redim adcBankAcctCode$
-                            adcBankAcctCode.firm_id$=source_tpl.firm_id$
-                            adcBankAcctCode.bnk_acct_cd$=str(next_bnkAcctCd:bnkAcctCd_mask$)
-                            adcBankAcctCode.acct_desc$=source_tpl.description$
-                            if cvs(adcBankAcctCode.acct_desc$,2)="" then
-                                rem --- If ACCT_DESC is blank, use GL_ACCT_DESC from GLM_ACCT (glm-01) for the GLM_BANKMASTER (glm-05) GL_ACCOUNT
-                                redim glmAcct$
-                                readrecord(glmAcct_dev,key=source_tpl.firm_id$+source_tpl.gl_account$,dom=*next)glmAcct$
-                                if cvs(glmAcct.gl_acct_desc$,2)<>"" then
-                                    adcBankAcctCode.acct_desc$=glmAcct.gl_acct_desc$
-                                else
-                                    adcBankAcctCode.acct_desc$=cvs(source_tpl.bnk_acct_no$,2)+" -- "+ cvs(source_tpl.name$,2)
-                                endif
+                        redim adcBankAcctCode$
+                        adcBankAcctCode.firm_id$=source_tpl.firm_id$
+                        adcBankAcctCode.bnk_acct_cd$=str(next_bnkAcctCd:bnkAcctCd_mask$)
+                        adcBankAcctCode.acct_desc$=source_tpl.description$
+                        if cvs(adcBankAcctCode.acct_desc$,2)="" then
+                            rem --- If ACCT_DESC is blank, use GL_ACCT_DESC from GLM_ACCT (glm-01) for the GLM_BANKMASTER (glm-05) GL_ACCOUNT
+                            redim glmAcct$
+                            readrecord(glmAcct_dev,key=source_tpl.firm_id$+source_tpl.gl_account$,dom=*next)glmAcct$
+                            if cvs(glmAcct.gl_acct_desc$,2)<>"" then
+                                adcBankAcctCode.acct_desc$=glmAcct.gl_acct_desc$
+                            else
+                                adcBankAcctCode.acct_desc$=cvs(source_tpl.bnk_acct_no$,2)+" -- "+ cvs(source_tpl.name$,2)
                             endif
-                            adcBankAcctCode.bank_name$=source_tpl.name$
-                            adcBankAcctCode.address_line_1$=source_tpl.address_line_1$
-                            adcBankAcctCode.address_line_2$=source_tpl.address_line_2$
-                            adcBankAcctCode.address_line_3$=source_tpl.address_line_3$
-                            adcBankAcctCode.aba_no$=""
-                            adcBankAcctCode.bnk_acct_no$=source_tpl.bnk_acct_no$
-                            adcBankAcctCode.bnk_acct_type$=""
-                            adcBankAcctCode$=field(adcBankAcctCode$)
-                            writerecord(adcBankAcctCode_dev)adcBankAcctCode$
-                        
-                            rem --- Initialize new GLM_BANKMASTER.BNK_ACCT_CD with the ADC_BANKACCTCODE.BNK_ACCT_CD for the matching BANK_NAME + BNK_ACCT_NO
-                            readrecord(glmBankMaster_dev,key=source_tpl.firm_id$+source_tpl.gl_account$,dom=*endif)glmBankMaster$
-                            glmBankMaster.bnk_acct_cd$=adcBankAcctCode.bnk_acct_cd$
-                            writerecord(glmBankMaster_dev)glmBankMaster$
-                            next_bnkAcctCd=next_bnkAcctCd+1
                         endif
+                        adcBankAcctCode.bank_name$=source_tpl.name$
+                        adcBankAcctCode.address_line_1$=source_tpl.address_line_1$
+                        adcBankAcctCode.address_line_2$=source_tpl.address_line_2$
+                        adcBankAcctCode.address_line_3$=source_tpl.address_line_3$
+                        adcBankAcctCode.aba_no$=""
+                        adcBankAcctCode.bnk_acct_no$=source_tpl.bnk_acct_no$
+                        adcBankAcctCode.bnk_acct_type$=""
+                        adcBankAcctCode$=field(adcBankAcctCode$)
+                        writerecord(adcBankAcctCode_dev)adcBankAcctCode$
+                    
+                        rem --- Initialize new GLM_BANKMASTER.BNK_ACCT_CD with the ADC_BANKACCTCODE.BNK_ACCT_CD for the matching BANK_NAME + BNK_ACCT_NO
+                        readrecord(glmBankMaster_dev,key=source_tpl.firm_id$+source_tpl.gl_account$,dom=*endif)glmBankMaster$
+                        glmBankMaster.bnk_acct_cd$=adcBankAcctCode.bnk_acct_cd$
+                        writerecord(glmBankMaster_dev)glmBankMaster$
+                        next_bnkAcctCd=next_bnkAcctCd+1
                     wend
                 endif
             else
