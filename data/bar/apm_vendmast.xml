@@ -21,9 +21,9 @@
 			<ASC_LICENSE_ID id="ddm_tables.apm_vendmast">3BB1D20D5EEBAE71E979758B43E819AD</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.apm_vendmast">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.apm_vendmast">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.apm_vendmast">20190219</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.apm_vendmast">20190219</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.apm_vendmast">175759</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.apm_vendmast">20190306</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.apm_vendmast">20190306</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.apm_vendmast">084826</DD_LSTSYNC_TIME>
 			<DD_ATTR_ATAB id="ddm_tables.apm_vendmast"></DD_ATTR_ATAB>
 			<DD_ATTR_CPGM id="ddm_tables.apm_vendmast">C:/dev_projects/aon_dev1/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.apm_vendmast"></DD_ATTR_DKNM>
@@ -89,6 +89,10 @@
 	</ALIAS>
 	<ALIAS id="ddm_table_cpro">
 		<ID id="ddm_table_cpro">DDM_TABLE_CPRO</ID>
+		<RECORD id="ddm_table_cpro.apm_vendmastadis">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.apm_vendmastadis">APM_VENDMAST    </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.apm_vendmastadis">ADIS</DD_ATTR_CPRO>
+		</RECORD>
 		<RECORD id="ddm_table_cpro.apm_vendmastaopt-hcpy">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.apm_vendmastaopt-hcpy">APM_VENDMAST    </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.apm_vendmastaopt-hcpy">AOPT-HCPY</DD_ATTR_CPRO>
@@ -104,6 +108,10 @@
 		<RECORD id="ddm_table_cpro.apm_vendmastaopt-rhst">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.apm_vendmastaopt-rhst">APM_VENDMAST    </DD_TABLE_ALIAS>
 			<DD_ATTR_CPRO id="ddm_table_cpro.apm_vendmastaopt-rhst">AOPT-RHST</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_table_cpro.apm_vendmastarec">
+			<DD_TABLE_ALIAS id="ddm_table_cpro.apm_vendmastarec">APM_VENDMAST    </DD_TABLE_ALIAS>
+			<DD_ATTR_CPRO id="ddm_table_cpro.apm_vendmastarec">AREC</DD_ATTR_CPRO>
 		</RECORD>
 		<RECORD id="ddm_table_cpro.apm_vendmastarnf">
 			<DD_TABLE_ALIAS id="ddm_table_cpro.apm_vendmastarnf">APM_VENDMAST    </DD_TABLE_ALIAS>
@@ -190,8 +198,14 @@
 		<RECORD id="ddm_table_tabg.apm_vendmast02">
 			<DD_TABLE_ALIAS id="ddm_table_tabg.apm_vendmast02">APM_VENDMAST    </DD_TABLE_ALIAS>
 			<DD_ATTR_SEQ id="ddm_table_tabg.apm_vendmast02">02</DD_ATTR_SEQ>
-			<DD_ATTR_TABG id="ddm_table_tabg.apm_vendmast02">Comments</DD_ATTR_TABG>
-			<DD_ATTR_ICON id="ddm_table_tabg.apm_vendmast02">[+CUST_IMAGES]address_block.png</DD_ATTR_ICON>
+			<DD_ATTR_TABG id="ddm_table_tabg.apm_vendmast02">Payment Information</DD_ATTR_TABG>
+			<DD_ATTR_ICON id="ddm_table_tabg.apm_vendmast02">C:\dev_projects\aon_dev1\aon\cust_images\bank.png</DD_ATTR_ICON>
+		</RECORD>
+		<RECORD id="ddm_table_tabg.apm_vendmast03">
+			<DD_TABLE_ALIAS id="ddm_table_tabg.apm_vendmast03">APM_VENDMAST    </DD_TABLE_ALIAS>
+			<DD_ATTR_SEQ id="ddm_table_tabg.apm_vendmast03">03</DD_ATTR_SEQ>
+			<DD_ATTR_TABG id="ddm_table_tabg.apm_vendmast03">Comments</DD_ATTR_TABG>
+			<DD_ATTR_ICON id="ddm_table_tabg.apm_vendmast03">[+CUST_IMAGES]address_block.png</DD_ATTR_ICON>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_tpls">
@@ -199,7 +213,7 @@
 		<RECORD id="ddm_table_tpls.apm_vendmast">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.apm_vendmast">APM_VENDMAST    </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.apm_vendmast">apm-01</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.apm_vendmast">firm_id:c(2),vendor_id:c(6),vendor_name:c(30),addr_line_1:c(24),addr_line_2:c(24),city:c(22),state_code:c(2),zip_code:c(9),phone_no:c(20),phone_exten:c(4),contact_name:c(20),alt_sequence:c(10),reserved_str:c(3),hold_flag:c(1),federal_id:c(15),vendor_1099:c(1),vendor_acct:c(10),fax_no:c(20),fob:c(15),ap_ship_via:c(15),reserved_str_02:c(20),opened_date:c(8),temp_vend:c(1),cntry_id:c(2),po_frt_terms:c(15),vend_inactive:c(1),payment_type:c(1),aba_no:c(10),bnk_acct_no:c(15),bnk_acct_type:c(1),memo_1024:c(1024*=1)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.apm_vendmast">firm_id:c(2),vendor_id:c(6),vendor_name:c(30),addr_line_1:c(24),addr_line_2:c(24),city:c(22),state_code:c(2),zip_code:c(9),phone_no:c(20),phone_exten:c(4),contact_name:c(20),alt_sequence:c(10),reserved_str:c(3),hold_flag:c(1),federal_id:c(15),vendor_1099:c(1),vendor_acct:c(10),fax_no:c(20),fob:c(15),ap_ship_via:c(15),reserved_str_02:c(20),opened_date:c(8),temp_vend:c(1),cntry_id:c(2),po_frt_terms:c(15),vend_inactive:c(1),payment_type:c(1),bank_name:c(30),aba_no:c(10),bnk_acct_no:c(15),bnk_acct_type:c(1),memo_1024:c(1024*=1)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -398,7 +412,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast001"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast001"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast001"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast001"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast001"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast001"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast001"></DD_ATTR_CTLY>
@@ -443,7 +456,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast002"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast002"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast002">C:/dev_projects/aon_dev1/aon/;</DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast002"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast002"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast002"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast002"></DD_ATTR_CTLY>
@@ -488,7 +500,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast003"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast003"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast003">C:/dev_projects/aon_dev1/aon/;</DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast003"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast003"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast003"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast003"></DD_ATTR_CTLY>
@@ -533,7 +544,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast004"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast004"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast004"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast004"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast004"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast004"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast004"></DD_ATTR_CTLY>
@@ -578,7 +588,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast005"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast005"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast005"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast005"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast005"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast005"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast005"></DD_ATTR_CTLY>
@@ -623,7 +632,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast006"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast006"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast006"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast006"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast006"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast006"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast006"></DD_ATTR_CTLY>
@@ -668,7 +676,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast007"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast007"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast007"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast007"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast007"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast007"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast007"></DD_ATTR_CTLY>
@@ -713,7 +720,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast008"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast008"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast008"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast008"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast008"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast008">+10</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast008">-1</DD_ATTR_CTLY>
@@ -758,7 +764,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast009"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast009"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast009"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast009"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast009"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast009"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast009"></DD_ATTR_CTLY>
@@ -803,7 +808,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast010"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast010"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast010"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast010"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast010"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast010">+21</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast010">-1</DD_ATTR_CTLY>
@@ -848,7 +852,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast011"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast011"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast011"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast011"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast011"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast011"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast011"></DD_ATTR_CTLY>
@@ -893,7 +896,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast012"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast012"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast012"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast012"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast012"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast012">-21</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast012"></DD_ATTR_CTLY>
@@ -938,7 +940,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast013"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast013"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast013"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast013"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast013"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast013"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast013"></DD_ATTR_CTLY>
@@ -983,7 +984,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast014"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast014"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast014"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast014"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast014"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast014"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast014"></DD_ATTR_CTLY>
@@ -1028,7 +1028,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast015"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast015"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast015"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast015"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast015"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast015">+41</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast015">-9</DD_ATTR_CTLY>
@@ -1073,7 +1072,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast016"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast016"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast016"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast016"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast016"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast016"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast016"></DD_ATTR_CTLY>
@@ -1118,7 +1116,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast017"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast017"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast017"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast017"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast017"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast017"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast017"></DD_ATTR_CTLY>
@@ -1163,7 +1160,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast018"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast018"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast018"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast018"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast018"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast018"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast018"></DD_ATTR_CTLY>
@@ -1208,7 +1204,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast019"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast019"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast019"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast019"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast019"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast019"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast019"></DD_ATTR_CTLY>
@@ -1253,7 +1248,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast020"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast020"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast020"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast020"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast020"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast020"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast020"></DD_ATTR_CTLY>
@@ -1298,7 +1292,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast021"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast021"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast021"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast021"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast021"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast021"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast021"></DD_ATTR_CTLY>
@@ -1343,7 +1336,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast022"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast022"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast022"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast022"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast022"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast022"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast022"></DD_ATTR_CTLY>
@@ -1388,7 +1380,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast023"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast023"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast023"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast023"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast023"></DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast023"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast023"></DD_ATTR_CTLY>
@@ -1433,7 +1424,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast024"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast024"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast024"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast024"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast024">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast024">-10</DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast024"></DD_ATTR_CTLY>
@@ -1478,7 +1468,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast025"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast025"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast025"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast025"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast025">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast025"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast025"></DD_ATTR_CTLY>
@@ -1514,7 +1503,7 @@
 			<DD_COL_REPEATS id="ddm_table_cols.apm_vendmast026">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.apm_vendmast026">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.apm_vendmast026">N</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.apm_vendmast026">0A</DD_DELIM_CHAR>
+			<DD_DELIM_CHAR id="ddm_table_cols.apm_vendmast026"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.apm_vendmast026"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.apm_vendmast026"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.apm_vendmast026"></DD_MASK_TYPE>
@@ -1523,7 +1512,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast026"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast026"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast026"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast026"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast026">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast026"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast026"></DD_ATTR_CTLY>
@@ -1567,8 +1555,7 @@
 			<DD_LSTREV_DATE id="ddm_table_cols.apm_vendmast027">20190219</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast027"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast027"></DD_ATTR_ABLV>
-			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast027"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast027"></DD_ATTR_CWID>
+			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast027">C:/dev_projects/aon_dev1/aon/;</DD_ATTR_CPGM>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast027">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast027"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast027"></DD_ATTR_CTLY>
@@ -1581,15 +1568,15 @@
 			<DD_ATTR_LABL id="ddm_table_cols.apm_vendmast027"></DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_table_cols.apm_vendmast027"></DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.apm_vendmast027">N</DD_ATTR_MLAN>
-			<DD_ATTR_MINL id="ddm_table_cols.apm_vendmast027"></DD_ATTR_MINL>
+			<DD_ATTR_MINL id="ddm_table_cols.apm_vendmast027">1</DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.apm_vendmast027"></DD_ATTR_MAXL>
 			<DD_ATTR_MINV id="ddm_table_cols.apm_vendmast027"></DD_ATTR_MINV>
 			<DD_ATTR_MAXV id="ddm_table_cols.apm_vendmast027"></DD_ATTR_MAXV>
 			<DD_ATTR_PROM id="ddm_table_cols.apm_vendmast027"></DD_ATTR_PROM>
 			<DD_ATTR_PVAL id="ddm_table_cols.apm_vendmast027"></DD_ATTR_PVAL>
 			<DD_ATTR_SLEV id="ddm_table_cols.apm_vendmast027"></DD_ATTR_SLEV>
-			<DD_ATTR_TABG id="ddm_table_cols.apm_vendmast027"></DD_ATTR_TABG>
-			<DD_ATTR_TIND id="ddm_table_cols.apm_vendmast027">28</DD_ATTR_TIND>
+			<DD_ATTR_TABG id="ddm_table_cols.apm_vendmast027">2</DD_ATTR_TABG>
+			<DD_ATTR_TIND id="ddm_table_cols.apm_vendmast027">27</DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.apm_vendmast027"></DD_ATTR_HELP>
 			<SQL_COLUMN_NAME id="ddm_table_cols.apm_vendmast027">PAYMENT_TYPE</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.apm_vendmast027"></DD_ATTR_FONT>
@@ -1599,8 +1586,8 @@
 		<RECORD id="ddm_table_cols.apm_vendmast028">
 			<DD_TABLE_ALIAS id="ddm_table_cols.apm_vendmast028">APM_VENDMAST    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.apm_vendmast028">028</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.apm_vendmast028">ABA_NO          </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.apm_vendmast028">ABA_NO          </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.apm_vendmast028">NAME            </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.apm_vendmast028">BANK_NAME       </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.apm_vendmast028">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.apm_vendmast028">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.apm_vendmast028">N</DD_FIELD_DELIM>
@@ -1608,12 +1595,11 @@
 			<DD_SYSTEM_REC id="ddm_table_cols.apm_vendmast028"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.apm_vendmast028"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.apm_vendmast028"></DD_MASK_TYPE>
-			<DD_CREATE_DATE id="ddm_table_cols.apm_vendmast028">20190219</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.apm_vendmast028">20190219</DD_LSTREV_DATE>
+			<DD_CREATE_DATE id="ddm_table_cols.apm_vendmast028">20190306</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.apm_vendmast028">20190306</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast028"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast028"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast028"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast028"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast028">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast028"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast028"></DD_ATTR_CTLY>
@@ -1623,8 +1609,8 @@
 			<DD_ATTR_DRLE id="ddm_table_cols.apm_vendmast028"></DD_ATTR_DRLE>
 			<DD_ATTR_GHDR id="ddm_table_cols.apm_vendmast028"></DD_ATTR_GHDR>
 			<DD_ATTR_IDEF id="ddm_table_cols.apm_vendmast028"></DD_ATTR_IDEF>
-			<DD_ATTR_LABL id="ddm_table_cols.apm_vendmast028"></DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.apm_vendmast028"></DD_ATTR_LABS>
+			<DD_ATTR_LABL id="ddm_table_cols.apm_vendmast028">Bank Name</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.apm_vendmast028">Bank Name</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.apm_vendmast028">N</DD_ATTR_MLAN>
 			<DD_ATTR_MINL id="ddm_table_cols.apm_vendmast028"></DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.apm_vendmast028"></DD_ATTR_MAXL>
@@ -1634,9 +1620,9 @@
 			<DD_ATTR_PVAL id="ddm_table_cols.apm_vendmast028"></DD_ATTR_PVAL>
 			<DD_ATTR_SLEV id="ddm_table_cols.apm_vendmast028"></DD_ATTR_SLEV>
 			<DD_ATTR_TABG id="ddm_table_cols.apm_vendmast028"></DD_ATTR_TABG>
-			<DD_ATTR_TIND id="ddm_table_cols.apm_vendmast028">29</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.apm_vendmast028">28</DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.apm_vendmast028"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.apm_vendmast028">ABA_NO</SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.apm_vendmast028">BANK_NAME</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.apm_vendmast028"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.apm_vendmast028"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.apm_vendmast028">N</DD_ATTR_FTSR>
@@ -1644,8 +1630,8 @@
 		<RECORD id="ddm_table_cols.apm_vendmast029">
 			<DD_TABLE_ALIAS id="ddm_table_cols.apm_vendmast029">APM_VENDMAST    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.apm_vendmast029">029</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.apm_vendmast029">BNK_ACCT_NO     </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.apm_vendmast029">BNK_ACCT_NO     </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.apm_vendmast029">ABA_NO          </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.apm_vendmast029">ABA_NO          </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.apm_vendmast029">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.apm_vendmast029">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.apm_vendmast029">N</DD_FIELD_DELIM>
@@ -1658,7 +1644,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast029"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast029"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast029"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast029"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast029">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast029"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast029"></DD_ATTR_CTLY>
@@ -1668,10 +1653,10 @@
 			<DD_ATTR_DRLE id="ddm_table_cols.apm_vendmast029"></DD_ATTR_DRLE>
 			<DD_ATTR_GHDR id="ddm_table_cols.apm_vendmast029"></DD_ATTR_GHDR>
 			<DD_ATTR_IDEF id="ddm_table_cols.apm_vendmast029"></DD_ATTR_IDEF>
-			<DD_ATTR_LABL id="ddm_table_cols.apm_vendmast029"></DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.apm_vendmast029"></DD_ATTR_LABS>
+			<DD_ATTR_LABL id="ddm_table_cols.apm_vendmast029">Bank Routing Number</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.apm_vendmast029">Bnk Route No</DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.apm_vendmast029">N</DD_ATTR_MLAN>
-			<DD_ATTR_MINL id="ddm_table_cols.apm_vendmast029"></DD_ATTR_MINL>
+			<DD_ATTR_MINL id="ddm_table_cols.apm_vendmast029">1</DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.apm_vendmast029"></DD_ATTR_MAXL>
 			<DD_ATTR_MINV id="ddm_table_cols.apm_vendmast029"></DD_ATTR_MINV>
 			<DD_ATTR_MAXV id="ddm_table_cols.apm_vendmast029"></DD_ATTR_MAXV>
@@ -1679,9 +1664,9 @@
 			<DD_ATTR_PVAL id="ddm_table_cols.apm_vendmast029"></DD_ATTR_PVAL>
 			<DD_ATTR_SLEV id="ddm_table_cols.apm_vendmast029"></DD_ATTR_SLEV>
 			<DD_ATTR_TABG id="ddm_table_cols.apm_vendmast029"></DD_ATTR_TABG>
-			<DD_ATTR_TIND id="ddm_table_cols.apm_vendmast029">30</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.apm_vendmast029">29</DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.apm_vendmast029"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.apm_vendmast029">BNK_ACCT_NO</SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.apm_vendmast029">ABA_NO</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.apm_vendmast029"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.apm_vendmast029"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.apm_vendmast029">N</DD_ATTR_FTSR>
@@ -1689,8 +1674,8 @@
 		<RECORD id="ddm_table_cols.apm_vendmast030">
 			<DD_TABLE_ALIAS id="ddm_table_cols.apm_vendmast030">APM_VENDMAST    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.apm_vendmast030">030</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.apm_vendmast030">BNK_ACCT_TYPE   </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.apm_vendmast030">BNK_ACCT_TYPE   </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.apm_vendmast030">BNK_ACCT_NO     </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.apm_vendmast030">BNK_ACCT_NO     </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.apm_vendmast030">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.apm_vendmast030">0</DD_COL_OCCURS>
 			<DD_FIELD_DELIM id="ddm_table_cols.apm_vendmast030">N</DD_FIELD_DELIM>
@@ -1703,7 +1688,6 @@
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast030"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast030"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast030"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast030"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast030">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast030"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast030"></DD_ATTR_CTLY>
@@ -1716,7 +1700,7 @@
 			<DD_ATTR_LABL id="ddm_table_cols.apm_vendmast030"></DD_ATTR_LABL>
 			<DD_ATTR_LABS id="ddm_table_cols.apm_vendmast030"></DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.apm_vendmast030">N</DD_ATTR_MLAN>
-			<DD_ATTR_MINL id="ddm_table_cols.apm_vendmast030"></DD_ATTR_MINL>
+			<DD_ATTR_MINL id="ddm_table_cols.apm_vendmast030">1</DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.apm_vendmast030"></DD_ATTR_MAXL>
 			<DD_ATTR_MINV id="ddm_table_cols.apm_vendmast030"></DD_ATTR_MINV>
 			<DD_ATTR_MAXV id="ddm_table_cols.apm_vendmast030"></DD_ATTR_MAXV>
@@ -1724,9 +1708,9 @@
 			<DD_ATTR_PVAL id="ddm_table_cols.apm_vendmast030"></DD_ATTR_PVAL>
 			<DD_ATTR_SLEV id="ddm_table_cols.apm_vendmast030"></DD_ATTR_SLEV>
 			<DD_ATTR_TABG id="ddm_table_cols.apm_vendmast030"></DD_ATTR_TABG>
-			<DD_ATTR_TIND id="ddm_table_cols.apm_vendmast030">31</DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.apm_vendmast030">30</DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.apm_vendmast030"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.apm_vendmast030">BNK_ACCT_TYPE</SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.apm_vendmast030">BNK_ACCT_NO</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.apm_vendmast030"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.apm_vendmast030"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.apm_vendmast030">N</DD_ATTR_FTSR>
@@ -1734,21 +1718,20 @@
 		<RECORD id="ddm_table_cols.apm_vendmast031">
 			<DD_TABLE_ALIAS id="ddm_table_cols.apm_vendmast031">APM_VENDMAST    </DD_TABLE_ALIAS>
 			<DD_SEQUENCE id="ddm_table_cols.apm_vendmast031">031</DD_SEQUENCE>
-			<DD_DATA_NAME id="ddm_table_cols.apm_vendmast031">MEMO_1024       </DD_DATA_NAME>
-			<DD_DVAR_NAME id="ddm_table_cols.apm_vendmast031">MEMO_1024       </DD_DVAR_NAME>
+			<DD_DATA_NAME id="ddm_table_cols.apm_vendmast031">BNK_ACCT_TYPE   </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.apm_vendmast031">BNK_ACCT_TYPE   </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.apm_vendmast031">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.apm_vendmast031">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.apm_vendmast031">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.apm_vendmast031">01</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.apm_vendmast031">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.apm_vendmast031"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.apm_vendmast031"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.apm_vendmast031"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.apm_vendmast031"></DD_MASK_TYPE>
-			<DD_CREATE_DATE id="ddm_table_cols.apm_vendmast031">20170328</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_table_cols.apm_vendmast031">20170328</DD_LSTREV_DATE>
+			<DD_CREATE_DATE id="ddm_table_cols.apm_vendmast031">20190219</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.apm_vendmast031">20190219</DD_LSTREV_DATE>
 			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast031"></DD_ATTR_ABLC>
 			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast031"></DD_ATTR_ABLV>
 			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast031"></DD_ATTR_CPGM>
-			<DD_ATTR_CWID id="ddm_table_cols.apm_vendmast031"></DD_ATTR_CWID>
 			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast031">0</DD_ATTR_COLW>
 			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast031"></DD_ATTR_CTLX>
 			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast031"></DD_ATTR_CTLY>
@@ -1758,8 +1741,8 @@
 			<DD_ATTR_DRLE id="ddm_table_cols.apm_vendmast031"></DD_ATTR_DRLE>
 			<DD_ATTR_GHDR id="ddm_table_cols.apm_vendmast031"></DD_ATTR_GHDR>
 			<DD_ATTR_IDEF id="ddm_table_cols.apm_vendmast031"></DD_ATTR_IDEF>
-			<DD_ATTR_LABL id="ddm_table_cols.apm_vendmast031">Vendor Comments</DD_ATTR_LABL>
-			<DD_ATTR_LABS id="ddm_table_cols.apm_vendmast031">Vendor Comments</DD_ATTR_LABS>
+			<DD_ATTR_LABL id="ddm_table_cols.apm_vendmast031"></DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.apm_vendmast031"></DD_ATTR_LABS>
 			<DD_ATTR_MLAN id="ddm_table_cols.apm_vendmast031">N</DD_ATTR_MLAN>
 			<DD_ATTR_MINL id="ddm_table_cols.apm_vendmast031"></DD_ATTR_MINL>
 			<DD_ATTR_MAXL id="ddm_table_cols.apm_vendmast031"></DD_ATTR_MAXL>
@@ -1768,13 +1751,78 @@
 			<DD_ATTR_PROM id="ddm_table_cols.apm_vendmast031"></DD_ATTR_PROM>
 			<DD_ATTR_PVAL id="ddm_table_cols.apm_vendmast031"></DD_ATTR_PVAL>
 			<DD_ATTR_SLEV id="ddm_table_cols.apm_vendmast031"></DD_ATTR_SLEV>
-			<DD_ATTR_TABG id="ddm_table_cols.apm_vendmast031">2</DD_ATTR_TABG>
-			<DD_ATTR_TIND id="ddm_table_cols.apm_vendmast031">27</DD_ATTR_TIND>
+			<DD_ATTR_TABG id="ddm_table_cols.apm_vendmast031"></DD_ATTR_TABG>
+			<DD_ATTR_TIND id="ddm_table_cols.apm_vendmast031">31</DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.apm_vendmast031"></DD_ATTR_HELP>
-			<SQL_COLUMN_NAME id="ddm_table_cols.apm_vendmast031">MEMO_1024</SQL_COLUMN_NAME>
+			<SQL_COLUMN_NAME id="ddm_table_cols.apm_vendmast031">BNK_ACCT_TYPE</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.apm_vendmast031"></DD_ATTR_FONT>
 			<DD_ATTR_STYL id="ddm_table_cols.apm_vendmast031"></DD_ATTR_STYL>
 			<DD_ATTR_FTSR id="ddm_table_cols.apm_vendmast031">N</DD_ATTR_FTSR>
+		</RECORD>
+		<RECORD id="ddm_table_cols.apm_vendmast032">
+			<DD_TABLE_ALIAS id="ddm_table_cols.apm_vendmast032">APM_VENDMAST    </DD_TABLE_ALIAS>
+			<DD_SEQUENCE id="ddm_table_cols.apm_vendmast032">032</DD_SEQUENCE>
+			<DD_DATA_NAME id="ddm_table_cols.apm_vendmast032">MEMO_1024       </DD_DATA_NAME>
+			<DD_DVAR_NAME id="ddm_table_cols.apm_vendmast032">MEMO_1024       </DD_DVAR_NAME>
+			<DD_COL_REPEATS id="ddm_table_cols.apm_vendmast032">0</DD_COL_REPEATS>
+			<DD_COL_OCCURS id="ddm_table_cols.apm_vendmast032">0</DD_COL_OCCURS>
+			<DD_FIELD_DELIM id="ddm_table_cols.apm_vendmast032">Y</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.apm_vendmast032">01</DD_DELIM_CHAR>
+			<DD_SYSTEM_REC id="ddm_table_cols.apm_vendmast032"></DD_SYSTEM_REC>
+			<DD_SYSTEM_ID id="ddm_table_cols.apm_vendmast032"></DD_SYSTEM_ID>
+			<DD_MASK_TYPE id="ddm_table_cols.apm_vendmast032"></DD_MASK_TYPE>
+			<DD_CREATE_DATE id="ddm_table_cols.apm_vendmast032">20170328</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_table_cols.apm_vendmast032">20170328</DD_LSTREV_DATE>
+			<DD_ATTR_ABLC id="ddm_table_cols.apm_vendmast032"></DD_ATTR_ABLC>
+			<DD_ATTR_ABLV id="ddm_table_cols.apm_vendmast032"></DD_ATTR_ABLV>
+			<DD_ATTR_CPGM id="ddm_table_cols.apm_vendmast032"></DD_ATTR_CPGM>
+			<DD_ATTR_COLW id="ddm_table_cols.apm_vendmast032">0</DD_ATTR_COLW>
+			<DD_ATTR_CTLX id="ddm_table_cols.apm_vendmast032"></DD_ATTR_CTLX>
+			<DD_ATTR_CTLY id="ddm_table_cols.apm_vendmast032"></DD_ATTR_CTLY>
+			<DD_ATTR_CTLW id="ddm_table_cols.apm_vendmast032"></DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_table_cols.apm_vendmast032"></DD_ATTR_CTLH>
+			<DD_ATTR_DFLT id="ddm_table_cols.apm_vendmast032"></DD_ATTR_DFLT>
+			<DD_ATTR_DRLE id="ddm_table_cols.apm_vendmast032"></DD_ATTR_DRLE>
+			<DD_ATTR_GHDR id="ddm_table_cols.apm_vendmast032"></DD_ATTR_GHDR>
+			<DD_ATTR_IDEF id="ddm_table_cols.apm_vendmast032"></DD_ATTR_IDEF>
+			<DD_ATTR_LABL id="ddm_table_cols.apm_vendmast032">Vendor Comments</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_cols.apm_vendmast032">Vendor Comments</DD_ATTR_LABS>
+			<DD_ATTR_MLAN id="ddm_table_cols.apm_vendmast032">N</DD_ATTR_MLAN>
+			<DD_ATTR_MINL id="ddm_table_cols.apm_vendmast032"></DD_ATTR_MINL>
+			<DD_ATTR_MAXL id="ddm_table_cols.apm_vendmast032"></DD_ATTR_MAXL>
+			<DD_ATTR_MINV id="ddm_table_cols.apm_vendmast032"></DD_ATTR_MINV>
+			<DD_ATTR_MAXV id="ddm_table_cols.apm_vendmast032"></DD_ATTR_MAXV>
+			<DD_ATTR_PROM id="ddm_table_cols.apm_vendmast032"></DD_ATTR_PROM>
+			<DD_ATTR_PVAL id="ddm_table_cols.apm_vendmast032"></DD_ATTR_PVAL>
+			<DD_ATTR_SLEV id="ddm_table_cols.apm_vendmast032"></DD_ATTR_SLEV>
+			<DD_ATTR_TABG id="ddm_table_cols.apm_vendmast032">3</DD_ATTR_TABG>
+			<DD_ATTR_TIND id="ddm_table_cols.apm_vendmast032">33</DD_ATTR_TIND>
+			<DD_ATTR_HELP id="ddm_table_cols.apm_vendmast032"></DD_ATTR_HELP>
+			<SQL_COLUMN_NAME id="ddm_table_cols.apm_vendmast032">MEMO_1024</SQL_COLUMN_NAME>
+			<DD_ATTR_FONT id="ddm_table_cols.apm_vendmast032"></DD_ATTR_FONT>
+			<DD_ATTR_STYL id="ddm_table_cols.apm_vendmast032"></DD_ATTR_STYL>
+			<DD_ATTR_FTSR id="ddm_table_cols.apm_vendmast032">N</DD_ATTR_FTSR>
+		</RECORD>
+	</ALIAS>
+	<ALIAS id="ddm_table_disp">
+		<ID id="ddm_table_disp">DDM_TABLE_DISP</ID>
+		<RECORD id="ddm_table_disp.apm_vendmast001">
+			<DD_TABLE_ALIAS id="ddm_table_disp.apm_vendmast001">APM_VENDMAST    </DD_TABLE_ALIAS>
+			<DD_SEQUENCE id="ddm_table_disp.apm_vendmast001">001</DD_SEQUENCE>
+			<DD_DATA_NAME id="ddm_table_disp.apm_vendmast001">EMAIL_ADDR      </DD_DATA_NAME>
+			<DD_CTRL_NAME id="ddm_table_disp.apm_vendmast001">CHKSTUB_EMAIL   </DD_CTRL_NAME>
+			<DD_ATTR_LABL id="ddm_table_disp.apm_vendmast001">Check stub email to</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_table_disp.apm_vendmast001"></DD_ATTR_LABS>
+			<DD_ATTR_CALC id="ddm_table_disp.apm_vendmast001"></DD_ATTR_CALC>
+			<DD_ATTR_CTLX id="ddm_table_disp.apm_vendmast001">0</DD_ATTR_CTLX>
+			<DD_ATTR_CTLY id="ddm_table_disp.apm_vendmast001">0</DD_ATTR_CTLY>
+			<DD_ATTR_CTLW id="ddm_table_disp.apm_vendmast001"></DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_table_disp.apm_vendmast001"></DD_ATTR_CTLH>
+			<DD_ATTR_DRLE id="ddm_table_disp.apm_vendmast001"></DD_ATTR_DRLE>
+			<DD_ATTR_GHDR id="ddm_table_disp.apm_vendmast001"></DD_ATTR_GHDR>
+			<DD_ATTR_SLEV id="ddm_table_disp.apm_vendmast001"></DD_ATTR_SLEV>
+			<DD_ATTR_TABG id="ddm_table_disp.apm_vendmast001"></DD_ATTR_TABG>
+			<DD_ATTR_TIND id="ddm_table_disp.apm_vendmast001">32</DD_ATTR_TIND>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_cpro">
@@ -1788,6 +1836,11 @@
 			<DD_TABLE_ALIAS id="ddm_column_cpro.apm_vendmastvendor_nameaval">APM_VENDMAST    </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_cpro.apm_vendmastvendor_nameaval">VENDOR_NAME     </DD_DVAR_NAME>
 			<DD_ATTR_CPRO id="ddm_column_cpro.apm_vendmastvendor_nameaval">AVAL</DD_ATTR_CPRO>
+		</RECORD>
+		<RECORD id="ddm_column_cpro.apm_vendmastpayment_typeaval">
+			<DD_TABLE_ALIAS id="ddm_column_cpro.apm_vendmastpayment_typeaval">APM_VENDMAST    </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_cpro.apm_vendmastpayment_typeaval">PAYMENT_TYPE    </DD_DVAR_NAME>
+			<DD_ATTR_CPRO id="ddm_column_cpro.apm_vendmastpayment_typeaval">AVAL</DD_ATTR_CPRO>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_column_opts">
@@ -1812,26 +1865,6 @@
 			<DD_DVAR_NAME id="ddm_column_opts.apm_vendmastopened_dateb">OPENED_DATE     </DD_DVAR_NAME>
 			<DD_ATTR_OPTS id="ddm_column_opts.apm_vendmastopened_dateb">B</DD_ATTR_OPTS>
 		</RECORD>
-		<RECORD id="ddm_column_opts.apm_vendmastpayment_typeo">
-			<DD_TABLE_ALIAS id="ddm_column_opts.apm_vendmastpayment_typeo">APM_VENDMAST    </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_opts.apm_vendmastpayment_typeo">PAYMENT_TYPE    </DD_DVAR_NAME>
-			<DD_ATTR_OPTS id="ddm_column_opts.apm_vendmastpayment_typeo">O</DD_ATTR_OPTS>
-		</RECORD>
-		<RECORD id="ddm_column_opts.apm_vendmastaba_noo">
-			<DD_TABLE_ALIAS id="ddm_column_opts.apm_vendmastaba_noo">APM_VENDMAST    </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_opts.apm_vendmastaba_noo">ABA_NO          </DD_DVAR_NAME>
-			<DD_ATTR_OPTS id="ddm_column_opts.apm_vendmastaba_noo">O</DD_ATTR_OPTS>
-		</RECORD>
-		<RECORD id="ddm_column_opts.apm_vendmastbnk_acct_noo">
-			<DD_TABLE_ALIAS id="ddm_column_opts.apm_vendmastbnk_acct_noo">APM_VENDMAST    </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_opts.apm_vendmastbnk_acct_noo">BNK_ACCT_NO     </DD_DVAR_NAME>
-			<DD_ATTR_OPTS id="ddm_column_opts.apm_vendmastbnk_acct_noo">O</DD_ATTR_OPTS>
-		</RECORD>
-		<RECORD id="ddm_column_opts.apm_vendmastbnk_acct_typeo">
-			<DD_TABLE_ALIAS id="ddm_column_opts.apm_vendmastbnk_acct_typeo">APM_VENDMAST    </DD_TABLE_ALIAS>
-			<DD_DVAR_NAME id="ddm_column_opts.apm_vendmastbnk_acct_typeo">BNK_ACCT_TYPE   </DD_DVAR_NAME>
-			<DD_ATTR_OPTS id="ddm_column_opts.apm_vendmastbnk_acct_typeo">O</DD_ATTR_OPTS>
-		</RECORD>
 		<RECORD id="ddm_column_opts.apm_vendmastmemo_1024i">
 			<DD_TABLE_ALIAS id="ddm_column_opts.apm_vendmastmemo_1024i">APM_VENDMAST    </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_opts.apm_vendmastmemo_1024i">MEMO_1024       </DD_DVAR_NAME>
@@ -1846,6 +1879,11 @@
 			<DD_TABLE_ALIAS id="ddm_column_opts.apm_vendmastmemo_1024s">APM_VENDMAST    </DD_TABLE_ALIAS>
 			<DD_DVAR_NAME id="ddm_column_opts.apm_vendmastmemo_1024s">MEMO_1024       </DD_DVAR_NAME>
 			<DD_ATTR_OPTS id="ddm_column_opts.apm_vendmastmemo_1024s">s</DD_ATTR_OPTS>
+		</RECORD>
+		<RECORD id="ddm_column_opts.apm_vendmastchkstub_emailc">
+			<DD_TABLE_ALIAS id="ddm_column_opts.apm_vendmastchkstub_emailc">APM_VENDMAST    </DD_TABLE_ALIAS>
+			<DD_DVAR_NAME id="ddm_column_opts.apm_vendmastchkstub_emailc">CHKSTUB_EMAIL   </DD_DVAR_NAME>
+			<DD_ATTR_OPTS id="ddm_column_opts.apm_vendmastchkstub_emailc">C</DD_ATTR_OPTS>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_elements">
@@ -3202,6 +3240,58 @@
 			<DD_ATTR_Y2KW id="ddm_elements.payment_type"></DD_ATTR_Y2KW>
 			<DD_ATTR_CASB id="ddm_elements.payment_type"></DD_ATTR_CASB>
 		</RECORD>
+		<RECORD id="ddm_elements.name">
+			<DD_DATA_NAME id="ddm_elements.name">NAME            </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.name">Name</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.name">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.name">30</DD_DATA_LENGTH>
+			<DD_MASK_TYPE id="ddm_elements.name"> </DD_MASK_TYPE>
+			<DD_SYSTEM_REC id="ddm_elements.name">Y</DD_SYSTEM_REC>
+			<ASC_COMP_ID id="ddm_elements.name">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.name">ADB</ASC_PROD_ID>
+			<LOCALIZATION_EX id="ddm_elements.name"></LOCALIZATION_EX>
+			<DD_CREATE_DATE id="ddm_elements.name">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.name">20060119</DD_LSTREV_DATE>
+			<DD_AUTO_COMP id="ddm_elements.name"></DD_AUTO_COMP>
+			<DD_ATTR_BLNK id="ddm_elements.name"></DD_ATTR_BLNK>
+			<DD_ATTR_CDAT id="ddm_elements.name"></DD_ATTR_CDAT>
+			<DD_ATTR_CTLW id="ddm_elements.name"></DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.name"></DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.name">E</DD_ATTR_CTYP>
+			<DD_ATTR_DCOL id="ddm_elements.name"></DD_ATTR_DCOL>
+			<DD_ATTR_DCOM id="ddm_elements.name">            </DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.name">            </DD_ATTR_DEXP>
+			<DD_ATTR_DFLT id="ddm_elements.name"></DD_ATTR_DFLT>
+			<DD_ATTR_DKNM id="ddm_elements.name"></DD_ATTR_DKNM>
+			<DD_ATTR_DKEY id="ddm_elements.name"></DD_ATTR_DKEY>
+			<DD_ATTR_DTAB id="ddm_elements.name"></DD_ATTR_DTAB>
+			<DD_ATTR_DINQ id="ddm_elements.name"></DD_ATTR_DINQ>
+			<DD_ATTR_ENCR id="ddm_elements.name"></DD_ATTR_ENCR>
+			<DD_ATTR_IDEF id="ddm_elements.name"></DD_ATTR_IDEF>
+			<DD_ATTR_LABL id="ddm_elements.name">Name</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.name">Name</DD_ATTR_LABS>
+			<DD_ATTR_LDIS id="ddm_elements.name"></DD_ATTR_LDIS>
+			<DD_ATTR_MAXL id="ddm_elements.name"></DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.name"></DD_ATTR_MAXR>
+			<DD_ATTR_MAXV id="ddm_elements.name"></DD_ATTR_MAXV>
+			<DD_ATTR_MINL id="ddm_elements.name"></DD_ATTR_MINL>
+			<DD_ATTR_MINV id="ddm_elements.name"></DD_ATTR_MINV>
+			<DD_ATTR_MSKI id="ddm_elements.name"></DD_ATTR_MSKI>
+			<DD_ATTR_MSKO id="ddm_elements.name"></DD_ATTR_MSKO>
+			<DD_ATTR_PADC id="ddm_elements.name"></DD_ATTR_PADC>
+			<DD_ATTR_PADJ id="ddm_elements.name"></DD_ATTR_PADJ>
+			<DD_ATTR_PREC id="ddm_elements.name"></DD_ATTR_PREC>
+			<DD_ATTR_PROM id="ddm_elements.name"></DD_ATTR_PROM>
+			<DD_ATTR_PVAL id="ddm_elements.name"></DD_ATTR_PVAL>
+			<DD_ATTR_SDLG id="ddm_elements.name"></DD_ATTR_SDLG>
+			<DD_ATTR_SLEV id="ddm_elements.name"></DD_ATTR_SLEV>
+			<DD_ATTR_STYP id="ddm_elements.name"></DD_ATTR_STYP>
+			<DD_ATTR_STEP id="ddm_elements.name"></DD_ATTR_STEP>
+			<DD_ATTR_FLPT id="ddm_elements.name"></DD_ATTR_FLPT>
+			<DD_ATTR_OEMD id="ddm_elements.name"></DD_ATTR_OEMD>
+			<DD_ATTR_Y2KW id="ddm_elements.name"></DD_ATTR_Y2KW>
+			<DD_ATTR_CASB id="ddm_elements.name"></DD_ATTR_CASB>
+		</RECORD>
 		<RECORD id="ddm_elements.aba_no">
 			<DD_DATA_NAME id="ddm_elements.aba_no">ABA_NO          </DD_DATA_NAME>
 			<DD_DESCRIPTION id="ddm_elements.aba_no">Reference Number</DD_DESCRIPTION>
@@ -3409,6 +3499,58 @@
 			<DD_ATTR_OEMD id="ddm_elements.memo_1024"></DD_ATTR_OEMD>
 			<DD_ATTR_Y2KW id="ddm_elements.memo_1024"></DD_ATTR_Y2KW>
 			<DD_ATTR_CASB id="ddm_elements.memo_1024"></DD_ATTR_CASB>
+		</RECORD>
+		<RECORD id="ddm_elements.email_addr">
+			<DD_DATA_NAME id="ddm_elements.email_addr">EMAIL_ADDR      </DD_DATA_NAME>
+			<DD_DESCRIPTION id="ddm_elements.email_addr">Email Address</DD_DESCRIPTION>
+			<DD_DATA_TYPE id="ddm_elements.email_addr">C</DD_DATA_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.email_addr">80</DD_DATA_LENGTH>
+			<DD_MASK_TYPE id="ddm_elements.email_addr"></DD_MASK_TYPE>
+			<DD_SYSTEM_REC id="ddm_elements.email_addr"></DD_SYSTEM_REC>
+			<ASC_COMP_ID id="ddm_elements.email_addr">01007514</ASC_COMP_ID>
+			<ASC_PROD_ID id="ddm_elements.email_addr">AD </ASC_PROD_ID>
+			<LOCALIZATION_EX id="ddm_elements.email_addr"></LOCALIZATION_EX>
+			<DD_CREATE_DATE id="ddm_elements.email_addr">20060119</DD_CREATE_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.email_addr">20150316</DD_LSTREV_DATE>
+			<DD_AUTO_COMP id="ddm_elements.email_addr"></DD_AUTO_COMP>
+			<DD_ATTR_BLNK id="ddm_elements.email_addr"></DD_ATTR_BLNK>
+			<DD_ATTR_CDAT id="ddm_elements.email_addr"></DD_ATTR_CDAT>
+			<DD_ATTR_CTLW id="ddm_elements.email_addr"></DD_ATTR_CTLW>
+			<DD_ATTR_CTLH id="ddm_elements.email_addr"></DD_ATTR_CTLH>
+			<DD_ATTR_CTYP id="ddm_elements.email_addr">E</DD_ATTR_CTYP>
+			<DD_ATTR_DCOL id="ddm_elements.email_addr"></DD_ATTR_DCOL>
+			<DD_ATTR_DCOM id="ddm_elements.email_addr"></DD_ATTR_DCOM>
+			<DD_ATTR_DEXP id="ddm_elements.email_addr"></DD_ATTR_DEXP>
+			<DD_ATTR_DFLT id="ddm_elements.email_addr"></DD_ATTR_DFLT>
+			<DD_ATTR_DKNM id="ddm_elements.email_addr"></DD_ATTR_DKNM>
+			<DD_ATTR_DKEY id="ddm_elements.email_addr"></DD_ATTR_DKEY>
+			<DD_ATTR_DTAB id="ddm_elements.email_addr"></DD_ATTR_DTAB>
+			<DD_ATTR_DINQ id="ddm_elements.email_addr"></DD_ATTR_DINQ>
+			<DD_ATTR_ENCR id="ddm_elements.email_addr"></DD_ATTR_ENCR>
+			<DD_ATTR_IDEF id="ddm_elements.email_addr"></DD_ATTR_IDEF>
+			<DD_ATTR_LABL id="ddm_elements.email_addr">Email Address</DD_ATTR_LABL>
+			<DD_ATTR_LABS id="ddm_elements.email_addr">Email Addr</DD_ATTR_LABS>
+			<DD_ATTR_LDIS id="ddm_elements.email_addr"></DD_ATTR_LDIS>
+			<DD_ATTR_MAXL id="ddm_elements.email_addr"></DD_ATTR_MAXL>
+			<DD_ATTR_MAXR id="ddm_elements.email_addr"></DD_ATTR_MAXR>
+			<DD_ATTR_MAXV id="ddm_elements.email_addr"></DD_ATTR_MAXV>
+			<DD_ATTR_MINL id="ddm_elements.email_addr"></DD_ATTR_MINL>
+			<DD_ATTR_MINV id="ddm_elements.email_addr"></DD_ATTR_MINV>
+			<DD_ATTR_MSKI id="ddm_elements.email_addr"></DD_ATTR_MSKI>
+			<DD_ATTR_MSKO id="ddm_elements.email_addr"></DD_ATTR_MSKO>
+			<DD_ATTR_PADC id="ddm_elements.email_addr"></DD_ATTR_PADC>
+			<DD_ATTR_PADJ id="ddm_elements.email_addr"></DD_ATTR_PADJ>
+			<DD_ATTR_PREC id="ddm_elements.email_addr">0</DD_ATTR_PREC>
+			<DD_ATTR_PROM id="ddm_elements.email_addr"></DD_ATTR_PROM>
+			<DD_ATTR_PVAL id="ddm_elements.email_addr"></DD_ATTR_PVAL>
+			<DD_ATTR_SDLG id="ddm_elements.email_addr"></DD_ATTR_SDLG>
+			<DD_ATTR_SLEV id="ddm_elements.email_addr"></DD_ATTR_SLEV>
+			<DD_ATTR_STYP id="ddm_elements.email_addr"></DD_ATTR_STYP>
+			<DD_ATTR_STEP id="ddm_elements.email_addr">0</DD_ATTR_STEP>
+			<DD_ATTR_FLPT id="ddm_elements.email_addr"></DD_ATTR_FLPT>
+			<DD_ATTR_OEMD id="ddm_elements.email_addr"></DD_ATTR_OEMD>
+			<DD_ATTR_Y2KW id="ddm_elements.email_addr"></DD_ATTR_Y2KW>
+			<DD_ATTR_CASB id="ddm_elements.email_addr"></DD_ATTR_CASB>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_element_cmts">
