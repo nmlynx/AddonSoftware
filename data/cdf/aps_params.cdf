@@ -1,3 +1,49 @@
+[[APS_ACH.ACH_CHECK_DIR.AVAL]]
+rem --- Verify export directory exists
+	temp_dir$=callpoint!.getUserInput()
+
+	rem --- Flip directory path separators
+	filePath$=temp_dir$
+	gosub fix_path
+	temp_dir$=filePath$
+	rem --- Add trailing path separator
+	if pos(temp_dir$(len(temp_dir$),1)="\/")=0 then
+		temp_dir$=temp_dir$+"/"
+	endif
+
+	temp_chan=unt
+	success=0
+	open(temp_chan,err=*next)temp_dir$; success=1
+	if !success then
+		close(temp_chan)
+		msg_id$="AD_DATAPORT_DIR"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
+	callpoint!.setUserInput(temp_dir$)
+[[APS_ACH.ACH_EXPORT_DIR.AVAL]]
+rem --- Verify export directory exists
+	temp_dir$=callpoint!.getUserInput()
+
+	rem --- Flip directory path separators
+	filePath$=temp_dir$
+	gosub fix_path
+	temp_dir$=filePath$
+	rem --- Add trailing path separator
+	if pos(temp_dir$(len(temp_dir$),1)="\/")=0 then
+		temp_dir$=temp_dir$+"/"
+	endif
+
+	temp_chan=unt
+	success=0
+	open(temp_chan,err=*next)temp_dir$; success=1
+	if !success then
+		close(temp_chan)
+		msg_id$="AD_DATAPORT_DIR"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
+	callpoint!.setUserInput(temp_dir$)
 [[APS_PARAMS.BEND]]
 rem --- Check fields required for ACH Payments
 	if cvs(callpoint!.getColumnData("APS_ACH.BNK_ACCT_CD"),2)<>"" then
@@ -438,6 +484,18 @@ rem =========================================================
 	R=num(RGB$(1,comma1-1))
 	G=num(RGB$(comma1+1,comma2-comma1-1))
 	B=num(RGB$(comma2+1))
+	return
+
+rem =========================================================
+fix_path: rem --- Flip directory path separators
+	rem --- input: filePath$
+rem =========================================================
+
+	pos=pos("\"=filePath$)
+	while pos
+		filePath$=filePath$(1, pos-1)+"/"+filePath$(pos+1)
+		pos=pos("\"=filePath$)
+	wend
 	return
 [[APS_PARAMS.ARAR]]
 rem --- Open/Lock files
