@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2019-03-06
+ Report Date:   2019-03-13
  Report Branch: AddonSoftware 18.21
  Last Release:  AddonSoftware 18.20
 =======================================================================================================================================
@@ -131,4 +131,28 @@ Bug 9596 - AD - ado_util.src can leave +THROWN_ERR set
  - Clear +THROWN_ERR when expected error is being handled internally.
 ----
 Modified: ad/src/ado_util.src
+
+=======================================================================================================================================
+Revision: 886cafbc5571c75e9c920aa5d05ebb1ef2bc0637
+Author: Christine <chawkins@basis.com>
+Date: 3/13/2019 10:58:03 AM
+Message:
+Bug 9602 - AR - The Rebuild Invoice Balance utility needs to close files to avoid problems when called during an upgrade
+ - Added closes for art-01/11.
+----
+Modified: ar/src/arc_rebuildinvbal.aon
+
+=======================================================================================================================================
+Revision: 6c7d8e8cb2ac4e148cbb2e9b2fc0bbae23a4b465
+Author: Christine <chawkins@basis.com>
+Date: 3/13/2019 11:10:59 AM
+Message:
+Bug 9597 - OP - if using alpha customers, cust_id$ may end up short going into OrderHelper object
+ - altered where cvs() is done to avoid sending short cust_id into OrderHelper.
+----
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/cdf/ope_invdet.cdf
+Modified: data/cdf/ope_orddet.cdf
+
 
