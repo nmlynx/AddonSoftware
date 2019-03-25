@@ -62,16 +62,16 @@ rem --- For version 19.00, initialize PAYMENT_TYPE in APM_VENDMAST (apm-01)
 
     this_module$="AP"
     if installMap!.get(this_module$)="Y" then
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:           Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+    
         task$="1900_AP_apm_vendmast"
         if convCtrl!.getProperty(task$)<>"Completed" then
-            rem --- Increment progress meter
-            meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
-:               Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
-            meter_proc_recs=meter_proc_recs+1
-            meter_action$="MTR-LST"
-            gosub disp_meter
-            print(log_dev)meter_text$
-    
             rem --- Open File(s)
             num_files=1
             dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
@@ -91,6 +91,7 @@ rem --- For version 19.00, initialize PAYMENT_TYPE in APM_VENDMAST (apm-01)
                     writerecord(apmVendMast_dev)apmVendMast$
                 endif
             wend
+            write(convCtrlFileChan)task$+"=Completed"
         else
             rem --- Increment progress meter
             meter_text$=Translate!.getTranslation("AON_CONV_PREVIOUSLY","Conversion previously completed for")+" "+task$
@@ -234,6 +235,7 @@ rem --- For version 19.00, Build ADC_BANKACCTCODE from GLM_BANKMASTER (glm-05)
                 rem --- Data upgraded via DataPort
                 rem --- ADC_BANKACCTCODE built from glm-05 (GLM_BANKMASTER) Bank Account Master, which was apm-13 in v6
             endif
+            write(convCtrlFileChan)task$+"=Completed"
         else
             rem --- Increment progress meter
             meter_text$=Translate!.getTranslation("AON_CONV_PREVIOUSLY","Conversion previously completed for")+" "+task$
@@ -346,10 +348,6 @@ done: rem --- Done, close things up
 
     rem --- Close opened files
     if ddm_table_tpls then close(ddm_table_tpls,err=*next)
-    if old_glsParams_dev then close(old_glsParams_dev,err=*next)
-    if old_glm02_dev then close(old_glm02_dev,err=*next)
-    if old_ddmTables then close(old_ddmTables,err=*next)
-    if old_ddmTableTpls then close(old_ddmTableTpls,err=*next)
 
     if completed_successfully then conv_status=0; rem --- no errors encountered
 	goto std_exit
