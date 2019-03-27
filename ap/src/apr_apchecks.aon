@@ -80,7 +80,6 @@ rem ---          - Removed in .aon when exiting program.
 rem ---                 Note: Old behavior allowed checks to be run repeatedly. This hasn't changed other than the
 rem ---                       requirement that an actual print run be completed before another can start for a firm.
 
-
     setesc std_error
     seterr std_error
 
@@ -215,7 +214,8 @@ rem --- Clear any existing (stale) recs for this firm from the jasper print file
 rem --- Assign form input values to local variables
 
     check_date$=option!.getOptionData("CHECK_DATE")
-    check_no$=option!.getOptionData("CHECK_NO")
+    printed_check_no$=str(num(option!.getOptionData("CHECK_NO"))-1)
+    check_no$=printed_check_no$
     restart$=option!.getOptionData("PICK_CHECK")
     ap_type$=option!.getOptionData("AP_TYPE")
     vendor_id$=option!.getOptionData("VENDOR_ID")
@@ -392,7 +392,8 @@ rem --- First pass gets Accounting stub and actual check data
 rem --- Breaks
 
         if ape04a.ap_type$<>prev_aptype_t0$ gosub ap_type_break
-        if ape04a.ap_type$+ape04a.vendor_id$<>prev_aptype_vend_t1$ gosub new_vendor 
+        if ape04a.ap_type$+ape04a.vendor_id$<>prev_aptype_vend_t1$ gosub new_vendor
+        if restart$="Y" and ach_payment$="Y" then continue 
 
         gosub inv_detail
 
@@ -650,8 +651,10 @@ inv_detail: rem --- Invoice Detail
 
 check_stub_detail:
 
+    rem --- Do NOT print ACH checks for ACH payments when doing a Restart.
+    if restart$="Y" and ach_payment$="Y" then return 
+
 	rem --- Write STUB detail row record to jasper print file
-	
     dim apw_chkprn$:fattr(apw_chkprn$)
 	
     apw_chkprn.firm_id$=       firm_id$
@@ -680,6 +683,8 @@ check_stub_detail:
 
     apw_chkprn.signature_1$=   ""
     apw_chkprn.signature_2$=   ""
+    
+    apw_chkprn.ach_payment$=   ach_payment$
 	
 	apw_chkprn.stub_inv_amt=    ape04a.invoice_amt
 	apw_chkprn.stub_inv_discamt=ape04a.discount_amt
@@ -693,8 +698,10 @@ check_stub_detail:
 
 stub_total: rem --- Stub Total
 
+    rem --- Do NOT print ACH checks for ACH payments when doing a Restart.
+    if restart$="Y" and ach_payment$="Y" then return 
+
 	rem --- Write STUB TOTAL record to jasper print file
-	
     dim apw_chkprn$:fattr(apw_chkprn$)
 	
     apw_chkprn.firm_id$=       firm_id$
@@ -723,6 +730,8 @@ stub_total: rem --- Stub Total
 
     apw_chkprn.signature_1$=   ""
     apw_chkprn.signature_2$=   ""
+
+    apw_chkprn.ach_payment$=   ach_payment$
 	
 	apw_chkprn.stub_inv_amt=    stub_inv_amt; rem passed in since variable: overflow vs actual total
 	apw_chkprn.stub_inv_discamt=stub_inv_discamt; rem passed in since variable: overflow vs actual total
@@ -740,6 +749,9 @@ stub_total: rem --- Stub Total
     return
 
 check_face: rem --- Print Check
+
+    rem --- Do NOT print ACH checks for ACH payments when doing a Restart.
+    if restart$="Y" and ach_payment$="Y" then return 
 
 	chk_amt=t[3]
     check_tot_cents$=str(fpt(chk_amt)*100:"00")
@@ -810,10 +822,16 @@ check_face: rem --- Print Check
 	
     apw_chkprn.chk_is_void$=   "N"
 	apw_chkprn.chk_exactly$=   chk_exactly$
-	apw_chkprn.chk_amt_str$=   chk_amt_str$
+    if ach_payment$="N" then
+        apw_chkprn.chk_amt_str$=chk_amt_str$
+	else
+        apw_chkprn.chk_amt_str$=Translate!.getTranslation("AON_***VOID***")
+	endif
 
-	apw_chkprn.signature_1$=   signature1$
-    apw_chkprn.signature_2$=   signature2$
+	apw_chkprn.signature_1$=signature1$
+    apw_chkprn.signature_2$=signature2$
+
+    apw_chkprn.ach_payment$=   ach_payment$
 
 	apw_chkprn.stub_inv_amt=0
 	apw_chkprn.stub_inv_discamt=0
@@ -861,7 +879,7 @@ overflow: rem --- Overflow
 
 void_check: rem --- Void check
 
-    rem  --- Use only for overflow (i.e. more invoices than fit on one stub) void checks, not zero amount checks
+    rem --- Use only for overflow (i.e. more invoices than fit on one stub) void checks, not zero amount checks
     chk_exactly$=Translate!.getTranslation("AON_***VOID***VOID***VOID***VOID***")
     chk_amt_str$=Translate!.getTranslation("AON_***VOID***")
 
@@ -902,6 +920,8 @@ rem --- Write Void
 
     apw_chkprn.signature_1$=   ""
     apw_chkprn.signature_2$=   ""
+
+    apw_chkprn.ach_payment$=   ach_payment$
 	
 	apw_chkprn.stub_inv_amt=0
 	apw_chkprn.stub_inv_discamt=0
@@ -939,20 +959,17 @@ new_vendor: rem --- New Vendor
 
 rem --- Now go back and re-write ape-04 using ape04_dev2 and ape04b$
 rem --- using the current check number and firm_id$ + prev_aptype_vend_t1$ (ap type and vendor number)
-
-        dim ape04b$:fattr(ape04b$)
-
-        read(ape04_dev2,key=firm_id$+prev_aptype_vend_t1$,dom=*next)
-
-        while more
-            extract record (ape04_dev2,end=*break) ape04b$;rem Advisory Locking
-            if pos(firm_id$+prev_aptype_vend_t1$=ape04b$)<>1 then read (ape04_dev2); break
-            ape04b.check_no$ = check_no$
-            ape04b$ = field(ape04b$)
-            write record (ape04_dev2) ape04b$
-        wend
-
-        gosub increment_check
+        if !(restart$="Y" and ach_payment$="Y") then 
+            dim ape04b$:fattr(ape04b$)
+            read(ape04_dev2,key=firm_id$+prev_aptype_vend_t1$,dom=*next)
+            while more
+                extract record (ape04_dev2,end=*break) ape04b$;rem Advisory Locking
+                if pos(firm_id$+prev_aptype_vend_t1$=ape04b$)<>1 then read (ape04_dev2); break
+                ape04b.check_no$ = check_no$
+                ape04b$ = field(ape04b$)
+                write record (ape04_dev2) ape04b$
+            wend
+        endif
     endif
 
 vendor_header:
@@ -970,11 +987,24 @@ vendor_header:
         address$(1)=apm01a.addr_line_1$+apm01a.addr_line_2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$
 		vend_name$=apm01a.vendor_name$
 
+        rem --- Is vendor being paid via ACH?
+        if apm01a.payment_type$="A" then
+            ach_payment$="Y"
+
+            rem --- Get next ACH check number
+            call stbl("+DIR_SYP")+"bas_sequences.bbj","ACH_CHK_NO",new_ACH_chk_no$,table_chans$[all]
+            check_no$=new_ACH_chk_no$
+        else
+            ach_payment$="N"
+        endif
+
+        gosub increment_check
+
         rem --- If using Payment Authorization, clear TreeSet for signers of current check
         if payauth.use_pay_auth then
             signerSet!.clear()
         endif
-        
+       
 		prev_aptype_vend_t1$=ape04a.ap_type$+ape04a.vendor_id$
         
         start_block = 1
@@ -990,9 +1020,13 @@ vendor_header:
 
 increment_check: rem --- Increment Check #
 
-    p8=num(check_no$)+1
-    if p8>9999999 p8=1
-    check_no$=str(p8:check_no_mask$)
+    if ach_payment$="N" then
+        p8=num(printed_check_no$)+1
+        if p8>9999999 p8=1
+        printed_check_no$=str(p8:check_no_mask$)
+        check_no$=printed_check_no$
+    endif
+
     if show_progress call pgmdir$+"adc_progress.aon","S","","","",check_no$,0,0,1,0,ignore_status
 
     return
