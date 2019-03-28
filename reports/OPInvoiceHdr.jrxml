@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2019-02-04T10:00:05 -->
+<!-- 2019-03-28T11:35:37 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OPInvoiceHdr" language="groovy" pageWidth="612" pageHeight="792" columnWidth="570" leftMargin="22" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon" uuid="b146e7c7-7794-48d0-bad4-a5da78d1668b">
 	<property name="ireport.zoom" value="3.0"/>
 	<property name="ireport.x" value="1095"/>
@@ -939,7 +939,7 @@
 		</band>
 	</detail>
 	<pageFooter>
-		<band height="82">
+		<band height="105">
 			<rectangle radius="10">
 				<reportElement x="12" y="4" width="531" height="19" backcolor="#FAFAFA" uuid="7e7f1cef-6d2d-464c-8b9a-c0b8d24c0442">
 					<printWhenExpression><![CDATA[$P{BATCH_MESSAGE}!=""]]></printWhenExpression>
@@ -1029,28 +1029,28 @@
 				</graphicElement>
 			</rectangle>
 			<textField pattern="" isBlankWhenNull="false">
-				<reportElement mode="Transparent" x="266" y="46" width="75" height="12" forecolor="#000000" backcolor="#FFFFFF" uuid="c392a517-eb5e-441a-a8f0-311e8283941a">
+				<reportElement mode="Transparent" x="266" y="46" width="89" height="12" forecolor="#000000" backcolor="#FFFFFF" uuid="c392a517-eb5e-441a-a8f0-311e8283941a">
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 					<printWhenExpression><![CDATA[!($F{PAID_DESC}.isEmpty())]]></printWhenExpression>
 				</reportElement>
-				<textElement textAlignment="Right" verticalAlignment="Bottom" rotation="None" markup="none">
+				<textElement textAlignment="Left" verticalAlignment="Bottom" rotation="None" markup="none">
 					<font fontName="DejaVu Sans" size="8" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
 					<paragraph lineSpacing="Single"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{PAID_DESC}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement mode="Transparent" x="266" y="61" width="75" height="12" forecolor="#000000" backcolor="#FFFFFF" uuid="0c7488bd-22da-4ae9-bdee-88f4f24ec87b">
+				<reportElement mode="Transparent" x="266" y="61" width="89" height="12" forecolor="#000000" backcolor="#FFFFFF" uuid="0c7488bd-22da-4ae9-bdee-88f4f24ec87b">
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 					<printWhenExpression><![CDATA[!($F{PAID_TEXT1}.isEmpty()) || !($F{PAID_TEXT2}.isEmpty())]]></printWhenExpression>
 				</reportElement>
-				<textElement textAlignment="Right" verticalAlignment="Bottom">
+				<textElement textAlignment="Left" verticalAlignment="Bottom">
 					<font fontName="DejaVu Sans" size="8" isBold="true"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$R{AON_NAME:}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$R{AON_NAME}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="343" y="46" width="137" height="12" uuid="7630a16a-e38a-416d-a887-650119e81874">
+				<reportElement x="360" y="46" width="120" height="12" uuid="7630a16a-e38a-416d-a887-650119e81874">
 					<printWhenExpression><![CDATA[!($F{PAID_TEXT1}.isEmpty())]]></printWhenExpression>
 				</reportElement>
 				<textElement verticalAlignment="Bottom">
@@ -1059,7 +1059,7 @@
 				<textFieldExpression><![CDATA[$F{PAID_TEXT1}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="343" y="61" width="137" height="12" uuid="16556bba-4603-4c09-86da-28609312a079">
+				<reportElement x="360" y="61" width="120" height="12" uuid="16556bba-4603-4c09-86da-28609312a079">
 					<printWhenExpression><![CDATA[!($F{PAID_TEXT2}.isEmpty())]]></printWhenExpression>
 				</reportElement>
 				<textElement verticalAlignment="Bottom">
@@ -1091,6 +1091,27 @@
 				</textElement>
 				<textFieldExpression><![CDATA[$R{AON_PAID}]]></textFieldExpression>
 			</textField>
+			<line>
+				<reportElement positionType="Float" x="355" y="43" width="1" height="33" backcolor="#EBF0FA" uuid="a663b01d-6820-4a07-afae-4e00c0231176">
+					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+					<printWhenExpression><![CDATA[!($F{PAID_TEXT1}.isEmpty()) || !($F{PAID_TEXT2}.isEmpty())]]></printWhenExpression>
+				</reportElement>
+				<graphicElement>
+					<pen lineColor="#C0C0C0"/>
+				</graphicElement>
+			</line>
+			<line>
+				<reportElement key="" positionType="Float" x="263" y="59" width="220" height="1" backcolor="#EBF0FA" uuid="7bd9ff56-5e59-4630-9e7f-0be3a20846d9">
+					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					<printWhenExpression><![CDATA[!($F{PAID_TEXT1}.isEmpty()) || !($F{PAID_TEXT2}.isEmpty())]]></printWhenExpression>
+				</reportElement>
+				<graphicElement>
+					<pen lineWidth="0.25" lineColor="#C0C0C0"/>
+				</graphicElement>
+			</line>
 		</band>
 	</pageFooter>
 </jasperReport>
