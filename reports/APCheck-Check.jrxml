@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2019-01-29T17:17:59 -->
+<!-- 2019-04-01T18:47:40 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="APCheck-Check" language="groovy" pageWidth="612" pageHeight="258" columnWidth="612" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" resourceBundle="addon" uuid="b87b574e-b006-478b-af8e-3a2fbb2ffb53">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="30"/>
@@ -24,6 +24,7 @@
 	<parameter name="VEND_MASK" class="java.lang.String"/>
 	<parameter name="GL_ACCT_MASK" class="java.lang.String"/>
 	<parameter name="CHECK_AMT_MASK" class="java.lang.String"/>
+	<parameter name="ACH_PAYMENT" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[call APCHECKS_CHECK($P{FIRM_ID},$P{BARISTA_WD},$P{CHECK_NUM},$P{CURR_PAGE},$P{AP_TYPE},$P{VENDOR_ID},$P{AP_ADDRESS1_NAME},$P{AP_ADDRESS2},$P{AP_ADDRESS3},$P{AP_ADDRESS4},$P{LOGO_FILE},$P{VEND_NAME},$P{VEND_ADDR1},$P{VEND_ADDR2},$P{VEND_ADDR3},$P{VEND_ADDR4},$P{VEND_MASK},$P{GL_ACCT_MASK},$P{CHECK_AMT_MASK})]]>
 	</queryString>
@@ -265,6 +266,32 @@
 					<font fontName="Serif" size="12"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$P{VEND_ADDR4}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="355" y="210" width="112" height="20" uuid="2acee78d-2991-45c5-9092-b9c0e7796e59">
+					<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					<printWhenExpression><![CDATA[$P{ACH_PAYMENT}=="Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$R{AON_NON-NEGOTIABLE}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="470" y="210" width="112" height="20" uuid="f38bf4ee-0747-448b-8bdf-4dfd4d6da499">
+					<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					<printWhenExpression><![CDATA[$P{ACH_PAYMENT}=="Y"]]></printWhenExpression>
+				</reportElement>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$R{AON_NON-NEGOTIABLE}]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>

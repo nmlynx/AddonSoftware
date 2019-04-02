@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2019-01-29T16:59:07 -->
+<!-- 2019-04-01T18:32:44 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="APChecks" language="groovy" pageWidth="612" pageHeight="792" columnWidth="612" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="6503a2e3-844c-4fcc-9be5-72abe9f5e267">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -23,8 +23,9 @@
 	<parameter name="AP_ADDR3_STUB" class="java.lang.String"/>
 	<parameter name="LOGO_FILE" class="java.lang.String"/>
 	<parameter name="MAX_STUB_ROWS" class="java.lang.String"/>
+	<parameter name="ACH_PAYMENT" class="java.lang.String"/>
 	<queryString language="SQL">
-		<![CDATA[call APCHECKS_MAIN($P{FIRM_ID},$P{BARISTA_WD},$P{AP_TYPE})]]>
+		<![CDATA[call APCHECKS_MAIN($P{FIRM_ID},$P{BARISTA_WD},$P{AP_TYPE},$P{ACH_PAYMENT})]]>
 	</queryString>
 	<field name="FIRM_ID" class="java.lang.String"/>
 	<field name="AP_TYPE" class="java.lang.String"/>
@@ -139,6 +140,9 @@
 				<subreportParameter name="VEND_MASK">
 					<subreportParameterExpression><![CDATA[$P{VEND_MASK}]]></subreportParameterExpression>
 				</subreportParameter>
+				<subreportParameter name="ACH_PAYMENT">
+					<subreportParameterExpression><![CDATA[$P{ACH_PAYMENT}]]></subreportParameterExpression>
+				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA["APCheck-Stub.jasper"]]></subreportExpression>
 			</subreport>
@@ -202,6 +206,9 @@
 				</subreportParameter>
 				<subreportParameter name="VEND_ADDR4">
 					<subreportParameterExpression><![CDATA[$F{VEND_ADDR4}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ACH_PAYMENT">
+					<subreportParameterExpression><![CDATA[$P{ACH_PAYMENT}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA["APCheck-Check.jasper"]]></subreportExpression>
@@ -281,6 +288,9 @@
 				<subreportParameter name="VEND_MASK">
 					<subreportParameterExpression><![CDATA[$P{VEND_MASK}]]></subreportParameterExpression>
 				</subreportParameter>
+				<subreportParameter name="ACH_PAYMENT">
+					<subreportParameterExpression><![CDATA[$P{ACH_PAYMENT}]]></subreportParameterExpression>
+				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA["APCheck-Stub.jasper"]]></subreportExpression>
 			</subreport>
@@ -344,6 +354,9 @@
 				</subreportParameter>
 				<subreportParameter name="VEND_ADDR4">
 					<subreportParameterExpression><![CDATA[$F{VEND_ADDR4}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ACH_PAYMENT">
+					<subreportParameterExpression><![CDATA[$P{ACH_PAYMENT}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA["APCheck-Check.jasper"]]></subreportExpression>
@@ -423,6 +436,9 @@
 				<subreportParameter name="VEND_MASK">
 					<subreportParameterExpression><![CDATA[$P{VEND_MASK}]]></subreportParameterExpression>
 				</subreportParameter>
+				<subreportParameter name="ACH_PAYMENT">
+					<subreportParameterExpression><![CDATA[$P{ACH_PAYMENT}]]></subreportParameterExpression>
+				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA["APCheck-Stub.jasper"]]></subreportExpression>
 			</subreport>
@@ -486,6 +502,9 @@
 				</subreportParameter>
 				<subreportParameter name="VEND_ADDR4">
 					<subreportParameterExpression><![CDATA[$F{VEND_ADDR4}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="ACH_PAYMENT">
+					<subreportParameterExpression><![CDATA[$P{ACH_PAYMENT}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA["APCheck-Check.jasper"]]></subreportExpression>

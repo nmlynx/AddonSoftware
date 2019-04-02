@@ -42,7 +42,7 @@ rem ---         which is processed by the jaspers and .prcs.
 rem ---   SPROCS
 rem ---      APCHECKS_MAIN.prc
 rem ---         Gets driver info from apw_chkjasperprn by using SELECT DISTINCT. 
-rem ---         Rwsult set is passed back to Main jasper to use in calling sub-reports (stub and check).
+rem ---         Result set is passed back to Main jasper to use in calling sub-reports (stub and check).
 rem ---      APCHECKS_STUB.prc
 rem ---         Processes based on input param specifying Vendor stub or Accounting stub.
 rem ---         Does a SELECT on apw_chkjasperprn to get, format and pass to jasper stub data.
@@ -88,9 +88,6 @@ rem ---                       requirement that an actual print run be completed 
     use ::bbjasper.bbj::BBJasperViewerControl
 
     use ::sys/prog/bao_utilities.bbj::BarUtils
-
-	declare BBJasperReport BBjReport!
-	declare BBJasperViewerWindow BBjReportWindow! 
     
     params! = Option!.getOptionMap()
 		
@@ -137,31 +134,23 @@ rem --- Make Document Archive Record and Get ID
     rep_time$=date(0:"%hz:%mz %p")
     rep_time_stamp$=date(0:"%Hz%mz%sz")
 
-    rd_source_alias$=rd_alias_id$
-    rd_source_type$="O"
-    rd_doc_source$="E"
-    rd_doc_ext$="JAS"
-    rd_archive_action$="DOC_ID-NOREPRINT"
-    gosub document_whse
-    rd_archive_action$=""
-
 rem --- Set Report Name & Subreport directory
 
     reportDir$ = stbl("+DIR_REPORTS",err=*next)
-    repTitle!=sysinfo.task_desc$+"_"+rd_doc_id$
-    repTitle$=repTitle!.replace(" ","_")
     temp = unt
     open (temp)reportDir$
     reportDir$ = fid(temp)(9)+"/"
     close (temp)
     reportBaseName$ = "APCheck-Main"
     filename$ = reportDir$ + reportBaseName$ + ".jasper"
+    achChecksBaseName$ = "APChecksACH"
+    ach_checks_filename$ = reportDir$ + achChecksBaseName$+".jasper"
 
     declare BBJasperReport report!
 	
 rem --- Open/Lock files
 
-    files=14,begfile=1,endfile=files
+    files=15,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="aps_params",  ids$[1]="APS_PARAMS"
     files$[2]="ape-04",      ids$[2]="APE_CHECKS"
@@ -177,6 +166,7 @@ rem --- Open/Lock files
     files$[12]="aps_payauth",ids$[12]="APS_PAYAUTH"
     files$[13]="apm_approvers",ids$[13]="APM_APPROVERS"
     files$[14]="apt_invapproval",ids$[14]="APT_INVAPPROVAL"
+    files$[15]="aps_ach",    ids$[15]="APS_ACH"
 	
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
     if status goto all_done
@@ -195,15 +185,15 @@ rem --- Open/Lock files
     payauth_dev=channels[12]
     apm_approvers_dev=channels[13]
     apt_invapproval_dev=channels[14]
+    apsACH_dev=channels[15]
 
 rem --- Dimension string templates
 
     dim aps01a$:templates$[1],ape04a$:templates$[2],apm01a$:templates$[3]
     dim ape04b$:templates$[4],apm08a$:templates$[5],apm10a$:templates$[6]
     dim apt02a$:templates$[7],apw01a$:templates$[8],aps01b$:templates$[9]
-	dim apw_chkprn$:templates$[10]
-	dim adxlocks$:templates$[11]
-    dim payauth$:templates$[12],apm_approvers$:templates$[13],apt_invapproval$:templates$[14]
+	dim apw_chkprn$:templates$[10],adxlocks$:templates$[11],payauth$:templates$[12]
+    dim apm_approvers$:templates$[13],apt_invapproval$:templates$[14],apsACH$:templates$[15]
 
 rem --- Clear any existing (stale) recs for this firm from the jasper print file
 
@@ -230,6 +220,9 @@ rem --- Retrieve parameter records
     aps01a_key$=firm_id$+"AP00"
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     find record (payauth_dev,key=aps01a_key$,dom=*next) payauth$
+    find record (apsACH_dev,key=aps01a_key$,dom=*next) apsACH$
+    ach_allowed=0
+    if cvs(apsACH.bnk_acct_cd$,2)<>"" then ach_allowed=1
     
 	call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",vend_mask$,0,vendor_length
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",gl_acct_mask$,0,gl_acct_length
@@ -285,10 +278,13 @@ initializations: rem --- Initializations
     exactly_amt_mask$="*#######"
     check_amt_mask$="*"+stub_amt_mask$(2,10)
 	
-    more=1
-    recs=0
+    viewerWin_closed=0
+    achViewerWin_closed=0
+    totalPrinted=0
+    totalACH=0
+    start_check_no$=""
+
 	memodist_width=len(stub_amt_mask$)+gl_acct_length+3; rem Memo/GL Dist col width to align-Rt GL amts which are appended to GL Accts (aligned-L)
-	
 	acctstub_rowcnt=1; rem 1-based Accting Stub may have more rows than vend stub, so use it to determine overflow (old 'L')
 	vendstub_rowcnt=1; rem 1-based
 
@@ -383,10 +379,9 @@ rem --- Init Read
 rem --- Main Read
 rem --- First pass gets Accounting stub and actual check data
 
-    while more
+    while 1
         k$=key(ape04_dev,end=*break)
         if pos(firm_id$=k$)<>1 break
-        recs=recs+1
         read record (ape04_dev) ape04a$
 
 rem --- Breaks
@@ -424,57 +419,154 @@ rem --- Totals
     t9$="E"; do_vend_header=0
     gosub new_vendor
 
-    rem --- invoke jasper
-    report! = BarUtils.getBBJasperReport(filename$)
-    report!.putParams(params!)
-
-    locale$ = stbl("!LOCALE")
-    locale$ = stbl("+USER_LOCALE",err=*next)
-    report!.setLocale(locale$)
-
-rem --- Fill Report and Show
-
-    rc=report!.fill(1)
-    if rc<>BBJasperReport.getSUCCESS() then goto close_win
-
-    rem --- get a pdf path from +DOC_DIR_PDF
-    rem --- this will eventually be replaced with code to get output formats/types based on doc group and/or print settings
-    gosub doc_path
+rem --- Fill jasper reports
+    if totalPrinted then
+        rem --- Invoke jasper for printed checks, includes no ACH payments
+        checkReport! = BarUtils.getBBJasperReport(filename$)
+        params!.put("ACH_PAYMENT","N")
+        checkReport!.putParams(params!)
+        locale$ = stbl("!LOCALE")
+        locale$ = stbl("+USER_LOCALE",err=*next)
+        checkReport!.setLocale(locale$)
+        checkReport!.fill(1)
     
-    declare BBJasperViewerWindow viewerWindow!
-    viewerWindow! = new BBJasperViewerWindow(report!,0,0,screen_width,screen_height,repTitle$,$00080093$)
+        rem --- Show printed checks in jasper viewers
+        declare BBJasperViewerWindow viewerWindow!
+        declare BBjTopLevelWindow bbjWindow!
+    
+        rd_doc_ext$="JAS"
+        rd_archive_action$="DOC_ID-NOREPRINT"
+        rd_source_alias$=rd_alias_id$
+        rd_source_type$="O"
+        rd_doc_source$="E"
+        rd_doc_id$=""
+        rd_source_id$="C"
+        rd_source_ref$=""
+        rd_doc_keywords$=""
+        gosub document_whse
+        rd_archive_action$=""
+    
+        repTitle!=sysinfo.task_desc$+"_"+rd_doc_id$
+        repTitle$=repTitle!.replace(" ","_")
+        report_doc_title$=repTitle$
+    
+        rem --- get a pdf path from +DOC_DIR_PDF
+        rem --- this will eventually be replaced with code to get output formats/types based on doc group and/or print settings
+        gosub doc_path
+        
+        rem --- Printed checks jasper - contains ALL printed checks, and NO ACH checks
+        viewerWindow! = new BBJasperViewerWindow(checkReport!,0,0,screen_width,screen_height,repTitle$,$00080093$)
+        viewerControl! = viewerWindow!.getViewerControl()
+        viewerControl!.setGoogleDefaultDocument(repTitle$)
+        viewerControl!.setDefaultSaveFolder(rd_doc_path$)
+        viewerControl!.setDefaultSaveFile(repTitle$)
+        viewerControl!.setFitWidth()
+    
+        rem --- set callbacks for when user presses save or email buttons in jasper viewer
+        rem --- note: saveAs or saveAsGDoc not intercepted, just regular save
+        rem --- setReleaseOnClose(0) not needed, but clarifies that we don't want BBjasper to release when we close the viewer - we'll handle close processing here via close_win
+        rem --- show(0) tells BBjasper to be modeless, i.e., show the viewer, then return here for process_events
+        saveMenuButton! = viewerControl!.getControl(BBJasperViewerControl.getSAVE_MENU_BUTTON_NAME())
+        saveMenuButton!.setCallback(BBjMenuButton.ON_BUTTON_PUSH ,"OnSaveMenuButton")
+    
+        savMenuItem! = viewerControl!.getControl(BBJasperViewerControl.getSAVE_MENU_ITEM_NAME())
+        savMenuItem!.setCallback(BBjMenuItem.ON_POPUP_ITEM_SELECT,"OnSaveMenuButton")
+    
+        emailToolButton! = viewerControl!.getControl(BBJasperViewerControl.getEMAIL_TOOL_BUTTON_NAME())
+        emailToolButton!.setCallback(BBjMenuButton.ON_TOOL_BUTTON_PUSH ,"OnEmailToolButton")
+    
+        viewerWindow!.setReleaseOnClose(0)
+        viewerWindow!.show(0)
+    
+        bbjWindow!= viewerWindow!.getViewerWindow()
+        bbjWindow!.setCallback(bbjWindow!.ON_CLOSE,"close_win")
+    else
+        viewerWin_closed=1
+    endif
 
-    viewerControl! = viewerWindow!.getViewerControl()
-    viewerControl!.setGoogleDefaultDocument(repTitle$)
-    viewerControl!.setDefaultSaveFolder(rd_doc_path$)
-    viewerControl!.setDefaultSaveFile(repTitle$)
-    viewerControl!.setFitWidth()
+    if totalACH then
+        rem --- Invoke jasper for ACH payments, includes no printed checkes
+        report! = BarUtils.getBBJasperReport(filename$)
+        params!.remove("ACH_PAYMENT")
+        params!.put("ACH_PAYMENT","Y")
+        report!.putParams(params!)
+        report!.setLocale(locale$)
+        report!.fill(1)
 
-    rem --- set callbacks for when user presses save or email buttons in jasper viewer
-    rem --- note: saveAs or saveAsGDoc not intercepted, just regular save
-    rem --- setReleaseOnClose(0) not needed, but clarifies that we don't want BBjasper to release when we close the viewer - we'll handle close processing here via close_win
-    rem --- show(0) tells BBjasper to be modeless, i.e., show the viewer, then return here for process_events
-    saveMenuButton! = viewerControl!.getControl(BBJasperViewerControl.getSAVE_MENU_BUTTON_NAME())
-    saveMenuButton!.setCallback(BBjMenuButton.ON_BUTTON_PUSH ,"OnSaveMenuButton")
+        rem --- Append ACH payments to ACH payments report
+        achReport! = BarUtils.getBBJasperReport(ach_checks_filename$)
+        achParams! = Option!.getOptionMap()
+        achParams!.put("CHECK_DATE",fndate$(check_date$))
+        achParams!.put("START_CHECK_NO",start_check_no$)
+        achReport!.putParams(achParams!)
+        achReport!.setLocale(locale$)
+        achReport!.fill()
+        achReport!.appendReport(report!)    
+    
+        rem --- Show ACH payments in jasper viewers
+        declare BBJasperViewerWindow achViewerWindow!
+        declare BBjTopLevelWindow achBbjWindow!
+    
+        rd_doc_ext$="JAS"
+        rd_archive_action$="DOC_ID-NOREPRINT"
+        rd_source_alias$=rd_alias_id$
+        rd_source_type$="O"
+        rd_doc_source$="E"
+        rd_doc_id$=""
+        rd_source_id$="C"
+        rd_source_ref$=""
+        rd_doc_keywords$=""
+        gosub document_whse
+        rd_archive_action$=""
+    
+        repTitle$=achChecksBaseName$+"_"+rd_doc_id$
+        ach_doc_title$=repTitle$
+    
+        rem --- get a pdf path from +DOC_DIR_PDF
+        rem --- this will eventually be replaced with code to get output formats/types based on doc group and/or print settings
+        gosub doc_path
+        
+        rem --- ACH payments jasper - contains ALL printed checks, and NO ACH checks
+        achViewerWindow! = new BBJasperViewerWindow(achReport!,0,0,screen_width,screen_height,repTitle$,$00080093$)
+        achViewerControl! = achViewerWindow!.getViewerControl()
+        achViewerControl!.setGoogleDefaultDocument(repTitle$)
+        achViewerControl!.setDefaultSaveFolder(rd_doc_path$)
+        achViewerControl!.setDefaultSaveFile(repTitle$)
+        achViewerControl!.setFitWidth()
 
-    savMenuItem! = viewerControl!.getControl(BBJasperViewerControl.getSAVE_MENU_ITEM_NAME())
-    savMenuItem!.setCallback(BBjMenuItem.ON_POPUP_ITEM_SELECT,"OnSaveMenuButton")
+        rem --- set callbacks for when user presses save or email buttons in jasper viewer
+        rem --- note: saveAs or saveAsGDoc not intercepted, just regular save
+        achSaveMenuButton! = achViewerControl!.getControl(BBJasperViewerControl.getSAVE_MENU_BUTTON_NAME())
+        achSaveMenuButton!.setCallback(BBjMenuButton.ON_BUTTON_PUSH ,"OnAchSaveMenuButton")
 
-    emailToolButton! = viewerControl!.getControl(BBJasperViewerControl.getEMAIL_TOOL_BUTTON_NAME())
-    emailToolButton!.setCallback(BBjMenuButton.ON_TOOL_BUTTON_PUSH ,"OnEmailToolButton")
+        achSavMenuItem! = achViewerControl!.getControl(BBJasperViewerControl.getSAVE_MENU_ITEM_NAME())
+        achSavMenuItem!.setCallback(BBjMenuItem.ON_POPUP_ITEM_SELECT,"OnAchSaveMenuButton")
 
-    viewerWindow!.setReleaseOnClose(0)
-    viewerWindow!.show(0)
-
-    declare BBjTopLevelWindow bbjWindow!
-    bbjWindow!= viewerWindow!.getViewerWindow()
-    cancelled=1
-    bbjWindow!.setCallback(bbjWindow!.ON_CLOSE,"close_win",err=*next); cancelled=0
-    if cancelled then goto close_win
+        achEmailToolButton! = achViewerControl!.getControl(BBJasperViewerControl.getEMAIL_TOOL_BUTTON_NAME())
+        achEmailToolButton!.setCallback(BBjMenuButton.ON_TOOL_BUTTON_PUSH ,"OnAchEmailToolButton")
+    
+        achViewerWindow!.setReleaseOnClose(0)
+        achViewerWindow!.show(0)
+    
+        bbjWindowACH!= achViewerWindow!.getViewerWindow()
+        bbjWindowACH!.setCallback(bbjWindowACH!.ON_CLOSE,"close_ACH_win")
+    else
+        achViewerWin_closed=1
+    endif
 
 rem --- Event Control
 
+    if viewerWin_closed and achViewerWin_closed then
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+
+        goto all_done
+    endif
+
     process_events,err=*same
+    
+    rem --- Clear softlock on jasper work file, apw_chkjasperprn    
+    remove (adxlocks_dev,key=firm_id$+menu_option_id$,dom=*next)
 
     release
 
@@ -513,17 +605,21 @@ rem --- so it can save based on user's doc group and doc settings
     return
 
 OnSaveMenuButton:
-rem --- save save and display confirmation dialog
+rem --- Save and display confirmation dialog
 
     show_save_dlg$="YES"
  
 exportToPDF:
 rem --- exportToPDF and record in doc warehouse
 
-    if rd_doc_path$<>"" and repTitle$<>""
-        rd_doc_name$=repTitle$+".pdf"
+    if rd_doc_path$<>"" and report_doc_title$<>""
+        rep_title$=report_doc_title$
+        rd_doc_name$=report_doc_title$+".pdf"
         rd_doc_ext$="PDF"
-        report!.exportToPDF(BBjAPI().FALSE, rd_doc_path$+rd_doc_name$)
+        rd_source_id$="C"
+        rd_source_ref$=""
+        rd_doc_keywords$=""
+        checkReport!.exportToPDF(BBjAPI().FALSE, rd_doc_path$+rd_doc_name$)
         gosub document_whse
     endif
 
@@ -533,6 +629,32 @@ rem --- exportToPDF and record in doc warehouse
         show_save_dlg$=""
     endif
     return    
+
+OnAchSaveMenuButton:
+rem --- Save and display confirmation dialog
+
+    show_save_dlg$="YES"
+ 
+exportAchToPDF:
+rem --- exportToPDF and record in doc warehouse
+
+    if rd_doc_path$<>"" and ach_doc_title$<>""
+        rep_title$=ach_doc_title$
+        rd_doc_name$=ach_doc_title$+".pdf"
+        rd_doc_ext$="PDF"
+        rd_source_id$="C"
+        rd_source_ref$=""
+        rd_doc_keywords$=""
+        achReport!.exportToPDF(BBjAPI().FALSE, rd_doc_path$+rd_doc_name$)
+        gosub document_whse
+    endif
+
+    if show_save_dlg$="YES"
+        msg_id$="DOC_OUTPUT_COMP"
+        gosub disp_message
+        show_save_dlg$=""
+    endif
+    return     
 
 OnEmailToolButton:rem --- Add document to fax/email queue
 rem --- force exportToPDF first, in case it hasn't already been saved
@@ -546,23 +668,41 @@ rem --- force exportToPDF first, in case it hasn't already been saved
 
     return
 
+OnAchEmailToolButton:rem --- Add document to fax/email queue
+rem --- force exportToPDF first, in case it hasn't already been saved
+    
+    rem --- force exportToPDF in case not already saved
+    gosub exportAchToPDF
+
+    if rd_doc_id$<>"" and rd_doc_ext$<>""
+        call stbl("+DIR_SYP")+"bac_faxemail_jasper.bbj",rd_doc_id$,rd_doc_ext$,table_chans$[all]
+    endif
+    return
+
 close_win:rem --- Viewer Window Closed
     viewerWindow!.destroy(err=*next)
-    rdForm!.destroy(err=*next)   
-    if tcb(13) then exit
-	
-	rem --- Clear softlock on jasper work file, apw_chkjasperprn	
-	remove (adxlocks_dev,key=firm_id$+menu_option_id$,dom=*next)
-	goto std_exit_no_report
-	
-    release
+    viewerWin_closed=1
+    
+    if achViewerWin_closed then goto all_done
+
+    return
+
+close_ACH_win:rem --- ACH Viewer Window Closed
+    achViewerWindow!.destroy(err=*next)
+    achViewerWin_closed=1
+    
+    if viewerWin_closed then goto all_done
+
+    return
 
 all_done: rem --- Exit
 
 	rem --- Clear softlock on jasper work file, apw_chkjasperprn	
 	remove (adxlocks_dev,key=firm_id$+menu_option_id$,dom=*next)
+
+    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
 	
-    goto std_exit
+    release
 	
 
 inv_detail: rem --- Invoice Detail
@@ -776,10 +916,10 @@ check_face: rem --- Print Check
     if aps01a.multi_types$="Y" remove (apw01_dev,key=firm_id$+"  "+apw01a.check_no$,dom=*next)
     write record (apw01_dev) apw01a$
 
-    rem --- If using Payment Authorization, put signature(s) on the check.
+    rem --- If using Payment Authorization and it's NOT an ACH payment, put signature(s) on the check.
     signature1$=""
     signature2$=""
-    if payauth.use_pay_auth then
+    if payauth.use_pay_auth and ach_payment$="N" then
         rem --- Remove approvers from signerSet! TreeSet that have exceeded ther authorization limit
         iter!=signerSet!.iterator()
         while iter!.hasNext()
@@ -962,7 +1102,7 @@ rem --- using the current check number and firm_id$ + prev_aptype_vend_t1$ (ap t
         if !(restart$="Y" and ach_payment$="Y") then 
             dim ape04b$:fattr(ape04b$)
             read(ape04_dev2,key=firm_id$+prev_aptype_vend_t1$,dom=*next)
-            while more
+            while 1
                 extract record (ape04_dev2,end=*break) ape04b$;rem Advisory Locking
                 if pos(firm_id$+prev_aptype_vend_t1$=ape04b$)<>1 then read (ape04_dev2); break
                 ape04b.check_no$ = check_no$
@@ -988,14 +1128,17 @@ vendor_header:
 		vend_name$=apm01a.vendor_name$
 
         rem --- Is vendor being paid via ACH?
-        if apm01a.payment_type$="A" then
+        if ach_allowed and apm01a.payment_type$="A" then
             ach_payment$="Y"
+            totalACH=totalACH+1
 
             rem --- Get next ACH check number
             call stbl("+DIR_SYP")+"bas_sequences.bbj","ACH_CHK_NO",new_ACH_chk_no$,table_chans$[all]
             check_no$=new_ACH_chk_no$
+            if totalACH=1 then start_check_no$=check_no$
         else
             ach_payment$="N"
+            totalPrinted=totalPrinted+1
         endif
 
         gosub increment_check
@@ -1034,7 +1177,7 @@ increment_check: rem --- Increment Check #
 
 ap_type_break: rem --- AP Type Break
 
-    while more
+    while 1
         t9$="A"; do_vend_header=0
         gosub new_vendor
         prev_aptype_t0$=ape04a.ap_type$
@@ -1201,17 +1344,5 @@ std_missing_params_release:
     release
 
 rem #endinclude std_missing_params.src
-
-rem #include std_end.src
-
-std_exit: rem --- Standard program end (01Mar2006)
-
-    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
-
-std_exit_no_report:
-
-    call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
-    release
-rem #endinclude std_end.src
 
     end

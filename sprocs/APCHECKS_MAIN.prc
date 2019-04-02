@@ -39,6 +39,7 @@ rem --- Get 'IN' SPROC parameters
 	firm_id$ = sp!.getParameter("FIRM_ID")
 	barista_wd$ = sp!.getParameter("BARISTA_WD")
 	ap_type$ = sp!.getParameter("AP_TYPE")
+    ach_payment$ = sp!.getParameter("ACH_PAYMENT")
 
 	chdir barista_wd$
 	
@@ -98,6 +99,10 @@ rem ---           format the address.
 	sql_prep$=sql_prep$+"      ,wk.vendor_id "
 	sql_prep$=sql_prep$+"FROM APW_CHKJASPERPRN wk "
 	sql_prep$=sql_prep$+"WHERE firm_id='"+firm_id$+"' "
+
+	if cvs(ach_payment$,2)<>"" then
+	    sql_prep$=sql_prep$+"AND ach_payment='"+ach_payment$+"' "
+	endif
 	
 	sql_chan=sqlunt
 	sqlopen(sql_chan,mode="PROCEDURE",err=*next)stbl("+DBNAME")
