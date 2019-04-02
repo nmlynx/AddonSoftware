@@ -5,13 +5,26 @@ rem --- Enable/disable and Payment Information fields
 		callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",1)
 		callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",1)
 		callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_TYPE",1)
-		callpoint!.setColumnEnabled("APM_VENDMAST.CHKSTUB_EMAIL",1)
 	else
 		callpoint!.setColumnEnabled("APM_VENDMAST.BANK_NAME",0)
 		callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",0)
 		callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",0)
 		callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_TYPE",0)
-		callpoint!.setColumnEnabled("APM_VENDMAST.CHKSTUB_EMAIL",0)
+	endif
+
+rem --- Initialize chkstub_email for this vendor
+	admRptCtlRcp_dev=fnget_dev("ADM_RPTCTL_RCP")
+	dim admRptCtlRcp$:fnget_tpl$("ADM_RPTCTL_RCP")
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","ADM_RPTCTL_RCP","PRIMARY",key_tpl$,table_chans$[all],status$
+	dim admRptCtlRcp_key$:key_tpl$
+	admRptCtlRcp_key.firm_id$=firm_id$
+	admRptCtlRcp_key.dd_table_alias$="APR_CHECKS"
+	admRptCtlRcp_key.customer_id$=""
+	admRptCtlRcp_key.vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+	readrecord(admRptCtlRcp_dev,key=admRptCtlRcp_key$,dom=*next)admRptCtlRcp$
+	callpoint!.setDevObject("chkstub_email",admRptCtlRcp.email_to$)
+	if callpoint!.getColumnData("APM_VENDMAST.PAYMENT_TYPE")="A"
+		callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_EMAIL",admRptCtlRcp.email_to$,1)
 	endif
 [[APM_VENDMAST.PAYMENT_TYPE.AVAL]]
 rem --- Enable Payment Information fields when paying via ACH
@@ -22,21 +35,21 @@ rem --- Enable Payment Information fields when paying via ACH
 			callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",1)
 			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",1)
 			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_TYPE",1)
-			callpoint!.setColumnEnabled("APM_VENDMAST.CHKSTUB_EMAIL",1)
 
 			callpoint!.setColumnData("APM_VENDMAST.BNK_ACCT_TYPE","C",1)
+			chkstub_email$=callpoint!.getDevObject("chkstub_email")
+			callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_EMAIL",chkstub_email$,1)
 		else
 			callpoint!.setColumnEnabled("APM_VENDMAST.BANK_NAME",0)
 			callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",0)
 			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",0)
 			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_TYPE",0)
-			callpoint!.setColumnEnabled("APM_VENDMAST.CHKSTUB_EMAIL",0)
 
 			callpoint!.setColumnData("APM_VENDMAST.BANK_NAME","",1)
 			callpoint!.setColumnData("APM_VENDMAST.ABA_NO","",1)
 			callpoint!.setColumnData("APM_VENDMAST.BNK_ACCT_NO","",1)
 			callpoint!.setColumnData("APM_VENDMAST.BNK_ACCT_TYPE","",1)
-			callpoint!.setColumnData("APM_VENDMAST.CHKSTUB_EMAIL","",1)
+			callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_EMAIL","",1)
 		endif
 	endif
 [[APM_VENDMAST.AREC]]
@@ -45,9 +58,9 @@ rem --- Disable and initialize Payment Information fields
 	callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",0)
 	callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",0)
 	callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_TYPE",0)
-	callpoint!.setColumnEnabled("APM_VENDMAST.CHKSTUB_EMIAL",0)
 
 	callpoint!.setColumnData("APM_VENDMAST.PAYMENT_TYPE","P",1)
+	callpoint!.setDevObject("chkstub_email","")
 [[APM_VENDMAST.AOPT-IHST]]
 rem --- Show invoices from this vendor
 
