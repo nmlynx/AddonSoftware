@@ -146,7 +146,7 @@ rem --- Main Read
         read record (apw01_dev) apw01a$
         if pos(firm_id$=apw01a.firm_id$)<>1 goto done
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
-        if apw01a.comp_or_void$="V" goto void_check
+        if pos(apw01a.comp_or_void$="VX") then goto void_check
 
 rem --- Check Detail
 

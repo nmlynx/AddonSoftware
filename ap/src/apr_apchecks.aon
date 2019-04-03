@@ -909,7 +909,11 @@ check_face: rem --- Print Check
     apw01a.firm_id$=firm_id$
     apw01a.ap_type$=prev_aptype_vend_t1$(1,2)
     apw01a.check_no$=check_no$
-    apw01a.comp_or_void$="C"
+    if ach_payment$="N" then
+        apw01a.comp_or_void$="C"
+    else
+        apw01a.comp_or_void$="A"
+    endif
     apw01a.check_date$=check_date$
     apw01a.vendor_id$=prev_aptype_vend_t1$(3,6)
     apw01a.ap_inv_no$=t2.ap_inv_no$
@@ -1028,7 +1032,11 @@ rem --- Write Void
     apw01a.firm_id$=     firm_id$
     apw01a.ap_type$=     ape04a.ap_type$
     apw01a.check_no$=    check_no$
-    apw01a.comp_or_void$="V"
+    if ach_payment$="N" then
+        apw01a.comp_or_void$="V"
+    else
+        apw01a.comp_or_void$="X"
+    endif
     apw01a.vendor_id$=   ape04a.vendor_id$
     apw01a.check_date$=  check_date$
     apw01a.ap_inv_no$=   ape04a.ap_inv_no$
