@@ -621,7 +621,7 @@ if callpoint!.getUserInput()<>callpoint!.getColumnData("POE_INVHDR.AP_TERMS_CODE
 	invdate$=callpoint!.getColumnData("POE_INVHDR.INV_DATE")
 	tmp_inv_date$=callpoint!.getColumnData("POE_INVHDR.INV_DATE")
 	gosub calculate_due_and_discount
-	disc_amt=num(callpoint!.getColumnData("POE_INVHDR.NET_INV_AMT"))*(num(callpoint!.getDevObject("disc_pct"))/100)
+	disc_amt=round(num(callpoint!.getColumnData("POE_INVHDR.NET_INV_AMT"))*(num(callpoint!.getDevObject("disc_pct"))/100),2)
 	callpoint!.setColumnData("POE_INVHDR.DISCOUNT_AMT",str(disc_amt))
 	callpoint!.setStatus("REFRESH")
 endif
@@ -694,7 +694,7 @@ if vend_hist$="" and callpoint!.getDevObject("multi_types")="Y"
 endif
 [[POE_INVHDR.NET_INV_AMT.AVAL]]
 rem re-calc discount amount based on net x disc %
-disc_amt=num(callpoint!.getUserInput())*(num(callpoint!.getDevObject("disc_pct"))/100)
+disc_amt=round(num(callpoint!.getUserInput())*(num(callpoint!.getDevObject("disc_pct"))/100),2)
 callpoint!.setColumnData("POE_INVHDR.DISCOUNT_AMT",str(disc_amt))
 callpoint!.setStatus("REFRESH:POE_INVHDR.DISCOUNT_AMT")
 [[POE_INVHDR.BWRI]]
