@@ -43,7 +43,7 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=16,begfile=1,endfile=files
+    files=18,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="aps_params",ids$[1]="APS_PARAMS"; rem aps-01
     files$[2]="ape-04",ids$[2]="APE_CHECKS",options$[2]="L"
@@ -57,6 +57,8 @@ rem --- Open/Lock files
     files$[14]="apc_typecode",ids$[14]="APC_TYPECODE";rem apm-10A
     files$[15]="apc_distribution",ids$[15]="APC_DISTRIBUTION";rem apm-10B
     files$[16]="aps_ach",ids$[16]="APS_ACH"
+    files$[17]="adc_bankacctcode",ids$[17]="ADC_BANKACCTCODE"
+    files$[18]="aps_report",ids$[18]="APS_REPORT"
 
 call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -73,6 +75,8 @@ call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all]
     apm10a_dev=channels[14]
     apm10b_dev=channels[15]
     apsACH_dev=channels[16]
+    adcBankAcctCode_dev=channels[17]
+    apsReport_dev=channels[18]
 
 rem --- Dimension string templates
 
@@ -80,7 +84,8 @@ rem --- Dimension string templates
 :       apm01a$:templates$[5],apm02a$:templates$[6],
 :       apt01a$:templates$[9],apt02a$:templates$[10],
 :       apt05a$:templates$[11],apt11a$:templates$[12],apw01a$:templates$[13],       
-:       apm10a$:templates$[14],apm10b$:templates$[15],apsACH$:templates$[16]
+:       apm10a$:templates$[14],apm10b$:templates$[15],apsACH$:templates$[16],
+:       adcBankAcctCode$:templates$[17],apsReport$:templates$[18]
 
 rem  glt14a$:templates$[11],glw11a$:templates$[12],
 
@@ -90,7 +95,11 @@ rem --- Retrieve parameter records
     find record (aps01_dev,key=aps01a_key$,err=std_missing_params) aps01a$
     find record (apsACH_dev,key=aps01a_key$,dom=*next) apsACH$
     ach_allowed=0
-    if cvs(apsACH.bnk_acct_cd$,2)<>"" then ach_allowed=1
+    if cvs(apsACH.bnk_acct_cd$,2)<>"" then 
+        ach_allowed=1
+        findrecord(adcBankAcctCode_dev,key=firm_id$+apsACH.bnk_acct_cd$,err=std_missing_params)adcBankAcctCode$
+        findrecord(apsReport_dev,key=firm_id$+"AP02",err=std_missing_params)apsReport$
+    endif
     call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","A","",m1$,0,0
     if aps01a.multi_types$="Y" or ach_allowed then
