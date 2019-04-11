@@ -90,6 +90,11 @@
     <path id="path.install">
         <pathelement location="${build.dir}/installBBj.jar"/>
     </path>
+
+    <path id="path.basis.install">
+          <pathelement location="${bbj.jars.dir}/BasisInstall.jar"/>
+    </path>
+
     <!-- End of ids -->
     <!-- ====================================== -->
 
@@ -201,7 +206,7 @@
         <echo message="  basedir: ${basedir}"/>
         <echo message="  install.dir: ${install.dir}"/>
         <java classname="com.basis.install.IS.WriteConfigurationFiles" dir="${basedir}" fork="true">
-            <classpath refid="path.bbj"/>
+            <classpath refid="path.basis.install"/>
             <arg value="${install.dir}"/>
             <arg value="-cdstore"/>
             <arg value="-barista"/>
