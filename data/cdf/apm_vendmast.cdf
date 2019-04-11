@@ -26,6 +26,32 @@ rem --- Enable Payment Information fields when paying via ACH
 
 			callpoint!.setColumnData("APM_VENDMAST.BNK_ACCT_TYPE","C",1)
 		else
+			rem --- Don’t allow changing PAYMENT_TYPE from A to P if there are any ACH payments for the vendor.
+			achPayment=0
+			vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+			apw01_dev=fnget_dev("APW_CHECKINVOICE")
+			dim apw01a$:fnget_tpl$("APW_CHECKINVOICE")
+			read(apw01_dev,key=firm_id$,dom=*next)
+			while 1
+				readrecord(apw01_dev,end=*break)apw01a$
+				if apw01a.firm_id$<>firm_id$ then break
+				if apw01a.vendor_id$<>vendor_id$ or apw01a.comp_or_void$<>"A" then continue
+				achPayment=1
+				break
+			wend
+			if achPayment then
+				msg_id$="AP_CHANGE_ACH"
+				gosub disp_message
+
+				rem --- Reset radio buttons and start over
+				checkPaymentType!=callpoint!.getControl("APM_VENDMAST.PAYMENT_TYPE")
+				checkPaymentType!.setSelected(SysGUI!.FALSE)
+				achPaymentType!=util.findControl(Form!,"ACH Payment")
+				if achPaymentType!<>null() then achPaymentType!.setSelected(SysGUI!.TRUE)
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+
 			callpoint!.setColumnEnabled("APM_VENDMAST.BANK_NAME",0)
 			callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",0)
 			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",0)
@@ -270,7 +296,9 @@ endif
 [[APM_VENDMAST.BSHO]]
 rem --- Open/Lock files
 
-	files=10,begfile=1,endfile=files
+	use ::ado_util.src::util
+
+	files=11,begfile=1,endfile=files
 	dim files$[files],options$[files],chans$[files],templates$[files]
 	files$[1]="APE_INVOICEHDR";rem --- ape-01
 	files$[2]="APT_INVOICEHDR";rem --- apt-01
@@ -282,6 +310,7 @@ rem --- Open/Lock files
 	files$[8]="APE_INVOICEDET"
 	files$[9]="GLS_CALENDAR"
 	files$[10]="ADM_RPTCTL_RCP"
+	files$[11]="APW_CHECKINVOICE"; rem --- apw-01
 
 	for wkx=begfile to endfile
 		options$[wkx]="OTA"
