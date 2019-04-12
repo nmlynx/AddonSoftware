@@ -83,18 +83,16 @@
     <!-- ====================================== -->
     <!-- ids -->
     <path id="path.bbj">
-        <pathelement location="${install.dir}/lib/BBjIndex.jar"/>
-        <pathelement location="${install.dir}/lib/ExtIndex.jar"/>
+        <pathelement location="${install.dir}/lib/BBjStartup.jar"/>
     </path>
 
-    <path id="path.install">
-        <pathelement location="${build.dir}/installBBj.jar"/>
+    <path id="path.installBBj">
+        <pathelement location="${bbj.jars.dir}/commons-io-2.6.jar"/>
     </path>
 
-    <path id="path.basis.install">
+    <path id="path.install.WriteConfigFiles">
           <pathelement location="${bbj.jars.dir}/BasisInstall.jar"/>
-          <pathelement location="${bbj.jars.dir}/BBjIndex.jar"/>
-          <pathelement location="${bbj.jars.dir}/ExtIndex.jar"/>
+          <pathelement location="${bbj.jars.dir}/BBjUtil.jar"/>
     </path>
 
     <!-- End of ids -->
@@ -208,7 +206,7 @@
         <echo message="  basedir: ${basedir}"/>
         <echo message="  install.dir: ${install.dir}"/>
         <java classname="com.basis.install.IS.WriteConfigurationFiles" dir="${basedir}" fork="true">
-            <classpath refid="path.basis.install"/>
+            <classpath refid="path.install.WriteConfigFiles"/>
             <arg value="${install.dir}"/>
             <arg value="-cdstore"/>
             <arg value="-barista"/>
@@ -288,7 +286,7 @@
         </copy>
 
         <!-- Compile programs -->
-        <java classname="com.basis.bbj.BBjCpl" fork="true" failonerror="true">
+        <java classname="com.basis.startup.BBjCpl" fork="true" failonerror="true">
             <classpath refid="path.bbj"/>
             <jvmarg value="${bbjcpl.heapdump}"/>
             <jvmarg value="${bbjcpl.printargs}"/>
@@ -535,6 +533,7 @@
 
         <!-- Run BBj installer -->
         <java jar="${work.dir}/installBBj.jar" fork="true">
+            <classpath refid="path.installBBj"/>
             <arg value="-pl"/>
             <arg value="${src.dir.aon}/InstallResponse.properties"/>
         </java>
