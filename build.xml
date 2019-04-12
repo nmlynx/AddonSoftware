@@ -87,6 +87,7 @@
     </path>
 
     <path id="path.installBBj">
+        <pathelement location="${work.dir}/installBBj.jar"/>
         <pathelement location="${bbj.jars.dir}/commons-io-2.6.jar"/>
     </path>
 
@@ -503,14 +504,17 @@
     <!-- install BBj -->
     <target name="installBBj">
         <!-- Clear out old stuff from last install -->
+        <echo message="deleting old stuff"/>
         <delete file="${build.dir}/installBBj.jar"/>
         <delete dir="${install.dir}"/>
 
         <!-- Unzip the BASIS installer -->
+        <echo message="unjar BBjInstaller.jar"/>
         <mkdir dir="${work.dir}"/>
         <unjar src="${build.dir}/BBjInstaller.jar" dest="${work.dir}"/>
 
         <!-- Jar up the install into an installable jar -->
+        <echo message="jar installBBj.jar"/>
         <jar destfile="${work.dir}/installBBj.jar">
             <fileset dir="${work.dir}"
                      includes="install.xml,
@@ -526,12 +530,14 @@
         </jar>
 
         <!-- Update the JENKINS_BUILD_DIR marker with the Jenkins build directory -->
+        <echo message="update InstallResponse.properties"/>
         <replace file="${src.dir.aon}/InstallResponse.properties"
                  encoding="ISO-8859-1"
                  token="BBJ_INSTALL_DIR"
                  value="${install.dir}"/>
 
         <!-- Run BBj installer -->
+        <echo message="java jar ${work.dir}/installBBj.jar"/>
         <java jar="${work.dir}/installBBj.jar" fork="true">
             <classpath refid="path.installBBj"/>
             <arg value="-pl"/>
@@ -539,7 +545,10 @@
         </java>
 
         <!-- Clean up -->
+<!--
+        <echo message="clean up"/>
         <delete dir="${work.dir}"/>
+-->
 
     </target>
     <!-- End of installBBj -->
