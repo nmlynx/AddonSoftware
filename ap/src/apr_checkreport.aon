@@ -53,6 +53,7 @@ rem --- Assign form input values to local variables
 	checkno$=Option!.getOptionData("CHECK_NO")
 	inv_no$=Option!.getOptionData("INV_NO")
     vend_type$=Option!.getOptionData("VENDOR_TYPE")
+    ach_payments$=Option!.getOptionData("ACH_PAYMENTS")
     type_breaks=num(Option!.getOptionData("TYPE_BREAKS"))
 
 rem --- Retrieve parameter records
@@ -69,7 +70,7 @@ rem --- Retrieve parameter records
 
 rem --- Initializations
 
-    dim headings$[headings],types$[4],m5$(7,"0")
+    dim headings$[headings],types$[5],m5$(7,"0")
     dim detail[3],totals[3],at[3],rt[3]
     done=0
     number=0
@@ -118,6 +119,7 @@ rem --- Initializations
     types$[2]=Translate!.getTranslation("AON_REVERSAL")
     types$[3]=Translate!.getTranslation("AON_MANUAL")
     types$[4]=Translate!.getTranslation("AON_COMPUTER")
+    types$[5]=Translate!.getTranslation("AON_ACH")
     lasttype$=""
     lastcheck$=""
 
@@ -183,6 +185,8 @@ rem --- Read the next Check History (apt-05) record
 		  if cvs(endvend$,3)<>"" if apt05a.vendor_id$>endvend$ continue
           if cvs(checkno$,3)<>"" if apt05a.check_no$<>checkno$ continue
 		  if cvs(inv_no$,3)<>"" if apt05a.ap_inv_no$<>inv_no$ continue
+		  if ach_payments$="X" and apt05a.trans_type$="A" then continue; rem --- Exclude ACH payments
+		  if ach_payments$="O" and apt05a.trans_type$<>"A" then continue; rem --- Only ACH payments
 
           rem --- extra apm01 read here to facilitate including/skipping vendors based on temp vend flag
           if vend_type$<>"A"
@@ -206,7 +210,7 @@ rem --- Read the next Check History (apt-05) record
           invoice$=""
           discount$=""
           retention$=""
-          type=pos(apt05a.trans_type$="VRMC")
+          type=pos(apt05a.trans_type$="VRMCA")
           type$=types$[type]
 
           rem --- Process check header

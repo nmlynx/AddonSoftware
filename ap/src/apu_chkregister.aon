@@ -244,7 +244,12 @@ open_checks: rem --- Open Checks
         apt05a.vendor_id$=ape04a.vendor_id$
         apt05a.ap_inv_no$=ape04a.ap_inv_no$
         apt05a.check_date$=apw01a.check_date$
-        apt05a.trans_type$="C"
+rem wgh ... 6684
+        if apw01a.comp_or_void$="A" then
+            apt05a.trans_type$="A"
+        else
+            apt05a.trans_type$="C"
+        endif
         apt05a.ap_dist_code$=k2$ ;rem jpb k2$?
         apt05a.invoice_amt=ape04a.payment_amt+ape04a.discount_amt+ape04a.retention
         apt05a.discount_amt=ape04a.discount_amt
