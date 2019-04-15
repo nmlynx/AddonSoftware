@@ -44,3 +44,6 @@ rem --- Initialize TYPE_BREAKS
 	else
 		callpoint!.setColumnData("APR_CHECKREPORT.TYPE_BREAKS","1",0)
 	endif
+
+rem --- Initialize ACH_PAYMENTS
+	callpoint!.setColumnData("APR_CHECKREPORT.ACH_PAYMENTS","I",0)

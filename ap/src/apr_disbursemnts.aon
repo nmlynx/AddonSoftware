@@ -676,6 +676,7 @@ check_break: rem --- Check break
     check$=lastcheck$
     paid$=fndate$(apt05a.check_date$)
     type$=Translate!.getTranslation("AON_COMPUTER")
+    if apt05a.trans_type$="A" type$=Translate!.getTranslation("AON_ACH")
     if apt05a.trans_type$="M" type$=Translate!.getTranslation("AON_MANUAL")
     if apt05a.trans_type$="R" type$=Translate!.getTranslation("AON_REVERSAL")
     if apt05a.trans_type$="V" type$=Translate!.getTranslation("AON_VOID")
