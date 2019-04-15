@@ -46,7 +46,7 @@ rem --- Enable Payment Information fields when paying via ACH
 				rem --- Reset radio buttons and start over
 				checkPaymentType!=callpoint!.getControl("APM_VENDMAST.PAYMENT_TYPE")
 				checkPaymentType!.setSelected(SysGUI!.FALSE)
-				achPaymentType!=util.findControl(Form!,"ACH Payment")
+				achPaymentType!=util.findControl(Form!,Translate!.getTranslation("DDM_ELEMENT_LDAT-PAYMENT_TYPE-A-DD_ATTR_LDAT_DS"))
 				if achPaymentType!<>null() then achPaymentType!.setSelected(SysGUI!.TRUE)
 				callpoint!.setStatus("ABORT")
 				break
