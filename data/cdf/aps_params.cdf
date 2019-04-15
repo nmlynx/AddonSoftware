@@ -78,6 +78,29 @@ rem --- Check fields required for ACH Payments
 rem --- Initialize ACH Payment fields
 	bnk_acct_cd$=callpoint!.getUserInput()
 	if cvs(bnk_acct_cd$,2)="" then
+		rem --- Don’t allow eliminating the BNK_ACCT_CD (changing is okay) if there are any ACH payments in APW_CHECKINVOICE (apw-01)
+		if cvs(callpoint!.getColumnData("APS_ACH.BNK_ACCT_CD"),2)<>"" then
+			achPayments=0
+			apwCheckInvoice_dev=fnget_dev("APW_CHECKINVOICE")
+			dim apwCheckInvoice$:fnget_tpl$("APW_CHECKINVOICE")
+			read(apwCheckInvoice_dev,key=firm_id$,dom=*next)
+			while 1
+				readrecord(apwCheckInvoice_dev,end=*break)apwCheckInvoice$
+				if apwCheckInvoice.firm_id$<>firm_id$ then break
+				if apwCheckInvoice.comp_or_void$<>"A" then continue
+				achPayments=1
+				break
+			wend
+			if achPayments then
+				rem --- Cannot delete Bank Account Code. There are ACH Payments in Check Register that have not been updated.
+				msg_id$="AP_ACHCHK_NOT_UPDTED"
+				gosub disp_message
+				callpoint!.setColumnData("APS_ACH.BNK_ACCT_CD",callpoint!.getColumnData("APS_ACH.BNK_ACCT_CD"),1)
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+		endif
+
 		rem --- Clear ACH Payment fields
 		callpoint!.setColumnData("<<DISPLAY>>.BANK_NAME","",1)
 		callpoint!.setColumnData("<<DISPLAY>>.ADDRESS_LINE_1","",1)
@@ -319,7 +342,7 @@ rem --- Enable/Disable Payment Authorization
 [[APS_PARAMS.BSHO]]
 rem --- Open files
 
-	num_files=6
+	num_files=7
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="APE_INVOICEHDR",open_opts$[1]="OTA"
 	open_tables$[2]="APT_INVOICEHDR",open_opts$[2]="OTA"
@@ -327,6 +350,7 @@ rem --- Open files
 	open_tables$[4]="ADC_BANKACCTCODE",open_opts$[4]="OTA"
 	open_tables$[5]="APS_REPORT",open_opts$[5]="OTA"
 	open_tables$[6]="ADM_FIRMS",open_opts$[6]="OTA"
+	open_tables$[7]="APW_CHECKINVOICE",open_opts$[7]="OTA"
 
 	gosub open_tables
 
