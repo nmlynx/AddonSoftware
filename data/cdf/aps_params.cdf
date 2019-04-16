@@ -235,6 +235,12 @@ rem --- Initialize new record
 	callpoint!.setColumnData("APS_PARAMS.CUR_1099_YR",callpoint!.getColumnData("APS_PARAMS.CURRENT_YEAR"),1)
 	callpoint!.setColumnData("APS_PARAMS.MULTI_TYPES","Y",1)
 	callpoint!.setColumnData("APS_PARAMS.MULTI_DIST","Y",1)
+
+	rem --- Disable non-bank account code fields on ACH Payments tab
+	callpoint!.setColumnEnabled("APS_ACH.TOTAL_REQUIRED",0)
+	callpoint!.setColumnEnabled("APS_ACH.FIRM_NAME",0)
+	callpoint!.setColumnEnabled("APS_ACH.ACH_EXPORT_DIR",0)
+	callpoint!.setColumnEnabled("APS_ACH.ACH_CHECK_DIR",0)
 [[APS_PAYAUTH.WARN_IN_REGISTER.AVAL]]
 rem --- Disable ok_to_update if not warning in register
 	warn_in_register=num(callpoint!.getUserInput())
