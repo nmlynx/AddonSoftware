@@ -92,8 +92,8 @@ rem ---                       requirement that an actual print run be completed 
     params! = Option!.getOptionMap()
 		
     ScreenSize!   = bbjAPI().getSysGui().getSystemMetrics().getScreenSize()
-    screen_width  = ScreenSize!.width - 50; rem -50 keeps it in the MDI w/ no scroll bars
-    screen_height = ScreenSize!.height - 50
+    screen_width  = ScreenSize!.width - 200; rem keep it in the MDI w/ no scroll bars
+    screen_height = ScreenSize!.height - 100
 	
 rem --- Retrieve the program path
 
@@ -455,7 +455,7 @@ rem --- Fill jasper reports
         gosub doc_path
         
         rem --- Printed checks jasper - contains ALL printed checks, and NO ACH checks
-        viewerWindow! = new BBJasperViewerWindow(checkReport!,0,0,screen_width,screen_height,repTitle$,$00080093$)
+        viewerWindow! = new BBJasperViewerWindow(checkReport!,5,5,screen_width,screen_height,repTitle$,$00000093$)
         viewerControl! = viewerWindow!.getViewerControl()
         viewerControl!.setGoogleDefaultDocument(repTitle$)
         viewerControl!.setDefaultSaveFolder(rd_doc_path$)
@@ -527,7 +527,7 @@ rem --- Fill jasper reports
         gosub doc_path
         
         rem --- ACH payments jasper - contains ALL printed checks, and NO ACH checks
-        achViewerWindow! = new BBJasperViewerWindow(achReport!,0,0,screen_width,screen_height,repTitle$,$00080093$)
+        achViewerWindow! = new BBJasperViewerWindow(achReport!,50,50,screen_width,screen_height,repTitle$,$00000093$)
         achViewerControl! = achViewerWindow!.getViewerControl()
         achViewerControl!.setGoogleDefaultDocument(repTitle$)
         achViewerControl!.setDefaultSaveFolder(rd_doc_path$)
