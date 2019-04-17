@@ -83,6 +83,8 @@ rem ---                       requirement that an actual print run be completed 
     setesc std_error
     seterr std_error
 
+    use java.util.HashMap
+
 	use ::bbjasper.bbj::BBJasperReport
     use ::bbjasper.bbj::BBJasperViewerWindow
     use ::bbjasper.bbj::BBJasperViewerControl
@@ -231,7 +233,7 @@ rem --- If using Payment Authorization, get all possible signers and their signa
 
     if payauth.use_pay_auth then
         rem --- Build HashMap of signature files
-        signerSignatureMap!=new java.util.HashMap()
+        signerSignatureMap!=new HashMap()
         read(apm_approvers_dev,key=firm_id$,dom=*next)
         while 1
             apm_approvers_key$=key(apm_approvers_dev,end=*break)
@@ -243,7 +245,7 @@ rem --- If using Payment Authorization, get all possible signers and their signa
         wend
         
         rem --- Build HashMap of authorization limits
-        signerAuthLimitMap!=new java.util.HashMap()
+        signerAuthLimitMap!=new HashMap()
         read(apm_approvers_dev,key=firm_id$,dom=*next)
         while 1
             apm_approvers_key$=key(apm_approvers_dev,end=*break)
@@ -522,9 +524,10 @@ rem --- Fill jasper reports
         repTitle$=achChecksBaseName$+"_"+rd_doc_id$
         ach_doc_title$=repTitle$
     
-        rem --- get a pdf path from +DOC_DIR_PDF
-        rem --- this will eventually be replaced with code to get output formats/types based on doc group and/or print settings
-        gosub doc_path
+        rem --- Get path to ACH Check Image Directory
+        rd_doc_path$=cvs(apsACH.ach_check_dir$,2)
+        rd_doc_path$=BBjAPI().getFileSystem().resolvePath(rd_doc_path$,err=*next)+"/"
+        mkdir rd_doc_path$,err=*next
         
         rem --- ACH payments jasper - contains ALL printed checks, and NO ACH checks
         achViewerWindow! = new BBJasperViewerWindow(achReport!,50,50,screen_width,screen_height,repTitle$,$00000093$)
@@ -553,7 +556,7 @@ rem --- Fill jasper reports
     else
         achViewerWin_closed=1
     endif
-
+    
 rem --- Event Control
 
     if viewerWin_closed and achViewerWin_closed then
