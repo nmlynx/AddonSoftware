@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2019-04-10
+ Report Date:   2019-04-23
  Report Branch: AddonSoftware 19.00
  Last Release:  AddonSoftware 18.21
 =======================================================================================================================================
@@ -272,6 +272,24 @@ Corrected table/template mismatch in demo data.
 (cherry picked from commit 3b9127fb15e27e1635e60071b0f00640532a329e)
 ----
 Modified: data/apm-01
+
+=======================================================================================================================================
+Revision: 5fadbd5661b787ab6c7307dd389eb06cbdc7296b
+Author: Christine <chawkins@basis.com>
+Date: 4/23/2019 2:25:14 PM
+Message:
+Bug 9611 - OP - CREDIT_FLAG not always being set on held orders
+ - Making sure amount of credit remaining is calculated correctly
+ - Making sure order header is saved (setStatus SAVE) in BREX when returning from credit form
+ - Allow credit form to handle setting credit_flag
+ - Fine tuning when credit exceeded warning message appears
+ - If order is released, but new credit warning message has been thrown, launch credit form
+----
+Modified: data/bar/ope_orddet.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_orddet.cdf
+Modified: data/cdf/ope_ordhdr.cdf
+
 
 
 
