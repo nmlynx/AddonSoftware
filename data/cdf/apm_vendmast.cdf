@@ -5,13 +5,33 @@ rem --- Enable/disable and Payment Information fields
 		callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",1)
 		callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",1)
 		callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_TYPE",1)
-		callpoint!.setColumnEnabled("APM_VENDMAST.CHKSTUB_EMAIL",1)
+
+		rem --- Initialize email address and fax number from ADM_RPTCTL_RCP
+		reportControl!=new ReportControl()
+		rpt_ctl$=reportControl!.getReportControl("APR_CHECKS")
+		rpt_ctl$=iff(rpt_ctl$="","NO","YES")
+		vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+		if rpt_ctl$="YES" and reportControl!.getRecipientInfo(reportControl!.getReportID(),"",vendor_id$) then
+			AdmRptctlRcp!=reportControl!.getAdmRptctlRcp()
+			if reportControl!.getEmailYN()="Y"  then
+				callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_EMAIL",AdmRptctlRcp!.getFieldAsString("EMAIL_TO"),1)
+			else
+				callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_EMAIL","",1)
+			endif
+			if reportControl!.getFaxYN()="Y" then
+				callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_FAX",AdmRptctlRcp!.getFieldAsString("FAX_TO"),1)
+			else
+				callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_FAX","",1)
+			endif
+		endif
 	else
 		callpoint!.setColumnEnabled("APM_VENDMAST.BANK_NAME",0)
 		callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",0)
 		callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",0)
 		callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_TYPE",0)
-		callpoint!.setColumnEnabled("APM_VENDMAST.CHKSTUB_EMAIL",0)
+
+		callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_EMAIL","",1)
+		callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_FAX","",1)
 	endif
 [[APM_VENDMAST.PAYMENT_TYPE.AVAL]]
 rem --- Enable Payment Information fields when paying via ACH
@@ -22,9 +42,23 @@ rem --- Enable Payment Information fields when paying via ACH
 			callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",1)
 			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",1)
 			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_TYPE",1)
-			callpoint!.setColumnEnabled("APM_VENDMAST.CHKSTUB_EMAIL",1)
 
 			callpoint!.setColumnData("APM_VENDMAST.BNK_ACCT_TYPE","C",1)
+
+			rem --- Initialize email address and fax number from ADM_RPTCTL_RCP
+			reportControl!=new ReportControl()
+			rpt_ctl$=reportControl!.getReportControl("APR_CHECKS")
+			rpt_ctl$=iff(rpt_ctl$="","NO","YES")
+			vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+			if rpt_ctl$="YES" and reportControl!.getRecipientInfo(reportControl!.getReportID(),"",vendor_id$) then
+				AdmRptctlRcp!=reportControl!.getAdmRptctlRcp()
+				if reportControl!.getEmailYN()="Y"  then
+					callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_EMAIL",AdmRptctlRcp!.getFieldAsString("EMAIL_TO"),1)
+				endif
+				if reportControl!.getFaxYN()="Y" then
+					callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_FAX",AdmRptctlRcp!.getFieldAsString("FAX_TO"),1)
+				endif
+			endif
 		else
 			rem --- Don’t allow changing PAYMENT_TYPE from A to P if there are any ACH payments for the vendor.
 			achPayment=0
@@ -56,13 +90,13 @@ rem --- Enable Payment Information fields when paying via ACH
 			callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",0)
 			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",0)
 			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_TYPE",0)
-			callpoint!.setColumnEnabled("APM_VENDMAST.CHKSTUB_EMAIL",0)
 
 			callpoint!.setColumnData("APM_VENDMAST.BANK_NAME","",1)
 			callpoint!.setColumnData("APM_VENDMAST.ABA_NO","",1)
 			callpoint!.setColumnData("APM_VENDMAST.BNK_ACCT_NO","",1)
 			callpoint!.setColumnData("APM_VENDMAST.BNK_ACCT_TYPE","",1)
-			callpoint!.setColumnData("APM_VENDMAST.CHKSTUB_EMAIL","",1)
+			callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_EMAIL","",1)
+			callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_FAX","",1)
 		endif
 	endif
 [[APM_VENDMAST.AREC]]
@@ -71,7 +105,6 @@ rem --- Disable and initialize Payment Information fields
 	callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",0)
 	callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",0)
 	callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_TYPE",0)
-	callpoint!.setColumnEnabled("APM_VENDMAST.CHKSTUB_EMAIL",0)
 
 	callpoint!.setColumnData("APM_VENDMAST.PAYMENT_TYPE","P",1)
 [[APM_VENDMAST.AOPT-IHST]]
@@ -296,6 +329,7 @@ endif
 [[APM_VENDMAST.BSHO]]
 rem --- Open/Lock files
 
+	use ::ado_rptControl.src::ReportControl
 	use ::ado_util.src::util
 
 	files=11,begfile=1,endfile=files
