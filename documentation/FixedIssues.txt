@@ -330,3 +330,23 @@ Modified: reports/SalesInvoiceDetails.jasper
 Modified: reports/SalesInvoiceDetails.jrxml
 Modified: reports/VendorDetail_replenish.jasper
 Modified: reports/VendorDetail_replenish.jrxml
+
+=======================================================================================================================================
+Revision: 42af4e00c802e6bbd1644e1bce111c0fcf50271c
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/30/2019 4:33:22 PM
+Message:
+Bug 9620: Modified BOM Maintenance grids to clear row data when/if the
+Line Type is changed. Modified BOM Inventory Costing Update to skip
+non-Standard (not "S") Line Types. Modified Upgrade Conversion Utility
+For Version 19.00 to purge unwanted/needed Memo Line Type data in BOM
+Maintenance grids that may have resulted from this bug.
+----
+Modified: ad/src/adc_v1900conversion.aon
+Modified: bm/src/bmu_ivcosting_o1.aon
+Modified: data/bar/bmm_billmat.xml
+Modified: data/bar/bmm_billoper.xml
+Modified: data/bar/bmm_billsub.xml
+Modified: data/cdf/bmm_billmat.cdf
+Modified: data/cdf/bmm_billoper.cdf
+Modified: data/cdf/bmm_billsub.cdf
