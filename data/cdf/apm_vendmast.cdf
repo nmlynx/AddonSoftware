@@ -19,7 +19,7 @@ rem --- Enable/disable and Payment Information fields
 				callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_EMAIL","",1)
 			endif
 			if reportControl!.getFaxYN()="Y" then
-				callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_FAX",AdmRptctlRcp!.getFieldAsString("FAX_TO"),1)
+				callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_FAX",AdmRptctlRcp!.getFieldAsString("FAX_NOS"),1)
 			else
 				callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_FAX","",1)
 			endif
@@ -56,7 +56,7 @@ rem --- Enable Payment Information fields when paying via ACH
 					callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_EMAIL",AdmRptctlRcp!.getFieldAsString("EMAIL_TO"),1)
 				endif
 				if reportControl!.getFaxYN()="Y" then
-					callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_FAX",AdmRptctlRcp!.getFieldAsString("FAX_TO"),1)
+					callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_FAX",AdmRptctlRcp!.getFieldAsString("FAX_NOS"),1)
 				endif
 			endif
 		else
