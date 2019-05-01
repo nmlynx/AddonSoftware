@@ -54,6 +54,17 @@ rem --- Bank account number required for Checking and Savings accounts
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
 	endif
+
+rem --- Bank account number must be a number with at least 4 digits, or blank
+	if cvs(bnk_acct_no$,2)<>"" then
+		bnkAcctNo=-1
+		bnkAcctNo=num(bnk_acct_no$,err=*next)
+		if bnkAcctNo<0 or len(bnk_acct_no$)<4 then
+			msg_id$="AD_BNKACCT_NUM"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
 [[ADC_BANKACCTCODE.ABA_NO.AVAL]]
 rem --- Bank routing number required for Checking and Savings accounts
 	aba_no$=callpoint!.getUserInput()
