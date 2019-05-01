@@ -47,9 +47,9 @@ rem --- Don’t allow deletinging BNK_ACCT_CD if currently in use in either APS_AC
 	endif
 [[ADC_BANKACCTCODE.BNK_ACCT_NO.AVAL]]
 rem --- Bank account number required for Checking and Savings accounts
-	aba_no$=callpoint!.getUserInput()
+	bnk_acct_no$=callpoint!.getUserInput()
 	bnk_acct_type$=callpoint!.getColumnData("ADC_BANKACCTCODE.BNK_ACCT_TYPE")
-	if pos(bnk_acct_type$="CS") and cvs(aba_no$,2)="" then
+	if pos(bnk_acct_type$="CS") and cvs(bnk_acct_no$,2)="" then
 		msg_id$="AD_BNKACCT_REQ"
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
@@ -62,4 +62,15 @@ rem --- Bank routing number required for Checking and Savings accounts
 		msg_id$="AD_ABANO_REQ"
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
+	endif
+
+rem --- Bank routing number must be 9-digit number, or blank
+	if cvs(aba_no$,2)<>"" then
+		abaNo=-1
+		abaNo=num(aba_no$,err=*next)
+		if abaNo<0 or len(aba_no$)<>9 then
+			msg_id$="AD_9DIGIT_ABANO"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+		endif
 	endif

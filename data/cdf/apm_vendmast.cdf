@@ -1,3 +1,13 @@
+[[APM_VENDMAST.ABA_NO.AVAL]]
+rem --- Bank routing number must be 9-digit number, or blank
+	aba_no$=callpoint!.getUserInput()
+	abaNo=-1
+	abaNo=num(aba_no$,err=*next)
+	if abaNo<0 or len(aba_no$)<>9 then
+		msg_id$="AD_9DIGIT_ABANO"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
 [[APM_VENDMAST.ADIS]]
 rem --- Enable/disable and Payment Information fields
 	if callpoint!.getColumnData("APM_VENDMAST.PAYMENT_TYPE")="A" then
