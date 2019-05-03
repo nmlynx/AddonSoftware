@@ -7,6 +7,19 @@ rem --- Bank routing number must be 9-digit number, or blank
 		msg_id$="AD_9DIGIT_ABANO"
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+rem ---Bank routing number must pass 371371371 checksum test
+	dim digit[9]
+	for i=1 to 9
+		digit[i]=num(aba_no$(i,1))
+	next i
+	if mod(3*(digit[1]+digit[4]+digit[7])+7*(digit[2]+digit[5]+digit[8])+1*(digit[3]+digit[6]+digit[9]),10)<>0 then
+		msg_id$="AD_BAD_ABANO"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
 	endif
 [[APM_VENDMAST.ADIS]]
 rem --- Enable/disable and Payment Information fields
