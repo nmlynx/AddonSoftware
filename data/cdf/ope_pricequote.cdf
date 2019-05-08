@@ -28,20 +28,35 @@ rem --- Validate the Item/Warehouse combination is valid
 		gosub build_arrays
 	endif
 [[OPE_PRICEQUOTE.AOPT-AVLE]]
-rem -- call inquiry program to view Sales Analysis records
-syspgmdir$=stbl("+DIR_SYP",err=*next)
-key_pfx$=firm_id$
-if cvs(callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID"),2) <>"" then
-	key_pfx$=key_pfx$+callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID")
-	call syspgmdir$+"bam_inquiry.bbj",
+rem -- call query to show pricing/availability
+
+item_id$=callpoint!.getColumnData("OPE_PRICEQUOTE.ITEM_ID")
+
+if cvs(item_id$,3) <>""
+
+	selected_key$ = ""
+	dim filter_defs$[1,2]
+	filter_defs$[0,0]="IVM_ITEMWHSE.FIRM_ID"
+	filter_defs$[0,1]="='"+firm_id$+"'"
+	filter_defs$[0,2]="LOCK"
+	filter_defs$[1,0]="IVM_ITEMWHSE.ITEM_ID"
+	filter_defs$[1,1]="='"+item_id$+"'"
+	filter_defs$[1,2]="LOCK"
+
+	dim search_defs$[3]
+
+	call stbl("+DIR_SYP")+"bax_query.bbj",
 :		gui_dev,
 :		Form!,
-:		"IVC_ITEMAVAIL",
-:		"VIEW",
+:		"IV_PRICE_AVAIL",
+:		"",
 :		table_chans$[all],
-:		key_pfx$,
-:		"AO_ITEM_WH",
+:		selected_key$,
+:		filter_defs$[all],
+:		search_defs$[all],
+:		"",
 :		""
+
 endif
 [[OPE_PRICEQUOTE.<CUSTOM>]]
 #include std_functions.src

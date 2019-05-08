@@ -30,10 +30,10 @@ rem --- Show availability this item
 
 	selected_key$ = ""
 	dim filter_defs$[1,2]
-	filter_defs$[0,0]="IVC_ITEMAVAIL.FIRM_ID"
+	filter_defs$[0,0]="IVM_ITEMWHSE.FIRM_ID"
 	filter_defs$[0,1]="='"+firm_id$+"'"
 	filter_defs$[0,2]="LOCK"
-	filter_defs$[1,0]="IVC_ITEMAVAIL.ITEM_ID"
+	filter_defs$[1,0]="IVM_ITEMWHSE.ITEM_ID"
 	filter_defs$[1,1]="='"+item_id$+"'"
 	filter_defs$[1,2]="LOCK"
 
@@ -42,8 +42,8 @@ rem --- Show availability this item
 	call stbl("+DIR_SYP")+"bax_query.bbj",
 :		gui_dev,
 :		Form!,
-:		"IVC_ITEMAVAIL",
-:		"BUILD",
+:		"IV_PRICE_AVAIL",
+:		"",
 :		table_chans$[all],
 :		selected_key$,
 :		filter_defs$[all],
