@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2019-04-30
+ Report Date:   2019-05-09
  Report Branch: AddonSoftware 19.00
  Last Release:  AddonSoftware 18.21
 =======================================================================================================================================
@@ -350,3 +350,29 @@ Modified: data/bar/bmm_billsub.xml
 Modified: data/cdf/bmm_billmat.cdf
 Modified: data/cdf/bmm_billoper.cdf
 Modified: data/cdf/bmm_billsub.cdf
+
+=======================================================================================================================================
+Revision: 616ba56bc5e9f3f9043dbce9ddb00986d8561734
+Author: Christine <chawkins@basis.com>
+Date: 5/6/2019 11:03:27 AM
+Message:
+Bug 9619 - AP - Export 1099 Data - Error 47
+ - Added logic to abort if directory is empty, invalid, or write only.
+----
+Modified: data/bar/apx_export1099.xml
+Added: data/cdf/apx_export1099.cdf
+
+=======================================================================================================================================
+Revision: ab5e879ddd865ba7053d4f786abd37815dea280a
+Author: Christine <chawkins@basis.com>
+Date: 5/9/2019 11:50:30 AM
+Message:
+Bug 9621 - IV - Child Alias IVC_ITEMAVAIL is being invoked as a query rather than a grid form
+ - changed these forms to use IV_PRICE_AVAIL custom query
+----
+Modified: data/bar/ivm_itemmast.xml
+Modified: data/bar/ope_pricequote.xml
+Modified: data/cdf/ivm_itemmast.cdf
+Modified: data/cdf/ope_pricequote.cdf
+
+
