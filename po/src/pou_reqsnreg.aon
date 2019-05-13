@@ -158,6 +158,7 @@ rem --- Create purchase order from requisition
 
         poe_pohdr.firm_id$=poe_reqhdr.firm_id$
         poe_pohdr.po_no$=seq_id$
+        poe_pohdr.purch_agent_cd$=purchAgentCd$
         poe_pohdr$=field(poe_pohdr$)
         write record (poe_pohdr_dev) poe_pohdr$
 
