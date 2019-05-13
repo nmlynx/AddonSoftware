@@ -722,19 +722,27 @@ rem --- remove from print file?
         next del_recs
       
         if emailFax!.size()
-            for email_fax=0 to emailFax!.size()-1 step 3
-                reportControl!.addToDocQueue(emailFax!.get(email_fax),"",emailFax!.get(email_fax+1),emailFax!.get(email_fax+2))    
-            next email_fax
-        endif   
+            msg_id$ = "CONF_RPTCTL"
+            gosub disp_message
+            if msg_opt$="Y"
+                for email_fax=0 to emailFax!.size()-1 step 3
+                    reportControl!.addToDocQueue(emailFax!.get(email_fax),"",emailFax!.get(email_fax+1),emailFax!.get(email_fax+2))    
+                next email_fax
+            endif   
+        endif
    
     else
     rem --- on demand print
  
         remove (poe_poprint,key=firm_id$+vendor_id$+po_no$,dom=*next)
         if emailFax!.size() and send_via_rpt_ctl$="Y"
-            for email_fax=0 to emailFax!.size()-1 step 3
-                reportControl!.addToDocQueue(emailFax!.get(email_fax),"",emailFax!.get(email_fax+1),emailFax!.get(email_fax+2))    
-            next email_fax
+            msg_id$ = "CONF_RPTCTL"
+            gosub disp_message
+            if msg_opt$="Y"
+                for email_fax=0 to emailFax!.size()-1 step 3
+                    reportControl!.addToDocQueue(emailFax!.get(email_fax),"",emailFax!.get(email_fax+1),emailFax!.get(email_fax+2))    
+                next email_fax
+            endif
         endif
     endif 
     

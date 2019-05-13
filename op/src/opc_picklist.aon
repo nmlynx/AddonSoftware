@@ -1009,9 +1009,13 @@ rem --- Clear Print Flags
 		wend
 
         if emailFax!.size()
-            for email_fax=0 to emailFax!.size()-1 step 3
-                reportControl!.addToDocQueue(emailFax!.get(email_fax),emailFax!.get(email_fax+1),"",emailFax!.get(email_fax+2))    
-            next email_fax
+            msg_id$ = "CONF_RPTCTL"
+            gosub disp_message
+            if msg_opt$="Y"
+                for email_fax=0 to emailFax!.size()-1 step 3
+                    reportControl!.addToDocQueue(emailFax!.get(email_fax),emailFax!.get(email_fax+1),"",emailFax!.get(email_fax+2))    
+                next email_fax
+            endif
         endif
         
     else 
@@ -1033,9 +1037,13 @@ rem --- Clear Print Flags
         endif 
         
         if emailFax!.size() and send_via_rpt_ctl$="Y"
-            for email_fax=0 to emailFax!.size()-1 step 3
-                reportControl!.addToDocQueue(emailFax!.get(email_fax),emailFax!.get(email_fax+1),"",emailFax!.get(email_fax+2))    
-            next email_fax
+            msg_id$ = "CONF_RPTCTL"
+            gosub disp_message
+            if msg_opt$="Y"
+                for email_fax=0 to emailFax!.size()-1 step 3
+                    reportControl!.addToDocQueue(emailFax!.get(email_fax),emailFax!.get(email_fax+1),"",emailFax!.get(email_fax+2))    
+                next email_fax
+            endif
         endif
         
 	endif
