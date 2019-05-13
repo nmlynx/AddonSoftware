@@ -42,11 +42,11 @@ rem --- Open/Lock files
 	open_tables$[15]="POW_REQREGALT", open_opts$[15]="OTAL"
 	rem open_tables$[16]="SFE_WOMASTR", open_opts$[16]="OTA"
 	rem open_tables$[17]="SFE_WOMATL", open_opts$[17]="OTA"
-	rem open_tables$[18]="SFE_WOSUBCNT", open_opts$[18]="OTA"
-	open_tables$[19]="APS_PARAMS", open_opts$[19]="OTA"
-	open_tables$[20]="ARS_PARAMS", open_opts$[20]="OTA"
+	open_tables$[18]="POC_PURCHAGENTCD", open_opts$[18]="OTA"
+	rem open_tables$[19]="APS_PARAMS", open_opts$[19]="OTA"
+	rem open_tables$[20]="ARS_PARAMS", open_opts$[20]="OTA"
 	open_tables$[21]="IVS_PARAMS", open_opts$[21]="OTA"
-	open_tables$[22]="POS_PARAMS", open_opts$[22]="OTA"
+	rem open_tables$[22]="POS_PARAMS", open_opts$[22]="OTA"
 	open_tables$[23]="POW_REQREGVEN", open_opts$[23]="OTAL"
 	open_tables$[24]="POW_REQREGREQ", open_opts$[24]="OTAL"
 	
@@ -69,11 +69,11 @@ rem --- Open/Lock files
 	pow_reqregalt_dev=num(open_chans$[15])
 	rem sfe_womastr_dev=num(open_chans$[16])
 	rem sfe_womatl_dev=num(open_chans$[17])
-	rem sfe_wosubcnt_dev=num(open_chans$[18])
-	aps_params_dev=num(open_chans$[19])
-	ars_params_dev=num(open_chans$[20])
+	pocPurchAgentCd_dev=num(open_chans$[18])
+	rem aps_params_dev=num(open_chans$[19])
+	rem ars_params_dev=num(open_chans$[20])
 	ivs_params_dev=num(open_chans$[21])
-	pos_params_dev=num(open_chans$[22])
+	rem pos_params_dev=num(open_chans$[22])
 	pow_reqregven_dev=num(open_chans$[23])
 	pow_reqregreq_dev=num(open_chans$[24])
 	
@@ -98,17 +98,18 @@ rem --- Open/Lock files
 	dim pow_reqregalt$:open_tpls$[15]
 	rem dim sfe_womastr$:open_tpls$[16]
 	rem dim sfe_womatl$:open_tpls$[17]
-	rem dim sfe_wosubcnt$:open_tpls$[18]
-	dim aps_params$:open_tpls$[19]
-	dim ars_params$:open_tpls$[20]
+	dim pocPurchAgentCd$:open_tpls$[18]
+	rem dim aps_params$:open_tpls$[19]
+	rem dim ars_params$:open_tpls$[20]
 	dim ivs_params$:open_tpls$[21]
-	dim pos_params$:open_tpls$[22]
+	rem dim pos_params$:open_tpls$[22]
 	dim pow_reqregven$:open_tpls$[23]
 	dim pow_reqregreq$:open_tpls$[24]
 	
 	
 rem --- Assign form input values to local variables
 
+    purchAgentCd$=option!.getOptionData("purch_agent_cd")
     begreq$=option!.getOptionData("req_no_1")
     endreq$=option!.getOptionData("req_no_2")
     sequence$=option!.getOptionData("report_type")                         
@@ -127,10 +128,10 @@ rem --- Assign form input values to local variables
 
 rem --- Retrieve parameter records
 
-	find record (aps_params_dev,key=firm_id$+"AP00",err=std_missing_params) aps_params$
-    find record (ars_params_dev,key=firm_id$+"AR00",err=std_missing_params) ars_params$
-    find record (ivs_params_dev,key=firm_id$+"IV00",err=std_missing_params) ivs_params$
-    find record (pos_params_dev,key=firm_id$+"PO00",err=std_missing_params) pos_params$
+	rem find record (aps_params_dev,key=firm_id$+"AP00",err=std_missing_params) aps_params$
+    rem find record (ars_params_dev,key=firm_id$+"AR00",err=std_missing_params) ars_params$
+    rem find record (ivs_params_dev,key=firm_id$+"IV00",err=std_missing_params) ivs_params$
+    rem find record (pos_params_dev,key=firm_id$+"PO00",err=std_missing_params) pos_params$
 
 rem --- masks
 
@@ -142,8 +143,8 @@ rem --- masks
 
 rem --- Parameters
 
-    find record (pos_params_dev,key=firm_id$+"PO00",dom=std_missing_params) pos_params$
-    find record (aps_params_dev,key=firm_id$+"AP00",dom=std_missing_params) aps_params$
+    rem find record (pos_params_dev,key=firm_id$+"PO00",dom=std_missing_params) pos_params$
+    rem find record (aps_params_dev,key=firm_id$+"AP00",dom=std_missing_params) aps_params$
     find record (ivs_params_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs_params$
     itemlen=ivs_params.item_id_len
     m0=len(m0$)
@@ -175,6 +176,9 @@ rem --- Parameters
     endif
 	
 rem --- Init data
+
+    findrecord(pocPurchAgentCd_dev,key=firm_id$+purchAgentCd$,err=*next)pocPurchAgentCd$
+    purchaseAgent$=pocPurchAgentCd.purch_agent_name$
 
     more=1
 

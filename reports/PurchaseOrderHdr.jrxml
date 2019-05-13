@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2019-01-30T16:56:29 -->
+<!-- 2019-05-08T18:07:57 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PurchaseOrder" pageWidth="612" pageHeight="792" whenNoDataType="AllSectionsNoDetail" columnWidth="572" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon" uuid="ea22a6d6-67f2-4294-82f2-d5ea1455f2e0">
 	<property name="ireport.zoom" value="1.5"/>
 	<property name="ireport.x" value="0"/>
@@ -114,6 +114,7 @@
 	<field name="HDR_SHIP_FROM" class="java.lang.String">
 		<fieldDescription><![CDATA[]]></fieldDescription>
 	</field>
+	<field name="AGENT_SIGNATURE" class="java.lang.String"/>
 	<variable name="PO_TOTAL" class="java.lang.String"/>
 	<group name="PO" isReprintHeaderOnEachPage="true" footerPosition="ForceAtBottom">
 		<groupExpression><![CDATA[$P{PO_NO}]]></groupExpression>
@@ -1174,6 +1175,15 @@
 				</textElement>
 				<text><![CDATA[Purchasing Agent]]></text>
 			</staticText>
+			<image onErrorType="Blank">
+				<reportElement x="370" y="29" width="140" height="44" uuid="9d7c8ffc-2ff1-4c68-b4fb-0ff8b857aa0d">
+					<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+					<printWhenExpression><![CDATA[$F{AGENT_SIGNATURE}!=""]]></printWhenExpression>
+				</reportElement>
+				<imageExpression><![CDATA[$F{AGENT_SIGNATURE}]]></imageExpression>
+			</image>
 		</band>
 	</pageFooter>
 </jasperReport>

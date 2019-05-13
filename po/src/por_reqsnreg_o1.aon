@@ -465,7 +465,9 @@ req_subheading: rem --- Requisition subheading
      OutVect!.addItem(Translate!.getTranslation("AON_REQUISITION_#:_")+poe_reqhdr.req_no$)
      xwk = fnblank(1)
      OutVect!.addItem(Translate!.getTranslation("AON_DATE:_")+fndate$(poe_reqhdr.ord_date$))
-	 xwk=fnblank(6)
+     xwk=fnblank(1)
+     OutVect!.addItem(Translate!.getTranslation("AON_PURCHASING_AGENT")+": "+purchaseAgent$)    
+	 xwk=fnblank(4)
 	 
 rem --- Dropship?
 

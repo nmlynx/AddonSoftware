@@ -45,7 +45,7 @@ rem --- formatted date, vendor address, ship-to (warehouse) address, terms code 
     datatemplate$ = datatemplate$ + "ship_addr_line1:C(30),ship_addr_line2:C(30),ship_addr_line3:C(30),"
     datatemplate$ = datatemplate$ + "ship_addr_line4:C(30),ship_addr_line5:C(30),ship_addr_line6:C(30),"
     datatemplate$ = datatemplate$ + "ship_addr_line7:C(30),"
-    dataTemplate$ = dataTemplate$ + "drop_ship:C(1*),terms_desc:C(1*),ship_via:C(1*),fob:C(1*),"
+    dataTemplate$ = dataTemplate$ + "drop_ship:C(1*),terms_desc:C(1*),ship_via:C(1*),fob:C(1*),agent_signature:C(1*),"
     dataTemplate$ = dataTemplate$ + "ack_by:C(1*),freight_terms:C(1*),hdr_msg_code:C(1*),hdr_ship_from:C(1*)"
 
     rs! = BBJAPI().createMemoryRecordSet(dataTemplate$)
@@ -64,13 +64,14 @@ rem --- Retrieve the program path
 rem --- Open Files    
 rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
 
-    files=4,begfile=1,endfile=files
+    files=5,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]    
 
     files$[1]="poe-02",ids$[1]="POE_POHDR"
     files$[2]="apm-01",ids$[2]="APM_VENDMAST"
     files$[3]="ivc_whsecode",ids$[3]="IVC_WHSECODE"
     files$[4]="apc_termscode",ids$[4]="APC_TERMSCODE"
+    files$[5]="poc_purchagentcd",ids$[5]="POC_PURCHAGENTCD"
 
 	call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
 
@@ -86,11 +87,13 @@ rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
     apm_vendmast = channels[2]    
     ivc_whsecode = channels[3]
     apc_termscode = channels[4]
+    pocPurchAgentCd = channels[5]
 	
     dim poe_pohdr$:templates$[1]
     dim apm_vendmast$:templates$[2]
     dim ivc_whsecode$:templates$[3]
     dim apc_termscode$:templates$[4]
+    dim pocPurchAgentCd$:templates$[5]
 	
 rem --- Initialize Data
 
@@ -145,6 +148,10 @@ rem --- get Terms description and message code
     if cvs(poe_pohdr.po_msg_code$,2)<>"" then hdr_msg_code$=poe_pohdr.po_msg_code$
 
     hdr_ship_from$=poe_pohdr.purch_addr$
+
+rem --- get purchasing agent's signature file
+
+    findrecord(pocPurchAgentCd,key=firm_id$+poe_pohdr.purch_agent_cd$,err=*next)pocPurchAgentCd$
         
 all_done:
 
@@ -179,6 +186,7 @@ all_done:
     data!.setFieldValue("ship_addr_line6", ship_addr$((ship_addrLine_len*5)+1,ship_addrLine_len))
     data!.setFieldValue("ship_addr_line7", ship_addr$((ship_addrLine_len*6)+1,ship_addrLine_len))
 
+    data!.setFieldValue("agent_signature",cvs(pocPurchAgentCd.signature_file$,2))
 	rs!.insert(data!)
 
 rem Tell the stored procedure to return the result set.
