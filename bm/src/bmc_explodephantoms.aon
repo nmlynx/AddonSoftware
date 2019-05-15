@@ -8,7 +8,7 @@ rem --- All Rights Reserved
 
         setesc std_error
         seterr std_error
-        enter channel[all],info$[all],info[all],headings$[all],parent$,template$[all],outVect!,Translate!
+        enter channel[all],info$[all],info[all],headings$[all],parent$,template$[all],outVect!,Translate!,rd_table_chans$[all]
 
 rem --- Retrieve the program path
 
@@ -476,7 +476,7 @@ rem #include std_error.src
 
 disp_message:rem --- Display Message Dialog
 
-    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
     return
 
 std_error: rem --- Standard error handler (11Oct2017)
