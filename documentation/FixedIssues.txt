@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2019-05-13
+ Report Date:   2019-05-15
  Report Branch: AddonSoftware 19.00
  Last Release:  AddonSoftware 18.21
 =======================================================================================================================================
@@ -386,3 +386,15 @@ rather than always automatically adding them to the document queue.
 Modified: op/src/opc_invoice.aon
 Modified: op/src/opc_picklist.aon
 Modified: po/src/por_poprint.aon
+
+=======================================================================================================================================
+Revision: 2bb9eca52439ed0fe4784fd8a44bc2a5fd096493
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/15/2019 11:30:24 AM
+Message:
+Bug 9561: Added rd_table_chans$[all] to bmc_explodephantoms.aon call
+ENTER list so that channels opened in bmc_getcost get passed back to
+callers of bmc_explodephantoms.aon, i.e. bmr_invproduction.aon.
+----
+Modified: bm/src/bmc_explodephantoms.aon
+Modified: bm/src/bmr_invproduction.aon
