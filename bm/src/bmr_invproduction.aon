@@ -801,7 +801,7 @@ explodephantoms: rem --- Explode Phantoms
         info[0]=bme01a.qty_ordered*bmm02a.qty_required,info[1]=l,info[2]=l9,info[3]=headings
         info[4]=short,info[5]=o1,info[6]=0,info[7]=u0,info[8]=u1,info[9]=1
         info[10]=h,info[12]=glstatus,info[13]=bmm01a.est_yield*bmm08a.setup_time/100,info[14]=value
-        call pgmdir$+"bmc_explodephantoms.aon",channel[all],info$[all],info[all],headings$[all],bme01a.item_id$,template$[all],outVect!,Translate!
+        call pgmdir$+"bmc_explodephantoms.aon",channel[all],info$[all],info[all],headings$[all],bme01a.item_id$,template$[all],outVect!,Translate!,rd_table_chans$[all]
         if info[11]>0 then exitto std_exit
         o2$=info$[5]
         l=info[1],short=info[4],o1=info[5],u0=info[7],u1=info[8],h=info[10],value=info[14]
@@ -929,7 +929,7 @@ rem #include disp_message.src
 
 disp_message:rem --- Display Message Dialog
 
-    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
 
 return
 	
