@@ -80,7 +80,7 @@ rem --- Get check date and amount
     sqlprep(sql_chan)sql_prep$
     dim read_tpl$:sqltmpl(sql_chan)
     sqlexec(sql_chan)
-    read_tpl$ = sqlfetch(sql_chan)
+    read_tpl$ = sqlfetch(sql_chan,end=*next)
 
 rem --- put data into recordset
     data! = rs!.getEmptyRecordData()

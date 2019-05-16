@@ -197,12 +197,6 @@ rem --- Dimension string templates
 	dim apw_chkprn$:templates$[10],adxlocks$:templates$[11],payauth$:templates$[12]
     dim apm_approvers$:templates$[13],apt_invapproval$:templates$[14],apsACH$:templates$[15]
 
-rem --- Clear any existing (stale) recs for this firm from the jasper print file
-
-	call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",apw_chkprn_dev,firm_id$,status
-	rem --- Do NOT clear apw_checkinvoice (apw-01) because check printing may have been Restarted.
-    rem call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",apw01_dev,firm_id$,status
-
 rem --- Assign form input values to local variables
 
     check_date$=option!.getOptionData("CHECK_DATE")
@@ -228,6 +222,25 @@ rem --- Retrieve parameter records
     
 	call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",vend_mask$,0,vendor_length
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",gl_acct_mask$,0,gl_acct_length
+
+rem --- Clear any existing (stale) recs for this firm from the jasper print file
+
+    if restart$="Y" and ach_allowed then
+        rem --- ACH checks are not reprinted, so use the ACH check that were previously printed
+        read(apw_chkprn_dev,key=firm_id$,dom=*next)
+        while 1
+            apwChkPrn_key$=key(apw_chkprn_dev,end=*break)
+            if pos(firm_id$=apwChkPrn_key$)<>1 then break
+            readrecord(apw_chkprn_dev)apw_chkprn$
+            rem --- ACH check numbers start with an alpha character
+            x=num(apw_chkprn.check_no$,err=*continue)
+            remove(apw_chkprn_dev,key=apwChkPrn_key$,err=*next)
+        wend
+    else
+        call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",apw_chkprn_dev,firm_id$,status
+    endif
+    rem --- Do NOT clear apw_checkinvoice (apw-01) because check printing may have been Restarted.
+    rem call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",apw01_dev,firm_id$,status
     
 rem --- If using Payment Authorization, get all possible signers and their signature files
 
@@ -487,7 +500,7 @@ rem --- Fill jasper reports
     endif
 
     if totalACH then
-        rem --- Invoke jasper for ACH payments, includes no printed checkes
+        rem --- Invoke jasper for ACH payments, includes no printed checks
         report! = BarUtils.getBBJasperReport(filename$)
         params!.remove("ACH_PAYMENT")
         params!.put("ACH_PAYMENT","Y")
@@ -1110,7 +1123,7 @@ new_vendor: rem --- New Vendor
 
 rem --- Now go back and re-write ape-04 using ape04_dev2 and ape04b$
 rem --- using the current check number and firm_id$ + prev_aptype_vend_t1$ (ap type and vendor number)
-        if !(restart$="Y" and ach_payment$="Y") then 
+        if !(restart$="Y" and ach_payment$="Y") then
             dim ape04b$:fattr(ape04b$)
             read(ape04_dev2,key=firm_id$+prev_aptype_vend_t1$,dom=*next)
             while 1
@@ -1141,11 +1154,13 @@ vendor_header:
         rem --- Is vendor being paid via ACH?
         if ach_allowed and apm01a.payment_type$="A" then
             ach_payment$="Y"
-            totalACH=totalACH+1
 
             rem --- Get next ACH check number
-            call stbl("+DIR_SYP")+"bas_sequences.bbj","ACH_CHK_NO",new_ACH_chk_no$,table_chans$[all]
-            check_no$=new_ACH_chk_no$
+            if !(restart$="Y") then 
+                totalACH=totalACH+1
+                call stbl("+DIR_SYP")+"bas_sequences.bbj","ACH_CHK_NO",new_ACH_chk_no$,table_chans$[all]
+                check_no$=new_ACH_chk_no$
+            endif
             if totalACH=1 then start_check_no$=check_no$
         else
             ach_payment$="N"
