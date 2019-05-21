@@ -115,7 +115,14 @@ rem --- Validate installation base directory
 	endif
 
 	rem --- Use canonical path
-	callpoint!.setUserInput(base!.getCanonicalPath())
+	base_dir$=base!.getCanonicalPath()
+	callpoint!.setUserInput(base_dir$)
+
+	rem --- Initialize Barista installation directory
+	if cvs(callpoint!.getColumnData("ADX_JARAON.BAR_DIR"),2)="" then
+		callpoint!.setColumnData("ADX_JARAON.BAR_DIR",base_dir$,1)
+	endif
+
 [[ADX_JARAON.BSHO]]
 rem --- Inits
 	use java.io.File
