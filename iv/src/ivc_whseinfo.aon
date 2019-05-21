@@ -69,6 +69,10 @@ init_tpls: rem --- Initialize templates
     dim ivm02a_key$:whseinfo_tpls$[1]
     dim k3$:whseinfo_tpls$[2]
 
+rem --- Get current ivm02 knum on channels[2], and reset it on the way out.
+    xfin$=xfin(channels[2])
+    ivm02_knum=dec(xfin$(61,4))
+
 rem --- Initializations
 
     dim b0$(24),b1$(64),b[20]
@@ -111,6 +115,9 @@ rem --- All Warehouses
     endif
 
 done: rem --- All done
+
+    rem --- Reset ivm-02 knum on channels[2] to what it was initially.
+    read(ivm02_dev,key="",knum=ivm02_knum,dom=*next)
 
     goto std_exit
 
