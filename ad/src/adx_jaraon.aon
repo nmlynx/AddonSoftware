@@ -7,12 +7,320 @@ rem --- AddonSoftware Version 19.0
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
 
+    use java.io.File
+
     setesc std_error
     seterr std_error
+
+rem --- Initializations
+    sysGUI! = BBjAPI().getSysGui()
+    sourcePath!=new java.util.Properties()
+    systems!=new java.util.Properties()
+    skipped=0
+
+rem --- Get user inputs
+    baseDir$=Option!.getOptionData("BASE_DIR")
+    barDir$=Option!.getOptionData("BAR_DIR")
+    jarFile$=Option!.getOptionData("JAR_FILE")
+
+rem --- Open DDM_TABLE_TPLS in source Barista installation
+    ddmTableTpls_dev=unt
+    open(ddmTableTpls_dev)barDir$+"/sys/data/ddm_table_tpls.dat"; rem --- Error if not found, something is wrong.
+    dim ddm_table_tpls$:"table_name:c(16*),file_name:c(30*),template:c(10230*)"
+
+rem --- Open DDM_SYSTEMS in source Barista installation
+    ddmSystems_dev=unt
+    open(ddmSystems_dev)barDir$+"/sys/data/ddm_systems.dat"
+    findrecord(ddmTableTpls_dev,key=pad("DDM_SYSTEMS",16))ddm_table_tpls$; rem --- Error if not found, something is wrong.
+    dim ddmSystems$:ddm_table_tpls.template$
+
+rem --- Get Mounted Directory for system (application) installed in source Barista
+    read(ddmSystems_dev,key="",dom=*next)
+    while 1
+        readrecord(ddmSystems_dev,end=*break)ddmSystems$
+        systems!.setProperty(cvs(ddmSystems.mount_sys_id$,2),cvs(ddmSystems.mount_dir$,2))
+    wend
+    close(ddmSystems_dev,err=*next)
+    
+rem --- Start main progress meter
+    meter_title$=rdForm!.getTitle()
+    meter_total_recs=4*systems!.size()+1
+    meter_text$=""
+    meter_action$="WIN-LST-OK"
+    gosub disp_meter
+    mainMeter!=meterWin!
+    mainMeterProcRecs=meter_proc_recs
+    mainMeterTotalRecs=meter_total_recs
+
+rem --- Open log file
+    location$ = baseDir$
+    gosub open_log
+
+rem --- Build sourcePath! Properties object of directories and files used by each system (application) installed in source Barista
+    systemsIter!=systems!.keySet().iterator()
+    while systemsIter!.hasNext()
+        system$=systemsIter!.next()
+        mount_dir$=systems!.getProperty(system$)
+        mountDir!=new java.io.File(mount_dir$)
+        mount_dir$=mountDir!.getCanonicalPath()
+
+        rem --- Increment main progress meter
+        meterWin!=mainMeter!
+        meter_total_recs=mainMeterTotalRecs
+        mainMeterProcRecs=mainMeterProcRecs+1
+        meter_text$=system$+": verify paths in syn file"
+        meter_proc_recs=mainMeterProcRecs
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)
+        print(log_dev)meter_text$
+
+        rem --- Count lines in system (application) syn file
+        lines=0
+        appSyn_dev=unt
+        open(appSyn_dev,isz=-1)mount_dir$+"/config/"+cvs(system$,8)+".syn"; rem --- Error if not found, something is wrong.
+        while 1
+            read(appSyn_dev,end=*break)record$
+            lines=lines+1
+        wend
+        close(appSyn_dev,err=*next)
+        
+        rem --- Start secondary progress meter
+        meter_title$=mount_dir$+"/config/"+cvs(system$,8)+".syn"
+        meter_total_recs=lines
+        meter_text$=""
+        meter_action$="WIN-LST"
+        gosub disp_meter
+        detailMeter!=meterWin!
+
+        rem --- Verify paths in system (application) syn file
+        appSyn_dev=unt
+        open(appSyn_dev,isz=-1)mount_dir$+"/config/"+cvs(system$,8)+".syn"; rem --- Error if not found, something is wrong.
+        while 1
+            read(appSyn_dev,end=*break)record$
+
+            meter_text$=""
+            key$ = record$(1, pos("="=record$) - 1)
+            switch (BBjAPI().TRUE)
+                case key$ = "DIR"
+                case key$ = "SYSDIR"
+                    xpos = pos("="=record$)
+                    path$ = cvs(record$(xpos+1),3)
+                    gosub verify_path
+                    meter_text$=key$
+                    if skip_path then
+                        meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
+                        print(log_dev)"    "+meter_text$
+                    endif
+                    break
+                case key$ = "APROD"
+                case key$ = "SYSAPP"
+                    xpos = pos("="=record$)
+                    ypos = pos(";"=record$)
+                    app$ = cvs(record$(xpos+1, ypos-xpos-1),3)
+                    xpos = pos(";"=record$,1,5)
+                    ypos = pos(";"=record$,1,6)
+                    path$ = cvs(record$(xpos+1, ypos-xpos-1),3)
+                    gosub verify_path
+                    meter_text$=key$+": "+app$
+                    if skip_path then
+                        meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
+                        print(log_dev)"    "+meter_text$
+                    endif
+                    break
+                case key$ = "STBL"
+                case key$ = "SYSSTBL"
+                    xpos = pos(" "=record$)
+                    ypos = pos("="=record$,1,2)
+                    stbl$ = cvs(record$(xpos+1, ypos-xpos-1),3)
+                    path$ = cvs(record$(ypos+1),3)
+                    rem --- Sanity check if this looks like a path
+                    if (pos("/"=path$) or pos("\"=path$)) and (pos("http:"=path$)=0 and pos("https:"=path$)=0) then
+                        gosub verify_path
+                        meter_text$=key$+": "+stbl$
+                        if skip_path then
+                            meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
+                            print(log_dev)"    "+meter_text$
+                        endif
+                    endif
+                    break
+                case key$ = "PREFIX"
+                case key$ = "SYSPFX"
+                    rem --- replace SYSPFX/PREFIX path with new path
+                    xpos = pos("="=record$)
+                    path$ = cvs(record$(xpos+1),3)
+                    gosub verify_path
+                    meter_text$=key$+" "+path$
+                    if skip_path then
+                        meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
+                        print(log_dev)"    "+meter_text$
+                    endif
+                    break
+                case key$ = "CFG"
+                case key$ = "SYSCFG"
+                    rem --- replace SYSCFG/CFG path with new path for corresponding STBL
+                    xpos = pos("="=record$)
+                    ypos = pos("="=record$,1,2)
+                    stbl$ = cvs(record$(xpos+1, ypos-xpos-1),3)
+                    path$ = cvs(record$(ypos+1),3)
+                    gosub verify_path
+                    meter_text$=key$+": "+stbl$
+                    if skip_path then
+                        meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
+                        print(log_dev)"    "+meter_text$
+                    endif
+                    break
+                case default
+                    rem --- skip other lines
+                    break
+            swend
+
+            rem --- Increment secondary progress meter
+            if meter_text$<>"" then
+                meterWin!=detailMeter!
+                meter_proc_recs=meter_proc_recs+1
+                meter_action$="MTR-LST"
+                gosub disp_meter
+            endif
+        wend
+        close(appSyn_dev,err=*next)
+
+        rem --- Stop secondary progress meter
+        meterWin!=detailMeter!
+        meter_text$=""
+        meter_proc_recs=meter_total_recs
+        meter_action$="LST-END"
+        gosub disp_meter
+
+        rem --- Increment main progress meter
+        meterWin!=mainMeter!
+        meter_total_recs=mainMeterTotalRecs
+        mainMeterProcRecs=mainMeterProcRecs+1
+        meter_text$=system$+": verify paths in sync/adm_modules~*.xml files"
+        meter_proc_recs=mainMeterProcRecs
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+
+        rem --- Verify paths in system (application) sync/adm_modules~*.xml files
+rem wgh ... 9625 ... stopped here
+
+        rem --- Increment main progress meter
+        meterWin!=mainMeter!
+        meter_total_recs=mainMeterTotalRecs
+        mainMeterProcRecs=mainMeterProcRecs+1
+        meter_text$=system$+": verify paths in admin_backup/adm_modules~*.xml files"
+        meter_proc_recs=mainMeterProcRecs
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+
+        rem --- Verify paths in system (application) admin_backup/adm_modules~*.xml files
+
+        rem --- Increment main progress meter
+        meterWin!=mainMeter!
+        meter_total_recs=mainMeterTotalRecs
+        mainMeterProcRecs=mainMeterProcRecs+1
+        meter_text$=system$+": verify paths in application's data files"
+        meter_proc_recs=mainMeterProcRecs
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+
+        rem --- Verify paths in system (application) data files
+
+    wend
     
 done: rem --- All done
 
+    rem --- Close open files
+    close(ddmTableTpls_dev,err=*next)
+    
+    rem --- Stop main progress meter
+    meterWin!=mainMeter!
+    meter_total_recs=mainMeterTotalRecs
+    meter_text$=""
+    meter_proc_recs=mainMeterTotalRecs
+    meter_action$="LST-END"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)"Copy Addon Installation Utility log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
+    close(log_dev)
+
+    rem --- Warn if paths were skipped, i.e. skipped>0
+    if skipped then
+        msg_id$="AD_SKIPPED_PATHS"
+        dim msg_tokens$[2]
+        msg_tokens$[1]=str(skipped)
+        msg_tokens$[2]=log$
+        gosub disp_message
+    endif
+
     goto std_exit
+
+verify_path: rem --- Verify path is located under installation base directory
+    skip_path=0
+
+    path!=new java.io.File(path$)
+    canonicalPath$=path!.getCanonicalPath()
+    if pos(baseDir$=canonicalPath$)=1 then
+        rem --- Good path
+        sourcePath!.setProperty(path$,canonicalPath$)
+    else
+        rem --- Bad path
+        skip_path=1
+        skipped=skipped+1
+    endif
+
+    return
+    
+disp_meter:rem --- Display Progress Meter
+
+    rem --- sysGUI! is not declared in bam_prog_bar.bbj, so can't declare it here
+    rem declare BBjSysGui sysGUI!
+
+    rem --- rdForm! is not declared in bam_prog_bar.bbj, so can't declare it here
+    rem declare BBjTopLevelWindow rdForm!
+
+    rem --- meterWin! is not declared in bam_prog_bar.bbj, so can't declare it here
+    rem declare BBjTopLevelWindow meterWin!
+
+    call stbl("+DIR_SYP")+"bam_prog_bar.bbj",
+:       sysGUI!,
+:       rdForm!,
+:       meterWin!,
+:       meter_title$,
+:       meter_total_recs,
+:       meter_proc_recs,
+:       meter_text$,
+:       meter_action$
+
+    return
+
+open_log:rem --- Open log file
+
+    rem --- create and open log file
+    log$ = baseDir$+File.separator+"adx_jaraon.log"
+    erase log$,err=*next
+    string log$
+    log_dev=unt
+    open(log_dev)log$
+    
+    rem --- write log header info
+    print(log_dev)"Copy Addon Installation Utility log started: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
+    print(log_dev)
+    print(log_dev)"Source Operating System: " + info(0,0)
+    print(log_dev)"Source Installation Base Directory: " + baseDir$
+    print(log_dev)"Source Barista Installation Location: " + barDir$
+    print(log_dev)"Jar Filename: " + jarFile$
+
+    return
+
+disp_message: rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
+
+    return
     
 rem #include std_error.src
 
