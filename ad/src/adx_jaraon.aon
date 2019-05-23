@@ -8,6 +8,8 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
 
     use java.io.File
+    use java.util.Vector
+    use ::adc_updatexmlfiles.aon::AdmModulesFileter
 
     setesc std_error
     seterr std_error
@@ -192,30 +194,101 @@ rem --- Build sourcePath! Properties object of directories and files used by eac
         meter_action$="LST-END"
         gosub disp_meter
 
-        rem --- Increment main progress meter
-        meterWin!=mainMeter!
-        meter_total_recs=mainMeterTotalRecs
-        mainMeterProcRecs=mainMeterProcRecs+1
-        meter_text$=system$+": verify paths in sync/adm_modules~*.xml files"
-        meter_proc_recs=mainMeterProcRecs
-        meter_action$="MTR-LST"
-        gosub disp_meter
-        print(log_dev)meter_text$
+        rem --- Verify paths in system (application) adm_modules~*.xml files
+        pathsToAdmModules!=new Vector()
+        pathsToAdmModules!.add("data/sync")
+        pathsToAdmModules!.add("data/admin_backup")
+        for i=0 to pathsToAdmModules!.size()-1
+            admModulePath$=pathsToAdmModules!.get(i)
 
-        rem --- Verify paths in system (application) sync/adm_modules~*.xml files
-rem wgh ... 9625 ... stopped here
+            rem --- Increment main progress meter
+            meterWin!=mainMeter!
+            meter_total_recs=mainMeterTotalRecs
+            mainMeterProcRecs=mainMeterProcRecs+1
+            meter_text$=system$+": verify paths in "+admModulePath$+"/adm_modules~*.xml files"
+            meter_proc_recs=mainMeterProcRecs
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+    
+            rem --- Verify paths in adm_modules~*.xml files
+            dir!=new File(mount_dir$ + File.separator + admModulePath$)
+            rem --- Validate directory
+            if dir! <> null() and dir!.exists() and dir!.isDirectory() and dir!.list() <> null()
+                fileVector! = new Vector(java.util.Arrays.asList(dir!.list(new AdmModulesFileter())))
+                
+                if(fileVector!.size()>0) then
+                    rem --- Start secondary progress meter
+                    meter_title$=system$+" adm_modules~*.xml files"
+                    meter_total_recs=14*2
+                    meter_text$=""
+                    meter_action$="WIN-LST"
+                    gosub disp_meter
+                    detailMeter!=meterWin!
 
-        rem --- Increment main progress meter
-        meterWin!=mainMeter!
-        meter_total_recs=mainMeterTotalRecs
-        mainMeterProcRecs=mainMeterProcRecs+1
-        meter_text$=system$+": verify paths in admin_backup/adm_modules~*.xml files"
-        meter_proc_recs=mainMeterProcRecs
-        meter_action$="MTR-LST"
-        gosub disp_meter
-        print(log_dev)meter_text$
+                    rem --- Verify paths in LOCALE_PATH and DD_MOUNT_DIR tags
+                    startLocalePath$ = "<LOCALE_PATH>"
+                    startLocalePathLen = len(startLocalePath$)
+                    endLocalePath$ = "</LOCALE_PATH>"
+                    startDdMountDir$ = "<DD_MOUNT_DIR>"
+                    startDdMountDirLen = len(startDdMountDir$)
+                    endDdMountDir$ = "</DD_MOUNT_DIR>"
+                    
+                    for j=0 to fileVector!.size()-1
+                        admModuleFile$=fileVector!.get(j)
+                        admModule_dev=unt
+                        open(admModule_dev,isz=-1)dir!.getCanonicalPath()+File.separator+admModuleFile$; rem --- Error if not found, something is wrong.
+                        while 1
+                            read(admModule_dev,end=*break)record$
+                            meter_text$=""
+                        
+                            rem --- Verify path in <LOCALE_PATH> lines
+                            startLocalePath = pos(startLocalePath$=cvs(record$,4))
+                            if startLocalePath then
+                                path$ = record$(startLocalePath + startLocalePathLen)
+                                path$ = path$(1,pos(endLocalePath$=cvs(path$,4))-1)
+                                gosub verify_path
+                                meter_text$=admModuleFile$+": "+startLocalePath$
+                                if skip_path then
+                                    meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
+                                    print(log_dev)"    "+meter_text$
+                                endif
+                            endif
+                            
+                            rem --- Verify path in <DD_MOUNT_DIR> lines
+                            startDdMountDir = pos(startDdMountDir$=cvs(record$,4))
+                            if startDdMountDir then
+                                path$ = record$(startDdMountDir + startDdMountDirLen)
+                                path$ = path$(1,pos(endDdMountDir$=cvs(path$,4))-1)
+                                gosub verify_path
+                                meter_text$=admModuleFile$+": "+startDdMountDir$
+                                if skip_path then
+                                    meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
+                                    print(log_dev)"    "+meter_text$
+                                endif
+                            endif
+                        
+                            rem --- Increment secondary progress meter
+                            if meter_text$<>"" then
+                                meterWin!=detailMeter!
+                                meter_proc_recs=meter_proc_recs+1
+                                meter_action$="MTR-LST"
+                                gosub disp_meter
+                            endif
+                        wend
+                        close(admModule_dev,err=*next)
+                    next j
 
-        rem --- Verify paths in system (application) admin_backup/adm_modules~*.xml files
+                    rem --- Stop secondary progress meter
+                    meterWin!=detailMeter!
+                    meter_text$=""
+                    meter_proc_recs=meter_total_recs
+                    meter_action$="LST-END"
+                    gosub disp_meter
+                endif
+            endif
+        
+        next i
 
         rem --- Increment main progress meter
         meterWin!=mainMeter!
