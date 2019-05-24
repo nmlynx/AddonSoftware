@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2019-05-20
+ Report Date:   2019-05-24
  Report Branch: AddonSoftware 19.00
  Last Release:  AddonSoftware 18.21
 =======================================================================================================================================
@@ -419,3 +419,17 @@ Bug 9563: Modified ivc_whseinfo.aon to reset the ivm-02 knum to it's
 initial value.
 ----
 Modified: iv/src/ivc_whseinfo.aon
+
+=======================================================================================================================================
+Revision: 8699dcdd1627340d61aaecbc868cce1fe41558bf
+Author: Christine <chawkins@basis.com>
+Date: 5/24/2019 1:27:57 PM
+Message:
+Bug 9634 - GL - Error 11 deleting GL Account if there is no Retained Earnings Account
+ - Make sure BDEL handles not having a gls_earnings record.
+
+(cherry picked from commit d1c743c4ae57d86856a65a02d71596f9b74e6db3)
+----
+Modified: data/bar/glm_acct.xml
+Modified: data/cdf/glm_acct.cdf
+
