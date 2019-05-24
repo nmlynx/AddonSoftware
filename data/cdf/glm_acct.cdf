@@ -278,12 +278,14 @@ rem --- Check Retained Earnings Account
 
 		gls_earnings_dev=num(chans$[1])
 		dim gls01b$:templates$[1]
-		read record(gls_earnings_dev,key=firm_id$+"GL01")gls01b$
-		if gls01b.gl_account$=this_acct$
-			okay$="N"
-			reason$=Translate!.getTranslation("AON_RETAINED_EARNINGS_ACCOUNT")
-		endif
-
+		while 1
+			read record(gls_earnings_dev,key=firm_id$+"GL01",err=*break)gls01b$
+			if gls01b.gl_account$=this_acct$
+				okay$="N"
+				reason$=Translate!.getTranslation("AON_RETAINED_EARNINGS_ACCOUNT")
+			endif
+			break
+		wend
 		files=1,begfile=1,endfile=files
 		dim files$[files],options$[files],chans$[files],templates$[files]
 		files$[1]="GLS_EARNINGS",options$[1]="CX"
