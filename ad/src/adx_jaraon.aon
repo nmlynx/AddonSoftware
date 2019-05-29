@@ -9,15 +9,16 @@ rem ==========================================================================
 
     use java.io.File
     use java.util.Vector
-    use ::adc_updatexmlfiles.aon::AdmModulesFileter
 
     setesc std_error
     seterr std_error
 
 rem --- Initializations
     sysGUI! = BBjAPI().getSysGui()
-    sourcePath!=new java.util.Properties()
+    sourcePaths!=new java.util.Properties()
+    stblPaths!=new java.util.Properties()
     systems!=new java.util.Properties()
+    prefixVect!=new Vector()
     skipped=0
 
 rem --- Get user inputs
@@ -30,9 +31,21 @@ rem --- Open DDM_TABLE_TPLS in source Barista installation
     open(ddmTableTpls_dev)barDir$+"/sys/data/ddm_table_tpls.dat"; rem --- Error if not found, something is wrong.
     dim ddm_table_tpls$:"table_name:c(16*),file_name:c(30*),template:c(10230*)"
 
+rem --- Open DDM_TABLES in source Barista installation
+    ddmTables_dev=unt
+    open(ddmTables_dev)barDir$+"/sys/data/ddm_tables.dat"; rem --- Error if not found, something is wrong.
+    findrecord(ddmTableTpls_dev,key=pad("DDM_TABLES",16))ddm_table_tpls$; rem --- Error if not found, something is wrong.
+    dim ddmTables$:ddm_table_tpls.template$
+
+rem --- Open DDM_TABLE_COLS in source Barista installation
+    ddmTableCols_dev=unt
+    open(ddmTableCols_dev)barDir$+"/sys/data/ddm_table_cols.dat"; rem --- Error if not found, something is wrong.
+    findrecord(ddmTableTpls_dev,key=pad("DDM_TABLE_COLS",16))ddm_table_tpls$; rem --- Error if not found, something is wrong.
+    dim ddmTableCols$:ddm_table_tpls.template$
+
 rem --- Open DDM_SYSTEMS in source Barista installation
     ddmSystems_dev=unt
-    open(ddmSystems_dev)barDir$+"/sys/data/ddm_systems.dat"
+    open(ddmSystems_dev)barDir$+"/sys/data/ddm_systems.dat"; rem --- Error if not found, something is wrong.
     findrecord(ddmTableTpls_dev,key=pad("DDM_SYSTEMS",16))ddm_table_tpls$; rem --- Error if not found, something is wrong.
     dim ddmSystems$:ddm_table_tpls.template$
 
@@ -42,11 +55,10 @@ rem --- Get Mounted Directory for system (application) installed in source Baris
         readrecord(ddmSystems_dev,end=*break)ddmSystems$
         systems!.setProperty(cvs(ddmSystems.mount_sys_id$,2),cvs(ddmSystems.mount_dir$,2))
     wend
-    close(ddmSystems_dev,err=*next)
     
 rem --- Start main progress meter
     meter_title$=rdForm!.getTitle()
-    meter_total_recs=4*systems!.size()+1
+    meter_total_recs=3*systems!.size()+2
     meter_text$=""
     meter_action$="WIN-LST-OK"
     gosub disp_meter
@@ -58,7 +70,7 @@ rem --- Open log file
     location$ = baseDir$
     gosub open_log
 
-rem --- Build sourcePath! Properties object of directories and files used by each system (application) installed in source Barista
+rem --- Build sourcePaths! Properties object of directories and files used by each system (application) installed in source Barista
     systemsIter!=systems!.keySet().iterator()
     while systemsIter!.hasNext()
         system$=systemsIter!.next()
@@ -112,8 +124,8 @@ rem --- Build sourcePath! Properties object of directories and files used by eac
                     meter_text$=key$
                     if skip_path then
                         meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
-                        print(log_dev)"    "+meter_text$
                     endif
+                    stblPaths!.setProperty(key$,canonicalPath$)
                     break
                 case key$ = "APROD"
                 case key$ = "SYSAPP"
@@ -127,7 +139,6 @@ rem --- Build sourcePath! Properties object of directories and files used by eac
                     meter_text$=key$+": "+app$
                     if skip_path then
                         meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
-                        print(log_dev)"    "+meter_text$
                     endif
                     break
                 case key$ = "STBL"
@@ -142,8 +153,8 @@ rem --- Build sourcePath! Properties object of directories and files used by eac
                         meter_text$=key$+": "+stbl$
                         if skip_path then
                             meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
-                            print(log_dev)"    "+meter_text$
                         endif
+                        stblPaths!.setProperty(stbl$,canonicalPath$)
                     endif
                     break
                 case key$ = "PREFIX"
@@ -155,8 +166,8 @@ rem --- Build sourcePath! Properties object of directories and files used by eac
                     meter_text$=key$+" "+path$
                     if skip_path then
                         meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
-                        print(log_dev)"    "+meter_text$
                     endif
+                    prefixVect!.add(path$)
                     break
                 case key$ = "CFG"
                 case key$ = "SYSCFG"
@@ -169,7 +180,6 @@ rem --- Build sourcePath! Properties object of directories and files used by eac
                     meter_text$=key$+": "+stbl$
                     if skip_path then
                         meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
-                        print(log_dev)"    "+meter_text$
                     endif
                     break
                 case default
@@ -183,6 +193,7 @@ rem --- Build sourcePath! Properties object of directories and files used by eac
                 meter_proc_recs=meter_proc_recs+1
                 meter_action$="MTR-LST"
                 gosub disp_meter
+                print(log_dev)"    "+meter_text$
             endif
         wend
         close(appSyn_dev,err=*next)
@@ -251,7 +262,6 @@ rem --- Build sourcePath! Properties object of directories and files used by eac
                                 meter_text$=admModuleFile$+": "+startLocalePath$
                                 if skip_path then
                                     meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
-                                    print(log_dev)"    "+meter_text$
                                 endif
                             endif
                             
@@ -264,16 +274,16 @@ rem --- Build sourcePath! Properties object of directories and files used by eac
                                 meter_text$=admModuleFile$+": "+startDdMountDir$
                                 if skip_path then
                                     meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
-                                    print(log_dev)"    "+meter_text$
                                 endif
                             endif
-                        
+
                             rem --- Increment secondary progress meter
                             if meter_text$<>"" then
                                 meterWin!=detailMeter!
                                 meter_proc_recs=meter_proc_recs+1
                                 meter_action$="MTR-LST"
                                 gosub disp_meter
+                                print(log_dev)"    "+meter_text$
                             endif
                         wend
                         close(admModule_dev,err=*next)
@@ -287,27 +297,218 @@ rem --- Build sourcePath! Properties object of directories and files used by eac
                     gosub disp_meter
                 endif
             endif
-        
         next i
+    wend
 
-        rem --- Increment main progress meter
-        meterWin!=mainMeter!
-        meter_total_recs=mainMeterTotalRecs
-        mainMeterProcRecs=mainMeterProcRecs+1
-        meter_text$=system$+": verify paths in application's data files"
-        meter_proc_recs=mainMeterProcRecs
+rem --- Verify paths referenced in data files and add to sourcePaths! Properties object
+
+    rem --- Increment main progress meter
+    meterWin!=mainMeter!
+    meter_total_recs=mainMeterTotalRecs
+    mainMeterProcRecs=mainMeterProcRecs+1
+    meter_text$="Verify paths referenced in data files"
+    meter_proc_recs=mainMeterProcRecs
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+
+    rem --- Check these Element Types for directory and file paths
+    elementTypes!=new Vector()
+    elementTypes!.add("ADM_CONFIG_FILE")
+    elementTypes!.add("DATA_PATH")
+    elementTypes!.add("DD_MOUNT_DIR")
+    elementTypes!.add("DD_MOUNT_MENU")
+    elementTypes!.add("DIR_BROWSE")
+    elementTypes!.add("EMAIL_FILES")
+    elementTypes!.add("GENERIC_FILE_80")
+    elementTypes!.add("LOGO_FILE")
+    elementTypes!.add("PROGRAM_PATH")
+        
+    rem --- Start secondary progress meter
+    meter_title$="Verify Element Type data paths"
+    meter_total_recs=elementTypes!.size()
+    meter_text$=""
+    meter_action$="WIN-LST"
+    gosub disp_meter
+    detailMeter!=meterWin!
+
+    rem --- Check tables using Element Type, and verify paths
+    for i=0 to elementTypes!.size()-1
+        elementType$=elementTypes!.get(i)
+
+        rem --- Increment secondary progress meter
+        meter_text$=elementType$
+        meterWin!=detailMeter!
+        meter_proc_recs=meter_proc_recs+1
         meter_action$="MTR-LST"
         gosub disp_meter
-        print(log_dev)meter_text$
+        print(log_dev)"    "+elementType$
 
-        rem --- Verify paths in system (application) data files
+        rem --- Search tables using this Element Type
+        read(ddmTableCols_dev,key=elementType$,knum="COLUMN_ID",dom=*next)
+        while 1
+            readrecord(ddmTableCols_dev,end=*break)ddmTableCols$
+            if cvs(ddmTableCols.dd_data_name$,2)<>elementType$ then break
 
-    wend
+            rem --- Get disk file name for this table
+            findrecord(ddmTables_dev,key=ddmTableCols.dd_table_alias$,dom=*continue)ddmTables$
+            if pos(ddmTables.dd_alias_type$="OPQRT") then continue; rem --- Skip if not a BBj data file
+            if cvs(ddmTables.dd_table_alias$,2)="ADS_AUTOLAUNCH" and cvs(ddmTableCols.dd_dvar_name$,2)="PROGRAM_ARGS" then continue; rem --- Does not hold paths
+            filename$=cvs(ddmTables.dd_file_name$,2)
+            if filename$="" then filename$=cvs(ddmTables.dd_table_alias$,10)
+
+            rem --- Log table.column being verified for this Element Type
+            print(log_dev)"    "+"    "+cvs(ddmTables.dd_table_alias$,2)+"."+ddmTableCols.dd_dvar_name$
+
+            rem --- Get path to this table in source Barista installation
+            if pos(ddmTables.asc_prod_id$="ADBDDBSQB",3) then
+                rem --- It is a Barista system file
+                filePath$=barDir$+"/sys/data"
+            else
+                rem --- It is an installed application's file
+                filePath$=ddmTables.dd_table_path$
+                if cvs(filePath$,2)="" then filePath$=barDir$+"/sys/data"
+                if filePath$(1,1)="[" and filePath$(len(filePath$),1)="]" then
+                    rem --- Get path from STBL
+                    stbl$=filePath$(2,len(filePath$)-2)
+                    if stblPaths!.containsKey(stbl$) then
+                        filePath$=stblPaths!.getProperty(stbl$)
+                    else
+                        filePath$=""
+                    endif
+                endif
+            endif
+            filePath!=new java.io.File(filePath$)
+            filePath$=filePath!.getCanonicalPath()
+
+            rem --- Open file and verify paths for this Element Type
+            table_dev=unt
+            open(table_dev,err=*continue)filePath$+File.separator+filename$; rem --- If error, assume file not created yet.
+            findrecord(ddmTableTpls_dev,key=pad(ddmTables.dd_table_alias$,16))ddm_table_tpls$; rem --- Error if not found, something is wrong.
+            dim table$:ddm_table_tpls.template$
+            read(table_dev,key="",dom=*next)
+            while 1
+                key$=key(table_dev,end=*break)
+                readrecord(table_dev)table$
+                path$ = field(table$,cvs(ddmTableCols.dd_dvar_name$,2))
+                if cvs(path$,2)="" continue
+            
+                rem --- Resolve STBLs in path
+                while pos("["=path$)
+                    startPos=pos("["=path$)
+                    endPos=pos("]"=path$)
+                    stbl$=path$(1,endPos-1)
+                    stbl$=stbl$(startPos+1)
+                    if stblPaths!.containsKey(stbl$) then
+                        stblPath$=stblPaths!.getProperty(stbl$)
+                    else
+                        rem --- Resolve Barista STBL paths
+                        switch (BBjAPI().TRUE)
+                            case stbl$ = "+DIR_BRA"
+                                stblPath$=barDir$+"/sys/data/"
+                                break
+                            case stbl$ = "+DIR_BRD"
+                                stblPath$=barDir$+"/sys/data/"
+                                break
+                            case stbl$ = "+DIR_SYP"
+                                stblPath$=barDir$+"/sys/prog/"
+                                break
+                            case stbl$ = "+DIR_SYR"
+                                stblPath$=barDir$+"/sys/prop/"
+                                break
+                            case default
+                                rem --- Unkown STBL
+                                stblPath$=""
+                                break
+                        swend
+                    endif
+                    path$=path$(1,startPos-1)+stblPath$+path$(endPos+1)
+                wend
+            
+                if pos("/"=path$)+pos("\"=path$)=0 then
+                    rem --- Filename only. Look for it under the Prefix paths
+                    if prefixVect!.size() then
+                        found_it=0
+                        for j=0 to prefixVect!.size()-1
+                            prefixDir$=prefixVect!.get(j)
+                            prefixDir!=new File(prefixDir$)
+                            fileList!=new Vector(java.util.Arrays.asList(prefixDir!.listFiles()))
+                            if fileList!<>null() and fileList!.size()>0 then
+                                for k=0 to fileList!.size()-1
+                                    nextFile!=fileList!.get(k)
+                                    if nextFile!.isFile() then
+                                        tempFile!=nextFile!.getCanonicalPath()
+                                        if tempFile!.endsWith(File.separator+path$)
+                                            path$=tempFile!
+                                            found_it=1
+                                            break
+                                        endif
+                                    endif
+                                next k
+                            endif
+                            if found_it then break
+                        next j
+                    endif
+                else
+                    if cvs(ddmTables.dd_table_alias$,2)="ADM_MODULES" and cvs(ddmTableCols.dd_dvar_name$,2)="DD_MOUNT_DIR" and path$="sys/" then
+                        path$=barDir$+"/sys/"
+                    endif
+                endif
+            
+                gosub verify_path
+                if skip_path then
+                    print(log_dev)"    "+"    "+"    "+"***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "
+                    print(log_dev)"    "+"    "+"    "+"    "+"key="+key$
+                    print(log_dev)"    "+"    "+"    "+"    "+"path="+path$
+                endif
+            wend
+        wend
+    next i
+
+    rem --- Stop secondary progress meter
+    meterWin!=detailMeter!
+    meter_text$=""
+    meter_proc_recs=meter_total_recs
+    meter_action$="LST-END"
+    gosub disp_meter
+
+rem --- Build jar file
+
+    rem --- Increment main progress meter
+    meterWin!=mainMeter!
+    meter_total_recs=mainMeterTotalRecs
+    mainMeterProcRecs=mainMeterProcRecs+1
+    meter_text$="Build jar file"
+    meter_proc_recs=mainMeterProcRecs
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+
+    rem --- Log canonical_paths in sourcePaths!
     
-done: rem --- All done
+    rem --- Build copyPath! Vector from sourcePaths! Properties, eliminating redundant canonical_paths
+    
+    rem --- Jar canonical_paths in copyPath! Vector
+        
+    rem --- Start secondary progress meter
+    meter_title$="Build jar file"
+rem wgh ... 9625 ... 
+meter_total_recs=1
+    meter_text$=""
+    meter_action$="WIN-LST"
+    gosub disp_meter
+    detailMeter!=meterWin!
+    
+    rem --- Log adding log file to jar
 
-    rem --- Close open files
-    close(ddmTableTpls_dev,err=*next)
+    rem --- Stop secondary progress meter
+    meterWin!=detailMeter!
+    meter_text$=""
+    meter_proc_recs=meter_total_recs
+    meter_action$="LST-END"
+    gosub disp_meter
     
     rem --- Stop main progress meter
     meterWin!=mainMeter!
@@ -319,6 +520,16 @@ done: rem --- All done
     print(log_dev)
     print(log_dev)"Copy Addon Installation Utility log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     close(log_dev)
+    
+    rem --- Add log file to jar
+    
+done: rem --- All done
+
+    rem --- Close open files
+    close(ddmTableTpls_dev,err=*next)
+    close(ddmTables_dev,err=*next)
+    close(ddmTableCols_dev,err=*next)
+    close(ddmSystems_dev,err=*next)
 
     rem --- Warn if paths were skipped, i.e. skipped>0
     if skipped then
@@ -338,7 +549,7 @@ verify_path: rem --- Verify path is located under installation base directory
     canonicalPath$=path!.getCanonicalPath()
     if pos(baseDir$=canonicalPath$)=1 then
         rem --- Good path
-        sourcePath!.setProperty(path$,canonicalPath$)
+        sourcePaths!.setProperty(path$,canonicalPath$)
     else
         rem --- Bad path
         skip_path=1
@@ -438,5 +649,21 @@ std_exit: rem --- Standard program end (01Mar2006)
     release
 
 rem #endinclude std_end.src
+    
+rem /**
+rem  * FilenameFilter Class to filter adm_modules~*.xml files.
+rem  */
+
+    class public AdmModulesFileter implements java.io.FilenameFilter
+
+        method public boolean accept(File dir!, String file!)
+            if file!.startsWith("adm_modules~") and file!.endsWith(".xml")
+                methodret Boolean.valueOf("true")
+            else
+                methodret Boolean.valueOf("false")
+            endif
+        methodend
+        
+    classend
     
     end
