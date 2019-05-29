@@ -201,7 +201,7 @@ rem --- Read next Financial Report Detail (glm-22) record
 
           char$=""
           dim print_buf$(width)
-          if pos("U"=editing_code$) char$=fill(int(m1*1.7),"-")
+          if pos("U"=editing_code$) char$=fill(m1*2,"-")
           if pos("D"=editing_code$) char$=fill(m1,"=")
           if char$<>""
 			OutVect!.addItem("")
