@@ -307,7 +307,7 @@ print_line: rem --- Perform any required editing and print the line
 
         char$=""
         if pos("U"=editing_code$) char$="-",lenfactor=1.7
-        if pos("D"=editing_code$) char$="=",lenfactor=1
+        if pos("D"=editing_code$) char$="=",lenfactor=0.7
 
         if char$<>""
             OutVect!.addItem("")
