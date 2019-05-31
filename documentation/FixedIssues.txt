@@ -465,3 +465,20 @@ Bug 9640 - AP - Check register err 47 if check date <= prior fiscal year
 ----
 Modified: ap/src/apu_chkregister.aon
 
+=======================================================================================================================================
+Revision: d85e1d402d65bde158b8f27a720c1efa6fa6b7d3
+Author: Christine <chawkins@basis.com>
+Date: 5/31/2019 11:38:04 AM
+Message:
+Bug 9636 - OP - Price column incorrectly disabled on non-stock lines if quantity < 0
+ - adjusted backorder and shipped column assignments up by 2 to account for new columns inserted in the grid.
+ - removed column assignments for product type and unit price (unused).
+
+(cherry picked from commit c1ded1d31d32b7ae75b863ddadbac7de090c823a)
+----
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_invhdr.cdf
+Modified: data/cdf/ope_ordhdr.cdf
+
+
