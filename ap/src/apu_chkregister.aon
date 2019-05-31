@@ -180,7 +180,7 @@ rem --- Vendor
             apm02a.lstpay_date$=apw01a.check_date$
             apm02a.open_invs=apm02a.open_invs-(ape04a.payment_amt+ape04a.discount_amt)
             if apw01a.check_date$<=prior_g9$
-				apm02a.pri_yr_discs=apm02a.pro_yr_discs+ape04a.discount_amt
+				apm02a.pri_yr_discs=apm02a.pri_yr_discs+ape04a.discount_amt
 				apm02a.pyr_payments=apm02a.pyr_payments+ape04a.payment_amt
 			endif
             if apw01a.check_date$>prior_g9$ and apw01a.check_date$<=g9$
