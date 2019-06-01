@@ -34,6 +34,9 @@ rem --- Initializations
     sysGUI! = BBjAPI().getSysGui()
 	declare File aFile!
 	declare Iterator iter!
+    bbjHome$=java.lang.System.getProperty("basis.BBjHome")
+    aonDemoDir$=bbjHome$+"/apps/aon"
+    barDemoDir$=bbjHome$+"/barista"
 
 	rem --- Retrieve sysinfo data
     sysinfo_tpl$=stbl("+SYSINFO_TPL",err=*next)
@@ -298,6 +301,22 @@ rem --- Copy Barista's ads_masks.dat firm ZZ records to new firm
     if cvs(newFirm$,3)<>"" and adsMasks_found then 
         print(log_dev)""
         print(log_dev)"copy Barista's ads_masks.dat firm ZZ records to new firm "+newFirm$
+        
+        rem --- Use latest available firm ZZ records from Barista demo installation
+        barDemoMasks_found=0
+        barDemoMasks_dev=unt
+        open(barDemoMasks_dev,err=*next)barDemoDir$+"/sys/data/ads_masks.dat"; barDemoMasks_found=1
+        if barDemoMasks_found then
+            read(barDemoMasks_dev,key="ZZ",dom=*next)
+            while 1
+                masksKey$=key(barDemoMasks_dev,end=*break)
+                if pos("ZZ"=masksKey$)<>1 then break
+                readrecord(barDemoMasks_dev)record$
+                writerecord(adsMasks_dev,dom=*continue)record$
+            wend
+            close(barDemoMasks_dev,err=*next)
+        endif
+
         findrecord(ddmTableTpls_dev,key=pad(cvs("ADS_MASKS",4),16),dom=*endif)ddmTableTpls$
         dim adsMasks$:ddmTableTpls.dd_table_tpl$
         read(adsMasks_dev,key="ZZ",dom=*next)
@@ -365,6 +384,22 @@ rem --- Copy Barista's ads_sequences.dat firm ZZ records to new firm
     if cvs(newFirm$,3)<>"" and adsSequences_found then 
         print(log_dev)""
         print(log_dev)"copy Barista's ads_sequences.dat firm ZZ records to new firm "+newFirm$
+        
+        rem --- Use latest available firm ZZ records from Barista demo installation
+        barDemoSequences_found=0
+        barDemoSequences_dev=unt
+        open(barDemoSequences_dev,err=*next)barDemoDir$+"/sys/data/ads_sequences.dat"; barDemoSequencess_found=1
+        if barDemoSequences_found then
+            read(barDemoSequences_dev,key="ZZ",dom=*next)
+            while 1
+                sequencesKey$=key(barDemoSequences_dev,end=*break)
+                if pos("ZZ"=sequencesKey$)<>1 then break
+                readrecord(barDemoSequences_dev)record$
+                writerecord(adsSequences_dev,dom=*continue)record$
+            wend
+            close(barDemoSequences_dev,err=*next)
+        endif
+
         findrecord(ddmTableTpls_dev,key=pad(cvs("ADS_SEQUENCES",4),16),dom=*endif)ddmTableTpls$
         dim adsSequences$:ddmTableTpls.dd_table_tpl$
         read(adsSequences_dev,key="ZZ",dom=*next)
@@ -436,6 +471,22 @@ rem --- Process requiredFiles!
         
         rem --- Copy firm ZZ to new firm, if new firm not blank
         if cvs(newFirm$,3)<>"" then 
+        
+            rem --- Use latest available firm ZZ records from Addon demo installation
+            aonDemoFile_found=0
+            aonDemoFile_dev=unt
+            open(aonDemoFile_dev,err=*next)aonDemoDir$+"/data/"+aFile!.getName(); aonDemoFile_found=1
+            if aonDemoFile_found then
+                read(aonDemoFile_dev,key="ZZ",dom=*next)
+                while 1
+                    aonDemoKey$=key(aonDemoFile_dev,end=*break)
+                    if pos("ZZ"=aonDemoKey$)<>1 then break
+                    readrecord(aonDemoFile_dev)record$
+                    writerecord(file_dev_dev,dom=*continue)record$
+                wend
+                close(aonDemoFile_dev,err=*next)
+            endif
+
             write_dev=unt
             open(write_dev)aFile!.getPath()
             read(file_dev,key="ZZ",dom=*next)
@@ -468,7 +519,7 @@ rem --- Process requiredFiles!
                     writerecord(file_dev)record$
                     break
                 case thisFile$ = "aps_params"
-                    findrecord(file_dev,key=newFirm$+"AP00")record$
+                    findrecord(file_dev,key=newFirm$+"AP00",dom=*break)record$
                     record.current_per$=systemMonth$
                     record.current_year$=systemYear$
                     record.cur_1099_yr$=systemYear$
@@ -489,7 +540,7 @@ rem --- Process requiredFiles!
                     writerecord(file_dev)record$
                     break
                 case thisFile$ = "ars_params"
-                    findrecord(file_dev,key=newFirm$+"AR00")record$
+                    findrecord(file_dev,key=newFirm$+"AR00",dom=*break)record$
                     record.current_per$=systemMonth$
                     record.current_year$=systemYear$
                     record.lstcom_date$=""
@@ -532,25 +583,25 @@ rem --- Process requiredFiles!
                     writerecord(file_dev)record$
                     break
                 case thisFile$ = "gls_financials"
-                    findrecord(file_dev,key=newFirm$+"GL02")record$
+                    findrecord(file_dev,key=newFirm$+"GL02",dom=*break)record$
                     record.period$=systemMonth$
                     record.year$=systemYear$
                     writerecord(file_dev)record$
                     break
                 case thisFile$ = "gls_params"
-                    findrecord(file_dev,key=newFirm$+"GL00")record$
+                    findrecord(file_dev,key=newFirm$+"GL00",dom=*break)record$
                     record.current_per$=systemMonth$
                     record.current_year$=systemYear$
                     writerecord(file_dev)record$
                     break
                 case thisFile$ = "ivs_params"
-                    findrecord(file_dev,key=newFirm$+"IV00")record$
+                    findrecord(file_dev,key=newFirm$+"IV00",dom=*break)record$
                     record.current_per$=systemMonth$
                     record.current_year$=systemYear$
                     writerecord(file_dev)record$
                     break
                 case thisFile$ = "sfs_params"
-                    findrecord(file_dev,key=newFirm$+"SF00")record$
+                    findrecord(file_dev,key=newFirm$+"SF00",dom=*break)record$
                     record.current_per$=systemMonth$
                     record.current_year$=systemYear$
                     writerecord(file_dev)record$
