@@ -14,11 +14,13 @@ rem ==========================================================================
     seterr std_error
 
 rem --- Initializations
-    sysGUI! = BBjAPI().getSysGui()
+    copyPath!=new Vector()
+    prefixVect!=new Vector()
     sourcePaths!=new java.util.Properties()
     stblPaths!=new java.util.Properties()
+    sysGUI! = BBjAPI().getSysGui()
     systems!=new java.util.Properties()
-    prefixVect!=new Vector()
+    savedDir$=dir("")
     skipped=0
 
 rem --- Get user inputs
@@ -102,6 +104,7 @@ rem --- Build sourcePaths! Properties object of directories and files used by ea
         rem --- Start secondary progress meter
         meter_title$=mount_dir$+"/config/"+cvs(system$,8)+".syn"
         meter_total_recs=lines
+        meter_proc_recs=0
         meter_text$=""
         meter_action$="WIN-LST"
         gosub disp_meter
@@ -232,6 +235,7 @@ rem --- Build sourcePaths! Properties object of directories and files used by ea
                     rem --- Start secondary progress meter
                     meter_title$=system$+" adm_modules~*.xml files"
                     meter_total_recs=14*2
+                    meter_proc_recs=0
                     meter_text$=""
                     meter_action$="WIN-LST"
                     gosub disp_meter
@@ -328,6 +332,7 @@ rem --- Verify paths referenced in data files and add to sourcePaths! Properties
     rem --- Start secondary progress meter
     meter_title$="Verify Element Type data paths"
     meter_total_recs=elementTypes!.size()
+    meter_proc_recs=0
     meter_text$=""
     meter_action$="WIN-LST"
     gosub disp_meter
@@ -455,7 +460,7 @@ rem --- Verify paths referenced in data files and add to sourcePaths! Properties
                         path$=barDir$+"/sys/"
                     endif
                 endif
-            
+
                 gosub verify_path
                 if skip_path then
                     print(log_dev)"    "+"    "+"    "+"***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "
@@ -463,6 +468,7 @@ rem --- Verify paths referenced in data files and add to sourcePaths! Properties
                     print(log_dev)"    "+"    "+"    "+"    "+"path="+path$
                 endif
             wend
+            close(table_dev,err=*next)
         wend
     next i
 
@@ -472,6 +478,47 @@ rem --- Verify paths referenced in data files and add to sourcePaths! Properties
     meter_proc_recs=meter_total_recs
     meter_action$="LST-END"
     gosub disp_meter
+
+    rem --- Log canonical_paths in sourcePaths!
+    print(log_dev)
+    pathIter!=sourcePaths!.keySet().iterator()
+    while pathIter!.hasNext()
+        path$=pathIter!.next()
+        canonicalPath$=sourcePaths!.getProperty(path$)
+        print(log_dev) "Canonical Path: "+path$+"::::"+canonicalPath$
+    wend
+    
+    rem --- Build copyPath! Vector from sourcePaths! Properties, eliminating redundant canonical paths
+    copyPath!.add(barDir$)
+    pathIter!=sourcePaths!.keySet().iterator()
+    while pathIter!.hasNext()
+        path$=pathIter!.next()
+        canonicalPath$=sourcePaths!.getProperty(path$)
+        
+        rem --- Is this canonical path redundant (i.e. begins with canoncial path already in copyPath!)?
+        redundant=0
+        for i=0 to copyPath!.size()-1
+            existingCopyPath$=copyPath!.get(i)
+            if pos(existingCopyPath$=canonicalPath$)=1 then
+                redundant=1
+                break
+            endif
+        next i
+            
+        rem --- Add non-redundant canonical paths to copyPath!
+        if !redundant then
+            rem --- Remove all existing copyPath! <canonical_path>s that begin with the new canonical path being added
+            removePaths!=new Vector()
+            for i=0 to copyPath!.size()-1
+                existingCopyPath$=copyPath!.get(i)
+                if pos(canonicalPath$=existingCopyPath$)=1 then removePaths!.add(existingCopyPath$)
+            next i
+            if removePaths!.size() then copyPath!.removeAll(removePaths!)
+
+            rem --- Add new canonical path
+            copyPath!.add(canonicalPath$)
+        endif
+    wend
 
 rem --- Build jar file
 
@@ -485,30 +532,56 @@ rem --- Build jar file
     gosub disp_meter
     print(log_dev)
     print(log_dev)meter_text$
+    
+    rem --- Jar canonical paths in copyPath! Vector
+    if copyPath!.size() then
 
-    rem --- Log canonical_paths in sourcePaths!
-    
-    rem --- Build copyPath! Vector from sourcePaths! Properties, eliminating redundant canonical_paths
-    
-    rem --- Jar canonical_paths in copyPath! Vector
+        rem --- Start secondary progress meter
+        meter_title$="Build "+jarFile$
+        meter_total_recs=copyPath!.size()
+        meter_proc_recs=0
+        meter_text$=""
+        meter_action$="WIN-LST"
+        gosub disp_meter
+        detailMeter!=meterWin!
         
-    rem --- Start secondary progress meter
-    meter_title$="Build jar file"
-rem wgh ... 9625 ... 
-meter_total_recs=1
-    meter_text$=""
-    meter_action$="WIN-LST"
-    gosub disp_meter
-    detailMeter!=meterWin!
-    
-    rem --- Log adding log file to jar
+        rem --- Make sure jarFile$ doesn't already exist in baseDir$
+        erase baseDir$+File.separator+jarFile$,err=*next
 
-    rem --- Stop secondary progress meter
-    meterWin!=detailMeter!
-    meter_text$=""
-    meter_proc_recs=meter_total_recs
-    meter_action$="LST-END"
-    gosub disp_meter
+        rem --- Remove baseDir$ from copyPath! canonical path before adding it to jar
+        lenBaseDir=len(baseDir$)
+        for i=0 to copyPath!.size()-1
+            canonicalPath$=copyPath!.get(i)
+            shortPath$=canonicalPath$(lenBaseDir+2)
+
+            rem --- Increment secondary progress meter
+            meter_text$=shortpath$
+            meterWin!=detailMeter!
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)"    "+meter_text$
+
+            rem --- Jar the path
+            chdir baseDir$
+            if i=0 then
+                x=scall("jar -cfM "+jarFile$+" "+shortPath$)
+            else
+                x=scall("jar -ufM "+jarFile$+" "+shortPath$)
+            endif
+            chdir savedDir$
+        next i
+    
+        rem --- Stop secondary progress meter
+        meterWin!=detailMeter!
+        meter_text$=""
+        meter_proc_recs=meter_total_recs
+        meter_action$="LST-END"
+        gosub disp_meter
+    endif
+
+    rem --- Log adding log file to jar
+    print(log_dev)"    adx_jaraon.log"
     
     rem --- Stop main progress meter
     meterWin!=mainMeter!
@@ -522,6 +595,13 @@ meter_total_recs=1
     close(log_dev)
     
     rem --- Add log file to jar
+    chdir baseDir$
+    if copyPath!.size()=0 then
+        x=scall("jar -cfM "+jarFile$+" adx_jaraon.log")
+    else
+        x=scall("jar -ufM "+jarFile$+" adx_jaraon.log")
+    endif
+    chdir savedDir$
     
 done: rem --- All done
 
@@ -547,7 +627,7 @@ verify_path: rem --- Verify path is located under installation base directory
 
     path!=new java.io.File(path$)
     canonicalPath$=path!.getCanonicalPath()
-    if pos(baseDir$=canonicalPath$)=1 then
+    if pos(baseDir$=canonicalPath$)=1 and path!.exists() then
         rem --- Good path
         sourcePaths!.setProperty(path$,canonicalPath$)
     else
