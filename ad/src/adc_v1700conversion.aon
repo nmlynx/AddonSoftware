@@ -1198,7 +1198,7 @@ rem --- For version 17.00, initialize changes for Fiscal Calendars
                 else
                     rem --- Required template missing
                     err_msg$="***** "+Translate!.getTranslation("AON_ERROR","Error")+": "+Translate!.getTranslation("AON_VERSION","Verion")+" "+convCtrl!.getProperty("start_version")+
-:                       " "+Translate!.getTranslation("AON_TEMPLATE_NOT_FOUND","Template not found")+": "+ope_table$+" *****"
+:                       " "+Translate!.getTranslation("AON_TEMPLATE_NOT_FOUND","Template not found")+": "+old_table$+" *****"
                     goto done
                 endif
             else
