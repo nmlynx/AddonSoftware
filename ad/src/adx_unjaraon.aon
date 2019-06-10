@@ -7,12 +7,159 @@ rem --- AddonSoftware Version 19.0
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
 
+    use java.io.File
+    use java.util.Properties
+
     setesc std_error
     seterr std_error
+
+rem --- Initializations
+    sourcePaths!=new Properties()
+    sysGUI! = BBjAPI().getSysGui()
+    savedDir$=dir("")
+
+rem --- Get user inputs
+    baseDir$=Option!.getOptionData("BASE_DIR")
+    jarFile$=Option!.getOptionData("JAR_FILE")
+    barDir$=Option!.getOptionData("BAR_DIR")
+    
+rem --- Start main progress meter
+    meter_title$=rdForm!.getTitle()
+    meter_total_recs=8
+rem wgh ... 9625 ... if pre-v19 then meter_total_recs=meter_total_recs+1
+    meter_text$=""
+    meter_action$="WIN-LST-OK"
+    gosub disp_meter
+    mainMeter!=meterWin!
+    mainMeterProcRecs=meter_proc_recs
+    mainMeterTotalRecs=meter_total_recs
+
+rem --- Open log file
+    location$ = baseDir$
+    gosub open_log
+
+rem --- Un-package existing Barista installation jar file at the new installation base directory
+
+    rem --- Increment main progress meter
+    meterWin!=mainMeter!
+    meter_total_recs=mainMeterTotalRecs
+    mainMeterProcRecs=mainMeterProcRecs+1
+    meter_text$="Extract files from jar file "+baseDir$+File.separator+jarFile$
+    meter_proc_recs=mainMeterProcRecs
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+
+rem goto wgh1; rem wgh ... 9625 ... testing
+    rem --- Un-package jar file
+    chdir baseDir$
+    x=scall("jar -xf "+jarFile$)
+    chdir savedDir$
+wgh1: rem wgh ... 9625 ... testing
+
+rem --- Build sourcePath! Properties object from “Canonical Path:” lines in adx_jaraon.log file
+
+    rem --- Increment main progress meter
+    meterWin!=mainMeter!
+    meter_total_recs=mainMeterTotalRecs
+    mainMeterProcRecs=mainMeterProcRecs+1
+    meter_text$="Get old source paths used"
+    meter_proc_recs=mainMeterProcRecs
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+
+    rem --- Process “Canonical Path:” lines in adx_jaraon.log file
+    sourceLog$=baseDir$+File.separator+"adx_jaraon.log"
+    sourceLog_dev=unt
+    open(sourceLog_dev,isz=-1)sourceLog$; rem --- Error if not found, something is wrong.
+    while 1
+        read(sourceLog_dev,end=*break)line$
+        if pos("Canonical Path: "=line$)<>1 then continue
+
+        path$=line$(pos(": "=line$)+2)
+        path$=path$(1,pos("::::"=path$)-1)
+        canonicalPath$=line$(pos("::::"=line$)+4)
+        sourcePaths!.setProperty(path$,canonicalPath$)
+    wend
+    close(sourceLog_dev,err=*next)
+
+
+rem --- Set permissions for extracted directory and file
+rem wgh ... 9625 ... come back to this later
+
+rem --- Update paths in system (application) syn file
+rem wgh ... 9625 ... stopped here
+
+rem --- Update paths in system (application) adm_modules~*.xml files
+
+rem --- Update paths in system (application) admin_backup/adm_modules~*.xml files
+        
+rem --- Update paths in *.def files for ALL languages if pre-v19 Barista
+rem wgh ... 9625 ... if pre-v19 then meter_total_recs=meter_total_recs+1
+
+rem --- Update paths referenced in data files and add to sourcePaths! Properties object
+
+rem --- Update port and SSL settings in barista.cfg
     
 done: rem --- All done
+    
+    rem --- Stop main progress meter
+    meterWin!=mainMeter!
+    meter_total_recs=mainMeterTotalRecs
+    meter_text$=""
+    meter_proc_recs=mainMeterTotalRecs
+    meter_action$="LST-END"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)"Install Copied Addon Installation Utility log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
+    close(log_dev)
 
     goto std_exit
+    
+disp_meter:rem --- Display Progress Meter
+
+    rem --- sysGUI! is not declared in bam_prog_bar.bbj, so can't declare it here
+    rem declare BBjSysGui sysGUI!
+
+    rem --- rdForm! is not declared in bam_prog_bar.bbj, so can't declare it here
+    rem declare BBjTopLevelWindow rdForm!
+
+    rem --- meterWin! is not declared in bam_prog_bar.bbj, so can't declare it here
+    rem declare BBjTopLevelWindow meterWin!
+
+    call stbl("+DIR_SYP")+"bam_prog_bar.bbj",
+:       sysGUI!,
+:       rdForm!,
+:       meterWin!,
+:       meter_title$,
+:       meter_total_recs,
+:       meter_proc_recs,
+:       meter_text$,
+:       meter_action$
+
+    return
+
+open_log:rem --- Open log file
+
+    rem --- create and open log file
+    log$ = baseDir$+File.separator+"adx_unjaraon.log"
+    erase log$,err=*next
+    string log$
+    log_dev=unt
+    open(log_dev)log$
+    
+    rem --- write log header info
+    print(log_dev)"Install Copied Addon Installation Utility log started: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
+    print(log_dev)
+    print(log_dev)"Source Operating System: " + info(0,0)
+    print(log_dev)"Source Installation Base Directory: " + baseDir$
+    print(log_dev)"Jar Filename: " + jarFile$
+    print(log_dev)"Source Barista Installation Location: " + barDir$
+
+    return
     
 rem #include std_error.src
 
