@@ -1,6 +1,7 @@
 [[ADX_JARAON.<CUSTOM>]]
 validate_base_dir: rem --- Validate installation base directory
 	abort=0
+	callpoint!.setDevObject("abort",abort)
 	base!=new File(base_dir$)
 
 	rem --- Directory must exist
@@ -13,6 +14,7 @@ validate_base_dir: rem --- Validate installation base directory
 		callpoint!.setFocus("ADX_JARAON.BASE_DIR")
 		callpoint!.setStatus("ABORT")
 		abort=1
+		callpoint!.setDevObject("abort",abort)
 		return
 	endif
 	
@@ -26,6 +28,7 @@ validate_base_dir: rem --- Validate installation base directory
 		callpoint!.setFocus("ADX_JARAON.BASE_DIR")
 		callpoint!.setStatus("ABORT")
 		abort=1
+		callpoint!.setDevObject("abort",abort)
 		return
 	endif
 
@@ -39,6 +42,7 @@ validate_base_dir: rem --- Validate installation base directory
 		callpoint!.setFocus("ADX_JARAON.BASE_DIR")
 		callpoint!.setStatus("ABORT")
 		abort=1
+		callpoint!.setDevObject("abort",abort)
 		return
 	endif
 
@@ -48,6 +52,7 @@ validate_base_dir: rem --- Validate installation base directory
 
 validate_bar_dir: rem --- Validate Barista installation directory
 	abort=0
+	callpoint!.setDevObject("abort",abort)
 
 	rem --- Make sure path ends with barista
 	bar!=new File(bar_dir$)
@@ -67,6 +72,7 @@ validate_bar_dir: rem --- Validate Barista installation directory
 		callpoint!.setFocus("ADX_JARAON.BAR_DIR")
 		callpoint!.setStatus("ABORT")
 		abort=1
+		callpoint!.setDevObject("abort",abort)
 		return
 	endif
 	
@@ -80,6 +86,7 @@ validate_bar_dir: rem --- Validate Barista installation directory
 		callpoint!.setFocus("ADX_JARAON.BAR_DIR")
 		callpoint!.setStatus("ABORT")
 		abort=1
+		callpoint!.setDevObject("abort",abort)
 		return
 	endif
 
@@ -93,6 +100,7 @@ validate_bar_dir: rem --- Validate Barista installation directory
 		callpoint!.setFocus("ADX_JARAON.BAR_DIR")
 		callpoint!.setStatus("ABORT")
 		abort=1
+		callpoint!.setDevObject("abort",abort)
 		return
 	endif
 
@@ -108,12 +116,16 @@ validate_bar_dir: rem --- Validate Barista installation directory
 		callpoint!.setFocus("ADX_JARAON.BAR_DIR")
 		callpoint!.setStatus("ABORT")
 		abort=1
+		callpoint!.setDevObject("abort",abort)
 		return
 	endif
 
 	return
 
 validate_jar_file: rem --- Warn before overwriting an existing file
+	abort=0
+	callpoint!.setDevObject("abort",abort)
+
 	path$=base_dir$+File.separator+jar_file$
 	base!=new File(path$)
 	if base!.exists() then
@@ -127,6 +139,7 @@ validate_jar_file: rem --- Warn before overwriting an existing file
 				callpoint!.setFocus("ADX_JARAON.JAR_FILE")
 				callpoint!.setStatus("ABORT")
 				abort=1
+				callpoint!.setDevObject("abort",abort)
 				return
 			endif
 		else
@@ -138,12 +151,19 @@ validate_jar_file: rem --- Warn before overwriting an existing file
 			callpoint!.setFocus("ADX_JARAON.JAR_FILE")
 			callpoint!.setStatus("ABORT")
 			abort=1
+			callpoint!.setDevObject("abort",abort)
 			return
 		endif
 	endif
 
 	return
 [[ADX_JARAON.ASVA]]
+rem --- Abort if already failed validation
+	if callpoint!.getDevObject("abort") then
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
 rem --- Validate installation base directory
 	base_dir$=callpoint!.getColumnData("ADX_JARAON.BASE_DIR")
 	gosub validate_base_dir
@@ -190,3 +210,5 @@ rem --- Validate installation base directory
 [[ADX_JARAON.BSHO]]
 rem --- Inits
 	use java.io.File
+
+	callpoint!.setDevObject("abort",0)
