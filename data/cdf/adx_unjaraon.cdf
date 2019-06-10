@@ -127,7 +127,10 @@ validate_bar_install: rem --- Validate barista installation location
 	callpoint!.setDevObject("abort",abort)
 
 	rem --- Extract log file from jar file
+	savedDir$=dir("")
+	chdir base_dir$
 	x=scall("jar -xf "+jar_file$+" adx_jaraon.log")
+	chdir savedDir$
 
 	rem --- Get Source Barista Installation Location from log file
 	sourceLog$=base_dir$+File.separator+"adx_jaraon.log"
@@ -204,5 +207,7 @@ rem --- Verify jar file exists
 
 rem --- Validate barista installation location
 	jar_file$=callpoint!.getColumnData("ADX_UNJARAON.JAR_FILE")
-	gosub validate_bar_install
-	if abort then break
+	if cvs(jar_file$,2)<>"" then
+		gosub validate_bar_install
+		if abort then break
+	endif
