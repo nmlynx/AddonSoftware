@@ -60,7 +60,7 @@ rem --- Get Mounted Directory for system (application) installed in source Baris
     
 rem --- Start main progress meter
     meter_title$=rdForm!.getTitle()
-    meter_total_recs=3*systems!.size()+2
+    meter_total_recs=2*systems!.size()+2
     meter_text$=""
     meter_action$="WIN-LST-OK"
     gosub disp_meter
@@ -485,6 +485,7 @@ rem --- Verify paths referenced in data files and add to sourcePaths! Properties
     while pathIter!.hasNext()
         path$=pathIter!.next()
         canonicalPath$=sourcePaths!.getProperty(path$)
+        if (new File(canonicalPath$)).isDirectory() then canonicalPath$=canonicalPath$+File.separator
         print(log_dev) "Canonical Path: "+path$+"::::"+canonicalPath$
     wend
     
