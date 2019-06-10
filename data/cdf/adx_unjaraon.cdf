@@ -1,4 +1,10 @@
 [[ADX_UNJARAON.ASVA]]
+rem --- Abort if already failed validation
+	if callpoint!.getDevObject("abort") then
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
 rem --- Validate installation base directory
 	base_dir$=callpoint!.getColumnData("ADX_UNJARAON.BASE_DIR")
 	gosub validate_base_dir
@@ -12,11 +18,13 @@ rem --- Verify jar file exists
 
 rem --- Validate barista installation location
 	base_dir$=callpoint!.getColumnData("ADX_UNJARAON.BASE_DIR")
+	jar_file$=callpoint!.getColumnData("ADX_UNJARAON.JAR_FILE")
 	gosub validate_bar_install
 	if abort then break
 [[ADX_UNJARAON.<CUSTOM>]]
 validate_base_dir: rem --- Validate installation base directory
 	abort=0
+	callpoint!.setDevObject("abort",abort)
 	base!=new File(base_dir$)
 
 	rem --- Directory must exist
@@ -29,6 +37,7 @@ validate_base_dir: rem --- Validate installation base directory
 		callpoint!.setFocus("ADX_UNJARAON.BASE_DIR")
 		callpoint!.setStatus("ABORT")
 		abort=1
+		callpoint!.setDevObject("abort",abort)
 		return
 	endif
 	
@@ -41,6 +50,7 @@ validate_base_dir: rem --- Validate installation base directory
 		callpoint!.setColumnData("ADX_UNJARAON.BASE_DIR",base_dir$)
 		callpoint!.setFocus("ADX_UNJARAON.BASE_DIR")
 		callpoint!.setStatus("ABORT")
+		callpoint!.setDevObject("abort",abort)
 		abort=1
 		return
 	endif
@@ -54,6 +64,7 @@ validate_base_dir: rem --- Validate installation base directory
 		callpoint!.setColumnData("ADX_UNJARAON.BASE_DIR",base_dir$)
 		callpoint!.setFocus("ADX_UNJARAON.BASE_DIR")
 		callpoint!.setStatus("ABORT")
+		callpoint!.setDevObject("abort",abort)
 		abort=1
 		return
 	endif
@@ -68,6 +79,7 @@ validate_base_dir: rem --- Validate installation base directory
 		callpoint!.setFocus("ADX_UNJARAON.BASE_DIR")
 		callpoint!.setStatus("ABORT")
 		abort=1
+		callpoint!.setDevObject("abort",abort)
 		return
 	endif
 
@@ -75,30 +87,7 @@ validate_base_dir: rem --- Validate installation base directory
 
 validate_jar_file: rem --- Verify jar file exists
 	abort=0
-
-	rem --- Get Source Barista Installation Location from log file
-	sourceLog$=base_dir$+File.separator+"adx_jaraon.log"
-	sourceLog_dev=unt
-	open(sourceLog_dev,isz=-1)sourceLog$; rem --- Error if not found, something is wrong.
-	while 1
-		read(sourceLog_dev,end=*break)line$
-
-		key$=line$(1,pos(":"=line$))
-		switch (BBjAPI().TRUE)
-			case key$="Source Installation Base Directory:"
-				sourceBaseDir$=cvs(line$(pos(":"=line$)+1),3)
-				callpoint!.setDevObject("sourceBaseDir",sourceBaseDir$)
-				break
-			case key$="Source Barista Installation Location:"
-				sourceBarDir$=cvs(line$(pos(":"=line$)+1),3)
-				callpoint!.setDevObject("sourceBarDir",sourceBarDir$)
-				barDir$=base_dir$+sourceBarDir$(len(sourceBaseDir$)+1)
-				callpoint!.setColumnData("ADX_UNJARAON.BAR_DIR",barDir$,1)
-				break
-		swend
-		if cvs(barDir$,2)<>"" then break
-	wend
-	close(sourceLog_dev,err=*next)
+	callpoint!.setDevObject("abort",abort)
 
 	rem --- Verify jar file exists and is a file
 	path$=base_dir$+File.separator+jar_file$
@@ -114,6 +103,7 @@ validate_jar_file: rem --- Verify jar file exists
 			callpoint!.setFocus("ADX_UNJARAON.JAR_FILE")
 			callpoint!.setStatus("ABORT")
 			abort=1
+			callpoint!.setDevObject("abort",abort)
 			return
 		endif
 	else
@@ -125,6 +115,7 @@ validate_jar_file: rem --- Verify jar file exists
 		callpoint!.setFocus("ADX_UNJARAON.JAR_FILE")
 		callpoint!.setStatus("ABORT")
 		abort=1
+		callpoint!.setDevObject("abort",abort)
 		return
 	endif
 	callpoint!.setColumnData("ADX_UNJARAON.JAR_FILE",jar_file$)
@@ -133,25 +124,47 @@ validate_jar_file: rem --- Verify jar file exists
 
 validate_bar_install: rem --- Validate barista installation location
 	abort=0
-	sourceBaseDir$=callpoint!.getDevObject("sourceBaseDir")
-	sourceBarDir$=callpoint!.getDevObject("sourceBarDir")
+	callpoint!.setDevObject("abort",abort)
+
+	rem --- Extract log file from jar file
+	x=scall("jar -xf "+jar_file$+" adx_jaraon.log")
+
+	rem --- Get Source Barista Installation Location from log file
+	sourceLog$=base_dir$+File.separator+"adx_jaraon.log"
+	sourceLog_dev=unt
+	open(sourceLog_dev,isz=-1)sourceLog$; rem --- Error if not found, something is wrong.
+	while 1
+		read(sourceLog_dev,end=*break)line$
+
+		key$=line$(1,pos(":"=line$))
+		switch (BBjAPI().TRUE)
+			case key$="Source Installation Base Directory:"
+				sourceBaseDir$=cvs(line$(pos(":"=line$)+1),3)
+				break
+			case key$="Source Barista Installation Location:"
+				sourceBarDir$=cvs(line$(pos(":"=line$)+1),3)
+				barDir$=base_dir$+sourceBarDir$(len(sourceBaseDir$)+1)
+				callpoint!.setColumnData("ADX_UNJARAON.BAR_DIR",barDir$,1)
+				break
+		swend
+		if cvs(barDir$,2)<>"" then break
+	wend
+	close(sourceLog_dev,err=*next)
 
 	rem --- Barista installation can NOT already exist at Source Barista Installation Location. Empty directory is okay.
-	if sourceBaseDir$<>"" and sourceBarDir$<>"" then
-		barDir$=callpoint!.getColumnData("ADX_UNJARAON.BAR_DIR")
-		barDir!=new File(barDir$+File.separator+"sys/data/ddm_tables.dat")
-		if barDir!.exists() then
-			msg_id$="AD_BAR_EXISTS"
-			dim msg_tokens$[1]
-			msg_tokens$[1]=barDir$
-			gosub disp_message
-			callpoint!.setColumnData("ADX_UNJARAON.BAR_DIR",barDir$,1)
-			callpoint!.setColumnData("ADX_UNJARAON.BASE_DIR",base_dir$,1)
-			callpoint!.setFocus("ADX_UNJARAON.BASE_DIR")
-			callpoint!.setStatus("ABORT")
-			abort=1
-			return
-		endif
+	ddmTables!=new File(barDir$+File.separator+"sys/data/ddm_tables.dat")
+	if ddmTables!.exists() then
+		msg_id$="AD_BAR_EXISTS"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=barDir$
+		gosub disp_message
+		callpoint!.setColumnData("ADX_UNJARAON.BAR_DIR",barDir$,1)
+		callpoint!.setColumnData("ADX_UNJARAON.BASE_DIR",base_dir$,1)
+		callpoint!.setFocus("ADX_UNJARAON.BASE_DIR")
+		callpoint!.setStatus("ABORT")
+		abort=1
+		callpoint!.setDevObject("abort",abort)
+		return
 	endif
 
 	return
@@ -162,9 +175,6 @@ rem --- Verify jar file exists
 	gosub validate_jar_file
 	if abort then break
 
-rem --- Extract log file from jar file
-	x=scall("jar -xf "+jar_file$+" adx_jaraon.log")
-
 rem --- Validate barista installation location
 	base_dir$=callpoint!.getColumnData("ADX_UNJARAON.BASE_DIR")
 	gosub validate_bar_install
@@ -173,8 +183,7 @@ rem --- Validate barista installation location
 rem --- Inits
 	use java.io.File
 
-	callpoint!.setDevObject("sourceBaseDir","")
-	callpoint!.setDevObject("sourceBarDir","")
+	callpoint!.setDevObject("abort",0)
 [[ADX_UNJARAON.BASE_DIR.AVAL]]
 rem --- Validate installation base directory
 	base_dir$=callpoint!.getUserInput()
@@ -194,5 +203,6 @@ rem --- Verify jar file exists
 	endif
 
 rem --- Validate barista installation location
+	jar_file$=callpoint!.getColumnData("ADX_UNJARAON.JAR_FILE")
 	gosub validate_bar_install
 	if abort then break
