@@ -8,6 +8,7 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
 
     use java.io.File
+    use java.util.Properties
     use java.util.Vector
 
     setesc std_error
@@ -16,10 +17,10 @@ rem ==========================================================================
 rem --- Initializations
     copyPath!=new Vector()
     prefixVect!=new Vector()
-    sourcePaths!=new java.util.Properties()
-    stblPaths!=new java.util.Properties()
+    sourcePaths!=new Properties()
+    stblPaths!=new Properties()
     sysGUI! = BBjAPI().getSysGui()
-    systems!=new java.util.Properties()
+    systems!=new Properties()
     savedDir$=dir("")
     skipped=0
 
@@ -628,7 +629,7 @@ verify_path: rem --- Verify path is located under installation base directory
 
     path!=new java.io.File(path$)
     canonicalPath$=path!.getCanonicalPath()
-    if pos(baseDir$=canonicalPath$)=1 and path!.exists() then
+    if pos(baseDir$=canonicalPath$)=1 then
         rem --- Good path
         sourcePaths!.setProperty(path$,canonicalPath$)
     else
