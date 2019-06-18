@@ -77,9 +77,13 @@ rem --- Build sourcePaths! Properties object of directories and files used by ea
     systemsIter!=systems!.keySet().iterator()
     while systemsIter!.hasNext()
         system$=systemsIter!.next()
-        mount_dir$=systems!.getProperty(system$)
-        mountDir!=new java.io.File(mount_dir$)
+        mount_path$=systems!.getProperty(system$)
+        mountDir!=new java.io.File(mount_path$)
         mount_dir$=mountDir!.getCanonicalPath()
+        if pos(baseDir$=canonicalPath$)=1 then
+            rem --- Good path
+            sourcePaths!.setProperty(mount_path$,mount_dir$)
+        endif
 
         rem --- Increment main progress meter
         meterWin!=mainMeter!
@@ -230,7 +234,7 @@ rem --- Build sourcePaths! Properties object of directories and files used by ea
             dir!=new File(mount_dir$ + File.separator + admModulePath$)
             rem --- Validate directory
             if dir! <> null() and dir!.exists() and dir!.isDirectory() and dir!.list() <> null()
-                fileVector! = new Vector(java.util.Arrays.asList(dir!.list(new AdmModulesFileter())))
+                fileVector! = new Vector(java.util.Arrays.asList(dir!.list(new AdmModulesFilter())))
                 
                 if(fileVector!.size()>0) then
                     rem --- Start secondary progress meter
@@ -443,13 +447,11 @@ rem --- Verify paths referenced in data files and add to sourcePaths! Properties
                             if fileList!<>null() and fileList!.size()>0 then
                                 for k=0 to fileList!.size()-1
                                     nextFile!=fileList!.get(k)
-                                    if nextFile!.isFile() then
-                                        tempFile!=nextFile!.getCanonicalPath()
-                                        if tempFile!.endsWith(File.separator+path$)
-                                            path$=tempFile!
-                                            found_it=1
-                                            break
-                                        endif
+                                    tempFile!=nextFile!.getCanonicalPath()
+                                    if tempFile!.endsWith(File.separator+path$)
+                                        path$=tempFile!
+                                        found_it=1
+                                        break
                                     endif
                                 next k
                             endif
@@ -480,7 +482,32 @@ rem --- Verify paths referenced in data files and add to sourcePaths! Properties
     meter_action$="LST-END"
     gosub disp_meter
 
-    rem --- Log canonical_paths in sourcePaths!
+rem --- Verify paths in barista.syn file
+    barSyn_found=0
+    barSyn_dev=unt
+    open(barSyn_dev,isz=-1,err=*next)barDir$+"/sys/config/barista.syn"; barSyn_found=1
+    if barSyn_found then
+        while 1
+            read(barSyn_dev,end=*break)record$
+    
+            key$ = record$(1, pos("="=record$) - 1)
+            switch (BBjAPI().TRUE)
+                case key$ = "SYN"
+                    xpos = pos("="=record$)
+                    path$ = cvs(record$(xpos+1),3)
+                    gosub verify_path
+                    meter_text$=key$
+                    stblPaths!.setProperty(key$,canonicalPath$)
+                    break
+                case default
+                    rem --- skip other lines
+                    break
+            swend
+        wend
+        close(barSyn_dev,err=*next)
+    endif
+
+rem --- Log canonical_paths in sourcePaths!
     print(log_dev)
     pathIter!=sourcePaths!.keySet().iterator()
     while pathIter!.hasNext()
@@ -490,7 +517,7 @@ rem --- Verify paths referenced in data files and add to sourcePaths! Properties
         print(log_dev) "Canonical Path: "+path$+"::::"+canonicalPath$
     wend
     
-    rem --- Build copyPath! Vector from sourcePaths! Properties, eliminating redundant canonical paths
+rem --- Build copyPath! Vector from sourcePaths! Properties, eliminating redundant canonical paths
     copyPath!.add(barDir$)
     pathIter!=sourcePaths!.keySet().iterator()
     while pathIter!.hasNext()
@@ -736,7 +763,7 @@ rem /**
 rem  * FilenameFilter Class to filter adm_modules~*.xml files.
 rem  */
 
-    class public AdmModulesFileter implements java.io.FilenameFilter
+    class public AdmModulesFilter implements java.io.FilenameFilter
 
         method public boolean accept(File dir!, String file!)
             if file!.startsWith("adm_modules~") and file!.endsWith(".xml")

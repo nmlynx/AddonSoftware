@@ -11,11 +11,15 @@ rem ==========================================================================
     use java.util.Properties
     use java.util.Vector
 
+    use ::ado_util.src::util    
+
     setesc std_error
     seterr std_error
 
 rem --- Initializations
+    prefixVect!=new Vector()
     sourcePaths!=new Properties()
+    stblPaths!=new Properties()
     sysGUI! = BBjAPI().getSysGui()
     systems!=new Properties()
     savedDir$=dir("")
@@ -24,30 +28,10 @@ rem --- Get user inputs
     baseDir$=Option!.getOptionData("BASE_DIR")
     jarFile$=Option!.getOptionData("JAR_FILE")
     barDir$=Option!.getOptionData("BAR_DIR")
-
-
-rem --- Open DDM_TABLE_TPLS in target Barista installation
-    ddmTableTpls_dev=unt
-    open(ddmTableTpls_dev)barDir$+"/sys/data/ddm_table_tpls.dat"; rem --- Error if not found, something is wrong.
-    dim ddm_table_tpls$:"table_name:c(16*),file_name:c(30*),template:c(10230*)"
-
-rem --- Open DDM_SYSTEMS in target Barista installation
-    ddmSystems_dev=unt
-    open(ddmSystems_dev)barDir$+"/sys/data/ddm_systems.dat"; rem --- Error if not found, something is wrong.
-    findrecord(ddmTableTpls_dev,key=pad("DDM_SYSTEMS",16))ddm_table_tpls$; rem --- Error if not found, something is wrong.
-    dim ddmSystems$:ddm_table_tpls.template$
-
-rem --- Get Mounted Directory for system (application) installed in target Barista
-    read(ddmSystems_dev,key="",dom=*next)
-    while 1
-        readrecord(ddmSystems_dev,end=*break)ddmSystems$
-        systems!.setProperty(cvs(ddmSystems.mount_sys_id$,2),cvs(ddmSystems.mount_dir$,2))
-    wend
     
 rem --- Start main progress meter
     meter_title$=rdForm!.getTitle()
     meter_total_recs=9
-rem wgh ... 9625 ... if pre-v19 then meter_total_recs=meter_total_recs+1
     meter_text$=""
     meter_action$="WIN-LST-OK"
     gosub disp_meter
@@ -72,12 +56,59 @@ rem --- Un-package existing Barista installation jar file at the new installatio
     print(log_dev)
     print(log_dev)meter_text$
 
-rem goto wgh1; rem wgh ... 9625 ... testing
+    rem --- Show busy/working image while extracting files from jar
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=mainMeter!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
     rem --- Un-package jar file
     chdir baseDir$
     x=scall("jar -xf "+jarFile$)
     chdir savedDir$
-wgh1: rem wgh ... 9625 ... testing
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
+
+rem --- Open DDM_TABLE_TPLS in target Barista installation
+    ddmTableTpls_dev=unt
+    open(ddmTableTpls_dev)barDir$+"/sys/data/ddm_table_tpls.dat"; rem --- Error if not found, something is wrong.
+    dim ddm_table_tpls$:"table_name:c(16*),file_name:c(30*),template:c(10230*)"
+
+rem --- Open DDM_TABLES in source Barista installation
+    ddmTables_dev=unt
+    open(ddmTables_dev)barDir$+"/sys/data/ddm_tables.dat"; rem --- Error if not found, something is wrong.
+    findrecord(ddmTableTpls_dev,key=pad("DDM_TABLES",16))ddm_table_tpls$; rem --- Error if not found, something is wrong.
+    dim ddmTables$:ddm_table_tpls.template$
+
+rem --- Open DDM_TABLE_COLS in source Barista installation
+    ddmTableCols_dev=unt
+    open(ddmTableCols_dev)barDir$+"/sys/data/ddm_table_cols.dat"; rem --- Error if not found, something is wrong.
+    findrecord(ddmTableTpls_dev,key=pad("DDM_TABLE_COLS",16))ddm_table_tpls$; rem --- Error if not found, something is wrong.
+    dim ddmTableCols$:ddm_table_tpls.template$
+
+rem --- Open DDM_SYSTEMS in target Barista installation
+    ddmSystems_dev=unt
+    open(ddmSystems_dev)barDir$+"/sys/data/ddm_systems.dat"; rem --- Error if not found, something is wrong.
+    findrecord(ddmTableTpls_dev,key=pad("DDM_SYSTEMS",16))ddm_table_tpls$; rem --- Error if not found, something is wrong.
+    dim ddmSystems$:ddm_table_tpls.template$
+
+rem --- Get Mounted Directory for system (application) installed in target Barista
+    read(ddmSystems_dev,key="",dom=*next)
+    while 1
+        readrecord(ddmSystems_dev,end=*break)ddmSystems$
+        systems!.setProperty(cvs(ddmSystems.mount_sys_id$,2),cvs(ddmSystems.mount_dir$,2))
+    wend
+    close(ddmSystems_dev,err=*next)
+
+rem --- Open ADM_MODULES in target Barista installation
+    admModules_dev=unt
+    open(admModules_dev)barDir$+"/sys/data/adm_modules.dat"; rem --- Error if not found, something is wrong.
+    findrecord(ddmTableTpls_dev,key=pad("ADM_MODULES",16))ddm_table_tpls$; rem --- Error if not found, something is wrong.
+    dim admModules$:ddm_table_tpls.template$
+
+rem --- Get version of Barista's ADB module
+    readrecord(admModules_dev,key="01007514"+"ADB",dom=*next)admModules$
+    barVersion=num(admModules.version_id$)
+    close(admModules_dev,err=*next)
 
 rem --- Build sourcePath! Properties object from “Canonical Path:” lines in adx_jaraon.log file
 
@@ -116,10 +147,6 @@ rem --- Build sourcePath! Properties object from “Canonical Path:” lines in adx_
     wend
     close(sourceLog_dev,err=*next)
 
-
-rem --- Set permissions for extracted directory and file
-rem wgh ... 9625 ... come back to this later
-
 rem --- Update paths in system (application) syn file
 
     rem --- Increment main progress meter
@@ -140,6 +167,7 @@ rem --- Update paths in system (application) syn file
         sourceMountDir$=systems!.getProperty(system$)
         if !sourcePaths!.containsKey(sourceMountDir$) then continue
         sourceCanonicalMountDir$=sourcePaths!.getProperty(sourceMountDir$)
+        targetMountDir$=sourceCanonicalMountDir$
         if pos(sourceBaseDir$=sourceCanonicalMountDir$)=1 then
             targetMountDir$=baseDir$+sourceCanonicalMountDir$(len(sourceBaseDir$)+1)
         endif
@@ -164,14 +192,15 @@ rem --- Update paths in system (application) syn file
                 case key$ = "SYSDIR"
                     xpos = pos("="=record$)
                     path$ = cvs(record$(xpos+1),3)
-                    sourceCanonicalPath$=sourcePaths!.getProperty(path$)
                     if sourcePaths!.containsKey(path$) then
+                        sourceCanonicalPath$=sourcePaths!.getProperty(path$)
                         if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
                             path$=baseDir$+sourceCanonicalPath$(len(sourceBaseDir$)+1)
                         endif
                         record$=record$(1,pos("="=record$,1,2))+path$
                     endif
-                    print(log_dev)"        "+key$+": "+path$
+                    stblPaths!.setProperty(key$,path$)
+                    print(log_dev)"    "+"    "+key$+": "+path$
                     break
                 case key$ = "APROD"
                 case key$ = "SYSAPP"
@@ -188,7 +217,7 @@ rem --- Update paths in system (application) syn file
                         endif
                         record$=record$(1,xpos)+path$+record$(ypos)
                     endif
-                    print(log_dev)"        "+key$+"="+app$+": "+path$
+                    print(log_dev)"    "+"    "+key$+"="+app$+": "+path$
                     break
                 case key$ = "STBL"
                 case key$ = "SYSSTBL"
@@ -205,7 +234,8 @@ rem --- Update paths in system (application) syn file
                             endif
                             record$=record$(1,ypos)+path$
                         endif
-                        print(log_dev)"        "+key$+" "+stbl$+": "+path$
+                        stblPaths!.setProperty(stbl$,path$)
+                        print(log_dev)"    "+"    "+key$+" "+stbl$+": "+path$
                     endif
                     break
                 case key$ = "PREFIX"
@@ -219,7 +249,8 @@ rem --- Update paths in system (application) syn file
                         endif
                         record$=record$(1,xpos)+path$
                     endif
-                    print(log_dev)"        "+key$+": "+path$
+                    prefixVect!.add(path$)
+                    print(log_dev)"    "+"    "+key$+": "+path$
                     break
                 case key$ = "CFG"
                 case key$ = "SYSCFG"
@@ -234,7 +265,7 @@ rem --- Update paths in system (application) syn file
                         endif
                         record$=record$(1,ypos)+path$
                     endif
-                    print(log_dev)"        "+key$+" "+stbl$+": "+path$
+                    print(log_dev)"    "+"    "+key$+" "+stbl$+": "+path$
                     break
                 case default
                     rem --- skip other lines
@@ -273,6 +304,7 @@ rem --- Update paths in system (application) adm_modules~*.xml files
             sourceMountDir$=systems!.getProperty(system$)
             if !sourcePaths!.containsKey(sourceMountDir$) then continue
             sourceCanonicalMountDir$=sourcePaths!.getProperty(sourceMountDir$)
+            targetMountDir$=sourceCanonicalMountDir$
             if pos(sourceBaseDir$=sourceCanonicalMountDir$)=1 then
                 targetMountDir$=baseDir$+sourceCanonicalMountDir$(len(sourceBaseDir$)+1)
             endif
@@ -281,8 +313,7 @@ rem --- Update paths in system (application) adm_modules~*.xml files
             dir!=new File(targetMountDir$ + File.separator + admModulePath$)
             rem --- Validate directory
             if dir! <> null() and dir!.exists() and dir!.isDirectory() and dir!.list() <> null()
-                fileVector! = new Vector(java.util.Arrays.asList(dir!.list(new AdmModulesFileter())))
-                
+                fileVector! = new Vector(java.util.Arrays.asList(dir!.list(new AdmModulesFilter())))
                 if(fileVector!.size()>0) then
                     rem --- Update paths in LOCALE_PATH and DD_MOUNT_DIR tags
                     startLocalePath$ = "<LOCALE_PATH>"
@@ -320,7 +351,7 @@ rem --- Update paths in system (application) adm_modules~*.xml files
                                     endif
                                     record$=record$(1,startLocalePath + startLocalePathLen - 1)+path$+record$(pos(endLocalePath$=cvs(record$,4), -1))
                                 endif
-                                print(log_dev)"        "+startLocalePath$+": "+path$
+                                print(log_dev)"    "+"    "+startLocalePath$+": "+path$
                             endif
 
                             rem --- Update path in <DD_MOUNT_DIR> lines
@@ -335,7 +366,7 @@ rem --- Update paths in system (application) adm_modules~*.xml files
                                     endif
                                     record$=record$(1,startDdMountDir + startDdMountDirLen - 1)+path$+record$(pos(endDdMountDir$=cvs(record$,4), -1))
                                 endif
-                                print(log_dev)"        "+startDdMountDir$+": "+path$
+                                print(log_dev)"    "+"    "+startDdMountDir$+": "+path$
                             endif
 
                             write(tmpWork_dev)record$
@@ -351,16 +382,353 @@ rem --- Update paths in system (application) adm_modules~*.xml files
     next i
 
 rem --- Update paths in system (application) data files
-rem wgh ... 9625 ... stopped here
+
+    rem --- Increment main progress meter
+    meterWin!=mainMeter!
+    meter_total_recs=mainMeterTotalRecs
+    mainMeterProcRecs=mainMeterProcRecs+1
+    meter_text$="Update paths referenced in data files"
+    meter_proc_recs=mainMeterProcRecs
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+
+    rem --- Check these Element Types for directory and file paths
+    elementTypes!=new Vector()
+    elementTypes!.add("ADM_CONFIG_FILE")
+    elementTypes!.add("DATA_PATH")
+    elementTypes!.add("DD_MOUNT_DIR")
+    elementTypes!.add("DD_MOUNT_MENU")
+    elementTypes!.add("DIR_BROWSE")
+    elementTypes!.add("EMAIL_FILES")
+    elementTypes!.add("GENERIC_FILE_80")
+    elementTypes!.add("LOGO_FILE")
+    elementTypes!.add("PROGRAM_PATH")
+
+    rem --- Check tables using Element Type, and update paths
+    for i=0 to elementTypes!.size()-1
+        elementType$=elementTypes!.get(i)
+        print(log_dev)"    "+elementType$
+    
+        rem --- Search tables using this Element Type
+        read(ddmTableCols_dev,key=elementType$,knum="COLUMN_ID",dom=*next)
+        while 1
+            readrecord(ddmTableCols_dev,end=*break)ddmTableCols$
+            if cvs(ddmTableCols.dd_data_name$,2)<>elementType$ then break
+    
+            rem --- Get disk file name for this table
+            findrecord(ddmTables_dev,key=ddmTableCols.dd_table_alias$,dom=*continue)ddmTables$
+            if pos(ddmTables.dd_alias_type$="OPQRT") then continue; rem --- Skip if not a BBj data file
+            if cvs(ddmTables.dd_table_alias$,2)="ADS_AUTOLAUNCH" and cvs(ddmTableCols.dd_dvar_name$,2)="PROGRAM_ARGS" then continue; rem --- Does not hold paths
+            filename$=cvs(ddmTables.dd_file_name$,2)
+            if filename$="" then filename$=cvs(ddmTables.dd_table_alias$,10)
+    
+            rem --- Log table.column being updated for this Element Type
+            print(log_dev)"    "+"    "+cvs(ddmTables.dd_table_alias$,2)+"."+ddmTableCols.dd_dvar_name$
+    
+            rem --- Get path to this table in source Barista installation
+            if pos(ddmTables.asc_prod_id$="ADBDDBSQB",3) then
+                rem --- It is a Barista system file
+                filePath$=barDir$+File.separator+"sys"+File.separator+"data"
+            else
+                rem --- It is an installed application's file
+                filePath$=ddmTables.dd_table_path$
+                if cvs(filePath$,2)="" then filePath$=barDir$+File.separator+"sys"+File.separator+"data"
+                if filePath$(1,1)="[" and filePath$(len(filePath$),1)="]" then
+                    rem --- Get path from STBL
+                    stbl$=filePath$(2,len(filePath$)-2)
+                    if stblPaths!.containsKey(stbl$) then
+                        filePath$=stblPaths!.getProperty(stbl$)
+                    else
+                        filePath$=""
+                    endif
+                endif
+            endif
+    
+            rem --- Open file and update paths for this Element Type
+            dataFile$=filePath$+File.separator+filename$
+            table_dev=unt
+            open(table_dev,err=*continue)dataFile$; rem --- If error, assume file not created yet.
+            table_dev2=unt
+            open(table_dev2,err=*continue)dataFile$; rem --- If error, assume file not created yet.
+            findrecord(ddmTableTpls_dev,key=pad(ddmTables.dd_table_alias$,16))ddm_table_tpls$; rem --- Error if not found, something is wrong.
+            dim table$:ddm_table_tpls.template$
+            read(table_dev,key="",dom=*next,end=*continue)
+            while 1
+                key$=key(table_dev,end=*break)
+                readrecord(table_dev)table$
+                path$ = field(table$,cvs(ddmTableCols.dd_dvar_name$,2))
+                if cvs(path$,2)="" continue
+                startPath$=path$
+    
+                rem --- Update path with new installation base directory
+                if sourcePaths!.containsKey(path$) then
+                    sourceCanonicalPath$=sourcePaths!.getProperty(path$)
+                    if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
+                        path$=baseDir$+sourceCanonicalPath$(len(sourceBaseDir$)+1)
+                    endif
+                endif
+    
+                if startPath$<>path$ then print(log_dev) "    "+"    "+"    "+startPath$+" >>> "+path$
+                field table$,cvs(ddmTableCols.dd_dvar_name$,2)=path$
+                table$=field(table$)
+                writerecord(table_dev2)table$
+            wend
+            close(table_dev,err=*next)
+            close(table_dev2,err=*next)
+        wend
+    next i
         
 rem --- Update paths in system (application) *.def files for ALL languages if pre-v19 Barista
-rem wgh ... 9625 ... if pre-v19 then meter_total_recs=meter_total_recs+1
-rem wgh ... 9625 ... include Barista *.def files too
-rem wgh ... 9625 ... use version for Addon AD module in Barista's adm_modules.dat file
+    if barVersion<19 then
+
+        rem --- Increment main progress meter
+        meterWin!=mainMeter!
+        meter_total_recs=mainMeterTotalRecs
+        mainMeterProcRecs=mainMeterProcRecs+1
+        meter_text$="Update paths referenced in *.def files"
+        meter_proc_recs=mainMeterProcRecs
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)
+        print(log_dev)meter_text$
+
+        rem --- Do Barista *.def files too
+        systems!.setProperty("BARISTA","")
+
+        rem --- Locate target *.def files and update paths
+        systemsIter!=systems!.keySet().iterator()
+        while systemsIter!.hasNext()
+            system$=systemsIter!.next()
+            sourceMountDir$=systems!.getProperty(system$)
+            if system$="BARISTA" then
+                targetMountDir$=barDir$
+            else
+                if !sourcePaths!.containsKey(sourceMountDir$) then continue
+                sourceCanonicalMountDir$=sourcePaths!.getProperty(sourceMountDir$)
+                targetMountDir$=sourceCanonicalMountDir$
+                if pos(sourceBaseDir$=sourceCanonicalMountDir$)=1 then
+                    targetMountDir$=baseDir$+sourceCanonicalMountDir$(len(sourceBaseDir$)+1)
+                endif
+            endif
+            print(log_dev)"    "+system$
+
+            rem --- Get path to this system's def directory
+            if system$="BARISTA" then
+                systemDefDir$=targetMountDir$+File.separator+"sys"+File.separator+"data"+File.separator+"def"
+            else
+                systemDefDir$=targetMountDir$+File.separator+"data"+File.separator+"def"
+            endif
+            defDir!=new File(systemDefDir$)
+
+            rem --- Get languages for this system's *def files
+            if defDir! <> null() and defDir!.exists() and defDir!.isDirectory() and defDir!.list() <> null()
+                langDirVector! = new Vector(java.util.Arrays.asList(defDir!.listFiles()))
+                if(langDirVector!.size()>0) then
+                    for i=0 to langDirVector!.size()-1
+                        langDir!=langDirVector!.get(i)
+                        if !langDir!.isDirectory() or langDir!.list()=null() then continue
+                        print(log_dev)"    "+"    "+langDir!.getName()
+
+                        rem --- Get *def files for this language
+                        fileVector! = new Vector(java.util.Arrays.asList(langDir!.listFiles(new DefFileFilter())))
+                        if(fileVector!.size()>0) then
+
+                            rem --- Start secondary progress meter
+                            meter_title$=system$+" "+langDir!.getName()+" *.def files"
+                            meter_total_recs=langDirVector!.size()
+                            meter_proc_recs=0
+                            meter_text$=""
+                            meter_action$="WIN-LST"
+                            gosub disp_meter
+                            detailMeter!=meterWin!
+
+                            rem --- Update paths in *.def files for this language
+                            for j=0 to fileVector!.size()-1
+                                defFile!=fileVector!.get(j)
+                                if !defFile!.isFile() then continue
+
+                                rem --- Increment secondary progress meter
+                                meter_text$=defFile!.getName()
+                                meterWin!=detailMeter!
+                                meter_proc_recs=meter_proc_recs+1
+                                meter_action$="MTR-LST"
+                                gosub disp_meter
+                                
+                                rem --- Open target *.def file, and temporary work file
+                                defFile$=defFile!.getCanonicalPath()
+                                defFile_dev=unt
+                                open(defFile_dev,isz=-1)defFile$; rem --- Error if not found, something is wrong.
+                                tmpWorkFile$=defFile!.getParent()+File.separator+"workfile.tmp"
+                                erase tmpWorkFile$, err=*next
+                                tmpWork_dev=unt
+                                open(tmpWork_dev,isz=-1,mode="O_CREATE,O_TRUNC")tmpWorkFile$
+
+                                rem --- Update paths in *.def file
+                                cpgmColumn_pos=0
+                                cpgmTable_pos=0
+                                doColumnAttrs=0
+                                doColumnDefs=0
+                                doTableAttrs=0
+                                doTableDefs=0
+                                while 1
+                                    read(defFile_dev,end=*break)line$
+                                
+                                    key$=line$(1,pos("}"=line$))
+                                    switch (BBjAPI().TRUE)
+                                        case key$="{TableAttrs}"
+                                            doTableAttrs=2
+                                            break
+                                        case key$="{TableDefs}"
+                                            doTableDefs=1
+                                            break
+                                        case key$="{TableDefsEnd}"
+                                            doTableDefs=0
+                                            break
+                                        case key$="{ColumnAttrs}"
+                                            doColumnAttrs=2
+                                            break
+                                        case key$="{ColumnDefs}"
+                                            doColumnDefs=1
+                                            break
+                                        case key$="{ColumnDefsEnd}"
+                                            doColumnDefs=0
+                                            break
+                                        case default
+                                            break
+                                    swend
+                                
+                                    rem --- Get position of CPGM attribute for Tables
+                                    if doTableAttrs then
+                                        if doTableAttrs=1 then
+                                            cpgmTable_pos=(pos("CPGM"=line$,5)-1)/5
+                                        endif
+                                        doTableAttrs=doTableAttrs-1
+                                    endif
+                                
+                                    rem --- Get position of CPGM attribute for Columns
+                                    if doColumnAttrs then
+                                        if doColumnAttrs=1 then
+                                            cpgmColumn_pos=(pos("CPGM"=line$,5)-1)/5
+                                        endif
+                                        doColumnAttrs=doColumnAttrs-1
+                                    endif
+                                
+                                    rem --- Update CPGM attribute for Tables
+                                    if doTableDefs and pos("{TableDefs}"=line$)=0 then
+                                        tmpLine1$=line$(1,pos("^"=line$,1,cpgmTable_pos))
+                                        path$=line$(pos("^"=line$,1,cpgmTable_pos)+1)
+                                        if pos(";^"=path$) then
+                                            tmpline2$=path$(pos(";^"=path$))
+                                            path$=path$(1,pos(";^"=path$)-1)
+                                            if sourcePaths!.containsKey(path$) then
+                                                sourceCanonicalPath$=sourcePaths!.getProperty(path$)
+                                                if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
+                                                    path$=baseDir$+sourceCanonicalPath$(len(sourceBaseDir$)+1)
+                                                endif
+                                                line$=tmpline1$+path$+tmpline2$
+                                            endif
+                                        endif
+                                    endif
+                                
+                                    rem --- Update CPGM attribute for Columns
+                                    if doColumnDefs and pos("{ColumnDefs}"=line$)=0 then
+                                        tmpLine1$=line$(1,pos("^"=line$,1,cpgmColumn_pos))
+                                        path$=line$(pos("^"=line$,1,cpgmColumn_pos)+1)
+                                        if pos(";^"=path$) then
+                                            tmpline2$=path$(pos(";^"=path$))
+                                            path$=path$(1,pos(";^"=path$)-1)
+                                            if sourcePaths!.containsKey(path$) then
+                                                sourceCanonicalPath$=sourcePaths!.getProperty(path$)
+                                                if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
+                                                    path$=baseDir$+sourceCanonicalPath$(len(sourceBaseDir$)+1)
+                                                endif
+                                                line$=tmpline1$+path$+tmpline2$
+                                            endif
+                                        endif
+                                    endif
+                                    
+                                    write(tmpWork_dev)line$
+                                wend
+
+                                close(admModule_dev,err=*next)
+                                close(tmpWork_dev,err=*next)
+                                erase defFile$, err=*next
+                                rename tmpWorkFile$ to defFile$, err=*next
+                            next j
+
+                            rem --- Stop secondary progress meter
+                            meterWin!=detailMeter!
+                            meter_text$=""
+                            meter_proc_recs=meter_total_recs
+                            meter_action$="LST-END"
+                            gosub disp_meter
+                        endif
+                    next i
+                endif
+            endif
+        wend
+    endif
 
 rem --- Update paths in <new_base_dir>/barista/sys/config/barista.syn
 
+    rem --- Open barista.syn file, and temporary work file
+    barSyn_found=0
+    barSynFile$=barDir$+"/sys/config/barista.syn"
+    barSyn_dev=unt
+    open(barSyn_dev,isz=-1,err=*next)barSynFile$; barSyn_found=1
+    if barSyn_found then
+        rem --- Increment main progress meter
+        meterWin!=mainMeter!
+        meter_total_recs=mainMeterTotalRecs
+        mainMeterProcRecs=mainMeterProcRecs+1
+        meter_text$="Update paths in barista.syn"
+        meter_proc_recs=mainMeterProcRecs
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)
+        print(log_dev)meter_text$
+
+        rem --- Open temporary work file
+        tmpWorkFile$=barDir$+"/sys/config/workfile.tmp"
+        erase tmpWorkFile$, err=*next
+        tmpWork_dev=unt
+        open(tmpWork_dev,isz=-1,mode="O_CREATE,O_TRUNC")tmpWorkFile$
+    
+        rem --- Update paths
+        while 1
+            read(barSyn_dev,end=*break)record$
+    
+            key$ = record$(1, pos("="=record$) - 1)
+            switch (BBjAPI().TRUE)
+                case key$ = "SYN"
+                    xpos = pos("="=record$)
+                    path$ = cvs(record$(xpos+1),3)
+                    if sourcePaths!.containsKey(path$) then
+                        sourceCanonicalPath$=sourcePaths!.getProperty(path$)
+                        if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
+                            path$=baseDir$+sourceCanonicalPath$(len(sourceBaseDir$)+1)
+                        endif
+                        record$=record$(1,pos("="=record$))+path$
+                    endif
+                    break
+                case default
+                    rem --- skip other lines
+                    break
+            swend
+            write(tmpWork_dev)record$
+        wend
+        close(barSyn_dev,err=*next)
+        close(tmpWork_dev,err=*next)
+        erase barSynFile$, err=*next
+        rename tmpWorkFile$ to barSynFile$, err=*next
+    endif
+
 rem --- Update port and SSL settings in barista.cfg for ALL languages
+
+rem --- Set permissions for extracted directory and file
+rem --- (HOLD: This may not be necessary. Need to determine.)
     
 done: rem --- All done
     
@@ -377,7 +745,8 @@ done: rem --- All done
 
     rem --- Close open files
     close(ddmTableTpls_dev,err=*next)
-    close(ddmSystems_dev,err=*next)
+    close(ddmTables_dev,err=*next)
+    close(ddmTableCols_dev,err=*next)
 
     goto std_exit
     
@@ -469,10 +838,26 @@ rem /**
 rem  * FilenameFilter Class to filter adm_modules~*.xml files.
 rem  */
 
-    class public AdmModulesFileter implements java.io.FilenameFilter
+    class public AdmModulesFilter implements java.io.FilenameFilter
 
         method public boolean accept(File dir!, String file!)
             if file!.startsWith("adm_modules~") and file!.endsWith(".xml")
+                methodret Boolean.valueOf("true")
+            else
+                methodret Boolean.valueOf("false")
+            endif
+        methodend
+        
+    classend
+    
+rem /**
+rem  * DefFileFilter Class to filter *.def files.
+rem  */
+
+    class public DefFileFilter implements java.io.FilenameFilter
+
+        method public boolean accept(File dir!, String file!)
+            if file!.endsWith(".def")
                 methodret Boolean.valueOf("true")
             else
                 methodret Boolean.valueOf("false")
