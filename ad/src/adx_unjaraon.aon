@@ -652,7 +652,7 @@ rem --- Update paths in system (application) *.def files for ALL languages if pr
                                     write(tmpWork_dev)line$
                                 wend
 
-                                close(admModule_dev,err=*next)
+                                close(defFile_dev,err=*next)
                                 close(tmpWork_dev,err=*next)
                                 erase defFile$, err=*next
                                 rename tmpWorkFile$ to defFile$, err=*next
@@ -726,6 +726,69 @@ rem --- Update paths in <new_base_dir>/barista/sys/config/barista.syn
     endif
 
 rem --- Update port and SSL settings in barista.cfg for ALL languages
+
+    rem --- Increment main progress meter
+    meterWin!=mainMeter!
+    meter_total_recs=mainMeterTotalRecs
+    mainMeterProcRecs=mainMeterProcRecs+1
+    meter_text$="Update port and SSL settings in barista.cfg files"
+    meter_proc_recs=mainMeterProcRecs
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+
+    rem --- Get languages for barista's barista.cfg files
+    barConfigDir!=new File(barDir$+File.separator+"sys"+File.separator+"config")
+    if barConfigDir! <> null() and barConfigDir!.exists() and barConfigDir!.isDirectory() and barConfigDir!.list() <> null()
+        langDirVector! = new Vector(java.util.Arrays.asList(barConfigDir!.listFiles()))
+        if(langDirVector!.size()>0) then
+            for i=0 to langDirVector!.size()-1
+                langDir!=langDirVector!.get(i)
+                if !langDir!.isDirectory() or langDir!.list()=null() then continue
+                print(log_dev)"    "+langDir!.getName()
+                
+                rem --- Open barista.cfg file for this language, and temporary work file
+                barCfgFile$=langDir!.getPath()+File.separator+"barista.cfg"
+                barCfg_dev=unt
+                open(barCfg_dev,isz=-1,err=*continue)barCfgFile$
+                tmpWorkFile$=langDir!.getPath()+File.separator+"workfile.tmp"
+                erase tmpWorkFile$, err=*next
+                tmpWork_dev=unt
+                open(tmpWork_dev,isz=-1,mode="O_CREATE,O_TRUNC")tmpWorkFile$
+    
+                rem --- Update port and SSL settings in barista.cfg for this language
+                while 1
+                    read(barCfg_dev,end=*break)line$
+                
+                    key$=cvs(line$(1,pos("="=line$)-1),3)
+                    switch (BBjAPI().TRUE)
+                        case key$="SET +DBSQLPORT"
+                            line$=key$+"="+stbl("+DBSQLPORT",err=*break)
+                            break
+                        case key$="SET +DBPORT"
+                            line$=key$+"="+stbl("+DBPORT",err=*break)
+                            break
+                        case key$="SET +DBSSL"
+                            line$=key$+"="+stbl("+DBSSL",err=*break)
+                            break
+                        case key$="SET +EMAIL_USE_SSL"
+                            line$=key$+"="+stbl("+EMAIL_USE_SSL",err=*break)
+                            break
+                        case default
+                            break
+                    swend
+                    
+                    write(tmpWork_dev)line$
+                wend
+    
+                close(barCfg_dev,err=*next)
+                close(tmpWork_dev,err=*next)
+                erase barCfgFile$, err=*next
+                rename tmpWorkFile$ to barCfgFile$, err=*next
+            next i
+        endif
+    endif
 
 rem --- Set permissions for extracted directory and file
 rem --- (HOLD: This may not be necessary. Need to determine.)
