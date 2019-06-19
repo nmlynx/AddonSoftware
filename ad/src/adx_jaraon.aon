@@ -11,6 +11,8 @@ rem ==========================================================================
     use java.util.Properties
     use java.util.Vector
 
+    use ::ado_util.src::util    
+
     setesc std_error
     seterr std_error
 
@@ -565,6 +567,12 @@ rem --- Build jar file
     rem --- Jar canonical paths in copyPath! Vector
     if copyPath!.size() then
 
+        rem --- Can't jar open files, so close them
+        close(ddmTableTpls_dev,err=*next)
+        close(ddmTables_dev,err=*next)
+        close(ddmTableCols_dev,err=*next)
+        close(ddmSystems_dev,err=*next)
+
         rem --- Start secondary progress meter
         meter_title$="Build "+jarFile$
         meter_total_recs=copyPath!.size()
@@ -573,11 +581,16 @@ rem --- Build jar file
         meter_action$="WIN-LST"
         gosub disp_meter
         detailMeter!=meterWin!
+
+        rem --- Show busy/working image while building jar
+        nxt_ctlID=util.getNextControlID()
+        busyImage!=detailMeter!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
         
         rem --- Make sure jarFile$ doesn't already exist in baseDir$
         erase baseDir$+File.separator+jarFile$,err=*next
 
-        rem --- Remove baseDir$ from copyPath! canonical path before adding it to jar
+        rem --- Remove baseDir$ from copyPath! canonical path before adding it to the jar
+        jarList$=""
         lenBaseDir=len(baseDir$)
         for i=0 to copyPath!.size()-1
             canonicalPath$=copyPath!.get(i)
@@ -592,14 +605,52 @@ rem --- Build jar file
             print(log_dev)"    "+meter_text$
 
             rem --- Jar the path
-            chdir baseDir$
             if i=0 then
-                x=scall("jar -cfM "+jarFile$+" "+shortPath$)
+                if pos("WIN"=cvs(info(0,0),4)) then
+                    rem --- Windows OS
+                    command$="cmd /c chdir "+baseDir$+" && "+"jar -cfM "+jarFile$+" "+shortPath$
+                else
+                    rem --- Non-Windows OS
+                    command$="chdir "+baseDir$+" ; "+"jar -cfM "+jarFile$+" "+shortPath$
+                endif
             else
-                x=scall("jar -ufM "+jarFile$+" "+shortPath$)
+                if pos("WIN"=cvs(info(0,0),4)) then
+                    rem --- Windows OS
+                    command$="cmd /c chdir "+baseDir$+" && "+"jar -ufM "+jarFile$+" "+shortPath$
+                else
+                    rem --- Non-Windows OS
+                    command$="chdir "+baseDir$+" ; "+"jar -ufM "+jarFile$+" "+shortPath$
+                endif
             endif
-            chdir savedDir$
+            command!=cast(java.lang.String,command$)
+            process!=java.lang.Runtime.getRuntime().exec(command!)
+            process!.waitFor()
+
+            rem --- Check for error and report any
+            exitValue=process!.exitValue()
+            if exitValue then
+                errorReader! = new java.io.BufferedReader(new java.io.InputStreamReader(process!.getErrorStream()))
+                while 1
+                    line! = errorReader!.readLine()
+                    if line!=null() then
+                        msg_id$="AD_JAR_ERROR"
+                        dim msg_tokens$[3]
+                        msg_tokens$[1]=shortPath$
+                        msg_tokens$[2]=jarFile$
+                        msg_tokens$[3]=log$
+                        gosub disp_message
+                        break
+                    else
+                        print(log_dev)"    "+"    "+line!
+                    endif
+                wend
+                errorReader!.close()
+                break
+            endif
         next i
+
+        rem --- Remove busy/working image from progress meter
+        busyImage!.destroy(err=*next)
     
         rem --- Stop secondary progress meter
         meterWin!=detailMeter!
@@ -622,15 +673,28 @@ rem --- Build jar file
     print(log_dev)
     print(log_dev)"Copy Addon Installation Utility log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     close(log_dev)
-    
+
     rem --- Add log file to jar
-    chdir baseDir$
     if copyPath!.size()=0 then
-        x=scall("jar -cfM "+jarFile$+" adx_jaraon.log")
+        if pos("WIN"=cvs(info(0,0),4)) then
+            rem --- Windows OS
+            command$="cmd /c chdir "+baseDir$+" && "+"jar -cfM "+jarFile$+" adx_jaraon.log"
+        else
+            rem --- Non-Windows OS
+            command$="chdir "+baseDir$+" ; "+"jar -cfM "+jarFile$+" adx_jaraon.log"
+        endif
     else
-        x=scall("jar -ufM "+jarFile$+" adx_jaraon.log")
+        if pos("WIN"=cvs(info(0,0),4)) then
+            rem --- Windows OS
+            command$="cmd /c chdir "+baseDir$+" && "+"jar -ufM "+jarFile$+" adx_jaraon.log"
+        else
+            rem --- Non-Windows OS
+            command$="chdir "+baseDir$+" ; "+"jar -ufM "+jarFile$+" adx_jaraon.log"
+        endif
     endif
-    chdir savedDir$
+    command!=cast(java.lang.String,command$)
+    process!=java.lang.Runtime.getRuntime().exec(command!)
+    process!.waitFor()
     
 done: rem --- All done
 
