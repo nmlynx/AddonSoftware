@@ -705,12 +705,14 @@ rem --- Update paths in <new_base_dir>/barista/sys/config/barista.syn
                 case key$ = "SYN"
                     xpos = pos("="=record$)
                     path$ = cvs(record$(xpos+1),3)
+                    startPath$=path$
                     if sourcePaths!.containsKey(path$) then
                         sourceCanonicalPath$=sourcePaths!.getProperty(path$)
                         if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
                             path$=baseDir$+sourceCanonicalPath$(len(sourceBaseDir$)+1)
                         endif
                         record$=record$(1,pos("="=record$))+path$
+                        if startPath$<>path$ then print(log_dev) "    "+startPath$+" >>> "+path$
                     endif
                     break
                 case default
