@@ -213,6 +213,7 @@ rem --- Main read
         if cvs(theFirm$,2)<>"" and opt01a.firm_id$<>theFirm$ break
         if firm_id$<>opt01a.firm_id$ then gosub init_firm
         if opt01a.invoice_type$<>"S" then continue
+        if opt_01a.trans_status$<>"U" then continue
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
 rem --- Position Invoice History Detail File
@@ -246,11 +247,7 @@ rem --- Update Sales Analysis
             find record (ivm01_dev,key=firm_id$+opt11a.item_id$,dom=*next) ivm01a$
             find record (ivm02_dev,key=firm_id$+opt11a.warehouse_id$+opt11a.item_id$,dom=*next) ivm02a$
             if ivm01a.stock_level$="W" vendor$=ivm02a.vendor_id$ else vendor$=ivm01a.vendor_id$
-            if opt11a.trans_status$="U" then
-                call pgmdir$+"adc_fiscalperyr_v15.aon",periodEndDates$[all],opt01a.invoice_date$,period$,year$
-            else
-                call pgmdir$+"adc_fiscalperyr_v15.aon",periodEndDates$[all],opt01a.shipmnt_date$,period$,year$
-            endif
+            call pgmdir$+"adc_fiscalperyr_v15.aon",periodEndDates$[all],opt01a.invoice_date$,period$,year$
             period=num(period$)
 
 rem --- Customer
