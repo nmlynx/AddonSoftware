@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2019-06-18
+ Report Date:   2019-06-21
  Report Branch: AddonSoftware 19.01
  Last Release:  AddonSoftware 19.00
 =======================================================================================================================================
@@ -191,9 +191,6 @@ Bug 9652 - AR - Drilldown on Customer MTD Sales isn't working correctly
 ----
 Modified: ar/src/arf_mtdsales.aon
 
-
-
-
 =======================================================================================================================================
 Revision: c87c992a87482c2f006dbd01f5927a3a388c45cd
 Author: Christine <chawkins@basis.com>
@@ -211,6 +208,19 @@ Modified: config/esp/addon.men
 Modified: config/fra/addon.men
 Modified: config/frc/addon.men
 Modified: config/ita/addon.men
+
+=======================================================================================================================================
+Revision: e27913494700b45abc6f1a2dad166162e01cf37f
+Author: Christine <chawkins@basis.com>
+Date: 6/21/2019 6:02:17 PM
+Message:
+Bug 9659 - OP - Sales tax report from/to date
+ - Maxlen attribute for mm/yyyy date incorrectly set to 8. Removed it so it can default (to 6) from the element type
+
+(cherry picked from commit b8d647b020e9e69f125a2c3f055eb0205b8a0b88)
+----
+Modified: data/bar/opr_salestax.xml
+
 
 
 
