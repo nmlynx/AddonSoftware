@@ -1,6 +1,32 @@
+[[OPM_SHIPTRACK.ORDER_NO.AINP]]
+rem --- As necessary, get customer for this order
+	if cvs(callpoint!.getColumnData("OPM_SHIPTRACK.CUSTOMER_ID"),2)="" then
+		optInvHdr_dev=fnget_dev("@OPT_INVHDR")
+		dim optInvHdr$:fnget_tpl$("@OPT_INVHDR")
+		order_no$=pad(callpoint!.getUserInput(),len(optInvHdr.order_no$),"R","0")
+		trip_key$=firm_id$+"  "+order_no$
+		read(optInvHdr_dev,key=trip_key$,knum="AO_ORD_CUST",dom=*next)
+		while 1
+			optInvHdr_key$=key(optInvHdr_dev,end=*break)
+			if pos(trip_key$=optInvHdr_key$)<>1 then break
+			readrecord(optInvHdr_dev)optInvHdr$
+			if optInvHdr.trans_status$<>"E" then continue
+			callpoint!.setColumnData("OPM_SHIPTRACK.CUSTOMER_ID",optInvHdr.customer_id$,1)
+			break
+		wend
+	endif
 [[OPM_SHIPTRACK.ASVA]]
 rem --- Launch Shipment Tracking Maintenance form
 	ar_type$=callpoint!.getDevObject("ar_type")
+	if ar_type$="" then
+		rem --- Get shipping and tracking information for this order
+		order_no$=callpoint!.getColumnData("OPM_SHIPTRACK.ORDER_NO")
+		gosub getShippingInfo
+		if abort then
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
 	customer_id$=callpoint!.getDevObject("customer_id")
 	order_no$=callpoint!.getDevObject("order_no")
 	ship_seq_no$=callpoint!.getDevObject("ship_seq_no")
@@ -19,23 +45,7 @@ rem --- Warn order not found without allowing user to create it.
 	msg_id$="OP_ORDER_TYPE"
 	gosub disp_message
 	callpoint!.setStatus("ABORT-QUIET")
-[[OPM_SHIPTRACK.ORDER_NO.AINP]]
-rem --- As necessary, get customer for this order
-	if cvs(callpoint!.getColumnData("OPM_SHIPTRACK.CUSTOMER_ID"),2)="" then
-		optInvHdr_dev=fnget_dev("@OPT_INVHDR")
-		dim optInvHdr$:fnget_tpl$("@OPT_INVHDR")
-		order_no$=pad(callpoint!.getUserInput(),len(optInvHdr.order_no$),"R","0")
-		trip_key$=firm_id$+"  "+order_no$
-		read(optInvHdr_dev,key=trip_key$,knum="AO_ORD_CUST",dom=*next)
-		while 1
-			optInvHdr_key$=key(optInvHdr_dev,end=*break)
-			if pos(trip_key$=optInvHdr_key$)<>1 then break
-			readrecord(optInvHdr_dev)optInvHdr$
-			if optInvHdr.trans_status$<>"E" then continue
-			callpoint!.setColumnData("OPM_SHIPTRACK.CUSTOMER_ID",optInvHdr.customer_id$,1)
-			break
-		wend
-	endif
+	callpoint!.setStatus("QUIET")
 [[OPM_SHIPTRACK.ORDER_NO.BINQ]]
 rem --- Use AR_OPEN_ORDERS custom quiry instead of default order_no lookup in order to parse selected key
 	customer_id$=callpoint!.getColumnData("OPM_SHIPTRACK.CUSTOMER_ID")
@@ -75,6 +85,8 @@ rem --- Use AR_OPEN_ORDERS custom quiry instead of default order_no lookup in or
 		callpoint!.setColumnData("OPM_SHIPTRACK.ORDER_NO",optInvHdr_key.order_no$,1)
 	endif	
 
+rem --- Set ar_type DevObject blank so ASVA knows the following ABORT skips AVAL
+	callpoint!.setDevObject("ar_type","")
 	callpoint!.setStatus("ACTIVATE-ABORT")
 [[OPM_SHIPTRACK.AOPT-SHPT]]
 rem --- Launches carrier's shipment tracking web page for a package (tracking number)
@@ -280,6 +292,80 @@ rem ==========================================================================
 	return
 
 rem ==========================================================================
+getShippingInfo: rem --- Get shipping (and tracking information) for this order
+	rem IN: order_no$
+	rem OUT: abort
+rem ==========================================================================
+	abort=0
+
+	optInvHdr_dev=fnget_dev("@OPT_INVHDR")
+	dim optInvHdr$:fnget_tpl$("@OPT_INVHDR")
+	trip_key$=firm_id$+"  "+order_no$
+	orderFound=0
+	read(optInvHdr_dev,key=trip_key$,knum="AO_ORD_CUST",dom=*next)
+	while 1
+		optInvHdr_key$=key(optInvHdr_dev,end=*break)
+		if pos(trip_key$=optInvHdr_key$)<>1 then break
+		readrecord(optInvHdr_dev)optInvHdr$
+		if optInvHdr.trans_status$<>"E" then continue
+		orderFound=1
+		break
+	wend
+
+	if !orderFound then
+		msg_id$="OP_ORDER_TYPE"
+		gosub disp_message
+		abort=1
+		return
+	else
+		rem --- Customer for this order
+		callpoint!.setColumnData("OPM_SHIPTRACK.CUSTOMER_ID",optInvHdr.customer_id$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.SHIPPING_ID",optInvHdr.shipping_id$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.SHIPPING_EMAIL",optInvHdr.shipping_email$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.AR_SHIP_VIA",optInvHdr.ar_ship_via$,1)
+
+		rem --- Shipping information for this order
+		switch pos(optInvHdr.shipto_type$="BMS")
+			case default
+			case 1; rem --- Use Bill-To address
+				armCustMast_dev=fnget_dev("@ARM_CUSTMAST")
+				dim tpl$:fnget_tpl$("@ARM_CUSTMAST")
+				findrecord(armCustMast_dev, key=firm_id$+optInvHdr.customer_id$,dom=*next)tpl$
+				sname$=tpl.customer_name$
+			break
+			case 2; rem --- Use manual ship-to address
+				opeOrdShip_dev=fnget_dev("@OPE_ORDSHIP")
+				dim tpl$:fnget_tpl$("@OPE_ORDSHIP")
+				findrecord(opeOrdShip_dev, key=firm_id$+optInvHdr.customer_id$+optInvHdr.order_no$+optInvHdr.ar_inv_no$, dom=*next)tpl$
+				sname$=tpl.name$
+			break
+			case 3; rem --- use Ship-To address
+				armCustShip_dev=fnget_dev("@ARM_CUSTSHIP")
+				dim tpl$:fnget_tpl$("@ARM_CUSTSHIP")
+				findrecord(armCustShip_dev, key=firm_id$+optInvHdr.customer_id$+optInvHdr.shipto_no$,dom=*next)tpl$
+				sname$=tpl.name$
+			break
+		swend
+		callpoint!.setColumnData("<<DISPLAY>>.SNAME",sname$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.SADD1",tpl.addr_line_1$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.SADD2",tpl.addr_line_2$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.SADD3",tpl.addr_line_3$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.SADD4",tpl.addr_line_4$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.SCITY",tpl.city$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.SSTATE",tpl.state_code$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.SZIP",tpl.zip_code$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.SCNTRY",tpl.cntry_id$,1)
+
+		rem --- Tracking information for this order
+		gosub getTrackingInfo
+
+		rem --- Enable Additional Options
+		callpoint!.setOptionEnabled("EDIT",1)
+	endif
+
+	return
+
+rem ==========================================================================
 getTrackingInfo: rem --- Get Tracking information for this order
 rem ==========================================================================
 
@@ -327,69 +413,10 @@ rem ==========================================================================
 [[OPM_SHIPTRACK.ORDER_NO.AVAL]]
 rem --- Get shipping and tracking information for this order
 	order_no$=callpoint!.getUserInput()
-	optInvHdr_dev=fnget_dev("@OPT_INVHDR")
-	dim optInvHdr$:fnget_tpl$("@OPT_INVHDR")
-	trip_key$=firm_id$+"  "+order_no$
-	orderFound=0
-	read(optInvHdr_dev,key=trip_key$,knum="AO_ORD_CUST",dom=*next)
-	while 1
-		optInvHdr_key$=key(optInvHdr_dev,end=*break)
-		if pos(trip_key$=optInvHdr_key$)<>1 then break
-		readrecord(optInvHdr_dev)optInvHdr$
-		if optInvHdr.trans_status$<>"E" then continue
-		orderFound=1
-		break
-	wend
-
-	if !orderFound then
-		msg_id$="OP_ORDER_TYPE"
-		gosub disp_message
+	gosub getShippingInfo
+	if abort then
 		callpoint!.setStatus("ABORT")
 		break
-	else
-		rem --- Customer for this order
-		callpoint!.setColumnData("OPM_SHIPTRACK.CUSTOMER_ID",optInvHdr.customer_id$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.SHIPPING_ID",optInvHdr.shipping_id$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.SHIPPING_EMAIL",optInvHdr.shipping_email$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.AR_SHIP_VIA",optInvHdr.ar_ship_via$,1)
-
-		rem --- Shipping information for this order
-		switch pos(optInvHdr.shipto_type$="BMS")
-			case default
-			case 1; rem --- Use Bill-To address
-				armCustMast_dev=fnget_dev("@ARM_CUSTMAST")
-				dim tpl$:fnget_tpl$("@ARM_CUSTMAST")
-				findrecord(armCustMast_dev, key=firm_id$+optInvHdr.customer_id$,dom=*next)tpl$
-				sname$=tpl.customer_name$
-			break
-			case 2; rem --- Use manual ship-to address
-				opeOrdShip_dev=fnget_dev("@OPE_ORDSHIP")
-				dim tpl$:fnget_tpl$("@OPE_ORDSHIP")
-				findrecord(opeOrdShip_dev, key=firm_id$+optInvHdr.customer_id$+optInvHdr.order_no$+optInvHdr.ar_inv_no$, dom=*next)tpl$
-				sname$=tpl.name$
-			break
-			case 3; rem --- use Ship-To address
-				armCustShip_dev=fnget_dev("@ARM_CUSTSHIP")
-				dim tpl$:fnget_tpl$("@ARM_CUSTSHIP")
-				findrecord(armCustShip_dev, key=firm_id$+optInvHdr.customer_id$+optInvHdr.shipto_no$,dom=*next)tpl$
-				sname$=tpl.name$
-			break
-		swend
-		callpoint!.setColumnData("<<DISPLAY>>.SNAME",sname$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.SADD1",tpl.addr_line_1$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.SADD2",tpl.addr_line_2$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.SADD3",tpl.addr_line_3$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.SADD4",tpl.addr_line_4$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.SCITY",tpl.city$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.SSTATE",tpl.state_code$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.SZIP",tpl.zip_code$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.SCNTRY",tpl.cntry_id$,1)
-
-		rem --- Tracking information for this order
-		gosub getTrackingInfo
-
-		rem --- Enable Additional Options
-		callpoint!.setOptionEnabled("EDIT",1)
 	endif
 [[OPM_SHIPTRACK.BSHO]]
 rem --- Open files
