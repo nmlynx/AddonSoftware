@@ -426,7 +426,7 @@ done: rem --- All done
             wend
             rename savedConvCtrlFile!.getAbsolutePath() to aFile!.getAbsolutePath(), err=*next
         endif
-        convCtrlFile!.renameTo(savedConvCtrlFile!)
+        rename convCtrlFile!.getAbsolutePath() to savedConvCtrlFile!.getAbsolutePath()
 
         print(log_dev)Translate!.getTranslation("AON_DELETED_CONV_CTRL","Deleted conversion control file")+": "+convCtrlFile!.getAbsolutePath()
 
