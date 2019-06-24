@@ -605,21 +605,22 @@ rem --- Build jar file
             print(log_dev)"    "+meter_text$
 
             rem --- Jar the path
-            if i=0 then
-                if pos("WIN"=cvs(info(0,0),4)) then
-                    rem --- Windows OS
-                    command$="cmd /c chdir "+baseDir$+" && "+"jar -cfM "+jarFile$+" "+shortPath$
-                else
-                    rem --- Non-Windows OS
-                    command$="chdir "+baseDir$+" ; "+"jar -cfM "+jarFile$+" "+shortPath$
-                endif
-            else
+            jarFile!=new File(baseDir$ + File.separator + jarFile$)
+            if jarFile!.exists() then
                 if pos("WIN"=cvs(info(0,0),4)) then
                     rem --- Windows OS
                     command$="cmd /c chdir "+baseDir$+" && "+"jar -ufM "+jarFile$+" "+shortPath$
                 else
                     rem --- Non-Windows OS
                     command$="chdir "+baseDir$+" ; "+"jar -ufM "+jarFile$+" "+shortPath$
+                endif
+            else
+                if pos("WIN"=cvs(info(0,0),4)) then
+                    rem --- Windows OS
+                    command$="cmd /c chdir "+baseDir$+" && "+"jar -cfM "+jarFile$+" "+shortPath$
+                else
+                    rem --- Non-Windows OS
+                    command$="chdir "+baseDir$+" ; "+"jar -cfM "+jarFile$+" "+shortPath$
                 endif
             endif
             command!=cast(java.lang.String,command$)
@@ -645,7 +646,6 @@ rem --- Build jar file
                     endif
                 wend
                 errorReader!.close()
-                break
             endif
         next i
 
@@ -675,21 +675,22 @@ rem --- Build jar file
     close(log_dev)
 
     rem --- Add log file to jar
-    if copyPath!.size()=0 then
-        if pos("WIN"=cvs(info(0,0),4)) then
-            rem --- Windows OS
-            command$="cmd /c chdir "+baseDir$+" && "+"jar -cfM "+jarFile$+" adx_jaraon.log"
-        else
-            rem --- Non-Windows OS
-            command$="chdir "+baseDir$+" ; "+"jar -cfM "+jarFile$+" adx_jaraon.log"
-        endif
-    else
+    jarFile!=new File(baseDir$ + File.separator + jarFile$)
+    if jarFile!.exists() then
         if pos("WIN"=cvs(info(0,0),4)) then
             rem --- Windows OS
             command$="cmd /c chdir "+baseDir$+" && "+"jar -ufM "+jarFile$+" adx_jaraon.log"
         else
             rem --- Non-Windows OS
             command$="chdir "+baseDir$+" ; "+"jar -ufM "+jarFile$+" adx_jaraon.log"
+        endif
+    else
+        if pos("WIN"=cvs(info(0,0),4)) then
+            rem --- Windows OS
+            command$="cmd /c chdir "+baseDir$+" && "+"jar -cfM "+jarFile$+" adx_jaraon.log"
+        else
+            rem --- Non-Windows OS
+            command$="chdir "+baseDir$+" ; "+"jar -cfM "+jarFile$+" adx_jaraon.log"
         endif
     endif
     command!=cast(java.lang.String,command$)
@@ -699,10 +700,12 @@ rem --- Build jar file
 done: rem --- All done
 
     rem --- Close open files
-    close(ddmTableTpls_dev,err=*next)
-    close(ddmTables_dev,err=*next)
-    close(ddmTableCols_dev,err=*next)
-    close(ddmSystems_dev,err=*next)
+    if copyPath!.size()=0 then
+        close(ddmTableTpls_dev,err=*next)
+        close(ddmTables_dev,err=*next)
+        close(ddmTableCols_dev,err=*next)
+        close(ddmSystems_dev,err=*next)
+    endif
 
     rem --- Warn if paths were skipped, i.e. skipped>0
     if skipped then
