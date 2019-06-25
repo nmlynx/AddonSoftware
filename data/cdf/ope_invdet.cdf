@@ -1172,8 +1172,9 @@ rem --- Buttons start disabled
 	callpoint!.setOptionEnabled("COMM",0)
 	callpoint!.setStatus("REFRESH")
 [[OPE_INVDET.BDEL]]
-rem --- Require modified rows be saved before deleting so can't uncommit quantity different from what was committed (bug 8087)
-	if callpoint!.getGridRowModifyStatus(num(callpoint!.getValidationRow()))="Y" then
+rem --- Require existing modified rows be saved before deleting so can't uncommit quantity different from what was committed (bug 8087)
+	if callpoint!.getGridRowModifyStatus(num(callpoint!.getValidationRow()))="Y" and
+:	callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))<>"Y" then
 		msg_id$="OP_MODIFIED_DELETE"
 		gosub disp_message
 		callpoint!.setStatus("ABORT")
