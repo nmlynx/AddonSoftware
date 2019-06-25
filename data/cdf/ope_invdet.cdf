@@ -256,7 +256,7 @@ rem --- Enable buttons
 	gosub enable_addl_opts
 
 if callpoint!.getDevObject("focusPrice")="Y"
- 	callpoint!.setFocus(callpoint!.getValidationRow(),"OPE_INVDET.UNIT_PRICE",1)
+ 	callpoint!.setFocus(callpoint!.getValidationRow(),"<<DISPLAY>>.UNIT_PRICE_DSP",1)
 endif
 [[<<DISPLAY>>.QTY_ORDERED_DSP.BINP]]
 rem --- Get prev qty / enable repricing, options, lots
