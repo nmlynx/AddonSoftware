@@ -149,7 +149,7 @@ rem --- Main read
         if cvs(theFirm$,2)<>"" and opt01a.firm_id$<>theFirm$ break
         if firm_id$<>opt01a.firm_id$ then gosub init_firm
         if skip_firm or opt01a.invoice_type$<>"S" then continue
-        if opt_01a.trans_status$<>"U" then continue
+        if opt01a.trans_status$<>"U" then continue
         call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
 rem --- Position Invoice History Detail File
