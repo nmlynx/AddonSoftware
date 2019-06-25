@@ -765,17 +765,20 @@ rem --- Update port and SSL settings in barista.cfg for ALL languages
                 
                     key$=cvs(line$(1,pos("="=line$)-1),3)
                     switch (BBjAPI().TRUE)
-                        case key$="SET +DBSQLPORT"
-                            line$=key$+"="+stbl("+DBSQLPORT",err=*break)
-                            break
                         case key$="SET +DBPORT"
                             line$=key$+"="+stbl("+DBPORT",err=*break)
+                            break
+                        case key$="SET +DBSQLPORT"
+                            line$=key$+"="+stbl("+DBSQLPORT",err=*break)
                             break
                         case key$="SET +DBSSL"
                             line$=key$+"="+stbl("+DBSSL",err=*break)
                             break
                         case key$="SET +EMAIL_USE_SSL"
                             line$=key$+"="+stbl("+EMAIL_USE_SSL",err=*break)
+                            break
+                        case key$="SET +ENPORT"
+                            line$=key$+"="+stbl("+ENPORT",err=*break)
                             break
                         case default
                             break
