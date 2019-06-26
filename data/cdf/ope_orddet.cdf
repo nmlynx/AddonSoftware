@@ -290,6 +290,19 @@ rem --- Set Manual Price flag and round price
 	rem --- Use UM_SOLD related <DISPLAY> fields to update the real record fields
 	callpoint!.setColumnData("<<DISPLAY>>.UNIT_PRICE_DSP",str(unit_price))
 	gosub update_record_fields
+
+	rem --- Warn if unit price is zero
+	if unit_price=0 then
+		msg_id$="OP_ZERO_UNIT_PRICE"
+		dim msg_tokens$[1]
+		msg_tokens$[1] =callpoint!.getColumnData("<<DISPLAY>>.UNIT_PRICE_DSP")
+		gosub disp_message
+		if msg_opt$="N" then
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+		callpoint!.setStatus("ACTIVATE")
+	endif
 [[<<DISPLAY>>.UNIT_PRICE_DSP.AVEC]]
 rem --- Extend price now that grid vector has been updated, if the unit price has changed
 unit_price = num(callpoint!.getColumnData("<<DISPLAY>>.UNIT_PRICE_DSP"))
@@ -1920,7 +1933,7 @@ rem ==========================================================================
 		price=price*conv_factor
 	endif
 
-	if price=0 then
+	if price=0 and callpoint!.getVariableName()<>"<<DISPLAY>>.QTY_ORDERED_DSP" then
 		msg_id$="ENTER_PRICE"
 		gosub disp_message
 		enter_price_message = 1
