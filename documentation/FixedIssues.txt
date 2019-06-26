@@ -140,3 +140,20 @@ Message:
 Bug 9655: Skip firms 99 and ZZ in check for existing fiscal calendars.
 ----
 Modified: gl/src/glc_checkfiscalcalendars.aon
+
+=======================================================================================================================================
+Revision: 32fb95db8c2fd43f7ac67be446e967fb7dd4f468
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 6/25/2019 6:11:03 PM
+Message:
+ER 9667: Do not display the "Item Price must be entered" message when
+leaving the Qty Ord cell. Instead, warn if the unit price is zero when
+leaving the Unit Price cell.
+----
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/cdf/ope_invdet.cdf
+Modified: data/cdf/ope_orddet.cdf
+Modified: data/sync/ads_messages~[01007514OP].xml
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
