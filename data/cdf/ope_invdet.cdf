@@ -227,14 +227,16 @@ rem --- Re-calculate qty_shipped and ext_price unless already shipping extra or 
 		callpoint!.setColumnData("<<DISPLAY>>.QTY_BACKORD_DSP", "0",1)
 		if qty_ord < 0 then
 			callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", str(qty_ord),1)
-			util.disableGridColumn(Form!, user_tpl.bo_col)
-			util.disableGridColumn(Form!, user_tpl.shipped_col)
+			util.disableGridCell(Form!,user_tpl.bo_col,callpoint!.getValidationRow())
+			util.disableGridCell(Form!,user_tpl.shipped_col,callpoint!.getValidationRow())
 		else
 			if callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "Y" or callpoint!.getHeaderColumnData("OPE_INVHDR.INVOICE_TYPE") = "P" then
 				callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", str(qty_ord),1)
 			else
 				callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", "0",1)
 			endif
+			util.ensableGridCell(Form!,user_tpl.bo_col,callpoint!.getValidationRow())
+			util.enableGridCell(Form!,user_tpl.shipped_col,callpoint!.getValidationRow())
 		endif
 	endif
 
