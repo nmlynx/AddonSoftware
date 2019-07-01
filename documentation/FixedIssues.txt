@@ -183,3 +183,16 @@ Modified: data/bar/ope_invdet.xml
 Modified: data/bar/ope_orddet.xml
 Modified: data/cdf/ope_invdet.cdf
 Modified: data/cdf/ope_orddet.cdf
+
+=======================================================================================================================================
+Revision: 6b9423831514c84261136ae336d71285494a08b7
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 7/1/2019 11:07:01 AM
+Message:
+Bug 9660: If glc_ctlcreate.aon encounters an error, warn that error
+occurred creating +GLCONTROL and exit pgm via
+callpoint.setStatus("EXIT").
+----
+Modified: data/bar/gle_jrnlhdr.xml
+Modified: data/cdf/gle_jrnlhdr.cdf
+Modified: gl/src/glc_ctlcreate.aon
