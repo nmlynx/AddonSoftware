@@ -2648,7 +2648,7 @@ rem =========================================================
 rem =========================================================
 check_ship_qty: rem --- Warn if ship quantity is more than currently available.
 rem =========================================================
-	if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "Y" then
+	if callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "Y" and user_tpl.line_type$ <> "N" then
 		shipqty=num(callpoint!.getColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP"))
 		prev_available=num(userObj!.getItem(user_tpl.avail_avail).getText())
 		curr_available=prev_available+callpoint!.getDevObject("prior_qty")
