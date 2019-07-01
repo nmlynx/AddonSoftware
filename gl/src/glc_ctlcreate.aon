@@ -69,7 +69,7 @@ rem --- Retrieve miscellaneous templates
     ids$[1]="+GLCONTROL"
     ids$[2]="+PROCESS"
     call pgmdir$+"adc_template.aon",begfile,endfile,ids$[all],templates$[all],status
-    if status break
+    if status goto std_exit
 
 rem --- Dimension miscellaneous string templates
 

@@ -197,7 +197,14 @@ gl$="N"
 status=0
 source$=pgm(-2)
 call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"GL",glw11$,gl$,status
-if status<>0 goto std_exit
+if status<>0 then
+	msg_id$="GLC_CTLCREATE_ERR"
+	dim msg_tokens$[1]
+	msg_tokens$[1]=str(status)
+	gosub disp_message
+	callpoint!.setStatus("EXIT")
+	break
+endif
 
 user_tpl.glint$=gl$
 user_tpl.je$="Y"
