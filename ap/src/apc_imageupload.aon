@@ -18,6 +18,8 @@ rem --- status       : Status/0=No error (returned)
     seterr std_error
     setesc std_error
 
+    use ::ado_util.src::util
+
     enter channels[all],templates$[all],ap_type$,vendor_id$,ap_inv_no$,man_check$,scan_docs_to$,status
 
 rem --- Retrieve sysinfo data
@@ -97,7 +99,7 @@ rem --- Save selected image on server
 
     tempFileLocation$=cf!.copyFromClient()
 	nameOnServer$=response$
-	serverPath$ = stbl("+DOC_DIR_PDF")
+	serverPath$ = util.resolvePathStbls(stbl("+DOC_DIR_PDF",err=*next))
 	mkdir serverPath$,err=*next
 
     rem --- strip the path and get the ordinary file name of the uploaded file
