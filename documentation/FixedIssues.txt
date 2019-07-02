@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2019-07-01
+ Report Date:   2019-07-02
  Report Branch: AddonSoftware 19.02
  Last Release:  AddonSoftware 19.01
 =======================================================================================================================================
@@ -215,3 +215,41 @@ Modified: data/cdf/ivc_physcode.cdf
 Modified: data/sync/ads_messages~[01007514IV].xml
 Modified: prop/addon.properties
 Modified: prop/addon_en.properties
+
+=======================================================================================================================================
+Revision: 719fea93f64169f92f5722dd79fd4e69c6471b7b
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 7/2/2019 10:16:47 AM
+Message:
+Bug 9594: Used new ado_util.src method
+        method public static BBjString resolvePathStbls(BBjString pathName$)
+to resolve embedded STBLs in given path name (for this bug,
+stbl("+DOC_DIR_PDF")) per Barista's resolve_path subroutine.
+----
+Modified: ad/src/ado_util.src
+Modified: ad/src/adx_aondashboard.aon
+Modified: ap/src/apc_imageupload.aon
+Modified: ap/src/apr_apchecks.aon
+Modified: ap/src/apr_detail.aon
+Modified: ar/src/arr_detail.aon
+Modified: ar/src/arr_drillDownSalesReport.aon
+Modified: ar/src/arr_invoices.aon
+Modified: ar/src/arr_statements.aon
+Modified: ar/src/arr_stmt_demand.aon
+Modified: bm/src/bmr_costing.aon
+Modified: bm/src/bmr_detail.aon
+Modified: iv/src/ivr_itemdetail.aon
+Modified: op/src/opc_hist_invoice.aon
+Modified: op/src/opc_invoice.aon
+Modified: op/src/opc_picklist.aon
+Modified: op/src/opr_stdmsglist.aon
+Modified: po/src/por_calendar.aon
+Modified: po/src/por_poprint.aon
+Modified: po/src/por_reqprint.aon
+Modified: sf/src/sfr_calendar.aon
+Modified: sf/src/sfr_clsdwodet.aon
+Modified: sf/src/sfr_picklist.aon
+Modified: sf/src/sfr_picklist_o1.aon
+Modified: sf/src/sfr_wodetrpt.aon
+Modified: sf/src/sfr_wohardcopy.aon
+Modified: sf/src/sfr_wotrav.aon
