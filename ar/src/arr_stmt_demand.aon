@@ -14,6 +14,7 @@ rem --- Use statements and Declares
 
     use ::ado_rptControl.src::ReportControl
     use ::ado_func.src::func
+    use ::ado_util.src::util
     use ::sys/prog/bao_utilities.bbj::BarUtils
 
 	declare BBJasperReport BBjReport!
@@ -30,7 +31,7 @@ rem --- Retrieve the program path
 
 rem --- Set document Directory
 
-    docdir$=stbl("+DOC_DIR_PDF",err=*next)
+    docdir$=util.resolvePathStbls(stbl("+DOC_DIR_PDF",err=*next))
     mkdir docdir$,err=*next
 
 rem --- Retrieve sysinfo data
@@ -240,7 +241,7 @@ rem --- so it can save based on user's doc group and doc settings
 
     if rd_doc_path$="" then
         rd_doc_path$=dsk("")+dir("")
-        rd_doc_path$=BBjAPI().getFileSystem().resolvePath(stbl("+DOC_DIR_PDF",err=*next),err=*next)+"/"
+        rd_doc_path$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(stbl("+DOC_DIR_PDF",err=*next)),err=*next)+"/"
         mkdir rd_doc_path$,err=*next
     endif
 

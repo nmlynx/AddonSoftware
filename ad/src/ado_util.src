@@ -1837,6 +1837,42 @@ method_error:rem --- Method error trap/handler (11Oct2017)
     x$=stbl("+THROWN_ERR","TRUE")   
     throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
+    
+rem wgh ... 9594
+        rem /**
+        rem  * Resolves embedded STBLs in given path name.
+        rem  *
+        rem  * @param BBjString pathName$
+        rem  * @return BBjString -- resolved path name
+        rem  */
+        method public static BBjString resolvePathStbls(BBjString pathName$)
+            seterr method_error
+            resolvedPath$=pathName$
+
+            while pos("["=resolvedPath$)
+                startPos=pos("["=resolvedPath$)+1
+                endPos=pos("]"=resolvedPath$)
+                tmpStbl$=stbl(resolvedPath$(startPos,endPos-startPos),err=*break)
+                if pos(" "=tmpStbl$) then tmpStbl$=$22$+tmpStbl$+$22$
+                resolvedPath$=resolvedPath$(1,startPos-2)+tmpStbl$+resolvedPath$(endPos+1)
+            wend            
+
+            methodret resolvedPath$
+           
+method_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
 
     classend
 

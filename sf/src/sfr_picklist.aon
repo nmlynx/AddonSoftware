@@ -9,13 +9,15 @@ rem --- All Rights Reserved
     setesc std_error
     seterr std_error
 
+    use ::ado_util.src::util
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Set document Directory
 
-    docdir$=stbl("+DOC_DIR_PDF",err=*next)
+    docdir$=util.resolvePathStbls(stbl("+DOC_DIR_PDF",err=*next))
     mkdir docdir$,err=*next
 
 rem --- Retrieve sysinfo data
