@@ -163,7 +163,8 @@ rem --- Initializations
     begindex=0
     endindex=(mp+1)*(numYears-1)
     dim as[(mp+1)*numYears],us[(mp+1)*numYears],o[10],at[2],et[2],pt[2],jt[2],rt[2],n[2]
-
+    ln_desc$=Translate!.getTranslation("AON_TOTAL")+" "+Translate!.getTranslation("AON_DEBITS")+" "+Translate!.getTranslation("AON_AND")+" "+Translate!.getTranslation("AON_CREDITS")+" "+Translate!.getTranslation("AON_FOR_")
+    
 rem --- Document columns
 
     rem --- Summary Report Heading
@@ -523,6 +524,9 @@ account_break: rem --- Account number break
     debits=at[0]
     credits=at[1]
     units=at[2]
+    drcr_account$=fnmask$(glm01a.gl_account$(1,m0),m0$)
+    gosub print_totals_dr_cr
+    drcr_account$=""
     gosub print_totals
     if journal$<>"" goto new_account
 
@@ -637,8 +641,11 @@ period_break: rem --- Period break
     debits=pt[0]
     credits=pt[1]
     units=pt[2]
-    if trns_date$="" then gosub print_totals
-
+    if trns_date$="" then 
+    	gosub print_totals_dr_cr
+    	gosub print_totals
+    endif
+    
 period_balance: rem --- Print ending balance for period
 
     if export_format$="Y"
@@ -750,6 +757,60 @@ print_totals: rem --- Print totals line
             OutVect!.addItem(debit$)
             OutVect!.addItem(credit$)
             OutVect!.addItem(unit$)
+        endif
+    endif
+
+    return
+
+print_totals_dr_cr: rem --- at each break print a total debit and credit line
+
+    debit$=str(debits)
+    credit$=str(abs(credits))
+    unit$=""
+    if drcr_account$<>"" then
+    	line_desc$=ln_desc$+drcr_account$
+    else
+        line_desc$=ln_desc$+x$+" "+y$
+    endif
+    
+    if detail$="D"
+        if export_format$="Y"
+            OutVect!.addItem(export_acct$)
+            abc=fnblank(3)
+            OutVect!.addItem(export_desc$)
+            OutVect!.addItem(x$+" "+y$)
+            OutVect!.addItem(line_desc$)
+            abc=fnblank(1)
+            OutVect!.addItem(debit$)
+            OutVect!.addItem(credit$)
+            OutVect!.addItem(unit$)
+        else
+            TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+            abc=fnblank(4)
+            OutVect!.addItem(line_desc$)
+            abc=fnblank(3)
+            OutVect!.addItem(debit$)
+            OutVect!.addItem(credit$)
+            OutVect!.addItem(unit$)
+        endif
+    endif
+    
+    if detail$="S"
+        if export_format$="Y"
+	    OutVect!.addItem(export_acct$)
+	    abc=fnblank(1)
+	    rem ' OutVect!.addItem(export_desc$+" "+x$+" "+y$+" "+total$)
+	    OutVect!.addItem(export_desc$ + " " +line_desc$)
+	    OutVect!.addItem(debit$)
+	    OutVect!.addItem(credit$)
+	    OutVect!.addItem(unit$)
+        else
+	    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+	    abc=fnblank(2)
+	    OutVect!.addItem(line_desc$)
+	    OutVect!.addItem(debit$)
+	    OutVect!.addItem(credit$)
+	    OutVect!.addItem(unit$)
         endif
     endif
 
