@@ -14,12 +14,15 @@ rem --- Validate directory for aon new install location
 [[ADX_INSTALLWIZ.INSTALL_TYPE.AVAL]]
 rem --- Use adx_firmsetup form to get new firm ID, name, address, etc
 	callpoint!.setDevObject("formData",null())
-	if callpoint!.getUserInput()<>"Q" then
+	if callpoint!.getUserInput()="Q" then
+		callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_FIRM_ID","",1)
+	else
+		install_type$=callpoint!.getUserInput()
 		dim dflt_data$[3,1]
 		dflt_data$[1,0] = "DATA_LOCATION"
 		dflt_data$[1,1] = callpoint!.getColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC")+"/aon/data/"
 		dflt_data$[2,0] = "INSTALL_TYPE"
-		dflt_data$[2,1] = callpoint!.getUserInput()
+		dflt_data$[2,1] = install_type$
 		dflt_data$[3,0] = "NEW_INSTALL"
 		dflt_data$[3,1] = "1"; rem --- Yes, it's for a new install
 
@@ -27,7 +30,8 @@ rem --- Use adx_firmsetup form to get new firm ID, name, address, etc
 
 		formData!=callpoint!.getDevObject("formData")
 		if formData!=null() then
-			rem --- Exited adx_firmsetup form finishing it
+			rem --- Exited adx_firmsetup form before finishing it
+			callpoint!.setColumnData("ADX_INSTALLWIZ.INSTALL_TYPE",install_type$,1)
 			callpoint!.setStatus("ABORT")
 			break
 		endif
@@ -74,7 +78,6 @@ rem --- Open/Lock files
 	open_tables$[1]="ADM_MODULES",open_opts$[1]="OTA"
 
 	gosub open_tables
-
 [[ADX_INSTALLWIZ.<CUSTOM>]]
 validate_new_db_name: rem --- Validate new database name
 
@@ -142,7 +145,20 @@ validate_aon_dir: rem --- Validate directory for aon new install location
 	current_dir$=dir("")
 	current_drive$=dsk("",err=*next)
     	FileObject.makeDirs(new File(new_loc$))
-	chdir(new_loc$)
+	valid_path=0
+	chdir(new_loc$),err=*next; valid_path=1
+	if !valid_path then
+		msg_id$="AD_BAD_DIR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=new_loc$
+		gosub disp_message
+
+		callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC", new_loc$)
+		callpoint!.setFocus("ADX_INSTALLWIZ.NEW_INSTALL_LOC")
+		callpoint!.setStatus("ABORT")
+		abort=1
+		return
+	endif
 	new_loc$=current_drive$+dir("")
 	chdir(current_dir$)
 
