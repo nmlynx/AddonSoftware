@@ -86,12 +86,13 @@ rem --- Init totals
 
 rem --- Open files with adc
 
-    files=5,begfile=1,endfile=files
+    files=6,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ivm-01",ids$[1]="IVM_ITEMMAST"
 	files$[2]="sfm-10",ids$[2]="SFC_WOTYPECD"
 	files$[3]="arm-01",ids$[3]="ARM_CUSTMAST"
 	files$[4]="sfs_params",ids$[4]="SFS_PARAMS"
+    files$[6]="sfe-32",ids$[6]="SFE_WOSUBCNT"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
@@ -104,6 +105,7 @@ rem --- Open files with adc
 	sfc_type_dev=channels[2]
 	arm_custmast=channels[3]
 	sfs_params=channels[4]
+    sfe_wosubcnt_dev=channels[6]
 
 rem --- Dimension string templates
 
@@ -111,6 +113,7 @@ rem --- Dimension string templates
 	dim sfc_type$:templates$[2]
 	dim arm_custmast$:templates$[3]
 	dim sfs_params$:templates$[4]
+    dim sfe_wosubcnt$:templates$[6]
 	
 rem --- Get proper Op Code Maintenance table
 
@@ -138,7 +141,7 @@ rem --- Build SQL statement
 	sql_prep$=sql_prep$+"SELECT op_code, wo_op_ref, require_date, runtime_hrs "+$0a$
 	sql_prep$=sql_prep$+"     , pcs_per_hour, direct_rate, ovhd_rate, setup_time "+$0a$
 	sql_prep$=sql_prep$+"     , hrs_per_pce, unit_cost, total_time, tot_std_cost "+$0a$
-	sql_prep$=sql_prep$+"     , line_type, memo_1024 "+$0a$
+	sql_prep$=sql_prep$+"     , line_type, memo_1024, internal_seq_no "+$0a$
 	sql_prep$=sql_prep$+"  FROM sfe_wooprtn "+$0a$
 	sql_prep$=sql_prep$+" WHERE firm_id = '"+firm_id$+"' "+$0a$
 	sql_prep$=sql_prep$+"   AND wo_location = '"+wo_loc$+"' "+$0a$
@@ -191,6 +194,22 @@ rem --- Trip Read
 				data!.setFieldValue("COST_TOT",str(read_tpl.tot_std_cost:sf_amt_mask$))
 			endif
 			rs!.insert(data!)			
+
+            rem --- Get subcontract info for operations"
+            read(sfe_wosubcnt_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
+            while 1
+                readrecord(sfe_wosubcnt_dev,end=*break)sfe_wosubcnt$
+                if sfe_wosubcnt.firm_id$+sfe_wosubcnt.wo_location$+sfe_wosubcnt.wo_no$<>firm_id$+wo_loc$+wo_no$ then break
+                if sfe_wosubcnt.oper_seq_ref$<>read_tpl.internal_seq_no$ then break
+                data! = rs!.getEmptyRecordData()
+                if sfe_wosubcnt.line_type$="S" then
+                    subcnt_desc$=sfe_wosubcnt.description$
+                else
+                    subcnt_desc$=sfe_wosubcnt.ext_comments$
+                endif
+                data!.setFieldValue("COMMENTS","Sub Ref: "+sfe_wosubcnt.subcont_seq$+" - "+subcnt_desc$)
+                rs!.insert(data!)
+            wend
 		endif
 		
 		tot_recs=tot_recs+1
