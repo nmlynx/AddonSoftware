@@ -228,7 +228,7 @@ rem --- Initializations
 
         rem --- Initialize document parameters used for each individaul ACH non-negotiable check (payment) file
         params!=new HashMap()
-        if logo_filename$<>"" then params!.put("LOGO_FILE",logo_filename$)
+        params!.put("LOGO_FILE",logo_filename$)
         params!.put("BARISTA_WD",dir(""))
         params!.put("FIRM_ID",firm_id$)
         params!.put("FIRM_NAME", arsReport.name$)

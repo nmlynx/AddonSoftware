@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2019-03-28T11:35:37 -->
+<!-- 2019-07-10T15:38:19 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OPInvoiceHdr" language="groovy" pageWidth="612" pageHeight="792" columnWidth="570" leftMargin="22" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon" uuid="b146e7c7-7794-48d0-bad4-a5da78d1668b">
 	<property name="ireport.zoom" value="3.0"/>
 	<property name="ireport.x" value="1095"/>
@@ -433,7 +433,9 @@
 				</graphicElement>
 			</rectangle>
 			<image hAlign="Center">
-				<reportElement mode="Opaque" x="67" y="50" width="196" height="54" uuid="d6ed7f0d-ed69-4971-b802-f40d70fa6a8a"/>
+				<reportElement mode="Opaque" x="67" y="50" width="196" height="54" uuid="d6ed7f0d-ed69-4971-b802-f40d70fa6a8a">
+					<printWhenExpression><![CDATA[!$P{LOGO_FILE}.isEmpty()]]></printWhenExpression>
+				</reportElement>
 				<imageExpression><![CDATA[$P{LOGO_FILE}]]></imageExpression>
 			</image>
 			<textField>
