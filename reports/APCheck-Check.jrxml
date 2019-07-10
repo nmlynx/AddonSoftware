@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2019-04-01T18:47:40 -->
+<!-- 2019-07-10T14:41:14 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="APCheck-Check" language="groovy" pageWidth="612" pageHeight="258" columnWidth="612" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" resourceBundle="addon" uuid="b87b574e-b006-478b-af8e-3a2fbb2ffb53">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="30"/>
@@ -137,7 +137,9 @@
 				<textFieldExpression><![CDATA[$P{AP_ADDRESS4}]]></textFieldExpression>
 			</textField>
 			<image hAlign="Center">
-				<reportElement x="15" y="14" width="27" height="25" uuid="e0606ad1-d16a-46d8-9dcb-0ef5d2759c75"/>
+				<reportElement x="15" y="14" width="27" height="25" uuid="e0606ad1-d16a-46d8-9dcb-0ef5d2759c75">
+					<printWhenExpression><![CDATA[!$P{LOGO_FILE}.isEmpty()]]></printWhenExpression>
+				</reportElement>
 				<imageExpression><![CDATA[$P{LOGO_FILE}]]></imageExpression>
 			</image>
 			<rectangle radius="4">

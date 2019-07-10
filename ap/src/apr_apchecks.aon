@@ -89,8 +89,11 @@ rem ---                       requirement that an actual print run be completed 
     use ::bbjasper.bbj::BBJasperViewerWindow
     use ::bbjasper.bbj::BBJasperViewerControl
 
-    use ::sys/prog/bao_utilities.bbj::BarUtils
     use ::ado_util.src::util
+    use ::ado_func.src::func
+    use ::ado_rptControl.src::ReportControl
+
+    use ::sys/prog/bao_utilities.bbj::BarUtils
     
     params! = Option!.getOptionMap()
 		
@@ -119,16 +122,23 @@ rem --- Retrieve sysinfo data
     firm_name$=sysinfo.firm_name$
 	menu_option_id$=sysinfo.menu_option_id$
 
-rem --- Derive/set path and filename for logo to go on form
-
-    logo_file$=stbl("+CUST_IMAGES",err=*next)+stbl("+FORM_LOGO",err=*next)
-    logo_filenm$=""
-    if logo_file$<>""
-        logo_chn=unt
-        open (logo_chn,err=*endif)logo_file$
-        logo_filenm$=fid(logo_chn)(9)
-        close (logo_chn)
+rem --- Get logo to go on form; start w/ company logo, fall back to default logo from config if no company logo specified
+    logo_filename$=""
+    logo_filename$=func.getCompanyLogo()
+    if logo_filename$=""
+        logo_file$=stbl("+CUST_IMAGES",err=*next)+stbl("+FORM_LOGO",err=*next)
+        if logo_file$<>""
+            logo_filename$=BBjAPI().getFileSystem().resolvePath(logo_file$,err=*next)
+        endif
     endif
+    rem --- If available, use Report Control logo file
+    reportControl!=new ReportControl()
+    reportControl!.setDocExtension("pdf")
+    rpt_ctl$=reportControl!.getReportControl("APR_CHECKS")
+    rpt_ctl$=iff(rpt_ctl$="","NO","YES")
+    rpt_id$=iff(rpt_ctl$="YES",reportControl!.getReportID(),"")
+    rpt_logo_file$=iff(rpt_ctl$="YES",reportControl!.getLogoFile(),"")
+    logo_filename$=iff(rpt_logo_file$="",logo_filename$,rpt_logo_file$);rem doc-specific logo supersedes default or company logo
 
 rem --- Make Document Archive Record and Get ID
 
@@ -345,8 +355,8 @@ rem --- Assign needed jasper params
 	params!.put("AP_ADDRESS3",ap_address$(36,35))
 	params!.put("AP_ADDRESS4",ap_address$(71))
 	params!.put("AP_ADDR3_STUB",stub_address$)
-	
-	params!.put("LOGO_FILE",logo_filenm$)
+
+	params!.put("LOGO_FILE",logo_filename$)
 	
 	params!.put("MAX_STUB_ROWS",str(max_stub_rows))
 

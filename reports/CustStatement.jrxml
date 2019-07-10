@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2019-02-04T11:46:21 -->
+<!-- 2019-07-10T15:27:42 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="CustStatement" pageWidth="595" pageHeight="800" columnWidth="535" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon" uuid="af3384f6-df08-4dae-956a-8f60de737f18">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -342,6 +342,7 @@
 			<image scaleImage="RetainShape" hAlign="Center">
 				<reportElement x="315" y="99" width="225" height="69" uuid="6350f371-095d-4356-990f-0c631454a5d9">
 					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
+					<printWhenExpression><![CDATA[!$P{LOGO_FILE}.isEmpty()]]></printWhenExpression>
 				</reportElement>
 				<imageExpression><![CDATA[$P{LOGO_FILE}]]></imageExpression>
 			</image>

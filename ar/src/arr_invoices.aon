@@ -224,7 +224,7 @@ rem --- Read next Invoice Header (are-05) record
     rem --- Other params
 
         params!.put("BARISTA_WD",dir(""))
-        if logo_filename$<>"" then params!.put("LOGO_FILE",logo_filename$)
+        params!.put("LOGO_FILE",logo_filename$)
         params!.put("FIRM_ID",firm_id$)
         params!.put("AR_INV_NO",are05.ar_inv_no$)
         params!.put("CUSTOMER_ID",are05.customer_id$)
