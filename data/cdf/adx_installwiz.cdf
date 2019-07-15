@@ -86,21 +86,10 @@ validate_new_db_name: rem --- Validate new database name
 	rem --- Barista uses all upper case db names
 	db_name$=cvs(db_name$,4)
 
-	rem --- Don't allow database if it's already in Enterprise Manager, unless installing PRB Payroll for the first time
+	rem --- Don't allow database if it's already in Enterprise Manager
 	call stbl("+DIR_SYP")+"bac_em_login.bbj",SysGUI!,Form!,rdAdmin!,rd_status$
 	if rd_status$="ADMIN" then
 		db! = rdAdmin!.getDatabase(db_name$,err=dbNotFound)
-
-		rem --- Okay to use this db if PRB Payroll is being installed, and it does not exist yet at new install location.
-		dim adm_modules$:fnget_tpl$("ADM_MODULES")
-		findrecord(fnget_dev("ADM_MODULES"),key="01004419"+"PRB",dom=*next)adm_modules$
-		if adm_modules.sys_install$="Y" then
-			prbabsDir_exists=0
-			testChan=unt
-			open(testChan,err=*next)new_loc$ + "/prbabs/data"; prbabsDir_exists=1
-			close(testChan,err=*next)
-			if !prbabsDir_exists then goto dbNotFound
-		endif
 
 		rem --- This db already exists, so don't allow it
 		msg_id$="AD_DB_EXISTS"
