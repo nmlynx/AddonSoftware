@@ -1,6 +1,90 @@
+[[ADX_INSTALLWIZ.INSTALL_TYPE.BINP]]
+rem --- Use adx_firmsetup form to get new firm ID, name, address, etc
+	install_type$=callpoint!.getUserInput()
+	callpoint!.setDevObject("formData",null())
+	if install_type$<>"Q" and cvs(callpoint!.getColumnData("ADX_INSTALLWIZ.NEW_FIRM_ID"),2)="" then
+		if install_type$<>callpoint!.getColumnData("ADX_INSTALLWIZ.INSTALL_TYPE") then
+			dim dflt_data$[3,1]
+			dflt_data$[1,0] = "DATA_LOCATION"
+			dflt_data$[1,1] = callpoint!.getColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC")+"/aon/data/"
+			dflt_data$[2,0] = "INSTALL_TYPE"
+			dflt_data$[2,1] = install_type$
+			dflt_data$[3,0] = "NEW_INSTALL"
+			dflt_data$[3,1] = "1"; rem --- Yes, it's for a new install
+
+			call stbl("+DIR_SYP")+"bam_run_prog.bbj","ADX_FIRMSETUP",stbl("+USER_ID"),"MNT","",table_chans$[all],"",dflt_data$[all]
+
+			formData!=callpoint!.getDevObject("formData")
+			if formData!=null() then
+				rem --- Exited adx_firmsetup form before finishing it
+				callpoint!.setColumnData("ADX_INSTALLWIZ.INSTALL_TYPE",install_type$,1)
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+
+			rem --- Display new firm ID
+			callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_FIRM_ID",formData!.getProperty("NEW_FIRM_ID"),1)
+			callpoint!.setFocus("ADX_INSTALLWIZ.APP_HELP")
+			callpoint!.setStatus("ACTIVATE")
+		endif
+	endif
+[[ADX_INSTALLWIZ.BASE_DIR.AVAL]]
+rem --- Validate base directory for installation
+
+	new_loc$ = callpoint!.getUserInput()
+	gosub validate_base_dir
+	if abort then
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+	callpoint!.setUserInput(new_loc$)
+
+rem --- Update new install loc
+	major_ver$=callpoint!.getDevObject("major_ver")
+	minor_ver$=callpoint!.getDevObject("minor_ver")
+	callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC",new_loc$+"/"+major_ver$+"/"+minor_ver$,1)
+	
+[[ADX_INSTALLWIZ.VERSION_NEUTRAL.AVAL]]
+rem --- Initialize and enable/disable BASE_DIR and NEW_INSTALL_LOC
+	if num(callpoint!.getUserInput()) then
+		rem --- Cannot use version-neutral install and Quick Copy together
+		if callpoint!.getColumnData("ADX_INSTALLWIZ.INSTALL_TYPE")="Q" then
+			msg_id$="AD_VER_NEUT_PLUS_QC"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+
+			callpoint!.setColumnData("ADX_INSTALLWIZ.VERSION_NEUTRAL",callpoint!.getColumnData("ADX_INSTALLWIZ.VERSION_NEUTRAL"),1)
+			break
+		endif
+
+		rem --- Version-neutral install
+		callpoint!.setColumnEnabled("ADX_INSTALLWIZ.BASE_DIR",1)
+		callpoint!.setColumnEnabled("ADX_INSTALLWIZ.NEW_INSTALL_LOC",0)
+		callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC","",1)
+
+		base_dir$=callpoint!.getColumnData("ADX_INSTALLWIZ.BASE_DIR")
+		if cvs(base_dir$,2)<>"" then
+			major_ver$=callpoint!.getDevObject("major_ver")
+			minor_ver$=callpoint!.getDevObject("minor_ver")
+			callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC",base_dir$+"/"+major_ver$+"/"+minor_ver$,1)
+		endif
+	else
+		rem --- Not a version-neutral install
+		callpoint!.setColumnEnabled("ADX_INSTALLWIZ.BASE_DIR",0)
+		callpoint!.setColumnEnabled("ADX_INSTALLWIZ.NEW_INSTALL_LOC",1)
+		callpoint!.setColumnData("ADX_INSTALLWIZ.BASE_DIR","",1)
+
+		new_install_loc$=callpoint!.getColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC")
+		if cvs(new_install_loc$,2)<>"" then
+			callpoint!.setColumnData("ADX_INSTALLWIZ.BASE_DIR",new_install_loc$,1)
+		endif
+	end
+
 [[ADX_INSTALLWIZ.AREC]]
 rem --- Initialize new record
-	callpoint!.setColumnData("ADX_INSTALLWIZ.INSTALL_TYPE","Q")
+	callpoint!.setColumnData("ADX_INSTALLWIZ.INSTALL_TYPE","D")
+	callpoint!.setColumnData("ADX_INSTALLWIZ.VERSION_NEUTRAL","1")
+	callpoint!.setColumnEnabled("ADX_INSTALLWIZ.NEW_INSTALL_LOC",0)
 [[ADX_INSTALLWIZ.NEW_INSTALL_LOC.AVAL]]
 rem --- Validate directory for aon new install location
 
@@ -10,36 +94,50 @@ rem --- Validate directory for aon new install location
 		callpoint!.setStatus("ABORT")
 		break
 	endif
-	callpoint!.setUserInput( new_loc$)
+	callpoint!.setUserInput(new_loc$)
+
+rem --- Update base dir
+	callpoint!.setColumnData("ADX_INSTALLWIZ.BASE_DIR",new_loc$,1)
 [[ADX_INSTALLWIZ.INSTALL_TYPE.AVAL]]
 rem --- Use adx_firmsetup form to get new firm ID, name, address, etc
+	install_type$=callpoint!.getUserInput()
 	callpoint!.setDevObject("formData",null())
-	if callpoint!.getUserInput()="Q" then
-		callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_FIRM_ID","",1)
-	else
-		install_type$=callpoint!.getUserInput()
-		dim dflt_data$[3,1]
-		dflt_data$[1,0] = "DATA_LOCATION"
-		dflt_data$[1,1] = callpoint!.getColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC")+"/aon/data/"
-		dflt_data$[2,0] = "INSTALL_TYPE"
-		dflt_data$[2,1] = install_type$
-		dflt_data$[3,0] = "NEW_INSTALL"
-		dflt_data$[3,1] = "1"; rem --- Yes, it's for a new install
-
-		call stbl("+DIR_SYP")+"bam_run_prog.bbj","ADX_FIRMSETUP",stbl("+USER_ID"),"MNT","",table_chans$[all],"",dflt_data$[all]
-
-		formData!=callpoint!.getDevObject("formData")
-		if formData!=null() then
-			rem --- Exited adx_firmsetup form before finishing it
-			callpoint!.setColumnData("ADX_INSTALLWIZ.INSTALL_TYPE",install_type$,1)
+	if install_type$="Q" then
+		if num(callpoint!.getColumnData("ADX_INSTALLWIZ.VERSION_NEUTRAL")) then
+			msg_id$="AD_VER_NEUT_PLUS_QC"
+			gosub disp_message
 			callpoint!.setStatus("ABORT")
+
+			callpoint!.setColumnData("ADX_INSTALLWIZ.INSTALL_TYPE",callpoint!.getColumnData("ADX_INSTALLWIZ.INSTALL_TYPE"),1)
 			break
 		endif
 
-		rem --- Display new firm ID
-		callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_FIRM_ID",formData!.getProperty("NEW_FIRM_ID"),1)
-		callpoint!.setFocus("ADX_INSTALLWIZ.APP_HELP")
-		callpoint!.setStatus("ACTIVATE")
+		callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_FIRM_ID","",1)
+	else
+		if install_type$<>callpoint!.getColumnData("ADX_INSTALLWIZ.INSTALL_TYPE") then
+			dim dflt_data$[3,1]
+			dflt_data$[1,0] = "DATA_LOCATION"
+			dflt_data$[1,1] = callpoint!.getColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC")+"/aon/data/"
+			dflt_data$[2,0] = "INSTALL_TYPE"
+			dflt_data$[2,1] = install_type$
+			dflt_data$[3,0] = "NEW_INSTALL"
+			dflt_data$[3,1] = "1"; rem --- Yes, it's for a new install
+
+			call stbl("+DIR_SYP")+"bam_run_prog.bbj","ADX_FIRMSETUP",stbl("+USER_ID"),"MNT","",table_chans$[all],"",dflt_data$[all]
+
+			formData!=callpoint!.getDevObject("formData")
+			if formData!=null() then
+				rem --- Exited adx_firmsetup form before finishing it
+				callpoint!.setColumnData("ADX_INSTALLWIZ.INSTALL_TYPE",install_type$,1)
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+
+			rem --- Display new firm ID
+			callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_FIRM_ID",formData!.getProperty("NEW_FIRM_ID"),1)
+			callpoint!.setFocus("ADX_INSTALLWIZ.APP_HELP")
+			callpoint!.setStatus("ACTIVATE")
+		endif
 	endif
 	
 [[ADX_INSTALLWIZ.DB_NAME.AVAL]]
@@ -78,6 +176,20 @@ rem --- Open/Lock files
 	open_tables$[1]="ADM_MODULES",open_opts$[1]="OTA"
 
 	gosub open_tables
+
+	admModules_dev=fnget_dev("ADM_MODULES")
+	dim admModules$:fnget_tpl$("ADM_MODULES")
+
+rem --- Get this version of Addon's Admin module
+	admModules.version_id$="??.??"
+	major_ver$="v??"
+	minor_ver$="v??"
+	findrecord(admModules_dev,key="01007514"+"AD ",dom=*next)admModules$
+	version_id$=admModules.version_id$
+	major_ver$="v"+str(num(version_id$(1,pos("."=version_id$)-1)),"00")
+	minor_ver$="v"+str(num(version_id$(pos("."=version_id$)+1)),"00")
+	callpoint!.setDevObject("major_ver",major_ver$)
+	callpoint!.setDevObject("minor_ver",minor_ver$)
 [[ADX_INSTALLWIZ.<CUSTOM>]]
 validate_new_db_name: rem --- Validate new database name
 
@@ -149,6 +261,9 @@ validate_aon_dir: rem --- Validate directory for aon new install location
 		return
 	endif
 	new_loc$=current_drive$+dir("")
+	while len(new_loc$) and pos(new_loc$(len(new_loc$),1)="/\")
+		new_loc$ = new_loc$(1, len(new_loc$)-1)
+	wend
 	chdir(current_dir$)
 
 	rem --- Don’t allow current download location
@@ -211,6 +326,109 @@ validate_aon_dir: rem --- Validate directory for aon new install location
 
 	return
 
+validate_base_dir: rem --- Validate base directory for installation
+
+	abort=0
+
+	rem --- Flip directory path separators
+
+	filePath$=new_loc$
+	gosub fix_path
+	new_loc$=filePath$
+
+	rem --- Remove trailing slashes (/ and \) from aon new install location
+
+	while len(new_loc$) and pos(new_loc$(len(new_loc$),1)="/\")
+		new_loc$ = new_loc$(1, len(new_loc$)-1)
+	wend
+
+	rem --- Fix path for this OS
+	current_dir$=dir("")
+	current_drive$=dsk("",err=*next)
+    	FileObject.makeDirs(new File(new_loc$))
+	valid_path=0
+	chdir(new_loc$),err=*next; valid_path=1
+	if !valid_path then
+		msg_id$="AD_BAD_DIR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=new_loc$
+		gosub disp_message
+
+		callpoint!.setColumnData("ADX_INSTALLWIZ.BASE_DIR", new_loc$)
+		callpoint!.setFocus("ADX_INSTALLWIZ.BASE_DIR")
+		callpoint!.setStatus("ABORT")
+		abort=1
+		return
+	endif
+	new_loc$=current_drive$+dir("")
+	while len(new_loc$) and pos(new_loc$(len(new_loc$),1)="/\")
+		new_loc$ = new_loc$(1, len(new_loc$)-1)
+	wend
+	chdir(current_dir$)
+
+	rem --- Don’t allow current download location
+
+	testLoc$=new_loc$
+	gosub verify_not_download_loc
+	if !loc_ok
+		callpoint!.setColumnData("ADX_INSTALLWIZ.BASE_DIR", new_loc$)
+		callpoint!.setFocus("ADX_INSTALLWIZ.BASE_DIR")
+		callpoint!.setStatus("ABORT")
+		abort=1
+		return
+	endif
+
+	rem --- Read-Write-Execute directory permissions are required
+
+	if !FileObject.isDirWritable(new_loc$)
+		msg_id$="AD_DIR_NOT_WRITABLE"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=new_loc$
+		gosub disp_message
+
+		callpoint!.setColumnData("ADX_INSTALLWIZ.BASE_DIR", new_loc$)
+		callpoint!.setFocus("ADX_INSTALLWIZ.BASE_DIR")
+		callpoint!.setStatus("ABORT")
+		abort=1
+		return
+	endif
+
+	rem --- Cannot be currently used by Addon and PRB Payroll
+
+	major_ver$=callpoint!.getDevObject("major_ver")
+	minor_ver$=callpoint!.getDevObject("minor_ver")
+	aonDir_exists=0
+	prbabsDir_exists=0
+	testChan=unt
+	open(testChan,err=*next)new_loc$+"/"+major_ver$+"/"+minor_ver$+"/aon/data"; aonDir_exists=1
+	close(testChan,err=*next)
+	testChan=unt
+	open(testChan,err=*next)new_loc$+"/"+major_ver$+"/"+minor_ver$+"/prbabs/data"; prbabsDir_exists=1
+	close(testChan,err=*next)
+	if !aonDir_exists and !prbabsDir_exists then return
+
+	rem --- Location is used by Addon
+	callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC",new_loc$+"/"+major_ver$+"/"+minor_ver$,1)
+	msg_id$="AD_INSTALL_LOC_USED"
+	gosub disp_message
+
+	rem --- If PRB Payroll is being installed, and location is not currently used by PRB Payroll, 
+	rem --- ask if they want to install PRB Payroll there too. 
+	dim adm_modules$:fnget_tpl$("ADM_MODULES")
+	findrecord(fnget_dev("ADM_MODULES"),key="01004419"+"PRB",dom=*next)adm_modules$
+	if adm_modules.sys_install$="Y" and !prbabsDir_exists then
+		msg_id$="AD_INSTALL_PR_HERE"
+		gosub disp_message
+		if msg_opt$="Y" then return
+	endif
+
+	callpoint!.setColumnData("ADX_INSTALLWIZ.BASE_DIR", new_loc$)
+	callpoint!.setFocus("ADX_INSTALLWIZ.BASE_DIR")
+	callpoint!.setStatus("ABORT")
+	abort=1
+
+	return
+
 verify_not_download_loc: rem --- Verify not using current download location
 
 	loc_ok=1
@@ -262,16 +480,22 @@ fix_path: rem --- Flip directory path separators
 	wend
 	return
 [[ADX_INSTALLWIZ.ASVA]]
-rem --- Validate directory for aon new install location
+rem --- Validate directory
+	if num(callpoint!.getColumnData("ADX_INSTALLWIZ.VERSION_NEUTRAL")) then
+		rem --- Validate base directory for installation
+		new_loc$ = callpoint!.getColumnData("ADX_INSTALLWIZ.BASE_DIR")
+		gosub validate_base_dir
 
-	new_loc$ = callpoint!.getColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC")
-	gosub validate_aon_dir
+		callpoint!.setColumnData("ADX_INSTALLWIZ.BASE_DIR", new_loc$)
+		if abort then break
+	else
+		rem --- Validate directory for aon new install location
+		new_loc$ = callpoint!.getColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC")
+		gosub validate_aon_dir
 
-	if pos(new_loc$(len(new_loc$),1)="\/")<>0
-		new_loc$=new_loc$(1,len(new_loc$)-1)
+		callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC", new_loc$)
+		if abort then break
 	endif
-	callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC", new_loc$)
-	if abort then break
 
 rem -- Validate new firm ID with demo data
 
@@ -283,4 +507,18 @@ rem -- Validate new firm ID with demo data
 	install_type$=callpoint!.getColumnData("ADX_INSTALLWIZ.INSTALL_TYPE")
 	focus$="ADX_INSTALLWIZ.NEW_FIRM_ID"
 	gosub validate_firm_id
-	if abort then break
+	if abort then
+		callpoint!.setFocus("ADX_INSTALLWIZ.INSTALL_TYPE")
+		break
+	endif
+
+rem --- Cannot use version-neutral install and Quick Copy together
+	if callpoint!.getColumnData("ADX_INSTALLWIZ.INSTALL_TYPE")="Q" and
+:	num(callpoint!.getColumnData("ADX_INSTALLWIZ.VERSION_NEUTRAL")) then
+		msg_id$="AD_VER_NEUT_PLUS_QC"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+
+		callpoint!.setFocus("ADX_INSTALLWIZ.INSTALL_TYPE")
+		break
+	endif
