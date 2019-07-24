@@ -135,7 +135,7 @@ rem --- Get this version of Addon's Admin module
 	findrecord(admModules_dev,key="01007514"+"AD ",dom=*next)admModules$
 	version_id$=admModules.version_id$
 	major_ver$="v"+str(num(version_id$(1,pos("."=version_id$)-1)),"00")
-	minor_ver$="v"+str(num(version_id$(pos("."=version_id$)+1)),"00")
+	minor_ver$="v"+str(num(version_id$)*100,"0000")
 	callpoint!.setDevObject("major_ver",major_ver$)
 	callpoint!.setDevObject("minor_ver",minor_ver$)
 [[ADX_INSTALLWIZ.<CUSTOM>]]
