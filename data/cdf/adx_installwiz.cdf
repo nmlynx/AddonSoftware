@@ -128,10 +128,10 @@ rem --- Open/Lock files
 rem --- Get this version of Addon's Admin module
 	version_id$="??.??"
 	major_ver$="v??"
-	minor_ver$="v??"
+	minor_ver$="v????"
 	call stbl("+DIR_SYP")+"bax_version.bbj",version_id$,lic_id$
-	major_ver$="v"+str(num(version_id$),"00")
-	minor_ver$="v"+str(num(version_id$)*100,"0000")
+	major_ver$="v"+str(num(version_id$):"00")
+	minor_ver$="v"+str(num(version_id$)*100:"0000")
 	callpoint!.setDevObject("major_ver",major_ver$)
 	callpoint!.setDevObject("minor_ver",minor_ver$)
 [[ADX_INSTALLWIZ.<CUSTOM>]]
