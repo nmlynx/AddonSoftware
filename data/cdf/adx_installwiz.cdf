@@ -125,16 +125,12 @@ rem --- Open/Lock files
 
 	gosub open_tables
 
-	admModules_dev=fnget_dev("ADM_MODULES")
-	dim admModules$:fnget_tpl$("ADM_MODULES")
-
 rem --- Get this version of Addon's Admin module
-	admModules.version_id$="??.??"
+	version_id$="??.??"
 	major_ver$="v??"
 	minor_ver$="v??"
-	findrecord(admModules_dev,key="01007514"+"AD ",dom=*next)admModules$
-	version_id$=admModules.version_id$
-	major_ver$="v"+str(num(version_id$(1,pos("."=version_id$)-1)),"00")
+	call stbl("+DIR_SYP")+"bax_version.bbj",version_id$,lic_id$
+	major_ver$="v"+str(num(version_id$),"00")
 	minor_ver$="v"+str(num(version_id$)*100,"0000")
 	callpoint!.setDevObject("major_ver",major_ver$)
 	callpoint!.setDevObject("minor_ver",minor_ver$)
@@ -438,9 +434,10 @@ rem -- Get firm if not using Quick Copy
 		dflt_data$[3,0] = "NEW_INSTALL"
 		dflt_data$[3,1] = "1"; rem --- Yes, it's for a new install
 
+		callpoint!.setDevObject("formData",null())
+
 		call stbl("+DIR_SYP")+"bam_run_prog.bbj","ADX_FIRMSETUP",stbl("+USER_ID"),"MNT","",table_chans$[all],"",dflt_data$[all]
 
-		callpoint!.setDevObject("formData",null())
 		formData!=callpoint!.getDevObject("formData")
 		if formData!=null() then
 			rem --- Exited adx_firmsetup form before finishing it
