@@ -1,3 +1,47 @@
+[[APE_INVOICEHDR.AP_INV_NO.BDRL]]
+rem --- Allow selecting invoice from the drilldown
+	vendor_id$=callpoint!.getColumnData("APE_INVOICEHDR.VENDOR_ID")
+	ap_type$=callpoint!.getColumnData("APE_INVOICEHDR.AP_TYPE")
+
+	selected_key$ = ""
+	dim filter_defs$[2,2]
+	filter_defs$[0,0]="APT_INVOICEHDR.FIRM_ID"
+	filter_defs$[0,1]="='"+firm_id$+"'"
+	filter_defs$[0,2]="LOCK"
+	filter_defs$[1,0]="APT_INVOICEHDR.VENDOR_ID"
+	filter_defs$[1,1]="='"+vendor_id$+"'"
+	filter_defs$[1,2]="LOCK"
+	filter_defs$[2,0]="APT_INVOICEHDR.AP_TYPE"
+	filter_defs$[2,1]="='"+ap_type$+"'"
+	filter_defs$[2,2]="LOCK"
+
+	dim search_defs$[3]
+
+	call stbl("+DIR_SYP")+"bax_query.bbj",
+:		gui_dev,
+:		Form!,
+:		"AP_INVBYVEND",
+:		"",
+:		table_chans$[all],
+:		selected_key$,
+:		filter_defs$[all],
+:		search_defs$[all],
+:		"",
+:		""
+
+	if selected_key$<>""
+		call stbl("+DIR_SYP")+"bac_key_template.bbj",
+:			"APT_INVOICEHDR",
+:			"PRIMARY",
+:			aptInvoiceHdr_key$,
+:			table_chans$[all],
+:			status$
+		dim aptInvoiceHdr_key$:aptInvoiceHdr_key$
+		aptInvoiceHdr_key$=selected_key$
+		callpoint!.setColumnData("APE_INVOICEHDR.AP_INV_NO",aptInvoiceHdr_key.ap_inv_no$,1)
+	endif	
+
+callpoint!.setStatus("ACTIVATE-ABORT")
 [[APE_INVOICEHDR.AOPT-VIDI]]
 rem --- Display invoice images in the browser
 	invimage_dev=fnget_dev("1APT_INVIMAGE")
@@ -80,8 +124,6 @@ if sel_key$<>""
 	callpoint!.setColumnData("APE_INVOICEHDR.VENDOR_ID",apm_vend_key.vendor_id$,1)
 endif	
 callpoint!.setStatus("ACTIVATE-ABORT")
-
-
 [[APE_INVOICEHDR.AWIN]]
 rem --- setup utility
 
