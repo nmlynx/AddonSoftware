@@ -130,8 +130,8 @@ rem --- Get this version of Addon's Admin module
 	major_ver$="v??"
 	minor_ver$="v????"
 	call stbl("+DIR_SYP")+"bax_version.bbj",version_id$,lic_id$
-	major_ver$="v"+str(num(version_id$):"00")
-	minor_ver$="v"+str(num(version_id$)*100:"0000")
+	major_ver$="v"+str(num(version_id$,err=*next):"00",err=*next)
+	minor_ver$="v"+str(num(version_id$,err=*next)*100:"0000",err=*next)
 	callpoint!.setDevObject("major_ver",major_ver$)
 	callpoint!.setDevObject("minor_ver",minor_ver$)
 [[ADX_INSTALLWIZ.<CUSTOM>]]
