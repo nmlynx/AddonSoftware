@@ -674,12 +674,11 @@ rem --- updates grid and vectors accordingly
 			rem --- Look for other invoices this vendor that may have been previously approved, and demote to partially approved since we're now over threshold
             if thisVendor_total-inv_amt < callpoint!.getDevObject("two_sig_amt")
                 for demote_row=0 to vectInvoicesMaster!.size()-1 step num(user_tpl.MasterCols)
-                    if vectInvoicesMaster!.get(demote_row+4)>vendor_id$ then break
-                    if vectInvoicesMaster!.get(demote_row+4)=vendor_id$ and vectInvoicesMaster!.get(demote_row+1)="4"
+                    if vectInvoicesMaster!.get(demote_row+5)=vendor_id$ and vectInvoicesMaster!.get(demote_row+1)="4"
                         vectInvoicesMaster!.set(demote_row+1,"3")
-                        vend_id$=vectInvoicesMaster!.get(demote_row+4)
-                        ap_type$=vectInvoicesMaster!.get(demote_row+3)
-                        inv_no$=vectInvoicesMaster!.get(demote_row+6)
+                        vend_id$=vectInvoicesMaster!.get(demote_row+5)
+                        ap_type$=vectInvoicesMaster!.get(demote_row+4)
+                        inv_no$=vectInvoicesMaster!.get(demote_row+7)
                         if vectInvoicesMaster!.get(demote_row)="Y"
                             gosub get_vectInvoices_offset
                             if vect_offset>=0
@@ -714,11 +713,11 @@ rem --- updates grid and vectors accordingly
                             ach_payments=num(callpoint!.getDevObject("ach_payments"))
                             tot_payments=num(callpoint!.getDevObject("tot_payments"))
                             if gridInvoices!.getCellStyle(row_no,2)=SysGUI!.GRID_STYLE_CHECKED then
-				ach_payments=ach_payments-num(vectInvoicesMaster!.get(demote_row+13))
+				ach_payments=ach_payments-num(vectInvoicesMaster!.get(demote_row+14))
                             else
-				chk_payments=chk_payments-num(vectInvoicesMaster!.get(demote_row+13))
+				chk_payments=chk_payments-num(vectInvoicesMaster!.get(demote_row+14))
                             endif
-                            tot_payments=tot_payments-num(vectInvoicesMaster!.get(demote_row+13))
+                            tot_payments=tot_payments-num(vectInvoicesMaster!.get(demote_row+14))
                             callpoint!.setDevObject("chk_payments",str(chk_payments))
                             callpoint!.setDevObject("ach_payments",str(ach_payments))
                             callpoint!.setDevObject("tot_payments",str(tot_payments))
@@ -726,8 +725,8 @@ rem --- updates grid and vectors accordingly
                             callpoint!.setColumnData("<<DISPLAY>>.ACH_PAYMENTS",str(ach_payments),1)
                             callpoint!.setColumnData("<<DISPLAY>>.TOT_PAYMENTS",str(tot_payments),1)
                             if apt01a.discount_amt<0 and apt01a.invoice_amt>0 then apt01a.discount_amt=0
-                            vectInvoicesMaster!.set(demote_row+12,apt01a.discount_amt$)
-                            vectInvoicesMaster!.set(demote_row+13,"0")
+                            vectInvoicesMaster!.set(demote_row+13,apt01a.discount_amt$)
+                            vectInvoicesMaster!.set(demote_row+14,"0")
                         endif
                     endif
                 next demote_row
@@ -2027,14 +2026,13 @@ rem --- also promotes remaining invoice(s) for same vendor if the undo has put u
     if callpoint!.getDevObject("two_sig_req") and thisVendor_total< num(callpoint!.getDevObject("two_sig_amt"))
         rem --- iterate through other invoices this vendor and promote to final approval, since we are now under 2 sig threshold
         for promote_row=0 to vectInvoicesMaster!.size()-1 step num(user_tpl.MasterCols)
-            if vectInvoicesMaster!.get(promote_row+4)>vendor_id$ then break
-            if vectInvoicesMaster!.get(promote_row+4)=vendor_id$ and vectInvoicesMaster!.get(promote_row+1)="3"
+            if vectInvoicesMaster!.get(promote_row+5)=vendor_id$ and vectInvoicesMaster!.get(promote_row+1)="3"
                 vectInvoicesMaster!.set(promote_row+1,"4")
-                vectInvoicesMaster!.set(promote_row+13,vectInvoicesMaster!.get(promote_row+10))
+                vectInvoicesMaster!.set(promote_row+14,vectInvoicesMaster!.get(promote_row+11))
                 if vectInvoicesMaster!.get(promote_row)="Y"
-                    vend_id$=vectInvoicesMaster!.get(promote_row+4)
-                    ap_type$=vectInvoicesMaster!.get(promote_row+3)
-                    inv_no$=vectInvoicesMaster!.get(promote_row+6)
+                    vend_id$=vectInvoicesMaster!.get(promote_row+5)
+                    ap_type$=vectInvoicesMaster!.get(promote_row+4)
+                    inv_no$=vectInvoicesMaster!.get(promote_row+7)
                     gosub get_vectInvoices_offset
                     if vect_offset>=0
                     rem -- if newly-promoted invoice is showing in the grid, set vectInvoices and grid, too
