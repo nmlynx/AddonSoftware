@@ -1015,16 +1015,11 @@ rem ==========================================================================
 		endif
 	next row
 
-	if pos("A"=usertype$) then
-		rem --- User is an approver
-		if len(not_reviewed$) <> 0 then msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_INV_NOT_REVIEWED:")+" <br>" + $0A$ + "<table border=1>" + not_reviewed$ + "</table><br>" +$0A$
-		if len(reviewed_but_not_approved$) <> 0 then msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_INV_REVIEWED_NO_APPROVALS:")+" <br>" + $0A$ + "<table border=1>" + reviewed_but_not_approved$ + "</table><br>" + $0A$
-		if len(partially_approved$) <> 0 then msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_INV_REVIEWED_REQUIRE_ANOTHER_APPROVAL:")+" <br>" + $0A$ + "<table border=1>" + partially_approved$ + "</table><br>" + $0A$
-		if len(approved_invoices$) <> 0 then msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_INV_APPROVED_READY_FOR_PAYMENT:")+" <br>" + $0A$ + "<table border=1>" + approved_invoices$ + "</table><br>" + $0A$
-	else
-		rem --- User is the reviewer
-		msgHtml$ = msgHtml$ + "<table border=1>" + reviewed_but_not_approved$ + partially_approved$ + "</table>" + $0A$
-	endif	
+	if len(not_reviewed$) <> 0 then msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_INV_NOT_REVIEWED:")+" <br>" + $0A$ + "<table border=1>" + not_reviewed$ + "</table><br>" +$0A$
+	if len(reviewed_but_not_approved$) <> 0 then msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_INV_REVIEWED_NO_APPROVALS:")+" <br>" + $0A$ + "<table border=1>" + reviewed_but_not_approved$ + "</table><br>" + $0A$
+	if len(partially_approved$) <> 0 then msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_INV_REVIEWED_REQUIRE_ANOTHER_APPROVAL:")+" <br>" + $0A$ + "<table border=1>" + partially_approved$ + "</table><br>" + $0A$
+	if len(approved_invoices$) <> 0 then msgHtml$ = msgHtml$ + Translate!.getTranslation("AON_INV_APPROVED_READY_FOR_PAYMENT:")+" <br>" + $0A$ + "<table border=1>" + approved_invoices$ + "</table><br>" + $0A$
+
 	gosub build_bui_url
 	msgHtml$ = msgHtml$ + "<br><a href=" + chr(34) + buiurl$ +chr(34) + ">"+Translate!.getTranslation("AON_LAUNCH_BARISTA_IN_BROWSER")+"</a><br>"
 	msgHtml$ = msgHtml$ + "</body></html>"
@@ -1035,12 +1030,21 @@ rem ==========================================================================
 
 	if pos("A"=usertype$)=0 and not_reviewed<>0 then
 		rem --- Reviewer only, not an approver.
-		rem --- Report it and go, all invoices must be reviewed prior to emailing the approvers
+		rem --- Report it and give option to send email now or wait until all invoices are approved
 		msg$ = msg$ + Translate!.getTranslation("AON_INV_AWAITING_REVIEW")
-		msg_id$="GENERIC_WARN"
+		if callpoint!.getDevObject("send_email")  then
+			rem ---- give them a choice
+			msg_id$="AP_PAYAUTH_EMAIL"
+			msg$ = msg$+$0A$+Translate!.getTranslation("AON_INV_AWAITING_REVIEW_EMAIL_OPTION","You may notify approvers now, or wait until all invoices have been reviewed.",1)+$0A$
+		else
+			msg_id$="GENERIC_OK"
+		endif
 		dim msg_tokens$[1]
 		msg_tokens$[1]=msg$
 		gosub disp_message
+		if msg_opt$="Y" then
+			gosub queue_email
+		endif
 	else
 		if pos("A"=usertype$)=0 and not_reviewed = 0 and reviewed_but_not_approved = 0 and partially_approved = 0 then
 			rem --- Reviewer only, not an approver.
@@ -1052,7 +1056,7 @@ rem ==========================================================================
 			gosub disp_message
 		else
 			if pos("A"=usertype$)=0 then
-				rem --- Reviewer only, not an approver.
+				rem --- Reviewer only, not an approver. All invoices approved.
 				if callpoint!.getDevObject("send_email")  then
 					rem ---- give them a choice
 					msg_id$="AP_PAYAUTH_EMAIL"
