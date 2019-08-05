@@ -167,7 +167,7 @@ format_address_block:
 
     address$=""
 	read record(arm01,key=firm_id$ + customer$)arm01$
-    address$=arm01.addr_line_1$+arm01.addr_line_2$+arm01.addr_line_3$+arm01.addr_line_4$+arm01.city$+arm01.state_code$+arm01.zip_code$
+    address$=arm01.addr_line_1$+arm01.addr_line_2$+arm01.addr_line_3$+arm01.addr_line_4$+arm01.city$+arm01.state_code$+arm01.zip_code$+arm01.cntry_id$
     call pgmdir$+"adc_address.aon",address$,24,5,9,30
 	dim tmp_address$(180)
 	y=151
