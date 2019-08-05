@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2019-08-01
+ Report Date:   2019-08-05
  Report Branch: AddonSoftware 19.02
  Last Release:  AddonSoftware 19.01
 =======================================================================================================================================
@@ -463,5 +463,14 @@ ER 9726 - AP - Provide user with option to send payment selection review email e
 Modified: data/bar/ape_payselect.xml
 Modified: data/cdf/ape_payselect.cdf
 
-
-
+=======================================================================================================================================
+Revision: e0af88dc647a439ea67f44a8bdf8a52471d0ee26
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 8/5/2019 9:21:20 AM
+Message:
+Bug 7165: Added arm_custmast.cntry_id to the address block for Customer
+Statements. OP Invoices/Pick Lists already use custmast.cntry_id in the
+address block, and expand it out to the full country name using
+adc_country.
+----
+Modified: sprocs/CUSTSTATEMENTS.prc
