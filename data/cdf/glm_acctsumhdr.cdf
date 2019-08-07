@@ -1029,6 +1029,7 @@ rem =======================================================
 		endif
 		if periodsAligned then
 			gls_cur_yr$=callpoint!.getDevObject("gls_cur_yr")
+			redim glw_acctsummary$
 			readrecord(glw_acctsummary_dev,key=glm02_key$,knum="BY_ACCOUNT_YEAR",dom=*next)glw_acctsummary$
 			dim glm02a$:glm02_tpl$
 			call stbl("+DIR_PGM")+"adc_copyfile.aon",glw_acctsummary$,glm02a$,status

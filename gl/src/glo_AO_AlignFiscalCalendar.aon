@@ -229,8 +229,13 @@ AlignFiscalCalendar_error:rem --- Method error trap/handler (11Oct2017)
                     dim gltTransDetail$:#tplGltTransDetail$
                     read(#devGltTransDetail,key=#firmID$+startDate$,knum="BY_TRANS_DATE",dom=*next)
                     readrecord(#devGltTransDetail,end=*next)gltTransDetail$
-                    first_posting_year$=gltTransDetail.posting_year$
-                    first_posting_per$=gltTransDetail.posting_per$
+                    if gltTransDetail.firm_id$=#firmID$ then
+                        first_posting_year$=gltTransDetail.posting_year$
+                        first_posting_per$=gltTransDetail.posting_per$
+                    else
+                        first_posting_year$=str(num(thisYear$)+1:"0000")
+                        first_posting_per$="99"
+                    endif
 
                     rem --- Get latest posting_year and posting_period with tranaction date on (or before) the aligned calendar's end date.
                     year=num(alignedFiscalCalEndDate$(1,4))
@@ -241,9 +246,13 @@ AlignFiscalCalendar_error:rem --- Method error trap/handler (11Oct2017)
                     read(#devGltTransDetail,key=#firmID$+tripDate$,knum="BY_TRANS_DATE",dom=*next)
                     read(#devGltTransDetail,dir=-1,err=*next)
                     readrecord(#devGltTransDetail,end=*next)gltTransDetail$
-                    last_posting_year$=gltTransDetail.posting_year$
-                    last_posting_per$=gltTransDetail.posting_per$
-
+                    if gltTransDetail.firm_id$=#firmID$ then
+                        last_posting_year$=gltTransDetail.posting_year$
+                        last_posting_per$=gltTransDetail.posting_per$
+                    else
+                        first_posting_year$=""
+                        first_posting_per$=""
+                    endif
                     rem --- Build glw_acctsummary records from glt_transdetail transactions
                     dim gltTransDetail$:#tplGltTransDetail$
                     read(#devGltTransDetail,key=#firmID$,knum="PRIMARY",dom=*next)
