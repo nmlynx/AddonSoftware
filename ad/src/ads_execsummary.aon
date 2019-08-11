@@ -501,14 +501,14 @@ display_status:rem --- Display Build Status Date/Time
 get_user_settings:rem --- Get User/Windows Settings
 
 	win_save_id$=pad("WIN_[EXEC_SUMM]",20)
-	call dir_syp$+"bac_winsize.bbj",cvs(win_save_id$,4),"W","",Window!,"READ",win_coord[all]
+	call dir_syp$+"bac_winsize.bbj",cvs(win_save_id$,4),"W","",Window!,"READ",win_coord[all],"",table_chans$[all]
 
 	return
 
 save_user_settings:rem --- Save Windows Coordinates
 
 	if Window!<>null() then
-		call dir_syp$+"bac_winsize.bbj",cvs(win_save_id$,4),"W","",Window!,"SAVE",win_coord[all]
+		call dir_syp$+"bac_winsize.bbj",cvs(win_save_id$,4),"W","",Window!,"SAVE",win_coord[all],"",table_chans$[all]
 	endif
 
 	return
