@@ -521,7 +521,7 @@ rem --- Look for Open Invoice
 	callpoint!.setColumnData("APE_MANCHECKDET.INVOICE_AMT",str(inv_amt))
 	callpoint!.setColumnData("APE_MANCHECKDET.DISCOUNT_AMT",str(disc_amt))
 	callpoint!.setColumnData("APE_MANCHECKDET.RETENTION",str(ret_amt))
-	callpoint!.setColumnData("APE_MANCHECKDET.NET_PAID_AMT",str(inv_amt-disc_amt-ret_amt))
+	callpoint!.setColumnData("APE_MANCHECKDET.NET_PAID_AMT",str(inv_amt-disc_amt))
 
 	callpoint!.setOptionEnabled("OINV",0)
 
