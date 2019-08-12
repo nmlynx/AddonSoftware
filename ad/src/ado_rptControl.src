@@ -93,20 +93,24 @@ class public ReportControl
     
         if #AdmRptctlChan=0 then #openTables()
         #NextOverlay$=""
+        found$=""
         dim temp$:#AdmRptctl!.fattr()
         temp.dd_table_alias$=rpt_id$;rem --- sees to it that it's padded to the proper length
         while 1
             readrecord (#AdmRptctlChan,key=#FirmID$+temp.dd_table_alias$,err=*break)#AdmRptctl!
+            found$="YES"
             #ReportID$=temp.dd_table_alias$
             #EmailAccount$=#AdmRptctl!.getFieldAsString("EMAIL_ACCOUNT")
             #RecipientTp$=#AdmRptctl!.getFieldAsString("RECIPIENT_TP")
             #LogoFile$=#resolvePath(#AdmRptctl!.getFieldAsString("LOGO_FILE"))
-            dummy$=stbl("+AUTO_SEND",#FirmID$+"^"+temp.dd_table_alias$+"^")
-            #setNextOverlay()
+            if #RecipientTp$="O"
+                dummy$=stbl("+AUTO_SEND",#FirmID$+"^"+temp.dd_table_alias$+"^")
+                #setNextOverlay()
+            endif
             break
         wend
     
-        methodret #NextOverlay$
+        methodret found$
         
     methodend
 
