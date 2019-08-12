@@ -755,7 +755,7 @@ rem --- next_overlay$ (and stbl("+AUTO_SEND")) will get set only if this report 
     reportControl!=new ReportControl()
     reportControl!.setDocExtension("pdf")
     tmp$=reportControl!.getReportControl(rpt_id$)
-    next_overlay$=iff(tmp$<>"",tmp$,overlay$)
+    next_overlay$=iff(tmp$="YES",reportControl!.getNextOverlay(),overlay$)
 
 
     goto std_exit
