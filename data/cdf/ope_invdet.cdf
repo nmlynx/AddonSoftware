@@ -235,7 +235,7 @@ rem --- Re-calculate qty_shipped and ext_price unless already shipping extra or 
 			else
 				callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", "0",1)
 			endif
-			util.ensableGridCell(Form!,user_tpl.bo_col,callpoint!.getValidationRow())
+			util.enableGridCell(Form!,user_tpl.bo_col,callpoint!.getValidationRow())
 			util.enableGridCell(Form!,user_tpl.shipped_col,callpoint!.getValidationRow())
 		endif
 	endif
