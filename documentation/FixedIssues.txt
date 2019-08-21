@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2019-08-16
+ Report Date:   2019-08-20
  Report Branch: AddonSoftware 19.10
  Last Release:  AddonSoftware 19.02
 =======================================================================================================================================
@@ -381,4 +381,19 @@ Bug 9741 - OP - Typo in Invoice Entry causes error when entering order quantity
 Modified: data/bar/ope_invdet.xml
 Modified: data/cdf/ope_invdet.cdf
 
+=======================================================================================================================================
 
+19.10 release 8/20/2019
+BBjBaristaAddonDemos1910_08-20-2019_1004.jar
+
+=======================================================================================================================================
+Revision: 06749e44c04482def11c3fbf7c362bff88437c89
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 8/20/2019 4:54:55 PM
+Message:
+Bug 9401: Fixed possible endless loop in AP Check Printing when checking
+if the Check Number had been previously used in multi-firm installs that
+use a single ap_type.
+----
+Modified: data/bar/apr_checks.xml
+Modified: data/cdf/apr_checks.cdf
