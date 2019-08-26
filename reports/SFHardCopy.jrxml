@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2018-06-14T09:57:19 -->
+<!-- 2019-08-26T11:17:37 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SFHardCopy" language="groovy" pageWidth="792" pageHeight="612" orientation="Landscape" columnWidth="752" leftMargin="20" rightMargin="20" topMargin="28" bottomMargin="28" resourceBundle="addon" uuid="d161469e-994e-4528-9381-9bfa0b4b35c5">
 	<property name="ireport.zoom" value="2.0"/>
 	<property name="ireport.x" value="60"/>
@@ -90,7 +90,7 @@
 	</field>
 	<variable name="MAST_CLS_INP_QTY" class="java.lang.Float">
 		<variableExpression><![CDATA[]]></variableExpression>
-		<initialValueExpression><![CDATA[Float.valueOf($F{MAST_CLS_INP_QTY_STR}).floatValue()]]></initialValueExpression>
+		<initialValueExpression><![CDATA[Float.valueOf($F{MAST_CLS_INP_QTY_STR}.replaceAll( ",","" )).floatValue()]]></initialValueExpression>
 	</variable>
 	<variable name="MAST_CLOSED_COST" class="java.math.BigDecimal"/>
 	<variable name="COST_EA_STDTOT_BIGDEC" class="java.math.BigDecimal"/>
@@ -334,7 +334,7 @@
 				</textField>
 			</band>
 			<band height="13">
-				<printWhenExpression><![CDATA[(Float.valueOf($F{MAST_CLS_INP_QTY_STR}).floatValue() != 0.0) && ($P{REPORT_TYPE}=="C")]]></printWhenExpression>
+				<printWhenExpression><![CDATA[(Float.valueOf($F{MAST_CLS_INP_QTY_STR}.replaceAll( ",","" )).floatValue() != 0.0) && ($P{REPORT_TYPE}=="C")]]></printWhenExpression>
 				<staticText>
 					<reportElement x="7" y="2" width="26" height="11" isRemoveLineWhenBlank="true" uuid="4494e676-56e8-4392-95f4-969a1b513715">
 						<printWhenExpression><![CDATA[$P{REPORT_TYPE}=="C"]]></printWhenExpression>
