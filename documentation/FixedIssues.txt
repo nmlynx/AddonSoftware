@@ -423,3 +423,15 @@ Modified: reports/SFHardCopyCmnts.jasper
 Modified: reports/SFHardCopyMatStd.jasper
 Modified: reports/SFHardCopyOpStd.jasper
 Modified: reports/SFHardCopySubStd.jasper
+
+=======================================================================================================================================
+Revision: 54c68727ab7a67563b51dff214cf25f198bbd74f
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 8/26/2019 5:45:35 PM
+Message:
+Bug 9740: Changed OP_QTY_COMMITTED drilldown to only show opt_invdet
+records that are committed, and line type is not drop ship.
+----
+Added: data/sync/ddm_drill_defs~[01007514OP].xml
+Deleted: data/sync/ddm_drill_defs~op_qty_committed.xml
+Added: op/src/opf_qtyCommitted.aon
