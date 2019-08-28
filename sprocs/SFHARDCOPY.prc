@@ -15,6 +15,7 @@ seterr sproc_error
 rem --- Set of utility methods
 
 	use ::ado_func.src::func
+    use ::ado_util.src::util
 
 rem --- Declare some variables ahead of time
 
@@ -372,7 +373,7 @@ rem --- Trip Read
             if image_path$(1,1)=$22$ then image_path$=image_path$(2) 
             if image_path$(len(image_path$))=$22$ then image_path$=image_path$(1,len(image_path$)-1)
             if image_dir$<>"" then image_path$=image_dir$+image_path$
-            image_file$=BBjAPI().getFileSystem().resolvePath(image_path$,err=*endif)
+            image_file$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(image_path$,err=*endif))
             data!.setFieldValue("IMAGE_PATH",image_file$)
         endif
 		data!.setFieldValue("DRAWING_NO",read_tpl.drawing_no$)

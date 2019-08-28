@@ -80,6 +80,8 @@ rem --- idea is to make an admin table in Addon (Barista?) that contains
 rem --- name, params, .prc loc and .cfg loc so as we deploy, we can run this program
 rem --- as part of install/init, and see to it that sprocs are defined.
 
+    use ::ado_util.src::util
+
     seterr std_error
     setesc std_error
     
@@ -137,9 +139,9 @@ rem --- init
 
     database$=stbl("+DBNAME",err=std_exit)
     sproc_path$=dsk("")+dir("")
-    sproc_path$=BBjAPI().getFileSystem().resolvePath(stbl("+DIR_SPROCS",err=*next),err=*next)+"/"
+    sproc_path$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(stbl("+DIR_SPROCS",err=*next)),err=*next)+"/"
     barista_cfg_path$=dsk("")+dir("")
-    barista_cfg_path$=BBjAPI().getFileSystem().resolvePath(stbl("+DIR_CFG",err=*next),err=*next)+"/"
+    barista_cfg_path$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(stbl("+DIR_CFG",err=*next)),err=*next)+"/"
 
 rem --- init progress meter
 

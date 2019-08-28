@@ -1,3 +1,5 @@
+[[OPC_MESSAGE.BSHO]]
+    use ::ado_util.src::util
 [[OPC_MESSAGE.AOPT-PRNT]]
 rem --- create message listing
 
@@ -26,7 +28,7 @@ rem --- Get HashMap of Values in Options Entry Form
 
 rem --- Set Report Name & Subreport directory
 
-	reportDir$ = BBjAPI().getFileSystem().resolvePath(stbl("+DIR_REPORTS",err=*next))+"/"
+	reportDir$ = BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(stbl("+DIR_REPORTS",err=*next)))+"/"
 	repTitle!="Standard_Message_Formatting"
 	reportBaseName$ = "OPMessageFormat"
 	filename$ = reportDir$ + reportBaseName$ + ".jasper"

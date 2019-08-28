@@ -8,6 +8,7 @@ rem --- All Rights Reserved
 
     use java.io.File
     use ::ado_file.src::FileObject
+    use ::ado_util.src::util
 
     setesc std_error
     seterr std_error
@@ -431,7 +432,7 @@ build_NACHA_file: rem --- Build NACHA text file for financial institution to pro
     rd_doc_source$="E"
     rd_doc_ext$="PDF"
     rd_doc_path$=cvs(apsACH.ach_check_dir$,2)
-    rd_doc_path$=BBjAPI().getFileSystem().resolvePath(rd_doc_path$,err=*next)+"/"
+    rd_doc_path$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(rd_doc_path$,err=*next))+"/"
     rd_source_type$="O"
     rem rd_source_alias$=rd_alias_id$
     rd_source_id$="C"

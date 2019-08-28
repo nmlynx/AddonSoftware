@@ -4,6 +4,8 @@ rem --- Program ado_func.src v8.0.0 02Feb2009
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
 
+    use ::ado_util.src::util
+
     class public func
 
     rem ==========================================================================
@@ -462,7 +464,7 @@ method_error:rem --- Method error trap/handler (11Oct2017)
             endif
         wend
         
-        if file_path$<>"" then file_path_out$=BBjAPI().getFileSystem().resolvePath(file_path$,err=*next)
+        if file_path$<>"" then file_path_out$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(file_path$,err=*next))
         
         methodret file_path_out$
 
