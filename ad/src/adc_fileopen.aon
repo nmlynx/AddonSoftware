@@ -38,6 +38,8 @@ rem --- CHANNELS[n]  : Channel that FILES$[n] was opened on (Returned)
 rem --- BATCH        : Batch number if applicable (Returned)
 rem --- STATUS       : Status code/0=No error (Returned)
 
+    use ::ado_util.src::util
+
     seterr std_error
     setesc std_error
     enter action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],
@@ -167,7 +169,7 @@ actual_open:
         admin!=BBjAPI().getGroupNamespace().getValue("+bar_admin_"+cvs(stbl("+USER_ID",err=*next),11),err=*next)
 
         if admin! <> NULL() then
-            if filedir$<>"" then filedir$ = BBjAPI().getFileSystem().resolvePath(filedir$)+"/"         
+            if filedir$<>"" then filedir$ = BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(filedir$))+"/"         
             lockfile! = admin!.getBBjFile(filedir$+pathname$,err=*next)
             if lockfile! <> NULL() 
                 openFile! = lockfile!.getOpenFileLocked(err=*next)

@@ -137,7 +137,7 @@ rem --- Get logo to go on form; start w/ company logo, fall back to default logo
     if logo_filename$=""
         logo_file$=stbl("+CUST_IMAGES",err=*next)+stbl("+FORM_LOGO",err=*next)
         if logo_file$<>""
-            logo_filename$=BBjAPI().getFileSystem().resolvePath(logo_file$,err=*next)
+            logo_filename$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(logo_file$,err=*next))
         endif
     endif
 
