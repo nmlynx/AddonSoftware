@@ -1992,12 +1992,12 @@ rem ==============================================
 rem --- resolve path to preview image pngs
 
 	preview_path$=dsk("")+dir("")
-	preview_path$=BBjAPI().getFileSystem().resolvePath(stbl("+CUST_IMAGES",err=*next),err=*next)+"/"
+	preview_path$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(stbl("+CUST_IMAGES",err=*next)),err=*next)+"/"
 
 rem --- resolve path to jasper reports
 
 	report_path$=dsk("")+dir("")
-    report_path$=BBjAPI().getFileSystem().resolvePath(stbl("+DIR_REPORTS",err=*next),err=*next)+"/"
+    report_path$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(stbl("+DIR_REPORTS",err=*next)),err=*next)+"/"
 	
 	return
 
@@ -2017,7 +2017,7 @@ rem ==============================================
 
 	barista_wd$=dsk("")+dir("")
     sproc_dir$=dsk("")+dir("")
-    sproc_dir$=BBjAPI().getFileSystem().resolvePath(stbl("+DIR_SPROCS",err=*next),err=*next)+"/"
+    sproc_dir$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(stbl("+DIR_SPROCS",err=*next)),err=*next)+"/"
 	
 	return
 

@@ -19,6 +19,7 @@ escape
     release
 
     use ::sys/prog/bao_docqueue.bbj::DocumentQueue
+    use ::ado_util.src::util
 
 class public ReportControl
 
@@ -130,7 +131,7 @@ class public ReportControl
             endif
         wend
         
-        if file_path$<>"" then file_path_out$=BBjAPI().getFileSystem().resolvePath(file_path$,err=*next)
+        if file_path$<>"" then file_path_out$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(file_path$,err=*next))
         
         methodret file_path_out$
 
