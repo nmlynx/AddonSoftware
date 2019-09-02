@@ -199,7 +199,7 @@ rem --- Build sourcePaths! Properties object of directories and files used by ea
 :                   ((pos("["=path$) and pos("]"=path$))) then
                         gosub verify_path
                         meter_text$=key$+": "+stbl$
-                        if skip_path then
+                        if skip_path and stbl$<>"+DIR_INV_IMAGES" then
                             meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
                         endif
                         stblPaths!.setProperty(stbl$,canonicalPath$)
