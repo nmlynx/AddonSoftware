@@ -199,8 +199,12 @@ rem --- Build sourcePaths! Properties object of directories and files used by ea
 :                   ((pos("["=path$) and pos("]"=path$))) then
                         gosub verify_path
                         meter_text$=key$+": "+stbl$
-                        if skip_path and stbl$<>"+DIR_INV_IMAGES" then
-                            meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
+                        if skip_path then
+                            if stbl$="+DIR_INV_IMAGES" then
+                                skipped=skipped-1
+                            else
+                                meter_text$="***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "+meter_text$
+                            endif
                         endif
                         stblPaths!.setProperty(stbl$,canonicalPath$)
                     endif
@@ -453,7 +457,7 @@ rem --- Verify paths referenced in data files and add to sourcePaths! Properties
                     if cvs(path$,2)="" continue
                 
                     rem --- Resolve STBLs embedded in path
-                    resolvedPath$=path$
+                    pathName$=path$
                     gosub resolvePathStbls
                     path$=resolvedPath$
                 
@@ -480,7 +484,9 @@ rem --- Verify paths referenced in data files and add to sourcePaths! Properties
                             next j
                         endif
                     else
-                        if cvs(ddmTables.dd_table_alias$,2)="ADM_MODULES" and cvs(ddmTableCols.dd_dvar_name$,2)="DD_MOUNT_DIR" and path$="sys/" then
+                    if cvs(ddmTables.dd_table_alias$,2)="ADM_MODULES" and 
+:                       (cvs(ddmTableCols.dd_dvar_name$,2)="DD_MOUNT_DIR" or cvs(ddmTableCols.dd_dvar_name$,2)="LOCALE_PATH") and 
+:                       (pos("sys/"=path$)=1 or pos("./sys/"=path$)=1) then
                             path$=barDir$+"/sys/"
                         endif
                     endif
@@ -507,6 +513,18 @@ rem --- Verify paths referenced in data files and add to sourcePaths! Properties
     gosub disp_meter
 
 rem --- Verify paths in barista.syn file
+        
+    rem --- Increment main progress meter
+    meterWin!=mainMeter!
+    meter_total_recs=mainMeterTotalRecs
+    mainMeterProcRecs=mainMeterProcRecs+1
+    meter_text$="Verify paths in barista.syn file"
+    meter_proc_recs=mainMeterProcRecs
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+
     barSyn_found=0
     barSyn_dev=unt
     open(barSyn_dev,isz=-1,err=*next)barDir$+"/sys/config/barista.syn"; barSyn_found=1
@@ -520,7 +538,13 @@ rem --- Verify paths in barista.syn file
                     xpos = pos("="=record$)
                     path$ = cvs(record$(xpos+1),3)
                     gosub verify_path
-                    meter_text$=key$
+                    meter_text$=path$
+                    if skip_path then
+                        print(log_dev)"    "+"***"+Translate!.getTranslation("AON_SKIP","SKIP")+"*** "
+                        print(log_dev)"    "+"    "+key$+": "+path$
+                    else
+                        print(log_dev)"    "+key$+": "+path$
+                    endif
                     break
                 case default
                     rem --- skip other lines
@@ -716,6 +740,10 @@ rem --- Build jar file
     print(log_dev)"Copy Addon Installation Utility log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     close(log_dev)
 
+    rem --- Show busy/working image while finishing things up
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=rdForm!.addImageCtrl(nxt_ctlID,250,20,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
     rem --- Add log file to jar
     jarFile!=new File(baseDir$ + File.separator + jarFile$)
     if jarFile!.exists() then
@@ -758,6 +786,9 @@ done: rem --- All done
         gosub disp_message
     endif
 
+    rem --- Remove busy/working image from form
+    busyImage!.destroy(err=*next)
+
     goto std_exit
 
 verify_path: rem --- Verify path is located under installation base directory
@@ -793,7 +824,7 @@ resolvePathStbls: rem --- Resolve embedded STBLs, except not [+FIRM_ID]. (Based 
             continue
         endif
         rem --- Must get STBL from packaged installation's *.syn, not from installation running the utility
-        tmpPath$=stblValues!.getProperty(tmpStbl$,err=*break)
+        tmpPath!=stblValues!.getProperty(tmpStbl$,err=*break)
         if tmpPath!=null() then break
         tmpPath$=tmpPath!
         if pos(" "=tmpPath$) then tmpPath$=$22$+tmpPath$+$22$
