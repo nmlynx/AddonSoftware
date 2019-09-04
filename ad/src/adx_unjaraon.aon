@@ -26,6 +26,7 @@ rem --- Initializations
     savedDir$=dir("")
 
 rem --- Get user inputs
+    dbName$=Option!.getOptionData("DB_NAME")
     baseDir$=Option!.getOptionData("BASE_DIR")
     jarFile$=Option!.getOptionData("JAR_FILE")
     barDir$=Option!.getOptionData("BAR_DIR")
@@ -754,13 +755,13 @@ rem --- Update paths in <new_base_dir>/barista/sys/config/barista.syn
         rename tmpWorkFile$ to barSynFile$, err=*next
     endif
 
-rem --- Update port and SSL settings in barista.cfg for ALL languages
+rem --- Update dbname, dbname_api, port and SSL settings in barista.cfg for ALL languages
 
     rem --- Increment main progress meter
     meterWin!=mainMeter!
     meter_total_recs=mainMeterTotalRecs
     mainMeterProcRecs=mainMeterProcRecs+1
-    meter_text$="Update port and SSL settings in barista.cfg files"
+    meter_text$="Update barista.cfg files"
     meter_proc_recs=mainMeterProcRecs
     meter_action$="MTR-LST"
     gosub disp_meter
@@ -792,6 +793,12 @@ rem --- Update port and SSL settings in barista.cfg for ALL languages
                 
                     key$=cvs(line$(1,pos("="=line$)-1),3)
                     switch (BBjAPI().TRUE)
+                        case key$="SET +DBNAME"
+                            line$=line$(1,pos("="=line$,-1))+dbName$
+                            break
+                        case key$="SET +DBNAME_API"
+                            line$=key$+"="+dbName$
+                            break
                         case key$="SET +DBPORT"
                             line$=key$+"="+stbl("+DBPORT",err=*break)
                             break
@@ -903,6 +910,7 @@ open_log:rem --- Open log file
     print(log_dev)"Install Copied Addon Installation Utility log started: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     print(log_dev)
     print(log_dev)"Source Operating System: " + info(0,0)
+    print(log_dev)"New Database Name: " + dbName$
     print(log_dev)"Source Installation Base Directory: " + baseDir$
     print(log_dev)"Jar Filename: " + jarFile$
     print(log_dev)"Source Barista Installation Location: " + barDir$
