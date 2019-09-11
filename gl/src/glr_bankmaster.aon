@@ -60,13 +60,16 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=5,begfile=1,endfile=files
+    files=7,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="glm-01",ids$[1]="GLM_ACCT"
     files$[2]="glm-05",ids$[2]="GLM_BANKMASTER"
     files$[3]="glt-05",ids$[3]="GLT_BANKCHECKS"
     files$[4]="glt-15",ids$[4]="GLT_BANKOTHER"
     files$[5]="adc_bankacctcode",ids$[5]="ADC_BANKACCTCODE"
+    files$[6]="gls_params",ids$[6]="GLS_PARAMS"
+    files$[7]="glt-06",ids$[7]="GLT_TRANSDETAIL"
+
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -75,11 +78,15 @@ rem --- Open/Lock files
     glt05_dev=channels[3]
     glt15_dev=channels[4]
     adcBankAcctCode_dev=channels[5]
+    gls01_dev=channels[6]
+    glt06_dev=channels[7]
 
+	
 rem --- Dimension string templates
 
     dim glm01a$:templates$[1],glm05a$:templates$[2],
-:       glt05a$:templates$[3],glt15a$:templates$[4],adcBankAcctCode$:templates$[5]
+:       glt05a$:templates$[3],glt15a$:templates$[4],adcBankAcctCode$:templates$[5],
+:       gls01a$:templates$[6],glt06a$:templates$[7]
 
 
 rem --- Retrieve parameter records
@@ -295,7 +302,7 @@ balance: rem --- Print the balance information
     balance=glm05a.cur_stmt_amt-checkopen+otheropen
     gosub balance_heading
     xwk=fnblank(3)
-    OutVect!.addItem(Translate!.getTranslation("AON_STATEMENT_BALANCE:_"))
+    OutVect!.addItem(Translate!.getTranslation("AON_CURRENT")+" "+Translate!.getTranslation("AON_STATEMENT_BALANCE:_"))
     OutVect!.addItem(str(glm05a.cur_stmt_amt))
     xwk=fnblank(1)
 
@@ -305,21 +312,21 @@ balance: rem --- Print the balance information
     xwk=fnblank(1)
 
     xwk=fnblank(3)
-    OutVect!.addItem(Translate!.getTranslation("AON_TRANSACTIONS_OUTSTANDING:_")+str(openother:m9$)+Translate!.getTranslation("AON__ITEMS"))
+    OutVect!.addItem(Translate!.getTranslation("AON_DEP_OTH_TRANS_OUTSTANDING:_")+str(openother:m9$)+Translate!.getTranslation("AON__ITEMS"))
     OutVect!.addItem(str(otheropen))
     xwk=fnblank(1)
 
     TotVect!.addItem(str(OutVect!.size()/(columns+1)))
 
     xwk=fnblank(3)
-    OutVect!.addItem(Translate!.getTranslation("AON_ENDING_BALANCE:_"))
+    OutVect!.addItem(Translate!.getTranslation("AON_RECONCILIATION_BALANCE:_"))
     OutVect!.addItem(str(balance))
     xwk=fnblank(1)
 
     xwk=fnblank(columns+1);rem blank line
 
     xwk=fnblank(3)
-    OutVect!.addItem(Translate!.getTranslation("AON_CHECK_BOOK_BALANCE_AS_OF_")+fndate$(glm05a.curstm_date$))
+    OutVect!.addItem(Translate!.getTranslation("AON_GL_BALANCE_AS_OF_")+fndate$(glm05a.curstm_date$))
     OutVect!.addItem(str(glm05a.book_balance))
     xwk=fnblank(1)
 
@@ -342,10 +349,34 @@ balance: rem --- Print the balance information
         xwk=fnblank(1)
 
         xwk=fnblank(3)
-        OutVect!.addItem(Translate!.getTranslation("AON_PAID_TRANSACTIONS:_")+str(paidother:m9$)+Translate!.getTranslation("AON__ITEMS"))
+        OutVect!.addItem(Translate!.getTranslation("AON_PAID_DEP_OTH_TRANSACTIONS:_")+str(paidother:m9$)+Translate!.getTranslation("AON__ITEMS"))
         OutVect!.addItem(str(otherpaid))
         xwk=fnblank(1)
     endif
+    
+    gosub calc_inflows_and_outflows
+    
+    if inflows <>0 or outflows<>0 then
+
+        xwk=fnblank(columns+1);rem blank line
+
+        xwk=fnblank(3)
+        OutVect!.addItem(Translate!.getTranslation("AON_CASH_INFLOWS:_"))
+        OutVect!.addItem(str(inflows))
+        xwk=fnblank(1)
+
+        xwk=fnblank(3)
+        OutVect!.addItem(Translate!.getTranslation("AON_CASH_OUTFLOWS:_"))
+        OutVect!.addItem(str(outflows))
+        xwk=fnblank(1)
+        
+        xwk=fnblank(3)
+        OutVect!.addItem(Translate!.getTranslation("AON_CASH_INC_DEC:_"))
+        OutVect!.addItem(str(cash_inc_dec))
+        xwk=fnblank(1)
+    
+    endif
+    
 
 rem --- All Done
 
@@ -380,7 +411,7 @@ return;rem not using pbuf$ anymore. cah Jul08
 
 other_heading: rem --- Other transaction subheading
 
-    OutVect!.addItem(Translate!.getTranslation("AON_OTHER_TRANSACTIONS:"))
+    OutVect!.addItem(Translate!.getTranslation("AON_DEPOSITS")+"/"+Translate!.getTranslation("AON_OTHER_TRANSACTIONS:"))
     xwk=fnblank(5)
     otherhead=1
 return;rem not using pbuf$ anymore. cah Jul08
@@ -423,6 +454,77 @@ return;rem not using pbuf$ anymore. cah Jul08
     dim pbuf$(pbufwidth)
     pbuf$(1)=bar$
     OutVect!.addItem(pbuf$)
+    return
+
+calc_inflows_and_outflows: rem --- calculate cash inflows and outflows for the statement period and then differnce
+
+    inflows=0
+    outflows=0
+
+    rem --- get the Prior and Current Statement Dates
+    stmtdate$=glm05a.curstm_date$
+    priordate$=glm05a.pri_end_date$
+	
+    if len(stmtdate$) = 8 and len(priordate$) = 8 then
+
+        rem --- Find G/L Record"
+        rem dim glt06a$:user_tpl.glt06_tpl$
+        rem dim gls01a$:user_tpl.gls01_tpl$
+        rem glt06_dev=user_tpl.glt06_dev
+        rem gls01_dev=user_tpl.gls01_dev
+        readrecord(gls01_dev,key=firm_id$+"GL00")gls01a$
+        
+        call stbl("+DIR_PGM")+"adc_fiscalperyr.aon",firm_id$,stmtdate$,stmtperiod$,stmtyear$,table_chans$[all],status
+	if !status then 
+	
+	    stmtperiod=num(stmtperiod$)
+	    stmtperiod$=str(stmtperiod:"00")
+	    stmtyear=num(stmtyear$)
+	    if gls01a.gl_yr_closed$="Y" currentgl=num(gls01a.current_year$) else currentgl=num(gls01a.current_year$)-1; rem "GL year end closed?
+	    priorgl=currentgl-1
+	    nextgl=currentgl+1
+		
+       	    call stbl("+DIR_PGM")+"adc_fiscalperyr.aon",firm_id$,priordate$,priordateperiod$,priordateyear$,table_chans$[all],status
+	    if !status then 
+	
+		priordateperiod=num(priordateperiod$)
+		priordateperiod$=str(priordateperiod:"00")
+		priordateyear=num(priordateyear$)
+		if gls01a.gl_yr_closed$="Y" prior_currentgl=num(gls01a.current_year$) else prior_currentgl=num(gls01a.current_year$)-1; rem "GL year end closed?
+		prior_priorgl=prior_currentgl-1
+		prior_nextgl=prior_currentgl+1
+
+		rem --- Initialize displayColumns! object
+		if displayColumns!=null() then
+		    use ::glo_DisplayColumns.aon::DisplayColumns
+    		    displayColumns!=new DisplayColumns(firm_id$)
+		endif
+		r1$=firm_id$+glm05a.gl_account$
+		if priordateyear=prior_priorgl s1$=r1$+displayColumns!.getYear("2"); rem "Use prior yea1r actual
+		if priordateyear=prior_currentgl s1$=r1$+displayColumns!.getYear("0"); rem "Use current year actual
+		if priordateyear=prior_nextgl s1$=r1$+displayColumns!.getYear("4"); rem "Use next year actual
+		if s1$<>"" then 
+		    rem --- accumulate transactions in the statment period"
+		    call stbl("+DIR_PGM")+"adc_daydates.aon",priordate$,followingday$,1
+		    d1$=r1$+priordateyear$+priordateperiod$+followingday$
+		    readrecord (glt06_dev,key=d1$,dom=*next)
+		    while 1
+		        k$=key(glt06_dev,END=*break)
+		        if pos(r1$=k$)<>1 then break
+		        if k$(19,8)>stmtdate$ then break
+		        dim glt06a$:fattr(glt06a$)
+		        read record (glt06_dev,key=k$)glt06a$
+			if glt06a.trans_amt > 0 then
+			    inflows=inflows+glt06a.trans_amt
+			else	
+			    outflows=outflows+glt06a.trans_amt		
+			endif
+		    wend
+		    cash_inc_dec = inflows+outflows
+		endif
+	    endif
+	endif
+    endif
     return
 
 rem --- Functions
