@@ -551,6 +551,9 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
                 convCtrlPath!.mkdirs()
             endif
             convCtrlFile!.createNewFile()
+            rem --- Set read-write permissions for everyone
+            convCtrlFile!.setReadable(1,0)
+            convCtrlFile!.setWritable(1,0)
         endif
         convCtrlFileChan=unt
         open(convCtrlFileChan,isz=-1,mode="O_CREATE,O_TRUNC")convCtrlFileName$

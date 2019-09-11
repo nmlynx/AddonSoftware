@@ -141,8 +141,19 @@ rem --- Init Data
     m6$="###0.00-";rem weight
     m9$="##0";rem lead time & cycle days
     phnmsk$="(###) ###-####"
+    m6=len(m6$)
+    m9=len(m9$)
 
-    o[0]=132-(totmlen)
+    while 1
+        totmlen=m1+(10*m2)+m3+m6+m9+7
+        if totmlen<=140 break
+        if m1>12 call pgmdir$+"adc_sizemask.aon",m1$,m1,12,m1-1; continue
+        if m3>9 call pgmdir$+"adc_sizemask.aon",m3$,m3,9,m3-1; continue
+        if m2>8 call pgmdir$+"adc_sizemask.aon",m2$,m2,8,m2-1; continue
+        break
+    wend
+
+    o[0]=142-(totmlen)
     o[1]=o[0]+4
     o[2]=o[1]+m2
     o[3]=o[2]+m2
