@@ -52,7 +52,6 @@ rem --- Init data
     dopagebrk$="N"
     printtotline$="N"
     dim buyertots[2],vendtots[2],prodtots[2]
-    dim review$(30)
     therearebuyers=1; rem "Used to print sel criteria when no poe-17
     more=1
     recs=0
@@ -84,11 +83,6 @@ rem --- Init Read
         read record (poe_ordhdr_dev,end=*break) poe_ordhdr$
         buyer$=poe_ordhdr.buyer_code$
         vendor$=poe_ordhdr.vendor_id$
-		if cvs(poe_ordhdr.cycle_date$,3)<>""
-			review$=Translate!.getTranslation("AON_THROUGH_REVIEW_DATE:_")+fndate$(poe_ordhdr.cycle_date$)
-		else
-			review$=Translate!.getTranslation("AON_THROUGH_LAST_DATE")
-		endif
         comment$=poe_ordhdr.rep_comments$
         call pgmdir$+"adc_progress.aon","S","","","","",0,poe_ordhdr_dev,1,meter_num,status
         gosub testbreaks
@@ -115,106 +109,63 @@ rem --- Init detail ptr
 
             itemnum$=poe_orddet.item_id$
             whse$=poe_orddet.warehouse_id$
-            stocklevel$=poe_orddet.stock_level$
             if poe_orddet.usage_is_est$="Y" estimated$="**"
             annualusage$=str(poe_orddet.annual_usage:m2$)
             avgusage$=str(poe_orddet.avg_usage:m2$)
             avail$=str(poe_orddet.qty_avail:m2$)
             onorder$=str(poe_orddet.qty_on_order:m2$)
 
-            if stocklevel$<>"I"
-
-            	if suggonly$="Y" 
-
-                	if itemnum$<>prevwitem$
-
-				csugg=0
-				p16_key$=poe_orddet.firm_id$+poe_orddet.buyer_code$+poe_orddet.vendor_id$+poe_orddet.product_type$+poe_orddet.item_id$
-				find record (poe_ordtot_dev,key=p16_key$,dom=*continue) poe_ordtot$
-				if poe_ordtot.sugg_ord_qty=0 continue
-				csugg=poe_ordtot.sugg_ord_qty
-				prevminusannuse=minusannuse
-				prevminusavguse=minusavguse
-				prevminusavail=minusavail
-				prevminusonord=minusonord
-				minusannuse=0
-				minusavguse=0
-				minusavail=0
-				minusonord=0
-				prevwitem$=itemnum$
-
+        	if suggonly$="Y" 
+            	if itemnum$<>prevwitem$
+    				csugg=0
+    				p16_key$=poe_orddet.firm_id$+poe_orddet.buyer_code$+poe_orddet.vendor_id$+poe_orddet.product_type$+poe_orddet.item_id$
+    				find record (poe_ordtot_dev,key=p16_key$,dom=*continue) poe_ordtot$
+    				if poe_ordtot.sugg_ord_qty=0 continue
+    				csugg=poe_ordtot.sugg_ord_qty
+    				prevminusannuse=minusannuse
+    				prevminusavguse=minusavguse
+    				prevminusavail=minusavail
+    				prevminusonord=minusonord
+    				minusannuse=0
+    				minusavguse=0
+    				minusavail=0
+    				minusonord=0
+    				prevwitem$=itemnum$
+    			endif
 			endif
 
-		endif
-
-                sugg=num(poe_orddet.sugg_ord_qty$)
+            sugg=num(poe_orddet.sugg_ord_qty$)
 
 rem --- Skip whse detail if NOT INCLUDEWHS$
 
-                if includewhse$<>"Y"
-
-                    gosub newitem
-                    read (poe_orddet_dev,key=p16_key$+$FF$,dom=*continue)
-
-                endif
+            if includewhse$<>"Y"
+                gosub newitem
+                read (poe_orddet_dev,key=p16_key$+$FF$,dom=*continue)
+            endif
 
 rem --- Accum amts to subtract from total line for sugg=0 'W' items
 
-                if suggonly$="Y" 
+            if suggonly$="Y" 
+            	if sugg=0
+    				minusannuse=minusannuse+poe_orddet.annual_usage
+    				minusavguse=minusavguse+poe_orddet.avg_usage
+    				minusavail=minusavail+poe_orddet.qty_avail
+    				minusonord=minusonord+poe_orddet.qty_on_order
+    				if itemnum$<>previtem$ gosub newitem
+    				continue
+    			endif
+    		endif
 
-                	if sugg=0
-
-				minusannuse=minusannuse+poe_orddet.annual_usage
-				minusavguse=minusavguse+poe_orddet.avg_usage
-				minusavail=minusavail+poe_orddet.qty_avail
-				minusonord=minusonord+poe_orddet.qty_on_order
-				if itemnum$<>previtem$ gosub newitem
-				continue
-
-			endif
-
-		endif
-
-                linepoint$=str(poe_orddet.line_point:m2$)
-                ordpoint$=str(poe_orddet.order_point:m2$)
-                eoq$=str(poe_orddet.eoq:m2$)
-                safety$=str(poe_orddet.safety_stock:m2$)
-                max$=str(poe_orddet.maximum_qty:m2$)
-                lead$=str(poe_orddet.lead_time:m9$)
-                sugg$=str(sugg:m2$)
-                weight$=str(poe_orddet.weight:m6$)
-                cost$=str(poe_orddet.est_unit_cst:m3$)
-                extension$=str(poe_orddet.extended_amt:m1$)
-
-            else
-
-rem --- Check suggested qty of total for stocked by 'I'
-
-                minusannuse=0
-                minusavguse=0
-                minusavail=0
-                minusonord=0
-                prevminusannuse=0
-                prevminusavguse=0
-                prevminusavail=0
-                prevminusonord=0
-                find record (poe_ordtot_dev,key=p06_key$+prodtype$+itemnum$,dom=testinclude) poe_ordtot$
-                sugg=poe_ordtot.sugg_ord_qty
-
-testinclude:
-
-                if includewhse$<>"Y"
-                    gosub newitem
-                    read (poe_orddet_dev,key=p16_key$+$FF$,dom=*continue)
-                endif
-
-rem --- Skip all whses for items by 'I' w/no sugg qty
-
-                if suggonly$="Y" if sugg=0 
-                    read (poe_orddet_dev,key=p16_key$+$FF$,dom=*continue)
-                endif
-
-            endif
+            linepoint$=str(poe_orddet.line_point:m2$)
+            ordpoint$=str(poe_orddet.order_point:m2$)
+            eoq$=str(poe_orddet.eoq:m2$)
+            safety$=str(poe_orddet.safety_stock:m2$)
+            max$=str(poe_orddet.maximum_qty:m2$)
+            lead$=str(poe_orddet.lead_time:m9$)
+            sugg$=str(sugg:m2$)
+            weight$=str(poe_orddet.weight:m6$)
+            cost$=str(poe_orddet.est_unit_cst:m3$)
+            extension$=str(poe_orddet.extended_amt:m1$)
 
 rem --- Test for new item
 
@@ -243,9 +194,8 @@ rem --- Print
             OutVect!.addItem(pbuf$)
             recs=recs+1
 
-         rem ---     print (printer_dev) @(o[0]),whse$," ",@(o[1]),annualusage$,@(o[2]),avgusage$,@(o[3]),safety$,rem				@(o[4]),lead$,@(o[5]),avail$,@(o[6]),onorder$,@(o[7]$,@(o[8]),max$,rem				@(o[9]),eoq$,@(o[10]),linepoint$,@(o[11]),cost$,@(o[12]),sugg$,@(o[13]),weight$,rem				@(o[14]),extension$
             l=l+1
-            if stocklevel$="W" gosub dosurplus
+            gosub dosurplus
 
         wend; rem --- Loop up for next detail
 
@@ -260,7 +210,8 @@ done: rem --- Done
     endif
 
     if !page
-        gosub report_heading
+        l=headings+1
+        page=1
         therearebuyers=0
     endif
 
@@ -272,27 +223,6 @@ done: rem --- Done
 	next_overlay$=stbl("+DIR_PGM")+"pou_repselupdate.aon"
 	goto std_exit
 
-
-report_heading: rem --- Report Heading
-
-rem    if page gosub printfooter ...only printing footer once at end
-    l=headings+1
-    page=1
-    if review$<>fill(30) and pos(review$=headings$[1])=0 headings$[1]=headings$[1](1,headings1len)+" "+review$
-    if comment$=fill(30) return
-    comment$=cvs(comment$,3); rem "Strip leading & trailing spaces
-
-    dim pbuf$(width)
-    pbuf$(fncenter(comment$,width))=comment$
-    OutVect!.addItem(pbuf$)
-	if comment$<>""
-		OutVect!.addItem("")
-	endif
-	
-    rem    print (printer_dev) @(fncenter(comment$,width)),comment$
-    l=l+1
-    return
-
 newvendor: rem --- New Vendor
 
     if printvtot$="Y" gosub vendtotals
@@ -300,9 +230,13 @@ newvendor: rem --- New Vendor
     	dopagebrk$="N"
     	BrkVect!.addItem(str(OutVect!.size()))
     	HdrVect!.addItem(buyerhead$)
-    	gosub report_heading
+        l=headings+1
+        page=1
     endif
-    if l+12>l9 gosub report_heading
+    if l+12>l9 then
+        l=headings+1
+        page=1
+    endif
     gosub vaddress
     dim vendline$(132),targettype$(10)
     vendline$(1)=Translate!.getTranslation("AON_VENDOR:_")+fnmask$(vendor$(1,vendlen),vendomask$)
@@ -487,10 +421,8 @@ newitem: rem --- New Item
 
                 dim pbuf$(width)
         pbuf$(1)=estimated$+"  "+cvs(fnmask$(itemnum$(1,itemlen),ivIMask$),2)+"  "+itemdesc$
-        pbuf$(51)=Translate!.getTranslation("AON_STOCKED_BY:_")+stocklevel$
         OutVect!.addItem(pbuf$)
 
-        rem        print (printer_dev) estimated$,"  ",itemnum$(1,itemlen),"  ",itemdesc$,@(50),Translate!.getTranslation("AON_STOCKED_BY:_"),stocklevel$
         l=l+1
         printtotline$="Y"
 
@@ -558,17 +490,19 @@ newbuyer: rem --- New Buyer
     buyerhead$=buyerhead$(1,pos(" "<>buyerhead$,-1))
 	HdrVect!.addItem(buyerhead$)
     BrkVect!.addItem(str(OutVect!.size()))
-    gosub report_heading
     printbtot$="Y"
     prevbuyer$=buyer$
     dopagebrk$="N"
+    l=headings+1
+    page=1
     return
 
 buyertotals: rem --- Print buyer totals
 
 	BrkVect!.addItem(str(OutVect!.size()))
 	HdrVect!.addItem(buyerhead$)
-    gosub report_heading
+    l=headings+1
+    page=1
 
     dim pbuf$(width)
 	pbuf$(h[12]+1)=Translate!.getTranslation("AON_SUGGESTED"),pbuf$(h[13]+1)=Translate!.getTranslation("AON_TOTAL")
@@ -604,11 +538,6 @@ rem --- Print selection critera for this buyer
     pbuf$(hsel[0]+1)=Translate!.getTranslation("AON_SEQ"),pbuf$(hsel[1]+1)=Translate!.getTranslation("AON_BUYER"),pbuf$(hsel[2]+1)=Translate!.getTranslation("AON_BUYER"),pbuf$(hsel[3]+1)=Translate!.getTranslation("AON_VENDOR"),pbuf$(hsel[4]+1)=Translate!.getTranslation("AON_VENDOR"),pbuf$(hsel[5]+1)=Translate!.getTranslation("AON_DATE"),pbuf$(hsel[6]+1)=Translate!.getTranslation("AON_DATE"),pbuf$(hsel[7]+1)=Translate!.getTranslation("AON_WHS"),pbuf$(hsel[8]+1)=Translate!.getTranslation("AON_WHS"),pbuf$(hsel[9]+1)=Translate!.getTranslation("AON_COMMENT")
     OutVect!.addItem(pbuf$)
 
-
-rem    print (printer_dev) Translate!.getTranslation("AON_SELECTION_CRITERIA:"),@(hsel[1]),Translate!.getTranslation("AON_BEG"),@(hsel[2]),Translate!.getTranslation("AON_END"),@(hsel[3]),Translate!.getTranslation("AON_BEG"),@(hsel[4]),Translate!.getTranslation("AON_END"),@(hsel[5]),Translate!.getTranslation("AON_BEG"),@(hsel[6]),Translate!.getTranslation("AON_END"),@(hsel[7]),Translate!.getTranslation("AON_BEG"),@(hsel[8]),Translate!.getTranslation("AON_END")
-
-rem    print (printer_dev) @(hsel[0]),Translate!.getTranslation("AON_SEQ"),@(hsel[1]),Translate!.getTranslation("AON_BUYER"),@(hsel[2]),Translate!.getTranslation("AON_BUYER"),@(hsel[3]),Translate!.getTranslation("AON_VENDOR"),@(hsel[4]),Translate!.getTranslation("AON_VENDOR"),@(hsel[5]),Translate!.getTranslation("AON_DATE"),@(hsel[6]),Translate!.getTranslation("AON_DATE"),@(hsel[7]),Translate!.getTranslation("AON_WHS"),@(hsel[8]),Translate!.getTranslation("AON_WHS"),@(hsel[9]),Translate!.getTranslation("AON_COMMENT")
-
     l=l+2
     dim w0$(4),w1$(75)
 
@@ -634,21 +563,23 @@ rem    print (printer_dev) @(hsel[0]),Translate!.getTranslation("AON_SEQ"),@(hse
         read record (poe_repsel_dev,key=poe07a_key$,dom=*continue) poe_repsel$
         seqnum$=str(poe_repsel.sequence_num$:"00")
         comment$=poe_repsel.rep_comments$
-        if poe_repsel.beg_buyer$=fill(3) buyerfrom$=Translate!.getTranslation("AON_FIRST") else buyerfrom$=poe_repsel.beg_buyer$
-        if poe_repsel.end_buyer$=fill(3) buyerthru$=Translate!.getTranslation("AON_LAST") else buyerthru$=poe_repsel.end_buyer$
-        if poe_repsel.begin_vend$=fill(6) vendfrom$=Translate!.getTranslation("AON_FIRST") else vendfrom$=fnmask$(poe_repsel.begin_vend$,vendomask$)
-        if poe_repsel.ending_vend$=fill(6) vendthru$=Translate!.getTranslation("AON_LAST") else vendthru$=fnmask$(poe_repsel.ending_vend$,vendomask$)
-        if poe_repsel.from_whse$=fill(2) whsfrom$=Translate!.getTranslation("AON_FIRST") else whsfrom$=poe_repsel.from_whse$
-        if poe_repsel.thru_whse$=fill(2) whsthru$=Translate!.getTranslation("AON_LAST") else whsthru$=poe_repsel.thru_whse$
-        if poe_repsel.begrev_date$=fill(8) datefrom$=Translate!.getTranslation("AON_FIRST") else datefrom$=fndate$(poe_repsel.begrev_date$)
-        if poe_repsel.endrev_date$=fill(8) datethru$=Translate!.getTranslation("AON_LAST") else datethru$=fndate$(poe_repsel.endrev_date$)
-        if l+1>l9 gosub report_heading
+        if cvs(poe_repsel.beg_buyer$,2)="" buyerfrom$=Translate!.getTranslation("AON_FIRST") else buyerfrom$=poe_repsel.beg_buyer$
+        if cvs(poe_repsel.end_buyer$,2)="" buyerthru$=Translate!.getTranslation("AON_LAST") else buyerthru$=poe_repsel.end_buyer$
+        if cvs(poe_repsel.begin_vend$,2)="" vendfrom$=Translate!.getTranslation("AON_FIRST") else vendfrom$=fnmask$(poe_repsel.begin_vend$,vendomask$)
+        if cvs(poe_repsel.ending_vend$,2)="" vendthru$=Translate!.getTranslation("AON_LAST") else vendthru$=fnmask$(poe_repsel.ending_vend$,vendomask$)
+        if cvs(poe_repsel.from_whse$,2)="" whsfrom$=Translate!.getTranslation("AON_FIRST") else whsfrom$=poe_repsel.from_whse$
+        if cvs(poe_repsel.thru_whse$,2)="" whsthru$=Translate!.getTranslation("AON_LAST") else whsthru$=poe_repsel.thru_whse$
+        if cvs(poe_repsel.begrev_date$,2)="" datefrom$=Translate!.getTranslation("AON_FIRST") else datefrom$=fndate$(poe_repsel.begrev_date$)
+        if cvs(poe_repsel.endrev_date$,2)="" datethru$=Translate!.getTranslation("AON_LAST") else datethru$=fndate$(poe_repsel.endrev_date$)
+        if l+1>l9 then
+            l=headings+1
+            page=1
+        endif
 
         dim pbuf$(width)
     	pbuf$(hsel[0]+1)=seqnum$,pbuf$(hsel[1]+1)=buyerfrom$,pbuf$(hsel[2]+1)=buyerthru$,pbuf$(hsel[3]+1)=vendfrom$,pbuf$(hsel[4]+1)=vendthru$,pbuf$(hsel[5]+1)=datefrom$,pbuf$(hsel[6]+1)=datethru$,pbuf$(hsel[7]+1)=whsfrom$,pbuf$(hsel[8]+1)=whsthru$,pbuf$(hsel[9]+1)=comment$
     	OutVect!.addItem(pbuf$)
 
-        rem        print (printer_dev) @(hsel[0]),seqnum$,@(hsel[1]),buyerfrom$,@(hsel[2]),buyerthru$,@(hsel[3]),vendfrom$,@(hsel[4]),vendthru$,@(hsel[5]),datefrom$,@(hsel[6]),datethru$,@(hsel[7]),whsfrom$,@(hsel[8]),whsthru$,@(hsel[9]),comment$
         l=l+1
 
     wend
@@ -760,7 +691,7 @@ totalline: rem --- Print total line
 
     p26a_key$=firm_id$+prevbuyer$+prevvend$+prevprodtype$+previtem$
     find record (poe_ordtot_dev,key=p26a_key$,dom=nototal) poe_ordtot$
-    let tstocklevel$=poe_ordtot.stock_level$,textension$=str(poe_ordtot.extended_amt:m1$)
+    let textension$=str(poe_ordtot.extended_amt:m1$)
     for x=1 to 8
     	adjustcodes$(x)=field(poe_ordtot$,"ADJUST_CODE_"+str(x:"00"))
     next x
@@ -768,13 +699,6 @@ totalline: rem --- Print total line
     let tonorder$=str(poe_ordtot.qty_on_order-prevminusonord:m2$),tsugg$=str(poe_ordtot.sugg_ord_qty:m2$)
     let tannualusage$=str(poe_ordtot.annual_usage-prevminusannuse:m2$)
     let tavgusage$=str(poe_ordtot.avg_usage-prevminusavguse:m2$)
-    if tstocklevel$<>"W"
-
-        let tlinepoint$=str(poe_ordtot.line_point:m2$),tordpoint$=str(poe_ordtot.order_point:m2$),teoq$=str(poe_ordtot.eoq:m2$)
-        let tsafety$=str(poe_ordtot.safety_stock:m2$),tmax$=str(poe_ordtot.maximum_qty:m2$),tlead$=str(poe_ordtot.lead_time:m9$)
-        let tcost$=str(poe_ordtot.est_unit_cst:m3$)
-
-    endif
 
     dim pbuf$(width)
     pbuf$(1)=adjustcodes$,pbuf$(o[1]+1)=tannualusage$,pbuf$(o[2]+1)=tavgusage$,pbuf$(o[3]+1)=tsafety$,pbuf$(o[4]+1)=tlead$,pbuf$(o[5]+1)=tavail$,pbuf$(o[6]+1)=tonorder$,pbuf$(o[7]+1)=tordpoint$,pbuf$(o[8]+1)=tmax$,pbuf$(o[9]+1)=teoq$,pbuf$(o[10]+1)=tlinepoint$,pbuf$(o[11]+1)=tcost$,pbuf$(o[12]+1)=tsugg$,pbuf$(o[13]+1)=tweight$,pbuf$(o[14]+1)=textension$
