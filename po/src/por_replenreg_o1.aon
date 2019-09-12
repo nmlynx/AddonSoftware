@@ -38,7 +38,6 @@ rem --- Init data
     l9=59-footnum
     headings=3
     page=0
-    width=142
     when$=sysinfo.system_date$
     dim vendor$(6),prevvend$(6),headings$[headings]
     headings$[0]=sysinfo.firm_name$
@@ -64,7 +63,7 @@ rem --- using a single column, and print lines are built by constructing pbuf$, 
 rem --- line is added to OutVect! (OutVect!.addItem(pbuf$))
 
     dim columns$[0,10]
-    columns$[0,0]="  ",columns$[0,1]="C",columns$[0,2]=str(width)
+    columns$[0,0]="  ",columns$[0,1]="C",columns$[0,2]=str(int(width*1.05))
 
     call stbl("+DIR_PGM",err=*next)+"adc_docout_adj.aon",columns$[all]
 
