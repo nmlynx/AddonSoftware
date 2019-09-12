@@ -55,6 +55,7 @@ rs! = BBJAPI().createMemoryRecordSet("FIRM_ID:C(2), BILL_NO:C(20), DRAWING_NO:C(
 rem --- Get Barista System Program directory
 	sypdir$=""
 	sypdir$=stbl("+DIR_SYP",err=*next)
+    pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- Open files with adc
 

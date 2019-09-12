@@ -24,6 +24,7 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 rem ----------------------------------------------------------------------------
 
+    use ::ado_util.src::util
 
 	seterr sproc_error
 	
@@ -148,7 +149,7 @@ resolve_sig_path:
         if image_path$(1,1)=$22$ then image_path$=image_path$(2) 
         if image_path$(len(image_path$))=$22$ then image_path$=image_path$(1,len(image_path$)-1)
         if image_dir$<>"" then image_path$=image_dir$+image_path$
-        image_file$=BBjAPI().getFileSystem().resolvePath(image_path$,err=*endif)
+        image_file$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(image_path$,err=*endif))
     endif
     return
 

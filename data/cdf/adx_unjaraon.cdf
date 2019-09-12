@@ -1,3 +1,10 @@
+[[ADX_UNJARAON.DB_NAME.AVAL]]
+rem --- Validate new database name
+
+	db_name$ = callpoint!.getUserInput()
+	gosub validate_new_db_name
+	callpoint!.setUserInput(db_name$)
+	if abort then break
 [[ADX_UNJARAON.ASVA]]
 rem --- Abort if already failed validation
 	if callpoint!.getDevObject("abort") then
@@ -22,6 +29,34 @@ rem --- Validate barista installation location
 	gosub validate_bar_install
 	if abort then break
 [[ADX_UNJARAON.<CUSTOM>]]
+validate_new_db_name: rem --- Validate new database name
+
+	abort=0
+
+	rem --- Barista uses all upper case db names
+	db_name$=cvs(db_name$,4)
+
+	rem --- Don't allow database if it's already in Enterprise Manager
+	call stbl("+DIR_SYP")+"bac_em_login.bbj",SysGUI!,Form!,rdAdmin!,rd_status$
+	if rd_status$="ADMIN" then
+		db! = rdAdmin!.getDatabase(db_name$,err=dbNotFound)
+
+		rem --- This db already exists, so don't allow it
+		msg_id$="AD_DB_EXISTS"
+		gosub disp_message
+	endif
+
+	rem --- Abort, need to re-enter database name
+	callpoint!.setColumnData("ADX_UNJARAON.DB_NAME", db_name$)
+	callpoint!.setFocus("ADX_UNJARAON.DB_NAME")
+	callpoint!.setStatus("ABORT")
+	abort=1
+
+dbNotFound:
+	rem --- Okay to use this db name, it doesn't already exist
+
+	return
+
 validate_base_dir: rem --- Validate installation base directory
 	abort=0
 	callpoint!.setDevObject("abort",abort)

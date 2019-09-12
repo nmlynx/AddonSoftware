@@ -283,6 +283,15 @@ rem --- All done
         break
     wend
 
+    rem --- Close files now, otherwise they remain open until exit DocOut report viewer
+    close(aps01_dev,err=*next)
+    close(ape01_dev,err=*next)
+    close(ape04_dev,err=*next)
+    close(ape11_dev,err=*next)
+    close(ape16_dev,err=*next)
+    close(apm01_dev,err=*next)
+    close(apm10_dev,err=*next)
+
     goto std_exit
 
 print_total: rem --- Print totals

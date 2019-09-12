@@ -14,6 +14,7 @@ rem --- All Rights Reserved
 
     use ::ado_func.src::func
     use ::ado_rptControl.src::ReportControl
+    use ::ado_util.src::util
 
     use ::sys/prog/bao_utilities.bbj::BarUtils
 
@@ -37,7 +38,6 @@ rem --- Retrieve sysinfo data
 
     rem --- If BUI, initialize Barista processes
     if info(3,6)="5" then
-        use ::ado_util.src::util
         Translate!=util.initBUIProcess()
         if Translate!=null() then goto std_exit
     endif
@@ -186,7 +186,7 @@ rem --- Initializations
         rd_doc_source$="E"
         rd_doc_ext$="PDF"
         rd_doc_path$=cvs(apsACH.ach_check_dir$,2)
-        rd_doc_path$=BBjAPI().getFileSystem().resolvePath(rd_doc_path$,err=*next)+"/"
+        rd_doc_path$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(rd_doc_path$,err=*next))+"/"
         mkdir rd_doc_path$,err=*next
         rd_source_type$="O"
         rd_source_alias$=rd_alias_id$
@@ -203,7 +203,7 @@ rem --- Initializations
         if logo_filename$=""
             logo_file$=stbl("+CUST_IMAGES",err=*next)+stbl("+FORM_LOGO",err=*next)
             if logo_file$<>""
-                logo_filename$=BBjAPI().getFileSystem().resolvePath(logo_file$,err=*next)
+                logo_filename$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(logo_file$,err=*next))
             endif
         endif
         rem --- If available, use Report Control logo file
@@ -228,7 +228,7 @@ rem --- Initializations
 
         rem --- Initialize document parameters used for each individaul ACH non-negotiable check (payment) file
         params!=new HashMap()
-        if logo_filename$<>"" then params!.put("LOGO_FILE",logo_filename$)
+        params!.put("LOGO_FILE",logo_filename$)
         params!.put("BARISTA_WD",dir(""))
         params!.put("FIRM_ID",firm_id$)
         params!.put("FIRM_NAME", arsReport.name$)

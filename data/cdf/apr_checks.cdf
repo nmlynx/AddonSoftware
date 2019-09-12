@@ -33,6 +33,7 @@ rem --- Warn if this check number has been previously used
 					read(aptCheckHistory_dev,key=firm_id$+aptCheckHistory.ap_type$+$FF$,dom=*next)
 				endif
 				readrecord(aptCheckHistory_dev,end=*break)aptCheckHistory$
+				if aptCheckHistory.firm_id$<>firm_id$ then break
 				next_ap_type$=aptCheckHistory.ap_type$
 				read(aptCheckHistory_dev,key=firm_id$+next_ap_type$+check_no$,dom=*continue)
 			endif
@@ -42,6 +43,7 @@ rem --- Warn if this check number has been previously used
 [[APR_CHECKS.ARER]]
 rem --- Use default check form order if available
 	default_form_order$=callpoint!.getDevObject("default_form_order")
+	callpoint!.setColumnData("APR_CHECKS.FORM_ORDER",default_form_order$,1)
 	if cvs(default_form_order$,2)<>"" then
 		formorderListButton!=callpoint!.getControl("APR_CHECKS.FORM_ORDER")
 		formorderVector!=formorderListButton!.getAllItems()

@@ -30,6 +30,7 @@ barista_wd$=sp!.getParameter("BARISTA_WD")
 sv_wd$=dir("")
 chdir barista_wd$
 nf$="Not found"
+pgmdir$=stbl("+DIR_PGM",err=*next)
 
 rem --- setting for testing when running directly
 rem firm_id$="01"

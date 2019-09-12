@@ -1,0 +1,106 @@
+rem Create sscp for new instance of Addon based on bbj_home 'addon' classpath
+rem Program adc_createsscp.aon
+rem Called from AIUW Install, Quick Copy, and Update wizards (adx_installwiz.aon, adx_quickcopywiz.aon, adx_upgradewiz.aon)
+
+rem  Copyright BASIS International Ltd.  All Rights Reserved.
+
+    seterr std_error
+    setesc std_error
+
+    enter sscpName$,newAonLoc$,copyData%,rdAdmin!,status
+
+rem --- sscpName$ = database name of new instance
+rem --- newAonLoc$ = name of directory into which aon is being installed
+rem --- copyData% = 1 if it's a Quick Copy install, 0 otherwise (production install or upgrade)
+rem --- rdAdmin! = admin object (needed to get environment/classpath objects)
+rem --- status = outbound status 0 for success, 1 otherwise
+
+rem --- Initializations
+    status=1
+    env!=BBjAPI().getAdmin(rdAdmin!.getUser(), rdAdmin!.getPassword()).getEnvironment()
+    if pos(newAonLoc$(len(newAonLoc$),1)="\/")=0 then newAonLoc$=newAonLoc$
+
+rem --- Main
+rem --- Create new session specific classpath (SSCP) in Enterprise Manager
+
+    appsPath$=java.lang.System.getProperty("basis.BBjHome").replace("\","/")+"/apps/"
+    baristaPath$=java.lang.System.getProperty("basis.BBjHome").replace("\","/")+"/barista/"
+    qcpath$=iff(copyData%,"/apps/","/")
+    baristaSubpath$="barista"
+    newBaristaSubpath$="barista_"+sscpName$
+    
+    rem --- first, create new barista sub-classpath
+    subpaths!=BBjAPI().makeVector()
+    subpaths!=env!.getClasspath(baristaSubpath$)
+    if subpaths!.size()>0
+        for i=0 to subpaths!.size()-1
+            subpaths!.setItem(i,subpaths!.getItem(i).replace("\","/"))
+            subpaths!.setItem(i,subpaths!.getItem(i).replace(appsPath$,newAonLoc$+qcpath$))
+            subpaths!.setItem(i,subpaths!.getItem(i).replace(baristaPath$,newAonLoc$+"/barista/"))
+        next i    
+    endif
+
+    paths!=BBjAPI().makeVector()
+    paths!=env!.getClasspath(BBjAPI().getConfig().getCurrentCommandLineObject().getOriginalClasspathName(),err=*next)
+
+    if paths!.size()>0
+        for i=0 to paths!.size()-1
+            paths!.setItem(i,paths!.getItem(i).replace("\","/"))
+            paths!.setItem(i,paths!.getItem(i).replace(appsPath$,newAonLoc$+qcpath$))
+            paths!.setItem(i,paths!.getItem(i).replace(baristaPath$,newAonLoc$+"/barista/"))
+            paths!.setItem(i,paths!.getItem(i).replace("("+baristaSubpath$+")","("+newBaristaSubpath$+")"))
+        next i
+    endif
+
+    env!.setClasspath(newBaristaSubpath$,subpaths!)
+    env!.setClasspath(sscpName$, paths!)
+
+done:
+    status=0
+    goto std_exit
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (11Oct2017)
+
+    if tcb(19)>0
+        rem --- Escape handler
+        if and(chr(tcb(19)),$08$)=$08$
+            release
+        else
+            setesc std_error
+            return
+        endif
+    endif
+
+    if err=0   
+        rem --- Get tcb(12) and tcb(10) to send into bac_error
+        lock_byte=tcb(10)
+        lock_chan=tcb(12)  
+    endif
+
+    rd_err_text$="",err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$,lock_byte,lock_chan
+    if pos("ESCAPE"=rd_err_act$) seterr 0; setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+    if pgm(-1)<>pgm(-2) status=999; exit 
+    release
+
+rem #endinclude std_error.src
+
+
+rem #include std_exit.src
+
+std_exit: rem --- Standard called program exit (01Mar2006)
+
+    exit
+
+rem #endinclude std_exit.src
+
+    end

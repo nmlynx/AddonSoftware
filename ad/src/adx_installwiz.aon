@@ -25,6 +25,8 @@ rem --- Initializations
 
 rem --- Get user inputs
 
+    version_neutral=num(Option!.getOptionData("VERSION_NEUTRAL"))
+    base_dir$=Option!.getOptionData("BASE_DIR")
     dbName$=Option!.getOptionData("DB_NAME")
     appDesc$=Option!.getOptionData("APP_DESC")
     newAonLoc$=Option!.getOptionData("NEW_INSTALL_LOC")
@@ -32,6 +34,7 @@ rem --- Get user inputs
     installType$=Option!.getOptionData("INSTALL_TYPE")
     help%=int(num(Option!.getOptionData("APP_HELP")))
     rdAdmin!=cast(BBjAdminBase, callpoint!.getDevObject("rdAdmin"))
+    major_ver$=callpoint!.getDevObject("major_ver")
 	
 	copyData%=iff(installType$="Q",1,0)
 rem --- if installType is "Q", then run program that does 'quick copy'
@@ -88,7 +91,11 @@ rem --- Is PRB Payroll being installed?
     
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_INSTALL_WIZ")
-    meter_total_recs=5
+    if version_neutral then
+        meter_total_recs=7
+    else
+        meter_total_recs=5
+    endif
     if cvs(newFirm$,2)<>"" then meter_total_recs=meter_total_recs+1
     meter_proc_recs=0
     meter_text$=""
@@ -152,50 +159,25 @@ rem --- Update new addon.syn file
     next syscnt
     
 rem --- Create new session specific classpath (SSCP) in Enterprise Manager
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_CREATE_SSCP","Creating new classpath",1)
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+ 
     sscpName$=cvs(dbName$,8)
-    needBaristaprop=1
-    needAddonprop=1
-    needJ2Pay=1
-    needANet=1
-    needPrbabsprop=1
-    paths!=BBjAPI().makeVector()
-    env!=BBjAPI().getAdmin(rdAdmin!.getUser(), rdAdmin!.getPassword()).getEnvironment()
-    paths!=env!.getClasspath(BBjAPI().getConfig().getCurrentCommandLineObject().getOriginalClasspathName(),err=*next)
-    if paths!.size()>0 then
-        for i=0 to paths!.size()-1
-            if pos("baristaprop.jar"=paths!.getItem(i)) and install_aon then
-                rem --- Update path to baristaprop.jar
-                paths!.setItem(i,newAonLoc$+"/barista/sys/prop/baristaprop.jar")
-                needBaristaprop=0
-            endif
-            if pos("addonprop.jar"=paths!.getItem(i)) and install_aon then
-                rem --- Update path to addonprop.jar
-                paths!.setItem(i,newAonLoc$+"/aon/prop/addonprop.jar")
-                needAddonprop=0
-            endif
-            if pos("j2pay-2.7.7.jar"=paths!.getItem(i)) and install_aon then
-                rem --- Update path to j2pay-2.7.7.jar
-                paths!.setItem(i,newAonLoc$+"/aon/lib/jars/j2pay-2.7.7.jar")
-                needJ2Pay=0
-            endif
-            if pos("anet-java-sdk-1.9.8-SNAPSHOT.jar"=paths!.getItem(i)) and install_aon then
-                rem --- Update path to anet-java-sdk-1.9.8-SNAPSHOT.jar
-                paths!.setItem(i,newAonLoc$+"/aon/lib/jars/anet-java-sdk-1.9.8-SNAPSHOT.jar")
-                needANet=0
-            endif
-            if pos("prbabsprop.jar"=paths!.getItem(i)) and install_prbabs then
-                rem --- Update path to prbabsprop.jar
-                paths!.setItem(i,newAonLoc$+"/prbabs/prop/prbabsprop.jar")
-                needPrbabsprop=0
-            endif
-        next i
+    status=0
+    call pgmdir$+"adc_createsscp.aon",sscpName$,newAonLoc$,copyData%,rdAdmin!,status
+    if status 
+        rem --- Increment progress meter
+        meter_text$=Translate!.getTranslation("AON_CREATE_SSCP_ERROR","Unable to create new classpath",1)
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$    
     endif
-    if needBaristaprop then paths!.addItem(newAonLoc$+"/barista/sys/prop/baristaprop.jar")
-    if needAddonprop then paths!.addItem(newAonLoc$+"/aon/prop/addonprop.jar")
-    if needJ2Pay then paths!.addItem(newAonLoc$+"/aon/lib/jars/j2pay-2.7.7.jar")
-    if needANet then paths!.addItem(newAonLoc$+"/aon/lib/jars/anet-java-sdk-1.9.8-SNAPSHOT.jar")
-    if needPrbabsprop then paths!.addItem(newAonLoc$+"/prbabs/prop/prbabsprop.jar")
-    env!.setClasspath(sscpName$, paths!)
 
 rem --- Create new Web Context in Enterprise Manager
     declare BBjJettyServerConfiguration serverConfig!
@@ -269,6 +251,108 @@ rem --- BIM clears barista/settings dir, so must do this step after BIMing and b
         newSyncLoc$=mountedSys!.getItem(syscnt)+"/data/sync"
         call pgmdir$+"adc_updatexmlfiles.aon",newSyncLoc$,oldSyncLoc$,syncBackupDir$,upgrade%,rdForm!,0,status
     next syscnt
+
+rem --- For version-neutral installs, move files and update paths
+    if version_neutral then
+
+        rem --- Open addon.syn file, and temporary work file
+        aonSynFile$=newAonLoc$+"/aon/config/addon.syn"
+        aonSyn_dev=unt
+        open(aonSyn_dev,isz=-1)aonSynFile$; rem --- Error if not found, something is wrong.
+        tmpWorkFile$=newAonLoc$+"/aon/config/workfile.tmp"
+        erase tmpWorkFile$, err=*next
+        tmpWork_dev=unt
+        open(tmpWork_dev,isz=-1,mode="O_CREATE,O_TRUNC")tmpWorkFile$
+
+        rem --- Get current aon path from SYSDIR/DIR line
+        currentAonDir$=newAonLoc$+"/"
+        while 1
+            read(aonSyn_dev,end=*break)record$
+            
+            rem --- process SYSDIR/DIR lines
+            if(pos("DIR="=record$) = 1 or pos("SYSDIR="=record$) = 1) then
+                xpos = pos("="=record$)
+                currentAonDir$ = cvs(record$(xpos+1),3)
+                break
+            endif
+        wend
+        read(aonSyn_dev,ind=0,err=*next); rem --- reset to beginning of file
+
+        rem --- Make HashMap of source and version-neutral directories
+        sourceMap!=new java.util.HashMap()
+        sourceMap!.put(currentAonDir$+"cust_images",base_dir$+"/cust_images")
+        sourceMap!.put(currentAonDir$+"data",base_dir$+"/"+major_ver$+"/data")
+        sourceMap!.put(currentAonDir$+"documents",base_dir$+"/documents")
+        sourceMap!.put(currentAonDir$+"documents/archive",base_dir$+"/documents/archive")
+        sourceMap!.put(currentAonDir$+"images",base_dir$+"/images")
+        
+        rem --- Increment progress meter
+        meter_text$=Translate!.getTranslation("AON_MOVE_FILES_TO")+" "+Translate!.getTranslation("AON_VER_NEUTRAL_DIR")
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+            
+        rem --- Move files to version-neutral directories
+        sourceIter!=sourceMap!.keySet().iterator()
+        while sourceIter!.hasNext()
+            sourceDir$=sourceIter!.next()
+            targetDir$=sourceMap!.get(sourceDir$)
+
+            rem --- Make sure target directory exists
+            mkdir targetDir$,err=*next
+
+            rem --- Move all files in source directory to target directory
+            dir!=new File(sourceDir$)
+            if dir! <> null() and dir!.exists() and dir!.isDirectory() and dir!.list() <> null()
+                fileVector! = new java.util.Vector(java.util.Arrays.asList(dir!.listFiles()))
+                
+                if fileVector!<>null() and fileVector!.size()>0 then
+                    for j=0 to fileVector!.size()-1
+                        sourceFile!=fileVector!.get(j)
+                        if sourceFile!.isDirectory() then continue
+
+                        targetFile!=new File(targetDir$, sourceFile!.getName())
+                        targetFile!.delete()
+                        sourceFile!.renameTo(targetFile!)
+                        next j
+                endif
+            endif
+        wend
+
+        rem --- Update addon.syn file with version-neutral paths
+
+        rem --- Increment progress meter
+        meter_text$=Translate!.getTranslation("AON_UPDATE_SYN")+" "+Translate!.getTranslation("AON_FOR_")+Translate!.getTranslation("AON_VER_NEUTRAL_DIR")
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+
+        rem --- Update paths in addon.syn file
+        while 1
+            read(aonSyn_dev,end=*break)record$
+
+            rem --- Check for version-neutral paths
+            sourceIter!=sourceMap!.keySet().iterator()
+            while sourceIter!.hasNext()
+                sourceDir$=sourceIter!.next()
+                xpos=pos(sourceDir$=record$)
+                if xpos=0 then continue
+                
+                rem --- Replace path with version-neutral path
+                targetDir$=sourceMap!.get(sourceDir$)
+                record$=record$(1,xpos-1)+targetDir$+record$(xpos+len(sourceDir$))
+                break
+            wend
+
+            write(tmpWork_dev)record$
+        wend
+        close(aonSyn_dev,err=*next)
+        close(tmpWork_dev,err=*next)
+        erase aonSynFile$, err=*next
+        rename tmpWorkFile$ to aonSynFile$, err=*next
+    endif
 
 rem --- Launch auto-sync in new barista for the new addon.syn
 rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the new barista
@@ -356,7 +440,7 @@ update_addon_syn: rem --- Update new addon.syn file
     gosub fix_path
     oldAonDir$=filePath$
     search$=oldAonDir$
-    replace$=newAppDir$+"/"
+    replace$=newAppDir$
     use java.util.HashMap
     declare HashMap stblMap!
     stblMap!=new HashMap()
@@ -467,6 +551,9 @@ open_log:rem --- Open log file
     rem --- write log header info
     print(log_dev)"Installwiz log started: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     print(log_dev)
+    ver_neut_structure$=iff(version_neutral,"Yes","No")
+    print(log_dev)"Version-Neutral Directory Structure: " + ver_neut_structure$
+    print(log_dev)"Installation Base Directory: " + base_dir$
     print(log_dev)"New Database Name: " + dbName$
     print(log_dev)"New Description: " + appDesc$
     print(log_dev)"New aon Location: " + newAonLoc$

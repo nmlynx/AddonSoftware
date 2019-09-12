@@ -190,50 +190,24 @@ rem --- Run BIM bai_install_manager.bbj program via synchronous system call beca
     print(log_dev)meter_text$
 
     rem --- Create new session specific classpath (SSCP) in Enterprise Manager
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_CREATE_SSCP","Creating new classpath",1)
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
     sscpName$=cvs(dbName$,8)
-    needBaristaprop=1
-    needAddonprop=1
-    needJ2Pay=1
-    needANet=1
-    needPrbabsprop=1
-    paths!=BBjAPI().makeVector()
-    env!=BBjAPI().getAdmin(rdAdmin!.getUser(), rdAdmin!.getPassword()).getEnvironment()
-    paths!=env!.getClasspath(BBjAPI().getConfig().getCurrentCommandLineObject().getOriginalClasspathName(),err=*next)
-    if paths!.size()>0 then
-        for i=0 to paths!.size()-1
-            if pos("baristaprop.jar"=paths!.getItem(i)) then
-                rem --- Update path to baristaprop.jar
-                paths!.setItem(i,newAonLoc$+"/barista/sys/prop/baristaprop.jar")
-                needBaristaprop=0
-            endif
-            if pos("addonprop.jar"=paths!.getItem(i)) then
-                rem --- Update path to addonprop.jar
-                paths!.setItem(i,newAonLoc$+"/aon/prop/addonprop.jar")
-                needAddonprop=0
-            endif
-            if pos("j2pay-2.7.7.jar"=paths!.getItem(i)) and install_aon then
-                rem --- Update path to j2pay-2.7.7.jar
-                paths!.setItem(i,newAonLoc$+"/aon/lib/jars/j2pay-2.7.7.jar")
-                needJ2Pay=0
-            endif
-            if pos("anet-java-sdk-1.9.8-SNAPSHOT.jar"=paths!.getItem(i)) and install_aon then
-                rem --- Update path to anet-java-sdk-1.9.8-SNAPSHOT.jar
-                paths!.setItem(i,newAonLoc$+"/aon/lib/jars/anet-java-sdk-1.9.8-SNAPSHOT.jar")
-                needANet=0
-            endif
-            if pos("prbabsprop.jar"=paths!.getItem(i)) then
-                rem --- Update path to prbabsprop.jar
-                paths!.setItem(i,newAonLoc$+"/prbabs/prop/prbabsprop.jar")
-                needPrbabsprop=0
-            endif
-        next i
+    status=0
+    call pgmdir$+"adc_createsscp.aon",sscpName$,newAonLoc$,copyData%,rdAdmin!,status
+    if status 
+        rem --- Increment progress meter
+        meter_text$=Translate!.getTranslation("AON_CREATE_SSCP_ERROR","Unable to create new classpath",1)
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$    
     endif
-    if needBaristaprop then paths!.addItem(newAonLoc$+"/barista/sys/prop/baristaprop.jar")
-    if needAddonprop then paths!.addItem(newAonLoc$+"/aon/prop/addonprop.jar")
-    if needJ2Pay then paths!.addItem(newAonLoc$+"/aon/lib/jars/j2pay-2.7.7.jar")
-    if needANet then paths!.addItem(newAonLoc$+"/aon/lib/jars/anet-java-sdk-1.9.8-SNAPSHOT.jar")
-    if needPrbabsprop then paths!.addItem(newAonLoc$+"/prbabs/prop/prbabsprop.jar")
-    env!.setClasspath(sscpName$, paths!)
 
     rem --- Create new Web Context in Enterprise Manager
     declare BBjJettyServerConfiguration serverConfig!
@@ -577,6 +551,9 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
                 convCtrlPath!.mkdirs()
             endif
             convCtrlFile!.createNewFile()
+            rem --- Set read-write permissions for everyone
+            convCtrlFile!.setReadable(1,0)
+            convCtrlFile!.setWritable(1,0)
         endif
         convCtrlFileChan=unt
         open(convCtrlFileChan,isz=-1,mode="O_CREATE,O_TRUNC")convCtrlFileName$
