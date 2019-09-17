@@ -114,10 +114,10 @@ rem --- Init detail ptr
             avail$=str(poe_orddet.qty_avail:m2$)
             onorder$=str(poe_orddet.qty_on_order:m2$)
 
+            p16_key$=poe_orddet.firm_id$+poe_orddet.buyer_code$+poe_orddet.vendor_id$+poe_orddet.product_type$+poe_orddet.item_id$
         	if suggonly$="Y" 
             	if itemnum$<>prevwitem$
     				csugg=0
-    				p16_key$=poe_orddet.firm_id$+poe_orddet.buyer_code$+poe_orddet.vendor_id$+poe_orddet.product_type$+poe_orddet.item_id$
     				find record (poe_ordtot_dev,key=p16_key$,dom=*continue) poe_ordtot$
     				if poe_ordtot.sugg_ord_qty=0 continue
     				csugg=poe_ordtot.sugg_ord_qty
@@ -191,7 +191,6 @@ rem --- Print
             pbuf$(o[13]+1)=weight$
             pbuf$(o[14]+1)=extension$
             OutVect!.addItem(pbuf$)
-            recs=recs+1
 
             l=l+1
             gosub dosurplus
@@ -421,6 +420,7 @@ newitem: rem --- New Item
                 dim pbuf$(width)
         pbuf$(1)=estimated$+"  "+cvs(fnmask$(itemnum$(1,itemlen),ivIMask$),2)+"  "+itemdesc$
         OutVect!.addItem(pbuf$)
+        recs=recs+1
 
         l=l+1
         printtotline$="Y"
@@ -652,10 +652,7 @@ dosurplus: rem --- Print surplus of other whses for items stocked by 'W'
     p36_key$=firm_id$(1,2)+itemnum$
     read record (poe_repsurp_dev,key=p36_key$,dom=*next) poe_repsurp$
 
-readpoe36:
-
     while more
-
         poe36a_key$=key(poe_repsurp_dev,end=*break)
         if pos(p36_key$=poe36a_key$)<>1 break
         if col>12 break
@@ -664,18 +661,13 @@ readpoe36:
             surplus$(o[col])=poe_repsurp.warehouse_id$+": "+str(poe_repsurp.surplus_qty:m2$)
             col=col+2
         endif
-
     wend
 
-printsurplus:
-
     if col>4
-
-        	dim pbuf$(width)
+    	dim pbuf$(width)
     	pbuf$(1)=surplus$
 		OutVect!.addItem(pbuf$)
 
-rem        print (printer_dev)surplus$
         let l=l+1
     endif
     return
