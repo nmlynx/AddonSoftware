@@ -471,20 +471,22 @@ rem --- Fill jasper reports
         rd_doc_keywords$=""
         gosub document_whse
         rd_archive_action$=""
+        check_doc_id$=rd_doc_id$
     
-        repTitle!=sysinfo.task_desc$+"_"+rd_doc_id$
+        repTitle!=sysinfo.task_desc$+"_"+check_doc_id$
         repTitle$=repTitle!.replace(" ","_")
         report_doc_title$=repTitle$
     
         rem --- get a pdf path from +DOC_DIR_PDF
         rem --- this will eventually be replaced with code to get output formats/types based on doc group and/or print settings
         gosub doc_path
+        check_doc_path$=rd_doc_path$
         
         rem --- Printed checks jasper - contains ALL printed checks, and NO ACH checks
         viewerWindow! = new BBJasperViewerWindow(checkReport!,5,5,screen_width,screen_height,repTitle$,$00000093$)
         viewerControl! = viewerWindow!.getViewerControl()
         viewerControl!.setGoogleDefaultDocument(repTitle$)
-        viewerControl!.setDefaultSaveFolder(rd_doc_path$)
+        viewerControl!.setDefaultSaveFolder(check_doc_path$)
         viewerControl!.setDefaultSaveFile(repTitle$)
         viewerControl!.setFitWidth()
     
@@ -532,7 +534,7 @@ rem --- Fill jasper reports
         rem --- Show ACH payments in jasper viewers
         declare BBJasperViewerWindow achViewerWindow!
         declare BBjTopLevelWindow achBbjWindow!
-    
+
         rd_doc_ext$="JAS"
         rd_archive_action$="DOC_ID-NOREPRINT"
         rd_source_alias$=rd_alias_id$
@@ -542,22 +544,27 @@ rem --- Fill jasper reports
         rd_source_id$="C"
         rd_source_ref$=""
         rd_doc_keywords$=""
+        rd_doc_path$=ach_doc_path$
+        rep_title$=rd_sysinfo.task_desc$+" - ACH"
         gosub document_whse
         rd_archive_action$=""
+        ach_doc_id$=rd_doc_id$
     
-        repTitle$=achChecksBaseName$+"_"+rd_doc_id$
+        repTitle$=achChecksBaseName$+"_"+ach_doc_id$
         ach_doc_title$=repTitle$
     
         rem --- Get path to ACH Check Image Directory
-        rd_doc_path$=cvs(apsACH.ach_check_dir$,2)
-        rd_doc_path$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(rd_doc_path$,err=*next))+"/"
-        mkdir rd_doc_path$,err=*next
+        ach_doc_path$=cvs(apsACH.ach_check_dir$,2)
+        ach_doc_path$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(ach_doc_path$,err=*next))+"/"
+        mkdir ach_doc_path$,err=*next
+    
+        gosub exportAchToPDF; rem --- force save
         
         rem --- ACH payments jasper - contains ALL printed checks, and NO ACH checks
         achViewerWindow! = new BBJasperViewerWindow(achReport!,50,50,screen_width,screen_height,repTitle$,$00000093$)
         achViewerControl! = achViewerWindow!.getViewerControl()
         achViewerControl!.setGoogleDefaultDocument(repTitle$)
-        achViewerControl!.setDefaultSaveFolder(rd_doc_path$)
+        achViewerControl!.setDefaultSaveFolder(ach_doc_path$)
         achViewerControl!.setDefaultSaveFile(repTitle$)
         achViewerControl!.setFitWidth()
 
@@ -639,14 +646,16 @@ rem --- Save and display confirmation dialog
 exportToPDF:
 rem --- exportToPDF and record in doc warehouse
 
-    if rd_doc_path$<>"" and report_doc_title$<>""
+    if check_doc_path$<>"" and report_doc_title$<>""
         rep_title$=report_doc_title$
         rd_doc_name$=report_doc_title$+".pdf"
         rd_doc_ext$="PDF"
         rd_source_id$="C"
         rd_source_ref$=""
         rd_doc_keywords$=""
-        checkReport!.exportToPDF(BBjAPI().FALSE, rd_doc_path$+rd_doc_name$)
+        checkReport!.exportToPDF(BBjAPI().FALSE, check_doc_path$+rd_doc_name$)
+        rd_doc_path$=check_doc_path$
+        rd_doc_id$=check_doc_id$
         gosub document_whse
     endif
 
@@ -665,14 +674,16 @@ rem --- Save and display confirmation dialog
 exportAchToPDF:
 rem --- exportToPDF and record in doc warehouse
 
-    if rd_doc_path$<>"" and ach_doc_title$<>""
+    if ach_doc_path$<>"" and ach_doc_title$<>""
         rep_title$=ach_doc_title$
         rd_doc_name$=ach_doc_title$+".pdf"
         rd_doc_ext$="PDF"
         rd_source_id$="C"
         rd_source_ref$=""
         rd_doc_keywords$=""
-        achReport!.exportToPDF(BBjAPI().FALSE, rd_doc_path$+rd_doc_name$)
+        achReport!.exportToPDF(BBjAPI().FALSE, ach_doc_path$+rd_doc_name$)
+        rd_doc_path$=ach_doc_path$
+        rd_doc_id$=ach_doc_id$
         gosub document_whse
     endif
 
@@ -689,21 +700,20 @@ rem --- force exportToPDF first, in case it hasn't already been saved
     rem --- force exportToPDF in case not already saved
     gosub exportToPDF
 
-    if rd_doc_id$<>"" and rd_doc_ext$<>""
-        call stbl("+DIR_SYP")+"bac_faxemail_jasper.bbj",rd_doc_id$,rd_doc_ext$,rd_table_chans$[all]
+    if check_doc_id$<>"" and rd_doc_ext$<>""
+        call stbl("+DIR_SYP")+"bac_faxemail_jasper.bbj",check_doc_id$,rd_doc_ext$,rd_table_chans$[all]
     endif
 
     return
 
 OnAchEmailToolButton:rem --- Add document to fax/email queue
-rem --- force exportToPDF first, in case it hasn't already been saved
     
-    rem --- force exportToPDF in case not already saved
-    gosub exportAchToPDF
+    rem gosub exportAchToPDF; rem --- Already aways done
 
-    if rd_doc_id$<>"" and rd_doc_ext$<>""
-        call stbl("+DIR_SYP")+"bac_faxemail_jasper.bbj",rd_doc_id$,rd_doc_ext$,table_chans$[all]
+    if ach_doc_id$<>"" and rd_doc_ext$<>""
+        call stbl("+DIR_SYP")+"bac_faxemail_jasper.bbj",ach_doc_id$,rd_doc_ext$,table_chans$[all]
     endif
+
     return
 
 close_win:rem --- Viewer Window Closed

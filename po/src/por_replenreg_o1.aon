@@ -38,7 +38,6 @@ rem --- Init data
     l9=59-footnum
     headings=3
     page=0
-    width=142
     when$=sysinfo.system_date$
     dim vendor$(6),prevvend$(6),headings$[headings]
     headings$[0]=sysinfo.firm_name$
@@ -52,6 +51,7 @@ rem --- Init data
     dopagebrk$="N"
     printtotline$="N"
     dim buyertots[2],vendtots[2],prodtots[2]
+    dim review$(30)
     therearebuyers=1; rem "Used to print sel criteria when no poe-17
     more=1
     recs=0
@@ -64,7 +64,7 @@ rem --- using a single column, and print lines are built by constructing pbuf$, 
 rem --- line is added to OutVect! (OutVect!.addItem(pbuf$))
 
     dim columns$[0,10]
-    columns$[0,0]="  ",columns$[0,1]="C",columns$[0,2]=str(width)
+    columns$[0,0]="  ",columns$[0,1]="C",columns$[0,2]=str(int(width*1.05))
 
     call stbl("+DIR_PGM",err=*next)+"adc_docout_adj.aon",columns$[all]
 
@@ -83,6 +83,11 @@ rem --- Init Read
         read record (poe_ordhdr_dev,end=*break) poe_ordhdr$
         buyer$=poe_ordhdr.buyer_code$
         vendor$=poe_ordhdr.vendor_id$
+        if cvs(poe_ordhdr.cycle_date$,3)<>""
+            review$=Translate!.getTranslation("AON_THROUGH_REVIEW_DATE:_")+fndate$(poe_ordhdr.cycle_date$)
+        else
+            review$=Translate!.getTranslation("AON_THROUGH_LAST_DATE")
+        endif
         comment$=poe_ordhdr.rep_comments$
         call pgmdir$+"adc_progress.aon","S","","","","",0,poe_ordhdr_dev,1,meter_num,status
         gosub testbreaks
@@ -115,10 +120,10 @@ rem --- Init detail ptr
             avail$=str(poe_orddet.qty_avail:m2$)
             onorder$=str(poe_orddet.qty_on_order:m2$)
 
+            p16_key$=poe_orddet.firm_id$+poe_orddet.buyer_code$+poe_orddet.vendor_id$+poe_orddet.product_type$+poe_orddet.item_id$
         	if suggonly$="Y" 
             	if itemnum$<>prevwitem$
     				csugg=0
-    				p16_key$=poe_orddet.firm_id$+poe_orddet.buyer_code$+poe_orddet.vendor_id$+poe_orddet.product_type$+poe_orddet.item_id$
     				find record (poe_ordtot_dev,key=p16_key$,dom=*continue) poe_ordtot$
     				if poe_ordtot.sugg_ord_qty=0 continue
     				csugg=poe_ordtot.sugg_ord_qty
@@ -192,7 +197,6 @@ rem --- Print
             pbuf$(o[13]+1)=weight$
             pbuf$(o[14]+1)=extension$
             OutVect!.addItem(pbuf$)
-            recs=recs+1
 
             l=l+1
             gosub dosurplus
@@ -298,31 +302,15 @@ rem	OutVect!.addItem(pbuf$)
    	pbuf$(1)=dashes$
 	OutVect!.addItem(pbuf$)
 	dim pbuf$(width)
-    pbuf$(h[1]+1)=Translate!.getTranslation("AON_ACT_ANNL"),pbuf$(h[2]+1)=Translate!.getTranslation("AON_WGT_PER"),pbuf$(h[3]+1)=Translate!.getTranslation("AON_SAFETY"),pbuf$(h[4]+1)=Translate!.getTranslation("AON_LEAD"),pbuf$(h[6]+1)=Translate!.getTranslation("AON_ON"),pbuf$(h[7]+1)=Translate!.getTranslation("AON_ORDER"),pbuf$(h[8]+1)=Translate!.getTranslation("AON_MAX"),pbuf$(h[10]+1)=Translate!.getTranslation("AON_LINE"),pbuf$(h[11]+1)=Translate!.getTranslation("AON_UNIT"),pbuf$(h[12]+1)=Translate!.getTranslation("AON_SUGGESTED"),pbuf$(h[13]+1)=Translate!.getTranslation("AON_TOTAL")
+    pbuf$(h[1]+1)=Translate!.getTranslation("AON_ACT_ANNL"),pbuf$(h[2]+1)=Translate!.getTranslation("AON_PERIOD"),pbuf$(h[3]+1)=Translate!.getTranslation("AON_SAFETY"),pbuf$(h[4]+1)=Translate!.getTranslation("AON_LEAD"),pbuf$(h[6]+1)=Translate!.getTranslation("AON_ON"),pbuf$(h[7]+1)=Translate!.getTranslation("AON_ORDER"),pbuf$(h[8]+1)=Translate!.getTranslation("AON_MAX"),pbuf$(h[10]+1)=Translate!.getTranslation("AON_LINE"),pbuf$(h[11]+1)=Translate!.getTranslation("AON_UNIT"),pbuf$(h[12]+1)=Translate!.getTranslation("AON_SUGGESTED"),pbuf$(h[13]+1)=Translate!.getTranslation("AON_TOTAL")
 	OutVect!.addItem(pbuf$)
 	dim pbuf$(width)
-    pbuf$(h[0]+1)=Translate!.getTranslation("AON_WHS"),pbuf$(h[1]+1)=Translate!.getTranslation("AON_USAGE"),pbuf$(h[2]+1)=Translate!.getTranslation("AON_USAGE"),pbuf$(h[3]+1)=Translate!.getTranslation("AON_STOCK"),pbuf$(h[4]+1)=Translate!.getTranslation("AON_TIME"),pbuf$(h[5]+1)=Translate!.getTranslation("AON_AVAIL"),pbuf$(h[6]+1)=Translate!.getTranslation("AON_ORDER"),pbuf$(h[7]+1)=Translate!.getTranslation("AON_POINT"),pbuf$(h[8]+1)=Translate!.getTranslation("AON_QTY"),pbuf$(h[9]+1)="EOQ",pbuf$(h[10]+1)=Translate!.getTranslation("AON_POINT"),pbuf$(h[11]+1)=Translate!.getTranslation("AON_COST"),pbuf$(h[12]+1)=Translate!.getTranslation("AON_ORDER_QTY"),pbuf$(h[13]+1)=Translate!.getTranslation("AON_WEIGHT"),pbuf$(h[14]+1)=Translate!.getTranslation("AON_EXTENSION")
+    pbuf$(h[0]+1)=Translate!.getTranslation("AON_WHS"),pbuf$(h[1]+1)=Translate!.getTranslation("AON_USAGE"),pbuf$(h[2]+1)=Translate!.getTranslation("AON_AVG")+" "+Translate!.getTranslation("AON_USAGE"),pbuf$(h[3]+1)=Translate!.getTranslation("AON_STOCK"),pbuf$(h[4]+1)=Translate!.getTranslation("AON_TIME"),pbuf$(h[5]+1)=Translate!.getTranslation("AON_AVAIL"),pbuf$(h[6]+1)=Translate!.getTranslation("AON_ORDER"),pbuf$(h[7]+1)=Translate!.getTranslation("AON_POINT"),pbuf$(h[8]+1)=Translate!.getTranslation("AON_QTY"),pbuf$(h[9]+1)="EOQ",pbuf$(h[10]+1)=Translate!.getTranslation("AON_POINT"),pbuf$(h[11]+1)=Translate!.getTranslation("AON_COST"),pbuf$(h[12]+1)=Translate!.getTranslation("AON_ORDER_QTY"),pbuf$(h[13]+1)=Translate!.getTranslation("AON_WEIGHT"),pbuf$(h[14]+1)=Translate!.getTranslation("AON_EXTENSION")
 	OutVect!.addItem(pbuf$)
    	dim pbuf$(width)
    	pbuf$(1)=dashes$
 	OutVect!.addItem(pbuf$)
 
-	rem    print (printer_dev)""
-rem   print (printer_dev) @(0),vendline$
-rem    print (printer_dev) @(16),addr1$,@(57),Translate!.getTranslation("AON_PRIOR_REVIEW:_"),prirev$,@(83),Translate!.getTranslation("AON_CYCLE_DAYS:_"),apm_vendrepl.rev_days:"##0",@(105),Translate!.getTranslation("AON_TARGET_WEIGHT:_"),apm_vendrepl.pur_targ_lbs:m6$
-
-rem    print (printer_dev) @(16),addr2$,@(57),Translate!.getTranslation("AON_LAST_RECEIPT:_"),lastrcpt$,@(104),Translate!.getTranslation("AON_TARGET_DOLLARS:_"),apm_vendrepl.pur_targ_amt:m1$
-
-rem    if pos(" "<>addr3$)<>0 print (printer_dev)@(16),addr3$; let l=l+1
-
-rem    print (printer_dev) @(0),Translate!.getTranslation("AON_CONTACT:_"),contact$,@(57),Translate!.getTranslation("AON_PHONE:__"),phone$,@(90),Translate!.getTranslation("AON_FAX:__"),fax$
-
-rem    print (printer_dev)dashes$
-
-rem    print (printer_dev) @(h[1]),Translate!.getTranslation("AON_ACT_ANNL"),@(h[2]),Translate!.getTranslation("AON_WGT_PER"),@(h[3]),Translate!.getTranslation("AON_SAFETY"),@(h[4]),Translate!.getTranslation("AON_LEAD"),@(h[6]),Translate!.getTranslation("AON_ON"),@(h[7]),Translate!.getTranslation("AON_ORDER"),@(h[8]),Translate!.getTranslation("AON_MAX"),@(h[10]),Translate!.getTranslation("AON_LINE"),@(h[11]),Translate!.getTranslation("AON_UNIT"),@(h[12]),Translate!.getTranslation("AON_SUGGESTED"),@(h[13]),Translate!.getTranslation("AON_TOTAL")
-
-rem    print (printer_dev) @(h[0]),Translate!.getTranslation("AON_WHS"),@(h[1]),Translate!.getTranslation("AON_USAGE"),@(h[2]),Translate!.getTranslation("AON_USAGE"),@(h[3]),Translate!.getTranslation("AON_STOCK"),@(h[4]),Translate!.getTranslation("AON_TIME"),@(h[5]),Translate!.getTranslation("AON_AVAIL"),@(h[6]),Translate!.getTranslation("AON_ORDER"),@(h[7]),Translate!.getTranslation("AON_POINT"),@(h[8]),Translate!.getTranslation("AON_QTY"),@(h[9]),"EOQ",@(h[10]),Translate!.getTranslation("AON_POINT"),@(h[11]),Translate!.getTranslation("AON_COST"),@(h[12]),Translate!.getTranslation("AON_ORDER_QTY"),@(h[13]),Translate!.getTranslation("AON_WEIGHT"),@(h[14]),Translate!.getTranslation("AON_EXTENSION")
-rem    print (printer_dev)dashes$
     l=l+9
     printvtot$="Y"
     prevvend$=vendor$
@@ -421,7 +409,9 @@ newitem: rem --- New Item
 
                 dim pbuf$(width)
         pbuf$(1)=estimated$+"  "+cvs(fnmask$(itemnum$(1,itemlen),ivIMask$),2)+"  "+itemdesc$
+        pbuf$(51)=review$
         OutVect!.addItem(pbuf$)
+        recs=recs+1
 
         l=l+1
         printtotline$="Y"
@@ -653,10 +643,7 @@ dosurplus: rem --- Print surplus of other whses for items stocked by 'W'
     p36_key$=firm_id$(1,2)+itemnum$
     read record (poe_repsurp_dev,key=p36_key$,dom=*next) poe_repsurp$
 
-readpoe36:
-
     while more
-
         poe36a_key$=key(poe_repsurp_dev,end=*break)
         if pos(p36_key$=poe36a_key$)<>1 break
         if col>12 break
@@ -665,18 +652,13 @@ readpoe36:
             surplus$(o[col])=poe_repsurp.warehouse_id$+": "+str(poe_repsurp.surplus_qty:m2$)
             col=col+2
         endif
-
     wend
 
-printsurplus:
-
     if col>4
-
-        	dim pbuf$(width)
+    	dim pbuf$(width)
     	pbuf$(1)=surplus$
 		OutVect!.addItem(pbuf$)
 
-rem        print (printer_dev)surplus$
         let l=l+1
     endif
     return
