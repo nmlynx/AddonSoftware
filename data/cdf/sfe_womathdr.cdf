@@ -83,10 +83,7 @@ rem --- If new record, initialize SFE_WOMATHDR and SFE_WOMATDET
 
 		rem -- Verify WO status
 		gosub verify_wo_status
-		if bad_wo then
-			callpoint!.setStatus("ABORT")
-			break
-		endif
+		if bad_wo then break
 	endif
 [[SFE_WOMATHDR.ARAR]]
 rem -- Build starting rowQtyMap!
@@ -95,13 +92,6 @@ rem -- Build starting rowQtyMap!
 [[SFE_WOMATHDR.AREC]]
 rem -- Provide initial empty starting rowQtyMap!
 	callpoint!.setDevObject("start_rowQtyMap", new java.util.HashMap())
-[[SFE_WOMATHDR.BPFX]]
-rem -- Verify WO status
-	gosub verify_wo_status
-	if bad_wo then
-		callpoint!.setStatus("ABORT")
-		break
-	endif
 [[SFE_WOMATHDR.BDEL]]
 rem --- Initialize inventory item update
 	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
@@ -189,11 +179,11 @@ rem --- Existing materials issues?
 		rem --- Warn Materials Issues Entry is in process for this WO
 		msg_id$="WO_ISSUES_IN_PROCESS"
 		gosub disp_message
-		callpoint!.setStatus("ABORT")
+		callpoint!.setStatus("NEWREC")
 		break
 	endif
 
-rem ... focus needs to move to the grid re Barista bug 6299
+rem ... focus needs to move to the last key field re Barista bug 6299
 [[SFE_WOMATHDR.<CUSTOM>]]
 #include std_missing_params.src
 
