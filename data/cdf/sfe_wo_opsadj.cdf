@@ -110,8 +110,8 @@ rem	if last_event!.getKeyCode()=6 and last_event!.isControlDown() = true escape
 	switch notice.code
 
 		case 32; rem grid cell validation
-rem --- New Work Order Number
 
+			rem --- New Work Order Number
 			if curr_col=17
 				wo_no$=notice.buf$
 				wo_no$=str(num(wo_no$):callpoint!.getDevObject("wo_no_mask"))
@@ -154,8 +154,7 @@ rem --- New Work Order Number
 				break
 			endif
 
-rem --- Rates or Units
-
+			rem --- Rates or Units
 			if curr_col = 6 or curr_col=8  or curr_col=10 or curr_col=12 then
 				if curr_col=6
 					dir=num(notice.buf$)
@@ -191,14 +190,14 @@ rem --- Rates or Units
 				break
 			endif
 
-rem --- New Qty Complete
+			rem --- New Qty Complete
 			if curr_col=16
 				vectOps!.setItem((curr_row*num(user_tpl.gridOpsCols$))+16,notice.buf$)
 				gridOps!.accept(1)
 				break
 			endif
 
-rem --- New Tran Date
+			rem --- New Tran Date
 			if curr_col=18
 				tran_date$=notice.buf$
 				input_value$=tran_date$
@@ -236,8 +235,8 @@ rem --- New Tran Date
 			gridOps!.accept(1)
 			break
 
-		case 19; rem row change
-
+		case 19; rem --- grid_select_row
+			sysgui!.flushEvents(); rem --- Eliminate extra grid_mouse_up event that comes with grid_select_row event
 			if vectOps!.size()=0 break
 			gosub switch_colors
 			break
@@ -248,9 +247,11 @@ rem --- New Tran Date
 			endif
 			break
 
-		case 12; rem Lookup;rem CAH
+		case 12; rem --- grid_key_press
+			keycode=notice.wparam
+			if curr_col=0 and keycode=32 then gosub switch_value
 			if curr_col=17
-				keycode=notice.wparam
+				rem --- WO lookup
 				keycode$=bin(keycode,2)
 				if asc(and(keycode$,$2000$)) and keycode$=$2006$
 					key_pfx$=firm_id$
@@ -266,7 +267,7 @@ rem --- New Tran Date
 			break
 
 		case 14; rem --- grid_mouse_up
-			if notice.col=0 gosub switch_value
+			if curr_col=0 then gosub switch_value
 			break
 
 	swend
@@ -375,7 +376,6 @@ rem --- Set callbacks - processed in ACUS callpoint
 	gridOps!.setCallback(gridOps!.ON_GRID_SPECIAL_KEY,"custom_event")
 	gridOps!.setCallback(gridOps!.ON_GRID_KEYPRESS,"custom_event")
 	gridOps!.setCallback(gridOps!.ON_GRID_MOUSE_UP,"custom_event")
-	gridOps!.setCallback(gridOps!.ON_GRID_MOUSE_DOWN,"custom_event")
 [[SFE_WO_OPSADJ.<CUSTOM>]]
 rem ==========================================================================
 format_grid: rem --- Use Barista program to format the grid
@@ -734,23 +734,18 @@ rem ==========================================================================
 
 	SysGUI!.setRepaintEnabled(0)
 
-rem	gridOps!       = UserObj!.getItem(num(user_tpl.gridOps$))
-rem	vectOps!       = UserObj!.getItem(num(user_tpl.vectOpsOfst$))
-
 	TempRows! = gridOps!.getSelectedRows()
-	numcols   = gridOps!.getNumColumns()
-
 	if TempRows!.size() > 0 then
 		for curr_row=1 to TempRows!.size()
 			row_no = num(TempRows!.getItem(curr_row-1))
 
 			if gridOps!.getCellState(row_no,0) = 0 then
-		rem --- not checked - leave alone
-
-				gridOps!.setCellState(row_no, 0, 0)
+				rem --- Not checked -> Checked
+				gridOps!.setCellState(row_no, 0, 1)
 
 			else
-		rem --- Checked -> not checked
+				rem --- Checked -> not checked
+				gridOps!.setCellState(row_no, 0, 0)
 
 				orig_dir$ = gridOps!.getCellText(row_no,5)
 				orig_ovh$=gridOps!.getCellText(row_no,7)
@@ -761,7 +756,6 @@ rem	vectOps!       = UserObj!.getItem(num(user_tpl.vectOpsOfst$))
 				orig_wo$=callpoint!.getDevObject("wo_no")
 				orig_date$=gridOps!.getCellText(row_no,1)
 
-				gridOps!.setCellState(row_no,0,0)
 				gridOps!.setCellText(row_no, 6, orig_dir$)
 				gridOps!.setCellText(row_no,8,orig_ovh$)
 				gridOps!.setCellText(row_no,10,orig_setup$)
@@ -780,6 +774,7 @@ rem	vectOps!       = UserObj!.getItem(num(user_tpl.vectOpsOfst$))
 				gridOps!.setCellBackColor(rowno,17,callpoint!.getDevObject("same_color"))
 				gridOps!.setCellBackColor(rowno,18,callpoint!.getDevObject("same_color"))
 
+				numcols   = gridOps!.getNumColumns()
 				vectOps!.setItem((row_no*numcols)+6,orig_dir$)
 				vectOps!.setItem((row_no*numcols)+8,orig_ovh$)
 				vectOps!.setItem((row_no*numcols)+10,orig_setup$)
