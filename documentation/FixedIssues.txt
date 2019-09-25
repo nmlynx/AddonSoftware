@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2019-09-24
+ Report Date:   2019-09-25
  Report Branch: AddonSoftware 19.11
  Last Release:  AddonSoftware 19.10
 =======================================================================================================================================
@@ -164,3 +164,15 @@ Modified: data/bar/sfr_wordjobstat.xml
 Modified: data/bar/sfr_wotranshist.xml
 Modified: data/bar/sfr_wovarrep.xml
 Added: data/cdf/bmu_prgobsdet.cdf
+
+=======================================================================================================================================
+Revision: 40ebb7ceb175667011de22c11fa321631dbedbb6
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 9/25/2019 3:47:11 PM
+Message:
+Bug 9767: Grid sell state was not being updated when checkbox went from
+unchecked to checked. And, the grid_select_row event generated an extra
+grid_mouse_up event that needed to be flushed.
+----
+Modified: data/bar/sfe_wo_opsadj.xml
+Modified: data/cdf/sfe_wo_opsadj.cdf
