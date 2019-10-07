@@ -1,3 +1,32 @@
+[[APM_VENDMAST.AOPT-HIST]]
+rem --- Show historical invoices from this vendor (balance=0)
+
+	vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+
+	selected_key$ = ""
+	dim filter_defs$[1,2]
+	filter_defs$[0,0]="APT_INVOICEHDR.FIRM_ID"
+	filter_defs$[0,1]="='"+firm_id$+"'"
+	filter_defs$[0,2]="LOCK"
+	filter_defs$[1,0]="APT_INVOICEHDR.VENDOR_ID"
+	filter_defs$[1,1]="='"+vendor_id$+"'"
+	filter_defs$[1,2]="LOCK"
+
+	dim search_defs$[3]
+
+	call stbl("+DIR_SYP")+"bax_query.bbj",
+:		gui_dev,
+:		Form!,
+:		"AP_HISTINV",
+:		"",
+:		table_chans$[all],
+:		"",
+:		filter_defs$[all],
+:		search_defs$[all]
+[[APM_VENDMAST.BTBL]]
+
+[[APM_VENDMAST.ASHO]]
+
 [[APM_VENDMAST.ABA_NO.AVAL]]
 rem --- Bank routing number must be 9-digit number, or blank
 	aba_no$=callpoint!.getUserInput()
