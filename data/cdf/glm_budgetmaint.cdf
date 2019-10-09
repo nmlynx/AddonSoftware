@@ -293,6 +293,14 @@ gridBudgets!=UserObj!.getItem(num(user_tpl.grid_ofst$))
 for x=0 to cols!.size()-1
 	this_col$=cols!.getItem(x)
 	this_tp$=tps!.getItem(x)
+
+	if cvs(this_col$+this_tp$,2)="" then
+		rem --- Disable grid row (except cell 0) for budget code (none) 
+		gridBudgets!.setRowEditable(x,0)
+		gridBudgets!.setCellEditable(x,0,1)
+		continue
+	endif
+
 	x1=0
 	while x1<codes!.size()-1
 		wcd$=codes!.getItem(x1)
@@ -347,6 +355,7 @@ switch notice.code
 
 		if curr_col=0
 			label$=gridBudgets!.getCellText(curr_row,curr_col)
+			if len(label$)<2 then break; rem --- Skip budget code (none)
 			record_type$=label$(pos(" ("=label$,-1)+2)
 			record_type$=record_type$(1,len(record_type$)-2)
 			amt_or_units$=label$(len(label$)-1,1)
@@ -448,6 +457,7 @@ rem --- Only budget and planned budget rows are editable. Actual rows are disabl
 cols=vectGLSummary!.size()-1
 if cols>0
 	label$=gridBudgets!.getCellText(curr_row,0)
+	if len(cd_tp$)<2 then return; rem --- Skip budget code (none)
 	record_type$=label$(pos(" ("=label$,-1)+2)
 	record_type$=record_type$(1,len(record_type$)-2)
 	amt_or_units$=label$(len(label$)-1,1)
@@ -719,6 +729,7 @@ replicate_amt:
 		gls_calendar_dev=fnget_dev("GLS_CALENDAR")
 		dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
 		label$=gridBudgets!.getCellText(curr_row,0)
+		if len(label$)<2 then return; rem --- Skip budget code (none)
 		record_type$=label$(pos(" ("=label$,-1)+2)
 		record_type$=record_type$(1,len(record_type$)-2)
 		displayColumns!=callpoint!.getDevObject("displayColumns")

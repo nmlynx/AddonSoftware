@@ -6,8 +6,8 @@ displayColumns!=new DisplayColumns(firm_id$)
 rem create list for column zero of grid -- column type drop-down
 none_list$=pad(Translate!.getTranslation("AON_(NONE)"),20)+"~"+"   ;"
 button_list$=displayColumns!.getStringButtonList()
-ldat_list$=none_list$+button_list$
 
+ldat_list$=none_list$+button_list$
 for x=1 to 4
 	callpoint!.setTableColumnAttribute("<<DISPLAY>>.BUD_CD_"+str(x),"LDAT",ldat_list$)
 next x
@@ -82,13 +82,15 @@ next x
 rem "set column and type in gl param rec based on items selected from pulldowns
 
 for x=1 to 4
-	cd_tp$=pad(callpoint!.getColumnData("<<DISPLAY>>.RECORD_CD_"+str(x)),2)
+	cd_tp$=callpoint!.getColumnData("<<DISPLAY>>.RECORD_CD_"+str(x))
+	if len(cd_tp$)<2 then cd_tp$=pad(cd_tp$,2)
 	callpoint!.setColumnData("GLS_COLUMNS.ACCT_MN_COLS_"+str(x:"00"),cd_tp$(1,1))
 	callpoint!.setColumnData("GLS_COLUMNS.ACCT_MN_TYPE_"+str(x:"00"),cd_tp$(2,1))
 next x
 
 for x=1 to 4
 	cd_tp$=callpoint!.getColumnData("<<DISPLAY>>.BUD_CD_"+str(x))
+	if len(cd_tp$)<2 then cd_tp$=pad(cd_tp$,2)
 	callpoint!.setColumnData("GLS_COLUMNS.BUD_MN_COLS_"+str(x:"00"),cd_tp$(1,len(cd_tp$)-1))
 	callpoint!.setColumnData("GLS_COLUMNS.BUD_MN_TYPE_"+str(x:"00"),cd_tp$(len(cd_tp$)))
 next x

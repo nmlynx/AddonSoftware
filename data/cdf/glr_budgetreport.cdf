@@ -112,6 +112,7 @@ next x
 [[GLR_BUDGETREPORT.ARER]]
 rem look at cols and tps in param rec; translate those to matching entry in the <<DISPLAY>> lists and set selected index
 
+codes!=UserObj!.getItem(0)
 gls01_dev=fnget_dev("GLS_PARAMS")
 dim gls01a$:fnget_tpl$("GLS_PARAMS")
 
@@ -120,11 +121,17 @@ readrecord(gls01_dev,key=firm_id$+"GL00",dom=std_missing_params)gls01a$
 for x=1 to 4
 	cd$=field(gls01a$,"BUD_MN_COLS_"+str(x:"00"))
 	tp$=field(gls01a$,"BUD_MN_TYPE_"+str(x:"00"))
-	cd_tp$="("+cd$+tp$+")"
-	callpoint!.setColumnData("<<DISPLAY>>.BUD_CD_"+str(x),cd$+tp$)
+	if pos(cd$(1,1)="012345") then cd$=cvs(cd$,2)
+	wk_id$=callpoint!.getTableColumnAttribute("<<DISPLAY>>.BUD_CD_"+str(x),"CTLI")
+	wk_ctl!=Form!.getControl(num(wk_id$))
+	itemsVect!=wk_ctl!.getAllItems()
+	for i=0 to codes!.size()-1
+		if cd$+tp$=codes!.get(i) then
+			wk_ctl!.selectIndex(i+1)
+			break
+		endif
+	next i
 next x
-
-callpoint!.setStatus("REFRESH")
 [[GLR_BUDGETREPORT.<CUSTOM>]]
 #include std_functions.src
 disable_fields:
