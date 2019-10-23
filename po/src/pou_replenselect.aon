@@ -297,7 +297,7 @@ rem --- How much does it cost?
 
 		gosub getcost_n_vlead
 		if cost=0 cost=unitcost; rem "If no qty breaks, use ivm-02 cost
-		extension=sugg*cost
+		extension=round(sugg*cost,2)
 
 assignpoe16: rem --- Assign to poe-16
 
@@ -323,7 +323,7 @@ assignbywhse: rem --- Assign items stocked by Whse to poe-16
 		poe_orddet.safety_stock=safe
 		poe_orddet.maximum_qty=max
 		poe_orddet.lead_time=lead
-		poe_orddet.weight=weight*sugg
+		poe_orddet.weight=round(weight*sugg,2)
 		poe_orddet.sugg_ord_qty=sugg
 		poe_orddet.est_unit_cst=cost
 		poe_orddet.annual_usage=actualusage
@@ -399,7 +399,7 @@ rem --- Assign for stocked by 'W'arehouse
 	endif
     poe_ordtot.qty_avail=totavail
     poe_ordtot.qty_on_order=totonorder
-    poe_ordtot.weight=weight*totsugg
+    poe_ordtot.weight=round(weight*totsugg,2)
     poe_ordtot.sugg_ord_qty=totsugg
     poe_ordtot.annual_usage=totactualusage
     poe_ordtot.avg_usage=totavgusage
@@ -432,12 +432,12 @@ l5380:
     poe_ordtot.safety_stock=safe
     poe_ordtot.maximum_qty=max
     poe_ordtot.lead_time=lead
-    poe_ordtot.weight=weight*sugg
+    poe_ordtot.weight=round(weight*sugg,2)
     poe_ordtot.sugg_ord_qty=sugg
     poe_ordtot.est_unit_cost=cost
     poe_ordtot.annual_usage=totactualusage
     poe_ordtot.avg_usage=totavgusage
-    poe_ordtot.extended_amt=cost*sugg
+    poe_ordtot.extended_amt=round(cost*sugg,2)
 writepoe26:
     if detaillines=0 goto l5450
     write record (poe_ordtot_dev) poe_ordtot$
