@@ -1,13 +1,29 @@
-rem --- rem Replenishment Report Program (Input Overlay)
-rem --- Program por_replen.aon v8.0.0 06Jul2007 (por_fa)
-rem --- Created by adx_codeport.bbx v1.1.5 (07/06/2007 12:35:00)
+rem --- PO Replenishment Report
+rem --- Program por_replen.aon (por_fa)
+rem --- Adapted from the original single-column DocOut version to use Jasper report
 
-rem --- AddonSoftware Version 8.0.0 - 01Jan2007
+rem --- AddonSoftware
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
-rem --- All Rights Reserved
 
     setesc std_error
     seterr std_error
+
+    use ::bbjasper.bbj::BBJasperReport
+    use ::bbjasper.bbj::BBJasperViewerWindow
+    use ::bbjasper.bbj::BBJasperViewerControl
+
+    use ::ado_rptControl.src::ReportControl
+    use ::ado_func.src::func
+    use ::ado_util.src::util
+    use ::sys/prog/bao_utilities.bbj::BarUtils
+
+    declare BBJasperReport BBjReport!
+    
+    params! = Option!.getOptionMap()
+        
+    ScreenSize!   = bbjAPI().getSysGui().getSystemMetrics().getScreenSize()
+    screen_width  = ScreenSize!.width - 200; rem keep it in the MDI w/ no scroll bars
+    screen_height = ScreenSize!.height - 100
 
 rem --- Retrieve the program path
 
@@ -18,213 +34,282 @@ rem --- Retrieve sysinfo data
     sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
     dim sysinfo$:sysinfo_template$
     sysinfo$=stbl("+SYSINFO",err=*next)
-    milestone=num(stbl("+MILESTONE",err=*next),err=*next)
     firm_id$=sysinfo.firm_id$
-
-rem --- Open/Lock files
-
-	num_files=22,open_beg=1,open_end=num_files
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-
-		open_tables$[1]="APM_VENDMAST", open_opts$[1]="OTA"
-	open_tables$[2]="ARM_CUSTMAST", open_opts$[2]="OTA"
-	open_tables$[3]="APM_VENDADDR", open_opts$[3]="OTA"
-	open_tables$[4]="APM_VENDREPL", open_opts$[4]="OTA"
-	open_tables$[5]="IVM_ITEMMAST", open_opts$[5]="OTA"
-	open_tables$[6]="IVC_PRODCODE", open_opts$[6]="OTA"
-	open_tables$[7]="POE_REQHDR", open_opts$[7]="OTA"
-	open_tables$[8]="POE_POHDR", open_opts$[8]="OTA"
-	open_tables$[9]="POE_ORDHDR", open_opts$[9]="OTA"
-	open_tables$[10]="POE_REPSEL", open_opts$[10]="OTA"
-	open_tables$[11]="POE_REQDET", open_opts$[11]="OTA"
-	open_tables$[12]="POE_ORDDET", open_opts$[12]="OTA"
-	open_tables$[13]="POE_REPXREF", open_opts$[13]="OTA"
-	open_tables$[14]="POE_REQPRINT", open_opts$[14]="OTA"
-	open_tables$[15]="POE_ORDTOT", open_opts$[15]="OTA"
-	open_tables$[16]="POE_REPSURP", open_opts$[16]="OTA"
-	open_tables$[17]="POC_LINECODE", open_opts$[17]="OTA"
-	open_tables$[18]="APS_PARAMS", open_opts$[18]="OTA"
-	open_tables$[20]="IVS_PARAMS", open_opts$[20]="OTA"
-	open_tables$[21]="IVS_ABCPARAM", open_opts$[21]="OTA"
-	open_tables$[22]="IVC_BUYCODE", open_opts$[22]="OTA"
-
-		gosub open_tables
-
-	apm_vendmast_dev=num(open_chans$[1])
-	arm_custmast_dev=num(open_chans$[2])
-	apm_vendaddr_dev=num(open_chans$[3])
-	apm_vendrepl_dev=num(open_chans$[4])
-	ivm_itemmast_dev=num(open_chans$[5])
-	ivc_prodcode_dev=num(open_chans$[6])
-	poe_reqhdr_dev=num(open_chans$[7])
-	poe_pohdr_dev=num(open_chans$[8])
-	poe_ordhdr_dev=num(open_chans$[9])
-	poe_repsel_dev=num(open_chans$[10])
-	poe_reqdet_dev=num(open_chans$[11])
-	poe_orddet_dev=num(open_chans$[12])
-	poe_repxref_dev=num(open_chans$[13])
-	poe_reqprint_dev=num(open_chans$[14])
-	poe_ordtot_dev=num(open_chans$[15])
-	poe_repsurp_dev=num(open_chans$[16])
-	poc_linecode_dev=num(open_chans$[17])
-	aps_params_dev=num(open_chans$[18])
-	ivs_params_dev=num(open_chans$[20])
-	ivs_abcparam_dev=num(open_chans$[21])
-	ivc_buycode_dev=num(open_chans$[22])
-
-	dim apm_vendmast$:open_tpls$[1]
-	dim arm_custmast$:open_tpls$[2]
-	dim apm_vendaddr$:open_tpls$[3]
-	dim apm_vendrepl$:open_tpls$[4]
-	dim ivm_itemmast$:open_tpls$[5]
-	dim ivc_prodcode$:open_tpls$[6]
-	dim poe_reqhdr$:open_tpls$[7]
-	dim poe_pohdr$:open_tpls$[8]
-	dim poe_ordhdr$:open_tpls$[9]
-	dim poe_repsel$:open_tpls$[10]
-	dim poe_reqdet$:open_tpls$[11]
-	dim poe_orddet$:open_tpls$[12]
-	dim poe_repxref$:open_tpls$[13]
-	dim poe_reqprint$:open_tpls$[14]
-	dim poe_ordtot$:open_tpls$[15]
-	dim poe_repsurp$:open_tpls$[16]
-	dim poc_linecode$:open_tpls$[17]
-	dim aps_params$:open_tpls$[18]
-	dim ivs_params$:open_tpls$[20]
-	dim ivs_abcparam$:open_tpls$[21]
-	dim ivc_buycode$:open_tpls$[22]
+    firm_name$=sysinfo.firm_name$
 
 rem --- Assign form input values to local variables
 
-    includewhse$=option!.getOptionData("whse_detail")
-    suggonly$=option!.getOptionData("sugg_itemsonly")
+    whse_detail$=option!.getOptionData("WHSE_DETAIL")
+    sugg_itemsonly$=option!.getOptionData("SUGG_ITEMSONLY")
+
+rem --- Open files
+
+    num_files=6
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="POE_ORDHDR",   open_opts$[1]="OTA"
+    open_tables$[2]="POE_ORDDET",   open_opts$[2]="OTA"
+    open_tables$[3]="POE_ORDTOT",   open_opts$[3]="OTA"
+    open_tables$[4]="POE_REPSEL",   open_opts$[4]="OTA"
+    open_tables$[5]="POE_REPSURP",  open_opts$[5]="OTA"
+    open_tables$[6]="POE_REPXREF",  open_opts$[6]="OTA"
+
+    gosub open_tables
+
+rem --- Close files after ensuring they exist
+
+    num_files=6
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="POE_ORDHDR",   open_opts$[1]="CX"
+    open_tables$[2]="POE_ORDDET",   open_opts$[2]="CX"
+    open_tables$[3]="POE_ORDTOT",   open_opts$[3]="CX"
+    open_tables$[4]="POE_REPSEL",   open_opts$[4]="CX"
+    open_tables$[5]="POE_REPSURP",  open_opts$[5]="CX"
+    open_tables$[6]="POE_REPXREF",  open_opts$[6]="CX"
+
+    gosub open_tables
 
 rem --- Retrieve parameter records
 
-    find record (aps_params_dev,key=firm_id$+"AP00",err=std_missing_params) aps_params$
-    find record (ivs_params_dev,key=firm_id$+"IV00",err=std_missing_params) ivs_params$
-    find record (ivs_abcparam_dev,key=firm_id$+"IV02",err=std_missing_params) ivs_abcparam$
+rem --- Masks
 
-rem --- masks
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",vend_mask$,0,vendorLen
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",amount_mask$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",cost_mask$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",units_mask$,0,0
+    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","I","",item_mask$,0,itemLen
+    weight_mask$="####0.00-"
+    
+rem --- Make Document Archive Record and Get ID
 
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",m1$,0,0
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","U","",m2$,0,0
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","C","",m3$,0,0
-    call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","I","",vendomask$,0,vendlen
-    m1=len(m1$),m1s=m1
-    m2=len(m2$),m2s=m2
-    m3=len(m3$),m3s=m3
+    rep_date$=date(0:stbl("+DATE_MASK"))
+    rep_date_stamp$=date(0:"%Yd%Mz%Dz")
+    rep_time$=date(0:"%hz:%mz %p")
+    rep_time_stamp$=date(0:"%Hz%mz%sz")
 
-rem --- Parameters
+    rd_source_alias$=rd_alias_id$
+    rd_source_type$="O"
+    rd_doc_source$="E"
+    rd_doc_ext$="JAS"
+    rd_archive_action$="DOC_ID-NOREPRINT"
+    gosub document_whse
+    rd_archive_action$=""
 
-	dim desclen[3]
-    ivprecision=num(ivs_params.precision$)
-    itemlen=ivs_params.item_id_len
-    defaultwhse$=ivs_params.warehouse_id$
-    curper$=ivs_params.current_per$
-    curyr$=ivs_params.current_year$
-    curper=num(curper$)
-    curyr=num(curyr$)
-    call pgmdir$+"adc_perioddates.aon",curper,curyr,begper$,endper$,table_chans$[all],status
-    if status then goto std_exit
+rem --- Document Output Report Parameters
 
-    desclen[1]=num(ivs_params.desc_len_01$)
-    desclen[2]=num(ivs_params.desc_len_02$)
-    desclen[3]=num(ivs_params.desc_len_03$)     
+    params!.put("DOC_NO",rd_doc_id$)
+    params!.put("DATE_REP",rep_date$+"  "+rep_time$)
 
-    precision ivprecision
+rem --- Other params
 
-rem --- Init Data
+    rem --- Report params
+    params!.put("BARISTA_WD",dir(""))  
+    params!.put("REPORT_NAME",sysinfo.task_desc$) 
+    params!.put("FIRM_ID",firm_id$)
+    params!.put("FIRM_NAME",firm_name$)
+    params!.put("WHSE_DETAIL",whse_detail$)
+    params!.put("SUGG_ITEMSONLY",sugg_itemsonly$)
 
-    width=170
-    dim dashes$(width,"-"),o[14],h[14],hsel[9]
-    m6$="###0.00-";rem weight
-    m9$="##0";rem lead time & cycle days
-    phnmsk$="(###) ###-####"
-    m6=len(m6$)
-    m9=len(m9$)
+    rem --- Mask params
+    params!.put("AMOUNT_MASK",amount_mask$)
+    params!.put("AMOUNT_MASK_PATTERN",fngetPattern$(amount_mask$))
+    params!.put("COST_MASK",cost_mask$)
+    params!.put("ITEM_MASK",item_mask$)
+    params!.put("UNITS_MASK",units_mask$)
+    params!.put("UNITS_MASK_PATTERN",fngetPattern$(units_mask$))
+    params!.put("VEND_MASK",vend_mask$)
+    params!.put("WEIGHT_MASK",weight_mask$)
+    params!.put("WEIGHT_MASK_PATTERN",fngetPattern$(weight_mask$))
+    params!.put("ITEM_LEN",str(itemLen:"#0"))
+    params!.put("VENDOR_LEN",str(vendorLen:"#0"))
 
-    while 1
-        totlen=6+m1+(10*m2)+m3+m6+m9+3
-        if totlen<=width break
-        if m1>12 call pgmdir$+"adc_sizemask.aon",m1$,m1,12,m1-1; continue
-        if m3>9 call pgmdir$+"adc_sizemask.aon",m3$,m3,9,m3-1; continue
-        if m2>8 call pgmdir$+"adc_sizemask.aon",m2$,m2,8,m2-1; continue
-        break
-    wend
-    while 1
-        totlen=4+m1+(10*m2)+m3+m6+m9+3
-        if totlen=width break
-        if m1<m1s call pgmdir$+"adc_sizemask.aon",m1$,m1,m1+1,m1s; continue
-        if m3<m3s call pgmdir$+"adc_sizemask.aon",m3$,m3,m3+1,m3s; continue
-        break
-    wend
+    rem --- Translation params
+    params!.put("AON_CYCLE_DAYS",CVS(Translate!.getTranslation("AON_CYCLE_DAYS:_"),2))
+    params!.put("AON_D_DOLLARS",Translate!.getTranslation("AON_D_DOLLARS"))
+    params!.put("AON_FIRST",Translate!.getTranslation("AON_FIRST"))
+    params!.put("AON_LAST",Translate!.getTranslation("AON_LAST"))
+    params!.put("AON_NEXT_REVIEW",cvs(Translate!.getTranslation("AON_NEXT_REVIEW:_"),2))
+    params!.put("AON_N_NONE",Translate!.getTranslation("AON_N_NONE"))
+    params!.put("AON_NONE",Translate!.getTranslation("AON_NONE"))
+    params!.put("AON_PRIOR_REVIEW",cvs(Translate!.getTranslation("AON_PRIOR_REVIEW:_"),2))
+    params!.put("AON_PRODUCT",cvs(Translate!.getTranslation("AON_PRODUCT:_"),2))
+    params!.put("AON_TARGET_DOLLARS",cvs(Translate!.getTranslation("AON_TARGET_DOLLARS:_"),2))
+    params!.put("AON_TARGET_TYPE",cvs(Translate!.getTranslation("AON_TARGET_TYPE:_"),2))
+    params!.put("AON_TARGET_UNITS",cvs(Translate!.getTranslation("AON_TARGET_UNITS:_"),2))
+    params!.put("AON_TARGET_WEIGHT",cvs(Translate!.getTranslation("AON_TARGET_WEIGHT:_"),2))
+    params!.put("AON_THROUGH_LAST_DATE",Translate!.getTranslation("AON_THROUGH_LAST_DATE"))
+    params!.put("AON_THROUGH_REVIEW_DATE",cvs(Translate!.getTranslation("AON_THROUGH_REVIEW_DATE:_"),2))
+    params!.put("AON_U_UNITS",Translate!.getTranslation("AON_U_UNITS"))
+    params!.put("AON_W_WEIGHT",Translate!.getTranslation("AON_W_WEIGHT"))
 
-    o[0]=2
-    o[1]=o[0]+4
-    o[2]=o[1]+m2
-    o[3]=o[2]+m2
-    o[4]=o[3]+m2
-    o[5]=o[4]+m9
-    o[6]=o[5]+m2
-    o[7]=o[6]+m2
-    o[8]=o[7]+m2
-    o[9]=o[8]+m2
-    o[10]=o[9]+m2
-    o[11]=o[10]+m2
-    o[12]=o[11]+m3+1
-    o[13]=o[12]+m2+1
-    o[14]=o[13]+m6+1
+rem --- Set Report Name & Subreport directory
 
-rem --- Column headers
+    reportDir$ = stbl("+DIR_REPORTS",err=*next)   
+    temp = unt
+    open (temp)reportDir$
+    reportDir$ = fid(temp)(9)+"/"
+    close (temp)
+    reportBaseName$ = "POReplenishment"
+    repTitle$=reportBaseName$
+    filename$ = reportDir$ + reportBaseName$ + ".jasper"
 
-    h[0]=o[0]-1
-    h[1]=o[1]+m2-9
-    h[2]=o[2]+m2-10
-    h[3]=o[3]+m2-7
-    h[4]=o[4]+m9-3
-    h[5]=o[5]+m2-6
-    h[6]=o[6]+m2-6
-    h[7]=o[7]+m2-6
-    h[8]=o[8]+m2-4
-    h[9]=o[9]+m2-4
-    h[10]=o[10]+m2-6
-    h[11]=o[11]+m3-5
-    h[12]=o[12]+m2-10
-    h[13]=o[13]+m6-7
-    h[14]=o[14]+m1-10
+    declare BBJasperReport report!
+    
+rem --- Fill Report
 
-rem --- Selections column headers
+    report! = BarUtils.getBBJasperReport(filename$)
+    report!.putParams(params!)
+    locale$ = stbl("!LOCALE")
+    locale$ = stbl("+USER_LOCALE",err=*next)
+    report!.setLocale(locale$)
+    rc=report!.fill(1)
+    if rc<>BBJasperReport.getSUCCESS() then goto close_win
 
-    hsel[0]=24
-    hsel[1]=30
-    hsel[2]=38
-    hsel[3]=46
-    hsel[4]=55
-    hsel[5]=64
-    hsel[6]=75
-    hsel[7]=86
-    hsel[8]=93
-    hsel[9]=100
+rem --- Show Report
+    
+    rem --- get a pdf path from +DOC_DIR_PDF
+    rem --- this will eventually be replaced with code to get output formats/types based on doc group and/or print settings
+    gosub doc_path
+    
+    declare BBJasperViewerWindow viewerWindow!
+    viewerWindow! = new BBJasperViewerWindow(report!,50,50,screen_width,screen_height,repTitle$,$00000093$)
 
-rem --- Run report overlay
-    run pgmdir$+"por_replenreg_o1.aon"
+    viewerControl! = viewerWindow!.getViewerControl()
+    viewerControl!.setGoogleDefaultDocument(repTitle$)
+    viewerControl!.setDefaultSaveFolder(rd_doc_path$)
+    viewerControl!.setDefaultSaveFile(repTitle$)
+    viewerControl!.setFitWidth()
 
-    open_tables: rem --- Call open table routine	
+    rem --- set callbacks for when user presses save or email buttons in jasper viewer
+    rem --- note: saveAs or saveAsGDoc not intercepted, just regular save
+    saveMenuButton! = viewerControl!.getControl(BBJasperViewerControl.getSAVE_MENU_BUTTON_NAME())
+    saveMenuButton!.setCallback(BBjMenuButton.ON_BUTTON_PUSH ,"OnSaveMenuButton")
 
-	call stbl("+DIR_SYP")+"bac_open_tables.bbj",		open_beg,		open_end,		open_tables$[all],		open_opts$[all],		open_chans$[all],		open_tpls$[all],		rd_table_chans$[all],		open_batch,		open_status$
+    savMenuItem! = viewerControl!.getControl(BBJasperViewerControl.getSAVE_MENU_ITEM_NAME())
+    savMenuItem!.setCallback(BBjMenuItem.ON_POPUP_ITEM_SELECT,"OnSaveMenuButton")
 
-	if open_status$<>"" then
-		msg_id$="ENTRY_OPEN_ERROR"
-		dim msg_tokens$[1]
-		msg_tokens$[1]=open_status$
-		call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
-		status=912
-		goto std_exit
-	endif
+    emailToolButton! = viewerControl!.getControl(BBJasperViewerControl.getEMAIL_TOOL_BUTTON_NAME())
+    emailToolButton!.setCallback(BBjMenuButton.ON_TOOL_BUTTON_PUSH ,"OnEmailToolButton")
+    
+    viewerWindow!.setReleaseOnClose(0)
+    viewerWindow!.show(0)
+        
+    declare BBjTopLevelWindow bbjWindow!
+    bbjWindow!= viewerWindow!.getViewerWindow()
+    if bbjWindow!=null() then goto close_win
+    bbjWindow!.setCallback(bbjWindow!.ON_CLOSE,"close_win",err=*next)
 
-	return
+rem --- Event Control
 
+    process_events,err=*same
+
+    release
+
+document_whse:rem --- Write record to Barista document warehouse (ads_documents)
+
+    call stbl("+DIR_SYP")+"bac_documents.bbj",
+:       rd_doc_id$,
+:       rep_date_stamp$,
+:       rep_time_stamp$,
+:       rd_doc_source$,
+:       rd_doc_ext$,
+:       rd_doc_path$,
+:       rd_source_type$,
+:       rd_source_alias$,
+:       rd_source_id$,
+:       rd_source_ref$,
+:       rd_table_chans$[all],
+:       rd_archive_action$,
+:       rd_doc_name$,
+:       rep_title$,
+:       rd_doc_keywords$
+
+    return
+
+doc_path:rem --- Get Document Path
+rem --- forcing a pdf save to this location for release 13.03
+rem --- eventually, want to make the save functionality mimic (as closely as possible) Barista
+rem --- so it can save based on user's doc group and doc settings
+
+    if rd_doc_path$="" then
+        rd_doc_path$=dsk("")+dir("")
+        rd_doc_path$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(stbl("+DOC_DIR_PDF",err=*next)),err=*next)+"/"
+        mkdir rd_doc_path$,err=*next
+    endif
+
+    return
+
+OnSaveMenuButton:
+rem --- save save and display confirmation dialog
+
+    show_save_dlg$="YES"
+ 
+exportToPDF:
+rem --- exportToPDF and record in doc warehouse
+
+    if rd_doc_path$<>"" and repTitle$<>""
+        rd_doc_name$=repTitle$+".pdf"
+        rd_doc_ext$="PDF"
+        report!.exportToPDF(BBjAPI().FALSE, rd_doc_path$+rd_doc_name$)
+        gosub document_whse
+    endif
+
+    if show_save_dlg$="YES"
+        msg_id$="DOC_OUTPUT_COMP"
+        gosub disp_message
+        show_save_dlg$=""
+    endif
+    return    
+
+OnEmailToolButton:rem --- Add document to fax/email queue
+rem --- force exportToPDF first, in case it hasn't already been saved
+    
+    rem --- force exportToPDF in case not already saved
+    gosub exportToPDF
+
+    if rd_doc_id$<>"" and rd_doc_ext$<>""
+        call stbl("+DIR_SYP")+"bac_faxemail_jasper.bbj",rd_doc_id$,rd_doc_ext$,rd_table_chans$[all]
+    endif
+
+    return
+
+close_win:rem --- Viewer Window Closed
+    viewerWindow!.destroy(err=*next)
+    rdForm!.destroy(err=*next)
+    if tcb(13) then exit
+    release
+
+connect_err:rem --- Connection Error
+
+    declare java.lang.Exception Exception!
+    Exception! = bbjapi().getLastException()
+    if Exception! = null() then 
+       x = msgbox(errmes(-1),16,"Connection Failed")
+    else
+       x = msgbox(Exception!.getLocalizedMessage(),16,"Connection Failed")
+    endif
+
+    release
+
+open_tables: rem --- Call open table routine    
+
+    call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
+    
+    if open_status$<>"" then
+        msg_id$="ENTRY_OPEN_ERROR"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=open_status$
+        call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
+        status=912
+        goto std_exit
+    endif
+    
+    return
+    
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
+
+    return
 
 rem #include std_functions.src
 rem --- Standard AddonSoftware functions (01Mar2006)
@@ -289,6 +374,28 @@ rem --- fnglobal$: Return string value of passed STBL variable
         q1$=stbl(q$,err=*next)
         return q1$
     fnend
+
+rem --- fngetPattern$: Build iReports 'Pattern' from Addon Mask
+    def fngetPattern$(q$)
+        q1$=q$
+        if len(q$)>0
+            if pos("-"=q$)
+                q1=pos("-"=q$)
+                if q1=len(q$)
+                    q1$=q$(1,len(q$)-1)+";"+q$; rem Has negatives with minus at the end =>> ##0.00;##0.00-
+                else
+                    q1$=q$(2,len(q$)-1)+";"+q$; rem Has negatives with minus at the front =>> ##0.00;-##0.00
+                endif
+            endif
+            if pos("CR"=q$)=len(q$)-1
+                q1$=q$(1,pos("CR"=q$)-1)+";"+q$
+            endif
+            if q$(1,1)="(" and q$(len(q$),1)=")"
+                q1$=q$(2,len(q$)-2)+";"+q$
+            endif
+        endif
+        return q1$
+    fnend   
 
 rem #endinclude std_functions.src
 
