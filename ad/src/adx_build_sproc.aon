@@ -44,6 +44,11 @@ rem --- PURCHASEORDER_HDR
 rem --- PURCHASEORDER_DET
 rem --- OPPICKLIST_HDR
 rem --- OPPICKLIST_DET
+rem --- POREPLENISHMENT
+rem --- POREPLENISHMENT_ITEM
+rem --- POREPLENISHMENT_PRODUCT
+rem --- POREPLENISHMENT_SELECTION
+rem --- POREPLENISHMENT_VENDOR
 rem --- PURCHASEREQUISITION_HDR
 rem --- PURCHASEREQUISITION_DET
 rem --- SFPICKLIST
@@ -406,6 +411,26 @@ rem --- first drop all std Addon SPROCs
     gosub create_sproc_def
 	
 	sproc_vw_name$="OPPICKLIST_DET_LOTSER"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+
+    sproc_vw_name$="POREPLENISHMENT"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+
+    sproc_vw_name$="POREPLENISHMENT_ITEM"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+
+    sproc_vw_name$="POREPLENISHMENT_PRODUCT"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+
+    sproc_vw_name$="POREPLENISHMENT_SELECTION"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+
+    sproc_vw_name$="POREPLENISHMENT_VENDOR"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
 
@@ -869,6 +894,65 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'OP Pick List Lot/Serial'"
 
     gosub create_sproc_def
+
+    rem --- POREPLENISHMENT
+    sproc_vw_name$="POREPLENISHMENT"
+    sqlprep$="CREATE PROCEDURE POREPLENISHMENT "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, BARISTA_WD VARCHAR(50) IN) "
+    sqlprep$=sqlprep$+"'"+sproc_path$+"POREPLENISHMENT.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'PO Replenishment'"
+
+    gosub create_sproc_def
+
+    rem --- POREPLENISHMENT_ITEM
+    sproc_vw_name$="POREPLENISHMENT_ITEM"
+    sqlprep$="CREATE PROCEDURE POREPLENISHMENT_ITEM "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, BUYER_CODE CHAR(3) IN, VENDOR_ID CHAR(6) IN, PRODUCT_TYPE CHAR(6) IN, BARISTA_WD VARCHAR(50) IN, "  
+    sqlprep$=sqlprep$+"ITEM_LEN CHAR(2) IN, AMOUNT_MASK VARCHAR(10) IN, COST_MASK VARCHAR(10) IN, ITEM_MASK VARCHAR(10) IN, UNITS_MASK VARCHAR(10) IN, WEIGHT_MASK VARCHAR(10) IN, "  
+    sqlprep$=sqlprep$+"WHSE_DETAIL VARCHAR(10) IN, SUGG_ITEMSONLY VARCHAR(10) IN) "  
+    sqlprep$=sqlprep$+"'"+sproc_path$+"POREPLENISHMENT_ITEM.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'PO Replenishment - Item'"
+
+    gosub create_sproc_def
+
+    rem --- POREPLENISHMENT_PRODUCT
+    sproc_vw_name$="POREPLENISHMENT_PRODUCT"
+    sqlprep$="CREATE PROCEDURE POREPLENISHMENT_PRODUCT "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, BUYER_CODE CHAR(3) IN, VENDOR_ID CHAR(6) IN, BARISTA_WD VARCHAR(50) IN, "  
+    sqlprep$=sqlprep$+"SUGG_ITEMSONLY VARCHAR(10) IN) "  
+    sqlprep$=sqlprep$+"'"+sproc_path$+"POREPLENISHMENT_PRODUCT.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'PO Replenishment - Product'"
+
+    gosub create_sproc_def
+
+    rem --- POREPLENISHMENT_SELECTION
+    sproc_vw_name$="POREPLENISHMENT_SELECTION"
+    sqlprep$="CREATE PROCEDURE POREPLENISHMENT_SELECTION "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, BUYER_CODE CHAR(3) IN, BARISTA_WD VARCHAR(50) IN, "  
+    sqlprep$=sqlprep$+"VENDOR_LEN CHAR(2) IN, VEND_MASK VARCHAR(10) IN, "  
+    sqlprep$=sqlprep$+"AON_FIRST VARCHAR(10) IN, AON_LAST VARCHAR(10) IN) "
+    sqlprep$=sqlprep$+"'"+sproc_path$+"POREPLENISHMENT_SELECTION.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'PO Replenishment - Selection'"
+
+    gosub create_sproc_def
+
+    rem --- POREPLENISHMENT_VENDOR
+    sproc_vw_name$="POREPLENISHMENT_VENDOR"
+    sqlprep$="CREATE PROCEDURE POREPLENISHMENT_VENDOR "
+    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, BUYER_CODE CHAR(3) IN, VENDOR_ID CHAR(6) IN, WHSE_DETAIL CHAR(1) IN, SUGG_ITEMSONLY CHAR(1) IN, BARISTA_WD VARCHAR(50) IN, "  
+    sqlprep$=sqlprep$+"VENDOR_LEN CHAR(2) IN, AMOUNT_MASK VARCHAR(10) IN, UNITS_MASK VARCHAR(10) IN, VEND_MASK VARCHAR(10) IN, WEIGHT_MASK VARCHAR(10) IN, "  
+    sqlprep$=sqlprep$+"AON_D_DOLLARS VARCHAR(10) IN, AON_N_NONE VARCHAR(10) IN, AON_NONE VARCHAR(10) IN, AON_THROUGH_LAST_DATE VARCHAR(10) IN, AON_THROUGH_REVIEW_DATE VARCHAR(10) IN, "
+    sqlprep$=sqlprep$+"AON_U_UNITS VARCHAR(10) IN, AON_W_WEIGHT VARCHAR(10) IN) "
+    sqlprep$=sqlprep$+"'"+sproc_path$+"POREPLENISHMENT_VENDOR.prc' '"+barista_cfg_path$+"barista.cfg' "
+    sqlprep$=sqlprep$+"RESULT_SET "
+    sqlprep$=sqlprep$+"{_begin_}{_end_} 'PO Replenishment - Vendor'"
+
+    gosub create_sproc_def
+
 
 	rem --- PURCHASEREQUISITION_HDR
     sproc_vw_name$="PURCHASEREQUISITION_HDR"
