@@ -591,3 +591,14 @@ Modified: sprocs/SFWOSSOS_GRD.prc
 Modified: sprocs/SIMPLE_INVOICE.prc
 Modified: sprocs/VENDORDETAIL_HIST.prc
 Modified: util/codeport/lib/std_functions.src
+
+=======================================================================================================================================
+Revision: 7fb60bf07eebd3fcf942b0ba415e4b20ecf97a8c
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 10/28/2019 3:51:33 PM
+Message:
+Bug 9779: Changed the util Classes default ExtraWidth% from 10 to 0
+(zero) so the resizeWindow() method won't make a form wider than
+necessary.
+----
+Modified: ad/src/ado_util.src
