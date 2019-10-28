@@ -16,7 +16,7 @@ rem ==========================================================================
 
     rem --- Width/height for adjusting window
     
-        field public static BBjInt ExtraWidth% = 10
+        field public static BBjInt ExtraWidth% = 0
         field public static BBjInt ExtraHeight% = 10
         
     rem --- Width/height for adjusting screen
@@ -163,12 +163,12 @@ rem ==========================================================================
 
         rem --- If the current form fits or is bigger, we're done (except if there's buttons)   
             if Form!.getWidth() >= new_width + #ExtraWidth% and Form!.getHeight() >= new_height + extra_height then
-                rem print "form is bigger tha calculated size, exitting"; rem debug
+                rem print "form is bigger than calculated size, exitting"; rem debug
                 methodret
             endif
 
         rem --- Set new size, but not bigger than the screen
-        
+
             new_width = min( screen_width, new_width + #ExtraWidth% )
             new_height = min( screen_height, new_height + extra_height )
             Form!.setSize(new_width, new_height)
