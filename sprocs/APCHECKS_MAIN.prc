@@ -183,7 +183,9 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
     def fnmask$(q1$,q2$)
         if cvs(q1$,2)="" return ""
         if q2$="" q2$=fill(len(q1$),"0")
-        return str(-num(q1$,err=*next):q2$,err=*next)
+        if pos("E"=cvs(q1$,4)) goto alpha_mask
+:      else return str(-num(q1$,err=alpha_mask):q2$,err=alpha_mask)
+alpha_mask:
         q=1
         q0=0
         while len(q2$(q))
@@ -215,22 +217,6 @@ rem --- fngetPattern$: Build iReports 'Pattern' from Addon Mask
 		endif
 		return q1$
 	fnend	
-
-rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
-
-    def fnmask$(q1$,q2$)
-        if cvs(q1$,2)="" return ""
-        if q2$="" q2$=fill(len(q1$),"0")
-        return str(-num(q1$,err=*next):q2$,err=*next)
-        q=1
-        q0=0
-        while len(q2$(q))
-            if pos(q2$(q,1)="-()") q0=q0+1 else q2$(q,1)="X"
-            q=q+1
-        wend
-        if len(q1$)>len(q2$)-q0 q1$=q1$(1,len(q2$)-q0)
-        return str(q1$:q2$)
-    fnend
 
 	def fngetmask$(q1$,q2$,q3$)
 		rem --- q1$=mask name, q2$=default mask if not found in mask string, q3$=mask string from parameters
