@@ -28,7 +28,9 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
 	def fnmask$(q1$,q2$)
 	    if cvs(q1$,2)="" return ""
 	    if q2$="" q2$=fill(len(q1$),"0")
-	    return str(-num(q1$,err=*next):q2$,err=*next)
+	    if pos("E"=cvs(q1$,4)) goto alpha_mask
+:      else return str(-num(q1$,err=alpha_mask):q2$,err=alpha_mask)
+alpha_mask:
 	    q=1
 	    q0=0
 	    while len(q2$(q))
