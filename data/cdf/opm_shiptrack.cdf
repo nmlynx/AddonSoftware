@@ -109,7 +109,19 @@ rem --- Launches carrier's shipment tracking web page for a package (tracking nu
 		webpageCounter!=callpoint!.getDevObject("webpageCounter")
 		if webpageCounter!=null() then webpageCounter!="0"
 		webpageCounter$=str(1+num(webpageCounter!))
-		returnCode=scall("bbj "+$22$+"opt_shiptrack.aon"+$22$+" - -u"+tracking_url$+" -c"+webpageCounter$+" &")
+
+		frameMode!=BBjAPI().getConfig().getCurrentCommandLineObject().getChildFrameMode()
+		if frameMode! <> null() then
+			rem --- Using MDI or SDI
+			cmd$=$22$+"opt_shiptrack.aon"+$22$+" - -u"+tracking_url$+" -c"+webpageCounter$+" &"
+			cmdObj!=BBjAPI().getConfig().getCommandLineObject(cmd$)
+			cmdObj!.setChildFrameMode(frameMode!)
+			returnCode=BBjAPI().newBBjSession(cmdObj!)
+		else
+			rem --- Using BUI
+			BBjAPI().getThinClient().browse(tracking_url$)
+		endif
+
 		callpoint!.setDevObject("webpageCounter",webpageCounter$)
 	else
 		msg_id$="AR_MISSING_CARRIER_C"
