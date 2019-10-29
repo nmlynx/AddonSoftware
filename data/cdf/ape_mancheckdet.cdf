@@ -446,11 +446,11 @@ rem --- Look for Open Invoice
 
 		print "---not select for pay; not on hold..."; rem debug
 
+		rem --- Is invoice already in ape_mancheckdet?
 		dim ape22_key$:ape22_key1_tmpl$
 		read (ape22_dev1, key=firm_id$+ap_type$+vendor_id$+invoice_no$, knum="AO_VEND_INV", dom=*next)
 		ape22_key$ = key(ape22_dev1, end=*next)
-
-		if pos(firm_id$+ap_type$+vendor_id$+apt01a.ap_inv_no$ = ape22_key$) = 1 and
+		if pos(firm_id$+ap_type$+vendor_id$+invoice_no$ = ape22_key$) = 1 and
 :			ape22_key.check_no$ <> check_no$
 :		then
 			callpoint!.setMessage("AP_INV_IN_USE:Manual Check")
@@ -497,6 +497,18 @@ rem --- Look for Open Invoice
 		callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"APE_MANCHECKDET.AP_DIST_CODE",0)
 
 	else
+
+		rem --- Is invoice already in ape_mancheckdet?
+		dim ape22_key$:ape22_key1_tmpl$
+		read (ape22_dev1, key=firm_id$+ap_type$+vendor_id$+invoice_no$, knum="AO_VEND_INV", dom=*next)
+		ape22_key$ = key(ape22_dev1, end=*next)
+		if pos(firm_id$+ap_type$+vendor_id$+invoice_no$ = ape22_key$) = 1 and
+:			ape22_key.check_no$ <> check_no$
+:		then
+			callpoint!.setMessage("AP_INV_IN_USE:Manual Check")
+			callpoint!.setStatus("ABORT-RECORD:["+ape02_key$+"]")
+			goto end_of_inv_aval
+		endif
 
 	rem --- Enable inv date/dist code if on invoice not in open invoice file
 	rem --- Also have user confirm that the invoice wasn't found in Open Invoice file
