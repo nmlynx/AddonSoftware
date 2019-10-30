@@ -245,6 +245,9 @@ class public ReportControl
         close (#AdmRptctlChan,err=*next)
         close (#AdmRptctlRcpChan,err=*next)
         close (#AdsDocumentsChan,err=*next)
+        #AdmRptctlChan=0
+        #AdmRptctlRcpChan=0
+        #AdsDocumentsChan=0
         dummy$=stbl("+AUTO_SEND","")
 
     methodend
