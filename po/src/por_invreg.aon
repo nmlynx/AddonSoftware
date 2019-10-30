@@ -202,13 +202,11 @@ rem --- Parameters
 l500: rem --- Initializations
 
     precision i[1]
-    dim a0$(20),a1$(64),a[8],b0$(8),b1$(30),xa$(32)
     dim oi[10],og[2],vendor[3],type[3],report[3],totals[3],desc$[3]
-    dim op[7],ol[8],xc$(26),xc[2],y0$(4),y1$(32),y2$(2*g[4])
-    dim d0$(24),d1$(32),d[4],w0$(24),w1$(96),w[4],item$[6]
+    dim op[7],ol[8],y0$(4),y1$(32),y2$(2*g[4])
+    dim item$[6]
     dim glfiles[20],glparams$[20],glparams[20],w$[10],y$[10],values[20]
     dim tpls$[20]
-    a0$(1)=firm_id$
     l0=11
     increment=10
     hl=3
@@ -489,7 +487,7 @@ l2100: rem --- Read history header and original terms
 
     iter! = receiverMap!.keySet().iterator()
     while iter!.hasNext()
-        dim c0$(22),c1$(160),c[8],xc$(26),terms$(tw)
+        dim terms$(tw)
         dim pot04a$:fattr(pot04a$)
         dim apm10c$:fattr(apm10c$)
         receipt$=cast(BBjString, iter!.next())
@@ -595,7 +593,7 @@ l2800: rem --- Generate GL Recap
         values[3]=ivm02a.qty_on_hand
         arcode$=ivm02a.ar_dist_code$
         w$[0]=poe25a$
-        w$[1]="";rem not used anymore (sending entire poe25a$ rec in w$[0], used to send w1$ here)
+        w$[1]="";rem not used anymore (sending entire poe25a$ rec in w$[0])
         y$[0]=pom02a$
         y$[1]=y1$;rem not used anymore (sending entire rec)
         y$[2]=y2$;rem not used anymore
@@ -671,7 +669,7 @@ l3600: rem --- Generate any additional GL recap postings for the invoice
     action$="D"
     account$=apacct$
     values[0]=-distribution
-    w$[0]=poe05a.firm_id$+poe05a.ap_type$+poe05a.vendor_id$+poe05a.ap_inv_no$;rem used to be a0$
+    w$[0]=poe05a.firm_id$+poe05a.ap_type$+poe05a.vendor_id$+poe05a.ap_inv_no$
     gosub l6900
 
 l3700: rem --- Does GL total match invoice header?
@@ -831,9 +829,9 @@ ap_type_break: rem --- AP Type Break
     if type[0]<>0 gosub l6800
 l6100:
     if done goto l6190
-    dim xa$(32),type[3]
+    dim type[3]
     if aptype=0 goto l6190
-    t0$=poe05a.ap_type$,xa$(6,20)=nf$,l=l9+1,warehouse=0
+    t0$=poe05a.ap_type$,l=l9+1,warehouse=0
     find record (apm10a_dev,key=firm_id$+"A"+t0$,dom=*next) apm10a$
     HdrVect!.addItem(Translate!.getTranslation("AON_FOR_AP_TYPE_")+t0$+" "+cvs(apm10a.code_desc$,3))
     BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
@@ -847,8 +845,8 @@ vendor_break: rem --- Vendor Break
     if vendor[0]<>0 gosub l6800
 l6300:
     if done goto l6390
-    dim b0$(8),b1$(30),vendor$(dw),vendor[3]
-    t1$=poe05a.vendor_id$,b0$(1)=firm_id$+t1$,b1$(1)=nf$
+    dim vendor$(dw),vendor[3]
+    t1$=poe05a.vendor_id$
     find record (apm01_dev,key=firm_id$+t1$,dom=*next) apm01a$
     vendor$(1)=fnmask$(apm01a.vendor_id$(1,p[0]),m0$)+" "+apm01a.vendor_name$
 l6390:
