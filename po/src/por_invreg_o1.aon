@@ -336,7 +336,7 @@ l6000: rem --- Vendor Break
     if vendor<>0 gosub l6800
 l6100:
     if done goto l6190
-    dim b0$(8),b1$(30),vendor$(31+m0)
+    dim vendor$(31+m0)
     t0$=poe25a.vendor_id$
     vendor=0
     find record (apm01_dev,key=firm_id$+t0$,dom=*next) apm01a$
