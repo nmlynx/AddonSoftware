@@ -87,6 +87,7 @@ rem --- Initializations
 rem --- See if this document is set up in Addon Report Control
 
     reportControl!=new ReportControl()
+    reportControl!=null()
     reportControl!.setDocExtension("pdf")
     rpt_ctl$=reportControl!.getReportControl(rptctl_alias$)
     rpt_ctl$=iff(rpt_ctl$="","NO","YES")

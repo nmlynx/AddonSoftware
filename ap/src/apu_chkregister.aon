@@ -525,6 +525,7 @@ finish_NACHA_file: rem --- Finish building complete NACHA text file for ACH paym
         endif
     endif    
     reportControl!.destroy(err=*next)
+    reportControl!=null()
 
     return
 

@@ -1056,6 +1056,7 @@ all_done:
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
 
     reportControl!.destroy(err=*next)    
+    reportControl!=null()
     masterViewerWindow!.destroy(err=*next)
     pickPrintViewerWindow!.destroy(err=*next)
     quotePrintViewerWindow!.destroy(err=*next)

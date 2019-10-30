@@ -66,8 +66,8 @@ rem --- Main processing
         dummy$=stbl("+AUTO_SEND",auto_send$)
     else
         reportControl!.destroy(err=*next)
+        reportControl!=null()
     endif
-
 
     goto std_exit
 

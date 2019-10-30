@@ -597,6 +597,7 @@ close_win:rem --- Viewer Window Closed
     endif    
     
     reportControl!.destroy(err=*next)
+    reportControl!=null()
     masterViewerWindow!.destroy(err=*next)
     printViewerWindow!.destroy(err=*next)
 
