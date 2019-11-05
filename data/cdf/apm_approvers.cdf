@@ -1,3 +1,15 @@
+[[APM_APPROVERS.SIGNATURE_FILE.AVAL]]
+rem --- Verify signature file exists
+	signature_file$=callpoint!.getUserInput()
+	sigFile!=new File(signature_file$)
+	if ! sigFile!.exists() or sigFile!.isDirectory() then
+		msg_id$="AD_FILE_NOT_FOUND"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=signature_file$
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
 [[APM_APPROVERS.ADIS]]
 rem --- enable/disable according to authorization level
 
@@ -37,6 +49,9 @@ else
 	callpoint!.setColumnEnabled("APM_APPROVERS.CHECK_SIGNER",1)
 endif
 [[APM_APPROVERS.BSHO]]
+rem --- Inits
+	use java.io.File
+
 rem --- Open/Lock files
 
 	num_files=6
