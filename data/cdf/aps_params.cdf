@@ -342,13 +342,27 @@ rem --- Enable/Disable TWO_SIG_AMT and TWO_AUTH_COLOR (and initialize TWO_AUTH_C
 	two_sig_req=num(callpoint!.getUserInput())
 	gosub able_two_sig
 [[APS_PAYAUTH.USE_PAY_AUTH.AVAL]]
+rem --- Cannot change Payment Authorization paramters when invoices already selected for payment
+	prev_payAuth$=callpoint!.getColumnData("APS_PAYAUTH.USE_PAY_AUTH")
+	apeChecks_dev=fnget_dev("APE_CHECKS")
+	dim apeChecks$:fnget_tpl$("APE_CHECKS")
+	read(apeChecks_dev,key=firm_id$,dom=*next)
+	readrecord(apeChecks_dev,end=*next)apeChecks$
+	if apeChecks.firm_id$=firm_id$ then
+		msg_id$="AP_CHANGE_PAY_AUTH"
+		gosub disp_message
+		callpoint!.setColumnData("APS_PAYAUTH.USE_PAY_AUTH",prev_payAuth$,1)
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
 rem --- Enable/Disable Payment Authorization
 	use_pay_auth=num(callpoint!.getUserInput())
 	gosub able_payauth
 [[APS_PARAMS.BSHO]]
 rem --- Open files
 
-	num_files=7
+	num_files=8
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="APE_INVOICEHDR",open_opts$[1]="OTA"
 	open_tables$[2]="APT_INVOICEHDR",open_opts$[2]="OTA"
@@ -357,6 +371,7 @@ rem --- Open files
 	open_tables$[5]="APS_REPORT",open_opts$[5]="OTA"
 	open_tables$[6]="ADM_FIRMS",open_opts$[6]="OTA"
 	open_tables$[7]="APW_CHECKINVOICE",open_opts$[7]="OTA"
+	open_tables$[8]="APE_CHECKS",open_opts$[8]="OTA"
 
 	gosub open_tables
 
@@ -595,8 +610,19 @@ rem --- Retrieve parameter data
 		endif
 	endif
 
-rem --- Enable/Disable Payment Authorization
-	use_pay_auth=num(callpoint!.getColumnData("APS_PAYAUTH.USE_PAY_AUTH"))
+rem --- Cannot change Payment Authorization paramters when invoices already selected for payment
+	prev_payAuth$=callpoint!.getColumnData("APS_PAYAUTH.USE_PAY_AUTH")
+	apeChecks_dev=fnget_dev("APE_CHECKS")
+	dim apeChecks$:fnget_tpl$("APE_CHECKS")
+	read(apeChecks_dev,key=firm_id$,dom=*next)
+	readrecord(apeChecks_dev,end=*next)apeChecks$
+	if apeChecks.firm_id$=firm_id$ then
+		use_pay_auth=0
+	else
+		use_pay_auth=num(callpoint!.getColumnData("APS_PAYAUTH.USE_PAY_AUTH"))
+	endif
+
+	rem --- Enable/Disable Payment Authorization
 	gosub able_payauth
 
 rem --- Set maximum number of periods allowed for this fiscal year
