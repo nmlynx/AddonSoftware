@@ -414,7 +414,7 @@ rem --- create StackedBarChartEmbeddedWidget to show sales and cost for selected
 
 	widget!.setChartRangeAxisToCurrency()
 	widget!.setFontScalingFactor(0.5)
-	widget!.setLabelsInBarChartColor("#000000")
+	rem widget!.setLabelsInBarChartColor("#000000")
 	widget!.clearDataSet()
 
 	rem --- Create a filter to allow switching between sales/cost and units views
