@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2019-04-29T09:04:51 -->
+<!-- 2019-11-05T18:33:26 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SalesByCustomer" pageWidth="612" pageHeight="792" columnWidth="572" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon" uuid="4885ae43-e8d4-4926-92e8-ea84e4e458d8">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -34,6 +34,7 @@
 	<parameter name="BARISTA_WD" class="java.lang.String"/>
 	<parameter name="BEGDATE" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="ENDDATE" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="LOGO_FILE" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[CALL SALES_CUSTOMER($P{FIRM_ID}, $P{CUSTOMER_ID}, $P{BEGDATE}, $P{ENDDATE}, $P{BARISTA_WD})]]>
 	</queryString>
@@ -50,7 +51,7 @@
 		<band height="75" splitType="Stretch">
 			<image onErrorType="Blank">
 				<reportElement x="402" y="0" width="150" height="53" uuid="3a716d13-b28e-4e43-992d-e1406a8a7cb6"/>
-				<imageExpression><![CDATA["../apps/aon/cust_images/aon_logo.jpg"]]></imageExpression>
+				<imageExpression><![CDATA[$P{LOGO_FILE}]]></imageExpression>
 			</image>
 			<textField>
 				<reportElement x="0" y="0" width="319" height="20" uuid="46ea337c-9c9a-4129-b6c8-af91fb4e6f8f"/>
@@ -216,6 +217,9 @@
 				</hyperlinkParameter>
 				<hyperlinkParameter name="FitType">
 					<hyperlinkParameterExpression><![CDATA["Width"]]></hyperlinkParameterExpression>
+				</hyperlinkParameter>
+				<hyperlinkParameter name="LOGO_FILE">
+					<hyperlinkParameterExpression><![CDATA[$P{LOGO_FILE}]]></hyperlinkParameterExpression>
 				</hyperlinkParameter>
 			</textField>
 			<line>
