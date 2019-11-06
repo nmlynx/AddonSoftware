@@ -1,3 +1,36 @@
+[[<<DISPLAY>>.SADD4.AVAL]]
+rem --- Check Ship-to's
+
+	shipto_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
+	shipto_no$  = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
+	ship_addr$=callpoint!.getColumnData("<<DISPLAY>>.SADD1")+callpoint!.getColumnData("<<DISPLAY>>.SADD2")+
+:		callpoint!.getColumnData("<<DISPLAY>>.SADD3")+callpoint!.getUserInput()
+	gosub check_shipto
+	if user_tpl.shipto_warned
+		break; rem --- exit callpoint
+	endif
+[[<<DISPLAY>>.SADD3.AVAL]]
+rem --- Check Ship-to's
+
+	shipto_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
+	shipto_no$  = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
+	ship_addr$=callpoint!.getColumnData("<<DISPLAY>>.SADD1")+callpoint!.getColumnData("<<DISPLAY>>.SADD2")+
+:		callpoint!.getUserInput()+callpoint!.getColumnData("<<DISPLAY>>.SADD4")
+	gosub check_shipto
+	if user_tpl.shipto_warned
+		break; rem --- exit callpoint
+	endif
+[[<<DISPLAY>>.SADD2.AVAL]]
+rem --- Check Ship-to's
+
+	shipto_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
+	shipto_no$  = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
+	ship_addr$=callpoint!.getColumnData("<<DISPLAY>>.SADD1")+callpoint!.getUserInput()+
+:		callpoint!.getColumnData("<<DISPLAY>>.SADD3")+callpoint!.getColumnData("<<DISPLAY>>.SADD4")
+	gosub check_shipto
+	if user_tpl.shipto_warned
+		break; rem --- exit callpoint
+	endif
 [[OPE_INVHDR.AOPT-SHPT]]
 rem --- Launch Shipment Tracking maintenance grid
 	ar_type$=callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
@@ -85,7 +118,8 @@ rem --- Check Ship-to's
 
 	shipto_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
 	shipto_no$  = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
-	ship_addr1$=callpoint!.getUserInput()
+	ship_addr$=callpoint!.getUserInput()+callpoint!.getColumnData("<<DISPLAY>>.SADD2")+
+:		callpoint!.getColumnData("<<DISPLAY>>.SADD3")+callpoint!.getColumnData("<<DISPLAY>>.SADD4")
 	gosub check_shipto
 	if user_tpl.shipto_warned
 		break; rem --- exit callpoint
@@ -95,7 +129,8 @@ rem --- Check Ship-to's
 
 	shipto_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
 	shipto_no$  = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
-	ship_addr1$=callpoint!.getColumnData("<<DISPLAY>>.SADD1")
+	ship_addr$=callpoint!.getColumnData("<<DISPLAY>>.SADD1")+callpoint!.getColumnData("<<DISPLAY>>.SADD2")+
+:		callpoint!.getColumnData("<<DISPLAY>>.SADD3")+callpoint!.getColumnData("<<DISPLAY>>.SADD4")
 	gosub check_shipto
 	if user_tpl.shipto_warned
 		callpoint!.setStatus("ABORT")
@@ -1055,7 +1090,8 @@ rem --- Check Ship-to's
 
 	shipto_no$  = callpoint!.getUserInput()
 	shipto_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
-	ship_addr1$=callpoint!.getColumnData("<<DISPLAY>>.SADD1")
+	ship_addr$=callpoint!.getColumnData("<<DISPLAY>>.SADD1")+callpoint!.getColumnData("<<DISPLAY>>.SADD2")+
+:		callpoint!.getColumnData("<<DISPLAY>>.SADD3")+callpoint!.getColumnData("<<DISPLAY>>.SADD4")
 	gosub check_shipto
 	if user_tpl.shipto_warned
 		callpoint!.setDevObject("abort_shipto_no",1)
@@ -3171,7 +3207,7 @@ rem ==========================================================================
 check_shipto: rem --- Check Ship-to's
 rem IN: shipto_type$
 rem IN: shipto_no$
-rem IN: ship_addr1$
+rem IN: ship_addr$
 rem ==========================================================================
 
 	user_tpl.shipto_warned = 0
@@ -3180,7 +3216,7 @@ rem ==========================================================================
 		gosub disp_message
 		user_tpl.shipto_warned = 1
 	endif
-	if shipto_type$ = "M" and cvs(ship_addr1$, 2) = "" then
+	if shipto_type$ = "M" and cvs(ship_addr$, 2) = "" then
 		msg_id$ = "OP_MAN_SHIPTO_NEEDED"
 		gosub disp_message
 		user_tpl.shipto_warned = 1
