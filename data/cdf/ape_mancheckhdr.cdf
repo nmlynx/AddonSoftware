@@ -106,6 +106,10 @@ rem --- not found in entry file, so see if in open checks
 					gosub disable_fields
 					callpoint!.setColumnData("APE_MANCHECKHDR.CHECK_DATE",apt05a.check_date$)
 					callpoint!.setColumnData("APE_MANCHECKHDR.VENDOR_ID",vendor_id$)
+					callpoint!.setColumnData("<<DISPLAY>>.DISP_TOT_INV",str(apt05a.invoice_amt),1)
+					callpoint!.setColumnData("<<DISPLAY>>.DISP_TOT_DISC",str(apt05a.discount_amt),1)
+					callpoint!.setColumnData("<<DISPLAY>>.DISP_TOT_RETEN",str(apt05a.retention),1)
+					callpoint!.setColumnData("<<DISPLAY>>.DISP_TOT_CHECK",str(apt05a.invoice_amt-apt05a.discount_amt-apt05a.retention),1)
 					tmp_vendor_id$=vendor_id$
 					gosub disp_vendor_comments
 					gosub disable_grid
