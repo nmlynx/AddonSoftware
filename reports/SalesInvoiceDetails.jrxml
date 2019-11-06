@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2019-04-29T09:06:21 -->
+<!-- 2019-11-05T18:27:51 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SalesInvoiceDetails" pageWidth="792" pageHeight="612" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="752" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon" uuid="90d853c0-dbed-49fe-bd7e-63a820a7a918">
 	<property name="ireport.zoom" value="1.5"/>
 	<property name="ireport.x" value="222"/>
@@ -42,6 +42,7 @@
 		<defaultValueExpression><![CDATA["6"]]></defaultValueExpression>
 	</parameter>
 	<parameter name="BARISTA_WD" class="java.lang.String"/>
+	<parameter name="LOGO_FILE" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[CALL SALES_INVOICE_DETAILS($P{FIRM_ID}, $P{CUSTOMER_ID}, $P{AR_INV_NBR}, $P{BARISTA_WD})]]>
 	</queryString>
@@ -62,7 +63,7 @@
 		<band height="80" splitType="Stretch">
 			<image onErrorType="Blank">
 				<reportElement x="601" y="0" width="150" height="53" uuid="0722fbfd-091a-46c4-8b8e-da11b21e178b"/>
-				<imageExpression><![CDATA["../apps/aon/cust_images/aon_logo.jpg"]]></imageExpression>
+				<imageExpression><![CDATA[$P{LOGO_FILE}]]></imageExpression>
 			</image>
 			<textField>
 				<reportElement x="0" y="0" width="435" height="20" uuid="5f1a2fc4-5e9e-4539-9190-3fc2875a0d70"/>

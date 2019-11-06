@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2019-04-29T09:03:40 -->
+<!-- 2019-11-05T18:32:33 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SalesCustTypeCust" pageWidth="612" pageHeight="792" columnWidth="572" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon" uuid="cc231e5d-2b73-4763-b07a-dfff9a5bb8a1">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -25,6 +25,7 @@
 	<parameter name="BARISTA_WD" class="java.lang.String"/>
 	<parameter name="BEGDATE" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="ENDDATE" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="LOGO_FILE" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[CALL SALES_CUST_TYPE_CUST($P{FIRM_ID}, $P{CUST_TYPE}, $P{BEGDATE}, $P{ENDDATE}, $P{CUST_ID_MASK}, $P{CUST_ID_LEN}, $P{BARISTA_WD})]]>
 	</queryString>
@@ -44,7 +45,7 @@
 		<band height="79" splitType="Stretch">
 			<image onErrorType="Blank">
 				<reportElement x="405" y="0" width="150" height="62" uuid="119d982a-0d27-49d2-a7cc-82d47be3fb83"/>
-				<imageExpression><![CDATA["../apps/aon/cust_images/aon_logo.jpg"]]></imageExpression>
+				<imageExpression><![CDATA[$P{LOGO_FILE}]]></imageExpression>
 			</image>
 			<textField>
 				<reportElement x="1" y="0" width="390" height="29" uuid="499207bf-21d2-4ab4-a5a8-d1c33ebd72ba"/>
@@ -215,6 +216,9 @@
 				</hyperlinkParameter>
 				<hyperlinkParameter name="FitType">
 					<hyperlinkParameterExpression><![CDATA["Width"]]></hyperlinkParameterExpression>
+				</hyperlinkParameter>
+				<hyperlinkParameter name="LOGO_FILE">
+					<hyperlinkParameterExpression><![CDATA[$P{LOGO_FILE}]]></hyperlinkParameterExpression>
 				</hyperlinkParameter>
 			</textField>
 		</band>

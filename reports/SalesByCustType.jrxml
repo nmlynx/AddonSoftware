@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2019-04-29T08:46:57 -->
+<!-- 2019-11-05T18:29:11 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="SalesByCustType" pageWidth="612" pageHeight="792" whenNoDataType="AllSectionsNoDetail" columnWidth="572" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon" uuid="61581789-5e0c-49c9-8ac5-56746cdac093">
 	<property name="ireport.zoom" value="0.9090909090909091"/>
 	<property name="ireport.x" value="0"/>
@@ -23,6 +23,7 @@
 	<parameter name="BARISTA_WD" class="java.lang.String"/>
 	<parameter name="BEGDATE" class="java.lang.String" isForPrompting="false"/>
 	<parameter name="ENDDATE" class="java.lang.String" isForPrompting="false"/>
+	<parameter name="LOGO_FILE" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[CALL SALES_CUST_TYPE ($P{FIRM_ID},$P{BEGDATE},$P{ENDDATE},$P{BARISTA_WD})]]>
 	</queryString>
@@ -47,7 +48,7 @@
 			</textField>
 			<image onErrorType="Blank" hyperlinkType="Reference">
 				<reportElement x="405" y="0" width="147" height="65" uuid="5db37a60-87cc-4571-91f6-d6dbde7bbfe1"/>
-				<imageExpression><![CDATA["../apps/aon/cust_images/aon_logo.jpg"]]></imageExpression>
+				<imageExpression><![CDATA[$P{LOGO_FILE}]]></imageExpression>
 				<hyperlinkReferenceExpression><![CDATA["http://www.basis.com"]]></hyperlinkReferenceExpression>
 				<hyperlinkParameter name="command">
 					<hyperlinkParameterExpression><![CDATA["http://www.basis.com"]]></hyperlinkParameterExpression>
@@ -167,6 +168,9 @@
 				</hyperlinkParameter>
 				<hyperlinkParameter name="FitType">
 					<hyperlinkParameterExpression><![CDATA["Width"]]></hyperlinkParameterExpression>
+				</hyperlinkParameter>
+				<hyperlinkParameter name="LOGO_FILE">
+					<hyperlinkParameterExpression><![CDATA[$P{LOGO_FILE}]]></hyperlinkParameterExpression>
 				</hyperlinkParameter>
 			</textField>
 			<textField>
