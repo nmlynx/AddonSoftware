@@ -25,9 +25,6 @@ rem --- Retrieve sysinfo data
 rem --- Initializations
 
     precision i[1]
-    dim a0$(20),a1$(64),a[8],b0$(23),b1$(32),b[4],c0$(23),c1$(64),c[4]
-    dim d0$(23),d1$(32),d[4],ha$(23),hb$(26),hc$(26),x0$(32),x1$(4*g[4])
-    dim y0$(4),y1$(32),y2$(2*g[4]),xa$(24),xb$(31),xc$(21),hd$(40)
     dim files[44],params[10],params$[10],item$[6],refs$[20],refs[20]
     item$[0]=firm_id$
     params[0]=g[0]
@@ -190,8 +187,6 @@ l2370:
 
 rem --- Update PO line item
 
-    dim l0$(18),l1$(64),l2$(32),l3$(22),l4$(40),l[12]
-    l0$(1)=firm_id$+a0$(5,6)+c1$(1,7)+c1$(8,3)
     dim poe12a$:fattr(poe12a$)
     poe12a.firm_id$=firm_id$
     poe12a.po_no$=poe25a.po_no$
@@ -240,10 +235,10 @@ l2700: rem --- Generate GL Recap
     values[3]=ivm02a.qty_on_hand
     arcode$=ivm02a.ar_dist_code$
     w$[0]=poe25a$
-    w$[1]="";rem not used anymore (sending entire poe25a$ rec in w$[0], used to send c1$ here)
+    w$[1]="";rem not used anymore (sending entire poe25a$ rec in w$[0])
     y$[0]=pom02a$
-    y$[1]=y1$;rem not used anymore (sending entire rec)
-    y$[2]=y2$;rem not used anymore
+    y$[1]="";rem not used anymore (sending entire pom02a$ rec)
+    y$[2]="";rem not used anymore (sending entire pom02a$ rec)
     gosub l6900
 
 rem --- Get WIP account for Non-Stocks
@@ -300,7 +295,7 @@ rem --- Generate GL recap postings and loop back for next record
     amount=-poe35a.gl_post_amt
     values[0]=amount
     w$[0]=poe35a$
-    w$[1]="";rem not used anymore (sending entire poe35a$ record in w$[0], used to send d1$ here)
+    w$[1]="";rem not used anymore (sending entire poe35a$ record in w$[0])
     action$="D"
     distribution=distribution+amount
     gosub l6900
@@ -474,7 +469,9 @@ rem --- fnmask$: Alphanumeric Masking Function (formerly fnf$)
     def fnmask$(q1$,q2$)
         if cvs(q1$,2)="" return ""
         if q2$="" q2$=fill(len(q1$),"0")
-        return str(-num(q1$,err=*next):q2$,err=*next)
+        if pos("E"=cvs(q1$,4)) goto alpha_mask
+:      else return str(-num(q1$,err=alpha_mask):q2$,err=alpha_mask)
+alpha_mask:
         q=1
         q0=0
         while len(q2$(q))
