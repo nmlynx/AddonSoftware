@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2019-11-06
+ Report Date:   2019-11-11
  Report Branch: AddonSoftware 19.12
  Last Release:  AddonSoftware 19.11
 =======================================================================================================================================
@@ -539,3 +539,13 @@ Modified: data/bar/ope_invhdr.xml
 Modified: data/bar/ope_ordhdr.xml
 Modified: data/cdf/ope_invhdr.cdf
 Modified: data/cdf/ope_ordhdr.cdf
+
+=======================================================================================================================================
+Revision: 477b24de06e4ee105b17cfcd4bf011ef61d7f61c
+Author: shaney <shaney@basis.com>
+Date: 11/7/2019 5:08:28 PM
+Message:
+ER 9737: One of the reportControl!=null() lines was misplaced to be right after reportControl object creation rather than destruction.
+Relocated the statement to be after the call to destroy().
+----
+Modified: ar/src/arr_stmt_demand.aon
