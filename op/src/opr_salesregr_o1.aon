@@ -47,11 +47,15 @@ rem --- Initializations
     c1=0
     c2=0
     c3=0
-    if r1$="" h5$="First" else if r0$="A" h5$=r1$ else h5$=fnmask$(r1$,m0$)
-    if r2$="" h6$="Last" else if r0$="A" h6$=r2$ else h6$=fnmask$(r2$,m0$)
-    if r3$="" h7$="First" else h7$=fndate$(r3$)
-    if r4$="" h8$="Last" else h8$=fndate$(r4$)
-    if r5$="S" h9$="*** Summary ***",x8$="",x9$="" else h9$="*** Detail ***",x8$="No.",x9$="Line"
+    if r1$="" h5$=Translate!.getTranslation("AON_FIRST") else if r0$="A" h5$=r1$ else h5$=fnmask$(r1$,m0$)
+    if r2$="" h6$=Translate!.getTranslation("AON_LAST") else if r0$="A" h6$=r2$ else h6$=fnmask$(r2$,m0$)
+    if r3$="" h7$=Translate!.getTranslation("AON_FIRST") else h7$=fndate$(r3$)
+    if r4$="" h8$=Translate!.getTranslation("AON_LAST") else h8$=fndate$(r4$)
+    if r5$="S" then 
+        h9$="*** "+Translate!.getTranslation("AON_SUMMARY")+" ***"
+    else
+        h9$="*** "+Translate!.getTranslation("AON_DETAIL")+" ***"
+    endif
     when$=sysinfo.system_date$
     clock$=""
     page=0
@@ -65,23 +69,31 @@ rem --- Initializations
     headings$[0]=n1$
     headings$[1]=n3$
     headings$[2]=""
-    headings$[3]="From Customer: "+h5$+", Through Customer: "+h6$
-    headings$[4]="From Invoice Date: "+h7$+", Through Invoice Date: "+h8$
+    headings$[3]=Translate!.getTranslation("AON_FROM_CUSTOMER:_")+h5$+","+Translate!.getTranslation("AON__THROUGH_")+Translate!.getTranslation("AON_CUSTOMER:_")+h6$
+    headings$[4]=Translate!.getTranslation("AON_FROM_")+Translate!.getTranslation("AON_INVOICE_DATE")+": "+h7$+","+Translate!.getTranslation("AON__THROUGH_")+Translate!.getTranslation("AON_INVOICE_DATE")+": "+h8$
     headings$[5]=h9$
 
 rem -- Column heading
 
-    dim columns$[6,10]
     columns = 6,cur_col=0
-
-    columns$[0,0]="Customer No & Name", columns$[0,1]="C",columns$[0,2]="30"
-    columns$[1,0]="Inv.No",             columns$[1,1]="C",columns$[1,2]="8"
-    columns$[2,0]="Inv.Date",           columns$[2,1]="C",columns$[2,2]="10"
-rem columns$[3,0]="Line.No",            columns$[3,1]="C",columns$[3,2]="8"
-    columns$[3,0]="G.L.No.",            columns$[3,1]="C",columns$[3,2]="8"
-    columns$[4,0]="Description",        columns$[4,1]="C",columns$[4,2]="25"
-    columns$[5,0]="Debit",              columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$,columns$[5,10]="T"
-    columns$[6,0]="Credit",             columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
+    dim columns$[6,10]
+    if export$="Y" then
+       columns$[0,0]=Translate!.getTranslation("AON_CUSTOMER_ID"),   columns$[0,1]="C",columns$[0,2]="10"
+       columns$[1,0]=Translate!.getTranslation("AON_CUSTOMER_NAME"), columns$[1,1]="C",columns$[1,2]="30"
+       columns$[2,0]=Translate!.getTranslation("AON_INV_NO"),        columns$[2,1]="C",columns$[2,2]="8"
+       columns$[3,0]=Translate!.getTranslation("AON_INV_DATE"),      columns$[3,1]="C",columns$[3,2]="10"
+       columns$[4,0]=Translate!.getTranslation("AON_GL_ACCOUNT"),    columns$[4,1]="C",columns$[4,2]="10"
+       columns$[5,0]=Translate!.getTranslation("AON_DESCRIPTION"),   columns$[5,1]="C",columns$[5,2]="25"
+       columns$[6,0]=Translate!.getTranslation("AON_AMOUNT"),        columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
+    else
+        columns$[0,0]=Translate!.getTranslation("AON_CUSTOMER_ID")+" "+Translate!.getTranslation("AON_AND")+" "+Translate!.getTranslation("AON_NAME"), columns$[0,1]="C",columns$[0,2]="30"
+        columns$[1,0]=Translate!.getTranslation("AON_INV_NO"),       columns$[1,1]="C",columns$[1,2]="8"
+        columns$[2,0]=Translate!.getTranslation("AON_INV_DATE"),     columns$[2,1]="C",columns$[2,2]="10"
+        columns$[3,0]=Translate!.getTranslation("AON_GL_ACCOUNT"),   columns$[3,1]="C",columns$[3,2]="10"
+        columns$[4,0]=Translate!.getTranslation("AON_DESCRIPTION"),  columns$[4,1]="C",columns$[4,2]="25"
+        columns$[5,0]=Translate!.getTranslation("AON_DEBIT"),        columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m1$,columns$[5,10]="T"
+        columns$[6,0]=Translate!.getTranslation("AON_CREDIT"),       columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
+    endif
 
     call stbl("+DIR_PGM",err=*next)+"adc_docout_adj.aon",columns$[all]
 
@@ -278,12 +290,17 @@ rem --- Print Invoice Number & Date
         
     if r5$<>"D" goto l3650
     
-    if cur_col=0
+    if cur_col=0 and export$<>"Y" then
         OutVect!.addItem("")
     endif
     
-    OutVect!.addItem(opt01a.ar_inv_no$)
-    OutVect!.addItem(fndate$(opt01a.invoice_date$))
+    cur_inv_no$=opt01a.ar_inv_no$
+    cur_inv_date$=fndate$(opt01a.invoice_date$)
+
+    if export$<>"Y" then
+       OutVect!.addItem(opt01a.ar_inv_no$)
+       OutVect!.addItem(fndate$(opt01a.invoice_date$))
+    endif
     cur_col=2
     recs=recs+1
 
@@ -302,20 +319,29 @@ l3780: rem --- Print
 
     if r5$<>"D" goto l3870
     
-    if cur_col<2
+    if cur_col<2 and export$<>"Y" then
         xwk=fnblank(3-cur_col)
     endif
     
-rem    OutVect!.addItem(opw04a.orddet_seq_ref$)
-    OutVect!.addItem(fnmask$(opw04a.gl_account$(1,g5),g5$))
-    OutVect!.addItem(glm01a.gl_acct_desc$)
-    
-    if opw04a.gl_post_amt>0 then
-        OutVect!.addItem(str(opw04a.gl_post_amt))
-        OutVect!.addItem("")
+    if export$<>"Y" then
+       OutVect!.addItem(fnmask$(opw04a.gl_account$(1,g5),g5$))
+       OutVect!.addItem(glm01a.gl_acct_desc$)
+       
+       if opw04a.gl_post_amt>0 then
+          OutVect!.addItem(str(opw04a.gl_post_amt))
+          OutVect!.addItem("")
+       else
+          OutVect!.addItem("")
+          OutVect!.addItem(str(abs(opw04a.gl_post_amt)))
+       endif
     else
-        OutVect!.addItem("")
-        OutVect!.addItem(str(abs(opw04a.gl_post_amt)))
+       OutVect!.addItem(cust_no$)
+       OutVect!.addItem(cust_name$)
+       OutVect!.addItem(cur_inv_no$)
+       OutVect!.addItem(cur_inv_date$)
+       OutVect!.addItem(fnmask$(opw04a.gl_account$(1,g5),g5$))
+       OutVect!.addItem(glm01a.gl_acct_desc$)
+       OutVect!.addItem(str(opw04a.gl_post_amt))
     endif
     
     cur_col=0
@@ -352,20 +378,21 @@ done: rem --- End
     gosub cust_break
     if r5$<>"D" goto l4100
 
-    xwk=fnblank(14)
-    TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
-    OutVect!.addItem("Grand Total : ")
-    
-    if d2-abs(c2)<>0 then
-        xwk=fnblank(3)
-        OutVect!.addItem("***")
-    else
-        xwk=fnblank(4)
+    if export$<>"Y" then
+        xwk=fnblank(14)
+        TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
+        OutVect!.addItem(Translate!.getTranslation("AON_GRAND_TOTAL:_"))
+        
+        if d2-abs(c2)<>0 then
+            xwk=fnblank(3)
+            OutVect!.addItem("***")
+        else
+            xwk=fnblank(4)
+        endif
+        
+        OutVect!.addItem(str(d2))
+        OutVect!.addItem(str(abs(c2)))
     endif
-    
-    OutVect!.addItem(str(d2))
-    OutVect!.addItem(str(abs(c2)))
-
 l4100: rem --- G/L Account Totals
 
     retain$="YES"
@@ -380,13 +407,15 @@ cust_break: rem --- Customer Break
     if t0$="" goto l6100
     if d3-abs(c3)<>0 gosub l6200
     if r5$<>"D" goto l6100
-    xwk=fnblank(7)
-    TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
-    OutVect!.addItem("Customer "+fnmask$(t0$(1,m0),m0$)+" Total: ")
-    xwk=fnblank(4)
-    OutVect!.addItem(str(d1))
-    OutVect!.addItem(str(abs(c1)))
-    xwk=fnblank(7)
+    if export$<>"Y" then
+        xwk=fnblank(7)
+        TotVect!.addItem(str(OutVect!.size()/(columns+1))) 
+        OutVect!.addItem(Translate!.getTranslation("AON_CUSTOMER")+" "+fnmask$(t0$(1,m0),m0$)+" "+Translate!.getTranslation("AON_TOTAL:_"))
+        xwk=fnblank(4)
+        OutVect!.addItem(str(d1))
+        OutVect!.addItem(str(abs(c1)))
+        xwk=fnblank(7)
+    endif
     cur_col=0
     l=l+3
     recs=recs+1
@@ -396,9 +425,13 @@ l6100:
     arm01a.customer_name$="*** Not On File ***"
     find record (arm01_dev,key=firm_id$+opw04a.customer_id$,knum="PRIMARY",dom=l6150) arm01a$
     x0$=fnmask$(opw04a.customer_id$(1,m0),m0$)+" "+arm01a.customer_name$
+    cust_no$=fnmask$(opw04a.customer_id$(1,m0),m0$)
+    cust_name$=arm01a.customer_name$
     if r5$<>"D" goto l6170
 l6150:
-    OutVect!.addItem(x0$)
+    if export$<>"Y" then
+       OutVect!.addItem(x0$)
+    endif
     cur_col=1
     recs=recs+1
 l6170:
@@ -414,7 +447,7 @@ l6190:
 l6200: rem --- Previous Invoice Out Of Balance
 
     gosub l6400
-    if d3-abs(c3)=0 goto l6290
+    if d3-abs(c3)=0 or export$="Y" then goto l6290
     if r5$<>"D" goto l6290
     if cur_col<4
         xwk=fnblank(4-cur_col)
@@ -444,21 +477,30 @@ rem --- Summarize Non-Retained Postings
     d0=oob
     gosub l6900
     if r5$<>"D" goto l6495
+
+    if export$<>"Y" then
+        if cur_col<3
+            xwk=fnblank(3-cur_col)
+        endif
     
-    if cur_col<3
-        xwk=fnblank(3-cur_col)
-    endif
-    
-    rem OutVect!.addItem("???")
-    OutVect!.addItem(d1$)
-    OutVect!.addItem("***Detail Not Retained***")
-    
-    if oob>0
-        OutVect!.addItem(str(oob))
-        OutVect!.addItem("")
+        OutVect!.addItem(d1$)
+        OutVect!.addItem("*** "+Translate!.getTranslation("AON_DETAIL")+" "+Translate!.getTranslation("AON_NOT")+" "+Translate!.getTranslation("AON_RETAINED")+" ***")
+        
+        if oob>0
+            OutVect!.addItem(str(oob))
+            OutVect!.addItem("")
+        else
+            OutVect!.addItem("")
+            OutVect!.addItem(str(abs(oob)))
+        endif
     else
-        OutVect!.addItem("")
-        OutVect!.addItem(str(abs(oob)))
+        OutVect!.addItem(cust_no$)
+        OutVect!.addItem(cust_name$)
+        OutVect!.addItem(cur_inv_no$)
+        OutVect!.addItem(cur_inv_date$)
+        OutVect!.addItem(d1$)
+        OutVect!.addItem("*** "+Translate!.getTranslation("AON_DETAIL")+" "+Translate!.getTranslation("AON_NOT")+" "+Translate!.getTranslation("AON_RETAINED")+" ***")
+        OutVect!.addItem(str(oob))
     endif
     
     cur_col=0
