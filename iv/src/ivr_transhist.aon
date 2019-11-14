@@ -108,6 +108,7 @@ rem --- Assign form input values to local variables
     ttypes$[9]=option!.getOptionData("tran_hst_bm")
     inactive$=Option!.getOptionData("ITEM_INACTIVE")
     doComments$=option!.getOptionData("PICK_CHECK")
+    export$=option!.getOptionData("EXPORT_FORMAT")
 
 rem --- Retrieve parameter records
 
@@ -195,7 +196,8 @@ rem --- Initializations
     masks$[1]=x9$
     masks$[2]=x7$
     masks$[3]=g5$
-
+    rpt_tot$=""
+    dim rpt_qty[9],rpt_ext[9]
 init_headings: rem --- Initialize HEADINGS$
 
     x1$=Translate!.getTranslation("AON_FIRST_DATE")
@@ -223,17 +225,31 @@ init_headings: rem --- Initialize HEADINGS$
     headings$[8]="[HEADER]"
 
 rem --- column headings
-
-    dim columns$[7,10]
-    columns=8
-    columns$[0,0]=Translate!.getTranslation("AON_ITEM"),                   columns$[0,1]="C",columns$[0,2]="10"
-    columns$[1,0]=Translate!.getTranslation("AON_DATE"),                   columns$[1,1]="C",columns$[1,2]="8"
-    columns$[2,0]=Translate!.getTranslation("AON_TYPE"),                   columns$[2,1]="C",columns$[2,2]="5"
-    columns$[3,0]=Translate!.getTranslation("AON_REFERENCE_INFORMATION"),  columns$[3,1]="C",columns$[3,2]="35"
-    columns$[4,0]=Translate!.getTranslation("AON_QUANTITY"),               columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m2$,columns$[4,10]="T"
-    columns$[5,0]=Translate!.getTranslation("AON_UNIT_COST"),              columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m3$
-    columns$[6,0]=Translate!.getTranslation("AON_EXTENSION"),              columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
-    columns$[7,0]=Translate!.getTranslation("AON_BALANCE"),                columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m2$
+    if export$="Y" then
+       dim columns$[8,10]
+       columns=9
+       columns$[0,0]=Translate!.getTranslation("AON_WAREHOUSE"),              columns$[0,1]="C",columns$[0,2]="20"
+       columns$[1,0]=Translate!.getTranslation("AON_ITEM"),                   columns$[1,1]="C",columns$[1,2]="35"
+       columns$[2,0]=Translate!.getTranslation("AON_PROD"),                   columns$[2,1]="C",columns$[2,2]="4"
+       columns$[3,0]=Translate!.getTranslation("AON_DATE"),                   columns$[3,1]="C",columns$[3,2]="8"
+       columns$[4,0]=Translate!.getTranslation("AON_TYPE"),                   columns$[4,1]="C",columns$[4,2]="5"
+       columns$[5,0]=Translate!.getTranslation("AON_REFERENCE_INFORMATION"),  columns$[5,1]="C",columns$[5,2]="35"
+       columns$[6,0]=Translate!.getTranslation("AON_QUANTITY"),               columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m2$
+       columns$[7,0]=Translate!.getTranslation("AON_UNIT_COST"),              columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m3$
+       columns$[8,0]=Translate!.getTranslation("AON_EXTENSION"),              columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m1$
+       
+    else
+        dim columns$[7,10]
+        columns=8
+        columns$[0,0]=Translate!.getTranslation("AON_ITEM"),                   columns$[0,1]="C",columns$[0,2]="10"
+        columns$[1,0]=Translate!.getTranslation("AON_DATE"),                   columns$[1,1]="C",columns$[1,2]="8"
+        columns$[2,0]=Translate!.getTranslation("AON_TYPE"),                   columns$[2,1]="C",columns$[2,2]="5"
+        columns$[3,0]=Translate!.getTranslation("AON_REFERENCE_INFORMATION"),  columns$[3,1]="C",columns$[3,2]="35"
+        columns$[4,0]=Translate!.getTranslation("AON_QUANTITY"),               columns$[4,1]="N",columns$[4,2]="10",columns$[4,3]=m2$,columns$[4,10]="T"
+        columns$[5,0]=Translate!.getTranslation("AON_UNIT_COST"),              columns$[5,1]="N",columns$[5,2]="10",columns$[5,3]=m3$
+        columns$[6,0]=Translate!.getTranslation("AON_EXTENSION"),              columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
+        columns$[7,0]=Translate!.getTranslation("AON_BALANCE"),                columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m2$
+    endif
 
     call stbl("+DIR_PGM",err=*next)+"adc_docout_adj.aon",columns$[all]
 
@@ -288,7 +304,7 @@ rem --- Get Reference Block
         call pgmdir$+"ivc_transdata.aon",ivt04a$,ivchannels[all],params[all],masks$[all],type$,desc$[all]
         if type$="" continue
 
-rem --- Build Totals Array
+rem --- Build Item Totals Array
 
         while more
             x=pos(type$=item_tot$,4)
@@ -300,9 +316,21 @@ rem --- Build Totals Array
         item_qty[x]=item_qty[x]+ivt04a.trans_qty
         item_ext[x]=item_ext[x]+ivt04a.trans_qty*ivt04a.unit_cost
 
+rem --- Build Report Totals Array
+        while more
+            xt=pos(type$=rpt_tot$,4)
+            if xt=0 then
+                rpt_tot$=rpt_tot$+type$
+                continue
+            endif
+            break
+        wend
+        xt=(xt+3)/4
+        rpt_qty[xt]=rpt_qty[xt]+ivt04a.trans_qty
+        rpt_ext[xt]=rpt_ext[xt]+ivt04a.trans_qty*ivt04a.unit_cost
 rem --- Print subheading?
 
-        if subhead1$<>"" 
+        if subhead1$<>"" and export$<>"Y" then
             xwk=fnblank(columns)
             OutVect!.addItem(subhead1$)
             xwk=fnblank(2)
@@ -312,29 +340,40 @@ rem --- Print subheading?
         endif
 
 print_detail: rem --- Print detail line
-
-        OutVect!.addItem("")
-        OutVect!.addItem(fndate$(ivt04a.trans_date$))
-        OutVect!.addItem(type$)
-        OutVect!.addItem(desc$[0])
-        OutVect!.addItem(str(ivt04a.trans_qty))
-        OutVect!.addItem(str(ivt04a.unit_cost))
-        OutVect!.addItem(str(ivt04a.trans_qty*ivt04a.unit_cost))
-        if all$="Y" then OutVect!.addItem(str(balance)) else OutVect!.addItem("")
-        
-        if cvs(desc$[1],2)<>"" then
-            xwk=fnblank(3)
-            OutVect!.addItem(cvs(desc$[1],2))
-            xwk=fnblank(columns-4)
-        endif
-
-        if doComments$="Y" and len(ivt04a.memo_1024$)>len(ivt04a.trans_cmt$) then
-            memoVect!=func.splitMultiLineField(ivt04a.memo_1024$,60)
-            for i=0 to memoVect!.size()-1
+        if export$="Y" then
+            OutVect!.addItem(whse_code$+" "+whse_name$)
+            OutVect!.addItem(subhead1$)
+            OutVect!.addItem(subhead2$)
+            OutVect!.addItem(fndate$(ivt04a.trans_date$))
+            OutVect!.addItem(type$)
+            OutVect!.addItem(desc$[0])
+            OutVect!.addItem(str(ivt04a.trans_qty))
+            OutVect!.addItem(str(ivt04a.unit_cost))
+            OutVect!.addItem(str(ivt04a.trans_qty*ivt04a.unit_cost))
+        else
+            OutVect!.addItem("")
+            OutVect!.addItem(fndate$(ivt04a.trans_date$))
+            OutVect!.addItem(type$)
+            OutVect!.addItem(desc$[0])
+            OutVect!.addItem(str(ivt04a.trans_qty))
+            OutVect!.addItem(str(ivt04a.unit_cost))
+            OutVect!.addItem(str(ivt04a.trans_qty*ivt04a.unit_cost))
+            if all$="Y" then OutVect!.addItem(str(balance)) else OutVect!.addItem("")
+            
+            if cvs(desc$[1],2)<>"" then
                 xwk=fnblank(3)
-                OutVect!.addItem(memoVect!.getItem(i))
+                OutVect!.addItem(cvs(desc$[1],2))
                 xwk=fnblank(columns-4)
-            next i
+            endif
+    
+            if doComments$="Y" and len(ivt04a.memo_1024$)>len(ivt04a.trans_cmt$) then
+                memoVect!=func.splitMultiLineField(ivt04a.memo_1024$,60)
+                for i=0 to memoVect!.size()-1
+                    xwk=fnblank(3)
+                    OutVect!.addItem(memoVect!.getItem(i))
+                    xwk=fnblank(columns-4)
+                next i
+            endif
         endif
 		
 		no_records = 0
@@ -351,6 +390,9 @@ done: rem --- All done
         gosub item_break
 	endif
 	
+    if export$<>"Y" then
+       gosub grand_total
+    endif
     goto std_exit
     
 whse_break: rem Warehouse Break
@@ -362,12 +404,18 @@ whse_break: rem Warehouse Break
     x0$=ivm10c.short_name$
     x$=Translate!.getTranslation("AON_WAREHOUSE_")+t0$+" "+cvs(x0$,2)
     BrkVect!.addItem(str(OutVect!.size()/(columns)))
-    HdrVect!.addItem(x$)
+    if export$="Y" then
+       HdrVect!.addItem("")
+    else
+        HdrVect!.addItem(x$)
+    endif
+    whse_code$=whse$
+    whse_name$=ivm10c.short_name$
     return
     
 item_break: rem --- Item Break
     
-    if t1$<>"" then
+    if t1$<>"" and export$<>"Y" then
         if len(item_tot$)<>0 then
             xwk=fnblank(columns)
             TotVect!.addItem(str(OutVect!.size()/(columns)))
@@ -405,7 +453,47 @@ item_break: rem --- Item Break
     if all$="Y" then gosub get_beg_bal
 
     subhead1$=cvs(fnmask$(t1$,ivIMask$),2)+" "+wkdesc$
-    subhead2$=Translate!.getTranslation("AON_PRODUCT_TYPE:_")+ivm01a.product_type$
+    if export$="Y" then
+        subhead2$=ivm01a.product_type$
+    else
+        subhead2$=Translate!.getTranslation("AON_PRODUCT_TYPE:_")+ivm01a.product_type$
+    endif
+    return
+
+    grand_total:
+    rem --- Grand Total for Report
+    net_qty=0
+    net_ext=0
+
+    if len(rpt_tot$)<>0 then
+       xwk=fnblank(columns)
+       OutVect!.addItem("Report Grand Total")
+       
+       TotVect!.addItem(str(OutVect!.size()/(columns)))
+       xwk=fnblank(columns-1)
+       
+       for x=1 to len(rpt_tot$) step 4
+          xwk=fnblank(3)
+          OutVect!.addItem("     "+rpt_tot$(x,4)+Translate!.getTranslation("AON__TOTAL"))
+          OutVect!.addItem(str(rpt_qty[(x+3)/4]))
+          OutVect!.addItem("")
+          OutVect!.addItem(str(rpt_ext[(x+3)/4]))
+          OutVect!.addItem("")
+          net_qty=net_qty+rpt_qty[(x+3)/4]
+          net_ext=net_ext+rpt_ext[(x+3)/4]
+       next x
+       
+       if all$<>"N" then
+          xwk=fnblank(3)
+          OutVect!.addItem(Translate!.getTranslation("AON______NET_CHANGE"))
+          OutVect!.addItem(str(net_qty))
+          OutVect!.addItem("")
+          OutVect!.addItem(str(net_ext))
+          OutVect!.addItem("")
+          xwk=fnblank(columns)
+       endif
+    endif
+
     return
     
 get_beg_bal: rem --- Determine starting beginning balance
