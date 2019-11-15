@@ -9,6 +9,11 @@ rem --- All Rights Reserved
     seterr std_error
     setesc std_error
 
+rem --- Inits
+
+    use ::bbtranslator.bbj::BBTranslator
+    declare BBTranslator Translate!
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -83,6 +88,7 @@ rem --- Assign form input values to local variables
     r3$= option!.getOptionData("INVOICE_DATE_1")
     r4$= option!.getOptionData("INVOICE_DATE_2")
     r5$= option!.getOptionData("SUMM_DTL")
+    export$=option!.getOptionData("EXPORT_FORMAT")
 
 rem --- Retrieve parameter records
 
@@ -148,7 +154,7 @@ rem --- G/L Not Installed
 
     msg_id$="GENERIC_WARN"
     dim msg_tokens$[1]
-    msg_tokens$[1]="General Ledger Is Required For The "+n3$
+    msg_tokens$[1]=Translate!.getTranslation("AON_GENERAL_LEDGER")+Translate!.getTranslation("AON__IS_REQUIRED_TO_RUN_THIS_TASK.")
     gosub disp_message
     
     goto std_exit

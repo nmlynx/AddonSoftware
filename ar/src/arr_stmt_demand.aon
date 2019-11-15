@@ -87,7 +87,6 @@ rem --- Initializations
 rem --- See if this document is set up in Addon Report Control
 
     reportControl!=new ReportControl()
-    reportControl!=null()
     reportControl!.setDocExtension("pdf")
     rpt_ctl$=reportControl!.getReportControl(rptctl_alias$)
     rpt_ctl$=iff(rpt_ctl$="","NO","YES")
@@ -299,6 +298,7 @@ exit_viewer:
 close_win:rem --- Viewer Window Closed
     
     reportControl!.destroy(err=*next)
+	reportControl!=null()
     viewerWindow!.destroy(err=*next)
     if tcb(13) then exit
     release
