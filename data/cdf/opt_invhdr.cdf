@@ -462,3 +462,5 @@ rem --- historical invoice
 :	                       table_chans$[all],
 :	                       "",
 :	                       dflt_data$[all]
+
+	callpoint!.setStatus("ACTIVATE")

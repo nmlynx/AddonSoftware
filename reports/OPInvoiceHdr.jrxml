@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2019-07-10T15:38:19 -->
+<!-- 2019-11-19T12:15:37 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="OPInvoiceHdr" language="groovy" pageWidth="612" pageHeight="792" columnWidth="570" leftMargin="22" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon" uuid="b146e7c7-7794-48d0-bad4-a5da78d1668b">
 	<property name="ireport.zoom" value="3.0"/>
 	<property name="ireport.x" value="1095"/>
@@ -35,8 +35,9 @@
 	<parameter name="SHIP_SEQ_NO" class="java.lang.String"/>
 	<parameter name="ITEM_MASK" class="java.lang.String"/>
 	<parameter name="AR_FAX_NO" class="java.lang.String"/>
+	<parameter name="REPORT_TYPE" class="java.lang.String"/>
 	<queryString language="SQL">
-		<![CDATA[call OPINVOICE_HDR($P{FIRM_ID},$P{AR_TYPE},$P{CUSTOMER_ID},$P{ORDER_NO},$P{AR_INV_NO},$P{CUST_MASK},$P{CUST_SIZE},$P{BARISTA_WD})]]>
+		<![CDATA[call OPINVOICE_HDR($P{FIRM_ID},$P{AR_TYPE},$P{CUSTOMER_ID},$P{ORDER_NO},$P{AR_INV_NO},$P{CUST_MASK},$P{CUST_SIZE},$P{BARISTA_WD},$P{REPORT_TYPE})]]>
 	</queryString>
 	<field name="INVOICE_NO" class="java.lang.String"/>
 	<field name="INVOICE_DATE" class="java.lang.String"/>
@@ -413,18 +414,42 @@
 				</graphicElement>
 			</rectangle>
 			<staticText>
-				<reportElement x="271" y="13" width="281" height="44" forecolor="#CCCCCC" uuid="f50d2b77-a7b9-49db-b8d4-b08a332a43ed"/>
+				<reportElement x="271" y="13" width="281" height="44" forecolor="#CCCCCC" uuid="f50d2b77-a7b9-49db-b8d4-b08a332a43ed">
+					<printWhenExpression><![CDATA[!$P{REPORT_TYPE}.equals( "3" )]]></printWhenExpression>
+				</reportElement>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="DejaVu Serif" size="30" isBold="true"/>
 				</textElement>
 				<text><![CDATA[INVOICE]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="270" y="11" width="281" height="43" forecolor="#000000" uuid="55be52b3-bec8-40f1-9882-597218c45b64"/>
+				<reportElement x="270" y="11" width="281" height="43" forecolor="#000000" uuid="55be52b3-bec8-40f1-9882-597218c45b64">
+					<printWhenExpression><![CDATA[!$P{REPORT_TYPE}.equals( "3" )]]></printWhenExpression>
+				</reportElement>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="DejaVu Serif" size="30" isBold="true"/>
 				</textElement>
 				<text><![CDATA[INVOICE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="272" y="6" width="281" height="62" forecolor="#CCCCCC" uuid="0fabd864-9a7c-4ec3-a556-351e5fdcc124">
+					<printWhenExpression><![CDATA[$P{REPORT_TYPE}.equals( "3" )]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="24" isBold="true"/>
+				</textElement>
+				<text><![CDATA[HISTORICAL
+ INVOICE]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="270" y="5" width="281" height="62" forecolor="#000000" uuid="a8a33e0a-5154-4806-b4f6-9674a92b51cf">
+					<printWhenExpression><![CDATA[$P{REPORT_TYPE}.equals( "3" )]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="24" isBold="true"/>
+				</textElement>
+				<text><![CDATA[HISTORICAL
+ INVOICE]]></text>
 			</staticText>
 			<rectangle radius="4">
 				<reportElement mode="Opaque" x="13" y="6" width="256" height="104" forecolor="#000000" backcolor="#FFFFFF" uuid="4e4c2f06-45fa-4809-8572-98b100e47bca"/>
@@ -933,6 +958,9 @@
 				</subreportParameter>
 				<subreportParameter name="ITEM_MASK">
 					<subreportParameterExpression><![CDATA[$P{ITEM_MASK}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="REPORT_TYPE">
+					<subreportParameterExpression><![CDATA[$P{REPORT_TYPE}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<returnValue subreportVariable="TOTAL_EXT_BigDec_OUT" toVariable="TOTAL_SALE_BigDec"/>

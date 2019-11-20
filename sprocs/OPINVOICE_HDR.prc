@@ -3,23 +3,17 @@ rem --- OP Invoice Printing
 rem --- Program: OPINVOICE_HDR.prc 
 
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
-rem --- All Rights Reserved
 
-rem --- 4/2013 ------------------------
-rem --- Replaced BBjForm-based OP Invoice Print with Jasper-based
+rem --- opc_invoice.aon is used to print (1) On-Demand (from Invoice Entry--
+rem --- ope_invhdr.cdf), (2) Batch (from menu: OP Invoice Printing--
+rem --- opr_invoice.aon), and (3) Historical Invoices (from Invoice History
+rem --- Inquiry--opt_invhdr.cdf).
 
-rem --- opc_invoice.aon is used to print On-Demand (from Invoice Entry--
-rem --- ope_invhdr.cdf) and Batch (from menu: OP Invoice Printing--
-rem --- opr_invoice.aon)
-
-rem --- Historical is still not implemented, since it should be handled
-rem --- when real-time processing is implemented
-
-rem --- There are three sprocs and three .jaspers for this enhancement:
+rem --- opc_invoice.aon uses four sprocs and four .jaspers to generate invoicest:
 rem ---    - OPINVOICE_HDR.prc / OPInvoiceHdr.jasper
 rem ---    - OPINVOICE_DET.prc / OPInvoiceDet.jasper
 rem ---    - OPINVOICE_DET_LOTSER.prc / OPInvoiceDet-LotSer.jasper
-rem -----------------------------------
+rem ---    - OPINVOICE_SHIPTRACK.prc / OPInvoiceShipTrack.jasper
 
 rem ----------------------------------------------------------------------------
 
@@ -42,6 +36,7 @@ ar_inv_no$ =   sp!.getParameter("AR_INV_NO")
 cust_mask$ =   sp!.getParameter("CUST_MASK")
 cust_size = num(sp!.getParameter("CUST_SIZE"))
 barista_wd$ =  sp!.getParameter("BARISTA_WD")
+report_type$ = sp!.getParameter("REPORT_TYPE")
 
 chdir barista_wd$
 
@@ -61,12 +56,6 @@ datatemplate$ = datatemplate$ + "inv_std_message:C(1024*=1), paid_desc:C(20), pa
 dataTemplate$ = dataTemplate$ + "discount_amt_raw:C(1*),tax_amt_raw:C(1*),freight_amt_raw:C(1*)"
 
 rs! = BBJAPI().createMemoryRecordSet(dataTemplate$)
-
-rem --- Types of calls
-
-    on_demand  = 1
-    batch_inv  = 2
-    historical = 3
     
 rem --- Use statements and Declares
 	
@@ -88,6 +77,11 @@ rem --- Init
 
     start_block = 1
     nothing_printed = 1	
+
+    rem --- Report types
+    on_demand$="1"
+    batch_inv$="2"
+    historical$="3"
 
 rem --- Open Files    
 rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
@@ -185,7 +179,12 @@ rem --- Initialize Data
 	
 rem --- Main Read
 
-    find record (ope01_dev, key=firm_id$+"E"+ar_type$+customer_id$+order_no$+ar_inv_no$, knum="AO_STATUS", dom=all_done) ope01a$
+    if report_type$=historical$ then
+        trans_status$="U"
+    else
+        trans_status$="E"
+    endif
+    find record (ope01_dev, key=firm_id$+trans_status$+ar_type$+customer_id$+order_no$+ar_inv_no$, knum="AO_STATUS", dom=all_done) ope01a$
 	
 	ar_inv_no$ =    ope01a.ar_inv_no$
 	invoice_date$ = func.formatDate(ope01a.invoice_date$)
@@ -201,6 +200,7 @@ rem --- Main Read
     tax_amt$ =      str(tax_amt_raw:amt_mask$)
     freight_amt$ =  str(freight_amt_raw:amt_mask$)
 
+
 	rem --- Cash Sale?
 	
 		if ope01a.cash_sale$ = "Y" then
@@ -208,7 +208,7 @@ rem --- Main Read
 			arm10c.trans_type$ = "C"
 
 			if ope41_dev then
-				find record (ope41_dev, key=firm_id$+"E"+ar_type$+ope01a.customer_id$+ope01a.order_no$+ope01a.ar_inv_no$,knum="AO_STATUS", dom=*endif, err=*endif) ope41a$; rem z0$, z1$
+				find record (ope41_dev, key=firm_id$+trans_status$+ar_type$+ope01a.customer_id$+ope01a.order_no$+ope01a.ar_inv_no$,knum="AO_STATUS", dom=*endif, err=*endif) ope41a$; rem z0$, z1$
 				find record (arm10c_dev, key=firm_id$+"C"+ope41a.cash_rec_cd$, dom=*next) arm10c$; rem y7$, y9$                
 			endif
 		endif
