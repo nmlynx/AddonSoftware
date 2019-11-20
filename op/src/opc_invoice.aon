@@ -4,25 +4,18 @@ rem --- Created by adx_codeport.bbj v1.1.5 (06/12/2009 12:05:26)
 
 rem --- AddonSoftware Version 8.0.0 - 27Jul2009
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
-rem --- All Rights Reserved
 
-rem --- Send in a list of customer IDs and order numbers to print.
+rem --- opc_invoice.aon is used to print (1) On-Demand (from Invoice Entry--
+rem --- ope_invhdr.cdf), (2) Batch (from menu: OP Invoice Printing--
+rem --- opr_invoice.aon), and (3) Historical Invoices (from Invoice History
+rem --- Inquiry--opt_invhdr.cdf).
 
-rem --- 4/2013 ------------------------
-rem --- Replaced BBjForm-based OP Invoice Print with Jasper-based
-
-rem --- opc_invoice.aon is used to print On-Demand (from Invoice Entry--
-rem --- ope_invhdr.cdf) and Batch (from menu: OP Invoice Printing--
-rem --- opr_invoice.aon)
-
-rem --- Historical is still not implemented, since it should be handled
-rem --- when real-time processing is implemented
-
-rem --- There are three sprocs and three .jaspers for this enhancement:
+rem --- opc_invoice.aon uses four sprocs and four .jaspers to generate invoicest:
 rem ---    - OPINVOICE_HDR.prc / OPInvoiceHdr.jasper
 rem ---    - OPINVOICE_DET.prc / OPInvoiceDet.jasper
 rem ---    - OPINVOICE_DET_LOTSER.prc / OPInvoiceDet-LotSer.jasper
-rem -----------------------------------
+rem ---    - OPINVOICE_SHIPTRACK.prc / OPInvoiceShipTrack.jasper
+
 rem --- 11/2014 -----------------------
 rem --- Revised to generate a 'print' copy as well as a 'master' copy when doing batch invoices.
 rem --- Print copy contains invoices for customers not in report control file, or in the file with the 'print' box checked.
@@ -61,12 +54,18 @@ batch_inv: rem --- Batch printing of invoices
     type = 2
     goto done_with_enter
  
-historical: rem --- Historical invoice printing (not implemented)
+historical: rem --- Historical invoice printing
 
     setesc std_error
     seterr std_error
 
-    enter custIds!, orderNos!, table_chans$[all], status
+    enter cust_id$, order_no$, option!, table_chans$[all], status
+     
+    custIds! = BBjAPI().makeVector()
+    orderNos! = BBjAPI().makeVector()
+    
+    custIds!.addItem( cust_id$ )
+    orderNos!.addItem( order_no$ )   
     
     type = 3
     goto done_with_enter
@@ -279,17 +278,17 @@ rem --- Initialize Data
     func.setLen3( int(num(ivs01a.desc_len_03$)) )
 	   
     nothing_printed = 1
-    
-    if type = on_demand then
-        alias$ = option!.getAlias()
-        rptctl_alias$ = "OPR_INVOICE";rem --- use actual alias (i.e., OPE_INVHDR) when putting in doc archive so you know it was an on-demand invoice, but use OPR_INVOICE for report control so you don't need two report control records for each customer to handle on-demand vs. batch.        
-		master_document=0
-        print_document=0
-    else
+
+    if type = batch_inv then
         alias$ = option!.getAlias()
         rptctl_alias$ = alias$
 		master_document=1
         print_document=1
+    else
+        alias$ = option!.getAlias()
+        rptctl_alias$ = "OPR_INVOICE";rem --- use actual alias (i.e., OPE_INVHDR) when putting in doc archive so you know it was an on-demand invoice, but use OPR_INVOICE for report control so you don't need two report control records for each customer to handle on-demand vs. batch.        
+        master_document=0
+        print_document=0
     endif
 
     emailFax! = BBjAPI().makeVector()
@@ -306,17 +305,24 @@ rem --- See if this document is set up in Addon Report Control
 
 rem --- Assign form input values to local variables
 
-    if type = batch_inv then 
-		restart$ = option!.getOptionData("pick_check")
-		restart_customer$ = option!.getOptionData("customer_id")  
-        batch_adhoc_message$ = option!.getOptionData("pick_text")
-    else
-		restart$ = ""
-		restart_customer$ = ""
-        batch_adhoc_message$ = option!.getOptionData("pick_text")
-        send_via_rpt_ctl$ = option!.getOptionData("pick_check")
-
-    endif
+    switch type
+        case on_demand
+            restart$ = ""
+            restart_customer$ = ""
+            batch_adhoc_message$ = option!.getOptionData("pick_text")
+            send_via_rpt_ctl$ = option!.getOptionData("pick_check")
+        case batch_inv
+            restart$ = option!.getOptionData("pick_check")
+            restart_customer$ = option!.getOptionData("customer_id")  
+            batch_adhoc_message$ = option!.getOptionData("pick_text")
+            break
+        case historical
+            restart$ = ""
+            restart_customer$ = ""
+            batch_adhoc_message$ = option!.getOptionData("pick_text")
+            send_via_rpt_ctl$ = option!.getOptionData("pick_check")
+            break
+    swend
 
 rem --- Start progress meter 
 
@@ -330,7 +336,12 @@ rem --- Main Read
         cust_id$ = str( custIds!.getItem(next_item) )
         order_no$ = str( orderNos!.getItem(next_item) )
 
-        ope01_trip$=firm_id$+"E"+"  "+cust_id$+order_no$
+        if type = historical then
+            trans_status$="U"
+        else
+            trans_status$="E"
+        endif
+        ope01_trip$=firm_id$+trans_status$+"  "+cust_id$+order_no$
         read(ope01_dev,key=ope01_trip$,knum="AO_STATUS",dom=*next)
         ope01_key$=key(ope01_dev,end=*continue)
         if pos(ope01_trip$=ope01_key$)<>1 then continue
@@ -446,6 +457,7 @@ rem --- Main Read
 			print_params!.put("MESSAGE",batch_adhoc_message$)
 		endif
 
+        params!.put("REPORT_TYPE",str(type))
 		params!.put("FIRM_ID",ope01a.firm_id$)
 		params!.put("AR_TYPE",ope01a.ar_type$)
 		params!.put("CUSTOMER_ID",ope01a.customer_id$)
@@ -605,7 +617,7 @@ rem --- bring up jasper viewers (master doc and print doc for Batch Invoices; si
 	    rd_doc_id$=new_doc_id$
 	        
         gosub exportOnDemandToPDF; rem --- always save to doc archive
-	        
+
 	    demandViewerWindow! = new BBJasperViewerWindow(report!,5,5,screen_width,screen_height,repTitle$,$00080093$)
         demandViewerControl! = demandViewerWindow!.getViewerControl()
         demandViewerControl!.setGoogleDefaultDocument(repTitle$)
@@ -790,9 +802,11 @@ close_win:rem --- Master or On-demand viewer closed - do post-processing for bat
         if !ok_to_close then return
     endif
   
-    msg_id$ = "OP_INVOICE_UPDATE"
-    gosub disp_message
-    if msg_opt$<>"Y" then goto all_done
+    if type<>historical then
+        msg_id$ = "OP_INVOICE_UPDATE"
+        gosub disp_message
+        if msg_opt$<>"Y" then goto all_done
+    endif
     
     if type=batch_inv
         call pgmdir$+"adc_progress.aon","N",sysinfo.task_desc$,"","Updating","",0,0,1,0,status
@@ -811,7 +825,7 @@ close_win:rem --- Master or On-demand viewer closed - do post-processing for bat
             if status = 999 then exitto all_done
 
             if start_block then
-                ope01_trip$=firm_id$+"E"+"  "+ope04a.customer_id$+ope04a.order_no$
+                ope01_trip$=firm_id$+trans_status$+"  "+ope04a.customer_id$+ope04a.order_no$
                 read(ope01_dev,key=ope01_trip$,knum="AO_STATUS",dom=*next)
                 ope01_key$=key(ope01_dev,end=*continue)
                 if pos(ope01_trip$=ope01_key$)=1 then
@@ -831,7 +845,6 @@ close_win:rem --- Master or On-demand viewer closed - do post-processing for bat
             endif
         endif
 	else 
-		rem gosub open_cash_box... not implemented in Barista Addon
 		gosub order_update
         
         if emailFax!.size() and send_via_rpt_ctl$="Y"
@@ -845,12 +858,6 @@ close_win:rem --- Master or On-demand viewer closed - do post-processing for bat
         endif
 		call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,status
 					
-    endif    
-    
-    if type = historical then
-        rem read (ope01_dev, key=firm_id$+"  "+ope01a.customer_id$, dom=*next)
-        read record (arm01_dev,key=firm_id$+ope01a.customer_id$) arm01a1$
-        read record (arm02_dev,key=firm_id$+ope01a.customer_id$+"  ") arm02a$
     endif    
 
 all_done: rem --- Exit
@@ -885,7 +892,6 @@ order_update: rem --- Update order's status
     ope01a.mod_time$=date(0:"%Hz%mz")
     ope01a$ = field(ope01a$)
     write record (ope01_dev) ope01a$
-rem    if type = on_demand then callpoint!.setStatus("SETORIG")
     
     return
 	

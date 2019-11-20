@@ -5,23 +5,17 @@ rem --- Description: Stored Procedure to create Shipment Tracking detail for a j
 rem 
 rem --- AddonSoftware
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
-rem --- All Rights Reserved
 
-rem --- 4/2013 ------------------------
-rem --- Replaced BBjForm-based OP Invoice Print with Jasper-based
+rem --- opc_invoice.aon is used to print (1) On-Demand (from Invoice Entry--
+rem --- ope_invhdr.cdf), (2) Batch (from menu: OP Invoice Printing--
+rem --- opr_invoice.aon), and (3) Historical Invoices (from Invoice History
+rem --- Inquiry--opt_invhdr.cdf).
 
-rem --- opc_invoice.aon is used to print On-Demand (from Invoice Entry--
-rem --- ope_invhdr.cdf) and Batch (from menu: OP Invoice Printing--
-rem --- opr_invoice.aon)
-
-rem --- Historical is still not implemented, since it should be handled
-rem --- when real-time processing is implemented
-
-rem --- There are three sprocs and three .jaspers for this enhancement:
+rem --- opc_invoice.aon uses four sprocs and four .jaspers to generate invoicest:
 rem ---    - OPINVOICE_HDR.prc / OPInvoiceHdr.jasper
 rem ---    - OPINVOICE_DET.prc / OPInvoiceDet.jasper
 rem ---    - OPINVOICE_DET_LOTSER.prc / OPInvoiceDet-LotSer.jasper
-rem -----------------------------------
+rem ---    - OPINVOICE_SHIPTRACK.prc / OPInvoiceShipTrack.jasper
 
 rem ----------------------------------------------------------------------------
 
@@ -86,7 +80,7 @@ rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
     
     dim optShipTrack$:templates$[1]
 
-rem --- Get any associated Lots/SerialNumbers
+rem --- Get shipment tracking information for this order
 
 	sqlprep$=""
 	sqlprep$=sqlprep$+"SELECT TRACKING_NO, CARRIER_CODE, SCAC_CODE, VOID_FLAG"

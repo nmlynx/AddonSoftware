@@ -5,23 +5,17 @@ rem --- Description: Stored Procedure to create detail for a jasper-based OP inv
 rem 
 rem --- AddonSoftware
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
-rem --- All Rights Reserved
 
-rem --- 4/2013 ------------------------
-rem --- Replaced BBjForm-based OP Invoice Print with Jasper-based
+rem --- opc_invoice.aon is used to print (1) On-Demand (from Invoice Entry--
+rem --- ope_invhdr.cdf), (2) Batch (from menu: OP Invoice Printing--
+rem --- opr_invoice.aon), and (3) Historical Invoices (from Invoice History
+rem --- Inquiry--opt_invhdr.cdf).
 
-rem --- opc_invoice.aon is used to print On-Demand (from Invoice Entry--
-rem --- ope_invhdr.cdf) and Batch (from menu: OP Invoice Printing--
-rem --- opr_invoice.aon)
-
-rem --- Historical is still not implemented, since it should be handled
-rem --- when real-time processing is implemented
-
-rem --- There are three sprocs and three .jaspers for this enhancement:
+rem --- opc_invoice.aon uses four sprocs and four .jaspers to generate invoicest:
 rem ---    - OPINVOICE_HDR.prc / OPInvoiceHdr.jasper
 rem ---    - OPINVOICE_DET.prc / OPInvoiceDet.jasper
 rem ---    - OPINVOICE_DET_LOTSER.prc / OPInvoiceDet-LotSer.jasper
-rem -----------------------------------
+rem ---    - OPINVOICE_SHIPTRACK.prc / OPInvoiceShipTrack.jasper
 
 rem ----------------------------------------------------------------------------
 
@@ -51,6 +45,7 @@ rem --- Get 'IN' SPROC parameters
     ivIMask$ =       sp!.getParameter("ITEM_MASK")
 	ext_mask$ =    sp!.getParameter("EXT_MASK")
 	barista_wd$ =  sp!.getParameter("BARISTA_WD")
+    report_type$ = sp!.getParameter("REPORT_TYPE")
 
 	chdir barista_wd$
 
@@ -66,6 +61,11 @@ rem --- create the in memory recordset for return
 	rs! = BBJAPI().createMemoryRecordSet(dataTemplate$)
 	
 rem --- Initializationas
+
+    rem --- Report types
+    on_demand$="1"
+    batch_inv$="2"
+    historical$="3"
 	
 rem --- Open Files    
 rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
@@ -97,7 +97,12 @@ rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
 	
 rem --- Main
 
-    read (ope11_dev, key=firm_id$+"E"+ar_type$+customer_id$+order_no$+ar_inv_no$, knum="AO_STAT_CUST_ORD", dom=*next)
+    if report_type$=historical$ then
+        trans_status$="U"
+    else
+        trans_status$="E"
+    endif
+    read (ope11_dev, key=firm_id$+trans_status$+ar_type$+customer_id$+order_no$+ar_inv_no$, knum="AO_STAT_CUST_ORD", dom=*next)
 	
     rem --- Detail lines
 
