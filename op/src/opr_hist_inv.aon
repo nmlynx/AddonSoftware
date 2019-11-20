@@ -2,6 +2,18 @@ rem --- Historical Invoice Printing
 rem --- Program opr_hist_inv.aon
 
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+
+rem --- opc_invoice.aon is used to print (1) On-Demand (from Invoice Entry--
+rem --- ope_invhdr.cdf), (2) Batch (from menu: OP Invoice Printing--
+rem --- opr_invoice.aon), and (3) Historical Invoices (from Invoice History
+rem --- Inquiry--opt_invhdr.cdf).
+
+rem --- opc_invoice.aon uses four sprocs and four .jaspers to generate invoicest:
+rem ---    - OPINVOICE_HDR.prc / OPInvoiceHdr.jasper
+rem ---    - OPINVOICE_DET.prc / OPInvoiceDet.jasper
+rem ---    - OPINVOICE_DET_LOTSER.prc / OPInvoiceDet-LotSer.jasper
+rem ---    - OPINVOICE_SHIPTRACK.prc / OPInvoiceShipTrack.jasper
+
 rem ----------------------------------------------------------------------------
     setesc std_error
     seterr std_error
@@ -32,8 +44,8 @@ rem --- Assign form input values to local variables
     invoice_no$ = option!.getOptionData("ar_inv_no")
     
 rem --- Call the invoice printing program
-    
-    call pgmdir$+"opc_hist_invoice.aon::historical", cust_id$, order_no$, invoice_no$, option!, table_chans$[all], status
+
+    call pgmdir$+"opc_invoice.aon::historical", cust_id$, order_no$, option!, table_chans$[all], status
     goto std_exit
     
 rem #include std_error.src
