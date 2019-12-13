@@ -285,7 +285,11 @@ rem ====================================================
 	out_trans_amt=0
 	out_trans=0
 	over_under$=""
-	statement_amt=num(callpoint!.getColumnData("GLM_BANKMASTER.CUR_STMT_AMT"))
+	if pos("CUR_STMT_AMT.AVAL"=callpoint!.getCallpointEvent())
+		statement_amt=num(callpoint!.getUserInput())
+	else
+		statement_amt=num(callpoint!.getColumnData("GLM_BANKMASTER.CUR_STMT_AMT"))
+	endif
 	callpoint!.setColumnData("<<DISPLAY>>.STMT_AMT",str(statement_amt))
 	book_balance = num(callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE"))
 	callpoint!.setColumnData("<<DISPLAY>>.BOOK_BAL",str(book_balance))
