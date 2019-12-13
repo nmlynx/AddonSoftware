@@ -90,7 +90,7 @@ rem --- Remove Paid Checks
 				readrecord (glt05_dev,end=*break)glt05a$
 				if glt05a.firm_id$<>firm_id$ break
 				if glt05a.gl_account$<>gl_acct$ break
-				if glt05a.paid_code$<>"P" continue
+				if glt05a.paid_code$<>"P" and glt05a.paid_code$<>"V" continue
 				if glt05a.bnk_chk_date$>st_date$ continue
 				remove (glt05_dev,key=glt05a.firm_id$+glt05a.gl_account$+glt05a.check_no$,dom=*next)
 			wend
@@ -102,25 +102,27 @@ rem --- Remove Paid Transactions
 				readrecord (glt15_dev,end=*break)glt15a$
 				if glt15a.firm_id$<>firm_id$ break
 				if glt15a.gl_account$<>gl_acct$ break
-				if glt15a.posted_code$<>"P" continue
+				if glt15a.posted_code$<>"P" and glt15a.posted_code$<>"V" continue
 				if glt15a.trns_date$>st_date$ continue
 				remove (glt15_dev,key=glt15a.firm_id$+glt15a.gl_account$+glt15a.trans_no$,dom=*next)
 			wend
-
-			callpoint!.setColumnData("GLM_BANKMASTER.PRI_END_DATE",callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE"))
-			callpoint!.setColumnData("GLM_BANKMASTER.CURSTM_DATE","")
-			callpoint!.setColumnData("GLM_BANKMASTER.PRI_END_AMT",callpoint!.getColumnData("GLM_BANKMASTER.CUR_STMT_AMT"))
-			callpoint!.setColumnData("GLM_BANKMASTER.CUR_STMT_AMT","0")
-			callpoint!.setColumnData("GLM_BANKMASTER.BOOK_BALANCE","0")
-			rec_data.pri_end_date$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_DATE")
-			rec_data.curstm_date$=callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE")
-			rec_data.pri_end_amt$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_AMT")
-			rec_data.cur_stmt_amt$=callpoint!.getColumnData("GLM_BANKMASTER.CUR_STMT_AMT")
-			rec_data.book_balance$=callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE")
-			writerecord(fnget_dev("GLM_BANKMASTER"))rec_data$
-			glm05_key$=rec_data.firm_id$+rec_data.gl_account$
-			extractrecord(fnget_dev("GLM_BANKMASTER"),key=glm05_key$)x$; rem Advisory Locking
 		endif
+
+		rem --- poll the statement date and amount
+		callpoint!.setColumnData("GLM_BANKMASTER.PRI_END_DATE",callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE"))
+		callpoint!.setColumnData("GLM_BANKMASTER.CURSTM_DATE","")
+		callpoint!.setColumnData("GLM_BANKMASTER.PRI_END_AMT",callpoint!.getColumnData("GLM_BANKMASTER.CUR_STMT_AMT"))
+		callpoint!.setColumnData("GLM_BANKMASTER.CUR_STMT_AMT","0")
+		callpoint!.setColumnData("GLM_BANKMASTER.BOOK_BALANCE","0")
+		rec_data.pri_end_date$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_DATE")
+		rec_data.curstm_date$=callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE")
+		rec_data.pri_end_amt$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_AMT")
+		rec_data.cur_stmt_amt$=callpoint!.getColumnData("GLM_BANKMASTER.CUR_STMT_AMT")
+		rec_data.book_balance$=callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE")
+		writerecord(fnget_dev("GLM_BANKMASTER"))rec_data$
+		glm05_key$=rec_data.firm_id$+rec_data.gl_account$
+		extractrecord(fnget_dev("GLM_BANKMASTER"),key=glm05_key$)x$; rem Advisory Locking
+
 	endif
 [[GLM_BANKMASTER.CUR_STMT_AMT.AVAL]]
 rem " --- Recalc Summary Info
@@ -222,7 +224,7 @@ rem --- Set up user_tpl$
 
 rem - Set up disabled controls
 
-	dim dctl$[14]
+	dim dctl$[18]
 	dctl$[1]="<<DISPLAY>>.BANK_NAME"
 	dctl$[2]="<<DISPLAY>>.ADDRESS_LINE_1"
 	dctl$[3]="<<DISPLAY>>.ADDRESS_LINE_2"
@@ -237,6 +239,10 @@ rem - Set up disabled controls
 	dctl$[12]="<<DISPLAY>>.END_BAL"
 	dctl$[13]="<<DISPLAY>>.NO_CHECKS"
 	dctl$[14]="<<DISPLAY>>.NO_TRANS"
+	dctl$[15]="<<DISPLAY>>.BOOK_BAL"
+	dctl$[16]="<<DISPLAY>>.DIFFERENCE"
+	dctl$[17]="<<DISPLAY>>.CASH_IN"
+	dctl$[18]="<<DISPLAY>>.CASH_OUT"
 	gosub disable_ctls
 [[GLM_BANKMASTER.<CUSTOM>]]
 #include std_functions.src
@@ -253,6 +259,17 @@ rem ====================================================
 	if gls01a.gl_yr_closed$="Y" currentgl=num(gls01a.current_year$) else currentgl=num(gls01a.current_year$)-1; rem "GL year end closed?
 	priorgl=currentgl-1
 	nextgl=currentgl+1
+	
+	call stbl("+DIR_PGM")+"adc_fiscalperyr.aon",firm_id$,priordate$,priordateperiod$,priordateyear$,table_chans$[all],status
+	if status then return
+
+	priordateperiod=num(priordateperiod$)
+	priordateperiod$=str(priordateperiod:"00")
+	priordateyear=num(priordateyear$)
+	if gls01a.gl_yr_closed$="Y" prior_currentgl=num(gls01a.current_year$) else prior_currentgl=num(gls01a.current_year$)-1; rem "GL year end closed?
+	prior_priorgl=prior_currentgl-1
+	prior_nextgl=prior_currentgl+1
+
 	return
 
 rem ====================================================
@@ -270,6 +287,8 @@ rem ====================================================
 	over_under$=""
 	statement_amt=num(callpoint!.getColumnData("GLM_BANKMASTER.CUR_STMT_AMT"))
 	callpoint!.setColumnData("<<DISPLAY>>.STMT_AMT",str(statement_amt))
+	book_balance = num(callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE"))
+	callpoint!.setColumnData("<<DISPLAY>>.BOOK_BAL",str(book_balance))
 
 rem --- Find Outstanding Checks
 	read (glt05_dev,key=firm_id$+gl_acct$,dom=*next)
@@ -295,6 +314,10 @@ rem --- Find Outstanding Transactions
 		out_trans_amt=out_trans_amt+glt15a.trans_amt,out_trans=out_trans+1
 	wend
 
+rem --- Find total cash inflows and total cash outflows
+	gosub calc_inflows_outflows
+	cash_inc_dec = inflows +outflows
+
 rem --- Setup display variables
 
 	callpoint!.setColumnData("<<DISPLAY>>.CHECKS_OUT",str(out_checks_amt))
@@ -303,6 +326,11 @@ rem --- Setup display variables
 	callpoint!.setColumnData("<<DISPLAY>>.NO_TRANS",str(out_trans))
 	end_bal=statement_amt-out_checks_amt+out_trans_amt
 	callpoint!.setColumnData("<<DISPLAY>>.END_BAL",str(end_bal))
+	difference = num(callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE")) - end_bal
+	callpoint!.setColumnData("<<DISPLAY>>.DIFFERENCE",str(difference))
+	callpoint!.setColumnData("<<DISPLAY>>.CASH_IN",str(inflows),1)
+	callpoint!.setColumnData("<<DISPLAY>>.CASH_OUT",str(outflows),1)
+	callpoint!.setColumnData("<<DISPLAY>>.CASH_INC_DEC",str(cash_inc_dec),1)
 	callpoint!.setStatus("REFRESH")
 	if end_bal<num(callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE")) over_under$="SHORT"
 	if end_bal>num(callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE")) over_under$="OVER"
@@ -324,6 +352,58 @@ rem ====================================================
 		endif
 	next dctl
 	return
+
+rem ====================================================
+calc_inflows_outflows:rem --- calc the inflow total and outflow total
+rem ====================================================
+
+	inflows=0
+	outflows=0
+
+rem --- get the Prior and Current Statement Dates
+	stmtdate$=callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE")
+	priordate$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_DATE")
+	
+	if len(stmtdate$) = 8 and len(priordate$) = 8 then
+
+		rem --- Find G/L Record"
+		dim glt06a$:user_tpl.glt06_tpl$
+		dim gls01a$:user_tpl.gls01_tpl$
+		glt06_dev=user_tpl.glt06_dev
+		gls01_dev=user_tpl.gls01_dev
+		readrecord(gls01_dev,key=firm_id$+"GL00")gls01a$
+		gosub check_date
+		if !status then
+			rem --- Initialize displayColumns! object
+			if displayColumns!=null() then
+				displayColumns!=new DisplayColumns(firm_id$)
+			endif
+			r1$=firm_id$+callpoint!.getColumnData("GLM_BANKMASTER.GL_ACCOUNT"),s1$=""
+			if priordateyear=prior_priorgl s1$=r1$+displayColumns!.getYear("2"); rem "Use prior yea1r actual
+			if priordateyear=prior_currentgl s1$=r1$+displayColumns!.getYear("0"); rem "Use current year actual
+			if priordateyear=prior_nextgl s1$=r1$+displayColumns!.getYear("4"); rem "Use next year actual
+			if s1$<>"" then 
+				rem --- accumulate transactions in the statment period"
+				call stbl("+DIR_PGM")+"adc_daydates.aon",priordate$,followingday$,1
+				d1$=r1$+priordateyear$+priordateperiod$+followingday$
+				readrecord (glt06_dev,key=d1$,dom=*next)
+				while 1
+					k$=key(glt06_dev,END=*break)
+					if pos(r1$=k$)<>1 then break
+					if k$(19,8)>stmtdate$ then break
+					dim glt06a$:fattr(glt06a$)
+					read record (glt06_dev,key=k$)glt06a$
+					if glt06a.trans_amt > 0 then
+						inflows=inflows+glt06a.trans_amt
+					else	
+						outflows=outflows+glt06a.trans_amt		
+					endif
+				wend
+			endif
+		endif
+	endif
+
+	return
 [[GLM_BANKMASTER.AOPT-RECL]]
 rem --- Validate Current Statement Date
 	stmtdate$=callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE")
@@ -334,6 +414,9 @@ rem --- Validate Current Statement Date
 		gosub disp_message
 		break
 	endif
+
+rem --- get the Prior Statement Date
+	priordate$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_DATE")
 
 rem --- Initialize displayColumns! object
 	if displayColumns!=null() then
