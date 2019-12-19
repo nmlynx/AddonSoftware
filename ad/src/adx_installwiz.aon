@@ -169,7 +169,7 @@ rem --- Create new session specific classpath (SSCP) in Enterprise Manager
  
     sscpName$=cvs(dbName$,8)
     status=0
-    call pgmdir$+"adc_createsscp.aon",sscpName$,newAonLoc$,copyData%,rdAdmin!,status
+    call pgmdir$+"adc_createsscp.aon",sscpName$,newAonLoc$,"",copyData%,rdAdmin!,status
     if status 
         rem --- Increment progress meter
         meter_text$=Translate!.getTranslation("AON_CREATE_SSCP_ERROR","Unable to create new classpath",1)
