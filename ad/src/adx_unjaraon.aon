@@ -24,16 +24,23 @@ rem --- Initializations
     sysGUI! = BBjAPI().getSysGui()
     systems!=new Properties()
     savedDir$=dir("")
+    bbjHome$=java.lang.System.getProperty("basis.BBjHome").replace("\","/")
 
 rem --- Get user inputs
     dbName$=Option!.getOptionData("DB_NAME")
+    appDesc$=Option!.getOptionData("APP_DESC")
     baseDir$=Option!.getOptionData("BASE_DIR")
     jarFile$=Option!.getOptionData("JAR_FILE")
     barDir$=Option!.getOptionData("BAR_DIR")
+    rdAdmin!=cast(BBjAdminBase, callpoint!.getDevObject("rdAdmin"))
+
+rem --- Remove trailing slash (/ or \) from directory paths
+    if baseDir$(len(baseDir$))=File.separator then baseDir$=baseDir$(1,len(baseDir$)-1)
+    if barDir$(len(barDir$))=File.separator then barDir$=barDir$(1,len(barDir$)-1)
     
 rem --- Start main progress meter
     meter_title$=rdForm!.getTitle()
-    meter_total_recs=9
+    meter_total_recs=14
     meter_text$=""
     meter_action$="WIN-LST-OK"
     gosub disp_meter
@@ -60,7 +67,7 @@ rem --- Un-package existing Barista installation jar file at the new installatio
 
     rem --- Show busy/working image while extracting files from jar
     nxt_ctlID=util.getNextControlID()
-    busyImage!=mainMeter!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+    busyImage!=mainMeter!.addImageCtrl(nxt_ctlID,150,75,33,33,bbjHome$+"/utils/reporting/bbjasper/images/CreatingReport.gif")
 
     rem --- Un-package jar file
     chdir baseDir$
@@ -245,12 +252,18 @@ rem --- Update paths in system (application) syn file
                     ypos = pos("="=record$,1,2)
                     stbl$ = cvs(record$(xpos+1, ypos-xpos-1),3)
                     path$ = cvs(record$(ypos+1),3)
-                    if sourcePaths!.containsKey(path$) then
-                        sourceCanonicalPath$=sourcePaths!.getProperty(path$)
-                        if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
-                            path$=baseDir$+sourceCanonicalPath$(sourceBaseDirLen+1)
-                        endif
+                    if cvs(stbl$,3)="+MDI_TITLE" then
+                        rem --- Set +MDI_TITLE to appDesc$
+                        path$=appDesc$
                         record$=record$(1,ypos)+path$
+                    else
+                        if sourcePaths!.containsKey(path$) then
+                            sourceCanonicalPath$=sourcePaths!.getProperty(path$)
+                            if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
+                                path$=baseDir$+sourceCanonicalPath$(sourceBaseDirLen+1)
+                            endif
+                            record$=record$(1,ypos)+path$
+                        endif
                     endif
                     stblValues!.setProperty(stbl$,path$)
                     print(log_dev)"    "+"    "+key$+" "+stbl$+": "+path$
@@ -415,6 +428,7 @@ rem --- Update paths in system (application) data files
     elementTypes!=new Vector()
     elementTypes!.add("ADM_CONFIG_FILE")
     elementTypes!.add("DATA_PATH")
+    elementTypes!.add("DD_ATTR_CPGM")
     elementTypes!.add("DD_MOUNT_DIR")
     elementTypes!.add("DD_MOUNT_MENU")
     elementTypes!.add("DD_TABLE_PATH")
@@ -449,7 +463,7 @@ rem --- Update paths in system (application) data files
             print(log_dev)"    "+"    "+cvs(ddmTables.dd_table_alias$,2)+"."+ddmTableCols.dd_dvar_name$
     
             rem --- Get path to this table in source installation
-            if pos(ddmTables.asc_prod_id$="ADBDDBSQB",3) then
+            if pos(ddmTables.asc_prod_id$="ADBDDBSQB",3) and elementType$<>"DD_ATTR_CPGM" then
                 rem --- It is a Barista system file
                 filePath$=barDir$+File.separator+"sys"+File.separator+"data"
             else
@@ -488,12 +502,15 @@ rem --- Update paths in system (application) data files
                     startPath$=path$
         
                     rem --- Update path with new installation base directory
+                    if elementType$="DD_ATTR_CPGM" and path$(len(path$))=";" then path$=path$(1,len(path$)-1)
                     if sourcePaths!.containsKey(path$) then
                         sourceCanonicalPath$=sourcePaths!.getProperty(path$)
                         if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
                             path$=baseDir$+sourceCanonicalPath$(sourceBaseDirLen+1)
+                            if elementType$="DD_ATTR_CPGM" then path$=path$+";"
                         endif
                     endif
+                    if elementType$="DD_ATTR_CPGM" and path$(len(path$))<>";" then path$=path$+";"
         
                     if startPath$<>path$ then print(log_dev) "    "+"    "+"    "+startPath$+" >>> "+path$
                     field table$,cvs(ddmTableCols.dd_dvar_name$,2)=path$
@@ -755,7 +772,7 @@ rem --- Update paths in <new_base_dir>/barista/sys/config/barista.syn
         rename tmpWorkFile$ to barSynFile$, err=*next
     endif
 
-rem --- Update dbname, dbname_api, port and SSL settings in barista.cfg for ALL languages
+rem --- Update PREFIX, dbname, dbname_api, port and SSL settings in barista.cfg for ALL languages
 
     rem --- Increment main progress meter
     meterWin!=mainMeter!
@@ -787,9 +804,17 @@ rem --- Update dbname, dbname_api, port and SSL settings in barista.cfg for ALL 
                 tmpWork_dev=unt
                 open(tmpWork_dev,isz=-1,mode="O_CREATE,O_TRUNC")tmpWorkFile$
     
-                rem --- Update port and SSL settings in barista.cfg for this language
+                rem --- Update PREFIX, dbname, dbname_api, port and SSL settings in barista.cfg for this language
                 while 1
                     read(barCfg_dev,end=*break)line$
+
+                    if pos("PREFIX "=line$)=1 then
+                        line!=line$
+                        line$=line!.replace("\","/")
+                        last_pos=pos(bbjHome$=line$,-1)
+                        end_pos=last_pos+pos(" "=line$(last_pos))
+                        line$=line$(1,end_pos)
+                    endif
                 
                     key$=cvs(line$(1,pos("="=line$)-1),3)
                     switch (BBjAPI().TRUE)
@@ -829,6 +854,161 @@ rem --- Update dbname, dbname_api, port and SSL settings in barista.cfg for ALL 
         endif
     endif
 
+rem --- Attach to new database and set some properties
+
+    rem --- Increment progress meter
+    meterWin!=mainMeter!
+    meter_total_recs=mainMeterTotalRecs
+    mainMeterProcRecs=mainMeterProcRecs+1
+    meter_text$=Translate!.getTranslation("AON_ATTACH_DB","Attaching to new database",1)
+    meter_proc_recs=mainMeterProcRecs
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+
+    rdAdmin!.attachDatabaseOnDisk(cvs(dbName$,3),cvs(baseDir$,3)+File.separator+"barista"+File.separator+"bbdict"+File.separator)
+
+    dataBase!=rdAdmin!.getDatabase(cvs(dbName$,3))
+
+    dataBase!.setString("DATABASE",cvs(dbName$,2))
+    dataBase!.setString("DICTIONARY",baseDir$+File.separator+"barista"+File.separator+"bbdict"+File.separator)
+    dataBase!.setString("+DIR_BRD",baseDir$+File.separator+"barista"+File.separator+"sys"+File.separator+"data"+File.separator)
+    dataBase!.setString("+DIR_BRA",baseDir$+File.separator+"barista"+File.separator+"sys"+File.separator+"data"+File.separator)
+    dataBase!.setString("ACCESSPOLICY","ALL")
+    dataBase!.setBoolean("ADVISORYLOCKING",BBjAPI().TRUE)
+    dataBase!.setBoolean("AUTO_ANALYZE_TABLES",BBjAPI().TRUE)
+    dataBase!.setBoolean("ENFORCE_VARCHAR_LENGTH",BBjAPI().TRUE)
+    dataBase!.setBoolean("STRICTKEYCHECKING",BBjAPI().TRUE)
+
+    dataBase!.commit()
+
+    rdAdmin!.reloadDatabaseConfig(err=*next)
+
+rem --- Create new session specific classpath (SSCP) in Enterprise Manager
+
+    rem --- Increment progress meter
+    meterWin!=mainMeter!
+    meter_total_recs=mainMeterTotalRecs
+    mainMeterProcRecs=mainMeterProcRecs+1
+    meter_text$=Translate!.getTranslation("AON_CREATE_SSCP","Creating new classpath",1)
+    meter_proc_recs=mainMeterProcRecs
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+ 
+    sscpName$=cvs(dbName$,8)
+    copyData%=0
+    status=0
+    oldAonLoc$=sourceBaseDir$
+    call pgmdir$+"adc_createsscp.aon",sscpName$,baseDir$,oldAonLoc$,copyData%,rdAdmin!,status
+    if status 
+        rem --- Increment progress meter
+        meterWin!=mainMeter!
+        meter_total_recs=mainMeterTotalRecs
+        mainMeterProcRecs=mainMeterProcRecs+1
+        meter_text$=Translate!.getTranslation("AON_CREATE_SSCP_ERROR","Unable to create new classpath",1)
+        meter_proc_recs=mainMeterProcRecs
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$    
+    endif
+
+rem --- Create new Web Context in Enterprise Manager
+
+    rem --- Increment progress meter
+    meterWin!=mainMeter!
+    meter_total_recs=mainMeterTotalRecs
+    mainMeterProcRecs=mainMeterProcRecs+1
+    meter_text$="Creating new Web Context"
+    meter_proc_recs=mainMeterProcRecs
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+
+    declare BBjJettyServerConfiguration serverConfig!
+    declare BBjJettyContextConfiguration contextConfig!
+
+    serverConfig! = BBjAPI().getAdmin(rdAdmin!.getUser(), rdAdmin!.getPassword()).getJettyServerConfig()
+
+    rem --- Make sure we start with a clean fresh web context
+    serverConfig!.removeCustomContext(cvs(dbName$,3))
+    contextConfig! = serverConfig!.createCustomContext(cvs(dbName$,3))
+
+    contextConfig!.enable()
+    contextConfig!.setDocBase((new File(baseDir$+"/aon/web")).getAbsolutePath())
+    contextConfig!.setPath("/"+cvs(dbName$,3))
+    contextConfig!.setHTTP(0); rem --- Protocol: Allow insecure HPPT connections
+    contextConfig!.setHttpPort(8888)
+
+    rem --- BBJSP Servlets
+    contextConfig!.addBBjspServlet("AuthorizeWebhook", "/AuthorizeWebhook", (new File(baseDir$+"/aon/web/AuthorizeWebhook.aon")).getAbsolutePath())
+    contextConfig!.addBBjspServlet("AuthorizeConfirmation", "/AuthorizeConfirmation", (new File(baseDir$+"/aon/web/AuthorizeConfirmation.aon")).getAbsolutePath())
+    contextConfig!.addBBjspServlet("PayPalSilentPost", "/PayPalSilentPost", (new File(baseDir$+"/aon/web/PayPalSilentPost.aon")).getAbsolutePath())
+    contextConfig!.addBBjspServlet("PayPalSilentPostFailure", "/PayPalSilentPostFailure", (new File(baseDir$+"/aon/web/PayPalSilentPostFailure.aon")).getAbsolutePath())
+    contextConfig!.addBBjspServlet("PayPalError", "/PayPalError", (new File(baseDir$+"/aon/web/PayPalError.aon")).getAbsolutePath())
+
+    rem --- Session Cookie
+    contextConfig!.setSessionCookieHttpOnly(1)
+    contextConfig!.setSessionCookieSecure(1)
+
+    rem --- Update XML Configuration File barista_installs.xml
+    gosub update_barista_installs
+    
+rem --- Launch auto-sync in new barista for the new addon.syn
+rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the new barista
+
+    rem --- Increment progress meter
+    meterWin!=mainMeter!
+    meter_total_recs=mainMeterTotalRecs
+    mainMeterProcRecs=mainMeterProcRecs+1
+    meter_text$=Translate!.getTranslation("AON_AUTO_SYNC")
+    meter_proc_recs=mainMeterProcRecs
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+
+    rem --- Launch bax_dd_synch_auto.bbj in the NEW installation
+    bar_dir$=barDir$
+    if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
+    run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
+:   +" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
+:   +" "+$22$+bar_dir$+"/sys/prog/bax_launch_task.bbj"+$22$
+
+    systemsIter!=systems!.keySet().iterator()
+    while systemsIter!.hasNext()
+        system$=systemsIter!.next()
+        sourceMountDir$=systems!.getProperty(system$)
+        if !sourcePaths!.containsKey(sourceMountDir$) then continue
+        sourceCanonicalMountDir$=sourcePaths!.getProperty(sourceMountDir$)
+        targetMountDir$=sourceCanonicalMountDir$
+        if pos(sourceBaseDir$=sourceCanonicalMountDir$)=1 then
+            targetMountDir$=baseDir$+sourceCanonicalMountDir$(sourceBaseDirLen+1)
+        endif
+
+        rem --- Don't need to rebuild forms, use -x argument for bax_dd_synch_auto.bbj
+        user_arg$=" - "
+:       +" -u"+rdAdmin!.getUser()
+:       +" -p"+rdAdmin!.getPassword()
+:       +" -t"+"DDM_TABLES"
+:       +" -y"+"A"
+:       +" -a" +"bax_dd_synch_auto.bbj"+$22$+" - "+" -f"+targetMountDir$+"config"+File.separator+cvs(system$,8)+".syn"+" -b -x"+$22$
+:       +" -w"
+        scall_result=scall(run_arg$+user_arg$,err=*next)
+    wend
+
+rem --- Reset ADS_AUTOLAUNCH record for BUILDSPROC process
+
+    sql_prep$="UPDATE ADS_AUTOLAUNCH SET PROCESS_STATUS='N',TRANS_DATE='',TRANS_TIME='' WHERE PROCESS_ID='BUILDSPROC'"
+    sql_chan=sqlunt
+    sqlopen(sql_chan,err=*next)dbName$
+    sqlprep(sql_chan)sql_prep$
+    sqlexec(sql_chan)
+    sqlclose(sql_chan)
+
 rem --- Set permissions for extracted directory and file
 rem --- (HOLD: This may not be necessary. Need to determine.)
     
@@ -851,6 +1031,99 @@ done: rem --- All done
     close(ddmTableCols_dev,err=*next)
 
     goto std_exit
+
+update_barista_installs: rem --- Update XML Configuration File barista_installs.xml
+
+    rem --- Increment progress meter
+    meterWin!=mainMeter!
+    meter_total_recs=mainMeterTotalRecs
+    mainMeterProcRecs=mainMeterProcRecs+1
+    meter_text$=Translate!.getTranslation("AON_UPDT_INSTALLS","Updating barista_installs.xml",1)
+    meter_proc_recs=mainMeterProcRecs
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)
+    print(log_dev)meter_text$
+
+    call stbl("+DIR_SYP")+"bax_version.bbj",barVersion$,""
+    newVersion$=barVersion$+"."+stbl("+BUILD_ID")
+    line_sep$=java.lang.System.getProperty("line.separator") 
+    tempSep$=$01$   
+
+    baseProp$="-tT0 -q -CP"+sscpName$+" -WD"+$22$+baseDir$+"/barista"+$22$+" -c"+$22$+baseDir$+"/barista/sys/config/enu/barista.cfg"+$22$+" "+$22$+baseDir$+"/barista/sys/prog/bar_login.bbj"+$22$+" - aon"
+
+    barInstallFile$=bbjHome$+"/barista/sys/config/barista_installs.xml"
+
+    temp_tag$=$09$+"<RECORD id="+$22$+cvs(dbName$,136)+$22$+">"
+
+    xml_chan=unt
+    open (xml_chan,err=create_installs)barInstallFile$
+    xml_chan_fin$=fin(xml_chan)
+    read record(xml_chan,siz=dec($00$+xml_chan_fin$(1,4)))xml_data$
+    close (xml_chan)
+
+    xmlData!=xml_data$
+    xmlData!=xmlData!.replace($0d0a$,tempSep$)
+    xmlData!=xmlData!.replace($0d$,tempSep$)
+    xml_data$=xmlData!.replace($0a$,tempSep$)
+
+    rec_block$=
+:       $09$+"<RECORD id="+$22$+cvs(dbName$,136)+$22$+">"+line_sep$+
+:       $0909$+"<ID id="+$22$+cvs(dbName$,136)+$22$+">"+dbName$+"</ID>"+line_sep$+
+:       $0909$+"<DESCRIPTION id="+$22$+cvs(dbName$,136)+$22$+">"+appDesc$+"</DESCRIPTION>"+line_sep$+
+:       $0909$+"<LOCATION id="+$22$+cvs(dbName$,136)+$22$+">"+baseDir$+"</LOCATION>"+line_sep$+
+:       $0909$+"<VERSION id="+$22$+cvs(dbName$,136)+$22$+">"+newVersion$+"</VERSION>"+line_sep$+
+:       $0909$+"<DATE_CREATED id="+$22$+cvs(dbName$,136)+$22$+">"+date(0:"%Yd%Mz%Dz%Hz%mz%sz")+"</DATE_CREATED>"+line_sep$+
+:       $0909$+"<PROPERTIES id="+$22$+cvs(dbName$,136)+$22$+">"+baseProp$+"</PROPERTIES>"+line_sep$+
+:       $09$+"</RECORD>"+line_sep$
+
+    temp_pos=pos(temp_tag$=xml_data$)
+    if temp_pos=0
+        temp_pos=pos("</INSTALLATIONS>"=xml_data$)
+        xml_data$=xml_data$(1,temp_pos-1)+rec_block$+xml_data$(temp_pos)
+    else
+        temp_pos=pos(temp_tag$=xml_data$)
+        temp_block=pos($09$+"</RECORD>"=xml_data$(temp_pos))+10
+        xml_data$=xml_data$(1,temp_pos-1)+rec_block$+xml_data$(temp_pos+temp_block)
+    endif
+
+    xmlData!=xml_data$
+    xmlData!=xmlData!.replace(tempSep$,line_sep$)
+    xml_data$=xmlData!
+
+    initfile barInstallFile$
+    xml_chan=unt
+    open (xml_chan)barInstallFile$
+    write record(xml_chan)xml_data$
+    close(xml_chan)
+
+    return
+
+create_installs:rem --- Create Installations File
+
+    xml_dir$=bbjHome$+File.separator+"barista"+File.separator
+
+    xml_data$=
+:       "<?xml version='1.0' encoding='UTF-8' ?>"+line_sep$+
+:       "<INSTALLATIONS>"+line_sep$+
+:       $09$+"<RECORD id="+$22$+"barista"+$22$+">"+line_sep$+
+:       $0909$+"<ID id="+$22$+"barista"+$22$+">BARISTA</ID>"+line_sep$+
+:       $0909$+"<DESCRIPTION id="+$22$+"barista"+$22$+">Barista Application Framework</DESCRIPTION>"+line_sep$+
+:       $0909$+"<LOCATION id="+$22$+"barista"+$22$+">"+xml_dir$+"</LOCATION>"+line_sep$+
+:       $0909$+"<VERSION id="+$22$+"barista"+$22$+">"+barVersion$+"."+stbl("+BUILD_ID")+"</VERSION>"+line_sep$+
+:       $0909$+"<DATE_CREATED id="+$22$+"barista"+$22$+">"+date(0:"%Yd%Mz%Dz%Hz%mz%sz")+"</DATE_CREATED>"+line_sep$+
+:       $0909$+"<PROPERTIES id="+$22$+"barista"+$22$+">-tT0 -q -WD"+$22$+xml_dir$+$22$+" -c"+$22$+xml_dir$+"sys/config/enu/barista.cfg"+$22$+" "+$22$+xml_dir$+"sys/prog/bar_login.bbj"+$22$+"</PROPERTIES>"+line_sep$+
+:       $09$+"</RECORD>"+line_sep$+
+:       "</INSTALLATIONS>"
+
+    string barInstallFile$
+
+    xml_chan=unt
+    open (xml_chan)barInstallFile$
+    write record(xml_chan)xml_data$
+    close(xml_chan)
+
+    retry
 
 resolvePathStbls: rem --- Resolve embedded STBLs, except not [+FIRM_ID]. (Based on ado_util.src resolvePathStbls(BBjString pathName$) method)
     resolvedPath$=pathName$

@@ -3,27 +3,37 @@ rem Program adc_createsscp.aon
 rem Called from AIUW Install, Quick Copy, and Update wizards (adx_installwiz.aon, adx_quickcopywiz.aon, adx_upgradewiz.aon)
 
 rem  Copyright BASIS International Ltd.  All Rights Reserved.
-
-    seterr std_error
-    setesc std_error
-
-    enter sscpName$,newAonLoc$,copyData%,rdAdmin!,status
-
+    
 rem --- sscpName$ = database name of new instance
 rem --- newAonLoc$ = name of directory into which aon is being installed
+rem --- oldAonLoc$ = name of directory in which the old aon was installed
 rem --- copyData% = 1 if it's a Quick Copy install, 0 otherwise (production install or upgrade)
 rem --- rdAdmin! = admin object (needed to get environment/classpath objects)
 rem --- status = outbound status 0 for success, 1 otherwise
 
-rem --- Initializations
+    seterr std_error
+    setesc std_error
+
+    enter sscpName$,newAonLoc$,oldAonLoc$,copyData%,rdAdmin!,status
+
+initialize: rem --- Initializations
+    if cvs(oldAonLoc$,2)="" then oldAonLoc$=java.lang.System.getProperty("basis.BBjHome").replace("\","/")+"/apps/"
     status=1
     env!=BBjAPI().getAdmin(rdAdmin!.getUser(), rdAdmin!.getPassword()).getEnvironment()
-    if pos(newAonLoc$(len(newAonLoc$),1)="\/")=0 then newAonLoc$=newAonLoc$
+
+    rem --- Flip directory path separators for newAonLoc$
+    filePath$=newAonLoc$
+    gosub fix_path
+    newAonPath$=filePath$
+
+    rem --- Flip directory path separators for oldAonLoc$
+    filePath$=oldAonLoc$
+    gosub fix_path
+    oldAonPath$=filePath$+"/"
 
 rem --- Main
 rem --- Create new session specific classpath (SSCP) in Enterprise Manager
 
-    appsPath$=java.lang.System.getProperty("basis.BBjHome").replace("\","/")+"/apps/"
     baristaPath$=java.lang.System.getProperty("basis.BBjHome").replace("\","/")+"/barista/"
     qcpath$=iff(copyData%,"/apps/","/")
     baristaSubpath$="barista"
@@ -35,8 +45,8 @@ rem --- Create new session specific classpath (SSCP) in Enterprise Manager
     if subpaths!.size()>0
         for i=0 to subpaths!.size()-1
             subpaths!.setItem(i,subpaths!.getItem(i).replace("\","/"))
-            subpaths!.setItem(i,subpaths!.getItem(i).replace(appsPath$,newAonLoc$+qcpath$))
-            subpaths!.setItem(i,subpaths!.getItem(i).replace(baristaPath$,newAonLoc$+"/barista/"))
+            subpaths!.setItem(i,subpaths!.getItem(i).replace(oldAonPath$,newAonPath$+qcpath$))
+            subpaths!.setItem(i,subpaths!.getItem(i).replace(baristaPath$,newAonPath$+"/barista/"))
         next i    
     endif
 
@@ -46,8 +56,8 @@ rem --- Create new session specific classpath (SSCP) in Enterprise Manager
     if paths!.size()>0
         for i=0 to paths!.size()-1
             paths!.setItem(i,paths!.getItem(i).replace("\","/"))
-            paths!.setItem(i,paths!.getItem(i).replace(appsPath$,newAonLoc$+qcpath$))
-            paths!.setItem(i,paths!.getItem(i).replace(baristaPath$,newAonLoc$+"/barista/"))
+            paths!.setItem(i,paths!.getItem(i).replace(oldAonPath$,newAonPath$+qcpath$))
+            paths!.setItem(i,paths!.getItem(i).replace(baristaPath$,newAonPath$+"/barista/"))
             paths!.setItem(i,paths!.getItem(i).replace("("+baristaSubpath$+")","("+newBaristaSubpath$+")"))
         next i
     endif
@@ -58,6 +68,18 @@ rem --- Create new session specific classpath (SSCP) in Enterprise Manager
 done:
     status=0
     goto std_exit
+
+fix_path: rem --- Flip directory path separators
+
+    pos=pos("\"=filePath$)
+    while pos
+        filePath$=filePath$(1, pos-1)+"/"+filePath$(pos+1)
+        pos=pos("\"=filePath$)
+    wend
+    
+    rem --- Remove trailing slash
+    if filePath$(len(filePath$))="/" then filePath$=filePath$(1,len(filePath$)-1)
+    return
 
 rem #include std_error.src
 
