@@ -35,7 +35,7 @@ rem --- Flip directory path separators for newAonLoc
 
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_QUICKCOPY_WIZ","Quick Copy Wizard",1)
-    meter_total_recs=8
+    meter_total_recs=10
     meter_proc_recs=0
     meter_text$=""
     meter_action$="WIN-LST-OK"
@@ -56,6 +56,8 @@ rem --- Main processing
 	gosub reset_adm_modules
 	gosub reset_auto_sync
 	gosub update_barista_installs
+    gosub update_dd_atr_cpgm
+    gosub do_auto_sync
 
 done: rem --- All done
    
@@ -458,7 +460,7 @@ reset_auto_sync:
 rem --- reset auto-launch record for the auto-sync process
 rem --- also now resets for new Payroll module's license agreement/disclaimer
 
-	sql_prep$="UPDATE ADS_AUTOLAUNCH SET PROCESS_STATUS='N',TRANS_DATE='',TRANS_TIME='' WHERE PROCESS_ID='50AUTOSYNC' OR PROCESS_ID='BUILDSPROC'"
+	sql_prep$="UPDATE ADS_AUTOLAUNCH SET PROCESS_STATUS='N',TRANS_DATE='',TRANS_TIME='' WHERE PROCESS_ID='BUILDSPROC'"
 	sql_chan=sqlunt
 	sqlopen(sql_chan,err=*next)dbName$
     sqlprep(sql_chan)sql_prep$
@@ -467,6 +469,93 @@ rem --- also now resets for new Payroll module's license agreement/disclaimer
 	
 	return
 
+do_auto_sync: rem --- Launch auto-sync in new barista
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_AUTO_SYNC")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Launch bax_dd_synch_auto.bbj in the NEW installation
+    rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the new barista
+    bar_dir$=newAonLoc$+"/barista"
+    if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
+    run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
+:   +" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
+:   +" "+$22$+bar_dir$+"/sys/prog/bax_launch_task.bbj"+$22$
+
+    for syscnt=0 to mountedSys!.size()-1
+        mounted_sys$=mountedSys!.getItem(syscnt)
+        syn_file$=synFile!.getItem(syscnt)
+        rem --- Set updateSynFile to .syn at the new install location
+        newAppDir$=newAonLoc$+sep$+mounted_sys$
+        updateSynFile$=newAppDir$+"/config/"+syn_file$
+        user_arg$=" - "
+:       +" -u"+rdAdmin!.getUser()
+:       +" -p"+rdAdmin!.getPassword()
+:       +" -t"+"DDM_TABLES"
+:       +" -y"+"A"
+:       +" -a" +"bax_dd_synch_auto.bbj"+$22$+" - "+" -f"+updateSynFile$+" -b -x"+$22$
+:       +" -w"
+        scall_result=scall(run_arg$+user_arg$,err=*next)
+    next syscnt
+
+    return
+    
+update_dd_atr_cpgm: rem --- Update the "../apps/" paths in DD_ATTR_CPGM
+
+    rem --- Increment progress meter
+    meter_text$="Update DD_ATTR_CPGM paths"
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Open DDM_TABLE_TPLS in target Barista installation
+    ddmTableTpls_dev=unt
+    open(ddmTableTpls_dev)newAonLoc$+"/barista/sys/data/ddm_table_tpls.dat"; rem --- Error if not found, something is wrong.
+    dim ddm_table_tpls$:"table_name:c(16*),file_name:c(30*),template:c(10230*)"
+
+    tablesVect!=BBjAPI().makeVector()
+    tablesVect!.add("DDM_TABLES")
+    tablesVect!.add("DDM_TABLE_COLS")
+    tablesVect!.add("DDM_TABLE_DISP")
+    
+    for i=0 to tablesVect!.size()-1
+
+        rem --- Open file
+        dataFile$=newAonLoc$+"/barista/sys/data/"+cvs(tablesVect!.getItem(i),8)+".dat"
+        table_dev=unt
+        open(table_dev,err=*continue)dataFile$; rem --- If error, assume file not created yet.
+        table_dev2=unt
+        open(table_dev2,err=*continue)dataFile$; rem --- If error, assume file not created yet.
+        findrecord(ddmTableTpls_dev,key=pad(tablesVect!.getItem(i),16))ddm_table_tpls$; rem --- Error if not found, something is wrong.
+        dim table$:ddm_table_tpls.template$
+
+        rem --- Update DD_ATTR_CPGM paths
+        read(table_dev,key="",dom=*next,end=*continue)
+        while 1
+            readrecord(table_dev,end=*break)table$
+            path$ = field(table$,"DD_ATTR_CPGM")
+            if pos("../apps/"=path$)<>1 then continue
+
+            rem --- Update path with new installation base directory
+            path$=newAonLoc$+path$(8)
+            field table$,"DD_ATTR_CPGM"=path$
+            table$=field(table$)
+            writerecord(table_dev2)table$
+        wend
+
+        close(table_dev,err=*next)
+        close(table_dev2,err=*next)
+    next i
+    
+    close(ddmTableTpls_dev,err=*next)
+
+    return
+    
 update_barista_installs:
 rem --- Update XML Configuration File barista_installs.xml
 
