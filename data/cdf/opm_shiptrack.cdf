@@ -58,10 +58,13 @@ rem --- Use AR_OPEN_ORDERS custom quiry instead of default order_no lookup in or
 	filter_defs$[1,1]="='"+callpoint!.getColumnData("OPM_SHIPTRACK.AR_TYPE")+"'"
 	filter_defs$[1,2]="LOCK"
 	if cvs(customer_id$,2)<>"" then
-		filter_defs$[0,0]="OPT_INVHDR.CUSTOMER_ID"
-		filter_defs$[0,1]="='"+customer_id$+"'"
-		filter_defs$[0,2]="LOCK"
+		filter_defs$[2,0]="OPT_INVHDR.CUSTOMER_ID"
+		filter_defs$[2,1]="='"+customer_id$+"'"
+		filter_defs$[2,2]="LOCK"
 	endif
+	filter_defs$[3,0]="OPT_INVHDR.INVOICE_TYPE"
+	filter_defs$[3,1]="='S'"
+	filter_defs$[3,2]="LOCK"
 
 	call STBL("+DIR_SYP")+"bax_query.bbj",
 :		gui_dev, 
