@@ -323,6 +323,7 @@ rem ==========================================================================
 		if pos(trip_key$=optInvHdr_key$)<>1 then break
 		readrecord(optInvHdr_dev)optInvHdr$
 		if optInvHdr.trans_status$<>"E" then continue
+		if optInvHdr.invoice_type$<>"S" then continue
 		orderFound=1
 		break
 	wend
