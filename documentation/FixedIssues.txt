@@ -81,3 +81,15 @@ Register when the size of the comments is greater than zero instead of
 one.
 ----
 Modified: ap/src/apr_invoiceentry.aon
+
+=======================================================================================================================================
+Revision: 7ac15869ffe362c3a3fe730cf8f3a39e79209d6b
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/20/2020 1:25:26 PM
+Message:
+Bug 9844: When an adjustment is made to an updated AP invoice,
+initialize ape_invoicehdr (ape-01) MEMO_1024 with the old apt_invoicehdr
+(apt-01) MEMO_1024.
+----
+Modified: data/bar/ape_invoicehdr.xml
+Modified: data/cdf/ape_invoicehdr.cdf
