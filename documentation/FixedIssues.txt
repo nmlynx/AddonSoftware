@@ -59,3 +59,14 @@ Bug 9846: Changed demo data ARR.INVOICES Report Control's Logo File Name
 to [+CUST_IMAGES]aon_logo.jpg
 ----
 Modified: data/adm_rptctl
+
+=======================================================================================================================================
+Revision: a444729f80454245aa8b2a126bb8c02288d46e7e
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 1/20/2020 11:33:11 AM
+Message:
+Bug 9843: In the Invoice Detail Report, read apt_invoicehdr (apt-01)
+using knum="PRIMARY" in case an alternate key was used for the last read
+of apt_invoicehdr.
+----
+Modified: ap/src/apr_vendinv.aon
