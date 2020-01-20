@@ -365,7 +365,7 @@ rem --- Read next Invoice Header (ape-01) record
         else
             lineVect!=BBjAPI().makeVector()
         endif
-        if lineVect!.size()>1 then
+        if lineVect!.size()>0 then
             for i=0 to lineVect!.size()-1
                 xwk=fnblank(11)
                 OutVect!.addItem(lineVect!.getItem(i))
