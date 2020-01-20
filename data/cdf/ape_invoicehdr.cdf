@@ -244,6 +244,7 @@ look_for_invoice:
 		callpoint!.setColumnData("APE_INVOICEHDR.HOLD_FLAG",apt01a.hold_flag$)
 		callpoint!.setColumnData("APE_INVOICEHDR.AP_INV_MEMO",apt01a.ap_inv_memo$)
 		callpoint!.setColumnData("APE_INVOICEHDR.REFERENCE",apt01a.reference$)
+		callpoint!.setColumnData("APE_INVOICEHDR.MEMO_1024",apt01a.memo_1024$)
 		callpoint!.setColumnData("APE_INVOICEHDR.INVOICE_AMT","")
 		callpoint!.setColumnData("APE_INVOICEHDR.NET_INV_AMT","")
 		callpoint!.setColumnData("APE_INVOICEHDR.RETENTION","")
