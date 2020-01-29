@@ -1,21 +1,43 @@
-[[ADX_COPYFIRM.FILES_TO_COPY.AINP]]
-rem --- Skip if files_to_copy hasn't changed
-	files_to_copy$=callpoint!.getUserInput()
-	if files_to_copy$=callpoint!.getColumnData("ADX_COPYFIRM.FILES_TO_COPY") then break
+[[ADX_COPYFIRM.ACUS]]
+rem --- Process custom event
+rem --- Select/de-select checkboxes in grid
 
-rem --- Update checked/uncheck grid rows
-	callpoint!.setColumnData("ADX_COPYFIRM.FILES_TO_COPY",files_to_copy$,1)
-	gosub fill_grid
-[[ADX_COPYFIRM.UPDT_REC_COUNT.AINP]]
-rem --- Skip if files_to_copy hasn't changed
-	updt_rec_count$=callpoint!.getUserInput()
-	if updt_rec_count$=callpoint!.getColumnData("ADX_COPYFIRM.UPDT_REC_COUNT") then break
+rem This routine is executed when callbacks have been set to run a 'custom event'.
+rem Analyze gui_event$ and notice$ to see which control's callback triggered the event, and what kind of event it is.
+rem See basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info.
 
-rem --- Get record counts for from firm
-	firm$=cvs(callpoint!.getColumnData("ADX_COPYFIRM.FIRM_ID_ENTRY"),3)	
-	gosub set_firm_recs
-	callpoint!.setColumnData("ADX_COPYFIRM.UPDT_REC_COUNT",updt_rec_count$,1)
-	gosub fill_grid
+	dim gui_event$:tmpl(gui_dev)
+	dim notify_base$:noticetpl(0,0)
+	gui_event$=SysGUI!.getLastEventString()
+	ctl_ID=dec(gui_event.ID$)
+
+	if ctl_ID <> num(user_tpl.gridFilesCtlID$) then break; rem --- exit callpoint
+
+	if gui_event.code$="N"
+		notify_base$=notice(gui_dev,gui_event.x%)
+		dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
+		notice$=notify_base$
+	endif
+
+	gridFiles! = callpoint!.getDevObject("gridFiles")
+	numcols = gridFiles!.getNumColumns()
+	curr_row = dec(notice.row$)
+	curr_col = dec(notice.col$)
+
+	rem --- Do NOT allow selecting aps_report and ars_report tables in grid
+	if cvs(gridFiles!.getCellText(curr_row,1),2)<>"01007514" or cvs(gridFiles!.getCellText(curr_row,2),2)<>"AD" or 
+:	pos(":"+cvs(gridFiles!.getCellText(curr_row,3),2)+":"=":APS_REPORT:ARS_REPORT:")=0  then
+		switch notice.code
+			case 12; rem --- grid_key_press
+				if notice.wparam=32 gosub switch_value
+				break
+
+			case 14; rem --- grid_mouse_up
+				if notice.col=0 gosub switch_value
+				break
+		swend
+	endif
+
 [[ADX_COPYFIRM.AREC]]
 rem --- Initializations
 	rem --- Set asc_comp_id and files_to_copy
@@ -25,12 +47,55 @@ rem --- Initializations
 
 	rem --- Set updt_rec_count
 	callpoint!.setColumnData("ADX_COPYFIRM.UPDT_REC_COUNT","Y")
+
+[[ADX_COPYFIRM.ASC_COMP_ID.AVAL]]
+rem --- Skip if asc_comp_id hasn't changed
+	asc_comp_id$=callpoint!.getUserInput()
+	if asc_comp_id$=callpoint!.getColumnData("ADX_COPYFIRM.ASC_COMP_ID") then break
+
+rem --- Disable and clear asc_prod_id unless asc_comp_id was entered
+	if cvs(asc_comp_id$,2)="" then
+		callpoint!.setColumnData("ADX_COPYFIRM.ASC_PROD_ID","",1)
+		callpoint!.setColumnEnabled("ADX_COPYFIRM.ASC_PROD_ID",0)
+	else
+		callpoint!.setColumnEnabled("ADX_COPYFIRM.ASC_PROD_ID",1)
+	endif
+
+rem --- Initialize files_to_copy
+	if asc_comp_id$="01007514" then
+		callpoint!.setColumnData("ADX_COPYFIRM.FILES_TO_COPY","T",1)
+		callpoint!.setColumnEnabled("ADX_COPYFIRM.FILES_TO_COPY",1)
+	else
+		callpoint!.setColumnData("ADX_COPYFIRM.FILES_TO_COPY","A",1)
+		callpoint!.setColumnEnabled("ADX_COPYFIRM.FILES_TO_COPY",0)
+	endif
+
+rem --- Set Filter and update grid
+	gosub filter_recs
+	updt_rec_count$=callpoint!.getColumnData("ADX_COPYFIRM.UPDT_REC_COUNT")
+	firm$=cvs(callpoint!.getColumnData("ADX_COPYFIRM.FIRM_ID_ENTRY"),3)
+	gosub set_firm_recs
+	gosub fill_grid
+
+[[ADX_COPYFIRM.ASC_PROD_ID.AVAL]]
+rem --- Skip if asc_prod_id hasn't changed
+	asc_prod_id$=callpoint!.getUserInput()
+	if asc_prod_id$=callpoint!.getColumnData("ADX_COPYFIRM.ASC_PROD_ID") then break
+
+rem --- Set Filter and update grid
+	gosub filter_recs
+	updt_rec_count$=callpoint!.getColumnData("ADX_COPYFIRM.UPDT_REC_COUNT")
+	firm$=cvs(callpoint!.getColumnData("ADX_COPYFIRM.FIRM_ID_ENTRY"),3)
+	gosub set_firm_recs
+	gosub fill_grid
+
 [[ADX_COPYFIRM.ASIZ]]
 rem --- resize grid
 	gridFiles!=callpoint!.getDevObject("gridFiles")
 	gridFiles!.setSize(Form!.getWidth()-(gridFiles!.getX()*2),Form!.getHeight()-(gridFiles!.getY()+40))
 	gridFiles!.setFitToGrid(1)
 	callpoint!.setDevObject("gridFiles",gridFiles!)
+
 [[ADX_COPYFIRM.ASVA]]
 rem --- Confirm ready to copy data
 	numSelected=0
@@ -201,31 +266,92 @@ rem --- Copy selected data
 		meter_action$="LST-END"
 		gosub disp_meter
 	endif
-[[ADX_COPYFIRM.TO_FIRM_ID.AVAL]]
-rem --- Skip if to_firm_id hasn't changed
-	to_firm_id$=callpoint!.getUserInput()
-	if to_firm_id$=callpoint!.getColumnData("ADX_COPYFIRM.TO_FIRM_ID") then break
 
-rem --- Firms 99 and ZZ not allowed for to_firm_id
-	if pos(to_firm_id$="99ZZ",2) then
-		dim msg_tokens$[1]
-		msg_tokens$[1]=to_firm_id$
-		msg_id$="AD_FIRM_ID_BAD"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-		break
-	endif
+[[ADX_COPYFIRM.AWIN]]
+rem --- Open/Lock files
 
-rem --- Make sure 2 firms aren't the same
-	from_firm$=callpoint!.getColumnData("ADX_COPYFIRM.FIRM_ID_ENTRY")
-	to_firm$=callpoint!.getUserInput()
-	if cvs(to_firm$,2)<>"" then 
-		gosub check_firms
-		if from_firm$=to_firm$
-			callpoint!.setStatus("ABORT")
-			break
-		endif
-	endif
+	use java.io.File
+    	use ::ado_file.src::FileObject
+	use ::ado_func.src::func
+	use ::ado_util.src::util
+
+	num_files=2
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+
+	open_tables$[1]="DDM_TABLES",open_opts$[1]="OTA"
+	open_tables$[2]="ADM_MODULES",open_opts$[2]="OTA"
+
+	gosub open_tables
+
+	user_tpl_str$ = "gridFilesCols:c(5), " +
+:		"gridFilesRows:c(5), " +
+:		"gridFilesCtlID:c(5)," +
+:		"MasterCols:n(5)"
+	dim user_tpl$:user_tpl_str$
+
+	UserObj! = BBjAPI().makeVector()
+	vectFiles! = BBjAPI().makeVector()
+	vectFilesMaster! = BBjAPI().makeVector()
+	nxt_ctlID = num(stbl("+CUSTOM_CTL",err=std_error))
+	ignore$ = stbl("+CUSTOM_CTL", str(nxt_ctlID+1))
+
+	tmpCtl!=callpoint!.getControl("UPDT_REC_COUNT")
+	tmp_y=tmpCtl!.getY()
+	tmp_h=tmpCtl!.getHeight()
+	wnd_w=Form!.getWidth()
+	wnd_h=Form!.getHeight()
+
+	gridFiles! = Form!.addGrid(nxt_ctlID,5,tmp_y+tmp_h+10,wnd_w-5,wnd_h-tmp_y-tmp_h-5); rem --- ID, x, y, width, height
+
+	user_tpl.gridFilesCtlID$ = str(nxt_ctlID)
+	user_tpl.gridFilesCols$ = "6"
+	user_tpl.gridFilesRows$ = "10"
+	user_tpl.MasterCols = 7
+
+	gosub format_grid
+
+	callpoint!.setDevObject("gridFiles",gridFiles!)
+	callpoint!.setDevObject("vectFiles",vectFiles!)
+	callpoint!.setDevObject("vectFilesMaster",vectFilesMaster!)
+
+	rem --- Set background color for editable grid rows
+	RGB$="255,255,255"
+	gosub get_RGB
+	callpoint!.setDevObject("editableColor",BBjAPI().getSysGui().makeColor(R,G,B))
+
+	rem --- Set background color for not editable grid rows
+	RGB$="231,236,255"
+	RGB$=stbl("+GRID_NONEDIT_COLOR",err=*next)
+	gosub get_RGB
+	callpoint!.setDevObject("notEditableColor",BBjAPI().getSysGui().makeColor(R,G,B))
+
+rem --- Misc other init
+
+	gridFiles!.setColumnEditable(0,1)
+	gridFiles!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
+	gridFiles!.setTabAction(gridFiles!.GRID_NAVIGATE_GRID)
+
+	gosub checkout_licenses
+	gosub create_reports_vector
+	callpoint!.setColumnData("ADX_COPYFIRM.FILES_TO_COPY","T")
+	gosub fill_grid
+
+rem --- Set callbacks - processed in ACUS callpoint
+
+	gridFiles!.setCallback(gridFiles!.ON_GRID_KEY_PRESS,"custom_event")
+	gridFiles!.setCallback(gridFiles!.ON_GRID_MOUSE_UP,"custom_event")
+	gridFiles!.setCallback(gridFiles!.ON_GRID_EDIT_STOP,"custom_event")
+	callpoint!.setDevObject("gridFiles",gridFiles!)
+
+[[ADX_COPYFIRM.FILES_TO_COPY.AINP]]
+rem --- Skip if files_to_copy hasn't changed
+	files_to_copy$=callpoint!.getUserInput()
+	if files_to_copy$=callpoint!.getColumnData("ADX_COPYFIRM.FILES_TO_COPY") then break
+
+rem --- Update checked/uncheck grid rows
+	callpoint!.setColumnData("ADX_COPYFIRM.FILES_TO_COPY",files_to_copy$,1)
+	gosub fill_grid
+
 [[ADX_COPYFIRM.FIRM_ID_ENTRY.AVAL]]
 rem --- Skip if firm_id_entry hasn't changed
 	from_firm$=callpoint!.getUserInput()
@@ -258,84 +384,44 @@ rem --- Set number of recs for firm selected
 		gosub set_firm_recs
 		gosub fill_grid
 	endif
-[[ADX_COPYFIRM.ASC_PROD_ID.AVAL]]
-rem --- Skip if asc_prod_id hasn't changed
-	asc_prod_id$=callpoint!.getUserInput()
-	if asc_prod_id$=callpoint!.getColumnData("ADX_COPYFIRM.ASC_PROD_ID") then break
 
-rem --- Set Filter and update grid
-	gosub filter_recs
-	updt_rec_count$=callpoint!.getColumnData("ADX_COPYFIRM.UPDT_REC_COUNT")
-	firm$=cvs(callpoint!.getColumnData("ADX_COPYFIRM.FIRM_ID_ENTRY"),3)
+[[ADX_COPYFIRM.TO_FIRM_ID.AVAL]]
+rem --- Skip if to_firm_id hasn't changed
+	to_firm_id$=callpoint!.getUserInput()
+	if to_firm_id$=callpoint!.getColumnData("ADX_COPYFIRM.TO_FIRM_ID") then break
+
+rem --- Firms 99 and ZZ not allowed for to_firm_id
+	if pos(to_firm_id$="99ZZ",2) then
+		dim msg_tokens$[1]
+		msg_tokens$[1]=to_firm_id$
+		msg_id$="AD_FIRM_ID_BAD"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+rem --- Make sure 2 firms aren't the same
+	from_firm$=callpoint!.getColumnData("ADX_COPYFIRM.FIRM_ID_ENTRY")
+	to_firm$=callpoint!.getUserInput()
+	if cvs(to_firm$,2)<>"" then 
+		gosub check_firms
+		if from_firm$=to_firm$
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
+
+[[ADX_COPYFIRM.UPDT_REC_COUNT.AINP]]
+rem --- Skip if files_to_copy hasn't changed
+	updt_rec_count$=callpoint!.getUserInput()
+	if updt_rec_count$=callpoint!.getColumnData("ADX_COPYFIRM.UPDT_REC_COUNT") then break
+
+rem --- Get record counts for from firm
+	firm$=cvs(callpoint!.getColumnData("ADX_COPYFIRM.FIRM_ID_ENTRY"),3)	
 	gosub set_firm_recs
+	callpoint!.setColumnData("ADX_COPYFIRM.UPDT_REC_COUNT",updt_rec_count$,1)
 	gosub fill_grid
-[[ADX_COPYFIRM.ASC_COMP_ID.AVAL]]
-rem --- Skip if asc_comp_id hasn't changed
-	asc_comp_id$=callpoint!.getUserInput()
-	if asc_comp_id$=callpoint!.getColumnData("ADX_COPYFIRM.ASC_COMP_ID") then break
 
-rem --- Disable and clear asc_prod_id unless asc_comp_id was entered
-	if cvs(asc_comp_id$,2)="" then
-		callpoint!.setColumnData("ADX_COPYFIRM.ASC_PROD_ID","",1)
-		callpoint!.setColumnEnabled("ADX_COPYFIRM.ASC_PROD_ID",0)
-	else
-		callpoint!.setColumnEnabled("ADX_COPYFIRM.ASC_PROD_ID",1)
-	endif
-
-rem --- Initialize files_to_copy
-	if asc_comp_id$="01007514" then
-		callpoint!.setColumnData("ADX_COPYFIRM.FILES_TO_COPY","T",1)
-		callpoint!.setColumnEnabled("ADX_COPYFIRM.FILES_TO_COPY",1)
-	else
-		callpoint!.setColumnData("ADX_COPYFIRM.FILES_TO_COPY","A",1)
-		callpoint!.setColumnEnabled("ADX_COPYFIRM.FILES_TO_COPY",0)
-	endif
-
-rem --- Set Filter and update grid
-	gosub filter_recs
-	updt_rec_count$=callpoint!.getColumnData("ADX_COPYFIRM.UPDT_REC_COUNT")
-	firm$=cvs(callpoint!.getColumnData("ADX_COPYFIRM.FIRM_ID_ENTRY"),3)
-	gosub set_firm_recs
-	gosub fill_grid
-[[ADX_COPYFIRM.ACUS]]
-rem --- Process custom event
-rem --- Select/de-select checkboxes in grid
-
-rem This routine is executed when callbacks have been set to run a 'custom event'.
-rem Analyze gui_event$ and notice$ to see which control's callback triggered the event, and what kind of event it is.
-rem See basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info.
-
-	dim gui_event$:tmpl(gui_dev)
-	dim notify_base$:noticetpl(0,0)
-	gui_event$=SysGUI!.getLastEventString()
-	ctl_ID=dec(gui_event.ID$)
-
-	if ctl_ID <> num(user_tpl.gridFilesCtlID$) then break; rem --- exit callpoint
-
-	if gui_event.code$="N"
-		notify_base$=notice(gui_dev,gui_event.x%)
-		dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
-		notice$=notify_base$
-	endif
-
-	gridFiles! = callpoint!.getDevObject("gridFiles")
-	numcols = gridFiles!.getNumColumns()
-	curr_row = dec(notice.row$)
-	curr_col = dec(notice.col$)
-
-	rem --- Do NOT allow selecting aps_report and ars_report tables in grid
-	if cvs(gridFiles!.getCellText(curr_row,1),2)<>"01007514" or cvs(gridFiles!.getCellText(curr_row,2),2)<>"AD" or 
-:	pos(":"+cvs(gridFiles!.getCellText(curr_row,3),2)+":"=":APS_REPORT:ARS_REPORT:")=0  then
-		switch notice.code
-			case 12; rem --- grid_key_press
-				if notice.wparam=32 gosub switch_value
-				break
-
-			case 14; rem --- grid_mouse_up
-				if notice.col=0 gosub switch_value
-				break
-		swend
-	endif
 [[ADX_COPYFIRM.<CUSTOM>]]
 rem ==========================================================================
 format_grid: rem --- Use Barista program to format the grid
@@ -484,18 +570,8 @@ rem ==========================================================================
 
 				rem --- Skip files that haven't been created yet
 				tablePath$=cvs(ddm_tables.dd_table_path$,3)
-				if pos("["=tablePath$)=1 then
-					rem --- Using stbl for path
-					tablePath$=tablePath$(2)
-					tablePath$=tablePath$(1,len(tablePath$)-1)
-					dataDir$=stbl(tablePath$)
-				else
-					dataDir$=tablePath$
-				endif
-				if pos(dataDir$="\/")=0 and pos(":"=dataDir$)<>2 then
-					rem --- Relative path
-					dataDir$=dir("")+dataDir$
-				endif
+				dataDir$=tablePath$
+				dataDir$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(tablePath$,err=*next),err=*next)
 				dataFile$=cvs(ddm_tables.dd_file_name$,2)
 				if cvs(dataFile$,2)="" then dataFile$=cvs(dataFile$,10)
 				thisFile!=new File(dataDir$+dataFile$,err=*continue)
@@ -784,78 +860,4 @@ rem --- fn_filter_txt: Check Operator data for text fields
 rem ==========================================================================
 #include std_missing_params.src
 rem ==========================================================================
-[[ADX_COPYFIRM.AWIN]]
-rem --- Open/Lock files
 
-	use java.io.File
-    	use ::ado_file.src::FileObject
-	use ::ado_func.src::func
-	use ::ado_util.src::util
-
-	num_files=2
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-
-	open_tables$[1]="DDM_TABLES",open_opts$[1]="OTA"
-	open_tables$[2]="ADM_MODULES",open_opts$[2]="OTA"
-
-	gosub open_tables
-
-	user_tpl_str$ = "gridFilesCols:c(5), " +
-:		"gridFilesRows:c(5), " +
-:		"gridFilesCtlID:c(5)," +
-:		"MasterCols:n(5)"
-	dim user_tpl$:user_tpl_str$
-
-	UserObj! = BBjAPI().makeVector()
-	vectFiles! = BBjAPI().makeVector()
-	vectFilesMaster! = BBjAPI().makeVector()
-	nxt_ctlID = num(stbl("+CUSTOM_CTL",err=std_error))
-	ignore$ = stbl("+CUSTOM_CTL", str(nxt_ctlID+1))
-
-	tmpCtl!=callpoint!.getControl("UPDT_REC_COUNT")
-	tmp_y=tmpCtl!.getY()
-	tmp_h=tmpCtl!.getHeight()
-	wnd_w=Form!.getWidth()
-	wnd_h=Form!.getHeight()
-
-	gridFiles! = Form!.addGrid(nxt_ctlID,5,tmp_y+tmp_h+10,wnd_w-5,wnd_h-tmp_y-tmp_h-5); rem --- ID, x, y, width, height
-
-	user_tpl.gridFilesCtlID$ = str(nxt_ctlID)
-	user_tpl.gridFilesCols$ = "6"
-	user_tpl.gridFilesRows$ = "10"
-	user_tpl.MasterCols = 7
-
-	gosub format_grid
-
-	callpoint!.setDevObject("gridFiles",gridFiles!)
-	callpoint!.setDevObject("vectFiles",vectFiles!)
-	callpoint!.setDevObject("vectFilesMaster",vectFilesMaster!)
-
-	rem --- Set background color for editable grid rows
-	RGB$="255,255,255"
-	gosub get_RGB
-	callpoint!.setDevObject("editableColor",BBjAPI().getSysGui().makeColor(R,G,B))
-
-	rem --- Set background color for not editable grid rows
-	RGB$="231,236,255"
-	RGB$=stbl("+GRID_NONEDIT_COLOR",err=*next)
-	gosub get_RGB
-	callpoint!.setDevObject("notEditableColor",BBjAPI().getSysGui().makeColor(R,G,B))
-
-rem --- Misc other init
-
-	gridFiles!.setColumnEditable(0,1)
-	gridFiles!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
-	gridFiles!.setTabAction(gridFiles!.GRID_NAVIGATE_GRID)
-
-	gosub checkout_licenses
-	gosub create_reports_vector
-	callpoint!.setColumnData("ADX_COPYFIRM.FILES_TO_COPY","T")
-	gosub fill_grid
-
-rem --- Set callbacks - processed in ACUS callpoint
-
-	gridFiles!.setCallback(gridFiles!.ON_GRID_KEY_PRESS,"custom_event")
-	gridFiles!.setCallback(gridFiles!.ON_GRID_MOUSE_UP,"custom_event")
-	gridFiles!.setCallback(gridFiles!.ON_GRID_EDIT_STOP,"custom_event")
-	callpoint!.setDevObject("gridFiles",gridFiles!)
