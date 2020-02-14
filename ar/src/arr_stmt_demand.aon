@@ -64,6 +64,16 @@ rem --- Set Report Name & Subreport directory
 
     declare BBJasperReport report!
 
+rem --- open files
+    files=1,begfile=1,endfile=files
+    dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+    files$[1]="ars_cc_custpmt",ids$[1]="ARS_CC_CUSTPMT"
+
+    call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
+    if status goto std_exit
+
+    ars_cc_custpmt=channels[1]; dim ars_cc_custpmt$:templates$[1]
+
 rem --- Assign form input values to local variables
 
     customer_id$  = option!.getOptionData("CUSTOMER_ID")
@@ -83,6 +93,16 @@ rem --- Initializations
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,0
 
     emailFax! = BBjAPI().makeVector()
+
+rem --- get payment_url for the cash_rec_cd used for customer payments (only one record allowed at present)
+
+	readrecord(ars_cc_custpmt,key=firm_id$,dom=*next)
+	while 1
+		redim ars_cc_custpmt$
+		readrecord(ars_cc_custpmt,end=*break)ars_cc_custpmt$
+		if ars_cc_custpmt.firm_id$<>firm_id$ then break
+		if ars_cc_custpmt.allow_cust_cc$="Y" then break
+	wend
 
 rem --- See if this document is set up in Addon Report Control
 
@@ -134,6 +154,24 @@ rem --- Use ReportControl object to see if customer wants print, email, or fax
                     emailFax!.add(rpt_id$)
                     emailFax!.add(customer_id$)
                     emailFax!.add(new_doc_id$)
+					url$=cvs(ars_cc_custpmt.payment_url$,3)
+					if url$<>"" then
+						url_message$=Translate!.getTranslation("AON_PAY_ONLINE")+" "+url$
+						if reportControl!.getEmailYN()="Y" then
+							AdmRptctlRcp!=reportControl!.getAdmRptctlRcp()
+							email$=AdmRptctlRcp!.getFieldAsString("EMAIL_MESSAGE")
+							email$=cvs(email$,2)+$0A$+url_message$
+							AdmRptctlRcp!.setFieldValue("EMAIL_MESSAGE",email$)
+							reportControl!.setAdmRptctlRcp(AdmRptctlRcp!)
+						endif
+						if reportControl!.getFaxYN()="Y" then
+							AdmRptctlRcp!=reportControl!.getAdmRptctlRcp()
+							fax$=AdmRptctlRcp!.getFieldAsString("FAX_MESSAGE")
+							fax$=cvs(fax$,2)+$0A$+url_message$
+							AdmRptctlRcp!.setFieldValue("FAX_MESSAGE",fax$)
+							reportControl!.setAdmRptctlRcp(AdmRptctlRcp!)
+						endif
+					endif
                 endif
             endif
         endif

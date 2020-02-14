@@ -145,8 +145,13 @@ class public ReportControl
 
     method public void addToDocQueue(BBjString rpt_id$,BBjString customer_id$,BBjString vendor_id$,BBjString doc_no$)
     
-        found=#getRecipientInfo(rpt_id$,customer_id$,vendor_id$)
-        if found
+		REM if we don't have the recipient info, go retrieve it. 
+        if !#RecipFound% then  
+			#getRecipientInfo(rpt_id$,customer_id$,vendor_id$)
+        fi 
+		
+		REM If we now have the recipient info, then send the reports out. 
+		if #RecipFound% then 
             if #FaxYN$="Y"
                 #sendFax(doc_no$)
             endif
@@ -155,6 +160,8 @@ class public ReportControl
             endif
         endif
         
+		REM Right now we're not doing anything if the recipient isn't found. 
+		
     methodend
     
     method public BBjInt getRecipientInfo(BBjString rpt_id$,BBjString customer_id$,BBjString vendor_id$)

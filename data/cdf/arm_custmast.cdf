@@ -1,3 +1,97 @@
+[[ARM_CUSTMAST.PAY_AUTH_EMAIL.BINP]]
+rem --- Warn when pay_auth_email doesn't match ARS_CC_CUSTPMT Report Control Recipients email-to address
+	if callpoint!.getDevObject("match_email_to")<>"OK" then
+		rem --- Set background color for bad pay_auth_email
+		payAuthEmail!=callpoint!.getControl("ARM_CUSTMAST.PAY_AUTH_EMAIL")
+		call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
+		payAuthEmail!.setBackColor(rdErrorColor!)
+		callpoint!.setDevObject("match_email_to","BAD")
+
+		rem --- Warn pay_auth_email doesn't match ARS_CC_CUSTPMT Report Control Recipients email-to address
+		msg_id$="AR_FIX_PAYAUTHEMAIL"
+		dim msg_tokens$[1]
+		gosub disp_message
+		if msg_opt$="Y" then
+			recipient_email_to$=callpoint!.getDevObject("recipient_email_to")
+			callpoint!.setColumnData("ARM_CUSTMAST.PAY_AUTH_EMAIL",recipient_email_to$,1)
+			callpoint!.setDevObject("match_email_to","OK")
+			callpoint!.setStatus("MODIFIED")
+		endif
+	endif
+[[ARM_CUSTMAST.PAY_AUTH_EMAIL.AVAL]]
+rem --- Warn when pay_auth_email doesn't match ARS_CC_CUSTPMT Report Control Recipients email-to address
+	pay_auth_email$=callpoint!.getUserInput()
+	recipient_email_to$=cvs(callpoint!.getDevObject("recipient_email_to"),2)
+	if recipient_email_to$<>"" and pay_auth_email$<>callpoint!.getColumnData("ARM_CUSTMAST.PAY_AUTH_EMAIL") then
+		if cvs(pay_auth_email$,2)<>recipient_email_to$ then
+			rem --- Set background color for bad pay_auth_email
+			payAuthEmail!=callpoint!.getControl("ARM_CUSTMAST.PAY_AUTH_EMAIL")
+			call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
+			payAuthEmail!.setBackColor(rdErrorColor!)
+			callpoint!.setDevObject("match_email_to","BAD")
+
+			rem --- Warn pay_auth_email doesn't match ARS_CC_CUSTPMT Report Control Recipients email-to address
+			msg_id$="AR_FIX_PAYAUTHEMAIL"
+			dim msg_tokens$[1]
+			gosub disp_message
+			if msg_opt$="Y" then
+				recipient_email_to$=callpoint!.getDevObject("recipient_email_to")
+				callpoint!.setUserInput(recipient_email_to$)
+				callpoint!.setDevObject("match_email_to","OK")
+				callpoint!.setStatus("MODIFIED")
+			else
+				rem --- Set background color for bad pay_auth_email
+				payAuthEmail!.setBackColor(rdErrorColor!)
+			endif
+		endif
+	endif
+[[ARM_CUSTMAST.AWRI]]
+rem --- Add ARS_CC_CUSTPMT Report Control Recipients record for this customer if one doesn't already exist
+	if cvs(callpoint!.getColumnData("ARM_CUSTMAST.PAY_AUTH_EMAIL"),3)<>"" then
+		customer_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+		admRptCtlRcp_dev=fnget_dev("ADM_RPTCTL_RCP")
+		dim admRptCtlRcp$:fnget_tpl$("ADM_RPTCTL_RCP")
+		admRptCtlRcp.dd_table_alias$="ARS_CC_CUSTPMT"
+		findrecord(admRptCtlRcp_dev,key=firm_id$+admRptCtlRcp.dd_table_alias$+customer_id$+admRptCtlRcp.vendor_id$,dom=*next)admRptCtlRcp$
+
+		if cvs(admRptCtlRcp.customer_id$,3)="" then
+			rem --- Add ARS_CC_CUSTPMT record for this customer
+			redim admRptCtlRcp$
+			admRptCtlRcp.firm_id$=firm_id$
+			admRptCtlRcp.dd_table_alias$="ARS_CC_CUSTPMT"
+			admRptCtlRcp.customer_id$=customer_id$
+			admRptCtlRcp.email_yn$="Y"
+			admRptCtlRcp.email_to$=callpoint!.getColumnData("ARM_CUSTMAST.PAY_AUTH_EMAIL")
+
+			rem --- Use Report Control default subject and message
+			admRptCtl_dev=fnget_dev("ADM_RPTCTL")
+			dim admRptCtl$:fnget_tpl$("ADM_RPTCTL")
+			findrecord(admRptCtl_dev,key=firm_id$+admRptCtlRcp.dd_table_alias$,dom=*endif)admRptCtl$
+			admRptCtlRcp.email_subject$=admRptCtl.dflt_subject$
+			admRptCtlRcp.email_message$=admRptCtl.dflt_message$
+
+			rem --- If available, use Report Control email account's from and reply-to
+			admEmailAcct_dev=fnget_dev("ADM_EMAIL_ACCT")
+			dim admEmailAcct$:fnget_tpl$("ADM_EMAIL_ACCT")
+			findrecord(admEmailAcct_dev,key=firm_id$+admRptCtl.email_account$,dom=*next)admEmailAcct$
+			if cvs(admEmailAcct.email_account$,3)<>"" then
+				admRptCtlRcp.email_from$=admEmailAcct.email_from$
+				admRptCtlRcp.email_replyto$=admEmailAcct.email_replyto$
+			endif
+
+			admRptCtlRcp$=field(admRptCtlRcp$)
+			writerecord(admRptCtlRcp_dev)admRptCtlRcp$
+			callpoint!.setDevObject("recipient_email_to",admRptCtlRcp.email_to$)
+			callpoint!.setDevObject("match_email_to","OK")
+		endif
+	endif
+
+	if callpoint!.getDevObject("match_email_to")<>"OK" then
+		rem --- Set background color for bad pay_auth_email
+		payAuthEmail!=callpoint!.getControl("ARM_CUSTMAST.PAY_AUTH_EMAIL")
+		call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
+		payAuthEmail!.setBackColor(rdErrorColor!)
+	endif
 [[ARM_CUSTMAST.AOPT-PYMT]]
 rem --- Select invoice(s) for credit card payment
 rem --- May be done via PayPal or Authorize.net hosted page
@@ -538,6 +632,32 @@ rem --- pie if all balances >=0, bar if any negatives, hide if all bals are 0
 
 	endif
 
+rem --- Draw attention when pay_auth_email doesn't match ARS_CC_CUSTPMT Report Control Recipients email-to address
+	rem --- Get customer's ARS_CC_CUSTPMT Report Control Recipients email-to address
+	customer_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+	admRptCtlRcp_dev=fnget_dev("ADM_RPTCTL_RCP")
+	dim admRptCtlRcp$:fnget_tpl$("ADM_RPTCTL_RCP")
+	admRptCtlRcp.dd_table_alias$="ARS_CC_CUSTPMT"
+	findrecord(admRptCtlRcp_dev,key=firm_id$+admRptCtlRcp.dd_table_alias$+customer_id$+admRptCtlRcp.vendor_id$,dom=*next)admRptCtlRcp$
+	if cvs(admRptCtlRcp.customer_id$,3)<>"" then
+		email_to$=admRptCtlRcp.email_to$
+	else
+		email_to$=""
+	endif
+	callpoint!.setDevObject("recipient_email_to",email_to$)
+
+	rem --- Set background color for pay_auth_email
+	payAuthEmail!=callpoint!.getControl("ARM_CUSTMAST.PAY_AUTH_EMAIL")
+
+	if cvs(callpoint!.getColumnData("ARM_CUSTMAST.PAY_AUTH_EMAIL"),3)<>cvs(email_to$,3) and cvs(email_to$,3)<>"" then
+		call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
+		payAuthEmail!.setBackColor(rdErrorColor!)
+		callpoint!.setDevObject("match_email_to","BAD")
+	else
+		addrLine1!=callpoint!.getControl("ARM_CUSTMAST.ADDR_LINE_1")
+		payAuthEmail!.setBackColor(addrLine1!.getBackColor())
+		callpoint!.setDevObject("match_email_to","OK")
+	endif
 
 
 
@@ -783,7 +903,7 @@ rem --- clear out the contents of the widgets
 rem --- Open/Lock files
 	dir_pgm$=stbl("+DIR_PGM")
 	sys_pgm$=stbl("+DIR_SYP")
-	num_files=9
+	num_files=12
 
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[2]="ARS_PARAMS",open_opts$[2]="OTA"
@@ -794,6 +914,9 @@ rem --- Open/Lock files
 	open_tables$[7]="ART_INVDET",open_opts$[7]="OTA"
 	open_tables$[8]="ARS_CC_CUSTSVC",open_opts$[8]="OTA"
 	open_tables$[9]="ARM_EMAILFAX",open_opts$[9]="OTA"
+	open_tables$[10]="ADM_RPTCTL",open_opts$[10]="OTA"
+	open_tables$[11]="ADM_RPTCTL_RCP",open_opts$[11]="OTA"
+	open_tables$[12]="ADM_EMAIL_ACCT",open_opts$[12]="OTA"
 	gosub open_tables
 
 	ars01_dev=num(open_chans$[2])
@@ -899,15 +1022,15 @@ rem --- Additional/optional opens
 rem --- disable credit card payment and view response options if not processing credit card payments
 
 	read(ars_cc_custsvc,key=firm_id$,dom=*next)
+	callpoint!.setOptionEnabled("PYMT",0)
+	callpoint!.setOptionEnabled("RESP",0)
 	while 1
 		readrecord(ars_cc_custsvc,end=*break)ars_cc_custsvc$
 		if ars_cc_custsvc.firm_id$<>firm_id$ then break
 		if ars_cc_custsvc.use_custsvc_cc$="Y"
 			callpoint!.setOptionEnabled("PYMT",1)
 			callpoint!.setOptionEnabled("RESP",1)
-		else
-			callpoint!.setOptionEnabled("PYMT",0)
-			callpoint!.setOptionEnabled("RESP",0)
+			break
 		endif
 	wend
 

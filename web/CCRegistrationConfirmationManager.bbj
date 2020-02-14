@@ -1,0 +1,61 @@
+use ::../apps/aon/web/CCRegistrationConfirmationView.bbj::CCRegistrationConfirmationView
+use ::../apps/aon/web/CCRegistrationConfirmationModel.bbj::CCRegistrationConfirmationModel
+use ::../apps/aon/web/CCRegistrationModel.bbj::CCRegistrationRecord
+
+
+class public CCRegistrationConfirmationManager
+  field public CCRegistrationConfirmationView View! = new CCRegistrationConfirmationView()
+  field public CCRegistrationConfirmationModel Model!=new CCRegistrationConfirmationModel() 
+  field protected CCRegistrationRecord RegistrationRecord!
+
+  REM TODO:  Put in an elaborate amount of diagnostic logging so that people on the backend can 
+  REM help troubleshoot registrations. People trying to register should not get direct access to 
+  REM this information. 
+  method public CCRegistrationConfirmationManager()
+    
+    CCUtil.initializeBaristaEnvironment()
+    
+    declare BBjString token$
+    declare CCRegistrationRecord rec!
+    
+    token$=clientenv("token",err=no_token)
+    
+    REM Locate the registration associated with this token
+    #RegistrationRecord!=#Model!.locateToken(token$)
+    if (#RegistrationRecord!=null()) then goto no_token
+    
+    #View!.registerYesButton_OnButtonPushCallback(#this!,"handleAcceptRegistration")
+    #View!.registerNoButton_OnButtonPushCallback(#this!,"handleRejectRegistration")
+    
+    #View!.getDesiredUserNameEB().setText(#RegistrationRecord!.getUserName())
+    #View!.getFirstNameEB().setText(#RegistrationRecord!.getFirstName())
+    #View!.getLastNameEB().setText(#RegistrationRecord!.getLastName())
+    #View!.getUserEmailEB().setText(#RegistrationRecord!.getUserEmail())
+    #View!.getCustomerIDEB().setText(#RegistrationRecord!.getCustomerID())
+    
+    #View!.show() 
+    methodret 
+    
+    no_token:
+    REM Show rejection message 
+    x=msgbox("I did not get a token!")
+    
+  methodend
+  
+  method public void handleAcceptRegistration(BBjButtonPushEvent e!)
+    #Model!.addUser(#RegistrationRecord!)
+    #View!.showAcceptanceMessage() 
+    release
+  methodend 
+  
+  method public void handleRejectRegistration(BBjButtonPushEvent e!)
+    #Model!.deleteRegistration(#RegistrationRecord!)
+    #View!.showRejectionMessage()
+    release
+  methodend 
+
+classend
+
+
+x!=new CCRegistrationConfirmationManager()
+process_events

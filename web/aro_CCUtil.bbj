@@ -1,0 +1,58 @@
+REM /**
+REM  * aro_CCUtil.bbj
+REM  * @author shaun
+REM  *
+REM  */
+use com.basis.api.admin.BBjAdminBase
+
+REM CCUtil
+REM A utility class that provides constants and methods needed by the Customer Portal
+class public CCUtil
+
+    field protected static BBjString DATE_MASK!="%Yl%Mz%Dz"
+    field protected static BBjString EM_ACCOUNT_PREFIX!="arccc_"
+
+    method public static BBjString getDATE_MASK()
+        methodret #DATE_MASK!
+    methodend 
+    
+    method public static BBjString getEM_ACCOUNT_PREFIX()
+        methodret #EM_ACCOUNT_PREFIX!
+    methodend 
+
+    method public static BBjAdminBase getAdmin()
+        declare BBjString keyName$
+        declare BBjNamespace ns!
+        declare BBjAdminBase admin!
+   
+        keyName$="+bar_admin_"+cvs(stbl("+USER_ID"),11);rem CAH
+        ns!=BBjAPI().getGroupNamespace()
+        admin!=cast(BBjAdminBase,ns!.getValue(keyName$))
+    
+        methodret admin!
+    methodend
+  
+    method public static BBjString today()
+        methodret date(0:#DATE_MASK!)
+    methodend 
+    
+    method public static BBjString getEMUserName(BBjString username$) 
+        methodret #EM_ACCOUNT_PREFIX!+username$
+    methodend 
+    
+    method public static void initializeBaristaEnvironment()
+        declare BBjNumber curr_arg
+		declare BBjString temp_arg$
+		declare BBjString user_id$
+		declare BBjString temp$
+
+        for curr_arg=1 to argc-1
+            temp_arg$=argv(curr_arg)
+            if pos("-u"=temp_arg$)=1 then user_id$=cvs(temp_arg$(3),4)
+        next curr_arg
+        temp$=stbl("+USER_ID",user_id$)
+
+        call stbl("+DIR_SYP")+"bas_process_beg.bbj",user_id$,table_chans$[all]
+    methodend 
+   
+classend 

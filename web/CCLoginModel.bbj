@@ -1,0 +1,124 @@
+use java.security.MessageDigest
+
+use ::../apps/aon/web/aro_CCUtil.bbj::CCUtil
+
+class public CCLoginModel
+
+	REM Public Fields 
+	field public BBjNumber LoggedIn=0
+	
+	REM Internal fields 
+	field protected BBjNumber SqlChan
+	field protected BBjString UserName$
+
+	method public CCLoginModel()
+		#SqlChan=sqlunt
+		sqlopen (#SqlChan) stbl("+DBNAME")
+	methodend 
+		
+	
+	REM Returns true if user's credentials are valid, otherwise false
+	method public BBjNumber login(BBjString username$, BBjString password$)
+	    declare BBjNumber canLogin
+	    declare BBjNumber passwordCorrect 
+		
+		REM Check to see if the username exists and is active. No point in looking for 
+		REM a password for a nonexistent or unactivated user 
+		if (! #canLogin(username$)) then 
+		    methodret 0
+		fi 
+		
+		REM Validate the password
+		if (! #validatePassword(username$,password$)) then
+		    methodret 0
+		fi
+		
+		REM Set the state to show that we've successfully logged in
+		#LoggedIn=1
+		#UserName$=username$
+		#setLastUsedDate()
+		methodret 1
+	methodend 
+	
+	method protected BBjNumber canLogin(BBjString user$)
+		declare BBjString rec$
+		declare BBjString today$
+		declare BBjString activated$
+		declare BBjString deactivated$
+		
+		REM See if the username is in the database 
+		sqlprep (#SqlChan) "select count(cc_username) as count from arc_cc_users where cc_username=?"
+		sqlexec (#SqlChan) user$
+		
+		dim rec$:sqltmpl(#SqlChan) 
+		rec$=sqlfetch(#SqlChan)
+		
+		if (rec.count<>1) then methodret 0
+		
+		REM Make sure the account is between the activated and deactivated dates 
+		REM .. get the current date
+		today$=CCUtil.today() 
+		
+		REM .. get the activated and deactivated dates 
+		sqlprep (#SqlChan) "select activated_date, deactivated_date from arc_cc_users where cc_username=?"
+		sqlexec (#SqlChan) user$
+		
+		dim rec$:sqltmpl(#SqlChan) 
+		rec$=sqlfetch(#SqlChan)
+		
+		REM .. check that the deactivated date is either not set or in the future
+		deactivated$=rec.deactivated_date$
+		if (deactivated$<>"") then 
+			if deactivated$<=today$ then methodret 0
+		endif 
+		
+		REM .. check that the activated date is set and in the past 
+		activated$=rec.activated_date$
+		if (activated$="" OR activated$>today$) then methodret 0
+		
+		REM If we've made it through these checks then we can login
+		methodret 1
+		
+	methodend 
+	
+	method protected BBjNumber validatePassword(BBjString username$, BBjString password$)
+		x!=BBjAPI().getAdmin(CCUtil.getEMUserName(username$),password$,err=*next)
+		methodret x!<>null()
+	methodend 
+	
+	method protected void setLastUsedDate()
+	    sqlprep (#SqlChan) "update ARC_CC_USERS set LAST_USED_DATE=? WHERE CC_USERNAME=?"
+	    sqlexec (#SqlChan) CCUtil.today(), #UserName$
+	methodend 
+		
+	method public BBjString getAssociatedCustomerID()
+		if #LoggedIn then 
+			REM .. get the customer id 
+			sqlprep (#SqlChan) "select customer_id from arc_cc_users where cc_username=?"
+			sqlexec (#SqlChan) #UserName$
+			
+			dim rec$:sqltmpl(#SqlChan) 
+			rec$=sqlfetch(#SqlChan)
+			
+			methodret rec.customer_id$
+		else 
+			methodret ""
+		endif 
+	methodend 
+	
+	method public BBjString getAssociatedFirmID()
+		if #LoggedIn then 
+			REM .. get the firm id 
+			sqlprep (#SqlChan) "select firm_id from arc_cc_users where cc_username=?"
+			sqlexec (#SqlChan) #UserName$
+			
+			dim rec$:sqltmpl(#SqlChan) 
+			rec$=sqlfetch(#SqlChan)
+			
+			methodret rec.firm_id$
+		else 
+			methodret ""
+		endif 
+	methodend 
+
+classend 

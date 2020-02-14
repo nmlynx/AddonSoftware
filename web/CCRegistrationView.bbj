@@ -1,0 +1,174 @@
+use ::../apps/aon/web/CCView.bbj::CCView
+use ::../apps/aon/web/CCRegistrationModel.bbj::CCCustomerFirmInfo
+
+class public CCRegistrationView extends CCView
+
+	field protected BBjStaticText DesiredUserNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,104,190,26,"User Name",$8000$)
+	field protected BBjStaticText UserNameValidST!=#getWin().addStaticText(#getWin().getAvailableControlID(),593,100,34,34,"",$8000$)
+	field protected BBjStaticText FirstNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,146,190,26,"First Name",$8000$)
+	field protected BBjStaticText LastNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,191,190,26,"Last Name",$8000$)
+	field protected BBjStaticText UserEmailST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,238,190,26,"User Email",$8000$)
+	field protected BBjStaticText CustomerIDST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,283,190,26,"Customer ID",$8000$)
+	field protected BBjStaticText CustomerAccountST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,328,190,26,"Customer Account",$8000$)
+
+	field protected BBjEditBox DesiredUserNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,100,366,34,"")
+	field protected BBjEditBox FirstNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,145,400,34,"")
+	field protected BBjEditBox LastNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,190,400,34,"")
+	field protected BBjEditBox UserEmailEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,235,400,34,"") 
+	field protected BBjEditBox CustomerIDEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,280,400,34,"")
+	field protected BBjListButton FirmSelectionLB!=#getWin().addListButton(#getWin().getAvailableControlID(),225,325,400,510,"")
+
+	field protected BBjButton RegisterBtn!=#getWin().addButton(#getWin().getAvailableControlID(),206,370,110,50,"Register")
+	field protected BBjButton CancelBtn!=#getWin().addButton(#getWin().getAvailableControlID(),324,370,110,50,"Cancel")
+
+
+	method public CCRegistrationView()
+	
+		#super!()
+		
+		REM Adjust the height of our window
+		#getWin().setSize(#getWin().getWidth(),450)
+		 
+		#DesiredUserNameST!.setFont(#getFont())
+		#FirstNameST!.setFont(#getFont())
+		#LastNameST!.setFont(#getFont())
+		#UserEmailST!.setFont(#getFont())
+		#CustomerIDST!.setFont(#getFont())
+		#CustomerAccountST!.setFont(#getFont())
+
+		#DesiredUserNameST!.addStyle("cc-statictext")
+		#FirstNameST!.addStyle("cc-statictext")
+		#LastNameST!.addStyle("cc-statictext")
+		#UserEmailST!.addStyle("cc-statictext")
+		#CustomerIDST!.addStyle("cc-statictext")
+		#CustomerAccountST!.addStyle("cc-statictext")
+
+		#DesiredUserNameEB!.setFont(#getFont())
+		#FirstNameEB!.setFont(#getFont())
+		#LastNameEB!.setFont(#getFont())
+		#UserEmailEB!.setFont(#getFont())
+		#CustomerIDEB!.setFont(#getFont())
+		#FirmSelectionLB!.setFont(#getFont())
+
+		#DesiredUserNameEB!.addStyle("cc-editbox")
+		#FirstNameEB!.addStyle("cc-editbox")
+		#LastNameEB!.addStyle("cc-editbox")
+		#UserEmailEB!.addStyle("cc-editbox")
+		#CustomerIDEB!.addStyle("cc-editbox")
+
+		#UserNameValidST!.setOpaque(0)
+		#RegisterBtn!.setFont(#getFont())
+		#RegisterBtn!.setEnabled(0)
+		#CancelBtn!.setFont(#getFont())
+
+		#RegisterBtn!.addStyle("cc-button")
+		#CancelBtn!.addStyle("cc-button")
+		
+		#FirmSelectionLB!.setFieldHeight(34)
+
+	methodend
+
+	method public void registerDesiredUserNameEB_OnFocusLostCallback(CustomObject handler!, BBjString callback!)
+	    #DesiredUserNameEB!.setCallback(BBjEditBox.ON_LOST_FOCUS,handler!,callback!)
+	methodend 
+	
+	method public void registerFirstNameEB_OnFocusLostCallback(CustomObject handler!, BBjString callback!)
+        #FirstNameEB!.setCallback(BBjEditBox.ON_LOST_FOCUS,handler!,callback!)
+    methodend 
+    
+    method public void registerLastNameEB_OnFocusLostCallback(CustomObject handler!, BBjString callback!)
+        #LastNameEB!.setCallback(BBjEditBox.ON_LOST_FOCUS,handler!,callback!)
+    methodend 
+    
+    method public void registerUserEmailEB_OnFocusLostCallback(CustomObject handler!, BBjString callback!)
+        #UserEmailEB!.setCallback(BBjEditBox.ON_LOST_FOCUS,handler!,callback!)
+    methodend 
+
+	method public void registerCustomerIDEB_OnFocusLostCallback(CustomObject handler!, BBjString callback!)
+        #CustomerIDEB!.setCallback(BBjEditBox.ON_LOST_FOCUS,handler!,callback!)
+    methodend
+
+    method public void registerFirmSelectionLB_OnFocusLostCallback(CustomObject handler!, BBjString callback!)
+        #FirmSelectionLB!.setCallback(BBjListButton.ON_LOST_FOCUS,handler!,callback!)
+    methodend
+
+    method public void registerRegisterButton_OnButtonPushCallback(CustomObject handler!, BBjString callback!)
+		#RegisterBtn!.setCallback(BBjButton.ON_BUTTON_PUSH,handler!,callback!)
+	methodend
+
+	method public void registerCancelButton_OnButtonPushCallback(CustomObject handler!, BBjString callback!)
+		#CancelBtn!.setCallback(BBjButton.ON_BUTTON_PUSH,handler!,callback!)
+	methodend
+	
+	method public BBjString getUserName()
+	    methodret #DesiredUserNameEB!.getText()
+	methodend 
+	
+	method public BBjString getFirstName()
+	    methodret #FirstNameEB!.getText() 
+	methodend 
+	
+	method public BBjString getLastName()
+	    methodret #LastNameEB!.getText()
+	methodend 
+	
+	method public BBjString getCustomerID() 
+	    methodret #CustomerIDEB!.getText()
+	methodend 
+	
+	method public BBjString getUserEmail()
+	    methodret #UserEmailEB!.getText()
+	methodend 
+	
+	
+	method public void populateFirmSelectionListButton(BBjVector firmList!)
+	    declare CCCustomerFirmInfo firmInfo!
+	    declare BBjString currentFirm!
+	    for i=0 to firmList!.size()-1
+	        firmInfo!=cast(CCCustomerFirmInfo, firmList!.get(i))
+	        currentFirm!=firmInfo!.getCustomerName().trim()+",customer of "+firmInfo!.getFirmName().trim()+","+firmInfo!.getFirmAddress1().trim()+","+firmInfo!.getFirmAddress2().trim()+","+firmInfo!.getFirmCity().trim()+" "+firmInfo!.getFirmState().trim()+" "+firmInfo!.getFirmZip().trim()   
+	        #FirmSelectionLB!.addItem(currentFirm!)
+	        #FirmSelectionLB!.selectIndex(0)
+	    next i
+	methodend 
+
+	method public void clearFirmSelectionListButton()
+	    #FirmSelectionLB!.removeAllItems()
+	methodend
+	
+	method public BBjNumber getFirmSelectionListButtonSelection()
+	    methodret #FirmSelectionLB!.getSelectedIndex()
+	methodend 
+	
+	method public void showRegistrationMessage() 
+	    #displayMessage("A registration email has been sent to your company. Your account will be ready when the email is approved.")
+	methodend 
+	
+	REM Sets the color of the indicator beside username red for valid=0 and green for valid=1
+	method public void setUserNameValid(BBjNumber valid)
+	    #UserNameValidST!.setOpaque(1)
+	    if (valid)
+	        #UserNameValidST!.setBackColor(BBjColor.GREEN)
+	    else 
+	       #UserNameValidST!.setBackColor(BBjColor.RED)
+	    endif
+	methodend 
+	
+	method public void resetUserNameValid()
+	    #UserNameValidST!.setOpaque(0)
+	methodend 
+	
+	method public void setRegistrationEnabled(BBjNumber enabled)
+	  #RegisterBtn!.setEnabled(enabled)
+	methodend 
+	
+	method public BBjNumber allFieldsHaveValues()
+	    methodret #notEmpty(#DesiredUserNameEB!) and #notEmpty(#FirmSelectionLB!) and #notEmpty(#FirstNameEB!) and #notEmpty(#LastNameEB!) and #notEmpty(#CustomerIDEB!) and #notEmpty(#UserEmailEB!)
+	methodend 
+
+	method protected BBjNumber notEmpty(BBjControl c!)
+	    methodret c!.getText().trim().length()>0
+	methodend 
+
+
+classend

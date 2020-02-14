@@ -125,13 +125,15 @@ rem --- Retrieve sysinfo data
     
 rem --- Open File(s)
     
-    num_files=1
+	num_files=2
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="ADS_AUTOLAUNCH",open_opts$[1]="OTA"
+	open_tables$[2]="DDM_SYSTEMS",open_opts$[2]="OTA"
 
     gosub open_tables
 
     ads_autolaunch=num(open_chans$[1]);dim ads_autolaunch$:open_tpls$[1]
+	ddm_systems=num(open_chans$[2]);dim ddm_systems$:open_tpls$[2]
 
 rem --- Open File(s) used in VIEWs to ensure their existence (so CREATE won't err)
 rem     ***** NOTE: New VIEWs should add their tables to these opens *****
@@ -1214,51 +1216,21 @@ rem --- As of 11/2018, no VIEWs are needed
 
 rem --- Add AddonSoftware Web Context for demo installation
 
-    use java.io.File
-    declare BBjAdmin admin!
-    declare BBjJettyServerConfiguration serverConfig!
-    declare BBjJettyContextConfiguration contextConfig!
-
 	rem --- Get current user credentials using AdminAPI
+	user_id$=stbl("+USER_ID",err=*next)
+	thisAdmin!=BBjAPI().getGroupNamespace().getValue("+bar_admin_"+cvs(user_id$,11),err=*next)
 
-    user_id$=stbl("+USER_ID",err=*next)
-    thisAdmin!=BBjAPI().getGroupNamespace().getValue("+bar_admin_"+cvs(user_id$,11),err=*next)
-
-    if thisAdmin!=null()
+	if thisAdmin!=null()
 		sysGUI!=BBjAPI().getSysGui()
-        call stbl("+DIR_SYP")+"bac_em_login.bbj",sysGUI!,null(),thisAdmin!,status$
-        if status$<>"ADMIN" goto done
-    endif
-	
-	rem --- now get BBjAdmin object to set up context
-	
-    admin! = BBJAPI().getAdmin(thisAdmin!.getUser(),thisAdmin!.getPassword())
-    serverConfig! = admin!.getJettyServerConfig()
-    bbjHome$=java.lang.System.getProperty("basis.BBjHome")
+		call stbl("+DIR_SYP")+"bac_em_login.bbj",sysGUI!,null(),thisAdmin!,status$
+		if status$<>"ADMIN" goto done
+	endif
 
-	db_name$="AddonSoftware"
-	db_path$=bbjHome$+"/apps/aon/web"
+	rem --- Get location of this Addon installation
+	readrecord(ddm_systems,key=pad("ADDON",16),knum="SYSTEM_ID",err=*next)ddm_systems$
+	aonDir$=ddm_systems.mount_dir$
 
-    rem --- Make sure we start with a clean fresh context
-    serverConfig!.removeCustomContext(db_name$)
-    contextConfig! = serverConfig!.createCustomContext(db_name$)
-
-    contextConfig!.enable()
-    contextConfig!.setDocBase((new File(db_path$)).getAbsolutePath())
-    contextConfig!.setPath("/"+cvs(db_name$,11))
-    contextConfig!.setHTTP(0); rem --- Protocol: Allow insecure HPPT connections
-    contextConfig!.setHttpPort(8888)
-    
-    rem --- BBJSP Servlets
-    contextConfig!.addBBjspServlet("AuthorizeWebhook", "/AuthorizeWebhook", (new File(db_path$+"/AuthorizeWebhook.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("AuthorizeConfirmation", "/AuthorizeConfirmation", (new File(db_path$+"/AuthorizeConfirmation.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("PayPalSilentPost", "/PayPalSilentPost", (new File(db_path$+"/PayPalSilentPost.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("PayPalSilentPostFailure", "/PayPalSilentPostFailure", (new File(db_path$+"/PayPalSilentPostFailure.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("PayPalError", "/PayPalError", (new File(db_path$+"/PayPalError.aon")).getAbsolutePath())
-    
-    rem --- Session Cookie
-    contextConfig!.setSessionCookieHttpOnly(1)
-    contextConfig!.setSessionCookieSecure(1)
+	call pgmdir$+"adc_webcontext.aon",thisAdmin!,stbl("+DBNAME_API"),aonDir$,dsk("")+dir(""),status
 
 done:
 

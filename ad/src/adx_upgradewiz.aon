@@ -209,33 +209,6 @@ rem --- Run BIM bai_install_manager.bbj program via synchronous system call beca
         print(log_dev)meter_text$    
     endif
 
-    rem --- Create new Web Context in Enterprise Manager
-    declare BBjJettyServerConfiguration serverConfig!
-    declare BBjJettyContextConfiguration contextConfig!
-
-    serverConfig! = BBjAPI().getAdmin(rdAdmin!.getUser(), rdAdmin!.getPassword()).getJettyServerConfig()
-
-    rem --- Make sure we start with a clean fresh web context
-    serverConfig!.removeCustomContext(cvs(dbName$,3))
-    contextConfig! = serverConfig!.createCustomContext(cvs(dbName$,3))
-
-    contextConfig!.enable()
-    contextConfig!.setDocBase((new File(newAonLoc$+"/aon/web")).getAbsolutePath())
-    contextConfig!.setPath("/"+cvs(dbName$,3))
-    contextConfig!.setHTTP(0); rem --- Protocol: Allow insecure HPPT connections
-    contextConfig!.setHttpPort(8888)
-
-    rem --- BBJSP Servlets
-    contextConfig!.addBBjspServlet("AuthorizeWebhook", "/AuthorizeWebhook", (new File(newAonLoc$+"/aon/web/AuthorizeWebhook.aon")).getAbsolutePath())
-	contextConfig!.addBBjspServlet("AuthorizeConfirmation", "/AuthorizeConfirmation", (new File(newAonLoc$+"/aon/web/AuthorizeConfirmation.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("PayPalSilentPost", "/PayPalSilentPost", (new File(newAonLoc$+"/aon/web/PayPalSilentPost.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("PayPalSilentPostFailure", "/PayPalSilentPostFailure", (new File(newAonLoc$+"/aon/web/PayPalSilentPostFailure.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("PayPalError", "/PayPalError", (new File(newAonLoc$+"/aon/web/PayPalError.aon")).getAbsolutePath())
-
-    rem --- Session Cookie
-    contextConfig!.setSessionCookieHttpOnly(1)
-    contextConfig!.setSessionCookieSecure(1)
-
     rem --- Launch bai_install_manager.bbj
 	bar_dir$=dir("")
 	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$

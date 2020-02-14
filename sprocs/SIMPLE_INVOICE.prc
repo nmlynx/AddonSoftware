@@ -32,18 +32,19 @@ rem --- create the in memory recordset for return
 
 dataTemplate$ = "firm_id:c(2),customer_id:C(1*),cust_name:C(30),address1:C(30),address2:C(30),"
 dataTemplate$ = dataTemplate$ + "address3:C(30),address4:C(30),address5:C(30),address6:C(30),"
-dataTemplate$ = dataTemplate$ + "remit1:C(30),remit2:C(30),remit3:C(30), remit4:C(30),"
+dataTemplate$ = dataTemplate$ + "remit1:C(30),remit2:C(30),remit3:C(30),remit4:C(30),payment_url:C(1*),"
 dataTemplate$ = dataTemplate$ + "ar_address1:C(30),ar_address2:C(30),ar_address3:C(30),ar_address4:C(30),ar_phone_no:C(1*),ar_fax_no:C(1*),terms_desc:C(1*)"
 
 rs! = BBJAPI().createMemoryRecordSet(dataTemplate$)
 
 rem --- open files
 
-files=3,begfile=1,endfile=files
+files=4,begfile=1,endfile=files
 dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
 files$[1]="arm-01",ids$[1]="ARM_CUSTMAST"
 files$[2]="ars_report",ids$[2]="ARS_REPORT"
 files$[3]="arc_termcode",ids$[3]="ARC_TERMCODE"
+files$[4]="ars_cc_custpmt",ids$[4]="ARS_CC_CUSTPMT"
 
 call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
 if status then
@@ -55,13 +56,25 @@ endif
 arm01=channels[1]
 ars_report=channels[2]
 arc_termcode=channels[3]
+ars_cc_custpmt=channels[4]
 
 rem --- Dimension string templates
 
 dim arm01$:templates$[1]
 dim ars_report$:templates$[2]
 dim arc_termcode$:templates$[3]
+dim ars_cc_custpmt$:templates$[4]
     
+rem --- get payment_url for the cash_rec_cd used for customer payments (only one record allowed at present)
+
+readrecord(ars_cc_custpmt,key=firm_id$,dom=*next)
+while 1
+	redim ars_cc_custpmt$
+	readrecord(ars_cc_custpmt,end=*break)ars_cc_custpmt$
+	if ars_cc_custpmt.firm_id$<>firm_id$ then break
+	if ars_cc_custpmt.allow_cust_cc$="Y" then break
+wend
+
 rem --- init   
 
 gosub format_return_remit_addresses
@@ -83,6 +96,7 @@ data!.setFieldValue("REMIT1", remit$(1,30))
 data!.setFieldValue("REMIT2", remit$(31,30))
 data!.setFieldValue("REMIT3", remit$(61,30))
 data!.setFieldValue("REMIT4", remit$(91,30))
+data!.setFieldValue("PAYMENT_URL", cvs(ars_cc_custpmt.payment_url$,2))
 data!.setFieldValue("AR_ADDRESS1", ar_address$(1,30))
 data!.setFieldValue("AR_ADDRESS2", ar_address$(31,30))
 data!.setFieldValue("AR_ADDRESS3", ar_address$(61,30))

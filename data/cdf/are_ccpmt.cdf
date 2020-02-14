@@ -46,6 +46,7 @@ rem --- this avoids re-running this code via the ASVA (Barista re-validates last
 		callpoint!.setDevObject("ars_cc_custsvc",ars_cc_custsvc$)
 		callpoint!.setDevObject("interface_tp",ars_cc_custsvc.interface_tp$)
 		if ars_cc_custsvc.interface_tp$="A"
+
 			rem --- Set timer for form when interface_tp$="A" (using internal API, so collecting sensitive info)
 			timer_key!=10000
 			BBjAPI().createTimer(timer_key!,60,"custom_event")
@@ -480,6 +481,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 		msg_tokens$[0]=trans_msg$+$0A$+cash_msg$
 		msg_id$="GENERIC_OK"
 		gosub disp_message
+		BBjAPI().removeTimer(10000,err=*next)
 		callpoint!.setStatus("EXIT")
 	else
 		rem --- interface_tp$="H" (hosted page), check to make sure one or more invoices selected, confirm, then process
@@ -593,7 +595,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 					rem Create the payment transaction request
 					txnRequest! = new TransactionRequestType()
 					txnRequest!.setTransactionType(TransactionTypeEnum.AUTH_CAPTURE_TRANSACTION.value())
-					txnRequest!.setAmount(new BigDecimal(apply_amt!).setScale(2, RoundingMode.CEILING))
+					txnRequest!.setAmount(new BigDecimal(apply_amt!).setScale(2,RoundingMode.HALF_EVEN))
 					txnRequest!.setOrder(order!)
 
 					setting1! = new SettingType()
@@ -1044,7 +1046,7 @@ rem --- Add open invoice grid to form
 	openInvoicesGrid!.setColumnEditable(11,1)
 
 rem --- Reset window size
-	util.resizeWindow(Form!, SysGui!)
+rem CAH	util.resizeWindow(Form!, SysGui!)
 
 rem --- set callbacks - processed in ACUS callpoint
 	openInvoicesGrid!.setCallback(openInvoicesGrid!.ON_GRID_KEY_PRESS,"custom_event")
@@ -1537,7 +1539,7 @@ rem ==========================================================================
 	return
 
 rem ==========================================================================
-reset_timer: rem --- reset timer for another 10 seconds from each AVAL, or from grid switch_value
+reset_timer: rem --- reset timer for another 60 seconds from each AVAL, or from grid switch_value
 rem ==========================================================================
 
 rem --- Set timer for form - closes after a minute of inactivity

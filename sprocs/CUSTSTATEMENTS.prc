@@ -34,19 +34,20 @@ dataTemplate$ = "firm_id:c(2),statement_date:C(10),customer_id:C(1*),cust_name:C
 dataTemplate$ = dataTemplate$ + "address3:C(30),address4:C(30),address5:C(30),address6:C(30),"
 dataTemplate$ = dataTemplate$ + "invoice_date:C(10),ar_inv_no:C(7),inv_type:C(11),invoice_amt:C(1*),trans_amt:C(1*),"
 dataTemplate$ = DataTemplate$ + "invBalance:C(1*),aging_cur:C(1*),aging_30:C(1*),aging_60:C(1*),aging_90:C(1*),aging_120:C(1*),total_bal:C(1*),"
-dataTemplate$ = dataTemplate$ + "remit1:C(30),remit2:C(30),remit3:C(30), remit4:C(30),"
+dataTemplate$ = dataTemplate$ + "remit1:C(30),remit2:C(30),remit3:C(30),remit4:C(30),payment_url:C(1*),"
 dataTemplate$ = dataTemplate$ + "ar_address1:C(30),ar_address2:C(30),ar_address3:C(30),ar_address4:C(30),ar_phone_no:C(1*),ar_fax_no:C(1*)"
 
 rs! = BBJAPI().createMemoryRecordSet(dataTemplate$)
 
 rem --- open files
 
-    files=4,begfile=1,endfile=files
+    files=5,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="arm-01",ids$[1]="ARM_CUSTMAST"
     files$[2]="art-01",ids$[2]="ART_INVHDR"
     files$[3]="art-11",ids$[3]="ART_INVDET"
     files$[4]="ars_report",ids$[4]="ARS_REPORT"
+    files$[5]="ars_cc_custpmt",ids$[5]="ARS_CC_CUSTPMT"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
     if status then
@@ -59,6 +60,7 @@ rem --- open files
     art01=channels[2]
     art11=channels[3]
     ars_report=channels[4]
+    ars_cc_custpmt=channels[5]
     
     rem --- Dimension string templates
 
@@ -66,6 +68,7 @@ rem --- open files
     dim art01$:templates$[2]
     dim art11$:templates$[3]
     dim ars_report$:templates$[4]
+    dim ars_cc_custpmt$:templates$[5]
     
 rem --- init   
 
@@ -73,6 +76,16 @@ gosub format_return_remit_addresses
 gosub format_address_block
 
 dim aging[5]
+
+rem --- get payment_url for the cash_rec_cd used for customer payments (only one record allowed at present)
+
+	readrecord(ars_cc_custpmt,key=firm_id$,dom=*next)
+	while 1
+		redim ars_cc_custpmt$
+		readrecord(ars_cc_custpmt,end=*break)ars_cc_custpmt$
+		if ars_cc_custpmt.firm_id$<>firm_id$ then break
+		if ars_cc_custpmt.allow_cust_cc$="Y" then break
+	wend
 
 rem --- positional read
 
@@ -142,6 +155,7 @@ rem	data!.setFieldValue("CUST_NAME",arm01.customer_name$)
     data!.setFieldValue("REMIT2", remit$(31,30))
     data!.setFieldValue("REMIT3", remit$(61,30))
     data!.setFieldValue("REMIT4", remit$(91,30))
+	data!.setFieldValue("PAYMENT_URL", cvs(ars_cc_custpmt.payment_url$,2))
     data!.setFieldValue("AR_ADDRESS1", ar_address$(1,30))
     data!.setFieldValue("AR_ADDRESS2", ar_address$(31,30))
     data!.setFieldValue("AR_ADDRESS3", ar_address$(61,30))

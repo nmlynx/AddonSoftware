@@ -1,0 +1,82 @@
+use ::../apps/aon/web/CCView.bbj::CCView
+
+class public CCRegistrationConfirmationView extends CCView
+
+	field protected BBjStaticText DesiredUserNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,104,190,26,"User Name",$8000$)
+	field protected BBjStaticText FirstNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,146,190,26,"First Name",$8000$)
+	field protected BBjStaticText LastNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,191,190,26,"Last Name",$8000$)
+	field protected BBjStaticText UserEmailST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,238,190,26,"User Email",$8000$)
+	field protected BBjStaticText CustomerIDST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,285,190,26,"Customer ID",$8000$)
+	
+
+	field public BBjEditBox DesiredUserNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,100,400,34,"",$0200$)
+	field public BBjEditBox FirstNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,145,400,34,"",$0200$)
+	field public BBjEditBox LastNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,190,400,34,"",$0200$)
+	field public BBjEditBox UserEmailEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,235,400,34,"",$0200$)
+	field public BBjEditBox CustomerIDEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,280,400,34,"",$0200$)
+	
+	field public BBjButton RegisterBtn!=#getWin().addButton(#getWin().getAvailableControlID(),206,370,110,50,"Yes")
+	field public BBjButton CancelBtn!=#getWin().addButton(#getWin().getAvailableControlID(),324,370,110,50,"No")
+
+
+	method public CCRegistrationConfirmationView()
+		#super!()
+
+		#DesiredUserNameST!.setFont(#getFont())
+		#FirstNameST!.setFont(#getFont())
+		#LastNameST!.setFont(#getFont())
+		#UserEmailST!.setFont(#getFont())
+		#CustomerIDST!.setFont(#getFont())
+
+		#DesiredUserNameST!.addStyle("cc-statictext")
+		#FirstNameST!.addStyle("cc-statictext")
+		#LastNameST!.addStyle("cc-statictext")
+		#UserEmailST!.addStyle("cc-statictext")
+		#CustomerIDST!.addStyle("cc-statictext")
+
+		#DesiredUserNameEB!.setFont(#getFont())
+		#FirstNameEB!.setFont(#getFont())
+		#LastNameEB!.setFont(#getFont())
+		#UserEmailEB!.setFont(#getFont())
+		#CustomerIDEB!.setFont(#getFont())
+
+		#DesiredUserNameEB!.addStyle("cc-editbox")
+		#FirstNameEB!.addStyle("cc-editbox")
+		#LastNameEB!.addStyle("cc-editbox")
+		#UserEmailEB!.addStyle("cc-editbox")
+		#CustomerIDEB!.addStyle("cc-editbox")
+
+		#RegisterBtn!.setFont(#getFont())
+		#CancelBtn!.setFont(#getFont())
+
+		#RegisterBtn!.addStyle("cc-button")
+		#CancelBtn!.addStyle("cc-button")
+
+	methodend
+
+	method public void registerYesButton_OnButtonPushCallback(CustomObject handler!, BBjString callback!)
+		#RegisterBtn!.setCallback(BBjButton.ON_BUTTON_PUSH,handler!,callback!)
+	methodend
+
+	method public void registerNoButton_OnButtonPushCallback(CustomObject handler!, BBjString callback!)
+		#CancelBtn!.setCallback(BBjButton.ON_BUTTON_PUSH,handler!,callback!)
+	methodend
+	
+	method public void showAcceptanceMessage()
+	    msg_id$="GENERIC_OK"
+	    dim msg_tokens$[1]
+	    msg_tokens$[1]="User registered and account created.  Welcome to credit card payments!"
+	    msg_opt$=$$
+	    dim table_chans$[10]
+	    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all]
+	methodend 
+	
+	method public void showRejectionMessage()
+	    msg_id$="GENERIC_OK"
+        dim msg_tokens$[1]
+        msg_tokens$[1]="Registration cancelled. If this was not intentional, please have user re-register."
+        msg_opt$=$$
+        dim table_chans$[10]
+        call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all]
+    methodend 
+classend

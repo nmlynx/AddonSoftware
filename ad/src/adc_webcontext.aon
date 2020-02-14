@@ -1,0 +1,116 @@
+rem ==========================================================================
+rem --- adc_webcontext.aon 
+rem --- Create Web Context for an installation, and add Addon's standard Servlets.
+rem --- 
+rem --- AddonSoftware Version 20.0
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem ==========================================================================
+
+
+rem --- theAdmin!  : BBjAdmin object to set up context (Input)
+rem --- dbName$    : Installation's database name (Input)
+rem --- aonLoc$    : Full path to installation's location, NOT including the aon directory (Input)
+rem --- barDir$    : Full path to installation's barista directory (Input)
+rem --- status     : Status code/0=No error (Returned)
+
+    use java.io.File
+
+    declare BBjJettyServerConfiguration serverConfig!
+    declare BBjJettyContextConfiguration contextConfig!
+
+    seterr std_error
+    setesc std_error
+    enter theAdmin!,dbName$,aonLoc$,barDir$,status
+
+rem --- Initializations
+    status=0
+
+rem --- Create new Web Context in Enterprise Manager
+    serverConfig! = BBjAPI().getAdmin(theAdmin!.getUser(), theAdmin!.getPassword()).getJettyServerConfig()
+
+    rem --- Make sure we start with a clean fresh web context
+    serverConfig!.removeCustomContext(cvs(dbName$,3))
+    contextConfig! = serverConfig!.createCustomContext(cvs(dbName$,3))
+
+    contextConfig!.enable()
+    contextConfig!.setDocBase((new File(aonLoc$+"/aon/web")).getAbsolutePath())
+    contextConfig!.setPath("/"+cvs(dbName$,3))
+    contextConfig!.setConfig(barDir$+stbl("+FILE_CFG"))
+    if db_name$="AddonSoftware" then
+        sscpName$="addon"
+    else
+        sscpName$=cvs(dbName$,11)
+    endif
+    contextConfig!.setClasspath(sscpName$)
+    contextConfig!.setHTTP(0); rem --- Protocol: Allow insecure HPPT connections
+    contextConfig!.setHttpPort(8888)
+
+rem --- Add Session Cookie
+    contextConfig!.setSessionCookieHttpOnly(1)
+    contextConfig!.setSessionCookieSecure(1)
+
+rem --- Add BBJSP Servlets
+    servlets!=BBjAPI().makeVector()
+    servlets!.addItem("AuthorizeWebhook")
+    servlets!.addItem("AuthorizeConfirmation")
+    servlets!.addItem("PayPalSilentPost")
+    servlets!.addItem("PayPalSilentPostFailure")
+    servlets!.addItem("PayPalError")
+    
+    for i=0 to servlets!.size()-1
+        servletName$=servlets!.getItem(i)
+        contextConfig!.addBBjspServlet(servletName$, "/"+servletName$, (new File(aonLoc$+"/aon/web/"+servletName$+".aon")).getAbsolutePath())
+        servletContext!=contextConfig!.getBBjspServlet("/"+servletName$)
+        servletContext!.setConfig(barDir$+stbl("+FILE_CFG"))
+        servletContext!.setClassPath(sscpName$)
+        servletContext!.setWorkingDir(barDir$)
+    next i
+    
+done: rem --- All done
+    
+    goto std_exit
+   
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (11Oct2017)
+
+    if tcb(19)>0
+        rem --- Escape handler
+        if and(chr(tcb(19)),$08$)=$08$
+            release
+        else
+            setesc std_error
+            return
+        endif
+    endif
+
+    if err=0   
+        rem --- Get tcb(12) and tcb(10) to send into bac_error
+        lock_byte=tcb(10)
+        lock_chan=tcb(12)  
+    endif
+
+    rd_err_text$="",err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$,lock_byte,lock_chan
+    if pos("ESCAPE"=rd_err_act$) seterr 0; setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+    if pgm(-1)<>pgm(-2) status=999; exit 
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_exit.src
+
+std_exit: rem --- Standard called program exit (01Mar2006)
+
+    exit
+
+rem #endinclude std_exit.src
+
+    end

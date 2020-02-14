@@ -33,11 +33,11 @@ rem --- set URL based on gateway
 
 rem --- Add window for BBjHtmlView control
     thisGui!=BBjAPI().openSysGui(stbl("+GUI_DEVICE"))
-    
+  
     margin=25
     if BBjAPI().isInMDI() then
-        width=BBjAPI().getMDI().getClientWidth()-7*margin
-        height=BBjAPI().getMDI().getClientHeight()-7*margin
+        width=BBjAPI().getMDI().getClientWidth()-2*margin
+        height=BBjAPI().getMDI().getClientHeight()-2*margin
     else
         screenSize!=thisGui!.getSystemMetrics().getScreenSize()
         width=screenSize!.width-100
@@ -66,7 +66,7 @@ on_close: rem --- Close window
     goto std_exit
     
 on_resize: rem --- Resize window
-    htmlView!.setSize(htmlWin!.getWidth()-50,htmlWin!.getHeight()-100)
+    htmlView!.setSize(htmlWin!.getWidth()-2,htmlWin!.getHeight()-2)
     return
 
 on_auth_conf_close:

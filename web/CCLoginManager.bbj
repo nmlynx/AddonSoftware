@@ -1,0 +1,222 @@
+use ::../apps/aon/web/CCLoginView.bbj::CCLoginView
+use ::../apps/aon/web/CCLoginModel.bbj::CCLoginModel
+use ::../apps/aon/web/CCAccountSettingsView.bbj::CCAccountSettingsView
+use ::../apps/aon/web/CCRegistrationView.bbj::CCRegistrationView
+use ::../apps/aon/web/CCRegistrationModel.bbj::CCRegistrationModel
+use ::../apps/aon/web/CCRegistrationModel.bbj::CCRegistrationRecord
+use ::../apps/aon/web/CCRegistrationModel.bbj::CCCustomerFirmInfo
+use ::../apps/aon/web/aro_CCUtil.bbj::CCUtil
+
+class public CCLoginManager
+
+	field protected CCLoginView LoginView!=new CCLoginView()
+	field protected CCLoginModel LoginModel!=new CCLoginModel()
+	field protected CCRegistrationView RegistrationView!=new CCRegistrationView() 
+	field protected CCRegistrationModel RegistrationModel!=new CCRegistrationModel() 
+
+	method public CCLoginManager()
+	    CCUtil.initializeBaristaEnvironment()
+	    
+	    REM Set up user interface 
+        #LoginView!.registerRegisterButton_OnButtonPushCallback(#this!,"handleRegistration")
+        #LoginView!.registerLoginButton_OnButtonPushCallback(#this!,"handleLogin")
+        #LoginView!.registerCancelButton_OnButtonPushCallback(#this!,"handleCancel")
+        
+        #RegistrationView!.registerRegisterButton_OnButtonPushCallback(#this!,"sendRegistrationRequest")
+        #RegistrationView!.registerCancelButton_OnButtonPushCallback(#this!,"cancelRegistrationRequest")
+        #RegistrationView!.registerCustomerIDEB_OnFocusLostCallback(#this!, "handleCustomerModification")
+        #RegistrationView!.registerDesiredUserNameEB_OnFocusLostCallback(#this!,"handleUserNameModification")
+        #RegistrationView!.registerFirstNameEB_OnFocusLostCallback(#this!,"handleLostFocus")
+        #RegistrationView!.registerLastNameEB_OnFocusLostCallback(#this!,"handleLostFocus")
+        #RegistrationView!.registerUserEmailEB_OnFocusLostCallback(#this!,"handleLostFocus")
+        #RegistrationView!.registerFirmSelectionLB_OnFocusLostCallback(#this!,"handleLostFocus")
+	methodend
+
+	method public void doModal()
+		#LoginView!.show()
+		process_events
+	methodend
+
+	method public void handleRegistration(BBjButtonPushEvent event!)
+			#LoginView!.hide()
+			#RegistrationView!.show()
+	methodend
+
+	method public void handleLogin(BBjButtonPushEvent event!)
+		declare BBjString username!
+		declare BBjString password!
+
+		username!=#LoginView!.getUserName()
+		password!=#LoginView!.getPassword()
+
+		if (#LoginModel!.login(username!,password!)) then
+			#LoginView!.hide()
+
+			REM TODO:  Resolve where User account settings should be
+			REM Prepare the account settings view
+			REM #AccountSettingsView!=new CCAccountSettingsView()
+			REM #AccountSettingsView!.show()
+			REM We'll need to put user settings in the future.  I want this to conform to good web design rather 
+			REM than putting in "Additional Options" in the Addon dialog since your typical paying customer is not 
+			REM an Addon user. 
+
+			customerID$=#LoginModel!.getAssociatedCustomerID()
+			firmID$=#LoginModel!.getAssociatedFirmID()
+
+
+			if (customerID$<>"" and firmID$<>"") then
+				declare BBjCommandLineObject cmd!
+				cmd!=BBjAPI().getConfig().getCurrentCommandLineObject()
+
+				cmd!.setProgramName("sys/prog/bax_launch_task.bbj")
+				arguments$=""
+				arguments$=arguments$+"-tARE_CCPMT_CSTHST "
+				arguments$=arguments$+"-oARE_CCPMT_CSTHST "
+				arguments$=arguments$+"-mMNT "
+				arguments$=arguments$+"-f"+firmID$+" "
+				arguments$=arguments$+"-k"+customerID$+" "
+				arguments$=arguments$+"-u[APP1] -p[APP2] "
+				arguments$=arguments$+"&"
+				cmd!.setProgramArgs(arguments$)
+				x=scall("bbj "+cmd!.toString())
+				release
+			endif
+		else
+			#LoginView!.show()
+			#RegistrationView!.displayMessage("Login Failed. Please Try Again.")
+		endif
+
+	methodend
+	
+	method public void handleCustomerModification(BBjLostFocusEvent event!)
+	    declare BBjVector customerList!
+	    declare BBjString customerID!
+	    declare BBjNumber customerFound
+	    
+	    REM Get the list of corresponding customers
+	    customerID!=event!.getEditBox().getText()
+	    customerID!=customerID!.trim()
+	    if (customerID!.length()>0) then 
+	        customerList!=#RegistrationModel!.getCorrespondingCustomerList(customerID!)
+	    else 
+	        #RegistrationView!.clearFirmSelectionListButton()
+	        methodret 
+	    endif 
+	    	    
+	    REM Populate the listbutton with the corresponding customers 
+	    customerFound=(customerList!<>null() and customerList!.size()>0)
+	    if  customerFound then 
+	        #RegistrationView!.populateFirmSelectionListButton(customerList!)
+	    else 
+	       #RegistrationView!.clearFirmSelectionListButton()
+	    endif 
+	    
+	    REM Enable the registration button if all our fields are populated.
+	    #handleLostFocus(event!)
+	    
+	    REM Display this error message as the last thing, since it's awkward to display it when the state of all the GUI controls has not been set. 
+	    if !customerFound then 
+	        #RegistrationView!.displayMessage("It looks like this customer is not signed up for online payments. Please contact us to set up online payments.")
+	    endif 
+	    
+	methodend 
+	
+	method public void handleUserNameModification(BBjLostFocusEvent event!)
+	    declare BBjString name!
+	    
+	    name!=event!.getEditBox().getText()
+	    valid = #userIsValid(name!)
+	    #RegistrationView!.setUserNameValid(valid)
+	    #handleLostFocus(event!)
+	methodend 
+	
+	method protected BBjNumber userIsValid(BBjString name!)
+	    valid = len(name!)>4 and
+:           (! #RegistrationModel!.userNameExistsInUsers(name!)) and 
+:           (! #RegistrationModel!.userNameExistsInRegistration(name!))
+	    methodret valid 
+	methodend 
+	
+	method public void handleLostFocus(BBjLostFocusEvent event!)
+	    enable=#RegistrationView!.allFieldsHaveValues() and #userIsValid(#RegistrationView!.getUserName())
+	    #RegistrationView!.setRegistrationEnabled(enable)
+	methodend 
+
+	method public void handleCancel(BBjButtonPushEvent event!)
+        release
+    methodend
+
+	REM Get the registration information from the view and have the model send it to the servlet
+    method public void sendRegistrationRequest(BBjButtonPushEvent event!)
+      declare CCRegistrationRecord rec!
+      declare CCRegistrationEmailConfiguration emailConfiguration!
+      declare BBjVector firmSelectionList!
+      declare CCCustomerFirmInfo firmInfo!
+      
+      rec!=new CCRegistrationRecord()
+      rec!.setUserName(#RegistrationView!.getUserName())
+      rec!.setFirstName(#RegistrationView!.getFirstName())
+      rec!.setLastName(#RegistrationView!.getLastName())
+      rec!.setUserEmail(#RegistrationView!.getUserEmail())
+      rec!.setCustomerID(#RegistrationView!.getCustomerID())
+      rec!.setGeneratedToken(#RegistrationModel!.generateToken())
+      rec!.setRequestDate(CCUtil.today())
+      
+      REM Obtain the firm id from the Registration View's ListButton selection
+      ndx=#RegistrationView!.getFirmSelectionListButtonSelection()
+      firmSelectionList!=#RegistrationModel!.getCustomerFirmList()
+      firmInfo!=cast(CCCustomerFirmInfo,firmSelectionList!.get(ndx))
+      rec!.setFirmID(firmInfo!.getFirmID())
+      
+      REM Add the registration to the database and send the registration request email
+      #RegistrationModel!.addRegistration(rec!)
+      
+      REM Switch GUI back to login screen
+      #RegistrationView!.showRegistrationMessage()
+      #RegistrationView!.hide()
+      #LoginView!.show()   
+    methodend
+
+	REM Cancel registration
+    method public void cancelRegistrationRequest(BBjButtonPushEvent event!)
+      REM Switch GUI back to login screen
+      #RegistrationView!.hide()
+      #LoginView!.show()   
+    methodend
+    
+classend
+
+
+declare CCLoginManager cclm!
+cclm!=new CCLoginManager()
+cclm!.doModal()
+release
+
+open_tables:rem --- Open Tables
+
+    call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:       rd_open_beg,
+:       rd_open_end,
+:       rd_open_tables$[all],
+:       rd_open_opts$[all],
+:       rd_open_chans$[all],
+:       rd_open_tpls$[all],
+:       rd_table_chans$[all],
+:       rd_open_batch,
+:       rd_open_status$
+
+    if rd_open_status$<>""
+        rd_msg_id$="ENTRY_OPEN_ERROR"
+        dim rd_msg_tokens$[1]
+            rd_msg_tokens$[1]=rd_open_status$
+        gosub disp_message
+        release
+    endif
+
+    return
+
+disp_message:rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",rd_msg_id$,rd_msg_tokens$[all],rd_msg_opt$,rd_table_chans$[all]
+
+    return

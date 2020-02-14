@@ -1,0 +1,151 @@
+use java.util.UUID
+
+use ::sys/prog/bao_docqueue.bbj::DocumentQueue
+use ::sys/prog/bao_security.bbj::Security
+use ::../apps/aon/ad/src/ado_rptControl.src::ReportControl
+
+class public CCRegistrationModel
+
+  REM Get this into configuration
+  rem field public BBjString SERVERNAME!=System.getProperty("com.basis.jetty.host")
+  rem field public BBjNumber SERVERPORT=8443
+  field public BBjString ParameterTable$="ARS_CC_CUSTPMT"
+  field public BBjString ReportControlID$=pad(#ParameterTable$,16)
+  
+
+  field protected BBjNumber SqlChan
+  field protected BBjString EmailAccountName$="GMAIL"
+  field protected BBjVector CustomerFirmList!
+ 
+ 
+  method public CCRegistrationModel()
+    #SqlChan=sqlunt
+    sqlopen (#SqlChan) stbl("+DBNAME")
+  methodend
+
+
+  method public BBjNumber userNameExistsInUsers(BBjString username$)
+    declare BBjNumber existsInUsers
+    declare BBjNumber existsInRegistrants 
+    
+    sqlprep (#SqlChan) "select count(*) as count from arc_cc_users where cc_username = ?"
+    sqlexec (#SqlChan) username$
+    dim result$:sqltmpl(#SqlChan)
+    result$=sqlfetch(#SqlChan)
+
+    methodret (result.count<>0)
+  methodend 
+    
+  method public BBjNumber userNameExistsInRegistration(BBjString username$)
+    sqlprep (#SqlChan) "select count(*) as count from arc_cc_register where cc_username = ?"
+    sqlexec (#SqlChan) username$
+    dim result$:sqltmpl(#SqlChan)
+    result$=sqlfetch(#SqlChan)
+    
+    methodret (result.count<>0)
+  methodend
+  
+  REM Return value is a list of customers to populate the list button with
+  method public BBjVector getCorrespondingCustomerList(BBjString customerID$)
+    declare CCCustomerFirmInfo customerInfo!
+    #CustomerFirmList!=BBjAPI().makeVector() 
+  
+    sqlprep (#SqlChan) "SELECT ARM_CUSTMAST.FIRM_ID,ARM_CUSTMAST.CUSTOMER_NAME, ARS_REPORT.NAME,ARS_REPORT.ADDR_LINE_1,ARS_REPORT.ADDR_LINE_2,ARS_REPORT.CITY,ARS_REPORT.STATE_CODE,ARS_REPORT.ZIP_CODE FROM ARM_CUSTMAST, ARS_REPORT WHERE ARM_CUSTMAST.PAY_ONLINE='Y' AND ARM_CUSTMAST.PAY_AUTH_EMAIL<>'' AND ARM_CUSTMAST.FIRM_ID=ARS_REPORT.FIRM_ID AND ARM_CUSTMAST.CUSTOMER_ID=? ORDER BY ARM_CUSTMAST.FIRM_ID"
+    sqlexec (#SqlChan) customerID$
+    dim result$:sqltmpl(#SqlChan)
+    
+    done=0
+    while !done
+        result$=sqlfetch(#SqlChan,end=done)
+        customerInfo!=new CCCustomerFirmInfo() 
+        customerInfo!.setFirmID(result.firm_id$)
+        customerInfo!.setCustomerName(result.customer_name$)
+        customerInfo!.setFirmName(result.name$)
+        customerInfo!.setFirmAddress1(result.addr_line_1$)
+        customerInfo!.setFirmAddress2(result.addr_line_2$)
+        customerInfo!.setFirmCity(result.city$)
+        customerInfo!.setFirmState(result.state_code$)
+        customerInfo!.setFirmZip(result.zip_code$)
+        #CustomerFirmList!.add(customerInfo!)
+    wend
+    done: 
+    
+    methodret #CustomerFirmList!
+    
+  methodend 
+  
+  method public BBjVector getCustomerFirmList() 
+    methodret #CustomerFirmList!
+  methodend 
+  
+  method public void addRegistration(CCRegistrationRecord rec!)
+    sqlprep (#SqlChan) "insert into arc_cc_register (firm_id,cc_username, name_first, name_last, user_email, customer_id, cc_token,request_date) values (?, ?, ?, ?, ?, ?, ?,?)"
+    sqlexec (#SqlChan) rec!.getFirmID(),rec!.getUserName(), rec!.getFirstName(),rec!.getLastName(),rec!.getUserEmail(), rec!.getCustomerID(),rec!.getGeneratedToken(),rec!.getRequestDate()
+    #emailRegistration(rec!)
+  methodend 
+  
+  method public BBjString generateToken() 
+    methodret UUID.randomUUID().toString()
+  methodend 
+  
+  method public void emailRegistration(CCRegistrationRecord registration!)
+	declare ReportControl reportControl!
+	declare BBjNumber found 
+	declare BBjTemplatedString recipientInfo!
+	declare BBjString emailMessage!
+	declare BBjString url!
+	
+	reportControl!=new ReportControl()
+	reportControl!.setFirmID(registration!.getFirmID())
+	reportControl!.getReportControl(#ParameterTable$)
+	found=reportControl!.getRecipientInfo(#ReportControlID$,registration!.getCustomerID(),"")
+	if (found) 
+		recipientInfo!=reportControl!.getAdmRptctlRcp() 
+		emailMessage!=recipientInfo!.getFieldAsString("EMAIL_MESSAGE")
+		
+		REM Get the URL for registration from our parameter table
+		sqlprep(#SqlChan) "select REGISTER_URL from ?"
+		sqlexec(#SqlChan) #ParameterTable$
+		dim result$:sqltmpl(#SqlChan)
+		result$=sqlfetch(#SqlChan)
+		url!=result.REGISTER_URL$
+		
+		REM Append the URL and the specific generated token to the mail message then put the modified message back in our recipient info. 
+		emailMessage!=emailMessage!.trim()+$0A$+url!.trim()+"?token="+registration!.getGeneratedToken()
+		recipientInfo!.setFieldValue("EMAIL_MESSAGE",emailMessage!)
+		reportControl!.setAdmRptctlRcp(recipientInfo!)
+		
+		REM Put our email on the document queue to be sent out. The document queue was designed with the assumption that any email sent out
+		REM will have some sort of attached document to it. This is not the case for this document. Provide "PDF" for the extension and the 
+		REM "NOATTACH" for the document ID, to appease the document queue that no attachment is really okay. 
+		reportControl!.setDocExtension("PDF")
+		reportControl!.addToDocQueue(#ParameterTable$,registration!.getCustomerID(),"","NOATTACH")
+	else 
+	    REM TODO: Handle customer not being found in the recipient records. This means that the customer is not fully set up for payments. 
+	endif 
+	
+  methodend 
+  
+classend
+
+class public CCRegistrationRecord 
+    field public BBjString UserName!
+    field public BBjString FirstName!
+    field public BBjString LastName!
+    field public BBjString CustomerID!
+    field public BBjString UserEmail!
+    field public BBjString FirmID!
+    field public BBjString GeneratedToken!
+    field public BBjString RequestDate!
+classend 
+
+class public CCCustomerFirmInfo
+    field public BBjString FirmID$
+    field public BBjString CustomerName$
+    field public BBjString FirmName$
+    field public BBjString FirmAddress1$
+    field public BBjString FirmAddress2$
+    field public BBjString FirmCity$
+    field public BBjString FirmState$
+    field public BBjString FirmZip$
+classend

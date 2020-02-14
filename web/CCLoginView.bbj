@@ -1,0 +1,84 @@
+use ::../apps/aon/web/CCView.bbj::CCView
+
+REM /**
+REM  * CCLoginView.bbj
+REM  * @author shaun
+REM  *
+REM  */
+class public CCLoginView extends CCView
+    field protected BBjStaticText userNameST!
+    field protected BBjEditBox userNameEB!
+    field protected BBjStaticText passwordST!
+    field protected BBjEditBox passwordEB!
+    field protected BBjButton loginBtn!
+    field protected BBjButton registerBtn!
+    field protected BBjButton cancelBtn!
+    field protected BBjStaticText header1!
+    field protected BBjStaticText header2!
+	field protected BBjFont headerFont1!=#getSysGui().makeFont("Comic Sans MS",24,3)
+	field protected BBjFont headerFont2!=#getSysGui().makeFont("Segoe UI",32,1)
+
+    method public CCLoginView()
+	    #super!()
+		#getWin().setTitle("Customer Login")
+
+
+		#header1!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,25,640,50,"ACME Manufacturing Company")
+		#header2!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,85,640,50,"Customer Portal")
+        #userNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),5,170,150,24,"Username",$8000$)
+        #userNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),160,165,350,34,"")
+        #passwordST!=#getWin().addStaticText(#getWin().getAvailableControlID(),5,220,150,24,"Password",$8000$)
+        #passwordEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),160,215,350,34,"",$0400$)
+        #loginBtn!=#getWin().addButton(#getWin().getAvailableControlID(),160,265,110,50,"Login")
+        #registerBtn!=#getWin().addButton(#getWin().getAvailableControlID(),275,265,110,50,"Register")
+        #cancelBtn!=#getWin().addButton(#getWin().getAvailableControlID(),390,265,110,50,"Cancel")
+
+		#header1!.setName("cclogin-header1-statictext")
+		#header2!.setName("cclogin-header2-statictext")
+		#userNameST!.setName("cclogin-username-statictext")
+		#passwordST!.setName("cclogin-password-statictext")
+		#loginBtn!.setName("cclogin-login-button")
+		#registerBtn!.setName("cclogin-register-button")
+		#cancelBtn!.setName("cclogin-cancel-button")
+
+		REM Set the font for all the controls
+		#header1!.setFont(#headerFont1!)
+		#header1!.setAlignment(BBjStaticText.ALIGN_CENTER)
+		#header2!.setFont(#headerFont2!)
+		#header2!.setAlignment(BBjStaticText.ALIGN_CENTER)
+		#userNameST!.setFont(#getFont())
+		#userNameEB!.setFont(#getFont())
+        #passwordST!.setFont(#getFont())
+        #passwordEB!.setFont(#getFont())
+        #loginBtn!.setFont(#getFont())
+        #registerBtn!.setFont(#getFont())
+        #cancelBtn!.setFont(#getFont())
+
+  methodend
+
+	method public BBjString getUserName()
+		methodret #userNameEB!.getText()
+	methodend
+
+	method public BBjString getPassword()
+		methodret #passwordEB!.getText()
+	methodend
+
+  method public void registerRegisterButton_OnButtonPushCallback(CustomObject handler!, BBjString callback!)
+		#registerBtn!.setCallback(BBjButton.ON_BUTTON_PUSH,handler!,callback!)
+	methodend
+
+	method public void registerLoginButton_OnButtonPushCallback(CustomObject handler!, BBjString callback!)
+		#loginBtn!.setCallback(BBjButton.ON_BUTTON_PUSH,handler!,callback!)
+	methodend
+
+	method public void registerCancelButton_OnButtonPushCallback(CustomObject handler!, BBjString callback!)
+		#cancelBtn!.setCallback(BBjButton.ON_BUTTON_PUSH,handler!,callback!)
+	methodend
+
+classend
+
+declare CCLoginView dialog!
+dialog!=new CCLoginView()
+
+process_events

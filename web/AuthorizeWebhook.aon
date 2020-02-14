@@ -1,11 +1,32 @@
 CLASS PUBLIC AuthorizeWebhook
 
+	use java.io.File
+
     use org.json.JSONObject
+	
+	use net.authorize.Environment
+	use net.authorize.api.contract.v1.MerchantAuthenticationType
+	use net.authorize.api.contract.v1.TransactionRequestType
+	use net.authorize.api.contract.v1.SettingType
+	use net.authorize.api.contract.v1.ArrayOfSetting
+	use net.authorize.api.contract.v1.MessageTypeEnum
+	use net.authorize.api.contract.v1.TransactionTypeEnum
+	use net.authorize.api.contract.v1.GetHostedPaymentPageRequest
+	use net.authorize.api.contract.v1.GetHostedPaymentPageResponse
+	use net.authorize.api.contract.v1.GetTransactionDetailsRequest
+	use net.authorize.api.contract.v1.OrderType
+	use net.authorize.api.controller.base.ApiOperationBase
+	use net.authorize.api.controller.GetHostedPaymentPageController
+	use net.authorize.api.controller.GetTransactionDetailsController
+
+	use ::ado_util.src::util	
+	use ::ado_file.src::FileObject
 
     field private BBjspWebRequest request!
     field private BBjspWebResponse response!
     field private BBjspWebSession session!
     field private BBjspSessionData data!
+    field private BBjInt logDev% = 0
   
     method public void service(BBjspServletContext context!)
 	       
@@ -13,10 +34,263 @@ CLASS PUBLIC AuthorizeWebhook
         #response! = context!.getResponse()
 
 		content!=#request!.getBody()
-		webhook_info!=new JSONObject(content!)
-		trans_id$=webhook_info!.get("payload").get("id")
+		webhookInfo!=new JSONObject(content!)
+		trans_id$=webhookInfo!.get("payload").get("id")
+
+		rem --- These two lines put the trans_id$ in the namespace that is used by the internal (AR staff) payment form (from Customer master).
+		rem --- If an internal payment form is up, the ACUS will get the namespace event and query the trans_id$ to see if the returned secure token
+		rem --- corresponds to a payment from that form/session. If not, it's ignored.
+		rem --- This lets us process both internal (AR staff) and external (customer payment) payments in this same servlet. 
+		rem --- If this webhook *does* correspond to an internal payment, it should fall through and exit this servlet either because:
+		rem ---    AUTHORIZEgw_config namespace variable isn't there (no customer payments made since BBj last started) or
+		rem ---    AUTHORIZE+resp_id$ namespace variable isn't there (this webhook isn't associated with a customer payment)
+		rem --- So the remainder of the code - posting the cash receipt and transaction response here in the servlet - only happens with external/customer payment.
+
 		ns!=BBjAPI().getNamespace("aon","credit_receipt_authorize",1)
 		ns!.setValue(trans_id$,content!)
+
+		global_ns!=BBjAPI().getGlobalNamespace()
+		gw_config!=new java.util.HashMap()
+		gw_config!=global_ns!.getValue("AUTHORIZEgw_config",err=*next)
+		if gw_config!.size()
+			ApiOperationBase.setEnvironment(net.authorize.Environment.valueOf(gw_config!.get("environment")))
+
+			merchantAuthenticationType!  = new MerchantAuthenticationType() 
+			merchantAuthenticationType!.setName(gw_config!.get("name"))
+			merchantAuthenticationType!.setTransactionKey(gw_config!.get("transactionKey"))
+			ApiOperationBase.setMerchantAuthentication(merchantAuthenticationType!)
+
+			getRequest! = new GetTransactionDetailsRequest()
+			getRequest!.setMerchantAuthentication(merchantAuthenticationType!)
+			getRequest!.setTransId(trans_id$)
+
+			controller! = new GetTransactionDetailsController(getRequest!)
+			controller!.execute()
+			authResponse! = controller!.getApiResponse()
+
+			if authResponse!.getMessages().getResultCode()=MessageTypeEnum.OK
+				resp_cust$=authResponse!.getTransaction().getOrder().getInvoiceNumber()
+				resp_sid$=authResponse!.getTransaction().getOrder().getDescription()
+				resp_code=authResponse!.getTransaction().getResponseCode()
+				payment_amt$=str(authResponse!.getTransaction().getAuthAmount())
+				trans_msg$=authResponse!.getMessages().getMessage().get(0).getCode()+$0a$+authResponse!.getMessages().getMessage().get(0).getText()
+
+				vectPymtInfo!=BBjAPI().makeVector()
+				vectPymtInfo!=global_ns!.getValue("AUTHORIZE"+resp_sid$,err=*next)
+				if vectPymtInfo!.size()
+				
+					wd$=vectPymtInfo!.get(0)
+					user_id$=vectPymtInfo!.get(1)
+					cust_id$=vectPymtInfo!.get(2)
+					cash_rec_cd$=vectPymtInfo!.get(3)
+					vectInvoices!=vectPymtInfo!.get(4)
+					grid_cols=num(vectPymtInfo!.get(5))
+					inv_pd_col=num(vectPymtInfo!.get(6))
+
+					call stbl("+DIR_SYP")+"bas_process_beg_bui.bbj",user_id$,rd_table_chans$[all]
+
+					rem --- Retrieve sysinfo data
+
+					sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+					dim sysinfo$:sysinfo_template$
+					sysinfo$=stbl("+SYSINFO",err=*next)
+					firm_id$=sysinfo.firm_id$
+
+					rem --- Open files with adc
+
+					files=6,begfile=1,endfile=files
+					dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
+					files$[1]="art_resphdr",ids$[1]="ART_RESPHDR"
+					files$[2]="art_respdet",ids$[2]="ART_RESPDET"
+					files$[3]="ars_cc_custpmt",ids$[3]="ARS_CC_CUSTPMT"
+					files$[4]="are-01",ids$[4]="ARE_CASHHDR"
+					files$[5]="are-11",ids$[5]="ARE_CASHDET"
+					files$[6]="are-31",ids$[6]="ARE_CASHBAL"
+
+					call stbl("+DIR_PGM")+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
+					if status then
+						seterr 0
+						x$=stbl("+THROWN_ERR","TRUE")   
+						throw "File open error.",1001
+					endif
+					
+					art_resphdr = channels[1]
+					art_respdet = channels[2]
+					ars_cc_custpmt = channels[3]
+					are_cashhdr = channels[4]
+					are_cashdet = channels[5]
+					are_cashbal = channels[6]
+
+					dim art_resphdr$:templates$[1]
+					dim art_respdet$:templates$[2]
+					dim ars_cc_custpmt$:templates$[3]
+					dim are_cashhdr$:templates$[4]
+					dim are_cashdet$:templates$[5]
+					dim are_cashbal$:templates$[6]
+					
+					readrecord(ars_cc_custpmt,key=firm_id$+cash_rec_cd$,dom=*next)ars_cc_custpmt$
+					gateway_id$=ars_cc_custpmt.gateway_id$
+					if resp_code
+						batch_no$=ars_cc_custpmt.last_batch_no$
+						deposit_id$=ars_cc_custpmt.last_deposit_id$
+
+						redim are_cashhdr$
+
+						are_cashhdr.firm_id$=firm_id$
+						are_cashhdr.receipt_date$=date(0:"%Yd%Mz%Dz")
+						are_cashhdr.customer_id$=cust_id$
+						are_cashhdr.cash_rec_cd$=cash_rec_cd$
+
+						receipt_found=0
+
+						extractrecord(are_cashhdr,key=
+:						are_cashhdr.firm_id$+
+:						are_cashhdr.ar_type$+
+:						are_cashhdr.reserved_key_01$+
+:						are_cashhdr.receipt_date$+
+:						are_cashhdr.customer_id$+
+:						are_cashhdr.cash_rec_cd$+
+:						are_cashhdr.ar_check_no$+
+:						are_cashhdr.reserved_key_02$,dom=*next)are_cashhdr$;receipt_found=1
+						if receipt_found
+							if cvs(are_cashhdr.batch_no$,3)<>batch_no$ or cvs(are_cashhdr.deposit_id$,3)<>deposit_id$
+								#logDev%=#getLogFile(#logDev%)
+								message!=BBjAPI().makeVector()
+								message!.addItem("A cash receipt matching this customer, date and cash receipt code has already been entered")
+								message!.addItem("using a different batch and/or deposit. You will need to MANUALLY adjust that cash receipt")
+								message!.addItem("to reflect this credit card transaction.")
+								#logMessage(#logDev%, message!)
+							endif
+						endif
+
+						are_cashhdr.payment_amt=are_cashhdr.payment_amt+num(payment_amt$)
+						are_cashhdr.batch_no$=batch_no$
+						are_cashhdr.deposit_id$=deposit_id$
+						are_cashhdr$=field(are_cashhdr$)
+						writerecord(are_cashhdr)are_cashhdr$
+						rem --- now write are_cashdet and are_cashbal recs for each invoice in vectInvoices!
+						for inv_row=0 to vectInvoices!.size()-1 step grid_cols
+							pay_flag$=vectInvoices!.get(inv_row)
+							if pay_flag$="Y"
+								ar_inv_no$=vectInvoices!.get(inv_row+1)
+								invoice_pay$=vectInvoices!.get(inv_row+inv_pd_col)
+								invoice_disc$=vectInvoices!.get(inv_row+inv_pd_col-1)
+								
+								redim are_cashdet$
+								redim are_cashbal$
+
+								are_cashdet.firm_id$=firm_id$
+								are_cashdet.receipt_date$=are_cashhdr.receipt_date$
+								are_cashdet.customer_id$=are_cashhdr.customer_id$
+								are_cashdet.cash_rec_cd$=are_cashhdr.cash_rec_cd$
+								are_cashdet.ar_inv_no$=ar_inv_no$
+
+								extractrecord(are_cashdet,key=
+:								are_cashdet.firm_id$+
+:								are_cashdet.ar_type$+
+:								are_cashdet.reserved_key_01$+
+:								are_cashdet.receipt_date$+
+:								are_cashdet.customer_id$+
+:								are_cashdet.cash_rec_cd$+
+:								are_cashdet.ar_check_no$+
+:								are_cashdet.reserved_key_02$+
+:								are_cashdet.ar_inv_no$,dom=*next)are_cashdet$;rem advisory locking
+
+								are_cashdet.apply_amt=are_cashdet.apply_amt+num(invoice_pay$)
+								are_cashdet.discount_amt=are_cashdet.discount_amt+num(invoice_disc$)
+								are_cashdet.batch_no$=are_cashhdr.batch_no$
+								are_cashdet.memo_1024$=iff(cvs(are_cashdet.memo_1024$,3)="",invoice_cmt$,are_cashdet.memo_1024$+invoice_cmt$)
+								are_cashdet.firm_id$=field(are_cashdet$)
+								writerecord(are_cashdet)are_cashdet$
+								are_cashbal.firm_id$=firm_id$
+								are_cashbal.customer_id$=are_cashhdr.customer_id$
+								are_cashbal.ar_inv_no$=ar_inv_no$
+
+								extractrecord(are_cashbal,key=
+:								are_cashbal.firm_id$+
+:								are_cashbal.ar_type$+
+:								are_cashbal.reserved_str$+
+:								are_cashbal.customer_id$+
+:								are_cashbal.ar_inv_no$,dom=*next)are_cashbal$
+
+								are_cashbal.apply_amt=are_cashbal.apply_amt+num(invoice_pay$)
+								are_cashbal$=field(are_cashbal$)
+								writerecord(are_cashbal)are_cashbal$
+							endif
+						next inv_row
+					endif
+					rem --- write to response log
+					if cvs(trans_id$,3)<>""
+						response_text$=webhookInfo!.toString()
+						trans_amount$=payment_amt$
+						trans_approved$=iff(resp_code,"A","D");rem A=approved, D=declined
+
+						rem --- get sequence number for response records
+						call stbl("+DIR_SYP")+"bas_sequences.bbj","CREDIT_TRANS_NO",credit_trans_no$,rd_table_chans$[all],"QUIET"
+
+						art_resphdr.firm_id$=firm_id$
+						art_resphdr.credit_trans_no$=credit_trans_no$
+						art_resphdr.customer_id$=cust_id$
+						art_resphdr.transaction_id$=trans_id$
+						art_resphdr.trans_type$="S";rem Sale
+						art_resphdr.gateway_id$=gateway_id$
+						art_resphdr.amount$=trans_amount$
+						art_resphdr.approve_decline$=trans_approved$
+						art_resphdr.response_text$=response_text$
+						art_resphdr.created_user$=user_id$
+						art_resphdr.created_date$=date(0:"%Yd%Mz%Dz")
+						art_resphdr.created_time$=date(0:"%Hz%mz")
+						art_resphdr.deposit_id$=deposit_id$
+						art_resphdr.batch_no$=batch_no$
+						art_resphdr$=field(art_resphdr$)
+						writerecord(art_resphdr)art_resphdr$
+
+						next_seq=1
+						seq_mask$=fill(len(art_respdet.sequence_no$),"0")
+						
+						for inv_row=0 to vectInvoices!.size()-1 step grid_cols
+							pay_flag$=vectInvoices!.get(inv_row)
+							if pay_flag$="Y"
+								ar_inv_no$=vectInvoices!.get(inv_row+1)
+								invoice_pay$=vectInvoices!.get(inv_row+inv_pd_col)
+								redim art_respdet$
+								art_respdet.firm_id$=firm_id$
+								art_respdet.credit_trans_no$=credit_trans_no$
+								art_respdet.sequence_no$=str(next_seq:seq_mask$)
+								art_respdet.customer_id$=cust_id$
+								art_respdet.transaction_id$=trans_id$
+								art_respdet.ar_inv_no$=ar_inv_no$;rem actual invoice selected or OAymmdd
+								art_respdet.order_no$="";rem for future use by OP
+								art_respdet.apply_amt$=invoice_pay$
+								art_respdet$=field(art_respdet$)
+								writerecord(art_respdet)art_respdet$
+								next_seq=next_seq+1
+							endif
+						next inv_row
+					endif
+					global_ns!.removeValue("AUTHORIZEgw_config",err=*next)
+					global_ns!.removeValue("AUTHORIZE"+resp_sid$,err=*next)
+				else
+					rem --- this webhook response doesn't correspond to a payment currently in the namespace
+					#logDev%=#getLogFile(#logDev%)
+					message!=BBjAPI().makeVector()
+					message!.addItem("This webhook response doesn't correspond to a payment currently in the namespace.")
+					#logMessage(#logDev%, message!)
+				endif
+			else
+				rem --- Unable to process GetTransactionDetailsRequest method.
+				#logDev%=#getLogFile(#logDev%)
+				message!=BBjAPI().makeVector()
+				message!.addItem("Unable to process GetTransactionDetailsRequest method.")
+				#logMessage(#logDev%, message!)
+			endif		
+		else
+			rem --- namespace not present or doesn't contain gw_config!
+			#logDev%=#getLogFile(#logDev%)
+			message!=BBjAPI().makeVector()
+			message!.addItem("Namespace not present, or doesn't contain gw_config!")
+			#logMessage(#logDev%, message!)
+		endif
 
 		goto end_logging;rem --- rem this line to enable output to .txt for troubleshooting
 
@@ -56,5 +330,73 @@ CLASS PUBLIC AuthorizeWebhook
 end_logging:
 
     METHODEND
+
+    method private BBjInt getLogFile(BBjInt log_dev%)
+		if log_dev%=0 then
+			rem --- Get this installation's location
+			num_files=1
+			dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+			table_alias$="DDM_SYSTEMS"
+			open_tables$[1]=table_alias$,open_opts$[1]="OTA"
+			call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:           	open_beg,
+:           	open_end,
+:           	open_tables$[all],
+:           	open_opts$[all],
+:           	open_chans$[all],
+:           	open_tpls$[all],
+:           	table_chans$[all],
+:           	open_batch,
+:           	open_status$
+			if open_status$<>"" then
+				seterr 0
+				x$=stbl("+THROWN_ERR","TRUE")   
+				throw "AuthorizeWebhook: getLogFile(): Cannot open table: "+table_alias$,302
+			endif
+
+			ddm_systems=num(open_chans$[1])
+			dim ddm_systems$:open_tpls$[1]
+
+			readrecord(ddm_systems,key=pad("ADDON",16),knum="SYSTEM_ID")ddm_systems$
+			location$=ddm_systems.mount_dir$
+
+			rem --- Create logs directory at installation location
+			logDir$ = FileObject.fixPath(location$ + "/logs", "/")
+			FileObject.makeDirs(new File(logDir$))
+
+			rem --- Create and/or open log file
+			log$ = logDir$+"/online_ccpmt_issues.log"
+			new_log=0
+			string log$,err=*next; new_log=1
+			log_dev%=int(unt)
+			open(log_dev%)log$
+
+			if new_log then
+				rem --- Write header info for new log
+				print(log_dev%)"Online Customer Credit Card Payment issues log started: " + date(0:"%Yd-%Mz-%Dz @ %Hz:%mz:%sz")
+				print(log_dev%)
+			else
+				rem --- Move to end of existing log
+				log_fin$=fin(log_dev%)
+				log_size=dec($00$+log_fin$(1,4))
+				read(log_dev%,ind=log_size,end=*next)
+			endif
+		endif
+
+		methodret log_dev%
+	methodend
+
+    method private void logMessage(BBjInt log_dev%, BBjVector message!)
+		print(log_dev%)date(0:"%Yd-%Mz-%Dz @ %Hz:%mz:%sz")
+		print(log_dev%)"AuthorizeWebhook"
+		if message!.size()>0 then
+			for i=0 to message!.size()-1
+				print(log_dev%)message!.getItem(i)
+			next i
+		endif
+		print(log_dev%)""
+
+		methodret
+	methodend
     
 CLASSEND
