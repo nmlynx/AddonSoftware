@@ -56,7 +56,7 @@ CLASS PUBLIC PayPalSilentPost
 				vectInvoices!=vectPymtInfo!.get(4)
 				grid_cols=num(vectPymtInfo!.get(5))
 				inv_pd_col=num(vectPymtInfo!.get(6))
-				call stbl("+DIR_SYP")+"bas_process_beg_bui.bbj",user_id$,rd_table_chans$[all]
+				call stbl("+DIR_SYP")+"bas_process_beg.bbj",user_id$,rd_table_chans$[all]
 
 				rem --- Retrieve sysinfo data
 
