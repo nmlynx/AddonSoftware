@@ -338,14 +338,17 @@ rem --- Main Read
 
         if type = historical then
             trans_status$="U"
+            invoice_no$ = option!.getOptionData("ar_inv_no")
+            ope01_key$=firm_id$+trans_status$+"  "+cust_id$+order_no$+invoice_no$
+            extract record (ope01_dev, key=ope01_key$, knum="AO_STATUS", dom=*continue) ope01a$; rem Advisory Locking
         else
             trans_status$="E"
+            ope01_trip$=firm_id$+trans_status$+"  "+cust_id$+order_no$
+            read(ope01_dev,key=ope01_trip$,knum="AO_STATUS",dom=*next)
+            ope01_key$=key(ope01_dev,end=*continue)
+            if pos(ope01_trip$=ope01_key$)<>1 then continue
+            extract record (ope01_dev, key=ope01_key$, dom=*continue) ope01a$; rem Advisory Locking
         endif
-        ope01_trip$=firm_id$+trans_status$+"  "+cust_id$+order_no$
-        read(ope01_dev,key=ope01_trip$,knum="AO_STATUS",dom=*next)
-        ope01_key$=key(ope01_dev,end=*continue)
-        if pos(ope01_trip$=ope01_key$)<>1 then continue
-        extract record (ope01_dev, key=ope01_key$, dom=*continue) ope01a$; rem Advisory Locking
 
 	rem --- Is invoice Void?
 		if ope01a.invoice_type$ = "V" 
