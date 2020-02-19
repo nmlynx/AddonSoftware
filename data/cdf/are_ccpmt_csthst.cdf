@@ -176,16 +176,12 @@ rem --- other init
 		temp_argv$=argv(curr_argv)
 		if pos("-k"=temp_argv$)=1 cust_id$=temp_argv$(3);break;rem get cust_id$ passed in from login
 	next curr_argv
-rem wgh ... 9598 ... testing
-rem cust_id$="000100"
 
 	arm_custmast=fnget_dev("ARM_CUSTMAST")
 	dim arm_custmast$:fnget_tpl$("ARM_CUSTMAST")
 
 	readrecord(arm_custmast,key=firm_id$+cust_id$,dom=*next)arm_custmast$
-rem wgh ... 9598 ... testing
 	if arm_custmast.customer_id$<>cust_id$
-rem if arm_custmast.customer_id$<>cust_id$+"wgh"
 		msg_id$="PROCESS_ABORT"
 		gosub disp_message
 
@@ -1040,12 +1036,13 @@ rem =====================================================================
 sendCcOnlineEmail: rem --- Send email to users with CCONLINE security role
 rem =====================================================================
 
-	num_files=4
+	num_files=5
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ADM_USERROLES",open_opts$[1]="OTA"
 	open_tables$[2]="ADM_USER",open_opts$[2]="OTA"
 	open_tables$[3]="ADS_COMPINFO",open_opts$[3]="OTA"
 	open_tables$[4]="ADM_EMAIL_ACCT",open_opts$[4]="OTA"
+	open_tables$[5]="ADM_RPTCTL",open_opts$[5]="OTA"
 
 	gosub open_tables
 
@@ -1053,11 +1050,13 @@ rem =====================================================================
 	adm_user=num(open_chans$[2])
 	ads_compinfo=num(open_chans$[3])
 	adm_email_acct=num(open_chans$[4])
+	adm_rptctl=num(open_chans$[5])
 
 	dim adm_userroles$:open_tpls$[1]
 	dim adm_user$:open_tpls$[2]
 	dim ads_compinfo$:open_tpls$[3]
 	dim adm_email_acct$:open_tpls$[4]
+	dim adm_rptctl$:open_tpls$[5]
 
 	rem --- Get email address of users with CCONLINE security role
 	userEmail!=BBjAPI().makeVector()
@@ -1081,6 +1080,10 @@ rem =====================================================================
 		if cvs(adm_email_acct.firm_email_from$,2)<>"" then firm_email_from$=cvs(adm_email_acct.firm_email_from$,2)
 		if cvs(adm_email_acct.firm_email_replyto$,2)<>"" then firm_email_replyto$=cvs(adm_email_acct.firm_email_replyto$,2)
 	endif
+
+	rem --- Get email account from Report Control
+	adm_rptctl.dd_table_alias$="ARS_CC_CUSTPMT"
+	readrecord(adm_rptctl,key=firm_id$+adm_rptctl.dd_table_alias$,dom=*next)adm_rptctl$
 	
 	rem --- Send message to email address for users with CCONLINE security role
 	if userEmail!.size()=0 and firm_email_replyto$<>"" then userEmail!.add(adm_user.firm_email_replyto$)
@@ -1088,20 +1091,15 @@ rem =====================================================================
 		for i=0 to userEmail!.size()-1
 			thisEmail$=userEmail!.get(i)
 
-			rem --- Get next Barista document number
-rem wgh ... 9598 ... testing
-rem			call stbl("+DIR_SYP")+"bas_sequences.bbj","DOC_NO",next_docno$,table_chans$[all]
-
 			rem --- Make email entry in Doc Processing Queue
 			docQueue! = new DocumentQueue()
 			docQueue!.clear()
 			docQueue!.setFirmID(firm_id$)
-rem wgh ... 9598 ... testing
-rem			docQueue!.setDocumentID(next_docno$)
-docQueue!.setDocumentID("NOATTACH")
+			docQueue!.setDocumentID("NOATTACH")
 			docQueue!.setDocumentExt("PDF")
 			docQueue!.setProcessType("E")
 			docQueue!.setStatus("A");rem Auto-detect.  Queue will switch it to "Ready" if all required data is present
+			docQueue!.setEmailAccount(cvs(adm_rptctl.email_account$,2))
 			docQueue!.setEmailFrom(iff(firm_email_from$<>"", firm_email_from$, thisEmail$))
 			docQueue!.setEmailTo(thisEmail$)
 			docQueue!.setSubject("ERROR: Customer Online Credit Card Payment")

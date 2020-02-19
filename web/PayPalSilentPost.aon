@@ -8,11 +8,13 @@ CLASS PUBLIC PayPalSilentPost
     field private BBjInt adm_user% = 0
     field private BBjInt ads_compinfo% = 0
     field private BBjInt adm_email_acct% = 0
+    field private BBjInt adm_rptctl% = 0
 
     field private BBjString adm_userroles_tpl$ = ""
     field private BBjString adm_user_tpl$ = ""
     field private BBjString ads_compinfo_tpl$ = ""
     field private BBjString adm_email_acct_tpl$ = ""
+    field private BBjString adm_rptctl_tpl$ = ""
   
     method public void service(BBjspServletContext context!)
 
@@ -365,15 +367,15 @@ end_logging:
         methodret
     methodend
 
-rem wgh ... 9598
     method private void sendCcOnlineEmail(BBjString msgText$)
         if #adm_userroles%=0 then
-            num_files=4
+            num_files=5
             dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
             open_tables$[1]="ADM_USERROLES",open_opts$[1]="OTA"
             open_tables$[2]="ADM_USER",open_opts$[2]="OTA"
             open_tables$[3]="ADS_COMPINFO",open_opts$[3]="OTA"
             open_tables$[4]="ADM_EMAIL_ACCT",open_opts$[4]="OTA"
+            open_tables$[5]="ADM_RPTCTL",open_opts$[5]="OTA"
             call stbl("+DIR_SYP")+"bac_open_tables.bbj",
 :               open_beg,
 :               open_end,
@@ -394,17 +396,20 @@ rem wgh ... 9598
             #adm_user%=int(num(open_chans$[2]))
             #ads_compinfo%=int(num(open_chans$[3]))
             #adm_email_acct%=int(num(open_chans$[4]))
+            #adm_rptctl%=int(num(open_chans$[5]))
 
             #adm_userroles_tpl$=open_tpls$[1]
             #adm_user_tpl$=open_tpls$[2]
             #ads_compinfo_tpl$=open_tpls$[3]
             #adm_email_acct_tpl$=open_tpls$[4]
+            #adm_rptctl_tpl$=open_tpls$[5]
         endif
 
         dim adm_userroles$:#adm_userroles_tpl$
         dim adm_user$:#adm_user_tpl$
         dim ads_compinfo$:#ads_compinfo_tpl$
         dim adm_email_acct$:#adm_email_acct_tpl$
+        dim adm_rptctl$:#adm_rptctl_tpl$
 
         rem --- Retrieve sysinfo data
         sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
@@ -434,6 +439,10 @@ rem wgh ... 9598
             if cvs(adm_email_acct.firm_email_from$,2)<>"" then firm_email_from$=cvs(adm_email_acct.firm_email_from$,2)
             if cvs(adm_email_acct.firm_email_replyto$,2)<>"" then firm_email_replyto$=cvs(adm_email_acct.firm_email_replyto$,2)
         endif
+
+        rem --- Get email account from Report Control
+        adm_rptctl.dd_table_alias$="ARS_CC_CUSTPMT"
+        readrecord(#adm_rptctl%,key=firm_id$+adm_rptctl.dd_table_alias$,dom=*next)adm_rptctl$
     
         rem --- Send message to email address for users with CCONLINE security role
         if userEmail!.size()=0 and firm_email_replyto$<>"" then userEmail!.add(adm_user.firm_email_replyto$)
@@ -449,6 +458,7 @@ rem wgh ... 9598
                 docQueue!.setDocumentExt("PDF")
                 docQueue!.setProcessType("E")
                 docQueue!.setStatus("A");rem Auto-detect.  Queue will switch it to "Ready" if all required data is present
+                docQueue!.setEmailAccount(cvs(adm_rptctl.email_account$,2))
                 docQueue!.setEmailFrom(iff(firm_email_from$<>"", firm_email_from$, thisEmail$))
                 docQueue!.setEmailTo(thisEmail$)
                 docQueue!.setSubject("ERROR: PayPalSilentPost")
