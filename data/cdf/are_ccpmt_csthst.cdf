@@ -97,6 +97,8 @@ gosub process_payment
 [[ARE_CCPMT_CSTHST.AWIN]]
 rem --- Declare classes used
 
+	use ::sys/prog/bao_docqueue.bbj::DocumentQueue
+
 	use java.io.File
 	use java.math.BigDecimal
 	use java.math.RoundingMode
@@ -174,22 +176,24 @@ rem --- other init
 		temp_argv$=argv(curr_argv)
 		if pos("-k"=temp_argv$)=1 cust_id$=temp_argv$(3);break;rem get cust_id$ passed in from login
 	next curr_argv
+rem wgh ... 9598 ... testing
+rem cust_id$="000100"
 
 	arm_custmast=fnget_dev("ARM_CUSTMAST")
 	dim arm_custmast$:fnget_tpl$("ARM_CUSTMAST")
 
 	readrecord(arm_custmast,key=firm_id$+cust_id$,dom=*next)arm_custmast$
+rem wgh ... 9598 ... testing
 	if arm_custmast.customer_id$<>cust_id$
+rem if arm_custmast.customer_id$<>cust_id$+"wgh"
 		msg_id$="PROCESS_ABORT"
 		gosub disp_message
 
-		gosub open_log
-		print(log_dev)date(0:"%Yd-%Mz-%Dz @ %Hz:%mz:%sz")
-		print(log_dev)pgm(-2)
-		print(log_dev)"arm_custmast (arm-01) record not found"
-		print(log_dev)"firm_id="+firm_id$
-		print(log_dev)"customer_id="+cust_id$
-		print(log_dev)
+		message!=BBjAPI().makeVector()
+		message!.addItem("arm_custmast (arm-01) record not found")
+		message!.addItem("firm_id="+firm_id$)
+		message!.addItem("customer_id="+cust_id$)
+		gosub logMessage
 
 		release
 	else
@@ -219,11 +223,9 @@ rem --- read ars_cc_custpmt to get cash_rec_cd used for customer payments (only 
 		msg_id$="PROCESS_ABORT"
 		gosub disp_message
 
-		gosub open_log
-		print(log_dev)date(0:"%Yd-%Mz-%Dz @ %Hz:%mz:%sz")
-		print(log_dev)pgm(-2)
-		print(log_dev)"Online Customer Credit Card Parameters not setup for credit card payments."
-		print(log_dev)
+		message!=BBjAPI().makeVector()
+		message!.addItem("Online Customer Credit Card Parameters not setup for credit card payments.")
+		gosub logMessage
 
 		release
 	endif
@@ -236,12 +238,10 @@ rem --- Interface to gl?
 		msg_id$="PROCESS_ABORT"
 		gosub disp_message
 
-		gosub open_log
-		print(log_dev)date(0:"%Yd-%Mz-%Dz @ %Hz:%mz:%sz")
-		print(log_dev)pgm(-2)
-		print(log_dev)"Failed to create GL Posting Control for ARE_CASHHDR."
-		print(log_dev)"status="+str(status)
-		print(log_dev)
+		message!=BBjAPI().makeVector()
+		message!.addItem("Failed to create GL Posting Control for ARE_CASHHDR.")
+		message!.addItem("status="+str(status))
+		gosub logMessage
 
 		release
 	else
@@ -252,13 +252,11 @@ rem --- Interface to gl?
 				msg_id$="PROCESS_ABORT"
 				gosub disp_message
 
-				gosub open_log
-				print(log_dev)date(0:"%Yd-%Mz-%Dz @ %Hz:%mz:%sz")
-				print(log_dev)pgm(-2)
-				print(log_dev)"Receipt date failed GL transaction date verification."
-				print(log_dev)"recpt_date$="+recpt_date$
-				print(log_dev)"status="+str(status)
-				print(log_dev)
+				message!=BBjAPI().makeVector()
+				message!.addItem("Receipt date failed GL transaction date verification.")
+				message!.addItem("recpt_date$="+recpt_date$)
+				message!.addItem("status="+str(status))
+				gosub logMessage
 
 				release
 			endif
@@ -524,6 +522,7 @@ rem --- get cash receipts code/params, verify config
 
 	gosub get_open_invoices
 	gosub fill_grid
+
 [[ARE_CCPMT_CSTHST.BEND]]
 rem --- if vectInvoices! contains any selected items, get confirmation that user really wants to exit
 
@@ -1012,6 +1011,105 @@ rem =====================================================================
 			log_size=dec($00$+log_fin$(1,4))
 			read(log_dev,ind=log_size,end=*next)
 		endif
+	endif
+
+	return
+
+rem =====================================================================
+logMessage: rem --- Write to log file
+rem =====================================================================
+
+	gosub open_log
+
+	rem --- Build email message
+	msgText$=date(0:"%Yd-%Mz-%Dz @ %Hz:%mz:%sz") + $0A$
+	msgText$=msgText$+pgm(-2) + $0A$
+	msgText$=msgText$+"user: "+sysinfo.user_id$ + $0A$
+	if message!.size()>0 then
+		for i=0 to message!.size()-1
+			msgText$=msgText$+message!.getItem(i) + $0A$
+		next i
+	endif
+
+	print(log_dev)msgText$
+	gosub sendCcOnlineEmail
+
+	return
+
+rem =====================================================================
+sendCcOnlineEmail: rem --- Send email to users with CCONLINE security role
+rem =====================================================================
+
+	num_files=4
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="ADM_USERROLES",open_opts$[1]="OTA"
+	open_tables$[2]="ADM_USER",open_opts$[2]="OTA"
+	open_tables$[3]="ADS_COMPINFO",open_opts$[3]="OTA"
+	open_tables$[4]="ADM_EMAIL_ACCT",open_opts$[4]="OTA"
+
+	gosub open_tables
+
+	adm_userroles=num(open_chans$[1])
+	adm_user=num(open_chans$[2])
+	ads_compinfo=num(open_chans$[3])
+	adm_email_acct=num(open_chans$[4])
+
+	dim adm_userroles$:open_tpls$[1]
+	dim adm_user$:open_tpls$[2]
+	dim ads_compinfo$:open_tpls$[3]
+	dim adm_email_acct$:open_tpls$[4]
+
+	rem --- Get email address of users with CCONLINE security role
+	userEmail!=BBjAPI().makeVector()
+	adm_userroles.sec_role_id$="CCONLINE"
+	read(adm_userroles,key=adm_userroles.sec_role_id$,knum="ROLE_USER",dom=*next)
+	while 1
+		readrecord(adm_userroles,end=*break)adm_userroles$
+		if cvs(adm_userroles.sec_role_id$,2)<>"CCONLINE" then break
+
+		redim adm_user$		
+		readrecord(adm_user,key=adm_userroles.user_id$,dom=*next)adm_user$
+		if cvs(adm_user.email_address$,2)<>"" then userEmail!.add(cvs(adm_user.email_address$,2))
+	wend
+
+	rem --- Get firm's email addresses
+	firm_email_from$=""
+	firm_email_replyto$=""
+	readrecord(ads_compinfo,key=firm_id$,dom=*next)ads_compinfo$
+	if cvs(ads_compinfo.email_account$,2)<>"" then
+		readrecord(adm_email_acct,key=firm_id$+ads_compinfo.email_account$,dom=*endif)adm_email_acct$
+		if cvs(adm_email_acct.firm_email_from$,2)<>"" then firm_email_from$=cvs(adm_email_acct.firm_email_from$,2)
+		if cvs(adm_email_acct.firm_email_replyto$,2)<>"" then firm_email_replyto$=cvs(adm_email_acct.firm_email_replyto$,2)
+	endif
+	
+	rem --- Send message to email address for users with CCONLINE security role
+	if userEmail!.size()=0 and firm_email_replyto$<>"" then userEmail!.add(adm_user.firm_email_replyto$)
+	if userEmail!.size()>0 then
+		for i=0 to userEmail!.size()-1
+			thisEmail$=userEmail!.get(i)
+
+			rem --- Get next Barista document number
+rem wgh ... 9598 ... testing
+rem			call stbl("+DIR_SYP")+"bas_sequences.bbj","DOC_NO",next_docno$,table_chans$[all]
+
+			rem --- Make email entry in Doc Processing Queue
+			docQueue! = new DocumentQueue()
+			docQueue!.clear()
+			docQueue!.setFirmID(firm_id$)
+rem wgh ... 9598 ... testing
+rem			docQueue!.setDocumentID(next_docno$)
+docQueue!.setDocumentID("NOATTACH")
+			docQueue!.setDocumentExt("PDF")
+			docQueue!.setProcessType("E")
+			docQueue!.setStatus("A");rem Auto-detect.  Queue will switch it to "Ready" if all required data is present
+			docQueue!.setEmailFrom(iff(firm_email_from$<>"", firm_email_from$, thisEmail$))
+			docQueue!.setEmailTo(thisEmail$)
+			docQueue!.setSubject("ERROR: Customer Online Credit Card Payment")
+			docQueue!.setMessage(msgText$)
+			docQueue!.createProcess()
+			proc_key$=docQueue!.getFirmID()+docQueue!.getProcessID()
+			docQueue!.checkStatus(proc_key$)
+		next i
 	endif
 
 	return
