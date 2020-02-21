@@ -171,7 +171,12 @@ CLASS PUBLIC AuthorizeWebhook
 								message!.addItem("A cash receipt matching this customer, date and cash receipt code has already been entered")
 								message!.addItem("using a different batch and/or deposit. You will need to MANUALLY adjust that cash receipt")
 								message!.addItem("to reflect this credit card transaction.")
-								#logMessage(user_id$, message!, 0)
+                                message!.addItem("are_cashhdr.receipt_date$="+are_cashhdr.receipt_date$)
+                                message!.addItem("are_cashhdr.customer_id$="+are_cashhdr.customer_id$)
+                                message!.addItem("are_cashhdr.cash_rec_cd$="+are_cashhdr.cash_rec_cd$)
+                                message!.addItem("batch_no$="+batch_no$)
+                                message!.addItem("deposit_id$="+deposit_id$)
+								#logMessage(user_id$, message!, 1)
 							endif
 						endif
 
@@ -282,26 +287,14 @@ CLASS PUBLIC AuthorizeWebhook
 					endif
 					global_ns!.removeValue("AUTHORIZEgw_config",err=*next)
 					global_ns!.removeValue("AUTHORIZE"+resp_sid$,err=*next)
-				else
-					rem --- this webhook response doesn't correspond to a payment currently in the namespace
-					message!=BBjAPI().makeVector()
-					message!.addItem("This webhook response doesn't correspond to a payment currently in the namespace.")
-					message!.addItem("Namespace: AUTHORIZE"+resp_sid$)
-					#logMessage(user_id$, message!, 1)
-				endif
 			else
 				rem --- Unable to process GetTransactionDetailsRequest method.
 				message!=BBjAPI().makeVector()
 				message!.addItem("Unable to process GetTransactionDetailsRequest method.")
 				message!.addItem("Request response code: "+authResponse!.getMessages().getResultCode())
+                message!.addItem("Content: "+content!)
 				#logMessage(user_id$, message!, 1)
 			endif		
-		else
-			rem --- namespace not present or doesn't contain gw_config!
-			message!=BBjAPI().makeVector()
-			message!.addItem("Namespace not present, or doesn't contain gw_config!")
-			message!.addItem("Namespace: AUTHORIZEgw_config")
-			#logMessage(user_id$, message!, 1)
 		endif
 
 		goto end_logging;rem --- rem this line to enable output to .txt for troubleshooting

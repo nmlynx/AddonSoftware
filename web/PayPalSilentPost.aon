@@ -140,7 +140,12 @@ CLASS PUBLIC PayPalSilentPost
 							message!.addItem("A cash receipt matching this customer, date and cash receipt code has already been entered")
 							message!.addItem("using a different batch and/or deposit. You will need to MANUALLY adjust that cash receipt")
 							message!.addItem("to reflect this credit card transaction.")
-							#logMessage(user_id$, message!, 0)
+                            message!.addItem("are_cashhdr.receipt_date$="+are_cashhdr.receipt_date$)
+                            message!.addItem("are_cashhdr.customer_id$="+are_cashhdr.customer_id$)
+                            message!.addItem("are_cashhdr.cash_rec_cd$="+are_cashhdr.cash_rec_cd$)
+                            message!.addItem("batch_no$="+batch_no$)
+                            message!.addItem("deposit_id$="+deposit_id$)
+							#logMessage(user_id$, message!, 1)
 						endif
 					endif
 
@@ -254,7 +259,7 @@ CLASS PUBLIC PayPalSilentPost
 				rem --- namespace not there or not as expected
 				message!=BBjAPI().makeVector()
 				message!.addItem("Namespace not present, or doesn't contain vectPymtInfo!")
-				message!.addItem("Namespace: PAYFLOWPRO"+token_id$)
+				message!.addItem("Content: "+content!)
 				#logMessage(user_id$, message!, 1)
 			endif
 		endif
