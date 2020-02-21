@@ -1,7 +1,7 @@
 REM /**
 REM  * aro_CCUtil.bbj
 REM  * @author shaun
-REM  *
+REM  * Copyright BASIS International Ltd.  All Rights Reserved.
 REM  */
 use com.basis.api.admin.BBjAdminBase
 
@@ -49,10 +49,11 @@ class public CCUtil
         for curr_arg=1 to argc-1
             temp_arg$=argv(curr_arg)
             if pos("-u"=temp_arg$)=1 then user_id$=cvs(temp_arg$(3),4)
+			if pos("-f"=temp_arg$)=1 then cust_user_firm$=cvs(temp_arg$(3),3)
         next curr_arg
         temp$=stbl("+USER_ID",user_id$)
-
         call stbl("+DIR_SYP")+"bas_process_beg.bbj",user_id$,table_chans$[all]
+		temp$=stbl("+FIRM_ID",cust_user_firm$)
     methodend 
    
 classend 

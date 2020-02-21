@@ -1,11 +1,17 @@
-use ::../apps/aon/web/CCLoginView.bbj::CCLoginView
-use ::../apps/aon/web/CCLoginModel.bbj::CCLoginModel
-use ::../apps/aon/web/CCAccountSettingsView.bbj::CCAccountSettingsView
-use ::../apps/aon/web/CCRegistrationView.bbj::CCRegistrationView
-use ::../apps/aon/web/CCRegistrationModel.bbj::CCRegistrationModel
-use ::../apps/aon/web/CCRegistrationModel.bbj::CCRegistrationRecord
-use ::../apps/aon/web/CCRegistrationModel.bbj::CCCustomerFirmInfo
-use ::../apps/aon/web/aro_CCUtil.bbj::CCUtil
+REM /**
+REM  * CCLoginManager.bbj
+REM  * @author shaun
+REM  * Copyright BASIS International Ltd.  All Rights Reserved.
+REM  */
+
+use ::CCLoginView.bbj::CCLoginView
+use ::CCLoginModel.bbj::CCLoginModel
+use ::CCAccountSettingsView.bbj::CCAccountSettingsView
+use ::CCRegistrationView.bbj::CCRegistrationView
+use ::CCRegistrationModel.bbj::CCRegistrationModel
+use ::CCRegistrationModel.bbj::CCRegistrationRecord
+use ::CCRegistrationModel.bbj::CCCustomerFirmInfo
+use ::aro_CCUtil.bbj::CCUtil
 
 class public CCLoginManager
 
@@ -191,6 +197,23 @@ declare CCLoginManager cclm!
 cclm!=new CCLoginManager()
 cclm!.doModal()
 release
+
+rem --- sample code below for Shaun - need to open tables we want to query, then close them again
+rem --- ensures Barista creates them if non-existent, so SQL query won't throw err 77
+
+rem --- Open files
+
+    num_files=16
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="ARS_PARAMS",     open_opts$[1]="OTA"
+	
+	gosub open_tables
+	
+rem --- Close files after ensuring they exist
+
+    num_files=15
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="ARC_SALECODE",   open_opts$[1]="C@"
 
 open_tables:rem --- Open Tables
 

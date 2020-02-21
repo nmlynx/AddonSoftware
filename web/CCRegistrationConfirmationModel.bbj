@@ -1,12 +1,17 @@
-use ::../apps/aon/web/CCRegistrationModel.bbj::CCRegistrationModel
-use ::../apps/aon/web/CCRegistrationModel.bbj::CCRegistrationRecord
-use ::../apps/aon/web/CCLoginModel.bbj::CCLoginModel
-use ::../apps/aon/web/CCUtil.bbj::CCUtil
-use ::../apps/aon/ad/src/ado_rptControl.src::ReportControl
+REM /**
+REM  * CCRegistrationConfirmationModel.bbj
+REM  * @author shaun
+REM  * Copyright BASIS International Ltd.  All Rights Reserved.
+REM  */
+
+use ::CCRegistrationModel.bbj::CCRegistrationModel
+use ::CCRegistrationModel.bbj::CCRegistrationRecord
+use ::CCLoginModel.bbj::CCLoginModel
+use ::ado_rptControl.src::ReportControl
+use ::aro_CCUtil.bbj::CCUtil
 
 use java.util.Base64
 use java.util.UUID
-
 
 class public CCRegistrationConfirmationModel
 
@@ -87,8 +92,8 @@ class public CCRegistrationConfirmationModel
         emailMessage!="Here is your new password: "+password$
         
         REM Get the URL for payments from our parameter table
-        sqlprep(#SqlChan) "select PAYMENT_URL from ?"
-        sqlexec(#SqlChan) parameterTable$
+        sqlprep(#SqlChan) "select PAYMENT_URL from " + parameterTable$
+        sqlexec(#SqlChan)
         dim result$:sqltmpl(#SqlChan)
         result$=sqlfetch(#SqlChan)
         url!=result.PAYMENT_URL$
