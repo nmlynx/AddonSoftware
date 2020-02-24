@@ -33,7 +33,7 @@ rem --- Create new Web Context in Enterprise Manager
     contextConfig! = serverConfig!.createCustomContext(cvs(dbName$,3))
 
     contextConfig!.enable()
-    contextConfig!.setDocBase((new File(aonLoc$+"/web")).getAbsolutePath())
+    contextConfig!.setDocBase((new File(aonLoc$+"/htdocs")).getAbsolutePath())
     contextConfig!.setPath("/"+cvs(dbName$,11))
     contextConfig!.setConfig(barDir$+stbl("+FILE_CFG"))
     if db_name$="AddonSoftware" then
