@@ -246,8 +246,12 @@ CLASS PUBLIC AuthorizeWebhook
 						trans_approved$=iff(resp_code,"A","D");rem A=approved, D=declined
 
 						rem --- get sequence number for response records
-rem wgh ... 9598 ... log this
 						call stbl("+DIR_SYP")+"bas_sequences.bbj","CREDIT_TRANS_NO",credit_trans_no$,rd_table_chans$[all],"QUIET"
+                        if credit_trans_no$="" then
+                            message!=BBjAPI().makeVector()
+                            message!.addItem("Barista Sequence Number record not found for CREDIT_TRANS_NO")
+                            #logMessage(user_id$, message!, 1)
+                        endif
 
 						art_resphdr.firm_id$=firm_id$
 						art_resphdr.credit_trans_no$=credit_trans_no$
@@ -501,7 +505,8 @@ end_logging:
 		while userEmailIter!.hasNext()
 			thisUser$=userEmailIter!.next()
 			thisEmail$=userEmail!.getProperty(thisUser$)
-			x$=stbl("+USER_ID",thisUser$)
+			user_id$=stbl("+USER_ID",err=*next)
+			if user_id$="" then x$=stbl("+USER_ID",thisUser$)
             
 			rem --- Make email entry in Doc Processing Queue
 			docQueue! = new DocumentQueue()
