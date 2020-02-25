@@ -92,7 +92,7 @@ class public CCRegistrationConfirmationModel
         emailMessage!="Here is your new password: "+password$
         
         REM Get the URL for payments from our parameter table
-        sqlprep(#SqlChan) "select PAYMENT_URL from " + parameterTable$
+        sqlprep(#SqlChan) "select PAYMENT_URL from " + parameterTable$ + " where FIRM_ID = '" + stbl("+FIRM_ID") + "'"
         sqlexec(#SqlChan)
         dim result$:sqltmpl(#SqlChan)
         result$=sqlfetch(#SqlChan)
@@ -116,6 +116,18 @@ class public CCRegistrationConfirmationModel
     
   methodend 
   
+  method public BBjString getCustomerName(BBjString customerID$)
+
+    customerName$ = "NOT_FOUND" 
+    sqlprep (#SqlChan) "SELECT ARM_CUSTMAST.FIRM_ID,ARM_CUSTMAST.CUSTOMER_NAME, ARS_REPORT.NAME,ARS_REPORT.ADDR_LINE_1,ARS_REPORT.ADDR_LINE_2,ARS_REPORT.CITY,ARS_REPORT.STATE_CODE,ARS_REPORT.ZIP_CODE FROM ARM_CUSTMAST, ARS_REPORT WHERE ARM_CUSTMAST.PAY_ONLINE='Y' AND ARM_CUSTMAST.PAY_AUTH_EMAIL<>'' AND ARM_CUSTMAST.FIRM_ID=ARS_REPORT.FIRM_ID AND ARM_CUSTMAST.CUSTOMER_ID=? AND ARM_CUSTMAST.FIRM_ID='"+stbl("+FIRM_ID")+"' "
+    sqlexec (#SqlChan) customerID$
+    dim result$:sqltmpl(#SqlChan)
+	result$=sqlfetch(#SqlChan,end=done)
+    customerName$ = result.customer_name$
+	done:
+    methodret customerName$
+    
+  methodend
   
   REM Generate a password for the credit card processing system using the BASE64 alphabet
   method protected BBjString generatePassword() 
@@ -137,7 +149,7 @@ class public CCRegistrationConfirmationModel
   methodend 
     
   method public void deleteRegistration(CCRegistrationRecord rec!)
-    sqlprep (#SqlChan) "DELETE FROM ARC_CC_REGISTER WHERE CC_USER_NAME=?"
+    sqlprep (#SqlChan) "DELETE FROM ARC_CC_REGISTER WHERE CC_USERNAME=?"
     sqlexec (#SqlChan) rec!.getUserName() 
   methodend 
   

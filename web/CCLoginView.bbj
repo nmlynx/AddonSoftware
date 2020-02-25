@@ -16,15 +16,22 @@ class public CCLoginView extends CCView
     field protected BBjButton cancelBtn!
     field protected BBjStaticText header1!
     field protected BBjStaticText header2!
-	field protected BBjFont headerFont1!=#getSysGui().makeFont("Comic Sans MS",24,3)
-	field protected BBjFont headerFont2!=#getSysGui().makeFont("Segoe UI",32,1)
+	field protected BBjFont headerFont1!=#getSysGui().makeFont("Segoe UI",32,1)
+	field protected BBjFont headerFont2!=#getSysGui().makeFont("Segoe UI",28,1)
+	field protected BBjNumber SqlChan
 
     method public CCLoginView()
 	    #super!()
 		#getWin().setTitle("Customer Login")
+		#SqlChan=sqlunt
+		sqlopen (#SqlChan) stbl("+DBNAME")
+		
+		sqlprep(#SqlChan) "select FIRM_NAME from ADM_FIRMS where COMPANY_ID = '" + stbl("+FIRM_ID") + "'"
+		sqlexec(#SqlChan)
+		dim result$:sqltmpl(#SqlChan)
+		result$=sqlfetch(#SqlChan)
 
-
-		#header1!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,25,640,50,"ACME Manufacturing Company")
+		#header1!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,25,640,60,result$)
 		#header2!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,85,640,50,"Customer Portal")
         #userNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),5,170,150,24,"Username",$8000$)
         #userNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),160,165,350,34,"")

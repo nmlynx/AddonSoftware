@@ -1,11 +1,15 @@
-use java.awt.Rectangle
+REM /**
+REM  * CCView.bbj - Base class for all view windows
+REM  * @author shaun
+REM  * Copyright BASIS International Ltd.  All Rights Reserved.
+REM  */
 
-REM Base class for all view windows
+use java.awt.Rectangle
 
 class public CCView
 	field protected BBjSysGui SysGui!=BBjAPI().openSysGui("X0")
 	field protected Rectangle Bounds!=#SysGui!.getSystemMetrics().getScreenBounds()
-  field protected BBjTopLevelWindow Win!
+	field protected BBjTopLevelWindow Win!
 	field protected BBjNumber WindowWidth=640
 	field protected BBjNumber WindowHeight=400
 	field protected BBjFont Font!=#SysGui!.makeFont("Segoe UI",14,1)

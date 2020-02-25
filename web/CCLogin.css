@@ -1,9 +1,11 @@
 .BBjTopLevelWindow {
     border: none !important;
 }
+
 .BBjTopLevelWindow-container {
     background: #fff;
 }
+
 .BBjWindow-content {
     outline: none;
 }
@@ -14,7 +16,7 @@
 }
 
 body{
-	background-image: url('//localhost:8888/files/Biking.png'),linear-gradient(red, yellow);
+	background-image: url('//localhost:8888/files/Biking.png'),linear-gradient(#b3cccc, #669999);
 }
 
 .terminatedMessage{
@@ -25,26 +27,35 @@ body{
 	font-size: 36px;
 }
 
-[id='5'],[id='18'] {
+/* id 5 handles the login and confirmation windows, id 20 handles the registration window */
+[id='5'],[id='20'] {
 	background-color: rgba(255,255,255,0.0);
     border-radius: 50px;
 }
 
-.cclogin-username-statictext, .cclogin-password-statictext {
+.cclogin-username-statictext, .cclogin-password-statictext, .ccregister-statictext, .ccconfirm-statictext {
 	color:charcoal;
 	text-shadow: none; 
 }
 
-.cclogin-header2-statictext {
+.cclogin-header2-statictext, .ccregister-header2-statictext, .ccregister-confirmation-header2-statictext {
 	color: black;
 	text-shadow: none; 
 }
 
-.cclogin-header1-statictext {
-	color: rgba(255,255,0); 
+.cclogin-header1-statictext, .ccregister-header1-statictext, .ccregister-confirmation-header1-statictext {
+	color: black;
+	text-shadow: none;
 }
 	
 .cclogin-login-button, .cclogin-register-button, .cclogin-cancel-button {
+	border-radius: 100px; 
+    font-family: Tahoma, Helvetica !important;
+    font-size: 14px !important;
+    font-weight: bold !important;
+}
+
+.ccregister-register-button, .ccregister-cancel-button {
 	border-radius: 100px; 
     font-family: Tahoma, Helvetica !important;
     font-size: 14px !important;
