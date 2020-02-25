@@ -25,7 +25,7 @@ class public CCLoginModel
 	method public BBjNumber login(BBjString username$, BBjString password$)
 	    declare BBjNumber canLogin
 	    declare BBjNumber passwordCorrect 
-		
+	
 		REM Check to see if the username exists and is active. No point in looking for 
 		REM a password for a nonexistent or unactivated user 
 		if (! #canLogin(username$)) then 

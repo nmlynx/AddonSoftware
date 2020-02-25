@@ -8,37 +8,63 @@ use ::CCView.bbj::CCView
 
 class public CCRegistrationConfirmationView extends CCView
 
-	field protected BBjStaticText DesiredUserNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,104,190,26,"User Name",$8000$)
-	field protected BBjStaticText FirstNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,146,190,26,"First Name",$8000$)
-	field protected BBjStaticText LastNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,191,190,26,"Last Name",$8000$)
-	field protected BBjStaticText UserEmailST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,238,190,26,"User Email",$8000$)
-	field protected BBjStaticText CustomerIDST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,285,190,26,"Customer ID",$8000$)
+	field protected BBjStaticText header1!
+	field protected BBjStaticText header2!
+	field protected BBjStaticText DesiredUserNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,170,190,26,"User Name",$8000$)
+	field protected BBjStaticText FirstNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,220,190,26,"First Name",$8000$)
+	field protected BBjStaticText LastNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,270,190,26,"Last Name",$8000$)
+	field protected BBjStaticText UserEmailST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,320,190,26,"User Email",$8000$)
+	field protected BBjStaticText CustomerIDST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,370,190,26,"Customer ID",$8000$)
+	field protected BBjNumber SqlChan
+	field protected BBjFont headerFont1!=#getSysGui().makeFont("Segoe UI",32,1)
+	field protected BBjFont headerFont2!=#getSysGui().makeFont("Segoe UI",26,1)
 	
 
-	field public BBjEditBox DesiredUserNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,100,400,34,"",$0200$)
-	field public BBjEditBox FirstNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,145,400,34,"",$0200$)
-	field public BBjEditBox LastNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,190,400,34,"",$0200$)
-	field public BBjEditBox UserEmailEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,235,400,34,"",$0200$)
-	field public BBjEditBox CustomerIDEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,280,400,34,"",$0200$)
+	field public BBjEditBox DesiredUserNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,165,400,34,"",$0200$)
+	field public BBjEditBox FirstNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,215,400,34,"",$0200$)
+	field public BBjEditBox LastNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,265,400,34,"",$0200$)
+	field public BBjEditBox UserEmailEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,315,400,34,"",$0200$)
+	field public BBjEditBox CustomerIDEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,365,400,34,"",$0200$)
+	field protected BBjStaticText CustomerNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),225,420,400,34,"",$2000$)
 	
-	field public BBjButton RegisterBtn!=#getWin().addButton(#getWin().getAvailableControlID(),206,370,110,50,"Yes")
-	field public BBjButton CancelBtn!=#getWin().addButton(#getWin().getAvailableControlID(),324,370,110,50,"No")
+	field public BBjButton RegisterBtn!=#getWin().addButton(#getWin().getAvailableControlID(),206,470,110,50,"Confirm")
+	field public BBjButton CancelBtn!=#getWin().addButton(#getWin().getAvailableControlID(),324,470,110,50,"Cancel")
 
 
 	method public CCRegistrationConfirmationView()
 		#super!()
+		#getWin().setTitle("Customer Registration Confirmation")
+		#getWin().setSize(#getWin().getWidth()+100,520)
+		#SqlChan=sqlunt
+		sqlopen (#SqlChan) stbl("+DBNAME")
+		
+		sqlprep(#SqlChan) "select FIRM_NAME from ADM_FIRMS where COMPANY_ID = '" + stbl("+FIRM_ID") + "'"
+		sqlexec(#SqlChan)
+		dim result$:sqltmpl(#SqlChan)
+		result$=sqlfetch(#SqlChan)
+
+		#header1!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,25,720,60,result$)
+		#header2!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,85,720,50,"Customer Portal - Confirm Registration")
+		#header1!.setName("ccregister-confirmation-header1-statictext")
+		#header2!.setName("ccregister-confirmation-header2-statictext")
+		#header1!.setFont(#headerFont1!)
+		#header1!.setAlignment(BBjStaticText.ALIGN_CENTER)
+		#header2!.setFont(#headerFont2!)
+		#header2!.setAlignment(BBjStaticText.ALIGN_CENTER)
 
 		#DesiredUserNameST!.setFont(#getFont())
 		#FirstNameST!.setFont(#getFont())
 		#LastNameST!.setFont(#getFont())
 		#UserEmailST!.setFont(#getFont())
 		#CustomerIDST!.setFont(#getFont())
+		#CustomerNameST!.setFont(#getFont())
 
-		#DesiredUserNameST!.addStyle("cc-statictext")
-		#FirstNameST!.addStyle("cc-statictext")
-		#LastNameST!.addStyle("cc-statictext")
-		#UserEmailST!.addStyle("cc-statictext")
-		#CustomerIDST!.addStyle("cc-statictext")
+		#DesiredUserNameST!.setName("ccconfirm-statictext")
+		#FirstNameST!.setName("ccconfirm-statictext")
+		#LastNameST!.setName("ccconfirm-statictext")
+		#UserEmailST!.setName("ccconfirm-statictext")
+		#CustomerIDST!.setName("ccconfirm-statictext")
+		#CustomerNameST!.setName("ccconfirm-statictext")
 
 		#DesiredUserNameEB!.setFont(#getFont())
 		#FirstNameEB!.setFont(#getFont())
@@ -55,8 +81,8 @@ class public CCRegistrationConfirmationView extends CCView
 		#RegisterBtn!.setFont(#getFont())
 		#CancelBtn!.setFont(#getFont())
 
-		#RegisterBtn!.addStyle("cc-button")
-		#CancelBtn!.addStyle("cc-button")
+		#RegisterBtn!.setName("ccregister-register-button")
+		#CancelBtn!.setName("ccregister-cancel-button")
 
 	methodend
 
@@ -66,6 +92,10 @@ class public CCRegistrationConfirmationView extends CCView
 
 	method public void registerNoButton_OnButtonPushCallback(CustomObject handler!, BBjString callback!)
 		#CancelBtn!.setCallback(BBjButton.ON_BUTTON_PUSH,handler!,callback!)
+	methodend
+
+	method public void updateCustomerNameText(BBjString customerName$)
+		#CustomerNameST!.setText(customerName$)
 	methodend
 	
 	method public void showAcceptanceMessage()

@@ -290,6 +290,13 @@ rem --- Get current or new batch for "AR Csh Rcp" process if applicable
 		rem --- Create new credit card payment batch for "AR Csh Rcp" process
 		if need_new_batch then
 			call stbl("+DIR_SYP")+"bas_sequences.bbj","BATCH_NO",next_batchno$,table_chans$[all],"QUIET"
+			if next_batchno$="" then
+				message!=BBjAPI().makeVector()
+				message!.addItem("Barista Sequence Number record not found for BATCH_NO")
+				gosub logMessage
+
+				release
+			endif
 
 			adm_procbatches=fnget_dev("ADM_PROCBATCHES")
 			dim adm_procbatches$:fnget_tpl$("ADM_PROCBATCHES")
@@ -369,7 +376,14 @@ rem --- Get current or new Deposit ID if applicable
 		rem --- Create new credit card payment Deposit ID
 		if need_new_depositID then
 			call stbl("+DIR_SYP")+"bas_sequences.bbj","DEPOSIT_ID",next_depositID$,table_chans$[all],"QUIET"
+			if next_depositID$="" then
+				message!=BBjAPI().makeVector()
+				message!.addItem("Barista Sequence Number record not found for DEPOSIT_ID")
+				gosub logMessage
 
+				release
+			endif
+	
 			are_deposit=fnget_dev("ARE_DEPOSIT")
 			dim are_deposit$:fnget_tpl$("ARE_DEPOSIT")
 			are_deposit.firm_id$=firm_id$

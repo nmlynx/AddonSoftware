@@ -11,6 +11,11 @@ class public CCUtil
 
     field protected static BBjString DATE_MASK!="%Yl%Mz%Dz"
 
+	method public CCUtil()
+		#initializeBaristaEnvironment()
+		#openQueryTables()
+	methodend
+
     method public static BBjString getDATE_MASK()
         methodret #DATE_MASK!
     methodend 
@@ -45,6 +50,47 @@ class public CCUtil
         temp$=stbl("+USER_ID",user_id$)
         call stbl("+DIR_SYP")+"bas_process_beg.bbj",user_id$,table_chans$[all]
 		temp$=stbl("+FIRM_ID",cust_user_firm$)
-    methodend 
+    methodend
+
+	method public static void openQueryTables()
+		declare BBjNumber temp
+		declare BBjNumber num_files
+		declare BBjNumber open_beg
+		declare BBjNumber open_end
+		declare BBjNumber open_batch
+		declare BBjString open_tables$
+		declare BBjString open_opts$
+		declare BBjString open_chans$
+		declare BBjString open_tpls$
+		declare BBjString table_chans$
+		declare BBjString open_status$
+		declare BBjString msg_id$
+		declare BBjString msg_tokens$
+		declare BBjString msg_opt$
+		
+		rem --- open, then close tables to ensure they get created if not yet present; prevents err 77 in queries
+		num_files=4
+		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+		open_tables$[1]="ARC_CC_REGISTER",open_opts$[1]="OTA"
+		open_tables$[2]="ARC_CC_USERS",open_opts$[2]="OTA"
+		open_tables$[3]="ARM_CUSTMAST",open_opts$[3]="OTA"
+		open_tables$[4]="ARS_CC_CUSTPMT",open_opts$[4]="OTA"
+
+		call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],table_chans$[all],open_batch,open_status$
+
+		if open_status$<>""
+			msg_id$="ENTRY_OPEN_ERROR"
+			dim msg_tokens$[1]
+				msg_tokens$[1]=open_status$
+			call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+			release
+		endif
+		
+		for temp=1 to num_files
+			open_opts$[temp]="CX"
+		next temp
+		
+		call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],table_chans$[all],open_batch,open_status$
+	methodend
    
 classend 

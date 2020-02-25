@@ -9,52 +9,72 @@ use ::CCRegistrationModel.bbj::CCCustomerFirmInfo
 
 class public CCRegistrationView extends CCView
 
-	field protected BBjStaticText DesiredUserNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,104,190,26,"User Name",$8000$)
-	field protected BBjStaticText UserNameValidST!=#getWin().addStaticText(#getWin().getAvailableControlID(),593,100,34,34,"",$8000$)
-	field protected BBjStaticText FirstNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,146,190,26,"First Name",$8000$)
-	field protected BBjStaticText LastNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,191,190,26,"Last Name",$8000$)
-	field protected BBjStaticText UserEmailST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,238,190,26,"User Email",$8000$)
-	field protected BBjStaticText CustomerIDST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,283,190,26,"Customer ID",$8000$)
-	field protected BBjStaticText CustomerAccountST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,328,190,26,"Customer Account",$8000$)
+	field protected BBjStaticText DesiredUserNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,170,190,26,"User Name",$8000$)
+	field protected BBjStaticText FirstNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,220,190,26,"First Name",$8000$)
+	field protected BBjStaticText LastNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,270,190,26,"Last Name",$8000$)
+	field protected BBjStaticText UserEmailST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,320,190,26,"User Email",$8000$)
+	field protected BBjStaticText CustomerIDST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,370,190,26,"Customer ID",$8000$)
+	field protected BBjStaticText header1!
+    field protected BBjStaticText header2!
 
-	field protected BBjEditBox DesiredUserNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,100,366,34,"")
-	field protected BBjEditBox FirstNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,145,400,34,"")
-	field protected BBjEditBox LastNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,190,400,34,"")
-	field protected BBjEditBox UserEmailEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,235,400,34,"") 
-	field protected BBjEditBox CustomerIDEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,280,400,34,"")
-	field protected BBjListButton FirmSelectionLB!=#getWin().addListButton(#getWin().getAvailableControlID(),225,325,400,510,"")
+	field protected BBjEditBox DesiredUserNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,165,400,34,"")
+	field protected BBjEditBox FirstNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,215,400,34,"")
+	field protected BBjEditBox LastNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,265,400,34,"")
+	field protected BBjEditBox UserEmailEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,315,400,34,"") 
+	field protected BBjEditBox CustomerIDEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,365,400,34,"")
+	field protected BBjStaticText CustomerNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),225,420,400,34,"",$2000$)
 
-	field protected BBjButton RegisterBtn!=#getWin().addButton(#getWin().getAvailableControlID(),206,370,110,50,"Register")
-	field protected BBjButton CancelBtn!=#getWin().addButton(#getWin().getAvailableControlID(),324,370,110,50,"Cancel")
+	field protected BBjButton RegisterBtn!=#getWin().addButton(#getWin().getAvailableControlID(),206,470,110,50,"Register")
+	field protected BBjButton CancelBtn!=#getWin().addButton(#getWin().getAvailableControlID(),324,470,110,50,"Cancel")
 
+	field protected BBjFont headerFont1!=#getSysGui().makeFont("Segoe UI",32,1)
+	field protected BBjFont headerFont2!=#getSysGui().makeFont("Segoe UI",26,1)
+	field protected BBjNumber SqlChan
 
 	method public CCRegistrationView()
 	
 		#super!()
-		
+		#getWin().setTitle("New Customer Registration")		
 		REM Adjust the height of our window
-		#getWin().setSize(#getWin().getWidth(),450)
+		#getWin().setSize(#getWin().getWidth()+150,520)
+
+		#SqlChan=sqlunt
+		sqlopen (#SqlChan) stbl("+DBNAME")
+		
+		sqlprep(#SqlChan) "select FIRM_NAME from ADM_FIRMS where COMPANY_ID = '" + stbl("+FIRM_ID") + "'"
+		sqlexec(#SqlChan)
+		dim result$:sqltmpl(#SqlChan)
+		result$=sqlfetch(#SqlChan)
+
+		#header1!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,25,800,60,result$)
+		#header2!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,85,800,50,"Customer Portal - New User Registration")
+		#header1!.setName("ccregister-header1-statictext")
+		#header2!.setName("ccregister-header2-statictext")
+		#header1!.setFont(#headerFont1!)
+		#header1!.setAlignment(BBjStaticText.ALIGN_CENTER)
+		#header2!.setFont(#headerFont2!)
+		#header2!.setAlignment(BBjStaticText.ALIGN_CENTER)
 		 
 		#DesiredUserNameST!.setFont(#getFont())
 		#FirstNameST!.setFont(#getFont())
 		#LastNameST!.setFont(#getFont())
 		#UserEmailST!.setFont(#getFont())
 		#CustomerIDST!.setFont(#getFont())
-		#CustomerAccountST!.setFont(#getFont())
+		#CustomerNameST!.setFont(#getFont())
 
-		#DesiredUserNameST!.addStyle("cc-statictext")
-		#FirstNameST!.addStyle("cc-statictext")
-		#LastNameST!.addStyle("cc-statictext")
-		#UserEmailST!.addStyle("cc-statictext")
-		#CustomerIDST!.addStyle("cc-statictext")
-		#CustomerAccountST!.addStyle("cc-statictext")
+rem --- what does addStyle do? #DesiredUserNameST!.addStyle("cc-statictext") 
+		#DesiredUserNameST!.setName("ccregister-statictext")
+		#FirstNameST!.setName("ccregister-statictext")
+		#LastNameST!.setName("ccregister-statictext")
+		#UserEmailST!.setName("ccregister-statictext")
+		#CustomerIDST!.setName("ccregister-statictext")
+		#CustomerNameST!.setName("ccregister-statictext")
 
 		#DesiredUserNameEB!.setFont(#getFont())
 		#FirstNameEB!.setFont(#getFont())
 		#LastNameEB!.setFont(#getFont())
 		#UserEmailEB!.setFont(#getFont())
 		#CustomerIDEB!.setFont(#getFont())
-		#FirmSelectionLB!.setFont(#getFont())
 
 		#DesiredUserNameEB!.addStyle("cc-editbox")
 		#FirstNameEB!.addStyle("cc-editbox")
@@ -62,15 +82,12 @@ class public CCRegistrationView extends CCView
 		#UserEmailEB!.addStyle("cc-editbox")
 		#CustomerIDEB!.addStyle("cc-editbox")
 
-		#UserNameValidST!.setOpaque(0)
 		#RegisterBtn!.setFont(#getFont())
 		#RegisterBtn!.setEnabled(0)
 		#CancelBtn!.setFont(#getFont())
 
-		#RegisterBtn!.addStyle("cc-button")
-		#CancelBtn!.addStyle("cc-button")
-		
-		#FirmSelectionLB!.setFieldHeight(34)
+		#RegisterBtn!.setName("ccregister-register-button")
+		#CancelBtn!.setName("ccregister-cancel-button")
 
 	methodend
 
@@ -92,10 +109,6 @@ class public CCRegistrationView extends CCView
 
 	method public void registerCustomerIDEB_OnFocusLostCallback(CustomObject handler!, BBjString callback!)
         #CustomerIDEB!.setCallback(BBjEditBox.ON_LOST_FOCUS,handler!,callback!)
-    methodend
-
-    method public void registerFirmSelectionLB_OnFocusLostCallback(CustomObject handler!, BBjString callback!)
-        #FirmSelectionLB!.setCallback(BBjListButton.ON_LOST_FOCUS,handler!,callback!)
     methodend
 
     method public void registerRegisterButton_OnButtonPushCallback(CustomObject handler!, BBjString callback!)
@@ -126,50 +139,24 @@ class public CCRegistrationView extends CCView
 	    methodret #UserEmailEB!.getText()
 	methodend 
 	
-	
-	method public void populateFirmSelectionListButton(BBjVector firmList!)
-	    declare CCCustomerFirmInfo firmInfo!
-	    declare BBjString currentFirm!
-	    for i=0 to firmList!.size()-1
-	        firmInfo!=cast(CCCustomerFirmInfo, firmList!.get(i))
-	        currentFirm!=firmInfo!.getCustomerName().trim()+",customer of "+firmInfo!.getFirmName().trim()+","+firmInfo!.getFirmAddress1().trim()+","+firmInfo!.getFirmAddress2().trim()+","+firmInfo!.getFirmCity().trim()+" "+firmInfo!.getFirmState().trim()+" "+firmInfo!.getFirmZip().trim()   
-	        #FirmSelectionLB!.addItem(currentFirm!)
-	        #FirmSelectionLB!.selectIndex(0)
-	    next i
-	methodend 
-
-	method public void clearFirmSelectionListButton()
-	    #FirmSelectionLB!.removeAllItems()
+	method public void updateCustomerNameText(BBjString customerName$)
+		#CustomerNameST!.setText(customerName$)
 	methodend
-	
-	method public BBjNumber getFirmSelectionListButtonSelection()
-	    methodret #FirmSelectionLB!.getSelectedIndex()
-	methodend 
+
+	method public void clearCustomerNameText()
+		#CustomerNameST!.setText("")
+	methodend
 	
 	method public void showRegistrationMessage() 
 	    #displayMessage("A registration email has been sent to your company. Your account will be ready when the email is approved.")
-	methodend 
-	
-	REM Sets the color of the indicator beside username red for valid=0 and green for valid=1
-	method public void setUserNameValid(BBjNumber valid)
-	    #UserNameValidST!.setOpaque(1)
-	    if (valid)
-	        #UserNameValidST!.setBackColor(BBjColor.GREEN)
-	    else 
-	       #UserNameValidST!.setBackColor(BBjColor.RED)
-	    endif
-	methodend 
-	
-	method public void resetUserNameValid()
-	    #UserNameValidST!.setOpaque(0)
-	methodend 
+	methodend  
 	
 	method public void setRegistrationEnabled(BBjNumber enabled)
 	  #RegisterBtn!.setEnabled(enabled)
 	methodend 
 	
 	method public BBjNumber allFieldsHaveValues()
-	    methodret #notEmpty(#DesiredUserNameEB!) and #notEmpty(#FirmSelectionLB!) and #notEmpty(#FirstNameEB!) and #notEmpty(#LastNameEB!) and #notEmpty(#CustomerIDEB!) and #notEmpty(#UserEmailEB!)
+	    methodret #notEmpty(#DesiredUserNameEB!) and #notEmpty(#CustomerNameST!) and #notEmpty(#FirstNameEB!) and #notEmpty(#LastNameEB!) and #notEmpty(#CustomerIDEB!) and #notEmpty(#UserEmailEB!)
 	methodend 
 
 	method protected BBjNumber notEmpty(BBjControl c!)

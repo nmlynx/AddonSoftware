@@ -14,14 +14,13 @@ use ::CCRegistrationModel.bbj::CCCustomerFirmInfo
 use ::aro_CCUtil.bbj::CCUtil
 
 class public CCLoginManager
-
+	field protected CCUtil Util!=new CCUtil()
 	field protected CCLoginView LoginView!=new CCLoginView()
 	field protected CCLoginModel LoginModel!=new CCLoginModel()
 	field protected CCRegistrationView RegistrationView!=new CCRegistrationView() 
 	field protected CCRegistrationModel RegistrationModel!=new CCRegistrationModel() 
 
 	method public CCLoginManager()
-	    CCUtil.initializeBaristaEnvironment()
 	    
 	    REM Set up user interface 
         #LoginView!.registerRegisterButton_OnButtonPushCallback(#this!,"handleRegistration")
@@ -35,7 +34,6 @@ class public CCLoginManager
         #RegistrationView!.registerFirstNameEB_OnFocusLostCallback(#this!,"handleLostFocus")
         #RegistrationView!.registerLastNameEB_OnFocusLostCallback(#this!,"handleLostFocus")
         #RegistrationView!.registerUserEmailEB_OnFocusLostCallback(#this!,"handleLostFocus")
-        #RegistrationView!.registerFirmSelectionLB_OnFocusLostCallback(#this!,"handleLostFocus")
 	methodend
 
 	method public void doModal()
@@ -95,26 +93,25 @@ class public CCLoginManager
 	methodend
 	
 	method public void handleCustomerModification(BBjLostFocusEvent event!)
-	    declare BBjVector customerList!
 	    declare BBjString customerID!
+		declare BBjString customerName$
 	    declare BBjNumber customerFound
 	    
-	    REM Get the list of corresponding customers
+	    REM Get the corresponding customer name
 	    customerID!=event!.getEditBox().getText()
 	    customerID!=customerID!.trim()
 	    if (customerID!.length()>0) then 
-	        customerList!=#RegistrationModel!.getCorrespondingCustomerList(customerID!)
-	    else 
-	        #RegistrationView!.clearFirmSelectionListButton()
-	        methodret 
+	        customerName$=#RegistrationModel!.getCorrespondingCustomerName(customerID!)
+	    else
+			customerName$="NOT_FOUND" 
 	    endif 
 	    	    
-	    REM Populate the listbutton with the corresponding customers 
-	    customerFound=(customerList!<>null() and customerList!.size()>0)
+	    REM Set the static text with the customer name 
+	    customerFound=(customerName$<>"NOT_FOUND")
 	    if  customerFound then 
-	        #RegistrationView!.populateFirmSelectionListButton(customerList!)
+	        #RegistrationView!.updateCustomerNameText(customerName$)
 	    else 
-	       #RegistrationView!.clearFirmSelectionListButton()
+	       #RegistrationView!.clearCustomerNameText()
 	    endif 
 	    
 	    REM Enable the registration button if all our fields are populated.
@@ -132,7 +129,10 @@ class public CCLoginManager
 	    
 	    name!=event!.getEditBox().getText()
 	    valid = #userIsValid(name!)
-	    #RegistrationView!.setUserNameValid(valid)
+		if !valid
+			#RegistrationView!.displayMessage("This username is not available; please select a different one.")
+		endif
+rem	    #RegistrationView!.setUserNameValid(valid)
 	    #handleLostFocus(event!)
 	methodend 
 	
@@ -160,6 +160,7 @@ class public CCLoginManager
       declare CCCustomerFirmInfo firmInfo!
       
       rec!=new CCRegistrationRecord()
+	  rec!.setFirmID(stbl("+FIRM_ID"))
       rec!.setUserName(#RegistrationView!.getUserName())
       rec!.setFirstName(#RegistrationView!.getFirstName())
       rec!.setLastName(#RegistrationView!.getLastName())
@@ -167,12 +168,6 @@ class public CCLoginManager
       rec!.setCustomerID(#RegistrationView!.getCustomerID())
       rec!.setGeneratedToken(#RegistrationModel!.generateToken())
       rec!.setRequestDate(CCUtil.today())
-      
-      REM Obtain the firm id from the Registration View's ListButton selection
-      ndx=#RegistrationView!.getFirmSelectionListButtonSelection()
-      firmSelectionList!=#RegistrationModel!.getCustomerFirmList()
-      firmInfo!=cast(CCCustomerFirmInfo,firmSelectionList!.get(ndx))
-      rec!.setFirmID(firmInfo!.getFirmID())
       
       REM Add the registration to the database and send the registration request email
       #RegistrationModel!.addRegistration(rec!)
@@ -198,48 +193,3 @@ cclm!=new CCLoginManager()
 cclm!.doModal()
 release
 
-rem --- sample code below for Shaun - need to open tables we want to query, then close them again
-rem --- ensures Barista creates them if non-existent, so SQL query won't throw err 77
-
-rem --- Open files
-
-    num_files=16
-    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="ARS_PARAMS",     open_opts$[1]="OTA"
-	
-	gosub open_tables
-	
-rem --- Close files after ensuring they exist
-
-    num_files=15
-    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="ARC_SALECODE",   open_opts$[1]="C@"
-
-open_tables:rem --- Open Tables
-
-    call stbl("+DIR_SYP")+"bac_open_tables.bbj",
-:       rd_open_beg,
-:       rd_open_end,
-:       rd_open_tables$[all],
-:       rd_open_opts$[all],
-:       rd_open_chans$[all],
-:       rd_open_tpls$[all],
-:       rd_table_chans$[all],
-:       rd_open_batch,
-:       rd_open_status$
-
-    if rd_open_status$<>""
-        rd_msg_id$="ENTRY_OPEN_ERROR"
-        dim rd_msg_tokens$[1]
-            rd_msg_tokens$[1]=rd_open_status$
-        gosub disp_message
-        release
-    endif
-
-    return
-
-disp_message:rem --- Display Message Dialog
-
-    call stbl("+DIR_SYP")+"bac_message.bbj",rd_msg_id$,rd_msg_tokens$[all],rd_msg_opt$,rd_table_chans$[all]
-
-    return

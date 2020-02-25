@@ -4,7 +4,7 @@ REM  * @author shaun
 REM  * Copyright BASIS International Ltd.  All Rights Reserved.
 REM  */
 
-
+use java.util.UUID
 
 use ::sys/prog/bao_docqueue.bbj::DocumentQueue
 use ::sys/prog/bao_security.bbj::Security
@@ -17,12 +17,8 @@ class public CCRegistrationModel
   rem field public BBjNumber SERVERPORT=8443
   field public BBjString ParameterTable$="ARS_CC_CUSTPMT"
   field public BBjString ReportControlID$=pad(#ParameterTable$,16)
-  
 
   field protected BBjNumber SqlChan
-  field protected BBjString EmailAccountName$="GMAIL"
-  field protected BBjVector CustomerFirmList!
- 
  
   method public CCRegistrationModel()
     #SqlChan=sqlunt
@@ -51,37 +47,18 @@ class public CCRegistrationModel
     methodret (result.count<>0)
   methodend
   
-  REM Return value is a list of customers to populate the list button with
-  method public BBjVector getCorrespondingCustomerList(BBjString customerID$)
-    declare CCCustomerFirmInfo customerInfo!
-    #CustomerFirmList!=BBjAPI().makeVector() 
-	firm_id$=stbl("+FIRM_ID");rem CAH
-    sqlprep (#SqlChan) "SELECT ARM_CUSTMAST.FIRM_ID,ARM_CUSTMAST.CUSTOMER_NAME, ARS_REPORT.NAME,ARS_REPORT.ADDR_LINE_1,ARS_REPORT.ADDR_LINE_2,ARS_REPORT.CITY,ARS_REPORT.STATE_CODE,ARS_REPORT.ZIP_CODE FROM ARM_CUSTMAST, ARS_REPORT WHERE ARM_CUSTMAST.PAY_ONLINE='Y' AND ARM_CUSTMAST.PAY_AUTH_EMAIL<>'' AND ARM_CUSTMAST.FIRM_ID=ARS_REPORT.FIRM_ID AND ARM_CUSTMAST.CUSTOMER_ID=? AND ARM_CUSTMAST.FIRM_ID='"+firm_id$+"' ";rem CAH
+  REM Return value is the customer name for the ID entered by the registrant
+  method public BBjString getCorrespondingCustomerName(BBjString customerID$)
+
+    customerName$ = "NOT_FOUND" 
+    sqlprep (#SqlChan) "SELECT ARM_CUSTMAST.FIRM_ID,ARM_CUSTMAST.CUSTOMER_NAME, ARS_REPORT.NAME,ARS_REPORT.ADDR_LINE_1,ARS_REPORT.ADDR_LINE_2,ARS_REPORT.CITY,ARS_REPORT.STATE_CODE,ARS_REPORT.ZIP_CODE FROM ARM_CUSTMAST, ARS_REPORT WHERE ARM_CUSTMAST.PAY_ONLINE='Y' AND ARM_CUSTMAST.PAY_AUTH_EMAIL<>'' AND ARM_CUSTMAST.FIRM_ID=ARS_REPORT.FIRM_ID AND ARM_CUSTMAST.CUSTOMER_ID=? AND ARM_CUSTMAST.FIRM_ID='"+stbl("+FIRM_ID")+"' "
     sqlexec (#SqlChan) customerID$
     dim result$:sqltmpl(#SqlChan)
+	result$=sqlfetch(#SqlChan,end=done)
+    customerName$ = result.customer_name$
+	done:
+    methodret customerName$
     
-    done=0
-    while !done
-        result$=sqlfetch(#SqlChan,end=done)
-        customerInfo!=new CCCustomerFirmInfo() 
-        customerInfo!.setFirmID(result.firm_id$)
-        customerInfo!.setCustomerName(result.customer_name$)
-        customerInfo!.setFirmName(result.name$)
-        customerInfo!.setFirmAddress1(result.addr_line_1$)
-        customerInfo!.setFirmAddress2(result.addr_line_2$)
-        customerInfo!.setFirmCity(result.city$)
-        customerInfo!.setFirmState(result.state_code$)
-        customerInfo!.setFirmZip(result.zip_code$)
-        #CustomerFirmList!.add(customerInfo!)
-    wend
-    done: 
-    
-    methodret #CustomerFirmList!
-    
-  methodend 
-  
-  method public BBjVector getCustomerFirmList() 
-    methodret #CustomerFirmList!
   methodend 
   
   method public void addRegistration(CCRegistrationRecord rec!)
@@ -110,7 +87,7 @@ class public CCRegistrationModel
 		emailMessage!=recipientInfo!.getFieldAsString("EMAIL_MESSAGE")
 		
 		REM Get the URL for registration from our parameter table
-		sqlprep(#SqlChan) "select REGISTER_URL from " + #ParameterTable$
+		sqlprep(#SqlChan) "select REGISTER_URL from " + #ParameterTable$ + " where FIRM_ID = '" + stbl("+FIRM_ID") + "'"
 		sqlexec(#SqlChan)
 		dim result$:sqltmpl(#SqlChan)
 		result$=sqlfetch(#SqlChan)

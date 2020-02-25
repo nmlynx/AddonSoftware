@@ -1,6 +1,7 @@
 CLASS PUBLIC AuthorizeWebhook
 
 	use java.io.File
+    use java.util.Properties
 
     use org.json.JSONObject
 	
@@ -18,6 +19,8 @@ CLASS PUBLIC AuthorizeWebhook
 	use net.authorize.api.controller.base.ApiOperationBase
 	use net.authorize.api.controller.GetHostedPaymentPageController
 	use net.authorize.api.controller.GetTransactionDetailsController
+
+	use ::sys/prog/bao_docqueue.bbj::DocumentQueue
 
 	use ::ado_util.src::util	
 	use ::ado_file.src::FileObject
@@ -61,7 +64,7 @@ CLASS PUBLIC AuthorizeWebhook
 
 		ns!=BBjAPI().getNamespace("aon","credit_receipt_authorize",1)
 		ns!.setValue(trans_id$,content!)
-
+		
 		global_ns!=BBjAPI().getGlobalNamespace()
 		gw_config!=new java.util.HashMap()
 		gw_config!=global_ns!.getValue("AUTHORIZEgw_config",err=*next)
@@ -244,6 +247,11 @@ CLASS PUBLIC AuthorizeWebhook
 
 						rem --- get sequence number for response records
 						call stbl("+DIR_SYP")+"bas_sequences.bbj","CREDIT_TRANS_NO",credit_trans_no$,rd_table_chans$[all],"QUIET"
+                        if credit_trans_no$="" then
+                            message!=BBjAPI().makeVector()
+                            message!.addItem("Barista Sequence Number record not found for CREDIT_TRANS_NO")
+                            #logMessage(user_id$, message!, 1)
+                        endif
 
 						art_resphdr.firm_id$=firm_id$
 						art_resphdr.credit_trans_no$=credit_trans_no$
@@ -287,14 +295,15 @@ CLASS PUBLIC AuthorizeWebhook
 					endif
 					global_ns!.removeValue("AUTHORIZEgw_config",err=*next)
 					global_ns!.removeValue("AUTHORIZE"+resp_sid$,err=*next)
+				endif
 			else
 				rem --- Unable to process GetTransactionDetailsRequest method.
 				message!=BBjAPI().makeVector()
 				message!.addItem("Unable to process GetTransactionDetailsRequest method.")
-				message!.addItem("Request response code: "+authResponse!.getMessages().getResultCode())
+				message!.addItem("Request response code: "+authResponse!.getMessages().getResultCode().toString())
                 message!.addItem("Content: "+content!)
 				#logMessage(user_id$, message!, 1)
-			endif		
+			endif
 		endif
 
 		goto end_logging;rem --- rem this line to enable output to .txt for troubleshooting
@@ -455,12 +464,16 @@ end_logging:
 
         rem --- Retrieve sysinfo data
         sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-        dim sysinfo$:sysinfo_template$
-        sysinfo$=stbl("+SYSINFO",err=*next)
-        firm_id$=sysinfo.firm_id$
+		if cvs(sysinfo_template$,2)<>"" then
+			dim sysinfo$:sysinfo_template$
+			sysinfo$=stbl("+SYSINFO",err=*next)
+			firm_id$=sysinfo.firm_id$
+		else
+			firm_id$=""
+		endif
 
         rem --- Get email address of users with CCONLINE security role
-        userEmail!=BBjAPI().makeVector()
+        userEmail!=new Properties()
         adm_userroles.sec_role_id$="CCONLINE"
         read(#adm_userroles%,key=adm_userroles.sec_role_id$,knum="ROLE_USER",dom=*next)
         while 1
@@ -469,7 +482,8 @@ end_logging:
     
             redim adm_user$     
             readrecord(#adm_user%,key=adm_userroles.user_id$,dom=*next)adm_user$
-            if cvs(adm_user.email_address$,2)<>"" then userEmail!.add(cvs(adm_user.email_address$,2))
+            if cvs(adm_user.email_address$,2)<>"" then userEmail!.setProperty(cvs(adm_user.user_id$,2),cvs(adm_user.email_address$,2))
+			if firm_id$="" then firm_id$=adm_user.default_firm$
         wend
 
         rem --- Get firm's email addresses
@@ -487,29 +501,30 @@ end_logging:
         readrecord(#adm_rptctl%,key=firm_id$+adm_rptctl.dd_table_alias$,dom=*next)adm_rptctl$
     
         rem --- Send message to email address for users with CCONLINE security role
-        if userEmail!.size()=0 and firm_email_replyto$<>"" then userEmail!.add(adm_user.firm_email_replyto$)
-        if userEmail!.size()>0 then
-            for i=0 to userEmail!.size()-1
-                thisEmail$=userEmail!.get(i)
+		userEmailIter!=userEmail!.keySet().iterator()
+		while userEmailIter!.hasNext()
+			thisUser$=userEmailIter!.next()
+			thisEmail$=userEmail!.getProperty(thisUser$)
+			user_id$=stbl("+USER_ID",err=*next)
+			if user_id$="" then x$=stbl("+USER_ID",thisUser$)
             
-                rem --- Make email entry in Doc Processing Queue
-                docQueue! = new DocumentQueue()
-                docQueue!.clear()
-                docQueue!.setFirmID(firm_id$)
-                docQueue!.setDocumentID("NOATTACH")
-                docQueue!.setDocumentExt("PDF")
-                docQueue!.setProcessType("E")
-                docQueue!.setStatus("A");rem Auto-detect.  Queue will switch it to "Ready" if all required data is present
-                docQueue!.setEmailAccount(cvs(adm_rptctl.email_account$,2))
-                docQueue!.setEmailFrom(iff(firm_email_from$<>"", firm_email_from$, thisEmail$))
-                docQueue!.setEmailTo(thisEmail$)
-                docQueue!.setSubject("ERROR: AuthorizeWebhook")
-                docQueue!.setMessage(msgText$)
-                docQueue!.createProcess()
-                proc_key$=docQueue!.getFirmID()+docQueue!.getProcessID()
-                docQueue!.checkStatus(proc_key$)
-            next i
-        endif
+			rem --- Make email entry in Doc Processing Queue
+			docQueue! = new DocumentQueue()
+			docQueue!.clear()
+			docQueue!.setFirmID(firm_id$)
+			docQueue!.setDocumentID("NOATTACH")
+			docQueue!.setDocumentExt("PDF")
+			docQueue!.setProcessType("E")
+			docQueue!.setStatus("A");rem Auto-detect.  Queue will switch it to "Ready" if all required data is present
+			docQueue!.setEmailAccount(cvs(adm_rptctl.email_account$,2))
+			docQueue!.setEmailFrom(iff(firm_email_from$<>"", firm_email_from$, thisEmail$))
+			docQueue!.setEmailTo(thisEmail$)
+			docQueue!.setSubject("ERROR: AuthorizeWebhook")
+			docQueue!.setMessage(msgText$)
+			docQueue!.createProcess()
+			proc_key$=docQueue!.getFirmID()+docQueue!.getProcessID()
+			docQueue!.checkStatus(proc_key$)
+        wend
 
         methodret
     methodend
