@@ -10,16 +10,11 @@ REM A utility class that provides constants and methods needed by the Customer P
 class public CCUtil
 
     field protected static BBjString DATE_MASK!="%Yl%Mz%Dz"
-    field protected static BBjString EM_ACCOUNT_PREFIX!="arccc_"
 
     method public static BBjString getDATE_MASK()
         methodret #DATE_MASK!
     methodend 
     
-    method public static BBjString getEM_ACCOUNT_PREFIX()
-        methodret #EM_ACCOUNT_PREFIX!
-    methodend 
-
     method public static BBjAdminBase getAdmin()
         declare BBjString keyName$
         declare BBjNamespace ns!
@@ -34,10 +29,6 @@ class public CCUtil
   
     method public static BBjString today()
         methodret date(0:#DATE_MASK!)
-    methodend 
-    
-    method public static BBjString getEMUserName(BBjString username$) 
-        methodret #EM_ACCOUNT_PREFIX!+username$
     methodend 
     
     method public static void initializeBaristaEnvironment()

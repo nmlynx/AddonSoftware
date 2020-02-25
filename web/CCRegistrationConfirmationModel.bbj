@@ -17,6 +17,7 @@ class public CCRegistrationConfirmationModel
 
   field protected CCRegistrationModel RegistrationModel!=new CCRegistrationModel() 
   field protected BBjNumber SqlChan
+  field protected static BBjString EM_ACCOUNT_PREFIX!="arccc_"
  
   method public CCRegistrationConfirmationModel()
     #SqlChan=sqlunt
@@ -60,18 +61,20 @@ class public CCRegistrationConfirmationModel
 
   method public void addUser(CCRegistrationRecord rec!)
     declare BBjAdminBase admin!
+    declare BBjString emUserName$
     REM TODO:  Validate data
     
     activatedDate$=CCUtil.today()
+    emUserName$=CCUtil.createEMUserName(rec!.getUserName())
     
     REM Create User in database 
-    sqlprep (#SqlChan) "INSERT INTO ARC_CC_USERS (FIRM_ID, CC_USERNAME, CUSTOMER_ID, NAME_FIRST, NAME_LAST, USER_EMAIL, ACTIVATED_DATE) VALUES(?,?,?,?,?,?,?)"
-    sqlexec (#SqlChan) rec!.getFirmID(),rec!.getUserName(),rec!.getCustomerID(), rec!.getFirstName(),rec!.getLastName(), rec!.getUserEmail(),activatedDate$
+    sqlprep (#SqlChan) "INSERT INTO ARC_CC_USERS (FIRM_ID, CC_USERNAME, CUSTOMER_ID, NAME_FIRST, NAME_LAST, USER_EMAIL, ACTIVATED_DATE, EMUSER) VALUES(?,?,?,?,?,?,?)"
+    sqlexec (#SqlChan) rec!.getFirmID(),rec!.getUserName(),rec!.getCustomerID(), rec!.getFirstName(),rec!.getLastName(), rec!.getUserEmail(),activatedDate$,emUserName$
     
     REM Create user in EM 
     password$=#generatePassword()
     admin!=CCUtil.getAdmin()
-    admin!.addUser(CCUtil.getEMUserName(rec!.getUserName()),password$)
+    admin!.addUser(emUserName$,password$)
     
     REM Send the password to the new user's email address
     declare ReportControl reportControl!
@@ -141,5 +144,26 @@ class public CCRegistrationConfirmationModel
     sqlexec (#SqlChan) rec!.getUserName() 
   methodend 
   
+  REM Generate an EM Username for a new user
+  method public BBjString generateEMUserName(BBjString username$)
+      declare BBjString emUserName$
+      declare BBjString uuid$
+      uuid$=UUID.randomUUID().toString()
+        
+      methodret #EM_ACCOUNT_PREFIX!+username$+uuid$
+  methodend
+    
+  REM Look up an existing user's EM username
+  method public BBjString getEMUserName(BBjString username$)
+      sqlprep (#SqlChan) "select emuser from arc_cc_users where cc_username=?"
+      sqlexec (#SqlChan) username$
+      
+      dim result$:sqltmpl(#SqlChan)
+      
+      result$=sqlfetch(#SqlChan)
+      
+      return result.emuser$
+      
+  methodend 
 
 classend
