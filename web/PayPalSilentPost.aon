@@ -1,5 +1,9 @@
 CLASS PUBLIC PayPalSilentPost
 
+    use java.util.Properties
+
+	use ::sys/prog/bao_docqueue.bbj::DocumentQueue
+
     field private BBjspWebRequest request!
     field private BBjspWebResponse response!
 
@@ -212,6 +216,7 @@ CLASS PUBLIC PayPalSilentPost
 					trans_approved$=iff(result$="0","A","D");rem A=approved, D=declined
 
 					rem --- get sequence number for response records
+rem wgh ... 9598 ... log this
 					call stbl("+DIR_SYP")+"bas_sequences.bbj","CREDIT_TRANS_NO",credit_trans_no$,rd_table_chans$[all],"QUIET"
 
 					art_resphdr.firm_id$=firm_id$
@@ -418,12 +423,16 @@ end_logging:
 
         rem --- Retrieve sysinfo data
         sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
-        dim sysinfo$:sysinfo_template$
-        sysinfo$=stbl("+SYSINFO",err=*next)
-        firm_id$=sysinfo.firm_id$
+		if cvs(sysinfo_template$,2)<>"" then
+			dim sysinfo$:sysinfo_template$
+			sysinfo$=stbl("+SYSINFO",err=*next)
+			firm_id$=sysinfo.firm_id$
+		else
+			firm_id$=""
+		endif
 
         rem --- Get email address of users with CCONLINE security role
-        userEmail!=BBjAPI().makeVector()
+        userEmail!=new Properties()
         adm_userroles.sec_role_id$="CCONLINE"
         read(#adm_userroles%,key=adm_userroles.sec_role_id$,knum="ROLE_USER",dom=*next)
         while 1
@@ -432,7 +441,8 @@ end_logging:
     
             redim adm_user$     
             readrecord(#adm_user%,key=adm_userroles.user_id$,dom=*next)adm_user$
-            if cvs(adm_user.email_address$,2)<>"" then userEmail!.add(cvs(adm_user.email_address$,2))
+            if cvs(adm_user.email_address$,2)<>"" then userEmail!.setProperty(cvs(adm_user.user_id$,2),cvs(adm_user.email_address$,2))
+			if firm_id$="" then firm_id$=adm_user.default_firm$
         wend
 
         rem --- Get firm's email addresses
@@ -450,29 +460,29 @@ end_logging:
         readrecord(#adm_rptctl%,key=firm_id$+adm_rptctl.dd_table_alias$,dom=*next)adm_rptctl$
     
         rem --- Send message to email address for users with CCONLINE security role
-        if userEmail!.size()=0 and firm_email_replyto$<>"" then userEmail!.add(adm_user.firm_email_replyto$)
-        if userEmail!.size()>0 then
-            for i=0 to userEmail!.size()-1
-                thisEmail$=userEmail!.get(i)
+		userEmailIter!=userEmail!.keySet().iterator()
+		while userEmailIter!.hasNext()
+			thisUser$=userEmailIter!.next()
+			thisEmail$=userEmail!.getProperty(thisUser$)
+			x$=stbl("+USER_ID",thisUser$)
             
-                rem --- Make email entry in Doc Processing Queue
-                docQueue! = new DocumentQueue()
-                docQueue!.clear()
-                docQueue!.setFirmID(firm_id$)
-                docQueue!.setDocumentID("NOATTACH")
-                docQueue!.setDocumentExt("PDF")
-                docQueue!.setProcessType("E")
-                docQueue!.setStatus("A");rem Auto-detect.  Queue will switch it to "Ready" if all required data is present
-                docQueue!.setEmailAccount(cvs(adm_rptctl.email_account$,2))
-                docQueue!.setEmailFrom(iff(firm_email_from$<>"", firm_email_from$, thisEmail$))
-                docQueue!.setEmailTo(thisEmail$)
-                docQueue!.setSubject("ERROR: PayPalSilentPost")
-                docQueue!.setMessage(msgText$)
-                docQueue!.createProcess()
-                proc_key$=docQueue!.getFirmID()+docQueue!.getProcessID()
-                docQueue!.checkStatus(proc_key$)
-            next i
-        endif
+			rem --- Make email entry in Doc Processing Queue
+			docQueue! = new DocumentQueue()
+			docQueue!.clear()
+			docQueue!.setFirmID(firm_id$)
+			docQueue!.setDocumentID("NOATTACH")
+			docQueue!.setDocumentExt("PDF")
+			docQueue!.setProcessType("E")
+			docQueue!.setStatus("A");rem Auto-detect.  Queue will switch it to "Ready" if all required data is present
+			docQueue!.setEmailAccount(cvs(adm_rptctl.email_account$,2))
+			docQueue!.setEmailFrom(iff(firm_email_from$<>"", firm_email_from$, thisEmail$))
+			docQueue!.setEmailTo(thisEmail$)
+			docQueue!.setSubject("ERROR: AuthorizeWebhook")
+			docQueue!.setMessage(msgText$)
+			docQueue!.createProcess()
+			proc_key$=docQueue!.getFirmID()+docQueue!.getProcessID()
+			docQueue!.checkStatus(proc_key$)
+        wend
 
         methodret
     methodend
