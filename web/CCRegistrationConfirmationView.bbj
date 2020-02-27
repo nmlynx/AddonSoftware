@@ -8,8 +8,8 @@ use ::CCView.bbj::CCView
 
 class public CCRegistrationConfirmationView extends CCView
 
-	field protected BBjStaticText header1!
-	field protected BBjStaticText header2!
+	field protected BBjStaticText Header1!
+	field protected BBjStaticText Header2!
 	field protected BBjStaticText DesiredUserNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,170,190,26,"User Name",$8000$)
 	field protected BBjStaticText FirstNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,220,190,26,"First Name",$8000$)
 	field protected BBjStaticText LastNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,270,190,26,"Last Name",$8000$)
@@ -35,6 +35,8 @@ class public CCRegistrationConfirmationView extends CCView
 		#super!()
 		#getWin().setTitle("Customer Registration Confirmation")
 		#getWin().setSize(#getWin().getWidth()+100,520)
+		
+		REM Belongs in model
 		#SqlChan=sqlunt
 		sqlopen (#SqlChan) stbl("+DBNAME")
 		
@@ -42,15 +44,16 @@ class public CCRegistrationConfirmationView extends CCView
 		sqlexec(#SqlChan)
 		dim result$:sqltmpl(#SqlChan)
 		result$=sqlfetch(#SqlChan)
-
-		#header1!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,25,720,60,result$)
-		#header2!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,85,720,50,"Customer Portal - Confirm Registration")
-		#header1!.setName("ccregister-confirmation-header1-statictext")
-		#header2!.setName("ccregister-confirmation-header2-statictext")
-		#header1!.setFont(#headerFont1!)
-		#header1!.setAlignment(BBjStaticText.ALIGN_CENTER)
-		#header2!.setFont(#headerFont2!)
-		#header2!.setAlignment(BBjStaticText.ALIGN_CENTER)
+		REM /Belongs in model 
+		
+		#Header1!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,25,720,60,result$)
+		#Header2!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,85,720,50,"Customer Portal - Confirm Registration")
+		#Header1!.setName("ccregister-confirmation-header1-statictext")
+		#Header2!.setName("ccregister-confirmation-header2-statictext")
+		#Header1!.setFont(#headerFont1!)
+		#Header1!.setAlignment(BBjStaticText.ALIGN_CENTER)
+		#Header2!.setFont(#headerFont2!)
+		#Header2!.setAlignment(BBjStaticText.ALIGN_CENTER)
 
 		#DesiredUserNameST!.setFont(#getFont())
 		#FirstNameST!.setFont(#getFont())

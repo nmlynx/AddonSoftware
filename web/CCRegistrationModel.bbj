@@ -9,18 +9,19 @@ use java.util.UUID
 use ::sys/prog/bao_docqueue.bbj::DocumentQueue
 use ::sys/prog/bao_security.bbj::Security
 use ::ado_rptControl.src::ReportControl
+use ::aro_CCUtil.bbj::CCUtil
 
 class public CCRegistrationModel
 
   REM Get this into configuration
-  rem field public BBjString SERVERNAME!=System.getProperty("com.basis.jetty.host")
-  rem field public BBjNumber SERVERPORT=8443
   field public BBjString ParameterTable$="ARS_CC_CUSTPMT"
   field public BBjString ReportControlID$=pad(#ParameterTable$,16)
 
   field protected BBjNumber SqlChan
  
   method public CCRegistrationModel()
+  
+    rem CCUtil.openQueryTables()
     #SqlChan=sqlunt
     sqlopen (#SqlChan) stbl("+DBNAME")
   methodend

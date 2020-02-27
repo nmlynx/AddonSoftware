@@ -90,6 +90,11 @@ class public CCLoginModel
 		methodret x!<>null()
 	methodend 
 	
+	REM Method for allowing the user to change their password
+	method protected void changePassword(BBjString newPassword$)
+	    CCUtil.getAdmin().changePassword(#UserName$,newPassword$)
+	methodend 
+	
 	method protected void setLastUsedDate()
 	    sqlprep (#SqlChan) "update ARC_CC_USERS set LAST_USED_DATE=? WHERE CC_USERNAME=?"
 	    sqlexec (#SqlChan) CCUtil.today(), #UserName$
