@@ -65,10 +65,10 @@ class public CCRegistrationConfirmationModel
     REM TODO:  Validate data
     
     activatedDate$=CCUtil.today()
-    emUserName$=CCUtil.createEMUserName(rec!.getUserName())
+    emUserName$=#generateEMUserName(rec!.getUserName())
     
     REM Create User in database 
-    sqlprep (#SqlChan) "INSERT INTO ARC_CC_USERS (FIRM_ID, CC_USERNAME, CUSTOMER_ID, NAME_FIRST, NAME_LAST, USER_EMAIL, ACTIVATED_DATE, EMUSER) VALUES(?,?,?,?,?,?,?)"
+    sqlprep (#SqlChan) "INSERT INTO ARC_CC_USERS (FIRM_ID, CC_USERNAME, CUSTOMER_ID, NAME_FIRST, NAME_LAST, USER_EMAIL, ACTIVATED_DATE, EMUSER) VALUES(?,?,?,?,?,?,?,?)"
     sqlexec (#SqlChan) rec!.getFirmID(),rec!.getUserName(),rec!.getCustomerID(), rec!.getFirstName(),rec!.getLastName(), rec!.getUserEmail(),activatedDate$,emUserName$
     
     REM Create user in EM 
