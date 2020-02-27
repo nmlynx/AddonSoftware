@@ -1,4 +1,24 @@
-[[OPT_INVHDR.APFE]]
+[[OPT_INVHDR.ADIS]]
+rem --- Display Ship to information
+
+	cust_id$ = callpoint!.getColumnData("OPT_INVHDR.CUSTOMER_ID")
+	gosub display_customer
+
+	ship_to_type$ = callpoint!.getColumnData("OPT_INVHDR.SHIPTO_TYPE")
+	ship_to_no$    = callpoint!.getColumnData("OPT_INVHDR.SHIPTO_NO")
+	order_no$       = callpoint!.getColumnData("OPT_INVHDR.ORDER_NO")
+	invoice_no$     = callpoint!.getColumnData("OPT_INVHDR.AR_INV_NO")
+	gosub ship_to_info
+
+rem --- Display invoice total
+
+	net_sales=num(callpoint!.getColumnData("OPT_INVHDR.TOTAL_SALES"))-
+:			  num(callpoint!.getColumnData("OPT_INVHDR.DISCOUNT_AMT"))+
+:			  num(callpoint!.getColumnData("OPT_INVHDR.TAX_AMOUNT"))+
+:			  num(callpoint!.getColumnData("OPT_INVHDR.FREIGHT_AMT"))
+
+	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str(net_sales),1)
+
 rem --- Enable SHPT additional options if shipment tracking info exists
 	optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
 	ar_type$=callpoint!.getColumnData("OPT_INVHDR.AR_TYPE")
@@ -11,9 +31,44 @@ rem --- Enable SHPT additional options if shipment tracking info exists
 	else
 		callpoint!.setOptionEnabled("SHPT",0)
 	endif
-[[OPT_INVHDR.BPFX]]
-rem --- Disable additional options for now
-	callpoint!.setOptionEnabled("SHPT",0)
+
+rem --- Enable Print button for this record
+	callpoint!.setOptionEnabled("PRNT",1)
+
+[[OPT_INVHDR.AFMC]]
+rem --- Inits
+
+	use ::ado_util.src::util
+	use ::ado_order.src::OrderHelper
+	use ::adc_array.aon::ArrayObject
+
+[[OPT_INVHDR.AOPT-PRNT]]
+rem --- historical invoice
+ 
+	cp_cust_id$=callpoint!.getColumnData("OPT_INVHDR.CUSTOMER_ID")
+	cp_order_no$=callpoint!.getColumnData("OPT_INVHDR.ORDER_NO")
+	cp_invoice_no$=callpoint!.getColumnData("OPT_INVHDR.AR_INV_NO")
+	user_id$=stbl("+USER_ID")
+ 
+	dim dflt_data$[3,1]
+	dflt_data$[1,0]="CUSTOMER_ID"
+	dflt_data$[1,1]=cp_cust_id$
+	dflt_data$[2,0]="ORDER_NO"
+	dflt_data$[2,1]=cp_order_no$
+	dflt_data$[3,0]="AR_INV_NO"
+	dflt_data$[3,1]=cp_invoice_no$
+ 
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	                       "OPR_HIST_INV",
+:	                       user_id$,
+:	                       "",
+:	                       "",
+:	                       table_chans$[all],
+:	                       "",
+:	                       dflt_data$[all]
+
+	callpoint!.setStatus("ACTIVATE")
+
 [[OPT_INVHDR.AOPT-SHPT]]
 rem --- Launch Shipment Tracking grid (view only)
 	ar_type$=callpoint!.getColumnData("OPT_INVHDR.AR_TYPE")
@@ -28,9 +83,29 @@ rem --- Launch Shipment Tracking grid (view only)
 :       "QRY",
 :       key_pfx$,
 :       table_chans$[all]
+
+[[OPT_INVHDR.APFE]]
+rem --- Enable SHPT additional options if shipment tracking info exists
+	optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
+	ar_type$=callpoint!.getColumnData("OPT_INVHDR.AR_TYPE")
+	ship_seq_no$=callpoint!.getColumnData("OPT_INVHDR.SHIP_SEQ_NO")
+	trip_key$=firm_id$+ar_type$+cust_id$+order_no$+ship_seq_no$
+	read(optShipTrack_dev,key=trip_key$,dom=*next)
+	optShipTrack_key$=key(optShipTrack_dev,end=*next)
+	if pos(trip_key$=optShipTrack_key$)=1 then
+		callpoint!.setOptionEnabled("SHPT",1)
+	else
+		callpoint!.setOptionEnabled("SHPT",0)
+	endif
+
 [[OPT_INVHDR.ARAR]]
 rem --- Disable additional options for now
 	callpoint!.setOptionEnabled("SHPT",0)
+
+[[OPT_INVHDR.AREC]]
+rem --- Disable Print button when no record displayed
+	callpoint!.setOptionEnabled("PRNT",0)
+
 [[OPT_INVHDR.AR_INV_NO.AVAL]]
 rem --- If missing, set the customer for this invoice.
 	if cvs(callpoint!.getColumnData("OPT_INVHDR.CUSTOMER_ID"),3)="" then
@@ -52,12 +127,15 @@ rem --- If missing, set the customer for this invoice.
 		rem --- Reset index back to AO_STAT_CUST_INV.
 		read(opt_invhdr_dev,key=firm_id$,knum="AO_STAT_CUST_INV",dom=*next)
 	endif
-[[OPT_INVHDR.AFMC]]
-rem --- Inits
 
-	use ::ado_util.src::util
-	use ::ado_order.src::OrderHelper
-	use ::adc_array.aon::ArrayObject
+[[OPT_INVHDR.ASVA]]
+rem --- Enable Print button when leave edit mode
+	callpoint!.setOptionEnabled("PRNT",1)
+
+[[OPT_INVHDR.BPFX]]
+rem --- Disable additional options for now
+	callpoint!.setOptionEnabled("SHPT",0)
+
 [[OPT_INVHDR.BSHO]]
 rem --- Open needed files
 
@@ -328,6 +406,11 @@ rem --- Parse table_chans$[all] into an object
 
 	call pgmdir$+"adc_array.aon::str_array2object", table_chans$[all], tableChans!, status
 	util.setTableChans(tableChans!)
+
+[[OPT_INVHDR.MEMO_1024.BINP]]
+rem --- Disable Print button when in edit mode (this is the only editable field)
+	callpoint!.setOptionEnabled("PRNT",0)
+
 [[OPT_INVHDR.<CUSTOM>]]
 rem ==========================================================================
 display_customer: rem --- Get and display Bill To Information
@@ -405,62 +488,4 @@ rem ==========================================================================
 	callpoint!.setStatus("REFRESH")
 
 	return
-[[OPT_INVHDR.ADIS]]
-rem --- Display Ship to information
 
-	cust_id$ = callpoint!.getColumnData("OPT_INVHDR.CUSTOMER_ID")
-	gosub display_customer
-
-	ship_to_type$ = callpoint!.getColumnData("OPT_INVHDR.SHIPTO_TYPE")
-	ship_to_no$    = callpoint!.getColumnData("OPT_INVHDR.SHIPTO_NO")
-	order_no$       = callpoint!.getColumnData("OPT_INVHDR.ORDER_NO")
-	invoice_no$     = callpoint!.getColumnData("OPT_INVHDR.AR_INV_NO")
-	gosub ship_to_info
-
-rem --- Display invoice total
-
-	net_sales=num(callpoint!.getColumnData("OPT_INVHDR.TOTAL_SALES"))-
-:			  num(callpoint!.getColumnData("OPT_INVHDR.DISCOUNT_AMT"))+
-:			  num(callpoint!.getColumnData("OPT_INVHDR.TAX_AMOUNT"))+
-:			  num(callpoint!.getColumnData("OPT_INVHDR.FREIGHT_AMT"))
-
-	callpoint!.setColumnData("<<DISPLAY>>.ORDER_TOT",str(net_sales),1)
-
-rem --- Enable SHPT additional options if shipment tracking info exists
-	optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
-	ar_type$=callpoint!.getColumnData("OPT_INVHDR.AR_TYPE")
-	ship_seq_no$=callpoint!.getColumnData("OPT_INVHDR.SHIP_SEQ_NO")
-	trip_key$=firm_id$+ar_type$+cust_id$+order_no$+ship_seq_no$
-	read(optShipTrack_dev,key=trip_key$,dom=*next)
-	optShipTrack_key$=key(optShipTrack_dev,end=*next)
-	if pos(trip_key$=optShipTrack_key$)=1 then
-		callpoint!.setOptionEnabled("SHPT",1)
-	else
-		callpoint!.setOptionEnabled("SHPT",0)
-	endif
-[[OPT_INVHDR.AOPT-PRNT]]
-rem --- historical invoice
- 
-	cp_cust_id$=callpoint!.getColumnData("OPT_INVHDR.CUSTOMER_ID")
-	cp_order_no$=callpoint!.getColumnData("OPT_INVHDR.ORDER_NO")
-	cp_invoice_no$=callpoint!.getColumnData("OPT_INVHDR.AR_INV_NO")
-	user_id$=stbl("+USER_ID")
- 
-	dim dflt_data$[3,1]
-	dflt_data$[1,0]="CUSTOMER_ID"
-	dflt_data$[1,1]=cp_cust_id$
-	dflt_data$[2,0]="ORDER_NO"
-	dflt_data$[2,1]=cp_order_no$
-	dflt_data$[3,0]="AR_INV_NO"
-	dflt_data$[3,1]=cp_invoice_no$
- 
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:	                       "OPR_HIST_INV",
-:	                       user_id$,
-:	                       "",
-:	                       "",
-:	                       table_chans$[all],
-:	                       "",
-:	                       dflt_data$[all]
-
-	callpoint!.setStatus("ACTIVATE")
