@@ -1,17 +1,17 @@
 REM /**
-REM  * aro_CCUtil.aon
+REM  * aro_AO_CCUtil.aon
 REM  * @author shaun
 REM  * Copyright BASIS International Ltd.  All Rights Reserved.
 REM  */
 use com.basis.api.admin.BBjAdminBase
 
-REM CCUtil
-REM A utility class that provides constants and methods needed by the Customer Portal
-class public CCUtil
+REM AO_CCUtil
+REM An Addon utility class that provides constants and methods needed by the Customer Portal for online credit card payments
+class public AO_CCUtil
 
     field protected static BBjString DATE_MASK!="%Yl%Mz%Dz"
 
-	method public CCUtil()
+	method public AO_CCUtil()
 		#initializeBaristaEnvironment()
 		#openQueryTables()
 	methodend
