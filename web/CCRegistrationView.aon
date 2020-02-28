@@ -21,14 +21,12 @@ class public CCRegistrationView extends CCView
 	field protected BBjEditBox FirstNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,215,400,34,"")
 	field protected BBjEditBox LastNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,265,400,34,"")
 	field protected BBjEditBox UserEmailEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,315,400,34,"") 
-	field protected BBjEditBox CustomerIDEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,365,400,34,"")
-	field protected BBjStaticText CustomerNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),225,420,400,34,"",$2000$)
+	field protected BBjEditBox CustomerIDEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,365,150,34,"")
+	field protected BBjStaticText CustomerNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),270,370,400,34,$2000$)
 
-	field protected BBjButton RegisterBtn!=#getWin().addButton(#getWin().getAvailableControlID(),206,470,110,50,"Register")
-	field protected BBjButton CancelBtn!=#getWin().addButton(#getWin().getAvailableControlID(),324,470,110,50,"Cancel")
+	field protected BBjButton RegisterBtn!=#getWin().addButton(#getWin().getAvailableControlID(),300,420,110,50,"Register")
+	field protected BBjButton CancelBtn!=#getWin().addButton(#getWin().getAvailableControlID(),420,420,110,50,"Cancel")
 
-	field protected BBjFont headerFont1!=#getSysGui().makeFont("Segoe UI",32,1)
-	field protected BBjFont headerFont2!=#getSysGui().makeFont("Segoe UI",26,1)
 	field protected BBjNumber SqlChan
 
 	method public CCRegistrationView()
@@ -48,27 +46,22 @@ class public CCRegistrationView extends CCView
 
 		#header1!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,25,800,60,result$)
 		#header2!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,85,800,50,"Customer Portal - New User Registration")
-		#header1!.setName("ccregister-header1-statictext")
-		#header2!.setName("ccregister-header2-statictext")
-		#header1!.setFont(#headerFont1!)
-		#header1!.setAlignment(BBjStaticText.ALIGN_CENTER)
-		#header2!.setFont(#headerFont2!)
-		#header2!.setAlignment(BBjStaticText.ALIGN_CENTER)
-		 
-		#DesiredUserNameST!.setFont(#getFont())
-		#FirstNameST!.setFont(#getFont())
-		#LastNameST!.setFont(#getFont())
-		#UserEmailST!.setFont(#getFont())
-		#CustomerIDST!.setFont(#getFont())
-		#CustomerNameST!.setFont(#getFont())
-
-rem --- what does addStyle do? #DesiredUserNameST!.addStyle("cc-statictext") 
-		#DesiredUserNameST!.setName("ccregister-statictext")
-		#FirstNameST!.setName("ccregister-statictext")
-		#LastNameST!.setName("ccregister-statictext")
-		#UserEmailST!.setName("ccregister-statictext")
-		#CustomerIDST!.setName("ccregister-statictext")
-		#CustomerNameST!.setName("ccregister-statictext")
+		
+		#header1!.addStyle("cc-header1")
+		#header2!.addStyle("cc-header2")		 
+		#DesiredUserNameST!.addStyle("cc-statictext")
+		#FirstNameST!.addStyle("cc-statictext")
+		#LastNameST!.addStyle("cc-statictext")
+		#UserEmailST!.addStyle("cc-statictext")
+		#CustomerIDST!.addStyle("cc-statictext")
+		#CustomerNameST!.addStyle("cc-statictext")
+		#DesiredUserNameEB!.addStyle("cc-editbox")
+		#FirstNameEB!.addStyle("cc-editbox")
+		#LastNameEB!.addStyle("cc-editbox")
+		#UserEmailEB!.addStyle("cc-editbox")
+		#CustomerIDEB!.addStyle("cc-editbox")
+		#RegisterBtn!.addStyle("cc-button")
+		#CancelBtn!.addStyle("cc-button")		
 
 		#DesiredUserNameEB!.setFont(#getFont())
 		#FirstNameEB!.setFont(#getFont())
@@ -76,18 +69,9 @@ rem --- what does addStyle do? #DesiredUserNameST!.addStyle("cc-statictext")
 		#UserEmailEB!.setFont(#getFont())
 		#CustomerIDEB!.setFont(#getFont())
 
-		#DesiredUserNameEB!.addStyle("cc-editbox")
-		#FirstNameEB!.addStyle("cc-editbox")
-		#LastNameEB!.addStyle("cc-editbox")
-		#UserEmailEB!.addStyle("cc-editbox")
-		#CustomerIDEB!.addStyle("cc-editbox")
-
 		#RegisterBtn!.setFont(#getFont())
 		#RegisterBtn!.setEnabled(0)
 		#CancelBtn!.setFont(#getFont())
-
-		#RegisterBtn!.setName("ccregister-register-button")
-		#CancelBtn!.setName("ccregister-cancel-button")
 
 	methodend
 

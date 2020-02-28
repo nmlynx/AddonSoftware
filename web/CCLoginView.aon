@@ -16,8 +16,6 @@ class public CCLoginView extends CCView
     field protected BBjButton cancelBtn!
     field protected BBjStaticText header1!
     field protected BBjStaticText header2!
-	field protected BBjFont headerFont1!=#getSysGui().makeFont("Segoe UI",32,1)
-	field protected BBjFont headerFont2!=#getSysGui().makeFont("Segoe UI",28,1)
 	field protected BBjNumber SqlChan
 
     method public CCLoginView()
@@ -41,26 +39,19 @@ class public CCLoginView extends CCView
         #registerBtn!=#getWin().addButton(#getWin().getAvailableControlID(),275,265,110,50,"Register")
         #cancelBtn!=#getWin().addButton(#getWin().getAvailableControlID(),390,265,110,50,"Cancel")
 
-		#header1!.setName("cclogin-header1-statictext")
-		#header2!.setName("cclogin-header2-statictext")
-		#userNameST!.setName("cclogin-username-statictext")
-		#passwordST!.setName("cclogin-password-statictext")
-		#loginBtn!.setName("cclogin-login-button")
-		#registerBtn!.setName("cclogin-register-button")
-		#cancelBtn!.setName("cclogin-cancel-button")
+		#header1!.addStyle("cc-header1")
+		#header2!.addStyle("cc-header2")
+		#userNameST!.addStyle("cc-statictext")
+		#passwordST!.addStyle("cc-statictext")
+		#userNameEB!.addStyle("cc-editbox")
+		#passwordEB!.addStyle("cc-editbox")
+		#loginBtn!.addStyle("cc-button")
+		#registerBtn!.addStyle("cc-button")
+		#cancelBtn!.addStyle("cc-button")
 
 		REM Set the font for all the controls
-		#header1!.setFont(#headerFont1!)
-		#header1!.setAlignment(BBjStaticText.ALIGN_CENTER)
-		#header2!.setFont(#headerFont2!)
-		#header2!.setAlignment(BBjStaticText.ALIGN_CENTER)
-		#userNameST!.setFont(#getFont())
-		#userNameEB!.setFont(#getFont())
-        #passwordST!.setFont(#getFont())
-        #passwordEB!.setFont(#getFont())
-        #loginBtn!.setFont(#getFont())
-        #registerBtn!.setFont(#getFont())
-        #cancelBtn!.setFont(#getFont())
+rem		#userNameEB!.setFont(#getFont())
+rem     #passwordEB!.setFont(#getFont())
 
   methodend
 
