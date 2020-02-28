@@ -10,11 +10,11 @@ class public CCRegistrationConfirmationView extends CCView
 
 	field protected BBjStaticText header1!
 	field protected BBjStaticText header2!
-	field protected BBjStaticText DesiredUserNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,170,190,26,"User Name",$8000$)
-	field protected BBjStaticText FirstNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,220,190,26,"First Name",$8000$)
-	field protected BBjStaticText LastNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,270,190,26,"Last Name",$8000$)
-	field protected BBjStaticText UserEmailST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,320,190,26,"User Email",$8000$)
-	field protected BBjStaticText CustomerIDST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,370,190,26,"Customer ID",$8000$)
+	field protected BBjStaticText DesiredUserNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,172,190,26,"User Name",$8000$)
+	field protected BBjStaticText FirstNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,222,190,26,"First Name",$8000$)
+	field protected BBjStaticText LastNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,272,190,26,"Last Name",$8000$)
+	field protected BBjStaticText UserEmailST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,322,190,26,"User Email",$8000$)
+	field protected BBjStaticText CustomerIDST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,372,190,26,"Customer ID",$8000$)
 	field protected BBjNumber SqlChan
 
 	field public BBjEditBox DesiredUserNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,165,400,34,"",$0200$)
@@ -22,7 +22,7 @@ class public CCRegistrationConfirmationView extends CCView
 	field public BBjEditBox LastNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,265,400,34,"",$0200$)
 	field public BBjEditBox UserEmailEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,315,400,34,"",$0200$)
 	field public BBjEditBox CustomerIDEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),225,365,150,34,"",$0200$)
-	field protected BBjStaticText CustomerNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),270,370,400,34,"",$2000$)
+	field protected BBjStaticText CustomerNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),380,372,400,34,"",$2000$)
 	
 	field public BBjButton RegisterBtn!=#getWin().addButton(#getWin().getAvailableControlID(),300,420,110,50,"Confirm")
 	field public BBjButton CancelBtn!=#getWin().addButton(#getWin().getAvailableControlID(),420,420,110,50,"Cancel")
@@ -50,7 +50,7 @@ class public CCRegistrationConfirmationView extends CCView
 		#LastNameST!.addStyle("cc-statictext")
 		#UserEmailST!.addStyle("cc-statictext")
 		#CustomerIDST!.addStyle("cc-statictext")
-		#CustomerNameST!.addStyle("cc-statictext")
+		#CustomerNameST!.addStyle("cc-statictext-left")
 		#DesiredUserNameEB!.addStyle("cc-editbox")
 		#FirstNameEB!.addStyle("cc-editbox")
 		#LastNameEB!.addStyle("cc-editbox")
@@ -58,22 +58,6 @@ class public CCRegistrationConfirmationView extends CCView
 		#CustomerIDEB!.addStyle("cc-editbox")
 		#RegisterBtn!.setName("cc-button")
 		#CancelBtn!.setName("cc-button")
-
-		#DesiredUserNameST!.setFont(#getFont())
-		#FirstNameST!.setFont(#getFont())
-		#LastNameST!.setFont(#getFont())
-		#UserEmailST!.setFont(#getFont())
-		#CustomerIDST!.setFont(#getFont())
-		#CustomerNameST!.setFont(#getFont())
-
-		#DesiredUserNameEB!.setFont(#getFont())
-		#FirstNameEB!.setFont(#getFont())
-		#LastNameEB!.setFont(#getFont())
-		#UserEmailEB!.setFont(#getFont())
-		#CustomerIDEB!.setFont(#getFont())
-
-		#RegisterBtn!.setFont(#getFont())
-		#CancelBtn!.setFont(#getFont())
 
 	methodend
 
@@ -90,20 +74,10 @@ class public CCRegistrationConfirmationView extends CCView
 	methodend
 	
 	method public void showAcceptanceMessage()
-	    msg_id$="GENERIC_OK"
-	    dim msg_tokens$[1]
-	    msg_tokens$[1]="User registered and account created.  Welcome to credit card payments!"
-	    msg_opt$=$$
-	    dim table_chans$[10]
-	    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all]
+		#displayMessage("User registered and account created.  Welcome to credit card payments!")
 	methodend 
 	
 	method public void showRejectionMessage()
-	    msg_id$="GENERIC_OK"
-        dim msg_tokens$[1]
-        msg_tokens$[1]="Registration cancelled. If this was not intentional, please have user re-register."
-        msg_opt$=$$
-        dim table_chans$[10]
-        call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all]
+		#displayMessage("Registration cancelled. If this was not intentional, please have user re-register.")
     methodend 
 classend
