@@ -1,0 +1,285 @@
+REM /**
+REM  * aro_AO_CCUserModel.aon
+REM  * @author shaun
+REM  *
+REM  */
+use ::ado_rptControl.src::ReportControl
+use ::aro_CCUtil.aon::CCUtil
+use ::aro_CCUserModel.aon::CCUserRecord
+
+use java.util.UUID
+use java.util.Base64
+
+class public AO_CCUserModel
+
+    REM Public Fields 
+    field public BBjNumber LoggedIn=0
+    field public BBjString ParameterTable$="ARS_CC_CUSTPMT"
+    field public BBjString ReportControlID$=pad(#ParameterTable$,16)
+    
+    REM Internal fields 
+    field protected BBjNumber SqlChan
+    field protected BBjString UserName$
+    field protected static BBjString EM_ACCOUNT_PREFIX!="arccc_"
+
+    method public AO_CCUserModel()
+        #SqlChan=sqlunt
+        sqlopen (#SqlChan) stbl("+DBNAME")
+    methodend 
+        
+    
+    REM Returns true if user's credentials are valid, otherwise false
+    method public BBjNumber login(BBjString username$, BBjString password$)
+        declare BBjNumber canLogin
+        declare BBjNumber passwordCorrect 
+    
+        REM Check to see if the username exists and is active. No point in looking for 
+        REM a password for a nonexistent or unactivated user 
+        if (! #canLogin(username$)) then 
+            methodret 0
+        fi 
+        
+        REM Validate the password
+        if (! #validatePassword(username$,password$)) then
+            methodret 0
+        fi
+        
+        REM Set the state to show that we've successfully logged in
+        #LoggedIn=1
+        #UserName$=username$
+        #setLastUsedDate()
+        methodret 1
+    methodend 
+    
+    method protected BBjNumber canLogin(BBjString user$)
+        declare BBjString rec$
+        declare BBjString today$
+        declare BBjString activated$
+        declare BBjString deactivated$
+        
+        REM See if the username is in the database 
+        sqlprep (#SqlChan) "select count(cc_username) as count from arc_cc_users where cc_username=?"
+        sqlexec (#SqlChan) user$
+        
+        dim rec$:sqltmpl(#SqlChan) 
+        rec$=sqlfetch(#SqlChan)
+        
+        if (rec.count<>1) then methodret 0
+        
+        REM Make sure the account is between the activated and deactivated dates 
+        REM .. get the current date
+        today$=CCUtil.today() 
+        
+        REM .. get the activated and deactivated dates 
+        sqlprep (#SqlChan) "select activated_date, deactivated_date from arc_cc_users where cc_username=?"
+        sqlexec (#SqlChan) user$
+        
+        dim rec$:sqltmpl(#SqlChan) 
+        rec$=sqlfetch(#SqlChan)
+        
+        REM .. check that the deactivated date is either not set or in the future
+        deactivated$=rec.deactivated_date$
+        if (deactivated$<>"") then 
+            if deactivated$<=today$ then methodret 0
+        endif 
+        
+        REM .. check that the activated date is set and in the past 
+        activated$=rec.activated_date$
+        if (activated$="" OR activated$>today$) then methodret 0
+        
+        REM If we've made it through these checks then we can login
+        methodret 1
+        
+    methodend 
+    
+    method protected BBjNumber validatePassword(BBjString username$, BBjString password$)
+        x!=BBjAPI().getAdmin(#getEMUserName(username$),password$,err=*next)
+        methodret x!<>null()
+    methodend 
+    
+    REM Method for allowing the user to change their password
+    method protected void changePassword(BBjString newPassword$)
+        CCUtil.getAdmin().changePassword(#UserName$,newPassword$)
+    methodend 
+    
+    method protected void setLastUsedDate()
+        sqlprep (#SqlChan) "update ARC_CC_USERS set LAST_USED_DATE=? WHERE CC_USERNAME=?"
+        sqlexec (#SqlChan) CCUtil.today(), #UserName$
+    methodend 
+        
+    method public BBjString getAssociatedCustomerID()
+        if #LoggedIn then 
+            REM .. get the customer id 
+            sqlprep (#SqlChan) "select customer_id from arc_cc_users where cc_username=?"
+            sqlexec (#SqlChan) #UserName$
+            
+            dim rec$:sqltmpl(#SqlChan) 
+            rec$=sqlfetch(#SqlChan)
+            
+            methodret rec.customer_id$
+        else 
+            methodret ""
+        endif 
+    methodend 
+    
+    method public BBjString getAssociatedFirmID()
+        if #LoggedIn then 
+            REM .. get the firm id 
+            sqlprep (#SqlChan) "select firm_id from arc_cc_users where cc_username=?"
+            sqlexec (#SqlChan) #UserName$
+            
+            dim rec$:sqltmpl(#SqlChan) 
+            rec$=sqlfetch(#SqlChan)
+            
+            methodret rec.firm_id$
+        else 
+            methodret ""
+        endif 
+    methodend 
+    
+    method public void addUser(CCUserRecord rec!)
+      declare BBjAdminBase admin!
+      declare BBjString emUserName$
+      REM TODO:  Validate data
+      
+      activatedDate$=CCUtil.today()
+      emUserName$=#generateEMUserName(rec!.getUserName())
+      
+      REM Create User in database 
+      sqlprep (#SqlChan) "INSERT INTO ARC_CC_USERS (FIRM_ID, CC_USERNAME, CUSTOMER_ID, NAME_FIRST, NAME_LAST, USER_EMAIL, ACTIVATED_DATE, EMUSER) VALUES(?,?,?,?,?,?,?,?)"
+      sqlexec (#SqlChan) rec!.getFirmID(),rec!.getUserName(),rec!.getCustomerID(), rec!.getFirstName(),rec!.getLastName(), rec!.getUserEmail(),activatedDate$,emUserName$
+      
+      REM Create user in EM 
+      password$=#generatePassword()
+      admin!=CCUtil.getAdmin()
+      admin!.addUser(emUserName$,password$)
+      
+      REM Send the password to the new user's email address
+      declare ReportControl reportControl!
+      declare BBjNumber found 
+      declare BBjTemplatedString recipientInfo!
+      declare BBjString emailMessage!
+      declare BBjString url!
+      
+      
+      reportControl!=new ReportControl()
+      reportControl!.setFirmID(rec!.getFirmID())
+      reportControl!.getReportControl(#ParameterTable$)
+      found=reportControl!.getRecipientInfo(#ReportControlID$,rec!.getCustomerID(),"")
+      if (found) 
+          recipientInfo!=reportControl!.getAdmRptctlRcp() 
+          emailMessage!="Here is your new password: "+password$
+          
+          REM Get the URL for payments from our parameter table
+          sqlprep(#SqlChan) "select PAYMENT_URL from " + #ParameterTable$ + " where FIRM_ID = '" + stbl("+FIRM_ID") + "'"
+          sqlexec(#SqlChan)
+          dim result$:sqltmpl(#SqlChan)
+          result$=sqlfetch(#SqlChan)
+          url!=result.PAYMENT_URL$
+          
+          REM Append the URL and the specific generated token to the mail message then put the modified message back in our recipient info. 
+          emailMessage!=emailMessage!.trim()+$0A$+url!.trim()
+          recipientInfo!.setFieldValue("EMAIL_MESSAGE",emailMessage!)
+          recipientInfo!.setFieldValue("EMAIL_SUBJECT","New account created")
+          recipientInfo!.setFieldValue("EMAIL_TO",rec!.getUserEmail())
+          reportControl!.setAdmRptctlRcp(recipientInfo!)
+          
+          REM Put our email on the document queue to be sent out. The document queue was designed with the assumption that any email sent out
+          REM will have some sort of attached document to it. This is not the case for this document. Provide "PDF" for the extension and the 
+          REM "NOATTACH" for the document ID, to appease the document queue that no attachment is really okay. 
+          reportControl!.setDocExtension("PDF")
+          reportControl!.addToDocQueue(#ParameterTable$,rec!.getCustomerID(),"","NOATTACH")
+      else 
+          REM TODO: Handle customer not being found in the recipient records. This means that the customer is not fully set up for payments. 
+      endif 
+      
+    methodend 
+
+  REM Generate a password for the credit card processing system using the BASE64 alphabet
+  method protected BBjString generatePassword() 
+    REM length of password
+    declare BBjNumber length
+  
+    REM A unique ID to use as a random sequence
+    declare BBjString randomSequence!
+    
+    REM the password to be generated 
+    declare BBjString password!
+
+    randomSequence!=UUID.randomUUID().toString().replace("-","")
+    password!=Base64.getEncoder().encode(randomSequence!)
+    length=8+rnd(9)
+    password!=password!.substring(0,length)
+    
+    methodret password!
+  methodend 
+  
+  REM Generate an EM Username for a new user
+  method public BBjString generateEMUserName(BBjString username$)
+      declare BBjString emUserName$
+      declare BBjString uuid$
+      uuid$=UUID.randomUUID().toString()
+        
+      methodret #EM_ACCOUNT_PREFIX!+username$+uuid$
+  methodend
+  
+  REM Look up an existing user's EM username
+  method public BBjString getEMUserName(BBjString username$)
+      sqlprep (#SqlChan) "select emuser from arc_cc_users where cc_username=?"
+      sqlexec (#SqlChan) username$
+      
+      dim result$:sqltmpl(#SqlChan)
+      
+      result$=sqlfetch(#SqlChan)
+      
+      methodret result.emuser$    
+  methodend 
+  
+  method public BBjNumber userNameExistsInUsers(BBjString username$)
+    declare BBjNumber existsInUsers
+    declare BBjNumber existsInRegistrants 
+    
+    sqlprep (#SqlChan) "select count(*) as count from arc_cc_users where cc_username = ?"
+    sqlexec (#SqlChan) username$
+    dim result$:sqltmpl(#SqlChan)
+    result$=sqlfetch(#SqlChan)
+
+    methodret (result.count<>0)
+  methodend 
+  
+    REM Look up an existing user's EM username
+    method public BBjString getEMUserName(BBjString username$)
+        sqlprep (#SqlChan) "select emuser from arc_cc_users where cc_username=?"
+        sqlexec (#SqlChan) username$
+        
+        dim result$:sqltmpl(#SqlChan)
+        
+        result$=sqlfetch(#SqlChan)
+        
+        return result.emuser$
+        
+    methodend 
+
+   method public BBjString getCustomerName(BBjString customerID$)
+
+    customerName$ = "NOT_FOUND" 
+    sqlprep (#SqlChan) "SELECT ARM_CUSTMAST.FIRM_ID,ARM_CUSTMAST.CUSTOMER_NAME, ARS_REPORT.NAME,ARS_REPORT.ADDR_LINE_1,ARS_REPORT.ADDR_LINE_2,ARS_REPORT.CITY,ARS_REPORT.STATE_CODE,ARS_REPORT.ZIP_CODE FROM ARM_CUSTMAST, ARS_REPORT WHERE ARM_CUSTMAST.PAY_ONLINE='Y' AND ARM_CUSTMAST.PAY_AUTH_EMAIL<>'' AND ARM_CUSTMAST.FIRM_ID=ARS_REPORT.FIRM_ID AND ARM_CUSTMAST.CUSTOMER_ID=? AND ARM_CUSTMAST.FIRM_ID='"+stbl("+FIRM_ID")+"' "
+    sqlexec (#SqlChan) customerID$
+    dim result$:sqltmpl(#SqlChan)
+    result$=sqlfetch(#SqlChan,end=done)
+    customerName$ = result.customer_name$
+    done:
+    methodret customerName$
+    
+  methodend
+
+classend 
+
+class public AO_CCUserRecord 
+    field public BBjString UserName!
+    field public BBjString FirstName!
+    field public BBjString LastName!
+    field public BBjString CustomerID!
+    field public BBjString UserEmail!
+    field public BBjString FirmID!
+classend 

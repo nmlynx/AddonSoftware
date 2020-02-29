@@ -5,20 +5,21 @@ REM  * Copyright BASIS International Ltd.  All Rights Reserved.
 REM  */
 
 use ::CCLoginView.aon::CCLoginView
-use ::CCLoginModel.aon::CCLoginModel
-use ::CCAccountSettingsView.aon::CCAccountSettingsView
 use ::CCRegistrationView.aon::CCRegistrationView
 use ::CCRegistrationModel.aon::CCRegistrationModel
 use ::CCRegistrationModel.aon::CCRegistrationRecord
 use ::CCRegistrationModel.aon::CCCustomerFirmInfo
+use ::aro_CCUserModel.aon::CCUserModel
+use ::aro_CCUserModel.aon::CCUserRecord
 use ::aro_CCUtil.aon::CCUtil
 
 class public CCLoginManager
 	field protected CCUtil Util!=new CCUtil()
 	field protected CCLoginView LoginView!=new CCLoginView()
-	field protected CCLoginModel LoginModel!=new CCLoginModel()
+	rem field protected CCLoginModel LoginModel!=new CCLoginModel()
 	field protected CCRegistrationView RegistrationView!=new CCRegistrationView() 
 	field protected CCRegistrationModel RegistrationModel!=new CCRegistrationModel() 
+	field protected CCUserModel UserModel!=new CCUserModel() 
 
 	method public CCLoginManager()
 	    
@@ -34,6 +35,8 @@ class public CCLoginManager
         #RegistrationView!.registerFirstNameEB_OnFocusLostCallback(#this!,"handleLostFocus")
         #RegistrationView!.registerLastNameEB_OnFocusLostCallback(#this!,"handleLostFocus")
         #RegistrationView!.registerUserEmailEB_OnFocusLostCallback(#this!,"handleLostFocus")
+        
+        #RegistrationModel!.setUserModel(#UserModel!)
 	methodend
 
 	method public void doModal()
@@ -53,7 +56,7 @@ class public CCLoginManager
 		username!=#LoginView!.getUserName()
 		password!=#LoginView!.getPassword()
 
-		if (#LoginModel!.login(username!,password!)) then
+		if (#UserModel!.login(username!,password!)) then
 			#LoginView!.hide()
 
 			REM TODO:  Resolve where User account settings should be
@@ -64,13 +67,24 @@ class public CCLoginManager
 			REM than putting in "Additional Options" in the Addon dialog since your typical paying customer is not 
 			REM an Addon user. 
 
-			customerID$=#LoginModel!.getAssociatedCustomerID()
-			firmID$=#LoginModel!.getAssociatedFirmID()
+			customerID$=#UserModel!.getAssociatedCustomerID()
+			firmID$=#UserModel!.getAssociatedFirmID()
 
 
 			if (customerID$<>"" and firmID$<>"") then
 				declare BBjCommandLineObject cmd!
 				cmd!=BBjAPI().getConfig().getCurrentCommandLineObject()
+				
+				REM TODO: Discuss this. Due to this piece of code we're requiring the user to call their 
+				REM account aliases APP1 and APP2.  Mostly we want them to create a suitable account user 
+				REM with suitable aliases but perhaps should not restrict what they choose to call those 
+				REM aliases. At this point, we're safe harvesting the application username and password 
+				REM to put on the commandline because they're not exposed to the website user. The problem is 
+				REM more if someone were to accidently configure this interface to be a desktop app.
+				declare BBjAdminBase admin!
+				admin!=CCUtil.getAdmin()
+				applicationUser$=admin!.getUser()
+				applicationPassword$=admin!.getPassword()
 
 				cmd!.setProgramName("sys/prog/bax_launch_task.bbj")
 				arguments$=""
@@ -79,11 +93,13 @@ class public CCLoginManager
 				arguments$=arguments$+"-mMNT "
 				arguments$=arguments$+"-f"+firmID$+" "
 				arguments$=arguments$+"-k"+customerID$+" "
-				arguments$=arguments$+"-u[APP1] -p[APP2] "
-				arguments$=arguments$+"&"
+				arguments$=arguments$+"-u"+applicationUser$+" -p"+applicationPassword$
+				arguments$=arguments$+" &"
 				cmd!.setProgramArgs(arguments$)
 				x=scall("bbj "+cmd!.toString())
 				release
+			else 
+			    REM TODO: Handle situation where there's a login for a user who is not set up properly
 			endif
 		else
 			#LoginView!.show()
@@ -128,23 +144,16 @@ class public CCLoginManager
 	    declare BBjString name!
 	    
 	    name!=event!.getEditBox().getText()
-	    valid = #userIsValid(name!)
+	    valid = #RegistrationModel!.newUserNameIsValid(name!)
 		if !valid
 			#RegistrationView!.displayMessage("This username is not available; please select a different one.")
 		endif
 rem	    #RegistrationView!.setUserNameValid(valid)
 	    #handleLostFocus(event!)
 	methodend 
-	
-	method protected BBjNumber userIsValid(BBjString name!)
-	    valid = len(name!)>4 and
-:           (! #RegistrationModel!.userNameExistsInUsers(name!)) and 
-:           (! #RegistrationModel!.userNameExistsInRegistration(name!))
-	    methodret valid 
-	methodend 
-	
+		
 	method public void handleLostFocus(BBjLostFocusEvent event!)
-	    enable=#RegistrationView!.allFieldsHaveValues() and #userIsValid(#RegistrationView!.getUserName())
+	    enable=#RegistrationView!.allFieldsHaveValues() and #RegistrationModel!.newUserNameIsValid(#RegistrationView!.getUserName())
 	    #RegistrationView!.setRegistrationEnabled(enable)
 	methodend 
 
@@ -155,17 +164,21 @@ rem	    #RegistrationView!.setUserNameValid(valid)
 	REM Get the registration information from the view and have the model send it to the servlet
     method public void sendRegistrationRequest(BBjButtonPushEvent event!)
       declare CCRegistrationRecord rec!
+      declare CCUserRecord user!
       declare CCRegistrationEmailConfiguration emailConfiguration!
       declare BBjVector firmSelectionList!
       declare CCCustomerFirmInfo firmInfo!
       
       rec!=new CCRegistrationRecord()
-	  rec!.setFirmID(stbl("+FIRM_ID"))
-      rec!.setUserName(#RegistrationView!.getUserName())
-      rec!.setFirstName(#RegistrationView!.getFirstName())
-      rec!.setLastName(#RegistrationView!.getLastName())
-      rec!.setUserEmail(#RegistrationView!.getUserEmail())
-      rec!.setCustomerID(#RegistrationView!.getCustomerID())
+      user!=new CCUserRecord()
+      
+	  user!.setFirmID(stbl("+FIRM_ID"))
+      user!.setUserName(#RegistrationView!.getUserName())
+      user!.setFirstName(#RegistrationView!.getFirstName())
+      user!.setLastName(#RegistrationView!.getLastName())
+      user!.setUserEmail(#RegistrationView!.getUserEmail())
+      user!.setCustomerID(#RegistrationView!.getCustomerID())
+      rec!.setUserRecord(user!)
       rec!.setGeneratedToken(#RegistrationModel!.generateToken())
       rec!.setRequestDate(CCUtil.today())
       

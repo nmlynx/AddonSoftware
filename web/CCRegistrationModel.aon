@@ -9,14 +9,13 @@ use java.util.UUID
 use ::sys/prog/bao_docqueue.bbj::DocumentQueue
 use ::sys/prog/bao_security.bbj::Security
 use ::ado_rptControl.src::ReportControl
-use ::aro_CCUtil.bbj::CCUtil
+use ::aro_CCUserModel.aon::CCUserModel 
+use ::aro_CCUserModel.aon::CCUserRecord
+use ::aro_CCUtil.aon::CCUtil
 
 class public CCRegistrationModel
-
-  REM Get this into configuration
-  field public BBjString ParameterTable$="ARS_CC_CUSTPMT"
-  field public BBjString ReportControlID$=pad(#ParameterTable$,16)
-
+  
+  field protected CCUserModel UserModel!
   field protected BBjNumber SqlChan
  
   method public CCRegistrationModel()
@@ -25,20 +24,13 @@ class public CCRegistrationModel
     #SqlChan=sqlunt
     sqlopen (#SqlChan) stbl("+DBNAME")
   methodend
-
-
-  method public BBjNumber userNameExistsInUsers(BBjString username$)
-    declare BBjNumber existsInUsers
-    declare BBjNumber existsInRegistrants 
-    
-    sqlprep (#SqlChan) "select count(*) as count from arc_cc_users where cc_username = ?"
-    sqlexec (#SqlChan) username$
-    dim result$:sqltmpl(#SqlChan)
-    result$=sqlfetch(#SqlChan)
-
-    methodret (result.count<>0)
+  
+  REM Since the manager classes often need access to the user model class as well, 
+  REM have the manager provide its instance to the registration model
+  method public void setUserModel(CCUserModel userModel!)
+    #UserModel!=userModel!
   methodend 
-    
+
   method public BBjNumber userNameExistsInRegistration(BBjString username$)
     sqlprep (#SqlChan) "select count(*) as count from arc_cc_register where cc_username = ?"
     sqlexec (#SqlChan) username$
@@ -63,8 +55,10 @@ class public CCRegistrationModel
   methodend 
   
   method public void addRegistration(CCRegistrationRecord rec!)
+    declare CCUserRecord user!
+    user!=rec!.getUserRecord()
     sqlprep (#SqlChan) "insert into arc_cc_register (firm_id,cc_username, name_first, name_last, user_email, customer_id, cc_token,request_date) values (?, ?, ?, ?, ?, ?, ?,?)"
-    sqlexec (#SqlChan) rec!.getFirmID(),rec!.getUserName(), rec!.getFirstName(),rec!.getLastName(),rec!.getUserEmail(), rec!.getCustomerID(),rec!.getGeneratedToken(),rec!.getRequestDate()
+    sqlexec (#SqlChan) user!.getFirmID(),user!.getUserName(), user!.getFirstName(),user!.getLastName(),user!.getUserEmail(), user!.getCustomerID(),rec!.getGeneratedToken(),rec!.getRequestDate()
     #emailRegistration(rec!)
   methodend 
   
@@ -78,17 +72,19 @@ class public CCRegistrationModel
 	declare BBjTemplatedString recipientInfo!
 	declare BBjString emailMessage!
 	declare BBjString url!
+	declare CCUserRecord user!
 	
+	user!=registration!.getUserRecord()
 	reportControl!=new ReportControl()
-	reportControl!.setFirmID(registration!.getFirmID())
-	reportControl!.getReportControl(#ParameterTable$)
-	found=reportControl!.getRecipientInfo(#ReportControlID$,registration!.getCustomerID(),"")
+	reportControl!.setFirmID(user!.getFirmID())
+	reportControl!.getReportControl(#UserModel!.getParameterTable())
+	found=reportControl!.getRecipientInfo(#UserModel!.getReportControlID(),user!.getCustomerID(),"")
 	if (found) 
 		recipientInfo!=reportControl!.getAdmRptctlRcp() 
 		emailMessage!=recipientInfo!.getFieldAsString("EMAIL_MESSAGE")
 		
 		REM Get the URL for registration from our parameter table
-		sqlprep(#SqlChan) "select REGISTER_URL from " + #ParameterTable$ + " where FIRM_ID = '" + stbl("+FIRM_ID") + "'"
+		sqlprep(#SqlChan) "select REGISTER_URL from " + #UserModel!.getParameterTable() + " where FIRM_ID = '" + stbl("+FIRM_ID") + "'"
 		sqlexec(#SqlChan)
 		dim result$:sqltmpl(#SqlChan)
 		result$=sqlfetch(#SqlChan)
@@ -103,22 +99,71 @@ class public CCRegistrationModel
 		REM will have some sort of attached document to it. This is not the case for this document. Provide "PDF" for the extension and the 
 		REM "NOATTACH" for the document ID, to appease the document queue that no attachment is really okay. 
 		reportControl!.setDocExtension("PDF")
-		reportControl!.addToDocQueue(#ParameterTable$,registration!.getCustomerID(),"","NOATTACH")
+		reportControl!.addToDocQueue(#UserModel!.getParameterTable(),user!.getCustomerID(),"","NOATTACH")
 	else 
 	    REM TODO: Handle customer not being found in the recipient records. This means that the customer is not fully set up for payments. 
 	endif 
 	
   methodend 
   
+  method public void deleteRegistration(CCRegistrationRecord rec!)
+    sqlprep (#SqlChan) "DELETE FROM ARC_CC_REGISTER WHERE CC_USERNAME=?"
+    sqlexec (#SqlChan) rec!.getUserRecord().getUserName() 
+  methodend 
+    
+  method public CCRegistrationRecord locateToken(BBjString token!)
+    declare CCRegistrationRecord rec!
+    declare CCUserRecord user!
+    declare BBjString result$
+    
+    sqlprep (#SqlChan) "select * from ARC_CC_REGISTER where CC_Token=?"
+    sqlexec (#SqlChan) token!
+    
+    dim result$:sqltmpl(#SqlChan)
+    result$=sqlfetch(#SqlChan,end=not_found)
+    
+    REM Check to see if username already exists in users and registration (duplicate registrations can happen) 
+    if (#UserModel!.userNameExistsInUsers(result.CC_USERNAME$)) then
+     methodret null() 
+    endif
+    
+    REM Check to see if this registration has already been taken care of 
+    if (result.REGISTER_DATE$<>"") then 
+        methodret null() 
+    endif 
+    
+    rec!=new CCRegistrationRecord()
+    
+    user!=new CCUserRecord()
+    user!.setUserName(result.CC_USERNAME$)
+    user!.setFirstName(result.NAME_FIRST$)
+    user!.setLastName(result.NAME_LAST$)
+    user!.setCustomerID(result.CUSTOMER_ID$)
+    user!.setUserEmail(result.USER_EMAIL$)
+    user!.setFirmID(result.FIRM_ID$)
+    
+    rec!.setUserRecord(user!)
+    rec!.setGeneratedToken(result.CC_TOKEN$)
+    rec!.setRequestDate(result.REQUEST_DATE$)
+    
+    
+    methodret rec!
+    not_found: 
+    methodret null() 
+  methodend 
+  
+    REM Make sure the new username is not already taken and is otherwise valid
+    method public BBjNumber newUserNameIsValid(BBjString name!)
+        valid = len(name!)>4 and
+:           (! #UserModel!.userNameExistsInUsers(name!)) and 
+:           (! #userNameExistsInRegistration(name!))
+        methodret valid 
+    methodend 
+  
 classend
 
 class public CCRegistrationRecord 
-    field public BBjString UserName!
-    field public BBjString FirstName!
-    field public BBjString LastName!
-    field public BBjString CustomerID!
-    field public BBjString UserEmail!
-    field public BBjString FirmID!
+    field public CCUserRecord UserRecord!
     field public BBjString GeneratedToken!
     field public BBjString RequestDate!
 classend 

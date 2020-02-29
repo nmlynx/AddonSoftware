@@ -5,15 +5,19 @@ REM  * Copyright BASIS International Ltd.  All Rights Reserved.
 REM  */
 
 use ::CCRegistrationConfirmationView.aon::CCRegistrationConfirmationView
-use ::CCRegistrationConfirmationModel.aon::CCRegistrationConfirmationModel
+use ::CCRegistrationModel.aon::CCRegistrationModel
 use ::CCRegistrationModel.aon::CCRegistrationRecord
+use ::aro_CCUserModel.aon::CCUserModel
+use ::aro_CCUserModel.aon::CCUserRecord
 use ::aro_CCUtil.aon::CCUtil
 
 
 class public CCRegistrationConfirmationManager
 	field protected CCUtil Util!=new CCUtil()
 	field public CCRegistrationConfirmationView View! = new CCRegistrationConfirmationView()
-	field public CCRegistrationConfirmationModel Model!=new CCRegistrationConfirmationModel() 
+	field public CCRegistrationModel RegistrationModel!=new CCRegistrationModel() 
+	field public CCUserModel UserModel!=new CCUserModel()
+	
 	field protected CCRegistrationRecord RegistrationRecord!
 
 	REM TODO:  Put in an elaborate amount of diagnostic logging so that people on the backend can 
@@ -24,23 +28,26 @@ class public CCRegistrationConfirmationManager
 		declare BBjString token$
 		declare BBjString customerName$
 		declare CCRegistrationRecord rec!
+		declare CCUserRecord user!
 		
 		token$=clientenv("token",err=no_token)
 		
 		REM Locate the registration associated with this token
-		#RegistrationRecord!=#Model!.locateToken(token$)
+		#RegistrationModel!.setUserModel(#UserModel!)
+		#RegistrationRecord!=#RegistrationModel!.locateToken(token$)
 		if (#RegistrationRecord!=null()) then goto no_token
 		
 		#View!.registerYesButton_OnButtonPushCallback(#this!,"handleAcceptRegistration")
 		#View!.registerNoButton_OnButtonPushCallback(#this!,"handleRejectRegistration")
 		
-		#View!.getDesiredUserNameEB().setText(#RegistrationRecord!.getUserName())
-		#View!.getFirstNameEB().setText(#RegistrationRecord!.getFirstName())
-		#View!.getLastNameEB().setText(#RegistrationRecord!.getLastName())
-		#View!.getUserEmailEB().setText(#RegistrationRecord!.getUserEmail())
-		#View!.getCustomerIDEB().setText(#RegistrationRecord!.getCustomerID())
+		user!=#RegistrationRecord!.getUserRecord()
+		#View!.getDesiredUserNameEB().setText(user!.getUserName())
+		#View!.getFirstNameEB().setText(user!.getFirstName())
+		#View!.getLastNameEB().setText(user!.getLastName())
+		#View!.getUserEmailEB().setText(user!.getUserEmail())
+		#View!.getCustomerIDEB().setText(user!.getCustomerID())
 		
-		customerName$=#Model!.getCustomerName(#RegistrationRecord!.getCustomerID())
+		customerName$=#UserModel!.getCustomerName(user!.getCustomerID())
 		#View!.updateCustomerNameText(customerName$)
 		
 		#View!.show() 
@@ -53,14 +60,14 @@ class public CCRegistrationConfirmationManager
 	methodend
   
 	method public void handleAcceptRegistration(BBjButtonPushEvent e!)
-		#Model!.addUser(#RegistrationRecord!)
-		#Model!.deleteRegistration(#RegistrationRecord!)
+		#UserModel!.addUser(#RegistrationRecord!.getUserRecord())
+		#RegistrationModel!.deleteRegistration(#RegistrationRecord!)
 		#View!.showAcceptanceMessage() 
 		release
 	methodend 
 
 	method public void handleRejectRegistration(BBjButtonPushEvent e!)
-		#Model!.deleteRegistration(#RegistrationRecord!)
+		#RegistrationModel!.deleteRegistration(#RegistrationRecord!)
 		#View!.showRejectionMessage()
 		release
 	methodend 
