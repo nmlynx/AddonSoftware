@@ -150,7 +150,10 @@ rem --- use
 
 	use java.io.File
 
+	use com.basis.api.admin.BBjAdminAppDeploymentApplication
+
 	use ::ado_func.src::func
+	use ::aro_CCUtil.aon::CCUtil
 	use ::sys/prog/bao_encryptor.bbj::Encryptor
 
 rem --- open tables
@@ -286,10 +289,20 @@ rem --- in: css$
 rem --- in: sscpName$
 rem ============================================================
 
-rem wgh ... 9598 ... Use Admin API (BBjAdminBase) instead of using the BBjAPI() methods
-	appServer! = BBjAPI().getAdmin(thisAdmin!.getUser(), thisAdmin!.getPassword()).getWebAppServer()
+	rem --- Use Admin API (BBjAdminBase) instead of BBjAPI() methods
+	adminBase!=CCUtil.getAdmin()
+	remoteConfig!=adminBase!.getRemoteConfiguration()
+	remoteApps! = remoteConfig!.getApplications()
 	foundApplication=0
-	loginApp!=appServer!.getApplication(appName$,err=*next); foundApplication=1
+	if remoteApps!.size() then
+		for i = 0 to remoteApps!.size()-1
+			thisApp! = remoteApps!.get(i)
+			if thisApp!.getString(BBjAdminAppDeploymentApplication.NAME)=appName$ then
+				foundApplication=1
+				break
+			endif
+		next i
+	endif
 	if foundApplication then
 		rem --- Warn that web app already exists
 		msg_id$="AD_WEBAPP_EXISTS_1"
@@ -315,39 +328,27 @@ rem wgh ... 9598 ... Use Admin API (BBjAdminBase) instead of using the BBjAPI() 
 	endif
 
 	if doWebApp then
-		progArgs!=BBjAPI().makeVector()
-		progArgs!.add("-yA")
-		progArgs!.add("-tDDM_TABLES")
-		progArgs!.add("-a"+program$+" -f01")
-		progArgs!.add("-u[APP1]")
-		progArgs!.add("-p[APP2]")
+		newApp!=remoteConfig!.createApplication()
+		newApp!.setString(BBjAdminAppDeploymentApplication.NAME,appName$)
+		newApp!.setString(BBjAdminAppDeploymentApplication.PROGRAM,"sys/prog/bax_launch_task.bbj")
+		newApp!.setString(BBjAdminAppDeploymentApplication.CONFIG_FILE,barDir$+stbl("+FILE_CFG"))
+		newApp!.setString(BBjAdminAppDeploymentApplication.WORKING_DIRECTORY,barDir$)
+		newApp!.setString(BBjAdminAppDeploymentApplication.CLASSPATH,sscpName$)
+rem wgh ... 9598 ... need program arguments: ???
+		newApp!.setBoolean(BBjAdminAppDeploymentApplication.QUIET,1)
+		newApp!.setBoolean(BBjAdminAppDeploymentApplication.BUI_ENABLED,1)
+rem wgh ... 9598 ... need desktop app enabled: false
+		newApp!.setBoolean(BBjAdminAppDeploymentApplication.SHOW_BROWSER_WARNING_USE_DEFAULT,0)
+		newApp!.setBoolean(BBjAdminAppDeploymentApplication.SHOW_CONFIRM_CLOSE_DIALOG_USE_DEFAULT ,0)
+		newApp!.setBoolean(BBjAdminAppDeploymentApplication.MANAGE_BROWSER_HISTORY_USE_DEFAULT,0)
+		newApp!.setBoolean(BBjAdminAppDeploymentApplication.DISALLOW_CONSOLE_USE_DEFAULT,0)
+		newApp!.setBoolean(BBjAdminAppDeploymentApplication.DISALLOW_CONSOLE,1)
+		newApp!.setBoolean(BBjAdminAppDeploymentApplication.DEVELOPMENT_MODE_USE_DEFAULT,0)
+		newApp!.setBoolean(BBjAdminAppDeploymentApplication.OMIT_BASIS_CSS_USE_DEFAULT,0)
+rem wgh ... 9598 ... need CSS: css!
+		newApp!.setString(BBjAdminAppDeploymentApplication.CONTEXT,cvs(dbName$,4))
 
-		appConfig!=appServer!.makeEmptyAppConfig()
-		appConfig!.setBBjApplicationName(appName$)
-		appConfig!.setProgramName("sys/prog/bax_launch_task.bbj")
-		appConfig!.setConfigFile(barDir$+stbl("+FILE_CFG"))
-		appConfig!.setWorkingDirectory(barDir$)
-rem ... sscpName$ didn't get set
-		appConfig!.setClasspathName(sscpName$)
-rem ... progArgs! not saved correctly
-		appConfig!.setProgramArguments(progArgs!)
-		appConfig!.setQuiet(1)
-rem ... web app: enable
-rem ... desktop app: disable
-rem ... show browser warning: disable
-rem ... show confirm close dialog: disable
-rem ... manage browser history: disable
-rem ...		appServer!.setDisallowConsole(1)
-rem ... development mode: disable
-rem ... omit BASIS CSS: disable
-		appConfig!.setStyleSheet(css!)
-rem ... context: cvs(dbName$,4)
-rem ... secure connection: <default>
-rem ... remote port: <blank>
-
-		application!=appConfig!.buildApplication(appName$)
-		appServer!.unpublish(appName$,err=*next)
-		appServer!.publish(application!)
+		newApp!.commit()
 	endif
 
 	return
@@ -387,4 +388,6 @@ rem ============================================================
 
 #include std_functions.src
 #include std_missing_params.src
+
+
 
