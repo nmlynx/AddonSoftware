@@ -105,7 +105,7 @@ rem --- add up dist lines and display diff between total inv amt entered and dis
 gosub calc_grid_tots
 gosub disp_totals
 [[APE_RECURRINGDET.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 calc_grid_tots:
 
 	recVect!=GridVect!.getItem(0)

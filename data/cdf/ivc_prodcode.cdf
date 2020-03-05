@@ -44,7 +44,7 @@ return
 
 rem #endinclude disable_fields.src
 
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[IVC_PRODCODE.BSHO]]
 rem --- Open/Lock files
 

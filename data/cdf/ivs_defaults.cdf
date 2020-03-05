@@ -11,7 +11,7 @@ gosub gl_active
 [[IVS_DEFAULTS.GL_COGS_ACCT.AVAL]]
 gosub gl_active
 [[IVS_DEFAULTS.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 
 gl_active:
 rem "GL INACTIVE FEATURE"

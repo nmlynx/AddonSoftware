@@ -331,7 +331,7 @@ rem --- Calc numbers
 	rate=num(callpoint!.getUserInput())
 	gosub calc_totals
 [[SFE_WOSUBCNT.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 rem ========================================================
 calc_totals:
 rem rate:		input

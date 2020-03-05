@@ -48,7 +48,7 @@ rem --- Verify calendar exists for entered GL fiscal year
 		endif
 	endif
 [[GLR_TRIALBALANCE.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[GLR_TRIALBALANCE.ARAR]]
 gls01_dev=fnget_dev("GLS_PARAMS")
 gls01_tpl$=fnget_tpl$("GLS_PARAMS")

@@ -133,7 +133,7 @@ for x=1 to 4
 	next i
 next x
 [[GLR_BUDGETREPORT.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 disable_fields:
 	rem --- used to disable/enable controls
 	rem --- ctl_name$ sent in with name of control to enable/disable (format "ALIAS.CONTROL_NAME")
@@ -169,4 +169,4 @@ rem ==========================================================================
 
 	return
 
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon

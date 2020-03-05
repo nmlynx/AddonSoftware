@@ -800,7 +800,7 @@ if gl$="Y"
 	endif
 endif
 [[ARE_CASHHDR.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 rem ==================================================================
 disable_key_fields:
 rem ==================================================================
@@ -1989,4 +1989,4 @@ rem ==================================================================
 	callpoint!.setDevObject("saved_payment_amt",current_payment_amt)
 	return
 
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon

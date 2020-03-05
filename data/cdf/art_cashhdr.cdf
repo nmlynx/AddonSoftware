@@ -10,7 +10,7 @@ rem --- Launch GL Dist grid if posting to GL
 		gosub disp_message							
 	endif
 [[ART_CASHHDR.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 
 rem ==================================================================
 get_customer_balance:

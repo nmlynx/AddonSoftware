@@ -230,7 +230,7 @@ rem --- Remove software lock on batch when batching
 rem --- Hold on to the control for entered_hrs so it can be updated in detail grid
 	callpoint!.setDevObject("control_entered_hrs",callpoint!.getControl("<<DISPLAY>>.ENTERED_HRS"))
 [[SFE_TIMEWO.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[SFE_TIMEWO.BTBL]]
 rem --- Get Batch information
 	call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]

@@ -108,8 +108,8 @@ rem --- Disable G/L Accounts if G/L not installed
 		gosub disable_fields
 	endif
 [[ARC_CASHCODE.<CUSTOM>]]
-#include std_functions.src
-#include std_missing_params.src
+#include [+ADDON_LIB]std_functions.aon
+#include [+ADDON_LIB]std_missing_params.aon
 
 rem ============================================================
 get_gateways:rem --- load up listbutton with supported gateways for given or selected interface type

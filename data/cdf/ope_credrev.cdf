@@ -404,7 +404,7 @@ alpha_mask:
 	    return str(q1$:q2$)
 	fnend
 
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[OPE_CREDREV.AWIN]]
 rem --- Build custom form
 	use ::ado_util.src::util

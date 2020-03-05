@@ -1,5 +1,5 @@
 [[SFU_CREATEPOREQ.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[SFU_CREATEPOREQ.BSHO]]
 rem --- Exit if PO is not installed
 	call stbl("+DIR_PGM")+"adc_application.aon","PO",info$[all]

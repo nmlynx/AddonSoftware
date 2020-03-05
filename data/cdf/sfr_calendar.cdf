@@ -23,7 +23,7 @@ rem --- open files/init
 		callpoint!.setTableColumnAttribute("SFR_CALENDAR.OP_CODE","DTAB","SFC_OPRTNCOD")
 	endif
 [[SFR_CALENDAR.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[SFR_CALENDAR.OP_CODE.AVAL]]
 rem --- Set default dates
 	files=1,begfile=1,endfile=1

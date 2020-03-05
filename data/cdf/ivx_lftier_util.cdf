@@ -1,5 +1,5 @@
 [[IVX_LFTIER_UTIL.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[IVX_LFTIER_UTIL.BSHO]]
 rem --- Open Files
 

@@ -73,7 +73,7 @@ rem --- cannot be after the end_year and must have a fiscal calendar.
 		break
 	endif
 [[GLX_BUILDACTSUM.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[GLX_BUILDACTSUM.BSHO]]
 rem --- Open Files
 	num_files=3

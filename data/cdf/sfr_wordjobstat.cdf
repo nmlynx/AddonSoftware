@@ -66,4 +66,4 @@ endif
 seq_list$=seq_list$+bill_no$+cust_no$
 callpoint!.setTableColumnAttribute("SFR_WORDJOBSTAT.REPORT_SEQ","LDAT",seq_list$)
 [[SFR_WORDJOBSTAT.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon

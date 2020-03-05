@@ -1,5 +1,5 @@
 [[GLU_CREATEBUDGET.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[GLU_CREATEBUDGET.ASHO]]
 num_files=1
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]

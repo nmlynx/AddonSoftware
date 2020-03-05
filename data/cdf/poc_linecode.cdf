@@ -27,8 +27,8 @@ else
 	endif
 endif
 [[POC_LINECODE.<CUSTOM>]]
-#include std_missing_params.src
-#include std_functions.src
+#include [+ADDON_LIB]std_missing_params.aon
+#include [+ADDON_LIB]std_functions.aon
 
 gl_active:
 rem "GL INACTIVE FEATURE"

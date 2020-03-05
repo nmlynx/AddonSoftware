@@ -171,7 +171,7 @@ rem	if cvs(apc_typecode$,2)<>""
 rem		user_tpl.dflt_dist_code$=apc_typecode.ap_dist_code$
 rem	endif
 [[APM_VENDHIST.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 disable_fields:
 	rem --- used to disable/enable controls depending on parameter settings
 	rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space to disable/enable
@@ -200,4 +200,4 @@ display_default_rec:
 	wend
 return
 
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon

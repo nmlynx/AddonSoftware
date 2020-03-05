@@ -16,4 +16,4 @@ rem "GL INACTIVE FEATURE"
       callpoint!.setStatus("ACTIVATE-ABORT")
    endif
 [[GLS_EARNINGS.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon

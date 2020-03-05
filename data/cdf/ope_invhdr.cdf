@@ -2016,7 +2016,7 @@ rem --- If cash customer, get correct customer number
 		callpoint!.setStatus("REFRESH")
 	endif
 [[OPE_INVHDR.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 
 rem ==========================================================================
 display_customer: rem --- Get and display Bill To Information

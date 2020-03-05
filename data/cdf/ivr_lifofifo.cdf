@@ -3,7 +3,7 @@ rem --- Item synonym processing
 
 	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[IVR_LIFOFIFO.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[IVR_LIFOFIFO.BSHO]]
 rem --- Open files
 

@@ -89,7 +89,7 @@ disp_totals:
     units!=UserObj!.getItem(num(user_tpl.units_ofst$))
     units!.setValue(num(user_tpl.tot_units$))
     return
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[GLE_RECJEHDR.BSHO]]
 num_files=1
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]

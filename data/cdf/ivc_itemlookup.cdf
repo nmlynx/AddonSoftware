@@ -541,5 +541,5 @@ rem --- Format date from YYYYMMDD to MM/DD/YY
     fnend
 
 rem ==========================================================================
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 rem ==========================================================================

@@ -17,7 +17,7 @@ rem --- Percent can't be zero
 		callpoint!.setStatus("ABORT")
 	endif
 [[IVR_COSTCHGBYPCT.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[IVR_COSTCHGBYPCT.BSHO]]
 rem --- Inits
 
