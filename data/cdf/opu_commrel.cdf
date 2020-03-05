@@ -23,4 +23,4 @@ rem --- Get parameter record and set defaults
 	callpoint!.setColumnData("OPU_COMMREL.COMMIT_THRU", thru$)
 	callpoint!.setStatus("REFRESH")
 [[OPU_COMMREL.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon

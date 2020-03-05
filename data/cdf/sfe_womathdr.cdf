@@ -185,7 +185,7 @@ rem --- Existing materials issues?
 
 rem ... focus needs to move to the last key field re Barista bug 6299
 [[SFE_WOMATHDR.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 
 verify_wo_status: rem -- Verify WO status
 	status$=callpoint!.getColumnData("<<DISPLAY>>.WO_STATUS")

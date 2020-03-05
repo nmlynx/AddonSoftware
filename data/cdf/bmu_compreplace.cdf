@@ -1,5 +1,5 @@
 [[BMU_COMPREPLACE.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[BMU_COMPREPLACE.BILL_NO.AVAL]]
 rem --- Validate against BOM_BILLMAST
 

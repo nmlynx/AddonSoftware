@@ -359,7 +359,7 @@ get_control!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
 return get_control!
 fnend
 rem #endinclude fnget_control.src
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[APE_RECURRINGHDR.BSHO]]
 rem --- add static label for displaying date/amount if pulling up open invoice
 inv_no!=fnget_control!("APE_RECURRINGHDR.AP_INV_NO")

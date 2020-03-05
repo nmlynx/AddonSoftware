@@ -287,7 +287,7 @@ rem --- Calculate and display all the extra tax codes
 	callpoint!.setColumnData("<<DISPLAY>>.TAX_TOTAL",str(total_pct))
 	callpoint!.setStatus("REFRESH-ABLEMAP")
 [[OPC_TAXCODE.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 able_gl: rem --- enable/disable selected control
 	wctl$=str(num(callpoint!.getTableColumnAttribute("OPC_TAXCODE.GL_ACCOUNT","CTLI")):"00000")
 	wmap$=callpoint!.getAbleMap()

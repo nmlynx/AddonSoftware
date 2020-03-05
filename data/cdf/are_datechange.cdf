@@ -37,7 +37,7 @@ rem --- recalculate due and discount dates
 	tmp_term_code$=callpoint!.getColumnData("ARE_DATECHANGE.AR_TERMS_CODE")
 	gosub recalc_dates
 [[ARE_DATECHANGE.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 recalc_dates:
 	rem --- tmp_term_code$ and tmp_inv_date$ set prior to gosub
 	arc_termcode_dev=fnget_dev("ARC_TERMCODE")

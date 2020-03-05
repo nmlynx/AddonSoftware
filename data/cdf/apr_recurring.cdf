@@ -9,7 +9,7 @@ rem --- Validate Date
 [[APR_RECURRING.BEND]]
 release
 [[APR_RECURRING.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[APR_RECURRING.ARAR]]
 rem --- Default year and period
 	aps01_dev=fnget_dev("APS_PARAMS")

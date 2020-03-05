@@ -20,7 +20,7 @@ rem --- Restrict to only unlocked periods in the current fiscal year
 	call stbl("+DIR_PGM")+"glc_datecheck.aon",date_check$,"Y",period$,year$,status
 	if status>100 callpoint!.setStatus("ABORT")
 [[GLR_ALLOCATE.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[GLR_ALLOCATE.ARAR]]
 gls01_dev=fnget_dev("GLS_PARAMS")
 gls01_tpl$=fnget_tpl$("GLS_PARAMS")

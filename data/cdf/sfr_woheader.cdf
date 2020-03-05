@@ -59,7 +59,7 @@ if callpoint!.getUserInput()="B"
 	endif
 endif
 [[SFR_WOHEADER.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[SFR_WOHEADER.BSHO]]
 rem --- Open needed IV tables
 rem --- Get default warehouse from IV params

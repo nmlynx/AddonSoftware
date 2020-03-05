@@ -59,7 +59,7 @@ if cvs(item_id$,3) <>""
 
 endif
 [[OPE_PRICEQUOTE.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 rem --- Build Pricing records
 build_arrays:
 	if cvs(cust_id$,2)="" or cvs(wh$,2)="" or cvs(item$,2)=""

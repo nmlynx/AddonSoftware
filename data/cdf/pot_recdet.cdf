@@ -18,7 +18,7 @@ rem --- store extended amount for display in header
 
 [[POT_RECDET.<CUSTOM>]]
 rem ==========================================================================
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 rem ==========================================================================
 
 rem ==========================================================================

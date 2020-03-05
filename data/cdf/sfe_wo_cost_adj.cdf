@@ -25,7 +25,7 @@ rem --- Get Batch information
 	call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]
 	callpoint!.setTableColumnAttribute("SFE_WO_COST_ADJ.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
 [[SFE_WO_COST_ADJ.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[SFE_WO_COST_ADJ.ASVA]]
 rem --- Call Correct Form
 

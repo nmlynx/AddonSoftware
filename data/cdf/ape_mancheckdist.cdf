@@ -109,7 +109,7 @@ gosub calc_grid_tots
 [[APE_MANCHECKDIST.ADEL]]
 gosub calc_grid_tots
 [[APE_MANCHECKDIST.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 calc_grid_tots:
 
 dist_amt$=callpoint!.getDevObject("dist_amt")

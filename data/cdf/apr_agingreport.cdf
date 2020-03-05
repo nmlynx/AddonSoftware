@@ -5,7 +5,7 @@ rem --- Initialize and disable ap_type when not using multiple AP types
 		callpoint!.setColumnEnabled("APR_AGINGREPORT.AP_TYPE",0)
 	endif
 [[APR_AGINGREPORT.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[APR_AGINGREPORT.BSHO]]
 rem --- Open/Lock files
 	num_files=1

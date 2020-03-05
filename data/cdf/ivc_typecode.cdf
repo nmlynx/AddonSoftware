@@ -24,7 +24,7 @@ if ivs_defaults.item_type$=item_type$ then
 	callpoint!.setStatus("ABORT")
 endif
 [[IVC_TYPECODE.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[IVC_TYPECODE.BSHO]]
 rem --- Open/Lock files
 

@@ -604,8 +604,8 @@ get_control!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
 return get_control!
 fnend
 rem #endinclude fnget_control.src
-#include std_missing_params.src
-#include std_functions.src
+#include [+ADDON_LIB]std_missing_params.aon
+#include [+ADDON_LIB]std_functions.aon
 [[POE_INVHDR.INVOICE_AMT.AVAL]]
 callpoint!.setColumnData("POE_INVHDR.NET_INV_AMT", callpoint!.getUserInput())
 callpoint!.setDevObject("inv_amt",callpoint!.getUserInput())

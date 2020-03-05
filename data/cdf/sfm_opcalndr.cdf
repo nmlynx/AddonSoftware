@@ -16,5 +16,5 @@ rem --- See if BOM is being used
 	endif
 [[SFM_OPCALNDR.<CUSTOM>]]
 rem ==========================================================================
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 rem ==========================================================================

@@ -32,7 +32,7 @@ rem --- Verify haven't exceeded calendar total periods for current AR fiscal yea
 		endif
 	endif
 [[ARR_DRLLDOWN.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[ARR_DRLLDOWN.ARAR]]
 ars01_dev=fnget_dev("ARS_PARAMS")
 ars01_tpl$=fnget_tpl$("ARS_PARAMS")

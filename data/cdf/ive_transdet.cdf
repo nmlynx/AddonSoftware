@@ -376,7 +376,7 @@ rem --- Calculate and display extended cost
 	trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
 	gosub calc_ext_cost
 [[IVE_TRANSDET.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 rem ==========================================================================
 calc_ext_cost: rem --- Calculate and display extended cost
                rem ---  IN: unit_cost

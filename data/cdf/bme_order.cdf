@@ -10,7 +10,7 @@ if num(stbl("+BATCH_NO"),err=*next)<>0
 	if status or existingBatchNo$<>"" then callpoint!.setStatus("NEWREC")
 endif
 [[BME_ORDER.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 [[BME_ORDER.CUSTOMER_ID.AVAL]]
 rem "Customer Inactive Feature"
 customer_id$=callpoint!.getUserInput()

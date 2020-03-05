@@ -49,7 +49,7 @@ rem --- recal/display tots after deleting a grid row
 gosub calc_grid_tots
 gosub disp_totals
 [[GLE_RECJEDET.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 rem calculate total debits/credits/units and display in form header
 
 calc_grid_tots:

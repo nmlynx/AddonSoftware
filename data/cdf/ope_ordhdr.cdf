@@ -2083,7 +2083,7 @@ rem --- Update devObjects with current values written to file
 	callpoint!.setDevObject("total_cost",num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_COST")))
 	callpoint!.setDevObject("total_sales",num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")))
 [[OPE_ORDHDR.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 
 rem ==========================================================================
 display_customer: rem --- Get and display Bill To Information

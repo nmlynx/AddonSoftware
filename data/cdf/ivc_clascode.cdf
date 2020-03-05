@@ -47,4 +47,4 @@ rem --- Dimension miscellaneous string templates
 	ivs01a_key$=firm_id$+"IV00"
 	find record (ivs01_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
 [[IVC_CLASCODE.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon

@@ -16,7 +16,7 @@ rem -- show current fiscal year
 cur_fiscal_yr$=callpoint!.getDevObject("cur_fiscal_yr")
 callpoint!.setColumnData("ADX_DEMOYEAR.CURRENT_YEAR",cur_fiscal_yr$)
 [[ADX_DEMOYEAR.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[ADX_DEMOYEAR.BSHO]]
 rem -- get current fiscal year
 

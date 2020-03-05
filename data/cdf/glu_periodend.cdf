@@ -22,4 +22,4 @@ rem --- Dimension string templates
 
 	dim gls01a$:gls01_tpl$
 [[GLU_PERIODEND.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon

@@ -921,7 +921,7 @@ if callpoint!.getColumnData("POE_POHDR.DROPSHIP")="Y"
 	endif
 endif
 [[POE_POHDR.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 vendor_info: rem --- get and display Vendor Information
 	apm01_dev=fnget_dev("APM_VENDMAST")
 	dim apm01a$:fnget_tpl$("APM_VENDMAST")

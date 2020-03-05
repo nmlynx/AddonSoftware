@@ -350,7 +350,7 @@ rem --- Open tables
 	readrecord(ops_params_dev,key=firm_id$+"AR00")ops_params$
 	callpoint!.setDevObject("op_create_wo",ops_params.op_create_wo$)
 [[OPE_CREDMAINT.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 disp_cust_comments:
 	
 rem --- You must pass in cust_id$ because we don't know whether it's verified or not

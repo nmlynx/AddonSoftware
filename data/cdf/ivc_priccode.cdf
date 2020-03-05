@@ -65,7 +65,7 @@ remove_process_bar: rem -- remove process bar
 	rdFuncSpace!.setValue("+build_task","OFF")
 return
 
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[IVC_PRICCODE.BSHO]]
 num_files=2
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]

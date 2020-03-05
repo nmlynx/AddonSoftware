@@ -56,7 +56,7 @@ if info$[20] = "N"
 	gosub disable_fields
 endif
 [[ARC_DISTCODE.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 
 gl_inactive:
 rem "GL INACTIVE FEATURE"

@@ -239,7 +239,7 @@ rem - Set up disabled controls
 	dctl$[14]="<<DISPLAY>>.NO_TRANS"
 	gosub disable_ctls
 [[GLM_BANKMASTER.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 rem ====================================================
 check_date: rem --- Check Statement Ending Date
 rem ====================================================

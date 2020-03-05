@@ -21,7 +21,7 @@ rem --- Retrieve parameter data
 	callpoint!.setDevObject("multi_types",aps01a.multi_types$)
 	callpoint!.setDevObject("ap_type",aps01a.ap_type$)
 [[APR_CASHREQUIRE.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[APR_CASHREQUIRE.AGING_DATE.AVAL]]
 rem --- Verify calendar exists for fiscal year of aging_date
 	aging_date$=callpoint!.getUserInput()

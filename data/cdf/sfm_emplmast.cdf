@@ -1,5 +1,5 @@
 [[SFM_EMPLMAST.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[SFM_EMPLMAST.BSHO]]
 rem --- Check to make sure Payroll isn't installed
 

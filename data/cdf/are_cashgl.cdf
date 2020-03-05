@@ -23,7 +23,7 @@ rem --- Invoke the comments dialog
 rem --- Invoke the comments dialog
 	gosub comment_entry
 [[ARE_CASHGL.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 
 comment_entry: rem --- When the Comment field is accessed, launch the new memo_1024 editor instead
 	disp_text$=callpoint!.getColumnData("ARE_CASHGL.MEMO_1024")

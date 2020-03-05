@@ -591,7 +591,7 @@ if num(callpoint!.getUserInput())<0 or num(callpoint!.getUserInput())>9999.99 ca
 [[IVM_ITEMMAST.ASHO]]
 callpoint!.setStatus("ABLEMAP-REFRESH")
 [[IVM_ITEMMAST.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 
 gl_active:
 rem "GL INACTIVE FEATURE"
@@ -647,7 +647,7 @@ rem ==========================================================================
 return
 
 rem ==========================================================================
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 rem ==========================================================================
 [[IVM_ITEMMAST.BSHO]]
 rem --- Inits

@@ -153,7 +153,7 @@ rem ===========================================================================
 return
 
 rem ===========================================================================
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 rem ===========================================================================
 [[IVE_COSTCHG.WAREHOUSE_ID.AVAL]]
 rem --- Is the warehouse / item combination valid?
