@@ -1,8 +1,10 @@
-[[ARC_CC_USERS.ADEL]]
+[[ARC_CC_USERS.BDEL]]
 rem --- Remove deleted user from Enterprise Manager
 	admin!=callpoint!.getDevObject("admin")
-	customer_id$=cvs(callpoint!.getColumnData("ARC_CC_USERS.CUSTOMER_ID"),2)
-	admin!.removeUser(CCUserModel.getEMUserName(customer_id$))
+	cc_username$=cvs(callpoint!.getColumnData("ARC_CC_USERS.CC_USERNAME"),2)
+	thisUser!=new CCUserModel()
+	admin!.dropUser(thisUser!.getEMUserName(cc_username$),err=*next)
+	admin!.commit(err=*next)
 
 [[ARC_CC_USERS.BSHO]]
 rem --- Get needed classes

@@ -72,13 +72,13 @@ class public AO_CCUserModel
         REM .. get the current date
         today$=CCUtil.today() 
         
-        deactivated$=#getDectivatedDate(user$)
+        deactivated$=cvs(#getDectivatedDate(user$),3)
         if (deactivated$<>"") then 
             if deactivated$<=today$ then methodret 0
         endif 
         
         REM .. check that the activated date is set and in the past 
-        activated$=#getActivatedDate(user$)
+        activated$=cvs(#getActivatedDate(user$),3)
         if (activated$="" OR activated$>today$) then methodret 0
         
         REM If we've made it through these checks then we can login
@@ -92,7 +92,7 @@ class public AO_CCUserModel
         
         dim rec$:sqltmpl(#SqlChan) 
         rec$=sqlfetch(#SqlChan)
-        methodret rec.activated_date$
+        methodret cvs(rec.activated_date$,3)
     methodend 
     
     method public BBjString getDectivatedDate(BBjString user$)
@@ -101,7 +101,7 @@ class public AO_CCUserModel
         
         dim rec$:sqltmpl(#SqlChan) 
         rec$=sqlfetch(#SqlChan)
-        methodret rec.deactivated_date$      
+        methodret cvs(rec.deactivated_date$,3)
     methodend 
     
     method public BBjString getLastUsedDate(BBjString user$)
@@ -110,7 +110,7 @@ class public AO_CCUserModel
         
         dim rec$:sqltmpl(#SqlChan) 
         rec$=sqlfetch(#SqlChan)
-        methodret rec.last_used_date$      
+        methodret cvs(rec.last_used_date$,3)
     methodend 
     
     
@@ -242,7 +242,7 @@ class public AO_CCUserModel
       declare BBjString uuid$
       uuid$=UUID.randomUUID().toString()
         
-      methodret #EM_ACCOUNT_PREFIX!+username$+uuid$
+      methodret #EM_ACCOUNT_PREFIX!+cvs(username$,3)+uuid$
   methodend
   
   REM Look up an existing user's EM username
@@ -254,7 +254,7 @@ class public AO_CCUserModel
       
       result$=sqlfetch(#SqlChan)
       
-      methodret result.emuser$    
+      methodret cvs(result.emuser$,3)
   methodend 
   
   method public BBjNumber userNameExistsInUsers(BBjString username$)

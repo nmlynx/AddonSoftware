@@ -128,7 +128,7 @@ class public CCRegistrationModel
     endif
     
     REM Check to see if this registration has already been taken care of 
-    if (result.REGISTER_DATE$<>"") then 
+    if (cvs(result.REGISTER_DATE$,3)<>"") then 
         methodret null() 
     endif 
     
