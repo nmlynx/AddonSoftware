@@ -4,6 +4,12 @@ REM  * @author shaun
 REM  * Copyright BASIS International Ltd.  All Rights Reserved.
 REM  */
 
+REM Driver code called by bax_launch_task by way of the web app. 
+declare CCLoginManager cclm!
+cclm!=new CCLoginManager()
+cclm!.doModal()
+release
+
 use ::CCLoginView.aon::CCLoginView
 use ::CCRegistrationView.aon::CCRegistrationView
 use ::CCRegistrationModel.aon::CCRegistrationModel
@@ -12,14 +18,15 @@ use ::CCRegistrationModel.aon::CCCustomerFirmInfo
 use ::aro_CCUserModel.aon::CCUserModel
 use ::aro_CCUserModel.aon::CCUserRecord
 use ::aro_CCUtil.aon::CCUtil
+use ::aro_CCConfigurePasswordView.aon::CCConfigurePasswordView
 
 class public CCLoginManager
 	field protected CCUtil Util!=new CCUtil()
 	field protected CCLoginView LoginView!=new CCLoginView()
-	rem field protected CCLoginModel LoginModel!=new CCLoginModel()
 	field protected CCRegistrationView RegistrationView!=new CCRegistrationView() 
 	field protected CCRegistrationModel RegistrationModel!=new CCRegistrationModel() 
 	field protected CCUserModel UserModel!=new CCUserModel() 
+	field protected CCConfigurePasswordView ConfigurePasswordView!=new CCConfigurePasswordView()
 
 	method public CCLoginManager()
 	    
@@ -35,8 +42,11 @@ class public CCLoginManager
         #RegistrationView!.registerFirstNameEB_OnFocusLostCallback(#this!,"handleLostFocus")
         #RegistrationView!.registerLastNameEB_OnFocusLostCallback(#this!,"handleLostFocus")
         #RegistrationView!.registerUserEmailEB_OnFocusLostCallback(#this!,"handleLostFocus")
-        
         #RegistrationModel!.setUserModel(#UserModel!)
+        
+        #ConfigurePasswordView!.registerOKBtn_OnButtonPushCallback(#this!,"handleChangePasswordOK")
+        #ConfigurePasswordView!.registerCancelBtn_OnButtonPushCallback(#this!,"handleChangePasswordCancel")
+                
 	methodend
 
 	method public void doModal()
@@ -52,9 +62,12 @@ class public CCLoginManager
 	method public void handleLogin(BBjButtonPushEvent event!)
 		declare BBjString username!
 		declare BBjString password!
+		declare BBjNumber changePasswordOnFirstLogin!
 
 		username!=#LoginView!.getUserName()
 		password!=#LoginView!.getPassword()
+		
+		changePasswordOnFirstLogin!=(#UserModel!.getLastUsedDate(userName!)="")
 
 		if (#UserModel!.login(username!,password!)) then
 			#LoginView!.hide()
@@ -67,46 +80,66 @@ class public CCLoginManager
 			REM than putting in "Additional Options" in the Addon dialog since your typical paying customer is not 
 			REM an Addon user. 
 
-			customerID$=#UserModel!.getAssociatedCustomerID()
-			firmID$=#UserModel!.getAssociatedFirmID()
-
-
-			if (customerID$<>"" and firmID$<>"") then
-				declare BBjCommandLineObject cmd!
-				cmd!=BBjAPI().getConfig().getCurrentCommandLineObject()
-				
-				REM TODO: Discuss this. Due to this piece of code we're requiring the user to call their 
-				REM account aliases APP1 and APP2.  Mostly we want them to create a suitable account user 
-				REM with suitable aliases but perhaps should not restrict what they choose to call those 
-				REM aliases. At this point, we're safe harvesting the application username and password 
-				REM to put on the commandline because they're not exposed to the website user. The problem is 
-				REM more if someone were to accidently configure this interface to be a desktop app.
-				declare BBjAdminBase admin!
-				admin!=CCUtil.getAdmin()
-				applicationUser$=admin!.getUser()
-				applicationPassword$=admin!.getPassword()
-
-				cmd!.setProgramName("sys/prog/bax_launch_task.bbj")
-				arguments$=""
-				arguments$=arguments$+"-tARE_CCPMT_CSTHST "
-				arguments$=arguments$+"-oARE_CCPMT_CSTHST "
-				arguments$=arguments$+"-mMNT "
-				arguments$=arguments$+"-f"+firmID$+" "
-				arguments$=arguments$+"-k"+customerID$+" "
-				arguments$=arguments$+"-u"+applicationUser$+" -p"+applicationPassword$
-				arguments$=arguments$+" &"
-				cmd!.setProgramArgs(arguments$)
-				x=scall("bbj "+cmd!.toString())
-				release
+			REM If this is the first time the user has ever logged in, make them change their password
+			if (changePasswordOnFirstLogin!) then 
+			    #ConfigurePasswordView!.show()
 			else 
-			    REM TODO: Handle situation where there's a login for a user who is not set up properly
-			endif
+			    #launchCustomerPaymentForm()
+			endif 
 		else
 			#LoginView!.show()
 			#RegistrationView!.displayMessage("Login Failed. Please Try Again.")
 		endif
 
 	methodend
+	
+	method public void launchCustomerPaymentForm()
+	    REM Launch the customer payment form
+        customerID$=#UserModel!.getAssociatedCustomerID()
+        firmID$=#UserModel!.getAssociatedFirmID()
+        if (customerID$<>"" and firmID$<>"") then
+            declare BBjCommandLineObject cmd!
+            cmd!=BBjAPI().getConfig().getCurrentCommandLineObject()
+            
+            declare BBjAdminBase admin!
+            admin!=CCUtil.getAdmin()
+            applicationUser$=admin!.getUser()
+            applicationPassword$=admin!.getPassword()
+
+            cmd!.setProgramName("sys/prog/bax_launch_task.bbj")
+            arguments$=""
+            arguments$=arguments$+"-tARE_CCPMT_CSTHST "
+            arguments$=arguments$+"-oARE_CCPMT_CSTHST "
+            arguments$=arguments$+"-mMNT "
+            arguments$=arguments$+"-f"+firmID$+" "
+            arguments$=arguments$+"-k"+customerID$+" "
+            arguments$=arguments$+"-u"+applicationUser$+" -p"+applicationPassword$
+            cmd!.setProgramArgs(arguments$)
+            x=scall("bbj "+cmd!.toString())
+        else 
+            REM TODO: Take care of awkward situation where customer account has not been set up correctly.
+        endif 
+	methodend 
+	
+	method public void handleChangePasswordOK(BBjButtonPushEvent event!)
+	    if (#ConfigurePasswordView!.passwordsMatch()) then
+	        #UserModel!.changePassword(#ConfigurePasswordView!.getPassword())
+	        #ConfigurePasswordView!.displayMessage("Password has been changed.")
+	        #ConfigurePasswordView!.hide()
+	        #launchCustomerPaymentForm()
+	        release
+	    else 
+	        #ConfigurePasswordView!.displayMessage("Passwords do not match")
+	    endif 
+	methodend 
+
+    method public void handleChangePasswordCancel(BBjButtonPushEvent event!)
+        #ConfigurePasswordView!.displayMessage("Password has not been changed.")
+        #ConfigurePasswordView!.hide()
+        #launchCustomerPaymentForm()
+        release
+    methodend 
+
 	
 	method public void handleCustomerModification(BBjLostFocusEvent event!)
 	    declare BBjString customerID!
@@ -160,7 +193,7 @@ rem	    #RegistrationView!.setUserNameValid(valid)
 	method public void handleCancel(BBjButtonPushEvent event!)
         release
     methodend
-
+    
 	REM Get the registration information from the view and have the model send it to the servlet
     method public void sendRegistrationRequest(BBjButtonPushEvent event!)
       declare CCRegistrationRecord rec!
@@ -199,10 +232,3 @@ rem	    #RegistrationView!.setUserNameValid(valid)
     methodend
     
 classend
-
-
-declare CCLoginManager cclm!
-cclm!=new CCLoginManager()
-cclm!.doModal()
-release
-
