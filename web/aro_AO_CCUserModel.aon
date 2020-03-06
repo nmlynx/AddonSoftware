@@ -267,19 +267,6 @@ class public AO_CCUserModel
 
     methodret (result.count<>0)
   methodend 
-  
-    REM Look up an existing user's EM username
-    method public BBjString getEMUserName(BBjString username$)
-        sqlprep (#SqlChan) "select emuser from arc_cc_users where cc_username=?"
-        sqlexec (#SqlChan) username$
-        
-        dim result$:sqltmpl(#SqlChan)
-        
-        result$=sqlfetch(#SqlChan)
-        
-        return result.emuser$
-        
-    methodend 
 
    method public BBjString getCustomerName(BBjString customerID$)
 
