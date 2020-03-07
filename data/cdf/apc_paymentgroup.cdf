@@ -1,5 +1,5 @@
 [[APC_PAYMENTGROUP.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[APC_PAYMENTGROUP.BSHO]]
 rem --- Open/Lock files
 

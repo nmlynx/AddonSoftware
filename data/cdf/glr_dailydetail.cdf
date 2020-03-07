@@ -1,5 +1,5 @@
 [[GLR_DAILYDETAIL.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 [[GLR_DAILYDETAIL.GL_ACCOUNT.AVAL]]
 rem "GL INACTIVE FEATURE"
    glm01_dev=fnget_dev("GLM_ACCT")

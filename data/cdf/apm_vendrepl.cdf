@@ -30,7 +30,7 @@ disable_ctls:rem --- disable selected control
     next dctl
     return
 
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[APM_VENDREPL.BDEL]]
 rem --- check knum3 of ivm-01; if firm/buyer/vendor key is present, disallow deletion
 

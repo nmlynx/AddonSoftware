@@ -1,49 +1,3 @@
-[[APC_DISTRIBUTION.GL_RET_ACCT.AVAL]]
-gosub gl_active
-[[APC_DISTRIBUTION.GL_PURC_ACCT.AVAL]]
-gosub gl_active
-[[APC_DISTRIBUTION.GL_DISC_ACCT.AVAL]]
-gosub gl_active
-[[APC_DISTRIBUTION.GL_CASH_ACCT.AVAL]]
-gosub gl_active
-[[APC_DISTRIBUTION.GL_AP_ACCT.AVAL]]
-gosub gl_active
-[[APC_DISTRIBUTION.<CUSTOM>]]
-#include std_functions.src
-#include std_missing_params.src
-
-gl_active:
-rem "GL INACTIVE FEATURE"
-   glm01_dev=fnget_dev("GLM_ACCT")
-   glm01_tpl$=fnget_tpl$("GLM_ACCT")
-   dim glm01a$:glm01_tpl$
-   glacctinput$=callpoint!.getUserInput()
-   glm01a_key$=firm_id$+glacctinput$
-   find record (glm01_dev,key=glm01a_key$,err=*break) glm01a$
-   if glm01a.acct_inactive$="Y" then
-      call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,gl_size
-      msg_id$="GL_ACCT_INACTIVE"
-      dim msg_tokens$[2]
-      msg_tokens$[1]=fnmask$(glm01a.gl_account$(1,gl_size),m0$)
-      msg_tokens$[2]=cvs(glm01a.gl_acct_desc$,2)
-      gosub disp_message
-      callpoint!.setStatus("ACTIVATE-ABORT")
-   endif
-return
-
-disable_fields:
- rem --- used to disable/enable controls depending on parameter settings
- rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space to disable/enable
-
-
- wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
- wmap$=callpoint!.getAbleMap()
- wpos=pos(wctl$=wmap$,8)
- wmap$(wpos+6,1)=ctl_stat$
- callpoint!.setAbleMap(wmap$)
- callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
- 
-return
 [[APC_DISTRIBUTION.BSHO]]
 rem --- Open/Lock files
 
@@ -101,3 +55,56 @@ if gl$<>"Y" then
 	callpoint!.setColumnEnabled("APC_DISTRIBUTION.GL_CASH_ACCT",-1)
 	callpoint!.setColumnEnabled("APC_DISTRIBUTION.GL_DISC_ACCT",-1)
 endif
+
+[[APC_DISTRIBUTION.GL_AP_ACCT.AVAL]]
+gosub gl_active
+
+[[APC_DISTRIBUTION.GL_CASH_ACCT.AVAL]]
+gosub gl_active
+
+[[APC_DISTRIBUTION.GL_DISC_ACCT.AVAL]]
+gosub gl_active
+
+[[APC_DISTRIBUTION.GL_PURC_ACCT.AVAL]]
+gosub gl_active
+
+[[APC_DISTRIBUTION.GL_RET_ACCT.AVAL]]
+gosub gl_active
+
+[[APC_DISTRIBUTION.<CUSTOM>]]
+#include [+ADDON_LIB]std_functions.aon
+#include [+ADDON_LIB]std_missing_params.aon
+
+gl_active:
+rem "GL INACTIVE FEATURE"
+   glm01_dev=fnget_dev("GLM_ACCT")
+   glm01_tpl$=fnget_tpl$("GLM_ACCT")
+   dim glm01a$:glm01_tpl$
+   glacctinput$=callpoint!.getUserInput()
+   glm01a_key$=firm_id$+glacctinput$
+   find record (glm01_dev,key=glm01a_key$,err=*break) glm01a$
+   if glm01a.acct_inactive$="Y" then
+      call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,gl_size
+      msg_id$="GL_ACCT_INACTIVE"
+      dim msg_tokens$[2]
+      msg_tokens$[1]=fnmask$(glm01a.gl_account$(1,gl_size),m0$)
+      msg_tokens$[2]=cvs(glm01a.gl_acct_desc$,2)
+      gosub disp_message
+      callpoint!.setStatus("ACTIVATE-ABORT")
+   endif
+return
+
+disable_fields:
+ rem --- used to disable/enable controls depending on parameter settings
+ rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space to disable/enable
+
+
+ wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+ wmap$=callpoint!.getAbleMap()
+ wpos=pos(wctl$=wmap$,8)
+ wmap$(wpos+6,1)=ctl_stat$
+ callpoint!.setAbleMap(wmap$)
+ callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
+ 
+return
+

@@ -526,7 +526,7 @@ gosub calc_grid_tots
 gosub disp_dist_bal
 callpoint!.setStatus("REFRESH")
 [[APE_INVOICEHDR.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 rem --------------------------------------------------------------------------------------------------------------
 disable_fields:
 rem --------------------------------------------------------------------------------------------------------------
@@ -627,7 +627,7 @@ get_control!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
 return get_control!
 fnend
 rem #endinclude fnget_control.src
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[APE_INVOICEHDR.BSHO]]
 rem --- Open/Lock files
 files=12,begfile=1,endfile=files

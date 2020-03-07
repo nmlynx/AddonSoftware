@@ -43,7 +43,7 @@ rem --- Validate against BOM_BILLMAST
 		callpoint!.setStatus("ABORT")
 	endif
 [[SFR_WODETRPT.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[SFR_WODETRPT.REPORT_SEQ.AVAL]]
 rem ---- If By Bill and a whse hasn't been entered, default whse
 

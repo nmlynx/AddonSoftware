@@ -150,7 +150,7 @@ rem --- Verify calendar exists for entered ending fiscal year
 		endif
 	endif
 [[GLR_TRANSHISTORY.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 [[GLR_TRANSHISTORY.GL_ACCOUNT.AVAL]]
 rem "GL INACTIVE FEATURE"
    glm01_dev=fnget_dev("GLM_ACCT")

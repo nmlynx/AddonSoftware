@@ -2240,8 +2240,8 @@ rem --- Set Discount and Payment Amount in InvoiceMaster vector
 	fnend
 
 rem ==========================================================================
-#include std_missing_params.src
-#include std_functions.src
+#include [+ADDON_LIB]std_missing_params.aon
+#include [+ADDON_LIB]std_functions.aon
 rem ==========================================================================
 [[APE_PAYSELECT.ASVA]]
 rem --- Update apt-01 (remove/write) based on what's checked in the grid

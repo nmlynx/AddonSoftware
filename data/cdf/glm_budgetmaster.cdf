@@ -83,7 +83,7 @@ endif
 rev_src$=callpoint!.getColumnData("GLM_BUDGETMASTER.REVISION_SRC")
 gosub validate_revision_source
 [[GLM_BUDGETMASTER.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 validate_revision_source:
 	rem --- rev_src$ set prior to gosub
 	amt_units$=callpoint!.getColumnData("GLM_BUDGETMASTER.AMT_OR_UNITS")
@@ -95,7 +95,7 @@ validate_revision_source:
 		endif
 	endif
 return
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[GLM_BUDGETMASTER.REVISION_SRC.AVAL]]
 rev_src$=callpoint!.getUserInput()
 gosub validate_revision_source

@@ -27,7 +27,7 @@ if can_delete$="N"
 	callpoint!.setStatus("ABORT")
 endif
 [[IVC_BUYCODE.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[IVC_BUYCODE.BSHO]]
 rem --- Open/Lock files
 

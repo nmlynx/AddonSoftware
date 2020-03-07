@@ -449,7 +449,7 @@ swend
 
 endif
 [[GLM_BUDGETMAINT.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 update_glm_acctsummary:
 rem ---  Parse thru gridBudgets! and write back any budget recs to glm-02
 rem --- Only budget and planned budget rows are editable. Actual rows are disabled
@@ -907,4 +907,4 @@ rem ==========================================================================
 
 	return
 
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon

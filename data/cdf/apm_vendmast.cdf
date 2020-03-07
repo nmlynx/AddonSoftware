@@ -1,32 +1,3 @@
-[[APM_VENDMAST.AOPT-HIST]]
-rem --- Show historical invoices from this vendor (balance=0)
-
-	vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
-
-	selected_key$ = ""
-	dim filter_defs$[1,2]
-	filter_defs$[0,0]="APT_INVOICEHDR.FIRM_ID"
-	filter_defs$[0,1]="='"+firm_id$+"'"
-	filter_defs$[0,2]="LOCK"
-	filter_defs$[1,0]="APT_INVOICEHDR.VENDOR_ID"
-	filter_defs$[1,1]="='"+vendor_id$+"'"
-	filter_defs$[1,2]="LOCK"
-
-	dim search_defs$[3]
-
-	call stbl("+DIR_SYP")+"bax_query.bbj",
-:		gui_dev,
-:		Form!,
-:		"AP_HISTINV",
-:		"",
-:		table_chans$[all],
-:		"",
-:		filter_defs$[all],
-:		search_defs$[all]
-[[APM_VENDMAST.BTBL]]
-
-[[APM_VENDMAST.ASHO]]
-
 [[APM_VENDMAST.ABA_NO.AVAL]]
 rem --- Bank routing number must be 9-digit number, or blank
 	aba_no$=callpoint!.getUserInput()
@@ -50,6 +21,7 @@ rem ---Bank routing number must pass 371371371 checksum test
 		callpoint!.setStatus("ABORT")
 		break
 	endif
+
 [[APM_VENDMAST.ADIS]]
 rem --- Enable/disable and Payment Information fields
 	if callpoint!.getColumnData("APM_VENDMAST.PAYMENT_TYPE")="A" then
@@ -85,80 +57,61 @@ rem --- Enable/disable and Payment Information fields
 		callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_EMAIL","",1)
 		callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_FAX","",1)
 	endif
-[[APM_VENDMAST.PAYMENT_TYPE.AVAL]]
-rem --- Enable Payment Information fields when paying via ACH
-	payment_type$=callpoint!.getUserInput()
-	if payment_type$<>callpoint!.getColumnData("APM_VENDMAST.PAYMENT_TYPE") then
-		if payment_type$="A" then
-			callpoint!.setColumnEnabled("APM_VENDMAST.BANK_NAME",1)
-			callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",1)
-			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",1)
-			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_TYPE",1)
 
-			callpoint!.setColumnData("APM_VENDMAST.BNK_ACCT_TYPE","C",1)
+[[APM_VENDMAST.AOPT-HCPY]]
+rem --- Go run the Hard Copy form
 
-			rem --- Initialize email address and fax number from ADM_RPTCTL_RCP
-			reportControl!=new ReportControl()
-			rpt_ctl$=reportControl!.getReportControl("APR_CHECKS")
-			rpt_ctl$=iff(rpt_ctl$="","NO","YES")
-			vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
-			if rpt_ctl$="YES" and reportControl!.getRecipientInfo(reportControl!.getReportID(),"",vendor_id$) then
-				AdmRptctlRcp!=reportControl!.getAdmRptctlRcp()
-				if reportControl!.getEmailYN()="Y"  then
-					callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_EMAIL",AdmRptctlRcp!.getFieldAsString("EMAIL_TO"),1)
-				endif
-				if reportControl!.getFaxYN()="Y" then
-					callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_FAX",AdmRptctlRcp!.getFieldAsString("FAX_NOS"),1)
-				endif
-			endif
-		else
-			rem --- Don’t allow changing PAYMENT_TYPE from A to P if there are any ACH payments for the vendor.
-			achPayment=0
-			vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
-			apw01_dev=fnget_dev("APW_CHECKINVOICE")
-			dim apw01a$:fnget_tpl$("APW_CHECKINVOICE")
-			read(apw01_dev,key=firm_id$,dom=*next)
-			while 1
-				readrecord(apw01_dev,end=*break)apw01a$
-				if apw01a.firm_id$<>firm_id$ then break
-				if apw01a.vendor_id$<>vendor_id$ or apw01a.comp_or_void$<>"A" then continue
-				achPayment=1
-				break
-			wend
-			if achPayment then
-				msg_id$="AP_CHANGE_ACH"
-				gosub disp_message
-
-				rem --- Reset radio buttons and start over
-				checkPaymentType!=callpoint!.getControl("APM_VENDMAST.PAYMENT_TYPE")
-				checkPaymentType!.setSelected(SysGUI!.FALSE)
-				achPaymentType!=util.findControl(Form!,Translate!.getTranslation("DDM_ELEMENT_LDAT-PAYMENT_TYPE-A-DD_ATTR_LDAT_DS"))
-				if achPaymentType!<>null() then achPaymentType!.setSelected(SysGUI!.TRUE)
-				callpoint!.setStatus("ABORT")
-				break
-			endif
-
-			callpoint!.setColumnEnabled("APM_VENDMAST.BANK_NAME",0)
-			callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",0)
-			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",0)
-			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_TYPE",0)
-
-			callpoint!.setColumnData("APM_VENDMAST.BANK_NAME","",1)
-			callpoint!.setColumnData("APM_VENDMAST.ABA_NO","",1)
-			callpoint!.setColumnData("APM_VENDMAST.BNK_ACCT_NO","",1)
-			callpoint!.setColumnData("APM_VENDMAST.BNK_ACCT_TYPE","",1)
-			callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_EMAIL","",1)
-			callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_FAX","",1)
-		endif
+	vend$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+	temp$=callpoint!.getColumnData("APM_VENDMAST.TEMP_VEND")
+	if temp$="Y"
+		type$="T"
+	else
+		type$="P"
 	endif
-[[APM_VENDMAST.AREC]]
-rem --- Disable and initialize Payment Information fields
-	callpoint!.setColumnEnabled("APM_VENDMAST.BANK_NAME",0)
-	callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",0)
-	callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",0)
-	callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_TYPE",0)
 
-	callpoint!.setColumnData("APM_VENDMAST.PAYMENT_TYPE","P",1)
+	dim dflt_data$[3,1]
+	dflt_data$[1,0]="VENDOR_ID_1"
+	dflt_data$[1,1]=vend$
+	dflt_data$[2,0]="VENDOR_ID_2"
+	dflt_data$[2,1]=vend$
+	dflt_data$[3,0]="VENDOR_TYPE"
+	dflt_data$[3,1]=type$
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"APR_DETAIL",
+:		stbl("+USER_ID"),
+:		"MNT",
+:		"",
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
+[[APM_VENDMAST.AOPT-HIST]]
+rem --- Show historical invoices from this vendor (balance=0)
+
+	vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+
+	selected_key$ = ""
+	dim filter_defs$[1,2]
+	filter_defs$[0,0]="APT_INVOICEHDR.FIRM_ID"
+	filter_defs$[0,1]="='"+firm_id$+"'"
+	filter_defs$[0,2]="LOCK"
+	filter_defs$[1,0]="APT_INVOICEHDR.VENDOR_ID"
+	filter_defs$[1,1]="='"+vendor_id$+"'"
+	filter_defs$[1,2]="LOCK"
+
+	dim search_defs$[3]
+
+	call stbl("+DIR_SYP")+"bax_query.bbj",
+:		gui_dev,
+:		Form!,
+:		"AP_HISTINV",
+:		"",
+:		table_chans$[all],
+:		"",
+:		filter_defs$[all],
+:		search_defs$[all]
+
 [[APM_VENDMAST.AOPT-IHST]]
 rem --- Show invoices from this vendor
 
@@ -208,43 +161,59 @@ rem --- Show history for selected invoice
 :			key_pfx$,
 :			table_chans$[all]
 	endif
-[[APM_VENDMAST.AOPT-HCPY]]
-rem --- Go run the Hard Copy form
 
-	vend$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
-	temp$=callpoint!.getColumnData("APM_VENDMAST.TEMP_VEND")
-	if temp$="Y"
-		type$="T"
-	else
-		type$="P"
-	endif
+[[APM_VENDMAST.AOPT-OINV]]
+rem Open Invoice Inquiry
+cp_vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+user_id$=stbl("+USER_ID")
+dim dflt_data$[2,1]
+dflt_data$[1,0]="VENDOR_ID"
+dflt_data$[1,1]=cp_vendor_id$
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:                       "APR_VENDINV",
+:                       user_id$,
+:                   	  "",
+:                       "",
+:                       table_chans$[all],
+:                       "",
+:                       dflt_data$[all]
 
-	dim dflt_data$[3,1]
-	dflt_data$[1,0]="VENDOR_ID_1"
-	dflt_data$[1,1]=vend$
-	dflt_data$[2,0]="VENDOR_ID_2"
-	dflt_data$[2,1]=vend$
-	dflt_data$[3,0]="VENDOR_TYPE"
-	dflt_data$[3,1]=type$
-
+[[APM_VENDMAST.AOPT-RHST]]
+rem Receipt History Inquiry
+if user_tpl.po_installed$="Y"
+	cp_vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+	user_id$=stbl("+USER_ID")
+	dim dflt_data$[2,1]
+	dflt_data$[1,0]="VENDOR_ID"
+	dflt_data$[1,1]=cp_vendor_id$
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:		"APR_DETAIL",
-:		stbl("+USER_ID"),
-:		"MNT",
-:		"",
-:		table_chans$[all],
-:		"",
-:		dflt_data$[all]
-[[APM_VENDMAST.VENDOR_ID.AVAL]]
-if num(callpoint!.getUserInput(),err=*endif)=0
-	callpoint!.setMessage("INPUT_ERR_MAIN")
-	callpoint!.setStatus("ABORT")
+:	                       "APR_RECEIPTS",
+:	                       user_id$,
+:	                   	  "",
+:	                       "",
+:	                       table_chans$[all],
+:	                       "",
+:	                       dflt_data$[all]
+else
+	msg_id$="AP_NOPO"
+	gosub disp_message
 endif
-[[APM_VENDMAST.BWRI]]
-if num(callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID"),err=*endif)=0 
-	callpoint!.setMessage("INPUT_ERR_MAIN")
-	callpoint!.setStatus("ABORT")
-endif
+
+[[APM_VENDMAST.AREC]]
+rem --- Disable and initialize Payment Information fields
+	callpoint!.setColumnEnabled("APM_VENDMAST.BANK_NAME",0)
+	callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",0)
+	callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",0)
+	callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_TYPE",0)
+
+	callpoint!.setColumnData("APM_VENDMAST.PAYMENT_TYPE","P",1)
+
+[[APM_VENDMAST.ARNF]]
+rem --- Set Date Opened
+	callpoint!.setColumnData("APM_VENDMAST.OPENED_DATE",sysinfo.system_date$)
+
+[[APM_VENDMAST.ASHO]]
+
 [[APM_VENDMAST.AWRI]]
 rem --- Code input if new customer
 	cp_vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
@@ -302,9 +271,7 @@ rem --- from AP Types file (apc_typecode)
 
 	endif
 	
-[[APM_VENDMAST.ARNF]]
-rem --- Set Date Opened
-	callpoint!.setColumnData("APM_VENDMAST.OPENED_DATE",sysinfo.system_date$)
+
 [[APM_VENDMAST.BDEL]]
 rem --- can delete vendor and assoc recs (apm01/02/05/06/08/09/14/15) unless
 rem --- vendor referenced in inventory, or
@@ -355,29 +322,7 @@ if cvs(vendor_id$,3)<>""
 		callpoint!.setStatus("ABORT")
 	endif
 endif
-[[APM_VENDMAST.<CUSTOM>]]
-disable_fields:
-	rem --- used to disable/enable controls depending on parameter settings
-	rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space to disable/enable
-	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
-	wmap$=callpoint!.getAbleMap()
-	wpos=pos(wctl$=wmap$,8)
-	wmap$(wpos+6,1)=ctl_stat$
-	callpoint!.setAbleMap(wmap$)
-	callpoint!.setStatus("ABLEMAP-REFRESH")
-return
-#include std_missing_params.src
-[[APM_VENDMAST.VENDOR_NAME.AVAL]]
-rem --- if no alt sequence is set, default it to vendor name
-if cvs(callpoint!.getColumnData("APM_VENDMAST.ALT_SEQUENCE"),3)=""
-	alt_seq$=callpoint!.getUserInput()
-	alt_seq_len=num(callpoint!.getTableColumnAttribute("APM_VENDMAST.ALT_SEQUENCE","MAXL"))
-	if len(alt_seq$)>alt_seq_len
-		alt_seq$=alt_seq$(1,alt_seq_len)
-	endif
-	callpoint!.setColumnData("APM_VENDMAST.ALT_SEQUENCE",alt_seq$)
-	callpoint!.setStatus("REFRESH")
-endif
+
 [[APM_VENDMAST.BSHO]]
 rem --- Open/Lock files
 
@@ -500,38 +445,111 @@ rem --- if vendor maint has been launched from Invoice/Manual Check Entry, defau
 	if str(callpoint!.getDevObject("passed_in_temp_vend"))="Y"
 		callpoint!.setTableColumnAttribute("APM_VENDMAST.TEMP_VEND","DFLT","Y")
 	endif
-[[APM_VENDMAST.AOPT-RHST]]
-rem Receipt History Inquiry
-if user_tpl.po_installed$="Y"
-	cp_vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
-	user_id$=stbl("+USER_ID")
-	dim dflt_data$[2,1]
-	dflt_data$[1,0]="VENDOR_ID"
-	dflt_data$[1,1]=cp_vendor_id$
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:	                       "APR_RECEIPTS",
-:	                       user_id$,
-:	                   	  "",
-:	                       "",
-:	                       table_chans$[all],
-:	                       "",
-:	                       dflt_data$[all]
-else
-	msg_id$="AP_NOPO"
-	gosub disp_message
+
+[[APM_VENDMAST.BTBL]]
+
+[[APM_VENDMAST.BWRI]]
+if num(callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID"),err=*endif)=0 
+	callpoint!.setMessage("INPUT_ERR_MAIN")
+	callpoint!.setStatus("ABORT")
 endif
-[[APM_VENDMAST.AOPT-OINV]]
-rem Open Invoice Inquiry
-cp_vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
-user_id$=stbl("+USER_ID")
-dim dflt_data$[2,1]
-dflt_data$[1,0]="VENDOR_ID"
-dflt_data$[1,1]=cp_vendor_id$
-call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:                       "APR_VENDINV",
-:                       user_id$,
-:                   	  "",
-:                       "",
-:                       table_chans$[all],
-:                       "",
-:                       dflt_data$[all]
+
+[[APM_VENDMAST.PAYMENT_TYPE.AVAL]]
+rem --- Enable Payment Information fields when paying via ACH
+	payment_type$=callpoint!.getUserInput()
+	if payment_type$<>callpoint!.getColumnData("APM_VENDMAST.PAYMENT_TYPE") then
+		if payment_type$="A" then
+			callpoint!.setColumnEnabled("APM_VENDMAST.BANK_NAME",1)
+			callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",1)
+			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",1)
+			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_TYPE",1)
+
+			callpoint!.setColumnData("APM_VENDMAST.BNK_ACCT_TYPE","C",1)
+
+			rem --- Initialize email address and fax number from ADM_RPTCTL_RCP
+			reportControl!=new ReportControl()
+			rpt_ctl$=reportControl!.getReportControl("APR_CHECKS")
+			rpt_ctl$=iff(rpt_ctl$="","NO","YES")
+			vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+			if rpt_ctl$="YES" and reportControl!.getRecipientInfo(reportControl!.getReportID(),"",vendor_id$) then
+				AdmRptctlRcp!=reportControl!.getAdmRptctlRcp()
+				if reportControl!.getEmailYN()="Y"  then
+					callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_EMAIL",AdmRptctlRcp!.getFieldAsString("EMAIL_TO"),1)
+				endif
+				if reportControl!.getFaxYN()="Y" then
+					callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_FAX",AdmRptctlRcp!.getFieldAsString("FAX_NOS"),1)
+				endif
+			endif
+		else
+			rem --- Don’t allow changing PAYMENT_TYPE from A to P if there are any ACH payments for the vendor.
+			achPayment=0
+			vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+			apw01_dev=fnget_dev("APW_CHECKINVOICE")
+			dim apw01a$:fnget_tpl$("APW_CHECKINVOICE")
+			read(apw01_dev,key=firm_id$,dom=*next)
+			while 1
+				readrecord(apw01_dev,end=*break)apw01a$
+				if apw01a.firm_id$<>firm_id$ then break
+				if apw01a.vendor_id$<>vendor_id$ or apw01a.comp_or_void$<>"A" then continue
+				achPayment=1
+				break
+			wend
+			if achPayment then
+				msg_id$="AP_CHANGE_ACH"
+				gosub disp_message
+
+				rem --- Reset radio buttons and start over
+				checkPaymentType!=callpoint!.getControl("APM_VENDMAST.PAYMENT_TYPE")
+				checkPaymentType!.setSelected(SysGUI!.FALSE)
+				achPaymentType!=util.findControl(Form!,Translate!.getTranslation("DDM_ELEMENT_LDAT-PAYMENT_TYPE-A-DD_ATTR_LDAT_DS"))
+				if achPaymentType!<>null() then achPaymentType!.setSelected(SysGUI!.TRUE)
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+
+			callpoint!.setColumnEnabled("APM_VENDMAST.BANK_NAME",0)
+			callpoint!.setColumnEnabled("APM_VENDMAST.ABA_NO",0)
+			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_NO",0)
+			callpoint!.setColumnEnabled("APM_VENDMAST.BNK_ACCT_TYPE",0)
+
+			callpoint!.setColumnData("APM_VENDMAST.BANK_NAME","",1)
+			callpoint!.setColumnData("APM_VENDMAST.ABA_NO","",1)
+			callpoint!.setColumnData("APM_VENDMAST.BNK_ACCT_NO","",1)
+			callpoint!.setColumnData("APM_VENDMAST.BNK_ACCT_TYPE","",1)
+			callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_EMAIL","",1)
+			callpoint!.setColumnData("<<DISPLAY>>.CHKSTUB_FAX","",1)
+		endif
+	endif
+
+[[APM_VENDMAST.VENDOR_ID.AVAL]]
+if num(callpoint!.getUserInput(),err=*endif)=0
+	callpoint!.setMessage("INPUT_ERR_MAIN")
+	callpoint!.setStatus("ABORT")
+endif
+
+[[APM_VENDMAST.VENDOR_NAME.AVAL]]
+rem --- if no alt sequence is set, default it to vendor name
+if cvs(callpoint!.getColumnData("APM_VENDMAST.ALT_SEQUENCE"),3)=""
+	alt_seq$=callpoint!.getUserInput()
+	alt_seq_len=num(callpoint!.getTableColumnAttribute("APM_VENDMAST.ALT_SEQUENCE","MAXL"))
+	if len(alt_seq$)>alt_seq_len
+		alt_seq$=alt_seq$(1,alt_seq_len)
+	endif
+	callpoint!.setColumnData("APM_VENDMAST.ALT_SEQUENCE",alt_seq$)
+	callpoint!.setStatus("REFRESH")
+endif
+
+[[APM_VENDMAST.<CUSTOM>]]
+disable_fields:
+	rem --- used to disable/enable controls depending on parameter settings
+	rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space to disable/enable
+	wctl$=str(num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI")):"00000")
+	wmap$=callpoint!.getAbleMap()
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)=ctl_stat$
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP-REFRESH")
+return
+
+#include [+ADDON_LIB]std_missing_params.aon
+

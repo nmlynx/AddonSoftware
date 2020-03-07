@@ -29,4 +29,4 @@ rem --- Check to make sure BOM isn't being used
 		release
 	endif
 [[SFC_OPRTNCOD.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon

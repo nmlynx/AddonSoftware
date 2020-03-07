@@ -4,7 +4,7 @@ if callpoint!.getDevObject("multi_dist")<>"Y"
 	callpoint!.setColumnData("APC_TYPECODE.AP_DIST_CODE",ap_dist_code$)
 endif
 [[APC_TYPECODE.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[APC_TYPECODE.BSHO]]
 rem --- Open/Lock files
 

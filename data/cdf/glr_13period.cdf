@@ -170,7 +170,7 @@ rem ==========================================================================
 
 	return
 		
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[GLR_13PERIOD.ASIZ]]
 if UserObj!<>null()
 	gridReports!=UserObj!.getItem(num(user_tpl.gridReportsOfst$))

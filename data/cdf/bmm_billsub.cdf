@@ -164,7 +164,7 @@ rem --- Display Net Qty and Total Cost
 	unit_cost=num(callpoint!.getColumnData("BMM_BILLSUB.UNIT_COST"))
 	gosub calc_display
 [[BMM_BILLSUB.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 rem ===================================================================
 calc_display:
 rem --- qty_req:		input

@@ -16,7 +16,7 @@ rem "GL INACTIVE FEATURE"
       callpoint!.setStatus("ACTIVATE")
    endif
 [[GLR_ACCTLIST.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 [[GLR_ACCTLIST.GL_WILDCARD.AVAL]]
 rem --- Check length of wildcard against defined mask for GL Account
 	if callpoint!.getUserInput()<>""

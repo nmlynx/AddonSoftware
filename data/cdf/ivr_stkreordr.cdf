@@ -3,7 +3,7 @@ rem --- Item synonym processing
 
 	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[IVR_STKREORDR.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[IVR_STKREORDR.ARAR]]
 rem --- Are IV parameters missing?
 

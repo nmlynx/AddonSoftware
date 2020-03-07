@@ -521,7 +521,7 @@ rem --- Disable ok_to_update if not warning in register
 	gosub able_ok_to_update
 
 [[APS_PARAMS.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 
 rem =========================================================
 able_payauth: rem --- Enable/Disable Payment Authorization

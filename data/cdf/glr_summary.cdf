@@ -80,8 +80,8 @@ gosub init_align_periods
 
 callpoint!.setStatus("REFRESH")
 [[GLR_SUMMARY.<CUSTOM>]]
-#include std_missing_params.src
-#include std_functions.src
+#include [+ADDON_LIB]std_missing_params.aon
+#include [+ADDON_LIB]std_functions.aon
 
 rem ==========================================================================
 init_align_periods: rem --- Initialize align_periods for prior and next year

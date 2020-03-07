@@ -14,7 +14,7 @@ rem --- Check if code is used as a default code
 		callpoint!.setStatus("ABORT")
 	endif
 [[OPC_DISCCODE.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[OPC_DISCCODE.BSHO]]
 rem --- Open/Lock files
 	files=1,begfile=1,endfile=1

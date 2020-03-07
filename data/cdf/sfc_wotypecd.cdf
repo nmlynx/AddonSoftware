@@ -29,7 +29,7 @@ rem --- Disable 4 G/L Accounts if posting at Actuals
 
 	return
 
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[SFC_WOTYPECD.STDACT_FLAG.AINP]]
 rem --- See if we need to set flag
 

@@ -16,4 +16,4 @@ dim ivs01a$:ivs_params_tpl$
 
 find record (ivs_params_chn,key=ivs01a_key$,err=std_missing_params) ivs01a$
 [[IVR_PRICELIST.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon

@@ -25,5 +25,5 @@ rem --- open files/init
 	endif
 [[SFR_BOTNECKANA.<CUSTOM>]]
 rem ==========================================================================
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 rem ==========================================================================

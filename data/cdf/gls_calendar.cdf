@@ -719,7 +719,7 @@ rem --- On launch initialize form with calendar for current fiscal year
 		endif
 	endif
 [[GLS_CALENDAR.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 
 show_current_fiscal_yr: rem --- Show current fiscal year and period
 	dim gls_params$:fnget_tpl$("GLS_PARAMS")

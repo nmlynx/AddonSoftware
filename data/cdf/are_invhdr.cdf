@@ -231,7 +231,7 @@ if gl$="Y"
 	endif
 endif
 [[ARE_INVHDR.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 calc_grid_tots:
         recVect!=GridVect!.getItem(0)
         dim gridrec$:dtlg_param$[1,3]
@@ -324,4 +324,4 @@ disp_cust_comments: rem --- You must pass in cust_id$ because we don't know whet
 	callpoint!.setColumnData("<<DISPLAY>>.comments",arm01a.memo_1024$,1)
 	return
 
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon

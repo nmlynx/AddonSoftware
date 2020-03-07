@@ -16,4 +16,4 @@ read record (ivs_params_dev,key=firm_id$+"IV00",err=std_missing_params)ivs_param
 callpoint!.setColumnData("IVX_BEGBALS.PERIOD_YEAR",ivs_params.current_year$+ivs_params.current_per$)
 callpoint!.setStatus("REFRESH")
 [[IVX_BEGBALS.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon

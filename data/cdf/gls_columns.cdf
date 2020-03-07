@@ -43,7 +43,7 @@ for x=1 to 4
 	callpoint!.setTableColumnAttribute("<<DISPLAY>>.RECORD_CD_"+str(x),"LDAT",ldat_list$)
 next x
 [[GLS_COLUMNS.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[GLS_COLUMNS.ADIS]]
 rem look at cols and tps in param rec; translate those to matching entry in the <<DISPLAY>> lists and set selected index
 codes!=callpoint!.getDevObject("codes")

@@ -152,7 +152,7 @@ disable_wh:
 	callpoint!.setAbleMap(wmap$)
 	callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
 return
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[BME_PRODUCT.PROD_DATE.AVAL]]
 rem --- make sure accting date is in an appropriate GL period
 
