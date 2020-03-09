@@ -65,6 +65,13 @@ rem --- Add BBJSP Servlets
         servletContext!.setClassPath(sscpName$)
         servletContext!.setWorkingDir(barDir$)
     next i
+	
+rem --- Save, then start the context
+
+    serverConfig!.saveConfig()
+    jettyServer! = BBjAPI().getAdmin(theAdmin!.getUser(), theAdmin!.getPassword()).getJettyServer()
+    thisContext! = jettyServer!.getContext(cvs(dbName$,3))
+    thisContext!.start()
     
 done: rem --- All done
     
