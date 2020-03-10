@@ -1,68 +1,46 @@
-[[ARS_CC_CUSTSVC.GATEWAY_ID.AVAL]]
-rem --- check config for specified gateway and warn if not set up
+[[ARS_CC_CUSTSVC.ADIS]]
+rem --- if accepting credit card payments for this cash rec code, populate list of supported gateways based on the interface type
 
-	ars_gatewaydet=fnget_dev("ARS_GATEWAYDET")
-	dim ars_gatewaydet$:fnget_tpl$("ARS_GATEWAYDET")
+	interface_tp$=callpoint!.getColumnData("ARS_CC_CUSTSVC.INTERFACE_TP")
+	gosub get_gateways
+		
+	callpoint!.setStatus("REFRESH")
 
-	encryptor! = new Encryptor()
-	config_id$ = "GATEWAY_AUTH"
-	encryptor!.setConfiguration(config_id$)
 
-	gateway_id$=callpoint!.getUserInput()
+	gateway$=cvs(callpoint!.getColumnData("ARS_CC_CUSTSVC.GATEWAY_ID"),3)
+	if gateway$<>""
+		callpoint!.setOptionEnabled("GTWY",1)
+	else
+		callpoint!.setOptionEnabled("GTWY",0)
+	endif
 
-	read(ars_gatewaydet,key=firm_id$+gateway_id$,knum=0,dom=*next)
+[[ARS_CC_CUSTSVC.AOPT-GTWY]]
+rem --- launch config form for selected gateway
 
-	while 1
-		readrecord(ars_gatewaydet,end=*break)ars_gatewaydet$
-		if pos(firm_id$+gateway_id$=ars_gatewaydet$)<>1 then break
-		cfg_value$=encryptor!.decryptData(cvs(ars_gatewaydet.config_value$,3))
-		if pos("token>"=cfg_value$) or cvs(cfg_value$,3)=""
-			dim msg_tokens$[1]
-			msg_tokens$[0]=Translate!.getTranslation("AON_INVALID_GATEWAY_CONFIG","One or more configuration values for the payment gateway are invalid.",1)+$0A$+"("+gateway_id$+")"
-			msg_id$="GENERIC_WARN"
-			gosub disp_message
-		endif
-	wend
+	gateway$=callpoint!.getColumnData("ARS_CC_CUSTSVC.GATEWAY_ID")
+
+	dim dflt_data$[1,1]
+	dflt_data$[0,0]="FIRM_ID"
+	dflt_data$[0,1]=firm_id$
+	dflt_data$[1,0]="GATEWAY_ID"
+	dflt_data$[1,1]=gateway$
+
+	key_pfx$=firm_id$+gateway$
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"ARS_GATEWAYHDR",
+:		stbl("+USER_ID"),
+:		"",
+:		key_pfx$,
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
 [[ARS_CC_CUSTSVC.AREC]]
 rem --- disable gateway button
 
 	callpoint!.setOptionEnabled("GTWY",0)
-[[ARS_CC_CUSTSVC.<CUSTOM>]]
-rem ============================================================
-get_gateways:rem --- load up listbutton with supported gateways for given or selected interface type
-rem --- in: interface_tp$
-rem ============================================================
 
-	ars_gatewayhdr=fnget_dev("ARS_GATEWAYHDR")
-	dim ars_gatewayhdr$:fnget_tpl$("ARS_GATEWAYHDR")
-
-	column$="ARS_CC_CUSTSVC.GATEWAY_ID"
-
-	ldat$=""
-
-	codeVect!=BBjAPI().makeVector()
-	descVect!=BBjAPI().makeVector()
-
-	read(ars_gatewayhdr,key=firm_id$,dom=*next)
-	while 1
-		readrecord(ars_gatewayhdr,end=*break)ars_gatewayhdr$
-		if pos(firm_id$=ars_gatewayhdr$)<>1 then break
-		if pos(ars_gatewayhdr.interface_tp$=interface_tp$+"B")
-			codeVect!.add(ars_gatewayhdr.gateway_id$)
-			descVect!.add(ars_gatewayhdr.description$)
-		endif
-	wend
-
-	ldat$=func.buildListButtonList(descVect!,codeVect!)
-	callpoint!.setTableColumnAttribute(column$,"LDAT",ldat$)
-	c!=callpoint!.getControl(column$)
-	c!.removeAllItems()
-	c!.insertItems(0,descVect!)
-
-	return
-
-#include std_functions.src
-#include std_missing_params.src
 [[ARS_CC_CUSTSVC.BSHO]]
 rem --- use
 
@@ -104,44 +82,73 @@ rem --- get process_id for Cash Receipts to see if batching is turned on; enable
 	wend
 	read record (adm_procmaster,key=firm_id$+proc_id$,dom=*next)adm_procmaster$
 	callpoint!.setColumnEnabled("ARS_CC_CUSTSVC.BATCH_DESC",iff(adm_procmaster.batch_entry$="Y",1,-1))
-[[ARS_CC_CUSTSVC.ADIS]]
-rem --- if accepting credit card payments for this cash rec code, populate list of supported gateways based on the interface type
 
-	interface_tp$=callpoint!.getColumnData("ARS_CC_CUSTSVC.INTERFACE_TP")
-	gosub get_gateways
-		
-	callpoint!.setStatus("REFRESH")
+[[ARS_CC_CUSTSVC.GATEWAY_ID.AVAL]]
+rem --- check config for specified gateway and warn if not set up
 
+	ars_gatewaydet=fnget_dev("ARS_GATEWAYDET")
+	dim ars_gatewaydet$:fnget_tpl$("ARS_GATEWAYDET")
 
-	gateway$=cvs(callpoint!.getColumnData("ARS_CC_CUSTSVC.GATEWAY_ID"),3)
-	if gateway$<>""
-		callpoint!.setOptionEnabled("GTWY",1)
-	else
-		callpoint!.setOptionEnabled("GTWY",0)
-	endif
-[[ARS_CC_CUSTSVC.AOPT-GTWY]]
-rem --- launch config form for selected gateway
+	encryptor! = new Encryptor()
+	config_id$ = "GATEWAY_AUTH"
+	encryptor!.setConfiguration(config_id$)
 
-	gateway$=callpoint!.getColumnData("ARS_CC_CUSTSVC.GATEWAY_ID")
+	gateway_id$=callpoint!.getUserInput()
 
-	dim dflt_data$[1,1]
-	dflt_data$[0,0]="FIRM_ID"
-	dflt_data$[0,1]=firm_id$
-	dflt_data$[1,0]="GATEWAY_ID"
-	dflt_data$[1,1]=gateway$
+	read(ars_gatewaydet,key=firm_id$+gateway_id$,knum=0,dom=*next)
 
-	key_pfx$=firm_id$+gateway$
+	while 1
+		readrecord(ars_gatewaydet,end=*break)ars_gatewaydet$
+		if pos(firm_id$+gateway_id$=ars_gatewaydet$)<>1 then break
+		cfg_value$=encryptor!.decryptData(cvs(ars_gatewaydet.config_value$,3))
+		if pos("token>"=cfg_value$) or cvs(cfg_value$,3)=""
+			dim msg_tokens$[1]
+			msg_tokens$[0]=Translate!.getTranslation("AON_INVALID_GATEWAY_CONFIG","One or more configuration values for the payment gateway are invalid.",1)+$0A$+"("+gateway_id$+")"
+			msg_id$="GENERIC_WARN"
+			gosub disp_message
+		endif
+	wend
 
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:		"ARS_GATEWAYHDR",
-:		stbl("+USER_ID"),
-:		"",
-:		key_pfx$,
-:		table_chans$[all],
-:		"",
-:		dflt_data$[all]
 [[ARS_CC_CUSTSVC.INTERFACE_TP.AVAL]]
 rem --- populate list of supported gateways based on the interface type
 
 	interface_tp$=callpoint!.getUserInput()
 	gosub get_gateways
+
+[[ARS_CC_CUSTSVC.<CUSTOM>]]
+rem ============================================================
+get_gateways:rem --- load up listbutton with supported gateways for given or selected interface type
+rem --- in: interface_tp$
+rem ============================================================
+
+	ars_gatewayhdr=fnget_dev("ARS_GATEWAYHDR")
+	dim ars_gatewayhdr$:fnget_tpl$("ARS_GATEWAYHDR")
+
+	column$="ARS_CC_CUSTSVC.GATEWAY_ID"
+
+	ldat$=""
+
+	codeVect!=BBjAPI().makeVector()
+	descVect!=BBjAPI().makeVector()
+
+	read(ars_gatewayhdr,key=firm_id$,dom=*next)
+	while 1
+		readrecord(ars_gatewayhdr,end=*break)ars_gatewayhdr$
+		if pos(firm_id$=ars_gatewayhdr$)<>1 then break
+		if pos(ars_gatewayhdr.interface_tp$=interface_tp$+"B")
+			codeVect!.add(ars_gatewayhdr.gateway_id$)
+			descVect!.add(ars_gatewayhdr.description$)
+		endif
+	wend
+
+	ldat$=func.buildListButtonList(descVect!,codeVect!)
+	callpoint!.setTableColumnAttribute(column$,"LDAT",ldat$)
+	c!=callpoint!.getControl(column$)
+	c!.removeAllItems()
+	c!.insertItems(0,descVect!)
+
+	return
+
+#include [+ADDON_LIB]std_functions.aon
+#include [+ADDON_LIB]std_missing_params.aon
+

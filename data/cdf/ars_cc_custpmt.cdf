@@ -96,12 +96,12 @@ rem --- CreditCardConfirmation web app
 
 rem --- Initialize Payment URL
 	field$="ARS_CC_CUSTPMT.PAYMENT_URL"
-	default_URL$="https://"+gatewayServer$+"/"+cvs(dbName$,7)+"/apps/CreditCardLogin_"+ cvs(dbName$,11) +"_"+firm_id$
+	default_URL$="https://"+gatewayServer$+"/"+cvs(dbName$,11)+"/apps/CreditCardLogin_"+ cvs(dbName$,11) +"_"+firm_id$
 	gosub configureURL
 
 rem --- Initialize Registration URL
 	field$="ARS_CC_CUSTPMT.REGISTER_URL"
-	default_URL$="https://"+gatewayServer$+"/"+cvs(dbName$,7)+"/apps/CreditCardConfirmation_"+ cvs(dbName$,11) +"_"+firm_id$
+	default_URL$="https://"+gatewayServer$+"/"+cvs(dbName$,11)+"/apps/CreditCardConfirmation_"+ cvs(dbName$,11) +"_"+firm_id$
 	gosub configureURL
 
 rem --- Task completed
@@ -373,7 +373,7 @@ rem ============================================================
 		rem --- Set the CSS to the resource we created above
 		newApp!.setString(BBjAdminAppDeploymentApplication.CSS_RESOURCE_ID,resource!.getString(BBjAdminAppDeploymentResource.RESOURCE_ID))
 
-		newApp!.setString(BBjAdminAppDeploymentApplication.CONTEXT,cvs(dbName$,7))
+		newApp!.setString(BBjAdminAppDeploymentApplication.CONTEXT,cvs(dbName$,11))
 		newApp!.commit()
 	endif
 
@@ -412,8 +412,6 @@ rem ============================================================
 
 	return
 
-#include std_functions.src
-#include std_missing_params.src
-
-
+#include [+ADDON_LIB]std_functions.aon
+#include [+ADDON_LIB]std_missing_params.aon
 
