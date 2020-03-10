@@ -138,6 +138,7 @@ rem --- Declare classes used
 
 	use ::ado_util.src::util	
 	use ::ado_file.src::FileObject
+	use ::aro_CCUtil.aon::CCUtil
 	use ::sys/prog/bao_encryptor.bbj::Encryptor
 
 	use ::REST/BBWebClient.bbj::BBWebClient
@@ -189,9 +190,11 @@ rem --- other init
 		message!.addItem("arm_custmast (arm-01) record not found")
 		message!.addItem("firm_id="+firm_id$)
 		message!.addItem("customer_id="+cust_id$)
-		gosub logMessage
 
-		release
+		ccUtil! = new CCUtil()
+		ccUtil!.logMessage(pgm(-2), sysinfo.user_id$, message!, 1)
+		callpoint!.setStatus("EXIT")
+		goto done
 	else
 		callpoint!.setTableColumnAttribute("ARE_CCPMT_CSTHST.CUSTOMER_ID","DFLT",arm_custmast.customer_id$)
 		callpoint!.setDevObject("arm_custmast",arm_custmast$)
@@ -221,9 +224,11 @@ rem --- read ars_cc_custpmt to get cash_rec_cd used for customer payments (only 
 
 		message!=BBjAPI().makeVector()
 		message!.addItem("Online Customer Credit Card Parameters not setup for credit card payments.")
-		gosub logMessage
 
-		release
+		ccUtil! = new CCUtil()
+		ccUtil!.logMessage(pgm(-2), sysinfo.user_id$, message!, 1)
+		callpoint!.setStatus("EXIT")
+		goto done
 	endif
 
 rem --- Interface to gl?
@@ -237,9 +242,11 @@ rem --- Interface to gl?
 		message!=BBjAPI().makeVector()
 		message!.addItem("Failed to create GL Posting Control for ARE_CASHHDR.")
 		message!.addItem("status="+str(status))
-		gosub logMessage
 
-		release
+		ccUtil! = new CCUtil()
+		ccUtil!.logMessage(pgm(-2), sysinfo.user_id$, message!, 1)
+		callpoint!.setStatus("EXIT")
+		goto done
 	else
 		callpoint!.setDevObject("gl_interface",gl$)
 		if gl$="Y"
@@ -252,9 +259,11 @@ rem --- Interface to gl?
 				message!.addItem("Receipt date failed GL transaction date verification.")
 				message!.addItem("recpt_date$="+recpt_date$)
 				message!.addItem("status="+str(status))
-				gosub logMessage
 
-				release
+				ccUtil! = new CCUtil()
+				ccUtil!.logMessage(pgm(-2), sysinfo.user_id$, message!, 1)
+				callpoint!.setStatus("EXIT")
+				goto done
 			endif
 		endif
 	endif
@@ -293,9 +302,11 @@ rem --- Get current or new batch for "AR Csh Rcp" process if applicable
 			if next_batchno$="" then
 				message!=BBjAPI().makeVector()
 				message!.addItem("Barista Sequence Number record not found for BATCH_NO")
-				gosub logMessage
 
-				release
+				ccUtil! = new CCUtil()
+				ccUtil!.logMessage(pgm(-2), sysinfo.user_id$, message!, 1)
+				callpoint!.setStatus("EXIT")
+				goto done
 			endif
 
 			adm_procbatches=fnget_dev("ADM_PROCBATCHES")
@@ -379,9 +390,11 @@ rem --- Get current or new Deposit ID if applicable
 			if next_depositID$="" then
 				message!=BBjAPI().makeVector()
 				message!.addItem("Barista Sequence Number record not found for DEPOSIT_ID")
-				gosub logMessage
 
-				release
+				ccUtil! = new CCUtil()
+				ccUtil!.logMessage(pgm(-2), sysinfo.user_id$, message!, 1)
+				callpoint!.setStatus("EXIT")
+				goto done
 			endif
 	
 			are_deposit=fnget_dev("ARE_DEPOSIT")
@@ -532,6 +545,8 @@ rem --- get cash receipts code/params, verify config
 
 	gosub get_open_invoices
 	gosub fill_grid
+
+done:
 
 [[ARE_CCPMT_CSTHST.BEND]]
 rem --- if vectInvoices! contains any selected items, get confirmation that user really wants to exit
@@ -990,143 +1005,6 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 	return
 
 rem =====================================================================
-open_log: rem --- Open log file
-rem =====================================================================
-
-	if log_dev=0 then
-		rem --- Get this installation's location
-		ddm_systems=fnget_dev("DDM_SYSTEMS")
-		dim ddm_systems$:fnget_tpl$("DDM_SYSTEMS")
-		readrecord(ddm_systems,key=pad("ADDON",16),knum="SYSTEM_ID")ddm_systems$
-		location$=ddm_systems.mount_dir$
- 
-		rem --- Create logs directory at installation location
-		logDir$ = FileObject.fixPath(location$ + "/logs", "/")
-		FileObject.makeDirs(new File(logDir$))
-
-		rem --- Create and/or open log file
-		log$ = logDir$+"/online_ccpmt_issues.log"
-		new_log=0
-		string log$,err=*next; new_log=1
-		log_dev=unt
-		open(log_dev)log$
-
-		if new_log then
-			rem --- Write header info for new log
-			print(log_dev)"Online Customer Credit Card Payment issues log started: " + date(0:"%Yd-%Mz-%Dz @ %Hz:%mz:%sz")
-			print(log_dev)
-		else
-			rem --- Move to end of existing log
-			log_fin$=fin(log_dev)
-			log_size=dec($00$+log_fin$(1,4))
-			read(log_dev,ind=log_size,end=*next)
-		endif
-	endif
-
-	return
-
-rem =====================================================================
-logMessage: rem --- Write to log file
-rem =====================================================================
-
-	gosub open_log
-
-	rem --- Build email message
-	msgText$=date(0:"%Yd-%Mz-%Dz @ %Hz:%mz:%sz") + $0A$
-	msgText$=msgText$+pgm(-2) + $0A$
-	msgText$=msgText$+"user: "+sysinfo.user_id$ + $0A$
-	if message!.size()>0 then
-		for i=0 to message!.size()-1
-			msgText$=msgText$+message!.getItem(i) + $0A$
-		next i
-	endif
-
-	print(log_dev)msgText$
-	gosub sendCcOnlineEmail
-
-	return
-
-rem =====================================================================
-sendCcOnlineEmail: rem --- Send email to users with CCONLINE security role
-rem =====================================================================
-
-	num_files=5
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="ADM_USERROLES",open_opts$[1]="OTA"
-	open_tables$[2]="ADM_USER",open_opts$[2]="OTA"
-	open_tables$[3]="ADS_COMPINFO",open_opts$[3]="OTA"
-	open_tables$[4]="ADM_EMAIL_ACCT",open_opts$[4]="OTA"
-	open_tables$[5]="ADM_RPTCTL",open_opts$[5]="OTA"
-
-	gosub open_tables
-
-	adm_userroles=num(open_chans$[1])
-	adm_user=num(open_chans$[2])
-	ads_compinfo=num(open_chans$[3])
-	adm_email_acct=num(open_chans$[4])
-	adm_rptctl=num(open_chans$[5])
-
-	dim adm_userroles$:open_tpls$[1]
-	dim adm_user$:open_tpls$[2]
-	dim ads_compinfo$:open_tpls$[3]
-	dim adm_email_acct$:open_tpls$[4]
-	dim adm_rptctl$:open_tpls$[5]
-
-	rem --- Get email address of users with CCONLINE security role
-	userEmail!=BBjAPI().makeVector()
-	adm_userroles.sec_role_id$="CCONLINE"
-	read(adm_userroles,key=adm_userroles.sec_role_id$,knum="ROLE_USER",dom=*next)
-	while 1
-		readrecord(adm_userroles,end=*break)adm_userroles$
-		if cvs(adm_userroles.sec_role_id$,2)<>"CCONLINE" then break
-
-		redim adm_user$		
-		readrecord(adm_user,key=adm_userroles.user_id$,dom=*next)adm_user$
-		if cvs(adm_user.email_address$,2)<>"" then userEmail!.add(cvs(adm_user.email_address$,2))
-	wend
-
-	rem --- Get firm's email addresses
-	firm_email_from$=""
-	firm_email_replyto$=""
-	readrecord(ads_compinfo,key=firm_id$,dom=*next)ads_compinfo$
-	if cvs(ads_compinfo.email_account$,2)<>"" then
-		readrecord(adm_email_acct,key=firm_id$+ads_compinfo.email_account$,dom=*endif)adm_email_acct$
-		if cvs(adm_email_acct.firm_email_from$,2)<>"" then firm_email_from$=cvs(adm_email_acct.firm_email_from$,2)
-		if cvs(adm_email_acct.firm_email_replyto$,2)<>"" then firm_email_replyto$=cvs(adm_email_acct.firm_email_replyto$,2)
-	endif
-
-	rem --- Get email account from Report Control
-	adm_rptctl.dd_table_alias$="ARS_CC_CUSTPMT"
-	readrecord(adm_rptctl,key=firm_id$+adm_rptctl.dd_table_alias$,dom=*next)adm_rptctl$
-	
-	rem --- Send message to email address for users with CCONLINE security role
-	if userEmail!.size()=0 and firm_email_replyto$<>"" then userEmail!.add(adm_user.firm_email_replyto$)
-	if userEmail!.size()>0 then
-		for i=0 to userEmail!.size()-1
-			thisEmail$=userEmail!.get(i)
-
-			rem --- Make email entry in Doc Processing Queue
-			docQueue! = new DocumentQueue()
-			docQueue!.clear()
-			docQueue!.setFirmID(firm_id$)
-			docQueue!.setDocumentID("NOATTACH")
-			docQueue!.setDocumentExt("PDF")
-			docQueue!.setProcessType("E")
-			docQueue!.setStatus("A");rem Auto-detect.  Queue will switch it to "Ready" if all required data is present
-			docQueue!.setEmailAccount(cvs(adm_rptctl.email_account$,2))
-			docQueue!.setEmailFrom(iff(firm_email_from$<>"", firm_email_from$, thisEmail$))
-			docQueue!.setEmailTo(thisEmail$)
-			docQueue!.setSubject("ERROR: Customer Online Credit Card Payment")
-			docQueue!.setMessage(msgText$)
-			docQueue!.createProcess()
-			proc_key$=docQueue!.getFirmID()+docQueue!.getProcessID()
-			docQueue!.checkStatus(proc_key$)
-		next i
-	endif
-
-	return
-
-rem =====================================================================
 rem functions
 rem =====================================================================
 
@@ -1139,4 +1017,6 @@ def fnbuildURL$(config_value$)
 	fnend
 
 #include std_missing_params.src
+
+
 
