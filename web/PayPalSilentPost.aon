@@ -126,7 +126,7 @@ CLASS PUBLIC PayPalSilentPost
 :					are_cashhdr.ar_check_no$+
 :					are_cashhdr.reserved_key_02$,dom=*next)are_cashhdr$;receipt_found=1
 					if receipt_found
-						if cvs(are_cashhdr.batch_no$,3)<>batch_no$ or cvs(are_cashhdr.deposit_id$,3)<>deposit_id$
+						if are_cashhdr.batch_no$<>batch_no$ or are_cashhdr.deposit_id$<>deposit_id$
 							message!=BBjAPI().makeVector()
 							message!.addItem("A cash receipt matching this customer, date and cash receipt code has already been entered")
 							message!.addItem("using a different batch and/or deposit. You will need to MANUALLY adjust that cash receipt")
