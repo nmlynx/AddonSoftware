@@ -355,6 +355,8 @@ rem --- Get current or new batch for "AR Csh Rcp" process if applicable
 		ars_cc_custpmt.batch_desc$=""
 		writerecord(ars_cc_custpmt)ars_cc_custpmt$
 	endif
+	current_batch_no$=ars_cc_custpmt.last_batch_no$
+	current_batch_desc$=ars_cc_custpmt.batch_desc$
 
 rem --- Get current or new Deposit ID if applicable
 	ars_params=fnget_dev("ARS_PARAMS")
@@ -379,7 +381,13 @@ rem --- Get current or new Deposit ID if applicable
 
 			today$=date(0:"%Yd%Mz%Dz")
 			if are_deposit.created_date$<>today$ then
-				rem --- Batch for credit card payments is out of date
+				rem --- Deposit for credit card payments is out of date
+				need_new_depositID=1
+			endif
+
+			rem --- Verify deposit is for the current batch
+			if ars_cc_custpmt.last_batch_no$<>current_batch_no$ then
+				rem --- Batch for credit card payments is not current
 				need_new_depositID=1
 			endif
 		endif
@@ -424,6 +432,11 @@ rem --- Get current or new Deposit ID if applicable
 
 			ars_cc_custpmt.last_deposit_id$=next_depositID$
 			ars_cc_custpmt.deposit_desc$=description$
+			if ars_cc_custpmt.last_batch_no$<>current_batch_no$ then
+				rem --- Batch for credit card payments is not current
+				ars_cc_custpmt.last_batch_no$=current_batch_no$
+				ars_cc_custpmt.batch_desc$=current_batch_desc$
+			endif
 			writerecord(ars_cc_custpmt)ars_cc_custpmt$
 		else
 			rem --- Update last used time stamp
@@ -1017,4 +1030,6 @@ def fnbuildURL$(config_value$)
 	fnend
 
 #include [+ADDON_LIB]std_missing_params.aon
+
+
 
