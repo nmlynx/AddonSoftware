@@ -386,8 +386,8 @@ rem --- Get current or new Deposit ID if applicable
 			endif
 
 			rem --- Verify deposit is for the current batch
-			if ars_cc_custpmt.last_batch_no$<>current_batch_no$ then
-				rem --- Batch for credit card payments is not current
+			if are_deposit.batch_no$<>current_batch_no$ then
+				rem --- Batch for credit card payments <> batch from deposit record
 				need_new_depositID=1
 			endif
 		endif
@@ -1030,6 +1030,4 @@ def fnbuildURL$(config_value$)
 	fnend
 
 #include [+ADDON_LIB]std_missing_params.aon
-
-
 
