@@ -34,7 +34,7 @@ class public AO_CCUserModel
     method public BBjNumber login(BBjString username$, BBjString password$)
         declare BBjNumber canLogin
         declare BBjNumber passwordCorrect 
-    
+  
         REM Check to see if the username exists and is active. No point in looking for 
         REM a password for a nonexistent or unactivated user 
         if (! #canLogin(username$)) then 
@@ -60,7 +60,7 @@ class public AO_CCUserModel
         declare BBjString deactivated$
         
         REM See if the username is in the database 
-        sqlprep (#SqlChan) "select count(cc_username) as count from arc_cc_users where cc_username=?"
+        sqlprep (#SqlChan) "select count(cc_username) as count from arc_cc_users where firm_id='"+stbl("+FIRM_ID")+"' and cc_username=?"
         sqlexec (#SqlChan) user$
         
         dim rec$:sqltmpl(#SqlChan) 
@@ -87,7 +87,7 @@ class public AO_CCUserModel
     methodend 
     
     method public BBjString getActivatedDate(BBjString user$)
-        sqlprep (#SqlChan) "select activated_date from arc_cc_users where cc_username=?"
+        sqlprep (#SqlChan) "select activated_date from arc_cc_users where firm_id='"+stbl("+FIRM_ID")+"' and cc_username=?"
         sqlexec (#SqlChan) user$
         
         dim rec$:sqltmpl(#SqlChan) 
@@ -96,7 +96,7 @@ class public AO_CCUserModel
     methodend 
     
     method public BBjString getDectivatedDate(BBjString user$)
-        sqlprep (#SqlChan) "select deactivated_date from arc_cc_users where cc_username=?"
+        sqlprep (#SqlChan) "select deactivated_date from arc_cc_users where firm_id='"+stbl("+FIRM_ID")+"' and cc_username=?"
         sqlexec (#SqlChan) user$
         
         dim rec$:sqltmpl(#SqlChan) 
@@ -105,11 +105,11 @@ class public AO_CCUserModel
     methodend 
     
     method public BBjString getLastUsedDate(BBjString user$)
-        sqlprep (#SqlChan) "select last_used_date from arc_cc_users where cc_username=?"
+        sqlprep (#SqlChan) "select last_used_date from arc_cc_users where firm_id='"+stbl("+FIRM_ID")+"' and cc_username=?"
         sqlexec (#SqlChan) user$
         
         dim rec$:sqltmpl(#SqlChan) 
-        rec$=sqlfetch(#SqlChan)
+        rec$=sqlfetch(#SqlChan,err=*next);rem err trap in case username isn't found (i.e., no results)
         methodret cvs(rec.last_used_date$,3)
     methodend 
     
@@ -125,14 +125,14 @@ class public AO_CCUserModel
     methodend 
     
     method protected void setLastUsedDate()
-        sqlprep (#SqlChan) "update ARC_CC_USERS set LAST_USED_DATE=? WHERE CC_USERNAME=?"
+        sqlprep (#SqlChan) "update ARC_CC_USERS set LAST_USED_DATE=? WHERE firm_id='"+stbl("+FIRM_ID")+"' and CC_USERNAME=?"
         sqlexec (#SqlChan) CCUtil.today(), #UserName$
     methodend 
         
     method public BBjString getAssociatedCustomerID()
         if #LoggedIn then 
             REM .. get the customer id 
-            sqlprep (#SqlChan) "select customer_id from arc_cc_users where cc_username=?"
+            sqlprep (#SqlChan) "select customer_id from arc_cc_users where firm_id='"+stbl("+FIRM_ID")+"' and cc_username=?"
             sqlexec (#SqlChan) #UserName$
             
             dim rec$:sqltmpl(#SqlChan) 
@@ -242,12 +242,12 @@ class public AO_CCUserModel
       declare BBjString uuid$
       uuid$=UUID.randomUUID().toString()
         
-      methodret #EM_ACCOUNT_PREFIX!+cvs(username$,3)+uuid$
+      methodret #EM_ACCOUNT_PREFIX!+stbl("+FIRM_ID")+cvs(username$,3)+uuid$
   methodend
   
   REM Look up an existing user's EM username
   method public BBjString getEMUserName(BBjString username$)
-      sqlprep (#SqlChan) "select emuser from arc_cc_users where cc_username=?"
+      sqlprep (#SqlChan) "select emuser from arc_cc_users where firm_id='"+stbl("+FIRM_ID")+"' and cc_username=?"
       sqlexec (#SqlChan) username$
       
       dim result$:sqltmpl(#SqlChan)
@@ -261,7 +261,7 @@ class public AO_CCUserModel
     declare BBjNumber existsInUsers
     declare BBjNumber existsInRegistrants 
     
-    sqlprep (#SqlChan) "select count(*) as count from arc_cc_users where cc_username = ?"
+    sqlprep (#SqlChan) "select count(*) as count from arc_cc_users where firm_id='"+stbl("+FIRM_ID")+"' and cc_username = ?"
     sqlexec (#SqlChan) username$
     dim result$:sqltmpl(#SqlChan)
     result$=sqlfetch(#SqlChan)

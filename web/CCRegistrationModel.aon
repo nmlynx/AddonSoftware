@@ -32,7 +32,7 @@ class public CCRegistrationModel
   methodend 
 
   method public BBjNumber userNameExistsInRegistration(BBjString username$)
-    sqlprep (#SqlChan) "select count(*) as count from arc_cc_register where cc_username = ?"
+    sqlprep (#SqlChan) "select count(*) as count from arc_cc_register where firm_id='"+stbl("+FIRM_ID")+"' and cc_username = ?"
     sqlexec (#SqlChan) username$
     dim result$:sqltmpl(#SqlChan)
     result$=sqlfetch(#SqlChan)
@@ -107,7 +107,7 @@ class public CCRegistrationModel
   methodend 
   
   method public void deleteRegistration(CCRegistrationRecord rec!)
-    sqlprep (#SqlChan) "DELETE FROM ARC_CC_REGISTER WHERE CC_USERNAME=?"
+    sqlprep (#SqlChan) "delete from arc_cc_register where firm_id='"+stbl("+FIRM_ID")+"' and cc_username=?"
     sqlexec (#SqlChan) rec!.getUserRecord().getUserName() 
   methodend 
     
@@ -116,7 +116,7 @@ class public CCRegistrationModel
     declare CCUserRecord user!
     declare BBjString result$
     
-    sqlprep (#SqlChan) "select * from ARC_CC_REGISTER where CC_Token=?"
+    sqlprep (#SqlChan) "select * from arc_cc_register where firm_id='"+stbl("+FIRM_ID")+"' and CC_Token=?"
     sqlexec (#SqlChan) token!
     
     dim result$:sqltmpl(#SqlChan)

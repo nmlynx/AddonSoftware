@@ -96,7 +96,7 @@ class public CCLoginManager
 	method public void launchCustomerPaymentForm()
 	    REM Launch the customer payment form
         customerID$=#UserModel!.getAssociatedCustomerID()
-        firmID$=#UserModel!.getAssociatedFirmID()
+        firmID$=stbl("+FIRM_ID");rem #UserModel!.getAssociatedFirmID()
         if (customerID$<>"" and firmID$<>"") then
             declare BBjCommandLineObject cmd!
             cmd!=BBjAPI().getConfig().getCurrentCommandLineObject()
