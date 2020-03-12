@@ -19,6 +19,7 @@ use ::aro_CCUserModel.aon::CCUserModel
 use ::aro_CCUserModel.aon::CCUserRecord
 use ::aro_CCUtil.aon::CCUtil
 use ::aro_CCConfigurePasswordView.aon::CCConfigurePasswordView
+use ::aro_CCForgotPasswordView.aon::CCForgotPasswordView
 
 class public CCLoginManager
 	field protected CCUtil Util!=new CCUtil()
@@ -27,6 +28,7 @@ class public CCLoginManager
 	field protected CCRegistrationModel RegistrationModel!=new CCRegistrationModel() 
 	field protected CCUserModel UserModel!=new CCUserModel() 
 	field protected CCConfigurePasswordView ConfigurePasswordView!=new CCConfigurePasswordView()
+	field protected CCForgotPasswordView ForgotPasswordView!=new CCForgotPasswordView()
 
 	method public CCLoginManager()
 	    
@@ -34,6 +36,7 @@ class public CCLoginManager
         #LoginView!.registerRegisterButton_OnButtonPushCallback(#this!,"handleRegistration")
         #LoginView!.registerLoginButton_OnButtonPushCallback(#this!,"handleLogin")
         #LoginView!.registerCancelButton_OnButtonPushCallback(#this!,"handleCancel")
+        #LoginView!.registerForgotPasswordST_OnMouseUpCallback(#this!,"handleForgotPassword")
         
         #RegistrationView!.registerRegisterButton_OnButtonPushCallback(#this!,"sendRegistrationRequest")
         #RegistrationView!.registerCancelButton_OnButtonPushCallback(#this!,"cancelRegistrationRequest")
@@ -46,6 +49,8 @@ class public CCLoginManager
         
         #ConfigurePasswordView!.registerOKBtn_OnButtonPushCallback(#this!,"handleChangePasswordOK")
         #ConfigurePasswordView!.registerCancelBtn_OnButtonPushCallback(#this!,"handleChangePasswordCancel")
+        #ForgotPasswordView!.registerOKBtn_OnButtonPushCallback(#this!,"handleForgotPasswordOK")
+        #ForgotPasswordView!.registerCancelBtn_OnButtonPushCallback(#this!,"handleForgotPasswordCancel")
                 
 	methodend
 
@@ -193,6 +198,31 @@ rem	    #RegistrationView!.setUserNameValid(valid)
 	method public void handleCancel(BBjButtonPushEvent event!)
         release
     methodend
+    
+    method public void handleForgotPassword(BBjToolButtonPushEvent event!)
+        REM Get the email address from the user 
+        #ForgotPasswordView!.show() 
+        #LoginView!.hide() 
+    methodend 
+    
+    method public void handleForgotPasswordOK(BBjButtonPushEvent event!)
+        declare CCUserRecord user!
+        
+        REM See if the email corresponds to a user
+        if (#ForgotPasswordView!.getEmail().isEmpty()) then
+            
+        endif
+        if (! #ForgotPasswordView!.getEmail().isEmpty()) then
+            user!=#UserModel!.getUserFromEmail()
+        endif 
+        
+        
+        
+        REM send the user a link to change their credentials.
+    methodend 
+    
+    method public void handleForgotPasswordCancel(BBjButtonPushEvent event!)
+    methodend 
     
 	REM Get the registration information from the view and have the model send it to the servlet
     method public void sendRegistrationRequest(BBjButtonPushEvent event!)

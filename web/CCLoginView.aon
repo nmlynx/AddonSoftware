@@ -16,6 +16,7 @@ class public CCLoginView extends CCView
     field protected BBjButton cancelBtn!
     field protected BBjStaticText header1!
     field protected BBjStaticText header2!
+    field protected BBjToolButton forgotPasswordTB!
 	field protected BBjNumber SqlChan
 
     method public CCLoginView()
@@ -35,10 +36,12 @@ class public CCLoginView extends CCView
         #userNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),160,165,350,34,"")
         #passwordST!=#getWin().addStaticText(#getWin().getAvailableControlID(),5,222,150,24,"Password",$8000$)
         #passwordEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),160,215,350,34,"",$0400$)
-        #loginBtn!=#getWin().addButton(#getWin().getAvailableControlID(),160,265,110,50,"Login")
-        #registerBtn!=#getWin().addButton(#getWin().getAvailableControlID(),275,265,110,50,"Register")
-        #cancelBtn!=#getWin().addButton(#getWin().getAvailableControlID(),390,265,110,50,"Cancel")
-
+        #forgotPasswordTB!=#getWin().addToolButton(#getWin().getAvailableControlID(),160,250,350,24,"Forgot Username or Password?",$8000$)
+        #loginBtn!=#getWin().addButton(#getWin().getAvailableControlID(),160,285,110,50,"Login")
+        #registerBtn!=#getWin().addButton(#getWin().getAvailableControlID(),275,285,110,50,"Register")
+        #cancelBtn!=#getWin().addButton(#getWin().getAvailableControlID(),390,285,110,50,"Cancel")
+        
+        
 		#header1!.addStyle("cc-header1")
 		#header2!.addStyle("cc-header2")
 		#userNameST!.addStyle("cc-statictext")
@@ -70,6 +73,10 @@ class public CCLoginView extends CCView
 	method public void registerCancelButton_OnButtonPushCallback(CustomObject handler!, BBjString callback!)
 		#cancelBtn!.setCallback(BBjButton.ON_BUTTON_PUSH,handler!,callback!)
 	methodend
+	
+	method public void registerForgotPasswordST_OnMouseUpCallback(CustomObject handler!, BBjString callback!)
+	    #forgotPasswordTB!.setCallback(BBjToolButton.ON_TOOL_BUTTON_PUSH,handler!,callback!)
+	methodend 
 
 classend
 

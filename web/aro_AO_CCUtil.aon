@@ -10,6 +10,8 @@ REM An Addon utility class that provides constants and methods needed by the Cus
 class public AO_CCUtil
 
     field protected static BBjString DATE_MASK!="%Yl%Mz%Dz"
+    field public static BBjString ParameterTable$="ARS_CC_CUSTPMT"
+    field public static BBjString ReportControlID$=pad(#ParameterTable$,16)
 
     method public AO_CCUtil()
         #initializeBaristaEnvironment()
@@ -92,5 +94,44 @@ class public AO_CCUtil
         
         call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],table_chans$[all],open_batch,open_status$
     methodend
+    
+    method public static void emailCustomMessage(BBjString firmID!, BBjString customerID!, BBjString email!, BBjString subject!, BBjString message!) 
+        declare ReportControl reportControl!
+        declare BBjNumber found
+        declare BBjNumber sqlChan
+    
+        reportControl!=new ReportControl()
+        reportControl!.setFirmID(firmID!)
+        reportControl!.getReportControl(#ParameterTable$)
+        found=reportControl!.getRecipientInfo(#ReportControlID$,customerID$,"")
+        if (found) 
+            recipientInfo!=reportControl!.getAdmRptctlRcp() 
+            emailMessage!=recipientInfo!.getFieldAsString("EMAIL_MESSAGE")
+            
+            REM Append the URL and the specific generated token to the mail message then put the modified message back in our recipient info. 
+            if ! message!.isEmpty() then 
+                recipientInfo!.setFieldValue("EMAIL_MESSAGE",message!)
+            endif 
+            
+            if ! subject!.isEmpty() then 
+                recipientInfo!.setFieldValue("EMAIL_SUBJECT",subject!)
+            endif
+            
+            if ! email!.isEmpty() then 
+                recipientInfo!.setFieldValue("EMAIL_TO",rec!.getUserEmail())
+            endif 
+            
+            reportControl!.setAdmRptctlRcp(recipientInfo!)
+            
+            REM Put our email on the document queue to be sent out. The document queue was designed with the assumption that any email sent out
+            REM will have some sort of attached document to it. This is not the case for this document. Provide "PDF" for the extension and the 
+            REM "NOATTACH" for the document ID, to appease the document queue that no attachment is really okay. 
+            reportControl!.setDocExtension("PDF")
+            reportControl!.addToDocQueue(#ParameterTable!,customerID!,"","NOATTACH")
+      else 
+            REM TODO: Handle customer not being found in the recipient records. This means that the customer is not fully set up for payments. 
+      endif 
+    
+  methodend 
     
 classend 
