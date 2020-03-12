@@ -1,5 +1,5 @@
 [[IVM_ITEMVEND.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 [[IVM_ITEMVEND.VENDOR_ID.AVAL]]
 rem "VENDOR INACTIVE - FEATURE"
 vendor_id$ = callpoint!.getUserInput()

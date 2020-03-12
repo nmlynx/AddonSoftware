@@ -1,5 +1,5 @@
 [[GLE_ALLOCDET.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 [[GLE_ALLOCDET.GL_DEST_ACCT.AVAL]]
    rem "GL INACTIVE FEATURE"
    glm01_dev=fnget_dev("GLM_ACCT")

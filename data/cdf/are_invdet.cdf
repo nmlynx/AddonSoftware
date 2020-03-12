@@ -127,8 +127,8 @@ callpoint!.setStatus("MODIFIED-REFRESH")
 gosub calc_grid_tots
 gosub disp_totals
 [[ARE_INVDET.<CUSTOM>]]
-#include std_functions.src
-#include std_missing_params.src
+#include [+ADDON_LIB]std_functions.aon
+#include [+ADDON_LIB]std_missing_params.aon
 
 calc_grid_tots:
 

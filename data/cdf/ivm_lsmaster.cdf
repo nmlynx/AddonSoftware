@@ -24,7 +24,7 @@ if apm01a.vend_inactive$="Y" then
    callpoint!.setStatus("ACTIVATE")
 endif
 [[IVM_LSMASTER.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 [[IVM_LSMASTER.AOPT-LHST]]
 iv_item_id$=callpoint!.getColumnData("IVM_LSMASTER.ITEM_ID")
 iv_whse_id$=callpoint!.getColumnData("IVM_LSMASTER.WAREHOUSE_ID")

@@ -173,6 +173,6 @@ callpoint!.setColumnData("ARE_CNVINV.DISC_DATE",wk_date_out$)
 callpoint!.setColumnUndoData("ARE_CNVINV.DISC_DATE",wk_date_out$)
 callpoint!.setStatus("REFRESH")
 [[ARE_CNVINV.<CUSTOM>]]
-#include std_missing_params.src
-#include std_functions.src
+#include [+ADDON_LIB]std_missing_params.aon
+#include [+ADDON_LIB]std_functions.aon
 

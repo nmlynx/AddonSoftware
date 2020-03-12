@@ -83,25 +83,25 @@ rem --- Get gateway server
 	wend
 
 rem --- Configure CreditCardLogin web app
-	appName$="CreditCardLogin_"+dbName$+"_"+firm_id$
+	appName$="CreditCardLogin_"+cvs(dbName$,11)+"_"+firm_id$
 	program$=(new File(aonDir$+"/web/CCLoginManager.aon")).getAbsolutePath()
 	css$=(new File(aonDir$+"/htdocs/CCLogin.css")).getAbsolutePath()
 	gosub configureWebApp
 
 rem --- CreditCardConfirmation web app
-	appName$="CreditCardConfirmation_"+dbName$+"_"+firm_id$
+	appName$="CreditCardConfirmation_"+cvs(dbName$,11)+"_"+firm_id$
 	program$=(new File(aonDir$+"/web/CCRegistrationConfirmationManager.aon")).getAbsolutePath()
 	css$=(new File(aonDir$+"/htdocs/CCLogin.css")).getAbsolutePath()
 	gosub configureWebApp
 
 rem --- Initialize Payment URL
 	field$="ARS_CC_CUSTPMT.PAYMENT_URL"
-	default_URL$="https://"+gatewayServer$+"/"+cvs(dbName$,4)+"/apps/CreditCardLogin_"+ dbName$ +"_"+firm_id$
+	default_URL$="https://"+gatewayServer$+"/"+cvs(dbName$,11)+"/apps/CreditCardLogin_"+ cvs(dbName$,11) +"_"+firm_id$
 	gosub configureURL
 
 rem --- Initialize Registration URL
 	field$="ARS_CC_CUSTPMT.REGISTER_URL"
-	default_URL$="https://"+gatewayServer$+"/"+cvs(dbName$,4)+"/apps/CreditCardConfirmation_"+ dbName$ +"_"+firm_id$
+	default_URL$="https://"+gatewayServer$+"/"+cvs(dbName$,11)+"/apps/CreditCardConfirmation_"+ cvs(dbName$,11) +"_"+firm_id$
 	gosub configureURL
 
 rem --- Task completed
@@ -151,6 +151,7 @@ rem --- use
 	use java.io.File
 
 	use com.basis.api.admin.BBjAdminAppDeploymentApplication
+	use com.basis.api.admin.BBjAdminAppDeploymentResource
 
 	use ::ado_func.src::func
 	use ::aro_CCUtil.aon::CCUtil
@@ -294,15 +295,14 @@ rem ============================================================
 	remoteConfig!=adminBase!.getRemoteConfiguration()
 	remoteApps! = remoteConfig!.getApplications()
 	foundApplication=0
-	if remoteApps!.size() then
-		for i = 0 to remoteApps!.size()-1
-			thisApp! = remoteApps!.get(i)
-			if thisApp!.getString(BBjAdminAppDeploymentApplication.NAME)=appName$ then
-				foundApplication=1
-				break
-			endif
-		next i
-	endif
+	appsIter!=remoteApps!.iterator()
+	while appsIter!.hasNext()
+		thisApp!=appsIter!.next()
+		if thisApp!.getString(BBjAdminAppDeploymentApplication.NAME)=appName$ then
+			foundApplication=1
+			break
+		endif
+	wend
 	if foundApplication then
 		rem --- Warn that web app already exists
 		msg_id$="AD_WEBAPP_EXISTS_1"
@@ -334,10 +334,17 @@ rem ============================================================
 		newApp!.setString(BBjAdminAppDeploymentApplication.CONFIG_FILE,barDir$+stbl("+FILE_CFG"))
 		newApp!.setString(BBjAdminAppDeploymentApplication.WORKING_DIRECTORY,barDir$)
 		newApp!.setString(BBjAdminAppDeploymentApplication.CLASSPATH,sscpName$)
-rem wgh ... 9598 ... need program arguments: ???
+
+		progArgs! = newApp!.getArguments()
+		progArgs!.add("-yA")
+		progArgs!.add("-tDDM_TABLES")
+		progArgs!.add("-a"+program$+" -f"+firm_id$)
+		progArgs!.add("-u[APP1]")
+		progArgs!.add("-p[APP2]")
+
 		newApp!.setBoolean(BBjAdminAppDeploymentApplication.QUIET,1)
 		newApp!.setBoolean(BBjAdminAppDeploymentApplication.BUI_ENABLED,1)
-rem wgh ... 9598 ... need desktop app enabled: false
+		newApp!.setBoolean(BBjAdminAppDeploymentApplication.EXE_ENABLED,0)
 		newApp!.setBoolean(BBjAdminAppDeploymentApplication.SHOW_BROWSER_WARNING_USE_DEFAULT,0)
 		newApp!.setBoolean(BBjAdminAppDeploymentApplication.SHOW_CONFIRM_CLOSE_DIALOG_USE_DEFAULT ,0)
 		newApp!.setBoolean(BBjAdminAppDeploymentApplication.MANAGE_BROWSER_HISTORY_USE_DEFAULT,0)
@@ -345,9 +352,28 @@ rem wgh ... 9598 ... need desktop app enabled: false
 		newApp!.setBoolean(BBjAdminAppDeploymentApplication.DISALLOW_CONSOLE,1)
 		newApp!.setBoolean(BBjAdminAppDeploymentApplication.DEVELOPMENT_MODE_USE_DEFAULT,0)
 		newApp!.setBoolean(BBjAdminAppDeploymentApplication.OMIT_BASIS_CSS_USE_DEFAULT,0)
-rem wgh ... 9598 ... need CSS: css!
-		newApp!.setString(BBjAdminAppDeploymentApplication.CONTEXT,cvs(dbName$,4))
 
+		resourceList!=remoteConfig!.getResources()
+		foundResource=0
+		resourceIter!=resourceList!.iterator()
+		while resourceIter!.hasNext()
+			resource!=resourceIter!.next()
+			if resource!.getString(BBjAdminAppDeploymentResource.SOURCE_FILE_NAME)=css$ then
+				foundResource=1
+				break
+			endif
+		wend
+		if !foundResource then
+			rem --- Create a resource entry for a CSS
+			resource!=remoteConfig!.createResource()
+			resource!.setString(BBjAdminAppDeploymentResource.SOURCE_FILE_NAME,css$)
+			remoteConfig!.getResources().add(resource!)
+			remoteConfig!.commit()
+		endif
+		rem --- Set the CSS to the resource we created above
+		newApp!.setString(BBjAdminAppDeploymentApplication.CSS_RESOURCE_ID,resource!.getString(BBjAdminAppDeploymentResource.RESOURCE_ID))
+
+		newApp!.setString(BBjAdminAppDeploymentApplication.CONTEXT,cvs(dbName$,11))
 		newApp!.commit()
 	endif
 
@@ -386,8 +412,6 @@ rem ============================================================
 
 	return
 
-#include std_functions.src
-#include std_missing_params.src
-
-
+#include [+ADDON_LIB]std_functions.aon
+#include [+ADDON_LIB]std_missing_params.aon
 

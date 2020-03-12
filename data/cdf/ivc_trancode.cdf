@@ -89,8 +89,8 @@ rem --- Check for G/L Number if Post to G/L is up
 	endif
 
 [[IVC_TRANCODE.<CUSTOM>]]
-#include std_functions.src
-#include std_missing_params.src
+#include [+ADDON_LIB]std_functions.aon
+#include [+ADDON_LIB]std_missing_params.aon
 [[IVC_TRANCODE.BSHO]]
 rem --- Open/Lock Files
 	files=1,begfile=1,endfile=files

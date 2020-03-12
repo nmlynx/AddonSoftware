@@ -561,7 +561,7 @@ rem -- Disable lot/serial option if not lotted/serialized, and scheduled for clo
 		callpoint!.setOptionEnabled("LSNO",0)
 	endif
 [[SFE_WOCLOSE.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 
 rem ==========================================================================
 enable_closed_cost: rem --- Enable/disable closed cost

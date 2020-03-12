@@ -675,6 +675,6 @@ get_vendor_history:
 	endif
 return
 
-#include std_missing_params.src
-#include std_functions.src
+#include [+ADDON_LIB]std_missing_params.aon
+#include [+ADDON_LIB]std_functions.aon
 

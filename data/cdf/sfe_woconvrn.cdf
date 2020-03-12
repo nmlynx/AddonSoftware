@@ -118,7 +118,7 @@ rem --- Display work order data
 	callpoint!.setColumnData("<<DISPLAY>>.WO_STATUS",womastr.wo_status$,1)
 	callpoint!.setColumnData("<<DISPLAY>>.WO_TYPE",womastr.wo_type$,1)
 [[SFE_WOCONVRN.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 
 rem ==========================================================================
 update_totals: rem --- Update totals

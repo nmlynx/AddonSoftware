@@ -509,7 +509,7 @@ rem --- Calculate Remaining Units
 	return
 
 rem ==========================================================================
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 rem ==========================================================================
 [[SFE_DISPATCHINQ.ASIZ]]
 rem --- Resize the grid

@@ -15,7 +15,7 @@ rem --- Retrieve parameter data
 	callpoint!.setDevObject("multi_whse",ivs01a.multi_whse$)
 	callpoint!.setDevObject("warehouse_id",ivs01a.warehouse_id$)
 [[OPR_ODERPICKDMD.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[OPR_ODERPICKDMD.AREC]]
 rem --- default print prices to true if this is a quote
 

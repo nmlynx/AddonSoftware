@@ -17,13 +17,13 @@
 			<RESTRICT_AUTOADD id="ddm_tables.arc_cc_register">Y</RESTRICT_AUTOADD>
 			<ASC_COMP_ID id="ddm_tables.arc_cc_register">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_tables.arc_cc_register">AR </ASC_PROD_ID>
-			<ASC_VERSION_ID id="ddm_tables.arc_cc_register">20.0      </ASC_VERSION_ID>
+			<ASC_VERSION_ID id="ddm_tables.arc_cc_register">20.0</ASC_VERSION_ID>
 			<ASC_LICENSE_ID id="ddm_tables.arc_cc_register"></ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.arc_cc_register">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.arc_cc_register">20191122</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.arc_cc_register">20200228</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.arc_cc_register">20200224</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.arc_cc_register">112553</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.arc_cc_register">20200306</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.arc_cc_register">20200311</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.arc_cc_register">163829</DD_LSTSYNC_TIME>
 			<DD_ATTR_ATAB id="ddm_tables.arc_cc_register"></DD_ATTR_ATAB>
 			<DD_ATTR_CPGM id="ddm_tables.arc_cc_register"></DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.arc_cc_register"></DD_ATTR_DKNM>
@@ -90,7 +90,7 @@
 		<RECORD id="ddm_table_tpls.arc_cc_register">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.arc_cc_register">ARC_CC_REGISTER </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.arc_cc_register">arc_cc_register</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.arc_cc_register">firm_id:c(2*),cc_token:c(36*),cc_username:c(256*),name_first:c(20*),name_last:c(25*),customer_id:c(6*),request_date:c(8*),register_date:c(8*),user_email:c(80*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.arc_cc_register">firm_id:c(2),cc_token:c(36),cc_username:c(256),name_first:c(20),name_last:c(25),customer_id:c(6),request_date:c(8),register_date:c(8),user_email:c(80)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -142,7 +142,7 @@
 			<DD_TABLE_ALIAS id="ddm_key_segs.arc_cc_register0101">ARC_CC_REGISTER </DD_TABLE_ALIAS>
 			<DD_KEY_NUMBER id="ddm_key_segs.arc_cc_register0101">01</DD_KEY_NUMBER>
 			<DD_SEGMENT_SEQ id="ddm_key_segs.arc_cc_register0101">01</DD_SEGMENT_SEQ>
-			<DD_SEGMENT_COL id="ddm_key_segs.arc_cc_register0101">CC_USERNAME</DD_SEGMENT_COL>
+			<DD_SEGMENT_COL id="ddm_key_segs.arc_cc_register0101">FIRM_ID</DD_SEGMENT_COL>
 			<DD_SEGMENT_POS id="ddm_key_segs.arc_cc_register0101"></DD_SEGMENT_POS>
 			<DD_SEGMENT_OFF id="ddm_key_segs.arc_cc_register0101"></DD_SEGMENT_OFF>
 			<DD_SEGMENT_LEN id="ddm_key_segs.arc_cc_register0101"></DD_SEGMENT_LEN>
@@ -150,6 +150,19 @@
 			<DD_SEGMENT_UNIQ id="ddm_key_segs.arc_cc_register0101">N</DD_SEGMENT_UNIQ>
 			<DD_SEGMENT_MATH id="ddm_key_segs.arc_cc_register0101">N</DD_SEGMENT_MATH>
 			<DD_SEGMENT_NUM id="ddm_key_segs.arc_cc_register0101">N</DD_SEGMENT_NUM>
+		</RECORD>
+		<RECORD id="ddm_key_segs.arc_cc_register0102">
+			<DD_TABLE_ALIAS id="ddm_key_segs.arc_cc_register0102">ARC_CC_REGISTER </DD_TABLE_ALIAS>
+			<DD_KEY_NUMBER id="ddm_key_segs.arc_cc_register0102">01</DD_KEY_NUMBER>
+			<DD_SEGMENT_SEQ id="ddm_key_segs.arc_cc_register0102">02</DD_SEGMENT_SEQ>
+			<DD_SEGMENT_COL id="ddm_key_segs.arc_cc_register0102">CC_USERNAME</DD_SEGMENT_COL>
+			<DD_SEGMENT_POS id="ddm_key_segs.arc_cc_register0102"></DD_SEGMENT_POS>
+			<DD_SEGMENT_OFF id="ddm_key_segs.arc_cc_register0102"></DD_SEGMENT_OFF>
+			<DD_SEGMENT_LEN id="ddm_key_segs.arc_cc_register0102"></DD_SEGMENT_LEN>
+			<DD_SEGMENT_SORT id="ddm_key_segs.arc_cc_register0102">N</DD_SEGMENT_SORT>
+			<DD_SEGMENT_UNIQ id="ddm_key_segs.arc_cc_register0102">N</DD_SEGMENT_UNIQ>
+			<DD_SEGMENT_MATH id="ddm_key_segs.arc_cc_register0102">N</DD_SEGMENT_MATH>
+			<DD_SEGMENT_NUM id="ddm_key_segs.arc_cc_register0102">N</DD_SEGMENT_NUM>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_table_cols">
@@ -161,8 +174,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.arc_cc_register001">FIRM_ID         </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.arc_cc_register001">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.arc_cc_register001">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register001">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register001">0A</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register001">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register001"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.arc_cc_register001"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.arc_cc_register001"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.arc_cc_register001"></DD_MASK_TYPE>
@@ -191,7 +204,7 @@
 			<DD_ATTR_PVAL id="ddm_table_cols.arc_cc_register001"></DD_ATTR_PVAL>
 			<DD_ATTR_SLEV id="ddm_table_cols.arc_cc_register001"></DD_ATTR_SLEV>
 			<DD_ATTR_TABG id="ddm_table_cols.arc_cc_register001"></DD_ATTR_TABG>
-			<DD_ATTR_TIND id="ddm_table_cols.arc_cc_register001"></DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.arc_cc_register001">11</DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.arc_cc_register001"></DD_ATTR_HELP>
 			<SQL_COLUMN_NAME id="ddm_table_cols.arc_cc_register001">FIRM_ID</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.arc_cc_register001"></DD_ATTR_FONT>
@@ -202,7 +215,7 @@
 			<DD_ATTR_CTLN id="ddm_table_cols.arc_cc_register001"></DD_ATTR_CTLN>
 			<DD_ATTR_CTLC id="ddm_table_cols.arc_cc_register001"></DD_ATTR_CTLC>
 			<DD_ATTR_RADG id="ddm_table_cols.arc_cc_register001"></DD_ATTR_RADG>
-			<DD_ATTR_RKEY id="ddm_table_cols.arc_cc_register001"></DD_ATTR_RKEY>
+			<DD_ATTR_RKEY id="ddm_table_cols.arc_cc_register001">Y</DD_ATTR_RKEY>
 			<DD_ATTR_BTNS id="ddm_table_cols.arc_cc_register001"></DD_ATTR_BTNS>
 		</RECORD>
 		<RECORD id="ddm_table_cols.arc_cc_register002">
@@ -212,8 +225,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.arc_cc_register002">CC_TOKEN        </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.arc_cc_register002">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.arc_cc_register002">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register002">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register002">0A</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register002">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register002"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.arc_cc_register002"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.arc_cc_register002"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.arc_cc_register002"></DD_MASK_TYPE>
@@ -242,7 +255,7 @@
 			<DD_ATTR_PVAL id="ddm_table_cols.arc_cc_register002"></DD_ATTR_PVAL>
 			<DD_ATTR_SLEV id="ddm_table_cols.arc_cc_register002"></DD_ATTR_SLEV>
 			<DD_ATTR_TABG id="ddm_table_cols.arc_cc_register002"></DD_ATTR_TABG>
-			<DD_ATTR_TIND id="ddm_table_cols.arc_cc_register002"></DD_ATTR_TIND>
+			<DD_ATTR_TIND id="ddm_table_cols.arc_cc_register002">12</DD_ATTR_TIND>
 			<DD_ATTR_HELP id="ddm_table_cols.arc_cc_register002"></DD_ATTR_HELP>
 			<SQL_COLUMN_NAME id="ddm_table_cols.arc_cc_register002">CC_TOKEN</SQL_COLUMN_NAME>
 			<DD_ATTR_FONT id="ddm_table_cols.arc_cc_register002"></DD_ATTR_FONT>
@@ -253,7 +266,7 @@
 			<DD_ATTR_CTLN id="ddm_table_cols.arc_cc_register002"></DD_ATTR_CTLN>
 			<DD_ATTR_CTLC id="ddm_table_cols.arc_cc_register002"></DD_ATTR_CTLC>
 			<DD_ATTR_RADG id="ddm_table_cols.arc_cc_register002"></DD_ATTR_RADG>
-			<DD_ATTR_RKEY id="ddm_table_cols.arc_cc_register002"></DD_ATTR_RKEY>
+			<DD_ATTR_RKEY id="ddm_table_cols.arc_cc_register002">Y</DD_ATTR_RKEY>
 			<DD_ATTR_BTNS id="ddm_table_cols.arc_cc_register002"></DD_ATTR_BTNS>
 		</RECORD>
 		<RECORD id="ddm_table_cols.arc_cc_register003">
@@ -263,8 +276,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.arc_cc_register003">CC_USERNAME     </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.arc_cc_register003">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.arc_cc_register003">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register003">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register003">0A</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register003">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register003"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.arc_cc_register003"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.arc_cc_register003"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.arc_cc_register003"></DD_MASK_TYPE>
@@ -314,8 +327,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.arc_cc_register004">NAME_FIRST      </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.arc_cc_register004">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.arc_cc_register004">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register004">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register004">0A</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register004">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register004"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.arc_cc_register004"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.arc_cc_register004"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.arc_cc_register004"></DD_MASK_TYPE>
@@ -365,8 +378,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.arc_cc_register005">NAME_LAST       </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.arc_cc_register005">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.arc_cc_register005">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register005">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register005">0A</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register005">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register005"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.arc_cc_register005"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.arc_cc_register005"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.arc_cc_register005"></DD_MASK_TYPE>
@@ -416,8 +429,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.arc_cc_register006">CUSTOMER_ID     </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.arc_cc_register006">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.arc_cc_register006">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register006">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register006">0A</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register006">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register006"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.arc_cc_register006"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.arc_cc_register006"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.arc_cc_register006"></DD_MASK_TYPE>
@@ -467,8 +480,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.arc_cc_register007">REQUEST_DATE    </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.arc_cc_register007">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.arc_cc_register007">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register007">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register007">0A</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register007">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register007"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.arc_cc_register007"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.arc_cc_register007"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.arc_cc_register007"></DD_MASK_TYPE>
@@ -518,8 +531,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.arc_cc_register008">REGISTER_DATE   </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.arc_cc_register008">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.arc_cc_register008">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register008">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register008">0A</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register008">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register008"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.arc_cc_register008"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.arc_cc_register008"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.arc_cc_register008"></DD_MASK_TYPE>
@@ -569,8 +582,8 @@
 			<DD_DVAR_NAME id="ddm_table_cols.arc_cc_register009">USER_EMAIL      </DD_DVAR_NAME>
 			<DD_COL_REPEATS id="ddm_table_cols.arc_cc_register009">0</DD_COL_REPEATS>
 			<DD_COL_OCCURS id="ddm_table_cols.arc_cc_register009">0</DD_COL_OCCURS>
-			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register009">Y</DD_FIELD_DELIM>
-			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register009">0A</DD_DELIM_CHAR>
+			<DD_FIELD_DELIM id="ddm_table_cols.arc_cc_register009">N</DD_FIELD_DELIM>
+			<DD_DELIM_CHAR id="ddm_table_cols.arc_cc_register009"></DD_DELIM_CHAR>
 			<DD_SYSTEM_REC id="ddm_table_cols.arc_cc_register009"></DD_SYSTEM_REC>
 			<DD_SYSTEM_ID id="ddm_table_cols.arc_cc_register009"></DD_SYSTEM_ID>
 			<DD_MASK_TYPE id="ddm_table_cols.arc_cc_register009"></DD_MASK_TYPE>
@@ -679,13 +692,13 @@
 			<ASC_PROD_ID id="ddm_elements.ar_cc_token">AR </ASC_PROD_ID>
 			<LOCALIZATION_EX id="ddm_elements.ar_cc_token">N</LOCALIZATION_EX>
 			<DD_CREATE_DATE id="ddm_elements.ar_cc_token">2458764</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.ar_cc_token">20191007</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.ar_cc_token">20200306</DD_LSTREV_DATE>
 			<DD_AUTO_COMP id="ddm_elements.ar_cc_token"></DD_AUTO_COMP>
 			<DD_ATTR_BLNK id="ddm_elements.ar_cc_token">N</DD_ATTR_BLNK>
 			<DD_ATTR_CDAT id="ddm_elements.ar_cc_token"></DD_ATTR_CDAT>
 			<DD_ATTR_CTLW id="ddm_elements.ar_cc_token"></DD_ATTR_CTLW>
 			<DD_ATTR_CTLH id="ddm_elements.ar_cc_token"></DD_ATTR_CTLH>
-			<DD_ATTR_CTYP id="ddm_elements.ar_cc_token">H</DD_ATTR_CTYP>
+			<DD_ATTR_CTYP id="ddm_elements.ar_cc_token">E</DD_ATTR_CTYP>
 			<DD_ATTR_DCOL id="ddm_elements.ar_cc_token"></DD_ATTR_DCOL>
 			<DD_ATTR_DCOM id="ddm_elements.ar_cc_token"></DD_ATTR_DCOM>
 			<DD_ATTR_DEXP id="ddm_elements.ar_cc_token"></DD_ATTR_DEXP>
@@ -706,8 +719,8 @@
 			<DD_ATTR_MINV id="ddm_elements.ar_cc_token"></DD_ATTR_MINV>
 			<DD_ATTR_MSKI id="ddm_elements.ar_cc_token"></DD_ATTR_MSKI>
 			<DD_ATTR_MSKO id="ddm_elements.ar_cc_token"></DD_ATTR_MSKO>
-			<DD_ATTR_PADC id="ddm_elements.ar_cc_token"></DD_ATTR_PADC>
-			<DD_ATTR_PADJ id="ddm_elements.ar_cc_token"></DD_ATTR_PADJ>
+			<DD_ATTR_PADC id="ddm_elements.ar_cc_token">20</DD_ATTR_PADC>
+			<DD_ATTR_PADJ id="ddm_elements.ar_cc_token">L</DD_ATTR_PADJ>
 			<DD_ATTR_PREC id="ddm_elements.ar_cc_token">0</DD_ATTR_PREC>
 			<DD_ATTR_PROM id="ddm_elements.ar_cc_token"></DD_ATTR_PROM>
 			<DD_ATTR_PVAL id="ddm_elements.ar_cc_token"></DD_ATTR_PVAL>

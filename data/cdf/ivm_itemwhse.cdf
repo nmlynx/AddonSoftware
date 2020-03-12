@@ -333,8 +333,8 @@ if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
 [[IVM_ITEMWHSE.ABC_CODE.AVAL]]
 if (callpoint!.getUserInput()<"A" or callpoint!.getUserInput()>"Z") and cvs(callpoint!.getUserInput(),2)<>"" callpoint!.setStatus("ABORT")
 [[IVM_ITEMWHSE.<CUSTOM>]]
-#include std_missing_params.src
-#include std_functions.src
+#include [+ADDON_LIB]std_missing_params.aon
+#include [+ADDON_LIB]std_functions.aon
 [[IVM_ITEMWHSE.BSHO]]
 rem --- Open extra tables
 

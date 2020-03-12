@@ -70,7 +70,7 @@ rem --- Set default Warehouse
 	callpoint!.setColumnData("SFR_WOVARREP.WAREHOUSE_ID",whse$,1)
 
 [[SFR_WOVARREP.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[SFR_WOVARREP.BSHO]]
 rem --- Open needed IV tables
 rem --- Get default warehouse from IV params

@@ -64,7 +64,7 @@ rem --- Open/Lock files
 
 	gosub open_tables
 [[GLR_BALANCE.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 
 rem ==========================================================================
 init_align_periods: rem --- Initialize align_periods for pick_year

@@ -3,7 +3,7 @@ rem #include std_missing_params.src
 std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
 
     rd_err_text$=""
-    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
     call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5):"00000"),
 :                                   str(err:"000"),rd_err_text$,rd_err_act$

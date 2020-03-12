@@ -170,5 +170,5 @@ format_cust_outmask:
 		if pos("#"=wkdata$(wk,1))=0 then let cust_out$=cust_out$+wkdata$(wk,1)
 	next wk
 return
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 

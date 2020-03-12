@@ -1,5 +1,5 @@
 [[GLC_CYCLECODE.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 
 disable_fields:
  rem --- used to disable/enable controls depending on parameter settings

@@ -13,7 +13,7 @@ if pos(firm_id$+wh$=k$)=1
 	callpoint!.setStatus("ABORT")
 endif
 [[IVC_WHSECODE.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[IVC_WHSECODE.BSHO]]
 rem --- Open/Lock files
 

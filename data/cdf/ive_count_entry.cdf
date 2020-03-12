@@ -531,7 +531,7 @@ parse_count_end:
 
 
 rem ==========================================================================
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 rem ==========================================================================
 [[IVE_COUNT_ENTRY.COUNT_STRING.AVAL]]
 print "COUNT_STRING:AVAL"; rem debug

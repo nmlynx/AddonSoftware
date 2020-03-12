@@ -1,5 +1,5 @@
 [[IVR_COSTCHGREG.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[IVR_COSTCHGREG.ASVA]]
 rem --- Close file so it can be locked in the register
 

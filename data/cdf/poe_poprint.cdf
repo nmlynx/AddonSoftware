@@ -1,5 +1,5 @@
 [[POE_POPRINT.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 [[POE_POPRINT.VENDOR_ID.AVAL]]
 rem "VENDOR INACTIVE - FEATURE"
 vendor_id$ = callpoint!.getUserInput()

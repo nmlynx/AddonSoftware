@@ -3,11 +3,31 @@ REM  * aro_AO_CCUtil.aon
 REM  * @author shaun
 REM  * Copyright BASIS International Ltd.  All Rights Reserved.
 REM  */
+
+use java.io.File
+use java.util.Properties
+
 use com.basis.api.admin.BBjAdminBase
+
+use ::ado_file.src::FileObject
+use ::sys/prog/bao_docqueue.bbj::DocumentQueue
 
 REM AO_CCUtil
 REM An Addon utility class that provides constants and methods needed by the Customer Portal for online credit card payments
 class public AO_CCUtil
+
+    field private BBjInt logDev% = 0
+    field private BBjInt adm_userroles% = 0
+    field private BBjInt adm_user% = 0
+    field private BBjInt ads_compinfo% = 0
+    field private BBjInt adm_email_acct% = 0
+    field private BBjInt adm_rptctl% = 0
+
+    field private BBjString adm_userroles_tpl$ = ""
+    field private BBjString adm_user_tpl$ = ""
+    field private BBjString ads_compinfo_tpl$ = ""
+    field private BBjString adm_email_acct_tpl$ = ""
+    field private BBjString adm_rptctl_tpl$ = ""
 
     field protected static BBjString DATE_MASK!="%Yl%Mz%Dz"
     field public static BBjString ParameterTable$="ARS_CC_CUSTPMT"
@@ -16,6 +36,7 @@ class public AO_CCUtil
     method public AO_CCUtil()
         #initializeBaristaEnvironment()
         #openQueryTables()
+        #openEmailTables()
     methodend
 
     method public static BBjString getDATE_MASK()
@@ -44,14 +65,103 @@ class public AO_CCUtil
         declare BBjString user_id$
         declare BBjString temp$
 
-        for curr_arg=1 to argc-1
-            temp_arg$=argv(curr_arg)
-            if pos("-u"=temp_arg$)=1 then user_id$=cvs(temp_arg$(3),4)
-            if pos("-f"=temp_arg$)=1 then cust_user_firm$=cvs(temp_arg$(3),3)
-        next curr_arg
-        temp$=stbl("+USER_ID",user_id$)
-        call stbl("+DIR_SYP")+"bas_process_beg.bbj",user_id$,table_chans$[all]
-        temp$=stbl("+FIRM_ID",cust_user_firm$)
+		if argc>1
+			for curr_arg=1 to argc-1
+				temp_arg$=argv(curr_arg)
+				if pos("-u"=temp_arg$)=1 then user_id$=cvs(temp_arg$(3),4)
+				if pos("-f"=temp_arg$)=1 then cust_user_firm$=cvs(temp_arg$(3),3)
+			next curr_arg
+			temp$=stbl("+USER_ID",user_id$)
+			call stbl("+DIR_SYP")+"bas_process_beg.bbj",user_id$,table_chans$[all]
+			temp$=stbl("+FIRM_ID",cust_user_firm$)
+		endif
+    methodend
+
+    method public void logMessage(BBjString task$, BBjString user_id$, BBjVector message!, BBjInt sendEmail%)
+
+        msgText$=date(0:"%Yd-%Mz-%Dz @ %Hz:%mz:%sz") + $0A$
+        msgText$=msgText$+task$ + $0A$
+        msgText$=msgText$+"user: "+user_id$ + $0A$
+        if message!.size()>0 then
+            for i=0 to message!.size()-1
+                msgText$=msgText$+message!.getItem(i) + $0A$
+            next i
+        endif
+
+        print(#logDev%)msgText$
+        if sendEmail% then #sendCcOnlineEmail(task$,msgText$)
+
+        methodret
+    methodend
+
+    method protected void openEmailTables()
+        num_files=6
+        dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+        open_tables$[1]="ADM_USERROLES",open_opts$[1]="OTA"
+        open_tables$[2]="ADM_USER",open_opts$[2]="OTA"
+        open_tables$[3]="ADS_COMPINFO",open_opts$[3]="OTA"
+        open_tables$[4]="ADM_EMAIL_ACCT",open_opts$[4]="OTA"
+        open_tables$[5]="ADM_RPTCTL",open_opts$[5]="OTA"
+        open_tables$[6]="DDM_SYSTEMS",open_opts$[6]="OTA"
+        call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:               open_beg,
+:               open_end,
+:               open_tables$[all],
+:               open_opts$[all],
+:               open_chans$[all],
+:               open_tpls$[all],
+:               table_chans$[all],
+:               open_batch,
+:               open_status$
+        if open_status$<>"" then
+            seterr 0
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] openEmailTables(): Cannot open table.",302
+        endif
+
+        #adm_userroles%=int(num(open_chans$[1]))
+        #adm_user%=int(num(open_chans$[2]))
+        #ads_compinfo%=int(num(open_chans$[3]))
+        #adm_email_acct%=int(num(open_chans$[4]))
+        #adm_rptctl%=int(num(open_chans$[5]))
+        ddm_systems=num(open_chans$[6])
+
+        #adm_userroles_tpl$=open_tpls$[1]
+        #adm_user_tpl$=open_tpls$[2]
+        #ads_compinfo_tpl$=open_tpls$[3]
+        #adm_email_acct_tpl$=open_tpls$[4]
+        #adm_rptctl_tpl$=open_tpls$[5]
+        dim ddm_systems$:open_tpls$[6]
+
+        rem --- Get this installation's location
+        readrecord(ddm_systems,key=pad("ADDON",16),knum="SYSTEM_ID")ddm_systems$
+        location$=ddm_systems.mount_dir$
+
+        rem --- Create logs directory at installation location
+        logDir$ = FileObject.fixPath(location$ + "/logs", "/")
+        FileObject.makeDirs(new File(logDir$))
+
+        rem --- Create and/or open log file
+        log$ = logDir$+"/online_ccpmt_issues.log"
+        new_log=0
+        string log$,err=*next; new_log=1
+        log_dev%=int(unt)
+        open(log_dev%)log$
+
+        if new_log then
+            rem --- Write header info for new log
+            print(log_dev%)"Online Customer Credit Card Payment issues log started: " + date(0:"%Yd-%Mz-%Dz @ %Hz:%mz:%sz")
+            print(log_dev%)
+        else
+            rem --- Move to end of existing log
+            log_fin$=fin(log_dev%)
+            log_size=dec($00$+log_fin$(1,4))
+            read(log_dev%,ind=log_size,end=*next)
+        endif
+
+        #logDev%=log_dev%
+
+        methodret
     methodend
 
     method public static void openQueryTables()
@@ -93,6 +203,80 @@ class public AO_CCUtil
         next temp
         
         call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],table_chans$[all],open_batch,open_status$
+    methodend
+
+    method public void sendCcOnlineEmail(BBjString task$,BBjString msgText$)
+        dim adm_userroles$:#adm_userroles_tpl$
+        dim adm_user$:#adm_user_tpl$
+        dim ads_compinfo$:#ads_compinfo_tpl$
+        dim adm_email_acct$:#adm_email_acct_tpl$
+        dim adm_rptctl$:#adm_rptctl_tpl$
+
+        rem --- Retrieve sysinfo data
+        sysinfo_template$=stbl("+SYSINFO_TPL",err=*next)
+        if cvs(sysinfo_template$,2)<>"" then
+            dim sysinfo$:sysinfo_template$
+            sysinfo$=stbl("+SYSINFO",err=*next)
+            firm_id$=sysinfo.firm_id$
+        else
+            firm_id$=""
+        endif
+
+        rem --- Get email address of users with CCONLINE security role
+        userEmail!=new Properties()
+        adm_userroles.sec_role_id$="CCONLINE"
+        read(#adm_userroles%,key=adm_userroles.sec_role_id$,knum="ROLE_USER",dom=*next)
+        while 1
+            readrecord(#adm_userroles%,end=*break)adm_userroles$
+            if cvs(adm_userroles.sec_role_id$,2)<>"CCONLINE" then break
+    
+            redim adm_user$     
+            readrecord(#adm_user%,key=adm_userroles.user_id$,dom=*next)adm_user$
+            if cvs(adm_user.email_address$,2)<>"" then userEmail!.setProperty(cvs(adm_user.user_id$,2),cvs(adm_user.email_address$,2))
+            if firm_id$="" then firm_id$=adm_user.default_firm$
+        wend
+
+        rem --- Get firm's email addresses
+        firm_email_from$=""
+        firm_email_replyto$=""
+        readrecord(#ads_compinfo%,key=firm_id$,dom=*next)ads_compinfo$
+        if cvs(ads_compinfo.email_account$,2)<>"" then
+            readrecord(#adm_email_acct%,key=firm_id$+ads_compinfo.email_account$,dom=*endif)adm_email_acct$
+            if cvs(adm_email_acct.firm_email_from$,2)<>"" then firm_email_from$=cvs(adm_email_acct.firm_email_from$,2)
+            if cvs(adm_email_acct.firm_email_replyto$,2)<>"" then firm_email_replyto$=cvs(adm_email_acct.firm_email_replyto$,2)
+        endif
+
+        rem --- Get email account from Report Control
+        adm_rptctl.dd_table_alias$="ARS_CC_CUSTPMT"
+        readrecord(#adm_rptctl%,key=firm_id$+adm_rptctl.dd_table_alias$,dom=*next)adm_rptctl$
+    
+        rem --- Send message to email address for users with CCONLINE security role
+        userEmailIter!=userEmail!.keySet().iterator()
+        while userEmailIter!.hasNext()
+            thisUser$=userEmailIter!.next()
+            thisEmail$=userEmail!.getProperty(thisUser$)
+            user_id$=stbl("+USER_ID",err=*next)
+            if user_id$="" then x$=stbl("+USER_ID",thisUser$)
+            
+            rem --- Make email entry in Doc Processing Queue
+            docQueue! = new DocumentQueue()
+            docQueue!.clear()
+            docQueue!.setFirmID(firm_id$)
+            docQueue!.setDocumentID("NOATTACH")
+            docQueue!.setDocumentExt("PDF")
+            docQueue!.setProcessType("E")
+            docQueue!.setStatus("A");rem Auto-detect.  Queue will switch it to "Ready" if all required data is present
+            docQueue!.setEmailAccount(cvs(adm_rptctl.email_account$,2))
+            docQueue!.setEmailFrom(iff(firm_email_from$<>"", firm_email_from$, thisEmail$))
+            docQueue!.setEmailTo(thisEmail$)
+            docQueue!.setSubject("ERROR: "+ task$)
+            docQueue!.setMessage(msgText$)
+            docQueue!.createProcess()
+            proc_key$=docQueue!.getFirmID()+docQueue!.getProcessID()
+            docQueue!.checkStatus(proc_key$)
+        wend
+
+        methodret
     methodend
     
     method public static void emailCustomMessage(BBjString firmID!, BBjString customerID!, BBjString email!, BBjString subject!, BBjString message!) 

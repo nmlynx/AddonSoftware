@@ -1,6 +1,6 @@
 [[SFR_SHPFLRDSPTCH.<CUSTOM>]]
 rem ==========================================================================
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 rem ==========================================================================
 [[SFR_SHPFLRDSPTCH.BFMC]]
 rem --- open files/init

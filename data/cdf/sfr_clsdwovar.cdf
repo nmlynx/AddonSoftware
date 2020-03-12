@@ -165,4 +165,4 @@ rem --  Potentially remove list options based on module installed? status
 		gosub open_tables
 	endif
 [[SFR_CLSDWOVAR.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon

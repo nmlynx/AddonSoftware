@@ -58,7 +58,7 @@ rem --- re-enable all fields
 	dctl$[7]="MESSAGE_TYPE"
 	gosub disable_ctls
 [[OPC_LINECODE.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 rem ========================================================
 disable_ctls:rem --- Disable fields that don't apply
 rem ========================================================

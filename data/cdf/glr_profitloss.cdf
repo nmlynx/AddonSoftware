@@ -52,7 +52,7 @@ rem --- Verify calendar exists for entered GL fiscal year
 		gosub init_align_periods
 	endif
 [[GLR_PROFITLOSS.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 
 rem ==========================================================================
 init_align_periods: rem --- Initialize align_periods for pick_year

@@ -21,4 +21,4 @@ read record (aps01_dev,key=firm_id$+"AP00",dom=std_missing_params)aps01a$
 callpoint!.setColumnData("APU_PERIODEND.PERIOD_YEAR",aps01a.current_year$+aps01a.current_per$)
 callpoint!.setStatus("REFRESH")
 [[APU_PERIODEND.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon

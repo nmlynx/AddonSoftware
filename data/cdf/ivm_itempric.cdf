@@ -1,5 +1,5 @@
 [[IVM_ITEMPRIC.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 [[IVM_ITEMPRIC.CUSTOMER_ID.AVAL]]
 rem "Customer Inactive Feature"
 customer_id$=callpoint!.getUserInput()

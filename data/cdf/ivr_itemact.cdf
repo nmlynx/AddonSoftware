@@ -3,7 +3,7 @@ rem --- Item synonym processing
 
 	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[IVR_ITEMACT.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[IVR_ITEMACT.ARAR]]
 num_files=1
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]

@@ -26,7 +26,7 @@ rem --- Check length of wildcard against defined mask for GL Account
 		endif
 	endif
 [[GLR_BUDGETUPDATE.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 ctl_toggle:
 	for x=0 to ctls_to_toggle!.size()-1
 		ctl_name$=ctls_to_toggle!.getItem(x)
@@ -45,7 +45,7 @@ disable_fields:
 	callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
 return
 
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[GLR_BUDGETUPDATE.BUDGET_REVS.AVAL]]
 glm08_dev=fnget_dev("GLM_BUDGETMASTER")
 dim glm08a$:fnget_tpl$("GLM_BUDGETMASTER")

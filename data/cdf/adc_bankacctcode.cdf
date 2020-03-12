@@ -1,12 +1,37 @@
-[[ADC_BANKACCTCODE.<CUSTOM>]]
-#include std_functions.src
-[[ADC_BANKACCTCODE.BSHO]]
-rem --- Open tables
-	num_files=2
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="APS_ACH",open_opts$[1]="OTA"
-	open_tables$[2]="GLM_BANKMASTER",   open_opts$[2]="OTA"
-	gosub open_tables
+[[ADC_BANKACCTCODE.ABA_NO.AVAL]]
+rem --- Bank routing number required for Checking and Savings accounts
+	aba_no$=callpoint!.getUserInput()
+	bnk_acct_type$=callpoint!.getColumnData("ADC_BANKACCTCODE.BNK_ACCT_TYPE")
+	if pos(bnk_acct_type$="CS") and cvs(aba_no$,2)="" then
+		msg_id$="AD_ABANO_REQ"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+rem --- Bank routing number must be 9-digit number, or blank, and pass 371371371 checksum test
+	if cvs(aba_no$,2)<>"" then
+		abaNo=-1
+		abaNo=num(aba_no$,err=*next)
+		if abaNo<0 or len(aba_no$)<>9 then
+			msg_id$="AD_9DIGIT_ABANO"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+		rem --- 371371371 checksum test
+		dim digit[9]
+		for i=1 to 9
+			digit[i]=num(aba_no$(i,1))
+		next i
+		if mod(3*(digit[1]+digit[4]+digit[7])+7*(digit[2]+digit[5]+digit[8])+1*(digit[3]+digit[6]+digit[9]),10)<>0 then
+			msg_id$="AD_BAD_ABANO"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
+
 [[ADC_BANKACCTCODE.BDEL]]
 rem --- Don’t allow deletinging BNK_ACCT_CD if currently in use in either APS_ACH or GLM_BANKMASTER (glm-05)
 	bnk_acct_cd$=callpoint!.getColumnData("ADC_BANKACCTCODE.BNK_ACCT_CD")
@@ -45,6 +70,7 @@ rem --- Don’t allow deletinging BNK_ACCT_CD if currently in use in either APS_AC
 		callpoint!.setStatus("ABORT")
 		break
 	endif
+
 [[ADC_BANKACCTCODE.BNK_ACCT_NO.AVAL]]
 rem --- Bank account number required for Checking and Savings accounts
 	bnk_acct_no$=callpoint!.getUserInput()
@@ -65,36 +91,15 @@ rem --- Bank account number must be a number with at least 4 digits, or blank
 			callpoint!.setStatus("ABORT")
 		endif
 	endif
-[[ADC_BANKACCTCODE.ABA_NO.AVAL]]
-rem --- Bank routing number required for Checking and Savings accounts
-	aba_no$=callpoint!.getUserInput()
-	bnk_acct_type$=callpoint!.getColumnData("ADC_BANKACCTCODE.BNK_ACCT_TYPE")
-	if pos(bnk_acct_type$="CS") and cvs(aba_no$,2)="" then
-		msg_id$="AD_ABANO_REQ"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-		break
-	endif
 
-rem --- Bank routing number must be 9-digit number, or blank, and pass 371371371 checksum test
-	if cvs(aba_no$,2)<>"" then
-		abaNo=-1
-		abaNo=num(aba_no$,err=*next)
-		if abaNo<0 or len(aba_no$)<>9 then
-			msg_id$="AD_9DIGIT_ABANO"
-			gosub disp_message
-			callpoint!.setStatus("ABORT")
-			break
-		endif
-		rem --- 371371371 checksum test
-		dim digit[9]
-		for i=1 to 9
-			digit[i]=num(aba_no$(i,1))
-		next i
-		if mod(3*(digit[1]+digit[4]+digit[7])+7*(digit[2]+digit[5]+digit[8])+1*(digit[3]+digit[6]+digit[9]),10)<>0 then
-			msg_id$="AD_BAD_ABANO"
-			gosub disp_message
-			callpoint!.setStatus("ABORT")
-			break
-		endif
-	endif
+[[ADC_BANKACCTCODE.BSHO]]
+rem --- Open tables
+	num_files=2
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="APS_ACH",open_opts$[1]="OTA"
+	open_tables$[2]="GLM_BANKMASTER",   open_opts$[2]="OTA"
+	gosub open_tables
+
+[[ADC_BANKACCTCODE.<CUSTOM>]]
+#include [+ADDON_LIB]std_functions.aon
+

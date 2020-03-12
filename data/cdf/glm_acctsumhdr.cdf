@@ -773,7 +773,7 @@ rem --- Set proper record ID
 
 	gosub display_mtd_ytd
 [[GLM_ACCTSUMHDR.<CUSTOM>]]
-#include std_functions.src
+#include [+ADDON_LIB]std_functions.aon
 rem ======================================================
 check_modified:
 rem ======================================================
@@ -1256,4 +1256,4 @@ rem ==========================================================================
 
 	return
 
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon

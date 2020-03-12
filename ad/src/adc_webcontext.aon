@@ -29,8 +29,8 @@ rem --- Create new Web Context in Enterprise Manager
     serverConfig! = BBjAPI().getAdmin(theAdmin!.getUser(), theAdmin!.getPassword()).getJettyServerConfig()
 
     rem --- Make sure we start with a clean fresh web context
-    serverConfig!.removeCustomContext(cvs(dbName$,3))
-    contextConfig! = serverConfig!.createCustomContext(cvs(dbName$,3))
+    serverConfig!.removeCustomContext(cvs(dbName$,11))
+    contextConfig! = serverConfig!.createCustomContext(cvs(dbName$,11))
 
     contextConfig!.enable()
     contextConfig!.setDocBase((new File(aonLoc$+"/htdocs")).getAbsolutePath())
@@ -65,6 +65,13 @@ rem --- Add BBJSP Servlets
         servletContext!.setClassPath(sscpName$)
         servletContext!.setWorkingDir(barDir$)
     next i
+	
+rem --- Save, then start the context
+
+    serverConfig!.saveConfig()
+    jettyServer! = BBjAPI().getAdmin(theAdmin!.getUser(), theAdmin!.getPassword()).getJettyServer()
+    thisContext! = jettyServer!.getContext(cvs(dbName$,11))
+    thisContext!.start()
     
 done: rem --- All done
     

@@ -45,7 +45,7 @@ rem --- but used to be stored in pymt ID field
 		endif
 	endif
 [[OPE_INVCASH.<CUSTOM>]]
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 
 rem ==============================================
 rem -- mod10_check; see if payment ID field contains valid cc# format

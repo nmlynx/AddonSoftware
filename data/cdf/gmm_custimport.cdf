@@ -936,7 +936,7 @@ rem ==========================================================================
 
 	return
 
-#include std_missing_params.src
+#include [+ADDON_LIB]std_missing_params.aon
 [[GMM_CUSTIMPORT.AWIN]]
 rem --- Needed classes
 	use ::ado_util.src::util

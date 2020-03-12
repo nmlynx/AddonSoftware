@@ -200,8 +200,8 @@ rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space 
 	callpoint!.setAbleMap(wmap$)
 	callpoint!.setStatus("ABLEMAP-REFRESH")
 return
-#include std_missing_params.src
-#include std_functions.src
+#include [+ADDON_LIB]std_missing_params.aon
+#include [+ADDON_LIB]std_functions.aon
 [[APR_CHECKS.ASVA]]
 rem --- Validate Check Number unless only ACH payments selected, i.e. there are no printed checks
 if num(callpoint!.getColumnData("APR_CHECKS.CHECK_NO")) = 0 then
