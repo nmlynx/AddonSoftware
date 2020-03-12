@@ -102,12 +102,21 @@ rem --- Use statements and Declares
     use ::sys/prog/bao_option.bbj::Option
     use ::sys/prog/bao_valid_card.bbj::CreditCard
     use ::sys/prog/bao_utilities.bbj::BarUtils
+	use ::bbtranslator.bbj::BBTranslator
     
     declare Callpoint callpoint!
     declare Option option!
     declare BBjVector custIds!
     declare BBjVector orderNos!
     declare CreditCard credCard!
+
+    declare BBTranslator Translate!
+    rdTransSpaceKey$=stbl("+PROPS_NAME")+"_"+stbl("+USER_LOCALE")+"_BBTranslator"
+    Translate!=cast(BBTranslator,BBjAPI().getGroupNamespace().getValue(rdTransSpaceKey$,err=*next))
+    if Translate!=null()
+        Translate!=BBTranslator.getInstance(stbl("+PROPS_NAME"),stbl("+USER_LOCALE"),null(),stbl("+PROPS_PATH"))
+        BBjAPI().getGroupNamespace().setValue(rdTransSpaceKey$,Translate!)
+    endif
 
 rem --- Retrieve the program path
 
