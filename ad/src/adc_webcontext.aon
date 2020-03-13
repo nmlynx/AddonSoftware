@@ -25,6 +25,11 @@ rem --- status     : Status code/0=No error (Returned)
 rem --- Initializations
     status=0
 
+rem --- Stop the context
+    jettyServer! = BBjAPI().getAdmin(theAdmin!.getUser(), theAdmin!.getPassword()).getJettyServer()
+    thisContext! = jettyServer!.getContext(cvs(dbName$,11))
+    thisContext!.stop()
+
 rem --- Create new Web Context in Enterprise Manager
     serverConfig! = BBjAPI().getAdmin(theAdmin!.getUser(), theAdmin!.getPassword()).getJettyServerConfig()
 
@@ -67,11 +72,15 @@ rem --- Add BBJSP Servlets
     next i
 	
 rem --- Save, then start the context
-
     serverConfig!.saveConfig()
-    jettyServer! = BBjAPI().getAdmin(theAdmin!.getUser(), theAdmin!.getPassword()).getJettyServer()
-    thisContext! = jettyServer!.getContext(cvs(dbName$,11))
-    thisContext!.start()
+	
+rem --- have tried jettyServer!.restart(), which hung, jettyServer!.stop()/start() doesn't hang, but doesn't work (err 503's)
+rem	jettyServer!.stop()
+rem	jettyServer!.start()
+
+rem --- have tried to get the context after having stopped/removed/created/saved it, then just start the context. Also gives err 503's
+rem	thisContext! = jettyServer!.getContext(cvs(dbName$,11))
+rem thisContext!.start()
     
 done: rem --- All done
     
