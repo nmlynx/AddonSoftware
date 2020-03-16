@@ -28,7 +28,7 @@ rem --- Initializations
 rem --- Stop the context
     jettyServer! = BBjAPI().getAdmin(theAdmin!.getUser(), theAdmin!.getPassword()).getJettyServer()
     thisContext! = jettyServer!.getContext(cvs(dbName$,11))
-    thisContext!.stop()
+    if thisContext!<>null() then thisContext!.stop()
 
 rem --- Create new Web Context in Enterprise Manager
     serverConfig! = BBjAPI().getAdmin(theAdmin!.getUser(), theAdmin!.getPassword()).getJettyServerConfig()
