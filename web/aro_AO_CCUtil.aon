@@ -11,6 +11,7 @@ use com.basis.api.admin.BBjAdminBase
 
 use ::ado_file.src::FileObject
 use ::sys/prog/bao_docqueue.bbj::DocumentQueue
+use ::ado_rptControl.src::ReportControl
 
 REM AO_CCUtil
 REM An Addon utility class that provides constants and methods needed by the Customer Portal for online credit card payments
@@ -287,7 +288,7 @@ class public AO_CCUtil
         reportControl!=new ReportControl()
         reportControl!.setFirmID(firmID!)
         reportControl!.getReportControl(#ParameterTable$)
-        found=reportControl!.getRecipientInfo(#ReportControlID$,customerID$,"")
+        found=reportControl!.getRecipientInfo(#ReportControlID$,customerID!,"")
         if (found) 
             recipientInfo!=reportControl!.getAdmRptctlRcp() 
             emailMessage!=recipientInfo!.getFieldAsString("EMAIL_MESSAGE")
@@ -302,7 +303,7 @@ class public AO_CCUtil
             endif
             
             if ! email!.isEmpty() then 
-                recipientInfo!.setFieldValue("EMAIL_TO",rec!.getUserEmail())
+                recipientInfo!.setFieldValue("EMAIL_TO",email!)
             endif 
             
             reportControl!.setAdmRptctlRcp(recipientInfo!)
@@ -311,9 +312,9 @@ class public AO_CCUtil
             REM will have some sort of attached document to it. This is not the case for this document. Provide "PDF" for the extension and the 
             REM "NOATTACH" for the document ID, to appease the document queue that no attachment is really okay. 
             reportControl!.setDocExtension("PDF")
-            reportControl!.addToDocQueue(#ParameterTable!,customerID!,"","NOATTACH")
+            reportControl!.addToDocQueue(#ParameterTable$,customerID!,"","NOATTACH")
       else 
-            REM TODO: Handle customer not being found in the recipient records. This means that the customer is not fully set up for payments. 
+            REM TODO: Handle customer not being found in the recipient records. This means that the customer is not fully set up for payments.v
       endif 
     
   methodend 

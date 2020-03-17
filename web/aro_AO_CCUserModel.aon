@@ -22,7 +22,7 @@ class public AO_CCUserModel
     field protected BBjNumber SqlChan
     field protected BBjString UserName$
     field protected static BBjString EM_ACCOUNT_PREFIX!="arccc_"
-    field protected BBjString FirmID$
+    field protected BBjString FirmID$=STBL("+FIRM_ID")
 
     method public AO_CCUserModel()
         #SqlChan=sqlunt
@@ -281,6 +281,41 @@ class public AO_CCUserModel
     methodret customerName$
     
   methodend
+  
+  method public CCUserRecord getUserFromEmail(BBjString email$)
+    
+        sqlprep (#SqlChan) "select CC_USERNAME, NAME_FIRST, NAME_LAST, CUSTOMER_ID, USER_EMAIL, FIRM_ID from ARC_CC_USERS where USER_EMAIL=? and FIRM_ID=?"
+        sqlexec (#SqlChan) email$, #FirmID$
+        
+        dim result$:sqltmpl(#SqlChan)
+        
+        eof=0
+        ctr=0
+        while ! eof 
+            result$=sqlfetch(#SqlChan,end=eof)
+            ctr=ctr+1
+            continue 
+        eof:
+            eof=1
+        wend
+        
+        if (ctr=1) then
+            declare CCUserRecord user!
+            user!=new CCUserRecord()
+            user!.setUserName(result.CC_USERNAME$)
+            user!.setFirstName(result.NAME_FIRST$)
+            user!.setLastName(result.NAME_LAST$)
+            user!.setCustomerID(result.CUSTOMER_ID$)
+            user!.setUserEmail(result.USER_EMAIL$)
+            user!.setFirmID(result.FIRM_ID$)
+            methodret user!
+        else 
+            REM TODO: If the database contains more than one matching record, we have a problem. We've defined a unique 
+            REM key in the ARC_CC_USERS table, so the case where we have more than one user for a given email should not 
+            REM happen. 
+            methodret null()
+        endif 
+  methodend 
 
 classend 
 

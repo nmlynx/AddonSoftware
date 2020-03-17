@@ -207,18 +207,31 @@ rem	    #RegistrationView!.setUserNameValid(valid)
     
     method public void handleForgotPasswordOK(BBjButtonPushEvent event!)
         declare CCUserRecord user!
+        declare BBjString email!
         
         REM See if the email corresponds to a user
-        if (#ForgotPasswordView!.getEmail().isEmpty()) then
-            
+        email!=#ForgotPasswordView!.getEmail()
+        if (email!.isEmpty()) then
+            REM TODO: Show message that the user email has to be filled in. 
+            methodret 
         endif
-        if (! #ForgotPasswordView!.getEmail().isEmpty()) then
-            user!=#UserModel!.getUserFromEmail()
+        
+        user!=#UserModel!.getUserFromEmail(email!)
+        
+        REM Show a message saying we'll send the password link to the email address if an account exists for it.
+        REM Note:  Don't tell the user whether an account exists for a particular email.  This can lead to malicious
+        REM users searching for working emails that they might be able to set passwords on.
+        if (user!<>null()) then
+            REM send the user a link to change their credentials.
+            subject$="Someone has requested a password reset on your account."
+            message$="Someone has requested a password reset on your account. If it was you, you can reset your password with the following link. Otherwise, please ignore this message."
+            CCUtil.emailCustomMessage(user!.getFirmID(),user!.getCustomerID(),user!.getUserEmail(),subject$,message$) 
         endif 
         
+        #ForgotPasswordView!.displayMessage("We've sent a reset password link to this email if an account exists for it.")
+        #ForgotPasswordView!.hide()
+        #LoginView!.show() 
         
-        
-        REM send the user a link to change their credentials.
     methodend 
     
     method public void handleForgotPasswordCancel(BBjButtonPushEvent event!)
