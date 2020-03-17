@@ -340,6 +340,7 @@ rem --- Write to glw-11
 date_errors: rem --- Any GL transaction date errors detected in lead overlay?
 
     if errors=0 goto next_overlay
+    if update$="opu_updatesales.aon" then goto next_overlay; rem --- The Sales Register Update needs to reset trans_status$="E" if register is not updated.
 
 register_errors: rem --- Register errors
 
