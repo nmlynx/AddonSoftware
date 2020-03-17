@@ -10,6 +10,11 @@ rem --- of event it is... in this case, we're toggling checkboxes on/off in form
 	gui_event$=SysGUI!.getLastEventString()
 	ev!=BBjAPI().getLastEvent()
 
+	if ev!.getEventName()="BBjTimerEvent" and gui_event.y=10000
+		BBjAPI().removeTimer(10000)
+		release;rem --- form left up > 60 seconds, so close it and bug out
+	endif
+
 	ctl_ID=dec(gui_event.ID$)
 	if ctl_ID=num(callpoint!.getDevObject("openInvoicesGridId"))
 		if gui_event.code$="N"
@@ -75,6 +80,11 @@ rem --- load up form fields from customer rec
 	dim arm_custmast$:fnget_tpl$("ARM_CUSTMAST")
 
 	arm_custmast$=callpoint!.getDevObject("arm_custmast")
+
+[[ARE_CCPMT_CSTHST.ASHO]]
+rem --- Set timer so form doesn't stay up > 60 seconds (otherwise 'back office' tasks like C/R Register can't run)
+	timer_key!=10000
+	BBjAPI().createTimer(timer_key!,60,"custom_event")
 
 [[ARE_CCPMT_CSTHST.ASIZ]]
 rem --- Resize grids
@@ -909,9 +919,8 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 				if content!.contains("RESULT=0")
 					rem --- set devObject to indicate 'payment' status - check when exiting and warn if still in "payment" status (i.e., no response received yet)
 					callpoint!.setDevObject("cust_payment_status","payment")
-			rem		returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway_id$+" -t"+tokenID$+" -s"+sid$+" -l"+gw_config!.get("launchURL"))
-					callpoint!.setStatus("EXIT")
 					BBjAPI().getThinClient().browse(gw_config!.get("launchURL")+"?SECURETOKENID="+sid$+"&SECURETOKEN="+tokenID$,"_self","")
+					release;rem --- we're done with this form
 				else
 					trans_msg$=Translate!.getTranslation("AON_UNABLE_TO_ACQUIRE_SECURE_TOKEN")+$0A$+content!
 					dim msg_tokens$[1]
@@ -998,8 +1007,8 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 				rem --- assuming this is our response, record the Webhook response in art_response and create cash receipt, if applicable
 
 				if authResponse!.getMessages().getResultCode()=MessageTypeEnum.OK
-					callpoint!.setStatus("EXIT")
 					BBjAPI().getThinClient().browse(launch_page$+"?authtoken="+authResponse!.getToken()+"&gatewayURL="+gw_config!.get("gatewayURL")+"&amount="+masked_amt$,"_self","")
+					release;rem --- we're done with this form
 				else
 					trans_msg$=Translate!.getTranslation("AON_UNABLE_TO_ACQUIRE_SECURE_TOKEN")+$0a$+authResponse!.getMessages().getMessage().get(0).getCode()+$0a$+authResponse!.getMessages().getMessage().get(0).getText()
 					dim msg_tokens$[1]

@@ -1,11 +1,11 @@
 CLASS PUBLIC PayPalSilentPost
 
 	use ::sys/prog/bao_docqueue.bbj::DocumentQueue
-
     use ::aro_CCUtil.aon::CCUtil
 
     field private BBjspWebRequest request!
     field private BBjspWebResponse response!
+	field private CCUtil ccUtil!=null()
   
     method public void service(BBjspServletContext context!)
 
@@ -152,7 +152,7 @@ CLASS PUBLIC PayPalSilentPost
 						if pay_flag$="Y"
 							ar_inv_no$=vectInvoices!.get(inv_row+1)
 							invoice_pay$=vectInvoices!.get(inv_row+inv_pd_col)
-							invoice_disc$=vectInvoices!.get(inv_row+inv_pd_col-1)
+							invoice_disc$=vectInvoices!.get(inv_row+inv_pd_col-2)
 							
 							redim are_cashdet$
 							redim are_cashbal$
@@ -205,7 +205,7 @@ CLASS PUBLIC PayPalSilentPost
 
 					rem --- get sequence number for response records
 					call stbl("+DIR_SYP")+"bas_sequences.bbj","CREDIT_TRANS_NO",credit_trans_no$,rd_table_chans$[all],"QUIET"
-                    if credit_trans_no$="" then
+					if credit_trans_no$="" then
                         message!=BBjAPI().makeVector()
                         message!.addItem("Barista Sequence Number record not found for CREDIT_TRANS_NO")
                         if #ccUtil!=null() then #ccUtil! = new CCUtil()
