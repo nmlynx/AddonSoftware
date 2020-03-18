@@ -1,15 +1,43 @@
+[[OPE_ORDDATES.ARAR]]
+print "ORDDATES:ARAR"; rem debug
+
+rem --- Setup default dates
+
+	ars01_dev = fnget_dev("ARS_PARAMS")
+	dim ars01a$:fnget_tpl$("ARS_PARAMS")
+	read record (ars01_dev,key=firm_id$+"AR00") ars01a$
+
+	dim sysinfo$:stbl("+SYSINFO_TPL")
+	sysinfo$=stbl("+SYSINFO")
+
+	pgmdir$ = ""
+	pgmdir$ = stbl("+DIR_PGM", err=*next)
+
+	orddate$ = sysinfo.system_date$
+	comdate$ = orddate$
+	shpdate$ = orddate$
+
+	comdays = num(ars01a.commit_days$)
+	shpdays = num(ars01a.def_shp_days$)
+
+	if comdays then call pgmdir$+"adc_daydates.aon", orddate$, comdate$, comdays
+	if shpdays then call pgmdir$+"adc_daydates.aon", orddate$, shpdate$, shpdays
+
+	callpoint!.setColumnData("OPE_ORDDATES.DEF_COMMIT", comdate$)
+	callpoint!.setColumnData("OPE_ORDDATES.DEF_SHIP", shpdate$)
+	callpoint!.setStatus("REFRESH")
+
+	temp_stbl$ = stbl("OPE_DEF_SHIP", shpdate$)
+	temp_stbl$ = stbl("OPE_DEF_COMMIT", comdate$)
+
 [[OPE_ORDDATES.ASVA]]
 rem --- Set STBL
 	ignore$ = stbl("OPE_DEF_STATION",callpoint!.getColumnData("OPE_ORDDATES.DEF_STATION"))
 
-[[OPE_ORDDATES.DEF_SHIP.AVAL]]
-rem --- Set STBL
+[[OPE_ORDDATES.BEND]]
+print "ORDDATES:BEND"; rem debug
+release; rem --- if ditching this form, don't run order entry either, just release
 
-	ignore$ = stbl("OPE_DEF_SHIP", callpoint!.getUserInput())
-[[OPE_ORDDATES.DEF_COMMIT.AVAL]]
-rem --- Set STBL
-
-	ignore$ = stbl("OPE_DEF_COMMIT", callpoint!.getUserInput())
 [[OPE_ORDDATES.BSHO]]
 print "ORDDATES:BSHO"; rem debug
 
@@ -46,37 +74,28 @@ rem --- Set this user's or param's default POS station
 			callpoint!.setTableColumnAttribute("OPE_ORDDATES.DEF_STATION", "DFLT", params_rec.default_station$)
 		endif
 	endif
-[[OPE_ORDDATES.BEND]]
-print "ORDDATES:BEND"; rem debug
-release; rem --- if ditching this form, don't run order entry either, just release
-[[OPE_ORDDATES.ARAR]]
-print "ORDDATES:ARAR"; rem debug
 
-rem --- Setup default dates
+[[OPE_ORDDATES.DEF_COMMIT.AVAL]]
+rem --- Warn if Commit Date isn't in an appropriate GL period
+	commit_date$=callpoint!.getUserInput()        
+	if callpoint!.getDevObject("glint")="Y" 
+		call stbl("+DIR_PGM")+"glc_datecheck.aon",commit_date$,"Y",per$,yr$,status
+	endif
 
-	ars01_dev = fnget_dev("ARS_PARAMS")
-	dim ars01a$:fnget_tpl$("ARS_PARAMS")
-	read record (ars01_dev,key=firm_id$+"AR00") ars01a$
+rem --- Set STBL
 
-	dim sysinfo$:stbl("+SYSINFO_TPL")
-	sysinfo$=stbl("+SYSINFO")
+	ignore$ = stbl("OPE_DEF_COMMIT", commit_date$)
 
-	pgmdir$ = ""
-	pgmdir$ = stbl("+DIR_PGM", err=*next)
+[[OPE_ORDDATES.DEF_SHIP.AVAL]]
+rem --- Warn if Ship Date isn't in an appropriate GL period
+	ship_date$=callpoint!.getUserInput()        
+	if callpoint!.getDevObject("glint")="Y" 
+		call stbl("+DIR_PGM")+"glc_datecheck.aon",ship_date$,"Y",per$,yr$,status
+	endif
 
-	orddate$ = sysinfo.system_date$
-	comdate$ = orddate$
-	shpdate$ = orddate$
+rem --- Set STBL
 
-	comdays = num(ars01a.commit_days$)
-	shpdays = num(ars01a.def_shp_days$)
+	ignore$ = stbl("OPE_DEF_SHIP", ship_date$)
 
-	if comdays then call pgmdir$+"adc_daydates.aon", orddate$, comdate$, comdays
-	if shpdays then call pgmdir$+"adc_daydates.aon", orddate$, shpdate$, shpdays
 
-	callpoint!.setColumnData("OPE_ORDDATES.DEF_COMMIT", comdate$)
-	callpoint!.setColumnData("OPE_ORDDATES.DEF_SHIP", shpdate$)
-	callpoint!.setStatus("REFRESH")
 
-	temp_stbl$ = stbl("OPE_DEF_SHIP", shpdate$)
-	temp_stbl$ = stbl("OPE_DEF_COMMIT", comdate$)
