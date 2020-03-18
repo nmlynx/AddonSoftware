@@ -14,6 +14,38 @@ rem --- if accepting credit card payments for this cash rec code, populate list 
 		callpoint!.setOptionEnabled("GTWY",0)
 	endif
 
+[[ARS_CC_CUSTPMT.ALLOW_CUST_CC.AVAL]]
+rem --- cannot set allow_cust_cc if any other record has it set
+rem --- currently the customer cc payment form (are_cc_csthst) only supports one cash rec code, therefore one ars_cc_custpmt record
+
+	if callpoint!.getUserInput()="Y"
+		ars_cc_custpmt=fnget_dev("@ARS_CC_CUSTPMT")
+		dim ars_cc_custpmt$:fnget_tpl$("@ARS_CC_CUSTPMT")
+
+		check_count=0
+		check_codes$=""
+
+		read(ars_cc_custpmt,key=firm_id$,dom=*next)
+
+		while 1
+			readrecord(ars_cc_custpmt,end=*break)ars_cc_custpmt$
+			if ars_cc_custpmt.firm_id$<>firm_id$ then break
+			if ars_cc_custpmt.cash_rec_cd$<>callpoint!.getColumnData("ARS_CC_CUSTPMT.CASH_REC_CD") and ars_cc_custpmt.allow_cust_cc$="Y"
+				check_count=check_count+1
+				check_codes$=check_codes$+ars_cc_custpmt.cash_rec_cd$+","
+			endif
+		wend
+
+		if check_count >= 1
+			msg_id$="GENERIC_WARN"
+			dim msg_tokens$[1]
+			msg_tokens$[1]=Translate!.getTranslation("AON_ONLY_ONE_ARS_CC_CUSTPMT_ALLOWED","A different Cash Receipt Code has already been designated for customer credit card payments."+$0A$+"Delete the code listed below, or uncheck its 'Accept Credit Card Payments' box.",1)+ $0A$+"Code: "+check_codes$(1,len(check_codes$)-1)
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+		endif
+
+	endif
+
 [[ARS_CC_CUSTPMT.ALLOW_CUST_CC.BINP]]
 rem --- Enable Configure Web App additional option when in edit mode
 	if callpoint!.isEditMode() then callpoint!.setOptionEnabled("WEBA",1)
@@ -118,33 +150,6 @@ rem --- Disable additional options
 	callpoint!.setOptionEnabled("GTWY",0)
 	callpoint!.setOptionEnabled("WEBA",0)
 
-[[ARS_CC_CUSTPMT.AWRI]]
-rem --- warn user if >1 record is 'turned on' for customer cc processing
-rem --- currently the customer cc payment form (are_cc_csthst) only supports one cash rec code, therefore one ars_cc_custpmt record
-
-	ars_cc_custpmt=fnget_dev("@ARS_CC_CUSTPMT")
-	dim ars_cc_custpmt$:fnget_tpl$("@ARS_CC_CUSTPMT")
-
-	check_count=0
-
-	read(ars_cc_custpmt,key=firm_id$,dom=*next)
-
-	while 1
-		readrecord(ars_cc_custpmt,end=*break)ars_cc_custpmt$
-		if ars_cc_custpmt.firm_id$<>firm_id$ then break
-		if ars_cc_custpmt.allow_cust_cc$="Y"
-			check_count=check_count+1
-		endif
-	wend
-
-	if check_count > 1
-		msg_id$="GENERIC_WARN"
-		dim msg_tokens$[1]
-		msg_tokens$[1]=Translate!.getTranslation("AON_ONLY_ONE_ARS_CC_CUSTPMT_ALLOWED","More than one Cash Receipt Code has been set for customer credit card payments. Only the first will be used.")
-		gosub disp_message
-	endif
-	
-
 [[ARS_CC_CUSTPMT.BSHO]]
 rem --- use
 
@@ -234,7 +239,9 @@ rem --- Enable Configure Web App additional option when in edit mode
 rem --- populate list of supported gateways based on the interface type
 
 	interface_tp$=callpoint!.getUserInput()
-	gosub get_gateways
+	if cvs(interface_tp$,3)<>"" and interface_tp$<>callpoint!.getColumnData("ARS_CC_CUSTPMT.INTERFACE_TP")
+		gosub get_gateways
+	endif
 
 [[ARS_CC_CUSTPMT.INTERFACE_TP.BINP]]
 rem --- Enable Configure Web App additional option when in edit mode
@@ -414,4 +421,6 @@ rem ============================================================
 
 #include [+ADDON_LIB]std_functions.aon
 #include [+ADDON_LIB]std_missing_params.aon
+
+
 
