@@ -1,0 +1,86 @@
+REM /**
+REM  * CCLoginView.aon
+REM  * @author shaun
+REM  * Copyright BASIS International Ltd.  All Rights Reserved.
+REM  */
+
+use ::CCView.aon::CCView
+
+class public CCLoginView extends CCView
+    field protected BBjStaticText userNameST!
+    field protected BBjEditBox userNameEB!
+    field protected BBjStaticText passwordST!
+    field protected BBjEditBox passwordEB!
+    field protected BBjButton loginBtn!
+    field protected BBjButton registerBtn!
+    field protected BBjButton cancelBtn!
+    field protected BBjStaticText header1!
+    field protected BBjStaticText header2!
+    field protected BBjToolButton forgotPasswordTB!
+	field protected BBjNumber SqlChan
+
+    method public CCLoginView()
+	    #super!()
+		#getWin().setTitle("Customer Login")
+		#SqlChan=sqlunt
+		sqlopen (#SqlChan) stbl("+DBNAME")
+		
+		sqlprep(#SqlChan) "select FIRM_NAME from ADM_FIRMS where COMPANY_ID = '" + stbl("+FIRM_ID") + "'"
+		sqlexec(#SqlChan)
+		dim result$:sqltmpl(#SqlChan)
+		result$=sqlfetch(#SqlChan)
+
+		#header1!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,25,640,60,result$)
+		#header2!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,85,640,50,"Customer Portal")
+        #userNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),5,172,150,24,"Username",$8000$)
+        #userNameEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),160,165,350,34,"")
+        #passwordST!=#getWin().addStaticText(#getWin().getAvailableControlID(),5,222,150,24,"Password",$8000$)
+        #passwordEB!=#getWin().addEditBox(#getWin().getAvailableControlID(),160,215,350,34,"",$0400$)
+        #forgotPasswordTB!=#getWin().addToolButton(#getWin().getAvailableControlID(),160,250,350,24,"Forgot Username or Password?",$8000$)
+        #loginBtn!=#getWin().addButton(#getWin().getAvailableControlID(),160,285,110,50,"Login")
+        #registerBtn!=#getWin().addButton(#getWin().getAvailableControlID(),275,285,110,50,"Register")
+        #cancelBtn!=#getWin().addButton(#getWin().getAvailableControlID(),390,285,110,50,"Cancel")
+        
+        
+		#header1!.addStyle("cc-header1")
+		#header2!.addStyle("cc-header2")
+		#userNameST!.addStyle("cc-statictext")
+		#passwordST!.addStyle("cc-statictext")
+		#userNameEB!.addStyle("cc-editbox")
+		#passwordEB!.addStyle("cc-editbox")
+		#loginBtn!.addStyle("cc-button")
+		#registerBtn!.addStyle("cc-button")
+		#cancelBtn!.addStyle("cc-button")
+
+  methodend
+
+	method public BBjString getUserName()
+		methodret #userNameEB!.getText()
+	methodend
+
+	method public BBjString getPassword()
+		methodret #passwordEB!.getText()
+	methodend
+
+  method public void registerRegisterButton_OnButtonPushCallback(CustomObject handler!, BBjString callback!)
+		#registerBtn!.setCallback(BBjButton.ON_BUTTON_PUSH,handler!,callback!)
+	methodend
+
+	method public void registerLoginButton_OnButtonPushCallback(CustomObject handler!, BBjString callback!)
+		#loginBtn!.setCallback(BBjButton.ON_BUTTON_PUSH,handler!,callback!)
+	methodend
+
+	method public void registerCancelButton_OnButtonPushCallback(CustomObject handler!, BBjString callback!)
+		#cancelBtn!.setCallback(BBjButton.ON_BUTTON_PUSH,handler!,callback!)
+	methodend
+	
+	method public void registerForgotPasswordST_OnMouseUpCallback(CustomObject handler!, BBjString callback!)
+	    #forgotPasswordTB!.setCallback(BBjToolButton.ON_TOOL_BUTTON_PUSH,handler!,callback!)
+	methodend 
+
+classend
+
+declare CCLoginView dialog!
+dialog!=new CCLoginView()
+
+process_events

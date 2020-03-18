@@ -23,18 +23,20 @@ CLASS PUBLIC AuthorizeConfirmation
 				values=1
 				ns!=BBjAPI().getNamespace("aon","authorize_confirmation",1)
 				ns!.setValue(value$,"close")
-			endif	
+			endif
 		endif
 
-		rem - shouldn't happen, but if for some reason sid (uuid) wasn't included in URL (so can't auto-close based on namespace variable change) write out html telling user to close manually
-		if !params or !values
+		rem - for external/customer payment, write out thanks/close html
+
 			s! = #response!.getOutputStream()
 			s!.write("<html>")
+			s!.write("<head>")
+			s!.write("<link rel='stylesheet' href='CCLogin.css'>")
+			s!.write("</head>")
 			s!.write("<body>")
-			s!.write("<h1>All done. You can close this page.</h1>")
+			s!.write("<h2>Thank you for your payment! You can close this page.</h2>")
 			s!.write("</body>")
 			s!.write("</html>")
-        endif 
 
     METHODEND
     

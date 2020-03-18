@@ -75,12 +75,13 @@ rem --- Set Report Name & Subreport directory
 
 rem --- Open/Lock files
 
-    files=4,begfile=1,endfile=files
+    files=5,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="arm-01",ids$[1]="ARM_CUSTMAST"
     files$[2]="arm-02",ids$[2]="ARM_CUSTDET"
     files$[3]="art-01",ids$[3]="ART_INVHDR"
     files$[4]="art-11",ids$[4]="ART_INVDET"
+    files$[5]="ars_cc_custpmt",ids$[5]="ARS_CC_CUSTPMT"
     
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -89,11 +90,13 @@ rem --- Open/Lock files
     arm02_dev=channels[2]
     art01_dev=channels[3]
     art11_dev=channels[4]
+    ars_cc_custpmt=channels[5]
 
 rem --- Dimension string templates
 
     dim arm01a$:templates$[1],arm02a$:templates$[2]
     dim art01a$:templates$[3],art11a$:templates$[4]
+	dim ars_cc_custpmt$:templates$[5]
 
 rem --- Assign form input values to local variables
 
@@ -151,6 +154,16 @@ rem --- Initializations
     print_document=1
 
     emailFax! = BBjAPI().makeVector()
+
+rem --- get payment_url for the cash_rec_cd used for customer payments (only one record allowed at present)
+
+	readrecord(ars_cc_custpmt,key=firm_id$,dom=*next)
+	while 1
+		redim ars_cc_custpmt$
+		readrecord(ars_cc_custpmt,end=*break)ars_cc_custpmt$
+		if ars_cc_custpmt.firm_id$<>firm_id$ then break
+		if ars_cc_custpmt.allow_cust_cc$="Y" then break
+	wend
 
 rem --- See if this document is set up in Addon Report Control
 
@@ -315,6 +328,24 @@ rem --- Read next Customer Master (arm-01) and Detail (arm-02) record
                     emailFax!.add(rpt_id$)
                     emailFax!.add(arm01a.customer_id$)
                     emailFax!.add(new_doc_id$)
+					url$=cvs(ars_cc_custpmt.payment_url$,3)
+					if url$<>"" then
+						url_message$=Translate!.getTranslation("AON_PAY_ONLINE")+" "+url$
+						if reportControl!.getEmailYN()="Y" then
+							AdmRptctlRcp!=reportControl!.getAdmRptctlRcp()
+							email$=AdmRptctlRcp!.getFieldAsString("EMAIL_MESSAGE")
+							email$=cvs(email$,2)+$0A$+url_message$
+							AdmRptctlRcp!.setFieldValue("EMAIL_MESSAGE",email$)
+							reportControl!.setAdmRptctlRcp(AdmRptctlRcp!)
+						endif
+						if reportControl!.getFaxYN()="Y" then
+							AdmRptctlRcp!=reportControl!.getAdmRptctlRcp()
+							fax$=AdmRptctlRcp!.getFieldAsString("FAX_MESSAGE")
+							fax$=cvs(fax$,2)+$0A$+url_message$
+							AdmRptctlRcp!.setFieldValue("FAX_MESSAGE",fax$)
+							reportControl!.setAdmRptctlRcp(AdmRptctlRcp!)
+						endif
+					endif
                 endif
             endif
         endif

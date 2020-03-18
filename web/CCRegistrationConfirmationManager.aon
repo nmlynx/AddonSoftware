@@ -1,0 +1,79 @@
+REM /**
+REM  * CCRegistrationConfirmationManager.aon
+REM  * @author shaun
+REM  * Copyright BASIS International Ltd.  All Rights Reserved.
+REM  */
+
+use ::CCRegistrationConfirmationView.aon::CCRegistrationConfirmationView
+use ::CCRegistrationModel.aon::CCRegistrationModel
+use ::CCRegistrationModel.aon::CCRegistrationRecord
+use ::aro_CCUserModel.aon::CCUserModel
+use ::aro_CCUserModel.aon::CCUserRecord
+use ::aro_CCUtil.aon::CCUtil
+
+
+class public CCRegistrationConfirmationManager
+	field protected CCUtil Util!=new CCUtil()
+	field public CCRegistrationConfirmationView View! = new CCRegistrationConfirmationView()
+	field public CCRegistrationModel RegistrationModel!=new CCRegistrationModel() 
+	field public CCUserModel UserModel!=new CCUserModel()
+	
+	field protected CCRegistrationRecord RegistrationRecord!
+
+	REM TODO:  Put in an elaborate amount of diagnostic logging so that people on the backend can 
+	REM help troubleshoot registrations. People trying to register should not get direct access to 
+	REM this information. 
+	method public CCRegistrationConfirmationManager()
+    
+		declare BBjString token$
+		declare BBjString customerName$
+		declare CCRegistrationRecord rec!
+		declare CCUserRecord user!
+		
+		token$=clientenv("token",err=no_token)
+		
+		REM Locate the registration associated with this token
+		#RegistrationModel!.setUserModel(#UserModel!)
+		#RegistrationRecord!=#RegistrationModel!.locateToken(token$)
+		if (#RegistrationRecord!=null()) then goto no_token
+		
+		#View!.registerYesButton_OnButtonPushCallback(#this!,"handleAcceptRegistration")
+		#View!.registerNoButton_OnButtonPushCallback(#this!,"handleRejectRegistration")
+		
+		user!=#RegistrationRecord!.getUserRecord()
+		#View!.getDesiredUserNameEB().setText(user!.getUserName())
+		#View!.getFirstNameEB().setText(user!.getFirstName())
+		#View!.getLastNameEB().setText(user!.getLastName())
+		#View!.getUserEmailEB().setText(user!.getUserEmail())
+		#View!.getCustomerIDEB().setText(user!.getCustomerID())
+		
+		customerName$=#UserModel!.getCustomerName(user!.getCustomerID())
+		#View!.updateCustomerNameText(customerName$)
+		
+		#View!.show() 
+		methodret 
+		
+		no_token:
+		REM Show rejection message 
+		#View!.displayMessage("The token is no longer valid.")
+    
+	methodend
+  
+	method public void handleAcceptRegistration(BBjButtonPushEvent e!)
+		#UserModel!.addUser(#RegistrationRecord!.getUserRecord())
+		#RegistrationModel!.deleteRegistration(#RegistrationRecord!)
+		#View!.showAcceptanceMessage() 
+		release
+	methodend 
+
+	method public void handleRejectRegistration(BBjButtonPushEvent e!)
+		#RegistrationModel!.deleteRegistration(#RegistrationRecord!)
+		#View!.showRejectionMessage()
+		release
+	methodend 
+
+classend
+
+
+x!=new CCRegistrationConfirmationManager()
+process_events

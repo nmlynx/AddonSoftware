@@ -102,12 +102,21 @@ rem --- Use statements and Declares
     use ::sys/prog/bao_option.bbj::Option
     use ::sys/prog/bao_valid_card.bbj::CreditCard
     use ::sys/prog/bao_utilities.bbj::BarUtils
+	use ::bbtranslator.bbj::BBTranslator
     
     declare Callpoint callpoint!
     declare Option option!
     declare BBjVector custIds!
     declare BBjVector orderNos!
     declare CreditCard credCard!
+
+    declare BBTranslator Translate!
+    rdTransSpaceKey$=stbl("+PROPS_NAME")+"_"+stbl("+USER_LOCALE")+"_BBTranslator"
+    Translate!=cast(BBTranslator,BBjAPI().getGroupNamespace().getValue(rdTransSpaceKey$,err=*next))
+    if Translate!=null()
+        Translate!=BBTranslator.getInstance(stbl("+PROPS_NAME"),stbl("+USER_LOCALE"),null(),stbl("+PROPS_PATH"))
+        BBjAPI().getGroupNamespace().setValue(rdTransSpaceKey$,Translate!)
+    endif
 
 rem --- Retrieve the program path
 
@@ -167,7 +176,7 @@ rem --- Set Report Name & Subreport directory
 
 rem --- Open Files    
     
-	num_files=18
+	num_files=19
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
     open_tables$[1]="ARM_CUSTMAST",  open_opts$[1] = "OTA"
@@ -188,6 +197,7 @@ rem --- Open Files
     open_tables$[16]="OPC_LINECODE", open_opts$[16] = "OTA"
     open_tables$[17]="OPM_CUSTJOBS", open_opts$[17] = "OTA"
     open_tables$[18]="ARS_PARAMS",   open_opts$[18] = "OTA"
+    open_tables$[19]="ARS_CC_CUSTPMT",open_opts$[19] = "OTA"
     
     gosub open_tables
     
@@ -209,6 +219,7 @@ rem --- Open Files
     opm02_dev      = num(open_chans$[16])
     opm09_dev      = num(open_chans$[17])
     ars01a_dev     = num(open_chans$[18])
+    ars_cc_custpmt = num(open_chans$[19])
     
     dim arm01a$:open_tpls$[1]
     dim arm01a1$:open_tpls$[1]
@@ -229,6 +240,7 @@ rem --- Open Files
     dim opm02a$:open_tpls$[16]
     dim opm09a$:open_tpls$[17]
     dim ars01a$:open_tpls$[18]
+	dim ars_cc_custpmt$:open_tpls$[19]
     
 rem --- Parameters (company addresses)
 
@@ -292,6 +304,16 @@ rem --- Initialize Data
     endif
 
     emailFax! = BBjAPI().makeVector()
+
+rem --- get payment_url for the cash_rec_cd used for customer payments (only one record allowed at present)
+
+	readrecord(ars_cc_custpmt,key=firm_id$,dom=*next)
+	while 1
+		redim ars_cc_custpmt$
+		readrecord(ars_cc_custpmt,end=*break)ars_cc_custpmt$
+		if ars_cc_custpmt.firm_id$<>firm_id$ then break
+		if ars_cc_custpmt.allow_cust_cc$="Y" then break
+	wend
 
 rem --- See if this document is set up in Addon Report Control
 
@@ -443,6 +465,24 @@ rem --- Main Read
                     emailFax!.add(rpt_id$)
                     emailFax!.add(cust_id$)
                     emailFax!.add(new_doc_id$)
+					url$=cvs(ars_cc_custpmt.payment_url$,3)
+					if url$<>"" then
+						url_message$=Translate!.getTranslation("AON_PAY_ONLINE")+" "+url$
+						if reportControl!.getEmailYN()="Y" then
+							AdmRptctlRcp!=reportControl!.getAdmRptctlRcp()
+							email$=AdmRptctlRcp!.getFieldAsString("EMAIL_MESSAGE")
+							email$=cvs(email$,2)+$0A$+url_message$
+							AdmRptctlRcp!.setFieldValue("EMAIL_MESSAGE",email$)
+							reportControl!.setAdmRptctlRcp(AdmRptctlRcp!)
+						endif
+						if reportControl!.getFaxYN()="Y" then
+							AdmRptctlRcp!=reportControl!.getAdmRptctlRcp()
+							fax$=AdmRptctlRcp!.getFieldAsString("FAX_MESSAGE")
+							fax$=cvs(fax$,2)+$0A$+url_message$
+							AdmRptctlRcp!.setFieldValue("FAX_MESSAGE",fax$)
+							reportControl!.setAdmRptctlRcp(AdmRptctlRcp!)
+						endif
+					endif
                 endif
             endif
         endif

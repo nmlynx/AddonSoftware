@@ -572,7 +572,6 @@ rem --- Update XML Configuration File barista_installs.xml
     rd_temp_sep$=$01$	
 
 	gosub create_sscp
-	gosub create_web_context
 	
     rd_base_prop$="-tT0 -q -CP"+sscpName$+" -WD"+$22$+newAonLoc$+"/barista"+$22$+" -c"+$22$+newAonLoc$+"/barista/sys/config/enu/barista.cfg"+$22$+" "+$22$+newAonLoc$+"/barista/sys/prog/bar_login.bbj"+$22$+" - aon"
 
@@ -672,36 +671,6 @@ rem --- Create new session specific classpath (SSCP) in Enterprise Manager
     endif
 
 	return
-
-create_web_context: rem --- Create new Web Context in Enterprise Manager
-
-    declare BBjJettyServerConfiguration serverConfig!
-    declare BBjJettyContextConfiguration contextConfig!
-
-    serverConfig! = BBjAPI().getAdmin(rdAdmin!.getUser(), rdAdmin!.getPassword()).getJettyServerConfig()
-
-    rem --- Make sure we start with a clean fresh web context
-    serverConfig!.removeCustomContext(cvs(dbName$,3))
-    contextConfig! = serverConfig!.createCustomContext(cvs(dbName$,3))
-
-    contextConfig!.enable()
-    contextConfig!.setDocBase((new File(newAonLoc$+"/aon/web")).getAbsolutePath())
-    contextConfig!.setPath("/"+cvs(dbName$,3))
-    contextConfig!.setHTTP(0); rem --- Protocol: Allow insecure HPPT connections
-    contextConfig!.setHttpPort(8888)
-
-    rem --- BBJSP Servlets
-    contextConfig!.addBBjspServlet("AuthorizeWebhook", "/AuthorizeWebhook", (new File(newAonLoc$+"/aon/web/AuthorizeWebhook.aon")).getAbsolutePath())
-	contextConfig!.addBBjspServlet("AuthorizeConfirmation", "/AuthorizeConfirmation", (new File(newAonLoc$+"/aon/web/AuthorizeConfirmation.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("PayPalSilentPost", "/PayPalSilentPost", (new File(newAonLoc$+"/aon/web/PayPalSilentPost.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("PayPalSilentPostFailure", "/PayPalSilentPostFailure", (new File(newAonLoc$+"/aon/web/PayPalSilentPostFailure.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("PayPalError", "/PayPalError", (new File(newAonLoc$+"/aon/web/PayPalError.aon")).getAbsolutePath())
-
-    rem --- Session Cookie
-    contextConfig!.setSessionCookieHttpOnly(1)
-    contextConfig!.setSessionCookieSecure(1)
-
-    return
     
 fix_path: rem --- Flip directory path separators
 

@@ -51,7 +51,7 @@ datatemplate$ = datatemplate$ + "ship_addr_line1:C(30),ship_addr_line2:C(30),shi
 datatemplate$ = datatemplate$ + "ship_addr_line4:C(30),ship_addr_line5:C(30),ship_addr_line6:C(30),"
 datatemplate$ = datatemplate$ + "ship_addr_line7:C(30),"
 dataTemplate$ = dataTemplate$ + "salesrep_code:C(3),salesrep_desc:C(20),cust_po_num:C(20),ship_via:C(10),"
-dataTemplate$ = dataTemplate$ + "fob:C(15),ship_date:C(10),terms_code:C(3),terms_desc:C(20),"
+dataTemplate$ = dataTemplate$ + "fob:C(15),ship_date:C(10),terms_code:C(3),terms_desc:C(20),payment_url:C(1*),"
 datatemplate$ = datatemplate$ + "inv_std_message:C(1024*=1), paid_desc:C(20), paid_text1:C(40), paid_text2:C(40),"
 dataTemplate$ = dataTemplate$ + "discount_amt_raw:C(1*),tax_amt_raw:C(1*),freight_amt_raw:C(1*)"
 
@@ -86,7 +86,7 @@ rem --- Init
 rem --- Open Files    
 rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
 
-    files=13,begfile=1,endfile=files
+    files=14,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]    
 
     files$[1]="arm-01",       ids$[1]="ARM_CUSTMAST"
@@ -102,6 +102,7 @@ rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
     files$[11]="opt-41",      ids$[11]="OPE_INVCASH"    
     files$[12]="opm-09",      ids$[12]="OPM_CUSTJOBS"
     files$[13]="opc_message",      ids$[13]="OPC_MESSAGE"
+    files$[14]="ars_cc_custpmt",ids$[14]="ARS_CC_CUSTPMT"
 
 	call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
 
@@ -126,6 +127,7 @@ rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
     ope41_dev = channels[11]
     opm09_dev = channels[12]
     opc_message = channels[13]
+    ars_cc_custpmt=channels[14]
     
 	
     dim arm01a$:templates$[1]
@@ -142,6 +144,7 @@ rem --- Note 'files' and 'channels[]' are used in close loop, so don't re-use
     dim ope41a$:templates$[11]
     dim opm09a$:templates$[12]
     dim opc_message$:templates$[13]
+    dim ars_cc_custpmt$:templates$[14]
 	
 rem --- Initialize Data
 
@@ -176,6 +179,16 @@ rem --- Initialize Data
 	paid_desc$ =    ""
 	paid_text1$ =   ""
 	paid_text2$ =   ""
+
+rem --- Get payment_url for the cash_rec_cd used for customer payments (only one record allowed at present)
+
+	readrecord(ars_cc_custpmt,key=firm_id$,dom=*next)
+	while 1
+		redim ars_cc_custpmt$
+		readrecord(ars_cc_custpmt,end=*break)ars_cc_custpmt$
+		if ars_cc_custpmt.firm_id$<>firm_id$ then break
+		if ars_cc_custpmt.allow_cust_cc$="Y" then break
+	wend
 	
 rem --- Main Read
 
@@ -358,6 +371,7 @@ rem --- Format addresses to be bottom justified
         if len(memo_1024$) and memo_1024$(len(memo_1024$))=$0A$ then memo_1024$=memo_1024$(1,len(memo_1024$)-1); rem --- trim trailing newline
 		data!.setFieldValue("INV_STD_MESSAGE", memo_1024$)
 		
+		data!.setFieldValue("PAYMENT_URL", cvs(ars_cc_custpmt.payment_url$,2))
 		data!.setFieldValue("PAID_DESC", paid_desc$)
 		data!.setFieldValue("PAID_TEXT1", paid_text1$)
 		data!.setFieldValue("PAID_TEXT2", paid_text2$)

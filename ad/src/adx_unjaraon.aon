@@ -915,46 +915,7 @@ rem --- Create new session specific classpath (SSCP) in Enterprise Manager
         print(log_dev)meter_text$    
     endif
 
-rem --- Create new Web Context in Enterprise Manager
-
-    rem --- Increment progress meter
-    meterWin!=mainMeter!
-    meter_total_recs=mainMeterTotalRecs
-    mainMeterProcRecs=mainMeterProcRecs+1
-    meter_text$="Creating new Web Context"
-    meter_proc_recs=mainMeterProcRecs
-    meter_action$="MTR-LST"
-    gosub disp_meter
-    print(log_dev)
-    print(log_dev)meter_text$
-
-    declare BBjJettyServerConfiguration serverConfig!
-    declare BBjJettyContextConfiguration contextConfig!
-
-    serverConfig! = BBjAPI().getAdmin(rdAdmin!.getUser(), rdAdmin!.getPassword()).getJettyServerConfig()
-
-    rem --- Make sure we start with a clean fresh web context
-    serverConfig!.removeCustomContext(cvs(dbName$,3))
-    contextConfig! = serverConfig!.createCustomContext(cvs(dbName$,3))
-
-    contextConfig!.enable()
-    contextConfig!.setDocBase((new File(baseDir$+"/aon/web")).getAbsolutePath())
-    contextConfig!.setPath("/"+cvs(dbName$,3))
-    contextConfig!.setHTTP(0); rem --- Protocol: Allow insecure HPPT connections
-    contextConfig!.setHttpPort(8888)
-
-    rem --- BBJSP Servlets
-    contextConfig!.addBBjspServlet("AuthorizeWebhook", "/AuthorizeWebhook", (new File(baseDir$+"/aon/web/AuthorizeWebhook.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("AuthorizeConfirmation", "/AuthorizeConfirmation", (new File(baseDir$+"/aon/web/AuthorizeConfirmation.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("PayPalSilentPost", "/PayPalSilentPost", (new File(baseDir$+"/aon/web/PayPalSilentPost.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("PayPalSilentPostFailure", "/PayPalSilentPostFailure", (new File(baseDir$+"/aon/web/PayPalSilentPostFailure.aon")).getAbsolutePath())
-    contextConfig!.addBBjspServlet("PayPalError", "/PayPalError", (new File(baseDir$+"/aon/web/PayPalError.aon")).getAbsolutePath())
-
-    rem --- Session Cookie
-    contextConfig!.setSessionCookieHttpOnly(1)
-    contextConfig!.setSessionCookieSecure(1)
-
-    rem --- Update XML Configuration File barista_installs.xml
+rem --- Update XML Configuration File barista_installs.xml
     gosub update_barista_installs
     
 rem --- Launch auto-sync in new barista for the new addon.syn

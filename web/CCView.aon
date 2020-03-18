@@ -1,0 +1,51 @@
+REM /**
+REM  * CCView.aon - Base class for all view windows
+REM  * @author shaun
+REM  * Copyright BASIS International Ltd.  All Rights Reserved.
+REM  */
+
+use java.awt.Rectangle
+
+class public CCView
+	field protected BBjSysGui SysGui!=BBjAPI().openSysGui("X0")
+	field protected Rectangle Bounds!=#SysGui!.getSystemMetrics().getScreenBounds()
+	field protected BBjTopLevelWindow Win!
+	field protected BBjNumber WindowWidth=640
+	field protected BBjNumber WindowHeight=400
+	field protected static BBjString CreationOpts!=$01030010$
+
+	method public CCView()
+		#Win!=#getSysGui().addWindow(#getSysGui().getAvailableContext(),#getCenterX(),#getCenterY(),#WindowWidth, #WindowHeight,"CCView",#CreationOpts!)
+	methodend
+
+	method protected BBjNumber getCenterX()
+		methodret int(#Bounds!.width/2)-int(#WindowWidth/2)
+	methodend
+
+	method protected BBjNumber getCenterY()
+		methodret int(#Bounds!.height/2)-int(#WindowHeight/2)
+	methodend
+
+	method public void show()
+		if (#Win!<>null()) then
+			#Win!.setVisible(1)
+		endif
+	methodend
+
+	method public void hide()
+		if (#Win!<>null()) then
+			#Win!.setVisible(0)
+		endif
+	methodend
+	
+	method public void displayMessage(BBjString message$)
+        msg_id$="GENERIC_OK_CC"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=message$
+        msg_opt$=$$
+        dim table_chans$[10]
+        call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all]
+	methodend
+
+
+classend
