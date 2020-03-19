@@ -6,6 +6,7 @@ REM  */
 
 use java.io.File
 use java.util.Properties
+use java.util.UUID
 
 use com.basis.api.admin.BBjAdminBase
 
@@ -314,9 +315,13 @@ class public AO_CCUtil
             reportControl!.setDocExtension("PDF")
             reportControl!.addToDocQueue(#ParameterTable$,customerID!,"","NOATTACH")
       else 
-            REM TODO: Handle customer not being found in the recipient records. This means that the customer is not fully set up for payments.v
+            REM TODO: Handle customer not being found in the recipient records. This means that the customer is not fully set up for payments.
       endif 
     
+  methodend 
+  
+  method public static BBjString generateToken() 
+    methodret UUID.randomUUID().toString()
   methodend 
     
 classend 

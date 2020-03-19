@@ -61,11 +61,7 @@ class public CCRegistrationModel
     sqlexec (#SqlChan) user!.getFirmID(),user!.getUserName(), user!.getFirstName(),user!.getLastName(),user!.getUserEmail(), user!.getCustomerID(),rec!.getGeneratedToken(),rec!.getRequestDate()
     #emailRegistration(rec!)
   methodend 
-  
-  method public BBjString generateToken() 
-    methodret UUID.randomUUID().toString()
-  methodend 
-  
+    
   method public void emailRegistration(CCRegistrationRecord registration!)
 	declare ReportControl reportControl!
 	declare BBjNumber found 
@@ -84,8 +80,8 @@ class public CCRegistrationModel
 		emailMessage!=recipientInfo!.getFieldAsString("EMAIL_MESSAGE")
 		
 		REM Get the URL for registration from our parameter table
-		sqlprep(#SqlChan) "select REGISTER_URL from " + #UserModel!.getParameterTable() + " where FIRM_ID = '" + stbl("+FIRM_ID") + "'"
-		sqlexec(#SqlChan)
+		sqlprep(#SqlChan) "select REGISTER_URL from " + #UserModel!.getParameterTable() + " where FIRM_ID=? and UCASE(allow_cust_cc)='Y'"
+		sqlexec(#SqlChan) stbl("+FIRM_ID") 
 		dim result$:sqltmpl(#SqlChan)
 		result$=sqlfetch(#SqlChan)
 		url!=result.REGISTER_URL$
