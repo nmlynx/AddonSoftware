@@ -36,7 +36,8 @@ rem --- Create new session specific classpath (SSCP) in Enterprise Manager
 
     baristaPath$=java.lang.System.getProperty("basis.BBjHome").replace("\","/")+"/barista/"
     qcpath$=iff(copyData%,"/apps/","/")
-    baristaSubpath$="barista"
+    baristaSubpath$="barista_internal"
+    addonPath$="addon_internal"
     newBaristaSubpath$="barista_"+sscpName$
     
     rem --- first, create new barista sub-classpath
@@ -51,8 +52,8 @@ rem --- Create new session specific classpath (SSCP) in Enterprise Manager
     endif
 
     paths!=BBjAPI().makeVector()
-    paths!=env!.getClasspath(BBjAPI().getConfig().getCurrentCommandLineObject().getOriginalClasspathName(),err=*next)
-
+rem    paths!=env!.getClasspath(BBjAPI().getConfig().getCurrentCommandLineObject().getOriginalClasspathName(),err=*next)
+    paths!=env!.getClasspath(addonPath$)
     if paths!.size()>0
         for i=0 to paths!.size()-1
             paths!.setItem(i,paths!.getItem(i).replace("\","/"))
