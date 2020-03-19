@@ -86,6 +86,14 @@ class public AO_CCUserModel
         
     methodend 
     
+    method public BBjString getLoggedInUser()
+        if (#LoggedIn) then
+            methodret #UserName$
+        else
+            methodret ""
+        endif 
+    methodend 
+    
     method public BBjString getActivatedDate(BBjString user$)
         sqlprep (#SqlChan) "select activated_date from arc_cc_users where firm_id='"+stbl("+FIRM_ID")+"' and cc_username=?"
         sqlexec (#SqlChan) user$
@@ -120,8 +128,8 @@ class public AO_CCUserModel
     methodend 
     
     REM Method for allowing the user to change their password
-    method public void changePassword(BBjString newPassword$)
-        CCUtil.getAdmin().changePassword(#getEMUserName(#UserName$),newPassword$)
+    method public void changePassword(BBjString userName$, BBjString newPassword$)
+        CCUtil.getAdmin().changePassword(#getEMUserName(userName$),newPassword$)
     methodend 
     
     method protected void setLastUsedDate()
@@ -193,8 +201,8 @@ class public AO_CCUserModel
           emailMessage!="Here is your new password: "+password$
           
           REM Get the URL for payments from our parameter table
-          sqlprep(#SqlChan) "select PAYMENT_URL from " + #ParameterTable$ + " where FIRM_ID = '" + stbl("+FIRM_ID") + "'"
-          sqlexec(#SqlChan)
+          sqlprep(#SqlChan) "select PAYMENT_URL from " + #ParameterTable$ + " where FIRM_ID = ? and  UCASE(allow_cust_cc)='Y'"
+          sqlexec(#SqlChan) stbl("+FIRM_ID")
           dim result$:sqltmpl(#SqlChan)
           result$=sqlfetch(#SqlChan)
           url!=result.PAYMENT_URL$
@@ -216,24 +224,24 @@ class public AO_CCUserModel
       endif 
       
     methodend 
-
-  REM Generate a password for the credit card processing system using the BASE64 alphabet
-  method protected BBjString generatePassword() 
-    REM length of password
-    declare BBjNumber length
+    
+    REM Generate a password for the credit card processing system using the BASE64 alphabet
+    method protected BBjString generatePassword() 
+      REM length of password
+      declare BBjNumber length
+    
+      REM A unique ID to use as a random sequence
+      declare BBjString randomSequence!
+      
+      REM the password to be generated 
+      declare BBjString password!
   
-    REM A unique ID to use as a random sequence
-    declare BBjString randomSequence!
-    
-    REM the password to be generated 
-    declare BBjString password!
-
-    randomSequence!=UUID.randomUUID().toString().replace("-","")
-    password!=Base64.getEncoder().encode(randomSequence!)
-    length=8+rnd(9)
-    password!=password!.substring(0,length)
-    
-    methodret password!
+      randomSequence!=UUID.randomUUID().toString().replace("-","")
+      password!=Base64.getEncoder().encode(randomSequence!)
+      length=8+rnd(9)
+      password!=password!.substring(0,length)
+      
+      methodret password!
   methodend 
   
   REM Generate an EM Username for a new user
