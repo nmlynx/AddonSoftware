@@ -542,7 +542,7 @@ update_dd_atr_cpgm: rem --- Update the "../apps/" paths in DD_ATTR_CPGM
             if pos("../apps/"=path$)<>1 then continue
 
             rem --- Update path with new installation base directory
-            path$=newAonLoc$+path$(8)
+            path$=newAonLoc$+path$(3)
             field table$,"DD_ATTR_CPGM"=path$
             table$=field(table$)
             writerecord(table_dev2)table$
