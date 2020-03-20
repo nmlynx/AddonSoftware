@@ -126,6 +126,12 @@ rem --- CreditCardConfirmation web app
 	css$=(new File(aonDir$+"/htdocs/CCLogin.css")).getAbsolutePath()
 	gosub configureWebApp
 
+rem --- CreditCardPassword web app
+	appName$="CreditCardPassword_"+cvs(dbName$,11)+"_"+firm_id$
+	program$=(new File(aonDir$+"/web/CCForgotPasswordManager.aon")).getAbsolutePath()
+	css$=(new File(aonDir$+"/htdocs/CCLogin.css")).getAbsolutePath()
+	gosub configureWebApp
+
 rem --- Initialize Payment URL
 	field$="ARS_CC_CUSTPMT.PAYMENT_URL"
 	default_URL$="https://"+gatewayServer$+"/"+cvs(dbName$,11)+"/apps/CreditCardLogin_"+ cvs(dbName$,11) +"_"+firm_id$
@@ -134,6 +140,11 @@ rem --- Initialize Payment URL
 rem --- Initialize Registration URL
 	field$="ARS_CC_CUSTPMT.REGISTER_URL"
 	default_URL$="https://"+gatewayServer$+"/"+cvs(dbName$,11)+"/apps/CreditCardConfirmation_"+ cvs(dbName$,11) +"_"+firm_id$
+	gosub configureURL
+
+rem --- Initialize Password Reset URL
+	field$="ARS_CC_CUSTPMT.PASSWORD_URL"
+	default_URL$="https://"+gatewayServer$+"/"+cvs(dbName$,11)+"/apps/CreditCardPassword_"+ cvs(dbName$,11) +"_"+firm_id$
 	gosub configureURL
 
 rem --- Task completed

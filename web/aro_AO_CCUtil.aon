@@ -183,12 +183,13 @@ class public AO_CCUtil
         declare BBjString msg_opt$
         
         rem --- open, then close tables to ensure they get created if not yet present; prevents err 77 in queries
-        num_files=4
+        num_files=5
         dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
         open_tables$[1]="ARC_CC_REGISTER",open_opts$[1]="OTA"
         open_tables$[2]="ARC_CC_USERS",open_opts$[2]="OTA"
         open_tables$[3]="ARM_CUSTMAST",open_opts$[3]="OTA"
         open_tables$[4]="ARS_CC_CUSTPMT",open_opts$[4]="OTA"
+        open_tables$[5]="ARC_CC_PWDREQ",open_opts$[5]="OTA"
 
         call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],table_chans$[all],open_batch,open_status$
 
