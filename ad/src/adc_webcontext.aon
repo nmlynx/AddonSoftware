@@ -38,7 +38,8 @@ rem --- Create new Web Context in Enterprise Manager
     contextConfig! = serverConfig!.createCustomContext(cvs(dbName$,11))
 
     contextConfig!.enable()
-    contextConfig!.setDocBase((new File(aonLoc$+"/htdocs")).getAbsolutePath())
+    filePath$=(new File(aonLoc$+"/htdocs")).getAbsolutePath()
+    contextConfig!.setDocBase(BBjapi().getFileSystem().resolvePath(filePath$))
     contextConfig!.setPath("/"+cvs(dbName$,11))
     contextConfig!.setConfig(barDir$+stbl("+FILE_CFG"))
     if db_name$="AddonSoftware" then
@@ -64,7 +65,8 @@ rem --- Add BBJSP Servlets
     
     for i=0 to servlets!.size()-1
         servletName$=servlets!.getItem(i)
-        contextConfig!.addBBjspServlet(servletName$, "/"+servletName$, (new File(aonLoc$+"/web/"+servletName$+".aon")).getAbsolutePath())
+        filePath$=(new File(aonLoc$+"/web/"+servletName$+".aon")).getAbsolutePath()
+        contextConfig!.addBBjspServlet(servletName$, "/"+servletName$, BBjapi().getFileSystem().resolvePath(filePath$))
         servletContext!=contextConfig!.getBBjspServlet("/"+servletName$)
         servletContext!.setConfig(barDir$+stbl("+FILE_CFG"))
         servletContext!.setClassPath(sscpName$)
