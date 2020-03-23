@@ -1,158 +1,92 @@
-[[ARM_CUSTMAST.PAY_AUTH_EMAIL.BINP]]
-rem --- Warn when pay_auth_email doesn't match ARS_CC_CUSTPMT Report Control Recipients email-to address
-	if callpoint!.getDevObject("match_email_to")<>"OK" then
-		rem --- Set background color for bad pay_auth_email
-		payAuthEmail!=callpoint!.getControl("ARM_CUSTMAST.PAY_AUTH_EMAIL")
+[[ARM_CUSTMAST.ADIS]]
+rem --- retrieve dashboard pie or bar chart widget and refresh for current customer/balances
+rem --- pie if all balances >=0, bar if any negatives, hide if all bals are 0
+
+	rem --- test to see if widgets need to be re-created
+	rem --- possible they've been destroyed if cust form was launched again from here (via Expresso or an option entry hyperlink)
+
+	agingPieWidgetControl!=callpoint!.getDevObject("dbPieWidgetControl")
+	agingBarWidgetControl!=callpoint!.getDevObject("dbBarWidgetControl")
+
+	if agingPieWidgetControl!.isDestroyed() or agingBarWidgetControl!.isDestroyed()
+		gosub create_widgets
+	endif
+
+	bal_fut=num(callpoint!.getColumnData("ARM_CUSTDET.AGING_FUTURE"))
+	bal_cur=num(callpoint!.getColumnData("ARM_CUSTDET.AGING_CUR"))
+	bal_30=num(callpoint!.getColumnData("ARM_CUSTDET.AGING_30"))
+	bal_60=num(callpoint!.getColumnData("ARM_CUSTDET.AGING_60"))
+	bal_90=num(callpoint!.getColumnData("ARM_CUSTDET.AGING_90"))
+	bal_120=num(callpoint!.getColumnData("ARM_CUSTDET.AGING_120"))
+
+
+	if bal_fut<0 or bal_cur<0 or bal_30<0 or bal_60<0 or bal_90<0 or bal_120<0
+
+		agingDashboardBarWidget!=callpoint!.getDevObject("dbBarWidget")
+		agingBarWidget! = agingDashboardBarWidget!.getWidget()
+		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_FUT","Fut",1), "",bal_fut)
+		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_CUR","Cur",1), "", bal_cur)
+		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_30","30",1),"", bal_30)
+		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_60","60",1), "", bal_60)
+		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_90","90",1), "", bal_90)
+		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_120","120",1), "", bal_120)
+		agingBarWidget!.refresh()
+
+		agingPieWidgetControl!=callpoint!.getDevObject("dbPieWidgetControl")
+		agingBarWidgetControl!=callpoint!.getDevObject("dbBarWidgetControl")	
+		agingPieWidgetControl!.setVisible(0)
+		agingBarWidgetControl!.setVisible(1)
+
+	else
+
+		agingDashboardPieWidget!=callpoint!.getDevObject("dbPieWidget")
+		agingPieWidget! = agingDashboardPieWidget!.getWidget()
+		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_FUTURE","Future",1), bal_fut)
+		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_CURRENT","Current",1), bal_cur)
+		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_30_DAYS","30 Days",1), bal_30 )
+		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_60_DAYS","60 days",1), bal_60)
+		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_90_DAYS","90 days",1), bal_90)
+		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_120_DAYS","120 days",1), bal_120)
+		agingPieWidget!.refresh()
+
+		agingPieWidgetControl!=callpoint!.getDevObject("dbPieWidgetControl")
+		agingBarWidgetControl!=callpoint!.getDevObject("dbBarWidgetControl")	
+		agingPieWidgetControl!.setVisible(1)
+		agingBarWidgetControl!.setVisible(0)
+
+	endif
+
+rem --- Draw attention when pay_auth_email doesn't match ARS_CC_CUSTPMT Report Control Recipients email-to address
+	rem --- Get customer's ARS_CC_CUSTPMT Report Control Recipients email-to address
+	customer_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+	admRptCtlRcp_dev=fnget_dev("ADM_RPTCTL_RCP")
+	dim admRptCtlRcp$:fnget_tpl$("ADM_RPTCTL_RCP")
+	admRptCtlRcp.dd_table_alias$="ARS_CC_CUSTPMT"
+	findrecord(admRptCtlRcp_dev,key=firm_id$+admRptCtlRcp.dd_table_alias$+customer_id$+admRptCtlRcp.vendor_id$,dom=*next)admRptCtlRcp$
+	if cvs(admRptCtlRcp.customer_id$,3)<>"" then
+		email_to$=admRptCtlRcp.email_to$
+	else
+		email_to$=""
+	endif
+	callpoint!.setDevObject("recipient_email_to",email_to$)
+
+	rem --- Set background color for pay_auth_email
+	payAuthEmail!=callpoint!.getControl("ARM_CUSTMAST.PAY_AUTH_EMAIL")
+
+	if cvs(callpoint!.getColumnData("ARM_CUSTMAST.PAY_AUTH_EMAIL"),3)<>cvs(email_to$,3) and cvs(email_to$,3)<>"" then
 		call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
 		payAuthEmail!.setBackColor(rdErrorColor!)
 		callpoint!.setDevObject("match_email_to","BAD")
-
-		rem --- Warn pay_auth_email doesn't match ARS_CC_CUSTPMT Report Control Recipients email-to address
-		msg_id$="AR_FIX_PAYAUTHEMAIL"
-		dim msg_tokens$[1]
-		gosub disp_message
-		if msg_opt$="Y" then
-			recipient_email_to$=callpoint!.getDevObject("recipient_email_to")
-			callpoint!.setColumnData("ARM_CUSTMAST.PAY_AUTH_EMAIL",recipient_email_to$,1)
-			callpoint!.setDevObject("match_email_to","OK")
-			callpoint!.setStatus("MODIFIED")
-		endif
-	endif
-[[ARM_CUSTMAST.PAY_AUTH_EMAIL.AVAL]]
-rem --- Warn when pay_auth_email doesn't match ARS_CC_CUSTPMT Report Control Recipients email-to address
-	pay_auth_email$=callpoint!.getUserInput()
-	recipient_email_to$=cvs(callpoint!.getDevObject("recipient_email_to"),2)
-	if recipient_email_to$<>"" and pay_auth_email$<>callpoint!.getColumnData("ARM_CUSTMAST.PAY_AUTH_EMAIL") then
-		if cvs(pay_auth_email$,2)<>recipient_email_to$ then
-			rem --- Set background color for bad pay_auth_email
-			payAuthEmail!=callpoint!.getControl("ARM_CUSTMAST.PAY_AUTH_EMAIL")
-			call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
-			payAuthEmail!.setBackColor(rdErrorColor!)
-			callpoint!.setDevObject("match_email_to","BAD")
-
-			rem --- Warn pay_auth_email doesn't match ARS_CC_CUSTPMT Report Control Recipients email-to address
-			msg_id$="AR_FIX_PAYAUTHEMAIL"
-			dim msg_tokens$[1]
-			gosub disp_message
-			if msg_opt$="Y" then
-				recipient_email_to$=callpoint!.getDevObject("recipient_email_to")
-				callpoint!.setUserInput(recipient_email_to$)
-				callpoint!.setDevObject("match_email_to","OK")
-				callpoint!.setStatus("MODIFIED")
-			else
-				rem --- Set background color for bad pay_auth_email
-				payAuthEmail!.setBackColor(rdErrorColor!)
-			endif
-		endif
-	endif
-[[ARM_CUSTMAST.AWRI]]
-rem --- Add ARS_CC_CUSTPMT Report Control Recipients record for this customer if one doesn't already exist
-	if cvs(callpoint!.getColumnData("ARM_CUSTMAST.PAY_AUTH_EMAIL"),3)<>"" then
-		customer_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
-		admRptCtlRcp_dev=fnget_dev("ADM_RPTCTL_RCP")
-		dim admRptCtlRcp$:fnget_tpl$("ADM_RPTCTL_RCP")
-		admRptCtlRcp.dd_table_alias$="ARS_CC_CUSTPMT"
-		findrecord(admRptCtlRcp_dev,key=firm_id$+admRptCtlRcp.dd_table_alias$+customer_id$+admRptCtlRcp.vendor_id$,dom=*next)admRptCtlRcp$
-
-		if cvs(admRptCtlRcp.customer_id$,3)="" then
-			rem --- Add ARS_CC_CUSTPMT record for this customer
-			redim admRptCtlRcp$
-			admRptCtlRcp.firm_id$=firm_id$
-			admRptCtlRcp.dd_table_alias$="ARS_CC_CUSTPMT"
-			admRptCtlRcp.customer_id$=customer_id$
-			admRptCtlRcp.email_yn$="Y"
-			admRptCtlRcp.email_to$=callpoint!.getColumnData("ARM_CUSTMAST.PAY_AUTH_EMAIL")
-
-			rem --- Use Report Control default subject and message
-			admRptCtl_dev=fnget_dev("ADM_RPTCTL")
-			dim admRptCtl$:fnget_tpl$("ADM_RPTCTL")
-			findrecord(admRptCtl_dev,key=firm_id$+admRptCtlRcp.dd_table_alias$,dom=*endif)admRptCtl$
-			admRptCtlRcp.email_subject$=admRptCtl.dflt_subject$
-			admRptCtlRcp.email_message$=admRptCtl.dflt_message$
-
-			rem --- If available, use Report Control email account's from and reply-to
-			admEmailAcct_dev=fnget_dev("ADM_EMAIL_ACCT")
-			dim admEmailAcct$:fnget_tpl$("ADM_EMAIL_ACCT")
-			findrecord(admEmailAcct_dev,key=firm_id$+admRptCtl.email_account$,dom=*next)admEmailAcct$
-			if cvs(admEmailAcct.email_account$,3)<>"" then
-				admRptCtlRcp.email_from$=admEmailAcct.email_from$
-				admRptCtlRcp.email_replyto$=admEmailAcct.email_replyto$
-			endif
-
-			admRptCtlRcp$=field(admRptCtlRcp$)
-			writerecord(admRptCtlRcp_dev)admRptCtlRcp$
-			callpoint!.setDevObject("recipient_email_to",admRptCtlRcp.email_to$)
-			callpoint!.setDevObject("match_email_to","OK")
-		endif
+	else
+		addrLine1!=callpoint!.getControl("ARM_CUSTMAST.ADDR_LINE_1")
+		payAuthEmail!.setBackColor(addrLine1!.getBackColor())
+		callpoint!.setDevObject("match_email_to","OK")
 	endif
 
-	if callpoint!.getDevObject("match_email_to")<>"OK" then
-		rem --- Set background color for bad pay_auth_email
-		payAuthEmail!=callpoint!.getControl("ARM_CUSTMAST.PAY_AUTH_EMAIL")
-		call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
-		payAuthEmail!.setBackColor(rdErrorColor!)
-	endif
-[[ARM_CUSTMAST.AOPT-PYMT]]
-rem --- Select invoice(s) for credit card payment
-rem --- May be done via PayPal or Authorize.net hosted page
-rem --- or using J2Pay library, as specified in ars_cc_custsvc
 
-	cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
-	user_id$=stbl("+USER_ID")
 
-	arm_emailfax=fnget_dev("ARM_EMAILFAX")
-	dim arm_emailfax$:fnget_tpl$("ARM_EMAILFAX")
-	readrecord(arm_emailfax,key=firm_id$+cp_cust_id$,dom=*next)arm_emailfax$
+	
 
-	dim dflt_data$[9,1]
-	dflt_data$[1,0]="CUSTOMER_ID"
-	dflt_data$[1,1]=cp_cust_id$
-	dflt_data$[2,0]="ADDRESS_LINE_1"
-	dflt_data$[2,1]=callpoint!.getColumnData("ARM_CUSTMAST.ADDR_LINE_1")
-	dflt_data$[3,0]="ADDRESS_LINE_2"
-	dflt_data$[3,1]=callpoint!.getColumnData("ARM_CUSTMAST.ADDR_LINE_2")
-	dflt_data$[4,0]="CITY"
-	dflt_data$[4,1]=callpoint!.getColumnData("ARM_CUSTMAST.CITY")
-	dflt_data$[5,0]="STATE_CODE"
-	dflt_data$[5,1]=callpoint!.getColumnData("ARM_CUSTMAST.STATE_CODE")
-	dflt_data$[6,0]="ZIP_CODE"
-	dflt_data$[6,1]=callpoint!.getColumnData("ARM_CUSTMAST.ZIP_CODE")
-	dflt_data$[7,0]="CNTRY_ID"
-	dflt_data$[7,1]=callpoint!.getColumnData("ARM_CUSTMAST.CNTRY_ID")
-	dflt_data$[8,0]="PHONE_NO"
-	dflt_data$[8,1]=callpoint!.getColumnData("ARM_CUSTMAST.PHONE_NO")
-	dflt_data$[9,0]="EMAIL_ADDR"
-	dflt_data$[9,1]=arm_emailfax.email_to$
-
-	key_pfx$=cp_cust_id$
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:		"ARE_CCPMT",
-:                user_id$,
-:                "",
-:                key_pfx$,
-:                table_chans$[all],
-:                "",
-:                dflt_data$[all]
-[[ARM_CUSTMAST.AOPT-RESP]]
-rem --- view electronic receipt response, if applicable 
-	user_id$=stbl("+USER_ID")  
-	cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
-
-	dim dflt_data$[1,1]
-	dflt_data$[0,0]="ART_RESPHDR.FIRM_ID"
-	dflt_data$[0,1]=firm_id$
-	dflt_data$[1,0]="ART_RESPHDR.CUSTOMER_ID"
-	dflt_data$[1,1]=cust_id$
-
-	key_pfx$=callpoint!.getColumnData("ARM_CUSTMAST.FIRM_ID")+callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:		"ART_RESPHDR",
-:		user_id$,
-:		"",
-:		key_pfx$,
-:		table_chans$[all],
-:		"",
-:		dflt_data$[all]
 [[ARM_CUSTMAST.AOPT-CRDT]]
 rem --- Launch Customer Maitenance form for this customer
 	user_id$=stbl("+USER_ID")
@@ -233,55 +167,45 @@ rem --- Refresh data that might have been changed in Credit Maintenance
 	callpoint!.setColumnData("ARM_CUSTDET.CRED_HOLD",str(callpoint!.getDevObject("cred_hold")),1)
 	callpoint!.setColumnData("ARM_CUSTDET.CREDIT_LIMIT",str(callpoint!.getDevObject("cred_limit")),1)
 	callpoint!.setColumnData("ARM_CUSTMAST.MEMO_1024",str(callpoint!.getDevObject("memo_1024")),1)
-[[ARM_CUSTMAST.BEND]]
-rem --- call the close() method for the gmClient! object on the way out
 
-	if user_tpl.gm_installed$="Y" then
-		gmClient!=callpoint!.getDevObject("gmClient")
-		gmClient!.close()
-	endif
+[[ARM_CUSTMAST.AOPT-HCPY]]
+rem --- Go run the Hard Copy form
 
-		
-[[ARM_CUSTMAST.AOPT-PRIC]]
-rem --- Launch Price Quote Inquiry form
+	callpoint!.setDevObject("cust_id",callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID"))
+	cust$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+
 	dim dflt_data$[2,1]
-	dflt_data$[1,0]="FIRM_ID"
-	dflt_data$[1,1]=firm_id$
-	dflt_data$[2,0]="CUSTOMER_ID"
-	dflt_data$[2,1]=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+	dflt_data$[1,0]="CUSTOMER_ID_1"
+	dflt_data$[1,1]=cust$
+	dflt_data$[2,0]="CUSTOMER_ID_2"
+	dflt_data$[2,1]=cust$
 
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:		"OPE_PRICEQUOTE",
+:		"ARR_DETAIL",
 :		stbl("+USER_ID"),
 :		"MNT",
 :		"",
 :		table_chans$[all],
 :		"",
 :		dflt_data$[all]
-[[ARM_CUSTMAST.AOPT-SHST]]
-rem --- Launch customer sales analysis form
-	user_id$=stbl("+USER_ID")
-	year$=sysinfo.system_date$(1,4)
-	customer_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
-	key_pfx$=firm_id$+year$+customer_id$
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:		"SAM_CUSTOMER",
-:		user_id$,
-:		"",
-:		key_pfx$,
-:		table_chans$[all]
-[[ARM_CUSTDET.AR_TERMS_CODE.AVAL]]
-rem --- look up terms code, arm10A...if cred_hold is Y for this terms code,
-rem --- and cm$ is Y, set arm_custdet.cred_hold to Y as well
-if user_tpl.cm_installed$="Y"
-	ar_terms_code$=callpoint!.getUserInput()
-	arc_termcode_dev=fnget_dev("ARC_TERMCODE")
-	dim arc_termcode$:fnget_tpl$("ARC_TERMCODE")
-	read record (arc_termcode_dev,key=firm_id$+"A"+ar_terms_code$,dom=*break)arc_termcode$
-	if arc_termcode.cred_hold$="Y"
-		callpoint!.setColumnData("ARM_CUSTDET.CRED_HOLD","Y",1)
-	endif
-endif
+
+[[ARM_CUSTMAST.AOPT-IDTL]]
+rem Invoice Dtl Inquiry
+
+cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+user_id$=stbl("+USER_ID")
+dim dflt_data$[2,1]
+dflt_data$[1,0]="CUSTOMER_ID"
+dflt_data$[1,1]=cp_cust_id$
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:                       "ARR_INVDETAIL",
+:                       user_id$,
+:                   	"",
+:                       "",
+:                       table_chans$[all],
+:                       "",
+:                       dflt_data$[all]
+
 [[ARM_CUSTMAST.AOPT-INVC]]
 rem --- Show invoices
 
@@ -324,6 +248,7 @@ rem --- Show invoices
 :		search_defs$[all],
 :		"",
 :		"AO_STATUS"
+
 [[ARM_CUSTMAST.AOPT-ORDR]]
 rem --- Show orders
 
@@ -366,6 +291,91 @@ rem --- Show orders
 :		search_defs$[all],
 :		"",
 :		"AO_STATUS"
+
+[[ARM_CUSTMAST.AOPT-ORIV]]
+rem Order/Invoice History Inq
+rem --- assume this should only run if OP installed...
+	if user_tpl.op_installed$="Y"
+		cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+		user_id$=stbl("+USER_ID")
+		dim dflt_data$[2,1]
+		dflt_data$[1,0]="CUSTOMER_ID"
+		dflt_data$[1,1]=cp_cust_id$
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:                           "ARR_ORDINVHIST",
+:                           user_id$,
+:                   	    "",
+:                           "",
+:                           table_chans$[all],
+:                           "",
+:                           dflt_data$[all]
+	else
+		msg_id$="AD_NO_OP"
+		dim msg_tokens$[1]
+		msg_opt$=""
+		gosub disp_message
+	endif
+	callpoint!.setStatus("ACTIVATE")
+
+[[ARM_CUSTMAST.AOPT-PRIC]]
+rem --- Launch Price Quote Inquiry form
+	dim dflt_data$[2,1]
+	dflt_data$[1,0]="FIRM_ID"
+	dflt_data$[1,1]=firm_id$
+	dflt_data$[2,0]="CUSTOMER_ID"
+	dflt_data$[2,1]=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"OPE_PRICEQUOTE",
+:		stbl("+USER_ID"),
+:		"MNT",
+:		"",
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
+[[ARM_CUSTMAST.AOPT-PYMT]]
+rem --- Select invoice(s) for credit card payment
+rem --- May be done via PayPal or Authorize.net hosted page
+rem --- or using J2Pay library, as specified in ars_cc_custsvc
+
+	cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+	user_id$=stbl("+USER_ID")
+
+	arm_emailfax=fnget_dev("ARM_EMAILFAX")
+	dim arm_emailfax$:fnget_tpl$("ARM_EMAILFAX")
+	readrecord(arm_emailfax,key=firm_id$+cp_cust_id$,dom=*next)arm_emailfax$
+
+	dim dflt_data$[9,1]
+	dflt_data$[1,0]="CUSTOMER_ID"
+	dflt_data$[1,1]=cp_cust_id$
+	dflt_data$[2,0]="ADDRESS_LINE_1"
+	dflt_data$[2,1]=callpoint!.getColumnData("ARM_CUSTMAST.ADDR_LINE_1")
+	dflt_data$[3,0]="ADDRESS_LINE_2"
+	dflt_data$[3,1]=callpoint!.getColumnData("ARM_CUSTMAST.ADDR_LINE_2")
+	dflt_data$[4,0]="CITY"
+	dflt_data$[4,1]=callpoint!.getColumnData("ARM_CUSTMAST.CITY")
+	dflt_data$[5,0]="STATE_CODE"
+	dflt_data$[5,1]=callpoint!.getColumnData("ARM_CUSTMAST.STATE_CODE")
+	dflt_data$[6,0]="ZIP_CODE"
+	dflt_data$[6,1]=callpoint!.getColumnData("ARM_CUSTMAST.ZIP_CODE")
+	dflt_data$[7,0]="CNTRY_ID"
+	dflt_data$[7,1]=callpoint!.getColumnData("ARM_CUSTMAST.CNTRY_ID")
+	dflt_data$[8,0]="PHONE_NO"
+	dflt_data$[8,1]=callpoint!.getColumnData("ARM_CUSTMAST.PHONE_NO")
+	dflt_data$[9,0]="EMAIL_ADDR"
+	dflt_data$[9,1]=arm_emailfax.email_to$
+
+	key_pfx$=cp_cust_id$
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"ARE_CCPMT",
+:                user_id$,
+:                "",
+:                key_pfx$,
+:                table_chans$[all],
+:                "",
+:                dflt_data$[all]
+
 [[ARM_CUSTMAST.AOPT-QUOT]]
 rem --- Show quotes
 
@@ -405,6 +415,436 @@ rem --- Show quotes
 :		search_defs$[all],
 :		"",
 :		"AO_STATUS"
+
+[[ARM_CUSTMAST.AOPT-RESP]]
+rem --- view electronic receipt response, if applicable 
+	user_id$=stbl("+USER_ID")  
+	cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+
+	dim dflt_data$[1,1]
+	dflt_data$[0,0]="ART_RESPHDR.FIRM_ID"
+	dflt_data$[0,1]=firm_id$
+	dflt_data$[1,0]="ART_RESPHDR.CUSTOMER_ID"
+	dflt_data$[1,1]=cust_id$
+
+	key_pfx$=callpoint!.getColumnData("ARM_CUSTMAST.FIRM_ID")+callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"ART_RESPHDR",
+:		user_id$,
+:		"",
+:		key_pfx$,
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
+[[ARM_CUSTMAST.AOPT-SHST]]
+rem --- Launch customer sales analysis form
+	user_id$=stbl("+USER_ID")
+	year$=sysinfo.system_date$(1,4)
+	customer_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+	key_pfx$=firm_id$+year$+customer_id$
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"SAM_CUSTOMER",
+:		user_id$,
+:		"",
+:		key_pfx$,
+:		table_chans$[all]
+
+[[ARM_CUSTMAST.AOPT-STMT]]
+rem On Demand Statement
+
+cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+user_id$=stbl("+USER_ID")
+key_pfx$=cp_cust_id$
+
+dim dflt_data$[2,1]
+dflt_data$[1,0]="CUSTOMER_ID"
+dflt_data$[1,1]=cp_cust_id$
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:                       "ARR_STMT_DEMAND",
+:                       user_id$,
+:                   	"",
+:                       key_pfx$,
+:                       table_chans$[all],
+:                       "",
+:                       dflt_data$[all]
+
+[[ARM_CUSTMAST.AREA]]
+rem --- Set New Customer flag
+	user_tpl.new_cust$="N"
+
+[[ARM_CUSTMAST.AREC]]
+rem --- notes about defaults, other init:
+rem --- if cm$ installed, and ars01c.hold_new$ is "Y", then default arm02a.cred_hold$ to "Y"
+rem --- default arm02a.slspsn_code$,ar_terms_code$,disc_code$,ar_dist_code$,territory$,tax_code$
+rem --- and inv_hist_flg$ per defaults in ops10d
+dim ars10d$:user_tpl.cust_dflt_tpl$
+ars10d$=user_tpl.cust_dflt_rec$
+callpoint!.setColumnData("ARM_CUSTMAST.AR_SHIP_VIA",ars10d.ar_ship_via$,1)
+callpoint!.setColumnUndoData("ARM_CUSTMAST.AR_SHIP_VIA",ars10d.ar_ship_via$)
+callpoint!.setColumnData("ARM_CUSTMAST.FOB",ars10d.fob$,1)
+callpoint!.setColumnUndoData("ARM_CUSTMAST.FOB",ars10d.fob$)
+callpoint!.setColumnData("ARM_CUSTMAST.OPENED_DATE",date(0:"%Yd%Mz%Dz"))
+callpoint!.setColumnData("ARM_CUSTMAST.RETAIN_CUST","Y")
+
+callpoint!.setColumnData("ARM_CUSTDET.AR_TERMS_CODE",ars10d.ar_terms_code$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.AR_TERMS_CODE",ars10d.ar_terms_code$)
+callpoint!.setColumnData("ARM_CUSTDET.AR_DIST_CODE",ars10d.ar_dist_code$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.AR_DIST_CODE",ars10d.ar_dist_code$)
+callpoint!.setColumnData("ARM_CUSTDET.SLSPSN_CODE",ars10d.slspsn_code$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.SLSPSN_CODE",ars10d.slspsn_code$)
+callpoint!.setColumnData("ARM_CUSTDET.DISC_CODE",ars10d.disc_code$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.DISC_CODE",ars10d.disc_code$)
+callpoint!.setColumnData("ARM_CUSTDET.TERRITORY",ars10d.territory$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.TERRITORY",ars10d.territory$)
+callpoint!.setColumnData("ARM_CUSTDET.TAX_CODE",ars10d.tax_code$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.TAX_CODE",ars10d.tax_code$)
+if cvs(ars10d.inv_hist_flg$,2)<>"" then
+	callpoint!.setColumnData("ARM_CUSTDET.INV_HIST_FLG",ars10d.inv_hist_flg$,1)
+	callpoint!.setColumnUndoData("ARM_CUSTDET.INV_HIST_FLG",ars10d.inv_hist_flg$)
+else
+	callpoint!.setColumnData("ARM_CUSTDET.INV_HIST_FLG","Y",1)
+	callpoint!.setColumnUndoData("ARM_CUSTDET.INV_HIST_FLG","Y")
+endif
+if cvs(ars10d.cred_hold$,2)<>"" then
+	callpoint!.setColumnData("ARM_CUSTDET.CRED_HOLD",ars10d.cred_hold$,1)
+	callpoint!.setColumnUndoData("ARM_CUSTDET.CRED_HOLD",ars10d.cred_hold$)
+else
+	if user_tpl.cm_installed$="Y" then 
+		callpoint!.setColumnData("ARM_CUSTDET.CRED_HOLD",user_tpl.dflt_cred_hold$,1)
+		callpoint!.setColumnUndoData("ARM_CUSTDET.CRED_HOLD",user_tpl.dflt_cred_hold$)
+	else
+		callpoint!.setColumnData("ARM_CUSTDET.CRED_HOLD","N",1)
+		callpoint!.setColumnUndoData("ARM_CUSTDET.CRED_HOLD","N")
+	endif
+endif
+callpoint!.setColumnData("ARM_CUSTDET.CUSTOMER_TYPE",ars10d.customer_type$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.CUSTOMER_TYPE",ars10d.customer_type$)
+callpoint!.setColumnData("ARM_CUSTDET.FRT_TERMS",ars10d.frt_terms$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.FRT_TERMS",ars10d.frt_terms$)
+callpoint!.setColumnData("ARM_CUSTDET.MESSAGE_CODE",ars10d.message_code$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.MESSAGE_CODE",ars10d.message_code$)
+callpoint!.setColumnData("ARM_CUSTDET.PRICING_CODE",ars10d.pricing_code$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.PRICING_CODE",ars10d.pricing_code$)
+callpoint!.setColumnData("ARM_CUSTDET.LABEL_CODE",ars10d.label_code$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.LABEL_CODE",ars10d.label_code$)
+callpoint!.setColumnData("ARM_CUSTDET.AR_CYCLECODE",ars10d.ar_cyclecode$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.AR_CYCLECODE",ars10d.ar_cyclecode$)
+callpoint!.setColumnData("ARM_CUSTDET.SA_FLAG",ars10d.sa_flag$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.SA_FLAG",ars10d.sa_flag$)
+callpoint!.setColumnData("ARM_CUSTDET.CREDIT_LIMIT",str(ars10d.credit_limit),1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.CREDIT_LIMIT",str(ars10d.credit_limit))
+callpoint!.setColumnData("ARM_CUSTDET.FINANCE_CHG",ars10d.finance_chg$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.FINANCE_CHG",ars10d.finance_chg$)
+callpoint!.setColumnData("ARM_CUSTDET.STATEMENTS",ars10d.statements$,1)
+callpoint!.setColumnUndoData("ARM_CUSTDET.STATEMENTS",ars10d.statements$)
+
+rem --- clear out the contents of the widgets
+
+	agingDashboardPieWidget!=callpoint!.getDevObject("dbPieWidget")
+	agingPieWidget! = agingDashboardPieWidget!.getWidget()
+	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_FUTURE","Future",1), 0)
+	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_CURRENT","Current",1), 0)
+	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_30_DAYS","30 Days",1), 0)
+	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_60_DAYS","60 days",1), 0)
+	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_90_DAYS","90 days",1), 0)
+	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_120_DAYS","120 days",1), 0)
+	agingPieWidget!.refresh()
+
+	agingDashboardBarWidget!=callpoint!.getDevObject("dbBarWidget")
+	agingBarWidget! = agingDashboardBarWidget!.getWidget()
+	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_FUT","Fut",1), "",0)
+	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_CUR","Cur",1), "", 0)
+	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_30","30",1),"", 0)
+	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_60","60",1), "", 0)
+	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_90","90",1), "", 0)
+	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_120","120",1), "", 0)
+	agingBarWidget!.refresh()
+
+	agingPieWidgetControl!=callpoint!.getDevObject("dbPieWidgetControl")
+	agingPieWidgetControl!.setVisible(0)
+	agingBarWidgetControl!=callpoint!.getDevObject("dbBarWidgetControl")
+	agingBarWidgetControl!.setVisible(0)
+
+[[ARM_CUSTDET.AR_TERMS_CODE.AVAL]]
+rem --- look up terms code, arm10A...if cred_hold is Y for this terms code,
+rem --- and cm$ is Y, set arm_custdet.cred_hold to Y as well
+if user_tpl.cm_installed$="Y"
+	ar_terms_code$=callpoint!.getUserInput()
+	arc_termcode_dev=fnget_dev("ARC_TERMCODE")
+	dim arc_termcode$:fnget_tpl$("ARC_TERMCODE")
+	read record (arc_termcode_dev,key=firm_id$+"A"+ar_terms_code$,dom=*break)arc_termcode$
+	if arc_termcode.cred_hold$="Y"
+		callpoint!.setColumnData("ARM_CUSTDET.CRED_HOLD","Y",1)
+	endif
+endif
+
+[[ARM_CUSTMAST.AWRI]]
+rem --- Add ARS_CC_CUSTPMT Report Control Recipients record for this customer if one doesn't already exist
+	if cvs(callpoint!.getColumnData("ARM_CUSTMAST.PAY_AUTH_EMAIL"),3)<>"" then
+		customer_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+		admRptCtlRcp_dev=fnget_dev("ADM_RPTCTL_RCP")
+		dim admRptCtlRcp$:fnget_tpl$("ADM_RPTCTL_RCP")
+		admRptCtlRcp.dd_table_alias$="ARS_CC_CUSTPMT"
+		findrecord(admRptCtlRcp_dev,key=firm_id$+admRptCtlRcp.dd_table_alias$+customer_id$+admRptCtlRcp.vendor_id$,dom=*next)admRptCtlRcp$
+
+		if cvs(admRptCtlRcp.customer_id$,3)="" then
+			rem --- Add ARS_CC_CUSTPMT record for this customer
+			redim admRptCtlRcp$
+			admRptCtlRcp.firm_id$=firm_id$
+			admRptCtlRcp.dd_table_alias$="ARS_CC_CUSTPMT"
+			admRptCtlRcp.customer_id$=customer_id$
+			admRptCtlRcp.email_yn$="Y"
+			admRptCtlRcp.email_to$=callpoint!.getColumnData("ARM_CUSTMAST.PAY_AUTH_EMAIL")
+
+			rem --- Use Report Control default subject and message
+			admRptCtl_dev=fnget_dev("ADM_RPTCTL")
+			dim admRptCtl$:fnget_tpl$("ADM_RPTCTL")
+			findrecord(admRptCtl_dev,key=firm_id$+admRptCtlRcp.dd_table_alias$,dom=*endif)admRptCtl$
+			admRptCtlRcp.email_subject$=admRptCtl.dflt_subject$
+			admRptCtlRcp.email_message$=admRptCtl.dflt_message$
+
+			rem --- If available, use Report Control email account's from and reply-to
+			admEmailAcct_dev=fnget_dev("ADM_EMAIL_ACCT")
+			dim admEmailAcct$:fnget_tpl$("ADM_EMAIL_ACCT")
+			findrecord(admEmailAcct_dev,key=firm_id$+admRptCtl.email_account$,dom=*next)admEmailAcct$
+			if cvs(admEmailAcct.email_account$,3)<>"" then
+				admRptCtlRcp.email_from$=admEmailAcct.email_from$
+				admRptCtlRcp.email_replyto$=admEmailAcct.email_replyto$
+			endif
+
+			admRptCtlRcp$=field(admRptCtlRcp$)
+			writerecord(admRptCtlRcp_dev)admRptCtlRcp$
+			callpoint!.setDevObject("recipient_email_to",admRptCtlRcp.email_to$)
+			callpoint!.setDevObject("match_email_to","OK")
+		endif
+	endif
+
+	if callpoint!.getDevObject("match_email_to")<>"OK" then
+		rem --- Set background color for bad pay_auth_email
+		payAuthEmail!=callpoint!.getControl("ARM_CUSTMAST.PAY_AUTH_EMAIL")
+		call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
+		payAuthEmail!.setBackColor(rdErrorColor!)
+	endif
+
+[[ARM_CUSTMAST.BDEL]]
+rem  --- Check for Open AR Invoices
+	delete_msg$=""
+	cust$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+	read(user_tpl.art01_dev,key=firm_id$+"  "+cust$,dom=*next)
+	art01_key$=key(user_tpl.art01_dev,end=check_op_ord)
+	if pos(firm_id$+"  "+cust$=art01_key$)<>1 goto check_op_ord
+	delete_msg$=Translate!.getTranslation("AON_OPEN_INVOICES_EXIST_-_CUSTOMER_DELETION_NOT_ALLOWED")
+	goto done_checking	
+
+check_op_ord:
+	if user_tpl.op_installed$<>"Y" goto done_checking
+	num_files=1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="OPT_INVHDR",open_opts$[1]="OTA"
+	gosub open_tables
+	opt01_dev=num(open_chans$[1])
+	dim opt01_tpl$:open_tpls$[1]
+
+	read (opt01_dev,key=firm_id$+"  "+cust$,dom=*next)
+	opt01_key$=key(opt01_dev,end=done_checking)              
+	if pos(firm_id$+"  "+cust$=opt01_key$)<>1 goto done_checking
+	readrecord(opt01_dev)opt01_tpl$
+	if opt01_tpl.trans_status$="U"
+		delete_msg$=Translate!.getTranslation("AON_HISTORICAL_INVOICES_EXIST_-_CUSTOMER_DELETION_NOT_ALLOWED")
+	else
+		delete_msg$=Translate!.getTranslation("AON_OPEN_ORDERS_EXIST_-_CUSTOMER_DELETION_NOT_ALLOWED")
+	endif
+
+done_checking:
+	if delete_msg$<>""
+		callpoint!.setMessage("NO_DELETE:"+delete_msg$)
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+rem --- If GM installed, remove cross reference(s) to GoldMine
+	if user_tpl.gm_installed$="Y" then
+		gmxCustomer_dev=fnget_dev("GMX_CUSTOMER")
+		dim gmxCustomer$:fnget_tpl$("GMX_CUSTOMER")
+		read(gmxCustomer_dev,key=firm_id$+cust$,knum="BY_ADDON",dom=*next)
+		while 1
+			gmxCustomer_key$=key(gmxCustomer_dev,end=*break)
+			if pos(firm_id$+cust$=gmxCustomer_key$)<>1 then break
+			readrecord(gmxCustomer_dev)gmxCustomer$
+			remove(gmxCustomer_dev,key=gmxCustomer.gm_accountno$+gmxCustomer.gm_recid$)
+			read(gmxCustomer_dev,key=firm_id$+cust$,knum="BY_ADDON",dom=*next)
+		wend
+	endif
+
+[[ARM_CUSTMAST.BEND]]
+rem --- call the close() method for the gmClient! object on the way out
+
+	if user_tpl.gm_installed$="Y" then
+		gmClient!=callpoint!.getDevObject("gmClient")
+		gmClient!.close()
+	endif
+
+		
+
+[[ARM_CUSTMAST.BREC]]
+rem --- Set New Customer flag
+	user_tpl.new_cust$="Y"
+
+[[ARM_CUSTMAST.BSHO]]
+rem --- Open/Lock files
+	dir_pgm$=stbl("+DIR_PGM")
+	sys_pgm$=stbl("+DIR_SYP")
+	num_files=13
+
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[2]="ARS_PARAMS",open_opts$[2]="OTA"
+	open_tables$[3]="ARS_CUSTDFLT",open_opts$[3]="OTA"
+	open_tables$[4]="ARS_CREDIT",open_opts$[4]="OTA"
+	open_tables$[5]="ARM_CUSTDET",open_opts$[5]="OTA"
+	open_tables$[6]="ART_INVHDR",open_opts$[6]="OTA"
+	open_tables$[7]="ART_INVDET",open_opts$[7]="OTA"
+	open_tables$[8]="ARS_CC_CUSTSVC",open_opts$[8]="OTA"
+	open_tables$[9]="ARM_EMAILFAX",open_opts$[9]="OTA"
+	open_tables$[10]="ADM_RPTCTL",open_opts$[10]="OTA"
+	open_tables$[11]="ADM_RPTCTL_RCP",open_opts$[11]="OTA"
+	open_tables$[12]="ADM_EMAIL_ACCT",open_opts$[12]="OTA"
+	open_tables$[13]="ARS_CC_CUSTPMT",open_opts$[13]="OTA"
+	gosub open_tables
+
+	ars01_dev=num(open_chans$[2])
+	ars10_dev=num(open_chans$[3])
+	ars01c_dev=num(open_chans$[4])
+	arm02_dev=num(open_chans$[5])
+	ars_cc_custsvc=num(open_chans$[8])
+	ars_cc_custpmt=num(open_chans$[13])
+
+rem --- Dimension miscellaneous string templates
+
+	dim ars01a$:open_tpls$[2],ars10d$:open_tpls$[3],ars01c$:open_tpls$[4]
+	dim arm02_tpl$:open_tpls$[5],ars_cc_custsvc$:open_tpls$[8],ars_cc_custpmt$:open_tpls$[13]
+
+rem --- Retrieve parameter data
+	dim info$[20]
+	ars01a_key$=firm_id$+"AR00"
+	find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$ 
+	ars01c_key$=firm_id$+"AR01"
+	find record (ars01c_dev,key=ars01c_key$,err=std_missing_params) ars01c$                
+	cm$=ars01c.sys_install$
+	dflt_cred_hold$=ars01c.hold_new$
+	find record (ars10_dev,key=firm_id$+"D",err=std_missing_params) ars10d$
+	call stbl("+DIR_PGM")+"adc_application.aon","GL",info$[all]
+	gl$=info$[20]
+	call stbl("+DIR_PGM")+"adc_application.aon","OP",info$[all]
+	op$=info$[20]
+	call stbl("+DIR_PGM")+"adc_application.aon","IV",info$[all]
+	iv$=info$[20]
+	call stbl("+DIR_PGM")+"adc_application.aon","SA",info$[all]
+	sa$=info$[20]
+	call stbl("+DIR_PGM")+"adc_application.aon","GM",info$[all]
+	gm$=info$[20]
+	dim user_tpl$:"app:c(2),gl_installed:c(1),op_installed:c(1),sa_installed:c(1),iv_installed:c(1),gm_installed:c(1),"+
+:		"cm_installed:c(1),dflt_cred_hold:c(1),cust_dflt_tpl:c(1024),cust_dflt_rec:c(1024),new_cust:c(1),"+
+:		"art01_dev:n(5)"
+	user_tpl.app$="AR"
+	user_tpl.gl_installed$=gl$
+	user_tpl.op_installed$=op$
+	user_tpl.iv_installed$=iv$
+	user_tpl.sa_installed$=sa$
+	user_tpl.gm_installed$=gm$
+	user_tpl.cm_installed$=cm$
+	user_tpl.dflt_cred_hold$=dflt_cred_hold$
+	user_tpl.cust_dflt_tpl$=fattr(ars10d$)
+	user_tpl.cust_dflt_rec$=ars10d$
+	user_tpl.art01_dev=num(open_chans$[6])
+	dim dctl$[17]
+	if user_tpl.cm_installed$="Y"
+ 		dctl$[1]="ARM_CUSTDET.CREDIT_LIMIT"              
+	endif
+	if user_tpl.sa_installed$<>"Y" or user_tpl.op_installed$<>"Y"
+ 		dctl$[2]="ARM_CUSTDET.SA_FLAG"
+	endif
+	if ars01a.inv_hist_flg$="N"
+		dctl$[3]="ARM_CUSTDET.INV_HIST_FLG"
+	endif
+	if user_tpl.op_installed$<>"Y"
+		dctl$[3]="ARM_CUSTDET.INV_HIST_FLG"
+		dctl$[4]="ARM_CUSTDET.TAX_CODE"
+		dctl$[5]="ARM_CUSTDET.FRT_TERMS"
+		dctl$[6]="ARM_CUSTDET.MESSAGE_CODE"
+		dctl$[7]="ARM_CUSTDET.DISC_CODE"
+		dctl$[8]="ARM_CUSTDET.PRICING_CODE"
+		callpoint!.setOptionEnabled("QUOT",0)
+		callpoint!.setOptionEnabled("ORDR",0)
+		callpoint!.setOptionEnabled("INVC",0)
+		callpoint!.setOptionEnabled("CRDT",0)
+	endif
+	dctl$[9]="<<DISPLAY>>.DSP_BALANCE"
+	dctl$[10]="<<DISPLAY>>.DSP_MTD_PROFIT"
+	dctl$[11]="<<DISPLAY>>.DSP_YTD_PROFIT"
+	dctl$[12]="<<DISPLAY>>.DSP_PRI_PROFIT"
+	dctl$[13]="<<DISPLAY>>.DSP_NXT_PROFIT"
+	dctl$[14]="<<DISPLAY>>.DSP_MTD_PROF_PCT"
+	dctl$[15]="<<DISPLAY>>.DSP_YTD_PROF_PCT"
+	dctl$[16]="<<DISPLAY>>.DSP_PRI_PROF_PCT"
+	dctl$[17]="<<DISPLAY>>.DSP_NXT_PROF_PCT"
+	gosub disable_ctls
+
+rem --- Disable Option for Jobs if OP not installed or Job flag not set
+	if op$<>"Y" or ars01a.job_nos$<>"Y"
+		callpoint!.setOptionEnabled("OPM_CUSTJOBS",0)
+	endif
+
+rem --- Additional/optional opens
+	if user_tpl.gm_installed$="Y" then
+		num_files=3
+		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+		open_tables$[1]="GMS_PARAMS",open_opts$[1]="OTA"
+		open_tables$[2]="GMQ_CUSTOMER",open_opts$[2]="OTA"
+		open_tables$[3]="GMX_CUSTOMER",open_opts$[3]="OTA"
+		gosub open_tables
+
+		rem --- Verify GM parameters have been entered
+		find (num(open_chans$[1]),key=firm_id$+"GM",err=std_missing_params) 
+
+		rem --- Get GoldMine interface client
+		use ::gmo_GmInterfaceClient.aon::GmInterfaceClient
+		gmClient!=new GmInterfaceClient()
+		callpoint!.setDevObject("gmClient",gmClient!)
+	endif
+
+rem --- disable credit card payment and view response options if not processing credit card payments
+
+	read(ars_cc_custsvc,key=firm_id$,dom=*next)
+	callpoint!.setOptionEnabled("PYMT",0)
+	callpoint!.setOptionEnabled("RESP",0)
+	while 1
+		readrecord(ars_cc_custsvc,end=*break)ars_cc_custsvc$
+		if ars_cc_custsvc.firm_id$<>firm_id$ then break
+		if ars_cc_custsvc.use_custsvc_cc$="Y"
+			callpoint!.setOptionEnabled("PYMT",1)
+			callpoint!.setOptionEnabled("RESP",1)
+			break
+		endif
+	wend
+
+	rem --- have checked ars_cc_custsvc; also check ars_cc_custpmt
+	rem --- could be processing online cc pymts (ars_cc_custpmt) but not AR staff payments (ars_cc_custsvc)
+	rem --- if that's the case, enable the option to view responses
+	read(ars_cc_custpmt,key=firm_id$,dom=*next)
+	while 1
+		readrecord(ars_cc_custpmt,end=*break)ars_cc_custpmt$
+		if ars_cc_custpmt.firm_id$<>firm_id$ then break
+		if ars_cc_custpmt.allow_cust_cc$="Y"
+			callpoint!.setOptionEnabled("RESP",1)
+			break
+		endif
+	wend
+
+rem --- Create/embed widgets to show aged balance
+
+	gosub create_widgets
+
 [[ARM_CUSTMAST.BWRI]]
 rem --- If GM installed, update GoldMine database as necessary
 	if user_tpl.gm_installed$="Y" then
@@ -574,181 +1014,11 @@ rem --- If GM installed, update GoldMine database as necessary
 		endif
 
 	endif
-[[ARM_CUSTMAST.ADIS]]
-rem --- retrieve dashboard pie or bar chart widget and refresh for current customer/balances
-rem --- pie if all balances >=0, bar if any negatives, hide if all bals are 0
 
-	rem --- test to see if widgets need to be re-created
-	rem --- possible they've been destroyed if cust form was launched again from here (via Expresso or an option entry hyperlink)
+[[ARM_CUSTMAST.CUSTOMER_ID.AVAL]]
+rem --- Validate Customer Number
+	if num(callpoint!.getUserInput(),err=*next)=0 callpoint!.setStatus("ABORT")
 
-	agingPieWidgetControl!=callpoint!.getDevObject("dbPieWidgetControl")
-	agingBarWidgetControl!=callpoint!.getDevObject("dbBarWidgetControl")
-
-	if agingPieWidgetControl!.isDestroyed() or agingBarWidgetControl!.isDestroyed()
-		gosub create_widgets
-	endif
-
-	bal_fut=num(callpoint!.getColumnData("ARM_CUSTDET.AGING_FUTURE"))
-	bal_cur=num(callpoint!.getColumnData("ARM_CUSTDET.AGING_CUR"))
-	bal_30=num(callpoint!.getColumnData("ARM_CUSTDET.AGING_30"))
-	bal_60=num(callpoint!.getColumnData("ARM_CUSTDET.AGING_60"))
-	bal_90=num(callpoint!.getColumnData("ARM_CUSTDET.AGING_90"))
-	bal_120=num(callpoint!.getColumnData("ARM_CUSTDET.AGING_120"))
-
-
-	if bal_fut<0 or bal_cur<0 or bal_30<0 or bal_60<0 or bal_90<0 or bal_120<0
-
-		agingDashboardBarWidget!=callpoint!.getDevObject("dbBarWidget")
-		agingBarWidget! = agingDashboardBarWidget!.getWidget()
-		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_FUT","Fut",1), "",bal_fut)
-		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_CUR","Cur",1), "", bal_cur)
-		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_30","30",1),"", bal_30)
-		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_60","60",1), "", bal_60)
-		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_90","90",1), "", bal_90)
-		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_120","120",1), "", bal_120)
-		agingBarWidget!.refresh()
-
-		agingPieWidgetControl!=callpoint!.getDevObject("dbPieWidgetControl")
-		agingBarWidgetControl!=callpoint!.getDevObject("dbBarWidgetControl")	
-		agingPieWidgetControl!.setVisible(0)
-		agingBarWidgetControl!.setVisible(1)
-
-	else
-
-		agingDashboardPieWidget!=callpoint!.getDevObject("dbPieWidget")
-		agingPieWidget! = agingDashboardPieWidget!.getWidget()
-		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_FUTURE","Future",1), bal_fut)
-		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_CURRENT","Current",1), bal_cur)
-		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_30_DAYS","30 Days",1), bal_30 )
-		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_60_DAYS","60 days",1), bal_60)
-		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_90_DAYS","90 days",1), bal_90)
-		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_120_DAYS","120 days",1), bal_120)
-		agingPieWidget!.refresh()
-
-		agingPieWidgetControl!=callpoint!.getDevObject("dbPieWidgetControl")
-		agingBarWidgetControl!=callpoint!.getDevObject("dbBarWidgetControl")	
-		agingPieWidgetControl!.setVisible(1)
-		agingBarWidgetControl!.setVisible(0)
-
-	endif
-
-rem --- Draw attention when pay_auth_email doesn't match ARS_CC_CUSTPMT Report Control Recipients email-to address
-	rem --- Get customer's ARS_CC_CUSTPMT Report Control Recipients email-to address
-	customer_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
-	admRptCtlRcp_dev=fnget_dev("ADM_RPTCTL_RCP")
-	dim admRptCtlRcp$:fnget_tpl$("ADM_RPTCTL_RCP")
-	admRptCtlRcp.dd_table_alias$="ARS_CC_CUSTPMT"
-	findrecord(admRptCtlRcp_dev,key=firm_id$+admRptCtlRcp.dd_table_alias$+customer_id$+admRptCtlRcp.vendor_id$,dom=*next)admRptCtlRcp$
-	if cvs(admRptCtlRcp.customer_id$,3)<>"" then
-		email_to$=admRptCtlRcp.email_to$
-	else
-		email_to$=""
-	endif
-	callpoint!.setDevObject("recipient_email_to",email_to$)
-
-	rem --- Set background color for pay_auth_email
-	payAuthEmail!=callpoint!.getControl("ARM_CUSTMAST.PAY_AUTH_EMAIL")
-
-	if cvs(callpoint!.getColumnData("ARM_CUSTMAST.PAY_AUTH_EMAIL"),3)<>cvs(email_to$,3) and cvs(email_to$,3)<>"" then
-		call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
-		payAuthEmail!.setBackColor(rdErrorColor!)
-		callpoint!.setDevObject("match_email_to","BAD")
-	else
-		addrLine1!=callpoint!.getControl("ARM_CUSTMAST.ADDR_LINE_1")
-		payAuthEmail!.setBackColor(addrLine1!.getBackColor())
-		callpoint!.setDevObject("match_email_to","OK")
-	endif
-
-
-
-	
-[[ARM_CUSTMAST.AOPT-HCPY]]
-rem --- Go run the Hard Copy form
-
-	callpoint!.setDevObject("cust_id",callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID"))
-	cust$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
-
-	dim dflt_data$[2,1]
-	dflt_data$[1,0]="CUSTOMER_ID_1"
-	dflt_data$[1,1]=cust$
-	dflt_data$[2,0]="CUSTOMER_ID_2"
-	dflt_data$[2,1]=cust$
-
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:		"ARR_DETAIL",
-:		stbl("+USER_ID"),
-:		"MNT",
-:		"",
-:		table_chans$[all],
-:		"",
-:		dflt_data$[all]
-[[ARM_CUSTMAST.AOPT-STMT]]
-rem On Demand Statement
-
-cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
-user_id$=stbl("+USER_ID")
-key_pfx$=cp_cust_id$
-
-dim dflt_data$[2,1]
-dflt_data$[1,0]="CUSTOMER_ID"
-dflt_data$[1,1]=cp_cust_id$
-call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:                       "ARR_STMT_DEMAND",
-:                       user_id$,
-:                   	"",
-:                       key_pfx$,
-:                       table_chans$[all],
-:                       "",
-:                       dflt_data$[all]
-[[ARM_CUSTMAST.BDEL]]
-rem  --- Check for Open AR Invoices
-	delete_msg$=""
-	cust$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
-	read(user_tpl.art01_dev,key=firm_id$+"  "+cust$,dom=*next)
-	art01_key$=key(user_tpl.art01_dev,end=check_op_ord)
-	if pos(firm_id$+"  "+cust$=art01_key$)<>1 goto check_op_ord
-	delete_msg$=Translate!.getTranslation("AON_OPEN_INVOICES_EXIST_-_CUSTOMER_DELETION_NOT_ALLOWED")
-	goto done_checking	
-
-check_op_ord:
-	if user_tpl.op_installed$<>"Y" goto done_checking
-	num_files=1
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="OPT_INVHDR",open_opts$[1]="OTA"
-	gosub open_tables
-	opt01_dev=num(open_chans$[1])
-	dim opt01_tpl$:open_tpls$[1]
-
-	read (opt01_dev,key=firm_id$+"  "+cust$,dom=*next)
-	opt01_key$=key(opt01_dev,end=done_checking)              
-	if pos(firm_id$+"  "+cust$=opt01_key$)<>1 goto done_checking
-	readrecord(opt01_dev)opt01_tpl$
-	if opt01_tpl.trans_status$="U"
-		delete_msg$=Translate!.getTranslation("AON_HISTORICAL_INVOICES_EXIST_-_CUSTOMER_DELETION_NOT_ALLOWED")
-	else
-		delete_msg$=Translate!.getTranslation("AON_OPEN_ORDERS_EXIST_-_CUSTOMER_DELETION_NOT_ALLOWED")
-	endif
-
-done_checking:
-	if delete_msg$<>""
-		callpoint!.setMessage("NO_DELETE:"+delete_msg$)
-		callpoint!.setStatus("ABORT")
-		break
-	endif
-
-rem --- If GM installed, remove cross reference(s) to GoldMine
-	if user_tpl.gm_installed$="Y" then
-		gmxCustomer_dev=fnget_dev("GMX_CUSTOMER")
-		dim gmxCustomer$:fnget_tpl$("GMX_CUSTOMER")
-		read(gmxCustomer_dev,key=firm_id$+cust$,knum="BY_ADDON",dom=*next)
-		while 1
-			gmxCustomer_key$=key(gmxCustomer_dev,end=*break)
-			if pos(firm_id$+cust$=gmxCustomer_key$)<>1 then break
-			readrecord(gmxCustomer_dev)gmxCustomer$
-			remove(gmxCustomer_dev,key=gmxCustomer.gm_accountno$+gmxCustomer.gm_recid$)
-			read(gmxCustomer_dev,key=firm_id$+cust$,knum="BY_ADDON",dom=*next)
-		wend
-	endif
 [[ARM_CUSTMAST.CUSTOMER_NAME.AVAL]]
 rem --- Set Alternate Sequence for new customers
 	if user_tpl.new_cust$="Y"
@@ -758,285 +1028,56 @@ rem --- Set Alternate Sequence for new customers
 		alt_sequence$(1)=callpoint!.getUserInput()
 		callpoint!.setColumnData("ARM_CUSTMAST.ALT_SEQUENCE",alt_sequence$,1)
 	endif
-[[ARM_CUSTMAST.AREA]]
-rem --- Set New Customer flag
-	user_tpl.new_cust$="N"
-[[ARM_CUSTMAST.BREC]]
-rem --- Set New Customer flag
-	user_tpl.new_cust$="Y"
-[[ARM_CUSTMAST.CUSTOMER_ID.AVAL]]
-rem --- Validate Customer Number
-	if num(callpoint!.getUserInput(),err=*next)=0 callpoint!.setStatus("ABORT")
-[[ARM_CUSTMAST.AOPT-IDTL]]
-rem Invoice Dtl Inquiry
 
-cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
-user_id$=stbl("+USER_ID")
-dim dflt_data$[2,1]
-dflt_data$[1,0]="CUSTOMER_ID"
-dflt_data$[1,1]=cp_cust_id$
-call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:                       "ARR_INVDETAIL",
-:                       user_id$,
-:                   	"",
-:                       "",
-:                       table_chans$[all],
-:                       "",
-:                       dflt_data$[all]
-[[ARM_CUSTMAST.AOPT-ORIV]]
-rem Order/Invoice History Inq
-rem --- assume this should only run if OP installed...
-	if user_tpl.op_installed$="Y"
-		cp_cust_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
-		user_id$=stbl("+USER_ID")
-		dim dflt_data$[2,1]
-		dflt_data$[1,0]="CUSTOMER_ID"
-		dflt_data$[1,1]=cp_cust_id$
-		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:                           "ARR_ORDINVHIST",
-:                           user_id$,
-:                   	    "",
-:                           "",
-:                           table_chans$[all],
-:                           "",
-:                           dflt_data$[all]
-	else
-		msg_id$="AD_NO_OP"
-		dim msg_tokens$[1]
-		msg_opt$=""
-		gosub disp_message
-	endif
-	callpoint!.setStatus("ACTIVATE")
-[[ARM_CUSTMAST.AREC]]
-rem --- notes about defaults, other init:
-rem --- if cm$ installed, and ars01c.hold_new$ is "Y", then default arm02a.cred_hold$ to "Y"
-rem --- default arm02a.slspsn_code$,ar_terms_code$,disc_code$,ar_dist_code$,territory$,tax_code$
-rem --- and inv_hist_flg$ per defaults in ops10d
-dim ars10d$:user_tpl.cust_dflt_tpl$
-ars10d$=user_tpl.cust_dflt_rec$
-callpoint!.setColumnData("ARM_CUSTMAST.AR_SHIP_VIA",ars10d.ar_ship_via$,1)
-callpoint!.setColumnUndoData("ARM_CUSTMAST.AR_SHIP_VIA",ars10d.ar_ship_via$)
-callpoint!.setColumnData("ARM_CUSTMAST.FOB",ars10d.fob$,1)
-callpoint!.setColumnUndoData("ARM_CUSTMAST.FOB",ars10d.fob$)
-callpoint!.setColumnData("ARM_CUSTMAST.OPENED_DATE",date(0:"%Yd%Mz%Dz"))
-callpoint!.setColumnData("ARM_CUSTMAST.RETAIN_CUST","Y")
+[[ARM_CUSTMAST.PAY_AUTH_EMAIL.AVAL]]
+rem --- Warn when pay_auth_email doesn't match ARS_CC_CUSTPMT Report Control Recipients email-to address
+	pay_auth_email$=callpoint!.getUserInput()
+	recipient_email_to$=cvs(callpoint!.getDevObject("recipient_email_to"),2)
+	if recipient_email_to$<>"" and pay_auth_email$<>callpoint!.getColumnData("ARM_CUSTMAST.PAY_AUTH_EMAIL") then
+		if cvs(pay_auth_email$,2)<>recipient_email_to$ then
+			rem --- Set background color for bad pay_auth_email
+			payAuthEmail!=callpoint!.getControl("ARM_CUSTMAST.PAY_AUTH_EMAIL")
+			call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
+			payAuthEmail!.setBackColor(rdErrorColor!)
+			callpoint!.setDevObject("match_email_to","BAD")
 
-callpoint!.setColumnData("ARM_CUSTDET.AR_TERMS_CODE",ars10d.ar_terms_code$,1)
-callpoint!.setColumnUndoData("ARM_CUSTDET.AR_TERMS_CODE",ars10d.ar_terms_code$)
-callpoint!.setColumnData("ARM_CUSTDET.AR_DIST_CODE",ars10d.ar_dist_code$,1)
-callpoint!.setColumnUndoData("ARM_CUSTDET.AR_DIST_CODE",ars10d.ar_dist_code$)
-callpoint!.setColumnData("ARM_CUSTDET.SLSPSN_CODE",ars10d.slspsn_code$,1)
-callpoint!.setColumnUndoData("ARM_CUSTDET.SLSPSN_CODE",ars10d.slspsn_code$)
-callpoint!.setColumnData("ARM_CUSTDET.DISC_CODE",ars10d.disc_code$,1)
-callpoint!.setColumnUndoData("ARM_CUSTDET.DISC_CODE",ars10d.disc_code$)
-callpoint!.setColumnData("ARM_CUSTDET.TERRITORY",ars10d.territory$,1)
-callpoint!.setColumnUndoData("ARM_CUSTDET.TERRITORY",ars10d.territory$)
-callpoint!.setColumnData("ARM_CUSTDET.TAX_CODE",ars10d.tax_code$,1)
-callpoint!.setColumnUndoData("ARM_CUSTDET.TAX_CODE",ars10d.tax_code$)
-if cvs(ars10d.inv_hist_flg$,2)<>"" then
-	callpoint!.setColumnData("ARM_CUSTDET.INV_HIST_FLG",ars10d.inv_hist_flg$,1)
-	callpoint!.setColumnUndoData("ARM_CUSTDET.INV_HIST_FLG",ars10d.inv_hist_flg$)
-else
-	callpoint!.setColumnData("ARM_CUSTDET.INV_HIST_FLG","Y",1)
-	callpoint!.setColumnUndoData("ARM_CUSTDET.INV_HIST_FLG","Y")
-endif
-if cvs(ars10d.cred_hold$,2)<>"" then
-	callpoint!.setColumnData("ARM_CUSTDET.CRED_HOLD",ars10d.cred_hold$,1)
-	callpoint!.setColumnUndoData("ARM_CUSTDET.CRED_HOLD",ars10d.cred_hold$)
-else
-	if user_tpl.cm_installed$="Y" then 
-		callpoint!.setColumnData("ARM_CUSTDET.CRED_HOLD",user_tpl.dflt_cred_hold$,1)
-		callpoint!.setColumnUndoData("ARM_CUSTDET.CRED_HOLD",user_tpl.dflt_cred_hold$)
-	else
-		callpoint!.setColumnData("ARM_CUSTDET.CRED_HOLD","N",1)
-		callpoint!.setColumnUndoData("ARM_CUSTDET.CRED_HOLD","N")
-	endif
-endif
-callpoint!.setColumnData("ARM_CUSTDET.CUSTOMER_TYPE",ars10d.customer_type$,1)
-callpoint!.setColumnUndoData("ARM_CUSTDET.CUSTOMER_TYPE",ars10d.customer_type$)
-callpoint!.setColumnData("ARM_CUSTDET.FRT_TERMS",ars10d.frt_terms$,1)
-callpoint!.setColumnUndoData("ARM_CUSTDET.FRT_TERMS",ars10d.frt_terms$)
-callpoint!.setColumnData("ARM_CUSTDET.MESSAGE_CODE",ars10d.message_code$,1)
-callpoint!.setColumnUndoData("ARM_CUSTDET.MESSAGE_CODE",ars10d.message_code$)
-callpoint!.setColumnData("ARM_CUSTDET.PRICING_CODE",ars10d.pricing_code$,1)
-callpoint!.setColumnUndoData("ARM_CUSTDET.PRICING_CODE",ars10d.pricing_code$)
-callpoint!.setColumnData("ARM_CUSTDET.LABEL_CODE",ars10d.label_code$,1)
-callpoint!.setColumnUndoData("ARM_CUSTDET.LABEL_CODE",ars10d.label_code$)
-callpoint!.setColumnData("ARM_CUSTDET.AR_CYCLECODE",ars10d.ar_cyclecode$,1)
-callpoint!.setColumnUndoData("ARM_CUSTDET.AR_CYCLECODE",ars10d.ar_cyclecode$)
-callpoint!.setColumnData("ARM_CUSTDET.SA_FLAG",ars10d.sa_flag$,1)
-callpoint!.setColumnUndoData("ARM_CUSTDET.SA_FLAG",ars10d.sa_flag$)
-callpoint!.setColumnData("ARM_CUSTDET.CREDIT_LIMIT",str(ars10d.credit_limit),1)
-callpoint!.setColumnUndoData("ARM_CUSTDET.CREDIT_LIMIT",str(ars10d.credit_limit))
-callpoint!.setColumnData("ARM_CUSTDET.FINANCE_CHG",ars10d.finance_chg$,1)
-callpoint!.setColumnUndoData("ARM_CUSTDET.FINANCE_CHG",ars10d.finance_chg$)
-callpoint!.setColumnData("ARM_CUSTDET.STATEMENTS",ars10d.statements$,1)
-callpoint!.setColumnUndoData("ARM_CUSTDET.STATEMENTS",ars10d.statements$)
-
-rem --- clear out the contents of the widgets
-
-	agingDashboardPieWidget!=callpoint!.getDevObject("dbPieWidget")
-	agingPieWidget! = agingDashboardPieWidget!.getWidget()
-	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_FUTURE","Future",1), 0)
-	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_CURRENT","Current",1), 0)
-	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_30_DAYS","30 Days",1), 0)
-	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_60_DAYS","60 days",1), 0)
-	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_90_DAYS","90 days",1), 0)
-	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_120_DAYS","120 days",1), 0)
-	agingPieWidget!.refresh()
-
-	agingDashboardBarWidget!=callpoint!.getDevObject("dbBarWidget")
-	agingBarWidget! = agingDashboardBarWidget!.getWidget()
-	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_FUT","Fut",1), "",0)
-	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_CUR","Cur",1), "", 0)
-	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_30","30",1),"", 0)
-	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_60","60",1), "", 0)
-	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_90","90",1), "", 0)
-	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_120","120",1), "", 0)
-	agingBarWidget!.refresh()
-
-	agingPieWidgetControl!=callpoint!.getDevObject("dbPieWidgetControl")
-	agingPieWidgetControl!.setVisible(0)
-	agingBarWidgetControl!=callpoint!.getDevObject("dbBarWidgetControl")
-	agingBarWidgetControl!.setVisible(0)
-[[ARM_CUSTMAST.BSHO]]
-rem --- Open/Lock files
-	dir_pgm$=stbl("+DIR_PGM")
-	sys_pgm$=stbl("+DIR_SYP")
-	num_files=12
-
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[2]="ARS_PARAMS",open_opts$[2]="OTA"
-	open_tables$[3]="ARS_CUSTDFLT",open_opts$[3]="OTA"
-	open_tables$[4]="ARS_CREDIT",open_opts$[4]="OTA"
-	open_tables$[5]="ARM_CUSTDET",open_opts$[5]="OTA"
-	open_tables$[6]="ART_INVHDR",open_opts$[6]="OTA"
-	open_tables$[7]="ART_INVDET",open_opts$[7]="OTA"
-	open_tables$[8]="ARS_CC_CUSTSVC",open_opts$[8]="OTA"
-	open_tables$[9]="ARM_EMAILFAX",open_opts$[9]="OTA"
-	open_tables$[10]="ADM_RPTCTL",open_opts$[10]="OTA"
-	open_tables$[11]="ADM_RPTCTL_RCP",open_opts$[11]="OTA"
-	open_tables$[12]="ADM_EMAIL_ACCT",open_opts$[12]="OTA"
-	gosub open_tables
-
-	ars01_dev=num(open_chans$[2])
-	ars10_dev=num(open_chans$[3])
-	ars01c_dev=num(open_chans$[4])
-	arm02_dev=num(open_chans$[5])
-	ars_cc_custsvc=num(open_chans$[8])
-
-rem --- Dimension miscellaneous string templates
-
-	dim ars01a$:open_tpls$[2],ars10d$:open_tpls$[3],ars01c$:open_tpls$[4]
-	dim arm02_tpl$:open_tpls$[5],ars_cc_custsvc$:open_tpls$[8]
-
-rem --- Retrieve parameter data
-	dim info$[20]
-	ars01a_key$=firm_id$+"AR00"
-	find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$ 
-	ars01c_key$=firm_id$+"AR01"
-	find record (ars01c_dev,key=ars01c_key$,err=std_missing_params) ars01c$                
-	cm$=ars01c.sys_install$
-	dflt_cred_hold$=ars01c.hold_new$
-	find record (ars10_dev,key=firm_id$+"D",err=std_missing_params) ars10d$
-	call stbl("+DIR_PGM")+"adc_application.aon","GL",info$[all]
-	gl$=info$[20]
-	call stbl("+DIR_PGM")+"adc_application.aon","OP",info$[all]
-	op$=info$[20]
-	call stbl("+DIR_PGM")+"adc_application.aon","IV",info$[all]
-	iv$=info$[20]
-	call stbl("+DIR_PGM")+"adc_application.aon","SA",info$[all]
-	sa$=info$[20]
-	call stbl("+DIR_PGM")+"adc_application.aon","GM",info$[all]
-	gm$=info$[20]
-	dim user_tpl$:"app:c(2),gl_installed:c(1),op_installed:c(1),sa_installed:c(1),iv_installed:c(1),gm_installed:c(1),"+
-:		"cm_installed:c(1),dflt_cred_hold:c(1),cust_dflt_tpl:c(1024),cust_dflt_rec:c(1024),new_cust:c(1),"+
-:		"art01_dev:n(5)"
-	user_tpl.app$="AR"
-	user_tpl.gl_installed$=gl$
-	user_tpl.op_installed$=op$
-	user_tpl.iv_installed$=iv$
-	user_tpl.sa_installed$=sa$
-	user_tpl.gm_installed$=gm$
-	user_tpl.cm_installed$=cm$
-	user_tpl.dflt_cred_hold$=dflt_cred_hold$
-	user_tpl.cust_dflt_tpl$=fattr(ars10d$)
-	user_tpl.cust_dflt_rec$=ars10d$
-	user_tpl.art01_dev=num(open_chans$[6])
-	dim dctl$[17]
-	if user_tpl.cm_installed$="Y"
- 		dctl$[1]="ARM_CUSTDET.CREDIT_LIMIT"              
-	endif
-	if user_tpl.sa_installed$<>"Y" or user_tpl.op_installed$<>"Y"
- 		dctl$[2]="ARM_CUSTDET.SA_FLAG"
-	endif
-	if ars01a.inv_hist_flg$="N"
-		dctl$[3]="ARM_CUSTDET.INV_HIST_FLG"
-	endif
-	if user_tpl.op_installed$<>"Y"
-		dctl$[3]="ARM_CUSTDET.INV_HIST_FLG"
-		dctl$[4]="ARM_CUSTDET.TAX_CODE"
-		dctl$[5]="ARM_CUSTDET.FRT_TERMS"
-		dctl$[6]="ARM_CUSTDET.MESSAGE_CODE"
-		dctl$[7]="ARM_CUSTDET.DISC_CODE"
-		dctl$[8]="ARM_CUSTDET.PRICING_CODE"
-		callpoint!.setOptionEnabled("QUOT",0)
-		callpoint!.setOptionEnabled("ORDR",0)
-		callpoint!.setOptionEnabled("INVC",0)
-		callpoint!.setOptionEnabled("CRDT",0)
-	endif
-	dctl$[9]="<<DISPLAY>>.DSP_BALANCE"
-	dctl$[10]="<<DISPLAY>>.DSP_MTD_PROFIT"
-	dctl$[11]="<<DISPLAY>>.DSP_YTD_PROFIT"
-	dctl$[12]="<<DISPLAY>>.DSP_PRI_PROFIT"
-	dctl$[13]="<<DISPLAY>>.DSP_NXT_PROFIT"
-	dctl$[14]="<<DISPLAY>>.DSP_MTD_PROF_PCT"
-	dctl$[15]="<<DISPLAY>>.DSP_YTD_PROF_PCT"
-	dctl$[16]="<<DISPLAY>>.DSP_PRI_PROF_PCT"
-	dctl$[17]="<<DISPLAY>>.DSP_NXT_PROF_PCT"
-	gosub disable_ctls
-
-rem --- Disable Option for Jobs if OP not installed or Job flag not set
-	if op$<>"Y" or ars01a.job_nos$<>"Y"
-		callpoint!.setOptionEnabled("OPM_CUSTJOBS",0)
-	endif
-
-rem --- Additional/optional opens
-	if user_tpl.gm_installed$="Y" then
-		num_files=3
-		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-		open_tables$[1]="GMS_PARAMS",open_opts$[1]="OTA"
-		open_tables$[2]="GMQ_CUSTOMER",open_opts$[2]="OTA"
-		open_tables$[3]="GMX_CUSTOMER",open_opts$[3]="OTA"
-		gosub open_tables
-
-		rem --- Verify GM parameters have been entered
-		find (num(open_chans$[1]),key=firm_id$+"GM",err=std_missing_params) 
-
-		rem --- Get GoldMine interface client
-		use ::gmo_GmInterfaceClient.aon::GmInterfaceClient
-		gmClient!=new GmInterfaceClient()
-		callpoint!.setDevObject("gmClient",gmClient!)
-	endif
-
-rem --- disable credit card payment and view response options if not processing credit card payments
-
-	read(ars_cc_custsvc,key=firm_id$,dom=*next)
-	callpoint!.setOptionEnabled("PYMT",0)
-	callpoint!.setOptionEnabled("RESP",0)
-	while 1
-		readrecord(ars_cc_custsvc,end=*break)ars_cc_custsvc$
-		if ars_cc_custsvc.firm_id$<>firm_id$ then break
-		if ars_cc_custsvc.use_custsvc_cc$="Y"
-			callpoint!.setOptionEnabled("PYMT",1)
-			callpoint!.setOptionEnabled("RESP",1)
-			break
+			rem --- Warn pay_auth_email doesn't match ARS_CC_CUSTPMT Report Control Recipients email-to address
+			msg_id$="AR_FIX_PAYAUTHEMAIL"
+			dim msg_tokens$[1]
+			gosub disp_message
+			if msg_opt$="Y" then
+				recipient_email_to$=callpoint!.getDevObject("recipient_email_to")
+				callpoint!.setUserInput(recipient_email_to$)
+				callpoint!.setDevObject("match_email_to","OK")
+				callpoint!.setStatus("MODIFIED")
+			else
+				rem --- Set background color for bad pay_auth_email
+				payAuthEmail!.setBackColor(rdErrorColor!)
+			endif
 		endif
-	wend
+	endif
 
-rem --- Create/embed widgets to show aged balance
+[[ARM_CUSTMAST.PAY_AUTH_EMAIL.BINP]]
+rem --- Warn when pay_auth_email doesn't match ARS_CC_CUSTPMT Report Control Recipients email-to address
+	if callpoint!.getDevObject("match_email_to")<>"OK" then
+		rem --- Set background color for bad pay_auth_email
+		payAuthEmail!=callpoint!.getControl("ARM_CUSTMAST.PAY_AUTH_EMAIL")
+		call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
+		payAuthEmail!.setBackColor(rdErrorColor!)
+		callpoint!.setDevObject("match_email_to","BAD")
 
-	gosub create_widgets
+		rem --- Warn pay_auth_email doesn't match ARS_CC_CUSTPMT Report Control Recipients email-to address
+		msg_id$="AR_FIX_PAYAUTHEMAIL"
+		dim msg_tokens$[1]
+		gosub disp_message
+		if msg_opt$="Y" then
+			recipient_email_to$=callpoint!.getDevObject("recipient_email_to")
+			callpoint!.setColumnData("ARM_CUSTMAST.PAY_AUTH_EMAIL",recipient_email_to$,1)
+			callpoint!.setDevObject("match_email_to","OK")
+			callpoint!.setStatus("MODIFIED")
+		endif
+	endif
+
 [[ARM_CUSTMAST.<CUSTOM>]]
 rem =======================================================
 create_widgets:rem --- create pie and bar widgets to show aged balance (bar in case credits)
@@ -1150,3 +1191,6 @@ rem ===================================
     return
 
 #include [+ADDON_LIB]std_missing_params.aon
+
+
+
