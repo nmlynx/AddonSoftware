@@ -275,7 +275,18 @@ class public AO_CCUserModel
     result$=sqlfetch(#SqlChan)
 
     methodret (result.count<>0)
-  methodend 
+  methodend
+
+  method public BBjNumber userEmailExistsInUsers(BBjString email$)
+    declare BBjNumber existsInUsers
+    
+    sqlprep (#SqlChan) "select count(*) as count from arc_cc_users where firm_id='"+stbl("+FIRM_ID")+"' and user_email = ?"
+    sqlexec (#SqlChan) email$
+    dim result$:sqltmpl(#SqlChan)
+    result$=sqlfetch(#SqlChan)
+
+    methodret (result.count<>0)
+  methodend
 
    method public BBjString getCustomerName(BBjString customerID$)
 

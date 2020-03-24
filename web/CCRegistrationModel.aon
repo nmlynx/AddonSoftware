@@ -39,6 +39,15 @@ class public CCRegistrationModel
     
     methodret (result.count<>0)
   methodend
+
+  method public BBjNumber userEmailExistsInRegistration(BBjString email$)
+    sqlprep (#SqlChan) "select count(*) as count from arc_cc_register where firm_id='"+stbl("+FIRM_ID")+"' and user_email = ?"
+    sqlexec (#SqlChan) email$
+    dim result$:sqltmpl(#SqlChan)
+    result$=sqlfetch(#SqlChan)
+    
+    methodret (result.count<>0)
+  methodend
   
   REM Return value is the customer name for the ID entered by the registrant
   method public BBjString getCorrespondingCustomerName(BBjString customerID$)
@@ -154,7 +163,15 @@ class public CCRegistrationModel
 :           (! #UserModel!.userNameExistsInUsers(name!)) and 
 :           (! #userNameExistsInRegistration(name!))
         methodret valid 
-    methodend 
+    methodend
+
+    REM Make sure the user email is not already in use and is at least len 7 (a@b.xxx)
+    method public BBjNumber newUserEmailIsValid(BBjString email!)
+        valid = len(email!)>7 and
+:           (! #UserModel!.userEmailExistsInUsers(email!)) and 
+:           (! #userEmailExistsInRegistration(email!))
+        methodret valid 
+    methodend	
   
 classend
 
