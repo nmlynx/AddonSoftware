@@ -46,7 +46,7 @@ class public CCLoginManager
         #RegistrationView!.registerDesiredUserNameEB_OnFocusLostCallback(#this!,"handleUserNameModification")
         #RegistrationView!.registerFirstNameEB_OnFocusLostCallback(#this!,"handleLostFocus")
         #RegistrationView!.registerLastNameEB_OnFocusLostCallback(#this!,"handleLostFocus")
-        #RegistrationView!.registerUserEmailEB_OnFocusLostCallback(#this!,"handleLostFocus")
+        #RegistrationView!.registerUserEmailEB_OnFocusLostCallback(#this!,"handleUserEmailModification")
         #RegistrationModel!.setUserModel(#UserModel!)
         #ForgotPasswordModel!.setUserModel(#UserModel!)
         
@@ -197,10 +197,22 @@ class public CCLoginManager
 		endif
 rem	    #RegistrationView!.setUserNameValid(valid)
 	    #handleLostFocus(event!)
-	methodend 
+	methodend
+
+	method public void handleUserEmailModification(BBjLostFocusEvent event!)
+	    declare BBjString email!
+	    
+	    email!=event!.getEditBox().getText()
+	    valid = #RegistrationModel!.newUserEmailIsValid(email!)
+		if !valid
+			#RegistrationView!.displayMessage("Please use a different email address.")
+		endif
+	    #handleLostFocus(event!)
+	methodend	
 		
 	method public void handleLostFocus(BBjLostFocusEvent event!)
-	    enable=#RegistrationView!.allFieldsHaveValues() and #RegistrationModel!.newUserNameIsValid(#RegistrationView!.getUserName())
+	    enable=#RegistrationView!.allFieldsHaveValues() and #RegistrationModel!.newUserNameIsValid(#RegistrationView!.getUserName()) 
+:			and #RegistrationModel!.newUserEmailIsValid(#RegistrationView!.getUserEmail())
 	    #RegistrationView!.setRegistrationEnabled(enable)
 	methodend 
 
