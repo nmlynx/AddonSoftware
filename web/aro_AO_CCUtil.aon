@@ -183,13 +183,14 @@ class public AO_CCUtil
         declare BBjString msg_opt$
         
         rem --- open, then close tables to ensure they get created if not yet present; prevents err 77 in queries
-        num_files=5
+        num_files=6
         dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
         open_tables$[1]="ARC_CC_REGISTER",open_opts$[1]="OTA"
         open_tables$[2]="ARC_CC_USERS",open_opts$[2]="OTA"
         open_tables$[3]="ARM_CUSTMAST",open_opts$[3]="OTA"
         open_tables$[4]="ARS_CC_CUSTPMT",open_opts$[4]="OTA"
         open_tables$[5]="ARC_CC_PWDREQ",open_opts$[5]="OTA"
+		open_tables$[6]="ADM_SETTINGS",open_opts$[6]="OTA"
 
         call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],table_chans$[all],open_batch,open_status$
 
@@ -200,7 +201,22 @@ class public AO_CCUtil
             call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
             release
         endif
-        
+
+		rem --- also remove the WIN_ARE_CCPMT_CSTHST record from ADM_SETTINGS so form always comes up with default x,y,w,h
+		adm_settings=num(open_chans$[6])
+		dim adm_settings$:open_tpls$[6]
+		
+		read(adm_settings,key="USR"+stbl("+USER_ID"),dom=*next)
+		while 1
+			adm_settings_key$=key(adm_settings,err=*break)
+			readrecord(adm_settings)adm_settings$
+			if adm_settings.set_type$<>"USR" or adm_settings.set_user_id$<>stbl("+USER_ID") then break
+			if cvs(adm_settings.set_key$,3)="WIN_ARE_CCPMT_CSTHST"
+				remove(adm_settings,key=adm_settings_key$,err=*break)
+				break
+			endif
+		wend
+       
         for temp=1 to num_files
             open_opts$[temp]="CX"
         next temp
