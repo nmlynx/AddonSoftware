@@ -461,7 +461,7 @@ rem --- not found in entry file, so see if in open checks
 						tot_dis=tot_dis+apt05a.discount_amt
 						tot_reten=tot_reten+apt05a.retention
 
-						readrecord (apt05_dev,end=*next)apt05a$
+						readrecord (apt05_dev,end=*break)apt05a$
 						if apt05a.firm_id$<>firm_id$ or apt05a.ap_type$<>ap_type$ or apt05a.check_no$<>check_no$ then break
 					wend
 
@@ -677,4 +677,6 @@ return
 
 #include [+ADDON_LIB]std_missing_params.aon
 #include [+ADDON_LIB]std_functions.aon
+
+
 
