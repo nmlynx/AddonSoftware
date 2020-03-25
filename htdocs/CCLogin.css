@@ -27,8 +27,7 @@ body{
 	font-size: 36px;
 }
 
-/* id 5 handles the login and confirmation windows, id 21 the registration window, id 41 the password change window */
-[id='5'],[id='21'],[id='41'] {
+.cc-window {
 	background-color: rgba(255,255,255,0.0);
     border-radius: 50px;
 }
@@ -84,6 +83,55 @@ body{
     font-size: 1.25em !important;
     font-weight: bold !important;
 }
+
+/* 
+	Used for the password link, which is actually a BBjToolButton. 
+*/
+.cc-link {
+	background-color: rgba(255,255,255,0.0);
+	background: none;
+	border-width: 0px; 
+	box-shadow: none; 
+}
+
+.cc-link .html-face .basis-button-face {
+	color: blue;
+	text-decoration: underline;
+	
+}
+
+.cc-link.BBjToolButton:not(.bbj-disabled):hover {
+	background: none;
+	text-shadow: none;
+}
+
+.cc-link.BBjToolButton:not(.bbj-disabled):active {
+	background: none;
+	text-shadow: none;
+}
+
+.cc-link.gwt-ToggleButton-up-hovering {
+	background: none; 
+}
+
+.cc-link.gwt-ToggleButton-down-hovering {
+	background: none; 
+}
+
+.cc-link.BBjControl.BBjToolButton:not(.bbj-disabled):not(.bbj-toggle).gwt-ToggleButton-down-hovering {
+	background: none;
+	border-width: 0px; 
+}	
+
+.cc-link.BBjControl.BBjToolButton:not(.bbj-disabled):not(.bbj-toggle).gwt-ToggleButton-up-hovering {
+	background: none; 
+	border-width: 0px; 
+}	
+
+
+/* 
+End properties for password link. 
+*/
 
 .txt_customer_id, .txt_disp_apply_amt {
 	text-shadow:none;
