@@ -44,7 +44,7 @@ if callpoint!.getColumnData("ADM_PROCMASTER.ALLOW_BATCH")="Y" then
 		endif
 		num_files=1
 		dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-		open_tables$[1]=dd_table_alias$,open_opts$[1]="C"
+		open_tables$[1]=adm_proctables.dd_table_alias$,open_opts$[1]="C"
 		gosub open_tables
 
 		if keys_used then break
