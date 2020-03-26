@@ -335,6 +335,14 @@ class public AO_CCUserModel
             methodret null()
         endif 
   methodend 
+  
+  method public BBjString getFirmName()
+        sqlprep(#SqlChan) "select FIRM_NAME from ADM_FIRMS where COMPANY_ID = ?"
+        sqlexec(#SqlChan) #FirmID$
+        dim result$:sqltmpl(#SqlChan)
+        result$=sqlfetch(#SqlChan)
+        methodret result$
+  methodend 
 
 classend 
 

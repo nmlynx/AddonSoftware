@@ -54,7 +54,8 @@ class public CCLoginManager
         #ConfigurePasswordView!.registerCancelBtn_OnButtonPushCallback(#this!,"handleChangePasswordCancel")
         #ForgotPasswordView!.registerOKBtn_OnButtonPushCallback(#this!,"handleForgotPasswordOK")
         #ForgotPasswordView!.registerCancelBtn_OnButtonPushCallback(#this!,"handleForgotPasswordCancel")
-                
+        #ForgotPasswordView!.setHeader1Text(#UserModel!.getFirmName())
+        #ForgotPasswordView!.setHeader2Text("Provide email address for the account.")
 	methodend
 
 	method public void doModal()
