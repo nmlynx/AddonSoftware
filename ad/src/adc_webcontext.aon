@@ -42,7 +42,7 @@ rem --- Create new Web Context in Enterprise Manager
     contextConfig!.setDocBase(BBjapi().getFileSystem().resolvePath(filePath$))
     contextConfig!.setPath("/"+cvs(dbName$,11))
     contextConfig!.setConfig(barDir$+stbl("+FILE_CFG"))
-    if db_name$="AddonSoftware" then
+    if dbName$="AddonSoftware" then
         sscpName$="addon"
     else
         sscpName$=cvs(dbName$,11)
