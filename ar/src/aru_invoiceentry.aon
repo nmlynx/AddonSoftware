@@ -123,11 +123,18 @@ rem --- Update Customer Detail (arm-02) record
           arm02a.ar_type$=ar_type$
           k$=arm02a.firm_id$+arm02a.customer_id$+arm02a.ar_type$ 
           extract record (arm02_dev,key=k$,dom=*next) arm02a$; rem Advisory Locking
-          arm02a.aging_cur=arm02a.aging_cur+extension
-          balance=arm02a.aging_future+arm02a.aging_cur+arm02a.aging_30+
-:                 arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
-          arm02a$=field(arm02a$)
-          write record (arm02_dev) arm02a$
+          if cvs(arm02a.report_date$,2)="" then arm02a.report_date$=sysinfo.system_date$
+          aging_date$=arm02a.report_date$
+          if cvs(arm02a.report_type$,2)="" then arm02a.report_type$="I"
+          age_by$=arm02a.report_type$
+
+          rem --- Determine 30 day aging period dates
+          period_dates$=""
+          for x=-5 to 0
+              periodEndDate$=""
+              call pgmdir$+"adc_daydates.aon",aging_date$,periodEndDate$,x*30
+              period_dates$=periodEndDate$+period_dates$
+          next x
 
 rem --- Generate due date and discount date based on terms
 
@@ -137,6 +144,24 @@ rem --- Generate due date and discount date based on terms
           call pgmdir$+"adc_duedate.aon",arm10a.prox_or_days$,invoicedate$,number_of_days,duedate$,status
           number_of_days=arm10a.disc_days
           call pgmdir$+"adc_duedate.aon",arm10a.prox_or_days$,invoicedate$,number_of_days,discountdate$,status
+
+          rem --- Age this invoice
+          transaction_date$=iff(age_by$="I",invoicedate$,duedate$)
+          period=pos(transaction_date$>period_dates$,8)
+          period=iff(period=0,5,int(period/8))
+          dim aging[5]
+          aging[period]=aging[period]+extension
+
+          arm02a.aging_future=arm02a.aging_future+aging[0]
+          arm02a.aging_cur=arm02a.aging_cur+aging[1]
+          arm02a.aging_30=arm02a.aging_30+aging[2]
+          arm02a.aging_60=arm02a.aging_60+aging[3]
+          arm02a.aging_90=arm02a.aging_90+aging[4]
+          arm02a.aging_120=arm02a.aging_120+aging[5]
+          arm02a.lstinv_date$=invoicedate$
+          balance=arm02a.aging_future+arm02a.aging_cur+arm02a.aging_30+arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
+          arm02a$=field(arm02a$)
+          write record (arm02_dev) arm02a$
 
 rem --- Initialize Invoice Header (art-01) record and attempt to retrieve it
 

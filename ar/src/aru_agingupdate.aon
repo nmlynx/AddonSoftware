@@ -118,6 +118,7 @@ customer_break: rem --- Customer Break
        arm02a.report_date$=aging_date$
        arm02a.report_type$=age_by$
        arm02a.age_credits$="Y"
+       arm02a.future_aging$="Y"
        arm02a$=field(arm02a$)
        write record (arm02_dev) arm02a$
     endif

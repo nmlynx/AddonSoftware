@@ -1,7 +1,34 @@
+[[OPE_CREDREV.ACUS]]
+rem process custom event -- used in this pgm to select/de-select checkboxes in grid
+rem see basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info
+rem this routine is executed when callbacks have been set to run a "custom event"
+rem analyze gui_event$ and notice$ to see which control's callback triggered the event, and what kind
+rem of event it is... in this case, we're toggling checkboxes on/off in form grid control
+
+rem --- double click to select the row
+
+dim gui_event$:tmpl(gui_dev)
+dim notify_base$:noticetpl(0,0)
+gui_event$=SysGUI!.getLastEventString()
+ctl_ID=dec(gui_event.ID$)
+
+if ctl_ID=num(user_tpl.gridCreditCtlID$)
+
+	if gui_event.code$="N"
+		notify_base$=notice(gui_dev,gui_event.x%)
+		dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
+		notice$=notify_base$
+	endif
+
+	gosub launch_cred_maint
+
+endif
+
 [[OPE_CREDREV.AOPT-CRED]]
 rem --- get curr row from grid and launch credit maint
 
 	gosub launch_cred_maint
+
 [[OPE_CREDREV.AOPT-NEWC]]
 rem --- Add Tickler
 
@@ -38,6 +65,7 @@ rem --- Update Credit changes to master file
 		callpoint!.setOptionEnabled("CRED",1)
 	endif
 	callpoint!.setOptionEnabled("NEWC",1)
+
 [[OPE_CREDREV.AOPT-SELR]]
 rem --- Run appropriate form
 	if user_tpl.cur_sel$="O"
@@ -47,6 +75,93 @@ rem --- Run appropriate form
 		print 'show'
 		print "C"
 	endif
+
+[[OPE_CREDREV.AWIN]]
+rem --- Build custom form
+	use ::ado_util.src::util
+
+	num_files=6
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+
+	open_tables$[1]="ARS_CREDIT",open_opts$[1]="OTA"
+	open_tables$[2]="OPE_CREDDATE",open_opts$[2]="OTA"
+	open_tables$[3]="OPE_ORDHDR",open_opts$[3]="OTA"
+	open_tables$[4]="ARM_CUSTMAST",open_opts$[4]="OTA"
+	open_tables$[5]="ARM_CUSTDET",open_opts$[5]="OTA"
+	open_tables$[6]="ARM_CUSTPMTS",open_opts$[6]="OTA"
+
+	gosub open_tables
+
+	ars01c_dev=num(open_chans$[1]),ars01c_tpl$=open_tpls$[1]
+	ope03_dev=num(open_chans$[2]),ope03_tpl$=open_tpls$[2]
+	ope01_dev=num(open_chans$[3]),ope01_tpl$=open_tpls$[3]
+	arm01_dev=num(open_chans$[4]),arm01_tpl$=open_tpls$[4]
+	arm02_dev=num(open_chans$[5]),arm02_tpl$=open_tpls$[5]
+
+rem --- Dimension string templates
+
+	dim ars01c$:ars01c_tpl$
+
+rem --- Check Parameters
+
+	read record (ars01c_dev,key=firm_id$+"AR01",dom=std_missing_params)ars01c$
+	if ars01c.sys_install$<>"Y"
+		msg_id$="OP_NOCREDIT"
+		gosub disp_message
+		bbjAPI!=bbjAPI()
+		rdFuncSpace!=bbjAPI!.getGroupNamespace()
+		rdFuncSpace!.setValue("+build_task","OFF")
+		release
+	endif
+
+rem --- get customer mask
+
+	call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,cust_len
+	callpoint!.setDevObject("custmask",m0$)
+
+rem --- add grid to store credit holds, with checkboxes for user to select one only
+
+	user_tpl_str$="gridCreditOffset:c(5),gridCreditCols:c(5),gridCreditRows:c(5),gridCreditCtlID:c(5)," +
+:		"vectCreditOffset:c(5),cur_sel:c(1)"
+	dim user_tpl$:user_tpl_str$
+
+	UserObj!=SysGUI!.makeVector()
+	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
+
+	gridCredit!=Form!.addGrid(nxt_ctlID,5,40,800,400)
+	user_tpl.gridCreditCtlID$=str(nxt_ctlID)
+	user_tpl.gridCreditCols$="6"
+	user_tpl.gridCreditRows$="10"
+	user_tpl.gridCreditOffset$="0"
+	user_tpl.vectCreditOffset$="1"
+	user_tpl.cur_sel$="O"
+
+	gosub format_grid
+	util.resizeWindow(Form!, SysGui!)
+
+	UserObj!.addItem(gridCredit!)
+	UserObj!.addItem(vectCredit!);rem vector of filtered recs from Credit recs
+
+rem --- misc other init
+	gridCredit!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
+	gridCredit!.setTabAction(gridCredit!.GRID_NAVIGATE_GRID)
+
+	gosub create_orders_vector
+	gosub fill_grid
+
+rem --- set callbacks - processed in ACUS callpoint
+	gridCredit!.setCallback(gridCredit!.ON_GRID_DOUBLE_CLICK,"custom_event")
+	gridCredit!.setCallback(gridCredit!.ON_GRID_ENTER_KEY,"custom_event")
+
+rem --- verify New Tickler is disabled and Cred Maint ensabled properly
+	callpoint!.setOptionEnabled("NEWC",0)
+
+	if rows=0
+		callpoint!.setOptionEnabled("CRED",0)
+	else
+		callpoint!.setOptionEnabled("CRED",1)
+	endif
+
 [[OPE_CREDREV.CUST_ORD.AVAL]]
 rem --- Change selection
 	if user_tpl.cur_sel$="O" and callpoint!.getUserInput()="C"
@@ -72,31 +187,7 @@ rem --- Change selection
 		endif
 		callpoint!.setOptionEnabled("NEWC",0)
 	endif
-[[OPE_CREDREV.ACUS]]
-rem process custom event -- used in this pgm to select/de-select checkboxes in grid
-rem see basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info
-rem this routine is executed when callbacks have been set to run a "custom event"
-rem analyze gui_event$ and notice$ to see which control's callback triggered the event, and what kind
-rem of event it is... in this case, we're toggling checkboxes on/off in form grid control
 
-rem --- double click to select the row
-
-dim gui_event$:tmpl(gui_dev)
-dim notify_base$:noticetpl(0,0)
-gui_event$=SysGUI!.getLastEventString()
-ctl_ID=dec(gui_event.ID$)
-
-if ctl_ID=num(user_tpl.gridCreditCtlID$)
-
-	if gui_event.code$="N"
-		notify_base$=notice(gui_dev,gui_event.x%)
-		dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
-		notice$=notify_base$
-	endif
-
-	gosub launch_cred_maint
-
-endif
 [[OPE_CREDREV.<CUSTOM>]]
 rem --- launch Credit Maint for selected row========================================
 
@@ -126,10 +217,13 @@ launch_cred_maint:
 	dim arm01a$:fnget_tpl$("ARM_CUSTMAST")
 	arm02_dev=fnget_dev("ARM_CUSTDET")
 	dim arm02a$:fnget_tpl$("ARM_CUSTDET")
+	arm06_dev=fnget_dev("ARM_CUSTPMTS")
+	dim arm06a$:fnget_tpl$("ARM_CUSTPMTS")
 	readrecord(arm01_dev,key=firm_id$+cust$,dom=*next)arm01a$
 	readrecord(arm02_dev,key=firm_id$+cust$+"  ",dom=*next)arm02a$
+	readrecord(arm06_dev,key=firm_id$+cust$,dom=*next)arm06a$
 	user_id$=stbl("+USER_ID")
-	dim dflt_data$[27,1]
+	dim dflt_data$[32,1]
 	dflt_data$[1,0]="CUSTOMER_ID"
 	dflt_data$[1,1]=cust$
 	dflt_data$[2,0]="ADDR_LINE_1"
@@ -184,6 +278,17 @@ launch_cred_maint:
 	dflt_data$[26,1]=date(jul(gridCredit!.getCellText(curr_row,4),stbl("+DATE_GRID")):"%Yd%Mz%Dz")
 	dflt_data$[27,0]="SHIPMNT_DATE"
 	dflt_data$[27,1]=date(jul(gridCredit!.getCellText(curr_row,5),stbl("+DATE_GRID")):"%Yd%Mz%Dz")
+	dflt_data$[28,0]="AVG_DAYS"
+	dflt_data$[28,1]=str(arm06a.avg_days)
+	dflt_data$[29,0]="LSTINV_DATE"
+	dflt_data$[29,1]=arm06a.lstinv_date$
+	dflt_data$[30,0]="LSTPAY_DATE"
+	dflt_data$[30,1]=arm06a.lstpay_date$
+	dflt_data$[31,0]="REPORT_DATE"
+	dflt_data$[31,1]=arm02a.report_date$
+	dflt_data$[32,0]="REPORT_TYPE"
+	dflt_data$[32,1]=arm02a.report_type$
+
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :		"OPE_CREDMAINT",
 :		user_id$,
@@ -405,87 +510,6 @@ alpha_mask:
 	fnend
 
 #include [+ADDON_LIB]std_missing_params.aon
-[[OPE_CREDREV.AWIN]]
-rem --- Build custom form
-	use ::ado_util.src::util
 
-	num_files=5
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
-	open_tables$[1]="ARS_CREDIT",open_opts$[1]="OTA"
-	open_tables$[2]="OPE_CREDDATE",open_opts$[2]="OTA"
-	open_tables$[3]="OPE_ORDHDR",open_opts$[3]="OTA"
-	open_tables$[4]="ARM_CUSTMAST",open_opts$[4]="OTA"
-	open_tables$[5]="ARM_CUSTDET",open_opts$[5]="OTA"
 
-	gosub open_tables
-
-	ars01c_dev=num(open_chans$[1]),ars01c_tpl$=open_tpls$[1]
-	ope03_dev=num(open_chans$[2]),ope03_tpl$=open_tpls$[2]
-	ope01_dev=num(open_chans$[3]),ope01_tpl$=open_tpls$[3]
-	arm01_dev=num(open_chans$[4]),arm01_tpl$=open_tpls$[4]
-	arm02_dev=num(open_chans$[5]),arm02_tpl$=open_tpls$[5]
-
-rem --- Dimension string templates
-
-	dim ars01c$:ars01c_tpl$
-
-rem --- Check Parameters
-
-	read record (ars01c_dev,key=firm_id$+"AR01",dom=std_missing_params)ars01c$
-	if ars01c.sys_install$<>"Y"
-		msg_id$="OP_NOCREDIT"
-		gosub disp_message
-		bbjAPI!=bbjAPI()
-		rdFuncSpace!=bbjAPI!.getGroupNamespace()
-		rdFuncSpace!.setValue("+build_task","OFF")
-		release
-	endif
-
-rem --- get customer mask
-
-	call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,cust_len
-	callpoint!.setDevObject("custmask",m0$)
-
-rem --- add grid to store credit holds, with checkboxes for user to select one only
-
-	user_tpl_str$="gridCreditOffset:c(5),gridCreditCols:c(5),gridCreditRows:c(5),gridCreditCtlID:c(5)," +
-:		"vectCreditOffset:c(5),cur_sel:c(1)"
-	dim user_tpl$:user_tpl_str$
-
-	UserObj!=SysGUI!.makeVector()
-	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
-
-	gridCredit!=Form!.addGrid(nxt_ctlID,5,40,800,400)
-	user_tpl.gridCreditCtlID$=str(nxt_ctlID)
-	user_tpl.gridCreditCols$="6"
-	user_tpl.gridCreditRows$="10"
-	user_tpl.gridCreditOffset$="0"
-	user_tpl.vectCreditOffset$="1"
-	user_tpl.cur_sel$="O"
-
-	gosub format_grid
-	util.resizeWindow(Form!, SysGui!)
-
-	UserObj!.addItem(gridCredit!)
-	UserObj!.addItem(vectCredit!);rem vector of filtered recs from Credit recs
-
-rem --- misc other init
-	gridCredit!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
-	gridCredit!.setTabAction(gridCredit!.GRID_NAVIGATE_GRID)
-
-	gosub create_orders_vector
-	gosub fill_grid
-
-rem --- set callbacks - processed in ACUS callpoint
-	gridCredit!.setCallback(gridCredit!.ON_GRID_DOUBLE_CLICK,"custom_event")
-	gridCredit!.setCallback(gridCredit!.ON_GRID_ENTER_KEY,"custom_event")
-
-rem --- verify New Tickler is disabled and Cred Maint ensabled properly
-	callpoint!.setOptionEnabled("NEWC",0)
-
-	if rows=0
-		callpoint!.setOptionEnabled("CRED",0)
-	else
-		callpoint!.setOptionEnabled("CRED",1)
-	endif

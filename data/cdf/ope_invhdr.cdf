@@ -1496,7 +1496,7 @@ rem                 = 1 -> user_tpl.hist_ord$ = "N"
 
 rem --- Open needed files
 
-	num_files=42
+	num_files=43
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 
 	open_tables$[1]="ARM_CUSTMAST",  open_opts$[1]="OTA"
@@ -1538,6 +1538,7 @@ rem --- Open needed files
 	open_tables$[40]="ARC_TERMCODE", open_opts$[40]="OTA"
 	open_tables$[41]="IVM_ITEMSYN",open_opts$[41]="OTA"
 	open_tables$[42]="OPT_SHIPTRACK",open_opts$[42]="OTA"
+	open_tables$[43]="ARM_CUSTPMTS",   open_opts$[43]="OTA"
 
 	gosub open_tables
 
@@ -2644,8 +2645,11 @@ rem ==========================================================================
 
 	custdet_dev = fnget_dev("ARM_CUSTDET")
 	dim custdet_tpl$:fnget_tpl$("ARM_CUSTDET")
+	custpmts_dev = fnget_dev("ARM_CUSTPMTS")
+	dim custpmts_tpl$:fnget_tpl$("ARM_CUSTPMTS")
 
 	find record (custdet_dev, key=firm_id$+cust_id$+"  ",dom=*next) custdet_tpl$
+	find record (custpmts_dev, key=firm_id$+cust_id$,dom=*next) custpmts_tpl$
 
 	user_tpl.balance = custdet_tpl.aging_future+
 :		custdet_tpl.aging_cur+
@@ -2661,6 +2665,26 @@ rem ==========================================================================
 	callpoint!.setColumnData("<<DISPLAY>>.AGING_CUR",    custdet_tpl.aging_cur$)
 	callpoint!.setColumnData("<<DISPLAY>>.AGING_FUTURE", custdet_tpl.aging_future$)
 	callpoint!.setColumnData("<<DISPLAY>>.TOT_AGING",    user_tpl.balance$)
+	callpoint!.setColumnData("<<DISPLAY>>.AVG_DAYS",    custpmts_tpl.avg_days$)
+	callpoint!.setColumnData("<<DISPLAY>>.LSTINV_DATE",    custpmts_tpl.lstinv_date$)
+	callpoint!.setColumnData("<<DISPLAY>>.LSTPAY_DATE",    custpmts_tpl.lstpay_date$)
+	callpoint!.setColumnData("<<DISPLAY>>.REPORT_DATE",    custdet_tpl.report_date$)
+
+	switch pos(custdet_tpl.report_type$=" DI")
+		case 1
+			report_type$=""
+			break
+		case 2
+			report_type$="D - Due Date"
+			break
+		case 3
+			report_type$="I - Invoice Date"
+			break
+		case default
+			report_type$="Unkown"
+			break
+	swend
+	callpoint!.setColumnData("<<DISPLAY>>.REPORT_TYPE",report_type$,1)
 
 	rem --- also display cust type
 	callpoint!.setColumnData("<<DISPLAY>>.CUST_TP",   custdet_tpl.customer_type$)
