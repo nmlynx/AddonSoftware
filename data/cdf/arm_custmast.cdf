@@ -98,7 +98,7 @@ rem --- Launch Customer Maitenance form for this customer
 	callpoint!.setDevObject("cred_limit",cred_limit$)
 	callpoint!.setDevObject("memo_1024",memo_1024$)
 
-	dim dflt_data$[27,1]
+	dim dflt_data$[32,1]
 	dflt_data$[1,0]="CUSTOMER_ID"
 	dflt_data$[1,1]=customer_id$
 	dflt_data$[2,0]="ADDR_LINE_1"
@@ -153,6 +153,16 @@ rem --- Launch Customer Maitenance form for this customer
 	dflt_data$[26,1]=""
 	dflt_data$[27,0]="SHIPMNT_DATE"
 	dflt_data$[27,1]=""
+	dflt_data$[28,0]="AVG_DAYS"
+	dflt_data$[28,1]=callpoint!.getColumnData("ARM_CUSTPMTS.AVG_DAYS")
+	dflt_data$[29,0]="LSTINV_DATE"
+	dflt_data$[29,1]=callpoint!.getColumnData("ARM_CUSTPMTS.LSTINV_DATE")
+	dflt_data$[30,0]="LSTPAY_DATE"
+	dflt_data$[30,1]=callpoint!.getColumnData("ARM_CUSTPMTS.LSTPAY_DATE")
+	dflt_data$[31,0]="REPORT_DATE"
+	dflt_data$[31,1]=callpoint!.getColumnData("ARM_CUSTDET.REPORT_DATE")
+	dflt_data$[32,0]="REPORT_TYPE"
+	dflt_data$[32,1]=callpoint!.getColumnData("ARM_CUSTDET.REPORT_TYPE")
 
 	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :		"OPE_CREDMAINT",

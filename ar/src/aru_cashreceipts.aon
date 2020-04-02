@@ -54,6 +54,7 @@ rem --- Read next Cash Receipts Header (are-01) record
 
           rem --- Initializations for this invoice
 
+          dim aging[5]
           total=0
           mtdcash=0
           mtddisc=0
@@ -77,6 +78,18 @@ rem --- Read next Cash Receipts Header (are-01) record
           arm02a.ar_type$=are01a.ar_type$
           k$=arm02a.firm_id$+arm02a.customer_id$+arm02a.ar_type$ 
           find record (arm02_dev,key=k$,dom=*next) arm02a$
+          if cvs(arm02a.report_date$,2)="" then arm02a.report_date$=sysinfo.system_date$
+          aging_date$=arm02a.report_date$
+          if cvs(arm02a.report_type$,2)="" then arm02a.report_type$="I"
+          age_by$=arm02a.report_type$
+
+          rem --- Determine 30 day aging period dates
+          period_dates$=""
+          for x=-5 to 0
+              enddate$=""
+              call pgmdir$+"adc_daydates.aon",aging_date$,enddate$,x*30
+              period_dates$=enddate$+period_dates$
+          next x
 
           rem --- Post Cash Receipt History Header (art-06) record
  
@@ -318,6 +331,12 @@ rem --- Read next Cash Receipts Header (are-01) record
                 endif
                 total=total-are11a.apply_amt-are11a.discount_amt
 
+                rem --- Age this invoice
+                transaction_date$=iff(age_by$="I",art01a.invoice_date$,art01a.inv_due_date$)
+                period=pos(transaction_date$>period_dates$,8)
+                period=iff(period=0,5,int(period/8))
+                aging[period]=aging[period]-are11a.apply_amt-are11a.discount_amt
+
                 rem --- Remove or update Cash Receipts Invoice Balance (are-31) record
 
                 while moredetail
@@ -392,7 +411,12 @@ rem --- Read next Cash Receipts Header (are-01) record
                 k$=arm02a.firm_id$+arm02a.customer_id$+arm02a.ar_type$ 
                 extract record (arm02_dev,key=k$,dom=*next) arm02a$; rem Advisory Locking
                 arm02a.lstpay_date$=are01a.receipt_date$
-                arm02a.aging_cur=arm02a.aging_cur+total
+                arm02a.aging_future=arm02a.aging_future+aging[0]
+                arm02a.aging_cur=arm02a.aging_cur+aging[1]
+                arm02a.aging_30=arm02a.aging_30+aging[2]
+                arm02a.aging_60=arm02a.aging_60+aging[3]
+                arm02a.aging_90=arm02a.aging_90+aging[4]
+                arm02a.aging_120=arm02a.aging_120+aging[5]
                 arm02a$=field(arm02a$)
                 write record (arm02_dev) arm02a$
                 break

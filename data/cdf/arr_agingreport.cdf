@@ -1,3 +1,62 @@
+[[ARR_AGINGREPORT.AGEDATE_30_FROM.AVAL]]
+tmp_cur_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_CUR_FROM")
+tmp_30_from$=callpoint!.getUserInput()
+tmp_60_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_60_FROM")
+tmp_90_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_90_FROM")
+
+gosub calc_dates2
+
+[[ARR_AGINGREPORT.AGEDATE_60_FROM.AVAL]]
+tmp_cur_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_CUR_FROM")
+tmp_30_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_30_FROM")
+tmp_60_from$=callpoint!.getUserInput()
+tmp_90_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_90_FROM")
+
+gosub calc_dates3
+
+[[ARR_AGINGREPORT.AGEDATE_90_FROM.AVAL]]
+tmp_cur_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_CUR_FROM")
+tmp_30_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_30_FROM")
+tmp_60_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_60_FROM")
+tmp_90_from$=callpoint!.getUserInput()
+
+gosub calc_dates4
+
+[[ARR_AGINGREPORT.AGEDATE_CUR_FROM.AVAL]]
+tmp_cur_from$=callpoint!.getUserInput()
+tmp_30_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_30_FROM")
+tmp_60_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_60_FROM")
+tmp_90_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_90_FROM")
+
+gosub calc_dates1
+
+[[ARR_AGINGREPORT.AGEDATE_FUT_FROM.AVAL]]
+tmp_cur_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_CUR_FROM")
+tmp_30_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_30_FROM")
+tmp_60_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_60_FROM")
+tmp_90_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_90_FROM")
+
+gosub calc_dates1
+
+[[ARR_AGINGREPORT.AGE_CREDITS.AVAL]]
+rem --- If updating customer record, MUST age credits
+if callpoint!.getUserInput()="N"and callpoint!.getColumnData("ARR_AGINGREPORT.UPDATE_AGING")="Y"
+	callpoint!.setMessage("AGE_CREDITS")
+rem ... Age Credits is required to update the Customer.
+	callpoint!.setColumnData("ARR_AGINGREPORT.AGE_CREDITS","Y",1)
+	callpoint!.setStatus("ABORT")
+	break
+endif
+
+[[ARR_AGINGREPORT.AREC]]
+tmp_rpt_opt$=callpoint!.getColumnData("ARR_AGINGREPORT.REPORT_OPTION")
+tmp_rpt_seq$=callpoint!.getColumnData("ARR_AGINGREPORT.REPORT_SEQUENCE")
+gosub set_selections
+fixed_periods$=callpoint!.getColumnData("ARR_AGINGREPORT.FIXED_PERIODS")
+days_in_per=num(callpoint!.getColumnData("ARR_AGINGREPORT.DAYS_IN_PER"))
+start_date$=callpoint!.getColumnData("ARR_AGINGREPORT.REPORT_DATE")
+gosub calc_dates_fixed
+
 [[ARR_AGINGREPORT.COL_FORMAT.AVAL]]
 rem --- Enable/Disable Comments field based on this value
 
@@ -7,91 +66,7 @@ rem --- Enable/Disable Comments field based on this value
 	else
 		callpoint!.setColumnEnabled("ARR_AGINGREPORT.CUST_COMMENTS",1)
 	endif
-[[ARR_AGINGREPORT.REPORT_SUMM_DET.AVAL]]
-rem --- Enable/Disable Comments field based on this value
 
-	if callpoint!.getUserInput()="S"
-		callpoint!.setColumnData("ARR_AGINGREPORT.CUST_COMMENTS","",1)
-		callpoint!.setColumnEnabled("ARR_AGINGREPORT.CUST_COMMENTS",0)
-	else
-		callpoint!.setColumnEnabled("ARR_AGINGREPORT.CUST_COMMENTS",1)
-	endif
-[[ARR_AGINGREPORT.AGEDATE_FUT_FROM.AVAL]]
-tmp_cur_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_CUR_FROM")
-tmp_30_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_30_FROM")
-tmp_60_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_60_FROM")
-tmp_90_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_90_FROM")
-
-gosub calc_dates1
-[[ARR_AGINGREPORT.AGEDATE_CUR_FROM.AVAL]]
-tmp_cur_from$=callpoint!.getUserInput()
-tmp_30_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_30_FROM")
-tmp_60_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_60_FROM")
-tmp_90_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_90_FROM")
-
-gosub calc_dates1
-[[ARR_AGINGREPORT.AGEDATE_90_FROM.AVAL]]
-tmp_cur_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_CUR_FROM")
-tmp_30_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_30_FROM")
-tmp_60_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_60_FROM")
-tmp_90_from$=callpoint!.getUserInput()
-
-gosub calc_dates4
-[[ARR_AGINGREPORT.AGEDATE_60_FROM.AVAL]]
-tmp_cur_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_CUR_FROM")
-tmp_30_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_30_FROM")
-tmp_60_from$=callpoint!.getUserInput()
-tmp_90_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_90_FROM")
-
-gosub calc_dates3
-[[ARR_AGINGREPORT.AGEDATE_30_FROM.AVAL]]
-tmp_cur_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_CUR_FROM")
-tmp_30_from$=callpoint!.getUserInput()
-tmp_60_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_60_FROM")
-tmp_90_from$=callpoint!.getColumnData("ARR_AGINGREPORT.AGEDATE_90_FROM")
-
-gosub calc_dates2
-[[ARR_AGINGREPORT.REPORT_SEQUENCE.AVAL]]
-tmp_rpt_opt$=callpoint!.getColumnData("ARR_AGINGREPORT.REPORT_OPTION")
-tmp_rpt_seq$=callpoint!.getUserInput()
-gosub set_selections
-[[ARR_AGINGREPORT.REPORT_OPTION.AVAL]]
-tmp_rpt_opt$=callpoint!.getUserInput()
-tmp_rpt_seq$=callpoint!.getColumnData("ARR_AGINGREPORT.REPORT_SEQUENCE")
-gosub set_selections
-[[ARR_AGINGREPORT.UPDATE_AGING.AVAL]]
-
-if callpoint!.getColumnData("ARR_AGINGREPORT.FIXED_PERIODS")="N" or num(callpoint!.getColumnData("ARR_AGINGREPORT.DAYS_IN_PER"))<>30
-	if callpoint!.getUserInput()="Y"
-		callpoint!.setMessage("PER_30_REQUIRED")
-		callpoint!.setUserInput("N")
-		callpoint!.setStatus("REFRESH")
-	endif
-endif
-[[ARR_AGINGREPORT.FIXED_PERIODS.AVAL]]
-rem --- Recalc dates if fixed periods
-if callpoint!.getUserInput()="Y"
-	fixed_periods$=callpoint!.getUserInput()
-	days_in_per=num(callpoint!.getColumnData("ARR_AGINGREPORT.DAYS_IN_PER"))
-	start_date$=callpoint!.getColumnData("ARR_AGINGREPORT.REPORT_DATE")
-	gosub calc_dates_fixed
-	callpoint!.setStatus("REFRESH")
-else
-	if callpoint!.getColumnData("ARR_AGINGREPORT.UPDATE_AGING")="Y"
-		callpoint!.setMessage("FIXED_PERIODS")
-		callpoint!.setColumnData("ARR_AGINGREPORT.FIXED_PERIODS","Y",1)
-		callpoint!.setStatus("ABORT")
-		break
-	endif
-endif
-[[ARR_AGINGREPORT.AREC]]
-tmp_rpt_opt$=callpoint!.getColumnData("ARR_AGINGREPORT.REPORT_OPTION")
-tmp_rpt_seq$=callpoint!.getColumnData("ARR_AGINGREPORT.REPORT_SEQUENCE")
-gosub set_selections
-fixed_periods$=callpoint!.getColumnData("ARR_AGINGREPORT.FIXED_PERIODS")
-days_in_per=num(callpoint!.getColumnData("ARR_AGINGREPORT.DAYS_IN_PER"))
-start_date$=callpoint!.getColumnData("ARR_AGINGREPORT.REPORT_DATE")
-gosub calc_dates_fixed
 [[ARR_AGINGREPORT.DAYS_IN_PER.AVAL]]
 rem --- recalc dates using new fixed number of days
 rem --- if updating customer record, MUST stay w/ 30 day periods
@@ -111,6 +86,34 @@ rem --- if updating customer record, MUST stay w/ 30 day periods
 
 
 	callpoint!.setStatus("REFRESH")
+
+[[ARR_AGINGREPORT.FIXED_PERIODS.AVAL]]
+rem --- Recalc dates if fixed periods
+if callpoint!.getUserInput()="Y"
+	fixed_periods$=callpoint!.getUserInput()
+	days_in_per=num(callpoint!.getColumnData("ARR_AGINGREPORT.DAYS_IN_PER"))
+	start_date$=callpoint!.getColumnData("ARR_AGINGREPORT.REPORT_DATE")
+	gosub calc_dates_fixed
+	callpoint!.setStatus("REFRESH")
+else
+	if callpoint!.getColumnData("ARR_AGINGREPORT.UPDATE_AGING")="Y"
+		callpoint!.setMessage("FIXED_PERIODS")
+		callpoint!.setColumnData("ARR_AGINGREPORT.FIXED_PERIODS","Y",1)
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+endif
+
+[[ARR_AGINGREPORT.FUTURE_AGING.AVAL]]
+rem --- If updating customer record, MUST do future aging
+if callpoint!.getUserInput()="N"and callpoint!.getColumnData("ARR_AGINGREPORT.UPDATE_AGING")="Y"
+	callpoint!.setMessage("FUTURE_AGING")
+rem ... Future Aging is required to update the Customer.
+	callpoint!.setColumnData("ARR_AGINGREPORT.FUTURE_AGING","Y",1)
+	callpoint!.setStatus("ABORT")
+	break
+endif
+
 [[ARR_AGINGREPORT.REPORT_DATE.AVAL]]
 fixed_periods$=callpoint!.getColumnData("ARR_AGINGREPORT.FIXED_PERIODS")
 days_in_per=num(callpoint!.getColumnData("ARR_AGINGREPORT.DAYS_IN_PER"))
@@ -131,6 +134,41 @@ else
 	endif
 endif
 callpoint!.setStatus("REFRESH")
+
+[[ARR_AGINGREPORT.REPORT_OPTION.AVAL]]
+tmp_rpt_opt$=callpoint!.getUserInput()
+tmp_rpt_seq$=callpoint!.getColumnData("ARR_AGINGREPORT.REPORT_SEQUENCE")
+gosub set_selections
+
+[[ARR_AGINGREPORT.REPORT_SEQUENCE.AVAL]]
+tmp_rpt_opt$=callpoint!.getColumnData("ARR_AGINGREPORT.REPORT_OPTION")
+tmp_rpt_seq$=callpoint!.getUserInput()
+gosub set_selections
+
+[[ARR_AGINGREPORT.REPORT_SUMM_DET.AVAL]]
+rem --- Enable/Disable Comments field based on this value
+
+	if callpoint!.getUserInput()="S"
+		callpoint!.setColumnData("ARR_AGINGREPORT.CUST_COMMENTS","",1)
+		callpoint!.setColumnEnabled("ARR_AGINGREPORT.CUST_COMMENTS",0)
+	else
+		callpoint!.setColumnEnabled("ARR_AGINGREPORT.CUST_COMMENTS",1)
+	endif
+
+[[ARR_AGINGREPORT.UPDATE_AGING.AVAL]]
+rem --- If updating customer record, MUST use 30-day fixed periods, do future aging and age credits.
+if callpoint!.getUserInput()="Y"
+	if callpoint!.getColumnData("ARR_AGINGREPORT.FIXED_PERIODS")="N" or 
+:	num(callpoint!.getColumnData("ARR_AGINGREPORT.DAYS_IN_PER"))<>30 or
+:	callpoint!.getColumnData("ARR_AGINGREPORT.FUTURE_AGING")="N" or
+:	callpoint!.getColumnData("ARR_AGINGREPORT.AGE_CREDITS")="N" then
+		callpoint!.setMessage("AR_CUST_AGING_REQ")
+rem ... Fixed Periods of 30 days each, Future Aging and Aging Credits are required when updating the Customer.
+		callpoint!.setUserInput("N")
+		callpoint!.setStatus("REFRESH")
+	endif
+endif
+
 [[ARR_AGINGREPORT.<CUSTOM>]]
 calc_dates_fixed:rem --- Calculate Aging Dates
 rem --- fixed_periods$,days_in_per,start_date$ being set prior to gosub
@@ -287,3 +325,6 @@ rem --- send in control to toggle (format "ALIAS.CONTROL_NAME"), and D or space 
 		callpoint!.setStatus("ABLEMAP-REFRESH-ACTIVATE")
 	next x 
 return
+
+
+
