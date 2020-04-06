@@ -1,129 +1,43 @@
 =======================================================================================================================================
  Report Date:   2020-03-27
- Report Branch: AddonSoftware 20.00
- Last Release:  AddonSoftware 19.22
+ Report Branch: AddonSoftware 20.01
+ Last Release:  AddonSoftware 20.00
 =======================================================================================================================================
 
-19.22 release 03/16/2020
-BBjBaristaAddonDemos1922_03-13-2020_1225.jar
+20.00 release 04/3/2020
+BBjBaristaAddonDemos2000_04-02-2020_1751.jar
 
 =======================================================================================================================================
-Revision: 519ab2e50cf12c143bcebf8acf7145636b4225ba
+Revision: 72f5913f1eab097096f3908cf78474ecdae346e9
 Author: Bill Halsted <bhalsted@basis.com>
-Date: 3/10/2020 5:36:25 PM
+Date: 4/1/2020 5:10:40 PM
 Message:
-Bug 9528: Changed the AO_INVOICE key on the art_invhdr/det tables to
-include customer number.
+ER 9892: Modified the AR Cash Receipts Register update, the AR Simple
+Invoice Register update, and the OP Sales Register update to update the
+correct aging period in arm_custdet (arm-02). Added aging criterion
+information to Totals tab Order/Invoice Entry form, and the OP Credit
+Maintenance form. Modified AR Aging Report to require 30-day fixed
+period, aging credits and future aging when selection "Update Customer
+Aging Summary".
 ----
-Modified: data/art-01
-Modified: data/art-11
-Modified: data/bar/art_invdet.xml
-Modified: data/bar/art_invhdr.xml
-Modified: data/cdf/art_invhdr.cdf
-Modified: documentation/readme.htm
-
-=======================================================================================================================================
-Revision: 0a35c4f2e30e3a3f1614076e54452e41b8899722
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 3/16/2020 3:33:06 PM
-Message:
-Bug 9904: Added special handling for batched real-time processing files.
-----
-Modified: data/bar/adm_procbatchmnt.xml
-Modified: data/bar/adm_procmaster.xml
-Modified: data/cdf/adm_procbatchmnt.cdf
-Modified: data/cdf/adm_procmaster.cdf
-
-=======================================================================================================================================
-Revision: 011e9b43e91c0155d39937e4e036646292919a61
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 3/17/2020 1:15:01 PM
-Message:
-Bug 9906: Modified the GL Recap Report to let the Sales Register Update
-handle errors so it can reset trans_status flags from 'R' to 'E'.
-----
-Modified: gl/src/glr_recap.aon
-
-=======================================================================================================================================
-Revision: 130e72fbca94da50aca116107d28e6901594d26b
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 3/17/2020 5:44:42 PM
-Message:
-Bug 9908: Prevent entering a Sales Order invoice date that is in a
-locked GL period.
-----
+Modified: ar/src/arr_agingreport.aon
+Modified: ar/src/aru_agingupdate.aon
+Modified: ar/src/aru_cashreceipts.aon
+Modified: ar/src/aru_invoiceentry.aon
+Modified: data/bar/arm_custdet.xml
+Modified: data/bar/arm_custmast.xml
+Modified: data/bar/arm_custpmts.xml
+Modified: data/bar/arr_agingreport.xml
+Modified: data/bar/ope_credmaint.xml
+Modified: data/bar/ope_credrev.xml
 Modified: data/bar/ope_invhdr.xml
-Modified: data/bar/ope_orddates.xml
 Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/arm_custmast.cdf
+Modified: data/cdf/arr_agingreport.cdf
+Modified: data/cdf/ope_credrev.cdf
 Modified: data/cdf/ope_invhdr.cdf
-Modified: data/cdf/ope_orddates.cdf
 Modified: data/cdf/ope_ordhdr.cdf
-
-=======================================================================================================================================
-Revision: deb93fe3ddcaa4924ca1fee1a3a2a2eb76e89078
-Author: Christine <chawkins@basis.com>
-Date: 3/19/2020 2:20:49 PM
-Message:
-Bug 9911 - AD - (*internal) classpaths aren't correctly duplicated when creating new Addon instances
- - altered to use barista_internal and addon_internal when creating new sscp's
-
-(cherry picked from commit 919502c6b521b7cd923e6a64689936e0777b6c8c)
-----
-Modified: ad/src/adc_createsscp.aon
-
-=======================================================================================================================================
-Revision: 7d52c7146671a91d920d123a2a89ebfb664956e6
-Author: Christine <chawkins@basis.com>
-Date: 3/20/2020 1:42:09 PM
-Message:
-Bug 9912 - AD - Quick Copy updates DD_ATTR_CPGM with incorrect path
-
-(cherry picked from commit 72f323accd42c49073fe8eeb2986e34708b9e021)
-----
-Modified: ad/src/adx_quickcopywiz.aon
-
-=======================================================================================================================================
-Revision: 7bca9cb2ea7f78a8b52e63ddb85cd17e0388c2bd
-Author: Christine <chawkins@basis.com>
-Date: 3/25/2020 12:26:49 PM
-Message:
-Bug 9913 - AP - Reversing last check in apt_checkhistory file causes loop
-
-(cherry picked from commit b253813116ba0d009fc9df38d4ae949c446c1b1d)
-----
-Modified: data/bar/ape_mancheckhdr.xml
-Modified: data/cdf/ape_mancheckhdr.cdf
-
-=======================================================================================================================================
-Revision: 4185e33788bbb162824e0d03a697e99ffe3aa2b0
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 3/25/2020 4:15:55 PM
-Message:
-Bug 9904: Corrected use of wrong variable for closing open channels.
-----
-Modified: data/bar/adm_procmaster.xml
-Modified: data/cdf/adm_procmaster.cdf
-
-=======================================================================================================================================
-Revision: 73e878468679dd9eb46b3a290d4164f925127e7e
-Author: Christine <chawkins@basis.com>
-Date: 3/25/2020 5:16:18 PM
-Message:
-Updating Process Control tables to bring demo firms 01, 02, ZZ into alignment.
-
-(cherry picked from commit d8a28369a3d7cfe67f5b54bb55ce02edb24232a3)
-----
-Modified: data/adm-09
-Modified: data/adm-19
-Modified: data/adm-39
-Modified: data/glm-06
-
-=======================================================================================================================================
-Revision: 034491776313365e80a12156054bc790aa4a86e1
-Author: Christine <chawkins@basis.com>
-Date: 3/27/2020 12:59:38 PM
-Message:
-Bug 9916 - AR - Customer aging buckets for 2020 demo data aren't accurate.
-
-----
-Modified: data/arm-02
+Modified: data/sync/ads_messages~[01007514AR].xml
+Modified: op/src/opu_updateinventory.aon
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
