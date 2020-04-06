@@ -1027,7 +1027,25 @@ rem --- If GM installed, update GoldMine database as necessary
 
 [[ARM_CUSTMAST.CUSTOMER_ID.AVAL]]
 rem --- Validate Customer Number
-	if num(callpoint!.getUserInput(),err=*next)=0 callpoint!.setStatus("ABORT")
+	customer_id$=callpoint!.getUserInput()
+	if num(customer_id$,err=*next)=0  then callpoint!.setStatus("ABORT")
+
+rem --- Automatically age this customer's transactions
+	auto_age=0
+	if auto_age then
+		rem --- Skip unless current processing date is greater than last aging date
+		armCustDet_dev=fnget_dev("ARM_CUSTDET")
+		dim armCustDet$:fnget_tpl$("ARM_CUSTDET")
+		armCustDet.firm_id$=firm_id$
+		armCustDet.customer_id$=customer_id$
+		armCustDet.ar_type$=""
+		readrecord(armCustDet_dev,key=armCustDet.firm_id$+armCustDet.customer_id$+armCustDet.ar_type$)armCustDet$
+		sysDate$=stbl("+SYSTEM_DATE")
+		if sysDate$>armCustDet.report_date$ then
+			endcust$=customer_id$
+			call stbl("+DIR_PGM")+"arc_custaging.aon",customer_id$,endcust$,sysDate$,armCustDet.report_type$,status
+		endif
+	endif
 
 [[ARM_CUSTMAST.CUSTOMER_NAME.AVAL]]
 rem --- Set Alternate Sequence for new customers
