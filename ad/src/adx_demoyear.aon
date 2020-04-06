@@ -406,6 +406,10 @@ done: rem --- All done
     print(log_dev)"Demoyear log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     close(log_dev)
 
+    rem --- Run customer aging for the new demo year
+    newDemoYear$=str(num(currentYear$)+incYr)
+    call pgmdir$+"arc_custaging.aon","","",newDemoYear$+"0331","I",status
+
     goto std_exit
 
 disp_meter:rem --- Display Progress Meter
