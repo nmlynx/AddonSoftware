@@ -106,7 +106,14 @@ rem --- Retrieve parameter records
     ach_allowed=0
     if cvs(apsACH.bnk_acct_cd$,2)<>"" then 
         ach_allowed=1
-        findrecord(adcBankAcctCode_dev,key=firm_id$+apsACH.bnk_acct_cd$,err=std_missing_params)adcBankAcctCode$
+        findrecord(adcBankAcctCode_dev,key=firm_id$+apsACH.bnk_acct_cd$,dom=*next)adcBankAcctCode$
+        if adcBankAcctCode.bnk_acct_cd$<>apsACH.bnk_acct_cd$ then
+            msg_id$="GL_BAD_BANK_ACCT_CD"
+            dim msg_tokens$[1]
+            msg_tokens$[1]=apsACH.bnk_acct_cd$
+            gosub disp_message
+            goto std_exit_no_report
+        endif
         findrecord(apsReport_dev,key=firm_id$+"AP02",err=std_missing_params)apsReport$
     endif
     call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size

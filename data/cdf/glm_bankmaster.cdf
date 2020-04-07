@@ -2,23 +2,15 @@
 rem " --- Recalc Summary Info
 
 	gosub calc_totals
-[[GLM_BANKMASTER.GL_ACCOUNT.AVAL]]
-rem "GL INACTIVE FEATURE"
-   glm01_dev=fnget_dev("GLM_ACCT")
-   glm01_tpl$=fnget_tpl$("GLM_ACCT")
-   dim glm01a$:glm01_tpl$
-   glacctinput$=callpoint!.getUserInput()
-   glm01a_key$=firm_id$+glacctinput$
-   find record (glm01_dev,key=glm01a_key$,err=*break) glm01a$
-   if glm01a.acct_inactive$="Y" then
-      call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,gl_size
-      msg_id$="GL_ACCT_INACTIVE"
-      dim msg_tokens$[2]
-      msg_tokens$[1]=fnmask$(glm01a.gl_account$(1,gl_size),m0$)
-      msg_tokens$[2]=cvs(glm01a.gl_acct_desc$,2)
-      gosub disp_message
-      callpoint!.setStatus("ACTIVATE")
-   endif
+
+[[GLM_BANKMASTER.AOPT-DETL]]
+rem " --- Recalc Summary Info
+
+	gosub calc_totals
+
+	gl_account$=callpoint!.getColumnData("GLM_BANKMASTER.GL_ACCOUNT")
+	call stbl("+DIR_PGM")+"glr_bankmaster.aon",gl_account$
+
 [[GLM_BANKMASTER.AOPT-POST]]
 rem --- Check Statement Date and Amount
 
@@ -124,10 +116,85 @@ rem --- Remove Paid Transactions
 		extractrecord(fnget_dev("GLM_BANKMASTER"),key=glm05_key$)x$; rem Advisory Locking
 
 	endif
-[[GLM_BANKMASTER.CUR_STMT_AMT.AVAL]]
+
+[[GLM_BANKMASTER.AOPT-RECL]]
+rem --- Validate Current Statement Date
+	stmtdate$=callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE")
+	if num(stmtdate$)=0
+		msg_id$="INVALID_DATE"
+		dim msg_tokens$[1]
+		msg_opt$=""
+		gosub disp_message
+		break
+	endif
+
+rem --- get the Prior Statement Date
+	priordate$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_DATE")
+
+rem --- Initialize displayColumns! object
+	if displayColumns!=null() then
+		use ::glo_DisplayColumns.aon::DisplayColumns
+		displayColumns!=new DisplayColumns(firm_id$)
+	endif
+
+rem --- Find G/L Record"
+	dim glm02a$:user_tpl.glm02_tpl$
+	dim glt06a$:user_tpl.glt06_tpl$
+	dim gls01a$:user_tpl.gls01_tpl$
+	glm02_dev=user_tpl.glm02_dev
+	glt06_dev=user_tpl.glt06_dev
+	gls01_dev=user_tpl.gls01_dev
+	readrecord(gls01_dev,key=firm_id$+"GL00")gls01a$
+	gosub check_date
+	if status then
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+	r0$=firm_id$+callpoint!.getColumnData("GLM_BANKMASTER.GL_ACCOUNT"),s0$=""
+	if stmtyear=priorgl s0$=r0$+displayColumns!.getYear("2"); rem "Use prior year actual
+	if stmtyear=currentgl s0$=r0$+displayColumns!.getYear("0"); rem "Use current year actual
+	if stmtyear=nextgl s0$=r0$+displayColumns!.getYear("4"); rem "Use next year actual
+	if s0$="" 
+		msg_id$="INVALID_DATE"
+		dim msg_tokens$[1]
+		msg_opt$=""
+		gosub disp_message
+		exit; rem "Invalid statement year
+	endif
+	read record (glm02_dev,key=s0$,dom=*next) glm02a$
+
+rem --- Calculate Balance"
+	total_amt=glm02a.begin_amt,total_units=glm02a.begin_units
+	for x=1 to stmtperiod
+		total_amt=total_amt+nfield(glm02a$,"period_amt_"+str(x:"00"))
+		total_units=total_units+nfield(glm02a$,"period_units_"+str(x:"00"))
+	next x
+	call stbl("+DIR_PGM")+"adc_daydates.aon",stmtdate$,nextday$,1
+	d0$=r0$+stmtyear$+stmtperiod$+nextday$,amount=0
+	readrecord (glt06_dev,key=d0$,dom=*next)
+
+rem --- Accumulate transactions for period after statement date"
+	while 1
+		k$=key(glt06_dev,END=*break)
+		if pos(r0$=k$)<>1 break
+		if k$(13,6)<>stmtyear$+stmtperiod$ break
+		dim glt06a$:fattr(glt06a$)
+		read record (glt06_dev,key=k$)glt06a$
+		amount=amount+glt06a.trans_amt
+	wend
+
+rem --- Back out transactions for period after statement date"
+	total_amt=total_amt-amount
+
+rem --- All Done"
+	callpoint!.setColumnData("GLM_BANKMASTER.BOOK_BALANCE",str(total_amt),1)
+	callpoint!.setStatus("SAVE")
+
 rem " --- Recalc Summary Info
 
 	gosub calc_totals
+
 [[GLM_BANKMASTER.ARAR]]
 rem --- Display Bank Account Information
 	adcBankAcctCode_dev=fnget_dev("ADC_BANKACCTCODE")
@@ -144,39 +211,7 @@ rem --- Display Bank Account Information
 
 rem --- Calculate Summary info
   	gosub calc_totals
-[[GLM_BANKMASTER.CURSTM_DATE.AVAL]]
-rem --- Current statement date must be after prior statement end date
-	curstm_date$=callpoint!.getUserInput()
-	pri_end_date$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_DATE")
-	if cvs(pri_end_date$,2)<>"" and pri_end_date$>curstm_date$ then
-		msg_id$="GL_BANK_PRIDATE"
-		gosub disp_message
-		if msg_opt$="N"
-			callpoint!.setStatus("ABORT")
-			break
-		endif
-	endif
 
-rem --- Current statement date must be in prior, current or next fiscal year
-	call stbl("+DIR_PGM")+"glc_ctlcreate.aon",pgm(-2),"GL","","",status
-	call stbl("+DIR_PGM")+"glc_datecheck.aon",curstm_date$,"N",period$,year$,glstatus
-	if glstatus=101 then
-		dim msg_tokens$[1]
-		msg_tokens$[1]=fndate$(curstm_date$)+" "+Translate!.getTranslation("AON_IS_NOT_IN_THE_PRIOR,_CURRENT_OR_NEXT_GL_YEAR.")
-		call stbl("+DIR_SYP")+"bac_message.bbj","GENERIC_WARN",msg_tokens$[all],msg_opt$,table_chans$[all]
-		callpoint!.setStatus("ABORT")
-		break
-	endif
-
-rem --- Recalc Summary Info
-	gosub calc_totals
-[[GLM_BANKMASTER.AOPT-DETL]]
-rem " --- Recalc Summary Info
-
-	gosub calc_totals
-
-	gl_account$=callpoint!.getColumnData("GLM_BANKMASTER.GL_ACCOUNT")
-	call stbl("+DIR_PGM")+"glr_bankmaster.aon",gl_account$
 [[GLM_BANKMASTER.BSHO]]
 rem --- Open/Lock files
 	dir_pgm$=stbl("+DIR_PGM")
@@ -189,7 +224,7 @@ rem --- Open/Lock files
 	files$[3]="glm-02",ids$[3]="GLM_ACCTSUMMARY",options$[3]="OTA"
 	files$[4]="glt-05",ids$[4]="GLT_BANKCHECKS",options$[4]="OTA"
 	files$[5]="glt-15",ids$[5]="GLT_BANKOTHER",options$[5]="OTA"
-	files$[6]="glt-15",ids$[6]="ADC_BANKACCTCODE",options$[6]="OTA"
+	files$[6]="adc_bankacctcode",ids$[6]="ADC_BANKACCTCODE",options$[6]="OTA"
 	call stbl("+DIR_PGM")+"adc_fileopen.aon",action,1,num_files,files$[all],options$[all],
 :                              ids$[all],templates$[all],channels[all],batch,status
 	if status then
@@ -244,6 +279,57 @@ rem - Set up disabled controls
 	dctl$[17]="<<DISPLAY>>.CASH_IN"
 	dctl$[18]="<<DISPLAY>>.CASH_OUT"
 	gosub disable_ctls
+
+[[GLM_BANKMASTER.CURSTM_DATE.AVAL]]
+rem --- Current statement date must be after prior statement end date
+	curstm_date$=callpoint!.getUserInput()
+	pri_end_date$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_DATE")
+	if cvs(pri_end_date$,2)<>"" and pri_end_date$>curstm_date$ then
+		msg_id$="GL_BANK_PRIDATE"
+		gosub disp_message
+		if msg_opt$="N"
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
+
+rem --- Current statement date must be in prior, current or next fiscal year
+	call stbl("+DIR_PGM")+"glc_ctlcreate.aon",pgm(-2),"GL","","",status
+	call stbl("+DIR_PGM")+"glc_datecheck.aon",curstm_date$,"N",period$,year$,glstatus
+	if glstatus=101 then
+		dim msg_tokens$[1]
+		msg_tokens$[1]=fndate$(curstm_date$)+" "+Translate!.getTranslation("AON_IS_NOT_IN_THE_PRIOR,_CURRENT_OR_NEXT_GL_YEAR.")
+		call stbl("+DIR_SYP")+"bac_message.bbj","GENERIC_WARN",msg_tokens$[all],msg_opt$,table_chans$[all]
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+rem --- Recalc Summary Info
+	gosub calc_totals
+
+[[GLM_BANKMASTER.CUR_STMT_AMT.AVAL]]
+rem " --- Recalc Summary Info
+
+	gosub calc_totals
+
+[[GLM_BANKMASTER.GL_ACCOUNT.AVAL]]
+rem "GL INACTIVE FEATURE"
+   glm01_dev=fnget_dev("GLM_ACCT")
+   glm01_tpl$=fnget_tpl$("GLM_ACCT")
+   dim glm01a$:glm01_tpl$
+   glacctinput$=callpoint!.getUserInput()
+   glm01a_key$=firm_id$+glacctinput$
+   find record (glm01_dev,key=glm01a_key$,err=*break) glm01a$
+   if glm01a.acct_inactive$="Y" then
+      call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,gl_size
+      msg_id$="GL_ACCT_INACTIVE"
+      dim msg_tokens$[2]
+      msg_tokens$[1]=fnmask$(glm01a.gl_account$(1,gl_size),m0$)
+      msg_tokens$[2]=cvs(glm01a.gl_acct_desc$,2)
+      gosub disp_message
+      callpoint!.setStatus("ACTIVATE")
+   endif
+
 [[GLM_BANKMASTER.<CUSTOM>]]
 #include [+ADDON_LIB]std_functions.aon
 rem ====================================================
@@ -408,80 +494,6 @@ rem --- get the Prior and Current Statement Dates
 	endif
 
 	return
-[[GLM_BANKMASTER.AOPT-RECL]]
-rem --- Validate Current Statement Date
-	stmtdate$=callpoint!.getColumnData("GLM_BANKMASTER.CURSTM_DATE")
-	if num(stmtdate$)=0
-		msg_id$="INVALID_DATE"
-		dim msg_tokens$[1]
-		msg_opt$=""
-		gosub disp_message
-		break
-	endif
 
-rem --- get the Prior Statement Date
-	priordate$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_DATE")
 
-rem --- Initialize displayColumns! object
-	if displayColumns!=null() then
-		use ::glo_DisplayColumns.aon::DisplayColumns
-		displayColumns!=new DisplayColumns(firm_id$)
-	endif
 
-rem --- Find G/L Record"
-	dim glm02a$:user_tpl.glm02_tpl$
-	dim glt06a$:user_tpl.glt06_tpl$
-	dim gls01a$:user_tpl.gls01_tpl$
-	glm02_dev=user_tpl.glm02_dev
-	glt06_dev=user_tpl.glt06_dev
-	gls01_dev=user_tpl.gls01_dev
-	readrecord(gls01_dev,key=firm_id$+"GL00")gls01a$
-	gosub check_date
-	if status then
-		callpoint!.setStatus("ABORT")
-		break
-	endif
-
-	r0$=firm_id$+callpoint!.getColumnData("GLM_BANKMASTER.GL_ACCOUNT"),s0$=""
-	if stmtyear=priorgl s0$=r0$+displayColumns!.getYear("2"); rem "Use prior year actual
-	if stmtyear=currentgl s0$=r0$+displayColumns!.getYear("0"); rem "Use current year actual
-	if stmtyear=nextgl s0$=r0$+displayColumns!.getYear("4"); rem "Use next year actual
-	if s0$="" 
-		msg_id$="INVALID_DATE"
-		dim msg_tokens$[1]
-		msg_opt$=""
-		gosub disp_message
-		exit; rem "Invalid statement year
-	endif
-	read record (glm02_dev,key=s0$,dom=*next) glm02a$
-
-rem --- Calculate Balance"
-	total_amt=glm02a.begin_amt,total_units=glm02a.begin_units
-	for x=1 to stmtperiod
-		total_amt=total_amt+nfield(glm02a$,"period_amt_"+str(x:"00"))
-		total_units=total_units+nfield(glm02a$,"period_units_"+str(x:"00"))
-	next x
-	call stbl("+DIR_PGM")+"adc_daydates.aon",stmtdate$,nextday$,1
-	d0$=r0$+stmtyear$+stmtperiod$+nextday$,amount=0
-	readrecord (glt06_dev,key=d0$,dom=*next)
-
-rem --- Accumulate transactions for period after statement date"
-	while 1
-		k$=key(glt06_dev,END=*break)
-		if pos(r0$=k$)<>1 break
-		if k$(13,6)<>stmtyear$+stmtperiod$ break
-		dim glt06a$:fattr(glt06a$)
-		read record (glt06_dev,key=k$)glt06a$
-		amount=amount+glt06a.trans_amt
-	wend
-
-rem --- Back out transactions for period after statement date"
-	total_amt=total_amt-amount
-
-rem --- All Done"
-	callpoint!.setColumnData("GLM_BANKMASTER.BOOK_BALANCE",str(total_amt),1)
-	callpoint!.setStatus("SAVE")
-
-rem " --- Recalc Summary Info
-
-	gosub calc_totals
