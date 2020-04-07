@@ -129,7 +129,7 @@ rem --- Retrieve parameter records
         goto std_exit
     endif
 	find record (pos_params_dev,key=firm_id$+"PO00",err=std_missing_params) pos_params$
-	find record (ivs_abcparam_dev,key=firm_id$+"IV02",err=std_missing_params) ivs_abcparam$
+	find record (ivs_abcparam_dev,key=firm_id$+"IV02",dom=*next) ivs_abcparam$
 
 rem --- Initialization
 

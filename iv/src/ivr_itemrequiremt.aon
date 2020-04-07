@@ -102,7 +102,7 @@ rem --- Retrieve parameter records
     ivs01a_key$=firm_id$+"IV00"
     find record (ivs01a_dev,key=ivs01a_key$,err=std_missing_params) ivs01a$
     ivs01c_key$=firm_id$+"IV02"
-    find record (ivs01c_dev,key=ivs01c_key$,err=std_missing_params) ivs01c$
+    find record (ivs01c_dev,key=ivs01c_key$,dom=*next) ivs01c$
     find record (gls_calendar_dev,key=firm_id$+ivs01a.current_year$,err=*next) gls_calendar$
     if cvs(gls_calendar.firm_id$,2)="" then
         msg_id$="AD_NO_FISCAL_CAL"
