@@ -135,6 +135,8 @@ rem --- Initializations
         width=132
         column=79
 
+        mpm01a.forcast$=forecast$
+        mpm01a.description_01$="Missing Forcast"
         find record (mpm01_dev,key=firm_id$+forecast$,dom=*next) mpm01a$
         h5$=mpm01a.description_01$
         h5$="Forecast :"+h5$

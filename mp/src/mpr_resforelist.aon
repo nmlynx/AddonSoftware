@@ -93,6 +93,8 @@ rem --- Initializations
             h5$="Period "+str(begper)+" Through "+str(endper)
         endif
 
+        mpm01a.forcast$=forecast$
+        mpm01a.description_01$="Missing Forcast"
         find record (mpm01a_dev,key=firm_id$+forecast$,dom=*next) mpm01a$
         h6$=mpm01a.forecast$+" "+mpm01a.description_01$
         h6$="Forecast :"+h6$
