@@ -33,6 +33,15 @@ rem --- Build and display error message
 		message!=BBjAPI().getProgramInfo(pgmname$)
 		message$=message$+$0a$+$0a$+message!.getListingForPhysicalLine(num(line$))
 	endif
+    if pos("(aps01b_dev,"=message$) or pos("(apsReport_dev,"=message$) or pos("(aps_report_dev,"=message$) then
+        message$=message$+$0A$+$0A$+"***** Complete AP Report Parameters for this firm. *****"
+    endif
+    if pos("(ars_report_dev,"=message$) then
+        message$=message$+$0A$+$0A$+"***** Complete AR Report Parameters for this firm. *****"
+    endif
+    if pos("(gmsParams_dev,"=message$) then
+        message$=message$+$0A$+$0A$+"***** Complete GM Application Parameters for this firm. *****"
+    endif
     x=msgbox(message$,16,title$)
 
 rem --- All done
