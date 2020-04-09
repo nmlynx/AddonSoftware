@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2020-04-06
+ Report Date:   2020-04-08
  Report Branch: AddonSoftware 20.01
  Last Release:  AddonSoftware 20.00
 =======================================================================================================================================
@@ -61,3 +61,21 @@ Bug 9915: Added running customer aging after rolling demo data so 3/31
 transactions get aged correctly for leap years.
 ----
 Modified: ad/src/adx_demoyear.aon
+
+=======================================================================================================================================
+Revision: de102b6d5b383679bf8ab4f849fadd0a1adc3b26
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/8/2020 5:45:12 PM
+Message:
+Bug 9925: Modified Customer Sales Summary drilldowns to handle
+customer's with more than +DEFAULT_MAXROWS records in art_invhdr.
+----
+Modified: data/bar/arm_custdet.xml
+Modified: data/bar/arm_custmast.xml
+Modified: data/bar/arm_custpmts.xml
+Modified: data/cdf/arm_custmast.cdf
+Modified: data/sync/ddm_drill_defs~[01007514AD].xml
+Deleted: data/sync/ddm_drill_defs~ar_mtdsales_1.xml
+Deleted: data/sync/ddm_drill_defs~ar_nmnsales_1.xml
+Deleted: data/sync/ddm_drill_defs~ar_pyrsales_1.xml
+Deleted: data/sync/ddm_drill_defs~ar_ytdsales_1.xml
