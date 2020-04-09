@@ -113,7 +113,7 @@ rem --- Call the FTI rebuild
     meter_action$="MTR-LST"
     gosub disp_meter
 
-    rd_run_arg$="bbj "+stbl("+DIR_SYP")+"bam_dd_export_FTI.bbj - -auto -u"+stbl("+USER_ID")
+    rd_run_arg$="bbj "+stbl("+DIR_SYP")+"bam_dd_export.bbj - -auto -u"+stbl("+USER_ID")
     rd_scall_result=scall(rd_run_arg$,err=*next)
     meter_text$=Translate!.getTranslation("AON_FULL_TEXT_INDEX","Full Text Indexes (re)created.")
     meter_proc_recs=meter_proc_recs+1
