@@ -870,7 +870,6 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 		gateway_id$=ars_cc_custpmt.gateway_id$
 		gw_config!=callpoint!.getDevObject("gw_config")
 
-
 		vectServlet!=BBjAPI().makeVector()
 		vectInvoices!=callpoint!.getDevObject("vectInvoices")
 		cust_id$=callpoint!.getDevObject("customer_id")
@@ -932,19 +931,16 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 			break
 			case "AUTHORIZE "
 
-				rem --- Create the order object to add to transaction request
-				rem --- Currently filling with unique ID so we can link this auth-capture to returned response
-				rem --- Authorize.net next API version should allow refID to be passed that will be returned in Webhook, obviating need for unique ID in order
-
 				sid!=UUID.randomUUID()
 				sid$=sid!.toString()
+				refID$=sid!.toString().replace("-","")
+				rem --- for Authorize, refID$ is sent in GetHostedPaymentPageRequest (and returned in webhook)
+				rem --- and we set namespace variable/callback using that refID$ since it's limited to 20 char
+				refID$=cust_id$+"-"+refID$(1,13)
+				callpoint!.setDevObject("refID",refID$)
 				callpoint!.setDevObject("sid",sid$)
 				global_ns!=BBjAPI().getGlobalNamespace()
-				global_ns!.setValue("AUTHORIZE"+sid$,vectServlet!)
-				global_ns!.setValue("AUTHORIZEgw_config",gw_config!)
-				order! = new OrderType()
-				order!.setInvoiceNumber(cust_id$)
-				order!.setDescription(sid$)
+				global_ns!.setValue("AUTHORIZE"+refID$,vectServlet!)
 
 				confirmation_page$=fnbuildURL$(gw_config!.get("confirmationPage"))
 				embed_info$="sid="+sid$
@@ -970,7 +966,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 						
 				setting2! = new SettingType()
 				setting2!.setSettingName("hostedPaymentOrderOptions")
-				setting2!.setSettingValue("{"+$22$+"show"+$22$+": false}")
+				setting2!.setSettingValue("{"+$22$+"show"+$22$+": true, "+$22$+"merchantName"+$22$+": "+$22$+sysinfo.firm_name$+$22$+"}")
 
 				setting3! = new SettingType()
 				setting3!.setSettingName("hostedPaymentReturnOptions")
@@ -978,15 +974,21 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 
 				setting4! = new SettingType()
 				setting4!.setSettingName("hostedPaymentPaymentOptions")
-				setting4!.setSettingValue("{"+$22$+"showBankAccount"+$22$+": false}")
+				setting4!.setSettingValue("{"+$22$+"cardCodeRequired"+$22$+": true, "+$22$+"showBankAccount"+$22$+": false}")
+
+				setting5! = new SettingType()
+				setting5!.setSettingName("hostedPaymentBillingAddressOptions")
+				setting5!.setSettingValue("{"+$22$+"show"+$22$+": true, "+$22$+"required"+$22$+": true}")
 
 				alist! = new ArrayOfSetting()
 				alist!.getSetting().add(setting1!)
 				alist!.getSetting().add(setting2!)
 				alist!.getSetting().add(setting3!)
 				alist!.getSetting().add(setting4!)
+				alist!.getSetting().add(setting5!)
 
 				apiRequest! = new GetHostedPaymentPageRequest()
+				apiRequest!.setRefId(refID$)
 				apiRequest!.setTransactionRequest(txnRequest!)
 				apiRequest!.setHostedPaymentSettings(alist!)
 
@@ -997,14 +999,8 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 				authResponse! = controller!.getApiResponse()
 
 				rem --- if GetHostedPaymentPageResponse() indicates success, launch our 'starter' page.
-				rem --- 'starter' page gets passed the token, and has a 'proceed to checkout' button, which does a POST to https://test.authorize.net/payment/payment, passing along the token.
-				rem --- Authorize.net is configured with Webhook for the auth-capture transaction. Webhook contains URL that runs our BBJSP servlet.
-				rem --- Servlet updates namespace variable 'authresp' with response text
-				rem --- registered callback for variable change will cause authorize_response routine to get executed
-				rem --- authorize_response will parse trans_id from the webhook, then send a getTransactionDetailsRequest
-				rem --- returned getTransactionDetailsResponse should contain order with our sid$ in the order description
-				rem --- if sid$ matches saved_sid$, then this is our response (and not someone else's who might also be processing payments)
-				rem --- assuming this is our response, record the Webhook response in art_response and create cash receipt, if applicable
+				rem --- 'starter' page gets passed the token, and silently redirects via a form POST to https://test.authorize.net/payment/payment, passing along the token.
+				rem --- Authorize.net is configured with Webhook for the auth-capture transaction. Webhook contains URL that runs our servlet
 
 				if authResponse!.getMessages().getResultCode()=MessageTypeEnum.OK
 					BBjAPI().getThinClient().browse(launch_page$+"?authtoken="+authResponse!.getToken()+"&gatewayURL="+gw_config!.get("gatewayURL")+"&amount="+masked_amt$,"_self","")
@@ -1039,4 +1035,6 @@ def fnbuildURL$(config_value$)
 	fnend
 
 #include [+ADDON_LIB]std_missing_params.aon
+
+
 
