@@ -1287,9 +1287,8 @@ rem --- Initialize detail line for this line_code
 	line_code$ = callpoint!.getUserInput()
 	gosub line_code_init
 
-
 rem --- Initialize UM_SOLD ListButton with a blank item for new rows except when line type is non-stock
-	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" and line_code$<>"N" then
+	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" and user_tpl.line_type$<>"N" then
 		rem --- Skip if UM_SOLD ListButton is already initialized
 		dtlGrid!=util.getGrid(Form!)
 		col_hdr$=callpoint!.getTableColumnAttribute("OPE_ORDDET.UM_SOLD","LABS")
@@ -2739,4 +2738,6 @@ rem 	Use util object
 rem ==========================================================================
 
 	use ::ado_util.src::util
+
+
 
