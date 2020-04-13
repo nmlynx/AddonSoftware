@@ -855,67 +855,35 @@ rem --- Create/embed widgets to show aged balance
 
 	gosub create_widgets
 
-rem --- Set STBLs needed in Drilldown Definition filters
+rem --- Set STBLs needed in Customer Sales Summary drilldown definition filters
 	rem --- AR_MTDSALES_1 beginning and ending dates
 	period=num(ars01a.current_per$)
 	year=num(ars01a.current_year$)
 	call stbl("+DIR_PGM")+"adc_perioddates.aon",period,year,begdate$,enddate$,table_chans$[all],status
-	if status=0 then
-		x$=stbl("MTD_BEG_DATE",begdate$)
-		x$=stbl("MTD_END_DATE",enddate$)
-	else
-		rem --- Not interfacing with GL
-		x$=stbl("MTD_BEG_DATE",str(year-1)+"0101")
-		x$=stbl("MTD_END_DATE",str(year+1)+"1231")
-	endif
+	x$=stbl("MTD_BEG_DATE",begdate$)
+	x$=stbl("MTD_END_DATE",enddate$)
 
 	rem --- AR_NMNSALES_1 beginning and ending dates
 	period=period+1
 	call stbl("+DIR_PGM")+"adc_perioddates.aon",period,year,begdate$,enddate$,table_chans$[all],status
-	if status=0 then
-		x$=stbl("NMN_BEG_DATE",begdate$)
-		x$=stbl("NMN_END_DATE",enddate$) 
-	else
-		rem --- Not interfacing with GL
-		x$=stbl("NMN_BEG_DATE",str(year)+"0101")
-		x$=stbl("NMN_END_DATE",str(year+2)+"1231")
-	endif
+	x$=stbl("NMN_BEG_DATE",begdate$)
+	x$=stbl("NMN_END_DATE",enddate$) 
 
 	rem --- AR_YTDSALES_1 beginning date and ending dates
 	period=1
 	call stbl("+DIR_PGM")+"adc_perioddates.aon",period,year,begdate$,enddate$,table_chans$[all],status
-	if status=0 then
-		x$=stbl("YTD_BEG_DATE",begdate$)
-	else
-		rem --- Not interfacing with GL
-		x$=stbl("YTD_BEG_DATE",str(year-1)+"0101")
-	endif
+	x$=stbl("YTD_BEG_DATE",begdate$)
 	next_year=year+1
 	call stbl("+DIR_PGM")+"adc_perioddates.aon",period,next_year,begdate$,enddate$,table_chans$[all],status
-	if status=0 then
-		x$=stbl("YTD_END_DATE",begdate$)
-	else
-		rem --- Not interfacing with GL
-		x$=stbl("YTD_END_DATE",str(next_year)+"1231")
-	endif
+	x$=stbl("YTD_END_DATE",begdate$)
 
 	rem --- AR_PYRSALES_1 beginning date and ending dates
 	period=1
 	last_year=year-1
 	call stbl("+DIR_PGM")+"adc_perioddates.aon",period,last_year,begdate$,enddate$,table_chans$[all],status
-	if status=0 then
-		x$=stbl("PYTD_BEG_DATE",begdate$)
-	else
-		rem --- Not interfacing with GL
-		x$=stbl("PYTD_BEG_DATE",str(last_year-1)+"0101")
-	endif
+	x$=stbl("PYTD_BEG_DATE",begdate$)
 	call stbl("+DIR_PGM")+"adc_perioddates.aon",period,year,begdate$,enddate$,table_chans$[all],status
-	if status=0 then
-		x$=stbl("PYTD_END_DATE",begdate$)
-	else
-		rem --- Not interfacing with GL
-		x$=stbl("PYTD_END_DATE",str(year)+"1231")
-	endif
+	x$=stbl("PYTD_END_DATE",begdate$)
 
 [[ARM_CUSTMAST.BWRI]]
 rem --- If GM installed, update GoldMine database as necessary
