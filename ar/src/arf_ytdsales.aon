@@ -18,6 +18,10 @@ rem calc_tpl$      - Current row calculated columns
 rem table_chans$[] - Barista opened channels array
 rem status$        - Returned status: "SKIP" = Skip current record
 
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
 rem --- Main process - for each row fetched, determine if in YTD period
 
     status$=""
@@ -32,13 +36,13 @@ rem --- Main process - for each row fetched, determine if in YTD period
     dim ars_params$:fnget_tpl$("@"+"ARS_PARAMS")
 
     inv_date$=rec_tpl.invoice_date$
-    call pgmdir$+"adc_fiscalperyr.aon",firm_id$,rec_tpl.invoice_date$,period$,year$,table_chans$[all],status
+    call pgmdir$+"adc_fiscalperyr.aon",rec_tpl.firm_id$,rec_tpl.invoice_date$,period$,year$,table_chans$[all],status
     if status then goto exit_prog
     readrecord(ars01a_dev,key=rec_tpl.firm_id$+"AR00",dom=exit_prog)ars_params$
     cur_year$=ars_params.current_year$
     cur_period$=ars_params.current_per$
     
-    if year$<>cur_year$ or year$+period$>cur_year$+cur_period$ or rec_tpl.invoice_type$="F"
+    if year$<>cur_year$ or year$+period$>cur_year$+cur_period$ or rec_tpl.invoice_type$="F" or pos("OA"=rec_tpl.ar_inv_no$)=1
         status$="SKIP"
     else
         rem --- if we have an invoice we want to show, open OPT_INVHDR (just once, not for every row)

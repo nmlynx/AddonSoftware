@@ -12,6 +12,10 @@ rem --- ARS_PARAMS and OPT_INVHDR are opened on new channels to avoid any knum/e
 
     enter inq_mode$,rec_tpl$,calc_tpl$,table_chans$[all],status$
 
+rem --- Retrieve the program path
+
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+
 rem inq_mode$      - not used until recently - current use not yet documented
 rem rec_tpl$       - Current row database columns
 rem calc_tpl$      - Current row calculated columns
@@ -32,12 +36,12 @@ rem --- Main process
     dim ars_params$:fnget_tpl$("@"+"ARS_PARAMS")
     
     inv_date$=rec_tpl.invoice_date$
-    call pgmdir$+"adc_fiscalperyr.aon",firm_id$,rec_tpl.invoice_date$,period$,year$,table_chans$[all],status
+    call pgmdir$+"adc_fiscalperyr.aon",rec_tpl.firm_id$,rec_tpl.invoice_date$,period$,year$,table_chans$[all],status
     if status then goto exit_prog
     readrecord(ars01a_dev,key=rec_tpl.firm_id$+"AR00",dom=exit_prog)ars_params$
     pyr_year$=str(num(ars_params.current_year$)-1)
 
-    if pyr_year$<>year$ or rec_tpl.invoice_type$="F"
+    if pyr_year$<>year$ or rec_tpl.invoice_type$="F" or pos("OA"=rec_tpl.ar_inv_no$)=1
         status$="SKIP"
     else
         rem --- if we have an invoice we want to show, open OPT_INVHDR (just once, not for every row)
