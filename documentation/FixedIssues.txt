@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2020-04-10
+ Report Date:   2020-04-13
  Report Branch: AddonSoftware 20.01
  Last Release:  AddonSoftware 20.00
 =======================================================================================================================================
@@ -92,4 +92,16 @@ Bug 9927 - OP - Test for line code instead of line type in line_code.aval can ca
 Modified: data/bar/ope_orddet.xml
 Modified: data/cdf/ope_orddet.cdf
 
-
+=======================================================================================================================================
+Revision: 0fbfee1aa6ecf3601a0d9b80319d823eaafe55ec
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/13/2020 9:46:59 AM
+Message:
+Bug 9925: Removed code for missing fiscal calendar since Customer
+Payment Summary arm_custpmts (arm-06) records are NOT written unless
+there is a fiscal calendar for the year.
+----
+Modified: data/bar/arm_custdet.xml
+Modified: data/bar/arm_custmast.xml
+Modified: data/bar/arm_custpmts.xml
+Modified: data/cdf/arm_custmast.cdf
