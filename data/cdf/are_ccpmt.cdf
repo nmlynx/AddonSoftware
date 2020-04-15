@@ -447,6 +447,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 					rem --- set namespace variable/callback using that number
 					sid!=UUID.randomUUID()
 					sid$=sid!.toString()
+					sid$=sid$(1,33)+"-AR"
 					callpoint!.setDevObject("sid",sid$)
 					ns!=BBjAPI().getNamespace("aon","credit_receipt_payflowpro",1)
 					ns!.setValue(sid$,"init")
@@ -457,7 +458,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 					request!=new BBWebRequest()
 					request!.setURI(gw_config!.get("requestTokenURL"))
 					request!.setMethod("POST")
-					request!.setContent("PARTNER="+gw_config!.get("PARTNER")+"&VENDOR="+gw_config!.get("VENDOR")+"&USER="+gw_config!.get("USER")+"&PWD="+gw_config!.get("PWD")+"&TRXTYPE=S&AMT="+str(apply_amt!:"###,###.00")+"&CREATESECURETOKEN=Y&SECURETOKENID="+sid!.toString())
+					request!.setContent("PARTNER="+gw_config!.get("PARTNER")+"&VENDOR="+gw_config!.get("VENDOR")+"&USER="+gw_config!.get("USER")+"&PWD="+gw_config!.get("PWD")+"&TRXTYPE=S&AMT="+str(apply_amt!:"###,###.00")+"&CREATESECURETOKEN=Y&SECURETOKENID="+sid$)
 					response! = client!.sendRequest(request!) 
 					content!=response!.getBody()
 					response!.close()
@@ -510,7 +511,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 					rem --- for Authorize, refID$ is sent in GetHostedPaymentPageRequest
 					rem --- and we set namespace variable/callback using that refID$
 					rem --- Can only be 20 char, so not using full sid$
-					refID$=cust_id$+"-"+refID$(1,13)
+					refID$=cust_id$+"-"+refID$(1,10)+"-AR"
 					callpoint!.setDevObject("sid",sid$)
 					callpoint!.setDevObject("refID",refID$)
 
