@@ -890,6 +890,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 				rem --- PayPal returns that number in the response, so can match number in response to number we're sending to be sure we're processing our payment and not someone else's (multi-user)
 				sid!=UUID.randomUUID()
 				sid$=sid!.toString()
+				sid$=sid$(1,33)+"-OL"
 				callpoint!.setDevObject("sid",sid$)
 				global_ns!=BBjAPI().getGlobalNamespace()
 				global_ns!.setValue("PAYFLOWPRO"+sid$,vectServlet!)
@@ -899,7 +900,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 				request!=new BBWebRequest()
 				request!.setURI(gw_config!.get("requestTokenURL"))
 				request!.setMethod("POST")
-				request!.setContent("PARTNER="+gw_config!.get("PARTNER")+"&VENDOR="+gw_config!.get("VENDOR")+"&USER="+gw_config!.get("USER")+"&PWD="+gw_config!.get("PWD")+"&TRXTYPE=S&AMT="+str(apply_amt!:"###,###.00")+"&CREATESECURETOKEN=Y&SECURETOKENID="+sid!.toString())
+				request!.setContent("PARTNER="+gw_config!.get("PARTNER")+"&VENDOR="+gw_config!.get("VENDOR")+"&USER="+gw_config!.get("USER")+"&PWD="+gw_config!.get("PWD")+"&TRXTYPE=S&AMT="+str(apply_amt!:"###,###.00")+"&CREATESECURETOKEN=Y&SECURETOKENID="+sid$)
 				response! = client!.sendRequest(request!) 
 				content!=response!.getBody()
 				response!.close()
@@ -934,7 +935,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 				refID$=sid!.toString().replace("-","")
 				rem --- for Authorize, refID$ is sent in GetHostedPaymentPageRequest (and returned in webhook)
 				rem --- and we set namespace variable/callback using that refID$ since it's limited to 20 char
-				refID$=cust_id$+"-"+refID$(1,13)
+				refID$=cust_id$+"-"+refID$(1,10)+"-OL"
 				callpoint!.setDevObject("refID",refID$)
 				callpoint!.setDevObject("sid",sid$)
 				global_ns!=BBjAPI().getGlobalNamespace()
