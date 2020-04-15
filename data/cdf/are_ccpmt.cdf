@@ -1,334 +1,257 @@
-[[ARE_CCPMT.RECEIPT_DATE.AVAL]]
-rem --- validate receipt date
+[[ARE_CCPMT.ACUS]]
+rem --- Process custom event -- used in this pgm to select/de-select checkboxes in grid
+rem --- See basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info
+rem --- This routine is executed when callbacks have been set to run a 'custom event'
+rem --- Analyze gui_event$ and notice$ to see which control's callback triggered the event, and what kind
+rem --- of event it is... in this case, we're toggling checkboxes on/off in form grid control
 
-	gl$=callpoint!.getDevObject("gl_interface")
-	recpt_date$=callpoint!.getUserInput()        
-	if gl$="Y" 
-		call stbl("+DIR_PGM")+"glc_datecheck.aon",recpt_date$,"Y",per$,yr$,status
-		if status>99
-			callpoint!.setStatus("ABORT")
-		endif
-	endif
+	dim gui_event$:tmpl(gui_dev)
+	dim notify_base$:noticetpl(0,0)
+	gui_event$=SysGUI!.getLastEventString()
+	ev!=BBjAPI().getLastEvent()
 
-gosub reset_timer
-[[ARE_CCPMT.CASH_REC_CD.AVAL]]
-rem --- get cash rec code and associated credit card params; if hosted, disable data collection fields
-rem --- only execute if vectInvoices! not yet populated
-rem --- this avoids re-running this code via the ASVA (Barista re-validates last enabled control?)
+	if ev!.getEventName()="BBjNamespaceEvent"
 
-	vectInvoices!=callpoint!.getDevObject("vectInvoices")
-	rem --- only execute if vectInvoices! hasn't yet been built - i.e., don't execute again in ASVA final validation check
-	rem --- or if cash rec code has been changed
+		vectInvoices!=callpoint!.getDevObject("vectInvoices")
+		apply_amt!=cast(BBjNumber, num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT")))
+		cust_id$=callpoint!.getColumnData("ARE_CCPMT.CUSTOMER_ID")
+		cash_rec_cd$=callpoint!.getColumnData("ARE_CCPMT.CASH_REC_CD")
 
-	if !vectInvoices!.size() or callpoint!.getUserInput()<>callpoint!.getColumnData("ARE_CCPMT.CASH_REC_CD")
+		gw_config!=callpoint!.getDevObject("gw_config")
+		gateway_id$=gw_config!.get("gateway_id")
 
-		ars_cc_custsvc=fnget_dev("ARS_CC_CUSTSVC")
-		arc_cashcode=fnget_dev("ARC_CASHCODE")
-		are_cashhdr=fnget_dev("ARE_CASHHDR")
+		trans_msg$=Translate!.getTranslation("AON_UNTRAPPED_NAMESPACE_EVENT")
+		cash_msg$=""
 
-		dim ars_cc_custsvc$:fnget_tpl$("ARS_CC_CUSTSVC")
-		dim arc_cashcode$:fnget_tpl$("ARC_CASHCODE")
-		dim are_cashhdr$:fnget_tpl$("ARE_CASHHDR")
-
-		cash_cd$=callpoint!.getUserInput()
-
-		readrecord(arc_cashcode,key=firm_id$+"C"+cash_cd$,dom=std_missing_params)arc_cashcode$
-		readrecord(ars_cc_custsvc,key=firm_id$+cash_cd$,dom=std_missing_params)ars_cc_custsvc$
-
-		if cvs(callpoint!.getColumnData("ARE_CCPMT.CNTRY_ID"),3)=""
-			callpoint!.setColumnData("ARE_CCPMT.CNTRY_ID",ars_cc_custsvc.dflt_cntry_id$,1)
-		endif
-
-		gateway_id$=ars_cc_custsvc.gateway_id$
-		gosub get_gateway_config
-		if msg_id$<>"" then break; rem --- 'token' string found in config; needs to be substituted for legit value before continuing
-
-		callpoint!.setDevObject("ars_cc_custsvc",ars_cc_custsvc$)
-		callpoint!.setDevObject("interface_tp",ars_cc_custsvc.interface_tp$)
-		if ars_cc_custsvc.interface_tp$="A"
-
-			rem --- Set timer for form when interface_tp$="A" (using internal API, so collecting sensitive info)
-			timer_key!=10000
-			BBjAPI().createTimer(timer_key!,60,"custom_event")
-			enable_flag=1
-		else
-			enable_flag=0
-			callpoint!.setColumnData("ARE_CCPMT.CARD_NO","",1)
-			callpoint!.setColumnData("ARE_CCPMT.SECURITY_CD","",1)
-			callpoint!.setColumnData("ARE_CCPMT.NAME_FIRST","",1)
-			callpoint!.setColumnData("ARE_CCPMT.NAME_LAST","",1)
-			callpoint!.setColumnData("ARE_CCPMT.MONTH","",1)
-			callpoint!.setColumnData("ARE_CCPMT.YEAR","",1)
-
-			rem --- for hosted, make sure expected config attributes exist
-			config_attribs!=BBjAPI().makeVector()
-			if gateway_id$="PAYFLOWPRO"
-				config_attribs!.add("PARTNER")
-				config_attribs!.add("VENDOR")
-				config_attribs!.add("USER")
-				config_attribs!.add("PWD")
-				config_attribs!.add("testMode")
-				config_attribs!.add("server")
-				config_attribs!.add("requestTokenURL")
-				config_attribs!.add("launchURL")
-				config_attribs!.add("silentPostServlet")
-				config_attribs!.add("silentPostFailureServlet")
-				config_attribs!.add("silentPostFailureServlet")
-			else
-				config_attribs!.add("name")
-				config_attribs!.add("transactionKey")
-				config_attribs!.add("server")
-				config_attribs!.add("launchPage")
-				config_attribs!.add("gatewayURL")
-				config_attribs!.add("confirmationPage")
-				config_attribs!.add("webhookServlet")
-				config_attribs!.add("environment")
-				config_attribs!.add("testMode")
+		ns_name$=ev!.getNamespaceName()
+		ns!=BBjAPI().getExistingNamespace(ns_name$)
+		if pos("authorize"=ns_name$)
+			old_value$=ev!.getOldValue()
+			nsvariable$=ev!.getVariableName()
+			if old_value$="init" and nsvariable$=callpoint!.getDevObject("refID")
+				rem --- response (webhook) from Authorize.net
+				newValue! = new JSONObject(ev!.getNewValue())
+				trans_id$=newValue!.get("payload").get("id")
+				resp_code=num(newValue!.get("payload").get("responseCode"))
+				payment_amt$=str(round(newValue!.get("payload").get("authAmount"),2))
+				response_text$=newValue!.toString()
+				trans_amount$=payment_amt$
+				trans_approved$=iff(resp_code,"A","D");rem A=approved, D=declined
+				trans_msg$=iff(resp_code,"Approved","Declined")
+				if resp_code
+					gosub create_cash_receipt
+				else
+					cash_msg$=""
+				endif
+				gosub write_to_response_log
+				callpoint!.setDevObject("payment_status","response")
 			endif
-			for wk=0 to config_attribs!.size()-1
-				if gw_config!.get(config_attribs!.get(wk))=null()
-					dim msg_tokens$[1]
-					msg_tokens$[0]=Translate!.getTranslation("AON_MISSING_GATEWAY_CONFIG","One or more configuration values for the payment gateway are missing.",1)+$0A$+"("+gateway_id$+")"
-					msg_id$="GENERIC_WARN"
-					gosub disp_message
-					callpoint!.setStatus("EXIT")
+			refID$=callpoint!.getDevObject("refID")
+			ns!.removeCallbackForVariableChange(refID$)
+		else
+			if pos("payflowpro"=ns_name$)
+				rem --- response (silent post) from PayPal
+				old_value$=ev!.getOldValue()
+				if old_value$="init"
+					new_value$=ev!.getNewValue()
+					trans_id$=fnparse$(new_value$,"PNREF=","&")
+					payment_amt$=str(num(fnparse$(new_value$,"AMT=","&")))
+					trans_msg$=fnparse$(new_value$,"RESPMSG=","&")
+					result$=fnparse$(new_value$,"RESULT=","&")
+					if result$="0"
+						gosub create_cash_receipt
+					else
+						cash_msg$=""
+					endif
+					if cvs(trans_id$,3)<>""
+						response_text$=new_value$
+						trans_amount$=payment_amt$
+						trans_approved$=iff(result$="0","A","D");rem A=approved, D=declined
+						gosub write_to_response_log
+					endif
+					rem --- set devObject to indicate 'response' status
+					callpoint!.setDevObject("payment_status","response")
+				endif
+				sid$=callpoint!.getDevObject("sid")
+				ns!.removeCallbackForVariableChange(sid$)
+			else
+				if pos("credit_progbar"=ns_name$)
+					bbjHome$ =  System.getProperty("basis.BBjHome")
+					title$=form!.getTitle()
+					progtext$=Translate!.getTranslation("AON_AWAITING_RESPONSE","Awaiting response",1)+"..."
+					progWin! = SysGui!.addWindow(SysGUI!.getAvailableContext(),Form!.getX()+Form!.getWidth()/2,Form!.getY()+Form!.getHeight()/2,300,100,title$,$000C0000$)
+					nxt_ctlID=util.getNextControlID()
+					progWin!.addImageCtrl(nxt_ctlID,15,15,33,33,bbjHome$+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+					nxt_ctlID=util.getNextControlID()
+					sText!=progWin!.addStaticText(nxt_ctlID,75,20,150,50,progtext$)
+					font! = sText!.getFont()
+					fontBold! = SysGui!.makeFont(font!.getName(), font!.getSize()+2, SysGui!.BOLD)
+					sText!.setFont(fontBold!)
+					nxt_ctlID=util.getNextControlID()
+					cncl!=progWin!.addButton(nxt_ctlID,100,70,75,25,Translate!.getTranslation("AON_CANCEL"))
+					cncl!.setCallback(cncl!.ON_BUTTON_PUSH,"custom_event")
+					callpoint!.setDevObject("progwincancel",nxt_ctlID)
+					callpoint!.setDevObject("progwin",progWin!)
 					break
 				endif
-			next wk
-		endif
-		callpoint!.setColumnEnabled("ARE_CCPMT.ADDRESS_LINE_1",enable_flag)
-		callpoint!.setColumnEnabled("ARE_CCPMT.ADDRESS_LINE_2",enable_flag)
-		callpoint!.setColumnEnabled("ARE_CCPMT.CARD_NO",enable_flag)
-		callpoint!.setColumnEnabled("ARE_CCPMT.CITY",enable_flag)
-		callpoint!.setColumnEnabled("ARE_CCPMT.CNTRY_ID",enable_flag)
-		callpoint!.setColumnEnabled("ARE_CCPMT.EMAIL_ADDR",enable_flag)
-		callpoint!.setColumnEnabled("ARE_CCPMT.MONTH",enable_flag)
-		callpoint!.setColumnEnabled("ARE_CCPMT.NAME_FIRST",enable_flag)
-		callpoint!.setColumnEnabled("ARE_CCPMT.NAME_LAST",enable_flag)
-		callpoint!.setColumnEnabled("ARE_CCPMT.PHONE_NO",enable_flag)
-		callpoint!.setColumnEnabled("ARE_CCPMT.SECURITY_CD",enable_flag)
-		callpoint!.setColumnEnabled("ARE_CCPMT.STATE_CODE",enable_flag)
-		callpoint!.setColumnEnabled("ARE_CCPMT.YEAR",enable_flag)
-		callpoint!.setColumnEnabled("ARE_CCPMT.ZIP_CODE",enable_flag)
-
-		rem --- load up open invoices
-
-		gosub get_open_invoices
-		gosub fill_grid
-
-		are_cashhdr.firm_id$=firm_id$
-		are_cashhdr.customer_id$=callpoint!.getColumnData("ARE_CCPMT.CUSTOMER_ID")
-		are_cashhdr.receipt_date$=callpoint!.getColumnData("ARE_CCPMT.RECEIPT_DATE")
-		are_cashhdr.cash_rec_cd$=cash_cd$
-
-		receipt_found=0
-		dflt_batch_desc$=cvs(ars_cc_custsvc.batch_desc$,3)
-		dflt_deposit_desc$=cvs(ars_cc_custsvc.deposit_desc$,3)
-
-		extractrecord(are_cashhdr,key=
-:			are_cashhdr.firm_id$+
-:			are_cashhdr.ar_type$+
-:			are_cashhdr.reserved_key_01$+
-:			are_cashhdr.receipt_date$+
-:			are_cashhdr.customer_id$+
-:			are_cashhdr.cash_rec_cd$+
-:			are_cashhdr.ar_check_no$+
-:			are_cashhdr.reserved_key_02$,dom=*next)are_cashhdr$;receipt_found=1
-
-		if receipt_found
-			if num(are_cashhdr.batch_no$)<>0
-				dflt_batch_no$=are_cashhdr.batch_no$
-			else
-				dflt_batch_no$=""
-			endif
-			if num(are_cashhdr.deposit_id$)<>0
-				dflt_deposit_id$=are_cashhdr.deposit_id$
-			else
-				dflt_deposit_id$=""
 			endif
 		endif
-			
-		rem --- Get batching information, supplying batch number that must be used if this receipt already exists and is batched (batch#<>0)
 
-		call stbl("+DIR_PGM")+"adc_getbatch.aon","ARE_CASHHDR","",table_chans$[all],dflt_batch_desc$,dflt_batch_no$
-		callpoint!.setColumnData("ARE_CCPMT.BATCH_NO",stbl("+BATCH_NO"),1)
-		if receipt_found then read(are_cashhdr);rem --- can release temp extract on are_cashhdr now that batch is soft-locked (or if not batching)
+		gosub remove_batch_lock
+		if callpoint!.getDevObject("br_interface")="Y" then gosub update_deposit
 
-		rem --- Get deposit info, supplying deposit number that must be used if this receipt already exists and contains a deposit ID
+		progWin!=callpoint!.getDevObject("progwin")
+		if progWin!<>null() then progWin!.destroy(err=*next)
 
-		if callpoint!.getDevObject("br_interface")="Y" then
+		dim msg_tokens$[1]
+		msg_tokens$[0]=trans_msg$+$0A$+cash_msg$
+		msg_id$="GENERIC_OK"
+		gosub disp_message
+		callpoint!.setStatus("EXIT")
 
-			rem --- init temp stbls for use inside deposit form
+	else
+		if ev!.getEventName()="BBjTimerEvent" and gui_event.y=10000
+			BBjAPI().removeTimer(10000)
+			callpoint!.setStatus("EXIT")
+		else
+			ctl_ID=dec(gui_event.ID$)
+			if ctl_ID=num(callpoint!.getDevObject("openInvoicesGridId"))
+				if gui_event.code$="N"
+					notify_base$=notice(gui_dev,gui_event.x%)
+					dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
+					notice$=notify_base$
+					curr_row = dec(notice.row$)
+					curr_col = dec(notice.col$)
+				endif
+				switch notice.code
+					case 12;rem grid_key_press
+						if notice.wparam=32 gosub switch_value
+					break
+					case 14;rem grid_mouse_up
+						if notice.col=0 gosub switch_value
+					break
+					case 7;rem edit stop - can only edit pay and disc taken cols
+						if curr_col=num(callpoint!.getDevObject("pay_col")) or curr_col=num(callpoint!.getDevObject("disc_taken_col"))  then
+							vectInvoices!=callpoint!.getDevObject("vectInvoices")
+							openInvoicesGrid!=callpoint!.getDevObject("openInvoicesGrid")
+							grid_cols = num(callpoint!.getDevObject("grid_cols"))
+							inv_bal_col=num(callpoint!.getDevObject("inv_bal_col"))
+							disc_col=num(callpoint!.getDevObject("disc_col"))
+							pay_col=num(callpoint!.getDevObject("pay_col"))
+							disc_taken_col=num(callpoint!.getDevObject("disc_taken_col"))
+							end_bal_col=num(callpoint!.getDevObject("end_bal_col"))
+							oa_inv$=callpoint!.getDevObject("oa_inv")
+							tot_pay=num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT"))
+							vect_pay_amt=num(vectInvoices!.get(curr_row*grid_cols+pay_col))
+							vect_disc_taken=num(vectInvoices!.get(curr_row*grid_cols+disc_taken_col))
+							vect_inv_bal=num(vectInvoices!.get(curr_row*grid_cols+inv_bal_col))
+							grid_pay_amt = num(openInvoicesGrid!.getCellText(curr_row,pay_col))
+							grid_disc_taken = num(openInvoicesGrid!.getCellText(curr_row,disc_taken_col))
+							if grid_pay_amt<0 then grid_pay_amt=0
+							if grid_disc_taken<0 then grid_disc_taken=0
+							if grid_pay_amt<=0 then grid_disc_taken=0
+							openInvoicesGrid!.setCellText(curr_row,end_bal_col,str(vect_inv_bal-grid_pay_amt-grid_disc_taken))
+							if vectInvoices!.get(curr_row*grid_cols+1)<>oa_inv$ and num(openInvoicesGrid!.getCellText(curr_row,end_bal_col))<0
+								msg_id$="GENERIC_WARN"
+								dim msg_tokens$[1]
+								msg_tokens$[1]=Translate!.getTranslation("AON_CREDIT_BALANCE_PLEASE_CORRECT","You have created a credit balance. Please correct the payment or discount amounts.",1)
+								gosub disp_message
+								grid_pay_amt=0
+								grid_disc_taken=0
+							endif
+							tot_pay=tot_pay-vect_pay_amt+grid_pay_amt
+							vectInvoices!.set(curr_row*grid_cols+pay_col,str(grid_pay_amt))
+							vectInvoices!.set(curr_row*grid_cols+disc_taken_col,str(grid_disc_taken))
+							vectInvoices!.set(curr_row*grid_cols+end_bal_col,str(vect_inv_bal-grid_pay_amt-grid_disc_taken))
+							openInvoicesGrid!.setCellText(curr_row,pay_col,str(grid_pay_amt))
+							openInvoicesGrid!.setCellText(curr_row,disc_taken_col,str(grid_disc_taken))
+							openInvoicesGrid!.setCellText(curr_row,end_bal_col,str(vect_inv_bal-grid_pay_amt-grid_disc_taken))
+							callpoint!.setColumnData("<<DISPLAY>>.APPLY_AMT",str(tot_pay),1)
+							if grid_pay_amt>0
+								vectInvoices!.set(curr_row*grid_cols,"Y")
+								openInvoicesGrid!.setCellState(curr_row,0,1)
+							else
+								vectInvoices!.set(curr_row*grid_cols,"")
+								openInvoicesGrid!.setCellState(curr_row,0,0)
+							endif
+							gosub reset_timer
+							callpoint!.setDevObject("vectInvoices",vectInvoices!)
+							callpoint!.setDevObject("openInvoicesGrid",openInvoicesGrid!)
+						endif
+					break
+					case 8;rem edit start
+						grid_cols = num(callpoint!.getDevObject("grid_cols"))
+						comment_col=grid_cols-1
+		 				if curr_col=comment_col
+							vectInvoices!=callpoint!.getDevObject("vectInvoices")
+							openInvoicesGrid!=callpoint!.getDevObject("openInvoicesGrid")
+							disp_text$=openInvoicesGrid!.getCellText(clicked_row,comment_col)
+							sv_disp_text$=disp_text$
 
-			xwk$=stbl("+cc_cash_rec_cd",ars_cc_custsvc.cash_rec_cd$);rem --- don't allow cash rec code to be changed on deposit form
-			xwk$=stbl("+cc_receipt_date",callpoint!.getColumnData("ARE_CCPMT.RECEIPT_DATE"))
+							editable$="YES"
+							force_loc$="NO"
+							baseWin!=null()
+							startx=0
+							starty=0
+							shrinkwrap$="NO"
+							html$="NO"
+							dialog_result$=""
+							spellcheck=1
 
-			callpoint!.setDevObject("deposit_id","")
+							call stbl("+DIR_SYP")+ "bax_display_text.bbj",
+:								"Cash Receipts Detail Comments",
+:								disp_text$, 
+:								table_chans$[all], 
+:								editable$, 
+:								force_loc$, 
+:								baseWin!, 
+:								startx, 
+:								starty, 
+:								shrinkwrap$, 
+:								html$, 
+:								dialog_result$,
+:								spellcheck
 
-			dim dflt_data$[4,1]
-			dflt_data$[1,0]="DESCRIPTION"
-			dflt_data$[1,1]=dflt_deposit_desc$
-			dflt_data$[2,0]="CASH_REC_CD"
-			dflt_data$[2,1]=ars_cc_custsvc.cash_rec_cd$
-			dflt_data$[3,0]="BATCH_NO"
-			dflt_data$[3,1]=stbl("+BATCH_NO")
-			if dflt_deposit_id$<>""
-				dflt_data$[4,0]="DEPOSIT_ID"
-				dflt_data$[4,1]=dflt_deposit_id$
-				key_pfx$=firm_id$+stbl("+BATCH_NO")+"E"+dflt_deposit_id$;rem --- 'E' is trans status Entry
+							if disp_text$<>sv_disp_text$
+								openInvoicesGrid!.setCellText(curr_row,comment_col,disp_text$)
+								vectInvoices!.setItem(curr_row*grid_cols+comment_col,disp_text$)
+							endif
+
+							callpoint!.setStatus("ACTIVATE")
+						endif
+					break
+					case default
+					break
+				swend
 			else
-				key_pfx$=firm_id$+stbl("+BATCH_NO")+"E"
+				if ev!.getEventName()="BBjButtonPushEvent" and ctl_ID=callpoint!.getDevObject("progwincancel")
+					progwin!=callpoint!.getDevObject("progwin")
+					progwin!.destroy()
+				endif
 			endif
-
-			call stbl("+DIR_SYP")+"bam_run_prog.bbj", "ARE_DEPOSIT", stbl("+USER_ID"), "MNT", key_pfx$, table_chans$[all],"",dflt_data$[all]
-			callpoint!.setColumnData("ARE_CCPMT.DEPOSIT_ID",str(callpoint!.getDevObject("deposit_id")),1)	
-
-			rem --- DEPOSIT_ID is required, so ABORT if we didn't select one
-			if callpoint!.getDevObject("deposit_id")=""
-				callpoint!.setStatus("ABORT")
-			endif
-
-			rem --- clear temp stbls
-			xwk$=stbl("!CLEAR","+cc_cash_rec_cd")
-			xwk$=stbl("!CLEAR","+cc_receipt_date")	
 		endif
 	endif
-[[ARE_CCPMT.CASH_REC_CD.BINQ]]
-rem --- restrict inquiry to cash rec codes associated with credit card payments
 
-	dim filter_defs$[1,2]
-	filter_defs$[0,0]="ARC_CASHCODE.FIRM_ID"
-	filter_defs$[0,1]="='"+firm_id$+"'"
-	filter_defs$[0,2]="LOCK"
-	filter_defs$[1,0]="ARS_CC_CUSTSVC.USE_CUSTSVC_CC"
-	filter_defs$[1,1]="='Y'"
-	filter_defs$[1,2]="LOCK"
-
-	dim search_defs$[3]
-
-	call stbl("+DIR_SYP")+"bax_query.bbj",
-:		gui_dev,
-:		Form!,
-:		"AR_CREDIT_CODES",
-:		"",
-:		table_chans$[all],
-:		selected_keys$,
-:		filter_defs$[all],
-:		search_defs$[all],
-:		"",
-:		""
-
-	if selected_keys$<>""
-		call stbl("+DIR_SYP")+"bac_key_template.bbj",
-:			"ARC_CASHCODE",
-:			"PRIMARY",
-:			arc_cashcode_key$,
-:			table_chans$[all],
-:			status$
-		dim arc_cashcode_key$:arc_cashcode_key$
-		arc_cashcode_key$=selected_keys$
-		callpoint!.setColumnData("ARE_CCPMT.CASH_REC_CD",arc_cashcode_key.cash_rec_cd$,1)
-	endif
-
-	callpoint!.setDevObject("cash_rec_cd",selected_keys$)
-	callpoint!.setStatus("ACTIVATE-ABORT")
-[[ARE_CCPMT.ZIP_CODE.AVAL]]
-gosub reset_timer
-[[ARE_CCPMT.YEAR.AINV]]
-gosub reset_timer
-[[ARE_CCPMT.STATE_CODE.AVAL]]
-gosub reset_timer
-[[ARE_CCPMT.SECURITY_CD.AVAL]]
-gosub reset_timer
-[[ARE_CCPMT.PHONE_NO.AVAL]]
-gosub reset_timer
-[[ARE_CCPMT.NAME_LAST.AVAL]]
-gosub reset_timer
-[[ARE_CCPMT.NAME_FIRST.AVAL]]
-gosub reset_timer
-[[ARE_CCPMT.MONTH.AVAL]]
-rem --- validate month
-
-	month$=cvs(callpoint!.getUserInput(),3)
-
-	if month$<>""
-		if num(month$)<1 or num(month$)>12 then callpoint!.setStatus("ABORT")
-	endif
-
-	gosub reset_timer
-[[ARE_CCPMT.EMAIL_ADDR.AVAL]]
-gosub reset_timer
-[[ARE_CCPMT.CNTRY_ID.AVAL]]
-gosub reset_timer
-[[ARE_CCPMT.ADDRESS_LINE_2.AVAL]]
-gosub reset_timer
 [[ARE_CCPMT.ADDRESS_LINE_1.AVAL]]
 gosub reset_timer
-[[ARE_CCPMT.BEND]]
-rem --- if vectInvoices! contains any selected items, get confirmation that user really wants to exit
 
-	progWin!=callpoint!.getDevObject("progwin")
-	if progWin!<>null() then progWin!.destroy(err=*next)
+[[ARE_CCPMT.ADDRESS_LINE_2.AVAL]]
+gosub reset_timer
 
-	vectInvoices!=callpoint!.getDevObject("vectInvoices")
-	grid_cols = num(callpoint!.getDevObject("grid_cols"))
-	selected=0
-	if vectInvoices!.size(err=*endif)
-		for wk=0 to vectInvoices!.size()-1 step grid_cols
-			selected=selected+iff(vectInvoices!.get(wk)="Y",1,0)
-		next wk
-	endif
-
-	if callpoint!.getDevObject("payment_status")="payment"
-		msg_id$="GENERIC_WARN_CANCEL"
-		dim msg_tokens$[1]
-		msg_tokens$[0]=Translate!.getTranslation("AON_PAYMENT_TRANSACTION_IN_PROCESS","Payment transaction in process. Response not yet received.",1)
-		msg_tokens$[0]=msg_tokens$[0]+$0A$+Translate!.getTranslation("AON_MANUALLY_CREATE_CASH_RECEIPT","If you click OK to exit, you will need to manually confirm successful payment and enter the Cash Receipt.",1)
-		gosub disp_message
-		if msg_opt$<>"O" then callpoint!.setStatus("ABORT")
-	endif
-
-	if selected
-		msg_id$="GENERIC_WARN_CANCEL"
-		dim msg_tokens$[1]
-		msg_tokens$[0]=Translate!.getTranslation("AON_EXIT_WITHOUT_PROCESSING_THIS_PAYMENT","Exit without processing this payment?",1)+$0A$+Translate!.getTranslation("AON_SELECT_OK_OR_CANCEL","Select OK to exit, or Cancel to return to the form.",1)
-		gosub disp_message
-		if msg_opt$<>"O" then callpoint!.setStatus("ABORT")
-	endif
-
-	BBjAPI().removeTimer(10000,err=*next)
-
-	gosub remove_batch_lock
 [[ARE_CCPMT.AREC]]
 
-[[ARE_CCPMT.CARD_NO.AVAL]]
-rem ==============================================
-rem -- mod10_check; see if card number field contains valid cc# format
-rem ==============================================
+[[ARE_CCPMT.ASIZ]]
+rem --- Resize grids
+	formHeight=Form!.getHeight()
+	formWidth=Form!.getWidth()
+	openInvoicesGrid!=callpoint!.getDevObject("openInvoicesGrid")
+	gridYpos=openInvoicesGrid!.getY()
+	gridXpos=openInvoicesGrid!.getX()
+	availableHeight=formHeight-gridYpos
 
-	cc_digits$ = ""
-	cc_curr_digit = 0
-	cc_card$=callpoint!.getUserInput()
+	openInvoicesGrid!.setSize(formWidth-2*gridXpos,availableHeight-8)
+	openInvoicesGrid!.setFitToGrid(1)
 
-	if cvs(cc_card$,3)<>""
-		for cc_temp = len(cc_card$) to 1 step -1
-		cc_curr_digit = cc_curr_digit + 1
-		cc_no = num(cc_card$(cc_temp,1)) * iff(mod(cc_curr_digit,2)=0, 2, 1)
-		cc_digits$ = str(cc_no) + cc_digits$
-		next cc_temp
-
-		cc_total = 0
-		for cc_temp = 1 to len(cc_digits$)
-		cc_total = cc_total + num(cc_digits$(cc_temp, 1))
-		next cc_temp
-
-		if mod(cc_total, 10) <> 0
-			callpoint!.setMessage("INVALID_CREDIT_CARD")
-			callpoint!.setStatus("ABORT")
-		endif
-	endif
-
-	gosub reset_timer
 [[ARE_CCPMT.ASVA]]
 rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, then process
 
@@ -521,8 +444,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 				case "PAYFLOWPRO"
 
 					rem --- get random number to send when requesting secure token
-					rem --- set namespace variable using that number
-					rem --- PayPal returns that number in the response, so can match number in response to number we're sending to be sure we're processing our payment and not someone else's (multi-user)
+					rem --- set namespace variable/callback using that number
 					sid!=UUID.randomUUID()
 					sid$=sid!.toString()
 					callpoint!.setDevObject("sid",sid$)
@@ -544,7 +466,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 					tokenID$=tokenID!.substring(1,tokenID!.indexOf("&"))
 
 					rem --- If successful in getting secure token, launch hosted page.
-					rem --- PayPal Silent Post configuration will contain return URL that runs a BBJSP servlet once payment is completed (or declined).
+					rem --- PayPal Silent Post configuration will contain return URL that runs our servlet once payment is completed (or declined).
 					rem --- Servlet updates namespace variable sid$ with response text.
 					rem --- Registered callback for namespace variable change will cause PayPal response routine in ACUS to get executed,
 					rem --- which will record response in art_response and post cash receipt, if applicable.
@@ -555,7 +477,18 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 						setprogbar!=BBjAPI().getNamespace("aon","credit_progbar",1)
 						setprogbar!.setValue(sid$,"init")
 						setprogbar!.setCallbackForVariableChange(sid$,"custom_event")
-						returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway_id$+" -t"+tokenID$+" -s"+sid$+" -l"+gw_config!.get("launchURL"))
+
+						frameMode!=BBjAPI().getConfig().getCurrentCommandLineObject().getChildFrameMode()
+						if frameMode! <> null() then
+							rem --- Using MDI or SDI
+							cmd$=$22$+"are_hosted.aon"+$22$+" - -g"+gateway_id$+" -t"+tokenID$+" -s"+sid$+" -l"+gw_config!.get("launchURL")
+							cmdObj!=BBjAPI().getConfig().getCommandLineObject(cmd$)
+							cmdObj!.setChildFrameMode(frameMode!)
+							returnCode=BBjAPI().newSynchBBjSession(cmdObj!)
+						else
+							rem --- Using BUI
+							BBjAPI().getThinClient().browse(gw_config!.get("launchURL")+"?SECURETOKENID="+sid$+"&SECURETOKEN="+tokenID$,"_blank","")
+						endif
 					else
 						trans_msg$=Translate!.getTranslation("AON_UNABLE_TO_ACQUIRE_SECURE_TOKEN")+$0A$+content!
 						dim msg_tokens$[1]
@@ -566,19 +499,24 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 					endif
 				break
 				case "AUTHORIZE "
-					ns!=BBjAPI().getNamespace("aon","credit_receipt_authorize",1)
-					ns!.setCallbackForNamespace("custom_event")
-
-					rem --- Create the order object to add to transaction request
-					rem --- Currently filling with unique ID so we can link this auth-capture to returned response
-					rem --- Authorize.net next API version should allow refID to be passed that will be returned in Webhook, obviating need for unique ID in order
 
 					sid!=UUID.randomUUID()
+					rem --- for Authorize, sid$ is used on confirmation page URL and passed to are_hosted.aon, 
+					rem --- where a namespace/callbackForVariableChange is set for it. 
+					rem --- The AuthorizeConfirmation servlet sets that ns variable to "close,"
+					rem --- which is how are_hosted.aon knows to close the BBjHtmlView
 					sid$=sid!.toString()
+					refID$=sid!.toString().replace("-","")
+					rem --- for Authorize, refID$ is sent in GetHostedPaymentPageRequest
+					rem --- and we set namespace variable/callback using that refID$
+					rem --- Can only be 20 char, so not using full sid$
+					refID$=cust_id$+"-"+refID$(1,13)
 					callpoint!.setDevObject("sid",sid$)
-					order! = new OrderType()
-					order!.setInvoiceNumber(cust_id$)
-					order!.setDescription(sid$)
+					callpoint!.setDevObject("refID",refID$)
+
+					ns!=BBjAPI().getNamespace("aon","credit_receipt_authorize",1)
+					ns!.setValue(refID$,"init")
+					ns!.setCallbackForVariableChange(refID$,"custom_event")
 
 					confirmation_page$=fnbuildURL$(gw_config!.get("confirmationPage"))
 					embed_info$="sid="+sid$
@@ -596,7 +534,6 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 					txnRequest! = new TransactionRequestType()
 					txnRequest!.setTransactionType(TransactionTypeEnum.AUTH_CAPTURE_TRANSACTION.value())
 					txnRequest!.setAmount(new BigDecimal(apply_amt!).setScale(2,RoundingMode.HALF_EVEN))
-					txnRequest!.setOrder(order!)
 
 					setting1! = new SettingType()
 					setting1!.setSettingName("hostedPaymentButtonOptions")
@@ -604,7 +541,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 	                        
 					setting2! = new SettingType()
 					setting2!.setSettingName("hostedPaymentOrderOptions")
-					setting2!.setSettingValue("{"+$22$+"show"+$22$+": false}")
+					setting2!.setSettingValue("{"+$22$+"show"+$22$+": true, "+$22$+"merchantName"+$22$+": "+$22$+sysinfo.firm_name$+$22$+"}")
 
 					setting3! = new SettingType()
 					setting3!.setSettingName("hostedPaymentReturnOptions")
@@ -612,15 +549,21 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 
 					setting4! = new SettingType()
 					setting4!.setSettingName("hostedPaymentPaymentOptions")
-					setting4!.setSettingValue("{"+$22$+"showBankAccount"+$22$+": false}")
+					setting4!.setSettingValue("{"+$22$+"cardCodeRequired"+$22$+": true, "+$22$+"showBankAccount"+$22$+": false}")
+
+					setting5! = new SettingType()
+					setting5!.setSettingName("hostedPaymentBillingAddressOptions")
+					setting5!.setSettingValue("{"+$22$+"show"+$22$+": true, "+$22$+"required"+$22$+": true}")
 
 					alist! = new ArrayOfSetting()
 					alist!.getSetting().add(setting1!)
 					alist!.getSetting().add(setting2!)
 					alist!.getSetting().add(setting3!)
 					alist!.getSetting().add(setting4!)
+					alist!.getSetting().add(setting5!)
 
 					apiRequest! = new GetHostedPaymentPageRequest()
+					apiRequest!.setRefId(refID$)
 					apiRequest!.setTransactionRequest(txnRequest!)
 					apiRequest!.setHostedPaymentSettings(alist!)
 
@@ -631,22 +574,31 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 					authResponse! = controller!.getApiResponse()
 
 					rem --- if GetHostedPaymentPageResponse() indicates success, launch our 'starter' page.
-					rem --- 'starter' page gets passed the token, and has a 'proceed to checkout' button, which does a POST to https://test.authorize.net/payment/payment, passing along the token.
-					rem --- Authorize.net is configured with Webhook for the auth-capture transaction. Webhook contains URL that runs our BBJSP servlet.
-					rem --- Servlet updates namespace variable 'authresp' with response text
-					rem --- registered callback for variable change will cause authorize_response routine to get executed
-					rem --- authorize_response will parse trans_id from the webhook, then send a getTransactionDetailsRequest
-					rem --- returned getTransactionDetailsResponse should contain order with our sid$ in the order description
-					rem --- if sid$ matches saved_sid$, then this is our response (and not someone else's who might also be processing payments)
-					rem --- assuming this is our response, record the Webhook response in art_response and create cash receipt, if applicable
-
+					rem --- 'starter' page gets passed the token, and silently redirects via a form POST to https://test.authorize.net/payment/payment, passing along the token.
+					rem --- Authorize.net is configured with Webhook for the auth-capture transaction. Webhook contains URL that runs our servlet.
+					rem --- Servlet updates namespace variable refID$ with response text
+					rem --- Registered callback for namespace variable change will cause Authorize response routine in ACUS to get executed,
+					rem --- which will record response in art_response and post cash receipt, if applicable.
+					
 					if authResponse!.getMessages().getResultCode()=MessageTypeEnum.OK
 						rem --- set devObject to indicate 'payment' status - check when exiting and warn if still in "payment" status (i.e., no response received yet)
 						callpoint!.setDevObject("payment_status","payment")
 						setprogbar!=BBjAPI().getNamespace("aon","credit_progbar",1)
 						setprogbar!.setValue(sid$,"init")
 						setprogbar!.setCallbackForVariableChange(sid$,"custom_event")
-						returnCode=scall("bbj "+$22$+"are_hosted.aon"+$22$+" - -g"+gateway_id$+" -t"+authResponse!.getToken()+" -a"+masked_amt$+" -l"+launch_page$+" -u"+gw_config!.get("gatewayURL")+" -s"+sid$)
+
+						frameMode!=BBjAPI().getConfig().getCurrentCommandLineObject().getChildFrameMode()
+						if frameMode! <> null() then
+							rem --- Using MDI or SDI
+							cmd$=$22$+"are_hosted.aon"+$22$+" - -g"+gateway_id$+" -t"+authResponse!.getToken()+" -a"+masked_amt$+" -l"+launch_page$+" -u"+gw_config!.get("gatewayURL")+" -s"+sid$
+							cmdObj!=BBjAPI().getConfig().getCommandLineObject(cmd$)
+							cmdObj!.setChildFrameMode(frameMode!)
+							returnCode=BBjAPI().newSynchBBjSession(cmdObj!)
+						else
+							rem --- Using BUI
+							BBjAPI().getThinClient().browse(launch_page$+"?authtoken="+authResponse!.getToken()+"&gatewayURL="+gw_config!.get("gatewayURL")+"&amount="+masked_amt$,"_blank","")
+						endif
+
 					else
 						trans_msg$=Translate!.getTranslation("AON_UNABLE_TO_ACQUIRE_SECURE_TOKEN")+$0a$+authResponse!.getMessages().getMessage().get(0).getCode()+$0a$+authResponse!.getMessages().getMessage().get(0).getText()
 						dim msg_tokens$[1]
@@ -662,281 +614,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 			swend
 		endif
 	endif
-[[ARE_CCPMT.ACUS]]
-rem --- Process custom event -- used in this pgm to select/de-select checkboxes in grid
-rem --- See basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info
-rem --- This routine is executed when callbacks have been set to run a 'custom event'
-rem --- Analyze gui_event$ and notice$ to see which control's callback triggered the event, and what kind
-rem --- of event it is... in this case, we're toggling checkboxes on/off in form grid control
 
-	dim gui_event$:tmpl(gui_dev)
-	dim notify_base$:noticetpl(0,0)
-	gui_event$=SysGUI!.getLastEventString()
-	ev!=BBjAPI().getLastEvent()
-
-	if ev!.getEventName()="BBjNamespaceEvent"
-
-		vectInvoices!=callpoint!.getDevObject("vectInvoices")
-		apply_amt!=cast(BBjNumber, num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT")))
-		cust_id$=callpoint!.getColumnData("ARE_CCPMT.CUSTOMER_ID")
-		cash_rec_cd$=callpoint!.getColumnData("ARE_CCPMT.CASH_REC_CD")
-
-		gw_config!=callpoint!.getDevObject("gw_config")
-		gateway_id$=gw_config!.get("gateway_id")
-
-		trans_msg$=Translate!.getTranslation("AON_UNTRAPPED_NAMESPACE_EVENT")
-		cash_msg$=""
-
-		ns_name$=ev!.getNamespaceName()
-		ns!=BBjAPI().getExistingNamespace(ns_name$)
-		if pos("authorize"=ns_name$)
-			rem --- response (webhook) from Authorize.net
-			newValue! = new JSONObject(ev!.getNewValue())
-			trans_id$=newValue!.get("payload").get("id")
-
-			ApiOperationBase.setEnvironment(Environment.valueOf(gw_config!.get("environment")))
-
-			merchantAuthenticationType!  = new MerchantAuthenticationType() 
-			merchantAuthenticationType!.setName(gw_config!.get("name"))
-			merchantAuthenticationType!.setTransactionKey(gw_config!.get("transactionKey"))
-			ApiOperationBase.setMerchantAuthentication(merchantAuthenticationType!)
-
-			getRequest! = new GetTransactionDetailsRequest()
-			getRequest!.setMerchantAuthentication(merchantAuthenticationType!)
-			getRequest!.setTransId(trans_id$)
-
-			controller! = new GetTransactionDetailsController(getRequest!)
-			controller!.execute()
-			authResponse! = controller!.getApiResponse()
-			if authResponse!.getMessages().getResultCode()=MessageTypeEnum.OK
-				resp_cust$=authResponse!.getTransaction().getOrder().getInvoiceNumber()
-				resp_sid$=authResponse!.getTransaction().getOrder().getDescription()
-				resp_code=authResponse!.getTransaction().getResponseCode()
-				payment_amt$=str(authResponse!.getTransaction().getAuthAmount())
-				trans_msg$=authResponse!.getMessages().getMessage().get(0).getCode()+$0a$+authResponse!.getMessages().getMessage().get(0).getText()
-
-				rem if resp_sid$ matches callpoint!.getDevObject("sid") then this is a response to OUR payment
-				rem this is a workaround until Authorize.net returns our assigned refID in the webhook response
-				rem until then, don't know if this event got triggered by us, or someone else processing a credit card payment
-				rem so we have to put the sid$ in something that gets returned in the full response, and get that full response
-				rem instead of just using the returned webhook
-				rem may want to always get full response to record in art_response anyway, since webhook payload is abridged   
-   
-				if resp_sid$=callpoint!.getDevObject("sid")
-					response_text$=newValue!.toString()
-					trans_amount$=payment_amt$
-					trans_approved$=iff(resp_code,"A","D");rem A=approved, D=declined
-					if resp_code
-						gosub create_cash_receipt
-					else
-						cash_msg$=""
-					endif
-					gosub write_to_response_log
-				else
-					rem --- if webhook response came in for a different transaction, just resume (keep waiting for OUR response)
-					rem --- this could happen if >1 session is accepting a credit card payment at the same time
-					break
-				endif
-				callpoint!.setDevObject("payment_status","response")
-			else
-				trans_msg$=Translate!.getTranslation("AON_UNABLE_TO_PROCESS_GETTRANSACTIONDETAILSREQUEST_METHOD")
-			endif
-			ns!.removeCallbackForNamespace()
-
-		else
-			if pos("payflowpro"=ns_name$)
-				rem --- response (silent post) from PayPal
-				old_value$=ev!.getOldValue()
-				if old_value$="init"
-					new_value$=ev!.getNewValue()
-					trans_id$=fnparse$(new_value$,"PNREF=","&")
-					payment_amt$=str(num(fnparse$(new_value$,"AMT=","&")))
-					trans_msg$=fnparse$(new_value$,"RESPMSG=","&")
-					result$=fnparse$(new_value$,"RESULT=","&")
-					if result$="0"
-						gosub create_cash_receipt
-					else
-						cash_msg$=""
-					endif
-					if cvs(trans_id$,3)<>""
-						response_text$=new_value$
-						trans_amount$=payment_amt$
-						trans_approved$=iff(result$="0","A","D");rem A=approved, D=declined
-						gosub write_to_response_log
-					endif
-					rem --- set devObject to indicate 'response' status
-					callpoint!.setDevObject("payment_status","response")
-				endif
-				sid$=callpoint!.getDevObject("sid")
-				ns!.removeCallbackForVariableChange(sid$)
-			else
-				if pos("credit_progbar"=ns_name$)
-					bbjHome$ =  System.getProperty("basis.BBjHome")
-					title$=form!.getTitle()
-					progtext$=Translate!.getTranslation("AON_AWAITING_RESPONSE","Awaiting response",1)+"..."
-					progWin! = SysGui!.addWindow(SysGUI!.getAvailableContext(),Form!.getX()+Form!.getWidth()/2,Form!.getY()+Form!.getHeight()/2,300,100,title$,$000C0000$)
-					nxt_ctlID=util.getNextControlID()
-					progWin!.addImageCtrl(nxt_ctlID,15,15,33,33,bbjHome$+"/utils/reporting/bbjasper/images/CreatingReport.gif")
-					nxt_ctlID=util.getNextControlID()
-					sText!=progWin!.addStaticText(nxt_ctlID,75,20,150,50,progtext$)
-					font! = sText!.getFont()
-					fontBold! = SysGui!.makeFont(font!.getName(), font!.getSize()+2, SysGui!.BOLD)
-					sText!.setFont(fontBold!)
-					nxt_ctlID=util.getNextControlID()
-					cncl!=progWin!.addButton(nxt_ctlID,100,70,75,25,Translate!.getTranslation("AON_CANCEL"))
-					cncl!.setCallback(cncl!.ON_BUTTON_PUSH,"custom_event")
-					callpoint!.setDevObject("progwincancel",nxt_ctlID)
-					callpoint!.setDevObject("progwin",progWin!)
-					break
-				endif
-			endif
-		endif
-
-		gosub remove_batch_lock
-		if callpoint!.getDevObject("br_interface")="Y" then gosub update_deposit
-
-		progWin!=callpoint!.getDevObject("progwin")
-		if progWin!<>null() then progWin!.destroy(err=*next)
-
-		dim msg_tokens$[1]
-		msg_tokens$[0]=trans_msg$+$0A$+cash_msg$
-		msg_id$="GENERIC_OK"
-		gosub disp_message
-		callpoint!.setStatus("EXIT")
-
-	else
-		if ev!.getEventName()="BBjTimerEvent" and gui_event.y=10000
-			BBjAPI().removeTimer(10000)
-			callpoint!.setStatus("EXIT")
-		else
-			ctl_ID=dec(gui_event.ID$)
-			if ctl_ID=num(callpoint!.getDevObject("openInvoicesGridId"))
-				if gui_event.code$="N"
-					notify_base$=notice(gui_dev,gui_event.x%)
-					dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
-					notice$=notify_base$
-					curr_row = dec(notice.row$)
-					curr_col = dec(notice.col$)
-				endif
-				switch notice.code
-					case 12;rem grid_key_press
-						if notice.wparam=32 gosub switch_value
-					break
-					case 14;rem grid_mouse_up
-						if notice.col=0 gosub switch_value
-					break
-					case 7;rem edit stop - can only edit pay and disc taken cols
-						if curr_col=num(callpoint!.getDevObject("pay_col")) or curr_col=num(callpoint!.getDevObject("disc_taken_col"))  then
-							vectInvoices!=callpoint!.getDevObject("vectInvoices")
-							openInvoicesGrid!=callpoint!.getDevObject("openInvoicesGrid")
-							grid_cols = num(callpoint!.getDevObject("grid_cols"))
-							inv_bal_col=num(callpoint!.getDevObject("inv_bal_col"))
-							disc_col=num(callpoint!.getDevObject("disc_col"))
-							pay_col=num(callpoint!.getDevObject("pay_col"))
-							disc_taken_col=num(callpoint!.getDevObject("disc_taken_col"))
-							end_bal_col=num(callpoint!.getDevObject("end_bal_col"))
-							oa_inv$=callpoint!.getDevObject("oa_inv")
-							tot_pay=num(callpoint!.getColumnData("<<DISPLAY>>.APPLY_AMT"))
-							vect_pay_amt=num(vectInvoices!.get(curr_row*grid_cols+pay_col))
-							vect_disc_taken=num(vectInvoices!.get(curr_row*grid_cols+disc_taken_col))
-							vect_inv_bal=num(vectInvoices!.get(curr_row*grid_cols+inv_bal_col))
-							grid_pay_amt = num(openInvoicesGrid!.getCellText(curr_row,pay_col))
-							grid_disc_taken = num(openInvoicesGrid!.getCellText(curr_row,disc_taken_col))
-							if grid_pay_amt<0 then grid_pay_amt=0
-							if grid_disc_taken<0 then grid_disc_taken=0
-							if grid_pay_amt<=0 then grid_disc_taken=0
-							openInvoicesGrid!.setCellText(curr_row,end_bal_col,str(vect_inv_bal-grid_pay_amt-grid_disc_taken))
-							if vectInvoices!.get(curr_row*grid_cols+1)<>oa_inv$ and num(openInvoicesGrid!.getCellText(curr_row,end_bal_col))<0
-								msg_id$="GENERIC_WARN"
-								dim msg_tokens$[1]
-								msg_tokens$[1]=Translate!.getTranslation("AON_CREDIT_BALANCE_PLEASE_CORRECT","You have created a credit balance. Please correct the payment or discount amounts.",1)
-								gosub disp_message
-								grid_pay_amt=0
-								grid_disc_taken=0
-							endif
-							tot_pay=tot_pay-vect_pay_amt+grid_pay_amt
-							vectInvoices!.set(curr_row*grid_cols+pay_col,str(grid_pay_amt))
-							vectInvoices!.set(curr_row*grid_cols+disc_taken_col,str(grid_disc_taken))
-							vectInvoices!.set(curr_row*grid_cols+end_bal_col,str(vect_inv_bal-grid_pay_amt-grid_disc_taken))
-							openInvoicesGrid!.setCellText(curr_row,pay_col,str(grid_pay_amt))
-							openInvoicesGrid!.setCellText(curr_row,disc_taken_col,str(grid_disc_taken))
-							openInvoicesGrid!.setCellText(curr_row,end_bal_col,str(vect_inv_bal-grid_pay_amt-grid_disc_taken))
-							callpoint!.setColumnData("<<DISPLAY>>.APPLY_AMT",str(tot_pay),1)
-							if grid_pay_amt>0
-								vectInvoices!.set(curr_row*grid_cols,"Y")
-								openInvoicesGrid!.setCellState(curr_row,0,1)
-							else
-								vectInvoices!.set(curr_row*grid_cols,"")
-								openInvoicesGrid!.setCellState(curr_row,0,0)
-							endif
-							gosub reset_timer
-							callpoint!.setDevObject("vectInvoices",vectInvoices!)
-							callpoint!.setDevObject("openInvoicesGrid",openInvoicesGrid!)
-						endif
-					break
-					case 8;rem edit start
-						grid_cols = num(callpoint!.getDevObject("grid_cols"))
-						comment_col=grid_cols-1
-		 				if curr_col=comment_col
-							vectInvoices!=callpoint!.getDevObject("vectInvoices")
-							openInvoicesGrid!=callpoint!.getDevObject("openInvoicesGrid")
-							disp_text$=openInvoicesGrid!.getCellText(clicked_row,comment_col)
-							sv_disp_text$=disp_text$
-
-							editable$="YES"
-							force_loc$="NO"
-							baseWin!=null()
-							startx=0
-							starty=0
-							shrinkwrap$="NO"
-							html$="NO"
-							dialog_result$=""
-							spellcheck=1
-
-							call stbl("+DIR_SYP")+ "bax_display_text.bbj",
-:								"Cash Receipts Detail Comments",
-:								disp_text$, 
-:								table_chans$[all], 
-:								editable$, 
-:								force_loc$, 
-:								baseWin!, 
-:								startx, 
-:								starty, 
-:								shrinkwrap$, 
-:								html$, 
-:								dialog_result$,
-:								spellcheck
-
-							if disp_text$<>sv_disp_text$
-								openInvoicesGrid!.setCellText(curr_row,comment_col,disp_text$)
-								vectInvoices!.setItem(curr_row*grid_cols+comment_col,disp_text$)
-							endif
-
-							callpoint!.setStatus("ACTIVATE")
-						endif
-					break
-					case default
-					break
-				swend
-			else
-				if ev!.getEventName()="BBjButtonPushEvent" and ctl_ID=callpoint!.getDevObject("progwincancel")
-					progwin!=callpoint!.getDevObject("progwin")
-					progwin!.destroy()
-				endif
-			endif
-		endif
-	endif
-[[ARE_CCPMT.ASIZ]]
-rem --- Resize grids
-	formHeight=Form!.getHeight()
-	formWidth=Form!.getWidth()
-	openInvoicesGrid!=callpoint!.getDevObject("openInvoicesGrid")
-	gridYpos=openInvoicesGrid!.getY()
-	gridXpos=openInvoicesGrid!.getX()
-	availableHeight=formHeight-gridYpos
-
-	openInvoicesGrid!.setSize(formWidth-2*gridXpos,availableHeight-8)
-	openInvoicesGrid!.setFitToGrid(1)
 [[ARE_CCPMT.AWIN]]
 rem --- Declare classes used
 
@@ -970,11 +648,8 @@ rem --- Declare classes used
 	use net.authorize.api.contract.v1.TransactionTypeEnum
 	use net.authorize.api.contract.v1.GetHostedPaymentPageRequest
 	use net.authorize.api.contract.v1.GetHostedPaymentPageResponse
-	use net.authorize.api.contract.v1.GetTransactionDetailsRequest
-	use net.authorize.api.contract.v1.OrderType
 	use net.authorize.api.controller.base.ApiOperationBase
 	use net.authorize.api.controller.GetHostedPaymentPageController
-	use net.authorize.api.controller.GetTransactionDetailsController
 
 	use ::ado_util.src::util	
 	use ::sys/prog/bao_encryptor.bbj::Encryptor
@@ -1046,13 +721,354 @@ rem --- Add open invoice grid to form
 	openInvoicesGrid!.setColumnEditable(11,1)
 
 rem --- Reset window size
-rem CAH	util.resizeWindow(Form!, SysGui!)
+rem	util.resizeWindow(Form!, SysGui!)
 
 rem --- set callbacks - processed in ACUS callpoint
 	openInvoicesGrid!.setCallback(openInvoicesGrid!.ON_GRID_KEY_PRESS,"custom_event")
 	openInvoicesGrid!.setCallback(openInvoicesGrid!.ON_GRID_MOUSE_UP,"custom_event")
 	openInvoicesGrid!.setCallback(openInvoicesGrid!.ON_GRID_EDIT_STOP,"custom_event")
 	openInvoicesGrid!.setCallback(openInvoicesGrid!.ON_GRID_EDIT_START,"custom_event")
+
+[[ARE_CCPMT.BEND]]
+rem --- if vectInvoices! contains any selected items, get confirmation that user really wants to exit
+
+	progWin!=callpoint!.getDevObject("progwin")
+	if progWin!<>null() then progWin!.destroy(err=*next)
+
+	vectInvoices!=callpoint!.getDevObject("vectInvoices")
+	grid_cols = num(callpoint!.getDevObject("grid_cols"))
+	selected=0
+	if vectInvoices!.size(err=*endif)
+		for wk=0 to vectInvoices!.size()-1 step grid_cols
+			selected=selected+iff(vectInvoices!.get(wk)="Y",1,0)
+		next wk
+	endif
+
+	if callpoint!.getDevObject("payment_status")="payment"
+		msg_id$="GENERIC_WARN_CANCEL"
+		dim msg_tokens$[1]
+		msg_tokens$[0]=Translate!.getTranslation("AON_PAYMENT_TRANSACTION_IN_PROCESS","Payment transaction in process. Response not yet received.",1)
+		msg_tokens$[0]=msg_tokens$[0]+$0A$+Translate!.getTranslation("AON_MANUALLY_CREATE_CASH_RECEIPT","If you click OK to exit, you will need to manually confirm successful payment and enter the Cash Receipt.",1)
+		gosub disp_message
+		if msg_opt$<>"O" then callpoint!.setStatus("ABORT")
+	endif
+
+	if selected
+		msg_id$="GENERIC_WARN_CANCEL"
+		dim msg_tokens$[1]
+		msg_tokens$[0]=Translate!.getTranslation("AON_EXIT_WITHOUT_PROCESSING_THIS_PAYMENT","Exit without processing this payment?",1)+$0A$+Translate!.getTranslation("AON_SELECT_OK_OR_CANCEL","Select OK to exit, or Cancel to return to the form.",1)
+		gosub disp_message
+		if msg_opt$<>"O" then callpoint!.setStatus("ABORT")
+	endif
+
+	BBjAPI().removeTimer(10000,err=*next)
+
+	gosub remove_batch_lock
+
+[[ARE_CCPMT.CARD_NO.AVAL]]
+rem ==============================================
+rem -- mod10_check; see if card number field contains valid cc# format
+rem ==============================================
+
+	cc_digits$ = ""
+	cc_curr_digit = 0
+	cc_card$=callpoint!.getUserInput()
+
+	if cvs(cc_card$,3)<>""
+		for cc_temp = len(cc_card$) to 1 step -1
+		cc_curr_digit = cc_curr_digit + 1
+		cc_no = num(cc_card$(cc_temp,1)) * iff(mod(cc_curr_digit,2)=0, 2, 1)
+		cc_digits$ = str(cc_no) + cc_digits$
+		next cc_temp
+
+		cc_total = 0
+		for cc_temp = 1 to len(cc_digits$)
+		cc_total = cc_total + num(cc_digits$(cc_temp, 1))
+		next cc_temp
+
+		if mod(cc_total, 10) <> 0
+			callpoint!.setMessage("INVALID_CREDIT_CARD")
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
+
+	gosub reset_timer
+
+[[ARE_CCPMT.CASH_REC_CD.AVAL]]
+rem --- get cash rec code and associated credit card params; if hosted, disable data collection fields
+rem --- only execute if vectInvoices! not yet populated
+rem --- this avoids re-running this code via the ASVA (Barista re-validates last enabled control?)
+
+	vectInvoices!=callpoint!.getDevObject("vectInvoices")
+	rem --- only execute if vectInvoices! hasn't yet been built - i.e., don't execute again in ASVA final validation check
+	rem --- or if cash rec code has been changed
+
+	if !vectInvoices!.size() or callpoint!.getUserInput()<>callpoint!.getColumnData("ARE_CCPMT.CASH_REC_CD")
+
+		ars_cc_custsvc=fnget_dev("ARS_CC_CUSTSVC")
+		arc_cashcode=fnget_dev("ARC_CASHCODE")
+		are_cashhdr=fnget_dev("ARE_CASHHDR")
+
+		dim ars_cc_custsvc$:fnget_tpl$("ARS_CC_CUSTSVC")
+		dim arc_cashcode$:fnget_tpl$("ARC_CASHCODE")
+		dim are_cashhdr$:fnget_tpl$("ARE_CASHHDR")
+
+		cash_cd$=callpoint!.getUserInput()
+
+		readrecord(arc_cashcode,key=firm_id$+"C"+cash_cd$,dom=std_missing_params)arc_cashcode$
+		readrecord(ars_cc_custsvc,key=firm_id$+cash_cd$,dom=std_missing_params)ars_cc_custsvc$
+
+		if cvs(callpoint!.getColumnData("ARE_CCPMT.CNTRY_ID"),3)=""
+			callpoint!.setColumnData("ARE_CCPMT.CNTRY_ID",ars_cc_custsvc.dflt_cntry_id$,1)
+		endif
+
+		gateway_id$=ars_cc_custsvc.gateway_id$
+		gosub get_gateway_config
+		if msg_id$<>"" then break; rem --- 'token' string found in config; needs to be substituted for legit value before continuing
+
+		callpoint!.setDevObject("ars_cc_custsvc",ars_cc_custsvc$)
+		callpoint!.setDevObject("interface_tp",ars_cc_custsvc.interface_tp$)
+		if ars_cc_custsvc.interface_tp$="A"
+
+			rem --- Set timer for form when interface_tp$="A" (using internal API, so collecting sensitive info)
+			timer_key!=10000
+			BBjAPI().createTimer(timer_key!,60,"custom_event")
+			enable_flag=1
+		else
+			enable_flag=0
+			callpoint!.setColumnData("ARE_CCPMT.CARD_NO","",1)
+			callpoint!.setColumnData("ARE_CCPMT.SECURITY_CD","",1)
+			callpoint!.setColumnData("ARE_CCPMT.NAME_FIRST","",1)
+			callpoint!.setColumnData("ARE_CCPMT.NAME_LAST","",1)
+			callpoint!.setColumnData("ARE_CCPMT.MONTH","",1)
+			callpoint!.setColumnData("ARE_CCPMT.YEAR","",1)
+
+			rem --- for hosted, make sure expected config attributes exist
+			config_attribs!=BBjAPI().makeVector()
+			if gateway_id$="PAYFLOWPRO"
+				config_attribs!.add("PARTNER")
+				config_attribs!.add("VENDOR")
+				config_attribs!.add("USER")
+				config_attribs!.add("PWD")
+				config_attribs!.add("testMode")
+				config_attribs!.add("server")
+				config_attribs!.add("requestTokenURL")
+				config_attribs!.add("launchURL")
+				config_attribs!.add("silentPostServlet")
+				config_attribs!.add("silentPostFailureServlet")
+				config_attribs!.add("silentPostFailureServlet")
+			else
+				config_attribs!.add("name")
+				config_attribs!.add("transactionKey")
+				config_attribs!.add("server")
+				config_attribs!.add("launchPage")
+				config_attribs!.add("gatewayURL")
+				config_attribs!.add("confirmationPage")
+				config_attribs!.add("webhookServlet")
+				config_attribs!.add("environment")
+				config_attribs!.add("testMode")
+			endif
+			for wk=0 to config_attribs!.size()-1
+				if gw_config!.get(config_attribs!.get(wk))=null()
+					dim msg_tokens$[1]
+					msg_tokens$[0]=Translate!.getTranslation("AON_MISSING_GATEWAY_CONFIG","One or more configuration values for the payment gateway are missing.",1)+$0A$+"("+gateway_id$+")"
+					msg_id$="GENERIC_WARN"
+					gosub disp_message
+					callpoint!.setStatus("EXIT")
+					break
+				endif
+			next wk
+		endif
+		callpoint!.setColumnEnabled("ARE_CCPMT.ADDRESS_LINE_1",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.ADDRESS_LINE_2",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.CARD_NO",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.CITY",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.CNTRY_ID",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.EMAIL_ADDR",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.MONTH",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.NAME_FIRST",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.NAME_LAST",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.PHONE_NO",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.SECURITY_CD",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.STATE_CODE",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.YEAR",enable_flag)
+		callpoint!.setColumnEnabled("ARE_CCPMT.ZIP_CODE",enable_flag)
+
+		rem --- load up open invoices
+
+		gosub get_open_invoices
+		gosub fill_grid
+
+		are_cashhdr.firm_id$=firm_id$
+		are_cashhdr.customer_id$=callpoint!.getColumnData("ARE_CCPMT.CUSTOMER_ID")
+		are_cashhdr.receipt_date$=callpoint!.getColumnData("ARE_CCPMT.RECEIPT_DATE")
+		are_cashhdr.cash_rec_cd$=cash_cd$
+
+		receipt_found=0
+		dflt_batch_desc$=cvs(ars_cc_custsvc.batch_desc$,3)
+		dflt_deposit_desc$=cvs(ars_cc_custsvc.deposit_desc$,3)
+
+		extractrecord(are_cashhdr,key=
+:			are_cashhdr.firm_id$+
+:			are_cashhdr.ar_type$+
+:			are_cashhdr.reserved_key_01$+
+:			are_cashhdr.receipt_date$+
+:			are_cashhdr.customer_id$+
+:			are_cashhdr.cash_rec_cd$+
+:			are_cashhdr.ar_check_no$+
+:			are_cashhdr.reserved_key_02$,dom=*next)are_cashhdr$;receipt_found=1
+
+		if receipt_found
+			if num(are_cashhdr.batch_no$)<>0
+				dflt_batch_no$=are_cashhdr.batch_no$
+			else
+				dflt_batch_no$=""
+			endif
+			if num(are_cashhdr.deposit_id$)<>0
+				dflt_deposit_id$=are_cashhdr.deposit_id$
+			else
+				dflt_deposit_id$=""
+			endif
+		endif
+			
+		rem --- Get batching information, supplying batch number that must be used if this receipt already exists and is batched (batch#<>0)
+
+		call stbl("+DIR_PGM")+"adc_getbatch.aon","ARE_CASHHDR","",table_chans$[all],dflt_batch_desc$,dflt_batch_no$
+		callpoint!.setColumnData("ARE_CCPMT.BATCH_NO",stbl("+BATCH_NO"),1)
+		if receipt_found then read(are_cashhdr);rem --- can release temp extract on are_cashhdr now that batch is soft-locked (or if not batching)
+
+		rem --- Get deposit info, supplying deposit number that must be used if this receipt already exists and contains a deposit ID
+
+		if callpoint!.getDevObject("br_interface")="Y" then
+
+			rem --- init temp stbls for use inside deposit form
+
+			xwk$=stbl("+cc_cash_rec_cd",ars_cc_custsvc.cash_rec_cd$);rem --- don't allow cash rec code to be changed on deposit form
+			xwk$=stbl("+cc_receipt_date",callpoint!.getColumnData("ARE_CCPMT.RECEIPT_DATE"))
+
+			callpoint!.setDevObject("deposit_id","")
+
+			dim dflt_data$[4,1]
+			dflt_data$[1,0]="DESCRIPTION"
+			dflt_data$[1,1]=dflt_deposit_desc$
+			dflt_data$[2,0]="CASH_REC_CD"
+			dflt_data$[2,1]=ars_cc_custsvc.cash_rec_cd$
+			dflt_data$[3,0]="BATCH_NO"
+			dflt_data$[3,1]=stbl("+BATCH_NO")
+			if dflt_deposit_id$<>""
+				dflt_data$[4,0]="DEPOSIT_ID"
+				dflt_data$[4,1]=dflt_deposit_id$
+				key_pfx$=firm_id$+stbl("+BATCH_NO")+"E"+dflt_deposit_id$;rem --- 'E' is trans status Entry
+			else
+				key_pfx$=firm_id$+stbl("+BATCH_NO")+"E"
+			endif
+
+			call stbl("+DIR_SYP")+"bam_run_prog.bbj", "ARE_DEPOSIT", stbl("+USER_ID"), "MNT", key_pfx$, table_chans$[all],"",dflt_data$[all]
+			callpoint!.setColumnData("ARE_CCPMT.DEPOSIT_ID",str(callpoint!.getDevObject("deposit_id")),1)	
+
+			rem --- DEPOSIT_ID is required, so ABORT if we didn't select one
+			if callpoint!.getDevObject("deposit_id")=""
+				callpoint!.setStatus("ABORT")
+			endif
+
+			rem --- clear temp stbls
+			xwk$=stbl("!CLEAR","+cc_cash_rec_cd")
+			xwk$=stbl("!CLEAR","+cc_receipt_date")	
+		endif
+	endif
+
+[[ARE_CCPMT.CASH_REC_CD.BINQ]]
+rem --- restrict inquiry to cash rec codes associated with credit card payments
+
+	dim filter_defs$[1,2]
+	filter_defs$[0,0]="ARC_CASHCODE.FIRM_ID"
+	filter_defs$[0,1]="='"+firm_id$+"'"
+	filter_defs$[0,2]="LOCK"
+	filter_defs$[1,0]="ARS_CC_CUSTSVC.USE_CUSTSVC_CC"
+	filter_defs$[1,1]="='Y'"
+	filter_defs$[1,2]="LOCK"
+
+	dim search_defs$[3]
+
+	call stbl("+DIR_SYP")+"bax_query.bbj",
+:		gui_dev,
+:		Form!,
+:		"AR_CREDIT_CODES",
+:		"",
+:		table_chans$[all],
+:		selected_keys$,
+:		filter_defs$[all],
+:		search_defs$[all],
+:		"",
+:		""
+
+	if selected_keys$<>""
+		call stbl("+DIR_SYP")+"bac_key_template.bbj",
+:			"ARC_CASHCODE",
+:			"PRIMARY",
+:			arc_cashcode_key$,
+:			table_chans$[all],
+:			status$
+		dim arc_cashcode_key$:arc_cashcode_key$
+		arc_cashcode_key$=selected_keys$
+		callpoint!.setColumnData("ARE_CCPMT.CASH_REC_CD",arc_cashcode_key.cash_rec_cd$,1)
+	endif
+
+	callpoint!.setDevObject("cash_rec_cd",selected_keys$)
+	callpoint!.setStatus("ACTIVATE-ABORT")
+
+[[ARE_CCPMT.CNTRY_ID.AVAL]]
+gosub reset_timer
+
+[[ARE_CCPMT.EMAIL_ADDR.AVAL]]
+gosub reset_timer
+
+[[ARE_CCPMT.MONTH.AVAL]]
+rem --- validate month
+
+	month$=cvs(callpoint!.getUserInput(),3)
+
+	if month$<>""
+		if num(month$)<1 or num(month$)>12 then callpoint!.setStatus("ABORT")
+	endif
+
+	gosub reset_timer
+
+[[ARE_CCPMT.NAME_FIRST.AVAL]]
+gosub reset_timer
+
+[[ARE_CCPMT.NAME_LAST.AVAL]]
+gosub reset_timer
+
+[[ARE_CCPMT.PHONE_NO.AVAL]]
+gosub reset_timer
+
+[[ARE_CCPMT.RECEIPT_DATE.AVAL]]
+rem --- validate receipt date
+
+	gl$=callpoint!.getDevObject("gl_interface")
+	recpt_date$=callpoint!.getUserInput()        
+	if gl$="Y" 
+		call stbl("+DIR_PGM")+"glc_datecheck.aon",recpt_date$,"Y",per$,yr$,status
+		if status>99
+			callpoint!.setStatus("ABORT")
+		endif
+	endif
+
+gosub reset_timer
+
+[[ARE_CCPMT.SECURITY_CD.AVAL]]
+gosub reset_timer
+
+[[ARE_CCPMT.STATE_CODE.AVAL]]
+gosub reset_timer
+
+[[ARE_CCPMT.YEAR.AINV]]
+gosub reset_timer
+
+[[ARE_CCPMT.ZIP_CODE.AVAL]]
+gosub reset_timer
+
 [[ARE_CCPMT.<CUSTOM>]]
 rem ==========================================================================
 format_grid: rem --- Let Barista create/format the grid
@@ -1582,3 +1598,6 @@ def fnbuildURL$(config_value$)
 	fnend
 
 #include [+ADDON_LIB]std_missing_params.aon
+
+
+
