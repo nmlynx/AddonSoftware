@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2020-04-13
+ Report Date:   2020-04-15
  Report Branch: AddonSoftware 20.01
  Last Release:  AddonSoftware 20.00
 =======================================================================================================================================
@@ -140,4 +140,26 @@ Bug 9929: Eliminated all Delete Dependency Tables (ddm_table_dtlx) for
 ARC_TERMCODE.
 ----
 Modified: data/bar/arc_termcode.xml
+
+=======================================================================================================================================
+Revision: 584b1fe133ecc91a9301965530f5976ce68c28f8
+Author: Christine <chawkins@basis.com>
+Date: 4/15/2020 4:03:28 PM
+Message:
+ER9598 additional enhancements:
+ - set required fields for Authorize hosted page
+ - fix bug 9795 (Hosted Payment page should work in SDI and BUI as well as GUI)
+ - revise Authorize.net code to use refID since they now return it in webhook (eliminates need for burying unique ID in dummy order info and extra API call to get transaction details)
+ - fix casing for BillPro gateway (AccountID/AccountAuth) in ars_gatewaydet
+
+(cherry picked from commit 32c4b6a6713423665414f01aa41e1c1d270d70e8)
+----
+Modified: data/ars_gatewaydet
+Modified: data/bar/are_ccpmt.xml
+Modified: data/bar/are_ccpmt_csthst.xml
+Modified: data/cdf/are_ccpmt.cdf
+Modified: data/cdf/are_ccpmt_csthst.cdf
+Modified: web/AuthorizeWebhook.aon
+
+
 
