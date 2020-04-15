@@ -544,7 +544,9 @@
 
         <!-- Run BBj installer -->
         <echo message="java jar ${work.dir}/installBBj.jar"/>
-        <java jar="${work.dir}/installBBj.jar" fork="true">
+        <java jar="${work.dir}/installBBj.jar"
+              fork="true"
+              jvm="/usr/java/jdk-11.0.6+10/bin/java">
             <arg value="-pl"/>
             <arg value="${src.dir.aon}/InstallResponse.properties"/>
         </java>
