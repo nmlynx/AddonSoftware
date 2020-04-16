@@ -774,18 +774,22 @@ rem ==============================================
 	cc_digits$ = ""
 	cc_curr_digit = 0
 	cc_card$=callpoint!.getUserInput()
+	cc_total=1
 
 	if cvs(cc_card$,3)<>""
 		for cc_temp = len(cc_card$) to 1 step -1
-		cc_curr_digit = cc_curr_digit + 1
-		cc_no = num(cc_card$(cc_temp,1)) * iff(mod(cc_curr_digit,2)=0, 2, 1)
-		cc_digits$ = str(cc_no) + cc_digits$
+			cc_no=num(cc_card$(cc_temp,1),err=*continue)
+			cc_curr_digit = cc_curr_digit + 1
+			cc_no = cc_no * iff(mod(cc_curr_digit,2)=0, 2, 1)
+			cc_digits$ = str(cc_no) + cc_digits$
 		next cc_temp
 
-		cc_total = 0
-		for cc_temp = 1 to len(cc_digits$)
-		cc_total = cc_total + num(cc_digits$(cc_temp, 1))
-		next cc_temp
+		if len(cc_digits$)>=13
+			cc_total = 0
+			for cc_temp = 1 to len(cc_digits$)
+				cc_total = cc_total + num(cc_digits$(cc_temp, 1))
+			next cc_temp
+		endif
 
 		if mod(cc_total, 10) <> 0
 			callpoint!.setMessage("INVALID_CREDIT_CARD")
