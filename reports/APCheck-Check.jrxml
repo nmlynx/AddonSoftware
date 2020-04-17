@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2019-07-10T14:41:14 -->
+<!-- 2020-04-15T16:22:40 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="APCheck-Check" language="groovy" pageWidth="612" pageHeight="258" columnWidth="612" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" resourceBundle="addon" uuid="b87b574e-b006-478b-af8e-3a2fbb2ffb53">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="30"/>
@@ -210,12 +210,15 @@
 				<textFieldExpression><![CDATA[$R{AON_AMOUNT}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="160" y="92" width="410" height="20" uuid="350747ab-7a3c-4771-8eb0-5a955cacfd29"/>
-				<textElement verticalAlignment="Middle">
-					<font size="12" isBold="false"/>
+				<reportElement x="15" y="92" width="570" height="20" uuid="350747ab-7a3c-4771-8eb0-5a955cacfd29">
+					<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="10" isBold="false"/>
 					<paragraph leftIndent="6"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{EXACTLY_AMT}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{EXACTLY_AMT}.trim()]]></textFieldExpression>
 			</textField>
 			<line>
 				<reportElement x="354" y="227" width="225" height="1" uuid="9b5c0375-c846-45aa-b614-0686884e38cc"/>
