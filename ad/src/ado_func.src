@@ -966,10 +966,10 @@ buildListButtonList_error:rem --- Method error trap/handler (11Oct2017)
                 if dollars$(7,3)<>"000"then
                     checkAmtText$=checkAmtText$+#convertNumberToWords(dollars$(7,3))
                 endif
-                if pennies$<>"00" then
+                rem if pennies$<>"00" then
                     if checkAmtText$<>"" then checkAmtText$=checkAmtText$+"and "
                     checkAmtText$=checkAmtText$+pennies$+"/100 "
-                endif
+                rem endif
                 checkAmtText$=checkAmtText$+"Dollars"
             endif
 
