@@ -5,6 +5,10 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
 
     use ::ado_util.src::util
+    use ::bbtranslator.bbj::BBTranslator
+    
+    use java.util.Arrays
+    use java.util.Vector
 
     class public func
 
@@ -15,6 +19,8 @@ rem ==========================================================================
         field public static BBjInt Len1% = 0
         field public static BBjInt Len2% = 0
         field public static BBjInt Len3% = 0
+        field protected static Vector words!=new Vector()
+
 
         method public static BBjString displayDesc(BBjString p_desc$, BBjInt p_len_1%, BBjInt p_len_2%, BBjInt p_len_3%)
             seterr method_error
@@ -908,6 +914,126 @@ splitMultiLineField_error:rem --- Method error trap/handler (11Oct2017)
             methodret ldatString$
             
 buildListButtonList_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Builds text string to use on a check for the check amount.
+        rem  * 
+        rem  * For a check amount of $1,234.56, in English speaking countries it returns:
+        rem  *      One Thousand Two Hundred Thirty Four and 56/100 Dollars
+        rem  * In non-English speaking countries it returns:
+        rem  *      Exactly*1234*Dollars*And*56*Cents
+        rem  * 
+        rem  * @param BBjNumber checkAmt
+        rem  * @param BBjString checkAmtMask$
+        rem  * @param BBTranslator Translate!
+        rem  * 
+        rem  * @return BBjString checkAmtText$
+        rem  */
+        method public static BBjString buildCheckAmtText(BBjNumber checkAmt, BBjString checkAmtMask$, BBTranslator Translate!)
+            seterr buildCheckAmtText_error
+            checkAmtText$=""
+            countryID$=stbl("+COUNTRY_ID")
+
+            rem --- Get pennies in check amount
+            pennies$=str(fpt(checkAmt)*100:"00")
+
+            if pos(countryID$+";"="AU;CA;US;")=0 or checkAmt>999999999.99 then
+                rem --- Non-English speaking country
+                if pennies$="00" then pennies$="NO"
+                checkAmtText$=Translate!.getTranslation("AON_EXACTLY*")+str(int(checkAmt):checkAmtMask$)+Translate!.getTranslation("AON_*DOLLARS*AND*")+pennies$+Translate!.getTranslation("AON_*CENTS")
+            else
+                rem --- English speaking country
+                dollars$=str(int(checkAmt):"000000000")
+                if dollars$(1,3)<>"000"then
+                    checkAmtText$=#convertNumberToWords(dollars$(1,3))+"Million "
+                endif
+                if dollars$(4,3)<>"000"then
+                    checkAmtText$=checkAmtText$+#convertNumberToWords(dollars$(4,3))+"Thousand "
+                endif
+                if dollars$(7,3)<>"000"then
+                    checkAmtText$=checkAmtText$+#convertNumberToWords(dollars$(7,3))
+                endif
+                if pennies$<>"00" then
+                    if checkAmtText$<>"" then checkAmtText$=checkAmtText$+"and "
+                    checkAmtText$=checkAmtText$+pennies$+"/100 "
+                endif
+                checkAmtText$=checkAmtText$+"Dollars"
+            endif
+
+            methodret checkAmtText$
+            
+buildCheckAmtText_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+ 
+        rem /**
+        rem  * Converts 3-digit number to words.
+        rem  * 
+        rem  * For example, 123 is converted to "One Hundred Twenty Three".
+        rem  * 
+        rem  * @param BBjString nnnDigits$
+        rem  * 
+        rem  * @return numInWords checkAmtText$
+        rem  */
+        method public static BBjString convertNumberToWords(BBjString nnnDigits$)
+            seterr convertNumberToWords_error
+            numInWords$ = ""
+
+            rem --- As necessary, initialize vector of words
+            if #words!.size()=0 then
+                #words!.addAll(Arrays.asList("Zero","One","Two","Three","Four","Five","Six","Seven","Eight","Nine"))
+                #words!.addAll(Arrays.asList("Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"))
+                #words!.addAll(Arrays.asList("Twenty","","","","","","","","",""))
+                #words!.addAll(Arrays.asList("Thirty","","","","","","","","",""))
+                #words!.addAll(Arrays.asList("Forty","","","","","","","","",""))
+                #words!.addAll(Arrays.asList("Fifty","","","","","","","","",""))
+                #words!.addAll(Arrays.asList("Sixty","","","","","","","","",""))
+                #words!.addAll(Arrays.asList("Seventy","","","","","","","","",""))
+                #words!.addAll(Arrays.asList("Eighty","","","","","","","","",""))
+                #words!.addAll(Arrays.asList("Ninety","","","","","","","","",""))
+            endif
+
+            rem --- Convert number to words
+            digit100 = num(nnnDigits$(1,1))
+            if digit100<>0 then numInWords$ = #words!.get(digit100)+" Hundred "
+            digit011=num(nnnDigits$(2,2))
+            if digit011<20 then
+                numInWords$ = numInWords$ + #words!.get(digit011)+" "
+            else
+                digit010=num(nnnDigits$(2,1))
+                numInWords$=numInWords$ + #words!.get(10*digit010)+" "
+                
+                digit001=num(nnnDigits$(3,1))
+                if digit001>0 then numInWords$=numInWords$+#words!.get(digit001)+" "
+            endif
+
+            methodret numInWords$
+            
+convertNumberToWords_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then

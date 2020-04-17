@@ -931,14 +931,11 @@ check_face: rem --- Print Check
     if restart$="Y" and ach_payment$="Y" then return 
 
 	chk_amt=t[3]
-    check_tot_cents$=str(fpt(chk_amt)*100:"00")
-    if check_tot_cents$="00" then check_tot_cents$="NO"
-
-    if t[3] <= 0 then 
+    if chk_amt <= 0 then 
         chk_exactly$=Translate!.getTranslation("AON_***VOID***VOID***VOID***VOID***")
         chk_amt_str$=Translate!.getTranslation("AON_***VOID***")
-    else 
-        chk_exactly$=Translate!.getTranslation("AON_EXACTLY*")+str(int(chk_amt):exactly_amt_mask$)+Translate!.getTranslation("AON_*DOLLARS*AND*")+check_tot_cents$+Translate!.getTranslation("AON_*CENTS")
+    else
+        chk_exactly$=func.buildCheckAmtText(chk_amt,exactly_amt_mask$,Translate!)
         chk_amt_str$=str(chk_amt:check_amt_mask$)
     endif
 
