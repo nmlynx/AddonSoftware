@@ -325,8 +325,8 @@ rem --- Update firm ZZ records in "required" data files
     defaultDataDir$=""
     defaultDataDir$=FileObject.fixPath(stbl("+DIR_DAT",err=*next), "/")
     bbjHome$=java.lang.System.getProperty("basis.BBjHome")
-    
-    fileVect! = CopyAonDir.getRequiredFiles(2)
+
+    fileVect! = CopyAonDir.getRequiredFiles(3)
     for i=0 to fileVect!.size()-1
         thisFile$=fileVect!.get(i)
         

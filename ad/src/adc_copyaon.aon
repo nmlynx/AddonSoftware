@@ -424,17 +424,11 @@ method_error:rem --- Method error trap/handler (11Oct2017)
 
             rem --- Files with firm ZZ default data.
             if fileType%=2 or fileType%=3 then
-                if fileType%=2 then requiredFiles!.add("adm_rptctl")
-                if fileType%=2 then requiredFiles!.add("adm-09"); rem --- adm_procmaster
-                if fileType%=2 then requiredFiles!.add("adm-19"); rem --- adm_procdetail
-                if fileType%=2 then requiredFiles!.add("adm-39"); rem --- adm_proctables
-                requiredFiles!.add("ads_compinfo")
                 requiredFiles!.add("apc_distribution")
                 requiredFiles!.add("apc_paymentgroup")
                 requiredFiles!.add("apc_termscode")
                 requiredFiles!.add("apc_typecode")
                 requiredFiles!.add("aps_params")
-                requiredFiles!.add("aps_report")
                 requiredFiles!.add("arc_carriercode")
                 requiredFiles!.add("arc_cashcode")
                 requiredFiles!.add("arc_custtype")
@@ -444,15 +438,14 @@ method_error:rem --- Method error trap/handler (11Oct2017)
                 requiredFiles!.add("arc_shipviacode")
                 requiredFiles!.add("arc_termcode")
                 requiredFiles!.add("arc_terrcode")
+                requiredFiles!.add("ars_credit")
+                requiredFiles!.add("ars_custdflt")
+                requiredFiles!.add("ars_gatewaydet")
+                requiredFiles!.add("ars_gatewayhdr")
                 requiredFiles!.add("ars_params")
-                requiredFiles!.add("ars_report")
-				requiredFiles!.add("ars_gatewayhdr")
-				requiredFiles!.add("ars_gatewaydet")
                 requiredFiles!.add("bmm-08"); rem --- bmc_opcodes
                 requiredFiles!.add("bms_params")
                 requiredFiles!.add("glm-01"); rem --- glm_acct
-                if fileType%=2 then requiredFiles!.add("glm-03"); rem --- glc_journalcode
-                if fileType%=2 then requiredFiles!.add("glm-06"); rem --- adm_auditcontrol
                 requiredFiles!.add("glm-07"); rem --- glc_cyclecode
                 requiredFiles!.add("glm-10"); rem --- glm_acctbreaks
                 requiredFiles!.add("glm-11"); rem --- glm_finassign
@@ -468,7 +461,6 @@ method_error:rem --- Method error trap/handler (11Oct2017)
                 requiredFiles!.add("ivc_priccode")
                 requiredFiles!.add("ivc_prodcode")
                 requiredFiles!.add("ivc_trancode")
-                if fileType%=2 then requiredFiles!.add("ivc_whsecode")
                 requiredFiles!.add("ivm-13"); rem --- ivc_clascode
                 requiredFiles!.add("ivm-15"); rem --- ivc_typecode
                 requiredFiles!.add("ivs_params")
@@ -477,7 +469,6 @@ method_error:rem --- Method error trap/handler (11Oct2017)
                 requiredFiles!.add("opm-03"); rem --- opc_disccode
                 requiredFiles!.add("opm-05"); rem --- opc_pricecds
                 requiredFiles!.add("opm-06"); rem --- opc_taxcode
-                if fileType%=2 then requiredFiles!.add("opm_pointofsale")
                 requiredFiles!.add("poc_message")
                 requiredFiles!.add("pom-02"); rem --- poc_linecode
                 requiredFiles!.add("pom-03"); rem --- poc_rejctcod
