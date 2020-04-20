@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2020-04-16
+ Report Date:   2020-04-20
  Report Branch: AddonSoftware 20.01
  Last Release:  AddonSoftware 20.00
 =======================================================================================================================================
@@ -200,3 +200,13 @@ Also reverted casing changes made for BillPro in ars_gatewaydet.
 Modified: data/ars_gatewaydet
 Added: lib/jars/j2pay-2.9.11.jar
 
+=======================================================================================================================================
+Revision: 95a7232e3ca1deb89e319ffbf7b981be118a8c8b
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/20/2020 8:54:45 AM
+Message:
+Bug 9922: Added ars_credit and ars_custdflt to the list of ZZ files in
+the CopyAonDir::getRequiredFiles(BBjInt fileType%) method.
+----
+Modified: ad/src/adc_copyaon.aon
+Modified: ad/src/adx_init_data.aon
