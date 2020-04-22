@@ -100,7 +100,7 @@ rem --- Retrieve parameter records
 rem --- Initializations
 
     dim headings$[maxheadings],underline$((2)*m1,"-")
-    dim h[9],o[9],detail[3],totals[3],at[3],rt[3],vt[3]
+    dim h[9],o[9],detail[3],totals[3],at[3],rt[3],vt[3],achtot[3],checktot[3]
     vm=max(m0,8)
     done=0
     page=0
@@ -123,6 +123,7 @@ rem --- Initializations
     thisname$=""
     if multitypes headings$[2]="[HEADER]"
     recs=0
+    use_underline$="Y"
 
 rem --- Prompt user for permission to continue
 
@@ -134,25 +135,26 @@ rem --- Prompt user for permission to continue
 rem --- Headings and print positions
 
     if retention
+        dim columns$[10,10]
+        columns = 10
+    else
         dim columns$[9,10]
         columns = 9
-    else
-        dim columns$[8,10]
-        columns = 8
     endif
 
     columns$[0,0]=Translate!.getTranslation("AON_VENDOR"),           columns$[0,1]="C",columns$[0,2]="6"
     columns$[1,0]=Translate!.getTranslation("AON_NAME"),             columns$[1,1]="C",columns$[1,2]="25"
-    columns$[2,0]=Translate!.getTranslation("AON_INVOICE"),          columns$[2,1]="C",columns$[2,2]="10"
-    columns$[3,0]=Translate!.getTranslation("AON_INVOICE_DT"),       columns$[3,1]="C",columns$[3,2]="10"
-    columns$[4,0]=Translate!.getTranslation("AON_DUE_DT"),           columns$[4,1]="C",columns$[4,2]="10"
-    columns$[5,0]=Translate!.getTranslation("AON_DISCOUNT_DT"),      columns$[5,1]="C",columns$[5,2]="10"
-    columns$[6,0]=Translate!.getTranslation("AON_INVOICE_AMT"),      columns$[6,1]="N",columns$[6,2]="10",columns$[6,3]=m1$,columns$[6,10]="T"
-    columns$[7,0]=Translate!.getTranslation("AON_DISCOUNT_AMT"),     columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$,columns$[7,10]="T"
-    columns$[8,0]=Translate!.getTranslation("AON_PAYMENT_AMT"),      columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m1$,columns$[8,10]="T"
+    columns$[2,0]=Translate!.getTranslation("AON_ACH"),              columns$[2,1]="C",columns$[2,2]="4"
+    columns$[3,0]=Translate!.getTranslation("AON_INVOICE"),          columns$[3,1]="C",columns$[3,2]="10"
+    columns$[4,0]=Translate!.getTranslation("AON_INVOICE_DT"),       columns$[4,1]="C",columns$[4,2]="10"
+    columns$[5,0]=Translate!.getTranslation("AON_DUE_DT"),           columns$[5,1]="C",columns$[5,2]="10"
+    columns$[6,0]=Translate!.getTranslation("AON_DISCOUNT_DT"),      columns$[6,1]="C",columns$[6,2]="10"
+    columns$[7,0]=Translate!.getTranslation("AON_INVOICE_AMT"),      columns$[7,1]="N",columns$[7,2]="10",columns$[7,3]=m1$,columns$[7,10]="T"
+    columns$[8,0]=Translate!.getTranslation("AON_DISCOUNT_AMT"),     columns$[8,1]="N",columns$[8,2]="10",columns$[8,3]=m1$,columns$[8,10]="T"
+    columns$[9,0]=Translate!.getTranslation("AON_PAYMENT_AMT"),      columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m1$,columns$[9,10]="T"
 
     if retention
-        columns$[9,0]=Translate!.getTranslation("AON_RETENTION_AMT"),   columns$[9,1]="N",columns$[9,2]="10",columns$[9,3]=m1$,columns$[9,10]="T"
+        columns$[10,0]=Translate!.getTranslation("AON_RETENTION_AMT"),   columns$[10,1]="N",columns$[10,2]="10",columns$[10,3]=m1$,columns$[10,10]="T"
     endif
 
     call stbl("+DIR_PGM",err=*next)+"adc_docout_adj.aon",columns$[all]
@@ -220,6 +222,7 @@ rem --- Read next Check Detail (ape-04) record
 
         OutVect!.addItem(vendor$)
         OutVect!.addItem(name$)
+        OutVect!.addItem(ach$)
         OutVect!.addItem(ape04a.ap_inv_no$)
         OutVect!.addItem(fndate$(ape04a.invoice_date$))
         OutVect!.addItem(fndate$(ape04a.inv_due_date$))
@@ -236,6 +239,7 @@ rem --- Read next Check Detail (ape-04) record
         printed=printed+1
         vendor$=""
         name$=""
+        ach$=""
 
     rem --- Accumulate totals
 
@@ -248,6 +252,11 @@ rem --- Read next Check Detail (ape-04) record
             vt[x]=vt[x]+detail[x]
             at[x]=at[x]+detail[x]
             rt[x]=rt[x]+detail[x]
+            if accum_ach$="Y"
+                achtot[x]=achtot[x]+detail[x]
+            else
+                checktot[x]=checktot[x]+detail[x]
+            endif
         next x
 
     rem --- Loop back for next check detail record
@@ -264,11 +273,27 @@ rem --- All done
 
     done=1
     gosub type_break
+  
+    total$=Translate!.getTranslation("AON_ACH_PAYMENTS")
+    for x=0 to 3
+        totals[x]=achtot[x]
+    next x
+    use_underline$="N"
+    gosub print_total
+
+
+    total$=Translate!.getTranslation("AON_CHECK_PAYMENTS")    
+    for x=0 to 3
+        totals[x]=checktot[x]
+    next x
+    use_underline$="N"
+    gosub print_total
 
     total$=Translate!.getTranslation("AON_TOTALS_FOR_REPORT")
     for x=0 to 3
         totals[x]=rt[x]
     next x
+    use_underline$="Y"
     gosub print_total
 
     while negative_checks
@@ -303,15 +328,17 @@ print_total: rem --- Print totals
     if warning$<>""
         xwk = fnblank(1)
         OutVect!.addItem(warning$)
-        if retention wblanks=8 else wblanks=7
+        if retention wblanks=9 else wblanks=8
         xwk=fnblank(wblanks)
     endif
 
-    TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+    if use_underline$="Y"
+        TotVect!.addItem(str(OutVect!.size()/(columns+1)))
+    endif
 
     xwk = fnblank(1) 
     OutVect!.addItem(total$)
-    xwk=fnblank(4)
+    xwk=fnblank(5)
     OutVect!.addItem(str(totals[0]))
     OutVect!.addItem(str(totals[1]))
     OutVect!.addItem(str(payment))
@@ -336,7 +363,7 @@ type_break: rem --- AP type break
         next x
         
         gosub print_total
-        xwk=fnblank(9)
+        xwk=fnblank(10)
         if retention OutVect!.addItem("")
         break
     wend
@@ -375,7 +402,7 @@ vendor_break: rem --- Vendor break
         
         warning$=""
         payment=totals[3]
-        
+       
         if payment<0 
             negative_checks=1
             warning$=Translate!.getTranslation("AON_WARNING:_NEGATIVE_CHECK_AMOUNT")
@@ -383,7 +410,7 @@ vendor_break: rem --- Vendor break
         
         if printed>=1 
             gosub print_total
-            xwk=fnblank(9)
+            xwk=fnblank(10)
             if retention OutVect!.addItem("")
             break
         endif
@@ -393,14 +420,14 @@ vendor_break: rem --- Vendor break
         xwk = fnblank(1)
 
         OutVect!.addItem(warning$)
-        xwk = fnblank(7)
+        xwk = fnblank(8)
         
         if retention
             xwk = fnblank(1)
         endif
         
         lines=lines+1
-        xwk=fnblank(9)
+        xwk=fnblank(10)
         if retention OutVect!.addItem("")
         break
     wend
@@ -420,6 +447,8 @@ vendor_break: rem --- Vendor break
     name$=apm01a.vendor_name$
     thisvendor$=vendor$
     thisname$=name$
+    ach$=iff(apm01a.payment_type$="A","Y","")
+    accum_ach$=ach$
     
     return
 
