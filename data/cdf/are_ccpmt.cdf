@@ -379,7 +379,7 @@ rem --- if using J2Pay (interface_tp$='A'), check for mandatory data, confirm, t
 
 		full_response!=response!.getJSONResponse()
 		if full_response!<>null()
-			trans_id$=full_response!.get("lr").get("transactionId",err=*next)
+			trans_id$=full_response!.get("lr").get("transactionId",err=*next).toString()
 			trans_msg$=full_response!.get("lr").get("message")
 
 			rem --- if transaction was approved, create cash receipt
