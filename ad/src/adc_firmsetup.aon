@@ -9,6 +9,7 @@ rem --- All Rights Reserved
 rem ==========================================================================
 
 rem --- FORMDATA!   : Property object with form data from Barista's Option! object (Input)
+rem --- AONDIR$     : Absolut path to (and including) the aon directory (Input)
 rem --- DEMODATA%   : 0=Without demo data/1=With demo data (Input)
 rem --- RDFORM!     : Parent BBjTopLevelWindow object, the form (Input)
 rem --- WAIT4OK%    : Wait for user's OK when done, 0=don't wait/1=wait (Input)
@@ -25,7 +26,7 @@ rem --- STATUS      : Status code/0=No error (Returned)
     seterr std_error
     setesc std_error
 
-    enter formData!,demoData%,rdForm!,wait4ok%,status
+    enter formData!,aonDir$,demoData%,rdForm!,wait4ok%,status
 
 rem --- Initializations
     status=0
@@ -92,15 +93,11 @@ rem --- Open files
     admModules_dev=num(open_chans$[1]); dim admModules$:open_tpls$[1]
     ddmTableTpls_dev=num(open_chans$[2]); dim ddmTableTpls$:open_tpls$[2]
 
-rem --- Get aon directory
-    if newInstall then
-        rem --- For new install, can get aon directory from the aon/data path
-        aonDir$=dataDir$(1, pos("/data"=dataDir$,-1)-1)
-    else
-        rem --- For existing install, get aon directory from adm_modules dd_mount_dir for AD module
-        readrecord(admModules_dev,key=pad("01007514AD",11))admModules$
-        aonDir$=admModules.dd_mount_dir$
-    endif
+rem --- Fix aon path, and remove trailing slash
+    filePath$ = aonDir$
+    gosub fix_path
+    aonDir$ = filePath$
+    if aonDir$(len(aonDir$))="/" then aonDir$=aonDir$(1,len(aonDir$)-1)
 
 rem --- Get barista directory
     if newInstall then

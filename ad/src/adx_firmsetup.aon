@@ -40,13 +40,54 @@ rem --- Get user inputs
         rdForm!.destroy()
     else
         rem --- Setup new firm in an existing installation
+        num_files=1
+        dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+        open_tables$[1]="DDM_SYSTEMS",open_opts$[1]="OTA"
+        gosub open_tables
+        ddm_systems=num(open_chans$[1]);dim ddm_systems$:open_tpls$[1]
+        
+        aonDir$=""
+        readrecord(ddm_systems,key=pad("ADDON",16," "),knum="SYSTEM_ID",err=*next)ddm_systems$
+        if cvs(ddm_systems.mount_dir$,2)<>"" then
+            aonDir$=ddm_systems.mount_dir$
+        endif
+
         demoData%=0; rem --- This is always for an existing install, not a new install with demo data.
-        call pgmdir$+"adc_firmsetup.aon",formData!,demoData%,rdForm!,1,status
+        call pgmdir$+"adc_firmsetup.aon",formData!,aonDir$,demoData%,rdForm!,1,status
     endif
     
 done: rem --- All done
 
     goto std_exit
+   
+open_tables:rem --- Open Tables
+
+    call stbl("+DIR_SYP")+"bac_open_tables.bbj",
+:       open_beg,
+:       open_end,
+:       open_tables$[all],
+:       open_opts$[all],
+:       open_chans$[all],
+:       open_tpls$[all],
+:       rd_table_chans$[all],
+:       open_batch,
+:       open_status$
+
+    if open_status$<>"" then
+        msg_id$="ENTRY_OPEN_ERROR"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=open_status$
+        gosub disp_message
+        rdFuncSpace!=bbjAPI().getGroupNamespace().setValue("+build_task","OFF")
+        release
+    endif
+    return
+
+disp_message: rem --- Display Message Dialog
+
+    call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+
+    return
     
 rem #include std_error.src
 

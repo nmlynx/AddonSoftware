@@ -92,9 +92,9 @@ rem --- Is PRB Payroll being installed?
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_INSTALL_WIZ")
     if version_neutral then
-        meter_total_recs=7
+        meter_total_recs=9
     else
-        meter_total_recs=5
+        meter_total_recs=7
     endif
     if cvs(newFirm$,2)<>"" then meter_total_recs=meter_total_recs+1
     meter_proc_recs=0
@@ -370,8 +370,13 @@ rem --- NOTE: newFirm$="" for Quick Copy installs
         for syscnt=0 to mountedSys!.size()-1
             mountSys$=mountedSys!.getItem(syscnt)
             if mountSys$(len(mountSys$)-3,4)="/aon"
+                if version_neutral then
+                    formData!.setProperty("DATA_LOCATION",base_dir$+"/"+major_ver$+"/data")
+                else
+                    formData!.setProperty("DATA_LOCATION",mountSys$+"/data")
+                endif
                 formData!.setProperty("DATA_LOCATION",mountSys$+"/data")
-                call pgmdir$+"adc_firmsetup.aon",formData!,copyData%,rdForm!,0,status
+                call pgmdir$+"adc_firmsetup.aon",formData!,newAonLoc$+"/aon",copyData%,rdForm!,0,status
             endif
         next syscnt
     endif
