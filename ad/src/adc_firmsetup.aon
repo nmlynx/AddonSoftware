@@ -102,7 +102,7 @@ rem --- Fix aon path, and remove trailing slash
 rem --- Get barista directory
     if newInstall then
         rem --- For new install, can get barista directory location from aon directory
-        barDir$=aonDir$(1, pos("/aon"=dataDir$,-1)-1)+"/barista"
+        barDir$=aonDir$(1, pos("/aon"=aonDir$,-1)-1)+"/barista"
     else
         rem --- For existing install, get barista directory from default disk directory
         barDir$=dir("")
