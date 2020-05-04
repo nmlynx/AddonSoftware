@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2020-04-29
+ Report Date:   2020-05-04
  Report Branch: AddonSoftware 20.10
  Last Release:  AddonSoftware 20.01
 =======================================================================================================================================
@@ -70,3 +70,23 @@ ER 9944: Removed PRBABS Payroll from the Install Wizard's entry form.
 ----
 Modified: data/bar/adx_installwiz.xml
 Modified: data/cdf/adx_installwiz.cdf
+
+=======================================================================================================================================
+Revision: c6adfb401903e63a15135ab75d72614241701b2a
+Author: Christine <chawkins@basis.com>
+Date: 5/4/2020 4:07:39 PM
+Message:
+Bug 9941 - AP - Labels on AP Parameters ACH Payments tab are confusing
+Bug 9943 - AP - Prompts on Vendor Payment Information tab should be corrected
+
+Changed prompts to refer to the Payment Report instead of Check Image, since it's the former that gets saved/emailed to vendors.
+
+(cherry picked from commit a96cfdc67a49273cde18cefc395a2bf0c2cad141)
+----
+Modified: data/bar/apm_vendmast.xml
+Modified: data/bar/aps_ach.xml
+Modified: data/bar/aps_params.xml
+Modified: data/bar/aps_payauth.xml
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
+
