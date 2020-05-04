@@ -8,8 +8,21 @@ rem --- All Rights Reserved
 rem ==========================================================================
 
     use java.io.File
+    use java.util.Arrays
+    use java.util.Collections
+    use java.util.HashSet
     use java.util.Properties
+    use java.util.Vector
+
+    use org.eclipse.jgit.api.Git
+    use org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
+	use org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
+	use org.eclipse.jgit.api.CheckoutResult
+
+    use ::adc_copyaon.aon::CopyAonDir
     use ::ado_file.src::FileObject
+    use ::ado_util.src::util    
+
 
     setesc std_error
     seterr std_error
@@ -22,10 +35,13 @@ rem --- Initializations
     mountedSys!=BBjAPI().makeVector()
     synFile!=BBjAPI().makeVector()
     oldLocation!=BBjAPI().makeVector()
+    blocksize = 2^20
 
 rem --- Get user inputs
 
-    version_neutral=num(Option!.getOptionData("VERSION_NEUTRAL"))
+rem wgh ... 9809 ... force version-neutral install
+rem    version_neutral=num(Option!.getOptionData("VERSION_NEUTRAL"))
+version_neutral=1
     base_dir$=Option!.getOptionData("BASE_DIR")
     dbName$=Option!.getOptionData("DB_NAME")
     appDesc$=Option!.getOptionData("APP_DESC")
@@ -77,12 +93,18 @@ rem --- Is Addon being installed, or is it already installed?
         synFile!.add(newAonLoc$+"/aon/config/addon.syn")
         oldLocation!.add(bbjHome$+"/apps/aon")
     endif
+
+rem --- Get version for repository branch
+    call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
+    branchVersion$=str(num(app_version_id$)*100:"0000")
     
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_INSTALL_WIZ")
     if version_neutral then
+rem wgh ... 9946
         meter_total_recs=9
     else
+rem wgh ... 9946
         meter_total_recs=7
     endif
     if cvs(newFirm$,2)<>"" then meter_total_recs=meter_total_recs+1
@@ -92,17 +114,22 @@ rem --- Start progress meter
     gosub disp_meter
 
 rem --- Open log file
-    location$ = newAonLoc$
     gosub open_log
     
-rem --- Recursively copy oldLocation to newAonLoc
+rem --- Clone and pull branch(s) from Git repository to newAonLoc
 
     rem --- Increment progress meter
-    meter_text$=Translate!.getTranslation("AON_COPY_AON")
+rem wgh ... 9809 ... needs translation
+rem    meter_text$=Translate!.getTranslation("AON_COPY_AON")
+meter_text$="Clone repository and checkout branch"
     meter_proc_recs=meter_proc_recs+1
     meter_action$="MTR-LST"
     gosub disp_meter
     print(log_dev)meter_text$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
 
     if installType$="X" then
         rem --- Without data
@@ -111,22 +138,67 @@ rem --- Recursively copy oldLocation to newAonLoc
         rem --- With default parameters and codes
         requiredFiles%=3; rem --- Required files listed in readme.htm plus files with firm ZZ default data
     endif
+    
     for syscnt=0 to mountedSys!.size()-1
-        call pgmdir$+"adc_copyaon.aon",oldLocation!.getItem(syscnt),mountedSys!.getItem(syscnt),requiredFiles%,copyData%,help%,rdForm!,0,status
-
-        rem --- Clear data/admin_backup directory copied from oldLocation
-        admin_backup_dir$=mountedSys!.getItem(syscnt)+"/data/admin_backup/"
-        admin_backup_dir!=new java.io.File(admin_backup_dir$)
-        if admin_backup_dir!.exists() and admin_backup_dir!.isDirectory()
-            admin_backup_files!=new java.util.Vector(java.util.Arrays.asList(admin_backup_dir!.list()))
-            if(admin_backup_files!.size()>0) then
-                for i=0 to admin_backup_files!.size()-1
-                    admin_backup_files$ = admin_backup_dir$+cast(BBjString, admin_backup_files!.get(i))
-                    erase admin_backup_dir$+admin_backup_files!.get(i),err=*next
-                next i
-            endif
+           
+        rem --- Clone and pull branch from Git repository
+        gitURI$="https://git.basis.com/Addon/Addon.git"
+		branchName$="BBJ"+branchVersion$+"GA"
+        remoteBranch$="origin/"+branchName$
+        cloneDir$=mountedSys!.getItem(syscnt)
+        cloneDir!=new File(cloneDir$)
+        userName$="shaney"
+        userPassword$="Brx33+fLuTia48&"
+    
+        print(log_dev)"Clone "+gitURI$   
+        cloneCmd!=Git.cloneRepository()
+        cloneCmd!.setCredentialsProvider(new UsernamePasswordCredentialsProvider(userName$,userPassword$))
+        cloneCmd!.setURI(gitURI$).setDirectory(cloneDir!).setCloneAllBranches(1)
+        git!=cloneCmd!.call()
+		
+		rem --- verify clone worked
+		rem     Note from Shaun: 
+		rem  		I am guessing that if the clone fails, we're going to get null instead of a non-working object.
+		if (git!=null()) then 
+			dim msg_tokens$[1]
+            msg_tokens$[1]=gitBranch$
+            gosub disp_message
+            print(log_dev)"***** "+gitBranch$+" CLONE FAILED *****"   
+            goto done
+		endif 
+    
+	
+		REM Check out the current branch
+		print (log_dev) "Checkout "+branchName$
+		checkoutCmd!=git!.checkout().setName(branchName$).setCreateBranch(1).setUpstreamMode(SetupUpstreamMode.TRACK).setStartPoint(remoteBranch$)
+		checkoutCmd!.call() 
+		results!=checkoutCmd!.getResult()
+		
+        if (results!.getStatus() <> CheckoutResult.Status.OK) then
+			rem --- Failure, warn and terminate
+			print "*** CHECKOUT Failed ***"
+			escape; rem ... 9809 ... pull failed
+			rem wgh ... 9808 ... need new message 
+			rem SDH .... Messages should probably be FAILED_BAD_CLONE and FAILED_BAD_CHECKOUT
+			msg_id$="FAILED_BAD_CHECKOUT"
+			rem wgh ... 9808 ... Install Failed. Not able to checkout %1 branch from repository.
+            dim msg_tokens$[1]
+            msg_tokens$[1]=gitBranch$
+            gosub disp_message
+            print(log_dev)"***** "+gitBranch$+" CHECKOUT FAILED *****"  
+			
+			REM go ahead and close these even under this error condition. 
+			git!.getRepository().close();rem CAH
+            git!.close();rem CAH
+            goto done
+        else
+            git!.getRepository().close();rem CAH
+            git!.close();rem CAH
         endif
     next syscnt
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
     
 rem --- Update new addon.syn file
 
@@ -214,7 +286,7 @@ rem --- BIM clears barista/settings dir, so must do this step after BIMing and b
         call pgmdir$+"adc_updatexmlfiles.aon",newSyncLoc$,oldSyncLoc$,syncBackupDir$,upgrade%,rdForm!,0,status
     next syscnt
 
-rem --- For version-neutral installs, move files and update paths
+rem --- For version-neutral installs, copy files and update paths
     if version_neutral then
 
         rem --- Open addon.syn file, and temporary work file
@@ -243,19 +315,24 @@ rem --- For version-neutral installs, move files and update paths
         rem --- Make HashMap of source and version-neutral directories
         sourceMap!=new java.util.HashMap()
         sourceMap!.put(currentAonDir$+"cust_images",base_dir$+"/cust_images")
-        sourceMap!.put(currentAonDir$+"data",base_dir$+"/"+major_ver$+"/data")
+rem wgh ... 9809 ... use /app_data for version_neutral
+sourceMap!.put(currentAonDir$+"data",base_dir$+"/"+major_ver$+"/app_data")
         sourceMap!.put(currentAonDir$+"documents",base_dir$+"/documents")
         sourceMap!.put(currentAonDir$+"documents/archive",base_dir$+"/documents/archive")
         sourceMap!.put(currentAonDir$+"images",base_dir$+"/images")
+
+        rem --- Wanted demo data files
+        wantedDataFiles!= new HashSet(CopyAonDir.getRequiredFiles(requiredFiles%))
         
         rem --- Increment progress meter
+rem wgh ... 9809 ... change message from "move" to "copy"
         meter_text$=Translate!.getTranslation("AON_MOVE_FILES_TO")+" "+Translate!.getTranslation("AON_VER_NEUTRAL_DIR")
         meter_proc_recs=meter_proc_recs+1
         meter_action$="MTR-LST"
         gosub disp_meter
         print(log_dev)meter_text$
-            
-        rem --- Move files to version-neutral directories
+
+        rem --- Copy files to version-neutral directories
         sourceIter!=sourceMap!.keySet().iterator()
         while sourceIter!.hasNext()
             sourceDir$=sourceIter!.next()
@@ -263,8 +340,12 @@ rem --- For version-neutral installs, move files and update paths
 
             rem --- Make sure target directory exists
             mkdir targetDir$,err=*next
+            
+            rem --- Skip documents directory as it should start empty
+            if targetDir$=base_dir$+"/documents" then continue
+            if targetDir$=base_dir$+"/documents/archive" then continue
 
-            rem --- Move all files in source directory to target directory
+            rem --- Copy wanted files in source directory to target directory
             dir!=new File(sourceDir$)
             if dir! <> null() and dir!.exists() and dir!.isDirectory() and dir!.list() <> null()
                 fileVector! = new java.util.Vector(java.util.Arrays.asList(dir!.listFiles()))
@@ -275,9 +356,35 @@ rem --- For version-neutral installs, move files and update paths
                         if sourceFile!.isDirectory() then continue
 
                         targetFile!=new File(targetDir$, sourceFile!.getName())
-                        targetFile!.delete()
-                        sourceFile!.renameTo(targetFile!)
-                        next j
+                        rem --- Do NOT overwrite existing target files
+                        if targetFile!.exists() then continue
+
+                        rem --- Filter demo data files
+rem wgh ... 9809 ... use /app_data for version_neutral
+if targetDir$=base_dir$+"/"+major_ver$+"/app_data" then
+    if !wantedDataFiles!.contains(sourceFile!.getName()) then continue
+endif
+                        
+                        rem --- Filter image files
+                        if targetDir$=base_dir$+"/images" then
+                            if sourceFile!.getName()<>"addon_logo32.png" then continue
+                        endif
+                        
+                        rem --- Copy file to target directory
+                        rem --- Can't use java.nio.files.Files::copy() method because of err 252 on Win machines when BBj has the source file open.
+                        sourceModTime!=sourceFile!.lastModified()
+                        sourceChan=unt
+                        open(sourceChan,isz=-1)sourceFile!.getPath()
+                        targetChan=unt
+                        open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")targetFile!.getPath()
+                        while 1
+                            readrecord(sourceChan,siz=blocksize,end=*break)record$
+                            writerecord(targetChan)record$
+                        wend
+                        close(sourceChan)
+                        close(targetChan)
+                        targetFile!.setLastModified(sourceModTime!)
+                    next j
                 endif
             endif
         wend
@@ -360,11 +467,10 @@ rem --- NOTE: newFirm$="" for Quick Copy installs
             mountSys$=mountedSys!.getItem(syscnt)
             if mountSys$(len(mountSys$)-3,4)="/aon"
                 if version_neutral then
-                    formData!.setProperty("DATA_LOCATION",base_dir$+"/"+major_ver$+"/data")
+                    formData!.setProperty("DATA_LOCATION",base_dir$+"/"+major_ver$+"/app_data")
                 else
                     formData!.setProperty("DATA_LOCATION",mountSys$+"/data")
                 endif
-                formData!.setProperty("DATA_LOCATION",mountSys$+"/data")
                 call pgmdir$+"adc_firmsetup.aon",formData!,newAonLoc$+"/aon",copyData%,rdForm!,0,status
             endif
         next syscnt
@@ -380,6 +486,13 @@ done: rem --- All done
     print(log_dev)
     print(log_dev)"Installwiz log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     close(log_dev)
+
+    rem --- Move log file to aon/logs directory
+    logFile!=new File(log$)
+    aonLogFile!=new File(newAonLoc$ + "/aon/logs"+logName$)
+    logFile!.renameTo(aonLogFile!)
+    logDir!=new File(logDir$)
+    logDir!.delete()
 
     goto std_exit
 
@@ -505,11 +618,12 @@ disp_meter:rem --- Display Progress Meter
 open_log:rem --- Open log file
             
     rem --- create logs directory at location
-    logDir$ = FileObject.fixPath(location$ + "/aon/logs", "/")
+    logDir$ = FileObject.fixPath(base_dir$ + "/logs", "/")
     FileObject.makeDirs(new File(logDir$))
 
     rem --- create and open log file
-    log$ = logDir$+"/installwiz_"+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")+".txt"
+    logName$="/installwiz_"+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")+".txt"
+    log$ = logDir$+logName$
     erase log$,err=*next
     string log$
     log_dev=unt
