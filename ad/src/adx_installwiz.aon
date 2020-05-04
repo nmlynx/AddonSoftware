@@ -243,7 +243,8 @@ rem --- For version-neutral installs, move files and update paths
         rem --- Make HashMap of source and version-neutral directories
         sourceMap!=new java.util.HashMap()
         sourceMap!.put(currentAonDir$+"cust_images",base_dir$+"/cust_images")
-        sourceMap!.put(currentAonDir$+"data",base_dir$+"/"+major_ver$+"/data")
+
+        sourceMap!.put(currentAonDir$+"data",base_dir$+"/"+major_ver$+"/app_data")
         sourceMap!.put(currentAonDir$+"documents",base_dir$+"/documents")
         sourceMap!.put(currentAonDir$+"documents/archive",base_dir$+"/documents/archive")
         sourceMap!.put(currentAonDir$+"images",base_dir$+"/images")
@@ -275,9 +276,36 @@ rem --- For version-neutral installs, move files and update paths
                         if sourceFile!.isDirectory() then continue
 
                         targetFile!=new File(targetDir$, sourceFile!.getName())
-                        targetFile!.delete()
-                        sourceFile!.renameTo(targetFile!)
-                        next j
+
+                        rem --- Do NOT overwrite existing target files
+                        if targetFile!.exists() then continue
+
+                        rem --- Filter demo data files
+                        if targetDir$=base_dir$+"/"+major_ver$+"/app_data" then
+                            if !wantedDataFiles!.contains(sourceFile!.getName()) then continue
+                        endif
+                        
+                        rem --- Filter image files
+                        if targetDir$=base_dir$+"/images" then
+                            if sourceFile!.getName()<>"addon_logo32.png" then continue
+                        endif
+                        
+                        rem --- Copy file to target directory
+                        rem --- Can't use java.nio.files.Files::copy() method because of err 252 on Win machines when BBj has the source file open.
+                        sourceModTime!=sourceFile!.lastModified()
+                        sourceChan=unt
+                        open(sourceChan,isz=-1)sourceFile!.getPath()
+                        targetChan=unt
+                        open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")targetFile!.getPath()
+                        while 1
+                            readrecord(sourceChan,siz=blocksize,end=*break)record$
+                            writerecord(targetChan)record$
+                        wend
+                        close(sourceChan)
+                        close(targetChan)
+                        targetFile!.setLastModified(sourceModTime!)
+                    next j
+
                 endif
             endif
         wend
