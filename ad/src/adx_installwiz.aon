@@ -39,9 +39,7 @@ rem --- Initializations
 
 rem --- Get user inputs
 
-rem wgh ... 9809 ... force version-neutral install
-rem    version_neutral=num(Option!.getOptionData("VERSION_NEUTRAL"))
-version_neutral=1
+    version_neutral=num(Option!.getOptionData("VERSION_NEUTRAL"))
     base_dir$=Option!.getOptionData("BASE_DIR")
     dbName$=Option!.getOptionData("DB_NAME")
     appDesc$=Option!.getOptionData("APP_DESC")
@@ -101,10 +99,8 @@ rem --- Get version for repository branch
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_INSTALL_WIZ")
     if version_neutral then
-rem wgh ... 9946
         meter_total_recs=9
     else
-rem wgh ... 9946
         meter_total_recs=7
     endif
     if cvs(newFirm$,2)<>"" then meter_total_recs=meter_total_recs+1
@@ -315,8 +311,7 @@ rem --- For version-neutral installs, copy files and update paths
         rem --- Make HashMap of source and version-neutral directories
         sourceMap!=new java.util.HashMap()
         sourceMap!.put(currentAonDir$+"cust_images",base_dir$+"/cust_images")
-rem wgh ... 9809 ... use /app_data for version_neutral
-sourceMap!.put(currentAonDir$+"data",base_dir$+"/"+major_ver$+"/app_data")
+        sourceMap!.put(currentAonDir$+"data",base_dir$+"/"+major_ver$+"/app_data")
         sourceMap!.put(currentAonDir$+"documents",base_dir$+"/documents")
         sourceMap!.put(currentAonDir$+"documents/archive",base_dir$+"/documents/archive")
         sourceMap!.put(currentAonDir$+"images",base_dir$+"/images")
@@ -360,10 +355,9 @@ rem wgh ... 9809 ... change message from "move" to "copy"
                         if targetFile!.exists() then continue
 
                         rem --- Filter demo data files
-rem wgh ... 9809 ... use /app_data for version_neutral
-if targetDir$=base_dir$+"/"+major_ver$+"/app_data" then
-    if !wantedDataFiles!.contains(sourceFile!.getName()) then continue
-endif
+                        if targetDir$=base_dir$+"/"+major_ver$+"/app_data" then
+                            if !wantedDataFiles!.contains(sourceFile!.getName()) then continue
+                        endif
                         
                         rem --- Filter image files
                         if targetDir$=base_dir$+"/images" then
