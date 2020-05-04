@@ -1,60 +1,72 @@
 =======================================================================================================================================
- Report Date:   2020-03-17
- Report Branch: AddonSoftware 20.00
- Last Release:  AddonSoftware 19.22
+ Report Date:   2020-04-29
+ Report Branch: AddonSoftware 20.10
+ Last Release:  AddonSoftware 20.01
 =======================================================================================================================================
 
-19.22 release 03/16/2020
-BBjBaristaAddonDemos1922_03-13-2020_1225.jar
+20.01 release 04/28/2020
+BBjBaristaAddonDemos2001_04-27-2020_1145.jar
 
 =======================================================================================================================================
-Revision: 519ab2e50cf12c143bcebf8acf7145636b4225ba
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 3/10/2020 5:36:25 PM
+Revision: 2bc9efba11e967096ce9601bb05e7021b3e4471f
+Author: Christine <chawkins@basis.com>
+Date: 4/22/2020 3:42:14 PM
 Message:
-Bug 9528: Changed the AO_INVOICE key on the art_invhdr/det tables to
-include customer number.
+ER Bug 9734 - AP - Show ACH invoices on Payment Selection Report
+ - altered to flag ACH vendors and show ACH, check and total payments.
 ----
-Modified: data/art-01
-Modified: data/art-11
-Modified: data/bar/art_invdet.xml
-Modified: data/bar/art_invhdr.xml
-Modified: data/cdf/art_invhdr.cdf
-Modified: documentation/readme.htm
+Modified: ap/src/apr_payments.aon
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
 
 =======================================================================================================================================
-Revision: 0a35c4f2e30e3a3f1614076e54452e41b8899722
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 3/16/2020 3:33:06 PM
+Revision: a7078a3da3395d9cbcfaa979e59a529d78140b8d
+Author: Christine <chawkins@basis.com>
+Date: 4/28/2020 12:43:14 PM
 Message:
-Bug 9904: Added special handling for batched real-time processing files.
+Bug 9947 - AR - AR Staff Credit Card Payment can throw error on unsuccessful transaction
+
 ----
-Modified: data/bar/adm_procbatchmnt.xml
-Modified: data/bar/adm_procmaster.xml
-Modified: data/cdf/adm_procbatchmnt.cdf
-Modified: data/cdf/adm_procmaster.cdf
+Modified: data/bar/are_ccpmt.xml
+Modified: data/cdf/are_ccpmt.cdf
 
 =======================================================================================================================================
-Revision: 011e9b43e91c0155d39937e4e036646292919a61
+Revision: e43cc487a523e309d6e4547e1d049d187013eb3a
 Author: Bill Halsted <bhalsted@basis.com>
-Date: 3/17/2020 1:15:01 PM
+Date: 4/29/2020 12:47:07 PM
 Message:
-Bug 9906: Modified the GL Recap Report to let the Sales Register Update
-handle errors so it can reset trans_status flags from 'R' to 'E'.
+Bug 9946: Made changes to the Install Wizard so that it now sets up new
+firms correctly in version-neutral installations.
 ----
-Modified: gl/src/glr_recap.aon
+Modified: ad/src/adc_firmsetup.aon
+Modified: ad/src/adx_firmsetup.aon
+Modified: ad/src/adx_installwiz.aon
 
 =======================================================================================================================================
-Revision: 130e72fbca94da50aca116107d28e6901594d26b
+Revision: 6037e4f764a5b9ee25c166e1d5dcf674a29ee965
 Author: Bill Halsted <bhalsted@basis.com>
-Date: 3/17/2020 5:44:42 PM
+Date: 4/29/2020 12:58:49 PM
 Message:
-Bug 9908: Prevent entering a Sales Order invoice date that is in a
-locked GL period.
+ER 9944: Removed PRBABS Payroll from Addon's Install Wizard.
 ----
-Modified: data/bar/ope_invhdr.xml
-Modified: data/bar/ope_orddates.xml
-Modified: data/bar/ope_ordhdr.xml
-Modified: data/cdf/ope_invhdr.cdf
-Modified: data/cdf/ope_orddates.cdf
-Modified: data/cdf/ope_ordhdr.cdf
+Modified: ad/src/adx_installwiz.aon
+
+=======================================================================================================================================
+Revision: d3c86b7058163bf8d80d7e28465ca2e35cd6bfb6
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/29/2020 5:20:08 PM
+Message:
+Bug 9946: Corrected path to barista directory in Set Up New Firm
+utility.
+----
+Modified: ad/src/adc_firmsetup.aon
+
+=======================================================================================================================================
+Revision: 2820ec1646e774c7cca17a02e2b3b7b72ab866e6
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/29/2020 5:34:44 PM
+Message:
+ER 9944: Removed PRBABS Payroll from the Install Wizard's entry form.
+----
+Modified: data/bar/adx_installwiz.xml
+Modified: data/cdf/adx_installwiz.cdf
