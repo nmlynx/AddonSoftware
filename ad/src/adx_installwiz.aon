@@ -301,10 +301,13 @@ rem --- For version-neutral installs, move files and update paths
                 sourceDir$=sourceIter!.next()
                 xpos=pos(sourceDir$=record$)
                 if xpos=0 then continue
+                print(log_dev)"  <<< "+record$
                 
                 rem --- Replace path with version-neutral path
                 targetDir$=sourceMap!.get(sourceDir$)
                 record$=record$(1,xpos-1)+targetDir$+record$(xpos+len(sourceDir$))
+                print(log_dev)"  >>> "+record$
+                print(log_dev)
                 break
             wend
 
