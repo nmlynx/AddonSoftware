@@ -143,8 +143,8 @@ meter_text$="Clone repository and checkout branch"
         remoteBranch$="origin/"+branchName$
         cloneDir$=mountedSys!.getItem(syscnt)
         cloneDir!=new File(cloneDir$)
-        userName$="shaney"
-        userPassword$="Brx33+fLuTia48&"
+        userName$="username"
+        userPassword$="password"
     
         print(log_dev)"Clone "+gitURI$   
         cloneCmd!=Git.cloneRepository()
@@ -152,10 +152,11 @@ meter_text$="Clone repository and checkout branch"
         cloneCmd!.setURI(gitURI$).setDirectory(cloneDir!).setCloneAllBranches(1)
         git!=cloneCmd!.call()
 		
-		rem --- verify clone worked
-		rem     Note from Shaun: 
-		rem  		I am guessing that if the clone fails, we're going to get null instead of a non-working object.
+		rem --- Verify clone worked (assuming get null instead of a non-working object on failure)
+rem wgh ... 9809 ... needs message
 		if (git!=null()) then 
+            msg_id$="FAILED_BAD_CLONE"
+rem wgh ... 9808 ... Install Failed. Not able to clone %1 branch from repository.
 			dim msg_tokens$[1]
             msg_tokens$[1]=gitBranch$
             gosub disp_message
@@ -170,26 +171,21 @@ meter_text$="Clone repository and checkout branch"
 		checkoutCmd!.call() 
 		results!=checkoutCmd!.getResult()
 		
+        git!.getRepository().close()
+        git!.close()
         if (results!.getStatus() <> CheckoutResult.Status.OK) then
 			rem --- Failure, warn and terminate
-			print "*** CHECKOUT Failed ***"
-			escape; rem ... 9809 ... pull failed
-			rem wgh ... 9808 ... need new message 
-			rem SDH .... Messages should probably be FAILED_BAD_CLONE and FAILED_BAD_CHECKOUT
+print "*** CHECKOUT Failed ***"
+escape; rem ... 9809 ... pull failed
+rem wgh ... 9808 ... need new message 
+rem SDH .... Messages should probably be FAILED_BAD_CLONE and FAILED_BAD_CHECKOUT
 			msg_id$="FAILED_BAD_CHECKOUT"
-			rem wgh ... 9808 ... Install Failed. Not able to checkout %1 branch from repository.
+rem wgh ... 9808 ... Install Failed. Not able to checkout %1 branch from repository.
             dim msg_tokens$[1]
             msg_tokens$[1]=gitBranch$
             gosub disp_message
-            print(log_dev)"***** "+gitBranch$+" CHECKOUT FAILED *****"  
-			
-			REM go ahead and close these even under this error condition. 
-			git!.getRepository().close();rem CAH
-            git!.close();rem CAH
+            print(log_dev)"***** "+gitBranch$+" CHECKOUT FAILED *****"
             goto done
-        else
-            git!.getRepository().close();rem CAH
-            git!.close();rem CAH
         endif
     next syscnt
 
@@ -279,6 +275,7 @@ rem --- BIM clears barista/settings dir, so must do this step after BIMing and b
 
     for syscnt=0 to mountedSys!.size()-1
         newSyncLoc$=mountedSys!.getItem(syscnt)+"/data/sync"
+rem wgh ... 9809 ... remove unwanted extra newlines
         call pgmdir$+"adc_updatexmlfiles.aon",newSyncLoc$,oldSyncLoc$,syncBackupDir$,upgrade%,rdForm!,0,status
     next syscnt
 
@@ -402,10 +399,15 @@ rem wgh ... 9809 ... change message from "move" to "copy"
                 sourceDir$=sourceIter!.next()
                 xpos=pos(sourceDir$=record$)
                 if xpos=0 then continue
+rem wgh ... 9948 ... before
+                print(log_dev)"  <<< "+record$
                 
                 rem --- Replace path with version-neutral path
                 targetDir$=sourceMap!.get(sourceDir$)
                 record$=record$(1,xpos-1)+targetDir$+record$(xpos+len(sourceDir$))
+rem wgh ... 9948 ... after
+                print(log_dev)"  >>> "+record$
+                print(log_dev)
                 break
             wend
 
@@ -561,6 +563,7 @@ update_addon_syn: rem --- Update new addon.syn file
     wend
     close(synDev)
 
+rem wgh ... 9809 ... remove unwanted extra newlines
     call pgmdir$+"adc_updatesynfile.aon",updateSynFile$,oldSynFile$,upgrade%,stblMap!,pfxList!,rdForm!,0,status
     
     return
