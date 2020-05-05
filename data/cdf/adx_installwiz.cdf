@@ -316,7 +316,7 @@ validate_aon_dir: rem --- Validate directory for aon new install location
 
 	aonDir_exists=0
 	testChan=unt
-	open(testChan,err=*next)new_loc$ + "/aon/data"; aonDir_exists=1
+	open(testChan,err=*next)new_loc$ + "/aon"; aonDir_exists=1
 	close(testChan,err=*next)
 	testChan=unt
 	if !aonDir_exists then return
@@ -405,7 +405,7 @@ validate_base_dir: rem --- Validate base directory for installation
 	minor_ver$=callpoint!.getDevObject("minor_ver")
 	aonDir_exists=0
 	testChan=unt
-	open(testChan,err=*next)new_loc$+"/"+major_ver$+"/"+minor_ver$+"/aon/data"; aonDir_exists=1
+	open(testChan,err=*next)new_loc$+"/"+major_ver$+"/"+minor_ver$+"/aon"; aonDir_exists=1
 	close(testChan,err=*next)
 	testChan=unt
 	if !aonDir_exists then return
