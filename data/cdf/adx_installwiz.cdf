@@ -5,18 +5,20 @@ rem --- Initialize new record
 	callpoint!.setColumnEnabled("ADX_INSTALLWIZ.NEW_INSTALL_LOC",0)
 
 [[ADX_INSTALLWIZ.ASHO]]
-rem --- Don't allow running the utility if Addon doesn't exist at Basis download location
+rem --- Don't allow running the utility if not launched from Addon demo system under Basis download location
+	ddm_systems=fnget_dev("DDM_SYSTEMS")
+	dim ddm_systems$:fnget_tpl$("DDM_SYSTEMS")
+	readrecord(ddm_systems,key=pad("ADDON",16," "),knum="SYSTEM_ID",err=*next)ddm_systems$
+	aonDir!=new java.io.File(ddm_systems.mount_dir$)
+	aonDir$=aonDir!.getCanonicalPath()
 
-	bbjHome$ = System.getProperty("basis.BBjHome")
-	aonSynFile$ = bbjHome$+"/apps/aon/config/addon.syn"
-	aonExists = 0
-	tmp_dev = unt
-	open(tmp_dev, err=*next)aonSynFile$; aonExists = 1
-	close(tmp_dev,err=*next)
-	if !aonExists then
-		msg_id$="AD_DOWNLOAD_MISSING"
+	demoDir!=new java.io.File(System.getProperty("basis.BBjHome")+"/apps/aon")
+	demoDir$=demoDir!.getCanonicalPath()
+
+	if aonDir$<>demoDir$ then
+		msg_id$="AD_MUST_BE_DEMO_SYS"
 		dim msg_tokens$[1]
-		msg_tokens$[1]=bbjHome$
+		msg_tokens$[1]=demoDir$
 		gosub disp_message
 		callpoint!.setStatus("EXIT")
 	endif
@@ -132,7 +134,7 @@ rem --- Open/Lock files
 
 	num_files=1
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="ADM_MODULES",open_opts$[1]="OTA"
+	open_tables$[1]="DDM_SYSTEMS",open_opts$[1]="OTA"
 
 	gosub open_tables
 
