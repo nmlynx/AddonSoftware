@@ -570,6 +570,7 @@ method_error: rem --- Method error trap/handler
             rem --- copy backup file back to xml file, making necessary updates
             while 1
                 read(sourceChan,end=*break)record$
+                if cvs(record$,2)="" then continue
 
                 rem --- get module ID in <ASC_PROD_ID> lines
                 startProdIdTag = pos(startProdIdTag$=cvs(record$,4))
@@ -681,6 +682,7 @@ method_error:rem --- Method error trap/handler (11Oct2017)
             rem --- copy backup file back to xml file, making necessary updates
             while 1
                 read(sourceChan,end=*break)record$
+                if cvs(record$,2)="" then continue
 
                 rem --- process <PROCESS_STATUS> lines
                 startProcStatusTag = pos(startProcStatusTag$=cvs(record$,4))
