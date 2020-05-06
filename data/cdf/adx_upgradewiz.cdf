@@ -1,26 +1,3 @@
-[[ADX_UPGRADEWIZ.ASHO]]
-rem --- Don't allow running the utility if Addon doesn't exist at Basis download location
-
-	bbjHome$ = System.getProperty("basis.BBjHome")
-	aonSynFile$ = bbjHome$+"/apps/aon/config/addon.syn"
-	aonExists = 0
-	tmp_dev = unt
-	open(tmp_dev, err=*next)aonSynFile$; aonExists = 1
-	close(tmp_dev,err=*next)
-	if !aonExists then
-		msg_id$="AD_DOWNLOAD_MISSING"
-		dim msg_tokens$[1]
-		msg_tokens$[1]=bbjHome$
-		gosub disp_message
-		callpoint!.setStatus("EXIT")
-	endif
-[[ADX_UPGRADEWIZ.DB_NAME.AVAL]]
-rem --- Validate new database name
-
-	db_name$ = callpoint!.getUserInput()
-	gosub validate_new_db_name
-	callpoint!.setUserInput(db_name$)
-	if abort then break
 [[ADX_UPGRADEWIZ.ACUS]]
 rem --- Process custom event
 
@@ -127,6 +104,26 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 			break
 		swend
 	endif
+
+[[ADX_UPGRADEWIZ.ASHO]]
+rem --- Don't allow running the utility if not launched from Addon demo system under Basis download location
+	ddm_systems=fnget_dev("DDM_SYSTEMS")
+	dim ddm_systems$:fnget_tpl$("DDM_SYSTEMS")
+	readrecord(ddm_systems,key=pad("ADDON",16," "),knum="SYSTEM_ID",err=*next)ddm_systems$
+	aonDir!=new java.io.File(ddm_systems.mount_dir$)
+	aonDir$=aonDir!.getCanonicalPath()
+
+	demoDir!=new java.io.File(System.getProperty("basis.BBjHome")+"/apps/aon")
+	demoDir$=demoDir!.getCanonicalPath()
+
+	if aonDir$<>demoDir$ then
+		msg_id$="AD_MUST_BE_DEMO_SYS"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=demoDir$
+		gosub disp_message
+		callpoint!.setStatus("EXIT")
+	endif
+
 [[ADX_UPGRADEWIZ.ASIZ]]
 rem --- Resize grids
 
@@ -149,59 +146,7 @@ rem --- Resize grids
 	stblGrid!.setLocation(10,stblYpos)
 	stblGrid!.setSize(formWidth-2*appXpos,stblHeight)
 	stblGrid!.setFitToGrid(1)
-[[ADX_UPGRADEWIZ.AWIN]]
-rem --- Add grids to form
 
-	use ::ado_util.src::util
-
-	rem --- Get column headings for grids
-	aon_application_label$=Translate!.getTranslation("AON_APPLICATION")
-	aon_app_parent_label$=Translate!.getTranslation("AON_APP_PARENT")
-	aon_copy_label$=Translate!.getTranslation("AON_COPY")
-	aon_install_label$=Translate!.getTranslation("AON_INSTALL")
-	aon_source_label$=Translate!.getTranslation("AON_SOURCE")
-	aon_stbl_prefix_lable$=Translate!.getTranslation("AON_STBL_PREFIX")
-	aon_target_label$=Translate!.getTranslation("AON_TARGET")
-
-	rem --- Add grid to form for applications to be copied and/or installed
-	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
-	appGrid!=Form!.addGrid(nxt_ctlID,10,160,850,80); rem --- ID, x, y, width, height
-	callpoint!.setDevObject("appGrid",appGrid!)
-	callpoint!.setDevObject("app_grid_id",str(nxt_ctlID))
-	callpoint!.setDevObject("app_grid_def_cols",6)
-	callpoint!.setDevObject("app_grid_min_rows",4)
-	gosub format_app_grid
-	appGrid!.setColumnStyle(2,SysGUI!.GRID_STYLE_UNCHECKED)
-	appGrid!.setColumnEditable(2,1)
-	appGrid!.setColumnStyle(3,SysGUI!.GRID_STYLE_UNCHECKED)
-	appGrid!.setColumnEditable(3,1)
-	appGrid!.setColumnEditable(5,1)
-	appGrid!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
-
-	rem --- Add grid to form for updating STBLs and PREFIXs with paths
-	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))+1
-	stblGrid!=Form!.addGrid(nxt_ctlID,10,255,850,250); rem --- ID, x, y, width, height
-	callpoint!.setDevObject("stblGrid",stblGrid!)
-	callpoint!.setDevObject("stbl_grid_id",str(nxt_ctlID))
-	callpoint!.setDevObject("stbl_grid_def_cols",4)
-	callpoint!.setDevObject("stbl_grid_min_rows",16)
-	gosub format_stbl_grid
-	stblGrid!.setColumnEditable(3,1)
-	stblGrid!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
-
-	rem --- misc other init
-	util.resizeWindow(Form!, SysGui!)
-
-	rem --- set callbacks - processed in ACUS callpoint
-	appGrid!.setCallback(appGrid!.ON_GRID_CHECK_ON,"custom_event")
-	appGrid!.setCallback(appGrid!.ON_GRID_CHECK_OFF,"custom_event")
-	appGrid!.setCallback(appGrid!.ON_GRID_KEY_PRESS,"custom_event")
-	rem --- Currently ON_GRID_CELL_EDIT_STOP results in the loss of user input when 
-	rem --- they Run Process (F5) before leaving the cell where text was entered.
-	appGrid!.setCallback(appGrid!.ON_GRID_EDIT_STOP,"custom_event")
-	rem --- Currently ON_GRID_CELL_EDIT_STOP results in the loss of user input when 
-	rem --- they Run Process (F5) before leaving the cell where text was entered.
-	stblGrid!.setCallback(stblGrid!.ON_GRID_EDIT_STOP,"custom_event")
 [[ADX_UPGRADEWIZ.ASVA]]
 rem --- Validate new aon install location
 
@@ -289,51 +234,61 @@ rem --- Capture stbl grid in data structur for backend programs
 	next i
 
 	callpoint!.setDevObject("appStblMap",appStblMap!)
-[[ADX_UPGRADEWIZ.SYNC_BACKUP_DIR.AVAL]]
-rem --- Validate sync backup directory
 
-	sync_backup_dir$=(new File(callpoint!.getUserInput())).getCanonicalPath()
-	gosub validate_sync_backup_dir
-	callpoint!.setUserInput(sync_backup_dir$)
-	if abort then break
-[[ADX_UPGRADEWIZ.OLD_BAR_LOC.AVAL]]
-rem --- Validate old barista install location
+[[ADX_UPGRADEWIZ.AWIN]]
+rem --- Add grids to form
 
-	old_bar_loc$=(new File(callpoint!.getUserInput())).getCanonicalPath()
-	gosub validate_old_bar_loc
-	callpoint!.setUserInput(old_bar_loc$)
-	if abort then break
-		
-	rem --- Re-initialize app grid whenever old barista location changes
-	if cvs(old_bar_loc$,3)<>cvs(callpoint!.getDevObject("prev_old_bar_loc"),3) then
-		callpoint!.setDevObject("prev_old_bar_loc",old_bar_loc$)
+	use ::ado_util.src::util
 
-		rem --- Initialize app grid, i.e. set defaults for data apps
-		gosub create_app_vector
-		callpoint!.setDevObject("appRowVect",appRowVect!)
-		gosub fill_app_grid
-		util.resizeWindow(Form!, SysGui!)
-		callpoint!.setStatus("REFRESH")
-	endif
+	rem --- Get column headings for grids
+	aon_application_label$=Translate!.getTranslation("AON_APPLICATION")
+	aon_app_parent_label$=Translate!.getTranslation("AON_APP_PARENT")
+	aon_copy_label$=Translate!.getTranslation("AON_COPY")
+	aon_install_label$=Translate!.getTranslation("AON_INSTALL")
+	aon_source_label$=Translate!.getTranslation("AON_SOURCE")
+	aon_stbl_prefix_lable$=Translate!.getTranslation("AON_STBL_PREFIX")
+	aon_target_label$=Translate!.getTranslation("AON_TARGET")
 
+	rem --- Add grid to form for applications to be copied and/or installed
+	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
+	appGrid!=Form!.addGrid(nxt_ctlID,10,160,850,80); rem --- ID, x, y, width, height
+	callpoint!.setDevObject("appGrid",appGrid!)
+	callpoint!.setDevObject("app_grid_id",str(nxt_ctlID))
+	callpoint!.setDevObject("app_grid_def_cols",6)
+	callpoint!.setDevObject("app_grid_min_rows",4)
+	gosub format_app_grid
+	appGrid!.setColumnStyle(2,SysGUI!.GRID_STYLE_UNCHECKED)
+	appGrid!.setColumnEditable(2,1)
+	appGrid!.setColumnStyle(3,SysGUI!.GRID_STYLE_UNCHECKED)
+	appGrid!.setColumnEditable(3,1)
+	appGrid!.setColumnEditable(5,1)
+	appGrid!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 
-	rem --- Initialize old Barista admin_backup as needed
-	if cvs(callpoint!.getColumnData("ADX_UPGRADEWIZ.SYNC_BACKUP_DIR"),3)="" then
-		bar_dir$=old_bar_loc$+"/barista"
-		gosub able_backup_sync_dir
-	endif
+	rem --- Add grid to form for updating STBLs and PREFIXs with paths
+	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))+1
+	stblGrid!=Form!.addGrid(nxt_ctlID,10,255,850,250); rem --- ID, x, y, width, height
+	callpoint!.setDevObject("stblGrid",stblGrid!)
+	callpoint!.setDevObject("stbl_grid_id",str(nxt_ctlID))
+	callpoint!.setDevObject("stbl_grid_def_cols",4)
+	callpoint!.setDevObject("stbl_grid_min_rows",16)
+	gosub format_stbl_grid
+	stblGrid!.setColumnEditable(3,1)
+	stblGrid!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 
-rem --- Check if PRB Payroll should be installed
+	rem --- misc other init
+	util.resizeWindow(Form!, SysGui!)
 
-	gosub check_payroll_install
+	rem --- set callbacks - processed in ACUS callpoint
+	appGrid!.setCallback(appGrid!.ON_GRID_CHECK_ON,"custom_event")
+	appGrid!.setCallback(appGrid!.ON_GRID_CHECK_OFF,"custom_event")
+	appGrid!.setCallback(appGrid!.ON_GRID_KEY_PRESS,"custom_event")
+	rem --- Currently ON_GRID_CELL_EDIT_STOP results in the loss of user input when 
+	rem --- they Run Process (F5) before leaving the cell where text was entered.
+	appGrid!.setCallback(appGrid!.ON_GRID_EDIT_STOP,"custom_event")
+	rem --- Currently ON_GRID_CELL_EDIT_STOP results in the loss of user input when 
+	rem --- they Run Process (F5) before leaving the cell where text was entered.
+	stblGrid!.setCallback(stblGrid!.ON_GRID_EDIT_STOP,"custom_event")
 
-	rem --- Remove PRBABS if PRB Payroll isn't being installed
-	if !callpoint!.getDevObject("install_prbabs") then
-		appName$="PRBABS"
-		gosub remove_app_stbl_vector
-		rem --- if PRBABS was removed, then need to re-initialize the stbl grid
-		gosub init_stbl_grid
-	endif
 [[ADX_UPGRADEWIZ.BSHO]]
 rem --- Declare Java classes used
 
@@ -353,11 +308,81 @@ rem --- Initialize location values so can tell later if they have changed
 
 rem --- Open/Lock files
 
-	num_files=1
+	num_files=2
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ADM_MODULES",open_opts$[1]="OTA"
+	open_tables$[2]="DDM_SYSTEMS",open_opts$[2]="OTA"
 
 	gosub open_tables
+
+[[ADX_UPGRADEWIZ.DB_NAME.AVAL]]
+rem --- Validate new database name
+
+	db_name$ = callpoint!.getUserInput()
+	gosub validate_new_db_name
+	callpoint!.setUserInput(db_name$)
+	if abort then break
+
+[[ADX_UPGRADEWIZ.NEW_AON_LOC.AVAL]]
+rem --- Validate new aon install location
+
+	new_aon_loc$=(new File(callpoint!.getUserInput())).getCanonicalPath()
+	gosub validate_new_aon_loc
+	callpoint!.setUserInput(new_aon_loc$)
+	if abort then break
+
+rem --- Check if PRB Payroll should be installed
+
+	gosub check_payroll_install
+
+rem --- Set defaults for data STBLs
+	prev_new_aon_loc$=cvs(callpoint!.getDevObject("prev_new_aon_loc"),3)
+	prev_old_aon_loc$=cvs(callpoint!.getDevObject("prev_old_aon_loc"),3)
+	if cvs(new_aon_loc$,3)<>prev_new_aon_loc$ then
+		updateTargetPaths=1
+		if prev_new_aon_loc$<>"" and prev_old_aon_loc$<>"" then
+			msg_id$="AD_UPDT_TARGET_PATH"
+			gosub disp_message
+			if msg_opt$<>"Y"then
+				updateTargetPaths=0
+			endif
+		endif
+
+		rem --- Capture new aon location value so can tell later if it's been changed
+		callpoint!.setDevObject("prev_new_aon_loc",new_aon_loc$)
+
+		if updateTargetPaths then
+			rem --- Initialize aon and prbabs directories from new aon location
+			filePath$=new_aon_loc$
+			gosub fix_path
+			aonNewDir$=filePath$+"/aon/"
+			prbabsNewDir$=filePath$+"/prbabs/"
+
+			rem --- Use addon.syn and prbabs.syn files from BASIS product download location
+			bbjHome$ = System.getProperty("basis.BBjHome")
+			aonSynFile$=bbjHome$+"/apps/aon/config/addon.syn"
+			prbabsSynFile$=bbjHome$+"/apps/prbabs/config/prbabs.syn"
+
+			rem --- Initialize STBL grid for ADDON and PRBABS, i.e. set defaults for data STBLs
+			stblRowVect!=SysGUI!.makeVector()
+			newDir$=aonNewDir$
+			synFile$=aonSynFile$
+			gosub build_stbl_vector
+			if callpoint!.getDevObject("install_prbabs") then
+			rem --- If installing PRB Payroll, handle prbabs.syn globals in bottom grid
+				newDir$=prbabsNewDir$
+				synFile$=prbabsSynFile$
+				gosub build_stbl_vector
+			endif
+			callpoint!.setDevObject("newSynRows",stblRowVect!)
+			if prev_old_aon_loc$<>"" or !callpoint!.getDevObject("install_prbabs") then
+				gosub init_stbl_grid
+				util.resizeWindow(Form!, SysGui!)
+				callpoint!.setStatus("REFRESH")
+			endif
+		endif
+	endif
+
 [[ADX_UPGRADEWIZ.OLD_AON_LOC.AVAL]]
 rem --- Validate old aon install location
 
@@ -436,6 +461,54 @@ rem --- Initializations when old aon install location changes
 			endif
 		endif
 	endif
+
+[[ADX_UPGRADEWIZ.OLD_BAR_LOC.AVAL]]
+rem --- Validate old barista install location
+
+	old_bar_loc$=(new File(callpoint!.getUserInput())).getCanonicalPath()
+	gosub validate_old_bar_loc
+	callpoint!.setUserInput(old_bar_loc$)
+	if abort then break
+		
+	rem --- Re-initialize app grid whenever old barista location changes
+	if cvs(old_bar_loc$,3)<>cvs(callpoint!.getDevObject("prev_old_bar_loc"),3) then
+		callpoint!.setDevObject("prev_old_bar_loc",old_bar_loc$)
+
+		rem --- Initialize app grid, i.e. set defaults for data apps
+		gosub create_app_vector
+		callpoint!.setDevObject("appRowVect",appRowVect!)
+		gosub fill_app_grid
+		util.resizeWindow(Form!, SysGui!)
+		callpoint!.setStatus("REFRESH")
+	endif
+
+
+	rem --- Initialize old Barista admin_backup as needed
+	if cvs(callpoint!.getColumnData("ADX_UPGRADEWIZ.SYNC_BACKUP_DIR"),3)="" then
+		bar_dir$=old_bar_loc$+"/barista"
+		gosub able_backup_sync_dir
+	endif
+
+rem --- Check if PRB Payroll should be installed
+
+	gosub check_payroll_install
+
+	rem --- Remove PRBABS if PRB Payroll isn't being installed
+	if !callpoint!.getDevObject("install_prbabs") then
+		appName$="PRBABS"
+		gosub remove_app_stbl_vector
+		rem --- if PRBABS was removed, then need to re-initialize the stbl grid
+		gosub init_stbl_grid
+	endif
+
+[[ADX_UPGRADEWIZ.SYNC_BACKUP_DIR.AVAL]]
+rem --- Validate sync backup directory
+
+	sync_backup_dir$=(new File(callpoint!.getUserInput())).getCanonicalPath()
+	gosub validate_sync_backup_dir
+	callpoint!.setUserInput(sync_backup_dir$)
+	if abort then break
+
 [[ADX_UPGRADEWIZ.<CUSTOM>]]
 validate_new_db_name: rem --- Validate new database name
 
@@ -1377,62 +1450,6 @@ check_payroll_install: rem --- Check if PRB Payroll should be installed
 	callpoint!.setDevObject("hybridPR_installed",hybridPR_installed)
 
 	return
-[[ADX_UPGRADEWIZ.NEW_AON_LOC.AVAL]]
-rem --- Validate new aon install location
 
-	new_aon_loc$=(new File(callpoint!.getUserInput())).getCanonicalPath()
-	gosub validate_new_aon_loc
-	callpoint!.setUserInput(new_aon_loc$)
-	if abort then break
 
-rem --- Check if PRB Payroll should be installed
 
-	gosub check_payroll_install
-
-rem --- Set defaults for data STBLs
-	prev_new_aon_loc$=cvs(callpoint!.getDevObject("prev_new_aon_loc"),3)
-	prev_old_aon_loc$=cvs(callpoint!.getDevObject("prev_old_aon_loc"),3)
-	if cvs(new_aon_loc$,3)<>prev_new_aon_loc$ then
-		updateTargetPaths=1
-		if prev_new_aon_loc$<>"" and prev_old_aon_loc$<>"" then
-			msg_id$="AD_UPDT_TARGET_PATH"
-			gosub disp_message
-			if msg_opt$<>"Y"then
-				updateTargetPaths=0
-			endif
-		endif
-
-		rem --- Capture new aon location value so can tell later if it's been changed
-		callpoint!.setDevObject("prev_new_aon_loc",new_aon_loc$)
-
-		if updateTargetPaths then
-			rem --- Initialize aon and prbabs directories from new aon location
-			filePath$=new_aon_loc$
-			gosub fix_path
-			aonNewDir$=filePath$+"/aon/"
-			prbabsNewDir$=filePath$+"/prbabs/"
-
-			rem --- Use addon.syn and prbabs.syn files from BASIS product download location
-			bbjHome$ = System.getProperty("basis.BBjHome")
-			aonSynFile$=bbjHome$+"/apps/aon/config/addon.syn"
-			prbabsSynFile$=bbjHome$+"/apps/prbabs/config/prbabs.syn"
-
-			rem --- Initialize STBL grid for ADDON and PRBABS, i.e. set defaults for data STBLs
-			stblRowVect!=SysGUI!.makeVector()
-			newDir$=aonNewDir$
-			synFile$=aonSynFile$
-			gosub build_stbl_vector
-			if callpoint!.getDevObject("install_prbabs") then
-			rem --- If installing PRB Payroll, handle prbabs.syn globals in bottom grid
-				newDir$=prbabsNewDir$
-				synFile$=prbabsSynFile$
-				gosub build_stbl_vector
-			endif
-			callpoint!.setDevObject("newSynRows",stblRowVect!)
-			if prev_old_aon_loc$<>"" or !callpoint!.getDevObject("install_prbabs") then
-				gosub init_stbl_grid
-				util.resizeWindow(Form!, SysGui!)
-				callpoint!.setStatus("REFRESH")
-			endif
-		endif
-	endif
