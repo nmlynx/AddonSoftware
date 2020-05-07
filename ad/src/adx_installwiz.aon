@@ -150,9 +150,7 @@ rem --- Clone and pull branch(s) from Git repository to newAonLoc
 		
 		rem --- Verify clone worked (assuming get null instead of a non-working object on failure)
 		if (git!=null()) then 
-rem wgh ... 9809 ... needs message
-            msg_id$="FAILED_BAD_CLONE"
-rem wgh ... 9808 ... Install Failed. Not able to clone %1 branch from repository.
+            msg_id$="AD_FAILED_BAD_CLONE"
 			dim msg_tokens$[1]
             msg_tokens$[1]=gitBranch$
             gosub disp_message
@@ -171,9 +169,7 @@ rem wgh ... 9808 ... Install Failed. Not able to clone %1 branch from repository
         git!.close()
         if (results!.getStatus() <> CheckoutResult.Status.OK) then
 			rem --- Failure, warn and terminate
-rem wgh ... 9808 ... need new message 
-			msg_id$="FAILED_BAD_CHECKOUT"
-rem wgh ... 9808 ... Install Failed. Not able to checkout %1 branch from repository.
+			msg_id$="AD_FAILED_BAD_CHKOUT"
             dim msg_tokens$[1]
             msg_tokens$[1]=gitBranch$
             gosub disp_message
