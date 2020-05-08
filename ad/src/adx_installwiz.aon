@@ -294,6 +294,7 @@ rem --- For version-neutral installs, move files and update paths
         rem --- Update paths in addon.syn file
         while 1
             read(aonSyn_dev,end=*break)record$
+            if cvs(record$,2)="" then continue
 
             rem --- Check for version-neutral paths
             sourceIter!=sourceMap!.keySet().iterator()
