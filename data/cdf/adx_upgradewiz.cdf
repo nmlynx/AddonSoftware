@@ -1421,6 +1421,7 @@ check_payroll_install: rem --- Check if PRB Payroll should be installed
 	findrecord(adm_modules_dev,key="01004419"+"PRB",dom=*next)adm_modules$
 	install_prbabs=0
 	hybridPR_installed=0
+adm_modules.sys_install$="N"; rem --- ER 9944
 	if adm_modules.sys_install$="Y" then
 		install_prbabs=1
 
