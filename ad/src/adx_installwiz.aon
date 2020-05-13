@@ -48,6 +48,7 @@ rem --- Get user inputs
     help%=int(num(Option!.getOptionData("APP_HELP")))
     rdAdmin!=cast(BBjAdminBase, callpoint!.getDevObject("rdAdmin"))
     major_ver$=callpoint!.getDevObject("major_ver")
+    minor_ver$=callpoint!.getDevObject("minor_ver")
 	
 	copyData%=iff(installType$="Q",1,0)
 rem --- if installType is "Q", then run program that does 'quick copy'
@@ -89,10 +90,6 @@ rem --- Is Addon being installed, or is it already installed?
         mountedSys!.add(newAonLoc$+"/aon")
         synFile!.add(newAonLoc$+"/aon/config/addon.syn")
     endif
-
-rem --- Get version for repository branch
-    call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
-    branchVersion$=str(num(app_version_id$)*100:"0000")
     
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_INSTALL_WIZ")
@@ -135,14 +132,14 @@ rem --- Clone and pull branch(s) from Git repository to newAonLoc
            
         rem --- Clone and pull branch from Git repository
         gitURI$="https://git.basis.com/Addon/Addon.git"
-		branchName$="BBJ"+branchVersion$+"GA"
+		branchName$="BBJ"+minor_ver$(2)+"GA"
         remoteBranch$="origin/"+branchName$
         cloneDir$=mountedSys!.getItem(syscnt)
         cloneDir!=new File(cloneDir$)
         userName$="username"
         userPassword$="password"
     
-        print(log_dev)"Clone "+gitURI$   
+        print(log_dev)"    Clone "+gitURI$   
         cloneCmd!=Git.cloneRepository()
         cloneCmd!.setCredentialsProvider(new UsernamePasswordCredentialsProvider(userName$,userPassword$))
         cloneCmd!.setURI(gitURI$).setDirectory(cloneDir!).setCloneAllBranches(1)
@@ -154,13 +151,13 @@ rem --- Clone and pull branch(s) from Git repository to newAonLoc
 			dim msg_tokens$[1]
             msg_tokens$[1]=gitBranch$
             gosub disp_message
-            print(log_dev)"***** "+gitBranch$+" CLONE FAILED *****"   
+            print(log_dev)"    ***** "+gitBranch$+" CLONE FAILED *****"   
             goto done
 		endif 
     
 	
 		REM Check out the current branch
-		print (log_dev) "Checkout "+branchName$
+		print (log_dev) "    Checkout "+branchName$
 		checkoutCmd!=git!.checkout().setName(branchName$).setCreateBranch(1).setUpstreamMode(SetupUpstreamMode.TRACK).setStartPoint(remoteBranch$)
 		checkoutCmd!.call() 
 		results!=checkoutCmd!.getResult()
@@ -173,10 +170,17 @@ rem --- Clone and pull branch(s) from Git repository to newAonLoc
             dim msg_tokens$[1]
             msg_tokens$[1]=gitBranch$
             gosub disp_message
-            print(log_dev)"***** "+gitBranch$+" CHECKOUT FAILED *****"
+            print(log_dev)"    ***** "+gitBranch$+" CHECKOUT FAILED *****"
             goto done
         endif
     next syscnt
+
+    rem --- Build addonprop.jar and put it in the aon/prop directory
+    print (log_dev) "    Build addonprop.jar"
+    x=scall("jar cf "+newAonLoc$+"/aon/addonprop.jar -C "+newAonLoc$+"/aon/prop .",err=*next)
+    aonJar!=new File(newAonLoc$+"/aon/addonprop.jar")
+    propJar!=new File(newAonLoc$+"/aon/prop/addonprop.jar")
+    aonJar!.renameTo(propJar!)
 
     rem --- Remove busy/working image from progress meter
     busyImage!.destroy(err=*next)
