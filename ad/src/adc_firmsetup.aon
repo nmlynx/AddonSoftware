@@ -479,7 +479,7 @@ rem --- Process requiredFiles!
                     aonDemoKey$=key(aonDemoFile_dev,end=*break)
                     if pos("ZZ"=aonDemoKey$)<>1 then break
                     readrecord(aonDemoFile_dev)record$
-                    writerecord(file_dev_dev,dom=*continue)record$
+                    writerecord(file_dev,dom=*continue)record$
                 wend
                 close(aonDemoFile_dev,err=*next)
             endif
