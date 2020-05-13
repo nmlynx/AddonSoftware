@@ -149,9 +149,9 @@ rem --- Clone and pull branch(s) from Git repository to newAonLoc
 		if (git!=null()) then 
             msg_id$="AD_FAILED_BAD_CLONE"
 			dim msg_tokens$[1]
-            msg_tokens$[1]=gitBranch$
+            msg_tokens$[1]=branchName$
             gosub disp_message
-            print(log_dev)"    ***** "+gitBranch$+" CLONE FAILED *****"   
+            print(log_dev)"    ***** "+branchName$+" CLONE FAILED *****"   
             goto done
 		endif 
     
@@ -168,9 +168,9 @@ rem --- Clone and pull branch(s) from Git repository to newAonLoc
 			rem --- Failure, warn and terminate
 			msg_id$="AD_FAILED_BAD_CHKOUT"
             dim msg_tokens$[1]
-            msg_tokens$[1]=gitBranch$
+            msg_tokens$[1]=branchName$
             gosub disp_message
-            print(log_dev)"    ***** "+gitBranch$+" CHECKOUT FAILED *****"
+            print(log_dev)"    ***** "+branchName$+" CHECKOUT FAILED *****"
             goto done
         endif
     next syscnt
