@@ -1327,8 +1327,13 @@ rem ==========================================================================
 
 		rem --- process SYSPFX/PREFIX lines
 		if(pos("PREFIX"=record$) = 1 or pos("SYSPFX"=record$) = 1) then
-			aonDefaultPath=0
 			source_value$=cvs(record$(pos("="=record$)+1),3)
+			if pos("../apps/aon/classes/"=source_value$) then
+				rem --- Addon classes directory for Business Components may not exist yet
+				aonDefaultPath=1
+			else
+				aonDefaultPath=0
+			endif
 			gosub source_target_value
 			stblRowVect!.addItem(appName$)
 			stblRowVect!.addItem("<prefix>")
