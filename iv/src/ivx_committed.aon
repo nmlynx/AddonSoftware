@@ -348,9 +348,12 @@ entryfiles: rem --- Make sure appropriate entry files are empty
             call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :               ids$[all],templates$[all],channels[all],batch,status
             if status then goto std_exit_no_update
-            x$=fin(channels[1])
-            keys_used=dec(x$(77,4))        
-            if keys_used gosub Entry_File
+            entryKey$=""
+            entry_dev=channels[1]
+            read(entry_dev,key=firm_id$,dom=*next)
+            entryKey$=key(entry_dev,end=*next)
+            if pos(firm_id$=entryKey$)=1 then gosub Entry_File
+
             close (channels[1])
         endif
     next x
