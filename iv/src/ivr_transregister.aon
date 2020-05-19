@@ -299,17 +299,17 @@ rem --- Read next ive-01 header
         if pos(firm_id$+batch_no$=ive01_key$)<>1 break
         
         read record (ive01_dev,end=*break) ive01a$
-        read (ive11_dev,key=firm_id$+ive01a.iv_trans_no$,dom=*next)
         if doComments$="Y" then
             hdrCmtVect!=func.splitMultiLineField(ive01a.memo_1024$,60)
         else
             hdrCmtVect!=BBjAPI().makeVector()
             hdrCmtVect!.addItem(ive01a.trans_cmt$)
         endif
-
+        recs=recs+1
 
 rem --- Read next ive-11 detail
 
+        read (ive11_dev,key=firm_id$+ive01a.iv_trans_no$,dom=*next)
         while more
             ive11_key$=key(ive11_dev,end=*break)
             if pos(ive01a.firm_id$ + ive01a.iv_trans_no$ = ive11_key$) <> 1 then break
@@ -406,7 +406,6 @@ rem --- Print detail line
                     next i
                 endif
             endif
-            recs=recs+1
 
 rem --- G/L Distribution
 
