@@ -11,10 +11,17 @@ rem ==========================================================================
     use java.io.FileWriter
     use java.util.ArrayList
     use java.util.HashMap
+    use java.util.HashSet
     use java.util.Properties
     use java.util.Vector
 
+    use org.eclipse.jgit.api.Git
+    use org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
+    use org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
+    use org.eclipse.jgit.api.CheckoutResult
+
     use ::bbtranslator.bbj::BBTranslator
+    use ::adc_copyaon.aon::CopyAonDir
     use ::adc_updatexmlfiles.aon::UpdateSyncXmlFiles
     use ::ado_file.src::FileObject
     use ::ado_util.src::util    
@@ -56,13 +63,13 @@ rem --- Get user inputs
     oldAonDir$=oldAonLoc$ + "/aon"
     oldBarDir$=oldBarLoc$ + "/barista"
 
-rem --- Accommodate installing other applications in addition to Addon?
+rem --- Currently only installing Addon from a Git repository
     appName!=BBjAPI().makeVector()
     newAonDir!=BBjAPI().makeVector()
     oldAonDir!=BBjAPI().makeVector()
     appName!.add("ADDON")
-    newAonDir!.add(newAonLoc$+"/aon")
-    oldAonDir!.add(oldAonLoc$+"/aon")
+    newAonDir!.add(newAonDir$)
+    oldAonDir!.add(oldAonDir$)
 
 rem --- Get version for repository branch
     call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
@@ -80,16 +87,6 @@ rem --- Start progress meter
 
 rem --- Open log file
     gosub open_log
-    
-rem --- Open File(s)
-
-    num_files=1
-    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="ADM_MODULES", open_opts$[1]="OTA"
-
-    gosub open_tables
-
-    adm_modules=num(open_chans$[1]);dim adm_modules$:open_tpls$[1]
 
 rem --- Skip Barista’s Create Sync File Backup bax_sync_backup.bbj unless upgrading from a pre-v18 version.
     if doSyncBackup% then
@@ -116,24 +113,95 @@ rem --- Clone and pull branch(s) from Git repository to newAonLoc
     rem --- Show busy/working image while cloning and pulling from repository
     nxt_ctlID=util.getNextControlID()
     busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
-rem wgh ... 9809 ... stopped here    
 
-	rem --- Set oldLocation to aon directory under the current download directory
-    sep$ = java.io.File.separator
-    bbjHome$=java.lang.System.getProperty("basis.BBjHome")
-    bbjHomeLocation!=BBjAPI().makeVector()
-    bbjHomeLocation!.add(bbjHome$ + sep$ + "apps" + sep$ + "aon")
-
-	rem --- Do not copy data or help file
-	requiredFiles%=1
-	copyData%=0
-	help%=0
-	
-    rem --- Launch adc_copyaon.aon
     for syscnt=0 to appName!.size()-1
-        oldLocation$=bbjHomeLocation!.getItem(syscnt)
-        call pgmdir$+"adc_copyaon.aon",bbjHomeLocation!.getItem(syscnt),newAonDir!.getItem(syscnt),requiredFiles%,copyData%,help%,rdForm!,0,status
+        rem --- Clone and pull branch from Git repository
+        gitURI$="https://git.basis.com/Addon/Addon.git"
+        branchName$="BBJ"+branchVersion$+"GA"
+        remoteBranch$="origin/"+branchName$
+        cloneDir$= newAonDir!.getItem(syscnt)
+        cloneDir!=new File(cloneDir$)
+        userName$="username"
+        userPassword$="password"
+    
+        print(log_dev)"    Clone "+gitURI$   
+        cloneCmd!=Git.cloneRepository()
+        cloneCmd!.setCredentialsProvider(new UsernamePasswordCredentialsProvider(userName$,userPassword$))
+        cloneCmd!.setURI(gitURI$).setDirectory(cloneDir!).setCloneAllBranches(1)
+        git!=cloneCmd!.call()
+        
+        rem --- Verify clone worked (assuming get null instead of a non-working object on failure)
+        if (git!=null()) then 
+            msg_id$="AD_FAILED_BAD_CLONE"
+            dim msg_tokens$[1]
+            msg_tokens$[1]=branchName$
+            gosub disp_message
+            print(log_dev)"    ***** "+branchName$+" CLONE FAILED *****"   
+            goto done
+        endif 
+    
+    
+        rem --- Check out the current branch
+        print (log_dev) "    Checkout "+branchName$
+        checkoutCmd!=git!.checkout().setName(branchName$).setCreateBranch(1).setUpstreamMode(SetupUpstreamMode.TRACK).setStartPoint(remoteBranch$)
+        checkoutCmd!.call() 
+        results!=checkoutCmd!.getResult()
+        
+        git!.getRepository().close()
+        git!.close()
+        if (results!.getStatus() <> CheckoutResult.Status.OK) then
+            rem --- Failure, warn and terminate
+            msg_id$="AD_FAILED_BAD_CHKOUT"
+            dim msg_tokens$[1]
+            msg_tokens$[1]=branchName$
+            gosub disp_message
+            print(log_dev)"    ***** "+branchName$+" CHECKOUT FAILED *****"
+            goto done
+        endif
     next syscnt
+
+    rem --- Build addonprop.jar and put it in the aon/prop directory
+    print (log_dev) "    Build addonprop.jar"
+    x=scall("jar cf "+newAonDir$+"/addonprop.jar -C "+newAonDir$+"/prop .",err=*next)
+    aonJar!=new File(newAonDir$+"/addonprop.jar")
+    propJar!=new File(newAonDir$+"/prop/addonprop.jar")
+    aonJar!.renameTo(propJar!)
+
+rem wgh ... 9809 ... Why not use a version-neutral structure? Then can leave /data files the same as for a new install.
+    rem --- Remove data files except the required files listed in readme.htm
+    requiredFiles%=1; rem --- Only required files listed in readme.htm
+    wantedDataFiles!=new HashSet(CopyAonDir.getRequiredFiles(requiredFiles%))
+    dataDir!=new File(newAonDir$+"/data")
+    if dataDir!.listFiles()<>null() then
+        dataFiles! = new Vector(java.util.Arrays.asList(dataDir!.listFiles()))
+        iter! = dataFiles!.iterator()
+        while iter!.hasNext()
+            aFile! = cast(File, iter!.next())
+            if !wantedDataFiles!.contains(aFile!.getName()) then aFile!.delete()
+        wend
+    endif
+rem wgh ... 9809 ... Add /data directory to .gitignore ?????
+rem wgh ... 9809 ... Add !/data/bar directory to .gitignore ?????
+rem wgh ... 9809 ... Add !/data/cdf directory to .gitignore ?????
+rem wgh ... 9809 ... Add !/data/sync directory to .gitignore ?????
+
+
+rem wgh ... 9809 ... Why not use a version-neutral structure? Then can leave /images files the same as for a new install.
+    rem --- Remove inventory item images, except addon_logo32.png
+    imagesDir! = new File(newAonDir$ + "/images")
+    if imagesDir!.listFiles()<>null() then
+        imagesFiles! = new Vector(java.util.Arrays.asList(imagesDir!.listFiles()))
+        iter! = imagesFiles!.iterator()
+        while iter!.hasNext()
+            aFile! = cast(File, iter!.next())
+            if aFile!.getName()<>"addon_logo32.png" then aFile!.delete()
+        wend
+    endif
+rem wgh ... 9809 ... Add /images to .gitignore ?????
+rem wgh ... 9809 ... How are images copied from old install to the new install ?????
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
     
 rem --- Update new addon.syn file
 
@@ -152,7 +220,8 @@ rem --- Update new addon.syn file
         upgrade%=1
         oldSynFile$=oldAonDir!.getItem(syscnt)+"/config/"+cvs(appName!.getItem(syscnt),8)+".syn"
 
-        rem --- If oldSynFile does not exist for ADDON, skip.
+        rem --- If oldSynFile does not exist, skip.
+        oldSynFile! = new File(oldSynFile$)
         if !oldSynFile!.exists() then continue
      
         rem --- Build stblMap! and pfxList! for adc_updatesynfile.aon
@@ -187,6 +256,7 @@ rem --- Run BIM bai_install_manager.bbj program via synchronous system call beca
     print(log_dev)meter_text$
 
     sscpName$=cvs(dbName$,8)
+    copyData%=0
     status=0
     call pgmdir$+"adc_createsscp.aon",sscpName$,newAonLoc$,"",copyData%,rdAdmin!,status
     if status 
@@ -508,11 +578,8 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
                 line$=line$(1,xpos+len("data_source=")-1)+"AIUW"+line$(xpos+len("data_source="))
             endif
             if pos("end_version="=line$) then
-rem wgh ... 9809
                 rem --- Get version of this Addon installation
-                redim adm_modules$
-                readrecord(adm_modules,key=pad("01007514AD",11),dom=*next)adm_modules$
-                end_version$=cvs(adm_modules.version_id$,3)
+                end_version$=str(num(branchVersion$(1,3))/10:"00.0")
         
                 xpos=pos("end_version="=line$)
                 line$=line$(1,xpos+len("end_version=")-1)+end_version$+line$(xpos+len("end_version="))
@@ -554,6 +621,13 @@ done: rem --- All done
     print(log_dev)
     print(log_dev)"Upgradewiz log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     close(log_dev)
+
+    rem --- Move log file to aon/logs directory
+    logFile!=new File(log$)
+    aonLogFile!=new File(newAonDir$ + "/logs"+logName$)
+    logFile!.renameTo(aonLogFile!)
+    logDir!=new File(logDir$)
+    logDir!.delete()
 
     goto std_exit
 
@@ -622,7 +696,8 @@ open_log:rem --- Open log file
     FileObject.makeDirs(new File(logDir$))
 
     rem --- create and open log file
-    log$ = logDir$+"/upgradewiz_"+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")+".txt"
+    logName$="/upgradewiz_"+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")+".txt"
+    log$ = logDir$+logName$
     erase log$,err=*next
     string log$
     log_dev=unt
