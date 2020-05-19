@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2020-05-18
+ Report Date:   2020-05-19
  Report Branch: AddonSoftware 20.10
  Last Release:  AddonSoftware 20.01
 =======================================================================================================================================
@@ -194,3 +194,14 @@ before warning that the Inventory Transaction Register and Update need
 to be run.
 ----
 Modified: iv/src/ivx_committed.aon
+
+=======================================================================================================================================
+Revision: b29e578568b5e10e1a69446eae0fba14dfb611ed
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/19/2020 9:14:37 AM
+Message:
+Bug 9956: Modified Inventory Transaction Register to count ive_transhdr
+(ive-01) records, not ive_transdet (ive-11) records, when determining if
+there is any data to update.
+----
+Modified: iv/src/ivr_transregister.aon
