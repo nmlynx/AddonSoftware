@@ -35,6 +35,7 @@ rem --- Get user inputs
     help%=int(num(Option!.getOptionData("APP_HELP")))
     rdAdmin!=cast(BBjAdminBase, callpoint!.getDevObject("rdAdmin"))
     major_ver$=callpoint!.getDevObject("major_ver")
+    minor_ver$=callpoint!.getDevObject("minor_ver")
 	
 	copyData%=iff(installType$="Q",1,0)
 rem --- if installType is "Q", then run program that does 'quick copy'
@@ -113,6 +114,19 @@ rem --- Recursively copy oldLocation to newAonLoc
     endif
     for syscnt=0 to mountedSys!.size()-1
         call pgmdir$+"adc_copyaon.aon",oldLocation!.getItem(syscnt),mountedSys!.getItem(syscnt),requiredFiles%,copyData%,help%,rdForm!,0,status
+
+        rem --- Clear documents directory copied from oldLocation
+        docs_dir$=mountedSys!.getItem(syscnt)+"/documents/"
+        docs_dir!=new java.io.File(docs_dir$)
+        if docs_dir!.exists() and docs_dir!.isDirectory()
+            docs_files!=new java.util.Vector(java.util.Arrays.asList(docs_dir!.list()))
+            if(docs_files!.size()>0) then
+                for i=0 to docs_files!.size()-1
+                    docs_files$ = docs_dir$+cast(BBjString, docs_files!.get(i))
+                    erase docs_dir$+docs_files!.get(i),err=*next
+                next i
+            endif
+        endif
 
         rem --- Clear data/admin_backup directory copied from oldLocation
         admin_backup_dir$=mountedSys!.getItem(syscnt)+"/data/admin_backup/"
@@ -243,7 +257,7 @@ rem --- For version-neutral installs, move files and update paths
         rem --- Make HashMap of source and version-neutral directories
         sourceMap!=new java.util.HashMap()
         sourceMap!.put(currentAonDir$+"cust_images",base_dir$+"/cust_images")
-        sourceMap!.put(currentAonDir$+"data",base_dir$+"/"+major_ver$+"/data")
+        sourceMap!.put(currentAonDir$+"data",base_dir$+"/"+major_ver$+"/app_data")
         sourceMap!.put(currentAonDir$+"documents",base_dir$+"/documents")
         sourceMap!.put(currentAonDir$+"documents/archive",base_dir$+"/documents/archive")
         sourceMap!.put(currentAonDir$+"images",base_dir$+"/images")
@@ -264,7 +278,7 @@ rem --- For version-neutral installs, move files and update paths
             rem --- Make sure target directory exists
             mkdir targetDir$,err=*next
 
-            rem --- Move all files in source directory to target directory
+            rem --- Move files in source directory to target directory if they don't alread exist there
             dir!=new File(sourceDir$)
             if dir! <> null() and dir!.exists() and dir!.isDirectory() and dir!.list() <> null()
                 fileVector! = new java.util.Vector(java.util.Arrays.asList(dir!.listFiles()))
@@ -275,9 +289,8 @@ rem --- For version-neutral installs, move files and update paths
                         if sourceFile!.isDirectory() then continue
 
                         targetFile!=new File(targetDir$, sourceFile!.getName())
-                        targetFile!.delete()
-                        sourceFile!.renameTo(targetFile!)
-                        next j
+                        if !targetFile!.exists() then sourceFile!.renameTo(targetFile!)
+                    next j
                 endif
             endif
         wend
@@ -364,11 +377,10 @@ rem --- NOTE: newFirm$="" for Quick Copy installs
             mountSys$=mountedSys!.getItem(syscnt)
             if mountSys$(len(mountSys$)-3,4)="/aon"
                 if version_neutral then
-                    formData!.setProperty("DATA_LOCATION",base_dir$+"/"+major_ver$+"/data")
+                    formData!.setProperty("DATA_LOCATION",base_dir$+"/"+major_ver$+"/app_data")
                 else
                     formData!.setProperty("DATA_LOCATION",mountSys$+"/data")
                 endif
-                formData!.setProperty("DATA_LOCATION",mountSys$+"/data")
                 call pgmdir$+"adc_firmsetup.aon",formData!,newAonLoc$+"/aon",copyData%,rdForm!,0,status
             endif
         next syscnt
