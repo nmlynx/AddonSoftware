@@ -134,7 +134,7 @@ rem --- Resize grids
 	appXpos=appGrid!.getX()
 	availableHeight=formHeight-appYpos
 	appHeight=int((availableHeight-15)/4)
-	stblYpos=160+appHeight+15
+	stblYpos=200+appHeight+15
 	stblHeight=int(3*(availableHeight-15)/4)
 
 	rem --- Resize application grid
@@ -148,11 +148,12 @@ rem --- Resize grids
 	stblGrid!.setFitToGrid(1)
 
 [[ADX_UPGRADEWIZ.ASVA]]
-rem --- Validate new aon install location
+rem --- Validate base directory for installation
 
-	new_aon_loc$ = callpoint!.getColumnData("ADX_UPGRADEWIZ.NEW_AON_LOC")
-	gosub validate_new_aon_loc
-	callpoint!.setColumnData("ADX_UPGRADEWIZ.NEW_AON_LOC",new_aon_loc$)
+	new_loc$ = callpoint!.getColumnData("ADX_UPGRADEWIZ.BASE_DIR")
+	gosub validate_base_dir
+	callpoint!.setColumnData("ADX_UPGRADEWIZ.BASE_DIR", new_loc$)
+	callpoint!.setColumnData("ADX_UPGRADEWIZ.NEW_AON_LOC",new_loc$+"/"+major_ver$+"/"+minor_ver$,1)
 	if abort then break
 
 rem --- Validate old aon install location
@@ -251,7 +252,7 @@ rem --- Add grids to form
 
 	rem --- Add grid to form for applications to be copied and/or installed
 	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
-	appGrid!=Form!.addGrid(nxt_ctlID,10,160,850,80); rem --- ID, x, y, width, height
+	appGrid!=Form!.addGrid(nxt_ctlID,10,200,850,80); rem --- ID, x, y, width, height
 	callpoint!.setDevObject("appGrid",appGrid!)
 	callpoint!.setDevObject("app_grid_id",str(nxt_ctlID))
 	callpoint!.setDevObject("app_grid_def_cols",6)
@@ -266,7 +267,7 @@ rem --- Add grids to form
 
 	rem --- Add grid to form for updating STBLs and PREFIXs with paths
 	nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))+1
-	stblGrid!=Form!.addGrid(nxt_ctlID,10,255,850,250); rem --- ID, x, y, width, height
+	stblGrid!=Form!.addGrid(nxt_ctlID,10,295,850,250); rem --- ID, x, y, width, height
 	callpoint!.setDevObject("stblGrid",stblGrid!)
 	callpoint!.setDevObject("stbl_grid_id",str(nxt_ctlID))
 	callpoint!.setDevObject("stbl_grid_def_cols",4)
@@ -288,6 +289,64 @@ rem --- Add grids to form
 	rem --- Currently ON_GRID_CELL_EDIT_STOP results in the loss of user input when 
 	rem --- they Run Process (F5) before leaving the cell where text was entered.
 	stblGrid!.setCallback(stblGrid!.ON_GRID_EDIT_STOP,"custom_event")
+
+[[ADX_UPGRADEWIZ.BASE_DIR.AVAL]]
+rem --- Validate base directory for installation
+
+	new_loc$ = callpoint!.getUserInput()
+	gosub validate_base_dir
+	if abort then
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+	callpoint!.setUserInput(new_loc$)
+
+rem --- Update new install loc
+	major_ver$=callpoint!.getDevObject("major_ver")
+	minor_ver$=callpoint!.getDevObject("minor_ver")
+	new_aon_loc$=new_loc$+"/"+major_ver$+"/"+minor_ver$
+	callpoint!.setColumnData("ADX_UPGRADEWIZ.NEW_AON_LOC",new_aon_loc$,1)
+
+rem --- Set defaults for data STBLs
+	prev_new_aon_loc$=cvs(callpoint!.getDevObject("prev_new_aon_loc"),3)
+	prev_old_aon_loc$=cvs(callpoint!.getDevObject("prev_old_aon_loc"),3)
+	if cvs(new_aon_loc$,3)<>prev_new_aon_loc$ then
+		updateTargetPaths=1
+		if prev_new_aon_loc$<>"" and prev_old_aon_loc$<>"" then
+			msg_id$="AD_UPDT_TARGET_PATH"
+			gosub disp_message
+			if msg_opt$<>"Y"then
+				updateTargetPaths=0
+			endif
+		endif
+
+		rem --- Capture new aon location value so can tell later if it's been changed
+		callpoint!.setDevObject("prev_new_aon_loc",new_aon_loc$)
+
+		if updateTargetPaths then
+			rem --- Initialize aon directory from new aon location
+			filePath$=new_aon_loc$
+			gosub fix_path
+			aonNewDir$=filePath$+"/aon/"
+
+			rem --- Use addon.syn file from BASIS product download location
+			bbjHome$ = System.getProperty("basis.BBjHome")
+			aonSynFile$=bbjHome$+"/apps/aon/config/addon.syn"
+
+			rem --- Initialize STBL grid for ADDON, i.e. set defaults for data STBLs
+			stblRowVect!=SysGUI!.makeVector()
+			newDir$=aonNewDir$
+			synFile$=aonSynFile$
+			gosub build_stbl_vector
+			callpoint!.setDevObject("newSynRows",stblRowVect!)
+			if prev_old_aon_loc$<>"" then
+				gosub init_stbl_grid
+				util.resizeWindow(Form!, SysGui!)
+				callpoint!.setStatus("REFRESH")
+			endif
+		endif
+	endif
+	
 
 [[ADX_UPGRADEWIZ.BSHO]]
 rem --- Declare Java classes used
@@ -315,6 +374,16 @@ rem --- Open/Lock files
 
 	gosub open_tables
 
+rem --- Get this version of Addon's Admin module
+	version_id$="??.??"
+	major_ver$="v??"
+	minor_ver$="v????"
+	call stbl("+DIR_SYP")+"bax_version.bbj",version_id$,lic_id$
+	major_ver$="v"+str(num(version_id$,err=*next):"00",err=*next)
+	minor_ver$="v"+str(num(version_id$,err=*next)*100:"0000",err=*next)
+	callpoint!.setDevObject("major_ver",major_ver$)
+	callpoint!.setDevObject("minor_ver",minor_ver$)
+
 [[ADX_UPGRADEWIZ.DB_NAME.AVAL]]
 rem --- Validate new database name
 
@@ -322,54 +391,6 @@ rem --- Validate new database name
 	gosub validate_new_db_name
 	callpoint!.setUserInput(db_name$)
 	if abort then break
-
-[[ADX_UPGRADEWIZ.NEW_AON_LOC.AVAL]]
-rem --- Validate new aon install location
-
-	new_aon_loc$=(new File(callpoint!.getUserInput())).getCanonicalPath()
-	gosub validate_new_aon_loc
-	callpoint!.setUserInput(new_aon_loc$)
-	if abort then break
-
-rem --- Set defaults for data STBLs
-	prev_new_aon_loc$=cvs(callpoint!.getDevObject("prev_new_aon_loc"),3)
-	prev_old_aon_loc$=cvs(callpoint!.getDevObject("prev_old_aon_loc"),3)
-	if cvs(new_aon_loc$,3)<>prev_new_aon_loc$ then
-		updateTargetPaths=1
-		if prev_new_aon_loc$<>"" and prev_old_aon_loc$<>"" then
-			msg_id$="AD_UPDT_TARGET_PATH"
-			gosub disp_message
-			if msg_opt$<>"Y"then
-				updateTargetPaths=0
-			endif
-		endif
-
-		rem --- Capture new aon location value so can tell later if it's been changed
-		callpoint!.setDevObject("prev_new_aon_loc",new_aon_loc$)
-
-		if updateTargetPaths then
-			rem --- Initialize aon directories from new aon location
-			filePath$=new_aon_loc$
-			gosub fix_path
-			aonNewDir$=filePath$+"/aon/"
-
-			rem --- Use addon.syn file from BASIS product download location
-			bbjHome$ = System.getProperty("basis.BBjHome")
-			aonSynFile$=bbjHome$+"/apps/aon/config/addon.syn"
-
-			rem --- Initialize STBL grid for ADDON, i.e. set defaults for data STBLs
-			stblRowVect!=SysGUI!.makeVector()
-			newDir$=aonNewDir$
-			synFile$=aonSynFile$
-			gosub build_stbl_vector
-			callpoint!.setDevObject("newSynRows",stblRowVect!)
-			if prev_old_aon_loc$<>"" then
-				gosub init_stbl_grid
-				util.resizeWindow(Form!, SysGui!)
-				callpoint!.setStatus("REFRESH")
-			endif
-		endif
-	endif
 
 [[ADX_UPGRADEWIZ.OLD_AON_LOC.AVAL]]
 rem --- Validate old aon install location
@@ -504,37 +525,53 @@ dbNotFound:
 
 	return
 
-validate_new_aon_loc: rem --- Validate new aon install location
+validate_base_dir: rem --- Validate base directory for installation
 
 	abort=0
 
+	rem --- Flip directory path separators
+
+	filePath$=new_loc$
+	gosub fix_path
+	new_loc$=filePath$
+
 	rem --- Remove trailing slashes (/ and \) from aon new install location
 
-	while len(new_aon_loc$) and pos(new_aon_loc$(len(new_aon_loc$),1)="/\")
-		new_aon_loc$ = new_aon_loc$(1, len(new_aon_loc$)-1)
+	while len(new_loc$) and pos(new_loc$(len(new_loc$),1)="/\")
+		new_loc$ = new_loc$(1, len(new_loc$)-1)
 	wend
-
-	rem --- Remove trailing “/aon”
-
-	if len(new_aon_loc$)>=4 and pos(new_aon_loc$(1+len(new_aon_loc$)-4)="/aon\aon" ,4)
-		new_aon_loc$ = new_aon_loc$(1, len(new_aon_loc$)-4)
-	endif
 
 	rem --- Fix path for this OS
 	current_dir$=dir("")
 	current_drive$=dsk("",err=*next)
-    	FileObject.makeDirs(new File(new_aon_loc$))
-	chdir(new_aon_loc$)
+    	FileObject.makeDirs(new File(new_loc$))
+	valid_path=0
+	chdir(new_loc$),err=*next; valid_path=1
+	if !valid_path then
+		msg_id$="AD_BAD_DIR"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=new_loc$
+		gosub disp_message
+
+		callpoint!.setColumnData("ADX_UPGRADEWIZ.BASE_DIR", new_loc$)
+		callpoint!.setFocus("ADX_UPGRADEWIZ.BASE_DIR")
+		callpoint!.setStatus("ABORT")
+		abort=1
+		return
+	endif
 	new_loc$=current_drive$+dir("")
+	while len(new_loc$) and pos(new_loc$(len(new_loc$),1)="/\")
+		new_loc$ = new_loc$(1, len(new_loc$)-1)
+	wend
 	chdir(current_dir$)
 
 	rem --- Don’t allow current download location
 
-	testLoc$=new_aon_loc$
+	testLoc$=new_loc$
 	gosub verify_not_download_loc
 	if !loc_ok
-		callpoint!.setColumnData("ADX_UPGRADEWIZ.NEW_AON_LOC", new_aon_loc$)
-		callpoint!.setFocus("ADX_UPGRADEWIZ.NEW_AON_LOC")
+		callpoint!.setColumnData("ADX_UPGRADEWIZ.BASE_DIR", new_loc$)
+		callpoint!.setFocus("ADX_UPGRADEWIZ.BASE_DIR")
 		callpoint!.setStatus("ABORT")
 		abort=1
 		return
@@ -542,14 +579,14 @@ validate_new_aon_loc: rem --- Validate new aon install location
 
 	rem --- Read-Write-Execute directory permissions are required
 
-	if !FileObject.isDirWritable(new_aon_loc$)
+	if !FileObject.isDirWritable(new_loc$)
 		msg_id$="AD_DIR_NOT_WRITABLE"
 		dim msg_tokens$[1]
-		msg_tokens$[1]=new_aon_loc$
+		msg_tokens$[1]=new_loc$
 		gosub disp_message
 
-		callpoint!.setColumnData("ADX_COPYAON.NEW_INSTALL_LOC", new_aon_loc$)
-		callpoint!.setFocus("ADX_COPYAON.NEW_INSTALL_LOC")
+		callpoint!.setColumnData("ADX_UPGRADEWIZ.BASE_DIR", new_loc$)
+		callpoint!.setFocus("ADX_UPGRADEWIZ.BASE_DIR")
 		callpoint!.setStatus("ABORT")
 		abort=1
 		return
@@ -557,16 +594,22 @@ validate_new_aon_loc: rem --- Validate new aon install location
 
 	rem --- Cannot be currently used by Addon
 
+	major_ver$=callpoint!.getDevObject("major_ver")
+	minor_ver$=callpoint!.getDevObject("minor_ver")
+	aonDir_exists=0
 	testChan=unt
-	open(testChan, err=*return)new_aon_loc$ + "/aon/data"; rem --- successful return here
-	close(testChan)
+	open(testChan,err=*next)new_loc$+"/"+major_ver$+"/"+minor_ver$+"/aon/data"; aonDir_exists=1
+	close(testChan,err=*next)
+	testChan=unt
+	if !aonDir_exists then return
 
 	rem --- Location is used by Addon
+	callpoint!.setColumnData("ADX_UPGRADEWIZ.NEW_AON_LOC",new_loc$+"/"+major_ver$+"/"+minor_ver$,1)
 	msg_id$="AD_INSTALL_LOC_USED"
 	gosub disp_message
 
-	callpoint!.setColumnData("ADX_UPGRADEWIZ.NEW_AON_LOC", new_aon_loc$)
-	callpoint!.setFocus("ADX_UPGRADEWIZ.NEW_AON_LOC")
+	callpoint!.setColumnData("ADX_UPGRADEWIZ.BASE_DIR", new_loc$)
+	callpoint!.setFocus("ADX_UPGRADEWIZ.BASE_DIR")
 	callpoint!.setStatus("ABORT")
 	abort=1
 
@@ -1229,6 +1272,9 @@ rem ==========================================================================
 	open(synDev,isz=-1,err=*return)synFile$; more=1
 
 	oldDir$=""
+	filePath$=callpoint!.getColumnData("ADX_UPGRADEWIZ.BASE_DIR")
+	gosub fix_path
+	baseDir$=filePath$
 	while more
 		read(synDev,end=*break)record$
 
@@ -1262,7 +1308,22 @@ rem ==========================================================================
 				aonDefaultPath=0
 			endif
 			source_value$=cvs(record$(pos("="=record$,1,2)+1),3)
-			gosub source_target_value
+
+			rem --- Use version-neutral directory for +AON_IMAGES, +CUST_IMAGES and +DOC_DIR_* target directories
+			switch (BBjAPI().TRUE)
+				case pos(stbl$="+AON_IMAGES")
+					target_value$=baseDir$+"/images/"
+					break
+				case pos(stbl$="+CUST_IMAGES")
+					target_value$=baseDir$+"/cust_images/"
+					break
+				case pos("+DOC_DIR_"=stbl$)
+					target_value$=baseDir$+"/documents/"
+					break
+				case default
+					gosub source_target_value
+					break
+			swend
 
 			rem --- don't let target data directories be the same as source data directories (i.e. a minor rev upgrade using same data dir)
 			if target_value$=source_value$ and 

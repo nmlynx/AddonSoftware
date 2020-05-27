@@ -40,6 +40,8 @@ rem --- Get user inputs
 
     dbName$=Option!.getOptionData("DB_NAME")
     appDesc$=Option!.getOptionData("APP_DESC")
+    version_neutral=num(Option!.getOptionData("VERSION_NEUTRAL"))
+    baseDir$=Option!.getOptionData("BASE_DIR")
     newAonLoc$=Option!.getOptionData("NEW_AON_LOC")
     oldAonLoc$=Option!.getOptionData("OLD_AON_LOC")
     oldBarLoc$=Option!.getOptionData("OLD_BAR_LOC")
@@ -53,6 +55,7 @@ rem --- Get user inputs
     useOldMenu%=int(num(Option!.getOptionData("USE_OLD_MENU")))
 
 	rem --- Flip directory path separators
+    baseDir$=FileObject.fixPath(baseDir$, "/")
 	newAonLoc$=FileObject.fixPath(newAonLoc$, "/")
 	oldAonLoc$=FileObject.fixPath(oldAonLoc$, "/")
 	oldBarLoc$=FileObject.fixPath(oldBarLoc$, "/")
@@ -101,7 +104,9 @@ rem --- Skip Barista’s Create Sync File Backup bax_sync_backup.bbj unless upgrad
         call stbl("+DIR_SYP")+"bax_sync_backup.bbj","AUTO",oldBarDir$,sysGUI!,rdForm!,null(),rd_table_chans$[all]
     endif
 
-rem --- Clone and pull branch(s) from Git repository to newAonLoc
+rem wgh ... 9809 ... Latest thinking is copy old aon directory instead of cloning Git repository.
+rem wgh ... 9809 ... Check if got the .git direcotry. If didn't, clone Git repository and check out the appropriate branch. 
+rem --- Clone Git repository to newAonLoc, and check out branch
 
     rem --- Increment progress meter
     meter_text$=Translate!.getTranslation("AON_CLONE_REPO")
@@ -167,7 +172,7 @@ rem --- Clone and pull branch(s) from Git repository to newAonLoc
     propJar!=new File(newAonDir$+"/prop/addonprop.jar")
     aonJar!.renameTo(propJar!)
 
-rem wgh ... 9809 ... Why not use a version-neutral structure? Then can leave /data files the same as for a new install.
+rem wgh ... 9809 ... Will use a version-neutral structure so files don't need to be deleted.
     rem --- Remove data files except the required files listed in readme.htm
     requiredFiles%=1; rem --- Only required files listed in readme.htm
     wantedDataFiles!=new HashSet(CopyAonDir.getRequiredFiles(requiredFiles%))
@@ -180,13 +185,8 @@ rem wgh ... 9809 ... Why not use a version-neutral structure? Then can leave /da
             if !wantedDataFiles!.contains(aFile!.getName()) then aFile!.delete()
         wend
     endif
-rem wgh ... 9809 ... Add /data directory to .gitignore ?????
-rem wgh ... 9809 ... Add !/data/bar directory to .gitignore ?????
-rem wgh ... 9809 ... Add !/data/cdf directory to .gitignore ?????
-rem wgh ... 9809 ... Add !/data/sync directory to .gitignore ?????
 
-
-rem wgh ... 9809 ... Why not use a version-neutral structure? Then can leave /images files the same as for a new install.
+rem wgh ... 9809 ... Will use a version-neutral structure so files don't need to be deleted.
     rem --- Remove inventory item images, except addon_logo32.png
     imagesDir! = new File(newAonDir$ + "/images")
     if imagesDir!.listFiles()<>null() then
@@ -197,8 +197,6 @@ rem wgh ... 9809 ... Why not use a version-neutral structure? Then can leave /im
             if aFile!.getName()<>"addon_logo32.png" then aFile!.delete()
         wend
     endif
-rem wgh ... 9809 ... Add /images to .gitignore ?????
-rem wgh ... 9809 ... How are images copied from old install to the new install ?????
 
     rem --- Remove busy/working image from progress meter
     busyImage!.destroy(err=*next)
@@ -233,6 +231,7 @@ rem --- Update new addon.syn file
             aonStblMap!=stblMap!
         endif
 
+rem wgh ... 9809 ... Latest thinking is addon.syn and adm_modules~*.xml files shouldn't updated until AFTER new upgrade branch is commited.
         rem --- Launch adc_updatesynfile.aon
         call pgmdir$+"adc_updatesynfile.aon",newSynFile$,oldSynFile$,upgrade%,stblMap!,pfxList!,rdForm!,0,status
     next syscnt
