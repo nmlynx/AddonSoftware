@@ -3,81 +3,7 @@ rem --- Display next record
 
 	gosub read_display
 	user_tpl.prev_cycle$ = physical_rec.pi_cyclecode$
-[[IVE_COUNT_ENTRY.ITEM_ID.AINV]]
-rem --- Item synonym processing
 
-	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
-[[IVE_COUNT_ENTRY.PI_CYCLECODE.BINQ]]
-rem --- Restrict lookup to printed cycles
-
-	alias_id$ = "IVC_PHYSCODE"
-	inq_mode$ = "LOOKUP"
-	key_pfx$  = firm_id$
-	key_id$   = "PRIMARY"
-
-	dim filter_defs$[1,1]
-	filter_defs$[1,0] = "IVC_PHYSCODE.PHYS_INV_STS"
-	filter_defs$[1,1] = "='2'"
-
-	call stbl("+DIR_SYP")+"bam_inquiry.bbj",
-:		gui_dev,
-:		Form!,
-:		alias_id$,
-:		inq_mode$,
-:		table_chans$[all],
-:		key_pfx$,
-:		key_id$,
-:		selected_key$,
-:		filter_defs$[all],
-:		search_defs$[all]
-
-	callpoint!.setStatus("ABORT")
-[[IVE_COUNT_ENTRY.COUNT_STRING.BINP]]
-rem --- Serial number's count defaults to one
-
-	if user_tpl.this_item_lot_ser and user_tpl.lotser_flag$ = "S"
-		callpoint!.setTableColumnAttribute("IVE_COUNT_ENTRY.ACT_PHYS_CNT","DFLT","1")
-	endif
-[[IVE_COUNT_ENTRY.LOTSER_NO.AVAL]]
-print "LOTSER_NO:AVAL"; rem debug
-
-rem --- Check for valid lot and lookup the lot location
-
-	item$ = callpoint!.getColumnData("IVE_COUNT_ENTRY.ITEM_ID")
-	lotser_no$ = callpoint!.getUserInput()
-
-rem --- Does record exists?  Ok to add?
-
-	gosub find_record
-
-	if cvs(lotser_no$, 2) = "" then 
-		callpoint!.setStatus("ABORT")
-	else 
-		if new_record then
-			msg_id$ = "IV_ADD_PHYS_REC"
-			gosub disp_message
-
-			if msg_opt$ = "N" then
-				callpoint!.setStatus("ABORT")
-			else
-				callpoint!.setColumnData("IVE_COUNT_ENTRY.FREEZE_QTY", "0")
-
-rem			Serial number count defaults to one
-				if user_tpl.lotser_flag$ = "S" then
-					callpoint!.setColumnData("IVE_COUNT_ENTRY.COUNT_STRING", "1")
-					callpoint!.setColumnData("IVE_COUNT_ENTRY.ACT_PHYS_CNT", "1")
-				else
-					callpoint!.setColumnData("IVE_COUNT_ENTRY.COUNT_STRING", "")
-					callpoint!.setColumnData("IVE_COUNT_ENTRY.ACT_PHYS_CNT", "0")	
-				endif
-
-				callpoint!.setStatus("REFRESH")
-			endif
-
-		else
-			gosub display_record
-		endif
-	endif
 [[IVE_COUNT_ENTRY.ASVA]]
 print "ASVA"; rem debug
 
@@ -132,6 +58,103 @@ rem --- Write existing record and display the next
 	callpoint!.setColumnEnabled("IVE_COUNT_ENTRY.LOTSER_NO", 0)
 
 asva_end:
+
+[[IVE_COUNT_ENTRY.BSHO]]
+rem print 'show',"BSHO"; rem debug
+
+rem --- Inits
+
+	use ::ado_func.src::func
+
+	dim user_tpl$:"amt_mask:c(1*), ls:c(1), lotser_flag:c(1), this_item_lot_ser:u(1)," +
+:                "entered_flag:c(1), lotser_item:c(1), freeze_qty:n(1*), prev_cycle:c(2)"
+
+rem --- Open files
+
+	num_files=5
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="IVE_PHYSICAL", open_opts$[1]="OTA"
+	open_tables$[2]="IVS_PARAMS",   open_opts$[2]="OTA"
+	open_tables$[3]="IVM_ITEMMAST", open_opts$[3]="OTA"
+	open_tables$[4]="IVM_ITEMWHSE", open_opts$[4]="OTA"
+	open_tables$[5]="IVC_PHYSCODE", open_opts$[5]="OTA"
+
+	gosub open_tables
+
+	physical_dev = num(open_chans$[1])
+	params_dev   = num(open_chans$[2])
+
+	dim params_rec$:open_tpls$[2]
+
+rem --- Get IV params, set mask, lot/serial
+
+	find record (params_dev, key=firm_id$+"IV00", dom=std_missing_params) params_rec$
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",amt_mask$,0,0
+	user_tpl.amt_mask$ = amt_mask$
+	if pos(params_rec.lotser_flag$ = "LS") then ls$ = "Y" else ls$ = "N"
+	user_tpl.ls$ = ls$
+	user_tpl.lotser_flag$ = params_rec.lotser_flag$
+
+	if ls$ = "N" then
+		callpoint!.setColumnEnabled("IVE_COUNT_ENTRY.LOTSER_ITEM", -1)
+	endif
+
+rem --- Additional file opens
+
+	if ls$ = "Y" then
+		open_beg=1, open_end=1
+		open_tables$[1]="IVM_LSMASTER", open_opts$[1]="OTA"
+		gosub open_tables
+	endif
+
+rem --- Set at first record
+
+	read (physical_dev, key=firm_id$, dom=*next)
+
+[[IVE_COUNT_ENTRY.COUNT_STRING.AVAL]]
+print "COUNT_STRING:AVAL"; rem debug
+
+rem --- Test and total count string
+
+	count$ = callpoint!.getUserInput()
+	gosub parse_count
+
+	if failed then
+		print "---Failed in parse_count"; rem debug
+		callpoint!.setStatus("ABORT")
+		break; rem --- exit callpoint
+	endif
+
+rem --- Serial number count must be one or zero
+
+	qty$=callpoint!.getUserInput()
+
+	if user_tpl.this_item_lot_ser and user_tpl.lotser_flag$ = "S" and qty$ <> "1" and qty$<> "0"
+		msg_id$="IV_SER_ONE_ZERO"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break; rem --- exit callpoint
+	endif
+
+rem --- Flag that this record was entered
+
+	if cvs(callpoint!.getUserInput(), 2) <> "" then 
+		user_tpl.entered_flag$ = "Y"
+		print "---Set entered flag"; rem debug
+	endif
+
+[[IVE_COUNT_ENTRY.COUNT_STRING.BINP]]
+rem --- Serial number's count defaults to one
+
+	if user_tpl.this_item_lot_ser and user_tpl.lotser_flag$ = "S"
+		callpoint!.setTableColumnAttribute("IVE_COUNT_ENTRY.ACT_PHYS_CNT","DFLT","1")
+	endif
+
+[[IVE_COUNT_ENTRY.ITEM_ID.AINV]]
+rem --- Item synonym processing
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
+
 [[IVE_COUNT_ENTRY.ITEM_ID.AVAL]]
 print "ITEM_ID:AVAL"; rem debug
 rem "Inventory Inactive Feature"
@@ -191,6 +214,48 @@ rem --- Get record if this isn't a lotted/serial item
 		endif
 
 	endif
+
+[[IVE_COUNT_ENTRY.LOTSER_NO.AVAL]]
+print "LOTSER_NO:AVAL"; rem debug
+
+rem --- Check for valid lot and lookup the lot location
+
+	item$ = callpoint!.getColumnData("IVE_COUNT_ENTRY.ITEM_ID")
+	lotser_no$ = callpoint!.getUserInput()
+
+rem --- Does record exists?  Ok to add?
+
+	gosub find_record
+
+	if cvs(lotser_no$, 2) = "" then 
+		callpoint!.setStatus("ABORT")
+	else 
+		if new_record then
+			msg_id$ = "IV_ADD_PHYS_REC"
+			gosub disp_message
+
+			if msg_opt$ = "N" then
+				callpoint!.setStatus("ABORT")
+			else
+				callpoint!.setColumnData("IVE_COUNT_ENTRY.FREEZE_QTY", "0")
+
+rem			Serial number count defaults to one
+				if user_tpl.lotser_flag$ = "S" then
+					callpoint!.setColumnData("IVE_COUNT_ENTRY.COUNT_STRING", "1")
+					callpoint!.setColumnData("IVE_COUNT_ENTRY.ACT_PHYS_CNT", "1")
+				else
+					callpoint!.setColumnData("IVE_COUNT_ENTRY.COUNT_STRING", "")
+					callpoint!.setColumnData("IVE_COUNT_ENTRY.ACT_PHYS_CNT", "0")	
+				endif
+
+				callpoint!.setStatus("REFRESH")
+			endif
+
+		else
+			gosub display_record
+		endif
+	endif
+
 [[IVE_COUNT_ENTRY.PI_CYCLECODE.AVAL]]
 print "PI_CYCLCODE:AVAL"; rem debug
 
@@ -212,6 +277,33 @@ rem --- Is cycle in the correct stage?
 		callpoint!.setStatus("ABORT")
 		break
 	endif
+
+[[IVE_COUNT_ENTRY.PI_CYCLECODE.BINQ]]
+rem --- Restrict lookup to printed cycles
+
+	alias_id$ = "IVC_PHYSCODE"
+	inq_mode$ = "LOOKUP"
+	key_pfx$  = firm_id$
+	key_id$   = "PRIMARY"
+
+	dim filter_defs$[1,1]
+	filter_defs$[1,0] = "IVC_PHYSCODE.PHYS_INV_STS"
+	filter_defs$[1,1] = "='2'"
+
+	call stbl("+DIR_SYP")+"bam_inquiry.bbj",
+:		gui_dev,
+:		Form!,
+:		alias_id$,
+:		inq_mode$,
+:		table_chans$[all],
+:		key_pfx$,
+:		key_id$,
+:		selected_key$,
+:		filter_defs$[all],
+:		search_defs$[all]
+
+	callpoint!.setStatus("ABORT")
+
 [[IVE_COUNT_ENTRY.<CUSTOM>]]
 rem ==========================================================================
 check_whse_cycle: rem --- Check the Physical Cycle code for the correct status
@@ -309,11 +401,14 @@ print "in read_display"; rem debug
 	if func.hasRecords(physical_dev) then 
 		while 1
 			read record (physical_dev, end=read_display_eof) physical_rec$
+			if physical_rec.firm_id$<>firm_id$ then goto read_display_eof
 			gosub display_record
 			break
 		
 read_display_eof:
 			read (physical_dev, key=firm_id$, dom=*next)
+			ive03_key$=key(physical_dev,end=*break)
+			if pos(firm_id$=ive03_key$)<>1 then break
 		wend
 	endif
 
@@ -533,85 +628,6 @@ parse_count_end:
 rem ==========================================================================
 #include [+ADDON_LIB]std_missing_params.aon
 rem ==========================================================================
-[[IVE_COUNT_ENTRY.COUNT_STRING.AVAL]]
-print "COUNT_STRING:AVAL"; rem debug
 
-rem --- Test and total count string
 
-	count$ = callpoint!.getUserInput()
-	gosub parse_count
 
-	if failed then
-		print "---Failed in parse_count"; rem debug
-		callpoint!.setStatus("ABORT")
-		break; rem --- exit callpoint
-	endif
-
-rem --- Serial number count must be one or zero
-
-	qty$=callpoint!.getUserInput()
-
-	if user_tpl.this_item_lot_ser and user_tpl.lotser_flag$ = "S" and qty$ <> "1" and qty$<> "0"
-		msg_id$="IV_SER_ONE_ZERO"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-		break; rem --- exit callpoint
-	endif
-
-rem --- Flag that this record was entered
-
-	if cvs(callpoint!.getUserInput(), 2) <> "" then 
-		user_tpl.entered_flag$ = "Y"
-		print "---Set entered flag"; rem debug
-	endif
-[[IVE_COUNT_ENTRY.BSHO]]
-rem print 'show',"BSHO"; rem debug
-
-rem --- Inits
-
-	use ::ado_func.src::func
-
-	dim user_tpl$:"amt_mask:c(1*), ls:c(1), lotser_flag:c(1), this_item_lot_ser:u(1)," +
-:                "entered_flag:c(1), lotser_item:c(1), freeze_qty:n(1*), prev_cycle:c(2)"
-
-rem --- Open files
-
-	num_files=5
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="IVE_PHYSICAL", open_opts$[1]="OTA"
-	open_tables$[2]="IVS_PARAMS",   open_opts$[2]="OTA"
-	open_tables$[3]="IVM_ITEMMAST", open_opts$[3]="OTA"
-	open_tables$[4]="IVM_ITEMWHSE", open_opts$[4]="OTA"
-	open_tables$[5]="IVC_PHYSCODE", open_opts$[5]="OTA"
-
-	gosub open_tables
-
-	physical_dev = num(open_chans$[1])
-	params_dev   = num(open_chans$[2])
-
-	dim params_rec$:open_tpls$[2]
-
-rem --- Get IV params, set mask, lot/serial
-
-	find record (params_dev, key=firm_id$+"IV00", dom=std_missing_params) params_rec$
-	call stbl("+DIR_PGM")+"adc_getmask.aon","","IV","A","",amt_mask$,0,0
-	user_tpl.amt_mask$ = amt_mask$
-	if pos(params_rec.lotser_flag$ = "LS") then ls$ = "Y" else ls$ = "N"
-	user_tpl.ls$ = ls$
-	user_tpl.lotser_flag$ = params_rec.lotser_flag$
-
-	if ls$ = "N" then
-		callpoint!.setColumnEnabled("IVE_COUNT_ENTRY.LOTSER_ITEM", -1)
-	endif
-
-rem --- Additional file opens
-
-	if ls$ = "Y" then
-		open_beg=1, open_end=1
-		open_tables$[1]="IVM_LSMASTER", open_opts$[1]="OTA"
-		gosub open_tables
-	endif
-
-rem --- Set at first record
-
-	read (physical_dev, key=firm_id$, dom=*next)

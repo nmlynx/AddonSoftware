@@ -60,44 +60,51 @@ rem --- Initializations
     federalId$=formData!.getProperty("FEDERAL_ID")
     installType$=formData!.getProperty("INSTALL_TYPE")
     newInstall=num(formData!.getProperty("NEW_INSTALL"))
-	
-	rem --- Initialize TreeMap with files required for a clean new install
-	declare Vector fileVect!
-	declare TreeMap requiredFiles!
-	if installType$="X" then
-	    rem --- Without data
-	    fileVect! = CopyAonDir.getRequiredFiles(1); rem --- Only required files listed in readme.htm
-	else
-	    rem --- With default parameters and codes
-        fileVect! = CopyAonDir.getRequiredFiles(3); rem --- Required files listed in readme.htm plus files with firm ZZ default data
-	endif
-	requiredFiles! = new TreeMap()
-	for i=0 to fileVect!.size()-1
-	    thisFile$=fileVect!.get(i)
-	    requiredFiles!.put(thisFile$,"")
-	next i
     
 	rem --- Flip directory path separators
     filePath$=dataDir$
     gosub fix_path
     dataDir$=filePath$
 
-rem --- Open files
-    num_files=2
-    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="ADM_MODULES",open_opts$[1]="OTA"
-    open_tables$[2]="DDM_TABLE_TPLS",open_opts$[2]="OTA"
-
-    gosub open_tables
-
-    admModules_dev=num(open_chans$[1]); dim admModules$:open_tpls$[1]
-    ddmTableTpls_dev=num(open_chans$[2]); dim ddmTableTpls$:open_tpls$[2]
-
 rem --- Fix aon path, and remove trailing slash
     filePath$ = aonDir$
     gosub fix_path
     aonDir$ = filePath$
     if aonDir$(len(aonDir$))="/" then aonDir$=aonDir$(1,len(aonDir$)-1)
+
+rem --- Open files
+    num_files=3
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="ADM_MODULES",open_opts$[1]="OTA"
+    open_tables$[2]="DDM_TABLES",open_opts$[2]="OTA[1]"
+    open_tables$[3]="DDM_TABLE_TPLS",open_opts$[3]="OTA"
+
+    gosub open_tables
+
+    admModules_dev=num(open_chans$[1]); dim admModules$:open_tpls$[1]
+    ddmTables_dev=num(open_chans$[2]); dim ddmTables$:open_tpls$[2]
+    ddmTableTpls_dev=num(open_chans$[3]); dim ddmTableTpls$:open_tpls$[3]
+    
+    rem --- Initialize TreeMap with files and table aliases required for a clean new install
+    declare Vector fileVect!
+    declare TreeMap requiredFiles!
+    if installType$="X" then
+        rem --- Without data
+        fileVect! = CopyAonDir.getRequiredFiles(1); rem --- Only required files listed in readme.htm
+    else
+        rem --- With default parameters and codes
+        fileVect! = CopyAonDir.getRequiredFiles(3); rem --- Required files listed in readme.htm plus files with firm ZZ default data
+    endif
+    requiredFiles! = new TreeMap()
+    for i=0 to fileVect!.size()-1
+        thisFile$=fileVect!.get(i)
+        thisTable$=""
+        read(ddmTables_dev,key=thisFile$,knum="FILE_NAME",dir=-1,dom=*next)
+        redim ddmTables$
+        readrecord(ddmTables_dev,end=*next)ddmTables$
+        if cvs(ddmTables.dd_file_name$,2)=thisFile$ then thisTable$=ddmTables.dd_table_alias$
+        requiredFiles!.put(thisFile$,thisTable$)
+    next i
 
 rem --- Get barista directory
     if newInstall then
@@ -479,7 +486,7 @@ rem --- Process requiredFiles!
                     aonDemoKey$=key(aonDemoFile_dev,end=*break)
                     if pos("ZZ"=aonDemoKey$)<>1 then break
                     readrecord(aonDemoFile_dev)record$
-                    writerecord(file_dev_dev,dom=*continue)record$
+                    writerecord(file_dev,dom=*continue)record$
                 wend
                 close(aonDemoFile_dev,err=*next)
             endif
@@ -499,7 +506,10 @@ rem --- Process requiredFiles!
 
             rem --- Handle files with special initialization requirements 
             thisFile$=aFile!.getName()
-            findrecord(ddmTableTpls_dev,key=pad(cvs(thisFile$,4),16),dom=*endif)ddmTableTpls$
+            thisTable$=requiredFiles!.get(thisFile$)
+            if cvs(thisTable$,2)="" then thisTable$=pad(cvs(thisFile$,4),16)
+            redim ddmTableTpls$
+            findrecord(ddmTableTpls_dev,key=thisTable$,dom=*next)ddmTableTpls$
             dim record$:ddmTableTpls.dd_table_tpl$
             switch (BBjAPI().TRUE)
                 case thisFile$ = "ads_compinfo"
@@ -607,10 +617,6 @@ rem --- Process requiredFiles!
                 case default
                     break
             swend
-
-            rem --- Close files
-            close(write_dev)
-            close(file_dev)
         
             rem --- Increment progress meter
             meter_text$="copied firm ZZ to "+newFirm$+": "+aFile!.getPath()
@@ -619,6 +625,10 @@ rem --- Process requiredFiles!
             gosub disp_meter
             print(log_dev)meter_text$
         endif
+
+        rem --- Close files
+        close(write_dev)
+        close(file_dev)
     wend
     
 done: rem --- All done

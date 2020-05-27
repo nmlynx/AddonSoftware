@@ -5,18 +5,20 @@ rem --- Initialize new record
 	callpoint!.setColumnEnabled("ADX_INSTALLWIZ.NEW_INSTALL_LOC",0)
 
 [[ADX_INSTALLWIZ.ASHO]]
-rem --- Don't allow running the utility if Addon doesn't exist at Basis download location
+rem --- Don't allow running the utility if not launched from Addon demo system under Basis download location
+	ddm_systems=fnget_dev("DDM_SYSTEMS")
+	dim ddm_systems$:fnget_tpl$("DDM_SYSTEMS")
+	readrecord(ddm_systems,key=pad("ADDON",16," "),knum="SYSTEM_ID",err=*next)ddm_systems$
+	aonDir!=new java.io.File(ddm_systems.mount_dir$)
+	aonDir$=aonDir!.getCanonicalPath()
 
-	bbjHome$ = System.getProperty("basis.BBjHome")
-	aonSynFile$ = bbjHome$+"/apps/aon/config/addon.syn"
-	aonExists = 0
-	tmp_dev = unt
-	open(tmp_dev, err=*next)aonSynFile$; aonExists = 1
-	close(tmp_dev,err=*next)
-	if !aonExists then
-		msg_id$="AD_DOWNLOAD_MISSING"
+	demoDir!=new java.io.File(System.getProperty("basis.BBjHome")+"/apps/aon")
+	demoDir$=demoDir!.getCanonicalPath()
+
+	if aonDir$<>demoDir$ then
+		msg_id$="AD_MUST_BE_DEMO_SYS"
 		dim msg_tokens$[1]
-		msg_tokens$[1]=bbjHome$
+		msg_tokens$[1]=demoDir$
 		gosub disp_message
 		callpoint!.setStatus("EXIT")
 	endif
@@ -132,7 +134,7 @@ rem --- Open/Lock files
 
 	num_files=1
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="ADM_MODULES",open_opts$[1]="OTA"
+	open_tables$[1]="DDM_SYSTEMS",open_opts$[1]="OTA"
 
 	gosub open_tables
 
@@ -174,15 +176,24 @@ rem --- Enable/disable version_neutral
 				callpoint!.setColumnEnabled("ADX_INSTALLWIZ.NEW_INSTALL_LOC",1)
 			endif
 
-			rem --- Disable and clear version_neutral
+			rem ---Clear version_neutral
 			callpoint!.setColumnData("ADX_INSTALLWIZ.VERSION_NEUTRAL","0",1)
-			callpoint!.setColumnEnabled("ADX_INSTALLWIZ.VERSION_NEUTRAL",0)
 			
 			rem --- Clear firm_id
 			callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_FIRM_ID","",1)
 		else
-			rem --- Enable version_neutral
-			callpoint!.setColumnEnabled("ADX_INSTALLWIZ.VERSION_NEUTRAL",1)
+			rem --- Version-neutral install
+			callpoint!.setColumnData("ADX_INSTALLWIZ.VERSION_NEUTRAL","1",1)
+			callpoint!.setColumnEnabled("ADX_INSTALLWIZ.BASE_DIR",1)
+			callpoint!.setColumnEnabled("ADX_INSTALLWIZ.NEW_INSTALL_LOC",0)
+			callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC","",1)
+
+			base_dir$=callpoint!.getColumnData("ADX_INSTALLWIZ.BASE_DIR")
+			if cvs(base_dir$,2)<>"" then
+				major_ver$=callpoint!.getDevObject("major_ver")
+				minor_ver$=callpoint!.getDevObject("minor_ver")
+				callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC",base_dir$+"/"+major_ver$+"/"+minor_ver$,1)
+			endif
 		endif
 	endif
 
@@ -199,32 +210,6 @@ rem --- Validate directory for aon new install location
 
 rem --- Update base dir
 	callpoint!.setColumnData("ADX_INSTALLWIZ.BASE_DIR",new_loc$,1)
-
-[[ADX_INSTALLWIZ.VERSION_NEUTRAL.AVAL]]
-rem --- Initialize and enable/disable BASE_DIR and NEW_INSTALL_LOC
-	if num(callpoint!.getUserInput()) then
-		rem --- Version-neutral install
-		callpoint!.setColumnEnabled("ADX_INSTALLWIZ.BASE_DIR",1)
-		callpoint!.setColumnEnabled("ADX_INSTALLWIZ.NEW_INSTALL_LOC",0)
-		callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC","",1)
-
-		base_dir$=callpoint!.getColumnData("ADX_INSTALLWIZ.BASE_DIR")
-		if cvs(base_dir$,2)<>"" then
-			major_ver$=callpoint!.getDevObject("major_ver")
-			minor_ver$=callpoint!.getDevObject("minor_ver")
-			callpoint!.setColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC",base_dir$+"/"+major_ver$+"/"+minor_ver$,1)
-		endif
-	else
-		rem --- Not a version-neutral install
-		callpoint!.setColumnEnabled("ADX_INSTALLWIZ.BASE_DIR",0)
-		callpoint!.setColumnEnabled("ADX_INSTALLWIZ.NEW_INSTALL_LOC",1)
-		callpoint!.setColumnData("ADX_INSTALLWIZ.BASE_DIR","",1)
-
-		new_install_loc$=callpoint!.getColumnData("ADX_INSTALLWIZ.NEW_INSTALL_LOC")
-		if cvs(new_install_loc$,2)<>"" then
-			callpoint!.setColumnData("ADX_INSTALLWIZ.BASE_DIR",new_install_loc$,1)
-		endif
-	end
 
 [[ADX_INSTALLWIZ.<CUSTOM>]]
 validate_new_db_name: rem --- Validate new database name
@@ -333,7 +318,7 @@ validate_aon_dir: rem --- Validate directory for aon new install location
 
 	aonDir_exists=0
 	testChan=unt
-	open(testChan,err=*next)new_loc$ + "/aon/data"; aonDir_exists=1
+	open(testChan,err=*next)new_loc$ + "/aon"; aonDir_exists=1
 	close(testChan,err=*next)
 	testChan=unt
 	if !aonDir_exists then return
@@ -422,7 +407,7 @@ validate_base_dir: rem --- Validate base directory for installation
 	minor_ver$=callpoint!.getDevObject("minor_ver")
 	aonDir_exists=0
 	testChan=unt
-	open(testChan,err=*next)new_loc$+"/"+major_ver$+"/"+minor_ver$+"/aon/data"; aonDir_exists=1
+	open(testChan,err=*next)new_loc$+"/"+major_ver$+"/"+minor_ver$+"/aon"; aonDir_exists=1
 	close(testChan,err=*next)
 	testChan=unt
 	if !aonDir_exists then return
@@ -450,8 +435,6 @@ verify_not_download_loc: rem --- Verify not using current download location
 		gosub disp_message
 		loc_ok=0
 	endif
-
-	return
 
 	return
 
