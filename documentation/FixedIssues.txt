@@ -1,219 +1,29 @@
 =======================================================================================================================================
- Report Date:   2020-05-19
- Report Branch: AddonSoftware 20.10
- Last Release:  AddonSoftware 20.01
+ Report Date:   2020-05-27
+ Report Branch: AddonSoftware 20.11
+ Last Release:  AddonSoftware 20.10
 =======================================================================================================================================
 
-20.01 release 04/28/2020
-BBjBaristaAddonDemos2001_04-27-2020_1145.jar
+20.10 release 05/26/2020
+BBjBaristaAddonDemos2010_05-25-2020_1337.jar
 
 =======================================================================================================================================
-Revision: 2bc9efba11e967096ce9601bb05e7021b3e4471f
-Author: Christine <chawkins@basis.com>
-Date: 4/22/2020 3:42:14 PM
-Message:
-ER Bug 9734 - AP - Show ACH invoices on Payment Selection Report
- - altered to flag ACH vendors and show ACH, check and total payments.
-----
-Modified: ap/src/apr_payments.aon
-Modified: prop/addon.properties
-Modified: prop/addon_en.properties
-
-=======================================================================================================================================
-Revision: a7078a3da3395d9cbcfaa979e59a529d78140b8d
-Author: Christine <chawkins@basis.com>
-Date: 4/28/2020 12:43:14 PM
-Message:
-Bug 9947 - AR - AR Staff Credit Card Payment can throw error on unsuccessful transaction
-
-----
-Modified: data/bar/are_ccpmt.xml
-Modified: data/cdf/are_ccpmt.cdf
-
-=======================================================================================================================================
-Revision: e43cc487a523e309d6e4547e1d049d187013eb3a
+Revision: 127e5f669984f8fb58655ebc294bd61cda682b12
 Author: Bill Halsted <bhalsted@basis.com>
-Date: 4/29/2020 12:47:07 PM
+Date: 5/27/2020 11:53:59 AM
 Message:
-Bug 9946: Made changes to the Install Wizard so that it now sets up new
-firms correctly in version-neutral installations.
+ER 9960: Modified the Install Wizard to force a version-neutral
+directory structure for production install with or without data, and a
+non-version-neutral directory structure for Quick Copy installs.
+Modified the Upgrade Wizard to always force a version-neutral directory
+structure.
 ----
 Modified: ad/src/adc_firmsetup.aon
-Modified: ad/src/adx_firmsetup.aon
 Modified: ad/src/adx_installwiz.aon
-
-=======================================================================================================================================
-Revision: 6037e4f764a5b9ee25c166e1d5dcf674a29ee965
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 4/29/2020 12:58:49 PM
-Message:
-ER 9944: Removed PRBABS Payroll from Addon's Install Wizard.
-----
-Modified: ad/src/adx_installwiz.aon
-
-=======================================================================================================================================
-Revision: d3c86b7058163bf8d80d7e28465ca2e35cd6bfb6
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 4/29/2020 5:20:08 PM
-Message:
-Bug 9946: Corrected path to barista directory in Set Up New Firm
-utility.
-----
-Modified: ad/src/adc_firmsetup.aon
-
-=======================================================================================================================================
-Revision: 2820ec1646e774c7cca17a02e2b3b7b72ab866e6
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 4/29/2020 5:34:44 PM
-Message:
-ER 9944: Removed PRBABS Payroll from the Install Wizard's entry form.
-----
-Modified: data/bar/adx_installwiz.xml
-Modified: data/cdf/adx_installwiz.cdf
-
-=======================================================================================================================================
-Revision: c6adfb401903e63a15135ab75d72614241701b2a
-Author: Christine <chawkins@basis.com>
-Date: 5/4/2020 4:07:39 PM
-Message:
-Bug 9941 - AP - Labels on AP Parameters ACH Payments tab are confusing
-Bug 9943 - AP - Prompts on Vendor Payment Information tab should be corrected
-
-Changed prompts to refer to the Payment Report instead of Check Image, since it's the former that gets saved/emailed to vendors.
-
-(cherry picked from commit a96cfdc67a49273cde18cefc395a2bf0c2cad141)
-----
-Modified: data/bar/apm_vendmast.xml
-Modified: data/bar/aps_ach.xml
-Modified: data/bar/aps_params.xml
-Modified: data/bar/aps_payauth.xml
-Modified: prop/addon.properties
-Modified: prop/addon_en.properties
-
-=======================================================================================================================================
-Revision: c6fb7a60c5f08b99a9172a65b6723a0d61417b89
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 5/5/2020 11:49:56 AM
-Message:
-Bug 9948: Modified Install Wizard to log path changes in addon.syn file
-when using a version-neutral directory structure.
-----
-Modified: ad/src/adx_installwiz.aon
-
-=======================================================================================================================================
-Revision: a634094a0041ca6365ebfddc9695ab98f0185d30
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 5/5/2020 4:49:55 PM
-Message:
-ER 9950: Modified adc_updatesynfile.aon and adc_updatexmlfiles.aon to
-skip blank lines when updating addon.syn and adm_mudules~*.xml files.
-----
-Modified: ad/src/adc_updatesynfile.aon
-Modified: ad/src/adc_updatexmlfiles.aon
-
-=======================================================================================================================================
-Revision: da5c539c8315ba3ebf035ce76dfb507fc57fb851
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 5/6/2020 4:52:59 PM
-Message:
-ER 9952: Prevented launching Addon's Install and Upgrade Wizards except
-from the demo system under BBjHome.
-----
+Modified: ad/src/adx_upgradewiz.aon
 Modified: data/bar/adx_installwiz.xml
 Modified: data/bar/adx_upgradewiz.xml
 Modified: data/cdf/adx_installwiz.cdf
 Modified: data/cdf/adx_upgradewiz.cdf
-Modified: data/sync/ads_messages~[01007514AD].xml
-Deleted: data/sync/ads_messages~ad_download_missing.xml
 Modified: prop/addon.properties
 Modified: prop/addon_en.properties
-
-=======================================================================================================================================
-Revision: 5918a768bacd0fbfad2fb618fcd846058c20789d
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 5/8/2020 3:03:00 PM
-Message:
-ER 9950: Modified adx_installwiz.aon to skip blank lines when updating
-addon.syn for installations using a version-neutral directory structure.
-----
-Modified: ad/src/adx_installwiz.aon
-
-=======================================================================================================================================
-Revision: 605f66156e9b15e08e4227af53b953aba2a75502
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 5/11/2020 10:02:47 AM
-Message:
-Bug 9953: Corrected paths for custom images used on form tabs.
-----
-Modified: data/bar/apm_vendmast.xml
-Modified: data/bar/aps_ach.xml
-Modified: data/bar/aps_params.xml
-Modified: data/bar/aps_payauth.xml
-Modified: data/bar/glm_bankmaster.xml
-Modified: data/bar/pot_rechdr.xml
-
-=======================================================================================================================================
-Revision: 435743b5118d88163d22365ffa0c5700525d0e6e
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 5/12/2020 3:00:01 PM
-Message:
-ER 9944: Removed PRBABS Payroll from Addon's Upgrade Wizard.
-----
-Modified: data/bar/adx_upgradewiz.xml
-Modified: data/cdf/adx_upgradewiz.cdf
-
-=======================================================================================================================================
-Revision: 0d94e794e0aab93e65b977ed708dbda42b5f9468
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 5/13/2020 10:29:35 AM
-Message:
-Bug 9955: Corrected typo in channel variable name in Set Up New Firm
-utility.
-----
-Modified: ad/src/adc_firmsetup.aon
-
-=======================================================================================================================================
-Revision: 7e7c179c2b6ff32db6c4e13b487d52df6e75acfe
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 5/18/2020 1:57:45 PM
-Message:
-Bug 9957: Modified Upgrade Wizard to update the PREFIX path for the new
-Business Components aon/classes directory that may not exist yet.
-----
-Modified: data/bar/adx_upgradewiz.xml
-Modified: data/cdf/adx_upgradewiz.cdf
-
-=======================================================================================================================================
-Revision: 7a7a97bb08a1ab4937032edc9342e7ff202abda8
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 5/18/2020 5:34:19 PM
-Message:
-Bug 9956: Modified IV Rebuild Committed Quantities utility to check
-ive_transhdr (ive-01) for existing records ONLY for the current firm
-before warning that the Inventory Transaction Register and Update need
-to be run.
-----
-Modified: iv/src/ivx_committed.aon
-
-=======================================================================================================================================
-Revision: b29e578568b5e10e1a69446eae0fba14dfb611ed
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 5/19/2020 9:14:37 AM
-Message:
-Bug 9956: Modified Inventory Transaction Register to count ive_transhdr
-(ive-01) records, not ive_transdet (ive-11) records, when determining if
-there is any data to update.
-----
-Modified: iv/src/ivr_transregister.aon
-
-=======================================================================================================================================
-Revision: 191f8e804bc62b75786a76fd79f5bf1e73595da5
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 5/19/2020 1:31:32 PM
-Message:
-Bug 9959: Modified IV Physical Count Entry to skip records when wrong
-firm encountered, and start over with the first record for the current
-firm.
-----
-Modified: data/bar/ive_count_entry.xml
-Modified: data/cdf/ive_count_entry.cdf
