@@ -25,8 +25,22 @@ rem --- status     : Status code/0=No error (Returned)
 rem --- Initializations
     status=0
 
-rem --- Stop the context
+rem --- Make sure Jetty is running 
     jettyServer! = BBjAPI().getAdmin(theAdmin!.getUser(), theAdmin!.getPassword()).getJettyServer()
+    
+    tries=0
+    while (!jettyServer!.isRunning() and tries<10)
+        wait 1
+        tries=tries+1
+    wend
+    
+    if (!jettyServer!.isRunning()) then 
+        status=1
+        exit 
+    endif 
+    
+
+rem --- Stop the context
     thisContext! = jettyServer!.getContext(cvs(dbName$,11))
     if thisContext!<>null() then thisContext!.stop()
 
