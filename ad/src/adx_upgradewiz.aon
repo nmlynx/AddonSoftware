@@ -9,22 +9,34 @@ rem ==========================================================================
     use java.io.File
     use java.io.FileReader
     use java.io.FileWriter
+    use java.lang.reflect.Array
+    use java.nio.charset.StandardCharsets
     use java.util.ArrayList
     use java.util.HashMap
     use java.util.HashSet
+    use java.util.Iterator
     use java.util.Properties
     use java.util.Vector
 
     use org.eclipse.jgit.api.Git
-    use org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
     use org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
     use org.eclipse.jgit.api.CheckoutResult
+    use org.eclipse.jgit.api.LogCommand
+    use org.eclipse.jgit.lib.IndexDiff
+    use org.eclipse.jgit.revwalk.RevCommit
+    use org.eclipse.jgit.storage.file.FileRepositoryBuilder
+    use org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
+    use org.eclipse.jgit.treewalk.FileTreeIterator
+    use org.eclipse.jgit.treewalk.TreeWalk
 
     use ::bbtranslator.bbj::BBTranslator
     use ::adc_copyaon.aon::CopyAonDir
     use ::adc_updatexmlfiles.aon::UpdateSyncXmlFiles
     use ::ado_file.src::FileObject
     use ::ado_util.src::util    
+
+    declare Git git!
+    declare LogCommand logCmd!
 
     setesc std_error
     seterr std_error
@@ -80,6 +92,7 @@ rem --- Get version for repository branch
     
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_UPDATE_WIZ")
+rem wgh ... 9809 ... when done, update meter_total_recs for the new wizard
     meter_total_recs=8
     if doSyncBackup% then meter_total_recs=meter_total_recs+1
     if useOldMenu% then meter_total_recs=meter_total_recs+1
@@ -103,9 +116,142 @@ rem --- Skip Barista’s Create Sync File Backup bax_sync_backup.bbj unless upgrad
         rem --- Pass bax_sync_backup.bbj the full path to the pre-v18 application’s Barista instance
         call stbl("+DIR_SYP")+"bax_sync_backup.bbj","AUTO",oldBarDir$,sysGUI!,rdForm!,null(),rd_table_chans$[all]
     endif
+    
+rem --- Recursively copy oldLocation to newAonDir
 
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_COPY_AON")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Do not copy data or help file
+    requiredFiles%=1
+    copyData%=0
+    help%=0
+    
+    rem --- Launch adc_copyaon.aon
+    oldUsedGit!=BBjAPI().makeVector()
+    oldUsedMods!=BBjAPI().makeVector()
+    for syscnt=0 to oldAonDir!.size()-1
+        call pgmdir$+"adc_copyaon.aon",oldAonDir!.getItem(syscnt),newAonDir!.getItem(syscnt),requiredFiles%,copyData%,help%,rdForm!,0,status
+
+        rem --- Does old copied installation use Git repository or MODS project for customizations?
+rem wgh ... 9809 ... What if old copied installation use BOTH Git repository AND MODS project for customizations ?????
+        oldGitDir! = new File(newAonDir!.getItem(syscnt)+"/.git")
+        if oldGitDir!.exists() and oldGitDir!.isDirectory() then
+            oldUsedGit!.add(newAonDir!.getItem(syscnt))
+        else
+            oldUsedMods!.add(newAonDir!.getItem(syscnt))
+        endif
+    next syscnt
+
+    rem --- Does the old copied installation use Git repository?
+    if oldUsedGit!.size()>0 then
+        for gitcnt=0 to oldUsedGit!.size()-1
+            rem --- Get Git repository and branch
+            aonDir$=oldUsedGit!.getItem(gitcnt)
+            git!=Git.open(new File(aonDir$+"/.git"))
+            repository!=git!.getRepository()
+
+            rem --- Do not allow upgrade if Git repository has uncommitted changes, either unstaged or staged
+            diffCmd!=git!.diff()
+            unstaged!=diffCmd!.call()
+            if !unstaged!.isEmpty() then
+                msg_id$="AD_UNCOMMITTED_CHGS"
+                dim msg_tokens$[1]
+                msg_tokens$[1]="unstaged"
+                gosub disp_message
+                print(log_dev)"    Uncommitted unstaged changes: "+unstaged!
+                goto done
+            endif
+            diffCmd!=git!.diff().setCached(1)
+            staged!=diffCmd!.call()
+            if !staged!.isEmpty() then
+                msg_id$="AD_UNCOMMITTED_CHGS"
+                dim msg_tokens$[1]
+                msg_tokens$[1]="staged"
+                gosub disp_message
+                print(log_dev)"    Uncommitted staged changes: "+staged!
+                goto done
+            endif
+
+            rem --- Build delta XMLs for modified bar/*.xml files that have been committed.
+            mkdir aonDir$+"/tmp",err=*next
+            logCmd!=git!.log()
+rem wgh ... 9809 ... testing
+gitBranch$=repository!.getBranch()
+gitBranch$="AONQFPGIT"
+            logCmd!.add(repository!.resolve(gitBranch$))
+            logIter!=logCmd!.call().iterator()
+            while logIter!.hasNext()
+                rem --- Get modified files that have been committed.
+                commit!=logIter!.next()
+rem wgh ... 9809 ... testing ... temp filter
+if commit!.getName()<>"89309c119185f4c95630826c850849c0997a8850" then continue
+
+                fileTreeIterator!=new FileTreeIterator(repository!)
+                indexDiff!=new IndexDiff(repository!,commit!.getId(),fileTreeIterator!)
+                indexDiff!.diff()
+                modifiedIter!=indexDiff!.getModified().iterator()
+                while modifiedIter!.hasNext()
+                    rem --- Identify modified bar/*.xml files that have been committed.
+                    modified!=modifiedIter!.next()
+                    if !modified!.matches("^data/bar/.*\.xml$") then continue
+                    commit!=repository!.resolve("refs/remotes/origin/"+gitBranch$+"^{tree}")
+                    commitArray!=Array.newInstance(commit!.getClass(),1)
+                    Array.set(commitArray!,0,commit!)
+            
+                    rem --- Create original version of modified bar/*.xml files in list.
+                    treeWalk!=TreeWalk.forPath( repository!,modified!,commitArray!)
+                    reader!=repository!.newObjectReader()
+                    loader!=reader!.open(treeWalk!.getObjectId(0))
+                    fileContent!=new String(loader!.getBytes(),StandardCharsets.UTF_8)
+            
+                    outfile$=aonDir$+"/tmp/"+modified!.substring(1+modified!.lastIndexOf("/"))
+                    erase outfile$,err=*next
+                    string outfile$
+                    out_dev=unt
+                    open(out_dev)outfile$
+                    print(out_dev)fileContent!
+            
+                    close(out_dev)
+                    reader!.close()
+                    treeWalk!.close()
+            
+                    rem --- Build delta XMLs using Barista's bax_dd_sync_delta.bbj.
+                    rd_action$=""
+                    rd_status$=""
+                    rd_base_file$=outfile$
+                    rd_proj_file$=aonDir$+"/"+modified!
+                    rd_delta_file$=aonDir$+"/data/bar/delta/"+modified!.substring(1+modified!.lastIndexOf("/"))
+            
+                    call stbl("+DIR_SYP")+"bax_dd_synch_delta.bbj",rd_base_file$,rd_proj_file$,rd_delta_file$,rd_action$,rd_status$
+            
+                    erase rd_base_file$,err=*next
+                wend
+rem wgh ... 9809 ... testing ... temp filter
+break
+            wend
+
+            rmdir aonDir$+"/tmp",err=*next
+        next gitcnt
+    endif
+    
+    rem --- Does the old copied installation use MODS project for customizations?
+    if oldUsedMods!.size()>0 then
+        for modscnt=0 to oldUsedMods!.size()-1
+rem wgh ... 9809 ... clone Git repository to newAonLoc
+rem wgh ... 9809 ... for pre-v15.02 upgrades, warn that they must run Barista's Build Delta XMLs for Mods Project utility
+rem wgh ... 9809 ... should ddm_systems.parent_sys_id be cleared for ADDON mods ????? For v21+ too ?????
+        next modscnt
+    endif
+
+goto wgh1; rem wgh ... 9809 ... skip code for now
 rem wgh ... 9809 ... Latest thinking is copy old aon directory instead of cloning Git repository.
 rem wgh ... 9809 ... Check if got the .git direcotry. If didn't, clone Git repository and check out the appropriate branch. 
+
 rem --- Clone Git repository to newAonLoc, and check out branch
 
     rem --- Increment progress meter
@@ -124,7 +270,7 @@ rem --- Clone Git repository to newAonLoc, and check out branch
         gitURI$="https://git.basis.com/Addon/Addon.git"
         branchName$="BBJ"+branchVersion$+"GA"
         remoteBranch$="origin/"+branchName$
-        cloneDir$= newAonDir!.getItem(syscnt)
+        cloneDir$=newAonDir!.getItem(syscnt)
         cloneDir!=new File(cloneDir$)
         userName$="username"
         userPassword$="password"
@@ -200,6 +346,7 @@ rem wgh ... 9809 ... Will use a version-neutral structure so files don't need to
 
     rem --- Remove busy/working image from progress meter
     busyImage!.destroy(err=*next)
+wgh1: rem wgh ... 9809 ...
     
 rem --- Update new addon.syn file
 
