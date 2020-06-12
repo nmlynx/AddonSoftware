@@ -1,5 +1,5 @@
 REM /**
-REM  * CCRegistrationModel.aon
+REM  * aro_AO_CCRegistrationModel.aon
 REM  * @author shaun
 REM  * Copyright BASIS International Ltd.  All Rights Reserved.
 REM  */
@@ -12,13 +12,15 @@ use ::ado_rptControl.src::ReportControl
 use ::aro_CCUserModel.aon::CCUserModel 
 use ::aro_CCUserModel.aon::CCUserRecord
 use ::aro_CCUtil.aon::CCUtil
+use ::aro_CCRegistrationModel.aon::CCRegistrationRecord
+use ::aro_CCRegistrationModel.aon::CCCustomerFirmInfo
 
-class public CCRegistrationModel
+class public AO_CCRegistrationModel
   
   field protected CCUserModel UserModel!
   field protected BBjNumber SqlChan
  
-  method public CCRegistrationModel()
+  method public AO_CCRegistrationModel()
   
     rem CCUtil.openQueryTables()
     #SqlChan=sqlunt
@@ -175,13 +177,13 @@ class public CCRegistrationModel
   
 classend
 
-class public CCRegistrationRecord 
+class public AO_CCRegistrationRecord 
     field public CCUserRecord UserRecord!
     field public BBjString GeneratedToken!
     field public BBjString RequestDate!
 classend 
 
-class public CCCustomerFirmInfo
+class public AO_CCCustomerFirmInfo
     field public BBjString FirmID$
     field public BBjString CustomerName$
     field public BBjString FirmName$
