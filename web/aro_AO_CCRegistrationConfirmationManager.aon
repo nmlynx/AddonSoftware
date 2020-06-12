@@ -4,15 +4,15 @@ REM  * @author shaun
 REM  * Copyright BASIS International Ltd.  All Rights Reserved.
 REM  */
 
-use ::CCRegistrationConfirmationView.aon::CCRegistrationConfirmationView
-use ::CCRegistrationModel.aon::CCRegistrationModel
-use ::CCRegistrationModel.aon::CCRegistrationRecord
+use ::aro_CCRegistrationConfirmationView.aon::CCRegistrationConfirmationView
+use ::aro_CCRegistrationModel.aon::CCRegistrationModel
+use ::aro_CCRegistrationModel.aon::CCRegistrationRecord
 use ::aro_CCUserModel.aon::CCUserModel
 use ::aro_CCUserModel.aon::CCUserRecord
 use ::aro_CCUtil.aon::CCUtil
 
 
-class public CCRegistrationConfirmationManager
+class public AO_CCRegistrationConfirmationManager
 	field protected CCUtil Util!=new CCUtil()
 	field public CCRegistrationConfirmationView View! = new CCRegistrationConfirmationView()
 	field public CCRegistrationModel RegistrationModel!=new CCRegistrationModel() 
@@ -23,7 +23,7 @@ class public CCRegistrationConfirmationManager
 	REM TODO:  Put in an elaborate amount of diagnostic logging so that people on the backend can 
 	REM help troubleshoot registrations. People trying to register should not get direct access to 
 	REM this information. 
-	method public CCRegistrationConfirmationManager()
+	method public AO_CCRegistrationConfirmationManager()
     
 		declare BBjString token$
 		declare BBjString customerName$
@@ -73,7 +73,3 @@ class public CCRegistrationConfirmationManager
 	methodend 
 
 classend
-
-
-x!=new CCRegistrationConfirmationManager()
-process_events

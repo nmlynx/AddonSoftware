@@ -1,0 +1,45 @@
+rem ==========================================================================
+rem --- aro_CCRegistrationModel.aon 
+rem --- Credit Card Registration Model (database and business logic) class (subclass of AO_CCRegistrationModel)
+rem --- 
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem ==========================================================================
+
+rem --- Use statements and declares
+
+    use ::aro_AO_CCRegistrationModel.aon::AO_CCRegistrationModel
+	use ::aro_AO_CCRegistrationModel.aon::AO_CCRegistrationRecord
+	use ::aro_AO_CCRegistrationModel.aon::AO_CCCustomerFirmInfo
+
+rem --- Customizable helper class for superclass containing Credit Card utility methods.
+
+class public CCRegistrationModel extends AO_CCRegistrationModel
+
+	method public CCRegistrationModel()
+		#super!()
+
+		methodret
+
+	methodend
+
+classend
+
+class public CCRegistrationRecord extends AO_CCRegistrationRecord
+		method public CCRegistrationRecord()
+		#super!()
+
+		methodret
+
+	methodend
+
+classend
+
+class public CCCustomerFirmInfo extends AO_CCCustomerFirmInfo
+		method public CCCustomerFirmInfo()
+		#super!()
+
+		methodret
+
+	methodend
+
+classend

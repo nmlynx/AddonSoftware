@@ -1,12 +1,12 @@
 REM /**
-REM  * CCLoginView.aon
+REM  * AO_CCLoginView.aon
 REM  * @author shaun
 REM  * Copyright BASIS International Ltd.  All Rights Reserved.
 REM  */
 
 use ::CCView.aon::CCView
 
-class public CCLoginView extends CCView
+class public AO_CCLoginView extends CCView
     field protected BBjStaticText userNameST!
     field protected BBjEditBox userNameEB!
     field protected BBjStaticText passwordST!
@@ -19,7 +19,7 @@ class public CCLoginView extends CCView
     field protected BBjToolButton forgotPasswordTB!
 	field protected BBjNumber SqlChan
 
-    method public CCLoginView()
+    method public AO_CCLoginView()
 	    #super!()
 		#getWin().setTitle("Customer Login")
 		#SqlChan=sqlunt
@@ -51,6 +51,7 @@ class public CCLoginView extends CCView
 		#loginBtn!.addStyle("cc-button")
 		#registerBtn!.addStyle("cc-button")
 		#cancelBtn!.addStyle("cc-button")
+		#forgotPasswordTB!.addStyle("cc-link")
 
   methodend
 
@@ -80,7 +81,7 @@ class public CCLoginView extends CCView
 
 classend
 
-declare CCLoginView dialog!
-dialog!=new CCLoginView()
+declare AO_CCLoginView dialog!
+dialog!=new AO_CCLoginView()
 
 process_events

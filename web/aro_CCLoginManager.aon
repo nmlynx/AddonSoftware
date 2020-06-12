@@ -1,0 +1,29 @@
+rem ==========================================================================
+rem --- aro_CCLoginManager.aon 
+rem --- Login Manager for credit card application (subclass of AO_CCLoginManager)
+rem --- 
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem ==========================================================================
+
+rem --- Use statements and declares
+
+use ::aro_AO_CCLoginManager.aon::AO_CCLoginManager
+
+REM Driver code called by bax_launch_task by way of the web app. 
+declare CCLoginManager cclm!
+cclm!=new CCLoginManager()
+cclm!.doModal()
+release
+
+rem --- Customizable helper class for superclass containing Credit Card utility methods.
+
+class public CCLoginManager extends AO_CCLoginManager
+
+	method public CCLoginManager()
+		#super!()
+
+		methodret
+
+	methodend
+
+classend

@@ -1,0 +1,27 @@
+rem ==========================================================================
+rem --- aro_CCUtil.aon 
+rem --- Credit Card Utility class (subclass of AO_CCUtil)
+rem --- 
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem ==========================================================================
+
+rem --- Use statements and declares
+use ::aro_AO_CCRegistrationConfirmationManager.aon::AO_CCRegistrationConfirmationManager
+
+rem --- Run registration confirmation manager via bax_launch_task.bbj 
+x!=new CCRegistrationConfirmationManager()
+process_events
+
+
+rem --- Customizable helper class for superclass containing Credit Card utility methods.
+
+class public CCRegistrationConfirmationManager extends AO_CCRegistrationConfirmationManager
+
+	method public CCRegistrationConfirmationManager()
+		#super!()
+
+		methodret
+
+	methodend
+
+classend
