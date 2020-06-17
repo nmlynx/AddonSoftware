@@ -1,0 +1,405 @@
+rem ==========================================================================
+rem --- ado_AO_GitRepoInterface.aon 
+rem --- AO_GitRepoInterface class (GitRepoInterface superclass)
+rem --- Superclass used to synchronize specified sync/*.xml files.
+rem --- 
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem ==========================================================================
+
+rem /**
+rem  * This class uses JGit to interface with Addon's Git repository to perform
+rem  * tasks needed during upgrades and updates.
+rem  */
+
+    use java.io.File
+    use java.lang.reflect.Array
+    use java.nio.charset.StandardCharsets
+    use java.util.TreeSet
+
+    use org.eclipse.jgit.api.Git
+    use org.eclipse.jgit.lib.ObjectId
+    use org.eclipse.jgit.lib.Repository
+    use org.eclipse.jgit.revwalk.RevWalk
+    use org.eclipse.jgit.treewalk.CanonicalTreeParser
+    use org.eclipse.jgit.treewalk.TreeWalk
+    
+    class public AO_GitRepoInterface
+        field public BBjString AonDir$
+        field public BBjString Branch$
+        field public BBjString LocalBranch$
+        field public BBjString LocalRepo$
+        field public BBjString ReleaseTag$
+        field public BBjString RemoteBranch$
+
+        field protected Git git!
+        field protected Repository repository!
+        
+        rem /**
+        rem  * Constructor.
+        rem  *
+        rem  * @param BBjString aonDir$
+        rem  */
+        method public AO_GitRepoInterface(BBjString aonDir$)
+            seterr GitRepoInterface_error
+
+            rem --- Initializations
+            #AonDir$=aonDir$
+            
+            #LocalRepo$=#AonDir$+"/.git"
+            #git!=Git.open(new File(#LocalRepo$))
+            #repository!=#git!.getRepository()
+            #Branch$=#repository!.getBranch()
+            #LocalBranch$="heads/"+#Branch$
+            #RemoteBranch$="remotes/origin/"+#Branch$
+            #ReleaseTag$="refs/tags/"+#Branch$+"_Release"
+            
+            methodret
+            
+GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Returns the commit Object ID for a given branch or tag name. 
+        rem  * 
+        rem  * @param BBjString branch_tag$ -- branch or tag name
+        rem  *
+        rem  * @return ObjectId commitId!
+        rem  */
+        method public ObjectId getCommitId(BBjString branch_tag$)
+            seterr getCommitID_error
+            commitId!=null()
+
+            revWalk!=new RevWalk(#repository!)
+            commit!=#repository!.resolve(branch_tag$)
+            if commit!<>null() then
+                revObject!=revWalk!.peel(revWalk!.parseAny(commit!))
+                commitId!=revObject!.getId()
+            endif
+            
+            methodret commitId!
+           
+getCommitID_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Builds list of commits made from since$ through until$. 
+        rem  * 
+        rem  * @param BBjString since$ -- branch or tag name since
+        rem  * @param BBjString until$ -- branch or tag name until
+        rem  *
+        rem  * @return java.util.List commits!
+        rem  */
+        method public java.util.List getCommits(BBjString since$, BBjString until$)
+            seterr getCommits_error
+            commits!=null()
+
+            untilId!=#getCommitId(until$)
+            sinceId!=#getCommitId(since$)
+            if untilId!<>null() and sinceId!<>null() then
+                logCmd!=#git!.log().addRange(untilId!,sinceId!)
+                revCommits!=logCmd!.call()
+                commits!=cast(java.util.List,java.util.stream.StreamSupport.stream(revCommits!.spliterator(),0).collect(java.util.stream.Collectors.toList()))
+            endif
+            
+            methodret commits!
+           
+getCommits_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+    
+        rem /**
+        rem  * Builds Vector of local commits made from since$ through until$ that 
+        rem  * were NOT pushed to the remote repository. 
+        rem  * 
+        rem  * @param BBjString since$ -- branch or tag name since
+        rem  * @param BBjString until$ -- branch or tag name until
+        rem  *
+        rem  * @return BBjVector localCommits!
+        rem  */
+        method public BBjVector getLocalCommits(BBjString since$, BBjString until$)
+            seterr getLocalCommits_error
+            filteredLocalCommits!=BBjAPI().makeVector()
+
+            remoteCommits!=#getCommits(#RemoteBranch$,until$)
+            localCommits!=#getCommits(since$,until$)
+            
+            if remoteCommits!<>null() and localCommits!<>null()
+                localCommits!.removeAll(remoteCommits!)
+                commitIter!=localCommits!.iterator()
+                while (commitIter!.hasNext())
+                    commit!=commitIter!.next()
+                    filteredLocalCommits!.add(commit!)
+                    rem --- Once we encounter a commit that has more than one parent, we have a merge result, 
+                    rem --- so grab the merge result, which has all our previous changes and stop here. 
+                    if (commit!.getParentCount()>=2) then 
+                        break
+                    endif   
+                wend
+            endif
+            
+            methodret filteredLocalCommits!
+           
+getLocalCommits_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend 
+    
+        rem /**
+        rem  * Builds Tree of bar/*.xml files in a Vector of filtered local commits. 
+        rem  * 
+        rem  * @param BBjVector localCommits! -- filtered local commits
+        rem  *
+        rem  * @return TreeSet localCommittedXmls!
+        rem  */
+        method public TreeSet getLocalCommittedXmls(BBjVector localCommits!)
+            seterr getLocalCommittedXmls_error
+            localCommittedXmls!=new TreeSet()
+
+            commitIter!=localCommits!.iterator()
+            while commitIter!.hasNext()
+                commit!=commitIter!.next()
+                prevCommit!=commit!.getParent(commit!.getParentCount()-1)
+    
+                treeParser!=new CanonicalTreeParser(null(), #repository!.newObjectReader(), commit!.getTree().getId())
+                prevTreeParser!=new CanonicalTreeParser(null(), #repository!.newObjectReader(), prevCommit!.getTree().getId())
+
+                diffCmd! = #git!.diff()
+                diffCmd!.setNewTree(treeParser!)
+                diffCmd!.setOldTree(prevTreeParser!)
+                diffs!=diffCmd!.call()
+
+                diffIter!=diffs!.iterator()
+                while diffIter!.hasNext()
+                    diff!=diffIter!.next()
+                    if diff!.getNewPath().matches("^data/bar/.*\.xml$") then 
+                        localCommittedXmls!.add(diff!.getNewPath())
+                    endif
+                wend
+            wend
+            
+            methodret localCommittedXmls!
+           
+getLocalCommittedXmls_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend 
+    
+        rem /**
+        rem  * Builds Tree of bar/*.xml files committed from since$ through until$ that 
+        rem  * were NOT pushed to the remote repository. 
+        rem  * 
+        rem  * @param BBjString since$ -- branch or tag name since
+        rem  * @param BBjString until$ -- branch or tag name until
+        rem  *
+        rem  * @return TreeSet localCommittedXmls!
+        rem  */
+        method public TreeSet getLocalCommittedXmls(BBjString since$, BBjString until$)
+            seterr getLocalCommittedXmls2_error
+
+            localCommits!=#getLocalCommits(since$, until$)
+            localCommittedXmls!=#getLocalCommittedXmls(localCommits!)
+            
+            methodret localCommittedXmls!
+           
+getLocalCommittedXmls2_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend 
+
+        rem /**
+        rem  * Returns the contents of the specified file from the remote repository. 
+        rem  * 
+        rem  * @param BBjString filePath$ -- file name, including path within the repository
+        rem  *
+        rem  * @return BBjString fileContent$
+        rem  */
+        method public BBjString getRemoteFileContent(BBjString filePath$)
+            seterr getRemoteFileContent_error
+
+            commit!=#repository!.resolve("refs/remotes/origin/"+#Branch$+"^{tree}")
+            commitArray!=Array.newInstance(commit!.getClass(),1)
+            Array.set(commitArray!,0,commit!)
+
+            rem --- Create original version of modified bar/*.xml files in list.
+            treeWalk!=TreeWalk.forPath(#repository!,filePath$,commitArray!)
+            reader!=#repository!.newObjectReader()
+            loader!=reader!.open(treeWalk!.getObjectId(0))
+            fileContent$=new String(loader!.getBytes(),StandardCharsets.UTF_8)
+
+            reader!.close()
+            treeWalk!.close()
+            
+            methodret fileContent$
+           
+getRemoteFileContent_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend 
+
+        rem /**
+        rem  * Get Vector of uncommitted staged changes in the local repository has . 
+        rem  *
+        rem  * @return BBjVector stagedChanges!
+        rem  */
+        method public BBjVector getStagedChanges()
+            seterr getStagedChanges_error
+            stagedChanges!=BBjAPI().makeVector()
+
+            diffCmd!=#git!.diff().setCached(1)
+            if diffCmd!<>null() then
+                diffIter!=diffCmd!.call().iterator()
+                while diffIter!.hasNext()
+                    diffEntry!=diffIter!.next()
+                    stagedChanges!.addItem(diffEntry!.getNewPath())
+                wend
+            endif
+            
+            methodret stagedChanges!
+           
+getStagedChanges_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend 
+
+        rem /**
+        rem  * Get Vector of uncommitted unstaged changes in the local repository has . 
+        rem  *
+        rem  * @return BBjVector unstagedChanges!
+        rem  */
+        method public BBjVector getUnstagedChanges()
+            seterr getUnstagedChanges_error
+            unstagedChanges!=BBjAPI().makeVector()
+
+            diffCmd!=#git!.diff()
+            if diffCmd!<>null() then
+                diffIter!=diffCmd!.call().iterator()
+                while diffIter!.hasNext()
+                    diffEntry!=diffIter!.next()
+                    unstagedChanges!.addItem(diffEntry!.getNewPath())
+                wend
+            endif
+            
+            methodret unstagedChanges!
+           
+getUnstagedChanges_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend 
+        
+        rem /**
+        rem  * Method for testing. 
+        rem  */
+        method public void testPrint()
+
+            print #LocalBranch$
+            print #RemoteBranch$
+            print #ReleaseTag$
+
+            localCommits!=#getLocalCommits(#LocalBranch$,#ReleaseTag$)
+            print localCommits!
+
+            localCommittedXmls!=#getLocalCommittedXmls(localCommits!)
+            print localCommittedXmls!
+
+            localCommittedXmls!=#getLocalCommittedXmls(#LocalBranch$,#ReleaseTag$)
+            print localCommittedXmls!
+            
+            methodret
+        methodend
+
+classend
