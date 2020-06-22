@@ -7,37 +7,14 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
 
     use java.io.File
-    use java.io.FileReader
-    use java.io.FileWriter
-    use java.lang.reflect.Array
-    use java.nio.charset.StandardCharsets
     use java.util.ArrayList
     use java.util.HashMap
-    use java.util.HashSet
-    use java.util.Iterator
-    use java.util.Properties
     use java.util.Vector
 
-    use org.eclipse.jgit.api.Git
-    use org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
-    use org.eclipse.jgit.api.CheckoutResult
-    use org.eclipse.jgit.api.LogCommand
-    use org.eclipse.jgit.lib.IndexDiff
-    use org.eclipse.jgit.revwalk.RevCommit
-    use org.eclipse.jgit.storage.file.FileRepositoryBuilder
-    use org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
-    use org.eclipse.jgit.treewalk.FileTreeIterator
-    use org.eclipse.jgit.treewalk.TreeWalk
-
-    use ::bbtranslator.bbj::BBTranslator
-    use ::adc_copyaon.aon::CopyAonDir
     use ::adc_updatexmlfiles.aon::UpdateSyncXmlFiles
     use ::ado_file.src::FileObject
     use ::ado_GitRepoInterface.aon::GitRepoInterface
     use ::ado_util.src::util    
-
-    declare Git git!
-    declare LogCommand logCmd!
 
     setesc std_error
     seterr std_error
@@ -89,12 +66,12 @@ rem --- Currently only installing Addon from a Git repository
 
 rem --- Get version for repository branch
 rem wgh ... 9809 ... Is there a better, more accurate, way of doing this ?????
+rem wgh ... 9809 ... Addon currently only tracks to the major release level.
     call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
     branchVersion$=str(num(app_version_id$)*100:"0000")
     
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_UPDATE_WIZ")
-rem wgh ... 9809 ... when done, update meter_total_recs for the new wizard
     meter_total_recs=8
     if doSyncBackup% then meter_total_recs=meter_total_recs+1
     if useOldMenu% then meter_total_recs=meter_total_recs+1
@@ -112,7 +89,6 @@ rem --- Skip Barista’s Create Sync File Backup bax_sync_backup.bbj unless upgrad
         meter_text$=Translate!.getTranslation("AON_SYNC_BACKUP")
         meter_proc_recs=meter_proc_recs+1
         meter_action$="MTR-LST"
-rem wgh ... 9809 ... +1 meter_total_recs if doSyncBackup%
         gosub disp_meter
         print(log_dev)meter_text$
 
@@ -126,7 +102,6 @@ rem --- Recursively copy oldLocation to newAonDir
     meter_text$=Translate!.getTranslation("AON_COPY_AON")
     meter_proc_recs=meter_proc_recs+1
     meter_action$="MTR-LST"
-rem wgh ... 9809 ... +1 meter_total_recs
     gosub disp_meter
     print(log_dev)meter_text$
 
@@ -134,7 +109,8 @@ rem wgh ... 9809 ... +1 meter_total_recs
     requiredFiles%=2
     copyData%=1
     help%=0
-    
+
+rem wgh ... 9809 ... #1 Git and Non-Git ... DONE    
     rem --- Launch adc_copyaon.aon
     oldUsedGit!=BBjAPI().makeVector()
     oldUsedMods!=BBjAPI().makeVector()
@@ -143,7 +119,6 @@ rem wgh ... 9809 ... +1 meter_total_recs
         call pgmdir$+"adc_copyaon.aon",oldAonDir!.getItem(syscnt),newAonDir!.getItem(syscnt),requiredFiles%,copyData%,help%,rdForm!,0,status
 
         rem --- Does old copied installation use Git repository or MODS project for customizations?
-rem wgh ... 9809 ... What if old copied installation use BOTH Git repository AND MODS project(s) for customizations ?????
         oldGitDir! = new File(newAonDir!.getItem(syscnt)+"/.git")
         if oldGitDir!.exists() and oldGitDir!.isDirectory() then
             oldUsedGit!.add(newAonDir!.getItem(syscnt))
@@ -159,7 +134,6 @@ rem --- Does the old copied installation use Git repository?
         meter_text$=Translate!.getTranslation("AON_BUILD_DELTA_XMLS")
         meter_proc_recs=meter_proc_recs+1
         meter_action$="MTR-LST"
-rem wgh ... 9809 ... +1 meter_total_recs if oldUsedGit!.size()>0
         gosub disp_meter
         print(log_dev)meter_text$
 
@@ -225,6 +199,7 @@ rem wgh ... 9809 ... +1 meter_total_recs if oldUsedGit!.size()>0
                 erase rd_base_file$,err=*next
             wend
 
+            repoInterface!.closeInterface()
             rmdir aonDir$+"/tmp",err=*next
         next gitcnt
     endif
@@ -236,7 +211,6 @@ rem --- Does the old copied installation use MODS project for customizations?
         meter_text$=Translate!.getTranslation("AON_CLONE_GIT_REPO")
         meter_proc_recs=meter_proc_recs+1
         meter_action$="MTR-LST"
-rem wgh ... 9809 ... +1 meter_total_recs if oldUsedMods!.size()>0
         gosub disp_meter
         print(log_dev)meter_text$
 
@@ -259,14 +233,10 @@ rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods 
             cloneDir!=new File(cloneDir$)
             userName$="username"
             userPassword$="password"
-        
-            cloneCmd!=Git.cloneRepository()
-            cloneCmd!.setCredentialsProvider(new UsernamePasswordCredentialsProvider(userName$,userPassword$))
-            cloneCmd!.setURI(gitURI$).setDirectory(cloneDir!).setCloneAllBranches(1)
-            git!=cloneCmd!.call()
-            
-            rem --- Verify clone worked (assuming get null instead of a non-working object on failure)
-            if (git!=null()) then 
+
+            rem --- Clone Git repository and get a JGit interface to it
+            repoInterface!=new GitRepoInterface(cloneDir$)
+            if (repoInterface!=null()) then 
                 msg_id$="AD_FAILED_BAD_CLONE"
                 dim msg_tokens$[1]
                 msg_tokens$[1]=branchName$
@@ -275,22 +245,17 @@ rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods 
                 goto done
             endif 
         
-        
             rem --- Check out the current branch
             print (log_dev) "    Checkout "+branchName$
-            checkoutCmd!=git!.checkout().setName(branchName$).setCreateBranch(1).setUpstreamMode(SetupUpstreamMode.TRACK).setStartPoint(remoteBranch$)
-            checkoutCmd!.call() 
-            results!=checkoutCmd!.getResult()
-            
-            git!.getRepository().close()
-            git!.close()
-            if (results!.getStatus() <> CheckoutResult.Status.OK) then
+            checkoutStatus$=repoInterface!.checkoutBranch(branchName$)
+            repoInterface!.closeInterface()
+            if checkoutStatus$<>"OK" then
                 rem --- Failure, warn and terminate
                 msg_id$="AD_FAILED_BAD_CHKOUT"
                 dim msg_tokens$[1]
                 msg_tokens$[1]=branchName$
                 gosub disp_message
-                print(log_dev)"    ***** "+branchName$+" CHECKOUT FAILED *****"
+                print(log_dev)"    ***** "+branchName$+" CHECKOUT FAILED ("+checkoutStatus$+") *****"
                 goto done
             endif
         next modscnt
@@ -336,7 +301,7 @@ rem --- Update new addon.syn file
             aonStblMap!=stblMap!
         endif
 
-rem wgh ... 9809 ... Latest thinking is addon.syn and adm_modules~*.xml files shouldn't be updated until AFTER new upgrade branch is commited.
+rem wgh ... 9809 ... addon.syn and adm_modules~*.xml files can't be updated until AFTER branch is switched, otherwise changes get overwritten
         rem --- Launch adc_updatesynfile.aon
         call pgmdir$+"adc_updatesynfile.aon",newSynFile$,oldSynFile$,upgrade%,stblMap!,pfxList!,rdForm!,0,status
     next syscnt

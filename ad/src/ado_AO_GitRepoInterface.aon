@@ -16,10 +16,12 @@ rem  */
     use java.nio.charset.StandardCharsets
     use java.util.TreeSet
 
+    use org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
     use org.eclipse.jgit.api.Git
     use org.eclipse.jgit.lib.ObjectId
     use org.eclipse.jgit.lib.Repository
     use org.eclipse.jgit.revwalk.RevWalk
+    use org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
     use org.eclipse.jgit.treewalk.CanonicalTreeParser
     use org.eclipse.jgit.treewalk.TreeWalk
     
@@ -36,26 +38,120 @@ rem  */
         
         rem /**
         rem  * Constructor.
+        rem  * Clones Git repository to specified location if one does not already exist there.
         rem  *
         rem  * @param BBjString aonDir$
         rem  */
         method public AO_GitRepoInterface(BBjString aonDir$)
             seterr GitRepoInterface_error
-
-            rem --- Initializations
             #AonDir$=aonDir$
-            
             #LocalRepo$=#AonDir$+"/.git"
+
+            rem --- Get Git repository
+            gitDir! = new File(#LocalRepo$)
+            if !gitDir!.exists() then
+                rem --- Clone Git repository to specified location
+                gitURI$="https://git.basis.com/Addon/Addon.git"
+                userName$="username"
+                userPassword$="password"
+    
+                cloneCmd!=Git.cloneRepository()
+                cloneCmd!.setCredentialsProvider(new UsernamePasswordCredentialsProvider(userName$,userPassword$))
+                cloneCmd!.setURI(gitURI$).setDirectory(new File(aonDir$)).setCloneAllBranches(1)
+                cloneCmd!.call()
+            endif
             #git!=Git.open(new File(#LocalRepo$))
+            
+            rem --- Initializations
             #repository!=#git!.getRepository()
             #Branch$=#repository!.getBranch()
-            #LocalBranch$="heads/"+#Branch$
-            #RemoteBranch$="remotes/origin/"+#Branch$
-            #ReleaseTag$="refs/tags/"+#Branch$+"_Release"
+            branchName$=#Branch$(1+pos("/"=#Branch$))
+            #LocalBranch$="heads/"+branchName$
+            #RemoteBranch$="remotes/origin/"+branchName$
+            #ReleaseTag$="refs/tags/"+branchName$+"_Release"
             
             methodret
             
 GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Checkout (i.e. switch to) specified branch in repository. 
+        rem  * 
+        rem  * @param BBjString branchName$ -- branch name
+        rem  *
+        rem  * @return BBjString status$ -- OK - Checkout completely normal
+        rem  *                              ERROR - An Exception occurred during checkout
+        rem  *                              CONFLICTS - Checkout has not completed because of checkout conflicts
+        rem  *                              NONDELETED - Checkout has completed, but some files could not be deleted
+        rem  *                              NOT_TRIED - The call() method has not yet been executed
+        rem  */
+        method public BBjString checkoutBranch(BBjString branchName$)
+            seterr checkoutBranch_error
+            status$="OK"
+
+            rem --- Is this already the current branch?
+            if branchName$<>#repository!.getBranch() then
+                if #repository!.resolve("heads/"+branchName$)=null() then
+                    rem --- Not currently a local branch, so create it.
+                    checkoutCmd!=#git!.checkout().setName("heads/"+branchName$).setUpstreamMode(SetupUpstreamMode.TRACK).setStartPoint("remotes/origin/"+branchName$)
+                    checkoutCmd!=checkoutCmd!.setCreateBranch(1)
+                else
+                    rem --- Already a local branch
+                    checkoutCmd!=#git!.checkout().setName("heads/"+branchName$)
+                endif
+                checkoutCmd!.call()
+                results!=checkoutCmd!.getResult()
+                status$=results!.getStatus().toString()
+    
+                rem --- Re-initialize
+                #Branch$=#repository!.getBranch()
+                #LocalBranch$="heads/"+branchName$
+                #RemoteBranch$="remotes/origin/"+branchName$
+                #ReleaseTag$="refs/tags/"+branchName$+"_Release"
+            endif
+
+            methodret status$
+           
+checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Free resources associated with this instance. 
+        rem  */
+        method public void closeInterface()
+            seterr closeInterface_error
+
+            #repository!.close()
+            #git!.close()
+            
+            methodret
+           
+closeInterface_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
@@ -386,18 +482,16 @@ getUnstagedChanges_error:rem --- Method error trap/handler (11Oct2017)
         rem  */
         method public void testPrint()
 
-            print #LocalBranch$
-            print #RemoteBranch$
-            print #ReleaseTag$
+            print "#Branch$=",#Branch$
+            print "#LocalBranch$=",#LocalBranch$
+            print "#RemoteBranch$=",#RemoteBranch$
+            print "#ReleaseTag$=",#ReleaseTag$
 
             localCommits!=#getLocalCommits(#LocalBranch$,#ReleaseTag$)
-            print localCommits!
+            print "localCommits!=",localCommits!
 
             localCommittedXmls!=#getLocalCommittedXmls(localCommits!)
-            print localCommittedXmls!
-
-            localCommittedXmls!=#getLocalCommittedXmls(#LocalBranch$,#ReleaseTag$)
-            print localCommittedXmls!
+            print "localCommittedXmls!=",localCommittedXmls!
             
             methodret
         methodend
