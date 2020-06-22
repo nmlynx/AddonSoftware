@@ -1690,7 +1690,8 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
             line$=line$(1,xpos+len("start_version=")-1)+str(source_version:"00.00")+line$(xpos+len("start_version="))
         endif
         if pos("modules="=line$) then
-            line$="modules="+upgradedModules$
+            xpos=pos("modules="=line$)
+            line$=line$(1,xpos+len("modules=")-1)+upgradedModules$+line$(xpos+len("modules=")+len(upgradedModules$))
         endif
         writerecord(convCtrlFileChan)line$
     wend
