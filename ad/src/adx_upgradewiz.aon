@@ -24,6 +24,7 @@ rem --- Initializations
     pgmdir$=stbl("+DIR_PGM",err=*next)
     dir_syp$=stbl("+DIR_SYP")
     sysGUI! = BBjAPI().getSysGui()
+    localCommitsList!=BBjAPI().makeVector()
     BLOCKSIZE = 2^20
 
 rem --- Get user inputs
@@ -110,7 +111,7 @@ rem --- Recursively copy oldLocation to newAonDir
     copyData%=1
     help%=0
 
-rem wgh ... 9809 ... #1 Git and Non-Git ... DONE    
+rem wgh ... 9809 ... #1 Git and #1 Non-Git ... DONE ... Copy old instance of aon from old location to new location
     rem --- Launch adc_copyaon.aon
     oldUsedGit!=BBjAPI().makeVector()
     oldUsedMods!=BBjAPI().makeVector()
@@ -171,8 +172,12 @@ rem --- Does the old copied installation use Git repository?
 
             mkdir aonDir$+"/tmp",err=*next
 
+rem wgh ... 9809 ... #2 Git ... DONE ... Get list of commits since the tagged commit
+            rem --- Get Vector of all local commits.
+            localCommitsList!=repoInterface!.getLocalCommits(LocalBranch$,ReleaseTag$)
+
             rem --- Get modified bar/*.xml files that have been committed.
-            localCommittedXmls!=repoInterface!.getLocalCommittedXmls(LocalBranch$,ReleaseTag$)
+            localCommittedXmls!=repoInterface!.getLocalCommittedXmls(localCommitsList!)
             modifiedXmlIter!=localCommittedXmls!.iterator()
             while modifiedXmlIter!.hasNext()
                 modifiedXml$=modifiedXmlIter!.next()
@@ -188,6 +193,7 @@ rem --- Does the old copied installation use Git repository?
                 print(out_dev)fileContent$
                 close(out_dev)
             
+rem wgh ... 9809 ... #3 Git ... DONE ... Call the Barista utility to create delta XMLs
                 rem --- Build delta XMLs using Barista's bax_dd_sync_delta.bbj.
                 rd_action$=""
                 rd_status$=""
@@ -234,6 +240,8 @@ rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods 
             userName$="username"
             userPassword$="password"
 
+rem wgh ... 9809 ... stopped here
+rem wgh ... 9809 ... #2 Non-Git ... wip ... Get a "scratch" clone of Addon in a work directory, harvest the .git directory and drop it in v22/v2200/aon, then get rid of the scratch clone 
             rem --- Clone Git repository and get a JGit interface to it
             repoInterface!=new GitRepoInterface(cloneDir$)
             if (repoInterface!=null()) then 
@@ -245,6 +253,9 @@ rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods 
                 goto done
             endif 
         
+rem wgh ... 9809 ... stopped here
+rem wgh ... 9809 ... #3 Non-Git ... wip ... Switch/checkout to the commit associated with the "old" version - WE HAVE YET TO FIGURE OUT HOW TO DO THIS PART. Remember or perhaps tag this commit once identified.
+rem wgh ... 9809 ... #3 Non-Git ... wip ... Also may need to handle line ending issues at this point?
             rem --- Check out the current branch
             print (log_dev) "    Checkout "+branchName$
             checkoutStatus$=repoInterface!.checkoutBranch(branchName$)
@@ -260,6 +271,14 @@ rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods 
             endif
         next modscnt
 
+rem wgh ... 9809 ... #4 Non-Git ... none, missing
+rem wgh ... 9809 ... #5 Non-Git ... to do ... Copy the old existing mods/data/bar/delta XMLs to new location 
+rem wgh ... 9809 ... #6 Non-Git ... to do ... Incorporate the mods/data/cdf's: put 'before'/'after' callpoints in, or replace the Addon code if it's a 'before' w/ skip. 
+rem wgh ... 9809 ... #6 Non-Git ... to do ... While we're massaging callpoints, alphabetize them. Have Git commit these altered cdf's.
+rem wgh ... 9809 ... #7 Non-Git ... to do ... Bring over any prog/ files from the mods project (and what if they have more than the prog folder?) and put them in the corresponding src folder based on our naming conventions.
+rem wgh ... 9809 ... #7 Non-Git ... to do ... This should result in new or changed files in ar/src/, gl/src/, etc. Have Git commit these new/changed files. 
+
+rem wgh ... 9809 ... must move this after branch switch/checkout     
         rem --- Build addonprop.jar and put it in the aon/prop directory
         print (log_dev) "    Build addonprop.jar"
         x=scall("jar cf "+newAonDir$+"/addonprop.jar -C "+newAonDir$+"/prop .",err=*next)
@@ -270,7 +289,11 @@ rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods 
         rem --- Remove busy/working image from progress meter
         busyImage!.destroy(err=*next)
     endif
-    
+
+rem wgh ... 9809 ... #4 Git and #8 Non-Git ... to do ... Switch/checkout to branch for new version 
+rem wgh ... 9809 ... #5 Git and #9 Non-Git ... to do ... Alter addon.syn and adm_modules*.xml's for new location, and let's assume these are set for skip-worktree, so no commit expected/needed
+
+rem wgh ... 9809 ... addon.syn and adm_modules~*.xml files can't be updated until AFTER branch is switched, otherwise changes get overwritten
 rem --- Update new addon.syn file
 
     rem --- Increment progress meter
@@ -301,7 +324,6 @@ rem --- Update new addon.syn file
             aonStblMap!=stblMap!
         endif
 
-rem wgh ... 9809 ... addon.syn and adm_modules~*.xml files can't be updated until AFTER branch is switched, otherwise changes get overwritten
         rem --- Launch adc_updatesynfile.aon
         call pgmdir$+"adc_updatesynfile.aon",newSynFile$,oldSynFile$,upgrade%,stblMap!,pfxList!,rdForm!,0,status
     next syscnt
@@ -432,7 +454,15 @@ rem --- to standard menus, thus no logging or progress meter.
         next syscnt
     endif
 
-rem wgh ... 9809 ... Need to switch to upgrade branch, cherry pick changes, and resolve conflicts
+rem wgh ... 9809 ... #6 Git ... to do ... Driving off the list of local commits (#2 Git), cherry pick the commits
+rem wgh ... 9809 ... #7 Git ... to do ... If there are conflicts, we have no choice at this point but to stop and have the VAR resolve them
+rem wgh ... 9809 ... #10 Non-Git ... to do ... Ask Git to cherry pick our cdf and back-end prog commits, and work conflicts if/as needed
+
+rem wgh ... 9809 ... Need to resolve Git conflicts before proceeding. Jump here on restart of wizard if previously aborted due to conflicts.
+
+rem wgh ... 9809 ... #8 Git and #11 Non-Git ... to do ... If no conflicts, or once all are resolved, copy over any verticals.
+rem wgh ... 9809 ... #9 Git ... to do ... BIM Barista to the new location
+rem wgh ... 9809 ... Can BIM be done BEFORE conflict are resolved?????
 
 rem --- Launch auto-sync in new barista for the new addon.syn
 rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the new barista
@@ -444,6 +474,7 @@ rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to b
     gosub disp_meter
     print(log_dev)meter_text$
 
+rem wgh ... 9809 ... #10 Git ... to do ... Launch the Install Application Wizard (where previously we would've launched the auto-sync) to sync in Addon.
     rem --- Launch bax_dd_synch_auto.bbj
 	bar_dir$=newBarDir$
 	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
@@ -499,6 +530,8 @@ rem --- Copy OPV_SHIPTRACK_nn views from old database to new database
             endif
         wend
     endif
+
+rem wgh ... 9809 ... #11 Git ... to do ... If there are any verticals, after installing Addon, install them.
 
 rem --- Run Copy Application utility for applications being copied
 
@@ -681,6 +714,8 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
         gosub disp_message
         print(log_dev)"***** ERROR: Required file not found, "+convCtrlIniFileName$+" *****"
    endif
+
+rem wgh ... 9809 ... #12 Git ... to do ... At this point, we should have the upgraded application in place, and can run the EM Update Wizard to bring over data and begin sanity checking and testing.
     
 done: rem --- All done
     
