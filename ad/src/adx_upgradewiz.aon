@@ -7,8 +7,13 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
 
     use java.io.File
+    use java.nio.file.Files
+    use java.nio.file.Path
+    use java.nio.file.Paths
     use java.util.ArrayList
+    use java.util.Comparator
     use java.util.HashMap
+    use java.util.stream.Collectors
     use java.util.Vector
 
     use ::adc_updatexmlfiles.aon::UpdateSyncXmlFiles
@@ -240,10 +245,10 @@ rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods 
             userName$="username"
             userPassword$="password"
 
-rem wgh ... 9809 ... stopped here
 rem wgh ... 9809 ... #2 Non-Git ... wip ... Get a "scratch" clone of Addon in a work directory, harvest the .git directory and drop it in v22/v2200/aon, then get rid of the scratch clone 
-            rem --- Clone Git repository and get a JGit interface to it
-            repoInterface!=new GitRepoInterface(cloneDir$)
+            rem --- Clone Git repository to a temporary work directory. (Pre-built download doesn't have a .git directory that can be copied.)
+            mkdir cloneDir$+"/tmp",err=*next
+            repoInterface!=new GitRepoInterface(cloneDir$+"/tmp")
             if (repoInterface!=null()) then 
                 msg_id$="AD_FAILED_BAD_CLONE"
                 dim msg_tokens$[1]
@@ -252,11 +257,29 @@ rem wgh ... 9809 ... #2 Non-Git ... wip ... Get a "scratch" clone of Addon in a 
                 print(log_dev)"    ***** "+branchName$+" CLONE FAILED *****"   
                 goto done
             endif 
+            repoInterface!.closeInterface()
+            
+            rem --- Move .git directory from temporary work directory to clone install location
+            tmpGitDir!=new File(cloneDir$+"/tmp/.git")
+            cloneGitDir!=new File(cloneDir$+"/.git")
+rem wgh ... 9809 ... Something has something in .git open, so can't rename/move it
+            tmpGitDir!.renameTo(cloneGitDir!)
+
+            rem --- Remove the temporary work directory
+            tmpDirPath!=Paths.get(cloneDir$+"/tmp")
+rem wgh ... 9809 ... Haven't been able to get Files.walk(...) to work   
+            pathsToDelete!=Files.walk(cast(Path,tmpDirPath!)).sorted(Comparator.reverseOrder()).collect(Collectors.toList())
+            deleteIter!=pathsToDelete.iterator()
+            while deleteIter!.hasNext()
+                Files!.deleteIfExists(deleteIter!.next())
+            wend
+rem wgh ... 9809 ... stopped here ... test above changes
         
 rem wgh ... 9809 ... stopped here
 rem wgh ... 9809 ... #3 Non-Git ... wip ... Switch/checkout to the commit associated with the "old" version - WE HAVE YET TO FIGURE OUT HOW TO DO THIS PART. Remember or perhaps tag this commit once identified.
 rem wgh ... 9809 ... #3 Non-Git ... wip ... Also may need to handle line ending issues at this point?
             rem --- Check out the current branch
+rem --- Clone Git repository and get a JGit interface to it
             print (log_dev) "    Checkout "+branchName$
             checkoutStatus$=repoInterface!.checkoutBranch(branchName$)
             repoInterface!.closeInterface()
@@ -277,20 +300,24 @@ rem wgh ... 9809 ... #6 Non-Git ... to do ... Incorporate the mods/data/cdf's: p
 rem wgh ... 9809 ... #6 Non-Git ... to do ... While we're massaging callpoints, alphabetize them. Have Git commit these altered cdf's.
 rem wgh ... 9809 ... #7 Non-Git ... to do ... Bring over any prog/ files from the mods project (and what if they have more than the prog folder?) and put them in the corresponding src folder based on our naming conventions.
 rem wgh ... 9809 ... #7 Non-Git ... to do ... This should result in new or changed files in ar/src/, gl/src/, etc. Have Git commit these new/changed files. 
-
-rem wgh ... 9809 ... must move this after branch switch/checkout     
-        rem --- Build addonprop.jar and put it in the aon/prop directory
-        print (log_dev) "    Build addonprop.jar"
-        x=scall("jar cf "+newAonDir$+"/addonprop.jar -C "+newAonDir$+"/prop .",err=*next)
-        aonJar!=new File(newAonDir$+"/addonprop.jar")
-        propJar!=new File(newAonDir$+"/prop/addonprop.jar")
-        aonJar!.renameTo(propJar!)
     
         rem --- Remove busy/working image from progress meter
         busyImage!.destroy(err=*next)
     endif
 
 rem wgh ... 9809 ... #4 Git and #8 Non-Git ... to do ... Switch/checkout to branch for new version 
+
+    rem --- Build addonprop.jar and put it in the aon/prop directory
+    meter_text$=Translate!.getTranslation("AON_BUILD_JAR")+": addonprop.jar"
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+    x=scall("jar cf "+newAonDir$+"/addonprop.jar -C "+newAonDir$+"/prop .",err=*next)
+    aonJar!=new File(newAonDir$+"/addonprop.jar")
+    propJar!=new File(newAonDir$+"/prop/addonprop.jar")
+    aonJar!.renameTo(propJar!)
+
 rem wgh ... 9809 ... #5 Git and #9 Non-Git ... to do ... Alter addon.syn and adm_modules*.xml's for new location, and let's assume these are set for skip-worktree, so no commit expected/needed
 
 rem wgh ... 9809 ... addon.syn and adm_modules~*.xml files can't be updated until AFTER branch is switched, otherwise changes get overwritten
@@ -359,6 +386,8 @@ rem --- Run BIM bai_install_manager.bbj program via synchronous system call beca
         print(log_dev)meter_text$    
     endif
 
+rem wgh ... 9809 ... #5.5 Git ... to do ... BIM Barista to the new location
+rem wgh ... 9809 ... #5.5 Git ... originally #9 Git
     rem --- Launch bai_install_manager.bbj
 	bar_dir$=dir("")
 	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
@@ -375,6 +404,7 @@ rem --- Run BIM bai_install_manager.bbj program via synchronous system call beca
     
 rem --- Update new sync XML files (and copy old barista/settings dir)
 rem --- BIM clears barista/settings dir, so must do this step after BIMing and before auto-sync
+rem wgh ... 9809 ... NOTE: after v?? Barista no longer uses settings dir
 
     rem --- Increment progress meter
     meter_text$=Translate!.getTranslation("AON_UPDATE_XML")
@@ -462,7 +492,7 @@ rem wgh ... 9809 ... Need to resolve Git conflicts before proceeding. Jump here 
 
 rem wgh ... 9809 ... #8 Git and #11 Non-Git ... to do ... If no conflicts, or once all are resolved, copy over any verticals.
 rem wgh ... 9809 ... #9 Git ... to do ... BIM Barista to the new location
-rem wgh ... 9809 ... Can BIM be done BEFORE conflict are resolved?????
+rem wgh ... 9809 ... #9 Git ... moved to #5.5 Git
 
 rem --- Launch auto-sync in new barista for the new addon.syn
 rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the new barista
@@ -716,6 +746,12 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
    endif
 
 rem wgh ... 9809 ... #12 Git ... to do ... At this point, we should have the upgraded application in place, and can run the EM Update Wizard to bring over data and begin sanity checking and testing.
+
+rem wgh ... 9809 ... Have adx_init_data.aon check to see if .git is in the correct directory. Since the Install and Upgrade Wizards will only do version-neutral installs now,
+rem wgh ... 9809 ... except for quick copies, for branch BBJxxyzGA the .git directory should be located under vxx/vxxyz/aon. The adx_init_data.aon can get a Git object for the correct path,
+rem wgh ... 9809 ... then use Git.getRepository().getBranch() to get the branch name. If .git isn't found, it won't be for quick copies since it's not in the pre-build download,
+rem wgh ... 9809 ... skip the test. Shortcoming for both is that a VAR can alter the auto-launch data conversion program, adx_init_data.aon, to skip the test. Add a REM the adx_init_data.aon
+rem wgh ... 9809 ... that explains why one shouldn't alter or remove the test ... that relieves us of the obligation of supporting people who use novel twists on the upgrade process.
     
 done: rem --- All done
     
