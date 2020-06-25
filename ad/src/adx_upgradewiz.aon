@@ -62,6 +62,7 @@ rem --- Get user inputs
     oldBarDir$=oldBarLoc$ + "/barista"
 
 rem --- Currently only installing Addon from a Git repository. Allow for more later.
+    aonStblMap!=new HashMap()
     appName!=BBjAPI().makeVector()
     newAonDir!=BBjAPI().makeVector()
     oldAonDir!=BBjAPI().makeVector()
@@ -118,67 +119,96 @@ rem wgh ... 9809 ... For pre-v15.02 upgrades, warn that they must run Barista's 
 rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods ????? For v21+ too ?????
 
     rem --- Process upgrades from a Git based installation
-    gitIter!=oldUsedGit!.keySet().iterator()
-    while gitIter!.hasNext()
-        newDir$=gitIter!.next()
-        oldDir$=oldUsedGit!.get(newDir$)
-        status=0
-        
-        rem --- Copy old instance of aon from old location to new location
-        gosub copyaon
-
-        rem --- Build delta XMLs for modified bar/*.xml files that have been committed.
+    if oldUsedGit!.size()>0 then
         localCommitsList!=BBjAPI().makeVector()
-        gosub buildDeltaXmls
-        if status goto done
 
-        rem --- Switch/checkout to branch for new version
-        branchName$="BBJ"+newVersion$+"GA"
-        gosub checkoutGitBranch
-        if status goto done
+        gitIter!=oldUsedGit!.keySet().iterator()
+        while gitIter!.hasNext()
+            newDir$=gitIter!.next()
+            oldDir$=oldUsedGit!.get(newDir$)
+            status=0
+
+            rem --- Get this application's name
+            appName$="unknown"
+            for syscnt=0 to newAonDir!.size()-1
+                if oldUsedGit!.containsKey(newAonDir!.getItem(syscnt))
+                    appName$=appName!.getItem(syscnt)
+                    break
+                endif
+            next syscnt
+            
+            rem --- Copy old instance of aon from old location to new location
+            gosub copyAon
+    
+            rem --- Build delta XMLs for modified bar/*.xml files that have been committed.
+            gosub buildDeltaXmls
+            if status goto done
+    
+            rem --- Switch/checkout to branch for new version
+            branchName$="BBJ"+newVersion$+"GA"
+            gosub checkoutGitBranch
+            if status goto done
+    
+            rem --- Update new addon.syn file
+            gosub updateAddonSyn
 
 rem wgh ... 9809 ... Git stopped here
-rem wgh ... 9809 ... #5 Git ... to do ... Alter addon.syn and adm_modules*.xml's for new location, and let's assume these are set for skip-worktree, so no commit expected/needed
 rem wgh ... 9809 ... #5.2 Git ... to do ... Copy over any verticals.
-rem wgh ... 9809 ... #5.2 Git ... to do ... BIM Barista to the new location.
+        wend
+rem --- Create new session specific classpath (SSCP) in Enterprise Manager
+rem wgh ... 9809 ... #5.5 Git ... to do ... BIM Barista to the new location.
 rem wgh ... 9809 ... #6 Git ... to do ... Driving off the list of local commits (#2 Git), cherry pick the commits
 rem wgh ... 9809 ... #7 Git ... to do ... If there are conflicts, we have no choice at this point but to stop and have the VAR resolve them
 rem wgh ... 9809 ... Need to resolve Git conflicts before proceeding.
-    wend
+    endif
 
     rem --- Process upgrades from a non-Git based installation
-    gitIter!=oldNonGit!.keySet().iterator()
-    while gitIter!.hasNext()
-        newDir$=gitIter!.next()
-        oldDir$=oldNonGit!.get(newDir$)
-        status=0
+    if oldNonGit!.size()>0 then
+        gitIter!=oldNonGit!.keySet().iterator()
+        while gitIter!.hasNext()
+            newDir$=gitIter!.next()
+            oldDir$=oldNonGit!.get(newDir$)
+            status=0
 
-        rem --- Clone Git repository and switch/checkout to old branch
+            rem --- Get this application's name
+            for syscnt=0 to newAonDir!.size()-1
+                if oldUsedGit!.containsKey(newAonDir!.getItem(syscnt))
+                    appName$=appName!.getItem(syscnt)
+                    break
+                endif
+            next syscnt
+    
+            rem --- Clone Git repository and switch/checkout to old branch
 rem wgh ... How are we going to get the old version to know what the old branch was?
+rem wgh ... For now, can/should we use            oldVers! = utility!.getModuleVersion(new File(oldSyncLoc$))
 oldVersion$="1821"
-        branchName$="BBJ"+oldVersion$+"GA"
-        gosub cloneGitRepo
-        if status then goto done
-
-        rem --- Copy old instance of aon from old location to new location
-        gosub copyaon
-
+            branchName$="BBJ"+oldVersion$+"GA"
+            gosub cloneGitRepo
+            if status then goto done
+    
+            rem --- Copy old instance of aon from old location to new location
+            gosub copyAon
+    
 rem wgh ... 9809 ... Non-Git stopped here
 rem wgh ... 9809 ... #5 Non-Git ... to do ... Copy the old existing mods/data/bar/delta XMLs to new location 
 rem wgh ... 9809 ... #6 Non-Git ... to do ... Incorporate the mods/data/cdf's: put 'before'/'after' callpoints in, or replace the Addon code if it's a 'before' w/ skip. 
 rem wgh ... 9809 ... #6 Non-Git ... to do ... While we're massaging callpoints, alphabetize them. Have Git commit these altered cdf's.
 rem wgh ... 9809 ... #7 Non-Git ... to do ... Bring over any prog/ files from the mods project (and what if they have more than the prog folder?) and put them in the corresponding src folder based on our naming conventions.
 rem wgh ... 9809 ... #7 Non-Git ... to do ... This should result in new or changed files in ar/src/, gl/src/, etc. Have Git commit these new/changed files after dealing with possible line ending issues.
+    
+            rem --- Switch/checkout to branch for new version
+            branchName$="BBJ"+newVersion$+"GA"
+            gosub checkoutGitBranch
+            if status goto done
+    
+            rem --- Update new addon.syn file
+            gosub updateAddonSyn
 
-        rem --- Switch/checkout to branch for new version
-        branchName$="BBJ"+newVersion$+"GA"
-        gosub checkoutGitBranch
-        if status goto done
-
-rem wgh ... 9809 ... #9 Non-Git ... to do ... Alter addon.syn and adm_modules*.xml's for new location, and let's assume these are set for skip-worktree, so no commit expected/needed
 rem wgh ... 9809 ... #9.2 Non-Git ... to do ... Copy over any verticals.
+        wend
+rem --- Create new session specific classpath (SSCP) in Enterprise Manager
 rem wgh ... 9809 ... #9.5 Non-Git ... to do ... BIM Barista to the new location.
-    wend
+    endif
 
     rem --- Build addonprop.jar and put it in the aon/prop directory
     meter_text$=Translate!.getTranslation("AON_BUILD_JAR")+": addonprop.jar"
@@ -191,56 +221,11 @@ rem wgh ... 9809 ... #9.5 Non-Git ... to do ... BIM Barista to the new location.
     propJar!=new File(newAonDir$+"/prop/addonprop.jar")
     aonJar!.renameTo(propJar!)
 
-rem wgh ... 9809 ... #5 Git and #9 Non-Git ... to do ... Alter addon.syn and adm_modules*.xml's for new location, and let's assume these are set for skip-worktree, so no commit expected/needed
 rem wgh ... 9809 ... #5.2 Git and #9.2 Non-Git ... to do ... Copy over any verticals.
-rem wgh ... 9809 ... #5.2 Git and #9.5 Non-Git ... to do ... BIM Barista to the new location.
+rem wgh ... 9809 ... #5.5 Git and #9.5 Non-Git ... to do ... BIM Barista to the new location.
 
-rem wgh ... 9809 ... addon.syn and adm_modules~*.xml files can't be updated until AFTER branch is switched, otherwise changes get overwritten
-rem --- Update new addon.syn file
-
-    rem --- Increment progress meter
-    meter_text$=Translate!.getTranslation("AON_UPDATE_SYN")
-    meter_proc_recs=meter_proc_recs+1
-    meter_action$="MTR-LST"
-    gosub disp_meter
-    print(log_dev)meter_text$
-
-    for syscnt=0 to appName!.size()-1
-    	rem --- Set newSynFile to addon.syn at the new aon location
-        newSynFile$=newAonDir!.getItem(syscnt)+"/config/"+cvs(appName!.getItem(syscnt),8)+".syn"
+rem --- Create new session specific classpath (SSCP) in Enterprise Manager
     
-    	rem --- Setup for upgrade
-        upgrade%=1
-        oldSynFile$=oldAonDir!.getItem(syscnt)+"/config/"+cvs(appName!.getItem(syscnt),8)+".syn"
-
-        rem --- If oldSynFile does not exist, skip.
-        oldSynFile! = new File(oldSynFile$)
-        if !oldSynFile!.exists() then continue
-     
-        rem --- Build stblMap! and pfxList! for adc_updatesynfile.aon
-        app$=appName!.getItem(syscnt)
-        gosub build_stblMap_pfxList
-
-        if app$="ADDON"
-            aonStblMap!=new HashMap()
-            aonStblMap!=stblMap!
-        endif
-
-        rem --- Launch adc_updatesynfile.aon
-        call pgmdir$+"adc_updatesynfile.aon",newSynFile$,oldSynFile$,upgrade%,stblMap!,pfxList!,rdForm!,0,status
-    next syscnt
-    
-rem --- Add new application to Barista Installation Manager
-rem --- Run BIM bai_install_manager.bbj program via synchronous system call because of its terminating release
-
-    rem --- Increment progress meter
-    meter_text$=Translate!.getTranslation("AON_BIM_CREATE")
-    meter_proc_recs=meter_proc_recs+1
-    meter_action$="MTR-LST"
-    gosub disp_meter
-    print(log_dev)meter_text$
-
-    rem --- Create new session specific classpath (SSCP) in Enterprise Manager
     rem --- Increment progress meter
     meter_text$=Translate!.getTranslation("AON_CREATE_SSCP","Creating new classpath",1)
     meter_proc_recs=meter_proc_recs+1
@@ -261,10 +246,20 @@ rem --- Run BIM bai_install_manager.bbj program via synchronous system call beca
         print(log_dev)meter_text$    
     endif
 
-rem wgh ... 9809 ... move copy application utility to just befor BIMing Barista
+rem wgh ... 9809 ... move copy application utility to just before BIMing Barista
 
 rem wgh ... 9809 ... #5.5 Git ... to do ... BIM Barista to the new location
 rem wgh ... 9809 ... #5.5 Git ... originally #9 Git
+rem --- Add new application to Barista Installation Manager
+rem --- Run BIM bai_install_manager.bbj program via synchronous system call because of its terminating release
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_BIM_CREATE")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
     rem --- Launch bai_install_manager.bbj
 	bar_dir$=dir("")
 	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
@@ -652,7 +647,7 @@ done: rem --- All done
 
     goto std_exit
 
-copyaon: rem --- Recursively copy aon from oldLocation to newAonDir
+copyAon: rem --- Recursively copy aon from oldLocation to newAonDir
 
     rem --- Increment progress meter
     meter_text$=Translate!.getTranslation("AON_COPY_AON")
@@ -813,6 +808,35 @@ buildDeltaXmls: rem --- Build delta XMLs for modified bar/*.xml files that have 
     
     repoInterface!.closeInterface()
     rmdir aonDir$+"/tmp",err=*next
+    return
+
+updateAddonSyn: rem --- Update addon.syn file
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_UPDATE_SYN")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Set newSynFile to addon.syn at the new aon location
+    newSynFile$=newDir$+"/config/"+cvs(appName$,8)+".syn"
+
+    rem --- Setup for upgrade
+    upgrade%=1
+    oldSynFile$=oldDir$+"/config/"+cvs(appName$,8)+".syn"
+
+    rem --- If oldSynFile does not exist, skip.
+    oldSynFile! = new File(oldSynFile$)
+    if oldSynFile!.exists() then
+        rem --- Build stblMap! and pfxList! for adc_updatesynfile.aon
+        app$=appName$
+        gosub build_stblMap_pfxList
+        if app$="ADDON" then aonStblMap!=stblMap!
+    
+        rem --- Launch adc_updatesynfile.aon
+        call pgmdir$+"adc_updatesynfile.aon",newSynFile$,oldSynFile$,upgrade%,stblMap!,pfxList!,rdForm!,0,status
+    endif
     return
 
 build_stblMap_pfxList: rem --- Build stblMap! and pfxList! for adc_copymods.aon for a app$
