@@ -173,6 +173,8 @@ rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods 
         if useOldMenu% then gosub useOldMenu
 
 rem wgh ... 9809 ... #6 Git ... to do ... Driving off the list of local commits (#2 Git), cherry pick the commits
+rem ... viewName!
+
 rem wgh ... 9809 ... #7 Git ... to do ... If there are conflicts, we have no choice at this point but to stop and have the VAR resolve them
 rem wgh ... 9809 ... Need to resolve Git conflicts before auto-sync.
 
@@ -205,10 +207,11 @@ oldBranch$="1821"; rem wgh ... 9809 ... testing
                 rem --- Copy old instance of aon from old location to new location
                 gosub copyAon
         
-rem wgh ... 9809 ... Non-Git stopped here
 rem wgh ... 9809 ... #5 Non-Git ... to do ... Copy the old existing mods/data/bar/delta XMLs to new location 
+
 rem wgh ... 9809 ... #6 Non-Git ... to do ... Incorporate the mods/data/cdf's: put 'before'/'after' callpoints in, or replace the Addon code if it's a 'before' w/ skip. 
 rem wgh ... 9809 ... #6 Non-Git ... to do ... While we're massaging callpoints, alphabetize them. Have Git commit these altered cdf's.
+
 rem wgh ... 9809 ... #7 Non-Git ... to do ... Bring over any prog/ files from the mods project (and what if they have more than the prog folder?) and put them in the corresponding src folder based on our naming conventions.
 rem wgh ... 9809 ... #7 Non-Git ... to do ... This should result in new or changed files in ar/src/, gl/src/, etc. Have Git commit these new/changed files after dealing with possible line ending issues.
         
@@ -289,31 +292,39 @@ rem --- Copy OPV_SHIPTRACK_nn views from old database to new database
         views!=oldDB!.getViews()
 
         rem --- Any old OPV_SHIPTRACK_nn views?
-rem wgh ... 9809 ... add progress meter
-        viewsIter!=views!.iterator()
-        while viewsIter!.hasNext()
-            oldView!=viewsIter!.next()
-            viewProps!=oldView!.getProperties()
-            viewName!=viewProps!.get(BBjAdminView.NAME)
-            if viewName!=null() then continue
-            if viewName!.startsWith("OPV_SHIPTRACK_") then
-                rem --- Copy view to new database
-                viewDesc$=""
-                viewDesc!=viewProps!.get(BBjAdminView.DESCRIPTION)
-                if viewDesc!<>null() then viewDesc$=viewDesc!
-                viewSelect$=""
-                viewSelect!=viewProps!.get(BBjAdminView.SELECT)
-                if viewSelect!<>null() then viewSelect$=viewSelect!
+        if views!.size()>0 then
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_COPY_DB_VIEWS")
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
 
-                newDB!=admin!.getDatabase(dbName$)
-                newDB!.dropView(viewName!)
-                newView!=newDB!.createView(viewName!)
-                newView!.setString(BBjAdminView.DESCRIPTION,viewDesc$)
-                newView!.setString(BBjAdminView.SELECT,viewSelect$)
-                newView!.commit()
-rem wgh ... 9809 ... add logging
-            endif
-        wend
+            viewsIter!=views!.iterator()
+            while viewsIter!.hasNext()
+                oldView!=viewsIter!.next()
+                viewProps!=oldView!.getProperties()
+                viewName!=viewProps!.get(BBjAdminView.NAME)
+                if viewName!=null() then continue
+                if viewName!.startsWith("OPV_SHIPTRACK_") then
+                    rem --- Copy view to new database
+                    viewDesc$=""
+                    viewDesc!=viewProps!.get(BBjAdminView.DESCRIPTION)
+                    if viewDesc!<>null() then viewDesc$=viewDesc!
+                    viewSelect$=""
+                    viewSelect!=viewProps!.get(BBjAdminView.SELECT)
+                    if viewSelect!<>null() then viewSelect$=viewSelect!
+    
+                    newDB!=admin!.getDatabase(dbName$)
+                    newDB!.dropView(viewName!)
+                    newView!=newDB!.createView(viewName!)
+                    newView!.setString(BBjAdminView.DESCRIPTION,viewDesc$)
+                    newView!.setString(BBjAdminView.SELECT,viewSelect$)
+                    newView!.commit()
+                    print(log_dev)"    View ",viewName!
+                endif
+            wend
+        endif
     endif
 
 rem wgh ... 9809 ... #11 Git ... to do ... If there are any verticals, after installing Addon, install them.
