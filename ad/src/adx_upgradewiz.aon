@@ -151,220 +151,102 @@ rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods 
     
             rem --- Update new addon.syn file
             gosub updateAddonSyn
-
-rem wgh ... 9809 ... Git stopped here
-rem wgh ... 9809 ... #5.2 Git ... to do ... Copy over any verticals.
         wend
-rem --- Create new session specific classpath (SSCP) in Enterprise Manager
-rem wgh ... 9809 ... #5.5 Git ... to do ... BIM Barista to the new location.
+
+        rem --- Create new session specific classpath (SSCP) in Enterprise Manager
+        gosub createSSCP
+
+        rem --- Run Copy Application utility for applications being copied
+        gosub copyApps
+
+        rem --- BIM Barista to the new location.
+        gosub bimBarista
+
+        rem --- Update new sync XML files (and copy old barista/settings dir)
+        start_version$=""
+        gosub updateSyncXml
+
+        rem --- Build addonprop.jar and put it in the aon/prop directory
+        gosub buildAddonJar
+
+        rem --- Use old modified menus instead of new standard menus.
+        if useOldMenu% then gosub useOldMenu
+
 rem wgh ... 9809 ... #6 Git ... to do ... Driving off the list of local commits (#2 Git), cherry pick the commits
 rem wgh ... 9809 ... #7 Git ... to do ... If there are conflicts, we have no choice at this point but to stop and have the VAR resolve them
-rem wgh ... 9809 ... Need to resolve Git conflicts before proceeding.
-    endif
+rem wgh ... 9809 ... Need to resolve Git conflicts before auto-sync.
 
-    rem --- Process upgrades from a non-Git based installation
-    if oldNonGit!.size()>0 then
-        gitIter!=oldNonGit!.keySet().iterator()
-        while gitIter!.hasNext()
-            newDir$=gitIter!.next()
-            oldDir$=oldNonGit!.get(newDir$)
-            status=0
+    else
 
-            rem --- Get this application's name
-            for syscnt=0 to newAonDir!.size()-1
-                if oldUsedGit!.containsKey(newAonDir!.getItem(syscnt))
-                    appName$=appName!.getItem(syscnt)
-                    break
-                endif
-            next syscnt
+        rem --- Process upgrades from a non-Git based installation
+        if oldNonGit!.size()>0 then
+            gitIter!=oldNonGit!.keySet().iterator()
+            while gitIter!.hasNext()
+                newDir$=gitIter!.next()
+                oldDir$=oldNonGit!.get(newDir$)
+                status=0
     
-            rem --- Clone Git repository and switch/checkout to old branch
-rem wgh ... How are we going to get the old version to know what the old branch was?
-rem wgh ... For now, can/should we use            oldVers! = utility!.getModuleVersion(new File(oldSyncLoc$))
-oldVersion$="1821"
-            branchName$="BBJ"+oldVersion$+"GA"
-            gosub cloneGitRepo
-            if status then goto done
-    
-            rem --- Copy old instance of aon from old location to new location
-            gosub copyAon
-    
+                rem --- Get this application's name
+                for syscnt=0 to newAonDir!.size()-1
+                    if oldUsedGit!.containsKey(newAonDir!.getItem(syscnt))
+                        appName$=appName!.getItem(syscnt)
+                        break
+                    endif
+                next syscnt
+        
+                rem --- Clone Git repository and switch/checkout to old branch
+rem wgh ... 9809 ... How are we going to get the old version to know what the old branch was?
+rem wgh ... 9809 ... For now, can/should we use            oldVers! = utility!.getModuleVersion(new File(oldSyncLoc$))
+oldBranch$="1821"; rem wgh ... 9809 ... testing
+                branchName$="BBJ"+oldBranch$+"GA"
+                gosub cloneGitRepo
+                if status then goto done
+        
+                rem --- Copy old instance of aon from old location to new location
+                gosub copyAon
+        
 rem wgh ... 9809 ... Non-Git stopped here
 rem wgh ... 9809 ... #5 Non-Git ... to do ... Copy the old existing mods/data/bar/delta XMLs to new location 
 rem wgh ... 9809 ... #6 Non-Git ... to do ... Incorporate the mods/data/cdf's: put 'before'/'after' callpoints in, or replace the Addon code if it's a 'before' w/ skip. 
 rem wgh ... 9809 ... #6 Non-Git ... to do ... While we're massaging callpoints, alphabetize them. Have Git commit these altered cdf's.
 rem wgh ... 9809 ... #7 Non-Git ... to do ... Bring over any prog/ files from the mods project (and what if they have more than the prog folder?) and put them in the corresponding src folder based on our naming conventions.
 rem wgh ... 9809 ... #7 Non-Git ... to do ... This should result in new or changed files in ar/src/, gl/src/, etc. Have Git commit these new/changed files after dealing with possible line ending issues.
+        
+                rem --- Switch/checkout to branch for new version
+                branchName$="BBJ"+newVersion$+"GA"
+                gosub checkoutGitBranch
+                if status goto done
+        
+                rem --- Update new addon.syn file
+                gosub updateAddonSyn
+            wend
     
-            rem --- Switch/checkout to branch for new version
-            branchName$="BBJ"+newVersion$+"GA"
-            gosub checkoutGitBranch
-            if status goto done
+            rem --- Create new session specific classpath (SSCP) in Enterprise Manager
+            gosub createSSCP
     
-            rem --- Update new addon.syn file
-            gosub updateAddonSyn
-
-rem wgh ... 9809 ... #9.2 Non-Git ... to do ... Copy over any verticals.
-        wend
-rem --- Create new session specific classpath (SSCP) in Enterprise Manager
-rem wgh ... 9809 ... #9.5 Non-Git ... to do ... BIM Barista to the new location.
-    endif
-
-    rem --- Build addonprop.jar and put it in the aon/prop directory
-    meter_text$=Translate!.getTranslation("AON_BUILD_JAR")+": addonprop.jar"
-    meter_proc_recs=meter_proc_recs+1
-    meter_action$="MTR-LST"
-    gosub disp_meter
-    print(log_dev)meter_text$
-    x=scall("jar cf "+newAonDir$+"/addonprop.jar -C "+newAonDir$+"/prop .",err=*next)
-    aonJar!=new File(newAonDir$+"/addonprop.jar")
-    propJar!=new File(newAonDir$+"/prop/addonprop.jar")
-    aonJar!.renameTo(propJar!)
-
-rem wgh ... 9809 ... #5.2 Git and #9.2 Non-Git ... to do ... Copy over any verticals.
-rem wgh ... 9809 ... #5.5 Git and #9.5 Non-Git ... to do ... BIM Barista to the new location.
-
-rem --- Create new session specific classpath (SSCP) in Enterprise Manager
+            rem --- Run Copy Application utility for applications being copied
+            gosub copyApps
     
-    rem --- Increment progress meter
-    meter_text$=Translate!.getTranslation("AON_CREATE_SSCP","Creating new classpath",1)
-    meter_proc_recs=meter_proc_recs+1
-    meter_action$="MTR-LST"
-    gosub disp_meter
-    print(log_dev)meter_text$
+            rem --- BIM Barista to the new location.
+            gosub bimBarista
 
-    sscpName$=cvs(dbName$,8)
-    copyData%=0
-    status=0
-    call pgmdir$+"adc_createsscp.aon",sscpName$,newAonLoc$,"",copyData%,rdAdmin!,status
-    if status 
-        rem --- Increment progress meter
-        meter_text$=Translate!.getTranslation("AON_CREATE_SSCP_ERROR","Unable to create new classpath",1)
-        meter_proc_recs=meter_proc_recs+1
-        meter_action$="MTR-LST"
-        gosub disp_meter
-        print(log_dev)meter_text$    
-    endif
+            rem --- Update new sync XML files (and copy old barista/settings dir)
+            start_version$=""
+            gosub updateSyncXml
 
-rem wgh ... 9809 ... move copy application utility to just before BIMing Barista
+            rem --- Build addonprop.jar and put it in the aon/prop directory
+            gosub buildAddonJar
 
-rem wgh ... 9809 ... #5.5 Git ... to do ... BIM Barista to the new location
-rem wgh ... 9809 ... #5.5 Git ... originally #9 Git
-rem --- Add new application to Barista Installation Manager
-rem --- Run BIM bai_install_manager.bbj program via synchronous system call because of its terminating release
+            rem --- Use old modified menus instead of new standard menus.
+            if useOldMenu% then gosub useOldMenu
 
-    rem --- Increment progress meter
-    meter_text$=Translate!.getTranslation("AON_BIM_CREATE")
-    meter_proc_recs=meter_proc_recs+1
-    meter_action$="MTR-LST"
-    gosub disp_meter
-    print(log_dev)meter_text$
-
-    rem --- Launch bai_install_manager.bbj
-	bar_dir$=dir("")
-	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
-	run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
-:	+" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
-:	+" "+$22$+bar_dir$+"/sys/prog/bai_install_manager.bbj"+$22$
-	user_arg$=" - "
-:	+" -u"+rdAdmin!.getUser()
-:	+" -id"+dbName$
-:	+" -desc"+$22$+appDesc$+$22$
-:	+" -loc"+$22$+newAonLoc$+$22$
-:   +" -cp"+$22$+sscpName$+$22$
-	scall_result=scall(run_arg$+user_arg$,err=*next)
-    
-rem --- Update new sync XML files (and copy old barista/settings dir)
-rem --- BIM clears barista/settings dir, so must do this step after BIMing and before auto-sync
-
-    rem --- Increment progress meter
-    meter_text$=Translate!.getTranslation("AON_UPDATE_XML")
-    meter_proc_recs=meter_proc_recs+1
-    meter_action$="MTR-LST"
-    gosub disp_meter
-    print(log_dev)meter_text$
-
-    start_version$=""
-
-    for syscnt=0 to appName!.size()-1
-    	rem --- Set newSyncLoc to sync directory at the new aon location
-        newSyncLoc$=newAonDir!.getItem(syscnt)+"/data/sync"
-    
-    	rem --- Setup for upgrade
-        upgrade%=1
-        oldSyncLoc$=oldAonDir!.getItem(syscnt)+"/data/sync"
-
-        rem --- If oldSynLoc does not exist for ADDON, skip.
-        oldSynLoc! = new File(oldSyncLoc$)
-        if !oldSynLoc!.exists() then continue
-    
-        rem --- Launch adc_updatexmlfiles.aon
-        call pgmdir$+"adc_updatexmlfiles.aon",newSyncLoc$,oldSyncLoc$,syncBackupDir$,upgrade%,rdForm!,0,status
-
-        rem --- Get version of source Addon installation from source data/sync/adm_modules~01007514ad.xml
-        if start_version$=""
-            utility! = new UpdateSyncXmlFiles(rdForm!,0)
-            oldVers! = utility!.getModuleVersion(new File(oldSyncLoc$))
-            if oldVers!.get("AD")<>null() then
-                start_version$=oldVers!.get("AD")
-            endif
-        endif
-    next syscnt
-
-rem --- Use old modified menus instead of new standard menus.
-rem --- Temporary "fix" until Barista enhancement 5658 can be implemented to preserve customizations
-rem --- to standard menus, thus no logging or progress meter.
-    if useOldMenu% then
-        rem --- Increment progress meter
-        meter_text$=Translate!.getTranslation("AON_COPY_MENUS")
-        meter_proc_recs=meter_proc_recs+1
-        meter_action$="MTR-LST"
-        gosub disp_meter
-        print(log_dev)meter_text$
-
-        availableLangs$="deuenuespfraitanldsve"
-        for syscnt=0 to appName!.size()-1
-            for i=1 to len(availableLangs$)-1 step 3
-                lang$=availableLangs$(i,3)
-                
-                rem --- If oldMenuFile exists, overwrite newMenuFile with it
-                oldMenuFile! = new File(oldAonDir!.getItem(syscnt)+"/config/"+lang$+"/"+cvs(appName!.getItem(syscnt),8)+".men")
-                if oldMenuFile!.exists()
-                
-                    rem --- Create new directories as necessary for newMenuFile
-                    newMenuDir! = new File(newAonDir!.getItem(syscnt)+"/config/"+lang$)
-                    FileObject.makeDirs(newMenuDir!)
-    
-                    rem --- Rename newMenuFile as a backup before overwriting it
-                    newMenuFile! = new File(newMenuDir!.getPath()+"/"+cvs(appName!.getItem(syscnt),8)+".men")
-                    rename newMenuFile!.getPath() to newMenuDir!.getPath()+"/"+cvs(appName!.getItem(syscnt),8)+".men.bak", err=*next
-                    
-                    rem --- Copy oldMenuFile to newMenuFile
-                    sourceChan=unt
-                    open(sourceChan,isz=-1,err=*endif)oldMenuFile!.getPath()
-                    targetChan=unt
-                    open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")newMenuFile!.getPath()
-                    while 1
-                        readrecord(sourceChan,siz=BLOCKSIZE,end=*break)record$
-                        writerecord(targetChan)record$
-                    wend
-                    close(sourceChan)
-                    close(targetChan)
-                endif
-            next i
-        next syscnt
-    endif
-
-rem wgh ... 9809 ... #6 Git ... to do ... Driving off the list of local commits (#2 Git), cherry pick the commits
-rem wgh ... 9809 ... #7 Git ... to do ... If there are conflicts, we have no choice at this point but to stop and have the VAR resolve them
 rem wgh ... 9809 ... #10 Non-Git ... to do ... Ask Git to cherry pick our cdf and back-end prog commits, and work conflicts if/as needed
+rem wgh ... 9809 ... Need to resolve Git conflicts before auto-sync.
+        endif
+    endif
 
-rem wgh ... 9809 ... Need to resolve Git conflicts before proceeding. Jump here on restart of wizard if previously aborted due to conflicts.
-
-rem wgh ... 9809 ... #8 Git ... to do ... If no conflicts, or once all are resolved, copy over any verticals.
-rem wgh ... 9809 ... #8 Git ... moved to #5.2 Git
-rem wgh ... 9809 ... #9 Git ... to do ... BIM Barista to the new location
-rem wgh ... 9809 ... #9 Git ... moved to #5.5 Git
+rem wgh ... 9809 ... Need to resolve Git conflicts before auto-sync. Jump here on restart of wizard if previously aborted due to conflicts.
+rem wgh ... 9809 ... #10 Git and #11 Non-Git ... to do ... Launch the Install Application Wizard (where previously we would've launched the auto-sync) to sync in Addon.
 
 rem --- Launch auto-sync in new barista for the new addon.syn
 rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the new barista
@@ -376,7 +258,6 @@ rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to b
     gosub disp_meter
     print(log_dev)meter_text$
 
-rem wgh ... 9809 ... #10 Git and #11 Non-Git ... to do ... Launch the Install Application Wizard (where previously we would've launched the auto-sync) to sync in Addon.
     rem --- Launch bax_dd_synch_auto.bbj
 	bar_dir$=newBarDir$
 	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
@@ -408,6 +289,7 @@ rem --- Copy OPV_SHIPTRACK_nn views from old database to new database
         views!=oldDB!.getViews()
 
         rem --- Any old OPV_SHIPTRACK_nn views?
+rem wgh ... 9809 ... add progress meter
         viewsIter!=views!.iterator()
         while viewsIter!.hasNext()
             oldView!=viewsIter!.next()
@@ -429,59 +311,12 @@ rem --- Copy OPV_SHIPTRACK_nn views from old database to new database
                 newView!.setString(BBjAdminView.DESCRIPTION,viewDesc$)
                 newView!.setString(BBjAdminView.SELECT,viewSelect$)
                 newView!.commit()
+rem wgh ... 9809 ... add logging
             endif
         wend
     endif
 
 rem wgh ... 9809 ... #11 Git ... to do ... If there are any verticals, after installing Addon, install them.
-
-
-rem wgh ... 9809 ... move copy application utility to just befor BIMing Barista
-rem --- Run Copy Application utility for applications being copied
-
-    rem --- Increment progress meter
-    trans_text$=Translate!.getTranslation("AON_COPY_APP")
-    meter_proc_recs=meter_proc_recs+1
-    meter_action$="MTR-LST"
-
-	appIter!=appVect!.iterator()
-	while appIter!.hasNext()
-		appList! = cast(ArrayList, appIter!.next())
-        
-        rem --- Skip application if it's not being copied
-		copy$=appList!.get(3)
-        if copy$<>"y" then continue
-
-        rem --- Get source syn file
-        app$=appList!.get(0); rem --- application
-        sourceSyn$=appList!.get(4)+"config/"+cvs(app$,8)+".syn"
-        synFound=0
-        sourceChan=unt
-        open(sourceChan,isz=-1,err=*next)sourceSyn$; synFound=1
-        close(sourceChan,err=*next)
-        if !synFound then
-            rem --- Log this app skipped
-            meter_text$=trans_text$+": ***skipped*** "+app$
-            gosub disp_meter
-            print(log_dev)meter_text$+" -- cannot find "+sourceSyn$
-            continue
-        endif
-
-        rem --- Log this app being copied
-        meter_text$=trans_text$+": "+app$
-        gosub disp_meter
-        print(log_dev)meter_text$
-
-        rem --- Remove trailing slashes (/ and \) from targetDir$
-        targetDir$=FileObject.removeEndSlash(appList!.get(5))
-
-        rem --- Build stblMap! and pfxList! for adc_copymods.aon
-        gosub build_stblMap_pfxList
-        
-        rem --- Launch adc_copymods.aon
-        call pgmdir$+"adc_copymods.aon",sourceSyn$,targetDir$,stblMap!,pfxList!,rdForm!,0,status
-    wend
-
 rem --- Run Install Application Wizard for applications being installed
 
     rem --- Increment progress meter
@@ -864,7 +699,194 @@ build_stblMap_pfxList: rem --- Build stblMap! and pfxList! for adc_copymods.aon 
         wend
     endif
     return
+
+createSSCP: rem --- Create new session specific classpath (SSCP) in Enterprise Manager
     
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_CREATE_SSCP","Creating new classpath",1)
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    sscpName$=cvs(dbName$,8)
+    copyData%=0
+    status=0
+    call pgmdir$+"adc_createsscp.aon",sscpName$,newAonLoc$,"",copyData%,rdAdmin!,status
+    if status 
+        rem --- Increment progress meter
+        meter_text$=Translate!.getTranslation("AON_CREATE_SSCP_ERROR","Unable to create new classpath",1)
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$    
+    endif
+    return
+
+copyApps: rem --- Run Copy Application utility for applications being copied
+
+    rem --- Increment progress meter
+    trans_text$=Translate!.getTranslation("AON_COPY_APP")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+
+    appIter!=appVect!.iterator()
+    while appIter!.hasNext()
+        appList! = cast(ArrayList, appIter!.next())
+        
+        rem --- Skip application if it's not being copied
+        copy$=appList!.get(3)
+        if copy$<>"y" then continue
+
+        rem --- Get source syn file
+        app$=appList!.get(0); rem --- application
+        sourceSyn$=appList!.get(4)+"config/"+cvs(app$,8)+".syn"
+        synFound=0
+        sourceChan=unt
+        open(sourceChan,isz=-1,err=*next)sourceSyn$; synFound=1
+        close(sourceChan,err=*next)
+        if !synFound then
+            rem --- Log this app skipped
+            meter_text$=trans_text$+": ***skipped*** "+app$
+            gosub disp_meter
+            print(log_dev)meter_text$+" -- cannot find "+sourceSyn$
+            continue
+        endif
+
+        rem --- Log this app being copied
+        meter_text$=trans_text$+": "+app$
+        gosub disp_meter
+        print(log_dev)meter_text$
+
+        rem --- Remove trailing slashes (/ and \) from targetDir$
+        targetDir$=FileObject.removeEndSlash(appList!.get(5))
+
+        rem --- Build stblMap! and pfxList! for adc_copymods.aon
+        gosub build_stblMap_pfxList
+        
+        rem --- Launch adc_copymods.aon
+        call pgmdir$+"adc_copymods.aon",sourceSyn$,targetDir$,stblMap!,pfxList!,rdForm!,0,status
+    wend
+    return
+    
+bimBarista: rem --- Add new application to Barista Installation Manager
+            rem --- Run BIM bai_install_manager.bbj program via synchronous system call because of its terminating release
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_BIM_CREATE")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Launch bai_install_manager.bbj
+    bar_dir$=dir("")
+    if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
+    run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
+:   +" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
+:   +" "+$22$+bar_dir$+"/sys/prog/bai_install_manager.bbj"+$22$
+    user_arg$=" - "
+:   +" -u"+rdAdmin!.getUser()
+:   +" -id"+dbName$
+:   +" -desc"+$22$+appDesc$+$22$
+:   +" -loc"+$22$+newAonLoc$+$22$
+:   +" -cp"+$22$+sscpName$+$22$
+    scall_result=scall(run_arg$+user_arg$,err=*next)
+    return
+
+updateSyncXml: rem --- Update new sync XML files (and copy old barista/settings dir)
+               rem --- BIM clears barista/settings dir, so must do this step after BIMing and before auto-sync
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_UPDATE_XML")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    for syscnt=0 to appName!.size()-1
+        rem --- Set newSyncLoc to sync directory at the new aon location
+        newSyncLoc$=newAonDir!.getItem(syscnt)+"/data/sync"
+    
+        rem --- Setup for upgrade
+        upgrade%=1
+        oldSyncLoc$=oldAonDir!.getItem(syscnt)+"/data/sync"
+
+        rem --- If oldSynLoc does not exist for ADDON, skip.
+        oldSynLoc! = new File(oldSyncLoc$)
+        if !oldSynLoc!.exists() then continue
+    
+        rem --- Launch adc_updatexmlfiles.aon
+        call pgmdir$+"adc_updatexmlfiles.aon",newSyncLoc$,oldSyncLoc$,syncBackupDir$,upgrade%,rdForm!,0,status
+
+        rem --- Get version of source Addon installation from source data/sync/adm_modules~01007514ad.xml
+        if start_version$="" and appName!.getItem(syscnt)="ADDON" then
+            utility! = new UpdateSyncXmlFiles(rdForm!,0)
+            oldVers! = utility!.getModuleVersion(new File(oldSyncLoc$))
+            if oldVers!.get("AD")<>null() then
+                start_version$=oldVers!.get("AD")
+            endif
+        endif
+    next syscnt
+    return
+
+buildAddonJar: rem --- Build addonprop.jar and put it in the aon/prop directory
+
+    meter_text$=Translate!.getTranslation("AON_BUILD_JAR")+": addonprop.jar"
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+    x=scall("jar cf "+newAonDir$+"/addonprop.jar -C "+newAonDir$+"/prop .",err=*next)
+    aonJar!=new File(newAonDir$+"/addonprop.jar")
+    propJar!=new File(newAonDir$+"/prop/addonprop.jar")
+    aonJar!.renameTo(propJar!)
+    return
+    
+useOldMenu: rem --- Use old modified menus instead of new standard menus.
+            rem --- Temporary "fix" until Barista enhancement 5658 can be implemented to preserve customizations
+            rem --- to standard menus, thus no logging or progress meter.
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_COPY_MENUS")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    availableLangs$="deuenuespfraitanldsve"
+    for syscnt=0 to appName!.size()-1
+        for i=1 to len(availableLangs$)-1 step 3
+            lang$=availableLangs$(i,3)
+            
+            rem --- If oldMenuFile exists, overwrite newMenuFile with it
+            oldMenuFile! = new File(oldAonDir!.getItem(syscnt)+"/config/"+lang$+"/"+cvs(appName!.getItem(syscnt),8)+".men")
+            if oldMenuFile!.exists()
+            
+                rem --- Create new directories as necessary for newMenuFile
+                newMenuDir! = new File(newAonDir!.getItem(syscnt)+"/config/"+lang$)
+                FileObject.makeDirs(newMenuDir!)
+
+                rem --- Rename newMenuFile as a backup before overwriting it
+                newMenuFile! = new File(newMenuDir!.getPath()+"/"+cvs(appName!.getItem(syscnt),8)+".men")
+                rename newMenuFile!.getPath() to newMenuDir!.getPath()+"/"+cvs(appName!.getItem(syscnt),8)+".men.bak", err=*next
+                
+                rem --- Copy oldMenuFile to newMenuFile
+                sourceChan=unt
+                open(sourceChan,isz=-1,err=*endif)oldMenuFile!.getPath()
+                targetChan=unt
+                open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")newMenuFile!.getPath()
+                while 1
+                    readrecord(sourceChan,siz=BLOCKSIZE,end=*break)record$
+                    writerecord(targetChan)record$
+                wend
+                close(sourceChan)
+                close(targetChan)
+            endif
+        next i
+    next syscnt
+    return
+
 search_replace: rem --- Search record$ for search$, and replace with replace$
 	rem --- Assumes only one occurrence of search$ per line so don't have 
 	rem --- to deal with situation where pos(search$=replace$)>0
