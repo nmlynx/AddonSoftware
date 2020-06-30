@@ -143,6 +143,9 @@ rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods 
             rem --- Build delta XMLs for modified bar/*.xml files that have been committed.
             gosub buildDeltaXmls
             if status goto done
+
+			rem --- Refresh Git repository to get the most current branch
+			gosub refreshGitRepo
     
             rem --- Switch/checkout to branch for new version
             branchName$="BBJ"+newVersion$+"GA"
@@ -401,7 +404,7 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
             convCtrlFilePath$=FileObject.fixPath(target$, "/")
             FileObject.removeEndSlash(convCtrlFilePath$)
         endif
-        convCtrlFileName$=convCtrlFilePath$+"/adx_conversionCtrl"
+        convCtrlFileName$=convCtrlFilePath$+"adx_conversionCtrl"
         convCtrlFile!=new File(convCtrlFileName$)
         rem --- Create path/file if doesn't exist
         if !convCtrlFile!.exists() then
@@ -433,7 +436,7 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
             endif
             if pos("end_version="=line$) then
                 rem --- Get version of this Addon installation
-                end_version$=str(num(newVersion$(1,3))/10:"00.0")
+                end_version$=str(num(newVersion$(1,2))/10:"00.0")
         
                 xpos=pos("end_version="=line$)
                 line$=line$(1,xpos+len("end_version=")-1)+end_version$+line$(xpos+len("end_version="))
@@ -555,7 +558,7 @@ cloneGitRepo: rem --- Clone Git repository and switch/checkout branch
 checkoutGitBranch: rem --- Switch/checkout branch
 
     rem --- Increment progress meter
-    meter_text$=Translate!.getTranslation("AON_CLONE_GIT_REPO")
+    meter_text$=Translate!.getTranslation("AON_CHECKOUT_GIT_BRANCH")
     meter_proc_recs=meter_proc_recs+1
     meter_action$="MTR-LST"
     gosub disp_meter
@@ -577,6 +580,22 @@ checkoutGitBranch: rem --- Switch/checkout branch
         print(log_dev)"    ***** "+branchName$+" CHECKOUT FAILED ("+checkoutStatus$+") *****"
         status=1
     endif
+    return
+
+refreshGitRepo: rem --- Refresh Git repository to get the most current branch
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_PULL_GIT_REPO")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Pull Git repository
+    repoInterface!=new GitRepoInterface(newDir$)
+    repoInterface!.pullRepository()
+    repoInterface!.closeInterface()
+
     return
     
 buildDeltaXmls: rem --- Build delta XMLs for modified bar/*.xml files that have been committed.

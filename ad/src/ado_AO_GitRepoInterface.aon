@@ -35,6 +35,7 @@ rem  */
 
         field protected Git git!
         field protected Repository repository!
+        field protected UsernamePasswordCredentialsProvider credentials!
         
         rem /**
         rem  * Constructor.
@@ -46,17 +47,16 @@ rem  */
             seterr GitRepoInterface_error
             #AonDir$=aonDir$
             #LocalRepo$=#AonDir$+"/.git"
+            #credentials!=new UsernamePasswordCredentialsProvider("username","password")
 
             rem --- Get Git repository
             gitDir! = new File(#LocalRepo$)
             if !gitDir!.exists() then
                 rem --- Clone Git repository to specified location
                 gitURI$="https://git.basis.com/Addon/Addon.git"
-                userName$="username"
-                userPassword$="password"
     
                 cloneCmd!=Git.cloneRepository()
-                cloneCmd!.setCredentialsProvider(new UsernamePasswordCredentialsProvider(userName$,userPassword$))
+                cloneCmd!.setCredentialsProvider(#credentials!)
                 cloneCmd!.setURI(gitURI$).setDirectory(new File(aonDir$)).setCloneAllBranches(1)
                 cloneCmd!.call()
             endif
@@ -443,7 +443,7 @@ getStagedChanges_error:rem --- Method error trap/handler (11Oct2017)
         methodend 
 
         rem /**
-        rem  * Get Vector of uncommitted unstaged changes in the local repository has . 
+        rem  * Get Vector of uncommitted unstaged changes in the local repository. 
         rem  *
         rem  * @return BBjVector unstagedChanges!
         rem  */
@@ -463,6 +463,36 @@ getStagedChanges_error:rem --- Method error trap/handler (11Oct2017)
             methodret unstagedChanges!
            
 getUnstagedChanges_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend 
+
+        rem /**
+        rem  * Refresh (pull) the local repository. 
+        rem  *
+        rem  * @return BBjVector unstagedChanges!
+        rem  */
+        method public void pullRepository()
+            seterr pullRepository_error
+
+rem wgh ... 9809 ... stopped here
+            pullCmd!=#git!.pull()
+            pullCmd!.setCredentialsProvider(#credentials!)
+            pullCmd!.call()
+            
+            methodret
+           
+pullRepository_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
             if err_num=252 then
