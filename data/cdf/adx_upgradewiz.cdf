@@ -105,6 +105,69 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 		swend
 	endif
 
+[[ADX_UPGRADEWIZ.ADIS]]
+rem --- Initialize old Barista admin_backup
+	bar_dir$=cvs(callpoint!.getColumnData("ADX_UPGRADEWIZ.OLD_BAR_LOC"),3)+"/barista"
+	gosub able_backup_sync_dir
+
+rem --- Reload saved grid info if there is any for entered aon locations.
+	adw_upgradewiz=fnget_dev("ADW_UPGRADEWIZ")
+	dim adw_upgradewiz$:fnget_tpl$("ADW_UPGRADEWIZ")
+	new_aon_loc$=callpoint!.getColumnData("ADX_UPGRADEWIZ.NEW_AON_LOC")
+	old_aon_loc$=callpoint!.getColumnData("ADX_UPGRADEWIZ.OLD_AON_LOC")
+
+	adw_upgradewiz.new_aon_loc$=new_aon_loc$
+	adw_upgradewiz.old_aon_loc$=old_aon_loc$
+	key$=adw_upgradewiz.new_aon_loc$+adw_upgradewiz.old_aon_loc$
+	read(adw_upgradewiz,key=key$,dom=*next)
+	adw_upgradewiz_key$=key(adw_upgradewiz,end=*next)
+	if pos(key$=adw_upgradewiz_key$)=1 then
+		appRowVect!=SysGUI!.makeVector()
+		callpoint!.setDevObject("appRowVect",appRowVect!)
+		stblRowVect!=SysGUI!.makeVector()
+		callpoint!.setDevObject("stblRowVect",stblRowVect!)
+
+		rem --- Reload saved APP grid info
+		adw_upgradewiz.new_aon_loc$=new_aon_loc$
+		adw_upgradewiz.old_aon_loc$=old_aon_loc$
+		adw_upgradewiz.grid_id$="APP"
+		key$=adw_upgradewiz.new_aon_loc$+adw_upgradewiz.old_aon_loc$+adw_upgradewiz.grid_id$
+		read(adw_upgradewiz,key=key$,dom=*next)
+		while 1
+			adw_upgradewiz_key$=key(adw_upgradewiz,end=*break)
+			if pos(key$=adw_upgradewiz_key$)<>1 then break
+			readrecord(adw_upgradewiz)adw_upgradewiz$
+			appRowVect!.addItem(cvs(adw_upgradewiz.app_id$,2))
+			appRowVect!.addItem(cvs(adw_upgradewiz.app_parent$,2))
+			appRowVect!.addItem(cvs(adw_upgradewiz.install$,2))
+			appRowVect!.addItem(cvs(adw_upgradewiz.copy$,2))
+			appRowVect!.addItem(cvs(adw_upgradewiz.source$,2))
+			appRowVect!.addItem(cvs(adw_upgradewiz.target$,2))
+		wend
+		callpoint!.setDevObject("appRowVect",appRowVect!)
+		gosub fill_app_grid
+
+		rem --- Reload saved STBL grid info
+		adw_upgradewiz.new_aon_loc$=new_aon_loc$
+		adw_upgradewiz.old_aon_loc$=old_aon_loc$
+		adw_upgradewiz.grid_id$="STBL"
+		key$=adw_upgradewiz.new_aon_loc$+adw_upgradewiz.old_aon_loc$+adw_upgradewiz.grid_id$
+		read(adw_upgradewiz,key=key$,dom=*next)
+		while 1
+			adw_upgradewiz_key$=key(adw_upgradewiz,end=*break)
+			if pos(key$=adw_upgradewiz_key$)<>1 then break
+			readrecord(adw_upgradewiz)adw_upgradewiz$
+			stblRowVect!.addItem(cvs(adw_upgradewiz.app_id$,2))
+			stblRowVect!.addItem(cvs(adw_upgradewiz.stbl_prefix$,2))
+			stblRowVect!.addItem(cvs(adw_upgradewiz.source$,2))
+			stblRowVect!.addItem(cvs(adw_upgradewiz.target$,2))
+		wend
+		callpoint!.setDevObject("stblRowVect",stblRowVect!)
+		gosub fill_stbl_grid
+
+		callpoint!.setStatus("REFRESH")
+	endif
+
 [[ADX_UPGRADEWIZ.ASHO]]
 rem --- Don't allow running the utility if not launched from Addon demo system under Basis download location
 	ddm_systems=fnget_dev("DDM_SYSTEMS")
@@ -190,7 +253,6 @@ rem --- Capture app grid in Vector (order is important) for backend programs
 	declare ArrayList aList!
 
 	appVect!=new Vector()
-	appGrid!=callpoint!.getDevObject("appGrid")
 	appRowVect!=callpoint!.getDevObject("appRowVect")
 	app_grid_def_cols=num(callpoint!.getDevObject("app_grid_def_cols"))
 
@@ -207,7 +269,7 @@ rem --- Capture app grid in Vector (order is important) for backend programs
 
 	callpoint!.setDevObject("appVect",appVect!)
 
-rem --- Capture stbl grid in data structur for backend programs
+rem --- Capture stbl grid in data structure for backend programs
 
 	declare HashMap appStblMap!
 	declare Vector stblVect!
@@ -235,6 +297,86 @@ rem --- Capture stbl grid in data structur for backend programs
 	next i
 
 	callpoint!.setDevObject("appStblMap",appStblMap!)
+rem --- Save grid info so it can be reloaded again.
+	adw_upgradewiz=fnget_dev("ADW_UPGRADEWIZ")
+	dim adw_upgradewiz$:fnget_tpl$("ADW_UPGRADEWIZ")
+	new_aon_loc$=callpoint!.getColumnData("ADX_UPGRADEWIZ.NEW_AON_LOC")
+	old_aon_loc$=callpoint!.getColumnData("ADX_UPGRADEWIZ.OLD_AON_LOC")
+
+	rem --- Save APP grid info
+	appRowVect!=callpoint!.getDevObject("appRowVect")
+	app_grid_def_cols=num(callpoint!.getDevObject("app_grid_def_cols"))
+	for i=0 to appRowVect!.size()-1 step app_grid_def_cols
+		redim adw_upgradewiz$
+		adw_upgradewiz.new_aon_loc$=new_aon_loc$
+		adw_upgradewiz.old_aon_loc$=old_aon_loc$
+		adw_upgradewiz.grid_id$="APP"
+		adw_upgradewiz.row$=str(i/app_grid_def_cols:"000")
+		adw_upgradewiz.app_id$=appRowVect!.getItem(i+0)
+		adw_upgradewiz.app_parent$=appRowVect!.getItem(i+1)
+		adw_upgradewiz.install$=appRowVect!.getItem(i+2)
+		adw_upgradewiz.copy$=appRowVect!.getItem(i+3)
+		adw_upgradewiz.stbl_prefix$=""
+		adw_upgradewiz.source$=appRowVect!.getItem(i+4)
+		adw_upgradewiz.target$=appRowVect!.getItem(i+5)
+		writerecord(adw_upgradewiz)adw_upgradewiz$
+	next i
+
+	rem --- Save STBL grid info
+	stblRowVect!=callpoint!.getDevObject("stblRowVect")
+	stbl_grid_def_cols=num(callpoint!.getDevObject("stbl_grid_def_cols"))
+	for i=0 to stblRowVect!.size()-1 step stbl_grid_def_cols
+		redim adw_upgradewiz$
+		adw_upgradewiz.new_aon_loc$=new_aon_loc$
+		adw_upgradewiz.old_aon_loc$=old_aon_loc$
+		adw_upgradewiz.grid_id$="STBL"
+		adw_upgradewiz.row$=str(i/stbl_grid_def_cols:"000")
+		adw_upgradewiz.app_id$=stblRowVect!.getItem(i+0)
+		adw_upgradewiz.app_parent$=""
+		adw_upgradewiz.install$=""
+		adw_upgradewiz.copy$=""
+		adw_upgradewiz.stbl_prefix$=stblRowVect!.getItem(i+1)
+		adw_upgradewiz.source$=stblRowVect!.getItem(i+2)
+		adw_upgradewiz.target$=stblRowVect!.getItem(i+3)
+		writerecord(adw_upgradewiz)adw_upgradewiz$
+	next i
+
+rem --- Clear ADW_UPGRADEWIZ records that do NOT have a corresponding entry in Barista's ads_selopts table.
+	adw_upgradewiz=fnget_dev("ADW_UPGRADEWIZ")
+	dim adw_upgradewiz$:fnget_tpl$("ADW_UPGRADEWIZ")
+	ads_selopts=fnget_dev("ADS_SELOPTS")
+	dim ads_selopts$:fnget_tpl$("ADS_SELOPTS")
+
+	read(adw_upgradewiz,key="",dom=*next)
+	while 1
+		readrecord(adw_upgradewiz,end=*break)adw_upgradewiz$
+		new_aon_loc$=adw_upgradewiz.new_aon_loc$
+		old_aon_loc$=adw_upgradewiz.old_aon_loc$
+
+		clear_records=1
+		read(ads_selopts,key="ADX_UPGRADEWIZ",dom=*next)
+		while 1
+			ads_selopts_key$=key(ads_selopts,end=*break)
+			if pos("ADX_UPGRADEWIZ"=ads_selopts_key$)<>1 then break
+			readrecord(ads_selopts)ads_selopts$
+			if pos("^"+cvs(new_aon_loc$,2)+"^"+cvs(old_aon_loc$,2)+"^"=ads_selopts.selection_opts$) then
+				clear_records=0
+				break
+			endif
+		wend
+
+		if clear_records then
+			adw_upgradewiz.new_aon_loc$=new_aon_loc$
+			adw_upgradewiz.old_aon_loc$=old_aon_loc$
+			key$=adw_upgradewiz.new_aon_loc$+adw_upgradewiz.old_aon_loc$
+			read(adw_upgradewiz,key=key$,dom=*next)
+			while 1
+				adw_upgradewiz_key$=key(adw_upgradewiz,end=*break)
+				if pos(key$=adw_upgradewiz_key$)<>1 then break
+				remove(adw_upgradewiz,key=adw_upgradewiz_key$,dom=*next)
+			wend
+		endif
+	wend
 
 [[ADX_UPGRADEWIZ.AWIN]]
 rem --- Add grids to form
@@ -367,10 +509,12 @@ rem --- Initialize location values so can tell later if they have changed
 
 rem --- Open/Lock files
 
-	num_files=2
+	num_files=4
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="ADM_MODULES",open_opts$[1]="OTA"
 	open_tables$[2]="DDM_SYSTEMS",open_opts$[2]="OTA"
+	open_tables$[3]="ADW_UPGRADEWIZ",open_opts$[3]="OTA"
+	open_tables$[4]="ADS_SELOPTS",open_opts$[4]="OTA"
 
 	gosub open_tables
 
@@ -775,6 +919,7 @@ able_backup_sync_dir: rem --- Enable/disable input field for sync backup directo
 		endif
 	wend
 	close(sourceChan)
+	callpoint!.setDevObject("old_dbname",dbname$)
 
 	rem --- Query old ADM_MODULES for Barista Administration version
 	adb_version$=""
