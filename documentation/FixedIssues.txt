@@ -1,96 +1,20 @@
 =======================================================================================================================================
- Report Date:   2020-06-22
- Report Branch: AddonSoftware 20.11
- Last Release:  AddonSoftware 20.10
+ Report Date:   2020-07-01
+ Report Branch: AddonSoftware 20.12
+ Last Release:  AddonSoftware 20.11
 =======================================================================================================================================
 
-20.10 release 05/26/2020
-BBjBaristaAddonDemos2010_05-25-2020_1337.jar
+20.11 release 06/30/2020
+BBjBaristaAddonDemos2011_06-26-2020_1114.jar
 
 =======================================================================================================================================
-Revision: 127e5f669984f8fb58655ebc294bd61cda682b12
+Revision: e3e2c801338025c520b6d857bfeaab91af917a02
 Author: Bill Halsted <bhalsted@basis.com>
-Date: 5/27/2020 11:53:59 AM
+Date: 7/1/2020 5:13:32 PM
 Message:
-ER 9960: Modified the Install Wizard to force a version-neutral
-directory structure for production install with or without data, and a
-non-version-neutral directory structure for Quick Copy installs.
-Modified the Upgrade Wizard to always force a version-neutral directory
-structure.
+ER 8793: Modified Upgrade Wizard to save/restore grid entries when
+Barista's "Saved Selection Option" feature is used.
 ----
-Modified: ad/src/adc_firmsetup.aon
-Modified: ad/src/adx_installwiz.aon
-Modified: ad/src/adx_upgradewiz.aon
-Modified: data/bar/adx_installwiz.xml
+Added: data/bar/adw_upgradewiz.xml
 Modified: data/bar/adx_upgradewiz.xml
-Modified: data/cdf/adx_installwiz.cdf
 Modified: data/cdf/adx_upgradewiz.cdf
-Modified: prop/addon.properties
-Modified: prop/addon_en.properties
-
-=======================================================================================================================================
-Revision: 9b5eb3ba25c365aaed0667cf6e18b9589849018a
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 6/1/2020 5:49:44 PM
-Message:
-Bug 9966: Corrected heading for the "Lead Time" column on the BOM
-Subcontracts detail grid.
-----
-Modified: data/bar/bmm_billsub.xml
-Modified: data/cdf/bmm_billsub.cdf
-
-=======================================================================================================================================
-Revision: c52e4f12b172fc6bc4d52288013bba3a678e279c
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 6/1/2020 6:09:13 PM
-Message:
-Bug 9966: Change heading for current "Op Seq" column on the BOM
-Subcontracts detail gird to "Op Ref".
-----
-Modified: prop/addon.properties
-Modified: prop/addon_en.properties
-
-=======================================================================================================================================
-Revision: 023091d8f3cd676b808d28ea46d24f572e7d53f6
-Author: Christine <chawkins@basis.com>
-Date: 6/4/2020 9:55:13 AM
-Message:
-Bug 9968 - PO - Error 26 in Purchase Orders by Item report; corrected typo.
-
-(cherry picked from commit b7f148b981a1497785d2e5df8d58c3fba4887671)
-----
-Modified: po/src/por_pobyitem_o1.aon
-
-=======================================================================================================================================
-Revision: dbabec1026ae3fc90a33c2f0043920bed2406fa4
-Author: Christine <chawkins@basis.com>
-Date: 6/8/2020 11:40:58 AM
-Message:
-Bug 9964 - AR - Follow on work for Customer Credit Card processing
- - Minor changes to these two programs to display progress bar during adc_webcontext, so user sees something happening if waiting for jetty, rather than just a long pause.
-
-(cherry picked from commit 19ce0256176c26ff23e927112a0b159f4e9e91a0)
-----
-Modified: ad/src/adc_webcontext.aon
-Modified: ad/src/adx_build_sproc.aon
-
-=======================================================================================================================================
-Revision: 1bf08b9e0cb7f15e0a4b30bdcac14559ac2f5e54
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 6/22/2020 8:54:31 AM
-Message:
-Bug 9783: Corrected previous "fix" that created by mistake an empty
-adx_conversionCtrl file except for the modules line.
-----
-Modified: util/dataport/DataPort_main.bbj
-
-=======================================================================================================================================
-Revision: f1f259a7bc27d94610453bc11006d5bcd06e73db
-Author: Bill Halsted <bhalsted@basis.com>
-Date: 6/22/2020 9:26:49 AM
-Message:
-ER 9983: Set read-write permissions for everyone for files created via
-java.io.File::createNewFile().
-----
-Modified: ad/src/adc_mvupgrdfiles.aon
-Modified: util/dataport/DataPort_main.bbj
