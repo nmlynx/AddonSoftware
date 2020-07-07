@@ -298,7 +298,46 @@ rem --- Capture stbl grid in data structure for backend programs
 
 	callpoint!.setDevObject("appStblMap",appStblMap!)
 
-rem --- Save grid info so it can be reloaded again.
+rem --- Clear ADW_UPGRADEWIZ records that do NOT have a corresponding entry in Barista's ADS_SELOPTS table.
+rem --- Must do this before saving grid info in ADW_UPGRADEWIZ because !LAST_PROCESS record isn't written to ADS_SELOPTS until after ASVA.
+	adw_upgradewiz=fnget_dev("ADW_UPGRADEWIZ")
+	dim adw_upgradewiz$:fnget_tpl$("ADW_UPGRADEWIZ")
+	ads_selopts=fnget_dev("ADS_SELOPTS")
+	dim ads_selopts$:fnget_tpl$("ADS_SELOPTS")
+
+	read(adw_upgradewiz,key="",dom=*next)
+	while 1
+		readrecord(adw_upgradewiz,end=*break)adw_upgradewiz$
+		new_aon_loc$=adw_upgradewiz.new_aon_loc$
+		old_aon_loc$=adw_upgradewiz.old_aon_loc$
+
+		clear_records=1
+		read(ads_selopts,key="ADX_UPGRADEWIZ",dom=*next)
+		while 1
+			ads_selopts_key$=key(ads_selopts,end=*break)
+			if pos("ADX_UPGRADEWIZ"=ads_selopts_key$)<>1 then break
+			readrecord(ads_selopts)ads_selopts$
+			if pos("^"+cvs(new_aon_loc$,2)+"^"+cvs(old_aon_loc$,2)+"^"=ads_selopts.selection_opts$) then
+				clear_records=0
+				break
+			endif
+		wend
+
+		if clear_records then
+			adw_upgradewiz.new_aon_loc$=new_aon_loc$
+			adw_upgradewiz.old_aon_loc$=old_aon_loc$
+			key$=adw_upgradewiz.new_aon_loc$+adw_upgradewiz.old_aon_loc$
+			read(adw_upgradewiz,key=key$,dom=*next)
+			while 1
+				adw_upgradewiz_key$=key(adw_upgradewiz,end=*break)
+				if pos(key$=adw_upgradewiz_key$)<>1 then break
+				remove(adw_upgradewiz,key=adw_upgradewiz_key$,dom=*next)
+			wend
+		endif
+	wend
+
+rem --- Save grid info in ADW_UPGRADEWIZ so it can be reloaded again.
+rem --- Must do this after clearing orphan ADW_UPGRADEWIZ records because !LAST_PROCESS record isn't written to ADS_SELOPTS until after ASVA.
 	adw_upgradewiz=fnget_dev("ADW_UPGRADEWIZ")
 	dim adw_upgradewiz$:fnget_tpl$("ADW_UPGRADEWIZ")
 	new_aon_loc$=callpoint!.getColumnData("ADX_UPGRADEWIZ.NEW_AON_LOC")
@@ -341,43 +380,6 @@ rem --- Save grid info so it can be reloaded again.
 		adw_upgradewiz.target$=stblRowVect!.getItem(i+3)
 		writerecord(adw_upgradewiz)adw_upgradewiz$
 	next i
-
-rem --- Clear ADW_UPGRADEWIZ records that do NOT have a corresponding entry in Barista's ads_selopts table.
-		adw_upgradewiz=fnget_dev("ADW_UPGRADEWIZ")
-		dim adw_upgradewiz$:fnget_tpl$("ADW_UPGRADEWIZ")
-		ads_selopts=fnget_dev("ADS_SELOPTS")
-		dim ads_selopts$:fnget_tpl$("ADS_SELOPTS")
-
-		read(adw_upgradewiz,key="",dom=*next)
-		while 1
-			readrecord(adw_upgradewiz,end=*break)adw_upgradewiz$
-			new_aon_loc$=adw_upgradewiz.new_aon_loc$
-			old_aon_loc$=adw_upgradewiz.old_aon_loc$
-
-			clear_records=1
-			read(ads_selopts,key="ADX_UPGRADEWIZ",dom=*next)
-			while 1
-				ads_selopts_key$=key(ads_selopts,end=*break)
-				if pos("ADX_UPGRADEWIZ"=ads_selopts_key$)<>1 then break
-				readrecord(ads_selopts)ads_selopts$
-				if pos("^"+cvs(new_aon_loc$,2)+"^"+cvs(old_aon_loc$,2)+"^"=ads_selopts.selection_opts$) then
-					clear_records=0
-					break
-				endif
-			wend
-
-			if clear_records then
-				adw_upgradewiz.new_aon_loc$=new_aon_loc$
-				adw_upgradewiz.old_aon_loc$=old_aon_loc$
-				key$=adw_upgradewiz.new_aon_loc$+adw_upgradewiz.old_aon_loc$
-				read(adw_upgradewiz,key=key$,dom=*next)
-				while 1
-					adw_upgradewiz_key$=key(adw_upgradewiz,end=*break)
-					if pos(key$=adw_upgradewiz_key$)<>1 then break
-					remove(adw_upgradewiz,key=adw_upgradewiz_key$,dom=*next)
-				wend
-			endif
-		wend
 
 [[ADX_UPGRADEWIZ.AWIN]]
 rem --- Add grids to form
