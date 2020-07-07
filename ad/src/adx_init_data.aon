@@ -10,6 +10,7 @@ rem ==========================================================================
     use java.io.File
     use java.io.FileReader
     use java.io.FileWriter
+    use java.lang.String
     use java.util.HashMap
     use java.util.Properties
     use java.util.Vector
@@ -65,7 +66,8 @@ rem --- Get location of this installation
     aonDir$=""
     readrecord(ddm_systems,key=pad("ADDON",16," "),knum="SYSTEM_ID",err=*next)ddm_systems$
     if cvs(ddm_systems.mount_dir$,2)<>"" then
-        aonDir$=ddm_systems.mount_dir$
+        aonDir$=FileObject.fixPath(ddm_systems.mount_dir$, "/")
+        aonDir$=FileObject.addEndSlash(aonDir$, "/")
     endif
 
 rem --- Verify Git repository exists and is using the correct branch for this installation.
@@ -75,20 +77,25 @@ rem *** WARNING: Do NOT remove, or alter, the following test for the correct Git
     gitRepo$=aonDir$+".git"
     gitRepo!=new File(gitRepo$,err=*next)
     if gitRepo!.exists() then
-        rem --- Verify branch version is correct for the version-neutral directory location of this installation
-        repoInterface!=new GitRepoInterface(aonDir$)
-        branch$=repoInterface!.getBranch()
-        branchVersion$=""
-        if pos("BBJ"=branch$)=1 and len(branch$)>7 then
-            branchVersion$=str(num(branch$(4,4),err=*endif):"0000")
-            if pos("v"+branchVersion$(1,2)+"/v"+branchVersion$+"/aon"=aonDir$)=0 then branchVersion$=""
-        endif
-        if branchVersion$=""
-            msg_id$="AD_WRONG_GIT_BRANCH"
-            dim msg_tokens$[1]
-            msg_tokens$[1]=branch$
-            gosub disp_message
-            goto std_exit
+        rem --- Skip if NOT using version-neutral installation, i.e. a development install
+        aonDir!=new String(cvs(aonDir$,2))
+        if aonDir!.matches(".*/v../v..../aon/$") then
+            rem --- Verify branch version is correct for the version-neutral directory location of this installation
+            repoInterface!=new GitRepoInterface(aonDir$)
+            branch$=repoInterface!.getBranch()
+            branchVersion$=""
+            if pos("BBJ"=branch$)=1 and len(branch$)>7 then
+                branchVersion$=str(num(branch$(4,4),err=*endif):"0000")
+                if pos("/v"+branchVersion$(1,2)+"/v"+branchVersion$+"/aon/"=aonDir$)=0 then branchVersion$=""
+            endif
+            if branchVersion$=""
+                gosub get_translate_object
+                msg_id$="AD_WRONG_GIT_BRANCH"
+                dim msg_tokens$[1]
+                msg_tokens$[1]=branch$
+                gosub disp_message
+                goto close_barista_mdi
+            endif
         endif
     endif
 
@@ -128,18 +135,6 @@ rem --- Are conversion needed for the start_version?
     endif
 
 rem --- Open log file in aon/logs directory
-
-    num_files=1
-    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="DDM_SYSTEMS",open_opts$[1]="OTA"
-    gosub open_tables
-    ddm_systems=num(open_chans$[1]);dim ddm_systems$:open_tpls$[1]
-    
-    aonDir$=""
-    readrecord(ddm_systems,key=pad("ADDON",16," "),knum="SYSTEM_ID",err=*next)ddm_systems$
-    if cvs(ddm_systems.mount_dir$,2)<>"" then
-        aonDir$=ddm_systems.mount_dir$
-    endif
 
     location$ = aonDir$
     gosub open_log
