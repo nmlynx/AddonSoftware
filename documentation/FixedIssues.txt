@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2020-07-01
+ Report Date:   2020-07-07
  Report Branch: AddonSoftware 20.12
  Last Release:  AddonSoftware 20.11
 =======================================================================================================================================
@@ -16,5 +16,17 @@ ER 8793: Modified Upgrade Wizard to save/restore grid entries when
 Barista's "Saved Selection Option" feature is used.
 ----
 Added: data/bar/adw_upgradewiz.xml
+Modified: data/bar/adx_upgradewiz.xml
+Modified: data/cdf/adx_upgradewiz.cdf
+
+=======================================================================================================================================
+Revision: 03b18faa6ad247828b9077b09618d5d956a8470d
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 7/7/2020 11:03:58 AM
+Message:
+ER 8793: Must clear orphan ADW_UPGRADEWIZ records before new ones are
+written because !LAST_PROCESS record isn't written to ADS_SELOPTS until
+after ASVA.
+----
 Modified: data/bar/adx_upgradewiz.xml
 Modified: data/cdf/adx_upgradewiz.cdf
