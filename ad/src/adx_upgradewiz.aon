@@ -75,6 +75,7 @@ rem wgh ... 9809 ... Is there a better, more accurate, way of doing this ?????
 rem wgh ... 9809 ... Addon currently only tracks to the major release level.
     call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
     newVersion$=str(num(app_version_id$)*100:"0000")
+newVersion$="2011"; escape; rem wgh ... 9809 ... testing
 
 rem --- Determine if upgrading from a Git based installation, or a non-Git based installation
     oldUsedGit!=new HashMap()
@@ -90,8 +91,12 @@ rem --- Determine if upgrading from a Git based installation, or a non-Git based
     
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_UPDATE_WIZ")
-rem wgh ... 9809 ... base meter_total_recs on size of oldUsedGit! and oldNonGit! as each has different number of steps
-    meter_total_recs=8*newAonDir!.size()
+    meter_total_recs=4
+    if oldUsedGit!.size()>0 then
+        meter_total_recs=meter_total_recs+6+5*oldUsedGit!.size()
+    else
+        meter_total_recs=meter_total_recs+6+7*oldNonGit!.size()
+    endif
     if doSyncBackup% then meter_total_recs=meter_total_recs+1
     if useOldMenu% then meter_total_recs=meter_total_recs+1
     meter_proc_recs=0
@@ -101,6 +106,29 @@ rem wgh ... 9809 ... base meter_total_recs on size of oldUsedGit! and oldNonGit!
 
 rem --- Open log file
     gosub open_log
+
+rem --- Is this a restart after resolving Git conflicts?
+    restartFile$=newAonDir$+"/logs/restartUpgradeWizard.txt"
+    restart=0
+    restart_dev=unt
+    open(restart_dev,err=*next)restartFile$; restart=1
+    if restart then
+        rem --- Verify correct restart file
+        read(restart_dev)text$
+        close(restart_dev,err=*next)
+        erase restartFile$,err=*next
+    
+        if pos(restartFile$=text$) then
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_UPGRADE_WIZ_RESTART")
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            meter_proc_recs=meter_total_recs-4
+            print(log_dev)"Upgrade Wizard re-started after Git conflicts"
+            print(log_dev)
+            goto restartUpgrade
+        endif
+    endif
 
 rem --- Skip Barista’s Create Sync File Backup bax_sync_backup.bbj unless upgrading from a pre-v18 version.
     if doSyncBackup% then
@@ -118,8 +146,9 @@ rem --- Skip Barista’s Create Sync File Backup bax_sync_backup.bbj unless upgrad
 rem wgh ... 9809 ... For pre-v15.02 upgrades, warn that they must run Barista's Build Delta XMLs from Mods Project utility.
 rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods ????? For v21+ too ?????
 
-    rem --- Process upgrades from a Git based installation
+rem --- Process upgrade from either a Git based installation or a non-Git based installation
     if oldUsedGit!.size()>0 then
+        rem --- Process upgrades from a Git based installation
         localCommitsList!=BBjAPI().makeVector()
 
         gitIter!=oldUsedGit!.keySet().iterator()
@@ -175,16 +204,13 @@ rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods 
         rem --- Use old modified menus instead of new standard menus.
         if useOldMenu% then gosub useOldMenu
 
-rem wgh ... 9809 ... #6 Git ... to do ... Driving off the list of local commits (#2 Git), cherry pick the commits
-rem ... viewName!
-
-rem wgh ... 9809 ... #7 Git ... to do ... If there are conflicts, we have no choice at this point but to stop and have the VAR resolve them
-rem wgh ... 9809 ... Need to resolve Git conflicts before auto-sync.
+        rem --- Cherry pick local commits from old installation
+        gosub cherryPickLocalCommits
 
     else
 
-        rem --- Process upgrades from a non-Git based installation
         if oldNonGit!.size()>0 then
+            rem --- Process upgrades from a non-Git based installation
             gitIter!=oldNonGit!.keySet().iterator()
             while gitIter!.hasNext()
                 newDir$=gitIter!.next()
@@ -247,13 +273,33 @@ rem wgh ... 9809 ... #7 Non-Git ... to do ... This should result in new or chang
             if useOldMenu% then gosub useOldMenu
 
 rem wgh ... 9809 ... #10 Non-Git ... to do ... Ask Git to cherry pick our cdf and back-end prog commits, and work conflicts if/as needed
-rem wgh ... 9809 ... Need to resolve Git conflicts before auto-sync.
         endif
     endif
 
-rem wgh ... 9809 ... Need to resolve Git conflicts before auto-sync. Jump here on restart of wizard if previously aborted due to conflicts.
-rem wgh ... 9809 ... #10 Git and #11 Non-Git ... to do ... Launch the Install Application Wizard (where previously we would've launched the auto-sync) to sync in Addon.
+restartUpgrade:
+rem --- Check for Git conflicts, and resolve bar/*.xml conflicts
+    gosub checkForGitConflicts
+    if haveConflicts then
+        rem --- Create restart file, then abort
+        FileObject.makeDirs(new File(newAonDir$ + "/logs"))
+        restartFile$=newAonDir$+"/logs/restartUpgradeWizard.txt"
+        erase restartFile$,err=*next
+        string restartFile$
+        restart_dev=unt
+        open(restart_dev)restartFile$
+        
+        print(restart_dev)"Restart file: "+restartFile$
+        print(restart_dev)"Created: "+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")
+        print(restart_dev)
+        print(restart_dev)"Previous log file: " + newAonDir$ + "/logs"+logName$
+        print(restart_dev)"New aon Locatoin: " + newAonLoc$
+        print(restart_dev)"Old aon Location: " + oldAonLoc$
+        close(restart_dev,err=*next)
+        
+        goto done
+    endif
 
+rem wgh ... 9809 ... #10 Git and #11 Non-Git ... to do ... Launch the Install Application Wizard (where previously we would've launched the auto-sync) to sync in Addon.
 rem --- Launch auto-sync in new barista for the new addon.syn
 rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the new barista
 
@@ -469,12 +515,6 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
    endif
 
 rem wgh ... 9809 ... #12 Git ... to do ... At this point, we should have the upgraded application in place, and can run the EM Update Wizard to bring over data and begin sanity checking and testing.
-
-rem wgh ... 9809 ... Have adx_init_data.aon check to see if .git is in the correct directory. Since the Install and Upgrade Wizards will only do version-neutral installs now,
-rem wgh ... 9809 ... except for quick copies, for branch BBJxxyzGA the .git directory should be located under vxx/vxxyz/aon. The adx_init_data.aon can get a Git object for the correct path,
-rem wgh ... 9809 ... then use Git.getRepository().getBranch() to get the branch name. If .git isn't found, it won't be for quick copies since it's not in the pre-build download,
-rem wgh ... 9809 ... skip the test. Shortcoming for both is that a VAR can alter the auto-launch data conversion program, adx_init_data.aon, to skip the test. Add a REM the adx_init_data.aon
-rem wgh ... 9809 ... that explains why one shouldn't alter or remove the test ... that relieves us of the obligation of supporting people who use novel twists on the upgrade process.
     
 done: rem --- All done
     
@@ -915,6 +955,48 @@ useOldMenu: rem --- Use old modified menus instead of new standard menus.
             endif
         next i
     next syscnt
+    return
+
+cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_CHERRY_PICK_LOCAL_COMMITS")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+rem wgh ... 9809 ... #6 Git ... to do ... Driving off the list of local commits (#2 Git), cherry pick the commits
+rem wgh ... 9809 ... add cherry picking to progress meter
+    rem --- Cherry pick local commits
+    commitIter!=localCommitsList!.iterator()
+    while commitIter!.hasNext()
+        commit!=commitIter!.next()
+        print(log_dev)"    commit: ",commit!
+    wend
+    return
+
+checkForGitConflicts: rem --- Check for Git conflicts, and resolve bar/*.xml conflicts
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_CHECK_GIT_CONFLICTS")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    haveConflicts=0
+rem wgh ... 9809 ... #7 Git ... to do ... If there are conflicts, we have no choice at this point but to stop and have the VAR resolve them
+rem wgh ... 9809 ... log un-resolved conflicts
+print(log_dev)"    conflict: "+"?????"
+
+    rem --- Warn about un-resolved conflicts
+    if haveConflicts then
+        msg_id$="AD_GIT_CONFLICTS"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=newAonDir$ + "/logs"+logName$
+        gosub disp_message
+    endif
     return
 
 search_replace: rem --- Search record$ for search$, and replace with replace$
