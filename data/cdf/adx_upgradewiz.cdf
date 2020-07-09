@@ -655,7 +655,21 @@ validate_new_db_name: rem --- Validate new database name
 	if rd_status$="ADMIN" then
 		db! = rdAdmin!.getDatabase(db_name$,err=dbNotFound)
 
-		rem --- This db already exists, so don't allow it
+		rem --- This db already exists, so don't allow it unless this is a re-start for Git conflicts
+		dictionary$=db!.getString(BBjAdminDatabase.DICTIONARY)
+		aonLoc$=dictionary$(1,pos("/barista/bbdict"=dictionary$)-1)
+		restartFile$=aonLoc$+"/aon/logs/restartUpgradeWizard.txt"
+		restart=0
+		restart_dev=unt
+		open(restart_dev,err=*next)restartFile$; restart=1
+		if restart then
+			rem --- Verify correct restart file
+			read(restart_dev)text$
+			close(restart_dev,err=*next)
+			if pos(restartFile$=text$) then goto dbNotFound
+		endif
+		close(restart_dev,err=*next)
+
 		msg_id$="AD_DB_EXISTS"
 		gosub disp_message
 	endif
@@ -667,7 +681,7 @@ validate_new_db_name: rem --- Validate new database name
 	abort=1
 
 dbNotFound:
-	rem --- Okay to use this db name, it doesn't already exist
+	rem --- Okay to use this db name, it doesn't already exist or this is a Git conflicts re-start
 	callpoint!.setDevObject("rdAdmin", rdAdmin!)
 
 	return
@@ -739,18 +753,31 @@ validate_base_dir: rem --- Validate base directory for installation
 		return
 	endif
 
-	rem --- Cannot be currently used by Addon
+	rem --- Cannot be currently used by Addon, unless this is a re-start for Git conflicts
 
 	major_ver$=callpoint!.getDevObject("major_ver")
 	minor_ver$=callpoint!.getDevObject("minor_ver")
+	aonLoc$=new_loc$+"/"+major_ver$+"/"+minor_ver$
 	aonDir_exists=0
 	testChan=unt
-	open(testChan,err=*next)new_loc$+"/"+major_ver$+"/"+minor_ver$+"/aon/data"; aonDir_exists=1
+	open(testChan,err=*next)aonLoc$+"/aon/data"; aonDir_exists=1
 	close(testChan,err=*next)
-	testChan=unt
 	if !aonDir_exists then return
 
-	rem --- Location is used by Addon
+	rem --- Is this is a re-start for Git conflicts?
+	restartFile$=aonLoc$+"/aon/logs/restartUpgradeWizard.txt"
+	restart=0
+	restart_dev=unt
+	open(restart_dev,err=*next)restartFile$; restart=1
+	if restart then
+		rem --- Verify correct restart file
+		read(restart_dev)text$
+		close(restart_dev,err=*next)
+		if pos(restartFile$=text$) then return
+	endif
+	close(restart_dev,err=*next)
+
+	rem --- Location is used by Addon, and this is not a Git conflict re-start
 	callpoint!.setColumnData("ADX_UPGRADEWIZ.NEW_AON_LOC",new_loc$+"/"+major_ver$+"/"+minor_ver$,1)
 	msg_id$="AD_INSTALL_LOC_USED"
 	gosub disp_message
