@@ -75,7 +75,7 @@ rem wgh ... 9809 ... Is there a better, more accurate, way of doing this ?????
 rem wgh ... 9809 ... Addon currently only tracks to the major release level.
     call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
     newVersion$=str(num(app_version_id$)*100:"0000")
-newVersion$="2011"; escape; rem wgh ... 9809 ... testing
+rem newVersion$="2011"; escape; rem wgh ... 9809 ... testing
 
 rem --- Determine if upgrading from a Git based installation, or a non-Git based installation
     oldUsedGit!=new HashMap()
@@ -129,6 +129,7 @@ rem --- Is this a restart after resolving Git conflicts?
             goto restartUpgrade
         endif
     endif
+    close(restart_dev,err=*next)
 
 rem --- Skip Barista’s Create Sync File Backup bax_sync_backup.bbj unless upgrading from a pre-v18 version.
     if doSyncBackup% then
@@ -279,7 +280,7 @@ rem wgh ... 9809 ... #10 Non-Git ... to do ... Ask Git to cherry pick our cdf an
 restartUpgrade:
 rem --- Check for Git conflicts, and resolve bar/*.xml conflicts
     gosub checkForGitConflicts
-    if haveConflicts then
+    if conflicts!.size()>0 then
         rem --- Create restart file, then abort
         FileObject.makeDirs(new File(newAonDir$ + "/logs"))
         restartFile$=newAonDir$+"/logs/restartUpgradeWizard.txt"
@@ -513,10 +514,19 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
         gosub disp_message
         print(log_dev)"***** ERROR: Required file not found, "+convCtrlIniFileName$+" *****"
    endif
-
-rem wgh ... 9809 ... #12 Git ... to do ... At this point, we should have the upgraded application in place, and can run the EM Update Wizard to bring over data and begin sanity checking and testing.
     
 done: rem --- All done
+
+    rem --- Report cherry pick failures
+    if cherryPickFailures then
+        msg_id$="AD_CHERRYPICK_ERR"
+        dim msg_tokens$[2]
+        msg_tokens$[1]=str(cherryPickFailures)
+        msg_tokens$[2]=newAonDir$ + "/logs"+logName$
+        gosub disp_message
+        print(log_dev)
+        print(log_dev)"***** "+str(cherryPickFailures)+" Cherry pick failure(s) *****"
+    endif
     
     rem --- Stop progress meter
     meter_text$=""
@@ -966,14 +976,21 @@ cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
     gosub disp_meter
     print(log_dev)meter_text$
 
-rem wgh ... 9809 ... #6 Git ... to do ... Driving off the list of local commits (#2 Git), cherry pick the commits
-rem wgh ... 9809 ... add cherry picking to progress meter
     rem --- Cherry pick local commits
+    cherryPickFailures=0
+    repoInterface!=new GitRepoInterface(aonDir$)
     commitIter!=localCommitsList!.iterator()
     while commitIter!.hasNext()
         commit!=commitIter!.next()
+        success=repoInterface!.cherryPick(commit!)
+
         print(log_dev)"    commit: ",commit!
+        if ! success then
+            print(log_dev)"            ***** FAILED *****"
+            cherryPickFailures=cherryPickFailures+1
+        endif
     wend
+    repoInterface!.closeInterface()
     return
 
 checkForGitConflicts: rem --- Check for Git conflicts, and resolve bar/*.xml conflicts
@@ -985,17 +1002,22 @@ checkForGitConflicts: rem --- Check for Git conflicts, and resolve bar/*.xml con
     gosub disp_meter
     print(log_dev)meter_text$
 
-    haveConflicts=0
-rem wgh ... 9809 ... #7 Git ... to do ... If there are conflicts, we have no choice at this point but to stop and have the VAR resolve them
-rem wgh ... 9809 ... log un-resolved conflicts
-print(log_dev)"    conflict: "+"?????"
+    rem --- Get Git conflicts
+    repoInterface!=new GitRepoInterface(newAonDir$)
+    conflicts!=repoInterface!.getConflicts()
+    repoInterface!.closeInterface()
 
-    rem --- Warn about un-resolved conflicts
-    if haveConflicts then
+    rem --- Warn about, and log, un-resolved conflicts
+    if conflicts!.size()>0 then
         msg_id$="AD_GIT_CONFLICTS"
         dim msg_tokens$[1]
         msg_tokens$[1]=newAonDir$ + "/logs"+logName$
         gosub disp_message
+
+        conflictIter!=conflicts!.iterator()
+        while conflictIter!.hasNext()
+            print(log_dev)"    conflict: "+conflictIter!.next()
+        wend
     endif
     return
 

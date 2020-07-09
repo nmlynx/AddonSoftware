@@ -16,14 +16,18 @@ rem  */
     use java.nio.charset.StandardCharsets
     use java.util.TreeSet
 
+    use org.eclipse.jgit.api.CheckoutCommand.Stage
+    use org.eclipse.jgit.api.CherryPickResult.CherryPickStatus
     use org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
     use org.eclipse.jgit.api.Git
     use org.eclipse.jgit.lib.ObjectId
     use org.eclipse.jgit.lib.Repository
+    use org.eclipse.jgit.revwalk.RevCommit
     use org.eclipse.jgit.revwalk.RevWalk
     use org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
     use org.eclipse.jgit.treewalk.CanonicalTreeParser
     use org.eclipse.jgit.treewalk.TreeWalk
+
     
     class public AO_GitRepoInterface
         field public BBjString AonDir$
@@ -141,6 +145,63 @@ checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
         methodend
 
         rem /**
+        rem  * Cherry picks givenGit repository commit. 
+        rem  * 
+        rem  * @param RevCommit commit! -- Git repository commits
+        rem  *
+        rem  * @return boolean success
+        rem  */
+        method public boolean cherryPick(RevCommit commit!)
+            seterr cherryPick_error
+            success=Boolean.valueOf("true")
+
+            cherryPickCmd!=#git!.cherryPick()
+            cherryPickCmd!.include(commit!)
+            result!=cherryPickCmd!.call()
+
+            rem --- Check for conflicts that are due to a bar/*.xml file, and resolve them by accepting ours 
+            switch (result!.getStatus()) 
+                case CherryPickStatus.OK
+                    break
+                case CherryPickStatus.CONFLICTING
+                    status!=#git!.status().call()
+                    conflictingFiles!=status!.getConflicting()
+                    fileIter!=conflictingFiles!.iterator()
+                    while (fileIter!.hasNext())
+                        fileName!=cast(BBjString,fileIter!.next())
+                        if (fileName!.matches("data/bar/.*\.xml")) then  
+                            rem --- Choose ours for bar/*.xml file conflicts
+                            checkoutCmd!=#git!.checkout()
+                            checkoutCmd!.setStage(Stage.OURS)
+                            checkoutCmd!.addPath(fileName!)
+                            checkoutCmd!.call()
+                            #git!.add().addFilepattern(fileName!).call()
+                        endif
+                    wend
+                    break
+                case CherryPickStatus.FAILED
+                    success=Boolean.valueOf("false")
+                    break
+            swend 
+            
+            methodret success
+           
+cherryPick_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend 
+
+        rem /**
         rem  * Free resources associated with this instance. 
         rem  */
         method public void closeInterface()
@@ -237,6 +298,36 @@ getCommits_error:rem --- Method error trap/handler (11Oct2017)
             x$=stbl("+THROWN_ERR","TRUE")   
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
+
+        rem /**
+        rem  * Builds Vector of file names for conflicts in local Git repository. 
+        rem  *
+        rem  * @return BBjVector conflicts!
+        rem  */
+        method public BBjVector getConflicts()
+            seterr getConflicts_error
+            conflicts!=BBjAPI().makeVector()
+
+            status!=#git!.status().call()
+            conflictingFiles!=status!.getConflicting()
+            conflicts!.addAll(conflictingFiles!)
+            
+            methodret conflicts!
+           
+getConflicts_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend 
     
         rem /**
         rem  * Builds Vector of local commits made from since$ through until$ that 
@@ -479,13 +570,10 @@ getUnstagedChanges_error:rem --- Method error trap/handler (11Oct2017)
 
         rem /**
         rem  * Refresh (pull) the local repository. 
-        rem  *
-        rem  * @return BBjVector unstagedChanges!
         rem  */
         method public void pullRepository()
             seterr pullRepository_error
 
-rem wgh ... 9809 ... stopped here
             pullCmd!=#git!.pull()
             pullCmd!.setCredentialsProvider(#credentials!)
             pullCmd!.call()
