@@ -168,6 +168,19 @@ rem --- Reload saved grid info if there is any for entered aon locations.
 		callpoint!.setStatus("REFRESH")
 	endif
 
+[[ADX_UPGRADEWIZ.AREC]]
+rem --- Clear custom APP grid
+	appRowVect!=SysGUI!.makeVector()
+	callpoint!.setDevObject("appRowVect",appRowVect!)
+	appGrid!=callpoint!.getDevObject("appGrid")
+	appGrid!.clearMainGrid()
+
+rem --- Clear custom STBL grid
+	stblRowVect!=SysGUI!.makeVector()
+	callpoint!.setDevObject("stblRowVect",stblRowVect!)
+	stblGrid!=callpoint!.getDevObject("stblGrid")
+	stblGrid!.clearMainGrid()
+
 [[ADX_UPGRADEWIZ.ASHO]]
 rem --- Don't allow running the utility if not launched from Addon demo system under Basis download location
 	ddm_systems=fnget_dev("DDM_SYSTEMS")
