@@ -75,7 +75,7 @@ rem wgh ... 9809 ... Is there a better, more accurate, way of doing this ?????
 rem wgh ... 9809 ... Addon currently only tracks to the major release level.
     call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
     newVersion$=str(num(app_version_id$)*100:"0000")
-rem newVersion$="2011"; escape; rem wgh ... 9809 ... testing
+newVersion$="2011"; rem wgh ... 9809 ... testing
 
 rem --- Determine if upgrading from a Git based installation, or a non-Git based installation
     oldUsedGit!=new HashMap()
@@ -517,15 +517,14 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
     
 done: rem --- All done
 
-    rem --- Report cherry pick failures
-    if cherryPickFailures then
+    rem --- Report cherry pick failure
+    if !failures!.isEmpty() then
         msg_id$="AD_CHERRYPICK_ERR"
-        dim msg_tokens$[2]
-        msg_tokens$[1]=str(cherryPickFailures)
-        msg_tokens$[2]=newAonDir$ + "/logs"+logName$
+        dim msg_tokens$[1]
+        msg_tokens$[1]=newAonDir$ + "/logs"+logName$
         gosub disp_message
         print(log_dev)
-        print(log_dev)"***** "+str(cherryPickFailures)+" Cherry pick failure(s) *****"
+        print(log_dev)"***** Cherry pick failed *****"
     endif
     
     rem --- Stop progress meter
@@ -976,21 +975,27 @@ cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
     gosub disp_meter
     print(log_dev)meter_text$
 
-    rem --- Cherry pick local commits
-    cherryPickFailures=0
-    repoInterface!=new GitRepoInterface(aonDir$)
+    rem --- Log commits that will be cherry picked
     commitIter!=localCommitsList!.iterator()
     while commitIter!.hasNext()
         commit!=commitIter!.next()
-        success=repoInterface!.cherryPick(commit!)
-
         print(log_dev)"    commit: ",commit!
-        if ! success then
-            print(log_dev)"            ***** FAILED *****"
-            cherryPickFailures=cherryPickFailures+1
-        endif
     wend
+
+    rem --- Cherry pick local commits
+    repoInterface!=new GitRepoInterface(aonDir$)
+    failures!=repoInterface!.cherryPick(localCommitsList!)
     repoInterface!.closeInterface()
+
+    rem --- Log and report cherry pick failure
+    if !failures!.isEmpty() then
+        print(log_dev)"    ***** CHERRY PICK FAILED *****"
+        print "    ",failures!
+
+rem wgh ... 9809 ... stopped here
+rem wgh ... 9809 ... set restart on failure
+rem wgh ... 9809 ... reverse order of commit list
+    endif
     return
 
 checkForGitConflicts: rem --- Check for Git conflicts, and resolve bar/*.xml conflicts

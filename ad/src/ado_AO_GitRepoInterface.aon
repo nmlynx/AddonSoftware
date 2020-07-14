@@ -14,6 +14,7 @@ rem  */
     use java.io.File
     use java.lang.reflect.Array
     use java.nio.charset.StandardCharsets
+    use java.util.HashMap
     use java.util.TreeSet
 
     use org.eclipse.jgit.api.CheckoutCommand.Stage
@@ -145,25 +146,30 @@ checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
         methodend
 
         rem /**
-        rem  * Cherry picks givenGit repository commit. 
+        rem  * Cherry picks given Vector of Git repository commits (RevCommit commits). 
         rem  * 
-        rem  * @param RevCommit commit! -- Git repository commits
+        rem  * @param BBjVector commits! -- Vector of RevCommit commits (Git repository commits)
         rem  *
-        rem  * @return boolean success
+        rem  * @return HashMap failures! --  key: path
+        rem  *                             value: failure reason
         rem  */
-        method public boolean cherryPick(RevCommit commit!)
+        method public HashMap cherryPick(BBjVector commits!)
             seterr cherryPick_error
-            success=Boolean.valueOf("true")
+            failures!=new HashMap()
 
             cherryPickCmd!=#git!.cherryPick()
-            cherryPickCmd!.include(commit!)
+            commitIter!=commits!.iterator()
+            while commitIter!.hasNext()
+                cherryPickCmd!.include(commitIter!.next())
+            wend
             result!=cherryPickCmd!.call()
 
-            rem --- Check for conflicts that are due to a bar/*.xml file, and resolve them by accepting ours 
+            rem --- Check cherry pick results
             switch (result!.getStatus()) 
                 case CherryPickStatus.OK
                     break
                 case CherryPickStatus.CONFLICTING
+                    rem --- Check for conflicts that are due to a bar/*.xml file, and resolve them by accepting ours 
                     status!=#git!.status().call()
                     conflictingFiles!=status!.getConflicting()
                     fileIter!=conflictingFiles!.iterator()
@@ -180,11 +186,11 @@ checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
                     wend
                     break
                 case CherryPickStatus.FAILED
-                    success=Boolean.valueOf("false")
+                    map!=result!.getFailingPaths()
                     break
             swend 
             
-            methodret success
+            methodret failures!
            
 cherryPick_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
