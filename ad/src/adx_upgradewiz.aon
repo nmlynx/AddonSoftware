@@ -30,6 +30,7 @@ rem --- Initializations
     dir_syp$=stbl("+DIR_SYP")
     sysGUI! = BBjAPI().getSysGui()
     BLOCKSIZE = 2^20
+    failures!=BBjAPI().makeVector()
 
 rem --- Get user inputs
 
@@ -539,9 +540,16 @@ done: rem --- All done
     endif
     
     rem --- Stop progress meter
-    meter_text$=""
     meter_proc_recs=meter_total_recs
-    meter_action$="LST-END"
+    if restartFlag then
+        meter_text$="***** "+Translate!.getTranslation("AON_TERMINATED")+" *****"
+        meter_action$="MTR-LST-END"
+        print(log_dev)
+        print(log_dev)meter_text$
+    else
+        meter_text$=""
+        meter_action$="LST-END"
+    endif
     gosub disp_meter
     print(log_dev)
     print(log_dev)"Upgradewiz log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
