@@ -378,7 +378,6 @@ rem --- Copy OPV_SHIPTRACK_nn views from old database to new database
         endif
     endif
 
-rem wgh ... 9809 ... #11 Git ... to do ... If there are any verticals, after installing Addon, install them.
 rem --- Run Install Application Wizard for applications being installed
 
     rem --- Increment progress meter
@@ -386,19 +385,17 @@ rem --- Run Install Application Wizard for applications being installed
     meter_proc_recs=meter_proc_recs+1
     meter_action$="MTR-LST"
 
-rem wgh ... 9809 ... #11 Git ... to do ... If there are any verticals, after installing Addon, install them.
-rem wgh ... 9809 ... stopped here
-rem --- Insert Addon as the first application to be installed
+    rem --- Insert Addon as the first application to be installed
     aList!=new ArrayList()
     aList!.add("ADDON"); rem Application
     aList!.add(""); rem App Parent
     aList!.add("y"); rem Install
     aList!.add(""); rem Copy
-rem        aList!.add(appRowVect!.getItem(i+4)); rem Source
-rem        aList!.add(appRowVect!.getItem(i+5)); rem Target
-rem        appVect!.add(aList!)
+    aList!.add(newAonDir$); rem Source
+    aList!.add(""); rem Target
+    appVect!.insertItem(0, aList!)
 
-
+    rem --- Install applications
 	iter!=appVect!.iterator()
 	while iter!.hasNext()
 		appList! = cast(ArrayList, iter!.next())
