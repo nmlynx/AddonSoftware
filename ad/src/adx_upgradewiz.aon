@@ -77,6 +77,7 @@ rem wgh ... 9809 ... Addon currently only tracks to the major release level.
     call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
     newVersion$=str(num(app_version_id$)*100:"0000")
 newVersion$="2011"; rem wgh ... 9809 ... testing
+escape; rem wgh ... 9809 ... testing ... adx_upgradewiz.aon
 
 rem --- Determine if upgrading from a Git based installation, or a non-Git based installation
     oldUsedGit!=new HashMap()
