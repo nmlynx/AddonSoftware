@@ -302,7 +302,6 @@ rem --- Need to restart if there were Git conflicts, or a Git cherry pick failur
         goto done
     endif
 
-rem wgh ... 9809 ... #10 Git and #11 Non-Git ... to do ... Launch the Install Application Wizard (where previously we would've launched the auto-sync) to sync in Addon.
 rem --- Launch auto-sync in new barista for the new addon.syn
 rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the new barista
 
@@ -386,6 +385,19 @@ rem --- Run Install Application Wizard for applications being installed
     trans_text$=Translate!.getTranslation("AON_INSTALL_APP")
     meter_proc_recs=meter_proc_recs+1
     meter_action$="MTR-LST"
+
+rem wgh ... 9809 ... #11 Git ... to do ... If there are any verticals, after installing Addon, install them.
+rem wgh ... 9809 ... stopped here
+rem --- Insert Addon as the first application to be installed
+    aList!=new ArrayList()
+    aList!.add("ADDON"); rem Application
+    aList!.add(""); rem App Parent
+    aList!.add("y"); rem Install
+    aList!.add(""); rem Copy
+rem        aList!.add(appRowVect!.getItem(i+4)); rem Source
+rem        aList!.add(appRowVect!.getItem(i+5)); rem Target
+rem        appVect!.add(aList!)
+
 
 	iter!=appVect!.iterator()
 	while iter!.hasNext()
