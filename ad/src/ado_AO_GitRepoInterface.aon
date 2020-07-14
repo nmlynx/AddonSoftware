@@ -342,11 +342,12 @@ getConflicts_error:rem --- Method error trap/handler (11Oct2017)
         rem  * @param BBjString since$ -- branch or tag name since
         rem  * @param BBjString until$ -- branch or tag name until
         rem  *
-        rem  * @return BBjVector localCommits!
+        rem  * @return BBjVector filteredLocalCommits!
         rem  */
         method public BBjVector getLocalCommits(BBjString since$, BBjString until$)
             seterr getLocalCommits_error
             filteredLocalCommits!=BBjAPI().makeVector()
+            tmpVect!=BBjAPI().makeVector()
 
             remoteCommits!=#getCommits(#RemoteBranch$,until$)
             localCommits!=#getCommits(since$,until$)
@@ -356,13 +357,21 @@ getConflicts_error:rem --- Method error trap/handler (11Oct2017)
                 commitIter!=localCommits!.iterator()
                 while (commitIter!.hasNext())
                     commit!=commitIter!.next()
-                    filteredLocalCommits!.add(commit!)
+                    filteredLocalCommits!.addItem(commit!)
                     rem --- Once we encounter a commit that has more than one parent, we have a merge result, 
                     rem --- so grab the merge result, which has all our previous changes and stop here. 
                     if (commit!.getParentCount()>=2) then 
                         break
                     endif   
                 wend
+            endif
+            
+            rem -- Sort commits so they are from the first/earliest to the last/latest.
+            if filteredLocalCommits!.size()>0 then
+                for i=filteredLocalCommits!.size()-1 to 0 step -1
+                    tmpVect!.addItem(filteredLocalCommits!.getItem(i))
+                next i
+                filteredLocalCommits!=tmpVect!
             endif
             
             methodret filteredLocalCommits!

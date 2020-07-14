@@ -109,7 +109,7 @@ rem --- Open log file
 
 rem --- Is this a restart after resolving Git conflicts?
     restartFile$=newAonDir$+"/logs/restartUpgradeWizard.txt"
-    restart=0
+    restartFlag=0
     restart_dev=unt
     open(restart_dev,err=*next)restartFile$; restart=1
     if restart then
@@ -278,9 +278,11 @@ rem wgh ... 9809 ... #10 Non-Git ... to do ... Ask Git to cherry pick our cdf an
     endif
 
 restartUpgrade:
-rem --- Check for Git conflicts, and resolve bar/*.xml conflicts
+rem --- Check for Git conflicts
     gosub checkForGitConflicts
-    if conflicts!.size()>0 then
+    
+rem --- Need to restart if there were Git conflicts, or a Git cherry pick failure
+    if restartFlag then
         rem --- Create restart file, then abort
         FileObject.makeDirs(new File(newAonDir$ + "/logs"))
         restartFile$=newAonDir$+"/logs/restartUpgradeWizard.txt"
@@ -989,12 +991,9 @@ cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
 
     rem --- Log and report cherry pick failure
     if !failures!.isEmpty() then
+        restartFlag=1
         print(log_dev)"    ***** CHERRY PICK FAILED *****"
         print "    ",failures!
-
-rem wgh ... 9809 ... stopped here
-rem wgh ... 9809 ... set restart on failure
-rem wgh ... 9809 ... reverse order of commit list
     endif
     return
 
@@ -1014,6 +1013,7 @@ checkForGitConflicts: rem --- Check for Git conflicts, and resolve bar/*.xml con
 
     rem --- Warn about, and log, un-resolved conflicts
     if conflicts!.size()>0 then
+        restartFlag=1
         msg_id$="AD_GIT_CONFLICTS"
         dim msg_tokens$[1]
         msg_tokens$[1]=newAonDir$ + "/logs"+logName$
