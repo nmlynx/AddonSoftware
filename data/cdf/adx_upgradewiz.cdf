@@ -145,6 +145,7 @@ rem --- Reload saved grid info if there is any for entered aon locations.
 			appRowVect!.addItem(cvs(adw_upgradewiz.target$,2))
 		wend
 		callpoint!.setDevObject("appRowVect",appRowVect!)
+		skipStblVectorBuild=1
 		gosub fill_app_grid
 
 		rem --- Reload saved STBL grid info
@@ -1176,12 +1177,14 @@ fill_app_grid: rem --- Fill the app grid with data in appRowVect!
 				appGrid!.setCellStyle(row, 3, SysGUI!.GRID_STYLE_CHECKED)
 				appGrid!.setCellEditable(row,5,1); rem Target
 
-				rem --- Update stblRowVect! for copied application
-				appName$=appRowVect!.getItem(i+0)
-				oldDir$=appRowVect!.getItem(i+4)
-				synFile$=oldDir$+"config/"+cvs(appName$,8)+".syn"
-				newDir$=appRowVect!.getItem(i+5)
-				gosub build_stbl_vector
+				if !skipStblVectorBuild then
+					rem --- Update stblRowVect! for copied application
+					appName$=appRowVect!.getItem(i+0)
+					oldDir$=appRowVect!.getItem(i+4)
+					synFile$=oldDir$+"config/"+cvs(appName$,8)+".syn"
+					newDir$=appRowVect!.getItem(i+5)
+					gosub build_stbl_vector
+				endif
 			else
 				appGrid!.setCellStyle(row, 3, SysGUI!.GRID_STYLE_UNCHECKED)
 				appGrid!.setCellEditable(row,5,0); rem Target
@@ -1562,6 +1565,7 @@ build_target_dir: rem --- Build target dir from source dir and new aon location
 rem ==========================================================================
 
 	filePath$=callpoint!.getDevObject("prev_new_aon_loc")
+	if len(filePath$)=0 then filePath$=cvs(callpoint!.getColumnData("ADX_UPGRADEWIZ.NEW_AON_LOC"),3)
 	gosub fix_path
 	if filePath$(len(filePath$))<>"/" then filePath$=filePath$+"/"
 	aonLoc$=filePath$
