@@ -536,7 +536,7 @@ rem --- Open/Lock files
 
 	gosub open_tables
 
-rem --- Get this version of Addon's Admin module
+rem --- Get this version of Addon. Use version of Barista in download.
 	version_id$="??.??"
 	major_ver$="v??"
 	minor_ver$="v????"
@@ -1508,6 +1508,9 @@ rem ==========================================================================
 					break
 				case pos(stbl$="+CUST_IMAGES")
 					target_value$=baseDir$+"/cust_images/"
+					break
+				case pos("+DOC_DIR_ARCHIVE"=stbl$)
+					target_value$=baseDir$+"/documents/archive/"
 					break
 				case pos("+DOC_DIR_"=stbl$)
 					target_value$=baseDir$+"/documents/"
