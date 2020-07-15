@@ -496,6 +496,7 @@ rem --- Set defaults for data STBLs
 			stblRowVect!=SysGUI!.makeVector()
 			newDir$=aonNewDir$
 			synFile$=aonSynFile$
+			callpoint!.setColumnData("ADX_UPGRADEWIZ.BASE_DIR",new_loc$,1)
 			gosub build_stbl_vector
 			callpoint!.setDevObject("newSynRows",stblRowVect!)
 			if prev_old_aon_loc$<>"" then
