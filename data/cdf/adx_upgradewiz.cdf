@@ -1482,6 +1482,9 @@ rem ==========================================================================
 				case pos(stbl$="+CUST_IMAGES")
 					target_value$=baseDir$+"/cust_images/"
 					break
+				case pos("+DOC_DIR_ARCHIVE"=stbl$)
+					target_value$=baseDir$+"/documents/archive/"
+					break
 				case pos("+DOC_DIR_"=stbl$)
 					target_value$=baseDir$+"/documents/"
 					break
