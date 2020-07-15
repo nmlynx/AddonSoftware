@@ -238,7 +238,10 @@ rem --- Validate old aon install location
 	old_aon_loc$ = callpoint!.getColumnData("ADX_UPGRADEWIZ.OLD_AON_LOC")
 	gosub validate_old_aon_loc
 	callpoint!.setColumnData("ADX_UPGRADEWIZ.OLD_AON_LOC",old_aon_loc$)
-	if abort then break
+	if abort then
+		callpoint!.setFocus("ADX_UPGRADEWIZ.OLD_AON_LOC")
+		break
+	endif
 
 rem --- Validate old barista install location
 
@@ -847,7 +850,6 @@ not_aon_loc:	rem --- Addon not at this location
 	gosub disp_message
 
 	callpoint!.setColumnData("ADX_UPGRADEWIZ.OLD_AON_LOC", old_aon_loc$)
-	callpoint!.setFocus("ADX_UPGRADEWIZ.OLD_AON_LOC")
 	callpoint!.setStatus("ABORT")
 	abort=1
 
