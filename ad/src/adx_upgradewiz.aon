@@ -71,12 +71,11 @@ rem --- Currently only installing Addon from a Git repository. Allow for more la
     newAonDir!.add(newAonDir$)
     oldAonDir!.add(oldAonDir$)
 
-rem --- Get version for repository branch
-rem wgh ... 9809 ... Is there a better, more accurate, way of doing this ?????
-rem wgh ... 9809 ... Addon currently only tracks to the major release level.
+rem --- Get version for repository branch. Use version of Barista in download.
+    rem --- Use version of Barista in download
     call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
     newVersion$=str(num(app_version_id$)*100:"0000")
-newVersion$="2011"; rem wgh ... 9809 ... testing
+rem newVersion$="2011"; rem wgh ... 9809 ... testing
 
 rem --- Determine if upgrading from a Git based installation, or a non-Git based installation
     oldUsedGit!=new HashMap()
@@ -1010,7 +1009,13 @@ cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
     if !failures!.isEmpty() then
         restartFlag=1
         print(log_dev)"    ***** CHERRY PICK FAILED *****"
-        print "    ",failures!
+        failurePaths!=failures!.keySet()
+        pathsIter!=failurePaths!.iterator()
+        while pathsIter!.hasNext()
+            path$=pathsIter!.next()
+            reason!=failures!.get(path$)
+            print(log_dev)"    ",path$,": ",reason!
+        wend
     endif
     return
 
