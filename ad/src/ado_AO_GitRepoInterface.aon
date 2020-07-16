@@ -276,9 +276,9 @@ getCommitID_error:rem --- Method error trap/handler (11Oct2017)
         method public java.util.List getCommits(BBjString since$, BBjString until$)
             seterr getCommits_error
             commits!=null()
-
             untilId!=#getCommitId(until$)
             sinceId!=#getCommitId(since$)
+
             if untilId!<>null() and sinceId!<>null() then
                 logCmd!=#git!.log().addRange(untilId!,sinceId!)
                 revCommits!=logCmd!.call()

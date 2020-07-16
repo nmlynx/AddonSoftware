@@ -183,6 +183,7 @@ rem --- Clear custom STBL grid
 	stblGrid!.clearMainGrid()
 
 [[ADX_UPGRADEWIZ.ASHO]]
+break; rem CAH for testing
 rem --- Don't allow running the utility if not launched from Addon demo system under Basis download location
 	ddm_systems=fnget_dev("DDM_SYSTEMS")
 	dim ddm_systems$:fnget_tpl$("DDM_SYSTEMS")
@@ -546,6 +547,7 @@ rem --- Get this version of Addon. Use version of Barista in download.
 	call stbl("+DIR_SYP")+"bax_version.bbj",version_id$,lic_id$
 	major_ver$="v"+str(num(version_id$,err=*next):"00",err=*next)
 	minor_ver$="v"+str(num(version_id$,err=*next)*100:"0000",err=*next)
+	minor_ver$="v2011";rem CAH testing
 	callpoint!.setDevObject("major_ver",major_ver$)
 	callpoint!.setDevObject("minor_ver",minor_ver$)
 
@@ -564,7 +566,7 @@ rem --- Validate old aon install location
 	gosub validate_old_aon_loc
 	callpoint!.setUserInput(old_aon_loc$)
 	if abort then break
-	
+
 rem --- Initializations when old aon install location changes
 	prev_old_aon_loc$=cvs(callpoint!.getDevObject("prev_old_aon_loc"),3)
 	prev_new_aon_loc$=cvs(callpoint!.getDevObject("prev_new_aon_loc"),3)
