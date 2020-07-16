@@ -31,6 +31,7 @@ rem --- Initializations
     sysGUI! = BBjAPI().getSysGui()
     BLOCKSIZE = 2^20
     failures!=BBjAPI().makeVector()
+    remainingCommits!=BBjAPI().makeVector()
 
 rem --- Get user inputs
 
@@ -71,12 +72,11 @@ rem --- Currently only installing Addon from a Git repository. Allow for more la
     newAonDir!.add(newAonDir$)
     oldAonDir!.add(oldAonDir$)
 
-rem --- Get version for repository branch
-rem wgh ... 9809 ... Is there a better, more accurate, way of doing this ?????
-rem wgh ... 9809 ... Addon currently only tracks to the major release level.
+rem --- Get version for repository branch. Use version of Barista in download.
+    rem --- Use version of Barista in download
     call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
     newVersion$=str(num(app_version_id$)*100:"0000")
-newVersion$="2011"; rem wgh ... 9809 ... testing
+rem newVersion$="2011"; rem wgh ... 9809 ... testing
 
 rem --- Determine if upgrading from a Git based installation, or a non-Git based installation
     oldUsedGit!=new HashMap()
@@ -115,10 +115,7 @@ rem --- Is this a restart after resolving Git conflicts?
     open(restart_dev,err=*next)restartFile$; restart=1
     if restart then
         rem --- Verify correct restart file
-        read(restart_dev)text$
-        close(restart_dev,err=*next)
-        erase restartFile$,err=*next
-    
+        read(restart_dev,end=*endif)text$
         if pos(restartFile$=text$) then
             rem --- Increment progress meter
             meter_text$=Translate!.getTranslation("AON_UPGRADE_WIZ_RESTART")
@@ -127,7 +124,28 @@ rem --- Is this a restart after resolving Git conflicts?
             meter_proc_recs=meter_total_recs-4
             print(log_dev)"Upgrade Wizard re-started after Git conflicts"
             print(log_dev)
+
+            rem --- Get from restart log list of remaining commits that still need to be cherry picked
+            label$="Remaining commit: "
+            lenLabel=len(label$)
+            while 1
+                read(restart_dev,end=*break)text$
+                if pos(label$=text$)=1 then
+                    repoInterface!=new GitRepoInterface(newAonDir$)
+                    commit!=repoInterface!.getRevCommit(text$(1+lenLabel))
+                    repoInterface!.closeInterface()
+            
+                    remainingCommits!.addItem(commit!)
+                endif
+            wend
+
+            close(restart_dev,err=*next)
+            erase restartFile$,err=*next
+
             goto restartUpgrade
+        else
+            close(restart_dev,err=*next)
+            erase restartFile$,err=*next
         endif
     endif
     close(restart_dev,err=*next)
@@ -187,28 +205,6 @@ rem --- Process upgrade from either a Git based installation or a non-Git based 
             gosub updateAddonSyn
         wend
 
-        rem --- Create new session specific classpath (SSCP) in Enterprise Manager
-        gosub createSSCP
-
-        rem --- Run Copy Application utility for applications being copied
-        gosub copyApps
-
-        rem --- BIM Barista to the new location.
-        gosub bimBarista
-
-        rem --- Update new sync XML files (and copy old barista/settings dir)
-        start_version$=""
-        gosub updateSyncXml
-
-        rem --- Build addonprop.jar and put it in the aon/prop directory
-        gosub buildAddonJar
-
-        rem --- Use old modified menus instead of new standard menus.
-        if useOldMenu% then gosub useOldMenu
-
-        rem --- Cherry pick local commits from old installation
-        gosub cherryPickLocalCommits
-
     else
 
         if oldNonGit!.size()>0 then
@@ -241,10 +237,12 @@ oldBranch$="1821"; rem wgh ... 9809 ... testing
 rem wgh ... 9809 ... #5 Non-Git ... to do ... Copy the old existing mods/data/bar/delta XMLs to new location 
 
 rem wgh ... 9809 ... #6 Non-Git ... to do ... Incorporate the mods/data/cdf's: put 'before'/'after' callpoints in, or replace the Addon code if it's a 'before' w/ skip. 
-rem wgh ... 9809 ... #6 Non-Git ... to do ... While we're massaging callpoints, alphabetize them. Have Git commit these altered cdf's.
+
+rem wgh ... 9809 ... #6.5 Non-Git ... to do ... While we're massaging callpoints, alphabetize them. Have Git commit these altered cdf's after dealing with possible line ending issues.
 
 rem wgh ... 9809 ... #7 Non-Git ... to do ... Bring over any prog/ files from the mods project (and what if they have more than the prog folder?) and put them in the corresponding src folder based on our naming conventions.
-rem wgh ... 9809 ... #7 Non-Git ... to do ... This should result in new or changed files in ar/src/, gl/src/, etc. Have Git commit these new/changed files after dealing with possible line ending issues.
+
+rem wgh ... 9809 ... #7.5 Non-Git ... to do ... This should result in new or changed files in ar/src/, gl/src/, etc. Have Git commit these new/changed files after dealing with possible line ending issues.
         
                 rem --- Switch/checkout to branch for new version
                 branchName$="BBJ"+newVersion$+"GA"
@@ -254,31 +252,37 @@ rem wgh ... 9809 ... #7 Non-Git ... to do ... This should result in new or chang
                 rem --- Update new addon.syn file
                 gosub updateAddonSyn
             wend
-    
-            rem --- Create new session specific classpath (SSCP) in Enterprise Manager
-            gosub createSSCP
-    
-            rem --- Run Copy Application utility for applications being copied
-            gosub copyApps
-    
-            rem --- BIM Barista to the new location.
-            gosub bimBarista
-
-            rem --- Update new sync XML files (and copy old barista/settings dir)
-            start_version$=""
-            gosub updateSyncXml
-
-            rem --- Build addonprop.jar and put it in the aon/prop directory
-            gosub buildAddonJar
-
-            rem --- Use old modified menus instead of new standard menus.
-            if useOldMenu% then gosub useOldMenu
-
-rem wgh ... 9809 ... #10 Non-Git ... to do ... Ask Git to cherry pick our cdf and back-end prog commits, and work conflicts if/as needed
         endif
     endif
 
+rem --- Create new session specific classpath (SSCP) in Enterprise Manager
+    gosub createSSCP
+
+rem --- Run Copy Application utility for applications being copied
+    gosub copyApps
+
+rem --- BIM Barista to the new location.
+    gosub bimBarista
+
+rem --- Update new sync XML files (and copy old barista/settings dir)
+    start_version$=""
+    gosub updateSyncXml
+
+rem --- Build addonprop.jar and put it in the aon/prop directory
+    gosub buildAddonJar
+
+rem --- Use old modified menus instead of new standard menus.
+    if useOldMenu% then gosub useOldMenu
+
+rem wgh ... 9809 ... check for, and resolve, line ending issues
+
+rem wgh ... 9809 ... commit sync xml and syn file changes
+
 restartUpgrade:
+rem --- Cherry pick local commits from old installation
+    if remainingCommits!.size()>0 then localCommitsList!=remainingCommits!
+    gosub cherryPickLocalCommits
+
 rem --- Check for Git conflicts
     gosub checkForGitConflicts
     
@@ -296,10 +300,19 @@ rem --- Need to restart if there were Git conflicts, or a Git cherry pick failur
         print(restart_dev)"Created: "+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")
         print(restart_dev)
         print(restart_dev)"Previous log file: " + newAonDir$ + "/logs"+logName$
-        print(restart_dev)"New aon Locatoin: " + newAonLoc$
+        print(restart_dev)"New aon Location: " + newAonLoc$
         print(restart_dev)"Old aon Location: " + oldAonLoc$
+        print(restart_dev)
+
+        rem --- Capture remaining commits that still need to be cherry picked
+        remainingIter!=remainingCommits!.iterator()
+        while remainingIter!.hasNext()
+            remaining!=remainingIter!.next()
+            print(restart_dev)"Remaining commit: ",remaining!
+        wend
+
+        print(restart_dev)
         close(restart_dev,err=*next)
-        
         goto done
     endif
 
@@ -994,24 +1007,32 @@ cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
     gosub disp_meter
     print(log_dev)meter_text$
 
-    rem --- Log commits that will be cherry picked
+    rem --- Cherry pick local commits
+    remainingCommits!=localCommitsList!
+    repoInterface!=new GitRepoInterface(newAonDir$)
     commitIter!=localCommitsList!.iterator()
     while commitIter!.hasNext()
         commit!=commitIter!.next()
+        failures!=repoInterface!.cherryPick(commit!)
+        
+        rem --- Do NOT cherry pick this commit again in a restart
         print(log_dev)"    commit: ",commit!
+        remainingCommits!.removeItem(0)
+
+        rem --- Log and report cherry pick failure
+        if !failures!.isEmpty() then
+            restartFlag=1
+            print(log_dev)"    ***** CHERRY PICK FAILED *****"
+            failurePaths!=failures!.keySet()
+            pathsIter!=failurePaths!.iterator()
+            while pathsIter!.hasNext()
+                path$=pathsIter!.next()
+                reason!=failures!.get(path$)
+                print(log_dev)"    ",path$,": ",reason!
+            wend
+        endif
     wend
-
-    rem --- Cherry pick local commits
-    repoInterface!=new GitRepoInterface(aonDir$)
-    failures!=repoInterface!.cherryPick(localCommitsList!)
     repoInterface!.closeInterface()
-
-    rem --- Log and report cherry pick failure
-    if !failures!.isEmpty() then
-        restartFlag=1
-        print(log_dev)"    ***** CHERRY PICK FAILED *****"
-        print "    ",failures!
-    endif
     return
 
 checkForGitConflicts: rem --- Check for Git conflicts, and resolve bar/*.xml conflicts
@@ -1094,7 +1115,7 @@ open_log:rem --- Open log file
     print(log_dev)
     print(log_dev)"New Database Name: " + dbName$
     print(log_dev)"New Description: " + appDesc$
-    print(log_dev)"New aon Locatoin: " + newAonLoc$
+    print(log_dev)"New aon Location: " + newAonLoc$
     print(log_dev)"Old aon Location: " + oldAonLoc$
     print(log_dev)"Old barista Location: " + oldBarLoc$
     print(log_dev)"Old sync Backup Dir: " + syncBackupDir$

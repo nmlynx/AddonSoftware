@@ -238,7 +238,10 @@ rem --- Validate old aon install location
 	old_aon_loc$ = callpoint!.getColumnData("ADX_UPGRADEWIZ.OLD_AON_LOC")
 	gosub validate_old_aon_loc
 	callpoint!.setColumnData("ADX_UPGRADEWIZ.OLD_AON_LOC",old_aon_loc$)
-	if abort then break
+	if abort then
+		callpoint!.setFocus("ADX_UPGRADEWIZ.OLD_AON_LOC")
+		break
+	endif
 
 rem --- Validate old barista install location
 
@@ -496,6 +499,7 @@ rem --- Set defaults for data STBLs
 			stblRowVect!=SysGUI!.makeVector()
 			newDir$=aonNewDir$
 			synFile$=aonSynFile$
+			callpoint!.setColumnData("ADX_UPGRADEWIZ.BASE_DIR",new_loc$,1)
 			gosub build_stbl_vector
 			callpoint!.setDevObject("newSynRows",stblRowVect!)
 			if prev_old_aon_loc$<>"" then
@@ -535,7 +539,7 @@ rem --- Open/Lock files
 
 	gosub open_tables
 
-rem --- Get this version of Addon's Admin module
+rem --- Get this version of Addon. Use version of Barista in download.
 	version_id$="??.??"
 	major_ver$="v??"
 	minor_ver$="v????"
@@ -846,7 +850,6 @@ not_aon_loc:	rem --- Addon not at this location
 	gosub disp_message
 
 	callpoint!.setColumnData("ADX_UPGRADEWIZ.OLD_AON_LOC", old_aon_loc$)
-	callpoint!.setFocus("ADX_UPGRADEWIZ.OLD_AON_LOC")
 	callpoint!.setStatus("ABORT")
 	abort=1
 
@@ -1507,6 +1510,9 @@ rem ==========================================================================
 					break
 				case pos(stbl$="+CUST_IMAGES")
 					target_value$=baseDir$+"/cust_images/"
+					break
+				case pos("+DOC_DIR_ARCHIVE"=stbl$)
+					target_value$=baseDir$+"/documents/archive/"
 					break
 				case pos("+DOC_DIR_"=stbl$)
 					target_value$=baseDir$+"/documents/"
