@@ -21,6 +21,7 @@ rem  */
     use org.eclipse.jgit.api.CherryPickResult.CherryPickStatus
     use org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
     use org.eclipse.jgit.api.Git
+    use org.eclipse.jgit.lib.AnyObjectId
     use org.eclipse.jgit.lib.ObjectId
     use org.eclipse.jgit.lib.Repository
     use org.eclipse.jgit.revwalk.RevCommit
@@ -146,30 +147,26 @@ checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
         methodend
 
         rem /**
-        rem  * Cherry picks given Vector of Git repository commits (RevCommit commits). 
+        rem  * Cherry picks Git repository commit given as a RevCommit object. 
         rem  * 
-        rem  * @param BBjVector commits! -- Vector of RevCommit commits (Git repository commits)
+        rem  * @param RevCommit commit! -- Git repository commits
         rem  *
         rem  * @return HashMap failures! --  key: path
         rem  *                             value: failure reason
         rem  */
-        method public HashMap cherryPick(BBjVector commits!)
+        method public HashMap cherryPick(RevCommit commit!)
             seterr cherryPick_error
             failures!=new HashMap()
 
             cherryPickCmd!=#git!.cherryPick()
-            commitIter!=commits!.iterator()
-            while commitIter!.hasNext()
-                cherryPickCmd!.include(commitIter!.next())
-            wend
+            cherryPickCmd!.include(commit!)
             result!=cherryPickCmd!.call()
 
-            rem --- Check cherry pick results
+            rem --- Check for conflicts that are due to a bar/*.xml file, and resolve them by accepting ours 
             switch (result!.getStatus()) 
                 case CherryPickStatus.OK
                     break
                 case CherryPickStatus.CONFLICTING
-                    rem --- Check for conflicts that are due to a bar/*.xml file, and resolve them by accepting ours 
                     status!=#git!.status().call()
                     conflictingFiles!=status!.getConflicting()
                     fileIter!=conflictingFiles!.iterator()
@@ -514,6 +511,53 @@ getRemoteFileContent_error:rem --- Method error trap/handler (11Oct2017)
         methodend 
 
         rem /**
+        rem  * Get Git RevCommit object from given BBjString. 
+        rem  * 
+        rem  * @param BBjString commit$! -- example:
+        rem  *                              commit 1ce0c5f8e453278e12f10795164613693d09d218 1590167270 ----sp
+        rem  *
+        rem  * @return RevCommit revCommit!
+        rem  */
+        method public RevCommit getRevCommit(BBjString commit$)
+            seterr getRevCommit_error
+            revCommit!=null()
+            
+            rem --- Reduce commit string down to just the hex characters
+            hexChars$=commit$
+            if pos("commit "=hexChars$) then hexChars$=hexChars$(pos("commit "=hexChars$)+len("commit "))
+            if pos(" ----sp"=hexChars$) then hexChars$=hexChars$(1,pos(" ----sp"=hexChars$)-1)
+            if pos(" "=hexChars$) then hexChars$=hexChars$(1,pos(" "=hexChars$)-1)
+
+            if ObjectId.isId(hexChars$) then
+                objectId!=ObjectId.fromString(hexChars$)
+                logCmd!=#git!.log().add(objectId!).setMaxCount(1)
+                revCommits!=logCmd!.call()
+                commits!=cast(java.util.List,java.util.stream.StreamSupport.stream(revCommits!.spliterator(),0).collect(java.util.stream.Collectors.toList()))
+                
+                commitsIter!=commits!.iterator()
+                while commitsIter!.hasNext()
+                    revCommit!=commitsIter!.next()
+                wend
+            endif
+                        
+            methodret revCommit!
+           
+getRevCommit_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend 
+
+        rem /**
         rem  * Get Vector of uncommitted staged changes in the local repository has . 
         rem  *
         rem  * @return BBjVector stagedChanges!
@@ -625,7 +669,7 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
 
             localCommittedXmls!=#getLocalCommittedXmls(localCommits!)
             print "localCommittedXmls!=",localCommittedXmls!
-            
+      
             methodret
         methodend
 
