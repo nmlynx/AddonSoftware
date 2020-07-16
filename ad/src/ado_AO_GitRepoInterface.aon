@@ -628,5 +628,9 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
             
             methodret
         methodend
+		
+		method public RevCommit commitAll(BBjNumber automaticallyStage!, BBjString message!)
+			methodret #git!.commit().setAll(automaticallyStage!).setMessage(message!).call()	
+		methodend 
 
 classend
