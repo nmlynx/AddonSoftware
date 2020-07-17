@@ -76,7 +76,7 @@ rem --- Get version for repository branch. Use version of Barista in download.
     rem --- Use version of Barista in download
     call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
     newVersion$=str(num(app_version_id$)*100:"0000")
-rem newVersion$="2011"; rem wgh ... 9809 ... testing
+    newVersion$="2011"; rem wgh ... 9809 ... testing
 
 rem --- Determine if upgrading from a Git based installation, or a non-Git based installation
     oldUsedGit!=new HashMap()
@@ -276,11 +276,17 @@ rem --- Use old modified menus instead of new standard menus.
 
 rem wgh ... 9809 ... check for, and resolve, line ending issues
 
-rem wgh ... 9809 ... commit sync xml and syn file changes
+rem --- commit sync xml and syn file changes made during updateAddonSyn and updateSyncXml routines
+rem --- assures work tree is clean prior to cherry picking
+    gosub doInterimCommit
 
 restartUpgrade:
 rem --- Cherry pick local commits from old installation
-    if remainingCommits!.size()>0 then localCommitsList!=remainingCommits!
+    if remainingCommits!.size()>0
+        localCommitsList!=remainingCommits!
+        remainingCommits!=BBjAPI().makeVector();rem CAH re-init remainingCommits!
+    endif
+
     gosub cherryPickLocalCommits
 
 rem --- Check for Git conflicts
@@ -318,7 +324,7 @@ rem --- Need to restart if there were Git conflicts, or a Git cherry pick failur
 
 rem --- Launch auto-sync in new barista for the new addon.syn
 rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the new barista
-
+escape;rem before sync CAH...
     rem --- Increment progress meter
     meter_text$=Translate!.getTranslation("AON_AUTO_SYNC")
     meter_proc_recs=meter_proc_recs+1
@@ -407,8 +413,8 @@ rem --- Run Install Application Wizard for applications being installed
     aList!.add(""); rem Copy
     aList!.add(newAonDir$); rem Source
     aList!.add(""); rem Target
-    appVect!.insertItem(0, aList!)
-
+    appVect!.insertElementAt(aList!,0)
+escape;rem appvect!? CAH
     rem --- Install applications
 	iter!=appVect!.iterator()
 	while iter!.hasNext()
@@ -785,6 +791,21 @@ updateAddonSyn: rem --- Update addon.syn file
     endif
     return
 
+doInterimCommit:
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_INTERIM_COMMIT")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+escape;rem in interim commit routine CAH
+    rem --- Get JGit interface to repository, and call commitAll()
+    aonDir$=newDir$
+    repoInterface!=new GitRepoInterface(aonDir$)
+    repoInterface!.commitAll(1,Translate!.getTranslation("AON_INTERIM_COMMIT"))
+    return
+
 build_stblMap_pfxList: rem --- Build stblMap! and pfxList! for adc_copymods.aon for a app$
 
     stblMap! = new HashMap()
@@ -1008,7 +1029,12 @@ cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
     print(log_dev)meter_text$
 
     rem --- Cherry pick local commits
-    remainingCommits!=localCommitsList!
+    if localCommitsList!.size()
+        for wk=0 to localCommitsList!.size()-1
+            remainingCommits!.add(localCommitsList!.get(wk));rem CAH
+        next wk
+    endif
+
     repoInterface!=new GitRepoInterface(newAonDir$)
     commitIter!=localCommitsList!.iterator()
     while commitIter!.hasNext()
@@ -1017,7 +1043,7 @@ cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
         
         rem --- Do NOT cherry pick this commit again in a restart
         print(log_dev)"    commit: ",commit!
-        remainingCommits!.removeItem(0)
+        if failures!.isEmpty() then remainingCommits!.removeItem(0)
 
         rem --- Log and report cherry pick failure
         if !failures!.isEmpty() then
