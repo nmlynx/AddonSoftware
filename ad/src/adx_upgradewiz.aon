@@ -990,10 +990,7 @@ cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
     while commitIter!.hasNext()
         commit!=commitIter!.next()
         failures!=repoInterface!.cherryPick(commit!)
-        
-        rem --- Do NOT cherry pick this commit again in a restart
         print(log_dev)"    commit: ",commit!
-        remainingCommits!.removeItem(0)
 
         rem --- Log and report cherry pick failure
         if !failures!.isEmpty() then
@@ -1008,6 +1005,9 @@ cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
             wend
             break
         endif
+        
+        rem --- Do NOT cherry pick this commit again in a restart
+        remainingCommits!.removeItem(0)
     wend
     repoInterface!.closeInterface()
     return
