@@ -76,7 +76,7 @@ rem --- Get version for repository branch. Use version of Barista in download.
     rem --- Use version of Barista in download
     call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
     newVersion$=str(num(app_version_id$)*100:"0000")
-    newVersion$="2011"; rem wgh ... 9809 ... testing
+rem newVersion$="2011"; rem wgh ... 9809 ... testing
 
 rem --- Determine if upgrading from a Git based installation, or a non-Git based installation
     oldUsedGit!=new HashMap()
@@ -239,6 +239,7 @@ rem wgh ... 9809 ... #5 Non-Git ... to do ... Copy the old existing mods/data/ba
 rem wgh ... 9809 ... #6 Non-Git ... to do ... Incorporate the mods/data/cdf's: put 'before'/'after' callpoints in, or replace the Addon code if it's a 'before' w/ skip. 
 
 rem wgh ... 9809 ... #6.5 Non-Git ... to do ... While we're massaging callpoints, alphabetize them. Have Git commit these altered cdf's after dealing with possible line ending issues.
+rem ... ??? commit via AddCommand since new files are not tracked yet ???
 
 rem wgh ... 9809 ... #7 Non-Git ... to do ... Bring over any prog/ files from the mods project (and what if they have more than the prog folder?) and put them in the corresponding src folder based on our naming conventions.
 
@@ -284,9 +285,8 @@ restartUpgrade:
 rem --- Cherry pick local commits from old installation
     if remainingCommits!.size()>0
         localCommitsList!=remainingCommits!
-        remainingCommits!=BBjAPI().makeVector();rem CAH re-init remainingCommits!
+        remainingCommits!=BBjAPI().makeVector()
     endif
-
     gosub cherryPickLocalCommits
 
 rem --- Check for Git conflicts
@@ -324,7 +324,7 @@ rem --- Need to restart if there were Git conflicts, or a Git cherry pick failur
 
 rem --- Launch auto-sync in new barista for the new addon.syn
 rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the new barista
-escape;rem before sync CAH...
+
     rem --- Increment progress meter
     meter_text$=Translate!.getTranslation("AON_AUTO_SYNC")
     meter_proc_recs=meter_proc_recs+1
@@ -414,7 +414,7 @@ rem --- Run Install Application Wizard for applications being installed
     aList!.add(newAonDir$); rem Source
     aList!.add(""); rem Target
     appVect!.insertElementAt(aList!,0)
-escape;rem appvect!? CAH
+
     rem --- Install applications
 	iter!=appVect!.iterator()
 	while iter!.hasNext()
@@ -791,7 +791,7 @@ updateAddonSyn: rem --- Update addon.syn file
     endif
     return
 
-doInterimCommit:
+doInterimCommit: rem --- Commit all modified and deleted tracked files
 
     rem --- Increment progress meter
     meter_text$=Translate!.getTranslation("AON_INTERIM_COMMIT")
@@ -799,7 +799,7 @@ doInterimCommit:
     meter_action$="MTR-LST"
     gosub disp_meter
     print(log_dev)meter_text$
-escape;rem in interim commit routine CAH
+
     rem --- Get JGit interface to repository, and call commitAll()
     aonDir$=newDir$
     repoInterface!=new GitRepoInterface(aonDir$)
@@ -1028,13 +1028,14 @@ cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
     gosub disp_meter
     print(log_dev)meter_text$
 
-    rem --- Cherry pick local commits
+    rem --- Track commits that still need to be cherry picked in case there is a failure
     if localCommitsList!.size()
         for wk=0 to localCommitsList!.size()-1
-            remainingCommits!.add(localCommitsList!.get(wk));rem CAH
+            remainingCommits!.add(localCommitsList!.get(wk))
         next wk
     endif
 
+    rem --- Cherry pick local commits
     repoInterface!=new GitRepoInterface(newAonDir$)
     commitIter!=localCommitsList!.iterator()
     while commitIter!.hasNext()
@@ -1043,7 +1044,7 @@ cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
         
         rem --- Do NOT cherry pick this commit again in a restart
         print(log_dev)"    commit: ",commit!
-        if failures!.isEmpty() then remainingCommits!.removeItem(0)
+        remainingCommits!.removeItem(0)
 
         rem --- Log and report cherry pick failure
         if !failures!.isEmpty() then
@@ -1056,6 +1057,7 @@ cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
                 reason!=failures!.get(path$)
                 print(log_dev)"    ",path$,": ",reason!
             wend
+            break
         endif
     wend
     repoInterface!.closeInterface()
