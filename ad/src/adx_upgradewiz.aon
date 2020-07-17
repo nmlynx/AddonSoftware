@@ -30,7 +30,9 @@ rem --- Initializations
     dir_syp$=stbl("+DIR_SYP")
     sysGUI! = BBjAPI().getSysGui()
     BLOCKSIZE = 2^20
+    aonStblMap!=new HashMap()
     failures!=BBjAPI().makeVector()
+    localCommitsList!=BBjAPI().makeVector()
     remainingCommits!=BBjAPI().makeVector()
 
 rem --- Get user inputs
@@ -62,41 +64,26 @@ rem --- Get user inputs
     newBarDir$=newAonLoc$ + "/barista"
     oldAonDir$=oldAonLoc$ + "/aon"
     oldBarDir$=oldBarLoc$ + "/barista"
+    appName$="ADDON"
 
-rem --- Currently only installing Addon from a Git repository. Allow for more later.
-    aonStblMap!=new HashMap()
-    appName!=BBjAPI().makeVector()
-    newAonDir!=BBjAPI().makeVector()
-    oldAonDir!=BBjAPI().makeVector()
-    appName!.add("ADDON")
-    newAonDir!.add(newAonDir$)
-    oldAonDir!.add(oldAonDir$)
+rem --- Determine if upgrading from a Git based installation, or a non-Git based installation
+    gitBasedUpgrade=0
+    oldGitDir! = new File(oldAonDir$+"/.git")
+    if oldGitDir!.exists() and oldGitDir!.isDirectory() then gitBasedUpgrade=1
 
 rem --- Get version for repository branch. Use version of Barista in download.
     rem --- Use version of Barista in download
     call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
     newVersion$=str(num(app_version_id$)*100:"0000")
 rem newVersion$="2011"; rem wgh ... 9809 ... testing
-
-rem --- Determine if upgrading from a Git based installation, or a non-Git based installation
-    oldUsedGit!=new HashMap()
-    oldNonGit!=new HashMap()
-    for syscnt=0 to oldAonDir!.size()-1
-        oldGitDir! = new File(oldAonDir!.getItem(syscnt)+"/.git")
-        if oldGitDir!.exists() and oldGitDir!.isDirectory() then
-            oldUsedGit!.put(newAonDir!.getItem(syscnt),oldAonDir!.getItem(syscnt))
-        else
-            oldNonGit!.put(newAonDir!.getItem(syscnt),oldAonDir!.getItem(syscnt))
-        endif
-    next syscnt
     
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_UPDATE_WIZ")
     meter_total_recs=4
-    if oldUsedGit!.size()>0 then
-        meter_total_recs=meter_total_recs+6+5*oldUsedGit!.size()
+    if gitBasedUpgrade then
+        meter_total_recs=meter_total_recs+11
     else
-        meter_total_recs=meter_total_recs+6+7*oldNonGit!.size()
+        meter_total_recs=meter_total_recs+13
     endif
     if doSyncBackup% then meter_total_recs=meter_total_recs+1
     if useOldMenu% then meter_total_recs=meter_total_recs+1
@@ -167,73 +154,44 @@ rem wgh ... 9809 ... For pre-v15.02 upgrades, warn that they must run Barista's 
 rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods ????? For v21+ too ?????
 
 rem --- Process upgrade from either a Git based installation or a non-Git based installation
-    if oldUsedGit!.size()>0 then
+    if gitBasedUpgrade then
         rem --- Process upgrades from a Git based installation
-        localCommitsList!=BBjAPI().makeVector()
+        status=0
+        
+        rem --- Copy old instance of aon from old location to new location
+        gosub copyAon
 
-        gitIter!=oldUsedGit!.keySet().iterator()
-        while gitIter!.hasNext()
-            newDir$=gitIter!.next()
-            oldDir$=oldUsedGit!.get(newDir$)
-            status=0
+        rem --- Build delta XMLs for modified bar/*.xml files that have been committed.
+        gosub buildDeltaXmls
+        if status goto done
 
-            rem --- Get this application's name
-            appName$="unknown"
-            for syscnt=0 to newAonDir!.size()-1
-                if oldUsedGit!.containsKey(newAonDir!.getItem(syscnt))
-                    appName$=appName!.getItem(syscnt)
-                    break
-                endif
-            next syscnt
-            
-            rem --- Copy old instance of aon from old location to new location
-            gosub copyAon
-    
-            rem --- Build delta XMLs for modified bar/*.xml files that have been committed.
-            gosub buildDeltaXmls
-            if status goto done
+		rem --- Refresh Git repository to get the most current branch
+		gosub refreshGitRepo
 
-			rem --- Refresh Git repository to get the most current branch
-			gosub refreshGitRepo
-    
-            rem --- Switch/checkout to branch for new version
-            branchName$="BBJ"+newVersion$+"GA"
-            gosub checkoutGitBranch
-            if status goto done
-    
-            rem --- Update new addon.syn file
-            gosub updateAddonSyn
-        wend
+        rem --- Switch/checkout to branch for new version
+        branchName$="BBJ"+newVersion$+"GA"
+        gosub checkoutGitBranch
+        if status goto done
+
+        rem --- Update new addon.syn file
+        gosub updateAddonSyn
 
     else
 
-        if oldNonGit!.size()>0 then
-            rem --- Process upgrades from a non-Git based installation
-            gitIter!=oldNonGit!.keySet().iterator()
-            while gitIter!.hasNext()
-                newDir$=gitIter!.next()
-                oldDir$=oldNonGit!.get(newDir$)
-                status=0
-    
-                rem --- Get this application's name
-                for syscnt=0 to newAonDir!.size()-1
-                    if oldUsedGit!.containsKey(newAonDir!.getItem(syscnt))
-                        appName$=appName!.getItem(syscnt)
-                        break
-                    endif
-                next syscnt
-        
-                rem --- Clone Git repository and switch/checkout to old branch
+        rem --- Process upgrades from a non-Git based installation
+        status=0
+
+        rem --- Clone Git repository and switch/checkout to old branch
 rem wgh ... 9809 ... How are we going to get the old version to know what the old branch was?
 rem wgh ... 9809 ... For now, can/should we use            oldVers! = utility!.getModuleVersion(new File(oldSyncLoc$))
-oldBranch$="1821"; rem wgh ... 9809 ... testing
-                branchName$="BBJ"+oldBranch$+"GA"
-                gosub cloneGitRepo
-                if status then goto done
-        
-                rem --- Copy old instance of aon from old location to new location
-                gosub copyAon
-        
+rem oldBranch$="1821"; rem wgh ... 9809 ... testing
+        branchName$="BBJ"+oldBranch$+"GA"
+        gosub cloneGitRepo
+        if status then goto done
+
+        rem --- Copy old instance of aon from old location to new location
+        gosub copyAon
+
 rem wgh ... 9809 ... #5 Non-Git ... to do ... Copy the old existing mods/data/bar/delta XMLs to new location 
 
 rem wgh ... 9809 ... #6 Non-Git ... to do ... Incorporate the mods/data/cdf's: put 'before'/'after' callpoints in, or replace the Addon code if it's a 'before' w/ skip. 
@@ -244,16 +202,14 @@ rem ... ??? commit via AddCommand since new files are not tracked yet ???
 rem wgh ... 9809 ... #7 Non-Git ... to do ... Bring over any prog/ files from the mods project (and what if they have more than the prog folder?) and put them in the corresponding src folder based on our naming conventions.
 
 rem wgh ... 9809 ... #7.5 Non-Git ... to do ... This should result in new or changed files in ar/src/, gl/src/, etc. Have Git commit these new/changed files after dealing with possible line ending issues.
-        
-                rem --- Switch/checkout to branch for new version
-                branchName$="BBJ"+newVersion$+"GA"
-                gosub checkoutGitBranch
-                if status goto done
-        
-                rem --- Update new addon.syn file
-                gosub updateAddonSyn
-            wend
-        endif
+
+        rem --- Switch/checkout to branch for new version
+        branchName$="BBJ"+newVersion$+"GA"
+        gosub checkoutGitBranch
+        if status goto done
+
+        rem --- Update new addon.syn file
+        gosub updateAddonSyn
     endif
 
 rem --- Create new session specific classpath (SSCP) in Enterprise Manager
@@ -339,17 +295,15 @@ rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to b
 :	+" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
 :	+" "+$22$+bar_dir$+"/sys/prog/bax_launch_task.bbj"+$22$
 
-    for syscnt=0 to appName!.size()-1
-        newSynFile$=newAonDir!.getItem(syscnt)+"/config/"+cvs(appName!.getItem(syscnt),8)+".syn"
-        user_arg$=" - "
+    newSynFile$=newAonDir$+"/config/"+cvs(appName$,8)+".syn"
+    user_arg$=" - "
 :       +" -u"+rdAdmin!.getUser()
 :       +" -p"+rdAdmin!.getPassword()
 :       +" -t"+"DDM_TABLES"
 :       +" -y"+"A"
 :       +" -a" +"bax_dd_synch_auto.bbj"+$22$+" - "+" -f"+newSynFile$+" -b"+$22$
 :       +" -w"
-	    scall_result=scall(run_arg$+user_arg$,err=*next)
-    next syscnt
+    scall_result=scall(run_arg$+user_arg$,err=*next)
 
 rem --- Copy OPV_SHIPTRACK_nn views from old database to new database
 
@@ -591,13 +545,13 @@ copyAon: rem --- Recursively copy aon from oldLocation to newAonDir
     meter_action$="MTR-LST"
     gosub disp_meter
     print(log_dev)meter_text$
-    print(log_dev)"    Copy "+oldDir$
+    print(log_dev)"    Copy "+oldAonDir$
 
     rem --- Do not copy data or help file
     requiredFiles%=2
     copyData%=1
     help%=0
-    call pgmdir$+"adc_copyaon.aon",oldDir$,newDir$,requiredFiles%,copyData%,help%,rdForm!,0,status
+    call pgmdir$+"adc_copyaon.aon",oldAonDir$,newAonDir$,requiredFiles%,copyData%,help%,rdForm!,0,status
     return
 
 cloneGitRepo: rem --- Clone Git repository and switch/checkout branch
@@ -608,7 +562,7 @@ cloneGitRepo: rem --- Clone Git repository and switch/checkout branch
     meter_action$="MTR-LST"
     gosub disp_meter
     print(log_dev)meter_text$
-    print(log_dev)"    For "+newDir$
+    print(log_dev)"    For "+newAonDir$
 
     rem --- Show busy/working image while cloning and pulling from repository
     nxt_ctlID=util.getNextControlID()
@@ -617,7 +571,7 @@ cloneGitRepo: rem --- Clone Git repository and switch/checkout branch
     rem --- Clone Git repository and checkout branch
     gitURI$="https://git.basis.com/Addon/Addon.git"
     remoteBranch$="origin/"+branchName$
-    cloneDir$=newDir$
+    cloneDir$=newAonDir$
     cloneDir!=new File(cloneDir$)
     userName$="username"
     userPassword$="password"
@@ -650,11 +604,11 @@ checkoutGitBranch: rem --- Switch/checkout branch
     meter_action$="MTR-LST"
     gosub disp_meter
     print(log_dev)meter_text$
-    print(log_dev)"    For "+newDir$
+    print(log_dev)"    For "+newAonDir$
     print (log_dev) "    Checkout "+branchName$
 
     rem --- Checkout repository branch
-    cloneDir$=newDir$
+    cloneDir$=newAonDir$
     repoInterface!=new GitRepoInterface(cloneDir$)
     checkoutStatus$=repoInterface!.checkoutBranch(branchName$)
     repoInterface!.closeInterface()
@@ -679,7 +633,7 @@ refreshGitRepo: rem --- Refresh Git repository to get the most current branch
     print(log_dev)meter_text$
 
     rem --- Pull Git repository
-    repoInterface!=new GitRepoInterface(newDir$)
+    repoInterface!=new GitRepoInterface(newAonDir$)
     repoInterface!.pullRepository()
     repoInterface!.closeInterface()
 
@@ -693,11 +647,10 @@ buildDeltaXmls: rem --- Build delta XMLs for modified bar/*.xml files that have 
     meter_action$="MTR-LST"
     gosub disp_meter
     print(log_dev)meter_text$
-    print(log_dev)"    For "+newDir$
+    print(log_dev)"    For "+newAonDir$
     
     rem --- Get JGit interface to repository
-    aonDir$=newDir$
-    repoInterface!=new GitRepoInterface(aonDir$)
+    repoInterface!=new GitRepoInterface(newAonDir$)
     LocalBranch$=repoInterface!.getLocalBranch()
     ReleaseTag$=repoInterface!.getReleaseTag()
     
@@ -728,7 +681,7 @@ buildDeltaXmls: rem --- Build delta XMLs for modified bar/*.xml files that have 
     rem --- Get Vector of all local commits.
     localCommitsList!=repoInterface!.getLocalCommits(LocalBranch$,ReleaseTag$)
     
-    mkdir aonDir$+"/tmp",err=*next
+    mkdir newAonDir$+"/tmp",err=*next
     
     rem --- Get modified bar/*.xml files that have been committed.
     localCommittedXmls!=repoInterface!.getLocalCommittedXmls(localCommitsList!)
@@ -739,7 +692,7 @@ buildDeltaXmls: rem --- Build delta XMLs for modified bar/*.xml files that have 
         rem --- Get original version of modified bar/*.xml files in list.
         fileContent$=repoInterface!.getRemoteFileContent(modifiedXml$)
     
-        outfile$=aonDir$+"/tmp/"+modifiedXml$(1+pos("/"=modifiedXml$,-1))
+        outfile$=newAonDir$+"/tmp/"+modifiedXml$(1+pos("/"=modifiedXml$,-1))
         erase outfile$,err=*next
         string outfile$
         out_dev=unt
@@ -751,15 +704,15 @@ buildDeltaXmls: rem --- Build delta XMLs for modified bar/*.xml files that have 
         rd_action$=""
         rd_status$=""
         rd_base_file$=outfile$
-        rd_proj_file$=aonDir$+"/"+modifiedXml$
-        rd_delta_file$=aonDir$+"/data/bar/delta/"+modifiedXml$(1+pos("/"=modifiedXml$,-1))
+        rd_proj_file$=newAonDir$+"/"+modifiedXml$
+        rd_delta_file$=newAonDir$+"/data/bar/delta/"+modifiedXml$(1+pos("/"=modifiedXml$,-1))
         call stbl("+DIR_SYP")+"bax_dd_synch_delta.bbj",rd_base_file$,rd_proj_file$,rd_delta_file$,rd_action$,rd_status$
     
         erase rd_base_file$,err=*next
     wend
     
     repoInterface!.closeInterface()
-    rmdir aonDir$+"/tmp",err=*next
+    rmdir newAonDir$+"/tmp",err=*next
     return
 
 updateAddonSyn: rem --- Update addon.syn file
@@ -772,11 +725,11 @@ updateAddonSyn: rem --- Update addon.syn file
     print(log_dev)meter_text$
 
     rem --- Set newSynFile to addon.syn at the new aon location
-    newSynFile$=newDir$+"/config/"+cvs(appName$,8)+".syn"
+    newSynFile$=newAonDir$+"/config/"+cvs(appName$,8)+".syn"
 
     rem --- Setup for upgrade
     upgrade%=1
-    oldSynFile$=oldDir$+"/config/"+cvs(appName$,8)+".syn"
+    oldSynFile$=oldAonDir$+"/config/"+cvs(appName$,8)+".syn"
 
     rem --- If oldSynFile does not exist, skip.
     oldSynFile! = new File(oldSynFile$)
@@ -801,9 +754,9 @@ doInterimCommit: rem --- Commit all modified and deleted tracked files
     print(log_dev)meter_text$
 
     rem --- Get JGit interface to repository, and call commitAll()
-    aonDir$=newDir$
-    repoInterface!=new GitRepoInterface(aonDir$)
+    repoInterface!=new GitRepoInterface(newAonDir$)
     repoInterface!.commitAll(1,Translate!.getTranslation("AON_INTERIM_COMMIT"))
+    repoInterface!.closeInterface()
     return
 
 build_stblMap_pfxList: rem --- Build stblMap! and pfxList! for adc_copymods.aon for a app$
@@ -936,30 +889,28 @@ updateSyncXml: rem --- Update new sync XML files (and copy old barista/settings 
     gosub disp_meter
     print(log_dev)meter_text$
 
-    for syscnt=0 to appName!.size()-1
-        rem --- Set newSyncLoc to sync directory at the new aon location
-        newSyncLoc$=newAonDir!.getItem(syscnt)+"/data/sync"
-    
-        rem --- Setup for upgrade
-        upgrade%=1
-        oldSyncLoc$=oldAonDir!.getItem(syscnt)+"/data/sync"
+    rem --- Set newSyncLoc to sync directory at the new aon location
+    newSyncLoc$=newAonDir$+"/data/sync"
 
-        rem --- If oldSynLoc does not exist for ADDON, skip.
-        oldSynLoc! = new File(oldSyncLoc$)
-        if !oldSynLoc!.exists() then continue
-    
-        rem --- Launch adc_updatexmlfiles.aon
-        call pgmdir$+"adc_updatexmlfiles.aon",newSyncLoc$,oldSyncLoc$,syncBackupDir$,upgrade%,rdForm!,0,status
+    rem --- Setup for upgrade
+    upgrade%=1
+    oldSyncLoc$=oldAonDir$+"/data/sync"
 
-        rem --- Get version of source Addon installation from source data/sync/adm_modules~01007514ad.xml
-        if start_version$="" and appName!.getItem(syscnt)="ADDON" then
-            utility! = new UpdateSyncXmlFiles(rdForm!,0)
-            oldVers! = utility!.getModuleVersion(new File(oldSyncLoc$))
-            if oldVers!.get("AD")<>null() then
-                start_version$=oldVers!.get("AD")
-            endif
+    rem --- If oldSynLoc does not exist for ADDON, skip.
+    oldSynLoc! = new File(oldSyncLoc$)
+    if !oldSynLoc!.exists() then continue
+
+    rem --- Launch adc_updatexmlfiles.aon
+    call pgmdir$+"adc_updatexmlfiles.aon",newSyncLoc$,oldSyncLoc$,syncBackupDir$,upgrade%,rdForm!,0,status
+
+    rem --- Get version of source Addon installation from source data/sync/adm_modules~01007514ad.xml
+    if start_version$="" then
+        utility! = new UpdateSyncXmlFiles(rdForm!,0)
+        oldVers! = utility!.getModuleVersion(new File(oldSyncLoc$))
+        if oldVers!.get("AD")<>null() then
+            start_version$=oldVers!.get("AD")
         endif
-    next syscnt
+    endif
     return
 
 buildAddonJar: rem --- Build addonprop.jar and put it in the aon/prop directory
@@ -987,36 +938,34 @@ useOldMenu: rem --- Use old modified menus instead of new standard menus.
     print(log_dev)meter_text$
 
     availableLangs$="deuenuespfraitanldsve"
-    for syscnt=0 to appName!.size()-1
-        for i=1 to len(availableLangs$)-1 step 3
-            lang$=availableLangs$(i,3)
-            
-            rem --- If oldMenuFile exists, overwrite newMenuFile with it
-            oldMenuFile! = new File(oldAonDir!.getItem(syscnt)+"/config/"+lang$+"/"+cvs(appName!.getItem(syscnt),8)+".men")
-            if oldMenuFile!.exists()
-            
-                rem --- Create new directories as necessary for newMenuFile
-                newMenuDir! = new File(newAonDir!.getItem(syscnt)+"/config/"+lang$)
-                FileObject.makeDirs(newMenuDir!)
+    for i=1 to len(availableLangs$)-1 step 3
+        lang$=availableLangs$(i,3)
+        
+        rem --- If oldMenuFile exists, overwrite newMenuFile with it
+        oldMenuFile! = new File(oldAonDir$+"/config/"+lang$+"/"+cvs(appName$,8)+".men")
+        if oldMenuFile!.exists()
+        
+            rem --- Create new directories as necessary for newMenuFile
+            newMenuDir! = new File(newAonDir$+"/config/"+lang$)
+            FileObject.makeDirs(newMenuDir!)
 
-                rem --- Rename newMenuFile as a backup before overwriting it
-                newMenuFile! = new File(newMenuDir!.getPath()+"/"+cvs(appName!.getItem(syscnt),8)+".men")
-                rename newMenuFile!.getPath() to newMenuDir!.getPath()+"/"+cvs(appName!.getItem(syscnt),8)+".men.bak", err=*next
-                
-                rem --- Copy oldMenuFile to newMenuFile
-                sourceChan=unt
-                open(sourceChan,isz=-1,err=*endif)oldMenuFile!.getPath()
-                targetChan=unt
-                open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")newMenuFile!.getPath()
-                while 1
-                    readrecord(sourceChan,siz=BLOCKSIZE,end=*break)record$
-                    writerecord(targetChan)record$
-                wend
-                close(sourceChan)
-                close(targetChan)
-            endif
-        next i
-    next syscnt
+            rem --- Rename newMenuFile as a backup before overwriting it
+            newMenuFile! = new File(newMenuDir!.getPath()+"/"+cvs(appName$,8)+".men")
+            rename newMenuFile!.getPath() to newMenuDir!.getPath()+"/"+cvs(appName$,8)+".men.bak", err=*next
+            
+            rem --- Copy oldMenuFile to newMenuFile
+            sourceChan=unt
+            open(sourceChan,isz=-1,err=*endif)oldMenuFile!.getPath()
+            targetChan=unt
+            open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")newMenuFile!.getPath()
+            while 1
+                readrecord(sourceChan,siz=BLOCKSIZE,end=*break)record$
+                writerecord(targetChan)record$
+            wend
+            close(sourceChan)
+            close(targetChan)
+        endif
+    next i
     return
 
 cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
