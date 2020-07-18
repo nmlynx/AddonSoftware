@@ -468,7 +468,7 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
             endif
             if pos("end_version="=line$) then
                 rem --- Get version of this Addon installation
-                end_version$=str(num(newVersion$(1,2))/10:"00.0")
+                end_version$=str(num(newVersion$(1,2)):"00.0")
         
                 xpos=pos("end_version="=line$)
                 line$=line$(1,xpos+len("end_version=")-1)+end_version$+line$(xpos+len("end_version="))
