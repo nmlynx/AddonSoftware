@@ -25,6 +25,7 @@ rem  */
     use org.eclipse.jgit.diff.DiffEntry
     use org.eclipse.jgit.diff.DiffFormatter
     use org.eclipse.jgit.lib.AnyObjectId
+    use org.eclipse.jgit.lib.Constants
     use org.eclipse.jgit.lib.ObjectId
     use org.eclipse.jgit.lib.Repository
     use org.eclipse.jgit.revwalk.RevCommit
@@ -702,7 +703,7 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
             declare RevWalk revWalk!
             declare CheckoutCommand checkoutCmd!
             
-            repository!=#Git!.getRepository()
+            repository!=#git!.getRepository()
             outputStream!=new ByteArrayOutputStream()
             
             REM Get a revcommit for the head of the repository
@@ -744,12 +745,26 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
             wend 
             
             if (filesToCheckOut!.size()>0) then 
-                checkOutCmd!=#Git!.checkout()
+                checkOutCmd!=#git!.checkout()
                 checkOutCmd!.addPaths(filesToCheckOut!)
                 checkOutCmd!.call()
             endif  
                 
         methodend
+        
+        REM Prepare Tree Parser 
+        method protected CanonicalTreeParser prepareTreeParser(RevCommit commit!)
+            declare RevWalk walk!
+            declare Repository repository!
+            declare ObjectId treeId!
+            declare ObjectReader reader!
+            
+            repository!=#git!.getRepository()
+            walk! = new RevWalk(repository!)
+            treeId! = commit!.getTree().getId()
+            reader! = repository!.newObjectReader()
+            methodret new CanonicalTreeParser(null(), reader!, treeId!)
+        methodend 
         
         REM Called by filesWithDifferentLineEndings
         method public BBjNumber diffOnlyShowsLineEndings(BBjString diff!)
