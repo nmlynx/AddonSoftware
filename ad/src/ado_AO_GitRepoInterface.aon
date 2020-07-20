@@ -17,7 +17,10 @@ rem  */
     use java.nio.charset.StandardCharsets
     use java.util.HashMap
     use java.util.TreeSet
+    use java.util.ArrayList
+    use java.util.Iterator
 
+    use org.eclipse.jgit.api.CheckoutCommand
     use org.eclipse.jgit.api.CheckoutCommand.Stage
     use org.eclipse.jgit.api.CherryPickResult.CherryPickStatus
     use org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
@@ -27,6 +30,7 @@ rem  */
     use org.eclipse.jgit.lib.AnyObjectId
     use org.eclipse.jgit.lib.Constants
     use org.eclipse.jgit.lib.ObjectId
+    use org.eclipse.jgit.lib.ObjectReader
     use org.eclipse.jgit.lib.Repository
     use org.eclipse.jgit.revwalk.RevCommit
     use org.eclipse.jgit.revwalk.RevWalk
