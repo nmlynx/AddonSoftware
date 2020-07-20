@@ -11,6 +11,7 @@ rem  * This class uses JGit to interface with Addon's Git repository to perform
 rem  * tasks needed during upgrades and updates.
 rem  */
 
+    use java.io.ByteArrayOutputStream
     use java.io.File
     use java.lang.reflect.Array
     use java.nio.charset.StandardCharsets
@@ -21,6 +22,8 @@ rem  */
     use org.eclipse.jgit.api.CherryPickResult.CherryPickStatus
     use org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
     use org.eclipse.jgit.api.Git
+    use org.eclipse.jgit.diff.DiffEntry
+    use org.eclipse.jgit.diff.DiffFormatter
     use org.eclipse.jgit.lib.AnyObjectId
     use org.eclipse.jgit.lib.ObjectId
     use org.eclipse.jgit.lib.Repository
@@ -28,7 +31,9 @@ rem  */
     use org.eclipse.jgit.revwalk.RevWalk
     use org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
     use org.eclipse.jgit.treewalk.CanonicalTreeParser
+    use org.eclipse.jgit.treewalk.FileTreeIterator
     use org.eclipse.jgit.treewalk.TreeWalk
+    
 
     
     class public AO_GitRepoInterface
@@ -673,8 +678,136 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
             methodret
         methodend
 		
+		REM Commits all the changes in the working directory. 
+		REM automaticallyStage!:  If set to 1 or nonzero, stages all changes before checking in. Does not add files. 
+		REM message!: Commit message for repository log
 		method public RevCommit commitAll(BBjNumber automaticallyStage!, BBjString message!)
 			methodret #git!.commit().setAll(automaticallyStage!).setMessage(message!).call()	
 		methodend 
+		
+        REM Method and companion methods for identifying files that are only different due to line endings. 
+        REM Assumptions made here are: 
+        REM     There's one huge difference and it's the entire file. 
+        REM     The differences are between $0A$ and $0D0A$
+        REM 
+        REM If files are found to only differ by different line endings, we revert the working copy. 
+        method public void checkoutFilesWithDifferentLineEndings() 
+            declare Repository repository!
+            declare ByteArrayOutputStream outputStream!
+            declare DiffFormatter formatter!
+            declare FileTreeIterator workTreeIterator!
+            declare java.util.List diffEntries!
+            declare Iterator diffIter!
+            declare DiffEntry entry!
+            declare RevWalk revWalk!
+            declare CheckoutCommand checkoutCmd!
+            
+            repository!=#Git!.getRepository()
+            outputStream!=new ByteArrayOutputStream()
+            
+            REM Get a revcommit for the head of the repository
+            declare ObjectId headObjectId!
+            declare RevCommit headRevCommit!
+            headObjectId!=repository!.resolve(Constants.HEAD)
+            revWalk!=new RevWalk(repository!)
+            headRevCommit!=revWalk!.parseCommit(headObjectId!)
+            
+            REM Get a list of diffs between the working tree and head commit
+            formatter! = new DiffFormatter(outputStream!)
+            formatter!.setRepository(repository!)
+            commitTreeIterator! = #prepareTreeParser(headRevCommit!)
+            workTreeIterator! = new FileTreeIterator(repository!)
+            diffEntries! = formatter!.scan(commitTreeIterator!, workTreeIterator!)
+    
+            REM Process the diffs 
+            diffIter!=diffEntries!.iterator()
+            
+            declare BBjVector filesToCheckOut!
+            filesToCheckOut!=BBjAPI().makeVector() 
+            
+            while (diffIter!.hasNext())  
+                entry!=cast(DiffEntry,diffIter!.next())
+                formatter!.format(entry!)
+                x$=outputStream!.toString()
+                outputStream!.reset()
+            
+                declare BBjString fileName!
+                fileName!=entry!.getNewPath()
+                if fileName!.contains("build.xml") then escape
+                diffOnlyShowsLineEndings=#diffOnlyShowsLineEndings(x$)
+                if (diffOnlyShowsLineEndings) then 
+                    print entry!.getNewPath()
+                    
+                    REM Add the file to the list of files to check out. 
+                    filesToCheckOut!.add(entry!.getNewPath())
+                endif 
+            wend 
+            
+            if (filesToCheckOut!.size()>0) then 
+                checkOutCmd!=#Git!.checkout()
+                checkOutCmd!.addPaths(filesToCheckOut!)
+                checkOutCmd!.call()
+            endif  
+                
+        methodend
+        
+        REM Called by filesWithDifferentLineEndings
+        method public BBjNumber diffOnlyShowsLineEndings(BBjString diff!)
+        
+            REM The file should just have one big difference 
+            declare BBjString search!
+            declare BBjString left!
+            declare BBjString right!
+            declare BBjNumber first!
+            declare BBjNumber last!
+            declare BBjNumber diffBegins!
+            declare BBjNumber leftBegins!
+            declare BBjNumber rightBegins!
+            declare BBjNumber nextLineBegins!
+            declare BBjNumber nextLineEnds!
+            declare BBjString leftSide!
+            declare BBjString rightSide!
+            
+            search!=$0A$+"@@"
+            first!=diff!.indexOf(search!)
+            last!=diff!.lastIndexOf(search!)
+            
+            if last!<>first! then methodret 0
+            
+            diffBegins!=last!
+            leftDelimiter!=$0A$+"-"
+            rightDelimiter!=$0A$+"+"
+            
+            leftSide!=#getSide(diff!,leftDelimiter!,diffBegins!)
+            rightSide!=#getSide(diff!,rightDelimiter!,diffBegins!)
+            
+            methodret leftSide!=rightSide!
+        methodend 
+        
+        REM Called by diffOnlyShowsLineEndings
+        method protected BBjString getSide(BBjString diff!, BBjString delimiter!, BBjNumber diffBegins!)
+            declare BBjNumber begins!
+            declare BBjNumber nextLineBegins!
+            declare BBjString side!
+            
+            begins!=diff!.indexOf(delimiter!,diffBegins!)
+            nextLineBegins!=begins!
+            
+            side!=""
+            while (nextLineBegins!>0)
+                nextLineEnds!=diff!.indexOf($0A$,nextLineBegins!+1)
+                if (nextLineEnds!<0) then 
+                    nextLineEnds!=diff!.length()
+                endif 
+                if (diff!.substring(nextLineEnds!-1,nextLineEnds!)=$0D$) then 
+                    nextLineEnds!=nextLineEnds!-1
+                endif 
+                
+                side!=side!+diff!.substring(nextLineBegins!+2,nextLineEnds!)
+                
+                nextLineBegins!=diff!.indexOf(delimiter!,nextLineBegins!+1)
+           wend 
+           methodret side!
+        methodend 
 
 classend

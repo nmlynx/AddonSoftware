@@ -232,7 +232,8 @@ rem --- Use old modified menus instead of new standard menus.
     if useOldMenu% then gosub useOldMenu
 
 rem wgh ... 9809 ... check for, and resolve, line ending issues
-
+    gosub checkLineEndings
+    
 rem --- commit sync xml and syn file changes made during updateAddonSyn and updateSyncXml routines
 rem --- assures work tree is clean prior to cherry picking
     gosub doInterimCommit
@@ -967,6 +968,11 @@ useOldMenu: rem --- Use old modified menus instead of new standard menus.
         endif
     next i
     return
+    
+checkLineEndings: 
+    repoInterface!=new GitRepoInterface(newAonDir$)
+    repoInterface!.checkoutFilesWithDifferentLineEndings()
+    repoInterface!.closeInterface()
 
 cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
 
