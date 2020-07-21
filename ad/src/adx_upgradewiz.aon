@@ -120,6 +120,17 @@ rem wgh ... 9809 ... re-count when complete
             print(log_dev)"Upgrade Wizard re-started after Git conflicts"
             print(log_dev)
 
+            rem --- Get from restart log the starting version for this upgrade
+            label$="Start version: "
+            lenLabel=len(label$)
+            while 1
+                read(restart_dev,end=*break)text$
+                if pos(label$=text$)=1 then
+                    start_version$=text$(1+lenLabel)
+                    break
+                endif
+            wend
+
             rem --- Get from restart log list of remaining commits that still need to be cherry picked
             label$="Remaining commit: "
             lenLabel=len(label$)
@@ -136,6 +147,11 @@ rem wgh ... 9809 ... re-count when complete
 
             close(restart_dev,err=*next)
             erase restartFile$,err=*next
+
+            rem --- Build aonStblMap! for restart
+            app$=appName$
+            gosub build_stblMap_pfxList
+            aonStblMap!=stblMap!
 
             goto restartUpgrade
         else
@@ -220,7 +236,7 @@ rem wgh ... 9809 ... #7 Non-Git ... to do ... Bring over any prog/ files from th
 rem wgh ... 9809 ... #7 Non-Git ... to do ... This should result in new or changed files in ar/src/, gl/src/, etc. Have Git commit these new/changed files after dealing with possible line ending issues.
 
 rem wgh ... 9809 ... stopped here
-rem escape; rem wgh ... 9809 ... testing moveModsDataBarDelta
+rem escape; rem wgh ... 9809 ... testing
 
         rem --- Commit ALL of the above changes to the old Git branch
         gosub doInterimCommit
@@ -287,6 +303,7 @@ rem --- Need to restart if there were Git conflicts, or a Git cherry pick failur
         print(restart_dev)"Previous log file: " + newAonDir$ + "/logs"+logName$
         print(restart_dev)"New aon Location: " + newAonLoc$
         print(restart_dev)"Old aon Location: " + oldAonLoc$
+        print(restart_dev)"Start version: " + start_version$
         print(restart_dev)
 
         rem --- Capture remaining commits that still need to be cherry picked
@@ -456,7 +473,6 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
 
         rem --- Put initialized conversion control file in +DIR_DAT new target data directory
         convCtrlFilePath$=newAonDir$+"/data"
-rem wgh ... 9809 ... stopped here ... aonStblMap! is empty on restarts
         if aonStblMap!.containsKey("+DIR_DAT") then
             aList! = cast(ArrayList, aonStblMap!.get("+DIR_DAT"))
             target$ = cast(BBjString, aList!.get(1))
@@ -502,7 +518,6 @@ rem wgh ... 9809 ... stopped here ... aonStblMap! is empty on restarts
             endif
             if pos("start_version="=line$) then
                 rem --- Get version of source Addon installation from source data/sync/adm_modules~01007514ad.xml
-rem wgh ... 9809 ... stopped here ... start_version$ is blank on restarts
                 start_version$=iff(start_version$<>"",start_version$,end_version$)
     
                 xpos=pos("start_version="=line$)
@@ -837,7 +852,7 @@ doInterimCommit: rem --- Commit all modified and deleted tracked files
     repoInterface!.closeInterface()
     return
 
-build_stblMap_pfxList: rem --- Build stblMap! and pfxList! for adc_copymods.aon for a app$
+build_stblMap_pfxList: rem --- Build stblMap! and pfxList! for a app$
 
     stblMap! = new HashMap()
     pfxList! = new ArrayList()
