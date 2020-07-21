@@ -449,6 +449,7 @@ rem --- Run Install Application Wizard for applications being installed
         rem --- Launch baw_install_app.bbj
         bar_dir$=newBarDir$
         if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
+        if app$="ADDON" then aongitarg$="-aongitY" else aongitarg$=""                                                                                                                                        
         run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
 :	    +" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
 :	    +" "+$22$+bar_dir$+"/sys/prog/bax_launch_task.bbj"+$22$
@@ -457,7 +458,7 @@ rem --- Run Install Application Wizard for applications being installed
 :	    +" -p"+rdAdmin!.getPassword()
 :	    +" -t"+"DDM_TABLES"
 :	    +" -y"+"A"
-:       +" -a" +"baw_install_app.bbj"+$22$+" - "+" -f"+sourceSyn$+$22$
+:       +" -a" +"baw_install_app.bbj"+$22$+" - "+" -f"+sourceSyn$+" "+aongitarg$+$22$
 :	    +" -w"
         scall_result=scall(run_arg$+user_arg$,err=*next)
     wend
@@ -592,10 +593,7 @@ copyAon: rem --- Recursively copy aon from oldLocation to newAonDir
     print(log_dev)meter_text$
     print(log_dev)"    Copy "+oldAonDir$
 
-    rem --- Do not copy data or help file
-    requiredFiles%=1
-    copyData%=0
-    help%=0
+    rem --- requiredFiles%,copyData%,help% are incoming; for git-based (i.e., version-neutral), copy data (demo data), for non-git, do NOT copy data.
     call pgmdir$+"adc_copyaon.aon",oldAonDir$,newAonDir$,requiredFiles%,copyData%,help%,rdForm!,0,status
     
     rem Clear logs directory
