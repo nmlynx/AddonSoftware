@@ -235,6 +235,8 @@ rem wgh ... use example class CDFMassager.bbj
 rem wgh ... 9809 ... #7 Non-Git ... to do ... Bring over any prog/ files from the mods project (and what if they have more than the prog folder?) and put them in the corresponding src folder based on our naming conventions.
 rem wgh ... 9809 ... #7 Non-Git ... to do ... This should result in new or changed files in ar/src/, gl/src/, etc. Have Git commit these new/changed files after dealing with possible line ending issues.
 
+rem wgh ... 9809 ... deal with possible line ending issues
+
 rem wgh ... 9809 ... stopped here
 rem escape; rem wgh ... 9809 ... testing
 
@@ -596,7 +598,16 @@ copyAon: rem --- Recursively copy aon from oldLocation to newAonDir
     help%=0
     call pgmdir$+"adc_copyaon.aon",oldAonDir$,newAonDir$,requiredFiles%,copyData%,help%,rdForm!,0,status
     
-rem wgh ... 9809 ... stopped here ... clear logs directory
+    rem Clear logs directory
+    logsDir!=new File(newAonDir$ + "/logs")
+    if logsDir!.exists() then
+        logsVector! = new Vector(java.util.Arrays.asList(logsDir!.listFiles()))
+        logsIter!=logsVector!.iterator()
+        while logsIter!.hasNext()
+            logFile!=logsIter!.next()
+            logFile!.delete()
+        wend
+    endif
     return
 
 moveModsDataBarDelta: rem --- Move mods/data/bar/delta XMLs to Addon location
