@@ -7,9 +7,11 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
 
     use java.io.File
+    use java.lang.reflect.Array
     use java.nio.file.Files
-    use java.nio.file.Path
-    use java.nio.file.Paths
+    use java.nio.file.StandardCopyOption
+rem wgh ...    use java.nio.file.Path
+rem wgh ...    use java.nio.file.Paths
     use java.util.ArrayList
     use java.util.Comparator
     use java.util.HashMap
@@ -79,6 +81,7 @@ rem newVersion$="2011"; rem wgh ... 9809 ... testing
     
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_UPDATE_WIZ")
+rem wgh ... 9809 ... re-count when complete
     meter_total_recs=4
     if gitBasedUpgrade then
         meter_total_recs=meter_total_recs+11
@@ -106,9 +109,14 @@ rem --- Is this a restart after resolving Git conflicts?
         if pos(restartFile$=text$) then
             rem --- Increment progress meter
             meter_text$=Translate!.getTranslation("AON_UPGRADE_WIZ_RESTART")
+rem wgh ... 9809 ... re-count when complete
+            if gitBasedUpgrade then
+                meter_proc_recs=meter_total_recs-5
+            else
+                meter_proc_recs=meter_total_recs-5
+            endif
             meter_action$="MTR-LST"
             gosub disp_meter
-            meter_proc_recs=meter_total_recs-4
             print(log_dev)"Upgrade Wizard re-started after Git conflicts"
             print(log_dev)
 
@@ -159,6 +167,9 @@ rem --- Process upgrade from either a Git based installation or a non-Git based 
         status=0
         
         rem --- Copy old instance of aon from old location to new location
+        requiredFiles%=0
+        copyData%=1
+        help%=0
         gosub copyAon
 
         rem --- Build delta XMLs for modified bar/*.xml files that have been committed.
@@ -183,25 +194,36 @@ rem --- Process upgrade from either a Git based installation or a non-Git based 
 
         rem --- Clone Git repository and switch/checkout to old branch
 rem wgh ... 9809 ... How are we going to get the old version to know what the old branch was?
-rem wgh ... 9809 ... For now, can/should we use            oldVers! = utility!.getModuleVersion(new File(oldSyncLoc$))
-rem oldBranch$="1821"; rem wgh ... 9809 ... testing
+rem  ... ????? For now, can/should we use            oldVers! = utility!.getModuleVersion(new File(oldSyncLoc$)) ?????
+oldBranch$="1821"; rem wgh ... 9809 ... testing
         branchName$="BBJ"+oldBranch$+"GA"
         gosub cloneGitRepo
         if status then goto done
 
         rem --- Copy old instance of aon from old location to new location
+        requiredFiles%=0
+        copyData%=0
+        help%=0
         gosub copyAon
 
-rem wgh ... 9809 ... #5 Non-Git ... to do ... Copy the old existing mods/data/bar/delta XMLs to new location 
+        rem --- Run Copy Application utility for applications being copied
+        gosub copyApps
+
+        rem --- Move mods/data/bar/delta XMLs to Addon location
+        gosub moveModsDataBarDelta
 
 rem wgh ... 9809 ... #6 Non-Git ... to do ... Incorporate the mods/data/cdf's: put 'before'/'after' callpoints in, or replace the Addon code if it's a 'before' w/ skip. 
-
-rem wgh ... 9809 ... #6.5 Non-Git ... to do ... While we're massaging callpoints, alphabetize them. Have Git commit these altered cdf's after dealing with possible line ending issues.
-rem ... ??? commit via AddCommand since new files are not tracked yet ???
+rem wgh ... 9809 ... #6 Non-Git ... to do ... While we're massaging callpoints, alphabetize them. Have Git commit these altered cdf's after dealing with possible line ending issues.
+rem wgh ... use example class CDFMassager.bbj
 
 rem wgh ... 9809 ... #7 Non-Git ... to do ... Bring over any prog/ files from the mods project (and what if they have more than the prog folder?) and put them in the corresponding src folder based on our naming conventions.
+rem wgh ... 9809 ... #7 Non-Git ... to do ... This should result in new or changed files in ar/src/, gl/src/, etc. Have Git commit these new/changed files after dealing with possible line ending issues.
 
-rem wgh ... 9809 ... #7.5 Non-Git ... to do ... This should result in new or changed files in ar/src/, gl/src/, etc. Have Git commit these new/changed files after dealing with possible line ending issues.
+rem wgh ... 9809 ... stopped here
+rem escape; rem wgh ... 9809 ... testing moveModsDataBarDelta
+
+        rem --- Commit ALL of the above changes to the old Git branch
+        gosub doInterimCommit
 
         rem --- Switch/checkout to branch for new version
         branchName$="BBJ"+newVersion$+"GA"
@@ -216,7 +238,7 @@ rem --- Create new session specific classpath (SSCP) in Enterprise Manager
     gosub createSSCP
 
 rem --- Run Copy Application utility for applications being copied
-    gosub copyApps
+    if gitBasedUpgrade then gosub copyApps
 
 rem --- BIM Barista to the new location.
     gosub bimBarista
@@ -231,11 +253,11 @@ rem --- Build addonprop.jar and put it in the aon/prop directory
 rem --- Use old modified menus instead of new standard menus.
     if useOldMenu% then gosub useOldMenu
 
-rem wgh ... 9809 ... check for, and resolve, line ending issues
+rem --- Check for, and resolve, line ending issues
     gosub checkLineEndings
-    
-rem --- commit sync xml and syn file changes made during updateAddonSyn and updateSyncXml routines
-rem --- assures work tree is clean prior to cherry picking
+
+rem --- Commit sync xml and syn file changes made during updateAddonSyn and updateSyncXml routines
+rem --- Assures work tree is clean prior to cherry picking
     gosub doInterimCommit
 
 restartUpgrade:
@@ -421,6 +443,9 @@ rem --- Run Install Application Wizard for applications being installed
         scall_result=scall(run_arg$+user_arg$,err=*next)
     wend
 
+rem --- Commit Addon changes made during baw_install_app.bbj
+    gosub doInterimCommit
+
 rem --- On successful complete, initialize conversion control file data/adx_conversionCtrl
 
     convCtrlIniFileName$=newAonDir$+"/config/adx_conversionCtrl.ini"
@@ -431,13 +456,14 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
 
         rem --- Put initialized conversion control file in +DIR_DAT new target data directory
         convCtrlFilePath$=newAonDir$+"/data"
+rem wgh ... 9809 ... stopped here ... aonStblMap! is empty on restarts
         if aonStblMap!.containsKey("+DIR_DAT") then
             aList! = cast(ArrayList, aonStblMap!.get("+DIR_DAT"))
             target$ = cast(BBjString, aList!.get(1))
             convCtrlFilePath$=FileObject.fixPath(target$, "/")
             FileObject.removeEndSlash(convCtrlFilePath$)
         endif
-        convCtrlFileName$=convCtrlFilePath$+"adx_conversionCtrl"
+        convCtrlFileName$=convCtrlFilePath$+"/adx_conversionCtrl"
         convCtrlFile!=new File(convCtrlFileName$)
         rem --- Create path/file if doesn't exist
         if !convCtrlFile!.exists() then
@@ -476,6 +502,7 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
             endif
             if pos("start_version="=line$) then
                 rem --- Get version of source Addon installation from source data/sync/adm_modules~01007514ad.xml
+rem wgh ... 9809 ... stopped here ... start_version$ is blank on restarts
                 start_version$=iff(start_version$<>"",start_version$,end_version$)
     
                 xpos=pos("start_version="=line$)
@@ -549,10 +576,60 @@ copyAon: rem --- Recursively copy aon from oldLocation to newAonDir
     print(log_dev)"    Copy "+oldAonDir$
 
     rem --- Do not copy data or help file
-    requiredFiles%=2
-    copyData%=1
+    requiredFiles%=1
+    copyData%=0
     help%=0
     call pgmdir$+"adc_copyaon.aon",oldAonDir$,newAonDir$,requiredFiles%,copyData%,help%,rdForm!,0,status
+    
+rem wgh ... 9809 ... stopped here ... clear logs directory
+    return
+
+moveModsDataBarDelta: rem --- Move mods/data/bar/delta XMLs to Addon location
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_MOVE_DELTA_XML")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+    print(log_dev)"    For "+newAonDir$
+
+    appIter!=appVect!.iterator()
+    while appIter!.hasNext()
+        aList! = cast(ArrayList, appIter!.next())
+        parent$=cast(BBjString, aList!.get(1))
+        if parent$<>"ADDON" then continue
+        
+        target$=cast(BBjString, aList!.get(5))
+        modsDataBarDelta!=new File(target$+"data/bar/delta",err=*next)
+        if modsDataBarDelta!.exists() and modsDataBarDelta!.isDirectory() then
+                
+            rem --- Ceate new aon/data/bar/delta directory if it doesn't exist
+            aonDataBarDelta$=newAonDir$+"/data/bar/delta"
+            FileObject.makeDirs(aonDataBarDelta$)
+    
+            rem --- Move mods/data/bar/delta XMLs to new aon/data/bar/delta directory
+            options!=Array.newInstance(StandardCopyOption.class,1)
+            Array.set(options!,0,StandardCopyOption.REPLACE_EXISTING)
+            sourceVector! = new Vector(java.util.Arrays.asList(modsDataBarDelta!.listFiles()))
+            sourceIter!=sourceVector!.iterator()
+            while sourceIter!.hasNext()
+                sourceFile!=sourceIter!.next()
+                sourceName!=sourceFile!.getName()
+                if sourceName!.endsWith(".xml") then
+                    rem --- Move *.xml files
+                    targetFile!=new File(aonDataBarDelta$+"/"+sourceName!)
+                    Files.move(sourceFile!.toPath(),targetFile!.toPath(),options!)
+                else
+                    rem --- Delete files that aren't *.xml
+                    sourceFile!.delete()
+                endif
+            wend
+    
+            rem --- Remove mods/data/bar/delta directory
+            modsDataBarDelta!.delete()
+        endif
+    wend
     return
 
 cloneGitRepo: rem --- Clone Git repository and switch/checkout branch
@@ -968,8 +1045,16 @@ useOldMenu: rem --- Use old modified menus instead of new standard menus.
         endif
     next i
     return
-    
-checkLineEndings: 
+
+checkLineEndings: rem --- Check for, and resolve, line ending issues
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_RESOLVE_LINE_ENDINGS")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
     repoInterface!=new GitRepoInterface(newAonDir$)
     repoInterface!.checkoutFilesWithDifferentLineEndings()
     repoInterface!.closeInterface()
