@@ -1,7 +1,7 @@
 rem ==========================================================================
 rem --- ado_AO_GitRepoInterface.aon 
 rem --- AO_GitRepoInterface class (GitRepoInterface superclass)
-rem --- Superclass used to synchronize specified sync/*.xml files.
+rem --- Superclass used to interface with JGit.
 rem --- 
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
@@ -38,8 +38,11 @@ rem  */
     use org.eclipse.jgit.treewalk.CanonicalTreeParser
     use org.eclipse.jgit.treewalk.FileTreeIterator
     use org.eclipse.jgit.treewalk.TreeWalk
-    
 
+rem /**
+rem  * This class uses JGit to interface with Addon's Git repository to perform
+rem  * tasks needed during upgrades and updates.
+rem  */
     
     class public AO_GitRepoInterface
         field public BBjString AonDir$
@@ -738,7 +741,6 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
             
                 declare BBjString fileName!
                 fileName!=entry!.getNewPath()
-                if fileName!.contains("build.xml") then escape
                 diffOnlyShowsLineEndings=#diffOnlyShowsLineEndings(x$)
                 if (diffOnlyShowsLineEndings) then 
                     print entry!.getNewPath()
