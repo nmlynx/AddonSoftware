@@ -125,11 +125,11 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             if branchName$<>#repository!.getBranch() then
                 if #repository!.resolve("heads/"+branchName$)=null() then
                     rem --- Not currently a local branch, so create it.
-                    checkoutCmd!=#git!.checkout().setName("heads/"+branchName$).setUpstreamMode(SetupUpstreamMode.TRACK).setStartPoint("remotes/origin/"+branchName$)
+                    checkoutCmd!=#git!.checkout().setName(branchName$).setUpstreamMode(SetupUpstreamMode.TRACK).setStartPoint("remotes/origin/"+branchName$)
                     checkoutCmd!=checkoutCmd!.setCreateBranch(1)
                 else
                     rem --- Already a local branch
-                    checkoutCmd!=#git!.checkout().setName("heads/"+branchName$)
+                    checkoutCmd!=#git!.checkout().setName(branchName$)
                 endif
                 checkoutCmd!.call()
                 results!=checkoutCmd!.getResult()
