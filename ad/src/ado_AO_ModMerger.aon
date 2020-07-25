@@ -1,0 +1,196 @@
+REM /**
+REM  * ModMerger.bbj
+REM  * @author shaun
+REM  *
+REM  */
+
+use java.io.FileFilter
+use java.nio.file.Files
+use java.nio.file.StandardCopyOption
+use java.util.Arrays
+use java.util.ArrayList
+use java.util.HashMap
+use java.util.HashSet
+use java.util.Map
+use java.util.Set
+use java.util.Iterator
+
+use ::ad/src/ado_ModMerger.aon::ModMergerStatus
+
+
+REM /**
+REM  * AO_ModMerger
+REM  * Copies any core Addon files customized by a mods project back into the Addon core. 
+REM  */
+class public AO_ModMerger
+
+    REM File extension for Addon files 
+    field public BBjString Extension!=".aon"
+    
+    REM File filter applied to directory listings 
+    field public FileFilter Filter!
+    
+    method public AO_ModMerger()
+    methodend 
+    
+    REM copyFilesFromModProject
+    REM 
+    method public ModMergerStatus copyProgFilesFromModProject(BBjString modsDirectoryName!, BBjString aonDirectoryName!)
+        
+        declare ModMergerStatus status!
+        declare java.io.File modsDirectory!
+        declare java.io.File aonDirectory!
+        declare BBjNumber modsDirectoryExists!
+        declare BBjNumber aonDirectoryExists!
+        declare Map aonFiles!
+        declare java.util.List aonDuplicates!
+        declare Map modsFiles!
+        declare java.util.List modsDuplicates!
+        declare HashSet commonFiles!
+        declare ArrayList optionsArrayList!
+        
+        REM Initialize Status Object 
+        status!=new ModMergerStatus()
+        
+        REM Check to see if both directories exist
+        modsDirectory!=new java.io.File(modsDirectoryName!)
+        aonDirectory!=new java.io.File(aonDirectoryName!)
+        
+        modsDirectoryExists!=aonDirectory!.exists() and modsDirectory!.isDirectory()
+        aonDirectoryExists!=aonDirectory!.exists() and aonDirectory!.isDirectory()
+        
+        if (! modsDirectoryExists!) then 
+            status!.addErrorMessage("The mods directory "+modsDirectoryName!+" is either not a directory or does not exist.")
+        endif 
+        
+        if (! aonDirectoryExists!) then 
+            status!.addErrorMessage("The Addon directory "+aonDirectoryName!+" is either not a directory or does not exist.")
+        endif 
+
+        if (!(modsDirectoryExists! and aonDirectoryExists!)) then 
+            #status!.addMessage("Both directories must exists to move mods programs to Addon directory. Aborting...")
+            methodret status!
+        endif 
+        
+        REM Build a map of core Addon files  
+        aonFiles!=new HashMap()
+        aonDuplicates!=BBjAPI().makeVector()
+        if (#Filter!=null()) then
+            #Filter!=new AO_ExtensionFileFilter(#Extension!) 
+        endif 
+        #getFilesWithExtension(aonDirectoryName!,#Filter!,aonFiles!,aonDuplicates!)
+        
+        REM Build a map of all files in the mods project, and collect a list of duplicates as well
+        modsFiles!=new HashMap()
+        modsDuplicates!=BBjAPI().makeVector()
+        #getFilesWithExtension(modsDirectoryName!,#Filter!,modsFiles!,modsDuplicates!)
+        
+        
+        REM Get the files we will copy over 
+        commonFiles!=new HashSet(aonFiles!.keySet())
+        commonFiles!.retainAll(modsFiles!.keySet())
+                
+        REM Subtract any files in the duplicates list from the files we plan to copy over, log the duplicates 
+        commonFiles!.removeAll(aonDuplicates!)
+        commonFiles!.removeAll(modsDuplicates!)
+
+        dupiter!=aonDuplicates!.iterator()
+        while dupiter!.hasNext()
+            status!.addErrorMessage("Duplicate file in Addon directory: "+dupiter!.next()+". Skipped file.")
+        wend 
+        dupiter!=modsDuplicates!.iterator()
+        while dupiter!.hasNext()
+            status!.addErrorMessage("Duplicate file in mods directory: "+dupiter!.next()+". Skipped file.")
+        wend 
+
+        REM copy the files over
+        commiter!=commonFiles!.iterator()
+        while commiter!.hasNext()
+            fileName!=cast(BBjString,commiter!.next())
+            aonFileName!=aonFiles!.get(fileName!)
+            modsFileName!=modsFiles!.get(fileName!)
+            aonFile!=new java.io.File(aonFileName!)
+            modsFile!=new java.io.File(modsFileName!)
+            optionsArray!=java.lang.reflect.Array.newInstance(StandardCopyOption.class,1)
+            java.lang.reflect.Array.set(optionsArray!,0,StandardCopyOption.REPLACE_EXISTING)
+            Files.copy(modsFile!.toPath(),aonFile!.toPath(),optionsArray!)
+        wend 
+        
+        methodret status!
+        
+    methodend 
+    
+    REM getFilesWithExtension
+    REM Traverses a directory structure looking for files that match criteria specified by the file filter.  Puts 
+    REM the files in a Java Map that is keyed with the base file name and has the absolute path as the value. 
+    REM 
+    method public void getFilesWithExtension(BBjString fileName!, FileFilter filter!,Map filePaths!,java.util.List duplicates!)
+        declare java.io.File file!
+        declare java.util.List directoryListing!
+        declare Iterator dirIter!
+        
+        file!=new java.io.File(fileName!)
+        
+        REM If we encounter a directory, traverse it
+        if (file!.isDirectory()) then 
+            directoryListing!=java.util.Arrays.asList(file!.listFiles(filter!))
+            dirIter!=directoryListing!.iterator()
+            while (dirIter!.hasNext())
+                nextFile!=dirIter!.next()
+                #getFilesWithExtension(nextFile!.getAbsolutePath(),filter!,filePaths!,duplicates!)
+            wend
+        else  
+           result!=filePaths!.putIfAbsent(file!.getName(),file!.getAbsolutePath())
+           if (result!<>null()) then
+                duplicates!.add(file!.getName())
+           endif 
+        endif 
+        
+    methodend 
+    
+classend 
+
+class public AO_ExtensionFileFilter implements FileFilter
+
+    field public BBjString Extension!
+    
+    method private AO_ExtensionFileFilter()
+    methodend 
+    
+    method public AO_ExtensionFileFilter(BBjString extension!)
+        #Extension!=extension!
+    methodend 
+
+    method public boolean accept(java.io.File pathName!)
+        declare boolean isAcceptable!
+        isAcceptable!=pathName!.getName().endsWith(#Extension!)
+        isAcceptable!=isAcceptable! or (pathName!.isDirectory() and !(pathName!.getName().contains(".git")))
+        methodret isAcceptable!
+    methodend 
+classend 
+
+class public AO_ModMergerStatus 
+
+    field public BBjVector Messages!=BBjAPI().makeVector()
+    
+    REM This is a count of the number of errors that occurred, not how many messages are in the vector!
+    field public BBjNumber NumErrorsEncountered!=0
+
+    method public void addMessage(BBjString message!)
+        #Messages!.add(message!)
+    methodend 
+
+    method public void addErrorMessage(BBjString message!)
+        #NumErrorsEncountered!=#NumErrorsEncountered!+1
+        #Messages!.add(message!)
+    methodend 
+    
+classend 
+
+declare AO_ModMerger mm!
+declare AO_ModMergerStatus status!
+mm!=new AO_ModMerger()
+status!=mm!.copyProgFilesFromModProject("C:\aon_qfp\regal_v1620_mods","C:\aon_instances\aon_git\v18\v1821\aon")
+print status!.getMessages()
+
+
