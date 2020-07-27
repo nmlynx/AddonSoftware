@@ -290,6 +290,7 @@ source_target_value: rem -- Set default new target value based on new config loc
 			rem --- Get absolute path for the source path in case it's a relative path, e.g. ../apps/
 			source_value$=aFile!.getCanonicalPath()
 			source_value$=FileObject.fixPath(source_value$,"/")
+			source_value$=FileObject.addEndSlash(source_value$,"/")
 			
 			record$=source_value$
 			search$=oldDir$
