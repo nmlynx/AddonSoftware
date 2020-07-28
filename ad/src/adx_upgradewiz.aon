@@ -76,14 +76,14 @@ rem --- Get version for repository branch. Use version of Barista in download.
     rem --- Use version of Barista in download
     call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
     newVersion$=str(num(app_version_id$)*100:"0000")
-newVersion$="2011"; rem wgh ... 9809 ... testing
+rem newVersion$="2011"; rem wgh ... 9809 ... testing
     
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_UPDATE_WIZ")
     if gitBasedUpgrade then
         meter_total_recs=19
     else
-        meter_total_recs=24
+        meter_total_recs=25
     endif
     if doSyncBackup% then meter_total_recs=meter_total_recs+1
     if useOldMenu% then meter_total_recs=meter_total_recs+1
@@ -232,7 +232,7 @@ rem ... skip std dirs we know don't have Addon code
         gosub checkLineEndings
 
 rem wgh ... 9809 ... stopped here
-escape; rem wgh ... 9809 ... testing
+rem escape; rem wgh ... 9809 ... testing
 
         rem --- Commit ALL of the above changes to the old Git branch
         gosub doInterimCommit
