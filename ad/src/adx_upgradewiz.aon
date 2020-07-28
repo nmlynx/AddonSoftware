@@ -20,6 +20,7 @@ rem ==========================================================================
     use ::ado_CdfMassager.aon::CdfMassager
     use ::ado_file.src::FileObject
     use ::ado_GitRepoInterface.aon::GitRepoInterface
+    use ::ado_ModMerger.aon::ModMerger
     use ::ado_util.src::util    
 
     setesc std_error
@@ -83,7 +84,7 @@ rem --- Start progress meter
     if gitBasedUpgrade then
         meter_total_recs=19
     else
-        meter_total_recs=25
+        meter_total_recs=24
     endif
     if doSyncBackup% then meter_total_recs=meter_total_recs+1
     if useOldMenu% then meter_total_recs=meter_total_recs+1
@@ -224,20 +225,15 @@ oldBranch$="1821"; rem wgh ... 9809 ... testing
         rem --- Merge mods before/after callpoints into standard Addon callpoints, and alphabetize them.
         gosub mergeCallpoints
 
-rem wgh ... 9809 ... #7 Non-Git ... to do ... Bring over any prog/ files from the mods project (and what if they have more than the prog folder?) and put them in the corresponding src folder based on our naming conventions.
-rem wgh ... 9809 ... #7 Non-Git ... to do ... This should result in new or changed files in ar/src/, gl/src/, etc. Have Git commit these new/changed files after dealing with possible line ending issues.
-rem ... skip std dirs we know don't have Addon code
+        rem --- Move any core Addon files customized by a mods project back into core Addon
+        gosub moveModifiedCore
 
         rem --- Check for, and resolve, line ending issues
         gosub checkLineEndings
 
-rem wgh ... 9809 ... stopped here
-rem escape; rem wgh ... 9809 ... testing
-
         rem --- Commit ALL of the above changes to the old Git branch
         gosub doInterimCommit
-
-rem wgh ... 9809 ... add commit from above doInterimCommit to localCommitsList!
+        remainingCommits!.addItem(commit!)
 
         rem --- Switch/checkout to branch for new version
         branchName$="BBJ"+newVersion$+"GA"
@@ -281,6 +277,7 @@ rem --- Cherry pick local commits from old installation
         remainingCommits!=BBjAPI().makeVector()
     endif
     gosub cherryPickLocalCommits
+rem escape; rem wgh ... 9809 ... testing
 
 rem --- Check for Git conflicts
     gosub checkForGitConflicts
@@ -673,6 +670,7 @@ mergeCallpoints: rem --- Merge mods before/after callpoints into standard Addon 
     nxt_ctlID=util.getNextControlID()
     busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
 
+    rem --- Import mods callpoint
     massager!=new CdfMassager()
     massager!.importModChanges(newModsDir$+"data/cdf",newAonDir$+"/data/cdf")
 
@@ -680,6 +678,38 @@ mergeCallpoints: rem --- Merge mods before/after callpoints into standard Addon 
     busyImage!.destroy(err=*next)
     return
 
+moveModifiedCore: rem --- Move any core Addon files customized by a mods project back into core Addon
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_MOVE_MODS_PGMS")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+    print(log_dev)"    For "+newModsDir$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+    rem --- Verify directories exist
+    newModsDir!=new File(newModsDir$)
+    if !newModsDir!.exists() or !newModsDir!.isDirectory() then newModsDir!.mkDirs()
+    newAonDir!=new File(newAonDir$)
+    if !newAonDir!.exists() or !newAonDir!.isDirectory() then newAonDir!.mkDirs()
+
+    rem --- Move mods customized Addon files
+    merger!=new ModMerger()
+    status!=merger!.copyProgFilesFromModProject(newModsDir$, newAonDir$)
+    messagesIter!=status!.getMessages().iterator()
+    while messagesIter!.hasNext()
+        print(log_dev)"    ",messagesIter!.next()
+    wend
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
+    return
+    
 cloneGitRepo: rem --- Clone Git repository and switch/checkout branch
 
     rem --- Increment progress meter
@@ -899,7 +929,7 @@ doInterimCommit: rem --- Commit all modified and deleted tracked files
 
     rem --- Get JGit interface to repository, and call commitAll()
     repoInterface!=new GitRepoInterface(newAonDir$)
-    repoInterface!.commitAll(1,Translate!.getTranslation("AON_INTERIM_COMMIT"))
+    commit!=repoInterface!.commitAll(1,Translate!.getTranslation("AON_INTERIM_COMMIT"))
     repoInterface!.closeInterface()
 
     rem --- Remove busy/working image from progress meter
@@ -972,7 +1002,8 @@ copyApps: rem --- Run Copy Application utility for applications being copied
 
         rem --- Get source syn file
         app$=appList!.get(0); rem --- application
-        sourceSyn$=appList!.get(4)+"config/"+cvs(app$,8)+".syn"
+        sourceDir$=FileObject.removeEndSlash(appList!.get(4))
+        sourceSyn$=sourceDir$+"config/"+cvs(app$,8)+".syn"
         synFound=0
         sourceChan=unt
         open(sourceChan,isz=-1,err=*next)sourceSyn$; synFound=1
@@ -989,6 +1020,7 @@ copyApps: rem --- Run Copy Application utility for applications being copied
         meter_text$=trans_text$+": "+app$
         gosub disp_meter
         print(log_dev)meter_text$
+        print(log_dev)"    Copy "+sourceDir$
 
         rem --- Remove trailing slashes (/ and \) from targetDir$
         targetDir$=FileObject.removeEndSlash(appList!.get(5))
