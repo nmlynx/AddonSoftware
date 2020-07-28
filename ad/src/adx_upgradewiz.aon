@@ -830,24 +830,25 @@ buildDeltaXmls: rem --- Build delta XMLs for modified bar/*.xml files that have 
     
         rem --- Get original version of modified bar/*.xml files in list.
         fileContent$=repoInterface!.getRemoteFileContent(modifiedXml$)
-    
-        outfile$=newAonDir$+"/tmp/"+modifiedXml$(1+pos("/"=modifiedXml$,-1))
-        erase outfile$,err=*next
-        string outfile$
-        out_dev=unt
-        open(out_dev)outfile$
-        print(out_dev)fileContent$
-        close(out_dev)
-    
-        rem --- Build delta XMLs using Barista's bax_dd_sync_delta.bbj.
-        rd_action$=""
-        rd_status$=""
-        rd_base_file$=outfile$
-        rd_proj_file$=newAonDir$+"/"+modifiedXml$
-        rd_delta_file$=newAonDir$+"/data/bar/delta/"+modifiedXml$(1+pos("/"=modifiedXml$,-1))
-        call stbl("+DIR_SYP")+"bax_dd_synch_delta.bbj",rd_base_file$,rd_proj_file$,rd_delta_file$,rd_action$,rd_status$
-    
-        erase rd_base_file$,err=*next
+        if fileContent$<>""
+            outfile$=newAonDir$+"/tmp/"+modifiedXml$(1+pos("/"=modifiedXml$,-1))
+            erase outfile$,err=*next
+            string outfile$
+            out_dev=unt
+            open(out_dev)outfile$
+            print(out_dev)fileContent$
+            close(out_dev)
+        
+            rem --- Build delta XMLs using Barista's bax_dd_sync_delta.bbj.
+            rd_action$=""
+            rd_status$=""
+            rd_base_file$=outfile$
+            rd_proj_file$=newAonDir$+"/"+modifiedXml$
+            rd_delta_file$=newAonDir$+"/data/bar/delta/"+modifiedXml$(1+pos("/"=modifiedXml$,-1))
+            call stbl("+DIR_SYP")+"bax_dd_synch_delta.bbj",rd_base_file$,rd_proj_file$,rd_delta_file$,rd_action$,rd_status$
+        
+            erase rd_base_file$,err=*next
+        endif
     wend
     
     repoInterface!.closeInterface()
