@@ -23,9 +23,6 @@ REM  * AO_ModMerger
 REM  * Copies any core Addon files customized by a mods project back into the Addon core. 
 REM  */
 class public AO_ModMerger
-
-    REM File extension for Addon files 
-    field public BBjString Extension!=".aon"
     
     REM File filter applied to directory listings 
     field public FileFilter Filter!
@@ -76,14 +73,14 @@ class public AO_ModMerger
         aonFiles!=new HashMap()
         aonDuplicates!=BBjAPI().makeVector()
         if (#Filter!=null()) then
-            #Filter!=new AO_ExtensionFileFilter(#Extension!) 
+            #Filter!=new AO_ExtensionFileFilter() 
         endif 
-        #getFilesWithExtension(aonDirectoryName!,#Filter!,aonFiles!,aonDuplicates!)
+        #getFiles(aonDirectoryName!,aonDirectoryName!,#Filter!,aonFiles!,aonDuplicates!)
         
         REM Build a map of all files in the mods project, and collect a list of duplicates as well
         modsFiles!=new HashMap()
         modsDuplicates!=BBjAPI().makeVector()
-        #getFilesWithExtension(modsDirectoryName!,#Filter!,modsFiles!,modsDuplicates!)
+        #getFiles(modsDirectoryName!,modsDirectoryName!,#Filter!,modsFiles!,modsDuplicates!)
         
         
         REM Get the files we will copy over 
@@ -120,11 +117,11 @@ class public AO_ModMerger
         
     methodend 
     
-    REM getFilesWithExtension
+    REM getFiles
     REM Traverses a directory structure looking for files that match criteria specified by the file filter.  Puts 
     REM the files in a Java Map that is keyed with the base file name and has the absolute path as the value. 
     REM 
-    method public void getFilesWithExtension(BBjString fileName!, FileFilter filter!,Map filePaths!,java.util.List duplicates!)
+    method public void getFiles(BBjString fileName!, BBjString topPath!, FileFilter filter!,Map filePaths!,java.util.List duplicates!)
         declare java.io.File file!
         declare java.util.List directoryListing!
         declare Iterator dirIter!
@@ -137,11 +134,24 @@ class public AO_ModMerger
             dirIter!=directoryListing!.iterator()
             while (dirIter!.hasNext())
                 nextFile!=dirIter!.next()
-                #getFilesWithExtension(nextFile!.getAbsolutePath(),filter!,filePaths!,duplicates!)
+                #getFiles(nextFile!.getAbsolutePath(),topPath!,filter!,filePaths!,duplicates!)
             wend
         else  
            result!=filePaths!.putIfAbsent(file!.getName(),file!.getAbsolutePath())
            if (result!<>null()) then
+                
+                REM If one of our duplicates is directly under the root directory,
+                REM choose the file that is not under the root path, and don't list in duplicates. 
+                if (file!.getParent()=topPath!) then 
+                    methodret 
+                endif 
+                fileInList!=new java.io.File(cast(BBjString,filePaths!.get(file!.getName())))
+                if (fileinList!.getParent()=topPath!) then 
+                    filePaths!.put(file!.getName(),file!.getAbsolutePath())
+                    methodret 
+                endif 
+                
+                REM Add duplicate file to the list of duplicates 
                 duplicates!.add(file!.getName())
            endif 
         endif 
@@ -151,21 +161,31 @@ class public AO_ModMerger
 classend 
 
 class public AO_ExtensionFileFilter implements FileFilter
-
-    field public BBjString Extension!
     
-    method private AO_ExtensionFileFilter()
-    methodend 
+    field public BBjVector FileList!=BBjAPI().makeVector()
     
-    method public AO_ExtensionFileFilter(BBjString extension!)
-        #Extension!=extension!
+    method public AO_ExtensionFileFilter()
+        #FileList!.add(".git")
+        #FileList!.add("callpoints")
+        #FileList!.add("config")
+        #FileList!.add("data")
+        #FileList!.add("image")
+        #FileList!.add("images")
+        #FileList!.add("image_bar")
+        #FileList!.add("logs")
+        #FileList!.add("props")
+        #FileList!.add("cust_images")
+        #FileList!.add("documentation")
+        #FileList!.add("documents")
+        #FileList!.add("codeport")
+        #FileList!.add("dataport")
+        
+        #FileList!.add(".gitattributes")
+        #FileList!.add(".gitignore")
     methodend 
 
     method public boolean accept(java.io.File pathName!)
-        declare boolean isAcceptable!
-        isAcceptable!=pathName!.getName().endsWith(#Extension!)
-        isAcceptable!=isAcceptable! or (pathName!.isDirectory() and !(pathName!.getName().contains(".git")))
-        methodret isAcceptable!
+        methodret !(#FileList!.contains(pathName!.getName()))
     methodend 
 classend 
 
@@ -190,7 +210,7 @@ classend
 declare AO_ModMerger mm!
 declare AO_ModMergerStatus status!
 mm!=new AO_ModMerger()
-status!=mm!.copyProgFilesFromModProject("C:\aon_qfp\regal_v1620_mods","C:\aon_instances\aon_git\v18\v1821\aon")
+status!=mm!.copyProgFilesFromModProject("C:\aon_qfp\regal_v1620_mods\mods","C:\aon_instances\aon_git\v18\v1821\aon")
 print status!.getMessages()
 
 
