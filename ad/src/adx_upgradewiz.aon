@@ -10,8 +10,6 @@ rem ==========================================================================
     use java.lang.reflect.Array
     use java.nio.file.Files
     use java.nio.file.StandardCopyOption
-rem wgh ...    use java.nio.file.Path
-rem wgh ...    use java.nio.file.Paths
     use java.util.ArrayList
     use java.util.Comparator
     use java.util.HashMap
@@ -19,6 +17,7 @@ rem wgh ...    use java.nio.file.Paths
     use java.util.Vector
 
     use ::adc_updatexmlfiles.aon::UpdateSyncXmlFiles
+    use ::ado_CdfMassager.aon::CdfMassager
     use ::ado_file.src::FileObject
     use ::ado_GitRepoInterface.aon::GitRepoInterface
     use ::ado_util.src::util    
@@ -77,16 +76,14 @@ rem --- Get version for repository branch. Use version of Barista in download.
     rem --- Use version of Barista in download
     call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
     newVersion$=str(num(app_version_id$)*100:"0000")
-rem newVersion$="2011"; rem wgh ... 9809 ... testing
+newVersion$="2011"; rem wgh ... 9809 ... testing
     
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_UPDATE_WIZ")
-rem wgh ... 9809 ... re-count when complete
-    meter_total_recs=4
     if gitBasedUpgrade then
-        meter_total_recs=meter_total_recs+11
+        meter_total_recs=19
     else
-        meter_total_recs=meter_total_recs+13
+        meter_total_recs=24
     endif
     if doSyncBackup% then meter_total_recs=meter_total_recs+1
     if useOldMenu% then meter_total_recs=meter_total_recs+1
@@ -109,12 +106,7 @@ rem --- Is this a restart after resolving Git conflicts?
         if pos(restartFile$=text$) then
             rem --- Increment progress meter
             meter_text$=Translate!.getTranslation("AON_UPGRADE_WIZ_RESTART")
-rem wgh ... 9809 ... re-count when complete
-            if gitBasedUpgrade then
-                meter_proc_recs=meter_total_recs-5
-            else
-                meter_proc_recs=meter_total_recs-5
-            endif
+            meter_proc_recs=meter_total_recs-5
             meter_action$="MTR-LST"
             gosub disp_meter
             print(log_dev)"Upgrade Wizard re-started after Git conflicts"
@@ -176,6 +168,7 @@ rem --- Skip Barista’s Create Sync File Backup bax_sync_backup.bbj unless upgrad
 
 rem wgh ... 9809 ... For pre-v15.02 upgrades, warn that they must run Barista's Build Delta XMLs from Mods Project utility.
 rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods ????? For v21+ too ?????
+rem wgh ... 9809 ... In the app grid, initialize Install and Copy to YES when parent is ADDON
 
 rem --- Process upgrade from either a Git based installation or a non-Git based installation
     if gitBasedUpgrade then
@@ -228,20 +221,23 @@ oldBranch$="1821"; rem wgh ... 9809 ... testing
         rem --- Move mods/data/bar/delta XMLs to Addon location
         gosub moveModsDataBarDelta
 
-rem wgh ... 9809 ... #6 Non-Git ... to do ... Incorporate the mods/data/cdf's: put 'before'/'after' callpoints in, or replace the Addon code if it's a 'before' w/ skip. 
-rem wgh ... 9809 ... #6 Non-Git ... to do ... While we're massaging callpoints, alphabetize them. Have Git commit these altered cdf's after dealing with possible line ending issues.
-rem wgh ... use example class CDFMassager.bbj
+        rem --- Merge mods before/after callpoints into standard Addon callpoints, and alphabetize them.
+        gosub mergeCallpoints
 
 rem wgh ... 9809 ... #7 Non-Git ... to do ... Bring over any prog/ files from the mods project (and what if they have more than the prog folder?) and put them in the corresponding src folder based on our naming conventions.
 rem wgh ... 9809 ... #7 Non-Git ... to do ... This should result in new or changed files in ar/src/, gl/src/, etc. Have Git commit these new/changed files after dealing with possible line ending issues.
+rem ... skip std dirs we know don't have Addon code
 
-rem wgh ... 9809 ... deal with possible line ending issues
+        rem --- Check for, and resolve, line ending issues
+        gosub checkLineEndings
 
 rem wgh ... 9809 ... stopped here
-rem escape; rem wgh ... 9809 ... testing
+escape; rem wgh ... 9809 ... testing
 
         rem --- Commit ALL of the above changes to the old Git branch
         gosub doInterimCommit
+
+rem wgh ... 9809 ... add commit from above doInterimCommit to localCommitsList!
 
         rem --- Switch/checkout to branch for new version
         branchName$="BBJ"+newVersion$+"GA"
@@ -480,7 +476,7 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
             aList! = cast(ArrayList, aonStblMap!.get("+DIR_DAT"))
             target$ = cast(BBjString, aList!.get(1))
             convCtrlFilePath$=FileObject.fixPath(target$, "/")
-            FileObject.removeEndSlash(convCtrlFilePath$)
+            FileObject.removeEndSlash(convCtrlFilePath$, "/")
         endif
         convCtrlFileName$=convCtrlFilePath$+"/adx_conversionCtrl"
         convCtrlFile!=new File(convCtrlFileName$)
@@ -618,14 +614,19 @@ moveModsDataBarDelta: rem --- Move mods/data/bar/delta XMLs to Addon location
     print(log_dev)meter_text$
     print(log_dev)"    For "+newAonDir$
 
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
     appIter!=appVect!.iterator()
     while appIter!.hasNext()
         aList! = cast(ArrayList, appIter!.next())
         parent$=cast(BBjString, aList!.get(1))
         if parent$<>"ADDON" then continue
         
-        target$=cast(BBjString, aList!.get(5))
-        modsDataBarDelta!=new File(target$+"data/bar/delta",err=*next)
+        newModsDir$=cast(BBjString, aList!.get(5))
+        newModsDir$=FileObject.fixPath(newModsDir$, "/")
+        modsDataBarDelta!=new File(newModsDir$+"data/bar/delta",err=*next)
         if modsDataBarDelta!.exists() and modsDataBarDelta!.isDirectory() then
                 
             rem --- Ceate new aon/data/bar/delta directory if it doesn't exist
@@ -654,6 +655,29 @@ moveModsDataBarDelta: rem --- Move mods/data/bar/delta XMLs to Addon location
             modsDataBarDelta!.delete()
         endif
     wend
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
+    return
+
+mergeCallpoints: rem --- Merge mods before/after callpoints into standard Addon callpoints, and alphabetize them.
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_MERGE_CDFS")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+    massager!=new CdfMassager()
+    massager!.importModChanges(newModsDir$+"data/cdf",newAonDir$+"/data/cdf")
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
     return
 
 cloneGitRepo: rem --- Clone Git repository and switch/checkout branch
@@ -690,12 +714,12 @@ cloneGitRepo: rem --- Clone Git repository and switch/checkout branch
         return
     endif 
     repoInterface!.closeInterface()
-    
-    rem --- Switch/checkout branch
-    gosub checkoutGitBranch
 
     rem --- Remove busy/working image from progress meter
     busyImage!.destroy(err=*next)
+    
+    rem --- Switch/checkout branch
+    gosub checkoutGitBranch
     return
     
 checkoutGitBranch: rem --- Switch/checkout branch
@@ -708,6 +732,10 @@ checkoutGitBranch: rem --- Switch/checkout branch
     print(log_dev)meter_text$
     print(log_dev)"    For "+newAonDir$
     print (log_dev) "    Checkout "+branchName$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
 
     rem --- Checkout repository branch
     cloneDir$=newAonDir$
@@ -723,6 +751,9 @@ checkoutGitBranch: rem --- Switch/checkout branch
         print(log_dev)"    ***** "+branchName$+" CHECKOUT FAILED ("+checkoutStatus$+") *****"
         status=1
     endif
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
     return
 
 refreshGitRepo: rem --- Refresh Git repository to get the most current branch
@@ -734,11 +765,17 @@ refreshGitRepo: rem --- Refresh Git repository to get the most current branch
     gosub disp_meter
     print(log_dev)meter_text$
 
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
     rem --- Pull Git repository
     repoInterface!=new GitRepoInterface(newAonDir$)
     repoInterface!.pullRepository()
     repoInterface!.closeInterface()
 
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
     return
     
 buildDeltaXmls: rem --- Build delta XMLs for modified bar/*.xml files that have been committed.
@@ -855,10 +892,17 @@ doInterimCommit: rem --- Commit all modified and deleted tracked files
     gosub disp_meter
     print(log_dev)meter_text$
 
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
     rem --- Get JGit interface to repository, and call commitAll()
     repoInterface!=new GitRepoInterface(newAonDir$)
     repoInterface!.commitAll(1,Translate!.getTranslation("AON_INTERIM_COMMIT"))
     repoInterface!.closeInterface()
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
     return
 
 build_stblMap_pfxList: rem --- Build stblMap! and pfxList! for a app$
@@ -1022,10 +1066,18 @@ buildAddonJar: rem --- Build addonprop.jar and put it in the aon/prop directory
     meter_action$="MTR-LST"
     gosub disp_meter
     print(log_dev)meter_text$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
     x=scall("jar cf "+newAonDir$+"/addonprop.jar -C "+newAonDir$+"/prop .",err=*next)
     aonJar!=new File(newAonDir$+"/addonprop.jar")
     propJar!=new File(newAonDir$+"/prop/addonprop.jar")
     aonJar!.renameTo(propJar!)
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
     return
     
 useOldMenu: rem --- Use old modified menus instead of new standard menus.
@@ -1079,9 +1131,16 @@ checkLineEndings: rem --- Check for, and resolve, line ending issues
     gosub disp_meter
     print(log_dev)meter_text$
 
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
     repoInterface!=new GitRepoInterface(newAonDir$)
     repoInterface!.checkoutFilesWithDifferentLineEndings()
     repoInterface!.closeInterface()
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
     return 
 
 cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
@@ -1099,6 +1158,10 @@ cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
             remainingCommits!.add(localCommitsList!.get(wk))
         next wk
     endif
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
 
     rem --- Cherry pick local commits
     repoInterface!=new GitRepoInterface(newAonDir$)
@@ -1126,6 +1189,9 @@ cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
         remainingCommits!.removeItem(0)
     wend
     repoInterface!.closeInterface()
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
     return
 
 checkForGitConflicts: rem --- Check for Git conflicts, and resolve bar/*.xml conflicts
@@ -1136,6 +1202,10 @@ checkForGitConflicts: rem --- Check for Git conflicts, and resolve bar/*.xml con
     meter_action$="MTR-LST"
     gosub disp_meter
     print(log_dev)meter_text$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
 
     rem --- Get Git conflicts
     repoInterface!=new GitRepoInterface(newAonDir$)
@@ -1155,6 +1225,9 @@ checkForGitConflicts: rem --- Check for Git conflicts, and resolve bar/*.xml con
             print(log_dev)"    conflict: "+conflictIter!.next()
         wend
     endif
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
     return
 
 search_replace: rem --- Search record$ for search$, and replace with replace$
