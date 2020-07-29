@@ -84,7 +84,7 @@ rem --- Start progress meter
     if gitBasedUpgrade then
         meter_total_recs=19
     else
-        meter_total_recs=24
+        meter_total_recs=25
     endif
     if doSyncBackup% then meter_total_recs=meter_total_recs+1
     if useOldMenu% then meter_total_recs=meter_total_recs+1
@@ -227,6 +227,7 @@ oldBranch$="1821"; rem wgh ... 9809 ... testing
 
         rem --- Move any core Addon files customized by a mods project back into core Addon
         gosub moveModifiedCore
+rem wgh ... 9809 ... need to restart if status!.NumErrorsEncountered()>0
 
         rem --- Check for, and resolve, line ending issues
         gosub checkLineEndings
@@ -234,6 +235,13 @@ oldBranch$="1821"; rem wgh ... 9809 ... testing
         rem --- Commit ALL of the above changes to the old Git branch
         gosub doInterimCommit
         remainingCommits!.addItem(commit!)
+
+rem wgh ... 9809 ... need to check for conflicts here
+rem --- Check for Git conflicts
+rem gosub checkForGitConflicts
+rem if restartFlag then escape; rem wgh ... 9809 ... need to handle restart if conflicts found here
+rem wgh ... 9809 ... need to handle restart if conflicts found here
+
 
         rem --- Switch/checkout to branch for new version
         branchName$="BBJ"+newVersion$+"GA"
@@ -694,9 +702,9 @@ moveModifiedCore: rem --- Move any core Addon files customized by a mods project
 
     rem --- Verify directories exist
     newModsDir!=new File(newModsDir$)
-    if !newModsDir!.exists() or !newModsDir!.isDirectory() then newModsDir!.mkDirs()
+    if !newModsDir!.exists() or !newModsDir!.isDirectory() then newModsDir!.mkdirs()
     newAonDir!=new File(newAonDir$)
-    if !newAonDir!.exists() or !newAonDir!.isDirectory() then newAonDir!.mkDirs()
+    if !newAonDir!.exists() or !newAonDir!.isDirectory() then newAonDir!.mkdirs()
 
     rem --- Move mods customized Addon files
     merger!=new ModMerger()

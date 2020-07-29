@@ -76,9 +76,9 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             
             rem --- Verify directories exist
             modsCdfDir!=new File(modsCdfDir$)
-            if !modsCdfDir!.exists() or !modsCdfDir!.isDirectory() then modsCdfDir!.mkDirs()
+            if !modsCdfDir!.exists() or !modsCdfDir!.isDirectory() then modsCdfDir!.mkdirs()
             aonCdfDir!=new File(aonCdfDir$)
-            if !aonCdfDir!.exists() or !aonCdfDir!.isDirectory() then aonCdfDir!.mkDirs()
+            if !aonCdfDir!.exists() or !aonCdfDir!.isDirectory() then aonCdfDir!.mkdirs()
             
             rem --- Process mods cdf files
             modsCdfs! = new Vector(java.util.Arrays.asList(modsCdfDir!.listFiles()))
