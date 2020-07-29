@@ -36,6 +36,7 @@ rem --- Initializations
     failures!=BBjAPI().makeVector()
     localCommitsList!=BBjAPI().makeVector()
     remainingCommits!=BBjAPI().makeVector()
+    moveModifiedCoreError=0
 
 rem --- Get user inputs
 
@@ -84,7 +85,7 @@ rem --- Start progress meter
     if gitBasedUpgrade then
         meter_total_recs=19
     else
-        meter_total_recs=25
+        meter_total_recs=24
     endif
     if doSyncBackup% then meter_total_recs=meter_total_recs+1
     if useOldMenu% then meter_total_recs=meter_total_recs+1
@@ -167,8 +168,8 @@ rem --- Skip Barista’s Create Sync File Backup bax_sync_backup.bbj unless upgrad
         call stbl("+DIR_SYP")+"bax_sync_backup.bbj","AUTO",oldBarDir$,sysGUI!,rdForm!,null(),rd_table_chans$[all]
     endif
 
-rem wgh ... 9809 ... For pre-v15.02 upgrades, warn that they must run Barista's Build Delta XMLs from Mods Project utility.
 rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods ????? For v21+ too ?????
+
 rem wgh ... 9809 ... In the app grid, initialize Install and Copy to YES when parent is ADDON
 
 rem --- Process upgrade from either a Git based installation or a non-Git based installation
@@ -204,8 +205,7 @@ rem --- Process upgrade from either a Git based installation or a non-Git based 
 
         rem --- Clone Git repository and switch/checkout to old branch
 rem wgh ... 9809 ... How are we going to get the old version to know what the old branch was?
-rem  ... ????? For now, can/should we use            oldVers! = utility!.getModuleVersion(new File(oldSyncLoc$)) ?????
-oldBranch$="1821"; rem wgh ... 9809 ... testing
+oldBranch$="1620"; rem wgh ... 9809 ... testing
         branchName$="BBJ"+oldBranch$+"GA"
         gosub cloneGitRepo
         if status then goto done
@@ -227,21 +227,22 @@ oldBranch$="1821"; rem wgh ... 9809 ... testing
 
         rem --- Move any core Addon files customized by a mods project back into core Addon
         gosub moveModifiedCore
-rem wgh ... 9809 ... need to restart if status!.NumErrorsEncountered()>0
 
         rem --- Check for, and resolve, line ending issues
         gosub checkLineEndings
 
         rem --- Commit ALL of the above changes to the old Git branch
         gosub doInterimCommit
-        remainingCommits!.addItem(commit!)
+        localCommitsList!.addItem(commit!)
 
-rem wgh ... 9809 ... need to check for conflicts here
+rem wgh ... 9809 ... need to check for conflicts here ?????
 rem --- Check for Git conflicts
 rem gosub checkForGitConflicts
 rem if restartFlag then escape; rem wgh ... 9809 ... need to handle restart if conflicts found here
 rem wgh ... 9809 ... need to handle restart if conflicts found here
-
+rem wgh ... 9809 ... need newModsDir$ for restarts ?????
+rem wgh ... 9809 ... need newAonDir$ for restarts
+rem wgh ... 9809 ... need oldAonDir$ for restarts
 
         rem --- Switch/checkout to branch for new version
         branchName$="BBJ"+newVersion$+"GA"
@@ -549,6 +550,16 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
     
 done: rem --- All done
 
+    rem --- Report errors encountered while moving core Addon files customized by a mods project back into core Addon
+    if moveModifiedCoreError then
+        msg_id$="AD_MOVE_MODS_ERR"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=newAonDir$ + "/logs"+logName$
+        gosub disp_message
+        print(log_dev)
+        print(log_dev)"***** Could not move Mods customized Addon files *****"
+    endif
+
     rem --- Report cherry pick failure
     if !failures!.isEmpty() then
         msg_id$="AD_CHERRYPICK_ERR"
@@ -713,6 +724,7 @@ moveModifiedCore: rem --- Move any core Addon files customized by a mods project
     while messagesIter!.hasNext()
         print(log_dev)"    ",messagesIter!.next()
     wend
+    if status!.getNumErrorsEncountered()>0 then moveModifiedCoreError=1
 
     rem --- Remove busy/working image from progress meter
     busyImage!.destroy(err=*next)
