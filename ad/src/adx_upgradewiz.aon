@@ -1011,7 +1011,7 @@ copyApps: rem --- Run Copy Application utility for applications being copied
         rem --- Get source syn file
         app$=appList!.get(0); rem --- application
         sourceDir$=FileObject.removeEndSlash(appList!.get(4))
-        sourceSyn$=sourceDir$+"config/"+cvs(app$,8)+".syn"
+        sourceSyn$=sourceDir$+"/config/"+cvs(app$,8)+".syn"
         synFound=0
         sourceChan=unt
         open(sourceChan,isz=-1,err=*next)sourceSyn$; synFound=1
