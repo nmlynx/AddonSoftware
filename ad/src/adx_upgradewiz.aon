@@ -718,8 +718,8 @@ moveModifiedCore: rem --- Move any core Addon files customized by a mods project
     if !newAonDir!.exists() or !newAonDir!.isDirectory() then newAonDir!.mkdirs()
 
     rem --- Move mods customized Addon files
-    merger!=new ModMerger()
-    status!=merger!.copyProgFilesFromModProject(newModsDir$, newAonDir$)
+    merger!=new ModMerger(newModsDir$, newAonDir$)
+    status!=merger!.copyProgFilesFromModProject()
     messagesIter!=status!.getMessages().iterator()
     while messagesIter!.hasNext()
         print(log_dev)"    ",messagesIter!.next()
