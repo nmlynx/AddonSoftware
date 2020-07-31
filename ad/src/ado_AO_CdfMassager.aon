@@ -1,0 +1,238 @@
+rem ==========================================================================
+rem --- ado_AO_CdfMassager.aon 
+rem --- AO_CdfMassager class (GitRepoInterface superclass)
+rem --- Superclass used to restructure data/cdf callpoint programs.
+rem --- Alphabetizes callpoints, and merges Mods project before/after callpoints into standard code.
+rem --- 
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem ==========================================================================
+
+    use java.io.File
+    use java.util.regex.Pattern
+    use java.util.Scanner
+    use java.util.TreeMap
+    use java.util.Vector
+
+    use ::ado_file.src::FileObject
+
+rem /**
+rem  * This class is used to restructure data/cdf callpoint programs.
+rem  * Alphabetizes callpoints, and merges Mods project before/after callpoints into standard code.
+rem  */
+    
+    class public AO_CdfMassager
+        
+        rem /**
+        rem  * Constructor.
+        rem  */
+        method public AO_CdfMassager()
+            seterr GitRepoInterface_error
+            
+            methodret
+            
+GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+    
+        rem /**
+        rem  * Combines two TreeMaps of callpoint code into a single combined TreeMap.
+        rem  * 
+        rem  * @param TreeMap aonCallpoints! -- from readCdfFile() method
+        rem  * @param TreeMap modsCallpoints! -- from readCdfFile() method
+        rem  *
+        rem  * @return TreeMap combinedCallpoints!
+        rem  */
+        method public TreeMap combineCdfFiles(TreeMap aonCallpoints!, TreeMap modsCallpoints!)
+            aonCallpoints!.putAll(modsCallpoints!)
+            methodret aonCallpoints!
+        methodend 
+    
+        rem /**
+        rem  * Combines modified Addon callpoint code with standard Addon callpoint code
+        rem  * into a single data/cdf callpoint program in the Addon installation. 
+        rem  * 
+        rem  * @param BBjString modsCdfDir$ -- path for Mods project data/cdf directory
+        rem  * @param BBjString aonCdfDir$ -- path for Addon installation data/cdf directory
+        rem  */
+        method public void importModChanges(BBjString modsCdfDir$, BBjString aonCdfDir$)
+            seterr importModChanges_error
+
+            rem --- Standardize paths
+            modsCdfDir$=FileObject.fixPath(modsCdfDir$, "/")
+            modsCdfDir$=FileObject.addEndSlash(modsCdfDir$, "/")
+            aonCdfDir$=FileObject.fixPath(aonCdfDir$, "/")
+            aonCdfDir$=FileObject.addEndSlash(aonCdfDir$, "/")
+            
+            rem --- Verify directories exist
+            modsCdfDir!=new File(modsCdfDir$)
+            if !modsCdfDir!.exists() or !modsCdfDir!.isDirectory() then modsCdfDir!.mkdirs()
+            aonCdfDir!=new File(aonCdfDir$)
+            if !aonCdfDir!.exists() or !aonCdfDir!.isDirectory() then aonCdfDir!.mkdirs()
+            
+            rem --- Process mods cdf files
+            modsCdfs! = new Vector(java.util.Arrays.asList(modsCdfDir!.listFiles()))
+            modsCdfIter!=modsCdfs!.iterator()
+            while modsCdfIter!.hasNext()
+                modsCdfFile!=modsCdfIter!.next()
+                if !modsCdfFile!.getName().endsWith(".cdf") then continue
+                aonCdfFile!=new File(aonCdfDir$+"/"+modsCdfFile!.getName())
+
+                rem --- If cdf file exits in both mods and aon, then combine the two cdf files
+                if (aonCdfFile!.exists()) then
+                    aonCallpoints!=#readCdfFile(aonCdfFile!.getPath())
+                    modsCallpoints!=#readCdfFile(modsCdfFile!.getPath())
+                    combinedCallpoints!=#combineCdfFiles(aonCallpoints!,modsCallpoints!)
+                    #writeCdf(combinedCallpoints!,aonCdfFile!.getPath())
+                endif 
+            wend
+            
+            methodret
+            
+importModChanges_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Builds TreeMap of callpoint code in specified cdf file.
+        rem  * 
+        rem  * @param BBjString filePath$ -- cdf file path
+        rem  *
+        rem  * @return TreeMap cdfMap!
+        rem  */
+        method public TreeMap readCdfFile(BBjString filePath$)
+            seterr readCdfFile_error
+            cdfMap!=new TreeMap()
+
+            rem --- Initializations
+            keyPattern!="\[\[.*\]\]"
+            beforeString!=".B]]"
+            normalString!="]]"
+            skipString!="callpoint!.setStatus("+$22$+"SKIP"+$22$+")"
+            
+            rem --- Read all callpoints from a cdf file and put them into an ordered hashmap
+            key!=null()
+            body!=""
+            fl!=new File(filePath$)
+            sc!=new Scanner(fl!)
+            while (sc!.hasNextLine()) 
+                rem --- Test to see if this line is the beginning of a new callpoint.
+                newLine!=sc!.nextLine()
+                pattern!=Pattern.compile(keyPattern!)
+                matcher!=pattern!.matcher(newLine!)
+                if (matcher!.find()) then
+                    newKey!=matcher!.group()
+                else 
+                    newKey!=null()
+                endif 
+                 
+                rem --- Is this a new callpoint
+                if (newKey!<>null()) then
+                    cdfMap!.put(newKey!,"") 
+                
+                    rem --- Test to see if this is a before callpoint. Test is only necessary on key
+                    isBefore!=newLine!.indexOf(beforeString!)>-1
+                    
+                    key!=newKey!
+                    newKey!=null() 
+                endif 
+                
+                rem --- Test to see if this is a skip callpoint
+                if (newLine!.indexOf(skipString!)>-1) then
+                    rem --- Change out the key here if we have a callpoint that is both before and skip
+                    if (isBefore!) then 
+                        newKey!=key!.replace(beforeString!,normalString!)
+                        body!=cdfMap!.get(key!)
+                        body!=body!.replace(beforeString!,normalString!)
+                        cdfMap!.remove(key!)
+                        cdfMap!.put(newKey!,body!)
+                        key!=newKey!
+                        newKey!=null()
+                    endif 
+                endif 
+                
+                cdfMap!.put(key!,cast(BBjString,cdfMap!.get(key!))+newLine!+$0A$) 
+            wend 
+            sc!.close()
+            
+            methodret cdfMap!
+            
+readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend 
+
+        rem /**
+        rem  * Writes specified cdf file from given TreeMap of callpoint code.
+        rem  * 
+        rem  * @param TreeMap cdfMap! -- cdf callpoint code
+        rem  * @param BBjString filePath$ -- cdf file path
+        rem  */
+        method public void writeCdf(TreeMap cdfMap!, BBjString filePath$)
+            seterr writeCdf_error
+            
+            rem --- Open specified cdf file.  Warning: this will overwrite an existing file
+            erase filePath$,err=*next
+            string filePath$
+            chan=unt
+            open (chan) filePath$
+            
+            rem --- Go through TreeMap and write all the callpoints (which are now in alphabetical order)
+            iter!=cdfMap!.keySet().iterator()
+            while (iter!.hasNext())
+                key!=cast(BBjString,iter!.next())
+                cp!=cast(BBjString,cdfMap!.get(key!))
+                print (chan) cp! 
+            wend 
+            
+            close (chan)
+            
+            methodret
+            
+writeCdf_error:rem --- Method error trap/handler (11Oct2017)
+            rd_err_text$="", err_num=err
+            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+            if err_num=252 then
+                E!=BBjAPI().getLastBBjException()
+                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+            endif
+            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+            if pos("RETRY"=rd_err_act$)<>0 retry
+            x$=stbl("+THROWN_ERR","TRUE")   
+            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend 
+
+classend

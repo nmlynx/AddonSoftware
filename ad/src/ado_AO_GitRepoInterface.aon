@@ -499,13 +499,14 @@ getLocalCommittedXmls2_error:rem --- Method error trap/handler (11Oct2017)
 
             rem --- Create original version of modified bar/*.xml files in list.
             treeWalk!=TreeWalk.forPath(#repository!,filePath$,commitArray!)
-            reader!=#repository!.newObjectReader()
-            loader!=reader!.open(treeWalk!.getObjectId(0))
-            fileContent$=new String(loader!.getBytes(),StandardCharsets.UTF_8)
+            if treeWalk!<>null()
+                reader!=#repository!.newObjectReader()
+                loader!=reader!.open(treeWalk!.getObjectId(0))
+                fileContent$=new String(loader!.getBytes(),StandardCharsets.UTF_8)
 
-            reader!.close()
-            treeWalk!.close()
-            
+                reader!.close()
+                treeWalk!.close()
+            endif
             methodret fileContent$
            
 getRemoteFileContent_error:rem --- Method error trap/handler (11Oct2017)
@@ -743,8 +744,6 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
                 fileName!=entry!.getNewPath()
                 diffOnlyShowsLineEndings=#diffOnlyShowsLineEndings(x$)
                 if (diffOnlyShowsLineEndings) then 
-                    print entry!.getNewPath()
-                    
                     REM Add the file to the list of files to check out. 
                     filesToCheckOut!.add(entry!.getNewPath())
                 endif 
