@@ -13,6 +13,10 @@ REM  * ModMerger
 REM  * Copies any core Addon files customized by a mods project back into the Addon core. 
 REM  */
 class public ModMerger extends AO_ModMerger    
+    method public ModMerger(BBjString modsDirectoryName!, BBjString aonDirectoryName!)
+        #super!(modsDirectoryName!, aonDirectoryName!)
+        methodret
+    methodend
 classend 
 
 class public ExtensionFileFilter extends AO_ExtensionFileFilter
