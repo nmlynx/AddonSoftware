@@ -168,10 +168,6 @@ rem --- Skip Barista’s Create Sync File Backup bax_sync_backup.bbj unless upgrad
         call stbl("+DIR_SYP")+"bax_sync_backup.bbj","AUTO",oldBarDir$,sysGUI!,rdForm!,null(),rd_table_chans$[all]
     endif
 
-rem wgh ... 9809 ... Should ddm_systems.parent_sys_id be cleared for ADDON mods ????? For v21+ too ?????
-
-rem wgh ... 9809 ... In the app grid, initialize Install and Copy to YES when parent is ADDON
-
 rem --- Process upgrade from either a Git based installation or a non-Git based installation
     if gitBasedUpgrade then
         rem --- Process upgrades from a Git based installation
@@ -235,15 +231,6 @@ oldBranch$="1620"; rem wgh ... 9809 ... testing
         gosub doInterimCommit
         localCommitsList!.addItem(commit!)
 
-rem wgh ... 9809 ... need to check for conflicts here ?????
-rem --- Check for Git conflicts
-rem gosub checkForGitConflicts
-rem if restartFlag then escape; rem wgh ... 9809 ... need to handle restart if conflicts found here
-rem wgh ... 9809 ... need to handle restart if conflicts found here
-rem wgh ... 9809 ... need newModsDir$ for restarts ?????
-rem wgh ... 9809 ... need newAonDir$ for restarts
-rem wgh ... 9809 ... need oldAonDir$ for restarts
-
         rem --- Switch/checkout to branch for new version
         branchName$="BBJ"+newVersion$+"GA"
         gosub checkoutGitBranch
@@ -286,7 +273,6 @@ rem --- Cherry pick local commits from old installation
         remainingCommits!=BBjAPI().makeVector()
     endif
     gosub cherryPickLocalCommits
-rem escape; rem wgh ... 9809 ... testing
 
 rem --- Check for Git conflicts
     gosub checkForGitConflicts
@@ -463,6 +449,41 @@ rem --- Run Install Application Wizard for applications being installed
 :       +" -a" +"baw_install_app.bbj"+$22$+" - "+" -f"+sourceSyn$+" "+aongitarg$+$22$
 :	    +" -w"
         scall_result=scall(run_arg$+user_arg$,err=*next)
+
+        rem --- Clear ddm_systems.parent_sys_id for apps with ADDON parent in the new mods installation
+        parent$=appList!.get(1); rem --- parent app
+        copy$=appList!.get(3); rem --- copy
+        if parent$="ADDON" and copy$="y" then
+            ddm_table_tpls$=newBarDir$+"/sys/data/ddm_table_tpls.dat"
+            open_success=0
+            ddmTableTpls=unt
+            open(ddmTableTpls,err=*next)ddm_table_tpls$; open_success=1
+            if open_success then
+                rem --- Get record template for ddm_systems
+                dim ddmTableTpls$:"table_name:c(16*),file_name:c(30*),template:c(10230*)"
+                tpl_found=0
+                findrecord(ddmTableTpls,key=pad("DDM_SYSTEMS",16),dom=*next)ddmTableTpls$;tpl_found=1
+                if tpl_found then
+                    rem --- Update ddm_systems record for mods app
+                    open_success=0
+                    ddmSystems=unt
+                    open(ddmSystems,err=*next)newBarDir$+"/sys/data/ddm_systems.dat"; open_success=1
+                    if open_success then
+                        dim ddmSystems$:ddmTableTpls.template$
+                        record_found=0
+                        findrecord(ddmSystems,key=pad(app$,16),dom=*next)ddmSystems$; record_found=1
+                        if record_found then
+                            ddmSystems.parent_sys_id$=""
+                            writerecord(ddmSystems)ddmSystems$
+                        endif
+            
+                        close(ddmSystems,err=*next)
+                    endif
+                endif
+                
+                close(ddmTableTpls,err=*next)
+            endif
+        endif
     wend
 
 rem --- Commit Addon changes made during baw_install_app.bbj
@@ -1378,29 +1399,6 @@ open_log:rem --- Open log file
         wend
     wend
     print(log_dev)
-
-    return
-    
-open_tables:rem -----<Open Tables
-
-    call stbl("+DIR_SYP")+"bac_open_tables.bbj",
-:       open_beg,
-:       open_end,
-:       open_tables$[all],
-:       open_opts$[all],
-:       open_chans$[all],
-:       open_tpls$[all],
-:       rd_table_chans$[all],
-:       open_batch,
-:       open_status$
-
-    if open_status$<>""
-        msg_id$="ENTRY_OPEN_ERROR"
-        dim msg_tokens$[1]
-            msg_tokens$[1]=open_status$
-        gosub disp_message
-        goto std_exit
-    endif
 
     return
 
