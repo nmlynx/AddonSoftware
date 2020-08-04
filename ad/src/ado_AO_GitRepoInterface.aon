@@ -15,6 +15,8 @@ rem  */
     use java.io.File
     use java.lang.reflect.Array
     use java.nio.charset.StandardCharsets
+    use java.text.SimpleDateFormat
+    use java.util.Date
     use java.util.HashMap
     use java.util.TreeSet
     use java.util.ArrayList
@@ -828,6 +830,72 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
                 nextLineBegins!=diff!.indexOf(delimiter!,nextLineBegins!+1)
            wend 
            methodret side!
+        methodend 
+        
+        REM Method to look at a non-Git Addon install and figure out to what version it is closest. 
+        method public BBjString determineAndSwitchToVersion(BBjString ungitifiedAonDirName$)
+            declare BBjNumber fixedIssuesChan
+            declare BBjString fixedIssuesFileName$
+            declare BBjString line!
+            declare BBjString line$
+            declare BBjString dateLine!
+            declare BBjString versionLine!
+            declare BBjString dateToken$
+            declare BBjString versionToken$
+            declare BBjString dateFormatString$
+            
+            REM Constants 
+            dateToken$="Report Date:"
+            versionToken$="Report Branch:"
+            dateFormatString$="yyyy-MM-dd hh:mm:ss"
+            
+            REM If we have FixedIssues.txt, use it to determine what version of Addon we should be using
+            fixedIssuesFileName$=ungitifiedAonDirName$+"/documentation/FixedIssues.txt"
+            
+            open (fixedIssuesChan) fixedIssuesFileName$
+            
+            dateLineFound=0
+            versionLineFound=0
+            found=0
+            eof=0
+            while ((!dateLineFound or !versionLineFound) and !eof) 
+                read (fixedIssuesChan,end=eof) line$
+                line!=line$
+                
+                REM if the line has a date, assign it to dateLine
+                dateLineFound=line!.contains(dateToken$)
+                if (dateLineFound) then
+                    dateLine!=line!
+                endif 
+                
+                REM if the line has a version assign it to versionLine
+                versionLineFound=line!.contains(versionToken$)
+                if (versionLineFound) then
+                    versionLine!=line!
+                endif 
+                
+                continue 
+            eof: 
+                eof=1
+            wend 
+            
+            REM Extract the date from the fixed issues line and find the closest tag to that date
+            if (!eof) then 
+            
+                REM Extract the version from the version line 
+                versionLine!=versionLine!.substring(versionLine!.indexOf(versionToken!)+versionToken!.length()).strip()
+            
+                REM Extract the date from the line
+                dateLine!=dateLine!.substring(dateLine!.indexOf(dateToken!)+dateToken!.length())
+                dateFormat!=new SimpleDateFormat(dateFormatString$)
+                fixedIssuesDate!=dateFormat!.parse(dateLine!)
+                
+                REM Find the commit closest to the date
+                escape 
+                
+            endif 
+            
+            REM If we don't have FixedIssues.txt, match a commit with the Addon installation
         methodend 
 
 classend

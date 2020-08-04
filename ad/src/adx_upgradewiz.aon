@@ -206,6 +206,7 @@ rem --- Process upgrade from either a Git based installation or a non-Git based 
         rem --- Clone Git repository and switch/checkout to old branch
 rem wgh ... 9809 ... How are we going to get the old version to know what the old branch was?
 oldBranch$="1620"; rem wgh ... 9809 ... testing
+        REM === SDH ==== Need versioning code called here. (Determine what old branch should be)
         branchName$="BBJ"+oldBranch$+"GA"
         gosub cloneGitRepo
         if status then goto done
