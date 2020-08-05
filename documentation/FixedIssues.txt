@@ -42,3 +42,14 @@ Modified: data/bar/ope_invdet.xml
 Modified: data/bar/ope_orddet.xml
 Modified: data/cdf/ope_invdet.cdf
 Modified: data/cdf/ope_orddet.cdf
+
+=======================================================================================================================================
+Revision: 9638c9419f8f993e8c5d033d6708c1f1b261af06
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 8/5/2020 4:18:59 PM
+Message:
+Bug 9988: Re-DIM'd gls_calendar$ before FINDRECORD so test for missing
+fiscal calendar works rather than eventually getting an invalid
+fiscal_year$ and an Error 46.
+----
+Modified: ad/src/adc_fiscalperyr.aon
