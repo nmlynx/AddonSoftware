@@ -1200,25 +1200,6 @@ rem --- Initialize detail line for this line_code
 	line_code$ = callpoint!.getUserInput()
 	gosub line_code_init
 
-rem --- Initialize UM_SOLD ListButton with a blank item for new rows except when line type is non-stock
-	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" and user_tpl.line_type$<>"N" then
-		rem --- Skip if UM_SOLD ListButton is already initialized
-		dtlGrid!=util.getGrid(Form!)
-		col_hdr$=callpoint!.getTableColumnAttribute("OPE_INVDET.UM_SOLD","LABS")
-		col_ref=util.getGridColumnNumber(dtlGrid!, col_hdr$)
-		row=callpoint!.getValidationRow()
-		umList!=null()
-		umList!=dtlGrid!.getCellListControl(row,col_ref,err=*next)
-		if umList!=null() then
-			nxt_ctlID=callpoint!.getDevObject("nxt_ctlID")
-			umList!=Form!.addListButton(nxt_ctlID,10,10,100,100,"",$0810$)
-			umList!.addItem("")
-			dtlGrid!.setCellListControl(row,col_ref,umList!)
-			dtlGrid!.setCellListSelection(row,col_ref,0,0)
-			callpoint!.setDevObject("nxt_ctlID",nxt_ctlID+1)
-		endif
-	endif
-
 [[OPE_INVDET.LINE_CODE.AVEC]]
 rem --- Line code may not be displayed correctly when selected via arrow key instead of mouse
 	callpoint!.setStatus("REFRESH:LINE_CODE")
@@ -1226,7 +1207,12 @@ rem --- Line code may not be displayed correctly when selected via arrow key ins
 [[OPE_INVDET.LINE_CODE.BINP]]
 rem --- Set previous value / enable repricing, options, lots
 
-	user_tpl.prev_line_code$ = callpoint!.getColumnData("OPE_INVDET.LINE_CODE")
+	rem --- Clear previous line_code for new rows
+	if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" then
+		user_tpl.prev_line_code$=""
+	else
+		user_tpl.prev_line_code$ = callpoint!.getColumnData("OPE_INVDET.LINE_CODE")
+	endif
 	gosub enable_repricing
 	gosub enable_addl_opts
 	gosub able_lot_button
@@ -1234,18 +1220,21 @@ rem --- Set previous value / enable repricing, options, lots
 rem --- Force focus on Warehouse when Line Code entry is skipped
 
 	if callpoint!.getDevObject("skipLineCode") = "Y" then
-		callpoint!.setDevObject("skipLineCode","N"); rem --- skip line code entry only once
-		if  callpoint!.getDevObject("skipWHCode") = "Y" then
-			callpoint!.setDevObject("skipWHCode","N")
-			callpoint!.setFocus(num(callpoint!.getValidationRow()),"OPE_INVDET.ITEM_ID",1)
-		else
-			callpoint!.setFocus(num(callpoint!.getValidationRow()),"OPE_INVDET.WAREHOUSE_ID",1)
-		endif
-
 		rem --- initialize detail line for default line_code
 		line_code$ = callpoint!.getColumnData("OPE_INVDET.LINE_CODE")
 		gosub line_code_init
-		break
+
+		callpoint!.setDevObject("skipLineCode","N"); rem --- skip line code entry only once
+		if  callpoint!.getDevObject("skipWHCode") = "Y" then
+			if pos(user_tpl.line_type$="SP") then
+				callpoint!.setDevObject("skipWHCode","N")
+				callpoint!.setFocus(num(callpoint!.getValidationRow()),"OPE_INVDET.ITEM_ID",1)
+			else
+				callpoint!.setFocus(num(callpoint!.getValidationRow()),"OPE_INVDET.ORDER_MEMO",1)
+			endif
+		else
+			callpoint!.setFocus(num(callpoint!.getValidationRow()),"OPE_INVDET.WAREHOUSE_ID",1)
+		endif
 	endif
 
 [[OPE_INVDET.MEMO_1024.AVAL]]
@@ -2429,6 +2418,25 @@ rem ==========================================================================
 			if cvs(callpoint!.getColumnData("OPE_INVDET.ORDER_MEMO"),3) = "" then
 				callpoint!.setColumnData("OPE_INVDET.ORDER_MEMO",cvs(opc_linecode.code_desc$,3))
 				callpoint!.setColumnData("OPE_INVDET.MEMO_1024",cvs(opc_linecode.code_desc$,3))
+			endif
+		endif
+
+		rem --- Initialize UM_SOLD ListButton with a blank item for new rows except when line type is non-stock
+		if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" and opc_linecode.line_type$<>"N" then
+			rem --- Skip if UM_SOLD ListButton is already initialized
+			dtlGrid!=util.getGrid(Form!)
+			col_hdr$=callpoint!.getTableColumnAttribute("OPE_INVDET.UM_SOLD","LABS")
+			col_ref=util.getGridColumnNumber(dtlGrid!, col_hdr$)
+			row=callpoint!.getValidationRow()
+			umList!=null()
+			umList!=dtlGrid!.getCellListControl(row,col_ref,err=*next)
+			if umList!=null() then
+				nxt_ctlID=callpoint!.getDevObject("nxt_ctlID")
+				umList!=Form!.addListButton(nxt_ctlID,10,10,100,100,"",$0810$)
+				umList!.addItem("")
+				dtlGrid!.setCellListControl(row,col_ref,umList!)
+				dtlGrid!.setCellListSelection(row,col_ref,0,0)
+				callpoint!.setDevObject("nxt_ctlID",nxt_ctlID+1)
 			endif
 		endif
 
