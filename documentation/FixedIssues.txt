@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2020-07-27
+ Report Date:   2020-08-05
  Report Branch: AddonSoftware 20.20
  Last Release:  AddonSoftware 20.12
 =======================================================================================================================================
@@ -27,3 +27,18 @@ utility.
 ----
 Modified: data/bar/adx_copymods.xml
 Modified: data/cdf/adx_copymods.cdf
+
+=======================================================================================================================================
+Revision: 818a9f5d91f3a0e9efa25b87af3bdac15f7e59f6
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 8/5/2020 1:06:29 PM
+Message:
+Bug 9967: Moved initialization of UM_SOLD ListButton from LINE_CODE.AVAL
+callpoint to line_code_init subroutine. Forced focus on ORDER_MEMO
+instead of ITEM_ID when Line Code entry is skipped for M, N or O Line
+Types.
+----
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/cdf/ope_invdet.cdf
+Modified: data/cdf/ope_orddet.cdf
