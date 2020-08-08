@@ -50,6 +50,7 @@ rem --- Open/Lock files
 
 get_calendar: rem --- Get calendar for the fiscal year
 
+    redim gls_calendar$
     find record (gls_calendar_dev,key=firm_id$+fiscal_year$,dom=*next)gls_calendar$
     if cvs(gls_calendar.firm_id$,2)="" then
         msg_id$="AD_NO_FISCAL_CAL"
