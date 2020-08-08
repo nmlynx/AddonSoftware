@@ -812,9 +812,13 @@ checkoutGitBranch: rem --- Switch/checkout branch
     rem --- Checkout repository branch
     cloneDir$=newAonDir$
     repoInterface!=new GitRepoInterface(cloneDir$)
-    checkoutStatus$=repoInterface!.checkoutBranch(branchName$)
+    
+    success=repoInterface!.determineAndSwitchToVersion(oldAonDir$)
+
+    rem SDH: determineAndSwitchToVersion() takes care of this. 
+    rem checkoutStatus$=repoInterface!.checkoutBranch(branchName$)
     repoInterface!.closeInterface()
-    if checkoutStatus$<>"OK" then
+    if (!success) then
         rem --- Failure, warn and terminate
         msg_id$="AD_FAILED_BAD_CHKOUT"
         dim msg_tokens$[1]
