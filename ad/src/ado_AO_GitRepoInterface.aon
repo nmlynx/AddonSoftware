@@ -11,6 +11,8 @@ rem  * This class uses JGit to interface with Addon's Git repository to perform
 rem  * tasks needed during upgrades and updates.
 rem  */
 
+    use ::ado_GitRepoInterface.aon::FixedIssuesReader
+
     use java.io.ByteArrayOutputStream
     use java.io.File
     use java.lang.reflect.Array
@@ -20,11 +22,14 @@ rem  */
     use java.util.HashMap
     use java.util.TreeSet
     use java.util.ArrayList
+    use java.util.Arrays
     use java.util.Iterator
 
     use org.eclipse.jgit.api.CheckoutCommand
     use org.eclipse.jgit.api.CheckoutCommand.Stage
     use org.eclipse.jgit.api.CherryPickResult.CherryPickStatus
+    use org.eclipse.jgit.api.ResetCommand
+    use org.eclipse.jgit.api.ResetCommand.ResetType
     use org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
     use org.eclipse.jgit.api.Git
     use org.eclipse.jgit.diff.DiffEntry
@@ -34,6 +39,7 @@ rem  */
     use org.eclipse.jgit.lib.ObjectId
     use org.eclipse.jgit.lib.ObjectReader
     use org.eclipse.jgit.lib.Repository
+    use org.eclipse.jgit.lib.Ref
     use org.eclipse.jgit.revwalk.RevCommit
     use org.eclipse.jgit.revwalk.RevWalk
     use org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
@@ -57,6 +63,8 @@ rem  */
         field protected Git git!
         field protected Repository repository!
         field protected UsernamePasswordCredentialsProvider credentials!
+        
+        field protected FixedIssuesReader fixedIssuesReader!
         
         rem /**
         rem  * Constructor.
@@ -160,6 +168,38 @@ checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
             x$=stbl("+THROWN_ERR","TRUE")   
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
+        
+        rem /**
+        rem  * resets the head of the branch to a particular commit.  Calling reset without the type parameter 
+        rem  * assumes a hard reset, which is what is used most of the time in an Addon upgrade. This clears any changes
+        rem  * out of the working directory. We don't follow the industry default of "mixed".
+        rem  */
+        method public BBjNumber reset(RevCommit commit!)
+            methodret #reset(commit!,"HARD")
+        methodend 
+ 
+        rem /**
+        rem  * resets the head of the branch to a particular commit.   
+        rem  * 
+        rem  */       
+        method public BBjNumber reset(RevCommit commit!, BBjString type!)
+            declare ResetCommand.ResetType mode!
+            declare Ref resultingCommit!
+            
+            REM Obtain the mode, validating against valid values
+            type!=type!.toUpperCase().trim()
+            mode!=ResetCommand.ResetType.valueOf(type!,err=*next)
+            if (err<>0) then 
+                message!="Invalid type for reset: "+$22$+type!+$22$+". Valid values are: "
+                message!=message!+Arrays.asList(ResetCommand.ResetType.values()).toString()
+                throw message!,17
+            endif 
+        
+            resultingCommit!=#git!.reset().setRef(commit!.getName()).setMode(mode!).call()
+            
+            methodret resultingCommit!.getObjectId().equals(commit!.getId())
+            
+        methodend 
 
         rem /**
         rem  * Cherry picks Git repository commit given as a RevCommit object. 
@@ -831,71 +871,153 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
            wend 
            methodret side!
         methodend 
-        
+               
         REM Method to look at a non-Git Addon install and figure out to what version it is closest. 
-        method public BBjString determineAndSwitchToVersion(BBjString ungitifiedAonDirName$)
-            declare BBjNumber fixedIssuesChan
+        method public BBjNumber determineAndSwitchToVersion(BBjString ungitifiedAonDirName$)
             declare BBjString fixedIssuesFileName$
-            declare BBjString line!
-            declare BBjString line$
-            declare BBjString dateLine!
-            declare BBjString versionLine!
-            declare BBjString dateToken$
-            declare BBjString versionToken$
-            declare BBjString dateFormatString$
+            declare BBjString version!
+            declare java.util.Date date!
+            declare java.util.List tagList!
+            declare Iterator tagIter!
+            declare Ref currentTag!
+            declare BBjVector relevantTags!
+            declare BBjString tagSearchString!
+            declare RevCommit currentCommit!
+            declare RevWalk walk!
             
-            REM Constants 
-            dateToken$="Report Date:"
-            versionToken$="Report Branch:"
-            dateFormatString$="yyyy-MM-dd hh:mm:ss"
-            
+
             REM If we have FixedIssues.txt, use it to determine what version of Addon we should be using
             fixedIssuesFileName$=ungitifiedAonDirName$+"/documentation/FixedIssues.txt"
             
-            open (fixedIssuesChan) fixedIssuesFileName$
-            
-            dateLineFound=0
-            versionLineFound=0
-            found=0
-            eof=0
-            while ((!dateLineFound or !versionLineFound) and !eof) 
-                read (fixedIssuesChan,end=eof) line$
-                line!=line$
-                
-                REM if the line has a date, assign it to dateLine
-                dateLineFound=line!.contains(dateToken$)
-                if (dateLineFound) then
-                    dateLine!=line!
-                endif 
-                
-                REM if the line has a version assign it to versionLine
-                versionLineFound=line!.contains(versionToken$)
-                if (versionLineFound) then
-                    versionLine!=line!
-                endif 
-                
-                continue 
-            eof: 
-                eof=1
-            wend 
-            
-            REM Extract the date from the fixed issues line and find the closest tag to that date
-            if (!eof) then 
-            
-                REM Extract the version from the version line 
-                versionLine!=versionLine!.substring(versionLine!.indexOf(versionToken!)+versionToken!.length()).strip()
-            
-                REM Extract the date from the line
-                dateLine!=dateLine!.substring(dateLine!.indexOf(dateToken!)+dateToken!.length())
-                dateFormat!=new SimpleDateFormat(dateFormatString$)
-                fixedIssuesDate!=dateFormat!.parse(dateLine!)
-                
-                REM Find the commit closest to the date
-                escape 
-                
+            #fixedIssuesReader!=new FixedIssuesReader() 
+            if (#fixedIssuesReader!.parse(fixedIssuesFileName$)) then 
+                version!=#fixedIssuesReader!.getVersion()
+                fixedIssuesDate!=#fixedIssuesReader!.getDate()
+            else 
+                throw "Could not find FixedIssues.txt file at "+fixedIssuesFileName$,12
             endif 
             
-            REM If we don't have FixedIssues.txt, match a commit with the Addon installation
+            REM At this point, we need to check out the branch to create the "heads/<branch name> ref."
+            branchName$="BBJ"+version!+"GA"
+            branchString!="heads/"+branchName$
+            #checkoutBranch(branchName$)
+            
+            REM Find the commit closest to the date
+            tagList!=#git!.tagList().call()
+            
+            REM Get the tags that start with our release. Unfortunately, the stream() interface does 
+            REM not translate to BBj. 
+            tagIter!=tagList!.iterator()
+            tagSearchString!="refs/tags/"+branchName$+"_"
+            relevantTags!=BBjAPI().makeVector()
+            
+            REM Put the top of the branch on relevant tags list 
+            topOfBranch!=#git!.getRepository().findRef(branchString!)
+            relevantTags!.add(topOfBranch!)
+            
+            REM Gather the relevant tags and put them in the relevant tags list
+            chosenTag!=null()
+            chosenTimeDifference!=Integer.MAX_VALUE
+            while (tagIter!.hasNext()) 
+                currentTag!=cast(Ref,tagIter!.next())
+                
+                if (currentTag!.getName().startsWith(tagSearchString!)) then
+                    relevantTags!.add(currentTag!)
+                endif 
+            wend 
+           
+            REM Find the tag with the closest date to the release 
+            tagIter!=relevantTags!.iterator() 
+            walk!=new RevWalk(#git!.getRepository())
+            while (tagIter!.hasNext())
+                currentTag!=cast(Ref,tagIter!.next())
+                currentCommit!=walk!.parseCommit(currentTag!.getObjectId())
+                    
+                currentCommitTime!=currentCommit!.getCommitTime()
+                fixedIssuesTime!=fixedIssuesDate!.getTime()/1000
+                timeDifference!=currentCommitTime!-fixedIssuesTime!
+                    
+                if (timeDifference!>-1) and (timeDifference!<chosenTimeDifference!) then 
+                      chosenTag!=currentCommit!
+                      chosenTimeDifference!=timeDifference!
+                endif  
+            wend 
+            
+            REM If we found a closely matching tag, return it. Otherwise, return null. 
+            if (chosenTag!<>null()) then 
+                methodret #reset(chosenTag!)
+            else 
+                methodret 0
+            endif 
+            
         methodend 
 
 classend
+
+REM Parses the FixedIssues file and extracts the version and date from the file if successful
+class public AO_FixedIssuesReader 
+    field public BBjString Version!=null()
+    field public java.util.Date Date!=null()
+    
+    REM Constants 
+    field protected BBjString DATE_TOKEN!="Report Date:"
+    field protected BBjString VERSION_TOKEN!="Report Branch: AddonSoftware "
+    field protected BBjString DATE_FORMAT_STRING!="yyyy-MM-dd"
+    
+    method public BBjNumber parse(BBjString fixedIssuesFileName$)
+        declare BBjNumber chan
+        declare BBjNumber dateLineFound
+        declare BBjNumber versionLineFound 
+        declare BBjNumber eof
+        declare BBjString line$
+        declare BBjString line!
+        
+        chan=unt
+        open (chan) fixedIssuesFileName$
+            
+        dateLineFound=0
+        versionLineFound=0
+        while (!dateLineFound or !versionLineFound) 
+            read (chan,end=eof) line$
+            line!=line$
+            
+            REM if the line has a date, assign it to dateLine
+            if (line!.contains(#DATE_TOKEN!) and !dateLineFound) then 
+                dateLineFound=1
+                dateLine!=line!
+            endif 
+            
+            REM if the line has a version assign it to versionLine
+            if (line!.contains(#VERSION_TOKEN!) and !versionLineFound) then 
+                versionLineFound=1
+                versionLine!=line!
+            endif 
+            
+            continue 
+        eof:
+            REM --- when we've reached the end of the file, stop looping
+            break
+        wend 
+        close (chan)
+        
+        REM If we did not find our version and date, then return false here. 
+        if (!dateLineFound or !versionLineFound) then
+            methodret 0
+        endif 
+        
+        REM Extract the date from the date line we read in
+        dateLine!=dateLine!.substring(dateLine!.indexOf(#DATE_TOKEN!)+#DATE_TOKEN!.length())
+        dateFormat!=new SimpleDateFormat(#DATE_FORMAT_STRING!)
+        #Date!=cast(java.util.Date,dateFormat!.parse(dateLine!))
+        
+        REM Extract version from the version line we read in
+        versionLine!=versionLine!.substring(versionLine!.indexOf(#VERSION_TOKEN!)+#VERSION_TOKEN!.length())
+        version!=versionLine!.trim()
+        periodNdx=version!.indexOf(".")
+        #Version!=version!.substring(0,periodNdx)+version!.substring(periodNdx+1)
+        
+        methodret 1 
+        
+    methodend 
+    
+classend 
