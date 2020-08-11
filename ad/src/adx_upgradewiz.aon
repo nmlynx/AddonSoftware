@@ -78,7 +78,7 @@ rem --- Get version for repository branch. Use version of Barista in download.
     rem --- Use version of Barista in download
     call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
     newVersion$=str(num(app_version_id$)*100:"0000")
-rem newVersion$="2011"; rem wgh ... 9809 ... testing
+newVersion$="2020"; rem wgh ... 9809 ... testing
     
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_UPDATE_WIZ")
@@ -199,11 +199,7 @@ rem --- Process upgrade from either a Git based installation or a non-Git based 
         rem --- Process upgrades from a non-Git based installation
         status=0
 
-        rem --- Clone Git repository and switch/checkout to old branch
-rem wgh ... 9809 ... How are we going to get the old version to know what the old branch was?
-oldBranch$="1620"; rem wgh ... 9809 ... testing
-        REM === SDH ==== Need versioning code called here. (Determine what old branch should be)
-        branchName$="BBJ"+oldBranch$+"GA"
+        rem --- Clone Git repository and switch/checkout to old branch/tag
         gosub cloneGitRepo
         if status then goto done
 
@@ -752,7 +748,7 @@ moveModifiedCore: rem --- Move any core Addon files customized by a mods project
     busyImage!.destroy(err=*next)
     return
     
-cloneGitRepo: rem --- Clone Git repository and switch/checkout branch
+cloneGitRepo: rem --- Clone Git repository and switch/checkout to old branch/tag
 
     rem --- Increment progress meter
     meter_text$=Translate!.getTranslation("AON_CLONE_GIT_REPO")
@@ -768,7 +764,6 @@ cloneGitRepo: rem --- Clone Git repository and switch/checkout branch
 
     rem --- Clone Git repository and checkout branch
     gitURI$="https://git.basis.com/Addon/Addon.git"
-    remoteBranch$="origin/"+branchName$
     cloneDir$=newAonDir$
     cloneDir!=new File(cloneDir$)
     userName$="username"
@@ -779,19 +774,28 @@ cloneGitRepo: rem --- Clone Git repository and switch/checkout branch
     if (repoInterface!=null()) then 
         msg_id$="AD_FAILED_BAD_CLONE"
         dim msg_tokens$[1]
-        msg_tokens$[1]=branchName$
+        msg_tokens$[1]=cloneDir$
         gosub disp_message
-        print(log_dev)"    ***** "+branchName$+" CLONE FAILED *****"   
+        print(log_dev)"    ***** "+cloneDir$+" CLONE FAILED *****"   
         status=1
-        return
     endif 
-    repoInterface!.closeInterface()
+    
+    rem --- Switch/checkout to old branch/tag
+    if !status then
+        success=repoInterface!.determineAndSwitchToVersion(oldAonDir$)
+        if !success then
+            msg_id$="AD_FAILED_BAD_CHKOUT"
+            dim msg_tokens$[1]
+            msg_tokens$[1]="OLD"
+            gosub disp_message
+            print(log_dev)"    ***** OLD BRANCH/TAG CHECKOUT FAILED *****"
+            status=1
+        endif
+    endif
 
     rem --- Remove busy/working image from progress meter
+    repoInterface!.closeInterface()
     busyImage!.destroy(err=*next)
-    
-    rem --- Switch/checkout branch
-    gosub checkoutGitBranch
     return
     
 checkoutGitBranch: rem --- Switch/checkout branch
@@ -812,13 +816,9 @@ checkoutGitBranch: rem --- Switch/checkout branch
     rem --- Checkout repository branch
     cloneDir$=newAonDir$
     repoInterface!=new GitRepoInterface(cloneDir$)
-    
-    success=repoInterface!.determineAndSwitchToVersion(oldAonDir$)
-
-    rem SDH: determineAndSwitchToVersion() takes care of this. 
-    rem checkoutStatus$=repoInterface!.checkoutBranch(branchName$)
+    checkoutStatus$=repoInterface!.checkoutBranch(branchName$)
     repoInterface!.closeInterface()
-    if (!success) then
+    if (checkoutStatus$<>"OK") then
         rem --- Failure, warn and terminate
         msg_id$="AD_FAILED_BAD_CHKOUT"
         dim msg_tokens$[1]
