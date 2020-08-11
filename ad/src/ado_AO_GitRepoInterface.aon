@@ -188,8 +188,9 @@ checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
             
             REM Obtain the mode, validating against valid values
             type!=type!.toUpperCase().trim()
-            mode!=ResetCommand.ResetType.valueOf(type!,err=*next)
-            if (err<>0) then 
+            resetHappened=0
+            mode!=ResetCommand.ResetType.valueOf(type!,err=*next);resetHappened=1
+            if (! resetHappened) then 
                 message!="Invalid type for reset: "+$22$+type!+$22$+". Valid values are: "
                 message!=message!+Arrays.asList(ResetCommand.ResetType.values()).toString()
                 throw message!,17
