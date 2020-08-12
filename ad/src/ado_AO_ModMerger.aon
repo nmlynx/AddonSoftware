@@ -48,9 +48,9 @@ class public AO_ModMerger
         #createPrefix()
     methodend 
     
-    REM copyProgFilesFromModProject
+    REM moveProgFilesFromModProject
     REM 
-    method public ModMergerStatus copyProgFilesFromModProject()
+    method public ModMergerStatus moveProgFilesFromModProject()
         
         declare ModMergerStatus status!
         declare java.io.File modsDirectory!
@@ -146,7 +146,7 @@ class public AO_ModMerger
             modsFile!=new java.io.File(modsFileName!)
             optionsArray!=java.lang.reflect.Array.newInstance(StandardCopyOption.class,1)
             java.lang.reflect.Array.set(optionsArray!,0,StandardCopyOption.REPLACE_EXISTING)
-            Files.copy(modsFile!.toPath(),aonFile!.toPath(),optionsArray!)
+            Files.move(modsFile!.toPath(),aonFile!.toPath(),optionsArray!)
         wend 
         
         methodret status!
@@ -321,7 +321,7 @@ classend
 declare AO_ModMerger mm!
 declare AO_ModMergerStatus status!
 mm!=new AO_ModMerger("C:\aon_instances\regal\v16\v1620\mods","C:\aon_instances\regal\v16\v1620\aon")
-status!=mm!.copyProgFilesFromModProject()
+status!=mm!.moveProgFilesFromModProject()
 print status!.getMessages()
 
 

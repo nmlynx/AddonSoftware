@@ -232,7 +232,6 @@ rem wgh 9809 ... remove mods programs/files after they've been brougth into stan
 
         rem --- Move any core Addon files customized by a mods project back into core Addon
         gosub moveModifiedCore
-rem wgh 9809 ... remove mods programs/files after they've been brougth into standard Addon
 
         rem --- Check for, and resolve, line ending issues
         gosub checkLineEndings
@@ -851,7 +850,7 @@ moveModifiedCore: rem --- Move any core Addon files customized by a mods project
 
     rem --- Move mods customized Addon files back into Addon
     merger!=new ModMerger(newModsDir$, newAonDir$)
-    status!=merger!.copyProgFilesFromModProject()
+    status!=merger!.moveProgFilesFromModProject()
     messagesIter!=status!.getMessages().iterator()
     while messagesIter!.hasNext()
         print(log_dev)"    ",messagesIter!.next()
