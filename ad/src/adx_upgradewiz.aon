@@ -55,6 +55,7 @@ rem --- Get user inputs
     appStblMap!=cast(HashMap, callpoint!.getDevObject("appStblMap"))
     rdAdmin!=cast(BBjAdminBase, callpoint!.getDevObject("rdAdmin"))
     useOldMenu%=int(num(Option!.getOptionData("USE_OLD_MENU")))
+    minor_ver$=callpoint!.getDevObject("minor_ver")
 
 	rem --- Flip directory path separators
     baseDir$=FileObject.fixPath(baseDir$, "/")
@@ -75,17 +76,14 @@ rem --- Determine if upgrading from a Git based installation, or a non-Git based
     if oldGitDir!.exists() and oldGitDir!.isDirectory() then gitBasedUpgrade=1
 
 rem --- Get version for repository branch. Use version of Barista in download.
-    rem --- Use version of Barista in download
-    call stbl("+DIR_SYP")+"bax_version.bbj",app_version_id$,lic_version_id$
-    newVersion$=str(num(app_version_id$)*100:"0000")
-newVersion$="2020"; rem wgh ... 9809 ... testing
+    newVersion$=minor_ver$(2)
     
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_UPDATE_WIZ")
     if gitBasedUpgrade then
         meter_total_recs=19
     else
-        meter_total_recs=24
+        meter_total_recs=25
     endif
     if doSyncBackup% then meter_total_recs=meter_total_recs+1
     if useOldMenu% then meter_total_recs=meter_total_recs+1
@@ -179,6 +177,12 @@ rem --- Process upgrade from either a Git based installation or a non-Git based 
         help%=0
         gosub copyAon
 
+        rem --- Get version of old install
+        repoInterface!=new GitRepoInterface(newAonDir$)
+        branch$=repoInterface!.getBranch(); rem --- BBJnnnnGA
+        oldVersion$=branch$(4,4)
+        repoInterface!.closeInterface()
+
         rem --- Build delta XMLs for modified bar/*.xml files that have been committed.
         gosub buildDeltaXmls
         if status goto done
@@ -203,6 +207,12 @@ rem --- Process upgrade from either a Git based installation or a non-Git based 
         gosub cloneGitRepo
         if status then goto done
 
+        rem --- Get version of old install
+        repoInterface!=new GitRepoInterface(newAonDir$)
+        branch$=repoInterface!.getBranch(); rem --- BBJnnnnGA
+        oldVersion$=branch$(4,4)
+        repoInterface!.closeInterface()
+
         rem --- Copy old instance of aon from old location to new location
         requiredFiles%=0
         copyData%=0
@@ -214,12 +224,15 @@ rem --- Process upgrade from either a Git based installation or a non-Git based 
 
         rem --- Move mods/data/bar/delta XMLs to Addon location
         gosub moveModsDataBarDelta
+rem wgh 9809 ... remove mods programs/files after they've been brougth into standard Addon
 
-        rem --- Merge mods before/after callpoints into standard Addon callpoints, and alphabetize them.
+        rem --- Merge mods before/after callpoints into standard Addon callpoints
         gosub mergeCallpoints
+rem wgh 9809 ... remove mods programs/files after they've been brougth into standard Addon
 
         rem --- Move any core Addon files customized by a mods project back into core Addon
         gosub moveModifiedCore
+rem wgh 9809 ... remove mods programs/files after they've been brougth into standard Addon
 
         rem --- Check for, and resolve, line ending issues
         gosub checkLineEndings
@@ -232,6 +245,9 @@ rem --- Process upgrade from either a Git based installation or a non-Git based 
         branchName$="BBJ"+newVersion$+"GA"
         gosub checkoutGitBranch
         if status goto done
+
+        rem --- Save copy of standard Addon cdf files in UpgradeCdfDiffs directory where they can be alphabetized for diff'ing with merged mods cdfs
+        gosub doUpgradeCdfDiffs
 
         rem --- Update new addon.syn file
         gosub updateAddonSyn
@@ -694,7 +710,7 @@ moveModsDataBarDelta: rem --- Move mods/data/bar/delta XMLs to Addon location
     busyImage!.destroy(err=*next)
     return
 
-mergeCallpoints: rem --- Merge mods before/after callpoints into standard Addon callpoints, and alphabetize them.
+mergeCallpoints: rem --- Merge mods before/after callpoints into standard Addon callpoints
 
     rem --- Increment progress meter
     meter_text$=Translate!.getTranslation("AON_MERGE_CDFS")
@@ -707,12 +723,110 @@ mergeCallpoints: rem --- Merge mods before/after callpoints into standard Addon 
     nxt_ctlID=util.getNextControlID()
     busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
 
-    rem --- Import mods callpoint
+    rem --- Import mods callpoint into Addon
     massager!=new CdfMassager()
     massager!.importModChanges(newModsDir$+"data/cdf",newAonDir$+"/data/cdf")
 
+    rem --- Copy merged cdf files into UpgradeCdfDiffs directory where they can be alphabetized for diff'ing with standard Addon cdfs
+    cdfDiffsDir$=baseDir$+"/UpgradeCdfDiffs"
+    cdfDiffsDir!=new File(cdfDiffsDir$)
+    if cdfDiffsDir!.exists() and cdfDiffsDir!.isDirectory() then
+        rem --- Clear existing directory
+        cdfVector! = new Vector(java.util.Arrays.asList(cdfDiffsDir!.listFiles()))
+        cdfIter!=cdfVector!.iterator()
+        while cdfIter!.hasNext()
+            cdfFile!=cdfIter!.next()
+            cdfFile!.delete()
+        wend
+    else
+        rem --- Make new directory
+        cdfDiffsDir!.mkdirs()
+    endif
+    
+    modsCdfDir$=newModsDir$+"data/cdf"
+    modsCdfDirDir!=new File(modsCdfDir$)
+    modsCdfDirVector! = new Vector(java.util.Arrays.asList(modsCdfDirDir!.listFiles()))
+    modsCdfDirIter!=modsCdfDirVector!.iterator()
+    while modsCdfDirIter!.hasNext()
+        modsCdfDirFile!=modsCdfDirIter!.next()
+        fileName!=modsCdfDirFile!.getName()
+        if !fileName!.endsWith(".cdf") then continue
+        
+        rem --- Get copy of merged cdf file
+        sourceChan=unt
+        open(sourceChan,isz=-1,err=*continue)newAonDir$+"/data/cdf/"+fileName!
+        targetChan=unt
+        open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")cdfDiffsDir$+"/"+fileName!
+        while 1
+            readrecord(sourceChan,siz=BLOCKSIZE,end=*break)record$
+            writerecord(targetChan)record$
+        wend
+        close(sourceChan)
+        close(targetChan)
+    wend
+
     rem --- Remove busy/working image from progress meter
     busyImage!.destroy(err=*next)
+    return
+
+doUpgradeCdfDiffs: rem --- Save copy of standard Addon cdf files in UpgradeCdfDiffs directory where they can be alphabetized for diff'ing with merged mods cdfs
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_UPGRADE_CDF_DIFFS")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+    cdfDiffsDir$=baseDir$+"/UpgradeCdfDiffs"
+    cdfDiffsDir!=new File(cdfDiffsDir$)
+    cdfDiffsVector! = new Vector(java.util.Arrays.asList(cdfDiffsDir!.listFiles()))
+    cdfDiffsIter!=cdfDiffsVector!.iterator()
+    while cdfDiffsIter!.hasNext()
+        cdfDiffsFile!=cdfDiffsIter!.next()
+        fileName$=cdfDiffsFile!.getName()
+        
+        rem --- Get copy of standard Addon cdf file, and identify version
+        fileFound=0
+        sourceChan=unt
+        open(sourceChan,isz=-1,err=*next)newAonDir$+"/data/cdf/"+fileName$; fileFound=1
+        if !fileFound then
+            rem --- cdf file not in standard Addon, so remove it from UpgradeCdfDiffs directory
+            cdfDiffsFile!.delete()
+        else
+            targetChan=unt
+            open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")cdfDiffsDir$+"/"+fileName$+"_"+newVersion$
+            while 1
+                readrecord(sourceChan,siz=BLOCKSIZE,end=*break)record$
+                writerecord(targetChan)record$
+            wend
+            close(sourceChan)
+            close(targetChan)
+        
+            rem --- Identify mods version of diff cdf file
+            modsDiffFile!=new File(cdfDiffsDir$+"/"+fileName$+"_"+oldVersion$)
+            cdfDiffsFile!.renameTo(modsDiffFile!)
+        endif
+    wend
+
+    rem --- Alphabetize all cdf files in UpgradeCdfDiffs directory
+    massager!=new CdfMassager()
+    
+    cdfDiffsVector! = new Vector(java.util.Arrays.asList(cdfDiffsDir!.listFiles()))
+    cdfDiffsIter!=cdfDiffsVector!.iterator()
+    while cdfDiffsIter!.hasNext()
+        cdfDiffsFile!=cdfDiffsIter!.next()
+        cdfPath$=cdfDiffsFile!.getPath()
+        cdfMap!=massager!.readAndOrderCdfFile(cdfPath$)
+        if cdfMap!.size() then massager!.writeOrderedCdfFile(cdfMap!,cdfPath$)
+    wend
+    
+        rem --- Remove busy/working image from progress meter
+        busyImage!.destroy(err=*next)
     return
 
 moveModifiedCore: rem --- Move any core Addon files customized by a mods project back into core Addon
@@ -735,7 +849,7 @@ moveModifiedCore: rem --- Move any core Addon files customized by a mods project
     newAonDir!=new File(newAonDir$)
     if !newAonDir!.exists() or !newAonDir!.isDirectory() then newAonDir!.mkdirs()
 
-    rem --- Move mods customized Addon files
+    rem --- Move mods customized Addon files back into Addon
     merger!=new ModMerger(newModsDir$, newAonDir$)
     status!=merger!.copyProgFilesFromModProject()
     messagesIter!=status!.getMessages().iterator()
