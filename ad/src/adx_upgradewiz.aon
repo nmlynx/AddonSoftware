@@ -224,11 +224,9 @@ rem --- Process upgrade from either a Git based installation or a non-Git based 
 
         rem --- Move mods/data/bar/delta XMLs to Addon location
         gosub moveModsDataBarDelta
-rem wgh 9809 ... remove mods programs/files after they've been brougth into standard Addon
 
         rem --- Merge mods before/after callpoints into standard Addon callpoints
         gosub mergeCallpoints
-rem wgh 9809 ... remove mods programs/files after they've been brougth into standard Addon
 
         rem --- Move any core Addon files customized by a mods project back into core Addon
         gosub moveModifiedCore
@@ -691,9 +689,14 @@ moveModsDataBarDelta: rem --- Move mods/data/bar/delta XMLs to Addon location
                 sourceFile!=sourceIter!.next()
                 sourceName!=sourceFile!.getName()
                 if sourceName!.endsWith(".xml") then
-                    rem --- Move *.xml files
+                    rem --- Move mods data/bar/delta/*.xml file
                     targetFile!=new File(aonDataBarDelta$+"/"+sourceName!)
                     Files.move(sourceFile!.toPath(),targetFile!.toPath(),options!)
+
+                    rem --- Remove corresponding mods data/bar/*.xml file
+                    dataBarXml$=newModsDir$+"data/bar/"+sourceName!
+                    dataBarXml!=new File(dataBarXml$)
+                    dataBarXml!.delete()
                 else
                     rem --- Delete files that aren't *.xml
                     sourceFile!.delete()
@@ -726,7 +729,7 @@ mergeCallpoints: rem --- Merge mods before/after callpoints into standard Addon 
     massager!=new CdfMassager()
     massager!.importModChanges(newModsDir$+"data/cdf",newAonDir$+"/data/cdf")
 
-    rem --- Copy merged cdf files into UpgradeCdfDiffs directory where they can be alphabetized for diff'ing with standard Addon cdfs
+    rem --- Make/clear UpgradeCdfDiffs directory for merged cdf files
     cdfDiffsDir$=baseDir$+"/UpgradeCdfDiffs"
     cdfDiffsDir!=new File(cdfDiffsDir$)
     if cdfDiffsDir!.exists() and cdfDiffsDir!.isDirectory() then
@@ -742,9 +745,10 @@ mergeCallpoints: rem --- Merge mods before/after callpoints into standard Addon 
         cdfDiffsDir!.mkdirs()
     endif
     
+    rem --- Copy merged cdf files into UpgradeCdfDiffs directory where they can be alphabetized for diff'ing with standard Addon cdfs
     modsCdfDir$=newModsDir$+"data/cdf"
-    modsCdfDirDir!=new File(modsCdfDir$)
-    modsCdfDirVector! = new Vector(java.util.Arrays.asList(modsCdfDirDir!.listFiles()))
+    modsCdfDir!=new File(modsCdfDir$)
+    modsCdfDirVector! = new Vector(java.util.Arrays.asList(modsCdfDir!.listFiles()))
     modsCdfDirIter!=modsCdfDirVector!.iterator()
     while modsCdfDirIter!.hasNext()
         modsCdfDirFile!=modsCdfDirIter!.next()
@@ -762,6 +766,15 @@ mergeCallpoints: rem --- Merge mods before/after callpoints into standard Addon 
         wend
         close(sourceChan)
         close(targetChan)
+
+        rem --- Remove mods cdf files after they've been merged into standard Addon
+        modsCdfDirFile!.delete()
+
+        rem --- Remove corresponding mods data/bar/*.xml file
+        fileName$=fileName!
+        xmlFile$=newModsDir$+"data/bar/"+fileName$(1,pos(".cdf"=fileName$)-1)+".xml"
+        xmlFile!=new File(xmlFile$)
+        xmlFile!.delete()
     wend
 
     rem --- Remove busy/working image from progress meter
@@ -1189,6 +1202,10 @@ copyApps: rem --- Run Copy Application utility for applications being copied
         
         rem --- Launch adc_copymods.aon
         call pgmdir$+"adc_copymods.aon",sourceSyn$,targetDir$,stblMap!,pfxList!,rdForm!,0,status
+
+        rem --- Delete mods data/def directory
+        parent$=appList!.get(1); rem --- parent app
+        if parent$="ADDON" then FileObject.deleteDirectory(targetDir$+"/data/def")
     wend
     return
     
