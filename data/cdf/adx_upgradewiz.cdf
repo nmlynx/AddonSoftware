@@ -83,6 +83,7 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 					rem --- Update stblRowVect! for modified target
 					if cvs(stblGrid!.getCellText(e!.getRow(),0),3)="ADDON" then
 						rem --- This row is for the ADDON application
+rem wgh ... 9809 ... Force copy when installing mods project
 						stbl$=pad(cvs(stblGrid!.getCellText(e!.getRow(),1),3),7)
 						if stbl$(1,1)="+" and stbl$(4)="DATA" then
 							rem --- This is an Addon +??DATA STBL
@@ -183,6 +184,7 @@ rem --- Clear custom STBL grid
 	stblGrid!.clearMainGrid()
 
 [[ADX_UPGRADEWIZ.ASHO]]
+rem escape; break; rem wgh ... 9809 ... testing
 rem --- Don't allow running the utility if not launched from Addon demo system under Basis download location
 	ddm_systems=fnget_dev("DDM_SYSTEMS")
 	dim ddm_systems$:fnget_tpl$("DDM_SYSTEMS")
@@ -225,6 +227,16 @@ rem --- Resize grids
 	stblGrid!.setFitToGrid(1)
 
 [[ADX_UPGRADEWIZ.ASVA]]
+rem --- Validate new database name
+
+	db_name$ = callpoint!.getColumnData("ADX_UPGRADEWIZ.DB_NAME")
+	gosub validate_new_db_name
+	callpoint!.setColumnData("ADX_UPGRADEWIZ.DB_NAME",db_name$)
+	if abort then
+		callpoint!.setFocus("ADX_UPGRADEWIZ.DB_NAME")
+		break
+	endif
+
 rem --- Validate base directory for installation
 
 	new_loc$ = callpoint!.getColumnData("ADX_UPGRADEWIZ.BASE_DIR")
@@ -546,6 +558,7 @@ rem --- Get this version of Addon. Use version of Barista in download.
 	call stbl("+DIR_SYP")+"bax_version.bbj",version_id$,lic_id$
 	major_ver$="v"+str(num(version_id$,err=*next):"00",err=*next)
 	minor_ver$="v"+str(num(version_id$,err=*next)*100:"0000",err=*next)
+rem minor_ver$="v2020"; rem wgh ... 9809 ... testing
 	callpoint!.setDevObject("major_ver",major_ver$)
 	callpoint!.setDevObject("minor_ver",minor_ver$)
 
@@ -1161,6 +1174,7 @@ rem ==========================================================================
 			next i
 		endif
 	wend
+rem wgh ... 9809 ... warn if more than one app with ADDON parent
 
 	rem ---Make sure grid has at least minimum number of rows
 	while appRowVect!.size()<callpoint!.getDevObject("app_grid_def_cols")*callpoint!.getDevObject("app_grid_min_rows")
