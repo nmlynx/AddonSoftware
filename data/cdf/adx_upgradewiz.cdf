@@ -225,6 +225,16 @@ rem --- Resize grids
 	stblGrid!.setFitToGrid(1)
 
 [[ADX_UPGRADEWIZ.ASVA]]
+rem --- Validate new database name
+
+	db_name$ = callpoint!.getColumnData("ADX_UPGRADEWIZ.DB_NAME")
+	gosub validate_new_db_name
+	callpoint!.setColumnData("ADX_UPGRADEWIZ.DB_NAME",db_name$)
+	if abort then
+		callpoint!.setFocus("ADX_UPGRADEWIZ.DB_NAME")
+		break
+	endif
+
 rem --- Validate base directory for installation
 
 	new_loc$ = callpoint!.getColumnData("ADX_UPGRADEWIZ.BASE_DIR")
