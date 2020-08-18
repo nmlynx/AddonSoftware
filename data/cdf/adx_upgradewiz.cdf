@@ -183,7 +183,6 @@ rem --- Clear custom STBL grid
 	stblGrid!.clearMainGrid()
 
 [[ADX_UPGRADEWIZ.ASHO]]
-rem escape; break; rem wgh ... 9809 ... testing
 rem --- Don't allow running the utility if not launched from Addon demo system under Basis download location
 	ddm_systems=fnget_dev("DDM_SYSTEMS")
 	dim ddm_systems$:fnget_tpl$("DDM_SYSTEMS")
@@ -557,7 +556,6 @@ rem --- Get this version of Addon. Use version of Barista in download.
 	call stbl("+DIR_SYP")+"bax_version.bbj",version_id$,lic_id$
 	major_ver$="v"+str(num(version_id$,err=*next):"00",err=*next)
 	minor_ver$="v"+str(num(version_id$,err=*next)*100:"0000",err=*next)
-rem minor_ver$="v2020"; rem wgh ... 9809 ... testing
 	callpoint!.setDevObject("major_ver",major_ver$)
 	callpoint!.setDevObject("minor_ver",minor_ver$)
 
@@ -633,6 +631,13 @@ rem --- Initializations when old aon install location changes
 				gosub fill_app_grid
 				util.resizeWindow(Form!, SysGui!)
 				callpoint!.setStatus("REFRESH")
+
+				rem --- Warn if more than one app with ADDON parent, and exit.
+				if aonParents>1 then
+					msg_id$="AD_EXTRA_AON_PARENTS"
+					gosub disp_message
+					release
+				endif
 			endif
 		endif
 	endif
@@ -655,6 +660,13 @@ rem --- Validate old barista install location
 		gosub fill_app_grid
 		util.resizeWindow(Form!, SysGui!)
 		callpoint!.setStatus("REFRESH")
+
+		rem --- Warn if more than one app with ADDON parent, and exit.
+		if aonParents>1 then
+			msg_id$="AD_EXTRA_AON_PARENTS"
+			gosub disp_message
+			release
+		endif
 	endif
 
 
@@ -1091,6 +1103,7 @@ rem ==========================================================================
 
 	rem --- Build HashMap of all parent and child applications. The HashMap is keyed by the parent,
 	rem --- and holds a Vector of all the children for that parent.
+	aonParents=0
 	declare HashMap appMap!
 	appMap! = new HashMap()
 	declare Vector rootVect!
@@ -1170,10 +1183,12 @@ rem ==========================================================================
 				else
 					appRowVect!.addItem(""); rem Target
 				endif
+
+				rem --- Count apps with ADDON parent
+				if childProps!.get("parent_sys_id")="ADDON" then aonParents=aonParents+1
 			next i
 		endif
 	wend
-rem wgh ... 9809 ... warn if more than one app with ADDON parent
 
 	rem ---Make sure grid has at least minimum number of rows
 	while appRowVect!.size()<callpoint!.getDevObject("app_grid_def_cols")*callpoint!.getDevObject("app_grid_min_rows")
