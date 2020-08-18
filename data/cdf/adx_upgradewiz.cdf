@@ -83,7 +83,6 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 					rem --- Update stblRowVect! for modified target
 					if cvs(stblGrid!.getCellText(e!.getRow(),0),3)="ADDON" then
 						rem --- This row is for the ADDON application
-rem wgh ... 9809 ... Force copy when installing mods project
 						stbl$=pad(cvs(stblGrid!.getCellText(e!.getRow(),1),3),7)
 						if stbl$(1,1)="+" and stbl$(4)="DATA" then
 							rem --- This is an Addon +??DATA STBL
@@ -1256,8 +1255,11 @@ rem ==========================================================================
     	app_grid_def_cols=callpoint!.getDevObject("app_grid_def_cols")
 	index=e!.getRow()*app_grid_def_cols
 
+	rem --- Force Install and Copy checkboxes to be the same for apps with ADDON parent
+	parent$=cvs(appRowVect!.getItem(index+1),2)
+
 	rem --- Install checkbox
-	if e!.getColumn()=2 then
+	if e!.getColumn()=2 or (parent$="ADDON" and e!.getColumn()=3) then
 		if onoff then
 			rem --- Checked
 			appGrid!.setCellStyle(e!.getRow(),2,SysGUI!.GRID_STYLE_CHECKED); rem Install
@@ -1280,7 +1282,7 @@ rem ==========================================================================
 	endif
 
 	rem --- Copy checkbox
-	if e!.getColumn()=3 then
+	if e!.getColumn()=3 or (parent$="ADDON" and e!.getColumn()=2) then
 		if onoff then
 			rem --- Checked
 			appGrid!.setCellStyle(e!.getRow(),3,SysGUI!.GRID_STYLE_CHECKED); rem Copy
