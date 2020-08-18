@@ -25,7 +25,7 @@ rem ==========================================================================
 
     setesc std_error
     seterr std_error
-
+ 
 rem --- Initializations
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -693,10 +693,9 @@ moveModsDataBarDelta: rem --- Move mods/data/bar/delta XMLs to Addon location
                     targetFile!=new File(aonDataBarDelta$+"/"+sourceName!)
                     Files.move(sourceFile!.toPath(),targetFile!.toPath(),options!)
 
-                    rem --- Remove corresponding mods data/bar/*.xml file
-                    dataBarXml$=newModsDir$+"data/bar/"+sourceName!
-                    dataBarXml!=new File(dataBarXml$)
-                    dataBarXml!.delete()
+                    rem --- Remove mods data/bar/*.xml file and data/arc/*/*.arc files corresponding to given sourceName!
+                    sourceName$=sourceName!
+                    gosub removeModsArcBarFile
                 else
                     rem --- Delete files that aren't *.xml
                     sourceFile!.delete()
@@ -770,11 +769,9 @@ mergeCallpoints: rem --- Merge mods before/after callpoints into standard Addon 
         rem --- Remove mods cdf files after they've been merged into standard Addon
         modsCdfDirFile!.delete()
 
-        rem --- Remove corresponding mods data/bar/*.xml file
-        fileName$=fileName!
-        xmlFile$=newModsDir$+"data/bar/"+fileName$(1,pos(".cdf"=fileName$)-1)+".xml"
-        xmlFile!=new File(xmlFile$)
-        xmlFile!.delete()
+        rem --- Remove mods data/bar/*.xml file and data/arc/*/*.arc files corresponding to given sourceName!
+        sourceName$=fileName!
+        gosub removeModsArcBarFile
     wend
 
     rem --- Remove busy/working image from progress meter
@@ -1206,6 +1203,22 @@ copyApps: rem --- Run Copy Application utility for applications being copied
         rem --- Delete mods data/def directory
         parent$=appList!.get(1); rem --- parent app
         if parent$="ADDON" then FileObject.deleteDirectory(targetDir$+"/data/def")
+
+        rem --- Remove SYSPAR=ADDON line from app *.syn files
+        appNewSyn$=targetDir$+"/config/"+cvs(app$,8)+".syn"
+        erase appNewSyn$ + ".bak", err=*next
+        rename appNewSyn$ to appNewSyn$ + ".bak", err=*next
+        sourceChan=unt
+        open(sourceChan,isz=-1,err=*next)appNewSyn$ + ".bak"
+        targetChan=unt
+        open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")appNewSyn$
+        while 1
+            read(sourceChan,end=*break)record$
+            if cvs(record$,3)="SYSPAR=ADDON" then continue
+            write(targetChan)record$
+        wend
+        close(sourceChan)
+        close(targetChan)
     wend
     return
     
@@ -1437,6 +1450,45 @@ checkForGitConflicts: rem --- Check for Git conflicts, and resolve bar/*.xml con
 
     rem --- Remove busy/working image from progress meter
     busyImage!.destroy(err=*next)
+    return
+
+removeModsArcBarFile: rem --- Remove mods data/bar/*.xml file and data/arc/*/*.arc files corresponding to given sourceName$
+    rem --- Get source basename and extension
+    sourceName$=sourceName!
+    baseName$=""
+    extension$=""
+    if sourceName!.endsWith(".xml") then
+        extension$=".xml"
+        baseName$=sourceName$(1,pos(extension$=sourceName$,-1)-1)
+    endif
+    if sourceName!.endsWith(".cdf") then
+        extension$=".cdf"
+        baseName$=sourceName$(1,pos(extension$=sourceName$,-1)-1)
+    endif
+    if baseName$="" or extension$="" then return
+    
+    rem --- Remove corresponding mods data/bar/*.xml file
+    modsBarXml!=new File(newModsDir$+"data/bar/"+baseName$+extension$)
+    modsBarXml!.delete()
+    
+    rem --- Remove corresponding mods data/arc/*/*.arc files
+    if arcLangDirs!=null() then
+        rem --- Get language directory that are under the mods data/arc directory
+        arcLangDirs!= new Vector()
+        modsDataArcDir!=new File(newModsDir$+"data/arc")
+        modsDataArcVector! = new Vector(java.util.Arrays.asList(modsDataArcDir!.listFiles()))
+        modsDataArcIter!=modsDataArcVector!.iterator()
+        while modsDataArcIter!.hasNext()
+            modsDataArcFile!=modsDataArcIter!.next()
+            if modsDataArcFile!.isDirectory() then arcLangDirs!.add(modsDataArcFile!)
+        wend
+    endif
+    arcLangIter!=arcLangDirs!.iterator()
+    while arcLangIter!.hasNext()
+        langDir!=arcLangIter!.next()
+        modsArcFile!=new File(newModsDir$+"data/arc/"+langDir!.getName()+"/"+baseName$+".arc")
+        modsArcFile!.delete()
+    wend
     return
 
 search_replace: rem --- Search record$ for search$, and replace with replace$
