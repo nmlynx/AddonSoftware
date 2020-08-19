@@ -584,7 +584,7 @@ rem --- Build copyPath! Vector from sourcePaths! Properties, eliminating redunda
         redundant=0
         for i=0 to copyPath!.size()-1
             existingCopyPath$=copyPath!.get(i)
-            if pos(existingCopyPath$=canonicalPath$)=1 then
+            if pos(existingCopyPath$+File.separator=canonicalPath$)=1 then
                 redundant=1
                 break
             endif
@@ -596,7 +596,7 @@ rem --- Build copyPath! Vector from sourcePaths! Properties, eliminating redunda
             removePaths!=new Vector()
             for i=0 to copyPath!.size()-1
                 existingCopyPath$=copyPath!.get(i)
-                if pos(canonicalPath$=existingCopyPath$)=1 then removePaths!.add(existingCopyPath$)
+                if pos(canonicalPath$+File.separator=existingCopyPath$)=1 then removePaths!.add(existingCopyPath$)
             next i
             if removePaths!.size() then copyPath!.removeAll(removePaths!)
 
