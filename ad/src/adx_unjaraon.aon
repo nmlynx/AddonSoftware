@@ -647,7 +647,8 @@ rem --- Update paths in system (application) *.def files for ALL languages if pr
                                     rem --- Get position of CPGM attribute for Tables
                                     if doTableAttrs then
                                         if doTableAttrs=1 then
-                                            cpgmTable_pos=(pos("CPGM"=line$,5)-1)/5
+                                            cpgmTable_pos=pos("CPGM"=line$,5)
+                                            if cpgmTable_pos then cpgmTable_pos=(cpgmTable_pos-1)/5
                                         endif
                                         doTableAttrs=doTableAttrs-1
                                     endif
@@ -655,7 +656,8 @@ rem --- Update paths in system (application) *.def files for ALL languages if pr
                                     rem --- Get position of CPGM attribute for Columns
                                     if doColumnAttrs then
                                         if doColumnAttrs=1 then
-                                            cpgmColumn_pos=(pos("CPGM"=line$,5)-1)/5
+                                            cpgmColumn_pos=pos("CPGM"=line$,5)
+                                            if cpgmColumn_pos then cpgmColumn_pos=(cpgmColumn_pos-1)/5
                                         endif
                                         doColumnAttrs=doColumnAttrs-1
                                     endif
@@ -812,8 +814,10 @@ rem --- Update PREFIX, dbname, dbname_api, port and SSL settings in barista.cfg 
                         line!=line$
                         line$=line!.replace("\","/")
                         last_pos=pos(bbjHome$=line$,-1)
-                        end_pos=last_pos+pos(" "=line$(last_pos))
-                        line$=line$(1,end_pos)
+                        if last_pos>0 then
+                            end_pos=last_pos+pos(" "=line$(last_pos))
+                            line$=line$(1,end_pos)
+                        endif
                     endif
                 
                     key$=cvs(line$(1,pos("="=line$)-1),3)
