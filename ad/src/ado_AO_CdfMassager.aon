@@ -8,8 +8,14 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
 
     use java.io.File
+    use java.util.Arrays
+    use java.util.ArrayList
+    use java.util.Iterator
+    use java.util.Map
+    use java.util.regex.Matcher
     use java.util.regex.Pattern
     use java.util.Scanner
+    use java.util.Set
     use java.util.TreeMap
     use java.util.LinkedHashMap
     use java.util.Vector
@@ -22,6 +28,9 @@ rem  * Alphabetizes callpoints, and merges Mods project before/after callpoints 
 rem  */
     
     class public AO_CdfMassager
+    
+        field protected BBjString CALLPOINT_SUFFIX!="\.([AB])\]\]\s*$"
+        field protected BBjString SKIP_STRING!=".*setStatus\(\"+$22$+"([^-\r]*)-?SKIP-?(.*)\"+$22$+"\).*"
         
         rem /**
         rem  * Constructor.
@@ -47,15 +56,98 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
         methodend
     
         rem /**
-        rem  * Combines two LinkedHashMaps of callpoint code into a single combined LinkedHashMap.
+        rem  * Combines two Maps of callpoint code into a single combined Map.
         rem  * 
-        rem  * @param LinkedHashMap aonCallpoints! -- from readCdfFile() method
-        rem  * @param LinkedHashMap modsCallpoints! -- from readCdfFile() method
+        rem  * @param Map aonCallpoints! -- from readCdfFile() method
+        rem  * @param Map modsCallpoints! -- from readCdfFile() method
         rem  *
-        rem  * @return LinkedHashMap combinedCallpoints!
+        rem  * @return Map combinedCallpoints!
         rem  */
-        method public LinkedHashMap combineCdfFiles(LinkedHashMap aonCallpoints!, LinkedHashMap modsCallpoints!)
-            aonCallpoints!.putAll(modsCallpoints!)
+        method public Map combineCdfFiles(Map aonCallpoints!, Map modsCallpoints!)
+            
+            declare Set modKeys!
+            declare Iterator modKeyIter!
+            declare BBjString modKey!
+            declare BBjString aonKey!
+            declare BBjString suffix!
+            declare BBjString aonBody!
+            declare BBjString modsBody!
+            declare BBjString body!
+            
+            REM Iterate through the mods callpoints and correlate them to the core callpoints 
+            modKeys!=modsCallpoints!.keySet()
+            modKeyIter!=modKeys!.iterator()
+            
+            while modKeyIter!.hasNext()
+                suffix!=""
+                modKey!=cast(BBjString,modKeyIter!.next())
+                
+                rem -- handle custom callpoints 
+                custom!=modKey!.contains("<CUSTOM>")
+                if (custom!) then
+                    newKey!=#desuffix(modKey!)
+                    body!=cast(BBjString,modsCallpoints!.get(modKey!))
+                    body!=newKey!+$0A$+"REM *** Custom from mods ***"+$0A$+"REM    "+body!
+                    aonCallpoints!.put(newKey!,body!)
+                    continue
+                endif 
+                
+                rem -- get the callpoint header suffix
+                suffix!=#getSuffix(modKey!) 
+                
+                rem -- ignore  callpoints without a suffix  
+                if (suffix!.length()<=0) then 
+                    continue
+                endif  
+                
+                rem -- handle callponts with a suffix 
+                aonKey!=#desuffix(modKey!)
+                
+                aonBody!=cast(BBjString,aonCallpoints!.get(aonKey!))
+                modsBody!=cast(BBjString,modsCallpoints!.get(modKey!))
+                
+                REM -- REM the header line of the addon callpoint
+                if (aonBody!<>null()) then
+                    aonBody!="REM    "+aonBody!
+                endif 
+
+                REM -- REM the header line of the mods callpoint 
+                if (modsBody!<>null()) then
+                    modsBody!="REM    "+modsBody!
+                else 
+                    REM -- Throw an error on a null mods callpoint.  This should not be able to happen, so something is wrong
+                    throw "Mods callpoint is completely empty.  This should never happen.",17
+                endif 
+
+                rem -- there's a before or after callpoint in mods that's not defined at all in core 
+                if aonBody!=null() then 
+                    body!=aonKey!+$0A$+"REM *** Callpoint from mods that's not in core ***"+$0A$+modsBody!
+                    body!=#replaceSkips(body!)
+                    aonCallpoints!.put(aonKey!,body!)
+                    continue
+                endif 
+                
+                rem -- append after callpoint to core callpoint 
+                if suffix!="A" then 
+                    body!=aonKey!+$0A$+"REM *** Core + After: Core ***"+$0A$+aonBody!+$0A$+"REM *** Core + After: After ***"+$0A$+modsBody!
+                endif 
+                
+                rem -- if before without skip, append the core callpoint to the before callpoint, otherwise, replace the core 
+                if suffix!="B" then
+                    if (#isSkipPresent(modsBody!)) then
+                        modsBody!=#replaceSkips(modsBody!)
+                        body!=aonKey!+$0A$+"REM *** Before with skip ***"+$0A$+modsBody!
+                    else 
+                        body!=aonKey!+$0A$+"REM *** Before without skip + Core: Before ***"+$0A$+modsBody!+$0A$+"REM *** Before without skip + Core: Core ***"+$0A$+aonBody!
+                    endif 
+                endif 
+                
+                if (suffix!<>"A" and suffix!<>"B") then
+                    throw "Don't know what to do for suffix: "+suffix!,17
+                endif 
+                
+                aonCallpoints!.put(aonKey!,body!)
+            wend 
             methodret aonCallpoints!
         methodend 
     
@@ -69,6 +161,9 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
         method public void importModChanges(BBjString modsCdfDir$, BBjString aonCdfDir$)
             seterr importModChanges_error
 
+            declare java.io.File modsCdfDir!
+            declare java.io.File aonCdfDir!
+
             rem --- Standardize paths
             modsCdfDir$=FileObject.fixPath(modsCdfDir$, "/")
             modsCdfDir$=FileObject.addEndSlash(modsCdfDir$, "/")
@@ -76,10 +171,12 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             aonCdfDir$=FileObject.addEndSlash(aonCdfDir$, "/")
             
             rem --- Verify directories exist
+            rem     Throw an error if these directories don't exist. These directories must exist with CDF
+            rem     files for the massager to work. 
             modsCdfDir!=new File(modsCdfDir$)
-            if !modsCdfDir!.exists() or !modsCdfDir!.isDirectory() then modsCdfDir!.mkdirs()
+            if !modsCdfDir!.exists() or !modsCdfDir!.isDirectory() then throw "Directory "+modsCdfDir!.getPath()+" doesn't exist or isn't a directory.",12
             aonCdfDir!=new File(aonCdfDir$)
-            if !aonCdfDir!.exists() or !aonCdfDir!.isDirectory() then aonCdfDir!.mkdirs()
+            if !aonCdfDir!.exists() or !aonCdfDir!.isDirectory() then throw "Directory "+modsCdfDir!.getPath()+" doesn't exist or isn't a directory.",12
             
             rem --- Process mods cdf files
             modsCdfs! = new Vector(java.util.Arrays.asList(modsCdfDir!.listFiles()))
@@ -94,7 +191,7 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
                     aonCallpoints!=#readCdfFile(aonCdfFile!.getPath())
                     modsCallpoints!=#readCdfFile(modsCdfFile!.getPath())
                     combinedCallpoints!=#combineCdfFiles(aonCallpoints!,modsCallpoints!)
-                    #writeCdf(combinedCallpoints!,aonCdfFile!.getPath())
+                    #writeCdfFile(combinedCallpoints!,aonCdfFile!.getPath())
                 endif 
             wend
             
@@ -124,59 +221,45 @@ importModChanges_error:rem --- Method error trap/handler (11Oct2017)
         rem  */
         method public LinkedHashMap readCdfFile(BBjString filePath$)
             seterr readCdfFile_error
+            
+            declare BBjString replacementString!
+            declare BBjString currentHeaderLine!
+            
             cdfMap!=new LinkedHashMap()
 
             rem --- Initializations
             keyPattern!="\[\[.*\]\]"
-            beforeString!=".B]]"
-            normalString!="]]"
-            rem CAH may not always be exactly like this...skipString!="callpoint!.setStatus("+$22$+"SKIP"+$22$+")"
-            skipString!=".*setStatus\([^\(]*SKIP.*\).*"
+            pattern!=Pattern.compile(keyPattern!)
+REM             beforeString!=".B]]"
+REM             beforeKeyString!=".B"
+REM             normalString!="]]"
+REM             skipString!=".*setStatus\(\"+$22$+"([^-]*)-?SKIP-?(.*)\"+$22$+"\).*"
             
-            rem --- Read all callpoints from a cdf file and put them into an ordered hashmap
+            rem --- Read all callpoints from a cdf file and put them into a map
             key!=null()
             body!=""
             fl!=new File(filePath$)
             sc!=new Scanner(fl!,err=*next)
             if sc!<>null()
                 while (sc!.hasNextLine()) 
-                    rem --- Test to see if this line is the beginning of a new callpoint.
+                    rem --- Test for new callpoint.
                     newLine!=sc!.nextLine()
-                    pattern!=Pattern.compile(keyPattern!)
                     matcher!=pattern!.matcher(newLine!)
                     if (matcher!.find()) then
                         newKey!=matcher!.group()
+                        currentHeaderLine!=cast(BBjString,newLine!) 
                     else 
                         newKey!=null()
                     endif 
-                     
-                    rem --- Is this a new callpoint
+                    
+                    rem -- handle new callpoint 
                     if (newKey!<>null()) then
                         cdfMap!.put(newKey!,"") 
-                    
-                        rem --- Test to see if this is a before callpoint. Test is only necessary on key
-                        isBefore!=newLine!.indexOf(beforeString!)>-1
-                        
                         key!=newKey!
                         newKey!=null() 
-                    endif 
-                    
-                    rem --- Test to see if this is a skip callpoint
-                    if newLine!.matches(skipString!) then
-                        rem --- Change out the key here if we have a callpoint that is both before and skip
-                        if (isBefore!) then 
-                            newKey!=key!.replace(beforeString!,normalString!)
-                            body!=cdfMap!.get(key!)
-                            body!=body!.replace(beforeString!,normalString!)
-                            cdfMap!.remove(key!)
-                            cdfMap!.put(newKey!,body!)
-                            key!=newKey!
-                            newKey!=null()
-                        endif 
-                    endif 
-                    
+                    endif                     
                     cdfMap!.put(key!,cast(BBjString,cdfMap!.get(key!))+newLine!+$0A$) 
-                wend 
+                wend
                 sc!.close()
             endif
             methodret cdfMap!
@@ -195,6 +278,128 @@ readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
             x$=stbl("+THROWN_ERR","TRUE")   
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
+
+        rem /**
+        rem  * Returns the given callpoint body with callpoint skips remmed out and replaced if
+        rem  * there's additional stati. 
+        rem  * 
+        rem  * @param BBjString body! 
+        rem  *
+        rem  * @return the body with skips replaced
+        rem  */        
+        method protected BBjString replaceSkips(BBjString body!)
+            declare Pattern skipPattern!
+            declare Matcher skipMatcher!
+            declare java.util.List lines!
+            declare Iterator lineIter!
+            declare BBjString modifiedBody!
+            declare BBjString currentLine!
+            declare BBjString group1!
+            declare BBjString ground2!
+            declare BBjString modifiedLine!
+            
+            modifiedBody!=""
+            lines!=Arrays.asList(body!.split($0A$))
+        
+            lineIter!=lines!.iterator()
+            
+            while lineIter!.hasNext()
+                currentLine!=cast(BBjString,lineIter!.next())
+                if (! currentLine!.matches(#SKIP_STRING!)) then
+                    modifiedBody!=modifiedBody!+currentLine!+$0A$
+                    continue
+                endif 
+                
+                skipPattern!=Pattern.compile(#SKIP_STRING!)
+                skipMatcher!=skipPattern!.matcher(currentLine!)
+                skipMatcher!.find()
+                
+                group1!=skipMatcher!.group(1)
+                group2!=skipMatcher!.group(2)
+                
+                action!=""
+                if (group1!.length()>0) then 
+                    action!=group1!
+                endif 
+                    
+                if (group2!.length()>0) then 
+                    if (action!.length()>0) then 
+                        action!=action!+"-"+group2!
+                    else 
+                        action!=group2!
+                    endif 
+                endif
+                
+                modifiedLine!="REM    "+currentLine!
+                if (action!.length()>0) then 
+                    modifiedLine!=modifiedLine!+$0A$+"callpoint!.setStatus("+$22$+action!+$22$+")"
+                endif   
+                
+                modifiedBody!=modifiedBody!+modifiedLine!+$0A$
+            wend 
+            methodret modifiedBody!
+        methodend 
+
+        rem /**
+        rem  * Returns true if the callpoint body contains a setStatus("*SKIP*")
+        rem  * 
+        rem  * @param BBjString body! 
+        rem  *
+        rem  * @return true if there's a skip status in the callpoint
+        rem  */        
+        method protected BBjNumber isSkipPresent(BBjString body!)
+            declare Pattern skipPattern!
+            declare Matcher skipMatcher!
+            
+            skipPattern!=Pattern.compile(#SKIP_STRING!)
+            skipMatcher!=skipPattern!.matcher(body!)
+            methodret skipMatcher!.find()
+        methodend 
+
+        rem /**
+        rem  * Returns the single letter suffix of the callpoint header
+        rem  * 
+        rem  * @param BBjString key! 
+        rem  *
+        rem  * @return the single letter character suffix of the callpoint header
+        rem  */
+        method protected BBjString getSuffix(BBjString key!)
+            declare Pattern pattern!
+            declare Matcher matcher! 
+            declare BBjString group!
+            
+            pattern!=Pattern.compile(#CALLPOINT_SUFFIX!)
+            matcher!=pattern!.matcher(key!)
+            if (matcher!.find()) then  
+                methodret matcher!.group(1).toUpperCase()
+            else 
+                methodret ""
+            endif 
+        methodend        
+
+
+        rem /**
+        rem  * Transforms a callpoint header with a suffix into a callpoint header without a suffix 
+        rem  * 
+        rem  * @param BBjString key! 
+        rem  *
+        rem  * @return the callpoint without the suffix
+        rem  */
+        method protected BBjString desuffix(BBjString key!)
+            methodret key!.replaceAll(#CALLPOINT_SUFFIX!,"]]")
+        methodend 
+
+        rem /**
+        rem  * Returns whether the callpoint header denotes a before callpoint
+        rem  * 
+        rem  * @param BBjString key! 
+        rem  *
+        rem  * @return 1 if the key string ends with the before callpoint suffix, 0 otherwise 
+        rem  */
+        method protected BBjNumber isBefore(BBjString key!)
+            methodret #getSuffix(key!)="B"
+        methodend 
+
 
         rem /**
         rem  * Builds TreeMap of callpoint code in specified cdf file.
@@ -283,7 +488,7 @@ readAndOrderCdfFile_error:rem --- Method error trap/handler (11Oct2017)
         rem  * @param LinkedHashMap cdfMap! -- cdf callpoint code
         rem  * @param BBjString filePath$ -- cdf file path
         rem  */
-        method public void writeCdf(LinkedHashMap cdfMap!, BBjString filePath$)
+        method public void writeCdfFile(Map cdfMap!, BBjString filePath$)
             seterr writeCdf_error
             
             rem --- Open specified cdf file.  Warning: this will overwrite an existing file
