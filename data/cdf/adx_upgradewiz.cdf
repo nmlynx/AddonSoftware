@@ -1535,6 +1535,7 @@ rem ==========================================================================
 			source_value$=cvs(record$(pos("="=record$,1,2)+1),3)
 
 			rem --- Use version-neutral directory for +AON_IMAGES, +CUST_IMAGES and +DOC_DIR_* target directories
+			rem --- Use version-neutral major_ver directory for +DIR_DAT and +??DATA directories
 			switch (BBjAPI().TRUE)
 				case pos(stbl$="+AON_IMAGES")
 					target_value$=baseDir$+"/images/"
@@ -1548,25 +1549,13 @@ rem ==========================================================================
 				case pos("+DOC_DIR_"=stbl$)
 					target_value$=baseDir$+"/documents/"
 					break
+				case stbl$="+DIR_DAT" or (stbl$(1,1)="+" and pos("DATA"=stbl$,-1)=len(stbl$)-3)
+					target_value$=baseDir$+"/"+callpoint!.getDevObject("major_ver")+"/app_data/"
+					break
 				case default
 					gosub source_target_value
 					break
 			swend
-
-			rem --- don't let target data directories be the same as source data directories (i.e. a minor rev upgrade using same data dir)
-			if target_value$=source_value$ and 
-:			(stbl$="+DIR_DAT" or (stbl$(1,1)="+" and pos("DATA"=stbl$,-1)=len(stbl$)-3)) then
-				target_value$=newDir$+"testdata/"
-				counter=0
-				while 1
-					rem --- find a target that doesn't exist
-					declare File aFile!
-					aFile! = new File(target_value$)
-					if !aFile!.exists() then break
-					counter=counter+1
-					target_value$=newDir$+"testdata"+str(counter)+"/"
-				wend
-			endif
 
 			stblRowVect!.addItem(appName$)
 			stblRowVect!.addItem(stbl$)
