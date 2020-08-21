@@ -831,7 +831,7 @@ doUpgradeCdfDiffs: rem --- Save copy of standard Addon cdf files in UpgradeCdfDi
         cdfDiffsFile!=cdfDiffsIter!.next()
         cdfPath$=cdfDiffsFile!.getPath()
         cdfMap!=massager!.readAndOrderCdfFile(cdfPath$)
-        if cdfMap!.size() then massager!.writeOrderedCdfFile(cdfMap!,cdfPath$)
+        if cdfMap!.size() then massager!.writeCdfFile(cdfMap!,cdfPath$)
     wend
     
         rem --- Remove busy/working image from progress meter

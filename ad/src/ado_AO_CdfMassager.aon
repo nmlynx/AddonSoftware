@@ -211,6 +211,17 @@ importModChanges_error:rem --- Method error trap/handler (11Oct2017)
             x$=stbl("+THROWN_ERR","TRUE")   
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
+        
+        rem /**
+        rem  * Builds LinkedHashMap of callpoint code in specified cdf file.
+        rem  * 
+        rem  * @param BBjString filePath$ -- cdf file path
+        rem  *
+        rem  * @return LinkedHashMap cdfMap!
+        rem  */
+        method public Map readCdfFile(BBjString filePath$)
+            methodret #readCdfFile(filePath$,new LinkedHashMap())
+        methodend 
 
         rem /**
         rem  * Builds LinkedHashMap of callpoint code in specified cdf file.
@@ -219,21 +230,17 @@ importModChanges_error:rem --- Method error trap/handler (11Oct2017)
         rem  *
         rem  * @return LinkedHashMap cdfMap!
         rem  */
-        method public LinkedHashMap readCdfFile(BBjString filePath$)
+        method public Map readCdfFile(BBjString filePath$, Map cdfMap!)
             seterr readCdfFile_error
             
             declare BBjString replacementString!
             declare BBjString currentHeaderLine!
             
-            cdfMap!=new LinkedHashMap()
+            if (cdfMap!=null()) then throw "Map parameter cannot be null",253
 
             rem --- Initializations
             keyPattern!="\[\[.*\]\]"
             pattern!=Pattern.compile(keyPattern!)
-REM             beforeString!=".B]]"
-REM             beforeKeyString!=".B"
-REM             normalString!="]]"
-REM             skipString!=".*setStatus\(\"+$22$+"([^-]*)-?SKIP-?(.*)\"+$22$+"\).*"
             
             rem --- Read all callpoints from a cdf file and put them into a map
             key!=null()
@@ -377,7 +384,6 @@ readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
             endif 
         methodend        
 
-
         rem /**
         rem  * Transforms a callpoint header with a suffix into a callpoint header without a suffix 
         rem  * 
@@ -400,7 +406,6 @@ readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
             methodret #getSuffix(key!)="B"
         methodend 
 
-
         rem /**
         rem  * Builds TreeMap of callpoint code in specified cdf file.
         rem  * 
@@ -408,78 +413,8 @@ readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
         rem  *
         rem  * @return TreeMap cdfMap!
         rem  */
-        method public TreeMap readAndOrderCdfFile(BBjString filePath$)
-            seterr readAndOrderCdfFile_error
-            cdfMap!=new TreeMap()
-
-            rem --- Initializations
-            keyPattern!="\[\[.*\]\]"
-            beforeString!=".B]]"
-            normalString!="]]"
-            rem CAH may not always be exactly like this...skipString!="callpoint!.setStatus("+$22$+"SKIP"+$22$+")"
-            skipString!=".*setStatus\([^\(]*SKIP.*\).*"
-            
-            rem --- Read all callpoints from a cdf file and put them into an ordered hashmap
-            key!=null()
-            body!=""
-            fl!=new File(filePath$)
-            sc!=new Scanner(fl!,err=*next)
-            if sc!<>null()
-                while (sc!.hasNextLine()) 
-                    rem --- Test to see if this line is the beginning of a new callpoint.
-                    newLine!=sc!.nextLine()
-                    pattern!=Pattern.compile(keyPattern!)
-                    matcher!=pattern!.matcher(newLine!)
-                    if (matcher!.find()) then
-                        newKey!=matcher!.group()
-                    else 
-                        newKey!=null()
-                    endif 
-                     
-                    rem --- Is this a new callpoint
-                    if (newKey!<>null()) then
-                        cdfMap!.put(newKey!,"") 
-                    
-                        rem --- Test to see if this is a before callpoint. Test is only necessary on key
-                        isBefore!=newLine!.indexOf(beforeString!)>-1
-                        
-                        key!=newKey!
-                        newKey!=null() 
-                    endif 
-                    
-                    rem --- Test to see if this is a skip callpoint
-                    if newLine!.matches(skipString!) then
-                        rem --- Change out the key here if we have a callpoint that is both before and skip
-                        if (isBefore!) then 
-                            newKey!=key!.replace(beforeString!,normalString!)
-                            body!=cdfMap!.get(key!)
-                            body!=body!.replace(beforeString!,normalString!)
-                            cdfMap!.remove(key!)
-                            cdfMap!.put(newKey!,body!)
-                            key!=newKey!
-                            newKey!=null()
-                        endif 
-                    endif 
-                    
-                    cdfMap!.put(key!,cast(BBjString,cdfMap!.get(key!))+newLine!+$0A$) 
-                wend 
-                sc!.close()
-            endif
-            methodret cdfMap!
-            
-readAndOrderCdfFile_error:rem --- Method error trap/handler (11Oct2017)
-            rd_err_text$="", err_num=err
-            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-            if err_num=252 then
-                E!=BBjAPI().getLastBBjException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-            endif
-            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-            if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
-            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        method public Map readAndOrderCdfFile(BBjString filePath$)
+            methodret #readCdfFile(filePath$,new TreeMap())
         methodend 
 
         rem /**
@@ -533,47 +468,6 @@ writeCdf_error:rem --- Method error trap/handler (11Oct2017)
         rem  * @param BBjString filePath$ -- cdf file path
         rem  */
         method public void writeOrderedCdfFile(TreeMap cdfMap!, BBjString filePath$)
-            seterr writeOrderedCdfFile_error
-            
-            rem --- Open specified cdf file.  Warning: this will overwrite an existing file
-            erase filePath$,err=*next
-            string filePath$
-            chan=unt
-            open (chan) filePath$
-            
-            rem --- Go through TreeMap and write all the callpoints (which are now in alphabetical order)
-            iter!=cdfMap!.keySet().iterator()
-            sv_key$=""
-            sv_cp$=""
-            while (iter!.hasNext())
-                key!=cast(BBjString,iter!.next())
-                if pos("<CUSTOM>"=key!)
-                    sv_key$=key!
-                    sv_cp$=cast(BBjString,cdfMap!.get(key!))
-                    continue
-                endif
-                cp!=cast(BBjString,cdfMap!.get(key!))
-                cp!=cvs(cp!,2,$0a$)+$0a$
-                print (chan) cp!
-            wend
-
-            if sv_key$<>"" print(chan)cvs(sv_cp$,2,$0a$)+$0a$
-            
-            methodret
-            
-writeOrderedCdfFile_error:rem --- Method error trap/handler (11Oct2017)
-            rd_err_text$="", err_num=err
-            if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-            if err_num=252 then
-                E!=BBjAPI().getLastBBjException()
-                rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-                if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-            endif
-            call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-            if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-            if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
-            throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+            #writeCdfFile(cdfMap!,filePath$)
         methodend 
-
 classend
