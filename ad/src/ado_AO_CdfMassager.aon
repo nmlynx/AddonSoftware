@@ -239,7 +239,7 @@ importModChanges_error:rem --- Method error trap/handler (11Oct2017)
             if (cdfMap!=null()) then throw "Map parameter cannot be null",253
 
             rem --- Initializations
-            keyPattern!="\[\[.*\]\]"
+            keyPattern!="^\s*\[\[.*\]\]"
             pattern!=Pattern.compile(keyPattern!)
             
             rem --- Read all callpoints from a cdf file and put them into a map
