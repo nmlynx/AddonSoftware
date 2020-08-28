@@ -87,7 +87,7 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
                 if (custom!) then
                     newKey!=#desuffix(modKey!)
                     body!=cast(BBjString,modsCallpoints!.get(modKey!))
-                    body!=newKey!+$0A$+"REM *** Custom from mods ***"+$0A$+"REM    "+body!
+                    body!=newKey!+$0A$+"REM *** Custom from mods ***"+$0A$+"REM    "+body!.replace("[[","").replace("]]","")
                     aonCallpoints!.put(newKey!,body!)
                     continue
                 endif 
@@ -108,12 +108,12 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
                 
                 REM -- REM the header line of the addon callpoint
                 if (aonBody!<>null()) then
-                    aonBody!="REM    "+aonBody!
+                    aonBody!="REM    "+aonBody!.replace("[[","").replace("]]","")
                 endif 
 
                 REM -- REM the header line of the mods callpoint 
                 if (modsBody!<>null()) then
-                    modsBody!="REM    "+modsBody!
+                    modsBody!="REM    "+modsBody!.replace("[[","").replace("]]","")
                 else 
                     REM -- Throw an error on a null mods callpoint.  This should not be able to happen, so something is wrong
                     throw "Mods callpoint is completely empty.  This should never happen.",17
