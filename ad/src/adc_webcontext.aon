@@ -24,9 +24,30 @@ rem --- status     : Status code/0=No error (Returned)
 
 rem --- Initializations
     status=0
+    total_tries=10
+    task_val$="WEB_CONTEXT"
+    progress! = bbjAPI().getGroupNamespace()
+    progress!.setValue("+process_task",task_val$+"^C^"+"Creating web context..."+"^CNC^"+str(total_tries)+"^")
+
+rem --- Make sure Jetty is running 
+    jettyServer! = BBjAPI().getAdmin(theAdmin!.getUser(), theAdmin!.getPassword()).getJettyServer()
+    
+    tries=0
+    while (!jettyServer!.isRunning() and tries<total_tries)
+        wait 1
+        tries=tries+1
+        progress!.setValue("+process_task",task_val$+"^U^"+str(tries)+"^")
+    wend
+    
+    if (!jettyServer!.isRunning()) then 
+        status=1
+        goto std_exit
+    else
+        progress!.setValue("+process_task",task_val$+"^U^"+str(total_tries)+"^")
+    endif 
+    
 
 rem --- Stop the context
-    jettyServer! = BBjAPI().getAdmin(theAdmin!.getUser(), theAdmin!.getPassword()).getJettyServer()
     thisContext! = jettyServer!.getContext(cvs(dbName$,11))
     if thisContext!<>null() then thisContext!.stop()
 
@@ -127,6 +148,7 @@ rem #include std_exit.src
 
 std_exit: rem --- Standard called program exit (01Mar2006)
 
+    progress!.setValue("+process_task",task_val$+"^D^")
     exit
 
 rem #endinclude std_exit.src

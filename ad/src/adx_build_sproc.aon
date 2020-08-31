@@ -1216,6 +1216,9 @@ rem --- As of 11/2018, no VIEWs are needed
 
 rem --- Add AddonSoftware Web Context for demo installation
 
+    rem --- Delete current progress bar
+    progress!.setValue("+process_task",task_val$+"^D^")
+
 	rem --- Get current user credentials using AdminAPI
 	user_id$=stbl("+USER_ID",err=*next)
 	thisAdmin!=BBjAPI().getGroupNamespace().getValue("+bar_admin_"+cvs(user_id$,11),err=*next)

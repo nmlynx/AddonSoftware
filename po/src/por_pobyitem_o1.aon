@@ -262,7 +262,7 @@ assignheads: rem --- Assign headings variables
 
     if vendfrom$="" headings$[2]=Translate!.getTranslation("AON_FROM_VENDOR:_FIRST") else headings$[2]=Translate!.getTranslation("AON_FROM_VENDOR:_")+ vendfrom$
     if vendthru$="" headings$[2]=headings$[2] + Translate!.getTranslation("AON__--_TO_VENDOR:_LAST") else headings$[2]=headings$[2] + Translate!.getTranslation("AON__--_TO_VENDOR:_") + vendthru$
-    if itemfrom$="" headings$[3]=Translate!.getTranslation("AON_FROM_ITEM:_FIRST") else headings$[3]=Translate!.getTranslation("AON_FROM_ITEM:_")+ cvs(fnmask$(itemfrom$,ivIMaskR),2)
+    if itemfrom$="" headings$[3]=Translate!.getTranslation("AON_FROM_ITEM:_FIRST") else headings$[3]=Translate!.getTranslation("AON_FROM_ITEM:_")+ cvs(fnmask$(itemfrom$,ivIMask$),2)
     if itemthru$="" headings$[3]=headings$[3] + Translate!.getTranslation("AON__TO_ITEM:_LAST") else headings$[3]=headings$[3] + Translate!.getTranslation("AON__--_TO_ITEM:_") + cvs(fnmask$(itemthru$,ivIMask$),2)
     if pofrom$=""   headings$[4]=Translate!.getTranslation("AON_FROM_PURCHASE_ORDER:_FIRST") else headings$[4]=Translate!.getTranslation("AON_FROM_PURCHASE_ORDER:_") + pofrom$
     if pothru$=""   headings$[4]=headings$[4] + Translate!.getTranslation("AON__--_TO_PURCHASE_ORDER:_LAST") else headings$[4]= headings$[4] + Translate!.getTranslation("AON__--_PURCHASE_ORDER:_") + pothru$

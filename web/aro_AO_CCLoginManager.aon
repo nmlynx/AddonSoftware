@@ -1,20 +1,20 @@
 REM /**
-REM  * CCLoginManager.aon
+REM  * AO_CCLoginManager.aon
 REM  * @author shaun
 REM  * Copyright BASIS International Ltd.  All Rights Reserved.
 REM  */
 
 REM Driver code called by bax_launch_task by way of the web app. 
-declare CCLoginManager cclm!
-cclm!=new CCLoginManager()
+declare AO_CCLoginManager cclm!
+cclm!=new AO_CCLoginManager()
 cclm!.doModal()
 release
 
-use ::CCLoginView.aon::CCLoginView
-use ::CCRegistrationView.aon::CCRegistrationView
-use ::CCRegistrationModel.aon::CCRegistrationModel
-use ::CCRegistrationModel.aon::CCRegistrationRecord
-use ::CCRegistrationModel.aon::CCCustomerFirmInfo
+use ::aro_CCLoginView.aon::CCLoginView
+use ::aro_CCRegistrationView.aon::CCRegistrationView
+use ::aro_CCRegistrationModel.aon::CCRegistrationModel
+use ::aro_CCRegistrationModel.aon::CCRegistrationRecord
+use ::aro_CCRegistrationModel.aon::CCCustomerFirmInfo
 use ::aro_CCUserModel.aon::CCUserModel
 use ::aro_CCUserModel.aon::CCUserRecord
 use ::aro_CCUtil.aon::CCUtil
@@ -22,7 +22,7 @@ use ::aro_CCConfigurePasswordView.aon::CCConfigurePasswordView
 use ::aro_CCForgotPasswordView.aon::CCForgotPasswordView
 use ::aro_CCForgotPasswordModel.aon::CCForgotPasswordModel
 
-class public CCLoginManager
+class public AO_CCLoginManager
 	field protected CCUtil Util!=new CCUtil()
 	field protected CCLoginView LoginView!=new CCLoginView()
 	field protected CCRegistrationView RegistrationView!=new CCRegistrationView() 
@@ -32,7 +32,7 @@ class public CCLoginManager
 	field protected CCForgotPasswordView ForgotPasswordView!=new CCForgotPasswordView()
 	field protected CCForgotPasswordModel ForgotPasswordModel!=new CCForgotPasswordModel() 
 
-	method public CCLoginManager()
+	method public AO_CCLoginManager()
 	    
 	    REM Set up user interface 
         #LoginView!.registerRegisterButton_OnButtonPushCallback(#this!,"handleRegistration")

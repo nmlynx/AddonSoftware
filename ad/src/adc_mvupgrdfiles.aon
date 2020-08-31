@@ -278,6 +278,9 @@ rem --- Update conversion control file data/adx_conversionCtrl, and create conve
                     endif
                     markerFile!=new File(dataDir$+"/v"+version$+"_"+requiredFiles!.get(0))
                     markerFile!.createNewFile()
+                    rem --- Set read-write permissions for everyone
+                    markerFile!.setReadable(1,0)
+                    markerFile!.setWritable(1,0)
             
                     print(log_dev)"Created conversion marker file: ",markerFile!.getAbsoluteFile()
                 wend

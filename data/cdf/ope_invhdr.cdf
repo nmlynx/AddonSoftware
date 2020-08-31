@@ -1269,7 +1269,7 @@ rem --- Disable buttons
 	callpoint!.setOptionEnabled("PRNT",0)
 	callpoint!.setOptionEnabled("CASH",0)
 	callpoint!.setOptionEnabled("TTLS",0)
-	callpoint!.setOptionEnabled("SHPT",1)
+	callpoint!.setOptionEnabled("SHPT",0)
 
 rem --- Capture current totals so we can tell later if they were changed in the grid
 

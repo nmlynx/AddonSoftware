@@ -1,5 +1,5 @@
 REM /**
-REM  * CCRegistrationView.aon
+REM  * aro_AO_CCRegistrationView.aon
 REM  * @author shaun
 REM  * Copyright BASIS International Ltd.  All Rights Reserved.
 REM  */
@@ -7,7 +7,7 @@ REM  */
 use ::CCView.aon::CCView
 use ::CCRegistrationModel.aon::CCCustomerFirmInfo
 
-class public CCRegistrationView extends CCView
+class public AO_CCRegistrationView extends CCView
 
 	field protected BBjStaticText DesiredUserNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,172,190,26,"User Name",$8000$)
 	field protected BBjStaticText FirstNameST!=#getWin().addStaticText(#getWin().getAvailableControlID(),25,222,190,26,"First Name",$8000$)
@@ -29,7 +29,7 @@ class public CCRegistrationView extends CCView
 
 	field protected BBjNumber SqlChan
 
-	method public CCRegistrationView()
+	method public AO_CCRegistrationView()
 	
 		#super!()
 		#getWin().setTitle("New Customer Registration")		

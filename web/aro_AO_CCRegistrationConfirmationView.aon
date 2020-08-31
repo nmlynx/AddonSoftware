@@ -1,12 +1,11 @@
 REM /**
-REM  * CCRegistrationConfirmationView.aon
-REM  * @author shaun
+REM  * aro_AO_CCRegistrationConfirmationView.aon
 REM  * Copyright BASIS International Ltd.  All Rights Reserved.
 REM  */
 
 use ::CCView.aon::CCView
 
-class public CCRegistrationConfirmationView extends CCView
+class public AO_CCRegistrationConfirmationView extends CCView
 
 	field protected BBjStaticText Header1!
 	field protected BBjStaticText Header2!
@@ -28,7 +27,7 @@ class public CCRegistrationConfirmationView extends CCView
 	field public BBjButton CancelBtn!=#getWin().addButton(#getWin().getAvailableControlID(),420,420,110,50,"Cancel")
 
 
-	method public CCRegistrationConfirmationView()
+	method public AO_CCRegistrationConfirmationView()
 		#super!()
 		#getWin().setTitle("Customer Registration Confirmation")
 		#getWin().setSize(#getWin().getWidth()+100,520)
