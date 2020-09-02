@@ -81,9 +81,9 @@ rem --- Get version for repository branch. Use version of Barista in download.
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_UPDATE_WIZ")
     if gitBasedUpgrade then
-        meter_total_recs=19
+        meter_total_recs=20
     else
-        meter_total_recs=25
+        meter_total_recs=26
     endif
     if doSyncBackup% then meter_total_recs=meter_total_recs+1
     if useOldMenu% then meter_total_recs=meter_total_recs+1
@@ -286,6 +286,9 @@ rem --- Cherry pick local commits from old installation
 
 rem --- Check for Git conflicts
     gosub checkForGitConflicts
+
+rem --- Check for delta XML RESERVED_STR and RESERVED_NUM issues
+    if !restartFlag then gosub checkForReservedStr
     
 rem --- Need to restart if there were Git conflicts, or a Git cherry pick failure
     if restartFlag then
@@ -1450,6 +1453,93 @@ checkForGitConflicts: rem --- Check for Git conflicts, and resolve bar/*.xml con
 
     rem --- Remove busy/working image from progress meter
     busyImage!.destroy(err=*next)
+    return
+
+checkForReservedStr: rem --- For pre-v19 upgrades, check for delta XML RESERVED_STR and RESERVED_NUM issues
+    if num(start_version$)<19 then
+        rem --- Increment progress meter
+        meter_text$=Translate!.getTranslation("AON_CHECK_DELTA_XML")
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$+": "+newAonDir$+"/data/bar/delta"
+    
+        rem --- Show busy/working image while cloning and pulling from repository
+        nxt_ctlID=util.getNextControlID()
+        busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+        rem --- Check XMLs in aon/data/bar/delta directory
+        aonDataBarDelta!=new File(newAonDir$+"/data/bar/delta",err=*next)
+        if aonDataBarDelta!.exists() and aonDataBarDelta!.isDirectory() then
+            deltaXmlVector! = new Vector(java.util.Arrays.asList(aonDataBarDelta!.listFiles()))
+            deltaXmlIter!=deltaXmlVector!.iterator()
+            while deltaXmlIter!.hasNext()
+                deltaXmlFile!=deltaXmlIter!.next()
+                deltaXmlName!=deltaXmlFile!.getName()
+                if deltaXmlName!.endsWith(".xml") then
+                    baseName$=deltaXmlName!
+                    baseName$=baseName$(1,pos(".xml"=baseName$)-1)
+                    reservedStrs!=new Vector()
+                    reservedNums!=new Vector()
+                    dealerStrs!=new Vector()
+                    dealerNums!=new Vector()
+        
+                    rem --- Does this delta XML have RESERVED_STR and RESERVED_NUM issues?
+                    deltaXml_dev=unt
+                    open(deltaXml_dev)deltaXMlFile!.getAbsolutePath()
+                    while 1
+                        read(deltaXml_dev,end=*break)text$
+                        if pos("<RECORD id=""ddm_table_cols."+baseName$=text$) then
+                            if pos("RESERVED_STR "=text$) then reservedStrs!.add(text$)
+                            if pos("RESERVED_NUM "=text$) then reservedNums!.add(text$)
+                            if pos("DEALER_STR "=text$) then dealerStrs!.add(text$)
+                            if pos("DEALER_NUM "=text$) then dealerNums!.add(text$)
+                        endif
+                    wend
+        
+                    rem --- Log RESERVED_STR and RESERVED_NUM issues, and set restartFlag
+                    if reservedStrs!.size()>1 or reservedNums!.size()>1 or dealerStrs!.size()>1 or dealerNums!.size()>1 then
+                        restartFlag=1
+                        print(log_dev) "    "+deltaXmlName!
+                        if reservedStrs!.size()>1 then
+                            for i=0 to reservedStrs!.size()-1
+                                print(log_dev) "        "+reservedStrs!.elementAt(i)
+                            next i
+                        endif
+                        if reservedNums!.size()>1 then
+                            for i=0 to reservedNums!.size()-1
+                                print(log_dev) "        "+reservedNums!.elementAt(i)
+                            next i
+                        endif
+                        if dealerStrs!.size()>1 then
+                            for i=0 to dealerStrs!.size()-1
+                                print(log_dev) "        "+dealerStrs!.elementAt(i)
+                            next i
+                        endif
+                        if dealerNums!.size()>1 then
+                            for i=0 to dealerNums!.size()-1
+                                print(log_dev) "        "+dealerNums!.elementAt(i)
+                            next i
+                        endif
+                    endif
+        
+                    close(deltaXml_dev,err=*next)
+                endif
+            wend
+        endif
+
+        rem --- Warn about, and log, un-resolved conflicts
+        if restartFlag then
+        rem ... AD_DELTA_XML_ISSUES: There are aon/data/bar/delta XML issues that must be resolved before completing this upgrade.\nSee the log file for details\: %1\n
+            msg_id$="AD_DELTA_XML_ISSUES"
+            dim msg_tokens$[1]
+            msg_tokens$[1]=newAonDir$ + "/logs"+logName$
+            gosub disp_message
+        endif
+    
+        rem --- Remove busy/working image from progress meter
+        busyImage!.destroy(err=*next)
+    endif
     return
 
 removeModsArcBarFile: rem --- Remove mods data/bar/*.xml file and data/arc/*/*.arc files corresponding to given sourceName$
