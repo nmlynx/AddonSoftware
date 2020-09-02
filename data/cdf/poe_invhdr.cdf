@@ -1,45 +1,241 @@
-[[POE_INVHDR.VENDOR_ID.BINQ]]
-rem --- Set filter_defs$[] to only show vendors of given AP Type
+[[POE_INVHDR.AABO]]
+rem --- user has elected not to save record (we are NOT in immediate write, so save takes care of header and detail at once)
+rem --- if rec_data$ is empty (i.e., new record never written), make sure no GL Dists are left orphaned (i.e., remove them)
 
+if callpoint!.getRecordMode()="A"
+	poe_invgl=fnget_dev("POE_INVGL")
+	k$=""
+	invgl_key$=callpoint!.getColumnData("POE_INVHDR.FIRM_ID")+
+:		callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+
+:		callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+
+:		callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
+
+	read (poe_invgl,key=invgl_key$,dom=*next)
+	while 1
+		k$=key(poe_invgl,end=*break)
+		if pos(invgl_key$=k$)<>1 then break
+		remove (poe_invgl,key=k$)	
+	wend	
+endif
+
+[[POE_INVHDR.ACCT_DATE.AVAL]]
+rem make sure accting date is in an appropriate GL period
+gl$=callpoint!.getDevObject("gl_int")
+acctgdate$=callpoint!.getUserInput()        
+if gl$="Y" 
+	call stbl("+DIR_PGM")+"glc_datecheck.aon",acctgdate$,"Y",per$,yr$,status
+	if status>99
+		callpoint!.setStatus("ABORT")
+	else
+		callpoint!.setDevObject("gl_year",yr$)
+		callpoint!.setDevObject("gl_per",per$)
+	endif
+endif
+
+[[POE_INVHDR.ADEL]]
+rem -- setting a delete flag so we know in BREX not to bother checking if out of balance
+
+callpoint!.setDevObject("deleted","Y")
+
+[[POE_INVHDR.ADIS]]
+vendor_id$=callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")
+gosub vendor_info
+gosub disp_vendor_comments
+
+rem --- get disc % assoc w/ terms in this rec, and disp distributed bal
+apm10c_dev=fnget_dev("APC_TERMSCODE")
+dim apm10c$:fnget_tpl$("APC_TERMSCODE")
+ap_terms_code$ = callpoint!.getColumnData("POE_INVHDR.AP_TERMS_CODE")
+while 1
+	readrecord(apm10c_dev,key=firm_id$+"C"+ap_terms_code$,dom=*break)apm10c$
+	callpoint!.setDevObject("disc_pct",apm10c.disc_percent$)
+	callpoint!.setDevObject("inv_amt",callpoint!.getColumnData("POE_INVHDR.INVOICE_AMT"))
+	callpoint!.setDevObject("tot_dist","")
+	callpoint!.setDevObject("tot_gl","")
+	gosub calc_gl_tots	
+	gosub calc_grid_tots
+	gosub disp_dist_bal
+	vendor_id$ = callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")
+	gosub disp_vendor_comments
+	callpoint!.setStatus("REFRESH")
+	break
+wend
+
+rem --- Is this a new invoice or an adjustment to an existing invoice?
+ap_inv_no$=callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
+gosub invoiceOrAdjustment
+
+[[POE_INVHDR.AOPT-GDIS]]
+pfx$=firm_id$+callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
+dim dflt_data$[3,1]
+dflt_data$[1,0]="AP_TYPE"
+dflt_data$[1,1]=callpoint!.getColumnData("POE_INVHDR.AP_TYPE")
+dflt_data$[2,0]="VENDOR_ID"
+dflt_data$[2,1]=callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")
+dflt_data$[3,0]="AP_INV_NO"
+dflt_data$[3,1]=callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
+call stbl("+DIR_SYP")+"bam_run_prog.bbj","POE_INVGL",stbl("+USER_ID"),"MNT",pfx$,table_chans$[all],"",dflt_data$[all]
+
+gosub calc_gl_tots
+gosub calc_grid_tots
+gosub disp_dist_bal
+
+[[POE_INVHDR.AOPT-INVD]]
+rem --- Add Barista soft lock for this record if not already in edit mode
 ap_type$=callpoint!.getColumnData("POE_INVHDR.AP_TYPE")
+vendor_id$=callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")
+ap_inv_no$=callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
 
-dim filter_defs$[2,2]
-filter_defs$[0,0]="APM_VENDMAST.FIRM_ID"
-filter_defs$[0,1]="='"+firm_id$+"'"
-filter_defs$[0,2]="LOCK"
+if !callpoint!.isEditMode() then
+	rem --- Is there an existing soft lock?
+	lock_table$="POE_INVHDR"
+	lock_record$=firm_id$+ap_type$+vendor_id$+ap_inv_no$
+	lock_type$="C"
+	lock_status$=""
+	lock_disp$=""
+	call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+	if lock_status$="" then
+		rem --- Add temporary soft lock used just for this task
+		lock_type$="L"
+		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+	else
+		rem --- Record locked by someone else
+		msg_id$="ENTRY_REC_LOCKED"
+		gosub disp_message
+		break
+	endif
+endif
 
-filter_defs$[1,0]="APM_VENDHIST.AP_TYPE"
-filter_defs$[1,1]="='"+ap_type$+"'"
-filter_defs$[1,2]="LOCK"
+rem --- Launch poe_invdet form
+dist_bal=num(callpoint!.getColumnData("POE_INVHDR.INVOICE_AMT"))-num(callpoint!.getDevObject("tot_gl"))
+callpoint!.setDevObject("invdet_bal",str(dist_bal));rem send in Invoice Header Amt - g/l amount
 
+pfx$=firm_id$+ap_type$+vendor_id$+ap_inv_no$
+dim dflt_data$[3,1]
+dflt_data$[1,0]="AP_TYPE"
+dflt_data$[1,1]=ap_type$
+dflt_data$[2,0]="VENDOR_ID"
+dflt_data$[2,1]=vendor_id$
+dflt_data$[3,0]="AP_INV_NO"
+dflt_data$[3,1]=ap_inv_no$
+call stbl("+DIR_SYP")+"bam_run_prog.bbj","POE_INVDET",stbl("+USER_ID"),"MNT",pfx$,table_chans$[all],"",dflt_data$[all]
 
-call STBL("+DIR_SYP")+"bax_query.bbj",
-:		gui_dev, 
-:		form!,
-:		"AP_VEND_LK",
-:		"DEFAULT",
-:		table_chans$[all],
-:		sel_key$,
-:		filter_defs$[all]
+rem --- re-align invsel w/ invdet based on changes user may have made in invdet
+rem --- corresponds to 6000 logic from old POE.EC
 
-if sel_key$<>""
-	call stbl("+DIR_SYP")+"bac_key_template.bbj",
-:		"APM_VENDMAST",
-:		"PRIMARY",
-:		apm_vend_key$,
-:		table_chans$[all],
-:		status$
-	dim apm_vend_key$:apm_vend_key$
-	apm_vend_key$=sel_key$
-	callpoint!.setColumnData("POE_INVHDR.VENDOR_ID",apm_vend_key.vendor_id$,1)
-endif	
-callpoint!.setStatus("ACTIVATE-ABORT")
-[[POE_INVHDR.ARAR]]
-if cvs(callpoint!.getColumnData("POE_INVHDR.AP_INV_NO"),2)<>""then
+poe_invsel_dev=fnget_dev("POE_INVSEL")
+poe_invdet_dev=fnget_dev("POE_INVDET")
+
+dim poe_invsel$:fnget_tpl$("POE_INVSEL")
+dim poe_invdet$:fnget_tpl$("POE_INVDET")
+
+other=0
+dim x$:str(callpoint!.getDevObject("poe_invsel_key"))
+last$=""
+
+tot_dist=0
+ky$=firm_id$+ap_type$+vendor_id$+ap_inv_no$
+read (poe_invsel_dev,key=ky$,dom=*next)
+while 1
+	read record (poe_invsel_dev,end=*break)poe_invsel$
+	if pos(ky$=poe_invsel$)<>1 then break
+	if cvs(poe_invsel.po_no$,3)="" then let x$=poe_invsel.firm_id$+poe_invsel.ap_type$+poe_invsel.vendor_id$+poe_invsel.ap_inv_no$+poe_invsel.line_no$
+	tot_invsel=0,last$=poe_invsel.firm_id$+poe_invsel.ap_type$+poe_invsel.vendor_id$+poe_invsel.ap_inv_no$,last_seq$=poe_invsel.line_no$
+	read (poe_invdet_dev,key=ky$,dom=*next)
+	while 1
+		read record (poe_invdet_dev,end=*break)poe_invdet$
+		if pos(ky$=poe_invdet$)<>1 then break
+		if cvs(poe_invdet.po_no$,3)="" then other=1; continue
+		if poe_invdet.po_no$<>poe_invsel.po_no$ then continue
+		if cvs(poe_invsel.receiver_no$,3)<>"" and poe_invsel.receiver_no$<>poe_invdet.receiver_no$ then continue
+		tot_invsel=tot_invsel+round(num(poe_invdet.unit_cost$)*num(poe_invdet.qty_received$),2)
+	wend
+	poe_invsel.total_amount$=str(tot_invsel)
+	poe_invsel$=field(poe_invsel$)
+	write record (poe_invsel_dev)poe_invsel$
+	tot_dist=tot_dist+tot_invsel
+wend
+
+if other
+	tot_other=0
+	read (poe_invdet_dev,key=ky$,dom=*next)
+	while 1
+		read record (poe_invdet_dev,end=*break)poe_invdet$
+		if pos(ky$=poe_invdet$)<>1 then break
+		if cvs(poe_invdet.po_no$,3)<>"" then continue
+		tot_other=tot_other+num(poe_invdet.unit_cost$)
+	wend
+	dim poe_invsel$:fattr(poe_invsel$)
+	if cvs(x$,3)="" then x$=last$+str(num(last_seq$)+1:"000")
+	poe_invsel.firm_id$=x.firm_id$
+	poe_invsel.ap_type$=x.ap_type$
+	poe_invsel.vendor_id$=x.vendor_id$
+	poe_invsel.ap_inv_no$=x.ap_inv_no$
+	poe_invsel.line_no$=x.line_no$
+	find record (poe_invsel_dev,key=x$,dom=*next)poe_invsel$
+	poe_invsel.total_amount$=str(tot_other)
+	poe_invsel$=field(poe_invsel$)
+	write record (poe_invsel_dev)poe_invsel$
+	tot_dist=tot_dist+tot_other
+endif
+
+callpoint!.setDevObject("tot_dist",str(tot_dist))
+callpoint!.setColumnData("POE_INVHDR.INVOICE_AMT",str(tot_dist),1)
+callpoint!.setStatus("RECORD:["+ky$+"]")
+
+rem --- Remove temporary soft lock used just for this task 
+if !callpoint!.isEditMode() and lock_type$="L" then
+	lock_type$="U"
+	call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+endif
+
+[[POE_INVHDR.APFE]]
+rem --- when re-entering primary form, enable GL button
+rem --- only enable invoice detail button if we've already written some poe_invdet records
+rem --- also re-initialize the "deleted" flag
+
+if cvs(callpoint!.getColumnData("POE_INVHDR.AP_INV_NO"),2)<>"" and
+:	num(callpoint!.getColumnData("POE_INVHDR.INVOICE_AMT"))<>0
 	if callpoint!.getDevObject("gl_installed")="Y" and callpoint!.getDevObject("cash_basis")<>"Y"
 		callpoint!.setOptionEnabled("GDIS",1)
 	endif
 endif
+
+poe_invdet=fnget_dev("POE_INVDET")
+
+k$=""
+invdet_key$=callpoint!.getColumnData("POE_INVHDR.FIRM_ID")+callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+
+:	callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
+
+
+read (poe_invdet,key=invdet_key$,dom=*next)
+k$=key(poe_invdet,end=*next)
+if pos(invdet_key$=k$)=1
+	callpoint!.setOptionEnabled("INVD",1)
+else
+	callpoint!.setOptionEnabled("INVD",0)
+endif
+
+callpoint!.setDevObject("deleted","")
+
+[[POE_INVHDR.AP_INV_NO.AVAL]]
+rem --- Is this a new invoice or an adjustment to an existing invoice?
+ap_inv_no$=callpoint!.getUserInput()
+gosub invoiceOrAdjustment
+
+[[POE_INVHDR.AP_TERMS_CODE.AVAL]]
+rem re-calc due and discount dates based on terms code
+
+if callpoint!.getUserInput()<>callpoint!.getColumnData("POE_INVHDR.AP_TERMS_CODE")
+	terms_cd$=callpoint!.getUserInput()	
+	invdate$=callpoint!.getColumnData("POE_INVHDR.INV_DATE")
+	tmp_inv_date$=callpoint!.getColumnData("POE_INVHDR.INV_DATE")
+	gosub calculate_due_and_discount
+	disc_amt=round(num(callpoint!.getColumnData("POE_INVHDR.NET_INV_AMT"))*(num(callpoint!.getDevObject("disc_pct"))/100),2)
+	callpoint!.setColumnData("POE_INVHDR.DISCOUNT_AMT",str(disc_amt))
+	callpoint!.setStatus("REFRESH")
+endif
+
 [[POE_INVHDR.AP_TYPE.AVAL]]
 ap_type$=callpoint!.getUserInput()
 if ap_type$=""
@@ -54,10 +250,143 @@ readrecord (apm10_dev,key=firm_id$+"A"+ap_type$,dom=*next)apm10a$
 if cvs(apm10a$,2)<>""
 	callpoint!.setDevObject("dflt_dist_cd",apm10a.ap_dist_code$)
 endif
-[[POE_INVHDR.ADEL]]
-rem -- setting a delete flag so we know in BREX not to bother checking if out of balance
 
-callpoint!.setDevObject("deleted","Y")
+[[POE_INVHDR.ARAR]]
+if cvs(callpoint!.getColumnData("POE_INVHDR.AP_INV_NO"),2)<>""then
+	if callpoint!.getDevObject("gl_installed")="Y" and callpoint!.getDevObject("cash_basis")<>"Y"
+		callpoint!.setOptionEnabled("GDIS",1)
+	endif
+endif
+
+[[POE_INVHDR.AREC]]
+callpoint!.setColumnData("<<DISPLAY>>.comments","")
+callpoint!.setDevObject("inv_amt","")
+callpoint!.setDevObject("tot_dist","")
+callpoint!.setDevObject("tot_gl","")
+callpoint!.setColumnData("<<DISPLAY>>.DIST_BAL","0")
+rem --- Re-enable disabled fields
+callpoint!.setColumnEnabled("POE_INVHDR.INV_DATE",1)
+callpoint!.setColumnEnabled("POE_INVHDR.NET_INV_AMT",1)
+rem --- disable opt buttons
+callpoint!.setOptionEnabled("INVD",0)
+callpoint!.setOptionEnabled("GDIS",0)
+
+rem --- Clear inv_adj_label
+Form!.getControl(num(callpoint!.getDevObject("inv_adj_label"))).setText("")
+
+[[POE_INVHDR.ARNF]]
+rem --- set defaults
+
+terms_cd$=callpoint!.getDevObject("dflt_terms_cd")
+invdate$=stbl("+SYSTEM_DATE")
+tmp_inv_date$=callpoint!.getColumnData("POE_INVHDR.INV_DATE")
+gosub calculate_due_and_discount
+callpoint!.setColumnData("POE_INVHDR.AP_DIST_CODE",str(callpoint!.getDevObject("dflt_dist_cd")))
+callpoint!.setColumnData("POE_INVHDR.AP_TERMS_CODE",str(callpoint!.getDevObject("dflt_terms_cd")))
+callpoint!.setColumnData("POE_INVHDR.PAYMENT_GRP",str(callpoint!.getDevObject("dflt_pymt_grp")))
+callpoint!.setColumnData("POE_INVHDR.INV_DATE",stbl("+SYSTEM_DATE"))
+
+if cvs(str(callpoint!.getDevObject("dflt_acct_date")),2)<>""
+	callpoint!.setColumnData("POE_INVHDR.ACCT_DATE",str(callpoint!.getDevObject("dflt_acct_date")))
+else
+	callpoint!.setColumnData("POE_INVHDR.ACCT_DATE",stbl("+SYSTEM_DATE"))
+endif
+callpoint!.setColumnData("POE_INVHDR.HOLD_FLAG","N")
+
+callpoint!.setStatus("REFRESH")
+
+[[POE_INVHDR.ASHO]]
+rem --- get default date
+call stbl("+DIR_SYP")+"bam_run_prog.bbj","POE_INVDATE",stbl("+USER_ID"),"MNT","",table_chans$[all]
+callpoint!.setDevObject("dflt_acct_date",stbl("DEF_ACCT_DATE"))
+
+[[POE_INVHDR.AWRI]]
+rem --- look thru gridVect for any rows we've deleted from invsel... delete corres rows from invdet
+
+if gridVect!.size()
+
+	poe_invdet_dev=fnget_dev("POE_INVDET")
+	dim poe_invdet$:fnget_tpl$("POE_INVDET")
+	recs!=gridVect!.getItem(0)
+	dim poe_invsel$:dtlg_param$[1,3]
+	if recs!.size()
+		for x=0 to recs!.size()-1
+			if callpoint!.getGridRowDeleteStatus(x)="Y"
+				poe_invsel$=recs!.getItem(x)
+				read (poe_invdet_dev,key=poe_invsel.firm_id$+poe_invsel.ap_type$+poe_invsel.vendor_id$+poe_invsel.ap_inv_no$,dom=*next)
+				while 1
+					read record (poe_invdet_dev,end=*break)poe_invdet$
+					if pos(poe_invsel.firm_id$+poe_invsel.ap_type$+poe_invsel.vendor_id$+poe_invsel.ap_inv_no$=poe_invdet$)<>1 then break
+					if poe_invsel.po_no$<>poe_invdet.po_no$ then continue
+					if cvs(poe_invsel.receiver_no$,3)<>"" and poe_invsel.receiver_no$<>poe_invdet.receiver_no$ then continue
+					remove (poe_invdet_dev,key=poe_invdet.firm_id$+poe_invdet.ap_type$+poe_invdet.vendor_id$+poe_invdet.ap_inv_no$+poe_invdet.line_no$,dom=*next)
+				wend
+			endif
+		next x
+	endif
+endif
+
+if callpoint!.getDevObject("gl_installed")="Y"
+	callpoint!.setOptionEnabled("INVD",1)
+	if callpoint!.getDevObject("cash_basis")<>"Y"
+		callpoint!.setOptionEnabled("GDIS",1)
+	endif
+endif
+
+rem --- also need final check of balance -- invoice amt - invsel amt - gl dist amt (invsel should already equal invdet)
+
+if num(callpoint!.getColumnData("<<DISPLAY>>.DIST_BAL"))<>0
+	msg_id$="PO_INV_NOT_DIST"
+	gosub disp_message
+
+endif
+
+[[POE_INVHDR.BPFX]]
+callpoint!.setOptionEnabled("INVD",0)
+callpoint!.setOptionEnabled("GDIS",0)
+
+[[POE_INVHDR.BREX]]
+rem --- also need final check of balance -- invoice amt - invsel amt - gl dist amt (invsel should already equal invdet)
+
+if callpoint!.getDevObject("deleted")<>"Y"
+	gosub disp_dist_bal
+	if num(callpoint!.getColumnData("<<DISPLAY>>.DIST_BAL"))<>0
+		msg_id$="PO_INV_NOT_DIST"
+		gosub disp_message
+
+	endif
+endif
+
+[[POE_INVHDR.BSHO]]
+rem --- add static label for displaying date/amount if pulling up open invoice
+inv_no!=fnget_control!("POE_INVHDR.AP_INV_NO")
+inv_no_x=inv_no!.getX()
+inv_no_y=inv_no!.getY()
+inv_no_height=inv_no!.getHeight()
+inv_no_width=inv_no!.getWidth()
+nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
+x$=stbl("+CUSTOM_CTL",str(nxt_ctlID+1))
+Form!.addStaticText(nxt_ctlID,inv_no_x+inv_no_width+25,inv_no_y,inv_no_width,inv_no_height,"")
+callpoint!.setDevObject("inv_adj_label",str(nxt_ctlID))
+
+rem --- add the display control holding the distribution balance to devObject
+dist_bal!=fnget_control!("<<DISPLAY>>.DIST_BAL")
+callpoint!.setDevObject("dist_bal_control",dist_bal!)
+
+rem --- may need to disable some ctls based on params
+if callpoint!.getDevObject("multi_types")="N" 
+	callpoint!.setColumnEnabled("POE_INVHDR.AP_TYPE",-1)
+endif
+if callpoint!.getDevObject("multi_dist")="N" 
+	callpoint!.setColumnEnabled("POE_INVHDR.AP_DIST_CODE",-1)
+endif
+if callpoint!.getDevObject("retention")="N" 
+	callpoint!.setColumnEnabled("POE_INVHDR.RETENTION",-1)
+endif
+callpoint!.setOptionEnabled("INVD",0)
+callpoint!.setOptionEnabled("GDIS",0)
+callpoint!.setOptionEnabled("INVB",0)
+
 [[POE_INVHDR.BTBL]]
 rem --- Open/Lock files
 files=18,begfile=1,endfile=files
@@ -205,294 +534,149 @@ if aps01a.multi_types$<>"Y"
 		callpoint!.setTableColumnAttribute("POE_INVHDR.AP_DIST_CODE","PVAL",$22$+apc_typecode.ap_dist_code$+$22$)
 	endif
 endif
-[[POE_INVHDR.AABO]]
-rem --- user has elected not to save record (we are NOT in immediate write, so save takes care of header and detail at once)
-rem --- if rec_data$ is empty (i.e., new record never written), make sure no GL Dists are left orphaned (i.e., remove them)
 
-if callpoint!.getRecordMode()="A"
-	poe_invgl=fnget_dev("POE_INVGL")
-	k$=""
-	invgl_key$=callpoint!.getColumnData("POE_INVHDR.FIRM_ID")+
-:		callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+
-:		callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+
-:		callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
-
-	read (poe_invgl,key=invgl_key$,dom=*next)
-	while 1
-		k$=key(poe_invgl,end=*break)
-		if pos(invgl_key$=k$)<>1 then break
-		remove (poe_invgl,key=k$)	
-	wend	
-endif
-[[POE_INVHDR.BREX]]
-rem --- also need final check of balance -- invoice amt - invsel amt - gl dist amt (invsel should already equal invdet)
-
-if callpoint!.getDevObject("deleted")<>"Y"
-	gosub disp_dist_bal
-	if num(callpoint!.getColumnData("<<DISPLAY>>.DIST_BAL"))<>0
-		msg_id$="PO_INV_NOT_DIST"
-		gosub disp_message
-
-	endif
-endif
-[[POE_INVHDR.APFE]]
-rem --- when re-entering primary form, enable GL button
-rem --- only enable invoice detail button if we've already written some poe_invdet records
-rem --- also re-initialize the "deleted" flag
-
-if cvs(callpoint!.getColumnData("POE_INVHDR.AP_INV_NO"),2)<>"" and
-:	num(callpoint!.getColumnData("POE_INVHDR.INVOICE_AMT"))<>0
-	if callpoint!.getDevObject("gl_installed")="Y" and callpoint!.getDevObject("cash_basis")<>"Y"
-		callpoint!.setOptionEnabled("GDIS",1)
+[[POE_INVHDR.BWRI]]
+rem --- re-check acct date
+gl$=callpoint!.getDevObject("gl_int")
+status=0
+acctgdate$=callpoint!.getColumnData("POE_INVHDR.ACCT_DATE")  
+if gl$="Y" 
+	call stbl("+DIR_PGM")+"glc_datecheck.aon",acctgdate$,"Y",per$,yr$,status
+	if status>99
+		callpoint!.setStatus("ABORT")
 	endif
 endif
 
-poe_invdet=fnget_dev("POE_INVDET")
+rem --- check vend hist file to be sure this vendor/ap type ok together; also make sure all key fields are entered
 
-k$=""
-invdet_key$=callpoint!.getColumnData("POE_INVHDR.FIRM_ID")+callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+
-:	callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
+dont_write$=""
 
+if cvs(callpoint!.getColumnData("POE_INVHDR.VENDOR_ID"),3)="" or
+:	cvs(callpoint!.getColumnData("POE_INVHDR.AP_INV_NO"),3)="" then dont_write$="Y"
 
-read (poe_invdet,key=invdet_key$,dom=*next)
-k$=key(poe_invdet,end=*next)
-if pos(invdet_key$=k$)=1
-	callpoint!.setOptionEnabled("INVD",1)
-else
-	callpoint!.setOptionEnabled("INVD",0)
+vendor_id$ = callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")
+ap_type$=callpoint!.getColumnData("POE_INVHDR.AP_TYPE")
+gosub get_vendor_history
+if vend_hist$="" and callpoint!.getDevObject("multi_types")="Y" then dont_write$="Y"
+
+if dont_write$="Y"
+	msg_id$="AP_INVOICEWRITE"
+	gosub disp_message
+	callpoint!.setStatus("ABORT")
 endif
 
-callpoint!.setDevObject("deleted","")
-[[POE_INVHDR.BPFX]]
-callpoint!.setOptionEnabled("INVD",0)
-callpoint!.setOptionEnabled("GDIS",0)
-[[POE_INVHDR.AOPT-GDIS]]
-pfx$=firm_id$+callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
-dim dflt_data$[3,1]
-dflt_data$[1,0]="AP_TYPE"
-dflt_data$[1,1]=callpoint!.getColumnData("POE_INVHDR.AP_TYPE")
-dflt_data$[2,0]="VENDOR_ID"
-dflt_data$[2,1]=callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")
-dflt_data$[3,0]="AP_INV_NO"
-dflt_data$[3,1]=callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
-call stbl("+DIR_SYP")+"bam_run_prog.bbj","POE_INVGL",stbl("+USER_ID"),"MNT",pfx$,table_chans$[all],"",dflt_data$[all]
-
-gosub calc_gl_tots
+[[POE_INVHDR.INVOICE_AMT.AVAL]]
+callpoint!.setColumnData("POE_INVHDR.NET_INV_AMT", callpoint!.getUserInput())
+callpoint!.setDevObject("inv_amt",callpoint!.getUserInput())
+if callpoint!.getDevObject("gl_int")="N" then callpoint!.setDevObject("tot_dist",callpoint!.getDevObject("inv_amt"))
 gosub calc_grid_tots
 gosub disp_dist_bal
-[[POE_INVHDR.AWRI]]
-rem --- look thru gridVect for any rows we've deleted from invsel... delete corres rows from invdet
-
-if gridVect!.size()
-
-	poe_invdet_dev=fnget_dev("POE_INVDET")
-	dim poe_invdet$:fnget_tpl$("POE_INVDET")
-	recs!=gridVect!.getItem(0)
-	dim poe_invsel$:dtlg_param$[1,3]
-	if recs!.size()
-		for x=0 to recs!.size()-1
-			if callpoint!.getGridRowDeleteStatus(x)="Y"
-				poe_invsel$=recs!.getItem(x)
-				read (poe_invdet_dev,key=poe_invsel.firm_id$+poe_invsel.ap_type$+poe_invsel.vendor_id$+poe_invsel.ap_inv_no$,dom=*next)
-				while 1
-					read record (poe_invdet_dev,end=*break)poe_invdet$
-					if pos(poe_invsel.firm_id$+poe_invsel.ap_type$+poe_invsel.vendor_id$+poe_invsel.ap_inv_no$=poe_invdet$)<>1 then break
-					if poe_invsel.po_no$<>poe_invdet.po_no$ then continue
-					if cvs(poe_invsel.receiver_no$,3)<>"" and poe_invsel.receiver_no$<>poe_invdet.receiver_no$ then continue
-					remove (poe_invdet_dev,key=poe_invdet.firm_id$+poe_invdet.ap_type$+poe_invdet.vendor_id$+poe_invdet.ap_inv_no$+poe_invdet.line_no$,dom=*next)
-				wend
-			endif
-		next x
-	endif
-endif
-
-if callpoint!.getDevObject("gl_installed")="Y"
-	callpoint!.setOptionEnabled("INVD",1)
-	if callpoint!.getDevObject("cash_basis")<>"Y"
-		callpoint!.setOptionEnabled("GDIS",1)
-	endif
-endif
-
-rem --- also need final check of balance -- invoice amt - invsel amt - gl dist amt (invsel should already equal invdet)
-
-if num(callpoint!.getColumnData("<<DISPLAY>>.DIST_BAL"))<>0
-	msg_id$="PO_INV_NOT_DIST"
-	gosub disp_message
-
-endif
-[[POE_INVHDR.AOPT-INVD]]
-rem --- Add Barista soft lock for this record if not already in edit mode
-ap_type$=callpoint!.getColumnData("POE_INVHDR.AP_TYPE")
-vendor_id$=callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")
-ap_inv_no$=callpoint!.getColumnData("POE_INVHDR.AP_INV_NO")
-
-if !callpoint!.isEditMode() then
-	rem --- Is there an existing soft lock?
-	lock_table$="POE_INVHDR"
-	lock_record$=firm_id$+ap_type$+vendor_id$+ap_inv_no$
-	lock_type$="C"
-	lock_status$=""
-	lock_disp$=""
-	call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
-	if lock_status$="" then
-		rem --- Add temporary soft lock used just for this task
-		lock_type$="L"
-		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
-	else
-		rem --- Record locked by someone else
-		msg_id$="ENTRY_REC_LOCKED"
-		gosub disp_message
-		break
-	endif
-endif
-
-rem --- Launch poe_invdet form
-dist_bal=num(callpoint!.getColumnData("POE_INVHDR.INVOICE_AMT"))-num(callpoint!.getDevObject("tot_gl"))
-callpoint!.setDevObject("invdet_bal",str(dist_bal));rem send in Invoice Header Amt - g/l amount
-
-pfx$=firm_id$+ap_type$+vendor_id$+ap_inv_no$
-dim dflt_data$[3,1]
-dflt_data$[1,0]="AP_TYPE"
-dflt_data$[1,1]=ap_type$
-dflt_data$[2,0]="VENDOR_ID"
-dflt_data$[2,1]=vendor_id$
-dflt_data$[3,0]="AP_INV_NO"
-dflt_data$[3,1]=ap_inv_no$
-call stbl("+DIR_SYP")+"bam_run_prog.bbj","POE_INVDET",stbl("+USER_ID"),"MNT",pfx$,table_chans$[all],"",dflt_data$[all]
-
-rem --- re-align invsel w/ invdet based on changes user may have made in invdet
-rem --- corresponds to 6000 logic from old POE.EC
-
-poe_invsel_dev=fnget_dev("POE_INVSEL")
-poe_invdet_dev=fnget_dev("POE_INVDET")
-
-dim poe_invsel$:fnget_tpl$("POE_INVSEL")
-dim poe_invdet$:fnget_tpl$("POE_INVDET")
-
-other=0
-dim x$:str(callpoint!.getDevObject("poe_invsel_key"))
-last$=""
-
-tot_dist=0
-ky$=firm_id$+ap_type$+vendor_id$+ap_inv_no$
-read (poe_invsel_dev,key=ky$,dom=*next)
-while 1
-	read record (poe_invsel_dev,end=*break)poe_invsel$
-	if pos(ky$=poe_invsel$)<>1 then break
-	if cvs(poe_invsel.po_no$,3)="" then let x$=poe_invsel.firm_id$+poe_invsel.ap_type$+poe_invsel.vendor_id$+poe_invsel.ap_inv_no$+poe_invsel.line_no$
-	tot_invsel=0,last$=poe_invsel.firm_id$+poe_invsel.ap_type$+poe_invsel.vendor_id$+poe_invsel.ap_inv_no$,last_seq$=poe_invsel.line_no$
-	read (poe_invdet_dev,key=ky$,dom=*next)
-	while 1
-		read record (poe_invdet_dev,end=*break)poe_invdet$
-		if pos(ky$=poe_invdet$)<>1 then break
-		if cvs(poe_invdet.po_no$,3)="" then other=1; continue
-		if poe_invdet.po_no$<>poe_invsel.po_no$ then continue
-		if cvs(poe_invsel.receiver_no$,3)<>"" and poe_invsel.receiver_no$<>poe_invdet.receiver_no$ then continue
-		tot_invsel=tot_invsel+round(num(poe_invdet.unit_cost$)*num(poe_invdet.qty_received$),2)
-	wend
-	poe_invsel.total_amount$=str(tot_invsel)
-	poe_invsel$=field(poe_invsel$)
-	write record (poe_invsel_dev)poe_invsel$
-	tot_dist=tot_dist+tot_invsel
-wend
-
-if other
-	tot_other=0
-	read (poe_invdet_dev,key=ky$,dom=*next)
-	while 1
-		read record (poe_invdet_dev,end=*break)poe_invdet$
-		if pos(ky$=poe_invdet$)<>1 then break
-		if cvs(poe_invdet.po_no$,3)<>"" then continue
-		tot_other=tot_other+num(poe_invdet.unit_cost$)
-	wend
-	dim poe_invsel$:fattr(poe_invsel$)
-	if cvs(x$,3)="" then x$=last$+str(num(last_seq$)+1:"000")
-	poe_invsel.firm_id$=x.firm_id$
-	poe_invsel.ap_type$=x.ap_type$
-	poe_invsel.vendor_id$=x.vendor_id$
-	poe_invsel.ap_inv_no$=x.ap_inv_no$
-	poe_invsel.line_no$=x.line_no$
-	find record (poe_invsel_dev,key=x$,dom=*next)poe_invsel$
-	poe_invsel.total_amount$=str(tot_other)
-	poe_invsel$=field(poe_invsel$)
-	write record (poe_invsel_dev)poe_invsel$
-	tot_dist=tot_dist+tot_other
-endif
-
-callpoint!.setDevObject("tot_dist",str(tot_dist))
-callpoint!.setColumnData("POE_INVHDR.INVOICE_AMT",str(tot_dist),1)
-callpoint!.setStatus("RECORD:["+ky$+"]")
-
-rem --- Remove temporary soft lock used just for this task 
-if !callpoint!.isEditMode() and lock_type$="L" then
-	lock_type$="U"
-	call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
-endif
-[[POE_INVHDR.ARNF]]
-rem --- set defaults
-
-terms_cd$=callpoint!.getDevObject("dflt_terms_cd")
-invdate$=stbl("+SYSTEM_DATE")
-tmp_inv_date$=callpoint!.getColumnData("POE_INVHDR.INV_DATE")
-gosub calculate_due_and_discount
-callpoint!.setColumnData("POE_INVHDR.AP_DIST_CODE",str(callpoint!.getDevObject("dflt_dist_cd")))
-callpoint!.setColumnData("POE_INVHDR.AP_TERMS_CODE",str(callpoint!.getDevObject("dflt_terms_cd")))
-callpoint!.setColumnData("POE_INVHDR.PAYMENT_GRP",str(callpoint!.getDevObject("dflt_pymt_grp")))
-callpoint!.setColumnData("POE_INVHDR.INV_DATE",stbl("+SYSTEM_DATE"))
-
-if cvs(str(callpoint!.getDevObject("dflt_acct_date")),2)<>""
-	callpoint!.setColumnData("POE_INVHDR.ACCT_DATE",str(callpoint!.getDevObject("dflt_acct_date")))
-else
-	callpoint!.setColumnData("POE_INVHDR.ACCT_DATE",stbl("+SYSTEM_DATE"))
-endif
-callpoint!.setColumnData("POE_INVHDR.HOLD_FLAG","N")
-
 callpoint!.setStatus("REFRESH")
-[[POE_INVHDR.AP_INV_NO.AVAL]]
-rem --- see if in apt-01 (open invoices)
 
-callpoint!.setDevObject("adjust_flag","0")
-Form!.getControl(num(callpoint!.getDevObject("inv_adj_label"))).setText(Translate!.getTranslation("AON_(INVOICE)"))
+[[POE_INVHDR.INV_DATE.AVAL]]
+invdate$=callpoint!.getUserInput()
+terms_cd$=callpoint!.getColumnData("POE_INVHDR.AP_TERMS_CODE")
+if cvs(terms_cd$,3)="" then terms_cd$=callpoint!.getDevObject("dflt_terms_cd")
+if cvs(callpoint!.getDevObject("dflt_acct_date"),2)=""
+	callpoint!.setColumnData("POE_INVHDR.ACCT_DATE",callpoint!.getUserInput())
+else
+	callpoint!.setColumnData("POE_INVHDR.ACCT_DATE",str(callpoint!.getDevObject("dflt_acct_date")))
+endif
+tmp_inv_date$=callpoint!.getUserInput()
+gosub calculate_due_and_discount
+callpoint!.setStatus("REFRESH")
 
-apt01_dev=fnget_dev("APT_INVOICEHDR")
-while 1
-	find(apt01_dev,key=firm_id$+callpoint!.getColumnData("POE_INVHDR.AP_TYPE")+
-:		callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")+callpoint!.getUserInput(),dom=*break)
-		callpoint!.setDevObject("adjust_flag","1")
+[[POE_INVHDR.NET_INV_AMT.AVAL]]
+rem re-calc discount amount based on net x disc %
+disc_amt=round(num(callpoint!.getUserInput())*(num(callpoint!.getDevObject("disc_pct"))/100),2)
+callpoint!.setColumnData("POE_INVHDR.DISCOUNT_AMT",str(disc_amt))
+callpoint!.setStatus("REFRESH:POE_INVHDR.DISCOUNT_AMT")
+
+[[POE_INVHDR.VENDOR_ID.AVAL]]
+
+rem "VENDOR INACTIVE - FEATURE"
+vendor_id$ = callpoint!.getUserInput()
+apm01_dev=fnget_dev("APM_VENDMAST")
+apm01_tpl$=fnget_tpl$("APM_VENDMAST")
+dim apm01a$:apm01_tpl$
+apm01a_key$=firm_id$+vendor_id$
+find record (apm01_dev,key=apm01a_key$,err=*break) apm01a$
+if apm01a.vend_inactive$="Y" then
+   call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+   msg_id$="AP_VEND_INACTIVE"
+   dim msg_tokens$[2]
+   msg_tokens$[1]=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
+   msg_tokens$[2]=cvs(apm01a.vendor_name$,2)
+   gosub disp_message
+   callpoint!.setStatus("ACTIVATE-ABORT")
+   goto std_exit
+endif
+
+ap_type$=callpoint!.getColumnData("POE_INVHDR.AP_TYPE")
+
+gosub vendor_info
+gosub disp_vendor_comments
+gosub get_vendor_history
+
+if vend_hist$="" and callpoint!.getDevObject("multi_types")="Y"
+	msg_id$="AP_VEND_BAD_APTYPE"
+	gosub disp_message
+	callpoint!.setStatus("CLEAR-NEWREC")
+endif
+
+[[POE_INVHDR.VENDOR_ID.BINQ]]
+rem --- Set filter_defs$[] to only show vendors of given AP Type
+
+ap_type$=callpoint!.getColumnData("POE_INVHDR.AP_TYPE")
+
+dim filter_defs$[2,2]
+filter_defs$[0,0]="APM_VENDMAST.FIRM_ID"
+filter_defs$[0,1]="='"+firm_id$+"'"
+filter_defs$[0,2]="LOCK"
+
+filter_defs$[1,0]="APM_VENDHIST.AP_TYPE"
+filter_defs$[1,1]="='"+ap_type$+"'"
+filter_defs$[1,2]="LOCK"
+
+
+call STBL("+DIR_SYP")+"bax_query.bbj",
+:		gui_dev, 
+:		form!,
+:		"AP_VEND_LK",
+:		"DEFAULT",
+:		table_chans$[all],
+:		sel_key$,
+:		filter_defs$[all]
+
+if sel_key$<>""
+	call stbl("+DIR_SYP")+"bac_key_template.bbj",
+:		"APM_VENDMAST",
+:		"PRIMARY",
+:		apm_vend_key$,
+:		table_chans$[all],
+:		status$
+	dim apm_vend_key$:apm_vend_key$
+	apm_vend_key$=sel_key$
+	callpoint!.setColumnData("POE_INVHDR.VENDOR_ID",apm_vend_key.vendor_id$,1)
+endif	
+callpoint!.setStatus("ACTIVATE-ABORT")
+
+[[POE_INVHDR.<CUSTOM>]]
+invoiceOrAdjustment: rem --- Is this a new invoice or an adjustment to an existing invoice?
+	adjust_flag=0
+	ap_type$=callpoint!.getColumnData("POE_INVHDR.AP_TYPE")
+	vendor_id$=callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")
+	apt01_dev=fnget_dev("APT_INVOICEHDR")
+	find(apt01_dev,key=firm_id$+ap_type$+vendor_id$+ap_inv_no$,dom=*next); adjust_flag=1
+	callpoint!.setDevObject("adjust_flag",adjust_flag)
+	if adjust_flag then
 		Form!.getControl(num(callpoint!.getDevObject("inv_adj_label"))).setText(Translate!.getTranslation("AON_(ADJUSTMENT)"))
 		callpoint!.setColumnEnabled("POE_INVHDR.NET_INV_AMT",0)
-	break
-wend
-[[POE_INVHDR.BSHO]]
-rem --- add static label for displaying date/amount if pulling up open invoice
-inv_no!=fnget_control!("POE_INVHDR.AP_INV_NO")
-inv_no_x=inv_no!.getX()
-inv_no_y=inv_no!.getY()
-inv_no_height=inv_no!.getHeight()
-inv_no_width=inv_no!.getWidth()
-nxt_ctlID=num(stbl("+CUSTOM_CTL",err=std_error))
-x$=stbl("+CUSTOM_CTL",str(nxt_ctlID+1))
-Form!.addStaticText(nxt_ctlID,inv_no_x+inv_no_width+25,inv_no_y,inv_no_width,inv_no_height,"")
-callpoint!.setDevObject("inv_adj_label",str(nxt_ctlID))
+	else
+		Form!.getControl(num(callpoint!.getDevObject("inv_adj_label"))).setText(Translate!.getTranslation("AON_(INVOICE)"))
+	endif
+return
 
-rem --- add the display control holding the distribution balance to devObject
-dist_bal!=fnget_control!("<<DISPLAY>>.DIST_BAL")
-callpoint!.setDevObject("dist_bal_control",dist_bal!)
-
-rem --- may need to disable some ctls based on params
-if callpoint!.getDevObject("multi_types")="N" 
-	callpoint!.setColumnEnabled("POE_INVHDR.AP_TYPE",-1)
-endif
-if callpoint!.getDevObject("multi_dist")="N" 
-	callpoint!.setColumnEnabled("POE_INVHDR.AP_DIST_CODE",-1)
-endif
-if callpoint!.getDevObject("retention")="N" 
-	callpoint!.setColumnEnabled("POE_INVHDR.RETENTION",-1)
-endif
-callpoint!.setOptionEnabled("INVD",0)
-callpoint!.setOptionEnabled("GDIS",0)
-callpoint!.setOptionEnabled("INVB",0)
-[[POE_INVHDR.<CUSTOM>]]
 vendor_info: rem --- get and display Vendor Information
 	apm01_dev=fnget_dev("APM_VENDMAST")
 	dim apm01a$:fnget_tpl$("APM_VENDMAST")
@@ -606,153 +790,6 @@ fnend
 rem #endinclude fnget_control.src
 #include [+ADDON_LIB]std_missing_params.aon
 #include [+ADDON_LIB]std_functions.aon
-[[POE_INVHDR.INVOICE_AMT.AVAL]]
-callpoint!.setColumnData("POE_INVHDR.NET_INV_AMT", callpoint!.getUserInput())
-callpoint!.setDevObject("inv_amt",callpoint!.getUserInput())
-if callpoint!.getDevObject("gl_int")="N" then callpoint!.setDevObject("tot_dist",callpoint!.getDevObject("inv_amt"))
-gosub calc_grid_tots
-gosub disp_dist_bal
-callpoint!.setStatus("REFRESH")
-[[POE_INVHDR.AP_TERMS_CODE.AVAL]]
-rem re-calc due and discount dates based on terms code
-
-if callpoint!.getUserInput()<>callpoint!.getColumnData("POE_INVHDR.AP_TERMS_CODE")
-	terms_cd$=callpoint!.getUserInput()	
-	invdate$=callpoint!.getColumnData("POE_INVHDR.INV_DATE")
-	tmp_inv_date$=callpoint!.getColumnData("POE_INVHDR.INV_DATE")
-	gosub calculate_due_and_discount
-	disc_amt=round(num(callpoint!.getColumnData("POE_INVHDR.NET_INV_AMT"))*(num(callpoint!.getDevObject("disc_pct"))/100),2)
-	callpoint!.setColumnData("POE_INVHDR.DISCOUNT_AMT",str(disc_amt))
-	callpoint!.setStatus("REFRESH")
-endif
-[[POE_INVHDR.ADIS]]
-vendor_id$=callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")
-gosub vendor_info
-gosub disp_vendor_comments
-
-rem --- get disc % assoc w/ terms in this rec, and disp distributed bal
-apm10c_dev=fnget_dev("APC_TERMSCODE")
-dim apm10c$:fnget_tpl$("APC_TERMSCODE")
-ap_terms_code$ = callpoint!.getColumnData("POE_INVHDR.AP_TERMS_CODE")
-while 1
-	readrecord(apm10c_dev,key=firm_id$+"C"+ap_terms_code$,dom=*break)apm10c$
-	callpoint!.setDevObject("disc_pct",apm10c.disc_percent$)
-	callpoint!.setDevObject("inv_amt",callpoint!.getColumnData("POE_INVHDR.INVOICE_AMT"))
-	callpoint!.setDevObject("tot_dist","")
-	callpoint!.setDevObject("tot_gl","")
-	gosub calc_gl_tots	
-	gosub calc_grid_tots
-	gosub disp_dist_bal
-	vendor_id$ = callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")
-	gosub disp_vendor_comments
-	callpoint!.setStatus("REFRESH")
-	break
-wend
-[[POE_INVHDR.ACCT_DATE.AVAL]]
-rem make sure accting date is in an appropriate GL period
-gl$=callpoint!.getDevObject("gl_int")
-acctgdate$=callpoint!.getUserInput()        
-if gl$="Y" 
-	call stbl("+DIR_PGM")+"glc_datecheck.aon",acctgdate$,"Y",per$,yr$,status
-	if status>99
-		callpoint!.setStatus("ABORT")
-	else
-		callpoint!.setDevObject("gl_year",yr$)
-		callpoint!.setDevObject("gl_per",per$)
-	endif
-endif
-[[POE_INVHDR.VENDOR_ID.AVAL]]
-
-rem "VENDOR INACTIVE - FEATURE"
-vendor_id$ = callpoint!.getUserInput()
-apm01_dev=fnget_dev("APM_VENDMAST")
-apm01_tpl$=fnget_tpl$("APM_VENDMAST")
-dim apm01a$:apm01_tpl$
-apm01a_key$=firm_id$+vendor_id$
-find record (apm01_dev,key=apm01a_key$,err=*break) apm01a$
-if apm01a.vend_inactive$="Y" then
-   call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
-   msg_id$="AP_VEND_INACTIVE"
-   dim msg_tokens$[2]
-   msg_tokens$[1]=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
-   msg_tokens$[2]=cvs(apm01a.vendor_name$,2)
-   gosub disp_message
-   callpoint!.setStatus("ACTIVATE-ABORT")
-   goto std_exit
-endif
-
-ap_type$=callpoint!.getColumnData("POE_INVHDR.AP_TYPE")
-
-gosub vendor_info
-gosub disp_vendor_comments
-gosub get_vendor_history
-
-if vend_hist$="" and callpoint!.getDevObject("multi_types")="Y"
-	msg_id$="AP_VEND_BAD_APTYPE"
-	gosub disp_message
-	callpoint!.setStatus("CLEAR-NEWREC")
-endif
-[[POE_INVHDR.NET_INV_AMT.AVAL]]
-rem re-calc discount amount based on net x disc %
-disc_amt=round(num(callpoint!.getUserInput())*(num(callpoint!.getDevObject("disc_pct"))/100),2)
-callpoint!.setColumnData("POE_INVHDR.DISCOUNT_AMT",str(disc_amt))
-callpoint!.setStatus("REFRESH:POE_INVHDR.DISCOUNT_AMT")
-[[POE_INVHDR.BWRI]]
-rem --- re-check acct date
-gl$=callpoint!.getDevObject("gl_int")
-status=0
-acctgdate$=callpoint!.getColumnData("POE_INVHDR.ACCT_DATE")  
-if gl$="Y" 
-	call stbl("+DIR_PGM")+"glc_datecheck.aon",acctgdate$,"Y",per$,yr$,status
-	if status>99
-		callpoint!.setStatus("ABORT")
-	endif
-endif
-
-rem --- check vend hist file to be sure this vendor/ap type ok together; also make sure all key fields are entered
-
-dont_write$=""
-
-if cvs(callpoint!.getColumnData("POE_INVHDR.VENDOR_ID"),3)="" or
-:	cvs(callpoint!.getColumnData("POE_INVHDR.AP_INV_NO"),3)="" then dont_write$="Y"
-
-vendor_id$ = callpoint!.getColumnData("POE_INVHDR.VENDOR_ID")
-ap_type$=callpoint!.getColumnData("POE_INVHDR.AP_TYPE")
-gosub get_vendor_history
-if vend_hist$="" and callpoint!.getDevObject("multi_types")="Y" then dont_write$="Y"
-
-if dont_write$="Y"
-	msg_id$="AP_INVOICEWRITE"
-	gosub disp_message
-	callpoint!.setStatus("ABORT")
-endif
 
 
-[[POE_INVHDR.AREC]]
-callpoint!.setColumnData("<<DISPLAY>>.comments","")
-callpoint!.setDevObject("inv_amt","")
-callpoint!.setDevObject("tot_dist","")
-callpoint!.setDevObject("tot_gl","")
-callpoint!.setColumnData("<<DISPLAY>>.DIST_BAL","0")
-rem --- Re-enable disabled fields
-callpoint!.setColumnEnabled("POE_INVHDR.INV_DATE",1)
-callpoint!.setColumnEnabled("POE_INVHDR.NET_INV_AMT",1)
-rem --- disable opt buttons
-callpoint!.setOptionEnabled("INVD",0)
-callpoint!.setOptionEnabled("GDIS",0)
-[[POE_INVHDR.INV_DATE.AVAL]]
-invdate$=callpoint!.getUserInput()
-terms_cd$=callpoint!.getColumnData("POE_INVHDR.AP_TERMS_CODE")
-if cvs(terms_cd$,3)="" then terms_cd$=callpoint!.getDevObject("dflt_terms_cd")
-if cvs(callpoint!.getDevObject("dflt_acct_date"),2)=""
-	callpoint!.setColumnData("POE_INVHDR.ACCT_DATE",callpoint!.getUserInput())
-else
-	callpoint!.setColumnData("POE_INVHDR.ACCT_DATE",str(callpoint!.getDevObject("dflt_acct_date")))
-endif
-tmp_inv_date$=callpoint!.getUserInput()
-gosub calculate_due_and_discount
-callpoint!.setStatus("REFRESH")
-[[POE_INVHDR.ASHO]]
-rem --- get default date
-call stbl("+DIR_SYP")+"bam_run_prog.bbj","POE_INVDATE",stbl("+USER_ID"),"MNT","",table_chans$[all]
-callpoint!.setDevObject("dflt_acct_date",stbl("DEF_ACCT_DATE"))
+
