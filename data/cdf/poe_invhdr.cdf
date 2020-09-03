@@ -180,7 +180,6 @@ if other
 endif
 
 callpoint!.setDevObject("tot_dist",str(tot_dist))
-callpoint!.setColumnData("POE_INVHDR.INVOICE_AMT",str(tot_dist),1)
 callpoint!.setStatus("RECORD:["+ky$+"]")
 
 rem --- Remove temporary soft lock used just for this task 
