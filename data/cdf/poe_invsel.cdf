@@ -1,49 +1,35 @@
-[[POE_INVSEL.PO_NO.BINQ]]
-rem --- Do custom query
+[[POE_INVSEL.ADEL]]
+gosub calc_grid_tots
+gosub disp_totals
 
-	query_id$="PO_INVRECPT"
-	query_mode$="DEFAULT"
-	dim filter_defs$[2,2]
-	filter_defs$[1,0] = "POT_RECHDR.FIRM_ID"
-	filter_defs$[1,1] = "='"+callpoint!.getColumnData("POE_INVSEL.FIRM_ID")+"'"
-	filter_defs$[1,2] = "LOCK"
-	filter_defs$[2,0] = "POT_RECHDR.VENDOR_ID"
-	filter_defs$[2,1] = "='" + callpoint!.getHeaderColumnData("POE_INVHDR.VENDOR_ID")+"'"
-	filter_defs$[2,2] = "LOCK"
+[[POE_INVSEL.AGCL]]
+rem print 'show';rem debug
 
-	call stbl("+DIR_SYP")+"bax_query.bbj",
-:		gui_dev,
-:		form!,
-:		query_id$,
-:		query_mode$,
-:		table_chans$[all],
-:		sel_key$,filter_defs$[all]
+use ::ado_util.src::util
 
-	if sel_key$<>""
-		call stbl("+DIR_SYP")+"bac_key_template.bbj",
-:			"POT_RECHDR",
-:			"PRIMARY",
-:			pot_rec_key$,
-:			table_chans$[all],
-:			status$
+[[POE_INVSEL.AGDR]]
+rem --- don't allow change on existing invsel row... user can delete/add
+util.disableGridRow(Form!,num(callpoint!.getValidationRow()))
 
-		dim pot_rec_key$:pot_rec_key$
-		pot_rec_key$=sel_key$
-		callpoint!.setColumnData("POE_INVSEL.PO_NO",pot_rec_key.po_no$,1)
-		callpoint!.setColumnData("POE_INVSEL.RECEIVER_NO",pot_rec_key.receiver_no$,1)
-		gosub accum_receiver_tot; rem accumulate total for po/receiver# entered
-		gosub calc_grid_tots
-		gosub disp_totals
-		callpoint!.setStatus("MODIFIED")
-	endif
-	callpoint!.setStatus("ACTIVATE-ABORT")
+[[POE_INVSEL.AGRE]]
+curr_po_no$=callpoint!.getColumnData("POE_INVSEL.PO_NO")
+curr_receiver_no$=callpoint!.getColumnData("POE_INVSEL.RECEIVER_NO")
+gosub receiver_already_selected
+if abort_receiver_already_selected then break
+
+rem --- enable/disable Invoice Detail button
+	gosub able_invoice_detail_button
+
+rem --- update grid and header totals
+	gosub calc_grid_tots
+	gosub disp_totals
+	callpoint!.setStatus("REFRESH")
+
 [[POE_INVSEL.AGRN]]
 rem --- enable/disable Invoice Detail button
 
 	gosub able_invoice_detail_button
-[[POE_INVSEL.BDGX]]
-rem --- disable Invoice Detail button
-	callpoint!.setOptionEnabled("INVB",0)
+
 [[POE_INVSEL.AOPT-INVB]]
 rem --- Add Barista soft lock for this record if not already in edit mode
 ap_type$=callpoint!.getHeaderColumnData("POE_INVHDR.AP_TYPE")
@@ -144,7 +130,6 @@ if other
 endif
 
 callpoint!.setDevObject("tot_dist",str(tot_dist))
-callpoint!.setHeaderColumnData("POE_INVHDR.INVOICE_AMT",str(tot_dist))
 callpoint!.setStatus("REFGRID")
 
 rem --- Remove temporary soft lock used just for this task 
@@ -152,24 +137,28 @@ if !callpoint!.isEditMode() and lock_type$="L" then
 	lock_type$="U"
 	call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
 endif
+
 [[POE_INVSEL.AREC]]
 rem --- Make sure new grid row is enabled
 util.enableGridRow(Form!,num(callpoint!.getValidationRow()))
-[[POE_INVSEL.AGDR]]
-rem --- don't allow change on existing invsel row... user can delete/add
-util.disableGridRow(Form!,num(callpoint!.getValidationRow()))
-[[POE_INVSEL.RECEIVER_NO.AVEC]]
-gosub calc_grid_tots
-gosub disp_totals
-[[POE_INVSEL.PO_NO.AVEC]]
-gosub calc_grid_tots
-gosub disp_totals
+
 [[POE_INVSEL.AUDE]]
 gosub calc_grid_tots
 gosub disp_totals
-[[POE_INVSEL.ADEL]]
-gosub calc_grid_tots
-gosub disp_totals
+
+[[POE_INVSEL.AWRI]]
+rem --- accum tot for po/receiver# entered and write to poe-25 for new/modified rows
+rem --- existing rows are disabled, so their info won't go to poe-25 again
+
+if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))="Y" or 
+: 	callpoint!.getGridRowModifyStatus(num(callpoint!.getValidationRow()))="Y"
+		gosub accum_receiver_tot
+endif
+
+[[POE_INVSEL.BDGX]]
+rem --- disable Invoice Detail button
+	callpoint!.setOptionEnabled("INVB",0)
+
 [[POE_INVSEL.PO_NO.AVAL]]
 rem --- For new detail lines, locate first un-billed receiver for this PO
 if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" and cvs(callpoint!.getColumnData("POE_INVSEL.RECEIVER_NO"),2)="" then
@@ -202,33 +191,58 @@ if callpoint!.getGridRowNewStatus(callpoint!.getValidationRow())="Y" and cvs(cal
 endif
 
 gosub accum_receiver_tot; rem accumulate total for po/receiver# entered
-[[POE_INVSEL.AWRI]]
-rem --- accum tot for po/receiver# entered and write to poe-25 for new/modified rows
-rem --- existing rows are disabled, so their info won't go to poe-25 again
 
-if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow()))="Y" or 
-: 	callpoint!.getGridRowModifyStatus(num(callpoint!.getValidationRow()))="Y"
-		gosub accum_receiver_tot
-endif
-[[POE_INVSEL.AGRE]]
-curr_po_no$=callpoint!.getColumnData("POE_INVSEL.PO_NO")
-curr_receiver_no$=callpoint!.getColumnData("POE_INVSEL.RECEIVER_NO")
-gosub receiver_already_selected
-if abort_receiver_already_selected then break
+[[POE_INVSEL.PO_NO.AVEC]]
+gosub calc_grid_tots
+gosub disp_totals
 
-rem --- enable/disable Invoice Detail button
-	gosub able_invoice_detail_button
+[[POE_INVSEL.PO_NO.BINQ]]
+rem --- Do custom query
 
-rem --- update grid and header totals
-	gosub calc_grid_tots
-	gosub disp_totals
-	callpoint!.setStatus("REFRESH")
-[[POE_INVSEL.AGCL]]
-rem print 'show';rem debug
+	query_id$="PO_INVRECPT"
+	query_mode$="DEFAULT"
+	dim filter_defs$[2,2]
+	filter_defs$[1,0] = "POT_RECHDR.FIRM_ID"
+	filter_defs$[1,1] = "='"+callpoint!.getColumnData("POE_INVSEL.FIRM_ID")+"'"
+	filter_defs$[1,2] = "LOCK"
+	filter_defs$[2,0] = "POT_RECHDR.VENDOR_ID"
+	filter_defs$[2,1] = "='" + callpoint!.getHeaderColumnData("POE_INVHDR.VENDOR_ID")+"'"
+	filter_defs$[2,2] = "LOCK"
 
-use ::ado_util.src::util
+	call stbl("+DIR_SYP")+"bax_query.bbj",
+:		gui_dev,
+:		form!,
+:		query_id$,
+:		query_mode$,
+:		table_chans$[all],
+:		sel_key$,filter_defs$[all]
+
+	if sel_key$<>""
+		call stbl("+DIR_SYP")+"bac_key_template.bbj",
+:			"POT_RECHDR",
+:			"PRIMARY",
+:			pot_rec_key$,
+:			table_chans$[all],
+:			status$
+
+		dim pot_rec_key$:pot_rec_key$
+		pot_rec_key$=sel_key$
+		callpoint!.setColumnData("POE_INVSEL.PO_NO",pot_rec_key.po_no$,1)
+		callpoint!.setColumnData("POE_INVSEL.RECEIVER_NO",pot_rec_key.receiver_no$,1)
+		gosub accum_receiver_tot; rem accumulate total for po/receiver# entered
+		gosub calc_grid_tots
+		gosub disp_totals
+		callpoint!.setStatus("MODIFIED")
+	endif
+	callpoint!.setStatus("ACTIVATE-ABORT")
+
 [[POE_INVSEL.RECEIVER_NO.AVAL]]
 gosub accum_receiver_tot; rem accumulate total for po/receiver# entered
+
+[[POE_INVSEL.RECEIVER_NO.AVEC]]
+gosub calc_grid_tots
+gosub disp_totals
+
 [[POE_INVSEL.<CUSTOM>]]
 receiver_already_selected:
 rem --- given a po/receiver (or po w/ no receiver) see if it's already in gridvect
@@ -425,3 +439,6 @@ rem #include fndate.src
     fnend
 
 rem #endinclude fndate.src
+
+
+
