@@ -21,6 +21,7 @@ rem ==========================================================================
     use java.util.Vector
 
     use ::ado_file.src::FileObject
+	use ::ado_GitRepoInterface.aon::GitRepoInterface
 
 rem /**
 rem  * This class is used to restructure data/cdf callpoint programs.
@@ -31,6 +32,7 @@ rem  */
     
         field protected BBjString CALLPOINT_SUFFIX!="\.([AB])\]\]\s*$"
         field protected BBjString SKIP_STRING!=".*setStatus\(\"+$22$+"([^-\r]*)-?SKIP-?(.*)\"+$22$+"\).*"
+        field protected BBjString KEY_PATTERN!="^\s*\[\[.*\]\]"
         
         rem /**
         rem  * Constructor.
@@ -220,7 +222,9 @@ importModChanges_error:rem --- Method error trap/handler (11Oct2017)
         rem  * @return LinkedHashMap cdfMap!
         rem  */
         method public Map readCdfFile(BBjString filePath$)
-            methodret #readCdfFile(filePath$,new LinkedHashMap())
+            declare Scanner sc!
+            sc!=new Scanner(new File(filePath$))
+            methodret #readCdfFile(sc!,new LinkedHashMap())
         methodend 
 
         rem /**
@@ -230,7 +234,7 @@ importModChanges_error:rem --- Method error trap/handler (11Oct2017)
         rem  *
         rem  * @return LinkedHashMap cdfMap!
         rem  */
-        method public Map readCdfFile(BBjString filePath$, Map cdfMap!)
+        method public Map readCdfFile(Scanner sc!, Map cdfMap!)
             seterr readCdfFile_error
             
             declare BBjString replacementString!
@@ -239,36 +243,31 @@ importModChanges_error:rem --- Method error trap/handler (11Oct2017)
             if (cdfMap!=null()) then throw "Map parameter cannot be null",253
 
             rem --- Initializations
-            keyPattern!="^\s*\[\[.*\]\]"
-            pattern!=Pattern.compile(keyPattern!)
+            pattern!=Pattern.compile(#KEY_PATTERN!)
             
             rem --- Read all callpoints from a cdf file and put them into a map
             key!=null()
             body!=""
-            fl!=new File(filePath$)
-            sc!=new Scanner(fl!,err=*next)
-            if sc!<>null()
-                while (sc!.hasNextLine()) 
-                    rem --- Test for new callpoint.
-                    newLine!=sc!.nextLine()
-                    matcher!=pattern!.matcher(newLine!)
-                    if (matcher!.find()) then
-                        newKey!=matcher!.group()
-                        currentHeaderLine!=cast(BBjString,newLine!) 
-                    else 
-                        newKey!=null()
-                    endif 
-                    
-                    rem -- handle new callpoint 
-                    if (newKey!<>null()) then
-                        cdfMap!.put(newKey!,"") 
-                        key!=newKey!
-                        newKey!=null() 
-                    endif                     
-                    cdfMap!.put(key!,cast(BBjString,cdfMap!.get(key!))+newLine!+$0A$) 
-                wend
-                sc!.close()
-            endif
+            while (sc!.hasNextLine()) 
+                rem --- Test for new callpoint.
+                newLine!=sc!.nextLine()
+                matcher!=pattern!.matcher(newLine!)
+                if (matcher!.find()) then
+                    newKey!=matcher!.group()
+                    currentHeaderLine!=cast(BBjString,newLine!) 
+                else 
+                    newKey!=null()
+                endif 
+                
+                rem -- handle new callpoint 
+                if (newKey!<>null()) then
+                    cdfMap!.put(newKey!,"") 
+                    key!=newKey!
+                    newKey!=null() 
+                endif                     
+                cdfMap!.put(key!,cast(BBjString,cdfMap!.get(key!))+newLine!+$0A$) 
+            wend
+            sc!.close()
             methodret cdfMap!
             
 readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
@@ -414,7 +413,9 @@ readCdfFile_error:rem --- Method error trap/handler (11Oct2017)
         rem  * @return TreeMap cdfMap!
         rem  */
         method public Map readAndOrderCdfFile(BBjString filePath$)
-            methodret #readCdfFile(filePath$,new TreeMap())
+            declare Scanner sc!
+            sc!=new Scanner(new File(filePath$))
+            methodret #readCdfFile(sc!,new TreeMap())
         methodend 
 
         rem /**
@@ -469,5 +470,86 @@ writeCdf_error:rem --- Method error trap/handler (11Oct2017)
         rem  */
         method public void writeOrderedCdfFile(TreeMap cdfMap!, BBjString filePath$)
             #writeCdfFile(cdfMap!,filePath$)
-        methodend 
+        methodend
+		
+        rem /**
+        rem  *  Rearranges the order of the callpoints in a CDF map to the order of the callpoints in CDF from a given commit  
+        rem  */
+		method public Map reorderToMatchCommit(Map cdfMap!, GitRepoInterface git!,BBjString commitId$,BBjString filePath$) 
+			 
+			declare BBjString fileContent!
+            declare Map extractionMap!
+            declare Scanner sc!
+            declare Iterator extractionIter!
+            declare BBjString extractionKey!
+            declare BBjString extractionContent!
+            declare BBjString cdfContent!
+            declare Pattern callpointEndPattern!
+            declare Matcher callpointEndMatcher!
+            
+            
+            rem Get the CDF file from which we want to get the callpoint order                        			
+			fileContent!=git!.getFileContent(filePath$,commitId$)
+			
+			rem Extract the keys from the file content 			
+			sc!=new Scanner(fileContent!)
+			extractionMap!=#readCdfFile(sc!,new LinkedHashMap())
+			
+			REM Look for presence of additional carriage returns at the end of the file and add them to the
+			REM corresponding callpoint in cdfMap if we find them. 
+			callpointEndPattern!=Pattern.compile("\n\n$",Pattern.DOTALL)
+			extractionIter!=extractionMap!.keySet().iterator()
+			while (extractionIter!.hasNext())
+			    extractionKey!=cast(BBjString,extractionIter!.next())
+			    extractionContent!=cast(BBjString,extractionMap!.get(extractionKey!))
+			    
+			    REM -- see if the upgrade version of the callpoint ends with two linefeeds
+			    callpointEndMatcher!=callpointEndPattern!.matcher(extractionContent!)
+			    if (! callpointEndMatcher!.find()) then continue
+			     
+			    REM -- see if the core version of the upgrade callpoint exists 
+			    cdfContent!=cast(BBjString,cdfMap!.get(extractionKey!))
+			    if (cdfContent!=null()) then continue
+			    
+			    REM -- see if the core version of the callpoint doesn't already end in two linefeeds 
+			    callpointEndMatcher!=callpointEndPattern!.matcher(cdfContent!)
+			    if (callpointEndMatcher!.find()) then continue  
+			    
+			    REM -- put an extra linefeed at the end of the core callpoint (It already ends in one linefeed.) 
+			    cdfMap!.put(extractionKey!,cdfContent!+$0A$) 
+			wend 
+			
+			REM Remove any keys from the extractionMap that don't exist in the cdfMap and then copy the keys
+			extractionMap!.keySet().retainAll(cdfMap!.keySet())
+			extractionMap!.putAll(cdfMap!)
+			
+			methodret extractionMap! 
+		methodend 
+		
+		REM /** 
+		REM  * Reorder and commit CDF files 
+		REM **/
+		method public void reorderAndCommitCDFs(BBjString coreCdfDir!, GitRepoInterface git!, BBjString commitId$)
+		    declare java.util.List cdfFiles!
+		    declare Iterator cdfIter!
+		    declare java.io.File cdfFile!
+		    declare BBjString cdfFileName!
+		    declare Map reorderedCdfMap!
+		    declare java.io.File coreCdfDirFile! 
+		    coreCdfDirFile!=new java.io.File(coreCdfDir!)
+		    cdfFiles! = Arrays.asList(coreCdfDirFile!.listFiles())
+		    cdfIter!=cdfFiles!.iterator()
+		    while (cdfIter!.hasNext())
+		        cdfFile!=cast(java.io.File,cdfIter!.next())
+		        cdfFileName!=cdfFile!.getName()
+		        if (! cdfFileName!.endsWith(".cdf")) then continue
+		        cdfMap!=#readCdfFile(cdfFile!.getAbsolutePath()) 
+		        reorderedCdfMap!=#reorderToMatchCommit(cdfMap!,git!,commitId$,"data/cdf/"+cdfFileName!)
+		        
+		        rem -- overwrite the file 
+		        #writeCdfFile(reorderedCdfMap!,cdfFile!.getAbsolutePath())
+		    wend 
+		    git!.commitAll(1,"BBJ UPGRADE WIZARD: Check in reordered CDFs. Do not cherry-pick this commit.")
+		methodend 
+		
 classend
