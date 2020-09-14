@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2020-09-03
+ Report Date:   2020-09-14
  Report Branch: AddonSoftware 20.20
  Last Release:  AddonSoftware 20.12
 =======================================================================================================================================
@@ -187,3 +187,15 @@ Modified: data/bar/poe_invhdr.xml
 Modified: data/bar/poe_invsel.xml
 Modified: data/cdf/poe_invhdr.cdf
 Modified: data/cdf/poe_invsel.cdf
+
+=======================================================================================================================================
+Revision: 8449058d8f3ba49d48653354fde986e8e3843a52
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 9/14/2020 8:58:19 AM
+Message:
+Bug 10023: Removed error branch on sqlfetch in able_backup_sync_dir
+subroutine of adx_upgradewiz.cdf so can get helpful error message if it
+fails, which it shouldn't.
+----
+Modified: data/bar/adx_upgradewiz.xml
+Modified: data/cdf/adx_upgradewiz.cdf
