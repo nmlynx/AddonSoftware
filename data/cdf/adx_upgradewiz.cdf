@@ -960,7 +960,7 @@ able_backup_sync_dir: rem --- Enable/disable input field for sync backup directo
 		sqlprep(sql_chan)sql_prep$
 		dim select_tpl$:sqltmpl(sql_chan)
 		sqlexec(sql_chan)
-		select_tpl$=sqlfetch(sql_chan,err=*break) 
+		select_tpl$=sqlfetch(sql_chan) ; rem --- Something is wrong if this fails, so let it error to get helpful message.
 		adb_version$=cvs(select_tpl.version_id$,3)
 		sqlclose(sql_chan)
 	endif
