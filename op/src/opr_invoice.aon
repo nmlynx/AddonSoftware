@@ -30,6 +30,7 @@ rem --- Retrieve the program path
 
 rem --- For type checking
 
+    use java.util.TreeMap
     use ::sys/prog/bao_option.bbj::Option
     
     declare Option option!
@@ -60,6 +61,7 @@ rem --- Assign form input values to local variables
 
     rem *** what does this do? restart$ = option!.getOptionData("pick_check"); rem p6$
     cust_id$ = option!.getOptionData("customer_id"); rem p5$
+    report_sequence$ = option!.getOptionData("report_sequence"); rem p5$
 
 rem --- Initialize Data
 
@@ -68,6 +70,7 @@ rem --- Initialize Data
     
     custIds!  = BBjAPI().makeVector()
     orderNos! = BBjAPI().makeVector()
+    invoiceNos! = new TreeMap()
     
     start_block = 1
 
@@ -127,6 +130,7 @@ rem --- Check to see if record is in use in Invoice Entry
         
         custIds!.addItem( ope01a.customer_id$ )
         orderNos!.addItem( ope01a.order_no$ )
+        invoiceNos!.put(ope01a.ar_inv_no$,ope01a.customer_id$+"::"+ope01a.order_no$)
         
     wend
     read(ope01_dev,end=*next); rem release extract
@@ -137,6 +141,21 @@ rem --- Did we find any invoices to print?
         msg_id$="DOC_OUTPUT_NODATA"
         gosub disp_message
         goto std_exit
+    endif
+
+rem --- Re-sort custIds! and orderNos! in Invoice number order
+    if report_sequence$="I" then
+        custIds!.clear()
+        orderNos!.clear()
+    
+        invoiceIter!=invoiceNos!.keySet().iterator()
+        while invoiceIter!.hasNext()
+            invoiceNo$=invoiceIter!.next()
+            customer_order$=invoiceNos!.get(invoiceNo$)
+            xpos=pos("::"=customer_order$)
+            custIds!.addItem(customer_order$(1,xpos-1))
+            orderNos!.addItem(customer_order$(xpos+2))
+        wend
     endif
     
 rem --- Call the invoice printing program with the vectors
