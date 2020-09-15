@@ -211,3 +211,14 @@ sequence.
 ----
 Modified: data/bar/opr_invoice.xml
 Modified: op/src/opr_invoice.aon
+
+=======================================================================================================================================
+Revision: 427f8bec17f91faaa923c3bc75d72227428d7f72
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 9/15/2020 3:30:11 PM
+Message:
+Bug 10025: Modified ReportControl::addToDocQueue() method to always
+execute getRecipientInfo() method instead of making it dependent on the
+value of RecipientFound%.
+----
+Modified: ad/src/ado_rptControl.src
