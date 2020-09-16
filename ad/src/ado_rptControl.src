@@ -145,10 +145,8 @@ class public ReportControl
 
     method public void addToDocQueue(BBjString rpt_id$,BBjString customer_id$,BBjString vendor_id$,BBjString doc_no$)
     
-		REM if we don't have the recipient info, go retrieve it. 
-        if !#RecipFound% then  
-			#getRecipientInfo(rpt_id$,customer_id$,vendor_id$)
-        fi 
+        REM retrieve recipient info 
+        #RecipFound%=#getRecipientInfo(rpt_id$,customer_id$,vendor_id$)
 		
 		REM If we now have the recipient info, then send the reports out. 
 		if #RecipFound% then 
