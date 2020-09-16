@@ -66,6 +66,9 @@ rem  */
         
         field protected FixedIssuesReader fixedIssuesReader!
         
+        field public BBjString ReorderedTagName!
+        field public BBjString FullReorderedTagName!
+        
         rem /**
         rem  * Constructor.
         rem  * Clones Git repository to specified location if one does not already exist there.
@@ -98,6 +101,8 @@ rem  */
             #LocalBranch$="heads/"+branchName$
             #RemoteBranch$="remotes/origin/"+branchName$
             #ReleaseTag$="refs/tags/"+branchName$+"_Release"
+            #ReorderedTagName!=branchName$+"_Reordered"
+            #FullReorderedTagName!="refs/tags/"+#ReorderedTagName!
             
             methodret
             
@@ -407,6 +412,15 @@ getConflicts_error:rem --- Method error trap/handler (11Oct2017)
             
             if remoteCommits!<>null() and localCommits!<>null()
                 localCommits!.removeAll(remoteCommits!)
+                
+                REM Exclude the reordering commit if it's present
+                declare RevCommit reorderedCommit!
+                reorderedCommit!=#getCommitId(#FullReorderedTagName!)
+                if reorderedCommit!<> null then 
+                    localCommits!.remove(reorderedCommit!)
+                endif 
+                escape 
+                
                 commitIter!=localCommits!.iterator()
                 while (commitIter!.hasNext())
                     commit!=commitIter!.next()
@@ -995,6 +1009,14 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
             endif 
             
         methodend 
+        
+        method public void tagCurrentCommit(BBjString tagName!)
+            if tagName!=null() then throw "tagName! can not be null!",17
+            tagName!=tagName!.trim()
+            if tagName!=$$ then throw "tagName! can not be blank!",17
+            
+            #git!.tag().setAnnotated(0).setName(tagName!).call()
+        methodend 
 
 classend
 
@@ -1062,6 +1084,5 @@ class public AO_FixedIssuesReader
         
         methodret 1 
         
-    methodend 
-    
+    methodend     
 classend 

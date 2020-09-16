@@ -34,6 +34,9 @@ rem  */
         field protected BBjString SKIP_STRING!=".*setStatus\(\"+$22$+"([^-\r]*)-?SKIP-?(.*)\"+$22$+"\).*"
         field protected BBjString KEY_PATTERN!="^\s*\[\[.*\]\]"
         
+        REM Signifies whether we should explicitly mark headers and skipped lines from mods in the merged file
+        field public BBjNumber MakeAnnotations=1
+        
         rem /**
         rem  * Constructor.
         rem  */
@@ -89,7 +92,12 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
                 if (custom!) then
                     newKey!=#desuffix(modKey!)
                     body!=cast(BBjString,modsCallpoints!.get(modKey!))
-                    body!=newKey!+$0A$+"REM *** Custom from mods ***"+$0A$+"REM    "+body!.replace("[[","").replace("]]","")
+                    if (#MakeAnnotations) then 
+                        body!=newKey!+$0A$+"REM *** Custom from mods ***"+$0A$+"REM    "+body!.replace("[[","").replace("]]","")
+                    else 
+                        ndx=body!.indexOf($0A$)
+                        body!=newKey!+$0A$+body!.substring(ndx+1)
+                    endif 
                     aonCallpoints!.put(newKey!,body!)
                     continue
                 endif 
@@ -110,12 +118,22 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
                 
                 REM -- REM the header line of the addon callpoint
                 if (aonBody!<>null()) then
-                    aonBody!="REM    "+aonBody!.replace("[[","").replace("]]","")
+                    if (#MakeAnnotations) then 
+                        aonBody!="REM    "+aonBody!.replace("[[","").replace("]]","")
+                    else 
+                        ndx=aonBody!.indexOf($0A$)
+                        aonBody!=aonBody!.substring(ndx+1)
+                    endif 
                 endif 
 
                 REM -- REM the header line of the mods callpoint 
                 if (modsBody!<>null()) then
-                    modsBody!="REM    "+modsBody!.replace("[[","").replace("]]","")
+                    if (#MakeAnnotations) then 
+                        modsBody!="REM    "+modsBody!.replace("[[","").replace("]]","")
+                    else 
+                        modsBody!.indexOf($0A$)
+                        modsBody!=modsBody!.substring(ndx+1)
+                    endif 
                 else 
                     REM -- Throw an error on a null mods callpoint.  This should not be able to happen, so something is wrong
                     throw "Mods callpoint is completely empty.  This should never happen.",17
@@ -123,7 +141,7 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
 
                 rem -- there's a before or after callpoint in mods that's not defined at all in core 
                 if aonBody!=null() then 
-                    body!=aonKey!+$0A$+"REM *** Callpoint from mods that's not in core ***"+$0A$+modsBody!
+                    body!=aonKey!+$0A$+iff(#MakeAnnotations,"REM *** Callpoint from mods that's not in core ***"+$0A$,$$)+modsBody!
                     body!=#replaceSkips(body!)
                     aonCallpoints!.put(aonKey!,body!)
                     continue
@@ -131,16 +149,16 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
                 
                 rem -- append after callpoint to core callpoint 
                 if suffix!="A" then 
-                    body!=aonKey!+$0A$+"REM *** Core + After: Core ***"+$0A$+aonBody!+$0A$+"REM *** Core + After: After ***"+$0A$+modsBody!
+                    body!=aonKey!+$0A$+iff(#MakeAnnotations,"REM *** Core + After: Core ***"+$0A$,$$)+aonBody!+$0A$+iff(#MakeAnnotations,"REM *** Core + After: After ***"+$0A$,$$)+modsBody!
                 endif 
                 
                 rem -- if before without skip, append the core callpoint to the before callpoint, otherwise, replace the core 
                 if suffix!="B" then
                     if (#isSkipPresent(modsBody!)) then
                         modsBody!=#replaceSkips(modsBody!)
-                        body!=aonKey!+$0A$+"REM *** Before with skip ***"+$0A$+modsBody!
+                        body!=aonKey!+$0A$+iff(#MakeAnnotations,"REM *** Before with skip ***"+$0A$,$$)+modsBody!
                     else 
-                        body!=aonKey!+$0A$+"REM *** Before without skip + Core: Before ***"+$0A$+modsBody!+$0A$+"REM *** Before without skip + Core: Core ***"+$0A$+aonBody!
+                        body!=aonKey!+$0A$+iff(#MakeAnnotations,"REM *** Before without skip + Core: Before ***"+$0A$,$$)+modsBody!+$0A$+iff(#MakeAnnotations,"REM *** Before without skip + Core: Core ***"+$0A$,$$)+aonBody!
                     endif 
                 endif 
                 
@@ -550,6 +568,7 @@ writeCdf_error:rem --- Method error trap/handler (11Oct2017)
 		        #writeCdfFile(reorderedCdfMap!,cdfFile!.getAbsolutePath())
 		    wend 
 		    git!.commitAll(1,"BBJ UPGRADE WIZARD: Check in reordered CDFs. Do not cherry-pick this commit.")
+		    git!.tagCurrentCommit(git!.getReorderedTagName())
 		methodend 
 		
 classend
