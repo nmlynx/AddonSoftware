@@ -2,8 +2,7 @@ rem ==========================================================================
 rem --- adx_upgradewiz.aon 
 rem --- Utility to automate Addon ugrade.
 rem --- 
-rem --- AddonSoftware
-rem --- since version 11.11
+rem --- AddonSoftware Version 11.11
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
 
@@ -139,7 +138,6 @@ rem --- Is this a restart after resolving Git conflicts?
             wend
 
             close(restart_dev,err=*next)
-            erase restartFile$,err=*next
 
             rem --- Build aonStblMap! for restart
             app$=appName$
@@ -149,7 +147,6 @@ rem --- Is this a restart after resolving Git conflicts?
             goto restartUpgrade
         else
             close(restart_dev,err=*next)
-            erase restartFile$,err=*next
         endif
     endif
     close(restart_dev,err=*next)
@@ -207,54 +204,18 @@ rem --- Process upgrade from either a Git based installation or a non-Git based 
         rem --- Clone Git repository and switch/checkout to old branch/tag
         gosub cloneGitRepo
         if status then goto done
-        
+
         rem --- Get version of old install
         repoInterface!=new GitRepoInterface(newAonDir$)
         branch$=repoInterface!.getBranch(); rem --- BBJnnnnGA
         oldVersion$=branch$(4,4)
-        
-        rem --- Reorder CDF files in old version to match the order of the CDFs in the new version
-        declare CdfMassager cdfMassager!
-        cdfMassager!=new CdfMassager() 
-        rem --- --- retrieve our commit from the remote branch because we have not checked out the new branch yet.
-        branchName$="BBJ"+newVersion$+"GA"
-        cdfMassager!.reorderAndCommitCDFs(newAonDir$+"/data/cdf/",repoInterface!,"refs/remotes/origin/"+branchName$)
-        
         repoInterface!.closeInterface()
 
-        rem --- We don't want to overwrite the CDFs that we just reordered to match the upgraded version, 
-        rem --- so rename the CDF directory 
-        declare BBjString cdfDirName!
-        declare BBjString newCdfDirName!
-        declare BBjString oldCdfDirName!
-        declare java.io.File cdfDir!
-        declare java.io.File newCdfDir!
-        declare java.io.File oldCdfDir!
-        declare CdfMassager cm!
-        
-        rem -- rename the existing CDF directory to cdf_reordered
-        cdfDirName!=newAonDir$+"/data/cdf"
-        newCdfDirName!=newAonDir$+"/data/cdf_reordered"
-        cdfDir!=new java.io.File(cdfDirName!)
-        newCdfDir!=new java.io.File(newCdfDirName!)
-        cdfDir!.renameTo(newCdfDir!)
-        
         rem --- Copy old instance of aon from old location to new location
         requiredFiles%=0
         copyData%=0
         help%=0
         gosub copyAon
-        
-        rem --- use the CDFMassager to copy user's changes into the reordered CDFs 
-        cm!=new CdfMassager()
-        cm!.setMakeAnnotations(0)
-        cm!.importModChanges(cdfDirName!,newCdfDirName!)
-        
-        rem --- rename cdf to cdf_old and cdf_reordered to cdf 
-        oldCdfDirName!=newAonDir$+"/data/cdf_old"
-        oldCdfDir!=new java.io.File(oldCdfDirName!)
-        cdfDir!.renameTo(oldCdfDir!)
-        newCdfDir!.renameTo(cdfDir!)
 
         rem --- Run Copy Application utility for applications being copied
         gosub copyApps
@@ -664,6 +625,13 @@ done: rem --- All done
     logDir!=new File(logDir$)
     logDir!.delete()
 
+    rem --- Rename restartUpgradeWizard.txt file
+    restartFile!=new File(restartFile$)
+    if restartFile!.exists() then
+        restartBakFile!=new File(restartFile$ + ".bak")
+        restartFile!.renameTo(restartBakFile!)
+    endif
+
     goto std_exit
 
 copyAon: rem --- Recursively copy aon from oldLocation to newAonDir
@@ -675,7 +643,7 @@ copyAon: rem --- Recursively copy aon from oldLocation to newAonDir
     gosub disp_meter
     print(log_dev)meter_text$
     print(log_dev)"    Copy "+oldAonDir$
-    
+
     rem --- requiredFiles%,copyData%,help% are incoming; for git-based (i.e., version-neutral), copy data (demo data), for non-git, do NOT copy data.
     call pgmdir$+"adc_copyaon.aon",oldAonDir$,newAonDir$,requiredFiles%,copyData%,help%,rdForm!,0,status
     
@@ -689,7 +657,6 @@ copyAon: rem --- Recursively copy aon from oldLocation to newAonDir
             logFile!.delete()
         wend
     endif
-        
     return
 
 moveModsDataBarDelta: rem --- Move mods/data/bar/delta XMLs to Addon location
