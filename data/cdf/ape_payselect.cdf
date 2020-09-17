@@ -1,14 +1,438 @@
-[[APE_PAYSELECT.PAYMENT_METHOD.AVAL]]
-rem --- Set filters on grid if value was changed
-	if callpoint!.getUserInput()<>callpoint!.getDevObject("prev_payment_method") then
-		gosub filter_recs
+[[APE_PAYSELECT.ACUS]]
+rem --- Process custom event
+rem --- Select/de-select checkboxes in grid and edit payment and discount amounts
 
-		rem --- For ListButton capture new selection in case it's changed again without leaving control
-		callpoint!.setDevObject("prev_payment_method",callpoint!.getUserInput())
+rem This routine is executed when callbacks have been set to run a 'custom event'.
+rem Analyze gui_event$ and notice$ to see which control's callback triggered the event, and what kind of event it is.
+rem See basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info.
+
+	dim gui_event$:tmpl(gui_dev)
+	dim notify_base$:noticetpl(0,0)
+	gui_event$=SysGUI!.getLastEventString()
+	ctl_ID=dec(gui_event.ID$)
+	new_popup_index=-1
+
+	if ctl_ID <> num(user_tpl.gridInvoicesCtlID$) then break; rem --- exit callpoint
+	gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
+	rowsSelected! = gridInvoices!.getSelectedRows()
+	numcols = gridInvoices!.getNumColumns()
+	vectInvoices! = UserObj!.getItem(num(user_tpl.vectInvoicesOfst$))
+	vectInvoicesMaster! = UserObj!.getItem(num(user_tpl.vectInvoicesMasterOfst$))
+	statusVect! = callpoint!.getDevObject("status_vect")
+    
+	rem --- Get selected pop-up menu item
+	if gui_event.code$="P"
+		popUpMenu!=gridInvoices!.getPopupMenu()
+		menuItem!=popUpMenu!.getMenuItem(gui_event.y)
+        if gui_event.y=400
+            gosub undo_pay_auth
+        else
+            if gui_event.y=300
+                gosub view_images
+            else
+                new_popup_index=gui_event.y-200
+                gosub change_invoice_status
+            endif
+		endif
 	endif
-[[APE_PAYSELECT.PAYMENT_METHOD.BINP]]
+
+	if gui_event.code$="N"
+		notify_base$=notice(gui_dev,gui_event.x%)
+		dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
+		notice$=notify_base$
+		curr_row = dec(notice.row$)
+		curr_col = dec(notice.col$)
+
+		switch notice.code
+			case 18; rem --- right_mouse_down
+                     rem --- see to it that a right click to get popup menu also selects the clicked row when there are no other rows selected
+                     rem --- also disable the 'undo' menu option unless using pay auth and only one row is selected
+                
+                menuItem_undo!=callpoint!.getDevObject("menu_undo")                     
+                     
+				if !rowsSelected!.size()
+					gridInvoices!.setSelectedRow(curr_row)
+                    if menuItem_undo!<>null() then menuItem_undo!.setEnabled(1)
+				endif
+                
+                if menuItem_undo!<>null()
+                    if rowsSelected!.size()>1
+                        menuItem_undo!.setEnabled(0)
+                    else
+                        menuItem_undo!.setEnabled(1)
+                    endif
+                endif
+
+			break
+
+			case 7; rem --- edit_stop
+
+				apm01_dev = fnget_dev("APM_VENDMAST")
+				dim apm01a$:fnget_tpl$("APM_VENDMAST")
+				apt01_dev = fnget_dev("APT_INVOICEHDR")
+				dim apt01a$:fnget_tpl$("APT_INVOICEHDR")
+				chk_payments=num(callpoint!.getDevObject("chk_payments"))
+				ach_payments=num(callpoint!.getDevObject("ach_payments"))
+				tot_payments=num(callpoint!.getDevObject("tot_payments"))
+
+				if gridInvoices!.getCellState(curr_row,7) 
+					msg_id$="AP_INV_RMVHOLD"
+					gosub disp_message
+					if msg_opt$<>"Y"
+						gridInvoices!.setCellText(curr_row,12,str(0))
+						gridInvoices!.setCellText(curr_row,13,str(0))
+						break
+					endif
+				endif
+
+				rem --- Discount Amount
+				
+				if curr_col = 12 then
+					ap_type$ = gridInvoices!.getCellText(curr_row,3)
+					vend_id$ = gridInvoices!.getCellText(curr_row,4)
+					inv_no$ = gridInvoices!.getCellText(curr_row,6)
+					inv_amt  = num(gridInvoices!.getCellText(curr_row,11))
+					disc_amt = num(gridInvoices!.getCellText(curr_row,12))
+					pmt_amt  = num(gridInvoices!.getCellText(curr_row,13))
+					retent_amt = num(gridInvoices!.getCellText(curr_row,14))
+					gosub get_master_offset
+					orig_inv_amt = num(vectInvoicesMaster!.getItem((mast_offset)+19))
+					if gridInvoices!.getCellStyle(row_no,2)=SysGUI!.GRID_STYLE_CHECKED then
+						ach_payments=ach_payments-pmt_amt
+					else
+						chk_payments=chk_payments-pmt_amt
+					endif
+					tot_payments=tot_payments-pmt_amt;rem back out old payment in prep for adding new one
+
+					if sgn(disc_amt) <> sgn(orig_inv_amt) then 
+						disc_amt = abs(disc_amt) * sgn(orig_inv_amt)
+						gridInvoices!.setCellText(curr_row,12,str(disc_amt))
+					endif
+
+					if abs(disc_amt) <> abs(orig_inv_amt) - abs(retent_amt) - abs(pmt_amt)
+						if pmt_amt=0 or abs(disc_amt) > abs(orig_inv_amt) - abs(retent_amt) - abs(pmt_amt)  then 
+							pmt_amt = (abs(orig_inv_amt) - abs(retent_amt) - abs(disc_amt)) * sgn(orig_inv_amt)
+							gridInvoices!.setCellText(curr_row,13,str(pmt_amt))
+						endif
+						inv_amt = orig_inv_amt -  (abs(retent_amt) + abs(disc_amt) + abs(pmt_amt)) * sgn(orig_inv_amt)
+						gridInvoices!.setCellText(curr_row,11,str(inv_amt))
+					endif
+                  
+                    rem --- if not using pay auth, changing disc/pay amounts does auto-select
+                    if !callpoint!.getDevObject("use_pay_auth")                    
+                        if disc_amt<>0 or inv_amt<>0 then
+                            dummy = fn_setmast_flag(
+:								vectInvoices!.getItem(curr_row*numcols+3),
+:								vectInvoices!.getItem(curr_row*numcols+4),
+:								vectInvoices!.getItem(curr_row*numcols+6),
+:								"1",
+:								str(pmt_amt)
+:							    )
+
+                                vectInvoices!.setItem(curr_row * numcols, "1")
+                                gridInvoices!.setCellText(curr_row,0,statusVect!.get(1))
+                                gridInvoices!.setRowFont(curr_row,callpoint!.getDevObject("bold_font"))
+
+                        else 
+                            dummy = fn_setmast_flag(
+:								vectInvoices!.getItem(curr_row*numcols+3),
+:								vectInvoices!.getItem(curr_row*numcols+4),
+:								vectInvoices!.getItem(curr_row*numcols+6),
+:								"0",
+:								"0"
+:							    )
+
+                                vectInvoices!.setItem(curr_row * numcols, "0")
+                                gridInvoices!.setCellText(curr_row,0,statusVect!.get(0))
+                                gridInvoices!.setRowFont(curr_row,callpoint!.getDevObject("plain_font"))
+						endif
+					endif
+
+					vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+12,str(disc_amt))
+					vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+13,str(pmt_amt))
+					dummy = fn_setmast_amts(
+:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+3),
+:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+4),
+:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+6),
+:						str(disc_amt),
+:						str(pmt_amt)
+:					    )
+
+                    if !callpoint!.getDevObject("use_pay_auth")
+                        if pmt_amt=0 then
+                            rem --- de-select payment
+                            x=curr_row
+                            selected_flag$="0"
+                            selected=0
+                            gosub selected_or_fully_approved
+                            curr_row=x
+                        else
+                            dummy = fn_setmast_flag(
+:								vectInvoices!.getItem(curr_row*numcols+3),
+:								vectInvoices!.getItem(curr_row*numcols+4),
+:								vectInvoices!.getItem(curr_row*numcols+6),
+:								"1",
+:								str(pmt_amt)
+:							    )
+
+                                vectInvoices!.setItem(curr_row * numcols, "1")
+                                gridInvoices!.setCellText(curr_row,0,statusVect!.get(1))
+                                gridInvoices!.setRowFont(curr_row,callpoint!.getDevObject("bold_font"))
+						endif
+					endif
+
+					inv_amt = orig_inv_amt -  (abs(retent_amt) + abs(disc_amt) + abs(pmt_amt)) * sgn(orig_inv_amt)
+					gridInvoices!.setCellText(curr_row,11,str(inv_amt))
+					vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+12,str(disc_amt))
+					vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+13,str(pmt_amt))
+					dummy = fn_setmast_amts(
+:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+3),
+:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+4),
+:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+6),
+:						str(disc_amt),
+:						str(pmt_amt)
+:					)
+					if gridInvoices!.getCellStyle(row_no,2)=SysGUI!.GRID_STYLE_CHECKED then
+						ach_payments=ach_payments+num(vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+13))
+					else
+						chk_payments=chk_payments+num(vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+13))
+					endif
+					tot_payments=tot_payments+num(vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+13))
+				endif
+
+				rem --- Payment Amount
+
+				if curr_col=13
+
+					rem --- re-initialize
+					apm01_dev = fnget_dev("APM_VENDMAST")
+					dim apm01a$:fnget_tpl$("APM_VENDMAST")
+					apt01_dev = fnget_dev("APT_INVOICEHDR")
+					dim apt01a$:fnget_tpl$("APT_INVOICEHDR")
+					apt11_dev = fnget_dev("APT_INVOICEDET")
+					dim apt11a$:fnget_tpl$("APT_INVOICEDET")
+					vend$ = gridInvoices!.getCellText(curr_row,4)
+
+					read record (apt01_dev, key=firm_id$+
+:						gridInvoices!.getCellText(curr_row,3)+
+:						vend$+
+:						gridInvoices!.getCellText(curr_row,6), dom=*next) apt01a$
+					
+					read record(apt11_dev, key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$, dom=*next)
+					while 1
+						readrecord(apt11_dev,end=*break)apt11a$
+						if pos(firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$ =
+:							    firm_id$+apt11a.ap_type$+apt11a.vendor_id$+apt11a.ap_inv_no$) <> 1 
+:						then 
+							break
+						endif
+
+						apt01a.invoice_amt = apt01a.invoice_amt + apt11a.trans_amt
+						apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
+					wend
+
+	                if apt01a.discount_amt<0 and apt01a.invoice_amt>0 then apt01a.discount_amt=0
+					gridInvoices!.setCellText(curr_row, 11, str(str(apt01a.invoice_amt - apt01a.retention - apt01a.discount_amt)))
+
+					if callpoint!.getColumnData("APE_PAYSELECT.INCLUDE_DISC")="Y" or
+:						apt01a.disc_date$ >= sysinfo.system_date$
+:					then
+						gridInvoices!.setCellText(curr_row, 12, apt01a.discount_amt$)
+					else
+						gridInvoices!.setCellText(curr_row, 12, "0.00")
+					endif
+
+					rem --- Now calculate proper Amt Due, Payment and Discount amounts
+
+					ap_type$ = gridInvoices!.getCellText(curr_row,3)
+					vend_id$ = gridInvoices!.getCellText(curr_row,4)
+					inv_no$ = gridInvoices!.getCellText(curr_row,6)
+					inv_amt  = num(gridInvoices!.getCellText(curr_row,11))
+					disc_amt = num(gridInvoices!.getCellText(curr_row,12))
+					pmt_amt  = num(gridInvoices!.getCellText(curr_row,13))
+					retent_amt = num(gridInvoices!.getCellText(curr_row,14))
+					gosub get_master_offset
+					orig_inv_amt = num(vectInvoicesMaster!.getItem((mast_offset)+19))
+					if gridInvoices!.getCellStyle(row_no,2)=SysGUI!.GRID_STYLE_CHECKED then
+						ach_payments=ach_payments-num(vectInvoicesMaster!.getItem((mast_offset)+14))
+					else
+						chk_payments=chk_payments-num(vectInvoicesMaster!.getItem((mast_offset)+14))
+					endif
+					tot_payments=tot_payments-num(vectInvoicesMaster!.getItem((mast_offset)+14));rem back out old payment in prep for adding new one
+					if sgn(pmt_amt) <> sgn(orig_inv_amt) then 
+						pmt_amt = abs(pmt_amt) * sgn(orig_inv_amt)
+						gridInvoices!.setCellText(curr_row,13,str(pmt_amt))
+					endif
+
+					if abs(pmt_amt)>abs(inv_amt)+abs(disc_amt)
+						pmt_amt=(abs(inv_amt)+abs(disc_amt))*sgn(orig_inv_amt)
+						gridInvoices!.setCellText(curr_row,13,str(pmt_amt))
+					endif
+
+					if abs(disc_amt)=0
+						if abs(pmt_amt)>abs(inv_amt)
+							pmt_amt=inv_amt
+							gridInvoices!.setCellText(curr_row,13,str(pmt_amt))
+						endif
+					endif
+
+					if abs(disc_amt)>0					
+						if abs(pmt_amt)-abs(disc_amt)>=abs(inv_amt)
+							disc_amt=(abs(orig_inv_amt)-abs(inv_amt)-abs(disc_amt)) * sgn(orig_inv_amt)
+							gridInvoices!.setCellText(curr_row,12,str(disc_amt))
+						endif
+					endif
+
+					if abs(pmt_amt) > abs(orig_inv_amt) - abs(retent_amt) - abs(disc_amt) then 
+						disc_amt = (abs(orig_inv_amt) - abs(retent_amt) - abs(pmt_amt)) * sgn(orig_inv_amt)
+						gridInvoices!.setCellText(curr_row,12,str(disc_amt))
+					endif
+
+					rem --- if not using pay auth, changing disc/pay amounts does auto-select
+					if !callpoint!.getDevObject("use_pay_auth")
+						if pmt_amt=0 then
+							rem --- de-select payment
+							dummy = fn_setmast_flag(
+:								vectInvoices!.getItem(curr_row*numcols+3),
+:								vectInvoices!.getItem(curr_row*numcols+4),
+:								vectInvoices!.getItem(curr_row*numcols+6),
+:								"0",
+:								"0"
+:							)
+
+							vectInvoices!.setItem(curr_row * numcols, "0")
+							gridInvoices!.setCellText(curr_row,0,statusVect!.get(0))
+							gridInvoices!.setRowFont(curr_row,callpoint!.getDevObject("plain_font"))
+						else
+							dummy = fn_setmast_flag(
+:								vectInvoices!.getItem(curr_row*numcols+3),
+:								vectInvoices!.getItem(curr_row*numcols+4),
+:								vectInvoices!.getItem(curr_row*numcols+6),
+:								"1",
+:								str(pmt_amt)
+:							)
+
+							vectInvoices!.setItem(curr_row * numcols, "1")
+							gridInvoices!.setCellText(curr_row,0,statusVect!.get(1))
+							gridInvoices!.setRowFont(curr_row,callpoint!.getDevObject("bold_font"))
+						endif
+					endif
+
+					inv_amt = orig_inv_amt -  (abs(retent_amt) + abs(disc_amt) + abs(pmt_amt)) * sgn(orig_inv_amt)
+					gridInvoices!.setCellText(curr_row,11,str(inv_amt))
+					vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+12,str(disc_amt))
+					vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+13,str(pmt_amt))
+					dummy = fn_setmast_amts(
+:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+3),
+:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+4),
+:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+6),
+:						str(disc_amt),
+:						str(pmt_amt)
+:					)
+					if gridInvoices!.getCellStyle(row_no,2)=SysGUI!.GRID_STYLE_CHECKED then
+						ach_payments=ach_payments+num(vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+13))
+					else
+						chk_payments=chk_payments+num(vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+13))
+					endif
+					tot_payments=tot_payments+num(vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+13))
+				endif
+				callpoint!.setDevObject("chk_payments",str(chk_payments))
+				callpoint!.setDevObject("ach_payments",str(ach_payments))
+				callpoint!.setDevObject("tot_payments",str(tot_payments))
+			break
+		swend
+
+		chk_payments=num(callpoint!.getDevObject("chk_payments"))
+		ach_payments=num(callpoint!.getDevObject("ach_payments"))
+		tot_payments=num(callpoint!.getDevObject("tot_payments"))
+		callpoint!.setColumnData("<<DISPLAY>>.CHK_PAYMENTS",str(chk_payments),1)
+		callpoint!.setColumnData("<<DISPLAY>>.ACH_PAYMENTS",str(ach_payments),1)
+		callpoint!.setColumnData("<<DISPLAY>>.TOT_PAYMENTS",str(tot_payments),1)
+
+[[APE_PAYSELECT.ADIS]]
+rem --- Update grid with saved selections
+	gosub filter_recs
+
+rem --- Update payments fields (include payments for previous selection)
+	callpoint!.setColumnData("<<DISPLAY>>.CHK_PAYMENTS",str(callpoint!.getDevObject("chk_payments")),1)
+	callpoint!.setColumnData("<<DISPLAY>>.ACH_PAYMENTS",str(callpoint!.getDevObject("ach_payments")),1)
+	callpoint!.setColumnData("<<DISPLAY>>.TOT_PAYMENTS",str(callpoint!.getDevObject("tot_payments")),1)
+
+[[APE_PAYSELECT.AOPT-PROC]]
+rem --- Process selected rows
+rem --- If no pay auth, this is a simple select/de-select toggle
+rem --- With pay auth, sets to reviewed or approved (prelim or final) according to current user's role
+
+	gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
+	rowsSelected! = gridInvoices!.getSelectedRows()
+	numcols = gridInvoices!.getNumColumns()
+	vectInvoices! = UserObj!.getItem(num(user_tpl.vectInvoicesOfst$))
+	vectInvoicesMaster! = UserObj!.getItem(num(user_tpl.vectInvoicesMasterOfst$))
+	statusVect! = callpoint!.getDevObject("status_vect")
+	gosub change_invoice_status
+
+[[APE_PAYSELECT.AOPT-UNDO]]
+rem --- When using pay auth, allow undo on a line-by-line basis
+
+	gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
+	rowsSelected! = gridInvoices!.getSelectedRows()
+	numcols = gridInvoices!.getNumColumns()
+	vectInvoices! = UserObj!.getItem(num(user_tpl.vectInvoicesOfst$))
+	vectInvoicesMaster! = UserObj!.getItem(num(user_tpl.vectInvoicesMasterOfst$))
+	statusVect! = callpoint!.getDevObject("status_vect")
+    
+	gosub  undo_pay_auth
+
+[[APE_PAYSELECT.AOPT-VIEW]]
+rem --- When using pay auth, bring up previously scanned invoice for for review
+
+	gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
+	rowsSelected! = gridInvoices!.getSelectedRows()
+	numcols = gridInvoices!.getNumColumns()
+	vectInvoices! = UserObj!.getItem(num(user_tpl.vectInvoicesOfst$))
+	vectInvoicesMaster! = UserObj!.getItem(num(user_tpl.vectInvoicesMasterOfst$))
+	statusVect! = callpoint!.getDevObject("status_vect")
+    
+	gosub view_images
+
+[[APE_PAYSELECT.AP_INV_NO.AVAL]]
+rem --- Set filters on grid if value was changed
+	if callpoint!.getUserInput()<>callpoint!.getDevObject("prev_inv_no") then
+		gosub filter_recs
+	endif
+
+[[APE_PAYSELECT.AP_INV_NO.BINP]]
 rem --- Capture current value so will know in AVAL if it's changed
-	callpoint!.setDevObject("prev_payment_method",callpoint!.getColumnData("APE_PAYSELECT.PAYMENT_METHOD"))
+	callpoint!.setDevObject("prev_inv_no",callpoint!.getColumnData("APE_PAYSELECT.AP_INV_NO"))
+
+[[APE_PAYSELECT.AP_TYPE.AVAL]]
+rem --- Set filters on grid if value was changed
+	if callpoint!.getUserInput()<>callpoint!.getDevObject("prev_ap_type") then
+		gosub filter_recs
+	endif
+
+[[APE_PAYSELECT.AP_TYPE.BINP]]
+rem --- Capture current value so will know in AVAL if it's changed
+	callpoint!.setDevObject("prev_ap_type",callpoint!.getColumnData("APE_PAYSELECT.AP_TYPE"))
+
+[[APE_PAYSELECT.ARAR]]
+rem --- If mult AP types = N, disable AP Type field
+
+	if callpoint!.getDevObject("multi_types")<>"Y" then 
+		callpoint!.setColumnEnabled("APE_PAYSELECT.AP_TYPE", 0)
+	endif
+
+rem --- Disable the entire Retention column (does this do anything?)
+
+	gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
+	util.disableGridColumn(gridInvoices!, user_tpl.retention_col)
+
+rem --- Display calculated total payments
+
+	callpoint!.setColumnData("<<DISPLAY>>.CHK_PAYMENTS",str(callpoint!.getDevObject("chk_payments")),1)
+	callpoint!.setColumnData("<<DISPLAY>>.ACH_PAYMENTS",str(callpoint!.getDevObject("ach_payments")),1)
+	callpoint!.setColumnData("<<DISPLAY>>.TOT_PAYMENTS",str(callpoint!.getDevObject("tot_payments")),1)
+
 [[APE_PAYSELECT.AREC]]
 rem --- Set default Payment Methods
 	if callpoint!.getDevObject("ach_allowed") then
@@ -16,6 +440,434 @@ rem --- Set default Payment Methods
 	else
 		callpoint!.setColumnData("APE_PAYSELECT.PAYMENT_METHOD","C")
 	endif
+
+rem --- Refresh grid
+	gosub filter_recs
+
+[[APE_PAYSELECT.ASIZ]]
+rem --- Resize the grid
+
+	if UserObj!<>null() then
+		gridInvoices!=UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
+		gridInvoices!.setSize(Form!.getWidth()-(gridInvoices!.getX()*2),Form!.getHeight()-(gridInvoices!.getY()+10))
+		gridInvoices!.setFitToGrid(1)
+	endif
+
+[[APE_PAYSELECT.ASVA]]
+rem --- Update apt-01 (remove/write) based on what's checked in the grid
+
+	apt01_dev = fnget_dev("APT_INVOICEHDR")
+	dim apt01a$:fnget_tpl$("APT_INVOICEHDR")
+	ape04_dev = fnget_dev("APE_CHECKS")
+	dim ape04a$:fnget_tpl$("APE_CHECKS")
+	apt11_dev = fnget_dev("APT_INVOICEDET")
+	dim apt11a$:fnget_tpl$("APT_INVOICEDET")
+
+	vectInvoicesMaster! = UserObj!.getItem(num(user_tpl.vectInvoicesMasterOfst$))
+
+	if vectInvoicesMaster!.size()
+rem --- First check to see if user_tpl.ap_check_seq$ is Y and multiple AP Types are selected
+		aptypes$=""
+		if user_tpl.ap_check_seq$="Y"
+			for row=0 to vectInvoicesMaster!.size()-1 step user_tpl.MasterCols
+				if vectInvoicesMaster!.getItem(row+1)="Y"
+					if aptypes$<>""
+						if vectInvoicesMaster!.getItem(row+4)<>aptypes$
+							callpoint!.setMessage("AP_NO_SELECT")
+							aptypes$="ABORT"
+						endif
+					else
+						aptypes$=vectInvoicesMaster!.getItem(row+4)
+					endif
+				endif
+			next row
+		endif
+
+		if aptypes$<>"ABORT"
+			call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",ape04_dev,firm_id$,status
+
+			for row=0 to vectInvoicesMaster!.size()-1 step user_tpl.MasterCols
+				vend$ = vectInvoicesMaster!.getItem(row+5)
+				apt01_key$=firm_id$+vectInvoicesMaster!.getItem(row+4)+
+:								   vend$+
+:								   vectInvoicesMaster!.getItem(row+7)
+				extract record (apt01_dev, key=apt01_key$) apt01a$; rem Advisory Locking
+				orig_inv_amt   = num(vectInvoicesMaster!.getItem(row+19))
+				inv_amt = num(vectInvoicesMaster!.getItem(row+11))
+				disc_to_take = num(vectInvoicesMaster!.getItem(row+13))
+				amt_to_pay   = num(vectInvoicesMaster!.getItem(row+14))
+				payments=0
+				retention=0
+
+				read(apt11_dev,key=apt01_key$,dom=*next)
+				while 1
+					read record(apt11_dev,end=*break)apt11a$
+					if pos(apt01_key$=apt11a$)<>1 break
+					payments=payments+apt11a.trans_amt
+					retention=retention+apt11a.trans_ret
+				wend
+
+                rem --- '1' is selected when no pay auth, 4 is final approval when using pay auth
+				if pos(vectInvoicesMaster!.getItem(row+1)="14")=0
+					apt01a.selected_for_pay$="N"
+					remove (ape04_dev, key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$, dom=*next)
+				else
+					apt01a.selected_for_pay$="Y"
+					dim ape04a$:fattr(ape04a$)
+
+					ape04a.firm_id$      = firm_id$
+					ape04a.ap_type$      = apt01a.ap_type$
+					ape04a.vendor_id$    = apt01a.vendor_id$
+					ape04a.ap_inv_no$    = apt01a.ap_inv_no$
+					ape04a.reference$    = apt01a.reference$
+					ape04a.ap_inv_memo$  = apt01a.ap_inv_memo$
+					ape04a.invoice_date$ = apt01a.invoice_date$
+					ape04a.inv_due_date$ = apt01a.inv_due_date$
+					ape04a.disc_date$    = apt01a.disc_date$
+					ape04a.invoice_amt   = inv_amt
+					ape04a.discount_amt  = disc_to_take
+					ape04a.retention     = apt01a.retention+retention
+					ape04a.orig_inv_amt  = apt01a.invoice_amt
+					ape04a.payment_amt = amt_to_pay
+
+					ape04a$=field(ape04a$)
+					extract record (ape04_dev, key=apt01_key$, dom=*next) dummy$; rem Advisory Locking
+					write record (ape04_dev) ape04a$
+				endif
+
+				apt01a$ = field(apt01a$)
+				write record (apt01_dev) apt01a$
+			next row
+		endif
+	endif
+
+rem --- Payment Authorization needs to write approvals to file and send emails
+
+	if callpoint!.getDevObject("use_pay_auth") then
+    	apt_invapproval=fnget_dev("@APT_INVAPPROVAL")
+		dim apt_invapproval$:fnget_tpl$("@APT_INVAPPROVAL")
+		rem --- Write approvals to file
+		approvalsEntered! = callpoint!.getDevObject("approvalsEntered")
+		if approvalsEntered!.size() > 0 then
+			for item = 0 to approvalsEntered!.size() - 1
+				apt_invapproval! = approvalsEntered!.getItem(item)
+				apt_invapproval$ = apt_invapproval!.getString()
+				apt_invapproval$ = field(apt_invapproval$)
+				write record(apt_invapproval)apt_invapproval$
+			next item
+		endif
+		rem --- Remove undone/reverted approvals from file
+		approvalsUndone! = callpoint!.getDevObject("approvalsUndone")
+        approvalsUndoneIter!=approvalsUndone!.keySet().iterator()
+        while approvalsUndoneIter!.hasNext()
+            undoneKey$=approvalsUndoneIter!.next()
+			remove(apt_invapproval,key=undoneKey$,err=*next)
+		wend
+
+		rem --- Send notification emails
+        if approvalsEntered!.size()>0 or callpoint!.getDevObject("undo_flag")="Y" then gosub send_payauth_email
+    endif
+
+[[APE_PAYSELECT.AWIN]]
+rem --- Open/Lock files
+
+    use ::BBUtils.bbj::BBUtils
+	use ::ado_util.src::util
+    use java.util.Iterator
+
+	num_files=13
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+
+	open_tables$[1]="APT_INVOICEHDR",open_opts$[1]="OTA"
+	open_tables$[2]="APT_INVOICEDET",open_opts$[2]="OTA"
+	open_tables$[3]="APM_VENDMAST",open_opts$[3]="OTA"
+	open_tables$[4]="APE_CHECKS",open_opts$[4]="OTAL"
+	open_tables$[5]="APW_CHECKINVOICE",open_opts$[5]="OTA"
+	open_tables$[6]="APE_INVOICEHDR",open_opts$[6]="OTA"
+	open_tables$[7]="APS_PARAMS",open_opts$[7]="OTA"
+	open_tables$[8]="APS_PAYAUTH",open_opts$[8]="OTA@"
+	open_tables$[9]="APT_INVIMAGE",open_opts$[9]="OTA@"
+	open_tables$[10]="APT_INVAPPROVAL",open_opts$[10]="OTA@"
+	open_tables$[11]="ADM_USER",open_opts$[11]="OTA@"
+	open_tables$[12]="APM_APPROVERS",open_opts$[12]="OTA@"
+	open_tables$[13]="APS_ACH",open_opts$[13]="OTA"
+
+	gosub open_tables
+
+	apt01_dev=num(open_chans$[1]),apt01_tpl$=open_tpls$[1]
+	apt11_dev=num(open_chans$[2]),apt11_tpl$=open_tpls$[2]
+	apm01_dev=num(open_chans$[3]),apm01_tpl$=open_tpls$[3]
+	ape04_dev=num(open_chans$[4]),ape04_tpl$=open_tpls$[4]
+	apw01_dev=num(open_chans$[5])
+	ape01_dev=num(open_chans$[6]),ape01_tpl$=open_tpls$[6]
+	aps_params=num(open_chans$[7]),aps_params_tpl$=open_tpls$[7]
+	aps_payauth=num(open_chans$[8]),aps_payauth_tpl$=open_tpls$[8]
+	apt_invapproval=num(open_chans$[10]),apt_inapproval_tpl$=open_tpls$[10]
+	aps_ach=num(open_chans$[13]),aps_ach_tpl$=open_tpls$[13]
+
+rem --- Dimension string templates
+
+	dim apt01a$:apt01_tpl$
+	dim apt11a$:apt11_tpl$
+	dim apm01a$:apm01_tpl$
+	dim ape04a$:ape04_tpl$
+	dim ape01a$:ape01_tpl$
+	dim aps_params$:aps_params_tpl$
+	dim aps_payauth$:aps_payauth_tpl$
+	dim apt_invapproval$:apt_inapproval_tpl$
+	dim aps_ach$:aps_ach_tpl$
+
+rem --- Get parameter record
+
+	readrecord(aps_params, key=firm_id$+"AP00", dom=std_missing_params) aps_params$
+	callpoint!.setDevObject("multi_types",aps_params.multi_types$)
+
+	readrecord(aps_ach,key=firm_id$+"AP00",dom=*next)aps_ach$
+	callpoint!.setDevObject("ach_allowed",iff(cvs(aps_ach.bnk_acct_cd$,2)="",0,1))
+
+	readrecord(aps_payauth,key=firm_id$+"AP00",dom=*next)aps_payauth$
+	callpoint!.setDevObject("use_pay_auth",aps_payauth.use_pay_auth)
+	callpoint!.setDevObject("send_email",aps_payauth.send_email)
+	callpoint!.setDevObject("scan_docs_to",aps_payauth.scan_docs_to$)
+	callpoint!.setDevObject("all_auth_color",aps_payauth.all_auth_color$)
+	callpoint!.setDevObject("default_color","255,255,255"); rem --- white
+	callpoint!.setDevObject("one_auth_color",aps_payauth.one_auth_color$)
+	callpoint!.setDevObject("two_pay_auth",aps_payauth.two_auth_color$)
+	callpoint!.setDevObject("two_sig_req",aps_payauth.two_sig_req)
+	callpoint!.setDevObject("two_sig_amt",aps_payauth.two_sig_amt)
+	wk$=fattr(apt_invapproval$,"SEQUENCE_NUM")
+	callpoint!.setDevObject("seq_no_mask",fill(dec(wk$(10,2)),"0"))
+ 	callpoint!.setDevObject("undo_flag","")
+	callpoint!.setDevObject("selections_made","")
+
+rem --- See if Check Printing has already been started
+
+	k$=""	
+	read (apw01_dev,key=firm_id$,dom=*next)
+	k$=key(apw01_dev,end=*next)
+	if pos(firm_id$=k$)=1 then
+		msg_id$="CHECKS_IN_PROGRESS"
+		gosub disp_message
+		if pos("PASSVALID"=msg_opt$)=0 or callpoint!.getDevObject("use_pay_auth") then
+			rem --- Password override not currently allowed with Payment Authorization
+			bbjAPI!=bbjAPI()
+			rdFuncSpace!=bbjAPI!.getGroupNamespace()
+			rdFuncSpace!.setValue("+build_task","OFF")
+			release
+		endif
+	endif
+
+rem --- Ask if user wants to clear out ape-04 (computer checks) when running without Payment Authorization
+
+	if !callpoint!.getDevObject("use_pay_auth")
+		while 1
+			read(ape04_dev,key=firm_id$,dom=*next)
+			ape04_key$=key(ape04_dev,end=*break)
+			if pos(firm_id$=ape04_key$)<>1 break
+
+			msg_id$="CLEAR_SEL"
+			dim msg_tokens$[1]
+			msg_opt$=""
+			gosub disp_message
+
+			if msg_opt$="Y" then
+				read(apt01_dev,key=firm_id$,dom=*next)
+				more=1
+
+				while more
+					apt01_key$=key(apt01_dev,end=*break)
+					if pos(firm_id$=apt01_key$)<>1 then break
+					extract record (apt01_dev, key=apt01_key$, err=*break) apt01a$; rem Advisory Locking
+					remove (ape04_dev,key=apt01_key$,dom=*next, err=*break); rem Advisory Locking
+					apt01a.selected_for_pay$="N"
+					apt01a$=field(apt01a$)
+					write record (apt01_dev) apt01a$
+				wend
+			endif
+
+			break
+		wend
+	endif
+
+rem --- Add grid to store invoices
+
+	user_tpl_str$ = "gridInvoicesOfst:c(5), " +
+:		"gridInvoicesCols:c(5), " +
+:		"gridInvoicesRows:c(5), " +
+:		"gridInvoicesCtlID:c(5)," +
+:		"vectInvoicesOfst:c(5), " +
+:		"vectInvoicesMasterOfst:c(5), " +
+:		"MasterCols:n(5), " +
+:		"retention_col:u(1), " +
+:		"ap_check_seq:c(1)"
+	dim user_tpl$:user_tpl_str$
+
+	UserObj! = BBjAPI().makeVector()
+	vectInvoices! = BBjAPI().makeVector()
+	vectInvoicesMaster! = BBjAPI().makeVector()
+	nxt_ctlID = util.getNextControlID()
+    tmpCtl!=callpoint!.getControl("APE_PAYSELECT.DISC_DATE_DT")
+    grid_y=tmpCtl!.getY()+tmpCtl!.getHeight()+5
+	gridInvoices! = Form!.addGrid(nxt_ctlID,5,grid_y,800,300); rem --- ID, x, y, width, height
+    popUpMenu!=SysGUI!.addPopupMenu();rem --- define popup menu for making status changes
+    if !callpoint!.getDevObject("use_pay_auth")
+        option_text$=Translate!.getTranslation("AON_SELECT_DESELECT")
+    else
+        option_text$="&"+Translate!.getTranslation("AON_REVIEW_APPROVE")
+        callpoint!.setOptionText("PROC",option_text$)
+    endif
+    
+    menuItem_proc!=popUpMenu!.addMenuItem(-(200),option_text$)
+    menuItem_proc!.setCallback(menuItem_proc!.ON_POPUP_ITEM_SELECT,"custom_event")
+
+	user_tpl.gridInvoicesCtlID$ = str(nxt_ctlID)
+	user_tpl.gridInvoicesCols$ = "15"
+	user_tpl.gridInvoicesRows$ = "10"
+	user_tpl.MasterCols = 20
+	user_tpl.retention_col = 15
+	user_tpl.ap_check_seq$=aps_params.ap_check_seq$
+
+	call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","A","",ap_a_mask$,0,0
+	callpoint!.setDevObject("ap_a_mask",ap_a_mask$)
+
+	gosub format_grid
+	util.resizeWindow(Form!, SysGui!)
+
+	UserObj!.addItem(gridInvoices!)
+	user_tpl.gridInvoicesOfst$="0"
+
+	UserObj!.addItem(vectInvoices!); rem --- vector of filtered recs from Open Invoices; this gets cleared/re-built to create the filtered view
+	user_tpl.vectInvoicesOfst$="1"
+
+	UserObj!.addItem(vectInvoicesMaster!); rem --- vector of all Open Invoices
+	user_tpl.vectInvoicesMasterOfst$="2"
+
+rem --- Misc other init
+
+	call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_len
+	gridInvoices!.setColumnMask(3,m0$)
+
+	callpoint!.setDevObject("chk_payments","0")
+	callpoint!.setDevObject("ach_payments","0")
+	callpoint!.setDevObject("tot_payments","0")
+	gridInvoices!.setColumnEditable(12,1)
+	gridInvoices!.setColumnEditable(13,1)
+	gridInvoices!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
+	gridInvoices!.setTabAction(gridInvoices!.GRID_NAVIGATE_GRID)
+	gridInvoices!.setTabActionSkipsNonEditableCells(1)
+    
+    statusVect!=BBjAPI().makeVector()
+    statusVect!.addItem(Translate!.getTranslation("AON_NEW"))
+    statusVect!.addItem(Translate!.getTranslation("AON_SELECTED"))
+    statusVect!.addItem(Translate!.getTranslation("AON_REVIEWED"))
+    statusVect!.addItem(Translate!.getTranslation("AON_APPROVED"))
+    statusVect!.addItem(Translate!.getTranslation("AON_APPROVED"));rem text is the same, but the offset in the vector indicates first approval (3) or final approval (4)
+    callpoint!.setDevObject("status_vect",statusVect!)
+
+    if callpoint!.getDevObject("use_pay_auth")
+
+		rem --- Read Approvers&Signers table to get approval level for current user
+		rem --- Build popup menu accordingly
+
+		apm_approvers=fnget_dev("@APM_APPROVERS")
+		dim apm_approvers$:fnget_tpl$("@APM_APPROVERS")
+
+		user$=sysinfo.user_id$
+		read record(apm_approvers,key=firm_id$ + user$,dom=*next)apm_approvers$
+		callpoint!.setDevObject("apm_approvers",apm_approvers$)
+
+		if !apm_approvers.prelim_approval and !apm_approvers.check_signer
+		rem --- non-reviewer/approver can make no changes to status or pay/disc
+		menuItem_proc!.setEnabled(0)
+		callpoint!.setOptionEnabled("PROC",0)
+			gridInvoices!.setColumnEditable(12,0)
+			gridInvoices!.setColumnEditable(13,0)
+		else
+			if apm_approvers.prelim_approval and !apm_approvers.check_signer                  
+                rem --- reviewer cannot change pay/disc
+                gridInvoices!.setColumnEditable(12,0)
+                gridInvoices!.setColumnEditable(13,0)               
+            endif
+		endif
+
+		rem --- Make a vector to hold Payment Authorization approvals done in the session
+		approvalsEntered! = BBjAPI().makeVector()
+		callpoint!.setDevObject("approvalsEntered",approvalsEntered!)
+        approvalsUndone!=new java.util.HashMap()
+        callpoint!.setDevObject("approvalsUndone",approvalsUndone!)
+
+		rem --- Get Barista's Document Queue object 
+		use ::sys/prog/bao_docqueue.bbj::DocumentQueue
+		docQueue! = new DocumentQueue()
+		callpoint!.setDevObject("docQueue",docQueue!)
+
+		rem --- Get current user's user record
+		adm_user=fnget_dev("@ADM_USER")
+		dim adm_user$:fnget_tpl$("@ADM_USER")
+		read record(adm_user,key=apm_approvers.user_id$,dom=*next)adm_user$
+		callpoint!.setDevObject("adm_user",adm_user$)
+        
+		popUpMenu!.addSeparator()
+		menuItem_view!=popUpMenu!.addMenuItem(-300,Translate!.getTranslation("AON_VIEW_IMAGES"))
+		menuItem_view!.setCallback(menuItem_view!.ON_POPUP_ITEM_SELECT,"custom_event")
+		if callpoint!.getDevObject("scan_docs_to")="NOT"
+			menuItem_view!.setEnabled(0)
+        endif
+        
+        if apm_approvers.prelim_approval or apm_approvers.check_signer
+            popUpMenu!.addSeparator()
+            menuItem_undo!=popUpMenu!.addMenuItem(-400,Translate!.getTranslation("AON_UNDO","Undo"))
+            menuItem_undo!.setCallback(menuItem_undo!.ON_POPUP_ITEM_SELECT,"custom_event")
+            callpoint!.setDevObject("menu_undo",menuItem_undo!)
+        else
+            callpoint!.setOptionEnabled("UNDO",0)
+        endif
+    else
+        callpoint!.setOptionEnabled("UNDO",0)
+        callpoint!.setOptionEnabled("VIEW",0)
+    endif
+
+rem --- Now add the popup menu to the grid
+
+	gridInvoices!.setPopupMenu(popUpMenu!)
+
+
+rem --- get font for grid, and create a bold font to use for selected/finalized invoices
+
+	plainFont!=gridInvoices!.getRowFont(0)
+	boldFont!=sysGUI!.makeFont(plainFont!.getName(),plainFont!.getSize(),BBjFont.FONT_BOLD)
+	callpoint!.setDevObject("bold_font",boldFont!)
+	callpoint!.setDevObject("plain_font",plainFont!)
+
+	gosub create_invoices_vector
+	gosub fill_grid
+
+rem --- Set callbacks - processed in ACUS callpoint
+
+	gridInvoices!.setCallback(gridInvoices!.ON_GRID_EDIT_STOP,"custom_event")
+	gridInvoices!.setCallback(gridInvoices!.ON_GRID_RIGHT_MOUSE_DOWN,"custom_event")
+
+[[APE_PAYSELECT.BEND]]
+rem --- Warn if user opts to leave via the close button rather than green arrow (run process)
+rem --- Don't warn if using pay auth and user isn't a reviewer or approver (i.e., can't have made any changes)
+rem --- Don't warn if using pay auth and nothing changed (nothing in approvalsEntered! or undo_flag$ not set)
+
+    warn=0
+    if !callpoint!.getDevObject("use_pay_auth")
+        if callpoint!.getDevObject("selections_made")="Y" then warn=1
+    else
+        dim apm_approvers$:fnget_tpl$("@APM_APPROVERS")
+        apm_approvers!=callpoint!.getDevObject("apm_approvers")
+        apm_approvers$=apm_approvers!.toString()
+        if apm_approvers.prelim_approval or apm_approvers.check_signer then warn=1
+        if cast(BBjVector,callpoint!.getDevObject("approvalsEntered")).size()=0 and callpoint!.getDevObject("undo_flag")<>"Y" then warn=0
+    endif
+    if warn
+        msg_id$="AP_PAYSELECT_EXIT "
+        gosub disp_message
+        if msg_opt$<>"Y"then callpoint!.setStatus("ABORT")
+    endif
+
 [[APE_PAYSELECT.BSHO]]
 rem --- Disable Payment Methods if ACH Payments aren' allowed
 	if !callpoint!.getDevObject("ach_allowed") then callpoint!.setColumnEnabled("APE_PAYSELECT.PAYMENT_METHOD",-1)
@@ -31,48 +883,98 @@ rem --- Disable Approve Invoices option as needed
 	if !callpoint!.getDevObject("use_pay_auth")  then
 			callpoint!.setOptionEnabled("AINV",0)
 	endif
-[[APE_PAYSELECT.AP_INV_NO.AVAL]]
+
+[[APE_PAYSELECT.DISC_DATE_DT.AVAL]]
 rem --- Set filters on grid if value was changed
-	if callpoint!.getUserInput()<>callpoint!.getDevObject("prev_inv_no") then
+	if callpoint!.getUserInput()<>callpoint!.getDevObject("prev_disc_date_dt") then
 		gosub filter_recs
 	endif
-[[APE_PAYSELECT.AP_INV_NO.BINP]]
+
+[[APE_PAYSELECT.DISC_DATE_DT.BINP]]
 rem --- Capture current value so will know in AVAL if it's changed
-	callpoint!.setDevObject("prev_inv_no",callpoint!.getColumnData("APE_PAYSELECT.AP_INV_NO"))
-[[APE_PAYSELECT.AOPT-VIEW]]
-rem --- When using pay auth, bring up previously scanned invoice for for review
+	callpoint!.setDevObject("prev_disc_date_dt",callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_DT"))
 
-	gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
-	rowsSelected! = gridInvoices!.getSelectedRows()
-	numcols = gridInvoices!.getNumColumns()
-	vectInvoices! = UserObj!.getItem(num(user_tpl.vectInvoicesOfst$))
-	vectInvoicesMaster! = UserObj!.getItem(num(user_tpl.vectInvoicesMasterOfst$))
-	statusVect! = callpoint!.getDevObject("status_vect")
-    
-	gosub view_images
-[[APE_PAYSELECT.AOPT-UNDO]]
-rem --- When using pay auth, allow undo on a line-by-line basis
+[[APE_PAYSELECT.DISC_DATE_OP.AVAL]]
+rem --- Set filters on grid if value was changed
+	disc_date_op$=callpoint!.getUserInput()
+	if disc_date_op$<>callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_OP") then
+		rem --- No need to filter if not doing All dates, and date hasn't been entered
+		if disc_date_op$="0" or cvs(callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_DT"),2)<>"" then
+			gosub filter_recs
+		endif
+	endif
 
-	gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
-	rowsSelected! = gridInvoices!.getSelectedRows()
-	numcols = gridInvoices!.getNumColumns()
-	vectInvoices! = UserObj!.getItem(num(user_tpl.vectInvoicesOfst$))
-	vectInvoicesMaster! = UserObj!.getItem(num(user_tpl.vectInvoicesMasterOfst$))
-	statusVect! = callpoint!.getDevObject("status_vect")
-    
-	gosub  undo_pay_auth
-[[APE_PAYSELECT.AOPT-PROC]]
-rem --- Process selected rows
-rem --- If no pay auth, this is a simple select/de-select toggle
-rem --- With pay auth, sets to reviewed or approved (prelim or final) according to current user's role
+[[APE_PAYSELECT.DUE_DATE_DT.AVAL]]
+rem --- Set filters on grid if value was changed
+	if callpoint!.getUserInput()<>callpoint!.getDevObject("prev_due_date_dt") then
+		gosub filter_recs
+	endif
 
-	gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
-	rowsSelected! = gridInvoices!.getSelectedRows()
-	numcols = gridInvoices!.getNumColumns()
-	vectInvoices! = UserObj!.getItem(num(user_tpl.vectInvoicesOfst$))
-	vectInvoicesMaster! = UserObj!.getItem(num(user_tpl.vectInvoicesMasterOfst$))
-	statusVect! = callpoint!.getDevObject("status_vect")
-	gosub change_invoice_status
+[[APE_PAYSELECT.DUE_DATE_DT.BINP]]
+rem --- Capture current value so will know in AVAL if it's changed
+	callpoint!.setDevObject("prev_due_date_dt",callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_DT"))
+
+[[APE_PAYSELECT.DUE_DATE_OP.AVAL]]
+rem --- Set filters on grid if value was changed
+	due_date_op$=callpoint!.getUserInput()
+	if due_date_op$<>callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_OP") then
+		rem --- No need to filter if not doing All dates, and date hasn't been entered
+		if due_date_op$="0" or cvs(callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_DT"),2)<>"" then
+			gosub filter_recs
+		endif
+	endif
+
+[[APE_PAYSELECT.PAYMENT_GRP.AVAL]]
+rem --- Set filters on grid if value was changed
+	if callpoint!.getUserInput()<>callpoint!.getDevObject("prev_payment_grp") then
+		gosub filter_recs
+	endif
+
+[[APE_PAYSELECT.PAYMENT_GRP.BINP]]
+rem --- Capture current value so will know in AVAL if it's changed
+	callpoint!.setDevObject("prev_payment_grp",callpoint!.getColumnData("APE_PAYSELECT.PAYMENT_GRP"))
+
+[[APE_PAYSELECT.PAYMENT_METHOD.AVAL]]
+rem --- Set filters on grid if value was changed
+	if callpoint!.getUserInput()<>callpoint!.getDevObject("prev_payment_method") then
+		gosub filter_recs
+
+		rem --- For ListButton capture new selection in case it's changed again without leaving control
+		callpoint!.setDevObject("prev_payment_method",callpoint!.getUserInput())
+	endif
+
+[[APE_PAYSELECT.PAYMENT_METHOD.BINP]]
+rem --- Capture current value so will know in AVAL if it's changed
+	callpoint!.setDevObject("prev_payment_method",callpoint!.getColumnData("APE_PAYSELECT.PAYMENT_METHOD"))
+
+[[APE_PAYSELECT.VENDOR_ID.AVAL]]
+rem "VENDOR INACTIVE - FEATURE"
+vendor_id$ = callpoint!.getUserInput()
+apm01_dev=fnget_dev("APM_VENDMAST")
+apm01_tpl$=fnget_tpl$("APM_VENDMAST")
+dim apm01a$:apm01_tpl$
+apm01a_key$=firm_id$+vendor_id$
+find record (apm01_dev,key=apm01a_key$,dom=*next) apm01a$
+if apm01a.vend_inactive$="Y" then
+   call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+   msg_id$="AP_VEND_INACTIVE"
+   dim msg_tokens$[2]
+   msg_tokens$[1]=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
+   msg_tokens$[2]=cvs(apm01a.vendor_name$,2)
+   gosub disp_message
+   callpoint!.setStatus("ACTIVATE")
+   goto std_exit
+endif
+
+rem --- Set filters on grid if value was changed
+	if callpoint!.getUserInput()<>callpoint!.getDevObject("prev_vendor_id") then
+		gosub filter_recs
+	endif
+
+[[APE_PAYSELECT.VENDOR_ID.BINP]]
+rem --- Capture current value so will know in AVAL if it's changed
+	callpoint!.setDevObject("prev_vendor_id",callpoint!.getColumnData("APE_PAYSELECT.VENDOR_ID"))
+
 [[APE_PAYSELECT.VENDOR_ID.BINQ]]
 rem --- Set filter_defs$[] to only show vendors of given AP Type
 
@@ -110,120 +1012,7 @@ if sel_key$<>""
 	callpoint!.setColumnData("APE_PAYSELECT.VENDOR_ID",apm_vend_key.vendor_id$,1)
 endif	
 callpoint!.setStatus("ACTIVATE-ABORT")
-[[APE_PAYSELECT.VENDOR_ID.BINP]]
-rem --- Capture current value so will know in AVAL if it's changed
-	callpoint!.setDevObject("prev_vendor_id",callpoint!.getColumnData("APE_PAYSELECT.VENDOR_ID"))
-[[APE_PAYSELECT.DUE_DATE_DT.BINP]]
-rem --- Capture current value so will know in AVAL if it's changed
-	callpoint!.setDevObject("prev_due_date_dt",callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_DT"))
-[[APE_PAYSELECT.DISC_DATE_DT.BINP]]
-rem --- Capture current value so will know in AVAL if it's changed
-	callpoint!.setDevObject("prev_disc_date_dt",callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_DT"))
-[[APE_PAYSELECT.AP_TYPE.BINP]]
-rem --- Capture current value so will know in AVAL if it's changed
-	callpoint!.setDevObject("prev_ap_type",callpoint!.getColumnData("APE_PAYSELECT.AP_TYPE"))
-[[APE_PAYSELECT.PAYMENT_GRP.BINP]]
-rem --- Capture current value so will know in AVAL if it's changed
-	callpoint!.setDevObject("prev_payment_grp",callpoint!.getColumnData("APE_PAYSELECT.PAYMENT_GRP"))
-[[APE_PAYSELECT.BEND]]
-rem --- Warn if user opts to leave via the close button rather than green arrow (run process)
-rem --- Don't warn if using pay auth and user isn't a reviewer or approver (i.e., can't have made any changes)
-rem --- Don't warn if using pay auth and nothing changed (nothing in approvalsEntered! or undo_flag$ not set)
 
-    warn=0
-    if !callpoint!.getDevObject("use_pay_auth")
-        if callpoint!.getDevObject("selections_made")="Y" then warn=1
-    else
-        dim apm_approvers$:fnget_tpl$("@APM_APPROVERS")
-        apm_approvers!=callpoint!.getDevObject("apm_approvers")
-        apm_approvers$=apm_approvers!.toString()
-        if apm_approvers.prelim_approval or apm_approvers.check_signer then warn=1
-        if cast(BBjVector,callpoint!.getDevObject("approvalsEntered")).size()=0 and callpoint!.getDevObject("undo_flag")<>"Y" then warn=0
-    endif
-    if warn
-        msg_id$="AP_PAYSELECT_EXIT "
-        gosub disp_message
-        if msg_opt$<>"Y"then callpoint!.setStatus("ABORT")
-    endif
-
-[[APE_PAYSELECT.ARAR]]
-rem --- If mult AP types = N, disable AP Type field
-
-	if callpoint!.getDevObject("multi_types")<>"Y" then 
-		callpoint!.setColumnEnabled("APE_PAYSELECT.AP_TYPE", 0)
-	endif
-
-rem --- Disable the entire Retention column (does this do anything?)
-
-	gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
-	util.disableGridColumn(gridInvoices!, user_tpl.retention_col)
-
-rem --- Display calculated total payments
-
-	callpoint!.setColumnData("<<DISPLAY>>.CHK_PAYMENTS",str(callpoint!.getDevObject("chk_payments")),1)
-	callpoint!.setColumnData("<<DISPLAY>>.ACH_PAYMENTS",str(callpoint!.getDevObject("ach_payments")),1)
-	callpoint!.setColumnData("<<DISPLAY>>.TOT_PAYMENTS",str(callpoint!.getDevObject("tot_payments")),1)
-[[APE_PAYSELECT.DISC_DATE_DT.AVAL]]
-rem --- Set filters on grid if value was changed
-	if callpoint!.getUserInput()<>callpoint!.getDevObject("prev_disc_date_dt") then
-		gosub filter_recs
-	endif
-[[APE_PAYSELECT.DUE_DATE_DT.AVAL]]
-rem --- Set filters on grid if value was changed
-	if callpoint!.getUserInput()<>callpoint!.getDevObject("prev_due_date_dt") then
-		gosub filter_recs
-	endif
-[[APE_PAYSELECT.DISC_DATE_OP.AVAL]]
-rem --- Set filters on grid if value was changed
-	disc_date_op$=callpoint!.getUserInput()
-	if disc_date_op$<>callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_OP") then
-		rem --- No need to filter if not doing All dates, and date hasn't been entered
-		if disc_date_op$="0" or cvs(callpoint!.getColumnData("APE_PAYSELECT.DISC_DATE_DT"),2)<>"" then
-			gosub filter_recs
-		endif
-	endif
-[[APE_PAYSELECT.PAYMENT_GRP.AVAL]]
-rem --- Set filters on grid if value was changed
-	if callpoint!.getUserInput()<>callpoint!.getDevObject("prev_payment_grp") then
-		gosub filter_recs
-	endif
-[[APE_PAYSELECT.DUE_DATE_OP.AVAL]]
-rem --- Set filters on grid if value was changed
-	due_date_op$=callpoint!.getUserInput()
-	if due_date_op$<>callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_OP") then
-		rem --- No need to filter if not doing All dates, and date hasn't been entered
-		if due_date_op$="0" or cvs(callpoint!.getColumnData("APE_PAYSELECT.DUE_DATE_DT"),2)<>"" then
-			gosub filter_recs
-		endif
-	endif
-[[APE_PAYSELECT.VENDOR_ID.AVAL]]
-rem "VENDOR INACTIVE - FEATURE"
-vendor_id$ = callpoint!.getUserInput()
-apm01_dev=fnget_dev("APM_VENDMAST")
-apm01_tpl$=fnget_tpl$("APM_VENDMAST")
-dim apm01a$:apm01_tpl$
-apm01a_key$=firm_id$+vendor_id$
-find record (apm01_dev,key=apm01a_key$,dom=*next) apm01a$
-if apm01a.vend_inactive$="Y" then
-   call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
-   msg_id$="AP_VEND_INACTIVE"
-   dim msg_tokens$[2]
-   msg_tokens$[1]=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
-   msg_tokens$[2]=cvs(apm01a.vendor_name$,2)
-   gosub disp_message
-   callpoint!.setStatus("ACTIVATE")
-   goto std_exit
-endif
-
-rem --- Set filters on grid if value was changed
-	if callpoint!.getUserInput()<>callpoint!.getDevObject("prev_vendor_id") then
-		gosub filter_recs
-	endif
-[[APE_PAYSELECT.AP_TYPE.AVAL]]
-rem --- Set filters on grid if value was changed
-	if callpoint!.getUserInput()<>callpoint!.getDevObject("prev_ap_type") then
-		gosub filter_recs
-	endif
 [[APE_PAYSELECT.<CUSTOM>]]
 rem ==========================================================================
 load_invoice_approval_status: rem --- Set grid row background colors and selections
@@ -2243,753 +3032,6 @@ rem ==========================================================================
 #include [+ADDON_LIB]std_missing_params.aon
 #include [+ADDON_LIB]std_functions.aon
 rem ==========================================================================
-[[APE_PAYSELECT.ASVA]]
-rem --- Update apt-01 (remove/write) based on what's checked in the grid
 
-	apt01_dev = fnget_dev("APT_INVOICEHDR")
-	dim apt01a$:fnget_tpl$("APT_INVOICEHDR")
-	ape04_dev = fnget_dev("APE_CHECKS")
-	dim ape04a$:fnget_tpl$("APE_CHECKS")
-	apt11_dev = fnget_dev("APT_INVOICEDET")
-	dim apt11a$:fnget_tpl$("APT_INVOICEDET")
 
-	vectInvoicesMaster! = UserObj!.getItem(num(user_tpl.vectInvoicesMasterOfst$))
 
-	if vectInvoicesMaster!.size()
-rem --- First check to see if user_tpl.ap_check_seq$ is Y and multiple AP Types are selected
-		aptypes$=""
-		if user_tpl.ap_check_seq$="Y"
-			for row=0 to vectInvoicesMaster!.size()-1 step user_tpl.MasterCols
-				if vectInvoicesMaster!.getItem(row+1)="Y"
-					if aptypes$<>""
-						if vectInvoicesMaster!.getItem(row+4)<>aptypes$
-							callpoint!.setMessage("AP_NO_SELECT")
-							aptypes$="ABORT"
-						endif
-					else
-						aptypes$=vectInvoicesMaster!.getItem(row+4)
-					endif
-				endif
-			next row
-		endif
-
-		if aptypes$<>"ABORT"
-			call stbl("+DIR_PGM")+"adc_clearpartial.aon","N",ape04_dev,firm_id$,status
-
-			for row=0 to vectInvoicesMaster!.size()-1 step user_tpl.MasterCols
-				vend$ = vectInvoicesMaster!.getItem(row+5)
-				apt01_key$=firm_id$+vectInvoicesMaster!.getItem(row+4)+
-:								   vend$+
-:								   vectInvoicesMaster!.getItem(row+7)
-				extract record (apt01_dev, key=apt01_key$) apt01a$; rem Advisory Locking
-				orig_inv_amt   = num(vectInvoicesMaster!.getItem(row+19))
-				inv_amt = num(vectInvoicesMaster!.getItem(row+11))
-				disc_to_take = num(vectInvoicesMaster!.getItem(row+13))
-				amt_to_pay   = num(vectInvoicesMaster!.getItem(row+14))
-				payments=0
-				retention=0
-
-				read(apt11_dev,key=apt01_key$,dom=*next)
-				while 1
-					read record(apt11_dev,end=*break)apt11a$
-					if pos(apt01_key$=apt11a$)<>1 break
-					payments=payments+apt11a.trans_amt
-					retention=retention+apt11a.trans_ret
-				wend
-
-                rem --- '1' is selected when no pay auth, 4 is final approval when using pay auth
-				if pos(vectInvoicesMaster!.getItem(row+1)="14")=0
-					apt01a.selected_for_pay$="N"
-					remove (ape04_dev, key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$, dom=*next)
-				else
-					apt01a.selected_for_pay$="Y"
-					dim ape04a$:fattr(ape04a$)
-
-					ape04a.firm_id$      = firm_id$
-					ape04a.ap_type$      = apt01a.ap_type$
-					ape04a.vendor_id$    = apt01a.vendor_id$
-					ape04a.ap_inv_no$    = apt01a.ap_inv_no$
-					ape04a.reference$    = apt01a.reference$
-					ape04a.ap_inv_memo$  = apt01a.ap_inv_memo$
-					ape04a.invoice_date$ = apt01a.invoice_date$
-					ape04a.inv_due_date$ = apt01a.inv_due_date$
-					ape04a.disc_date$    = apt01a.disc_date$
-					ape04a.invoice_amt   = inv_amt
-					ape04a.discount_amt  = disc_to_take
-					ape04a.retention     = apt01a.retention+retention
-					ape04a.orig_inv_amt  = apt01a.invoice_amt
-					ape04a.payment_amt = amt_to_pay
-
-					ape04a$=field(ape04a$)
-					extract record (ape04_dev, key=apt01_key$, dom=*next) dummy$; rem Advisory Locking
-					write record (ape04_dev) ape04a$
-				endif
-
-				apt01a$ = field(apt01a$)
-				write record (apt01_dev) apt01a$
-			next row
-		endif
-	endif
-
-rem --- Payment Authorization needs to write approvals to file and send emails
-
-	if callpoint!.getDevObject("use_pay_auth") then
-    	apt_invapproval=fnget_dev("@APT_INVAPPROVAL")
-		dim apt_invapproval$:fnget_tpl$("@APT_INVAPPROVAL")
-		rem --- Write approvals to file
-		approvalsEntered! = callpoint!.getDevObject("approvalsEntered")
-		if approvalsEntered!.size() > 0 then
-			for item = 0 to approvalsEntered!.size() - 1
-				apt_invapproval! = approvalsEntered!.getItem(item)
-				apt_invapproval$ = apt_invapproval!.getString()
-				apt_invapproval$ = field(apt_invapproval$)
-				write record(apt_invapproval)apt_invapproval$
-			next item
-		endif
-		rem --- Remove undone/reverted approvals from file
-		approvalsUndone! = callpoint!.getDevObject("approvalsUndone")
-        approvalsUndoneIter!=approvalsUndone!.keySet().iterator()
-        while approvalsUndoneIter!.hasNext()
-            undoneKey$=approvalsUndoneIter!.next()
-			remove(apt_invapproval,key=undoneKey$,err=*next)
-		wend
-
-		rem --- Send notification emails
-        if approvalsEntered!.size()>0 or callpoint!.getDevObject("undo_flag")="Y" then gosub send_payauth_email
-    endif
-[[APE_PAYSELECT.AWIN]]
-rem --- Open/Lock files
-
-    use ::BBUtils.bbj::BBUtils
-	use ::ado_util.src::util
-    use java.util.Iterator
-
-	num_files=13
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-
-	open_tables$[1]="APT_INVOICEHDR",open_opts$[1]="OTA"
-	open_tables$[2]="APT_INVOICEDET",open_opts$[2]="OTA"
-	open_tables$[3]="APM_VENDMAST",open_opts$[3]="OTA"
-	open_tables$[4]="APE_CHECKS",open_opts$[4]="OTAL"
-	open_tables$[5]="APW_CHECKINVOICE",open_opts$[5]="OTA"
-	open_tables$[6]="APE_INVOICEHDR",open_opts$[6]="OTA"
-	open_tables$[7]="APS_PARAMS",open_opts$[7]="OTA"
-	open_tables$[8]="APS_PAYAUTH",open_opts$[8]="OTA@"
-	open_tables$[9]="APT_INVIMAGE",open_opts$[9]="OTA@"
-	open_tables$[10]="APT_INVAPPROVAL",open_opts$[10]="OTA@"
-	open_tables$[11]="ADM_USER",open_opts$[11]="OTA@"
-	open_tables$[12]="APM_APPROVERS",open_opts$[12]="OTA@"
-	open_tables$[13]="APS_ACH",open_opts$[13]="OTA"
-
-	gosub open_tables
-
-	apt01_dev=num(open_chans$[1]),apt01_tpl$=open_tpls$[1]
-	apt11_dev=num(open_chans$[2]),apt11_tpl$=open_tpls$[2]
-	apm01_dev=num(open_chans$[3]),apm01_tpl$=open_tpls$[3]
-	ape04_dev=num(open_chans$[4]),ape04_tpl$=open_tpls$[4]
-	apw01_dev=num(open_chans$[5])
-	ape01_dev=num(open_chans$[6]),ape01_tpl$=open_tpls$[6]
-	aps_params=num(open_chans$[7]),aps_params_tpl$=open_tpls$[7]
-	aps_payauth=num(open_chans$[8]),aps_payauth_tpl$=open_tpls$[8]
-	apt_invapproval=num(open_chans$[10]),apt_inapproval_tpl$=open_tpls$[10]
-	aps_ach=num(open_chans$[13]),aps_ach_tpl$=open_tpls$[13]
-
-rem --- Dimension string templates
-
-	dim apt01a$:apt01_tpl$
-	dim apt11a$:apt11_tpl$
-	dim apm01a$:apm01_tpl$
-	dim ape04a$:ape04_tpl$
-	dim ape01a$:ape01_tpl$
-	dim aps_params$:aps_params_tpl$
-	dim aps_payauth$:aps_payauth_tpl$
-	dim apt_invapproval$:apt_inapproval_tpl$
-	dim aps_ach$:aps_ach_tpl$
-
-rem --- Get parameter record
-
-	readrecord(aps_params, key=firm_id$+"AP00", dom=std_missing_params) aps_params$
-	callpoint!.setDevObject("multi_types",aps_params.multi_types$)
-
-	readrecord(aps_ach,key=firm_id$+"AP00",dom=*next)aps_ach$
-	callpoint!.setDevObject("ach_allowed",iff(cvs(aps_ach.bnk_acct_cd$,2)="",0,1))
-
-	readrecord(aps_payauth,key=firm_id$+"AP00",dom=*next)aps_payauth$
-	callpoint!.setDevObject("use_pay_auth",aps_payauth.use_pay_auth)
-	callpoint!.setDevObject("send_email",aps_payauth.send_email)
-	callpoint!.setDevObject("scan_docs_to",aps_payauth.scan_docs_to$)
-	callpoint!.setDevObject("all_auth_color",aps_payauth.all_auth_color$)
-	callpoint!.setDevObject("default_color","255,255,255"); rem --- white
-	callpoint!.setDevObject("one_auth_color",aps_payauth.one_auth_color$)
-	callpoint!.setDevObject("two_pay_auth",aps_payauth.two_auth_color$)
-	callpoint!.setDevObject("two_sig_req",aps_payauth.two_sig_req)
-	callpoint!.setDevObject("two_sig_amt",aps_payauth.two_sig_amt)
-	wk$=fattr(apt_invapproval$,"SEQUENCE_NUM")
-	callpoint!.setDevObject("seq_no_mask",fill(dec(wk$(10,2)),"0"))
- 	callpoint!.setDevObject("undo_flag","")
-	callpoint!.setDevObject("selections_made","")
-
-rem --- See if Check Printing has already been started
-
-	k$=""	
-	read (apw01_dev,key=firm_id$,dom=*next)
-	k$=key(apw01_dev,end=*next)
-	if pos(firm_id$=k$)=1 then
-		msg_id$="CHECKS_IN_PROGRESS"
-		gosub disp_message
-		if pos("PASSVALID"=msg_opt$)=0 or callpoint!.getDevObject("use_pay_auth") then
-			rem --- Password override not currently allowed with Payment Authorization
-			bbjAPI!=bbjAPI()
-			rdFuncSpace!=bbjAPI!.getGroupNamespace()
-			rdFuncSpace!.setValue("+build_task","OFF")
-			release
-		endif
-	endif
-
-rem --- Ask if user wants to clear out ape-04 (computer checks) when running without Payment Authorization
-
-	if !callpoint!.getDevObject("use_pay_auth")
-		while 1
-			read(ape04_dev,key=firm_id$,dom=*next)
-			ape04_key$=key(ape04_dev,end=*break)
-			if pos(firm_id$=ape04_key$)<>1 break
-
-			msg_id$="CLEAR_SEL"
-			dim msg_tokens$[1]
-			msg_opt$=""
-			gosub disp_message
-
-			if msg_opt$="Y" then
-				read(apt01_dev,key=firm_id$,dom=*next)
-				more=1
-
-				while more
-					apt01_key$=key(apt01_dev,end=*break)
-					if pos(firm_id$=apt01_key$)<>1 then break
-					extract record (apt01_dev, key=apt01_key$, err=*break) apt01a$; rem Advisory Locking
-					remove (ape04_dev,key=apt01_key$,dom=*next, err=*break); rem Advisory Locking
-					apt01a.selected_for_pay$="N"
-					apt01a$=field(apt01a$)
-					write record (apt01_dev) apt01a$
-				wend
-			endif
-
-			break
-		wend
-	endif
-
-rem --- Add grid to store invoices
-
-	user_tpl_str$ = "gridInvoicesOfst:c(5), " +
-:		"gridInvoicesCols:c(5), " +
-:		"gridInvoicesRows:c(5), " +
-:		"gridInvoicesCtlID:c(5)," +
-:		"vectInvoicesOfst:c(5), " +
-:		"vectInvoicesMasterOfst:c(5), " +
-:		"MasterCols:n(5), " +
-:		"retention_col:u(1), " +
-:		"ap_check_seq:c(1)"
-	dim user_tpl$:user_tpl_str$
-
-	UserObj! = BBjAPI().makeVector()
-	vectInvoices! = BBjAPI().makeVector()
-	vectInvoicesMaster! = BBjAPI().makeVector()
-	nxt_ctlID = util.getNextControlID()
-    tmpCtl!=callpoint!.getControl("APE_PAYSELECT.DISC_DATE_DT")
-    grid_y=tmpCtl!.getY()+tmpCtl!.getHeight()+5
-	gridInvoices! = Form!.addGrid(nxt_ctlID,5,grid_y,800,300); rem --- ID, x, y, width, height
-    popUpMenu!=SysGUI!.addPopupMenu();rem --- define popup menu for making status changes
-    if !callpoint!.getDevObject("use_pay_auth")
-        option_text$=Translate!.getTranslation("AON_SELECT_DESELECT")
-    else
-        option_text$="&"+Translate!.getTranslation("AON_REVIEW_APPROVE")
-        callpoint!.setOptionText("PROC",option_text$)
-    endif
-    
-    menuItem_proc!=popUpMenu!.addMenuItem(-(200),option_text$)
-    menuItem_proc!.setCallback(menuItem_proc!.ON_POPUP_ITEM_SELECT,"custom_event")
-
-	user_tpl.gridInvoicesCtlID$ = str(nxt_ctlID)
-	user_tpl.gridInvoicesCols$ = "15"
-	user_tpl.gridInvoicesRows$ = "10"
-	user_tpl.MasterCols = 20
-	user_tpl.retention_col = 15
-	user_tpl.ap_check_seq$=aps_params.ap_check_seq$
-
-	call stbl("+DIR_PGM")+"adc_getmask.aon","","AP","A","",ap_a_mask$,0,0
-	callpoint!.setDevObject("ap_a_mask",ap_a_mask$)
-
-	gosub format_grid
-	util.resizeWindow(Form!, SysGui!)
-
-	UserObj!.addItem(gridInvoices!)
-	user_tpl.gridInvoicesOfst$="0"
-
-	UserObj!.addItem(vectInvoices!); rem --- vector of filtered recs from Open Invoices; this gets cleared/re-built to create the filtered view
-	user_tpl.vectInvoicesOfst$="1"
-
-	UserObj!.addItem(vectInvoicesMaster!); rem --- vector of all Open Invoices
-	user_tpl.vectInvoicesMasterOfst$="2"
-
-rem --- Misc other init
-
-	call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_len
-	gridInvoices!.setColumnMask(3,m0$)
-
-	callpoint!.setDevObject("chk_payments","0")
-	callpoint!.setDevObject("ach_payments","0")
-	callpoint!.setDevObject("tot_payments","0")
-	gridInvoices!.setColumnEditable(12,1)
-	gridInvoices!.setColumnEditable(13,1)
-	gridInvoices!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
-	gridInvoices!.setTabAction(gridInvoices!.GRID_NAVIGATE_GRID)
-	gridInvoices!.setTabActionSkipsNonEditableCells(1)
-    
-    statusVect!=BBjAPI().makeVector()
-    statusVect!.addItem(Translate!.getTranslation("AON_NEW"))
-    statusVect!.addItem(Translate!.getTranslation("AON_SELECTED"))
-    statusVect!.addItem(Translate!.getTranslation("AON_REVIEWED"))
-    statusVect!.addItem(Translate!.getTranslation("AON_APPROVED"))
-    statusVect!.addItem(Translate!.getTranslation("AON_APPROVED"));rem text is the same, but the offset in the vector indicates first approval (3) or final approval (4)
-    callpoint!.setDevObject("status_vect",statusVect!)
-
-    if callpoint!.getDevObject("use_pay_auth")
-
-		rem --- Read Approvers&Signers table to get approval level for current user
-		rem --- Build popup menu accordingly
-
-		apm_approvers=fnget_dev("@APM_APPROVERS")
-		dim apm_approvers$:fnget_tpl$("@APM_APPROVERS")
-
-		user$=sysinfo.user_id$
-		read record(apm_approvers,key=firm_id$ + user$,dom=*next)apm_approvers$
-		callpoint!.setDevObject("apm_approvers",apm_approvers$)
-
-		if !apm_approvers.prelim_approval and !apm_approvers.check_signer
-		rem --- non-reviewer/approver can make no changes to status or pay/disc
-		menuItem_proc!.setEnabled(0)
-		callpoint!.setOptionEnabled("PROC",0)
-			gridInvoices!.setColumnEditable(12,0)
-			gridInvoices!.setColumnEditable(13,0)
-		else
-			if apm_approvers.prelim_approval and !apm_approvers.check_signer                  
-                rem --- reviewer cannot change pay/disc
-                gridInvoices!.setColumnEditable(12,0)
-                gridInvoices!.setColumnEditable(13,0)               
-            endif
-		endif
-
-		rem --- Make a vector to hold Payment Authorization approvals done in the session
-		approvalsEntered! = BBjAPI().makeVector()
-		callpoint!.setDevObject("approvalsEntered",approvalsEntered!)
-        approvalsUndone!=new java.util.HashMap()
-        callpoint!.setDevObject("approvalsUndone",approvalsUndone!)
-
-		rem --- Get Barista's Document Queue object 
-		use ::sys/prog/bao_docqueue.bbj::DocumentQueue
-		docQueue! = new DocumentQueue()
-		callpoint!.setDevObject("docQueue",docQueue!)
-
-		rem --- Get current user's user record
-		adm_user=fnget_dev("@ADM_USER")
-		dim adm_user$:fnget_tpl$("@ADM_USER")
-		read record(adm_user,key=apm_approvers.user_id$,dom=*next)adm_user$
-		callpoint!.setDevObject("adm_user",adm_user$)
-        
-		popUpMenu!.addSeparator()
-		menuItem_view!=popUpMenu!.addMenuItem(-300,Translate!.getTranslation("AON_VIEW_IMAGES"))
-		menuItem_view!.setCallback(menuItem_view!.ON_POPUP_ITEM_SELECT,"custom_event")
-		if callpoint!.getDevObject("scan_docs_to")="NOT"
-			menuItem_view!.setEnabled(0)
-        endif
-        
-        if apm_approvers.prelim_approval or apm_approvers.check_signer
-            popUpMenu!.addSeparator()
-            menuItem_undo!=popUpMenu!.addMenuItem(-400,Translate!.getTranslation("AON_UNDO","Undo"))
-            menuItem_undo!.setCallback(menuItem_undo!.ON_POPUP_ITEM_SELECT,"custom_event")
-            callpoint!.setDevObject("menu_undo",menuItem_undo!)
-        else
-            callpoint!.setOptionEnabled("UNDO",0)
-        endif
-    else
-        callpoint!.setOptionEnabled("UNDO",0)
-        callpoint!.setOptionEnabled("VIEW",0)
-    endif
-
-rem --- Now add the popup menu to the grid
-
-	gridInvoices!.setPopupMenu(popUpMenu!)
-
-
-rem --- get font for grid, and create a bold font to use for selected/finalized invoices
-
-	plainFont!=gridInvoices!.getRowFont(0)
-	boldFont!=sysGUI!.makeFont(plainFont!.getName(),plainFont!.getSize(),BBjFont.FONT_BOLD)
-	callpoint!.setDevObject("bold_font",boldFont!)
-	callpoint!.setDevObject("plain_font",plainFont!)
-
-	gosub create_invoices_vector
-	gosub fill_grid
-
-rem --- Set callbacks - processed in ACUS callpoint
-
-	gridInvoices!.setCallback(gridInvoices!.ON_GRID_EDIT_STOP,"custom_event")
-	gridInvoices!.setCallback(gridInvoices!.ON_GRID_RIGHT_MOUSE_DOWN,"custom_event")
-[[APE_PAYSELECT.ASIZ]]
-rem --- Resize the grid
-
-	if UserObj!<>null() then
-		gridInvoices!=UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
-		gridInvoices!.setSize(Form!.getWidth()-(gridInvoices!.getX()*2),Form!.getHeight()-(gridInvoices!.getY()+10))
-		gridInvoices!.setFitToGrid(1)
-	endif
-[[APE_PAYSELECT.ACUS]]
-rem --- Process custom event
-rem --- Select/de-select checkboxes in grid and edit payment and discount amounts
-
-rem This routine is executed when callbacks have been set to run a 'custom event'.
-rem Analyze gui_event$ and notice$ to see which control's callback triggered the event, and what kind of event it is.
-rem See basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info.
-
-	dim gui_event$:tmpl(gui_dev)
-	dim notify_base$:noticetpl(0,0)
-	gui_event$=SysGUI!.getLastEventString()
-	ctl_ID=dec(gui_event.ID$)
-	new_popup_index=-1
-
-	if ctl_ID <> num(user_tpl.gridInvoicesCtlID$) then break; rem --- exit callpoint
-	gridInvoices! = UserObj!.getItem(num(user_tpl.gridInvoicesOfst$))
-	rowsSelected! = gridInvoices!.getSelectedRows()
-	numcols = gridInvoices!.getNumColumns()
-	vectInvoices! = UserObj!.getItem(num(user_tpl.vectInvoicesOfst$))
-	vectInvoicesMaster! = UserObj!.getItem(num(user_tpl.vectInvoicesMasterOfst$))
-	statusVect! = callpoint!.getDevObject("status_vect")
-    
-	rem --- Get selected pop-up menu item
-	if gui_event.code$="P"
-		popUpMenu!=gridInvoices!.getPopupMenu()
-		menuItem!=popUpMenu!.getMenuItem(gui_event.y)
-        if gui_event.y=400
-            gosub undo_pay_auth
-        else
-            if gui_event.y=300
-                gosub view_images
-            else
-                new_popup_index=gui_event.y-200
-                gosub change_invoice_status
-            endif
-		endif
-	endif
-
-	if gui_event.code$="N"
-		notify_base$=notice(gui_dev,gui_event.x%)
-		dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
-		notice$=notify_base$
-		curr_row = dec(notice.row$)
-		curr_col = dec(notice.col$)
-
-		switch notice.code
-			case 18; rem --- right_mouse_down
-                     rem --- see to it that a right click to get popup menu also selects the clicked row when there are no other rows selected
-                     rem --- also disable the 'undo' menu option unless using pay auth and only one row is selected
-                
-                menuItem_undo!=callpoint!.getDevObject("menu_undo")                     
-                     
-				if !rowsSelected!.size()
-					gridInvoices!.setSelectedRow(curr_row)
-                    if menuItem_undo!<>null() then menuItem_undo!.setEnabled(1)
-				endif
-                
-                if menuItem_undo!<>null()
-                    if rowsSelected!.size()>1
-                        menuItem_undo!.setEnabled(0)
-                    else
-                        menuItem_undo!.setEnabled(1)
-                    endif
-                endif
-
-			break
-
-			case 7; rem --- edit_stop
-
-				apm01_dev = fnget_dev("APM_VENDMAST")
-				dim apm01a$:fnget_tpl$("APM_VENDMAST")
-				apt01_dev = fnget_dev("APT_INVOICEHDR")
-				dim apt01a$:fnget_tpl$("APT_INVOICEHDR")
-				chk_payments=num(callpoint!.getDevObject("chk_payments"))
-				ach_payments=num(callpoint!.getDevObject("ach_payments"))
-				tot_payments=num(callpoint!.getDevObject("tot_payments"))
-
-				if gridInvoices!.getCellState(curr_row,7) 
-					msg_id$="AP_INV_RMVHOLD"
-					gosub disp_message
-					if msg_opt$<>"Y"
-						gridInvoices!.setCellText(curr_row,12,str(0))
-						gridInvoices!.setCellText(curr_row,13,str(0))
-						break
-					endif
-				endif
-
-				rem --- Discount Amount
-				
-				if curr_col = 12 then
-					ap_type$ = gridInvoices!.getCellText(curr_row,3)
-					vend_id$ = gridInvoices!.getCellText(curr_row,4)
-					inv_no$ = gridInvoices!.getCellText(curr_row,6)
-					inv_amt  = num(gridInvoices!.getCellText(curr_row,11))
-					disc_amt = num(gridInvoices!.getCellText(curr_row,12))
-					pmt_amt  = num(gridInvoices!.getCellText(curr_row,13))
-					retent_amt = num(gridInvoices!.getCellText(curr_row,14))
-					gosub get_master_offset
-					orig_inv_amt = num(vectInvoicesMaster!.getItem((mast_offset)+19))
-					if gridInvoices!.getCellStyle(row_no,2)=SysGUI!.GRID_STYLE_CHECKED then
-						ach_payments=ach_payments-pmt_amt
-					else
-						chk_payments=chk_payments-pmt_amt
-					endif
-					tot_payments=tot_payments-pmt_amt;rem back out old payment in prep for adding new one
-
-					if sgn(disc_amt) <> sgn(orig_inv_amt) then 
-						disc_amt = abs(disc_amt) * sgn(orig_inv_amt)
-						gridInvoices!.setCellText(curr_row,12,str(disc_amt))
-					endif
-
-					if abs(disc_amt) <> abs(orig_inv_amt) - abs(retent_amt) - abs(pmt_amt)
-						if pmt_amt=0 or abs(disc_amt) > abs(orig_inv_amt) - abs(retent_amt) - abs(pmt_amt)  then 
-							pmt_amt = (abs(orig_inv_amt) - abs(retent_amt) - abs(disc_amt)) * sgn(orig_inv_amt)
-							gridInvoices!.setCellText(curr_row,13,str(pmt_amt))
-						endif
-						inv_amt = orig_inv_amt -  (abs(retent_amt) + abs(disc_amt) + abs(pmt_amt)) * sgn(orig_inv_amt)
-						gridInvoices!.setCellText(curr_row,11,str(inv_amt))
-					endif
-                  
-                    rem --- if not using pay auth, changing disc/pay amounts does auto-select
-                    if !callpoint!.getDevObject("use_pay_auth")                    
-                        if disc_amt<>0 or inv_amt<>0 then
-                            dummy = fn_setmast_flag(
-:								vectInvoices!.getItem(curr_row*numcols+3),
-:								vectInvoices!.getItem(curr_row*numcols+4),
-:								vectInvoices!.getItem(curr_row*numcols+6),
-:								"1",
-:								str(pmt_amt)
-:							    )
-
-                                vectInvoices!.setItem(curr_row * numcols, "1")
-                                gridInvoices!.setCellText(curr_row,0,statusVect!.get(1))
-                                gridInvoices!.setRowFont(curr_row,callpoint!.getDevObject("bold_font"))
-
-                        else 
-                            dummy = fn_setmast_flag(
-:								vectInvoices!.getItem(curr_row*numcols+3),
-:								vectInvoices!.getItem(curr_row*numcols+4),
-:								vectInvoices!.getItem(curr_row*numcols+6),
-:								"0",
-:								"0"
-:							    )
-
-                                vectInvoices!.setItem(curr_row * numcols, "0")
-                                gridInvoices!.setCellText(curr_row,0,statusVect!.get(0))
-                                gridInvoices!.setRowFont(curr_row,callpoint!.getDevObject("plain_font"))
-						endif
-					endif
-
-					vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+12,str(disc_amt))
-					vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+13,str(pmt_amt))
-					dummy = fn_setmast_amts(
-:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+3),
-:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+4),
-:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+6),
-:						str(disc_amt),
-:						str(pmt_amt)
-:					    )
-
-                    if !callpoint!.getDevObject("use_pay_auth")
-                        if pmt_amt=0 then
-                            rem --- de-select payment
-                            x=curr_row
-                            selected_flag$="0"
-                            selected=0
-                            gosub selected_or_fully_approved
-                            curr_row=x
-                        else
-                            dummy = fn_setmast_flag(
-:								vectInvoices!.getItem(curr_row*numcols+3),
-:								vectInvoices!.getItem(curr_row*numcols+4),
-:								vectInvoices!.getItem(curr_row*numcols+6),
-:								"1",
-:								str(pmt_amt)
-:							    )
-
-                                vectInvoices!.setItem(curr_row * numcols, "1")
-                                gridInvoices!.setCellText(curr_row,0,statusVect!.get(1))
-                                gridInvoices!.setRowFont(curr_row,callpoint!.getDevObject("bold_font"))
-						endif
-					endif
-
-					inv_amt = orig_inv_amt -  (abs(retent_amt) + abs(disc_amt) + abs(pmt_amt)) * sgn(orig_inv_amt)
-					gridInvoices!.setCellText(curr_row,11,str(inv_amt))
-					vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+12,str(disc_amt))
-					vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+13,str(pmt_amt))
-					dummy = fn_setmast_amts(
-:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+3),
-:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+4),
-:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+6),
-:						str(disc_amt),
-:						str(pmt_amt)
-:					)
-					if gridInvoices!.getCellStyle(row_no,2)=SysGUI!.GRID_STYLE_CHECKED then
-						ach_payments=ach_payments+num(vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+13))
-					else
-						chk_payments=chk_payments+num(vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+13))
-					endif
-					tot_payments=tot_payments+num(vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+13))
-				endif
-
-				rem --- Payment Amount
-
-				if curr_col=13
-
-					rem --- re-initialize
-					apm01_dev = fnget_dev("APM_VENDMAST")
-					dim apm01a$:fnget_tpl$("APM_VENDMAST")
-					apt01_dev = fnget_dev("APT_INVOICEHDR")
-					dim apt01a$:fnget_tpl$("APT_INVOICEHDR")
-					apt11_dev = fnget_dev("APT_INVOICEDET")
-					dim apt11a$:fnget_tpl$("APT_INVOICEDET")
-					vend$ = gridInvoices!.getCellText(curr_row,4)
-
-					read record (apt01_dev, key=firm_id$+
-:						gridInvoices!.getCellText(curr_row,3)+
-:						vend$+
-:						gridInvoices!.getCellText(curr_row,6), dom=*next) apt01a$
-					
-					read record(apt11_dev, key=firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$, dom=*next)
-					while 1
-						readrecord(apt11_dev,end=*break)apt11a$
-						if pos(firm_id$+apt01a.ap_type$+apt01a.vendor_id$+apt01a.ap_inv_no$ =
-:							    firm_id$+apt11a.ap_type$+apt11a.vendor_id$+apt11a.ap_inv_no$) <> 1 
-:						then 
-							break
-						endif
-
-						apt01a.invoice_amt = apt01a.invoice_amt + apt11a.trans_amt
-						apt01a.discount_amt = apt01a.discount_amt + apt11a.trans_disc
-					wend
-
-	                if apt01a.discount_amt<0 and apt01a.invoice_amt>0 then apt01a.discount_amt=0
-					gridInvoices!.setCellText(curr_row, 11, str(str(apt01a.invoice_amt - apt01a.retention - apt01a.discount_amt)))
-
-					if callpoint!.getColumnData("APE_PAYSELECT.INCLUDE_DISC")="Y" or
-:						apt01a.disc_date$ >= sysinfo.system_date$
-:					then
-						gridInvoices!.setCellText(curr_row, 12, apt01a.discount_amt$)
-					else
-						gridInvoices!.setCellText(curr_row, 12, "0.00")
-					endif
-
-					rem --- Now calculate proper Amt Due, Payment and Discount amounts
-
-					ap_type$ = gridInvoices!.getCellText(curr_row,3)
-					vend_id$ = gridInvoices!.getCellText(curr_row,4)
-					inv_no$ = gridInvoices!.getCellText(curr_row,6)
-					inv_amt  = num(gridInvoices!.getCellText(curr_row,11))
-					disc_amt = num(gridInvoices!.getCellText(curr_row,12))
-					pmt_amt  = num(gridInvoices!.getCellText(curr_row,13))
-					retent_amt = num(gridInvoices!.getCellText(curr_row,14))
-					gosub get_master_offset
-					orig_inv_amt = num(vectInvoicesMaster!.getItem((mast_offset)+19))
-					if gridInvoices!.getCellStyle(row_no,2)=SysGUI!.GRID_STYLE_CHECKED then
-						ach_payments=ach_payments-num(vectInvoicesMaster!.getItem((mast_offset)+14))
-					else
-						chk_payments=chk_payments-num(vectInvoicesMaster!.getItem((mast_offset)+14))
-					endif
-					tot_payments=tot_payments-num(vectInvoicesMaster!.getItem((mast_offset)+14));rem back out old payment in prep for adding new one
-					if sgn(pmt_amt) <> sgn(orig_inv_amt) then 
-						pmt_amt = abs(pmt_amt) * sgn(orig_inv_amt)
-						gridInvoices!.setCellText(curr_row,13,str(pmt_amt))
-					endif
-
-					if abs(pmt_amt)>abs(inv_amt)+abs(disc_amt)
-						pmt_amt=(abs(inv_amt)+abs(disc_amt))*sgn(orig_inv_amt)
-						gridInvoices!.setCellText(curr_row,13,str(pmt_amt))
-					endif
-
-					if abs(disc_amt)=0
-						if abs(pmt_amt)>abs(inv_amt)
-							pmt_amt=inv_amt
-							gridInvoices!.setCellText(curr_row,13,str(pmt_amt))
-						endif
-					endif
-
-					if abs(disc_amt)>0					
-						if abs(pmt_amt)-abs(disc_amt)>=abs(inv_amt)
-							disc_amt=(abs(orig_inv_amt)-abs(inv_amt)-abs(disc_amt)) * sgn(orig_inv_amt)
-							gridInvoices!.setCellText(curr_row,12,str(disc_amt))
-						endif
-					endif
-
-					if abs(pmt_amt) > abs(orig_inv_amt) - abs(retent_amt) - abs(disc_amt) then 
-						disc_amt = (abs(orig_inv_amt) - abs(retent_amt) - abs(pmt_amt)) * sgn(orig_inv_amt)
-						gridInvoices!.setCellText(curr_row,12,str(disc_amt))
-					endif
-
-					rem --- if not using pay auth, changing disc/pay amounts does auto-select
-					if !callpoint!.getDevObject("use_pay_auth")
-						if pmt_amt=0 then
-							rem --- de-select payment
-							dummy = fn_setmast_flag(
-:								vectInvoices!.getItem(curr_row*numcols+3),
-:								vectInvoices!.getItem(curr_row*numcols+4),
-:								vectInvoices!.getItem(curr_row*numcols+6),
-:								"0",
-:								"0"
-:							)
-
-							vectInvoices!.setItem(curr_row * numcols, "0")
-							gridInvoices!.setCellText(curr_row,0,statusVect!.get(0))
-							gridInvoices!.setRowFont(curr_row,callpoint!.getDevObject("plain_font"))
-						else
-							dummy = fn_setmast_flag(
-:								vectInvoices!.getItem(curr_row*numcols+3),
-:								vectInvoices!.getItem(curr_row*numcols+4),
-:								vectInvoices!.getItem(curr_row*numcols+6),
-:								"1",
-:								str(pmt_amt)
-:							)
-
-							vectInvoices!.setItem(curr_row * numcols, "1")
-							gridInvoices!.setCellText(curr_row,0,statusVect!.get(1))
-							gridInvoices!.setRowFont(curr_row,callpoint!.getDevObject("bold_font"))
-						endif
-					endif
-
-					inv_amt = orig_inv_amt -  (abs(retent_amt) + abs(disc_amt) + abs(pmt_amt)) * sgn(orig_inv_amt)
-					gridInvoices!.setCellText(curr_row,11,str(inv_amt))
-					vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+12,str(disc_amt))
-					vectInvoices!.setItem(curr_row*num(user_tpl.gridInvoicesCols$)+13,str(pmt_amt))
-					dummy = fn_setmast_amts(
-:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+3),
-:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+4),
-:						vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+6),
-:						str(disc_amt),
-:						str(pmt_amt)
-:					)
-					if gridInvoices!.getCellStyle(row_no,2)=SysGUI!.GRID_STYLE_CHECKED then
-						ach_payments=ach_payments+num(vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+13))
-					else
-						chk_payments=chk_payments+num(vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+13))
-					endif
-					tot_payments=tot_payments+num(vectInvoices!.getItem(curr_row*num(user_tpl.gridInvoicesCols$)+13))
-				endif
-				callpoint!.setDevObject("chk_payments",str(chk_payments))
-				callpoint!.setDevObject("ach_payments",str(ach_payments))
-				callpoint!.setDevObject("tot_payments",str(tot_payments))
-			break
-		swend
-
-		chk_payments=num(callpoint!.getDevObject("chk_payments"))
-		ach_payments=num(callpoint!.getDevObject("ach_payments"))
-		tot_payments=num(callpoint!.getDevObject("tot_payments"))
-		callpoint!.setColumnData("<<DISPLAY>>.CHK_PAYMENTS",str(chk_payments),1)
-		callpoint!.setColumnData("<<DISPLAY>>.ACH_PAYMENTS",str(ach_payments),1)
-		callpoint!.setColumnData("<<DISPLAY>>.TOT_PAYMENTS",str(tot_payments),1)
