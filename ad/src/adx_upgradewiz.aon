@@ -275,6 +275,8 @@ rem --- Assures work tree is clean prior to cherry picking
     gosub doInterimCommit
 
 restartUpgrade:
+    restartFlag=0
+
 rem --- Cherry pick local commits from old installation
     if remainingCommits!.size()>0
         localCommitsList!=remainingCommits!
