@@ -612,6 +612,13 @@ done: rem --- All done
     else
         meter_text$=""
         meter_action$="LST-END"
+
+        rem --- Rename restartUpgradeWizard.txt file
+        restartFile!=new File(restartFile$)
+        if restartFile!.exists() then
+            restartBakFile!=new File(restartFile$ + ".bak")
+            restartFile!.renameTo(restartBakFile!)
+        endif
     endif
     gosub disp_meter
     print(log_dev)
@@ -624,13 +631,6 @@ done: rem --- All done
     logFile!.renameTo(aonLogFile!)
     logDir!=new File(logDir$)
     logDir!.delete()
-
-    rem --- Rename restartUpgradeWizard.txt file
-    restartFile!=new File(restartFile$)
-    if restartFile!.exists() then
-        restartBakFile!=new File(restartFile$ + ".bak")
-        restartFile!.renameTo(restartBakFile!)
-    endif
 
     goto std_exit
 
