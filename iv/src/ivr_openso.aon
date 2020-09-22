@@ -125,12 +125,7 @@ rem --- Position files
         ordnum$=ope11a.order_no$
         orddate$=func.formatDate(ope01a.order_date$)
         shipdate$=func.formatDate(ope11a.est_shp_date$)
-		
-        if ope11a.est_shp_date$=fill(8) and ope01a.shipmnt_date$=fill(8) then 
-			shipdate$=fill(8) 	
-		else 
-			shipdate$=func.formatDate(ope01a.shipmnt_date$)
-		endif
+        if cvs(shipdate$,2)="" then shipdate$=func.formatDate(ope01a.shipmnt_date$)
 		
         commit$=ope11a.commit_flag$
         ext=ope11a.ext_price
