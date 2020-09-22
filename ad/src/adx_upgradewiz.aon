@@ -209,13 +209,48 @@ rem --- Process upgrade from either a Git based installation or a non-Git based 
         repoInterface!=new GitRepoInterface(newAonDir$)
         branch$=repoInterface!.getBranch(); rem --- BBJnnnnGA
         oldVersion$=branch$(4,4)
+        
+        rem --- Reorder CDF files in old version to match the order of the CDFs in the new version
+        declare CdfMassager cdfMassager!
+        cdfMassager!=new CdfMassager() 
+        rem --- --- retrieve our commit from the remote branch because we have not checked out the new branch yet.
+        branchName$="BBJ"+newVersion$+"GA"
+        cdfMassager!.reorderAndCommitCDFs(newAonDir$+"/data/cdf/",repoInterface!,"refs/remotes/origin/"+branchName$)
         repoInterface!.closeInterface()
 
+        rem --- We don't want to overwrite the CDFs that we just reordered to match the upgraded version, 
+        rem --- so rename the CDF directory 
+        declare BBjString cdfDirName!
+        declare BBjString newCdfDirName!
+        declare BBjString oldCdfDirName!
+        declare java.io.File cdfDir!
+        declare java.io.File newCdfDir!
+        declare java.io.File oldCdfDir!
+        declare CdfMassager cm!
+        
+        rem -- rename the existing CDF directory to cdf_reordered
+        cdfDirName!=newAonDir$+"/data/cdf"
+        newCdfDirName!=newAonDir$+"/data/cdf_reordered"
+        cdfDir!=new java.io.File(cdfDirName!)
+        newCdfDir!=new java.io.File(newCdfDirName!)
+        cdfDir!.renameTo(newCdfDir!)
+        
         rem --- Copy old instance of aon from old location to new location
         requiredFiles%=0
         copyData%=0
         help%=0
         gosub copyAon
+
+        rem --- use the CDFMassager to copy user's changes into the reordered CDFs 
+        cm!=new CdfMassager()
+        cm!.setMakeAnnotations(0)
+        cm!.importModChanges(cdfDirName!,newCdfDirName!)
+        
+        rem --- rename cdf to cdf_old and cdf_reordered to cdf 
+        oldCdfDirName!=newAonDir$+"/data/cdf_old"
+        oldCdfDir!=new java.io.File(oldCdfDirName!)
+        cdfDir!.renameTo(oldCdfDir!)
+        newCdfDir!.renameTo(cdfDir!)
 
         rem --- Run Copy Application utility for applications being copied
         gosub copyApps
@@ -275,8 +310,6 @@ rem --- Assures work tree is clean prior to cherry picking
     gosub doInterimCommit
 
 restartUpgrade:
-    restartFlag=0
-
 rem --- Cherry pick local commits from old installation
     if remainingCommits!.size()>0
         localCommitsList!=remainingCommits!
@@ -633,6 +666,9 @@ done: rem --- All done
     logFile!.renameTo(aonLogFile!)
     logDir!=new File(logDir$)
     logDir!.delete()
+
+rem wgh ... 9809 ... stopped here
+rem wgh ... 9809 ... on successful completion (i.e. !restartFlag) rename restartUpgradeWizard.txt, clear bar/delta dir and remove cdf_old dir
 
     goto std_exit
 
