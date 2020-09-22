@@ -637,14 +637,19 @@ done: rem --- All done
         print(log_dev)"***** Cherry pick failed *****"
     endif
     
-    rem --- Stop progress meter
     meter_proc_recs=meter_total_recs
     if restartFlag then
+        rem --- Not successfull, need to restart
+        
+        rem --- Stop progress meter
         meter_text$="***** "+Translate!.getTranslation("AON_TERMINATED")+" *****"
         meter_action$="MTR-LST-END"
         print(log_dev)
         print(log_dev)meter_text$
     else
+        rem --- Upgrade completed successfully
+        
+        rem --- Stop progress meter
         meter_text$=""
         meter_action$="LST-END"
 
@@ -653,6 +658,29 @@ done: rem --- All done
         if restartFile!.exists() then
             restartBakFile!=new File(restartFile$ + ".bak")
             restartFile!.renameTo(restartBakFile!)
+        endif
+
+        rem --- Clear aon/data/bar/delta directory
+        deltaDir!=new File(aonDataBarDelta$=newAonDir$+"/data/bar/delta")
+        if deltaDir!.exists() then
+            deltaVector! = new Vector(java.util.Arrays.asList(deltaDir!.listFiles()))
+            deltaIter!=deltaVector!.iterator()
+            while deltaIter!.hasNext()
+                deltaFile!=deltaIter!.next()
+                deltaFile!.delete()
+            wend
+        endif
+        
+        rem --- Remove aon/data/cdf_old directory
+        oldCdfDir!=new File(newAonDir$+"/data/cdf_old")
+        if oldCdfDir!.exists() then
+            oldCdfVector! = new Vector(java.util.Arrays.asList(oldCdfDir!.listFiles()))
+            oldCdfIter!=oldCdfVector!.iterator()
+            while oldCdfIter!.hasNext()
+                oldCdfFile!=oldCdfIter!.next()
+                oldCdfFile!.delete()
+            wend
+            oldCdfDir!.delete()
         endif
     endif
     gosub disp_meter
@@ -666,9 +694,6 @@ done: rem --- All done
     logFile!.renameTo(aonLogFile!)
     logDir!=new File(logDir$)
     logDir!.delete()
-
-rem wgh ... 9809 ... stopped here
-rem wgh ... 9809 ... on successful completion (i.e. !restartFlag) rename restartUpgradeWizard.txt, clear bar/delta dir and remove cdf_old dir
 
     goto std_exit
 
@@ -685,7 +710,7 @@ copyAon: rem --- Recursively copy aon from oldLocation to newAonDir
     rem --- requiredFiles%,copyData%,help% are incoming; for git-based (i.e., version-neutral), copy data (demo data), for non-git, do NOT copy data.
     call pgmdir$+"adc_copyaon.aon",oldAonDir$,newAonDir$,requiredFiles%,copyData%,help%,rdForm!,0,status
     
-    rem Clear logs directory
+    rem --- Clear logs directory
     logsDir!=new File(newAonDir$ + "/logs")
     if logsDir!.exists() then
         logsVector! = new Vector(java.util.Arrays.asList(logsDir!.listFiles()))
