@@ -676,17 +676,6 @@ done: rem --- All done
             restartBakFile!=new File(restartFile$ + ".bak")
             restartFile!.renameTo(restartBakFile!)
         endif
-
-        rem --- Clear aon/data/bar/delta directory
-        deltaDir!=new File(newAonDir$+"/data/bar/delta")
-        if deltaDir!.exists() then
-            deltaVector! = new Vector(java.util.Arrays.asList(deltaDir!.listFiles()))
-            deltaIter!=deltaVector!.iterator()
-            while deltaIter!.hasNext()
-                deltaFile!=deltaIter!.next()
-                deltaFile!.delete()
-            wend
-        endif
         
         rem --- Remove aon/data/cdf_old directory
         oldCdfDir!=new File(newAonDir$+"/data/cdf_old")
@@ -1108,7 +1097,18 @@ buildDeltaXmls: rem --- Build delta XMLs for modified bar/*.xml files that have 
     localCommitsList!=repoInterface!.getLocalCommits(LocalBranch$,ReleaseTag$)
     
     mkdir newAonDir$+"/tmp",err=*next
-    
+
+    rem --- Clear aon/data/bar/delta directory
+    deltaDir!=new File(newAonDir$+"/data/bar/delta")
+    if deltaDir!.exists() then
+        deltaVector! = new Vector(java.util.Arrays.asList(deltaDir!.listFiles()))
+        deltaIter!=deltaVector!.iterator()
+        while deltaIter!.hasNext()
+            deltaFile!=deltaIter!.next()
+            deltaFile!.delete()
+        wend
+    endif
+
     rem --- Get modified bar/*.xml files that have been committed.
     localCommittedXmls!=repoInterface!.getLocalCommittedXmls(localCommitsList!)
     modifiedXmlIter!=localCommittedXmls!.iterator()
