@@ -123,6 +123,17 @@ rem --- Is this a restart after resolving Git conflicts?
                 endif
             wend
 
+            rem --- Get from restart log where to restart this upgrade
+            label$="Re-Start At: "
+            lenLabel=len(label$)
+            while 1
+                read(restart_dev,end=*break)text$
+                if pos(label$=text$)=1 then
+                    restartAt$=text$(1+lenLabel)
+                    break
+                endif
+            wend
+
             rem --- Get from restart log list of remaining commits that still need to be cherry picked
             label$="Remaining commit: "
             lenLabel=len(label$)
@@ -144,7 +155,21 @@ rem --- Is this a restart after resolving Git conflicts?
             gosub build_stblMap_pfxList
             aonStblMap!=stblMap!
 
-            goto restartUpgrade
+            rem --- Goto restart location Label
+            switch (BBjAPI().TRUE)
+                case restartAt$="restartUpgrade1"
+                    goto restartUpgrade1
+                    break
+                case restartAt$="restartUpgrade2"
+                    goto restartUpgrade2
+                    break
+                case restartAt$="restartUpgrade3"
+                    goto restartUpgrade3
+                    break
+                case default
+                    goto restartUpgrade1
+                    break
+            swend
         else
             close(restart_dev,err=*next)
         endif
@@ -309,7 +334,7 @@ rem --- Commit sync xml and syn file changes made during updateAddonSyn and upda
 rem --- Assures work tree is clean prior to cherry picking
     gosub doInterimCommit
 
-restartUpgrade:
+restartUpgrade1:
 rem --- Cherry pick local commits from old installation
     if remainingCommits!.size()>0
         localCommitsList!=remainingCommits!
@@ -325,35 +350,13 @@ rem --- Check for delta XML RESERVED_STR and RESERVED_NUM issues
     
 rem --- Need to restart if there were Git conflicts, or a Git cherry pick failure
     if restartFlag then
-        rem --- Create restart file, then abort
-        FileObject.makeDirs(new File(newAonDir$ + "/logs"))
-        restartFile$=newAonDir$+"/logs/restartUpgradeWizard.txt"
-        erase restartFile$,err=*next
-        string restartFile$
-        restart_dev=unt
-        open(restart_dev)restartFile$
-        
-        print(restart_dev)"Restart file: "+restartFile$
-        print(restart_dev)"Created: "+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")
-        print(restart_dev)
-        print(restart_dev)"Previous log file: " + newAonDir$ + "/logs"+logName$
-        print(restart_dev)"New aon Location: " + newAonLoc$
-        print(restart_dev)"Old aon Location: " + oldAonLoc$
-        print(restart_dev)"Start version: " + start_version$
-        print(restart_dev)
-
-        rem --- Capture remaining commits that still need to be cherry picked
-        remainingIter!=remainingCommits!.iterator()
-        while remainingIter!.hasNext()
-            remaining!=remainingIter!.next()
-            print(restart_dev)"Remaining commit: ",remaining!
-        wend
-
-        print(restart_dev)
-        close(restart_dev,err=*next)
+        rem --- Create restart file
+        restartAt$="restartUpgrade1"
+        gosub createRestartFile
         goto done
     endif
 
+restartUpgrade2:
 rem --- Launch auto-sync in new barista for the new addon.syn
 rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the new barista
 
@@ -379,7 +382,14 @@ rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to b
 :       +" -y"+"A"
 :       +" -a" +"bax_dd_synch_auto.bbj"+$22$+" - "+" -f"+newSynFile$+" -b"+$22$
 :       +" -w"
-    scall_result=scall(run_arg$+user_arg$,err=*next)
+    success=0
+    scall_result=scall(run_arg$+user_arg$,err=*next); success=1
+    if !success or scall_result<>0 then
+        rem --- Create restart file
+        restartAt$="restartUpgrade2"
+        gosub createRestartFile
+        goto done
+    endif
 
 rem --- Copy OPV_SHIPTRACK_nn views from old database to new database
 
@@ -428,6 +438,7 @@ rem --- Copy OPV_SHIPTRACK_nn views from old database to new database
         endif
     endif
 
+restartUpgrade3:
 rem --- Run Install Application Wizard for applications being installed
 
     rem --- Increment progress meter
@@ -495,6 +506,12 @@ rem --- Run Install Application Wizard for applications being installed
 :       +" -a" +"baw_install_app.bbj"+$22$+" - "+" -f"+sourceSyn$+" "+aongitarg$+$22$
 :	    +" -w"
         scall_result=scall(run_arg$+user_arg$,err=*next)
+        if !success or scall_result<>0 then
+            rem --- Create restart file
+            restartAt$="restartUpgrade3"
+            gosub createRestartFile
+            exitto done
+        endif
 
         rem --- Clear ddm_systems.parent_sys_id for apps with ADDON parent in the new mods installation
         parent$=appList!.get(1); rem --- parent app
@@ -639,7 +656,7 @@ done: rem --- All done
     
     meter_proc_recs=meter_total_recs
     if restartFlag then
-        rem --- Not successfull, need to restart
+        rem --- Not successful, need to restart
         
         rem --- Stop progress meter
         meter_text$="***** "+Translate!.getTranslation("AON_TERMINATED")+" *****"
@@ -661,7 +678,7 @@ done: rem --- All done
         endif
 
         rem --- Clear aon/data/bar/delta directory
-        deltaDir!=new File(aonDataBarDelta$=newAonDir$+"/data/bar/delta")
+        deltaDir!=new File(newAonDir$+"/data/bar/delta")
         if deltaDir!.exists() then
             deltaVector! = new Vector(java.util.Arrays.asList(deltaDir!.listFiles()))
             deltaIter!=deltaVector!.iterator()
@@ -1609,6 +1626,36 @@ checkForReservedStr: rem --- For pre-v19 upgrades, check for delta XML RESERVED_
         busyImage!.destroy(err=*next)
     endif
     return
+    
+createRestartFile: rem --- Create restart file
+    FileObject.makeDirs(new File(newAonDir$ + "/logs"))
+    restartFile$=newAonDir$+"/logs/restartUpgradeWizard.txt"
+    erase restartFile$,err=*next
+    string restartFile$
+    restart_dev=unt
+    open(restart_dev)restartFile$
+    
+    print(restart_dev)"Restart file: "+restartFile$
+    print(restart_dev)"Created: "+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")
+    print(restart_dev)
+    print(restart_dev)"Previous log file: " + newAonDir$ + "/logs"+logName$
+    print(restart_dev)"New aon Location: " + newAonLoc$
+    print(restart_dev)"Old aon Location: " + oldAonLoc$
+    print(restart_dev)"Start version: " + start_version$
+    print(restart_dev)"Re-Start At: " + restartAt$
+    print(restart_dev)
+
+    rem --- Capture remaining commits that still need to be cherry picked
+    remainingIter!=remainingCommits!.iterator()
+    while remainingIter!.hasNext()
+        remaining!=remainingIter!.next()
+        print(restart_dev)"Remaining commit: ",remaining!
+    wend
+
+    print(restart_dev)
+    close(restart_dev,err=*next)
+    return
+
 
 removeModsArcBarFile: rem --- Remove mods data/bar/*.xml file and data/arc/*/*.arc files corresponding to given sourceName$
     rem --- Get source basename and extension
