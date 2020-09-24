@@ -413,14 +413,6 @@ getConflicts_error:rem --- Method error trap/handler (11Oct2017)
             if remoteCommits!<>null() and localCommits!<>null()
                 localCommits!.removeAll(remoteCommits!)
                 
-                REM Exclude the reordering commit if it's present
-                declare RevCommit reorderedCommit!
-                reorderedCommit!=#getCommitId(#FullReorderedTagName!)
-                if reorderedCommit!<> null then 
-                    localCommits!.remove(reorderedCommit!)
-                endif 
-                escape 
-                
                 commitIter!=localCommits!.iterator()
                 while (commitIter!.hasNext())
                     commit!=commitIter!.next()
