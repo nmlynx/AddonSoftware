@@ -309,7 +309,8 @@ build_NACHA_file: rem --- Build NACHA text file for financial institution to pro
     rem --- As necessary, create new NACHA text file
     if nacha_dev=-1 then
         rem --- Make sure ACH File Export Directory exists
-        nachaDir$=cvs(FileObject.fixPath(apsACH.ach_export_dir$, "/"),2)
+        ach_export_dir$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(apsACH.ach_export_dir$,err=*next))
+        nachaDir$=cvs(FileObject.fixPath(ach_export_dir$, "/"),2)
         FileObject.makeDirs(new File(nachaDir$))
 
         rem --- Create NACHA text file
