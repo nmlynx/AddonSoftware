@@ -1,629 +1,3 @@
-[[GLS_CALENDAR.AWRI]]
-rem --- When fiscal calendar for the initial fiscal year is saved, create duplicate fiscal calendars for the prior and next fiscal years.
-	year$=callpoint!.getDevObject("copy_calendar")
-	if year$<>"" then
-		dim gls_params$:fnget_tpl$("GLS_PARAMS")
-		gls_params$=callpoint!.getDevObject("gls_params")
-		gls_calendar_dev=fnget_dev("GLS_CALENDAR")
-		dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
-		readrecord(gls_calendar_dev,key=firm_id$+year$,dom=*endif)gls_calendar$
-
-		rem --- Create prior fiscal year's calendar
-		dim prior_cal$:fnget_tpl$("GLS_CALENDAR")
-		prior_cal$=gls_calendar$
-		prior_cal.year$=str(num(gls_calendar.year$)-1)
-		for per=1 to num(prior_cal.total_pers$)
-			field prior_cal$,"LOCKED_FLAG_"+str(per:"00")="Y"
-			field prior_cal$,"LOCKED_DATE_"+str(per:"00")=date(0:"%Yd%Mz%Dz")
-			per_ending$=field(prior_cal$,"PER_ENDING_"+str(per:"00"))
-			if (gls_params.adjust_february and per_ending$="0228") or per_ending$="0229" then
-				rem --- Adjust last day of February for leap year
-				calendar_year=num(prior_cal.year$)
-				if per_ending$<prior_cal.cal_start_date$ then calendar_year=calendar_year+1
-				Calendar! = new java.util.GregorianCalendar()
-				if per_ending$="0229" and !Calendar!.isLeapYear(calendar_year) then field prior_cal$,"PER_ENDING_"+str(per:"00")="0228"
-				if per_ending$="0228" and Calendar!.isLeapYear(calendar_year) then field prior_cal$,"PER_ENDING_"+str(per:"00")="0229"
-			endif
-		next per
-
-		prior_cal$=field(prior_cal$)
-		writerecord(gls_calendar_dev)prior_cal$
-
-		rem --- Create next fiscal year's calendar only if GL parameter create_next_cal is checked/true
-		dim gls_params$:fnget_tpl$("GLS_PARAMS")
-		gls_params$=callpoint!.getDevObject("gls_params")
-		if gls_params.create_next_cal then
-			rem --- Next fiscal year
-			dim next_cal$:fnget_tpl$("GLS_CALENDAR")
-			next_cal$=gls_calendar$
-			next_cal.year$=str(num(gls_calendar.year$)+1)
-			for per=1 to num(next_cal.total_pers$)
-				field next_cal$,"LOCKED_FLAG_"+str(per:"00")="N"
-				field next_cal$,"LOCKED_DATE_"+str(per:"00")=""
-				per_ending$=field(next_cal$,"PER_ENDING_"+str(per:"00"))
-				if (gls_params.adjust_february and per_ending$="0228") or per_ending$="0229" then
-					rem --- Adjust last day of February for leap year
-					calendar_year=num(next_cal.year$)
-					if per_ending$<next_cal.cal_start_date$ then calendar_year=calendar_year+1
-					Calendar! = new java.util.GregorianCalendar()
-					if per_ending$="0229" and !Calendar!.isLeapYear(calendar_year) then field next_cal$,"PER_ENDING_"+str(per:"00")="0228"
-					if per_ending$="0228" and Calendar!.isLeapYear(calendar_year) then field next_cal$,"PER_ENDING_"+str(per:"00")="0229"
-				endif
-			next per
-
-			next_cal$=field(next_cal$)
-			writerecord(gls_calendar_dev)next_cal$
-		endif
-
-		rem --- Reset file pointer for saved record
-		read(gls_calendar_dev,key=firm_id$+year$,dom=*next)
-	endif
-
-rem --- Remove glw_acctsummary records if the fiscal calendar was changed.
-	if callpoint!.getDevObject("calendar_changed") then
-		dim gls_params$:fnget_tpl$("GLS_PARAMS")
-		gls_params$=callpoint!.getDevObject("gls_params")
-		if callpoint!.getColumnData("GLS_CALENDAR.YEAR")=gls_params.current_year$ then
-			rem --- Remove all glw_acctsummary records for the FIRM if the fiscal calendar (total_pers, cal_start_date, or per_ending_nn)
-			rem --- for the CURRENT FISCAL YEAR changes.
-			call stbl("+DIR_PGM")+"adc_clearpartial.aon","",fnget_dev("GLW_ACCTSUMMARY"),firm_id$,status
-		else
-			rem --- Remove all glw_acctsummary records for a YEAR if the fiscal calendar (total_pers, cal_start_date, or per_ending_nn)
-			rem --- changes for THAT FISCAL YEAR.
-			call stbl("+DIR_PGM")+"adc_clearpartial.aon","",fnget_dev("GLW_ACCTSUMMARY"),firm_id$+callpoint!.getColumnData("GLS_CALENDAR.YEAR"),status
-		endif
-		if status then
-			callpoint!.setStatus("ABORT")
-			break
-		endif
-	endif
-[[GLS_CALENDAR.PER_ENDING_03.AVAL]]
-rem --- The last period must end on the day before the calendar start date of the next year.
-	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="03" then
-		per_ending$=callpoint!.getUserInput()
-		gosub validate_cal_end
-		if abort then break
-	endif
-
-rem --- For new entries, Adjust last day of February for leap year
-	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_03"),2)="" then
-		per_ending$=callpoint!.getUserInput()
-		gosub leap_year_adjustment
-		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
-	endif
-
-rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
-	period$="03"
-	per_ending$=callpoint!.getUserInput()
-	gosub check_transdetail_period_dates
-	if abort then break
-
-rem --- Validate period ending date
-	per_ending$=callpoint!.getUserInput()
-	gosub validate_mo_day
-	if abort then break
-[[GLS_CALENDAR.PER_ENDING_04.AVAL]]
-rem --- The last period must end on the day before the calendar start date of the next year.
-	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="04" then
-		per_ending$=callpoint!.getUserInput()
-		gosub validate_cal_end
-		if abort then break
-	endif
-
-rem --- For new entries, Adjust last day of February for leap year
-	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_04"),2)="" then
-		per_ending$=callpoint!.getUserInput()
-		gosub leap_year_adjustment
-		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
-	endif
-
-rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
-	period$="04"
-	per_ending$=callpoint!.getUserInput()
-	gosub check_transdetail_period_dates
-	if abort then break
-
-rem --- Validate period ending date
-	per_ending$=callpoint!.getUserInput()
-	gosub validate_mo_day
-	if abort then break
-[[GLS_CALENDAR.PER_ENDING_05.AVAL]]
-rem --- The last period must end on the day before the calendar start date of the next year.
-	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="05" then
-		per_ending$=callpoint!.getUserInput()
-		gosub validate_cal_end
-		if abort then break
-	endif
-
-rem --- For new entries, Adjust last day of February for leap year
-	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_05"),2)="" then
-		per_ending$=callpoint!.getUserInput()
-		gosub leap_year_adjustment
-		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
-	endif
-
-rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
-	period$="05"
-	per_ending$=callpoint!.getUserInput()
-	gosub check_transdetail_period_dates
-	if abort then break
-
-rem --- Validate period ending date
-	per_ending$=callpoint!.getUserInput()
-	gosub validate_mo_day
-	if abort then break
-[[GLS_CALENDAR.PER_ENDING_06.AVAL]]
-rem --- The last period must end on the day before the calendar start date of the next year.
-	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="06" then
-		per_ending$=callpoint!.getUserInput()
-		gosub validate_cal_end
-		if abort then break
-	endif
-
-rem --- For new entries, Adjust last day of February for leap year
-	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_06"),2)="" then
-		per_ending$=callpoint!.getUserInput()
-		gosub leap_year_adjustment
-		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
-	endif
-
-rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
-	period$="06"
-	per_ending$=callpoint!.getUserInput()
-	gosub check_transdetail_period_dates
-	if abort then break
-
-rem --- Validate period ending date
-	per_ending$=callpoint!.getUserInput()
-	gosub validate_mo_day
-	if abort then break
-[[GLS_CALENDAR.PER_ENDING_07.AVAL]]
-rem --- The last period must end on the day before the calendar start date of the next year.
-	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="07" then
-		per_ending$=callpoint!.getUserInput()
-		gosub validate_cal_end
-		if abort then break
-	endif
-
-rem --- For new entries, Adjust last day of February for leap year
-	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_07"),2)="" then
-		per_ending$=callpoint!.getUserInput()
-		gosub leap_year_adjustment
-		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
-	endif
-
-rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
-	period$="07"
-	per_ending$=callpoint!.getUserInput()
-	gosub check_transdetail_period_dates
-	if abort then break
-
-rem --- Validate period ending date
-	per_ending$=callpoint!.getUserInput()
-	gosub validate_mo_day
-	if abort then break
-[[GLS_CALENDAR.PER_ENDING_08.AVAL]]
-rem --- The last period must end on the day before the calendar start date of the next year.
-	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="08" then
-		per_ending$=callpoint!.getUserInput()
-		gosub validate_cal_end
-		if abort then break
-	endif
-
-rem --- For new entries, Adjust last day of February for leap year
-	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_08"),2)="" then
-		per_ending$=callpoint!.getUserInput()
-		gosub leap_year_adjustment
-		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
-	endif
-
-rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
-	period$="08"
-	per_ending$=callpoint!.getUserInput()
-	gosub check_transdetail_period_dates
-	if abort then break
-
-rem --- Validate period ending date
-	per_ending$=callpoint!.getUserInput()
-	gosub validate_mo_day
-	if abort then break
-[[GLS_CALENDAR.PER_ENDING_09.AVAL]]
-rem --- The last period must end on the day before the calendar start date of the next year.
-	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="09" then
-		per_ending$=callpoint!.getUserInput()
-		gosub validate_cal_end
-		if abort then break
-	endif
-
-rem --- For new entries, Adjust last day of February for leap year
-	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_09"),2)="" then
-		per_ending$=callpoint!.getUserInput()
-		gosub leap_year_adjustment
-		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
-	endif
-
-rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
-	period$="09"
-	per_ending$=callpoint!.getUserInput()
-	gosub check_transdetail_period_dates
-	if abort then break
-
-rem --- Validate period ending date
-	per_ending$=callpoint!.getUserInput()
-	gosub validate_mo_day
-	if abort then break
-[[GLS_CALENDAR.PER_ENDING_10.AVAL]]
-rem --- The last period must end on the day before the calendar start date of the next year.
-	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="10" then
-		per_ending$=callpoint!.getUserInput()
-		gosub validate_cal_end
-		if abort then break
-	endif
-
-rem --- For new entries, Adjust last day of February for leap year
-	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_10"),2)="" then
-		per_ending$=callpoint!.getUserInput()
-		gosub leap_year_adjustment
-		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
-	endif
-
-rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
-	period$="10"
-	per_ending$=callpoint!.getUserInput()
-	gosub check_transdetail_period_dates
-	if abort then break
-
-rem --- Validate period ending date
-	per_ending$=callpoint!.getUserInput()
-	gosub validate_mo_day
-	if abort then break
-[[GLS_CALENDAR.PER_ENDING_11.AVAL]]
-rem --- The last period must end on the day before the calendar start date of the next year.
-	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="11" then
-		per_ending$=callpoint!.getUserInput()
-		gosub validate_cal_end
-		if abort then break
-	endif
-
-rem --- For new entries, Adjust last day of February for leap year
-	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_11"),2)="" then
-		per_ending$=callpoint!.getUserInput()
-		gosub leap_year_adjustment
-		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
-	endif
-
-rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
-	period$="11"
-	per_ending$=callpoint!.getUserInput()
-	gosub check_transdetail_period_dates
-	if abort then break
-
-rem --- Validate period ending date
-	per_ending$=callpoint!.getUserInput()
-	gosub validate_mo_day
-	if abort then break
-[[GLS_CALENDAR.PER_ENDING_12.AVAL]]
-rem --- The last period must end on the day before the calendar start date of the next year.
-	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="12" then
-		per_ending$=callpoint!.getUserInput()
-		gosub validate_cal_end
-		if abort then break
-	endif
-
-rem --- For new entries, Adjust last day of February for leap year
-	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_12"),2)="" then
-		per_ending$=callpoint!.getUserInput()
-		gosub leap_year_adjustment
-		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
-	endif
-
-rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
-	period$="12"
-	per_ending$=callpoint!.getUserInput()
-	gosub check_transdetail_period_dates
-	if abort then break
-
-rem --- Validate period ending date
-	per_ending$=callpoint!.getUserInput()
-	gosub validate_mo_day
-	if abort then break
-[[GLS_CALENDAR.BSHO]]
-rem -- Get GL parameters
-	num_files=6
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
-	open_tables$[2]="GLT_TRANSDETAIL",open_opts$[2]="OTA"
-	open_tables$[3]="GLM_ACCTSUMMARY",open_opts$[3]="OTA"
-	open_tables$[4]="ADS_COMPINFO",open_opts$[4]="OTA"
-	open_tables$[5]="GLW_ACCTSUMMARY",open_opts$[5]="OTA"
-	open_tables$[6]="GLM_ACCTBUDGET",open_opts$[6]="OTA"
-	gosub open_tables
-	gls_params_dev=num(open_chans$[1])
-	dim gls_params$:open_tpls$[1]
-
-	find record(gls_params_dev,key=firm_id$+"GL00",err=std_missing_params)gls_params$
-	callpoint!.setDevObject("gls_params",gls_params$)
-
-rem --- Need to know later if form was just launched
-	callpoint!.setDevObject("justLaunched","1")
-[[GLS_CALENDAR.BWRI]]
-rem --- TOTAL_PERS must be >= last period in glt_transdetail (glt-06) for this fiscal year
-	total_pers=num(callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS"))
-	gosub check_total_pers
-	if abort then break
-
-rem --- CAL_START_DATE must be <= first trns_date in glt_transdetail (glt-06) for this fiscal year
-	cal_start_date$=callpoint!.getColumnData("GLS_CALENDAR.CAL_START_DATE")
-	gosub check_cal_start_date
-	if abort then break
-
-rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
-	for per=1 to 13
-		period$=str(per:"00")
-		per_ending$=callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_"+period$)
-		gosub check_transdetail_period_dates
-		if abort then break
-	next per
-	if abort then break
-
-rem --- Check United States (US) specific requirements for fiscal calendars
-	ads_compinfo_dev=fnget_dev("ADS_COMPINFO")
-	dim ads_compinfo$:fnget_tpl$("ADS_COMPINFO")
-	readrecord(ads_compinfo_dev,key=firm_id$,dom=*next)ads_compinfo$
-	if ads_compinfo.country_id$="US" then gosub validate_us_requirements
-
-rem --- When fiscal calendar for the initial fiscal year is saved, create duplicate fiscal calendars for the prior and next fiscal years.
-	gls_calendar_dev=fnget_dev("GLS_CALENDAR")
-	dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
-
-	read(gls_calendar_dev,key=firm_id$,dom=*next)
-	gls_calendar_key$=key(gls_calendar_dev,end=*next)
-	if pos(firm_id$=gls_calendar_key$)<>1 then
-		callpoint!.setDevObject("copy_calendar",callpoint!.getColumnData("GLS_CALENDAR.YEAR"))
-	else
-		callpoint!.setDevObject("copy_calendar","")
-	endif
-
-rem --- Was this fiscal calendar changed (total_pers, cal_start_date, or per_ending_nn)?
-	callpoint!.setDevObject("calendar_changed",0)
-	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")<>callpoint!.getColumnUndoData("GLS_CALENDAR.TOTAL_PERS") then
-		callpoint!.setDevObject("calendar_changed",1)
-	else
-		if callpoint!.getColumnData("GLS_CALENDAR.CAL_START_DATE")<>callpoint!.getColumnUndoData("GLS_CALENDAR.CAL_START_DATE") then
-			callpoint!.setDevObject("calendar_changed",1)
-		else
-			for per=1 to num(callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS"))
-				if callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_"+str(per:"00"))<>callpoint!.getColumnUndoData("GLS_CALENDAR.PER_ENDING_"+str(per:"00")) then
-					callpoint!.setDevObject("calendar_changed",1)
-                            		break
-				endif
-			next per
-		endif
-	endif
-[[GLS_CALENDAR.BDEL]]
-rem --- Never allow deleting the calendar for the prior/current/next fiscal year.
-	dim gls_params$:fnget_tpl$("GLS_PARAMS")
-	gls_params$=callpoint!.getDevObject("gls_params")
-	current_year=num(gls_params.current_year$)
-	year=num(callpoint!.getColumnData("GLS_CALENDAR.YEAR"))
-	if year=current_year-1 or year=current_year or year=current_year+1 then
-		msg_id$="GL_NOT_DEL_PCN_CAL"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-		break
-	endif
-
-rem --- Can only delete fiscal calendars where there is no corresponding data in 
-rem --- GLM_ACCTSUMMARY (glm-02) or GLM_ACCTBUDGET.
-	cal_in_use=0
-	year$=callpoint!.getColumnData("GLS_CALENDAR.YEAR")
-
-	glm_acctsummary_dev=fnget_dev("GLM_ACCTSUMMARY")
-	dim glm_acctsummary$:fnget_tpl$("GLM_ACCTSUMMARY")
-	read(glm_acctsummary_dev,key=firm_id$+year$,knum="BY_YEAR_ACCT",dom=*next)
-	readrecord(glm_acctsummary_dev,end=*next)glm_acctsummary$
-	if glm_acctsummary.year$=year$ then cal_in_use=1
-
-	if !cal_in_use then
-		glm_acctbudget_dev=fnget_dev("GLM_ACCTBUDGET")
-		dim glm_acctbudget$:fnget_tpl$("GLM_ACCTBUDGET")
-		read(glm_acctbudget_dev,key=firm_id$+year$,knum="BY_YEAR_ACCT",dom=*next)
-		readrecord(glm_acctbudget_dev,end=*next)glm_acctbudget$
-		if glm_acctbudget.year$=year$ then cal_in_use=1
-	endif
-
-	if cal_in_use then
-		msg_id$="GL_CANNOT_DEL_CAL"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-		break
-	endif
-[[GLS_CALENDAR.PER_ENDING_01.AVAL]]
-rem --- The last period must end on the day before the calendar start date of the next year.
-	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="01" then
-		per_ending$=callpoint!.getUserInput()
-		gosub validate_cal_end
-		if abort then break
-	endif
-
-rem --- For new entries, Adjust last day of February for leap year
-	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_01"),2)="" then
-		per_ending$=callpoint!.getUserInput()
-		gosub leap_year_adjustment
-		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
-	endif
-
-rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
-	period$="01"
-	per_ending$=callpoint!.getUserInput()
-	gosub check_transdetail_period_dates
-	if abort then break
-
-rem --- Validate period ending date
-	per_ending$=callpoint!.getUserInput()
-	gosub validate_mo_day
-	if abort then break
-[[GLS_CALENDAR.PER_ENDING_02.AVAL]]
-rem --- The last period must end on the day before the calendar start date of the next year.
-	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="02" then
-		per_ending$=callpoint!.getUserInput()
-		gosub validate_cal_end
-		if abort then break
-	endif
-
-rem --- For new entries, Adjust last day of February for leap year
-	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_02"),2)="" then
-		per_ending$=callpoint!.getUserInput()
-		gosub leap_year_adjustment
-		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
-	endif
-
-rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
-	period$="02"
-	per_ending$=callpoint!.getUserInput()
-	gosub check_transdetail_period_dates
-	if abort then break
-
-rem --- Validate period ending date
-	per_ending$=callpoint!.getUserInput()
-	gosub validate_mo_day
-	if abort then break
-[[GLS_CALENDAR.PER_ENDING_13.AVAL]]
-rem --- The last period must end on the day before the calendar start date of the next year.
-	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="13" then
-		per_ending$=callpoint!.getUserInput()
-		gosub validate_cal_end
-		if abort then break
-	endif
-
-rem --- For new entries, Adjust last day of February for leap year
-	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_13"),2)="" then
-		per_ending$=callpoint!.getUserInput()
-		gosub leap_year_adjustment
-		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
-	endif
-
-rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
-	period$="13"
-	per_ending$=callpoint!.getUserInput()
-	gosub check_transdetail_period_dates
-	if abort then break
-
-rem --- Validate period ending date
-	per_ending$=callpoint!.getUserInput()
-	gosub validate_mo_day
-	if abort then break
-[[GLS_CALENDAR.CAL_START_DATE.AVAL]]
-rem --- Must be a valid date
-	cal_start_date$=callpoint!.getUserInput()
-	year=num(callpoint!.getColumnData("GLS_CALENDAR.YEAR"))
-	julian=-1
-	julian=jul(year,num(cal_start_date$(1,2)),num(cal_start_date$(3,2)),err=*next)
-	if julian<0 then
-		msg_id$="INVALID_DATE"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-		break
-	endif
-
-rem --- Must be the day after the ending period of the prior year when there is a calendar for the prior year.
-	gls_calendar_dev=fnget_dev("GLS_CALENDAR")
-	dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
-	prior_year$=str(num(callpoint!.getColumnData("GLS_CALENDAR.YEAR"))-1)
-	readrecord(gls_calendar_dev,key=firm_id$+prior_year$,dom=*next)gls_calendar$
-	if cvs(gls_calendar.year$,2)<>"" then
-		enddate$=date(julian-1:"%Yl%Mz%Dz")
-		if enddate$(5)<>field(gls_calendar$,"PER_ENDING_"+gls_calendar.total_pers$) then
-			msg_id$="GL_BAD_START_DATE"
-			gosub disp_message
-			callpoint!.setStatus("ABORT")
-			break
-		endif
-	endif
-
-rem --- CAL_START_DATE must be <= first trns_date in glt_transdetail (glt-06) for this fiscal year
-	cal_start_date$=callpoint!.getUserInput()
-	gosub check_cal_start_date
-	if abort then break
-[[GLS_CALENDAR.YEAR.AVAL]]
-rem --- Unless it's the current fiscal year, a new year must have an existing prior year, or next year.
-	gls_calendar_dev=fnget_dev("GLS_CALENDAR")
-	dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
-	dim gls_params$:fnget_tpl$("GLS_PARAMS")
-	gls_params$=callpoint!.getDevObject("gls_params")
-
-	year$=callpoint!.getUserInput()
-	if year$<>gls_params.current_year$ then
-		prior_year$=str(num(year$)-1)
-		readrecord(gls_calendar_dev,key=firm_id$+prior_year$,dom=*next)gls_calendar$
-		if cvs(gls_calendar.year$,2)="" then
-			next_year$=str(num(year$)+1)
-			readrecord(gls_calendar_dev,key=firm_id$+next_year$,dom=*next)gls_calendar$
-			if cvs(gls_calendar.year$,2)="" then
-				msg_id$="GL_CALENDAR_MISSING"
-				gosub disp_message
-				callpoint!.setStatus("ABORT")
-				break
-			endif
-
-			rem --- Is this a new record?
-			newRecord=1
-			readrecord(gls_calendar_dev,key=firm_id$+year$,dom=*next); newRecord=0
-			if newRecord then
-				msg_id$="GL_COPY_CALENDAR"
-				gosub disp_message
-				if msg_opt$="Y" then
-					rem --- Copy calendar from current fiscal year.
-					gosub copy_fiscal_calendar
-				else
-					rem --- Do NOT copy calendar from current fiscal year.
-					callpoint!.setColumnData("GLS_CALENDAR.CAL_START_DATE","",1)
-					callpoint!.setColumnEnabled("GLS_CALENDAR.CAL_START_DATE",1)
-				endif
-			endif
-		else
-			rem --- Is this a new record?
-			newRecord=1
-			readrecord(gls_calendar_dev,key=firm_id$+year$,dom=*next); newRecord=0
-			if newRecord then
-				msg_id$="GL_COPY_CALENDAR"
-				gosub disp_message
-				if msg_opt$="Y" then
-					rem --- Copy calendar from current fiscal year.
-					gosub copy_fiscal_calendar
-				else
-					rem --- Do NOT copy calendar from current fiscal year.
-					rem --- Initialize CAL_START_DATE to the day after the ending period of the prior year.
-					calendar_year=num(year$)-1
-					begdate$=field(gls_calendar$,"PER_ENDING_"+gls_calendar.total_pers$)
-					if begdate$<gls_calendar.per_ending_01$ then calendar_year=calendar_year+1
-					rem --- Adjust last day of February for leap year
-					if begdate$(1,2)="02" then
-						Calendar! = new java.util.GregorianCalendar()
-						if begdate$(3,2)="29" and !Calendar!.isLeapYear(calendar_year) then begdate$(3,2)="28"
-						if begdate$(3,2)="28" and Calendar!.isLeapYear(calendar_year) then begdate$(3,2)="29"
-					endif
-					julian=jul(calendar_year,num(begdate$(1,2)),num(begdate$(3,2)))+1
-					begdate$=date(julian:"%Yl%Mz%Dz")
-					callpoint!.setColumnData("GLS_CALENDAR.CAL_START_DATE",begdate$(5),1)
-					callpoint!.setColumnEnabled("GLS_CALENDAR.CAL_START_DATE",0)
-				endif
-			endif
-		endif
-	endif
-
-rem --- Get the earliest and latest trns_date in GLT_TRANSDETAIL (glt-06) for each period in "this" fiscal year.
-	year$=callpoint!.getUserInput()
-	gosub get_transdetail_period_dates
-[[GLS_CALENDAR.TOTAL_PERS.AVAL]]
-rem --- Disable and clear un-used periods
-	total_pers=num(callpoint!.getUserInput())
-	gosub disable_periods
-
-rem --- TOTAL_PERS must be >= last period in glt_transdetail (glt-06) for this fiscal year
-	total_pers=num(callpoint!.getUserInput())
-	gosub check_total_pers
-	if abort then break
 [[GLS_CALENDAR.ADIS]]
 rem --- Show current fiscal year and period
 	gosub show_current_fiscal_yr
@@ -635,6 +9,7 @@ rem --- Disable and clear un-used periods
 rem --- Get the earliest and latest trns_date in GLT_TRANSDETAIL (glt-06) for each period in "this" fiscal year.
 	year$=callpoint!.getColumnData("GLS_CALENDAR.YEAR")
 	gosub get_transdetail_period_dates
+
 [[GLS_CALENDAR.AREC]]
 rem --- Show current fiscal year and period
 	gosub show_current_fiscal_yr
@@ -718,6 +93,653 @@ rem --- On launch initialize form with calendar for current fiscal year
 			callpoint!.setStatus("REFRESH-MODIFIED")
 		endif
 	endif
+
+[[GLS_CALENDAR.AWRI]]
+rem --- When fiscal calendar for the initial fiscal year is saved, create duplicate fiscal calendars for the prior and next fiscal years.
+	year$=callpoint!.getDevObject("copy_calendar")
+	if year$<>"" then
+		dim gls_params$:fnget_tpl$("GLS_PARAMS")
+		gls_params$=callpoint!.getDevObject("gls_params")
+		gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+		dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+		readrecord(gls_calendar_dev,key=firm_id$+year$,dom=*endif)gls_calendar$
+
+		rem --- Create prior fiscal year's calendar
+		dim prior_cal$:fnget_tpl$("GLS_CALENDAR")
+		prior_cal$=gls_calendar$
+		prior_cal.year$=str(num(gls_calendar.year$)-1)
+		for per=1 to num(prior_cal.total_pers$)
+			field prior_cal$,"LOCKED_FLAG_"+str(per:"00")="Y"
+			field prior_cal$,"LOCKED_DATE_"+str(per:"00")=date(0:"%Yd%Mz%Dz")
+			per_ending$=field(prior_cal$,"PER_ENDING_"+str(per:"00"))
+			if (gls_params.adjust_february and per_ending$="0228") or per_ending$="0229" then
+				rem --- Adjust last day of February for leap year
+				calendar_year=num(prior_cal.year$)
+				if per_ending$<prior_cal.cal_start_date$ then calendar_year=calendar_year+1
+				Calendar! = new java.util.GregorianCalendar()
+				if per_ending$="0229" and !Calendar!.isLeapYear(calendar_year) then field prior_cal$,"PER_ENDING_"+str(per:"00")="0228"
+				if per_ending$="0228" and Calendar!.isLeapYear(calendar_year) then field prior_cal$,"PER_ENDING_"+str(per:"00")="0229"
+			endif
+		next per
+
+		prior_cal$=field(prior_cal$)
+		writerecord(gls_calendar_dev)prior_cal$
+
+		rem --- Create next fiscal year's calendar only if GL parameter create_next_cal is checked/true
+		dim gls_params$:fnget_tpl$("GLS_PARAMS")
+		gls_params$=callpoint!.getDevObject("gls_params")
+		if gls_params.create_next_cal then
+			rem --- Next fiscal year
+			dim next_cal$:fnget_tpl$("GLS_CALENDAR")
+			next_cal$=gls_calendar$
+			next_cal.year$=str(num(gls_calendar.year$)+1)
+			for per=1 to num(next_cal.total_pers$)
+				field next_cal$,"LOCKED_FLAG_"+str(per:"00")="N"
+				field next_cal$,"LOCKED_DATE_"+str(per:"00")=""
+				per_ending$=field(next_cal$,"PER_ENDING_"+str(per:"00"))
+				if (gls_params.adjust_february and per_ending$="0228") or per_ending$="0229" then
+					rem --- Adjust last day of February for leap year
+					calendar_year=num(next_cal.year$)
+					if per_ending$<next_cal.cal_start_date$ then calendar_year=calendar_year+1
+					Calendar! = new java.util.GregorianCalendar()
+					if per_ending$="0229" and !Calendar!.isLeapYear(calendar_year) then field next_cal$,"PER_ENDING_"+str(per:"00")="0228"
+					if per_ending$="0228" and Calendar!.isLeapYear(calendar_year) then field next_cal$,"PER_ENDING_"+str(per:"00")="0229"
+				endif
+			next per
+
+			next_cal$=field(next_cal$)
+			writerecord(gls_calendar_dev)next_cal$
+		endif
+
+		rem --- Reset file pointer for saved record
+		read(gls_calendar_dev,key=firm_id$+year$,dom=*next)
+	endif
+
+rem --- Remove glw_acctsummary records if the fiscal calendar was changed.
+	if callpoint!.getDevObject("calendar_changed") then
+		dim gls_params$:fnget_tpl$("GLS_PARAMS")
+		gls_params$=callpoint!.getDevObject("gls_params")
+		if callpoint!.getColumnData("GLS_CALENDAR.YEAR")=gls_params.current_year$ then
+			rem --- Remove all glw_acctsummary records for the FIRM if the fiscal calendar (total_pers, cal_start_date, or per_ending_nn)
+			rem --- for the CURRENT FISCAL YEAR changes.
+			call stbl("+DIR_PGM")+"adc_clearpartial.aon","",fnget_dev("GLW_ACCTSUMMARY"),firm_id$,status
+		else
+			rem --- Remove all glw_acctsummary records for a YEAR if the fiscal calendar (total_pers, cal_start_date, or per_ending_nn)
+			rem --- changes for THAT FISCAL YEAR.
+			call stbl("+DIR_PGM")+"adc_clearpartial.aon","",fnget_dev("GLW_ACCTSUMMARY"),firm_id$+callpoint!.getColumnData("GLS_CALENDAR.YEAR"),status
+		endif
+		if status then
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
+
+[[GLS_CALENDAR.BDEL]]
+rem --- Never allow deleting the calendar for the prior/current/next fiscal year.
+	dim gls_params$:fnget_tpl$("GLS_PARAMS")
+	gls_params$=callpoint!.getDevObject("gls_params")
+	current_year=num(gls_params.current_year$)
+	year=num(callpoint!.getColumnData("GLS_CALENDAR.YEAR"))
+	if year=current_year-1 or year=current_year or year=current_year+1 then
+		msg_id$="GL_NOT_DEL_PCN_CAL"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+rem --- Can only delete fiscal calendars where there is no corresponding data in 
+rem --- GLM_ACCTSUMMARY (glm-02) or GLM_ACCTBUDGET.
+	cal_in_use=0
+	year$=callpoint!.getColumnData("GLS_CALENDAR.YEAR")
+
+	glm_acctsummary_dev=fnget_dev("GLM_ACCTSUMMARY")
+	dim glm_acctsummary$:fnget_tpl$("GLM_ACCTSUMMARY")
+	read(glm_acctsummary_dev,key=firm_id$+year$,knum="BY_YEAR_ACCT",dom=*next)
+	readrecord(glm_acctsummary_dev,end=*next)glm_acctsummary$
+	if glm_acctsummary.year$=year$ then cal_in_use=1
+
+	if !cal_in_use then
+		glm_acctbudget_dev=fnget_dev("GLM_ACCTBUDGET")
+		dim glm_acctbudget$:fnget_tpl$("GLM_ACCTBUDGET")
+		read(glm_acctbudget_dev,key=firm_id$+year$,knum="BY_YEAR_ACCT",dom=*next)
+		readrecord(glm_acctbudget_dev,end=*next)glm_acctbudget$
+		if glm_acctbudget.year$=year$ then cal_in_use=1
+	endif
+
+	if cal_in_use then
+		msg_id$="GL_CANNOT_DEL_CAL"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+[[GLS_CALENDAR.BSHO]]
+rem -- Get GL parameters
+	num_files=6
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
+	open_tables$[2]="GLT_TRANSDETAIL",open_opts$[2]="OTA"
+	open_tables$[3]="GLM_ACCTSUMMARY",open_opts$[3]="OTA"
+	open_tables$[4]="ADS_COMPINFO",open_opts$[4]="OTA"
+	open_tables$[5]="GLW_ACCTSUMMARY",open_opts$[5]="OTA"
+	open_tables$[6]="GLM_ACCTBUDGET",open_opts$[6]="OTA"
+	gosub open_tables
+	gls_params_dev=num(open_chans$[1])
+	dim gls_params$:open_tpls$[1]
+
+	find record(gls_params_dev,key=firm_id$+"GL00",err=std_missing_params)gls_params$
+	callpoint!.setDevObject("gls_params",gls_params$)
+
+rem --- Need to know later if form was just launched
+	callpoint!.setDevObject("justLaunched","1")
+
+[[GLS_CALENDAR.BWRI]]
+rem --- TOTAL_PERS must be >= last period in glt_transdetail (glt-06) for this fiscal year
+	total_pers=num(callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS"))
+	gosub check_total_pers
+	if abort then break
+
+rem --- CAL_START_DATE must be <= first trns_date in glt_transdetail (glt-06) for this fiscal year
+	cal_start_date$=callpoint!.getColumnData("GLS_CALENDAR.CAL_START_DATE")
+	gosub check_cal_start_date
+	if abort then break
+
+rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
+	for per=1 to 13
+		period$=str(per:"00")
+		per_ending$=callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_"+period$)
+		gosub check_transdetail_period_dates
+		if abort then break
+	next per
+	if abort then break
+
+rem --- Check United States (US) specific requirements for fiscal calendars
+	ads_compinfo_dev=fnget_dev("ADS_COMPINFO")
+	dim ads_compinfo$:fnget_tpl$("ADS_COMPINFO")
+	readrecord(ads_compinfo_dev,key=firm_id$,dom=*next)ads_compinfo$
+	if ads_compinfo.country_id$="US" then gosub validate_us_requirements
+
+rem --- When fiscal calendar for the initial fiscal year is saved, create duplicate fiscal calendars for the prior and next fiscal years.
+	gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+	dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+
+	read(gls_calendar_dev,key=firm_id$,dom=*next)
+	gls_calendar_key$=key(gls_calendar_dev,end=*next)
+	if pos(firm_id$=gls_calendar_key$)<>1 then
+		callpoint!.setDevObject("copy_calendar",callpoint!.getColumnData("GLS_CALENDAR.YEAR"))
+	else
+		callpoint!.setDevObject("copy_calendar","")
+	endif
+
+rem --- Was this fiscal calendar changed (total_pers, cal_start_date, or per_ending_nn)?
+	callpoint!.setDevObject("calendar_changed",0)
+	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")<>callpoint!.getColumnUndoData("GLS_CALENDAR.TOTAL_PERS") then
+		callpoint!.setDevObject("calendar_changed",1)
+	else
+		if callpoint!.getColumnData("GLS_CALENDAR.CAL_START_DATE")<>callpoint!.getColumnUndoData("GLS_CALENDAR.CAL_START_DATE") then
+			callpoint!.setDevObject("calendar_changed",1)
+		else
+			for per=1 to num(callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS"))
+				if callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_"+str(per:"00"))<>callpoint!.getColumnUndoData("GLS_CALENDAR.PER_ENDING_"+str(per:"00")) then
+					callpoint!.setDevObject("calendar_changed",1)
+                            		break
+				endif
+			next per
+		endif
+	endif
+
+[[GLS_CALENDAR.CAL_START_DATE.AVAL]]
+rem --- Must be a valid date
+	cal_start_date$=callpoint!.getUserInput()
+	year=num(callpoint!.getColumnData("GLS_CALENDAR.YEAR"))
+	julian=-1
+	julian=jul(year,num(cal_start_date$(1,2)),num(cal_start_date$(3,2)),err=*next)
+	if julian<0 then
+		msg_id$="INVALID_DATE"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+rem --- Must be the day after the ending period of the prior year when there is a calendar for the prior year.
+	gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+	dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+	prior_year$=str(num(callpoint!.getColumnData("GLS_CALENDAR.YEAR"))-1)
+	readrecord(gls_calendar_dev,key=firm_id$+prior_year$,dom=*next)gls_calendar$
+	if cvs(gls_calendar.year$,2)<>"" then
+		enddate$=date(julian-1:"%Yl%Mz%Dz")
+		if enddate$(5)<>field(gls_calendar$,"PER_ENDING_"+gls_calendar.total_pers$) then
+			msg_id$="GL_BAD_START_DATE"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
+
+rem --- CAL_START_DATE must be <= first trns_date in glt_transdetail (glt-06) for this fiscal year
+	cal_start_date$=callpoint!.getUserInput()
+	gosub check_cal_start_date
+	if abort then break
+
+[[GLS_CALENDAR.PER_ENDING_01.AVAL]]
+rem --- The last period must end on the day before the calendar start date of the next year.
+	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="01" then
+		per_ending$=callpoint!.getUserInput()
+		gosub validate_cal_end
+		if abort then break
+	endif
+
+rem --- For new entries, Adjust last day of February for leap year
+	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_01"),2)="" then
+		per_ending$=callpoint!.getUserInput()
+		gosub leap_year_adjustment
+		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
+	endif
+
+rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
+	period$="01"
+	per_ending$=callpoint!.getUserInput()
+	gosub check_transdetail_period_dates
+	if abort then break
+
+rem --- Validate period ending date
+	per_ending$=callpoint!.getUserInput()
+	gosub validate_mo_day
+	if abort then break
+
+[[GLS_CALENDAR.PER_ENDING_02.AVAL]]
+rem --- The last period must end on the day before the calendar start date of the next year.
+	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="02" then
+		per_ending$=callpoint!.getUserInput()
+		gosub validate_cal_end
+		if abort then break
+	endif
+
+rem --- For new entries, Adjust last day of February for leap year
+	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_02"),2)="" then
+		per_ending$=callpoint!.getUserInput()
+		gosub leap_year_adjustment
+		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
+	endif
+
+rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
+	period$="02"
+	per_ending$=callpoint!.getUserInput()
+	gosub check_transdetail_period_dates
+	if abort then break
+
+rem --- Validate period ending date
+	per_ending$=callpoint!.getUserInput()
+	gosub validate_mo_day
+	if abort then break
+
+[[GLS_CALENDAR.PER_ENDING_03.AVAL]]
+rem --- The last period must end on the day before the calendar start date of the next year.
+	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="03" then
+		per_ending$=callpoint!.getUserInput()
+		gosub validate_cal_end
+		if abort then break
+	endif
+
+rem --- For new entries, Adjust last day of February for leap year
+	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_03"),2)="" then
+		per_ending$=callpoint!.getUserInput()
+		gosub leap_year_adjustment
+		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
+	endif
+
+rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
+	period$="03"
+	per_ending$=callpoint!.getUserInput()
+	gosub check_transdetail_period_dates
+	if abort then break
+
+rem --- Validate period ending date
+	per_ending$=callpoint!.getUserInput()
+	gosub validate_mo_day
+	if abort then break
+
+[[GLS_CALENDAR.PER_ENDING_04.AVAL]]
+rem --- The last period must end on the day before the calendar start date of the next year.
+	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="04" then
+		per_ending$=callpoint!.getUserInput()
+		gosub validate_cal_end
+		if abort then break
+	endif
+
+rem --- For new entries, Adjust last day of February for leap year
+	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_04"),2)="" then
+		per_ending$=callpoint!.getUserInput()
+		gosub leap_year_adjustment
+		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
+	endif
+
+rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
+	period$="04"
+	per_ending$=callpoint!.getUserInput()
+	gosub check_transdetail_period_dates
+	if abort then break
+
+rem --- Validate period ending date
+	per_ending$=callpoint!.getUserInput()
+	gosub validate_mo_day
+	if abort then break
+
+[[GLS_CALENDAR.PER_ENDING_05.AVAL]]
+rem --- The last period must end on the day before the calendar start date of the next year.
+	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="05" then
+		per_ending$=callpoint!.getUserInput()
+		gosub validate_cal_end
+		if abort then break
+	endif
+
+rem --- For new entries, Adjust last day of February for leap year
+	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_05"),2)="" then
+		per_ending$=callpoint!.getUserInput()
+		gosub leap_year_adjustment
+		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
+	endif
+
+rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
+	period$="05"
+	per_ending$=callpoint!.getUserInput()
+	gosub check_transdetail_period_dates
+	if abort then break
+
+rem --- Validate period ending date
+	per_ending$=callpoint!.getUserInput()
+	gosub validate_mo_day
+	if abort then break
+
+[[GLS_CALENDAR.PER_ENDING_06.AVAL]]
+rem --- The last period must end on the day before the calendar start date of the next year.
+	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="06" then
+		per_ending$=callpoint!.getUserInput()
+		gosub validate_cal_end
+		if abort then break
+	endif
+
+rem --- For new entries, Adjust last day of February for leap year
+	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_06"),2)="" then
+		per_ending$=callpoint!.getUserInput()
+		gosub leap_year_adjustment
+		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
+	endif
+
+rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
+	period$="06"
+	per_ending$=callpoint!.getUserInput()
+	gosub check_transdetail_period_dates
+	if abort then break
+
+rem --- Validate period ending date
+	per_ending$=callpoint!.getUserInput()
+	gosub validate_mo_day
+	if abort then break
+
+[[GLS_CALENDAR.PER_ENDING_07.AVAL]]
+rem --- The last period must end on the day before the calendar start date of the next year.
+	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="07" then
+		per_ending$=callpoint!.getUserInput()
+		gosub validate_cal_end
+		if abort then break
+	endif
+
+rem --- For new entries, Adjust last day of February for leap year
+	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_07"),2)="" then
+		per_ending$=callpoint!.getUserInput()
+		gosub leap_year_adjustment
+		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
+	endif
+
+rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
+	period$="07"
+	per_ending$=callpoint!.getUserInput()
+	gosub check_transdetail_period_dates
+	if abort then break
+
+rem --- Validate period ending date
+	per_ending$=callpoint!.getUserInput()
+	gosub validate_mo_day
+	if abort then break
+
+[[GLS_CALENDAR.PER_ENDING_08.AVAL]]
+rem --- The last period must end on the day before the calendar start date of the next year.
+	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="08" then
+		per_ending$=callpoint!.getUserInput()
+		gosub validate_cal_end
+		if abort then break
+	endif
+
+rem --- For new entries, Adjust last day of February for leap year
+	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_08"),2)="" then
+		per_ending$=callpoint!.getUserInput()
+		gosub leap_year_adjustment
+		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
+	endif
+
+rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
+	period$="08"
+	per_ending$=callpoint!.getUserInput()
+	gosub check_transdetail_period_dates
+	if abort then break
+
+rem --- Validate period ending date
+	per_ending$=callpoint!.getUserInput()
+	gosub validate_mo_day
+	if abort then break
+
+[[GLS_CALENDAR.PER_ENDING_09.AVAL]]
+rem --- The last period must end on the day before the calendar start date of the next year.
+	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="09" then
+		per_ending$=callpoint!.getUserInput()
+		gosub validate_cal_end
+		if abort then break
+	endif
+
+rem --- For new entries, Adjust last day of February for leap year
+	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_09"),2)="" then
+		per_ending$=callpoint!.getUserInput()
+		gosub leap_year_adjustment
+		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
+	endif
+
+rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
+	period$="09"
+	per_ending$=callpoint!.getUserInput()
+	gosub check_transdetail_period_dates
+	if abort then break
+
+rem --- Validate period ending date
+	per_ending$=callpoint!.getUserInput()
+	gosub validate_mo_day
+	if abort then break
+
+[[GLS_CALENDAR.PER_ENDING_10.AVAL]]
+rem --- The last period must end on the day before the calendar start date of the next year.
+	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="10" then
+		per_ending$=callpoint!.getUserInput()
+		gosub validate_cal_end
+		if abort then break
+	endif
+
+rem --- For new entries, Adjust last day of February for leap year
+	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_10"),2)="" then
+		per_ending$=callpoint!.getUserInput()
+		gosub leap_year_adjustment
+		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
+	endif
+
+rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
+	period$="10"
+	per_ending$=callpoint!.getUserInput()
+	gosub check_transdetail_period_dates
+	if abort then break
+
+rem --- Validate period ending date
+	per_ending$=callpoint!.getUserInput()
+	gosub validate_mo_day
+	if abort then break
+
+[[GLS_CALENDAR.PER_ENDING_11.AVAL]]
+rem --- The last period must end on the day before the calendar start date of the next year.
+	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="11" then
+		per_ending$=callpoint!.getUserInput()
+		gosub validate_cal_end
+		if abort then break
+	endif
+
+rem --- For new entries, Adjust last day of February for leap year
+	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_11"),2)="" then
+		per_ending$=callpoint!.getUserInput()
+		gosub leap_year_adjustment
+		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
+	endif
+
+rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
+	period$="11"
+	per_ending$=callpoint!.getUserInput()
+	gosub check_transdetail_period_dates
+	if abort then break
+
+rem --- Validate period ending date
+	per_ending$=callpoint!.getUserInput()
+	gosub validate_mo_day
+	if abort then break
+
+[[GLS_CALENDAR.PER_ENDING_12.AVAL]]
+rem --- The last period must end on the day before the calendar start date of the next year.
+	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="12" then
+		per_ending$=callpoint!.getUserInput()
+		gosub validate_cal_end
+		if abort then break
+	endif
+
+rem --- For new entries, Adjust last day of February for leap year
+	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_12"),2)="" then
+		per_ending$=callpoint!.getUserInput()
+		gosub leap_year_adjustment
+		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
+	endif
+
+rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
+	period$="12"
+	per_ending$=callpoint!.getUserInput()
+	gosub check_transdetail_period_dates
+	if abort then break
+
+rem --- Validate period ending date
+	per_ending$=callpoint!.getUserInput()
+	gosub validate_mo_day
+	if abort then break
+
+[[GLS_CALENDAR.PER_ENDING_13.AVAL]]
+rem --- The last period must end on the day before the calendar start date of the next year.
+	if callpoint!.getColumnData("GLS_CALENDAR.TOTAL_PERS")="13" then
+		per_ending$=callpoint!.getUserInput()
+		gosub validate_cal_end
+		if abort then break
+	endif
+
+rem --- For new entries, Adjust last day of February for leap year
+	if cvs(callpoint!.getColumnData("GLS_CALENDAR.PER_ENDING_13"),2)="" then
+		per_ending$=callpoint!.getUserInput()
+		gosub leap_year_adjustment
+		if mmdd$<>per_ending$ then callpoint!.setUserInput(mmdd$)
+	endif
+
+rem --- Check PER_ENDING date against GLT_TRANSDETAIL (glt-06) period dates
+	period$="13"
+	per_ending$=callpoint!.getUserInput()
+	gosub check_transdetail_period_dates
+	if abort then break
+
+rem --- Validate period ending date
+	per_ending$=callpoint!.getUserInput()
+	gosub validate_mo_day
+	if abort then break
+
+[[GLS_CALENDAR.TOTAL_PERS.AVAL]]
+rem --- Disable and clear un-used periods
+	total_pers=num(callpoint!.getUserInput())
+	gosub disable_periods
+
+rem --- TOTAL_PERS must be >= last period in glt_transdetail (glt-06) for this fiscal year
+	total_pers=num(callpoint!.getUserInput())
+	gosub check_total_pers
+	if abort then break
+
+[[GLS_CALENDAR.YEAR.AVAL]]
+rem --- Unless it's the current fiscal year, a new year must have an existing prior year, or next year.
+	gls_calendar_dev=fnget_dev("GLS_CALENDAR")
+	dim gls_calendar$:fnget_tpl$("GLS_CALENDAR")
+	dim gls_params$:fnget_tpl$("GLS_PARAMS")
+	gls_params$=callpoint!.getDevObject("gls_params")
+
+	year$=callpoint!.getUserInput()
+	if year$<>gls_params.current_year$ then
+		prior_year$=str(num(year$)-1)
+		readrecord(gls_calendar_dev,key=firm_id$+prior_year$,dom=*next)gls_calendar$
+		if cvs(gls_calendar.year$,2)="" then
+			next_year$=str(num(year$)+1)
+			readrecord(gls_calendar_dev,key=firm_id$+next_year$,dom=*next)gls_calendar$
+			if cvs(gls_calendar.year$,2)="" then
+				msg_id$="GL_CALENDAR_MISSING"
+				gosub disp_message
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+
+			rem --- Is this a new record?
+			newRecord=1
+			readrecord(gls_calendar_dev,key=firm_id$+year$,dom=*next); newRecord=0
+			if newRecord then
+				msg_id$="GL_COPY_CALENDAR"
+				gosub disp_message
+				if msg_opt$="Y" then
+					rem --- Copy calendar from current fiscal year.
+					gosub copy_fiscal_calendar
+				else
+					rem --- Do NOT copy calendar from current fiscal year.
+					callpoint!.setColumnData("GLS_CALENDAR.CAL_START_DATE","",1)
+					callpoint!.setColumnEnabled("GLS_CALENDAR.CAL_START_DATE",1)
+				endif
+			endif
+		else
+			rem --- Is this a new record?
+			newRecord=1
+			readrecord(gls_calendar_dev,key=firm_id$+year$,dom=*next); newRecord=0
+			if newRecord then
+				msg_id$="GL_COPY_CALENDAR"
+				gosub disp_message
+				if msg_opt$="Y" then
+					rem --- Copy calendar from current fiscal year.
+					gosub copy_fiscal_calendar
+				else
+					rem --- Do NOT copy calendar from current fiscal year.
+					rem --- Initialize CAL_START_DATE to the day after the ending period of the prior year.
+					calendar_year=num(year$)-1
+					begdate$=field(gls_calendar$,"PER_ENDING_"+gls_calendar.total_pers$)
+					if begdate$<gls_calendar.per_ending_01$ then calendar_year=calendar_year+1
+					rem --- Adjust last day of February for leap year
+					if begdate$(1,2)="02" then
+						Calendar! = new java.util.GregorianCalendar()
+						if begdate$(3,2)="29" and !Calendar!.isLeapYear(calendar_year) then begdate$(3,2)="28"
+						if begdate$(3,2)="28" and Calendar!.isLeapYear(calendar_year) then begdate$(3,2)="29"
+					endif
+					julian=jul(calendar_year,num(begdate$(1,2)),num(begdate$(3,2)))+1
+					begdate$=date(julian:"%Yl%Mz%Dz")
+					callpoint!.setColumnData("GLS_CALENDAR.CAL_START_DATE",begdate$(5),1)
+					callpoint!.setColumnEnabled("GLS_CALENDAR.CAL_START_DATE",0)
+				endif
+			endif
+		endif
+	endif
+
+rem --- Get the earliest and latest trns_date in GLT_TRANSDETAIL (glt-06) for each period in "this" fiscal year.
+	year$=callpoint!.getUserInput()
+	gosub get_transdetail_period_dates
+
 [[GLS_CALENDAR.<CUSTOM>]]
 #include [+ADDON_LIB]std_missing_params.aon
 
@@ -934,16 +956,21 @@ check_transdetail_period_dates: rem --- Check PER_ENDING date against GLT_TRANSD
 	if !abort and next_period$<="13" then
 		earliestTransDate!=callpoint!.getDevObject("earliestTransDate")
 		after_date$=earliestTransDate!.get(next_period$)
-		if after_date$<>"" and per_ending$>=after_date$(5) then
-			msg_id$="GL_PER_END_AFTER"
-			dim msg_tokens$[4]
-			msg_tokens$[1]=after_date$(5,2)+"/"+after_date$(7)
-			msg_tokens$[2]=next_period$
-			msg_tokens$[3]=period$
-			msg_tokens$[4]=after_date$(5,2)+"/"+after_date$(7)
-			gosub disp_message
-			callpoint!.setStatus("ABORT")
-			abort=1
+		if after_date$<>"" then
+			calendar_year=num(callpoint!.getColumnData("GLS_CALENDAR.YEAR"))
+			cal_start_date$=callpoint!.getColumnData("GLS_CALENDAR.CAL_START_DATE")
+			if per_ending$<cal_start_date$ then calendar_year=calendar_year+1
+			if str(calendar_year)+per_ending$>=after_date$ then
+				msg_id$="GL_PER_END_AFTER"
+				dim msg_tokens$[4]
+				msg_tokens$[1]=after_date$(5,2)+"/"+after_date$(7)
+				msg_tokens$[2]=next_period$
+				msg_tokens$[3]=period$
+				msg_tokens$[4]=after_date$(5,2)+"/"+after_date$(7)
+				gosub disp_message
+				callpoint!.setStatus("ABORT")
+				abort=1
+			endif
 		endif
 	endif
 return
@@ -1010,3 +1037,6 @@ validate_us_requirements: rem --- Check United States (US) specific requirements
 		gosub disp_message
 	endif
 return
+
+
+
