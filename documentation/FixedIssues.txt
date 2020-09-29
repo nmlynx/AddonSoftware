@@ -87,3 +87,15 @@ Bug 10028: Modified SFC_WOTYPECD table to use AD instead of SF for its
 App Product ID.
 ----
 Modified: data/bar/sfc_wotypecd.xml
+
+=======================================================================================================================================
+Revision: 75351008d2361f28053dd85a19e88930e8272696
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 9/29/2020 11:41:44 AM
+Message:
+Bug 10033: Modified check_transdetail_period_dates subroutine in
+gls_calendar.cdf to compare after_date$ to
+str(calendar_year)+per_ending$ instead of just per_ending$.
+----
+Modified: data/bar/gls_calendar.xml
+Modified: data/cdf/gls_calendar.cdf
