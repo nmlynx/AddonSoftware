@@ -224,7 +224,7 @@ rem --- Update paths in system (application) syn file
                         if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
                             path$=baseDir$+sourceCanonicalPath$(sourceBaseDirLen+1)
                         endif
-                        record$=record$(1,pos("="=record$,1,2))+path$
+                        record$=record$(1,pos("="=record$,1,1))+path$
                     endif
                     stblValues!.setProperty(key$,path$)
                     print(log_dev)"    "+"    "+key$+": "+path$
@@ -539,32 +539,23 @@ rem --- Update paths in system (application) *.def files for ALL languages if pr
         print(log_dev)
         print(log_dev)meter_text$
 
-        rem --- Do Barista *.def files too
-        systems!.setProperty("BARISTA","")
-
         rem --- Locate target *.def files and update paths
         systemsIter!=systems!.keySet().iterator()
         while systemsIter!.hasNext()
             system$=systemsIter!.next()
             sourceMountDir$=systems!.getProperty(system$)
-            if system$="BARISTA" then
-                targetMountDir$=barDir$
-            else
-                if !sourcePaths!.containsKey(sourceMountDir$) then continue
-                sourceCanonicalMountDir$=sourcePaths!.getProperty(sourceMountDir$)
-                targetMountDir$=sourceCanonicalMountDir$
-                if pos(sourceBaseDir$=sourceCanonicalMountDir$)=1 then
-                    targetMountDir$=baseDir$+sourceCanonicalMountDir$(sourceBaseDirLen+1)
-                endif
+
+            if !sourcePaths!.containsKey(sourceMountDir$) then continue
+            sourceCanonicalMountDir$=sourcePaths!.getProperty(sourceMountDir$)
+            targetMountDir$=sourceCanonicalMountDir$
+            if pos(sourceBaseDir$=sourceCanonicalMountDir$)=1 then
+                targetMountDir$=baseDir$+sourceCanonicalMountDir$(sourceBaseDirLen+1)
             endif
+
             print(log_dev)"    "+system$
 
             rem --- Get path to this system's def directory
-            if system$="BARISTA" then
-                systemDefDir$=targetMountDir$+File.separator+"sys"+File.separator+"data"+File.separator+"def"
-            else
-                systemDefDir$=targetMountDir$+File.separator+"data"+File.separator+"def"
-            endif
+            systemDefDir$=targetMountDir$+File.separator+"data"+File.separator+"def"
             defDir!=new File(systemDefDir$)
 
             rem --- Get languages for this system's *def files
