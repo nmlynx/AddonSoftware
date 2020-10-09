@@ -898,14 +898,14 @@ rem --- Attach to new database and set some properties
     print(log_dev)
     print(log_dev)meter_text$
 
-    rdAdmin!.attachDatabaseOnDisk(cvs(dbName$,3),cvs(baseDir$,3)+File.separator+"barista"+File.separator+"bbdict"+File.separator)
+    rdAdmin!.attachDatabaseOnDisk(cvs(dbName$,3),cvs(barDir$,3)+File.separator+"bbdict"+File.separator)
 
     dataBase!=rdAdmin!.getDatabase(cvs(dbName$,3))
 
     dataBase!.setString("DATABASE",cvs(dbName$,2))
-    dataBase!.setString("DICTIONARY",baseDir$+File.separator+"barista"+File.separator+"bbdict"+File.separator)
-    dataBase!.setString("+DIR_BRD",baseDir$+File.separator+"barista"+File.separator+"sys"+File.separator+"data"+File.separator)
-    dataBase!.setString("+DIR_BRA",baseDir$+File.separator+"barista"+File.separator+"sys"+File.separator+"data"+File.separator)
+    dataBase!.setString("DICTIONARY",barDir$+File.separator+"bbdict"+File.separator)
+    dataBase!.setString("+DIR_BRD",barDir$+File.separator+"sys"+File.separator+"data"+File.separator)
+    dataBase!.setString("+DIR_BRA",barDir$+File.separator+"sys"+File.separator+"data"+File.separator)
     dataBase!.setString("ACCESSPOLICY","ALL")
     dataBase!.setBoolean("ADVISORYLOCKING",BBjAPI().TRUE)
     dataBase!.setBoolean("AUTO_ANALYZE_TABLES",BBjAPI().TRUE)
@@ -932,7 +932,7 @@ rem --- Create new session specific classpath (SSCP) in Enterprise Manager
     sscpName$=cvs(dbName$,8)
     copyData%=0
     status=0
-    oldAonLoc$=sourceBaseDir$
+    oldAonLoc$=""
     call pgmdir$+"adc_createsscp.aon",sscpName$,baseDir$,oldAonLoc$,copyData%,rdAdmin!,status
     if status 
         rem --- Increment progress meter
@@ -1005,7 +1005,7 @@ update_barista_installs: rem --- Update XML Configuration File barista_installs.
     line_sep$=java.lang.System.getProperty("line.separator") 
     tempSep$=$01$   
 
-    baseProp$="-tT0 -q -CP"+sscpName$+" -WD"+$22$+baseDir$+"/barista"+$22$+" -c"+$22$+baseDir$+"/barista/sys/config/enu/barista.cfg"+$22$+" "+$22$+baseDir$+"/barista/sys/prog/bar_login.bbj"+$22$+" - aon"
+    baseProp$="-tT0 -q -CP"+sscpName$+" -WD"+$22$+barDir$+$22$+" -c"+$22$+barDir$+"/sys/config/enu/barista.cfg"+$22$+" "+$22$+barDir$+"/sys/prog/bar_login.bbj"+$22$+" - aon"
 
     barInstallFile$=bbjHome$+"/barista/sys/config/barista_installs.xml"
 
@@ -1026,7 +1026,7 @@ update_barista_installs: rem --- Update XML Configuration File barista_installs.
 :       $09$+"<RECORD id="+$22$+cvs(dbName$,136)+$22$+">"+line_sep$+
 :       $0909$+"<ID id="+$22$+cvs(dbName$,136)+$22$+">"+dbName$+"</ID>"+line_sep$+
 :       $0909$+"<DESCRIPTION id="+$22$+cvs(dbName$,136)+$22$+">"+appDesc$+"</DESCRIPTION>"+line_sep$+
-:       $0909$+"<LOCATION id="+$22$+cvs(dbName$,136)+$22$+">"+baseDir$+"</LOCATION>"+line_sep$+
+:       $0909$+"<LOCATION id="+$22$+cvs(dbName$,136)+$22$+">"+barDir$+"</LOCATION>"+line_sep$+
 :       $0909$+"<VERSION id="+$22$+cvs(dbName$,136)+$22$+">"+newVersion$+"</VERSION>"+line_sep$+
 :       $0909$+"<DATE_CREATED id="+$22$+cvs(dbName$,136)+$22$+">"+date(0:"%Yd%Mz%Dz%Hz%mz%sz")+"</DATE_CREATED>"+line_sep$+
 :       $0909$+"<PROPERTIES id="+$22$+cvs(dbName$,136)+$22$+">"+baseProp$+"</PROPERTIES>"+line_sep$+
