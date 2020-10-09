@@ -37,7 +37,7 @@ rem --- Get user inputs
 rem --- Remove trailing slash (/ or \) from directory paths
     if baseDir$(len(baseDir$))=File.separator then baseDir$=baseDir$(1,len(baseDir$)-1)
     if barDir$(len(barDir$))=File.separator then barDir$=barDir$(1,len(barDir$)-1)
-    
+
 rem --- Start main progress meter
     meter_title$=rdForm!.getTitle()
     meter_total_recs=14
@@ -224,7 +224,7 @@ rem --- Update paths in system (application) syn file
                         if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
                             path$=baseDir$+sourceCanonicalPath$(sourceBaseDirLen+1)
                         endif
-                        record$=record$(1,pos("="=record$,1,1))+path$
+                        record$=record$(1,xpos)+path$
                     endif
                     stblValues!.setProperty(key$,path$)
                     print(log_dev)"    "+"    "+key$+": "+path$
@@ -500,18 +500,33 @@ rem --- Update paths in system (application) data files
                     path$ = field(table$,cvs(ddmTableCols.dd_dvar_name$,2))
                     if cvs(path$,2)="" continue
                     startPath$=path$
-        
+
                     rem --- Update path with new installation base directory
-                    if elementType$="DD_ATTR_CPGM" and path$(len(path$))=";" then path$=path$(1,len(path$)-1)
-                    if sourcePaths!.containsKey(path$) then
-                        sourceCanonicalPath$=sourcePaths!.getProperty(path$)
-                        if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
-                            path$=baseDir$+sourceCanonicalPath$(sourceBaseDirLen+1)
-                            if elementType$="DD_ATTR_CPGM" then path$=path$+";"
+                    if elementType$="DD_ATTR_CPGM"
+                        all_cpgm_paths$=path$;rem --- for DD_ATTR_CPGM, >1 pathname can be present in semi-colon-separated string (e.g.,if mods project was involved, path to standard aon as well as mods)
+                        new_cpgm_paths$=""
+                        if all_cpgm_paths$(len(all_cpgm_paths$),1)<>";" then all_cpgm_paths$=all_cpgm_paths$+";";rem --- have seen some entries w/o final semi-colon
+                        while all_cpgm_paths$<>"" 
+                            path$=all_cpgm_paths$(1,pos(";"=all_cpgm_paths$)-1)
+                            all_cpgm_paths$=all_cpgm_paths$(pos(";"=all_cpgm_paths$)+1)
+                            if sourcePaths!.containsKey(path$) then
+                                sourceCanonicalPath$=sourcePaths!.getProperty(path$)
+                                if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
+                                    path$=baseDir$+sourceCanonicalPath$(sourceBaseDirLen+1)
+                                endif
+                            endif
+                            new_cpgm_paths$=new_cpgm_paths$+path$+";"
+                        wend
+                        path$=new_cpgm_paths$
+                    else
+                        if sourcePaths!.containsKey(path$) then
+                            sourceCanonicalPath$=sourcePaths!.getProperty(path$)
+                            if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
+                                path$=baseDir$+sourceCanonicalPath$(sourceBaseDirLen+1)
+                            endif
                         endif
                     endif
-                    if elementType$="DD_ATTR_CPGM" and path$(len(path$))<>";" then path$=path$+";"
-        
+
                     if startPath$<>path$ then print(log_dev) "    "+"    "+"    "+startPath$+" >>> "+path$
                     field table$,cvs(ddmTableCols.dd_dvar_name$,2)=path$
                     table$=field(table$)
@@ -555,6 +570,7 @@ rem --- Update paths in system (application) *.def files for ALL languages if pr
             print(log_dev)"    "+system$
 
             rem --- Get path to this system's def directory
+
             systemDefDir$=targetMountDir$+File.separator+"data"+File.separator+"def"
             defDir!=new File(systemDefDir$)
 
@@ -657,33 +673,45 @@ rem --- Update paths in system (application) *.def files for ALL languages if pr
                                     if doTableDefs and pos("{TableDefs}"=line$)=0 then
                                         tmpLine1$=line$(1,pos("^"=line$,1,cpgmTable_pos))
                                         path$=line$(pos("^"=line$,1,cpgmTable_pos)+1)
-                                        if pos(";^"=path$) then
-                                            tmpline2$=path$(pos(";^"=path$))
-                                            path$=path$(1,pos(";^"=path$)-1)
-                                            if sourcePaths!.containsKey(path$) then
-                                                sourceCanonicalPath$=sourcePaths!.getProperty(path$)
-                                                if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
-                                                    path$=baseDir$+sourceCanonicalPath$(sourceBaseDirLen+1)
+                                        if pos("^"=path$)>1 and pos(";^"=path$) then
+                                            tmpline2$=path$(pos(";^"=path$)+1)
+                                            all_cpgm_paths$=path$(1,pos(";^"=path$))
+                                            new_cpgm_paths$=""
+                                            while all_cpgm_paths$<>""
+                                                path$=all_cpgm_paths$(1,pos(";"=all_cpgm_paths$)-1)
+                                                all_cpgm_paths$=all_cpgm_paths$(pos(";"=all_cpgm_paths$)+1)
+                                                if sourcePaths!.containsKey(path$) then
+                                                    sourceCanonicalPath$=sourcePaths!.getProperty(path$)
+                                                    if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
+                                                        path$=baseDir$+sourceCanonicalPath$(sourceBaseDirLen+1)
+                                                    endif
                                                 endif
-                                                line$=tmpline1$+path$+tmpline2$
-                                            endif
+                                                new_cpgm_paths$=new_cpgm_paths$+path$+";"
+                                            wend
+                                            line$=tmpline1$+new_cpgm_paths$+tmpline2$
                                         endif
                                     endif
                                 
                                     rem --- Update CPGM attribute for Columns
                                     if doColumnDefs and pos("{ColumnDefs}"=line$)=0 then
                                         tmpLine1$=line$(1,pos("^"=line$,1,cpgmColumn_pos))
-                                        path$=line$(pos("^"=line$,1,cpgmColumn_pos)+1)
-                                        if pos(";^"=path$) then
-                                            tmpline2$=path$(pos(";^"=path$))
-                                            path$=path$(1,pos(";^"=path$)-1)
-                                            if sourcePaths!.containsKey(path$) then
-                                                sourceCanonicalPath$=sourcePaths!.getProperty(path$)
-                                                if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
-                                                    path$=baseDir$+sourceCanonicalPath$(sourceBaseDirLen+1)
+                                        path$=line$(pos("^"=line$,1,cpgmColumn_pos)+1) 
+                                        if pos("^"=path$)>1 and pos(";^"=path$) then
+                                            tmpline2$=path$(pos(";^"=path$)+1)
+                                            all_cpgm_paths$=path$(1,pos(";^"=path$))
+                                            new_cpgm_paths$=""
+                                            while all_cpgm_paths$<>""
+                                                path$=all_cpgm_paths$(1,pos(";"=all_cpgm_paths$)-1)
+                                                all_cpgm_paths$=all_cpgm_paths$(pos(";"=all_cpgm_paths$)+1)
+                                                if sourcePaths!.containsKey(path$) then
+                                                    sourceCanonicalPath$=sourcePaths!.getProperty(path$)
+                                                    if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
+                                                        path$=baseDir$+sourceCanonicalPath$(sourceBaseDirLen+1)
+                                                    endif
                                                 endif
-                                                line$=tmpline1$+path$+tmpline2$
-                                            endif
+                                                new_cpgm_paths$=new_cpgm_paths$+path$+";"
+                                            wend
+                                            line$=tmpline1$+new_cpgm_paths$+tmpline2$
                                         endif
                                     endif
                                     
@@ -737,7 +765,7 @@ rem --- Update paths in <new_base_dir>/barista/sys/config/barista.syn
         rem --- Update paths
         while 1
             read(barSyn_dev,end=*break)record$
-    
+            
             key$ = record$(1, pos("="=record$) - 1)
             switch (BBjAPI().TRUE)
                 case key$ = "SYN"
@@ -747,7 +775,8 @@ rem --- Update paths in <new_base_dir>/barista/sys/config/barista.syn
                     if sourcePaths!.containsKey(path$) then
                         sourceCanonicalPath$=sourcePaths!.getProperty(path$)
                         if pos(sourceBaseDir$=sourceCanonicalPath$)=1 then
-                            path$=baseDir$+sourceCanonicalPath$(sourceBaseDirLen+1)
+                            path!=baseDir$+sourceCanonicalPath$(sourceBaseDirLen+1)
+                            path$=path!.replace("\","/")
                         endif
                         record$=record$(1,pos("="=record$))+path$
                         if startPath$<>path$ then print(log_dev) "    "+startPath$+" >>> "+path$
@@ -800,6 +829,7 @@ rem --- Update PREFIX, dbname, dbname_api, port and SSL settings in barista.cfg 
                 rem --- Update PREFIX, dbname, dbname_api, port and SSL settings in barista.cfg for this language
                 while 1
                     read(barCfg_dev,end=*break)line$
+                    if line$="" then continue
 
                     if pos("PREFIX "=line$)=1 then
                         line!=line$
@@ -807,7 +837,13 @@ rem --- Update PREFIX, dbname, dbname_api, port and SSL settings in barista.cfg 
                         last_pos=pos(bbjHome$=line$,-1)
                         if last_pos>0 then
                             end_pos=last_pos+pos(" "=line$(last_pos))
-                            line$=line$(1,end_pos)
+                            line$=line$(1,end_pos-1)
+                        endif
+                        if prefixVect!.size()<>0
+                            for xwk=0 to prefixVect!.size()-1
+                                prefix_entry$=$22$+cvs(prefixVect!.get(xwk),3)+$22$
+                                line$=line$+" "+prefix_entry$
+                            next xwk
                         endif
                     endif
                 
@@ -913,56 +949,19 @@ rem --- Create new session specific classpath (SSCP) in Enterprise Manager
 rem --- Update XML Configuration File barista_installs.xml
     gosub update_barista_installs
     
-rem --- Launch auto-sync in new barista for the new addon.syn
-rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the new barista
-
-    rem --- Increment progress meter
-    meterWin!=mainMeter!
-    meter_total_recs=mainMeterTotalRecs
-    mainMeterProcRecs=mainMeterProcRecs+1
-    meter_text$=Translate!.getTranslation("AON_AUTO_SYNC")
-    meter_proc_recs=mainMeterProcRecs
-    meter_action$="MTR-LST"
-    gosub disp_meter
-    print(log_dev)
-    print(log_dev)meter_text$
-
-    rem --- Launch bax_dd_synch_auto.bbj in the NEW installation
-    bar_dir$=barDir$
-    if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
-    run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
-:   +" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
-:   +" "+$22$+bar_dir$+"/sys/prog/bax_launch_task.bbj"+$22$
-
-    systemsIter!=systems!.keySet().iterator()
-    while systemsIter!.hasNext()
-        system$=systemsIter!.next()
-        sourceMountDir$=systems!.getProperty(system$)
-        if !sourcePaths!.containsKey(sourceMountDir$) then continue
-        sourceCanonicalMountDir$=sourcePaths!.getProperty(sourceMountDir$)
-        targetMountDir$=sourceCanonicalMountDir$
-        if pos(sourceBaseDir$=sourceCanonicalMountDir$)=1 then
-            targetMountDir$=baseDir$+sourceCanonicalMountDir$(sourceBaseDirLen+1)
-        endif
-
-        rem --- Don't need to rebuild forms, use -x argument for bax_dd_synch_auto.bbj
-        user_arg$=" - "
-:       +" -u"+rdAdmin!.getUser()
-:       +" -p"+rdAdmin!.getPassword()
-:       +" -t"+"DDM_TABLES"
-:       +" -y"+"A"
-:       +" -a" +"bax_dd_synch_auto.bbj"+$22$+" - "+" -f"+targetMountDir$+"config"+File.separator+cvs(system$,8)+".syn"+" -b -x"+$22$
-:       +" -w"
-        scall_result=scall(run_arg$+user_arg$,err=*next)
-    wend
-
-rem --- Reset ADS_AUTOLAUNCH record for BUILDSPROC process
+rem --- Reset ADS_AUTOLAUNCH record for BUILDSPROC and 50AUTOSYNC processes
 
     sql_prep$="UPDATE ADS_AUTOLAUNCH SET PROCESS_STATUS='N',TRANS_DATE='',TRANS_TIME='' WHERE PROCESS_ID='BUILDSPROC'"
     sql_chan=sqlunt
     sqlopen(sql_chan,err=*next)dbName$
+    
     sqlprep(sql_chan)sql_prep$
     sqlexec(sql_chan)
+    
+    sql_prep$="UPDATE ADS_AUTOLAUNCH SET PROCESS_STATUS='N',TRANS_DATE='',TRANS_TIME='' WHERE PROCESS_ID='50AUTOSYNC'"
+    sqlprep(sql_chan)sql_prep$
+    sqlexec(sql_chan)
+
     sqlclose(sql_chan)
 
 rem --- Set permissions for extracted directory and file
