@@ -636,7 +636,7 @@ rem --- read thru selected sales order and build list of lines for which line co
 			descVect!.addItem(order_items!.getItem(x))
 			codeVect!.addItem(order_lines!.getItem(x))
 		next x
-		ldatString$=func.buildListButtonList(descVect!,codeVect!)
+		ldat$=func.buildListButtonList(descVect!,codeVect!)
 
 		callpoint!.setDevObject("ds_orders","Y")		
 		callpoint!.setDevObject("so_ldat",ldat$)
