@@ -221,7 +221,7 @@ checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
             cherryPickCmd!.include(commit!)
             result!=cherryPickCmd!.call()
 
-            rem --- Check for conflicts that are due to a bar/*.xml file, and resolve them by accepting ours 
+            rem --- Check for conflicts that we might be able to resolve
             switch (result!.getStatus()) 
                 case CherryPickStatus.OK
                     break
@@ -230,15 +230,16 @@ checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
                     conflictingFiles!=status!.getConflicting()
                     fileIter!=conflictingFiles!.iterator()
                     while (fileIter!.hasNext())
+                        REM --- Accept BAR XMLs as "OURS".  Handle these later on in the upgrade
                         fileName!=cast(BBjString,fileIter!.next())
                         if (fileName!.matches("data/bar/.*\.xml")) then  
-                            rem --- Choose ours for bar/*.xml file conflicts
-                            checkoutCmd!=#git!.checkout()
-                            checkoutCmd!.setStage(Stage.OURS)
-                            checkoutCmd!.addPath(fileName!)
-                            checkoutCmd!.call()
-                            #git!.add().addFilepattern(fileName!).call()
+                            #resolveByChoosingSide(fileName!,"OURS")
+                            continue
                         endif
+                        if (fileName!.matches("data/sync/adm_modules~.*\.xml")) then
+                            #resolveByChoosingSide(fileName!,"OURS")
+                            continue
+                        endif 
                     wend
                     break
                 case CherryPickStatus.FAILED
@@ -262,7 +263,32 @@ cherryPick_error:rem --- Method error trap/handler (11Oct2017)
             x$=stbl("+THROWN_ERR","TRUE")   
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend 
-
+        
+        rem /** 
+        rem  * If the repository is in a conflicted state, resolves a particular conflicted 
+        rem  * file by choosing the specified side.  The names for the sides are "THEIRS" and "OURS".
+        rem  * @param path$ The file path, relative the root of the repository to reolve the 
+        rem  * conflict in.
+        rem  * @param side$ The name of the side to choose. Valid values are "THEIRS" and "OURS".
+        rem  */
+        method public void resolveByChoosingSide(BBjString path!, BBjString side$)
+            declare CheckoutCommand checkoutCmd!
+            declare Stage stage!
+            
+            rem --- "stage!" is the enumerative constant for which side we want to choose
+            stage!=Stage.valueOf(side$)
+            
+            rem ---  To resolve a single file conflict in Git, 
+            rem ---  checkout the file from the side we're interested in
+            checkoutCmd!=#git!.checkout()
+            checkoutCmd!.setStage(stage!)
+            checkoutCmd!.addPath(path!)
+            checkoutCmd!.call()
+            
+            rem ---  then add the file in preparation for it to be committed
+            #git!.add().addFilepattern(path!).call()
+        methodend 
+        
         rem /**
         rem  * Free resources associated with this instance. 
         rem  */
