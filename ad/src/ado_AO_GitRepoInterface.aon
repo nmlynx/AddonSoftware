@@ -79,16 +79,14 @@ rem  */
             seterr GitRepoInterface_error
             #AonDir$=aonDir$
             #LocalRepo$=#AonDir$+"/.git"
-            #credentials!=new UsernamePasswordCredentialsProvider("username","password")
 
             rem --- Get Git repository
             gitDir! = new File(#LocalRepo$)
             if !gitDir!.exists() then
                 rem --- Clone Git repository to specified location
-                gitURI$="https://git.basis.com/Addon/Addon.git"
+                gitURI$="https://github.com/BASISInternational/AddonSoftware.git"
     
                 cloneCmd!=Git.cloneRepository()
-                cloneCmd!.setCredentialsProvider(#credentials!)
                 cloneCmd!.setURI(gitURI$).setDirectory(new File(aonDir$)).setCloneAllBranches(1)
                 cloneCmd!.call()
             endif
