@@ -236,6 +236,7 @@ checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
                             #resolveByChoosingSide(fileName!,"OURS")
                             continue
                         endif
+                        REM --- Accept adm_modules~*.xml as "OURS". We don't need THEIRS any longer. 
                         if (fileName!.matches("data/sync/adm_modules~.*\.xml")) then
                             #resolveByChoosingSide(fileName!,"OURS")
                             continue
