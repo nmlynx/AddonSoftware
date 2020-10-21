@@ -241,6 +241,11 @@ checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
                             #resolveByChoosingSide(fileName!,"OURS")
                             continue
                         endif 
+                        REM --- Accept addon.syn as ours.  User's changes should already be in new addon.syn
+                        if (fileName!.matches("config/addon.syn")) then
+                            #resolveByChoosingSide(fileName!,"OURS")
+                            continue
+                        endif 
                     wend
                     break
                 case CherryPickStatus.FAILED
