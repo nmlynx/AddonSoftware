@@ -801,55 +801,57 @@ mergeCallpoints: rem --- Merge mods before/after callpoints into standard Addon 
     nxt_ctlID=util.getNextControlID()
     busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
 
-    rem --- Import mods callpoint into Addon
-    massager!=new CdfMassager()
-    massager!.importModChanges(newModsDir$+"data/cdf",newAonDir$+"/data/cdf")
+    if newModsDir$<>""
+        rem --- Import mods callpoint into Addon
+        massager!=new CdfMassager()
+        massager!.importModChanges(newModsDir$+"data/cdf",newAonDir$+"/data/cdf")
 
-    rem --- Make/clear UpgradeCdfDiffs directory for merged cdf files
-    cdfDiffsDir$=baseDir$+"/UpgradeCdfDiffs"
-    cdfDiffsDir!=new File(cdfDiffsDir$)
-    if cdfDiffsDir!.exists() and cdfDiffsDir!.isDirectory() then
-        rem --- Clear existing directory
-        cdfVector! = new Vector(java.util.Arrays.asList(cdfDiffsDir!.listFiles()))
-        cdfIter!=cdfVector!.iterator()
-        while cdfIter!.hasNext()
-            cdfFile!=cdfIter!.next()
-            cdfFile!.delete()
-        wend
-    else
-        rem --- Make new directory
-        cdfDiffsDir!.mkdirs()
-    endif
-    
-    rem --- Copy merged cdf files into UpgradeCdfDiffs directory where they can be alphabetized for diff'ing with standard Addon cdfs
-    modsCdfDir$=newModsDir$+"data/cdf"
-    modsCdfDir!=new File(modsCdfDir$)
-    modsCdfDirVector! = new Vector(java.util.Arrays.asList(modsCdfDir!.listFiles()))
-    modsCdfDirIter!=modsCdfDirVector!.iterator()
-    while modsCdfDirIter!.hasNext()
-        modsCdfDirFile!=modsCdfDirIter!.next()
-        fileName!=modsCdfDirFile!.getName()
-        if !fileName!.endsWith(".cdf") then continue
+        rem --- Make/clear UpgradeCdfDiffs directory for merged cdf files
+        cdfDiffsDir$=baseDir$+"/UpgradeCdfDiffs"
+        cdfDiffsDir!=new File(cdfDiffsDir$)
+        if cdfDiffsDir!.exists() and cdfDiffsDir!.isDirectory() then
+            rem --- Clear existing directory
+            cdfVector! = new Vector(java.util.Arrays.asList(cdfDiffsDir!.listFiles()))
+            cdfIter!=cdfVector!.iterator()
+            while cdfIter!.hasNext()
+                cdfFile!=cdfIter!.next()
+                cdfFile!.delete()
+            wend
+        else
+            rem --- Make new directory
+            cdfDiffsDir!.mkdirs()
+        endif
         
-        rem --- Get copy of merged cdf file
-        sourceChan=unt
-        open(sourceChan,isz=-1,err=*continue)newAonDir$+"/data/cdf/"+fileName!
-        targetChan=unt
-        open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")cdfDiffsDir$+"/"+fileName!
-        while 1
-            readrecord(sourceChan,siz=BLOCKSIZE,end=*break)record$
-            writerecord(targetChan)record$
+        rem --- Copy merged cdf files into UpgradeCdfDiffs directory where they can be alphabetized for diff'ing with standard Addon cdfs
+        modsCdfDir$=newModsDir$+"data/cdf"
+        modsCdfDir!=new File(modsCdfDir$)
+        modsCdfDirVector! = new Vector(java.util.Arrays.asList(modsCdfDir!.listFiles()))
+        modsCdfDirIter!=modsCdfDirVector!.iterator()
+        while modsCdfDirIter!.hasNext()
+            modsCdfDirFile!=modsCdfDirIter!.next()
+            fileName!=modsCdfDirFile!.getName()
+            if !fileName!.endsWith(".cdf") then continue
+            
+            rem --- Get copy of merged cdf file
+            sourceChan=unt
+            open(sourceChan,isz=-1,err=*continue)newAonDir$+"/data/cdf/"+fileName!
+            targetChan=unt
+            open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")cdfDiffsDir$+"/"+fileName!
+            while 1
+                readrecord(sourceChan,siz=BLOCKSIZE,end=*break)record$
+                writerecord(targetChan)record$
+            wend
+            close(sourceChan)
+            close(targetChan)
+
+            rem --- Remove mods cdf files after they've been merged into standard Addon
+            modsCdfDirFile!.delete()
+
+            rem --- Remove mods data/bar/*.xml file and data/arc/*/*.arc files corresponding to given sourceName!
+            sourceName$=fileName!
+            gosub removeModsArcBarFile
         wend
-        close(sourceChan)
-        close(targetChan)
-
-        rem --- Remove mods cdf files after they've been merged into standard Addon
-        modsCdfDirFile!.delete()
-
-        rem --- Remove mods data/bar/*.xml file and data/arc/*/*.arc files corresponding to given sourceName!
-        sourceName$=fileName!
-        gosub removeModsArcBarFile
-    wend
+    endif
 
     rem --- Remove busy/working image from progress meter
     busyImage!.destroy(err=*next)
@@ -929,21 +931,22 @@ moveModifiedCore: rem --- Move any core Addon files customized by a mods project
     nxt_ctlID=util.getNextControlID()
     busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
 
-    rem --- Verify directories exist
-    newModsDir!=new File(newModsDir$)
-    if !newModsDir!.exists() or !newModsDir!.isDirectory() then newModsDir!.mkdirs()
-    newAonDir!=new File(newAonDir$)
-    if !newAonDir!.exists() or !newAonDir!.isDirectory() then newAonDir!.mkdirs()
+    if newModsDir$<>""
+        rem --- Verify directories exist
+        newModsDir!=new File(newModsDir$)
+        if !newModsDir!.exists() or !newModsDir!.isDirectory() then newModsDir!.mkdirs()
+        newAonDir!=new File(newAonDir$)
+        if !newAonDir!.exists() or !newAonDir!.isDirectory() then newAonDir!.mkdirs()
 
-    rem --- Move mods customized Addon files back into Addon
-    merger!=new ModMerger(newModsDir$, newAonDir$)
-    status!=merger!.moveProgFilesFromModProject()
-    messagesIter!=status!.getMessages().iterator()
-    while messagesIter!.hasNext()
-        print(log_dev)"    ",messagesIter!.next()
-    wend
-    if status!.getNumErrorsEncountered()>0 then moveModifiedCoreError=1
-
+        rem --- Move mods customized Addon files back into Addon
+        merger!=new ModMerger(newModsDir$, newAonDir$)
+        status!=merger!.moveProgFilesFromModProject()
+        messagesIter!=status!.getMessages().iterator()
+        while messagesIter!.hasNext()
+            print(log_dev)"    ",messagesIter!.next()
+        wend
+        if status!.getNumErrorsEncountered()>0 then moveModifiedCoreError=1
+    endif
     rem --- Remove busy/working image from progress meter
     busyImage!.destroy(err=*next)
     return
