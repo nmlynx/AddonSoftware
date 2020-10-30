@@ -2121,7 +2121,7 @@ rem --- Disable qty shipped if necessary
 
 rem --- Enable Comment button
 
-	callpoint!.setOptionEnabled("COMM",1)
+	if callpoint!.isEditMode() then callpoint!.setOptionEnabled("COMM",1)
 
 	return
 
@@ -2195,7 +2195,7 @@ rem ==========================================================================
 		gosub check_item_whse
 
 		if (!user_tpl.item_wh_failed and num(callpoint!.getColumnData("<<DISPLAY>>.QTY_ORDERED_DSP"))) or
-:		user_tpl.line_type$ = "O" then
+:		user_tpl.line_type$ = "O" and callpoint!.isEditMode() then
 			callpoint!.setOptionEnabled("ADDL",1)
 		else
 			callpoint!.setOptionEnabled("ADDL",0)
@@ -2235,7 +2235,7 @@ rem ==========================================================================
 
 	if lotted$ = "Y" and qty_ord <> 0 and 
 :	callpoint!.getHeaderColumnData("OPE_INVHDR.INVOICE_TYPE")<>"P" and
-:	callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "Y" 
+:	callpoint!.getColumnData("OPE_INVDET.COMMIT_FLAG") = "Y" and callpoint!.isEditMode()
 :	then
 		callpoint!.setOptionEnabled("LENT",1)
 	else
