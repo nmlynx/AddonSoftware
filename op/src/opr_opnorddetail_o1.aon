@@ -198,7 +198,7 @@ rem --- Main Loop Starts
         if s3$<>"" and ope01a.order_date$>s3$ then continue
         if start_ship_date$<>"" and ope01a.shipmnt_date$<start_ship_date$ then continue
         if end_ship_date$<>"" and ope01a.shipmnt_date$>end_ship_date$ then continue
-        if s5$<>"" and ope01a.ord_taken_by$<>s5$ then continue
+        if s5$<>"" and cvs(ope01a.ord_taken_by$,3)<>s5$ then continue
         if s7$<>"" and ope01a.slspsn_code$<>s7$ then continue
         if ope01a.ordinv_flag$="I" then continue
         stat$="Order"
