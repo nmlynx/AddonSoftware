@@ -1427,10 +1427,10 @@ rem ==========================================================================
 				addLine=1
 				for j=0 to stblRowVect!.size()-1 step numCols
 					if stblRowVect!.getItem(j+1)<>stbl$ then continue
+                    stblRowVect!.setItem(j+3,newSynRows!.getItem(i+3))
 					if stbl$="+MDI_TITLE" then
 						stblRowVect!.setItem(j+3, callpoint!.getColumnData("ADX_UPGRADEWIZ.APP_DESC"))
 					endif
-					stblRowVect!.setItem(j+3,newSynRows!.getItem(i+3))
 					addLine=0
 					break
 				next j
