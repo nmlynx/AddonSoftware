@@ -54,7 +54,7 @@ rem --- Get user inputs
     declare HashMap appStblMap!
     appStblMap!=cast(HashMap, callpoint!.getDevObject("appStblMap"))
     rdAdmin!=cast(BBjAdminBase, callpoint!.getDevObject("rdAdmin"))
-    useOldMenu%=int(num(Option!.getOptionData("USE_OLD_MENU")))
+rem    useOldMenu%=int(num(Option!.getOptionData("USE_OLD_MENU"))) --- Git-based will always incorporate menu changes so no need for separate, optional routine
     minor_ver$=callpoint!.getDevObject("minor_ver")
 
 	rem --- Flip directory path separators
