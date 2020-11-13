@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2020-11-09
+ Report Date:   2020-11-13
  Report Branch: AddonSoftware 20.30
  Last Release:  AddonSoftware 20.21
 =======================================================================================================================================
@@ -111,4 +111,35 @@ Bug 10063 - OP - Invoice serial number lookup
 Modified: data/bar/ope_ordlsdet.xml
 Modified: data/cdf/ope_ordlsdet.cdf
 Modified: data/sync/ads_messages~[01007514OP].xml
+
+=======================================================================================================================================
+Revision: 1263deb17800b5aaaefaca18b91941e19a51b159
+Author: Christine <chawkins@basis.com>
+Date: 11/13/2020 10:45:17 AM
+Message:
+Bug 10055 - Credit Invoice
+ - In Order/Invoice Entry, query was correctly called using trans_status="U" in filter_defs$[ ], but trans_status wasn't in the list of query cols in the OP_HISTINV query.
+
+(cherry picked from commit 00e287d7362a913553582abdc9f89e3b2ee76aa7)
+----
+Modified: data/sync/adm_query_cols~[01007514OP].xml
+Deleted: data/sync/adm_query_cols~op_histinv______001.xml
+Deleted: data/sync/adm_query_cols~op_histinv______002.xml
+Deleted: data/sync/adm_query_cols~op_histinv______003.xml
+Deleted: data/sync/adm_query_cols~op_histinv______004.xml
+Deleted: data/sync/adm_query_cols~op_histinv______005.xml
+Deleted: data/sync/adm_query_cols~op_histinv______006.xml
+Deleted: data/sync/adm_query_cols~op_histinv______007.xml
+Deleted: data/sync/adm_query_cols~op_histinv______008.xml
+Deleted: data/sync/adm_query_cols~op_histinv______009.xml
+Deleted: data/sync/adm_query_cols~op_histinv______010.xml
+Deleted: data/sync/adm_query_cols~op_histinv______011.xml
+Deleted: data/sync/adm_query_cols~op_histinv______012.xml
+Deleted: data/sync/adm_query_cols~op_histinv______013.xml
+Deleted: data/sync/adm_query_cols~op_histinv______014.xml
+Deleted: data/sync/adm_query_cols~op_histinv______015.xml
+Deleted: data/sync/adm_query_cols~op_histinv______016.xml
+Deleted: data/sync/adm_query_cols~op_histinv______017.xml
+Modified: data/sync/adm_query~[01007514OP].xml
+Deleted: data/sync/adm_query~op_histinv.xml
 
