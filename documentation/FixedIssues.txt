@@ -143,3 +143,15 @@ Deleted: data/sync/adm_query_cols~op_histinv______017.xml
 Modified: data/sync/adm_query~[01007514OP].xml
 Deleted: data/sync/adm_query~op_histinv.xml
 
+=======================================================================================================================================
+Revision: c4ad4b142c5bcd0dd9304d28503e463d475d48e3
+Author: Christine <chawkins@basis.com>
+Date: 11/13/2020 4:11:01 PM
+Message:
+Bug 10067 - ACH File Creation
+ - AP Check Update can throw an error if the directory for the nacha file doesn't already exist because it's trying to call resolvePath() on that non-existent directory.
+
+(cherry picked from commit 2eafa2e7c3812013efce4e73cab6e12a38376702)
+----
+Modified: ap/src/apu_chkregister.aon
+
