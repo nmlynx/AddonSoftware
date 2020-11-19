@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2020-11-13
+ Report Date:   2020-11-19
  Report Branch: AddonSoftware 20.30
  Last Release:  AddonSoftware 20.21
 =======================================================================================================================================
@@ -155,3 +155,16 @@ Bug 10067 - ACH File Creation
 ----
 Modified: ap/src/apu_chkregister.aon
 
+=======================================================================================================================================
+Revision: 3f2f36a6aaff128e3f74e54753afedd41fcd826e
+Author: Christine <chawkins@basis.com>
+Date: 11/19/2020 1:29:58 PM
+Message:
+Bug 10074 - AD - Copy Data from Firm to Firm doesn't select all the files it should
+ - add trailing slash after resolvePath() method
+ - if disk file name is blank, use alias name as disk file name
+
+(cherry picked from commit 724d18b211c63a9ac3bfffc5c4284e46b88862ec)
+----
+Modified: data/bar/adx_copyfirm.xml
+Modified: data/cdf/adx_copyfirm.cdf
