@@ -29,6 +29,7 @@ rem --- Validate barista installation location
 	gosub validate_bar_install
 	if abort then break
 [[ADX_UNJARAON.<CUSTOM>]]
+use ::jar/TGZUtil.bbj::TGZFile
 validate_new_db_name: rem --- Validate new database name
 
 	abort=0
@@ -163,10 +164,10 @@ validate_bar_install: rem --- Validate barista installation location
 	callpoint!.setDevObject("abort",abort)
 
 	rem --- Extract log file from jar file
-	savedDir$=dir("")
-	chdir base_dir$
-	x=scall("jar -xf "+jar_file$+" adx_jaraon.log")
-	chdir savedDir$
+    declare TGZFile tgz!
+    tgz!=new TGZFile(base_dir$+java.io.File.separator+jar_file$)
+    tgz!.setDefaultFilePermissions("rwxrwxrwx")
+    tgz!.extract("adx_jaraon.log",base_dir$)
 
 	rem --- Get Source Barista Installation Location from log file
 	sourceLog$=base_dir$+File.separator+"adx_jaraon.log"
