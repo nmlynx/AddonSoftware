@@ -11,7 +11,8 @@ rem ==========================================================================
     use java.util.Properties
     use java.util.Vector
 
-    use ::ado_util.src::util    
+    use ::ado_util.src::util
+    use ::jar/TGZUtil.bbj::TGZFile
 
     setesc std_error
     seterr std_error
@@ -104,7 +105,7 @@ rem --- Build sourcePaths! Properties object of directories and files used by ea
         mount_path$=systems!.getProperty(system$)
         mountDir!=new java.io.File(mount_path$)
         mount_dir$=mountDir!.getCanonicalPath()
-        if pos(baseDir$=canonicalPath$)=1 then
+        if pos(baseDir$=mount_dir$)=1 then
             rem --- Good path
             sourcePaths!.setProperty(mount_path$,mount_dir$)
         endif
@@ -641,7 +642,16 @@ rem --- Build jar file
         busyImage!=detailMeter!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
         
         rem --- Make sure jarFile$ doesn't already exist in baseDir$
-        erase baseDir$+File.separator+jarFile$,err=*next
+		jarFileName$=baseDir$+File.separator+jarFile$
+        erase jarFileName$,err=*next
+		
+		rem --- Open the jar file 
+		declare TGZFile tgzFile!
+		declare BBjString osname!
+		tgzFile!=new TGZFile(jarFileName$)
+		REM chmod 777 all entries in the tar file. 
+		tgzFile!.setDefaultFilePermissions("rwxrwxrwx")
+		tgzFile!.openForWriting()
 
         rem --- Remove baseDir$ from copyPath! canonical path before adding it to the jar
         jarList$=""
@@ -659,59 +669,17 @@ rem --- Build jar file
 
             rem --- If path includes [+FIRM_ID], then replace with actual COMPANY_IDs
             for j=0 to firmsVect!.size()-1
-                thisPath$=shortPath$
+                thisPath$=canonicalPath$
                 xpos=pos("[+FIRM_ID]"=thisPath$)
                 if xpos then
                     thisPath$=thisPath$(1,xpos-1)+firmsVect!.get(j)+thisPath$(xpos+10)
                 endif
 
-                rem --- Jar the path
-                jarFile!=new File(baseDir$ + File.separator + jarFile$)
-                if jarFile!.exists() then
-                    if pos("WIN"=cvs(info(0,0),4)) then
-                        rem --- Windows OS
-                        command$="cmd /c chdir "+baseDir$+" && "+"jar -ufM "+jarFile$+" "+thisPath$
-                    else
-                        rem --- Non-Windows OS
-                        command$="chdir "+baseDir$+" ; "+"jar -ufM "+jarFile$+" "+thisPath$
-                    endif
-                else
-                    if pos("WIN"=cvs(info(0,0),4)) then
-                        rem --- Windows OS
-                        command$="cmd /c chdir "+baseDir$+" && "+"jar -cfM "+jarFile$+" "+thisPath$
-                    else
-                        rem --- Non-Windows OS
-                        command$="chdir "+baseDir$+" ; "+"jar -cfM "+jarFile$+" "+thisPath$
-                    endif
-                endif
-                command!=cast(java.lang.String,command$)
-                process!=java.lang.Runtime.getRuntime().exec(command!)
-                process!.waitFor()
-    
-                rem --- Check for error and report any
-                exitValue=process!.exitValue()
-                if exitValue then
-                    errorReader! = new java.io.BufferedReader(new java.io.InputStreamReader(process!.getErrorStream()))
-                    while 1
-                        line! = errorReader!.readLine()
-                        if line!=null() then
-                            msg_id$="AD_JAR_ERROR"
-                            dim msg_tokens$[3]
-                            msg_tokens$[1]=thisPath$
-                            msg_tokens$[2]=jarFile$
-                            msg_tokens$[3]=log$
-                            gosub disp_message
-                            break
-                        else
-                            print(log_dev)"    "+"    "+line!
-                        endif
-                    wend
-                    errorReader!.close()
-                else
-                    print(log_dev)"    "+"    "+thisPath$
-                endif
+                rem --- Tar the path
+				tgzFile!.addFile(thisPath$,baseDir$) 
+				print(log_dev)"    "+"    "+thisPath$
                     
-                if pos("[+FIRM_ID]"=shortPath$)=0 then break
+                if pos("[+FIRM_ID]"=thisPath$)=0 then break
             next j
         next i
 
@@ -744,28 +712,9 @@ rem --- Build jar file
     nxt_ctlID=util.getNextControlID()
     busyImage!=rdForm!.addImageCtrl(nxt_ctlID,250,20,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
 
-    rem --- Add log file to jar
-    jarFile!=new File(baseDir$ + File.separator + jarFile$)
-    if jarFile!.exists() then
-        if pos("WIN"=cvs(info(0,0),4)) then
-            rem --- Windows OS
-            command$="cmd /c chdir "+baseDir$+" && "+"jar -ufM "+jarFile$+" adx_jaraon.log"
-        else
-            rem --- Non-Windows OS
-            command$="chdir "+baseDir$+" ; "+"jar -ufM "+jarFile$+" adx_jaraon.log"
-        endif
-    else
-        if pos("WIN"=cvs(info(0,0),4)) then
-            rem --- Windows OS
-            command$="cmd /c chdir "+baseDir$+" && "+"jar -cfM "+jarFile$+" adx_jaraon.log"
-        else
-            rem --- Non-Windows OS
-            command$="chdir "+baseDir$+" ; "+"jar -cfM "+jarFile$+" adx_jaraon.log"
-        endif
-    endif
-    command!=cast(java.lang.String,command$)
-    process!=java.lang.Runtime.getRuntime().exec(command!)
-    process!.waitFor()
+    rem --- Add log file to jar and close jar
+	tgzFile!.addFile(baseDir$+File.separator+"adx_jaraon.log",baseDir$)
+	tgzFile!.closeForWriting() 
     
 done: rem --- All done
 
