@@ -1081,7 +1081,7 @@ create_app_vector: rem --- Create a vector of applications from the OLD ddm_syst
 rem ==========================================================================
 
 	rem --- Application heritage must come from OLD system.
-	rem --- Locate the database for the OLD system, and quiry the DDM_SYSTEMS table.
+	rem --- Locate the database for the OLD system, and query the DDM_SYSTEMS table.
 	dbname$ = ""
 	bar_dir$=old_bar_loc$+"/barista"
 	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
@@ -1153,7 +1153,11 @@ rem ==========================================================================
 		if pos(":"+rootApp$+":"=":ADDON:")=0 then
 			appRowVect!.addItem(rootApp$); rem App
 			appRowVect!.addItem(""); rem Parent
-			appRowVect!.addItem("y"); rem Install
+			if pos(":"+rootApp$+":"=":V6HYBRID:")<>0
+				appRowVect!.addItem("n"); rem Don't install V6Hybrid - done separately
+			else
+				appRowVect!.addItem("y"); rem Install
+			endif
 			appRowVect!.addItem("n"); rem Copy
 			appRowVect!.addItem(cast(BBjString, rootProps!.get("mount_dir"))); rem Source
 			appRowVect!.addItem(""); rem Target
@@ -1220,6 +1224,13 @@ fill_app_grid: rem --- Fill the app grid with data in appRowVect!
 			rem --- Disable blank rows
 			if appRowVect!.getItem(i)="" then
 				appGrid!.setRowEditable(row, 0)
+			endif
+
+			rem --- Disable V6Hybrid row, if applicable (gets done separately)
+			if pos("V6HYBRID"=appRowVect!.getItem(i))<>0 then
+				appGrid!.setRowEditable(row, 0)
+				appGrid!.setCellStyle(row,2,SysGUI!.GRID_STYLE_UNCHECKED)
+				appGrid!.setCellStyle(row,3,SysGUI!.GRID_STYLE_UNCHECKED)
 			endif
 
 			rem --- Set install checkbox
