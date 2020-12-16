@@ -1,0 +1,388 @@
+rem ==========================================================================
+rem --- opo_AO_AvaTaxInterface.aon 
+rem --- AO_AvaTaxInterface class (AvaTaxInterface superclass)
+rem --- OP superclass that interfaces with Avalara's AvaTax sales tax service.
+rem --- 
+rem --- AddonSoftware Version 21.0
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem ==========================================================================
+
+rem /**
+rem  * This class creates planned Work Orders for items (BOMs) ordered
+rem  * in Order Entry.
+rem  */
+
+rem --- Use statements and declares
+
+    use ::ado_file.src::FileObject
+    use ::sys/prog/bao_encryptor.bbj::Encryptor
+    
+    use ::REST/BBWebClient.bbj::BBWebClient
+    use ::REST/BBWebClient.bbj::BBWebRequest
+    use ::REST/BBWebClient.bbj::BBWebResponse
+    
+    use java.io.File
+    use java.lang.Boolean
+    use java.lang.Integer
+    use java.math.BigDecimal
+    use java.text.SimpleDateFormat
+    use java.util.ArrayList
+    use java.util.Base64
+    use java.util.Date
+    use java.util.HashMap
+    use java.util.List
+    use java.util.Properties
+    
+    use com.fasterxml.jackson.databind.ObjectMapper
+    use com.fasterxml.jackson.databind.SerializationFeature
+    
+    use net.avalara.avatax.rest.client.AvaTaxClient
+    use net.avalara.avatax.rest.client.FetchResult
+    use net.avalara.avatax.rest.client.enums.AvaTaxEnvironment
+    use net.avalara.avatax.rest.client.enums.DocumentType
+    use net.avalara.avatax.rest.client.models.AddressesModel
+    use net.avalara.avatax.rest.client.models.AddressLocationInfo
+    use net.avalara.avatax.rest.client.models.CertificateModel
+    use net.avalara.avatax.rest.client.models.CommitTransactionModel
+    use net.avalara.avatax.rest.client.models.CreateTransactionModel
+    use net.avalara.avatax.rest.client.models.EntityUseCodeModel
+    use net.avalara.avatax.rest.client.models.ExemptionStatusModel
+    use net.avalara.avatax.rest.client.models.LineItemModel
+    use net.avalara.avatax.rest.client.models.PingResultModel
+    use net.avalara.avatax.rest.client.models.TaxCodeModel
+    use net.avalara.avatax.rest.client.models.TransactionAddressModel
+    use net.avalara.avatax.rest.client.models.TransactionLineModel
+    use net.avalara.avatax.rest.client.models.TransactionModel
+
+    class public AO_AvaTaxInterface
+        field protected BBjString accountNumber$ = ""
+        field protected BBjString appVersion$
+        field protected AvaTaxClient avataxClient! = null()
+        field protected BBjString className$ = "AvaTaxInterface"
+        field protected BBjNumber devArcShipViaCode = -1
+        field protected BBjNumber devArmCustExmpt = -1
+        field protected BBjNumber devArmCustMast = -1
+        field protected BBjNumber devArmCustShip = -1
+        field protected BBjNumber devArsReport = -1
+        field protected BBjNumber devClientLog = -1
+        field protected BBjNumber devDdmSystems = -1
+        field protected BBjNumber devIvcWhseCode = -1
+        field protected BBjNumber devIvmItemMast = -1
+        field protected BBjNumber devOpcLineCode = -1
+        field protected BBjNumber devOpeOrdShip = -1
+        field protected BBjNumber devOpsParams = -1
+        field protected BBjNumber devOpsSlsTaxSvcDet = -1
+        field protected BBjNumber devOpsSlsTaxSvcHdr = -1
+        field protected BBjNumber devOptInvDet = -1
+        field protected BBjNumber devOptInvHdr = -1
+        field protected BBjNumber devOptSlsTaxTrans = -1
+        field protected BBjNumber devTaxSvcCdSource = -1
+        field protected BBjString firmID$
+        field protected BBjString licenseKey$ = ""
+        field protected BBjNumber logClient = 0
+        field protected BBjString salesTaxInterface$
+        field protected BBjString server$ = ""
+        field protected BBjString taxSvcCdSource$
+        field protected BBjString testMode$ = ""
+        field protected BBjString tplArcShipViaCode$
+        field protected BBjString tplArmCustExmpt$
+        field protected BBjString tplArmCustMast$
+        field protected BBjString tplArmCustShip$
+        field protected BBjString tplArsReport$
+        field protected BBjString tplDdmSystems$
+        field protected BBjString tplIvcWhseCode$
+        field protected BBjString tplIvmItemMast$
+        field protected BBjString tplOpcLineCode$
+        field protected BBjString tplOpeOrdShip$
+        field protected BBjString tplOpsParams$
+        field protected BBjString tplOpsSlsTaxSvcDet$
+        field protected BBjString tplOpsSlsTaxSvcHdr$
+        field protected BBjString tplOptInvDet$
+        field protected BBjString tplOptInvHdr$
+        field protected BBjString tplOptSlsTaxTrans$
+        field protected BBjString tplTaxSvcCdSource$
+        field protected BBjString userCompanyID$ = ""
+        field protected BBjNumber waitTime = 10
+        field protected HashMap whseAddrs! = null()
+
+        rem /**
+        rem  * Constructor.
+        rem  *
+        rem  * @param BBjString firmID$
+        rem  */
+        method public AO_AvaTaxInterface(BBjString firm_id$)
+            def fnget_dev1(tmp0$)=num(rd_table_chans$[0,0](pos(pad(tmp0$,17)=rd_table_chans$[0,0],20)+17,3))
+            seterr AO_AvaTaxInterface_error
+
+            rem --- Initialize field variables
+            #firmID$ = firm_id$
+
+            rem --- Open needed files          
+            num_files=16
+            dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
+            open_tables$[1] ="ARC_SHIPVIACODE",   open_opts$[1] = "OTA[1]"
+            open_tables$[2] ="ARM_CUSTMAST",      open_opts$[2] = "OTA[1]"
+            open_tables$[3] ="ARM_CUSTSHIP",      open_opts$[3] = "OTA[1]"
+            open_tables$[4] ="ARM_CUSTEXMPT",     open_opts$[4] = "OTA[1]"
+            open_tables$[5] ="ARS_REPORT",        open_opts$[5] = "OTA[1]"
+            open_tables$[6] ="DDM_SYSTEMS",       open_opts$[6] = "OTA[1]"
+            open_tables$[7] ="IVC_WHSECODE",      open_opts$[7] = "OTA[1]"
+            open_tables$[8] ="IVM_ITEMMAST",      open_opts$[8] = "OTA[1]"
+            open_tables$[9] ="OPC_LINECODE",      open_opts$[9] = "OTA[1]"
+            open_tables$[10] ="OPE_ORDSHIP",      open_opts$[10] = "OTA[1]"
+            open_tables$[11] ="OPS_PARAMS",       open_opts$[11] = "OTA[1]"
+            open_tables$[12] ="OPS_SLSTAXSVCDET", open_opts$[12] = "OTA[1]"
+            open_tables$[13] ="OPS_SLSTAXSVCHDR", open_opts$[13] = "OTA[1]"
+            open_tables$[14] ="OPT_INVDET",       open_opts$[14] = "OTA[1]"
+            open_tables$[15] ="OPT_INVHDR",       open_opts$[15] = "OTA[1]"
+            open_tables$[16] ="OPT_SLSTAXTRANS",  open_opts$[16] = "OTA[1]"
+        
+            rem --- Note that rd_table_chans$[all] is NOT being shared/passed.
+            call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
+
+            if open_status$ = "" then
+                rem --- Make sure ddm_tables and ddm_table_tpls get closed
+                devDdmTables=fnget_dev1("DDM_TABLES")
+                devDdmTableTpls=fnget_dev1("DDM_TABLE_TPLS")
+                if devDdmTables >= 0 then close(devDdmTables,err=*next)
+                if devDdmTableTpls >= 0 then close(devDdmTableTpls,err=*next)
+
+                rem --- Hold on to channels and record templates
+                #devArcShipViaCode = num(open_chans$[1])
+                #devArmCustMast = num(open_chans$[2])
+                #devArmCustShip = num(open_chans$[3])
+                #devArmCustExmpt = num(open_chans$[4])
+                #devArsReport = num(open_chans$[5])
+                #devDdmSystems = num(open_chans$[6])
+                #devIvcWhseCode = num(open_chans$[7])
+                #devIvmItemMast = num(open_chans$[8])
+                #devOpcLineCode = num(open_chans$[9])
+                #devOpeOrdShip = num(open_chans$[10])
+                #devOpsParams = num(open_chans$[11])
+                #devOpsSlsTaxSvcDet = num(open_chans$[12])
+                #devOpsSlsTaxSvcHdr = num(open_chans$[13])
+                #devOptInvDet = num(open_chans$[14])
+                #devOptInvHdr = num(open_chans$[15])
+                #devOptSlsTaxTrans = num(open_chans$[16])
+
+                #tplArcShipViaCode$ = open_tpls$[1]
+                #tplArmCustMast$ = open_tpls$[2]
+                #tplArmCustShip$ = open_tpls$[3]
+                #tplArmCustExmpt$ = open_tpls$[4]
+                #tplArsReport$ = open_tpls$[5]
+                #tplDdmSystems$ = open_tpls$[6]
+                #tplIvcWhseCode$= open_tpls$[7]
+                #tplIvmItemMast$ = open_tpls$[8]
+                #tplOpcLineCode$ = open_tpls$[9]
+                #tplOpeOrdShip$ = open_tpls$[10]
+                #tplOpsParams$ = open_tpls$[11]
+                #tplOpsSlsTaxSvcDet$ = open_tpls$[12]
+                #tplOpsSlsTaxSvcHdr$ = open_tpls$[13]
+                #tplOptInvDet$ = open_tpls$[14]
+                #tplOptInvHdr$ = open_tpls$[15]
+                #tplOptSlsTaxTrans$ = open_tpls$[16]
+            else
+                #close()
+                
+                rem --- Throw error
+                err_num=err
+                err_num=num(open_status$,err=*next)
+                seterr 0
+                x$=stbl("+THROWN_ERR","TRUE")   
+                throw "["+pgm(-2)+"] Constructor failed to open files: "+open_status$,err_num
+            endif
+
+            rem --- Get needed OP params
+            dim opsParamsRec$:#tplOpsParams$
+            readrecord(#devOpsParams,key=#firmID$+"AR00")opsParamsRec$
+            salesTaxInterface$=opsParamsRec.sls_tax_intrface$
+            if salesTaxInterface$="A" then
+                #salesTaxInterface$=salesTaxInterface$
+                #taxSvcCdSource$=opsParamsRec.tax_svc_cd_src$
+                switch (BBjAPI().TRUE)
+                    case #taxSvcCdSource$ = "C"
+                        sourceFile$="IVC_CLASCODE"
+                    break
+                    case default
+                    case #taxSvcCdSource$= "P"
+                        sourceFile$="IVC_PRODCODE"
+                    break
+                    case #taxSvcCdSource$ = "T"
+                        sourceFile$="IVC_TYPECODE"
+                    break
+                swend
+                
+                rem --- Open source file for Sales Tax Service Code
+                num_files=1
+                dim open_tables$[1:num_files], open_opts$[1:num_files], open_chans$[1:num_files], open_tpls$[1:num_files]
+                open_tables$[1] =sourceFile$,   open_opts$[1] = "OTA[1]"
+                call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
+                if open_status$ = "" then
+                    rem --- Make sure ddm_tables and ddm_table_tpls get closed
+                    devDdmTables=fnget_dev1("DDM_TABLES")
+                    devDdmTableTpls=fnget_dev1("DDM_TABLE_TPLS")
+                    if devDdmTables >= 0 then close(devDdmTables,err=*next)
+                    if devDdmTableTpls >= 0 then close(devDdmTableTpls,err=*next)
+    
+                    rem --- Hold on to channels and record templates
+                    #devTaxSvcCdSource = num(open_chans$[16])
+                    #tplTaxSvcCdSource$ = open_tpls$[1]
+                else
+                    #close()
+                    
+                    rem --- Throw error
+                    err_num=err
+                    err_num=num(open_status$,err=*next)
+                    seterr 0
+                    x$=stbl("+THROWN_ERR","TRUE")   
+                    throw "["+pgm(-2)+"] Constructor failed to open "+sourceFile$+": "+open_status$,err_num
+                endif
+            else
+            endif
+
+            rem ... Get needed Sales Tax Service header params
+            dim opsSlsTaxSvcHdrRec$:#tplOpsSlsTaxSvcHdr$ 
+            readrecord(#devOpsSlsTaxSvcHdr,key=firmID$+#salesTaxInterface$)opsSlsTaxSvcHdrRec$
+            #waitTime = opsSlsTaxSvcHdrRec.wait_time
+
+            rem ... Get needed Sales Tax Service detail params
+            missingParams$=""
+            encryptor! = new Encryptor()
+            encryptor!.setConfiguration("SLSTAXSVC_AUTH")
+            read(#devOpsSlsTaxSvcHdr,key=firmID$+#salesTaxInterface$,dom=*next)
+            while 1
+                dim opsSlsTaxSvcDetRec$:#tplOpsSlsTaxSvcDet$
+                readrecord(#devOpsSlsTaxSvcHdr,end=*break)opsSlsTaxSvcDetRec$
+                if pos(firmID$+#salesTaxInterface$=opsSlsTaxSvcDetRec$)<>1 then break
+                svcConfigAttr$=opsSlsTaxSvcDetRec.svc_config_attr$
+                svcConfigValue$=encryptor!.decryptData(cvs(opsSlsTaxSvcDetRec.svc_config_value$,3))
+                switch (BBjAPI().TRUE)
+                    case svcConfigAttr$ = "server"
+                        #server$=svcConfigValue$
+                        if #server$="" then missingParams$=missingParams$+"server  "
+                        break
+                    case svcConfigAttr$ = "accountNumber"
+                        #accountNumber$=svcConfigValue$
+                        if #accountNumber$="" then missingParams$=missingParams$+"accountNumber  "
+                        break
+                    case svcConfigAttr$ = "licenseKey"
+                        #licenseKey$=svcConfigValue$
+                        if #licenseKey$="" then missingParams$=missingParams$+"licenseKey  "
+                        break
+                    case svcConfigAttr$ = "userCompanyID"
+                        #userCompanyID$=svcConfigValue$
+                        if #userCompanyID$="" then missingParams$=missingParams$+"licenseKey  "
+                        break
+                    case svcConfigAttr$ = "testMode"
+                        #testMode$=svcConfigValue$
+                        if #testMode$="" then missingParams$=missingParams$+"licenseKey  "
+                        break
+                    case svcConfigAttr$ = "loggingEndDate"
+                        loggingEndDate!=svcConfigValue$
+                        loggingEndDate$=loggingEndDate!.replace("-","")
+                        break
+                    case svcConfigAttr$ = "loggingStartDate"
+                        loggingStartDate!=svcConfigValue$
+                        loggingStartDate$=loggingStartDate!.replace("-","")
+                        break
+                swend
+            wend
+            if missingParams$<>"" then
+                #close()
+            
+                rem --- Throw error
+                seterr 0   
+                x$=stbl("+THROWN_ERR","TRUE")   
+                throw #className$+": Invalid directory: "+dir$,300
+            else
+                today$=Date(0,"%Yd%Mz%Dz")
+                if today$>=loggingStartDate$ and today$<=loggingEndDate$ then
+                    #logClient%=1
+                    aonDir$=""
+                    dim ddmSystems$:#tplDdmSystems$
+                    readrecord(#devDdmSystems%,key=pad("ADDON",16," "),knum="SYSTEM_ID",err=*next)ddmSystems$
+                    if cvs(ddm_systems.mount_dir$,2)<>"" then aonDir$=ddm_systems.mount_dir$
+                    logDir$ = FileObject.fixPath(aonDir$ + "/logs", "/")
+                    FileObject.makeDirs(new File(logDir$))
+                    logFile$=logDir$+"/AvaTaxLog_"+DATE(0:"%Yd%Mz%Dz")+".txt"
+                    devClientLog% = unt
+                    open(devClientLog,isz=-1,MODE="O_APPEND,O_CREATE")logFile$
+                endif
+            endif
+
+            rem ... Get Addon version
+            call stbl("+DIR_SYP")+"bax_version.bbj",barVersion$,""
+            #appVersion$=barVersion$
+
+            methodret
+            
+AO_AvaTaxInterface_error:rem --- Method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Close all open channels and connections.
+        rem  */
+        method public void close()
+            seterr close_error
+
+            rem --- Note that even though tables were opened using bac_open_tables.bbj, rd_table_chans$[all] is NOT being shared/passed.
+            if #devArcShipViaCode>0 then close(#devArcShipViaCode,err=*next)
+            if #devArmCustExmpt>0 then close(#devArmCustExmpt,err=*next)
+            if #devArmCustMast>0 then close(#devArmCustMast,err=*next)
+            if #devArmCustShip>0 then close(#devArmCustShip,err=*next)
+            if #devArsReport>0 then close(#devArsReport,err=*next)
+            if #devClientLog>0 then close(#devClientLog,err=*next)
+            if #devDdmSystems>0 then close(#devDdmSystems,err=*next)
+            if #devIvcWhseCode>0 then close(#devIvcWhseCode,err=*next)
+            if #devIvmItemMast>0 then close(#devIvmItemMast,err=*next)
+            if #devOpcLineCode>0 then close(#devOpcLineCode,err=*next)
+            if #devOpeOrdShip>0 then close(#devOpeOrdShip,err=*next)
+            if #devOpsParams>0 then close(#devOpsParams,err=*next)
+            if #devOpsSlsTaxSvcDet>0 then close(#devOpsSlsTaxSvcDet,err=*next)
+            if #devOpsSlsTaxSvcHdr>0 then close(#devOpsSlsTaxSvcHdr,err=*next)
+            if #devOptInvDet>0 then close(#devOptInvDet,err=*next)
+            if #devOptInvHdr>0 then close(#devOptInvHdr,err=*next)
+            if #devOptSlsTaxTrans>0 then close(#devOptSlsTaxTrans,err=*next)
+            if #devTaxSvcCdSource>0 then close(#devTaxSvcCdSource,err=*next)
+ 
+            methodret
+            
+close_error:rem --- Method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Cleanup on object's destruction and garbage collection.
+        rem  */
+        method protected void finalize()
+
+            rem --- Close all open channels and connections
+            #close()
+
+            methodret
+        methodend
+    
+classend
