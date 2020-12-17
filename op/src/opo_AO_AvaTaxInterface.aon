@@ -278,12 +278,14 @@ rem --- Use statements and declares
                         if #testMode$="" then missingParams$=missingParams$+"licenseKey  "
                         break
                     case svcConfigAttr$ = "loggingEndDate"
-                        loggingEndDate!=svcConfigValue$
-                        loggingEndDate$=loggingEndDate!.replace("-","")
+                        loggingEndDate$=svcConfigValue$
+                        endJul=-1
+                        endJul = jul(loggingEndDate$,"%Yd-%Mz-%Dz",err=*next)
                         break
                     case svcConfigAttr$ = "loggingStartDate"
-                        loggingStartDate!=svcConfigValue$
-                        loggingStartDate$=loggingStartDate!.replace("-","")
+                        loggingStartDate$=svcConfigValue$
+                        startJul=-1
+                        startJul = jul(loggingStartDate$,"%Yd-%Mz-%Dz",err=*next)
                         break
                 swend
             wend
@@ -295,8 +297,8 @@ rem --- Use statements and declares
                 x$=stbl("+THROWN_ERR","TRUE")   
                 throw #className$+": Invalid directory: "+dir$,300
             else
-                today$=Date(0,"%Yd%Mz%Dz")
-                if today$>=loggingStartDate$ and today$<=loggingEndDate$ then
+                thisJul=Jul(0,0,0)
+                if startJul>0 and endJul>0 and thisJul>=startJul and thisJul<=endJul then
                     #logClient%=1
                     aonDir$=""
                     dim ddmSystems$:#tplDdmSystems$

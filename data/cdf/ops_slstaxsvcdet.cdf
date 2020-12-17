@@ -1,3 +1,11 @@
+[[OPS_SLSTAXSVCDET.BGDC]]
+rem --- Get an Encryptor
+	use ::sys/prog/bao_encryptor.bbj::Encryptor
+
+	encryptor! = new Encryptor()
+	encryptor!.setConfiguration("SLSTAXSVC_AUTH")
+	callpoint!.setDevObject("encryptor",encryptor!)
+
 [[OPS_SLSTAXSVCDET.SVC_CONFIG_VALUE.AVAL]]
 rem --- Validate values entered for the attributes
 	value$=cvs(callpoint!.getUserInput(),2)
@@ -16,22 +24,73 @@ rem --- Validate values entered for the attributes
 				break
 			else
 				rem --- Cannot change the value if there are open orders or open invoices
-rem wgh ... 9806 ... stopped here
+				gosub validateAttrValueChange
 			endif
 			break
 		case attr$ = "loggingStartDate"
 		case attr$ = "loggingEndDate"
 			rem --- Date format must be YYYY-MM-DD, or blank
-			if value$<>"" and len(value$)<>8 then
-escape; rem wgh ... 9806 ... stopped here ... YYYY-MM-DD
+			if value$<>"" then
+				thisJul=-1
+				thisJul = jul(value$,"%Yd-%Mz-%Dz",err=*next)
+				if thisJul<0 then
+					msg_id$="OP_LOG_DATE_FORMAT"
+					gosub disp_message
+
+					callpoint!.setStatus("ABORT")
+					break
+				endif
 			endif
 			break
 		case attr$ = "server"
 		case attr$ = "userCompanyID"
 			rem --- Cannot change the value if there are open orders or open invoices
-rem wgh ... 9806 ... stopped here
+			gosub validateAttrValueChange
 			break
 	swend
+	if abort then break
+
+[[OPS_SLSTAXSVCDET.<CUSTOM>]]
+rem =========================================================
+validateAttrValueChange: rem --- Cannot change attribute's value if there are open orders or open invoices
+	rem --- input: attr$
+	rem --- input: value$
+	rem --- output: abort
+rem =========================================================
+	abort=0
+
+	encryptor!=callpoint!.getDevObject("encryptor")
+	priorValue$=encryptor!.decryptData(cvs(callpoint!.getColumnData("OPS_SLSTAXSVCDET.SVC_CONFIG_VALUE"),3))
+
+	if value$<>priorValue$ then
+		sql$ = "SELECT COUNT(*) AS COUNT "
+		sql$ = sql$ + "FROM OPT_INVHDR "
+		sql$ = sql$ + "WHERE FIRM_ID = '" + firm_id$ + "' and TRANS_STATUS IN ('E','R')"
+
+		sql_chan=sqlunt
+		sqlopen(sql_chan)stbl("+DBNAME")
+		sqlprep(sql_chan)sql$
+		dim read_tpl$:sqltmpl(sql_chan)
+		sqlexec(sql_chan)
+
+		read_tpl$ = sqlfetch(sql_chan,err=*continue)
+		count=read_tpl$.count
+		sqlclose(sql_chan)
+
+		if count then
+			msg_id$="OP_CANNOT_CHG_STS"
+			dim msg_tokens$[2]
+			msg_tokens$[1]=attr$
+			msg_tokens$[2]=str(count)
+			gosub disp_message
+
+			callpoint!.setUserInput(priorValue$)
+			callpoint!.setStatus("ABORT")
+			abort=1
+		endif
+	endif
+
+	return
 
 
 
