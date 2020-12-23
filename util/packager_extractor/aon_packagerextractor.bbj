@@ -14,6 +14,7 @@ use java.nio.file.StandardCopyOption
 use java.text.SimpleDateFormat
 use java.util.Arrays
 use java.util.Date
+use java.util.Iterator
 use java.util.List
 use java.util.Properties
 use java.util.Vector
@@ -265,6 +266,16 @@ class public PackagerExtractor
         baseDir$=baseDirFile!.getCanonicalPath() 
         
     rem --- Initializations
+        declare Vector copyPath!
+        declare Vector firmsVect!
+        declare Vector prefixVect!
+        declare Properties sourcePaths!
+        declare Properties stblPaths!
+        declare BBjSysGui sysGUI!
+        declare Properties systems!
+        declare BBjString savedDir$
+        declare BBjNumber skipped
+    
         copyPath!=new Vector()
         firmsVect!=new Vector()
         prefixVect!=new Vector()
@@ -846,34 +857,62 @@ class public PackagerExtractor
         pathIter!=sourcePaths!.keySet().iterator()
         while pathIter!.hasNext()
             path$=pathIter!.next()
+            
             canonicalPath$=sourcePaths!.getProperty(path$) 
             
+            rem --- Check whether the file exists
+            declare File testFile!
+            testFile!=new File(canonicalPath$)
+            if !testFile!.exists() then continue 
+            
             rem --- Is this canonical path redundant (i.e. begins with canoncial path already in copyPath!)?
+            declare Iterator copyPathIter!
             redundant=0
-            for i=0 to copyPath!.size()-1
-                existingCopyPath$=copyPath!.get(i)
+            
+            copyPathIter!=copyPath!.iterator() 
+            while copyPathIter!.hasNext()
+                existingCopyPath$=cast(BBjString,copyPathIter!.next())
                 
-                path1$=existingCopyPath$
-                if (#isWindows!) then path1$=cvs(path1$,4)
+                declare BBjString path1!
+                declare BBjString path2!
+                path1!=existingCopyPath$
+                if (#isWindows!) then path1!=path1!.toUpperCase()
                 
-                path2$=canonicalPath$
-                if (#isWindows!) then path2$=cvs(path2$,4)
+                if (! path1!.endsWith(File.separator)) then 
+                    path1!=path1!.concat(File.separator)
+                endif 
                 
-                if pos(path1$=path2$)=1 then
-                   continue
+                path2!=canonicalPath$
+                if (#isWindows!) then path2!=path2!.toUpperCase()
+                
+                if (path2!.startsWith(path1!)) then
+                   redundant=1
+                   break
                 endif
-            next i
+            wend
+            
+            REM if the path is redundant, just go on to the next path
+            if (redundant) then continue 
                 
             rem --- Add non-redundant canonical paths to copyPath!
             rem --- Remove all existing copyPath! <canonical_path>s that begin with the new canonical path being added
             removePaths!=new Vector()
             for i=0 to copyPath!.size()-1
+                declare BBjString path1!
+                declare BBjString path2!
                 existingCopyPath$=copyPath!.get(i)
-                if pos(canonicalPath$+File.separator=existingCopyPath$)=1 then removePaths!.add(existingCopyPath$)
+                path1!=existingCopyPath$
+                path2!=canonicalPath$
+                if (!path2!.endsWith(File.separator)) then path2!=path2!.concat(File.separator)
+                if #isWindows! then 
+                    path1!=path1!.toUpperCase()
+                    path2!=path2!.toUpperCase()
+                endif 
+                if path1!.startsWith(path2!) then removePaths!.add(existingCopyPath$)
             next i
             if removePaths!.size() then copyPath!.removeAll(removePaths!)
 
-            rem --- Add new canonical path
+            rem --- Add new canonical path if the path exists
             copyPath!.add(canonicalPath$)
         wend
     
@@ -1271,7 +1310,8 @@ std_exit:
       chdir baseDir$
       declare TGZFile tgzFile!
       tgzFile!=new TGZFile(jarFile$)
-      rem -- SDH:  Take a look at these lines and see what works on Linux, if anything. 
+      
+      rem -- TODO SDH:  Take a look at these lines and see what works on Linux, if anything. 
       rem tgzFile!.addDefaultCopyOption(StandardCopyOption.COPY_ATTRIBUTES)
       rem tgzFile!.setDefaultFilePermissions("rwxrwxrwx")
       tgzFile!.extractAll(baseDir$)
