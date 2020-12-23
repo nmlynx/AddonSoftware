@@ -1,3 +1,61 @@
+[[OPS_SLSTAXSVCHDR.AOPT-CONN]]
+rem --- Test connection to sales tax service
+	encryptor!=callpoint!.getDevObject("encryptor")
+
+	dim gridRec$:dtlg_param$[1,3]
+	rowData!=cast(BBjVector,GridVect!.getItem(0))
+	for i=0 to rowData!.size()-1
+		gridRec$=rowData!.getItem(i)
+		attr$=cvs(gridRec.svc_config_attr$,2)
+		value$=encryptor!.decryptData(cvs(gridRec.svc_config_value$,3))
+		switch (BBjAPI().TRUE)
+			case attr$ = "server"
+				server$=value$
+				break
+			case attr$ = "accountNumber"
+				accountNumber$=value$
+				break
+			case attr$ = "licenseKey"
+				licenseKey$=value$
+				break
+			case attr$ = "testMode"
+				if value$="true" then
+					environment! = AvaTaxEnvironment.Sandbox
+				else
+					environment! = AvaTaxEnvironment.Production
+				endif
+				break
+		swend
+	next
+	account_license$=accountNumber$+":"+licenseKey$
+	call stbl("+DIR_SYP")+"bax_version.bbj",barVersion$,""
+
+	client! = new AvaTaxClient("AddonSoftware", barVersion$, server$, environment!).withSecurity(Base64.getEncoder().encode(account_license$))
+	ping! = client!.ping()
+	if(ping!.getAuthenticated()) then
+		msg_id$="WEB_SERVICE_CONN_OK"
+		dim msg_tokens$[1]
+		slsTaxIntrface!=callpoint!.getControl("OPS_SLSTAXSVCHDR.SLS_TAX_INTRFACE")
+		msg_tokens$[1]=slsTaxIntrface!.getItemAt(slsTaxIntrface!.getSelectedIndex())
+		gosub disp_message
+	else
+		msg_id$="WEB_SERVICE_CONN_NOK"
+		dim msg_tokens$[2]
+		slsTaxIntrface!=callpoint!.getControl("OPS_SLSTAXSVCHDR.SLS_TAX_INTRFACE")
+		msg_tokens$[1]=slsTaxIntrface!.getItemAt(slsTaxIntrface!.getSelectedIndex())
+		gosub disp_message
+
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+rem wgh ... 9806 ... stopped here
+rem ... Test for connection time out
+rem ... Add new AvaTaxInterface methods before and after AvaTax calls
+rem ... timerStart() method (uses BjAPI().createTimer()) -- use before AvaTax calls
+rem ... timerStop() method (uses BjAPI().removeTimer()) -- use after AvaTax calls
+rem ... timerEvent() method -- use in ACUS callpoints
+
 [[OPS_SLSTAXSVCHDR.ARNF]]
 rem --- Initialize new records using the ZZ records
 	ops_slstaxsvchdr_dev = fnget_dev("OPS_SLSTAXSVCHDR")
@@ -24,6 +82,22 @@ rem --- Initialize new records using the ZZ records
 
 	rem --- Load new records into the form
 	callpoint!.setStatus("RECORD:["+firm_id$+sls_tax_intrface$+"]")
+
+[[OPS_SLSTAXSVCHDR.BSHO]]
+rem  --- Use statements
+	use ::sys/prog/bao_encryptor.bbj::Encryptor
+
+	use java.math.BigDecimal
+	use java.util.Base64
+
+	use net.avalara.avatax.rest.client.AvaTaxClient  
+	use net.avalara.avatax.rest.client.enums.AvaTaxEnvironment 
+	use net.avalara.avatax.rest.client.models.PingResultModel 
+
+rem --- Get an Encryptor
+	encryptor! = new Encryptor()
+	encryptor!.setConfiguration("SLSTAXSVC_AUTH")
+	callpoint!.setDevObject("encryptor",encryptor!)
 
 [[OPS_SLSTAXSVCHDR.WAIT_TIME.AVAL]]
 rem --- Verify wait_time is greater than zero
