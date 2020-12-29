@@ -30,8 +30,10 @@ rem --- Test connection to sales tax service
 	account_license$=accountNumber$+":"+licenseKey$
 	call stbl("+DIR_SYP")+"bax_version.bbj",barVersion$,""
 
+	rem --- Test connect to sales tax service
 	client! = new AvaTaxClient("AddonSoftware", barVersion$, server$, environment!).withSecurity(Base64.getEncoder().encode(account_license$))
-	ping! = client!.ping()
+	rem --- Test connection
+	ping! = client!.ping(err=pingErr)
 	if(ping!.getAuthenticated()) then
 		msg_id$="WEB_SERVICE_CONN_OK"
 		dim msg_tokens$[1]
@@ -49,12 +51,25 @@ rem --- Test connection to sales tax service
 		break
 	endif
 
-rem wgh ... 9806 ... stopped here
-rem ... Test for connection time out
-rem ... Add new AvaTaxInterface methods before and after AvaTax calls
-rem ... timerStart() method (uses BjAPI().createTimer()) -- use before AvaTax calls
-rem ... timerStop() method (uses BjAPI().removeTimer()) -- use after AvaTax calls
-rem ... timerEvent() method -- use in ACUS callpoints
+	break
+
+pingErr: rem --- Error during ping() test
+
+	rd_err_text$="", err_num=err
+	if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+	if err_num=252 then
+		E!=BBjAPI().getLastBBjException()
+		rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+		if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+	endif
+
+	msg_id$="AD_CHK_CONNECT"
+	dim msg_tokens$[1]
+	msg_tokens$[1]="["+pgm(-2)+"] "+str(tcb(5))+": "+$0A$+cvs(rd_err_text$,3)+" "+str(err_num)
+	gosub disp_message
+
+	callpoint!.setStatus("ABORT")
+	break
 
 [[OPS_SLSTAXSVCHDR.ARNF]]
 rem --- Initialize new records using the ZZ records
