@@ -62,9 +62,18 @@ class public PackagerExtractor
     field private BBjToolButton ExtractorArchiveBrowseBtn!=#ExtractorWin!.addToolButton(#ExtractorWin!.getAvailableControlID(),600,89,20,19,"...")
     field private BBjButton ExtractorBtn!=#ExtractorWin!.addButton(#ExtractorWin!.getAvailableControlID(),490,160,110,23,"Extract")
     
+    rem --- Packager state fields 
+    field private BBjNumber PRODUCTION_PACKAGING_TYPE=0
+    field private BBjNumber TESTING_PACKAGING_TYPE=1
+    field private BBjNumber PackagerPackagingType=#PRODUCTION_PACKAGING_TYPE
+    field private BBjNumber isPackagerBaseDirectoryValid!=0
+    field private BBjNumber isPackagerBaristaDirectoryValid!=0
+    field private BBjNumber isPackagerArchiveFileValid!
+    
     rem --- environment fields 
     field private BBjNumber isWindows!=new String(info(0,0)).contains("Win")
-      
+    field private BBjColor InvalidColor!=#Sysgui!.makeColor(255,85,85)
+    field private BBjColor ValidColor!=#PackagerInstallationLocationEB!.getBackColor()
     
     rem --- information specific to packaging
     field private BBjString ArchiveLocation!
@@ -99,8 +108,8 @@ class public PackagerExtractor
         #TabCtrl!.addTab("Extractor",#ExtractorWin!)
     
         rem -- adjust our control states 
-        #PackagerBaristaLocationEB!.setEnabled(#PackagerTestingRB!.isSelected())
-        #PackagerBaristaBrowseBtn!.setEnabled(#PackagerTestingRB!.isSelected())
+        #PackagerBaristaLocationEB!.setEnabled(#PackagerPackagingType=#TESTING_PACKAGING_TYPE)
+        #PackagerBaristaBrowseBtn!.setEnabled(#PackagerPackagingType=#TESTING_PACKAGING_TYPE)
         #PackagerArchiveLocationEB!.setEnabled(0)
         #PackagerBtn!.setEnabled(0)
         rem #ExtractorBaristaLocationEB!.setEnabled(0)
@@ -115,15 +124,19 @@ class public PackagerExtractor
         #Win!.setCallback(BBjWindow.ON_CLOSE,#this!,"quit")
         #PackagerProductionRB!.setCallback(BBjRadioButton.ON_CHECK_ON,#this!,"switchPackagingType")
         #PackagerTestingRB!.setCallback(BBjRadioButton.ON_CHECK_ON,#this!,"switchPackagingType")
-        #PackagerInstallationBrowseBtn!.setCallback(BBjToolButton.ON_TOOL_BUTTON_PUSH,#this!,"browseInstallationDirectory")
-        #PackagerInstallationLocationEB!.setCallback(BBjInputE.ON_CONTROL_VALIDATION,#this!,"handleValidatePackageInstallationLocation")
+        #PackagerInstallationBrowseBtn!.setCallback(BBjToolButton.ON_TOOL_BUTTON_PUSH,#this!,"browsePackagerDirectory")
+        #PackagerInstallationLocationEB!.setCallback(BBjInputE.ON_CONTROL_VALIDATION,#this!,"handleValidatePackager")
+        #PackagerBaristaBrowseBtn!.setCallback(BBjToolButton.ON_TOOL_BUTTON_PUSH,#this!,"browsePackagerDirectory")
+        #PackagerBaristaLocationEB!.setCallback(BBjInputE.ON_CONTROL_VALIDATION,#this!,"handleValidatePackager")
         #PackagerBtn!.setCallback(BBjButton.ON_BUTTON_PUSH,#this!,"package")
         
-        #ExtractorInstallationBrowseBtn!.setCallback(BBjToolButton.ON_TOOL_BUTTON_PUSH,#this!,"browseExtractorInstallationDirectory")
-        #ExtractorInstallationLocationEB!.setCallback(BBjInputE.ON_CONTROL_VALIDATION,#this!,"handleValidateExtractorInstallationLocation")
-        #ExtractorArchiveBrowseBtn!.setCallback(BBjToolButton.ON_TOOL_BUTTON_PUSH,#this!,"browseExtractorArchiveLocation")
-        #ExtractorArchiveLocationEB!.setCallback(BBjInputE.ON_CONTROL_VALIDATION,#this!,"handleValidateExtractorArchiveLocation")
-        #ExtractorNewDatabaseNameEB!.setCallback(BBjInputE.ON_CONTROL_VALIDATION,#this!,"handleValidateExtractorNewDatabaseName")
+        #ExtractorNewDatabaseNameEB!.setCallback(BBjInputE.ON_CONTROL_VALIDATION,#this!,"handleValidateExtractor")
+        #ExtractorApplicationDescriptionEB!.setCallback(BBjInputE.ON_CONTROL_VALIDATION,#this!,"handleValidateExtractor")
+        #ExtractorInstallationLocationEB!.setCallback(BBjInputE.ON_CONTROL_VALIDATION,#this!,"handleValidateExtractor")
+        #ExtractorInstallationBrowseBtn!.setCallback(BBjToolButton.ON_TOOL_BUTTON_PUSH,#this!,"browseExtractorDirectory")
+        #ExtractorBaristaLocationEB!.setCallback(BBjInputE.ON_CONTROL_VALIDATION,#this!,"handleValidateExtractor")
+        #ExtractorArchiveBrowseBtn!.setCallback(BBjToolButton.ON_TOOL_BUTTON_PUSH,#this!,"browseExtractorDirectory")
+        #ExtractorArchiveLocationEB!.setCallback(BBjInputE.ON_CONTROL_VALIDATION,#this!,"handleValidateExtractor")
         #ExtractorBtn!.setCallback(BBjButton.ON_BUTTON_PUSH,#this!,"extract")
         
         rem -- make window visible and start event loop
@@ -137,51 +150,91 @@ class public PackagerExtractor
     methodend 
     
     method public void switchPackagingType(BBjCheckOnEvent event!)
-        #PackagerBaristaLocationEB!.setEnabled(#PackagerTestingRB!.isSelected())
-        #PackagerBaristaBrowseBtn!.setEnabled(#PackagerTestingRB!.isSelected())
+        if (#PackagerProductionRB!.isSelected()) then 
+            #PackagerPackagingType=#PRODUCTION_PACKAGING_TYPE
+        endif 
+        if (#PackagerTestingRB!.isSelected()) then 
+            #PackagerPackagingType=#TESTING_PACKAGING_TYPE
+        endif 
+        
+        #PackagerBaristaLocationEB!.setEnabled(#PackagerPackagingType=#TESTING_PACKAGING_TYPE)
+        #PackagerBaristaBrowseBtn!.setEnabled(#PackagerPackagingType=#TESTING_PACKAGING_TYPE)
         #PackagerBtn!.setEnabled(#readyForPackaging())
     methodend 
     
-    method public void browseInstallationDirectory(BBjToolButtonPushEvent event!)
-        declare BBjString installationLocation! 
+    method public void markInputEInvalid(BBjInputE inputE!, BBjString shortCue!)
+        inputE!.setBackColor(#InvalidColor!)
+        inputE!.setShortCue(shortCue!)
+        inputE!.showToolTipText()
+    methodend 
+
+    method public void markInputEValid(BBjInputE inputE!)
+        inputE!.setBackColor(#ValidColor!)
+        inputE!.setShortCue($$)
+    methodend 
+
+    
+    method public void browsePackagerDirectory(BBjToolButtonPushEvent event!)
+        declare BBjString location! 
         declare BBjString browsedPath!
-                
-        installationLocation!=#PackagerInstallationLocationEB!.getText() 
-        browsedPath!=fileOpen("Select directory for Addon Installation", installationLocation!,"","","",1)
+        declare BBjInputE inputE!
+        
+        rem choose the inpute based on the tool button
+        if (event!.getControl()=#PackagerInstallationBrowseBtn!) then 
+            inputE!=#PackagerInstallationLocationEB!
+        endif 
+        
+        if (event!.getControl()=#PackagerBaristaBrowseBtn!) then 
+            inputE!=#PackagerBaristaLocationEB!
+        endif 
+        
+        location!=inputE!.getText() 
+        browsedPath!=fileOpen("Select directory for Addon Installation", location!,"","","",1)
         
         rem --- set the installation path to the browsed path if the user did not cancel or encounter an error
         if (! browsedPath!.startsWith("::")) then
-            installationLocation!=browsedPath!
+            location!=browsedPath!
         endif 
         
         rem --- set the field to the installation path
-        if (! #validatePackageInstallationLocation(installationLocation!)) then 
-            x=msgbox(installationLocation!+" does not contain an Addon and Barista installation.")
-        endif  
+        inputE!.setText(location!)
+        
+        rem --- validate the installation path
+        #readyForPackaging()
+        
     methodend
     
-    method public void handleValidatePackageInstallationLocation(BBjControlValidationEvent event!)
-        print "handleValidatePackageInstallationLocation"
-        declare BBjString installationLocation!
-        declare File installationLocationFile!
-        installationLocation!=event!.getValueAsText()
-        if (#validatePackageInstallationLocation(installationLocation!))
-            event!.accept(1)
-        endif 
-    methodend 
+    method public void handleValidatePackager(BBjControlValidationEvent event!)
         
-    method public BBjNumber validatePackageInstallationLocation(BBjString installationLocation!)
+        rem -- check all field values including the installation location to package up.  Mark fields that are invalid. 
+        #readyForPackaging()
+                
+        rem -- accept validation 
+        event!.accept(1)
+    methodend 
+    
+    rem /**
+    rem  * Validates the installation path for the Addon installation.  The installation path is valid 
+    rem  * for testing installations if:
+    rem  *      The path is an existing directory on the server's file system. 
+    rem  *      Somewhere under the file system are an addon and barista directory. 
+    rem  * The installation path is valid for production installations if: 
+    rem  *      The path is an existing directory on the server's file system. 
+    rem  *      There is an aon directory and a barista directory directly under the specified path. 
+    rem  * 
+    rem  * @param installationLocation! An absolute path to the base directory above the aon and barista directory in an Addon installation. 
+    rem  * 
+    rem  * @return A string indicating the validation error.  A blank string means success. 
+    rem  */    
+    method public BBjString validatePackageInstallationLocation(BBjString installationLocation!)
         print "validatePackageInstallationLocation"
         declare BBjString baristaLocation!
-        declare SimpleDateFormat format!
         declare File installationLocationFile!
-        
-        REM manage the state of the package button
-        #PackagerBtn!.setEnabled(0)
-        
+        declare BBjString statusString!
+                
         REM installation directory must exist and be a directory
         if !#directoryExists(installationLocation!) then
-            methodret 0
+            methodret "The directory "+$22$+installationLocation!+$22$+" either does not exist or is not a directory. Please check the path and respecify."
         endif 
         
         REM get the installation directory's canonical path and make sure it ends with a slash
@@ -194,49 +247,141 @@ class public PackagerExtractor
         
         REM How we check the location of the Barista directory is going to depend on whether we're 
         REM packaging for production or testing. 
-        if (#PackagerProductionRB!.isSelected()) then 
+        if (#PackagerPackagingType=#PRODUCTION_PACKAGING_TYPE) then 
             REM installation directory must contain a barista installation (well, at least a barista directory)
             baristaLocation!=installationLocation!+"barista"
             if (!#directoryExists(baristaLocation!)) then
-                methodret 0
+                methodret "The Barista directory "+$22$+baristaLocation!+$22$+" must exist, but does not."
             endif 
-        
-            #PackagerInstallationLocationEB!.setText(installationLocation!)
-            #PackagerBaristaLocationEB!.setText(baristaLocation!)
         endif 
         
-        format!=new SimpleDateFormat(#ArchiveDatePattern!)
-        #ArchiveLocation!=installationLocation!+#ArchiveBaseName!+format!.format(new java.util.Date())+#ArchiveExtension!
-        #PackagerArchiveLocationEB!.setText(#ArchiveLocation!)
-        
-        #PackagerBtn!.setEnabled(#readyForPackaging())
-        methodret 1
+        methodret ""
     methodend 
+        
+    rem /**
+    rem  * Validates the barista path.  The barista path is valid for testing installations if:
+    rem  *      The path is an existing directory on the server's file system. 
+    rem  *      The barista path resides under the installation base path.  
+    rem  * The barista path is valid for production installations if: 
+    rem  *      The path is an existing directory on the server's file system. 
+    rem  *      The barista path is directly under the installation base path.  
+    rem  * 
+    rem  * @param baristaLocation! An absolute path to the barista directory. 
+    rem  * 
+    rem  * @return A string indicating the validation error.  A blank string means success. 
+    rem  */    
+    method public BBjString validatePackageBaristaLocation(BBjString baristaLocation!)
+    
+        print "validatePackageBaristaLocation"
+        declare BBjString baristaLocation!
+        
+        if (! baristaLocation!.matches("[^\s]*[/\\]barista[/\\]?$")) then 
+            methodret $22$+baristaLocation!+$22$+" does not end with "+$22$+"barista"+$22$
+        endif 
+        
+        installationLocation!=#PackagerInstallationLocationEB!.getText()
+        if (#PackagerPackagingType=#TESTING_PACKAGING_TYPE) then 
+            valid=installationLocation!<>"" and baristaLocation!.startsWith(installationLocation!)
+            if (!valid) then 
+                methodret "Barista directory is not under the installation directory."
+            endif 
+        endif 
+       
+        if (#PackagerPackagingType=#PRODUCTION_PACKAGING_TYPE) then 
+            baristaLocationForComparison!=baristaLocation!.replaceAll("[/\\]",File.separator)
+            valid=(baristaLocationForCompariston!=installationLocation!.replaceAll("[/\\",File.separator)+"barista")
+            if (!valid) then
+                methodret "Barista directory is not immediately under installation directory."
+            endif 
+        endif 
+        methodret ""
+    methodend 
+    
     
     method public BBjNumber readyForPackaging()
         print "readyForPackaging"
         declare BBjString installationLocation!
         declare BBjString baristaLocation!
         declare BBjString archiveLocation!
-        declare BBjNumber readySoFar!
+        declare SimpleDateFormat format!
         declare File baristaDirectory!
+        declare BBjNumber installationDirectoryValid!
+        #PackagerBtn!.setEnabled(0)
         
+        rem -- validate the installation location
         installationLocation!=#PackagerInstallationLocationEB!.getText()
-        baristaLocation!=#PackagerBaristaLocationEB!.getText()
-        packagerLocation!=#PackagerArchiveLocationEB!.getText()
-        
-        readySoFar!=installationLocation!<>$$ and baristaLocation!<>$$ and packagerLocation!<>$$
-        readySoFar!=readySoFar! and baristaLocation!.startsWith(installationLocation!)
-        baristaDirectory!=new File(baristaLocation!)
-        readySoFar!=readySoFar! and baristaDirectory!.exists() and baristaDirectory!.isDirectory()
-        if (readySoFar! and #PackagerProductionRB!.isSelected()) then 
-            readySoFar!=readySoFar! and baristaLocation!=installationLocation!+"barista"
-            
-            declare File aonDirectory!
-            aonDirectory!=new File(installationLocation!+"aon")
-            readySoFar!=readySoFar! and aonDirectory!.exists() and aonDirectory!.isDirectory()
+        if (installationLocation!<>"") then 
+            installationLocation!=new File(installationLocation!).getCanonicalPath()
+            if (! installationLocation!.endsWith(File.separator)) then 
+                installationLocation!=installationLocation!.concat(File.separator)
+            endif 
+            #PackagerInstallationLocationEB!.setText(installationLocation!)
+
+            status$=#validatePackageInstallationLocation(installationLocation!)
+            if (status$<>"") then
+                #markInputEInvalid(#PackagerInstallationLocationEB!,status$)
+                #isPackagerBaseDirectoryValid!=0
+                methodret 0
+            endif 
+            #markInputEValid(#PackagerInstallationLocationEB!)
+            #isPackagerBaseDirectoryValid!=1
+        else 
+            #isPackagerBaseDirectoryValid!=0
+            methodret 0
         endif 
-        methodret readySoFar!
+         
+        rem -- If we're in packaging for production, verify the installation location.  If it's valid, then 
+        rem -- set the barista location and the archive location and then enable the packager button because 
+        rem -- we're ready to archive. 
+        if (#PackagerPackagingType=#PRODUCTION_PACKAGING_TYPE) then 
+            baristaLocation!=installationLocation!.replaceAll("[/\\]","\"+File.separator)
+            if (!baristaLocation!.endsWith(File.separator)) then 
+                baristaLocation!=baristaLocation!+File.separator
+            endif 
+            baristaLocation!=baristaLocation!+"barista"
+            #PackagerBaristaLocationEB!.setText(baristaLocation!)
+            #markInputEValid(#PackagerBaristaLocationEB!)
+            #isPackagerBaristaDirectoryValid!=1 
+        endif 
+        
+        rem -- if we're in test mode, then verify that the installation path is neither empty nor invalid.  Also verify that 
+        rem -- the barista installation location is neither empty nor invalid.  
+        if (#PackagerPackagingType=#TESTING_PACKAGING_TYPE) then
+            baristaLocation!=#PackagerBaristaLocationEB!.getText()
+            if (baristaLocation!<>"") then 
+                baristaLocation!=new File(baristaLocation!).getCanonicalPath()
+                if (!baristaLocation!.endsWith(File.separator)) then
+                    baristaLocation!=baristaLocation!.concat(File.separator)
+                endif 
+                status$=#validatePackageBaristaLocation(baristaLocation!)
+                if (status$<>"") then
+                    #markInputEInvalid(#PackagerBaristaLocationEB!,status$)
+                    #isPackagerBaristaDirectoryValid!=0
+                    methodret 0
+                endif 
+                #markInputEValid(#PackagerBaristaLocationEB!)
+                #isPackagerBaristaDirectoryValid!=1
+            else 
+                #isPackagerBaristaDirectoryValid!=0
+            endif 
+        endif 
+        
+        rem --- set the name of the archive if it hasn't already been set and we have a valid base directory
+        if (#isPackagerBaseDirectoryValid!) then 
+            format!=new SimpleDateFormat(#ArchiveDatePattern!)
+            #ArchiveLocation!=installationLocation!+#ArchiveBaseName!+format!.format(new java.util.Date())+#ArchiveExtension!
+            #PackagerArchiveLocationEB!.setText(#ArchiveLocation!)
+            #isPackagerArchiveFileValid!=1
+        endif 
+        
+        rem --- enable packaging if everything is ready and return status
+        if (#isPackagerBaseDirectoryValid! and #isPackagerBaristaDirectoryValid! and #isPackagerArchiveFileValid!) then 
+            #PackagerBtn!.setEnabled(1)
+            methodret 1
+        else 
+            methodret 0
+        endif 
+        
     methodend
     
     method public BBjNumber directoryExists(BBjString location$)
@@ -1091,137 +1236,249 @@ resolvePathStbls: rem --- Resolve embedded STBLs, except not [+FIRM_ID]. (Based 
 std_exit:         
     methodend 
  
-    REM *** Extractor 
-    method public void browseExtractorInstallationDirectory(BBjToolButtonPushEvent event!)
-        declare BBjString installationLocation! 
-        declare BBjString browsedPath!
-         
-        installationLocation!=#ExtractorInstallationLocationEB!.getText()  
-        
-        browsedPath!=fileOpen("Select directory for Addon Installation", installationLocation!,"","","",1)
-        
-        rem --- set the installation path to the browsed path if the user did not cancel or encounter an error
-        if (! browsedPath!.startsWith("::")) then
-            installationLocation!=browsedPath!
-        endif 
-        
-        rem --- set the field to the installation path
-        if (! #validateExtractorInstallationLocation(installationLocation!)) then 
-            x=msgbox(installationLocation!+" either is not empty or does not exist and can't be created.")
-        endif   
-    methodend
-    
-    method public BBjNumber validateExtractorInstallationLocation(BBjString installationLocation!)
-        declare File installationLocationFile!
-        declare BBjNumber valid!
-        declare BBjString baristaLocation!
-        
-        REM Verify that location exists
-        valid!=#directoryExists(installationLocation!)
-        
-        REM Fill out other fields if valid.
-        if (valid!) then 
-            installationLocation!=installationLocation!.replaceAll("[\\/]","\"+File.separator)
-            if (! installationLocation!.endsWith(File.separator)) then 
-                installationLocation!=installationLocation!+File.separator
-            endif
-            #ExtractorInstallationLocationEB!.setText(installationLocation!)
-            rem #ExtractorBaristaLocationEB!.setText(installationLocation!+"barista")
-            #ExtractorBtn!.setEnabled(#readyForExtraction())
-        endif 
-        methodret valid!
-    methodend 
-    
-    method public void handleValidateExtractorInstallationLocation(BBjControlValidationEvent event!)
-        declare BBjString installationLocation!
-        installationLocation!=event!.getValueAsText()
-        event!.accept(#validateExtractorInstallationLocation(installationLocation!))
-    methodend 
-    
-    method public BBjNumber readyForExtraction()
-        methodret #ExtractorArchiveLocationEB!.getText()<>$$ and #ExtractorBaristaLocationEB!.getText()<>$$ and #ExtractorInstallationLocationEB!.getText()<>$$ and #ExtractorNewDatabaseNameEB!.getText()<>$$ and #ExtractorApplicationDescriptionEB!.getText()<>$$
-    methodend 
-    
-    method public void handleValidateExtractorArchiveLocation(BBjControlValidationEvent event!)
-        declare BBjNumber validArchvieLocation!
-        validArchiveLocation!=#validateExtractorArchiveLocation(event!.getValueAsText())
-        if (validArchiveLocation! and #readyForExtraction()) then
-            #ExtractorBtn!.setEnabled(1)
-        endif 
-        event!.accept(validArchiveLocation!)
-    methodend 
-    
-    method public BBjNumber validateExtractorArchiveLocation(BBjString archiveLocation!)
-        declare File archiveFile!
-        
-        archiveFile!=new File(archiveLocation!)
-        methodret archiveFile!.exists() 
-    methodend 
-    
-    method public void browseExtractorArchiveLocation(BBjToolButtonPushEvent event!)
-        declare BBjString archiveLocation! 
-        declare BBjString browsedPath!
-         
-        archiveLocation!=""
-        archiveLocation!=#ExtractorArchiveLocationEB!.getText()  
-        
-        browsedPath!=fileOpen("Select Archive File", archiveLocation!,"","","",0)
-        
-        rem --- set the archive path to the browsed path if the user did not cancel or encounter an error
-        if (! browsedPath!.startsWith("::")) then
-            archiveLocation!=browsedPath!
-        endif 
-        
-        rem --- set the field to the archive path
-        if (! #validateExtractorArchiveLocation(archiveLocation!)) then 
-            x=msgbox(archiveLocation!+" does not exist")
-        else 
-            #ExtractorArchiveLocationEB!.setText(archiveLocation!)
-        endif  
-        
-        if (#readyForExtraction()) then 
-            #ExtractorBtn!.setEnabled(1)
-        endif 
-    methodend 
-    
-    method public void handleValidateExtractorNewDatabaseName(BBjControlValidationEvent event!)
+    REM *** Extractor
+    method public BBjString validateExtractorNewDatabaseName(BBjString databaseName!)
         declare BBjString databaseListString!
         declare java.util.List databaseList!
-        declare BBjString databaseName!
-        declare BBjNumber validDatabaseName!
         
         rem --- Get the list of existing database names and the new database name
         databaseListString!=sqllist(0)
         databaseList!=Arrays.asList(databaseListString!.split($0A$))
-        databaseName!=event!.getValueAsText()
         
-        rem --- Database name can not be blank 
-        if (databaseName!<>null()) then
-            databaseName!=databaseName!.trim()
-        else
-            x=msgbox("Database Name cannot be blank.")
-            event!.accept(0)
-            methodret
-        endif 
+        databaseName!=databaseName!.trim()
         
         rem --- Database name can not be in the list of existing databases
-        validDatabaseName!=(! databaseList!.contains(databaseName!))
-        if (validDatabaseName!) then
-            #ExtractorNewDatabaseNameEB!.setText(databaseName!)
-            
-            rem --- if all fields are filled out, then enable the Extract Button
-            if (#readyForExtraction()) then 
-                #ExtractorBtn!.setEnabled(1)
-            endif 
-            
-        else
-            x=msgbox(databaseName!+" already exists.  Please choose a different database name.")
+        if (databaseList!.contains(databaseName!)) then 
+            methodret "Database already exists"
+        endif
+        
+        methodret ""
+        
+    methodend
+    
+    method public BBjString validateExtractorApplicationDescription(BBjString applicationDescription!)
+        if (applicationDescription!=null() or applicationDescription!="") then 
+            methodret "Application description can not be blank."
         endif 
-        event!.accept(validDatabaseName!)
-         
+        
+        methodret ""
     methodend 
     
+    method public BBjString validateExtractorInstallationLocation(BBjString installationLocation!)
+        declare File installationLocationFile!
+        declare BBjNumber valid!
+        
+        REM Verify that location exists
+        if (! #directoryExists(installationLocation!)) then 
+            methodret "Directory must exist."
+        endif 
+        
+        methodret ""
+    methodend 
     
+    method public BBjString validateExtractorBaristaLocation(BBjString baristaLocation!)
+        declare BBjString installationPath!
+        declare File installationPathFile!
+        declare File baristaLocationFile!
+        
+        rem Check if installation path has been filled out.  Hard to validate the barista path without it
+        installationPath!=#ExtractorInstallationLocationEB!.getText()
+        if (installationPath!="") then 
+            methodret "Can't validate barista path since base path is blank."
+        endif 
+       
+       rem Check if the installation path exists 
+        if (! #directoryExists(installationPath!)) then 
+            methodret "Can't validate barista path since base path does not exist."
+        endif 
+        
+        rem Check if the path ends in "barista"
+        baristaLocationFile!=new File(baristaLocation!)
+        baristaLocation!=baristaLocationFile!.getCanonicalPath()
+        if (!baristaLocation!.endsWith(File.separator)) then 
+            baristaLocation!=baristaLocation!.concat(File.separator)
+        endif 
+        
+        if (!baristaLocation!.endsWith(File.separator+"barista"+File.separator)) then 
+            methodret "Barista path must end with "+$22$+File.separator+"barista"+File.separator+$22$
+        endif
+        
+        rem Check if the barista path is under the installation path
+        installationPathFile!=new File(installationPath!)
+        installationPath!=installationPathFile!.getCanonicalPath()
+        if (! installationPath!.endsWith(File.separator)) then 
+            installationPath!=installationPath!.concat(File.separator)
+        endif
+        if (! baristaLocation!.startsWith(installationPath!)) then 
+            methodret "Barista path must be under base path."
+        endif 
+        
+        rem If all checks have passed, return an empty string. 
+        methodret ""
+    methodend
+    
+    
+     
+    method public void browseExtractorDirectory(BBjToolButtonPushEvent event!)
+        declare BBjString location! 
+        declare BBjString browsedPath!
+        declare BBjInputE inputE!
+        declare BBjString browseMsg!
+        declare BBjNumber browseOption!
+        
+        if (event!.getControl()=#ExtractorArchiveBrowseBtn!) then 
+            inpute!=#ExtractorArchiveLocationEB!
+            browseMsg!="Select Archive File"
+            rem --- browse for a file
+            browseOption!=0
+        endif 
+        
+        if (event!.getControl()=#ExtractorInstallationBrowseBtn!) then 
+            inpute!=#ExtractorInstallationLocationEB!
+            browseMsg!="Select directory for Addon Installation"
+            rem --- browse for a directory
+            browseOption!=1
+        endif 
+        
+        location!=inputE!.getText()  
+        
+        browsedPath!=fileOpen(browseMsg!, location!,"","","",browseOption!)
+        
+        rem --- set the installation path to the browsed path if the user did not cancel or encounter an error
+        if (! browsedPath!.startsWith("::")) then
+            location!=browsedPath!
+        endif 
+        
+        rem --- set the field to the installation path
+        inputE!.setText(location!)
+        
+        rem --- validate fields 
+        #readyForExtraction()
+    methodend
+   
+    method public BBjString validateExtractorArchiveFile(BBjString archiveLocation!)
+        declare File archiveFile!
+        
+        archiveFile!=new File(archiveLocation!)
+        if (!archiveFile!.exists()) then 
+            methodret "Archive file must exist"
+        endif 
+        
+        if (! archiveFile!.isFile()) then
+            methodret "Archive file must be a file."
+        endif 
+        
+        methodret ""
+    methodend 
+ 
+    method public void handleValidateExtractor(BBjControlValidationEvent event!)
+        #readyForExtraction()
+        event!.accept(1)
+    methodend 
+        
+    method public BBjNumber readyForExtraction()
+        declare BBjString databaseName!
+        declare BBjString applicationDescription!
+        declare BBjString installationLocation!
+        declare BBjString baristaLocation!
+        declare BBjString archiveFile!
+        declare BBjNumber isExtractorNewDatabaseNameReady!
+        declare BBjNumber isExtractorApplicationDescriptionReady!
+        declare BBjNumber isExtractorInstallLocationReady!
+        declare BBjNumber isExtractorBaristaLocationReady!
+        declare BBjNumber isExtractorArchiveFileReady!
+        declare BBjString status$
+        
+        rem -- initialize our status variables
+        isExtractorNewDatabaseNameReady!=0
+        isExtractorApplicationDescriptionReady!=0
+        isExtractorInstallLocationReady!=0
+        isExtractorBaristaLocationReady!=0
+        isExtractorArchiveFileReady!=0
+        
+        rem --- disable extraction
+        #ExtractorBtn!.setEnabled(0)
+        
+        rem -- validate the new database name
+        databaseName!=#ExtractorNewDatabaseNameEB!.getText()
+        if (databaseName!<>$$) then 
+            status$=#validateExtractorNewDatabaseName(databaseName!)
+            isExtractorNewDatabaseNameReady!=(status$="")
+            if (isExtractorNewDatabaseNameReady!) then
+                #markInputEValid(#ExtractorNewDatabaseNameEB!)
+            else
+                #markInputEInvalid(#ExtractorNewDatabaseNameEB!,status$)
+            endif 
+        else 
+            isExtractorNewDatabaseNameReady!=0
+        endif
+        
+        rem -- validate the application description
+        applicationDescription!=#ExtractorApplicationDescriptionEB!.getText()
+        if (applicationDescription!<>"") then 
+            status$=#validateExtractorApplicationDescription(applicationDescription!)
+            isExtractorApplicationDescriptionReady!=(status$="")
+            if (isExtractorApplicationDescriptionReady!) then 
+                #markInputEValid(#ExtractorApplicationDescriptionEB!)
+            else 
+                #markInputEInvalid(#ExtractorApplicationDescriptionEB!,status!)
+            endif
+        else 
+            isExtractorApplicationDescriptionReady!=0
+        endif 
+        
+        rem -- validate installation directory
+        installationLocation!=#ExtractorInstallationLocationEB!.getText()
+        print "InstallationLocation=",installationLocation!
+        if (installationLocation!<>"")  then 
+            status$=#validateExtractorInstallationLocation(installationLocation!)
+            isExtractorInstallationLocationReady!=(status$="")
+            if (isExtractorInstallationLocationReady!) then 
+                #markInputEValid(#ExtractorInstallationLocationEB!)
+            else 
+                #markInputEInvalid(#ExtractorInstallationLocationEB!,status$)
+            endif 
+        else 
+           isExtractorInstallationLocationReady!=0
+        endif 
+        
+        rem -- validate barista directory 
+        baristaLocation!=#ExtractorBaristaLocationEB!.getText()
+        if (baristaLocation!<>"") then
+            status$=#validateExtractorBaristaLocation(baristaLocation!)
+            isExtractorBaristaLocationReady!=(status$="") 
+            if (isExtractorBaristaLocationReady!) then 
+                #markInputEValid(#ExtractorBaristaLocationEB!)
+            else 
+                #markInputEInvalid(#ExtractorBaristaLocationEB!,status$)
+            endif 
+        else 
+            isExtractorBaristaLocationReady!=0
+        endif 
+        
+        rem -- validate archive file 
+        archiveFile!=#ExtractorArchiveLocationEB!.getText()
+        if (archiveFile!<>"") then
+            status$=#validateExtractorArchiveFile(archiveFile!)
+            isExtractorArchiveFileReady!=(status$="") 
+            if (isExtractorArchiveFileReady!) then 
+                #markInputEValid(#ExtractorArchiveLocationEB!)
+            else 
+                #markInputEInvalid(#ExtractorArchiveLocationEB!,status$)
+            endif 
+        else 
+            isExtractorArchiveFileReady!=0
+        endif 
+        
+        rem -- allow extraction if all fields are ready
+        if (isExtractorNewDatabaseNameReady! and isExtractorApplicationDescriptionReady! and isExtractorInstallationLocationReady! and isExtractorBaristaLocationReady! and isExtractorArchiveFileReady!) then
+            #ExtractorBtn!.setEnabled(1)
+            methodret 1
+        else 
+            methodret 0
+        endif  
+    methodend 
+           
     method public void extract(BBjButtonPushEvent event!)
     
       rem --- Initializations
@@ -2360,4 +2617,4 @@ class public DefFileFilter implements java.io.FilenameFilter
         endif
     methodend
         
-    classend
+classend
