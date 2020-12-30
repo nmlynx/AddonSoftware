@@ -20,7 +20,7 @@ use java.util.Properties
 use java.util.Vector
 
 use ::ado_util.src::util
-use ::BBTranslator.bbj::BBTranslator
+use ::bbtranslator.bbj::BBTranslator
 use ::TGZUtil.bbj::TGZFile
 
 declare PackagerExtractor eventHandler!
@@ -1569,8 +1569,10 @@ std_exit:
       tgzFile!=new TGZFile(jarFile$)
       
       rem -- TODO SDH:  Take a look at these lines and see what works on Linux, if anything. 
-      rem tgzFile!.addDefaultCopyOption(StandardCopyOption.COPY_ATTRIBUTES)
-      rem tgzFile!.setDefaultFilePermissions("rwxrwxrwx")
+      if (!#isWindows!) then 
+          rem tgzFile!.addDefaultCopyOption(StandardCopyOption.COPY_ATTRIBUTES)
+          tgzFile!.setDefaultFilePermissions("rwxrwxrwx")
+      endif 
       tgzFile!.extractAll(baseDir$)
       print tgzFile!.getFailedToExtract()
       print "Failed to extract"
