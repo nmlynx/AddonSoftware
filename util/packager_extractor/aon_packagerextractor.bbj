@@ -1568,14 +1568,12 @@ std_exit:
       declare TGZFile tgzFile!
       tgzFile!=new TGZFile(jarFile$)
       
-      rem -- TODO SDH:  Take a look at these lines and see what works on Linux, if anything. 
+      rem -- Set permissions on non-Windows platforms 
       if (!#isWindows!) then 
           rem tgzFile!.addDefaultCopyOption(StandardCopyOption.COPY_ATTRIBUTES)
           tgzFile!.setDefaultFilePermissions("rwxrwxrwx")
       endif 
       tgzFile!.extractAll(baseDir$)
-      print tgzFile!.getFailedToExtract()
-      print "Failed to extract"
       chdir savedDir$
   
       rem --- Remove busy/working image from progress meter
