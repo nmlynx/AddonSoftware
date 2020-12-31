@@ -2855,7 +2855,7 @@ rem ==========================================================================
 			key_opt$=key_temp.firm_id$+key_temp.ar_type$+key_temp.customer_id$+key_temp.order_no$+key_temp.ar_inv_no$
 			opt01_dev = fnget_dev("OPT_INVHDR")
 			dim opt01a$:fnget_tpl$("OPT_INVHDR")
-			read record (opt01_dev, key=key_opt$) opt01a$
+			read record (opt01_dev, key=key_opt$,knum="PRIMARY") opt01a$
 			if opt01a.trans_status$<>"U" then
 				rem --- Can only duplicate historical invoices
 				msg_id$="OP_NO_HIST"
