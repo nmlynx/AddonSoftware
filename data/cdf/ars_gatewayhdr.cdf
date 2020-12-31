@@ -1,3 +1,29 @@
+[[ARS_GATEWAYHDR.AOPT-CTXT]]
+rem --- Add AddonSoftware Web Context for this installation
+
+	rem --- Get current user credentials using AdminAPI
+	user_id$=stbl("+USER_ID",err=*next)
+	thisAdmin!=BBjAPI().getGroupNamespace().getValue("+bar_admin_"+cvs(user_id$,11),err=*next)
+
+	if thisAdmin!=null()
+		sysGUI!=BBjAPI().getSysGui()
+		call stbl("+DIR_SYP")+"bac_em_login.bbj",sysGUI!,null(),thisAdmin!,status$
+		if status$<>"ADMIN" then break
+	endif
+
+	num_files=1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="DDM_SYSTEMS",open_opts$[1]="OTA"
+	gosub open_tables
+	ddm_systems=num(open_chans$[1])
+	dim ddm_systems$:open_tpls$[1]
+
+	rem --- Get location of this Addon installation
+	readrecord(ddm_systems,key=pad("ADDON",16),knum="SYSTEM_ID",err=*next)ddm_systems$
+	aonDir$=ddm_systems.mount_dir$
+
+	call stbl("+DIR_PGM")+"adc_webcontext.aon",thisAdmin!,stbl("+DBNAME_API"),aonDir$,dsk("")+dir(""),status
+
 [[ARS_GATEWAYHDR.ASHO]]
 rem --- if no records yet, initialize by copying from ZZ records
 
@@ -41,3 +67,6 @@ rem --- if no records yet, initialize by copying from ZZ records
 		wend
 	endif
 	
+
+
+
