@@ -141,12 +141,6 @@ rem --- Use statements and declares
             call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
 
             if open_status$ = "" then
-                rem --- Make sure ddm_tables and ddm_table_tpls get closed
-                devDdmTables=fnget_dev1("DDM_TABLES")
-                devDdmTableTpls=fnget_dev1("DDM_TABLE_TPLS")
-                if devDdmTables >= 0 then close(devDdmTables,err=*next)
-                if devDdmTableTpls >= 0 then close(devDdmTableTpls,err=*next)
-
                 rem --- Hold on to channels and record templates
                 #devArcShipViaCode = num(open_chans$[1])
                 #devArmCustMast = num(open_chans$[2])
@@ -218,14 +212,8 @@ rem --- Use statements and declares
                 open_tables$[1] =sourceFile$,   open_opts$[1] = "OTA[1]"
                 call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
                 if open_status$ = "" then
-                    rem --- Make sure ddm_tables and ddm_table_tpls get closed
-                    devDdmTables=fnget_dev1("DDM_TABLES")
-                    devDdmTableTpls=fnget_dev1("DDM_TABLE_TPLS")
-                    if devDdmTables >= 0 then close(devDdmTables,err=*next)
-                    if devDdmTableTpls >= 0 then close(devDdmTableTpls,err=*next)
-    
                     rem --- Hold on to channels and record templates
-                    #devTaxSvcCdSource = num(open_chans$[16])
+                    #devTaxSvcCdSource = num(open_chans$[1])
                     #tplTaxSvcCdSource$ = open_tpls$[1]
                 else
                     #close()
@@ -242,18 +230,18 @@ rem --- Use statements and declares
 
             rem ... Get needed Sales Tax Service header params
             dim opsSlsTaxSvcHdrRec$:#tplOpsSlsTaxSvcHdr$ 
-            readrecord(#devOpsSlsTaxSvcHdr,key=firmID$+#salesTaxInterface$)opsSlsTaxSvcHdrRec$
+            readrecord(#devOpsSlsTaxSvcHdr,key=#firmID$+#salesTaxInterface$)opsSlsTaxSvcHdrRec$
             #waitTime = opsSlsTaxSvcHdrRec.wait_time
 
             rem ... Get needed Sales Tax Service detail params
             missingParams$=""
             encryptor! = new Encryptor()
             encryptor!.setConfiguration("SLSTAXSVC_AUTH")
-            read(#devOpsSlsTaxSvcHdr,key=firmID$+#salesTaxInterface$,dom=*next)
+            read(#devOpsSlsTaxSvcHdr,key=#firmID$+#salesTaxInterface$,dom=*next)
             while 1
                 dim opsSlsTaxSvcDetRec$:#tplOpsSlsTaxSvcDet$
                 readrecord(#devOpsSlsTaxSvcHdr,end=*break)opsSlsTaxSvcDetRec$
-                if pos(firmID$+#salesTaxInterface$=opsSlsTaxSvcDetRec$)<>1 then break
+                if pos(#firmID$+#salesTaxInterface$=opsSlsTaxSvcDetRec$)<>1 then break
                 svcConfigAttr$=opsSlsTaxSvcDetRec.svc_config_attr$
                 svcConfigValue$=encryptor!.decryptData(cvs(opsSlsTaxSvcDetRec.svc_config_value$,3))
                 switch (BBjAPI().TRUE)
@@ -295,7 +283,7 @@ rem --- Use statements and declares
                 rem --- Throw error
                 seterr 0   
                 x$=stbl("+THROWN_ERR","TRUE")   
-                throw #className$+": Invalid directory: "+dir$,300
+                throw #className$+": Missing Sales Tax Service Parameters: "+missingParams$,300
             else
                 thisJul=Jul(0,0,0)
                 if startJul>0 and endJul>0 and thisJul>=startJul and thisJul<=endJul then
