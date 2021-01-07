@@ -15,6 +15,7 @@ rem  */
 rem --- Use statements and declares
 
     use ::ado_file.src::FileObject
+    use ::ado_util.src::util
     use ::sys/prog/bao_encryptor.bbj::Encryptor
     
     use ::REST/BBWebClient.bbj::BBWebClient
@@ -57,7 +58,9 @@ rem --- Use statements and declares
     class public AO_AvaTaxInterface
         field protected BBjString accountNumber$ = ""
         field protected BBjString appVersion$
-        field protected AvaTaxClient avataxClient! = null()
+        field protected AvaTaxClient avaTaxClient! = null()
+        field protected BBjTopLevelWindow busyForm! = null()
+        field protected BBjImageCtrl busyImage! = null()
         field protected BBjString className$ = "AvaTaxInterface"
         field protected BBjNumber devArcShipViaCode = -1
         field protected BBjNumber devArmCustExmpt = -1
@@ -83,6 +86,7 @@ rem --- Use statements and declares
         field protected BBjString salesTaxInterface$
         field protected BBjString server$ = ""
         field protected BBjString taxSvcCdSource$
+        field protected BBjString taxSvcName$ = "Avalara AvaTax"
         field protected BBjString testMode$ = ""
         field protected BBjString tplArcShipViaCode$
         field protected BBjString tplArmCustExmpt$
@@ -237,12 +241,12 @@ rem --- Use statements and declares
             missingParams$=""
             encryptor! = new Encryptor()
             encryptor!.setConfiguration("SLSTAXSVC_AUTH")
-            read(#devOpsSlsTaxSvcHdr,key=#firmID$+#salesTaxInterface$,dom=*next)
+            read(#devOpsSlsTaxSvcDet,key=#firmID$+#salesTaxInterface$,dom=*next)
             while 1
                 dim opsSlsTaxSvcDetRec$:#tplOpsSlsTaxSvcDet$
-                readrecord(#devOpsSlsTaxSvcHdr,end=*break)opsSlsTaxSvcDetRec$
+                readrecord(#devOpsSlsTaxSvcDet,end=*break)opsSlsTaxSvcDetRec$
                 if pos(#firmID$+#salesTaxInterface$=opsSlsTaxSvcDetRec$)<>1 then break
-                svcConfigAttr$=opsSlsTaxSvcDetRec.svc_config_attr$
+                svcConfigAttr$=cvs(opsSlsTaxSvcDetRec.svc_config_attr$,2)
                 svcConfigValue$=encryptor!.decryptData(cvs(opsSlsTaxSvcDetRec.svc_config_value$,3))
                 switch (BBjAPI().TRUE)
                     case svcConfigAttr$ = "server"
@@ -307,6 +311,148 @@ rem --- Use statements and declares
             methodret
             
 AO_AvaTaxInterface_error:rem --- Method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Create AvaTaxClinet object for connecting to the sales tax service.
+        rem  * 
+        rem  * @param BBjTopLevelWindow form!
+        rem  *
+        rem  * @return boolean success=1, failure=0
+        rem  */
+        method public boolean connectClient(BBjTopLevelWindow form!)
+            seterr connectClient_error
+            #busyForm!=form!
+            success=Boolean.valueOf("true")
+
+            appName$ = "AddonSoftware"
+            machineName$ = #server$
+            if #testMode$="true" then
+                environment! = AvaTaxEnvironment.Sandbox
+            else
+                environment! = AvaTaxEnvironment.Production
+            endif
+            account_license$=#accountNumber$+":"+#licenseKey$
+            tmpClient! = new AvaTaxClient(appName$, #appVersion$, machineName$, environment!).withSecurity(Base64.getEncoder().encode(account_license$))
+rem wgh ... 9806 ... needs timer
+            ping! = tmpClient!.ping()
+            if(ping!.getAuthenticated()) then
+                #avaTaxClient! = new AvaTaxClient(appName$, ping!.getCrmid(), machineName$, environment!).withSecurity(Base64.getEncoder().encode(account_license$))
+            else
+                msg_id$="OP_SLSTAX_CONN_FAIL"
+                dim msg_tokens$[1]
+                msg_tokens$[1]=#taxSvcName$
+                call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,table_chans$[all]
+                
+                success=Boolean.valueOf("false")
+            endif
+
+            methodret success
+            
+connectClient_error:rem --- Method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Handle expired timer event.
+        rem  * 
+        rem  * @param BBjTimerEvent event!
+        rem  */
+        method public void timerEvent(BBjTimerEvent event!)
+            seterr timerEvent_error
+
+print "in timerEvent( ... )"
+rem wgh ... 9806 ... handle timer event
+
+            methodret
+            
+timerEvent_error:rem --- Method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Show busy/working image and start timer.
+        rem  */
+        method public void timerStart(BBjTopLevelWindow form!)
+            seterr timerStart_error
+            height=33
+            width=33
+            xpos=int((form!.getWidth()-width)/2)
+            ypos=int((form!.getHeight()-height)/2)
+
+            rem --- Show busy/working image
+            nxt_ctlID=util.getNextControlID()
+            #busyImage!=form!.addImageCtrl(nxt_ctlID,xpos,ypos,width,height,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+            rem --- Start timer
+            BBjAPI().createTimer(10101,#waitTime,#this!,"timerEvent")
+
+            methodret
+            
+timerStart_error:rem --- Method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Stop timer and remove busy/working image.
+        rem  */
+        method public void timerStop()
+            seterr timerStop_error
+
+            rem --- Stop timer
+            BBjAPI().removeTimer(10101)
+            
+            rem --- Remove busy/working image from progress meter
+            #busyImage!.destroy(err=*next)
+
+            methodret
+            
+timerStop_error:rem --- Method error trap/handler (11Oct2017)
     rd_err_text$="", err_num=err
     if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     if err_num=252 then

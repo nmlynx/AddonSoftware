@@ -1,3 +1,40 @@
+[[IVC_PRODCODE.ASHO]]
+rem --- Disable TAX_SVC_CD when OP is not installed
+	callpoint!.setDevObject("salesTax",null())
+	if callpoint!.getDevObject("op")<>"Y" then
+		callpoint!.setColumnEnabled("IVC_PRODCODE.TAX_SVC_CD",-1)
+	else
+		rem --- Disable TAX_SVC_CD when OP is not using a Sales Tax Service
+		ops_params_dev=fnget_dev("OPS_PARAMS")
+		dim ops_params$:fnget_tpl$("OPS_PARAMS")
+		find record (ops_params_dev,key=firm_id$+"AR00",err=std_missing_params)ops_params$
+		if cvs(ops_params.sls_tax_intrface$,2)="" then
+			callpoint!.setColumnEnabled("IVC_PRODCODE.TAX_SVC_CD",-1)
+		else
+			rem --- Disable TAX_SVC_CD when not using Product Type for the Tax Service Code Source
+			if ops_params.tax_svc_cd_src$<>"P" then
+				callpoint!.setColumnEnabled("IVC_PRODCODE.TAX_SVC_CD",-1)
+			else
+				rem --- Get connection to Sales Tax Service
+				salesTax!=new AvaTaxInterface(firm_id$)
+				if salesTax!.connectClient(Form!,err=connectErr) then
+					callpoint!.setDevObject("salesTax",salesTax!)
+				else
+					callpoint!.setStatus("EXIT")
+					salesTax!.close()
+				endif
+			endif
+		endif
+	endif
+
+	break
+
+connectErr:
+	callpoint!.setStatus("EXIT")
+	if salesTax!<>null() then salesTax!.close()
+
+	break
+
 [[IVC_PRODCODE.BDEL]]
 rem --- Make sure prod type being deleted isn't used in ivm-01
 
@@ -26,6 +63,13 @@ if ivs_defaults.product_type$=prod_type$ then
 	callpoint!.setStatus("ABORT")
 endif
 
+[[IVC_PRODCODE.BEND]]
+rem --- Close connection to Sales Tax Service
+	salesTax!=callpoint!.getDevObject("salesTax")
+	if salesTax!<>null() then
+		salesTax!.close()
+	endif
+
 [[IVC_PRODCODE.BSHO]]
 rem --- Inits
 
@@ -35,6 +79,7 @@ rem --- Is Sales Order Processing installed?
 
 call dir_pgm1$+"adc_application.aon","OP",info$[all]
 op$=info$[20]
+callpoint!.setDevObject("op",op$)
 
 rem --- Open/Lock files
 
@@ -75,28 +120,6 @@ if sa$<>"Y"
 	ctl_stat$="I"
 	gosub disable_fields
 	callpoint!.setTableColumnAttribute("IVC_PRODCODE.SA_LEVEL","DFLT","N")
-endif
-
-rem --- Disable TAX_SVC_CD when OP is not installed
-
-if op$<>"Y" then
-	callpoint!.setColumnEnabled("IVC_PRODCODE.TAX_SVC_CD",-1)
-else
-	rem --- Disable TAX_SVC_CD when OP is not using a Sales Tax Service
-	ops_params_dev=num(chans$[4])
-	dim ops_params$:templates$[4]
-	find record (ops_params_dev,key=firm_id$+"AR00",err=std_missing_params)ops_params$
-	if cvs(ops_params.sls_tax_intrface$,2)="" then
-		callpoint!.setColumnEnabled("IVC_PRODCODE.TAX_SVC_CD",-1)
-	else
-		rem --- Disable TAX_SVC_CD when not using Product Type for the Tax Service Code Source
-		if ops_params.tax_svc_cd_src$<>"P" then
-			callpoint!.setColumnEnabled("IVC_PRODCODE.TAX_SVC_CD",-1)
-		else
-			rem --- Get connection to Sales Tax Service
-rem wgh ... 9806 ... stopped here
-		endif
-	endif
 endif
 
 [[IVC_PRODCODE.<CUSTOM>]]
