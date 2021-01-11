@@ -326,6 +326,63 @@ AO_AvaTaxInterface_error:rem --- Method error trap/handler (11Oct2017)
         methodend
 
         rem /**
+        rem  * Start busy/working image.
+        rem  */
+        method public void busyImageStart()
+            seterr busyImageStart_error
+            height=33
+            width=33
+            xpos=int((#busyForm!.getWidth()-width)/2)
+            ypos=int((#busyForm!.getHeight()-height)/2)
+
+            rem --- Show busy/working image
+            nxt_ctlID=util.getNextControlID()
+            #busyImage!=#busyForm!.addImageCtrl(nxt_ctlID,xpos,ypos,width,height,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+            methodret
+            
+busyImageStart_error:rem --- Method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Stop busy/working image.
+        rem  */
+        method public void busyImageStop()
+            seterr busyImageStop_error
+            
+            rem --- Remove busy/working image from progress meter
+            #busyImage!.destroy(err=*next)
+
+            methodret
+            
+busyImageStop_error:rem --- Method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
         rem  * Create AvaTaxClinet object for connecting to the sales tax service.
         rem  * 
         rem  * @param BBjTopLevelWindow form!
@@ -346,8 +403,9 @@ AO_AvaTaxInterface_error:rem --- Method error trap/handler (11Oct2017)
             endif
             account_license$=#accountNumber$+":"+#licenseKey$
             tmpClient! = new AvaTaxClient(appName$, #appVersion$, machineName$, environment!).withSecurity(Base64.getEncoder().encode(account_license$))
-rem wgh ... 9806 ... needs timer
+            #busyImageStart()
             ping! = tmpClient!.ping()
+            #busyImageStop()
             if(ping!.getAuthenticated()) then
                 #avaTaxClient! = new AvaTaxClient(appName$, ping!.getCrmid(), machineName$, environment!).withSecurity(Base64.getEncoder().encode(account_license$))
             else
@@ -361,7 +419,7 @@ rem wgh ... 9806 ... needs timer
 
             methodret success
             
-connectClient_error:rem --- Method error trap/handler (11Oct2017)
+connectClient_error:rem --- Modified method error trap/handler (11Oct2017)
     rd_err_text$="", err_num=err
     if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     if err_num=252 then
@@ -370,6 +428,10 @@ connectClient_error:rem --- Method error trap/handler (11Oct2017)
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
     endif
     call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+
+            rem --- Stop busy/working image
+            #busyImageStop()
+
     if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$)<>0 retry
     x$=stbl("+THROWN_ERR","TRUE")   
@@ -377,24 +439,29 @@ connectClient_error:rem --- Method error trap/handler (11Oct2017)
         methodend
 
         rem /**
-        rem  * Start busy/working image.
+        rem  * Create AvaTaxClinet object for connecting to the sales tax service.
         rem  * 
-        rem  * @param BBjTopLevelWindow form!
+        rem  * @param BBjString taxSvcCd$
+        rem  *
+        rem  * @return BBjString
         rem  */
-        method public void busyImageStart(BBjTopLevelWindow form!)
-            seterr timerStart_error
-            height=33
-            width=33
-            xpos=int((form!.getWidth()-width)/2)
-            ypos=int((form!.getHeight()-height)/2)
+        method public BBjString getTaxSvcCdDesc(BBjString taxSvcCd$)
+            seterr getTaxSvcCdDesc_error
+            desc$=""
 
-            rem --- Show busy/working image
-            nxt_ctlID=util.getNextControlID()
-            #busyImage!=form!.addImageCtrl(nxt_ctlID,xpos,ypos,width,height,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+            filter$="taxCode='"+cvs(taxSvcCd$,3)+"'"
+            #busyImageStart()
+            fetchResult!=#avaTaxClient!.listTaxCodes(filter$,0,0,"")
+            #busyImageStop()
+            taxCodeList!=fetchResult!.getValue()
+            if taxCodeList!.size()=1 then
+                taxCodeModel!=taxCodeList!.get(0)
+                desc$=taxCodeModel!.getDescription()
+            endif
 
-            methodret
+            methodret desc$
             
-timerStart_error:rem --- Method error trap/handler (11Oct2017)
+getTaxSvcCdDesc_error:rem --- Modified method error trap/handler (11Oct2017)
     rd_err_text$="", err_num=err
     if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     if err_num=252 then
@@ -403,32 +470,10 @@ timerStart_error:rem --- Method error trap/handler (11Oct2017)
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
     endif
     call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
-    x$=stbl("+THROWN_ERR","TRUE")   
-    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
-        methodend
 
-        rem /**
-        rem  * Stop busy/working image.
-        rem  */
-        method public void busyImageStop()
-            seterr timerStop_error
-            
-            rem --- Remove busy/working image from progress meter
-            #busyImage!.destroy(err=*next)
+            rem --- Stop busy/working image
+            #busyImageStop()
 
-            methodret
-            
-timerStop_error:rem --- Method error trap/handler (11Oct2017)
-    rd_err_text$="", err_num=err
-    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
-    if err_num=252 then
-        E!=BBjAPI().getLastBBjException()
-        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
-        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
-    endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
     if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$)<>0 retry
     x$=stbl("+THROWN_ERR","TRUE")   

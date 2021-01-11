@@ -19,8 +19,9 @@ rem --- Disable TAX_SVC_CD when OP is not installed
 				salesTax!=new AvaTaxInterface(firm_id$)
 				if salesTax!.connectClient(Form!,err=connectErr) then
 					callpoint!.setDevObject("salesTax",salesTax!)
+					callpoint!.setColumnEnabled("IVC_PRODCODE.TAX_SVC_CD",1)
 				else
-					callpoint!.setStatus("EXIT")
+					callpoint!.setColumnEnabled("IVC_PRODCODE.TAX_SVC_CD",0)
 					salesTax!.close()
 				endif
 			endif
@@ -30,7 +31,7 @@ rem --- Disable TAX_SVC_CD when OP is not installed
 	break
 
 connectErr:
-	callpoint!.setStatus("EXIT")
+	callpoint!.setColumnEnabled("IVC_PRODCODE.TAX_SVC_CD",0)
 	if salesTax!<>null() then salesTax!.close()
 
 	break
@@ -73,6 +74,7 @@ rem --- Close connection to Sales Tax Service
 [[IVC_PRODCODE.BSHO]]
 rem --- Inits
 
+use ::ado_util.src::util
 use ::opo_AvaTaxInterface.aon::AvaTaxInterface
 
 rem --- Is Sales Order Processing installed?
@@ -122,7 +124,64 @@ if sa$<>"Y"
 	callpoint!.setTableColumnAttribute("IVC_PRODCODE.SA_LEVEL","DFLT","N")
 endif
 
+rem --- Add static label for displaying TAX_SVC_CD description
+tax_svc_cd!=fnget_control!("IVC_PRODCODE.TAX_SVC_CD")
+tax_svc_cd_x=tax_svc_cd!.getX()
+tax_svc_cd_y=tax_svc_cd!.getY()
+tax_svc_cd_height=tax_svc_cd!.getHeight()
+tax_svc_cd_width=tax_svc_cd!.getWidth()
+code_desc!=fnget_control!("IVC_PRODCODE.CODE_DESC")
+code_desc_width=code_desc!.getWidth()
+nxt_ctlID=util.getNextControlID()
+tax_svc_cd_desc!=Form!.addStaticText(nxt_ctlID,tax_svc_cd_x+tax_svc_cd_width+5,tax_svc_cd_y+3,code_desc_width,tax_svc_cd_height,"")
+callpoint!.setDevObject("tax_svc_cd_desc",tax_svc_cd_desc!)
+
+[[IVC_PRODCODE.TAX_SVC_CD.AVAL]]
+rem --- Validate TAX_SVC_CD
+	taxSvcCd$=cvs(callpoint!.getUserInput(),2)
+	priorTaxSvcCd$=cvs(callpoint!.getColumnData("IVC_PRODCODE.TAX_SVC_CD"),2)
+	if taxSvcCd$<>priorTaxSvcCd$ then
+		tax_svc_cd_desc!=callpoint!.getDevObject("tax_svc_cd_desc")
+		if taxSvcCd$<>"" then
+			salesTax!=callpoint!.getDevObject("salesTax")
+			success=0
+			desc$=salesTax!.getTaxSvcCdDesc(taxSvcCd$,err=*next); success=1
+			if success then
+				if desc$<>"" then
+					rem --- Good code entered
+					tax_svc_cd_desc!.setText(desc$)
+				else
+					rem --- Bad code entered
+					msg_id$="OP_BAD_TAXSVC_CD"
+					dim msg_tokens$[1]
+					msg_tokens$[1]=taxSvcCd$
+					gosub disp_message
+
+					callpoint!.setColumnData("IVC_PRODCODE.TAX_SVC_CD",priorTaxSvcCd$,1)
+					callpoint!.setStatus("ABORT")
+					break
+				endif
+			else
+				rem --- AvaTax call error
+				callpoint!.setUserInput(priorTaxSvcCd$)
+				break
+			endif
+		else
+			rem --- No code entered, so clear description.
+			tax_svc_cd_desc!.setText("")
+		endif
+	endif
+
 [[IVC_PRODCODE.<CUSTOM>]]
+rem #include fnget_control.src
+	def fnget_control!(ctl_name$)
+	ctlContext=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLC"))
+	ctlID=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI"))
+	get_control!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
+	return get_control!
+	fnend
+rem #endinclude fnget_control.src
+
 rem #include disable_fields.src
 
 disable_fields:
