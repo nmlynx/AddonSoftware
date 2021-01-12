@@ -1,3 +1,44 @@
+[[IVC_TYPECODE.ADIS]]
+rem --- Show TAX_SVC_CD description
+	salesTax!=callpoint!.getDevObject("salesTax")
+	if salesTax!<>null() then
+		tax_svc_cd_desc!=callpoint!.getDevObject("tax_svc_cd_desc")
+		taxSvcCd$=cvs(callpoint!.getColumnData("IVC_TYPECODE.TAX_SVC_CD"),2)
+		if taxSvcCd$<>"" then
+			salesTax!=callpoint!.getDevObject("salesTax")
+			success=0
+			desc$=salesTax!.getTaxSvcCdDesc(taxSvcCd$,err=*next); success=1
+			if success then
+				if desc$<>"" then
+					rem --- Good code entered
+					tax_svc_cd_desc!.setText(desc$)
+				else
+					rem --- Bad code entered
+					msg_id$="OP_BAD_TAXSVC_CD"
+					dim msg_tokens$[1]
+					msg_tokens$[1]=taxSvcCd$
+					gosub disp_message
+
+					tax_svc_cd_desc!.setText("?????")
+				endif
+			else
+				rem --- AvaTax call error
+				tax_svc_cd_desc!.setText("?????")
+			endif
+		else
+			rem --- No code entered, so clear description.
+			tax_svc_cd_desc!.setText("")
+		endif
+	endif
+
+[[IVC_TYPECODE.AREC]]
+rem --- Clear TAX_SVC_CD description
+	salesTax!=callpoint!.getDevObject("salesTax")
+	if salesTax!<>null() then
+		tax_svc_cd_desc!=callpoint!.getDevObject("tax_svc_cd_desc")
+		tax_svc_cd_desc!.setText("")
+	endif
+
 [[IVC_TYPECODE.ASHO]]
 rem --- Disable TAX_SVC_CD when OP is not installed
 	callpoint!.setDevObject("salesTax",null())
@@ -150,7 +191,8 @@ rem --- Validate TAX_SVC_CD
 				endif
 			else
 				rem --- AvaTax call error
-				callpoint!.setUserInput(priorTaxSvcCd$)
+				callpoint!.setColumnData("IVC_TYPECODE.TAX_SVC_CD",priorTaxSvcCd$,1)
+				callpoint!.setStatus("ABORT")
 				break
 			endif
 		else
