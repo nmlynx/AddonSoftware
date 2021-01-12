@@ -31,9 +31,12 @@ rem --- Test connection to sales tax service
 	call stbl("+DIR_SYP")+"bax_version.bbj",barVersion$,""
 
 	rem --- Test connect to sales tax service
+	salesTax!=new AvaTaxInterface(firm_id$)
 	client! = new AvaTaxClient("AddonSoftware", barVersion$, server$, environment!).withSecurity(Base64.getEncoder().encode(account_license$))
-	rem --- Test connection
+	salesTax!.busyImageStart(Form!)
 	ping! = client!.ping(err=pingErr)
+	salesTax!.busyImageStop()
+	salesTax!.close()
 	if(ping!.getAuthenticated()) then
 		msg_id$="WEB_SERVICE_CONN_OK"
 		dim msg_tokens$[1]
@@ -68,6 +71,8 @@ pingErr: rem --- Error during ping() test
 	msg_tokens$[1]="["+pgm(-2)+"] "+str(tcb(5))+": "+$0A$+cvs(rd_err_text$,3)+" "+str(err_num)
 	gosub disp_message
 
+	salesTax!.busyImageStop()
+	salesTax!.close()
 	callpoint!.setStatus("ABORT")
 	break
 
@@ -100,6 +105,7 @@ rem --- Initialize new records using the ZZ records
 
 [[OPS_SLSTAXSVCHDR.BSHO]]
 rem  --- Use statements
+	use ::opo_AvaTaxInterface.aon::AvaTaxInterface
 	use ::sys/prog/bao_encryptor.bbj::Encryptor
 
 	use java.math.BigDecimal

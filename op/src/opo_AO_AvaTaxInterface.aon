@@ -328,16 +328,26 @@ AO_AvaTaxInterface_error:rem --- Method error trap/handler (11Oct2017)
         rem /**
         rem  * Start busy/working image.
         rem  */
-        method public void busyImageStart()
+        method protected void busyImageStart()
+            #busyImageStart(#busyForm!)
+            methodret
+        methodend
+
+        rem /**
+        rem  * Start busy/working image.
+        rem  * 
+        rem  * @param BBjTopLevelWindow form!
+        rem  */
+        method public void busyImageStart(BBjTopLevelWindow form!)
             seterr busyImageStart_error
             height=33
             width=33
-            xpos=int((#busyForm!.getWidth()-width)/2)
-            ypos=int((#busyForm!.getHeight()-height)/2)
+            xpos=int((form!.getWidth()-width)/2)
+            ypos=int((form!.getHeight()-height)/2)
 
             rem --- Show busy/working image
             nxt_ctlID=util.getNextControlID()
-            #busyImage!=#busyForm!.addImageCtrl(nxt_ctlID,xpos,ypos,width,height,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+            #busyImage!=form!.addImageCtrl(nxt_ctlID,xpos,ypos,width,height,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
 
             methodret
             
@@ -391,8 +401,8 @@ busyImageStop_error:rem --- Method error trap/handler (11Oct2017)
         rem  */
         method public boolean connectClient(BBjTopLevelWindow form!)
             seterr connectClient_error
-            #busyForm!=form!
             success=Boolean.valueOf("true")
+            #busyForm!=form!
 
             appName$ = "AddonSoftware"
             machineName$ = #server$
