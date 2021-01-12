@@ -1,172 +1,6 @@
-[[IVM_ITEMMAST.AOPT-SHST]]
-rem --- Launch item sales analysis form
-	user_id$=stbl("+USER_ID")
-	year$=sysinfo.system_date$(1,4)
-	product_type$=callpoint!.getColumnData("IVM_ITEMMAST.PRODUCT_TYPE")
-	item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
-	sam_item_key$=firm_id$+year$+product_type$+item_id$
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:		"SAM_ITEM",
-:		user_id$,
-:		"EXP-INQ",
-:		sam_item_key$,
-:		table_chans$[all]
-[[IVM_ITEMMAST.GL_PUR_ACCT.AVAL]]
-gosub gl_active
-[[IVM_ITEMMAST.GL_PPV_ACCT.AVAL]]
-gosub gl_active
-[[IVM_ITEMMAST.GL_INV_ADJ.AVAL]]
-gosub gl_active
-[[IVM_ITEMMAST.GL_INV_ACCT.AVAL]]
-gosub gl_active
-[[IVM_ITEMMAST.GL_COGS_ADJ.AVAL]]
-gosub gl_active
-[[IVM_ITEMMAST.GL_COGS_ACCT.AVAL]]
-gosub gl_active
-[[IVM_ITEMMAST.AOPT-ITAV]]
-rem --- Show availability this item
+[[IVM_ITEMMAST.ABC_CODE.AVAL]]
+if (callpoint!.getUserInput()<"A" or callpoint!.getUserInput()>"Z") and callpoint!.getUserInput()<>" " callpoint!.setStatus("ABORT")
 
-	item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
-
-	selected_key$ = ""
-	dim filter_defs$[1,2]
-	filter_defs$[0,0]="IVM_ITEMWHSE.FIRM_ID"
-	filter_defs$[0,1]="='"+firm_id$+"'"
-	filter_defs$[0,2]="LOCK"
-	filter_defs$[1,0]="IVM_ITEMWHSE.ITEM_ID"
-	filter_defs$[1,1]="='"+item_id$+"'"
-	filter_defs$[1,2]="LOCK"
-
-	dim search_defs$[3]
-
-	call stbl("+DIR_SYP")+"bax_query.bbj",
-:		gui_dev,
-:		Form!,
-:		"IV_PRICE_AVAIL",
-:		"",
-:		table_chans$[all],
-:		selected_key$,
-:		filter_defs$[all],
-:		search_defs$[all],
-:		"",
-:		""
-[[IVM_ITEMMAST.AENA]]
-rem --- Disable Barista menu items
-	wctl$="31031"; rem --- Save-As menu item in barista.ini
-	wmap$=callpoint!.getAbleMap()
-	wpos=pos(wctl$=wmap$,8)
-	wmap$(wpos+6,1)="X"
-	callpoint!.setAbleMap(wmap$)
-	callpoint!.setStatus("ABLEMAP")
-[[<<DISPLAY>>.TEMP_TAB_STOP.BINP]]
-rem --- "Hidden" field to allow enter/tab from single enabled field
-rem --- Temporary workaround for Barista bug 6925
-
-	callpoint!.setFocus("<<DISPLAY>>.ITEM_DESC_SEG_1")
-	callpoint!.setStatus("ABORT")
-	break
-[[IVM_ITEMMAST.PRODUCT_TYPE.AVAL]]
-rem --- Set SA Level if new record
-	if callpoint!.getRecordMode()="A"
-		ivm10_dev=fnget_dev("IVC_PRODCODE")
-		dim ivm10a$:fnget_tpl$("IVC_PRODCODE")
-		read record (ivm10_dev,key=firm_id$+"A"+callpoint!.getUserInput()) ivm10a$
-		callpoint!.setColumnData("IVM_ITEMMAST.SA_LEVEL",ivm10a.sa_level$,1)
-	endif
-[[IVM_ITEMMAST.AOPT-BOMU]]
-rem --- Display Where Used from BOMs
-
-cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
-user_id$=stbl("+USER_ID")
-dim dflt_data$[2,1]
-dflt_data$[1,0]="ITEM_ID_1"
-dflt_data$[1,1]=cp_item_id$
-dflt_data$[2,0]="ITEM_ID_2"
-dflt_data$[2,1]=cp_item_id$
-call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:	"BMR_MATERIALUSED",
-:	user_id$,
-:	"",
-:	"",
-:	table_chans$[all],
-:	"",
-:	dflt_data$[all]
-[[IVM_ITEMMAST.AOPT-LOOK]]
-rem --- call the custom item lookup form, so we can look for an item by product type, synonym, etc.
-
-select_key$=""
-call stbl("+DIR_SYP")+"bam_run_prog.bbj","IVC_ITEMLOOKUP",stbl("+USER_ID"),"MNT","",table_chans$[all]
-select_key$=str(bbjapi().getObjectTable().get("find_item"))
-if select_key$="null" then select_key$=""
-if select_key$<>"" then callpoint!.setStatus("RECORD:["+select_key$+"]")
-[[IVM_ITEMMAST.BWRI]]
-rem --- Is item code blank?
-
-	if cvs(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID"), 2) = "" then
-		msg_id$ = "IV_BLANK_ID"
-		gosub disp_message
-		callpoint!.setFocus("IVM_ITEMMAST.ITEM_ID")
-	endif
-
-	if cvs(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC"),3)="" then 
-		msg_id$="IV_BLANK_DESC"
-		gosub disp_message
-		callpoint!.setFocus("<<DISPLAY>>.ITEM_DESC_SEG_1")
-	endif
-[[IVM_ITEMMAST.LOTSER_ITEM.AVAL]]
-rem --- Disable inventoried if not lotted/serialized
-	inventoried$=callpoint!.getUserInput()
-	if inventoried$<>"Y" then
-		callpoint!.setColumnEnabled("IVM_ITEMMAST.INVENTORIED",0)
-		callpoint!.setColumnData("IVM_ITEMMAST.INVENTORIED","N",1)
-	else
-		callpoint!.setColumnEnabled("IVM_ITEMMAST.INVENTORIED",1)
-	endif
-
-rem --- Disable sell_purch_um if lotted/serialized, or sell_purch_um not allowed
-	if inventoried$="Y" or callpoint!.getDevObject("allow_SellPurchUM")="N" then
-		callpoint!.setColumnEnabled("IVM_ITEMMAST.SELL_PURCH_UM",0)
-		callpoint!.setColumnData("IVM_ITEMMAST.SELL_PURCH_UM","N",1)
-	else
-		callpoint!.setColumnEnabled("IVM_ITEMMAST.SELL_PURCH_UM",1)
-	endif
-[[IVM_ITEMMAST.INVENTORIED.AVAL]]
-rem --- Can't change Inventoried flag if there is QOH, and disable lotted/serialized flag if inventoried=Y
-
-	prev_inv_flag$=callpoint!.getColumnData("IVM_ITEMMAST.INVENTORIED")
-	this_inv_flag$ = callpoint!.getUserInput()
-	if this_inv_flag$ <> prev_inv_flag$ then
-		gosub check_qoh
-		if qoh then
-			msg_id$ = "IV_CANT_CHANGE_CODE"
-			gosub disp_message
-			callpoint!.setStatus("ABORT")
-			callpoint!.setColumnData("IVM_ITEMMAST.INVENTORIED",prev_inv_flag$,1)
-		else
-			if this_inv_flag$="Y" then
-				callpoint!.setColumnEnabled("IVM_ITEMMAST.LOTSER_ITEM",0)
-			else
-				callpoint!.setColumnEnabled("IVM_ITEMMAST.LOTSER_ITEM",1)
-			endif
-		endif
-	endif
-[[IVM_ITEMMAST.ARNF]]
-rem --- item not found (so assuming new record); default bar code to item id
-
-callpoint!.setColumnData("IVM_ITEMMAST.BAR_CODE", callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID"))
-callpoint!.setStatus("REFRESH")
-[[<<DISPLAY>>.ITEM_DESC_SEG_3.BINP]]
-rem --- Set previous value
-
-	user_tpl.prev_desc_seg_3$ = callpoint!.getColumnData("<<DISPLAY>>.ITEM_DESC_SEG_3")
-[[<<DISPLAY>>.ITEM_DESC_SEG_1.BINP]]
-rem --- Set previous value
-
-	user_tpl.prev_desc_seg_1$ = callpoint!.getColumnData("<<DISPLAY>>.ITEM_DESC_SEG_1")
-[[<<DISPLAY>>.ITEM_DESC_SEG_2.BINP]]
-rem --- Set previous value
-
-	user_tpl.prev_desc_seg_2$ = callpoint!.getColumnData("<<DISPLAY>>.ITEM_DESC_SEG_2")
 [[IVM_ITEMMAST.ADIS]]
 rem --- Set Description Segments
 
@@ -221,53 +55,67 @@ rem --- Disable sell_purch_um if lotted/serialized, or sell_purch_um not allowed
 			callpoint!.setColumnEnabled("IVM_ITEMMAST.SELL_PURCH_UM",1)
 		endif
 	endif
-[[<<DISPLAY>>.ITEM_DESC_SEG_3.AVAL]]
-rem --- Set this section back into desc, if modified
 
-	desc$ = pad(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC"), 60)
-	seg$  = callpoint!.getUserInput()
+rem --- Show TAX_SVC_CD description
+	salesTax!=callpoint!.getDevObject("salesTax")
+	if salesTax!<>null() then
+		tax_svc_cd_desc!=callpoint!.getDevObject("tax_svc_cd_desc")
+		taxSvcCd$=cvs(callpoint!.getColumnData("IVM_ITEMMAST.TAX_SVC_CD"),2)
+		if taxSvcCd$<>"" then
+			salesTax!=callpoint!.getDevObject("salesTax")
+			success=0
+			desc$=salesTax!.getTaxSvcCdDesc(taxSvcCd$,err=*next); success=1
+			if success then
+				if desc$<>"" then
+					rem --- Good code entered
+					tax_svc_cd_desc!.setText(desc$)
+				else
+					rem --- Bad code entered
+					msg_id$="OP_BAD_TAXSVC_CD"
+					dim msg_tokens$[1]
+					msg_tokens$[1]=taxSvcCd$
+					gosub disp_message
 
-	if seg$ <> user_tpl.prev_desc_seg_3$ then
-		desc$(1 + user_tpl.desc_len_01 + user_tpl.desc_len_02, user_tpl.desc_len_03) = seg$
-		callpoint!.setColumnData("IVM_ITEMMAST.ITEM_DESC", desc$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.DESC_DISPLAY", func.displayDesc(desc$),1)
-		callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$),1)
-		callpoint!.setStatus("MODIFIED")
+					tax_svc_cd_desc!.setText("?????")
+				endif
+			else
+				rem --- AvaTax call error
+				tax_svc_cd_desc!.setText("?????")
+			endif
+		else
+			rem --- No code entered, so clear description.
+			tax_svc_cd_desc!.setText("")
+		endif
 	endif
-[[<<DISPLAY>>.ITEM_DESC_SEG_2.AVAL]]
-rem --- Set this section back into desc, if modified
 
-	desc$ = pad(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC"), 60)
-	seg$  = callpoint!.getUserInput()
+[[IVM_ITEMMAST.AENA]]
+rem --- Disable Barista menu items
+	wctl$="31031"; rem --- Save-As menu item in barista.ini
+	wmap$=callpoint!.getAbleMap()
+	wpos=pos(wctl$=wmap$,8)
+	wmap$(wpos+6,1)="X"
+	callpoint!.setAbleMap(wmap$)
+	callpoint!.setStatus("ABLEMAP")
 
-	if seg$ <> user_tpl.prev_desc_seg_2$ then
-		desc$(1 + user_tpl.desc_len_01, user_tpl.desc_len_02) = seg$
-		callpoint!.setColumnData("IVM_ITEMMAST.ITEM_DESC", desc$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.DESC_DISPLAY", func.displayDesc(desc$),1)
-		callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$),1)
-		callpoint!.setStatus("MODIFIED")
-	endif
-[[<<DISPLAY>>.ITEM_DESC_SEG_1.AVAL]]
-rem --- Set this section back into desc, if modified
+[[IVM_ITEMMAST.AOPT-BOMU]]
+rem --- Display Where Used from BOMs
 
-	desc$ = pad(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC"), 60)
-	seg$  = callpoint!.getUserInput()
+cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+user_id$=stbl("+USER_ID")
+dim dflt_data$[2,1]
+dflt_data$[1,0]="ITEM_ID_1"
+dflt_data$[1,1]=cp_item_id$
+dflt_data$[2,0]="ITEM_ID_2"
+dflt_data$[2,1]=cp_item_id$
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	"BMR_MATERIALUSED",
+:	user_id$,
+:	"",
+:	"",
+:	table_chans$[all],
+:	"",
+:	dflt_data$[all]
 
-	if seg$ <> user_tpl.prev_desc_seg_1$ then
-		desc$(1, user_tpl.desc_len_01) = seg$
-		callpoint!.setColumnData("IVM_ITEMMAST.ITEM_DESC", desc$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.DESC_DISPLAY", func.displayDesc(desc$),1)
-		callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$),1)
-		callpoint!.setStatus("MODIFIED")
-	endif
-[[IVM_ITEMMAST.MSRP.AVAL]]
-if num(callpoint!.getUserInput())<0 then
-	callpoint!.setStatus("ABORT")
-endif
-[[IVM_ITEMMAST.CONV_FACTOR.AVAL]]
-if num(callpoint!.getUserInput())<0 then
-	callpoint!.setStatus("ABORT")
-endif
 [[IVM_ITEMMAST.AOPT-CITM]]
 rem --- Copy item
 
@@ -293,6 +141,7 @@ rem --- Edit the item just copied
 	if new_item_id$ <> "" then
 		callpoint!.setStatus("RECORD:["+firm_id$+new_item_id$+"]")
 	endif
+
 [[IVM_ITEMMAST.AOPT-HCPY]]
 cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
 user_id$=stbl("+USER_ID")
@@ -309,6 +158,110 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	table_chans$[all],
 :	"",
 :	dflt_data$[all]
+
+[[IVM_ITEMMAST.AOPT-IHST]]
+cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+user_id$=stbl("+USER_ID")
+dim dflt_data$[2,1]
+dflt_data$[1,0]="ITEM_ID_1"
+dflt_data$[1,1]=cp_item_id$
+dflt_data$[2,0]="ITEM_ID_2"
+dflt_data$[2,1]=cp_item_id$
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	"IVR_TRANSHIST",
+:	user_id$,
+:	"",
+:	"",
+:	table_chans$[all],
+:	"",
+:	dflt_data$[all]
+
+[[IVM_ITEMMAST.AOPT-ITAV]]
+rem --- Show availability this item
+
+	item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+
+	selected_key$ = ""
+	dim filter_defs$[1,2]
+	filter_defs$[0,0]="IVM_ITEMWHSE.FIRM_ID"
+	filter_defs$[0,1]="='"+firm_id$+"'"
+	filter_defs$[0,2]="LOCK"
+	filter_defs$[1,0]="IVM_ITEMWHSE.ITEM_ID"
+	filter_defs$[1,1]="='"+item_id$+"'"
+	filter_defs$[1,2]="LOCK"
+
+	dim search_defs$[3]
+
+	call stbl("+DIR_SYP")+"bax_query.bbj",
+:		gui_dev,
+:		Form!,
+:		"IV_PRICE_AVAIL",
+:		"",
+:		table_chans$[all],
+:		selected_key$,
+:		filter_defs$[all],
+:		search_defs$[all],
+:		"",
+:		""
+
+[[IVM_ITEMMAST.AOPT-LIFO]]
+cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+user_id$=stbl("+USER_ID")
+dim dflt_data$[2,1]
+dflt_data$[1,0]="ITEM_ID_1"
+dflt_data$[1,1]=cp_item_id$
+dflt_data$[2,0]="ITEM_ID_2"
+dflt_data$[2,1]=cp_item_id$
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	"IVR_LIFOFIFO",
+:	user_id$,
+:	"",
+:	"",
+:	table_chans$[all],
+:	"",
+:	dflt_data$[all]
+
+[[IVM_ITEMMAST.AOPT-LOOK]]
+rem --- call the custom item lookup form, so we can look for an item by product type, synonym, etc.
+
+select_key$=""
+call stbl("+DIR_SYP")+"bam_run_prog.bbj","IVC_ITEMLOOKUP",stbl("+USER_ID"),"MNT","",table_chans$[all]
+select_key$=str(bbjapi().getObjectTable().get("find_item"))
+if select_key$="null" then select_key$=""
+if select_key$<>"" then callpoint!.setStatus("RECORD:["+select_key$+"]")
+
+[[IVM_ITEMMAST.AOPT-LTRN]]
+cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+user_id$=stbl("+USER_ID")
+dim dflt_data$[2,1]
+dflt_data$[1,0]="ITEM_ID_1"
+dflt_data$[1,1]=cp_item_id$
+dflt_data$[2,0]="ITEM_ID_2"
+dflt_data$[2,1]=cp_item_id$
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	"IVR_LSTRANHIST",
+:	user_id$,
+:	"",
+:	"",
+:	table_chans$[all],
+:	"",
+:	dflt_data$[all]
+
+[[IVM_ITEMMAST.AOPT-PORD]]
+cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+user_id$=stbl("+USER_ID")
+dim dflt_data$[2,1]
+dflt_data$[1,0]="ITEM_ID"
+dflt_data$[1,1]=cp_item_id$
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	"IVR_OPENPO",
+:	user_id$,
+:	"",
+:	"",
+:	table_chans$[all],
+:	"",
+:	dflt_data$[all]
+
 [[IVM_ITEMMAST.AOPT-RORD]]
 cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
 user_id$=stbl("+USER_ID")
@@ -323,6 +276,36 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	table_chans$[all],
 :	"",
 :	dflt_data$[all]
+
+[[IVM_ITEMMAST.AOPT-SHST]]
+rem --- Launch item sales analysis form
+	user_id$=stbl("+USER_ID")
+	year$=sysinfo.system_date$(1,4)
+	product_type$=callpoint!.getColumnData("IVM_ITEMMAST.PRODUCT_TYPE")
+	item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+	sam_item_key$=firm_id$+year$+product_type$+item_id$
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"SAM_ITEM",
+:		user_id$,
+:		"EXP-INQ",
+:		sam_item_key$,
+:		table_chans$[all]
+
+[[IVM_ITEMMAST.AOPT-SORD]]
+cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+user_id$=stbl("+USER_ID")
+dim dflt_data$[2,1]
+dflt_data$[1,0]="ITEM_ID"
+dflt_data$[1,1]=cp_item_id$
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	"IVR_OPENSO",
+:	user_id$,
+:	"",
+:	"",
+:	table_chans$[all],
+:	"",
+:	dflt_data$[all]
+
 [[IVM_ITEMMAST.AOPT-STOK]]
 rem --- Populate Stocking Info in Warehouses
 	cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
@@ -352,57 +335,104 @@ rem --- Populate Stocking Info in Warehouses
 :                       table_chans$[all],
 :                       "",
 :                       dflt_data$[all]
-[[IVM_ITEMMAST.ITEM_ID.AVAL]]
-rem --- See if Auto Numbering in effect
 
-	if cvs(callpoint!.getUserInput(), 2) = "" then 
-		ivs01_dev = fnget_dev("IVS_PARAMS")
-		dim ivs01a$:fnget_tpl$("IVS_PARAMS")
-		ivs10_dev = fnget_dev("IVS_NUMBERS")
-		dim ivs10n$:fnget_tpl$("IVS_NUMBERS")
-		read record (ivs01_dev, key=firm_id$+"IV00") ivs01a$
+[[IVM_ITEMMAST.AREC]]
+rem -- Get default values for new record from ivs-10D, IVS_DEFAULTS
 
-		if ivs01a.auto_no_iv$="N" then
-			callpoint!.setStatus("ABORT")
+	ivs10_dev=fnget_dev("IVS_DEFAULTS")
+	dim ivs10d$:fnget_tpl$("IVS_DEFAULTS")
+	callpoint!.setColumnData("IVM_ITEMMAST.ALT_SUP_FLAG", "N")
+	callpoint!.setColumnData("IVM_ITEMMAST.CONV_FACTOR", "1")
+	callpoint!.setColumnData("IVM_ITEMMAST.ORDER_POINT", "D")
+	callpoint!.setColumnData("IVM_ITEMMAST.BAR_CODE", callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID"))
+
+	find record (ivs10_dev, key=firm_id$+"D", dom=*next) ivs10d$
+
+	callpoint!.setColumnData("IVM_ITEMMAST.PRODUCT_TYPE",ivs10d.product_type$)
+	callpoint!.setColumnData("IVM_ITEMMAST.UNIT_OF_SALE",ivs10d.unit_of_sale$)
+	callpoint!.setColumnData("IVM_ITEMMAST.PURCHASE_UM",ivs10d.purchase_um$)
+	callpoint!.setColumnData("IVM_ITEMMAST.TAXABLE_FLAG",ivs10d.taxable_flag$)
+	callpoint!.setColumnData("IVM_ITEMMAST.BUYER_CODE",ivs10d.buyer_code$)
+	callpoint!.setColumnData("IVM_ITEMMAST.LOTSER_ITEM",ivs10d.lotser_item$)
+	callpoint!.setColumnData("IVM_ITEMMAST.INVENTORIED",ivs10d.inventoried$)
+	callpoint!.setColumnData("IVM_ITEMMAST.ITEM_CLASS",ivs10d.item_class$)
+	callpoint!.setColumnData("IVM_ITEMMAST.STOCK_LEVEL","W")
+	callpoint!.setColumnData("IVM_ITEMMAST.ABC_CODE",ivs10d.abc_code$)
+	callpoint!.setColumnData("IVM_ITEMMAST.EOQ_CODE",ivs10d.eoq_code$)
+	callpoint!.setColumnData("IVM_ITEMMAST.ORD_PNT_CODE",ivs10d.ord_pnt_code$)
+	callpoint!.setColumnData("IVM_ITEMMAST.SAF_STK_CODE",ivs10d.saf_stk_code$)
+	callpoint!.setColumnData("IVM_ITEMMAST.ITEM_TYPE",ivs10d.item_type$)
+	callpoint!.setColumnData("IVM_ITEMMAST.GL_INV_ACCT",ivs10d.gl_inv_acct$)
+	callpoint!.setColumnData("IVM_ITEMMAST.GL_COGS_ACCT",ivs10d.gl_cogs_acct$)
+	callpoint!.setColumnData("IVM_ITEMMAST.GL_PUR_ACCT",ivs10d.gl_pur_acct$)
+	callpoint!.setColumnData("IVM_ITEMMAST.GL_PPV_ACCT",ivs10d.gl_ppv_acct$)
+	callpoint!.setColumnData("IVM_ITEMMAST.GL_INV_ADJ",ivs10d.gl_inv_adj$)
+	callpoint!.setColumnData("IVM_ITEMMAST.GL_COGS_ADJ",ivs10d.gl_cogs_adj$)
+
+	if user_tpl.sa$ <> "Y" then
+		callpoint!.setColumnData("IVM_ITEMMAST.SA_LEVEL","N")
+	else
+		ivm10_dev = fnget_dev("IVC_PRODCODE")
+		dim ivm10a$:fnget_tpl$("IVC_PRODCODE")
+		find record(ivm10_dev, key=firm_id$+"A"+ivs10d.product_type$, dom=*next)ivm10a$
+		callpoint!.setColumnData("IVM_ITEMMAST.SA_LEVEL", ivm10a.sa_level$)
+	endif
+
+	
+	callpoint!.setStatus("REFRESH")
+
+rem --- Clear TAX_SVC_CD description
+	salesTax!=callpoint!.getDevObject("salesTax")
+	if salesTax!<>null() then
+		tax_svc_cd_desc!=callpoint!.getDevObject("tax_svc_cd_desc")
+		tax_svc_cd_desc!.setText("")
+	endif
+
+rem --- set flag in devObject to say we're on a new record
+
+	callpoint!.setDevObject("new_rec","Y")
+
+[[IVM_ITEMMAST.ARNF]]
+rem --- item not found (so assuming new record); default bar code to item id
+
+callpoint!.setColumnData("IVM_ITEMMAST.BAR_CODE", callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID"))
+callpoint!.setStatus("REFRESH")
+
+[[IVM_ITEMMAST.ASHO]]
+callpoint!.setStatus("ABLEMAP-REFRESH")
+
+rem --- Disable TAX_SVC_CD when OP is not installed
+	callpoint!.setDevObject("salesTax",null())
+	if callpoint!.getDevObject("op")<>"Y" then
+		callpoint!.setColumnEnabled("IVM_ITEMMAST.TAX_SVC_CD",-1)
+	else
+		rem --- Disable TAX_SVC_CD when OP is not using a Sales Tax Service
+		ops_params_dev=fnget_dev("OPS_PARAMS")
+		dim ops_params$:fnget_tpl$("OPS_PARAMS")
+		find record (ops_params_dev,key=firm_id$+"AR00",err=std_missing_params)ops_params$
+		if cvs(ops_params.sls_tax_intrface$,2)="" then
+			callpoint!.setColumnEnabled("IVM_ITEMMAST.TAX_SVC_CD",-1)
 		else
-			item_len = num(callpoint!.getTableColumnAttribute("IVM_ITEMMAST.ITEM_ID","MAXL"))
-			if item_len=0 then item_len=20; rem Needed?
-			chk_digit$ = ""
-			if ivs01a.auto_no_iv$="C" then item_len=item_len-1
-			extract record (ivs10_dev,key=firm_id$+"N",dom=*next) ivs10n$; rem Advisory Locking
-			ivs10n.firm_id$ = firm_id$
-			ivs10n.record_id_n$ = "N"
-
-			if ivs10n.nxt_item_id=0
-				next_num=1
+			rem --- Get connection to Sales Tax Service
+			salesTax!=new AvaTaxInterface(firm_id$)
+			if salesTax!.connectClient(Form!,err=connectErr) then
+				callpoint!.setDevObject("salesTax",salesTax!)
+				callpoint!.setColumnEnabled("IVM_ITEMMAST.TAX_SVC_CD",1)
 			else
-				next_num=ivs10n.nxt_item_id
-			endif
-
-			dim max_num$(min(item_len,10),"9")
-
-			if next_num>num(max_num$) then 
-				read (ivs10_dev)
-				msg_id$="NO_MORE_NUMBERS"
-				gosub disp_message
-				callpoint!.setStatus("ABORT")
-			else
-				ivs10n.nxt_item_id=next_num+1
-				ivs10n$=field(ivs10n$)
-				write record (ivs10_dev) ivs10n$
-				next_num$=str(next_num)
-
-				if ivs01a.auto_no_iv$="C" then 
-					precision 4
-					chk_digit$=str(tim*10000),chk_digit$=chk_digit$(len(chk_digit$),1)
-					precision num(ivs01a.precision$)
-				endif
-
-				callpoint!.setUserInput(next_num$+chk_digit$)
-				callpoint!.setStatus("REFRESH")
+				callpoint!.setColumnEnabled("IVM_ITEMMAST.TAX_SVC_CD",0)
+				salesTax!.close()
 			endif
 		endif
 	endif
+
+	break
+
+connectErr:
+	callpoint!.setColumnEnabled("IVM_ITEMMAST.TAX_SVC_CD",0)
+	if salesTax!<>null() then salesTax!.close()
+
+	break
+
 [[IVM_ITEMMAST.AWRI]]
 rem --- Write synonyms of the Item Number, UPC Code and Bar Code
 	ivm_itemsyn_dev=fnget_dev("IVM_ITEMSYN")
@@ -515,6 +545,7 @@ rem --- if this is a newly added record, launch warehouse/stocking, vendors, and
 		endif
 
 	endif
+
 [[IVM_ITEMMAST.BDEL]]
 rem --- Allow this item to be deleted?
 
@@ -526,138 +557,31 @@ rem --- Allow this item to be deleted?
 		call stbl("+DIR_PGM")+"ivc_deleteitem.aon", action$, whse$, item$, rd_table_chans$[all], status
 		if status then callpoint!.setStatus("ABORT")
 	endif
-[[IVM_ITEMMAST.SAFETY_STOCK.AVAL]]
-if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
-[[IVM_ITEMMAST.EOQ.AVAL]]
-if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
-[[IVM_ITEMMAST.ORDER_POINT.AVAL]]
-if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
-[[IVM_ITEMMAST.MAXIMUM_QTY.AVAL]]
-if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
-[[IVM_ITEMMAST.LEAD_TIME.AVAL]]
-if num(callpoint!.getUserInput())<0 or fpt(num(callpoint!.getUserInput())) then callpoint!.setStatus("ABORT")
-[[IVM_ITEMMAST.ABC_CODE.AVAL]]
-if (callpoint!.getUserInput()<"A" or callpoint!.getUserInput()>"Z") and callpoint!.getUserInput()<>" " callpoint!.setStatus("ABORT")
-[[IVM_ITEMMAST.AREC]]
-rem -- Get default values for new record from ivs-10D, IVS_DEFAULTS
 
-	ivs10_dev=fnget_dev("IVS_DEFAULTS")
-	dim ivs10d$:fnget_tpl$("IVS_DEFAULTS")
-	callpoint!.setColumnData("IVM_ITEMMAST.ALT_SUP_FLAG", "N")
-	callpoint!.setColumnData("IVM_ITEMMAST.CONV_FACTOR", "1")
-	callpoint!.setColumnData("IVM_ITEMMAST.ORDER_POINT", "D")
-	callpoint!.setColumnData("IVM_ITEMMAST.BAR_CODE", callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID"))
-
-	find record (ivs10_dev, key=firm_id$+"D", dom=*next) ivs10d$
-
-	callpoint!.setColumnData("IVM_ITEMMAST.PRODUCT_TYPE",ivs10d.product_type$)
-	callpoint!.setColumnData("IVM_ITEMMAST.UNIT_OF_SALE",ivs10d.unit_of_sale$)
-	callpoint!.setColumnData("IVM_ITEMMAST.PURCHASE_UM",ivs10d.purchase_um$)
-	callpoint!.setColumnData("IVM_ITEMMAST.TAXABLE_FLAG",ivs10d.taxable_flag$)
-	callpoint!.setColumnData("IVM_ITEMMAST.BUYER_CODE",ivs10d.buyer_code$)
-	callpoint!.setColumnData("IVM_ITEMMAST.LOTSER_ITEM",ivs10d.lotser_item$)
-	callpoint!.setColumnData("IVM_ITEMMAST.INVENTORIED",ivs10d.inventoried$)
-	callpoint!.setColumnData("IVM_ITEMMAST.ITEM_CLASS",ivs10d.item_class$)
-	callpoint!.setColumnData("IVM_ITEMMAST.STOCK_LEVEL","W")
-	callpoint!.setColumnData("IVM_ITEMMAST.ABC_CODE",ivs10d.abc_code$)
-	callpoint!.setColumnData("IVM_ITEMMAST.EOQ_CODE",ivs10d.eoq_code$)
-	callpoint!.setColumnData("IVM_ITEMMAST.ORD_PNT_CODE",ivs10d.ord_pnt_code$)
-	callpoint!.setColumnData("IVM_ITEMMAST.SAF_STK_CODE",ivs10d.saf_stk_code$)
-	callpoint!.setColumnData("IVM_ITEMMAST.ITEM_TYPE",ivs10d.item_type$)
-	callpoint!.setColumnData("IVM_ITEMMAST.GL_INV_ACCT",ivs10d.gl_inv_acct$)
-	callpoint!.setColumnData("IVM_ITEMMAST.GL_COGS_ACCT",ivs10d.gl_cogs_acct$)
-	callpoint!.setColumnData("IVM_ITEMMAST.GL_PUR_ACCT",ivs10d.gl_pur_acct$)
-	callpoint!.setColumnData("IVM_ITEMMAST.GL_PPV_ACCT",ivs10d.gl_ppv_acct$)
-	callpoint!.setColumnData("IVM_ITEMMAST.GL_INV_ADJ",ivs10d.gl_inv_adj$)
-	callpoint!.setColumnData("IVM_ITEMMAST.GL_COGS_ADJ",ivs10d.gl_cogs_adj$)
-
-	if user_tpl.sa$ <> "Y" then
-		callpoint!.setColumnData("IVM_ITEMMAST.SA_LEVEL","N")
-	else
-		ivm10_dev = fnget_dev("IVC_PRODCODE")
-		dim ivm10a$:fnget_tpl$("IVC_PRODCODE")
-		find record(ivm10_dev, key=firm_id$+"A"+ivs10d.product_type$, dom=*next)ivm10a$
-		callpoint!.setColumnData("IVM_ITEMMAST.SA_LEVEL", ivm10a.sa_level$)
+[[IVM_ITEMMAST.BEND]]
+rem --- Close connection to Sales Tax Service
+	salesTax!=callpoint!.getDevObject("salesTax")
+	if salesTax!<>null() then
+		salesTax!.close()
 	endif
 
-	
-	callpoint!.setStatus("REFRESH")
-
-rem --- set flag in devObject to say we're on a new record
-
-	callpoint!.setDevObject("new_rec","Y")
-[[IVM_ITEMMAST.WEIGHT.AVAL]]
-if num(callpoint!.getUserInput())<0 or num(callpoint!.getUserInput())>9999.99 callpoint!.setStatus("ABORT")
-[[IVM_ITEMMAST.ASHO]]
-callpoint!.setStatus("ABLEMAP-REFRESH")
-[[IVM_ITEMMAST.<CUSTOM>]]
-#include [+ADDON_LIB]std_functions.aon
-
-gl_active:
-rem "GL INACTIVE FEATURE"
-   glm01_dev=fnget_dev("GLM_ACCT")
-   glm01_tpl$=fnget_tpl$("GLM_ACCT")
-   dim glm01a$:glm01_tpl$
-   glacctinput$=callpoint!.getUserInput()
-   glm01a_key$=firm_id$+glacctinput$
-   find record (glm01_dev,key=glm01a_key$,err=*return) glm01a$
-   if glm01a.acct_inactive$="Y" then
-      call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,gl_size
-      msg_id$="GL_ACCT_INACTIVE"
-      dim msg_tokens$[2]
-      msg_tokens$[1]=fnmask$(glm01a.gl_account$(1,gl_size),m0$)
-      msg_tokens$[2]=cvs(glm01a.gl_acct_desc$,2)
-      gosub disp_message
-      callpoint!.setStatus("ACTIVATE-ABORT")
-   endif
-return
-
-rem ==========================================================================
-set_desc_segs: rem --- Set the description segments
-               rem      IN: desc$
-rem ==========================================================================
-
-	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_1", desc$(1, user_tpl.desc_len_01),1)
- 	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_2", desc$(1 + user_tpl.desc_len_01, user_tpl.desc_len_02),1)
-	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_3", desc$(1 + user_tpl.desc_len_01 + user_tpl.desc_len_02, user_tpl.desc_len_03),1)
-	callpoint!.setColumnData("<<DISPLAY>>.DESC_DISPLAY", func.displayDesc(desc$, user_tpl.desc_len_01, user_tpl.desc_len_02, user_tpl.desc_len_03),1)
-
-return
-
-rem ==========================================================================
-check_qoh: rem --- Check for any QOH for this item
-           rem     OUT: qoh - 0 = none, <> 0 = some (may not be exact)
-rem ==========================================================================
-
-	item$ = callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
-	file$ = "IVM_ITEMWHSE"
-	itemwhse_dev = fnget_dev(file$)
-	dim itemwhse_rec$:fnget_tpl$(file$)
-
-	read (itemwhse_dev, key=firm_id$+item$, knum="AO_ITEM_WH", dom=*next)
-	qoh = 0
-
-	while 1
-		read record (itemwhse_dev, end=*break) itemwhse_rec$
-		if itemwhse_rec.firm_id$ <> firm_id$ or itemwhse_rec.item_id$ <> item$ then break
-		qoh = itemwhse_rec.qty_on_hand
-		if qoh then break
-	wend
-
-return
-
-rem ==========================================================================
-#include [+ADDON_LIB]std_missing_params.aon
-rem ==========================================================================
 [[IVM_ITEMMAST.BSHO]]
 rem --- Inits
 
 	use ::ado_util.src::util
 	use ::ado_func.src::func
+	use ::opo_AvaTaxInterface.aon::AvaTaxInterface
+
+rem --- Is Sales Order Processing installed?
+
+	call dir_pgm1$+"adc_application.aon","OP",info$[all]
+	op$=info$[20]
+	callpoint!.setDevObject("op",op$)
 
 rem --- Open/Lock files
 
 	num_files=8
+	if op$="Y" then num_files=9
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="IVS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="IVS_DEFAULTS",open_opts$[2]="OTA"
@@ -667,6 +591,7 @@ rem --- Open/Lock files
 	open_tables$[6]="IVS_NUMBERS",open_opts$[6]="OTA"
 	open_tables$[7]="IVM_ITEMSYN",open_opts$[7]="OTA"
 	open_tables$[8]="IVT_ITEMTRAN",open_opts$[8]="OTA"
+	if op$="Y" then open_tables$[9]="OPS_PARAMS",open_opts$[9]="OTA"
 
 	gosub open_tables
 	if status$ <> ""  then goto std_exit
@@ -917,79 +842,351 @@ rem ... Creating WOs from Sales Orders?
 		op_create_wo$=opsParams.op_create_wo$
 	endif
 	callpoint!.setDevObject("op_create_wo",op_create_wo$)
-[[IVM_ITEMMAST.AOPT-PORD]]
-cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
-user_id$=stbl("+USER_ID")
-dim dflt_data$[2,1]
-dflt_data$[1,0]="ITEM_ID"
-dflt_data$[1,1]=cp_item_id$
-call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:	"IVR_OPENPO",
-:	user_id$,
-:	"",
-:	"",
-:	table_chans$[all],
-:	"",
-:	dflt_data$[all]
-[[IVM_ITEMMAST.AOPT-SORD]]
-cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
-user_id$=stbl("+USER_ID")
-dim dflt_data$[2,1]
-dflt_data$[1,0]="ITEM_ID"
-dflt_data$[1,1]=cp_item_id$
-call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:	"IVR_OPENSO",
-:	user_id$,
-:	"",
-:	"",
-:	table_chans$[all],
-:	"",
-:	dflt_data$[all]
-[[IVM_ITEMMAST.AOPT-LTRN]]
-cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
-user_id$=stbl("+USER_ID")
-dim dflt_data$[2,1]
-dflt_data$[1,0]="ITEM_ID_1"
-dflt_data$[1,1]=cp_item_id$
-dflt_data$[2,0]="ITEM_ID_2"
-dflt_data$[2,1]=cp_item_id$
-call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:	"IVR_LSTRANHIST",
-:	user_id$,
-:	"",
-:	"",
-:	table_chans$[all],
-:	"",
-:	dflt_data$[all]
-[[IVM_ITEMMAST.AOPT-IHST]]
-cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
-user_id$=stbl("+USER_ID")
-dim dflt_data$[2,1]
-dflt_data$[1,0]="ITEM_ID_1"
-dflt_data$[1,1]=cp_item_id$
-dflt_data$[2,0]="ITEM_ID_2"
-dflt_data$[2,1]=cp_item_id$
-call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:	"IVR_TRANSHIST",
-:	user_id$,
-:	"",
-:	"",
-:	table_chans$[all],
-:	"",
-:	dflt_data$[all]
-[[IVM_ITEMMAST.AOPT-LIFO]]
-cp_item_id$=callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
-user_id$=stbl("+USER_ID")
-dim dflt_data$[2,1]
-dflt_data$[1,0]="ITEM_ID_1"
-dflt_data$[1,1]=cp_item_id$
-dflt_data$[2,0]="ITEM_ID_2"
-dflt_data$[2,1]=cp_item_id$
-call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:	"IVR_LIFOFIFO",
-:	user_id$,
-:	"",
-:	"",
-:	table_chans$[all],
-:	"",
-:	dflt_data$[all]
+
+rem --- Add static label for displaying TAX_SVC_CD description
+tax_svc_cd!=fnget_control!("IVM_ITEMMAST.TAX_SVC_CD")
+tax_svc_cd_x=tax_svc_cd!.getX()
+tax_svc_cd_y=tax_svc_cd!.getY()
+tax_svc_cd_height=tax_svc_cd!.getHeight()
+tax_svc_cd_width=tax_svc_cd!.getWidth()
+code_desc!=fnget_control!("IVM_ITEMMAST.UPC_CODE")
+code_desc_width=code_desc!.getWidth()
+nxt_ctlID=util.getNextControlID()
+item_tab!=tax_svc_cd!.getParentWindow()
+tax_svc_cd_desc!=item_tab!.addStaticText(nxt_ctlID,tax_svc_cd_x+tax_svc_cd_width+5,tax_svc_cd_y+3,code_desc_width,tax_svc_cd_height-3,"")
+callpoint!.setDevObject("tax_svc_cd_desc",tax_svc_cd_desc!)
+
+[[IVM_ITEMMAST.BWRI]]
+rem --- Is item code blank?
+
+	if cvs(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID"), 2) = "" then
+		msg_id$ = "IV_BLANK_ID"
+		gosub disp_message
+		callpoint!.setFocus("IVM_ITEMMAST.ITEM_ID")
+	endif
+
+	if cvs(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC"),3)="" then 
+		msg_id$="IV_BLANK_DESC"
+		gosub disp_message
+		callpoint!.setFocus("<<DISPLAY>>.ITEM_DESC_SEG_1")
+	endif
+
+[[IVM_ITEMMAST.CONV_FACTOR.AVAL]]
+if num(callpoint!.getUserInput())<0 then
+	callpoint!.setStatus("ABORT")
+endif
+
+[[IVM_ITEMMAST.EOQ.AVAL]]
+if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
+
+[[IVM_ITEMMAST.GL_COGS_ACCT.AVAL]]
+gosub gl_active
+
+[[IVM_ITEMMAST.GL_COGS_ADJ.AVAL]]
+gosub gl_active
+
+[[IVM_ITEMMAST.GL_INV_ACCT.AVAL]]
+gosub gl_active
+
+[[IVM_ITEMMAST.GL_INV_ADJ.AVAL]]
+gosub gl_active
+
+[[IVM_ITEMMAST.GL_PPV_ACCT.AVAL]]
+gosub gl_active
+
+[[IVM_ITEMMAST.GL_PUR_ACCT.AVAL]]
+gosub gl_active
+
+[[IVM_ITEMMAST.INVENTORIED.AVAL]]
+rem --- Can't change Inventoried flag if there is QOH, and disable lotted/serialized flag if inventoried=Y
+
+	prev_inv_flag$=callpoint!.getColumnData("IVM_ITEMMAST.INVENTORIED")
+	this_inv_flag$ = callpoint!.getUserInput()
+	if this_inv_flag$ <> prev_inv_flag$ then
+		gosub check_qoh
+		if qoh then
+			msg_id$ = "IV_CANT_CHANGE_CODE"
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			callpoint!.setColumnData("IVM_ITEMMAST.INVENTORIED",prev_inv_flag$,1)
+		else
+			if this_inv_flag$="Y" then
+				callpoint!.setColumnEnabled("IVM_ITEMMAST.LOTSER_ITEM",0)
+			else
+				callpoint!.setColumnEnabled("IVM_ITEMMAST.LOTSER_ITEM",1)
+			endif
+		endif
+	endif
+
+[[<<DISPLAY>>.ITEM_DESC_SEG_1.AVAL]]
+rem --- Set this section back into desc, if modified
+
+	desc$ = pad(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC"), 60)
+	seg$  = callpoint!.getUserInput()
+
+	if seg$ <> user_tpl.prev_desc_seg_1$ then
+		desc$(1, user_tpl.desc_len_01) = seg$
+		callpoint!.setColumnData("IVM_ITEMMAST.ITEM_DESC", desc$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.DESC_DISPLAY", func.displayDesc(desc$),1)
+		callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$),1)
+		callpoint!.setStatus("MODIFIED")
+	endif
+
+[[<<DISPLAY>>.ITEM_DESC_SEG_1.BINP]]
+rem --- Set previous value
+
+	user_tpl.prev_desc_seg_1$ = callpoint!.getColumnData("<<DISPLAY>>.ITEM_DESC_SEG_1")
+
+[[<<DISPLAY>>.ITEM_DESC_SEG_2.AVAL]]
+rem --- Set this section back into desc, if modified
+
+	desc$ = pad(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC"), 60)
+	seg$  = callpoint!.getUserInput()
+
+	if seg$ <> user_tpl.prev_desc_seg_2$ then
+		desc$(1 + user_tpl.desc_len_01, user_tpl.desc_len_02) = seg$
+		callpoint!.setColumnData("IVM_ITEMMAST.ITEM_DESC", desc$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.DESC_DISPLAY", func.displayDesc(desc$),1)
+		callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$),1)
+		callpoint!.setStatus("MODIFIED")
+	endif
+
+[[<<DISPLAY>>.ITEM_DESC_SEG_2.BINP]]
+rem --- Set previous value
+
+	user_tpl.prev_desc_seg_2$ = callpoint!.getColumnData("<<DISPLAY>>.ITEM_DESC_SEG_2")
+
+[[<<DISPLAY>>.ITEM_DESC_SEG_3.AVAL]]
+rem --- Set this section back into desc, if modified
+
+	desc$ = pad(callpoint!.getColumnData("IVM_ITEMMAST.ITEM_DESC"), 60)
+	seg$  = callpoint!.getUserInput()
+
+	if seg$ <> user_tpl.prev_desc_seg_3$ then
+		desc$(1 + user_tpl.desc_len_01 + user_tpl.desc_len_02, user_tpl.desc_len_03) = seg$
+		callpoint!.setColumnData("IVM_ITEMMAST.ITEM_DESC", desc$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.DESC_DISPLAY", func.displayDesc(desc$),1)
+		callpoint!.setColumnData("IVM_ITEMMAST.DISPLAY_DESC", func.displayDesc(desc$),1)
+		callpoint!.setStatus("MODIFIED")
+	endif
+
+[[<<DISPLAY>>.ITEM_DESC_SEG_3.BINP]]
+rem --- Set previous value
+
+	user_tpl.prev_desc_seg_3$ = callpoint!.getColumnData("<<DISPLAY>>.ITEM_DESC_SEG_3")
+
+[[IVM_ITEMMAST.ITEM_ID.AVAL]]
+rem --- See if Auto Numbering in effect
+
+	if cvs(callpoint!.getUserInput(), 2) = "" then 
+		ivs01_dev = fnget_dev("IVS_PARAMS")
+		dim ivs01a$:fnget_tpl$("IVS_PARAMS")
+		ivs10_dev = fnget_dev("IVS_NUMBERS")
+		dim ivs10n$:fnget_tpl$("IVS_NUMBERS")
+		read record (ivs01_dev, key=firm_id$+"IV00") ivs01a$
+
+		if ivs01a.auto_no_iv$="N" then
+			callpoint!.setStatus("ABORT")
+		else
+			item_len = num(callpoint!.getTableColumnAttribute("IVM_ITEMMAST.ITEM_ID","MAXL"))
+			if item_len=0 then item_len=20; rem Needed?
+			chk_digit$ = ""
+			if ivs01a.auto_no_iv$="C" then item_len=item_len-1
+			extract record (ivs10_dev,key=firm_id$+"N",dom=*next) ivs10n$; rem Advisory Locking
+			ivs10n.firm_id$ = firm_id$
+			ivs10n.record_id_n$ = "N"
+
+			if ivs10n.nxt_item_id=0
+				next_num=1
+			else
+				next_num=ivs10n.nxt_item_id
+			endif
+
+			dim max_num$(min(item_len,10),"9")
+
+			if next_num>num(max_num$) then 
+				read (ivs10_dev)
+				msg_id$="NO_MORE_NUMBERS"
+				gosub disp_message
+				callpoint!.setStatus("ABORT")
+			else
+				ivs10n.nxt_item_id=next_num+1
+				ivs10n$=field(ivs10n$)
+				write record (ivs10_dev) ivs10n$
+				next_num$=str(next_num)
+
+				if ivs01a.auto_no_iv$="C" then 
+					precision 4
+					chk_digit$=str(tim*10000),chk_digit$=chk_digit$(len(chk_digit$),1)
+					precision num(ivs01a.precision$)
+				endif
+
+				callpoint!.setUserInput(next_num$+chk_digit$)
+				callpoint!.setStatus("REFRESH")
+			endif
+		endif
+	endif
+
+[[IVM_ITEMMAST.LEAD_TIME.AVAL]]
+if num(callpoint!.getUserInput())<0 or fpt(num(callpoint!.getUserInput())) then callpoint!.setStatus("ABORT")
+
+[[IVM_ITEMMAST.LOTSER_ITEM.AVAL]]
+rem --- Disable inventoried if not lotted/serialized
+	inventoried$=callpoint!.getUserInput()
+	if inventoried$<>"Y" then
+		callpoint!.setColumnEnabled("IVM_ITEMMAST.INVENTORIED",0)
+		callpoint!.setColumnData("IVM_ITEMMAST.INVENTORIED","N",1)
+	else
+		callpoint!.setColumnEnabled("IVM_ITEMMAST.INVENTORIED",1)
+	endif
+
+rem --- Disable sell_purch_um if lotted/serialized, or sell_purch_um not allowed
+	if inventoried$="Y" or callpoint!.getDevObject("allow_SellPurchUM")="N" then
+		callpoint!.setColumnEnabled("IVM_ITEMMAST.SELL_PURCH_UM",0)
+		callpoint!.setColumnData("IVM_ITEMMAST.SELL_PURCH_UM","N",1)
+	else
+		callpoint!.setColumnEnabled("IVM_ITEMMAST.SELL_PURCH_UM",1)
+	endif
+
+[[IVM_ITEMMAST.MAXIMUM_QTY.AVAL]]
+if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
+
+[[IVM_ITEMMAST.MSRP.AVAL]]
+if num(callpoint!.getUserInput())<0 then
+	callpoint!.setStatus("ABORT")
+endif
+
+[[IVM_ITEMMAST.ORDER_POINT.AVAL]]
+if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
+
+[[IVM_ITEMMAST.PRODUCT_TYPE.AVAL]]
+rem --- Set SA Level if new record
+	if callpoint!.getRecordMode()="A"
+		ivm10_dev=fnget_dev("IVC_PRODCODE")
+		dim ivm10a$:fnget_tpl$("IVC_PRODCODE")
+		read record (ivm10_dev,key=firm_id$+"A"+callpoint!.getUserInput()) ivm10a$
+		callpoint!.setColumnData("IVM_ITEMMAST.SA_LEVEL",ivm10a.sa_level$,1)
+	endif
+
+[[IVM_ITEMMAST.SAFETY_STOCK.AVAL]]
+if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
+
+[[IVM_ITEMMAST.TAX_SVC_CD.AVAL]]
+rem --- Validate TAX_SVC_CD
+	taxSvcCd$=cvs(callpoint!.getUserInput(),2)
+	priorTaxSvcCd$=cvs(callpoint!.getColumnData("IVM_ITEMMAST.TAX_SVC_CD"),2)
+	if taxSvcCd$<>priorTaxSvcCd$ then
+		tax_svc_cd_desc!=callpoint!.getDevObject("tax_svc_cd_desc")
+		if taxSvcCd$<>"" then
+			salesTax!=callpoint!.getDevObject("salesTax")
+			success=0
+			desc$=salesTax!.getTaxSvcCdDesc(taxSvcCd$,err=*next); success=1
+			if success then
+				if desc$<>"" then
+					rem --- Good code entered
+					tax_svc_cd_desc!.setText(desc$)
+				else
+					rem --- Bad code entered
+					msg_id$="OP_BAD_TAXSVC_CD"
+					dim msg_tokens$[1]
+					msg_tokens$[1]=taxSvcCd$
+					gosub disp_message
+
+					callpoint!.setColumnData("IVM_ITEMMAST.TAX_SVC_CD",priorTaxSvcCd$,1)
+					callpoint!.setStatus("ABORT")
+					break
+				endif
+			else
+				rem --- AvaTax call error
+				callpoint!.setColumnData("IVM_ITEMMAST.TAX_SVC_CD",priorTaxSvcCd$,1)
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+		else
+			rem --- No code entered, so clear description.
+			tax_svc_cd_desc!.setText("")
+		endif
+	endif
+
+[[<<DISPLAY>>.TEMP_TAB_STOP.BINP]]
+rem --- "Hidden" field to allow enter/tab from single enabled field
+rem --- Temporary workaround for Barista bug 6925
+
+	callpoint!.setFocus("<<DISPLAY>>.ITEM_DESC_SEG_1")
+	callpoint!.setStatus("ABORT")
+	break
+
+[[IVM_ITEMMAST.WEIGHT.AVAL]]
+if num(callpoint!.getUserInput())<0 or num(callpoint!.getUserInput())>9999.99 callpoint!.setStatus("ABORT")
+
+[[IVM_ITEMMAST.<CUSTOM>]]
+rem #include fnget_control.src
+	def fnget_control!(ctl_name$)
+	ctlContext=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLC"))
+	ctlID=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI"))
+	get_control!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
+	return get_control!
+	fnend
+rem #endinclude fnget_control.src
+
+#include [+ADDON_LIB]std_functions.aon
+
+gl_active:
+rem "GL INACTIVE FEATURE"
+   glm01_dev=fnget_dev("GLM_ACCT")
+   glm01_tpl$=fnget_tpl$("GLM_ACCT")
+   dim glm01a$:glm01_tpl$
+   glacctinput$=callpoint!.getUserInput()
+   glm01a_key$=firm_id$+glacctinput$
+   find record (glm01_dev,key=glm01a_key$,err=*return) glm01a$
+   if glm01a.acct_inactive$="Y" then
+      call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,gl_size
+      msg_id$="GL_ACCT_INACTIVE"
+      dim msg_tokens$[2]
+      msg_tokens$[1]=fnmask$(glm01a.gl_account$(1,gl_size),m0$)
+      msg_tokens$[2]=cvs(glm01a.gl_acct_desc$,2)
+      gosub disp_message
+      callpoint!.setStatus("ACTIVATE-ABORT")
+   endif
+return
+
+rem ==========================================================================
+set_desc_segs: rem --- Set the description segments
+               rem      IN: desc$
+rem ==========================================================================
+
+	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_1", desc$(1, user_tpl.desc_len_01),1)
+ 	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_2", desc$(1 + user_tpl.desc_len_01, user_tpl.desc_len_02),1)
+	callpoint!.setColumnData("<<DISPLAY>>.ITEM_DESC_SEG_3", desc$(1 + user_tpl.desc_len_01 + user_tpl.desc_len_02, user_tpl.desc_len_03),1)
+	callpoint!.setColumnData("<<DISPLAY>>.DESC_DISPLAY", func.displayDesc(desc$, user_tpl.desc_len_01, user_tpl.desc_len_02, user_tpl.desc_len_03),1)
+
+return
+
+rem ==========================================================================
+check_qoh: rem --- Check for any QOH for this item
+           rem     OUT: qoh - 0 = none, <> 0 = some (may not be exact)
+rem ==========================================================================
+
+	item$ = callpoint!.getColumnData("IVM_ITEMMAST.ITEM_ID")
+	file$ = "IVM_ITEMWHSE"
+	itemwhse_dev = fnget_dev(file$)
+	dim itemwhse_rec$:fnget_tpl$(file$)
+
+	read (itemwhse_dev, key=firm_id$+item$, knum="AO_ITEM_WH", dom=*next)
+	qoh = 0
+
+	while 1
+		read record (itemwhse_dev, end=*break) itemwhse_rec$
+		if itemwhse_rec.firm_id$ <> firm_id$ or itemwhse_rec.item_id$ <> item$ then break
+		qoh = itemwhse_rec.qty_on_hand
+		if qoh then break
+	wend
+
+return
+
+rem ==========================================================================
+#include [+ADDON_LIB]std_missing_params.aon
+rem ==========================================================================
+
+
+
