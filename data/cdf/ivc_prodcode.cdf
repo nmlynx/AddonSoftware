@@ -85,7 +85,7 @@ callpoint!.setDevObject("op",op$)
 
 rem --- Open/Lock files
 
-files=3,begfile=1,endfile=files
+files=3
 if op$="Y" then files=4
 begfile=1,endfile=files
 dim files$[files],options$[files],chans$[files],templates$[files]
