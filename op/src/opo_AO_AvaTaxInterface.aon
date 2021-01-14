@@ -449,11 +449,51 @@ connectClient_error:rem --- Modified method error trap/handler (11Oct2017)
         methodend
 
         rem /**
-        rem  * Create AvaTaxClinet object for connecting to the sales tax service.
+        rem  * Get list of all AvaTaxClinet object Tax Service Codes.
+        rem  *
+        rem  * @return HashMap taxSvcCdMap!
+        rem  */
+        method public HashMap getTaxSvcCds()
+            seterr getTaxSvcCdDesc2_error
+            taxSvcCdMap!=new HashMap()
+
+            #busyImageStart()
+            fetchResult!=#avaTaxClient!.listTaxCodes("",0,0,"")
+            #busyImageStop()
+            taxSvcCdList!=fetchResult!.getValue()
+            taxSvcCdIter!=taxSvcCdList!.iterator()
+            while taxSvcCdIter!.hasNext()
+                taxCodeModel!=taxSvcCdIter!.next()
+                taxSvcCdMap!.put(taxCodeModel!.getTaxCode(),taxCodeModel!.getDescription())
+            wend
+
+            methodret taxSvcCdMap!
+            
+getTaxSvcCdDesc2_error:rem --- Modified method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+
+            rem --- Stop busy/working image
+            #busyImageStop()
+
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Get description for given AvaTax Tax Servcie Code.
         rem  * 
         rem  * @param BBjString taxSvcCd$
         rem  *
-        rem  * @return BBjString
+        rem  * @return BBjString desc$
         rem  */
         method public BBjString getTaxSvcCdDesc(BBjString taxSvcCd$)
             seterr getTaxSvcCdDesc_error
