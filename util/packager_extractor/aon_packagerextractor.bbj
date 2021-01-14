@@ -1552,7 +1552,7 @@ std_exit:
       meterWin!=mainMeter!
       meter_total_recs=mainMeterTotalRecs
       mainMeterProcRecs=mainMeterProcRecs+1
-      meter_text$="Extract files from jar file "+baseDir$+File.separator+jarFile$
+      meter_text$="Extract files from archive file "+jarFile$
       meter_proc_recs=mainMeterProcRecs
       meter_action$="MTR-LST"
       call stbl("+DIR_SYP")+"bam_prog_bar.bbj",#Sysgui!,#Win!,meterWin!,meter_title$,meter_total_recs,meter_proc_recs,meter_text$,meter_action$
@@ -1563,17 +1563,25 @@ std_exit:
       nxt_ctlID=util.getNextControlID()
       busyImage!=mainMeter!.addImageCtrl(nxt_ctlID,150,75,33,33,bbjHome$+"/utils/reporting/bbjasper/images/CreatingReport.gif")
   
-      rem --- Un-package jar file
+      rem --- Un-package archive file
       chdir baseDir$
       declare TGZFile tgzFile!
+      declare java.util.List failedToExtract!
+      declare Iterator failedToExtractI!
       tgzFile!=new TGZFile(jarFile$)
       
-      rem -- Set permissions on non-Windows platforms 
-      if (!#isWindows!) then 
-          rem tgzFile!.addDefaultCopyOption(StandardCopyOption.COPY_ATTRIBUTES)
-          tgzFile!.setDefaultFilePermissions("rwxrwxrwx")
-      endif 
+      tgzFile!.setDefaultFilePermissions("rwxrwxrwx")
       tgzFile!.extractAll(baseDir$)
+
+      REM log any files we did not overwrite. 
+      failedToExtract!=tgzFile!.getFailedToExtract()
+      if (failedToExtract!<>null()) then 
+          print (log_dev)  "Did not overwrite the following files:"
+          failedToExtractI!=failedToExtract!.iterator()
+          while (failedToExtractI!.hasNext())
+              print (log_dev) "Did not overwrite: ",failedToExtractI!.next()
+          wend 
+      endif
       chdir savedDir$
   
       rem --- Remove busy/working image from progress meter
