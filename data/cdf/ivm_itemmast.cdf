@@ -853,7 +853,7 @@ code_desc!=fnget_control!("IVM_ITEMMAST.UPC_CODE")
 code_desc_width=code_desc!.getWidth()
 nxt_ctlID=util.getNextControlID()
 item_tab!=tax_svc_cd!.getParentWindow()
-tax_svc_cd_desc!=item_tab!.addStaticText(nxt_ctlID,tax_svc_cd_x+tax_svc_cd_width+5,tax_svc_cd_y+3,code_desc_width,tax_svc_cd_height-3,"")
+tax_svc_cd_desc!=item_tab!.addStaticText(nxt_ctlID,tax_svc_cd_x+tax_svc_cd_width+5,tax_svc_cd_y+3,int(code_desc_width*1.5),tax_svc_cd_height-3,"")
 call stbl("+DIR_SYP")+"bac_create_color.bbj","+TAB_CHILD_COLOR","250,250,250",rdTabChildColor!,""
 tax_svc_cd_desc!.setBackColor(rdTabChildColor!)
 callpoint!.setDevObject("tax_svc_cd_desc",tax_svc_cd_desc!)

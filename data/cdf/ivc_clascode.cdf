@@ -159,7 +159,7 @@ tax_svc_cd_width=tax_svc_cd!.getWidth()
 code_desc!=fnget_control!("IVC_CLASCODE.CODE_DESC")
 code_desc_width=code_desc!.getWidth()
 nxt_ctlID=util.getNextControlID()
-tax_svc_cd_desc!=Form!.addStaticText(nxt_ctlID,tax_svc_cd_x+tax_svc_cd_width+5,tax_svc_cd_y+3,code_desc_width,tax_svc_cd_height,"")
+tax_svc_cd_desc!=Form!.addStaticText(nxt_ctlID,tax_svc_cd_x+tax_svc_cd_width+5,tax_svc_cd_y+3,int(code_desc_width*1.5),tax_svc_cd_height,"")
 callpoint!.setDevObject("tax_svc_cd_desc",tax_svc_cd_desc!)
 
 [[IVC_CLASCODE.TAX_SVC_CD.AVAL]]
