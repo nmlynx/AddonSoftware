@@ -449,6 +449,48 @@ connectClient_error:rem --- Modified method error trap/handler (11Oct2017)
         methodend
 
         rem /**
+        rem  * Get name for given AvaTax Entity Use Code.
+        rem  * 
+        rem  * @param BBjString entityUseCd$
+        rem  *
+        rem  * @return BBjString name$
+        rem  */
+        method public BBjString getEntityUseCdName(BBjString entityUseCd$)
+            seterr getEntityUseCdName_error
+            name$=""
+
+            filter$="code='"+cvs(entityUseCd$,3)+"'"
+            #busyImageStart()
+            fetchResult!=#avaTaxClient!.listEntityUseCodes(filter$,0,0,"")
+            #busyImageStop()
+            entityUseList!=fetchResult!.getValue()
+            if entityUseList!.size()=1 then
+                entityUseCodeModel!=entityUseList!.get(0)
+                name$=entityUseCodeModel!.getName()
+            endif
+
+            methodret name$
+            
+getEntityUseCdName_error:rem --- Modified method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+
+            rem --- Stop busy/working image
+            #busyImageStop()
+
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
         rem  * Get list of all AvaTaxClinet object Tax Service Codes.
         rem  *
         rem  * @return HashMap taxSvcCdMap!
@@ -489,7 +531,7 @@ getTaxSvcCdDesc2_error:rem --- Modified method error trap/handler (11Oct2017)
         methodend
 
         rem /**
-        rem  * Get description for given AvaTax Tax Servcie Code.
+        rem  * Get description for given AvaTax Tax Service Code.
         rem  * 
         rem  * @param BBjString taxSvcCd$
         rem  *

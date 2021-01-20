@@ -408,6 +408,15 @@ rem --- When USE_TAX_SVC is checked, disable and clear unwanted fields
 			enableit$=""
 			gosub able_gl
 		endif
+	else
+		rem --- Enable fields
+		callpoint!.setColumnEnabled("OPC_TAXCODE.TAX_RATE",1)
+		callpoint!.setColumnEnabled("OPC_TAXCODE.TAX_FRT_FLAG",1)
+		callpoint!.setColumnEnabled("OPC_TAXCODE.OP_MAX_LIMIT",1)
+		for i=1 to 10
+			index$=str(i:"00")
+			callpoint!.setColumnEnabled("OPC_TAXCODE.AR_TOT_CODE_"+index$,1)
+		next i
 	endif
 
 [[OPC_TAXCODE.<CUSTOM>]]
