@@ -479,6 +479,25 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :                       "",
 :                       dflt_data$[all]
 
+[[ARM_CUSTMAST.AOPT-XMPT]]
+rem wgh ... 9806 ... stopped here
+rem --- Launch Customer Sales Tax Exemptions form for this customer
+	user_id$=stbl("+USER_ID")
+	customer_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+
+	dim dflt_data$[1,1]
+	dflt_data$[1,0]="CUSTOMER_ID"
+	dflt_data$[1,1]=customer_id$
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"ARM_CUSTEXMPT",
+:		user_id$,
+:		"",
+:		firm_id$+customer_id$,
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
 [[ARM_CUSTMAST.AREA]]
 rem --- Set New Customer flag
 	user_tpl.new_cust$="N"
@@ -788,6 +807,7 @@ rem --- Retrieve parameter data
 		callpoint!.setOptionEnabled("ORDR",0)
 		callpoint!.setOptionEnabled("INVC",0)
 		callpoint!.setOptionEnabled("CRDT",0)
+		callpoint!.setOptionEnabled("XMPT",0)
 	endif
 	dctl$[9]="<<DISPLAY>>.DSP_BALANCE"
 	dctl$[10]="<<DISPLAY>>.DSP_MTD_PROFIT"
