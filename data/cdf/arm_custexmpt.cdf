@@ -92,9 +92,10 @@ rem --- Is Sales Order Processing installed?
 rem --- Open/Lock files
 
 	if op$="Y" then
-		files=1,begfile=1,endfile=files
+		files=2,begfile=1,endfile=files
 		dim files$[files],options$[files],chans$[files],templates$[files]
 		files$[1]="OPS_PARAMS",options$[1]="OTA"
+		files$[2]="ARM_ENTITYUSE",options$[2]="OTA"
 		call dir_pgm$+"bac_open_tables.bbj",begfile,endfile,files$[all],options$[all],
 :                                 chans$[all],templates$[all],table_chans$[all],batch,status$
 		if status$<>"" then
@@ -138,6 +139,14 @@ rem --- Validate ENTITY_USE_CD
 			success=0
 			name$=salesTax!.getEntityUseCdName(entityUseCd$,err=*next); success=1
 			if success then
+				if name$="" then
+					rem --- Check for custom Entity Use Code
+					arm_entityUse_dev=fnget_dev("ARM_ENTITYUSE")
+					dim arm_entityUse$:fnget_tpl$("ARM_ENTITYUSE")
+					arm_entityUse.entity_use_cd$=entityUseCd$
+					findrecord(arm_entityUse_dev,key=firm_id$+arm_entityUse.entity_use_cd$,dom=*next)arm_entityUse$
+					name$=cvs(arm_entityUse.name$,2)
+				endif
 				if name$<>"" then
 					rem --- Good code entered
 					entity_use_cd_desc!.setText(name$)
