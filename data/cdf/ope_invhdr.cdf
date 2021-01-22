@@ -147,6 +147,7 @@ rem --- Inits
 	use ::ado_util.src::util
 	use ::ado_order.src::OrderHelper
 	use ::adc_array.aon::ArrayObject
+	use ::opo_AvaTaxInterface.aon::AvaTaxInterface
 
 rem --- Create Inventory Availability window
 
@@ -897,6 +898,39 @@ end_pointofsale:
 	user_tpl.skip_whse$    = pointofsale_rec.skip_whse$
 	user_tpl.warehouse_id$ = pointofsale_rec.warehouse_id$	
 
+rem --- When using Sales Tax Service, get connection
+	callpoint!.setDevObject("salesTax",null())
+	if callpoint!.getDevObject("sls_tax_intrface")<>"" then
+		rem --- Get connection to Sales Tax Service
+		salesTax!=new AvaTaxInterface(firm_id$)
+		if salesTax!.connectClient(Form!,err=connectErr) then
+			callpoint!.setDevObject("salesTax",salesTax!)
+
+			rem --- Warn if in test mode
+			if salesTax!.isTestMode() then
+				rem --- Skip warning if they were previously warned
+				global_ns!=BBjAPI().getGlobalNamespace()
+				nsValue!=global_ns!.getValue(info(3,2)+date(0)+"_SalesTaxSvcTestWarning",err=*next)
+				if nsValue!=null() then
+					msg_id$="OP_SLS_TAX_SVC_TEST"
+					gosub disp_message
+
+					global_ns!.setValue(info(3,2)+date(0)+"_SalesTaxSvcTestWarning","Test mode warning")
+				endif
+			endif
+		else
+			callpoint!.setStatus("EXIT")
+			break
+		endif
+	endif
+
+	break
+
+connectErr:
+	callpoint!.setStatus("EXIT")
+
+	break
+
 [[OPE_INVHDR.ASIZ]]
 print "Hdr:ASIZ"; rem debug
 
@@ -1106,6 +1140,13 @@ rem --- Remove committments for detail records by calling ATAMO
 
 	if user_tpl.credit_installed$="Y" then
 		remove (creddate_dev, key=firm_id$+ord_date$+cust$+ord$, err=*next)	
+	endif
+
+[[OPE_INVHDR.BEND]]
+rem --- Close connection to Sales Tax Service
+	salesTax!=callpoint!.getDevObject("salesTax")
+	if salesTax!<>null() then
+		salesTax!.close()
 	endif
 
 [[OPE_INVHDR.BFST]]
@@ -1576,6 +1617,7 @@ rem --- get AR Params
 	if ars01a.op_totals_warn$="" ars01a.op_totals_warn$="4"
 	callpoint!.setDevObject("totals_warn",ars01a.op_totals_warn$)
 	callpoint!.setDevObject("check_po_dupes",ars01a.op_check_dupe_po$)
+	callpoint!.setDevObject("sls_tax_intrface", ars01a.sls_tax_intrface$)
 
 	dim ars_credit$:open_tpls$[7]
 	read record (num(open_chans$[7]), key=firm_id$+"AR01") ars_credit$
