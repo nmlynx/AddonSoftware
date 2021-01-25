@@ -1144,7 +1144,7 @@ rem --- Remove committments for detail records by calling ATAMO
 
 [[OPE_INVHDR.BEND]]
 rem --- Close connection to Sales Tax Service
-	salesTax!=callpoint!.getDevObject("salesTax")
+	salesTax!=callpoint!.getDevObject("salesTaxObject")
 	if salesTax!<>null() then
 		salesTax!.close()
 	endif
