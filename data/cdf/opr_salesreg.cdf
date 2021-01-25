@@ -1,9 +1,9 @@
-[[OPR_SALEREGISTER.AFMC]]
+[[OPR_SALESREG.AFMC]]
 rem --- Inits
 	use ::ado_util.src::util
 	use ::opo_AvaTaxInterface.aon::AvaTaxInterface
 
-[[OPR_SALEREGISTER.ASHO]]
+[[OPR_SALESREG.ASHO]]
 rem --- When using Sales Tax Service, get connection
 	callpoint!.setDevObject("salesTaxObject",null())
 	if callpoint!.getDevObject("sls_tax_intrface")<>"" then
@@ -37,14 +37,14 @@ connectErr:
 
 	break
 
-[[OPR_SALEREGISTER.BEND]]
+[[OPR_SALESREG.BEND]]
 rem --- Close connection to Sales Tax Service
-	salesTax!=callpoint!.getDevObject("salesTax")
+	salesTax!=callpoint!.getDevObject("salesTaxObject")
 	if salesTax!<>null() then
 		salesTax!.close()
 	endif
 
-[[OPR_SALEREGISTER.BSHO]]
+[[OPR_SALESREG.BSHO]]
 rem --- Open needed files
 	num_files=1
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
