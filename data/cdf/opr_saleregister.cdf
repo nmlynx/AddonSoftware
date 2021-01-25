@@ -5,12 +5,12 @@ rem --- Inits
 
 [[OPR_SALEREGISTER.ASHO]]
 rem --- When using Sales Tax Service, get connection
-	callpoint!.setDevObject("salesTax",null())
+	callpoint!.setDevObject("salesTaxObject",null())
 	if callpoint!.getDevObject("sls_tax_intrface")<>"" then
 		rem --- Get connection to Sales Tax Service
 		salesTax!=new AvaTaxInterface(firm_id$)
 		if salesTax!.connectClient(Form!,err=connectErr) then
-			callpoint!.setDevObject("salesTax",salesTax!)
+			callpoint!.setDevObject("salesTaxObject",salesTax!)
 
 			rem --- Warn if in test mode
 			if salesTax!.isTestMode() then
