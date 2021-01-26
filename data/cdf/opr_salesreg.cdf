@@ -55,7 +55,7 @@ rem --- Open needed files
 rem --- get AR Params
 	dim ars01a$:open_tpls$[1]
 	read record (num(open_chans$[1]), key=firm_id$+"AR00") ars01a$
-	callpoint!.setDevObject("sls_tax_intrface", ars01a.sls_tax_intrface$)
+	callpoint!.setDevObject("sls_tax_intrface", cvs(ars01a.sls_tax_intrface$,2))
 
 
 

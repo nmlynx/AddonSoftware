@@ -309,7 +309,7 @@ rem --- Keep info in user_tpl$
 
 rem --- Get OP Parametes
 	find record (ops_params_dev,key=firm_id$+"AR00",err=std_missing_params)ops_params$
-	callpoint!.setDevObject("sls_tax_intrface",ops_params.sls_tax_intrface$)
+	callpoint!.setDevObject("sls_tax_intrface",cvs(ops_params.sls_tax_intrface$,2))
 
 [[OPC_TAXCODE.GL_ACCOUNT.AVAL]]
 rem "GL INACTIVE FEATURE"

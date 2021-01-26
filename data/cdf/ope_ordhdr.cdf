@@ -767,12 +767,12 @@ end_pointofsale:
 	user_tpl.warehouse_id$ = pointofsale_rec.warehouse_id$	
 
 rem --- When using Sales Tax Service, get connection
-	callpoint!.setDevObject("salesTax",null())
+	callpoint!.setDevObject("salesTaxObject",null())
 	if callpoint!.getDevObject("sls_tax_intrface")<>"" then
 		rem --- Get connection to Sales Tax Service
 		salesTax!=new AvaTaxInterface(firm_id$)
 		if salesTax!.connectClient(Form!,err=connectErr) then
-			callpoint!.setDevObject("salesTax",salesTax!)
+			callpoint!.setDevObject("salesTaxObject",salesTax!)
 
 			rem --- Warn if in test mode
 			if salesTax!.isTestMode() then
@@ -1010,7 +1010,7 @@ rem --- As necessary, handle Cancel and new warnings from ope_createwos form
 	endif
 
 rem --- Close connection to Sales Tax Service
-	salesTax!=callpoint!.getDevObject("salesTax")
+	salesTax!=callpoint!.getDevObject("salesTaxObject")
 	if salesTax!<>null() then
 		salesTax!.close()
 	endif
@@ -1446,7 +1446,7 @@ rem --- get AR Params
 	callpoint!.setDevObject("totals_warn",ars01a.op_totals_warn$)
 	callpoint!.setDevObject("check_po_dupes",ars01a.op_check_dupe_po$)
 	callpoint!.setDevObject("op_create_wo",ars01a.op_create_wo$)
-	callpoint!.setDevObject("sls_tax_intrface", ars01a.sls_tax_intrface$)
+	callpoint!.setDevObject("sls_tax_intrface", cvs(ars01a.sls_tax_intrface$,2))
 
 	dim ars_credit$:open_tpls$[7]
 	read record (num(open_chans$[7]), key=firm_id$+"AR01") ars_credit$
@@ -3531,20 +3531,43 @@ rem IN: disc_amt
 rem IN: freight_amt
 rem ==========================================================================
 
-	if cvs(callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"),2) <> ""
-		ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-		ordHelp!.setTaxCode(callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"))
-		taxable_sales = num(ordHelp!.getTaxableSales())
-		taxAndTaxableVect! = ordHelp!.calculateTax(disc_amt, freight_amt,
-:											taxable_sales,
-:											num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")))
+	rem --- Using a sales tax service?
+	use_tax_service=0
+	if callpoint!.getDevObject("sls_tax_intrface")<>"" then
+		opc_taxcode_dev = fnget_dev("OPC_TAXCODE")
+		dim opc_taxcode$:fnget_tpl$("OPC_TAXCODE")
+		findrecord(opc_taxcode_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"),dom=*next)opc_taxcode$
+		use_tax_service=opc_taxcode.use_tax_service
+	endif
 
-		tax_amount = taxAndTaxableVect!.getItem(0)
-		taxable_amt = taxAndTaxableVect!.getItem(1)
 
-		callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",str(tax_amount))
-		callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",str(taxable_amt))
-		callpoint!.setStatus("REFRESH")
+use_tax_service=0; rem wgh ... 9806 ... testing
+	if use_tax_service then
+		rem --- Use sales tax service
+		salesTax!=callpoint!.getDevObject("salesTaxObject")
+		gosub get_disk_rec
+		success=0
+rem wgh ... 9806 ... testing calculate_tax
+		tax_amount=salesTax!.calculateTax(ordhdr_rec$,"SalesOrder",err=*next); success=1
+if !success then
+escape; rem wgh ... 9806 ... testing ... NOT success
+endif
+rem wgh ... 9806 ... What about the taxable_amt? Is it the same as taxable_sales?
+	else
+		if cvs(callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"),2) <> "" then
+			ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+			ordHelp!.setTaxCode(callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"))
+			taxable_sales = num(ordHelp!.getTaxableSales())
+			taxAndTaxableVect! = ordHelp!.calculateTax(disc_amt, freight_amt,taxable_sales,
+:				num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")))
+
+			tax_amount = taxAndTaxableVect!.getItem(0)
+			taxable_amt = taxAndTaxableVect!.getItem(1)
+
+			callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",str(tax_amount))
+			callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",str(taxable_amt))
+			callpoint!.setStatus("REFRESH")
+		endif
 	endif
 	return
 
