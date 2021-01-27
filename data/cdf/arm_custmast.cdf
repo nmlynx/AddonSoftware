@@ -480,7 +480,6 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :                       dflt_data$[all]
 
 [[ARM_CUSTMAST.AOPT-XMPT]]
-rem wgh ... 9806 ... stopped here
 rem --- Launch Customer Sales Tax Exemptions form for this customer
 	user_id$=stbl("+USER_ID")
 	customer_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
