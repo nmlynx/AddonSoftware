@@ -3540,19 +3540,20 @@ rem ==========================================================================
 		use_tax_service=opc_taxcode.use_tax_service
 	endif
 
-
-use_tax_service=0; rem wgh ... 9806 ... testing
 	if use_tax_service then
 		rem --- Use sales tax service
 		salesTax!=callpoint!.getDevObject("salesTaxObject")
 		gosub get_disk_rec
 		success=0
-rem wgh ... 9806 ... testing calculate_tax
-		tax_amount=salesTax!.calculateTax(ordhdr_rec$,"SalesOrder",err=*next); success=1
-if !success then
-escape; rem wgh ... 9806 ... testing ... NOT success
-endif
-rem wgh ... 9806 ... What about the taxable_amt? Is it the same as taxable_sales?
+		taxProps!=salesTax!.calculateTax(ordhdr_rec$,"SalesOrder",err=*next); success=1
+		if !success then
+escape; rem wgh ... 9806 ... testing ... tax calculation failed
+rem wgh ... 9806 ... stopped here ... need to handle tax calculation error
+		else
+			callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",taxProps!.getProperty("tax_amount"))
+			callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",taxProps!.getProperty("taxable_amt"))
+			callpoint!.setStatus("REFRESH")
+		endif
 	else
 		if cvs(callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"),2) <> "" then
 			ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
