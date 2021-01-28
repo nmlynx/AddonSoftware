@@ -1066,7 +1066,7 @@ resolveZipCode_error:rem --- Modified method error trap/handler (11Oct2017)
                     armCustExmpt.expire_date$=expirationDate$
                     writerecord(#devArmCustExmpt)armCustExmpt$
                 else
-                    if cvs(armCustExmpt.exempt_no$,3)<>cvs(certId$,3) or armCustExmpt.expire_date$<expirationDate$
+                    if cvs(armCustExmpt.exempt_no$,3)<>cvs(certId$,3) and armCustExmpt.expire_date$<expirationDate$
                         rem --- Update ARM_CUSTEXMPT record with latest certificate ID and expiration date
                         armCustExmpt.exempt_no$=certId$
                         armCustExmpt.expire_date$=expirationDate$
