@@ -681,10 +681,10 @@ ar_open_invoice_detail: rem --- AR Open Invoice Detail
         rem --- Update arm-02 Customer Summary
 
             extract record (arm02_dev,key=firm_id$+ope01a.customer_id$+ope01a.ar_type$,dom=accumulate_mtd_sales) arm02a$
-            if cvs(arm02a.report_date$,2)="" then arm02a.report_date$=sysinfo.system_date$
             aging_date$=arm02a.report_date$
-            if cvs(arm02a.report_type$,2)="" then arm02a.report_type$="I"
             age_by$=arm02a.report_type$
+            if cvs(aging_date$,2)="" then aging_date$=sysinfo.system_date$
+            if cvs(age_by$,2)="" then age_by$=iff(cvs(ars01a.dflt_age_by$,2)="","I",ars01a.dflt_age_by$)
 
             rem --- Determine 30 day aging period dates
             period_dates$=""
@@ -713,6 +713,8 @@ ar_open_invoice_detail: rem --- AR Open Invoice Detail
 
             inv_hist_flg$=arm02a.inv_hist_flg$
             arm02a.lstinv_date$ = ope01a.invoice_date$
+            arm02a.report_type$=age_by$
+            arm02a.report_date$=aging_date$
             arm02a$ = field(arm02a$)
             write record (arm02_dev) arm02a$
             goto accumulate_mtd_sales
@@ -728,7 +730,6 @@ ar_open_invoice_detail: rem --- AR Open Invoice Detail
             endif
 
         accumulate_mtd_sales: rem --- Accoumulate MTD Sales
-
             if ope01a.invoice_date$<=g9$ then
                 t[2]=t[2]+ope01a.tax_amount
                 t[3]=t[3]+ope01a.freight_amt
@@ -803,7 +804,6 @@ ar_open_invoice_detail: rem --- AR Open Invoice Detail
         endif
 
     rem --- Update invoice total sales and cost
-
         ope01a.lock_status$="2"
         ope01a.total_sales=total_ext
         ope01a.total_cost=total_cost

@@ -216,6 +216,48 @@ rem --- Save controls in the global userObj! (vector)
 	userObj!.addItem(mwin!.addStaticText(15108,695,35,160,15,"",$0000$)); rem Manual Price  (9)
  	userObj!.addItem(mwin!.addStaticText(15109,695,50,160,15,"",$0000$)); rem Alt/Super (10)
 
+[[OPE_ORDHDR.AOPT-AGNG]]
+rem --- Update this customer's aging stats if allowed by param
+	
+	rem --- Skip unless current processing date is greater than last aging date
+	armCustDet_dev=fnget_dev("ARM_CUSTDET")
+	dim armCustDet$:fnget_tpl$("ARM_CUSTDET")
+	armCustDet.firm_id$=firm_id$
+	armCustDet.customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	armCustDet.ar_type$=""
+	readrecord(armCustDet_dev,key=armCustDet.firm_id$+armCustDet.customer_id$+armCustDet.ar_type$)armCustDet$
+	if cvs(armCustDet.report_type$,2)="" then armCustDet.report_type$=iff(cvs(callpoint!.getDevObject("dflt_age_by"),2)="","I",callpoint!.getDevObject("dflt_age_by"))
+	sysDate$=stbl("+SYSTEM_DATE")
+	if sysDate$>armCustDet.report_date$ then
+		customer_id$=armCustDet.customer_id$
+		endcust$=customer_id$
+		call stbl("+DIR_PGM")+"arc_custaging.aon",customer_id$,endcust$,sysDate$,armCustDet.report_type$,status
+		rem --- re-read cust detail record and refresh aging fields
+		readrecord(armCustDet_dev,key=armCustDet.firm_id$+armCustDet.customer_id$+armCustDet.ar_type$)armCustDet$
+		callpoint!.setColumnData("<<DISPLAY>>.AGING_FUTURE",armCustDet.aging_future$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.AGING_CUR",armCustDet.aging_cur$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.AGING_30",armCustDet.aging_30$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.AGING_60",armCustDet.aging_60$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.AGING_90",armCustDet.aging_90$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.AGING_120",armCustDet.aging_120$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.REPORT_DATE",armCustDet.report_date$,1)
+		switch pos(armCustDet.report_type$=" DI")
+			case 1
+				report_type$=""
+				break
+			case 2
+				report_type$="D - Due Date"
+				break
+			case 3
+				report_type$="I - Invoice Date"
+				break
+			case default
+				report_type$="Unknown"
+				break
+		swend
+		callpoint!.setColumnData("<<DISPLAY>>.REPORT_TYPE",report_type$,1)
+	endif
+
 [[OPE_ORDHDR.AOPT-CINV]]
 rem --- Credit Historical Invoice
 
@@ -1447,6 +1489,13 @@ rem --- get AR Params
 	callpoint!.setDevObject("check_po_dupes",ars01a.op_check_dupe_po$)
 	callpoint!.setDevObject("op_create_wo",ars01a.op_create_wo$)
 	callpoint!.setDevObject("sls_tax_intrface", cvs(ars01a.sls_tax_intrface$,2))
+	if ars01a.on_demand_aging$="Y"
+		callpoint!.setDevObject("on_demand_aging",ars01a.on_demand_aging$)
+		callpoint!.setDevObject("dflt_age_by",ars01a.dflt_age_by$)
+		callpoint!.setOptionEnabled("AGNG",1)
+	else
+		callpoint!.setOptionEnabled("AGNG",0)
+	endif
 
 	dim ars_credit$:open_tpls$[7]
 	read record (num(open_chans$[7]), key=firm_id$+"AR01") ars_credit$
