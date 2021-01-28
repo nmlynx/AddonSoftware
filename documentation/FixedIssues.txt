@@ -8,5 +8,21 @@
 BBjBaristaAddonDemos2031_01-21-2021_1627.jar
 
 =======================================================================================================================================
+Revision: 07ce06a72beabafc0d7b3d6cfc5d560dd0355298
+Author: Christine <chawkins@basis.com>
+Date: 1/22/2021 12:22:04 PM
+Message:
+Bug 10094 - BM - Changing line type on operations row incorrectly clears internal_seq_no
+ - don't clear ISN in ops record when changing new row from standard to memo or vice versa
+Bug 10095 - BM - Changing an existing operations record can leave invalid op_seq_ref in materials/subcontracts records
+ - altered all three grids to make line type 'display only for existing records'
+
+(cherry picked from commit 9b3d90bcfb728f1fa2bb9ef7ad9ab43dd036cba6)
+----
+Modified: data/bar/bmm_billmat.xml
+Modified: data/bar/bmm_billoper.xml
+Modified: data/bar/bmm_billsub.xml
+Modified: data/cdf/bmm_billoper.cdf
+
 
 
