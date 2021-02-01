@@ -25,15 +25,16 @@ rem --- When using Sales Tax Service, get connection
 				endif
 			endif
 		else
-			callpoint!.setStatus("EXIT")
-			break
+			if salesTax!<>null() then salesTax!.close()
+			salesTax!=null()
 		endif
 	endif
 
 	break
 
 connectErr:
-	callpoint!.setStatus("EXIT")
+	if salesTax!<>null() then salesTax!.close()
+	salesTax!=null()
 
 	break
 
