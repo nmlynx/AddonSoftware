@@ -4018,5 +4018,20 @@ rem ==========================================================================
 
 	return
 
+rem ==========================================================================
+isTotalsTab: rem --- determine if the Totals tab has focus
+rem OUT: isTotalsTab
+rem ==========================================================================
+	isTotalsTab=0
+	formCtrls!=Form!.getAllControls()
+	for i=0 to formCtrls!.size()-1
+		thisCtrl!=formCtrls!.getItem(i)
+		if thisCtrl!.getControlType() = SysGUI!.TAB_CONTROL then
+			if thisCtrl!.getSelectedIndex() = thisCtrl!.getNumTabs()-1 then isTotalsTab=1
+			break
+		endif
+	next i
+	return
+
 
 
