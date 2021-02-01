@@ -3597,11 +3597,21 @@ rem ==========================================================================
 		success=0
 		taxProps!=salesTax!.calculateTax(ordhdr_rec$,"SalesOrder",err=*next); success=1
 		if !success then
-escape; rem wgh ... 9806 ... testing ... tax calculation failed
-rem wgh ... 9806 ... stopped here ... need to handle tax calculation error
+			rem --- Sales tax calculation failed
+			msg_id$="OP_TAX_CALC_FAILED"
+			gosub disp_message
+
+			callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
+			taxAmount!=callpoint!.getControl("OPE_ORDHDR.TAX_AMOUNT")
+			call stbl("+DIR_SYP")+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
+			taxAmount!.setBackColor(rdErrorColor!)
 		else
 			callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",taxProps!.getProperty("tax_amount"))
 			callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",taxProps!.getProperty("taxable_amt"))
+			callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(0))
+			taxAmount!=callpoint!.getControl("OPE_ORDHDR.TAX_AMOUNT")
+			disabledColor!=SysGUI!.makeColor(250,250,250)
+			taxAmount!.setBackColor(disabledColor!)
 			callpoint!.setStatus("REFRESH")
 		endif
 	else
