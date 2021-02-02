@@ -1787,9 +1787,6 @@ rem --- setup message_tpl$
 
 	gosub init_msgs
 
-rem --- Get next available control ID
-	callpoint!.setDevObject("nxt_ctlID",num(stbl("+CUSTOM_CTL",err=std_error)))
-
 [[OPE_ORDHDR.BWAR]]
 rem --- Calculate Taxes
 
