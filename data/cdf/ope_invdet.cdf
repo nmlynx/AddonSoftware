@@ -76,12 +76,11 @@ rem --- Initialize UM_SOLD ListButton except when line type is non-stock
 		col_hdr$=callpoint!.getTableColumnAttribute("OPE_INVDET.UM_SOLD","LABS")
 		col_ref=util.getGridColumnNumber(dtlGrid!, col_hdr$)
 		row=callpoint!.getValidationRow()
-		nxt_ctlID=callpoint!.getDevObject("nxt_ctlID")
+		nxt_ctlID=util.getNextControlID()
 		umList!=Form!.addListButton(nxt_ctlID,10,10,100,100,"",$0810$)
 		umList!.addItem("")
 		dtlGrid!.setCellListControl(row,col_ref,umList!)
 		dtlGrid!.setCellListSelection(row,col_ref,0,0)
-		callpoint!.setDevObject("nxt_ctlID",nxt_ctlID+1)
 		if cvs(callpoint!.getColumnData("OPE_INVDET.UM_SOLD"),2)<>"" then
 			ivm01_dev=fnget_dev("IVM_ITEMMAST")
 			ivm01_tpl$=fnget_tpl$("IVM_ITEMMAST")
@@ -2431,12 +2430,11 @@ rem ==========================================================================
 			umList!=null()
 			umList!=dtlGrid!.getCellListControl(row,col_ref,err=*next)
 			if umList!=null() then
-				nxt_ctlID=callpoint!.getDevObject("nxt_ctlID")
+				nxt_ctlID=util.getNextControlID()
 				umList!=Form!.addListButton(nxt_ctlID,10,10,100,100,"",$0810$)
 				umList!.addItem("")
 				dtlGrid!.setCellListControl(row,col_ref,umList!)
 				dtlGrid!.setCellListSelection(row,col_ref,0,0)
-				callpoint!.setDevObject("nxt_ctlID",nxt_ctlID+1)
 			endif
 		endif
 
