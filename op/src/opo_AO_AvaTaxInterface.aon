@@ -354,8 +354,11 @@ AO_AvaTaxInterface_error:rem --- Method error trap/handler (11Oct2017)
             ypos=int((form!.getHeight()-height)/2)
 
             rem --- Show busy/working image
-            nxt_ctlID=util.getNextControlID()
-            #busyImage!=form!.addImageCtrl(nxt_ctlID,xpos,ypos,width,height,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+            if #busyImage!=null() then
+                nextCtrlID=util.getNextControlID()
+                #busyImage!=form!.addImageCtrl(nextCtrlID,xpos,ypos,width,height,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+            endif
+            #busyImage!.setVisible(1)
 
             methodret
             
@@ -380,8 +383,8 @@ busyImageStart_error:rem --- Method error trap/handler (11Oct2017)
         method public void busyImageStop()
             seterr busyImageStop_error
             
-            rem --- Remove busy/working image from progress meter
-            #busyImage!.destroy(err=*next)
+            rem --- Hide busy/working image
+            #busyImage!.setVisible(0)
 
             methodret
             
