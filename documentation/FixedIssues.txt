@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-01-25
+ Report Date:   2021-02-02
  Report Branch: AddonSoftware 20.32
  Last Release:  AddonSoftware 20.31
 =======================================================================================================================================
@@ -23,6 +23,22 @@ Modified: data/bar/bmm_billmat.xml
 Modified: data/bar/bmm_billoper.xml
 Modified: data/bar/bmm_billsub.xml
 Modified: data/cdf/bmm_billoper.cdf
+
+=======================================================================================================================================
+Revision: 44bb7e02113e2362d5c8c1ae03733cc87c25be4a
+Author: Christine <chawkins@basis.com>
+Date: 2/2/2021 12:09:55 PM
+Message:
+Bug 10106 - Using "OTA" flags in bmc_getcost can cause ivw-04 to be opened when it doesn't need to be
+ - altered file open setup to ust "FT" flags for ivw-04 instead of "OTA." This tells Barista to just return the channel if the file is open, rather than opening it.
+
+(cherry picked from commit a11c5243632c21964703d0c86e8a8922459f9d59)
+----
+Modified: bm/src/bmc_getcost.aon
+
+
+
+
 
 
 
