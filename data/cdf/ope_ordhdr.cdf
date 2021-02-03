@@ -87,6 +87,7 @@ rem --- Enable buttons
 	callpoint!.setOptionEnabled("RPRT",num(callpoint!.getDevObject("reprintable")))
 	callpoint!.setOptionEnabled("TTLS",1)
 	callpoint!.setOptionEnabled("SHPT",1)
+	callpoint!.setOptionEnabled("RTAX",1)
 
 
 rem --- Set all previous values
@@ -449,6 +450,12 @@ rem --- Remove temporary soft lock used just for this print task
 		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
 	endif
 
+[[OPE_ORDHDR.AOPT-RTAX]]
+rem --- Recalculate sales tax now
+	disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+	gosub calculate_tax
+
 [[OPE_ORDHDR.AOPT-SHPT]]
 rem --- Launch Shipment Tracking maintenance grid
 	ar_type$=callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
@@ -518,6 +525,7 @@ rem --- Enable buttons as appropriate
 			rem callpoint!.setOptionEnabled("CRAT",0); rem --- handled via opc_creditmsg.aon call below
 			callpoint!.setOptionEnabled("WOLN",0)
 			callpoint!.setOptionEnabled("SHPT",0)
+			callpoint!.setOptionEnabled("RTAX",0)
 		else
 			callpoint!.setOptionEnabled("DINV",0)
 			callpoint!.setOptionEnabled("CINV",0)
@@ -526,6 +534,7 @@ rem --- Enable buttons as appropriate
 			callpoint!.setOptionEnabled("TTLS",1)
 			rem callpoint!.setOptionEnabled("CRAT",1); rem --- handled via opc_creditmsg.aon call below
 			callpoint!.setOptionEnabled("SHPT",1)
+			callpoint!.setOptionEnabled("RTAX",1)
 
 			op_create_wo$=callpoint!.getDevObject("op_create_wo")
 			if op_create_wo$="A" then
@@ -665,6 +674,7 @@ rem --- Set flags
 	callpoint!.setOptionEnabled("TTLS",0)
 	callpoint!.setOptionEnabled("WOLN",0)
 	callpoint!.setOptionEnabled("SHPT",0)
+	callpoint!.setOptionEnabled("RTAX",0)
 
 rem --- Clear order helper object
 
@@ -1221,6 +1231,7 @@ rem --- Disable header buttons
 	callpoint!.setOptionEnabled("TTLS",0)
 	callpoint!.setOptionEnabled("WOLN",0)
 	callpoint!.setOptionEnabled("SHPT",0)
+	callpoint!.setOptionEnabled("RTAX",0)
 
 rem --- Capture current totals so we can tell later if they were changed in the grid
 
@@ -1792,21 +1803,13 @@ rem --- Calculate Taxes
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 
-	if ordHelp!.getCust_id() = "" or ordHelp!.getOrder_no() = "" or user_tpl.do_end_of_form = 0 then
+	if ordHelp!.getCust_id() = "" or ordHelp!.getOrder_no() = "" then
 		break; rem --- exit callpoint
 	endif
 
-	discount_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+	disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
-	taxable_sales = num(ordHelp!.getTaxableSales())
-	taxAndTaxableVect! = ordHelp!.calculateTax(discount_amt, freight_amt, taxable_sales,
-:										num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")))
-
-	tax_amount = taxAndTaxableVect!.getItem(0)
-	taxable_amt = taxAndTaxableVect!.getItem(1)
-
-	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",str(tax_amount))
-	callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",str(taxable_amt))
+	gosub calculate_tax
 
 [[OPE_ORDHDR.BWRI]]
 rem --- Has customer and order number been entered?
@@ -2594,26 +2597,20 @@ rem --- Set Commission Percent
 	gosub get_comm_percent
 
 [[OPE_ORDHDR.TAX_CODE.AVAL]]
+rem --- Skip if the TAX_CODE hasn't changed
+	tax_code$=callpoint!.getUserInput()
+	if tax_code$=callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE") then break
+
 rem --- Set code in the Order Helper object
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-	ordHelp!.setTaxCode(callpoint!.getUserInput())
+	ordHelp!.setTaxCode(tax_code$)
 
 rem --- Calculate Taxes
 
-	discount_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+	disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
-	taxable_sales = num(ordHelp!.getTaxableSales())
-	taxAndTaxableVect! = ordHelp!.calculateTax(discount_amt, freight_amt,
-:										taxable_sales,
-:										num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")))
-
-	tax_amount = taxAndTaxableVect!.getItem(0)
-	taxable_amt = taxAndTaxableVect!.getItem(1)
-
-	callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",str(tax_amount))
-	callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",str(taxable_amt))
-	callpoint!.setStatus("REFRESH")
+	gosub calculate_tax
 
 [[OPE_ORDHDR.<CUSTOM>]]
 #include [+ADDON_LIB]std_functions.aon
@@ -3585,66 +3582,68 @@ rem IN: disc_amt
 rem IN: freight_amt
 rem ==========================================================================
 
-	rem --- Skip sales tax calculation unless previously deferred or failed
-	if num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 then
+	rem --- Do sales tax calculation if on Totals tab, or from BWAR and calculation previously skipped or failed, or from AOPT-RTAX.
+	gosub isTotalsTab
+	eventFrom$=callpoint!.getCallpointEvent()
+	if isTotalsTab or eventFrom$="OPE_ORDHDR.AOPT-RTAX" or 
+:		(eventFrom$="OPE_ORDHDR.BWAR" and num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1) then
 
-		rem --- Except for BWAR, skip sales tax calculation unless the Totals tab is displayed
-		gosub isTotalsTab
-		eventFrom$=callpoint!.getCallpointEvent()
-		if isTotalsTab or eventFrom$="OPE_ORDHDR.BWAR" then
+		rem --- Using a sales tax service?
+		use_tax_service=0
+		if callpoint!.getDevObject("sls_tax_intrface")<>"" then
+			opc_taxcode_dev = fnget_dev("OPC_TAXCODE")
+			dim opc_taxcode$:fnget_tpl$("OPC_TAXCODE")
+			findrecord(opc_taxcode_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"),dom=*next)opc_taxcode$
+			use_tax_service=opc_taxcode.use_tax_service
+		endif
 
-			rem --- Using a sales tax service?
-			use_tax_service=0
-			if callpoint!.getDevObject("sls_tax_intrface")<>"" then
-				opc_taxcode_dev = fnget_dev("OPC_TAXCODE")
-				dim opc_taxcode$:fnget_tpl$("OPC_TAXCODE")
-				findrecord(opc_taxcode_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"),dom=*next)opc_taxcode$
-				use_tax_service=opc_taxcode.use_tax_service
-			endif
+		if use_tax_service then
+			rem --- Use sales tax service
+			salesTax!=callpoint!.getDevObject("salesTaxObject")
+			gosub get_disk_rec
+			success=0
+			taxProps!=salesTax!.calculateTax(ordhdr_rec$,"SalesOrder",err=*next); success=1
+			if !success then
+				rem --- Sales tax calculation failed
+				callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
+				taxAmount!=callpoint!.getControl("OPE_ORDHDR.TAX_AMOUNT")
+				call stbl("+DIR_SYP")+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
+				taxAmount!.setBackColor(rdErrorColor!)
 
-			if use_tax_service then
-				rem --- Use sales tax service
-				salesTax!=callpoint!.getDevObject("salesTaxObject")
-				gosub get_disk_rec
-				success=0
-				taxProps!=salesTax!.calculateTax(ordhdr_rec$,"SalesOrder",err=*next); success=1
-				if !success then
-					rem --- Sales tax calculation failed
-					callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
-					taxAmount!=callpoint!.getControl("OPE_ORDHDR.TAX_AMOUNT")
-					call stbl("+DIR_SYP")+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
-					taxAmount!.setBackColor(rdErrorColor!)
-
-					msg_id$="OP_TAX_CALC_FAILED"
-					gosub disp_message
-				else
-					callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",taxProps!.getProperty("tax_amount"),1)
-					callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",taxProps!.getProperty("taxable_amt"),1)
-					callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(0))
-					taxAmount!=callpoint!.getControl("OPE_ORDHDR.TAX_AMOUNT")
-					disabledColor!=SysGUI!.makeColor(250,250,250)
-					taxAmount!.setBackColor(disabledColor!)
-				endif
+				msg_id$="OP_TAX_CALC_FAILED"
+				dim msg_tokens$[1]
+				msg_tokens$[1] = Translate!.getTranslation("AON_ORDER")
+				gosub disp_message
 			else
-				if cvs(callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"),2) <> "" then
-					ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-					ordHelp!.setTaxCode(callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"))
-					taxable_sales = num(ordHelp!.getTaxableSales())
-					taxAndTaxableVect! = ordHelp!.calculateTax(disc_amt, freight_amt,taxable_sales,
-:						num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")))
+				callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",taxProps!.getProperty("tax_amount"),1)
+				callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",taxProps!.getProperty("taxable_amt"),1)
+				callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(0))
+				taxAmount!=callpoint!.getControl("OPE_ORDHDR.TAX_AMOUNT")
+				disabledColor!=SysGUI!.makeColor(250,250,250)
+				taxAmount!.setBackColor(disabledColor!)
+			endif
+		else
+			if cvs(callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"),2) <> "" then
+				ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+				ordHelp!.setTaxCode(callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"))
+				taxable_sales = num(ordHelp!.getTaxableSales())
+				taxAndTaxableVect! = ordHelp!.calculateTax(disc_amt, freight_amt,taxable_sales,
+:					num(callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES")))
 
-					tax_amount = taxAndTaxableVect!.getItem(0)
-					taxable_amt = taxAndTaxableVect!.getItem(1)
+				tax_amount = taxAndTaxableVect!.getItem(0)
+				taxable_amt = taxAndTaxableVect!.getItem(1)
 
-					callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",str(tax_amount),1)
-					callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",str(taxable_amt),1)
-					callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(0))
-					taxAmount!=callpoint!.getControl("OPE_ORDHDR.TAX_AMOUNT")
-					disabledColor!=SysGUI!.makeColor(250,250,250)
-					taxAmount!.setBackColor(disabledColor!)
-				endif
+				callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",str(tax_amount),1)
+				callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",str(taxable_amt),1)
+				callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(0))
+				taxAmount!=callpoint!.getControl("OPE_ORDHDR.TAX_AMOUNT")
+				disabledColor!=SysGUI!.makeColor(250,250,250)
+				taxAmount!.setBackColor(disabledColor!)
 			endif
 		endif
+	else
+		rem --- Sales tax calculation has been deferred
+		if eventFrom$<>"OPE_ORDHDR.ADIS" then callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
 	endif
 
 	return
