@@ -1,3 +1,28 @@
+[[OPE_ORDHDR.ACUS]]
+rem --- Process custom event
+rem This routine is executed when callbacks have been set to run a 'custom event'.
+rem Analyze gui_event$ and notice$ to see which control's callback triggered the event, and what kind of event it is.
+rem See basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info.
+
+	dim gui_event$:tmpl(gui_dev)
+	dim notify_base$:noticetpl(0,0)
+	gui_event$=SysGUI!.getLastEventString()
+	ctl_ID=dec(gui_event.ID$)
+
+	notify_base$=notice(gui_dev,gui_event.x%)
+	dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
+	notice$=notify_base$
+
+	rem --- The tab control
+	if ctl_ID=num(stbl("+TAB_CTL")) then
+		switch notice.code
+			case 2; rem --- ON_TAB_SELECT
+				gosub isTotalsTab
+				if isTotalsTab then gosub calculate_tax
+			break
+		swend
+	endif
+
 [[OPE_ORDHDR.ADEL]]
 rem --- Remove from ope-04
 
@@ -651,8 +676,8 @@ rem --- Set data
 
 	user_tpl.order_date$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_DATE")
 
-	idx=form!.getControl(num(stbl("+TAB_CTL"))).getSelectedIndex()
-	if idx<>2
+	gosub isTotalsTab
+	if isTotalsTab then
 		callpoint!.setDevObject("was_on_tot_tab","N")
 	else
 		callpoint!.setDevObject("was_on_tot_tab","Y")
@@ -1798,6 +1823,15 @@ rem --- setup message_tpl$
 
 	gosub init_msgs
 
+rem --- Set callback for a tab being selected, and save the tab control ID
+	tabCtrl!=Form!.getControl(num(stbl("+TAB_CTL")))
+	tabCtrl!.setCallback(BBjTabCtrl.ON_TAB_SELECT,"custom_event")
+	if tabCtrl!.getTitleAt(2)<>Translate!.getTranslation("AON_TOTALS") then
+		escape; rem --- You need to adjust the code for the change in the Totals tab name and/or index.
+		rem --- If the name was changed, then change the translation above for the new name.
+		rem --- If the index was changed, then change the isTotalsTab subroutine for the new index.
+	endif
+
 [[OPE_ORDHDR.BWAR]]
 rem --- Calculate Taxes
 
@@ -2017,12 +2051,14 @@ rem --- Discount Amount cannot exceed Total Sales Amount
 		callpoint!.setUserInput(str(disc_amt))
 	endif
 
-rem --- Recalculate totals
+rem --- Skip if the disc_amt hasn't changed
+	if disc_amt=num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT")) then break
 
+rem --- Force recalculate totals
+
+	callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
 	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
 	gosub calculate_tax
-	gosub disp_totals
-	callpoint!.setDevObject("was_on_tot_tab","Y")
 
 [[OPE_ORDHDR.DISCOUNT_AMT.BINP]]
 rem --- Now we've been on the Totals tab
@@ -2048,21 +2084,17 @@ rem --- Set discount code for use in Order Totals
 	disc_amt = new_disc_amt
 	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
 	gosub calculate_tax
-	gosub disp_totals
 
 [[OPE_ORDHDR.FREIGHT_AMT.AVAL]]
-rem --- Recalculate totals
-
-	disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+rem --- Skip if the FREIGHT_AMT hasn't changed
 	freight_amt = num(callpoint!.getUserInput())
-	prev_freight_amt=num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
-	gosub calculate_tax
-	gosub disp_totals
+	if freight_amt=num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT")) then break
 
-	callpoint!.setDevObject("was_on_tot_tab","Y")
-	if freight_amt<>prev_freight_amt then
-	 	callpoint!.setFocus("<<DISPLAY>>.NET_SALES")
-	endif
+rem --- Force recalculate totals
+
+	callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
+	disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+	gosub calculate_tax
 
 [[OPE_ORDHDR.FREIGHT_AMT.BINP]]
 rem --- Now we've been on the Totals tab
@@ -2183,7 +2215,6 @@ rem --- Convert Quote?
 					callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",str(taxable_amt))
 					freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
 					gosub calculate_tax
-					gosub disp_totals
 				endif
 
 				precision old_prec
@@ -2824,7 +2855,6 @@ rem ==========================================================================
 	disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
 	gosub calculate_tax
-	gosub disp_totals
 
 	callpoint!.setStatus("REFRESH")
 
@@ -3582,12 +3612,18 @@ rem IN: disc_amt
 rem IN: freight_amt
 rem ==========================================================================
 
-	rem --- Do sales tax calculation if on Totals tab, or from BWAR and calculation previously skipped or failed, or from AOPT-RTAX.
+rem wgh ... 9806 ... must be in Edit mode to update tax ... callpoint!.isEditMode()
+	rem --- Do sales tax calculation?
+	rem --- Always do calculation if for Recalculate Tax additional option AOPT-RTAX
+	rem --- Do calculation if previously skipped or failed, and on Totals tab or from ACUS or from BWAR.
 	gosub isTotalsTab
 	eventFrom$=callpoint!.getCallpointEvent()
-	if isTotalsTab or eventFrom$="OPE_ORDHDR.AOPT-RTAX" or 
-:		(eventFrom$="OPE_ORDHDR.BWAR" and num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1) then
+rem wgh ... 9806 ... stopped here
+print"eventFrom$=",eventFrom$
+	if eventFrom$="OPE_ORDHDR.AOPT-RTAX" or (num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 and 
+:		(isTotalsTab or pos(eventFrom$="OPE_ORDHDR.ACUS:OPE_ORDHDR.BWAR")))
 
+rem escape; rem wgh ... 9806 ... do tax calc
 		rem --- Using a sales tax service?
 		use_tax_service=0
 		if callpoint!.getDevObject("sls_tax_intrface")<>"" then
@@ -3599,13 +3635,16 @@ rem ==========================================================================
 
 		if use_tax_service then
 			rem --- Use sales tax service
-			salesTax!=callpoint!.getDevObject("salesTaxObject")
+			callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT",str(disc_amt),1)
+			callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT",str(freight_amt),1)
 			gosub get_disk_rec
+			salesTax!=callpoint!.getDevObject("salesTaxObject")
 			success=0
 			taxProps!=salesTax!.calculateTax(ordhdr_rec$,"SalesOrder",err=*next); success=1
 			if !success then
 				rem --- Sales tax calculation failed
 				callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
+
 				taxAmount!=callpoint!.getControl("OPE_ORDHDR.TAX_AMOUNT")
 				call stbl("+DIR_SYP")+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
 				taxAmount!.setBackColor(rdErrorColor!)
@@ -3618,6 +3657,8 @@ rem ==========================================================================
 				callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",taxProps!.getProperty("tax_amount"),1)
 				callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",taxProps!.getProperty("taxable_amt"),1)
 				callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(0))
+				gosub disp_totals
+
 				taxAmount!=callpoint!.getControl("OPE_ORDHDR.TAX_AMOUNT")
 				disabledColor!=SysGUI!.makeColor(250,250,250)
 				taxAmount!.setBackColor(disabledColor!)
@@ -3636,6 +3677,8 @@ rem ==========================================================================
 				callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",str(tax_amount),1)
 				callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",str(taxable_amt),1)
 				callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(0))
+				gosub disp_totals
+
 				taxAmount!=callpoint!.getControl("OPE_ORDHDR.TAX_AMOUNT")
 				disabledColor!=SysGUI!.makeColor(250,250,250)
 				taxAmount!.setBackColor(disabledColor!)
@@ -3643,7 +3686,10 @@ rem ==========================================================================
 		endif
 	else
 		rem --- Sales tax calculation has been deferred
-		if eventFrom$<>"OPE_ORDHDR.ADIS" then callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
+rem escape; rem wgh ... 9806 ... skip tax calc
+		if !isTotalsTab and pos(eventFrom$="OPE_ORDHDR.ADIS:OPE_ORDHDR.ACUS:OPE_ORDHDR.BWAR")=0 then
+			callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
+		endif
 	endif
 
 	return
@@ -3719,14 +3765,9 @@ isTotalsTab: rem --- determine if the Totals tab has focus
 rem OUT: isTotalsTab
 rem ==========================================================================
 	isTotalsTab=0
-	formCtrls!=Form!.getAllControls()
-	for i=0 to formCtrls!.size()-1
-		thisCtrl!=formCtrls!.getItem(i)
-		if thisCtrl!.getControlType() = SysGUI!.TAB_CONTROL then
-			if thisCtrl!.getSelectedIndex() = thisCtrl!.getNumTabs()-1 then isTotalsTab=1
-			break
-		endif
-	next i
+	tabCtrl!=Form!.getControl(num(stbl("+TAB_CTL")))
+	if tabCtrl!.getSelectedIndex() = tabCtrl!.getNumTabs()-1 then isTotalsTab=1
+
 	return
 
 
