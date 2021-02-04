@@ -96,6 +96,8 @@ rem --- Enable buttons
 		callpoint!.setOptionEnabled("UINV",0)
 	endif
 
+	callpoint!.setOptionEnabled("AGNG",iff(callpoint!.getDevObject("on_demand_aging")="Y",1,0))
+
 rem --- Set all previous values
 
 	user_tpl.prev_ext_cost     = num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_COST"))
@@ -614,6 +616,7 @@ print "Hdr:APFE"; rem debug
 rem --- Enable / Disable buttons
 
 	callpoint!.setOptionEnabled("CRCH",0)
+	callpoint!.setOptionEnabled("AGNG",0)
 
 	if cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2) = "" then
 		if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2) = ""
@@ -638,7 +641,7 @@ rem --- Enable / Disable buttons
 			if user_tpl.credit_installed$="Y"
 				callpoint!.setOptionEnabled("CRCH",1)
 			endif
-
+			callpoint!.setOptionEnabled("AGNG",iff(callpoint!.getDevObject("on_demand_aging")="Y",1,0))
 			gosub able_cash_sale
 
 			if callpoint!.getColumnData("OPE_INVHDR.ORDINV_FLAG")<> "I" then
@@ -788,6 +791,7 @@ rem --- Set flags
 	callpoint!.setOptionEnabled("CRCH",0)
 	callpoint!.setOptionEnabled("TTLS",0)
 	callpoint!.setOptionEnabled("SHPT",0)
+	callpoint!.setOptionEnabled("AGNG",0)
 
 rem --- Clear order helper object
 
@@ -1354,6 +1358,7 @@ rem --- Disable buttons
 	callpoint!.setOptionEnabled("CASH",0)
 	callpoint!.setOptionEnabled("TTLS",0)
 	callpoint!.setOptionEnabled("SHPT",0)
+	callpoint!.setOptionEnabled("AGNG",0)
 
 rem --- Capture current totals so we can tell later if they were changed in the grid
 
@@ -1664,9 +1669,6 @@ rem --- get AR Params
 	if ars01a.on_demand_aging$="Y"
 		callpoint!.setDevObject("on_demand_aging",ars01a.on_demand_aging$)
 		callpoint!.setDevObject("dflt_age_by",ars01a.dflt_age_by$)
-		callpoint!.setOptionEnabled("AGNG",1)
-	else
-		callpoint!.setOptionEnabled("AGNG",0)
 	endif
 
 
@@ -1944,6 +1946,7 @@ rem --- Enable buttons
 	callpoint!.setOptionEnabled("TTLS",0)
 	callpoint!.setOptionEnabled("CRCH",0)
 	callpoint!.setOptionEnabled("CRAT",0)
+	callpoint!.setOptionEnabled("AGNG",0)
 
 rem --- Parse table_chans$[all] into an object
 
@@ -2120,6 +2123,7 @@ rem --- Enable Duplicate buttons, printer
 	if user_tpl.credit_installed$="Y"
 		callpoint!.setOptionEnabled("CRCH",1)
 	endif
+	callpoint!.setOptionEnabled("AGNG",iff(callpoint!.getDevObject("on_demand_aging")="Y",1,0))
 
 [[OPE_INVHDR.CUSTOMER_PO_NO.AVAL]]
 rem --- Check for duplicate PO numbers

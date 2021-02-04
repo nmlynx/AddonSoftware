@@ -88,6 +88,7 @@ rem --- Enable buttons
 	callpoint!.setOptionEnabled("TTLS",1)
 	callpoint!.setOptionEnabled("SHPT",1)
 	callpoint!.setOptionEnabled("RTAX",1)
+	callpoint!.setOptionEnabled("AGNG",iff(callpoint!.getDevObject("on_demand_aging")="Y",1,0))
 
 
 rem --- Set all previous values
@@ -515,6 +516,7 @@ rem --- Enable buttons as appropriate
 		if user_tpl.credit_installed$="Y"
 			callpoint!.setOptionEnabled("CRCH",1)
 		endif
+		callpoint!.setOptionEnabled("AGNG",iff(callpoint!.getDevObject("on_demand_aging")="Y",1,0))
 
 		if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)=""
 			callpoint!.setOptionEnabled("DINV",1)
@@ -675,6 +677,7 @@ rem --- Set flags
 	callpoint!.setOptionEnabled("WOLN",0)
 	callpoint!.setOptionEnabled("SHPT",0)
 	callpoint!.setOptionEnabled("RTAX",0)
+	callpoint!.setOptionEnabled("AGNG",0)
 
 rem --- Clear order helper object
 
@@ -1232,6 +1235,7 @@ rem --- Disable header buttons
 	callpoint!.setOptionEnabled("WOLN",0)
 	callpoint!.setOptionEnabled("SHPT",0)
 	callpoint!.setOptionEnabled("RTAX",0)
+	callpoint!.setOptionEnabled("AGNG",0)
 
 rem --- Capture current totals so we can tell later if they were changed in the grid
 
@@ -1511,9 +1515,6 @@ rem --- get AR Params
 	if ars01a.on_demand_aging$="Y"
 		callpoint!.setDevObject("on_demand_aging",ars01a.on_demand_aging$)
 		callpoint!.setDevObject("dflt_age_by",ars01a.dflt_age_by$)
-		callpoint!.setOptionEnabled("AGNG",1)
-	else
-		callpoint!.setOptionEnabled("AGNG",0)
 	endif
 
 	dim ars_credit$:open_tpls$[7]
@@ -1766,6 +1767,7 @@ rem --- Set up Lot/Serial button (and others) properly
 	callpoint!.setOptionEnabled("CRCH",0)
 	callpoint!.setOptionEnabled("CRAT",0)
 	callpoint!.setOptionEnabled("WOLN",0)
+	callpoint!.setOptionEnabled("AGNG",0)
 
 rem --- Parse table_chans$[all] into an object
 
@@ -1961,6 +1963,7 @@ rem --- Enable buttons
 	if user_tpl.credit_installed$="Y"
 		callpoint!.setOptionEnabled("CRCH",1)
 	endif
+	callpoint!.setOptionEnabled("AGNG",iff(callpoint!.getDevObject("on_demand_aging")="Y",1,0))
 
 [[OPE_ORDHDR.CUSTOMER_PO_NO.AVAL]]
 rem --- Check for duplicate PO numbers
