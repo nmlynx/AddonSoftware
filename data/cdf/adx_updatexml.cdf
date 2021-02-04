@@ -1,30 +1,3 @@
-[[ADX_UPDATEXML.BSHO]]
-rem --- Declare Java classes used
-
-	use java.io.File
-	use ::adc_updatexmlfiles.aon::UpdateSyncXmlFiles
-[[ADX_UPDATEXML.UPGRADE.AINP]]
-rem --- Enable/disable input field for backup sync location
-
-	old_sync_path$=callpoint!.getColumnData("ADX_UPDATEXML.OLD_SYNC_PATH")
-	gosub able_backup_sync_dir
-[[ADX_UPDATEXML.SYNC_BACKUP_DIR.AVAL]]
-rem --- Validate directory for backup sync location
-
-	loc_dir$ = callpoint!.getUserInput()
-	gosub validate_backup_sync_dir
-	callpoint!.setUserInput(loc_dir$)
-[[ADX_UPDATEXML.OLD_SYNC_PATH.AVAL]]
-rem --- Validate directory for old data/sync location
-
-	loc_dir$ = callpoint!.getUserInput()
-	gosub validate_old_sync_dir
-	callpoint!.setUserInput(loc_dir$)
-
-rem --- Enable/disable input field for backup sync location
-
-	old_sync_path$=loc_dir$
-	gosub able_backup_sync_dir
 [[ADX_UPDATEXML.ASVA]]
 rem --- Validate directory for new data/sync location
 
@@ -43,36 +16,61 @@ rem --- Validate directory for old data/sync location
 rem --- Validate directory for backup sync location
 
 	if num(callpoint!.getColumnData("ADX_UPDATEXML.UPGRADE"))
-		loc_dir$ = callpoint!.getColumnData("ADX_UPDATEXML.SYNC_BACKUP_DIR")
-		gosub validate_backup_sync_dir
-		if !success then callpoint!.setStatus("ABORT")
-	endif
-[[ADX_UPDATEXML.<CUSTOM>]]
-able_backup_sync_dir: rem --- Enable/disable input field for backup sync location
-
-	upgrade=num(callpoint!.getColumnData("ADX_UPDATEXML.UPGRADE"))
-	if upgrade
-		rem --- Sync backup dir isn't needed if old barista/admin_backup dir exists
-		path$=old_sync_path$
-                gosub parse_aon_path
-		sync_backup_dir$=aon_dir$(1,pos("/"=aon_dir$,-1))+"barista/admin_backup"
-
-		dir_found=0
-		tmp_dev=unt
-		open(tmp_dev,err=*next)sync_backup_dir$; dir_found=1
-		close(tmp_dev,err=*next)
-
-		if dir_found
-			callpoint!.setColumnEnabled("ADX_UPDATEXML.SYNC_BACKUP_DIR",0)
-			callpoint!.setColumnData("ADX_UPDATEXML.SYNC_BACKUP_DIR",sync_backup_dir$)
-		else
-			callpoint!.setColumnEnabled("ADX_UPDATEXML.SYNC_BACKUP_DIR",1)
+		loc_dir$ = callpoint!.getColumnData("ADX_UPDATEXML.OLD_SYNC_PATH")
+		utility! = new UpdateSyncXmlFiles(rdForm!,0)
+		oldVers! = utility!.getModuleVersion(new File(loc_dir$))
+		if oldVers!.get("AD")<>null() and num(oldVers!.get("AD"))<11
+			loc_dir$ = callpoint!.getColumnData("ADX_UPDATEXML.SYNC_BACKUP_DIR")
+			gosub validate_backup_sync_dir
+			if !success then callpoint!.setStatus("ABORT")
 		endif
+	endif
+
+[[ADX_UPDATEXML.BSHO]]
+rem --- Declare Java classes used
+
+	use java.io.File
+	use ::adc_updatexmlfiles.aon::UpdateSyncXmlFiles
+
+	rem --- will only enable the Sync Backup Dir if upgrading *from* a version prior to v11	
+	callpoint!.setColumnEnabled("ADX_UPDATEXML.SYNC_BACKUP_DIR",0)
+
+[[ADX_UPDATEXML.NEW_SYNC_PATH.AVAL]]
+rem --- Validate directory for new data/sync location
+
+	loc_dir$ = callpoint!.getUserInput()
+	gosub validate_new_sync_dir
+	callpoint!.setUserInput(loc_dir$)
+
+[[ADX_UPDATEXML.OLD_SYNC_PATH.AVAL]]
+rem --- Validate directory for old data/sync location
+
+	loc_dir$ = callpoint!.getUserInput()
+	gosub validate_old_sync_dir
+	callpoint!.setUserInput(loc_dir$)
+
+rem --- Enable/disable input field for backup sync location
+
+	old_sync_path$=loc_dir$
+	gosub able_backup_sync_dir
+
+[[ADX_UPDATEXML.SYNC_BACKUP_DIR.AVAL]]
+rem --- Validate directory for backup sync location
+
+	loc_dir$ = callpoint!.getUserInput()
+	gosub validate_backup_sync_dir
+	callpoint!.setUserInput(loc_dir$)
+
+[[ADX_UPDATEXML.<CUSTOM>]]
+able_backup_sync_dir: rem --- Enable/disable input field for backup sync location IF old version is < v11
+
+	utility! = new UpdateSyncXmlFiles(rdForm!,0)
+	oldVers! = utility!.getModuleVersion(new File(loc_dir$))
+	if oldVers!.get("AD")<>null() and num(oldVers!.get("AD"))<11
+		callpoint!.setColumnEnabled("ADX_UPDATEXML.SYNC_BACKUP_DIR",1)
 	else
 		callpoint!.setColumnEnabled("ADX_UPDATEXML.SYNC_BACKUP_DIR",0)
-		callpoint!.setColumnData("ADX_UPDATEXML.SYNC_BACKUP_DIR","")
 	endif
-	callpoint!.setStatus("REFRESH")
 
 	return
 
@@ -118,8 +116,8 @@ validate_new_sync_dir: rem --- Validate directory for new data/sync location
 
 	rem --- Get version of source Addon installation from source data/sync/adm_modules~01007514ad.xml
 	utility! = new UpdateSyncXmlFiles(rdForm!,0)
-	oldVers! = utility!.getModuleVersion(new File(loc_dir$))
-	if oldVers!.get("AD")<>null() and num(oldVers!.get("AD"))<18
+	newVers! = utility!.getModuleVersion(new File(loc_dir$))
+	if newVers!.get("AD")<>null() and num(newVers!.get("AD"))<18
 		rem --- The Barista instance for new data/sync location must be v18 or later.
 		msg_id$="AD_NEW_LOC_NOT_V18"
 		gosub disp_message
@@ -260,9 +258,6 @@ verify_dir_name: rem --- Directory must be named data/sync
 	endif
 
 	return
-[[ADX_UPDATEXML.NEW_SYNC_PATH.AVAL]]
-rem --- Validate directory for new data/sync location
 
-	loc_dir$ = callpoint!.getUserInput()
-	gosub validate_new_sync_dir
-	callpoint!.setUserInput(loc_dir$)
+
+
