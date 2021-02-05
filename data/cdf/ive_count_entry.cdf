@@ -473,7 +473,7 @@ find_record_new:
 print "record not found"; rem debug
 		user_tpl.entered_flag$ = "Y"
 		user_tpl.lotser_item$  = iff(user_tpl.this_item_lot_ser = 1, "Y", "N")
-		user_tpl.freeze_qty   = "1"
+		user_tpl.freeze_qty   = 1
 	endif
 
 	return
