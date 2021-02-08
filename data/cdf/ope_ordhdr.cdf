@@ -2072,9 +2072,11 @@ rem --- Now we've been on the Totals tab
 	callpoint!.setDevObject("was_on_tot_tab","Y")
 
 [[OPE_ORDHDR.DISC_CODE.AVAL]]
-rem --- Set discount code for use in Order Totals
+rem --- Set discount code for use in Order Totals if it changed
+	disc_code$ = callpoint!.getUserInput()
+	if cvs(disc_code$,3)=cvs(callpoint!.getColumnData("OPE_ORDHDR.DISC_CODE"),3) then break
 
-	user_tpl.disc_code$ = callpoint!.getUserInput()
+	user_tpl.disc_code$ = disc_code$
 	callpoint!.setDevObject("disc_code",user_tpl.disc_code$)
 
 	file_name$ = "OPC_DISCCODE"
@@ -2592,9 +2594,10 @@ rem --- Warn if Shipment Date isn't in an appropriate GL period
 	endif
 
 [[OPE_ORDHDR.SHIPTO_NO.AVAL]]
-rem --- Check Ship-to's
-
+rem --- Check Ship-to's if SHIPTO_NO has changed
 	shipto_no$  = callpoint!.getUserInput()
+	if cvs(shipto_no$,3)=cvs(callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO"),3) then break
+
 	shipto_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
 	ship_addr$=callpoint!.getColumnData("<<DISPLAY>>.SADD1")+callpoint!.getColumnData("<<DISPLAY>>.SADD2")+
 :		callpoint!.getColumnData("<<DISPLAY>>.SADD3")+callpoint!.getColumnData("<<DISPLAY>>.SADD4")
@@ -2639,9 +2642,10 @@ rem --- Allow changing shipto_type when abort shipto_no
 	endif
 
 [[OPE_ORDHDR.SHIPTO_TYPE.AVAL]]
-rem -- Deal with which Ship To type
-
+rem -- Deal with which Ship To type if it has changed
 	ship_to_type$ = callpoint!.getUserInput()
+	if cvs(ship_to_type$,3)=cvs(callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE"),3) then break
+
 	ship_to_no$   = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_NO")
 	cust_id$      = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 	order_no$     = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
