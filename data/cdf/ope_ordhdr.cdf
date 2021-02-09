@@ -18,7 +18,11 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 		switch notice.code
 			case 2; rem --- ON_TAB_SELECT
 				gosub isTotalsTab
-				if isTotalsTab and num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 then gosub calculate_tax
+				if isTotalsTab and num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 then
+					disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+					freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+					gosub calculate_tax
+				endif
 			break
 		swend
 	endif
@@ -608,7 +612,11 @@ rem --- Set MODIFIED if totals were changed in the grid
 	endif	
 
 rem --- Update sales tax calculation if it was previously deferred
-	if num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 then gosub calculate_tax
+	if num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 then
+		disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
 
 [[OPE_ORDHDR.ARAR]]
 rem --- If First/Last Record was used, did it return an Order?
@@ -2525,7 +2533,11 @@ rem --- Check Ship-to's
 
 rem --- Update sales tax calculation if SADD1 was changed
 	sadd1$=callpoint!.getUserInput()
-	if cvs(sadd1$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD1"),3) then gosub calculate_tax
+	if cvs(sadd1$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD1"),3) then
+		disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
 
 [[<<DISPLAY>>.SADD2.AVAL]]
 rem --- Check Ship-to's
@@ -2541,7 +2553,11 @@ rem --- Check Ship-to's
 
 rem --- Update sales tax calculation if SADD2 was changed
 	sadd2$=callpoint!.getUserInput()
-	if cvs(sadd2$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD2"),3) then gosub calculate_tax
+	if cvs(sadd2$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD2"),3) then
+		disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
 
 [[<<DISPLAY>>.SADD3.AVAL]]
 rem --- Check Ship-to's
@@ -2557,7 +2573,11 @@ rem --- Check Ship-to's
 
 rem --- Update sales tax calculation if SADD3 was changed
 	sadd3$=callpoint!.getUserInput()
-	if cvs(sadd3$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD3"),3) then gosub calculate_tax
+	if cvs(sadd3$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD3"),3) then
+		disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
 
 [[<<DISPLAY>>.SADD4.AVAL]]
 rem --- Check Ship-to's
@@ -2574,17 +2594,29 @@ rem --- Check Ship-to's
 
 rem --- Update sales tax calculation if SADD4 was changed
 	sadd4$=callpoint!.getUserInput()
-	if cvs(sadd4$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD4"),3) then gosub calculate_tax
+	if cvs(sadd4$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD4"),3) then 
+		disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
 
 [[<<DISPLAY>>.SCITY.AVAL]]
 rem --- Update sales tax calculation if SCITY was changed
 	scity$=callpoint!.getUserInput()
-	if cvs(city$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SCITY"),3) then gosub calculate_tax
+	if cvs(city$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SCITY"),3) then 
+		disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
 
 [[<<DISPLAY>>.SCNTRY_ID.AVAL]]
 rem --- Update sales tax calculation if SCNTRY_ID was changed
 	scntry_id$=callpoint!.getUserInput()
-	if cvs(scntry_id$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SCNTRY_ID"),3) then gosub calculate_tax
+	if cvs(scntry_id$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SCNTRY_ID"),3) then 
+		disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
 
 [[OPE_ORDHDR.SHIPMNT_DATE.AVAL]]
 rem --- Warn if Shipment Date isn't in an appropriate GL period
@@ -2667,12 +2699,20 @@ rem --- Set Commission Percent
 [[<<DISPLAY>>.SSTATE.AVAL]]
 rem --- Update sales tax calculation if SSTATE was changed
 	sstate$=callpoint!.getUserInput()
-	if cvs(sstate$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SSTATE"),3) then gosub calculate_tax
+	if cvs(sstate$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SSTATE"),3) then 
+		disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
 
 [[<<DISPLAY>>.SZIP.AVAL]]
 rem --- Update sales tax calculation if SZIP was changed
 	szip$=callpoint!.getUserInput()
-	if cvs(szip$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SZIP"),3) then gosub calculate_tax
+	if cvs(szip$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SZIP"),3) then 
+		disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
 
 [[OPE_ORDHDR.TAX_CODE.AVAL]]
 rem --- Skip if the TAX_CODE hasn't changed
