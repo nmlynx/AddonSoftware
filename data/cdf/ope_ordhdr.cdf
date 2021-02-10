@@ -18,10 +18,15 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 		switch notice.code
 			case 2; rem --- ON_TAB_SELECT
 				gosub isTotalsTab
-				if isTotalsTab and num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 then
+				if isTotalsTab and num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 and
+:				cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),2)<>"" and
+:				cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)<>"" then
 					disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
 					freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
 					gosub calculate_tax
+				else
+					taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
+					taxAmount_warn!.setVisible(0)
 				endif
 			break
 		swend
@@ -159,6 +164,14 @@ rem --- Capture current totals so we can tell later if they were changed in the 
 	callpoint!.setDevObject("total_sales",callpoint!.getColumnData("OPE_ORDHDR.TOTAL_SALES"))
 	callpoint!.setDevObject("commit_sls_tax","N")
 
+rem --- Show TAX_AMOUNT footnote warning if sales tax calculation was previously deferred
+	taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+	if num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 then
+		taxAmount_fnote!.setVisible(1)
+	else
+		taxAmount_fnote!.setVisible(0)
+	endif
+
 rem --- Fix bad records with missing ordinv_flag
 
 	if cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDINV_FLAG"),2)="" then
@@ -246,6 +259,38 @@ rem --- Save controls in the global userObj! (vector)
  	userObj!.addItem(mwin!.addStaticText(15107,695,20,75,15,"",$0000$)); rem Dropship text (8)
 	userObj!.addItem(mwin!.addStaticText(15108,695,35,160,15,"",$0000$)); rem Manual Price  (9)
  	userObj!.addItem(mwin!.addStaticText(15109,695,50,160,15,"",$0000$)); rem Alt/Super (10)
+
+rem --- Add static label warning for TAX_AMOUNT to identify it as possibly being incorrect
+	tax_amount!=fnget_control!("OPE_ORDHDR.TAX_AMOUNT")
+	tax_amount_x=tax_amount!.getX()
+	tax_amount_y=tax_amount!.getY()
+	tax_amount_height=tax_amount!.getHeight()
+	tax_amount_width=tax_amount!.getWidth()
+	label_width=15
+	nxt_ctlID=util.getNextControlID()
+	taxAmount_warn!=Form!.addStaticText(nxt_ctlID,tax_amount_x+tax_amount_width+8,tax_amount_y+85,label_width,tax_amount_height-6,"")
+	taxAmount_warn!.setText("??")
+	taxAmount_warn!.setForeColor(BBjColor.RED)
+	tabCtrl!=Form!.getControl(num(stbl("+TAB_CTL")))
+	taxAmount_warn!.setBackColor(tabCtrl!.getBackColor())
+	taxAmount_warn!.setVisible(0)
+	callpoint!.setDevObject("taxAmount_warn",taxAmount_warn!)
+
+rem --- Add static label footnote for TAX_AMOUNT to identify it as possibly being incorrect
+	order_no!=fnget_control!("OPE_ORDHDR.ORDER_NO")
+	order_no_x=order_no!.getX()
+	order_no_y=order_no!.getY()
+	order_no_height=order_no!.getHeight()
+	order_no_width=order_no!.getWidth()
+	label_width=550
+	nxt_ctlID=util.getNextControlID()
+	taxAmount_fnote!=Form!.addStaticText(nxt_ctlID,order_no_x+150,order_no_y+30,label_width,order_no_height-6,"")
+	taxAmount_fnote!.setText("?? - "+Translate!.getTranslation("AON_TAX_AMT_FNOTE"))
+	taxAmount_fnote!.setForeColor(BBjColor.RED)
+	tabCtrl!=Form!.getControl(num(stbl("+TAB_CTL")))
+	taxAmount_fnote!.setBackColor(tabCtrl!.getBackColor())
+	taxAmount_fnote!.setVisible(0)
+	callpoint!.setDevObject("taxAmount_fnote",taxAmount_fnote!)
 
 [[OPE_ORDHDR.AOPT-AGNG]]
 rem --- Update this customer's aging stats if allowed by param
@@ -804,9 +849,11 @@ rem --- Disable Ship To fields
 	ship_to_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
 	gosub disable_shipto
 
-rem --- Make sure sales tax get calculated
+rem --- Make sure sales tax gets calculated, and hide possible leftover TAX_AMOUNT footnote warning
 	callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
 	callpoint!.setDevObject("commit_sls_tax","N")
+	taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+	taxAmount_fnote!.setVisible(0)
 
 [[OPE_ORDHDR.ASHO]]
 rem --- Get default dates, POS station
@@ -2733,6 +2780,15 @@ rem --- Calculate Taxes
 [[OPE_ORDHDR.<CUSTOM>]]
 #include [+ADDON_LIB]std_functions.aon
 
+rem #include fnget_control.src
+	def fnget_control!(ctl_name$)
+	ctlContext=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLC"))
+	ctlID=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI"))
+	get_control!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
+	return get_control!
+	fnend
+rem #endinclude fnget_control.src
+
 rem ==========================================================================
 display_customer: rem --- Get and display Bill To Information
                   rem      IN: cust_id$
@@ -3731,10 +3787,10 @@ print"do tax calc"; rem wgh ... 9806 ... testing
 				callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT","0")
 				callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
 
-rem wgh ... 9806 ... changing this to show "??" with footnote
-				taxAmount!=callpoint!.getControl("OPE_ORDHDR.TAX_AMOUNT")
-				call stbl("+DIR_SYP")+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
-				taxAmount!.setBackColor(rdErrorColor!)
+				taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
+				taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+				taxAmount_warn!.setVisible(1)
+				taxAmount_fnote!.setVisible(1)
 
 				msg_id$="OP_TAX_CALC_FAILED"
 				dim msg_tokens$[1]
@@ -3746,49 +3802,13 @@ rem wgh ... 9806 ... changing this to show "??" with footnote
 				callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(0))
 				callpoint!.setDevObject("commit_sls_tax","Y")
 
+				taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
+				taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+				taxAmount_warn!.setVisible(0)
+				taxAmount_fnote!.setVisible(0)
+
 				rem --- Force write if not in Edit mode.
-				if !callpoint!.isEditMode() then
-					rem --- Add Barista soft lock for this record if there isn't one already
-					lock_table$="OPT_INVHDR"
-					lock_record$=firm_id$+"E"+"  "+customer_id$+order_no$+ar_inv_no$
-					lock_type$="C"
-					lock_status$=""
-					lock_disp$=""
-					call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
-					if lock_status$="" then
-						rem --- Add temporary soft lock
-						lock_type$="L"
-						call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
-
-						rem --- Update ordhdr_rec$ from earlier get_disk_rec, then write it to disk
-						ordhdr_rec.tax_amount$=callpoint!.getColumnData("OPE_ORDHDR.TAX_AMOUNT")
-						ordhdr_rec.taxable_amt$=callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT")
-						ordhdr_rec.no_sls_tax_calc=num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))
-						write record (ordhdr_dev) ordhdr_rec$
-						callpoint!.setStatus("SETORIG")
-
-						rem --- Remove temporary soft lock
-						lock_type$="U"
-						call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
-					else
-						rem --- Record locked by someone else
-						callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT","0")
-						callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
-
-rem wgh ... 9806 ... changing this to show "??" with footnote
-						taxAmount!=callpoint!.getControl("OPE_ORDHDR.TAX_AMOUNT")
-						call stbl("+DIR_SYP")+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
-						taxAmount!.setBackColor(rdErrorColor!)
-
-						msg_id$="ENTRY_REC_LOCKED"
-						gosub disp_message
-					endif
-				endif
-
-rem wgh ... 9806 ... changing this to remove "??" with footnote
-				taxAmount!=callpoint!.getControl("OPE_ORDHDR.TAX_AMOUNT")
-				disabledColor!=SysGUI!.makeColor(250,250,250)
-				taxAmount!.setBackColor(disabledColor!)
+				if !callpoint!.isEditMode() then gosub forceWrite
 			endif
 		else
 			if cvs(callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"),2) <> "" then
@@ -3806,49 +3826,13 @@ rem wgh ... 9806 ... changing this to remove "??" with footnote
 				callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(0))
 				callpoint!.setDevObject("commit_sls_tax","Y")
 
+				taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
+				taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+				taxAmount_warn!.setVisible(0)
+				taxAmount_fnote!.setVisible(0)
+
 				rem --- Force write if not in Edit mode.
-				if !callpoint!.isEditMode() then
-					rem --- Add Barista soft lock for this record if there isn't one already
-					lock_table$="OPT_INVHDR"
-					lock_record$=firm_id$+"E"+"  "+customer_id$+order_no$+ar_inv_no$
-					lock_type$="C"
-					lock_status$=""
-					lock_disp$=""
-					call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
-					if lock_status$="" then
-						rem --- Add temporary soft lock
-						lock_type$="L"
-						call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
-
-						rem --- Update ordhdr_rec$ from earlier get_disk_rec, then write it to disk
-						ordhdr_rec.tax_amount$=callpoint!.getColumnData("OPE_ORDHDR.TAX_AMOUNT")
-						ordhdr_rec.taxable_amt$=callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT")
-						ordhdr_rec.no_sls_tax_calc=num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))
-						write record (ordhdr_dev) ordhdr_rec$
-						callpoint!.setStatus("SETORIG")
-
-						rem --- Remove temporary soft lock
-						lock_type$="U"
-						call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
-					else
-						rem --- Record locked by someone else
-						callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT","0")
-						callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
-
-rem wgh ... 9806 ... changing this to show "??" with footnote
-						taxAmount!=callpoint!.getControl("OPE_ORDHDR.TAX_AMOUNT")
-						call stbl("+DIR_SYP")+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
-						taxAmount!.setBackColor(rdErrorColor!)
-
-						msg_id$="ENTRY_REC_LOCKED"
-						gosub disp_message
-					endif
-				endif
-
-rem wgh ... 9806 ... changing this to remove "??" with footnote
-				taxAmount!=callpoint!.getControl("OPE_ORDHDR.TAX_AMOUNT")
-				disabledColor!=SysGUI!.makeColor(250,250,250)
-				taxAmount!.setBackColor(disabledColor!)
+				if !callpoint!.isEditMode() then gosub forceWrite
 			endif
 		endif
 
@@ -3937,6 +3921,57 @@ rem ==========================================================================
 	isTotalsTab=0
 	tabCtrl!=Form!.getControl(num(stbl("+TAB_CTL")))
 	if tabCtrl!.getSelectedIndex() = tabCtrl!.getNumTabs()-1 then isTotalsTab=1
+
+	return
+
+rem ==========================================================================
+forceWrite: rem --- Force write if not in Edit mode.
+rem IN: firm_id$
+rem IN: customer_id$
+rem IN: order_no$
+rem IN: ar_inv_no$
+rem IN: ordhdr_dev
+rem IN: ordhdr_rec$ from earlier get_disk_rec
+rem ==========================================================================
+
+	rem --- Force write if not in Edit mode.
+	if !callpoint!.isEditMode() then
+		rem --- Add Barista soft lock for this record if there isn't one already
+		lock_table$="OPT_INVHDR"
+		lock_record$=firm_id$+"E"+"  "+customer_id$+order_no$+ar_inv_no$
+		lock_type$="C"
+		lock_status$=""
+		lock_disp$=""
+		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+		if lock_status$="" then
+			rem --- Add temporary soft lock
+			lock_type$="L"
+			call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+
+			rem --- Update ordhdr_rec$ from earlier get_disk_rec, then write it to disk
+			ordhdr_rec.tax_amount$=callpoint!.getColumnData("OPE_ORDHDR.TAX_AMOUNT")
+			ordhdr_rec.taxable_amt$=callpoint!.getColumnData("OPE_ORDHDR.TAXABLE_AMT")
+			ordhdr_rec.no_sls_tax_calc=num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))
+			write record (ordhdr_dev) ordhdr_rec$
+			callpoint!.setStatus("SETORIG")
+
+			rem --- Remove temporary soft lock
+			lock_type$="U"
+			call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+		else
+			rem --- Record locked by someone else
+			callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT","0")
+			callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
+
+			taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
+			taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+			taxAmount_warn!.setVisible(1)
+			taxAmount_fnote!.setVisible(1)
+
+			msg_id$="ENTRY_REC_LOCKED"
+			gosub disp_message
+		endif
+	endif
 
 	return
 
