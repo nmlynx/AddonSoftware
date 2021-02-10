@@ -2070,6 +2070,7 @@ rem --- Calculate Taxes
 	disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	gosub calculate_tax
+	gosub add_to_batch_print
 
 [[OPE_INVHDR.BWRI]]
 rem --- Has customer and order number been entered?
@@ -3118,6 +3119,7 @@ rem ==========================================================================
 	ope_prntlist_key$=ope_prntlist.firm_id$+ope_prntlist.ordinv_flag$+ope_prntlist.ar_type$+ope_prntlist.customer_id$+ope_prntlist.order_no$
 	extractrecord(ope_prntlist_dev,key=ope_prntlist_key$,dom=*next)x$; rem Advisory Lockint
 
+	ope_prntlist.no_sls_tax_calc=num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))
 	ope_prntlist$ = field(ope_prntlist$)
 	write record (ope_prntlist_dev) ope_prntlist$
 
