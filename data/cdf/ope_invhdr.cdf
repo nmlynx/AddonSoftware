@@ -456,6 +456,12 @@ rem --- Check for printing in next batch and set
 	msg_tokens$[1] = Translate!.getTranslation("AON_INVOICE")
 	gosub disp_message
 
+[[OPE_INVHDR.AOPT-RTAX]]
+rem --- Recalculate sales tax now
+	disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+	gosub calculate_tax
+
 [[OPE_INVHDR.AOPT-SHPT]]
 rem --- Launch Shipment Tracking maintenance grid
 	ar_type$=callpoint!.getColumnData("OPE_INVHDR.AR_TYPE")
@@ -704,6 +710,7 @@ rem --- Enable / Disable buttons
 		callpoint!.setOptionEnabled("PRNT",0)
 		callpoint!.setOptionEnabled("UINV",0)
 		callpoint!.setOptionEnabled("SHPT",0)
+		callpoint!.setOptionEnabled("RTAX",0)
 	else
 		if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2) = "" then
 			callpoint!.setOptionEnabled("PRNT",0)
@@ -713,6 +720,7 @@ rem --- Enable / Disable buttons
 			callpoint!.setOptionEnabled("PRNT",1)
 			callpoint!.setOptionEnabled("SHPT",1)
 			callpoint!.setOptionEnabled("TTLS",1)
+			callpoint!.setOptionEnabled("RTAX",1)
 			if user_tpl.credit_installed$="Y"
 				callpoint!.setOptionEnabled("CRCH",1)
 			endif
@@ -733,6 +741,7 @@ rem --- Enable / Disable buttons
 		callpoint!.setOptionEnabled("PRNT",0)
 		callpoint!.setOptionEnabled("RPRT",0)
 		callpoint!.setOptionEnabled("UINV",0)
+		callpoint!.setOptionEnabled("RTAX",0)
 	endif
 
 
@@ -867,6 +876,7 @@ rem --- Set flags
 	callpoint!.setOptionEnabled("TTLS",0)
 	callpoint!.setOptionEnabled("SHPT",0)
 	callpoint!.setOptionEnabled("AGNG",0)
+	callpoint!.setOptionEnabled("RTAX",0)
 
 rem --- Clear order helper object
 
@@ -1137,6 +1147,7 @@ rem --- Write/Remove manual ship to file
 		callpoint!.setOptionEnabled("CINV",0)
 		callpoint!.setOptionEnabled("DINV",0)
 		callpoint!.setOptionEnabled("RPRT",0)
+		callpoint!.setOptionEnabled("RTAX",0)
 	endif
 
 rem --- Update devObjects with current values written to file
@@ -1440,6 +1451,7 @@ rem --- Disable buttons
 	callpoint!.setOptionEnabled("TTLS",0)
 	callpoint!.setOptionEnabled("SHPT",0)
 	callpoint!.setOptionEnabled("AGNG",0)
+	callpoint!.setOptionEnabled("RTAX",0)
 
 rem --- Capture current totals so we can tell later if they were changed in the grid
 
@@ -2282,7 +2294,6 @@ rem --- Recalculate Tax Amount and Totals
 
 	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	gosub calculate_tax
-	gosub disp_totals
 	callpoint!.setDevObject("was_on_tot_tab","Y")
 
 [[OPE_INVHDR.DISCOUNT_AMT.BINP]]
@@ -2312,7 +2323,6 @@ rem --- Set discount code for use in Order Totals
 	disc_amt = new_disc_amt
 	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	gosub calculate_tax
-	gosub disp_totals
 
 [[OPE_INVHDR.DISC_CODE.BINP]]
 rem --- Enable/Disable Cash Sale button
@@ -2329,7 +2339,6 @@ rem --- Recalculate Tax Amount and Totals
 	freight_amt = num(callpoint!.getUserInput())
 	prev_freight_amt=num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	gosub calculate_tax
-	gosub disp_totals
 
 	callpoint!.setDevObject("was_on_tot_tab","Y")
 	if freight_amt<>prev_freight_amt then
@@ -3015,7 +3024,6 @@ rem ==========================================================================
 	disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	gosub calculate_tax
-	gosub disp_totals
 
 	callpoint!.setStatus("REFRESH")
 
@@ -4038,7 +4046,7 @@ rem ==========================================================================
 
 				msg_id$="OP_TAX_CALC_FAILED"
 				dim msg_tokens$[1]
-				msg_tokens$[1] = Translate!.getTranslation("AON_ORDER")
+				msg_tokens$[1] = Translate!.getTranslation("AON_INVOICE")
 				gosub disp_message
 			else
 				callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",taxProps!.getProperty("tax_amount"),1)
