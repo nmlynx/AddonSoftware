@@ -1,3 +1,37 @@
+[[OPE_INVHDR.ACUS]]
+rem --- Process custom event
+rem This routine is executed when callbacks have been set to run a 'custom event'.
+rem Analyze gui_event$ and notice$ to see which control's callback triggered the event, and what kind of event it is.
+rem See basis docs notice() function, noticetpl() function, notify event, grid control notify events for more info.
+
+	dim gui_event$:tmpl(gui_dev)
+	dim notify_base$:noticetpl(0,0)
+	gui_event$=SysGUI!.getLastEventString()
+	ctl_ID=dec(gui_event.ID$)
+
+	notify_base$=notice(gui_dev,gui_event.x%)
+	dim notice$:noticetpl(notify_base.objtype%,gui_event.flags%)
+	notice$=notify_base$
+
+	rem --- The tab control
+	if ctl_ID=num(stbl("+TAB_CTL")) then
+		switch notice.code
+			case 2; rem --- ON_TAB_SELECT
+				gosub isTotalsTab
+				if isTotalsTab and num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 and
+:				cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2)<>"" and
+:				cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2)<>"" then
+					disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+					freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+					gosub calculate_tax
+				else
+					taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
+					taxAmount_warn!.setVisible(0)
+				endif
+			break
+		swend
+	endif
+
 [[OPE_INVHDR.ADEL]]
 rem --- Set flag
 
@@ -135,6 +169,15 @@ rem --- Capture current totals so we can tell later if they were changed in the 
 	callpoint!.setDevObject("taxable_amt",callpoint!.getColumnData("OPE_INVHDR.TAXABLE_AMT"))
 	callpoint!.setDevObject("total_cost",callpoint!.getColumnData("OPE_INVHDR.TOTAL_COST"))
 	callpoint!.setDevObject("total_sales",callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES"))
+	callpoint!.setDevObject("commit_sls_tax","N")
+
+rem --- Show TAX_AMOUNT footnote warning if sales tax calculation was previously deferred
+	taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+	if num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 then
+		taxAmount_fnote!.setVisible(1)
+	else
+		taxAmount_fnote!.setVisible(0)
+	endif
 
 rem --- Disable Ship To fields
 
@@ -185,6 +228,38 @@ rem --- Save controls in the global userObj! (vector)
 	userObj!.addItem(mwin!.addStaticText(15107,695,20,75,15,"",$0000$)); rem Dropship text (8)
 	userObj!.addItem(mwin!.addStaticText(15108,695,35,160,15,"",$0000$)); rem Manual Price  (9)
 	userObj!.addItem(mwin!.addStaticText(15109,695,50,160,15,"",$0000$)); rem Alt/Super  (10)
+
+rem --- Add static label warning for TAX_AMOUNT to identify it as possibly being incorrect
+	tax_amount!=fnget_control!("OPE_INVHDR.TAX_AMOUNT")
+	tax_amount_x=tax_amount!.getX()
+	tax_amount_y=tax_amount!.getY()
+	tax_amount_height=tax_amount!.getHeight()
+	tax_amount_width=tax_amount!.getWidth()
+	label_width=15
+	nxt_ctlID=util.getNextControlID()
+	taxAmount_warn!=Form!.addStaticText(nxt_ctlID,tax_amount_x+tax_amount_width+8,tax_amount_y+85,label_width,tax_amount_height-6,"")
+	taxAmount_warn!.setText("??")
+	taxAmount_warn!.setForeColor(BBjColor.RED)
+	tabCtrl!=Form!.getControl(num(stbl("+TAB_CTL")))
+	taxAmount_warn!.setBackColor(tabCtrl!.getBackColor())
+	taxAmount_warn!.setVisible(0)
+	callpoint!.setDevObject("taxAmount_warn",taxAmount_warn!)
+
+rem --- Add static label footnote for TAX_AMOUNT to identify it as possibly being incorrect
+	order_no!=fnget_control!("OPE_INVHDR.ORDER_NO")
+	order_no_x=order_no!.getX()
+	order_no_y=order_no!.getY()
+	order_no_height=order_no!.getHeight()
+	order_no_width=order_no!.getWidth()
+	label_width=550
+	nxt_ctlID=util.getNextControlID()
+	taxAmount_fnote!=Form!.addStaticText(nxt_ctlID,order_no_x+150,order_no_y+30,label_width,order_no_height-6,"")
+	taxAmount_fnote!.setText("?? - "+Translate!.getTranslation("AON_TAX_AMT_FNOTE"))
+	taxAmount_fnote!.setForeColor(BBjColor.RED)
+	tabCtrl!=Form!.getControl(num(stbl("+TAB_CTL")))
+	taxAmount_fnote!.setBackColor(tabCtrl!.getBackColor())
+	taxAmount_fnote!.setVisible(0)
+	callpoint!.setDevObject("taxAmount_fnote",taxAmount_fnote!)
 
 [[OPE_INVHDR.AOPT-AGNG]]
 rem --- Update this customer's aging stats if allowed by param
@@ -881,6 +956,12 @@ rem --- Disable Ship To fields
 
 	ship_to_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
 	gosub disable_shipto
+
+rem --- Make sure sales tax gets calculated, and hide possible leftover TAX_AMOUNT footnote warning
+	callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(1))
+	callpoint!.setDevObject("commit_sls_tax","N")
+	taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+	taxAmount_fnote!.setVisible(0)
 
 [[OPE_INVHDR.AR_DIST_CODE.BINP]]
 rem --- Enable/Disable Cash Sale button
@@ -1977,6 +2058,15 @@ rem --- setup message_tpl$
 
 	gosub init_msgs
 
+rem --- Set callback for a tab being selected, and save the tab control ID
+	tabCtrl!=Form!.getControl(num(stbl("+TAB_CTL")))
+	tabCtrl!.setCallback(BBjTabCtrl.ON_TAB_SELECT,"custom_event")
+	if tabCtrl!.getTitleAt(2)<>Translate!.getTranslation("AON_TOTALS") then
+		escape; rem --- You need to adjust the code for the change in the Totals tab name and/or index.
+		rem --- If the name was changed, then change the translation above for the new name.
+		rem --- If the index was changed, then change the isTotalsTab subroutine for the new index.
+	endif
+
 [[OPE_INVHDR.BWRI]]
 rem --- Has customer and order number been entered?
 
@@ -2710,6 +2800,15 @@ rem --- Enable/Disable Cash Sale button
 
 [[OPE_INVHDR.<CUSTOM>]]
 #include [+ADDON_LIB]std_functions.aon
+
+rem #include fnget_control.src
+	def fnget_control!(ctl_name$)
+	ctlContext=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLC"))
+	ctlID=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI"))
+	get_control!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
+	return get_control!
+	fnend
+rem #endinclude fnget_control.src
 
 rem ==========================================================================
 display_customer: rem --- Get and display Bill To Information
@@ -3990,7 +4089,7 @@ rem ==========================================================================
 	declare BBjVector column!
 	column! = BBjAPI().makeVector()
 	
-	column!.addItem("OPE_ORDHDR.SHIPTO_NO")
+	column!.addItem("OPE_INVHDR.SHIPTO_NO")
 	if ship_to_type$="S"
 		status = 1
 	else
