@@ -1606,27 +1606,6 @@ rem --- Is flag down?
 		break; rem --- exit callpoint
 	endif	
 
-rem --- Calculate taxes and write it back
-
-	discount_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
-	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
-	total_sales = num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES"))
-	taxable_sales = ordHelp!.getTaxableSales()
-	if discount_amt<>0 or freight_amt<>0 or total_sales<>0 or taxable_sales<>0 then
-		gosub get_disk_rec
-		taxAndTaxableVect! = ordHelp!.calculateTax(discount_amt, freight_amt,
-:												taxable_sales,
-:												num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")))
-
-		ordhdr_rec.tax_amount = taxAndTaxableVect!.getItem(0)
-		ordhdr_rec.taxable_amt = taxAndTaxableVect!.getItem(1)
-		ordhdr_rec$ = field(ordhdr_rec$)
-		write record (ordhdr_dev) ordhdr_rec$
-		ordhdr_key$=ordhdr_rec.firm_id$+ordhdr_rec.trans_status$+ordhdr_rec.ar_type$+ordhdr_rec.customer_id$+ordhdr_rec.order_no$+ordhdr_rec.ar_inv_no$
-		extractrecord(ordhdr_dev,key=ordhdr_key$)ordhdr_rec$; rem Advisory Locking
-		callpoint!.setStatus("SETORIG")
-	endif
-
 rem --- Does the total of lot/serial# match the qty shipped for each detail line?
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
@@ -2078,6 +2057,19 @@ rem --- Set callback for a tab being selected, and save the tab control ID
 		rem --- If the name was changed, then change the translation above for the new name.
 		rem --- If the index was changed, then change the isTotalsTab subroutine for the new index.
 	endif
+
+[[OPE_INVHDR.BWAR]]
+rem --- Calculate Taxes
+
+	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+
+	if ordHelp!.getCust_id() = "" or ordHelp!.getOrder_no() = "" then
+		break; rem --- exit callpoint
+	endif
+
+	disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+	gosub calculate_tax
 
 [[OPE_INVHDR.BWRI]]
 rem --- Has customer and order number been entered?
