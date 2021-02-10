@@ -3192,6 +3192,12 @@ rem ==========================================================================
 			ope01a.batch_no$   = ""
 			ope01a.audit_number   = 0
 			ope01a.ship_seq_no$="001"
+			if callpoint!.getDevObject("sls_tax_intrface")<>"" then
+				opc_taxcode_dev = fnget_dev("OPC_TAXCODE")
+				dim opc_taxcode$:fnget_tpl$("OPC_TAXCODE")
+				findrecord(opc_taxcode_dev,key=firm_id$+opt01a.tax_code$,dom=*next)opc_taxcode$
+				if opc_taxcode.use_tax_service then ope01a.no_sls_tax_calc=1
+			endif
 
 			ope01a$=field(ope01a$)
 			write record (ope01_dev) ope01a$
@@ -3760,11 +3766,9 @@ rem ==========================================================================
 	rem --- Do calculation if previously skipped or failed, and on Totals tab or from BWAR.
 	eventFrom$=callpoint!.getCallpointEvent()
 	gosub isTotalsTab
-print"eventFrom$=",eventFrom$; rem wgh ... 9806 ... testing
 	if eventFrom$="OPE_ORDHDR.AOPT-RTAX" or (num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 and 
 :		(isTotalsTab or eventFrom$="OPE_ORDHDR.BWAR"))
 
-print"do tax calc"; rem wgh ... 9806 ... testing
 		rem --- Using a sales tax service?
 		use_tax_service=0
 		if callpoint!.getDevObject("sls_tax_intrface")<>"" then
@@ -3832,7 +3836,10 @@ print"do tax calc"; rem wgh ... 9806 ... testing
 				taxAmount_fnote!.setVisible(0)
 
 				rem --- Force write if not in Edit mode.
-				if !callpoint!.isEditMode() then gosub forceWrite
+				if !callpoint!.isEditMode() then
+					gosub get_disk_rec
+					gosub forceWrite
+				endif
 			endif
 		endif
 
@@ -3840,7 +3847,6 @@ print"do tax calc"; rem wgh ... 9806 ... testing
 		gosub disp_totals
 	else
 		rem --- Sales tax calculation has been deferred
-print"skip tax calc"; rem wgh ... 9806 ... testing
 		if !isTotalsTab and pos(eventFrom$="OPE_ORDHDR.ADIS:OPE_ORDHDR.BWAR")=0 then
 			callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
 		endif

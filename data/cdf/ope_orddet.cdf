@@ -1909,8 +1909,8 @@ rem ==========================================================================
 	endif
 
 	if use_tax_service then
-		rem --- Skip tax calculation for individual detail lines when using sales tax service
-		callpoint!.setHeaderColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
+		rem --- Skip tax calculation for individual detail lines, except for memos, when using sales tax service
+		if user_tpl.line_type$ <> "M" then 	callpoint!.setHeaderColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
 	else
 		rem --- Calculate tax
 		freight_amt = num(callpoint!.getHeaderColumnData("OPE_ORDHDR.FREIGHT_AMT"))
