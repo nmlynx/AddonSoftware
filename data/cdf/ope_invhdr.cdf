@@ -4001,21 +4001,97 @@ rem IN: disc_amt
 rem IN: freight_amt
 rem ==========================================================================
 
-	if cvs(callpoint!.getColumnData("OPE_INVHDR.TAX_CODE"),2) <> ""
-		ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-		ordHelp!.setTaxCode(callpoint!.getColumnData("OPE_INVHDR.TAX_CODE"))
-		taxable_sales = ordHelp!.getTaxableSales()
-		taxAndTaxableVect! = ordHelp!.calculateTax(disc_amt, freight_amt,
-:											taxable_sales,
-:											num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")))
+	rem --- Do sales tax calculation?
+	rem --- Always do calculation if for Recalculate Tax additional option AOPT-RTAX
+	rem --- Do calculation if previously skipped or failed, and on Totals tab or from BWAR.
+	eventFrom$=callpoint!.getCallpointEvent()
+	gosub isTotalsTab
+	if eventFrom$="OPE_INVHDR.AOPT-RTAX" or (num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 and 
+:		(isTotalsTab or eventFrom$="OPE_INVHDR.BWAR"))
 
-		tax_amount = taxAndTaxableVect!.getItem(0)
-		taxable_amt = taxAndTaxableVect!.getItem(1)
+		rem --- Using a sales tax service?
+		use_tax_service=0
+		if callpoint!.getDevObject("sls_tax_intrface")<>"" then
+			opc_taxcode_dev = fnget_dev("OPC_TAXCODE")
+			dim opc_taxcode$:fnget_tpl$("OPC_TAXCODE")
+			findrecord(opc_taxcode_dev,key=firm_id$+callpoint!.getColumnData("OPE_INVHDR.TAX_CODE"),dom=*next)opc_taxcode$
+			use_tax_service=opc_taxcode.use_tax_service
+		endif
 
-		callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",str(tax_amount))
-		callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",str(taxable_amt))
-		callpoint!.setStatus("REFRESH")
+		if use_tax_service then
+			rem --- Use sales tax service
+			callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT",str(disc_amt),1)
+			callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT",str(freight_amt),1)
+			gosub get_disk_rec
+			salesTax!=callpoint!.getDevObject("salesTaxObject")
+			success=0
+			taxProps!=salesTax!.calculateTax(ordhdr_rec$,"SalesOrder",err=*next); success=1
+			if !success then
+				rem --- Sales tax calculation failed
+				callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT","0")
+				callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(1))
+
+				taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
+				taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+				taxAmount_warn!.setVisible(1)
+				taxAmount_fnote!.setVisible(1)
+
+				msg_id$="OP_TAX_CALC_FAILED"
+				dim msg_tokens$[1]
+				msg_tokens$[1] = Translate!.getTranslation("AON_ORDER")
+				gosub disp_message
+			else
+				callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",taxProps!.getProperty("tax_amount"),1)
+				callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",taxProps!.getProperty("taxable_amt"),1)
+				callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(0))
+				callpoint!.setDevObject("commit_sls_tax","Y")
+
+				taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
+				taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+				taxAmount_warn!.setVisible(0)
+				taxAmount_fnote!.setVisible(0)
+
+				rem --- Force write if not in Edit mode.
+				if !callpoint!.isEditMode() then gosub forceWrite
+			endif
+		else
+			if cvs(callpoint!.getColumnData("OPE_INVHDR.TAX_CODE"),2) <> "" then
+				ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+				ordHelp!.setTaxCode(callpoint!.getColumnData("OPE_INVHDR.TAX_CODE"))
+				taxable_sales = num(ordHelp!.getTaxableSales())
+				taxAndTaxableVect! = ordHelp!.calculateTax(disc_amt, freight_amt,taxable_sales,
+:					num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")))
+
+				tax_amount = taxAndTaxableVect!.getItem(0)
+				taxable_amt = taxAndTaxableVect!.getItem(1)
+
+				callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",str(tax_amount),1)
+				callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",str(taxable_amt),1)
+				callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(0))
+				callpoint!.setDevObject("commit_sls_tax","Y")
+
+				taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
+				taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+				taxAmount_warn!.setVisible(0)
+				taxAmount_fnote!.setVisible(0)
+
+				rem --- Force write if not in Edit mode.
+				if !callpoint!.isEditMode() then
+					gosub get_disk_rec
+					gosub forceWrite
+				endif
+			endif
+		endif
+
+		rem --- Refresh totals
+		gosub disp_totals
+	else
+		rem --- Sales tax calculation has been deferred
+		if !isTotalsTab and pos(eventFrom$="OPE_INVHDR.ADIS:OPE_INVHDR.BWAR")=0 then
+			callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(1))
+		endif
 	endif
+
 	return
 
 rem ==========================================================================
@@ -4132,6 +4208,57 @@ rem ==========================================================================
 			break
 		endif
 	next i
+	return
+
+rem ==========================================================================
+forceWrite: rem --- Force write if not in Edit mode.
+rem IN: firm_id$
+rem IN: customer_id$
+rem IN: order_no$
+rem IN: ar_inv_no$
+rem IN: ordhdr_dev
+rem IN: ordhdr_rec$ from earlier get_disk_rec
+rem ==========================================================================
+
+	rem --- Force write if not in Edit mode.
+	if !callpoint!.isEditMode() then
+		rem --- Add Barista soft lock for this record if there isn't one already
+		lock_table$="OPT_INVHDR"
+		lock_record$=firm_id$+"E"+"  "+customer_id$+order_no$+ar_inv_no$
+		lock_type$="C"
+		lock_status$=""
+		lock_disp$=""
+		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+		if lock_status$="" then
+			rem --- Add temporary soft lock
+			lock_type$="L"
+			call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+
+			rem --- Update ordhdr_rec$ from earlier get_disk_rec, then write it to disk
+			ordhdr_rec.tax_amount$=callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT")
+			ordhdr_rec.taxable_amt$=callpoint!.getColumnData("OPE_INVHDR.TAXABLE_AMT")
+			ordhdr_rec.no_sls_tax_calc=num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))
+			write record (ordhdr_dev) ordhdr_rec$
+			callpoint!.setStatus("SETORIG")
+
+			rem --- Remove temporary soft lock
+			lock_type$="U"
+			call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+		else
+			rem --- Record locked by someone else
+			callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT","0")
+			callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(1))
+
+			taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
+			taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+			taxAmount_warn!.setVisible(1)
+			taxAmount_fnote!.setVisible(1)
+
+			msg_id$="ENTRY_REC_LOCKED"
+			gosub disp_message
+		endif
+	endif
+
 	return
 
 
