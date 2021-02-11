@@ -2092,13 +2092,6 @@ rem --- Has customer and order number been entered?
 		break
 	endif
 
-rem --- Redisplay Ship-To information in case answered YES to OP_REPRINT_INVOICE in ADIS
-
-	ship_to_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
-	ship_to_no$   = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
-	order_no$     = callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
-	gosub ship_to_info
-
 rem --- Check for Order Total on non-cash sales
 
 	if callpoint!.getColumnData("OPE_INVHDR.CASH_SALE")<>"Y"  then
