@@ -772,6 +772,13 @@ rem --- Set MODIFIED if totals were changed in the grid
 		endif
 	endif	
 
+rem --- Update sales tax calculation if it was previously deferred
+	if num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 then
+		disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
+
 [[OPE_INVHDR.ARAR]]
 rem --- If First/Last Record was used, did it return an Invoice?
 
@@ -2765,6 +2772,10 @@ rem --- Enable/Disable Cash Sale button
 	gosub able_cash_sale
 
 [[OPE_INVHDR.TAX_CODE.AVAL]]
+rem --- Skip if the TAX_CODE hasn't changed
+	tax_code$=callpoint!.getUserInput()
+	if tax_code$=callpoint!.getColumnData("OPE_INVHDR.TAX_CODE") then break
+
 rem --- Set code in the Order Helper object
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
@@ -2772,19 +2783,9 @@ rem --- Set code in the Order Helper object
 
 rem --- Calculate Taxes
 
-	discount_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+	disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
-	taxable_sales = ordHelp!.getTaxableSales()
-	taxAndTaxableVect! = ordHelp!.calculateTax(discount_amt, freight_amt,
-:										taxable_sales,
-:										num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")))
-
-	tax_amount = taxAndTaxableVect!.getItem(0)
-	taxable_amt = taxAndTaxableVect!.getItem(1)
-
-	callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",str(tax_amount))
-	callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",str(taxable_amt))
-	callpoint!.setStatus("REFRESH")
+	gosub calculate_tax
 
 [[OPE_INVHDR.TAX_CODE.BINP]]
 rem --- Enable/Disable Cash Sale button
