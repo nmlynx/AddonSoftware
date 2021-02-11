@@ -403,6 +403,9 @@ print "in read_display"; rem debug
 			read record (physical_dev, end=read_display_eof) physical_rec$
 			if physical_rec.firm_id$<>firm_id$ then goto read_display_eof
 			gosub display_record
+			whse$=physical_rec.warehouse_id$
+			item$=physical_rec.item_id$
+			gosub check_item_whse
 			break
 		
 read_display_eof:
