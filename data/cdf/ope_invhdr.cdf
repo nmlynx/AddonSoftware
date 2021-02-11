@@ -3361,6 +3361,12 @@ rem ==========================================================================
 			ope01a.batch_no$   = ""
 			ope01a.audit_number   = 0
 			ope01a.ship_seq_no$="001"
+			if callpoint!.getDevObject("sls_tax_intrface")<>"" then
+				opc_taxcode_dev = fnget_dev("OPC_TAXCODE")
+				dim opc_taxcode$:fnget_tpl$("OPC_TAXCODE")
+				findrecord(opc_taxcode_dev,key=firm_id$+opt01a.tax_code$,dom=*next)opc_taxcode$
+				if opc_taxcode.use_tax_service then ope01a.no_sls_tax_calc=1
+			endif
 
 			ope01a$=field(ope01a$)
 			write record (ope01_dev) ope01a$
