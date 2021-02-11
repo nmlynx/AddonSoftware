@@ -328,6 +328,7 @@ rem --- Do we need to print an invoice first?
 
 	if callpoint!.getDevObject( "print_invoice" ) = "Y" then
 		gosub do_invoice
+		if !invoicePrinted then break
 		callpoint!.setStatus("ACTIVATE")
 	endif
 
@@ -427,6 +428,7 @@ rem --- Print a counter Invoice
 rem --- No need to check credit first
 
 	gosub do_invoice
+	if !invoicePrinted then break
 	user_tpl.do_end_of_form = 0
 	callpoint!.clearStatus()
 	callpoint!.setStatus("NEWREC-ACTIVATE")
@@ -3609,7 +3611,7 @@ unlock_order: REM --- Unlock Order
 rem ==========================================================================
 	
 	callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS", "N")
-   callpoint!.setStatus("SAVE")
+	callpoint!.setStatus("SAVE")
 
 	return 
 
@@ -3634,7 +3636,21 @@ rem ==========================================================================
 
 rem ==========================================================================
 do_invoice: rem --- Print an Invoice
+rem OUT: invoicePrinted
 rem ==========================================================================
+
+rem --- Warn about failed or deferred sales tax calculation
+	invoicePrinted=1
+	if num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 then
+		msg_id$="GENERIC_WARN_CANCEL"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=Translate!.getTranslation("AON_TAX_AMT_FNOTE")
+		gosub disp_message
+		if msg_opt$<>"O" then
+			invoicePrinted=0
+			return
+		endif
+	endif
 
 rem --- Make sure everything's written back to disk
 
@@ -4030,8 +4046,8 @@ rem ==========================================================================
 			taxProps!=salesTax!.calculateTax(ordhdr_rec$,"SalesOrder",err=*next); success=1
 			if !success then
 				rem --- Sales tax calculation failed
-				callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT","0")
-				callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(1))
+				callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT","0",1)
+				callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(1),1)
 
 				taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 				taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
@@ -4045,7 +4061,7 @@ rem ==========================================================================
 			else
 				callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",taxProps!.getProperty("tax_amount"),1)
 				callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",taxProps!.getProperty("taxable_amt"),1)
-				callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(0))
+				callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(0),1)
 				callpoint!.setDevObject("commit_sls_tax","Y")
 
 				taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
@@ -4069,7 +4085,7 @@ rem ==========================================================================
 
 				callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",str(tax_amount),1)
 				callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",str(taxable_amt),1)
-				callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(0))
+				callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(0),1)
 				callpoint!.setDevObject("commit_sls_tax","Y")
 
 				taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
@@ -4090,9 +4106,10 @@ rem ==========================================================================
 	else
 		rem --- Sales tax calculation has been deferred
 		if !isTotalsTab and pos(eventFrom$="OPE_INVHDR.ADIS:OPE_INVHDR.BWAR")=0 then
-			callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(1))
+			callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(1),1)
 		endif
 	endif
+	callpoint!.setStatus("REFRESH")
 
 	return
 

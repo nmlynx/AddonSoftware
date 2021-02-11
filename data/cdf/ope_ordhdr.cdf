@@ -3788,8 +3788,8 @@ rem ==========================================================================
 			taxProps!=salesTax!.calculateTax(ordhdr_rec$,"SalesOrder",err=*next); success=1
 			if !success then
 				rem --- Sales tax calculation failed
-				callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT","0")
-				callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
+				callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT","0",1)
+				callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1),1)
 
 				taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 				taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
@@ -3803,7 +3803,7 @@ rem ==========================================================================
 			else
 				callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",taxProps!.getProperty("tax_amount"),1)
 				callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",taxProps!.getProperty("taxable_amt"),1)
-				callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(0))
+				callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(0),1)
 				callpoint!.setDevObject("commit_sls_tax","Y")
 
 				taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
@@ -3827,7 +3827,7 @@ rem ==========================================================================
 
 				callpoint!.setColumnData("OPE_ORDHDR.TAX_AMOUNT",str(tax_amount),1)
 				callpoint!.setColumnData("OPE_ORDHDR.TAXABLE_AMT",str(taxable_amt),1)
-				callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(0))
+				callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(0),1)
 				callpoint!.setDevObject("commit_sls_tax","Y")
 
 				taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
@@ -3848,9 +3848,10 @@ rem ==========================================================================
 	else
 		rem --- Sales tax calculation has been deferred
 		if !isTotalsTab and pos(eventFrom$="OPE_ORDHDR.ADIS:OPE_ORDHDR.BWAR")=0 then
-			callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
+			callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1),1)
 		endif
 	endif
+	callpoint!.setStatus("REFRESH")
 
 	return
 
