@@ -169,6 +169,8 @@ rem --- Show TAX_AMOUNT footnote warning if sales tax calculation was previously
 	if num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 then
 		taxAmount_fnote!.setVisible(1)
 	else
+		taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
+		taxAmount_warn!.setVisible(0)
 		taxAmount_fnote!.setVisible(0)
 	endif
 
