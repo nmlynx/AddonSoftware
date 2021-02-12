@@ -2285,11 +2285,14 @@ rem --- Discount Amount cannot exceed Total Sales Amount
 		callpoint!.setUserInput(str(disc_amt))
 	endif
 
+rem --- Skip if the disc_amt hasn't changed
+	if disc_amt=num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT")) then break
+
 rem --- Recalculate Tax Amount and Totals
 
+	callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(1))
 	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	gosub calculate_tax
-	callpoint!.setDevObject("was_on_tot_tab","Y")
 
 [[OPE_INVHDR.DISCOUNT_AMT.BINP]]
 rem --- Now we've been on the Totals tab
@@ -2300,7 +2303,9 @@ rem --- Enable/Disable Cash Sale button
 	gosub able_cash_sale
 
 [[OPE_INVHDR.DISC_CODE.AVAL]]
-rem --- Set discount code for use in Order Totals
+rem --- Set discount code for use in Order Totals if it changed
+	disc_code$ = callpoint!.getUserInput()
+	if cvs(disc_code$,3)=cvs(callpoint!.getColumnData("OPE_INVHDR.DISC_CODE"),3) then break
 
 	user_tpl.disc_code$ = callpoint!.getUserInput()
 	callpoint!.setDevObject("disc_code",user_tpl.disc_code$)
@@ -2328,17 +2333,15 @@ rem --- Enable/Disable Cash Sale button
 	gosub able_cash_sale
 
 [[OPE_INVHDR.FREIGHT_AMT.AVAL]]
+rem --- Skip if the FREIGHT_AMT hasn't changed
+	freight_amt = num(callpoint!.getUserInput())
+	if freight_amt=num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT")) then break
+
 rem --- Recalculate Tax Amount and Totals
 
+	callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(1))
 	disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
-	freight_amt = num(callpoint!.getUserInput())
-	prev_freight_amt=num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	gosub calculate_tax
-
-	callpoint!.setDevObject("was_on_tot_tab","Y")
-	if freight_amt<>prev_freight_amt then
-	 	callpoint!.setFocus("<<DISPLAY>>.NET_SALES")
-	endif
 
 [[OPE_INVHDR.FREIGHT_AMT.BINP]]
 rem --- Now we've been on the Totals tab
@@ -2623,6 +2626,14 @@ rem --- Check Ship-to's
 		break; rem --- exit callpoint
 	endif
 
+rem --- Update sales tax calculation if SADD1 was changed
+	sadd1$=callpoint!.getUserInput()
+	if cvs(sadd1$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD1"),3) then
+		disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
+
 [[<<DISPLAY>>.SADD2.AVAL]]
 rem --- Check Ship-to's
 
@@ -2633,6 +2644,14 @@ rem --- Check Ship-to's
 	gosub check_shipto
 	if user_tpl.shipto_warned
 		break; rem --- exit callpoint
+	endif
+
+rem --- Update sales tax calculation if SADD2 was changed
+	sadd2$=callpoint!.getUserInput()
+	if cvs(sadd2$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD2"),3) then
+		disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		gosub calculate_tax
 	endif
 
 [[<<DISPLAY>>.SADD3.AVAL]]
@@ -2647,6 +2666,14 @@ rem --- Check Ship-to's
 		break; rem --- exit callpoint
 	endif
 
+rem --- Update sales tax calculation if SADD3 was changed
+	sadd3$=callpoint!.getUserInput()
+	if cvs(sadd3$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD3"),3) then
+		disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
+
 [[<<DISPLAY>>.SADD4.AVAL]]
 rem --- Check Ship-to's
 
@@ -2657,6 +2684,32 @@ rem --- Check Ship-to's
 	gosub check_shipto
 	if user_tpl.shipto_warned
 		break; rem --- exit callpoint
+	endif
+
+rem --- Update sales tax calculation if SADD4 was changed
+	sadd4$=callpoint!.getUserInput()
+	if cvs(sadd4$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SADD4"),3) then 
+		disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
+
+[[<<DISPLAY>>.SCITY.AVAL]]
+rem --- Update sales tax calculation if SCITY was changed
+	scity$=callpoint!.getUserInput()
+	if cvs(city$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SCITY"),3) then 
+		disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
+
+[[<<DISPLAY>>.SCNTRY_ID.AVAL]]
+rem --- Update sales tax calculation if SCNTRY_ID was changed
+	scntry_id$=callpoint!.getUserInput()
+	if cvs(scntry_id$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SCNTRY_ID"),3) then 
+		disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		gosub calculate_tax
 	endif
 
 [[OPE_INVHDR.SHIPMNT_DATE.AVAL]]
@@ -2671,7 +2724,9 @@ rem --- Enable/Disable Cash Sale button
 	gosub able_cash_sale
 
 [[OPE_INVHDR.SHIPTO_NO.AVAL]]
-rem --- Check Ship-to's
+rem --- Check Ship-to's if SHIPTO_NO has changed
+	shipto_no$  = callpoint!.getUserInput()
+	if cvs(shipto_no$,3)=cvs(callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO"),3) then break
 
 	shipto_no$  = callpoint!.getUserInput()
 	shipto_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
@@ -2719,7 +2774,9 @@ rem --- Allow changing shipto_type when abort shipto_no
 	endif
 
 [[OPE_INVHDR.SHIPTO_TYPE.AVAL]]
-rem -- Deal with which Ship To type
+rem -- Deal with which Ship To type if it has changed
+	ship_to_type$ = callpoint!.getUserInput()
+	if cvs(ship_to_type$,3)=cvs(callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE"),3) then break
 
 	ship_to_type$ = callpoint!.getUserInput()
 	ship_to_no$   = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_NO")
@@ -2759,6 +2816,24 @@ rem --- Set Commission Percent
 [[OPE_INVHDR.SLSPSN_CODE.BINP]]
 rem --- Enable/Disable Cash Sale button
 	gosub able_cash_sale
+
+[[<<DISPLAY>>.SSTATE.AVAL]]
+rem --- Update sales tax calculation if SSTATE was changed
+	sstate$=callpoint!.getUserInput()
+	if cvs(sstate$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SSTATE"),3) then 
+		disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
+
+[[<<DISPLAY>>.SZIP.AVAL]]
+rem --- Update sales tax calculation if SZIP was changed
+	szip$=callpoint!.getUserInput()
+	if cvs(szip$,3)<>cvs(callpoint!.getColumnData("<<DISPLAY>>.SZIP"),3) then 
+		disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		gosub calculate_tax
+	endif
 
 [[OPE_INVHDR.TAX_AMOUNT.BINP]]
 rem --- Enable/Disable Cash Sale button
