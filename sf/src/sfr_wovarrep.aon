@@ -163,10 +163,14 @@ rem --- Init Data
         m0=len(m0$)
         m1=len(m1$)
         m2=len(m2$)
-        p0=num(sfs01a.current_per$)
+        p0=num(sfs01a.current_per$)-1
         p1=num(sfs01a.current_year$)
-        p0=p0-1
-        if p0=0 then p0=num(gls_calendar.total_pers$),p1=p1-1; rem "Find LAST PERIOD end date
+        if p0=0 then 
+            dim gls_calendar_wk$:fattr(gls_calendar$)
+            p1=p1-1
+            readrecord (gls_calendar_dev,key=firm_id$+str(p1:"0000"),dom=std_missing_params) gls_calendar_wk$
+            p0=num(gls_calendar_wk.total_pers$); rem "Find LAST PERIOD end date
+        endif
         call pgmdir$+"adc_perioddates.aon",p0,p1,v0$,g9$,table_chans$[all],status
         if status then goto std_exit
         sfs01a.current_per$=""
