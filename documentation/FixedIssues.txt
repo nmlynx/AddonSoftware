@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-02-10
+ Report Date:   2021-02-12
  Report Branch: AddonSoftware 20.32
  Last Release:  AddonSoftware 20.31
 =======================================================================================================================================
@@ -72,6 +72,30 @@ Bug 10112 - IV - Physical Count Entry not tracking lot/serialized items correctl
 ----
 Modified: data/bar/ive_count_entry.xml
 Modified: data/cdf/ive_count_entry.cdf
+
+=======================================================================================================================================
+Revision: 633cb8ada930c814d13be40d72ac2b6f73e13c1f
+Author: Christine <chawkins@basis.com>
+Date: 2/12/2021 6:21:46 PM
+Message:
+Bug 10110 - SF - Calculations for end date of previous SF period/year may be incorrect
+ - altered so if prior period is the last period of previous year, get the last period number based on total periods in *that* year, not the current year.
+
+(cherry picked from commit 3665f86a3764817630ac96886f97d6cc6961a589)
+----
+Modified: data/bar/sfe_womastr.xml
+Modified: data/cdf/sfe_womastr.cdf
+Modified: sf/src/sfr_clsdwodet.aon
+Modified: sf/src/sfr_labeffanarep.aon
+Modified: sf/src/sfr_wodetrpt.aon
+Modified: sf/src/sfr_wohardcopy.aon
+Modified: sf/src/sfr_woheader.aon
+Modified: sf/src/sfr_wordjobstat.aon
+Modified: sf/src/sfr_wotranshist.aon
+Modified: sf/src/sfr_wotrav.aon
+Modified: sf/src/sfr_wovarrep.aon
+
+
 
 
 
