@@ -1,13 +1,8 @@
 [[OPC_TAXCODE.ADIS]]
-rem --- When USE_TAX_SVC is checked, disable and clear unwanted fields
-	if num(callpoint!.getColumnData("OPC_TAXCODE.USE_TAX_SERVICE")) then
-		gosub disableUseTaxSvcUnwantedFields
-
-		rem --- Enable G/L Account"
-		if user_tpl.gl$="Y" then 
-			enableit$=""
-			gosub able_gl
-		endif
+rem --- Enable G/L Account"
+	if user_tpl.gl$="Y" then 
+		enableit$=""
+		gosub able_gl
 	endif
 
 [[OPC_TAXCODE.ARAR]]
@@ -399,26 +394,6 @@ rem --- Restrict changing USE_TAX_SVC if there are open orders or open invoices
 		endif
 	endif
 
-rem --- When USE_TAX_SVC is checked, disable and clear unwanted fields
-	if num(useTaxService$) then
-		gosub disableUseTaxSvcUnwantedFields
-
-		rem --- Enable G/L Account"
-		if user_tpl.gl$="Y" then 
-			enableit$=""
-			gosub able_gl
-		endif
-	else
-		rem --- Enable fields
-		callpoint!.setColumnEnabled("OPC_TAXCODE.TAX_RATE",1)
-		callpoint!.setColumnEnabled("OPC_TAXCODE.TAX_FRT_FLAG",1)
-		callpoint!.setColumnEnabled("OPC_TAXCODE.OP_MAX_LIMIT",1)
-		for i=1 to 10
-			index$=str(i:"00")
-			callpoint!.setColumnEnabled("OPC_TAXCODE.AR_TOT_CODE_"+index$,1)
-		next i
-	endif
-
 [[OPC_TAXCODE.<CUSTOM>]]
 #include [+ADDON_LIB]std_functions.aon
 
@@ -463,25 +438,6 @@ check_code: rem --- Check code
 		endif
 	next taxcode
 return
-
-disableUseTaxSvcUnwantedFields: rem --- Disable and clear USE_TAX_SVC unwanted fields
-	callpoint!.setColumnEnabled("OPC_TAXCODE.TAX_RATE",0)
-	callpoint!.setColumnData("OPC_TAXCODE.TAX_RATE","0")
-	callpoint!.setColumnEnabled("OPC_TAXCODE.TAX_FRT_FLAG",0)
-	callpoint!.setColumnData("OPC_TAXCODE.TAX_FRT_FLAG","0")
-	callpoint!.setColumnEnabled("OPC_TAXCODE.OP_MAX_LIMIT",0)
-	callpoint!.setColumnData("OPC_TAXCODE.OP_MAX_LIMIT","0")
-	for i=1 to 10
-		index$=str(i:"00")
-		callpoint!.setColumnEnabled("OPC_TAXCODE.AR_TOT_CODE_"+index$,0)
-		callpoint!.setColumnData("OPC_TAXCODE.AR_TOT_CODE_"+index$,"")
-		callpoint!.setColumnData("<<DISPLAY>>.TAX_DESC_"+index$,"")
-		callpoint!.setColumnData("<<DISPLAY>>.TAX_RATE_"+index$,"")
-	next i
-	callpoint!.setColumnData("<<DISPLAY>>.TAX_TOTAL","")
-
-	callpoint!.setStatus("REFRESH")
-	return
 
 
 
