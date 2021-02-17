@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-02-12
+ Report Date:   2021-02-16
  Report Branch: AddonSoftware 20.32
  Last Release:  AddonSoftware 20.31
 =======================================================================================================================================
@@ -95,6 +95,17 @@ Modified: sf/src/sfr_wotranshist.aon
 Modified: sf/src/sfr_wotrav.aon
 Modified: sf/src/sfr_wovarrep.aon
 
+=======================================================================================================================================
+Revision: 7b578db2a343e73b55a7110725c8c9fbe220e250
+Author: Christine <chawkins@basis.com>
+Date: 2/16/2021 6:07:08 PM
+Message:
+Bug 10100 - GL - Period End process not checking the auto-adjust Feb flag when creating new calendar
+ - added code to the close_last_period routine to adjust end date for February if adjust flag is set and new Next year is a leap year, or if new Next year is not a leap year.
+
+(cherry picked from commit 91adf635c67fe23ab53be30cdadca85209add09e)
+----
+Modified: gl/src/glu_periodend.aon
 
 
 
