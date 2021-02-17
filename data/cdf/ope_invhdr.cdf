@@ -187,8 +187,6 @@ rem --- Disable Ship To fields
 	gosub disable_shipto
 
 [[OPE_INVHDR.AFMC]]
-rem print 'show', "Hdr:AFMC"; rem debug
-
 rem --- Inits
 
 	use ::ado_util.src::util
@@ -321,7 +319,6 @@ rem --- Check minimum cash sale
 		endif
 	endif
 
-
 rem --- Launch Cash Transaction
 
 	gosub get_cash
@@ -330,8 +327,8 @@ rem --- Do we need to print an invoice first?
 
 	if callpoint!.getDevObject( "print_invoice" ) = "Y" then
 		gosub do_invoice
-		if !invoicePrinted then break
 		callpoint!.setStatus("ACTIVATE")
+		if !invoicePrinted then break
 	endif
 
 rem --- Start a new record after a cash sale
@@ -430,10 +427,11 @@ rem --- Print a counter Invoice
 rem --- No need to check credit first
 
 	gosub do_invoice
+	callpoint!.setStatus("ACTIVATE")
 	if !invoicePrinted then break
 	user_tpl.do_end_of_form = 0
 	callpoint!.clearStatus()
-	callpoint!.setStatus("NEWREC-ACTIVATE")
+	callpoint!.setStatus("NEWREC")
 
 rem --- Remove temporary soft lock used just for this print task 
 	if !callpoint!.isEditMode() and lock_type$="L" then
@@ -3716,7 +3714,13 @@ do_invoice: rem --- Print an Invoice
 rem OUT: invoicePrinted
 rem ==========================================================================
 
-rem --- Warn about failed or deferred sales tax calculation
+	rem --- Make sure sales TAX_AMOUNT is current
+	disc_amt=num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+	freight_amt=num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+	gosub calculate_tax
+	startTaxAmount=num(callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
+
+	rem --- Warn about failed or deferred sales tax calculation
 	invoicePrinted=1
 	if num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 then
 		msg_id$="GENERIC_WARN_CANCEL"
@@ -3726,6 +3730,49 @@ rem --- Warn about failed or deferred sales tax calculation
 		if msg_opt$<>"O" then
 			invoicePrinted=0
 			return
+		endif
+
+		rem --- Calculate Tax Amount using Tax Code's Tax Rate
+		if cvs(callpoint!.getColumnData("OPE_INVHDR.TAX_CODE"),2) <> ""
+			ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+			ordHelp!.setTaxCode(callpoint!.getColumnData("OPE_INVHDR.TAX_CODE"))
+			taxable_sales = ordHelp!.getTaxableSales()
+			taxAndTaxableVect! = ordHelp!.calculateTax(disc_amt, freight_amt,
+:											taxable_sales,
+:											num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")))
+
+			tax_amount = taxAndTaxableVect!.getItem(0)
+			taxable_amt = taxAndTaxableVect!.getItem(1)
+
+			callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",str(tax_amount),1)
+			callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",str(taxable_amt),1)
+
+			rem --- Refresh totals
+			gosub disp_totals
+			callpoint!.setStatus("REFRESH")
+		endif
+
+		rem --- Let user change the TAX_AMOUNT
+		user_id$=stbl("+USER_ID")
+		dim dflt_data$[1,1]
+		dflt_data$[1,0]="TAX_AMOUNT"
+		dflt_data$[1,1]=str(tax_amount)
+ 
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	                       "OPE_ALTSLSTAXCAL",
+:	                       user_id$,
+:	                       "",
+:	                       "",
+:	                       table_chans$[all],
+:	                       "",
+:	                       dflt_data$[all]
+
+		altSlsTaxCal=num(callpoint!.getDevObject("altSlsTaxCal"))
+		if altSlsTaxCal<>startTaxAmount
+			tax_amount=altSlsTaxCal
+			callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",str(tax_amount),1)
+			gosub disp_totals
+			callpoint!.setStatus("REFRESH")
 		endif
 	endif
 
@@ -4102,7 +4149,7 @@ rem ==========================================================================
 	eventFrom$=callpoint!.getCallpointEvent()
 	gosub isTotalsTab
 	if eventFrom$="OPE_INVHDR.AOPT-RTAX" or (num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 and 
-:		(isTotalsTab or eventFrom$="OPE_INVHDR.BWAR"))
+:		(isTotalsTab or pos(eventFrom$="OPE_INVHDR.BWAR:OPE_INVHDR.AOPT-CASH:OPE_INVHDR.AOPT-PRNT")))
 
 		rem --- Using a sales tax service?
 		use_tax_service=0
@@ -4182,7 +4229,7 @@ rem ==========================================================================
 		gosub disp_totals
 	else
 		rem --- Sales tax calculation has been deferred
-		if !isTotalsTab and pos(eventFrom$="OPE_INVHDR.ADIS:OPE_INVHDR.BWAR")=0 then
+		if !isTotalsTab and pos(eventFrom$="OPE_INVHDR.ADIS:OPE_INVHDR.BWAR:OPE_INVHDR.AOPT-CASH:OPE_INVHDR.AOPT-PRNT")=0 then
 			callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(1),1)
 		endif
 	endif
