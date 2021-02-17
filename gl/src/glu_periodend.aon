@@ -11,6 +11,8 @@ rem  +-----------------------------------------+
     setesc std_error
     seterr std_error
 
+    use java.util.GregorianCalendar
+
 rem --- Retrieve the program path
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
@@ -110,6 +112,7 @@ close_last_period: rem --- Closing last period of year
     gls01a.current_per$="01"
     year=year+1
     gls01a.current_year$=str(year:"0000")
+    Calendar! = new GregorianCalendar()
 
     rem --- Add calendar for new Next fiscal year
     if gls01a.create_next_cal then
@@ -125,10 +128,20 @@ close_last_period: rem --- Closing last period of year
             gosub disp_message
             goto std_exit_no_update
         endif
+        new_curr_yr=num(gls_calendar.year$)
         gls_calendar.year$=str(num(gls01a.current_year$)+1)
+        new_next_yyyy$=gls_calendar.year$
         for x=1 to num(gls_calendar.total_pers$)    
             field gls_calendar$,"locked_flag_"+str(x:"00")="N"
             field gls_calendar$,"locked_date_"+str(x:"00")=""
+            rem --- Adjust last day of February for leap year for new Next year (based on new Current year)
+            call pgmdir$+"adc_perioddates.aon",x,new_curr_yr,begdate$,enddate$,table_chans$[all],status
+            mm$=enddate$(5,2)
+            dd$=enddate$(7,2)
+            if mm$="02" then
+                if dd$="29" and !Calendar!.isLeapYear(num(new_next_yyyy$)) then field gls_calendar$,"per_ending_"+str(x:"00")=mm$+"28"
+                if dd$="28" and Calendar!.isLeapYear(num(new_next_yyyy$)) and gls01a.adjust_february then field gls_calendar$,"per_ending_"+str(x:"00")=mm$+"29"
+            endif
         next x
     endif
 
