@@ -1,0 +1,48 @@
+rem ==========================================================================
+rem --- ado_GitRepoInterface.aon 
+rem --- GitRepoInterface class (subclass of AO_GitRepoInterface)
+rem --- Customized helper class for superclass used to interface with Addon's
+rem --- Git repositories via JGit.
+rem --- 
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem ==========================================================================
+
+rem --- Use statements and declares
+
+    use ::ado_AO_GitRepoInterface.aon::AO_GitRepoInterface
+    use ::ado_AO_GitRepoInterface.aon::AO_FixedIssuesReader
+    
+rem --- Customized helper class for superclass used to interface with Addon's
+rem --- Git repositories via JGit.
+
+    class public GitRepoInterface extends AO_GitRepoInterface
+
+        rem /**
+        rem  * Constructor.
+        rem  *
+        rem  * @param BBjString aonDir$
+        rem  */
+        method public GitRepoInterface(BBjString aonDir$)
+        
+            #super!(aonDir$)
+
+            methodret
+
+        methodend
+
+    classend
+    
+    class public FixedIssuesReader extends AO_FixedIssuesReader
+
+        rem /**
+        rem  * Constructor
+        rem  */
+        method public FixedIssuesReader()
+        
+            #super!()
+            
+            methodret
+
+        methodend
+
+    classend

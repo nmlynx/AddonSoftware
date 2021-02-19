@@ -76,12 +76,11 @@ rem --- Initialize UM_SOLD ListButton except when line type is non-stock
 		col_hdr$=callpoint!.getTableColumnAttribute("OPE_INVDET.UM_SOLD","LABS")
 		col_ref=util.getGridColumnNumber(dtlGrid!, col_hdr$)
 		row=callpoint!.getValidationRow()
-		nxt_ctlID=callpoint!.getDevObject("nxt_ctlID")
+		nxt_ctlID=util.getNextControlID()
 		umList!=Form!.addListButton(nxt_ctlID,10,10,100,100,"",$0810$)
 		umList!.addItem("")
 		dtlGrid!.setCellListControl(row,col_ref,umList!)
 		dtlGrid!.setCellListSelection(row,col_ref,0,0)
-		callpoint!.setDevObject("nxt_ctlID",nxt_ctlID+1)
 		if cvs(callpoint!.getColumnData("OPE_INVDET.UM_SOLD"),2)<>"" then
 			ivm01_dev=fnget_dev("IVM_ITEMMAST")
 			ivm01_tpl$=fnget_tpl$("IVM_ITEMMAST")
@@ -1651,6 +1650,15 @@ rem ==========================================================================
 rem ==========================================================================
 disp_grid_totals: rem --- Get order totals and display, save header totals
 rem ==========================================================================
+	rem --- Using a sales tax service?
+	use_tax_service=0
+	if callpoint!.getDevObject("sls_tax_intrface")<>"" then
+		opc_taxcode_dev = fnget_dev("OPC_TAXCODE")
+		dim opc_taxcode$:fnget_tpl$("OPC_TAXCODE")
+		findrecord(opc_taxcode_dev,key=firm_id$+callpoint!.getHeaderColumnData("OPE_INVHDR.TAX_CODE"),dom=*next)opc_taxcode$
+		use_tax_service=opc_taxcode.use_tax_service
+	endif
+
 	gosub calculate_discount
 
 	freight_amt = num(callpoint!.getHeaderColumnData("OPE_INVHDR.FREIGHT_AMT"))
@@ -1667,8 +1675,6 @@ rem ==========================================================================
 	netamt!.setValue(net_sales)
 	taxamt! = UserObj!.getItem(num(callpoint!.getDevObject("tax_amt_disp")))
 	taxamt!.setValue(ttl_tax)
-rem	frghtamt! = UserObj!.getItem(num(callpoint!.getDevObject("freight_amt")))
-rem	frghtamt!.setValue(freight_amt)
 	ordamt! = UserObj!.getItem(user_tpl.ord_tot_obj)
 	ordamt!.setValue(net_sales)
 
@@ -1676,8 +1682,10 @@ rem	frghtamt!.setValue(freight_amt)
 	callpoint!.setHeaderColumnData("OPE_INVHDR.DISCOUNT_AMT",str(disc_amt))
 	callpoint!.setHeaderColumnData("<<DISPLAY>>.SUBTOTAL", str(sub_tot))
 	callpoint!.setHeaderColumnData("<<DISPLAY>>.NET_SALES", str(net_sales))
-	callpoint!.setHeaderColumnData("OPE_INVHDR.TAX_AMOUNT",str(ttl_tax))
-	callpoint!.setHeaderColumnData("OPE_INVHDR.TAXABLE_AMT",str(ttl_taxable))
+	if !use_tax_service then
+		callpoint!.setHeaderColumnData("OPE_INVHDR.TAX_AMOUNT",str(ttl_tax))
+		callpoint!.setHeaderColumnData("OPE_INVHDR.TAXABLE_AMT",str(ttl_taxable))
+	endif
 	callpoint!.setHeaderColumnData("OPE_INVHDR.FREIGHT_AMT",str(freight_amt))
 	callpoint!.setHeaderColumnData("<<DISPLAY>>.ORDER_TOT", str(net_sales))
 
@@ -1726,11 +1734,16 @@ rem ==========================================================================
 		callpoint!.setHeaderColumnData("OPE_INVHDR.DISCOUNT_AMT",str(disc_amt))
 	endif
 
-	rem --- Calculate tax
-	freight_amt = num(callpoint!.getHeaderColumnData("OPE_INVHDR.FREIGHT_AMT"))
-	taxAndTaxableVect! = ordHelp!.calculateTax(disc_amt, freight_amt, ttl_taxable_sales, ttl_ext_price)
-	ttl_tax = taxAndTaxableVect!.getItem(0)
-	ttl_taxable = taxAndTaxableVect!.getItem(1)
+	if use_tax_service then
+		rem --- Skip tax calculation for individual detail lines, except for memos, when using sales tax service
+		if user_tpl.line_type$ <> "M" then 	callpoint!.setHeaderColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(1))
+	else
+		rem --- Calculate tax
+		freight_amt = num(callpoint!.getHeaderColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		taxAndTaxableVect! = ordHelp!.calculateTax(disc_amt, freight_amt, ttl_taxable_sales, ttl_ext_price)
+		ttl_tax = taxAndTaxableVect!.getItem(0)
+		ttl_taxable = taxAndTaxableVect!.getItem(1)
+	endif
 
 	return
 
@@ -2431,12 +2444,11 @@ rem ==========================================================================
 			umList!=null()
 			umList!=dtlGrid!.getCellListControl(row,col_ref,err=*next)
 			if umList!=null() then
-				nxt_ctlID=callpoint!.getDevObject("nxt_ctlID")
+				nxt_ctlID=util.getNextControlID()
 				umList!=Form!.addListButton(nxt_ctlID,10,10,100,100,"",$0810$)
 				umList!.addItem("")
 				dtlGrid!.setCellListControl(row,col_ref,umList!)
 				dtlGrid!.setCellListSelection(row,col_ref,0,0)
-				callpoint!.setDevObject("nxt_ctlID",nxt_ctlID+1)
 			endif
 		endif
 

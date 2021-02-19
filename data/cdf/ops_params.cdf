@@ -1,35 +1,3 @@
-[[OPS_PARAMS.OP_CREATE_WO_TYP.AVAL]]
-rem --- Verify WO Category of entered WO Type is Inventory Item
-
-	wo_type$=callpoint!.getUserInput()
-	wotypecd_dev=fnget_dev("SFC_WOTYPECD")
-	dim wotypecd$:fnget_tpl$("SFC_WOTYPECD")
-	findrecord(wotypecd_dev,key=firm_id$+"A"+wo_type$,dom=*next)wotypecd$
-	if wotypecd.wo_category$<>"I" then
-		msg_id$="AD_BAD_WO_CATEGORY"
-		dim msg_tokens$[1]
-		msg_tokens$[1]="Inventory Item"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-	endif
-[[OPS_PARAMS.OP_CREATE_WO.AVAL]]
-rem --- Disable and clear OP_CREATE_WO_TYP if not creating Work Orders
-
-	op_create_wo$=callpoint!.getUserInput()
-	if cvs(op_create_wo$,2)<>cvs(callpoint!.getColumnData("OPS_PARAMS.OP_CREATE_WO"),2) then
-		if cvs(op_create_wo$,2)="" then
-			callpoint!.setColumnData("OPS_PARAMS.OP_CREATE_WO_TYP","",1)
-			callpoint!.setColumnEnabled("OPS_PARAMS.OP_CREATE_WO_TYP",0)
-		else
-			callpoint!.setColumnEnabled("OPS_PARAMS.OP_CREATE_WO_TYP",1)
-		endif
-	endif
-[[OPS_PARAMS.ARAR]]
-rem --- Update post_to_gl if GL is uninstalled
-	if user_tpl.gl_installed$<>"Y" and callpoint!.getColumnData("OPS_PARAMS.POST_TO_GL")="Y" then
-		callpoint!.setColumnData("OPS_PARAMS.POST_TO_GL","N",1)
-		callpoint!.setStatus("MODIFIED")
-	endif
 [[OPS_PARAMS.ADIS]]
 
 rem --- Default Line Code is required when Line Code Entry is skipped
@@ -53,26 +21,22 @@ rem --- Disable OP_CREATE_WO_TYP if not creating Work Orders
 	if cvs(callpoint!.getColumnData("OPS_PARAMS.OP_CREATE_WO"),2)="" then
 		callpoint!.setColumnEnabled("OPS_PARAMS.OP_CREATE_WO_TYP",0)
 	endif
-[[OPS_PARAMS.SKIP_LN_CODE.AVAL]]
-rem --- Default Line Code is required when Line Code Entry is skipped
 
-if callpoint!.getUserInput()="Y"
-	callpoint!.setTableColumnAttribute("OPS_PARAMS.LINE_CODE","MINL","1")
-else
-	callpoint!.setTableColumnAttribute("OPS_PARAMS.LINE_CODE","MINL","0")
-endif
-[[OPS_PARAMS.AREC]]
-rem --- Init new record
-	callpoint!.setColumnData("OPS_PARAMS.INV_HIST_FLG","Y")
-	if user_tpl.gl_installed$="Y" then callpoint!.setColumnData("OPS_PARAMS.POST_TO_GL","Y")
-[[OPS_PARAMS.END_CMT_LINE.AVAL]]
-beg_cmt$=callpoint!.getColumnData("OPS_PARAMS.BEG_CMT_LINE")
-end_cmt$=callpoint!.getUserInput()
-gosub validate_cmt_lines
-[[OPS_PARAMS.BEG_CMT_LINE.AVAL]]
-beg_cmt$=callpoint!.getUserInput()
-end_cmt$=callpoint!.getColumnData("OPS_PARAMS.END_CMT_LINE")
-gosub validate_cmt_lines
+rem --- Disable TAX_SVC_CD_SRC when not using a sales tax service
+	if cvs(callpoint!.getColumnData("OPS_PARAMS.SLS_TAX_INTRFACE"),2)="" then
+		callpoint!.setColumnData("OPS_PARAMS.TAX_SVC_CD_SRC","",1)
+		callpoint!.setColumnEnabled("OPS_PARAMS.TAX_SVC_CD_SRC",0)
+	else
+		callpoint!.setColumnEnabled("OPS_PARAMS.TAX_SVC_CD_SRC",1)
+	endif
+
+[[OPS_PARAMS.ARAR]]
+rem --- Update post_to_gl if GL is uninstalled
+	if user_tpl.gl_installed$<>"Y" and callpoint!.getColumnData("OPS_PARAMS.POST_TO_GL")="Y" then
+		callpoint!.setColumnData("OPS_PARAMS.POST_TO_GL","N",1)
+		callpoint!.setStatus("MODIFIED")
+	endif
+
 [[OPS_PARAMS.AREA]]
 rem --- if not posting to GL, set 'print sales GL detail' flag to N as well
 
@@ -82,10 +46,25 @@ if user_tpl.gl_post$="N" then
 	ctl_stat$="D"
 	gosub disable_fields
 endif
+
+[[OPS_PARAMS.AREC]]
+rem --- Init new record
+	callpoint!.setColumnData("OPS_PARAMS.INV_HIST_FLG","Y")
+	if user_tpl.gl_installed$="Y" then callpoint!.setColumnData("OPS_PARAMS.POST_TO_GL","Y")
+	callpoint!.setColumnData("OPS_PARAMS.SLS_TAX_INTRFACE","")
+	callpoint!.setColumnData("OPS_PARAMS.TAX_SVC_CD_SRC","")
+	callpoint!.setColumnEnabled("OPS_PARAMS.TAX_SVC_CD_SRC",0)
+
+[[OPS_PARAMS.BEG_CMT_LINE.AVAL]]
+beg_cmt$=callpoint!.getUserInput()
+end_cmt$=callpoint!.getColumnData("OPS_PARAMS.END_CMT_LINE")
+gosub validate_cmt_lines
+
 [[OPS_PARAMS.BSHO]]
 rem --- Inits
 
 	use ::ado_util.src::util
+	use net.avalara.avatax.rest.client.AvaTaxConstants
 
 rem --- Are Bill Of Materials and Shop Floor installed?
 
@@ -188,6 +167,126 @@ rem --- Retrieve parameter/application data
 rem --- Resize window
 
 	util.resizeWindow(Form!, SysGui!)
+
+[[OPS_PARAMS.BWRI]]
+rem --- TAX_SVC_CD_SRC is required when using a sales tax service
+	tax_svc_cd_src$=cvs(callpoint!.getColumnData("OPS_PARAMS.TAX_SVC_CD_SRC"),2)
+	sls_tax_intrface$=cvs(callpoint!.getColumnData("OPS_PARAMS.SLS_TAX_INTRFACE"),2)
+	if tax_svc_cd_src$="" and sls_tax_intrface$<>"" then
+		msg_id$="OP_NO_TAX_SVC_CD_SRC"
+		gosub disp_message
+
+		callpoint!.setFocus("OPS_PARAMS.TAX_SVC_CD_SRC")
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+[[OPS_PARAMS.END_CMT_LINE.AVAL]]
+beg_cmt$=callpoint!.getColumnData("OPS_PARAMS.BEG_CMT_LINE")
+end_cmt$=callpoint!.getUserInput()
+gosub validate_cmt_lines
+
+[[OPS_PARAMS.OP_CREATE_WO.AVAL]]
+rem --- Disable and clear OP_CREATE_WO_TYP if not creating Work Orders
+
+	op_create_wo$=callpoint!.getUserInput()
+	if cvs(op_create_wo$,2)<>cvs(callpoint!.getColumnData("OPS_PARAMS.OP_CREATE_WO"),2) then
+		if cvs(op_create_wo$,2)="" then
+			callpoint!.setColumnData("OPS_PARAMS.OP_CREATE_WO_TYP","",1)
+			callpoint!.setColumnEnabled("OPS_PARAMS.OP_CREATE_WO_TYP",0)
+		else
+			callpoint!.setColumnEnabled("OPS_PARAMS.OP_CREATE_WO_TYP",1)
+		endif
+	endif
+
+[[OPS_PARAMS.OP_CREATE_WO_TYP.AVAL]]
+rem --- Verify WO Category of entered WO Type is Inventory Item
+
+	wo_type$=callpoint!.getUserInput()
+	wotypecd_dev=fnget_dev("SFC_WOTYPECD")
+	dim wotypecd$:fnget_tpl$("SFC_WOTYPECD")
+	findrecord(wotypecd_dev,key=firm_id$+"A"+wo_type$,dom=*next)wotypecd$
+	if wotypecd.wo_category$<>"I" then
+		msg_id$="AD_BAD_WO_CATEGORY"
+		dim msg_tokens$[1]
+		msg_tokens$[1]="Inventory Item"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
+
+[[OPS_PARAMS.SKIP_LN_CODE.AVAL]]
+rem --- Default Line Code is required when Line Code Entry is skipped
+
+if callpoint!.getUserInput()="Y"
+	callpoint!.setTableColumnAttribute("OPS_PARAMS.LINE_CODE","MINL","1")
+else
+	callpoint!.setTableColumnAttribute("OPS_PARAMS.LINE_CODE","MINL","0")
+endif
+
+[[OPS_PARAMS.SLS_TAX_INTRFACE.AVAL]]
+rem --- Cannot change SLS_TAX_INTRFACE if there are open orders or open invoices
+	sls_tax_intrface$=cvs(callpoint!.getUserInput(),2)
+	if sls_tax_intrface$<>cvs(callpoint!.getColumnData("OPS_PARAMS.SLS_TAX_INTRFACE"),2) then
+		sql$ = "SELECT COUNT(*) AS COUNT "
+		sql$ = sql$ + "FROM OPT_INVHDR "
+		sql$ = sql$ + "WHERE FIRM_ID = '" + firm_id$ + "' and TRANS_STATUS IN ('E','R')"
+
+		sql_chan=sqlunt
+		sqlopen(sql_chan)stbl("+DBNAME")
+		sqlprep(sql_chan)sql$
+		dim read_tpl$:sqltmpl(sql_chan)
+		sqlexec(sql_chan)
+
+		read_tpl$ = sqlfetch(sql_chan,err=*continue)
+		count=read_tpl$.count
+		sqlclose(sql_chan)
+
+		if count then
+			msg_id$="OP_CANNOT_CHG_STI"
+			dim msg_tokens$[1]
+			msg_tokens$[1]=str(count)
+			gosub disp_message
+
+			callpoint!.setColumnData("OPS_PARAMS.SLS_TAX_INTRFACE",callpoint!.getColumnData("OPS_PARAMS.SLS_TAX_INTRFACE"),1)
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
+
+rem --- Disable TAX_SVC_CD_SRC when not using a sales tax service
+	sls_tax_intrface$=cvs(callpoint!.getUserInput(),2)
+	if sls_tax_intrface$="" then
+		callpoint!.setColumnData("OPS_PARAMS.TAX_SVC_CD_SRC","",1)
+		callpoint!.setColumnEnabled("OPS_PARAMS.TAX_SVC_CD_SRC",0)
+	else
+		callpoint!.setColumnEnabled("OPS_PARAMS.TAX_SVC_CD_SRC",1)
+	endif
+
+rem --- Use of AvaTax sales tax service requires access to AvaTax classes in AvaTax jar
+	if sls_tax_intrface$="A" then
+		avaTaxConstants!=new AvaTaxConstants(err=*next)
+		if avaTaxConstants!=null() then
+			msg_id$="OP_NO_AVATAX_JAR"
+			gosub disp_message
+
+			callpoint!.setColumnData("OPS_PARAMS.SLS_TAX_INTRFACE","",1)
+			callpoint!.setStatus("ABORT")
+			break
+		endif
+	endif
+
+[[OPS_PARAMS.TAX_SVC_CD_SRC.AVAL]]
+rem --- TAX_SVC_CD_SRC is required when using a sales tax service
+	tax_svc_cd_src$=cvs(callpoint!.getUserInput(),2)
+	sls_tax_intrface$=cvs(callpoint!.getColumnData("OPS_PARAMS.SLS_TAX_INTRFACE"),2)
+	if tax_svc_cd_src$="" and sls_tax_intrface$<>"" then
+		msg_id$="OP_NO_TAX_SVC_CD_SRC"
+		gosub disp_message
+
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
 [[OPS_PARAMS.<CUSTOM>]]
 validate_cmt_lines:
 rem make sure beg/end cmt lines are blank or >0, <99, and that beg < end
@@ -248,3 +347,6 @@ disable_fields:
 return
 
 #include [+ADDON_LIB]std_missing_params.aon
+
+
+

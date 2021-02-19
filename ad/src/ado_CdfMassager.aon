@@ -1,0 +1,33 @@
+rem ==========================================================================
+rem --- ado_CdfMassager.aon 
+rem --- CdfMassager class (subclass of AO_CdfMassager)
+rem --- Customized helper class for superclass used to restructure data/cdf callpoint programs
+rem --- Alphabetizes callpoints, and merges Mods project before/after callpoints into standard code.
+rem --- 
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem ==========================================================================
+
+rem --- Use statements and declares
+
+    use ::ado_AO_CdfMassager.aon::AO_CdfMassager
+
+
+rem /**
+rem  * Customized helper class for superclass used to restructure data/cdf callpoint programs.
+rem  * Alphabetizes callpoints, and merges Mods project before/after callpoints into standard code.
+rem  */
+
+    class public CdfMassager extends AO_CdfMassager
+
+        rem /**
+        rem  * Constructor.
+        rem  */
+        method public CdfMassager()
+        
+            #super!()
+
+            methodret
+
+        methodend
+
+    classend

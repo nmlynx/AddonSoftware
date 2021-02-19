@@ -71,6 +71,7 @@ rem --- Display selected colors
 	if cvs(bnk_acct_cd$,2)<>"" then
 		adcBankAcctCode_dev=fnget_dev("ADC_BANKACCTCODE")
 		dim adcBankAcctCode$:fnget_tpl$("ADC_BANKACCTCODE")
+		encryptor!=callpoint!.getDevObject("encryptor")
 		readrecord(adcBankAcctCode_dev,key=firm_id$+bnk_acct_cd$,dom=*next)adcBankAcctCode$
 		callpoint!.setColumnData("<<DISPLAY>>.BANK_NAME",adcBankAcctCode.bank_name$,1)
 		callpoint!.setColumnData("<<DISPLAY>>.ADDRESS_LINE_1",adcBankAcctCode.address_line_1$,1)
@@ -78,7 +79,7 @@ rem --- Display selected colors
 		callpoint!.setColumnData("<<DISPLAY>>.ADDRESS_LINE_3",adcBankAcctCode.address_line_3$,1)
 		callpoint!.setColumnData("<<DISPLAY>>.ACCT_DEST",adcBankAcctCode.acct_desc$,1)
 		callpoint!.setColumnData("<<DISPLAY>>.ABA_NO",adcBankAcctCode.aba_no$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.BNK_ACCT_NO",adcBankAcctCode.bnk_acct_no$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.BNK_ACCT_NO",encryptor!.decryptData(cvs(adcBankAcctCode.bnk_acct_no$,3)),1)
 		callpoint!.setColumnData("<<DISPLAY>>.BNK_ACCT_TYPE",adcBankAcctCode.bnk_acct_type$,1)
 
 		rem --- Initialize Federal ID field
@@ -314,6 +315,7 @@ rem --- Initialize ACH Payment fields
 			rem --- Initialize bank account code fields
 			adcBankAcctCode_dev=fnget_dev("ADC_BANKACCTCODE")
 			dim adcBankAcctCode$:fnget_tpl$("ADC_BANKACCTCODE")
+			encryptor!=callpoint!.getDevObject("encryptor")
 			readrecord(adcBankAcctCode_dev,key=firm_id$+bnk_acct_cd$,dom=*next)adcBankAcctCode$
 			callpoint!.setColumnData("<<DISPLAY>>.BANK_NAME",adcBankAcctCode.bank_name$,1)
 			callpoint!.setColumnData("<<DISPLAY>>.ADDRESS_LINE_1",adcBankAcctCode.address_line_1$,1)
@@ -321,7 +323,7 @@ rem --- Initialize ACH Payment fields
 			callpoint!.setColumnData("<<DISPLAY>>.ADDRESS_LINE_3",adcBankAcctCode.address_line_3$,1)
 			callpoint!.setColumnData("<<DISPLAY>>.ACCT_DEST",adcBankAcctCode.acct_desc$,1)
 			callpoint!.setColumnData("<<DISPLAY>>.ABA_NO",adcBankAcctCode.aba_no$,1)
-			callpoint!.setColumnData("<<DISPLAY>>.BNK_ACCT_NO",adcBankAcctCode.bnk_acct_no$,1)
+			callpoint!.setColumnData("<<DISPLAY>>.BNK_ACCT_NO",encryptor!.decryptData(cvs(adcBankAcctCode.bnk_acct_no$,3)),1)
 			callpoint!.setColumnData("<<DISPLAY>>.BNK_ACCT_TYPE",adcBankAcctCode.bnk_acct_type$,1)
 			callpoint!.setColumnData("APS_ACH.TOTAL_REQUIRED","Y",1)
 
@@ -354,6 +356,10 @@ rem --- Initialize ACH Payment fields
 	endif
 
 [[APS_PARAMS.BSHO]]
+rem --- Encryptor for bank acct #
+
+	use ::sys/prog/bao_encryptor.bbj::Encryptor
+
 rem --- Open files
 
 	num_files=8
@@ -397,6 +403,12 @@ rem --- TWO_AUTH_COLOR background color displays
 	ctl_name$="APS_PAYAUTH.TWO_AUTH_COLOR"
 	gosub make_color_display
 	callpoint!.setDevObject("two_color_ctl",color_display_ctl!)
+
+rem --- Set up Encryptor
+	encryptor! = new Encryptor()
+	config_id$ = "BANK_ACCT_AUTH"
+	encryptor!.setConfiguration(config_id$)
+	callpoint!.setDevObject("encryptor",encryptor!)
 
 [[APS_PARAMS.CURRENT_PER.AVAL]]
 rem --- Verify haven't exceeded calendar total periods for current AP fiscal year
@@ -659,4 +671,6 @@ rem =========================================================
 		pos=pos("\"=filePath$)
 	wend
 	return
+
+
 

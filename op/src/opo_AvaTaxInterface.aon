@@ -1,0 +1,37 @@
+rem ==========================================================================
+rem --- opo_AvaTaxInterface.aon 
+rem --- AvaTaxInterface class (subclass of AO_AvaTaxInterface)
+rem --- Customized OP helper class for superclass used to interface with
+rem --- Avalara's AvaTax sales tax service.
+rem --- 
+rem --- AddonSoftware Version 21.0
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem ==========================================================================
+
+rem /**
+rem  * Customized OP helper class for superclass used to interface with
+rem  * Avalara's AvaTax sales tax service.
+rem  */
+
+rem --- Use statements and declares
+
+    use ::opo_AO_AvaTaxInterface.aon::AO_AvaTaxInterface
+
+    class public AvaTaxInterface extends AO_AvaTaxInterface
+
+        rem /**
+        rem  * Constructor.
+        rem  *
+        rem  * @param BBjString aonFirm$
+        rem  * @param BBjString customerId$
+        rem  * @param BBjString orderNo$
+        rem  */
+        method public AvaTaxInterface(BBjString firmID$)
+
+            #super!(firmID$)
+
+            methodret
+
+        methodend
+
+    classend

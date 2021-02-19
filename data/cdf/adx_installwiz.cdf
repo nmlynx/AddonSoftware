@@ -176,7 +176,7 @@ rem --- Enable/disable version_neutral
 				callpoint!.setColumnEnabled("ADX_INSTALLWIZ.NEW_INSTALL_LOC",1)
 			endif
 
-			rem ---Clear version_neutral
+			rem --- Clear version_neutral
 			callpoint!.setColumnData("ADX_INSTALLWIZ.VERSION_NEUTRAL","0",1)
 			
 			rem --- Clear firm_id

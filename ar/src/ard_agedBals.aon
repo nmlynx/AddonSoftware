@@ -74,10 +74,11 @@ rem --- processes all invoices this customer and loads non-zero bal inv#'s into 
 	age90Vect!=BBjAPI().makeVector()
 	age120Vect!=BBjAPI().makeVector()
 
-    num_files=2
+    num_files=3
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
     open_tables$[1]="ART_INVHDR",open_opts$[1]="OTA@"
     open_tables$[2]="ARM_CUSTDET",open_opts$[2]="OTA@"
+    open_tables$[3]="ARS_PARAMS",open_opts$[3]="OTA@"
     
     gosub open_tables
         
@@ -85,6 +86,8 @@ rem --- processes all invoices this customer and loads non-zero bal inv#'s into 
     dim art_invhdr$:open_tpls$[1]
     arm_custdet=num(open_chans$[2])
     dim arm_custdet$:open_tpls$[2]
+    ars_params=num(open_chans$[3])
+    dim ars_params$:open_tpls$[3]
 
 	trip_key$=rd_drill_pfx$
     age_credits$=""
@@ -107,6 +110,10 @@ rem --- processes all invoices this customer and loads non-zero bal inv#'s into 
            	age_credits$=arm_custdet.age_credits$
             last_age_dt$=arm_custdet.report_date$
             last_age_by$=arm_custdet.report_type$
+            if cvs(last_age_by$,2)=""
+                readrecord(ars_params,key=art_invhdr.firm_id$+"AR00",dom=*next)ars_params$
+                last_age_by$=iff(cvs(ars_params.dflt_age_by$,2)="","I",ars_params.dflt_age_by$)
+            endif
             if cvs(last_age_dt$,2)=""
                 msg_id$="AGE_INFO_NOT_AVAIL"
                 gosub disp_message
@@ -177,11 +184,12 @@ rem --- processes all invoices this customer and loads non-zero bal inv#'s into 
 
 	objTable!.put("agedBalDrills",agedBalHash!)
 
-    num_files=2
+    num_files=3
     dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="D"+"ART_INVHDR",open_opts$[1]="CX"
-    open_tables$[2]="D"+"ARM_CUSTDET",open_opts$[2]="CX"
-    
+    open_tables$[1]="@"+"ART_INVHDR",open_opts$[1]="CX"
+    open_tables$[2]="@"+"ARM_CUSTDET",open_opts$[2]="CX"
+    open_tables$[3]="@"+"ARS_PARAMS",open_opts$[3]="CX"
+
     gosub open_tables;rem close files when leaving
 
 	return

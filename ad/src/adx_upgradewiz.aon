@@ -7,25 +7,36 @@ rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
 
     use java.io.File
-    use java.io.FileReader
-    use java.io.FileWriter
+    use java.lang.reflect.Array
+    use java.nio.file.Files
+    use java.nio.file.StandardCopyOption
     use java.util.ArrayList
+    use java.util.Comparator
     use java.util.HashMap
-    use java.util.Properties
+    use java.util.stream.Collectors
     use java.util.Vector
-    use ::bbtranslator.bbj::BBTranslator
+
     use ::adc_updatexmlfiles.aon::UpdateSyncXmlFiles
+    use ::ado_CdfMassager.aon::CdfMassager
     use ::ado_file.src::FileObject
+    use ::ado_GitRepoInterface.aon::GitRepoInterface
+    use ::ado_ModMerger.aon::ModMerger
+    use ::ado_util.src::util    
 
     setesc std_error
     seterr std_error
-
+ 
 rem --- Initializations
 
     pgmdir$=stbl("+DIR_PGM",err=*next)
     dir_syp$=stbl("+DIR_SYP")
     sysGUI! = BBjAPI().getSysGui()
     BLOCKSIZE = 2^20
+    aonStblMap!=new HashMap()
+    failures!=BBjAPI().makeVector()
+    localCommitsList!=BBjAPI().makeVector()
+    remainingCommits!=BBjAPI().makeVector()
+    moveModifiedCoreError=0
 
 rem --- Get user inputs
 
@@ -43,7 +54,8 @@ rem --- Get user inputs
     declare HashMap appStblMap!
     appStblMap!=cast(HashMap, callpoint!.getDevObject("appStblMap"))
     rdAdmin!=cast(BBjAdminBase, callpoint!.getDevObject("rdAdmin"))
-    useOldMenu%=int(num(Option!.getOptionData("USE_OLD_MENU")))
+rem    useOldMenu%=int(num(Option!.getOptionData("USE_OLD_MENU"))) --- Git-based will always incorporate menu changes so no need for separate, optional routine
+    minor_ver$=callpoint!.getDevObject("minor_ver")
 
 	rem --- Flip directory path separators
     baseDir$=FileObject.fixPath(baseDir$, "/")
@@ -56,18 +68,23 @@ rem --- Get user inputs
     newBarDir$=newAonLoc$ + "/barista"
     oldAonDir$=oldAonLoc$ + "/aon"
     oldBarDir$=oldBarLoc$ + "/barista"
+    appName$="ADDON"
 
-rem --- Allow for installing verticals in addition to Addon?
-    appName!=BBjAPI().makeVector()
-    newAonDir!=BBjAPI().makeVector()
-    oldAonDir!=BBjAPI().makeVector()
-    appName!.add("ADDON")
-    newAonDir!.add(newAonLoc$+"/aon")
-    oldAonDir!.add(oldAonLoc$+"/aon")
+rem --- Determine if upgrading from a Git based installation, or a non-Git based installation
+    gitBasedUpgrade=0
+    oldGitDir! = new File(oldAonDir$+"/.git")
+    if oldGitDir!.exists() and oldGitDir!.isDirectory() then gitBasedUpgrade=1
+
+rem --- Get version for repository branch. Use version of Barista in download.
+    newVersion$=minor_ver$(2)
     
 rem --- Start progress meter
     meter_title$=Translate!.getTranslation("AON_UPDATE_WIZ")
-    meter_total_recs=8
+    if gitBasedUpgrade then
+        meter_total_recs=20
+    else
+        meter_total_recs=26
+    endif
     if doSyncBackup% then meter_total_recs=meter_total_recs+1
     if useOldMenu% then meter_total_recs=meter_total_recs+1
     meter_proc_recs=0
@@ -76,18 +93,88 @@ rem --- Start progress meter
     gosub disp_meter
 
 rem --- Open log file
-    location$ = newAonDir$
     gosub open_log
-    
-rem --- Open File(s)
 
-    num_files=1
-    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-    open_tables$[1]="ADM_MODULES", open_opts$[1]="OTA"
+rem --- Is this a restart after resolving Git conflicts?
+    restartFile$=newAonDir$+"/logs/restartUpgradeWizard.txt"
+    restartFlag=0
+    restart_dev=unt
+    open(restart_dev,err=*next)restartFile$; restart=1
+    if restart then
+        rem --- Verify correct restart file
+        read(restart_dev,end=*endif)text$
+        if pos(restartFile$=text$) then
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_UPGRADE_WIZ_RESTART")
+            meter_proc_recs=meter_total_recs-5
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)"Upgrade Wizard re-started after Git conflicts"
+            print(log_dev)
 
-    gosub open_tables
+            rem --- Get from restart log the starting version for this upgrade
+            label$="Start version: "
+            lenLabel=len(label$)
+            while 1
+                read(restart_dev,end=*break)text$
+                if pos(label$=text$)=1 then
+                    start_version$=text$(1+lenLabel)
+                    break
+                endif
+            wend
 
-    adm_modules=num(open_chans$[1]);dim adm_modules$:open_tpls$[1]
+            rem --- Get from restart log where to restart this upgrade
+            label$="Re-Start At: "
+            lenLabel=len(label$)
+            while 1
+                read(restart_dev,end=*break)text$
+                if pos(label$=text$)=1 then
+                    restartAt$=text$(1+lenLabel)
+                    break
+                endif
+            wend
+
+            rem --- Get from restart log list of remaining commits that still need to be cherry picked
+            label$="Remaining commit: "
+            lenLabel=len(label$)
+            while 1
+                read(restart_dev,end=*break)text$
+                if pos(label$=text$)=1 then
+                    repoInterface!=new GitRepoInterface(newAonDir$)
+                    commit!=repoInterface!.getRevCommit(text$(1+lenLabel))
+                    repoInterface!.closeInterface()
+            
+                    remainingCommits!.addItem(commit!)
+                endif
+            wend
+
+            close(restart_dev,err=*next)
+
+            rem --- Build aonStblMap! for restart
+            app$=appName$
+            gosub build_stblMap_pfxList
+            aonStblMap!=stblMap!
+
+            rem --- Goto restart location Label
+            switch (BBjAPI().TRUE)
+                case restartAt$="restartUpgrade1"
+                    goto restartUpgrade1
+                    break
+                case restartAt$="restartUpgrade2"
+                    goto restartUpgrade2
+                    break
+                case restartAt$="restartUpgrade3"
+                    goto restartUpgrade3
+                    break
+                case default
+                    goto restartUpgrade1
+                    break
+            swend
+        else
+            close(restart_dev,err=*next)
+        endif
+    endif
+    close(restart_dev,err=*next)
 
 rem --- Skip Barista’s Create Sync File Backup bax_sync_backup.bbj unless upgrading from a pre-v18 version.
     if doSyncBackup% then
@@ -101,192 +188,175 @@ rem --- Skip Barista’s Create Sync File Backup bax_sync_backup.bbj unless upgrad
         rem --- Pass bax_sync_backup.bbj the full path to the pre-v18 application’s Barista instance
         call stbl("+DIR_SYP")+"bax_sync_backup.bbj","AUTO",oldBarDir$,sysGUI!,rdForm!,null(),rd_table_chans$[all]
     endif
-    
-rem --- Recursively copy oldLocation to newAonDir
 
-    rem --- Increment progress meter
-    meter_text$=Translate!.getTranslation("AON_COPY_AON")
-    meter_proc_recs=meter_proc_recs+1
-    meter_action$="MTR-LST"
-    gosub disp_meter
-    print(log_dev)meter_text$
+rem --- Process upgrade from either a Git based installation or a non-Git based installation
+    if gitBasedUpgrade then
+        rem --- Process upgrades from a Git based installation
+        status=0
+        
+        rem --- Copy old instance of aon from old location to new location
+        requiredFiles%=0
+        copyData%=1
+        help%=0
+        gosub copyAon
 
-	rem --- Set oldLocation to aon directory under the current download directory
-    sep$ = java.io.File.separator
-    bbjHome$=java.lang.System.getProperty("basis.BBjHome")
-    bbjHomeLocation!=BBjAPI().makeVector()
-    bbjHomeLocation!.add(bbjHome$ + sep$ + "apps" + sep$ + "aon")
+        rem --- Get version of old install
+        repoInterface!=new GitRepoInterface(newAonDir$)
+        branch$=repoInterface!.getBranch(); rem --- BBJnnnnGA
+        oldVersion$=branch$(4,4)
+        repoInterface!.closeInterface()
 
-	rem --- Do not copy data or help file
-	requiredFiles%=1
-	copyData%=0
-	help%=0
-	
-    rem --- Launch adc_copyaon.aon
-    for syscnt=0 to appName!.size()-1
-        oldLocation$=bbjHomeLocation!.getItem(syscnt)
-        call pgmdir$+"adc_copyaon.aon",bbjHomeLocation!.getItem(syscnt),newAonDir!.getItem(syscnt),requiredFiles%,copyData%,help%,rdForm!,0,status
-    next syscnt
-    
-rem --- Update new addon.syn file
+        rem --- Build delta XMLs for modified bar/*.xml files that have been committed.
+        gosub buildDeltaXmls
+        if status goto done
 
-    rem --- Increment progress meter
-    meter_text$=Translate!.getTranslation("AON_UPDATE_SYN")
-    meter_proc_recs=meter_proc_recs+1
-    meter_action$="MTR-LST"
-    gosub disp_meter
-    print(log_dev)meter_text$
+		rem --- Refresh Git repository to get the most current branch
+		gosub refreshGitRepo
 
-    for syscnt=0 to appName!.size()-1
-    	rem --- Set newSynFile to addon.syn at the new aon location
-        newSynFile$=newAonDir!.getItem(syscnt)+"/config/"+cvs(appName!.getItem(syscnt),8)+".syn"
-    
-    	rem --- Setup for upgrade
-        upgrade%=1
-        oldSynFile$=oldAonDir!.getItem(syscnt)+"/config/"+cvs(appName!.getItem(syscnt),8)+".syn"
+        rem --- Switch/checkout to branch for new version
+        branchName$="BBJ"+newVersion$+"GA"
+        gosub checkoutGitBranch
+        if status goto done
 
-        rem --- If oldSynFile does not exist for ADDON, skip.
-        oldSynFile! = new File(oldSynFile$)
-        if !oldSynFile!.exists() then continue
-     
-        rem --- Build stblMap! and pfxList! for adc_updatesynfile.aon
-        app$=appName!.getItem(syscnt)
-        gosub build_stblMap_pfxList
+        rem --- Update new addon.syn file
+        gosub updateAddonSyn
 
-        if app$="ADDON"
-            aonStblMap!=new HashMap()
-            aonStblMap!=stblMap!
-        endif
+    else
 
-        rem --- Launch adc_updatesynfile.aon
-        call pgmdir$+"adc_updatesynfile.aon",newSynFile$,oldSynFile$,upgrade%,stblMap!,pfxList!,rdForm!,0,status
-    next syscnt
-    
-rem --- Add new application to Barista Installation Manager
-rem --- Run BIM bai_install_manager.bbj program via synchronous system call because of its terminating release
+        rem --- Process upgrades from a non-Git based installation
+        status=0
 
-    rem --- Increment progress meter
-    meter_text$=Translate!.getTranslation("AON_BIM_CREATE")
-    meter_proc_recs=meter_proc_recs+1
-    meter_action$="MTR-LST"
-    gosub disp_meter
-    print(log_dev)meter_text$
+        rem --- Clone Git repository and switch/checkout to old branch/tag
+        gosub cloneGitRepo
+        if status then goto done
 
-    rem --- Create new session specific classpath (SSCP) in Enterprise Manager
-    rem --- Increment progress meter
-    meter_text$=Translate!.getTranslation("AON_CREATE_SSCP","Creating new classpath",1)
-    meter_proc_recs=meter_proc_recs+1
-    meter_action$="MTR-LST"
-    gosub disp_meter
-    print(log_dev)meter_text$
+        rem --- Get version of old install
+        repoInterface!=new GitRepoInterface(newAonDir$)
+        branch$=repoInterface!.getBranch(); rem --- BBJnnnnGA
+        oldVersion$=branch$(4,4)
+        
+        rem --- Reorder CDF files in old version to match the order of the CDFs in the new version
+        declare CdfMassager cdfMassager!
+        cdfMassager!=new CdfMassager() 
+        rem --- --- retrieve our commit from the remote branch because we have not checked out the new branch yet.
+        branchName$="BBJ"+newVersion$+"GA"
+        cdfMassager!.reorderAndCommitCDFs(newAonDir$+"/data/cdf/",repoInterface!,"refs/remotes/origin/"+branchName$)
+        repoInterface!.closeInterface()
 
-    sscpName$=cvs(dbName$,8)
-    status=0
-    call pgmdir$+"adc_createsscp.aon",sscpName$,newAonLoc$,"",copyData%,rdAdmin!,status
-    if status 
-        rem --- Increment progress meter
-        meter_text$=Translate!.getTranslation("AON_CREATE_SSCP_ERROR","Unable to create new classpath",1)
-        meter_proc_recs=meter_proc_recs+1
-        meter_action$="MTR-LST"
-        gosub disp_meter
-        print(log_dev)meter_text$    
+        rem --- We don't want to overwrite the CDFs that we just reordered to match the upgraded version, 
+        rem --- so rename the CDF directory 
+        declare BBjString cdfDirName!
+        declare BBjString newCdfDirName!
+        declare BBjString oldCdfDirName!
+        declare java.io.File cdfDir!
+        declare java.io.File newCdfDir!
+        declare java.io.File oldCdfDir!
+        declare CdfMassager cm!
+        
+        rem -- rename the existing CDF directory to cdf_reordered
+        cdfDirName!=newAonDir$+"/data/cdf"
+        newCdfDirName!=newAonDir$+"/data/cdf_reordered"
+        cdfDir!=new java.io.File(cdfDirName!)
+        newCdfDir!=new java.io.File(newCdfDirName!)
+        cdfDir!.renameTo(newCdfDir!)
+        
+        rem --- Copy old instance of aon from old location to new location
+        requiredFiles%=0
+        copyData%=0
+        help%=0
+        gosub copyAon
+
+        rem --- use the CDFMassager to copy user's changes into the reordered CDFs 
+        cm!=new CdfMassager()
+        cm!.setMakeAnnotations(0)
+        cm!.importModChanges(cdfDirName!,newCdfDirName!)
+        
+        rem --- rename cdf to cdf_old and cdf_reordered to cdf 
+        oldCdfDirName!=newAonDir$+"/data/cdf_old"
+        oldCdfDir!=new java.io.File(oldCdfDirName!)
+        cdfDir!.renameTo(oldCdfDir!)
+        newCdfDir!.renameTo(cdfDir!)
+
+        rem --- Run Copy Application utility for applications being copied
+        gosub copyApps
+
+        rem --- Move mods/data/bar/delta XMLs to Addon location
+        gosub moveModsDataBarDelta
+
+        rem --- Merge mods before/after callpoints into standard Addon callpoints
+        gosub mergeCallpoints
+
+        rem --- Move any core Addon files customized by a mods project back into core Addon
+        gosub moveModifiedCore
+
+        rem --- Check for, and resolve, line ending issues
+        gosub checkLineEndings
+
+        rem --- Commit ALL of the above changes to the old Git branch
+        gosub doInterimCommit
+        localCommitsList!.addItem(commit!)
+
+        rem --- Switch/checkout to branch for new version
+        branchName$="BBJ"+newVersion$+"GA"
+        gosub checkoutGitBranch
+        if status goto done
+
+        rem --- Save copy of standard Addon cdf files in UpgradeCdfDiffs directory where they can be alphabetized for diff'ing with merged mods cdfs
+        gosub doUpgradeCdfDiffs
+
+        rem --- Update new addon.syn file
+        gosub updateAddonSyn
     endif
 
-    rem --- Launch bai_install_manager.bbj
-	bar_dir$=dir("")
-	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
-	run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
-:	+" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
-:	+" "+$22$+bar_dir$+"/sys/prog/bai_install_manager.bbj"+$22$
-	user_arg$=" - "
-:	+" -u"+rdAdmin!.getUser()
-:	+" -id"+dbName$
-:	+" -desc"+$22$+appDesc$+$22$
-:	+" -loc"+$22$+newAonLoc$+$22$
-:   +" -cp"+$22$+sscpName$+$22$
-	scall_result=scall(run_arg$+user_arg$,err=*next)
-    
+rem --- Create new session specific classpath (SSCP) in Enterprise Manager
+    gosub createSSCP
+
+rem --- Run Copy Application utility for applications being copied
+    if gitBasedUpgrade then gosub copyApps
+
+rem --- BIM Barista to the new location.
+    gosub bimBarista
+
 rem --- Update new sync XML files (and copy old barista/settings dir)
-rem --- BIM clears barista/settings dir, so must do this step after BIMing and before auto-sync
-
-    rem --- Increment progress meter
-    meter_text$=Translate!.getTranslation("AON_UPDATE_XML")
-    meter_proc_recs=meter_proc_recs+1
-    meter_action$="MTR-LST"
-    gosub disp_meter
-    print(log_dev)meter_text$
-
     start_version$=""
+    gosub updateSyncXml
 
-    for syscnt=0 to appName!.size()-1
-    	rem --- Set newSyncLoc to sync directory at the new aon location
-        newSyncLoc$=newAonDir!.getItem(syscnt)+"/data/sync"
-    
-    	rem --- Setup for upgrade
-        upgrade%=1
-        oldSyncLoc$=oldAonDir!.getItem(syscnt)+"/data/sync"
-
-        rem --- If oldSynLoc does not exist for ADDON, skip.
-        oldSynLoc! = new File(oldSyncLoc$)
-        if !oldSynLoc!.exists() then continue
-    
-        rem --- Launch adc_updatexmlfiles.aon
-        call pgmdir$+"adc_updatexmlfiles.aon",newSyncLoc$,oldSyncLoc$,syncBackupDir$,upgrade%,rdForm!,0,status
-
-        rem --- Get version of source Addon installation from source data/sync/adm_modules~01007514ad.xml
-        if start_version$=""
-            utility! = new UpdateSyncXmlFiles(rdForm!,0)
-            oldVers! = utility!.getModuleVersion(new File(oldSyncLoc$))
-            if oldVers!.get("AD")<>null() then
-                start_version$=oldVers!.get("AD")
-            endif
-        endif
-    next syscnt
+rem --- Build addonprop.jar and put it in the aon/prop directory
+    gosub buildAddonJar
 
 rem --- Use old modified menus instead of new standard menus.
-rem --- Temporary "fix" until Barista enhancement 5658 can be implemented to preserve customizations
-rem --- to standard menus, thus no logging or progress meter.
-    if useOldMenu% then
-        rem --- Increment progress meter
-        meter_text$=Translate!.getTranslation("AON_COPY_MENUS")
-        meter_proc_recs=meter_proc_recs+1
-        meter_action$="MTR-LST"
-        gosub disp_meter
-        print(log_dev)meter_text$
+    if useOldMenu% then gosub useOldMenu
 
-        availableLangs$="deuenuespfraitanldsve"
-        for syscnt=0 to appName!.size()-1
-            for i=1 to len(availableLangs$)-1 step 3
-                lang$=availableLangs$(i,3)
-                
-                rem --- If oldMenuFile exists, overwrite newMenuFile with it
-                oldMenuFile! = new File(oldAonDir!.getItem(syscnt)+"/config/"+lang$+"/"+cvs(appName!.getItem(syscnt),8)+".men")
-                if oldMenuFile!.exists()
-                
-                    rem --- Create new directories as necessary for newMenuFile
-                    newMenuDir! = new File(newAonDir!.getItem(syscnt)+"/config/"+lang$)
-                    FileObject.makeDirs(newMenuDir!)
+rem --- Check for, and resolve, line ending issues
+    gosub checkLineEndings
+
+rem --- Commit sync xml and syn file changes made during updateAddonSyn and updateSyncXml routines
+rem --- Assures work tree is clean prior to cherry picking
+    gosub doInterimCommit
+
+restartUpgrade1:
+rem --- Cherry pick local commits from old installation
+    if remainingCommits!.size()>0
+        localCommitsList!=remainingCommits!
+        remainingCommits!=BBjAPI().makeVector()
+    endif
+    gosub cherryPickLocalCommits
+
+rem --- Check for Git conflicts
+    gosub checkForGitConflicts
+
+rem --- Check for delta XML RESERVED_STR and RESERVED_NUM issues
+    if !restartFlag then gosub checkForReservedStr
     
-                    rem --- Rename newMenuFile as a backup before overwriting it
-                    newMenuFile! = new File(newMenuDir!.getPath()+"/"+cvs(appName!.getItem(syscnt),8)+".men")
-                    rename newMenuFile!.getPath() to newMenuDir!.getPath()+"/"+cvs(appName!.getItem(syscnt),8)+".men.bak", err=*next
-                    
-                    rem --- Copy oldMenuFile to newMenuFile
-                    sourceChan=unt
-                    open(sourceChan,isz=-1,err=*endif)oldMenuFile!.getPath()
-                    targetChan=unt
-                    open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")newMenuFile!.getPath()
-                    while 1
-                        readrecord(sourceChan,siz=BLOCKSIZE,end=*break)record$
-                        writerecord(targetChan)record$
-                    wend
-                    close(sourceChan)
-                    close(targetChan)
-                endif
-            next i
-        next syscnt
+rem --- Need to restart if there were Git conflicts, or a Git cherry pick failure
+    if restartFlag then
+        rem --- Create restart file
+        restartAt$="restartUpgrade1"
+        gosub createRestartFile
+        goto done
     endif
 
+restartUpgrade2:
 rem --- Launch auto-sync in new barista for the new addon.syn
 rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to bypass bar_login.bbj in the new barista
 
@@ -304,17 +374,22 @@ rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to b
 :	+" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
 :	+" "+$22$+bar_dir$+"/sys/prog/bax_launch_task.bbj"+$22$
 
-    for syscnt=0 to appName!.size()-1
-        newSynFile$=newAonDir!.getItem(syscnt)+"/config/"+cvs(appName!.getItem(syscnt),8)+".syn"
-        user_arg$=" - "
+    newSynFile$=newAonDir$+"/config/"+cvs(appName$,8)+".syn"
+    user_arg$=" - "
 :       +" -u"+rdAdmin!.getUser()
 :       +" -p"+rdAdmin!.getPassword()
 :       +" -t"+"DDM_TABLES"
 :       +" -y"+"A"
 :       +" -a" +"bax_dd_synch_auto.bbj"+$22$+" - "+" -f"+newSynFile$+" -b"+$22$
 :       +" -w"
-	    scall_result=scall(run_arg$+user_arg$,err=*next)
-    next syscnt
+    success=0
+    scall_result=scall(run_arg$+user_arg$,err=*next); success=1
+    if !success or scall_result<>0 then
+        rem --- Create restart file
+        restartAt$="restartUpgrade2"
+        gosub createRestartFile
+        goto done
+    endif
 
 rem --- Copy OPV_SHIPTRACK_nn views from old database to new database
 
@@ -328,76 +403,42 @@ rem --- Copy OPV_SHIPTRACK_nn views from old database to new database
         views!=oldDB!.getViews()
 
         rem --- Any old OPV_SHIPTRACK_nn views?
-        viewsIter!=views!.iterator()
-        while viewsIter!.hasNext()
-            oldView!=viewsIter!.next()
-            viewProps!=oldView!.getProperties()
-            viewName!=viewProps!.get(BBjAdminView.NAME)
-            if viewName!=null() then continue
-            if viewName!.startsWith("OPV_SHIPTRACK_") then
-                rem --- Copy view to new database
-                viewDesc$=""
-                viewDesc!=viewProps!.get(BBjAdminView.DESCRIPTION)
-                if viewDesc!<>null() then viewDesc$=viewDesc!
-                viewSelect$=""
-                viewSelect!=viewProps!.get(BBjAdminView.SELECT)
-                if viewSelect!<>null() then viewSelect$=viewSelect!
+        if views!.size()>0 then
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_COPY_DB_VIEWS")
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
 
-                newDB!=admin!.getDatabase(dbName$)
-                newDB!.dropView(viewName!)
-                newView!=newDB!.createView(viewName!)
-                newView!.setString(BBjAdminView.DESCRIPTION,viewDesc$)
-                newView!.setString(BBjAdminView.SELECT,viewSelect$)
-                newView!.commit()
-            endif
-        wend
+            viewsIter!=views!.iterator()
+            while viewsIter!.hasNext()
+                oldView!=viewsIter!.next()
+                viewProps!=oldView!.getProperties()
+                viewName!=viewProps!.get(BBjAdminView.NAME)
+                if viewName!=null() then continue
+                if viewName!.startsWith("OPV_SHIPTRACK_") then
+                    rem --- Copy view to new database
+                    viewDesc$=""
+                    viewDesc!=viewProps!.get(BBjAdminView.DESCRIPTION)
+                    if viewDesc!<>null() then viewDesc$=viewDesc!
+                    viewSelect$=""
+                    viewSelect!=viewProps!.get(BBjAdminView.SELECT)
+                    if viewSelect!<>null() then viewSelect$=viewSelect!
+    
+                    newDB!=admin!.getDatabase(dbName$)
+                    newDB!.dropView(viewName!)
+                    newView!=newDB!.createView(viewName!)
+                    newView!.setString(BBjAdminView.DESCRIPTION,viewDesc$)
+                    newView!.setString(BBjAdminView.SELECT,viewSelect$)
+                    newView!.commit()
+                    print(log_dev)"    View ",viewName!
+                endif
+            wend
+        endif
     endif
 
-rem --- Run Copy Application utility for applications being copied
-
-    rem --- Increment progress meter
-    trans_text$=Translate!.getTranslation("AON_COPY_APP")
-    meter_proc_recs=meter_proc_recs+1
-    meter_action$="MTR-LST"
-
-	appIter!=appVect!.iterator()
-	while appIter!.hasNext()
-		appList! = cast(ArrayList, appIter!.next())
-        
-        rem --- Skip application if it's not being copied
-		copy$=appList!.get(3)
-        if copy$<>"y" then continue
-
-        rem --- Get source syn file
-        app$=appList!.get(0); rem --- application
-        sourceSyn$=appList!.get(4)+"config/"+cvs(app$,8)+".syn"
-        synFound=0
-        sourceChan=unt
-        open(sourceChan,isz=-1,err=*next)sourceSyn$; synFound=1
-        close(sourceChan,err=*next)
-        if !synFound then
-            rem --- Log this app skipped
-            meter_text$=trans_text$+": ***skipped*** "+app$
-            gosub disp_meter
-            print(log_dev)meter_text$+" -- cannot find "+sourceSyn$
-            continue
-        endif
-
-        rem --- Log this app being copied
-        meter_text$=trans_text$+": "+app$
-        gosub disp_meter
-        print(log_dev)meter_text$
-
-        rem --- Remove trailing slashes (/ and \) from targetDir$
-        targetDir$=FileObject.removeEndSlash(appList!.get(5))
-
-        rem --- Build stblMap! and pfxList! for adc_copymods.aon
-        gosub build_stblMap_pfxList
-        
-        rem --- Launch adc_copymods.aon
-        call pgmdir$+"adc_copymods.aon",sourceSyn$,targetDir$,stblMap!,pfxList!,rdForm!,0,status
-    wend
-
+restartUpgrade3:
 rem --- Run Install Application Wizard for applications being installed
 
     rem --- Increment progress meter
@@ -405,6 +446,17 @@ rem --- Run Install Application Wizard for applications being installed
     meter_proc_recs=meter_proc_recs+1
     meter_action$="MTR-LST"
 
+    rem --- Insert Addon as the first application to be installed
+    aList!=new ArrayList()
+    aList!.add("ADDON"); rem Application
+    aList!.add(""); rem App Parent
+    aList!.add("y"); rem Install
+    aList!.add(""); rem Copy
+    aList!.add(newAonDir$+"/"); rem Source
+    aList!.add(""); rem Target
+    appVect!.insertElementAt(aList!,0)
+
+    rem --- Install applications
 	iter!=appVect!.iterator()
 	while iter!.hasNext()
 		appList! = cast(ArrayList, iter!.next())
@@ -442,6 +494,7 @@ rem --- Run Install Application Wizard for applications being installed
         rem --- Launch baw_install_app.bbj
         bar_dir$=newBarDir$
         if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
+        if app$="ADDON" then aongitarg$="-aongitY" else aongitarg$=""                                                                                                                                        
         run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
 :	    +" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
 :	    +" "+$22$+bar_dir$+"/sys/prog/bax_launch_task.bbj"+$22$
@@ -450,10 +503,54 @@ rem --- Run Install Application Wizard for applications being installed
 :	    +" -p"+rdAdmin!.getPassword()
 :	    +" -t"+"DDM_TABLES"
 :	    +" -y"+"A"
-:       +" -a" +"baw_install_app.bbj"+$22$+" - "+" -f"+sourceSyn$+$22$
+:       +" -a" +"baw_install_app.bbj"+$22$+" - "+" -f"+sourceSyn$+" "+aongitarg$+$22$
 :	    +" -w"
         scall_result=scall(run_arg$+user_arg$,err=*next)
+        if !success or scall_result<>0 then
+            rem --- Create restart file
+            restartAt$="restartUpgrade3"
+            gosub createRestartFile
+            exitto done
+        endif
+
+        rem --- Clear ddm_systems.parent_sys_id for apps with ADDON parent in the new mods installation
+        parent$=appList!.get(1); rem --- parent app
+        copy$=appList!.get(3); rem --- copy
+        if parent$="ADDON" and copy$="y" then
+            ddm_table_tpls$=newBarDir$+"/sys/data/ddm_table_tpls.dat"
+            open_success=0
+            ddmTableTpls=unt
+            open(ddmTableTpls,err=*next)ddm_table_tpls$; open_success=1
+            if open_success then
+                rem --- Get record template for ddm_systems
+                dim ddmTableTpls$:"table_name:c(16*),file_name:c(30*),template:c(10230*)"
+                tpl_found=0
+                findrecord(ddmTableTpls,key=pad("DDM_SYSTEMS",16),dom=*next)ddmTableTpls$;tpl_found=1
+                if tpl_found then
+                    rem --- Update ddm_systems record for mods app
+                    open_success=0
+                    ddmSystems=unt
+                    open(ddmSystems,err=*next)newBarDir$+"/sys/data/ddm_systems.dat"; open_success=1
+                    if open_success then
+                        dim ddmSystems$:ddmTableTpls.template$
+                        record_found=0
+                        findrecord(ddmSystems,key=pad(app$,16),dom=*next)ddmSystems$; record_found=1
+                        if record_found then
+                            ddmSystems.parent_sys_id$=""
+                            writerecord(ddmSystems)ddmSystems$
+                        endif
+            
+                        close(ddmSystems,err=*next)
+                    endif
+                endif
+                
+                close(ddmTableTpls,err=*next)
+            endif
+        endif
     wend
+
+rem --- Commit Addon changes made during baw_install_app.bbj
+    gosub doInterimCommit
 
 rem --- On successful complete, initialize conversion control file data/adx_conversionCtrl
 
@@ -469,7 +566,7 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
             aList! = cast(ArrayList, aonStblMap!.get("+DIR_DAT"))
             target$ = cast(BBjString, aList!.get(1))
             convCtrlFilePath$=FileObject.fixPath(target$, "/")
-            FileObject.removeEndSlash(convCtrlFilePath$)
+            FileObject.removeEndSlash(convCtrlFilePath$, "/")
         endif
         convCtrlFileName$=convCtrlFilePath$+"/adx_conversionCtrl"
         convCtrlFile!=new File(convCtrlFileName$)
@@ -503,9 +600,7 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
             endif
             if pos("end_version="=line$) then
                 rem --- Get version of this Addon installation
-                redim adm_modules$
-                readrecord(adm_modules,key=pad("01007514AD",11),dom=*next)adm_modules$
-                end_version$=cvs(adm_modules.version_id$,3)
+                end_version$=str(num(newVersion$(1,2)):"00.0")
         
                 xpos=pos("end_version="=line$)
                 line$=line$(1,xpos+len("end_version=")-1)+end_version$+line$(xpos+len("end_version="))
@@ -538,19 +633,570 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
    endif
     
 done: rem --- All done
+
+    rem --- Report errors encountered while moving core Addon files customized by a mods project back into core Addon
+    if moveModifiedCoreError then
+        msg_id$="AD_MOVE_MODS_ERR"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=newAonDir$ + "/logs"+logName$
+        gosub disp_message
+        print(log_dev)
+        print(log_dev)"***** Could not move Mods customized Addon files *****"
+    endif
+
+    rem --- Report cherry pick failure
+    if !failures!.isEmpty() then
+        msg_id$="AD_CHERRYPICK_ERR"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=newAonDir$ + "/logs"+logName$
+        gosub disp_message
+        print(log_dev)
+        print(log_dev)"***** Cherry pick failed *****"
+    endif
     
-    rem --- Stop progress meter
-    meter_text$=""
     meter_proc_recs=meter_total_recs
-    meter_action$="LST-END"
+    if restartFlag then
+        rem --- Not successful, need to restart
+        
+        rem --- Stop progress meter
+        meter_text$="***** "+Translate!.getTranslation("AON_TERMINATED")+" *****"
+        meter_action$="MTR-LST-END"
+        print(log_dev)
+        print(log_dev)meter_text$
+    else
+        rem --- Upgrade completed successfully
+        
+        rem --- Stop progress meter
+        meter_text$=""
+        meter_action$="LST-END"
+
+        rem --- Rename restartUpgradeWizard.txt file
+        restartFile!=new File(restartFile$)
+        if restartFile!.exists() then
+            restartBakFile!=new File(restartFile$ + ".bak")
+            restartFile!.renameTo(restartBakFile!)
+        endif
+        
+        rem --- Remove aon/data/cdf_old directory
+        oldCdfDir!=new File(newAonDir$+"/data/cdf_old")
+        if oldCdfDir!.exists() then
+            oldCdfVector! = new Vector(java.util.Arrays.asList(oldCdfDir!.listFiles()))
+            oldCdfIter!=oldCdfVector!.iterator()
+            while oldCdfIter!.hasNext()
+                oldCdfFile!=oldCdfIter!.next()
+                oldCdfFile!.delete()
+            wend
+            oldCdfDir!.delete()
+        endif
+    endif
     gosub disp_meter
     print(log_dev)
     print(log_dev)"Upgradewiz log finished: " + date(0:"%Yd-%Mz-%Dz@%Hz:%mz:%sz")
     close(log_dev)
 
+    rem --- Move log file to aon/logs directory
+    logFile!=new File(log$)
+    aonLogFile!=new File(newAonDir$ + "/logs"+logName$)
+    logFile!.renameTo(aonLogFile!)
+    logDir!=new File(logDir$)
+    logDir!.delete()
+
     goto std_exit
 
-build_stblMap_pfxList: rem --- Build stblMap! and pfxList! for adc_copymods.aon for a app$
+copyAon: rem --- Recursively copy aon from oldLocation to newAonDir
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_COPY_AON")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+    print(log_dev)"    Copy "+oldAonDir$
+
+    rem --- requiredFiles%,copyData%,help% are incoming; for git-based (i.e., version-neutral), copy data (demo data), for non-git, do NOT copy data.
+    call pgmdir$+"adc_copyaon.aon",oldAonDir$,newAonDir$,requiredFiles%,copyData%,help%,rdForm!,0,status
+    
+    rem --- Clear logs directory
+    logsDir!=new File(newAonDir$ + "/logs")
+    if logsDir!.exists() then
+        logsVector! = new Vector(java.util.Arrays.asList(logsDir!.listFiles()))
+        logsIter!=logsVector!.iterator()
+        while logsIter!.hasNext()
+            logFile!=logsIter!.next()
+            logFile!.delete()
+        wend
+    endif
+    return
+
+moveModsDataBarDelta: rem --- Move mods/data/bar/delta XMLs to Addon location
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_MOVE_DELTA_XML")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+    print(log_dev)"    For "+newAonDir$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+    appIter!=appVect!.iterator()
+    while appIter!.hasNext()
+        aList! = cast(ArrayList, appIter!.next())
+        parent$=cast(BBjString, aList!.get(1))
+        if parent$<>"ADDON" then continue
+        
+        newModsDir$=cast(BBjString, aList!.get(5))
+        newModsDir$=FileObject.fixPath(newModsDir$, "/")
+        modsDataBarDelta!=new File(newModsDir$+"data/bar/delta",err=*next)
+        if modsDataBarDelta!.exists() and modsDataBarDelta!.isDirectory() then
+                
+            rem --- Ceate new aon/data/bar/delta directory if it doesn't exist
+            aonDataBarDelta$=newAonDir$+"/data/bar/delta"
+            FileObject.makeDirs(aonDataBarDelta$)
+    
+            rem --- Move mods/data/bar/delta XMLs to new aon/data/bar/delta directory
+            options!=Array.newInstance(StandardCopyOption.class,1)
+            Array.set(options!,0,StandardCopyOption.REPLACE_EXISTING)
+            sourceVector! = new Vector(java.util.Arrays.asList(modsDataBarDelta!.listFiles()))
+            sourceIter!=sourceVector!.iterator()
+            while sourceIter!.hasNext()
+                sourceFile!=sourceIter!.next()
+                sourceName!=sourceFile!.getName()
+                if sourceName!.endsWith(".xml") then
+                    rem --- Move mods data/bar/delta/*.xml file
+                    targetFile!=new File(aonDataBarDelta$+"/"+sourceName!)
+                    Files.move(sourceFile!.toPath(),targetFile!.toPath(),options!)
+
+                    rem --- Remove mods data/bar/*.xml file and data/arc/*/*.arc files corresponding to given sourceName!
+                    sourceName$=sourceName!
+                    gosub removeModsArcBarFile
+                else
+                    rem --- Delete files that aren't *.xml
+                    sourceFile!.delete()
+                endif
+            wend
+    
+            rem --- Remove mods/data/bar/delta directory
+            modsDataBarDelta!.delete()
+        endif
+    wend
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
+    return
+
+mergeCallpoints: rem --- Merge mods before/after callpoints into standard Addon callpoints
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_MERGE_CDFS")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+    if newModsDir$<>""
+        rem --- Import mods callpoint into Addon
+        massager!=new CdfMassager()
+        massager!.importModChanges(newModsDir$+"data/cdf",newAonDir$+"/data/cdf")
+
+        rem --- Make/clear UpgradeCdfDiffs directory for merged cdf files
+        cdfDiffsDir$=baseDir$+"/UpgradeCdfDiffs"
+        cdfDiffsDir!=new File(cdfDiffsDir$)
+        if cdfDiffsDir!.exists() and cdfDiffsDir!.isDirectory() then
+            rem --- Clear existing directory
+            cdfVector! = new Vector(java.util.Arrays.asList(cdfDiffsDir!.listFiles()))
+            cdfIter!=cdfVector!.iterator()
+            while cdfIter!.hasNext()
+                cdfFile!=cdfIter!.next()
+                cdfFile!.delete()
+            wend
+        else
+            rem --- Make new directory
+            cdfDiffsDir!.mkdirs()
+        endif
+        
+        rem --- Copy merged cdf files into UpgradeCdfDiffs directory where they can be alphabetized for diff'ing with standard Addon cdfs
+        modsCdfDir$=newModsDir$+"data/cdf"
+        modsCdfDir!=new File(modsCdfDir$)
+        modsCdfDirVector! = new Vector(java.util.Arrays.asList(modsCdfDir!.listFiles()))
+        modsCdfDirIter!=modsCdfDirVector!.iterator()
+        while modsCdfDirIter!.hasNext()
+            modsCdfDirFile!=modsCdfDirIter!.next()
+            fileName!=modsCdfDirFile!.getName()
+            if !fileName!.endsWith(".cdf") then continue
+            
+            rem --- Get copy of merged cdf file
+            sourceChan=unt
+            open(sourceChan,isz=-1,err=*continue)newAonDir$+"/data/cdf/"+fileName!
+            targetChan=unt
+            open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")cdfDiffsDir$+"/"+fileName!
+            while 1
+                readrecord(sourceChan,siz=BLOCKSIZE,end=*break)record$
+                writerecord(targetChan)record$
+            wend
+            close(sourceChan)
+            close(targetChan)
+
+            rem --- Remove mods cdf files after they've been merged into standard Addon
+            modsCdfDirFile!.delete()
+
+            rem --- Remove mods data/bar/*.xml file and data/arc/*/*.arc files corresponding to given sourceName!
+            sourceName$=fileName!
+            gosub removeModsArcBarFile
+        wend
+    endif
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
+    return
+
+doUpgradeCdfDiffs: rem --- Save copy of standard Addon cdf files in UpgradeCdfDiffs directory where they can be alphabetized for diff'ing with merged mods cdfs
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_UPGRADE_CDF_DIFFS")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+    cdfDiffsDir$=baseDir$+"/UpgradeCdfDiffs"
+    cdfDiffsDir!=new File(cdfDiffsDir$)
+    cdfDiffsVector! = new Vector(java.util.Arrays.asList(cdfDiffsDir!.listFiles()))
+    cdfDiffsIter!=cdfDiffsVector!.iterator()
+    while cdfDiffsIter!.hasNext()
+        cdfDiffsFile!=cdfDiffsIter!.next()
+        fileName$=cdfDiffsFile!.getName()
+        
+        rem --- Get copy of standard Addon cdf file, and identify version
+        fileFound=0
+        sourceChan=unt
+        open(sourceChan,isz=-1,err=*next)newAonDir$+"/data/cdf/"+fileName$; fileFound=1
+        if !fileFound then
+            rem --- cdf file not in standard Addon, so remove it from UpgradeCdfDiffs directory
+            cdfDiffsFile!.delete()
+        else
+            targetChan=unt
+            open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")cdfDiffsDir$+"/"+fileName$+"_"+newVersion$
+            while 1
+                readrecord(sourceChan,siz=BLOCKSIZE,end=*break)record$
+                writerecord(targetChan)record$
+            wend
+            close(sourceChan)
+            close(targetChan)
+        
+            rem --- Identify mods version of diff cdf file
+            modsDiffFile!=new File(cdfDiffsDir$+"/"+fileName$+"_"+oldVersion$)
+            cdfDiffsFile!.renameTo(modsDiffFile!)
+        endif
+    wend
+
+    rem --- Alphabetize all cdf files in UpgradeCdfDiffs directory
+    massager!=new CdfMassager()
+    
+    cdfDiffsVector! = new Vector(java.util.Arrays.asList(cdfDiffsDir!.listFiles()))
+    cdfDiffsIter!=cdfDiffsVector!.iterator()
+    while cdfDiffsIter!.hasNext()
+        cdfDiffsFile!=cdfDiffsIter!.next()
+        cdfPath$=cdfDiffsFile!.getPath()
+        cdfMap!=massager!.readAndOrderCdfFile(cdfPath$)
+        if cdfMap!.size() then massager!.writeCdfFile(cdfMap!,cdfPath$)
+    wend
+    
+        rem --- Remove busy/working image from progress meter
+        busyImage!.destroy(err=*next)
+    return
+
+moveModifiedCore: rem --- Move any core Addon files customized by a mods project back into core Addon
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_MOVE_MODS_PGMS")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+    print(log_dev)"    For "+newModsDir$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+    if newModsDir$<>""
+        rem --- Verify directories exist
+        newModsDir!=new File(newModsDir$)
+        if !newModsDir!.exists() or !newModsDir!.isDirectory() then newModsDir!.mkdirs()
+        newAonDir!=new File(newAonDir$)
+        if !newAonDir!.exists() or !newAonDir!.isDirectory() then newAonDir!.mkdirs()
+
+        rem --- Move mods customized Addon files back into Addon
+        merger!=new ModMerger(newModsDir$, newAonDir$)
+        status!=merger!.moveProgFilesFromModProject()
+        messagesIter!=status!.getMessages().iterator()
+        while messagesIter!.hasNext()
+            print(log_dev)"    ",messagesIter!.next()
+        wend
+        if status!.getNumErrorsEncountered()>0 then moveModifiedCoreError=1
+    endif
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
+    return
+    
+cloneGitRepo: rem --- Clone Git repository and switch/checkout to old branch/tag
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_CLONE_GIT_REPO")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+    print(log_dev)"    For "+newAonDir$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+    rem --- Clone Git repository and checkout branch
+    gitURI$="https://github.com/BASISInternational/AddonSoftware"
+    cloneDir$=newAonDir$
+    cloneDir!=new File(cloneDir$)
+    userName$="username"
+    userPassword$="password"
+
+    rem --- Clone Git repository
+    repoInterface!=new GitRepoInterface(cloneDir$)
+    if (repoInterface!=null()) then 
+        msg_id$="AD_FAILED_BAD_CLONE"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=cloneDir$
+        gosub disp_message
+        print(log_dev)"    ***** "+cloneDir$+" CLONE FAILED *****"   
+        status=1
+    endif 
+    
+    rem --- Switch/checkout to old branch/tag
+    if !status then
+        success=repoInterface!.determineAndSwitchToVersion(oldAonDir$)
+        if !success then
+            msg_id$="AD_FAILED_BAD_CHKOUT"
+            dim msg_tokens$[1]
+            msg_tokens$[1]="OLD"
+            gosub disp_message
+            print(log_dev)"    ***** OLD BRANCH/TAG CHECKOUT FAILED *****"
+            status=1
+        endif
+    endif
+
+    rem --- Remove busy/working image from progress meter
+    repoInterface!.closeInterface()
+    busyImage!.destroy(err=*next)
+    return
+    
+checkoutGitBranch: rem --- Switch/checkout branch
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_CHECKOUT_GIT_BRANCH")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+    print(log_dev)"    For "+newAonDir$
+    print (log_dev) "    Checkout "+branchName$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+    rem --- Checkout repository branch
+    cloneDir$=newAonDir$
+    repoInterface!=new GitRepoInterface(cloneDir$)
+    checkoutStatus$=repoInterface!.checkoutBranch(branchName$)
+    repoInterface!.closeInterface()
+    if (checkoutStatus$<>"OK") then
+        rem --- Failure, warn and terminate
+        msg_id$="AD_FAILED_BAD_CHKOUT"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=branchName$
+        gosub disp_message
+        print(log_dev)"    ***** "+branchName$+" CHECKOUT FAILED ("+checkoutStatus$+") *****"
+        status=1
+    endif
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
+    return
+
+refreshGitRepo: rem --- Refresh Git repository to get the most current branch
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_PULL_GIT_REPO")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+    rem --- Pull Git repository
+    repoInterface!=new GitRepoInterface(newAonDir$)
+    repoInterface!.pullRepository()
+    repoInterface!.closeInterface()
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
+    return
+    
+buildDeltaXmls: rem --- Build delta XMLs for modified bar/*.xml files that have been committed.
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_BUILD_DELTA_XMLS")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+    print(log_dev)"    For "+newAonDir$
+    
+    rem --- Get JGit interface to repository
+    repoInterface!=new GitRepoInterface(newAonDir$)
+    LocalBranch$=repoInterface!.getLocalBranch()
+    ReleaseTag$=repoInterface!.getReleaseTag()
+    
+    rem --- Do not allow upgrade if Git repository has uncommitted changes, either unstaged or staged
+    unstaged!=repoInterface!.getUnstagedChanges()
+    if unstaged!.size()>0 then
+        msg_id$="AD_UNCOMMITTED_CHGS"
+        dim msg_tokens$[1]
+        msg_tokens$[1]="unstaged"
+        gosub disp_message
+        print(log_dev)"    ***** Uncommitted unstaged changes *****"
+        print(log_dev)"    ",unstaged!
+        status=1
+        return
+    endif
+    staged!=repoInterface!.getUnstagedChanges()
+    if staged!.size()>0 then
+        msg_id$="AD_UNCOMMITTED_CHGS"
+        dim msg_tokens$[1]
+        msg_tokens$[1]="staged"
+        gosub disp_message
+        print(log_dev)"    ***** Uncommitted staged changes *****"
+        print(log_dev)"    ",staged!
+        status=1
+        return
+    endif
+    
+    rem --- Get Vector of all local commits.
+    localCommitsList!=repoInterface!.getLocalCommits(LocalBranch$,ReleaseTag$)
+    
+    mkdir newAonDir$+"/tmp",err=*next
+
+    rem --- Clear aon/data/bar/delta directory
+    deltaDir!=new File(newAonDir$+"/data/bar/delta")
+    if deltaDir!.exists() then
+        deltaVector! = new Vector(java.util.Arrays.asList(deltaDir!.listFiles()))
+        deltaIter!=deltaVector!.iterator()
+        while deltaIter!.hasNext()
+            deltaFile!=deltaIter!.next()
+            deltaFile!.delete()
+        wend
+    endif
+
+    rem --- Get modified bar/*.xml files that have been committed.
+    localCommittedXmls!=repoInterface!.getLocalCommittedXmls(localCommitsList!)
+    modifiedXmlIter!=localCommittedXmls!.iterator()
+    while modifiedXmlIter!.hasNext()
+        modifiedXml$=modifiedXmlIter!.next()
+    
+        rem --- Get original version of modified bar/*.xml files in list.
+        fileContent$=repoInterface!.getRemoteFileContent(modifiedXml$)
+        if fileContent$<>""
+            outfile$=newAonDir$+"/tmp/"+modifiedXml$(1+pos("/"=modifiedXml$,-1))
+            erase outfile$,err=*next
+            string outfile$
+            out_dev=unt
+            open(out_dev)outfile$
+            print(out_dev)fileContent$
+            close(out_dev)
+        
+            rem --- Build delta XMLs using Barista's bax_dd_sync_delta.bbj.
+            rd_action$=""
+            rd_status$=""
+            rd_base_file$=outfile$
+            rd_proj_file$=newAonDir$+"/"+modifiedXml$
+            rd_delta_file$=newAonDir$+"/data/bar/delta/"+modifiedXml$(1+pos("/"=modifiedXml$,-1))
+            call stbl("+DIR_SYP")+"bax_dd_synch_delta.bbj",rd_base_file$,rd_proj_file$,rd_delta_file$,rd_action$,rd_status$
+        
+            erase rd_base_file$,err=*next
+        endif
+    wend
+    
+    repoInterface!.closeInterface()
+    rmdir newAonDir$+"/tmp",err=*next
+    return
+
+updateAddonSyn: rem --- Update addon.syn file
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_UPDATE_SYN")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Set newSynFile to addon.syn at the new aon location
+    newSynFile$=newAonDir$+"/config/"+cvs(appName$,8)+".syn"
+
+    rem --- Setup for upgrade
+    upgrade%=1
+    oldSynFile$=oldAonDir$+"/config/"+cvs(appName$,8)+".syn"
+
+    rem --- If oldSynFile does not exist, skip.
+    oldSynFile! = new File(oldSynFile$)
+    if oldSynFile!.exists() then
+        rem --- Build stblMap! and pfxList! for adc_updatesynfile.aon
+        app$=appName$
+        gosub build_stblMap_pfxList
+        if app$="ADDON" then aonStblMap!=stblMap!
+    
+        rem --- Launch adc_updatesynfile.aon
+        call pgmdir$+"adc_updatesynfile.aon",newSynFile$,oldSynFile$,upgrade%,stblMap!,pfxList!,rdForm!,0,status
+    endif
+    return
+
+doInterimCommit: rem --- Commit all modified and deleted tracked files
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_INTERIM_COMMIT")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+    rem --- Get JGit interface to repository, and call commitAll()
+    repoInterface!=new GitRepoInterface(newAonDir$)
+    commit!=repoInterface!.commitAll(1,Translate!.getTranslation("AON_INTERIM_COMMIT"))
+    repoInterface!.closeInterface()
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
+    return
+
+build_stblMap_pfxList: rem --- Build stblMap! and pfxList! for a app$
 
     stblMap! = new HashMap()
     pfxList! = new ArrayList()
@@ -575,7 +1221,484 @@ build_stblMap_pfxList: rem --- Build stblMap! and pfxList! for adc_copymods.aon 
         wend
     endif
     return
+
+createSSCP: rem --- Create new session specific classpath (SSCP) in Enterprise Manager
     
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_CREATE_SSCP","Creating new classpath",1)
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    sscpName$=cvs(dbName$,8)
+    copyData%=0
+    status=0
+    call pgmdir$+"adc_createsscp.aon",sscpName$,newAonLoc$,"",copyData%,rdAdmin!,status
+    if status 
+        rem --- Increment progress meter
+        meter_text$=Translate!.getTranslation("AON_CREATE_SSCP_ERROR","Unable to create new classpath",1)
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$    
+    endif
+    return
+
+copyApps: rem --- Run Copy Application utility for applications being copied
+
+    rem --- Increment progress meter
+    trans_text$=Translate!.getTranslation("AON_COPY_APP")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+
+    appIter!=appVect!.iterator()
+    while appIter!.hasNext()
+        appList! = cast(ArrayList, appIter!.next())
+        
+        rem --- Skip application if it's not being copied
+        copy$=appList!.get(3)
+        if copy$<>"y" then continue
+
+        rem --- Get source syn file
+        app$=appList!.get(0); rem --- application
+        sourceDir$=FileObject.removeEndSlash(appList!.get(4))
+        sourceSyn$=sourceDir$+"/config/"+cvs(app$,8)+".syn"
+        synFound=0
+        sourceChan=unt
+        open(sourceChan,isz=-1,err=*next)sourceSyn$; synFound=1
+        close(sourceChan,err=*next)
+        if !synFound then
+            rem --- Log this app skipped
+            meter_text$=trans_text$+": ***skipped*** "+app$
+            gosub disp_meter
+            print(log_dev)meter_text$+" -- cannot find "+sourceSyn$
+            continue
+        endif
+
+        rem --- Log this app being copied
+        meter_text$=trans_text$+": "+app$
+        gosub disp_meter
+        print(log_dev)meter_text$
+        print(log_dev)"    Copy "+sourceDir$
+
+        rem --- Remove trailing slashes (/ and \) from targetDir$
+        targetDir$=FileObject.removeEndSlash(appList!.get(5))
+
+        rem --- Build stblMap! and pfxList! for adc_copymods.aon
+        gosub build_stblMap_pfxList
+        
+        rem --- Launch adc_copymods.aon
+        call pgmdir$+"adc_copymods.aon",sourceSyn$,targetDir$,stblMap!,pfxList!,rdForm!,0,status
+
+        rem --- Delete mods data/def directory
+        parent$=appList!.get(1); rem --- parent app
+        if parent$="ADDON" then FileObject.deleteDirectory(targetDir$+"/data/def")
+
+        rem --- Remove SYSPAR=ADDON line from app *.syn files
+        appNewSyn$=targetDir$+"/config/"+cvs(app$,8)+".syn"
+        erase appNewSyn$ + ".bak", err=*next
+        rename appNewSyn$ to appNewSyn$ + ".bak", err=*next
+        sourceChan=unt
+        open(sourceChan,isz=-1,err=*next)appNewSyn$ + ".bak"
+        targetChan=unt
+        open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")appNewSyn$
+        while 1
+            read(sourceChan,end=*break)record$
+            if cvs(record$,3)="SYSPAR=ADDON" then continue
+            write(targetChan)record$
+        wend
+        close(sourceChan)
+        close(targetChan)
+    wend
+    return
+    
+bimBarista: rem --- Add new application to Barista Installation Manager
+            rem --- Run BIM bai_install_manager.bbj program via synchronous system call because of its terminating release
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_BIM_CREATE")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Launch bai_install_manager.bbj
+    bar_dir$=dir("")
+    if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
+    run_arg$="bbj -tT0 -q -WD"+$22$+bar_dir$+$22$
+:   +" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
+:   +" "+$22$+bar_dir$+"/sys/prog/bai_install_manager.bbj"+$22$
+    user_arg$=" - "
+:   +" -u"+rdAdmin!.getUser()
+:   +" -id"+dbName$
+:   +" -desc"+$22$+appDesc$+$22$
+:   +" -loc"+$22$+newAonLoc$+$22$
+:   +" -cp"+$22$+sscpName$+$22$
+    scall_result=scall(run_arg$+user_arg$,err=*next)
+    return
+
+updateSyncXml: rem --- Update new sync XML files (and copy old barista/settings dir)
+               rem --- BIM clears barista/settings dir, so must do this step after BIMing and before auto-sync
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_UPDATE_XML")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Set newSyncLoc to sync directory at the new aon location
+    newSyncLoc$=newAonDir$+"/data/sync"
+
+    rem --- Setup for upgrade
+    upgrade%=1
+    oldSyncLoc$=oldAonDir$+"/data/sync"
+
+    rem --- If oldSynLoc does not exist for ADDON, skip.
+    oldSynLoc! = new File(oldSyncLoc$)
+    if !oldSynLoc!.exists() then continue
+
+    rem --- Launch adc_updatexmlfiles.aon
+    call pgmdir$+"adc_updatexmlfiles.aon",newSyncLoc$,oldSyncLoc$,syncBackupDir$,upgrade%,rdForm!,0,status
+
+    rem --- Get version of source Addon installation from source data/sync/adm_modules~01007514ad.xml
+    if start_version$="" then
+        utility! = new UpdateSyncXmlFiles(rdForm!,0)
+        oldVers! = utility!.getModuleVersion(new File(oldSyncLoc$))
+        if oldVers!.get("AD")<>null() then
+            start_version$=oldVers!.get("AD")
+        endif
+    endif
+    return
+
+buildAddonJar: rem --- Build addonprop.jar and put it in the aon/prop directory
+
+    meter_text$=Translate!.getTranslation("AON_BUILD_JAR")+": addonprop.jar"
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+    x=scall("jar cf "+newAonDir$+"/addonprop.jar -C "+newAonDir$+"/prop .",err=*next)
+    aonJar!=new File(newAonDir$+"/addonprop.jar")
+    propJar!=new File(newAonDir$+"/prop/addonprop.jar")
+    aonJar!.renameTo(propJar!)
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
+    return
+    
+useOldMenu: rem --- Use old modified menus instead of new standard menus.
+            rem --- Temporary "fix" until Barista enhancement 5658 can be implemented to preserve customizations
+            rem --- to standard menus, thus no logging or progress meter.
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_COPY_MENUS")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    availableLangs$="deuenuespfraitanldsve"
+    for i=1 to len(availableLangs$)-1 step 3
+        lang$=availableLangs$(i,3)
+        
+        rem --- If oldMenuFile exists, overwrite newMenuFile with it
+        oldMenuFile! = new File(oldAonDir$+"/config/"+lang$+"/"+cvs(appName$,8)+".men")
+        if oldMenuFile!.exists()
+        
+            rem --- Create new directories as necessary for newMenuFile
+            newMenuDir! = new File(newAonDir$+"/config/"+lang$)
+            FileObject.makeDirs(newMenuDir!)
+
+            rem --- Rename newMenuFile as a backup before overwriting it
+            newMenuFile! = new File(newMenuDir!.getPath()+"/"+cvs(appName$,8)+".men")
+            rename newMenuFile!.getPath() to newMenuDir!.getPath()+"/"+cvs(appName$,8)+".men.bak", err=*next
+            
+            rem --- Copy oldMenuFile to newMenuFile
+            sourceChan=unt
+            open(sourceChan,isz=-1,err=*endif)oldMenuFile!.getPath()
+            targetChan=unt
+            open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")newMenuFile!.getPath()
+            while 1
+                readrecord(sourceChan,siz=BLOCKSIZE,end=*break)record$
+                writerecord(targetChan)record$
+            wend
+            close(sourceChan)
+            close(targetChan)
+        endif
+    next i
+    return
+
+checkLineEndings: rem --- Check for, and resolve, line ending issues
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_RESOLVE_LINE_ENDINGS")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+    repoInterface!=new GitRepoInterface(newAonDir$)
+    repoInterface!.checkoutFilesWithDifferentLineEndings()
+    repoInterface!.closeInterface()
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
+    return 
+
+cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_CHERRY_PICK_LOCAL_COMMITS")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Track commits that still need to be cherry picked in case there is a failure
+    if localCommitsList!.size()
+        for wk=0 to localCommitsList!.size()-1
+            remainingCommits!.add(localCommitsList!.get(wk))
+        next wk
+    endif
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+    rem --- Cherry pick local commits
+    repoInterface!=new GitRepoInterface(newAonDir$)
+    commitIter!=localCommitsList!.iterator()
+    while commitIter!.hasNext()
+        commit!=commitIter!.next()
+        failures!=repoInterface!.cherryPick(commit!)
+        print(log_dev)"    commit: ",commit!
+
+        rem --- Log and report cherry pick failure
+        if !failures!.isEmpty() then
+            restartFlag=1
+            print(log_dev)"    ***** CHERRY PICK FAILED *****"
+            failurePaths!=failures!.keySet()
+            pathsIter!=failurePaths!.iterator()
+            while pathsIter!.hasNext()
+                path$=pathsIter!.next()
+                reason!=failures!.get(path$)
+                print(log_dev)"    ",path$,": ",reason!
+            wend
+            break
+        endif
+        
+        rem --- Do NOT cherry pick this commit again in a restart
+        remainingCommits!.removeItem(0)
+    wend
+    repoInterface!.closeInterface()
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
+    return
+
+checkForGitConflicts: rem --- Check for Git conflicts, and resolve bar/*.xml conflicts
+
+    rem --- Increment progress meter
+    meter_text$=Translate!.getTranslation("AON_CHECK_GIT_CONFLICTS")
+    meter_proc_recs=meter_proc_recs+1
+    meter_action$="MTR-LST"
+    gosub disp_meter
+    print(log_dev)meter_text$
+
+    rem --- Show busy/working image while cloning and pulling from repository
+    nxt_ctlID=util.getNextControlID()
+    busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+    rem --- Get Git conflicts
+    repoInterface!=new GitRepoInterface(newAonDir$)
+    conflicts!=repoInterface!.getConflicts()
+    repoInterface!.closeInterface()
+
+    rem --- Warn about, and log, un-resolved conflicts
+    if conflicts!.size()>0 then
+        restartFlag=1
+        msg_id$="AD_GIT_CONFLICTS"
+        dim msg_tokens$[1]
+        msg_tokens$[1]=newAonDir$ + "/logs"+logName$
+        gosub disp_message
+
+        conflictIter!=conflicts!.iterator()
+        while conflictIter!.hasNext()
+            print(log_dev)"    conflict: "+conflictIter!.next()
+        wend
+    endif
+
+    rem --- Remove busy/working image from progress meter
+    busyImage!.destroy(err=*next)
+    return
+
+checkForReservedStr: rem --- For pre-v19 upgrades, check for delta XML RESERVED_STR and RESERVED_NUM issues
+    if num(start_version$)<19 then
+        rem --- Increment progress meter
+        meter_text$=Translate!.getTranslation("AON_CHECK_DELTA_XML")
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$+": "+newAonDir$+"/data/bar/delta"
+    
+        rem --- Show busy/working image while cloning and pulling from repository
+        nxt_ctlID=util.getNextControlID()
+        busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+
+        rem --- Check XMLs in aon/data/bar/delta directory
+        aonDataBarDelta!=new File(newAonDir$+"/data/bar/delta",err=*next)
+        if aonDataBarDelta!.exists() and aonDataBarDelta!.isDirectory() then
+            deltaXmlVector! = new Vector(java.util.Arrays.asList(aonDataBarDelta!.listFiles()))
+            deltaXmlIter!=deltaXmlVector!.iterator()
+            while deltaXmlIter!.hasNext()
+                deltaXmlFile!=deltaXmlIter!.next()
+                deltaXmlName!=deltaXmlFile!.getName()
+                if deltaXmlName!.endsWith(".xml") then
+                    baseName$=deltaXmlName!
+                    baseName$=baseName$(1,pos(".xml"=baseName$)-1)
+                    reservedStrs!=new Vector()
+                    reservedNums!=new Vector()
+                    dealerStrs!=new Vector()
+                    dealerNums!=new Vector()
+        
+                    rem --- Does this delta XML have RESERVED_STR and RESERVED_NUM issues?
+                    deltaXml_dev=unt
+                    open(deltaXml_dev)deltaXMlFile!.getAbsolutePath()
+                    while 1
+                        read(deltaXml_dev,end=*break)text$
+                        if pos("<RECORD id=""ddm_table_cols."+baseName$=text$) then
+                            if pos("RESERVED_STR "=text$) then reservedStrs!.add(text$)
+                            if pos("RESERVED_NUM "=text$) then reservedNums!.add(text$)
+                            if pos("DEALER_STR "=text$) then dealerStrs!.add(text$)
+                            if pos("DEALER_NUM "=text$) then dealerNums!.add(text$)
+                        endif
+                    wend
+        
+                    rem --- Log RESERVED_STR and RESERVED_NUM issues, and set restartFlag
+                    if reservedStrs!.size()>1 or reservedNums!.size()>1 or dealerStrs!.size()>1 or dealerNums!.size()>1 then
+                        restartFlag=1
+                        print(log_dev) "    "+deltaXmlName!
+                        if reservedStrs!.size()>1 then
+                            for i=0 to reservedStrs!.size()-1
+                                print(log_dev) "        "+reservedStrs!.elementAt(i)
+                            next i
+                        endif
+                        if reservedNums!.size()>1 then
+                            for i=0 to reservedNums!.size()-1
+                                print(log_dev) "        "+reservedNums!.elementAt(i)
+                            next i
+                        endif
+                        if dealerStrs!.size()>1 then
+                            for i=0 to dealerStrs!.size()-1
+                                print(log_dev) "        "+dealerStrs!.elementAt(i)
+                            next i
+                        endif
+                        if dealerNums!.size()>1 then
+                            for i=0 to dealerNums!.size()-1
+                                print(log_dev) "        "+dealerNums!.elementAt(i)
+                            next i
+                        endif
+                    endif
+        
+                    close(deltaXml_dev,err=*next)
+                endif
+            wend
+        endif
+
+        rem --- Warn about, and log, un-resolved conflicts
+        if restartFlag then
+        rem ... AD_DELTA_XML_ISSUES: There are aon/data/bar/delta XML issues that must be resolved before completing this upgrade.\nSee the log file for details\: %1\n
+            msg_id$="AD_DELTA_XML_ISSUES"
+            dim msg_tokens$[1]
+            msg_tokens$[1]=newAonDir$ + "/logs"+logName$
+            gosub disp_message
+        endif
+    
+        rem --- Remove busy/working image from progress meter
+        busyImage!.destroy(err=*next)
+    endif
+    return
+    
+createRestartFile: rem --- Create restart file
+    FileObject.makeDirs(new File(newAonDir$ + "/logs"))
+    restartFile$=newAonDir$+"/logs/restartUpgradeWizard.txt"
+    erase restartFile$,err=*next
+    string restartFile$
+    restart_dev=unt
+    open(restart_dev)restartFile$
+    
+    print(restart_dev)"Restart file: "+restartFile$
+    print(restart_dev)"Created: "+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")
+    print(restart_dev)
+    print(restart_dev)"Previous log file: " + newAonDir$ + "/logs"+logName$
+    print(restart_dev)"New aon Location: " + newAonLoc$
+    print(restart_dev)"Old aon Location: " + oldAonLoc$
+    print(restart_dev)"Start version: " + start_version$
+    print(restart_dev)"Re-Start At: " + restartAt$
+    print(restart_dev)
+
+    rem --- Capture remaining commits that still need to be cherry picked
+    remainingIter!=remainingCommits!.iterator()
+    while remainingIter!.hasNext()
+        remaining!=remainingIter!.next()
+        print(restart_dev)"Remaining commit: ",remaining!
+    wend
+
+    print(restart_dev)
+    close(restart_dev,err=*next)
+    return
+
+
+removeModsArcBarFile: rem --- Remove mods data/bar/*.xml file and data/arc/*/*.arc files corresponding to given sourceName$
+    rem --- Get source basename and extension
+    sourceName$=sourceName!
+    baseName$=""
+    extension$=""
+    if sourceName!.endsWith(".xml") then
+        extension$=".xml"
+        baseName$=sourceName$(1,pos(extension$=sourceName$,-1)-1)
+    endif
+    if sourceName!.endsWith(".cdf") then
+        extension$=".cdf"
+        baseName$=sourceName$(1,pos(extension$=sourceName$,-1)-1)
+    endif
+    if baseName$="" or extension$="" then return
+    
+    rem --- Remove corresponding mods data/bar/*.xml file
+    modsBarXml!=new File(newModsDir$+"data/bar/"+baseName$+extension$)
+    modsBarXml!.delete()
+    
+    rem --- Remove corresponding mods data/arc/*/*.arc files
+    if arcLangDirs!=null() then
+        rem --- Get language directory that are under the mods data/arc directory
+        arcLangDirs!= new Vector()
+        modsDataArcDir!=new File(newModsDir$+"data/arc")
+        modsDataArcVector! = new Vector(java.util.Arrays.asList(modsDataArcDir!.listFiles()))
+        modsDataArcIter!=modsDataArcVector!.iterator()
+        while modsDataArcIter!.hasNext()
+            modsDataArcFile!=modsDataArcIter!.next()
+            if modsDataArcFile!.isDirectory() then arcLangDirs!.add(modsDataArcFile!)
+        wend
+    endif
+    arcLangIter!=arcLangDirs!.iterator()
+    while arcLangIter!.hasNext()
+        langDir!=arcLangIter!.next()
+        modsArcFile!=new File(newModsDir$+"data/arc/"+langDir!.getName()+"/"+baseName$+".arc")
+        modsArcFile!.delete()
+    wend
+    return
+
 search_replace: rem --- Search record$ for search$, and replace with replace$
 	rem --- Assumes only one occurrence of search$ per line so don't have 
 	rem --- to deal with situation where pos(search$=replace$)>0
@@ -611,11 +1734,12 @@ disp_meter:rem --- Display Progress Meter
 open_log:rem --- Open log file
             
     rem --- create logs directory at location
-    logDir$ = FileObject.fixPath(location$ + "/logs", "/")
+    logDir$ = FileObject.fixPath(newAonLoc$ + "/logs", "/")
     FileObject.makeDirs(new File(logDir$))
 
     rem --- create and open log file
-    log$ = logDir$+"/upgradewiz_"+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")+".txt"
+    logName$="/upgradewiz_"+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")+".txt"
+    log$ = logDir$+logName$
     erase log$,err=*next
     string log$
     log_dev=unt
@@ -626,7 +1750,7 @@ open_log:rem --- Open log file
     print(log_dev)
     print(log_dev)"New Database Name: " + dbName$
     print(log_dev)"New Description: " + appDesc$
-    print(log_dev)"New aon Locatoin: " + newAonLoc$
+    print(log_dev)"New aon Location: " + newAonLoc$
     print(log_dev)"Old aon Location: " + oldAonLoc$
     print(log_dev)"Old barista Location: " + oldBarLoc$
     print(log_dev)"Old sync Backup Dir: " + syncBackupDir$
@@ -670,29 +1794,6 @@ open_log:rem --- Open log file
         wend
     wend
     print(log_dev)
-
-    return
-    
-open_tables:rem -----<Open Tables
-
-    call stbl("+DIR_SYP")+"bac_open_tables.bbj",
-:       open_beg,
-:       open_end,
-:       open_tables$[all],
-:       open_opts$[all],
-:       open_chans$[all],
-:       open_tpls$[all],
-:       rd_table_chans$[all],
-:       open_batch,
-:       open_status$
-
-    if open_status$<>""
-        msg_id$="ENTRY_OPEN_ERROR"
-        dim msg_tokens$[1]
-            msg_tokens$[1]=open_status$
-        gosub disp_message
-        goto std_exit
-    endif
 
     return
 

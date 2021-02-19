@@ -1,57 +1,74 @@
-[[OPE_CREDMAINT.CUSTOMER_ID.AVAL]]
-rem "Customer Inactive Feature"
-customer_id$=callpoint!.getUserInput()
-arm01_dev=fnget_dev("ARM_CUSTMAST")
-arm01_tpl$=fnget_tpl$("ARM_CUSTMAST")
-dim arm01a$:arm01_tpl$
-arm01a_key$=firm_id$+customer_id$
-find record (arm01_dev,key=arm01a_key$,err=*break) arm01a$
-if arm01a.cust_inactive$="Y" then
-   call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
-   msg_id$="AR_CUST_INACTIVE"
-   dim msg_tokens$[2]
-   msg_tokens$[1]=fnmask$(arm01a.customer_id$(1,customer_size),m0$)
-   msg_tokens$[2]=cvs(arm01a.customer_name$,2)
-   gosub disp_message
-   callpoint!.setStatus("ACTIVATE")
-endif
+[[OPE_CREDMAINT.AOPT-AGNG]]
+rem --- Update this customer's aging stats
+	
+	rem --- Skip unless current processing date is greater than last aging date
+	armCustDet_dev=fnget_dev("ARM_CUSTDET")
+	dim armCustDet$:fnget_tpl$("ARM_CUSTDET")
+	armCustDet.firm_id$=firm_id$
+	armCustDet.customer_id$=callpoint!.getColumnData("OPE_CREDMAINT.CUSTOMER_ID")
+	armCustDet.ar_type$=""
+	readrecord(armCustDet_dev,key=armCustDet.firm_id$+armCustDet.customer_id$+armCustDet.ar_type$)armCustDet$
+	if cvs(armCustDet.report_type$,2)="" then armCustDet.report_type$=iff(cvs(callpoint!.getDevObject("dflt_age_by"),2)="","I",callpoint!.getDevObject("dflt_age_by"))
+	sysDate$=stbl("+SYSTEM_DATE")
+	if sysDate$>armCustDet.report_date$ then
+		customer_id$=armCustDet.customer_id$
+		endcust$=customer_id$
+		call stbl("+DIR_PGM")+"arc_custaging.aon",customer_id$,endcust$,sysDate$,armCustDet.report_type$,status
+	endif
+	rem --- re-read cust detail record and refresh aging fields
+	readrecord(armCustDet_dev,key=armCustDet.firm_id$+armCustDet.customer_id$+armCustDet.ar_type$)armCustDet$
+	callpoint!.setColumnData("OPE_CREDMAINT.AGING_FUTURE",armCustDet.aging_future$,1)
+	callpoint!.setColumnData("OPE_CREDMAINT.AGING_CUR",armCustDet.aging_cur$,1)
+	callpoint!.setColumnData("OPE_CREDMAINT.AGING_30",armCustDet.aging_30$,1)
+	callpoint!.setColumnData("OPE_CREDMAINT.AGING_60",armCustDet.aging_60$,1)
+	callpoint!.setColumnData("OPE_CREDMAINT.AGING_90",armCustDet.aging_90$,1)
+	callpoint!.setColumnData("OPE_CREDMAINT.AGING_120",armCustDet.aging_120$,1)
+	callpoint!.setColumnData("OPE_CREDMAINT.REPORT_DATE",armCustDet.report_date$,1)
+	callpoint!.setColumnData("OPE_CREDMAINT.REPORT_TYPE",armCustDet.report_type$,1)
+	
 
-[[OPE_CREDMAINT.ASVA]]
-rem --- Update the tickler date
+[[OPE_CREDMAINT.AOPT-COMM]]
+rem --- Comment Maintenance
+
 	gosub update_tickler
 
-rem --- Make sure this form is closed before the Credit Review and Release grid gets focus
-	callpoint!.setStatus("EXIT")
-[[OPE_CREDMAINT.ARER]]
-rem --- If tickler date is blank, use existing tickler date if one already exists for the customer and order.
-	old_tick_date$=callpoint!.getColumnData("OPE_CREDMAINT.REV_DATE")
-	if cvs(old_tick_date$,2)="" then
-		ope03_dev=fnget_dev("OPE_CREDDATE")
-		dim ope03a$:fnget_tpl$("OPE_CREDDATE")
-		cust_no$=callpoint!.getColumnData("OPE_CREDMAINT.CUSTOMER_ID")
-		ord$=callpoint!.getColumnData("OPE_CREDMAINT.ORDER_NO")
-		ope03a.firm_id$=firm_id$
-		ope03a.customer_id$=pad(cust_no$,dec(fattr(ope03a$,"CUSTOMER_ID")(10,2)))
-		ope03a.order_no$=pad(ord$,dec(fattr(ope03a$,"ORDER_NO")(10,2)))
-		ope03_trip$=ope03a.firm_id$+ope03a.customer_id$+ope03a.order_no$
-		read(ope03_dev,key=ope03_trip$,knum="BY_ORDER",dom=*next)
-		ope03_key$=key(ope03_dev,end=*next)
-		if pos(ope03_trip$=ope03_key$)=1 then
-			readrecord(ope03_dev)ope03a$
-			old_tick_date$=ope03a.rev_date$
-			callpoint!.setColumnData("OPE_CREDMAINT.REV_DATE",old_tick_date$,1)
-		endif
+	disp_text$=callpoint!.getColumnData("<<DISPLAY>>.COMMENTS")
+	sv_disp_text$=disp_text$
 
-		rem --- Reset ope03_dev to its PRIMARY key
-		read(ope03_dev,key="",knum="PRIMARY",dom=*next)
+	editable$="YES"
+	force_loc$="NO"
+	baseWin!=null()
+	startx=0
+	starty=0
+	shrinkwrap$="NO"
+	html$="NO"
+	dialog_result$=""
+
+	call stbl("+DIR_SYP")+ "bax_display_text.bbj",
+:		"Customer Comments",
+:		disp_text$, 
+:		table_chans$[all], 
+:		editable$, 
+:		force_loc$, 
+:		baseWin!, 
+:		startx, 
+:		starty, 
+:		shrinkwrap$, 
+:		html$, 
+:		dialog_result$
+
+	if disp_text$<>sv_disp_text$
+		rem --- Update comments to master file
+		arm01_dev=fnget_dev("ARM_CUSTMAST")
+		dim arm01a$:fnget_tpl$("ARM_CUSTMAST")
+		extractrecord(arm01_dev,key=firm_id$+callpoint!.getColumnData("OPE_CREDMAINT.CUSTOMER_ID"))arm01a$; rem Advisory Locking
+		arm01a.memo_1024$=disp_text$
+		arm01a$=field(arm01a$)
+		writerecord(arm01_dev)arm01a$
+		callpoint!.setColumnData("<<DISPLAY>>.COMMENTS",disp_text$,1)
+		callpoint!.setDevObject("memo_1024",disp_text$)
 	endif
 
-rem --- Hold on to old tickler date so we know if it gets changed
-	callpoint!.setDevObject("old_tick_date",old_tick_date$)
-
-rem --- Display Comments
-	cust_id$=callpoint!.getColumnData("OPE_CREDMAINT.CUSTOMER_ID")
-	gosub disp_cust_comments
 [[OPE_CREDMAINT.AOPT-DELO]]
 rem --- Delete the Order or the Followup date for the Customer
 
@@ -155,22 +172,7 @@ del_followup:
 	callpoint!.setStatus("EXIT")
 
 no_delete:
-[[OPE_CREDMAINT.AOPT-ORIV]]
-rem Order/Invoice History Inq
-	gosub update_tickler
-	cp_cust_id$=callpoint!.getColumnData("OPE_CREDMAINT.CUSTOMER_ID")
-	user_id$=stbl("+USER_ID")
-	dim dflt_data$[2,1]
-	dflt_data$[1,0]="CUSTOMER_ID"
-	dflt_data$[1,1]=cp_cust_id$
-	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:		"ARR_ORDINVHIST",
-:		user_id$,
-:		"",
-:		"",
-:		table_chans$[all],
-:		"",
-:		dflt_data$[all]
+
 [[OPE_CREDMAINT.AOPT-IDTL]]
 rem Invoice Dtl Inquiry
 	gosub update_tickler
@@ -187,6 +189,7 @@ rem Invoice Dtl Inquiry
 :                       table_chans$[all],
 :                       "",
 :                       dflt_data$[all]
+
 [[OPE_CREDMAINT.AOPT-MDAT]]
 rem --- Modify Information
 
@@ -210,9 +213,24 @@ rem --- Update Credit changes to master file
 	arm02a.credit_limit=num(cred_limit$)
 	arm02a$=field(arm02a$)
 	writerecord(arm02_dev)arm02a$
-[[OPE_CREDMAINT.BEND]]
-rem --- One last chance to update the tickler date
+
+[[OPE_CREDMAINT.AOPT-ORIV]]
+rem Order/Invoice History Inq
 	gosub update_tickler
+	cp_cust_id$=callpoint!.getColumnData("OPE_CREDMAINT.CUSTOMER_ID")
+	user_id$=stbl("+USER_ID")
+	dim dflt_data$[2,1]
+	dflt_data$[1,0]="CUSTOMER_ID"
+	dflt_data$[1,1]=cp_cust_id$
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"ARR_ORDINVHIST",
+:		user_id$,
+:		"",
+:		"",
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
 [[OPE_CREDMAINT.AOPT-RELO]]
 rem --- Release an Order from Credit Hold
 	gosub update_tickler
@@ -318,6 +336,49 @@ no_rel:
 	if pos("EXIT"=callpoint!.getStatus())=0
 		callpoint!.setStatus("REFRESH")
 	endif
+
+[[OPE_CREDMAINT.ARER]]
+rem --- If tickler date is blank, use existing tickler date if one already exists for the customer and order.
+	old_tick_date$=callpoint!.getColumnData("OPE_CREDMAINT.REV_DATE")
+	if cvs(old_tick_date$,2)="" then
+		ope03_dev=fnget_dev("OPE_CREDDATE")
+		dim ope03a$:fnget_tpl$("OPE_CREDDATE")
+		cust_no$=callpoint!.getColumnData("OPE_CREDMAINT.CUSTOMER_ID")
+		ord$=callpoint!.getColumnData("OPE_CREDMAINT.ORDER_NO")
+		ope03a.firm_id$=firm_id$
+		ope03a.customer_id$=pad(cust_no$,dec(fattr(ope03a$,"CUSTOMER_ID")(10,2)))
+		ope03a.order_no$=pad(ord$,dec(fattr(ope03a$,"ORDER_NO")(10,2)))
+		ope03_trip$=ope03a.firm_id$+ope03a.customer_id$+ope03a.order_no$
+		read(ope03_dev,key=ope03_trip$,knum="BY_ORDER",dom=*next)
+		ope03_key$=key(ope03_dev,end=*next)
+		if pos(ope03_trip$=ope03_key$)=1 then
+			readrecord(ope03_dev)ope03a$
+			old_tick_date$=ope03a.rev_date$
+			callpoint!.setColumnData("OPE_CREDMAINT.REV_DATE",old_tick_date$,1)
+		endif
+
+		rem --- Reset ope03_dev to its PRIMARY key
+		read(ope03_dev,key="",knum="PRIMARY",dom=*next)
+	endif
+
+rem --- Hold on to old tickler date so we know if it gets changed
+	callpoint!.setDevObject("old_tick_date",old_tick_date$)
+
+rem --- Display Comments
+	cust_id$=callpoint!.getColumnData("OPE_CREDMAINT.CUSTOMER_ID")
+	gosub disp_cust_comments
+
+[[OPE_CREDMAINT.ASVA]]
+rem --- Update the tickler date
+	gosub update_tickler
+
+rem --- Make sure this form is closed before the Credit Review and Release grid gets focus
+	callpoint!.setStatus("EXIT")
+
+[[OPE_CREDMAINT.BEND]]
+rem --- One last chance to update the tickler date
+	gosub update_tickler
+
 [[OPE_CREDMAINT.BSHO]]
 rem --- Init
 
@@ -349,6 +410,31 @@ rem --- Open tables
 
 	readrecord(ops_params_dev,key=firm_id$+"AR00")ops_params$
 	callpoint!.setDevObject("op_create_wo",ops_params.op_create_wo$)
+	if ops_params.on_demand_aging$<>"Y"
+		callpoint!.setOptionEnabled("AGNG",0)
+	else
+		callpoint!.setOptionEnabled("AGNG",1)
+		callpoint!.setDevObject("dflt_age_by",ops_params.dflt_age_by$)
+	endif
+
+[[OPE_CREDMAINT.CUSTOMER_ID.AVAL]]
+rem "Customer Inactive Feature"
+customer_id$=callpoint!.getUserInput()
+arm01_dev=fnget_dev("ARM_CUSTMAST")
+arm01_tpl$=fnget_tpl$("ARM_CUSTMAST")
+dim arm01a$:arm01_tpl$
+arm01a_key$=firm_id$+customer_id$
+find record (arm01_dev,key=arm01a_key$,err=*break) arm01a$
+if arm01a.cust_inactive$="Y" then
+   call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
+   msg_id$="AR_CUST_INACTIVE"
+   dim msg_tokens$[2]
+   msg_tokens$[1]=fnmask$(arm01a.customer_id$(1,customer_size),m0$)
+   msg_tokens$[2]=cvs(arm01a.customer_name$,2)
+   gosub disp_message
+   callpoint!.setStatus("ACTIVATE")
+endif
+
 [[OPE_CREDMAINT.<CUSTOM>]]
 #include [+ADDON_LIB]std_functions.aon
 disp_cust_comments:
@@ -397,44 +483,6 @@ remove_tickler:
 		remove(ope03_dev,key=firm_id$+old_tick_date$+cust_no$+ord$,dom=*next)
 	endif
 return
-[[OPE_CREDMAINT.AOPT-COMM]]
-rem --- Comment Maintenance
 
-	gosub update_tickler
 
-	disp_text$=callpoint!.getColumnData("<<DISPLAY>>.COMMENTS")
-	sv_disp_text$=disp_text$
 
-	editable$="YES"
-	force_loc$="NO"
-	baseWin!=null()
-	startx=0
-	starty=0
-	shrinkwrap$="NO"
-	html$="NO"
-	dialog_result$=""
-
-	call stbl("+DIR_SYP")+ "bax_display_text.bbj",
-:		"Customer Comments",
-:		disp_text$, 
-:		table_chans$[all], 
-:		editable$, 
-:		force_loc$, 
-:		baseWin!, 
-:		startx, 
-:		starty, 
-:		shrinkwrap$, 
-:		html$, 
-:		dialog_result$
-
-	if disp_text$<>sv_disp_text$
-		rem --- Update comments to master file
-		arm01_dev=fnget_dev("ARM_CUSTMAST")
-		dim arm01a$:fnget_tpl$("ARM_CUSTMAST")
-		extractrecord(arm01_dev,key=firm_id$+callpoint!.getColumnData("OPE_CREDMAINT.CUSTOMER_ID"))arm01a$; rem Advisory Locking
-		arm01a.memo_1024$=disp_text$
-		arm01a$=field(arm01a$)
-		writerecord(arm01_dev)arm01a$
-		callpoint!.setColumnData("<<DISPLAY>>.COMMENTS",disp_text$,1)
-		callpoint!.setDevObject("memo_1024",disp_text$)
-	endif
