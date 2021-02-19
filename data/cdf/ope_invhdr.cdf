@@ -328,12 +328,11 @@ rem --- Do we need to print an invoice first?
 	if callpoint!.getDevObject( "print_invoice" ) = "Y" then
 		gosub do_invoice
 		callpoint!.setStatus("ACTIVATE")
-		if !invoicePrinted then break
 	endif
 
 rem --- Start a new record after a cash sale
 
-	if callpoint!.getDevObject("cash_code_type")<>"" then
+	if invoicePrinted and callpoint!.getDevObject("cash_code_type")<>"" then
 		user_tpl.do_end_of_form = 0
 		callpoint!.setStatus("NEWREC-ACTIVATE")
 	endif
@@ -428,10 +427,11 @@ rem --- No need to check credit first
 
 	gosub do_invoice
 	callpoint!.setStatus("ACTIVATE")
-	if !invoicePrinted then break
-	user_tpl.do_end_of_form = 0
-	callpoint!.clearStatus()
-	callpoint!.setStatus("NEWREC")
+	if invoicePrinted then
+		user_tpl.do_end_of_form = 0
+		callpoint!.clearStatus()
+		callpoint!.setStatus("NEWREC")
+	endif
 
 rem --- Remove temporary soft lock used just for this print task 
 	if !callpoint!.isEditMode() and lock_type$="L" then
@@ -3767,6 +3767,13 @@ rem ==========================================================================
 :	                       "",
 :	                       dflt_data$[all]
 
+		rem --- How did form end?
+		if callpoint!.getDevObject("altSlsTaxCal_end")="BEND" then
+			rem --- User did Close (Ctrl+F4)
+			invoicePrinted=0
+			return
+		endif
+
 		altSlsTaxCal=num(callpoint!.getDevObject("altSlsTaxCal"))
 		if altSlsTaxCal<>startTaxAmount
 			tax_amount=altSlsTaxCal
@@ -3803,6 +3810,13 @@ rem --- on demand invoice
 :	                       table_chans$[all],
 :	                       "",
 :	                       dflt_data$[all]
+
+	rem --- How did form end?
+	if callpoint!.getDevObject("oprInvDemand_end")="BEND" then
+		rem --- User did Close (Ctrl+F4)
+		invoicePrinted=0
+		return
+	endif
 
 	return
 
