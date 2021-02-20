@@ -3994,8 +3994,8 @@ rem ==========================================================================
 						rem --- TAXABLE_AMT can/may include FREIGHT_AMT, which would affect TAX_AMOUNT
 						disc_amt=ope01a.discount_amt
 						gosub calculate_tax
-						ope01a.taxable_amt=taxable_amt
-						ope01a.tax_amount=tax_amount
+						ope01a.taxable_amt=num(callpoint!.getColumnData("OPE_INVHDR.TAXABLE_AMT"))
+						ope01a.tax_amount=num(callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
 					endif
 				endif
 
