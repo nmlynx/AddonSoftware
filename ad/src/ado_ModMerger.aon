@@ -1,0 +1,34 @@
+REM /**
+REM  * ModMerger.bbj
+REM  * @author shaun
+REM  *
+REM  */
+
+use ::ado_AO_ModMerger.aon::AO_ModMerger
+use ::ado_AO_ModMerger.aon::AO_ExtensionFileFilter
+use ::ado_AO_ModMerger.aon::AO_ModMergerStatus
+
+REM /**
+REM  * ModMerger
+REM  * Copies any core Addon files customized by a mods project back into the Addon core. 
+REM  */
+class public ModMerger extends AO_ModMerger    
+    method public ModMerger(BBjString modsDirectoryName!, BBjString aonDirectoryName!)
+        #super!(modsDirectoryName!, aonDirectoryName!)
+        methodret
+    methodend
+classend 
+
+class public ExtensionFileFilter extends AO_ExtensionFileFilter
+classend 
+
+class public ModMergerStatus extends AO_ModMergerStatus
+classend 
+
+declare ModMerger mm!
+declare ModMergerStatus status!
+mm!=new ModMerger()
+status!=mm!.moveProgFilesFromModProject("C:\aon_qfp\regal_v1620_mods","C:\aon_instances\aon_git\v18\v1821\aon")
+print status!.getMessages()
+
+

@@ -1,0 +1,327 @@
+REM /**
+REM  * ModMerger.bbj
+REM  * @author shaun
+REM  *
+REM  */
+
+use java.io.FileFilter
+use java.nio.file.Files
+use java.nio.file.StandardCopyOption
+use java.util.Arrays
+use java.util.ArrayList
+use java.util.HashMap
+use java.util.HashSet
+use java.util.Map
+use java.util.Set
+use java.util.Iterator
+
+use ::ado_ModMerger.aon::ModMergerStatus
+
+REM /**
+REM  * AO_ModMerger
+REM  * Copies any core Addon files customized by a mods project back into the Addon core. 
+REM  */
+class public AO_ModMerger
+    
+    REM Constants 
+    field public BBjString SYSPFX_VARIABLE!="SYSPFX="
+    
+    REM File filter applied to directory listings 
+    field public FileFilter Filter!
+    
+    REM List of directories in prefix
+    field protected java.util.List Prefix!=new ArrayList()
+    
+    REM Directories for mods and core 
+    field protected BBjString modsDirectoryName!
+    field protected BBjString aonDirectoryName!
+    
+    REM Default constructor
+    method private AO_ModMerger() 
+    methodend 
+    
+    REM Public constructor
+    method public AO_ModMerger(BBjString modsDirectoryName!, BBjString aonDirectoryName!)
+        #modsDirectoryName!=modsDirectoryName!
+        #aonDirectoryName!=aonDirectoryName!
+        
+        #createPrefix()
+    methodend 
+    
+    REM moveProgFilesFromModProject
+    REM 
+    method public ModMergerStatus moveProgFilesFromModProject()
+        
+        declare ModMergerStatus status!
+        declare java.io.File modsDirectory!
+        declare java.io.File aonDirectory!
+        declare BBjNumber modsDirectoryExists!
+        declare BBjNumber aonDirectoryExists!
+        declare Map aonFiles!
+        declare java.util.List aonDuplicates!
+        declare Map modsFiles!
+        declare java.util.List modsDuplicates!
+        declare HashSet commonFiles!
+        declare ArrayList optionsArrayList!
+        declare BBjString duplicateFileName! 
+        declare java.util.ArrayList resolvedDuplicates! 
+        
+        REM Initialize Status Object 
+        status!=new ModMergerStatus()
+        
+        REM Check to see if both directories exist
+        modsDirectory!=new java.io.File(#modsDirectoryName!)
+        aonDirectory!=new java.io.File(#aonDirectoryName!)
+        
+        modsDirectoryExists!=aonDirectory!.exists() and modsDirectory!.isDirectory()
+        aonDirectoryExists!=aonDirectory!.exists() and aonDirectory!.isDirectory()
+        
+        if (! modsDirectoryExists!) then 
+            status!.addErrorMessage("The mods directory "+#modsDirectoryName!+" is either not a directory or does not exist.")
+        endif 
+        
+        if (! aonDirectoryExists!) then 
+            status!.addErrorMessage("The Addon directory "+#aonDirectoryName!+" is either not a directory or does not exist.")
+        endif 
+
+        if (!(modsDirectoryExists! and aonDirectoryExists!)) then 
+            #status!.addMessage("Both directories must exists to move mods programs to Addon directory. Aborting...")
+            methodret status!
+        endif 
+        
+        REM Build a map of core Addon files  
+        aonFiles!=new HashMap()
+        aonDuplicates!=BBjAPI().makeVector()
+        if (#Filter!=null()) then
+            #Filter!=new AO_ExtensionFileFilter() 
+        endif 
+        #getFiles(#aonDirectoryName!,#aonDirectoryName!,#Filter!,aonFiles!,aonDuplicates!)
+        
+        REM Build a map of all files in the mods project, and collect a list of duplicates as well
+        modsFiles!=new HashMap()
+        modsDuplicates!=BBjAPI().makeVector()
+        #getFiles(#modsDirectoryName!,#modsDirectoryName!,#Filter!,modsFiles!,modsDuplicates!)
+        
+        
+        REM Get the files we will copy over 
+        commonFiles!=new HashSet(aonFiles!.keySet())
+        commonFiles!.retainAll(modsFiles!.keySet())
+                
+        REM Remove any files in the duplicates list from the files we plan to copy over, logging the duplicates 
+        dupiter!=aonDuplicates!.iterator()
+        while dupiter!.hasNext()
+            status!.addErrorMessage("Duplicate file in Addon directory: "+dupiter!.next()+". Skipped file.")
+        wend 
+        
+        resolvedDuplicates!=new ArrayList()
+        dupiter!=modsDuplicates!.iterator()
+        while dupiter!.hasNext()
+        
+            duplicateFileName!=cast(BBjString,dupiter!.next())
+            fileInPrefix!=#getFileInModsPrefix(duplicateFileName!)
+            if (fileInPrefix!<>"") then 
+                resolvedDuplicates!.add(duplicateFileName!)
+                modsFiles!.put(duplicateFileName!,fileInPrefix!)
+            else 
+                REM Figure out which file is actually being used 
+                status!.addErrorMessage("Duplicate file in mods directory: "+dupiter!.next()+". Skipped file.")
+            endif 
+        wend 
+        
+        REM Remove all the duplicates we were able to find in the mods prefix from the list of mods duplicates
+        modsDuplicates!.removeAll(resolvedDuplicates!)
+        
+        REM Remove any duplicate files in Addon or Mods from the list of common files. We don't know 
+        REM which file to copy from mods or where to copy it in Addon. 
+        commonFiles!.removeAll(aonDuplicates!)
+        commonFiles!.removeAll(modsDuplicates!)
+
+        REM copy the files over
+        commiter!=commonFiles!.iterator()
+        while commiter!.hasNext()
+            fileName!=cast(BBjString,commiter!.next())
+            aonFileName!=aonFiles!.get(fileName!)
+            modsFileName!=modsFiles!.get(fileName!)
+            aonFile!=new java.io.File(aonFileName!)
+            modsFile!=new java.io.File(modsFileName!)
+            optionsArray!=java.lang.reflect.Array.newInstance(StandardCopyOption.class,1)
+            java.lang.reflect.Array.set(optionsArray!,0,StandardCopyOption.REPLACE_EXISTING)
+            Files.move(modsFile!.toPath(),aonFile!.toPath(),optionsArray!)
+        wend 
+        
+        methodret status!
+        
+    methodend 
+    
+    REM createPrefix 
+    REM Reads the prefix from the mods addon.syn file
+    method public void createPrefix() 
+    
+        declare BBjString modsSynFileName!
+        declare java.io.File modsSynFile!
+        declare BBjString fileContent!
+        declare java.util.List lines!
+        declare Iterator lineIter!
+        declare BBjString line!
+        declare BBjNumber found
+        declare BBjString prefixString!
+        declare java.util.List prefixList!
+        declare BBjString prefixEntry!
+        declare java.io.File prefixEntryFile! 
+        declare Iterator prefixIter! 
+        
+        REM .. Is it always going to be called mods.syn? 
+        modsSynFileName!=#modsDirectoryName!+"/config/mods.syn"
+        modsSynFile!=new java.io.File(modsSynFileName!)
+        if (! modsSynFile!.exists()) then
+            throw "Can't find mods.syn file at "+modsSynFileName!,12
+        endif 
+        
+        REM Read the system prefix from the mods syn file
+        REM Java 11+
+        fileContent!=Files.readString(modsSynFile!.toPath())
+        lines!=Arrays.asList(fileContent!.split($0A$))
+        lineIter!=lines!.iterator()
+        found=0
+        while (lineIter!.hasNext())
+            line!=cast(BBjString,lineIter!.next())
+            if line!.startsWith(#SYSPFX_VARIABLE!) then
+                found=1
+                break
+            endif 
+        wend 
+    
+        REM Separate the paths and put them into the prefix. 
+        if (found) then
+            prefixString!=line!.substring(line!.indexOf(#SYSPFX_VARIABLE!)+len(#SYSPFX_VARIABLE!))
+            prefixList!=Arrays.asList(prefixString!.split("\s"))
+            prefixIter!=prefixList!.iterator()
+            while (prefixIter!.hasNext())
+                prefixEntry!=cast(BBjString,prefixIter!.next())
+                prefixEntryFile!=new java.io.File(prefixEntry!)
+                if (prefixEntryFile!.isDirectory()) then
+                    #Prefix!.add(prefixEntryFile!)
+                endif 
+            wend 
+        endif 
+    
+    methodend 
+    
+    method public BBjString getFileInModsPrefix(BBjString fileName!)
+        declare Iterator dirIter!
+        declare java.io.File dir!
+        declare java.io.File testFile! 
+        dirIter!=#Prefix!.iterator()
+        while dirIter!.hasNext()
+            dir!=cast(java.io.File,dirIter!.next())
+            testFile!=new java.io.File(dir!,fileName!)
+            if testFile!.exists() then
+                methodret testFile!.getPath()
+            endif 
+        wend 
+        methodret ""
+    methodend 
+    
+    
+    
+    REM getFiles
+    REM Traverses a directory structure looking for files that match criteria specified by the file filter.  Puts 
+    REM the files in a Java Map that is keyed with the base file name and has the absolute path as the value. 
+    REM 
+    method public void getFiles(BBjString fileName!, BBjString topPath!, FileFilter filter!,Map filePaths!,java.util.List duplicates!)
+        declare java.io.File file!
+        declare java.util.List directoryListing!
+        declare Iterator dirIter!
+        
+        file!=new java.io.File(fileName!)
+        
+        REM If we encounter a directory, traverse it
+        if (file!.isDirectory()) then 
+            directoryListing!=java.util.Arrays.asList(file!.listFiles(filter!))
+            dirIter!=directoryListing!.iterator()
+            while (dirIter!.hasNext())
+                nextFile!=dirIter!.next()
+                #getFiles(nextFile!.getAbsolutePath(),topPath!,filter!,filePaths!,duplicates!)
+            wend
+        else  
+           result!=filePaths!.putIfAbsent(file!.getName(),file!.getAbsolutePath())
+           if (result!<>null()) then
+                
+                REM If one of our duplicates is directly under the root directory,
+                REM choose the file that is not under the root path, and don't list in duplicates. 
+                if (file!.getParent()=topPath!) then 
+                    methodret 
+                endif 
+                fileInList!=new java.io.File(cast(BBjString,filePaths!.get(file!.getName())))
+                if (fileinList!.getParent()=topPath!) then 
+                    filePaths!.put(file!.getName(),file!.getAbsolutePath())
+                    methodret 
+                endif 
+                
+                REM Add duplicate file to the list of duplicates 
+                duplicates!.add(file!.getName())
+           endif 
+        endif 
+        
+    methodend 
+    
+classend 
+
+class public AO_ExtensionFileFilter implements FileFilter
+    
+    field public BBjVector FileList!=BBjAPI().makeVector()
+    
+    method public AO_ExtensionFileFilter()
+    
+        REM The list of directories and files to skip over. This list is publicly accessible.
+        REM you can call mm!.getFileList().add("yourpath") or mm!.getFileList().remove("yourpath") 
+        REM on your instance of the ModMerger. 
+        #FileList!.add(".git")
+        #FileList!.add("callpoints")
+        #FileList!.add("config")
+        #FileList!.add("data")
+        #FileList!.add("image")
+        #FileList!.add("images")
+        #FileList!.add("image_bar")
+        #FileList!.add("logs")
+        #FileList!.add("prop")
+        #FileList!.add("cust_images")
+        #FileList!.add("documentation")
+        #FileList!.add("documents")
+        #FileList!.add("codeport")
+        #FileList!.add("dataport")
+        
+        #FileList!.add(".gitattributes")
+        #FileList!.add(".gitignore")
+    methodend 
+
+    method public boolean accept(java.io.File pathName!)
+        methodret !(#FileList!.contains(pathName!.getName()))
+    methodend 
+classend 
+
+class public AO_ModMergerStatus 
+
+    field public BBjVector Messages!=BBjAPI().makeVector()
+    
+    REM This is a count of the number of errors that occurred, not how many messages are in the vector!
+    field public BBjNumber NumErrorsEncountered!=0
+
+    method public void addMessage(BBjString message!)
+        #Messages!.add(message!)
+    methodend 
+
+    method public void addErrorMessage(BBjString message!)
+        #NumErrorsEncountered!=#NumErrorsEncountered!+1
+        #Messages!.add(message!)
+    methodend 
+    
+classend 
+
+declare AO_ModMerger mm!
+declare AO_ModMergerStatus status!
+mm!=new AO_ModMerger("C:\aon_instances\regal\v16\v1620\mods","C:\aon_instances\regal\v16\v1620\aon")
+status!=mm!.moveProgFilesFromModProject()
+print status!.getMessages()
+
+

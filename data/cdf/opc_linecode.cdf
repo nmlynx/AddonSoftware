@@ -1,3 +1,132 @@
+[[OPC_LINECODE.ADIS]]
+rem --- Show TAX_SVC_CD description
+	salesTax!=callpoint!.getDevObject("salesTax")
+	if salesTax!<>null() then
+		tax_svc_cd_desc!=callpoint!.getDevObject("tax_svc_cd_desc")
+		taxSvcCd$=cvs(callpoint!.getColumnData("OPC_LINECODE.TAX_SVC_CD"),2)
+		if taxSvcCd$<>"" then
+			salesTax!=callpoint!.getDevObject("salesTax")
+			success=0
+			desc$=salesTax!.getTaxSvcCdDesc(taxSvcCd$,err=*next); success=1
+			if success then
+				if desc$<>"" then
+					rem --- Good code entered
+					tax_svc_cd_desc!.setText(desc$)
+				else
+					rem --- Bad code entered
+					msg_id$="OP_BAD_TAXSVC_CD"
+					dim msg_tokens$[1]
+					msg_tokens$[1]=taxSvcCd$
+					gosub disp_message
+
+					tax_svc_cd_desc!.setText("?????")
+				endif
+			else
+				rem --- AvaTax call error
+				tax_svc_cd_desc!.setText("?????")
+			endif
+		else
+			rem --- No code entered, so clear description.
+			tax_svc_cd_desc!.setText("")
+		endif
+	endif
+
+[[OPC_LINECODE.ARAR]]
+rem --- Enable-Disable all fields
+	gosub disable_ctls
+
+[[OPC_LINECODE.AREC]]
+rem --- Clear TAX_SVC_CD description
+	salesTax!=callpoint!.getDevObject("salesTax")
+	if salesTax!<>null() then
+		tax_svc_cd_desc!=callpoint!.getDevObject("tax_svc_cd_desc")
+		tax_svc_cd_desc!.setText("")
+	endif
+
+[[OPC_LINECODE.AR_DIST_CODE.AVAL]]
+rem --- Either fill or blank out 3 G/L display fields
+	gosub display_gl_fields
+
+[[OPC_LINECODE.ASHO]]
+rem --- Get connection to Sales Tax Service
+	callpoint!.setDevObject("salesTax",null())
+	ops_params_dev=fnget_dev("OPS_PARAMS")
+	dim ops_params$:fnget_tpl$("OPS_PARAMS")
+	find record (ops_params_dev,key=firm_id$+"AR00",err=std_missing_params)ops_params$
+	if cvs(ops_params.sls_tax_intrface$,2)<>"" then
+		rem --- Get connection to Sales Tax Service
+		salesTax!=new AvaTaxInterface(firm_id$)
+		if salesTax!.connectClient(Form!,err=connectErr) then
+			callpoint!.setDevObject("salesTax",salesTax!)
+			callpoint!.setColumnEnabled("IVC_PRODCODE.TAX_SVC_CD",1)
+		else
+			salesTax!.close()
+		endif
+	endif
+
+	break
+
+connectErr:
+	if salesTax!<>null() then salesTax!.close()
+
+	break
+
+[[OPC_LINECODE.BEND]]
+rem --- Close connection to Sales Tax Service
+	salesTax!=callpoint!.getDevObject("salesTax")
+	if salesTax!<>null() then
+		salesTax!.close()
+	endif
+
+[[OPC_LINECODE.BREA]]
+rem --- re-enable all fields
+	dim dctl$[7],dmap$[7]
+	dctl$[1]="GL_REV_ACCT"
+	dctl$[2]="TAXABLE_FLAG"
+	dctl$[3]="DROPSHIP"
+	dctl$[4]="PRODUCT_TYPE"
+	dctl$[5]="AR_DIST_CODE"
+	dctl$[6]="PROD_TYPE_PR"
+	dctl$[7]="MESSAGE_TYPE"
+	gosub disable_ctls
+
+[[OPC_LINECODE.BSHO]]
+rem --- Inits
+	use ::ado_util.src::util
+	use ::opo_AvaTaxInterface.aon::AvaTaxInterface
+
+rem --- Open/Lock files
+	num_files=2
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="ARC_DISTCODE",open_opts$[1]="OTA"
+	open_tables$[2]="OPS_PARAMS",open_opts$[2]="OTA"
+	gosub open_tables
+	arc_dist_dev=num(open_chans$[1]),arc_dist_tpl$=open_tpls$[1]
+
+rem --- setup for G/L Parameter
+	call stbl("+DIR_PGM")+"adc_application.aon","OP",info$[all]
+	dim user_tpl$:"gl:c(1),dist_dev:n(4),dist_tpl:c(500)"
+	user_tpl.gl$=info$[9]
+	user_tpl.dist_dev=arc_dist_dev
+	user_tpl.dist_tpl$=arc_dist_tpl$
+
+rem --- Add static label for displaying TAX_SVC_CD description
+	tax_svc_cd!=fnget_control!("OPC_LINECODE.TAX_SVC_CD")
+	tax_svc_cd_x=tax_svc_cd!.getX()
+	tax_svc_cd_y=tax_svc_cd!.getY()
+	tax_svc_cd_height=tax_svc_cd!.getHeight()
+	tax_svc_cd_width=tax_svc_cd!.getWidth()
+	code_desc!=fnget_control!("OPC_LINECODE.CODE_DESC")
+	code_desc_width=code_desc!.getWidth()
+	nxt_ctlID=util.getNextControlID()
+	tax_svc_cd_desc!=Form!.addStaticText(nxt_ctlID,tax_svc_cd_x+tax_svc_cd_width+5,tax_svc_cd_y+3,int(code_desc_width*1.5),tax_svc_cd_height,"")
+	callpoint!.setDevObject("tax_svc_cd_desc",tax_svc_cd_desc!)
+
+[[OPC_LINECODE.DROPSHIP.AVAL]]
+rem --- Maybe disable Distribution Code
+	callpoint!.setColumnData("OPC_LINECODE.DROPSHIP", callpoint!.getUserInput())
+	gosub disable_ctls
+
 [[OPC_LINECODE.GL_REV_ACCT.AVAL]]
 rem "GL INACTIVE FEATURE"
    glm01_dev=fnget_dev("GLM_ACCT")
@@ -15,54 +144,72 @@ rem "GL INACTIVE FEATURE"
       gosub disp_message
       callpoint!.setStatus("ACTIVATE-ABORT")
    endif
+
 [[OPC_LINECODE.LINE_TYPE.AVAL]]
 rem --- Disable fields that don't apply
 	callpoint!.setColumnData("OPC_LINECODE.LINE_TYPE", callpoint!.getUserInput())
 	gosub disable_ctls
-[[OPC_LINECODE.AR_DIST_CODE.AVAL]]
-rem --- Either fill or blank out 3 G/L display fields
-	gosub display_gl_fields
+
 [[OPC_LINECODE.PROD_TYPE_PR.AVAL]]
 rem --- Maybe disable Product Type
 	callpoint!.setColumnData("OPC_LINECODE.PROD_TYPE_PR", callpoint!.getUserInput())
 	gosub disable_ctls
-[[OPC_LINECODE.DROPSHIP.AVAL]]
-rem --- Maybe disable Distribution Code
-	callpoint!.setColumnData("OPC_LINECODE.DROPSHIP", callpoint!.getUserInput())
-	gosub disable_ctls
-[[OPC_LINECODE.BSHO]]
-rem --- Open Distribution Code file
-	num_files=1
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="ARC_DISTCODE",open_opts$[1]="OTA"
-	gosub open_tables
-	arc_dist_dev=num(open_chans$[1]),arc_dist_tpl$=open_tpls$[1]
-rem --- setup for G/L Parameter
-	call stbl("+DIR_PGM")+"adc_application.aon","OP",info$[all]
-	dim user_tpl$:"gl:c(1),dist_dev:n(4),dist_tpl:c(500)"
-	user_tpl.gl$=info$[9]
-	user_tpl.dist_dev=arc_dist_dev
-	user_tpl.dist_tpl$=arc_dist_tpl$
-[[OPC_LINECODE.ARAR]]
-rem --- Enable-Disable all fields
-	gosub disable_ctls
-[[OPC_LINECODE.BREA]]
-rem --- re-enable all fields
-	dim dctl$[7],dmap$[7]
-	dctl$[1]="GL_REV_ACCT"
-	dctl$[2]="TAXABLE_FLAG"
-	dctl$[3]="DROPSHIP"
-	dctl$[4]="PRODUCT_TYPE"
-	dctl$[5]="AR_DIST_CODE"
-	dctl$[6]="PROD_TYPE_PR"
-	dctl$[7]="MESSAGE_TYPE"
-	gosub disable_ctls
+
+[[OPC_LINECODE.TAX_SVC_CD.AVAL]]
+rem --- Validate TAX_SVC_CD
+	taxSvcCd$=cvs(callpoint!.getUserInput(),2)
+	priorTaxSvcCd$=cvs(callpoint!.getColumnData("OPC_LINECODE.TAX_SVC_CD"),2)
+	if taxSvcCd$<>priorTaxSvcCd$ then
+		tax_svc_cd_desc!=callpoint!.getDevObject("tax_svc_cd_desc")
+		if taxSvcCd$<>"" then
+			salesTax!=callpoint!.getDevObject("salesTax")
+			success=0
+			desc$=salesTax!.getTaxSvcCdDesc(taxSvcCd$,err=*next); success=1
+			if success then
+				if desc$<>"" then
+					rem --- Good code entered
+					tax_svc_cd_desc!.setText(desc$)
+				else
+					rem --- Bad code entered
+					msg_id$="OP_BAD_TAXSVC_CD"
+					dim msg_tokens$[1]
+					msg_tokens$[1]=taxSvcCd$
+					gosub disp_message
+
+					callpoint!.setColumnData("OPC_LINECODE.TAX_SVC_CD",priorTaxSvcCd$,1)
+					callpoint!.setStatus("ABORT")
+					break
+				endif
+			else
+				rem --- AvaTax call error
+				callpoint!.setColumnData("OPC_LINECODE.TAX_SVC_CD",priorTaxSvcCd$,1)
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+		else
+			rem --- No code entered, so clear description.
+			tax_svc_cd_desc!.setText("")
+		endif
+	endif
+
 [[OPC_LINECODE.<CUSTOM>]]
+#include [+ADDON_LIB]std_missing_params.aon
+
 #include [+ADDON_LIB]std_functions.aon
+
+rem #include fnget_control.src
+	def fnget_control!(ctl_name$)
+	ctlContext=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLC"))
+	ctlID=num(callpoint!.getTableColumnAttribute(ctl_name$,"CTLI"))
+	get_control!=SysGUI!.getWindow(ctlContext).getControl(ctlID)
+	return get_control!
+	fnend
+rem #endinclude fnget_control.src
+
 rem ========================================================
 disable_ctls:rem --- Disable fields that don't apply
 rem ========================================================
-	dim dctl$[7],dmap$[7]
+	dim dctl$[8],dmap$[8]
 	dctl$[1]="GL_REV_ACCT"
 	dctl$[2]="TAXABLE_FLAG"
 	dctl$[3]="DROPSHIP"
@@ -70,6 +217,7 @@ rem ========================================================
 	dctl$[5]="AR_DIST_CODE"
 	dctl$[6]="PROD_TYPE_PR"
 	dctl$[7]="MESSAGE_TYPE"
+	dctl$[8]="TAX_SVC_CD"
 
 	rem --- GL installed
 	if user_tpl.gl$<>"Y"
@@ -90,6 +238,7 @@ rem ========================================================
 		dmap$[4]="I"
 		dmap$[5]="I"
 		dmap$[6]="I"
+		dmap$[8]="I"
 	endif
 	if line_type$="N"
 		dmap$[1]="I"
@@ -101,10 +250,12 @@ rem ========================================================
 		dmap$[5]="I"
 		dmap$[6]="I"
 		dmap$[7]="I"
+		dmap$[8]="I"
 	endif
 	if line_type$="P"
 		dmap$[1]="I"
 		dmap$[7]="I"
+		dmap$[8]="I"
 	endif
 
 	rem --- Dropship
@@ -119,8 +270,13 @@ rem ========================================================
 		dmap$[4]="I"
 	endif
 
+	rem --- Sales Tax Service
+	if callpoint!.getDevObject("salesTax")=null() then
+		dmap$[8]="I"
+	endif
+
 	rem --- disable selected controls
-	for dctl=1 to 7
+	for dctl=1 to 8
 		dctl$=dctl$[dctl]
 		wctl$=str(num(callpoint!.getTableColumnAttribute(dctl$,"CTLI")):"00000")
 		wmap$=callpoint!.getAbleMap()
@@ -162,3 +318,6 @@ rem ========================================================
 		callpoint!.setStatus("REFRESH")
 	endif
 return
+
+
+

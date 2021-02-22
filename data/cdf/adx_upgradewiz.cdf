@@ -549,7 +549,7 @@ rem --- Open/Lock files
 
 	gosub open_tables
 
-rem --- Get this version of Addon's Admin module
+rem --- Get this version of Addon. Use version of Barista in download.
 	version_id$="??.??"
 	major_ver$="v??"
 	minor_ver$="v????"
@@ -574,7 +574,7 @@ rem --- Validate old aon install location
 	gosub validate_old_aon_loc
 	callpoint!.setUserInput(old_aon_loc$)
 	if abort then break
-	
+
 rem --- Initializations when old aon install location changes
 	prev_old_aon_loc$=cvs(callpoint!.getDevObject("prev_old_aon_loc"),3)
 	prev_new_aon_loc$=cvs(callpoint!.getDevObject("prev_new_aon_loc"),3)
@@ -631,6 +631,13 @@ rem --- Initializations when old aon install location changes
 				gosub fill_app_grid
 				util.resizeWindow(Form!, SysGui!)
 				callpoint!.setStatus("REFRESH")
+
+				rem --- Warn if more than one app with ADDON parent, and exit.
+				if aonParents>1 then
+					msg_id$="AD_EXTRA_AON_PARENTS"
+					gosub disp_message
+					release
+				endif
 			endif
 		endif
 	endif
@@ -653,6 +660,13 @@ rem --- Validate old barista install location
 		gosub fill_app_grid
 		util.resizeWindow(Form!, SysGui!)
 		callpoint!.setStatus("REFRESH")
+
+		rem --- Warn if more than one app with ADDON parent, and exit.
+		if aonParents>1 then
+			msg_id$="AD_EXTRA_AON_PARENTS"
+			gosub disp_message
+			release
+		endif
 	endif
 
 
@@ -683,7 +697,21 @@ validate_new_db_name: rem --- Validate new database name
 	if rd_status$="ADMIN" then
 		db! = rdAdmin!.getDatabase(db_name$,err=dbNotFound)
 
-		rem --- This db already exists, so don't allow it
+		rem --- This db already exists, so don't allow it unless this is a re-start for Git conflicts
+		dictionary$=db!.getString(BBjAdminDatabase.DICTIONARY)
+		aonLoc$=dictionary$(1,pos("/barista/bbdict"=dictionary$)-1)
+		restartFile$=aonLoc$+"/aon/logs/restartUpgradeWizard.txt"
+		restart=0
+		restart_dev=unt
+		open(restart_dev,err=*next)restartFile$; restart=1
+		if restart then
+			rem --- Verify correct restart file
+			read(restart_dev)text$
+			close(restart_dev,err=*next)
+			if pos(restartFile$=text$) then goto dbNotFound
+		endif
+		close(restart_dev,err=*next)
+
 		msg_id$="AD_DB_EXISTS"
 		gosub disp_message
 	endif
@@ -695,7 +723,7 @@ validate_new_db_name: rem --- Validate new database name
 	abort=1
 
 dbNotFound:
-	rem --- Okay to use this db name, it doesn't already exist
+	rem --- Okay to use this db name, it doesn't already exist or this is a Git conflicts re-start
 	callpoint!.setDevObject("rdAdmin", rdAdmin!)
 
 	return
@@ -767,18 +795,31 @@ validate_base_dir: rem --- Validate base directory for installation
 		return
 	endif
 
-	rem --- Cannot be currently used by Addon
+	rem --- Cannot be currently used by Addon, unless this is a re-start for Git conflicts
 
 	major_ver$=callpoint!.getDevObject("major_ver")
 	minor_ver$=callpoint!.getDevObject("minor_ver")
+	aonLoc$=new_loc$+"/"+major_ver$+"/"+minor_ver$
 	aonDir_exists=0
 	testChan=unt
-	open(testChan,err=*next)new_loc$+"/"+major_ver$+"/"+minor_ver$+"/aon/data"; aonDir_exists=1
+	open(testChan,err=*next)aonLoc$+"/aon/data"; aonDir_exists=1
 	close(testChan,err=*next)
-	testChan=unt
 	if !aonDir_exists then return
 
-	rem --- Location is used by Addon
+	rem --- Is this is a re-start for Git conflicts?
+	restartFile$=aonLoc$+"/aon/logs/restartUpgradeWizard.txt"
+	restart=0
+	restart_dev=unt
+	open(restart_dev,err=*next)restartFile$; restart=1
+	if restart then
+		rem --- Verify correct restart file
+		read(restart_dev)text$
+		close(restart_dev,err=*next)
+		if pos(restartFile$=text$) then return
+	endif
+	close(restart_dev,err=*next)
+
+	rem --- Location is used by Addon, and this is not a Git conflict re-start
 	callpoint!.setColumnData("ADX_UPGRADEWIZ.NEW_AON_LOC",new_loc$+"/"+major_ver$+"/"+minor_ver$,1)
 	msg_id$="AD_INSTALL_LOC_USED"
 	gosub disp_message
@@ -960,7 +1001,7 @@ able_backup_sync_dir: rem --- Enable/disable input field for sync backup directo
 		sqlprep(sql_chan)sql_prep$
 		dim select_tpl$:sqltmpl(sql_chan)
 		sqlexec(sql_chan)
-		select_tpl$=sqlfetch(sql_chan) ; rem --- Something is wrong if this fails, so let it error to get helpful message.
+		select_tpl$=sqlfetch(sql_chan); rem --- Something is wrong if this fails, so let it error to get helpful message. 
 		adb_version$=cvs(select_tpl.version_id$,3)
 		sqlclose(sql_chan)
 	endif
@@ -1040,7 +1081,7 @@ create_app_vector: rem --- Create a vector of applications from the OLD ddm_syst
 rem ==========================================================================
 
 	rem --- Application heritage must come from OLD system.
-	rem --- Locate the database for the OLD system, and quiry the DDM_SYSTEMS table.
+	rem --- Locate the database for the OLD system, and query the DDM_SYSTEMS table.
 	dbname$ = ""
 	bar_dir$=old_bar_loc$+"/barista"
 	if pos(":"=bar_dir$)=0 then bar_dir$=dsk("")+bar_dir$
@@ -1053,7 +1094,7 @@ rem ==========================================================================
 			rem --- get database from SET +DBNAME line
 			if pos("SET +DBNAME="=record$)=1 then
 				dbname$=record$(pos("="=record$)+1)
-				break
+			break
 			endif
 		wend
 		close(sourceChan)
@@ -1062,6 +1103,7 @@ rem ==========================================================================
 
 	rem --- Build HashMap of all parent and child applications. The HashMap is keyed by the parent,
 	rem --- and holds a Vector of all the children for that parent.
+	aonParents=0
 	declare HashMap appMap!
 	appMap! = new HashMap()
 	declare Vector rootVect!
@@ -1111,7 +1153,11 @@ rem ==========================================================================
 		if pos(":"+rootApp$+":"=":ADDON:")=0 then
 			appRowVect!.addItem(rootApp$); rem App
 			appRowVect!.addItem(""); rem Parent
-			appRowVect!.addItem("y"); rem Install
+			if pos(":"+rootApp$+":"=":V6HYBRID:")<>0
+				appRowVect!.addItem("n"); rem Don't install V6Hybrid - done separately
+			else
+				appRowVect!.addItem("y"); rem Install
+			endif
 			appRowVect!.addItem("n"); rem Copy
 			appRowVect!.addItem(cast(BBjString, rootProps!.get("mount_dir"))); rem Source
 			appRowVect!.addItem(""); rem Target
@@ -1127,12 +1173,12 @@ rem ==========================================================================
 				childProps! = cast(HashMap, descendentVect!.get(i))
 				appRowVect!.addItem(cast(BBjString, childProps!.get("mount_sys_id"))); rem App
 				appRowVect!.addItem(cast(BBjString, childProps!.get("parent_sys_id"))); rem Parent
+				appRowVect!.addItem("y"); rem Install
 				if pos(":"+rootApp$+":"=":ADDON:") then
-					appRowVect!.addItem("n"); rem Install
+					appRowVect!.addItem("y"); rem Copy
 				else
-					appRowVect!.addItem("y"); rem Install
+					appRowVect!.addItem("n"); rem Copy
 				endif
-				appRowVect!.addItem("n"); rem Copy
 				appRowVect!.addItem(cast(BBjString, childProps!.get("mount_dir"))); rem Source
 				if pos(":"+rootApp$+":"=":ADDON:") then
 					sourceDir$=cast(BBjString, childProps!.get("mount_dir"))
@@ -1141,6 +1187,9 @@ rem ==========================================================================
 				else
 					appRowVect!.addItem(""); rem Target
 				endif
+
+				rem --- Count apps with ADDON parent
+				if childProps!.get("parent_sys_id")="ADDON" then aonParents=aonParents+1
 			next i
 		endif
 	wend
@@ -1175,6 +1224,13 @@ fill_app_grid: rem --- Fill the app grid with data in appRowVect!
 			rem --- Disable blank rows
 			if appRowVect!.getItem(i)="" then
 				appGrid!.setRowEditable(row, 0)
+			endif
+
+			rem --- Disable V6Hybrid row, if applicable (gets done separately)
+			if pos("V6HYBRID"=appRowVect!.getItem(i))<>0 then
+				appGrid!.setRowEditable(row, 0)
+				appGrid!.setCellStyle(row,2,SysGUI!.GRID_STYLE_UNCHECKED)
+				appGrid!.setCellStyle(row,3,SysGUI!.GRID_STYLE_UNCHECKED)
 			endif
 
 			rem --- Set install checkbox
@@ -1225,8 +1281,11 @@ rem ==========================================================================
     	app_grid_def_cols=callpoint!.getDevObject("app_grid_def_cols")
 	index=e!.getRow()*app_grid_def_cols
 
+	rem --- Force Install and Copy checkboxes to be the same for apps with ADDON parent
+	parent$=cvs(appRowVect!.getItem(index+1),2)
+
 	rem --- Install checkbox
-	if e!.getColumn()=2 then
+	if e!.getColumn()=2 or (parent$="ADDON" and e!.getColumn()=3) then
 		if onoff then
 			rem --- Checked
 			appGrid!.setCellStyle(e!.getRow(),2,SysGUI!.GRID_STYLE_CHECKED); rem Install
@@ -1249,7 +1308,7 @@ rem ==========================================================================
 	endif
 
 	rem --- Copy checkbox
-	if e!.getColumn()=3 then
+	if e!.getColumn()=3 or (parent$="ADDON" and e!.getColumn()=2) then
 		if onoff then
 			rem --- Checked
 			appGrid!.setCellStyle(e!.getRow(),3,SysGUI!.GRID_STYLE_CHECKED); rem Copy
@@ -1379,10 +1438,10 @@ rem ==========================================================================
 				addLine=1
 				for j=0 to stblRowVect!.size()-1 step numCols
 					if stblRowVect!.getItem(j+1)<>stbl$ then continue
+                    stblRowVect!.setItem(j+3,newSynRows!.getItem(i+3))
 					if stbl$="+MDI_TITLE" then
 						stblRowVect!.setItem(j+3, callpoint!.getColumnData("ADX_UPGRADEWIZ.APP_DESC"))
 					endif
-					stblRowVect!.setItem(j+3,newSynRows!.getItem(i+3))
 					addLine=0
 					break
 				next j

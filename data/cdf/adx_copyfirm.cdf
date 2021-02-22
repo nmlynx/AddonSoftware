@@ -571,9 +571,9 @@ rem ==========================================================================
 				rem --- Skip files that haven't been created yet
 				tablePath$=cvs(ddm_tables.dd_table_path$,3)
 				dataDir$=tablePath$
-				dataDir$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(tablePath$,err=*next),err=*next)
+				dataDir$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(tablePath$,err=*next),err=*next)+"/"
 				dataFile$=cvs(ddm_tables.dd_file_name$,2)
-				if cvs(dataFile$,2)="" then dataFile$=cvs(dataFile$,10)
+				if cvs(dataFile$,2)="" then dataFile$=cvs(ddm_tables.dd_table_alias$,10)
 				thisFile!=new File(dataDir$+dataFile$,err=*continue)
 				if !thisFile!.exists() then continue
 
@@ -860,4 +860,6 @@ rem --- fn_filter_txt: Check Operator data for text fields
 rem ==========================================================================
 #include [+ADDON_LIB]std_missing_params.aon
 rem ==========================================================================
+
+
 

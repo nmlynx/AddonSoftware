@@ -11,7 +11,8 @@ rem ==========================================================================
     use java.util.Properties
     use java.util.Vector
 
-    use ::ado_util.src::util    
+    use ::ado_util.src::util
+    use ::jar/TGZUtil.bbj::TGZFile
 
     setesc std_error
     seterr std_error
@@ -71,7 +72,10 @@ rem --- Un-package existing Barista installation jar file at the new installatio
 
     rem --- Un-package jar file
     chdir baseDir$
-    x=scall("jar -xf "+jarFile$)
+	declare TGZFile tgzFile!
+	tgzFile!=new TGZFile(baseDir$+File.separator+jarFile$)
+        tgzFile!.setDefaultFilePermissions("rwxrwxrwx")
+	tgzFile!.extractAll(baseDir$)
     chdir savedDir$
 
     rem --- Remove busy/working image from progress meter

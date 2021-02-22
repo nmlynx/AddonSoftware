@@ -199,6 +199,7 @@ rem " --- Recalc Summary Info
 rem --- Display Bank Account Information
 	adcBankAcctCode_dev=fnget_dev("ADC_BANKACCTCODE")
 	dim adcBankAcctCode$:fnget_tpl$("ADC_BANKACCTCODE")
+	encryptor!=callpoint!.getDevObject("encryptor")
 	findrecord(adcBankAcctCode_dev,key=firm_id$+callpoint!.getColumnData("GLM_BANKMASTER.BNK_ACCT_CD"),dom=*next)adcBankAcctCode$
 	callpoint!.setColumnData("<<DISPLAY>>.BANK_NAME",adcBankAcctCode.bank_name$,1)
 	callpoint!.setColumnData("<<DISPLAY>>.ADDRESS_LINE_1",adcBankAcctCode.address_line_1$,1)
@@ -207,12 +208,16 @@ rem --- Display Bank Account Information
 	callpoint!.setColumnData("<<DISPLAY>>.ACCT_DESC",adcBankAcctCode.acct_desc$,1)
 	callpoint!.setColumnData("<<DISPLAY>>.BNK_ACCT_TYPE",adcBankAcctCode.bnk_acct_type$,1)
 	callpoint!.setColumnData("<<DISPLAY>>.ABA_NO",adcBankAcctCode.aba_no$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.BNK_ACCT_NO",adcBankAcctCode.bnk_acct_no$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.BNK_ACCT_NO",encryptor!.decryptData(cvs(adcBankAcctCode.bnk_acct_no$,3)),1)
 
 rem --- Calculate Summary info
   	gosub calc_totals
 
 [[GLM_BANKMASTER.BSHO]]
+rem --- Encryptor for bank acct #
+
+	use ::sys/prog/bao_encryptor.bbj::Encryptor
+
 rem --- Open/Lock files
 	dir_pgm$=stbl("+DIR_PGM")
 	sys_pgm$=stbl("+DIR_SYP")
@@ -279,6 +284,12 @@ rem - Set up disabled controls
 	dctl$[17]="<<DISPLAY>>.CASH_IN"
 	dctl$[18]="<<DISPLAY>>.CASH_OUT"
 	gosub disable_ctls
+
+rem --- Set up Encryptor
+	encryptor! = new Encryptor()
+	config_id$ = "BANK_ACCT_AUTH"
+	encryptor!.setConfiguration(config_id$)
+	callpoint!.setDevObject("encryptor",encryptor!)
 
 [[GLM_BANKMASTER.CURSTM_DATE.AVAL]]
 rem --- Current statement date must be after prior statement end date

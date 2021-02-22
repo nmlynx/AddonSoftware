@@ -124,9 +124,11 @@ rem --- Find last (prior) Period End Date
     priorper=curper-1
     curyear=num(sfs01a.current_year$)
 	prioryear=curyear
-    if priorper=0 then 
-        priorper=num(gls_calendar.total_pers$)
+    if priorper=0 then
+        dim gls_calendar_wk$:fattr(gls_calendar$)
         prioryear=curyear-1
+        readrecord(gls_calendar_dev,key=firm_id$+str(prioryear:"0000"),dom=std_missing_params) gls_calendar_wk$
+        priorper=num(gls_calendar_wk.total_pers$)
     endif
     call pgmdir$+"adc_perioddates.aon",priorper,prioryear,v0$,priorperenddt$,table_chans$[all],status
     if status then goto std_exit

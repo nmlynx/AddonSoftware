@@ -11,6 +11,8 @@ rem  +-----------------------------------------+
     setesc std_error
     seterr std_error
 
+	use ::sys/prog/bao_encryptor.bbj::Encryptor
+
 rem --- Call/Enter
 
     enter gl_account$
@@ -100,6 +102,11 @@ rem --- Retrieve parameter records
     headings=7
     width=120
 
+rem --- Set up Encryptor
+	encryptor! = new Encryptor()
+	config_id$ = "BANK_ACCT_AUTH"
+	encryptor!.setConfiguration(config_id$)
+
 rem --- Initializations
 
     dim headings$[headings],h$(width)
@@ -150,7 +157,7 @@ rem --- Load GL Account (glm-01) and Bank Master (glm-05) records
 rem --- Build remaining headings
 
     headings$[3]=Translate!.getTranslation("AON_BANK_NAME:_")+cvs(adcBankAcctCode.bank_name$,2)
-    headings$[4]=Translate!.getTranslation("AON_ACCOUNT_NUMBER:_")+cvs(adcBankAcctCode.bnk_acct_no$,2)
+    headings$[4]=Translate!.getTranslation("AON_ACCOUNT_NUMBER:_")+encryptor!.decryptData(cvs(adcBankAcctCode.bnk_acct_no$,2))
     headings$[5]=Translate!.getTranslation("AON_ACCOUNT_NAME:_")+cvs(adcBankAcctCode.acct_desc$,2)
     headings$[6]=Translate!.getTranslation("AON_GL_ACCOUNT:_")+fnmask$(glm01a.gl_account$(1,acctlen),m0$)
     headings$[7]=Translate!.getTranslation("AON_DESCRIPTION:_")+cvs(glm01a.gl_acct_desc$,2)

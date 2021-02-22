@@ -87,8 +87,30 @@ rem --- Draw attention when pay_auth_email doesn't match ARS_CC_CUSTPMT Report C
 
 	
 
+[[ARM_CUSTMAST.AOPT-AGNG]]
+rem --- Age this customer's transactions
+rem --- use RECORD instead of REFRESH to make sure ADIS gets fired again, which will refresh the widget
+
+	customer_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+	if cvs(customer_id$,2)<>""
+		rem --- Skip unless current processing date is greater than last aging date
+		armCustDet_dev=fnget_dev("ARM_CUSTDET")
+		dim armCustDet$:fnget_tpl$("ARM_CUSTDET")
+		armCustDet.firm_id$=firm_id$
+		armCustDet.customer_id$=customer_id$
+		armCustDet.ar_type$=""
+		readrecord(armCustDet_dev,key=armCustDet.firm_id$+armCustDet.customer_id$+armCustDet.ar_type$)armCustDet$
+		if cvs(armCustDet.report_type$,2)="" then armCustDet.report_type$=iff(cvs(callpoint!.getDevObject("dflt_age_by"),2)="","I",callpoint!.getDevObject("dflt_age_by"))
+		sysDate$=stbl("+SYSTEM_DATE")
+		if sysDate$>armCustDet.report_date$ then
+			endcust$=customer_id$
+			call stbl("+DIR_PGM")+"arc_custaging.aon",customer_id$,endcust$,sysDate$,armCustDet.report_type$,status
+		endif
+		callpoint!.setStatus("RECORD:["+firm_id$+customer_id$+"]")
+	endif
+
 [[ARM_CUSTMAST.AOPT-CRDT]]
-rem --- Launch Customer Maitenance form for this customer
+rem --- Launch Customer Maintenance form for this customer
 	user_id$=stbl("+USER_ID")
 	customer_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
 	cred_hold$=callpoint!.getColumnData("ARM_CUSTDET.CRED_HOLD")
@@ -174,9 +196,9 @@ rem --- Launch Customer Maitenance form for this customer
 :		dflt_data$[all]
 
 rem --- Refresh data that might have been changed in Credit Maintenance
-	callpoint!.setColumnData("ARM_CUSTDET.CRED_HOLD",str(callpoint!.getDevObject("cred_hold")),1)
-	callpoint!.setColumnData("ARM_CUSTDET.CREDIT_LIMIT",str(callpoint!.getDevObject("cred_limit")),1)
-	callpoint!.setColumnData("ARM_CUSTMAST.MEMO_1024",str(callpoint!.getDevObject("memo_1024")),1)
+rem --- use RECORD instead of REFRESH to make sure ADIS gets fired again, which will refresh the widget,
+rem --- in case user refreshed aging info from w/in credit maintenance
+	callpoint!.setStatus("RECORD:["+firm_id$+customer_id$+"]")
 
 [[ARM_CUSTMAST.AOPT-HCPY]]
 rem --- Go run the Hard Copy form
@@ -479,6 +501,24 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :                       "",
 :                       dflt_data$[all]
 
+[[ARM_CUSTMAST.AOPT-XMPT]]
+rem --- Launch Customer Sales Tax Exemptions form for this customer
+	user_id$=stbl("+USER_ID")
+	customer_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+
+	dim dflt_data$[1,1]
+	dflt_data$[1,0]="CUSTOMER_ID"
+	dflt_data$[1,1]=customer_id$
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"ARM_CUSTEXMPT",
+:		user_id$,
+:		"",
+:		firm_id$+customer_id$,
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
 [[ARM_CUSTMAST.AREA]]
 rem --- Set New Customer flag
 	user_tpl.new_cust$="N"
@@ -737,7 +777,9 @@ rem --- Dimension miscellaneous string templates
 rem --- Retrieve parameter data
 	dim info$[20]
 	ars01a_key$=firm_id$+"AR00"
-	find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$ 
+	find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+	callpoint!.setDevObject("on_demand_aging",ars01a.on_demand_aging$)
+	callpoint!.setDevObject("dflt_age_by",ars01a.dflt_age_by$)
 	ars01c_key$=firm_id$+"AR01"
 	find record (ars01c_dev,key=ars01c_key$,err=std_missing_params) ars01c$                
 	cm$=ars01c.sys_install$
@@ -788,6 +830,7 @@ rem --- Retrieve parameter data
 		callpoint!.setOptionEnabled("ORDR",0)
 		callpoint!.setOptionEnabled("INVC",0)
 		callpoint!.setOptionEnabled("CRDT",0)
+		callpoint!.setOptionEnabled("XMPT",0)
 	endif
 	dctl$[9]="<<DISPLAY>>.DSP_BALANCE"
 	dctl$[10]="<<DISPLAY>>.DSP_MTD_PROFIT"
@@ -803,6 +846,11 @@ rem --- Retrieve parameter data
 rem --- Disable Option for Jobs if OP not installed or Job flag not set
 	if op$<>"Y" or ars01a.job_nos$<>"Y"
 		callpoint!.setOptionEnabled("OPM_CUSTJOBS",0)
+	endif
+
+rem --- Disable Option for On Demand Aging if param not set
+	if ars01a.on_demand_aging$<>"Y"
+		callpoint!.setOptionEnabled("AGNG",0)
 	endif
 
 rem --- Additional/optional opens
@@ -1059,23 +1107,6 @@ rem --- If GM installed, update GoldMine database as necessary
 rem --- Validate Customer Number
 	customer_id$=callpoint!.getUserInput()
 	if num(customer_id$,err=*next)=0  then callpoint!.setStatus("ABORT")
-
-rem --- Automatically age this customer's transactions
-	auto_age=0
-	if auto_age then
-		rem --- Skip unless current processing date is greater than last aging date
-		armCustDet_dev=fnget_dev("ARM_CUSTDET")
-		dim armCustDet$:fnget_tpl$("ARM_CUSTDET")
-		armCustDet.firm_id$=firm_id$
-		armCustDet.customer_id$=customer_id$
-		armCustDet.ar_type$=""
-		readrecord(armCustDet_dev,key=armCustDet.firm_id$+armCustDet.customer_id$+armCustDet.ar_type$)armCustDet$
-		sysDate$=stbl("+SYSTEM_DATE")
-		if sysDate$>armCustDet.report_date$ then
-			endcust$=customer_id$
-			call stbl("+DIR_PGM")+"arc_custaging.aon",customer_id$,endcust$,sysDate$,armCustDet.report_type$,status
-		endif
-	endif
 
 [[ARM_CUSTMAST.CUSTOMER_NAME.AVAL]]
 rem --- Set Alternate Sequence for new customers

@@ -10,6 +10,8 @@ rem --- All Rights Reserved
     use ::ado_file.src::FileObject
     use ::ado_util.src::util
 
+	use ::sys/prog/bao_encryptor.bbj::Encryptor
+
     setesc std_error
     seterr std_error
 
@@ -91,6 +93,11 @@ rem --- Retrieve parameter records
         goto std_exit_no_update
     endif
     call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+
+rem --- Set up Encryptor
+	encryptor! = new Encryptor()
+	config_id$ = "BANK_ACCT_AUTH"
+	encryptor!.setConfiguration(config_id$)
 
 rem --- Parameters
 
@@ -309,9 +316,11 @@ build_NACHA_file: rem --- Build NACHA text file for financial institution to pro
     rem --- As necessary, create new NACHA text file
     if nacha_dev=-1 then
         rem --- Make sure ACH File Export Directory exists
-        ach_export_dir$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(apsACH.ach_export_dir$,err=*next))
+
+        ach_export_dir$=util.resolvePathStbls(cvs(apsACH.ach_export_dir$,3))
         nachaDir$=cvs(FileObject.fixPath(ach_export_dir$, "/"),2)
         FileObject.makeDirs(new File(nachaDir$))
+        nachaDir$=BBjAPI().getFileSystem().resolvePath(nachaDir$)+"/"
 
         rem --- Create NACHA text file
         nacha$=nachaDir$+cvs(apsACH.bnk_acct_cd$,2)+"_NACHA_"+DATE(0:"%Yd%Mz%Dz")+"_"+DATE(0:"%Hz%mz")+".txt"
@@ -328,7 +337,7 @@ build_NACHA_file: rem --- Build NACHA text file for financial institution to pro
         total_debits=0
         aba_no!=cvs(adcBankAcctCode.aba_no$,2)
         aba_no$=aba_no!.replace("-",""); rem --- remove hyphens
-        bnk_acct_no!=cvs(adcBankAcctCode.bnk_acct_no$,2)
+        bnk_acct_no!=encryptor!.decryptData(cvs(adcBankAcctCode.bnk_acct_no$,2))
         bnk_acct_no$=bnk_acct_no!.replace("-",""); rem --- remove hyphens
         federal_id!=cvs(apsReport.federal_id$,2)
         federal_id$=federal_id!.replace("-",""); rem --- remove hyphens
@@ -391,7 +400,7 @@ build_NACHA_file: rem --- Build NACHA text file for financial institution to pro
     vendor_aba_no!=cvs(apm01a.aba_no$,2)
     vendor_aba_no$=vendor_aba_no!.replace("-",""); rem --- remove hyphens
     nachaEntryDetail$=nachaEntryDetail$+pad(vendor_aba_no$,9);                              rem --- Receiving DFI Identification (includes Check Digit as 9th character)
-    vendor_bnk_acct_no!=cvs(apm01a.bnk_acct_no$,2)
+    vendor_bnk_acct_no!=encryptor!.decryptData(cvs(apm01a.bnk_acct_no$,2))
     vendor_bak_acct_no$=vendor_bnk_acct_no!.replace("-",""); rem --- remove hyphens
     nachaEntryDetail$=nachaEntryDetail$+pad(vendor_bak_acct_no$,17);                        rem --- DFI Account Number
     nachaEntryDetail$=nachaEntryDetail$+str(apwChkJasperPrn.chk_amt*100:"0000000000");      rem --- Amount

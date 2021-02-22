@@ -247,8 +247,10 @@ Rem --- Find end date of SF's PREVIOUS period
 	sf_prevper=num(sfs_params.current_per$)-1
     sf_prevper_yr=num(sfs_params.current_year$)
 	if sf_prevper=0 then
-		sf_prevper=num(gls_calendar.total_pers$)
-		sf_prevper_yr=sf_prevper_yr-1
+		dim gls_calendar_wk$:fattr(gls_calendar$)
+        sf_prevper_yr=sf_prevper_yr-1    
+        readrecord (gls_calendar_dev,key=firm_id$+str(sf_prevper_yr:"0000"),dom=std_missing_params) gls_calendar_wk$
+		sf_prevper=num(gls_calendar_wk.total_pers$)
 	endif
 		
     call pgmdir$+"adc_perioddates.aon",sf_prevper,sf_prevper_yr,begdate$,sf_prevper_enddate$,table_chans$[all],status

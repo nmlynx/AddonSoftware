@@ -35,11 +35,17 @@ rem --- Initializations
     sysGUI! = BBjAPI().getSysGui()
     dataDir$=FileObject.fixPath(stbl("+DIR_DAT",err=*next), "/")
 		
-rem --- Size progress meter based on number of files to move
+rem --- Create vector of all files in fileLoc$
 	declare File source!
 	source! = new File(fileLoc$)
 	declare Vector fileVector!
 	fileVector! = new Vector(java.util.Arrays.asList(source!.list()))
+
+rem --- Init directory to use for files we may *not* move because they already exist in destination (non-Addon files)
+    em_ocj_dup_files_dir$=BBjAPI().getFileSystem().resolvePath(fileLoc$)
+    em_ocj_dup_files_dir$=FileObject.fixPath(em_ocj_dup_files_dir$,"/")
+    em_ocj_dup_files_dir$=em_ocj_dup_files_dir$(1,pos("/"=em_ocj_dup_files_dir$,-1,1))+"em_ocj_dup_files/"
+    emOCJDupFilesDir!=new File(em_ocj_dup_files_dir$)
     
 rem --- Start progress meter
     declare BBTranslator Translate!
@@ -139,7 +145,7 @@ rem --- Process each file in source dir
 			endif
 			target!=new File(path$)
 			if target!.getAbsolutePath()=source!.getAbsolutePath() then
-				rem --- don't move, it's already where it belongs
+				rem --- don't move, it's already where it belongs (typically the case for the Addon files)
 				meter_text$=fileName$
 			else
 				rem --- have one to move or delete
@@ -149,13 +155,23 @@ rem --- Process each file in source dir
 					meter_text$=fileName$+" -- deleted"
 					sourceFile!.delete()
 				else
-					rem --- move (rename) this one
-					meter_text$=fileName$+" -- moved to "+path$
-					rem --- create new directory if it doesn't exist
-					FileObject.makeDirs(target!)
-					targetFile!=new File(target!, fileName$)
-					targetFile!.delete()
-					sourceFile!.renameTo(targetFile!)
+                    targetFile!=new File(target!, fileName$)
+                    if targetFile!.exists() and cvs(ddm_tables.asc_comp_id$,3)<>"01007514"
+                        rem --- if not an Addon table and it already exists, don't delete/rename, but set aside in different directory
+                        rem --- we don't want to overlay existing files from other company IDs (could be V6/ADATA/ or payroll file, etc.)
+                        meter_text$=fileName$+" already exists at "+target!.getAbsolutePath()+"; setting aside in "+em_ocj_dup_files_dir$
+                        FileObject.makeDirs(emOCJDupFilesDir!)
+                        emOCJDupFile!=new File(emOCJDupFilesDir!,fileName$)
+                        emOCJDupFile!.delete()
+                        sourceFile!.renameTo(emOCJDupFile!)
+                    else
+						rem --- move (rename) this one
+                        meter_text$=fileName$+" -- moved to "+path$
+                        rem --- create new directory if it doesn't exist
+                        FileObject.makeDirs(target!)
+                        targetFile!.delete()
+                        sourceFile!.renameTo(targetFile!)
+                    endif
 				endif
 			endif
 
