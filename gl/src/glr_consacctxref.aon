@@ -75,6 +75,9 @@ rem --- Dimension string templates
     dim glm10a$:templates$[3]
     dim glm01a$:templates$[2],glm11a$:templates$[4],glm21a$:templates$[5]
 
+    acct_no_brk_length=dec(fattr(glm10a$,"acct_no_brk")(10,2))
+    acct_bk_desc_length=dec(fattr(glm10a$,"acct_bk_desc")(10,2))
+
 rem --- Retrieve parameter records
 
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
@@ -96,6 +99,7 @@ rem --- Initializations
     moredetail=1
     headings$[0]=cvs(sysinfo.firm_name$,2)
     headings$[1]=cvs(sysinfo.task_desc$,2)
+    subhead_count=0
 
 rem --- Headings and print positions
 
@@ -130,13 +134,13 @@ rem --- Print positions
 
 rem --- Get user approval to proceed
 
-        msg_id$="AON_RUN_QUERY"
-        dim x$:stbl("+SYSINFO_TPL")
-        dim msg_tokens$[1]
-        x$=stbl("+SYSINFO")                                                            
-        msg_tokens$[1]=x.task_desc$
-        gosub disp_message
-        if msg_opt$<>"Y" then goto std_exit
+    msg_id$="AON_RUN_QUERY"
+    dim x$:stbl("+SYSINFO_TPL")
+    dim msg_tokens$[1]
+    x$=stbl("+SYSINFO")                                                            
+    msg_tokens$[1]=x.task_desc$
+    gosub disp_message
+    if msg_opt$<>"Y" then goto std_exit
 
 rem --- Open printer, start progress meter and position files
 
@@ -146,91 +150,87 @@ rem --- Open printer, start progress meter and position files
 rem --- Read next glm-01 record
 
     while more
-          glm01_key$=key(glm01_dev,end=*break)
-          if pos(firm_id$=glm01_key$)<>1 break
-          read record (glm01_dev)glm01a$
-          call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
+        glm01_key$=key(glm01_dev,end=*break)
+        if pos(firm_id$=glm01_key$)<>1 break
+        read record (glm01_dev)glm01a$
+        call pgmdir$+"adc_progress.aon","S","","","","",0,0,1,meter_num,status
 
-          account_break: rem --- Chart of Account Break?
+        account_break: rem --- Chart of Account Break?
 
-          if break$<>"" if glm01a.gl_account$<break$(1,10) goto format
-          if break$="" goto format
+        if break$<>"" then if glm01a.gl_account$<break$(1,acct_no_brk_length) goto format
+        if break$="" goto format
 
-          rem --- Print subtotal and new heading
+        rem --- Print subtotal and new heading
 
-          title$=cvs(desc$(1,20),2)
-          if l+4>l9 gosub set_linecount
-:              else gosub subheading
+        title$=cvs(desc$(1,acct_bk_desc_length),2)
+        gosub subheading
   
-new_heading: rem --- Strip current heading
+        new_heading: rem --- Strip current heading
 
-          if len(break$)>10 break$=break$(10+1),desc$=desc$(21)
-          if len(break$)<=10 break$="",desc$=""
-          if break$<>"" if pos(" "<>break$(1,10))=0 goto new_heading
-          goto account_break
+        if len(break$)>=acct_no_brk_length then break$=break$(acct_no_brk_length+1),desc$=desc$(acct_bk_desc_length+1)
+        if len(break$)<acct_no_brk_length then break$="",desc$=""
+        if break$<>"" then if pos(" "<>break$(1,acct_no_brk_length))=0 goto new_heading
+        goto account_break
 
-          format: rem --- Format print line: Regular
+        format: rem --- Format print line: Regular
 
-          dim buf$[10]
-          cnt=1
-          if consolidated$="Y" goto consolidated
-          read (glm11_dev,key=glm01_key$,dom=*next)
-          while moredetail
-                k$=key(glm11_dev,end=*break)
-                if pos(glm01_key$=k$(1,12))<>1 or cnt>10 break
-                read record (glm11_dev,key=k$)glm11a$
-                check$=glm11a.gl_rpt_no$+glm11a.gl_rpt_line$
-                if cvs(check$,2)<>"" buf$[cnt]=glm11a.gl_rpt_no$+"-"+glm11a.gl_rpt_line$
-                cnt=cnt+1
-          wend
-          goto print_detail
+        dim buf$[10]
+        cnt=1
+        if consolidated$="Y" goto consolidated
+        read (glm11_dev,key=glm01_key$,dom=*next)
+        while moredetail
+            k$=key(glm11_dev,end=*break)
+            if pos(glm01_key$=k$(1,12))<>1 or cnt>10 break
+            read record (glm11_dev,key=k$)glm11a$
+            check$=glm11a.gl_rpt_no$+glm11a.gl_rpt_line$
+            if cvs(check$,2)<>"" buf$[cnt]=glm11a.gl_rpt_no$+"-"+glm11a.gl_rpt_line$
+            cnt=cnt+1
+        wend
+        goto print_detail
 
-          consolidated: rem --- Format print line: Consolidated
+        consolidated: rem --- Format print line: Consolidated
 
-          read (glm21_dev,key=glm01_key$,dom=*next)
-          while moredetail
-                k$=key(glm21_dev,end=*break)
-                if pos(glm01_key$=k$(1,12))<>1 or cnt>10 break
-                read record (glm21_dev,key=k$)glm21a$
-                check$=glm21a.gl_co_rpt_no$+glm21a.gl_co_rpt_line$
-                if cvs(check$,2)<>"" buf$[cnt]=glm21a.gl_co_rpt_no$+"-"+glm21a.gl_co_rpt_line$
-                cnt=cnt+1
-          wend
+        read (glm21_dev,key=glm01_key$,dom=*next)
+        while moredetail
+            k$=key(glm21_dev,end=*break)
+            if pos(glm01_key$=k$(1,12))<>1 or cnt>10 break
+            read record (glm21_dev,key=k$)glm21a$
+            check$=glm21a.gl_co_rpt_no$+glm21a.gl_co_rpt_line$
+            if cvs(check$,2)<>"" buf$[cnt]=glm21a.gl_co_rpt_no$+"-"+glm21a.gl_co_rpt_line$
+            cnt=cnt+1
+        wend
 
-          print_detail: rem --- Print detail lines
+        print_detail: rem --- Print detail lines
 
-          if l+2>l9 gosub set_linecount
-          OutVect!.addItem(str(fnmask$(glm01a.gl_account$(1,m0),m0$)))
-          OutVect!.addItem(glm01a.gl_acct_desc$(1,width))
-          OutVect!.addItem(buf$[1])
-          OutVect!.addItem(buf$[2])
-          OutVect!.addItem(buf$[3])
-          OutVect!.addItem(buf$[4])
-          OutVect!.addItem(buf$[5])
-          OutVect!.addItem(buf$[6])
-          OutVect!.addItem(buf$[7])
-          OutVect!.addItem(buf$[8])
-          OutVect!.addItem(buf$[9])
-          OutVect!.addItem(buf$[10])
-   
-          l=l+1
+        OutVect!.addItem(str(fnmask$(glm01a.gl_account$(1,m0),m0$)))
+        OutVect!.addItem(glm01a.gl_acct_desc$(1,width))
+        OutVect!.addItem(buf$[1])
+        OutVect!.addItem(buf$[2])
+        OutVect!.addItem(buf$[3])
+        OutVect!.addItem(buf$[4])
+        OutVect!.addItem(buf$[5])
+        OutVect!.addItem(buf$[6])
+        OutVect!.addItem(buf$[7])
+        OutVect!.addItem(buf$[8])
+        OutVect!.addItem(buf$[9])
+        OutVect!.addItem(buf$[10])
+
     wend
 
 rem --- All done
 
     goto std_exit
 
-set_linecount: rem --- Set Line count
-
-    l=headings+1
-    l=l+3
-
 subheading: rem --- Subheading
-    
+
+    if subhead_count=0
+        subhead_count=1
+    else
+        xwk=fnblank(12)
+    endif
     OutVect!.addItem(title$)
     xwk = fnblank(11)
 
-    l=l+3
     return
 
 rem --- Functions
