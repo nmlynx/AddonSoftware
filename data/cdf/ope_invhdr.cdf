@@ -319,6 +319,13 @@ rem --- Check minimum cash sale
 		endif
 	endif
 
+rem --- Allow overriding failed or deferred sales tax calculation
+	gosub overrideSalesTax
+	if abort then
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
 rem --- Launch Cash Transaction
 
 	gosub get_cash
@@ -405,6 +412,13 @@ rem --- Add Barista soft lock for this record if not already in edit mode
 			gosub disp_message
 			break
 		endif
+	endif
+
+rem --- Allow overriding failed or deferred sales tax calculation
+	gosub overrideSalesTax
+	if abort then
+		callpoint!.setStatus("ABORT")
+		break
 	endif
 
 rem --- Get cash if needed for cash transaction
@@ -2079,6 +2093,7 @@ rem --- Calculate Taxes
 	disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 	freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	gosub calculate_tax
+	order_no$=callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
 	gosub add_to_batch_print
 
 [[OPE_INVHDR.BWRI]]
@@ -3713,75 +3728,7 @@ rem ==========================================================================
 do_invoice: rem --- Print an Invoice
 rem OUT: invoicePrinted
 rem ==========================================================================
-
-	rem --- Make sure sales TAX_AMOUNT is current
-	disc_amt=num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
-	freight_amt=num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
-	gosub calculate_tax
-	startTaxAmount=num(callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
-
-	rem --- Warn about failed or deferred sales tax calculation
 	invoicePrinted=1
-	if num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 then
-		msg_id$="GENERIC_WARN_CANCEL"
-		dim msg_tokens$[1]
-		msg_tokens$[1]=Translate!.getTranslation("AON_TAX_AMT_FNOTE")
-		gosub disp_message
-		if msg_opt$<>"O" then
-			invoicePrinted=0
-			return
-		endif
-
-		rem --- Calculate Tax Amount using Tax Code's Tax Rate
-		if cvs(callpoint!.getColumnData("OPE_INVHDR.TAX_CODE"),2) <> ""
-			ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-			ordHelp!.setTaxCode(callpoint!.getColumnData("OPE_INVHDR.TAX_CODE"))
-			taxable_sales = ordHelp!.getTaxableSales()
-			taxAndTaxableVect! = ordHelp!.calculateTax(disc_amt, freight_amt,
-:											taxable_sales,
-:											num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")))
-
-			tax_amount = taxAndTaxableVect!.getItem(0)
-			taxable_amt = taxAndTaxableVect!.getItem(1)
-
-			callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",str(tax_amount),1)
-			callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",str(taxable_amt),1)
-
-			rem --- Refresh totals
-			gosub disp_totals
-			callpoint!.setStatus("REFRESH")
-		endif
-
-		rem --- Let user change the TAX_AMOUNT
-		user_id$=stbl("+USER_ID")
-		dim dflt_data$[1,1]
-		dflt_data$[1,0]="TAX_AMOUNT"
-		dflt_data$[1,1]=str(tax_amount)
- 
-		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:	                       "OPE_ALTSLSTAXCAL",
-:	                       user_id$,
-:	                       "",
-:	                       "",
-:	                       table_chans$[all],
-:	                       "",
-:	                       dflt_data$[all]
-
-		rem --- How did form end?
-		if callpoint!.getDevObject("altSlsTaxCal_end")="BEND" then
-			rem --- User did Close (Ctrl+F4)
-			invoicePrinted=0
-			return
-		endif
-
-		altSlsTaxCal=num(callpoint!.getDevObject("altSlsTaxCal"))
-		if altSlsTaxCal<>startTaxAmount
-			tax_amount=altSlsTaxCal
-			callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",str(tax_amount),1)
-			gosub disp_totals
-			callpoint!.setStatus("REFRESH")
-		endif
-	endif
 
 rem --- Make sure everything's written back to disk
 
@@ -4413,6 +4360,86 @@ rem ==========================================================================
 
 			msg_id$="ENTRY_REC_LOCKED"
 			gosub disp_message
+		endif
+	endif
+
+	return
+
+rem ==========================================================================
+overrideSalesTax: rem --- Allow overriding failed or deferred sales tax calculation
+rem OUT: abort
+rem ==========================================================================
+	abort=0
+
+	rem --- Make sure sales TAX_AMOUNT is current
+	disc_amt=num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+	freight_amt=num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+	gosub calculate_tax
+	startTaxAmount=num(callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
+
+	rem --- Warn about failed or deferred sales tax calculation
+	if num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 then
+		rem --- Update OPE_PRNTLIST.NO_SLS_TAX_CALC for failed sales tax calculation
+		order_no$=callpoint!.getColumnData("OPE_INVHDR.ORDER_NO")
+		gosub add_to_batch_print
+
+		msg_id$="GENERIC_WARN_CANCEL"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=Translate!.getTranslation("AON_TAX_AMT_FNOTE")
+		gosub disp_message
+		if msg_opt$<>"O" then
+			abort=1
+			return
+		endif
+
+		rem --- Calculate Tax Amount using Tax Code's Tax Rate
+		if cvs(callpoint!.getColumnData("OPE_INVHDR.TAX_CODE"),2) <> ""
+			ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+			ordHelp!.setTaxCode(callpoint!.getColumnData("OPE_INVHDR.TAX_CODE"))
+			taxable_sales = ordHelp!.getTaxableSales()
+			taxAndTaxableVect! = ordHelp!.calculateTax(disc_amt, freight_amt,
+:											taxable_sales,
+:											num(callpoint!.getColumnData("OPE_INVHDR.TOTAL_SALES")))
+
+			tax_amount = taxAndTaxableVect!.getItem(0)
+			taxable_amt = taxAndTaxableVect!.getItem(1)
+
+			callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",str(tax_amount),1)
+			callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",str(taxable_amt),1)
+
+			rem --- Refresh totals
+			gosub disp_totals
+			callpoint!.setStatus("REFRESH")
+		endif
+
+		rem --- Let user change the TAX_AMOUNT
+		user_id$=stbl("+USER_ID")
+		dim dflt_data$[1,1]
+		dflt_data$[1,0]="TAX_AMOUNT"
+		dflt_data$[1,1]=str(tax_amount)
+ 
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	                       "OPE_ALTSLSTAXCAL",
+:	                       user_id$,
+:	                       "",
+:	                       "",
+:	                       table_chans$[all],
+:	                       "",
+:	                       dflt_data$[all]
+
+		rem --- How did form end?
+		if callpoint!.getDevObject("altSlsTaxCal_end")="BEND" then
+			rem --- User did Close (Ctrl+F4)
+			abort=1
+			return
+		endif
+
+		altSlsTaxCal=num(callpoint!.getDevObject("altSlsTaxCal"))
+		if altSlsTaxCal<>startTaxAmount
+			tax_amount=altSlsTaxCal
+			callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",str(tax_amount),1)
+			gosub disp_totals
+			callpoint!.setStatus("REFRESH")
 		endif
 	endif
 
