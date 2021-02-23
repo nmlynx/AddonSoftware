@@ -4440,6 +4440,12 @@ rem ==========================================================================
 			callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",str(tax_amount),1)
 			gosub disp_totals
 			callpoint!.setStatus("REFRESH")
+
+			rem --- Show Totals tab changes now
+			taxAmount!=callpoint!.getControl("OPE_INVHDR.TAX_AMOUNT")
+			taxAmount!.setText(cvs(callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"),2))
+			netSales!=callpoint!.getControl("<<DISPLAY>>.NET_SALES")
+			netSales!.setText(cvs(callpoint!.getColumnData("<<DISPLAY>>.NET_SALES"),2))
 		endif
 	endif
 
