@@ -64,6 +64,9 @@ rem --- Dimension string templates
     dim glm10a$:templates$[3]
     dim glm01a$:templates$[2],glm11a$:templates$[4],glm21a$:templates$[5]
 
+    acct_no_brk_length=dec(fattr(glm10a$,"acct_no_brk")(10,2))
+    acct_bk_desc_length=dec(fattr(glm10a$,"acct_bk_desc")(10,2))
+
 rem --- Retrieve parameter records
 
     call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,m0
@@ -93,6 +96,7 @@ rem --- Initializations
     moredetail=1
     headings$[0]=cvs(sysinfo.firm_name$,2)
     headings$[1]=cvs(sysinfo.task_desc$,2)
+    subhead_count=0
 
 rem --- Headings and print positions
 
@@ -140,19 +144,19 @@ rem --- Read next glm-01 record
 
           account_break: rem --- Chart of Account Break?
 
-          if break$<>"" if glm01a.gl_account$<break$(1,10) goto format
+          if break$<>"" then if glm01a.gl_account$<break$(1,acct_no_brk_length) goto format
           if break$="" goto format
 
           rem --- Print subtotal and new heading
 
-          title$=cvs(desc$(1,20),2)
+          title$=cvs(desc$(1,acct_bk_desc_length),2)
           gosub subheading
 
           new_heading: rem --- Strip current heading
 
-          if len(break$)>=10 break$=break$(10+1),desc$=desc$(21)
-          if len(break$)<10 break$="",desc$=""
-          if break$<>"" if pos(" "<>break$(1,10))=0 goto new_heading
+          if len(break$)>=acct_no_brk_length then break$=break$(acct_no_brk_length+1),desc$=desc$(acct_bk_desc_length+1)
+          if len(break$)<acct_no_brk_length then break$="",desc$=""
+          if break$<>"" then if pos(" "<>break$(1,acct_no_brk_length))=0 goto new_heading
           goto account_break
 
           format: rem --- Format print line: Regular
@@ -206,6 +210,11 @@ rem --- All done
 
 subheading: rem --- Subheading
 
+    if subhead_count=0
+        subhead_count=1
+    else
+        abc=fnblank(12)
+    endif
     OutVect!.addItem(title$)
     abc=fnblank(11)
     return

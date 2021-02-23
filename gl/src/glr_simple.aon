@@ -54,7 +54,10 @@ rem --- Open/Lock files
 rem --- Dimension string templates
 
     dim gls01a$:templates$[1],glm01a$:templates$[2],glm02a$:templates$[3]
-    dim glw02a$:templates$[5],gls_calendar$:templates$[6]
+    dim glm10a$:templates$[4],glw02a$:templates$[5],gls_calendar$:templates$[6]
+
+    acct_no_brk_length=dec(fattr(glm10a$,"acct_no_brk")(10,2))
+    acct_bk_desc_length=dec(fattr(glm10a$,"acct_bk_desc")(10,2))
 
 rem --- Assign input values to local variables
 
@@ -201,30 +204,30 @@ rem --- Read through account masters and build sort based on account type
 rem --- and chart of accounts breaks.
 
     while more
-          k$=key(glm01_dev,end=*break)
-          if pos(firm_id$=k$)<>1 break
-          read record (glm01_dev,key=k$)glm01a$
+        k$=key(glm01_dev,end=*break)
+        if pos(firm_id$=k$)<>1 break
+        read record (glm01_dev,key=k$)glm01a$
 
-          determine_break: rem --- Has a chart of accounts break occurred?
+        determine_break: rem --- Has a chart of accounts break occurred?
 
-          if break$="" goto update_sort
-          if cvs(break$(1,10),2)="" goto update_sort
-          if break$(1,10)>glm01a.gl_account$ goto update_sort
-          glw02a.acct_no_brk$=break$(1,10)
-          if len(break$)>10 break$=break$(11) else break$=""
-          goto determine_break
+        if break$="" goto update_sort
+        if cvs(break$(1,acct_no_brk_length),2)="" goto update_sort
+        if break$(1,acct_no_brk_length)>glm01a.gl_account$ goto update_sort
+        glw02a.acct_no_brk$=break$(1,acct_no_brk_length)
+        if len(break$)>acct_no_brk_length break$=break$(acct_no_brk_length+1) else break$=""
+        goto determine_break
 
-          update_sort: rem --- Write sort record
+        update_sort: rem --- Write sort record
 
-          x=pos(glm01a.gl_acct_type$="IEALC")
-          if x=0 x=6
-          glw02a.firm_id$=firm_id$
-          glw02a.gl_acct_type$=str(x)
-          glw02a.gl_account$=glm01a.gl_account$
-          glw02a$=field(glw02a$)
-          write record (glw02_dev) glw02a$
-          total_recs=total_recs+1
-          if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
+        x=pos(glm01a.gl_acct_type$="IEALC")
+        if x=0 x=6
+        glw02a.firm_id$=firm_id$
+        glw02a.gl_acct_type$=str(x)
+        glw02a.gl_account$=glm01a.gl_account$
+        glw02a$=field(glw02a$)
+        write record (glw02_dev) glw02a$
+        total_recs=total_recs+1
+        if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
     wend
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,meter_num,status
     wait 1; rem give first progress meter a chance to clear; less confusing to the eye
@@ -239,132 +242,132 @@ rem --- Position sort file
 rem --- Read next sort record
 
     while more
-          k$=key(glw02_dev,end=*break)
-          if pos(firm_id$=k$)<>1 break
-          read record (glw02_dev) glw02a$
+        k$=key(glw02_dev,end=*break)
+        if pos(firm_id$=k$)<>1 break
+        read record (glw02_dev) glw02a$
 
-          total_recs=total_recs+1
-          if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
+        total_recs=total_recs+1
+        if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
 
-          rem --- Retrieve account master and account summary records
+        rem --- Retrieve account master and account summary records
 
-          dim a[13],u[13]
-          glm01_key$=glw02a.firm_id$+glw02a.gl_account$
-          find record (glm01_dev,key=glm01_key$,dom=*continue)glm01a$
-          if alignPeriods$="Y" then
-              rem --- Align fiscal periods
-              glwAcctSummary_key$=glm01_key$+begyear$+gls01a.current_year$
-              findrecord(glwAcctSummary_dev,key=glwAcctSummary_key$,dom=level_break,knum="BY_ACCOUNT_YEAR")glwAcctSummary$
-              call pgmdir$+"glc_summary.aon",action$,glwAcctSummary$,a[all],u[all],status
-          else
-              glm02_key$=glm01_key$+begyear$
-              find record (glm02_dev,key=glm02_key$,dom=level_break)glm02a$
-              call pgmdir$+"glc_summary.aon",action$,glm02a$,a[all],u[all],status
-          endif
+        dim a[13],u[13]
+        glm01_key$=glw02a.firm_id$+glw02a.gl_account$
+        find record (glm01_dev,key=glm01_key$,dom=*continue)glm01a$
+        if alignPeriods$="Y" then
+          rem --- Align fiscal periods
+          glwAcctSummary_key$=glm01_key$+begyear$+gls01a.current_year$
+          findrecord(glwAcctSummary_dev,key=glwAcctSummary_key$,dom=level_break,knum="BY_ACCOUNT_YEAR")glwAcctSummary$
+          call pgmdir$+"glc_summary.aon",action$,glwAcctSummary$,a[all],u[all],status
+        else
+          glm02_key$=glm01_key$+begyear$
+          find record (glm02_dev,key=glm02_key$,dom=level_break)glm02a$
+          call pgmdir$+"glc_summary.aon",action$,glm02a$,a[all],u[all],status
+        endif
 
 level_break: rem --- Account Break?
 
-          rem --- Skip zero balance accounts
-          if include_zero$<>"Y" then
-            skip=1
-            for i=0 to 13
-                if a[i]<>0 or u[i]<>0 then
-                    skip=0
-                    break
-                endif
-            next i
-            if skip then continue
-          endif
+        rem --- Skip zero balance accounts
+        if include_zero$<>"Y" then
+        skip=1
+        for i=0 to 13
+            if a[i]<>0 or u[i]<>0 then
+                skip=0
+                break
+            endif
+        next i
+        if skip then continue
+        endif
 
-          level$=glw02a.gl_acct_type$+glw02a.acct_no_brk$
-          if level$=t0$ goto calculate_balance
-          gosub subtotals
+        level$=glw02a.gl_acct_type$+glw02a.acct_no_brk$
+        if level$=t0$ goto calculate_balance
+        gosub subtotals
 
-          rem --- Chart of Accounts Break?
+        rem --- Chart of Accounts Break?
 
-          if glw02a.gl_acct_type$=type$ goto print_subheading
-          type=num(type$)
-          switch type
-                 case 1
-                      total$=Translate!.getTranslation("AON_TOTAL_INCOME")
-                      mtd=s[0]
-                      ytd=s[1]
-                      if bs$="N" gosub account_break;abc=fnblank(3)
-                 break
-                 case 2
-                      total$=Translate!.getTranslation("AON_TOTAL_EXPENSE")
-                      mtd=s[2]
-                      ytd=s[3]
-                      if bs$="N" gosub account_break
-                      total$=Translate!.getTranslation("AON_PROFIT/LOSS")
-                      mtd=s[0]-s[2]
-                      ytd=s[1]-s[3]
-                      gosub account_break
-                      if bs$="N" more=0 
-                 break
-                 case 3
-                      total$=Translate!.getTranslation("AON_TOTAL_ASSETS")
-                      mtd=s[4]
-                      ytd=s[5]
-                      gosub account_break;abc=fnblank(2)
-                 break
-                 case 4
-                 break
-                 case 5
-                      total$=Translate!.getTranslation("AON_TOTAL_CAPITAL")
-                      mtd=s[6]
-                      ytd=s[7]
-                      gosub account_break;abc=fnblank(2)
-                 break
-          swend
+        if glw02a.gl_acct_type$=type$ goto print_subheading
+        type=num(type$)
+        switch type
+             case 1
+                total$=Translate!.getTranslation("AON_TOTAL_INCOME")
+                mtd=s[0]
+                ytd=s[1]
+                if bs$="N" gosub account_break;abc=fnblank(3)
+             break
+             case 2
+                total$=Translate!.getTranslation("AON_TOTAL_EXPENSE")
+                mtd=s[2]
+                ytd=s[3]
+                if bs$="N" gosub account_break
+                total$=Translate!.getTranslation("AON_PROFIT/LOSS")
+                mtd=s[0]-s[2]
+                ytd=s[1]-s[3]
+                gosub account_break
+                if bs$="N" more=0 
+             break
+             case 3
+                total$=Translate!.getTranslation("AON_TOTAL_ASSETS")
+                mtd=s[4]
+                ytd=s[5]
+                gosub account_break;abc=fnblank(2)
+             break
+             case 4
+             break
+             case 5
+                total$=Translate!.getTranslation("AON_TOTAL_CAPITAL")
+                mtd=s[6]
+                ytd=s[7]
+                gosub account_break;abc=fnblank(2)
+             break
+        swend
 
-          if more=0 break
-          type$=glw02a.gl_acct_type$
+        if more=0 break
+        type$=glw02a.gl_acct_type$
 
 print_subheading: rem --- Print subheading
 
-          if bs$="Y" and pos(type$="12") goto calculate_balance
-          gosub subheading
+        if bs$="Y" and pos(type$="12") goto calculate_balance
+        gosub subheading
 
 calculate_balance: rem --- Calculate current balance
 
-          balance=0
-          for x=0 to period
-              if pos(glm01a.gl_acct_type$="LCI") a[x]=-a[x]
-              balance=balance+a[x]
-          next x
-          amount=a[period]
+        balance=0
+        for x=0 to period
+            if pos(glm01a.gl_acct_type$="LCI") a[x]=-a[x]
+            balance=balance+a[x]
+        next x
+        amount=a[period]
 
-          rem --- Print detail line
+        rem --- Print detail line
 
-          if bs$="Y" if pos(type$="12")>0 goto accumulate_totals
-          dim buffer$(width)
-          mtd$=""
-          ytd$=str(balance)
-          buffer$(3)=glm01a.gl_acct_desc$
-          if bs$="N" mtd$=str(amount)
-          if include$="Y" buffer$(3)=fnmask$(glm01a.gl_account$(1,m0),m0$)+" "+glm01a.gl_acct_desc$
+        if bs$="Y" if pos(type$="12")>0 goto accumulate_totals
+        dim buffer$(width)
+        mtd$=""
+        ytd$=str(balance)
+        buffer$(3)=glm01a.gl_acct_desc$
+        if bs$="N" mtd$=str(amount)
+        if include$="Y" buffer$(3)=fnmask$(glm01a.gl_account$(1,m0),m0$)+" "+glm01a.gl_acct_desc$
 
-          if bs$="N"
-            OutVect!.addItem(buffer$)
-            OutVect!.addItem(mtd$)
-            OutVect!.addItem(ytd$)
-          endif
+        if bs$="N"
+        OutVect!.addItem(buffer$)
+        OutVect!.addItem(mtd$)
+        OutVect!.addItem(ytd$)
+        endif
 
-          if bs$="Y"
-            OutVect!.addItem(buffer$)
-            OutVect!.addItem(ytd$)
-          endif
+        if bs$="Y"
+        OutVect!.addItem(buffer$)
+        OutVect!.addItem(ytd$)
+        endif
 
 accumulate_totals: rem --- Accumulate totals
 
-          t[0]=t[0]+amount
-          t[1]=t[1]+balance
-          if glw02a.gl_acct_type$="1" s[0]=s[0]+amount,s[1]=s[1]+balance
-          if glw02a.gl_acct_type$="2" s[2]=s[2]+amount,s[3]=s[3]+balance
-          if glw02a.gl_acct_type$="3" s[4]=s[4]+amount,s[5]=s[5]+balance
-          if glw02a.gl_acct_type$="4" s[6]=s[6]+amount,s[7]=s[7]+balance
-          if glw02a.gl_acct_type$="5" s[8]=s[8]+amount,s[9]=s[9]+balance
+        t[0]=t[0]+amount
+        t[1]=t[1]+balance
+        if glw02a.gl_acct_type$="1" s[0]=s[0]+amount,s[1]=s[1]+balance
+        if glw02a.gl_acct_type$="2" s[2]=s[2]+amount,s[3]=s[3]+balance
+        if glw02a.gl_acct_type$="3" s[4]=s[4]+amount,s[5]=s[5]+balance
+        if glw02a.gl_acct_type$="4" s[6]=s[6]+amount,s[7]=s[7]+balance
+        if glw02a.gl_acct_type$="5" s[8]=s[8]+amount,s[9]=s[9]+balance
     wend
 
 rem --- Totals
@@ -433,9 +436,9 @@ new_break: rem --- Setup new break
     if done return
     dim t[3]
     t0$=glw02a.gl_acct_type$+glw02a.acct_no_brk$
-    w=pos(t0$(2,10)=break$,10)
+    w=pos(t0$(2,acct_no_brk_length)=break$,acct_no_brk_length)
     if w then
-        title$=desc$(20*int(w/10)+1,20)
+        title$=desc$(acct_bk_desc_length*int(w/acct_no_brk_length)+1,acct_bk_desc_length)
     else
         title$="?????"
     endif
