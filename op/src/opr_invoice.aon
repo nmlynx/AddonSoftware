@@ -113,6 +113,7 @@ rem --- Check to see if record is in use in Invoice Entry
         
         if ope01a.ordinv_flag$ = "I" then
             if ope01a.print_status$ = "Y" then continue
+            if ope01a.no_sls_tax_calc and ope01a.cash_sale$<>"Y" then continue
             if ope01a.print_status$<>"B" and ope01a.lock_status$="Y" then continue
             rem --- trans_status$="R" if sales register/update crashed 
             if ope01a.trans_status$="R" then continue

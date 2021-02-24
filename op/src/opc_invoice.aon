@@ -10,7 +10,7 @@ rem --- ope_invhdr.cdf), (2) Batch (from menu: OP Invoice Printing--
 rem --- opr_invoice.aon), and (3) Historical Invoices (from Invoice History
 rem --- Inquiry--opt_invhdr.cdf).
 
-rem --- opc_invoice.aon uses four sprocs and four .jaspers to generate invoicest:
+rem --- opc_invoice.aon uses four sprocs and four .jaspers to generate invoices:
 rem ---    - OPINVOICE_HDR.prc / OPInvoiceHdr.jasper
 rem ---    - OPINVOICE_DET.prc / OPInvoiceDet.jasper
 rem ---    - OPINVOICE_DET_LOTSER.prc / OPInvoiceDet-LotSer.jasper
@@ -846,6 +846,30 @@ close_win:rem --- Master or On-demand viewer closed - do post-processing for bat
     endif
   
     if type<>historical then
+        if type=batch_inv then
+            rem --- Warn if invoices were skipped because of failed tax calculation
+            warnSkippedInvoice=0
+            read (ope04_dev,key=firm_id$+"I",dom=*next)
+            while 1
+                read record (ope04_dev, end=*break) ope04a$
+                if ope04a.firm_id$<>firm_id$ or ope04a.ordinv_flag$<>"I" then break
+                ope01_trip$=firm_id$+trans_status$+"  "+ope04a.customer_id$+ope04a.order_no$
+                read(ope01_dev,key=ope01_trip$,knum="AO_STATUS",dom=*next)
+                ope01_key$=key(ope01_dev,end=*continue)
+                if pos(ope01_trip$=ope01_key$)=1 then
+                    readrecord (ope01_dev,key=ope01_key$, dom=*endif) ope01a$
+                    if ope01a.no_sls_tax_calc and ope01a.print_status$="N" then
+                        warnSkippedInvoice=1
+                        break
+                    endif
+                endif
+            wend
+            if warnSkippedInvoice then
+                msg_id$="OP_WARN_INV_SKIPPED"
+                gosub disp_message
+            endif
+        endif
+    
         msg_id$ = "OP_INVOICE_UPDATE"
         gosub disp_message
         if msg_opt$<>"Y" then goto all_done
