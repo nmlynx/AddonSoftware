@@ -40,6 +40,7 @@ rem --- Initializations
 
 rem --- Get user inputs
 
+    gitAuthID$=Option!.getOptionData("GIT_AUTH_ID")
     dbName$=Option!.getOptionData("DB_NAME")
     appDesc$=Option!.getOptionData("APP_DESC")
     version_neutral=num(Option!.getOptionData("VERSION_NEUTRAL"))
@@ -140,7 +141,7 @@ rem --- Is this a restart after resolving Git conflicts?
             while 1
                 read(restart_dev,end=*break)text$
                 if pos(label$=text$)=1 then
-                    repoInterface!=new GitRepoInterface(newAonDir$)
+                    repoInterface!=new GitRepoInterface(gitAuthID$,newAonDir$)
                     commit!=repoInterface!.getRevCommit(text$(1+lenLabel))
                     repoInterface!.closeInterface()
             
@@ -201,7 +202,7 @@ rem --- Process upgrade from either a Git based installation or a non-Git based 
         gosub copyAon
 
         rem --- Get version of old install
-        repoInterface!=new GitRepoInterface(newAonDir$)
+        repoInterface!=new GitRepoInterface(gitAuthID$,newAonDir$)
         branch$=repoInterface!.getBranch(); rem --- BBJnnnnGA
         oldVersion$=branch$(4,4)
         repoInterface!.closeInterface()
@@ -231,7 +232,7 @@ rem --- Process upgrade from either a Git based installation or a non-Git based 
         if status then goto done
 
         rem --- Get version of old install
-        repoInterface!=new GitRepoInterface(newAonDir$)
+        repoInterface!=new GitRepoInterface(gitAuthID$,newAonDir$)
         branch$=repoInterface!.getBranch(); rem --- BBJnnnnGA
         oldVersion$=branch$(4,4)
         
@@ -973,7 +974,7 @@ cloneGitRepo: rem --- Clone Git repository and switch/checkout to old branch/tag
     userPassword$="password"
 
     rem --- Clone Git repository
-    repoInterface!=new GitRepoInterface(cloneDir$)
+    repoInterface!=new GitRepoInterface(gitAuthID$,cloneDir$)
     if (repoInterface!=null()) then 
         msg_id$="AD_FAILED_BAD_CLONE"
         dim msg_tokens$[1]
@@ -1018,7 +1019,7 @@ checkoutGitBranch: rem --- Switch/checkout branch
 
     rem --- Checkout repository branch
     cloneDir$=newAonDir$
-    repoInterface!=new GitRepoInterface(cloneDir$)
+    repoInterface!=new GitRepoInterface(gitAuthID$,cloneDir$)
     checkoutStatus$=repoInterface!.checkoutBranch(branchName$)
     repoInterface!.closeInterface()
     if (checkoutStatus$<>"OK") then
@@ -1049,7 +1050,7 @@ refreshGitRepo: rem --- Refresh Git repository to get the most current branch
     busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
 
     rem --- Pull Git repository
-    repoInterface!=new GitRepoInterface(newAonDir$)
+    repoInterface!=new GitRepoInterface(gitAuthID$,newAonDir$)
     repoInterface!.pullRepository()
     repoInterface!.closeInterface()
 
@@ -1068,7 +1069,7 @@ buildDeltaXmls: rem --- Build delta XMLs for modified bar/*.xml files that have 
     print(log_dev)"    For "+newAonDir$
     
     rem --- Get JGit interface to repository
-    repoInterface!=new GitRepoInterface(newAonDir$)
+    repoInterface!=new GitRepoInterface(gitAuthID$,newAonDir$)
     LocalBranch$=repoInterface!.getLocalBranch()
     ReleaseTag$=repoInterface!.getReleaseTag()
     
@@ -1188,7 +1189,7 @@ doInterimCommit: rem --- Commit all modified and deleted tracked files
     busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
 
     rem --- Get JGit interface to repository, and call commitAll()
-    repoInterface!=new GitRepoInterface(newAonDir$)
+    repoInterface!=new GitRepoInterface(gitAuthID$,newAonDir$)
     commit!=repoInterface!.commitAll(1,Translate!.getTranslation("AON_INTERIM_COMMIT"))
     repoInterface!.closeInterface()
 
@@ -1448,7 +1449,7 @@ checkLineEndings: rem --- Check for, and resolve, line ending issues
     nxt_ctlID=util.getNextControlID()
     busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
 
-    repoInterface!=new GitRepoInterface(newAonDir$)
+    repoInterface!=new GitRepoInterface(gitAuthID$,newAonDir$)
     repoInterface!.checkoutFilesWithDifferentLineEndings()
     repoInterface!.closeInterface()
 
@@ -1477,7 +1478,7 @@ cherryPickLocalCommits: rem --- Cherry pick local commits from old installation
     busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
 
     rem --- Cherry pick local commits
-    repoInterface!=new GitRepoInterface(newAonDir$)
+    repoInterface!=new GitRepoInterface(gitAuthID$,newAonDir$)
     commitIter!=localCommitsList!.iterator()
     while commitIter!.hasNext()
         commit!=commitIter!.next()
@@ -1521,7 +1522,7 @@ checkForGitConflicts: rem --- Check for Git conflicts, and resolve bar/*.xml con
     busyImage!=meterWin!.addImageCtrl(nxt_ctlID,150,75,33,33,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
 
     rem --- Get Git conflicts
-    repoInterface!=new GitRepoInterface(newAonDir$)
+    repoInterface!=new GitRepoInterface(gitAuthID$,newAonDir$)
     conflicts!=repoInterface!.getConflicts()
     repoInterface!.closeInterface()
 
