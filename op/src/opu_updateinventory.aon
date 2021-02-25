@@ -976,6 +976,16 @@ rem --- Set LOCK_STATUS and TRANS_STATUS for update completed, and remove comple
             extract record (ope01_dev) ope01a$; rem Advisory Locking
             if ope01a.lock_status$<>"2" or ope01a.trans_status$<>"R" then read(ope01_dev); continue
 
+rem wgh ... 9806 ... stopped here
+redim opm06a$
+find record (opm06_dev,key=firm_id$+ope01a.tax_code$,dom=*next) opm06a$
+if opm06a.use_tax_service and ope01a.no_sls_tax_calc=0 then
+    rem --- Used sales tax service to calculate the tax amount
+    
+print "order_no=",ope01a.order_no$," need to commit transaction, and handle possible error"
+rem wgh ... 9806 ... testing    
+endif
+
             ope01a.lock_status$="3"
             ope01a.trans_status$="U"
             ope01a.mod_user$=sysinfo.user_id$
@@ -999,6 +1009,12 @@ rem --- Post the G/L Recap from the Sales Register directly to the Daily Detail
     endif
 
 rem --- All Done  
+
+    rem --- Close connection to Sales Tax Service
+    salesTax!=callpoint!.getDevObject("salesTaxObject")
+    if salesTax!<>null() then
+        salesTax!.close()
+    endif
 
     goto std_exit
 
@@ -1117,7 +1133,6 @@ update_salestax_history: rem --- Update Sales Tax History
 
 calculate_store_tax: rem --- Calculate and store taxes
 
-    precision 4
     dim art02a$:fattr(art02a$)
     art02a.firm_id$  = firm_id$
     art02a.tax_code$ = ope01a.tax_code$
@@ -1126,12 +1141,24 @@ calculate_store_tax: rem --- Calculate and store taxes
 
     tax_amt   = ope01a.tax_amount
     total_tax = 0
-    start_block = 1
 
 rem --- Get the main tax code and calculate amount
 
-    if start_block then 
-        find record (opm06_dev,key=firm_id$+ope01a.tax_code$,dom=*endif) opm06a$
+    redim opm06a$
+    find record (opm06_dev,key=firm_id$+ope01a.tax_code$,dom=*next) opm06a$
+    if cvs(opm06a.gl_account$,2)="" then return
+    if opm06a.use_tax_service and ope01a.no_sls_tax_calc=0 then
+        rem --- Used sales tax service to calculate the tax amount
+        total_tax = tax_amt
+        total_ext = ope01a.total_sales
+        gosub update_salestax_history
+
+        account$ = opm06a.gl_account$
+        amount   = -tax_amt
+        units    = 0
+    rem gosub glpost
+    else
+        precision 4
         tax_amt = round(opm06a.tax_rate*ope01a.taxable_amt/100, 2)
         precision 2
         if opm06a.op_max_limit<>0 and abs(tax_amt)>opm06a.op_max_limit then tax_amt = opm06a.op_max_limit*sgn(tax_amt)
@@ -1165,41 +1192,41 @@ rem --- Get the main tax code and calculate amount
             units    = 0
         rem gosub glpost
         next x9
-    endif
 
-    precision 2
-
-rem --- If there is a difference in the order's tax amount, post it now
-
-    if ope01a.tax_amount<>total_tax then
-        tax_amt = ope01a.tax_amount-total_tax
-
-    rem --- Hold on to original values
-
-        y0=total_ext
-        y1=ope01a.freight_amt
-        y2=ope01a.discount_amt
-        y4=ope01a.taxable_amt
-
-    rem --- Clear values for posting
-
-        total_ext=0
-        ope01a.freight_amt=0
-        ope01a.discount_amt=0
-        ope01a.taxable_amt=0
-        gosub update_salestax_history
-
-    rem --- Put back original values
-
-        total_ext=y0
-        ope01a.freight_amt=y1
-        ope01a.discount_amt=y2
-        ope01a.taxable_amt=y4
-
-        account$ = opm06a.gl_account$
-        amount   = -tax_amt
-        units    = 0
-    rem gosub glpost
+        precision 2
+    
+    rem --- If there is a difference in the order's tax amount, post it now
+    
+        if ope01a.tax_amount<>total_tax then
+            tax_amt = ope01a.tax_amount-total_tax
+    
+        rem --- Hold on to original values
+    
+            y0=total_ext
+            y1=ope01a.freight_amt
+            y2=ope01a.discount_amt
+            y4=ope01a.taxable_amt
+    
+        rem --- Clear values for posting
+    
+            total_ext=0
+            ope01a.freight_amt=0
+            ope01a.discount_amt=0
+            ope01a.taxable_amt=0
+            gosub update_salestax_history
+    
+        rem --- Put back original values
+    
+            total_ext=y0
+            ope01a.freight_amt=y1
+            ope01a.discount_amt=y2
+            ope01a.taxable_amt=y4
+    
+            account$ = opm06a.gl_account$
+            amount   = -tax_amt
+            units    = 0
+        rem gosub glpost
+        endif
     endif
 
     precision 2
