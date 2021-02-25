@@ -448,6 +448,27 @@ rem --- Show quotes
 :		"",
 :		"AO_STATUS"
 
+[[ARM_CUSTMAST.AOPT-RCTL]]
+rem --- Launch Report Control Recipients form for this customer
+	user_id$=stbl("+USER_ID")
+	customer_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+
+	dim dflt_data$[2,1]
+	dflt_data$[1,0]="CUSTOMER_ID"
+	dflt_data$[1,1]=customer_id$
+	dflt_data$[2,0]="RECIPIENT_TP"
+	dflt_data$[2,1]="C"
+
+	key_pfx$=firm_id$+customer_id$
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"ADM_RPTRCP_CUST",
+:		user_id$,
+:		"",
+:		key_pfx$,
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
 [[ARM_CUSTMAST.AOPT-RESP]]
 rem --- view electronic receipt response, if applicable 
 	user_id$=stbl("+USER_ID")  
