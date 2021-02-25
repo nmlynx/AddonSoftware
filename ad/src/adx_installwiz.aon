@@ -31,6 +31,7 @@ rem --- Initializations
 
 rem --- Get user inputs
 
+    git_auth_id$=Option!.getOptionData("GIT_AUTH_ID")
     version_neutral=num(Option!.getOptionData("VERSION_NEUTRAL"))
     base_dir$=Option!.getOptionData("BASE_DIR")
     dbName$=Option!.getOptionData("DB_NAME")
@@ -129,7 +130,7 @@ rem --- Clone and pull branch(s) from Git repository to newAonLoc
         cloneDir$=mountedSys!.getItem(syscnt)
 
         rem --- Clone Git repository and get a JGit interface to it
-        repoInterface!=new GitRepoInterface(cloneDir$)
+        repoInterface!=new GitRepoInterface(git_auth_id$,cloneDir$)
 		if (repoInterface!=null()) then 
             msg_id$="AD_FAILED_BAD_CLONE"
 			dim msg_tokens$[1]

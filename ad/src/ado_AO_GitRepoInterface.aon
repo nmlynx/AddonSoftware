@@ -12,6 +12,7 @@ rem  * tasks needed during upgrades and updates.
 rem  */
 
     use ::ado_GitRepoInterface.aon::FixedIssuesReader
+    use ::sys/prog/bao_encryptor.bbj::Encryptor
 
     use java.io.ByteArrayOutputStream
     use java.io.File
@@ -24,10 +25,14 @@ rem  */
     use java.util.ArrayList
     use java.util.Arrays
     use java.util.Iterator
+    
+    use com.jcraft.jsch.JSch
+    use com.jcraft.jsch.Session
 
     use org.eclipse.jgit.api.CheckoutCommand
     use org.eclipse.jgit.api.CheckoutCommand.Stage
     use org.eclipse.jgit.api.CherryPickResult.CherryPickStatus
+    use org.eclipse.jgit.api.TransportConfigCallback
     use org.eclipse.jgit.api.ResetCommand
     use org.eclipse.jgit.api.ResetCommand.ResetType
     use org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode
@@ -42,10 +47,16 @@ rem  */
     use org.eclipse.jgit.lib.Ref
     use org.eclipse.jgit.revwalk.RevCommit
     use org.eclipse.jgit.revwalk.RevWalk
+    use org.eclipse.jgit.transport.CredentialsProvider
+    use org.eclipse.jgit.transport.JschConfigSessionFactory
+    use org.eclipse.jgit.transport.OpenSshConfig
+    use org.eclipse.jgit.transport.SshTransport
+    use org.eclipse.jgit.transport.Transport
     use org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
     use org.eclipse.jgit.treewalk.CanonicalTreeParser
     use org.eclipse.jgit.treewalk.FileTreeIterator
     use org.eclipse.jgit.treewalk.TreeWalk
+    use org.eclipse.jgit.util.FS
 
 rem /**
 rem  * This class uses JGit to interface with Addon's Git repository to perform
@@ -59,10 +70,14 @@ rem  */
         field public BBjString LocalRepo$
         field public BBjString ReleaseTag$
         field public BBjString RemoteBranch$
+        field public BBjString RepoURL$
 
         field protected Git git!
         field protected Repository repository!
-        field protected UsernamePasswordCredentialsProvider credentials!
+        field protected BBjString repoURL!
+        field protected BBjString encryptionConfiguration!="PASSWORD_USER"
+        field protected CredentialsProvider credentials!
+        field protected TransportConfigCallback transportConfigCallback!
         
         field protected FixedIssuesReader fixedIssuesReader!
         
@@ -75,19 +90,31 @@ rem  */
         rem  *
         rem  * @param BBjString aonDir$
         rem  */
-        method public AO_GitRepoInterface(BBjString aonDir$)
+        method public AO_GitRepoInterface(BBjString gitAuthID$, BBjString aonDir$)
             seterr GitRepoInterface_error
             #AonDir$=aonDir$
             #LocalRepo$=#AonDir$+"/.git"
 
+            rem --- SDH this is where we need to obtain the URL to use and the credentials.
+            #obtainURLAndCredentials(gitAuthID$)
+            
             rem --- Get Git repository
             gitDir! = new File(#LocalRepo$)
             if !gitDir!.exists() then
                 rem --- Clone Git repository to specified location
-                gitURI$="https://github.com/BASISInternational/AddonSoftware.git"
-    
                 cloneCmd!=Git.cloneRepository()
-                cloneCmd!.setURI(gitURI$).setDirectory(new File(aonDir$)).setCloneAllBranches(1)
+                
+                rem -- build the clone command
+                cloneCmd!=cloneCmd!.setURI(#repoURL!)
+                if (#credentials!<>null()) then 
+                    cloneCmd!=cloneCmd!.setCredentialsProvider(#credentials!)
+                else
+                    if (#transportConfigCallback!<>null()) then
+                        cloneCmd!=cloneCmd!.setTransportConfigCallback(#transportConfigCallback!) 
+                    endif 
+                endif 
+                cloneCmd!=cloneCmd!.setDirectory(new File(aonDir$))
+                cloneCmd!=cloneCmd!.setCloneAllBranches(1)
                 cloneCmd!.call()
             endif
             #git!=Git.open(new File(#LocalRepo$))
@@ -118,6 +145,75 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             x$=stbl("+THROWN_ERR","TRUE")   
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
+        
+        rem /**
+        rem  * 
+        rem  */
+        method public void obtainURLAndCredentials(BBjString gitAuthID$)
+            declare BBjNumber sqlchan 
+            declare BBjString template$
+            declare BBjString result$
+            declare Encryptor encryptor! 
+            declare BBjString userName$
+            declare BBjString password$
+            declare BBjString token$
+            declare BBjString sshKeyFile$
+            
+            REM read the record from the ADX_GIT_AUTH table
+            sqlchan=sqlunt
+            sqlopen(sqlchan) STBL("+DBNAME")
+            sqlprep(sqlchan) "select * from ADX_GIT_AUTH where GIT_AUTH_ID=?"
+            sqlexec(sqlchan) gitAuthID$
+            template$=sqltmpl(sqlchan)
+            dim result$:template$
+            
+            result$=sqlfetch(sqlchan)
+            
+            REM get the URL
+            #repoURL!=cvs(result.URL$,3)
+            
+            REM Read in our Encryptor configuration and create our decryptor.  
+            encryptor!=new Encryptor()
+            encryptor!.setConfiguration(#encryptionConfiguration!)
+            
+            userName$=cvs(result.USERNAME$,3)
+            password$=encryptor!.decryptData(cvs(result.PASSWORD$,3))
+            token$=encryptor!.decryptData(cvs(result.TOKEN$,3))
+            sshKeyFile$=cvs(result.SSH_KEY_FILE$,3) 
+            
+            rem SDH escape 
+            REM Check to see if this is a public repo and if so, return null
+            isPublic=(userName$="") and (password$="") and (token$="") and (sshKeyFile$="")
+            if (isPublic) then
+                #credentials!=null()
+                methodret 
+            endif 
+            
+            REM determine the type of credentials in the table: none, user/password, OAuth token, public key
+            REM username/password
+            if (userName$<>"") then 
+                print $22$+userName$+$22$
+                print $22$+password$+$22$
+                escape 
+                declare UsernamePasswordCredentialsProvider upProvider!
+                upProvider!=new UsernamePasswordCredentialsProvider(userName$,password$)
+                #credentials!=upProvider!
+                methodret 
+            endif 
+            
+            if (token$<>"") then 
+                declare UsernamePasswordCredentialsProvider tokenProvider!
+                tokenProvider!=new UsernamePasswordCredentialsProvider(token$,"")
+                #credentials!=tokenProvider!
+                methodret 
+            endif 
+            
+            if (sshKeyFile$<>"") then 
+                #transportConfigCallback!=new SSH(sshKeyFile$)
+                methodret 
+            endif 
+        methodend
+        
 
         rem /**
         rem  * Checkout (i.e. switch to) specified branch in repository. 
@@ -1109,4 +1205,30 @@ class public AO_FixedIssuesReader
         methodret 1 
         
     methodend     
+classend 
+
+
+class public SSH extends JschConfigSessionFactory implements TransportConfigCallback
+    field private BBjString sshKey!
+    
+    method public SSH(BBjString sshKey!)
+        #sshKey!=sshKey!
+    methodend 
+
+    method protected JSch createDefaultJSch( FS fs! )
+        declare JSch defaultJSch!
+        
+        defaultJSch! = #super!.createDefaultJSch( fs! )
+        defaultJSch!.addIdentity( #sshKey! )
+        methodret defaultJSch!
+    methodend 
+    
+    method public void configure(Transport transport! ) 
+        declare SshTransport sshTransport!
+        sshTransport!= cast( SshTransport,transport!)
+        sshTransport!.setSshSessionFactory(#this!)
+    methodend 
+    
+    method protected void configure(OpenSshConfig.Host host!,Session session!)
+    methodend 
 classend 
