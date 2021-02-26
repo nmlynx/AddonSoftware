@@ -4128,7 +4128,7 @@ rem ==========================================================================
 			gosub get_disk_rec
 			salesTax!=callpoint!.getDevObject("salesTaxObject")
 			success=0
-			taxProps!=salesTax!.calculateTax(ordhdr_rec$,"SalesOrder",err=*next); success=1
+			taxProps!=salesTax!.calculateTax(ordhdr_rec$,"SalesInvoice",err=*next); success=1
 			if !success then
 				rem --- Sales tax calculation failed
 				callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT","0",1)
