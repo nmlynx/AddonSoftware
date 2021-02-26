@@ -52,16 +52,17 @@ rem --- limit query rows to those for "V" recipient types
 	callpoint!.setStatus("ACTIVATE-ABORT")
 
 [[ADM_RPTRCP_VEND.EMAIL_YN.AVAL]]
-rem --- if selecting email checkbox, get 'from' defaults from email account and 'to' defaults from vendor
+rem --- if changing email checkbox to Y, get 'from' defaults from email account and 'to' defaults from vendor
 
-	if callpoint!.getUserInput()="Y"
+	if callpoint!.getUserInput()="Y" and callpoint!.getColumnData("ADM_RPTRCP_VEND.EMAIL_YN")<>"Y"
 		gosub set_defaults
 	endif
+ 
 
 [[ADM_RPTRCP_VEND.FAX_YN.AVAL]]
-rem --- if selecting fax checkbox, set 'to' defaults from vendor
+rem --- if changing fax checkbox to Y, set 'to' defaults from vendor
 
-	if callpoint!.getUserInput()="Y"
+	if callpoint!.getUserInput()="Y" and callpoint!.getColumnData("ADM_RPTRCP_VEND.FAX_YN")<>"Y"
 		gosub set_defaults
 	endif
 
