@@ -153,11 +153,17 @@ rem --- Load GL Account (glm-01) and Bank Master (glm-05) records
     find record (glm01_dev,key=glm01_key$,dom=*next) glm01a$
     find record (glm05_dev,key=glm05_key$,dom=*next) glm05a$
     find record (adcBankAcctCode_dev,key=firm_id$+glm05a.bnk_acct_cd$,dom=*next)adcBankAcctCode$
+    bank_last_4$=encryptor!.decryptData(cvs(adcBankAcctCode.bnk_acct_no$,2))
+    if len(bank_last_4$)>=4
+        bank_last_4$=bank_last_4$(len(bank_last_4$)-3,4)
+    else
+        bank_last_4$=""
+    endif
 
 rem --- Build remaining headings
 
     headings$[3]=Translate!.getTranslation("AON_BANK_NAME:_")+cvs(adcBankAcctCode.bank_name$,2)
-    headings$[4]=Translate!.getTranslation("AON_ACCOUNT_NUMBER:_")+encryptor!.decryptData(cvs(adcBankAcctCode.bnk_acct_no$,2))
+    headings$[4]=Translate!.getTranslation("AON_ACCOUNT_NUMBER")+Translate!.getTranslation("AON_ENDING")+": "+bank_last_4$
     headings$[5]=Translate!.getTranslation("AON_ACCOUNT_NAME:_")+cvs(adcBankAcctCode.acct_desc$,2)
     headings$[6]=Translate!.getTranslation("AON_GL_ACCOUNT:_")+fnmask$(glm01a.gl_account$(1,acctlen),m0$)
     headings$[7]=Translate!.getTranslation("AON_DESCRIPTION:_")+cvs(glm01a.gl_acct_desc$,2)
