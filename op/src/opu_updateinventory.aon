@@ -962,6 +962,7 @@ rem --- Update Month To Date Sales Totals
 
 rem --- Set LOCK_STATUS and TRANS_STATUS for update completed, and remove completed OPE_PRNTLIST records
 
+    invNotCommitted$=""
     read (ope04_dev,key=firm_id$+"I",dom=*next)
     while more
         read record (ope04_dev, end=*break) ope04a$
@@ -976,15 +977,23 @@ rem --- Set LOCK_STATUS and TRANS_STATUS for update completed, and remove comple
             extract record (ope01_dev) ope01a$; rem Advisory Locking
             if ope01a.lock_status$<>"2" or ope01a.trans_status$<>"R" then read(ope01_dev); continue
 
-rem wgh ... 9806 ... stopped here
-redim opm06a$
-find record (opm06_dev,key=firm_id$+ope01a.tax_code$,dom=*next) opm06a$
-if opm06a.use_tax_service and ope01a.no_sls_tax_calc=0 then
-    rem --- Used sales tax service to calculate the tax amount
-    
-print "order_no=",ope01a.order_no$," need to commit transaction, and handle possible error"
-rem wgh ... 9806 ... testing    
-endif
+            rem --- Was sales tax service to calculate the tax amount?
+            redim opm06a$
+            find record (opm06_dev,key=firm_id$+ope01a.tax_code$,dom=*next) opm06a$
+            if opm06a.use_tax_service and ope01a.no_sls_tax_calc=0 then
+                customer_id$=ope01a.customer_id$
+                order_no$=ope01a.order_no$
+                ar_inv_no$=ope01a.ar_inv_no$
+                rem --- Omit documentType! since last tax calculation could have been in either Order Entry or Invoice Entry.
+                success=0
+                transaction!=salesTax!.commitTransaction(customer_id$, order_no$, ar_inv_no$, "",err=*next); success=1
+                
+                if !success then
+                    invNotCommitted$=invNotCommitted$+ar_inv_no$+"; "
+                    read(ope01_dev); rem --- release extract
+                    break
+                endif
+            endif
 
             ope01a.lock_status$="3"
             ope01a.trans_status$="U"
@@ -1014,6 +1023,14 @@ rem --- All Done
     salesTax!=callpoint!.getDevObject("salesTaxObject")
     if salesTax!<>null() then
         salesTax!.close()
+    endif
+
+    rem --- Warn about invoices that weren't committed
+    if invNotCommitted$<>"" then
+        msg_id$ = "OP_INV_NOT_COMMITTED"
+        dim msg_tokens$[1]
+        msg_tokens$[1] = invNotCommitted$
+        gosub disp_message
     endif
 
     goto std_exit
