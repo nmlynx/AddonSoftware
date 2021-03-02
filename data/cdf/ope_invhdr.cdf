@@ -1869,7 +1869,7 @@ rem --- Setup user_tpl$
 :		"alt_super:u(1), " +
 :		"ord_tot_obj:u(1), " +
 :		"price_code:c(2), " +
-:		"pricing_code:c(4), " +
+:		"pricing_code:c(6), " +
 :		"order_date:c(8), " +
 :		"pick_hold:c(1), " +
 :		"pgmdir:c(1*), " +
