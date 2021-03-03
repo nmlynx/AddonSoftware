@@ -3445,6 +3445,7 @@ rem ==========================================================================
 			ope01a.batch_no$   = ""
 			ope01a.audit_number   = 0
 			ope01a.ship_seq_no$="001"
+			if line_sign=-1 then ope01a.credit_invoice$=opt01a.ar_inv_no$
 			if callpoint!.getDevObject("sls_tax_intrface")<>"" then
 				opc_taxcode_dev = fnget_dev("OPC_TAXCODE")
 				dim opc_taxcode$:fnget_tpl$("OPC_TAXCODE")

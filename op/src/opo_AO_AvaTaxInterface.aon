@@ -43,6 +43,7 @@ rem --- Use statements and declares
     use net.avalara.avatax.rest.client.FetchResult
     use net.avalara.avatax.rest.client.enums.AvaTaxEnvironment
     use net.avalara.avatax.rest.client.enums.DocumentType
+    use net.avalara.avatax.rest.client.enums.TaxOverrideType
     use net.avalara.avatax.rest.client.models.AddressesModel
     use net.avalara.avatax.rest.client.models.AddressLocationInfo
     use net.avalara.avatax.rest.client.models.CertificateModel
@@ -54,6 +55,7 @@ rem --- Use statements and declares
     use net.avalara.avatax.rest.client.models.LineItemModel
     use net.avalara.avatax.rest.client.models.PingResultModel
     use net.avalara.avatax.rest.client.models.TaxCodeModel
+    use net.avalara.avatax.rest.client.models.TaxOverrideModel
     use net.avalara.avatax.rest.client.models.TransactionAddressModel
     use net.avalara.avatax.rest.client.models.TransactionLineModel
     use net.avalara.avatax.rest.client.models.TransactionModel
@@ -427,25 +429,65 @@ busyImageStop_error:rem --- Method error trap/handler (11Oct2017)
             addrTo!.setPostalCode(shiptoAddr!.getProperty("ZipCode"))
             addrTo!.setCountry(shiptoAddr!.getProperty("CountryID"))
 
+            rem --- Is this a Credit Order/Invoice?
+            doCredit=0
+            line_sign=1
+            if cvs(optInvHdr.credit_invoice$,2)<>"" then
+                dim creditInvoice$:#tplOptInvHdr$
+                creditInvoiceKey$=#firmID$+optInvHdr.ar_type$+optInvHdr.ar_inv_no$+optInvHdr.customer_id$
+                readrecord(#devOptInvHdr,key=creditInvoiceKey$,knum="AO_INV_CUST",dom=*next)creditInvoice$
+                if cvs(optInvHdr.order_no$,2)="" then
+                    rem --- Didn't find original invoice, so use currrent invoice's date
+                    creditInvoiceDate$=optInvHdr.invoice_date$
+                else
+                    creditInvoiceDate$=creditInvoice.invoice_date$
+                endif
+                doCredit=1
+                line_sign=-1
+                
+                read(#devOptInvHdr,key="",knum="PRIMARY",dom=*next); rem --- Reset key being used by channel
+            endif
+            
             rem --- Initialize AvaTax transaction
             createTransModel!=new CreateTransactionModel()
             createTransModel!.setCompanyCode(#companyCode$)
             createTransModel!.setCustomerCode(#firmID$+optInvHdr.customer_id$)
             switch (BBjAPI().TRUE)
                 case transType$ = "SalesInvoice"
-                    createTransModel!.setType(DocumentType.SalesInvoice)
+                    if doCredit then
+                        createTransModel!.setType(DocumentType.ReturnInvoice)
+                    else
+                        createTransModel!.setType(DocumentType.SalesInvoice)
+                    endif
                 break
                 case transType$ = "SalesOrder"
-                    createTransModel!.setType(DocumentType.SalesOrder)
+                    if doCredit then
+                        createTransModel!.setType(DocumentType.ReturnOrder)
+                    else
+                        createTransModel!.setType(DocumentType.SalesOrder)
+                    endif
                 break
             swend
             yyyyMMdd!=new SimpleDateFormat("yyyyMMdd")
-            createTransModel!.setDate(yyyyMMdd!.parse(optInvHdr.invoice_date$))
+            if cvs(optInvHdr.invoice_date$,2)<>"" then
+                transDate$=optInvHdr.invoice_date$
+            else
+                transDate$=optInvHdr.order_date$
+            endif
+            createTransModel!.setDate(yyyyMMdd!.parse(transDate$))
             createTransModel!.setCode(#firmID$+optInvHdr.customer_id$+optInvHdr.order_no$+optInvHdr.ar_inv_no$);rem --- firm, customer, order#, invoice#
             createTransModel!.setDiscount(#getBigDecimal(optInvHdr.discount_amt))
             exemption!=#updateCustomerExemption(optInvHdr.customer_id$,optInvHdr.shipto_type$,optInvHdr.shipto_no$, addrTo!)
             createTransModel!.setEntityUseCode(exemption!.getProperty("entity_use_cd"))
             createTransModel!.setExemptionNo(exemption!.getProperty("exempt_no"))
+            if doCredit then
+                taxOverride!=new TaxOverrideModel()
+                taxOverride!.setType(TaxOverrideType.TaxDate)
+                taxOverride!.setTaxDate(yyyyMMdd!.parse(creditInvoiceDate$))
+                taxOverride!.setReason("Credit Invoice")
+            
+                createTransModel!.setTaxOverride(taxOverride!)
+            endif
 
             rem --- Get list of line items on the order
             lineItemList!=new ArrayList()
@@ -519,7 +561,7 @@ busyImageStop_error:rem --- Method error trap/handler (11Oct2017)
                 lineItemModel!=new LineItemModel()
                 lineItemModel!.setNumber(optInvDet.line_no$)
                 lineItemModel!.setAmount(#getBigDecimal(optInvDet.taxable_amt))
-                lineItemModel!.setQuantity(#getBigDecimal(optInvDet.qty_shipped))
+                lineItemModel!.setQuantity(#getBigDecimal(optInvDet.qty_shipped*line_sign))
                 lineItemModel!.setTaxCode(taxSvcCd$)         
                 lineItemModel!.setItemCode(itemId$)
                 lineItemModel!.setDescription(itemDesc$)
