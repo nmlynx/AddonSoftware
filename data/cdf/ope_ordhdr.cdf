@@ -851,11 +851,13 @@ rem --- Disable Ship To fields
 	ship_to_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
 	gosub disable_shipto
 
-rem --- Make sure sales tax gets calculated, and hide possible leftover TAX_AMOUNT footnote warning
+rem --- Make sure sales tax gets calculated, and hide possible leftover TAX_AMOUNT warnings
 	callpoint!.setColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC",str(1))
 	callpoint!.setDevObject("commit_sls_tax","N")
 	taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+	taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 	taxAmount_fnote!.setVisible(0)
+	taxAmount_warn!.setVisible(0)
 
 [[OPE_ORDHDR.ASHO]]
 rem --- Get default dates, POS station
@@ -3711,7 +3713,7 @@ rem ==========================================================================
 
 	if !found then 
 		write record (ordhdr_dev,  dom=*endif) ordhdr_rec$
-		ordhdr_key$=ordhdr_rec.firm_id$+ordhdr_rec.trans_status$+ordhdr_rec.ar_type$+ordhdr_rec.customer_id$+ordhdr_rec.order_no$+ordhdr_rec.order_no$
+		ordhdr_key$=ordhdr_rec.firm_id$+ordhdr_rec.trans_status$+ordhdr_rec.ar_type$+ordhdr_rec.customer_id$+ordhdr_rec.order_no$+ordhdr_rec.ar_inv_no$
 		extract record (ordhdr_dev, key=ordhdr_key$) ordhdr_rec$; rem Advisory Locking
 		callpoint!.setStatus("SETORIG")
 	endif

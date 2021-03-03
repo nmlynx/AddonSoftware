@@ -443,7 +443,7 @@ busyImageStop_error:rem --- Method error trap/handler (11Oct2017)
                     creditInvoiceDate$=creditInvoice.invoice_date$
                 endif
                 doCredit=1
-                line_sign=-1
+                line_sign=-1; rem --- For returns send positive quantities and negative amounts
                 
                 read(#devOptInvHdr,key="",knum="PRIMARY",dom=*next); rem --- Reset key being used by channel
             endif
@@ -561,7 +561,7 @@ busyImageStop_error:rem --- Method error trap/handler (11Oct2017)
                 lineItemModel!=new LineItemModel()
                 lineItemModel!.setNumber(optInvDet.line_no$)
                 lineItemModel!.setAmount(#getBigDecimal(optInvDet.taxable_amt))
-                lineItemModel!.setQuantity(#getBigDecimal(optInvDet.qty_shipped*line_sign))
+                lineItemModel!.setQuantity(#getBigDecimal(optInvDet.qty_shipped*line_sign)); rem --- For returns send positive quantities and negative amounts
                 lineItemModel!.setTaxCode(taxSvcCd$)         
                 lineItemModel!.setItemCode(itemId$)
                 lineItemModel!.setDescription(itemDesc$)
@@ -587,15 +587,20 @@ busyImageStop_error:rem --- Method error trap/handler (11Oct2017)
             endif
 
             rem --- Get sales tax and taxable amounts
-            createTransModel!.setLines(lineItemList!)
-            createAdjustTransModel!=new CreateOrAdjustTransactionModel()
-            createAdjustTransModel!.setCreateTransactionModel(createTransModel!)
-            #busyImageStart()
-            transactionModel!=#avaTaxClient!.createOrAdjustTransaction("", createAdjustTransModel!)
-            #busyImageStop()
             taxProps! = new Properties()
-            taxProps!.setProperty("tax_amount",transactionModel!.getTotalTax().toString())
-            taxProps!.setProperty("taxable_amt",transactionModel!.getTotalTaxable().toString())
+            if lineItemList!.size()=0 then
+                taxProps!.setProperty("tax_amount","0")
+                taxProps!.setProperty("taxable_amt","0")
+            else
+                createTransModel!.setLines(lineItemList!)
+                createAdjustTransModel!=new CreateOrAdjustTransactionModel()
+                createAdjustTransModel!.setCreateTransactionModel(createTransModel!)
+                #busyImageStart()
+                transactionModel!=#avaTaxClient!.createOrAdjustTransaction("", createAdjustTransModel!)
+                #busyImageStop()
+                taxProps!.setProperty("tax_amount",transactionModel!.getTotalTax().toString())
+                taxProps!.setProperty("taxable_amt",transactionModel!.getTotalTaxable().toString())
+            endif
 
             methodret taxProps!
             
@@ -708,7 +713,9 @@ connectClient_error:rem --- Modified method error trap/handler (11Oct2017)
                 transaction!=#avaTaxClient!.commitTransaction(companyCode$, transactionCode$, documentType!, "", commitTrans!)
             endif
 
-rem wgh ... 9806 ... needs updating OPT_SLSTAXTRANS
+            rem --- Save committed sales tax transaction response
+            optSlsTaxTransKey$=#updateSalesTaxTransHistory(customer_id$, order_no$, ar_inv_no$, transaction!)
+
 rem wgh ... 9806 ... needs client side logging
             
             methodret transaction!
@@ -1122,6 +1129,42 @@ resolveZipCode_error:rem --- Modified method error trap/handler (11Oct2017)
         methodend
 
         rem /**
+        rem  * Convert AvaTax's transaction JSON response into a String.
+        rem  * 
+        rem  * @param Object source!
+        rem  *
+        rem  * @return BBjString json$
+        rem  */
+        method public BBjString stringJSON(Object source!)
+            seterr stringJSON_error
+
+            rem --- Get ObjectMapper object
+            jsonMapper! = new ObjectMapper()
+            jsonMapper!.enable(SerializationFeature.INDENT_OUTPUT)
+
+            rem --- Convert JSON to String object
+            valueType!=new Object()
+            valueType!=jsonMapper!.readValue(source!.toString(),valueType!.class)
+            json$=JsonMapper!.writerWithDefaultPrettyPrinter().writeValueAsString(valueType!)+System.getProperty("line.separator")
+ 
+            methodret json$
+            
+stringJSON_error:rem --- Method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
         rem  * Get current Exemption information for given customer, ship-to type and ship-to number, and
         rem  * update ARM_CUSTEXMPT information as needed.
         rem  * 
@@ -1193,6 +1236,96 @@ updateCustomerExemption_error:rem --- Modified method error trap/handler (11Oct2
             rem --- Stop busy/working image
             #busyImageStop()
 
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Update OPT_SLSTAXTRANS table for transactions committed in the Sales Register Update.
+        rem  * 
+        rem  * @param BBjString customer_id$
+        rem  * @param BBjString order_no$
+        rem  * @param BBjString ar_inv_no$
+        rem  * @param TransactionModel transaction!
+        rem  *
+        rem  * @return BBjString optSlsTaxTransKey$
+        rem  */
+        method protected BBjString updateSalesTaxTransHistory(BBjString customer_id$, BBjString order_no$, BBjString ar_inv_no$, TransactionModel transaction!)
+            seterr updateSalesTaxTransHistory_error
+
+            rem --- Get key for OPT_SLSTAXTRANS record
+            tripKey$=#firmID$+customer_id$+order_no$+ar_inv_no$
+            read(#devOptSlsTaxTrans,key=tripKey$+$FF$, dom=*next)
+            priorKey$=keyp(#devOptSlsTaxTrans,end=*next)
+            if pos(tripKey$=priorKey$)<>1 then
+                nextSeqNo=1
+            else
+                nextSeqNo=num(priorKey$(len(tripKey$)+1))+1
+            endif
+            dim optSlsTaxTrans$:#tplOptSlsTaxTrans$
+            seqNoMask$=fill(len(optSlsTaxTrans.sequence_no$),"0")
+            optSlsTaxTrans.sequence_no$=str(nextSeqNo:seqNoMask$)
+            optSlsTaxTransKey$=tripKey$+optSlsTaxTrans.sequence_no$
+
+            rem --- Build OPT_SLSTAXTRANS record
+            dim optSlsTaxTransr$:#tplOptSlsTaxTrans$
+            optSlsTaxTrans.firm_id$=#firmID$
+            optSlsTaxTrans.customer_id$=customer_id$
+            optSlsTaxTrans.order_no$=order_no$
+            optSlsTaxTrans.ar_inv_no$=ar_inv_no$
+            optSlsTaxTrans.sequence_no$=str(nextSeqNo:seqNoMask$)
+            optSlsTaxTrans.trans_tstamp$=date(0:"%Yd%Mz%Dz%Hz%mz%sz")
+            optSlsTaxTrans.server$=#server$
+            if #testMode$ = "true" then
+                optSlsTaxTrans.test_mode=1
+            else
+                optSlsTaxTrans.test_mode=0
+            endif
+            if transaction!=null()
+                optSlsTaxTrans.slstax_status$="Failed"
+            else
+                optSlsTaxTrans.slstax_trans_rec$=transaction!.getCode()
+                optSlsTaxTrans.slstax_date$=cvs(transaction!.getDate().toString(),2)
+                optSlsTaxTrans.slstax_status$=cvs(transaction!.getStatus().toString(),2)
+                optSlsTaxTrans.entity_use_cd$=transaction!.getEntityUseCode()
+                optSlsTaxTrans.exempt_no$=cvs(transaction!.getExemptNo(),2)
+                optSlsTaxTrans.tot_amount=transaction!.getTotalAmount()
+                optSlsTaxTrans.tot_discount=transaction!.getTotalDiscount()
+                optSlsTaxTrans.tot_exempt=transaction!.getTotalExempt()
+                optSlsTaxTrans.tot_taxable=transaction!.getTotalTaxable()
+                optSlsTaxTrans.tot_tax=transaction!.getTotalTax()
+                addrModelList!=transaction!.getAddresses()
+                if addrModelList!<>null() and addrModelList!.size()>0 then
+                    addrModel!=addrModelList!.get(0); rem --- ship-to address at index 0
+                    optSlsTaxTrans.addr_line_1$=addrModel!.getLine1()
+                    optSlsTaxTrans.addr_line_2$=addrModel!.getLine2()
+                    optSlsTaxTrans.addr_line_3$=addrModel!.getLine3()
+                    optSlsTaxTrans.city$= addrModel!.getCity()
+                    optSlsTaxTrans.state_code$=addrModel!.getRegion()
+                    optSlsTaxTrans.zip_code$=addrModel!.getPostalCode()
+                    optSlsTaxTrans.cntry_id$=addrModel!.getCountry()
+                endif
+            
+                rem --- Add transaction's JSON response to OPT_SLSTAXTRANS record
+                response$=#stringJSON(transaction!)
+                optSlsTaxTrans.json_text$=response$
+            endif
+            rem --- Write OPT_SLSTAXTRANS record
+            writerecord(#devOptSlsTaxTrans)optSlsTaxTrans$
+ 
+            methodret optSlsTaxTransKey$
+            
+updateSalesTaxTransHistory_error:rem --- Method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
     if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$)<>0 retry
     x$=stbl("+THROWN_ERR","TRUE")   
