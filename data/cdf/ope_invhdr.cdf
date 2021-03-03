@@ -994,7 +994,9 @@ rem --- Make sure sales tax gets calculated, and hide possible leftover TAX_AMOU
 	callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(1))
 	callpoint!.setDevObject("commit_sls_tax","N")
 	taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+	taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 	taxAmount_fnote!.setVisible(0)
+	taxAmount_warn!.setVisible(0)
 
 [[OPE_INVHDR.AR_DIST_CODE.BINP]]
 rem --- Enable/Disable Cash Sale button
