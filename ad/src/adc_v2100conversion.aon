@@ -134,6 +134,74 @@ rem --- For version 21.00, encrypt bank account number in ADC_BANKACCTCODE
         print(log_dev)meter_text$
     endif
 
+rem --- For version 21.00, encrypt bank account number in APM_VENDMAST (apm-01)
+
+    this_module$="AP"
+    if installMap!.get(this_module$)="Y" then    
+        task$="2100_AP_apm_vendmast"
+        if convCtrl!.getProperty(task$)<>"Completed" then
+
+            rem --- Increment progress meter
+            meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:              Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+
+            rem --- Open File(s)
+            num_files=1
+            dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+            open_tables$[1]="APM_VENDMAST",   open_opts$[1]="OTA"
+    
+            gosub open_tables
+    
+            apmVendMast_dev=num(open_chans$[1])
+            dim apmVendMast$:open_tpls$[1]
+
+            rem --- Encrypt the bank account number
+            read(apmVendMast_dev,key="",dom=*next)
+            while 1
+                readrecord(apmVendMast_dev,end=*break)apmVendMast$
+                apmVendMast.bnk_acct_no$=encryptor!.encryptData(cvs(apmVendMast.bnk_acct_no$,3))
+                writerecord(apmVendMast_dev)apmVendMast$
+            wend
+
+            rem --- close files opened for this conversion
+            num_files=1
+            dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+            open_tables$[1]="APM_VENDMAST",   open_opts$[1]="C"
+    
+            gosub open_tables
+
+            write(convCtrlFileChan)task$+"=Completed"
+
+            rem --- This task$ conversion completed successfully
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+task$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+        else
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_CONV_PREVIOUSLY","Conversion previously completed for")+" "+task$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+        endif
+    else
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_NOT","Not")+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:           Translate!.getTranslation("AON_SKIP","SKIP")+" "+Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+    endif
+
 rem --- For version 21.00, set default value for new AR dflt_age_by param to 'I'
     this_module$="AR"
     if installMap!.get(this_module$)="Y" then
@@ -202,46 +270,45 @@ rem --- For version 21.00, set default value for new AR dflt_age_by param to 'I'
         print(log_dev)meter_text$
     endif
 
-rem --- For version 21.00, encrypt bank account number in APM_VENDMAST (apm-01)
-
-    this_module$="AP"
-    if installMap!.get(this_module$)="Y" then    
-        task$="2100_AP_apm_vendmast"
+rem --- For version 21.00, set new IVC_PRICCODE pricing_basis to 'P' (since Percent is what has always been used in the past)
+    this_module$="IV"
+    if installMap!.get(this_module$)="Y" then
+        task$="2100_IV_ivc_priccode"
         if convCtrl!.getProperty(task$)<>"Completed" then
 
             rem --- Increment progress meter
             meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
-:              Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+:                   Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
             meter_proc_recs=meter_proc_recs+1
             meter_action$="MTR-LST"
             gosub disp_meter
             print(log_dev)meter_text$
-
+    
             rem --- Open File(s)
             num_files=1
             dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-            open_tables$[1]="APM_VENDMAST",   open_opts$[1]="OTA"
+            open_tables$[1]="IVC_PRICCODE",   open_opts$[1]="OTA"
     
             gosub open_tables
     
-            apmVendMast_dev=num(open_chans$[1])
-            dim apmVendMast$:open_tpls$[1]
+            ivcPriccode_dev=num(open_chans$[1])
+            dim ivcPriccode$:open_tpls$[1]
 
-            rem --- Encrypt the bank account number
-            read(apmVendMast_dev,key="",dom=*next)
+            rem --- Set the pricing_basis to 'P'
+            read(ivcPriccode_dev,key="",dom=*next)
             while 1
-                readrecord(apmVendMast_dev,end=*break)apmVendMast$
-                apmVendMast.bnk_acct_no$=encryptor!.encryptData(cvs(apmVendMast.bnk_acct_no$,3))
-                writerecord(apmVendMast_dev)apmVendMast$
+                readrecord(ivcPriccode_dev,end=*break)ivcPriccode$
+                ivcPriccode.pricing_basis$="P"
+                writerecord(ivcPriccode_dev)ivcPriccode$
             wend
-
+            
             rem --- close files opened for this conversion
             num_files=1
             dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-            open_tables$[1]="APM_VENDMAST",   open_opts$[1]="C"
+            open_tables$[1]="IVC_PRICCODE",   open_opts$[1]="C"
     
             gosub open_tables
-
+           
             write(convCtrlFileChan)task$+"=Completed"
 
             rem --- This task$ conversion completed successfully
@@ -252,6 +319,7 @@ rem --- For version 21.00, encrypt bank account number in APM_VENDMAST (apm-01)
             meter_action$="MTR-LST"
             gosub disp_meter
             print(log_dev)meter_text$
+                
         else
             rem --- Increment progress meter
             meter_text$=Translate!.getTranslation("AON_CONV_PREVIOUSLY","Conversion previously completed for")+" "+task$
