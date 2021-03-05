@@ -2,7 +2,7 @@ rem --- build_sprocs.aon
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- prototype for table-driven sproc definition
 
-rem --- for now, this program has hard-coded logic to create the following SPROCs:
+rem --- this program creates the following SPROCs:
 rem --- POCALENDAR
 rem --- SALES_CUSTOMER
 rem --- SALES_CUST_TYPE
@@ -53,7 +53,7 @@ rem --- PURCHASEREQUISITION_HDR
 rem --- PURCHASEREQUISITION_DET
 rem --- SFPICKLIST
 
-rem ---      Dashboard SPROCs
+rem --- Dashboard SPROCs
 rem --- ARAGINGTOT_BAR
 rem --- ARAGING_BAR
 
@@ -77,15 +77,16 @@ rem --- SATOPREPPROD_GRD
 
 rem --- SFWOSSOS_GRD
 
-
-rem --- 4/2012 Added VIEWs to the hard-coded logic herein
-rem --- As of 10/2013, no VIEWs are needed; all are removed
+rem --- VIEWs
+rem --- ADC_BANKACCTCODE_VIEW (shows last 4 of decrypted bank acct number)
+rem --- APM_VENDMAST_VIEW (shows last 4 of decrypted bank acct number)
 
 rem --- idea is to make an admin table in Addon (Barista?) that contains
 rem --- name, params, .prc loc and .cfg loc so as we deploy, we can run this program
 rem --- as part of install/init, and see to it that sprocs are defined.
 
     use ::ado_util.src::util
+	use ::sys/prog/bao_encryptor.bbj::Encryptor
 
     seterr std_error
     setesc std_error
@@ -122,6 +123,9 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
     milestone=1
+
+rem --- Set up Encryptor
+	encryptor! = new Encryptor()
     
 rem --- Open File(s)
     
@@ -138,9 +142,22 @@ rem --- Open File(s)
 rem --- Open File(s) used in VIEWs to ensure their existence (so CREATE won't err)
 rem     ***** NOTE: New VIEWs should add their tables to these opens *****
 
+	num_files=2
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="ADC_BANKACCTCODE",open_opts$[1]="OTA"
+	open_tables$[2]="APM_VENDMAST",open_opts$[2]="OTA"
+
+    gosub open_tables
 
 rem --- Close tables opened solely to ensure VIEWs don't err
 rem     ***** NOTE: New VIEWs should add their tables to these opens *****
+
+	num_files=2
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="ADC_BANKACCTCODE",open_opts$[1]="C"
+	open_tables$[2]="APM_VENDMAST",open_opts$[2]="C"
+
+    gosub open_tables
 	
 rem --- init
 
@@ -1212,7 +1229,41 @@ rem ==============================================
     gosub create_sproc_def		
 	
 rem --- Done with SPROCs. Now do VIEWs
-rem --- As of 11/2018, no VIEWs are needed
+rem --- first drop all std Addon VIEWs
+
+	sql_action$="DROP VIEW"
+	abort_on_exec_err=0; rem OK if DROP fails to EXEC, but not OK if CREATE fails or if PREP fails
+	
+	sproc_vw_name$="ADC_BANKACCTCODE_VIEW"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+
+	sproc_vw_name$="APM_VENDMAST_VIEW"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+    
+    rem --- now create VIEWs
+
+    sql_action$="CREATE VIEW"
+	abort_on_exec_err=1; rem OK if DROP fails to EXEC, but not OK if CREATE fails or if PREP fails
+
+    rem --- ADC_BANKACCTCODE_VIEW
+    config_id$ = "BANK_ACCT_AUTH"
+    config_str$ = encryptor!.configStr(config_id$)
+    sproc_vw_name$="ADC_BANKACCTCODE_VIEW "
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    sqlprep$=sqlprep$+"AS SELECT ADC_BANKACCTCODE.*,RIGHT(DECRYPT(ATH(TRIM(BNK_ACCT_NO)),'"+config_str$+"'),4) AS ACCT_LAST_4 FROM ADC_BANKACCTCODE"
+  
+    gosub create_sproc_def
+
+    rem --- APM_VENDMAST_VIEW
+	config_id$ = "BANK_ACCT_AUTH"
+    config_str$ = encryptor!.configStr(config_id$)
+    sproc_vw_name$="APM_VENDMAST_VIEW"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    sqlprep$=sqlprep$+"AS SELECT APM_VENDMAST.*,RIGHT(DECRYPT(ATH(TRIM(BNK_ACCT_NO)),'"+config_str$+"'),4) AS ACCT_LAST_4 FROM APM_VENDMAST"
+    
+    gosub create_sproc_def
 
 done:
 
