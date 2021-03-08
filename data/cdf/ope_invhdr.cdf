@@ -175,6 +175,11 @@ rem --- Show TAX_AMOUNT footnote warning if sales tax calculation was previously
 	taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
 	if num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 then
 		taxAmount_fnote!.setVisible(1)
+
+		rem - Update sales tax calculation to use SalesInvoice for sales tax service
+		disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		gosub calculate_tax
 	else
 	        taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 		taxAmount_warn!.setVisible(0)
@@ -2592,6 +2597,12 @@ rem --- New record, set default
 		user_tpl.order_date$   = sysinfo.system_date$
 
 		callpoint!.setOptionEnabled("UINV",0)
+
+		rem --- Update sales tax calculation to use SalesInvoice for sales tax service
+		callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC","1",1)
+		disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		gosub calculate_tax
 	endif
 
 rem --- New or existing order
@@ -3911,6 +3922,15 @@ rem ==========================================================================
 				ope01a.mod_user$=sysinfo.user_id$
 				ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
 				ope01a.mod_time$=date(0:"%Hz%mz")
+				rem --- Also setColumnData since cannot use get_disk_rec with sales tax service
+				callpoint!.setColumnData("OPE_INVHDR.AR_INV_NO",ope01a.ar_inv_no$,1)
+				callpoint!.setColumnData("OPE_INVHDR.ORDINV_FLAG",ope01a.ordinv_flag$,1)
+				callpoint!.setColumnData("OPE_INVHDR.INVOICE_DATE",ope01a.invoice_date$,1)
+				callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS",ope01a.print_status$,1)
+				callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS",ope01a.lock_status$,1)
+				callpoint!.setColumnData("OPE_INVHDR.MOD_USER",ope01a.mod_user$,1)
+				callpoint!.setColumnData("OPE_INVHDR.MOD_DATE",ope01a.mod_date$,1)
+				callpoint!.setColumnData("OPE_INVHDR.MOD_TIME",ope01a.mod_time$,1)
 
 				rem --- Do NOT overwrite existing FREIGH_AMT previously entered in Order Entry.
 				if ope01a.freight_amt=0 then
@@ -3940,12 +3960,7 @@ rem ==========================================================================
 							freight_amt=freight_amt+trackingNos!.get(trackingIter!.next())
 						wend
 						ope01a.freight_amt=freight_amt
-
-						rem --- TAXABLE_AMT can/may include FREIGHT_AMT, which would affect TAX_AMOUNT
-						disc_amt=ope01a.discount_amt
-						gosub calculate_tax
-						ope01a.taxable_amt=num(callpoint!.getColumnData("OPE_INVHDR.TAXABLE_AMT"))
-						ope01a.tax_amount=num(callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
+						callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT",str(ope01a.freight_amt),1)
 					endif
 				endif
 
@@ -3953,6 +3968,12 @@ rem ==========================================================================
 				writerecord(ope01_dev)ope01a$
 				ope01_primary$=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$+old_inv_no$
 				remove(ope01_dev,key=ope01_primary$)
+
+				rem - Update sales tax calculation to use SalesInvoice for sales tax service
+				callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC","1",1)
+				disc_amt=num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+				freight_amt=num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+				gosub calculate_tax
 			endif
 
 			gosub add_to_batch_print
@@ -4113,7 +4134,14 @@ rem ==========================================================================
 	eventFrom$=callpoint!.getCallpointEvent()
 	gosub isTotalsTab
 	if eventFrom$="OPE_INVHDR.AOPT-RTAX" or (num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 and 
-:		(isTotalsTab or pos(eventFrom$="OPE_INVHDR.BWAR:OPE_INVHDR.AOPT-CASH:OPE_INVHDR.AOPT-PRNT")))
+:		(isTotalsTab or pos(eventFrom$="OPE_INVHDR.ADIS:OPE_INVHDR.BWAR:OPE_INVHDR.AOPT-CASH:OPE_INVHDR.AOPT-PRNT")))
+
+		rem --- Get current form data for tax calculation
+		ordhdr_dev=fnget_dev("OPE_INVHDR")
+		ordhdr_tpl$=fnget_tpl$("OPE_INVHDR")
+		dim ordhdr_rec$:ordhdr_tpl$
+		ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
+		ordhdr_rec$ = field(ordhdr_rec$)
 
 		rem --- Using a sales tax service?
 		use_tax_service=0
@@ -4128,12 +4156,6 @@ rem ==========================================================================
 			rem --- Use sales tax service
 			callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT",str(disc_amt),1)
 			callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT",str(freight_amt),1)
-
-			rem --- Get current form data for tax calculation
-			ordhdr_tpl$=fnget_tpl$("OPE_INVHDR")
-			dim ordhdr_rec$:ordhdr_tpl$
-			ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
-			ordhdr_rec$ = field(ordhdr_rec$)
 
 			salesTax!=callpoint!.getDevObject("salesTaxObject")
 			success=0
@@ -4188,10 +4210,7 @@ rem ==========================================================================
 				taxAmount_fnote!.setVisible(0)
 
 				rem --- Force write if not in Edit mode.
-				if !callpoint!.isEditMode() then
-					gosub get_disk_rec
-					gosub forceWrite
-				endif
+				if !callpoint!.isEditMode() then gosub forceWrite
 			endif
 		endif
 
@@ -4330,7 +4349,7 @@ rem IN: customer_id$
 rem IN: order_no$
 rem IN: ar_inv_no$
 rem IN: ordhdr_dev
-rem IN: ordhdr_rec$ from earlier get_disk_rec
+rem IN: ordhdr_rec$ from earlier util.copyFields(ordhdr_tpl$, callpoint!)
 rem ==========================================================================
 
 	rem --- Force write if not in Edit mode.
