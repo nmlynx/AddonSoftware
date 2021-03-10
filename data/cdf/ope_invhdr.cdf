@@ -4519,6 +4519,18 @@ rem ==========================================================================
 			netSales!=callpoint!.getControl("<<DISPLAY>>.NET_SALES")
 			netSales!.setText(cvs(callpoint!.getColumnData("<<DISPLAY>>.NET_SALES"),2))
 		endif
+
+		rem --- Attempt to void any previously successful sales tax service transaction for this invoice
+		if callpoint!.getDevObject("use_tax_service")="Y" then
+			ar_inv_no$=callpoint!.getColumnData("OPE_INVHDR.AR_INV_NO")
+			salesTax!=callpoint!.getDevObject("salesTaxObject")
+			if cvs(callpoint!.getColumnData("OPE_INVHDR.CREDIT_INVOICE"),2)="" then
+				transType$="SalesInvoice"
+			else
+				transType$="ReturnInvoice"
+			endif
+			salesTax!.voidTransaction(customer_id$, order_no$, ar_inv_no$, transType$, err=*next)
+		endif
 	endif
 
 	return
