@@ -18,12 +18,17 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 		switch notice.code
 			case 2; rem --- ON_TAB_SELECT
 				gosub isTotalsTab
-				if isTotalsTab and num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 and
-:				cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2)<>"" and
-:				cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2)<>"" then
-					disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
-					freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
-					gosub calculate_tax
+				if isTotalsTab then
+					if num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 then
+						taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
+						taxAmount_warn!.setVisible(1)
+						if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2)<>"" and
+:						cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2)<>"" then
+							disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+							freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+							gosub calculate_tax
+						endif
+					endif
 				else
 					taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 					taxAmount_warn!.setVisible(0)
@@ -173,15 +178,17 @@ rem --- Capture current totals so we can tell later if they were changed in the 
 
 rem --- Show TAX_AMOUNT footnote warning if sales tax calculation was previously deferred
 	taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+        taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 	if num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 then
 		taxAmount_fnote!.setVisible(1)
+		gosub isTotalsTab
+		if isTotalsTab then taxAmount_warn!.setVisible(1)
 
 		rem - Update sales tax calculation to use SalesInvoice for sales tax service
 		disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 		gosub calculate_tax
 	else
-	        taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 		taxAmount_warn!.setVisible(0)
 		taxAmount_fnote!.setVisible(0)
 	endif
@@ -4427,8 +4434,13 @@ rem ==========================================================================
 
 			taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 			taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
-			taxAmount_warn!.setVisible(1)
 			taxAmount_fnote!.setVisible(1)
+			gosub isTotalsTab
+			if isTotalsTab then
+				taxAmount_warn!.setVisible(1)
+			else
+				taxAmount_warn!.setVisible(0)
+			endif
 
 			msg_id$="ENTRY_REC_LOCKED"
 			gosub disp_message
