@@ -121,10 +121,10 @@ rem --- Retrieve parameter records
     
     find record (aps_report,key=firm_id$+"AP02",err=std_missing_params) aps_report$
 
-	comp_addrLine_len = 30
+	comp_addrLine_len = 40
     comp$=aps_report.addr_line_1$+aps_report.addr_line_2$+aps_report.city$+aps_report.state_code$+aps_report.zip_code$    
-    call "adc_address.aon",comp$,24,3,9,comp_addrLine_len
-    comp$=aps_report.name$+comp$
+    call "adc_address.aon",comp$,30,3,9,comp_addrLine_len
+    comp$=pad(aps_report.name$,comp_addrLine_len)+comp$
 
     call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(aps_report.phone_no$,2),"",phone_mask$
     comp_phone$=cvs(aps_report.phone_no$,2)

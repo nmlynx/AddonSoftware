@@ -321,7 +321,7 @@ rem --- Check From Address
     aps01b_key$=firm_id$+"AP02"
     find record (aps01b_dev,key=aps01b_key$,err=std_missing_params) aps01b$
     ap_address$=aps01b.addr_line_1$+aps01b.addr_line_2$+aps01b.city$+aps01b.state_code$+aps01b.zip_code$
-    call pgmdir$+"adc_address.aon",ap_address$,24,3,9,35
+    call pgmdir$+"adc_address.aon",ap_address$,30,3,9,35
 
     if cvs(ap_address$(71),2)<>"" then
         stub_address$=ap_address$(71)

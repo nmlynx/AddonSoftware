@@ -251,7 +251,7 @@ rem --- Done with line item or line messages, wrap up with header level message 
         find record (apm_vendaddr,key=firm_id$+vendor_id$+hdr_ship_from$,dom=*next) apm_vendaddr$
 
         temp_addr$= apm_vendaddr.addr_line_1$ + apm_vendaddr.addr_line_2$ + apm_vendaddr.city$ + apm_vendaddr.state_code$ + apm_vendaddr.zip_code$ + apm_vendaddr.cntry_id$
-        call pgmdir$+"adc_address.aon",temp_addr$,24,3,9,shipfrom_addrLine_len
+        call pgmdir$+"adc_address.aon",temp_addr$,30,3,9,shipfrom_addrLine_len
         shipfrom$(1,shipfrom_addrLine_len)=shipfrom_prompt$+apm_vendaddr.name$
         shipfrom$(shipfrom_addrLine_len+1)=temp_addr$
         

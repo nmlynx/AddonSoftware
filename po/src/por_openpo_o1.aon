@@ -591,10 +591,10 @@ brnch8:
 rem --- Print dropship info if applicable
 
     if dropship$="Y" and ar$<>"N"
-        dim dropaddr$(120)
+        dropaddr$=""
         dropname$=poe02a.ds_name$
         dropaddr$=poe02a.ds_addr_line_1$+poe02a.ds_addr_line_2$+poe02a.ds_addr_line_3$+poe02a.ds_city$+poe02a.ds_state_cd$+poe02a.ds_zip_code$
-        call pgmdir$+"adc_address.aon",dropaddr$,24,4,9,30
+        call pgmdir$+"adc_address.aon",dropaddr$,30,4,9,30
 
         xwk=fnblank(14)
 

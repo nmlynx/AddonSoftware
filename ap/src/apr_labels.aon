@@ -160,7 +160,7 @@ rem --- Read next Vendor Master (apm-01) record
                 if printed_across>=across gosub label
                 printed_across=printed_across+1
                 address$=apm01a.addr_line_1$+apm01a.addr_line_2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$
-                call pgmdir$+"adc_address.aon",address$,24,3,9,30
+                call pgmdir$+"adc_address.aon",address$,30,3,9,30
                 label$(width*(printed_across-1)+1,width)=apm01a.vendor_name$
                 label$(width*(across+printed_across-1)+1,width)=address$(1,30)
                 label$(width*(2*across+printed_across-1)+1,width)=address$(31,30)
