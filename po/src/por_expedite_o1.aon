@@ -373,7 +373,7 @@ brnch6:
         dropname$=poe02a.ds_name$
         dropaddr$=poe02a.ds_addr_line_1$+poe02a.ds_addr_line_2$+poe02a.ds_addr_line_3$+
 :           poe02a.ds_city$+poe02a.ds_state_cd$+poe02a.ds_zip_code$
-        call pgmdir$+"adc_address.aon",dropaddr$,24,4,9,30
+        call pgmdir$+"adc_address.aon",dropaddr$,30,4,9,30
 
         xwk = fnblank(14)
         OutVect!.addItem(Translate!.getTranslation("AON_DROPSHIP_TO_CUSTOMER:_")+fnmask$(poe02a.customer_id$,customask$)+Translate!.getTranslation("AON_,_ORDER:_") + poe02a.order_no$)
@@ -405,7 +405,7 @@ brnch6:
 
         if cvs(dropaddr$(91,30),3)<>""
             xwk = fnblank(2)
-            OutVect!.addItem(custaddr$(91,30))
+            OutVect!.addItem(dropaddr$(91,30))
             xwk=fnblank(9)
             l=l+1
         endif

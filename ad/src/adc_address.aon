@@ -15,9 +15,7 @@ rem --- ZIP      : Length of zip/postal code string (input)
 rem --- WIDTH    : Width of address line desired in output
 
 rem --- ADDRESS$ is a block of address lines, WIDTH_IN by LINES long.  The
-rem --- ZIP code is outside this block.  The last two characters of the
-rem --- block (not including the ZIP) are considered the state if they
-rem --- aren't blank.
+rem --- STATE and ZIP are outside this block. 
 
 rem --- Country has been added at ZIP+1.  If it exists, it is placed under
 rem --- the line where the ZIP code is added.
@@ -30,18 +28,10 @@ rem --- Going out, ADDRESS$ is formatted WIDTH by LINES+1 long.
 
 rem --- Initializations
 
+    width_in=30; rem --- as of v21, all address and city fields are 30 characters
+    block=width_in*lines
     size=width*(lines+1)
     dim buffer$(size)
-
-rem --- Format City/State
-
-    block=width_in*lines
-    state$=address$(block-1,2)
-    address$(block-1,2)=""
-    if state$="  " goto fill_buffer
-    pt=pos(" "<>address$(1,block-2),-1)
-    if pt<block-3 address$(pt+1,4)=", "+state$ 
-:            else address$(block-1,2)=state$
 
 fill_buffer: rem --- Put non-blank address lines into buffer
 
@@ -53,9 +43,10 @@ fill_buffer: rem --- Put non-blank address lines into buffer
         endif
     next i
 
-rem --- Format ZIP code
+rem --- Get STATE and ZIP out of incoming address$ and format ZIP
 
-    zip$=address$(block+1,zip)
+    state$=address$(block+1,2)
+    zip$=address$(block+3,zip)
     call stbl("+DIR_SYP")+"bac_getmask.bbj","P",cvs(zip$,2),"",postal_mask$
     postal$=cvs(zip$,2)
     postal$=str(postal$:postal_mask$,err=*next)
@@ -67,15 +58,15 @@ rem --- Find last non-blank line (or last line if all are blank)
     next ll
     ll=size-width+1
 
-zipcode: rem --- Will the ZIP code fit on this line?
+zipcode: rem --- Will the STATE and ZIP code fit on this line?
 
     last$=cvs(buffer$(ll,width),2)
-    if width>=len(last$+"  "+postal$) buffer$(ll,width)=last$+"  "+postal$ 
-:                             else ll=ll+width,buffer$(ll)=postal$
+    if width>=len(last$+" "+state$+"  "+postal$) buffer$(ll,width)=last$+" "+state$+"  "+postal$ 
+:                             else ll=ll+width,buffer$(ll)=state$+"  "+postal$
 
 rem --- Add country if it exists
 
-    country$=address$(block+zip+1)
+    country$=address$(block+2+zip+1)
     if country$="" goto done
     if ll+width<=size ll=ll+width; rem "Next line, if possible
     if cvs(buffer$(ll),1)<>"" buffer$(ll)=cvs(buffer$(ll),2)+"  "+country$ 

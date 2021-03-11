@@ -122,20 +122,20 @@ rem --- Process SQL results
 		aptype_vend_pagenum$=  read_tpl.chk_pagenum$
 		
 		rem --- Vendor Address
-			dim address$(4*35)
+			address$=""
 		   
 			find record (apm01_dev,key=firm_id$+vendor_id$,dom=*next) apm01a$
-			address$(1)=apm01a.addr_line_1$+apm01a.addr_line_2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$+apm01a.cntry_id$
+			address$=apm01a.addr_line_1$+apm01a.addr_line_2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$+apm01a.cntry_id$
 			vend_name$= apm01a.vendor_name$
 			start_block = 1
 
 			if start_block
 				find record (apm08_dev,key=firm_id$+vendor_id$,dom=*endif) apm08a$
-				address$(1)= apm08a.addr_line_1$+apm08a.addr_line2$+apm08a.city$+apm08a.state_code$+apm08a.zip_code$+apm08a.cntry_id$
+				address$= apm08a.addr_line_1$+apm08a.addr_line2$+apm08a.city$+apm08a.state_code$+apm08a.zip_code$+apm08a.cntry_id$
 				vend_name$=  apm08a.vendor_name$
 			endif
 			
-			call pgmdir$+"adc_address.aon",address$,24,3,9,35
+			call pgmdir$+"adc_address.aon",address$,30,3,9,35
 			 
 		rem --- Send data to out result set
 			data! = rs!.getEmptyRecordData()

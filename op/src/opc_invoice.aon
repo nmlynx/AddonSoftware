@@ -251,16 +251,16 @@ rem --- Parameters (company addresses)
 rem --- Company addresses (AR and Remit To)
 
 	max_remitAddr_lines = 4
-	remit_addrLine_len = 30
+	remit_addrLine_len = 40
 	remit$=ars01b.remit_addr_1$+ars01b.remit_addr_2$+ars01b.remit_city$+ars01b.remit_state$+ars01b.remit_zip$
-    call pgmdir$+"adc_address.aon",remit$,24,3,9,remit_addrLine_len
-    remit$=ars01b.remit_name$+remit$
+    call pgmdir$+"adc_address.aon",remit$,30,3,9,remit_addrLine_len
+    remit$=pad(ars01b.remit_name$,remit_addrLine_len)+remit$
 
 	max_compAddr_lines = 4
-	comp_addrLine_len = 30
+	comp_addrLine_len = 40
 	comp$=ars01b.addr_line_1$+ars01b.addr_line_2$+ars01b.city$+ars01b.state_code$+ars01b.zip_code$
-    call pgmdir$+"adc_address.aon",comp$,24,3,9,comp_addrLine_len
-    comp$=ars01b.name$+comp$
+    call pgmdir$+"adc_address.aon",comp$,30,3,9,comp_addrLine_len
+    comp$=pad(ars01b.name$,comp_addrLine_len)+comp$
 
 rem --- Initialize Data
 

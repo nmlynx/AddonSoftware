@@ -552,11 +552,11 @@ rem --- Print dropship info if applicable
 
     if dropship$="Y" and ar$<>"N"
 
-        dim dropaddr$(120)
+        dropaddr$=""
 
         dropname$=poe01a.ds_name$
         dropaddr$=poe01a.ds_addr_line_1$+poe01a.ds_addr_line_2$+poe01a.ds_addr_line_3$+poe01a.ds_city$+poe01a.ds_state_cd$+poe01a.ds_zip_code$
-        call pgmdir$+"adc_address.aon",dropaddr$,24,4,9,30
+        call pgmdir$+"adc_address.aon",dropaddr$,30,4,9,30
 
         OutVect!.addItem(Translate!.getTranslation("AON_DROPSHIP_TO_CUSTOMER:_")+fnmask$(poe01a.customer_id$(1,custlen),customask$))
         OutVect!.addItem(Translate!.getTranslation("AON_ORDER:_")+poe01a.order_no$)
@@ -583,7 +583,7 @@ rem --- Print dropship info if applicable
         endif
 
         if cvs(dropaddr$(91,30),3)<>""
-            OutVect!.addItem(custaddr$(91,30))
+            OutVect!.addItem(dropaddr$(91,30))
             xwk=fnblank(8)
             let l=l+1
         endif
