@@ -42,6 +42,7 @@ rem --- Validate values entered for the attributes
 			break
 		case attr$ = "server"
 		case attr$ = "userCompanyID"
+		case attr$ = "companyCode"
 			rem --- Cannot change the value if there are open orders or open invoices
 			gosub validateAttrValueChange
 			break

@@ -20,3 +20,17 @@ rem --- See if this document/recipient is set up in Addon Report Control
 	rem --- gets instantiated again in opc_invoice since that program needs to handle both on-demand and batch
 	reportControl!.destroy()
 	reportControl! = null()
+
+rem --- How did this form end?
+	callpoint!.setDevObject("oprInvDemand_end","BEND")
+
+[[OPR_INV_DEMAND.ASVA]]
+rem --- Form ended via ASVA. User did Run Process (F5)
+	callpoint!.setDevObject("oprInvDemand_end","ASVA")
+
+[[OPR_INV_DEMAND.BEND]]
+rem --- Form ended via BEND. User did Close (Ctrl+F4)
+	callpoint!.setDevObject("oprInvDemand_end","BEND")
+
+
+

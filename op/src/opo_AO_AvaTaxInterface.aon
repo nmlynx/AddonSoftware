@@ -36,6 +36,8 @@ rem --- Use statements and declares
     
     use com.fasterxml.jackson.databind.ObjectMapper
     use com.fasterxml.jackson.databind.SerializationFeature
+
+    use com.google.gson.JsonParser
     
     use net.avalara.avatax.rest.client.AvaTaxClient
     use net.avalara.avatax.rest.client.FetchResult
@@ -45,6 +47,7 @@ rem --- Use statements and declares
     use net.avalara.avatax.rest.client.models.AddressLocationInfo
     use net.avalara.avatax.rest.client.models.CertificateModel
     use net.avalara.avatax.rest.client.models.CommitTransactionModel
+    use net.avalara.avatax.rest.client.models.CreateOrAdjustTransactionModel
     use net.avalara.avatax.rest.client.models.CreateTransactionModel
     use net.avalara.avatax.rest.client.models.EntityUseCodeModel
     use net.avalara.avatax.rest.client.models.ExemptionStatusModel
@@ -80,6 +83,7 @@ rem --- Use statements and declares
         field protected BBjNumber devOptInvHdr = -1
         field protected BBjNumber devOptSlsTaxTrans = -1
         field protected BBjNumber devTaxSvcCdSource = -1
+        field protected BBjString companyCode$ = ""
         field protected BBjString firmID$
         field protected BBjString licenseKey$ = ""
         field protected BBjNumber logClient = 0
@@ -263,11 +267,15 @@ rem --- Use statements and declares
                         break
                     case svcConfigAttr$ = "userCompanyID"
                         #userCompanyID$=svcConfigValue$
-                        if #userCompanyID$="" then missingParams$=missingParams$+"licenseKey  "
+                        if #userCompanyID$="" then missingParams$=missingParams$+"userCompanyID  "
+                        break
+                    case svcConfigAttr$ = "companyCode"
+                        #companyCode$=svcConfigValue$
+                        if #companyCode$="" then missingParams$=missingParams$+"companyCode  "
                         break
                     case svcConfigAttr$ = "testMode"
                         #testMode$=svcConfigValue$
-                        if #testMode$="" then missingParams$=missingParams$+"licenseKey  "
+                        if #testMode$="" then missingParams$=missingParams$+"testMode  "
                         break
                     case svcConfigAttr$ = "loggingEndDate"
                         loggingEndDate$=svcConfigValue$
@@ -346,8 +354,11 @@ AO_AvaTaxInterface_error:rem --- Method error trap/handler (11Oct2017)
             ypos=int((form!.getHeight()-height)/2)
 
             rem --- Show busy/working image
-            nxt_ctlID=util.getNextControlID()
-            #busyImage!=form!.addImageCtrl(nxt_ctlID,xpos,ypos,width,height,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+            if #busyImage!=null() then
+                nextCtrlID=util.getNextControlID()
+                #busyImage!=form!.addImageCtrl(nextCtrlID,xpos,ypos,width,height,System.getProperty("basis.BBjHome")+"/utils/reporting/bbjasper/images/CreatingReport.gif")
+            endif
+            #busyImage!.setVisible(1)
 
             methodret
             
@@ -372,8 +383,8 @@ busyImageStart_error:rem --- Method error trap/handler (11Oct2017)
         method public void busyImageStop()
             seterr busyImageStop_error
             
-            rem --- Remove busy/working image from progress meter
-            #busyImage!.destroy(err=*next)
+            rem --- Hide busy/working image
+            #busyImage!.setVisible(0)
 
             methodret
             
@@ -386,6 +397,179 @@ busyImageStop_error:rem --- Method error trap/handler (11Oct2017)
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
     endif
     call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Have the sales tax service calculate the sales tax for given transaction.
+        rem  * 
+        rem  * @param BBjString ope_ordhdr record
+        rem  * @param BBjString AvaTax transaction type
+        rem  *
+        rem  * @return Properties tax properties (tax_amount and taxable_amt)
+        rem  */
+        method public Properties calculateTax(BBjString opeOrdHdrRec$, BBjString transType$)
+            seterr calculateTax_error
+            dim optInvHdr$:#tplOptInvHdr$
+            optInvHdr$=opeOrdHdrRec$
+
+            rem --- Get Ship-To address
+            shiptoAddr!=#getShipTo(opeOrdHdrRec$)
+            addrTo!=new AddressLocationInfo()
+            addrTo!.setLine1(shiptoAddr!.getProperty("AddrLine1"))
+            addrTo!.setLine2(shiptoAddr!.getProperty("AddrLine2"))
+            addrTo!.setLine3(shiptoAddr!.getProperty("AddrLine3"))
+            addrTo!.setCity(shiptoAddr!.getProperty("City"))
+            addrTo!.setRegion(shiptoAddr!.getProperty("StateCode"))
+            addrTo!.setPostalCode(shiptoAddr!.getProperty("ZipCode"))
+            addrTo!.setCountry(shiptoAddr!.getProperty("CountryID"))
+
+            rem --- Initialize AvaTax transaction
+            createTransModel!=new CreateTransactionModel()
+            createTransModel!.setCompanyCode(#companyCode$)
+            createTransModel!.setCustomerCode(#firmID$+optInvHdr.customer_id$)
+            switch (BBjAPI().TRUE)
+                case transType$ = "SalesInvoice"
+                    createTransModel!.setType(DocumentType.SalesInvoice)
+                break
+                case transType$ = "SalesOrder"
+                    createTransModel!.setType(DocumentType.SalesOrder)
+                break
+            swend
+            yyyyMMdd!=new SimpleDateFormat("yyyyMMdd")
+            createTransModel!.setDate(yyyyMMdd!.parse(optInvHdr.invoice_date$))
+            createTransModel!.setCode(optInvHdr.customer_id$+optInvHdr.order_no$+optInvHdr.ar_inv_no$);rem --- firm, customer, order#, invoice#
+            createTransModel!.setDiscount(#getBigDecimal(optInvHdr.discount_amt))
+            exemption!=#updateCustomerExemption(optInvHdr.customer_id$,optInvHdr.shipto_type$,optInvHdr.shipto_no$, addrTo!)
+            createTransModel!.setEntityUseCode(exemption!.getProperty("entity_use_cd"))
+            createTransModel!.setExemptionNo(exemption!.getProperty("exempt_no"))
+
+            rem --- Get list of line items on the order
+            lineItemList!=new ArrayList()
+            tripKey$=#firmID$+optInvHdr.ar_type$+optInvHdr.customer_id$+optInvHdr.order_no$+optInvHdr.ar_inv_no$
+            read(#devOptInvDet,key=tripKey$,dom=*next)
+            while 1
+                thisKey$=key(#devOptInvDet,end=*break)
+                if pos(tripKey$=thisKey$)<>1 then break
+                dim optInvDet$:#tplOptInvDet$
+                readrecord(#devOptInvDet)optInvDet$
+                
+                rem --- Get Sales Tax Service code
+                dim opcLineCode$:#tplOpcLineCode$
+                readrecord(#devOpcLineCode,key=#firmID$+optInvDet.line_code$,dom=*next)opcLineCode$
+                if opcLineCode.line_type$="M" then continue
+                if pos(opcLineCode.line_type$="NO") then
+                    itemId$=optInvDet.line_code$
+                    itemDesc$=cvs(optInvDet.order_memo$,3)
+                    taxSvcCd$=cvs(opcLineCode.tax_svc_cd$,3)
+                else
+                    itemId$=optInvDet.item_id$
+                    dim ivmItemMast$:#tplIvmItemMast$
+                    readrecord(#devIvmItemMast,key=#firmID$+optInvDet.item_id$,dom=*next)ivmItemMast$
+                    itemDesc$=cvs(ivmItemMast.item_desc$,3)
+                    if cvs(ivmItemMast.tax_svc_cd$,2)<>"" then
+                        taxSvcCd$=cvs(ivmItemMast.tax_svc_cd$,3)
+                    else
+                        switch (BBjAPI().TRUE)
+                            case #taxSvcCdSource$ = "C"
+                                sourceKey$=#firmID$+ivmItemMast.item_class$
+                            break
+                            case #taxSvcCdSource$= "P"
+                                sourceKey$=#firmID$+"A"+ivmItemMast.product_type$
+                            break
+                            case #taxSvcCdSource$ = "T"
+                                sourceKey$=#firmID$+ivmItemMast.item_type$
+                            break
+                            case default
+                                sourceKey$=#firmID$+"X"+"ZZZ"
+                            break
+                        swend
+                        dim sourceTpl$:#tplTaxSvcCdSource$
+                        readrecord(#devTaxSvcCdSource,key=sourceKey$,dom=*next)sourceTpl$
+                        taxSvcCd$=sourceTpl.tax_svc_cd$
+                    endif
+                endif
+
+                rem --- Get Ship-From address
+                addrFrom!=new AddressLocationInfo()
+                if opcLineCode.dropship$="N" then
+                    shipfromAddress!=#getShipFrom(optInvDet.warehouse_id$)
+                    addrFrom!.setLine1(shipfromAddress!.getProperty("AddrLine1"))
+                    addrFrom!.setLine2(shipfromAddress!.getProperty("AddrLine2"))
+                    addrFrom!.setLine3(shipfromAddress!.getProperty("AddrLine3"))
+                    addrFrom!.setCity(shipfromAddress!.getProperty("City"))
+                    addrFrom!.setRegion(shipfromAddress!.getProperty("StateCode"))
+                    addrFrom!.setPostalCode(shipfromAddress!.getProperty("ZipCode"))
+                    addrFrom!.setCountry(shipfromAddress!.getProperty("CountryID"))
+                else
+                    dim arsReport$:#tplArsReport$
+                    readrecord(#devArsReport,key=#firmID$+"AR02",dom=*next)arsReport$
+                    addrFrom!.setLine1(cvs(arsReport.addr_line_1$,3))
+                    addrFrom!.setLine2(cvs(arsReport.addr_line_2$,3))
+                    addrFrom!.setCity(cvs(arsReport.city$,3))
+                    addrFrom!.setRegion(cvs(arsReport.state_code$,3))
+                    addrFrom!.setPostalCode(cvs(arsReport.zip_code$,3))
+                endif
+                addrsModel!=new AddressesModel()
+                addrsModel!.setShipTo(addrTo!)
+                addrsModel!.setShipFrom(addrFrom!)
+                lineItemModel!=new LineItemModel()
+                lineItemModel!.setNumber(optInvDet.line_no$)
+                lineItemModel!.setAmount(#getBigDecimal(optInvDet.taxable_amt))
+                lineItemModel!.setQuantity(#getBigDecimal(optInvDet.qty_shipped))
+                lineItemModel!.setTaxCode(taxSvcCd$)         
+                lineItemModel!.setItemCode(itemId$)
+                lineItemModel!.setDescription(itemDesc$)
+                if optInvHdr.discount_amt<>0 then lineItemModel!.setDiscounted(new Boolean("TRUE"))
+                lineItemModel!.setAddresses(addrsModel!)            
+                lineItemList!.add(lineItemModel!)
+            wend
+
+            rem --- Add freight to list of line items
+            if optInvHdr.freight_amt<>0 and addrTo!<>null() then
+                dim arcShipViaCode$:#tplArcShipViaCode$
+                readrecord(#devArcShipViaCode,key=#firmID$+optInvHdr.ar_ship_via$,dom=*next)arcShipViaCode$
+                addrsModel!=new AddressesModel()
+                addrsModel!.setShipTo(addrTo!)
+                lineItemModel!=new LineItemModel()
+                lineItemModel!.setNumber("FRT")
+                lineItemModel!.setAmount(#getBigDecimal(optInvHdr.freight_amt))
+                lineItemModel!.setQuantity(new BigDecimal(1))
+                lineItemModel!.setTaxCode(cvs(arcShipViaCode.freight_taxcd$,3))            
+                lineItemModel!.setItemCode("Freight")
+                lineItemModel!.setAddresses(addrsModel!)
+                lineItemList!.add(lineItemModel!)          
+            endif
+
+            rem --- Get sales tax and taxable amounts
+            createTransModel!.setLines(lineItemList!)
+            createAdjustTransModel!=new CreateOrAdjustTransactionModel()
+            createAdjustTransModel!.setCreateTransactionModel(createTransModel!)
+            #busyImageStart()
+            transactionModel!=#avaTaxClient!.createOrAdjustTransaction("", createAdjustTransModel!)
+            #busyImageStop()
+            taxProps! = new Properties()
+            taxProps!.setProperty("tax_amount",transactionModel!.getTotalTax().toString())
+            taxProps!.setProperty("taxable_amt",transactionModel!.getTotalTaxable().toString())
+
+            methodret taxProps!
+            
+calculateTax_error:rem --- Modified method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+
+            rem --- Stop busy/working image
+            #busyImageStop()
+
     if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$)<>0 retry
     x$=stbl("+THROWN_ERR","TRUE")   
@@ -449,6 +633,42 @@ connectClient_error:rem --- Modified method error trap/handler (11Oct2017)
         methodend
 
         rem /**
+        rem  * Convert a BBjNumber object to a Java BigDecimal object.
+        rem  * 
+        rem  * @param BBjNumber number!
+        rem  *
+        rem  * @return BigDecimal
+        rem  */
+        method protected BigDecimal getBigDecimal(BBjNumber number!)
+            seterr getBigDecimal_error
+            bigDec!=new BigDecimal(number!)
+
+            number$=number!.toString()
+            decPos=pos("."=number$)
+            if decPos=0 then
+                scale=0
+            else
+                scale=len(number$(decPos))-1
+            endif
+
+            methodret bigDec!.setScale(scale,1)
+            
+getBigDecimal_error:rem --- Method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
         rem  * Get name for given AvaTax Entity Use Code.
         rem  * 
         rem  * @param BBjString entityUseCd$
@@ -484,6 +704,157 @@ getEntityUseCdName_error:rem --- Modified method error trap/handler (11Oct2017)
             rem --- Stop busy/working image
             #busyImageStop()
 
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Get Ship-From address for given warehouse.
+        rem  *
+        rem  * @param BBjString warehouse ID
+        rem  *
+        rem  * @return Properties Ship-From address properties
+        rem  */
+        method protected Properties getShipFrom(BBjString warehouseID$)
+            seterr getShipFrom_error
+
+            if whseAddrs! = null() then whseAddrs!=new HashMap()
+            if whseAddrs!.containsKey(warehouseID$) then
+                rem --- Use Ship-From address previously retrieved for this warehouse
+                shipfromAddress!=whseAddrs!.get(warehouseID$)
+            else
+                rem --- Initialize new Ship-From address
+                shipfromAddress!=new Properties()
+                shipfromAddress!.setProperty("AddrLine1","")
+                shipfromAddress!.setProperty("AddrLine2","")
+                shipfromAddress!.setProperty("AddrLine3","")
+                shipfromAddress!.setProperty("City","")
+                shipfromAddress!.setProperty("StateCode","")
+                shipfromAddress!.setProperty("CountryID","")
+                shipfromAddress!.setProperty("ZipCode","")
+
+                rem --- Get Ship-From address for this warehouse
+                dim ivcWhseCode$:#tplIvcWhseCode$
+                readrecord(#devIvcWhseCode,key=#firmID$+"C"+warehouseID$,dom=*next)ivcWhseCode$
+                if ivcWhseCode.warehouse_id$=warehouseID$ then
+                    shipfromAddress!.setProperty("AddrLine1",cvs(ivcWhseCode.addr_line_1$,3))
+                    shipfromAddress!.setProperty("AddrLine2",cvs(ivcWhseCode.addr_line_2$,3))
+                    shipfromAddress!.setProperty("AddrLine3",cvs(ivcWhseCode.addr_line_3$,3))
+                    shipfromAddress!.setProperty("ZipCode",cvs(ivcWhseCode.zip_code$,3))
+                    shipfromAddress!.setProperty("City",cvs(ivcWhseCode.city$,3))
+                    shipfromAddress!.setProperty("StateCode",cvs(ivcWhseCode.state_code$,3))
+                endif
+
+                rem --- Get Zip Code location
+                if zipCode$<>"" then
+                    zipcodeAddress! = null()
+                    success=0
+                    zipcodeAddress! = #resolveZipCode(zipCode$,err=*next); success=1
+                    if success and zipcodeAddress!<>null() then
+                        shipfromAddress!.setProperty("City", zipcodeAddress!.getProperty("City"))
+                        shipfromAddress!.setProperty("StateCode", zipcodeAddress!.getProperty("StateCode"))
+                        shipfromAddress!.setProperty("CountryID", zipcodeAddress!.getProperty("CountryID"))
+                    endif
+                endif
+            endif
+
+            methodret shipfromAddress!
+            
+getShipFrom_error:rem --- Method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Get Ship-To address for given order.
+        rem  * 
+        rem  * @param BBjString ope_ordhdr record
+        rem  *
+        rem  * @return Properties Ship-To address properties
+        rem  */
+        method protected Properties getShipTo(BBjString opeOrdHdrRec$)
+            seterr getShipTo_error
+            dim optInvHdr$:#tplOptInvHdr$
+            optInvHdr$=opeOrdHdrRec$
+
+            rem --- Get source of ship-to address used for this order
+            shiptoAddress!=new Properties()
+            shiptoAddress!.setProperty("AddrLine1","")
+            shiptoAddress!.setProperty("AddrLine2","")
+            shiptoAddress!.setProperty("AddrLine3","")
+            shiptoAddress!.setProperty("City","")
+            shiptoAddress!.setProperty("StateCode","")
+            shiptoAddress!.setProperty("CountryID","")
+            shiptoAddress!.setProperty("ZipCode","")
+
+            rem --- Get source of ship-to address used for this order
+            switch pos(optInvHdr.shipto_type$="BSM")
+                case 0; rem --- none
+                break
+                case 1; rem --- Bill-To
+                    shiptoDev=#devArmCustMast
+                    dim shiptoTpl$:#tplArmCustMast$
+                    shiptoKey$=#firmID$+optInvHdr.customer_id$
+                break
+                case 2; rem --- Ship-To
+                    shiptoDev=#devArmCustShip
+                    dim shiptoTpl$:#tplArmCustShip$
+                    shiptoKey$=#firmID$+optInvHdr.customer_id$+optInvHdr.shipto_no$
+                break
+                case 3; rem --- Manual
+                    shiptoDev=#devOpeOrdShip
+                    dim shiptoTpl$:#tplOpeOrdShip$
+                    shiptoKey$=#firmID$+optInvHdr.customer_id$+optInvHdr.order_no$+optInvHdr.ar_inv_no$
+                break
+            swend
+            if pos(optInvHdr.shipto_type$="BSM") then
+                readrecord(shiptoDev,key=shiptoKey$,dom=*next)shiptoTpl$
+                shiptoAddress!.setProperty("AddrLine1",cvs(shiptoTpl.addr_line_1$,3))
+                shiptoAddress!.setProperty("AddrLine2",cvs(shiptoTpl.addr_line_2$,3))
+                shiptoAddress!.setProperty("AddrLine3",cvs(shiptoTpl.addr_line_3$,3))
+                zipCode$=cvs(shiptoTpl.zip_code$,3)
+                shiptoAddress!.setProperty("ZipCode",zipCode$)
+                shiptoAddress!.setProperty("City",cvs(shiptoTpl.city$,3))
+                shiptoAddress!.setProperty("StateCode",cvs(shiptoTpl.state_code$,3))
+                shiptoAddress!.setProperty("CountryID",cvs(shiptoTpl.cntry_id$,3))
+            
+                rem --- Get Zip Code location
+                zipcodeAddress! = null()
+                success=0
+                zipcodeAddress! = #resolveZipCode(zipCode$,err=*next); success=1
+                if success and zipcodeAddress!<>null() then
+                    shiptoAddress!.setProperty("City", zipcodeAddress!.getProperty("City"))
+                    shiptoAddress!.setProperty("StateCode", zipcodeAddress!.getProperty("StateCode"))
+                    shiptoAddress!.setProperty("CountryID", zipcodeAddress!.getProperty("CountryID"))
+                endif
+            endif
+
+            rem --- CountryID can NOT be blank for excemptions. Assume US if necessary.
+            if cvs(shiptoAddress!.getProperty("CountryID"),2)="" then shiptoAddress!.setProperty("CountryID", "US")
+
+            methodret shiptoAddress!
+            
+getShipTo_error:rem --- Method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
     if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$)<>0 retry
     x$=stbl("+THROWN_ERR","TRUE")   
@@ -582,7 +953,7 @@ getTaxSvcCdDesc_error:rem --- Modified method error trap/handler (11Oct2017)
 
             methodret Boolean.valueOf(#testMode$)
             
-isTestMode_error:rem --- Modified method error trap/handler (11Oct2017)
+isTestMode_error:rem --- Method error trap/handler (11Oct2017)
     rd_err_text$="", err_num=err
     if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     if err_num=252 then
@@ -591,6 +962,137 @@ isTestMode_error:rem --- Modified method error trap/handler (11Oct2017)
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
     endif
     call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Get address for given Zip Code.
+        rem  * 
+        rem  * @param BBjString zipCode$
+        rem  *
+        rem  * @return Properties Zip Code address properties
+        rem  */
+        method protected Properties resolveZipCode(BBjString zipCode$)
+            seterr resolveZipCode_error
+            zipcodeAddress!=null()
+
+            if len(zipCode$)>=5 then
+                webClient! = new BBWebClient()
+                request! = new BBWebRequest()
+                request!.addHeader("Content-Type",  "application/json")
+                request!.setURI("http://ziptasticapi.com/"+zipCode$)
+                #busyImageStart()
+                response! = webClient!.sendRequest(request!)
+                #busyImageStop()
+                statusCode = response!.getStatusCode()
+                if statusCode=200 then
+                    jsonElement! = new JsonParser().parse(response!.getBody())
+                    if jsonElement!.get("error")=null() then
+                        zipcodeAddress!=new Properties()
+                        zipcodeAddress!.setProperty("City",cvs(jsonElement!.get("city").toString().replace(CHR(34),""),3))
+                        zipcodeAddress!.setProperty("StateCode",cvs(jsonElement!.get("state").toString().replace(CHR(34),""),3))
+                        zipcodeAddress!.setProperty("CountryID",cvs(jsonElement!.get("country").toString().replace(CHR(34),""),3))
+                        zipcodeAddress!.setProperty("ZipCode",cvs(zipCode$,3))
+                    endif
+                endif
+            endif
+
+            methodret zipcodeAddress!
+            
+resolveZipCode_error:rem --- Modified method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+
+            rem --- Stop busy/working image
+            #busyImageStop()
+
+    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+    if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Get current Exemption information for given customer, ship-to type and ship-to number, and
+        rem  * update ARM_CUSTEXMPT information as needed.
+        rem  * 
+        rem  * @param BBjString customer_id$
+        rem  * @param BBjString shipto_type$
+        rem  * @param BBjString shipto_no$
+        rem  * @param AddressLocationInfo addrTo!
+        rem  *
+        rem  * @return Properties Exemption properties
+        rem  */
+        method protected Properties updateCustomerExemption(BBjString customer_id$, BBjString shipto_type$, BBjString shipto_no$, AddressLocationInfo addrTo!)
+            seterr updateCustomerExemption_error
+
+            rem --- Initialize AvaTax customer exemption
+            exemption!=new Properties()
+            exemption!.setProperty("entity_use_cd","")
+            exemption!.setProperty("exempt_no","")
+            exemption!.setProperty("expire_date","")
+
+            rem --- Get AvaTax exemption for this customer
+            companyId!=new Integer(#userCompanyID$)
+            customerCode$=#firmID$+customer_id$
+            country$=addrTo!.getCountry()
+            region$=addrTo!.getRegion()
+            #busyImageStart()
+            exemptStatusModel!=#avaTaxClient!.listValidCertificatesForCustomer(companyId!,customerCode$,country$,region$)
+            #busyImageStop()
+            certModel!=exemptStatusModel!.getCertificate()
+
+            rem --- Update ARM_CUSTEXMPT information as needed
+            if certModel!<>null() and certModel!.getValid() then
+                certId$=certModel!.getId().toString()
+                yyyyMMdd!=new SimpleDateFormat("yyyyMMdd")
+                expirationDate$=yyyyMMdd!.format(certModel!.getExpirationDate())
+                dim armCustExmpt$:#tplArmCustExmpt$
+                readrecord(#devArmCustExmpt,key=#firmID$+customer_id$+shipto_type$+shipto_no$,dom=*next)armCustExmpt$
+                if cvs(armCustExmpt.customer_id$,2)="" then
+                    rem --- Add missing ARM_CUSTEXMPT record
+                    armCustExmpt.firm_id$=#firmID$
+                    armCustExmpt.customer_id$=customer_id$
+                    armCustExmpt.shipto_type$=shipto_type$
+                    armCustExmpt.shipto_no$=shipt_no$
+                    armCustExmpt.entity_use_cd$=""
+                    armCustExmpt.exempt_no$=certId$
+                    armCustExmpt.expire_date$=expirationDate$
+                    writerecord(#devArmCustExmpt)armCustExmpt$
+                else
+                    if cvs(armCustExmpt.exempt_no$,3)<>cvs(certId$,3) and armCustExmpt.expire_date$<expirationDate$
+                        rem --- Update ARM_CUSTEXMPT record with latest certificate ID and expiration date
+                        armCustExmpt.exempt_no$=certId$
+                        armCustExmpt.expire_date$=expirationDate$
+                        writerecord(#devArmCustExmpt)armCustExmpt$
+                    endif
+                endif
+            endif
+
+            methodret exemption!
+            
+updateCustomerExemption_error:rem --- Modified method error trap/handler (11Oct2017)
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+
+            rem --- Stop busy/working image
+            #busyImageStop()
+
     if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$)<>0 retry
     x$=stbl("+THROWN_ERR","TRUE")   

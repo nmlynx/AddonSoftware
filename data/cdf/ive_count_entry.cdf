@@ -403,6 +403,9 @@ print "in read_display"; rem debug
 			read record (physical_dev, end=read_display_eof) physical_rec$
 			if physical_rec.firm_id$<>firm_id$ then goto read_display_eof
 			gosub display_record
+			whse$=physical_rec.warehouse_id$
+			item$=physical_rec.item_id$
+			gosub check_item_whse
 			break
 		
 read_display_eof:
@@ -473,7 +476,7 @@ find_record_new:
 print "record not found"; rem debug
 		user_tpl.entered_flag$ = "Y"
 		user_tpl.lotser_item$  = iff(user_tpl.this_item_lot_ser = 1, "Y", "N")
-		user_tpl.freeze_qty   = "1"
+		user_tpl.freeze_qty   = 1
 	endif
 
 	return

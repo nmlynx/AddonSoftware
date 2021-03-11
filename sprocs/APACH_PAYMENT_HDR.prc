@@ -26,6 +26,12 @@ rem --- Get 'IN' SPROC parameters
 
     chdir barista_wd$
 
+rem --- Set up Encryptor
+	use ::sys/prog/bao_encryptor.bbj::Encryptor
+	encryptor! = new Encryptor()
+	config_id$ = "BANK_ACCT_AUTH"
+	encryptor!.setConfiguration(config_id$)
+
 rem --- Create the memory record set for return to jasper
     dataTemplate$ = "vendor_id:C(1*),vendor_name:C(30),address1:C(30),address2:C(30),address3:C(30),"
     dataTemplate$ = dataTemplate$ + "check_no:C(1*),check_date:C(1*),check_amt:C(1*),"
@@ -93,7 +99,7 @@ rem --- put data into recordset
     data!.setFieldValue("CHECK_DATE", fndate$(read_tpl.check_date$))
     data!.setFieldValue("CHECK_AMT", str(read_tpl.chk_amt:amt_mask$))
     data!.setFieldValue("SENT_TO1", apm01a.bank_name$)
-    bnkAcctNo$=cvs(apm01a.bnk_acct_no$,2)
+    bnkAcctNo$=encryptor!.decryptData(cvs(apm01a.bnk_acct_no$,2))
     if len(bnkAcctNo$)>4 then
         bnkAcctNo$=pad(bnkAcctNo$(len(bnkAcctNo$)-3),len(bnkAcctNo$),"R","x")
     else

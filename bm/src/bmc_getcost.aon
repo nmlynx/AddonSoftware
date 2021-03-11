@@ -40,7 +40,7 @@ rem --- Open/Lock files
 	open_tables$[8]="IVM_ITEMWHSE",open_opts$[8]="OTA"
 	open_tables$[9]="IVM_ITEMTIER",open_opts$[9]="OTA"
 	open_tables$[10]="IVS_PARAMS",open_opts$[10]="OTA"
-	open_tables$[11]="IVW_LFDET",open_opts$[11]="OTA"
+	open_tables$[11]="IVW_LFDET",open_opts$[11]="FT";rem --- don't open, just return channel number if it's already open via caller
 	gosub open_tables
 
 	bmm01_dev=num(open_chans$[1])

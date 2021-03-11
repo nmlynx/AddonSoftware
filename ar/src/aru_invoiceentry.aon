@@ -123,10 +123,10 @@ rem --- Update Customer Detail (arm-02) record
           arm02a.ar_type$=ar_type$
           k$=arm02a.firm_id$+arm02a.customer_id$+arm02a.ar_type$ 
           extract record (arm02_dev,key=k$,dom=*next) arm02a$; rem Advisory Locking
-          if cvs(arm02a.report_date$,2)="" then arm02a.report_date$=sysinfo.system_date$
           aging_date$=arm02a.report_date$
-          if cvs(arm02a.report_type$,2)="" then arm02a.report_type$="I"
           age_by$=arm02a.report_type$
+          if cvs(aging_date$,2)="" then aging_date$=sysinfo.system_date$
+          if cvs(age_by$,2)="" then age_by$=iff(cvs(ars01a.dflt_age_by$,2)="","I",ars01a.dflt_age_by$)
 
           rem --- Determine 30 day aging period dates
           period_dates$=""
@@ -159,6 +159,8 @@ rem --- Generate due date and discount date based on terms
           arm02a.aging_90=arm02a.aging_90+aging[4]
           arm02a.aging_120=arm02a.aging_120+aging[5]
           arm02a.lstinv_date$=invoicedate$
+          arm02a.report_type$=age_by$
+          arm02a.report_date$=aging_date$
           balance=arm02a.aging_future+arm02a.aging_cur+arm02a.aging_30+arm02a.aging_60+arm02a.aging_90+arm02a.aging_120
           arm02a$=field(arm02a$)
           write record (arm02_dev) arm02a$
