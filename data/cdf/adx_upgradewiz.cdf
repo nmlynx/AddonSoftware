@@ -235,6 +235,10 @@ rem --- Validate new database name
 		break
 	endif
 
+rem --- Validate Repository
+	gitAuthID$=cvs(callpoint!.getColumnData("ADX_UPGRADEWIZ.GIT_AUTH_ID"),3)
+	gosub validate_git_auth_id
+
 rem --- Validate base directory for installation
 
 	new_loc$ = callpoint!.getColumnData("ADX_UPGRADEWIZ.BASE_DIR")
@@ -567,6 +571,10 @@ rem --- Validate new database name
 	callpoint!.setUserInput(db_name$)
 	if abort then break
 
+[[ADX_UPGRADEWIZ.GIT_AUTH_ID.AVAL]]
+gitAuthID$=cvs(callpoint!.getUserInput(),3)
+gosub validate_git_auth_id
+
 [[ADX_UPGRADEWIZ.OLD_AON_LOC.AVAL]]
 rem --- Validate old aon install location
 
@@ -685,6 +693,23 @@ rem --- Validate sync backup directory
 	if abort then break
 
 [[ADX_UPGRADEWIZ.<CUSTOM>]]
+rem --- validate_git_auth_id
+rem --- verifies that the Git repository is a fork or clone of the official Addon repository
+rem --- gitAuthID$: the ID of the Git Authentication record in the ADX_GIT_AUTH table.
+validate_git_auth_id: 
+	use ::ado_GitRepoInterface.aon::GitRepoInterface
+	
+	git!=new GitRepoInterface(gitAuthID$)
+	isOfficial=git!.isDescendantOfOfficialRepo()
+
+	REM If the repo is not official, show a message and cancel validation 
+	if !isOfficial then
+		msg_id$="ADX_INVALID_GIT_REPO"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif 
+	return 
+
 validate_new_db_name: rem --- Validate new database name
 
 	abort=0

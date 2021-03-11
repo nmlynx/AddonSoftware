@@ -18,12 +18,17 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 		switch notice.code
 			case 2; rem --- ON_TAB_SELECT
 				gosub isTotalsTab
-				if isTotalsTab and num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 and
-:				cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),2)<>"" and
-:				cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)<>"" then
-					disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
-					freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
-					gosub calculate_tax
+				if isTotalsTab then
+					if num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 then
+						taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
+						taxAmount_warn!.setVisible(1)
+						if cvs(callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID"),2)<>"" and
+:						cvs(callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO"),2)<>"" then
+							disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+							freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+							gosub calculate_tax
+						endif
+					endif
 				else
 					taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 					taxAmount_warn!.setVisible(0)
@@ -166,10 +171,17 @@ rem --- Capture current totals so we can tell later if they were changed in the 
 
 rem --- Show TAX_AMOUNT footnote warning if sales tax calculation was previously deferred
 	taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+	taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 	if num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 then
 		taxAmount_fnote!.setVisible(1)
+		gosub isTotalsTab
+		if isTotalsTab then taxAmount_warn!.setVisible(1)
+
+		rem - Update sales tax calculation to use SalesInvoice for sales tax service
+		disc_amt = num(callpoint!.getColumnData("OPE_ORDHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_ORDHDR.FREIGHT_AMT"))
+		gosub calculate_tax
 	else
-		taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 		taxAmount_warn!.setVisible(0)
 		taxAmount_fnote!.setVisible(0)
 	endif
@@ -3772,7 +3784,14 @@ rem ==========================================================================
 	eventFrom$=callpoint!.getCallpointEvent()
 	gosub isTotalsTab
 	if eventFrom$="OPE_ORDHDR.AOPT-RTAX" or (num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 and 
-:		(isTotalsTab or eventFrom$="OPE_ORDHDR.BWAR"))
+:		(isTotalsTab or pos(eventFrom$="OPE_INVHDR.ADIS:OPE_ORDHDR.BWAR")))
+
+		rem --- Get current form data for tax calculation
+		ordhdr_dev=fnget_dev("OPE_ORDHDR")
+		ordhdr_tpl$=fnget_tpl$("OPE_ORDHDR")
+		dim ordhdr_rec$:ordhdr_tpl$
+		ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
+		ordhdr_rec$ = field(ordhdr_rec$)
 
 		rem --- Using a sales tax service?
 		use_tax_service=0
@@ -3787,12 +3806,6 @@ rem ==========================================================================
 			rem --- Use sales tax service
 			callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT",str(disc_amt),1)
 			callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT",str(freight_amt),1)
-
-			rem --- Get current form data for tax calculation
-			ordhdr_tpl$=fnget_tpl$("OPE_ORDHDR")
-			dim ordhdr_rec$:ordhdr_tpl$
-			ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
-			ordhdr_rec$ = field(ordhdr_rec$)
 
 			salesTax!=callpoint!.getDevObject("salesTaxObject")
 			success=0
@@ -3847,10 +3860,7 @@ rem ==========================================================================
 				taxAmount_fnote!.setVisible(0)
 
 				rem --- Force write if not in Edit mode.
-				if !callpoint!.isEditMode() then
-					gosub get_disk_rec
-					gosub forceWrite
-				endif
+				if !callpoint!.isEditMode() then gosub forceWrite
 			endif
 		endif
 
@@ -3949,7 +3959,7 @@ rem IN: customer_id$
 rem IN: order_no$
 rem IN: ar_inv_no$
 rem IN: ordhdr_dev
-rem IN: ordhdr_rec$ from earlier get_disk_rec
+rem IN: ordhdr_rec$ from util.copyFields(ordhdr_tpl$, callpoint!)
 rem ==========================================================================
 
 	rem --- Force write if not in Edit mode.
@@ -3983,8 +3993,13 @@ rem ==========================================================================
 
 			taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 			taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
-			taxAmount_warn!.setVisible(1)
 			taxAmount_fnote!.setVisible(1)
+			gosub isTotalsTab
+			if isTotalsTab then
+				taxAmount_warn!.setVisible(1)
+			else
+				taxAmount_warn!.setVisible(0)
+			endif
 
 			msg_id$="ENTRY_REC_LOCKED"
 			gosub disp_message

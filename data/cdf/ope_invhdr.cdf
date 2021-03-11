@@ -18,12 +18,17 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 		switch notice.code
 			case 2; rem --- ON_TAB_SELECT
 				gosub isTotalsTab
-				if isTotalsTab and num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 and
-:				cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2)<>"" and
-:				cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2)<>"" then
-					disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
-					freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
-					gosub calculate_tax
+				if isTotalsTab then
+					if num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 then
+						taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
+						taxAmount_warn!.setVisible(1)
+						if cvs(callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID"),2)<>"" and
+:						cvs(callpoint!.getColumnData("OPE_INVHDR.ORDER_NO"),2)<>"" then
+							disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+							freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+							gosub calculate_tax
+						endif
+					endif
 				else
 					taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 					taxAmount_warn!.setVisible(0)
@@ -173,10 +178,17 @@ rem --- Capture current totals so we can tell later if they were changed in the 
 
 rem --- Show TAX_AMOUNT footnote warning if sales tax calculation was previously deferred
 	taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
+        taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 	if num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 then
 		taxAmount_fnote!.setVisible(1)
+		gosub isTotalsTab
+		if isTotalsTab then taxAmount_warn!.setVisible(1)
+
+		rem - Update sales tax calculation to use SalesInvoice for sales tax service
+		disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		gosub calculate_tax
 	else
-	        taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 		taxAmount_warn!.setVisible(0)
 		taxAmount_fnote!.setVisible(0)
 	endif
@@ -185,6 +197,10 @@ rem --- Disable Ship To fields
 
 	ship_to_type$ = callpoint!.getColumnData("OPE_INVHDR.SHIPTO_TYPE")
 	gosub disable_shipto
+
+rem --- Using a sales tax service?
+	tax_code$=callpoint!.getColumnData("OPE_INVHDR.TAX_CODE")
+	gosub usingTaxService
 
 [[OPE_INVHDR.AFMC]]
 rem --- Inits
@@ -545,6 +561,23 @@ rem --- Cannot undo if cash has been applied to invoice
 		msg_id$ = "OP_CANNOT_UNDO_INV"
 		gosub disp_message
 		break
+	endif
+
+rem --- Void AvaTax transaction if using a sales tax service
+	if callpoint!.getDevObject("use_tax_service")="Y" then
+		salesTax!=callpoint!.getDevObject("salesTaxObject")
+		if cvs(callpoint!.getColumnData("OPE_INVHDR.CREDIT_INVOICE"),2)="" then
+			transType$="SalesInvoice"
+		else
+			transType$="ReturnInvoice"
+		endif
+		success=0
+		success=salesTax!.voidTransaction(cust_id$, order_no$, old_inv_no$, transType$, err=*next)
+		if !success then
+			msg_id$ = "OP_CANNOT_VOID_INV"
+			gosub disp_message
+			break
+		endif
 	endif
 
 rem --- Invoice History Header, set to void
@@ -978,6 +1011,7 @@ rem --- clear availability
 	callpoint!.setDevObject("details_changed","N")
 	callpoint!.setDevObject("new_rec","Y")
 	callpoint!.setDevObject("initial_rec_data$",rec_data$)
+	callpoint!.setDevObject("use_tax_service","N")
 
 	gosub init_msgs
 
@@ -1224,6 +1258,24 @@ rem --- User approval required if packages have already been shipped
 			break
 		endif
 		callpoint!.setStatus("ACTIVATE")
+	endif
+
+rem --- Void AvaTax transaction if using a sales tax service
+	if callpoint!.getDevObject("use_tax_service")="Y" then
+		ar_inv_no$=callpoint!.getColumnData("OPE_INVHDR.AR_INV_NO")
+		salesTax!=callpoint!.getDevObject("salesTaxObject")
+		if cvs(callpoint!.getColumnData("OPE_INVHDR.CREDIT_INVOICE"),2)="" then
+			transType$="SalesInvoice"
+		else
+			transType$="ReturnInvoice"
+		endif
+		success=0
+		success=salesTax!.voidTransaction(customer_id$, order_no$, ar_inv_no$, transType$, err=*next)
+		if !success then
+			msg_id$ = "OP_CANNOT_VOID_INV"
+			gosub disp_message
+			break
+		endif
 	endif
 
 rem --- Set table variables
@@ -2370,10 +2422,18 @@ rem --- Enable/Disable Cash Sale button
 
 [[OPE_INVHDR.INVOICE_DATE.AVAL]]
 rem --- Prevent Invoice Date in an appropriate GL period
-	order_date$=callpoint!.getUserInput()        
+	invoice_date$=callpoint!.getUserInput()        
 	if user_tpl.glint$="Y" 
-		call stbl("+DIR_PGM")+"glc_datecheck.aon",order_date$,"Y",per$,yr$,status
+		call stbl("+DIR_PGM")+"glc_datecheck.aon",invoice_date$,"Y",per$,yr$,status
 		if status>100 then callpoint!.setStatus("ABORT")
+	endif
+
+rem --- Recalculate Tax Amount and Totals
+
+	if invoice_date$<>callpoint!.getColumnData("OPE_INVHDR.INVOICE_DATE") then
+		disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		gosub calculate_tax
 	endif
 
 [[OPE_INVHDR.INVOICE_DATE.BINP]]
@@ -2592,6 +2652,12 @@ rem --- New record, set default
 		user_tpl.order_date$   = sysinfo.system_date$
 
 		callpoint!.setOptionEnabled("UINV",0)
+
+		rem --- Update sales tax calculation to use SalesInvoice for sales tax service
+		callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC","1",1)
+		disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+		freight_amt = num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+		gosub calculate_tax
 	endif
 
 rem --- New or existing order
@@ -2864,7 +2930,10 @@ rem --- Skip if the TAX_CODE hasn't changed
 rem --- Set code in the Order Helper object
 
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
-	ordHelp!.setTaxCode(callpoint!.getUserInput())
+	ordHelp!.setTaxCode(tax_code$)
+
+rem --- Using a sales tax service?
+	gosub usingTaxService
 
 rem --- Calculate Taxes
 
@@ -3911,6 +3980,15 @@ rem ==========================================================================
 				ope01a.mod_user$=sysinfo.user_id$
 				ope01a.mod_date$=date(0:"%Yd%Mz%Dz")
 				ope01a.mod_time$=date(0:"%Hz%mz")
+				rem --- Also setColumnData since cannot use get_disk_rec with sales tax service
+				callpoint!.setColumnData("OPE_INVHDR.AR_INV_NO",ope01a.ar_inv_no$,1)
+				callpoint!.setColumnData("OPE_INVHDR.ORDINV_FLAG",ope01a.ordinv_flag$,1)
+				callpoint!.setColumnData("OPE_INVHDR.INVOICE_DATE",ope01a.invoice_date$,1)
+				callpoint!.setColumnData("OPE_INVHDR.PRINT_STATUS",ope01a.print_status$,1)
+				callpoint!.setColumnData("OPE_INVHDR.LOCK_STATUS",ope01a.lock_status$,1)
+				callpoint!.setColumnData("OPE_INVHDR.MOD_USER",ope01a.mod_user$,1)
+				callpoint!.setColumnData("OPE_INVHDR.MOD_DATE",ope01a.mod_date$,1)
+				callpoint!.setColumnData("OPE_INVHDR.MOD_TIME",ope01a.mod_time$,1)
 
 				rem --- Do NOT overwrite existing FREIGH_AMT previously entered in Order Entry.
 				if ope01a.freight_amt=0 then
@@ -3940,12 +4018,7 @@ rem ==========================================================================
 							freight_amt=freight_amt+trackingNos!.get(trackingIter!.next())
 						wend
 						ope01a.freight_amt=freight_amt
-
-						rem --- TAXABLE_AMT can/may include FREIGHT_AMT, which would affect TAX_AMOUNT
-						disc_amt=ope01a.discount_amt
-						gosub calculate_tax
-						ope01a.taxable_amt=num(callpoint!.getColumnData("OPE_INVHDR.TAXABLE_AMT"))
-						ope01a.tax_amount=num(callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
+						callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT",str(ope01a.freight_amt),1)
 					endif
 				endif
 
@@ -3953,6 +4026,14 @@ rem ==========================================================================
 				writerecord(ope01_dev)ope01a$
 				ope01_primary$=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$+old_inv_no$
 				remove(ope01_dev,key=ope01_primary$)
+
+				rem - Update sales tax calculation to use SalesInvoice for sales tax service
+				tax_code$=callpoint!.getColumnData("OPE_INVHDR.TAX_CODE")
+				gosub usingTaxService
+				callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC","1",1)
+				disc_amt=num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
+				freight_amt=num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
+				gosub calculate_tax
 			endif
 
 			gosub add_to_batch_print
@@ -4113,27 +4194,19 @@ rem ==========================================================================
 	eventFrom$=callpoint!.getCallpointEvent()
 	gosub isTotalsTab
 	if eventFrom$="OPE_INVHDR.AOPT-RTAX" or (num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 and 
-:		(isTotalsTab or pos(eventFrom$="OPE_INVHDR.BWAR:OPE_INVHDR.AOPT-CASH:OPE_INVHDR.AOPT-PRNT")))
+:		(isTotalsTab or pos(eventFrom$="OPE_INVHDR.ADIS:OPE_INVHDR.BWAR:OPE_INVHDR.AOPT-CASH:OPE_INVHDR.AOPT-PRNT")))
 
-		rem --- Using a sales tax service?
-		use_tax_service=0
-		if callpoint!.getDevObject("sls_tax_intrface")<>"" then
-			opc_taxcode_dev = fnget_dev("OPC_TAXCODE")
-			dim opc_taxcode$:fnget_tpl$("OPC_TAXCODE")
-			findrecord(opc_taxcode_dev,key=firm_id$+callpoint!.getColumnData("OPE_INVHDR.TAX_CODE"),dom=*next)opc_taxcode$
-			use_tax_service=opc_taxcode.use_tax_service
-		endif
+		rem --- Get current form data for tax calculation
+		ordhdr_dev=fnget_dev("OPE_INVHDR")
+		ordhdr_tpl$=fnget_tpl$("OPE_INVHDR")
+		dim ordhdr_rec$:ordhdr_tpl$
+		ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
+		ordhdr_rec$ = field(ordhdr_rec$)
 
-		if use_tax_service then
+		if callpoint!.getDevObject("use_tax_service")="Y" then
 			rem --- Use sales tax service
 			callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT",str(disc_amt),1)
 			callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT",str(freight_amt),1)
-
-			rem --- Get current form data for tax calculation
-			ordhdr_tpl$=fnget_tpl$("OPE_INVHDR")
-			dim ordhdr_rec$:ordhdr_tpl$
-			ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
-			ordhdr_rec$ = field(ordhdr_rec$)
 
 			salesTax!=callpoint!.getDevObject("salesTaxObject")
 			success=0
@@ -4188,10 +4261,7 @@ rem ==========================================================================
 				taxAmount_fnote!.setVisible(0)
 
 				rem --- Force write if not in Edit mode.
-				if !callpoint!.isEditMode() then
-					gosub get_disk_rec
-					gosub forceWrite
-				endif
+				if !callpoint!.isEditMode() then gosub forceWrite
 			endif
 		endif
 
@@ -4330,7 +4400,7 @@ rem IN: customer_id$
 rem IN: order_no$
 rem IN: ar_inv_no$
 rem IN: ordhdr_dev
-rem IN: ordhdr_rec$ from earlier get_disk_rec
+rem IN: ordhdr_rec$ from earlier util.copyFields(ordhdr_tpl$, callpoint!)
 rem ==========================================================================
 
 	rem --- Force write if not in Edit mode.
@@ -4364,8 +4434,13 @@ rem ==========================================================================
 
 			taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 			taxAmount_fnote!=callpoint!.getDevObject("taxAmount_fnote")
-			taxAmount_warn!.setVisible(1)
 			taxAmount_fnote!.setVisible(1)
+			gosub isTotalsTab
+			if isTotalsTab then
+				taxAmount_warn!.setVisible(1)
+			else
+				taxAmount_warn!.setVisible(0)
+			endif
 
 			msg_id$="ENTRY_REC_LOCKED"
 			gosub disp_message
@@ -4456,7 +4531,35 @@ rem ==========================================================================
 			netSales!=callpoint!.getControl("<<DISPLAY>>.NET_SALES")
 			netSales!.setText(cvs(callpoint!.getColumnData("<<DISPLAY>>.NET_SALES"),2))
 		endif
+
+		rem --- Attempt to void any previously successful sales tax service transaction for this invoice
+		if callpoint!.getDevObject("use_tax_service")="Y" then
+			ar_inv_no$=callpoint!.getColumnData("OPE_INVHDR.AR_INV_NO")
+			salesTax!=callpoint!.getDevObject("salesTaxObject")
+			if cvs(callpoint!.getColumnData("OPE_INVHDR.CREDIT_INVOICE"),2)="" then
+				transType$="SalesInvoice"
+			else
+				transType$="ReturnInvoice"
+			endif
+			salesTax!.voidTransaction(customer_id$, order_no$, ar_inv_no$, transType$, err=*next)
+		endif
 	endif
+
+	return
+
+rem ==========================================================================
+usingTaxService: rem ---  Using a sales tax service?
+rem IN: tax_code$
+rem ==========================================================================
+
+	use_tax_service$="N"
+	if callpoint!.getDevObject("sls_tax_intrface")<>"" then
+		opc_taxcode_dev = fnget_dev("OPC_TAXCODE")
+		dim opc_taxcode$:fnget_tpl$("OPC_TAXCODE")
+		findrecord(opc_taxcode_dev,key=firm_id$+tax_code$,dom=*next)opc_taxcode$
+		if opc_taxcode.use_tax_service then use_tax_service$="Y"
+	endif
+	callpoint!.setDevObject("use_tax_service",use_tax_service$)
 
 	return
 

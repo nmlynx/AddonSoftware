@@ -16,7 +16,9 @@ rem --- Use statements and declares
 
     use ::ado_file.src::FileObject
     use ::ado_util.src::util
+    use ::bbtranslator.bbj::BBTranslator
     use ::sys/prog/bao_encryptor.bbj::Encryptor
+    declare BBTranslator Translate!
     
     use ::REST/BBWebClient.bbj::BBWebClient
     use ::REST/BBWebClient.bbj::BBWebRequest
@@ -44,6 +46,7 @@ rem --- Use statements and declares
     use net.avalara.avatax.rest.client.enums.AvaTaxEnvironment
     use net.avalara.avatax.rest.client.enums.DocumentType
     use net.avalara.avatax.rest.client.enums.TaxOverrideType
+    use net.avalara.avatax.rest.client.enums.VoidReasonCode
     use net.avalara.avatax.rest.client.models.AddressesModel
     use net.avalara.avatax.rest.client.models.AddressLocationInfo
     use net.avalara.avatax.rest.client.models.CertificateModel
@@ -59,6 +62,7 @@ rem --- Use statements and declares
     use net.avalara.avatax.rest.client.models.TransactionAddressModel
     use net.avalara.avatax.rest.client.models.TransactionLineModel
     use net.avalara.avatax.rest.client.models.TransactionModel
+    use net.avalara.avatax.rest.client.models.VoidTransactionModel
 
     class public AO_AvaTaxInterface
         field protected BBjString accountNumber$ = ""
@@ -605,20 +609,23 @@ busyImageStop_error:rem --- Method error trap/handler (11Oct2017)
             methodret taxProps!
             
 calculateTax_error:rem --- Modified method error trap/handler (11Oct2017)
+    rem --- Stop busy/working image
+    #busyImageStop()
+
+    errorHandled=0
     rd_err_text$="", err_num=err
     if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     if err_num=252 then
         E!=BBjAPI().getLastBBjException()
         rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+        errorHandled=#errorHandlerAvaTax(rd_err_text$)
     endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-
-            rem --- Stop busy/working image
-            #busyImageStop()
-
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
+    if !errorHandled then
+        call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+        if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+        if pos("RETRY"=rd_err_act$)<>0 retry
+    endif
     x$=stbl("+THROWN_ERR","TRUE")   
     throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
@@ -661,20 +668,23 @@ calculateTax_error:rem --- Modified method error trap/handler (11Oct2017)
             methodret success
             
 connectClient_error:rem --- Modified method error trap/handler (11Oct2017)
+    rem --- Stop busy/working image
+    #busyImageStop()
+
+    errorHandled=0
     rd_err_text$="", err_num=err
     if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     if err_num=252 then
         E!=BBjAPI().getLastBBjException()
         rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+        errorHandled=#errorHandlerAvaTax(rd_err_text$)
     endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-
-            rem --- Stop busy/working image
-            #busyImageStop()
-
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
+    if !errorHandled then
+        call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+        if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+        if pos("RETRY"=rd_err_act$)<>0 retry
+    endif
     x$=stbl("+THROWN_ERR","TRUE")   
     throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
@@ -701,16 +711,18 @@ connectClient_error:rem --- Modified method error trap/handler (11Oct2017)
             else
                 documentType! = DocumentType.valueOf("Any")
             endif
+            #busyImageStart()
             transaction!=#avaTaxClient!.getTransactionByCode(companyCode$, transactionCode$, documentType!, "")
-            doCommit=0
-            if transaction!.getStatus().toString()<>"Committed" then doCommit=1
+            #busyImageStop()
 
             rem --- Need to commit this transaction?
-            if doCommit then
+            if transaction!.getStatus().toString()<>"Committed" then
                 commitTrans!=new CommitTransactionModel()
                 commitTrans!.setCommit(1); rem --- true
                 documentType! = transaction!.getType()
+                #busyImageStart()
                 transaction!=#avaTaxClient!.commitTransaction(companyCode$, transactionCode$, documentType!, "", commitTrans!)
+                #busyImageStop()
             endif
 
             rem --- Save committed sales tax transaction response
@@ -721,6 +733,80 @@ rem wgh ... 9806 ... needs client side logging
             methodret transaction!
             
 commitTransaction_error:rem --- Modified method error trap/handler (11Oct2017)
+    rem --- Stop busy/working image
+    #busyImageStop()
+
+    errorHandled=0
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+        errorHandled=#errorHandlerAvaTax(rd_err_text$)
+    endif
+    if !errorHandled then
+        call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+        if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+        if pos("RETRY"=rd_err_act$)<>0 retry
+    endif
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Present AvaTax error messages in a user friendly readable/understandable way.
+        rem  * 
+        rem  * @param BBjString rd_err_text$
+        rem  *
+        rem  * @return boolean   error handled=1, error NOT handled=0
+        rem  */
+        method protected boolean errorHandlerAvaTax(BBjString rd_err_text$)
+            seterr errorHandlerAvaTax_error
+            errText$=rd_err_text$
+            errorHandled=Boolean.valueOf("false")
+
+            if pos("com.basis.startup.type.BBjException: java.net.UnknownHostException:"=errText$) then
+                pos1=pos("("=errText$,-1)+1
+                pos2=pos(")"=errText$,-1)
+                host$=errText$(pos1,pos2-pos1)
+            
+                msg_id$="GENERIC_WARN"
+                dim msg_tokens$[1]
+                msg_tokens$[1]="Your internet connection to "+host$+" failed. Check your internet connection."+$0A$+
+:                   "Sorry, this means the sales tax service is not available at this time."
+                call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
+            
+                errorHandled=Boolean.valueOf("true")
+            endif
+            
+            if !errorHandled and pos("com.basis.startup.type.BBjException: net.avalara.avatax.rest.client.AvaTaxClientException:"=errText$) then
+                text$=$22$+"code"+$22$+":"+$22$
+                errText$=errText$(pos(text$=errText$)+len(text$))
+                code$=errText$(1,pos($22$+","=errText$)-1)
+                
+                text$=$22$+"message"+$22$+":"+$22$
+                errText$=errText$(pos(text$=errText$)+len(text$))
+                message$=errText$(1,pos($22$+","=errText$)-1)
+                
+                text$=$22$+"description"+$22$+":"+$22$
+                errText$=errText$(pos(text$=errText$)+len(text$))
+                desc!=errText$(1,pos($22$+","=errText$)-1)
+                description$=desc!.replace("\u0027","'")
+            
+                msg_id$="GENERIC_WARN"
+                dim msg_tokens$[1]
+                msg_tokens$[1]="*** Sales Tax Service Error ***"+$0A$+
+:                   code$+": "+message$+$0A$+
+:                   description$
+                call stbl("+DIR_SYP")+"bac_message.bbj",msg_id$,msg_tokens$[all],msg_opt$,rd_table_chans$[all]
+            
+                errorHandled=Boolean.valueOf("true")
+            endif
+
+            methodret errorHandled
+            
+errorHandlerAvaTax_error:rem --- Method error trap/handler (11Oct2017)
     rd_err_text$="", err_num=err
     if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     if err_num=252 then
@@ -729,10 +815,6 @@ commitTransaction_error:rem --- Modified method error trap/handler (11Oct2017)
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
     endif
     call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-
-            rem --- Stop busy/working image
-            #busyImageStop()
-
     if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$)<>0 retry
     x$=stbl("+THROWN_ERR","TRUE")   
@@ -799,20 +881,23 @@ getBigDecimal_error:rem --- Method error trap/handler (11Oct2017)
             methodret name$
             
 getEntityUseCdName_error:rem --- Modified method error trap/handler (11Oct2017)
+    rem --- Stop busy/working image
+    #busyImageStop()
+
+    errorHandled=0
     rd_err_text$="", err_num=err
     if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     if err_num=252 then
         E!=BBjAPI().getLastBBjException()
         rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+        errorHandled=#errorHandlerAvaTax(rd_err_text$)
     endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-
-            rem --- Stop busy/working image
-            #busyImageStop()
-
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
+    if !errorHandled then
+        call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+        if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+        if pos("RETRY"=rd_err_act$)<>0 retry
+    endif
     x$=stbl("+THROWN_ERR","TRUE")   
     throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
@@ -990,20 +1075,23 @@ getShipTo_error:rem --- Method error trap/handler (11Oct2017)
             methodret taxSvcCdMap!
             
 getTaxSvcCdDesc2_error:rem --- Modified method error trap/handler (11Oct2017)
+    rem --- Stop busy/working image
+    #busyImageStop()
+
+    errorHandled=0
     rd_err_text$="", err_num=err
     if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     if err_num=252 then
         E!=BBjAPI().getLastBBjException()
         rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+        errorHandled=#errorHandlerAvaTax(rd_err_text$)
     endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-
-            rem --- Stop busy/working image
-            #busyImageStop()
-
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
+    if !errorHandled then
+        call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+        if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+        if pos("RETRY"=rd_err_act$)<>0 retry
+    endif
     x$=stbl("+THROWN_ERR","TRUE")   
     throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
@@ -1032,20 +1120,23 @@ getTaxSvcCdDesc2_error:rem --- Modified method error trap/handler (11Oct2017)
             methodret desc$
             
 getTaxSvcCdDesc_error:rem --- Modified method error trap/handler (11Oct2017)
+    rem --- Stop busy/working image
+    #busyImageStop()
+
+    errorHandled=0
     rd_err_text$="", err_num=err
     if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     if err_num=252 then
         E!=BBjAPI().getLastBBjException()
         rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+        errorHandled=#errorHandlerAvaTax(rd_err_text$)
     endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-
-            rem --- Stop busy/working image
-            #busyImageStop()
-
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
+    if !errorHandled then
+        call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+        if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+        if pos("RETRY"=rd_err_act$)<>0 retry
+    endif
     x$=stbl("+THROWN_ERR","TRUE")   
     throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
@@ -1110,20 +1201,23 @@ isTestMode_error:rem --- Method error trap/handler (11Oct2017)
             methodret zipcodeAddress!
             
 resolveZipCode_error:rem --- Modified method error trap/handler (11Oct2017)
+    rem --- Stop busy/working image
+    #busyImageStop()
+
+    errorHandled=0
     rd_err_text$="", err_num=err
     if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     if err_num=252 then
         E!=BBjAPI().getLastBBjException()
         rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+        errorHandled=#errorHandlerAvaTax(rd_err_text$)
     endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-
-            rem --- Stop busy/working image
-            #busyImageStop()
-
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
+    if !errorHandled then
+        call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+        if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+        if pos("RETRY"=rd_err_act$)<>0 retry
+    endif
     x$=stbl("+THROWN_ERR","TRUE")   
     throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
@@ -1224,20 +1318,23 @@ stringJSON_error:rem --- Method error trap/handler (11Oct2017)
             methodret exemption!
             
 updateCustomerExemption_error:rem --- Modified method error trap/handler (11Oct2017)
+    rem --- Stop busy/working image
+    #busyImageStop()
+
+    errorHandled=0
     rd_err_text$="", err_num=err
     if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
     if err_num=252 then
         E!=BBjAPI().getLastBBjException()
         rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+        errorHandled=#errorHandlerAvaTax(rd_err_text$)
     endif
-    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
-
-            rem --- Stop busy/working image
-            #busyImageStop()
-
-    if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
-    if pos("RETRY"=rd_err_act$)<>0 retry
+    if !errorHandled then
+        call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+        if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+        if pos("RETRY"=rd_err_act$)<>0 retry
+    endif
     x$=stbl("+THROWN_ERR","TRUE")   
     throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
@@ -1328,6 +1425,63 @@ updateSalesTaxTransHistory_error:rem --- Method error trap/handler (11Oct2017)
     call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
     if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
     if pos("RETRY"=rd_err_act$)<>0 retry
+    x$=stbl("+THROWN_ERR","TRUE")   
+    throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
+        methodend
+
+        rem /**
+        rem  * Void specified previous uncommitted sales tax service SalesInvoice transaction.
+        rem  * 
+        rem  * @param BBjString customer_id$
+        rem  * @param BBjString order_no$
+        rem  * @param BBjString ar_inv_no$
+        rem  * @param BBjString transType$
+        rem  *
+        rem  * @return boolean success=1, failure=0
+        rem  */
+        method public boolean voidTransaction(BBjString customer_id$, BBjString order_no$, BBjString ar_inv_no$, BBjString transType$)
+            seterr voidTransaction_error
+            success=Boolean.valueOf("false")
+            
+            rem --- Has this transaction already been committed?
+            rem --- Use case: AvaTax processed the commit successfully, but internet connection was lost for their response.
+            companyCode$ = #companyCode$
+            transactionCode$ = #firmID$+customer_id$+order_no$+ar_inv_no$
+            documentType! = DocumentType.valueOf(transType$)
+            #busyImageStart()
+            transaction!=#avaTaxClient!.getTransactionByCode(companyCode$, transactionCode$, documentType!, "")
+            #busyImageStop()
+
+            rem --- Cannot void committed transactions
+            if transaction!.getStatus().toString()<>"Committed" then
+                voidModel!=new VoidTransactionModel()
+                voidModel!.setCode(VoidReasonCode.DocVoided)
+                #busyImageStart()
+                transaction!=#avaTaxClient!.voidTransaction(companyCode$, transactionCode$, documentType!, "", voidModel!)
+                #busyImageStop()
+                if transaction!.getStatus().toString()="Cancelled" then success=Boolean.valueOf("true")
+            endif
+            
+            methodret success
+            
+voidTransaction_error:rem --- Modified method error trap/handler (11Oct2017)
+    rem --- Stop busy/working image
+    #busyImageStop()
+
+    errorHandled=0
+    rd_err_text$="", err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+        errorHandled=#errorHandlerAvaTax(rd_err_text$)
+    endif
+    if !errorHandled then
+        call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
+        if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
+        if pos("RETRY"=rd_err_act$)<>0 retry
+    endif
     x$=stbl("+THROWN_ERR","TRUE")   
     throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
