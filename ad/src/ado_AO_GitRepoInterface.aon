@@ -32,6 +32,7 @@ rem  */
     use org.eclipse.jgit.api.CheckoutCommand
     use org.eclipse.jgit.api.CheckoutCommand.Stage
     use org.eclipse.jgit.api.CherryPickResult.CherryPickStatus
+    use org.eclipse.jgit.api.LsRemoteCommand
     use org.eclipse.jgit.api.TransportConfigCallback
     use org.eclipse.jgit.api.ResetCommand
     use org.eclipse.jgit.api.ResetCommand.ResetType
@@ -70,14 +71,18 @@ rem  */
         field public BBjString LocalRepo$
         field public BBjString ReleaseTag$
         field public BBjString RemoteBranch$
-        field public BBjString RepoURL$
+        field public BBjString RepoURL!
+        field public BBjString GitAuthID$
 
         field protected Git git!
         field protected Repository repository!
-        field protected BBjString repoURL!
         field protected BBjString encryptionConfiguration!="PASSWORD_USER"
         field protected CredentialsProvider credentials!
         field protected TransportConfigCallback transportConfigCallback!
+        
+        REM Fields for verification 
+        field protected BBjString verificationBranch!="refs/heads/mod1500bt"
+        field protected BBjString verificationObjectId!="AnyObjectId[d6ccfe9fe78bfe9fad7496f0cefcae154dcc3092]"
         
         field protected FixedIssuesReader fixedIssuesReader!
         
@@ -86,18 +91,30 @@ rem  */
         
         rem /**
         rem  * Constructor.
+        rem  * Instantiates authentication in order to query a remote Addon archive
+        rem  *
+        rem  * @param BBjString gitAuthID$
+        rem  */
+        method public AO_GitRepoInterface(BBjString gitAuthID$)
+            #GitAuthID$=gitAuthID$
+            #obtainURLAndCredentials(gitAuthID$)
+        methodend 
+        
+        rem /**
+        rem  * Constructor.
         rem  * Clones Git repository to specified location if one does not already exist there.
         rem  *
+        rem  * @param BBjString gitAuthID$
         rem  * @param BBjString aonDir$
         rem  */
         method public AO_GitRepoInterface(BBjString gitAuthID$, BBjString aonDir$)
+
+            #this!(gitAuthID$)
+            
             seterr GitRepoInterface_error
             #AonDir$=aonDir$
             #LocalRepo$=#AonDir$+"/.git"
-
-            rem --- SDH this is where we need to obtain the URL to use and the credentials.
-            #obtainURLAndCredentials(gitAuthID$)
-            
+     
             rem --- Get Git repository
             gitDir! = new File(#LocalRepo$)
             if !gitDir!.exists() then
@@ -105,7 +122,7 @@ rem  */
                 cloneCmd!=Git.cloneRepository()
                 
                 rem -- build the clone command
-                cloneCmd!=cloneCmd!.setURI(#repoURL!)
+                cloneCmd!=cloneCmd!.setURI(#RepoURL!)
                 if (#credentials!<>null()) then 
                     cloneCmd!=cloneCmd!.setCredentialsProvider(#credentials!)
                 else
@@ -158,6 +175,7 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             declare BBjString password$
             declare BBjString token$
             declare BBjString sshKeyFile$
+            declare BBjString sshKeyPassword$
             
             REM read the record from the ADX_GIT_AUTH table
             sqlchan=sqlunt
@@ -168,9 +186,10 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             dim result$:template$
             
             result$=sqlfetch(sqlchan)
-            
+            sqlclose(sqlchan)
+                        
             REM get the URL
-            #repoURL!=cvs(result.URL$,3)
+            #RepoURL!=cvs(result.URL$,3)
             
             REM Read in our Encryptor configuration and create our decryptor.  
             encryptor!=new Encryptor()
@@ -179,9 +198,9 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             userName$=cvs(result.USERNAME$,3)
             password$=encryptor!.decryptData(cvs(result.PASSWORD$,3))
             token$=encryptor!.decryptData(cvs(result.TOKEN$,3))
-            sshKeyFile$=cvs(result.SSH_KEY_FILE$,3) 
+            sshKeyFile$=cvs(result.SSH_KEY_FILE$,3)
+            sshKeyPassword$=encryptor!.decryptData(cvs(result.SSH_PASSWORD$,3))
             
-            rem SDH escape 
             REM Check to see if this is a public repo and if so, return null
             isPublic=(userName$="") and (password$="") and (token$="") and (sshKeyFile$="")
             if (isPublic) then
@@ -192,9 +211,6 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             REM determine the type of credentials in the table: none, user/password, OAuth token, public key
             REM username/password
             if (userName$<>"") then 
-                print $22$+userName$+$22$
-                print $22$+password$+$22$
-                escape 
                 declare UsernamePasswordCredentialsProvider upProvider!
                 upProvider!=new UsernamePasswordCredentialsProvider(userName$,password$)
                 #credentials!=upProvider!
@@ -208,11 +224,48 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
                 methodret 
             endif 
             
-            if (sshKeyFile$<>"") then 
-                #transportConfigCallback!=new SSH(sshKeyFile$)
+            if (sshKeyFile$<>"") then
+                if (sshKeyPassword$<>"") then
+                    #transportConfigCallback!=new SSH(sshKeyFile$,sshKeyPassword$)
+                else 
+                    #transportConfigCallback!=new SSH(sshKeyFile$)
+                endif 
                 methodret 
             endif 
         methodend
+        
+        rem /**
+        rem  *  isDescedantOfOfficialRepo()
+        rem  */
+        method public BBjNumber isDescendantOfOfficialRepo() 
+            declare LsRemoteCommand lsRemoteCmd!
+            declare java.util.Collection lsResult!
+            declare Iterator resultIterator!
+            declare Ref currentResult! 
+            
+            lsRemoteCmd!=Git.lsRemoteRepository()
+            lsRemoteCmd!=lsRemoteCmd!.setRemote(#RepoURL!)
+            
+            if (#credentials!<>null()) then 
+                lsRemoteCmd!=cast(LsRemoteCommand,lsRemoteCmd!.setCredentialsProvider(#credentials!))
+            else
+                if (#transportConfigCallback!<>null()) then
+                    lsRemoteCmd!=cast(LsRemoteCommand,lsRemoteCmd!.setTransportConfigCallback(#transportConfigCallback!)) 
+                endif 
+            endif 
+            lsResult!=lsRemoteCmd!.call()
+            
+            REM see if this repo has the verification branch and if the commit id for that branch matches 
+            resultIterator!=lsResult!.iterator()
+            while (resultIterator!.hasNext()) 
+                currentResult!=cast(Ref,resultIterator!.next())
+                print currentResult!.getName(), #verificationBranch!
+                if (currentResult!.getName()=#verificationBranch!) then break
+            wend
+            
+            REM return whether we got a match and if the commit id is correct.
+            methodret (currentResult!.getName()=#verificationBranch!) and (currentResult!.getObjectId().toString()=#verificationObjectId!)
+        methodend 
         
 
         rem /**
@@ -1137,7 +1190,7 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
             
             #git!.tag().setAnnotated(0).setName(tagName!).call()
         methodend 
-
+        
 classend
 
 REM Parses the FixedIssues file and extracts the version and date from the file if successful
@@ -1210,25 +1263,35 @@ classend
 
 class public SSH extends JschConfigSessionFactory implements TransportConfigCallback
     field private BBjString sshKey!
+    field private BBjString password!=null() 
     
     method public SSH(BBjString sshKey!)
         #sshKey!=sshKey!
+    methodend 
+    
+    method public SSH(BBjString sshKey!,BBjString password!)
+        #this!(sshKey!) 
+        #password!=password! 
     methodend 
 
     method protected JSch createDefaultJSch( FS fs! )
         declare JSch defaultJSch!
         
         defaultJSch! = #super!.createDefaultJSch( fs! )
-        defaultJSch!.addIdentity( #sshKey! )
+        if (#password!=null()) then 
+            defaultJSch!.addIdentity( #sshKey!)
+        else 
+            defaultJsch!.addIdentity(#sshKey!,#password!)
         methodret defaultJSch!
     methodend 
     
     method public void configure(Transport transport! ) 
         declare SshTransport sshTransport!
-        sshTransport!= cast( SshTransport,transport!)
+        sshTransport!= cast(SshTransport,transport!)
         sshTransport!.setSshSessionFactory(#this!)
     methodend 
     
     method protected void configure(OpenSshConfig.Host host!,Session session!)
     methodend 
+    
 classend 

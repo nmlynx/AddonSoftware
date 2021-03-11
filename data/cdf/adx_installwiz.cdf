@@ -14,7 +14,7 @@ rem --- Don't allow running the utility if not launched from Addon demo system u
 
 	demoDir!=new java.io.File(System.getProperty("basis.BBjHome")+"/apps/aon")
 	demoDir$=demoDir!.getCanonicalPath()
-
+ 	
 	if aonDir$<>demoDir$ then
 		msg_id$="AD_MUST_BE_DEMO_SYS"
 		dim msg_tokens$[1]
@@ -29,6 +29,10 @@ rem --- Update checkboxes (work around for Barista bug 5616)
 	callpoint!.setColumnData("ADX_INSTALLWIZ.APP_HELP",str(help!.isSelected()))
 	verNeutral! = callpoint!.getControl("ADX_INSTALLWIZ.VERSION_NEUTRAL")
 	callpoint!.setColumnData("ADX_INSTALLWIZ.VERSION_NEUTRAL",str(verNeutral!.isSelected()))
+
+rem --- Validate Repository
+	gitAuthID$=cvs(callpoint!.getColumnData("ADX_INSTALLWIZ.GIT_AUTH_ID"),3)
+	gosub validate_git_auth_id
 
 rem --- Validate directory
 	if num(callpoint!.getColumnData("ADX_INSTALLWIZ.VERSION_NEUTRAL")) then
@@ -156,6 +160,10 @@ rem --- Validate new database name
 	callpoint!.setUserInput(db_name$)
 	if abort then break
 
+[[ADX_INSTALLWIZ.GIT_AUTH_ID.AVAL]]
+gitAuthID$=cvs(callpoint!.getUserInput(),3)
+gosub validate_git_auth_id
+
 [[ADX_INSTALLWIZ.INSTALL_TYPE.AVAL]]
 rem --- Enable/disable version_neutral
 	install_type$=callpoint!.getUserInput()
@@ -212,6 +220,23 @@ rem --- Update base dir
 	callpoint!.setColumnData("ADX_INSTALLWIZ.BASE_DIR",new_loc$,1)
 
 [[ADX_INSTALLWIZ.<CUSTOM>]]
+rem --- validate_git_auth_id
+rem --- verifies that the Git repository is a fork or clone of the official Addon repository
+rem --- gitAuthID$: the ID of the Git Authentication record in the ADX_GIT_AUTH table.
+validate_git_auth_id: 
+	use ::ado_GitRepoInterface.aon::GitRepoInterface
+	
+	git!=new GitRepoInterface(gitAuthID$)
+	isOfficial=git!.isDescendantOfOfficialRepo()
+
+	REM If the repo is not official, show a message and cancel validation 
+	if !isOfficial then
+		msg_id$="ADX_INVALID_GIT_REPO"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif 
+	return 
+
 validate_new_db_name: rem --- Validate new database name
 
 	abort=0
