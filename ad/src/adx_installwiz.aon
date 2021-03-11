@@ -108,7 +108,7 @@ rem --- Clone and pull branch(s) from Git repository to newAonLoc
     meter_proc_recs=meter_proc_recs+1
     meter_action$="MTR-LST"
     gosub disp_meter
-    print(log_dev)meter_text$
+    print(log_dev)meter_text$ 
 
     rem --- Show busy/working image while cloning and pulling from repository
     nxt_ctlID=util.getNextControlID()
@@ -131,6 +131,7 @@ rem --- Clone and pull branch(s) from Git repository to newAonLoc
 
         rem --- Clone Git repository and get a JGit interface to it
         repoInterface!=new GitRepoInterface(git_auth_id$,cloneDir$)
+        print(log_dev) "    Git Repo URL="+repoInterface!.getRepoURL()
 		if (repoInterface!=null()) then 
             msg_id$="AD_FAILED_BAD_CLONE"
 			dim msg_tokens$[1]
