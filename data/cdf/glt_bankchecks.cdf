@@ -24,7 +24,7 @@ rem --- Update paid_code for selected grid rows
 		gltBankChecks_dev=fnget_dev("GLT_BANKCHECKS")
 		dim gltBankChecks$:fnget_tpl$("GLT_BANKCHECKS")
 		selectedRows!=grid!.getSelectedRows()
-		if selectedRows!.size=0 then break
+		if selectedRows!.size()=0 then break
 		for i=0 to selectedRows!.size()-1
 			rem --- Update grid row
 			row=selectedRows!.getItem(i)
@@ -47,6 +47,7 @@ rem --- Update paid_code for selected grid rows
 			endif
 		next i
 	endif
+
 [[GLT_BANKCHECKS.BSHO]]
 rem --- Add pop-up menu to match ListButton items for paid_code
 	popUpMenu!=SysGUI!.addPopupMenu()
@@ -72,7 +73,11 @@ rem --- Make grid multi-select with pop-up menu
 	grid!.setMultipleSelection(1)
 	grid!.setSelectionMode(grid!.GRID_SELECT_ROW)
 	grid!.setPopupMenu(popUpMenu!)
+
 [[GLT_BANKCHECKS.CHECK_NO.AVEC]]
 callpoint!.setColumnData("GLT_BANKCHECKS.CHECK_TYPE","E")
 callpoint!.setColumnData("GLT_BANKCHECKS.PAID_CODE","O")
 callpoint!.setStatus("REFRESH")
+
+
+
