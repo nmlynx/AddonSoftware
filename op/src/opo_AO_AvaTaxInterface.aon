@@ -1449,17 +1449,22 @@ updateSalesTaxTransHistory_error:rem --- Method error trap/handler (11Oct2017)
             transactionCode$ = #firmID$+customer_id$+order_no$+ar_inv_no$
             documentType! = DocumentType.valueOf(transType$)
             #busyImageStart()
-            transaction!=#avaTaxClient!.getTransactionByCode(companyCode$, transactionCode$, documentType!, "")
+            transaction!=#avaTaxClient!.getTransactionByCode(companyCode$, transactionCode$, documentType!, "", err=*next)
             #busyImageStop()
 
-            rem --- Cannot void committed transactions
-            if transaction!.getStatus().toString()<>"Committed" then
-                voidModel!=new VoidTransactionModel()
-                voidModel!.setCode(VoidReasonCode.DocVoided)
-                #busyImageStart()
-                transaction!=#avaTaxClient!.voidTransaction(companyCode$, transactionCode$, documentType!, "", voidModel!)
-                #busyImageStop()
-                if transaction!.getStatus().toString()="Cancelled" then success=Boolean.valueOf("true")
+            if transaction!=null() then
+                rem --- Transaction doesn't exist, so no need to void it
+                success=Boolean.valueOf("true")
+            else
+                rem --- Cannot void committed transactions
+                if transaction!.getStatus().toString()<>"Committed" then
+                    voidModel!=new VoidTransactionModel()
+                    voidModel!.setCode(VoidReasonCode.DocVoided)
+                    #busyImageStart()
+                    transaction!=#avaTaxClient!.voidTransaction(companyCode$, transactionCode$, documentType!, "", voidModel!)
+                    #busyImageStop()
+                    if transaction!.getStatus().toString()="Cancelled" then success=Boolean.valueOf("true")
+                endif
             endif
             
             methodret success
