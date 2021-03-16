@@ -305,16 +305,16 @@ rem --- Use statements and declares
             else
                 thisJul=Jul(0,0,0)
                 if startJul>0 and endJul>0 and thisJul>=startJul and thisJul<=endJul then
-                    #logClient%=1
+                    #logClient=1
                     aonDir$=""
                     dim ddmSystems$:#tplDdmSystems$
-                    readrecord(#devDdmSystems%,key=pad("ADDON",16," "),knum="SYSTEM_ID",err=*next)ddmSystems$
-                    if cvs(ddm_systems.mount_dir$,2)<>"" then aonDir$=ddm_systems.mount_dir$
+                    readrecord(#devDdmSystems,key=pad("ADDON",16," "),knum="SYSTEM_ID",err=*next)ddmSystems$
+                    if cvs(ddmSystems.mount_dir$,2)<>"" then aonDir$=ddmSystems.mount_dir$
                     logDir$ = FileObject.fixPath(aonDir$ + "/logs", "/")
                     FileObject.makeDirs(new File(logDir$))
                     logFile$=logDir$+"/AvaTaxLog_"+DATE(0:"%Yd%Mz%Dz")+".txt"
-                    devClientLog% = unt
-                    open(devClientLog,isz=-1,MODE="O_APPEND,O_CREATE")logFile$
+                    #devClientLog = unt
+                    open(#devClientLog,isz=-1,MODE="O_APPEND,O_CREATE")logFile$
                 endif
             endif
 
@@ -600,7 +600,32 @@ busyImageStop_error:rem --- Method error trap/handler (11Oct2017)
                 createAdjustTransModel!=new CreateOrAdjustTransactionModel()
                 createAdjustTransModel!.setCreateTransactionModel(createTransModel!)
                 #busyImageStart()
+                if #logClient then
+                    logSource$="createOrAdjustTransaction"
+                    print(#devClientLog) "<<< REQUEST "+logSource$+" (firm ID:  "+#firmID$+") "+date(0:"%Yd%Mz%Dz%Hz%mz%sz")+" >>>"
+                    print(#devClientLog) "    companyCode: "+createTransModel!.getCompanyCode()
+                    print(#devClientLog) "    customerCode: "+createTransModel!.getCustomerCode()
+                    print(#devClientLog) "    transactionType: "+createTransModel!.getType().toString()
+                    print(#devClientLog) "    transactionDate: "+createTransModel!.getDate().toString()
+                    print(#devClientLog) "    transactionCode: "+createTransModel!.getCode()
+                    print(#devClientLog) "    discount: "+str(createTransModel!.getDiscount())
+                    print(#devClientLog) "    entityUseCode: "+createTransModel!.getEntityUseCode()
+                    print(#devClientLog) "    exemptionNo: "+createTransModel!.getExemptionNo()
+                    if doCredit then
+                        print(#devClientLog) "    taxOverrideType: "+taxOverride!.getType().toString()
+                        print(#devClientLog) "    taxOverrideDate: "+taxOverride!.getTaxDate().toString()
+                        print(#devClientLog) "    taxOverrideReason: "+taxOverride!.getReason()
+                    endif
+                    startTime!=new Date()
+                endif
                 transactionModel!=#avaTaxClient!.createOrAdjustTransaction("", createAdjustTransModel!)
+                if #logClient then
+                    endTime!=new Date()
+                    response_time=(endTime!.getTime()-startTime!.getTime())/1000
+                    print(#devClientLog) "<<< RESPONSE "+logSource$+" (seconds: "+str(response_time)+") >>>"
+                    print(#devClientLog) "    JSON: "+ #stringJSON(transactionModel!)
+                    logSource$=""
+                endif
                 #busyImageStop()
                 taxProps!.setProperty("tax_amount",transactionModel!.getTotalTax().toString())
                 taxProps!.setProperty("taxable_amt",transactionModel!.getTotalTaxable().toString())
@@ -608,7 +633,7 @@ busyImageStop_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret taxProps!
             
-calculateTax_error:rem --- Modified method error trap/handler (11Oct2017)
+calculateTax_error:rem --- Error trap/handler for AvaTax methods and client side logging
     rem --- Stop busy/working image
     #busyImageStop()
 
@@ -620,6 +645,11 @@ calculateTax_error:rem --- Modified method error trap/handler (11Oct2017)
         rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
         errorHandled=#errorHandlerAvaTax(rd_err_text$)
+    endif
+    if #logClient then
+        print(#devClientLog) "<<< ERROR "+logSource$+" >>>"
+        print(#devClientLog) "    Error Number: "+ str(err_num)
+        print(#devClientLog) "    Error Text: "+ rd_err_text$
     endif
     if !errorHandled then
         call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -655,7 +685,24 @@ calculateTax_error:rem --- Modified method error trap/handler (11Oct2017)
             ping! = tmpClient!.ping()
             #busyImageStop()
             if(ping!.getAuthenticated()) then
+                if #logClient then
+                    logSource$="new AvaTaxClient"
+                    print(#devClientLog) "<<< REQUEST "+logSource$+" (firm ID:  "+#firmID$+") "+date(0:"%Yd%Mz%Dz%Hz%mz%sz")+" >>>"
+                    print(#devClientLog) "    accountNumber: "+#accountNumber$
+                    print(#devClientLog) "    appName: "+appName$
+                    print(#devClientLog) "    CRMID: "+ping!.getCrmid()
+                    print(#devClientLog) "    machineName: "+machineName$
+                    print(#devClientLog) "    environment: "+environment!.toString()
+                    startTime!=new Date()
+                endif
                 #avaTaxClient! = new AvaTaxClient(appName$, ping!.getCrmid(), machineName$, environment!).withSecurity(Base64.getEncoder().encode(account_license$))
+                if #logClient then
+                    endTime!=new Date()
+                    response_time=(endTime!.getTime()-startTime!.getTime())/1000
+                    print(#devClientLog) "<<< RESPONSE "+logSource$+" (seconds: "+str(response_time)+") >>>"
+                    print(#devClientLog) "    class: "+ #avaTaxClient!.getClass().getName()
+                    logSource$=""
+                endif
             else
                 msg_id$="OP_SLSTAX_CONN_FAIL"
                 dim msg_tokens$[1]
@@ -666,8 +713,8 @@ calculateTax_error:rem --- Modified method error trap/handler (11Oct2017)
             endif
 
             methodret success
-            
-connectClient_error:rem --- Modified method error trap/handler (11Oct2017)
+
+connectClient_error:rem --- Error trap/handler for AvaTax methods and client side logging
     rem --- Stop busy/working image
     #busyImageStop()
 
@@ -679,6 +726,11 @@ connectClient_error:rem --- Modified method error trap/handler (11Oct2017)
         rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
         errorHandled=#errorHandlerAvaTax(rd_err_text$)
+    endif
+    if #logClient then
+        print(#devClientLog) "<<< ERROR "+logSource$+" >>>"
+        print(#devClientLog) "    Error Number: "+ str(err_num)
+        print(#devClientLog) "    Error Text: "+ rd_err_text$
     endif
     if !errorHandled then
         call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -712,7 +764,23 @@ connectClient_error:rem --- Modified method error trap/handler (11Oct2017)
                 documentType! = DocumentType.valueOf("Any")
             endif
             #busyImageStart()
-            transaction!=#avaTaxClient!.getTransactionByCode(companyCode$, transactionCode$, documentType!, "")
+            if #logClient then
+                logSource$="getTransactionByCode"
+                print(#devClientLog) "<<< REQUEST "+logSource$+" (firm ID:  "+#firmID$+") "+date(0:"%Yd%Mz%Dz%Hz%mz%sz")+" >>>"
+                print(#devClientLog) "    companyCode: "+#companyCode$
+                print(#devClientLog) "    transactionCode: "+transactionCode$
+                print(#devClientLog) "    documentType: "+documentType!.toString()
+                startTime!=new Date()
+            endif
+             transaction!=#avaTaxClient!.getTransactionByCode(companyCode$, transactionCode$, documentType!, "")
+            if #logClient then
+                endTime!=new Date()
+                response_time=(endTime!.getTime()-startTime!.getTime())/1000
+                print(#devClientLog) "<<< RESPONSE "+logSource$+" (seconds: "+str(response_time)+") >>>"
+                print(#devClientLog) "    status: "+transaction!.getStatus().toString()
+                print(#devClientLog) "    transactionId: "+transaction!.getId().toString()
+                logSource$=""
+            endif
             #busyImageStop()
 
             rem --- Need to commit this transaction?
@@ -721,18 +789,33 @@ connectClient_error:rem --- Modified method error trap/handler (11Oct2017)
                 commitTrans!.setCommit(1); rem --- true
                 documentType! = transaction!.getType()
                 #busyImageStart()
-                transaction!=#avaTaxClient!.commitTransaction(companyCode$, transactionCode$, documentType!, "", commitTrans!)
+                if #logClient then
+                    logSource$="commitTransaction"
+                    print(#devClientLog) "<<< REQUEST "+logSource$+" (firm ID:  "+#firmID$+") "+date(0:"%Yd%Mz%Dz%Hz%mz%sz")+" >>>"
+                    print(#devClientLog) "    companyCode: "+companyCode$
+                    print(#devClientLog) "    transactionCode: "+transactionCode$
+                    print(#devClientLog) "    documentType: "+documentType!.toString()
+                    print(#devClientLog) "    include: Details,Addresses"
+                    print(#devClientLog) "    commit: true"
+                    startTime!=new Date()
+                endif
+                transaction!=#avaTaxClient!.commitTransaction(companyCode$, transactionCode$, documentType!, "Details,Addresses", commitTrans!)
+                if #logClient then
+                    endTime!=new Date()
+                    response_time=(endTime!.getTime()-startTime!.getTime())/1000
+                    print(#devClientLog) "<<< RESPONSE "+logSource$+" (seconds: "+str(response_time)+") >>>"
+                    print(#devClientLog) "    JSON: "+ #stringJSON(transaction!)
+                    logSource$=""
+                endif
                 #busyImageStop()
             endif
 
             rem --- Save committed sales tax transaction response
             optSlsTaxTransKey$=#updateSalesTaxTransHistory(customer_id$, order_no$, ar_inv_no$, transaction!)
-
-rem wgh ... 9806 ... needs client side logging
             
             methodret transaction!
             
-commitTransaction_error:rem --- Modified method error trap/handler (11Oct2017)
+commitTransaction_error:rem --- Error trap/handler for AvaTax methods and client side logging
     rem --- Stop busy/working image
     #busyImageStop()
 
@@ -744,6 +827,11 @@ commitTransaction_error:rem --- Modified method error trap/handler (11Oct2017)
         rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
         errorHandled=#errorHandlerAvaTax(rd_err_text$)
+    endif
+    if #logClient then
+        print(#devClientLog) "<<< ERROR "+logSource$+" >>>"
+        print(#devClientLog) "    Error Number: "+ str(err_num)
+        print(#devClientLog) "    Error Text: "+ rd_err_text$
     endif
     if !errorHandled then
         call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -870,7 +958,23 @@ getBigDecimal_error:rem --- Method error trap/handler (11Oct2017)
 
             filter$="code='"+cvs(entityUseCd$,3)+"'"
             #busyImageStart()
+            if #logClient then
+                logSource$="listEntityUseCodes"
+                print(#devClientLog) "<<< REQUEST "+logSource$+" (firm ID:  "+#firmID$+") "+date(0:"%Yd%Mz%Dz%Hz%mz%sz")+" >>>"
+                print(#devClientLog) "    filter: "+filter$
+                print(#devClientLog) "    top: "+"0"
+                print(#devClientLog) "    skip: "+"0"
+                print(#devClientLog) "    orderBy: "+""
+               startTime!=new Date()
+            endif
             fetchResult!=#avaTaxClient!.listEntityUseCodes(filter$,0,0,"")
+            if #logClient then
+                endTime!=new Date()
+                response_time=(endTime!.getTime()-startTime!.getTime())/1000
+                print(#devClientLog) "<<< RESPONSE "+logSource$+" (seconds: "+str(response_time)+") >>>"
+                print(#devClientLog) "    fetchResult: "+ fetchResult!.toString()
+                logSource$=""
+            endif
             #busyImageStop()
             entityUseList!=fetchResult!.getValue()
             if entityUseList!.size()=1 then
@@ -880,7 +984,7 @@ getBigDecimal_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret name$
             
-getEntityUseCdName_error:rem --- Modified method error trap/handler (11Oct2017)
+getEntityUseCdName_error:rem --- Error trap/handler for AvaTax methods and client side logging
     rem --- Stop busy/working image
     #busyImageStop()
 
@@ -892,6 +996,11 @@ getEntityUseCdName_error:rem --- Modified method error trap/handler (11Oct2017)
         rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
         errorHandled=#errorHandlerAvaTax(rd_err_text$)
+    endif
+    if #logClient then
+        print(#devClientLog) "<<< ERROR "+logSource$+" >>>"
+        print(#devClientLog) "    Error Number: "+ str(err_num)
+        print(#devClientLog) "    Error Text: "+ rd_err_text$
     endif
     if !errorHandled then
         call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1059,11 +1168,27 @@ getShipTo_error:rem --- Method error trap/handler (11Oct2017)
         rem  * @return HashMap taxSvcCdMap!
         rem  */
         method public HashMap getTaxSvcCds()
-            seterr getTaxSvcCdDesc2_error
+            seterr getTaxSvcCds_error
             taxSvcCdMap!=new HashMap()
 
             #busyImageStart()
+            if #logClient then
+                logSource$="listTaxCodes"
+                print(#devClientLog) "<<< REQUEST "+logSource$+" (firm ID:  "+#firmID$+") "+date(0:"%Yd%Mz%Dz%Hz%mz%sz")+" >>>"
+                print(#devClientLog) "    filter: "+""
+                print(#devClientLog) "    top: "+"0"
+                print(#devClientLog) "    skip: "+"0"
+                print(#devClientLog) "    orderBy: "+""
+                startTime!=new Date()
+            endif
             fetchResult!=#avaTaxClient!.listTaxCodes("",0,0,"")
+            if #logClient then
+                endTime!=new Date()
+                response_time=(endTime!.getTime()-startTime!.getTime())/1000
+                print(#devClientLog) "<<< RESPONSE "+logSource$+" (seconds: "+str(response_time)+") >>>"
+                print(#devClientLog) "    fetchSize: "+ str(fetchResult!.getValue().size())
+                logSource$=""
+            endif
             #busyImageStop()
             taxSvcCdList!=fetchResult!.getValue()
             taxSvcCdIter!=taxSvcCdList!.iterator()
@@ -1074,7 +1199,7 @@ getShipTo_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret taxSvcCdMap!
             
-getTaxSvcCdDesc2_error:rem --- Modified method error trap/handler (11Oct2017)
+getTaxSvcCds_error:rem --- Error trap/handler for AvaTax methods and client side logging
     rem --- Stop busy/working image
     #busyImageStop()
 
@@ -1086,6 +1211,11 @@ getTaxSvcCdDesc2_error:rem --- Modified method error trap/handler (11Oct2017)
         rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
         errorHandled=#errorHandlerAvaTax(rd_err_text$)
+    endif
+    if #logClient then
+        print(#devClientLog) "<<< ERROR "+logSource$+" >>>"
+        print(#devClientLog) "    Error Number: "+ str(err_num)
+        print(#devClientLog) "    Error Text: "+ rd_err_text$
     endif
     if !errorHandled then
         call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1109,7 +1239,23 @@ getTaxSvcCdDesc2_error:rem --- Modified method error trap/handler (11Oct2017)
 
             filter$="taxCode='"+cvs(taxSvcCd$,3)+"'"
             #busyImageStart()
+            if #logClient then
+                logSource$="listTaxCodes"
+                print(#devClientLog) "<<< REQUEST "+logSource$+" (firm ID:  "+#firmID$+") "+date(0:"%Yd%Mz%Dz%Hz%mz%sz")+" >>>"
+                print(#devClientLog) "    filter: "+filter$
+                print(#devClientLog) "    top: "+"0"
+                print(#devClientLog) "    skip: "+"0"
+                print(#devClientLog) "    orderBy: "+""
+                startTime!=new Date()
+            endif
             fetchResult!=#avaTaxClient!.listTaxCodes(filter$,0,0,"")
+            if #logClient then
+                endTime!=new Date()
+                response_time=(endTime!.getTime()-startTime!.getTime())/1000
+                print(#devClientLog) "<<< RESPONSE "+logSource$+" (seconds: "+str(response_time)+") >>>"
+                print(#devClientLog) "    fetchResult: "+ fetchResult!.toString()
+                logSource$=""
+            endif
             #busyImageStop()
             taxCodeList!=fetchResult!.getValue()
             if taxCodeList!.size()=1 then
@@ -1119,7 +1265,7 @@ getTaxSvcCdDesc2_error:rem --- Modified method error trap/handler (11Oct2017)
 
             methodret desc$
             
-getTaxSvcCdDesc_error:rem --- Modified method error trap/handler (11Oct2017)
+getTaxSvcCdDesc_error:rem --- Error trap/handler for AvaTax methods and client side logging
     rem --- Stop busy/working image
     #busyImageStop()
 
@@ -1131,6 +1277,11 @@ getTaxSvcCdDesc_error:rem --- Modified method error trap/handler (11Oct2017)
         rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
         errorHandled=#errorHandlerAvaTax(rd_err_text$)
+    endif
+    if #logClient then
+        print(#devClientLog) "<<< ERROR "+logSource$+" >>>"
+        print(#devClientLog) "    Error Number: "+ str(err_num)
+        print(#devClientLog) "    Error Text: "+ rd_err_text$
     endif
     if !errorHandled then
         call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1284,7 +1435,23 @@ stringJSON_error:rem --- Method error trap/handler (11Oct2017)
             country$=addrTo!.getCountry()
             region$=addrTo!.getRegion()
             #busyImageStart()
+            if #logClient then
+                logSource$="listValidCertificatesForCustomer"
+                print(#devClientLog) "<<< REQUEST "+logSource$+" (firm ID:  "+#firmID$+") "+date(0:"%Yd%Mz%Dz%Hz%mz%sz")+" >>>"
+                print(#devClientLog) "    companyId: "+#userCompanyID$
+                print(#devClientLog) "    customerCode: "+#firmID$+customer_id$
+                print(#devClientLog) "    country: "+country$
+                print(#devClientLog) "    region: "+region$
+                startTime!=new Date()
+            endif
             exemptStatusModel!=#avaTaxClient!.listValidCertificatesForCustomer(companyId!,customerCode$,country$,region$)
+            if #logClient then
+                endTime!=new Date()
+                response_time=(endTime!.getTime()-startTime!.getTime())/1000
+                print(#devClientLog) "<<< RESPONSE "+logSource$+" (seconds: "+str(response_time)+") >>>"
+                print(#devClientLog) "    status: "+ exemptStatusModel!.getStatus()
+                logSource$=""
+            endif
             #busyImageStop()
             certModel!=exemptStatusModel!.getCertificate()
 
@@ -1317,7 +1484,7 @@ stringJSON_error:rem --- Method error trap/handler (11Oct2017)
 
             methodret exemption!
             
-updateCustomerExemption_error:rem --- Modified method error trap/handler (11Oct2017)
+updateCustomerExemption_error:rem --- Error trap/handler for AvaTax methods and client side logging
     rem --- Stop busy/working image
     #busyImageStop()
 
@@ -1329,6 +1496,11 @@ updateCustomerExemption_error:rem --- Modified method error trap/handler (11Oct2
         rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
         errorHandled=#errorHandlerAvaTax(rd_err_text$)
+    endif
+    if #logClient then
+        print(#devClientLog) "<<< ERROR "+logSource$+" >>>"
+        print(#devClientLog) "    Error Number: "+ str(err_num)
+        print(#devClientLog) "    Error Text: "+ rd_err_text$
     endif
     if !errorHandled then
         call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
@@ -1449,7 +1621,23 @@ updateSalesTaxTransHistory_error:rem --- Method error trap/handler (11Oct2017)
             transactionCode$ = #firmID$+customer_id$+order_no$+ar_inv_no$
             documentType! = DocumentType.valueOf(transType$)
             #busyImageStart()
+            if #logClient then
+                logSource$="getTransactionByCode"
+                print(#devClientLog) "<<< REQUEST "+logSource$+" (firm ID:  "+#firmID$+") "+date(0:"%Yd%Mz%Dz%Hz%mz%sz")+" >>>"
+                print(#devClientLog) "    companyCode: "+#companyCode$
+                print(#devClientLog) "    transactionCode: "+transactionCode$
+                print(#devClientLog) "    documentType: "+documentType!.toString()
+                startTime!=new Date()
+            endif
             transaction!=#avaTaxClient!.getTransactionByCode(companyCode$, transactionCode$, documentType!, "", err=*next)
+            if #logClient then
+                endTime!=new Date()
+                response_time=(endTime!.getTime()-startTime!.getTime())/1000
+                print(#devClientLog) "<<< RESPONSE "+logSource$+" (seconds: "+str(response_time)+") >>>"
+                print(#devClientLog) "    status: "+transaction!.getStatus().toString()
+                print(#devClientLog) "    transactionId: "+transaction!.getId().toString()
+                logSource$=""
+            endif
             #busyImageStop()
 
             if transaction!=null() then
@@ -1461,7 +1649,24 @@ updateSalesTaxTransHistory_error:rem --- Method error trap/handler (11Oct2017)
                     voidModel!=new VoidTransactionModel()
                     voidModel!.setCode(VoidReasonCode.DocVoided)
                     #busyImageStart()
+                    if #logClient then
+                        logSource$="voidTransaction"
+                        print(#devClientLog) "<<< REQUEST "+logSource$+" (firm ID:  "+#firmID$+") "+date(0:"%Yd%Mz%Dz%Hz%mz%sz")+" >>>"
+                        print(#devClientLog) "    companyCode: "+#companyCode$
+                        print(#devClientLog) "    transactionCode: "+transactionCode$
+                        print(#devClientLog) "    documentType: "+documentType!.toString()
+                        print(#devClientLog) "    voidReason: "+voidModel!.getCode().toString()
+                        startTime!=new Date()
+                    endif
                     transaction!=#avaTaxClient!.voidTransaction(companyCode$, transactionCode$, documentType!, "", voidModel!)
+                    if #logClient then
+                        endTime!=new Date()
+                        response_time=(endTime!.getTime()-startTime!.getTime())/1000
+                        print(#devClientLog) "<<< RESPONSE "+logSource$+" (seconds: "+str(response_time)+") >>>"
+                        print(#devClientLog) "    status: "+transaction!.getStatus().toString()
+                        print(#devClientLog) "    transactionId: "+transaction!.getId().toString()
+                        logSource$=""
+                    endif
                     #busyImageStop()
                     if transaction!.getStatus().toString()="Cancelled" then success=Boolean.valueOf("true")
                 endif
@@ -1469,7 +1674,7 @@ updateSalesTaxTransHistory_error:rem --- Method error trap/handler (11Oct2017)
             
             methodret success
             
-voidTransaction_error:rem --- Modified method error trap/handler (11Oct2017)
+voidTransaction_error:rem --- Error trap/handler for AvaTax methods and client side logging
     rem --- Stop busy/working image
     #busyImageStop()
 
@@ -1481,6 +1686,11 @@ voidTransaction_error:rem --- Modified method error trap/handler (11Oct2017)
         rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
         if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
         errorHandled=#errorHandlerAvaTax(rd_err_text$)
+    endif
+    if #logClient then
+        print(#devClientLog) "<<< ERROR "+logSource$+" >>>"
+        print(#devClientLog) "    Error Number: "+ str(err_num)
+        print(#devClientLog) "    Error Text: "+ rd_err_text$
     endif
     if !errorHandled then
         call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
