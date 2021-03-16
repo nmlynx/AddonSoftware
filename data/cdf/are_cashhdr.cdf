@@ -1,343 +1,11 @@
-[[ARE_CASHHDR.BPRK]]
-rem --- Is previous record for the current deposit?
-	are01_dev=fnget_dev("ARE_CASHHDR")
-	dim are01a$:fnget_tpl$("ARE_CASHHDR")
-
-	rem --- Position the file at the correct record
-	batch_no$=callpoint!.getColumnData("ARE_CASHHDR.BATCH_NO")
-	ar_type$=callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")
-	start_key$=firm_id$+batch_no$+ar_type$
-	trip_key$=start_key$+callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_01")
-	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")
-	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")
-	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")
-	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")
-	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_02")
-	read record (are01_dev,key=trip_key$,dir=0,dom=*next)
-
-	hit_eof=0
-	deposit_id$=callpoint!.getDevObject("deposit_id")
-	while 1
-		p_key$ = keyp(are01_dev, end=eof_pkey)
-		read record (are01_dev, key=p_key$)are01a$
-		if are01a.firm_id$+are01a.batch_no$+are01a.ar_type$=start_key$ then
-			if are01a.deposit_id$=deposit_id$ then
-				rem --- Have a keeper, stop looking
-				break
-			else
-				rem --- Keep looking
-				read (are01_dev, key=p_key$, dir=0)
-				continue
-			endif
-		endif
-		rem --- End-of-firm
-
-eof_pkey: rem --- If end-of-file or end-of-firm, rewind to last record in this firm
-		read (are01_dev, key=start_key$+$ff$, dom=*next)
-		hit_eof=hit_eof+1
-		if hit_eof>1 then
-			msg_id$ = "AR_DEPOSIT_NO_RCPTS"
-			gosub disp_message
-			callpoint!.setStatus("ABORT-NEWREC")
-			break
-		endif
-	wend
-[[ARE_CASHHDR.BNEK]]
-rem --- Is next record for the current deposit?
-	are01_dev=fnget_dev("ARE_CASHHDR")
-	dim are01a$:fnget_tpl$("ARE_CASHHDR")
-
-	rem --- Position the file at the correct record
-	batch_no$=callpoint!.getColumnData("ARE_CASHHDR.BATCH_NO")
-	ar_type$=callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")
-	start_key$=firm_id$+batch_no$+ar_type$
-	trip_key$=start_key$+callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_01")
-	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")
-	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")
-	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")
-	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")
-	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_02")
-	read record (are01_dev,key=trip_key$,dom=*next)
-
-	hit_eof=0
-	deposit_id$=callpoint!.getDevObject("deposit_id")
-	while 1
-		read record (are01_dev, dir=0, end=eof)are01a$
-		if are01a.firm_id$+are01a.batch_no$+are01a.ar_type$=start_key$ then
-			if are01a.deposit_id$=deposit_id$ then
-				rem --- Have a keeper, stop looking
-				break
-			else
-				rem --- Keep looking
-				read (are01_dev, end=*endif)
-				continue
-			endif
-		endif
-		rem --- End-of-firm
-
-eof: rem --- If end-of-file or end-of-firm, rewind to first record of the firm
-		read (are01_dev, key=start_key$, dom=*next)
-		hit_eof=hit_eof+1
-		if hit_eof>1 then
-			msg_id$ = "AR_DEPOSIT_NO_RCPTS"
-			gosub disp_message
-			callpoint!.setStatus("ABORT-NEWREC")
-			break
-		endif
-	wend
-[[ARE_CASHHDR.BLST]]
-rem --- Set flag that Last Record has been selected
-	callpoint!.setDevObject("FirstLastRecord","LAST")
-[[ARE_CASHHDR.BFST]]
-rem --- Set flag that First Record has been selected
-	callpoint!.setDevObject("FirstLastRecord","FIRST")
-[[ARE_CASHHDR.AOPT-DPST]]
-rem --- Launch Bank Deposit Entry form if using Bank Rec.
-	if callpoint!.getDevObject("br_interface")="Y" then
-		call stbl("+DIR_SYP")+"bam_run_prog.bbj", "ARE_DEPOSIT", stbl("+USER_ID"), "MNT", "", table_chans$[all]
-
-		rem --- Start a new Cash Receipt record if the deposit_id has changed
-		if callpoint!.getDevObject("deposit_id")<>callpoint!.getColumnData("ARE_CASHHDR.DEPOSIT_ID") then
-			callpoint!.setStatus("NEWREC")
-			break
-		endif
-	endif
-[[ARE_CASHHDR.ASHO]]
-rem --- Launch Bank Deposit Entry form if using Bank Rec.
-	if callpoint!.getDevObject("br_interface")="Y" then
-		call stbl("+DIR_SYP")+"bam_run_prog.bbj", "ARE_DEPOSIT", stbl("+USER_ID"), "MNT", "", table_chans$[all]
-
-		rem --- DEPOSIT_ID is required, so terminate process if we don't have one.
-		if callpoint!.getDevObject("deposit_id")="" and callpoint!.getColumnData("ARE_CASHHDR.DEPOSIT_ID")=""  then
-			callpoint!.setStatus("EXIT")
-
-			rem --- Remove software lock on batch, if batching
-			batch$=stbl("+BATCH_NO",err=*next)
-			if num(batch$)<>0
-				lock_table$="ADM_PROCBATCHES"
-				lock_record$=firm_id$+stbl("+PROCESS_ID")+batch$
-				lock_type$="X"
-				lock_status$=""
-				lock_disp$=""
-				call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
-			endif
-			break
-		endif
-	endif
-[[ARE_CASHHDR.AR_CHECK_NO.AVAL]]
-rem --- temporary workaround to Barista bug not padding ar_check_no when nothing is entered for it
-	dim are01a$:fnget_tpl$("ARE_CASHHDR")
-	wk$=fattr(are01a$,"ar_check_no")
-	ar_check_no$=pad(callpoint!.getUserInput(),dec(wk$(10,2)))
-	callpoint!.setUserInput(ar_check_no$)
-[[ARE_CASHHDR.ARAR]]
-rem --- If First/Last Record was used, did it return a record for the current deposit?
-	if callpoint!.getDevObject("FirstLastRecord")<>null() and callpoint!.getDevObject("FirstLastRecord")<>"" then
-		whichRecord$=callpoint!.getDevObject("FirstLastRecord")
-		callpoint!.setDevObject("FirstLastRecord","")
-
-		deposit_id$=callpoint!.getDevObject("deposit_id")
-		if callpoint!.getColumnData("ARE_CASHHDR.DEPOSIT_ID")<>deposit_id$ then
-			are01_dev = fnget_dev("ARE_CASHHDR")
-			dim are01a$:fnget_tpl$("ARE_CASHHDR")
-			batch_no$=callpoint!.getColumnData("ARE_CASHHDR.BATCH_NO")
-			ar_type$=callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")
-			next_key$=""
-
-			if whichRecord$="FIRST" then
-				rem --- Locate FIRST valid record to display
-				while 1
-					read record (are01_dev, dir=0, end=*break) are01a$
-					if are01a.firm_id$+are01a.batch_no$+are01a.ar_type$<>firm_id$+batch_no$+ar_type$ then break
-					if are01a.deposit_id$=deposit_id$ then
-						rem --- Have a keeper, stop looking
-						next_key$=key(are01_dev)
-						break
-					else
-						rem --- Keep looking
-						read (are01_dev, end=*endif)
-						continue
-					endif
-				wend
-			endif
-
-			if whichRecord$="LAST" then
-				rem --- Locate LAST valid record to display
-				while 1
-					p_key$ = keyp(are01_dev, end=*break)
-					read record (are01_dev, key=p_key$) are01a$
-					if are01a.firm_id$+are01a.batch_no$+are01a.ar_type$<>firm_id$+batch_no$+ar_type$ then break
-					if are01a.deposit_id$=deposit_id$ then
-						rem --- Have a keeper, stop looking
-						next_key$=p_key$
-						break
-					else
-						rem --- Keep looking
-						read (are01_dev, key=p_key$, dir=0)
-						continue
-					endif
-				wend
-			endif
-
-			rem --- Display next record
-			if next_key$<>"" then
-				callpoint!.setStatus("RECORD:["+next_key$+"]")
-				break
-			else
-				msg_id$ = "AR_DEPOSIT_NO_RCPTS"
-				gosub disp_message
-				callpoint!.setStatus("ABORT-NEWREC")
-				break
-			endif
-		endif
-	endif
-
-rem --- Enable/disable controls based on Cash Receipt code
-	wk_cash_cd$=callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")
-	gosub get_cash_rec_cd
-	gosub able_controls
 [[ARE_CASHHDR.AABO]]
 rem --- User has elected to not save changes. 
 rem --- For new records only, remove any are_cashgl recs already added (don't want orphans).
 
 if callpoint!.getRecordMode()="A" then
-
-	rem --- read thru are-21's just written (if any) and remove them
-	rem --- alternative might be to set "no_out" flag and just give a warning, then  ABORT, but
-	rem --- while BEND has an ABORT, BREX doesn't, so if user wasn't closing, but just moving on, ABORT won't be seen
-
-	are_cashgl_dev=fnget_dev("ARE_CASHGL")
-	dim are21a$:fnget_tpl$("ARE_CASHGL")
-
-	key_pfx$=callpoint!.getColumnData("ARE_CASHHDR.FIRM_ID")+callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")+
-:		callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_01")+callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")+
-:		callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")+callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")+
-:		callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")+callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_02")
-
-	read(are_cashgl_dev,key=key_pfx$,dom=*next)
-	while 1	
-		ky$=key(are_cashgl_dev,end=*break)
-		if pos(key_pfx$=ky$)<>1 then break
-		remove (are_cashgl_dev,key=ky$)	
-	wend
-endif
-[[ARE_CASHHDR.BEND]]
-rem --- remove software lock on batch, if batching
-
-	batch$=stbl("+BATCH_NO",err=*next)
-	if num(batch$)<>0
-		lock_table$="ADM_PROCBATCHES"
-		lock_record$=firm_id$+stbl("+PROCESS_ID")+batch$
-		lock_type$="X"
-		lock_status$=""
-		lock_disp$=""
-		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
-	endif
-
-rem --- If using Bank Rec, check the Deposit’s TOT_DEPOSIT_AMT when ending a Deposit
-	if callpoint!.getDevObject("br_interface")="Y" then
-		deposit_id$=callpoint!.getDevObject("deposit_id")
-		tot_deposit_amt=num(callpoint!.getDevObject("tot_deposit_amt"))
-		tot_receipts_amt=num(callpoint!.getDevObject("tot_receipts_amt"))
-		if tot_deposit_amt=0 then
-			rem --- When TOT_DEPOSIT_AMT is zero, set it equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
-			gosub updateDepositAmt
-		else
-			rem --- Warn TOT_DEPOSIT_AMT it is not equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
-			if tot_deposit_amt<>tot_receipts_amt then
-				call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",AmtMsk$,0,0
-				msg_id$="AR_DEPOSIT_AMT_BAD"
-				dim msg_tokens$[2]
-				msg_tokens$[1]=cvs(str(tot_deposit_amt:AmtMsk$),3)
-				msg_tokens$[2]=cvs(str(tot_receipts_amt:AmtMsk$),3)
-				gosub disp_message
-				if msg_opt$="C" then
-					rem --- Change the deposit amount, set it equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
-					gosub updateDepositAmt
-				endif
-				if msg_opt$="E" then
-					rem --- Edit the cash receipts for this Deposit
-					callpoint!.setStatus("ABORT")
-					break
-				endif
-				if msg_opt$="L" then
-					rem --- Exit as-is
-					rem --- Warn that Cash Receipt Register can't be updated
-					msg_id$="AR_NO_UPDT_CSHRCPT"
-					gosub disp_message
-				endif
-			endif
-		endif
-	endif
-[[ARE_CASHHDR.BTBL]]
-rem --- Get Batch information
-
-call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]
-callpoint!.setTableColumnAttribute("ARE_CASHHDR.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
-[[ARE_CASHHDR.PAYMENT_AMT.BINP]]
-rem --- store value in control prior to input so we'll know at AVAL if it changed
-user_tpl.binp_pay_amt=num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT"))
-[[ARE_CASHHDR.ARNF]]
-if num(stbl("+BATCH_NO"),err=*next)<>0
-	rem --- Check if this record exists in a different batch
-	tableAlias$=callpoint!.getAlias()
-	primaryKey$=callpoint!.getColumnData("ARE_CASHHDR.FIRM_ID")+
-:		callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")+
-:		callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_01")+
-:		callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")+
-:		callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")+
-:		callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")+
-:		callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")+
-:		callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_02")
-	call stbl("+DIR_PGM")+"adc_findbatch.aon",tableAlias$,primaryKey$,Translate!,table_chans$[all],existingBatchNo$,status
-	if status or existingBatchNo$<>"" then callpoint!.setStatus("NEWREC")
+	gosub delete_cashgl
 endif
 
-ctl_stat$="D"
-gosub disable_key_fields
-
-commentMap!=new HashMap()
-callpoint!.setDevObject("commentMap",commentMap!)
-gosub get_open_invoices
-
-if len(currdtl$)
-	gosub include_new_OA_trans
-endif
-disp_applied=chk_applied-gl_applied
-disp_bal=num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT"))-disp_applied
-callpoint!.setColumnData("<<DISPLAY>>.DISP_APPLIED",str(disp_applied))
-callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",str(disp_bal))
-gosub fill_bottom_grid
-callpoint!.setStatus("REFRESH-ABLEMAP")
-[[ARE_CASHHDR.BWRI]]
-gosub validate_before_writing
-switch pos(validate_passed$="NO")
-	case 1; rem validation didn't pass, user elected not to update
-		callpoint!.setStatus("ABORT")
-	break
-	case 2; rem user elected to apply undistributed amt on account
-		gosub apply_on_acct
-		gosub get_open_invoices
-	break
-	case default
-	break
-swend
-[[ARE_CASHHDR.BSHO]]
-rem --- disable display fields
-	dim dctl$[3]
- 	dctl$[1]="<<DISPLAY>>.DISP_CUST_BAL"
-	dctl$[2]="<<DISPLAY>>.DISP_BAL"
-	dctl$[3]="<<DISPLAY>>.DISP_APPLIED"
-	gosub disable_ctls
-
-rem --- Disable Bank Rec. related controls
-	if callpoint!.getDevObject("br_interface")<>"Y" then
-		rem --- Disable New Deposit button if not using Bank Rec.
-		callpoint!.setOptionEnabled("DPST",0)
-	else
-		rem --- Disable fields coming from Bank Rec deposit when using Bank Rec.
-		callpoint!.setColumnEnabled("ARE_CASHHDR.CASH_REC_CD",-1)
-	endif
 [[ARE_CASHHDR.ACUS]]
 data_present$="N"
 gosub check_required_fields
@@ -396,6 +64,7 @@ if data_present$="Y"
 		break
 	swend
 endif
+
 [[ARE_CASHHDR.ADEL]]
 gosub delete_cashdet_cashbal
 
@@ -405,6 +74,7 @@ rem --- If using Bank Rec, adjust tot_receipts_amt when receipt is deleted
 		tot_receipts_amt=tot_receipts_amt-num(callpoint!.getDevObject("saved_payment_amt"))
 		callpoint!.setDevObject("tot_receipts_amt",tot_receipts_amt)
 	endif
+
 [[ARE_CASHHDR.ADIS]]
 tmp_cust_id$=callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")
 gosub get_customer_balance
@@ -499,8 +169,19 @@ if callpoint!.getDevObject("br_interface")="Y" then
 	rem --- Capture currently saved payment_amt so can adjust tot_receipts_amt if payment_amt is changed
 	callpoint!.setDevObject("saved_payment_amt",num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT")))
 endif
-[[ARE_CASHHDR.AOPT-OACT]]
-gosub apply_on_acct
+
+[[ARE_CASHHDR.AOPT-DPST]]
+rem --- Launch Bank Deposit Entry form if using Bank Rec.
+	if callpoint!.getDevObject("br_interface")="Y" then
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj", "ARE_DEPOSIT", stbl("+USER_ID"), "MNT", "", table_chans$[all]
+
+		rem --- Start a new Cash Receipt record if the deposit_id has changed
+		if callpoint!.getDevObject("deposit_id")<>callpoint!.getColumnData("ARE_CASHHDR.DEPOSIT_ID") then
+			callpoint!.setStatus("NEWREC")
+			break
+		endif
+	endif
+
 [[ARE_CASHHDR.AOPT-GLED]]
 rem --- call up GL Dist grid if GL installed
 if user_tpl.glint$="Y"
@@ -509,6 +190,77 @@ else
 	msg_id$="AR_NO_GL"
 	gosub disp_message							
 endif
+
+[[ARE_CASHHDR.AOPT-OACT]]
+gosub apply_on_acct
+
+[[ARE_CASHHDR.ARAR]]
+rem --- If First/Last Record was used, did it return a record for the current deposit?
+	if callpoint!.getDevObject("FirstLastRecord")<>null() and callpoint!.getDevObject("FirstLastRecord")<>"" then
+		whichRecord$=callpoint!.getDevObject("FirstLastRecord")
+		callpoint!.setDevObject("FirstLastRecord","")
+
+		deposit_id$=callpoint!.getDevObject("deposit_id")
+		if callpoint!.getColumnData("ARE_CASHHDR.DEPOSIT_ID")<>deposit_id$ then
+			are01_dev = fnget_dev("ARE_CASHHDR")
+			dim are01a$:fnget_tpl$("ARE_CASHHDR")
+			batch_no$=callpoint!.getColumnData("ARE_CASHHDR.BATCH_NO")
+			ar_type$=callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")
+			next_key$=""
+
+			if whichRecord$="FIRST" then
+				rem --- Locate FIRST valid record to display
+				while 1
+					read record (are01_dev, dir=0, end=*break) are01a$
+					if are01a.firm_id$+are01a.batch_no$+are01a.ar_type$<>firm_id$+batch_no$+ar_type$ then break
+					if are01a.deposit_id$=deposit_id$ then
+						rem --- Have a keeper, stop looking
+						next_key$=key(are01_dev)
+						break
+					else
+						rem --- Keep looking
+						read (are01_dev, end=*endif)
+						continue
+					endif
+				wend
+			endif
+
+			if whichRecord$="LAST" then
+				rem --- Locate LAST valid record to display
+				while 1
+					p_key$ = keyp(are01_dev, end=*break)
+					read record (are01_dev, key=p_key$) are01a$
+					if are01a.firm_id$+are01a.batch_no$+are01a.ar_type$<>firm_id$+batch_no$+ar_type$ then break
+					if are01a.deposit_id$=deposit_id$ then
+						rem --- Have a keeper, stop looking
+						next_key$=p_key$
+						break
+					else
+						rem --- Keep looking
+						read (are01_dev, key=p_key$, dir=0)
+						continue
+					endif
+				wend
+			endif
+
+			rem --- Display next record
+			if next_key$<>"" then
+				callpoint!.setStatus("RECORD:["+next_key$+"]")
+				break
+			else
+				msg_id$ = "AR_DEPOSIT_NO_RCPTS"
+				gosub disp_message
+				callpoint!.setStatus("ABORT-NEWREC")
+				break
+			endif
+		endif
+	endif
+
+rem --- Enable/disable controls based on Cash Receipt code
+	wk_cash_cd$=callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")
+	gosub get_cash_rec_cd
+	gosub able_controls
+
 [[ARE_CASHHDR.AREC]]
 rem --- clear custom controls (grids) and UserObj! items
 
@@ -551,6 +303,70 @@ rem --- Initialize fields for Bank Rec deposit.
 	else
 		callpoint!.setDevObject("deposit_id",callpoint!.getColumnData("ARE_CASHHDR.DEPOSIT_ID"))
 	endif
+
+[[ARE_CASHHDR.ARNF]]
+if num(stbl("+BATCH_NO"),err=*next)<>0
+	rem --- Check if this record exists in a different batch
+	tableAlias$=callpoint!.getAlias()
+	primaryKey$=callpoint!.getColumnData("ARE_CASHHDR.FIRM_ID")+
+:		callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")+
+:		callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_01")+
+:		callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")+
+:		callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")+
+:		callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")+
+:		callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")+
+:		callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_02")
+	call stbl("+DIR_PGM")+"adc_findbatch.aon",tableAlias$,primaryKey$,Translate!,table_chans$[all],existingBatchNo$,status
+	if status or existingBatchNo$<>"" then callpoint!.setStatus("NEWREC")
+endif
+
+ctl_stat$="D"
+gosub disable_key_fields
+
+commentMap!=new HashMap()
+callpoint!.setDevObject("commentMap",commentMap!)
+gosub get_open_invoices
+
+if len(currdtl$)
+	gosub include_new_OA_trans
+endif
+disp_applied=chk_applied-gl_applied
+disp_bal=num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT"))-disp_applied
+callpoint!.setColumnData("<<DISPLAY>>.DISP_APPLIED",str(disp_applied))
+callpoint!.setColumnData("<<DISPLAY>>.DISP_BAL",str(disp_bal))
+gosub fill_bottom_grid
+callpoint!.setStatus("REFRESH-ABLEMAP")
+
+[[ARE_CASHHDR.AR_CHECK_NO.AVAL]]
+rem --- temporary workaround to Barista bug not padding ar_check_no when nothing is entered for it
+	dim are01a$:fnget_tpl$("ARE_CASHHDR")
+	wk$=fattr(are01a$,"ar_check_no")
+	ar_check_no$=pad(callpoint!.getUserInput(),dec(wk$(10,2)))
+	callpoint!.setUserInput(ar_check_no$)
+
+[[ARE_CASHHDR.ASHO]]
+rem --- Launch Bank Deposit Entry form if using Bank Rec.
+	if callpoint!.getDevObject("br_interface")="Y" then
+		call stbl("+DIR_SYP")+"bam_run_prog.bbj", "ARE_DEPOSIT", stbl("+USER_ID"), "MNT", "", table_chans$[all]
+
+		rem --- DEPOSIT_ID is required, so terminate process if we don't have one.
+		if callpoint!.getDevObject("deposit_id")="" and callpoint!.getColumnData("ARE_CASHHDR.DEPOSIT_ID")=""  then
+			callpoint!.setStatus("EXIT")
+
+			rem --- Remove software lock on batch, if batching
+			batch$=stbl("+BATCH_NO",err=*next)
+			if num(batch$)<>0
+				lock_table$="ADM_PROCBATCHES"
+				lock_record$=firm_id$+stbl("+PROCESS_ID")+batch$
+				lock_type$="X"
+				lock_status$=""
+				lock_disp$=""
+				call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+			endif
+			break
+		endif
+	endif
+
 [[ARE_CASHHDR.ASIZ]]
 if UserObj!<>null()
 	gridInvoice!=UserObj!.getItem(num(user_tpl.inv_grid$))
@@ -558,6 +374,7 @@ if UserObj!<>null()
 	gridInvoice!.setFitToGrid(1)
 	gridInvoice!.setColumnWidth(0,25)
 endif
+
 [[ARE_CASHHDR.AWIN]]
 use ::ado_util.src::util
 use java.util.HashMap
@@ -724,6 +541,7 @@ gridInvoice!.setColumnEditable(9,1)
 gridInvoice!.setColumnEditable(11,1)
 gridInvoice!.setTabAction(SysGUI!.GRID_NAVIGATE_LEGACY)
 gridInvoice!.setTabActionSkipsNonEditableCells(1)
+
 [[ARE_CASHHDR.AWRI]]
 gosub update_cashhdr_cashdet_cashbal
 
@@ -732,6 +550,190 @@ rem ---  When using Bank Rec, sum up tot_receipts_amt for current Deposit
 		rem --- Adjust tot_receipts_amt for changes in payment_amt
 		gosub adjustTotReceiptsAmt
 	endif
+
+[[ARE_CASHHDR.BEND]]
+rem --- remove software lock on batch, if batching
+
+	batch$=stbl("+BATCH_NO",err=*next)
+	if num(batch$)<>0
+		lock_table$="ADM_PROCBATCHES"
+		lock_record$=firm_id$+stbl("+PROCESS_ID")+batch$
+		lock_type$="X"
+		lock_status$=""
+		lock_disp$=""
+		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+	endif
+
+rem --- If using Bank Rec, check the Deposit’s TOT_DEPOSIT_AMT when ending a Deposit
+	if callpoint!.getDevObject("br_interface")="Y" then
+		deposit_id$=callpoint!.getDevObject("deposit_id")
+		tot_deposit_amt=num(callpoint!.getDevObject("tot_deposit_amt"))
+		tot_receipts_amt=num(callpoint!.getDevObject("tot_receipts_amt"))
+		if tot_deposit_amt=0 then
+			rem --- When TOT_DEPOSIT_AMT is zero, set it equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
+			gosub updateDepositAmt
+		else
+			rem --- Warn TOT_DEPOSIT_AMT it is not equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
+			if tot_deposit_amt<>tot_receipts_amt then
+				call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",AmtMsk$,0,0
+				msg_id$="AR_DEPOSIT_AMT_BAD"
+				dim msg_tokens$[2]
+				msg_tokens$[1]=cvs(str(tot_deposit_amt:AmtMsk$),3)
+				msg_tokens$[2]=cvs(str(tot_receipts_amt:AmtMsk$),3)
+				gosub disp_message
+				if msg_opt$="C" then
+					rem --- Change the deposit amount, set it equal to the sum of the PAYMENT_AMTs, i.e., tot_receipts_amt
+					gosub updateDepositAmt
+				endif
+				if msg_opt$="E" then
+					rem --- Edit the cash receipts for this Deposit
+					callpoint!.setStatus("ABORT")
+					break
+				endif
+				if msg_opt$="L" then
+					rem --- Exit as-is
+					rem --- Warn that Cash Receipt Register can't be updated
+					msg_id$="AR_NO_UPDT_CSHRCPT"
+					gosub disp_message
+				endif
+			endif
+		endif
+	endif
+
+[[ARE_CASHHDR.BFST]]
+rem --- Set flag that First Record has been selected
+	callpoint!.setDevObject("FirstLastRecord","FIRST")
+
+[[ARE_CASHHDR.BLST]]
+rem --- Set flag that Last Record has been selected
+	callpoint!.setDevObject("FirstLastRecord","LAST")
+
+[[ARE_CASHHDR.BNEK]]
+rem --- Is next record for the current deposit?
+	are01_dev=fnget_dev("ARE_CASHHDR")
+	dim are01a$:fnget_tpl$("ARE_CASHHDR")
+
+	rem --- Position the file at the correct record
+	batch_no$=callpoint!.getColumnData("ARE_CASHHDR.BATCH_NO")
+	ar_type$=callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")
+	start_key$=firm_id$+batch_no$+ar_type$
+	trip_key$=start_key$+callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_01")
+	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")
+	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")
+	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")
+	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")
+	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_02")
+	read record (are01_dev,key=trip_key$,dom=*next)
+
+	hit_eof=0
+	deposit_id$=callpoint!.getDevObject("deposit_id")
+	while 1
+		read record (are01_dev, dir=0, end=eof)are01a$
+		if are01a.firm_id$+are01a.batch_no$+are01a.ar_type$=start_key$ then
+			if are01a.deposit_id$=deposit_id$ then
+				rem --- Have a keeper, stop looking
+				break
+			else
+				rem --- Keep looking
+				read (are01_dev, end=*endif)
+				continue
+			endif
+		endif
+		rem --- End-of-firm
+
+eof: rem --- If end-of-file or end-of-firm, rewind to first record of the firm
+		read (are01_dev, key=start_key$, dom=*next)
+		hit_eof=hit_eof+1
+		if hit_eof>1 then
+			msg_id$ = "AR_DEPOSIT_NO_RCPTS"
+			gosub disp_message
+			callpoint!.setStatus("ABORT-NEWREC")
+			break
+		endif
+	wend
+
+[[ARE_CASHHDR.BPRK]]
+rem --- Is previous record for the current deposit?
+	are01_dev=fnget_dev("ARE_CASHHDR")
+	dim are01a$:fnget_tpl$("ARE_CASHHDR")
+
+	rem --- Position the file at the correct record
+	batch_no$=callpoint!.getColumnData("ARE_CASHHDR.BATCH_NO")
+	ar_type$=callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")
+	start_key$=firm_id$+batch_no$+ar_type$
+	trip_key$=start_key$+callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_01")
+	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")
+	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")
+	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")
+	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")
+	trip_key$=trip_key$+callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_02")
+	read record (are01_dev,key=trip_key$,dir=0,dom=*next)
+
+	hit_eof=0
+	deposit_id$=callpoint!.getDevObject("deposit_id")
+	while 1
+		p_key$ = keyp(are01_dev, end=eof_pkey)
+		read record (are01_dev, key=p_key$)are01a$
+		if are01a.firm_id$+are01a.batch_no$+are01a.ar_type$=start_key$ then
+			if are01a.deposit_id$=deposit_id$ then
+				rem --- Have a keeper, stop looking
+				break
+			else
+				rem --- Keep looking
+				read (are01_dev, key=p_key$, dir=0)
+				continue
+			endif
+		endif
+		rem --- End-of-firm
+
+eof_pkey: rem --- If end-of-file or end-of-firm, rewind to last record in this firm
+		read (are01_dev, key=start_key$+$ff$, dom=*next)
+		hit_eof=hit_eof+1
+		if hit_eof>1 then
+			msg_id$ = "AR_DEPOSIT_NO_RCPTS"
+			gosub disp_message
+			callpoint!.setStatus("ABORT-NEWREC")
+			break
+		endif
+	wend
+
+[[ARE_CASHHDR.BSHO]]
+rem --- disable display fields
+	dim dctl$[3]
+ 	dctl$[1]="<<DISPLAY>>.DISP_CUST_BAL"
+	dctl$[2]="<<DISPLAY>>.DISP_BAL"
+	dctl$[3]="<<DISPLAY>>.DISP_APPLIED"
+	gosub disable_ctls
+
+rem --- Disable Bank Rec. related controls
+	if callpoint!.getDevObject("br_interface")<>"Y" then
+		rem --- Disable New Deposit button if not using Bank Rec.
+		callpoint!.setOptionEnabled("DPST",0)
+	else
+		rem --- Disable fields coming from Bank Rec deposit when using Bank Rec.
+		callpoint!.setColumnEnabled("ARE_CASHHDR.CASH_REC_CD",-1)
+	endif
+
+[[ARE_CASHHDR.BTBL]]
+rem --- Get Batch information
+
+call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]
+callpoint!.setTableColumnAttribute("ARE_CASHHDR.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
+
+[[ARE_CASHHDR.BWRI]]
+gosub validate_before_writing
+switch pos(validate_passed$="NO")
+	case 1; rem validation didn't pass, user elected not to update
+		callpoint!.setStatus("ABORT")
+	break
+	case 2; rem user elected to apply undistributed amt on account
+		gosub apply_on_acct
+		gosub get_open_invoices
+	break
+	case default
+	break
+swend
+
 [[ARE_CASHHDR.CASH_CHECK.AVAL]]
 if callpoint!.getUserInput()="$"
 	ctl_name$="ABA_NO"
@@ -744,11 +746,13 @@ else
 	gosub disable_fields
 endif
 callpoint!.setStatus("REFRESH-ABLEMAP-ACTIVATE")
+
 [[ARE_CASHHDR.CASH_REC_CD.AVAL]]
 rem --- Enable/disable controls based on Cash Receipt code
 	wk_cash_cd$=callpoint!.getUserInput()
 	gosub get_cash_rec_cd
 	gosub able_controls
+
 [[ARE_CASHHDR.CUSTOMER_ID.AVAL]]
 tmp_cust_id$=callpoint!.getUserInput()
 rem "Customer Inactive Feature"
@@ -770,6 +774,7 @@ endif
 
 gosub get_customer_balance
 callpoint!.setStatus("REFRESH")
+
 [[ARE_CASHHDR.PAYMENT_AMT.AVAL]]
 rem --- after check amt entered, alter remaining balance and re-do autopay, if turned on
 pymt_dist$=UserObj!.getItem(num(user_tpl.pymt_dist$))
@@ -786,6 +791,11 @@ if old_pay<>new_pay
 	callpoint!.setStatus("REFRESH")
 	user_tpl.binp_pay_amt=new_pay
 endif
+
+[[ARE_CASHHDR.PAYMENT_AMT.BINP]]
+rem --- store value in control prior to input so we'll know at AVAL if it changed
+user_tpl.binp_pay_amt=num(callpoint!.getColumnData("ARE_CASHHDR.PAYMENT_AMT"))
+
 [[ARE_CASHHDR.RECEIPT_DATE.AVAL]]
 if len(callpoint!.getUserInput())<6 or pos("9"<>callpoint!.getUserInput())=0 then callpoint!.setUserInput(stbl("+SYSTEM_DATE"))
 gl$=user_tpl.glint$
@@ -799,6 +809,7 @@ if gl$="Y"
 		user_tpl.glper$=per$
 	endif
 endif
+
 [[ARE_CASHHDR.<CUSTOM>]]
 #include [+ADDON_LIB]std_functions.aon
 rem ==================================================================
@@ -1118,10 +1129,11 @@ return
 rem ==================================================================
 delete_cashdet_cashbal:
 rem ==================================================================
-rem --- letting Barista delete are-21 based on delete cascade in form
 rem --- can't let Barista just delete are-11 and 31, 
 rem ---  because 31 may or may not be deleted, based on it's bal after deleting are-11's...
 rem ---  so delete are-11 and 31 manually here.
+rem --- also delete are-21 (are_cashgl)
+
 	are_cashdet_dev=fnget_dev("ARE_CASHDET")
 	are_cashbal_dev=fnget_dev("ARE_CASHBAL")	
 	dim are11a$:fnget_tpl$("ARE_CASHDET")
@@ -1163,6 +1175,9 @@ rem ---  so delete are-11 and 31 manually here.
 			more_dtl=0
 		endif
 	wend
+
+	gosub delete_cashgl
+
 	gridInvoice!=UserObj!.getItem(num(user_tpl.inv_grid$))
 	gridInvoice!.clearMainGrid()
 return
@@ -1217,30 +1232,22 @@ return
 rem ==================================================================
 delete_cashgl:
 rem ==================================================================
-rem --- intended to use if oper cancels out after having already done GL dist in separate grid/process, so need to be able to remove them
-rem --- waiting for BCAN event in Barista
-rem --- monitor gl dist remove
+rem --- called from above delete_cashdet_cashbal routine
+rem ---    and AABO, since user may opt to exit/abort w/o saving a cash receipt, but after having created a cashgl rec 
+
 	are_cashgl_dev=fnget_dev("ARE_CASHGL")
 	dim are21a$:fnget_tpl$("ARE_CASHGL")
-	are21a.firm_id$=firm_id$
-	are21a.receipt_date$=callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")
-	are21a.customer_id$=callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")
-	are21a.cash_rec_cd$=callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")
-	are21a.ar_check_no$=callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")	
-	read(are_cashgl_dev,key=are21a.firm_id$+are21a.ar_type$+are21a.reserved_key_01$+are21a.receipt_date$+are21a.customer_id$+
-:		are21a.cash_rec_cd$+are21a.ar_check_no$+are21a.reserved_key_02$,dom=*next)
-	more_dtl=1
-	while more_dtl
-		readrecord(are_cashgl_dev)are21a$
-		if are21a.firm_id$=firm_id$ and are21a.receipt_date$=callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE") and
-:										are21a.customer_id$=callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID") and 
-:										are21a.cash_rec_cd$=callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD") and
-:										are21a.ar_check_no$=callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")
-			remove(are_cashgl_dev,key=are21a.firm_id$+are21a.ar_type$+are21a.reserved_key_01$+are21a.receipt_date$+
-:				are21a.customer_id$+are21a.cash_rec_cd$+are21a.ar_check_no$+are21a.reserved_key_02$+are21a.gl_account$)
-		else
-			more_dtl=0
-		endif
+
+	key_pfx$=callpoint!.getColumnData("ARE_CASHHDR.FIRM_ID")+callpoint!.getColumnData("ARE_CASHHDR.AR_TYPE")+
+:		callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_01")+callpoint!.getColumnData("ARE_CASHHDR.RECEIPT_DATE")+
+:		callpoint!.getColumnData("ARE_CASHHDR.CUSTOMER_ID")+callpoint!.getColumnData("ARE_CASHHDR.CASH_REC_CD")+
+:		callpoint!.getColumnData("ARE_CASHHDR.AR_CHECK_NO")+callpoint!.getColumnData("ARE_CASHHDR.RESERVED_KEY_02")
+
+	read(are_cashgl_dev,key=key_pfx$,dom=*next)
+	while 1	
+		ky$=key(are_cashgl_dev,end=*break)
+		if pos(key_pfx$=ky$)<>1 then break
+		remove (are_cashgl_dev,key=ky$)	
 	wend
 return
 
@@ -1990,3 +1997,6 @@ rem ==================================================================
 	return
 
 #include [+ADDON_LIB]std_missing_params.aon
+
+
+
