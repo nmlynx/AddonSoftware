@@ -55,6 +55,7 @@ rem --- Initialize Data
     pbufwidth=200
     m8$="##0.00-"
     m9$="###.0%",clock$="",when$=sysinfo.system_date$
+    warnSlsTax=0
     
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",m0$,0,m0
 rem call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,m1  
@@ -331,7 +332,13 @@ rem --- Totals
     xwk=fnblank(6)
     OutVect!.addItem("Sales Tax"+$00$+"R")
     OutVect!.addItem(str(t[4]:m1$)+$00$+"R")
-    xwk=fnblank(4)
+    if warnSlsTax then
+        rem --- Provide visual warning sales tax amount may not be correct
+        OutVect!.addItem("??"+$00$+"L")
+        xwk=fnblank(3)
+    else
+        xwk=fnblank(4)
+    endif
 
     TotVect!.addItem(str(OutVect!.size()/(columns+1)))
     OutVect!.addItem(str(u2:"###0")+" Total Invoices"+$00$+"R")
@@ -540,7 +547,14 @@ sales_total: rem --- Sales Total/Freight/Sales Tax/Invoice Total
     xwk=fnblank(6)
     OutVect!.addItem("Sales Tax"+$00$+"R")
     OutVect!.addItem(str(ope01a.tax_amount:m1$)+$00$+"R")
-    xwk=fnblank(4)
+    if ope01a.no_sls_tax_calc and ope01a.print_status$<>"Y" then
+        rem --- Provide visual warning sales tax amount may not be correct
+        OutVect!.addItem("??"+$00$+"L")
+        xwk=fnblank(3)
+        warnSlsTax=1
+    else
+        xwk=fnblank(4)
+    endif
 
     xwk=fnblank(6)
     OutVect!.addItem("Invoice Total"+$00$+"R")
