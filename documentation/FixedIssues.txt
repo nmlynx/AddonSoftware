@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-03-12
+ Report Date:   2021-03-16
  Report Branch: AddonSoftware 21.00
  Last Release:  AddonSoftware 20.32
 =======================================================================================================================================
@@ -47,6 +47,22 @@ Modified: data/bar/glt_bankchecks.xml
 Modified: data/bar/glt_bankother.xml
 Modified: data/cdf/glt_bankchecks.cdf
 Modified: data/cdf/glt_bankother.cdf
+
+=======================================================================================================================================
+Revision: ff6bdb1eeb0e1a6e8493e62fa446f1fde90f08d9
+Author: Christine <chawkins@basis.com>
+Date: 3/16/2021 4:11:14 PM
+Message:
+Bug 10137 - AR - Deleted cash receipts record orphans the GL Distribution Record
+ - added callpoint code to delete are_cashgl rather than using Barista's Cascade Delete option
+
+(cherry picked from commit 0db448e789a8db08244f6a363637ab84e5042f51)
+----
+Modified: data/bar/are_cashgl.xml
+Modified: data/bar/are_cashhdr.xml
+Modified: data/cdf/are_cashhdr.cdf
+
+
 
 
 
