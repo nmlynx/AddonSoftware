@@ -84,6 +84,20 @@ rem --- Launch Shipment Tracking grid (view only)
 :       key_pfx$,
 :       table_chans$[all]
 
+[[OPT_INVHDR.AOPT-STAX]]
+rem --- Launch Sales Tax Trans History form
+	customer_id$=callpoint!.getColumnData("OPT_INVHDR.CUSTOMER_ID")
+	order_no$=callpoint!.getColumnData("OPT_INVHDR.ORDER_NO")
+	ar_inv_no$=callpoint!.getColumnData("OPT_INVHDR.AR_INV_NO")
+	key_pfx$=firm_id$+customer_id$+order_no$+ar_inv_no$+"001"
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	"OPT_SLSTAXTRANS",
+:       stbl("+USER_ID"),
+:       "QRY",
+:       key_pfx$,
+:       table_chans$[all]
+
 [[OPT_INVHDR.APFE]]
 rem --- Enable SHPT additional options if shipment tracking info exists
 	optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
