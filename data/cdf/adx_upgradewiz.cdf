@@ -87,10 +87,20 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 						if stbl$(1,1)="+" and stbl$(4)="DATA" then
 							rem --- This is an Addon +??DATA STBL
 							if cvs(stblGrid!.getCellText(e!.getRow(),2),3)=cvs(stblGrid!.getCellText(e!.getRow(),3),3) then
+
+								rem --- Have we shown a warning about same data paths before? 
+								if callpoint!.getDevObject("same_dir_ok")="Y" then 
+									break
+								endif 
+
 								rem --- Warn paths are the same and ask if that's correct
 								msg_id$="AD_SAME_DATA_PATH"
 								gosub disp_message
-								if msg_opt$<>"Y"then
+								if pos("Y"=msg_opt$)<>0 then 
+									if pos("PASSVALID"=msg_opt$)<>0 then 
+										callpoint!.setDevObject("same_dir_ok","Y")
+									endif
+								else 
 									rem --- Not correct, restore previous value
 									previousText$=stblRowVect!.getItem(index+3)
 									stblGrid!.setCellText(e!.getRow(),3,previousText$)
