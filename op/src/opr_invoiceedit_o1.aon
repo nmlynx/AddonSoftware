@@ -547,7 +547,7 @@ sales_total: rem --- Sales Total/Freight/Sales Tax/Invoice Total
     xwk=fnblank(6)
     OutVect!.addItem("Sales Tax"+$00$+"R")
     OutVect!.addItem(str(ope01a.tax_amount:m1$)+$00$+"R")
-    if ope01a.no_sls_tax_calc and ope01a.print_status$<>"Y" then
+    if ope01a.no_sls_tax_calc and (ope01a.ordinv_flag$="O" or (ope01a.ordinv_flag$="I" and ope01a.print_status$<>"Y")) then
         rem --- Provide visual warning sales tax amount may not be correct
         OutVect!.addItem("??"+$00$+"L")
         xwk=fnblank(3)
