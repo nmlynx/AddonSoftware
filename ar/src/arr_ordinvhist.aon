@@ -396,7 +396,7 @@ print_totals: rem --- Add totals to display page
         xwk=fnblank(8)
         OutVect!.addItem(Translate!.getTranslation("AON_TAX:"))
         OutVect!.addItem(str(hdrrec.tax_amount:m1$))
-        if hdrrec.no_sls_tax_calc and hdrrec.print_status$<>"Y" then
+        if hdrrec.no_sls_tax_calc and (hdrrec.ordinv_flag$="O" or (hdrrec.ordinv_flag$="I" and hdrrec.print_status$<>"Y")) then
             rem --- Provide visual warning sales tax amount may not be correct
             OutVect!.addItem("??")
         else
