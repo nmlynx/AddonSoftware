@@ -55,7 +55,7 @@ rem --- Initialize Data
     pbufwidth=200
     m8$="##0.00-"
     m9$="###.0%",clock$="",when$=sysinfo.system_date$
-    warnSlsTax=0
+    skippedInvoices!=bbjAPI().makeVector()
     
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","I","",m0$,0,m0
 rem call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,m1  
@@ -332,7 +332,7 @@ rem --- Totals
     xwk=fnblank(6)
     OutVect!.addItem("Sales Tax"+$00$+"R")
     OutVect!.addItem(str(t[4]:m1$)+$00$+"R")
-    if warnSlsTax then
+    if skippedInvoices!.size()>0 then
         rem --- Provide visual warning sales tax amount may not be correct
         OutVect!.addItem("??"+$00$+"L")
         xwk=fnblank(3)
@@ -468,6 +468,29 @@ rem --- Total By Line Type
     OutVect!.addItem(str(t[1]:m1$)+$00$+"R")
     xwk=fnblank(6)
 
+rem --- List invoices skipped due to failed tax calculation
+    if skippedInvoices!.size()>0 then
+        xwk = fnblank(12)
+
+        OutVect!.addItem(Translate!.getTranslation("AON_INVOICES_WITH_FAILED_TAX"))
+        xwk = fnblank(11)
+    
+        cust_ord_inv$=Translate!.getTranslation("AON_CUSTOMER")+"  -  "
+        cust_ord_inv$=cust_ord_inv$+Translate!.getTranslation("AON_ORDER")+"  -  "
+        cust_ord_inv$=cust_ord_inv$+Translate!.getTranslation("AON_INVOICE")
+        OutVect!.addItem(cust_ord_inv$)
+        xwk = fnblank(11)
+        
+        for i=0 to skippedInvoices!.size()-1
+            custOrdInv!=skippedInvoices!.getItem(i)
+            OutVect!.addItem(custOrdInv!.getItem(0)+"  -  "+custOrdInv!.getItem(1)+"  -  "+custOrdInv!.getItem(2))
+            xwk = fnblank(11)
+        next i
+    
+        msg_id$="OP_WARN_BAD_TAX"
+        gosub disp_message
+    endif
+
     out_action$="FORMAT"
     goto std_exit
 
@@ -551,7 +574,13 @@ sales_total: rem --- Sales Total/Freight/Sales Tax/Invoice Total
         rem --- Provide visual warning sales tax amount may not be correct
         OutVect!.addItem("??"+$00$+"L")
         xwk=fnblank(3)
-        warnSlsTax=1
+
+        rem --- Keep track of invoices skipped due to failed tax calculation
+        custOrdInv!=bbjAPI().makeVector()
+        custOrdInv!.addItem(ope01a.customer_id$)
+        custOrdInv!.addItem(ope01a.order_no$)
+        custOrdInv!.addItem(ope01a.ar_inv_no$)
+        skippedInvoices!.addItem(custOrdInv!)
     else
         xwk=fnblank(4)
     endif
