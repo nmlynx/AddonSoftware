@@ -1022,7 +1022,7 @@ buildCheckAmtText_error:rem --- Method error trap/handler (11Oct2017)
             if digit100<>0 then numInWords$ = #words!.get(digit100)+" Hundred "
             digit011=num(nnnDigits$(2,2))
             if digit011<20 then
-                numInWords$ = numInWords$ + #words!.get(digit011)+" "
+                if digit011>0 then numInWords$ = numInWords$ + #words!.get(digit011)+" "
             else
                 digit010=num(nnnDigits$(2,1))
                 numInWords$=numInWords$ + #words!.get(10*digit010)+" "
