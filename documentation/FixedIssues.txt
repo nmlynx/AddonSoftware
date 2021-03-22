@@ -85,3 +85,18 @@ subroutine of opr_invoiceedit_o1.aon.
 ----
 Modified: op/src/opr_invoiceedit_o1.aon
 
+=======================================================================================================================================
+Revision: 6a3eb2a7362e538cd3e5c8a8ceed4b627b2db167
+Author: Christine <chawkins@basis.com>
+Date: 3/22/2021 12:28:23 PM
+Message:
+Bug 10136 - PO - PO entry loses focus after on-demand print
+ - This bug was actually two issues. One was solved via Barista (the complaint about the PO number not existing).
+ The other (form loses focus after printing the PO) was because the on-demand PO form didn't have the 'destroy on run' option set.
+
+(cherry picked from commit 4fccbc02702defd089c58c13b51af421267cba8b)
+----
+Modified: data/bar/por_poprint_dmd.xml
+
+
+
