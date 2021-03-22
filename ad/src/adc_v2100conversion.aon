@@ -94,7 +94,7 @@ rem --- For version 21.00, encrypt bank account number in ADC_BANKACCTCODE
             read(adcBankAcctCode_dev,key="",dom=*next)
             while 1
                 readrecord(adcBankAcctCode_dev,end=*break)adcBankAcctCode$
-                if cvs(adcBankAcctCode.bnk_acct_no$,3)<>""
+                if cvs(adcBankAcctCode.bnk_acct_no$,3)<>"" and len(cvs(adcBankAcctCode.bnk_acct_no$,2))<=15
                     adcBankAcctCode.bnk_acct_no$=encryptor!.encryptData(cvs(adcBankAcctCode.bnk_acct_no$,3))
                     writerecord(adcBankAcctCode_dev)adcBankAcctCode$
                 endif
@@ -165,7 +165,7 @@ rem --- For version 21.00, encrypt bank account number in APM_VENDMAST (apm-01)
             read(apmVendMast_dev,key="",dom=*next)
             while 1
                 readrecord(apmVendMast_dev,end=*break)apmVendMast$
-                if cvs(apmVendMast.bnk_acct_no$,3)<>""
+                if cvs(apmVendMast.bnk_acct_no$,3)<>"" and len(cvs(apmVendMast.bnk_acct_no$,2))<=15
                     apmVendMast.bnk_acct_no$=encryptor!.encryptData(cvs(apmVendMast.bnk_acct_no$,3))
                     writerecord(apmVendMast_dev)apmVendMast$
                 endif
