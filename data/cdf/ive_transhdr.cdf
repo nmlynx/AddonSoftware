@@ -1,3 +1,24 @@
+[[IVE_TRANSHDR.ADEL]]
+	gosub clear_display_fields
+
+[[IVE_TRANSHDR.ADIS]]
+	gosub clear_display_fields
+
+[[IVE_TRANSHDR.APFE]]
+	gosub clear_display_fields
+
+[[IVE_TRANSHDR.AREA]]
+rem --- Get trans code record and set flags
+	
+	trans_code$ = rec_data.trans_code$
+	gosub get_trans_rec
+
+[[IVE_TRANSHDR.AREC]]
+	gosub clear_display_fields
+
+rem --- Disable Unit Cost column in grid
+	util.disableGridColumn(Form!, 11); rem --- Cost
+
 [[IVE_TRANSHDR.ARNF]]
 if num(stbl("+BATCH_NO"),err=*next)<>0
 	rem --- Check if this record exists in a different batch
@@ -7,22 +28,7 @@ if num(stbl("+BATCH_NO"),err=*next)<>0
 	call stbl("+DIR_PGM")+"adc_findbatch.aon",tableAlias$,primaryKey$,Translate!,table_chans$[all],existingBatchNo$,status
 	if status or existingBatchNo$<>"" then callpoint!.setStatus("NEWREC")
 endif
-[[IVE_TRANSHDR.MEMO_1024.AVAL]]
-rem --- Store first part of memo_1024 in trans_cmt.
-	memo_1024$=callpoint!.getUserInput()
-	if memo_1024$<>callpoint!.getColumnData("IVE_TRANSHDR.MEMO_1024")
-		dim trans_cmt$(20)
-		trans_cmt$(1)=memo_1024$(1,pos($0A$=memo_1024$+$0A$)-1)
-		callpoint!.setColumnData("IVE_TRANSHDR.TRANS_CMT",trans_cmt$)
-	endif
-[[IVE_TRANSHDR.APFE]]
-	gosub clear_display_fields
-[[IVE_TRANSHDR.ADEL]]
-	gosub clear_display_fields
-[[IVE_TRANSHDR.ADIS]]
-	gosub clear_display_fields
-[[IVE_TRANSHDR.AREC]]
-	gosub clear_display_fields
+
 [[IVE_TRANSHDR.BDEL]]
 rem -- uncommit any Issue, Commit, or *negative* Adjustment trans in dtl grid that aren't already deleted
 
@@ -74,6 +80,7 @@ rem -- uncommit any Issue, Commit, or *negative* Adjustment trans in dtl grid th
 		endif
 
 	endif
+
 [[IVE_TRANSHDR.BEND]]
 rem --- remove software lock on batch, if batching
 
@@ -86,87 +93,7 @@ rem --- remove software lock on batch, if batching
 		lock_disp$=""
 		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
 	endif
-[[IVE_TRANSHDR.BTBL]]
-rem --- Get Batch information
 
-call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]
-callpoint!.setTableColumnAttribute("IVE_TRANSHDR.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
-
-[[IVE_TRANSHDR.AREA]]
-print "HEADER: after record read (AREA)"; rem debug
-
-rem --- Get trans code record and set flags
-	
-	rem can't use the method below because the data is not displayed yet
-	rem trans_code$ = callpoint!.getColumnData("IVE_TRANSHDR.TRANS_CODE")
-	trans_code$ = rec_data.trans_code$
-	gosub get_trans_rec
-[[IVE_TRANSHDR.TRANS_CODE.AINP]]
-rem --- You can't modify the trans code use you've entered the record
-
-	trans_code$      = pad(callpoint!.getUserInput(), 2)
-	orig_trans_code$ = callpoint!.getColumnDiskData("IVE_TRANSHDR.TRANS_CODE")
-
-	if cvs(orig_trans_code$, 2) <> "" and trans_code$ <> orig_trans_code$ then
-		callpoint!.setMessage("IV_TRANS_CODE_CHANGE")
-		callpoint!.setStatus("ABORT")
-	endif
-[[IVE_TRANSHDR.TRANS_CODE.AVAL]]
-print "in TRANS_CODE.AVAL"; rem debug
-
-rem --- Get trans code record and set flags
-
-	trans_code$ = callpoint!.getUserInput()
-	gosub get_trans_rec
-[[IVE_TRANSHDR.TRANS_DATE.AVAL]]
-rem --- Does date fall into the GL period?
-
-	if user_tpl.gl$ = "Y" then
-		date$ = callpoint!.getUserInput()
-		call stbl("+DIR_PGM")+"glc_datecheck.aon",date$,"Y",period$,year$,status
-		if status > 99 then callpoint!.setStatus("ABORT")
-	endif
-[[IVE_TRANSHDR.<CUSTOM>]]
-rem --------------------------------------------------------------------------
-get_trans_rec: rem --- Get Transaction Code Record
-               rem      IN: trans_code$, file opened
-               rem     OUT: flags set
-rem --------------------------------------------------------------------------
-
-	transcode_dev = fnget_dev("IVC_TRANCODE")
-	dim trans_rec$:fnget_tpl$("IVC_TRANCODE")
-
-	trans_key$ = firm_id$ + "B" + trans_code$
-	find record (transcode_dev, key=trans_key$) trans_rec$
-
-	user_tpl.trans_type$     = trans_rec.trans_type$
-	user_tpl.trans_post_gl$  = trans_rec.post_gl$
-	user_tpl.trans_adj_acct$ = trans_rec.gl_adj_acct$
-
-	print "in get_trans_rec: Got transaction code and set user_tpl$; post to GL = ", user_tpl.trans_post_gl$; rem debug
-
-	rem --- Disable grid columns based on params 
-	if user_tpl.gl$ <> "Y" or user_tpl.trans_post_gl$ <> "Y" then 
-		util.disableGridColumn(Form!, 3)
-		print "G/L entry should be disabled"; rem debug
-	endif
-
-return
-
-rem ==========================================================================
-clear_display_fields: rem --- Clear the header display fields
-rem ==========================================================================
-
-	UserObj!.getItem(user_tpl.location_obj).setText("")
-	UserObj!.getItem(user_tpl.qoh_obj).setText("")
-	UserObj!.getItem(user_tpl.commit_obj).setText("")
-	UserObj!.getItem(user_tpl.avail_obj).setText("")
-
-return
-
-rem --------------------------------------------------------------------------
-#include [+ADDON_LIB]std_missing_params.aon
-rem --------------------------------------------------------------------------
 [[IVE_TRANSHDR.BSHO]]
 rem print 'show', ; rem debug
 
@@ -275,3 +202,93 @@ rem --- Is GL installed?
 rem --- Final inits
 
 	precision num(ivs01a.precision$)
+
+[[IVE_TRANSHDR.BTBL]]
+rem --- Get Batch information
+
+call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]
+callpoint!.setTableColumnAttribute("IVE_TRANSHDR.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
+
+[[IVE_TRANSHDR.MEMO_1024.AVAL]]
+rem --- Store first part of memo_1024 in trans_cmt.
+	memo_1024$=callpoint!.getUserInput()
+	if memo_1024$<>callpoint!.getColumnData("IVE_TRANSHDR.MEMO_1024")
+		dim trans_cmt$(20)
+		trans_cmt$(1)=memo_1024$(1,pos($0A$=memo_1024$+$0A$)-1)
+		callpoint!.setColumnData("IVE_TRANSHDR.TRANS_CMT",trans_cmt$)
+	endif
+
+[[IVE_TRANSHDR.TRANS_CODE.AINP]]
+rem --- You can't modify the trans code use you've entered the record
+
+	trans_code$      = pad(callpoint!.getUserInput(), 2)
+	orig_trans_code$ = callpoint!.getColumnDiskData("IVE_TRANSHDR.TRANS_CODE")
+
+	if cvs(orig_trans_code$, 2) <> "" and trans_code$ <> orig_trans_code$ then
+		callpoint!.setMessage("IV_TRANS_CODE_CHANGE")
+		callpoint!.setStatus("ABORT")
+	endif
+
+[[IVE_TRANSHDR.TRANS_CODE.AVAL]]
+print "in TRANS_CODE.AVAL"; rem debug
+
+rem --- Get trans code record and set flags
+
+	trans_code$ = callpoint!.getUserInput()
+	gosub get_trans_rec
+
+[[IVE_TRANSHDR.TRANS_DATE.AVAL]]
+rem --- Does date fall into the GL period?
+
+	if user_tpl.gl$ = "Y" then
+		date$ = callpoint!.getUserInput()
+		call stbl("+DIR_PGM")+"glc_datecheck.aon",date$,"Y",period$,year$,status
+		if status > 99 then callpoint!.setStatus("ABORT")
+	endif
+
+[[IVE_TRANSHDR.<CUSTOM>]]
+rem --------------------------------------------------------------------------
+get_trans_rec: rem --- Get Transaction Code Record
+               rem      IN: trans_code$, file opened
+               rem     OUT: flags set
+rem --------------------------------------------------------------------------
+
+	transcode_dev = fnget_dev("IVC_TRANCODE")
+	dim trans_rec$:fnget_tpl$("IVC_TRANCODE")
+
+	trans_key$ = firm_id$ + "B" + trans_code$
+	find record (transcode_dev, key=trans_key$) trans_rec$
+
+	user_tpl.trans_type$     = trans_rec.trans_type$
+	user_tpl.trans_post_gl$  = trans_rec.post_gl$
+	user_tpl.trans_adj_acct$ = trans_rec.gl_adj_acct$
+
+	rem --- Disable grid columns based on params 
+	if user_tpl.gl$ <> "Y" or user_tpl.trans_post_gl$ <> "Y" then 
+		util.disableGridColumn(Form!, 3)
+	endif
+	if user_tpl.trans_type$ <> "R" then 
+		util.disableGridColumn(Form!, 11); rem --- Cost
+	else
+		util.enableGridColumn(Form!, 11); rem --- Cost
+	endif
+
+return
+
+rem ==========================================================================
+clear_display_fields: rem --- Clear the header display fields
+rem ==========================================================================
+
+	UserObj!.getItem(user_tpl.location_obj).setText("")
+	UserObj!.getItem(user_tpl.qoh_obj).setText("")
+	UserObj!.getItem(user_tpl.commit_obj).setText("")
+	UserObj!.getItem(user_tpl.avail_obj).setText("")
+
+return
+
+rem --------------------------------------------------------------------------
+#include [+ADDON_LIB]std_missing_params.aon
+rem --------------------------------------------------------------------------
+
+
+
