@@ -746,7 +746,7 @@ average_item_cost: rem --- Get Average Of Serialized/Lotted Item Cost
 
     while more
         ope21a_key$=key(ope21_dev,end=*break)
-        if pos(ls_start$=ope21a_key$)<>1 then break
+        if pos(start_ls$=ope21a_key$)<>1 then break
         read record (ope21_dev) ope21a$
         if ope21a.trans_status$<>"E" then continue
         ser_cost=ser_cost+ope21a.qty_shipped*ope21a.unit_cost
