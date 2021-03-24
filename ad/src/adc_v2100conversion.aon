@@ -137,6 +137,7 @@ rem --- For version 21.00, encrypt bank account number in ADC_BANKACCTCODE
     endif
 
 rem --- For version 21.00, encrypt bank account number in APM_VENDMAST (apm-01)
+rem --- For version 21.00, initialize new paramaters in APS_PARAMS
 
     this_module$="AP"
     if installMap!.get(this_module$)="Y" then    
@@ -175,6 +176,66 @@ rem --- For version 21.00, encrypt bank account number in APM_VENDMAST (apm-01)
             num_files=1
             dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
             open_tables$[1]="APM_VENDMAST",   open_opts$[1]="C"
+    
+            gosub open_tables
+
+            write(convCtrlFileChan)task$+"=Completed"
+
+            rem --- This task$ conversion completed successfully
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+task$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+        else
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_CONV_PREVIOUSLY","Conversion previously completed for")+" "+task$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+        endif
+
+        task$="2100_AP_aps_params"
+        if convCtrl!.getProperty(task$)<>"Completed" then
+
+            rem --- Increment progress meter
+            meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:              Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+
+            rem --- Open File(s)
+            num_files=1
+            dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+            open_tables$[1]="APS_PARAMS",   open_opts$[1]="OTA"
+    
+            gosub open_tables
+    
+            apsParams_dev=num(open_chans$[1])
+            dim apsParams$:open_tpls$[1]
+
+            rem --- Initialize new parameters
+            read(apsParams_dev,key="",dom=*next)
+            while 1
+                readrecord(apsParams_dev,end=*break)apsParams$
+                apsParams.prnt_aba_no$="N"
+                apsParams.prnt_bnk_acct_no$="N"
+                apsParams.scan_docs_to$="NOT"
+                apsParams.warn_in_reg$="N"
+                apsParams.ok_to_update$="N"
+                apsParams.prnt_signature$="N"
+                writerecord(apsParams_dev)apsParams$
+            wend
+
+            rem --- close files opened for this conversion
+            num_files=1
+            dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+            open_tables$[1]="APS_PARAMS",   open_opts$[1]="C"
     
             gosub open_tables
 
