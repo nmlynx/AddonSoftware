@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-03-22
+ Report Date:   2021-03-24
  Report Branch: AddonSoftware 21.00
  Last Release:  AddonSoftware 20.32
 =======================================================================================================================================
@@ -111,3 +111,22 @@ Modified: data/bar/ive_transdet.xml
 Modified: data/bar/ive_transhdr.xml
 Modified: data/cdf/ive_transdet.cdf
 Modified: data/cdf/ive_transhdr.cdf
+
+=======================================================================================================================================
+Revision: d7e1b88bd2980296a3ba4d15b10cc4ab750eaf23
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 3/24/2021 2:14:36 PM
+Message:
+Bug 10089: Allowed changing, and auto-adjusting, fiscal calendar start
+and end dates when there are no existing GL transactions in the date
+range affected by the change.
+
+(cherry picked from commit 78c529745755adae07f03bfad9caef0693fe2ed7)
+----
+Modified: data/bar/gls_calendar.xml
+Modified: data/cdf/gls_calendar.cdf
+Modified: data/sync/ads_messages~[01007514GL].xml
+Deleted: data/sync/ads_messages~gl_bad_end_date.xml
+Deleted: data/sync/ads_messages~gl_bad_start_date.xml
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
