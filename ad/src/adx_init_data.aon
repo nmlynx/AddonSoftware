@@ -70,18 +70,31 @@ rem --- Get location of this installation
         aonDir$=FileObject.addEndSlash(aonDir$, "/")
     endif
 
+rem --- There's nothing to do if data/adx_conversionCtrl isn’t found, i.e. new install or all required conversions already completed.
+    convCtrlFileName$=dataDir$+"adx_conversionCtrl"
+    convCtrlFile!=new File(convCtrlFileName$,err=*next)
+    if !convCtrlFile!.exists() then goto std_exit
+    fileReader!=new FileReader(convCtrlFile!)
+
+    convCtrl!=new Properties()
+    convCtrl!.load(fileReader!)
+    fileReader!.close()
+
 rem --- Verify Git repository exists and is using the correct branch for this installation.
 rem *** WARNING: Do NOT remove, or alter, the following test for the correct Git branch. It is required to assure the correct version of software is being executed. *** 
-
     rem --- Assume this is a Quick Copy installation if Git repository isn't found.
     gitRepo$=aonDir$+".git"
     gitRepo!=new File(gitRepo$,err=*next)
     if gitRepo!.exists() then
+    
+        rem --- Get GIT_AUTH_ID from adx_conversionCtrl
+        git_auth_id$=convCtrl!.getProperty("git_auth_id")
+    
         rem --- Skip if NOT using version-neutral installation, i.e. a development install
         aonDir!=new String(cvs(aonDir$,2))
         if aonDir!.matches(".*/v../v..../aon/$") then
             rem --- Verify branch version is correct for the version-neutral directory location of this installation
-            repoInterface!=new GitRepoInterface(aonDir$)
+            repoInterface!=new GitRepoInterface(git_auth_id$,aonDir$)
             branch$=repoInterface!.getBranch()
             branchVersion$=""
             if pos("BBJ"=branch$)=1 and len(branch$)>7 then
@@ -98,17 +111,6 @@ rem *** WARNING: Do NOT remove, or alter, the following test for the correct Git
             endif
         endif
     endif
-
-rem --- There's nothing to do if data/adx_conversionCtrl isn’t found, i.e. new install or all required conversions already completed.
-
-    convCtrlFileName$=dataDir$+"adx_conversionCtrl"
-    convCtrlFile!=new File(convCtrlFileName$,err=*next)
-    if !convCtrlFile!.exists() then goto std_exit
-    fileReader!=new FileReader(convCtrlFile!)
-
-    convCtrl!=new Properties()
-    convCtrl!.load(fileReader!)
-    fileReader!.close()
 
 rem --- Are conversion needed for the start_version?
 
@@ -284,6 +286,7 @@ rem --- Verify data_source
 rem --- Following an upgrade, user may launch Addon before "copying" the data.
 rem --- Can't do anything if required files aren't present.
 
+    escape 
     adm_rptctl=0,adm09=0,glm03=0,glm06=0
     test_dev=unt
     open(test_dev,err=*next)stbl("+ADDATA")+"adm_rptctl"; adm_rptctl=1
