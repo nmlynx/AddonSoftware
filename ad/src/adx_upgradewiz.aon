@@ -40,7 +40,7 @@ rem --- Initializations
 
 rem --- Get user inputs
 
-    gitAuthID$=Option!.getOptionData("GIT_AUTH_ID")
+    gitAuthID$=cvs(Option!.getOptionData("GIT_AUTH_ID"),3)
     dbName$=Option!.getOptionData("DB_NAME")
     appDesc$=Option!.getOptionData("APP_DESC")
     version_neutral=num(Option!.getOptionData("VERSION_NEUTRAL"))
@@ -618,6 +618,10 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
                 xpos=pos("modules="=line$)
                 line$=line$(1,xpos+len("modules=")-1)+upgradedModules$+line$(xpos+len("modules="))
             endif
+            if pos("git_auth_id="=line$) then
+                xpos=pos("git_auth_id="=line$)
+                line$=line$(1,xpos+len("git_auth_id=")-1)+gitAuthID$+line$(xpos+len("git_auth_id="))
+            endif
             writerecord(convCtrlFileChan)line$
         wend
 
@@ -633,6 +637,15 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
         gosub disp_message
         print(log_dev)"***** ERROR: Required file not found, "+convCtrlIniFileName$+" *****"
    endif
+   
+   rem --- Copy adx_git_auth table from the download area to the new instance data
+   adx_git_auth_table$=stbl("+ADDATA")+"adx_git_auth.dat"
+   adx_git_auth_copy$=convCtrlFilePath$+"adx_git_auth.dat"
+   
+   rem --- --- close the table we're about to copy over
+   call stbl("+DIR_SYP")+"/bac_open_table.bbj","ADX_GIT_AUTH","C",rd_table_chans$[all],chan,template$,msg$
+   Files.copy(new File(adx_git_auth_table$).toPath(),new File(adx_git_auth_copy$).toPath(),null())
+   
 
 done: rem --- All done
 
