@@ -108,7 +108,7 @@ rem --- Get BBTranslator object Translate!
 
 rem --- Check For Required Fiscal Calendars
 
-    theFirm$=""; rem --- Check all firms
+    theFirm$=sysinfo.firm_id$; rem --- Only check current firm per ER 10142
     call stbl("+DIR_PGM")+"glc_checkfiscalcalendars.aon",theFirm$,Translate!,status
 	
 done: rem --- Done
