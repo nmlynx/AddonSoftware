@@ -1,36 +1,3 @@
-[[IVE_TRANSDET.MEMO_1024.BINQ]]
-rem --- Launch Comments dialog
-	gosub comment_entry
-	callpoint!.setStatus("ABORT")
-[[IVE_TRANSDET.LS_COMMENTS.BINP]]
-rem --- Invoke the comments dialog
-
-	gosub comment_entry
-[[IVE_TRANSDET.BDGX]]
-rem --- Disable detail-only buttons
-
-	callpoint!.setOptionEnabled("COMM",0)
-[[IVE_TRANSDET.AOPT-COMM]]
-rem --- Invoke the comments dialog
-
-	gosub comment_entry
-[[IVE_TRANSDET.GL_ACCOUNT.AVAL]]
-rem "GL INACTIVE FEATURE"
-   glm01_dev=fnget_dev("GLM_ACCT")
-   glm01_tpl$=fnget_tpl$("GLM_ACCT")
-   dim glm01a$:glm01_tpl$
-   glacctinput$=callpoint!.getUserInput()
-   glm01a_key$=firm_id$+glacctinput$
-   find record (glm01_dev,key=glm01a_key$,err=*break) glm01a$
-   if glm01a.acct_inactive$="Y" then
-      call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,gl_size
-      msg_id$="GL_ACCT_INACTIVE"
-      dim msg_tokens$[2]
-      msg_tokens$[1]=fnmask$(glm01a.gl_account$(1,gl_size),m0$)
-      msg_tokens$[2]=cvs(glm01a.gl_acct_desc$,2)
-      gosub disp_message
-      callpoint!.setStatus("ACTIVATE-ABORT")
-   endif
 [[IVE_TRANSDET.ADGE]]
 rem --- Setup for whether to test at end of line
 
@@ -49,26 +16,485 @@ rem --- Display defaults for this row
 	if user_tpl.gl$ = "Y" and user_tpl.trans_post_gl$ = "Y" then
 		callpoint!.setTableColumnAttribute("IVE_TRANSDET.GL_ACCOUNT","DFLT",user_tpl.trans_adj_acct$)
 	endif
-[[IVE_TRANSDET.ARAR]]
-rem --- Setup for whether to test at end of line
 
-	callpoint!.setDevObject("qty_ok","")
-[[IVE_TRANSDET.ITEM_ID.AINV]]
-rem --- Item synonym processing
+[[IVE_TRANSDET.AGCL]]
+rem --- We'll be using the "util" object throughout.
+rem --- It doesn't matter where the "use" statement is
+	use ::ado_util.src::util
 
-	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::grid_entry"
+rem --- set preset val for batch_no
+	callpoint!.setTableColumnAttribute("IVE_TRANSDET.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
+
+rem --- Set column size for memo_1024 field very small so it doesn't take up room, but still available for hover-over of memo contents
+
+	grid! = util.getGrid(Form!)
+	col_hdr$=callpoint!.getTableColumnAttribute("IVE_TRANSDET.MEMO_1024","LABS")
+	memo_1024_col=util.getGridColumnNumber(grid!, col_hdr$)
+	grid!.setColumnWidth(memo_1024_col,15)
+
+[[IVE_TRANSDET.AGRE]]
+print "after grid row exit (AGRE)"; rem debug
+
+rem --- Check that a warehouse record exists for this item
+
+	this_row = callpoint!.getValidationRow()
+	item$=callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
+	wh$=callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
+	okay$="N"
+
+	if callpoint!.getGridRowDeleteStatus(this_row) <> "Y" then
+		file$ = "IVM_ITEMWHSE"
+		ivm02_dev = fnget_dev(file$)
+		dim ivm02a$:fnget_tpl$(file$)
+			
+		if cvs(item$, 2) <> "" and cvs(wh$, 2) <> "" then
+			find record (ivm02_dev, key=firm_id$+wh$+item$, knum="PRIMARY", dom=*endif) ivm02a$
+			okay$="Y"
+		endif
+
+		if okay$="N"
+			callpoint!.setMessage("IV_NO_WHSE_ITEM")
+			callpoint!.setFocus(num(callpoint!.getValidationRow()),"IVE_TRANSDET.WAREHOUSE_ID")
+			break
+		endif
+	endif
+
+rem --- Is this row deleted?
+
+	this_row = callpoint!.getValidationRow()
+	print "row", this_row; rem debug
+	
+	if callpoint!.getGridRowDeleteStatus(this_row) = "Y" then 
+		print "row is deleted, exitting"; rem debug
+		break; rem --- exit callpoint
+	endif
+
+rem --- Check for Lot/Serial number entry
+	item_id$=callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
+	if cvs(item_id$,3) <> ""
+		if user_tpl.this_item_lot_or_ser then
+			if cvs(callpoint!.getColumnData("IVE_TRANSDET.LOTSER_NO"),3)=""
+				callpoint!.setMessage("OP_MISSING_LOTSER_NO")
+				callpoint!.setFocus(num(callpoint!.getValidationRow()),"IVE_TRANSDET.LOTSER_NO")
+				callpoint!.setStatus("ABORT")
+				break; rem --- exit callpoint
+			endif
+		endif
+	endif
+
+rem --- Tests to make sure trans qty is correct
+
+	if user_tpl.this_item_lot_or_ser then 
+
+		gosub test_ls
+		if failed then
+			callpoint!.setFocus(num(callpoint!.getValidationRow()),"IVE_TRANSDET.TRANS_QTY")
+			break; rem --- exit callpoint
+		endif
+
+	else
+
+		trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
+		gosub test_qty
+		if failed then
+			callpoint!.setFocus(num(callpoint!.getValidationRow()),"IVE_TRANSDET.TRANS_QTY")
+			break; rem --- exit callpoint
+		endif
+
+	endif
+
+rem --- Commit inventory
+
+	rem --- Issue and Commit type transactions commit
+	rem --- Receipts and *positive* Adjustments (incoming) do not commit
+	rem --- *negative* Adjustments DO commit, as they are the same as an issue
+
+	if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$="A" and trans_qty>0) then 
+		print "Receipts don't commit"; rem debug
+		break; rem --- exit callpoint
+	endif
+
+	rem --- Has this row changed?
+
+	if callpoint!.getGridRowModifyStatus(this_row) <> "Y" then
+		print "row not modified, exitting"; rem debug
+		break; rem --- exit callpoint
+	endif
+
+	print "row has been modified..."; rem debug
+
+	rem --- Get current and prior values
+
+	curVect!  = gridVect!.getItem(0)
+	undoVect! = gridVect!.getItem(1)
+
+	dim cur_rec$:dtlg_param$[1,3]
+	dim undo_rec$:dtlg_param$[1,3]
+
+	cur_rec$  = curVect!.getItem(this_row)
+	undo_rec$ = undoVect!.getItem(this_row)
+
+	curr_whse$   = cur_rec.warehouse_id$
+	curr_item$   = cur_rec.item_id$
+	curr_qty     = num( cur_rec.trans_qty$ )
+	curr_lotser$ = cur_rec.lotser_no$
+
+	if undo_rec$ <> "" then
+		prior_whse$   = undo_rec.warehouse_id$
+		prior_item$   = undo_rec.item_id$
+		prior_qty     = num( undo_rec.trans_qty$ )
+		prior_lotser$ = undo_rec.lotser_no$
+	else
+		prior_whse$   = ""
+		prior_item$   = ""
+		prior_qty     = 0
+		prior_lotser$ = ""
+	endif
+
+	rem debug to end
+	if (curr_whse$<>prior_whse$) then
+		print "Warehouses don't match or new"
+	else
+		print "Warehouses match"
+	endif
+
+	if (curr_item$<>prior_item$) then
+		print "Items don't match or new"
+	else
+		print "Items match"
+	endif
+
+	print "Change in quantity:", curr_qty - prior_qty
+	rem end debug
+
+	rem --- Has there been any change?
+
+	if (curr_whse$   <> "" and curr_item$ <> "") and 
+:		(curr_whse$   <> prior_whse$   or 
+:		 curr_item$   <> prior_item$   or 
+:		 curr_qty     <> prior_qty     or
+:      curr_lotser$ <> prior_lotser$) 
+:	then
+
+		rem --- Initialize inventory item update
+
+		print "initializing ATAMO..."
+		status = 999
+		call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		if status then 
+			callpoint!.setStatus("EXIT")
+			break; rem --- exit callpoint
+		endif
+
+		rem --- Items or warehouses are different: uncommit previous
+
+		if (prior_whse$   <> "" and prior_whse$   <> curr_whse$) or 
+:		   (prior_item$   <> "" and prior_item$   <> curr_item$) or
+:			(prior_lotser$ <> "" and prior_lotser$ <> curr_lotser$)
+:		then
+
+			rem --- Uncommit prior item and warehouse
+
+			if prior_whse$ <> "" and prior_item$ <> "" then
+			
+				print "uncomtting old item or warehouse..."; rem debug
+				items$[1] = prior_whse$
+				items$[2] = prior_item$
+				items$[3] = prior_lotser$
+				
+				rem --- Adjustments reverse the commitment
+				rem --- and we're only in here if it's an Issue, Commit, or *negative* adjustment (i.e., issue)		
+				if user_tpl.trans_type$ = "A" then
+					refs[0] = -prior_qty
+				else
+					refs[0] = prior_qty
+				endif
+				
+				call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+				if status then 
+					callpoint!.setStatus("EXIT")
+					break; rem --- exit callpoint
+				endif
+
+			endif
+
+			rem --- Commit quantity for current item and warehouse
+
+			print "committing current item and warehouse..."; rem debug
+			items$[1] = curr_whse$
+			items$[2] = curr_item$
+			items$[3] = curr_lotser$
+
+			rem --- Adjustments reverse the commitment
+			rem --- and we're only in here if it's an Issue, Commit, or *negative* adjustment (i.e., issue)
+			if user_tpl.trans_type$ = "A" then
+				refs[0] = -curr_qty
+			else
+				refs[0] = curr_qty
+			endif
+
+			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			if status then 
+				callpoint!.setStatus("EXIT")
+				break; rem --- exit callpoint
+			endif
+
+		endif
+
+		rem --- New record or item and warehouse haven't changed: commit difference
+
+		if	(prior_whse$   = "" or prior_whse$   = curr_whse$) and 
+:			(prior_item$   = "" or prior_item$   = curr_item$) and
+:			(prior_lotser$ = "" or prior_lotser$ = curr_lotser$)
+:		then
+
+			rem --- Commit quantity for current item and warehouse
+
+			print "committing new or current item and warehouse..."; rem debug
+			items$[1] = curr_whse$
+			items$[2] = curr_item$
+			items$[3] = curr_lotser$			
+
+			rem --- Adjustments reverse the commitment
+			rem --- and we're only in here if it's an Issue, Commit, or *negative* adjustment (i.e., issue)	
+			rem --- example: curr_qty=-3, prior_qty=-5; we've committed 5
+			rem --- so now we want to commit -(-3-(-5)), or -2, so committed will be 3
+			if user_tpl.trans_type$ = "A" then
+				refs[0] = -(curr_qty - prior_qty)
+			else
+				refs[0] = curr_qty - prior_qty
+			endif
+
+			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+			if status then 
+				callpoint!.setStatus("EXIT")
+				break; rem --- exit callpoint
+			endif
+
+		endif
+
+		print "done committing"; rem debug
+
+	endif
+
 [[IVE_TRANSDET.AGRN]]
-print "after grid row entry (AGRN)"; rem debug
-
 rem --- Set item/warehouse defaults
 
 	item$ = callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
 	whse$ = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
 	gosub get_whse_item
 
-rem --- Disable cost entry until we know it's legal
+rem --- Allow cost entry only for receipts and adjusting up (that is, incoming)
+	if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$ = "A" and num(callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY")) > 0) then
+		util.enableGridCell(Form!, 11); rem --- Cost
+	else
+		util.disableGridCell(Form!, 11); rem --- Cost
+	endif
 
-	util.disableGridCell(Form!, 11); rem --- Cost
+[[IVE_TRANSDET.AOPT-COMM]]
+rem --- Invoke the comments dialog
+
+	gosub comment_entry
+
+[[IVE_TRANSDET.ARAR]]
+rem --- Setup for whether to test at end of line
+
+	callpoint!.setDevObject("qty_ok","")
+
+[[IVE_TRANSDET.AREC]]
+	callpoint!.setDevObject("qty_ok","")
+
+	gosub clear_display_fields
+
+rem --- Disable Unit Cost unless this is a Receipt
+	if user_tpl.trans_type$ <> "R" then util.disableGridColumn(Form!, 11); rem --- Cost
+
+rem --- Disable detail-only buttons
+
+	callpoint!.setOptionEnabled("COMM",0)
+
+[[IVE_TRANSDET.BDEL]]
+print "before record delete (BDEL)"; rem debug
+
+rem --- Display adjusted warehouse quantities
+
+	item$=callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
+	whse$=callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
+	gosub get_whse_item
+
+rem --- Issue and Commit type transactions un-commit
+rem --- Receipts and *positive* Adjustments (incoming) do not un-commit
+rem --- *negative* Adjustments DO un-commit, as they are the same as an issue
+
+	trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
+	if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$="A" and trans_qty>0) then 
+		print "Receipts don't commit"; rem debug
+		break; rem --- exit callpoint
+	endif
+
+rem --- Check to make sure record exists before uncommitting
+
+	trans_det=fnget_dev("@IVE_TRANSDET")
+	trans_no$=callpoint!.getColumnData("IVE_TRANSDET.IV_TRANS_NO")
+	trans_seq$=callpoint!.getColumnData("IVE_TRANSDET.SEQUENCE_NO")
+	found_rec=0
+	while 1
+		read record (trans_det,key=firm_id$+trans_no$+trans_seq$,dom=*break)
+		found_rec=1
+		break
+	wend
+	if found_rec=0 break
+
+rem --- Uncommit quantity
+
+	status = 999
+	call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	if status then goto std_exit
+
+	curr_whse$   = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
+	curr_item$   = callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
+	curr_qty     = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
+	curr_lotser$ = callpoint!.getColumnData("IVE_TRANSDET.LOTSER_NO")
+
+	if curr_whse$ <> "" and curr_item$ <> "" and curr_qty <> 0 then 
+		print "uncommitting item ", curr_item$, ", amount", curr_qty; rem debug
+
+		items$[1] = curr_whse$
+		items$[2] = curr_item$
+		items$[3] = curr_lotser$
+
+		rem --- Adjustments reverse the commitment
+		rem --- and we're only in here if it's an Issue, Commit, or *negative* adjustment (i.e., issue)
+		if user_tpl.trans_type$ = "A" then
+			refs[0] = -curr_qty
+		else
+			refs[0] = curr_qty
+		endif
+
+		call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+	endif
+
+[[IVE_TRANSDET.BDGX]]
+rem --- Disable detail-only buttons
+
+	callpoint!.setOptionEnabled("COMM",0)
+
+[[IVE_TRANSDET.BUDE]]
+print "before record undelete (BUDE)"; rem debug
+
+rem --- Display adjusted warehouse quantities
+
+	item$=callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
+	whse$=callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
+	gosub get_whse_item
+
+rem --- Issue and Commit type transactionscommit
+rem --- Receipts and *positive* Adjustments (incoming) do not commit
+rem --- *negative* Adjustments DO commit, as they are the same as an issue
+
+	trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
+	if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$="A" and trans_qty>0) then 
+		print "Receipts don't commit"; rem debug
+		break; rem --- exit callpoint
+	endif
+
+rem --- Check the transaction qty
+
+	failed=0
+	gosub test_qty
+
+	if failed then 
+		callpoint!.setStatus("ABORT")
+		break
+	else
+
+		rem --- Calculate and display extended cost
+		unit_cost = num( callpoint!.getColumnData("IVE_TRANSDET.UNIT_COST") )
+		gosub calc_ext_cost
+
+		rem --- Enter cost only for receipts and adjusting up (that is, incoming)
+		if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$ = "A" and trans_qty > 0) then
+			util.enableGridCell(Form!, 11); rem --- Cost
+		endif
+
+		rem --- Re-commit quantity
+		status = 999
+		call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		if status then goto std_exit
+
+		curr_whse$   = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
+		curr_item$   = callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
+		curr_qty     = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
+		curr_lotser$ = callpoint!.getColumnData("IVE_TRANSDET.LOTSER_NO")
+
+		if curr_whse$ <> "" and curr_item$ <> "" and curr_qty <> 0 then 
+			print "re-committing item ", curr_item$, ", amount", curr_qty; rem debug
+
+			items$[1] = curr_whse$
+			items$[2] = curr_item$
+			items$[3] = curr_lotser$
+
+			rem --- Adjustments reverse the commitment
+			rem --- and we're only in here if it's an Issue, Commit, or *negative* adjustment (i.e., issue)
+			if user_tpl.trans_type$ = "A" then
+				refs[0] = -curr_qty
+			else
+				refs[0] = curr_qty
+			endif
+
+			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
+		endif
+	endif
+
+[[IVE_TRANSDET.GL_ACCOUNT.AVAL]]
+rem "GL INACTIVE FEATURE"
+   glm01_dev=fnget_dev("GLM_ACCT")
+   glm01_tpl$=fnget_tpl$("GLM_ACCT")
+   dim glm01a$:glm01_tpl$
+   glacctinput$=callpoint!.getUserInput()
+   glm01a_key$=firm_id$+glacctinput$
+   find record (glm01_dev,key=glm01a_key$,err=*break) glm01a$
+   if glm01a.acct_inactive$="Y" then
+      call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",m0$,0,gl_size
+      msg_id$="GL_ACCT_INACTIVE"
+      dim msg_tokens$[2]
+      msg_tokens$[1]=fnmask$(glm01a.gl_account$(1,gl_size),m0$)
+      msg_tokens$[2]=cvs(glm01a.gl_acct_desc$,2)
+      gosub disp_message
+      callpoint!.setStatus("ACTIVATE-ABORT")
+   endif
+
+[[IVE_TRANSDET.ITEM_ID.AINV]]
+rem --- Item synonym processing
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::grid_entry"
+
+[[IVE_TRANSDET.ITEM_ID.AVAL]]
+print "in ITEM_ID After Column Validation (AVAL)"; rem debug
+
+rem "Inventory Inactive Feature"
+item_id$=callpoint!.getUserInput()
+ivm01_dev=fnget_dev("IVM_ITEMMAST")
+ivm01_tpl$=fnget_tpl$("IVM_ITEMMAST")
+dim ivm01a$:ivm01_tpl$
+ivm01a_key$=firm_id$+item_id$
+find record (ivm01_dev,key=ivm01a_key$,err=*break)ivm01a$
+if ivm01a.item_inactive$="Y" then
+   msg_id$="IV_ITEM_INACTIVE"
+   dim msg_tokens$[2]
+   msg_tokens$[1]=cvs(ivm01a.item_id$,2)
+   msg_tokens$[2]=cvs(ivm01a.display_desc$,2)
+   gosub disp_message
+   callpoint!.setStatus("ACTIVATE")
+   goto std_exit
+endif
+
+rem --- Set and display default values
+
+	item$ = callpoint!.getUserInput()
+	whse$ = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
+	gosub get_whse_item
+
 [[IVE_TRANSDET.LOTSER_NO.AVAL]]
 print "in LOTSER_NO.AVAL"; rem debug
 
@@ -111,6 +537,7 @@ ls_not_found:
 
 	gosub test_ls
 	if failed then callpoint!.setStatus("ABORT")
+
 [[IVE_TRANSDET.LOTSER_NO.BINP]]
 print "in LOTSER_NO.BINP"; rem debug
 rem --- per bugzilla bug 3418, always invoking lot lookup so user can pick existing lot for Receipt/negative adjust, if desired.
@@ -200,36 +627,33 @@ ls_lookup: rem --- Call the lot lookup window and set default lot, lot location,
 	grid!.startEdit(curr_row,curr_col)
 	callpoint!.setStatus("ACTIVATE")
 	
-[[IVE_TRANSDET.BUDE]]
-print "before record undelete (BUDE)"; rem debug
 
-rem --- Display adjusted warehouse quantities
+[[IVE_TRANSDET.LS_COMMENTS.BINP]]
+rem --- Invoke the comments dialog
 
-	item$=callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
-	whse$=callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
-	gosub get_whse_item
+	gosub comment_entry
 
-rem --- Issue and Commit type transactionscommit
-rem --- Receipts and *positive* Adjustments (incoming) do not commit
-rem --- *negative* Adjustments DO commit, as they are the same as an issue
+[[IVE_TRANSDET.MEMO_1024.BINQ]]
+rem --- Launch Comments dialog
+	gosub comment_entry
+	callpoint!.setStatus("ABORT")
 
-	trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
-	if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$="A" and trans_qty>0) then 
-		print "Receipts don't commit"; rem debug
-		break; rem --- exit callpoint
-	endif
+[[IVE_TRANSDET.TRANS_QTY.AVAL]]
+rem --- There is nothing to do if no change in quantity
+
+	trans_qty = num( callpoint!.getUserInput() )
+	old_trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
+	if trans_qty = old_trans_qty then break	
 
 rem --- Check the transaction qty
 
 	failed=0
 	gosub test_qty
 
-	if failed then 
-		callpoint!.setStatus("ABORT")
-		break
-	else
+	if !(failed) then 
 
 		rem --- Calculate and display extended cost
+		trans_qty = num( callpoint!.getUserInput() )
 		unit_cost = num( callpoint!.getColumnData("IVE_TRANSDET.UNIT_COST") )
 		gosub calc_ext_cost
 
@@ -238,143 +662,40 @@ rem --- Check the transaction qty
 			util.enableGridCell(Form!, 11); rem --- Cost
 		endif
 
-		rem --- Re-commit quantity
-		status = 999
-		call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-		if status then goto std_exit
-
-		curr_whse$   = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
-		curr_item$   = callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
-		curr_qty     = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
-		curr_lotser$ = callpoint!.getColumnData("IVE_TRANSDET.LOTSER_NO")
-
-		if curr_whse$ <> "" and curr_item$ <> "" and curr_qty <> 0 then 
-			print "re-committing item ", curr_item$, ", amount", curr_qty; rem debug
-
-			items$[1] = curr_whse$
-			items$[2] = curr_item$
-			items$[3] = curr_lotser$
-
-			rem --- Adjustments reverse the commitment
-			rem --- and we're only in here if it's an Issue, Commit, or *negative* adjustment (i.e., issue)
-			if user_tpl.trans_type$ = "A" then
-				refs[0] = -curr_qty
-			else
-				refs[0] = curr_qty
-			endif
-
-			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-		endif
-	endif
-[[IVE_TRANSDET.BDEL]]
-print "before record delete (BDEL)"; rem debug
-
-rem --- Display adjusted warehouse quantities
-
-	item$=callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
-	whse$=callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
-	gosub get_whse_item
-
-rem --- Issue and Commit type transactions un-commit
-rem --- Receipts and *positive* Adjustments (incoming) do not un-commit
-rem --- *negative* Adjustments DO un-commit, as they are the same as an issue
-
-	trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
-	if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$="A" and trans_qty>0) then 
-		print "Receipts don't commit"; rem debug
-		break; rem --- exit callpoint
+		rem --- Display adjusted warehouse quantities
+		item$=callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
+		whse$=callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
+		callpoint!.setColumnData("IVE_TRANSDET.TRANS_QTY",str(trans_qty),1)
+		gosub get_whse_item
+	else
+		callpoint!.setStatus("ABORT")
 	endif
 
-rem --- Check to make sure record exists before uncommitting
-
-	trans_det=fnget_dev("@IVE_TRANSDET")
-	trans_no$=callpoint!.getColumnData("IVE_TRANSDET.IV_TRANS_NO")
-	trans_seq$=callpoint!.getColumnData("IVE_TRANSDET.SEQUENCE_NO")
-	found_rec=0
-	while 1
-		read record (trans_det,key=firm_id$+trans_no$+trans_seq$,dom=*break)
-		found_rec=1
-		break
-	wend
-	if found_rec=0 break
-
-rem --- Uncommit quantity
-
-	status = 999
-	call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-	if status then goto std_exit
-
-	curr_whse$   = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
-	curr_item$   = callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
-	curr_qty     = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
-	curr_lotser$ = callpoint!.getColumnData("IVE_TRANSDET.LOTSER_NO")
-
-	if curr_whse$ <> "" and curr_item$ <> "" and curr_qty <> 0 then 
-		print "uncommitting item ", curr_item$, ", amount", curr_qty; rem debug
-
-		items$[1] = curr_whse$
-		items$[2] = curr_item$
-		items$[3] = curr_lotser$
-
-		rem --- Adjustments reverse the commitment
-		rem --- and we're only in here if it's an Issue, Commit, or *negative* adjustment (i.e., issue)
-		if user_tpl.trans_type$ = "A" then
-			refs[0] = -curr_qty
-		else
-			refs[0] = curr_qty
-		endif
-
-		call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-	endif
-[[IVE_TRANSDET.AREC]]
-	callpoint!.setDevObject("qty_ok","")
-
-	gosub clear_display_fields
-
-rem --- Disable detail-only buttons
-
-	callpoint!.setOptionEnabled("COMM",0)
-[[IVE_TRANSDET.AGCL]]
-rem --- We'll be using the "util" object throughout.
-rem --- It doesn't matter where the "use" statement is
-	use ::ado_util.src::util
-
-rem --- set preset val for batch_no
-	callpoint!.setTableColumnAttribute("IVE_TRANSDET.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
-
-rem --- Set column size for memo_1024 field very small so it doesn't take up room, but still available for hover-over of memo contents
-
-	grid! = util.getGrid(Form!)
-	col_hdr$=callpoint!.getTableColumnAttribute("IVE_TRANSDET.MEMO_1024","LABS")
-	memo_1024_col=util.getGridColumnNumber(grid!, col_hdr$)
-	grid!.setColumnWidth(memo_1024_col,15)
 [[IVE_TRANSDET.TRANS_QTY.BINP]]
-print "in TRANS_QTY.BINP"; rem debug
-
 rem --- Serialized receipt or issue must be 1
 
  	if user_tpl.trans_type$ = "I" or user_tpl.trans_type$ = "R" then
 		if user_tpl.this_item_lot_or_ser and user_tpl.serialized then
 			if num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") ) = 0 then
-				callpoint!.setColumnData("IVE_TRANSDET.TRANS_QTY","1")
-				print "Set quantity to one because this item is serialized"; rem debug
-				rem callpoint!.setStatus("MODIFIED-REFRESH")
-				callpoint!.setStatus("REFRESH")
+				callpoint!.setColumnData("IVE_TRANSDET.TRANS_QTY","1",1)
 			endif
 		endif
 	endif
-[[IVE_TRANSDET.WAREHOUSE_ID.AVAL]]
-rem --- Set item/warehouse defaults
 
-	item$ = callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
-	whse$ = callpoint!.getUserInput()
-	gosub get_whse_item
 [[IVE_TRANSDET.UNIT_COST.AVAL]]
 rem --- Calculate and display extended cost
 
 	unit_cost = num( callpoint!.getUserInput() )
 	trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
 	gosub calc_ext_cost
+
+[[IVE_TRANSDET.WAREHOUSE_ID.AVAL]]
+rem --- Set item/warehouse defaults
+
+	item$ = callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
+	whse$ = callpoint!.getUserInput()
+	gosub get_whse_item
+
 [[IVE_TRANSDET.<CUSTOM>]]
 #include [+ADDON_LIB]std_functions.aon
 rem ==========================================================================
@@ -783,306 +1104,6 @@ rem ==========================================================================
 	callpoint!.setStatus("ACTIVATE")
 
 	return
-[[IVE_TRANSDET.TRANS_QTY.AVAL]]
-print "in TRANS_QTY.AVAL"; rem debug
 
-rem --- There is nothing to do if no change in quantity
 
-	trans_qty = num( callpoint!.getUserInput() )
-	old_trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
-	if trans_qty = old_trans_qty then break	
 
-rem --- Check the transaction qty
-
-	failed=0
-	gosub test_qty
-
-	if !(failed) then 
-
-		rem --- Calculate and display extended cost
-		trans_qty = num( callpoint!.getUserInput() )
-		unit_cost = num( callpoint!.getColumnData("IVE_TRANSDET.UNIT_COST") )
-		gosub calc_ext_cost
-
-		rem --- Enter cost only for receipts and adjusting up (that is, incoming)
-		if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$ = "A" and trans_qty > 0) then
-			util.enableGridCell(Form!, 11); rem --- Cost
-		endif
-
-		rem --- Display adjusted warehouse quantities
-		item$=callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
-		whse$=callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
-		callpoint!.setColumnData("IVE_TRANSDET.TRANS_QTY",str(trans_qty),1)
-		gosub get_whse_item
-	else
-		callpoint!.setStatus("ABORT")
-	endif
-[[IVE_TRANSDET.AGRE]]
-print "after grid row exit (AGRE)"; rem debug
-
-rem --- Check that a warehouse record exists for this item
-
-	this_row = callpoint!.getValidationRow()
-	item$=callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
-	wh$=callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
-	okay$="N"
-
-	if callpoint!.getGridRowDeleteStatus(this_row) <> "Y" then
-		file$ = "IVM_ITEMWHSE"
-		ivm02_dev = fnget_dev(file$)
-		dim ivm02a$:fnget_tpl$(file$)
-			
-		if cvs(item$, 2) <> "" and cvs(wh$, 2) <> "" then
-			find record (ivm02_dev, key=firm_id$+wh$+item$, knum="PRIMARY", dom=*endif) ivm02a$
-			okay$="Y"
-		endif
-
-		if okay$="N"
-			callpoint!.setMessage("IV_NO_WHSE_ITEM")
-			callpoint!.setFocus(num(callpoint!.getValidationRow()),"IVE_TRANSDET.WAREHOUSE_ID")
-			break
-		endif
-	endif
-
-rem --- Is this row deleted?
-
-	this_row = callpoint!.getValidationRow()
-	print "row", this_row; rem debug
-	
-	if callpoint!.getGridRowDeleteStatus(this_row) = "Y" then 
-		print "row is deleted, exitting"; rem debug
-		break; rem --- exit callpoint
-	endif
-
-rem --- Check for Lot/Serial number entry
-	item_id$=callpoint!.getColumnData("IVE_TRANSDET.ITEM_ID")
-	if cvs(item_id$,3) <> ""
-		if user_tpl.this_item_lot_or_ser then
-			if cvs(callpoint!.getColumnData("IVE_TRANSDET.LOTSER_NO"),3)=""
-				callpoint!.setMessage("OP_MISSING_LOTSER_NO")
-				callpoint!.setFocus(num(callpoint!.getValidationRow()),"IVE_TRANSDET.LOTSER_NO")
-				callpoint!.setStatus("ABORT")
-				break; rem --- exit callpoint
-			endif
-		endif
-	endif
-
-rem --- Tests to make sure trans qty is correct
-
-	if user_tpl.this_item_lot_or_ser then 
-
-		gosub test_ls
-		if failed then
-			callpoint!.setFocus(num(callpoint!.getValidationRow()),"IVE_TRANSDET.TRANS_QTY")
-			break; rem --- exit callpoint
-		endif
-
-	else
-
-		trans_qty = num( callpoint!.getColumnData("IVE_TRANSDET.TRANS_QTY") )
-		gosub test_qty
-		if failed then
-			callpoint!.setFocus(num(callpoint!.getValidationRow()),"IVE_TRANSDET.TRANS_QTY")
-			break; rem --- exit callpoint
-		endif
-
-	endif
-
-rem --- Commit inventory
-
-	rem --- Issue and Commit type transactions commit
-	rem --- Receipts and *positive* Adjustments (incoming) do not commit
-	rem --- *negative* Adjustments DO commit, as they are the same as an issue
-
-	if user_tpl.trans_type$ = "R" or (user_tpl.trans_type$="A" and trans_qty>0) then 
-		print "Receipts don't commit"; rem debug
-		break; rem --- exit callpoint
-	endif
-
-	rem --- Has this row changed?
-
-	if callpoint!.getGridRowModifyStatus(this_row) <> "Y" then
-		print "row not modified, exitting"; rem debug
-		break; rem --- exit callpoint
-	endif
-
-	print "row has been modified..."; rem debug
-
-	rem --- Get current and prior values
-
-	curVect!  = gridVect!.getItem(0)
-	undoVect! = gridVect!.getItem(1)
-
-	dim cur_rec$:dtlg_param$[1,3]
-	dim undo_rec$:dtlg_param$[1,3]
-
-	cur_rec$  = curVect!.getItem(this_row)
-	undo_rec$ = undoVect!.getItem(this_row)
-
-	curr_whse$   = cur_rec.warehouse_id$
-	curr_item$   = cur_rec.item_id$
-	curr_qty     = num( cur_rec.trans_qty$ )
-	curr_lotser$ = cur_rec.lotser_no$
-
-	if undo_rec$ <> "" then
-		prior_whse$   = undo_rec.warehouse_id$
-		prior_item$   = undo_rec.item_id$
-		prior_qty     = num( undo_rec.trans_qty$ )
-		prior_lotser$ = undo_rec.lotser_no$
-	else
-		prior_whse$   = ""
-		prior_item$   = ""
-		prior_qty     = 0
-		prior_lotser$ = ""
-	endif
-
-	rem debug to end
-	if (curr_whse$<>prior_whse$) then
-		print "Warehouses don't match or new"
-	else
-		print "Warehouses match"
-	endif
-
-	if (curr_item$<>prior_item$) then
-		print "Items don't match or new"
-	else
-		print "Items match"
-	endif
-
-	print "Change in quantity:", curr_qty - prior_qty
-	rem end debug
-
-	rem --- Has there been any change?
-
-	if (curr_whse$   <> "" and curr_item$ <> "") and 
-:		(curr_whse$   <> prior_whse$   or 
-:		 curr_item$   <> prior_item$   or 
-:		 curr_qty     <> prior_qty     or
-:      curr_lotser$ <> prior_lotser$) 
-:	then
-
-		rem --- Initialize inventory item update
-
-		print "initializing ATAMO..."
-		status = 999
-		call user_tpl.pgmdir$+"ivc_itemupdt.aon::init",err=*next,chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-		if status then 
-			callpoint!.setStatus("EXIT")
-			break; rem --- exit callpoint
-		endif
-
-		rem --- Items or warehouses are different: uncommit previous
-
-		if (prior_whse$   <> "" and prior_whse$   <> curr_whse$) or 
-:		   (prior_item$   <> "" and prior_item$   <> curr_item$) or
-:			(prior_lotser$ <> "" and prior_lotser$ <> curr_lotser$)
-:		then
-
-			rem --- Uncommit prior item and warehouse
-
-			if prior_whse$ <> "" and prior_item$ <> "" then
-			
-				print "uncomtting old item or warehouse..."; rem debug
-				items$[1] = prior_whse$
-				items$[2] = prior_item$
-				items$[3] = prior_lotser$
-				
-				rem --- Adjustments reverse the commitment
-				rem --- and we're only in here if it's an Issue, Commit, or *negative* adjustment (i.e., issue)		
-				if user_tpl.trans_type$ = "A" then
-					refs[0] = -prior_qty
-				else
-					refs[0] = prior_qty
-				endif
-				
-				call user_tpl.pgmdir$+"ivc_itemupdt.aon","UC",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-				if status then 
-					callpoint!.setStatus("EXIT")
-					break; rem --- exit callpoint
-				endif
-
-			endif
-
-			rem --- Commit quantity for current item and warehouse
-
-			print "committing current item and warehouse..."; rem debug
-			items$[1] = curr_whse$
-			items$[2] = curr_item$
-			items$[3] = curr_lotser$
-
-			rem --- Adjustments reverse the commitment
-			rem --- and we're only in here if it's an Issue, Commit, or *negative* adjustment (i.e., issue)
-			if user_tpl.trans_type$ = "A" then
-				refs[0] = -curr_qty
-			else
-				refs[0] = curr_qty
-			endif
-
-			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-			if status then 
-				callpoint!.setStatus("EXIT")
-				break; rem --- exit callpoint
-			endif
-
-		endif
-
-		rem --- New record or item and warehouse haven't changed: commit difference
-
-		if	(prior_whse$   = "" or prior_whse$   = curr_whse$) and 
-:			(prior_item$   = "" or prior_item$   = curr_item$) and
-:			(prior_lotser$ = "" or prior_lotser$ = curr_lotser$)
-:		then
-
-			rem --- Commit quantity for current item and warehouse
-
-			print "committing new or current item and warehouse..."; rem debug
-			items$[1] = curr_whse$
-			items$[2] = curr_item$
-			items$[3] = curr_lotser$			
-
-			rem --- Adjustments reverse the commitment
-			rem --- and we're only in here if it's an Issue, Commit, or *negative* adjustment (i.e., issue)	
-			rem --- example: curr_qty=-3, prior_qty=-5; we've committed 5
-			rem --- so now we want to commit -(-3-(-5)), or -2, so committed will be 3
-			if user_tpl.trans_type$ = "A" then
-				refs[0] = -(curr_qty - prior_qty)
-			else
-				refs[0] = curr_qty - prior_qty
-			endif
-
-			call user_tpl.pgmdir$+"ivc_itemupdt.aon","CO",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
-			if status then 
-				callpoint!.setStatus("EXIT")
-				break; rem --- exit callpoint
-			endif
-
-		endif
-
-		print "done committing"; rem debug
-
-	endif
-[[IVE_TRANSDET.ITEM_ID.AVAL]]
-print "in ITEM_ID After Column Validation (AVAL)"; rem debug
-
-rem "Inventory Inactive Feature"
-item_id$=callpoint!.getUserInput()
-ivm01_dev=fnget_dev("IVM_ITEMMAST")
-ivm01_tpl$=fnget_tpl$("IVM_ITEMMAST")
-dim ivm01a$:ivm01_tpl$
-ivm01a_key$=firm_id$+item_id$
-find record (ivm01_dev,key=ivm01a_key$,err=*break)ivm01a$
-if ivm01a.item_inactive$="Y" then
-   msg_id$="IV_ITEM_INACTIVE"
-   dim msg_tokens$[2]
-   msg_tokens$[1]=cvs(ivm01a.item_id$,2)
-   msg_tokens$[2]=cvs(ivm01a.display_desc$,2)
-   gosub disp_message
-   callpoint!.setStatus("ACTIVATE")
-   goto std_exit
-endif
-
-rem --- Set and display default values
-
-	item$ = callpoint!.getUserInput()
-	whse$ = callpoint!.getColumnData("IVE_TRANSDET.WAREHOUSE_ID")
-	gosub get_whse_item

@@ -2493,7 +2493,6 @@ rem --- Enable/Disable Cash Sale button
 [[OPE_INVHDR.ORDER_NO.AVAL]]
 rem --- Do we need to create a new order number?
 
-	new_seq$ = "N"
 	order_no$ = callpoint!.getUserInput()
 
 	if cvs(order_no$, 2) = "" then 
@@ -2509,7 +2508,7 @@ rem --- Do we need to create a new order number?
 			callpoint!.setUserInput(order_no$)
 			orderNo!=callpoint!.getControl("OPE_INVHDR.ORDER_NO")
 			orderNo!.setText(order_no$)
-			new_seq$ = "Y"
+			user_tpl.new_order=1
 		endif
 	endif
 
@@ -2542,7 +2541,7 @@ rem --- Does order exist?
 
 rem --- A new record must be the next sequence
 
-	if found = 0 and new_seq$ = "N" then
+	if found = 0 and user_tpl.new_order=0 then
 		msg_id$ = "OP_NEW_ORD_USE_SEQ"
 		gosub disp_message	
 		callpoint!.setFocus("OPE_INVHDR.ORDER_NO")

@@ -63,7 +63,7 @@
 		<a name="TOP" id="TOP"></a>
 		<center>
 			<br />
-            <span class="title">RELNOTES for AddonSoftware 21.00</span>
+            <span class="title">RELNOTES for AddonSoftware 21.10</span>
 		</center>
 		<br />
 
@@ -123,25 +123,59 @@
 		<br />
 		<div class="indent1">
 			<br />
-			Version 21.00 takes advantage of the technological advancements provided by Barista&reg; and BBj&reg; to deliver an innovative software package known for its structural quality. Together with Barista, AddonSoftware offers a leap forward in the efficiency of software customization and the creation of vertical applications. AddonSoftware
+			Version 21.10 takes advantage of the technological advancements provided by Barista&reg; and BBj&reg; to deliver an innovative software package known for its structural quality. Together with Barista, AddonSoftware offers a leap forward in the efficiency of software customization and the creation of vertical applications. AddonSoftware
 continues its history of constant improvement - additional features, increased functionality, and updated technology - in this release.
 			<ul>
+            <li>Preview features for version 22.00</li>
+            <ul>
+                <li> </li>
+            </ul>
             <li>New for version 21.00</li>
             <br />
                 <ul>
                     <li>General</li>
                     <ul>
-                        <li>Added Barista's "Saved Selection Option" feature to the Addon Upgrade Wizard form to save and quickly restore grid entries when restarting.</li>
+                        <li>Addon installs and upgrades are now version controlled using Git. Features of this new Git-based model include:</li>
+                        <ul>
+                            <li>Installs and upgrades automatically create the recommended version-neutral file structure.</li>
+                            <li>Facilitates making Addon customizations directly in the Addon file structure, eliminating the need for a separate "mods project."</li>
+                            <li>The Upgrade Wizard uses Barista's "Saved Selection Options" feature to save and quickly restore grid entries when resuming/restarting.</li>
+                            <li>The new Packager/Extractor utility simplifies moving a Barista/Addon instance between production and test servers.</li>
+                            <li>Automatically incorporates customizations from mods projects directly into Addon.</li>
+                        </ul>
+                        <li>All address and city fields have been expanded to 30 characters.</li>
+                        <li>Email address, subject, and message fields in the Report Control forms have been expanded.</li>
                     </ul>
                     <li>Accounting</li>
                     <ul>
-                        <li>Added aging criterion information to Totals tab on Order/Invoice Entry forms and the OP Credit Maintenance form. Modified the AR Aging Report to require 30-day fixed periods, aging credits and future aging when the "Update Customer Aging Summary" option is selected.</li>
                         <li>Added a new column to the AP Payment Selection Report to flag ACH vendors, and show Total ACH and Total Check payments in final report totals.</li>
                         <li>Added Barista's "Saved Selection Option" feature to the Payment Selection Entry form.</li>
+                        <li>Report Control Recipients form can be accessed from Vendor Maintenance.</li>
+                        <li>Bank Account field in the Bank Accounts and Vendors tables has been encrypted, and new VIEWs created to show account last 4 if accessing data externally (i.e., via SQL from outside of Addon).</li>
+                        <li>Added aging criterion information to the Credit Maintenance form and the Totals tab on Order/Invoice Entry form.</li>
+                        <li>Modified the AR Aging Report to require 30-day fixed periods, and always aging credits and future invoices when the "Update Customer Aging Summary" option is selected.</li>
+                        <li>A new option is available in the Customers, Credit Maintenance, and Order/Invoice Entry forms that allows users to refresh the customer's aged balances on demand. The option is enabled or disabled via a new "On-demand Aging?" parameter.</li>
+                        <li>The new Default Age By parameter supplies the default aging basis (I=Invoice Date, D=Due Date) for the Aging Report, Age Transactions, and Statements tasks as well as for back-end aging updates when no aging basis has yet been established for a given customer.</li>
+                        <li>The Customer form's Aging/Sales Summary tab has a new drill down on the Last Payment Date to quickly see how the payment was applied.</li>
+                        <li>Report Control Recipients form can be accessed directly from Customer Maintenance.</li>
+                        <li>Description for Chart of Accounts breaks expanded to 50 characters.</li>
                     </ul>
                     <li>Distribution</li>
                     <ul>
+                        <li>Interface with Avalara's AvaTax sales tax service:</li>
+                        <ul>
+                            <li>Send Orders to AvaTax for estimated tax.</li>
+                            <li>Send Invoices to AvaTax for final tax calculation.</li>
+                            <li>Commit/finalize transactions during Sales Register/Update.</li>
+                            <li>Automatically updates new Customer Sales Tax Exemptions table.</li>
+                            <li>Associate items with AvaTax tax service codes via Item Master, Product Type, Item Type, and/or Item Class .</li>
+                            <li>Committed transaction history and complete JSON response available for research, reporting, or auditing.</li>
+                            <li>Supports using AvaTax sales tax service together with traditional Addon sales tax codes.</li>
+                        </ul>
                         <li>Added a "Sequence" ListButton to the Invoice Printing form so that invoices can be printed in Customer ID sequence or Invoice Number sequence.</li>
+                        <li>New hand-held application for Physical Inventory Counting to use instead of or in conjunction with traditional count sheets.</li>
+                        <li>Expanded Item Class to 6 characters.</li>
+                        <li>Expanded Customer Pricing Code to 6 characters.</li>
                     </ul>                                                                                                                                                                                                                                                                           
                     <li>Testing</li>
                     <ul>
@@ -158,7 +192,7 @@ continues its history of constant improvement - additional features, increased f
 		<span class="style1"><a name="KNOWNISSUES" id="KNOWNISSUES">3. KNOWN ISSUES</a></span><span class="style6"><a href="#TOP">(top of page)</a></span>
 		<div class="indent1">
 			<ul>
-				<li>BBj version 21.00 and the Barista Application Framework version 21.00 are both required to run AddonSoftware version 21.00.</li>
+				<li>BBj version 21.10 and the Barista Application Framework version 21.10 are both required to run AddonSoftware version 21.10.</li>
 				<li>When running under Linux, the KDE desktop environment must be used.</li>
 			</ul>
 
