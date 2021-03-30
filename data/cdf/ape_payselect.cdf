@@ -1341,8 +1341,9 @@ rem --- in: rowsSelected!
 				continue
 			endif	
 
-			rem --- Reviewed by this user that is also an approver. Reviewer cannot also approve.
-			if reviewed and (cvs(reviewer$,3)=cvs(user$,3) or cvs(reviewer$,3)="") then
+			rem --- Reviewed by this user that is also an approver.
+			if reviewed and (cvs(reviewer$,3)=cvs(user$,3) or cvs(reviewer$,3)="") and !apm_approvers.review_approve then
+				rem --- This reviewer not allowed to be also the approver for this invoice
 				continue
 			endif
 
@@ -1593,8 +1594,8 @@ rem --- note: if user is both a reviewer and approver, does not currently allow 
 				continue
 			endif
 
-			if reviewed and cvs(reviewer$,3)=cvs(user$,3)  then
-				rem --- Reviewer cannot also be the approver
+			if reviewed and cvs(reviewer$,3)=cvs(user$,3) and !apm_approvers.review_approve  then
+				rem --- This reviewer not allowed to be also the approver for this invoice
 				continue
 			endif
 

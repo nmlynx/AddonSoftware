@@ -1,15 +1,3 @@
-[[APM_APPROVERS.SIGNATURE_FILE.AVAL]]
-rem --- Verify signature file exists
-	signature_file$=callpoint!.getUserInput()
-	sigFile!=new File(signature_file$)
-	if ! sigFile!.exists() or sigFile!.isDirectory() then
-		msg_id$="AD_FILE_NOT_FOUND"
-		dim msg_tokens$[1]
-		msg_tokens$[1]=signature_file$
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-		break
-	endif
 [[APM_APPROVERS.ADIS]]
 rem --- enable/disable according to authorization level
 
@@ -29,25 +17,20 @@ else
 	callpoint!.setColumnEnabled("APM_APPROVERS.PRELIM_APPROVAL",1)
 	callpoint!.setColumnEnabled("APM_APPROVERS.CHECK_SIGNER",1)
 endif
-[[APM_APPROVERS.PAYABLES_CLERK.AVAL]]
-rem --- if selected, disable/clear other fields
 
-if num(callpoint!.getUserInput())=1
-	callpoint!.setColumnData("APM_APPROVERS.PRELIM_APPROVAL","0",1)
-	callpoint!.setColumnData("APM_APPROVERS.CHECK_SIGNER","0",1)
-	callpoint!.setColumnData("APM_APPROVERS.SIGNATURE_FILE","",1)
-	callpoint!.setColumnData("APM_APPROVERS.LIMIT_AUTH","0",1)
-	callpoint!.setColumnData("APM_APPROVERS.MAX_AUTH_AMT","",1)
+rem --- Enable/disable REVIEW_APPROVE
+	if num(callpoint!.getColumnData("APM_APPROVERS.PRELIM_APPROVAL")) and num(callpoint!.getColumnData("APM_APPROVERS.CHECK_SIGNER")) then
+		callpoint!.setColumnEnabled("APM_APPROVERS.REVIEW_APPROVE",1)
+	else
+		callpoint!.setColumnEnabled("APM_APPROVERS.REVIEW_APPROVE",0)
+		callpoint!.setColumnData("APM_APPROVERS.REVIEW_APPROVE","0",1)
+	endif
 
-	callpoint!.setColumnEnabled("APM_APPROVERS.PRELIM_APPROVAL",0)
-	callpoint!.setColumnEnabled("APM_APPROVERS.CHECK_SIGNER",0)
-	callpoint!.setColumnEnabled("APM_APPROVERS.SIGNATURE_FILE",0)
-	callpoint!.setColumnEnabled("APM_APPROVERS.LIMIT_AUTH",0)
-	callpoint!.setColumnEnabled("APM_APPROVERS.MAX_AUTH_AMT",0)
-else
-	callpoint!.setColumnEnabled("APM_APPROVERS.PRELIM_APPROVAL",1)
-	callpoint!.setColumnEnabled("APM_APPROVERS.CHECK_SIGNER",1)
-endif
+[[APM_APPROVERS.AREC]]
+rem --- Disable REVIEW_APPROVE for new records
+	callpoint!.setColumnEnabled("APM_APPROVERS.REVIEW_APPROVE",0)
+	callpoint!.setColumnData("APM_APPROVERS.REVIEW_APPROVE","0",1)
+
 [[APM_APPROVERS.BSHO]]
 rem --- Inits
 	use java.io.File
@@ -80,5 +63,62 @@ rem --- Verify using Payment Authorization
 		callpoint!.setStatus("EXIT")
 		break
 	endif
+
+[[APM_APPROVERS.CHECK_SIGNER.AVAL]]
+rem --- Enable/disable REVIEW_APPROVE
+	if num(callpoint!.getUserInput()) and num(callpoint!.getColumnData("APM_APPROVERS.PRELIM_APPROVAL")) then
+		callpoint!.setColumnEnabled("APM_APPROVERS.REVIEW_APPROVE",1)
+	else
+		callpoint!.setColumnEnabled("APM_APPROVERS.REVIEW_APPROVE",0)
+		callpoint!.setColumnData("APM_APPROVERS.REVIEW_APPROVE","0",1)
+	endif
+
+[[APM_APPROVERS.PAYABLES_CLERK.AVAL]]
+rem --- if selected, disable/clear other fields
+
+if num(callpoint!.getUserInput())=1
+	callpoint!.setColumnData("APM_APPROVERS.PRELIM_APPROVAL","0",1)
+	callpoint!.setColumnData("APM_APPROVERS.CHECK_SIGNER","0",1)
+	callpoint!.setColumnData("APM_APPROVERS.REVIEW_APPROVE","0",1)
+	callpoint!.setColumnData("APM_APPROVERS.SIGNATURE_FILE","",1)
+	callpoint!.setColumnData("APM_APPROVERS.LIMIT_AUTH","0",1)
+	callpoint!.setColumnData("APM_APPROVERS.MAX_AUTH_AMT","",1)
+
+	callpoint!.setColumnEnabled("APM_APPROVERS.PRELIM_APPROVAL",0)
+	callpoint!.setColumnEnabled("APM_APPROVERS.CHECK_SIGNER",0)
+	callpoint!.setColumnEnabled("APM_APPROVERS.REVIEW_APPROVE",0)
+	callpoint!.setColumnEnabled("APM_APPROVERS.SIGNATURE_FILE",0)
+	callpoint!.setColumnEnabled("APM_APPROVERS.LIMIT_AUTH",0)
+	callpoint!.setColumnEnabled("APM_APPROVERS.MAX_AUTH_AMT",0)
+else
+	callpoint!.setColumnEnabled("APM_APPROVERS.PRELIM_APPROVAL",1)
+	callpoint!.setColumnEnabled("APM_APPROVERS.CHECK_SIGNER",1)
+endif
+
+[[APM_APPROVERS.PRELIM_APPROVAL.AVAL]]
+rem --- Enable/disable REVIEW_APPROVE
+	if num(callpoint!.getUserInput()) and num(callpoint!.getColumnData("APM_APPROVERS.CHECK_SIGNER")) then
+		callpoint!.setColumnEnabled("APM_APPROVERS.REVIEW_APPROVE",1)
+	else
+		callpoint!.setColumnEnabled("APM_APPROVERS.REVIEW_APPROVE",0)
+		callpoint!.setColumnData("APM_APPROVERS.REVIEW_APPROVE","0",1)
+	endif
+
+[[APM_APPROVERS.SIGNATURE_FILE.AVAL]]
+rem --- Verify signature file exists
+	signature_file$=callpoint!.getUserInput()
+	sigFile!=new File(signature_file$)
+	if ! sigFile!.exists() or sigFile!.isDirectory() then
+		msg_id$="AD_FILE_NOT_FOUND"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=signature_file$
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
 [[APM_APPROVERS.<CUSTOM>]]
 #include [+ADDON_LIB]std_missing_params.aon
+
+
+
