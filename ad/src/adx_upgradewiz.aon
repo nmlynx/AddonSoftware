@@ -639,8 +639,8 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
    endif
    
    rem --- Copy adx_git_auth table from the download area to the new instance data
-   adx_git_auth_table$=stbl("+ADDATA")+"adx_git_auth.dat"
-   adx_git_auth_copy$=convCtrlFilePath$+"adx_git_auth.dat"
+   adx_git_auth_table$=stbl("+ADDATA")+"adx_git_auth"
+   adx_git_auth_copy$=convCtrlFilePath$+"adx_git_auth"
    
    rem --- --- close the table we're about to copy over
    call stbl("+DIR_SYP")+"/bac_open_table.bbj","ADX_GIT_AUTH","C",rd_table_chans$[all],chan,template$,msg$
