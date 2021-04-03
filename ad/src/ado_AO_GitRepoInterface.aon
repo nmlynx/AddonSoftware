@@ -18,6 +18,15 @@ rem  */
     use java.io.File
     use java.lang.reflect.Array
     use java.nio.charset.StandardCharsets
+    use java.nio.file.Files
+    use java.nio.file.FileSystems
+    use java.nio.file.FileVisitResult
+    use java.nio.file.Path
+    use java.nio.file.Paths
+    use java.nio.file.SimpleFileVisitor
+    use java.nio.file.attribute.BasicFileAttributes
+    use java.nio.file.attribute.UserPrincipal
+    use java.nio.file.attribute.UserPrincipalLookupService
     use java.text.SimpleDateFormat
     use java.util.Date
     use java.util.HashMap
@@ -133,6 +142,10 @@ rem  */
                 cloneCmd!=cloneCmd!.setDirectory(new File(aonDir$))
                 cloneCmd!=cloneCmd!.setCloneAllBranches(1)
                 cloneCmd!.call()
+
+                declare OwnerSetter setter!
+                setter!=new OwnerSetter()
+                setter!.setOwnerRecursively(aonDir$)
             endif
             #git!=Git.open(new File(#LocalRepo$))
             
@@ -296,6 +309,10 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
                 checkoutCmd!.call()
                 results!=checkoutCmd!.getResult()
                 status$=results!.getStatus().toString()
+                
+                declare OwnerSetter setter!
+                setter!=new OwnerSetter()
+                setter!.setOwnerRecursively(#AonDir$)
     
                 rem --- Re-initialize
                 #Branch$=#repository!.getBranch()
@@ -349,6 +366,10 @@ checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
             endif 
         
             resultingCommit!=#git!.reset().setRef(commit!.getName()).setMode(mode!).call()
+            
+            declare OwnerSetter setter!
+            setter!=new OwnerSetter()
+            setter!.setOwnerRecursively(#AonDir$)
             
             methodret resultingCommit!.getObjectId().equals(commit!.getId())
             
@@ -441,6 +462,10 @@ cherryPick_error:rem --- Method error trap/handler (11Oct2017)
             checkoutCmd!.setStage(stage!)
             checkoutCmd!.addPath(path!)
             checkoutCmd!.call()
+            
+            declare OwnerSetter setter!
+            setter!=new OwnerSetter()
+            setter!.setOwnerRecursively(#AonDir$)
             
             rem ---  then add the file in preparation for it to be committed
             #git!.add().addFilepattern(path!).call()
@@ -924,6 +949,10 @@ getUnstagedChanges_error:rem --- Method error trap/handler (11Oct2017)
             pullCmd!.setCredentialsProvider(#credentials!)
             pullCmd!.call()
             
+            declare OwnerSetter setter!
+            setter!=new OwnerSetter()
+            setter!.setOwnerRecursively(#AonDir$)
+            
             methodret
            
 pullRepository_error:rem --- Method error trap/handler (11Oct2017)
@@ -1026,6 +1055,10 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
                 checkOutCmd!=#git!.checkout()
                 checkOutCmd!.addPaths(filesToCheckOut!)
                 checkOutCmd!.call()
+                
+                declare OwnerSetter setter!
+                setter!=new OwnerSetter()
+                setter!.setOwnerRecursively(#AonDir$)
             endif  
                 
         methodend
@@ -1295,3 +1328,41 @@ class public SSH extends JschConfigSessionFactory implements TransportConfigCall
     methodend 
     
 classend 
+
+
+REM Visits all files and directories under a given topLevel directory and sets them as 
+REM owned by the specified user account. 
+class public OwnerSetter extends SimpleFileVisitor
+
+    field public BBjString UserName!
+    field protected UserPrincipal userPrincipal!
+
+    method public OwnerSetter() 
+        #this!(info(3,2))
+    methodend 
+    
+    method public OwnerSetter(BBjString userName!)
+        #UserName!=userName!
+        #userPrincipal!=FileSystems.getDefault().getUserPrincipalLookupService().lookupPrincipalByName(#UserName!)
+    methodend 
+    
+    method public void setOwnerRecursively(BBjString topLevelDirectory!)
+        Files.walkFileTree(Paths.get(topLevelDirectory!),#this!)
+    methodend 
+    
+    method public FileVisitResult preVisitDirectory(Object directory!, BasicFileAttributes attrs!)
+        #setUser(directory!)
+        methodret FileVisitResult.CONTINUE
+    methodend 
+    
+    method public FileVisitResult visitFile(Object path!,BasicFileAttributes attr!)
+        #setUser(path!)
+        methodret FileVisitResult.CONTINUE
+    methodend 
+    
+    method public void setUser(Object path!)
+        Files.setOwner(cast(Path,path!),#userPrincipal!)
+    methodend 
+classend 
+
+
