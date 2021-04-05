@@ -338,12 +338,18 @@ rem --- For version 21.00, set default value for new AR dflt_age_by param to 'I'
 rem --- For version 21.00, set new IVC_PRICCODE pricing_basis to 'P' (since Percent is what has always been used in the past)
     this_module$="IV"
     if installMap!.get(this_module$)="Y" then
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:                   Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+
         task$="2100_IV_ivc_priccode"
         if convCtrl!.getProperty(task$)<>"Completed" then
-
             rem --- Increment progress meter
-            meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
-:                   Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+            meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" IVC_PRICCODE"
             meter_proc_recs=meter_proc_recs+1
             meter_action$="MTR-LST"
             gosub disp_meter
@@ -385,6 +391,108 @@ rem --- For version 21.00, set new IVC_PRICCODE pricing_basis to 'P' (since Perc
             gosub disp_meter
             print(log_dev)meter_text$
                 
+        else
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_CONV_PREVIOUSLY","Conversion previously completed for")+" "+task$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+        endif
+
+        rem --- For version 21.00, initialize IVC_UMCODES with existing UNIT_MEASURE, UNIT_OF_SALE, PURCHASE_UM and UM_SOLD codes
+        task$="2100_IV_ivc_umcodes"
+        if convCtrl!.getProperty(task$)<>"Completed" then
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" IVC_UMCODES"
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+
+            rem --- Get existing UNIT_MEASURE, UNIT_OF_SALE, PURCHASE_UM and UM_SOLD codes to update IVC_UMCODES with
+            umElementsTables! = new HashMap()
+            
+            umTbls!=BBjAPI().makeVector()
+            umTbls!.addItem("BMM_BILLMAST")
+            umTbls!.addItem("BMM_BILLMAT")
+            umTbls!.addItem("BMM_BILLSUB")
+            umTbls!.addItem("POE_PODET")
+            umTbls!.addItem("POE_RECDET")
+            umTbls!.addItem("POE_REQDET")
+            umTbls!.addItem("POT_RECDET")
+            umTbls!.addItem("SFE_WOMASTR")
+            umTbls!.addItem("SFE_WOMATL")
+            umTbls!.addItem("SFE_WOSUBCNT")
+            umTbls!.addItem("SFT_CLSMATTR")
+            umTbls!.addItem("SFT_OPNMATTR")
+            umElementsTables!.put("UNIT_MEASURE",umTbls!)
+
+            uosTbls!=BBjAPI().makeVector()
+            uosTbls!.addItem("IVM_ITEMMAST")
+            uosTbls!.addItem("IVS_DEFAULTS")
+            umElementsTables!.put("UNIT_OF_SALE",uosTbls!)
+
+            pumTbls!=BBjAPI().makeVector()
+            pumTbls!.addItem("IVM_ITEMMAST")
+            pumTbls!.addItem("IVS_DEFAULTS")
+            umElementsTables!.put("PURCHASE_UM",pumTbls!)
+
+            umsTbls!=BBjAPI().makeVector()
+            umsTbls!.addItem("OPT_INVDET")
+            umElementsTables!.put("UM_SOLD",umsTbls!)
+
+            rem --- Populate IVC_UMCODES with existing UNIT_MEASURE, UNIT_OF_SALE, PURCHASE_UM and UM_SOLD codes
+            num_files=1
+            dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+            open_tables$[1]="IVC_UMCODES",  open_opts$[1]="OTA"
+            gosub open_tables
+            ivcUmCodes_dev=num(open_chans$[1]); dim ivcUmCodes$:open_tpls$[1]
+
+            iter!=umElementsTables!.keySet().iterator()
+            while iter!.hasNext()
+                element$=iter!.next()
+                srcTbl!=umElementsTables!.get(element$)
+
+                for i=0 to srcTbl!.size()-1
+                    rem --- Open source file
+                    num_files=1
+                    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                    open_tables$[1]=srcTbl!.getItem(i),open_opts$[1]="OTA"
+                    gosub open_tables
+                    srcTbl_dev=num(open_chans$[1]);dim srcTbl$:open_tpls$[1]
+                
+                    read(srcTbl_dev,key="",dom=*next)
+                    while 1
+                        readrecord(srcTbl_dev,end=*break)srcTbl$
+                        uom$=field(srcTbl$,element$,err=*endif)
+                        if cvs(uom$,2)<>"" then
+                            redim ivcUmCodes$
+                            ivcUmCodes.firm_id$=srcTbl.firm_id$
+                            ivcUmCodes.unit_measure$=uom$
+                            ivcUmCodes.description$=uom$
+                            writerecord(ivcUmCodes_dev,dom=*next)ivcUmCodes$
+                        endif
+                    wend
+                next i
+            wend
+            
+            rem --- Close 
+            num_files=1
+            dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+            open_tables$[1]="IVC_UMCODES",   open_opts$[1]="C"
+            gosub open_tables
+
+            write(convCtrlFileChan)task$+"=Completed"
+
+            rem --- This task$ conversion completed successfully
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+task$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
         else
             rem --- Increment progress meter
             meter_text$=Translate!.getTranslation("AON_CONV_PREVIOUSLY","Conversion previously completed for")+" "+task$
