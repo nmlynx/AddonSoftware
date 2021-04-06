@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-03-30
+ Report Date:   2021-04-06
  Report Branch: AddonSoftware 21.00
  Last Release:  AddonSoftware 20.32
 =======================================================================================================================================
@@ -192,3 +192,16 @@ Modified: data/sync/adm_query_cols~[01007514AD].xml
 Modified: data/sync/adm_query~[01007514AD].xml
 Modified: data/sync/adm_searches~[01007514AD].xml
 
+=======================================================================================================================================
+Revision: ea07cb2bb91a73df2bedde7ab438cc03b7583344
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/6/2021 3:09:23 PM
+Message:
+Bug 10154: Modified apr_chkregister.aon to check for voided checks
+before it checks for breaks in the AP_TYPE. Also, added printing a
+message on the register when the AP_TYPE is blank and not found in
+apc_typecode.
+
+(cherry picked from commit ae7a573b5a617ae3e947cfb78253289615d45d41)
+----
+Modified: ap/src/apr_chkregister.aon
