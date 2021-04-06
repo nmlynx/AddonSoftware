@@ -360,16 +360,16 @@ rem --- Process apw_checkinvoice (apw01_dev) twice. First for normal printed che
               rem --- Skip if ACH payments allowed, vendor NOT paid via ACH and this is SECOND pass. 
               if ach_allowed and pos(apw01a.comp_or_void$="CV") and pass=2 then continue
     
-              rem --- Level breaks
-        
-              if str(pass)+apw01a.ap_type$<>lastPassType$ gosub type_break
-    
               rem --- Voided check?
     
               if pos(apw01a.comp_or_void$="VX") then
                  gosub print_voided
                  continue
               endif
+    
+              rem --- Level breaks
+        
+              if str(pass)+apw01a.ap_type$<>lastPassType$ gosub type_break
     
               rem --- Check transaction date if GL is being used
     
@@ -722,7 +722,11 @@ type_break: rem --- AP Type break
     endif
     BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
     if aptype$="" then
-        HdrVect!.addItem(checks$+payments$)
+        if cvs(apm10a.code_desc$,2)<>nf$ then
+            HdrVect!.addItem(checks$+payments$)
+        else
+            HdrVect!.addItem(checks$+payments$+" - "+Translate!.getTranslation("AON_AP_TYPE_")+" "+cvs(apm10a.code_desc$,2))
+        endif
         totalFor$=checks$
     else
         HdrVect!.addItem(checks$+payments$+" - "+aptype$+" "+cvs(apm10a.code_desc$,2))
