@@ -49,7 +49,7 @@ rem --- Get the IN parameters used by the procedure
 rem --- Create a memory record set to hold results.
 rem --- Columns for the record set are defined using a string template
 rs! = BBJAPI().createMemoryRecordSet("FIRM_ID:C(2), BILL_NO:C(20), DRAWING_NO:C(25), DRAWING_REV:C(5), BILL_REV:C(2), PHANTOM_BILL:C(1),
-:                                     SOURCE_CODE:C(1), UNIT_MEASURE:C(2), LSTRVS_DATE:C(8), LSTACT_DATE:C(8), CREATE_DATE:C(8),
+:                                     SOURCE_CODE:C(1), UNIT_MEASURE:C(6), LSTRVS_DATE:C(8), LSTACT_DATE:C(8), CREATE_DATE:C(8),
 :                                     EST_YIELD:N(5*), STD_LOT_SIZE:N(7*), ITEMDESC:C(60), SUB_ASSMBLY:C(20)")
 
 rem --- Get Barista System Program directory
