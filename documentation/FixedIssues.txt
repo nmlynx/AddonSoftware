@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-04-06
+ Report Date:   2021-04-07
  Report Branch: AddonSoftware 21.00
  Last Release:  AddonSoftware 20.32
 =======================================================================================================================================
@@ -218,3 +218,18 @@ form after Bank Account Code is entered/changed.
 ----
 Modified: data/bar/glm_bankmaster.xml
 Modified: data/cdf/glm_bankmaster.cdf
+
+=======================================================================================================================================
+Revision: 82044b85f80bffea450f7abf3ddb42323e6511b8
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/7/2021 11:26:42 AM
+Message:
+Bug 10154: Changed AP Check Printing to NOT change apw01a.ap_type$ to
+blank for voided checks when not using multiple AP Types. Changed AP
+Check Register back to checking for AP_TYPE breaks before checking for
+voided checks.
+
+(cherry picked from commit e6b351702b394c50bcb9b9c8d7fe43d72bbea3d6)
+----
+Modified: ap/src/apr_apchecks.aon
+Modified: ap/src/apr_chkregister.aon
