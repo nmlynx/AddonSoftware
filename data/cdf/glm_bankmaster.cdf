@@ -336,6 +336,14 @@ rem "GL INACTIVE FEATURE"
       callpoint!.setStatus("ACTIVATE")
    endif
 
+[[<<DISPLAY>>.TEMP_TAB_STOP.BINP]]
+rem --- "Hidden" field to allow enter/tab from single enabled field
+rem --- Temporary workaround for Barista bug 6925
+
+	callpoint!.setFocus("<<DISPLAY>>.BNK_ACCT_CD")
+	callpoint!.setStatus("ABORT")
+	break
+
 [[GLM_BANKMASTER.<CUSTOM>]]
 #include [+ADDON_LIB]std_functions.aon
 rem ====================================================
