@@ -143,9 +143,13 @@ rem  */
                 cloneCmd!=cloneCmd!.setCloneAllBranches(1)
                 cloneCmd!.call()
 
-                declare OwnerSetter setter!
-                setter!=new OwnerSetter()
-                setter!.setOwnerRecursively(aonDir$)
+                declare BBjString os!
+                os!=info(0,0)
+                if (os!.indexOf("Win")<=-1) then 
+                    declare OwnerSetter setter!
+                    setter!=new OwnerSetter()
+                    setter!.setOwnerRecursively(aonDir$)
+                endif 
             endif
             #git!=Git.open(new File(#LocalRepo$))
             
