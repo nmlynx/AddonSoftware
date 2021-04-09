@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2018-05-23T16:53:14 -->
+<!-- 2021-04-06T10:29:40 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="BOMMatlDet" language="groovy" pageWidth="612" pageHeight="792" columnWidth="612" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" resourceBundle="addon" uuid="c6a5bed4-953a-4c70-b9b8-f29e5d24263e">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -199,7 +199,9 @@ $P{ALL_DATES} == "Y")]]></printWhenExpression>
 				<text><![CDATA[U/M: ]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="366" y="13" width="27" height="13" uuid="a8706484-795c-4406-a364-486a81baf28b"/>
+				<reportElement x="366" y="13" width="45" height="13" uuid="a8706484-795c-4406-a364-486a81baf28b">
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+				</reportElement>
 				<textFieldExpression><![CDATA[$F{UNIT_MEASURE}+" "]]></textFieldExpression>
 			</textField>
 			<textField pattern="" isBlankWhenNull="true">
@@ -208,12 +210,16 @@ $P{ALL_DATES} == "Y")]]></printWhenExpression>
 				<textFieldExpression><![CDATA[$F{UNITCOST}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="400" y="13" width="47" height="13" uuid="b0a48387-67b1-4584-9287-60f672d53f3f"/>
+				<reportElement x="415" y="13" width="47" height="13" uuid="b0a48387-67b1-4584-9287-60f672d53f3f">
+					<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+				</reportElement>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$R{AON_NET_QTY:}]]></textFieldExpression>
 			</textField>
 			<textField pattern="">
-				<reportElement x="457" y="13" width="55" height="13" uuid="d4d3bdc4-9dca-4bb8-8d32-be18c38e36d1"/>
+				<reportElement x="465" y="13" width="55" height="13" uuid="d4d3bdc4-9dca-4bb8-8d32-be18c38e36d1">
+					<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+				</reportElement>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{NET_REQUIRED}]]></textFieldExpression>
 			</textField>

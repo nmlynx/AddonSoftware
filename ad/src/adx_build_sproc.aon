@@ -37,9 +37,6 @@ rem --- OPINVOICE_HDR
 rem --- OPINVOICE_DET
 rem --- OPINVOICE_DET_LOTSER
 rem --- OPINVOICE_SHIPTRACK
-rem --- OP_HIST_INVOICE_HDR
-rem --- OP_HIST_INVOICE_DET
-rem --- OP_HIST_INVOICE_DET_LOTSER
 rem --- PURCHASEORDER_HDR
 rem --- PURCHASEORDER_DET
 rem --- OPPICKLIST_HDR
@@ -322,18 +319,6 @@ rem --- first drop all std Addon SPROCs
     gosub create_sproc_def
         
     sproc_vw_name$="OPINVOICE_SHIPTRACK"
-    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
-    gosub create_sproc_def
-
-	sproc_vw_name$="OP_HIST_INVOICE_HDR"
-    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
-    gosub create_sproc_def
-	
-	sproc_vw_name$="OP_HIST_INVOICE_DET"
-    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
-    gosub create_sproc_def
-		
-	sproc_vw_name$="OP_HIST_INVOICE_DET_LOTSER"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
 
@@ -783,18 +768,6 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
-	rem --- OP_HIST_INVOICE_HDR
-    sproc_vw_name$="OP_HIST_INVOICE_HDR"
-	sqlprep$="CREATE PROCEDURE OP_HIST_INVOICE_HDR "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, AR_TYPE CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN, AR_INV_NO CHAR(7) IN, "
-	sqlprep$=sqlprep$+"CUST_MASK CHAR(20) IN, CUST_SIZE CHAR(1) IN, "
-	sqlprep$=sqlprep$+"BARISTA_WD VARCHAR(50) IN)"
-    sqlprep$=sqlprep$+"'"+sproc_path$+"OP_HIST_INVOICE_HDR.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'OP Invoice Header'"
-
-    gosub create_sproc_def
-
 	rem --- OPINVOICE_DET	
     sproc_vw_name$="OPINVOICE_DET"
 	sqlprep$="CREATE PROCEDURE OPINVOICE_DET "
@@ -802,18 +775,6 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 	sqlprep$=sqlprep$+"QTY_MASK CHAR(20) IN, AMT_MASK CHAR(20) IN, PRICE_MASK CHAR(20) IN, EXT_MASK CHAR(20) IN, "
 	sqlprep$=sqlprep$+"ITEM_MASK CHAR(20) IN, BARISTA_WD VARCHAR(50) IN, REPORT_TYPE CHAR(1) IN)"	
     sqlprep$=sqlprep$+"'"+sproc_path$+"OPINVOICE_DET.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'OP Invoice Detail'"
-
-    gosub create_sproc_def
-
-	rem --- OP_HIST_INVOICE_DET	
-    sproc_vw_name$="OP_HIST_INVOICE_DET"
-	sqlprep$="CREATE PROCEDURE OP_HIST_INVOICE_DET "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, AR_TYPE CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN, AR_INV_NO CHAR(7) IN, "
-	sqlprep$=sqlprep$+"QTY_MASK CHAR(20) IN, AMT_MASK CHAR(20) IN, PRICE_MASK CHAR(20) IN, EXT_MASK CHAR(20) IN, "
-	sqlprep$=sqlprep$+"ITEM_MASK CHAR(20) IN, BARISTA_WD VARCHAR(50) IN)"	
-    sqlprep$=sqlprep$+"'"+sproc_path$+"OP_HIST_INVOICE_DET.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'OP Invoice Detail'"
 
@@ -837,18 +798,6 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, AR_TYPE CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN, SHIP_SEQ_NO CHAR(3) IN, "
     sqlprep$=sqlprep$+"BARISTA_WD VARCHAR(50) IN)"  
     sqlprep$=sqlprep$+"'"+sproc_path$+"OPINVOICE_SHIPTRACK.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'OP Invoice Detail'"
-
-    gosub create_sproc_def
-
-	rem --- OP_HIST_INVOICE_DET_LOTSER
-    sproc_vw_name$="OP_HIST_INVOICE_DET_LOTSER"
-	sqlprep$="CREATE PROCEDURE OP_HIST_INVOICE_DET_LOTSER "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, AR_TYPE CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN, AR_INV_NO CHAR(7) IN, "
-	sqlprep$=sqlprep$+"INTERNAL_SEQ_NO CHAR(12) IN, OPE11_QTY_SHIPPED CHAR(20) IN, QTY_MASK CHAR(20) IN, "
-	sqlprep$=sqlprep$+"IVS_LOTSER_FLAG CHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"	
-    sqlprep$=sqlprep$+"'"+sproc_path$+"OP_HIST_INVOICE_DET_LOTSER.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'OP Invoice Detail'"
 
