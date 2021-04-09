@@ -197,21 +197,16 @@ rem " --- Recalc Summary Info
 
 [[GLM_BANKMASTER.ARAR]]
 rem --- Display Bank Account Information
-	adcBankAcctCode_dev=fnget_dev("ADC_BANKACCTCODE")
-	dim adcBankAcctCode$:fnget_tpl$("ADC_BANKACCTCODE")
-	encryptor!=callpoint!.getDevObject("encryptor")
-	findrecord(adcBankAcctCode_dev,key=firm_id$+callpoint!.getColumnData("GLM_BANKMASTER.BNK_ACCT_CD"),dom=*next)adcBankAcctCode$
-	callpoint!.setColumnData("<<DISPLAY>>.BANK_NAME",adcBankAcctCode.bank_name$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.ADDRESS_LINE_1",adcBankAcctCode.address_line_1$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.ADDRESS_LINE_2",adcBankAcctCode.address_line_2$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.ADDRESS_LINE_3",adcBankAcctCode.address_line_3$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.ACCT_DESC",adcBankAcctCode.acct_desc$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.BNK_ACCT_TYPE",adcBankAcctCode.bnk_acct_type$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.ABA_NO",adcBankAcctCode.aba_no$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.BNK_ACCT_NO",encryptor!.decryptData(cvs(adcBankAcctCode.bnk_acct_no$,3)),1)
+	bnk_acct_cd$=callpoint!.getColumnData("GLM_BANKMASTER.BNK_ACCT_CD")
+	gosub displayBankInfo
 
 rem --- Calculate Summary info
   	gosub calc_totals
+
+[[GLM_BANKMASTER.BNK_ACCT_CD.AVAL]]
+rem --- Display Bank Account Information
+	bnk_acct_cd$=callpoint!.getUserInput()
+	gosub displayBankInfo
 
 [[GLM_BANKMASTER.BSHO]]
 rem --- Encryptor for bank acct #
@@ -340,6 +335,14 @@ rem "GL INACTIVE FEATURE"
       gosub disp_message
       callpoint!.setStatus("ACTIVATE")
    endif
+
+[[<<DISPLAY>>.TEMP_TAB_STOP.BINP]]
+rem --- "Hidden" field to allow enter/tab from single enabled field
+rem --- Temporary workaround for Barista bug 6925
+
+	callpoint!.setFocus("<<DISPLAY>>.BNK_ACCT_CD")
+	callpoint!.setStatus("ABORT")
+	break
 
 [[GLM_BANKMASTER.<CUSTOM>]]
 #include [+ADDON_LIB]std_functions.aon
@@ -503,6 +506,25 @@ rem --- get the Prior and Current Statement Dates
 			endif
 		endif
 	endif
+
+	return
+
+rem ====================================================
+displayBankInfo: rem --- Display Bank Account Information
+rem 		IN: bnk_acct_cd$
+rem ====================================================
+	adcBankAcctCode_dev=fnget_dev("ADC_BANKACCTCODE")
+	dim adcBankAcctCode$:fnget_tpl$("ADC_BANKACCTCODE")
+	encryptor!=callpoint!.getDevObject("encryptor")
+	findrecord(adcBankAcctCode_dev,key=firm_id$+bnk_acct_cd$,dom=*next)adcBankAcctCode$
+	callpoint!.setColumnData("<<DISPLAY>>.BANK_NAME",adcBankAcctCode.bank_name$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.ADDRESS_LINE_1",adcBankAcctCode.address_line_1$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.ADDRESS_LINE_2",adcBankAcctCode.address_line_2$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.ADDRESS_LINE_3",adcBankAcctCode.address_line_3$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.ACCT_DESC",adcBankAcctCode.acct_desc$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.BNK_ACCT_TYPE",adcBankAcctCode.bnk_acct_type$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.ABA_NO",adcBankAcctCode.aba_no$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.BNK_ACCT_NO",encryptor!.decryptData(cvs(adcBankAcctCode.bnk_acct_no$,3)),1)
 
 	return
 

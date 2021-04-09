@@ -47,7 +47,7 @@ rem --- create the in memory recordset for return
 	dataTemplate$ = dataTemplate$ + "order_qty_masked:c(1*), ship_qty:c(1*), bo_qty:c(1*), "
 	dataTemplate$ = dataTemplate$ + "item_id:c(1*), item_desc:c(1*), whse:c(2*), "
 	dataTemplate$ = dataTemplate$ + "price_raw:c(1*), price_masked:c(1*), "
-	dataTemplate$ = dataTemplate$ + "location:c(1*), internal_seq_no:c(1*), um_sold:c(2*), "
+	dataTemplate$ = dataTemplate$ + "location:c(1*), internal_seq_no:c(1*), um_sold:c(6*), "
 	dataTemplate$ = dataTemplate$ + "item_is_ls:c(1), linetype_allows_ls:c(1), carton:c(1*), "
     dataTemplate$ = dataTemplate$ + "whse_message:c(1*), whse_msg_sfx:c(1*), ship_qty_raw:c(1*), "
     dataTemplate$ = dataTemplate$ + "wo_info1:c(1*), wo_info2:c(1*)"
@@ -293,7 +293,7 @@ line_detail: rem --- Item Detail
                 rem --- Cannot use internal_seq_no for the second line because the Jasper LINE_ITEM Group Header is grouped by internal_seq_no.
                 rem --- Use line_no instead of internal_seq_no for the second line to avoid that grouping, which causes second line to not print.
                 if line=2 then internal_seq_no$=ope11a.line_no$
-                
+
     			data! = rs!.getEmptyRecordData()
     			data!.setFieldValue("ORDER_QTY_MASKED", order_qty_masked$)
     			data!.setFieldValue("SHIP_QTY", ship_qty$)

@@ -722,7 +722,11 @@ type_break: rem --- AP Type break
     endif
     BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
     if aptype$="" then
-        HdrVect!.addItem(checks$+payments$)
+        if cvs(apm10a.code_desc$,2)<>nf$ then
+            HdrVect!.addItem(checks$+payments$)
+        else
+            HdrVect!.addItem(checks$+payments$+" - "+Translate!.getTranslation("AON_AP_TYPE_")+" "+cvs(apm10a.code_desc$,2))
+        endif
         totalFor$=checks$
     else
         HdrVect!.addItem(checks$+payments$+" - "+aptype$+" "+cvs(apm10a.code_desc$,2))

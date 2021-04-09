@@ -1074,7 +1074,6 @@ rem --- Write Void
     apw01a.vendor_id$=   ape04a.vendor_id$
     apw01a.check_date$=  check_date$
     apw01a.ap_inv_no$=   ape04a.ap_inv_no$
-    if aps01a.multi_types$<>"Y" apw01a.ap_type$=""
     write record (apw01_dev) apw01a$
 
 	rem --- Write VOID record to jasper print file

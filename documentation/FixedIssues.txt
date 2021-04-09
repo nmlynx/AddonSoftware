@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-03-30
+ Report Date:   2021-04-07
  Report Branch: AddonSoftware 21.00
  Last Release:  AddonSoftware 20.32
 =======================================================================================================================================
@@ -164,6 +164,21 @@ Modified: data/cdf/sfe_womathdr.cdf
 Modified: data/cdf/sfe_womatish.cdf
 
 =======================================================================================================================================
+Revision: 6fe294c59e004992fdc7b39495b3b9dc2d8780f7
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 3/29/2021 5:52:52 PM
+Message:
+Bug 10042: Added review_approve to apm_approvers table to get structural
+change in for v21. Implementation of bug fix to follow.
+
+(cherry picked from commit 6605a122d669698240c5828e5d51f59c31358060)
+----
+Modified: data/bar/apm_approvers.xml
+Modified: documentation/readme.htm
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
+
+=======================================================================================================================================
 Revision: 310ff960a327ea64814f0c5ce6e2060a04ed2f9b
 Author: Bill Halsted <bhalsted@basis.com>
 Date: 3/30/2021 11:08:41 AM
@@ -192,3 +207,57 @@ Modified: data/sync/adm_query_cols~[01007514AD].xml
 Modified: data/sync/adm_query~[01007514AD].xml
 Modified: data/sync/adm_searches~[01007514AD].xml
 
+=======================================================================================================================================
+Revision: ea07cb2bb91a73df2bedde7ab438cc03b7583344
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/6/2021 3:09:23 PM
+Message:
+Bug 10154: Modified apr_chkregister.aon to check for voided checks
+before it checks for breaks in the AP_TYPE. Also, added printing a
+message on the register when the AP_TYPE is blank and not found in
+apc_typecode.
+
+(cherry picked from commit ae7a573b5a617ae3e947cfb78253289615d45d41)
+----
+Modified: ap/src/apr_chkregister.aon
+
+=======================================================================================================================================
+Revision: d52f7c1ff89f000386048368655a4d8cdea113f9
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/6/2021 5:32:42 PM
+Message:
+Bug 10150: Displayed Bank Account information on Bank Reconciliation
+form after Bank Account Code is entered/changed.
+
+(cherry picked from commit 4ff2deec0e5bbfde98c9dfeac4dcb063eb6e9423)
+----
+Modified: data/bar/glm_bankmaster.xml
+Modified: data/cdf/glm_bankmaster.cdf
+
+=======================================================================================================================================
+Revision: 82044b85f80bffea450f7abf3ddb42323e6511b8
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/7/2021 11:26:42 AM
+Message:
+Bug 10154: Changed AP Check Printing to NOT change apw01a.ap_type$ to
+blank for voided checks when not using multiple AP Types. Changed AP
+Check Register back to checking for AP_TYPE breaks before checking for
+voided checks.
+
+(cherry picked from commit e6b351702b394c50bcb9b9c8d7fe43d72bbea3d6)
+----
+Modified: ap/src/apr_apchecks.aon
+Modified: ap/src/apr_chkregister.aon
+
+=======================================================================================================================================
+Revision: d60b7fd62797d5933331da074ea95ae68c55c73b
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 4/7/2021 1:06:38 PM
+Message:
+Bug 10157: Used "hidden" field to allow enter/tab from single enabled
+field for temporary workaround to Barista bug 6925.
+
+(cherry picked from commit 96b3c256428359db49b7fc31605a73267b1dba8c)
+----
+Modified: data/bar/glm_bankmaster.xml
+Modified: data/cdf/glm_bankmaster.cdf
