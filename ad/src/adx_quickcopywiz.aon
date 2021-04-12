@@ -27,6 +27,7 @@ rem --- Get user inputs
     appDesc$=Option!.getOptionData("APP_DESC")
     newAonLoc$=Option!.getOptionData("NEW_INSTALL_LOC")
     rdAdmin!=cast(BBjAdminBase, callpoint!.getDevObject("rdAdmin"))
+    copiedDb!=rdAdmin!.getDatabase(stbl("+DBNAME_API"))
 
 rem --- Flip directory path separators for newAonLoc
 	filePath$=newAonLoc$
@@ -417,12 +418,16 @@ rem --- attach to new database and set some properties
     gosub disp_meter
     print(log_dev)meter_text$
 
-    rdAdmin!.attachDatabaseOnDisk(cvs(dbName$,3),cvs(newAonLoc$,3)+"/barista/bbdict/")
+    rem we've copied all the files from the bbj_home instance, so its db type wins
+    if copiedDb!.getType()=BBjAdminDatabase.DatabaseType.BARISTA then
+        rdAdmin!.attachDatabaseOnDisk(cvs(dbName$,3),cvs(newAonLoc$,3)+"/barista/sys/data/",err=*return)
+    else
+        rdAdmin!.attachDatabaseOnDisk(cvs(dbName$,3),cvs(newAonLoc$,3)+"/barista/bbdict/",err=*return)
+    endif
 
     rdDatabase!=rdAdmin!.getDatabase(cvs(dbName$,3))
 
     rdDatabase!.setString("DATABASE",cvs(dbName$,2))
-    rdDatabase!.setString("DICTIONARY",newAonLoc$+"/barista/bbdict/")
     rdDatabase!.setString("+DIR_BRD",newAonLoc$+"/barista/sys/data/")
     rdDatabase!.setString("+DIR_BRA",newAonLoc$+"/barista/sys/data/")
     rdDatabase!.setString("ACCESSPOLICY","ALL")
