@@ -286,7 +286,6 @@ rem --- Verify data_source
 rem --- Following an upgrade, user may launch Addon before "copying" the data.
 rem --- Can't do anything if required files aren't present.
 
-    escape 
     adm_rptctl=0,adm09=0,glm03=0,glm06=0
     test_dev=unt
     open(test_dev,err=*next)stbl("+ADDATA")+"adm_rptctl"; adm_rptctl=1
