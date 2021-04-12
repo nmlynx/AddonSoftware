@@ -270,12 +270,18 @@ rem --- For version 21.00, initialize new paramaters in APS_PARAMS
 rem --- For version 21.00, set default value for new AR dflt_age_by param to 'I'
     this_module$="AR"
     if installMap!.get(this_module$)="Y" then
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:                   Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+
         task$="2100_AR_ars_params"
         if convCtrl!.getProperty(task$)<>"Completed" then
-
             rem --- Increment progress meter
-            meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
-:                   Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+            meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" ARS_PARAMS"
             meter_proc_recs=meter_proc_recs+1
             meter_action$="MTR-LST"
             gosub disp_meter
@@ -292,10 +298,15 @@ rem --- For version 21.00, set default value for new AR dflt_age_by param to 'I'
             dim arsParams$:open_tpls$[1]
 
             rem --- Set the dflt_age_by param to 'I'
+            rem --- Set age_per_days_? params to 30
             read(arsParams_dev,key="",dom=*next)
             while 1
                 readrecord(arsParams_dev,end=*break)arsParams$
                 arsParams.dflt_age_by$="I"
+                arsParams.age_per_days_1=30
+                arsParams.age_per_days_2=30
+                arsParams.age_per_days_3=30
+                arsParams.age_per_days_4=30
                 writerecord(arsParams_dev)arsParams$
             wend
             
@@ -445,7 +456,7 @@ rem --- For version 21.00, set new IVC_PRICCODE pricing_basis to 'P' (since Perc
             rem --- Populate IVC_UMCODES with existing UNIT_MEASURE, UNIT_OF_SALE, PURCHASE_UM and UM_SOLD codes
             num_files=1
             dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-            open_tables$[1]="IVC_UMCODES",  open_opts$[1]="OTA"
+            open_tables$[1]="IVC_UMCODES",open_opts$[1]="OTA"
             gosub open_tables
             ivcUmCodes_dev=num(open_chans$[1]); dim ivcUmCodes$:open_tpls$[1]
 
@@ -474,13 +485,19 @@ rem --- For version 21.00, set new IVC_PRICCODE pricing_basis to 'P' (since Perc
                             writerecord(ivcUmCodes_dev,dom=*next)ivcUmCodes$
                         endif
                     wend
+            
+                    rem --- Close 
+                    num_files=1
+                    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                    open_tables$[1]=srcTbl!.getItem(i),open_opts$[1]="C"
+                    gosub open_tables
                 next i
             wend
             
             rem --- Close 
             num_files=1
             dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-            open_tables$[1]="IVC_UMCODES",   open_opts$[1]="C"
+            open_tables$[1]="IVC_UMCODES",open_opts$[1]="C"
             gosub open_tables
 
             write(convCtrlFileChan)task$+"=Completed"
