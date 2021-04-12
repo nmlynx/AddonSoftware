@@ -34,6 +34,11 @@ rem --- Init new record
 		callpoint!.setColumnEnabled("ARS_PARAMS.BR_INTERFACE",0)
 	endif
 
+	callpoint!.setColumnData("ARS_PARAMS.AGE_PER_DAYS_1","30")
+	callpoint!.setColumnData("ARS_PARAMS.AGE_PER_DAYS_2","30")
+	callpoint!.setColumnData("ARS_PARAMS.AGE_PER_DAYS_3","30")
+	callpoint!.setColumnData("ARS_PARAMS.AGE_PER_DAYS_4","30")
+
 [[ARS_PARAMS.ARNF]]
 rem --- param rec (firm+AR00) doesn't yet exist; set some defaults
 callpoint!.setColumnData("ARS_PARAMS.CURRENT_PER",user_tpl.gl_curr_per$)
