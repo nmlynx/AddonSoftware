@@ -54,6 +54,7 @@ rem --- Init new record
 	callpoint!.setColumnData("OPS_PARAMS.SLS_TAX_INTRFACE","")
 	callpoint!.setColumnData("OPS_PARAMS.TAX_SVC_CD_SRC","")
 	callpoint!.setColumnEnabled("OPS_PARAMS.TAX_SVC_CD_SRC",0)
+	callpoint!.setColumnData("OPS_PARAMS.WARN_NOT_AVAIL","Y")
 
 [[OPS_PARAMS.BEG_CMT_LINE.AVAL]]
 beg_cmt$=callpoint!.getUserInput()
