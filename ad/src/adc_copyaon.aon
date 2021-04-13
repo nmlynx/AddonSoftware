@@ -29,7 +29,6 @@ rem --- Initializations
     status=0
 
 rem --- Recursively copy oldLocation to newLocation
-
     declare CopyAonDir utility!
     utility! = new CopyAonDir(rdForm!, wait4ok%)
     utility!.copyAonDirectory(oldLocation$, newLocation$, requiredFiles%, demoData%, help%)
@@ -219,7 +218,7 @@ method_error:rem --- Method error trap/handler (11Oct2017)
         rem  */
         method private void copyAonDirectory(File source!, File target!, BBjInt requiredFiles%, BBjInt demoData%, BBjInt helpFile%)
             seterr method_error
-    
+   
             rem -- recursively process directories and copy files
             if(source!.isDirectory()) then
             
@@ -268,17 +267,46 @@ method_error:rem --- Method error trap/handler (11Oct2017)
                     rem --- Can't use java.nio.files.Files::copy() method because of err 252 on Win machines when BBj has the source file open.
                     #incrementProgressMeter(source!.getPath())
                     sourceModTime!=source!.lastModified()
-                    sourceChan=unt
-                    open(sourceChan,isz=-1)source!.getPath()
-                    targetChan=unt
-                    open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getPath()
-                    while 1
-                        readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
-                        writerecord(targetChan)record$
-                    wend
-                    close(sourceChan)
-                    close(targetChan)
-                    target!.setLastModified(sourceModTime!)
+
+                    rem --- if copying addon.men, rename the one in repo addon.men.std and copy in as addon.men.mod
+                    if(cast(BBjString, source!.getPath()).endsWith(cast(BBjString, "addon.men")))
+                        if target!.exists()
+                            stdmen! = new File(target!.getPath()+".std")
+                            modmen! = new File(target!.getPath()+".mod")
+                            tempSrcChan=unt
+                            open(tempSrcChan,isz=-1)target!.getPath()
+                            tempTrgChan=unt
+                            open(tempTrgChan,isz=-1,mode="O_CREATE,O_TRUNC")stdmen!.getPath()
+                            while 1
+                                readrecord(tempSrcChan,siz=#BLOCKSIZE,end=*break)record$
+                                writerecord(tempTrgChan)record$
+                            wend
+                            close(tempSrcChan)
+                            close(tempTrgChan)
+                            tempSrcChan=unt
+                            open(tempSrcChan,isz=-1)source!.getPath()
+                            tempTrgChan=unt
+                            open(tempTrgChan,isz=-1,mode="O_CREATE,O_TRUNC")modmen!.getPath()
+                            while 1
+                                readrecord(tempSrcChan,siz=#BLOCKSIZE,end=*break)record$
+                                writerecord(tempTrgChan)record$
+                            wend
+                            close(tempSrcChan)
+                            close(tempTrgChan)
+                        endif
+                    else
+                        sourceChan=unt
+                        open(sourceChan,isz=-1)source!.getPath()
+                        targetChan=unt
+                        open(targetChan,isz=-1,mode="O_CREATE,O_TRUNC")target!.getPath()
+                        while 1
+                            readrecord(sourceChan,siz=#BLOCKSIZE,end=*break)record$
+                            writerecord(targetChan)record$
+                        wend
+                        close(sourceChan)
+                        close(targetChan)
+                        target!.setLastModified(sourceModTime!)
+                    endif
                 endif
                 #log("COPIED: " + source!.getPath())
                
