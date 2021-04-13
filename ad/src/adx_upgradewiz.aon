@@ -9,6 +9,8 @@ rem ==========================================================================
     use java.io.File
     use java.lang.reflect.Array
     use java.nio.file.Files
+    use java.nio.file.FileSystem
+    use java.nio.file.Paths
     use java.nio.file.StandardCopyOption
     use java.util.ArrayList
     use java.util.Comparator
@@ -177,7 +179,7 @@ rem --- Is this a restart after resolving Git conflicts?
     endif
     close(restart_dev,err=*next)
 
-rem --- Skip Barista�s Create Sync File Backup bax_sync_backup.bbj unless upgrading from a pre-v18 version.
+rem --- Skip Barista's Create Sync File Backup bax_sync_backup.bbj unless upgrading from a pre-v18 version.
     if doSyncBackup% then
         rem --- Increment progress meter
         meter_text$=Translate!.getTranslation("AON_SYNC_BACKUP")
@@ -575,11 +577,15 @@ rem --- On successful complete, initialize conversion control file data/adx_conv
         rem --- Create path/file if doesn't exist
         if !convCtrlFile!.exists() then
             convCtrlPath!=new File(convCtrlFilePath$)
-            if !convCtrlPath!.exists() then
+            if !convCtrlPath!.exists() then 
                 convCtrlPath!.mkdirs()
             endif
-            convCtrlFile!.createNewFile()
+            
             rem --- Set read-write permissions for everyone
+            convCtrlPath!.setReadable(1,0)
+            convCtrlPath!.setWritable(1,0)
+            
+            convCtrlFile!.createNewFile()
             convCtrlFile!.setReadable(1,0)
             convCtrlFile!.setWritable(1,0)
         endif
