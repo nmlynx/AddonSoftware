@@ -35,9 +35,9 @@ rem --- Init new record
 	endif
 
 	callpoint!.setColumnData("ARS_PARAMS.AGE_PER_DAYS_1","30")
-	callpoint!.setColumnData("ARS_PARAMS.AGE_PER_DAYS_2","30")
-	callpoint!.setColumnData("ARS_PARAMS.AGE_PER_DAYS_3","30")
-	callpoint!.setColumnData("ARS_PARAMS.AGE_PER_DAYS_4","30")
+	callpoint!.setColumnData("ARS_PARAMS.AGE_PER_DAYS_2","60")
+	callpoint!.setColumnData("ARS_PARAMS.AGE_PER_DAYS_3","90")
+	callpoint!.setColumnData("ARS_PARAMS.AGE_PER_DAYS_4","120")
 
 [[ARS_PARAMS.ARNF]]
 rem --- param rec (firm+AR00) doesn't yet exist; set some defaults
