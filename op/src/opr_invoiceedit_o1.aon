@@ -209,8 +209,8 @@ rem --- Check to see if record is in use in Invoice Entry
                 break
             endif
             if ope11a.trans_status$<>"E" then continue
-            
-            desc$=ope11a.order_memo$
+
+            desc$=ope11a.memo_1024$
             start_block = 1
             
             if start_block then
@@ -677,11 +677,14 @@ rem --- First line
 		xwk=fnblank(2)
 	endif
 	
-rem --- Second line
-    
-    rem OutVect!.addItem(desc$+$00$+"L")
-    OutVect!.addItem("  "+desc$)
-    xwk=fnblank(11)
+rem --- Print the description/comment/memo lines
+    lineVect!=func.splitMultiLineField(desc$,110)
+    if lineVect!.size() then
+        for i=0 to lineVect!.size()-1
+            OutVect!.addItem("  "+lineVect!.getItem(i))
+            xwk=fnblank(11)
+        next i
+    endif
     
 rem --- Subsequent lines
 
