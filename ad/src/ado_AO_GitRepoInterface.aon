@@ -143,11 +143,9 @@ rem  */
                 cloneCmd!=cloneCmd!.setCloneAllBranches(1)
                 cloneCmd!.call()
 
-                declare BBjString os!
-                os!=info(0,0)
-                if (os!.indexOf("Win")<=-1) then 
-                    declare OwnerSetter setter!
-                    setter!=new OwnerSetter()
+                declare OwnerSetter setter!
+                setter!=new OwnerSetter()
+                if (! setter!.getOSIsWindows()) then 
                     setter!.setOwnerRecursively(aonDir$)
                 endif 
             endif
@@ -316,7 +314,9 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
                 
                 declare OwnerSetter setter!
                 setter!=new OwnerSetter()
-                setter!.setOwnerRecursively(#AonDir$)
+                if (! setter!.getOSIsWindows()) then 
+                    setter!.setOwnerRecursively(#AonDir$)
+                endif 
     
                 rem --- Re-initialize
                 #Branch$=#repository!.getBranch()
@@ -373,7 +373,9 @@ checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
             
             declare OwnerSetter setter!
             setter!=new OwnerSetter()
-            setter!.setOwnerRecursively(#AonDir$)
+            if (! setter!.getOSIsWindows()) then 
+                setter!.setOwnerRecursively(#AonDir$)
+            endif 
             
             methodret resultingCommit!.getObjectId().equals(commit!.getId())
             
@@ -469,7 +471,9 @@ cherryPick_error:rem --- Method error trap/handler (11Oct2017)
             
             declare OwnerSetter setter!
             setter!=new OwnerSetter()
-            setter!.setOwnerRecursively(#AonDir$)
+            if (! setter!.getOSIsWindows()) then 
+                setter!.setOwnerRecursively(#AonDir$)
+            endif 
             
             rem ---  then add the file in preparation for it to be committed
             #git!.add().addFilepattern(path!).call()
@@ -955,7 +959,9 @@ getUnstagedChanges_error:rem --- Method error trap/handler (11Oct2017)
             
             declare OwnerSetter setter!
             setter!=new OwnerSetter()
-            setter!.setOwnerRecursively(#AonDir$)
+            if (! setter!.getOSIsWindows()) then 
+                setter!.setOwnerRecursively(#AonDir$)
+            endif 
             
             methodret
            
@@ -1062,7 +1068,9 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
                 
                 declare OwnerSetter setter!
                 setter!=new OwnerSetter()
-                setter!.setOwnerRecursively(#AonDir$)
+                if (! setter!.getOSIsWindows()) then
+                    setter!.setOwnerRecursively(#AonDir$)
+                endif
             endif  
                 
         methodend
@@ -1333,11 +1341,11 @@ class public SSH extends JschConfigSessionFactory implements TransportConfigCall
     
 classend 
 
-
 REM Visits all files and directories under a given topLevel directory and sets them as 
 REM owned by the specified user account. 
 class public OwnerSetter extends SimpleFileVisitor
 
+    field public static BBjNumber OSIsWindows!=(new String(info(0,0)).indexOf("Win"))>=0
     field public BBjString UserName!
     field protected UserPrincipal userPrincipal!
 
