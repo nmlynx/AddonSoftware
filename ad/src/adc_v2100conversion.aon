@@ -304,9 +304,9 @@ rem --- For version 21.00, set default value for new AR dflt_age_by param to 'I'
                 readrecord(arsParams_dev,end=*break)arsParams$
                 arsParams.dflt_age_by$="I"
                 arsParams.age_per_days_1=30
-                arsParams.age_per_days_2=30
-                arsParams.age_per_days_3=30
-                arsParams.age_per_days_4=30
+                arsParams.age_per_days_2=60
+                arsParams.age_per_days_3=90
+                arsParams.age_per_days_4=120
                 writerecord(arsParams_dev)arsParams$
             wend
             
