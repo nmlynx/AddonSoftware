@@ -1611,6 +1611,7 @@ rem --- get AR Params
 	callpoint!.setDevObject("check_po_dupes",ars01a.op_check_dupe_po$)
 	callpoint!.setDevObject("op_create_wo",ars01a.op_create_wo$)
 	callpoint!.setDevObject("sls_tax_intrface", cvs(ars01a.sls_tax_intrface$,2))
+	callpoint!.setDevObject("warn_not_avail",ars01a.warn_not_avail$)
 	if ars01a.on_demand_aging$="Y"
 		callpoint!.setDevObject("on_demand_aging",ars01a.on_demand_aging$)
 		callpoint!.setDevObject("dflt_age_by",ars01a.dflt_age_by$)
