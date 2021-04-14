@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-04-12
+ Report Date:   2021-04-14
  Report Branch: AddonSoftware 21.00
  Last Release:  AddonSoftware 20.32
 =======================================================================================================================================
@@ -273,3 +273,18 @@ Invoice Edit Report.
 (cherry picked from commit e7e7823a43b2697cc52faf7b5d1b1a4fa0bc1c4d)
 ----
 Modified: op/src/opr_invoiceedit_o1.aon
+
+=======================================================================================================================================
+Revision: 422f34be27eb7ce209a4984f4c5b3b78598c27ff
+Author: Christine <chawkins@basis.com>
+Date: 4/14/2021 2:27:26 PM
+Message:
+Bug 10168 - Creating/releasing many WO's at a time eventually causes stack overflow.
+ - changed several occurrences of rd_table_chans$[all] to table_chans$[all]
+
+(cherry picked from commit 6768672928a2e45ee5509806d010905dbbf2f88e)
+----
+Modified: data/bar/sfe_womatl.xml
+Modified: data/cdf/sfe_womatl.cdf
+
+
