@@ -1,40 +1,31 @@
-[[SFE_WOMATL.EXT_COMMENTS.BINP]]
-rem --- Launch Comments dialog
-	gosub comment_entry
-	callpoint!.setStatus("ABORT")
-[[SFE_WOMATL.AOPT-COMM]]
-rem --- Launch Comments dialog
-	gosub comment_entry
-[[SFE_WOMATL.MEMO_1024.AVAL]]
-rem --- Store first part of memo_1024 in ext_comment.
-rem --- This AVAL is hit if user navigates via arrows or clicks on the memo_1024 field, and double-clicks or ctrl-F to bring up editor.
-rem --- If use Comment field, or use ctrl-C or Comments button, code in the comment_entry subroutine is hit instead.
-	disp_text$=callpoint!.getUserInput()
-	if disp_text$<>callpoint!.getColumnUndoData("SFE_WOMATL.MEMO_1024")
-		dim ext_comments$(60)
-		ext_comments$(1)=disp_text$(1,pos($0A$=disp_text$+$0A$)-1)
-		callpoint!.setColumnData("SFE_WOMATL.MEMO_1024",disp_text$,1)
-		callpoint!.setColumnData("SFE_WOMATL.EXT_COMMENTS",ext_comments$,1)
-		callpoint!.setStatus("MODIFIED")
-	endif
-[[SFE_WOMATL.MEMO_1024.BINQ]]
-rem --- (Barista Bug 9179 workaround) If grid cell isn't editable, then abort so new text can't be entered via edit control.
-	maintGrid!=Form!.getControl(num(stbl("+GRID_CTL")))
-	col_hdr$=callpoint!.getTableColumnAttribute("SFE_WOMATL.MEMO_1024","LABS")
-	memo_1024_col=util.getGridColumnNumber(maintGrid!, col_hdr$)
-	this_row=callpoint!.getValidationRow()
-	isEditable=maintGrid!.isCellEditable(this_row,memo_1024_col)
-	if !isEditable then callpoint!.setStatus("ABORT")
-[[SFE_WOMATL.ITEM_ID.AINV]]
-rem --- To avoid endless loop, need second ABORT in AINV when ABORT executed in AVAL.
-	if callpoint!.getDevObject("item_wh_failed") then
-		callpoint!.setStatus("ABORT")
-		break
+[[SFE_WOMATL.AGDR]]
+rem --- Enable/disable explode field
+	gosub enable_explode
+
+rem --- Enable/disable comments
+	line_type$=callpoint!.getColumnData("SFE_WOMATL.LINE_TYPE")
+	gosub enable_comments
+
+rem --- Set ROW_NUM (material_seq may not be numbered sequentially from one when DataPorted)
+	dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
+	wk$=fattr(sfe_womatl$,"material_seq")
+	new_row_num=1+callpoint!.getValidationRow()
+	callpoint!.setColumnData("<<DISPLAY>>.ROW_NUM",pad(str(new_row_num),dec(wk$(10,2)),"R","0"),1)
+
+rem --- Track wo_ref_num in Map to insure they are unique
+	refnumMap!=callpoint!.getDevObject("refnumMap")
+	wo_ref_num$=callpoint!.getColumnData("SFE_WOMATL.WO_REF_NUM")
+	if cvs(wo_ref_num$,2)<>"" then
+		refnumMap!.put(wo_ref_num$,"")
 	endif
 
-rem --- Item synonym processing
+[[SFE_WOMATL.AGRE]]
+rem --- check to see if item is marked special order in IV warehouse rec; if so, mark PO Status flag
+	
+	if cvs(callpoint!.getColumnData("SFE_WOMATL.PO_STATUS"),3)=""
+		if callpoint!.getDevObject("special_order")="Y" then callpoint!.setColumnData("SFE_WOMATL.PO_STATUS","S")
+	endif
 
-	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
 [[SFE_WOMATL.AGRN]]
 rem --- Enable/disable explode field
 	gosub enable_explode
@@ -42,6 +33,16 @@ rem --- Enable/disable explode field
 rem --- Enable/disable comments
 	line_type$=callpoint!.getColumnData("SFE_WOMATL.LINE_TYPE")
 	gosub enable_comments
+
+[[SFE_WOMATL.ALT_FACTOR.AVAL]]
+rem --- Calc Totals
+
+	qty_required=num(callpoint!.getColumnData("SFE_WOMATL.QTY_REQUIRED"))
+	alt_factor=num(callpoint!.getUserInput())
+	divisor=num(callpoint!.getColumnData("SFE_WOMATL.DIVISOR"))
+	scrap_factor=num(callpoint!.getColumnData("SFE_WOMATL.SCRAP_FACTOR"))
+	gosub calculate_totals
+
 [[SFE_WOMATL.AOPT-AUTO]]
 rem --- Update displayed row nums for inserted and deleted rows, or
 	if callpoint!.getDevObject("insertedRows")+callpoint!.getDevObject("deletedRows") then
@@ -88,31 +89,22 @@ rem --- Auto create Reference Numbers
 
 rem --- Update grid with changes
 	if callpoint!.getDevObject("worefnum_status")<>"CANCEL" then callpoint!.setStatus("REFGRID")
-[[SFE_WOMATL.BUDE]]
-rem --- verify wo_ref_num is unique
-	refnumMap!=callpoint!.getDevObject("refnumMap")
-	wo_ref_num$=callpoint!.getColumnData("SFE_WOMATL.WO_REF_NUM")
-	if cvs(wo_ref_num$,2)<>"" then
-		if refnumMap!.containsKey(wo_ref_num$) then
-			msg_id$="SF_DUP_REF_NUM"
-			dim msg_tokens$[1]
-			msg_tokens$[1]=wo_ref_num$
-			gosub disp_message
-			callpoint!.setStatus("ABORT")
-			break
-		else
-			refnumMap!.put(wo_ref_num$,"")
-		endif
+
+[[SFE_WOMATL.AOPT-COMM]]
+rem --- Launch Comments dialog
+	gosub comment_entry
+
+[[SFE_WOMATL.AREC]]
+rem --- Initializations
+	callpoint!.setDevObject("special_order","N")
+
+rem --- Maintain count of inserted rows (don't count if last row)
+	if GridVect!.size()>1+callpoint!.getValidationRow() then
+		insertedRows=callpoint!.getDevObject("insertedRows")
+		insertedRows=insertedRows+1
+		callpoint!.setDevObject("insertedRows",insertedRows)
 	endif
 
-rem --- Maintain count of deleted rows
-	deletedRows=callpoint!.getDevObject("deletedRows")
-	deletedRows=deletedRows-1
-	callpoint!.setDevObject("deletedRows",deletedRows)
-[[SFE_WOMATL.WO_REF_NUM.BINP]]
-rem --- Capture starting wo_ref_num
-	prev_wo_ref_num$=callpoint!.getColumnData("SFE_WOMATL.WO_REF_NUM")
-	callpoint!.setDevObject("prev_wo_ref_num",prev_wo_ref_num$)
 [[SFE_WOMATL.BDEL]]
 rem --- Update refnumMap!
 	refnumMap!=callpoint!.getDevObject("refnumMap")
@@ -125,68 +117,7 @@ rem --- Maintain count of deleted rows
 	deletedRows=callpoint!.getDevObject("deletedRows")
 	deletedRows=deletedRows+1
 	callpoint!.setDevObject("deletedRows",deletedRows)
-[[SFE_WOMATL.WO_REF_NUM.AVAL]]
-rem --- Verify wo_ref_num is unique
-	wo_ref_num$=callpoint!.getUserInput()
-	prev_wo_ref_num$=callpoint!.getDevObject("prev_wo_ref_num")
-	refnumMap!=callpoint!.getDevObject("refnumMap")
-	if wo_ref_num$<>prev_wo_ref_num$ then
-		if refnumMap!.containsKey(wo_ref_num$) then
-			msg_id$="SF_DUP_REF_NUM"
-			dim msg_tokens$[1]
-			msg_tokens$[1]=wo_ref_num$
-			gosub disp_message
-			callpoint!.setStatus("ABORT")
-			break
-		else
-			if cvs(wo_ref_num$,2)<>"" then refnumMap!.put(wo_ref_num$,"")
-			if cvs(prev_wo_ref_num$,2)<>"" then refnumMap!.remove(prev_wo_ref_num$)
-		endif
-	endif
-[[<<DISPLAY>>.EXPLODE_BILL.AVAL]]
-rem --- Enable/disable explode field
-	callpoint!.setColumnData("<<DISPLAY>>.EXPLODE_BILL",callpoint!.getUserInput())
-	gosub enable_explode
-[[SFE_WOMATL.ITEM_ID.BINP]]
-rem --- Capture current item_id so will know later if it was changed
-	callpoint!.setDevObject("prev_item_id",callpoint!.getColumnData("SFE_WOMATL.ITEM_ID"))
-	callpoint!.setDevObject("item_wh_failed",0)
-[[SFE_WOMATL.LINE_TYPE.BINP]]
-rem --- Capture current line_type so will know later if it was changed
-	callpoint!.setDevObject("prev_line_type",callpoint!.getColumnData("SFE_WOMATL.LINE_TYPE"))
-[[SFE_WOMATL.LINE_TYPE.AVAL]]
-rem --- Skip if line_type didn't changed
-	line_type$=callpoint!.getUserInput()
-	if line_type$=callpoint!.getDevObject("prev_line_type") then break
 
-rem --- Enable/disable explode field
-	callpoint!.setColumnData("SFE_WOMATL.LINE_TYPE",line_type$)
-	gosub enable_explode
-	gosub enable_comments
-[[SFE_WOMATL.AGDR]]
-rem --- Enable/disable explode field
-	gosub enable_explode
-
-rem --- Enable/disable comments
-	line_type$=callpoint!.getColumnData("SFE_WOMATL.LINE_TYPE")
-	gosub enable_comments
-
-rem --- Set ROW_NUM (material_seq may not be numbered sequentially from one when DataPorted)
-	dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
-	wk$=fattr(sfe_womatl$,"material_seq")
-	new_row_num=1+callpoint!.getValidationRow()
-	callpoint!.setColumnData("<<DISPLAY>>.ROW_NUM",pad(str(new_row_num),dec(wk$(10,2)),"R","0"),1)
-
-rem --- Track wo_ref_num in Map to insure they are unique
-	refnumMap!=callpoint!.getDevObject("refnumMap")
-	wo_ref_num$=callpoint!.getColumnData("SFE_WOMATL.WO_REF_NUM")
-	if cvs(wo_ref_num$,2)<>"" then
-		refnumMap!.put(wo_ref_num$,"")
-	endif
-[[SFE_WOMATL.BWRI]]
-rem --- Add/remove to string of bills being exploded
-	checked$=""
-	gosub bills_to_explode
 [[SFE_WOMATL.BEND]]
 rem --- if materials lines were entered manually, and any of them are bills, 
 rem --- prompt user to explode them; if yes, explode, then re-launch form so user can view/edit
@@ -220,9 +151,9 @@ rem --- prompt user to explode them; if yes, explode, then re-launch form so use
 			sfe01_dev=fnget_dev("SFE_WOMASTR")
 			sfe22_dev=fnget_dev("SFE_WOMATL")
 
-			call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMATL","PRIMARY",sfe22_key_tpl$,rd_table_chans$[all],status$
-			call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOOPRTN","PRIMARY",sfe02_key_tpl$,rd_table_chans$[all],status$
-			call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOSUBCNT","PRIMARY",sfe32_key_tpl$,rd_table_chans$[all],status$
+			call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMATL","PRIMARY",sfe22_key_tpl$,table_chans$[all],status$
+			call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOOPRTN","PRIMARY",sfe02_key_tpl$,table_chans$[all],status$
+			call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOSUBCNT","PRIMARY",sfe32_key_tpl$,table_chans$[all],status$
 
 			wo_no$=callpoint!.getDevObject("wo_no")
 			wo_loc$=callpoint!.getDevObject("wo_loc")
@@ -271,38 +202,306 @@ rem --- prompt user to explode them; if yes, explode, then re-launch form so use
 			break
 		endif
 	endif
-[[SFE_WOMATL.AGRE]]
-rem --- check to see if item is marked special order in IV warehouse rec; if so, mark PO Status flag
-	
-	if cvs(callpoint!.getColumnData("SFE_WOMATL.PO_STATUS"),3)=""
-		if callpoint!.getDevObject("special_order")="Y" then callpoint!.setColumnData("SFE_WOMATL.PO_STATUS","S")
-	endif
-[[SFE_WOMATL.AREC]]
-rem --- Initializations
-	callpoint!.setDevObject("special_order","N")
 
-rem --- Maintain count of inserted rows (don't count if last row)
-	if GridVect!.size()>1+callpoint!.getValidationRow() then
-		insertedRows=callpoint!.getDevObject("insertedRows")
-		insertedRows=insertedRows+1
-		callpoint!.setDevObject("insertedRows",insertedRows)
+[[SFE_WOMATL.BSHO]]
+use ::ado_func.src::func
+use ::ado_util.src::util
+use ::sfo_SfUtils.aon::SfUtils
+declare SfUtils sfUtils!
+
+rem --- Set column size for memo_1024 field very small so it doesn't take up room, but still available for hover-over of memo contents
+
+	maintGrid!=Form!.getControl(num(stbl("+GRID_CTL")))
+	col_hdr$=callpoint!.getTableColumnAttribute("SFE_WOMATL.MEMO_1024","LABS")
+	memo_1024_col=util.getGridColumnNumber(maintGrid!, col_hdr$)
+	maintGrid!.setColumnWidth(memo_1024_col,15)
+
+rem --- init data
+
+	mark_to_explode$=""
+	refnumMap!=new java.util.HashMap()
+	callpoint!.setDevObject("refnumMap",refnumMap!)
+	callpoint!.setDevObject("insertedRows",0)
+	callpoint!.setDevObject("deletedRows",0)
+
+	all_bills$=""
+	x=0
+	t=1
+	dim allbills[10,1]
+	allbills[x,0]=1
+	allbills[x,1]=1
+
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMATL","PRIMARY",sfe22_key_tpl$,table_chans$[all],status$
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOOPRTN","PRIMARY",sfe02_key_tpl$,table_chans$[all],status$
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOSUBCNT","PRIMARY",sfe32_key_tpl$,table_chans$[all],status$
+
+	callpoint!.setDevObject("new_item",0)
+	callpoint!.setDevObject("explode_bills","")
+	callpoint!.setDevObject("special_order","")
+
+rem --- if coming in from the AWRI of the header form (vs. launching manually from the Addt'l Opts)
+rem --- see if we're on a new WO that's for an I-category bill, and if so explode mats/ops/subs before displaying mats
+
+	if callpoint!.getDevObject("new_rec")="Y" and callpoint!.getDevObject("wo_category")="I" and callpoint!.getDevObject("bm")="Y"
+
+		bmm02_dev=fnget_dev("BMM_BILLMAT")
+		sfe01_dev=fnget_dev("SFE_WOMASTR")
+
+		dim bmm_billmat$:fnget_tpl$("BMM_BILLMAT")
+		dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")
+		dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
+
+		wo_no$=callpoint!.getDevObject("wo_no")
+		wo_loc$=callpoint!.getDevObject("wo_loc")
+		read record (sfe01_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)sfe_womastr$
+		new_bill$=sfe_womastr.item_id$
+		mat_isn$=pad("",len(sfe_womatl.internal_seq_no$),"0")
+
+		if cvs(new_bill$,3)<>""
+			read(bmm02_dev,key=firm_id$+new_bill$,dom=*next)
+			bmm02_key$=key(bmm02_dev,end=*endif)
+			if pos(firm_id$+new_bill$=bmm02_key$)=1 then gosub explode_bills
+		endif
 	endif
-[[SFE_WOMATL.SCRAP_FACTOR.AVAL]]
+
+rem --- Disable grid if Closed Work Order or Recurring
+
+	if callpoint!.getDevObject("wo_status")="C" or 
+:		callpoint!.getDevObject("wo_category")="R" or
+:		(callpoint!.getDevObject("wo_category")="I" and callpoint!.getDevObject("bm")="Y")
+		opts$=callpoint!.getTableAttribute("OPTS")
+		callpoint!.setTableAttribute("OPTS",opts$+"BID")
+
+		x$=callpoint!.getTableColumns()
+		worefnumPos=pos("SFE_WOMATL.WO_REF_NUM"=x$)
+		for x=1 to len(x$) step 40
+			rem --- Don't disable wo_ref_num for Bills Of Materials unless WO is closed
+			if x<>worefnumPos or
+:			(x=worefnumPos and 
+:			(callpoint!.getDevObject("wo_status")="C" or (callpoint!.getDevObject("wo_category")<>"I" and callpoint!.getDevObject("bm")<>"Y")))
+:			then
+				opts$=callpoint!.getTableColumnAttribute(cvs(x$(x,40),2),"OPTS")
+				callpoint!.setTableColumnAttribute(cvs(x$(x,40),2),"OPTS",opts$+"C"); rem - makes cells read only
+			endif
+		next x
+	endif
+
+rem --- fill listbox for use with Op Sequence
+
+	sfe02_dev=fnget_dev("SFE_WOOPRTN")
+	dim sfe02a$:fnget_tpl$("SFE_WOOPRTN")
+	op_code=callpoint!.getDevObject("opcode_chan")
+	dim op_code$:callpoint!.getDevObject("opcode_tpl")
+	wo_no$=callpoint!.getDevObject("wo_no")
+	wo_loc$=callpoint!.getDevObject("wo_loc")
+
+	ops_lines!=SysGUI!.makeVector()
+	ops_items!=SysGUI!.makeVector()
+	ops_list!=SysGUI!.makeVector()
+	ops_lines!.addItem("000000000000")
+	ops_items!.addItem("")
+	ops_list!.addItem("")
+
+	read(sfe02_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
+	while 1
+		read record (sfe02_dev,end=*break) sfe02a$
+		if pos(firm_id$+wo_loc$+wo_no$=sfe02a$)<>1 break
+		if sfe02a.line_type$<>"S" continue
+		dim op_code$:fattr(op_code$)
+		read record (op_code,key=firm_id$+sfe02a.op_code$,dom=*next)op_code$
+		ops_lines!.addItem(sfe02a.internal_seq_no$)
+		ops_items!.addItem(sfe02a.wo_op_ref$)
+		ops_list!.addItem(sfe02a.wo_op_ref$+" - "+sfe02a.op_code$+" - "+op_code.code_desc$)
+	wend
+
+	ldat$=""
+	if ops_lines!.size()>0
+		descVect!=BBjAPI().makeVector()
+		codeVect!=BBjAPI().makeVector()
+		for x=0 to ops_lines!.size()-1
+			descVect!.addItem(ops_items!.getItem(x))
+			codeVect!.addItem(ops_lines!.getItem(x))
+		next x
+		ldat$=func.buildListButtonList(descVect!,codeVect!)
+	endif
+
+	callpoint!.setTableColumnAttribute("SFE_WOMATL.OPER_SEQ_REF","LDAT",ldat$)
+	col_hdr$=callpoint!.getTableColumnAttribute("SFE_WOMATL.OPER_SEQ_REF","LABS")
+	my_grid!=Form!.getControl(5000)
+	ListColumn=util.getGridColumnNumber(my_grid!, col_hdr$)
+	my_control!=my_grid!.getColumnListControl(ListColumn)
+	my_control!.removeAllItems()
+	my_control!.insertItems(0,ops_list!)
+	my_grid!.setColumnListControl(ListColumn,my_control!)
+	my_grid!.setColumnHeaderCellText(ListColumn,"Op Ref")
+
+rem --- Disable WO_REF_NUM when locked or WO closed
+	if callpoint!.getDevObject("lock_ref_num")="Y" or callpoint!.getDevObject("wo_status")="C" or !callpoint!.isEditMode() then
+		opts$=callpoint!.getTableColumnAttribute("SFE_WOMATL.WO_REF_NUM","OPTS")
+		callpoint!.setTableColumnAttribute("SFE_WOMATL.WO_REF_NUM","OPTS",opts$+"C"); rem --- makes read only
+		callpoint!.setOptionEnabled("AUTO",0)
+	endif
+
+[[SFE_WOMATL.BUDE]]
+rem --- verify wo_ref_num is unique
+	refnumMap!=callpoint!.getDevObject("refnumMap")
+	wo_ref_num$=callpoint!.getColumnData("SFE_WOMATL.WO_REF_NUM")
+	if cvs(wo_ref_num$,2)<>"" then
+		if refnumMap!.containsKey(wo_ref_num$) then
+			msg_id$="SF_DUP_REF_NUM"
+			dim msg_tokens$[1]
+			msg_tokens$[1]=wo_ref_num$
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		else
+			refnumMap!.put(wo_ref_num$,"")
+		endif
+	endif
+
+rem --- Maintain count of deleted rows
+	deletedRows=callpoint!.getDevObject("deletedRows")
+	deletedRows=deletedRows-1
+	callpoint!.setDevObject("deletedRows",deletedRows)
+
+[[SFE_WOMATL.BWRI]]
+rem --- Add/remove to string of bills being exploded
+	checked$=""
+	gosub bills_to_explode
+
+[[SFE_WOMATL.DIVISOR.AVAL]]
 rem --- Calc Totals
 
 	qty_required=num(callpoint!.getColumnData("SFE_WOMATL.QTY_REQUIRED"))
 	alt_factor=num(callpoint!.getColumnData("SFE_WOMATL.ALT_FACTOR"))
-	divisor=num(callpoint!.getColumnData("SFE_WOMATL.DIVISOR"))
-	scrap_factor=num(callpoint!.getUserInput())
+	divisor=num(callpoint!.getUserInput())
+	scrap_factor=num(callpoint!.getColumnData("SFE_WOMATL.SCRAP_FACTOR"))
 	gosub calculate_totals
-[[SFE_WOMATL.ALT_FACTOR.AVAL]]
-rem --- Calc Totals
+
+[[<<DISPLAY>>.EXPLODE_BILL.AVAL]]
+rem --- Enable/disable explode field
+	callpoint!.setColumnData("<<DISPLAY>>.EXPLODE_BILL",callpoint!.getUserInput())
+	gosub enable_explode
+
+[[SFE_WOMATL.EXT_COMMENTS.BINP]]
+rem --- Launch Comments dialog
+	gosub comment_entry
+	callpoint!.setStatus("ABORT")
+
+[[SFE_WOMATL.ITEM_ID.AINV]]
+rem --- To avoid endless loop, need second ABORT in AINV when ABORT executed in AVAL.
+	if callpoint!.getDevObject("item_wh_failed") then
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+rem --- Item synonym processing
+
+	call stbl("+DIR_PGM")+"ivc_itemsyn.aon::option_entry"
+
+[[SFE_WOMATL.ITEM_ID.AVAL]]
+rem "Inventory Inactive Feature"
+item_id$=callpoint!.getUserInput()
+ivm01_dev=fnget_dev("IVM_ITEMMAST")
+ivm01_tpl$=fnget_tpl$("IVM_ITEMMAST")
+dim ivm01a$:ivm01_tpl$
+ivm01a_key$=firm_id$+item_id$
+find record (ivm01_dev,key=ivm01a_key$,err=*break)ivm01a$
+if ivm01a.item_inactive$="Y" then
+   msg_id$="IV_ITEM_INACTIVE"
+   dim msg_tokens$[2]
+   msg_tokens$[1]=cvs(ivm01a.item_id$,2)
+   msg_tokens$[2]=cvs(ivm01a.display_desc$,2)
+   gosub disp_message
+   callpoint!.setStatus("ACTIVATE")
+endif
+
+rem --- Skip if item_id didn't change
+	item_id$=callpoint!.getUserInput()
+	if item_id$=callpoint!.getDevObject("prev_item_id") then break
+
+rem --- Verify item is in the production warehouse
+	ivm01_dev=fnget_dev("IVM_ITEMMAST")
+	ivm02_dev=fnget_dev("IVM_ITEMWHSE")
+	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
+	dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
+	whse_id$=callpoint!.getDevObject("warehouse_id")
+
+	read record(ivm01_dev,key=firm_id$+item_id$)ivm01a$
+	ivm02_found=0
+	read record (ivm02_dev,key=firm_id$+whse_id$+item_id$,dom=*next) ivm02a$; ivm02_found=1
+	if !ivm02_found then
+		msg_id$="SF_ITEM_NOT_IN_WH"
+		dim msg_tokens$[2]
+		msg_tokens$[1]=cvs(item_id$,2)
+		msg_tokens$[2]=whse_id$
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		callpoint!.setDevObject("item_wh_failed",1)
+		break
+	endif
+
+rem --- Enable/disable explode field for new/changed item
+	callpoint!.setColumnData("SFE_WOMATL.ITEM_ID",item_id$)
+	callpoint!.setDevObject("new_item",1)
+	gosub enable_explode
+	callpoint!.setDevObject("new_item",0)
+
+rem --- Set default Unit Cost
+
+	callpoint!.setColumnData("SFE_WOMATL.IV_UNIT_COST",str(ivm02a.unit_cost))
+	callpoint!.setColumnData("SFE_WOMATL.UNIT_MEASURE",ivm01a.unit_of_sale$,1)
+	callpoint!.setColumnData("SFE_WOMATL.WAREHOUSE_ID",whse_id$)
+
+	callpoint!.setDevObject("special_order",ivm02a.special_ord$)
 
 	qty_required=num(callpoint!.getColumnData("SFE_WOMATL.QTY_REQUIRED"))
-	alt_factor=num(callpoint!.getUserInput())
+	alt_factor=num(callpoint!.getColumnData("SFE_WOMATL.ALT_FACTOR"))
 	divisor=num(callpoint!.getColumnData("SFE_WOMATL.DIVISOR"))
 	scrap_factor=num(callpoint!.getColumnData("SFE_WOMATL.SCRAP_FACTOR"))
 	gosub calculate_totals
+
+[[SFE_WOMATL.ITEM_ID.BINP]]
+rem --- Capture current item_id so will know later if it was changed
+	callpoint!.setDevObject("prev_item_id",callpoint!.getColumnData("SFE_WOMATL.ITEM_ID"))
+	callpoint!.setDevObject("item_wh_failed",0)
+
+[[SFE_WOMATL.LINE_TYPE.AVAL]]
+rem --- Skip if line_type didn't changed
+	line_type$=callpoint!.getUserInput()
+	if line_type$=callpoint!.getDevObject("prev_line_type") then break
+
+rem --- Enable/disable explode field
+	callpoint!.setColumnData("SFE_WOMATL.LINE_TYPE",line_type$)
+	gosub enable_explode
+	gosub enable_comments
+
+[[SFE_WOMATL.LINE_TYPE.BINP]]
+rem --- Capture current line_type so will know later if it was changed
+	callpoint!.setDevObject("prev_line_type",callpoint!.getColumnData("SFE_WOMATL.LINE_TYPE"))
+
+[[SFE_WOMATL.MEMO_1024.AVAL]]
+rem --- Store first part of memo_1024 in ext_comment.
+rem --- This AVAL is hit if user navigates via arrows or clicks on the memo_1024 field, and double-clicks or ctrl-F to bring up editor.
+rem --- If use Comment field, or use ctrl-C or Comments button, code in the comment_entry subroutine is hit instead.
+	disp_text$=callpoint!.getUserInput()
+	if disp_text$<>callpoint!.getColumnUndoData("SFE_WOMATL.MEMO_1024")
+		dim ext_comments$(60)
+		ext_comments$(1)=disp_text$(1,pos($0A$=disp_text$+$0A$)-1)
+		callpoint!.setColumnData("SFE_WOMATL.MEMO_1024",disp_text$,1)
+		callpoint!.setColumnData("SFE_WOMATL.EXT_COMMENTS",ext_comments$,1)
+		callpoint!.setStatus("MODIFIED")
+	endif
+
+[[SFE_WOMATL.MEMO_1024.BINQ]]
+rem --- (Barista Bug 9179 workaround) If grid cell isn't editable, then abort so new text can't be entered via edit control.
+	maintGrid!=Form!.getControl(num(stbl("+GRID_CTL")))
+	col_hdr$=callpoint!.getTableColumnAttribute("SFE_WOMATL.MEMO_1024","LABS")
+	memo_1024_col=util.getGridColumnNumber(maintGrid!, col_hdr$)
+	this_row=callpoint!.getValidationRow()
+	isEditable=maintGrid!.isCellEditable(this_row,memo_1024_col)
+	if !isEditable then callpoint!.setStatus("ABORT")
+
 [[SFE_WOMATL.QTY_REQUIRED.AVAL]]
 rem --- Verify minimum quantity > 0
 
@@ -320,14 +519,40 @@ rem --- Calc Totals
 	divisor=num(callpoint!.getColumnData("SFE_WOMATL.DIVISOR"))
 	scrap_factor=num(callpoint!.getColumnData("SFE_WOMATL.SCRAP_FACTOR"))
 	gosub calculate_totals
-[[SFE_WOMATL.DIVISOR.AVAL]]
+
+[[SFE_WOMATL.SCRAP_FACTOR.AVAL]]
 rem --- Calc Totals
 
 	qty_required=num(callpoint!.getColumnData("SFE_WOMATL.QTY_REQUIRED"))
 	alt_factor=num(callpoint!.getColumnData("SFE_WOMATL.ALT_FACTOR"))
-	divisor=num(callpoint!.getUserInput())
-	scrap_factor=num(callpoint!.getColumnData("SFE_WOMATL.SCRAP_FACTOR"))
+	divisor=num(callpoint!.getColumnData("SFE_WOMATL.DIVISOR"))
+	scrap_factor=num(callpoint!.getUserInput())
 	gosub calculate_totals
+
+[[SFE_WOMATL.WO_REF_NUM.AVAL]]
+rem --- Verify wo_ref_num is unique
+	wo_ref_num$=callpoint!.getUserInput()
+	prev_wo_ref_num$=callpoint!.getDevObject("prev_wo_ref_num")
+	refnumMap!=callpoint!.getDevObject("refnumMap")
+	if wo_ref_num$<>prev_wo_ref_num$ then
+		if refnumMap!.containsKey(wo_ref_num$) then
+			msg_id$="SF_DUP_REF_NUM"
+			dim msg_tokens$[1]
+			msg_tokens$[1]=wo_ref_num$
+			gosub disp_message
+			callpoint!.setStatus("ABORT")
+			break
+		else
+			if cvs(wo_ref_num$,2)<>"" then refnumMap!.put(wo_ref_num$,"")
+			if cvs(prev_wo_ref_num$,2)<>"" then refnumMap!.remove(prev_wo_ref_num$)
+		endif
+	endif
+
+[[SFE_WOMATL.WO_REF_NUM.BINP]]
+rem --- Capture starting wo_ref_num
+	prev_wo_ref_num$=callpoint!.getColumnData("SFE_WOMATL.WO_REF_NUM")
+	callpoint!.setDevObject("prev_wo_ref_num",prev_wo_ref_num$)
+
 [[SFE_WOMATL.<CUSTOM>]]
 rem =========================================================
 
@@ -457,7 +682,7 @@ rem =========================================================
 	dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
 	dim sfe_wosubcnt$:fnget_tpl$("SFE_WOSUBCNT")
 
-	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMATL","PRIMARY",sfe22_key_tpl$,rd_table_chans$[all],status$
+	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMATL","PRIMARY",sfe22_key_tpl$,table_chans$[all],status$
 	dim sfe22_prev_key$:sfe22_key_tpl$
 
 	all_bills$=new_bill$
@@ -1027,202 +1252,6 @@ rem ========================================================
 	endif
 
 	return
-[[SFE_WOMATL.ITEM_ID.AVAL]]
-rem "Inventory Inactive Feature"
-item_id$=callpoint!.getUserInput()
-ivm01_dev=fnget_dev("IVM_ITEMMAST")
-ivm01_tpl$=fnget_tpl$("IVM_ITEMMAST")
-dim ivm01a$:ivm01_tpl$
-ivm01a_key$=firm_id$+item_id$
-find record (ivm01_dev,key=ivm01a_key$,err=*break)ivm01a$
-if ivm01a.item_inactive$="Y" then
-   msg_id$="IV_ITEM_INACTIVE"
-   dim msg_tokens$[2]
-   msg_tokens$[1]=cvs(ivm01a.item_id$,2)
-   msg_tokens$[2]=cvs(ivm01a.display_desc$,2)
-   gosub disp_message
-   callpoint!.setStatus("ACTIVATE")
-endif
 
-rem --- Skip if item_id didn't change
-	item_id$=callpoint!.getUserInput()
-	if item_id$=callpoint!.getDevObject("prev_item_id") then break
 
-rem --- Verify item is in the production warehouse
-	ivm01_dev=fnget_dev("IVM_ITEMMAST")
-	ivm02_dev=fnget_dev("IVM_ITEMWHSE")
-	dim ivm01a$:fnget_tpl$("IVM_ITEMMAST")
-	dim ivm02a$:fnget_tpl$("IVM_ITEMWHSE")
-	whse_id$=callpoint!.getDevObject("warehouse_id")
 
-	read record(ivm01_dev,key=firm_id$+item_id$)ivm01a$
-	ivm02_found=0
-	read record (ivm02_dev,key=firm_id$+whse_id$+item_id$,dom=*next) ivm02a$; ivm02_found=1
-	if !ivm02_found then
-		msg_id$="SF_ITEM_NOT_IN_WH"
-		dim msg_tokens$[2]
-		msg_tokens$[1]=cvs(item_id$,2)
-		msg_tokens$[2]=whse_id$
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-		callpoint!.setDevObject("item_wh_failed",1)
-		break
-	endif
-
-rem --- Enable/disable explode field for new/changed item
-	callpoint!.setColumnData("SFE_WOMATL.ITEM_ID",item_id$)
-	callpoint!.setDevObject("new_item",1)
-	gosub enable_explode
-	callpoint!.setDevObject("new_item",0)
-
-rem --- Set default Unit Cost
-
-	callpoint!.setColumnData("SFE_WOMATL.IV_UNIT_COST",str(ivm02a.unit_cost))
-	callpoint!.setColumnData("SFE_WOMATL.UNIT_MEASURE",ivm01a.unit_of_sale$,1)
-	callpoint!.setColumnData("SFE_WOMATL.WAREHOUSE_ID",whse_id$)
-
-	callpoint!.setDevObject("special_order",ivm02a.special_ord$)
-
-	qty_required=num(callpoint!.getColumnData("SFE_WOMATL.QTY_REQUIRED"))
-	alt_factor=num(callpoint!.getColumnData("SFE_WOMATL.ALT_FACTOR"))
-	divisor=num(callpoint!.getColumnData("SFE_WOMATL.DIVISOR"))
-	scrap_factor=num(callpoint!.getColumnData("SFE_WOMATL.SCRAP_FACTOR"))
-	gosub calculate_totals
-[[SFE_WOMATL.BSHO]]
-use ::ado_func.src::func
-use ::ado_util.src::util
-use ::sfo_SfUtils.aon::SfUtils
-declare SfUtils sfUtils!
-
-rem --- Set column size for memo_1024 field very small so it doesn't take up room, but still available for hover-over of memo contents
-
-	maintGrid!=Form!.getControl(num(stbl("+GRID_CTL")))
-	col_hdr$=callpoint!.getTableColumnAttribute("SFE_WOMATL.MEMO_1024","LABS")
-	memo_1024_col=util.getGridColumnNumber(maintGrid!, col_hdr$)
-	maintGrid!.setColumnWidth(memo_1024_col,15)
-
-rem --- init data
-
-	mark_to_explode$=""
-	refnumMap!=new java.util.HashMap()
-	callpoint!.setDevObject("refnumMap",refnumMap!)
-	callpoint!.setDevObject("insertedRows",0)
-	callpoint!.setDevObject("deletedRows",0)
-
-	all_bills$=""
-	x=0
-	t=1
-	dim allbills[10,1]
-	allbills[x,0]=1
-	allbills[x,1]=1
-
-	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOMATL","PRIMARY",sfe22_key_tpl$,rd_table_chans$[all],status$
-	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOOPRTN","PRIMARY",sfe02_key_tpl$,rd_table_chans$[all],status$
-	call stbl("+DIR_SYP")+"bac_key_template.bbj","SFE_WOSUBCNT","PRIMARY",sfe32_key_tpl$,rd_table_chans$[all],status$
-
-	callpoint!.setDevObject("new_item",0)
-	callpoint!.setDevObject("explode_bills","")
-	callpoint!.setDevObject("special_order","")
-
-rem --- if coming in from the AWRI of the header form (vs. launching manually from the Addt'l Opts)
-rem --- see if we're on a new WO that's for an I-category bill, and if so explode mats/ops/subs before displaying mats
-
-	if callpoint!.getDevObject("new_rec")="Y" and callpoint!.getDevObject("wo_category")="I" and callpoint!.getDevObject("bm")="Y"
-
-		bmm02_dev=fnget_dev("BMM_BILLMAT")
-		sfe01_dev=fnget_dev("SFE_WOMASTR")
-
-		dim bmm_billmat$:fnget_tpl$("BMM_BILLMAT")
-		dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")
-		dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
-
-		wo_no$=callpoint!.getDevObject("wo_no")
-		wo_loc$=callpoint!.getDevObject("wo_loc")
-		read record (sfe01_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)sfe_womastr$
-		new_bill$=sfe_womastr.item_id$
-		mat_isn$=pad("",len(sfe_womatl.internal_seq_no$),"0")
-
-		if cvs(new_bill$,3)<>""
-			read(bmm02_dev,key=firm_id$+new_bill$,dom=*next)
-			bmm02_key$=key(bmm02_dev,end=*endif)
-			if pos(firm_id$+new_bill$=bmm02_key$)=1 then gosub explode_bills
-		endif
-	endif
-
-rem --- Disable grid if Closed Work Order or Recurring
-
-	if callpoint!.getDevObject("wo_status")="C" or 
-:		callpoint!.getDevObject("wo_category")="R" or
-:		(callpoint!.getDevObject("wo_category")="I" and callpoint!.getDevObject("bm")="Y")
-		opts$=callpoint!.getTableAttribute("OPTS")
-		callpoint!.setTableAttribute("OPTS",opts$+"BID")
-
-		x$=callpoint!.getTableColumns()
-		worefnumPos=pos("SFE_WOMATL.WO_REF_NUM"=x$)
-		for x=1 to len(x$) step 40
-			rem --- Don't disable wo_ref_num for Bills Of Materials unless WO is closed
-			if x<>worefnumPos or
-:			(x=worefnumPos and 
-:			(callpoint!.getDevObject("wo_status")="C" or (callpoint!.getDevObject("wo_category")<>"I" and callpoint!.getDevObject("bm")<>"Y")))
-:			then
-				opts$=callpoint!.getTableColumnAttribute(cvs(x$(x,40),2),"OPTS")
-				callpoint!.setTableColumnAttribute(cvs(x$(x,40),2),"OPTS",opts$+"C"); rem - makes cells read only
-			endif
-		next x
-	endif
-
-rem --- fill listbox for use with Op Sequence
-
-	sfe02_dev=fnget_dev("SFE_WOOPRTN")
-	dim sfe02a$:fnget_tpl$("SFE_WOOPRTN")
-	op_code=callpoint!.getDevObject("opcode_chan")
-	dim op_code$:callpoint!.getDevObject("opcode_tpl")
-	wo_no$=callpoint!.getDevObject("wo_no")
-	wo_loc$=callpoint!.getDevObject("wo_loc")
-
-	ops_lines!=SysGUI!.makeVector()
-	ops_items!=SysGUI!.makeVector()
-	ops_list!=SysGUI!.makeVector()
-	ops_lines!.addItem("000000000000")
-	ops_items!.addItem("")
-	ops_list!.addItem("")
-
-	read(sfe02_dev,key=firm_id$+wo_loc$+wo_no$,dom=*next)
-	while 1
-		read record (sfe02_dev,end=*break) sfe02a$
-		if pos(firm_id$+wo_loc$+wo_no$=sfe02a$)<>1 break
-		if sfe02a.line_type$<>"S" continue
-		dim op_code$:fattr(op_code$)
-		read record (op_code,key=firm_id$+sfe02a.op_code$,dom=*next)op_code$
-		ops_lines!.addItem(sfe02a.internal_seq_no$)
-		ops_items!.addItem(sfe02a.wo_op_ref$)
-		ops_list!.addItem(sfe02a.wo_op_ref$+" - "+sfe02a.op_code$+" - "+op_code.code_desc$)
-	wend
-
-	ldat$=""
-	if ops_lines!.size()>0
-		descVect!=BBjAPI().makeVector()
-		codeVect!=BBjAPI().makeVector()
-		for x=0 to ops_lines!.size()-1
-			descVect!.addItem(ops_items!.getItem(x))
-			codeVect!.addItem(ops_lines!.getItem(x))
-		next x
-		ldat$=func.buildListButtonList(descVect!,codeVect!)
-	endif
-
-	callpoint!.setTableColumnAttribute("SFE_WOMATL.OPER_SEQ_REF","LDAT",ldat$)
-	col_hdr$=callpoint!.getTableColumnAttribute("SFE_WOMATL.OPER_SEQ_REF","LABS")
-	my_grid!=Form!.getControl(5000)
-	ListColumn=util.getGridColumnNumber(my_grid!, col_hdr$)
-	my_control!=my_grid!.getColumnListControl(ListColumn)
-	my_control!.removeAllItems()
-	my_control!.insertItems(0,ops_list!)
-	my_grid!.setColumnListControl(ListColumn,my_control!)
-	my_grid!.setColumnHeaderCellText(ListColumn,"Op Ref")
-
-rem --- Disable WO_REF_NUM when locked or WO closed
-	if callpoint!.getDevObject("lock_ref_num")="Y" or callpoint!.getDevObject("wo_status")="C" or !callpoint!.isEditMode() then
-		opts$=callpoint!.getTableColumnAttribute("SFE_WOMATL.WO_REF_NUM","OPTS")
-		callpoint!.setTableColumnAttribute("SFE_WOMATL.WO_REF_NUM","OPTS",opts$+"C"); rem --- makes read only
-		callpoint!.setOptionEnabled("AUTO",0)
-	endif
