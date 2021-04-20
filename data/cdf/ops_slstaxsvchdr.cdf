@@ -1,3 +1,11 @@
+[[OPS_SLSTAXSVCHDR.ADIS]]
+rem --- Enable/disable Test Connection
+	if cvs(callpoint!.getDevObject("sls_tax_intrface"),2)=cvs(callpoint!.getColumnData("OPS_SLSTAXSVCHDR.SLS_TAX_INTRFACE"),2) then
+		callpoint!.setOptionEnabled("CONN",1)
+	else
+		callpoint!.setOptionEnabled("CONN",0)
+	endif
+
 [[OPS_SLSTAXSVCHDR.AOPT-CONN]]
 rem --- Test connection to sales tax service
 	encryptor!=callpoint!.getDevObject("encryptor")
@@ -76,6 +84,10 @@ pingErr: rem --- Error during ping() test
 	callpoint!.setStatus("ABORT")
 	break
 
+[[OPS_SLSTAXSVCHDR.AREC]]
+rem --- Disable Test Connection
+	callpoint!.setOptionEnabled("CONN",0)
+
 [[OPS_SLSTAXSVCHDR.ARNF]]
 rem --- Initialize new records using the ZZ records
 	ops_slstaxsvchdr_dev = fnget_dev("OPS_SLSTAXSVCHDR")
@@ -103,6 +115,12 @@ rem --- Initialize new records using the ZZ records
 	rem --- Load new records into the form
 	callpoint!.setStatus("RECORD:["+firm_id$+sls_tax_intrface$+"]")
 
+[[OPS_SLSTAXSVCHDR.ASVA]]
+rem --- Enable Test Connection
+	if cvs(callpoint!.getDevObject("sls_tax_intrface"),2)=cvs(callpoint!.getColumnData("OPS_SLSTAXSVCHDR.SLS_TAX_INTRFACE"),2) then
+		callpoint!.setOptionEnabled("CONN",1)
+	endif
+
 [[OPS_SLSTAXSVCHDR.BSHO]]
 rem  --- Use statements
 	use ::opo_AvaTaxInterface.aon::AvaTaxInterface
@@ -120,6 +138,18 @@ rem --- Get an Encryptor
 	encryptor!.setConfiguration("SLSTAXSVC_AUTH")
 	callpoint!.setDevObject("encryptor",encryptor!)
 
+rem --- Open/Lock files
+	num_files=1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="ARS_PARAMS",open_opts$[1]="OTA"
+	gosub open_tables
+	arsParams_dev=num(open_chans$[1])
+	dim arsParams$:open_tpls$[1]
+
+rem --- Retrieve AR parameter data
+	readrecord(arsParams_dev,key=firm_id$+"AR00",dom=std_missing_params)arsParams$
+	callpoint!.setDevObject("sls_tax_intrface",arsParams.sls_tax_intrface$)
+
 [[OPS_SLSTAXSVCHDR.WAIT_TIME.AVAL]]
 rem --- Verify wait_time is greater than zero
 	wait_time=num(callpoint!.getUserInput())
@@ -130,6 +160,9 @@ rem --- Verify wait_time is greater than zero
 		callpoint!.setStatus("ABORT")
 		break
 	endif
+
+[[OPS_SLSTAXSVCHDR.<CUSTOM>]]
+#include [+ADDON_LIB]std_missing_params.aon
 
 
 
