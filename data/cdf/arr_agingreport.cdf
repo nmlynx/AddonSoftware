@@ -71,6 +71,35 @@ dim ars_params$:open_tpls$[1]
 readrecord(ars_params,key=firm_id$+"AR00",dom=std_missing_params)ars_params$
 callpoint!.setColumnData("ARR_AGINGREPORT.REPORT_TYPE",iff(cvs(ars_params.dflt_age_by$,2)="","I",ars_params.dflt_age_by$),1)
 
+[[ARR_AGINGREPORT.BSHO]]
+rem --- Inits
+	use ::ado_util.src::util
+
+rem --- Open/Lock files
+	num_files=1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="ARS_PARAMS",open_opts$[1]="OTA"
+	gosub open_tables
+
+	arsParams_dev=num(open_chans$[1])
+	dim arsParams$:open_tpls$[1]
+
+rem --- Retrieve parameter data
+	find record (arsParams_dev,key=firm_id$+"AR00",err=std_missing_params) arsParams$
+
+rem --- Update Control Labels for aging days
+	days$=" "+Translate!.getTranslation("AON_DAYS","Days",1)+":"
+
+	ctrl30!=util.findControl(Form!,Translate!.getTranslation("DDM_TABLE_LABL-ARR_AGINGREPORT-LABEL_30-DD_ATTR_LABL"))
+	ctrl60!=util.findControl(Form!,Translate!.getTranslation("DDM_TABLE_LABL-ARR_AGINGREPORT-LABEL_60-DD_ATTR_LABL"))
+	ctrl90!=util.findControl(Form!,Translate!.getTranslation("DDM_TABLE_LABL-ARR_AGINGREPORT-LABEL_90-DD_ATTR_LABL"))
+	ctrl120!=util.findControl(Form!,Translate!.getTranslation("DDM_TABLE_LABL-ARR_AGINGREPORT-LABEL_120-DD_ATTR_LABL"))
+
+	ctrl30!.setText(str(arsParams.age_per_days_1)+days$)
+	ctrl60!.setText(str(arsParams.age_per_days_2)+days$)
+	ctrl90!.setText(str(arsParams.age_per_days_3)+days$)
+	ctrl120!.setText(str(arsParams.age_per_days_4)+"+"+days$)
+
 [[ARR_AGINGREPORT.COL_FORMAT.AVAL]]
 rem --- Enable/Disable Comments field based on this value
 

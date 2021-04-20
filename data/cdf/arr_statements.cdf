@@ -17,8 +17,10 @@ rem --- Set default value
 	callpoint!.setColumnEnabled("ARR_STATEMENTS.REPORT_SEQUENCE",1)
 
 [[ARR_STATEMENTS.ARER]]
-rem --- default age_by (report_type) based on AR params
+rem --- Init
+use ::ado_func.src::func
 
+rem --- Open/Lock files
 num_files=1
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="ARS_PARAMS",open_opts$[1]="OTA"
@@ -26,8 +28,33 @@ gosub open_tables
 ars_params=num(open_chans$[1])
 dim ars_params$:open_tpls$[1]
 
-
+rem --- Retrieve parameter data
 readrecord(ars_params,key=firm_id$+"AR00",dom=std_missing_params)ars_params$
+
+rem --- Update Aging Period ListButton
+codeVect!=BBjAPI().makeVector()
+descVect!=BBjAPI().makeVector()
+
+days$=" "+Translate!.getTranslation("AON_DAYS","Days",1)
+codeVect!.add("A")
+descVect!.add(Translate!.getTranslation("AON_ALL"))
+codeVect!.add("1")
+descVect!.add(str(ars_params.age_per_days_1)+days$)
+codeVect!.add("2")
+descVect!.add(str(ars_params.age_per_days_2)+days$)
+codeVect!.add("3")
+descVect!.add(str(ars_params.age_per_days_3)+days$)
+codeVect!.add("4")
+descVect!.add(str(ars_params.age_per_days_4)+"+"+days$)
+
+ldat$=func.buildListButtonList(descVect!,codeVect!)
+callpoint!.setTableColumnAttribute("ARR_STATEMENTS.PICK_PER","LDAT",ldat$)
+periodList!=callpoint!.getControl("ARR_STATEMENTS.PICK_PER")
+periodList!.removeAllItems()
+periodList!.insertItems(0,descVect!)
+periodList!.selectIndex(0)
+
+rem --- default age_by (report_type) based on AR params
 callpoint!.setColumnData("ARR_STATEMENTS.REPORT_TYPE",iff(cvs(ars_params.dflt_age_by$,2)="","I",ars_params.dflt_age_by$),1)
 
 [[ARR_STATEMENTS.REPORT_OPTION.AVAL]]

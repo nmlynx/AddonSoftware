@@ -62,10 +62,11 @@ rem --- create the in memory recordset for return
 	
 rem --- Open/Lock files
 
-    files=2,begfile=1,endfile=files
+    files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="arm-01",ids$[1]="ARM_CUSTMAST"
     files$[2]="arm-02",ids$[2]="ARM_CUSTDET"
+    files$[3]="ars_params",ids$[3]="ARS_PARAMS"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
     if status then
@@ -76,20 +77,23 @@ rem --- Open/Lock files
 
     arm01a_dev=channels[1]
     arm02a_dev=channels[2]
+    arsParams_dev=channels[3]
 
 rem --- Dimension string templates
 
     dim arm01a$:templates$[1]
     dim arm02a$:templates$[2]
+    dim arsParams$:templates$[3]
     
 rem --- Identify aging period selected
+    readrecord(arsParams_dev,key=firm_id$+"AR00",dom=*next)arsParams$
     agingPeriods!=BBjAPI().makeVector()
     agingPeriods!.addItem("Future")
     agingPeriods!.addItem("Current")
-    agingPeriods!.addItem("30 Days")
-    agingPeriods!.addItem("60 Days")
-    agingPeriods!.addItem("90 Days")
-    agingPeriods!.addItem("120 Days")
+    agingPeriods!.addItem(str(arsParams.age_per_days_1)+" Days")
+    agingPeriods!.addItem(str(arsParams.age_per_days_2)+" Days")
+    agingPeriods!.addItem(str(arsParams.age_per_days_3)+" Days")
+    agingPeriods!.addItem(str(arsParams.age_per_days_4)+"+ Days")
     period=-1
     for i=0 to agingPeriods!.size()-1
         if aging_period$<>agingPeriods!.getItem(i) then continue
