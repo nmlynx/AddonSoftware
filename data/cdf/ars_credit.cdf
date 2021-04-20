@@ -1,4 +1,7 @@
 [[ARS_CREDIT.BSHO]]
+rem --- Init
+	use ::ado_func.src::func
+
 rem --- Open/Lock files
 
 	files=1,begfile=1,endfile=1
@@ -37,3 +40,27 @@ rem --- check to see if main AR param rec (firm/AR/00) exists; if not, tell user
 		gosub disp_message
 		release
 	endif
+
+rem --- Update Aging Bucket To Hold ListButton
+	codeVect!=BBjAPI().makeVector()
+	descVect!=BBjAPI().makeVector()
+
+	days$=" "+Translate!.getTranslation("AON_DAYS","Days",1)
+	codeVect!.add("2")
+	descVect!.add(str(ars01a.age_per_days_1)+days$)
+	codeVect!.add("3")
+	descVect!.add(str(ars01a.age_per_days_2)+days$)
+	codeVect!.add("4")
+	descVect!.add(str(ars01a.age_per_days_3)+days$)
+	codeVect!.add("5")
+	descVect!.add(str(ars01a.age_per_days_4)+"+"+days$)
+
+	ldat$=func.buildListButtonList(descVect!,codeVect!)
+	callpoint!.setTableColumnAttribute("ARS_CREDIT.AGING_BUCKET","LDAT",ldat$)
+	pickList!=callpoint!.getControl("ARS_CREDIT.AGING_BUCKET")
+	pickList!.removeAllItems()
+	pickList!.insertItems(0,descVect!)
+	pickList!.selectIndex(3)
+
+
+

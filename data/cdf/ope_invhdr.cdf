@@ -1884,6 +1884,13 @@ rem --- Disable display fields
 	column!.addItem("<<DISPLAY>>.TOT_AGING")
 	callpoint!.setColumnEnabled(column!, 0)
 
+rem --- Update Control Labels for aging days
+	days$=" "+Translate!.getTranslation("AON_DAYS","Days",1)+":"
+	util.changeControlLabel(SysGUI!, callpoint!, "<<DISPLAY>>.AGING_30", str(ars01a.age_per_days_1)+days$)
+	util.changeControlLabel(SysGUI!, callpoint!, "<<DISPLAY>>.AGING_60", str(ars01a.age_per_days_2)+days$)
+	util.changeControlLabel(SysGUI!, callpoint!, "<<DISPLAY>>.AGING_90", str(ars01a.age_per_days_3)+days$)
+	util.changeControlLabel(SysGUI!, callpoint!, "<<DISPLAY>>.AGING_120", str(ars01a.age_per_days_4)+"+"+days$)
+
 rem --- Save display control objects
 
 	UserObj!.addItem( util.getControl(callpoint!, "<<DISPLAY>>.ORDER_TOT") )
