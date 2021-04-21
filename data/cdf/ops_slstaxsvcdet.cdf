@@ -60,7 +60,7 @@ rem =========================================================
 
 	sql$ = "SELECT COUNT(*) AS COUNT "
 	sql$ = sql$ + "FROM OPT_INVHDR "
-	sql$ = sql$ + "WHERE FIRM_ID = '" + firm_id$ + "' and TRANS_STATUS IN ('E','R')"
+	sql$ = sql$ + "WHERE FIRM_ID = '" + firm_id$ + "' and TRANS_STATUS IN ('E','R') and INVOICE_TYPE<>'V'"
 
 	sql_chan=sqlunt
 	sqlopen(sql_chan)stbl("+DBNAME")

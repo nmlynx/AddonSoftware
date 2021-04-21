@@ -230,7 +230,7 @@ rem --- Cannot change SLS_TAX_INTRFACE if there are open orders or open invoices
 	if sls_tax_intrface$<>cvs(callpoint!.getColumnData("OPS_PARAMS.SLS_TAX_INTRFACE"),2) then
 		sql$ = "SELECT COUNT(*) AS COUNT "
 		sql$ = sql$ + "FROM OPT_INVHDR "
-		sql$ = sql$ + "WHERE FIRM_ID = '" + firm_id$ + "' and TRANS_STATUS IN ('E','R')"
+		sql$ = sql$ + "WHERE FIRM_ID = '" + firm_id$ + "' and TRANS_STATUS IN ('E','R') and INVOICE_TYPE<>'V'"
 
 		sql_chan=sqlunt
 		sqlopen(sql_chan)stbl("+DBNAME")
