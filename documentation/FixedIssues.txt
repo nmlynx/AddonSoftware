@@ -20,3 +20,33 @@ Parameters.
 ----
 Modified: data/bar/ops_slstaxsvchdr.xml
 Modified: data/cdf/ops_slstaxsvchdr.cdf
+
+=======================================================================================================================================
+Revision: 62082f6a40313d7f013f80812f8a7b57c1f3b955
+Author: Christine <chawkins@basis.com>
+Date: 4/20/2021 5:47:10 PM
+Message:
+Bug 10172 - Adds ops_slstaxsvchdr/det to the list of files to initialize from ZZ recs during install/upgrade.
+
+Bug 10173 - Corrects typo in upgrade when handling duplicate file (dupiter!.next())
+
+Bug 10174 - Adds logic to Upgrade Wizard to handle both ENHANCED and BARISTA DB types when testing for restart.
+
+(cherry picked from commit 193d50534afb4841e40efe8c16944b451eac3dbf)
+----
+Modified: ad/src/adc_copyaon.aon
+Modified: ad/src/ado_AO_ModMerger.aon
+Modified: data/bar/adx_upgradewiz.xml
+Modified: data/cdf/adx_upgradewiz.cdf
+
+=======================================================================================================================================
+Revision: c087fa91d43c2e7821892c2de153a09276e62825
+Author: Christine <chawkins@basis.com>
+Date: 4/20/2021 6:01:08 PM
+Message:
+Bug 10175 - AD - adx_locks uses Barista MENU_OPTION_ID element and needs to reflect recent changes
+ - updated to include the new validation settings
+
+(cherry picked from commit 86ea243dae64bd35f05c85b6e82988084dac3106)
+----
+Modified: data/bar/adx_locks.xml
