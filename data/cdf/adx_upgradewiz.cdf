@@ -734,7 +734,11 @@ validate_new_db_name: rem --- Validate new database name
 
 		rem --- This db already exists, so don't allow it unless this is a re-start for Git conflicts
 		dictionary$=db!.getString(BBjAdminDatabase.DICTIONARY)
-		aonLoc$=dictionary$(1,pos("/barista/bbdict"=dictionary$)-1)
+		if db!.getType()=BBjAdminDatabase.DatabaseType.BARISTA
+			aonLoc$=dictionary$(1,pos("/barista/sys/data"=dictionary$)-1)
+		else
+			aonLoc$=dictionary$(1,pos("/barista/bbdict"=dictionary$)-1)
+		endif
 		restartFile$=aonLoc$+"/aon/logs/restartUpgradeWizard.txt"
 		restart=0
 		restart_dev=unt
