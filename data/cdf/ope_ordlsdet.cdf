@@ -103,12 +103,12 @@ rem --- Set data for the lookup form
 	ord_qty = num( callpoint!.getDevObject("ord_qty") )
 	lsmast_dev = fnget_dev("IVM_LSMASTER")
 
-rem --- See if there are any open lots
+rem --- See if there are any lots/serials this item
 
-	read (lsmast_dev, key=firm_id$+wh$+item$+" ", knum="AO_WH_ITM_FLAG", dom=*next)
+	read (lsmast_dev, key=firm_id$+wh$+item$, knum="AO_WH_ITM_FLAG", dom=*next)
 	lsmast_key$=key(lsmast_dev, end=*next)
 
-	if pos(firm_id$+wh$+item$+" " = lsmast_key$) = 1 then
+	if pos(firm_id$+wh$+item$ = lsmast_key$) = 1 then
 		dim dflt_data$[3,1]
 		dflt_data$[1,0] = "ITEM_ID"
 		dflt_data$[1,1] = item$
