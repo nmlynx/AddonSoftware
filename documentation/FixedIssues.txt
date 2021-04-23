@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-04-22
+ Report Date:   2021-04-23
  Report Branch: AddonSoftware 21.01
  Last Release:  AddonSoftware 21.00
 =======================================================================================================================================
@@ -103,3 +103,21 @@ Per ER 10121 - IV - Expand and validate Unit of Measure
 (cherry picked from commit 2670832c29f999d017ba2f85ce8775d772351ede)
 ----
 Modified: data/bar/bmm_billmast.xml
+
+=======================================================================================================================================
+Revision: 88005b8ba0f5f8a4a402d4c568e42e4e73eb3753
+Author: Christine <chawkins@basis.com>
+Date: 4/23/2021 10:36:28 AM
+Message:
+Bug 10178 - OP - Credit Memo Line Detail Serial# Lookup does not show Serial# to select
+ - corrected to test for *any* lots/serials for a given item prior to launching the lookup, rather than testing for *open* lots/serials.
+
+(cherry picked from commit effa09e066550eb8982cd6cbd60553a2c7781970)
+----
+Modified: data/bar/ope_ordlsdet.xml
+Modified: data/cdf/ope_ordlsdet.cdf
+Modified: data/sync/ads_messages~[01007514IV].xml
+Deleted: data/sync/ads_messages~iv_no_openlots.xml
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
+
