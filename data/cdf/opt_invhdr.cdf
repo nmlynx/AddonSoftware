@@ -112,6 +112,11 @@ rem --- Enable SHPT additional options if shipment tracking info exists
 		callpoint!.setOptionEnabled("SHPT",0)
 	endif
 
+rem --- Enable Print button
+	if cvs(callpoint!.getColumnData("OPT_INVHDR.CUSTOMER_ID"),3)<>"" and cvs(callpoint!.getColumnData("OPT_INVHDR.ORDER_NO"),3)<>"" and cvs(callpoint!.getColumnData("OPT_INVHDR.AR_INV_NO"),3)<>""
+		callpoint!.setOptionEnabled("PRNT",1)
+	endif
+
 [[OPT_INVHDR.ARAR]]
 rem --- Disable additional options for now
 	callpoint!.setOptionEnabled("SHPT",0)
@@ -149,6 +154,7 @@ rem --- Enable Print button when leave edit mode
 [[OPT_INVHDR.BPFX]]
 rem --- Disable additional options for now
 	callpoint!.setOptionEnabled("SHPT",0)
+	callpoint!.setOptionEnabled("PRNT",0)
 
 [[OPT_INVHDR.BSHO]]
 rem --- Open needed files
