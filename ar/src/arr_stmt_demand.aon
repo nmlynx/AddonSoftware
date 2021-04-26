@@ -65,14 +65,16 @@ rem --- Set Report Name & Subreport directory
     declare BBJasperReport report!
 
 rem --- open files
-    files=1,begfile=1,endfile=files
+    files=2,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="ars_cc_custpmt",ids$[1]="ARS_CC_CUSTPMT"
+    files$[2]="ars_params",ids$[2]="ARS_PARAMS"
 
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
 
     ars_cc_custpmt=channels[1]; dim ars_cc_custpmt$:templates$[1]
+    arsParams=channels[2]; dim arsParams$:templates$[2]
 
 rem --- Assign form input values to local variables
 
@@ -93,6 +95,14 @@ rem --- Initializations
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,0
 
     emailFax! = BBjAPI().makeVector()
+
+rem --- Get aging period sizes from AR Parameters
+    findrecord(arsParams,key=firm_id$+"AR00",dom=std_missing_params)arsParams$
+    days$=" "+Translate!.getTranslation("AON_DAYS","Days",1)    
+    params!.put("30_DAY",str(arsParams.age_per_days_1)+days$)
+    params!.put("60_DAY",str(arsParams.age_per_days_2)+days$)
+    params!.put("90_DAY",str(arsParams.age_per_days_3)+days$)
+    params!.put("120_DAY",str(arsParams.age_per_days_4)+"+"+days$)
 
 rem --- get payment_url for the cash_rec_cd used for customer payments (only one record allowed at present)
 
@@ -421,6 +431,26 @@ std_error: rem --- Standard error handler (11Oct2017)
 
 rem #endinclude std_error.src
 
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),str(err),rd_err_text$,rd_err_act$
+std_missing_params_exit: 
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release: 
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
 
 rem #include std_end.src
 

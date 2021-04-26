@@ -84,6 +84,11 @@ rem --- Close files after ensuring they exist
 rem --- retrieve retention value from param file
 
     readrecord(ars_params_dev,key=firm_id$+"AR00",dom=*next)ars_params$
+    days$=" "+Translate!.getTranslation("AON_DAYS","Days",1)    
+    params!.put("30_DAY",str(ars_params.age_per_days_1)+days$)
+    params!.put("60_DAY",str(ars_params.age_per_days_2)+days$)
+    params!.put("90_DAY",str(ars_params.age_per_days_3)+days$)
+    params!.put("120_DAY",str(ars_params.age_per_days_4)+"+"+days$)
     
 rem --- Set additional params
 

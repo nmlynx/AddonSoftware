@@ -75,13 +75,14 @@ rem --- Set Report Name & Subreport directory
 
 rem --- Open/Lock files
 
-    files=5,begfile=1,endfile=files
+    files=6,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="arm-01",ids$[1]="ARM_CUSTMAST"
     files$[2]="arm-02",ids$[2]="ARM_CUSTDET"
     files$[3]="art-01",ids$[3]="ART_INVHDR"
     files$[4]="art-11",ids$[4]="ART_INVDET"
     files$[5]="ars_cc_custpmt",ids$[5]="ARS_CC_CUSTPMT"
+    files$[6]="ars_params",ids$[6]="ARS_PARAMS"
     
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
@@ -91,12 +92,13 @@ rem --- Open/Lock files
     art01_dev=channels[3]
     art11_dev=channels[4]
     ars_cc_custpmt=channels[5]
+    arsParams=channels[6]
 
 rem --- Dimension string templates
 
     dim arm01a$:templates$[1],arm02a$:templates$[2]
     dim art01a$:templates$[3],art11a$:templates$[4]
-	dim ars_cc_custpmt$:templates$[5]
+	dim ars_cc_custpmt$:templates$[5],arsParams$:templates$[6]
 
 rem --- Assign form input values to local variables
 
@@ -154,6 +156,14 @@ rem --- Initializations
     print_document=1
 
     emailFax! = BBjAPI().makeVector()
+
+rem --- Get aging period sizes from AR Parameters
+    findrecord(arsParams,key=firm_id$+"AR00",dom=std_missing_params)arsParams$
+    days$=" "+Translate!.getTranslation("AON_DAYS","Days",1)    
+    params!.put("30_DAY",str(arsParams.age_per_days_1)+days$)
+    params!.put("60_DAY",str(arsParams.age_per_days_2)+days$)
+    params!.put("90_DAY",str(arsParams.age_per_days_3)+days$)
+    params!.put("120_DAY",str(arsParams.age_per_days_4)+"+"+days$)
 
 rem --- get payment_url for the cash_rec_cd used for customer payments (only one record allowed at present)
 

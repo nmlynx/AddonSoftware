@@ -23,6 +23,10 @@
 	<parameter name="CUST_MASK" class="java.lang.String"/>
 	<parameter name="CUST_SIZE" class="java.lang.String"/>
 	<parameter name="PERIOD_DATES" class="java.lang.String"/>
+	<parameter name="30_DAY" class="java.lang.String"/>
+	<parameter name="60_DAY" class="java.lang.String"/>
+	<parameter name="90_DAY" class="java.lang.String"/>
+	<parameter name="120_DAY" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[CALL CUST_STATEMENTS($P{FIRM_ID},$P{STATEMENT_DATE},$P{CUSTOMER_ID},$P{AGE_BASIS},$P{AMT_MASK},$P{CUST_MASK},$P{CUST_SIZE},$P{PERIOD_DATES},$P{BARISTA_WD})]]>
 	</queryString>
@@ -234,28 +238,28 @@
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font fontName="SansSerif" size="12" isBold="true"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$R{AON_30-DAYS}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$P{30_DAY}]]></textFieldExpression>
 				</textField>
 				<textField>
 					<reportElement mode="Transparent" x="185" y="48" width="85" height="18" forecolor="#FFFFFF" backcolor="#999999" uuid="587dc2ce-1f72-4b14-bdf8-79f50a303ece"/>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font fontName="SansSerif" size="12" isBold="true"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$R{AON_60-DAYS}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$P{60_DAY}]]></textFieldExpression>
 				</textField>
 				<textField>
 					<reportElement mode="Transparent" x="275" y="48" width="85" height="18" forecolor="#FFFFFF" backcolor="#999999" uuid="2b89ca13-8273-479a-a0ab-6dc3c87e4a54"/>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font fontName="SansSerif" size="12" isBold="true"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$R{AON_90-DAYS}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$P{90_DAY}]]></textFieldExpression>
 				</textField>
 				<textField>
 					<reportElement mode="Transparent" x="365" y="48" width="85" height="18" forecolor="#FFFFFF" backcolor="#999999" uuid="3dca4b66-d8e6-4011-b0eb-9aaf8a6bc103"/>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font fontName="SansSerif" size="12" isBold="true"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$R{AON_120-DAYS_+}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$P{120_DAY}]]></textFieldExpression>
 				</textField>
 				<textField>
 					<reportElement mode="Transparent" x="455" y="48" width="95" height="18" forecolor="#FFFFFF" backcolor="#999999" uuid="f89c44f4-874a-4a70-a358-3abd327e0dbb"/>
