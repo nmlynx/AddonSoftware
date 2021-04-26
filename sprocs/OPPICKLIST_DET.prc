@@ -283,6 +283,7 @@ line_detail: rem --- Item Detail
                         um_sold$=ivm01a.unit_of_sale$
                         order_qty_masked$= str(qtyOrdered_salesUM:qty_mask$)
                         ship_qty_raw$= str(qtyOrdered_salesUM)
+                        if opm02a.line_type$="N" then um_sold$=ope11a.um_sold$;rem if non-stock, use UM from ope-11 (i.e., item isn't in ivm-01)
                     endif
                     if pos(opm02a.line_type$=" SNPO") and print_prices$="Y" then
                         price_raw$=   str(ope11a.unit_price*qtyOrdered_salesUM)
