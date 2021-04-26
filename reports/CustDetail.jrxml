@@ -20,6 +20,10 @@
 	<parameter name="CUST_REPLACE" class="java.lang.String"/>
 	<parameter name="OPTION_ACTIVE" class="java.lang.String"/>
 	<parameter name="INACTIVE_CUST" class="java.lang.String"/>
+	<parameter name="30_DAY" class="java.lang.String"/>
+	<parameter name="60_DAY" class="java.lang.String"/>
+	<parameter name="90_DAY" class="java.lang.String"/>
+	<parameter name="120_DAY" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[select * from arm_custmast where arm_custmast.firm_id = $P{FIRM_ID} and arm_custmast.customer_id >= $P{CUSTOMER_ID_1} and arm_custmast.customer_id <= $P{CUSTOMER_ID_2} $P!{OPTION_ACTIVE}]]>
 	</queryString>
@@ -308,6 +312,18 @@ $F{OPENED_DATE}.substring(4,6)+"/"+$F{OPENED_DATE}.substring(6)+"/"+$F{OPENED_DA
 				</subreportParameter>
 				<subreportParameter name="CUSTOMER_ID">
 					<subreportParameterExpression><![CDATA[$F{CUSTOMER_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="30_DAY">
+					<subreportParameterExpression><![CDATA[$P{30_DAY}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="60_DAY">
+					<subreportParameterExpression><![CDATA[$P{60_DAY}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="90_DAY">
+					<subreportParameterExpression><![CDATA[$P{90_DAY}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="120_DAY">
+					<subreportParameterExpression><![CDATA[$P{120_DAY}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA["CustProfile.jasper"]]></subreportExpression>

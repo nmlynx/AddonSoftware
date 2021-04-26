@@ -94,15 +94,16 @@ rem -- Heading Initialization
         col_start=1
         columns$[0,0]=Translate!.getTranslation("AON_CUSTOMER,_PHONE,_CONTACT,_TERMS"),columns$[0,1]="C",columns$[0,2]="25"
     endif
+    days$=" "+Translate!.getTranslation("AON_DAYS","Days",1)    
     columns$[col_start,0]=Translate!.getTranslation("AON_LAST_INV"),columns$[col_start,1]="C",columns$[col_start,2]="8"
     columns$[col_start+1,0]=Translate!.getTranslation("AON_LAST_PAY"),columns$[col_start+1,1]="C",columns$[col_start+1,2]="8"
     columns$[col_start+2,0]=Translate!.getTranslation("AON_DAYS_PAY"),columns$[col_start+2,1]="N",columns$[col_start+2,2]="8",columns$[col_start+2,3]="##0"
     columns$[col_start+3,0]=Translate!.getTranslation("AON_FUTURE"),columns$[col_start+3,1]="N",columns$[col_start+3,2]="10",columns$[col_start+3,3]=m1$,columns$[col_start+3,10]="T"
     columns$[col_start+4,0]=Translate!.getTranslation("AON_CURRENT"),columns$[col_start+4,1]="N",columns$[col_start+4,2]="10",columns$[col_start+4,3]=m1$,columns$[col_start+4,10]="T"
-    columns$[col_start+5,0]=Translate!.getTranslation("AON_30_DAYS"),columns$[col_start+5,1]="N",columns$[col_start+5,2]="10",columns$[col_start+5,3]=m1$,columns$[col_start+5,10]="T"
-    columns$[col_start+6,0]=Translate!.getTranslation("AON_60_DAYS"),columns$[col_start+6,1]="N",columns$[col_start+6,2]="10",columns$[col_start+6,3]=m1$,columns$[col_start+6,10]="T"
-    columns$[col_start+7,0]=Translate!.getTranslation("AON_90_DAYS"),columns$[col_start+7,1]="N",columns$[col_start+7,2]="10",columns$[col_start+7,3]=m1$,columns$[col_start+7,10]="T"
-    columns$[col_start+8,0]=Translate!.getTranslation("AON_120_DAYS"),columns$[col_start+8,1]="N",columns$[col_start+8,2]="10",columns$[col_start+8,3]=m1$,columns$[col_start+8,10]="T"
+    columns$[col_start+5,0]=str(ars01a.age_per_days_1)+days$,columns$[col_start+5,1]="N",columns$[col_start+5,2]="10",columns$[col_start+5,3]=m1$,columns$[col_start+5,10]="T"
+    columns$[col_start+6,0]=str(ars01a.age_per_days_2)+days$,columns$[col_start+6,1]="N",columns$[col_start+6,2]="10",columns$[col_start+6,3]=m1$,columns$[col_start+6,10]="T"
+    columns$[col_start+7,0]=str(ars01a.age_per_days_3)+days$,columns$[col_start+7,1]="N",columns$[col_start+7,2]="10",columns$[col_start+7,3]=m1$,columns$[col_start+7,10]="T"
+    columns$[col_start+8,0]=str(ars01a.age_per_days_4)+"+"+days$,columns$[col_start+8,1]="N",columns$[col_start+8,2]="10",columns$[col_start+8,3]=m1$,columns$[col_start+8,10]="T"
     columns$[col_start+9,0]=Translate!.getTranslation("AON_MTD_SALES"),columns$[col_start+9,1]="N",columns$[col_start+9,2]="10",columns$[col_start+9,3]=m1$,columns$[col_start+9,10]="T"
     columns$[col_start+10,0]=Translate!.getTranslation("AON_YTD_SALES"),columns$[col_start+10,1]="N",columns$[col_start+10,2]="10",columns$[col_start+10,3]=m1$,columns$[col_start+10,10]="T"
 
@@ -156,10 +157,10 @@ rem --- Headings
     headings$[3]=Translate!.getTranslation("AON_BASED_ON_AVERAGE_DAYS_TO_PAY")
     x$=Translate!.getTranslation("AON_FUTURE")
     if aging$="C" x$=Translate!.getTranslation("AON_CURRENT")
-    if aging$="3" x$=Translate!.getTranslation("AON_30_DAY")
-    if aging$="6" x$=Translate!.getTranslation("AON_60_DAY")
-    if aging$="9" x$=Translate!.getTranslation("AON_90_DAY")
-    if aging$="1" x$=Translate!.getTranslation("AON_120_DAY")
+    if aging$="3" x$=str(ars01a.age_per_days_1)+days$
+    if aging$="6" x$=str(ars01a.age_per_days_2)+days$
+    if aging$="9" x$=str(ars01a.age_per_days_3)+days$
+    if aging$="1" x$=str(ars01a.age_per_days_4)+"+"+days$
     if basis$="A" headings$[3]=Translate!.getTranslation("AON_BASED_ON_")+x$+Translate!.getTranslation("AON__AGING_BALANCE")
 
 rem --- Define print positions
