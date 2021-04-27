@@ -97,6 +97,7 @@ rem --- Read next Recurring Invoice Header (ape-03) record
                 wend
                 if wrong=0 break
                 d=d-1
+                if d<=0 then d=31
           wend
           ape03a.invoice_date$=invoice_date$
           ape03a.accting_date$=invoice_date$
@@ -114,6 +115,7 @@ rem --- Read next Recurring Invoice Header (ape-03) record
           while calculating
                 while wrong        
                       d=d-1
+                      if d<=0 then d=31
                       x=jul(year,month,d,err=*continue)
                       wrong=0
                 wend
