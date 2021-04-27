@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-04-26
+ Report Date:   2021-04-27
  Report Branch: AddonSoftware 21.01
  Last Release:  AddonSoftware 21.00
 =======================================================================================================================================
@@ -146,5 +146,18 @@ Bug 10185 - OP - Non-stock UM does not print on the invoice
 ----
 Modified: sprocs/OPINVOICE_DET.prc
 Modified: sprocs/OPPICKLIST_DET.prc
+
+=======================================================================================================================================
+Revision: 02409e0fbdcb45b9f5ed3b1eb530497c7e564e2b
+Author: Christine <chawkins@basis.com>
+Date: 4/27/2021 10:25:40 AM
+Message:
+Bug 10186 - APR Recurring Invoice Register Infinite Loop
+ - correct loop in invoice# calculation routine if re-running recurring invoices for same period and you have an invoice dated first day of month
+
+(cherry picked from commit 5cbe5ff795874740eab4b21a185c601e04c64663)
+----
+Modified: ap/src/apr_recurring.aon
+Modified: ap/src/apu_recurring.aon
 
 
