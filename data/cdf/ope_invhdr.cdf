@@ -4209,12 +4209,11 @@ rem ==========================================================================
 		dim ordhdr_rec$:ordhdr_tpl$
 		ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
 		ordhdr_rec$ = field(ordhdr_rec$)
+		ordhdr_rec.discount_amt=disc_amt
+		ordhdr_rec.freight_amt=freight_amt
 
 		if callpoint!.getDevObject("use_tax_service")="Y" then
 			rem --- Use sales tax service
-			callpoint!.setColumnData("OPE_INVHDR.DISCOUNT_AMT",str(disc_amt),1)
-			callpoint!.setColumnData("OPE_INVHDR.FREIGHT_AMT",str(freight_amt),1)
-
 			salesTax!=callpoint!.getDevObject("salesTaxObject")
 			success=0
 			taxProps!=salesTax!.calculateTax(ordhdr_rec$,"SalesInvoice",err=*next); success=1
