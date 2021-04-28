@@ -3799,6 +3799,8 @@ rem ==========================================================================
 		dim ordhdr_rec$:ordhdr_tpl$
 		ordhdr_rec$ = util.copyFields(ordhdr_tpl$, callpoint!)
 		ordhdr_rec$ = field(ordhdr_rec$)
+		ordhdr_rec.discount_amt=disc_amt
+		ordhdr_rec.freight_amt=freight_amt
 
 		rem --- Using a sales tax service?
 		use_tax_service=0
@@ -3811,9 +3813,6 @@ rem ==========================================================================
 
 		if use_tax_service then
 			rem --- Use sales tax service
-			callpoint!.setColumnData("OPE_ORDHDR.DISCOUNT_AMT",str(disc_amt),1)
-			callpoint!.setColumnData("OPE_ORDHDR.FREIGHT_AMT",str(freight_amt),1)
-
 			salesTax!=callpoint!.getDevObject("salesTaxObject")
 			success=0
 			taxProps!=salesTax!.calculateTax(ordhdr_rec$,"SalesOrder",err=*next); success=1
