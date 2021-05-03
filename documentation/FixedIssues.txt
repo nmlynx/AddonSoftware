@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-04-28
+ Report Date:   2021-05-03
  Report Branch: AddonSoftware 21.01
  Last Release:  AddonSoftware 21.00
 =======================================================================================================================================
@@ -186,3 +186,16 @@ form.
 (cherry picked from commit 9b43c573b86e2382f49a34db37642fb8e671e88f)
 ----
 Modified: data/bar/bmm_billmast.xml
+
+=======================================================================================================================================
+Revision: 29dea75d80caf906a5d2ca5b6ab4bbc6aee900d9
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/3/2021 12:50:35 PM
+Message:
+Bug 10193: Caught possible Customer Not Found exceptions thrown by
+AvaTax's listValidCertificatesForCustomer( ... ) method and handled them
+separate from normal error handling for all other exceptions.
+
+(cherry picked from commit 486ec997c2f139e92efbfa67242c0d536be7a26e)
+----
+Modified: op/src/opo_AO_AvaTaxInterface.aon
