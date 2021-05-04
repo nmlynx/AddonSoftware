@@ -482,8 +482,12 @@ busyImageStop_error:rem --- Method error trap/handler (11Oct2017)
             createTransModel!.setCode(#firmID$+optInvHdr.customer_id$+optInvHdr.order_no$+optInvHdr.ar_inv_no$);rem --- firm, customer, order#, invoice#
             createTransModel!.setDiscount(#getBigDecimal(optInvHdr.discount_amt))
             exemption!=#updateCustomerExemption(optInvHdr.customer_id$,optInvHdr.shipto_type$,optInvHdr.shipto_no$, addrTo!)
-            createTransModel!.setEntityUseCode(exemption!.getProperty("entity_use_cd"))
-            createTransModel!.setExemptionNo(exemption!.getProperty("exempt_no"))
+            expire_date$=exemption!.getProperty("expire_date")
+            if cvs(expire_date$,2)="" or expire_date$>=transDate$ then
+                rem --- Exemption has not expired
+                createTransModel!.setEntityUseCode(exemption!.getProperty("entity_use_cd"))
+                createTransModel!.setExemptionNo(exemption!.getProperty("exempt_no"))
+            endif
             if doCredit then
                 taxOverride!=new TaxOverrideModel()
                 taxOverride!.setType(TaxOverrideType.TaxDate)
@@ -1495,7 +1499,7 @@ stringJSON_error:rem --- Method error trap/handler (11Oct2017)
                     endif
                 endif
             else
-               rem --- AvaTax exemption certificate not found. Use exemption information ARM_CUSTEXMPT.
+               rem --- AvaTax exemption certificate not found. Use ARM_CUSTEXMPT exemption information.
                 dim armCustExmpt$:#tplArmCustExmpt$
                 readrecord(#devArmCustExmpt,key=#firmID$+customer_id$+shipto_type$+shipto_no$,dom=*next)armCustExmpt$
                 if cvs(armCustExmpt.customer_id$,2)<>""
