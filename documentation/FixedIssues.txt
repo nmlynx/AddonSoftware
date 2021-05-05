@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-05-04
+ Report Date:   2021-05-05
  Report Branch: AddonSoftware 21.01
  Last Release:  AddonSoftware 21.00
 =======================================================================================================================================
@@ -226,3 +226,17 @@ Modified: data/bar/ope_invhdr.xml
 Modified: data/bar/ope_ordhdr.xml
 Modified: data/cdf/ope_invhdr.cdf
 Modified: data/cdf/ope_ordhdr.cdf
+
+=======================================================================================================================================
+Revision: 8e080eaf523cd767e2ffa1e89b11c18528a4464c
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/5/2021 11:00:19 AM
+Message:
+ER 9806: Modified AO_AvaTaxInterface method updateCustomerExemption( ...
+) to stash exemptions in a HashMap in order to reduce the number of
+AvaTax API transactions from AvaTaxClient method
+listValidCertificatesForCustomer( ... )
+
+(cherry picked from commit 80c62b9468b3e38879741123dbe43e008b633daa)
+----
+Modified: op/src/opo_AO_AvaTaxInterface.aon
