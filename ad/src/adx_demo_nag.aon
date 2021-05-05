@@ -48,6 +48,7 @@ rem --- Open File(s)
 rem --- Get current working directory
 
 	workingDir$ = dir("")
+    workingDrive$=dsk("",err=*next)
 
 rem --- Get Addon install location
     
@@ -59,11 +60,13 @@ rem --- Get Addon install location
 rem --- Get current BASIS product download location
 
 	bbjHome$ = System.getProperty("basis.BBjHome")
+    if bbjHome$(2,1)=":" then setdrive bbjHome$(1,1)
 	chdir(bbjHome$)
 	bbjHome$ = dir(""); rem --- remove possible drive letter from path
 
 rem --- Reset current working directory
 
+    setdrive workingDrive$
 	chdir(workingDir$)
 
 rem --- Determine if current user is an admin
