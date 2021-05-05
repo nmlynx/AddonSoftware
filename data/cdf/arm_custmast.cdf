@@ -8,6 +8,8 @@ rem --- pie if all balances >=0, bar if any negatives, hide if all bals are 0
 	agingPieWidgetControl!=callpoint!.getDevObject("dbPieWidgetControl")
 	agingBarWidgetControl!=callpoint!.getDevObject("dbBarWidgetControl")
 
+	dim ars01a$:fnget_tpl$("ARS_PARAMS")
+	ars01a$=callpoint!.getDevObject("ars01a$")
 	if agingPieWidgetControl!.isDestroyed() or agingBarWidgetControl!.isDestroyed()
 		gosub create_widgets
 	endif
@@ -26,10 +28,10 @@ rem --- pie if all balances >=0, bar if any negatives, hide if all bals are 0
 		agingBarWidget! = agingDashboardBarWidget!.getWidget()
 		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_FUT","Fut",1), "",bal_fut)
 		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_CUR","Cur",1), "", bal_cur)
-		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_30","30",1),"", bal_30)
-		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_60","60",1), "", bal_60)
-		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_90","90",1), "", bal_90)
-		agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_120","120",1), "", bal_120)
+		agingBarWidget!.setDataSetValue(str(ars01a.age_per_days_1),"", bal_30)
+		agingBarWidget!.setDataSetValue(str(ars01a.age_per_days_2), "", bal_60)
+		agingBarWidget!.setDataSetValue(str(ars01a.age_per_days_3), "", bal_90)
+		agingBarWidget!.setDataSetValue(str(ars01a.age_per_days_4)+"+", "", bal_120)
 		agingBarWidget!.refresh()
 
 		agingPieWidgetControl!=callpoint!.getDevObject("dbPieWidgetControl")
@@ -39,14 +41,15 @@ rem --- pie if all balances >=0, bar if any negatives, hide if all bals are 0
 
 	else
 
+		days$=" "+Translate!.getTranslation("AON_DAYS","Days",1)+":"
 		agingDashboardPieWidget!=callpoint!.getDevObject("dbPieWidget")
 		agingPieWidget! = agingDashboardPieWidget!.getWidget()
 		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_FUTURE","Future",1), bal_fut)
 		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_CURRENT","Current",1), bal_cur)
-		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_30_DAYS","30 Days",1), bal_30 )
-		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_60_DAYS","60 days",1), bal_60)
-		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_90_DAYS","90 days",1), bal_90)
-		agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_120_DAYS","120 days",1), bal_120)
+		agingPieWidget!.setDataSetValue(str(ars01a.age_per_days_1)+days$, bal_30 )
+		agingPieWidget!.setDataSetValue(str(ars01a.age_per_days_2)+days$, bal_60)
+		agingPieWidget!.setDataSetValue(str(ars01a.age_per_days_3)+days$, bal_90)
+		agingPieWidget!.setDataSetValue(str(ars01a.age_per_days_4)+"+"+days$, bal_120)
 		agingPieWidget!.refresh()
 
 		agingPieWidgetControl!=callpoint!.getDevObject("dbPieWidgetControl")
@@ -448,6 +451,27 @@ rem --- Show quotes
 :		"",
 :		"AO_STATUS"
 
+[[ARM_CUSTMAST.AOPT-RCTL]]
+rem --- Launch Report Control Recipients form for this customer
+	user_id$=stbl("+USER_ID")
+	customer_id$=callpoint!.getColumnData("ARM_CUSTMAST.CUSTOMER_ID")
+
+	dim dflt_data$[2,1]
+	dflt_data$[1,0]="CUSTOMER_ID"
+	dflt_data$[1,1]=customer_id$
+	dflt_data$[2,0]="RECIPIENT_TP"
+	dflt_data$[2,1]="C"
+
+	key_pfx$=firm_id$+customer_id$
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"ADM_RPTRCP_CUST",
+:		user_id$,
+:		"",
+:		key_pfx$,
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
 [[ARM_CUSTMAST.AOPT-RESP]]
 rem --- view electronic receipt response, if applicable 
 	user_id$=stbl("+USER_ID")  
@@ -591,24 +615,27 @@ callpoint!.setColumnUndoData("ARM_CUSTDET.STATEMENTS",ars10d.statements$)
 
 rem --- clear out the contents of the widgets
 
+	dim ars01a$:fnget_tpl$("ARS_PARAMS")
+	ars01a$=callpoint!.getDevObject("ars01a$")
+	days$=" "+Translate!.getTranslation("AON_DAYS","Days",1)+":"
 	agingDashboardPieWidget!=callpoint!.getDevObject("dbPieWidget")
 	agingPieWidget! = agingDashboardPieWidget!.getWidget()
 	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_FUTURE","Future",1), 0)
 	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_CURRENT","Current",1), 0)
-	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_30_DAYS","30 Days",1), 0)
-	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_60_DAYS","60 days",1), 0)
-	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_90_DAYS","90 days",1), 0)
-	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_120_DAYS","120 days",1), 0)
+	agingPieWidget!.setDataSetValue(str(ars01a.age_per_days_1)+days$, 0)
+	agingPieWidget!.setDataSetValue(str(ars01a.age_per_days_2)+days$, 0)
+	agingPieWidget!.setDataSetValue(str(ars01a.age_per_days_3)+days$, 0)
+	agingPieWidget!.setDataSetValue(str(ars01a.age_per_days_4)+"+"+days$, 0)
 	agingPieWidget!.refresh()
 
 	agingDashboardBarWidget!=callpoint!.getDevObject("dbBarWidget")
 	agingBarWidget! = agingDashboardBarWidget!.getWidget()
 	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_FUT","Fut",1), "",0)
 	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_CUR","Cur",1), "", 0)
-	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_30","30",1),"", 0)
-	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_60","60",1), "", 0)
-	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_90","90",1), "", 0)
-	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_120","120",1), "", 0)
+	agingBarWidget!.setDataSetValue(str(ars01a.age_per_days_1),"", 0)
+	agingBarWidget!.setDataSetValue(str(ars01a.age_per_days_2), "", 0)
+	agingBarWidget!.setDataSetValue(str(ars01a.age_per_days_3), "", 0)
+	agingBarWidget!.setDataSetValue(str(ars01a.age_per_days_4)+"+", "", 0)
 	agingBarWidget!.refresh()
 
 	agingPieWidgetControl!=callpoint!.getDevObject("dbPieWidgetControl")
@@ -778,6 +805,7 @@ rem --- Retrieve parameter data
 	dim info$[20]
 	ars01a_key$=firm_id$+"AR00"
 	find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+	callpoint!.setDevObject("ars01a$",ars01a$)
 	callpoint!.setDevObject("on_demand_aging",ars01a.on_demand_aging$)
 	callpoint!.setDevObject("dflt_age_by",ars01a.dflt_age_by$)
 	ars01c_key$=firm_id$+"AR01"
@@ -898,6 +926,14 @@ rem --- disable credit card payment and view response options if not processing 
 			break
 		endif
 	wend
+
+rem --- Update Control Labels for aging days
+	days$=" "+Translate!.getTranslation("AON_DAYS","Days",1)+":"
+	use ::ado_util.src::util
+	util.changeControlLabel(SysGUI!, callpoint!, "ARM_CUSTDET.AGING_30", str(ars01a.age_per_days_1)+days$)
+	util.changeControlLabel(SysGUI!, callpoint!, "ARM_CUSTDET.AGING_60", str(ars01a.age_per_days_2)+days$)
+	util.changeControlLabel(SysGUI!, callpoint!, "ARM_CUSTDET.AGING_90", str(ars01a.age_per_days_3)+days$)
+	util.changeControlLabel(SysGUI!, callpoint!, "ARM_CUSTDET.AGING_120", str(ars01a.age_per_days_4)+"+"+days$)
 
 rem --- Create/embed widgets to show aged balance
 
@@ -1172,7 +1208,6 @@ rem =======================================================
 create_widgets:rem --- create pie and bar widgets to show aged balance (bar in case credits)
 rem =======================================================
 
-	use ::ado_util.src::util
 	use ::dashboard/widget.bbj::EmbeddedWidgetFactory
 	use ::dashboard/widget.bbj::EmbeddedWidget
 	use ::dashboard/widget.bbj::EmbeddedWidgetControl
@@ -1217,12 +1252,13 @@ rem --- Create either a pie chart or bar chart - the latter if any of the aging 
 	agingPieWidget!.setChartColorTheme(ChartWidget.getColorThemeColorful2())
 	agingPieWidget!.setLabelFormat("{0}: {1}", java.text.NumberFormat.getCurrencyInstance(), java.text.NumberFormat.getPercentInstance())
 	
+	days$=" "+Translate!.getTranslation("AON_DAYS","Days",1)+":"
 	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_FUTURE","Future",1), 0)
 	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_CURRENT","Current",1), 0)
-	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_30_DAYS","30 Days",1), 0)
-	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_60_DAYS","60 days",1), 0)
-	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_90_DAYS","90 days",1), 0)
-	agingPieWidget!.setDataSetValue(Translate!.getTranslation("AON_120_DAYS","120 days",1), 0)
+	agingPieWidget!.setDataSetValue(str(ars01a.age_per_days_1)+days$, 0)
+	agingPieWidget!.setDataSetValue(str(ars01a.age_per_days_2)+days$, 0)
+	agingPieWidget!.setDataSetValue(str(ars01a.age_per_days_3)+days$, 0)
+	agingPieWidget!.setDataSetValue(str(ars01a.age_per_days_4)+"+"+days$, 0)
 	agingPieWidget!.setFontScalingFactor(1.2)
 
 	agingPieWidgetControl! = new EmbeddedWidgetControl(agingDashboardPieWidget!,childWin!,widgetX,widgetY,widgetWidth,widgetHeight,$$)
@@ -1245,10 +1281,10 @@ rem --- Create either a pie chart or bar chart - the latter if any of the aging 
 
 	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_FUT","Fut",1), "",0)
 	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_CUR","Cur",1), "", 0)
-	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_30","30",1),"", 0)
-	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_60","60",1), "", 0)
-	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_90","90",1), "", 0)
-	agingBarWidget!.setDataSetValue(Translate!.getTranslation("AON_120","120",1), "", 0)
+	agingBarWidget!.setDataSetValue(str(ars01a.age_per_days_1),"", 0)
+	agingBarWidget!.setDataSetValue(str(ars01a.age_per_days_2), "", 0)
+	agingBarWidget!.setDataSetValue(str(ars01a.age_per_days_3), "", 0)
+	agingBarWidget!.setDataSetValue(str(ars01a.age_per_days_4)+"+", "", 0)
 
 	agingBarWidgetControl! = new EmbeddedWidgetControl(agingDashboardBarWidget!,childWin!,widgetX,widgetY,widgetWidth,widgetHeight,$$)
 	agingBarWidgetControl!.setVisible(0)

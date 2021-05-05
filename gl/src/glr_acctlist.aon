@@ -42,6 +42,10 @@ rem --- Open/Lock files
 rem --- Dimension string templates
 
     dim glm01a$:templates$[2]
+    dim glm10a$:templates$[3]
+
+    acct_no_brk_length=dec(fattr(glm10a$,"acct_no_brk")(10,2))
+    acct_bk_desc_length=dec(fattr(glm10a$,"acct_bk_desc")(10,2))
 
 rem --- Parameters
 
@@ -99,7 +103,7 @@ rem --- Document columns
 
     columns=3
     dim columns$[columns,3]
-    columns$[0,0]=Translate!.getTranslation("AON_ACCOUNT_BREAK"),columns$[0,1]="C",columns$[0,2]="30"
+    columns$[0,0]=Translate!.getTranslation("AON_ACCOUNT_BREAK"),columns$[0,1]="C",columns$[0,2]="50"
     columns$[1,0]=Translate!.getTranslation("AON_ACCOUNT"),columns$[1,1]="C",columns$[1,2]=str(m0)
     columns$[2,0]=Translate!.getTranslation("AON_DESCRIPTION"),columns$[2,1]="C",columns$[2,2]="30"
     columns$[3,0]=Translate!.getTranslation("AON_TYPE"),columns$[3,1]="C",columns$[3,2]="15"
@@ -116,48 +120,49 @@ rem --- Open printer, start progress meter and position files
 rem --- Top Of Loop
 
     while more
-          k$=key(glm01_dev,end=*break)
-          if pos(firm_id$=k$)<>1 break
-          read record (glm01_dev)glm01a$
-          if endacct$<>"" if glm01a.gl_account$>endacct$ break
-          gosub wildcard
-          if status continue
+        k$=key(glm01_dev,end=*break)
+        if pos(firm_id$=k$)<>1 break
+        read record (glm01_dev)glm01a$
+        if endacct$<>"" if glm01a.gl_account$>endacct$ break
+        gosub wildcard
+        if status continue
 		  
-          rem "GL INACTIVE FEATURE"
-	  if inactive$="Y" and glm01a.acct_inactive$="Y" then Continue
-		  
-          total_recs=total_recs+1
-          if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
-          number=number+1
+        rem "GL INACTIVE FEATURE
+        if inactive$="Y" and glm01a.acct_inactive$="Y" then continue
 
-          breaks: rem --- Breaks
+        total_recs=total_recs+1
+        if mod(total_recs,milestone)=0 then call stbl("+DIR_PGM")+"adc_progress.aon","S","","","","",0,0,milestone,meter_num,status
+        number=number+1
 
-          if break$="" goto print_rec
-          if break$<>"" if glm01a.gl_account$<break$(1,10) goto print_rec
-          h3$=desc$(1,20)    
-          h4$=h3$
+        breaks: rem --- Breaks
 
-          next_break: rem --- Position to next chart of accounts break
+        if break$="" goto print_rec
+        if break$<>"" then if glm01a.gl_account$<break$(1,acct_no_brk_length) goto print_rec
+        h3$=desc$(1,acct_bk_desc_length)    
 
-          if len(break$)>=10
-             break$=break$(11)
-             desc$=desc$(21)
-          endif
-          if len(break$)<10 break$=""
-          if break$<>"" if cvs(break$(1,10),2)="" goto next_break
-          goto breaks
+        next_break: rem --- Position to next chart of accounts break
 
-          print_rec: rem --- Print record
+        if len(break$)>=acct_no_brk_length
+            break$=break$(acct_no_brk_length+1)
+            desc$=desc$(acct_bk_desc_length+1)
+        endif
+        if len(break$)<acct_no_brk_length then break$=""
+        if break$<>"" then if cvs(break$(1,acct_no_brk_length),2)="" goto next_break
+        goto breaks
 
-          if h3$<>"" 
-            gosub subheading
-          else
+        print_rec: rem --- Print record
+
+        if h3$<>"" 
+            xwk=fnblank(4)
+            OutVect!.addItem(h3$)    
+            xwk=fnblank(3)
+            h3$=""
+        else
             OutVect!.addItem("")
-          endif
-
-          OutVect!.addItem(fnmask$(glm01a.gl_account$,m0$))
-          OutVect!.addItem(glm01a.gl_acct_desc$)
-          OutVect!.addItem(alice$(pos(glm01a.gl_acct_type$=alice$,9),9))
+            OutVect!.addItem(fnmask$(glm01a.gl_account$,m0$))
+            OutVect!.addItem(glm01a.gl_acct_desc$)
+            OutVect!.addItem(alice$(pos(glm01a.gl_acct_type$=alice$,9),9))
+        endif
 
 rem --- Loop back for next record
 
@@ -177,13 +182,6 @@ rem --- All done
     OutVect!.addItem(Translate!.getTranslation("AON_ACCOUNTS_LISTED"))
     OutVect!.addItem("")
     goto std_exit
-
-subheading: rem --- Subheading
-
-    xwk=fnblank(4)
-    OutVect!.addItem(h3$)    
-    h3$=""
-    return
 
 wildcard: rem --- Test account number against specified wildcard mask
 

@@ -155,7 +155,6 @@ create_req: rem --- Create Requisitions
         stocklevel$=poe_orddet.stock_level$
         if previtem$<>itemnum$ gosub removepoe36
         if stocklevel$<>"I"
-            dim unitmeas$(2)
             convfact=0
             read record (ivm_itemmast_dev,key=firm_id$+itemnum$,dom=missing_key) ivm_itemmast$
             unitmeas$=ivm_itemmast.purchase_um$
@@ -182,7 +181,6 @@ rem --- this routine also entered when stocking by 'W', but only to remove poe_o
         itemnum$=poe_ordtot.item_id$
         stocklevel$=poe_ordtot.stock_level$
         if stocklevel$<>"W"
-            dim unitmeas$(2)
             convfact=0
             read record (ivm_itemmast_dev,key=firm_id$+itemnum$,dom=missing_key1) ivm_itemmast$
             unitmeas$=ivm_itemmast.purchase_um$

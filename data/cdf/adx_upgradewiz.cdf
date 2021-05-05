@@ -87,10 +87,20 @@ rem See basis docs notice() function, noticetpl() function, notify event, grid c
 						if stbl$(1,1)="+" and stbl$(4)="DATA" then
 							rem --- This is an Addon +??DATA STBL
 							if cvs(stblGrid!.getCellText(e!.getRow(),2),3)=cvs(stblGrid!.getCellText(e!.getRow(),3),3) then
+
+								rem --- Have we shown a warning about same data paths before? 
+								if callpoint!.getDevObject("same_dir_ok")="Y" then 
+									break
+								endif 
+
 								rem --- Warn paths are the same and ask if that's correct
 								msg_id$="AD_SAME_DATA_PATH"
 								gosub disp_message
-								if msg_opt$<>"Y"then
+								if pos("Y"=msg_opt$)<>0 then 
+									if pos("PASSVALID"=msg_opt$)<>0 then 
+										callpoint!.setDevObject("same_dir_ok","Y")
+									endif
+								else 
 									rem --- Not correct, restore previous value
 									previousText$=stblRowVect!.getItem(index+3)
 									stblGrid!.setCellText(e!.getRow(),3,previousText$)
@@ -234,6 +244,10 @@ rem --- Validate new database name
 		callpoint!.setFocus("ADX_UPGRADEWIZ.DB_NAME")
 		break
 	endif
+
+rem --- Validate Repository
+	gitAuthID$=cvs(callpoint!.getColumnData("ADX_UPGRADEWIZ.GIT_AUTH_ID"),3)
+	gosub validate_git_auth_id
 
 rem --- Validate base directory for installation
 
@@ -567,6 +581,10 @@ rem --- Validate new database name
 	callpoint!.setUserInput(db_name$)
 	if abort then break
 
+[[ADX_UPGRADEWIZ.GIT_AUTH_ID.AVAL]]
+gitAuthID$=cvs(callpoint!.getUserInput(),3)
+gosub validate_git_auth_id
+
 [[ADX_UPGRADEWIZ.OLD_AON_LOC.AVAL]]
 rem --- Validate old aon install location
 
@@ -685,6 +703,23 @@ rem --- Validate sync backup directory
 	if abort then break
 
 [[ADX_UPGRADEWIZ.<CUSTOM>]]
+rem --- validate_git_auth_id
+rem --- verifies that the Git repository is a fork or clone of the official Addon repository
+rem --- gitAuthID$: the ID of the Git Authentication record in the ADX_GIT_AUTH table.
+validate_git_auth_id: 
+	use ::ado_GitRepoInterface.aon::GitRepoInterface
+	
+	git!=new GitRepoInterface(gitAuthID$)
+	isOfficial=git!.isDescendantOfOfficialRepo()
+
+	REM If the repo is not official, show a message and cancel validation 
+	if !isOfficial then
+		msg_id$="ADX_INVALID_GIT_REPO"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif 
+	return 
+
 validate_new_db_name: rem --- Validate new database name
 
 	abort=0
@@ -699,7 +734,11 @@ validate_new_db_name: rem --- Validate new database name
 
 		rem --- This db already exists, so don't allow it unless this is a re-start for Git conflicts
 		dictionary$=db!.getString(BBjAdminDatabase.DICTIONARY)
-		aonLoc$=dictionary$(1,pos("/barista/bbdict"=dictionary$)-1)
+		if db!.getType()=BBjAdminDatabase.DatabaseType.BARISTA
+			aonLoc$=dictionary$(1,pos("/barista/sys/data"=dictionary$)-1)
+		else
+			aonLoc$=dictionary$(1,pos("/barista/bbdict"=dictionary$)-1)
+		endif
 		restartFile$=aonLoc$+"/aon/logs/restartUpgradeWizard.txt"
 		restart=0
 		restart_dev=unt

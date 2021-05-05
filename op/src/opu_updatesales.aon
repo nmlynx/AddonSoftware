@@ -6,6 +6,7 @@ rem --- AddonSoftware Version 8.0.0 - 01Jan2007
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- All Rights Reserved
 
+    use ::opo_AvaTaxInterface.aon::AvaTaxInterface
 
     setesc std_error
     seterr std_error
@@ -181,10 +182,41 @@ rem --- Initializations
     iv_params$[3]=i3$
     iv_params$[4]=i4$
 
-rem --- Continue?
+rem --- Stop progress meter
 
     call pgmdir$+"adc_progress.aon","D","","","","",0,0,0,0,ignore_status
     if status = 999 then goto std_exit
+
+rem --- When using Sales Tax Service, get connection
+    callpoint!.setDevObject("salesTaxObject",null())
+    if cvs(ars01a.sls_tax_intrface$,2)<>"" then
+        rem --- Get connection to Sales Tax Service
+        salesTax!=new AvaTaxInterface(firm_id$)
+        sysGUI!=BBjAPI().getSysGui()
+        topWin!=sysGui!.getWindow(sysGui!.getContext())
+        if salesTax!.connectClient(topWin!,err=connectErr) then
+            callpoint!.setDevObject("salesTaxObject",salesTax!)
+
+            rem --- Warn if in test mode
+            if salesTax!.isTestMode() then
+                rem --- Skip warning if they were previously warned
+                global_ns!=BBjAPI().getGlobalNamespace()
+                nsValue!=global_ns!.getValue(info(3,2)+date(0)+"_SalesTaxSvcTestWarning",err=*next)
+                if nsValue!=null() then
+                    msg_id$="OP_SLS_TAX_SVC_TEST"
+                    gosub disp_message
+
+                    global_ns!.setValue(info(3,2)+date(0)+"_SalesTaxSvcTestWarning","Test mode warning")
+                endif
+            endif
+        else
+connectErr:
+            if salesTax!<>null() then salesTax!.close()
+            salesTax!=null()
+        endif
+    endif
+
+rem --- Continue?
     
     msg_id$ = "OP_UPDATE_SALESREG"
     gosub disp_message

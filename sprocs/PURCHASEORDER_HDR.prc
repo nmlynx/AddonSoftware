@@ -115,7 +115,7 @@ rem --- get Vendor address
     find record (apm_vendmast,key=firm_id$+vendor_id$,dom=*next)apm_vendmast$
     
     temp_addr$ = apm_vendmast.addr_line_1$ + apm_vendmast.addr_line_2$ + apm_vendmast.city$ + apm_vendmast.state_code$ + apm_vendmast.zip_code$ + apm_vendmast.cntry_id$
-    call "adc_address.aon",temp_addr$,24,3,9,vend_addrLine_len
+    call "adc_address.aon",temp_addr$,30,3,9,vend_addrLine_len
     vend_addr$(1)=apm_vendmast.vendor_name$+temp_addr$
 
     if cvs(apm_vendmast$,3)="" then
@@ -135,7 +135,7 @@ rem --- get Ship-To address
         temp_addr$= ivc_whsecode.addr_line_1$ + ivc_whsecode.addr_line_2$ + ivc_whsecode.addr_line_3$ + ivc_whsecode.city$ + ivc_whsecode.state_code$ + ivc_whsecode.zip_code$
     endif
     
-    call "adc_address.aon",temp_addr$,24,4,9,ship_addrLine_len
+    call "adc_address.aon",temp_addr$,30,4,9,ship_addrLine_len
     ship_addr$(1,ship_addrLine_len)=ship_to$
     ship_addr$(ship_addrLine_len+1)=temp_addr$
 

@@ -58,7 +58,7 @@ rem --- Columns
     columns$[1,0]="Item",                columns$[1,1]="C",columns$[1,2]="25"
     columns$[2,0]="Date Required",       columns$[2,1]="C",columns$[2,2]="12"
     columns$[3,0]="Location",            columns$[3,1]="C",columns$[3,2]="12"
-    columns$[4,0]="Conv^UM     Factor",  columns$[4,1]="C",columns$[4,2]="12"
+    columns$[4,0]="Conv^UM     Factor",  columns$[4,1]="C",columns$[4,2]="15"
     columns$[5,0]="           Qty Ordered",    columns$[5,1]="C",columns$[5,2]="12"
     columns$[6,0]="                 Qty Received",   columns$[6,1]="C",columns$[6,2]="15"
     columns$[7,0]="         Unit Cost",      columns$[7,1]="C",columns$[7,2]="10"
@@ -292,17 +292,17 @@ rem --- Print Line Types 'M', 'O' & 'V'
 
             if dropship$="Y" 
                 dim custinfo$(321),dropinfo$(173),custaddr$(120),dropaddr$(120)
-                custname$="Not On File"
-                dropname$="Not On File"
+                dropname$=""
+                dropaddr$=""
                 find record (arm01a_dev,key=pot04a.firm_id$+pot04a.customer_id$,dom=brnch3) arm01a$
-                custname$=arm01a.customer_name$
-                custaddr$=arm01a.addr_line_1$+arm01a.addr_line_2$+arm01a.addr_line_3$+arm01a.city$+arm01a.state_code$+arm01a.zip_code$
-                call pgmdir$+"adc_address.aon",custaddr$,24,4,9,30
+                dropname$=arm01a.customer_name$
+                dropaddr$=arm01a.addr_line_1$+arm01a.addr_line_2$+arm01a.addr_line_3$+arm01a.city$+arm01a.state_code$+arm01a.zip_code$
+                call pgmdir$+"adc_address.aon",dropaddr$,30,4,9,30
             brnch3: 
                 find record (arm03a_dev,key=pot04a.firm_id$+pot04a.customer_id$+pot14a.shipto_no$,dom=brnch4) arm03a$
                 dropname$=arm03a.name$
                 dropaddr$=arm03a.addr_line_1$+arm03a.addr_line_2$+arm03a.addr_line_3$+arm03a.city$+arm03a.state_code$+arm03a.zip_code$
-                call pgmdir$+"adc_address.aon",dropaddr$,24,4,9,30
+                call pgmdir$+"adc_address.aon",dropaddr$,30,4,9,30
             brnch4: 
                 if l+6>l9 gosub report_heading
                 rem --- Use pot14a.so_int_seq_ref$ to get opt_invdet record and corresponding opt_invdet.line_no$
@@ -320,40 +320,37 @@ rem --- Print Line Types 'M', 'O' & 'V'
                 OutVect!.addItem(fnmask$(arm01a.customer_id$(1,custlen),customask$))
                 OutVect!.addItem(" Order")
                 OutVect!.addItem(pot04a.order_no$+" "+opt11a.line_no$)
-                OutVect!.addItem("Ship To:")
+                OutVect!.addItem("Ship To#:")
                 OutVect!.addItem(pot14a.shipto_no$)
                 a=fnblank(2)
 
-                a=fnblank(2)
-                OutVect!.addItem("Name"+custname$)
-                OutVect!.addItem(dropname$)
+                a=fnblank(1)
+                OutVect!.addItem("To:"+dropname$)
                 a=fnblank(7)
-                OutVect!.addItem("Address"+custaddr$(1,30))
+                
+                a=fnblank(1)
                 OutVect!.addItem(dropaddr$(1,30))
-                a=fnblank(5)
+                a=fnblank(7)
                 l=l+3
 
-                if custaddr$(31,30)<>fill(30) or dropaddr$(31,30)<>fill(30) 
-                    a=fnblank(2)
-                    OutVect!.addItem("       "+custaddr$(31,30))
+                if dropaddr$(31,30)<>fill(30) 
+                    a=fnblank(1)
                     OutVect!.addItem(dropaddr$(31,30))
-                    a=fnblank(5)
+                    a=fnblank(7)
                     l=l+1
                 endif
 
-                if custaddr$(61,30)<>fill(30) or dropaddr$(61,30)<>fill(30) 
-                    a=fnblank(2)
-                    OutVect!.addItem("       "+custaddr$(61,30))
+                if dropaddr$(61,30)<>fill(30) 
+                    a=fnblank(1)
                     OutVect!.addItem(dropaddr$(61,30))
-                    a=fnblank(5)
+                    a=fnblank(7)
                     l=l+1
                 endif
 
-                if custaddr$(91,30)<>fill(30) or dropaddr$(91,30)<>fill(30) 
-                    a=fnblank(2)
-                    OutVect!.addItem("       "+custaddr$(91,30))
+                if dropaddr$(91,30)<>fill(30) 
+                    a=fnblank(1)
                     OutVect!.addItem(dropaddr$(91,30))
-                    a=fnblank(5)
+                    a=fnblank(7)
                     l=l+1
                 endif
 

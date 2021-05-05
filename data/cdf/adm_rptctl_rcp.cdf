@@ -11,12 +11,7 @@ rem --- Launch Import Recipients form
 :		table_chans$[all], 
 :		"",
 :		""
-[[ADM_RPTCTL_RCP.FAX_YN.AVAL]]
-rem --- if selecting fax checkbox, set 'to' defaults from customer or vendor
 
-	if callpoint!.getUserInput()="Y"
-		gosub set_defaults
-	endif
 [[ADM_RPTCTL_RCP.ARER]]
 rem --- if launching as Dtl Window Table from ADM_RPTCTL, need to set recipient type here since you won't be entering the DD_TABLE_ALIAS
 
@@ -24,12 +19,80 @@ rem --- if launching as Dtl Window Table from ADM_RPTCTL, need to set recipient 
 	if cvs(dd_table_alias$,3)<>""
 		gosub set_recip_tp
 	endif
+
+[[ADM_RPTCTL_RCP.BSHO]]
+rem --- table opens
+
+	num_files=4
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="ADM_EMAIL_ACCT",open_opts$[1]="OTA@"
+	open_tables$[2]="ADM_RPTCTL",open_opts$[2]="OTA@"
+	open_tables$[3]="ARM_EMAILFAX",open_opts$[3]="OTA@"
+	open_tables$[4]="APM_EMAILFAX",open_opts$[4]="OTA@"
+	gosub open_tables
+
+[[ADM_RPTCTL_RCP.CUSTOMER_ID.AINV]]
+rem --- if not on a Customer recipient type, pad w/ spaces
+
+	if callpoint!.getColumnData("ADM_RPTCTL_RCP.RECIPIENT_TP")<>"C"
+		cust_len=len(callpoint!.getColumnData("ADM_RPTCTL_RCP.CUSTOMER_ID"))
+		callpoint!.setUserInput(fill(cust_len," "))
+	endif
+
+[[ADM_RPTCTL_RCP.CUSTOMER_ID.AVAL]]
+rem --- if not on a Customer recipient type, pad w/ spaces
+
+	if callpoint!.getColumnData("ADM_RPTCTL_RCP.RECIPIENT_TP")<>"C"
+		cust_len=len(callpoint!.getColumnData("ADM_RPTCTL_RCP.CUSTOMER_ID"))
+		callpoint!.setUserInput(fill(cust_len," "))
+	else
+		if cvs(callpoint!.getUserInput(),2)<>"" then
+			rem --- Disable AOPT-IMPT after a customer_id has been entered
+			callpoint!.setOptionEnabled("IMPT",0)
+		endif
+	endif
+
+[[ADM_RPTCTL_RCP.DD_TABLE_ALIAS.AVAL]]
+rem --- set recipient type based on ADM_RPTCTL rec
+
+	dd_table_alias$=callpoint!.getUserInput()
+	gosub set_recip_tp
+
 [[ADM_RPTCTL_RCP.EMAIL_YN.AVAL]]
 rem --- if selecting email checkbox, get 'from' defaults from email account and 'to' defaults from customer or vendor
 
-	if callpoint!.getUserInput()="Y"
+	if callpoint!.getUserInput()="Y" and callpoint!.getColumnData("ADM_RPTCTL_RCP.EMAIL_YN")<>"Y"
 		gosub set_defaults
 	endif
+
+[[ADM_RPTCTL_RCP.FAX_YN.AVAL]]
+rem --- if selecting fax checkbox, set 'to' defaults from customer or vendor
+
+	if callpoint!.getUserInput()="Y" and callpoint!.getColumnData("ADM_RPTCTL_RCP.FAX_YN")<>"Y"
+		gosub set_defaults
+	endif
+
+[[ADM_RPTCTL_RCP.VENDOR_ID.AINV]]
+rem --- if not on a Vendor recipient type, pad w/ spaces
+
+	if callpoint!.getColumnData("ADM_RPTCTL_RCP.RECIPIENT_TP")<>"V"
+		vend_len=len(callpoint!.getColumnData("ADM_RPTCTL_RCP.VENDOR_ID"))
+		callpoint!.setUserInput(fill(vend_len," "))
+	endif
+
+[[ADM_RPTCTL_RCP.VENDOR_ID.AVAL]]
+rem --- if not on a Vendor recipient type, pad w/ spaces
+
+	if callpoint!.getColumnData("ADM_RPTCTL_RCP.RECIPIENT_TP")<>"V"
+		vend_len=len(callpoint!.getColumnData("ADM_RPTCTL_RCP.VENDOR_ID"))
+		callpoint!.setUserInput(fill(vend_len," "))
+	else
+		if cvs(callpoint!.getUserInput(),2)<>"" then
+			rem --- Disable AOPT-IMPT after a vendor_id has been entered
+			callpoint!.setOptionEnabled("IMPT",0)
+		endif
+	endif
+
 [[ADM_RPTCTL_RCP.<CUSTOM>]]
 rem ==================================================
 set_defaults:
@@ -153,56 +216,6 @@ rem --- incoming: dd_table_alias$
 		callpoint!.setStatus("EXIT")
 	endif
 	return
-[[ADM_RPTCTL_RCP.BSHO]]
-rem --- table opens
 
-	num_files=4
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="ADM_EMAIL_ACCT",open_opts$[1]="OTA@"
-	open_tables$[2]="ADM_RPTCTL",open_opts$[2]="OTA@"
-	open_tables$[3]="ARM_EMAILFAX",open_opts$[3]="OTA@"
-	open_tables$[4]="APM_EMAILFAX",open_opts$[4]="OTA@"
-	gosub open_tables
-[[ADM_RPTCTL_RCP.VENDOR_ID.AVAL]]
-rem --- if not on a Vendor recipient type, pad w/ spaces
 
-	if callpoint!.getColumnData("ADM_RPTCTL_RCP.RECIPIENT_TP")<>"V"
-		vend_len=len(callpoint!.getColumnData("ADM_RPTCTL_RCP.VENDOR_ID"))
-		callpoint!.setUserInput(fill(vend_len," "))
-	else
-		if cvs(callpoint!.getUserInput(),2)<>"" then
-			rem --- Disable AOPT-IMPT after a vendor_id has been entered
-			callpoint!.setOptionEnabled("IMPT",0)
-		endif
-	endif
-[[ADM_RPTCTL_RCP.VENDOR_ID.AINV]]
-rem --- if not on a Vendor recipient type, pad w/ spaces
 
-	if callpoint!.getColumnData("ADM_RPTCTL_RCP.RECIPIENT_TP")<>"V"
-		vend_len=len(callpoint!.getColumnData("ADM_RPTCTL_RCP.VENDOR_ID"))
-		callpoint!.setUserInput(fill(vend_len," "))
-	endif
-[[ADM_RPTCTL_RCP.DD_TABLE_ALIAS.AVAL]]
-rem --- set recipient type based on ADM_RPTCTL rec
-
-	dd_table_alias$=callpoint!.getUserInput()
-	gosub set_recip_tp
-[[ADM_RPTCTL_RCP.CUSTOMER_ID.AVAL]]
-rem --- if not on a Customer recipient type, pad w/ spaces
-
-	if callpoint!.getColumnData("ADM_RPTCTL_RCP.RECIPIENT_TP")<>"C"
-		cust_len=len(callpoint!.getColumnData("ADM_RPTCTL_RCP.CUSTOMER_ID"))
-		callpoint!.setUserInput(fill(cust_len," "))
-	else
-		if cvs(callpoint!.getUserInput(),2)<>"" then
-			rem --- Disable AOPT-IMPT after a customer_id has been entered
-			callpoint!.setOptionEnabled("IMPT",0)
-		endif
-	endif
-[[ADM_RPTCTL_RCP.CUSTOMER_ID.AINV]]
-rem --- if not on a Customer recipient type, pad w/ spaces
-
-	if callpoint!.getColumnData("ADM_RPTCTL_RCP.RECIPIENT_TP")<>"C"
-		cust_len=len(callpoint!.getColumnData("ADM_RPTCTL_RCP.CUSTOMER_ID"))
-		callpoint!.setUserInput(fill(cust_len," "))
-	endif

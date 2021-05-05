@@ -1,3 +1,51 @@
+[[SFE_WOMATISH.ADEL]]
+rem ---  Delete work order transactions
+
+	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
+
+	rem --- Delete work order issues transactions
+	remove(fnget_dev("SFE_WOTRANS"),key=firm_loc_wo$,dom=*next)
+
+	rem --- Delete work order commit transactions if not being retained
+	if callpoint!.getDevObject("del_issue_only")="N" then
+		remove(fnget_dev("SFE_WOCOMMIT"),key=firm_loc_wo$,dom=*next)
+	endif
+
+[[SFE_WOMATISH.ADIS]]
+rem --- Init <<DISPLAY>> fields
+	sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
+	dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")
+
+	findrecord(sfe_womastr_dev,key=firm_id$+"  "+callpoint!.getColumnData("SFE_WOMATISH.WO_NO"))sfe_womastr$
+
+	callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_01",sfe_womastr.description_01$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_02",sfe_womastr.description_02$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.WO_STATUS",sfe_womastr.wo_status$,1)
+
+rem --- Hold on to the Warehouse ID and Issued Date
+	callpoint!.setDevObject("warehouse_id",callpoint!.getColumnData("SFE_WOMATISH.WAREHOUSE_ID"))
+	callpoint!.setDevObject("issued_date",callpoint!.getColumnData("SFE_WOMATISH.ISSUED_DATE"))
+
+rem --- Existing materials issues?
+	wotrans=0
+	sfe_wotrans_dev=fnget_dev("SFE_WOTRANS")
+	sfe_wotrans_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMATISH.WO_NO")
+	find(sfe_wotrans_dev,key=sfe_wotrans_key$,dom=*next); wotrans=1
+	callpoint!.setDevObject("wotrans",wotrans)
+
+	if !wotrans then
+		rem --- Materials already commited?
+		wocommit=0
+		sfe_wocommit_dev=fnget_dev("SFE_WOCOMMIT")
+		sfe_wocommit_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMATISH.WO_NO")
+		find(sfe_wocommit_dev,key=sfe_wocommit_key$,dom=*next); wocommit=1
+
+		if wocommit then
+			msg_id$="WO_PICKLIST_NOT_DONE"
+			gosub disp_message
+		endif
+	endif
+
 [[SFE_WOMATISH.AREA]]
 rem --- Hold on to sfe_womatish key
 
@@ -15,20 +63,50 @@ rem --- Hold on to sfe_womatish key
 	callpoint!.setDevObject("sfe_womatish_key",sfe_womatish_key$)
 	firm_loc_wo$=firm_id$+wo_location$+wo_no$
 	callpoint!.setDevObject("firm_loc_wo",firm_loc_wo$)
-[[SFE_WOMATISH.WO_NO.AVAL]]
-rem --- Hold on to sfe_womatish key
 
-	wo_no$=callpoint!.getUserInput()
-	callpoint!.setDevObject("wo_no",wo_no$)
-	wo_location$=callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")
-	callpoint!.setDevObject("wo_location",wo_location$)
-	sfe_womatish_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.BATCH_NO")+wo_location$+wo_no$
-	callpoint!.setDevObject("sfe_womatish_key",sfe_womatish_key$)
-	firm_loc_wo$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+wo_no$
-	callpoint!.setDevObject("firm_loc_wo",firm_loc_wo$)
-[[SFE_WOMATISH.BDEQ]]
-rem --- Suppress Barista's default delete message
-	callpoint!.setStatus("QUIET")
+[[SFE_WOMATISH.AREC]]
+rem --- Init no existing materials issues
+	wotrans=0
+	callpoint!.setDevObject("wotrans",wotrans)
+	
+
+[[SFE_WOMATISH.ARNF]]
+if num(stbl("+BATCH_NO"),err=*next)<>0
+	rem --- Check if this record exists in a different batch
+	tableAlias$=callpoint!.getAlias()
+	primaryKey$=callpoint!.getColumnData("SFE_WOMATISH.FIRM_ID")+
+:		callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+
+:		callpoint!.getColumnData("SFE_WOMATISH.WO_NO")
+	call stbl("+DIR_PGM")+"adc_findbatch.aon",tableAlias$,primaryKey$,Translate!,table_chans$[all],existingBatchNo$,status
+	if status or existingBatchNo$<>"" then callpoint!.setStatus("NEWREC")
+endif
+
+rem --- Init new Materials Issues Entry record
+	sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
+	dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")
+
+	findrecord(sfe_womastr_dev,key=firm_id$+"  "+callpoint!.getColumnData("SFE_WOMATISH.WO_NO"))sfe_womastr$
+
+	callpoint!.setColumnData("SFE_WOMATISH.WO_TYPE",sfe_womastr.wo_type$,1)
+	callpoint!.setColumnData("SFE_WOMATISH.ITEM_ID",sfe_womastr.item_id$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_01",sfe_womastr.description_01$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_02",sfe_womastr.description_02$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.WO_STATUS",sfe_womastr.wo_status$,1)
+	callpoint!.setColumnData("SFE_WOMATISH.WO_CATEGORY",sfe_womastr.wo_category$,1)
+	callpoint!.setColumnData("SFE_WOMATISH.WAREHOUSE_ID",sfe_womastr.warehouse_id$,1)
+	callpoint!.setColumnData("SFE_WOMATISH.UNIT_MEASURE",sfe_womastr.unit_measure$,1)
+	callpoint!.setColumnData("SFE_WOMATISH.ISSUED_DATE","",1)
+
+	rem --- Default issued_date to today
+	dim sysinfo$:stbl("+SYSINFO_TPL")
+	sysinfo$=stbl("+SYSINFO")
+	callpoint!.setColumnData("SFE_WOMATISH.ISSUED_DATE",sysinfo.system_date$,1)
+	callpoint!.setStatus("MODIFIED")
+
+rem --- Hold on to the Warehouse ID and Issued Date
+	callpoint!.setDevObject("warehouse_id",sfe_womastr.warehouse_id$)
+	callpoint!.setDevObject("issued_date",sysinfo.system_date$)
+
 [[SFE_WOMATISH.BDEL]]
 rem --- Retain commitment on delete?
 
@@ -124,18 +202,11 @@ rem --- Delete inventory issues and commitments. Must do this before sfe_womatis
 			endif
 		endif
 	wend
-[[SFE_WOMATISH.ADEL]]
-rem ---  Delete work order transactions
 
-	firm_loc_wo$=callpoint!.getDevObject("firm_loc_wo")
+[[SFE_WOMATISH.BDEQ]]
+rem --- Suppress Barista's default delete message
+	callpoint!.setStatus("QUIET")
 
-	rem --- Delete work order issues transactions
-	remove(fnget_dev("SFE_WOTRANS"),key=firm_loc_wo$,dom=*next)
-
-	rem --- Delete work order commit transactions if not being retained
-	if callpoint!.getDevObject("del_issue_only")="N" then
-		remove(fnget_dev("SFE_WOCOMMIT"),key=firm_loc_wo$,dom=*next)
-	endif
 [[SFE_WOMATISH.BEND]]
 rem --- Remove software lock on batch when batching
 	batch$=stbl("+BATCH_NO",err=*next)
@@ -147,49 +218,103 @@ rem --- Remove software lock on batch when batching
 		lock_disp$=""
 		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
 	endif
+
+[[SFE_WOMATISH.BSHO]]
+rem --- Init Java classes
+
+	use java.util.HashMap
+	use java.util.Iterator
+
+rem --- Open Files
+	num_files=14
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="SFS_PARAMS",open_opts$[1]="OTA"
+	open_tables$[2]="IVS_PARAMS",open_opts$[2]="OTA"
+	open_tables$[3]="SFE_WOMASTR",open_opts$[3]="OTA"
+	open_tables$[4]="SFE_WOOPRTN",open_opts$[4]="OTA"
+	open_tables$[5]="SFE_OPENEDWO",open_opts$[5]="OTA"
+	open_tables$[6]="SFE_WOCOMMIT",open_opts$[6]="OTA"
+	open_tables$[7]="SFE_WOTRANS",open_opts$[7]="OTA"
+	open_tables$[8]="SFE_WOMATHDR",open_opts$[8]="OTA"
+	open_tables$[9]="SFE_WOMATDTL",open_opts$[9]="OTA"
+	open_tables$[10]="SFE_WOMATL",open_opts$[10]="OTA"
+	open_tables$[11]="SFC_OPRTNCOD",open_opts$[11]="OTA"
+	open_tables$[12]="SFC_WOTYPECD",open_opts$[12]="OTA"
+	open_tables$[13]="IVM_ITEMMAST",open_opts$[13]="OTA"
+	open_tables$[14]="IVM_ITEMWHSE",open_opts$[14]="OTA"
+
+	gosub open_tables
+
+	sfs_params_dev=num(open_chans$[1]),sfs_params_tpl$=open_tpls$[1]
+	ivs_params_dev=num(open_chans$[2]),ivs_params_tpl$=open_tpls$[2]
+	sfe_womastr_dev=num(open_chans$[3]),sfe_womastr_tpl$=open_tpls$[3]
+	callpoint!.setDevObject("opcode_dev",num(open_chans$[11]))
+	callpoint!.setDevObject("opcode_tpl",open_tpls$[11])
+
+rem --- Get SF parameters
+	dim sfs_params$:sfs_params_tpl$
+	read record (sfs_params_dev,key=firm_id$+"SF00",dom=std_missing_params) sfs_params$
+	bm$=sfs_params.bm_interface$
+	gl$=sfs_params.post_to_gl$
+
+	if bm$="Y"
+		call stbl("+DIR_PGM")+"adc_application.aon","BM",info$[all]
+		bm$=info$[20]
+	endif
+	callpoint!.setDevObject("bm",bm$)
+
+	if gl$="Y"
+		gl$="N"
+		status=0
+		source$=pgm(-2)
+		call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"SF",glw11$,gl$,status
+		if status<>0 goto std_exit
+	endif
+	callpoint!.setDevObject("gl",gl$)
+
+rem --- Get IV parameters
+	dim ivs_params$:ivs_params_tpl$
+	read record (ivs_params_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs_params$
+	lotser$=ivs_params.lotser_flag$
+	callpoint!.setDevObject("lotser",lotser$)
+	precision$=ivs_params.precision$
+	callpoint!.setDevObject("precision",precision$)
+	precision num(precision$)
+
+rem --- Additional file opens
+	num_files=4
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	if bm$="Y" then
+		open_tables$[1]="BMC_OPCODES",open_opts$[1]="OTA"
+	else
+		open_tables$[1]="SFC_OPRTNCOD",open_opts$[1]="OTA"
+	endif
+	if pos(lotser$="LS") then
+		open_tables$[2]="SFE_WOLSISSU",open_opts$[2]="OTA"
+		open_tables$[3]="IVM_LSMASTER",open_opts$[3]="OTA"
+		open_tables$[4]="IVM_LSACT",open_opts$[4]="OTA"
+	endif
+
+	gosub open_tables
+
+	if bm$="Y" then
+		callpoint!.setDevObject("opcode_dev",num(open_chans$[1]))
+		callpoint!.setDevObject("opcode_tpl",open_tpls$[1])
+	endif
+	if pos(lotser$="LS") then
+		sfe_wolsissu_dev=num(open_chans$[2]),sfe_wolsissu_tpl$=open_tpls$[2]
+		ivm_lsmaster_dev=num(open_chans$[3]),ivm_lsmaster_tpl$=open_tpls$[3]
+		ivm_lsact_dev=num(open_chans$[4]),ivm_lsact_tpl$=open_tpls$[4]
+	endif
+
+rem --- Other inits for sfe_womatisd
+	callpoint!.setDevObject("ls_lookup_row",-1)
+
 [[SFE_WOMATISH.BTBL]]
 rem --- Get Batch information
 	call stbl("+DIR_PGM")+"adc_getbatch.aon",callpoint!.getAlias(),"",table_chans$[all]
 	callpoint!.setTableColumnAttribute("SFE_WOMATISH.BATCH_NO","PVAL",$22$+stbl("+BATCH_NO")+$22$)
-[[SFE_WOMATISH.AREC]]
-rem --- Init no existing materials issues
-	wotrans=0
-	callpoint!.setDevObject("wotrans",wotrans)
-	
-[[SFE_WOMATISH.ADIS]]
-rem --- Init <<DISPLAY>> fields
-	sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
-	dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")
 
-	findrecord(sfe_womastr_dev,key=firm_id$+"  "+callpoint!.getColumnData("SFE_WOMATISH.WO_NO"))sfe_womastr$
-
-	callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_01",sfe_womastr.description_01$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_02",sfe_womastr.description_02$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.WO_STATUS",sfe_womastr.wo_status$,1)
-
-rem --- Hold on to the Warehouse ID and Issued Date
-	callpoint!.setDevObject("warehouse_id",callpoint!.getColumnData("SFE_WOMATISH.WAREHOUSE_ID"))
-	callpoint!.setDevObject("issued_date",callpoint!.getColumnData("SFE_WOMATISH.ISSUED_DATE"))
-
-rem --- Existing materials issues?
-	wotrans=0
-	sfe_wotrans_dev=fnget_dev("SFE_WOTRANS")
-	sfe_wotrans_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMATISH.WO_NO")
-	find(sfe_wotrans_dev,key=sfe_wotrans_key$,dom=*next); wotrans=1
-	callpoint!.setDevObject("wotrans",wotrans)
-
-	if !wotrans then
-		rem --- Materials already commited?
-		wocommit=0
-		sfe_wocommit_dev=fnget_dev("SFE_WOCOMMIT")
-		sfe_wocommit_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMATISH.WO_NO")
-		find(sfe_wocommit_dev,key=sfe_wocommit_key$,dom=*next); wocommit=1
-
-		if wocommit then
-			msg_id$="WO_PICKLIST_NOT_DONE"
-			gosub disp_message
-		endif
-	endif
 [[SFE_WOMATISH.ISSUED_DATE.AVAL]]
 rem --- When GL installed, verify date is in an open period.
 	issued_date$=callpoint!.getUserInput()
@@ -304,6 +429,7 @@ rem --- New materials issues entry or no existing materials issues
 				sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
 				dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")
 				sfe_womatl_dev=fnget_dev("SFE_WOMATL")
+				dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
 
 				findrecord(sfe_womastr_dev,key=firm_id$+"  "+callpoint!.getColumnData("SFE_WOMATISH.WO_NO"))sfe_womastr$
 
@@ -314,9 +440,16 @@ rem --- New materials issues entry or no existing materials issues
 					if pos(sfe_womatish_key$=sfe_womatisd_key$)<>1 then break
 					extractrecord(sfe_womatisd_dev)sfe_womatisd$
 
-					dim sfe_womatl$:fnget_tpl$("SFE_WOMATL")
-					findrecord(sfe_womatl_dev,key=firm_loc_wo$+sfe_womatisd.womatdtl_seq_ref$,knum="AO_MAT_SEQ",dom=*next)sfe_womatl$
-					if sfe_womatl.oper_seq_ref$="" then read (sfe_womatisd_dev); continue
+					rem --- Get corresponding  SFE_WOMATDTL Material Commit Detail record
+					redim sfe_womatdtl$
+					sfe_womatdtl_key$=firm_id$+sfe_womatisd.wo_location$+sfe_womatisd.wo_no$+sfe_womatisd.internal_seq_no$
+					findrecord(sfe_womatdtl_dev,key=sfe_womatdtl_key$,dom=*continue)sfe_womatdtl$
+
+					rem --- Get corresponding  SFE_WOMATL WO Materials Requirements record
+					redim sfe_womatl$
+					sfe_womatl_key$=firm_id$+sfe_womatdtl.wo_location$+sfe_womatdtl.wo_no$+sfe_womatdtl.womatl_seq_ref$
+					findrecord(sfe_womatl_dev,key=sfe_womatl_key$,knum="AO_MAT_SEQ",dom=*continue)sfe_womatl$
+					if cvs(sfe_womatl.oper_seq_ref$,2)="" then read (sfe_womatisd_dev); continue
 
 					rem --- Was this operation selected?
 					if !all_selected then
@@ -360,10 +493,24 @@ rem --- New materials issues entry or no existing materials issues
 		sfe_womatish_key$=callpoint!.getDevObject("sfe_womatish_key")
 		callpoint!.setStatus("RECORD:["+sfe_womatish_key$+"]")
 	endif
+
 [[SFE_WOMATISH.ISSUED_DATE.BINP]]
 rem -- Verify WO status
 	gosub verify_wo_status
 	if bad_wo then break
+
+[[SFE_WOMATISH.WO_NO.AVAL]]
+rem --- Hold on to sfe_womatish key
+
+	wo_no$=callpoint!.getUserInput()
+	callpoint!.setDevObject("wo_no",wo_no$)
+	wo_location$=callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")
+	callpoint!.setDevObject("wo_location",wo_location$)
+	sfe_womatish_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.BATCH_NO")+wo_location$+wo_no$
+	callpoint!.setDevObject("sfe_womatish_key",sfe_womatish_key$)
+	firm_loc_wo$=firm_id$+callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+wo_no$
+	callpoint!.setDevObject("firm_loc_wo",firm_loc_wo$)
+
 [[SFE_WOMATISH.<CUSTOM>]]
 #include [+ADDON_LIB]std_missing_params.aon
 
@@ -386,129 +533,6 @@ verify_wo_status: rem -- Verify WO status
 	endif
 
 	return
-[[SFE_WOMATISH.BSHO]]
-rem --- Init Java classes
 
-	use java.util.HashMap
-	use java.util.Iterator
 
-rem --- Open Files
-	num_files=14
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="SFS_PARAMS",open_opts$[1]="OTA"
-	open_tables$[2]="IVS_PARAMS",open_opts$[2]="OTA"
-	open_tables$[3]="SFE_WOMASTR",open_opts$[3]="OTA"
-	open_tables$[4]="SFE_WOOPRTN",open_opts$[4]="OTA"
-	open_tables$[5]="SFE_OPENEDWO",open_opts$[5]="OTA"
-	open_tables$[6]="SFE_WOCOMMIT",open_opts$[6]="OTA"
-	open_tables$[7]="SFE_WOTRANS",open_opts$[7]="OTA"
-	open_tables$[8]="SFE_WOMATHDR",open_opts$[8]="OTA"
-	open_tables$[9]="SFE_WOMATDTL",open_opts$[9]="OTA"
-	open_tables$[10]="SFE_WOMATL",open_opts$[10]="OTA"
-	open_tables$[11]="SFC_OPRTNCOD",open_opts$[11]="OTA"
-	open_tables$[12]="SFC_WOTYPECD",open_opts$[12]="OTA"
-	open_tables$[13]="IVM_ITEMMAST",open_opts$[13]="OTA"
-	open_tables$[14]="IVM_ITEMWHSE",open_opts$[14]="OTA"
 
-	gosub open_tables
-
-	sfs_params_dev=num(open_chans$[1]),sfs_params_tpl$=open_tpls$[1]
-	ivs_params_dev=num(open_chans$[2]),ivs_params_tpl$=open_tpls$[2]
-	sfe_womastr_dev=num(open_chans$[3]),sfe_womastr_tpl$=open_tpls$[3]
-	callpoint!.setDevObject("opcode_dev",num(open_chans$[11]))
-	callpoint!.setDevObject("opcode_tpl",open_tpls$[11])
-
-rem --- Get SF parameters
-	dim sfs_params$:sfs_params_tpl$
-	read record (sfs_params_dev,key=firm_id$+"SF00",dom=std_missing_params) sfs_params$
-	bm$=sfs_params.bm_interface$
-	gl$=sfs_params.post_to_gl$
-
-	if bm$="Y"
-		call stbl("+DIR_PGM")+"adc_application.aon","BM",info$[all]
-		bm$=info$[20]
-	endif
-	callpoint!.setDevObject("bm",bm$)
-
-	if gl$="Y"
-		gl$="N"
-		status=0
-		source$=pgm(-2)
-		call stbl("+DIR_PGM")+"glc_ctlcreate.aon",err=*next,source$,"SF",glw11$,gl$,status
-		if status<>0 goto std_exit
-	endif
-	callpoint!.setDevObject("gl",gl$)
-
-rem --- Get IV parameters
-	dim ivs_params$:ivs_params_tpl$
-	read record (ivs_params_dev,key=firm_id$+"IV00",dom=std_missing_params) ivs_params$
-	lotser$=ivs_params.lotser_flag$
-	callpoint!.setDevObject("lotser",lotser$)
-	precision$=ivs_params.precision$
-	callpoint!.setDevObject("precision",precision$)
-	precision num(precision$)
-
-rem --- Additional file opens
-	num_files=4
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	if bm$="Y" then
-		open_tables$[1]="BMC_OPCODES",open_opts$[1]="OTA"
-	else
-		open_tables$[1]="SFC_OPRTNCOD",open_opts$[1]="OTA"
-	endif
-	if pos(lotser$="LS") then
-		open_tables$[2]="SFE_WOLSISSU",open_opts$[2]="OTA"
-		open_tables$[3]="IVM_LSMASTER",open_opts$[3]="OTA"
-		open_tables$[4]="IVM_LSACT",open_opts$[4]="OTA"
-	endif
-
-	gosub open_tables
-
-	if bm$="Y" then
-		callpoint!.setDevObject("opcode_dev",num(open_chans$[1]))
-		callpoint!.setDevObject("opcode_tpl",open_tpls$[1])
-	endif
-	if pos(lotser$="LS") then
-		sfe_wolsissu_dev=num(open_chans$[2]),sfe_wolsissu_tpl$=open_tpls$[2]
-		ivm_lsmaster_dev=num(open_chans$[3]),ivm_lsmaster_tpl$=open_tpls$[3]
-		ivm_lsact_dev=num(open_chans$[4]),ivm_lsact_tpl$=open_tpls$[4]
-	endif
-
-rem --- Other inits for sfe_womatisd
-	callpoint!.setDevObject("ls_lookup_row",-1)
-[[SFE_WOMATISH.ARNF]]
-if num(stbl("+BATCH_NO"),err=*next)<>0
-	rem --- Check if this record exists in a different batch
-	tableAlias$=callpoint!.getAlias()
-	primaryKey$=callpoint!.getColumnData("SFE_WOMATISH.FIRM_ID")+
-:		callpoint!.getColumnData("SFE_WOMATISH.WO_LOCATION")+
-:		callpoint!.getColumnData("SFE_WOMATISH.WO_NO")
-	call stbl("+DIR_PGM")+"adc_findbatch.aon",tableAlias$,primaryKey$,Translate!,table_chans$[all],existingBatchNo$,status
-	if status or existingBatchNo$<>"" then callpoint!.setStatus("NEWREC")
-endif
-
-rem --- Init new Materials Issues Entry record
-	sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
-	dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")
-
-	findrecord(sfe_womastr_dev,key=firm_id$+"  "+callpoint!.getColumnData("SFE_WOMATISH.WO_NO"))sfe_womastr$
-
-	callpoint!.setColumnData("SFE_WOMATISH.WO_TYPE",sfe_womastr.wo_type$,1)
-	callpoint!.setColumnData("SFE_WOMATISH.ITEM_ID",sfe_womastr.item_id$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_01",sfe_womastr.description_01$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_02",sfe_womastr.description_02$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.WO_STATUS",sfe_womastr.wo_status$,1)
-	callpoint!.setColumnData("SFE_WOMATISH.WO_CATEGORY",sfe_womastr.wo_category$,1)
-	callpoint!.setColumnData("SFE_WOMATISH.WAREHOUSE_ID",sfe_womastr.warehouse_id$,1)
-	callpoint!.setColumnData("SFE_WOMATISH.UNIT_MEASURE",sfe_womastr.unit_measure$,1)
-	callpoint!.setColumnData("SFE_WOMATISH.ISSUED_DATE","",1)
-
-	rem --- Default issued_date to today
-	dim sysinfo$:stbl("+SYSINFO_TPL")
-	sysinfo$=stbl("+SYSINFO")
-	callpoint!.setColumnData("SFE_WOMATISH.ISSUED_DATE",sysinfo.system_date$,1)
-	callpoint!.setStatus("MODIFIED")
-
-rem --- Hold on to the Warehouse ID and Issued Date
-	callpoint!.setDevObject("warehouse_id",sfe_womastr.warehouse_id$)
-	callpoint!.setDevObject("issued_date",sysinfo.system_date$)

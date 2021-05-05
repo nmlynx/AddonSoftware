@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.11.0.final using JasperReports Library version 6.11.0-0c4056ccaa4d25a5a8c45672d2f764ea3498bebb  -->
+<!-- Created with Jaspersoft Studio version 6.13.0.final using JasperReports Library version 6.13.0-46ada4d1be8f3c5985fd0b6146f3ed44caed6f05  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="CustStatement" pageWidth="595" pageHeight="800" columnWidth="535" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon" uuid="af3384f6-df08-4dae-956a-8f60de737f18">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -23,6 +23,10 @@
 	<parameter name="CUST_MASK" class="java.lang.String"/>
 	<parameter name="CUST_SIZE" class="java.lang.String"/>
 	<parameter name="PERIOD_DATES" class="java.lang.String"/>
+	<parameter name="30_DAY" class="java.lang.String"/>
+	<parameter name="60_DAY" class="java.lang.String"/>
+	<parameter name="90_DAY" class="java.lang.String"/>
+	<parameter name="120_DAY" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[CALL CUST_STATEMENTS($P{FIRM_ID},$P{STATEMENT_DATE},$P{CUSTOMER_ID},$P{AGE_BASIS},$P{AMT_MASK},$P{CUST_MASK},$P{CUST_SIZE},$P{PERIOD_DATES},$P{BARISTA_WD})]]>
 	</queryString>
@@ -234,28 +238,28 @@
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font fontName="SansSerif" size="12" isBold="true"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$R{AON_30-DAYS}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$P{30_DAY}]]></textFieldExpression>
 				</textField>
 				<textField>
 					<reportElement mode="Transparent" x="185" y="48" width="85" height="18" forecolor="#FFFFFF" backcolor="#999999" uuid="587dc2ce-1f72-4b14-bdf8-79f50a303ece"/>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font fontName="SansSerif" size="12" isBold="true"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$R{AON_60-DAYS}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$P{60_DAY}]]></textFieldExpression>
 				</textField>
 				<textField>
 					<reportElement mode="Transparent" x="275" y="48" width="85" height="18" forecolor="#FFFFFF" backcolor="#999999" uuid="2b89ca13-8273-479a-a0ab-6dc3c87e4a54"/>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font fontName="SansSerif" size="12" isBold="true"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$R{AON_90-DAYS}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$P{90_DAY}]]></textFieldExpression>
 				</textField>
 				<textField>
 					<reportElement mode="Transparent" x="365" y="48" width="85" height="18" forecolor="#FFFFFF" backcolor="#999999" uuid="3dca4b66-d8e6-4011-b0eb-9aaf8a6bc103"/>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font fontName="SansSerif" size="12" isBold="true"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$R{AON_120-DAYS_+}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$P{120_DAY}]]></textFieldExpression>
 				</textField>
 				<textField>
 					<reportElement mode="Transparent" x="455" y="48" width="95" height="18" forecolor="#FFFFFF" backcolor="#999999" uuid="f89c44f4-874a-4a70-a358-3abd327e0dbb"/>
@@ -316,33 +320,33 @@
 			<textField>
 				<reportElement x="320" y="44" width="214" height="20" uuid="de92fdf4-3ee4-41b1-a6ff-763ea840ee3d"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle" markup="none">
-					<font fontName="Serif" size="15" isBold="true"/>
+					<font fontName="Serif" size="11" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{AR_ADDRESS1}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="320" y="64" width="214" height="16" uuid="5f722716-063e-4d3a-aea1-ed055492c989"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle" markup="none">
-					<font fontName="Serif" size="12" isBold="true"/>
+					<font fontName="Serif" size="11" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{AR_ADDRESS2}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="320" y="80" width="214" height="16" uuid="0c452908-7e52-4bbc-80c7-c07a03af1dc7"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle" markup="none">
-					<font fontName="Serif" size="12" isBold="true"/>
+					<font fontName="Serif" size="11" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{AR_ADDRESS3}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="320" y="96" width="214" height="16" uuid="8fa74b6f-9694-4f4d-9e7f-17df36f33cab"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle" markup="none">
-					<font fontName="Serif" size="12" isBold="true"/>
+					<font fontName="Serif" size="11" isBold="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{AR_ADDRESS4}]]></textFieldExpression>
 			</textField>
 			<image scaleImage="RetainShape" hAlign="Center">
-				<reportElement x="315" y="99" width="225" height="69" uuid="6350f371-095d-4356-990f-0c631454a5d9">
+				<reportElement x="467" y="118" width="70" height="69" uuid="6350f371-095d-4356-990f-0c631454a5d9">
 					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
 					<printWhenExpression><![CDATA[!$P{LOGO_FILE}.isEmpty()]]></printWhenExpression>
 				</reportElement>
@@ -599,8 +603,9 @@
 				<textFieldExpression><![CDATA[$P{MESSAGE}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="70" y="45" width="158" height="15" uuid="7f6bb0ff-e57f-439b-9f8b-b6553c5d0aa4">
+				<reportElement x="70" y="45" width="200" height="15" uuid="7f6bb0ff-e57f-439b-9f8b-b6553c5d0aa4">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<textElement>
 					<font fontName="Serif" size="9"/>
@@ -608,8 +613,9 @@
 				<textFieldExpression><![CDATA[$F{REMIT1}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="70" y="60" width="158" height="15" uuid="ef9f717a-7203-4d76-acd4-50370efecec4">
+				<reportElement x="70" y="60" width="200" height="15" uuid="ef9f717a-7203-4d76-acd4-50370efecec4">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<textElement>
 					<font fontName="Serif" size="9"/>
@@ -617,8 +623,9 @@
 				<textFieldExpression><![CDATA[$F{REMIT2}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="70" y="75" width="158" height="15" uuid="0db6d3f9-56bd-457f-a9c8-cd8abfe7bc58">
+				<reportElement x="70" y="75" width="200" height="15" uuid="0db6d3f9-56bd-457f-a9c8-cd8abfe7bc58">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<textElement>
 					<font fontName="Serif" size="9"/>
@@ -626,8 +633,9 @@
 				<textFieldExpression><![CDATA[$F{REMIT3}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="70" y="90" width="158" height="15" uuid="5077eeab-878d-4237-8def-2ea799363531">
+				<reportElement x="70" y="90" width="200" height="15" uuid="5077eeab-878d-4237-8def-2ea799363531">
 					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<textElement>
 					<font fontName="Serif" size="9"/>

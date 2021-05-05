@@ -1,3 +1,39 @@
+[[SFE_WOMATHDR.ADIS]]
+rem --- Init <<DISPLAY>> fields
+	sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
+	dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")
+
+	findrecord(sfe_womastr_dev,key=firm_id$+"  "+callpoint!.getColumnData("SFE_WOMATHDR.WO_NO"))sfe_womastr$
+
+	callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_01",sfe_womastr.description_01$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_02",sfe_womastr.description_02$,1)
+	callpoint!.setColumnData("<<DISPLAY>>.WO_STATUS",sfe_womastr.wo_status$,1)
+
+rem --- Existing materials issues?
+	wotrans=0
+	sfe_wotrans_dev=fnget_dev("SFE_WOTRANS")
+	sfe_wotrans_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATHDR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMATHDR.WO_NO")
+	find(sfe_wotrans_dev,key=sfe_wotrans_key$,dom=*next); wotrans=1
+
+	if wotrans then
+		rem --- Warn Materials Issues Entry is in process for this WO
+		msg_id$="WO_ISSUES_IN_PROCESS"
+		gosub disp_message
+		callpoint!.setStatus("NEWREC")
+		break
+	endif
+
+rem ... focus needs to move to the last key field re Barista bug 6299
+
+[[SFE_WOMATHDR.ARAR]]
+rem -- Build starting rowQtyMap!
+	gosub build_rowQtyMap
+	callpoint!.setDevObject("start_rowQtyMap",rowQtyMap!)
+
+[[SFE_WOMATHDR.AREC]]
+rem -- Provide initial empty starting rowQtyMap!
+	callpoint!.setDevObject("start_rowQtyMap", new java.util.HashMap())
+
 [[SFE_WOMATHDR.ARNF]]
 rem --- Write work order commit transaction
 	sfe_wocommit_dev=fnget_dev("SFE_WOCOMMIT")
@@ -42,6 +78,7 @@ rem --- so can display new detail in grid.
 		sfe_womatdtl.warehouse_id$=callpoint!.getColumnData("SFE_WOMATHDR.WAREHOUSE_ID")
 		sfe_womatdtl.item_id$=sfe_womatl.item_id$
 		sfe_womatdtl.wo_mat_ref$=sfe_womatl.wo_ref_num$
+		sfe_womatdtl.womatl_seq_ref$=sfe_womatl.internal_seq_no$
 		sfe_womatdtl.qty_ordered=sfe_womatl.total_units
 		sfe_womatdtl.tot_qty_iss=0
 		sfe_womatdtl.unit_cost=sfe_womatl.iv_unit_cost
@@ -62,36 +99,7 @@ rem --- Display grid with new detail.
 rem -- Build starting rowQtyMap!
 	gosub build_rowQtyMap
 	callpoint!.setDevObject("start_rowQtyMap",rowQtyMap!)
-[[SFE_WOMATHDR.WO_NO.AVAL]]
-rem --- If new record, initialize SFE_WOMATHDR and SFE_WOMATDET
-	if callpoint!.getRecordMode()="A"
-		rem --- When new record, initialize new SFE_WOMATHDR Materials Commitment Header record from SFE_WOMASTR Work Order Entry
-		sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
-		dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")
 
-		findrecord(sfe_womastr_dev,key=firm_id$+"  "+callpoint!.getUserInput())sfe_womastr$
-
-		callpoint!.setColumnData("SFE_WOMATHDR.WO_TYPE",sfe_womastr.wo_type$,1)
-		callpoint!.setColumnData("SFE_WOMATHDR.WO_CATEGORY",sfe_womastr.wo_category$,1)
-		callpoint!.setColumnData("SFE_WOMATHDR.UNIT_MEASURE",sfe_womastr.unit_measure$,1)
-		callpoint!.setColumnData("SFE_WOMATHDR.WAREHOUSE_ID",sfe_womastr.warehouse_id$,1)
-		callpoint!.setColumnData("SFE_WOMATHDR.ITEM_ID",sfe_womastr.item_id$,1)
-		callpoint!.setColumnData("SFE_WOMATHDR.ISSUED_DATE","",1)
-		callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_01",sfe_womastr.description_01$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_02",sfe_womastr.description_02$,1)
-		callpoint!.setColumnData("<<DISPLAY>>.WO_STATUS",sfe_womastr.wo_status$,1)
-
-		rem -- Verify WO status
-		gosub verify_wo_status
-		if bad_wo then break
-	endif
-[[SFE_WOMATHDR.ARAR]]
-rem -- Build starting rowQtyMap!
-	gosub build_rowQtyMap
-	callpoint!.setDevObject("start_rowQtyMap",rowQtyMap!)
-[[SFE_WOMATHDR.AREC]]
-rem -- Provide initial empty starting rowQtyMap!
-	callpoint!.setDevObject("start_rowQtyMap", new java.util.HashMap())
 [[SFE_WOMATHDR.BDEL]]
 rem --- Initialize inventory item update
 	call stbl("+DIR_PGM")+"ivc_itemupdt.aon::init",chan[all],ivs01a$,items$[all],refs$[all],refs[all],table_chans$[all],status
@@ -158,75 +166,7 @@ rem --- Delete inventory issues.
 			endif
 		wend
 	endif
-[[SFE_WOMATHDR.ADIS]]
-rem --- Init <<DISPLAY>> fields
-	sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
-	dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")
 
-	findrecord(sfe_womastr_dev,key=firm_id$+"  "+callpoint!.getColumnData("SFE_WOMATHDR.WO_NO"))sfe_womastr$
-
-	callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_01",sfe_womastr.description_01$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_02",sfe_womastr.description_02$,1)
-	callpoint!.setColumnData("<<DISPLAY>>.WO_STATUS",sfe_womastr.wo_status$,1)
-
-rem --- Existing materials issues?
-	wotrans=0
-	sfe_wotrans_dev=fnget_dev("SFE_WOTRANS")
-	sfe_wotrans_key$=firm_id$+callpoint!.getColumnData("SFE_WOMATHDR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMATHDR.WO_NO")
-	find(sfe_wotrans_dev,key=sfe_wotrans_key$,dom=*next); wotrans=1
-
-	if wotrans then
-		rem --- Warn Materials Issues Entry is in process for this WO
-		msg_id$="WO_ISSUES_IN_PROCESS"
-		gosub disp_message
-		callpoint!.setStatus("NEWREC")
-		break
-	endif
-
-rem ... focus needs to move to the last key field re Barista bug 6299
-[[SFE_WOMATHDR.<CUSTOM>]]
-#include [+ADDON_LIB]std_missing_params.aon
-
-verify_wo_status: rem -- Verify WO status
-	status$=callpoint!.getColumnData("<<DISPLAY>>.WO_STATUS")
-	bad_wo=0
-
-	if status$="C" then
-		msg_id$="WO_CLOSED"
-		gosub disp_message
-		callpoint!.setStatus("NEWREC")
-		bad_wo=1
-	endif
-
-	if !bad_wo and pos(status$="PQ") then
-		msg_id$="WO_NOT_RELEASED"
-		gosub disp_message
-		callpoint!.setStatus("NEWREC")
-		bad_wo=1
-	endif
-	return
-
-rem ==========================================================================
-build_rowQtyMap: rem --- Build rowQtyMap!
-rem --- The rowQtyMap! is keyed by sfe_womatdtl.internal_seq_no$ and holds sfe_womatdtl.qty_ordered.
-rem --- It is used to determine if any qty_ordered is different than when entry started, and thus maybe requiring reprint
-rem --- of the pick list. A simple flag does not work for this since the qty_ordered could be changed multiple times, and
-rem --- ending up back where it originally started.
-rem --- output: rowQtyMap!
-rem ==========================================================================
-	rowQtyMap!=new java.util.HashMap()
-	sfe_womatdtl_dev=fnget_dev("SFE_WOMATDTL")
-	dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
-
-	firm_loc_wo$=firm_id$+callpoint!.getColumnData("SFE_WOMATHDR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMATHDR.WO_NO")
-	read(sfe_womatdtl_dev,key=firm_loc_wo$,knum="PRIMARY",dom=*next)
-	while 1
-		sfe_womatdtl_key$=key(sfe_womatdtl_dev,end=*break)
-		if pos(firm_loc_wo$=sfe_womatdtl_key$)<>1 then break
-		readrecord(sfe_womatdtl_dev)sfe_womatdtl$
-		rowQtyMap!.put(sfe_womatdtl.internal_seq_no$, sfe_womatdtl.qty_ordered)
-	wend
-	return
 [[SFE_WOMATHDR.BSHO]]
 rem --- Open Files
 	num_files=13
@@ -277,3 +217,74 @@ rem --- Additional file opens
 
 rem -- Provide initial empty starting rowQtyMap!
 	callpoint!.setDevObject("start_rowQtyMap", new java.util.HashMap())
+
+[[SFE_WOMATHDR.WO_NO.AVAL]]
+rem --- If new record, initialize SFE_WOMATHDR and SFE_WOMATDET
+	if callpoint!.getRecordMode()="A"
+		rem --- When new record, initialize new SFE_WOMATHDR Materials Commitment Header record from SFE_WOMASTR Work Order Entry
+		sfe_womastr_dev=fnget_dev("SFE_WOMASTR")
+		dim sfe_womastr$:fnget_tpl$("SFE_WOMASTR")
+
+		findrecord(sfe_womastr_dev,key=firm_id$+"  "+callpoint!.getUserInput())sfe_womastr$
+
+		callpoint!.setColumnData("SFE_WOMATHDR.WO_TYPE",sfe_womastr.wo_type$,1)
+		callpoint!.setColumnData("SFE_WOMATHDR.WO_CATEGORY",sfe_womastr.wo_category$,1)
+		callpoint!.setColumnData("SFE_WOMATHDR.UNIT_MEASURE",sfe_womastr.unit_measure$,1)
+		callpoint!.setColumnData("SFE_WOMATHDR.WAREHOUSE_ID",sfe_womastr.warehouse_id$,1)
+		callpoint!.setColumnData("SFE_WOMATHDR.ITEM_ID",sfe_womastr.item_id$,1)
+		callpoint!.setColumnData("SFE_WOMATHDR.ISSUED_DATE","",1)
+		callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_01",sfe_womastr.description_01$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.DESCRIPTION_02",sfe_womastr.description_02$,1)
+		callpoint!.setColumnData("<<DISPLAY>>.WO_STATUS",sfe_womastr.wo_status$,1)
+
+		rem -- Verify WO status
+		gosub verify_wo_status
+		if bad_wo then break
+	endif
+
+[[SFE_WOMATHDR.<CUSTOM>]]
+#include [+ADDON_LIB]std_missing_params.aon
+
+verify_wo_status: rem -- Verify WO status
+	status$=callpoint!.getColumnData("<<DISPLAY>>.WO_STATUS")
+	bad_wo=0
+
+	if status$="C" then
+		msg_id$="WO_CLOSED"
+		gosub disp_message
+		callpoint!.setStatus("NEWREC")
+		bad_wo=1
+	endif
+
+	if !bad_wo and pos(status$="PQ") then
+		msg_id$="WO_NOT_RELEASED"
+		gosub disp_message
+		callpoint!.setStatus("NEWREC")
+		bad_wo=1
+	endif
+	return
+
+rem ==========================================================================
+build_rowQtyMap: rem --- Build rowQtyMap!
+rem --- The rowQtyMap! is keyed by sfe_womatdtl.internal_seq_no$ and holds sfe_womatdtl.qty_ordered.
+rem --- It is used to determine if any qty_ordered is different than when entry started, and thus maybe requiring reprint
+rem --- of the pick list. A simple flag does not work for this since the qty_ordered could be changed multiple times, and
+rem --- ending up back where it originally started.
+rem --- output: rowQtyMap!
+rem ==========================================================================
+	rowQtyMap!=new java.util.HashMap()
+	sfe_womatdtl_dev=fnget_dev("SFE_WOMATDTL")
+	dim sfe_womatdtl$:fnget_tpl$("SFE_WOMATDTL")
+
+	firm_loc_wo$=firm_id$+callpoint!.getColumnData("SFE_WOMATHDR.WO_LOCATION")+callpoint!.getColumnData("SFE_WOMATHDR.WO_NO")
+	read(sfe_womatdtl_dev,key=firm_loc_wo$,knum="PRIMARY",dom=*next)
+	while 1
+		sfe_womatdtl_key$=key(sfe_womatdtl_dev,end=*break)
+		if pos(firm_loc_wo$=sfe_womatdtl_key$)<>1 then break
+		readrecord(sfe_womatdtl_dev)sfe_womatdtl$
+		rowQtyMap!.put(sfe_womatdtl.internal_seq_no$, sfe_womatdtl.qty_ordered)
+	wend
+	return
+
+
+

@@ -223,10 +223,10 @@ rem --- Initializations
         logo_filename$=iff(rpt_logo_file$="",logo_filename$,rpt_logo_file$);rem doc-specific logo supersedes default or company logo
 
         rem --- Format firm's address
-        dim firm_address$(3*30)
+        firm_address$=""
         find record (arsReport_dev,key=firm_id$+"AR02",err=*next) arsReport$
-        firm_address$(1)=arsReport.addr_line_1$+arsReport.addr_line_2$+arsReport.city$+arsReport.state_code$+arsReport.zip_code$
-        call pgmdir$+"adc_address.aon",firm_address$,24,3,9,30
+        firm_address$=arsReport.addr_line_1$+arsReport.addr_line_2$+arsReport.city$+arsReport.state_code$+arsReport.zip_code$
+        call pgmdir$+"adc_address.aon",firm_address$,30,3,9,30
     
         call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(arsReport.phone_no$,2),"",phone_mask$
         firm_phone_no$=str(cvs(arsReport.phone_no$,2):phone_mask$)
@@ -722,7 +722,11 @@ type_break: rem --- AP Type break
     endif
     BrkVect!.addItem(str(OutVect!.size()/(columns+1)))
     if aptype$="" then
-        HdrVect!.addItem(checks$+payments$)
+        if cvs(apm10a.code_desc$,2)<>nf$ then
+            HdrVect!.addItem(checks$+payments$)
+        else
+            HdrVect!.addItem(checks$+payments$+" - "+Translate!.getTranslation("AON_AP_TYPE_")+" "+cvs(apm10a.code_desc$,2))
+        endif
         totalFor$=checks$
     else
         HdrVect!.addItem(checks$+payments$+" - "+aptype$+" "+cvs(apm10a.code_desc$,2))

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2015-09-21T15:23:48 -->
+<!-- Created with Jaspersoft Studio version 6.13.0.final using JasperReports Library version 6.13.0-46ada4d1be8f3c5985fd0b6146f3ed44caed6f05  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="CustProfile" language="groovy" pageWidth="612" pageHeight="792" columnWidth="612" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" resourceBundle="addon" uuid="ed69a263-5eff-47cb-b967-17cfa8076fda">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -28,6 +27,10 @@
 	</style>
 	<parameter name="FIRM_ID" class="java.lang.String"/>
 	<parameter name="CUSTOMER_ID" class="java.lang.String"/>
+	<parameter name="30_DAY" class="java.lang.String"/>
+	<parameter name="60_DAY" class="java.lang.String"/>
+	<parameter name="90_DAY" class="java.lang.String"/>
+	<parameter name="120_DAY" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[select t1.firm_id, t1.customer_id, t1.ar_type, t1.slspsn_code, t1.ar_terms_code, t1.disc_code, t1.ar_dist_code, t1.finance_chg, t1.sa_flag, t1.ar_cyclecode, t1.statements, t1.territory, t1.pricing_code, t1.label_code, t1.message_code, t1.tax_code, t1.customer_type, t1.inv_hist_flg, t1.cred_hold, t1.frt_terms, t1.lstinv_date, t1.lstpay_date, t1.aging_future, t1.aging_cur, t1.aging_30, t1.aging_60, t1.aging_90, t1.aging_120, t1.credit_limit, t2.mtd_sales AS mtd_sales, t2.ytd_sales AS ytd_sales, t2.pyr_sales AS pyr_sales, t2.mtd_cost AS mtd_cost, t2.ytd_cost AS ytd_cost, t2.pri_ytd_cost AS pri_ytd_cost, t2.avg_days AS avg_days, t2.no_payments AS no_payments, t2.nmtd_sales AS nmtd_sales, t2.nxt_mtd_cost AS nxt_mtd_cost, t2.avg_days_mtd AS avg_days_mtd, t2.mtd_no_pmts AS mtd_no_pmts, t2.avg_days_ytd AS avg_days_ytd, t2.ytd_no_pmts AS ytd_no_pmts, t2.avg_dtp_pytd AS avg_dtp_pytd, t2.pyr_no_py AS pyr_no_py, t2.avg_dtp_nmtd AS avg_dtp_nmtd, t2.nmtd_no_pay AS nmtd_no_pay, t2.mtd_high_crd AS mtd_high_crd, t2.ytd_hi_cred AS ytd_hi_cred, t2.pyr_hi_crd AS pyr_hi_crd, t2.nmtd_high_cr AS nmtd_high_cr, arc_salecode.code_desc AS slsmn_desc, arc_termcode.code_desc AS terms_desc, arc_terrcode.code_desc AS terr_desc, arc_distcode.code_desc AS dist_desc, opc_message.code_desc AS msg_code_desc, opc_disccode.code_desc AS sls_disc_desc, opc_taxcode.code_desc AS tax_desc, opc_pricecds.code_desc AS price_desc, arc_custtype.code_desc AS type_desc
 FROM arm_custdet t1
@@ -297,22 +300,22 @@ inner join arm_custpmts t2 ON t1.firm_id = t2.firm_id and t1.customer_id = t2.cu
 			<textField>
 				<reportElement x="160" y="131" width="69" height="13" uuid="b5983aed-349d-4a8c-a78d-1daee15cd713"/>
 				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$R{AON_30_DAYS}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$P{30_DAY}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="240" y="131" width="69" height="13" uuid="6100380c-71e5-40a0-b142-d7c8648feb4e"/>
 				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$R{AON_60_DAYS}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$P{60_DAY}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="320" y="131" width="69" height="13" uuid="e2335526-1cc3-46b3-9c8b-1f727a1af755"/>
 				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$R{AON_90_DAYS}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$P{90_DAY}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="400" y="131" width="69" height="13" uuid="91145be1-df44-4f4a-a651-bbf8cfa717f8"/>
 				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$R{AON_120_DAYS}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$P{120_DAY}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="480" y="131" width="69" height="13" uuid="3babc009-67e4-4d6d-8137-d91adab4e8fc"/>

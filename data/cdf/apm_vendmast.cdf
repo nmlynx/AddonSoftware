@@ -178,6 +178,27 @@ call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :                       "",
 :                       dflt_data$[all]
 
+[[APM_VENDMAST.AOPT-RCTL]]
+rem --- Launch Report Control Recipients form for this vendor
+	user_id$=stbl("+USER_ID")
+	vendor_id$=callpoint!.getColumnData("APM_VENDMAST.VENDOR_ID")
+
+	dim dflt_data$[2,1]
+	dflt_data$[1,0]="VENDOR_ID"
+	dflt_data$[1,1]=vendor_id$
+	dflt_data$[2,0]="RECIPIENT_TP"
+	dflt_data$[2,1]="V"
+
+	key_pfx$=firm_id$+vendor_id$
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:		"ADM_RPTRCP_VEND",
+:		user_id$,
+:		"",
+:		key_pfx$,
+:		table_chans$[all],
+:		"",
+:		dflt_data$[all]
+
 [[APM_VENDMAST.AOPT-RHST]]
 rem Receipt History Inquiry
 if user_tpl.po_installed$="Y"
@@ -552,4 +573,6 @@ disable_fields:
 return
 
 #include [+ADDON_LIB]std_missing_params.aon
+
+
 

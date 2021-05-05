@@ -32,8 +32,8 @@ rem --- create the in memory recordset for return
 
 dataTemplate$ = "firm_id:c(2),customer_id:C(1*),cust_name:C(30),address1:C(30),address2:C(30),"
 dataTemplate$ = dataTemplate$ + "address3:C(30),address4:C(30),address5:C(30),address6:C(30),"
-dataTemplate$ = dataTemplate$ + "remit1:C(30),remit2:C(30),remit3:C(30),remit4:C(30),payment_url:C(1*),"
-dataTemplate$ = dataTemplate$ + "ar_address1:C(30),ar_address2:C(30),ar_address3:C(30),ar_address4:C(30),ar_phone_no:C(1*),ar_fax_no:C(1*),terms_desc:C(1*)"
+dataTemplate$ = dataTemplate$ + "remit1:C(30*),remit2:C(30*),remit3:C(30*),remit4:C(30*),payment_url:C(1*),"
+dataTemplate$ = dataTemplate$ + "ar_address1:C(30*),ar_address2:C(30*),ar_address3:C(30*),ar_address4:C(30*),ar_phone_no:C(1*),ar_fax_no:C(1*),terms_desc:C(1*)"
 
 rs! = BBJAPI().createMemoryRecordSet(dataTemplate$)
 
@@ -92,15 +92,15 @@ data!.setFieldValue("ADDRESS2", address$(31,30))
 data!.setFieldValue("ADDRESS3", address$(61,30))
 data!.setFieldValue("ADDRESS4", address$(91,30))
 data!.setFieldValue("ADDRESS5", address$(121,30))
-data!.setFieldValue("REMIT1", remit$(1,30))
-data!.setFieldValue("REMIT2", remit$(31,30))
-data!.setFieldValue("REMIT3", remit$(61,30))
-data!.setFieldValue("REMIT4", remit$(91,30))
+data!.setFieldValue("REMIT1", remit$((comp_remit_addr_len*0)+1,comp_remit_addr_len))
+data!.setFieldValue("REMIT2", remit$((comp_remit_addr_len*1)+1,comp_remit_addr_len))
+data!.setFieldValue("REMIT3", remit$((comp_remit_addr_len*2)+1,comp_remit_addr_len))
+data!.setFieldValue("REMIT4", remit$((comp_remit_addr_len*3)+1,comp_remit_addr_len))
 data!.setFieldValue("PAYMENT_URL", cvs(ars_cc_custpmt.payment_url$,2))
-data!.setFieldValue("AR_ADDRESS1", ar_address$(1,30))
-data!.setFieldValue("AR_ADDRESS2", ar_address$(31,30))
-data!.setFieldValue("AR_ADDRESS3", ar_address$(61,30))
-data!.setFieldValue("AR_ADDRESS4", ar_address$(91,30))
+data!.setFieldValue("AR_ADDRESS1", ar_address$((comp_remit_addr_len*0)+1,comp_remit_addr_len))
+data!.setFieldValue("AR_ADDRESS2", ar_address$((comp_remit_addr_len*1)+1,comp_remit_addr_len))
+data!.setFieldValue("AR_ADDRESS3", ar_address$((comp_remit_addr_len*2)+1,comp_remit_addr_len))
+data!.setFieldValue("AR_ADDRESS4", ar_address$((comp_remit_addr_len*3)+1,comp_remit_addr_len))
 data!.setFieldValue("AR_PHONE_NO", ar_phone_no$)
 data!.setFieldValue("AR_FAX_NO", ar_fax_no$)
 data!.setFieldValue("TERMS_DESC", terms_desc$)
@@ -121,22 +121,23 @@ format_address_block:
     address$=""
 	read record(arm01,key=firm_id$ + customer$)arm01$
     address$=arm01.addr_line_1$+arm01.addr_line_2$+arm01.addr_line_3$+arm01.addr_line_4$+arm01.city$+arm01.state_code$+arm01.zip_code$
-    call pgmdir$+"adc_address.aon",address$,24,5,9,30
+    call pgmdir$+"adc_address.aon",address$,30,5,9,30
     
 return
 
 rem --- format company and remit-to addresses
 format_return_remit_addresses:
 
+    comp_remit_addr_len=40
     find record (ars_report,key=firm_id$+"AR02",err=*next) ars_report$
 
     remit$=ars_report.remit_addr_1$+ars_report.remit_addr_2$+ars_report.remit_city$+ars_report.remit_state$+ars_report.remit_zip$
-    call pgmdir$+"adc_address.aon",remit$,24,3,9,30
-    remit$=ars_report.remit_name$+remit$
+    call pgmdir$+"adc_address.aon",remit$,30,3,9,comp_remit_addr_len
+    remit$=pad(ars_report.remit_name$,comp_remit_addr_len)+remit$
 
     ar_address$=ars_report.addr_line_1$+ars_report.addr_line_2$+ars_report.city$+ars_report.state_code$+ars_report.zip_code$
-    call pgmdir$+"adc_address.aon",ar_address$,24,3,9,30
-    ar_address$=ars_report.name$+ar_address$
+    call pgmdir$+"adc_address.aon",ar_address$,30,3,9,comp_remit_addr_len
+    ar_address$=pad(ars_report.name$,comp_remit_addr_len)+ar_address$
 
     call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(ars_report.phone_no$,2),"",phone_mask$
     ar_phone_no$=str(cvs(ars_report.phone_no$,2):phone_mask$)

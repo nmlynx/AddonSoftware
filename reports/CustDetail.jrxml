@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.2.1.final using JasperReports Library version 6.2.1  -->
-<!-- 2018-07-11T16:18:41 -->
+<!-- Created with Jaspersoft Studio version 6.13.0.final using JasperReports Library version 6.13.0-46ada4d1be8f3c5985fd0b6146f3ed44caed6f05  -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="CustDetail" language="groovy" pageWidth="612" pageHeight="792" columnWidth="572" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" resourceBundle="addon" uuid="938ee14f-0a2a-4d07-8683-b09fb396e56e">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -21,6 +20,10 @@
 	<parameter name="CUST_REPLACE" class="java.lang.String"/>
 	<parameter name="OPTION_ACTIVE" class="java.lang.String"/>
 	<parameter name="INACTIVE_CUST" class="java.lang.String"/>
+	<parameter name="30_DAY" class="java.lang.String"/>
+	<parameter name="60_DAY" class="java.lang.String"/>
+	<parameter name="90_DAY" class="java.lang.String"/>
+	<parameter name="120_DAY" class="java.lang.String"/>
 	<queryString>
 		<![CDATA[select * from arm_custmast where arm_custmast.firm_id = $P{FIRM_ID} and arm_custmast.customer_id >= $P{CUSTOMER_ID_1} and arm_custmast.customer_id <= $P{CUSTOMER_ID_2} $P!{OPTION_ACTIVE}]]>
 	</queryString>
@@ -143,27 +146,27 @@
 		<band height="195">
 			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 			<textField>
-				<reportElement x="84" y="14" width="80" height="13" uuid="dbc62ccb-08f9-4385-95df-a57b6581d54b"/>
+				<reportElement x="84" y="14" width="46" height="13" uuid="dbc62ccb-08f9-4385-95df-a57b6581d54b"/>
 				<textFieldExpression><![CDATA[$F{CUSTOMER_ID}.replaceAll($P{CUST_PATTERN},$P{CUST_REPLACE})]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="164" y="14" width="148" height="13" uuid="d59a7d93-8e2b-44a0-a605-51d01cdbf4d4"/>
+				<reportElement x="130" y="14" width="182" height="13" uuid="d59a7d93-8e2b-44a0-a605-51d01cdbf4d4"/>
 				<textFieldExpression><![CDATA[$F{CUSTOMER_NAME}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="84" y="27" width="100" height="13" uuid="f3110c69-12b0-450a-a2fe-b30651138c53"/>
+				<reportElement x="84" y="27" width="228" height="13" uuid="f3110c69-12b0-450a-a2fe-b30651138c53"/>
 				<textFieldExpression><![CDATA[$F{ADDR_LINE_1}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="84" y="40" width="100" height="13" uuid="1035106f-d21c-445b-84c9-c4dd69728fa8"/>
+				<reportElement x="84" y="40" width="228" height="13" uuid="1035106f-d21c-445b-84c9-c4dd69728fa8"/>
 				<textFieldExpression><![CDATA[$F{ADDR_LINE_2}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="84" y="53" width="100" height="13" uuid="354735be-d2d7-4393-afeb-dcfee9af48ee"/>
+				<reportElement x="84" y="53" width="228" height="13" uuid="354735be-d2d7-4393-afeb-dcfee9af48ee"/>
 				<textFieldExpression><![CDATA[$F{ADDR_LINE_3}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="84" y="66" width="100" height="13" uuid="f978fdd4-d944-47ac-b7c3-4738fe4d1c04"/>
+				<reportElement x="84" y="66" width="228" height="13" uuid="f978fdd4-d944-47ac-b7c3-4738fe4d1c04"/>
 				<textFieldExpression><![CDATA[$F{ADDR_LINE_4}]]></textFieldExpression>
 			</textField>
 			<textField>
@@ -309,6 +312,18 @@ $F{OPENED_DATE}.substring(4,6)+"/"+$F{OPENED_DATE}.substring(6)+"/"+$F{OPENED_DA
 				</subreportParameter>
 				<subreportParameter name="CUSTOMER_ID">
 					<subreportParameterExpression><![CDATA[$F{CUSTOMER_ID}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="30_DAY">
+					<subreportParameterExpression><![CDATA[$P{30_DAY}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="60_DAY">
+					<subreportParameterExpression><![CDATA[$P{60_DAY}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="90_DAY">
+					<subreportParameterExpression><![CDATA[$P{90_DAY}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="120_DAY">
+					<subreportParameterExpression><![CDATA[$P{120_DAY}]]></subreportParameterExpression>
 				</subreportParameter>
 				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 				<subreportExpression><![CDATA["CustProfile.jasper"]]></subreportExpression>

@@ -714,22 +714,22 @@ method_error:rem --- Method error trap/handler (11Oct2017)
             all_zeros   = pos(zip_code$ <> "0" )
             
             if city$ <> "" or state_code$ <> "" or (zip_code$ <> "" and !all_zeros) then
-                addr_line$ = city$ + ", " + state_code$
+                addr_line$ = city$
                 
                 if len(zip_code$) > 5 then zip_code$ = zip_code$(1,5) + "-" +zip_code$(6)
                 
-                if len(addr_line$) + len(zip_code$) + 2 > p_width then
+                if len(addr_line$) + len(state_code$) + len(zip_code$) + 3 > p_width then
                     if offset+p_width-1 <= size then
                         address_block$(offset, p_width) = addr_line$
                         offset = offset + p_width
                         
                         if offset+p_width-1 <= size then
-                            address_block$(offset, p_width) = zip_code$
+                            address_block$(offset, p_width) = state_code$+"  "+zip_code$
                         endif
                     endif
                 else
                     if offset+p_width-1 <= size then
-                        address_block$(offset, p_width) = addr_line$ + "  " + zip_code$
+                        address_block$(offset, p_width) = addr_line$ + " "+state_code$+"  " + zip_code$
 						offset = offset + p_width
                     endif
                 endif
@@ -1022,7 +1022,7 @@ buildCheckAmtText_error:rem --- Method error trap/handler (11Oct2017)
             if digit100<>0 then numInWords$ = #words!.get(digit100)+" Hundred "
             digit011=num(nnnDigits$(2,2))
             if digit011<20 then
-                numInWords$ = numInWords$ + #words!.get(digit011)+" "
+                if digit011>0 then numInWords$ = numInWords$ + #words!.get(digit011)+" "
             else
                 digit010=num(nnnDigits$(2,1))
                 numInWords$=numInWords$ + #words!.get(10*digit010)+" "

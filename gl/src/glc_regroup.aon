@@ -1,11 +1,11 @@
-rem glc - Re-Group glm-10 strings to 5.2 gls-01 'B' structure
-rem Program glc_regroup v8.0.0 13Apr2006 (glc_rg)
+rem glc - Return GLM_ACCTBREAKS break accounts/descriptions
+rem Program glc_regroup (glc_rg)
 rem Created by adx_progconv.bbx v1.0.0 (04/13/2006 10:03:49)
 
 rem  +-----------------------------------------+
-rem  | AddonSoftware Version 8.0.0 - 01Oct2006 |
-rem  |  Copyright BASIS International Ltd.  All Rights Reserved.
-rem  |          All Rights Reserved            |
+rem  | AddonSoftware                           |
+rem  | Copyright BASIS International Ltd.      |
+rem  | All Rights Reserved                     |
 rem  +-----------------------------------------+
 
 rem --- GLM10_DEV    : Channel of GLM10 (Input)
@@ -37,6 +37,9 @@ rem --- Retrieve templates
     
     dim glm10a$:open_tpls$[1]
 
+    acct_no_brk_length=dec(fattr(glm10a$,"acct_no_brk")(10,2))
+    acct_bk_desc_length=dec(fattr(glm10a$,"acct_bk_desc")(10,2))
+
 rem --- Initializations
 
     breaks$="",descriptions$=""
@@ -46,15 +49,14 @@ rem --- Position file
 
     read (glm10_dev,key=firm_id$,err=*next)
 
-rem --- Read through glm-10 and regroup account break and
-rem --- description strings to structure of 5.2 gls-01
+rem --- Read through glm-10 and create breaks$/descriptions$ 
 
     while more
           k$=key(glm10_dev,end=*break)
           if pos(firm_id$=k$)<>1 break
           read record (glm10_dev)glm10a$
-          breaks$=breaks$+pad(glm10a.acct_no_brk$,10)
-          descriptions$=descriptions$+pad(glm10a.acct_bk_desc$,20)
+          breaks$=breaks$+pad(glm10a.acct_no_brk$,acct_no_brk_length)
+          descriptions$=descriptions$+pad(glm10a.acct_bk_desc$,acct_bk_desc_length)
     wend
 
 rem --- All done

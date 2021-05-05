@@ -24,7 +24,7 @@ rem --- Update posted_code for selected grid rows
 		gltBankOther_dev=fnget_dev("GLT_BANKOTHER")
 		dim gltBankOther$:fnget_tpl$("GLT_BANKOTHER")
 		selectedRows!=grid!.getSelectedRows()
-		if selectedRows!.size=0 then break
+		if selectedRows!.size()=0 then break
 		for i=0 to selectedRows!.size()-1
 			rem --- Update grid row
 			row=selectedRows!.getItem(i)
@@ -47,6 +47,7 @@ rem --- Update posted_code for selected grid rows
 			endif
 		next i
 	endif
+
 [[GLT_BANKOTHER.BSHO]]
 rem --- Open/Lock files
 	num_files=1
@@ -80,6 +81,7 @@ rem --- Make grid multi-select with pop-up menu
 	grid!.setMultipleSelection(1)
 	grid!.setSelectionMode(grid!.GRID_SELECT_ROW)
 	grid!.setPopupMenu(popUpMenu!)
+
 [[GLT_BANKOTHER.TRANS_NO.AVAL]]
 rem --- Has the trans_no changed?
 	trans_no$=callpoint!.getUserInput()
@@ -107,6 +109,7 @@ rem --- Has the trans_no changed?
 			endif
 		endif
 	endif
+
 [[GLT_BANKOTHER.TRANS_TYPE.AVAL]]
 rem --- Has the trans_type changed?
 	trans_type$=callpoint!.getUserInput()
@@ -141,3 +144,6 @@ rem --- Has the trans_type changed?
 			callpoint!.setColumnEnabled(callpoint!.getValidationRow(),"GLT_BANKOTHER.CASH_REC_CD",0)
 		endif
 	endif
+
+
+

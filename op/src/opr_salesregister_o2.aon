@@ -101,6 +101,28 @@ rem --- Salesperson Summary
     xwk = fnblank(2)
     gosub process_summary_section
 
+rem --- List invoices skipped due to failed tax calculation
+    if skippedInvoices!.size()>0 then
+        xwk = fnblank(2)
+        OutVect!.addItem(Translate!.getTranslation("AON_INVOICES_SKIPPED_FAILED_TAX"))
+        OutVect!.addItem("")
+    
+        cust_ord_inv$=Translate!.getTranslation("AON_CUSTOMER")+"  -  "
+        cust_ord_inv$=cust_ord_inv$+Translate!.getTranslation("AON_ORDER")+"  -  "
+        cust_ord_inv$=cust_ord_inv$+Translate!.getTranslation("AON_INVOICE")
+        OutVect!.addItem(cust_ord_inv$)
+        OutVect!.addItem("")
+        
+        for i=0 to skippedInvoices!.size()-1
+            custOrdInv!=skippedInvoices!.getItem(i)
+            OutVect!.addItem(custOrdInv!.getItem(0)+"  -  "+custOrdInv!.getItem(1)+"  -  "+custOrdInv!.getItem(2))
+            OutVect!.addItem("")
+        next i
+    
+        msg_id$="OP_WARN_INV_SKIPPED"
+        gosub disp_message
+    endif
+
 rem --- All done
 
     if noninv<>0 or inv<>0 then

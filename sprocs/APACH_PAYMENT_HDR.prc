@@ -57,19 +57,20 @@ rem --- open files
     dim apmPayAddr$:templates$[2]
 
 rem --- Format Vendor Address
-    dim address$(3*30)
+    address$=""
     find record (apm01_dev,key=firm_id$+vendor_id$,dom=*next) apm01a$
-    address$(1)=apm01a.addr_line_1$+apm01a.addr_line_2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$+apm01a.cntry_id$
+    address$=apm01a.addr_line_1$+apm01a.addr_line_2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$+apm01a.cntry_id$
     vend_name$= apm01a.vendor_name$
     start_block = 1
 
     if start_block
         find record (apmPayAddr_dev,key=firm_id$+vendor_id$,dom=*endif) apmPayAddr$
-        address$(1)= apmPayAddr.addr_line_1$+apmPayAddr.addr_line2$+apmPayAddr.city$+apmPayAddr.state_code$+apmPayAddr.zip_code$+apmPayAddr.cntry_id$
+        address$=""
+        address$= apmPayAddr.addr_line_1$+apmPayAddr.addr_line2$+apmPayAddr.city$+apmPayAddr.state_code$+apmPayAddr.zip_code$+apmPayAddr.cntry_id$
         vend_name$=  apmPayAddr.vendor_name$
     endif
     
-    call pgmdir$+"adc_address.aon",address$,24,3,9,30
+    call pgmdir$+"adc_address.aon",address$,30,3,9,30
 
 rem --- Get check date and amount
     sql_prep$=""

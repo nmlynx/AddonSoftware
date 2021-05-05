@@ -382,6 +382,7 @@ rem --- One last chance to update the tickler date
 [[OPE_CREDMAINT.BSHO]]
 rem --- Init
 
+	use ::ado_util.src::util
 	use ::opo_SalesOrderCreateWO.aon::SalesOrderCreateWO
 
 rem --- Open tables
@@ -416,6 +417,13 @@ rem --- Open tables
 		callpoint!.setOptionEnabled("AGNG",1)
 		callpoint!.setDevObject("dflt_age_by",ops_params.dflt_age_by$)
 	endif
+
+rem --- Update Control Labels for aging days
+	days$=" "+Translate!.getTranslation("AON_DAYS","Days",1)+":"
+	util.changeControlLabel(SysGUI!, callpoint!, "OPE_CREDMAINT.AGING_30", str(ops_params.age_per_days_1)+days$)
+	util.changeControlLabel(SysGUI!, callpoint!, "OPE_CREDMAINT.AGING_60", str(ops_params.age_per_days_2)+days$)
+	util.changeControlLabel(SysGUI!, callpoint!, "OPE_CREDMAINT.AGING_90", str(ops_params.age_per_days_3)+days$)
+	util.changeControlLabel(SysGUI!, callpoint!, "OPE_CREDMAINT.AGING_120", str(ops_params.age_per_days_4)+"+"+days$)
 
 [[OPE_CREDMAINT.CUSTOMER_ID.AVAL]]
 rem "Customer Inactive Feature"

@@ -2,7 +2,7 @@ rem --- build_sprocs.aon
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem --- prototype for table-driven sproc definition
 
-rem --- for now, this program has hard-coded logic to create the following SPROCs:
+rem --- this program creates the following SPROCs:
 rem --- POCALENDAR
 rem --- SALES_CUSTOMER
 rem --- SALES_CUST_TYPE
@@ -37,9 +37,6 @@ rem --- OPINVOICE_HDR
 rem --- OPINVOICE_DET
 rem --- OPINVOICE_DET_LOTSER
 rem --- OPINVOICE_SHIPTRACK
-rem --- OP_HIST_INVOICE_HDR
-rem --- OP_HIST_INVOICE_DET
-rem --- OP_HIST_INVOICE_DET_LOTSER
 rem --- PURCHASEORDER_HDR
 rem --- PURCHASEORDER_DET
 rem --- OPPICKLIST_HDR
@@ -53,7 +50,7 @@ rem --- PURCHASEREQUISITION_HDR
 rem --- PURCHASEREQUISITION_DET
 rem --- SFPICKLIST
 
-rem ---      Dashboard SPROCs
+rem --- Dashboard SPROCs
 rem --- ARAGINGTOT_BAR
 rem --- ARAGING_BAR
 
@@ -77,15 +74,16 @@ rem --- SATOPREPPROD_GRD
 
 rem --- SFWOSSOS_GRD
 
-
-rem --- 4/2012 Added VIEWs to the hard-coded logic herein
-rem --- As of 10/2013, no VIEWs are needed; all are removed
+rem --- VIEWs
+rem --- ADC_BANKACCTCODE_VIEW (shows last 4 of decrypted bank acct number)
+rem --- APM_VENDMAST_VIEW (shows last 4 of decrypted bank acct number)
 
 rem --- idea is to make an admin table in Addon (Barista?) that contains
 rem --- name, params, .prc loc and .cfg loc so as we deploy, we can run this program
 rem --- as part of install/init, and see to it that sprocs are defined.
 
     use ::ado_util.src::util
+	use ::sys/prog/bao_encryptor.bbj::Encryptor
 
     seterr std_error
     setesc std_error
@@ -122,6 +120,9 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
     milestone=1
+
+rem --- Set up Encryptor
+	encryptor! = new Encryptor()
     
 rem --- Open File(s)
     
@@ -138,9 +139,22 @@ rem --- Open File(s)
 rem --- Open File(s) used in VIEWs to ensure their existence (so CREATE won't err)
 rem     ***** NOTE: New VIEWs should add their tables to these opens *****
 
+	num_files=2
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="ADC_BANKACCTCODE",open_opts$[1]="OTA"
+	open_tables$[2]="APM_VENDMAST",open_opts$[2]="OTA"
+
+    gosub open_tables
 
 rem --- Close tables opened solely to ensure VIEWs don't err
 rem     ***** NOTE: New VIEWs should add their tables to these opens *****
+
+	num_files=2
+    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+    open_tables$[1]="ADC_BANKACCTCODE",open_opts$[1]="C"
+	open_tables$[2]="APM_VENDMAST",open_opts$[2]="C"
+
+    gosub open_tables
 	
 rem --- init
 
@@ -305,18 +319,6 @@ rem --- first drop all std Addon SPROCs
     gosub create_sproc_def
         
     sproc_vw_name$="OPINVOICE_SHIPTRACK"
-    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
-    gosub create_sproc_def
-
-	sproc_vw_name$="OP_HIST_INVOICE_HDR"
-    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
-    gosub create_sproc_def
-	
-	sproc_vw_name$="OP_HIST_INVOICE_DET"
-    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
-    gosub create_sproc_def
-		
-	sproc_vw_name$="OP_HIST_INVOICE_DET_LOTSER"
     sqlprep$=sql_action$+" "+sproc_vw_name$+" "
     gosub create_sproc_def
 
@@ -766,18 +768,6 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 
     gosub create_sproc_def
 
-	rem --- OP_HIST_INVOICE_HDR
-    sproc_vw_name$="OP_HIST_INVOICE_HDR"
-	sqlprep$="CREATE PROCEDURE OP_HIST_INVOICE_HDR "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, AR_TYPE CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN, AR_INV_NO CHAR(7) IN, "
-	sqlprep$=sqlprep$+"CUST_MASK CHAR(20) IN, CUST_SIZE CHAR(1) IN, "
-	sqlprep$=sqlprep$+"BARISTA_WD VARCHAR(50) IN)"
-    sqlprep$=sqlprep$+"'"+sproc_path$+"OP_HIST_INVOICE_HDR.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'OP Invoice Header'"
-
-    gosub create_sproc_def
-
 	rem --- OPINVOICE_DET	
     sproc_vw_name$="OPINVOICE_DET"
 	sqlprep$="CREATE PROCEDURE OPINVOICE_DET "
@@ -785,18 +775,6 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
 	sqlprep$=sqlprep$+"QTY_MASK CHAR(20) IN, AMT_MASK CHAR(20) IN, PRICE_MASK CHAR(20) IN, EXT_MASK CHAR(20) IN, "
 	sqlprep$=sqlprep$+"ITEM_MASK CHAR(20) IN, BARISTA_WD VARCHAR(50) IN, REPORT_TYPE CHAR(1) IN)"	
     sqlprep$=sqlprep$+"'"+sproc_path$+"OPINVOICE_DET.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'OP Invoice Detail'"
-
-    gosub create_sproc_def
-
-	rem --- OP_HIST_INVOICE_DET	
-    sproc_vw_name$="OP_HIST_INVOICE_DET"
-	sqlprep$="CREATE PROCEDURE OP_HIST_INVOICE_DET "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, AR_TYPE CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN, AR_INV_NO CHAR(7) IN, "
-	sqlprep$=sqlprep$+"QTY_MASK CHAR(20) IN, AMT_MASK CHAR(20) IN, PRICE_MASK CHAR(20) IN, EXT_MASK CHAR(20) IN, "
-	sqlprep$=sqlprep$+"ITEM_MASK CHAR(20) IN, BARISTA_WD VARCHAR(50) IN)"	
-    sqlprep$=sqlprep$+"'"+sproc_path$+"OP_HIST_INVOICE_DET.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'OP Invoice Detail'"
 
@@ -820,18 +798,6 @@ rem --- now add them back (i.e., drop, then add, in case anything has changed)
     sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, AR_TYPE CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN, SHIP_SEQ_NO CHAR(3) IN, "
     sqlprep$=sqlprep$+"BARISTA_WD VARCHAR(50) IN)"  
     sqlprep$=sqlprep$+"'"+sproc_path$+"OPINVOICE_SHIPTRACK.prc' '"+barista_cfg_path$+"barista.cfg' "
-    sqlprep$=sqlprep$+"RESULT_SET "
-    sqlprep$=sqlprep$+"{_begin_}{_end_} 'OP Invoice Detail'"
-
-    gosub create_sproc_def
-
-	rem --- OP_HIST_INVOICE_DET_LOTSER
-    sproc_vw_name$="OP_HIST_INVOICE_DET_LOTSER"
-	sqlprep$="CREATE PROCEDURE OP_HIST_INVOICE_DET_LOTSER "
-    sqlprep$=sqlprep$+"(FIRM_ID CHAR(2) IN, AR_TYPE CHAR(2) IN, CUSTOMER_ID CHAR(6) IN, ORDER_NO CHAR(7) IN, AR_INV_NO CHAR(7) IN, "
-	sqlprep$=sqlprep$+"INTERNAL_SEQ_NO CHAR(12) IN, OPE11_QTY_SHIPPED CHAR(20) IN, QTY_MASK CHAR(20) IN, "
-	sqlprep$=sqlprep$+"IVS_LOTSER_FLAG CHAR(1) IN, BARISTA_WD VARCHAR(50) IN)"	
-    sqlprep$=sqlprep$+"'"+sproc_path$+"OP_HIST_INVOICE_DET_LOTSER.prc' '"+barista_cfg_path$+"barista.cfg' "
     sqlprep$=sqlprep$+"RESULT_SET "
     sqlprep$=sqlprep$+"{_begin_}{_end_} 'OP Invoice Detail'"
 
@@ -1212,7 +1178,41 @@ rem ==============================================
     gosub create_sproc_def		
 	
 rem --- Done with SPROCs. Now do VIEWs
-rem --- As of 11/2018, no VIEWs are needed
+rem --- first drop all std Addon VIEWs
+
+	sql_action$="DROP VIEW"
+	abort_on_exec_err=0; rem OK if DROP fails to EXEC, but not OK if CREATE fails or if PREP fails
+	
+	sproc_vw_name$="ADC_BANKACCTCODE_VIEW"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+
+	sproc_vw_name$="APM_VENDMAST_VIEW"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    gosub create_sproc_def
+    
+    rem --- now create VIEWs
+
+    sql_action$="CREATE VIEW"
+	abort_on_exec_err=1; rem OK if DROP fails to EXEC, but not OK if CREATE fails or if PREP fails
+
+    rem --- ADC_BANKACCTCODE_VIEW
+    config_id$ = "BANK_ACCT_AUTH"
+    config_str$ = encryptor!.configStr(config_id$)
+    sproc_vw_name$="ADC_BANKACCTCODE_VIEW "
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    sqlprep$=sqlprep$+"AS SELECT ADC_BANKACCTCODE.*,RIGHT(DECRYPT(ATH(TRIM(BNK_ACCT_NO)),'"+config_str$+"'),4) AS ACCT_LAST_4 FROM ADC_BANKACCTCODE"
+  
+    gosub create_sproc_def
+
+    rem --- APM_VENDMAST_VIEW
+	config_id$ = "BANK_ACCT_AUTH"
+    config_str$ = encryptor!.configStr(config_id$)
+    sproc_vw_name$="APM_VENDMAST_VIEW"
+    sqlprep$=sql_action$+" "+sproc_vw_name$+" "
+    sqlprep$=sqlprep$+"AS SELECT APM_VENDMAST.*,RIGHT(DECRYPT(ATH(TRIM(BNK_ACCT_NO)),'"+config_str$+"'),4) AS ACCT_LAST_4 FROM APM_VENDMAST"
+    
+    gosub create_sproc_def
 
 done:
 

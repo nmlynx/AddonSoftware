@@ -1,68 +1,59 @@
-[[IVM_ITEMWHSE.AVG_COST.AVAL]]
-rem --- Update unit_cost if using average costing and average cost changes
-	avg_cost$=callpoint!.getUserInput()
-	if callpoint!.getDevObject(cost_method$)="A" and avg_cost$<>callpoint!.getColumnData("IVM_ITEMWHSE.AVG_COST") then
-		callpoint!.setColumnData("IVM_ITEMWHSE.UNIT_COST",avg_cost$,1)
-	endif
-[[IVM_ITEMWHSE.REP_COST.AVAL]]
-rem --- Update unit_cost if using replacement costing and replacement cost changes
-	rep_cost$=callpoint!.getUserInput()
-	if callpoint!.getDevObject(cost_method$)="R" and rep_cost$<>callpoint!.getColumnData("IVM_ITEMWHSE.REP_COST") then
-		callpoint!.setColumnData("IVM_ITEMWHSE.UNIT_COST",rep_cost$,1)
-	endif
-[[IVM_ITEMWHSE.STD_COST.AVAL]]
-rem --- Update unit_cost if using standard costing and standard cost changes
-	std_cost$=callpoint!.getUserInput()
-	if callpoint!.getDevObject(cost_method$)="S" and std_cost$<>callpoint!.getColumnData("IVM_ITEMWHSE.STD_COST") then
-		callpoint!.setColumnData("IVM_ITEMWHSE.UNIT_COST",std_cost$,1)
-	endif
-[[IVM_ITEMWHSE.VENDOR_ID.AVAL]]
-rem "VENDOR INACTIVE - FEATURE"
-vendor_id$ = callpoint!.getUserInput()
-apm01_dev=fnget_dev("APM_VENDMAST")
-apm01_tpl$=fnget_tpl$("APM_VENDMAST")
-dim apm01a$:apm01_tpl$
-apm01a_key$=firm_id$+vendor_id$
-find record (apm01_dev,key=apm01a_key$,err=*break) apm01a$
-if apm01a.vend_inactive$="Y" then
-	call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
-	msg_id$="AP_VEND_INACTIVE"
-	dim msg_tokens$[2]
-	msg_tokens$[1]=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
-	msg_tokens$[2]=cvs(apm01a.vendor_name$,2)
-	gosub disp_message
-	callpoint!.setStatus("ACTIVATE")
+[[IVM_ITEMWHSE.ABC_CODE.AVAL]]
+if (callpoint!.getUserInput()<"A" or callpoint!.getUserInput()>"Z") and cvs(callpoint!.getUserInput(),2)<>"" callpoint!.setStatus("ABORT")
+
+[[IVM_ITEMWHSE.ADIS]]
+rem --- If select in Physical Intentory, location and cycle can't change
+
+if callpoint!.getColumnData("IVM_ITEMWHSE.SELECT_PHYS") = "Y" then
+	callpoint!.setColumnEnabled("IVM_ITEMWHSE.LOCATION",0)
+	callpoint!.setColumnEnabled("IVM_ITEMWHSE.PI_CYCLECODE",0)
+	call stbl("+DIR_SYP")+"bac_message.bbj","IV_PHY_INV_SELECT",msg_tokens$[all],msg_opt$,table_chans$[all]
+else
+	callpoint!.setColumnEnabled("IVM_ITEMWHSE.LOCATION",1)
+	callpoint!.setColumnEnabled("IVM_ITEMWHSE.PI_CYCLECODE",1)
 endif
 
-rem --- Make sure ivm_itemvend record exists for the stocking vendor
-ivm05_dev=fnget_dev("IVM_ITEMVEND")
-dim ivm05a$:fnget_tpl$("IVM_ITEMVEND")
-item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
-findrecord(ivm05_dev,key=firm_id$+vendor_id$+item_id$,dom=*next)ivm05a$
-if cvs(ivm05a.firm_id$,2)=""  then
-	rem --- Create ivm_itemvend record for this vendor
-	ivm05a.firm_id$=firm_id$
-	ivm05a.vendor_id$=vendor_id$
-	ivm05a.item_id$=item_id$
-	ivm05a.prisec_flag$="P"
-	ivm05a.break_qty_01=0
-	ivm05a.break_qty_02=0
-	ivm05a.break_qty_03=0
-	ivm05a.unit_cost_01=0
-	ivm05a.unit_cost_02=0
-	ivm05a.unit_cost_03=0
-	ivm05a.last_po_cost=0
-	ivm05a.last_po_lead=0
-	ivm05a.lead_time=0
-	writerecord(ivm05_dev)ivm05a$
+rem --- Draw attention when on-order quantities don't add up
+	qty_on_order=num(callpoint!.getColumnData("IVM_ITEMWHSE.QTY_ON_ORDER"))
+	po_qty=num(callpoint!.getColumnData("<<DISPLAY>>.ON_ORD_PO"))
+	womast_qty=num(callpoint!.getColumnData("<<DISPLAY>>.ON_ORD_WO"))
+	if qty_on_order<>po_qty+womast_qty then
+		call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
+		qtyOnOrder!=callpoint!.getControl("IVM_ITEMWHSE.QTY_ON_ORDER")
+		qtyOnOrder!.setBackColor(rdErrorColor!)
+	endif
 
-	call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
-	msg_id$="IV_ITEM_VEND_MISSING"
-	dim msg_tokens$[1]
-	msg_tokens$[1]=fnmask$(vendor_id$,m0$)
-	gosub disp_message
-	callpoint!.setStatus("ACTIVATE")
-endif
+rem --- Draw attention when commit quantities don't add up
+	qty_commit=num(callpoint!.getColumnData("IVM_ITEMWHSE.QTY_COMMIT"))
+	op_qty=num(callpoint!.getColumnData("<<DISPLAY>>.COMMIT_SO"))
+	womatdtl_qty=num(callpoint!.getColumnData("<<DISPLAY>>.COMMIT_WO"))
+	if qty_commit<>op_qty+womatdtl_qty then
+		call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
+		qtyCommit!=callpoint!.getControl("IVM_ITEMWHSE.QTY_COMMIT")
+		qtyCommit!.setBackColor(rdErrorColor!)
+	endif
+
+rem --- Disable cost fields when there are transactions for this item.
+	ivt04_dev=fnget_dev("IVT_ITEMTRAN")
+	warehouse_id$=callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
+	item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
+	read(ivt04_dev,key=firm_id$+warehouse_id$+item_id$,dom=*next)
+	ivt04_key$=""
+	ivt04_key$=key(ivt04_dev,end=*next)
+	if pos(firm_id$+warehouse_id$+item_id$=ivt04_key$)=1 then
+		rem --- Disable cost fields
+		enable=0
+	else
+		rem --- Enable cost fields
+		enable=1
+	endif
+	callpoint!.setColumnEnabled("IVM_ITEMWHSE.UNIT_COST",enable)
+	callpoint!.setColumnEnabled("IVM_ITEMWHSE.AVG_COST",enable)
+	callpoint!.setColumnEnabled("IVM_ITEMWHSE.STD_COST",enable)
+	callpoint!.setColumnEnabled("IVM_ITEMWHSE.REP_COST",enable)
+	callpoint!.setColumnEnabled("IVM_ITEMWHSE.LANDED_COST",enable)
+	callpoint!.setColumnEnabled("IVM_ITEMWHSE.LAST_PO_COST",enable)
+
 [[IVM_ITEMWHSE.AENA]]
 rem --- Disable Barista menu items
 	wctl$="31031"; rem --- Save-As menu item in barista.ini
@@ -71,20 +62,57 @@ rem --- Disable Barista menu items
 	wmap$(wpos+6,1)="X"
 	callpoint!.setAbleMap(wmap$)
 	callpoint!.setStatus("ABLEMAP")
-[[IVM_ITEMWHSE.AREC]]
-rem --- Initialize product_type with ivm_itemmast product_type
-	itemmast_dev=fnget_dev("IVM_ITEMMAST")
-	dim itemmast_tpl$:fnget_tpl$("IVM_ITEMMAST")
-	readrecord(itemmast_dev,key=firm_id$+callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID"),dom=*next)itemmast_tpl$
-	callpoint!.setColumnData("IVM_ITEMWHSE.PRODUCT_TYPE",itemmast_tpl.product_type$)
 
-rem --- Enisable cost fields for new item.
-	callpoint!.setColumnEnabled("IVM_ITEMWHSE.UNIT_COST",1)
-	callpoint!.setColumnEnabled("IVM_ITEMWHSE.AVG_COST",1)
-	callpoint!.setColumnEnabled("IVM_ITEMWHSE.STD_COST",1)
-	callpoint!.setColumnEnabled("IVM_ITEMWHSE.REP_COST",1)
-	callpoint!.setColumnEnabled("IVM_ITEMWHSE.LANDED_COST",1)
-	callpoint!.setColumnEnabled("IVM_ITEMWHSE.LAST_PO_COST",1)
+[[IVM_ITEMWHSE.AOPT-HIST]]
+iv_item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
+iv_whse_id$=callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
+
+call stbl("+DIR_PGM")+"ivr_itmWhseAct.aon",iv_item_id$,iv_whse_id$,table_chans$[all]
+
+[[IVM_ITEMWHSE.AOPT-IHST]]
+cp_item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
+cp_whse_id$=callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
+user_id$=stbl("+USER_ID")
+dim dflt_data$[4,1]
+dflt_data$[1,0]="ITEM_ID_1"
+dflt_data$[1,1]=cp_item_id$
+dflt_data$[2,0]="ITEM_ID_2"
+dflt_data$[2,1]=cp_item_id$
+dflt_data$[3,0]="WAREHOUSE_ID_1"
+dflt_data$[3,1]=cp_whse_id$
+dflt_data$[4,0]="WAREHOUSE_ID_2"
+dflt_data$[4,1]=cp_whse_id$
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	"IVR_TRANSHIST",
+:	user_id$,
+:	"",
+:	"",
+:	table_chans$[all],
+:	"",
+:	dflt_data$[all]
+
+[[IVM_ITEMWHSE.AOPT-LIFO]]
+cp_item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
+cp_whse_id$=callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
+user_id$=stbl("+USER_ID")
+dim dflt_data$[4,1]
+dflt_data$[1,0]="ITEM_ID_1"
+dflt_data$[1,1]=cp_item_id$
+dflt_data$[2,0]="ITEM_ID_2"
+dflt_data$[2,1]=cp_item_id$
+dflt_data$[3,0]="WAREHOUSE_ID_1"
+dflt_data$[3,1]=cp_whse_id$
+dflt_data$[4,0]="WAREHOUSE_ID_2"
+dflt_data$[4,1]=cp_whse_id$
+call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	"IVR_LIFOFIFO",
+:	user_id$,
+:	"",
+:	"",
+:	table_chans$[all],
+:	"",
+:	dflt_data$[all]
+
 [[IVM_ITEMWHSE.ARAR]]
 rem --- Get total on Open PO lines
 
@@ -233,6 +261,29 @@ rem --- Get WO commits
 
 		callpoint!.setColumnData("<<DISPLAY>>.COMMIT_WO",str(womatdtl_qty),1)
 	endif
+
+[[IVM_ITEMWHSE.AREC]]
+rem --- Initialize product_type with ivm_itemmast product_type
+	itemmast_dev=fnget_dev("IVM_ITEMMAST")
+	dim itemmast_tpl$:fnget_tpl$("IVM_ITEMMAST")
+	readrecord(itemmast_dev,key=firm_id$+callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID"),dom=*next)itemmast_tpl$
+	callpoint!.setColumnData("IVM_ITEMWHSE.PRODUCT_TYPE",itemmast_tpl.product_type$)
+
+rem --- Enisable cost fields for new item.
+	callpoint!.setColumnEnabled("IVM_ITEMWHSE.UNIT_COST",1)
+	callpoint!.setColumnEnabled("IVM_ITEMWHSE.AVG_COST",1)
+	callpoint!.setColumnEnabled("IVM_ITEMWHSE.STD_COST",1)
+	callpoint!.setColumnEnabled("IVM_ITEMWHSE.REP_COST",1)
+	callpoint!.setColumnEnabled("IVM_ITEMWHSE.LANDED_COST",1)
+	callpoint!.setColumnEnabled("IVM_ITEMWHSE.LAST_PO_COST",1)
+
+[[IVM_ITEMWHSE.AVG_COST.AVAL]]
+rem --- Update unit_cost if using average costing and average cost changes
+	avg_cost$=callpoint!.getUserInput()
+	if callpoint!.getDevObject(cost_method$)="A" and avg_cost$<>callpoint!.getColumnData("IVM_ITEMWHSE.AVG_COST") then
+		callpoint!.setColumnData("IVM_ITEMWHSE.UNIT_COST",avg_cost$,1)
+	endif
+
 [[IVM_ITEMWHSE.BDEL]]
 rem --- Allow this warehouse to be deleted?
 
@@ -242,99 +293,7 @@ rem --- Allow this warehouse to be deleted?
 
 	call stbl("+DIR_PGM")+"ivc_deleteitem.aon", action$, whse$, item$, rd_table_chans$[all], status
 	if status then callpoint!.setStatus("ABORT")
-[[IVM_ITEMWHSE.UNIT_COST.AVAL]]
-rem --- Set default costs from unit cost
 
-	unit_cost$ = callpoint!.getUserInput()
-	if unit_cost$<>callpoint!.getColumnData("IVM_ITEMWHSE.UNIT_COST") then
-
-		if num( callpoint!.getColumnData("IVM_ITEMWHSE.LANDED_COST") ) = 0 then
-			callpoint!.setColumnData("IVM_ITEMWHSE.LANDED_COST",unit_cost$,1)
-		endif
-
-		if num( callpoint!.getColumnData("IVM_ITEMWHSE.LAST_PO_COST") ) = 0 then
-			callpoint!.setColumnData("IVM_ITEMWHSE.LAST_PO_COST",unit_cost$,1)
-		endif
-
-		if num( callpoint!.getColumnData("IVM_ITEMWHSE.AVG_COST") ) = 0 or callpoint!.getDevObject(cost_method$)="A" then
-			callpoint!.setColumnData("IVM_ITEMWHSE.AVG_COST",unit_cost$,1)
-		endif
-
-		if num( callpoint!.getColumnData("IVM_ITEMWHSE.STD_COST") ) = 0 or callpoint!.getDevObject(cost_method$)="S" then
-			callpoint!.setColumnData("IVM_ITEMWHSE.STD_COST",unit_cost$,1)
-		endif
-
-		if num( callpoint!.getColumnData("IVM_ITEMWHSE.REP_COST") ) = 0 or callpoint!.getDevObject(cost_method$)="R" then
-			callpoint!.setColumnData("IVM_ITEMWHSE.REP_COST",unit_cost$,1)
-		endif
-	endif
-[[IVM_ITEMWHSE.ADIS]]
-rem --- If select in Physical Intentory, location and cycle can't change
-
-if callpoint!.getColumnData("IVM_ITEMWHSE.SELECT_PHYS") = "Y" then
-	callpoint!.setColumnEnabled("IVM_ITEMWHSE.LOCATION",0)
-	callpoint!.setColumnEnabled("IVM_ITEMWHSE.PI_CYCLECODE",0)
-	call stbl("+DIR_SYP")+"bac_message.bbj","IV_PHY_INV_SELECT",msg_tokens$[all],msg_opt$,table_chans$[all]
-else
-	callpoint!.setColumnEnabled("IVM_ITEMWHSE.LOCATION",1)
-	callpoint!.setColumnEnabled("IVM_ITEMWHSE.PI_CYCLECODE",1)
-endif
-
-rem --- Draw attention when on-order quantities don't add up
-	qty_on_order=num(callpoint!.getColumnData("IVM_ITEMWHSE.QTY_ON_ORDER"))
-	po_qty=num(callpoint!.getColumnData("<<DISPLAY>>.ON_ORD_PO"))
-	womast_qty=num(callpoint!.getColumnData("<<DISPLAY>>.ON_ORD_WO"))
-	if qty_on_order<>po_qty+womast_qty then
-		call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
-		qtyOnOrder!=callpoint!.getControl("IVM_ITEMWHSE.QTY_ON_ORDER")
-		qtyOnOrder!.setBackColor(rdErrorColor!)
-	endif
-
-rem --- Draw attention when commit quantities don't add up
-	qty_commit=num(callpoint!.getColumnData("IVM_ITEMWHSE.QTY_COMMIT"))
-	op_qty=num(callpoint!.getColumnData("<<DISPLAY>>.COMMIT_SO"))
-	womatdtl_qty=num(callpoint!.getColumnData("<<DISPLAY>>.COMMIT_WO"))
-	if qty_commit<>op_qty+womatdtl_qty then
-		call stbl("+DIR_SYP",err=*endif)+"bac_create_color.bbj","+ENTRY_ERROR_COLOR","255,224,224",rdErrorColor!,""
-		qtyCommit!=callpoint!.getControl("IVM_ITEMWHSE.QTY_COMMIT")
-		qtyCommit!.setBackColor(rdErrorColor!)
-	endif
-
-rem --- Disable cost fields when there are transactions for this item.
-	ivt04_dev=fnget_dev("IVT_ITEMTRAN")
-	warehouse_id$=callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
-	item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
-	read(ivt04_dev,key=firm_id$+warehouse_id$+item_id$,dom=*next)
-	ivt04_key$=""
-	ivt04_key$=key(ivt04_dev,end=*next)
-	if pos(firm_id$+warehouse_id$+item_id$=ivt04_key$)=1 then
-		rem --- Disable cost fields
-		enable=0
-	else
-		rem --- Enable cost fields
-		enable=1
-	endif
-	callpoint!.setColumnEnabled("IVM_ITEMWHSE.UNIT_COST",enable)
-	callpoint!.setColumnEnabled("IVM_ITEMWHSE.AVG_COST",enable)
-	callpoint!.setColumnEnabled("IVM_ITEMWHSE.STD_COST",enable)
-	callpoint!.setColumnEnabled("IVM_ITEMWHSE.REP_COST",enable)
-	callpoint!.setColumnEnabled("IVM_ITEMWHSE.LANDED_COST",enable)
-	callpoint!.setColumnEnabled("IVM_ITEMWHSE.LAST_PO_COST",enable)
-[[IVM_ITEMWHSE.SAFETY_STOCK.AVAL]]
-if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
-[[IVM_ITEMWHSE.ORDER_POINT.AVAL]]
-if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
-[[IVM_ITEMWHSE.MAXIMUM_QTY.AVAL]]
-if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
-[[IVM_ITEMWHSE.LEAD_TIME.AVAL]]
-if num(callpoint!.getUserInput())<0 or fpt(num(callpoint!.getUserInput())) then callpoint!.setStatus("ABORT")
-[[IVM_ITEMWHSE.EOQ.AVAL]]
-if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
-[[IVM_ITEMWHSE.ABC_CODE.AVAL]]
-if (callpoint!.getUserInput()<"A" or callpoint!.getUserInput()>"Z") and cvs(callpoint!.getUserInput(),2)<>"" callpoint!.setStatus("ABORT")
-[[IVM_ITEMWHSE.<CUSTOM>]]
-#include [+ADDON_LIB]std_missing_params.aon
-#include [+ADDON_LIB]std_functions.aon
 [[IVM_ITEMWHSE.BSHO]]
 rem --- Open extra tables
 
@@ -400,50 +359,124 @@ rem --- Disable vendor_id if AP not installed
 if callpoint!.getDevObject("ap_installed")<>"Y"
 	callpoint!.setColumnEnabled("IVM_ITEMWHSE.VENDOR_ID",-1)
 endif
-[[IVM_ITEMWHSE.AOPT-HIST]]
-iv_item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
-iv_whse_id$=callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
 
-call stbl("+DIR_PGM")+"ivr_itmWhseAct.aon",iv_item_id$,iv_whse_id$,table_chans$[all]
-[[IVM_ITEMWHSE.AOPT-LIFO]]
-cp_item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
-cp_whse_id$=callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
-user_id$=stbl("+USER_ID")
-dim dflt_data$[4,1]
-dflt_data$[1,0]="ITEM_ID_1"
-dflt_data$[1,1]=cp_item_id$
-dflt_data$[2,0]="ITEM_ID_2"
-dflt_data$[2,1]=cp_item_id$
-dflt_data$[3,0]="WAREHOUSE_ID_1"
-dflt_data$[3,1]=cp_whse_id$
-dflt_data$[4,0]="WAREHOUSE_ID_2"
-dflt_data$[4,1]=cp_whse_id$
-call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:	"IVR_LIFOFIFO",
-:	user_id$,
-:	"",
-:	"",
-:	table_chans$[all],
-:	"",
-:	dflt_data$[all]
-[[IVM_ITEMWHSE.AOPT-IHST]]
-cp_item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
-cp_whse_id$=callpoint!.getColumnData("IVM_ITEMWHSE.WAREHOUSE_ID")
-user_id$=stbl("+USER_ID")
-dim dflt_data$[4,1]
-dflt_data$[1,0]="ITEM_ID_1"
-dflt_data$[1,1]=cp_item_id$
-dflt_data$[2,0]="ITEM_ID_2"
-dflt_data$[2,1]=cp_item_id$
-dflt_data$[3,0]="WAREHOUSE_ID_1"
-dflt_data$[3,1]=cp_whse_id$
-dflt_data$[4,0]="WAREHOUSE_ID_2"
-dflt_data$[4,1]=cp_whse_id$
-call stbl("+DIR_SYP")+"bam_run_prog.bbj",
-:	"IVR_TRANSHIST",
-:	user_id$,
-:	"",
-:	"",
-:	table_chans$[all],
-:	"",
-:	dflt_data$[all]
+[[<<DISPLAY>>.COMMIT_WO.BDRL]]
+rem --- don't run drilldown if SF isn't installed
+
+	if callpoint!.getDevObject("wo_installed")<>"Y" then callpoint!.setStatus("ABORT")
+
+[[IVM_ITEMWHSE.EOQ.AVAL]]
+if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
+
+[[IVM_ITEMWHSE.LEAD_TIME.AVAL]]
+if num(callpoint!.getUserInput())<0 or fpt(num(callpoint!.getUserInput())) then callpoint!.setStatus("ABORT")
+
+[[IVM_ITEMWHSE.MAXIMUM_QTY.AVAL]]
+if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
+
+[[<<DISPLAY>>.ON_ORD_WO.BDRL]]
+rem --- don't run drilldown if SF isn't installed
+
+	if callpoint!.getDevObject("wo_installed")<>"Y" then callpoint!.setStatus("ABORT")
+
+[[IVM_ITEMWHSE.ORDER_POINT.AVAL]]
+if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
+
+[[IVM_ITEMWHSE.REP_COST.AVAL]]
+rem --- Update unit_cost if using replacement costing and replacement cost changes
+	rep_cost$=callpoint!.getUserInput()
+	if callpoint!.getDevObject(cost_method$)="R" and rep_cost$<>callpoint!.getColumnData("IVM_ITEMWHSE.REP_COST") then
+		callpoint!.setColumnData("IVM_ITEMWHSE.UNIT_COST",rep_cost$,1)
+	endif
+
+[[IVM_ITEMWHSE.SAFETY_STOCK.AVAL]]
+if num(callpoint!.getUserInput())<0 then callpoint!.setStatus("ABORT")
+
+[[IVM_ITEMWHSE.STD_COST.AVAL]]
+rem --- Update unit_cost if using standard costing and standard cost changes
+	std_cost$=callpoint!.getUserInput()
+	if callpoint!.getDevObject(cost_method$)="S" and std_cost$<>callpoint!.getColumnData("IVM_ITEMWHSE.STD_COST") then
+		callpoint!.setColumnData("IVM_ITEMWHSE.UNIT_COST",std_cost$,1)
+	endif
+
+[[IVM_ITEMWHSE.UNIT_COST.AVAL]]
+rem --- Set default costs from unit cost
+
+	unit_cost$ = callpoint!.getUserInput()
+	if unit_cost$<>callpoint!.getColumnData("IVM_ITEMWHSE.UNIT_COST") then
+
+		if num( callpoint!.getColumnData("IVM_ITEMWHSE.LANDED_COST") ) = 0 then
+			callpoint!.setColumnData("IVM_ITEMWHSE.LANDED_COST",unit_cost$,1)
+		endif
+
+		if num( callpoint!.getColumnData("IVM_ITEMWHSE.LAST_PO_COST") ) = 0 then
+			callpoint!.setColumnData("IVM_ITEMWHSE.LAST_PO_COST",unit_cost$,1)
+		endif
+
+		if num( callpoint!.getColumnData("IVM_ITEMWHSE.AVG_COST") ) = 0 or callpoint!.getDevObject(cost_method$)="A" then
+			callpoint!.setColumnData("IVM_ITEMWHSE.AVG_COST",unit_cost$,1)
+		endif
+
+		if num( callpoint!.getColumnData("IVM_ITEMWHSE.STD_COST") ) = 0 or callpoint!.getDevObject(cost_method$)="S" then
+			callpoint!.setColumnData("IVM_ITEMWHSE.STD_COST",unit_cost$,1)
+		endif
+
+		if num( callpoint!.getColumnData("IVM_ITEMWHSE.REP_COST") ) = 0 or callpoint!.getDevObject(cost_method$)="R" then
+			callpoint!.setColumnData("IVM_ITEMWHSE.REP_COST",unit_cost$,1)
+		endif
+	endif
+
+[[IVM_ITEMWHSE.VENDOR_ID.AVAL]]
+rem "VENDOR INACTIVE - FEATURE"
+vendor_id$ = callpoint!.getUserInput()
+apm01_dev=fnget_dev("APM_VENDMAST")
+apm01_tpl$=fnget_tpl$("APM_VENDMAST")
+dim apm01a$:apm01_tpl$
+apm01a_key$=firm_id$+vendor_id$
+find record (apm01_dev,key=apm01a_key$,err=*break) apm01a$
+if apm01a.vend_inactive$="Y" then
+	call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+	msg_id$="AP_VEND_INACTIVE"
+	dim msg_tokens$[2]
+	msg_tokens$[1]=fnmask$(apm01a.vendor_id$(1,vendor_size),m0$)
+	msg_tokens$[2]=cvs(apm01a.vendor_name$,2)
+	gosub disp_message
+	callpoint!.setStatus("ACTIVATE")
+endif
+
+rem --- Make sure ivm_itemvend record exists for the stocking vendor
+ivm05_dev=fnget_dev("IVM_ITEMVEND")
+dim ivm05a$:fnget_tpl$("IVM_ITEMVEND")
+item_id$=callpoint!.getColumnData("IVM_ITEMWHSE.ITEM_ID")
+findrecord(ivm05_dev,key=firm_id$+vendor_id$+item_id$,dom=*next)ivm05a$
+if cvs(ivm05a.firm_id$,2)=""  then
+	rem --- Create ivm_itemvend record for this vendor
+	ivm05a.firm_id$=firm_id$
+	ivm05a.vendor_id$=vendor_id$
+	ivm05a.item_id$=item_id$
+	ivm05a.prisec_flag$="P"
+	ivm05a.break_qty_01=0
+	ivm05a.break_qty_02=0
+	ivm05a.break_qty_03=0
+	ivm05a.unit_cost_01=0
+	ivm05a.unit_cost_02=0
+	ivm05a.unit_cost_03=0
+	ivm05a.last_po_cost=0
+	ivm05a.last_po_lead=0
+	ivm05a.lead_time=0
+	writerecord(ivm05_dev)ivm05a$
+
+	call stbl("+DIR_PGM")+"adc_getmask.aon","VENDOR_ID","","","",m0$,0,vendor_size
+	msg_id$="IV_ITEM_VEND_MISSING"
+	dim msg_tokens$[1]
+	msg_tokens$[1]=fnmask$(vendor_id$,m0$)
+	gosub disp_message
+	callpoint!.setStatus("ACTIVATE")
+endif
+
+[[IVM_ITEMWHSE.<CUSTOM>]]
+#include [+ADDON_LIB]std_missing_params.aon
+#include [+ADDON_LIB]std_functions.aon
+
+
+

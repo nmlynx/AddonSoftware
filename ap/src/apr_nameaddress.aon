@@ -154,8 +154,8 @@ rem --- Get next key
             call stbl("+DIR_SYP")+"bac_getmask.bbj","T",cvs(apm01a.fax_no$,2),"",fax_mask$
             fax$=cvs(apm01a.fax_no$,2)
             fax$=str(fax$:fax_mask$,err=*next)
-        address$=apm01a.addr_line_1$+apm01a.addr_line_2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$
-        call pgmdir$+"adc_address.aon",address$,24,3,9,30
+            address$=apm01a.addr_line_1$+apm01a.addr_line_2$+apm01a.city$+apm01a.state_code$+apm01a.zip_code$
+            call pgmdir$+"adc_address.aon",address$,30,3,9,30
             zip$=apm01a.zip_code$
             call stbl("+DIR_SYP")+"bac_getmask.bbj","P",cvs(zip$,2),"",postal_mask$
             postal$=cvs(zip$,2)

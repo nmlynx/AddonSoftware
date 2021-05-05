@@ -183,7 +183,7 @@ line_detail: rem --- Item Detail
 				ext_masked$=str(ope11a.ext_price:ext_mask$)
 			endif
 
-			if opm02a.line_type$="S" then 
+			if pos(opm02a.line_type$="SN") then 
 				um$=ope11a.um_sold$
 			endif
 

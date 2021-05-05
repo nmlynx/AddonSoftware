@@ -84,6 +84,20 @@ rem --- Launch Shipment Tracking grid (view only)
 :       key_pfx$,
 :       table_chans$[all]
 
+[[OPT_INVHDR.AOPT-STAX]]
+rem --- Launch Sales Tax Trans History form
+	customer_id$=callpoint!.getColumnData("OPT_INVHDR.CUSTOMER_ID")
+	order_no$=callpoint!.getColumnData("OPT_INVHDR.ORDER_NO")
+	ar_inv_no$=callpoint!.getColumnData("OPT_INVHDR.AR_INV_NO")
+	key_pfx$=firm_id$+customer_id$+order_no$+ar_inv_no$+"001"
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	"OPT_SLSTAXTRANS",
+:       stbl("+USER_ID"),
+:       "QRY",
+:       key_pfx$,
+:       table_chans$[all]
+
 [[OPT_INVHDR.APFE]]
 rem --- Enable SHPT additional options if shipment tracking info exists
 	optShipTrack_dev = fnget_dev("OPT_SHIPTRACK")
@@ -96,6 +110,11 @@ rem --- Enable SHPT additional options if shipment tracking info exists
 		callpoint!.setOptionEnabled("SHPT",1)
 	else
 		callpoint!.setOptionEnabled("SHPT",0)
+	endif
+
+rem --- Enable Print button
+	if cvs(callpoint!.getColumnData("OPT_INVHDR.CUSTOMER_ID"),3)<>"" and cvs(callpoint!.getColumnData("OPT_INVHDR.ORDER_NO"),3)<>"" and cvs(callpoint!.getColumnData("OPT_INVHDR.AR_INV_NO"),3)<>""
+		callpoint!.setOptionEnabled("PRNT",1)
 	endif
 
 [[OPT_INVHDR.ARAR]]
@@ -135,6 +154,7 @@ rem --- Enable Print button when leave edit mode
 [[OPT_INVHDR.BPFX]]
 rem --- Disable additional options for now
 	callpoint!.setOptionEnabled("SHPT",0)
+	callpoint!.setOptionEnabled("PRNT",0)
 
 [[OPT_INVHDR.BSHO]]
 rem --- Open needed files
@@ -273,7 +293,7 @@ rem --- Setup user_tpl$
 :		"manual_price:u(1), " +
 :     "ord_tot_obj:u(1), " +
 :		"price_code:c(2), " +
-:		"pricing_code:c(4), " +
+:		"pricing_code:c(6), " +
 :		"order_date:c(8), " +
 :		"pick_hold:c(1), " +
 :		"pgmdir:c(1*), " +
@@ -488,4 +508,6 @@ rem ==========================================================================
 	callpoint!.setStatus("REFRESH")
 
 	return
+
+
 

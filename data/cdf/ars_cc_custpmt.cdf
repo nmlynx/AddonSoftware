@@ -116,19 +116,19 @@ rem --- Get gateway server
 
 rem --- Configure CreditCardLogin web app
 	appName$="CreditCardLogin_"+cvs(dbName$,11)+"_"+firm_id$
-	program$=(new File(aonDir$+"/web/CCLoginManager.aon")).getAbsolutePath()
+	program$=(new File(aonDir$+"/web/aro_CCLoginManager.aon")).getAbsolutePath()
 	css$=(new File(aonDir$+"/htdocs/CCLogin.css")).getAbsolutePath()
 	gosub configureWebApp
 
 rem --- CreditCardConfirmation web app
 	appName$="CreditCardConfirmation_"+cvs(dbName$,11)+"_"+firm_id$
-	program$=(new File(aonDir$+"/web/CCRegistrationConfirmationManager.aon")).getAbsolutePath()
+	program$=(new File(aonDir$+"/web/aro_CCRegistrationConfirmationManager.aon")).getAbsolutePath()
 	css$=(new File(aonDir$+"/htdocs/CCLogin.css")).getAbsolutePath()
 	gosub configureWebApp
 
 rem --- CreditCardPassword web app
 	appName$="CreditCardPassword_"+cvs(dbName$,11)+"_"+firm_id$
-	program$=(new File(aonDir$+"/web/CCForgotPasswordManager.aon")).getAbsolutePath()
+	program$=(new File(aonDir$+"/web/aro_CCForgotPasswordManager.aon")).getAbsolutePath()
 	css$=(new File(aonDir$+"/htdocs/CCLogin.css")).getAbsolutePath()
 	gosub configureWebApp
 

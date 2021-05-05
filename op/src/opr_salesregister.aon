@@ -132,6 +132,7 @@ rem --- Assign form input values to local variables
 
 rem --- Parameters
 
+    skippedInvoices!=bbjAPI().makeVector()
     dim i[6],p[3],v[15]
     n1$=sysinfo.firm_name$
     n2$="AR"
@@ -391,6 +392,14 @@ rem --- Check to see if record is in use in Invoice Entry
 		endif
 
         extract record (ope01_dev, key=firm_id$+"  "+read_tpl.customer_id$+read_tpl.order_no$+read_tpl.ar_inv_no$, dom=*continue) ope01a$; rem Advisory Locking
+        if ope01a.no_sls_tax_calc and ope01a.print_status$<>"Y" then
+            rem --- Keep track of invoices skipped due to failed tax calculation
+            custOrdInv!=bbjAPI().makeVector()
+            custOrdInv!.addItem(func.alphaMask(ope01a.customer_id$,m0$))
+            custOrdInv!.addItem(ope01a.order_no$)
+            custOrdInv!.addItem(ope01a.ar_inv_no$)
+            skippedInvoices!.addItem(custOrdInv!)
+        endif
         if ope01a.print_status$<>"Y" then read(ope01_dev,end=*continue); continue
         if pos(ope01a.trans_status$="ER")=0 then read(ope01_dev,end=*continue); continue
 
@@ -715,10 +724,16 @@ rem --- Check to see if record is in use in Invoice Entry
             tax1=0
             tax=ope01a.tax_amount
             taxttl=0
-            start_block = 1
 
-            if start_block then
-                find record (opm06_dev,key=firm_id$+ope01a.tax_code$,dom=*endif) opm06a$
+            redim opm06a$
+            find record (opm06_dev,key=firm_id$+ope01a.tax_code$,dom=*next) opm06a$
+            if cvs(opm06a.gl_account$,2)="" then opm06a.gl_account$=fill(len(opm06a.gl_account$),"?")
+            if opm06a.use_tax_service and ope01a.no_sls_tax_calc=0 then
+                rem --- Used sales tax service to calculate the tax amount
+                account$ = opm06a.gl_account$
+                amount = -tax
+                gosub glrecap
+            else
                 tax = tax0*ope01a.taxable_amt/100
 
                 precision 2
@@ -747,14 +762,14 @@ rem --- Check to see if record is in use in Invoice Entry
                     amount   = -tax
                     gosub glrecap
                 next x9
-            endif
 
-            precision 2
-            if ope01a.tax_amount<>taxttl then
-                tax      = ope01a.tax_amount-taxttl
-                account$ = opm06a.gl_account$
-                amount   = -tax
-                gosub glrecap
+                precision 2
+                if ope01a.tax_amount<>taxttl then
+                    tax      = ope01a.tax_amount-taxttl
+                    account$ = opm06a.gl_account$
+                    amount   = -tax
+                    gosub glrecap
+                endif
             endif
 
         rem --- End of Tax routine

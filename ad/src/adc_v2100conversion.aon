@@ -94,8 +94,10 @@ rem --- For version 21.00, encrypt bank account number in ADC_BANKACCTCODE
             read(adcBankAcctCode_dev,key="",dom=*next)
             while 1
                 readrecord(adcBankAcctCode_dev,end=*break)adcBankAcctCode$
-                adcBankAcctCode.bnk_acct_no$=encryptor!.encryptData(cvs(adcBankAcctCode.bnk_acct_no$,3))
-                writerecord(adcBankAcctCode_dev)adcBankAcctCode$
+                if cvs(adcBankAcctCode.bnk_acct_no$,3)<>"" and len(cvs(adcBankAcctCode.bnk_acct_no$,2))<=15
+                    adcBankAcctCode.bnk_acct_no$=encryptor!.encryptData(cvs(adcBankAcctCode.bnk_acct_no$,3))
+                    writerecord(adcBankAcctCode_dev)adcBankAcctCode$
+                endif
             wend
             
             rem --- close files opened for this conversion
@@ -134,15 +136,152 @@ rem --- For version 21.00, encrypt bank account number in ADC_BANKACCTCODE
         print(log_dev)meter_text$
     endif
 
-rem --- For version 21.00, set default value for new AR dflt_age_by param to 'I'
-    this_module$="AR"
-    if installMap!.get(this_module$)="Y" then
-        task$="2100_AR_ars_params"
+rem --- For version 21.00, encrypt bank account number in APM_VENDMAST (apm-01)
+rem --- For version 21.00, initialize new paramaters in APS_PARAMS
+
+    this_module$="AP"
+    if installMap!.get(this_module$)="Y" then    
+        task$="2100_AP_apm_vendmast"
         if convCtrl!.getProperty(task$)<>"Completed" then
 
             rem --- Increment progress meter
             meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:              Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+
+            rem --- Open File(s)
+            num_files=1
+            dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+            open_tables$[1]="APM_VENDMAST",   open_opts$[1]="OTA"
+    
+            gosub open_tables
+    
+            apmVendMast_dev=num(open_chans$[1])
+            dim apmVendMast$:open_tpls$[1]
+
+            rem --- Encrypt the bank account number
+            read(apmVendMast_dev,key="",dom=*next)
+            while 1
+                readrecord(apmVendMast_dev,end=*break)apmVendMast$
+                if cvs(apmVendMast.bnk_acct_no$,3)<>"" and len(cvs(apmVendMast.bnk_acct_no$,2))<=15
+                    apmVendMast.bnk_acct_no$=encryptor!.encryptData(cvs(apmVendMast.bnk_acct_no$,3))
+                    writerecord(apmVendMast_dev)apmVendMast$
+                endif
+            wend
+
+            rem --- close files opened for this conversion
+            num_files=1
+            dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+            open_tables$[1]="APM_VENDMAST",   open_opts$[1]="C"
+    
+            gosub open_tables
+
+            write(convCtrlFileChan)task$+"=Completed"
+
+            rem --- This task$ conversion completed successfully
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+task$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+        else
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_CONV_PREVIOUSLY","Conversion previously completed for")+" "+task$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+        endif
+
+        task$="2100_AP_aps_params"
+        if convCtrl!.getProperty(task$)<>"Completed" then
+
+            rem --- Increment progress meter
+            meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:              Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+
+            rem --- Open File(s)
+            num_files=1
+            dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+            open_tables$[1]="APS_PARAMS",   open_opts$[1]="OTA"
+    
+            gosub open_tables
+    
+            apsParams_dev=num(open_chans$[1])
+            dim apsParams$:open_tpls$[1]
+
+            rem --- Initialize new parameters
+            read(apsParams_dev,key="",dom=*next)
+            while 1
+                readrecord(apsParams_dev,end=*break)apsParams$
+                apsParams.prnt_aba_no$="N"
+                apsParams.prnt_bnk_acct_no$="N"
+                apsParams.scan_docs_to$="NOT"
+                apsParams.warn_in_reg$="N"
+                apsParams.ok_to_update$="N"
+                apsParams.prnt_signature$="N"
+                writerecord(apsParams_dev)apsParams$
+            wend
+
+            rem --- close files opened for this conversion
+            num_files=1
+            dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+            open_tables$[1]="APS_PARAMS",   open_opts$[1]="C"
+    
+            gosub open_tables
+
+            write(convCtrlFileChan)task$+"=Completed"
+
+            rem --- This task$ conversion completed successfully
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+task$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+        else
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_CONV_PREVIOUSLY","Conversion previously completed for")+" "+task$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+        endif
+    else
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_NOT","Not")+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:           Translate!.getTranslation("AON_SKIP","SKIP")+" "+Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+    endif
+
+rem --- For version 21.00, set default value for new AR dflt_age_by param to 'I'
+    this_module$="AR"
+    if installMap!.get(this_module$)="Y" then
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
 :                   Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
+
+        task$="2100_AR_ars_params"
+        if convCtrl!.getProperty(task$)<>"Completed" then
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" ARS_PARAMS"
             meter_proc_recs=meter_proc_recs+1
             meter_action$="MTR-LST"
             gosub disp_meter
@@ -159,10 +298,16 @@ rem --- For version 21.00, set default value for new AR dflt_age_by param to 'I'
             dim arsParams$:open_tpls$[1]
 
             rem --- Set the dflt_age_by param to 'I'
+            rem --- Set age_per_days_? params to 30
             read(arsParams_dev,key="",dom=*next)
             while 1
                 readrecord(arsParams_dev,end=*break)arsParams$
                 arsParams.dflt_age_by$="I"
+                arsParams.age_per_days_1=30
+                arsParams.age_per_days_2=60
+                arsParams.age_per_days_3=90
+                arsParams.age_per_days_4=120
+                arsParams.warn_not_avail$="Y"
                 writerecord(arsParams_dev)arsParams$
             wend
             
@@ -202,44 +347,158 @@ rem --- For version 21.00, set default value for new AR dflt_age_by param to 'I'
         print(log_dev)meter_text$
     endif
 
-rem --- For version 21.00, encrypt bank account number in APM_VENDMAST (apm-01)
+rem --- For version 21.00, set new IVC_PRICCODE pricing_basis to 'P' (since Percent is what has always been used in the past)
+    this_module$="IV"
+    if installMap!.get(this_module$)="Y" then
+        rem --- Increment progress meter
+        meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
+:                   Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+        meter_proc_recs=meter_proc_recs+1
+        meter_action$="MTR-LST"
+        gosub disp_meter
+        print(log_dev)meter_text$
 
-    this_module$="AP"
-    if installMap!.get(this_module$)="Y" then    
-        task$="2100_AP_apm_vendmast"
+        task$="2100_IV_ivc_priccode"
         if convCtrl!.getProperty(task$)<>"Completed" then
-
             rem --- Increment progress meter
-            meter_text$=this_module$+" "+Translate!.getTranslation("AON_INSTALLED","Installed")+", "+
-:              Translate!.getTranslation("AON_DO_DATA_CONV","Doing data conversion for")+" "+this_module$
+            meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" IVC_PRICCODE"
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+    
+            rem --- Open File(s)
+            num_files=1
+            dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+            open_tables$[1]="IVC_PRICCODE",   open_opts$[1]="OTA"
+    
+            gosub open_tables
+    
+            ivcPriccode_dev=num(open_chans$[1])
+            dim ivcPriccode$:open_tpls$[1]
+
+            rem --- Set the pricing_basis to 'P'
+            read(ivcPriccode_dev,key="",dom=*next)
+            while 1
+                readrecord(ivcPriccode_dev,end=*break)ivcPriccode$
+                ivcPriccode.pricing_basis$="P"
+                writerecord(ivcPriccode_dev)ivcPriccode$
+            wend
+            
+            rem --- close files opened for this conversion
+            num_files=1
+            dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+            open_tables$[1]="IVC_PRICCODE",   open_opts$[1]="C"
+    
+            gosub open_tables
+           
+            write(convCtrlFileChan)task$+"=Completed"
+
+            rem --- This task$ conversion completed successfully
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_DATA_CONV","Data conversion")+" "+
+:                       Translate!.getTranslation("AON_COMPLETED_FOR","completed for")+": "+task$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+                
+        else
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_CONV_PREVIOUSLY","Conversion previously completed for")+" "+task$
+            meter_proc_recs=meter_proc_recs+1
+            meter_action$="MTR-LST"
+            gosub disp_meter
+            print(log_dev)meter_text$
+        endif
+
+        rem --- For version 21.00, initialize IVC_UMCODES with existing UNIT_MEASURE, UNIT_OF_SALE, PURCHASE_UM and UM_SOLD codes
+        task$="2100_IV_ivc_umcodes"
+        if convCtrl!.getProperty(task$)<>"Completed" then
+            rem --- Increment progress meter
+            meter_text$=Translate!.getTranslation("AON_INITIALIZING","Initializing")+" IVC_UMCODES"
             meter_proc_recs=meter_proc_recs+1
             meter_action$="MTR-LST"
             gosub disp_meter
             print(log_dev)meter_text$
 
-            rem --- Open File(s)
+            rem --- Get existing UNIT_MEASURE, UNIT_OF_SALE, PURCHASE_UM and UM_SOLD codes to update IVC_UMCODES with
+            umElementsTables! = new HashMap()
+            
+            umTbls!=BBjAPI().makeVector()
+            umTbls!.addItem("BMM_BILLMAST")
+            umTbls!.addItem("BMM_BILLMAT")
+            umTbls!.addItem("BMM_BILLSUB")
+            umTbls!.addItem("POE_PODET")
+            umTbls!.addItem("POE_RECDET")
+            umTbls!.addItem("POE_REQDET")
+            umTbls!.addItem("POT_RECDET")
+            umTbls!.addItem("SFE_WOMASTR")
+            umTbls!.addItem("SFE_WOMATL")
+            umTbls!.addItem("SFE_WOSUBCNT")
+            umTbls!.addItem("SFT_CLSMATTR")
+            umTbls!.addItem("SFT_OPNMATTR")
+            umElementsTables!.put("UNIT_MEASURE",umTbls!)
+
+            uosTbls!=BBjAPI().makeVector()
+            uosTbls!.addItem("IVM_ITEMMAST")
+            uosTbls!.addItem("IVS_DEFAULTS")
+            umElementsTables!.put("UNIT_OF_SALE",uosTbls!)
+
+            pumTbls!=BBjAPI().makeVector()
+            pumTbls!.addItem("IVM_ITEMMAST")
+            pumTbls!.addItem("IVS_DEFAULTS")
+            umElementsTables!.put("PURCHASE_UM",pumTbls!)
+
+            umsTbls!=BBjAPI().makeVector()
+            umsTbls!.addItem("OPT_INVDET")
+            umElementsTables!.put("UM_SOLD",umsTbls!)
+
+            rem --- Populate IVC_UMCODES with existing UNIT_MEASURE, UNIT_OF_SALE, PURCHASE_UM and UM_SOLD codes
             num_files=1
             dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-            open_tables$[1]="APM_VENDMAST",   open_opts$[1]="OTA"
-    
+            open_tables$[1]="IVC_UMCODES",open_opts$[1]="OTA"
             gosub open_tables
-    
-            apmVendMast_dev=num(open_chans$[1])
-            dim apmVendMast$:open_tpls$[1]
+            ivcUmCodes_dev=num(open_chans$[1]); dim ivcUmCodes$:open_tpls$[1]
 
-            rem --- Encrypt the bank account number
-            read(apmVendMast_dev,key="",dom=*next)
-            while 1
-                readrecord(apmVendMast_dev,end=*break)apmVendMast$
-                apmVendMast.bnk_acct_no$=encryptor!.encryptData(cvs(apmVendMast.bnk_acct_no$,3))
-                writerecord(apmVendMast_dev)apmVendMast$
+            iter!=umElementsTables!.keySet().iterator()
+            while iter!.hasNext()
+                element$=iter!.next()
+                srcTbl!=umElementsTables!.get(element$)
+
+                for i=0 to srcTbl!.size()-1
+                    rem --- Open source file
+                    num_files=1
+                    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                    open_tables$[1]=srcTbl!.getItem(i),open_opts$[1]="OTA"
+                    gosub open_tables
+                    srcTbl_dev=num(open_chans$[1]);dim srcTbl$:open_tpls$[1]
+                
+                    read(srcTbl_dev,key="",dom=*next)
+                    while 1
+                        readrecord(srcTbl_dev,end=*break)srcTbl$
+                        uom$=field(srcTbl$,element$,err=*endif)
+                        if cvs(uom$,2)<>"" then
+                            redim ivcUmCodes$
+                            ivcUmCodes.firm_id$=srcTbl.firm_id$
+                            ivcUmCodes.unit_measure$=uom$
+                            ivcUmCodes.description$=uom$
+                            writerecord(ivcUmCodes_dev,dom=*next)ivcUmCodes$
+                        endif
+                    wend
+            
+                    rem --- Close 
+                    num_files=1
+                    dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+                    open_tables$[1]=srcTbl!.getItem(i),open_opts$[1]="C"
+                    gosub open_tables
+                next i
             wend
-
-            rem --- close files opened for this conversion
+            
+            rem --- Close 
             num_files=1
             dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-            open_tables$[1]="APM_VENDMAST",   open_opts$[1]="C"
-    
+            open_tables$[1]="IVC_UMCODES",open_opts$[1]="C"
             gosub open_tables
 
             write(convCtrlFileChan)task$+"=Completed"

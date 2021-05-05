@@ -17,13 +17,13 @@
 			<RESTRICT_AUTOADD id="ddm_tables.glm_acctbreaks"></RESTRICT_AUTOADD>
 			<ASC_COMP_ID id="ddm_tables.glm_acctbreaks">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_tables.glm_acctbreaks">GL </ASC_PROD_ID>
-			<ASC_VERSION_ID id="ddm_tables.glm_acctbreaks">20.0      </ASC_VERSION_ID>
+			<ASC_VERSION_ID id="ddm_tables.glm_acctbreaks">21.0      </ASC_VERSION_ID>
 			<ASC_LICENSE_ID id="ddm_tables.glm_acctbreaks">B4313FE464837D73610310313EF3B7C6</ASC_LICENSE_ID>
 			<DD_EXPORT_DATA id="ddm_tables.glm_acctbreaks">Y</DD_EXPORT_DATA>
 			<DD_CREATE_DATE id="ddm_tables.glm_acctbreaks">20060630</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_tables.glm_acctbreaks">20200229</DD_LSTREV_DATE>
-			<DD_LSTSYNC_DATE id="ddm_tables.glm_acctbreaks">20200206</DD_LSTSYNC_DATE>
-			<DD_LSTSYNC_TIME id="ddm_tables.glm_acctbreaks">161521</DD_LSTSYNC_TIME>
+			<DD_LSTREV_DATE id="ddm_tables.glm_acctbreaks">20210223</DD_LSTREV_DATE>
+			<DD_LSTSYNC_DATE id="ddm_tables.glm_acctbreaks">20210223</DD_LSTSYNC_DATE>
+			<DD_LSTSYNC_TIME id="ddm_tables.glm_acctbreaks">104636</DD_LSTSYNC_TIME>
 			<DD_ATTR_ATAB id="ddm_tables.glm_acctbreaks"></DD_ATTR_ATAB>
 			<DD_ATTR_CPGM id="ddm_tables.glm_acctbreaks"></DD_ATTR_CPGM>
 			<DD_ATTR_DKNM id="ddm_tables.glm_acctbreaks"></DD_ATTR_DKNM>
@@ -90,7 +90,7 @@
 		<RECORD id="ddm_table_tpls.glm_acctbreaks">
 			<DD_TABLE_ALIAS id="ddm_table_tpls.glm_acctbreaks">GLM_ACCTBREAKS  </DD_TABLE_ALIAS>
 			<DD_FILE_NAME id="ddm_table_tpls.glm_acctbreaks">glm-10</DD_FILE_NAME>
-			<DD_TABLE_TPL id="ddm_table_tpls.glm_acctbreaks">firm_id:c(2),acct_no_brk:c(10*),acct_bk_desc:c(20*)</DD_TABLE_TPL>
+			<DD_TABLE_TPL id="ddm_table_tpls.glm_acctbreaks">firm_id:c(2),acct_no_brk:c(10*),acct_bk_desc:c(50*)</DD_TABLE_TPL>
 		</RECORD>
 	</ALIAS>
 	<ALIAS id="ddm_keys">
@@ -404,16 +404,16 @@
 		</RECORD>
 		<RECORD id="ddm_elements.acct_bk_desc">
 			<DD_DATA_NAME id="ddm_elements.acct_bk_desc">ACCT_BK_DESC    </DD_DATA_NAME>
-			<DD_DESCRIPTION id="ddm_elements.acct_bk_desc">GL Account Break Description  </DD_DESCRIPTION>
+			<DD_DESCRIPTION id="ddm_elements.acct_bk_desc">GL Account Break Description</DD_DESCRIPTION>
 			<DD_DATA_TYPE id="ddm_elements.acct_bk_desc">C</DD_DATA_TYPE>
-			<DD_DATA_LENGTH id="ddm_elements.acct_bk_desc">20</DD_DATA_LENGTH>
-			<DD_MASK_TYPE id="ddm_elements.acct_bk_desc"> </DD_MASK_TYPE>
+			<DD_DATA_LENGTH id="ddm_elements.acct_bk_desc">50</DD_DATA_LENGTH>
+			<DD_MASK_TYPE id="ddm_elements.acct_bk_desc"></DD_MASK_TYPE>
 			<DD_SYSTEM_REC id="ddm_elements.acct_bk_desc"></DD_SYSTEM_REC>
 			<ASC_COMP_ID id="ddm_elements.acct_bk_desc">01007514</ASC_COMP_ID>
 			<ASC_PROD_ID id="ddm_elements.acct_bk_desc">GL </ASC_PROD_ID>
 			<LOCALIZATION_EX id="ddm_elements.acct_bk_desc"></LOCALIZATION_EX>
 			<DD_CREATE_DATE id="ddm_elements.acct_bk_desc">20060119</DD_CREATE_DATE>
-			<DD_LSTREV_DATE id="ddm_elements.acct_bk_desc">20060119</DD_LSTREV_DATE>
+			<DD_LSTREV_DATE id="ddm_elements.acct_bk_desc">20210219</DD_LSTREV_DATE>
 			<DD_AUTO_COMP id="ddm_elements.acct_bk_desc"></DD_AUTO_COMP>
 			<DD_ATTR_BLNK id="ddm_elements.acct_bk_desc"></DD_ATTR_BLNK>
 			<DD_ATTR_CDAT id="ddm_elements.acct_bk_desc"></DD_ATTR_CDAT>
@@ -442,13 +442,13 @@
 			<DD_ATTR_MSKO id="ddm_elements.acct_bk_desc"></DD_ATTR_MSKO>
 			<DD_ATTR_PADC id="ddm_elements.acct_bk_desc"></DD_ATTR_PADC>
 			<DD_ATTR_PADJ id="ddm_elements.acct_bk_desc"></DD_ATTR_PADJ>
-			<DD_ATTR_PREC id="ddm_elements.acct_bk_desc"></DD_ATTR_PREC>
+			<DD_ATTR_PREC id="ddm_elements.acct_bk_desc">0</DD_ATTR_PREC>
 			<DD_ATTR_PROM id="ddm_elements.acct_bk_desc"></DD_ATTR_PROM>
 			<DD_ATTR_PVAL id="ddm_elements.acct_bk_desc"></DD_ATTR_PVAL>
 			<DD_ATTR_SDLG id="ddm_elements.acct_bk_desc"></DD_ATTR_SDLG>
 			<DD_ATTR_SLEV id="ddm_elements.acct_bk_desc"></DD_ATTR_SLEV>
 			<DD_ATTR_STYP id="ddm_elements.acct_bk_desc"></DD_ATTR_STYP>
-			<DD_ATTR_STEP id="ddm_elements.acct_bk_desc"></DD_ATTR_STEP>
+			<DD_ATTR_STEP id="ddm_elements.acct_bk_desc">0</DD_ATTR_STEP>
 			<DD_ATTR_FLPT id="ddm_elements.acct_bk_desc"></DD_ATTR_FLPT>
 			<DD_ATTR_OEMD id="ddm_elements.acct_bk_desc"></DD_ATTR_OEMD>
 			<DD_ATTR_Y2KW id="ddm_elements.acct_bk_desc"></DD_ATTR_Y2KW>

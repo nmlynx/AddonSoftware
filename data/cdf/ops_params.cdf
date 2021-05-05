@@ -54,6 +54,7 @@ rem --- Init new record
 	callpoint!.setColumnData("OPS_PARAMS.SLS_TAX_INTRFACE","")
 	callpoint!.setColumnData("OPS_PARAMS.TAX_SVC_CD_SRC","")
 	callpoint!.setColumnEnabled("OPS_PARAMS.TAX_SVC_CD_SRC",0)
+	callpoint!.setColumnData("OPS_PARAMS.WARN_NOT_AVAIL","Y")
 
 [[OPS_PARAMS.BEG_CMT_LINE.AVAL]]
 beg_cmt$=callpoint!.getUserInput()
@@ -229,7 +230,7 @@ rem --- Cannot change SLS_TAX_INTRFACE if there are open orders or open invoices
 	if sls_tax_intrface$<>cvs(callpoint!.getColumnData("OPS_PARAMS.SLS_TAX_INTRFACE"),2) then
 		sql$ = "SELECT COUNT(*) AS COUNT "
 		sql$ = sql$ + "FROM OPT_INVHDR "
-		sql$ = sql$ + "WHERE FIRM_ID = '" + firm_id$ + "' and TRANS_STATUS IN ('E','R')"
+		sql$ = sql$ + "WHERE FIRM_ID = '" + firm_id$ + "' and TRANS_STATUS IN ('E','R') and INVOICE_TYPE<>'V'"
 
 		sql_chan=sqlunt
 		sqlopen(sql_chan)stbl("+DBNAME")
