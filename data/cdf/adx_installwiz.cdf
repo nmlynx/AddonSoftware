@@ -268,6 +268,12 @@ validate_aon_dir: rem --- Validate directory for aon new install location
 	current_drive$=dsk("",err=*next)
     	FileObject.makeDirs(new File(new_loc$))
 	valid_path=0
+
+	if (new_loc$(2,1)=":") then
+		drive$=new_loc$(1,1)
+		setdrive drive$
+	endif 
+
 	chdir(new_loc$),err=*next; valid_path=1
 	if !valid_path then
 		msg_id$="AD_BAD_DIR"
@@ -281,11 +287,12 @@ validate_aon_dir: rem --- Validate directory for aon new install location
 		abort=1
 		return
 	endif
-	new_loc$=current_drive$+dir("")
+	new_loc$=dsk("")+dir("")
 	while len(new_loc$) and pos(new_loc$(len(new_loc$),1)="/\")
 		new_loc$ = new_loc$(1, len(new_loc$)-1)
 	wend
-	chdir(current_dir$)
+	setdrive current_drive$
+	chdir current_dir$
 
 	rem --- Don’t allow current download location
 
@@ -355,6 +362,12 @@ validate_base_dir: rem --- Validate base directory for installation
 	current_drive$=dsk("",err=*next)
     	FileObject.makeDirs(new File(new_loc$))
 	valid_path=0
+
+	if (new_loc$(2,1)=":") then
+		drive$=new_loc$(1,1)
+		setdrive drive$
+	endif 
+
 	chdir(new_loc$),err=*next; valid_path=1
 	if !valid_path then
 		msg_id$="AD_BAD_DIR"
@@ -368,11 +381,12 @@ validate_base_dir: rem --- Validate base directory for installation
 		abort=1
 		return
 	endif
-	new_loc$=current_drive$+dir("")
+	new_loc$=dsk("")+dir("") 
 	while len(new_loc$) and pos(new_loc$(len(new_loc$),1)="/\")
 		new_loc$ = new_loc$(1, len(new_loc$)-1)
 	wend
-	chdir(current_dir$)
+	setdrive current_drive$
+	chdir current_dir$
 
 	rem --- Don’t allow current download location
 
