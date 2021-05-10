@@ -2940,9 +2940,6 @@ rem --- Set code in the Order Helper object
 	ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
 	ordHelp!.setTaxCode(tax_code$)
 
-rem --- Using a sales tax service?
-	gosub usingTaxService
-
 rem --- Calculate Taxes
 
 	disc_amt = num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
@@ -4035,9 +4032,6 @@ rem ==========================================================================
 				ope01_primary$=ope01a.firm_id$+ope01a.ar_type$+ope01a.customer_id$+ope01a.order_no$+old_inv_no$
 				remove(ope01_dev,key=ope01_primary$)
 
-				rem - Update sales tax calculation to use SalesInvoice for sales tax service
-				tax_code$=callpoint!.getColumnData("OPE_INVHDR.TAX_CODE")
-				gosub usingTaxService
 				callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC","1",1)
 				disc_amt=num(callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))
 				freight_amt=num(callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
@@ -4199,8 +4193,17 @@ rem ==========================================================================
 	rem --- Do sales tax calculation?
 	rem --- Always do calculation if for Recalculate Tax additional option AOPT-RTAX
 	rem --- Do calculation if previously skipped or failed, and on Totals tab or from BWAR.
+
+	recs! = cast( BBjVector, gridVect!.getItem(0) )
+	if !recs!.size() then return;rem nothing in detail grid yet (F7 to detail grid hits BWAR, but if first time when grid is empty, no need to calculate tax)
+
 	eventFrom$=callpoint!.getCallpointEvent()
 	gosub isTotalsTab
+
+	rem - See if we're using a tax service
+	tax_code$=callpoint!.getColumnData("OPE_INVHDR.TAX_CODE")
+	gosub usingTaxService
+
 	if eventFrom$="OPE_INVHDR.AOPT-RTAX" or (num(callpoint!.getColumnData("OPE_INVHDR.NO_SLS_TAX_CALC"))=1 and 
 :		(isTotalsTab or pos(eventFrom$="OPE_INVHDR.ADIS:OPE_INVHDR.BWAR:OPE_INVHDR.AOPT-CASH:OPE_INVHDR.AOPT-PRNT")))
 
