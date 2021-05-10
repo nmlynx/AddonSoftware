@@ -3789,8 +3789,13 @@ rem ==========================================================================
 	rem --- Do sales tax calculation?
 	rem --- Always do calculation if for Recalculate Tax additional option AOPT-RTAX
 	rem --- Do calculation if previously skipped or failed, and on Totals tab or from BWAR.
+
+	recs! = cast( BBjVector, gridVect!.getItem(0) )
+	if !recs!.size() then return;rem nothing in detail grid yet (F7 to detail grid hits BWAR, but if first time when grid is empty, no need to calculate tax)
+
 	eventFrom$=callpoint!.getCallpointEvent()
 	gosub isTotalsTab
+
 	if eventFrom$="OPE_ORDHDR.AOPT-RTAX" or (num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 and 
 :		(isTotalsTab or pos(eventFrom$="OPE_INVHDR.ADIS:OPE_ORDHDR.BWAR")))
 

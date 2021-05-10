@@ -1501,6 +1501,9 @@ stringJSON_error:rem --- Method error trap/handler (11Oct2017)
                             armCustExmpt.exempt_no$=certId$
                             armCustExmpt.expire_date$=expirationDate$
                             writerecord(#devArmCustExmpt)armCustExmpt$
+                        else
+                            rem --- Release extract
+                            read(#devArmCustExmpt)
                         endif
                     endif
                 else
