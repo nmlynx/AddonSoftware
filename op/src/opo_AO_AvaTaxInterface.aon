@@ -597,7 +597,11 @@ busyImageStop_error:rem --- Method error trap/handler (11Oct2017)
 
             rem --- Get sales tax and taxable amounts
             taxProps! = new Properties()
-            if lineItemList!.size()=0 then
+            if lineItemList!.size()=0 
+                if transType$<>"SalesOrder"
+                    rem --- invoice has no detail lines or freight; void the transaction if it exists (not applicable on an order since they aren't retained)
+                    #voidTransaction(optInvHdr.customer_id$, optInvHdr.order_no$, optInvHdr.ar_inv_no$, transType$)
+                endif
                 taxProps!.setProperty("tax_amount","0")
                 taxProps!.setProperty("taxable_amt","0")
             else
@@ -777,7 +781,7 @@ connectClient_error:rem --- Error trap/handler for AvaTax methods and client sid
                 print(#devClientLog) "    documentType: "+documentType!.toString()
                 startTime!=new Date()
             endif
-             transaction!=#avaTaxClient!.getTransactionByCode(companyCode$, transactionCode$, documentType!, "")
+            transaction!=#avaTaxClient!.getTransactionByCode(companyCode$, transactionCode$, documentType!, "")
             if #logClient then
                 endTime!=new Date()
                 response_time=(endTime!.getTime()-startTime!.getTime())/1000
@@ -788,8 +792,8 @@ connectClient_error:rem --- Error trap/handler for AvaTax methods and client sid
             endif
             #busyImageStop()
 
-            rem --- Need to commit this transaction?
-            if transaction!.getStatus().toString()<>"Committed" then
+            rem --- Need to commit this transaction? (status 'saved' = uncommitted)
+            if transaction!.getStatus().toString()="Saved" then
                 commitTrans!=new CommitTransactionModel()
                 commitTrans!.setCommit(1); rem --- true
                 documentType! = transaction!.getType()
@@ -1667,19 +1671,34 @@ updateSalesTaxTransHistory_error:rem --- Method error trap/handler (11Oct2017)
                 print(#devClientLog) "    documentType: "+documentType!.toString()
                 startTime!=new Date()
             endif
+            transactionNotFound=0
             transaction!=#avaTaxClient!.getTransactionByCode(companyCode$, transactionCode$, documentType!, "", err=*next)
+            if transaction!=null() then
+                err_num=err
+                if err_num=252 then
+                    E!=BBjAPI().getLastBBjException()
+                    rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+                    if E!.getMessage()<>null() and pos("EntityNotFoundError"=E!.getMessage()) then transactionNotFound=1
+                endif
+                if !transactionNotFound then transaction!=#avaTaxClient!.getTransactionByCode(companyCode$, transactionCode$, documentType!, "")
+            endif
             if #logClient then
                 endTime!=new Date()
                 response_time=(endTime!.getTime()-startTime!.getTime())/1000
                 print(#devClientLog) "<<< RESPONSE "+logSource$+" (seconds: "+str(response_time)+") >>>"
-                print(#devClientLog) "    status: "+transaction!.getStatus().toString()
-                print(#devClientLog) "    transactionId: "+transaction!.getId().toString()
+                if transactionNotFound then
+                    print(#devClientLog) "    status: Transaction Not Found"
+                    print(#devClientLog) "    transactionId: (none)"
+                else
+                    print(#devClientLog,err=*next) "    status: "+transaction!.getStatus().toString()
+                    print(#devClientLog,err=*next) "    transactionId: "+transaction!.getId().toString()
+                endif
                 logSource$=""
             endif
             #busyImageStop()
 
-            if transaction!=null() then
-                rem --- Transaction doesn't exist, so no need to void it
+            if transaction!=null() or transaction!.getStatus().toString()="Cancelled" then
+                rem --- Transaction doesn't exist or is already Voided ('Cancelled'), so no need to void it
                 success=Boolean.valueOf("true")
             else
                 rem --- Cannot void committed transactions
