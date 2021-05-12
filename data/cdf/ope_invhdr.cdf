@@ -4500,19 +4500,21 @@ rem ==========================================================================
 
 			callpoint!.setColumnData("OPE_INVHDR.TAX_AMOUNT",str(tax_amount),1)
 			callpoint!.setColumnData("OPE_INVHDR.TAXABLE_AMT",str(taxable_amt),1)
+			callpoint!.setDevObject("altSlsTaxCal",str(tax_amount))
 
 			rem --- Refresh totals
 			gosub disp_totals
 			callpoint!.setStatus("REFRESH")
 		endif
 
-		rem --- Let user change the TAX_AMOUNT
-		user_id$=stbl("+USER_ID")
-		dim dflt_data$[1,1]
-		dflt_data$[1,0]="TAX_AMOUNT"
-		dflt_data$[1,1]=str(tax_amount)
+		rem --- Let sales tax service users change the TAX_AMOUNT
+		if callpoint!.getDevObject("use_tax_service")="Y" then
+			user_id$=stbl("+USER_ID")
+			dim dflt_data$[1,1]
+			dflt_data$[1,0]="TAX_AMOUNT"
+			dflt_data$[1,1]=str(tax_amount)
  
-		call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+			call stbl("+DIR_SYP")+"bam_run_prog.bbj",
 :	                       "OPE_ALTSLSTAXCAL",
 :	                       user_id$,
 :	                       "",
@@ -4521,11 +4523,15 @@ rem ==========================================================================
 :	                       "",
 :	                       dflt_data$[all]
 
-		rem --- How did form end?
-		if callpoint!.getDevObject("altSlsTaxCal_end")="BEND" then
-			rem --- User did Close (Ctrl+F4)
-			abort=1
-			return
+			rem --- How did form end?
+			if callpoint!.getDevObject("altSlsTaxCal_end")="BEND" then
+				rem --- User did Close (Ctrl+F4)
+				abort=1
+				return
+			endif
+		else
+			rem --- Not using a sales tax service, and Tax Amount has been calculated using Tax Code's Tax Rate
+			callpoint!.setColumnData("OPE_INVHDR.NO_SLS_TAX_CALC",str(0),1)
 		endif
 
 		altSlsTaxCal=num(callpoint!.getDevObject("altSlsTaxCal"))
