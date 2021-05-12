@@ -110,8 +110,8 @@ rem --- processes all invoices this customer and loads non-zero bal inv#'s into 
            	age_credits$=arm_custdet.age_credits$
             last_age_dt$=arm_custdet.report_date$
             last_age_by$=arm_custdet.report_type$
+            readrecord(ars_params,key=art_invhdr.firm_id$+"AR00",dom=*next)ars_params$
             if cvs(last_age_by$,2)=""
-                readrecord(ars_params,key=art_invhdr.firm_id$+"AR00",dom=*next)ars_params$
                 last_age_by$=iff(cvs(ars_params.dflt_age_by$,2)="","I",ars_params.dflt_age_by$)
             endif
             if cvs(last_age_dt$,2)=""
@@ -119,7 +119,7 @@ rem --- processes all invoices this customer and loads non-zero bal inv#'s into 
                 gosub disp_message
                 break
             else
-                gosub calc_dates_fixed
+                gosub calc_aging_dates
             endif
         endif
         
@@ -195,7 +195,7 @@ rem --- processes all invoices this customer and loads non-zero bal inv#'s into 
 	return
 
 rem =================================================
-calc_dates_fixed:rem --- calc aging period dates for fut/cur/30/60/90/120 drilldowns
+calc_aging_dates:rem --- calc aging period dates for fut/cur/30/60/90/120 drilldowns
 rem =================================================
 
 	days_in_per=30
@@ -205,10 +205,10 @@ rem =================================================
 	call "adc_daydates.aon",start_date$,new_start$,1
 
 	begperiods$[0]=new_start$
-	begperiods$[1]=date(jul(start_date$,"%Yd%Mz%Dz")-(days_in_per-1):"%Yd%Mz%Dz")
-	begperiods$[2]=date(jul(begperiods$[1],"%Yd%Mz%Dz")-(days_in_per):"%Yd%Mz%Dz")
-	begperiods$[3]=date(jul(begperiods$[2],"%Yd%Mz%Dz")-(days_in_per):"%Yd%Mz%Dz")
-	begperiods$[4]=date(jul(begperiods$[3],"%Yd%Mz%Dz")-(days_in_per):"%Yd%Mz%Dz")
+    begperiods$[1]=date(jul(start_date$,"%Yd%Mz%Dz")-(ars_params.age_per_days_1-1):"%Yd%Mz%Dz")
+    begperiods$[2]=date(jul(start_date$,"%Yd%Mz%Dz")-(ars_params.age_per_days_2-1):"%Yd%Mz%Dz")
+    begperiods$[3]=date(jul(start_date$,"%Yd%Mz%Dz")-(ars_params.age_per_days_3-1):"%Yd%Mz%Dz")
+    begperiods$[4]=date(jul(start_date$,"%Yd%Mz%Dz")-(ars_params.age_per_days_4-1):"%Yd%Mz%Dz")
 
 	return
     
