@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-05-12
+ Report Date:   2021-05-13
  Report Branch: AddonSoftware 21.01
  Last Release:  AddonSoftware 21.00
 =======================================================================================================================================
@@ -270,3 +270,21 @@ Modified: reports/OPInvoiceDet.jrxml
 Modified: reports/OPInvoiceHdr.jasper
 Modified: reports/OPInvoiceHdr.jrxml
 Modified: sprocs/OPINVOICE_HDR.prc
+
+=======================================================================================================================================
+Revision: c24de3c83f3f3cbda436d909fc02ff2f78bbc957
+Author: Christine <chawkins@basis.com>
+Date: 5/13/2021 2:42:53 PM
+Message:
+Bug 10207 - Bank Recon complains about missing fiscal calendar when there is no prior statement date
+ - If there is no prior statement date, prompt user to enter it (and the amount)
+ - Also fine-tuned the recalculate/display routine.
+
+(cherry picked from commit d4cae33951585d7314d03eade4ab65dba7fe4712)
+----
+Modified: data/bar/glm_bankmaster.xml
+Modified: data/cdf/glm_bankmaster.cdf
+Modified: data/sync/ads_messages~[01007514GL].xml
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
+
