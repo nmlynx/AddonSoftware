@@ -189,6 +189,7 @@ rem --- Back out transactions for period after statement date"
 
 rem --- All Done"
 	callpoint!.setColumnData("GLM_BANKMASTER.BOOK_BALANCE",str(total_amt),1)
+	callpoint!.setColumnData("<<DISPLAY>>.BOOK_BAL",str(total_amt),1)
 	callpoint!.setStatus("SAVE")
 
 rem " --- Recalc Summary Info
@@ -202,6 +203,10 @@ rem --- Display Bank Account Information
 
 rem --- Calculate Summary info
   	gosub calc_totals
+
+rem --- Disable prior statement date/amt (will enable if there is no prior info so user can enter it)
+	callpoint!.setColumnEnabled("GLM_BANKMASTER.PRI_END_DATE",0)
+	callpoint!.setColumnEnabled("GLM_BANKMASTER.PRI_END_AMT",0)
 
 [[GLM_BANKMASTER.BNK_ACCT_CD.AVAL]]
 rem --- Display Bank Account Information
@@ -287,6 +292,14 @@ rem --- Set up Encryptor
 	callpoint!.setDevObject("encryptor",encryptor!)
 
 [[GLM_BANKMASTER.CURSTM_DATE.AVAL]]
+rem --- If there is no prior statement date/amount, enable and prompt user to enter them
+	if cvs(callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_DATE"),3)=""
+		callpoint!.setColumnEnabled("GLM_BANKMASTER.PRI_END_DATE",1)
+		callpoint!.setColumnEnabled("GLM_BANKMASTER.PRI_END_AMT",1)
+		callpoint!.setMessage("GL_NO_PRI_DATE")
+		callpoint!.setFocus("GLM_BANKMASTER.PRI_END_DATE")
+	endif
+
 rem --- Current statement date must be after prior statement end date
 	curstm_date$=callpoint!.getUserInput()
 	pri_end_date$=callpoint!.getColumnData("GLM_BANKMASTER.PRI_END_DATE")
@@ -424,18 +437,18 @@ rem --- Find total cash inflows and total cash outflows
 
 rem --- Setup display variables
 
-	callpoint!.setColumnData("<<DISPLAY>>.CHECKS_OUT",str(out_checks_amt))
-	callpoint!.setColumnData("<<DISPLAY>>.NO_CHECKS",str(out_checks))
-	callpoint!.setColumnData("<<DISPLAY>>.TRANS_OUT",str(out_trans_amt))
-	callpoint!.setColumnData("<<DISPLAY>>.NO_TRANS",str(out_trans))
+	callpoint!.setColumnData("<<DISPLAY>>.CHECKS_OUT",str(out_checks_amt),1)
+	callpoint!.setColumnData("<<DISPLAY>>.NO_CHECKS",str(out_checks),1)
+	callpoint!.setColumnData("<<DISPLAY>>.TRANS_OUT",str(out_trans_amt),1)
+	callpoint!.setColumnData("<<DISPLAY>>.NO_TRANS",str(out_trans),1)
 	end_bal=statement_amt-out_checks_amt+out_trans_amt
-	callpoint!.setColumnData("<<DISPLAY>>.END_BAL",str(end_bal))
+	callpoint!.setColumnData("<<DISPLAY>>.END_BAL",str(end_bal),1)
 	difference = num(callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE")) - end_bal
-	callpoint!.setColumnData("<<DISPLAY>>.DIFFERENCE",str(difference))
+	callpoint!.setColumnData("<<DISPLAY>>.DIFFERENCE",str(difference),1)
 	callpoint!.setColumnData("<<DISPLAY>>.CASH_IN",str(inflows),1)
 	callpoint!.setColumnData("<<DISPLAY>>.CASH_OUT",str(outflows),1)
 	callpoint!.setColumnData("<<DISPLAY>>.CASH_INC_DEC",str(cash_inc_dec),1)
-	callpoint!.setStatus("REFRESH")
+
 	if end_bal<num(callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE")) over_under$="SHORT"
 	if end_bal>num(callpoint!.getColumnData("GLM_BANKMASTER.BOOK_BALANCE")) over_under$="OVER"
 	return
