@@ -53,7 +53,7 @@ datatemplate$ = datatemplate$ + "ship_addr_line7:C(30),"
 dataTemplate$ = dataTemplate$ + "salesrep_code:C(3),salesrep_desc:C(20),cust_po_num:C(20),ship_via:C(10),"
 dataTemplate$ = dataTemplate$ + "fob:C(15),ship_date:C(10),terms_code:C(3),terms_desc:C(20),payment_url:C(1*),"
 datatemplate$ = datatemplate$ + "inv_std_message:C(1024*=1), paid_desc:C(20), paid_text1:C(40), paid_text2:C(40),"
-dataTemplate$ = dataTemplate$ + "discount_amt_raw:C(1*),tax_amt_raw:C(1*),freight_amt_raw:C(1*)"
+dataTemplate$ = dataTemplate$ + "discount_amt_raw:C(1*),tax_amt_raw:C(1*),freight_amt_raw:C(1*),total_sale_raw:C(1*)"
 
 rs! = BBJAPI().createMemoryRecordSet(dataTemplate$)
     
@@ -209,6 +209,7 @@ rem --- Main Read
 	discount_amt_raw$ = str(-ope01a.discount_amt:amt_mask$)
     tax_amt_raw$ =      str(ope01a.tax_amount:amt_mask$)
     freight_amt_raw$ =  str(ope01a.freight_amt:amt_mask$)
+    total_sale_raw$ =  str(ope01a.total_sales:amt_mask$)
 	discount_amt$ = str(discount_amt_raw:amt_mask$)
     tax_amt$ =      str(tax_amt_raw:amt_mask$)
     freight_amt$ =  str(freight_amt_raw:amt_mask$)
@@ -379,6 +380,7 @@ rem --- Format addresses to be bottom justified
 		data!.setFieldValue("DISCOUNT_AMT_RAW", discount_amt_raw$)
 		data!.setFieldValue("TAX_AMT_RAW", tax_amt_raw$)
 		data!.setFieldValue("FREIGHT_AMT_RAW", freight_amt_raw$)
+        data!.setFieldValue("TOTAL_SALE_RAW", total_sale_raw$)
 
 		rs!.insert(data!)
 
