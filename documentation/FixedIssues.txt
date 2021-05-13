@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-05-05
+ Report Date:   2021-05-12
  Report Branch: AddonSoftware 21.01
  Last Release:  AddonSoftware 21.00
 =======================================================================================================================================
@@ -249,6 +249,24 @@ Message:
 Bug 10199: Rearranged fields on the Invoice History Inquiry form Totals
 tab to match the fields on the Invoice Entry form Totals tab.
 
-(cherry picked from commit commit 91ded3554d4c1fb1e505849024f723f04d03aa39)
+(cherry picked from commit 91ded3554d4c1fb1e505849024f723f04d03aa39)
 ----
 Modified: data/bar/opt_invhdr.xml
+
+=======================================================================================================================================
+Revision: 7674d2f5e350bc01412044f29ff9d5a293ab553b
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/12/2021 6:32:34 PM
+Message:
+Bug 10208: Used the ope_indhdr total_sales amount for the invoice sales
+amount rather than totaling the detail line extended amounts on the
+invoice.
+
+(cherry picked from commit a585c75e4e8401d8fbb2ab56eb33769f21e86b85)
+----
+Modified: reports/OPInvoiceDet-LotSer.jasper
+Modified: reports/OPInvoiceDet.jasper
+Modified: reports/OPInvoiceDet.jrxml
+Modified: reports/OPInvoiceHdr.jasper
+Modified: reports/OPInvoiceHdr.jrxml
+Modified: sprocs/OPINVOICE_HDR.prc
