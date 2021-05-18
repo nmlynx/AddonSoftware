@@ -6,6 +6,76 @@ rem --- set default Age By if blank
 		callpoint!.setStatus("SAVE")
 	endif
 
+rem --- Hold on to starting Aging Bucket Days so we'll know on form exit if they were changed
+	callpoint!.setDevObject("prev_age_per_days_1",num(callpoint!.getColumnData("ARS_PARAMS.AGE_PER_DAYS_1")))
+	callpoint!.setDevObject("prev_age_per_days_2",num(callpoint!.getColumnData("ARS_PARAMS.AGE_PER_DAYS_2")))
+	callpoint!.setDevObject("prev_age_per_days_3",num(callpoint!.getColumnData("ARS_PARAMS.AGE_PER_DAYS_3")))
+	callpoint!.setDevObject("prev_age_per_days_4",num(callpoint!.getColumnData("ARS_PARAMS.AGE_PER_DAYS_4")))
+
+[[ARS_PARAMS.AGE_PER_DAYS_1.AVAL]]
+rem --- age_per_days_1 must be a whole number greater than 0 and less than age_per_days_2
+	aged_days=num(callpoint!.getUserInput())
+	if aged_days=num(callpoint!.getColumnData("ARS_PARAMS.AGE_PER_DAYS_1")) then break
+	min_aged_days=1
+	max_aged_days=num(callpoint!.getColumnData("ARS_PARAMS.AGE_PER_DAYS_2"))-1
+	if aged_days<min_aged_days or aged_days>max_aged_days then
+		msg_id$="MIN_MAX_AGE_PER_SIZE"
+		dim msg_tokens$[2]
+		msg_tokens$[1]=str(min_aged_days)
+		msg_tokens$[2]=str(max_aged_days)
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+[[ARS_PARAMS.AGE_PER_DAYS_2.AVAL]]
+rem --- age_per_days_2 must be a whole number greater than age_per_days_1 and less than age_per_days_3
+	aged_days=num(callpoint!.getUserInput())
+	if aged_days=num(callpoint!.getColumnData("ARS_PARAMS.AGE_PER_DAYS_2")) then break
+	min_aged_days=num(callpoint!.getColumnData("ARS_PARAMS.AGE_PER_DAYS_1"))+1
+	max_aged_days=num(callpoint!.getColumnData("ARS_PARAMS.AGE_PER_DAYS_3"))-1
+	if aged_days<min_aged_days or aged_days>max_aged_days then
+		msg_id$="MIN_MAX_AGE_PER_SIZE"
+		dim msg_tokens$[2]
+		msg_tokens$[1]=str(min_aged_days)
+		msg_tokens$[2]=str(max_aged_days)
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+[[ARS_PARAMS.AGE_PER_DAYS_3.AVAL]]
+rem --- age_per_days_3 must be a whole number greater than age_per_days_2 and less than age_per_days_4
+	aged_days=num(callpoint!.getUserInput())
+	if aged_days=num(callpoint!.getColumnData("ARS_PARAMS.AGE_PER_DAYS_3")) then break
+	min_aged_days=num(callpoint!.getColumnData("ARS_PARAMS.AGE_PER_DAYS_2"))+1
+	max_aged_days=num(callpoint!.getColumnData("ARS_PARAMS.AGE_PER_DAYS_4"))-1
+	if aged_days<min_aged_days or aged_days>max_aged_days then
+		msg_id$="MIN_MAX_AGE_PER_SIZE"
+		dim msg_tokens$[2]
+		msg_tokens$[1]=str(min_aged_days)
+		msg_tokens$[2]=str(max_aged_days)
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
+[[ARS_PARAMS.AGE_PER_DAYS_4.AVAL]]
+rem --- age_per_days_4 must be a whole number greater than age_per_days_3 and less than 999
+	aged_days=num(callpoint!.getUserInput())
+	if aged_days=num(callpoint!.getColumnData("ARS_PARAMS.AGE_PER_DAYS_4")) then break
+	min_aged_days=num(callpoint!.getColumnData("ARS_PARAMS.AGE_PER_DAYS_3"))+1
+	max_aged_days=999
+	if aged_days<min_aged_days or aged_days>max_aged_days then
+		msg_id$="MIN_MAX_AGE_PER_SIZE"
+		dim msg_tokens$[2]
+		msg_tokens$[1]=str(min_aged_days)
+		msg_tokens$[2]=str(max_aged_days)
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
+
 [[ARS_PARAMS.ARAR]]
 rem --- Update post_to_gl if GL is uninstalled
 	if user_tpl.gl_installed$<>"Y" and callpoint!.getColumnData("ARS_PARAMS.POST_TO_GL")="Y" then
@@ -78,11 +148,68 @@ if callpoint!.getUserInput()="Y"
 	endif
 endif
 
+[[ARS_PARAMS.BEND]]
+rem --- Get Aging Bucket Days data that has been written to file
+	arsParams_dev=fnget_dev("ARS_PARAMS")
+	dim arsParams$:fnget_tpl$("ARS_PARAMS")
+	readrecord(arsParams_dev,key=firm_id$+"AR00",dom=*next)arsParams$
+
+rem --- If Aging Bucket Days were changed, warn about the need to update agings
+	if (arsParams.age_per_days_1<>0 and arsParams.age_per_days_1<>callpoint!.getDevObject("prev_age_per_days_1")) or
+:		(arsParams.age_per_days_2<>0 and arsParams.age_per_days_2<>callpoint!.getDevObject("prev_age_per_days_2")) or
+:		(arsParams.age_per_days_3<>0 and arsParams.age_per_days_3<>callpoint!.getDevObject("prev_age_per_days_3")) or
+:		(arsParams.age_per_days_4<>0 and arsParams.age_per_days_4<>callpoint!.getDevObject("prev_age_per_days_4")) then
+
+rem --- Are there any invoices that may need to be re-aged
+		artInvHdr_dev=fnget_dev("ART_INVHDR")
+		findrecord(artInvHdr_dev,key=firm_id$,dom=*next)
+		artInvHdr_key$=key(artInvHdr_dev,end=*next)
+		if pos(firm_id$=artInvHdr_key$)=1 then
+			rem --- Warn about the need to update agings
+			msg_id$="AR_NEED_AGING_UPDATE"
+			gosub disp_message
+
+			rem --- Cancel exit
+			if msg_opt$="C" then
+				callpoint!.setStatus("ABORT")
+				break
+			endif
+
+			rem --- Update agings now
+			if msg_opt$="Y" then
+				dim dflt_data$[4,1]
+				dflt_data$[1,0]="AGING_DATE"
+				dflt_data$[1,1]=stbl("+SYSTEM_DATE")
+				dflt_data$[2,0]="PICK_LISTBUTTON"
+				dflt_data$[2,1]=callpoint!.getColumnData("ARS_PARAMS.DFLT_AGE_BY")
+				dflt_data$[3,0]="CUSTOMER_ID_1"
+				dflt_data$[3,1]=""
+				dflt_data$[4,0]="CUSTOMER_ID_2"
+				dflt_data$[4,1]=""
+
+				rem --- Disable customer_id fields on ARU_AGINGUPDATE option entry form
+				callpoint!.setDevObject("disable_customers","Y")
+
+				call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:					"ARU_AGINGUPDATE",
+:					stbl("+USER_ID"),
+:					"",
+:					"",
+:					table_chans$[all],
+:					"",
+:					dflt_data$[all]
+				else
+					rem --- Do NOT update agings now
+				endif
+		endif
+	endif
+
 [[ARS_PARAMS.BSHO]]
-num_files=2
+num_files=3
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 open_tables$[1]="GLS_PARAMS",open_opts$[1]="OTA"
 open_tables$[2]="GLS_CALENDAR",open_opts$[2]="OTA"
+open_tables$[3]="ART_INVHDR",open_opts$[3]="OTA"
 gosub open_tables
 gls01_dev=num(open_chans$[1])
 rem --- Dimension string templates
