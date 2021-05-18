@@ -31,15 +31,17 @@ rem --- Retrieve sysinfo data
 
 rem --- Open/Lock files
 
-    files=2,begfile=1,endfile=files
+    files=3,begfile=1,endfile=files
     dim files$[files],options$[files],ids$[files],templates$[files],channels[files]
     files$[1]="arm-02",ids$[1]="ARM_CUSTDET"
     files$[2]="art-01",ids$[2]="ART_INVHDR"
+    files$[3]="ars_params",ids$[3]="ARS_PARAMS"
     call pgmdir$+"adc_fileopen.aon",action,begfile,endfile,files$[all],options$[all],
 :                                   ids$[all],templates$[all],channels[all],batch,status
     if status goto std_exit
     arm02_dev=channels[1]
     art01_dev=channels[2]
+    arsParams=channels[3]; dim arsParams$:templates$[3]
 
 rem --- Dimension string templates
 
@@ -51,14 +53,23 @@ rem --- Initializations
     customer$=""
     total_recs=0
 
-rem --- Determine 30 day aging period dates
 
+rem --- Get aging period sizes from AR Parameters
+    findrecord(arsParams,key=firm_id$+"AR00",dom=*next)arsParams$
+    agingDays!=BBjAPI().makeVector()
+    agingDays!.addItem(arsParams.age_per_days_4)
+    agingDays!.addItem(arsParams.age_per_days_3)
+    agingDays!.addItem(arsParams.age_per_days_2)
+    agingDays!.addItem(arsParams.age_per_days_1)
+    agingDays!.addItem(0)
+
+rem --- Determine aging period dates
     period_dates$=""
-    for x=-5 to 0
+    for i=0 to agingDays!.size()-1
         enddate$=""
-        call pgmdir$+"adc_daydates.aon",aging_date$,enddate$,x*30
+        call pgmdir$+"adc_daydates.aon", aging_date$, enddate$, -agingDays!.getItem(i)
         period_dates$=enddate$+period_dates$
-    next x
+    next i
 
 rem --- Start progress meter and position the file
 

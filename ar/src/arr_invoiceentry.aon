@@ -92,11 +92,18 @@ rem --- Retrieve parameter records
     dim info$[20]
     ars01a_key$=firm_id$+"AR00"
     find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    period=num(ars01a.current_per$)
+    year=num(ars01a.current_year$)
+    agingDays!=BBjAPI().makeVector()
+    agingDays!.addItem(ars01a.age_per_days_4)
+    agingDays!.addItem(ars01a.age_per_days_3)
+    agingDays!.addItem(ars01a.age_per_days_2)
+    agingDays!.addItem(ars01a.age_per_days_1)
+    agingDays!.addItem(0)
+
     source$=pgm(-2)
     call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,m1
-    period=num(ars01a.current_per$)
-    year=num(ars01a.current_year$)
 	call stbl("+DIR_PGM")+"adc_getmask.aon","GL_ACCOUNT","","","",g0$,0,account_length
     max_acct_len=max(10,account_length)
     m0=len(m0$)

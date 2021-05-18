@@ -99,6 +99,16 @@ rem --- Retrieve parameter records
     dim ars10c$:fattr(ars10c$)
     ars01a_key$=firm_id$+"AR00"
     find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+    br$=ars01a.br_interface$
+    period=num(ars01a.current_per$)
+    year=num(ars01a.current_year$)
+    agingDays!=BBjAPI().makeVector()
+    agingDays!.addItem(ars01a.age_per_days_4)
+    agingDays!.addItem(ars01a.age_per_days_3)
+    agingDays!.addItem(ars01a.age_per_days_2)
+    agingDays!.addItem(ars01a.age_per_days_1)
+    agingDays!.addItem(0)
+
     ars10c_key$=firm_id$+"C"
     find record (ars10_dev,key=ars10c_key$,dom=*next) ars10c$
     dim tot_cash[5]
@@ -108,10 +118,7 @@ rem --- Retrieve parameter records
     tot_cash[3]=ars10c.nxt_mtd_cash
     tot_cash[4]=ars10c.nmtd_cash_ds
     tot_cash[5]=ars10c.nmtd_cashgl
-    br$=ars01a.br_interface$
     call stbl("+DIR_PGM")+"adc_getmask.aon","CUSTOMER_ID","","","",m0$,0,customer_size
-    period=num(ars01a.current_per$)
-    year=num(ars01a.current_year$)
     call stbl("+DIR_PGM")+"adc_getmask.aon","","AR","A","",m1$,0,0
     m0=len(m0$)
     m1=len(m1$)

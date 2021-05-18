@@ -83,13 +83,13 @@ rem --- Read next Cash Receipts Header (are-01) record
           if cvs(aging_date$,2)="" then aging_date$=sysinfo.system_date$
           if cvs(age_by$,2)="" then age_by$=iff(cvs(ars01a.dflt_age_by$,2)="","I",ars01a.dflt_age_by$)
 
-          rem --- Determine 30 day aging period dates
+          rem --- Determine aging period dates
           period_dates$=""
-          for x=-5 to 0
+          for i=0 to agingDays!.size()-1
               enddate$=""
-              call pgmdir$+"adc_daydates.aon",aging_date$,enddate$,x*30
+              call pgmdir$+"adc_daydates.aon", aging_date$, enddate$, -agingDays!.getItem(i)
               period_dates$=enddate$+period_dates$
-          next x
+          next i
 
           rem --- Post Cash Receipt History Header (art-06) record
  
