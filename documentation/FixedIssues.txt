@@ -8,3 +8,34 @@
 BBjBaristaAddonDemos2101_05-14-2021_0843.jar
 
 =======================================================================================================================================
+Revision: 07ae930309661c6e040850812b017f0e56bf0a12
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/18/2021 10:03:43 AM
+Message:
+ER 9919: Used the AGE_PER_DAYS_? parameters rather than a fixed 30 days
+to calculate aging period dates.
+
+(cherry picked from commit 68e4c4542ff4dc867998bc05451b33a46a8d807b)
+----
+Modified: ar/src/arc_custaging.aon
+Modified: ar/src/arr_cashreceipts.aon
+Modified: ar/src/arr_invoiceentry.aon
+Modified: ar/src/arr_statements.aon
+Modified: ar/src/arr_stmt_demand.aon
+Modified: ar/src/aru_cashreceipts.aon
+Modified: ar/src/aru_invoiceentry.aon
+Modified: op/src/opu_updateinventory.aon
+
+=======================================================================================================================================
+Revision: 1d110a49cdfebb33b804d3065c74249922e45cbe
+Author: Christine <chawkins@basis.com>
+Date: 5/18/2021 12:52:15 PM
+Message:
+Bug 10212 - AD - BNK_ACCT_CD element type is used in record key and should have pad/align set
+ - set to left/space
+
+(cherry picked from commit 3045302fcc55896bfa3ddb6aebe48f6fef9750a7)
+----
+Modified: data/bar/adc_bankacctcode.xml
+Modified: data/bar/aps_ach.xml
+Modified: data/bar/glm_bankmaster.xml
