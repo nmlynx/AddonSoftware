@@ -2412,7 +2412,7 @@ rem ==========================================================================
 		user_tpl.prev_line_code$=line_code$
 		callpoint!.setColumnData("OPE_INVDET.MAN_PRICE", "N")
 		callpoint!.setColumnData("OPE_INVDET.PRODUCT_TYPE", "")
-		callpoint!.setColumnData("OPE_INVDET.WAREHOUSE_ID", user_tpl.def_whse$)
+		callpoint!.setColumnData("OPE_INVDET.WAREHOUSE_ID", user_tpl.warehouse_id$)
 		callpoint!.setColumnData("OPE_INVDET.ITEM_ID", "")
 		callpoint!.setColumnData("OPE_INVDET.EST_SHP_DATE", callpoint!.getHeaderColumnData("OPE_INVHDR.SHIPMNT_DATE"))
 		callpoint!.setColumnData("OPE_INVDET.PICK_FLAG", "")
