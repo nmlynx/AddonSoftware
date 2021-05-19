@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-05-18
+ Report Date:   2021-05-19
  Report Branch: AddonSoftware 21.02
  Last Release:  AddonSoftware 21.01
 =======================================================================================================================================
@@ -39,3 +39,19 @@ Bug 10212 - AD - BNK_ACCT_CD element type is used in record key and should have 
 Modified: data/bar/adc_bankacctcode.xml
 Modified: data/bar/aps_ach.xml
 Modified: data/bar/glm_bankmaster.xml
+
+=======================================================================================================================================
+Revision: 70bd3ab38e713e9b93adee4d932cffe7ac222683
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 5/19/2021 10:51:44 AM
+Message:
+Bug 10194: Initialized new order/invoice detail lines with the Point Of
+Sale warehouse rather than the IV Parameter's default warehouse.
+
+(cherry picked from commit 70bab97a4fd119daf4bdca8cfe36ed81ccc9627c)
+----
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/cdf/ope_invdet.cdf
+Modified: data/cdf/ope_orddet.cdf
+
