@@ -18,8 +18,7 @@ if callpoint!.getDevObject("disable_customers")="Y" then
 endif
 
 [[ARU_AGINGUPDATE.BSHO]]
-print"disable_customers=",callpoint!.getDevObject("disable_customers")
-escape; rem wgh ... 9919 ...
+rem --- Disable customer_id fields when requested
 if callpoint!.getDevObject("disable_customers")="Y" then
 	callpoint!.setColumnEnabled("ARU_AGINGUPDATE.CUSTOMER_ID_1",0)
 	callpoint!.setColumnEnabled("ARU_AGINGUPDATE.CUSTOMER_ID_2",0)
