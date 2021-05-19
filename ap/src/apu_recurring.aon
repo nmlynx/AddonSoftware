@@ -102,9 +102,11 @@ rem --- Read next Recurring Invoice Header (ape-03) record
           ape03a.invoice_date$=invoice_date$
           ape03a.accting_date$=invoice_date$
           call pgmdir$+"adc_duedate.aon",apm10c.prox_or_days$,ape03a.invoice_date$,
-:                                        apm10c.due_days,ape03a.inv_due_date$,status
+:                                        apm10c.due_days,inv_due_date$,status
+          ape03a.inv_due_date$=inv_due_date$
           call pgmdir$+"adc_duedate.aon",apm10c.prox_or_days$,ape03a.invoice_date$,
-:                                        apm10c_disc_days,ape03a.disc_date$,status
+:                                        apm10c.disc_days,disc_date$,status
+          ape03a.disc_date$=disc_date$
 
           rem --- Generate unique invoice number for this recurring invoice
 
