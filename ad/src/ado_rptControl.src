@@ -6,16 +6,16 @@ rem --- Test
 escape
     declare ReportControl rptControl!
     rptControl!=new ReportControl()
-    
+
     rem --- see if ARR_AGINGREPORT is subject to report control (+AUTO_SEND returned non-null)
     next_overlay$=rptControl!.getReportControl("ARR_AGINGREPORT")
     escape;rem print stbl("+AUTO_SEND") - should contain a value, and next_overlay$ should be "adx_rptctl_setup.aon"
 
-    rptControl!=new ReportControl()    
+    rptControl!=new ReportControl()
     rem --- see if XYZ is subject to report control (+AUTO_SEND returned empty)
     next_overlay$=rptControl!.getReportControl("XYZ")
     escape;rem print stbl("+AUTO_SEND") - should be empty, so should next_overlay$
-    
+
     release
 
     use ::sys/prog/bao_docqueue.bbj::DocumentQueue
@@ -32,20 +32,20 @@ class public ReportControl
     field public BBjString PrintYN$
     field public BBjString EmailYN$
     field public BBjString FaxYN$
-        
+
     field public BBjString DocExtension$
     field public BBjString SavedDoc$
 
-    field public BBjNumber AdmRptctlChan   
+    field public BBjNumber AdmRptctlChan
     field public BBjNumber AdmRptctlRcpChan
     field public BBjNumber AdsDocumentsChan
-    field public BBjInt RecipFound%
-    
+    field public BBjInt RecipFound%=0
+
     field public BBjTemplatedString AdmRptctl!
     field public BBjTemplatedString AdmRptctlRcp!
     field public BBjTemplatedString AdsDocuments!
-    
-    
+
+
 
     method public ReportControl()
 
@@ -56,7 +56,7 @@ class public ReportControl
     method public void clear()
 
         #FirmID$ = ""
-        #FirmID$ = stbl("+FIRM_ID", err = *next)        
+        #FirmID$ = stbl("+FIRM_ID", err = *next)
         #NextOverlay$ = ""
         dummy$=stbl("+AUTO_SEND","")
 
@@ -85,13 +85,13 @@ class public ReportControl
                 close(num(rd_table_chans$[0,0](rd_curr_close*20-2, 3)), err=*next)
             endif
         next rd_curr_close
-    
+
     methodend
 
     method public BBjString getReportControl(BBjString rpt_id$)
     rem --- see if rpt_id$ exists in the Report Control table
     rem --- if so, set the +AUTO_SEND global and return name of next_overlay program (used by DocOut)
-    
+
         if #AdmRptctlChan=0 then #openTables()
         #NextOverlay$=""
         found$=""
@@ -110,13 +110,13 @@ class public ReportControl
             endif
             break
         wend
-    
+
         methodret found$
-        
+
     methodend
 
     method private BBjString resolvePath(BBjString file_path$)
-    
+
         file_path$=cvs(file_path$,3)
         file_path_out$=""
 
@@ -130,9 +130,9 @@ class public ReportControl
                 file_path$=file_path$(1,stbl_from-2)+temp_stbl$+file_path$(stbl_thru+1)
             endif
         wend
-        
+
         if file_path$<>"" then file_path_out$=BBjAPI().getFileSystem().resolvePath(util.resolvePathStbls(file_path$,err=*next))
-        
+
         methodret file_path_out$
 
     methodend
@@ -145,23 +145,38 @@ class public ReportControl
 
     method public void addToDocQueue(BBjString rpt_id$,BBjString customer_id$,BBjString vendor_id$,BBjString doc_no$)
 
-		REM retrieve recipient info 
-		#RecipFound%=#getRecipientInfo(rpt_id$,customer_id$,vendor_id$)
-		
-		REM If we now have the recipient info, then send the reports out. 
-		if #RecipFound% then 
-            if #FaxYN$="Y"
-                #sendFax(doc_no$)
-            endif
-            if #EmailYN$="Y"
-                #sendEmail(doc_no$)
-            endif
+      REM retrieve recipient info
+      REM Find out if we have already retrieved and set the email message for the
+      REM current recipient. (The online credit card registration service finds then
+      REM recipient record ahead of time and appends a link and a token to the
+      REM email message.)
+      keepCurrentRecord=#RecipFound%
+      keepCurrentRecord=keepCurrentRecord and cvs(#AdmRptctlRcp!.getFieldAsString("CUSTOMER_ID"),11)=cvs(customer_id$,11)
+      keepCurrentRecord=keepCurrentRecord and cvs(#AdmRptctlRcp!.getFieldAsString("VENDOR_ID"),11)=cvs(vendor_id$,11)
+      keepCurrentRecord=keepCurrentRecord and cvs(#AdmRptctlRcp!.getFieldAsString("DD_TABLE_ALIAS"),11)=cvs(rpt_id$,11)
+      if (!keepCurrentRecord)
+        #RecipFound%=#getRecipientInfo(rpt_id$,customer_id$,vendor_id$)
+      endif
+
+  		REM If we now have the recipient info, then send the reports out.
+  		if #RecipFound% then
+        if #FaxYN$="Y"
+            #sendFax(doc_no$)
         endif
-        
-		REM Right now we're not doing anything if the recipient isn't found. 
-		
+        if #EmailYN$="Y"
+            #sendEmail(doc_no$)
+        endif
+      endif
+
+      REM Clear out the #RecipFound% flag once the report has been processed
+      #RecipFound%=0
+
+      REM TODO: Right now we're not doing anything if the recipient isn't found. Shoudn't
+      REM we be throwing an error or logging a message so that it's not just a
+      REM silent failure?
+
     methodend
-    
+
     method public BBjInt getRecipientInfo(BBjString rpt_id$,BBjString customer_id$,BBjString vendor_id$)
     rem --- get Report Control Recipient record for given recipient
     rem --- recipient type C will have customer but no vendor
@@ -174,27 +189,27 @@ class public ReportControl
         temp.dd_table_alias$=rpt_id$;rem --- sees to it that it's padded to the proper length
         temp.customer_id$=customer_id$
         temp.vendor_id$=vendor_id$
-        
+
         #RecipFound%=0
         #PrintYN$="Y"
         #EmailYN$="N"
         #FaxYN$="N"
-        
+        key$=#FirmID$+rpt_id$+temp.customer_id$+temp.vendor_id$
         while 1
-            readrecord (#AdmRptctlRcpChan,key=#FirmID$+rpt_id$+temp.customer_id$+temp.vendor_id$,err=*break)#AdmRptctlRcp!
+            readrecord (#AdmRptctlRcpChan,key=key$,knum=0,err=*break)#AdmRptctlRcp!
             #RecipFound%=1
             #PrintYN$=#AdmRptctlRcp!.getFieldAsString("PRINT_YN")
             #EmailYN$=#AdmRptctlRcp!.getFieldAsString("EMAIL_YN")
             #FaxYN$=#AdmRptctlRcp!.getFieldAsString("FAX_YN")
             break
         wend
-        
+
         methodret #RecipFound%
 
     methodend
 
     method public void sendEmail(BBjString doc_no$)
-    
+
         docQueue! = new DocumentQueue()
         docQueue!.clear()
         docQueue!.setFirmID(#FirmID$)
@@ -213,7 +228,7 @@ class public ReportControl
         docQueue!.createProcess()
         proc_key$=docQueue!.getFirmID()+docQueue!.getProcessID()
         docQueue!.checkStatus(proc_key$)
-    
+
     methodend
 
     method public void sendFax(BBjString doc_no$)
@@ -267,9 +282,9 @@ class public ReportControl
         found=0
         findrecord (#AdsDocumentsChan,key=#FirmID$+doc_id$+"PDF",err=*next)#AdsDocuments!;found=1
         if found then #SavedDoc$=#AdsDocuments!.getFieldAsString("DOC_NAME")
-    
+
         methodret #SavedDoc$
-    
+
     methodend
-    
+
 classend
