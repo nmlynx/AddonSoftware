@@ -439,7 +439,7 @@ busyImageStop_error:rem --- Method error trap/handler (11Oct2017)
             line_sign=1
             if cvs(optInvHdr.credit_invoice$,2)<>"" then
                 dim creditInvoice$:#tplOptInvHdr$
-                creditInvoiceKey$=#firmID$+optInvHdr.ar_type$+optInvHdr.ar_inv_no$+optInvHdr.customer_id$
+                creditInvoiceKey$=#firmID$+optInvHdr.ar_type$+optInvHdr.credit_invoice$+optInvHdr.customer_id$
                 readrecord(#devOptInvHdr,key=creditInvoiceKey$,knum="AO_INV_CUST",dom=*next)creditInvoice$
                 if cvs(optInvHdr.order_no$,2)="" then
                     rem --- Didn't find original invoice, so use currrent invoice's date
