@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-06-01
+ Report Date:   2021-06-07
  Report Branch: AddonSoftware 21.02
  Last Release:  AddonSoftware 21.01
 =======================================================================================================================================
@@ -93,3 +93,16 @@ reading for the historical invoice.
 (cherry picked from commit e84ab0cc7bb5ad0a4b7893438b529ae08d0b1869)
 ----
 Modified: op/src/opo_AO_AvaTaxInterface.aon
+
+=======================================================================================================================================
+Revision: 94dcd99172b5fbc767e8307d116ba2cd53316df9
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 6/7/2021 1:01:58 PM
+Message:
+Set quantity, onhand and balance to zero for a serial/lot number when
+there are no ivm_lsact (ivm-17) records for the serial/lot number for
+the fiscal period the Valuation Report is being run for.
+
+(cherry picked from commit 8162c41be53df814f2830fe7184fba6714a7729f)
+----
+Modified: iv/src/ivr_valuation_o1.aon
