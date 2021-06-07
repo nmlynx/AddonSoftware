@@ -91,7 +91,7 @@ rem --- Column Headings
         columns$[2,0]=Translate!.getTranslation("AON_QUANTITY^ON_HAND"),       columns$[2,1]="N",   columns$[2,2]=str(m2), columns$[2,3]=m2$
         columns$[3,0]=cost_desc$+Translate!.getTranslation("AON_^UNIT_COST"),  columns$[3,1]="N",   columns$[3,2]=str(m3), columns$[3,3]=m3$
         columns$[4,0]=Translate!.getTranslation("AON_ENDING^BALANCE"),         columns$[4,1]="N",   columns$[4,2]=str(m2), columns$[4,3]=m2$
-        columns$[5,0]=Translate!.getTranslation("AON_TOTAL^VALUE"),            columns$[5,1]="N",   columns$[5,2]=str(m1), columns$[5,3]=m1$, columns$[5,10]="T"
+        columns$[5,0]=Translate!.getTranslation("AON_TOTAL^VALUE"),            columns$[5,1]="N",   columns$[5,2]=str(m1+2), columns$[5,3]=m1$, columns$[5,10]="T"
     endif
 
     if level$="S" then
@@ -104,7 +104,7 @@ rem --- Column Headings
         columns$[4,0]=Translate!.getTranslation("AON_QUANTITY^ON_HAND"),       columns$[4,1]="N",   columns$[4,2]=str(m2), columns$[4,3]=m2$
         columns$[5,0]=cost_desc$+Translate!.getTranslation("AON_^UNIT_COST"),  columns$[5,1]="N",   columns$[5,2]=str(m3), columns$[5,3]=m3$
         columns$[6,0]=Translate!.getTranslation("AON_ENDING^BALANCE"),         columns$[6,1]="N",   columns$[6,2]=str(m2), columns$[6,3]=m2$
-        columns$[7,0]=Translate!.getTranslation("AON_TOTAL^VALUE"),            columns$[7,1]="N",   columns$[7,2]=str(m1), columns$[7,3]=m1$, columns$[7,10]="T"
+        columns$[7,0]=Translate!.getTranslation("AON_TOTAL^VALUE"),            columns$[7,1]="N",   columns$[7,2]=str(m1+2), columns$[7,3]=m1$, columns$[7,10]="T"
     endif
 
     if level$="D" then
@@ -123,7 +123,7 @@ rem --- Column Headings
         columns$[6,0]=Translate!.getTranslation("AON_QUANTITY^ON_HAND"),       columns$[6,1]="N",   columns$[6,2]=str(m2), columns$[6,3]=m2$
         columns$[7,0]=Translate!.getTranslation("AON_UNIT_COST"),              columns$[7,1]="N",   columns$[7,2]=str(m3), columns$[7,3]=m3$
         columns$[8,0]=Translate!.getTranslation("AON_ENDING^BALANCE"),         columns$[8,1]="N",   columns$[8,2]=str(m2), columns$[8,3]=m2$
-        columns$[9,0]=Translate!.getTranslation("AON_TOTAL^VALUE"),            columns$[9,1]="N",   columns$[9,2]=str(m1), columns$[9,3]=m1$, columns$[9,10]="T"
+        columns$[9,0]=Translate!.getTranslation("AON_TOTAL^VALUE"),            columns$[9,1]="N",   columns$[9,2]=str(m1+2), columns$[9,3]=m1$, columns$[9,10]="T"
     endif
 
     call stbl("+DIR_PGM",err=*next)+"adc_docout_adj.aon",columns$[all]
@@ -203,7 +203,7 @@ rem --- Main Read
         w[0]=ivm12a.beg_balance, w[1]=ivm12a.qty_received, w[2]=ivm12a.qty_built 
         w[3]=ivm12a.qty_sold, w[4]=ivm12a.qty_issued, w[5]=ivm12a.qty_adjust 
         w[6]=ivm12a.qty_xfer_in, w[7]=ivm12a.qty_xfer_out, w[8]=ivm12a.qty_returned
-        
+
         call pgmdir$+"ivc_periodqty.aon",selection$,ivm12a$,ignore[all],balance,status
         if status = 999 then exitto std_exit
         if whichqty$="B" quantity=balance
@@ -257,7 +257,7 @@ rem --- Main Read
                             end_ivm17=0
                             break
                         wend
-                        if end_ivm17=1 then continue
+                        if end_ivm17=1 then quantity=0,onhand=0,balance=0
                     endif
 
                     w[0]=ivm17a.beg_balance, w[1]=ivm17a.qty_received, w[2]=ivm17a.qty_built 
