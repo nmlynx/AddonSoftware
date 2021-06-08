@@ -121,3 +121,16 @@ Modified: data/bar/ops_slstaxsvchdr.xml
 Modified: data/cdf/ops_slstaxsvchdr.cdf
 Modified: data/ops_slstaxsvcdet
 Modified: op/src/opo_AO_AvaTaxInterface.aon
+
+=======================================================================================================================================
+Revision: e92681c62c5d7a3eea8528be687f94cc06fb8b34
+Author: Christine <chawkins@basis.com>
+Date: 6/8/2021 4:01:57 PM
+Message:
+Bug 10228 - AD - Quick Copy installs throw error 252 on all Jaspers
+ - Change the way the QC resets the PREFIX in barista.cfg. Rather than lopping off all non-bbj-home entries, snip out all ../apps/ entries.
+
+(cherry picked from commit d16a95633e2d7da7bde885cde2031f0175c905ed)
+----
+Modified: ad/src/adx_quickcopywiz.aon
+
