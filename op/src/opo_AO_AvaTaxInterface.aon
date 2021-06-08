@@ -51,6 +51,7 @@ rem --- Use statements and declares
     use net.avalara.avatax.rest.client.models.AddressLocationInfo
     use net.avalara.avatax.rest.client.models.CertificateModel
     use net.avalara.avatax.rest.client.models.CommitTransactionModel
+    use net.avalara.avatax.rest.client.models.CompanyModel
     use net.avalara.avatax.rest.client.models.CreateOrAdjustTransactionModel
     use net.avalara.avatax.rest.client.models.CreateTransactionModel
     use net.avalara.avatax.rest.client.models.EntityUseCodeModel
@@ -271,10 +272,6 @@ rem --- Use statements and declares
                     case svcConfigAttr$ = "licenseKey"
                         #licenseKey$=svcConfigValue$
                         if #licenseKey$="" then missingParams$=missingParams$+"licenseKey  "
-                        break
-                    case svcConfigAttr$ = "userCompanyID"
-                        #userCompanyID$=svcConfigValue$
-                        if #userCompanyID$="" then missingParams$=missingParams$+"userCompanyID  "
                         break
                     case svcConfigAttr$ = "companyCode"
                         #companyCode$=svcConfigValue$
@@ -704,6 +701,7 @@ calculateTax_error:rem --- Error trap/handler for AvaTax methods and client side
                     print(#devClientLog) "    environment: "+environment!.toString()
                     startTime!=new Date()
                 endif
+                #busyImageStart()
                 #avaTaxClient! = new AvaTaxClient(appName$, ping!.getCrmid(), machineName$, environment!).withSecurity(Base64.getEncoder().encode(account_license$))
                 if #logClient then
                     endTime!=new Date()
@@ -712,6 +710,13 @@ calculateTax_error:rem --- Error trap/handler for AvaTax methods and client side
                     print(#devClientLog) "    class: "+ #avaTaxClient!.getClass().getName()
                     logSource$=""
                 endif
+
+                rem --- Get the userCompanyID for this connection from AvaTax
+                fetchResult!=#avaTaxClient!.queryCompanies("","",1,0,"")
+                #busyImageStop()
+                companyModelList!=fetchResult!.getValue()
+                companyModel!=companyModelList!.get(0)
+                #userCompanyID$=str(companyModel!.getId())
             else
                 msg_id$="OP_SLSTAX_CONN_FAIL"
                 dim msg_tokens$[1]

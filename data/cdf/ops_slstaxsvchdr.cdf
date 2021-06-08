@@ -84,6 +84,14 @@ pingErr: rem --- Error during ping() test
 	callpoint!.setStatus("ABORT")
 	break
 
+[[OPS_SLSTAXSVCHDR.APFE]]
+rem --- Enable/disable Test Connection
+	if cvs(callpoint!.getDevObject("sls_tax_intrface"),2)=cvs(callpoint!.getColumnData("OPS_SLSTAXSVCHDR.SLS_TAX_INTRFACE"),2) then
+		callpoint!.setOptionEnabled("CONN",1)
+	else
+		callpoint!.setOptionEnabled("CONN",0)
+	endif
+
 [[OPS_SLSTAXSVCHDR.AREC]]
 rem --- Disable Test Connection
 	callpoint!.setOptionEnabled("CONN",0)
@@ -120,6 +128,10 @@ rem --- Enable Test Connection
 	if cvs(callpoint!.getDevObject("sls_tax_intrface"),2)=cvs(callpoint!.getColumnData("OPS_SLSTAXSVCHDR.SLS_TAX_INTRFACE"),2) then
 		callpoint!.setOptionEnabled("CONN",1)
 	endif
+
+[[OPS_SLSTAXSVCHDR.BPFX]]
+rem --- Disable Test Connection
+	callpoint!.setOptionEnabled("CONN",0)
 
 [[OPS_SLSTAXSVCHDR.BSHO]]
 rem  --- Use statements
