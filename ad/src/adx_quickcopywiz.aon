@@ -380,19 +380,17 @@ rem --- strip non-BBjHome dirs from prefix to re-initialize it; auto-sync on fir
     rd_tmp_text!=rd_tmp_text!.replace("\","/")
     rd_prefix_text$=rd_tmp_text!
 
-    rem --- Locate first path in PREFIX that is NOT in basis.BBjHome
-    rd_dir_bbj!=java.lang.System.getProperty("basis.BBjHome").replace("\","/")
-    rd_prefix_text$=rd_prefix_text$+" "
-    rd_temp_pfx$=rd_prefix_text$(8); rem --- Don't include beginning "PREFIX "
-    rd_pfx_pos=1
-    while rd_pfx_pos
-        if pos($22$+rd_dir_bbj!=rd_temp_pfx$(rd_pfx_pos))<>1 then break
-        rem --- This path is in basis.BBjHome
-        rd_pfx_pos=rd_pfx_pos+pos($22$+" "=rd_temp_pfx$(rd_pfx_pos))+1
-    wend
+    rem --- Loop through and remove all ../apps paths
+    if pos($22$+"../apps/"=rd_prefix_text$)<>0
+        while pos($22$+"../apps/"=rd_prefix_text$)<>0
+            rd_start_apps_pos=pos($22$+"../apps/"=rd_prefix_text$)
+            rd_end_apps_pos=pos($22$=rd_prefix_text$(rd_start_apps_pos+1))
+            if rd_start_apps_pos=0 or rd_end_apps_pos=0 then break
+            rd_prefix_text$=rd_prefix_text$(1,rd_start_apps_pos-1)+rd_prefix_text$(rd_start_apps_pos+rd_end_apps_pos+1)
+        wend
+    endif
 
-    rd_temp_pfx$="PREFIX "+rd_temp_pfx$(1,rd_pfx_pos-1)
-    rd_config_data$=rd_config_data$(1,rd_start_pos-1)+rd_temp_pfx$+rd_config_data$(rd_start_pos+rd_end_pos-1);rem test w/ -1
+    rd_config_data$=rd_config_data$(1,rd_start_pos-1)+cvs(rd_prefix_text$,2)+rd_config_data$(rd_start_pos+rd_end_pos-1)
 
     rd_temp_file_id$=cfg_dir$+"/"+tmp_file$+"~"+str(int(tim*100000):"0000000")+".tmp"
     rename rd_curr_cfg$,rd_temp_file_id$
