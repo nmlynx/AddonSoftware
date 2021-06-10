@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-06-08
+ Report Date:   2021-06-09
  Report Branch: AddonSoftware 21.02
  Last Release:  AddonSoftware 21.01
 =======================================================================================================================================
@@ -134,3 +134,26 @@ Bug 10228 - AD - Quick Copy installs throw error 252 on all Jaspers
 ----
 Modified: ad/src/adx_quickcopywiz.aon
 
+=======================================================================================================================================
+Revision: 6e831722c62b637ceaf2c5b828e77a9fdac58cca
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 6/9/2021 5:55:26 PM
+Message:
+ER 9806: Eliminated use of TAXABLE_FLAG in IVM_ITEMMAST (ivm-01) and
+OPC_LINECODE (opm-02) to set taxable amounts to zero for Sales Tax
+Service tax calculations.
+
+(cherry picked from commit 60e4d26d2d2c9623f815b46fe49c2b060e810592)
+----
+Modified: ad/src/ado_order.src
+Modified: data/bar/ope_invcash.xml
+Modified: data/bar/ope_invdet.xml
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_orddet.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_invcash.cdf
+Modified: data/cdf/ope_invdet.cdf
+Modified: data/cdf/ope_invhdr.cdf
+Modified: data/cdf/ope_orddet.cdf
+Modified: data/cdf/ope_ordhdr.cdf
+Modified: op/src/opu_commrel.aon
