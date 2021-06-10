@@ -3639,29 +3639,33 @@ rem ==========================================================================
 						ope11a.ext_price   = round(ope11a.unit_price * ope11a.qty_shipped, 2)
 					endif
 
-					if pos(opc_linecode.line_type$="SP")=0 then 
-						if opc_linecode.taxable_flag$="Y" then 
-							ope11a.taxable_amt = ope11a.ext_price
-						endif
+					if callpoint!.getDevObject("sls_tax_intrface")<>"" and opc_taxcode.use_tax_service then
+						ope11a.taxable_amt = ope11a.ext_price
 					else
-						redim ivm01a$
-						read record (ivm01_dev, key=firm_id$+ope11a.item_id$, dom=*next) ivm01a$
-						if opc_linecode.taxable_flag$="Y" and ivm01a.taxable_flag$="Y" then 
-							ope11a.taxable_amt = ope11a.ext_price
-						endif
+						if pos(opc_linecode.line_type$="SP")=0 then 
+							if opc_linecode.taxable_flag$="Y" then 
+								ope11a.taxable_amt = ope11a.ext_price
+							endif
+						else
+							redim ivm01a$
+							read record (ivm01_dev, key=firm_id$+ope11a.item_id$, dom=*next) ivm01a$
+							if opc_linecode.taxable_flag$="Y" and ivm01a.taxable_flag$="Y" then 
+								ope11a.taxable_amt = ope11a.ext_price
+							endif
 
-						rem --- Warn about superseded items
-						if ivm01a.alt_sup_flag$="S" then
-							redim ivm02a$
-							readrecord (ivm02_dev, key=firm_id$+ope11a.warehouse_id$+ope11a.item_id$, dom=*next) ivm02a$
+							rem --- Warn about superseded items
+							if ivm01a.alt_sup_flag$="S" then
+								redim ivm02a$
+								readrecord (ivm02_dev, key=firm_id$+ope11a.warehouse_id$+ope11a.item_id$, dom=*next) ivm02a$
 
-							msg_id$="OP_INCLUDES_SUPERSED"
-							dim msg_tokens$[4]
-							msg_tokens$[1]=str(ope11a.qty_ordered)
-							msg_tokens$[2]=cvs(ope11a.item_id$,2)
-							msg_tokens$[3]=cvs(ivm01a.alt_sup_item$,2)
-							msg_tokens$[4]=str(ivm02a.qty_on_hand - ivm02a.qty_commit)
-							gosub disp_message
+								msg_id$="OP_INCLUDES_SUPERSED"
+								dim msg_tokens$[4]
+								msg_tokens$[1]=str(ope11a.qty_ordered)
+								msg_tokens$[2]=cvs(ope11a.item_id$,2)
+								msg_tokens$[3]=cvs(ivm01a.alt_sup_item$,2)
+								msg_tokens$[4]=str(ivm02a.qty_on_hand - ivm02a.qty_commit)
+								gosub disp_message
+							endif
 						endif
 					endif
 				endif
@@ -4057,6 +4061,7 @@ rem ==========================================================================
 	cust_id$=callpoint!.getColumnData("OPE_INVHDR.CUSTOMER_ID")
 	find record (custmast_dev, key=firm_id$+cust_id$,dom=*next) custmast_tpl$
 
+	callpoint!.setDevObject("tax_code",   callpoint!.getColumnData("OPE_INVHDR.TAX_CODE"))
 	callpoint!.setDevObject("tax_amount",   callpoint!.getColumnData("OPE_INVHDR.TAX_AMOUNT"))
 	callpoint!.setDevObject("freight_amt",  callpoint!.getColumnData("OPE_INVHDR.FREIGHT_AMT"))
 	callpoint!.setDevObject("discount_amt", callpoint!.getColumnData("OPE_INVHDR.DISCOUNT_AMT"))

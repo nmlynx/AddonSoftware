@@ -174,9 +174,8 @@ rem --- Check for minimum line extension
 
 rem --- Set taxable amount
 
-	if user_tpl.line_taxable$ = "Y" and 
-:		( pos(user_tpl.line_type$ = "OMN") or user_tpl.item_taxable$ = "Y" ) 
-:	then 
+	if (user_tpl.line_taxable$ = "Y" and ( pos(user_tpl.line_type$ = "OMN") or user_tpl.item_taxable$ = "Y" )) or
+: 	callpoint!.getDevObject("use_tax_service")="Y" then 
 		callpoint!.setColumnData("OPE_ORDDET.TAXABLE_AMT", str(ext_price))
 	endif
 
@@ -417,7 +416,8 @@ rem --- Need to commit?
 		if orig_commit$ = "N" and callpoint!.getColumnData("OPE_ORDDET.COMMIT_FLAG") = "Y" then
 			committed_changed=1
 			callpoint!.setColumnData("<<DISPLAY>>.QTY_SHIPPED_DSP", str(callpoint!.getColumnData("<<DISPLAY>>.QTY_ORDERED_DSP")))
-			if user_tpl.line_taxable$ = "Y" and ( pos(user_tpl.line_type$ = "OMN") or user_tpl.item_taxable$ = "Y" ) then 
+			if (user_tpl.line_taxable$ = "Y" and ( pos(user_tpl.line_type$ = "OMN") or user_tpl.item_taxable$ = "Y" )) or
+: 			callpoint!.getDevObject("use_tax_service")="Y" then 
 				callpoint!.setColumnData("OPE_ORDDET.TAXABLE_AMT", str(ext_price))
 			endif
 			rem --- Warn if ship quantity is more than currently available.
@@ -973,6 +973,7 @@ rem --- Set header total amounts
 	if cvs(cust_id$,3)<>"" and cvs(order_no$,3)<>"" then
 
 		ordHelp! = cast(OrderHelper, callpoint!.getDevObject("order_helper_object"))
+		ordHelp!.setTaxCode(callpoint!.getHeaderColumnData("OPE_ORDHDR.TAX_CODE"))
 		ordHelp!.totalSalesDisk(cust_id$, order_no$, inv_type$)
 
 		callpoint!.setHeaderColumnData( "OPE_ORDHDR.TOTAL_SALES", str(ordHelp!.getExtPrice()) )
@@ -1932,6 +1933,7 @@ rem ==========================================================================
 		ttl_ext_cost = 0
 		ttl_taxable_sales = 0
 	else
+		ordHelp!.setTaxCode(callpoint!.getHeaderColumnData("OPE_ORDHDR.TAX_CODE"))
 		totalsVect!=ordHelp!.totalSalesCostTaxable(cast(BBjVector, GridVect!.getItem(0)), cast(Callpoint, callpoint!))
 		ttl_ext_price=totalsVect!.getItem(0)
 		ttl_ext_cost=totalsVect!.getItem(1)
@@ -2592,9 +2594,8 @@ rem ==========================================================================
 		gosub credit_exceeded
 	endif
 
-	if user_tpl.line_taxable$ = "Y" or 
-:		( pos(user_tpl.line_type$="OMN") and user_tpl.item_taxable$ = "Y" )
-:	then 
+	if (user_tpl.line_taxable$ = "Y" and ( pos(user_tpl.line_type$ = "OMN") or user_tpl.item_taxable$ = "Y" )) or
+: 	callpoint!.getDevObject("use_tax_service")="Y" then 
 		callpoint!.setColumnData("OPE_ORDDET.TAXABLE_AMT", callpoint!.getColumnData("OPE_ORDDET.EXT_PRICE"))
 	endif
 
