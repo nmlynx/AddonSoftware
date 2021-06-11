@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-06-09
+ Report Date:   2021-06-11
  Report Branch: AddonSoftware 21.02
  Last Release:  AddonSoftware 21.01
 =======================================================================================================================================
@@ -157,3 +157,16 @@ Modified: data/cdf/ope_invhdr.cdf
 Modified: data/cdf/ope_orddet.cdf
 Modified: data/cdf/ope_ordhdr.cdf
 Modified: op/src/opu_commrel.aon
+
+=======================================================================================================================================
+Revision: edfac92accbadf935187569b58085f487c8375ad
+Author: Christine <chawkins@basis.com>
+Date: 6/11/2021 11:55:39 AM
+Message:
+Bug 10225 - OP - Adding documents to the queue in a batch can cause stack overflow
+ - Caused by ado_rptControl instantiating DocumentQueue() object multiple times (which opened files that didn't all get closed), with additional "channel creep" in a few Barista programs. See bug 10229 for affected Barista code.
+
+(cherry picked from commit fb2c9eccea9fa6a183eb9afb0f1ca0d72705da20)
+----
+Modified: ad/src/ado_rptControl.src
+
