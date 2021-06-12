@@ -2531,7 +2531,7 @@ std_exit:
       write record(xml_chan)xml_data$
       close(xml_chan)
       
-      rem --- Reset ADS_AUTOLAUNCH record for BUILDSPROC and 50AUTOSYNC processes
+      rem --- Reset ADS_AUTOLAUNCH record for BUILDSPROC, 50AUTOSYNC, and 90MNUIMP processes
   
       sql_prep$="UPDATE ADS_AUTOLAUNCH SET PROCESS_STATUS='N',TRANS_DATE='',TRANS_TIME='' WHERE PROCESS_ID='BUILDSPROC'"
       sql_chan=sqlunt
@@ -2541,6 +2541,10 @@ std_exit:
       sqlexec(sql_chan)
       
       sql_prep$="UPDATE ADS_AUTOLAUNCH SET PROCESS_STATUS='N',TRANS_DATE='',TRANS_TIME='' WHERE PROCESS_ID='50AUTOSYNC'"
+      sqlprep(sql_chan)sql_prep$
+      sqlexec(sql_chan)
+
+      sql_prep$="UPDATE ADS_AUTOLAUNCH SET PROCESS_STATUS='N',TRANS_DATE='',TRANS_TIME='' WHERE PROCESS_ID='90MNUIMP'"
       sqlprep(sql_chan)sql_prep$
       sqlexec(sql_chan)
   
