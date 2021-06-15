@@ -110,12 +110,7 @@ rem --- Retrieve parameter records
     apperiod=num(aps01a.current_per$)
     m0=len(m0$)
     m1=len(m1$)
-    periodend$=""
     maxperiods=num(gls_calendar.total_pers$)
-    
-    for x=1 to maxperiods
-        periodend$=periodend$+field(gls_calendar$,"per_ending_"+str(x:"00"))
-    next x
 
 rem --- Initializations
 
@@ -184,30 +179,20 @@ rem --- Determine period beginning and ending dates based on the aging method se
 
             rem --- Determine which period the aging date falls into
 
-            year=num(agingdate$(1,4))
-            mmdd$=agingdate$(5,4)
-            
-            for x=1 to maxperiods
-                period=x
-                if mmdd$>periodend$((x*4)-3,4) continue
-                if x=1 if mmdd$>periodend$((maxperiods*4)-3,4) break
-                if x>1 if mmdd$>periodend$(((x-1)*4)-3,4) break
-                if x=1 if periodend$((x*4)-3,4)<periodend$(maxperiods*4-3,4) break
-                if x>1 if periodend$((x*4)-3,4)<periodend$((x-1)*4-3,4) break
-            next x
+            call pgmdir$+"adc_fiscalperyr.aon",firm_id$,agingdate$,period$,year$,table_chans$[all],status
 
             rem --- Get current period beginning and ending dates
 
-            if agingdate$(5,2)<periodend$(1,2) year=year-1
-            call pgmdir$+"adc_perioddates.aon",period,year,begperiod$,endperiod$,table_chans$[all],status
+            call pgmdir$+"adc_perioddates.aon",num(period$),num(year$),begperiod$,endperiod$,table_chans$[all],status
             if status then goto std_exit
             begdates$=begperiod$
             enddates$=endperiod$
 
             rem --- Calculate prior period beginning and ending dates
 
-            base=period
-            base_yr=year
+            base=num(period$)
+            base_yr=num(year$)
+            year=base_yr
             
             for x=1 to 3
                 period=base-x
@@ -231,22 +216,19 @@ rem --- Determine period beginning and ending dates based on the aging method se
             begdates$=""
             enddates$=""
                         
-                        rem setup the asked for report date as the date to start the count back with (plus the increment)       
-                        thisdate=jul(num(agingdate$(1,4)),num(agingdate$(5,2)),num(agingdate$(7,2))) + 1
+            rem setup the asked for report date as the date to start the count back with (plus the increment)       
+            thisdate=jul(num(agingdate$(1,4)),num(agingdate$(5,2)),num(agingdate$(7,2))) + 1
 
-                        rem build the end & start date strings from curr to previous dates
-                        for x=0 to 3
-                                enddate$=date(thisdate-1,"%Y%Mz%Dz")
-                                rem count back # days specified in the entry screen
-                                thisdate=thisdate-days
-                                rem this gets us the start date for this period
-                                begdate$=date(thisdate,"%Y%Mz%Dz")
-                                enddates$=enddates$+enddate$
-                                begdates$=begdates$+begdate$    
+            rem build the end & start date strings from curr to previous dates
+            for x=0 to 3
+                    enddate$=date(thisdate-1,"%Y%Mz%Dz")
+                    rem count back # days specified in the entry screen
+                    thisdate=thisdate-days
+                    rem this gets us the start date for this period
+                    begdate$=date(thisdate,"%Y%Mz%Dz")
+                    enddates$=enddates$+enddate$
+                    begdates$=begdates$+begdate$    
             next x
-                                
-
-            
         break
 
         case default

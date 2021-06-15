@@ -1037,62 +1037,36 @@ REM ========================================================================
     return
 
 SET_UP_PERIOD:
-    
-    firstPerEnding$ = gls_calendar.per_ending_01$
+
     switch curPeriod
         case 1 
-            ending$ = gls_calendar.per_ending_01$
-            if numPeriods = 12 then
-                starting$ = gls_calendar.per_ending_12$
-            else
-                starting$ = gls_calendar.per_ending_13$
-            fi
+            ending$ = gls_calendar.period_end_01$
+            starting$ = gls_calendar.start_date$
             break
-        case 2; ending$ = gls_calendar.per_ending_02$; starting$ = gls_calendar.per_ending_01$; break
-        case 3; ending$ = gls_calendar.per_ending_03$; starting$ = gls_calendar.per_ending_02$; break
-        case 4; ending$ = gls_calendar.per_ending_04$; starting$ = gls_calendar.per_ending_03$; break
-        case 5; ending$ = gls_calendar.per_ending_05$; starting$ = gls_calendar.per_ending_04$; break
-        case 6; ending$ = gls_calendar.per_ending_06$; starting$ = gls_calendar.per_ending_05$; break
-        case 7; ending$ = gls_calendar.per_ending_07$; starting$ = gls_calendar.per_ending_06$; break
-        case 8; ending$ = gls_calendar.per_ending_08$; starting$ = gls_calendar.per_ending_07$; break
-        case 9; ending$ = gls_calendar.per_ending_09$; starting$ = gls_calendar.per_ending_08$; break
-        case 10; ending$ = gls_calendar.per_ending_10$; starting$ = gls_calendar.per_ending_09$; break
-        case 11; ending$ = gls_calendar.per_ending_11$; starting$ = gls_calendar.per_ending_10$; break
-        case 12; ending$ = gls_calendar.per_ending_12$; starting$ = gls_calendar.per_ending_11$; break
-        case 13; ending$ = gls_calendar.per_ending_13$; starting$ = gls_calendar.per_ending_12$; break
-        case default; ending$ = "    "; starting$ = "    "; break
+        case 2; ending$ = gls_calendar.period_end_02$; starting$ = gls_calendar.period_end_01$; break
+        case 3; ending$ = gls_calendar.period_end_03$; starting$ = gls_calendar.period_end_02$; break
+        case 4; ending$ = gls_calendar.period_end_04$; starting$ = gls_calendar.period_end_03$; break
+        case 5; ending$ = gls_calendar.period_end_05$; starting$ = gls_calendar.period_end_04$; break
+        case 6; ending$ = gls_calendar.period_end_06$; starting$ = gls_calendar.period_end_05$; break
+        case 7; ending$ = gls_calendar.period_end_07$; starting$ = gls_calendar.period_end_06$; break
+        case 8; ending$ = gls_calendar.period_end_08$; starting$ = gls_calendar.period_end_07$; break
+        case 9; ending$ = gls_calendar.period_end_09$; starting$ = gls_calendar.period_end_08$; break
+        case 10; ending$ = gls_calendar.period_end_10$; starting$ = gls_calendar.period_end_09$; break
+        case 11; ending$ = gls_calendar.period_end_11$; starting$ = gls_calendar.period_end_10$; break
+        case 12; ending$ = gls_calendar.period_end_12$; starting$ = gls_calendar.period_end_11$; break
+        case 13; ending$ = gls_calendar.period_end_13$; starting$ = gls_calendar.period_end_12$; break
+        case default; ending$ = pad("",8); starting$ = pad("",8); break
     swend
-  
-    startMonth = num(starting$(1,2))    
-    startDay = num(starting$(3,2))
 
-    endMonth = num(ending$(1,2))
-    endDay = num(ending$(3,2))
+    endYear=num(ending$(1,4))
+    endMonth = num(ending$(5,2))
+    endDay = num(ending$(7))
 
-    firstPerMonth = num(firstPerEnding$(1,2))
-    
-    rem ' do we have a fiscal year that does not align with the calendar year
-    if endMonth < firstPerMonth then 
-        year = curYear + 1
-    else
-    	year = curYear
-    fi
-
-    endYear = year
-
-    rem ' adjust the start by one day
-    if startMonth = 12 then
-        startDate = jul(curYear - 1, startMonth, startDay)
-    else
-    	startDate = jul(year, startMonth, startDay)
-    fi
-    startDate = startDate + 1
-    startDay = num(date(startDate:"%D"))
-    startMonth = num(date(startDate:"%M"))
+    rem --- Add one day to prior period end date to get current period start date
+    startDate = jul(num(starting$(1,4)), num(starting$(5,2)), num(starting$(7)))+1
     startYear = num(date(startDate:"%Y"))
-    
-    rem ' adjust for leap year
-    if startMonth = 2 and startDay = 29 then startMonth = startMonth + 1, startDay = 1
+    startMonth = num(date(startDate:"%M"))
+    startDay = num(date(startDate:"%D"))
     
 return
 

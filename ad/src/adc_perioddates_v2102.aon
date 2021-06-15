@@ -1,25 +1,23 @@
 rem adc - Determine Period End Dates (Public/Called)
-rem Program adc_periodyear.aon v8.0.0 13Apr2006 (syc_pb)
-rem Created by adx_progconv.bbx v1.0.0 (04/13/2006 10:16:04)
+rem Program adc_perioddates_v2102 (syc_pa)
 
-rem  +-----------------------------------------+
-rem  | AddonSoftware Version 8.0.0 - 01Oct2006 |
-rem  |  Copyright BASIS International Ltd.  All Rights Reserved.
-rem  |          All Rights Reserved            |
-rem  +-----------------------------------------+
+rem --- AddonSoftware Version 17.00
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem --------------------------------------------------------------------------------
 
-rem --- PERIOD        : Current fiscal period (Input)
-rem --- YEAR          : Current fiscal year (Input)
-rem --- FULLNAME$     : Full period name (Returned)
-rem --- ABBRNAME$     : Abbreviated period name (Returned)
-rem --- BEGDATE$      : Period beginning date in YYYYMMDD format (Returned)
-rem --- ENDDATE$      : Period ending date in YYYYMMDD format (Returned)
+rem --- PERIOD    : Current fiscal period (Input)
+rem --- YEAR      : Current fiscal year (Input)
+rem --- BEGDATE$  : Period beginning date in YYYYMMDD format (Returned)
+rem --- ENDDATE$  : Period ending date in YYYYMMDD format (Returned)
 rem --- TABLE_CHANS$[]: Barista opened channels array
-rem --- STATUS        : Zero=No Error/Not Zero=Error (Returned)
+rem --- STATUS    : Zero=No Error/Not Zero=Error (Returned)
+
+use java.util.GregorianCalendar
 
     setesc std_error
     seterr std_error
-    enter period,year,fullname$,abbrname$,begdate$,enddate$,table_chans$[all],status
+    
+    enter period,year,begdate$,enddate$,table_chans$[all],status
 
 rem --- Retrieve the program path
 
@@ -52,7 +50,7 @@ rem --- Retrieve parameter records
 
     status=0
     gls01a_key$=firm_id$+"GL00"
-    find record (gls01_dev,key=gls01a_key$,err=std_missing_params)gls01a$
+    find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     readrecord(gls_calendar_dev,key=firm_id$+str(year),err=*next)gls_calendar$
     if cvs(gls_calendar.firm_id$,2)="" then
         msg_id$="AD_NO_FISCAL_CAL"
@@ -64,15 +62,12 @@ rem --- Retrieve parameter records
     endif
     total_periods=num(gls_calendar.total_pers$)
 
-	fullname$=field(gls_calendar$,"PERIOD_NAME_"+str(period:"00"))
-	abbrname$=field(gls_calendar$,"ABBR_NAME_"+str(period:"00"))
-
 rem --- Determine End Of Period
 
     if period>total_periods period=total_periods
     enddate$=field(gls_calendar$,"per_ending_"+str(period:"00"))
     calendar_year=year
-    if enddate$(1,2)<gls_calendar.per_ending_01$(1,2) calendar_year=calendar_year+1
+    if enddate$<gls_calendar.per_ending_01$ then calendar_year=calendar_year+1
     enddate$=str(calendar_year:"0000")+enddate$
     if len(enddate$)>7 then
         yyyy$=enddate$(1,4)
@@ -91,8 +86,9 @@ rem --- Determine Start Of Period
         rem --- Get calendar start date and subtract one day from it
         begdate$=field(gls_calendar$,"cal_start_date")
         julian=jul(calendar_year,num(begdate$(1,2)),num(begdate$(3,2)))-1
-        begdate$=date(julian:"%Mz%Dz")
-        calendar_year=year
+        prior_yr_end$=date(julian:"%Yl%Mz%Dz")
+        calendar_year=num(prior_yr_end$(1,4))
+        begdate$=prior_yr_end$(5)
     else
         rem --- Get ending date of previous period
         begdate$=field(gls_calendar$,"per_ending_"+str(period-1:"00"))
