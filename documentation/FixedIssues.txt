@@ -193,5 +193,36 @@ Bug 10225 - OP - Adding documents to the queue in a batch can cause stack overfl
 ----
 Modified: ad/src/ado_util.src
 
+=======================================================================================================================================
+Revision: 65eadfe6faec2ec8897c2c3a1c7e417f6e6c822e
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 6/15/2021 3:01:29 PM
+Message:
+ER 10087: Modified GL fiscal period end dates to include the year.
+Modified GL fiscal year start date to include the year.
 
-
+(cherry picked from commit b41546b1748136daaceac98ee1d4dbd5227b9465)
+----
+Modified: ad/src/adc_fiscalperyr.aon
+Modified: ad/src/adc_perioddates.aon
+Rename: ad/src/adc_perioddates_v2102.aon (from ad/src/adc_periodyear.aon)
+Modified: ap/src/apr_agingreport.aon
+Modified: ap/src/apr_cashrequire.aon
+Modified: ap/src/apu_chkregister.aon
+Modified: ap/src/apu_manualchecks.aon
+Modified: ar/digitalDashboard/arr_digitalDashboard.arc
+Modified: ar/digitalDashboard/arr_digitalDashboard.src
+Modified: ar/src/arr_graphicSalesReport.aon
+Modified: data/bar/gls_calendar.xml
+Modified: data/bar/opr_salestax.xml
+Modified: data/cdf/gls_calendar.cdf
+Modified: data/cdf/opr_salestax.cdf
+Added: data/sync/ads_autolaunch~[01007514GL].xml
+Modified: data/sync/ads_messages~[01007514GL].xml
+Modified: gl/src/glo_AO_AlignFiscalCalendar.aon
+Modified: gl/src/glu_periodend.aon
+Added: gl/src/glx_init_fiscal_cal.aon
+Modified: po/src/por_pocashreqmt.aon
+Modified: po/src/por_pocashreqmt_o1.aon
+Modified: prop/addon.properties
+Modified: prop/addon_en.properties
