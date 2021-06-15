@@ -139,8 +139,8 @@ close_last_period: rem --- Closing last period of year
             mm$=enddate$(5,2)
             dd$=enddate$(7,2)
             if mm$="02" then
-                if dd$="29" and !Calendar!.isLeapYear(num(new_next_yyyy$)) then field gls_calendar$,"per_ending_"+str(x:"00")=mm$+"28"
-                if dd$="28" and Calendar!.isLeapYear(num(new_next_yyyy$)) and gls01a.adjust_february then field gls_calendar$,"per_ending_"+str(x:"00")=mm$+"29"
+                if dd$="29" and !Calendar!.isLeapYear(num(new_next_yyyy$)) then field gls_calendar$,"period_end_"+str(x:"00")=mm$+"28"
+                if dd$="28" and Calendar!.isLeapYear(num(new_next_yyyy$)) and gls01a.adjust_february then field gls_calendar$,"period_end_"+str(x:"00")=mm$+"29"
             endif
         next x
     endif

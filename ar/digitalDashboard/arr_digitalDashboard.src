@@ -680,9 +680,9 @@ REM - get current accounting period and year
     dim read_tpl$:sqltmpl(sql_chan)
     sqlexec(sql_chan)
 
-    rs! = BBJAPI().createMemoryRecordSet("TOTAL_PERS:C(2),CURRENT_PER:C(2),CURRENT_YEAR:C(4),CAL_START_DATE:C(4),"+
-:   "PER_ENDING_01:C(4),PER_ENDING_02:C(4),PER_ENDING_03:C(4),PER_ENDING_04:C(4),PER_ENDING_05:C(4),PER_ENDING_06:C(4),"+
-:   "PER_ENDING_07:C(4),PER_ENDING_08:C(4),PER_ENDING_09:C(4),PER_ENDING_10:C(4),PER_ENDING_11:C(4),PER_ENDING_12:C(4),PER_ENDING_13:C(4)")
+    rs! = BBJAPI().createMemoryRecordSet("TOTAL_PERS:C(2),CURRENT_PER:C(2),CURRENT_YEAR:C(4),START_DATE:C(8),"+
+:   "PERIOD_END_01:C(8),PERIOD_END_02:C(8),PERIOD_END_03:C(8),PERIOD_END_04:C(8),PERIOD_END_05:C(8),PERIOD_END_06:C(8),"+
+:   "PERIOD_END_07:C(8),PERIOD_END_08:C(8),PERIOD_END_09:C(8),PERIOD_END_10:C(8),PERIOD_END_11:C(8),PERIOD_END_12:C(8),PERIOD_END_13:C(8)")
     
     read_tpl$ = sqlfetch(sql_chan,err=*break)
     periods! = rs!.getEmptyRecordData()    
@@ -1130,7 +1130,7 @@ set_up_period:
         periods!.setFieldValue("CURRENT_PER",str(period:"00"))
     wend
     year = num(periods!.getFieldValue("CURRENT_YEAR"))
-    yearStartDate$ = periods!.getFieldValue("CURRENT_YEAR") + periods!.getFieldValue("CAL_START_DATE")    
+    yearStartDate$ = periods!.getFieldValue("START_DATE")    
 
     rem --- Get beginning and ending date for the accounting period
     call stbl("+DIR_PGM")+"adc_perioddates.aon",period,year,periodBeginDate$,periodEndDate$,table_chans$[all],status
@@ -1273,9 +1273,9 @@ rem ' -----------------------------------------------------------------
 get_fiscal_calendar:
 
     REM - get the accounting periods
-    sql$ = "SELECT TOTAL_PERS, CAL_START_DATE, "
-    sql$ = sql$ + "PER_ENDING_01, PER_ENDING_02, PER_ENDING_03, PER_ENDING_04, PER_ENDING_05, PER_ENDING_06, "
-    sql$ = sql$ + "PER_ENDING_07, PER_ENDING_08, PER_ENDING_09, PER_ENDING_10, PER_ENDING_11, PER_ENDING_12, PER_ENDING_13 "
+    sql$ = "SELECT TOTAL_PERS, START_DATE, "
+    sql$ = sql$ + "PERIOD_END_01, PERIOD_END_02, PERIOD_END_03, PERIOD_END_04, PERIOD_END_05, PERIOD_END_06, "
+    sql$ = sql$ + "PERIOD_END_07, PERIOD_END_08, PERIOD_END_09, PERIOD_END_10, PERIOD_END_11, PERIOD_END_12, PERIOD_END_13 "
     sql$ = sql$ + "FROM GLS_CALENDAR "
     sql$ = sql$ + "WHERE FIRM_ID = '" + firm_id$ + "' AND YEAR = '" + periods!.getFieldValue("CURRENT_YEAR") + "'"
         
@@ -1287,10 +1287,10 @@ get_fiscal_calendar:
 
     read_tpl$ = sqlfetch(sql_chan,err=*break)
     periods!.setFieldValue("TOTAL_PERS",read_tpl.total_pers$)
-    periods!.setFieldValue("CAL_START_DATE",read_tpl.cal_start_date$)
+    periods!.setFieldValue("START_DATE",read_tpl.start_date$)
     for per=1 to 13
         per$=str(per:"00")
-        periods!.setFieldValue("PER_ENDING_"+per$,pad(field(read_tpl$,"PER_ENDING_"+per$),4))
+        periods!.setFieldValue("PERIOD_END_"+per$,pad(field(read_tpl$,"PERIOD_END_"+per$),8))
     next per
     sqlclose(sql_chan)
 
@@ -1327,8 +1327,8 @@ get_fiscal_calendar:
     totPer$=str(totalPeriods:"00")
     for x = 1 to totalPeriods
         per$=str(x:"00")
-        label$ = periods!.getFieldValue("PER_ENDING_"+per$)
-        label$ = label$(1,2) + "/" + label$(3,2)
+        label$ = periods!.getFieldValue("PERIOD_END_"+per$)
+        label$ = label$(5,2) + "/" + label$(7) + "/" + label$(1,4)
         window!.getControl(totPer$+"per"+per$).setText(label$)
     next x
     

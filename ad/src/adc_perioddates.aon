@@ -30,8 +30,6 @@ rem --- Retrieve sysinfo data
     sysinfo$=stbl("+SYSINFO",err=*next)
     firm_id$=sysinfo.firm_id$
 
-    Calendar! = new GregorianCalendar()
-
 rem --- Open/Lock files
 
     num_files=2
@@ -49,6 +47,8 @@ rem --- Open/Lock files
 rem --- Retrieve parameter records
 
     status=0
+    begdate$=""
+    enddate$=""
     gls01a_key$=firm_id$+"GL00"
     find record (gls01_dev,key=gls01a_key$,err=std_missing_params) gls01a$
     readrecord(gls_calendar_dev,key=firm_id$+str(year),err=*next)gls_calendar$
@@ -64,48 +64,20 @@ rem --- Retrieve parameter records
 
 rem --- Determine End Of Period
 
-    if period>total_periods period=total_periods
-    enddate$=field(gls_calendar$,"per_ending_"+str(period:"00"))
-    calendar_year=year
-    if enddate$<gls_calendar.per_ending_01$ then calendar_year=calendar_year+1
-    enddate$=str(calendar_year:"0000")+enddate$
-    if len(enddate$)>7 then
-        yyyy$=enddate$(1,4)
-        mm$=enddate$(5,2)
-        dd$=enddate$(7,2)
-        rem --- Adjust last day of February for leap year
-        if mm$="02" then
-            if dd$="29" and !Calendar!.isLeapYear(num(yyyy$)) then enddate$(7,2)="28"
-            if dd$="28" and Calendar!.isLeapYear(num(yyyy$)) and gls01a.adjust_february then enddate$(7,2)="29"
-        endif
-    endif
+    if period>total_periods then period=total_periods
+    enddate$=field(gls_calendar$,"period_end_"+str(period:"00"))
 
 rem --- Determine Start Of Period
 
     if period=1 then
-        rem --- Get calendar start date and subtract one day from it
-        begdate$=field(gls_calendar$,"cal_start_date")
-        julian=jul(calendar_year,num(begdate$(1,2)),num(begdate$(3,2)))-1
-        prior_yr_end$=date(julian:"%Yl%Mz%Dz")
-        calendar_year=num(prior_yr_end$(1,4))
-        begdate$=prior_yr_end$(5)
+        rem --- Get calendar start date
+        begdate$=gls_calendar.start_date$
     else
-        rem --- Get ending date of previous period
-        begdate$=field(gls_calendar$,"per_ending_"+str(period-1:"00"))
-        calendar_year=year
-        if begdate$<gls_calendar.per_ending_01$ then calendar_year=calendar_year+1
+        rem --- Get ending date of previous period and add one day
+        begdate$=field(gls_calendar$,"period_end_"+str(period-1:"00"))
+        julian=jul(num(begdate$(1,4)),num(begdate$(5,2)),num(begdate$(7)))+1
+        begdate$=date(julian:"%Yl%Mz%Dz")
     endif
-    if len(begdate$)>3 then
-        mm$=begdate$(1,2)
-        dd$=begdate$(3,2)
-        rem --- Adjust last day of February for leap year
-        if mm$="02" then
-            if dd$="29" and !Calendar!.isLeapYear(calendar_year) then begdate$(3,2)="28"
-            if dd$="28" and Calendar!.isLeapYear(calendar_year) and gls01a.adjust_february then begdate$(3,2)="29"
-        endif
-    endif
-    julian=jul(calendar_year,num(begdate$(1,2)),num(begdate$(3,2)))+1
-    begdate$=date(julian:"%Yl%Mz%Dz")
 
 rem --- Done
 
