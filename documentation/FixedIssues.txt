@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-06-11
+ Report Date:   2021-06-15
  Report Branch: AddonSoftware 21.02
  Last Release:  AddonSoftware 21.01
 =======================================================================================================================================
@@ -180,5 +180,18 @@ Bug 10230 - AD - Extractor used for moving/upgrading needs to reset 90MNUIMP aut
 (cherry picked from commit 23bc9c1a91f5d81e3ca403efea54c710a40a589c)
 ----
 Modified: util/packager_extractor/aon_packagerextractor.bbj
+
+=======================================================================================================================================
+Revision: 5ba4eb496dcfc8bdd09ee74bfc1ad822263788b9
+Author: Christine <chawkins@basis.com>
+Date: 6/15/2021 11:14:38 AM
+Message:
+Bug 10225 - OP - Adding documents to the queue in a batch can cause stack overflow (see also Barista bug 10229).
+ - Testing this fix uncovered a bug in ado_util same as that described in bug 9539, so made that fix as well.
+
+(cherry picked from commit c7746cb8b89f702a30d45b8b9865a958f864cd84)
+----
+Modified: ad/src/ado_util.src
+
 
 
