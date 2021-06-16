@@ -19,15 +19,12 @@ rem --- STATUS        : Zero=No Error/Not Zero=Error (Returned)
 
 rem --- Validate WHEN$ date
 
+    period$=""
+    year$=""
     when_jul=-1
     when_jul=jul(num(when$(1,4)),num(when$(5,2)),num(when$(7,2)),err=*next)
-    if when_jul<0 then
-        period$=""
-        year$=""
-        goto done
-    endif
-    date$=when$
-    fiscal_year$=date$(1,4)
+    if when_jul<0 then goto done
+    fiscal_year$=when$(1,4)
 
 rem --- Retrieve sysinfo data
 
@@ -62,56 +59,32 @@ get_calendar: rem --- Get calendar for the fiscal year
     endif
     periods=num(gls_calendar.total_pers$)
 
-rem --- Make sure we used the fiscal calendar for the correct year.
+rem --- Which fiscal year?
 
-    start_date$=gls_calendar.year$+gls_calendar.cal_start_date$
+    rem --- Earlier fiscal year?
+    start_date$=gls_calendar.start_date$
     start_jul=jul(num(start_date$(1,4)),num(start_date$(5,2)),num(start_date$(7,2)))
     if when_jul<start_jul then
         fiscal_year$=str(num(fiscal_year$)-1)
         goto get_calendar
     endif
 
-rem --- Initializations
-
-    numbers$="01020304050607080910111213"
-    numbers$=numbers$(1,periods*2)
-    period$=""
-    year$=""
-    p=0
-    y=0
-
-rem --- Sort period ending dates and corresponding period numbers
-
-    for x=1 to periods
-        periods$=periods$+field(gls_calendar$,"per_ending_"+str(x:"00"))
-    next x
-
-    for x=2 to periods
-        priper=(x-2)*4+1
-        curper=(x-1)*4+1
-        if periods$(curper,4)>periods$(priper,4) continue
-        periods$=periods$(curper)+periods$(1,curper-1)
-        w=int(curper/4)*2+1,numbers$=numbers$(w)+numbers$(1,w-1)
-        break
-    next x
-
-rem --- Which period/year?
-
-    mmdd$=date$(5)
-    p=pos(mmdd$<=periods$,4)
-    if p<>0
-        p=num(numbers$(int(p/4)*2+1,2))
-        y=num(date$(1,4))
-        if p>1 if field(gls_calendar$,"per_ending_"+str(p:"00"))<gls_calendar.per_ending_01$ y=y-1
-    else
-        rem --- 'ENTERED' date is > than all period end dates
-        p=num(numbers$(periods*2-1))+1
-        y=num(date$(1,4))
-        if p>periods p=1,y=y+1
+    rem --- Later fiscal year?
+    end_date$=field(gls_calendar$,"period_end_"+str(periods))
+    end_jul=jul(num(end_date$(1,4)),num(end_date$(5,2)),num(end_date$(7,2)))
+    if when_jul>end_jul then
+        fiscal_year$=str(num(fiscal_year$)+1)
+        goto get_calendar
     endif
 
-    period$=str(p:"00")
-    year$=str(y:"0000")
+    year$=fiscal_year$
+
+rem --- Which period?
+    for per=1 to periods
+        if when$<=field(gls_calendar$,"period_end_"+str(per:"00")) then break
+    next per
+
+    period$=str(per:"00")
 
 done: rem --- All done
 

@@ -167,7 +167,7 @@ rem --- Main
 			unit_measure$=poe_podet.unit_measure$
 			extension$=str(extension:ext_mask$)
 
-            item_id_desc_msg$=memo_1024$
+            item_id_desc_msg$=item_id_desc_msg$+" "+memo_1024$
             gosub add_to_recordset
             
             break

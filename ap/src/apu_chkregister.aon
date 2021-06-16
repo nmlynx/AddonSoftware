@@ -112,11 +112,8 @@ rem --- Parameters
 rem --- Initializations
 
     dim t[2]
-    g9$=field(gls_calendar$,"per_ending_"+str(num(gls_calendar.total_pers$):"00"))
-    w=ap_year
-    if g9$<gls_calendar.per_ending_01$ w=w+1
-    g9$=str(w)+g9$
-    prior_g9$=str(w-1)+g9$(5,4)
+    g9$=field(gls_calendar$,"period_end_"+gls_calendar.total_pers$)
+    prior_g9$=str(num(g9$(1,4))-1)+g9$(5)
     g8$=aps01a.cur_1099_yr$+"1231"
     prior_g8$=str(num(aps01a.cur_1099_yr$)-1:"0000")+"1231"
     more=1

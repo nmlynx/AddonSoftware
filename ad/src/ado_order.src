@@ -16,6 +16,8 @@ rem ==========================================================================
         field private BBjString firm_id$
         field private BBjInt precision% 
         field public BBjString LotSerialFlag$
+        field protected BBjString sls_tax_intrface$=" "
+        field protected BBjInt use_tax_service%=0
 
     rem --- Read-only fields for calcOverCreditLimit()
     
@@ -55,6 +57,8 @@ rem ==========================================================================
         field private BBjString ivsParamsTmpl$ 
         field protected BBjInt arsCreditDev%
         field protected BBjString arsCreditTmpl$
+        field private BBjInt arsParamsDev% 
+        field private BBjString arsParamsTmpl$ 
         
     rem --- Set from order
 
@@ -113,6 +117,16 @@ rem ==========================================================================
                     util.setTableChans(pTableChans!)
                 endif
             endif
+
+            rem --- Using a Sales Tax Service?
+            if #arsParamsDev% = 0 then
+                data_name$ = "ARS_PARAMS"
+                #arsParamsDev%  = int(util.getDev(data_name$))
+                #arsParamsTmpl$ = util.getTmpl(data_name$)
+            endif
+            dim arsParams$:#arsParamsTmpl$
+            readrecord(#arsParamsDev%,key=#firm_id$+"AR00",dom=*endif)arsParams$
+            #sls_tax_intrface$=arsParams.sls_tax_intrface$
             methodret
             
 method_error:rem --- Method error trap/handler (11Oct2017)
@@ -388,6 +402,19 @@ rem --- Return Taxable Amount from detail line vector
                 #itemMastTmpl$ = util.getTmpl(data_name$)
             endif
 
+            rem --- Is Sales Tax Service being used for the tax calculation?
+            use_tax_service=0
+            if cvs(#sls_tax_intrface$,2)<>"" then
+                if #TaxCode$ = "" then 
+                    seterr 0
+                    x$=stbl("+THROWN_ERR","TRUE")   
+                    throw #className$ + ": calculateTax(): #TaxCode is null", 263
+                endif
+                dim taxcode_rec$:#taxcodeTmpl$
+                findrecord(#taxcodeDev%,key=#firm_id$+#TaxCode$)taxcode_rec$
+                use_tax_service=taxcode_rec.use_tax_service
+            endif
+
             #getPrecision()
             precision #precision%
             ttl_taxable = 0
@@ -411,7 +438,9 @@ rem --- Return Taxable Amount from detail line vector
                             #lineCodeMap!.put(dtl_rec.line_code$,linecode_rec$)
                         endif
 
-                        if cvs(linecode_rec.line_type$,2)="" then
+                        if use_tax_service then
+                            ttl_taxable = ttl_taxable + dtl_rec.ext_price
+                        else
                             if pos(linecode_rec.line_type$ = "SP")=0 then
                                 if linecode_rec.taxable_flag$ = "Y" then
                                     ttl_taxable = ttl_taxable + dtl_rec.ext_price
@@ -484,6 +513,25 @@ method_error:rem --- Method error trap/handler (11Oct2017)
                 #itemMastTmpl$ = util.getTmpl(data_name$)
             endif
 
+            if #taxcodeDev% = 0 then 
+                data_name$ = "OPC_TAXCODE"
+                #taxcodeDev%  = int(util.getDev(data_name$))
+                #taxcodeTmpl$ = util.getTmpl(data_name$)
+            endif
+
+            rem --- Is Sales Tax Service being used for the tax calculation?
+            use_tax_service=0
+            if cvs(#sls_tax_intrface$,2)<>"" then
+                if #TaxCode$ = "" then 
+                    seterr 0
+                    x$=stbl("+THROWN_ERR","TRUE")   
+                    throw #className$ + ": calculateTax(): #TaxCode is null", 263
+                endif
+                dim taxcode_rec$:#taxcodeTmpl$
+                findrecord(#taxcodeDev%,key=#firm_id$+#TaxCode$)taxcode_rec$
+                use_tax_service=taxcode_rec.use_tax_service
+            endif
+
             #getPrecision()
             precision #precision%
             
@@ -520,24 +568,27 @@ method_error:rem --- Method error trap/handler (11Oct2017)
                                 endif
                             endif    
 
-
-                            if pos(linecode_rec.line_type$ = "SP")=0 then
-                                if linecode_rec.taxable_flag$ = "Y" then
-                                    ttl_taxable = ttl_taxable + dtl_rec.ext_price
-                                endif
+                            if use_tax_service then
+                                ttl_taxable = ttl_taxable + dtl_rec.ext_price
                             else
-                                if linecode_rec.taxable_flag$="Y" and #itemMastDev% then
-                                    rem --- Get Item Master record from itemMastMap! if it exists, otherwise add it to itemMastMap!
-                                    if #itemMastMap!=null() then #itemMastMap!=new HashMap()
-                                    if #itemMastMap!.containsKey(dtl_rec.item_id$) then
-                                        item_rec$ = cast(BBjString, #itemMastMap!.get(dtl_rec.item_id$))
-                                    else
-                                        dim item_rec$:#itemMastTmpl$
-                                        read record (#itemMastDev%, key=#firm_id$+dtl_rec.item_id$, dom=*endif)item_rec$
-                                        #itemMastMap!.put(dtl_rec.item_id$,item_rec$)
-                                    endif
-                                    if item_rec.taxable_flag$="Y" then
+                                if pos(linecode_rec.line_type$ = "SP")=0 then
+                                    if linecode_rec.taxable_flag$ = "Y" then
                                         ttl_taxable = ttl_taxable + dtl_rec.ext_price
+                                    endif
+                                else
+                                    if linecode_rec.taxable_flag$="Y" and #itemMastDev% then
+                                        rem --- Get Item Master record from itemMastMap! if it exists, otherwise add it to itemMastMap!
+                                        if #itemMastMap!=null() then #itemMastMap!=new HashMap()
+                                        if #itemMastMap!.containsKey(dtl_rec.item_id$) then
+                                            item_rec$ = cast(BBjString, #itemMastMap!.get(dtl_rec.item_id$))
+                                        else
+                                            dim item_rec$:#itemMastTmpl$
+                                            read record (#itemMastDev%, key=#firm_id$+dtl_rec.item_id$, dom=*endif)item_rec$
+                                            #itemMastMap!.put(dtl_rec.item_id$,item_rec$)
+                                        endif
+                                        if item_rec.taxable_flag$="Y" then
+                                            ttl_taxable = ttl_taxable + dtl_rec.ext_price
+                                        endif
                                     endif
                                 endif
                             endif
@@ -626,6 +677,25 @@ method_error:rem --- Method error trap/handler (11Oct2017)
                 #itemMastTmpl$ = util.getTmpl(data_name$)
             endif
 
+            if #taxcodeDev% = 0 then 
+                data_name$ = "OPC_TAXCODE"
+                #taxcodeDev%  = int(util.getDev(data_name$))
+                #taxcodeTmpl$ = util.getTmpl(data_name$)
+            endif
+
+        rem --- Is Sales Tax Service being used for the tax calculation?
+            use_tax_service=0
+            if cvs(#sls_tax_intrface$,2)<>"" then
+                if #TaxCode$ = "" then 
+                    seterr 0
+                    x$=stbl("+THROWN_ERR","TRUE")   
+                    throw #className$ + ": calculateTax(): #TaxCode is null", 263
+                endif
+                dim taxcode_rec$:#taxcodeTmpl$
+                findrecord(#taxcodeDev%,key=#firm_id$+#TaxCode$)taxcode_rec$
+                use_tax_service=taxcode_rec.use_tax_service
+            endif
+
         rem --- Inits
 
             #setCust_id(p_cust_id$)
@@ -695,27 +765,32 @@ method_error:rem --- Method error trap/handler (11Oct2017)
 				else
 					rem --- Determine taxable amount if committed or quote
 					orddet_rec.taxable_amt = 0
-					if linecode_rec.line_type$ <> "S" and linecode_rec.line_type$ <> "P" then
-						if linecode_rec.taxable_flag$ = "Y" then
-							orddet_rec.taxable_amt = orddet_rec.ext_price
-						endif
-					else
-						if #START_BLOCK then
-                            rem --- Get Item Master record from itemMastMap! if it exists, otherwise add it to itemMastMap!
-                            if #itemMastMap!=null() then #itemMastMap!=new HashMap()
-                            if #itemMastMap!.containsKey(orddet_rec.item_id$) then
-                                itemmast_rec$ = cast(BBjString, #itemMastMap!.get(orddet_rec.item_id$))
-                            else
-                                dim itemmast_rec$:#itemMastTmpl$
-                                read record (#itemMastDev%, key=#firm_id$+orddet_rec.item_id$, dom=*endif)itemmast_rec$
-                                #itemMastMap!.put(orddet_rec.item_id$,itemmast_rec$)
-                            endif
-							if itemmast_rec.taxable_flag$ = "Y" then
-								if linecode_rec.taxable_flag$ = "Y" then 
-									orddet_rec.taxable_amt = orddet_rec.ext_price
-								endif
-							endif
-						endif
+
+                    if use_tax_service then
+                        orddet_rec.taxable_amt = orddet_rec.ext_price
+                    else
+    					if linecode_rec.line_type$ <> "S" and linecode_rec.line_type$ <> "P" then
+    						if linecode_rec.taxable_flag$ = "Y" then
+    							orddet_rec.taxable_amt = orddet_rec.ext_price
+    						endif
+    					else
+    						if #START_BLOCK then
+                                rem --- Get Item Master record from itemMastMap! if it exists, otherwise add it to itemMastMap!
+                                if #itemMastMap!=null() then #itemMastMap!=new HashMap()
+                                if #itemMastMap!.containsKey(orddet_rec.item_id$) then
+                                    itemmast_rec$ = cast(BBjString, #itemMastMap!.get(orddet_rec.item_id$))
+                                else
+                                    dim itemmast_rec$:#itemMastTmpl$
+                                    read record (#itemMastDev%, key=#firm_id$+orddet_rec.item_id$, dom=*endif)itemmast_rec$
+                                    #itemMastMap!.put(orddet_rec.item_id$,itemmast_rec$)
+                                endif
+    							if itemmast_rec.taxable_flag$ = "Y" then
+    								if linecode_rec.taxable_flag$ = "Y" then 
+    									orddet_rec.taxable_amt = orddet_rec.ext_price
+    								endif
+    							endif
+    						endif
+    					endif
 					endif
                 endif
 

@@ -5,76 +5,7 @@ rem --- Set devObjects to tell ope_invhdr there aren't any ope_invcash transacti
 
 rem --- There is only one ope_invcash recprd per invoice, so exit form after record deleted.
 	callpoint!.setStatus("EXIT")
-[[OPE_INVCASH.BWRI]]
-rem --- Initialize RTP modified fields for modified existing records
-	if callpoint!.getRecordMode()="C" then
-		rec_data.mod_user$=sysinfo.user_id$
-		rec_data.mod_date$=date(0:"%Yd%Mz%Dz")
-		rec_data.mod_time$=date(0:"%Hz%mz")
-	endif
-[[OPE_INVCASH.AREC]]
-rem --- Initialize RTP trans_status and created fields
-	rem --- TRANS_STATUS set to "E" via form Preset Value
-	callpoint!.setColumnData("OPE_INVCASH.CREATED_USER",sysinfo.user_id$)
-	callpoint!.setColumnData("OPE_INVCASH.CREATED_DATE",date(0:"%Yd%Mz%Dz"))
-	callpoint!.setColumnData("OPE_INVCASH.CREATED_TIME",date(0:"%Hz%mz"))
-	callpoint!.setColumnData("OPE_INVCASH.AUDIT_NUMBER","0")
-[[OPE_INVCASH.BWAR]]
-rem --- if a credit card transaction, perform mod10 check on pymt ID field and mask
-rem --- note: only for backward compatability; credit card # in its own field as of v12
-rem --- but used to be stored in pymt ID field
 
-	wtype$=callpoint!.getDevObject("cash_code_type")
-	ccmask$="X"
-	ccmask$=stbl("+CARD_FILL_CHAR",ERR=*next)
-	if wtype$="P" and cvs(callpoint!.getColumnData("OPE_INVCASH.PAYMENT_ID"),3)<>""
-		cc_card_raw$=cvs(callpoint!.getColumnData("OPE_INVCASH.PAYMENT_ID"),3)
-		cc_card$=""
-		cc_status$=""
-		for x=1 to len(cc_card_raw$)
-			if cc_card_raw$(x,1)>="0" and cc_card_raw$(x,1)<="9"
-				cc_card$=cc_card$+cc_card_raw$(x,1)
-			endif
-		next x
-		if len(cc_card$)>4 
-			gosub mod10_check
-			if cc_status$=""
-				cc_card_raw$(1,len(cc_card_raw$)-4)=fill(len(cc_card_raw$)-4,ccmask$)
-				callpoint!.setColumnData("OPE_INVCASH.PAYMENT_ID",cc_card_raw$)
-			endif
-		endif
-	endif
-[[OPE_INVCASH.<CUSTOM>]]
-#include [+ADDON_LIB]std_missing_params.aon
-
-rem ==============================================
-rem -- mod10_check; see if payment ID field contains valid cc# format
-rem -- incoming cc_card$ is the ope_invcash.payment_id field
-rem -- return cc_status$ of blank or INVALID
-rem ==============================================
-mod10_check:
-
-    cc_digits$ = ""
-    cc_curr_digit = 0
-
-    for cc_temp = len(cc_card$) to 1 step -1
-        cc_curr_digit = cc_curr_digit + 1
-        cc_no = num(cc_card$(cc_temp,1)) * iff(mod(cc_curr_digit,2)=0, 2, 1)
-        cc_digits$ = str(cc_no) + cc_digits$
-    next cc_temp
-
-    cc_total = 0
-    for cc_temp = 1 to len(cc_digits$)
-        cc_total = cc_total + num(cc_digits$(cc_temp, 1))
-    next cc_temp
-
-    if mod(cc_total, 10) <> 0 then cc_status$ = "INVALID"
-
-    return
-[[OPE_INVCASH.BREX]]
-rem --- Set invoice printing global
-
-	callpoint!.setDevObject( "print_invoice", callpoint!.getColumnData("<<DISPLAY>>.PRINT") )
 [[OPE_INVCASH.ARAR]]
 rem --- Set table_chans$[all] into util object for getDev() and getTmpl()
 
@@ -88,6 +19,7 @@ rem --- Order Helper object
 
 	declare OrderHelper ordHelp!
 	ordHelp! = new OrderHelper(firm_id$, callpoint!)
+	ordHelp!.setTaxCode(str(callpoint!.getDevObject("tax_code")))
 
 rem --- Total detail lines
 
@@ -131,35 +63,100 @@ rem --- Set cash_code_type
 	if found then
 		callpoint!.setDevObject("cash_code_type",cashCode.trans_type$)
 	endif
-[[OPE_INVCASH.TENDERED_AMT.AVAL]]
-print "OPE_INVCASH.TENDERED_AMT:AVAL"; rem debug
 
-rem --- Tendered enough?
+[[OPE_INVCASH.AREC]]
+rem --- Initialize RTP trans_status and created fields
+	rem --- TRANS_STATUS set to "E" via form Preset Value
+	callpoint!.setColumnData("OPE_INVCASH.CREATED_USER",sysinfo.user_id$)
+	callpoint!.setColumnData("OPE_INVCASH.CREATED_DATE",date(0:"%Yd%Mz%Dz"))
+	callpoint!.setColumnData("OPE_INVCASH.CREATED_TIME",date(0:"%Hz%mz"))
+	callpoint!.setColumnData("OPE_INVCASH.AUDIT_NUMBER","0")
 
-	tendered    = num(callpoint!.getUserInput())
-	invoice_amt = num(callpoint!.getColumnData("OPE_INVCASH.INVOICE_AMT"))
+[[OPE_INVCASH.BREX]]
+rem --- Set invoice printing global
 
-	if tendered < invoice_amt then
-		msg_id$ = "OP_TENDER_MORE"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
-		break; rem --- exit callpoint
+	callpoint!.setDevObject( "print_invoice", callpoint!.getColumnData("<<DISPLAY>>.PRINT") )
+
+[[OPE_INVCASH.BSHO]]
+print "OPE_INVCASH:BSHO"; rem debug
+
+rem --- Inits
+
+	use ::ado_util.src::util
+	use ::ado_order.src::OrderHelper
+	use ::adc_array.aon::ArrayObject
+
+rem --- Open files
+
+	num_files = 3
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+
+	open_tables$[1]="ARM_CUSTMAST", open_opts$[1]="OTA"
+	open_tables$[2]="ARC_CASHCODE", open_opts$[2]="OTA"
+	open_tables$[3]="ARS_PARAMS", open_opts$[3]="OTA@"
+
+	gosub open_tables
+
+	ars01_dev=num(open_chans$[3])
+	dim ars01a$:open_tpls$[3]
+
+rem --- Retrieve AR parameter data
+
+	ars01a_key$=firm_id$+"AR00"
+	find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
+	callpoint!.setDevObject("br_interface",ars01a.br_interface$)
+
+rem --- Additional/optional opens
+
+	num_files = 1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+	open_tables$[1]="GLM_BANKMASTER", open_opts$[1]="OTA@"
+
+	gosub open_tables
+
+rem --- Global string templates
+
+	dim user_tpl$:"ext_price:n(15), taxable:n(15), ext_cost:n(15)"
+
+rem --- Print Invoice global
+
+	callpoint!.setDevObject("print_invoice", "N")
+	callpoint!.setDevObject("cash_code_type","")
+
+[[OPE_INVCASH.BWAR]]
+rem --- if a credit card transaction, perform mod10 check on pymt ID field and mask
+rem --- note: only for backward compatability; credit card # in its own field as of v12
+rem --- but used to be stored in pymt ID field
+
+	wtype$=callpoint!.getDevObject("cash_code_type")
+	ccmask$="X"
+	ccmask$=stbl("+CARD_FILL_CHAR",ERR=*next)
+	if wtype$="P" and cvs(callpoint!.getColumnData("OPE_INVCASH.PAYMENT_ID"),3)<>""
+		cc_card_raw$=cvs(callpoint!.getColumnData("OPE_INVCASH.PAYMENT_ID"),3)
+		cc_card$=""
+		cc_status$=""
+		for x=1 to len(cc_card_raw$)
+			if cc_card_raw$(x,1)>="0" and cc_card_raw$(x,1)<="9"
+				cc_card$=cc_card$+cc_card_raw$(x,1)
+			endif
+		next x
+		if len(cc_card$)>4 
+			gosub mod10_check
+			if cc_status$=""
+				cc_card_raw$(1,len(cc_card_raw$)-4)=fill(len(cc_card_raw$)-4,ccmask$)
+				callpoint!.setColumnData("OPE_INVCASH.PAYMENT_ID",cc_card_raw$)
+			endif
+		endif
 	endif
 
-rem --- Set change amount
-
-	callpoint!.setColumnData("<<DISPLAY>>.CHANGE", str(tendered - invoice_amt))
-	callpoint!.setStatus("REFRESH")
-[[OPE_INVCASH.EXPIRE_DATE.AVAL]]
-print "OPE_INVCASH.EXPIRE_DATE:AVAL"; rem debug
-
-rem --- Expiration date can't by more than today
-
-	if callpoint!.getUserInput() <= sysinfo.system_date$ then
-		msg_id$="OP_CC_EXPIRED"
-		gosub disp_message
-		callpoint!.setStatus("ABORT")
+[[OPE_INVCASH.BWRI]]
+rem --- Initialize RTP modified fields for modified existing records
+	if callpoint!.getRecordMode()="C" then
+		rec_data.mod_user$=sysinfo.user_id$
+		rec_data.mod_date$=date(0:"%Yd%Mz%Dz")
+		rec_data.mod_time$=date(0:"%Hz%mz")
 	endif
+
 [[OPE_INVCASH.CASH_REC_CD.AVAL]]
 print "OPE_INVCASH.CASH_REC_CD:AVAL"; rem debug
 
@@ -242,48 +239,65 @@ rem --- Set default Tendered Amount
 	if cashcode_rec.trans_type$ = "P" or (cashcode_rec.trans_type$ = "C" and terndered_amt = 0) then
 		callpoint!.setTableColumnAttribute("OPE_INVCASH.TENDERED_AMT","DFLT", str(invoice_amt))
 	endif
-[[OPE_INVCASH.BSHO]]
-print "OPE_INVCASH:BSHO"; rem debug
 
-rem --- Inits
+[[OPE_INVCASH.EXPIRE_DATE.AVAL]]
+print "OPE_INVCASH.EXPIRE_DATE:AVAL"; rem debug
 
-	use ::ado_util.src::util
-	use ::ado_order.src::OrderHelper
-	use ::adc_array.aon::ArrayObject
+rem --- Expiration date can't by more than today
 
-rem --- Open files
+	if callpoint!.getUserInput() <= sysinfo.system_date$ then
+		msg_id$="OP_CC_EXPIRED"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+	endif
 
-	num_files = 3
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+[[OPE_INVCASH.TENDERED_AMT.AVAL]]
+print "OPE_INVCASH.TENDERED_AMT:AVAL"; rem debug
 
-	open_tables$[1]="ARM_CUSTMAST", open_opts$[1]="OTA"
-	open_tables$[2]="ARC_CASHCODE", open_opts$[2]="OTA"
-	open_tables$[3]="ARS_PARAMS", open_opts$[3]="OTA@"
+rem --- Tendered enough?
 
-	gosub open_tables
+	tendered    = num(callpoint!.getUserInput())
+	invoice_amt = num(callpoint!.getColumnData("OPE_INVCASH.INVOICE_AMT"))
 
-	ars01_dev=num(open_chans$[3])
-	dim ars01a$:open_tpls$[3]
+	if tendered < invoice_amt then
+		msg_id$ = "OP_TENDER_MORE"
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break; rem --- exit callpoint
+	endif
 
-rem --- Retrieve AR parameter data
+rem --- Set change amount
 
-	ars01a_key$=firm_id$+"AR00"
-	find record (ars01_dev,key=ars01a_key$,err=std_missing_params) ars01a$
-	callpoint!.setDevObject("br_interface",ars01a.br_interface$)
+	callpoint!.setColumnData("<<DISPLAY>>.CHANGE", str(tendered - invoice_amt))
+	callpoint!.setStatus("REFRESH")
 
-rem --- Additional/optional opens
+[[OPE_INVCASH.<CUSTOM>]]
+#include [+ADDON_LIB]std_missing_params.aon
 
-	num_files = 1
-	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
-	open_tables$[1]="GLM_BANKMASTER", open_opts$[1]="OTA@"
+rem ==============================================
+rem -- mod10_check; see if payment ID field contains valid cc# format
+rem -- incoming cc_card$ is the ope_invcash.payment_id field
+rem -- return cc_status$ of blank or INVALID
+rem ==============================================
+mod10_check:
 
-	gosub open_tables
+    cc_digits$ = ""
+    cc_curr_digit = 0
 
-rem --- Global string templates
+    for cc_temp = len(cc_card$) to 1 step -1
+        cc_curr_digit = cc_curr_digit + 1
+        cc_no = num(cc_card$(cc_temp,1)) * iff(mod(cc_curr_digit,2)=0, 2, 1)
+        cc_digits$ = str(cc_no) + cc_digits$
+    next cc_temp
 
-	dim user_tpl$:"ext_price:n(15), taxable:n(15), ext_cost:n(15)"
+    cc_total = 0
+    for cc_temp = 1 to len(cc_digits$)
+        cc_total = cc_total + num(cc_digits$(cc_temp, 1))
+    next cc_temp
 
-rem --- Print Invoice global
+    if mod(cc_total, 10) <> 0 then cc_status$ = "INVALID"
 
-	callpoint!.setDevObject("print_invoice", "N")
-	callpoint!.setDevObject("cash_code_type","")
+    return
+
+
+
