@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-06-15
+ Report Date:   2021-06-16
  Report Branch: AddonSoftware 21.02
  Last Release:  AddonSoftware 21.01
 =======================================================================================================================================
@@ -251,3 +251,18 @@ data GLS_CALENDAR.
 (cherry picked from commit 777b6640e11f5cfe03024f39f89b7d6ae4f11a87)
 ----
 Modified: data/gls_calendar
+
+=======================================================================================================================================
+Revision: d5e886b17e40841fc8aa6720b86707234c7e7601
+Author: Bill Halsted <bhalsted@basis.com>
+Date: 6/16/2021 10:03:13 AM
+Message:
+Bug 10217: Issue with AP Check Printing form fixed by using Barista's
+callpoint!.setFocus(<table>.<column>) method instead of using a field's
+CTLC/CTLI attributes and getControl() to execute the control's focus()
+method.
+
+(cherry picked from commit d672d47e0951d7fd2f7ccbdb8371ea9d49b916d0)
+----
+Modified: data/bar/apr_checks.xml
+Modified: data/cdf/apr_checks.cdf
