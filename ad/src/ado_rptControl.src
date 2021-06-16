@@ -44,6 +44,8 @@ class public ReportControl
     field public BBjTemplatedString AdmRptctl!
     field public BBjTemplatedString AdmRptctlRcp!
     field public BBjTemplatedString AdsDocuments!
+    
+    field public DocumentQueue docQueue!
 
 
 
@@ -59,6 +61,7 @@ class public ReportControl
         #FirmID$ = stbl("+FIRM_ID", err = *next)
         #NextOverlay$ = ""
         dummy$=stbl("+AUTO_SEND","")
+        #docQueue! = new DocumentQueue()
 
     methodend
 
@@ -210,24 +213,23 @@ class public ReportControl
 
     method public void sendEmail(BBjString doc_no$)
 
-        docQueue! = new DocumentQueue()
-        docQueue!.clear()
-        docQueue!.setFirmID(#FirmID$)
-        docQueue!.setDocumentID(doc_no$)
-        docQueue!.setDocumentExt(cvs(#DocExtension$,4))
-        docQueue!.setProcessType("E")
-        docQueue!.setStatus("A");rem Auto-detect.  Queue will switch it to "Ready" if all required data is present
-        docQueue!.setEmailAccount(#AdmRptctl!.getFieldAsString("EMAIL_ACCOUNT"))
-        docQueue!.setEmailFrom(#AdmRptctlRcp!.getFieldAsString("EMAIL_FROM"))
-        docQueue!.setEmailReplyTo(#AdmRptctlRcp!.getFieldAsString("EMAIL_REPLYTO"))
-        docQueue!.setEmailTo(#AdmRptctlRcp!.getFieldAsString("EMAIL_TO"))
-        docQueue!.setEmailCC(#AdmRptctlRcp!.getFieldAsString("EMAIL_CC"))
-        docQueue!.setEmailBCC(#AdmRptctlRcp!.getFieldAsString("EMAIL_BCC"))
-        docQueue!.setSubject(#AdmRptctlRcp!.getFieldAsString("EMAIL_SUBJECT"))
-        docQueue!.setMessage(#AdmRptctlRcp!.getFieldAsString("EMAIL_MESSAGE"))
-        docQueue!.createProcess()
-        proc_key$=docQueue!.getFirmID()+docQueue!.getProcessID()
-        docQueue!.checkStatus(proc_key$)
+        #docQueue!.clear()
+        #docQueue!.setFirmID(#FirmID$)
+        #docQueue!.setDocumentID(doc_no$)
+        #docQueue!.setDocumentExt(cvs(#DocExtension$,4))
+        #docQueue!.setProcessType("E")
+        #docQueue!.setStatus("A");rem Auto-detect.  Queue will switch it to "Ready" if all required data is present
+        #docQueue!.setEmailAccount(#AdmRptctl!.getFieldAsString("EMAIL_ACCOUNT"))
+        #docQueue!.setEmailFrom(#AdmRptctlRcp!.getFieldAsString("EMAIL_FROM"))
+        #docQueue!.setEmailReplyTo(#AdmRptctlRcp!.getFieldAsString("EMAIL_REPLYTO"))
+        #docQueue!.setEmailTo(#AdmRptctlRcp!.getFieldAsString("EMAIL_TO"))
+        #docQueue!.setEmailCC(#AdmRptctlRcp!.getFieldAsString("EMAIL_CC"))
+        #docQueue!.setEmailBCC(#AdmRptctlRcp!.getFieldAsString("EMAIL_BCC"))
+        #docQueue!.setSubject(#AdmRptctlRcp!.getFieldAsString("EMAIL_SUBJECT"))
+        #docQueue!.setMessage(#AdmRptctlRcp!.getFieldAsString("EMAIL_MESSAGE"))
+        #docQueue!.createProcess()
+        proc_key$=#docQueue!.getFirmID()+#docQueue!.getProcessID()
+        #docQueue!.checkStatus(proc_key$)
 
     methodend
 
@@ -238,24 +240,23 @@ class public ReportControl
         tmp_max=1
         tmp_max=num(stbl("+DOC_QUEUE_RETRY_ATT",err=*next),err=*next)
 
-        docQueue! = new DocumentQueue()
-        docQueue!.clear()
-        docQueue!.setFirmID(#FirmID$)
-        docQueue!.setDocumentID(doc_no$)
-        docQueue!.setDocumentExt(cvs(#DocExtension$,4))
-        docQueue!.setProcessType("F")
-        docQueue!.setPriority(tmp_pri$)
-        docQueue!.setMaxAttempts(tmp_max)
-        docQueue!.setFaxNumbers(#AdmRptctlRcp!.getFieldAsString("FAX_NOS"))
-        docQueue!.setFaxFromCompany(#AdmRptctlRcp!.getFieldAsString("FROM_COMPANY"))
-        docQueue!.setFaxFromName(#AdmRptctlRcp!.getFieldAsString("FROM_NAME"))
-        docQueue!.setFaxToOrganization(#AdmRptctlRcp!.getFieldAsString("RECIPIENT_NAME"))
-        docQueue!.setFaxToName(#AdmRptctlRcp!.getFieldAsString("FAX_TO"))
-        docQueue!.setSubject(#AdmRptctlRcp!.getFieldAsString("FAX_SUBJECT"))
-        docQueue!.setMessage(#AdmRptctlRcp!.getFieldAsString("FAX_MESSAGE"))
-        docQueue!.createProcess()
-        proc_key$=docQueue!.getFirmID()+docQueue!.getProcessID()
-        docQueue!.checkStatus(proc_key$)
+        #docQueue!.clear()
+        #docQueue!.setFirmID(#FirmID$)
+        #docQueue!.setDocumentID(doc_no$)
+        #docQueue!.setDocumentExt(cvs(#DocExtension$,4))
+        #docQueue!.setProcessType("F")
+        #docQueue!.setPriority(tmp_pri$)
+        #docQueue!.setMaxAttempts(tmp_max)
+        #docQueue!.setFaxNumbers(#AdmRptctlRcp!.getFieldAsString("FAX_NOS"))
+        #docQueue!.setFaxFromCompany(#AdmRptctlRcp!.getFieldAsString("FROM_COMPANY"))
+        #docQueue!.setFaxFromName(#AdmRptctlRcp!.getFieldAsString("FROM_NAME"))
+        #docQueue!.setFaxToOrganization(#AdmRptctlRcp!.getFieldAsString("RECIPIENT_NAME"))
+        #docQueue!.setFaxToName(#AdmRptctlRcp!.getFieldAsString("FAX_TO"))
+        #docQueue!.setSubject(#AdmRptctlRcp!.getFieldAsString("FAX_SUBJECT"))
+        #docQueue!.setMessage(#AdmRptctlRcp!.getFieldAsString("FAX_MESSAGE"))
+        #docQueue!.createProcess()
+        proc_key$=#docQueue!.getFirmID()+#docQueue!.getProcessID()
+        #docQueue!.checkStatus(proc_key$)
 
     methodend
 

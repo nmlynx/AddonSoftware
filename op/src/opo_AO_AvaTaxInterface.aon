@@ -51,6 +51,7 @@ rem --- Use statements and declares
     use net.avalara.avatax.rest.client.models.AddressLocationInfo
     use net.avalara.avatax.rest.client.models.CertificateModel
     use net.avalara.avatax.rest.client.models.CommitTransactionModel
+    use net.avalara.avatax.rest.client.models.CompanyModel
     use net.avalara.avatax.rest.client.models.CreateOrAdjustTransactionModel
     use net.avalara.avatax.rest.client.models.CreateTransactionModel
     use net.avalara.avatax.rest.client.models.EntityUseCodeModel
@@ -272,10 +273,6 @@ rem --- Use statements and declares
                         #licenseKey$=svcConfigValue$
                         if #licenseKey$="" then missingParams$=missingParams$+"licenseKey  "
                         break
-                    case svcConfigAttr$ = "userCompanyID"
-                        #userCompanyID$=svcConfigValue$
-                        if #userCompanyID$="" then missingParams$=missingParams$+"userCompanyID  "
-                        break
                     case svcConfigAttr$ = "companyCode"
                         #companyCode$=svcConfigValue$
                         if #companyCode$="" then missingParams$=missingParams$+"companyCode  "
@@ -439,7 +436,7 @@ busyImageStop_error:rem --- Method error trap/handler (11Oct2017)
             line_sign=1
             if cvs(optInvHdr.credit_invoice$,2)<>"" then
                 dim creditInvoice$:#tplOptInvHdr$
-                creditInvoiceKey$=#firmID$+optInvHdr.ar_type$+optInvHdr.ar_inv_no$+optInvHdr.customer_id$
+                creditInvoiceKey$=#firmID$+optInvHdr.ar_type$+optInvHdr.credit_invoice$+optInvHdr.customer_id$
                 readrecord(#devOptInvHdr,key=creditInvoiceKey$,knum="AO_INV_CUST",dom=*next)creditInvoice$
                 if cvs(optInvHdr.order_no$,2)="" then
                     rem --- Didn't find original invoice, so use currrent invoice's date
@@ -704,6 +701,7 @@ calculateTax_error:rem --- Error trap/handler for AvaTax methods and client side
                     print(#devClientLog) "    environment: "+environment!.toString()
                     startTime!=new Date()
                 endif
+                #busyImageStart()
                 #avaTaxClient! = new AvaTaxClient(appName$, ping!.getCrmid(), machineName$, environment!).withSecurity(Base64.getEncoder().encode(account_license$))
                 if #logClient then
                     endTime!=new Date()
@@ -712,6 +710,13 @@ calculateTax_error:rem --- Error trap/handler for AvaTax methods and client side
                     print(#devClientLog) "    class: "+ #avaTaxClient!.getClass().getName()
                     logSource$=""
                 endif
+
+                rem --- Get the userCompanyID for this connection from AvaTax
+                fetchResult!=#avaTaxClient!.queryCompanies("","",1,0,"")
+                #busyImageStop()
+                companyModelList!=fetchResult!.getValue()
+                companyModel!=companyModelList!.get(0)
+                #userCompanyID$=str(companyModel!.getId())
             else
                 msg_id$="OP_SLSTAX_CONN_FAIL"
                 dim msg_tokens$[1]

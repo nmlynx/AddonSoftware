@@ -230,6 +230,10 @@ rem --- Disable Ship To fields
 	ship_to_type$ = callpoint!.getColumnData("OPE_ORDHDR.SHIPTO_TYPE")
 	gosub disable_shipto
 
+rem --- Using a sales tax service?
+	tax_code$=callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE")
+	gosub usingTaxService
+
 [[OPE_ORDHDR.AFMC]]
 rem --- Inits
 
@@ -3335,29 +3339,33 @@ rem ==========================================================================
 						ope11a.ext_price   = round(ope11a.unit_price * ope11a.qty_shipped, 2)
 					endif
 
-					if pos(opc_linecode.line_type$="SP")=0 then 
-						if opc_linecode.taxable_flag$="Y" then 
-							ope11a.taxable_amt = ope11a.ext_price
-						endif
+					if callpoint!.getDevObject("sls_tax_intrface")<>"" and opc_taxcode.use_tax_service then
+						ope11a.taxable_amt = ope11a.ext_price
 					else
-						redim ivm01a$
-						read record (ivm01_dev, key=firm_id$+ope11a.item_id$, dom=*next) ivm01a$
-						if opc_linecode.taxable_flag$="Y" and ivm01a.taxable_flag$="Y" then 
-							ope11a.taxable_amt = ope11a.ext_price
-						endif
+						if pos(opc_linecode.line_type$="SP")=0 then 
+							if opc_linecode.taxable_flag$="Y" then 
+								ope11a.taxable_amt = ope11a.ext_price
+							endif
+						else
+							redim ivm01a$
+							read record (ivm01_dev, key=firm_id$+ope11a.item_id$, dom=*next) ivm01a$
+							if opc_linecode.taxable_flag$="Y" and ivm01a.taxable_flag$="Y" then 
+								ope11a.taxable_amt = ope11a.ext_price
+							endif
 
-						rem --- Warn about superseded items
-						if ivm01a.alt_sup_flag$="S" then
-							redim ivm02a$
-							readrecord (ivm02_dev, key=firm_id$+ope11a.warehouse_id$+ope11a.item_id$, dom=*next) ivm02a$
+							rem --- Warn about superseded items
+							if ivm01a.alt_sup_flag$="S" then
+								redim ivm02a$
+								readrecord (ivm02_dev, key=firm_id$+ope11a.warehouse_id$+ope11a.item_id$, dom=*next) ivm02a$
 
-							msg_id$="OP_INCLUDES_SUPERSED"
-							dim msg_tokens$[4]
-							msg_tokens$[1]=str(ope11a.qty_ordered)
-							msg_tokens$[2]=cvs(ope11a.item_id$,2)
-							msg_tokens$[3]=cvs(ivm01a.alt_sup_item$,2)
-							msg_tokens$[4]=str(ivm02a.qty_on_hand - ivm02a.qty_commit)
-							gosub disp_message
+								msg_id$="OP_INCLUDES_SUPERSED"
+								dim msg_tokens$[4]
+								msg_tokens$[1]=str(ope11a.qty_ordered)
+								msg_tokens$[2]=cvs(ope11a.item_id$,2)
+								msg_tokens$[3]=cvs(ivm01a.alt_sup_item$,2)
+								msg_tokens$[4]=str(ivm02a.qty_on_hand - ivm02a.qty_commit)
+								gosub disp_message
+							endif
 						endif
 					endif
 				endif
@@ -3793,6 +3801,10 @@ rem ==========================================================================
 	eventFrom$=callpoint!.getCallpointEvent()
 	gosub isTotalsTab
 
+	rem - See if we're using a tax service
+	tax_code$=callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE")
+	gosub usingTaxService
+
 	if eventFrom$="OPE_ORDHDR.AOPT-RTAX" or (num(callpoint!.getColumnData("OPE_ORDHDR.NO_SLS_TAX_CALC"))=1 and 
 :		(isTotalsTab or pos(eventFrom$="OPE_INVHDR.ADIS:OPE_ORDHDR.BWAR")))
 
@@ -3805,16 +3817,7 @@ rem ==========================================================================
 		ordhdr_rec.discount_amt=disc_amt
 		ordhdr_rec.freight_amt=freight_amt
 
-		rem --- Using a sales tax service?
-		use_tax_service=0
-		if callpoint!.getDevObject("sls_tax_intrface")<>"" then
-			opc_taxcode_dev = fnget_dev("OPC_TAXCODE")
-			dim opc_taxcode$:fnget_tpl$("OPC_TAXCODE")
-			findrecord(opc_taxcode_dev,key=firm_id$+callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE"),dom=*next)opc_taxcode$
-			use_tax_service=opc_taxcode.use_tax_service
-		endif
-
-		if use_tax_service then
+		if callpoint!.getDevObject("use_tax_service")="Y" then
 			rem --- Use sales tax service
 			salesTax!=callpoint!.getDevObject("salesTaxObject")
 			success=0
@@ -4014,6 +4017,22 @@ rem ==========================================================================
 			gosub disp_message
 		endif
 	endif
+
+	return
+
+rem ==========================================================================
+usingTaxService: rem ---  Using a sales tax service?
+rem IN: tax_code$
+rem ==========================================================================
+
+	use_tax_service$="N"
+	if callpoint!.getDevObject("sls_tax_intrface")<>"" then
+		opc_taxcode_dev = fnget_dev("OPC_TAXCODE")
+		dim opc_taxcode$:fnget_tpl$("OPC_TAXCODE")
+		findrecord(opc_taxcode_dev,key=firm_id$+tax_code$,dom=*next)opc_taxcode$
+		if opc_taxcode.use_tax_service then use_tax_service$="Y"
+	endif
+	callpoint!.setDevObject("use_tax_service",use_tax_service$)
 
 	return
 

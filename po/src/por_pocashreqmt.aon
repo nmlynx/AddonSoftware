@@ -94,18 +94,15 @@ get_calendar: rem --- Get calendar for the fiscal year
 
 rem --- Make sure we used the fiscal calendar for the correct year.
 
-    start_date$=gls_calendar.year$+gls_calendar.cal_start_date$
+    start_date$=gls_calendar.start_date$
     start_jul=jul(num(start_date$(1,4)),num(start_date$(5,2)),num(start_date$(7,2)))
     if from_jul<start_jul then
         fiscal_year$=str(num(fiscal_year$)-1)
         goto get_calendar
     endif
 
-    end_year$=gls_calendar.year$
-    end_mmdd$=field(gls_calendar$,"per_ending_"+str(periods:"00"))
-    if end_mmdd$<gls_calendar.cal_start_date$ then end_year$=str(num(end_year$)+1)
-    end_date$=end_year$+end_mmdd$
-    end_jul=jul(num(end_date$(1,4)),num(end_date$(5,2)),num(end_date$(7,2)))
+    end_date$=field(gls_calendar$,"period_end_"+str(periods:"00"))
+    end_jul=jul(num(end_date$(1,4)),num(end_date$(5,2)),num(end_date$(7)))
     if from_jul>end_jul then
         fiscal_year$=str(num(fiscal_year$)+1)
         goto get_calendar
