@@ -9,36 +9,36 @@ use java.util.UUID
 use ::sys/prog/bao_docqueue.bbj::DocumentQueue
 use ::sys/prog/bao_security.bbj::Security
 use ::ado_rptControl.src::ReportControl
-use ::aro_CCUserModel.aon::CCUserModel 
+use ::aro_CCUserModel.aon::CCUserModel
 use ::aro_CCUserModel.aon::CCUserRecord
 use ::aro_CCUtil.aon::CCUtil
 use ::aro_CCRegistrationModel.aon::CCRegistrationRecord
 use ::aro_CCRegistrationModel.aon::CCCustomerFirmInfo
 
 class public AO_CCRegistrationModel
-  
+
   field protected CCUserModel UserModel!
   field protected BBjNumber SqlChan
- 
+
   method public AO_CCRegistrationModel()
-  
+
     rem CCUtil.openQueryTables()
     #SqlChan=sqlunt
     sqlopen (#SqlChan) stbl("+DBNAME")
   methodend
-  
-  REM Since the manager classes often need access to the user model class as well, 
+
+  REM Since the manager classes often need access to the user model class as well,
   REM have the manager provide its instance to the registration model
   method public void setUserModel(CCUserModel userModel!)
     #UserModel!=userModel!
-  methodend 
+  methodend
 
   method public BBjNumber userNameExistsInRegistration(BBjString username$)
     sqlprep (#SqlChan) "select count(*) as count from arc_cc_register where firm_id='"+stbl("+FIRM_ID")+"' and cc_username = ?"
     sqlexec (#SqlChan) username$
     dim result$:sqltmpl(#SqlChan)
     result$=sqlfetch(#SqlChan)
-    
+
     methodret (result.count<>0)
   methodend
 
@@ -47,14 +47,14 @@ class public AO_CCRegistrationModel
     sqlexec (#SqlChan) email$
     dim result$:sqltmpl(#SqlChan)
     result$=sqlfetch(#SqlChan)
-    
+
     methodret (result.count<>0)
   methodend
-  
+
   REM Return value is the customer name for the ID entered by the registrant
   method public BBjString getCorrespondingCustomerName(BBjString customerID$)
 
-    customerName$ = "NOT_FOUND" 
+    customerName$ = "NOT_FOUND"
     sqlprep (#SqlChan) "SELECT ARM_CUSTMAST.FIRM_ID,ARM_CUSTMAST.CUSTOMER_NAME, ARS_REPORT.NAME,ARS_REPORT.ADDR_LINE_1,ARS_REPORT.ADDR_LINE_2,ARS_REPORT.CITY,ARS_REPORT.STATE_CODE,ARS_REPORT.ZIP_CODE FROM ARM_CUSTMAST, ARS_REPORT WHERE ARM_CUSTMAST.PAY_ONLINE='Y' AND ARM_CUSTMAST.PAY_AUTH_EMAIL<>'' AND ARM_CUSTMAST.FIRM_ID=ARS_REPORT.FIRM_ID AND ARM_CUSTMAST.CUSTOMER_ID=? AND ARM_CUSTMAST.FIRM_ID='"+stbl("+FIRM_ID")+"' "
     sqlexec (#SqlChan) customerID$
     dim result$:sqltmpl(#SqlChan)
@@ -62,85 +62,85 @@ class public AO_CCRegistrationModel
     customerName$ = result.customer_name$
 	done:
     methodret customerName$
-    
-  methodend 
-  
+
+  methodend
+
   method public void addRegistration(CCRegistrationRecord rec!)
     declare CCUserRecord user!
     user!=rec!.getUserRecord()
     sqlprep (#SqlChan) "insert into arc_cc_register (firm_id,cc_username, name_first, name_last, user_email, customer_id, cc_token,request_date) values (?, ?, ?, ?, ?, ?, ?,?)"
     sqlexec (#SqlChan) user!.getFirmID(),user!.getUserName(), user!.getFirstName(),user!.getLastName(),user!.getUserEmail(), user!.getCustomerID(),rec!.getGeneratedToken(),rec!.getRequestDate()
     #emailRegistration(rec!)
-  methodend 
-    
+  methodend
+
   method public void emailRegistration(CCRegistrationRecord registration!)
-	declare ReportControl reportControl!
-	declare BBjNumber found 
-	declare BBjTemplatedString recipientInfo!
-	declare BBjString emailMessage!
-	declare BBjString url!
-	declare CCUserRecord user!
-	
-	user!=registration!.getUserRecord()
-	reportControl!=new ReportControl()
-	reportControl!.setFirmID(user!.getFirmID())
-	reportControl!.getReportControl(#UserModel!.getParameterTable())
-	found=reportControl!.getRecipientInfo(#UserModel!.getReportControlID(),user!.getCustomerID(),"")
-	if (found) 
-		recipientInfo!=reportControl!.getAdmRptctlRcp() 
-		emailMessage!=recipientInfo!.getFieldAsString("EMAIL_MESSAGE")
-		
-		REM Get the URL for registration from our parameter table
-		sqlprep(#SqlChan) "select REGISTER_URL from " + #UserModel!.getParameterTable() + " where FIRM_ID=? and UCASE(allow_cust_cc)='Y'"
-		sqlexec(#SqlChan) stbl("+FIRM_ID") 
-		dim result$:sqltmpl(#SqlChan)
-		result$=sqlfetch(#SqlChan)
-		url!=result.REGISTER_URL$
-		
-		REM Append the URL and the specific generated token to the mail message then put the modified message back in our recipient info. 
-		emailMessage!=emailMessage!.trim()+$0A$+url!.trim()+"?token="+registration!.getGeneratedToken()
-		recipientInfo!.setFieldValue("EMAIL_MESSAGE",emailMessage!)
-		reportControl!.setAdmRptctlRcp(recipientInfo!)
-		
-		REM Put our email on the document queue to be sent out. The document queue was designed with the assumption that any email sent out
-		REM will have some sort of attached document to it. This is not the case for this document. Provide "PDF" for the extension and the 
-		REM "NOATTACH" for the document ID, to appease the document queue that no attachment is really okay. 
-		reportControl!.setDocExtension("PDF")
-		reportControl!.addToDocQueue(#UserModel!.getParameterTable(),user!.getCustomerID(),"","NOATTACH")
-	else 
-	    REM TODO: Handle customer not being found in the recipient records. This means that the customer is not fully set up for payments. 
-	endif 
-	
-  methodend 
-  
+  	declare ReportControl reportControl!
+  	declare BBjNumber found
+  	declare BBjTemplatedString recipientInfo!
+  	declare BBjString emailMessage!
+  	declare BBjString url!
+  	declare CCUserRecord user!
+
+  	user!=registration!.getUserRecord()
+  	reportControl!=new ReportControl()
+  	reportControl!.setFirmID(user!.getFirmID())
+  	reportControl!.getReportControl(#UserModel!.getParameterTable())
+  	found=reportControl!.getRecipientInfo(#UserModel!.getReportControlID(),user!.getCustomerID(),"")
+  	if (found)
+  		recipientInfo!=reportControl!.getAdmRptctlRcp()
+  		emailMessage!=recipientInfo!.getFieldAsString("EMAIL_MESSAGE")
+
+  		REM Get the URL for registration from our parameter table
+  		sqlprep(#SqlChan) "select REGISTER_URL from " + #UserModel!.getParameterTable() + " where FIRM_ID=? and UCASE(allow_cust_cc)='Y'"
+  		sqlexec(#SqlChan) stbl("+FIRM_ID")
+  		dim result$:sqltmpl(#SqlChan)
+  		result$=sqlfetch(#SqlChan)
+  		url!=result.REGISTER_URL$
+
+  		REM Append the URL and the specific generated token to the mail message then put the modified message back in our recipient info.
+  		emailMessage!=emailMessage!.trim()+" "+url!.trim()+"?token="+registration!.getGeneratedToken()
+  		recipientInfo!.setFieldValue("EMAIL_MESSAGE",emailMessage!)
+  		reportControl!.setAdmRptctlRcp(recipientInfo!)
+
+  		REM Put our email on the document queue to be sent out. The document queue was designed with the assumption that any email sent out
+  		REM will have some sort of attached document to it. This is not the case for this document. Provide "PDF" for the extension and the
+  		REM "NOATTACH" for the document ID, to appease the document queue that no attachment is really okay.
+  		reportControl!.setDocExtension("PDF")
+  		reportControl!.addToDocQueue(#UserModel!.getReportControlID(),user!.getCustomerID(),"","NOATTACH")
+  	else
+  	    REM TODO: Handle customer not being found in the recipient records. This means that the customer is not fully set up for payments.
+  	endif
+
+  methodend
+
   method public void deleteRegistration(CCRegistrationRecord rec!)
     sqlprep (#SqlChan) "delete from arc_cc_register where firm_id='"+stbl("+FIRM_ID")+"' and cc_username=?"
-    sqlexec (#SqlChan) rec!.getUserRecord().getUserName() 
-  methodend 
-    
+    sqlexec (#SqlChan) rec!.getUserRecord().getUserName()
+  methodend
+
   method public CCRegistrationRecord locateToken(BBjString token!)
     declare CCRegistrationRecord rec!
     declare CCUserRecord user!
     declare BBjString result$
-    
+
     sqlprep (#SqlChan) "select * from arc_cc_register where firm_id='"+stbl("+FIRM_ID")+"' and CC_Token=?"
     sqlexec (#SqlChan) token!
-    
+
     dim result$:sqltmpl(#SqlChan)
     result$=sqlfetch(#SqlChan,end=not_found)
-    
-    REM Check to see if username already exists in users and registration (duplicate registrations can happen) 
+
+    REM Check to see if username already exists in users and registration (duplicate registrations can happen)
     if (#UserModel!.userNameExistsInUsers(result.CC_USERNAME$)) then
-     methodret null() 
+     methodret null()
     endif
-    
-    REM Check to see if this registration has already been taken care of 
-    if (cvs(result.REGISTER_DATE$,3)<>"") then 
-        methodret null() 
-    endif 
-    
+
+    REM Check to see if this registration has already been taken care of
+    if (cvs(result.REGISTER_DATE$,3)<>"") then
+        methodret null()
+    endif
+
     rec!=new CCRegistrationRecord()
-    
+
     user!=new CCUserRecord()
     user!.setUserName(result.CC_USERNAME$)
     user!.setFirstName(result.NAME_FIRST$)
@@ -148,40 +148,47 @@ class public AO_CCRegistrationModel
     user!.setCustomerID(result.CUSTOMER_ID$)
     user!.setUserEmail(result.USER_EMAIL$)
     user!.setFirmID(result.FIRM_ID$)
-    
+
     rec!.setUserRecord(user!)
     rec!.setGeneratedToken(result.CC_TOKEN$)
     rec!.setRequestDate(result.REQUEST_DATE$)
-    
-    
-    methodret rec!
-    not_found: 
-    methodret null() 
-  methodend 
-  
-    REM Make sure the new username is not already taken and is otherwise valid
-    method public BBjNumber newUserNameIsValid(BBjString name!)
-        valid = len(name!)>4 and
-:           (! #UserModel!.userNameExistsInUsers(name!)) and 
-:           (! #userNameExistsInRegistration(name!))
-        methodret valid 
-    methodend
 
-    REM Make sure the user email is not already in use and is at least len 7 (a@b.xxx)
-    method public BBjNumber newUserEmailIsValid(BBjString email!)
-        valid = len(email!)>7 and
-:           (! #UserModel!.userEmailExistsInUsers(email!)) and 
-:           (! #userEmailExistsInRegistration(email!))
-        methodret valid 
-    methodend	
+
+    methodret rec!
+    not_found:
+    methodret null()
+  methodend
+
+  REM Make sure the new username fits criteria for valid username 
+  method public BBjNumber newUserNameIsValid(BBjString name!)
+      valid = len(name!)>4
+      methodret valid
+  methodend
+
+  REM Make sure the user email is not already in use and is at least len 7 (a@b.xxx)
+  method public BBjNumber newUserEmailIsValid(BBjString email!)
+     valid = len(email!)>7
+     methodret valid
+  methodend
   
+  method public BBjNumber isReregistrant(CCUserRecord user!) 
+    sqlprep (#SqlChan) "select count(*) as count from ARC_CC_REGISTER where firm_id='"+stbl("+FIRM_ID")+"' AND CC_USERNAME=? AND USER_EMAIL=? AND CUSTOMER_ID=?"
+    sqlexec (#SqlChan) user!.getUserName(),user!.getUserEmail(), user!.getCustomerID() 
+    dim result$:sqltmpl(#SqlChan)
+    result$=sqlfetch(#SqlChan)
+    
+    REM We really shouldn't ever have more than one for a re-registration. 
+    methodret result.count>=1 
+    
+  methodend 
+
 classend
 
-class public AO_CCRegistrationRecord 
+class public AO_CCRegistrationRecord
     field public CCUserRecord UserRecord!
     field public BBjString GeneratedToken!
     field public BBjString RequestDate!
-classend 
+classend
 
 class public AO_CCCustomerFirmInfo
     field public BBjString FirmID$
