@@ -48,7 +48,7 @@ class public AO_CCRegistrationView extends CCView
 		#header2!=#getWin().addStaticText(#getWin().getAvailableControlID(),0,85,800,50,"Customer Portal - New User Registration")
 		 
 		#header1!.addStyle("cc-header1")
-		#header2!.addStyle("cc-header2")		 
+		#header2!.addStyle("cc-header2")
 		#DesiredUserNameST!.addStyle("cc-statictext")
 		#FirstNameST!.addStyle("cc-statictext")
 		#LastNameST!.addStyle("cc-statictext")
@@ -61,15 +61,15 @@ class public AO_CCRegistrationView extends CCView
 		#UserEmailEB!.addStyle("cc-editbox")
 		#CustomerIDEB!.addStyle("cc-editbox")
 		#RegisterBtn!.addStyle("cc-button")
-		#CancelBtn!.addStyle("cc-button")		
+		#CancelBtn!.addStyle("cc-button")
 
 		#RegisterBtn!.setEnabled(0)
 
 	methodend
 
-	method public void registerDesiredUserNameEB_OnFocusLostCallback(CustomObject handler!, BBjString callback!)
-	    #DesiredUserNameEB!.setCallback(BBjEditBox.ON_LOST_FOCUS,handler!,callback!)
-	methodend 
+    method public void registerDesiredUserNameEB_OnFocusLostCallback(CustomObject handler!, BBjString callback!)
+        #DesiredUserNameEB!.setCallback(BBjEditBox.ON_LOST_FOCUS,handler!,callback!)
+    methodend 
 	
 	method public void registerFirstNameEB_OnFocusLostCallback(CustomObject handler!, BBjString callback!)
         #FirstNameEB!.setCallback(BBjEditBox.ON_LOST_FOCUS,handler!,callback!)
@@ -134,10 +134,24 @@ class public AO_CCRegistrationView extends CCView
 	method public BBjNumber allFieldsHaveValues()
 	    methodret #notEmpty(#DesiredUserNameEB!) and #notEmpty(#CustomerNameST!) and #notEmpty(#FirstNameEB!) and #notEmpty(#LastNameEB!) and #notEmpty(#CustomerIDEB!) and #notEmpty(#UserEmailEB!)
 	methodend 
+    
+    method public void initializeWindow()
+        #DesiredUserNameEB!.setText("")
+        #FirstNameEB!.setText("")
+        #LastNameEB!.setText("")
+        #UserEmailEB!.setText("")
+        #CustomerIDEB!.setText("")
+        #CustomerNameST!.setText("")
+        #setRegistrationEnabled(0)
+    methodend 
 
 	method protected BBjNumber notEmpty(BBjControl c!)
 	    methodret c!.getText().trim().length()>0
 	methodend 
-
+    
+    method public void hide()
+        #initializeWindow()
+        #super!.hide()
+    methodend 
 
 classend

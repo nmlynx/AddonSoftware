@@ -4,7 +4,7 @@ REM  * @author shaun
 REM  * Copyright BASIS International Ltd.  All Rights Reserved.
 REM  */
 
-REM Driver code called by bax_launch_task by way of the web app. 
+REM Driver code called by bax_launch_task by way of the web app.
 declare AO_CCLoginManager cclm!
 cclm!=new AO_CCLoginManager()
 cclm!.doModal()
@@ -25,16 +25,16 @@ use ::aro_CCForgotPasswordModel.aon::CCForgotPasswordModel
 class public AO_CCLoginManager
 	field protected CCUtil Util!=new CCUtil()
 	field protected CCLoginView LoginView!=new CCLoginView()
-	field protected CCRegistrationView RegistrationView!=new CCRegistrationView() 
-	field protected CCRegistrationModel RegistrationModel!=new CCRegistrationModel() 
-	field protected CCUserModel UserModel!=new CCUserModel() 
+	field protected CCRegistrationView RegistrationView!=new CCRegistrationView()
+	field protected CCRegistrationModel RegistrationModel!=new CCRegistrationModel()
+	field protected CCUserModel UserModel!=new CCUserModel()
 	field protected CCConfigurePasswordView ConfigurePasswordView!=new CCConfigurePasswordView()
 	field protected CCForgotPasswordView ForgotPasswordView!=new CCForgotPasswordView()
-	field protected CCForgotPasswordModel ForgotPasswordModel!=new CCForgotPasswordModel() 
+	field protected CCForgotPasswordModel ForgotPasswordModel!=new CCForgotPasswordModel()
 
 	method public AO_CCLoginManager()
-	    
-	    REM Set up user interface 
+
+	    REM Set up user interface
         #LoginView!.registerRegisterButton_OnButtonPushCallback(#this!,"handleRegistration")
         #LoginView!.registerLoginButton_OnButtonPushCallback(#this!,"handleLogin")
         #LoginView!.registerCancelButton_OnButtonPushCallback(#this!,"handleCancel")
@@ -49,7 +49,7 @@ class public AO_CCLoginManager
         #RegistrationView!.registerUserEmailEB_OnFocusLostCallback(#this!,"handleUserEmailModification")
         #RegistrationModel!.setUserModel(#UserModel!)
         #ForgotPasswordModel!.setUserModel(#UserModel!)
-        
+
         #ConfigurePasswordView!.registerOKBtn_OnButtonPushCallback(#this!,"handleChangePasswordOK")
         #ConfigurePasswordView!.registerCancelBtn_OnButtonPushCallback(#this!,"handleChangePasswordCancel")
         #ForgotPasswordView!.registerOKBtn_OnButtonPushCallback(#this!,"handleForgotPasswordOK")
@@ -75,7 +75,7 @@ class public AO_CCLoginManager
 
 		username!=#LoginView!.getUserName()
 		password!=#LoginView!.getPassword()
-		
+
 		changePasswordOnFirstLogin!=(#UserModel!.getLastUsedDate(userName!)="")
 
 		if (#UserModel!.login(username!,password!)) then
@@ -85,24 +85,24 @@ class public AO_CCLoginManager
 			REM Prepare the account settings view
 			REM #AccountSettingsView!=new CCAccountSettingsView()
 			REM #AccountSettingsView!.show()
-			REM We'll need to put user settings in the future.  I want this to conform to good web design rather 
-			REM than putting in "Additional Options" in the Addon dialog since your typical paying customer is not 
-			REM an Addon user. 
+			REM We'll need to put user settings in the future.  I want this to conform to good web design rather
+			REM than putting in "Additional Options" in the Addon dialog since your typical paying customer is not
+			REM an Addon user.
 
 			REM If this is the first time the user has ever logged in, make them change their password
-			if (changePasswordOnFirstLogin!) then 
+			if (changePasswordOnFirstLogin!) then
 			    #ConfigurePasswordView!.show()
-			else 
+			else
 			    #launchCustomerPaymentForm()
 				release
-			endif 
+			endif
 		else
 			#LoginView!.show()
 			#RegistrationView!.displayMessage("Login Failed. Please Try Again.")
 		endif
 
 	methodend
-	
+
 	method public void launchCustomerPaymentForm()
 	    REM Launch the customer payment form
         customerID$=#UserModel!.getAssociatedCustomerID()
@@ -110,7 +110,7 @@ class public AO_CCLoginManager
         if (customerID$<>"" and firmID$<>"") then
             declare BBjCommandLineObject cmd!
             cmd!=BBjAPI().getConfig().getCurrentCommandLineObject()
-            
+
             declare BBjAdminBase admin!
             admin!=CCUtil.getAdmin()
             applicationUser$=admin!.getUser()
@@ -126,136 +126,193 @@ class public AO_CCLoginManager
             arguments$=arguments$+"-u"+applicationUser$+" -p"+applicationPassword$
             cmd!.setProgramArgs(arguments$)
             x=scall("bbj "+cmd!.toString())
-        else 
+        else
             REM TODO: Take care of awkward situation where customer account has not been set up correctly.
-        endif 
-	methodend 
-	
+        endif
+	methodend
+
 	method public void handleChangePasswordOK(BBjButtonPushEvent event!)
 	    declare BBjString userName!
-	    REM TODO: getLoggedInUser() could return null, but it would mean a user got here without logging in... How'd that happen?  
-	    REM Get the user who's logged in. 
+	    REM TODO: getLoggedInUser() could return null, but it would mean a user got here without logging in... How'd that happen?
+	    REM Get the user who's logged in.
 	    userName!=#UserModel!.getLoggedInUser()
-	    
+
 	    if (#ConfigurePasswordView!.passwordsMatch()) then
 	        #UserModel!.changePassword(userName!, #ConfigurePasswordView!.getPassword())
 	        #ConfigurePasswordView!.displayMessage("Password has been changed.")
 	        #ConfigurePasswordView!.hide()
 	        #launchCustomerPaymentForm()
 	        release
-	    else 
+	    else
 	        #ConfigurePasswordView!.displayMessage("Passwords do not match")
-	    endif 
-	methodend 
+	    endif
+	methodend
 
     method public void handleChangePasswordCancel(BBjButtonPushEvent event!)
         #ConfigurePasswordView!.displayMessage("Password has not been changed.")
         #ConfigurePasswordView!.hide()
         #launchCustomerPaymentForm()
         release
-    methodend 
+    methodend
 
-	
+
 	method public void handleCustomerModification(BBjLostFocusEvent event!)
 	    declare BBjString customerID!
 		declare BBjString customerName$
 	    declare BBjNumber customerFound
-	    
+
 	    REM Get the corresponding customer name
 	    customerID!=event!.getEditBox().getText()
 	    customerID!=customerID!.trim()
-	    if (customerID!.length()>0) then 
+	    if (customerID!.length()>0) then
 	        customerName$=#RegistrationModel!.getCorrespondingCustomerName(customerID!)
 	    else
-			customerName$="NOT_FOUND" 
-	    endif 
-	    	    
-	    REM Set the static text with the customer name 
+			customerName$="NOT_FOUND"
+	    endif
+
+	    REM Set the static text with the customer name
 	    customerFound=(customerName$<>"NOT_FOUND")
-	    if  customerFound then 
+	    if  customerFound then
 	        #RegistrationView!.updateCustomerNameText(customerName$)
-	    else 
+	    else
 	       #RegistrationView!.clearCustomerNameText()
-	    endif 
-	    
+	    endif
+
 	    REM Enable the registration button if all our fields are populated.
 	    #handleLostFocus(event!)
-	    
-	    REM Display this error message as the last thing, since it's awkward to display it when the state of all the GUI controls has not been set. 
-	    if !customerFound then 
+
+	    REM Display this error message as the last thing, since it's awkward to display it when the state of all the GUI controls has not been set.
+	    if !customerFound then
 	        #RegistrationView!.displayMessage("It looks like this customer is not signed up for online payments. Please contact us to set up online payments.")
-	    endif 
-	    
-	methodend 
-	
+	    endif
+
+	methodend
+
 	method public void handleUserNameModification(BBjLostFocusEvent event!)
 	    declare BBjString name!
-	    
+
 	    name!=event!.getEditBox().getText()
-	    valid = #RegistrationModel!.newUserNameIsValid(name!)
+	    valid = #RegistrationModel!.newUserNameIsValid(name!) and !#UserModel!.userNameExistsInUsers(name!)
 		if !valid
 			#RegistrationView!.displayMessage("This username is not available; please select a different one.")
 		endif
-rem	    #RegistrationView!.setUserNameValid(valid)
 	    #handleLostFocus(event!)
 	methodend
 
 	method public void handleUserEmailModification(BBjLostFocusEvent event!)
 	    declare BBjString email!
-	    
+
 	    email!=event!.getEditBox().getText()
-	    valid = #RegistrationModel!.newUserEmailIsValid(email!)
+	    valid = #RegistrationModel!.newUserEmailIsValid(email!) and !#UserModel!.userEmailExistsInUsers(email!)
 		if !valid
 			#RegistrationView!.displayMessage("Please use a different email address.")
 		endif
 	    #handleLostFocus(event!)
-	methodend	
-		
-	method public void handleLostFocus(BBjLostFocusEvent event!)
-	    enable=#RegistrationView!.allFieldsHaveValues() and #RegistrationModel!.newUserNameIsValid(#RegistrationView!.getUserName()) 
-:			and #RegistrationModel!.newUserEmailIsValid(#RegistrationView!.getUserEmail())
-	    #RegistrationView!.setRegistrationEnabled(enable)
-	methodend 
+	methodend
 
-	method public void handleCancel(BBjButtonPushEvent event!)
-        release
+    method public void handleLostFocus(BBjLostFocusEvent event!)
+    
+        declare BBjNumber valid
+        declare BBjNumber newRegistrant
+        declare BBjNumber reregistrant
+        declare CCUserRecord user!
+        declare CCRegistrationRecord registration!
+        declare BBjNumber allFieldsHaveValues
+        declare BBjNumber userNameIsValid
+        declare BBjNumber userEmailIsValid
+        declare BBjNumber userNameInUsers
+        declare BBjNumber userEmailInUsers
+        declare BBjNumber userNameInRegistration
+        declare BBjNumber userEmailInRegistration
+        
+        #RegistrationView!.setRegistrationEnabled(0)
+        
+        registration!=new CCRegistrationRecord()
+        user!=new CCUserRecord()
+        user!.setFirmID(stbl("+FIRM_ID"))
+        user!.setUserName(#RegistrationView!.getUserName())
+        user!.setFirstName(#RegistrationView!.getFirstName())
+        user!.setLastName(#RegistrationView!.getLastName())
+        user!.setUserEmail(#RegistrationView!.getUserEmail())
+        user!.setCustomerID(#RegistrationView!.getCustomerID())
+        registration!.setUserRecord(user!)
+        
+        allFieldsHaveValues=#RegistrationView!.allFieldsHaveValues()
+        if (!allFieldsHaveValues) then methodret
+
+        userNameIsValid=#RegistrationModel!.newUserNameIsValid(user!.getUserName())
+        userEmailIsValid=#RegistrationModel!.newUserEmailIsValid(user!.getUserEmail())
+        userNameInUsers=#UserModel!.userNameExistsInUsers(user!.getUserName())
+        valid=allFieldsHaveValues and userNameIsValid and userEmailIsValid and !userNameInUsers and !userEmailInUsers
+        
+        REM Test to see if this is a new registrant
+        userNameInRegistration=#RegistrationModel!.userNameExistsInRegistration(user!.getUserName())
+        userEmailInRegistration=#RegistrationModel!.userEmailExistsInRegistration(user!.getUserEmail())
+        newRegistrant=!userNameInRegistration and !userEmailInRegistration
+
+        REM Test to see if this is a reregistration
+        if (!newRegistrant) then 
+            reregistrant=#RegistrationModel!.isReregistrant(user!)
+        endif 
+        
+        errant=!newRegistrant and !reregistrant and valid
+        if (errant) then 
+            if (userNameInRegistration) then 
+                #RegistrationView!.displayMessage("Please choose a different username.")
+            endif 
+            if (userEmailInRegistration) then 
+                #RegistrationView!.displayMessage("This email is already in use.") 
+            endif 
+        endif 
+        
+        enable=valid and (newRegistrant or reregistrant)
+
+        #RegistrationView!.setRegistrationEnabled(enable)
     methodend
     
-    method public void handleForgotPassword(BBjToolButtonPushEvent event!)
-        REM Get the email address from the user 
-        #ForgotPasswordView!.show() 
-        #LoginView!.hide() 
+    method public void initializeRegistrationWindow(BBjActivateEvent event!)
+        #RegistrationView!.initializeWindow()
     methodend 
-    
+
+    method public void handleCancel(BBjButtonPushEvent event!)
+        release
+    methodend
+
+    method public void handleForgotPassword(BBjToolButtonPushEvent event!)
+        REM Get the email address from the user
+        #ForgotPasswordView!.show()
+        #LoginView!.hide()
+    methodend
+
     method public void handleForgotPasswordOK(BBjButtonPushEvent event!)
         declare CCUserRecord user!
         declare BBjString email!
         declare BBjString token!
-        
+
         REM See if the email corresponds to a user
         email!=#ForgotPasswordView!.getEmail()
         if (email!.isEmpty()) then
-            #ForgotPasswordView!.displayMessage("Please provide an email that the password reset link will be sent to.") 
-            methodret 
+            #ForgotPasswordView!.displayMessage("Please provide an email that the password reset link will be sent to.")
+            methodret
         endif
-        
+
         #ForgotPasswordModel!.sendForgotPasswordEmail(email!)
-        
+
         REM Show a message saying we'll send the password link to the email address if an account exists for it.
         REM Note:  Don't tell the user whether an account exists for a particular email.  This can lead to malicious
         REM users searching for working emails that they might be able to set passwords on.
         #ForgotPasswordView!.displayMessage("We've sent a reset password link to this email if an account exists for it.")
-        
+
         #ForgotPasswordView!.hide()
-        #LoginView!.show() 
-        
-    methodend 
-    
+        #LoginView!.show()
+
+    methodend
+
     method public void handleForgotPasswordCancel(BBjButtonPushEvent event!)
         #ForgotPasswordView!.hide()
         #LoginView!.show()
-    methodend 
-    
+    methodend
+
 	REM Get the registration information from the view and have the model send it to the servlet
     method public void sendRegistrationRequest(BBjButtonPushEvent event!)
       declare CCRegistrationRecord rec!
@@ -263,11 +320,10 @@ rem	    #RegistrationView!.setUserNameValid(valid)
       declare CCRegistrationEmailConfiguration emailConfiguration!
       declare BBjVector firmSelectionList!
       declare CCCustomerFirmInfo firmInfo!
-      
       rec!=new CCRegistrationRecord()
       user!=new CCUserRecord()
-      
-	  user!.setFirmID(stbl("+FIRM_ID"))
+
+      user!.setFirmID(stbl("+FIRM_ID"))
       user!.setUserName(#RegistrationView!.getUserName())
       user!.setFirstName(#RegistrationView!.getFirstName())
       user!.setLastName(#RegistrationView!.getLastName())
@@ -276,21 +332,26 @@ rem	    #RegistrationView!.setUserNameValid(valid)
       rec!.setUserRecord(user!)
       rec!.setGeneratedToken(CCUtil.generateToken())
       rec!.setRequestDate(CCUtil.today())
-      
+
+      REM If this is a reregistration, delete the previous one(s). 
+      if #RegistrationModel!.isReregistrant(user!) then 
+        #RegistrationModel!.deleteRegistration(rec!)
+      endif 
+
       REM Add the registration to the database and send the registration request email
       #RegistrationModel!.addRegistration(rec!)
-      
+
       REM Switch GUI back to login screen
       #RegistrationView!.showRegistrationMessage()
       #RegistrationView!.hide()
-      #LoginView!.show()   
+      #LoginView!.show()
     methodend
 
 	REM Cancel registration
     method public void cancelRegistrationRequest(BBjButtonPushEvent event!)
       REM Switch GUI back to login screen
       #RegistrationView!.hide()
-      #LoginView!.show()   
+      #LoginView!.show()
     methodend
-    
+
 classend

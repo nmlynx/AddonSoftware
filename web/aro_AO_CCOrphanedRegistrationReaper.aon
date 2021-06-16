@@ -1,0 +1,96 @@
+REM /**
+REM  * aro_AO_CCOrphanedRegistrationReaper.bbj
+REM  * @author shaun
+REM  *
+REM  */
+use ::aro_CCUtil.aon::CCUtil
+
+use com.basis.api.admin.BBjAdminBase
+use com.basis.api.admin.BBjAdminTask
+use com.basis.api.admin.BBjAdminTaskGroup
+use com.basis.api.admin.BBjAdminTaskQueue
+use com.basis.api.admin.BBjAdminList
+
+class public AO_CCOrphanedRegistrationReaper
+
+    field public BBjString GroupName!="Credit Card Registration Cleanup"
+
+    method public void scheduleReaperProcess()
+        
+        REM Get the BBjAdminBase object 
+        declare BBjAdminBase admin!
+        admin!=CCUtil.getAdmin()
+        
+        REM Check for the existence of this group and don't go any further if it already exists.
+        declare BBjAdminTaskQueue queue!
+        declare BBjAdminTaskGroup addonGroup!
+        queue!=admin!.getTaskQueue()
+        addonGroup!=queue!.getTaskGroup(#GroupName!,err=*next)
+        if (addonGroup!<>null()) then 
+            REM The group already exists, so don't attempt to recreate it.
+            methodret
+        endif 
+     
+        REM Create the task group
+        addonGroup!= admin!.newTaskGroup()
+        addonGroup!.setString(BBjAdminTaskGroup.NAME,#GroupName!)
+        
+        declare BBjCommandLineObject commandLine!
+        commandLine!=BBjAPI().getConfig().getCurrentCommandLineObject()
+        
+        declare BBjAdminTask task!
+        task! = addonGroup!.newTask(BBjAdminTask.TaskType.BBJ_PROGRAM)
+        task!.setString(BBjAdminBBjTask.PROGRAM, "aro_CCOrphanedRegistrationReaper.aon")
+        
+        declare BBjString configFile!
+        configFile!=commandLine!.getConfigFile()
+        REM we don't want quotes as part of the string
+        if (configFile!.startsWith($22$)) then 
+            configFile!=configFile!.substring(1,configFile!.length()-1)
+        endif 
+        task!.setString(BBjAdminBBjTask.CONFIG, configFile!)
+        
+        declare BBjString workingDirectory!
+        workingDirectory!=commandLine!.getWorkingDirectory()
+        REM we don't want quotes as part of the string
+        if (workingDirectory!.startsWith($22$)) then 
+            workingDirectory!=workingDirectory!.substring(1,workingDirectory!.length()-1)
+        endif 
+        task!.setString(BBjAdminBBjTask.WORKING_DIR, workingDirectory!)
+        
+        task!.setString(BBjAdminBBjTask.RUN_AS,admin!.getUser()) 
+        task!.setString(BBjAdminBBjTask.RUN_AS_PASSWORD,admin!.getPassword()) 
+        
+       
+        addonGroup!.getTasks().add(task!)
+       
+        addonGroup!.setLong(BBjAdminTaskGroup.START_DATE,new java.util.Date().getTime())
+        addonGroup!.setInt(BBjAdminTaskGroup.REPEAT_TYPE,BBjAdminTaskGroup.DAILY)
+        addonGroup!.setDouble(BBjAdminTaskGroup.REPEAT_FREQUENCY, 1)
+        
+        addonGroup!.commit()
+        addonGroup!.executeIfAppropriate()
+        
+    methodend 
+    
+    method public void reapOrphanedRegistrations() 
+        declare BBjNumber sqlchan 
+        declare BBjString today!
+        declare BBjNumber timeout!
+        
+        timeout!=0
+        timeout!=num(stbl("+ARC_REGISTRATION_TIMEOUT",err=*next)) 
+        
+        if timeout!<=0 then 
+            timeout!=2
+        endif 
+        
+        REM The date format as we have it stored in ARC_CC_REGISTER is apparently wrong for SQL.  It needs to be YYYY-MM-DD, not YYYYMMDD. 
+        sqlchan=unt
+        sqlopen (sqlchan) stbl("+DBNAME") 
+        sqlprep(sqlchan) "delete from ARC_CC_REGISTER where DATEDIFF('DAY',CURRENT_DATE(),substring(REQUEST_DATE,1,4)+'-'+substring(REQUEST_DATE,5,2)+'-'+substring(REQUEST_DATE,7,2))>"+str(timeout!)
+        sqlexec(sqlchan)
+        sqlclose(sqlchan)
+    methodend
+
+classend 
