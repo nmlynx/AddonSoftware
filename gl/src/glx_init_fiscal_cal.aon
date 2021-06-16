@@ -84,7 +84,7 @@ rem --- Process all GLS_CALENDAR records for ALL firms
             if cvs(period_end$,2)="" then
                 rem --- Get the YYYYMMDD period ending date for PERIOD_END_nn using adc_perioddates_v2102.aon with the period nn and 
                 rem --- the YEAR from the record containing the PERIOD_END_nn
-                call pgmdir$+"adc_perioddates.aon",per,num(glsCalendar.year$),begdate$,enddate$,table_chans$[all],status
+                call pgmdir$+"adc_perioddates_v2102.aon",per,num(glsCalendar.year$),begdate$,enddate$,table_chans$[all],status
                 if status then continue
                 
                 field glsCalendar$,"PERIOD_END_"+str(per:"00")=enddate$
