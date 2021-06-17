@@ -7,8 +7,8 @@ rem --- Clear Check Number when using previously saved selections.
 [[APR_CHECKS.ARER]]
 rem --- Use default check form order if available
 	default_form_order$=callpoint!.getDevObject("default_form_order")
-	callpoint!.setColumnData("APR_CHECKS.FORM_ORDER",default_form_order$,1)
 	if cvs(default_form_order$,2)<>"" then
+		callpoint!.setColumnData("APR_CHECKS.FORM_ORDER",default_form_order$,1)
 		formorderListButton!=callpoint!.getControl("APR_CHECKS.FORM_ORDER")
 		formorderVector!=formorderListButton!.getAllItems()
 		for i=0 to formorderVector!.size()-1
