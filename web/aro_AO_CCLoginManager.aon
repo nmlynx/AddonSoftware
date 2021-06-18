@@ -107,6 +107,13 @@ class public AO_CCLoginManager
 	    REM Launch the customer payment form
         customerID$=#UserModel!.getAssociatedCustomerID()
         firmID$=stbl("+FIRM_ID");rem #UserModel!.getAssociatedFirmID()
+        
+        REM There's probably going to be other times we need to call setLastUsedDate, but currently, this is 
+        REM the main place where we need to set it.
+        REM We need to eventually stop using the last used date to determine whether a user has reset their 
+        REM password and instead, use a field in ARC_CC_USERS to determine if it's been set. 
+        #UserModel!.setLastUsedDate() 
+        
         if (customerID$<>"" and firmID$<>"") then
             declare BBjCommandLineObject cmd!
             cmd!=BBjAPI().getConfig().getCurrentCommandLineObject()
@@ -138,7 +145,7 @@ class public AO_CCLoginManager
 	    userName!=#UserModel!.getLoggedInUser()
 
 	    if (#ConfigurePasswordView!.passwordsMatch()) then
-	        #UserModel!.changePassword(userName!, #ConfigurePasswordView!.getPassword())
+	        #UserModel!.changePassword(userName!, #ConfigurePasswordView!.getPassword(),err=handleInValidPassword)
 	        #ConfigurePasswordView!.displayMessage("Password has been changed.")
 	        #ConfigurePasswordView!.hide()
 	        #launchCustomerPaymentForm()
@@ -146,10 +153,32 @@ class public AO_CCLoginManager
 	    else
 	        #ConfigurePasswordView!.displayMessage("Passwords do not match")
 	    endif
+        
+        methodret 
+        
+        handleInvalidPassword: 
+        message!=errmes(-1) 
+        exception$="com.basis.api.admin.BBjAdminException"
+        beginningNdx=message!.indexOf(exception$)
+        if (beginningNdx>-1) then 
+            messageNdx=beginningNdx+len(exception$)
+            REM The +1 to messageNdx is because there's a colon right after the exception name that we don't want to capture.
+            #ConfigurePasswordView!.displayMessage(message!.substring(messageNdx+1))
+        else 
+            #ConfigurePasswordView!.displayMessage("Setting the password failed due to an internal error.")
+        endif 
 	methodend
 
     method public void handleChangePasswordCancel(BBjButtonPushEvent event!)
+        userName!=#UserModel!.getLoggedInUser()
+        changePasswordOnFirstLogin!=(#UserModel!.getLastUsedDate(userName!)="")
+        
+        REM if we're forcing a password change on the first login, don't proceed to the payment form
         #ConfigurePasswordView!.displayMessage("Password has not been changed.")
+        if (changePasswordOnFirstLogin!) then 
+            release 
+        endif 
+        
         #ConfigurePasswordView!.hide()
         #launchCustomerPaymentForm()
         release
