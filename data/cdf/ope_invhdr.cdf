@@ -953,7 +953,7 @@ rem --- Reset all previous values
 	user_tpl.prev_ship_to$     = ""
 	user_tpl.prev_sales_total  = 0
 
-	user_tpl.new_order = 1
+	user_tpl.new_order = 0
 	user_tpl.credit_limit_warned = 0
 	user_tpl.shipto_warned = 0
 	callpoint!.setDevObject("disc_code",callpoint!.getColumnData("OPE_INVHDR.DISC_CODE"))
