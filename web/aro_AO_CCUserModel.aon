@@ -49,7 +49,6 @@ class public AO_CCUserModel
         REM Set the state to show that we've successfully logged in
         #LoggedIn=1
         #UserName$=username$
-        #setLastUsedDate()
         methodret 1
     methodend 
     
@@ -129,10 +128,16 @@ class public AO_CCUserModel
     
     REM Method for allowing the user to change their password
     method public void changePassword(BBjString userName$, BBjString newPassword$)
+        seterr bad_password
         CCUtil.getAdmin().changePassword(#getEMUserName(userName$),newPassword$)
+        methodret 
+        
+        bad_password:
+        throw errmes(-1),err
+        
     methodend 
     
-    method protected void setLastUsedDate()
+    method public void setLastUsedDate()
         sqlprep (#SqlChan) "update ARC_CC_USERS set LAST_USED_DATE=? WHERE firm_id='"+stbl("+FIRM_ID")+"' and CC_USERNAME=?"
         sqlexec (#SqlChan) CCUtil.today(), #UserName$
     methodend 
