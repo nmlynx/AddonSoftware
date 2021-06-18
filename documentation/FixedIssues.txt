@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-06-16
+ Report Date:   2021-06-18
  Report Branch: AddonSoftware 21.02
  Last Release:  AddonSoftware 21.01
 =======================================================================================================================================
@@ -280,3 +280,19 @@ when default_form_order is NOT blank.
 ----
 Modified: data/bar/apr_checks.xml
 Modified: data/cdf/apr_checks.cdf
+
+=======================================================================================================================================
+Revision: ef489167b56495aaabf9619b7178fc6b9c66b5a7
+Author: Christine <chawkins@basis.com>
+Date: 6/18/2021 2:30:24 PM
+Message:
+Bug 10144 - OP - Focus back in Order Number field on newly-assigned order number gives 'order does not exist' message
+ - Follow up commit; initialize user_tpl.new_order to 0 in ARAR instead of 1, to make sure user isn't allowed to type in a random number.
+
+(cherry picked from commit 3cff96595f2a71c0d5d3e402416a57b9aaa4761e)
+----
+Modified: data/bar/ope_invhdr.xml
+Modified: data/bar/ope_ordhdr.xml
+Modified: data/cdf/ope_invhdr.cdf
+Modified: data/cdf/ope_ordhdr.cdf
+
