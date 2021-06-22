@@ -1,5 +1,5 @@
 rem ==========================================================================
-rem --- aro_CCLoginView.aon 
+rem --- aro_CCExpiredRequestReaper.aon 
 rem --- Credit Card Login User Interface (GUI) (subclass of AO_CCLoginView)
 rem --- 
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
@@ -7,20 +7,20 @@ rem ==========================================================================
 
 rem --- Use statements and declares
 
-use ::aro_AO_CCOrphanedRegistrationReaper.aon::AO_CCOrphanedRegistrationReaper
+use ::aro_AO_CCExpiredRequestReaper.aon::AO_CCExpiredRequestReaper
 
 rem --- Customizable helper class for superclass containing Credit Card utility methods.
 
-class public CCOrphanedRegistrationReaper extends AO_CCOrphanedRegistrationReaper
+class public CCExpiredRequestReaper extends AO_CCExpiredRequestReaper
 
-    method public CCOrphanedRegistrationReaper()
+    method public CCExpiredRequestReaper()
         #super!()
         methodret
     methodend
 
 classend
 
-declare CCOrphanedRegistrationReaper reaper!
-reaper!=new CCOrphanedRegistrationReaper()
-reaper!.reapOrphanedRegistrations()
+declare CCExpiredRequestReaper reaper!
+reaper!=new CCExpiredRequestReaper()
+reaper!.reapExpiredRequests()
 release

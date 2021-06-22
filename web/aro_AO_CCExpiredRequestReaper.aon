@@ -1,5 +1,5 @@
 REM /**
-REM  * aro_AO_CCOrphanedRegistrationReaper.bbj
+REM  * aro_AO_CCExpiredRequestReaper.bbj
 REM  * @author shaun
 REM  *
 REM  */
@@ -11,7 +11,7 @@ use com.basis.api.admin.BBjAdminTaskGroup
 use com.basis.api.admin.BBjAdminTaskQueue
 use com.basis.api.admin.BBjAdminList
 
-class public AO_CCOrphanedRegistrationReaper
+class public AO_CCExpiredRequestReaper
 
     field public BBjString GroupName!="Credit Card Registration Cleanup"
 
@@ -40,7 +40,7 @@ class public AO_CCOrphanedRegistrationReaper
         
         declare BBjAdminTask task!
         task! = addonGroup!.newTask(BBjAdminTask.TaskType.BBJ_PROGRAM)
-        task!.setString(BBjAdminBBjTask.PROGRAM, "aro_CCOrphanedRegistrationReaper.aon")
+        task!.setString(BBjAdminBBjTask.PROGRAM, "aro_CCExpiredRequestReaper.aon")
         
         declare BBjString configFile!
         configFile!=commandLine!.getConfigFile()
@@ -73,23 +73,33 @@ class public AO_CCOrphanedRegistrationReaper
         
     methodend 
     
-    method public void reapOrphanedRegistrations() 
+    method public void reapExpiredRequests() 
         declare BBjNumber sqlchan 
         declare BBjString today!
         declare BBjNumber timeout!
         
+        REM open the database 
+        sqlchan=unt
+        sqlopen (sqlchan) stbl("+DBNAME") 
+        
+        REM Get rid of expired registration requests
         timeout!=0
-        timeout!=num(stbl("+ARC_REGISTRATION_TIMEOUT",err=*next)) 
+        timeout!=num(CCUtil.getADSConfigValue("+REG_TIMOUT"),err=*next)
         
         if timeout!<=0 then 
             timeout!=2
         endif 
         
-        REM The date format as we have it stored in ARC_CC_REGISTER is apparently wrong for SQL.  It needs to be YYYY-MM-DD, not YYYYMMDD. 
-        sqlchan=unt
-        sqlopen (sqlchan) stbl("+DBNAME") 
+        REM The date format as we have it stored in ARC_CC_REGISTER is apparently wrong for SQL.  It needs to be YYYY-MM-DD, not YYYYMMDD.
         sqlprep(sqlchan) "delete from ARC_CC_REGISTER where DATEDIFF('DAY',CURRENT_DATE(),substring(REQUEST_DATE,1,4)+'-'+substring(REQUEST_DATE,5,2)+'-'+substring(REQUEST_DATE,7,2))>"+str(timeout!)
         sqlexec(sqlchan)
+        
+        REM Get rid of expired password change requests
+        REM The date format as we have it stored in ARC_CC_PWDREQ is apparently wrong for SQL.  It needs to be YYYY-MM-DD, not YYYYMMDD.
+        sqlprep (sqlchan) "delete from ARC_CC_PWDREQ where DATEDIFF('DAY',CURRENT_DATE(),substring(EXPIRATION,1,4)+'-'+substring(EXPIRATION,5,2)+'-'+substring(EXPIRATION,7,2))>0"
+        sqlexec(sqlchan)
+        
+        REM Close the database 
         sqlclose(sqlchan)
     methodend
 
