@@ -34,6 +34,8 @@ class public AO_CCUtil
     field protected static BBjString DATE_MASK!="%Yl%Mz%Dz"
     field public static BBjString ParameterTable$="ARS_CC_CUSTPMT"
     field public static BBjString ReportControlID$=pad(#ParameterTable$,16)
+    field public static BBjString PasswordRequestTimeoutVariable$="+PASSREQ_TIMOUT"
+    field public static BBjNumber PasswordRequestTimeoutDefault=2
 
     method public AO_CCUtil()
         #initializeBaristaEnvironment()
@@ -340,5 +342,21 @@ class public AO_CCUtil
   method public static BBjString generateToken() 
     methodret UUID.randomUUID().toString()
   methodend 
+  
+  REM Get a value from the ADS_CONFIGURE table
+  method public static BBjString getADSConfigValue(BBjString adsKey$)
+        dim configs$[0,3]
+        configs$[0,0]=adsKey$
+        call stbl("+DIR_SYP")+"bac_getconfig.bbj",configs$[all],table_chans$[all],""
+        
+        file_offset=0
+        open_files$=table_chans$[0,0]
+        while file_offset < len(open_files$)
+            close(num(open_files$(file_offset+18,3)),err=*next)
+            file_offset=file_offset+20
+        wend
+        
+        methodret configs$[0,1]
+  methodend
     
 classend 

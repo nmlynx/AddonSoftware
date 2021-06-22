@@ -308,7 +308,7 @@ rem --- in: css$
 rem --- in: sscpName$
 rem ============================================================
 
-	use ::aro_CCOrphanedRegistrationReaper.aon::CCOrphanedRegistrationReaper
+	use ::aro_CCExpiredRequestReaper.aon::CCExpiredRequestReaper
 
 	rem --- Use Admin API (BBjAdminBase) instead of BBjAPI() methods
 	adminBase!=CCUtil.getAdmin()
@@ -397,8 +397,8 @@ rem ============================================================
 		newApp!.commit()
 
 		REM Schedule the reaper process to get rid of old user registrations
-		declare CCOrphanedRegistrationReaper reaper!
-		reaper!=new CCOrphanedRegistrationReaper() 
+		declare CCExpiredRequestReaper reaper!
+		reaper!=new CCExpiredRequestReaper() 
 		reaper!.scheduleReaperProcess() 
 		
 	endif
