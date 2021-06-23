@@ -1,0 +1,432 @@
+REM /**
+REM  * TarGZUtil.bbj
+REM  * @author shaun
+REM  *
+REM  */
+
+use org.apache.commons.compress.archivers.tar.TarArchiveEntry
+use org.apache.commons.compress.archivers.tar.TarArchiveInputStream
+use org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
+use org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
+use org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream
+
+use java.io.InputStream
+use java.io.OutputStream
+use java.io.BufferedInputStream
+use java.io.BufferedOutputStream
+use java.io.File
+use java.io.FileInputStream
+use java.io.FileOutputStream 
+use java.io.IOException
+use java.lang.reflect.Array
+use java.nio.file.attribute.FileAttribute
+use java.nio.file.LinkOption
+use java.nio.file.StandardCopyOption
+use java.nio.file.StandardOpenOption
+use java.nio.file.Files
+use java.nio.file.FileSystems
+use java.nio.file.Path
+use java.nio.file.Paths
+use java.nio.file.FileVisitor
+use java.nio.file.StandardOpenOption
+use java.nio.file.FileVisitResult
+use java.nio.file.attribute.BasicFileAttributes
+use java.nio.file.attribute.PosixFilePermission
+use java.nio.file.attribute.PosixFilePermissions
+use java.util.ArrayList
+use java.util.Set
+
+
+class public TGZFile
+
+    field public BBjString DefaultFilePermissions!=null()
+    field protected Object DefaultCopyOptions!=Array.newInstance(Class.forName("java.nio.file.StandardCopyOption"),0)
+    rem field protected StandardCopyOption[] DefaultCopyOptions!=null()
+    
+    field protected File TarFile!
+    field protected BBjString CurrentBasePath!
+    
+    REM Our many output streams, kinda like an onion, but not a parfait
+    field protected OutputStream m_os!
+    field protected BufferedOutputStream m_bos!
+    field protected GzipCompressorOutputStream m_gzos!
+    field protected TarArchiveOutputStream m_tos!
+    
+    REM Our many output streams, kinda like a parfait
+    field protected InputStream m_is!
+    field protected BufferedInputStream m_bis!
+    field protected GzipCompressorInputStream m_gzis!
+    field protected TarArchiveInputStream m_tis!
+    
+    REM State Variables 
+    field protected BBjNumber m_stateClosed=0
+    field protected BBjNumber m_stateOpenForWriting=0
+    field protected BBjNumber m_stateOpenForReading=0
+    
+    REM System variables
+    field protected BBjNumber m_isWindows=new String(info(0,0)).contains("Win")
+    
+    REM Error reporting variables 
+    field protected BBjVector m_failedToExtract!
+    
+    method private TGZFile() 
+    methodend 
+    
+    method public TGZFile(BBjString fileName!)
+        declare File tarFile!
+        
+        REM calling getCanonicalFile ensures the path is valid (no unallowed characters)
+        tarFile!=new File(fileName!)
+        #TarFile!=tarFile!.getCanonicalFile()
+    methodend 
+
+    method public void openForWriting()
+        REM Open and encapsulate an output stream for writing to the new file
+        optionsArray!=Array.newInstance(StandardOpenOption.APPEND.getClass(),0)
+        #m_os!=Files.newOutputStream(#TarFile!.toPath(),optionsArray!)
+        #m_bos!=new BufferedOutputStream(#m_os!)
+        #m_gzos!=new GzipCompressorOutputStream(#m_bos!)
+        #m_tos!=new TarArchiveOutputStream(#m_gzos!)
+
+        REM Set the tar to support paths longer than 100 bytes (for crying out loud)
+        #m_tos!.setLongFileMode(TarArchiveOutputStream.LONGFILE_GNU)       
+ 
+        #m_stateOpenForWriting=1
+    methodend 
+    
+    method public void closeForWriting()
+        #m_tos!.finish()
+        #m_tos!.close()
+        #m_gzos!.close()
+        #m_bos!.close()
+        #m_os!.close() 
+        #m_stateClosed=1
+    methodend 
+    
+    method public void addFile(BBjString pathToAdd!, BBjString baseDirectory!)
+        declare Path pathToAddPath!
+        
+        REM Make sure the streams are ready for writing new files to archive
+        if (#m_stateClosed) then throw "Tar file is already closed. Cannot add any more files.",17
+        if (!#m_stateOpenForWriting) then throw "Must call openForWriting() before attempting to add files.",17
+        
+        #CurrentBasePath!=baseDirectory!
+        x!=new String("")
+        paths!=Array.newInstance(x!.getClass(),0)
+        linkOptions!=Array.newInstance(LinkOption.NOFOLLOW_LINKS.getClass(),0)
+        pathToAddPath!=FileSystems.getDefault().getPath(pathToAdd!,paths!)
+        if !Files.exists(pathToAddPath!,linkOptions!) then 
+            throw "Path does not exist: "+pathToAddPath!.toString(),12
+        endif 
+        Files.walkFileTree(pathToAddPath!,new AddFileVisitor(#this!))
+    methodend 
+
+    method public void addSingleFile(Path pathToAddPath!)
+        declare TarArchiveEntry entry!
+        declare File pathToAddFile!
+        declare Path baseDirectoryPath!
+        declare Path tarArchivePath! 
+        
+        REM Create a tar entry for the file and add it to the archive
+        pathToAddFile!=pathToAddPath!.toFile()
+        x!=new String("")
+        paths!=Array.newInstance(x!.getClass(),0)
+        baseDirectoryPath!=FileSystems.getDefault().getPath(#CurrentBasePath!,paths!)
+        tarArchivePath!=baseDirectoryPath!.relativize(pathToAddPath!)
+        entry!=new TarArchiveEntry(pathToAddFile!,tarArchivePath!.toString())
+        #m_tos!.putArchiveEntry(entry!)
+        if (pathToAddFile!.isFile()) then 
+            Files.copy(pathToAddPath!,#m_tos!)
+        endif
+        #m_tos!.closeArchiveEntry()
+    methodend 
+    
+    method public void extract(BBjString nameToExtract!, BBjString destinationDirectory!)
+        
+        declare BBjString entryName!
+        declare TarArchiveEntry entry!
+        
+        REM Make sure the file we want to extract actually exists.
+        linkOptions!=Array.newInstance(LinkOption.NOFOLLOW_LINKS.getClass(),0)
+        if (Files.notExists(#TarFile!.toPath(),linkOptions!)) throw #TarFile!+" does not exist, and thus can't be extracted!",12
+        
+        #openForReading()
+        x!=new String("")
+        paths!=Array.newInstance(x!.getClass(),0)
+        destinationPath!=FileSystems.getDefault().getPath(destinationDirectory!,paths!)
+    
+        REM If this is not Windows and default file permissions have been set, convert them 
+        REM to file attributes. 
+        declare Set permissions!
+        declare FileAttribute permissionsFA!
+
+        if #DefaultFilePermissions!<>null() and !#m_isWindows then 
+            permissions!=PosixFilePermissions.fromString(#DefaultFilePermissions!)
+            permissionsFA!=PosixFilePermissions.asFileAttribute(permissions!) 
+        endif
+
+        REM read and extract files from the tar archive
+        REM Break out of loop rather setting a condition
+        extractingDirectory=0
+        while (1)
+            next_extraction:
+            entry!=cast(TarArchiveEntry,#m_tis!.getNextEntry())
+            
+            rem If entry comes back null, then there are no more entries, so exit loop.
+            if (entry!=null()) then break
+            
+            REM quick check to make sure file will fall under destination
+            entryName!=entry!.getName()
+            if (entryName!=nameToExtract! or entryName!=nameToExtract!+"/") then
+                extractingDirectory=entry!.isDirectory()
+            endif 
+
+            if (extractingDirectory) then 
+            	if (!entryName!.startsWith(nameToExtract!)) then continue
+            else 
+                if (entryName!<>nameToExtract!) then continue
+            endif 
+            
+            entryPath!=new File(entryName!).toPath()
+            diskPath!=destinationPath!.resolve(entryPath!)
+            if (!diskPath!.normalize().startsWith(destinationPath!)) then 
+                throw "Path in archive will copy outside of destination directory. Stopping.",17
+            endif 
+            
+            REM if the entry represents a directory, create the directory. Otherwise, copy the file. 
+            if (entry!.isDirectory()) then 
+                Files.createDirectories(diskPath!,permissionsFA!)
+            else 
+                Files.createDirectories(diskPath!.getParent(),permissionsFA!)
+                array!=#DefaultCopyOptions!
+                Files.copy(#m_tis!,diskPath!,array!,err=handle_copy_error)
+            endif 
+
+            if (!#m_isWindows and #DefaultFilePermissions!<>null()) then
+                Files.setPosixFilePermissions(diskPath!,permissions!)
+            endif
+       wend 
+       
+       #closeForReading()
+       methodret 
+       
+       handle_copy_error:  
+       declare BBjString errorMessage!
+       errorMessage!=errmes(-1)
+
+       rem --- don't overwrite a file that already exists, but also don't error out and fall to a prompt
+       if (err=252 and errorMessage!.contains("FileAlreadyExistsException")) then 
+            if (#m_failedToExtract!=null()) then 
+                #m_failedToExtract!=BBjAPI().makeVector()
+            endif 
+            goto next_extraction
+       endif 
+       
+       rem --- if this is not an error we handle, rethrow it. 
+       throw errmes(-1),err
+       
+   methodend     
+    
+    method public void extractAll(BBjString destinationDirectory!)
+        
+        declare TarArchiveEntry entry!
+        declare Path destinationPath!
+        declare Path entryPath!
+        declare Path diskPath!
+         
+        REM Make sure the file we want to extract actually exists.
+        linkOptions!=Array.newInstance(LinkOption.NOFOLLOW_LINKS.getClass(),0)      
+        if (Files.notExists(#TarFile!.toPath(),linkOptions!)) throw #TarFile!+" does not exist, and thus can't be extracted!",12
+        
+        #openForReading()
+        x!=new String("")
+        paths!=Array.newInstance(x!.getClass(),0)
+        destinationPath!=FileSystems.getDefault().getPath(destinationDirectory!,paths!)
+
+        REM If this is not Windows and default file permissions have been set, convert them 
+        REM to file attributes. 
+        declare Set permissions!
+        declare FileAttribute permissionsFA!
+        declare BBjNumber needsPermissions
+        
+        needsPermissions=#DefaultFilePermissions!<>null() and !#m_isWindows
+        permissionsArray!=Array.newInstance(Class.forName("java.nio.file.attribute.FileAttribute"),needsPermissions)
+        if needsPermissions then 
+            permissions!=PosixFilePermissions.fromString(#DefaultFilePermissions!)
+            permissionsFA!=PosixFilePermissions.asFileAttribute(permissions!)
+            Array.set(permissionsArray!,0,permissionsFA!)
+        endif
+        
+        REM read and extract files from the tar archive
+        REM Break out of loop rather setting a condition
+        while (1)
+            next_extraction: 
+            entry!=cast(TarArchiveEntry,#m_tis!.getNextEntry())
+            
+            rem If entry comes back null, then there are no more entries, so exit loop.
+            if (entry!=null()) then break
+            
+            REM quick check to make sure file will fall under destination
+            entryPath!=new File(entry!.getName()).toPath()
+            diskPath!=destinationPath!.resolve(entryPath!)
+            if (!diskPath!.normalize().startsWith(destinationPath!)) then 
+                throw "Path in archive will copy outside of destination directory. Stopping.",17
+            endif 
+            
+            REM if the entry represents a directory, create the directory. Otherwise, copy the file. 
+            if (entry!.isDirectory()) then 
+                Files.createDirectories(diskPath!,permissionsArray!)
+            else 
+                array!=#DefaultCopyOptions!
+                Files.copy(#m_tis!,diskPath!,array!,err=handle_copy_error)
+            endif 
+            
+            if (needsPermissions) then 
+                Files.setPosixFilePermissions(diskPath!,permissions!)
+            endif 
+       wend 
+       
+       #closeForReading()
+       methodret 
+       
+       handle_copy_error: 
+       declare BBjString errorMessage!
+       errorMessage!=errmes(-1)
+
+       rem --- don't overwrite a file that already exists, but also don't error out and fall to a prompt
+       if (err=252 and errorMessage!.contains("FileAlreadyExistsException")) then 
+            if (#m_failedToExtract!=null()) then 
+                #m_failedToExtract!=BBjAPI().makeVector()
+            endif
+            #m_failedToExtract!.add(diskPath!) 
+            goto next_extraction
+       endif 
+       
+       rem --- if this is not an error we handle, rethrow it. 
+       throw errmes(-1),err
+       
+    methodend
+    
+    method public void openForReading()
+        REM Open and encapsulate an output stream for writing to the new file
+        optionsArray!=Array.newInstance(StandardOpenOption.APPEND.getClass(),0)
+        #m_is!=Files.newInputStream(#TarFile!.toPath(),optionsArray!)
+        #m_bis!=new BufferedInputStream(#m_is!)
+        #m_gzis!=new GzipCompressorInputStream(#m_bis!)
+        #m_tis!=new TarArchiveInputStream(#m_gzis!)
+        
+        #m_stateOpenForReading=1
+    methodend 
+    
+    method public void closeForReading()
+        #m_tis!.close()
+        #m_gzis!.close()
+        #m_bis!.close()
+        #m_is!.close() 
+        #m_stateClosed=1
+    methodend 
+    
+    method public void addDefaultCopyOption(StandardCopyOption option!)
+        REM adding null to the list of copy options is a no-op.  It's possible this should be an error. 
+        if option!=null() then 
+            methodret 
+        endif 
+        
+        REM create the list of default copy options if it's currently null
+        declare StandardCopyOption[] newCopyOptions!
+        if (#DefaultCopyOptions!=null()) then 
+            #DefaultCopyOptions!=Array.newInstance(Class.forName("java.nio.file.StandardCopyOption"),1)
+            lastNdx=0
+        else 
+            array!=#DefaultCopyOptions!
+            lastNdx=array!.length
+            newCopyOptions!=Array.newInstance(Class.forName("java.nio.file.StandardCopyOption"),lastNdx+1)
+            for i=0 to lastNdx-1
+                o!=Array.get(array!,i)
+                Array.set(newCopyOptions!,i,o!)
+            next i
+            #DefaultCopyOptions!=newCopyOptions!
+        endif 
+        
+        REM Add the option to the list of options
+        Array.set(#DefaultCopyOptions!,lastNdx,option!)
+    methodend 
+    
+    method public java.util.List listEntries()
+        
+        declare TarArchiveEntry entry!
+        declare Path destinationPath!
+        declare Path entryPath!
+        declare Path diskPath!
+        declare BBjVector fileList! 
+        
+        REM Create an empty list 
+        fileList!=BBjAPI().makeVector() 
+        
+        REM Make sure the file we want to extract actually exists. 
+        linkOptions!=Array.newInstance(LinkOption.NOFOLLOW_LINKS.getClass(),0)
+        if (Files.notExists(#TarFile!.toPath(),linkOptions!)) throw #TarFile!+" does not exist, and thus can't be listed!",12
+        
+        #openForReading()
+        x!=new String("")
+        paths!=Array.newInstance(x!.getClass(),0)
+        destinationPath!=FileSystems.getDefault().getPath(destinationDirectory!,paths!)
+        
+        REM read and list entries from the tar archive
+        REM Break out of loop rather setting a condition
+        while (1)
+            next_extraction: 
+            entry!=cast(TarArchiveEntry,#m_tis!.getNextEntry())
+            
+            fileList!.add(entry!.getName())
+            
+            rem If entry comes back null, then there are no more entries, so exit loop.
+            if (entry!=null()) then break
+       wend 
+       #closeForReading()
+       methodret fileList! 
+       
+    methodend 
+    
+    method public BBjVector getFailedToExtract()
+        methodret #m_failedToExtract!
+    methodend 
+    
+classend 
+
+
+REM a class for adding files to the tar archive when called by a visitor class. 
+class public AddFileVisitor implements FileVisitor
+    
+    field private TGZFile CallbackObj!
+    
+    method private AddFileVisitor() 
+    methodend 
+    
+    method public AddFileVisitor(TGZFile callbackObj!)
+        #CallbackObj!=callbackObj!
+    methodend
+    
+    method public FileVisitResult visitFile(Object visitedElement!, BasicFileAttributes attributes!)
+        declare Path fl!
+        fl!=cast(Path,visitedElement!)
+        #CallbackObj!.addSingleFile(fl!)
+        methodret FileVisitResult.CONTINUE
+    methodend
+    
+    method public FileVisitResult preVisitDirectory(Object visitedElement!, BasicFileAttributes attributes!)
+        fl!=cast(Path,visitedElement!)
+        #CallbackObj!.addSingleFile(fl!)
+        methodret FileVisitResult.CONTINUE
+    methodend 
+    
+    method public FileVisitResult postVisitDirectory(Object visitedElement!, IOException exception!) 
+        methodret FileVisitResult.CONTINUE
+    methodend 
+    
+    method public FileVisitResult visitFileFailed(Object visitedElement!, IOException exception!) 
+        methodret FileVisitResult.CONTINUE
+    methodend
+ 
+
+classend 
