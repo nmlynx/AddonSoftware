@@ -135,8 +135,8 @@ method_error:rem --- Method error trap/handler (11Oct2017)
             if proc_mssg$ <> "" then goto getDescLensDone
 
         rem --- Make sure ddm_tables and ddm_table_tpls get closed
-            devDdmTables=fnget_dev1("DDM_TABLES")
-            devDdmTableTpls=fnget_dev1("DDM_TABLE_TPLS")
+            if pos(pad("DDM_TABLES",17)=rd_table_chans$[0,0],20)<>0 then devDdmTables=fnget_dev1("DDM_TABLES")
+            if pos(pad("DDM_TABLE_TPLS",17)=rd_table_chans$[0,0],20)<>0 then devDdmTableTpls=fnget_dev1("DDM_TABLE_TPLS")
             if devDdmTables >= 0 then close(devDdmTables,err=*next)
             if devDdmTableTpls >= 0 then close(devDdmTableTpls,err=*next)
 
@@ -302,8 +302,8 @@ method_error:rem --- Method error trap/handler (11Oct2017)
             if proc_mssg$ <> "" then goto getNumPeriodsDone
 
         rem --- Make sure ddm_tables and ddm_table_tpls get closed
-            devDdmTables=fnget_dev2("DDM_TABLES")
-            devDdmTableTpls=fnget_dev2("DDM_TABLE_TPLS")
+            if pos(pad("DDM_TABLES",17)=rd_table_chans$[0,0],20)<>0 then devDdmTables=fnget_dev2("DDM_TABLES")
+            if pos(pad("DDM_TABLE_TPLS",17)=rd_table_chans$[0,0],20)<>0 then devDdmTableTpls=fnget_dev2("DDM_TABLE_TPLS")
             if devDdmTables >= 0 then close(devDdmTables,err=*next)
             if devDdmTableTpls >= 0 then close(devDdmTableTpls,err=*next)
 
@@ -359,8 +359,8 @@ method_error:rem --- Method error trap/handler (11Oct2017)
             if proc_mssg$ <> "" then goto getNumPeriodsDone
 
         rem --- Make sure ddm_tables and ddm_table_tpls get closed
-            devDdmTables=fnget_dev3("DDM_TABLES")
-            devDdmTableTpls=fnget_dev3("DDM_TABLE_TPLS")
+            if pos(pad("DDM_TABLES",17)=rd_table_chans$[0,0],20)<>0 then devDdmTables=fnget_dev3("DDM_TABLES")
+            if pos(pad("DDM_TABLE_TPLS",17)=rd_table_chans$[0,0],20)<>0 then devDdmTableTpls=fnget_dev3("DDM_TABLE_TPLS")
             if devDdmTables >= 0 then close(devDdmTables,err=*next)
             if devDdmTableTpls >= 0 then close(devDdmTableTpls,err=*next)
 
@@ -416,8 +416,8 @@ method_error:rem --- Method error trap/handler (11Oct2017)
             if proc_mssg$ <> "" then goto getCompanyLogoDone
 
         rem --- Make sure ddm_tables and ddm_table_tpls get closed
-            devDdmTables=fnget_dev4("DDM_TABLES")
-            devDdmTableTpls=fnget_dev4("DDM_TABLE_TPLS")
+            if pos(pad("DDM_TABLES",17)=rd_table_chans$[0,0],20)<>0 then devDdmTables=fnget_dev4("DDM_TABLES")
+            if pos(pad("DDM_TABLE_TPLS",17)=rd_table_chans$[0,0],20)<>0 then devDdmTableTpls=fnget_dev4("DDM_TABLE_TPLS")
             if devDdmTables >= 0 then close(devDdmTables,err=*next)
             if devDdmTableTpls >= 0 then close(devDdmTableTpls,err=*next)
 

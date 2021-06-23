@@ -1557,8 +1557,8 @@ openGmqCustomer_error:rem --- Method error trap/handler (11Oct2017)
                     call stbl("+DIR_SYP")+"bac_open_tables.bbj",open_beg,open_end,open_tables$[all],open_opts$[all],open_chans$[all],open_tpls$[all],rd_table_chans$[all],open_batch,open_status$
 
                     rem --- Make sure ddm_tables and ddm_table_tpls get closed
-                    devDdmTables=fnget_dev1("DDM_TABLES")
-                    devDdmTableTpls=fnget_dev1("DDM_TABLE_TPLS")
+                    if pos(pad("DDM_TABLES",17)=rd_table_chans$[0,0],20)<>0 then devDdmTables=fnget_dev1("DDM_TABLES")
+                    if pos(pad("DDM_TABLE_TPLS",17)=rd_table_chans$[0,0],20)<>0 then devDdmTableTpls=fnget_dev1("DDM_TABLE_TPLS")
                     if devDdmTables >= 0 then close(devDdmTables,err=*next)
                     if devDdmTableTpls >= 0 then close(devDdmTableTpls,err=*next)
 
