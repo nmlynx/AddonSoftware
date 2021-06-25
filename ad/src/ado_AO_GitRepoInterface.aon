@@ -1,8 +1,8 @@
 rem ==========================================================================
-rem --- ado_AO_GitRepoInterface.aon 
+rem --- ado_AO_GitRepoInterface.aon
 rem --- AO_GitRepoInterface class (GitRepoInterface superclass)
 rem --- Superclass used to interface with JGit.
-rem --- 
+rem ---
 rem --- Copyright BASIS International Ltd.  All Rights Reserved.
 rem ==========================================================================
 
@@ -34,7 +34,7 @@ rem  */
     use java.util.ArrayList
     use java.util.Arrays
     use java.util.Iterator
-    
+
     use com.jcraft.jsch.JSch
     use com.jcraft.jsch.Session
 
@@ -72,7 +72,7 @@ rem /**
 rem  * This class uses JGit to interface with Addon's Git repository to perform
 rem  * tasks needed during upgrades and updates.
 rem  */
-    
+
     class public AO_GitRepoInterface
         field public BBjString AonDir$
         field public BBjString Branch$
@@ -88,16 +88,16 @@ rem  */
         field protected BBjString encryptionConfiguration!="PASSWORD_USER"
         field protected CredentialsProvider credentials!
         field protected TransportConfigCallback transportConfigCallback!
-        
-        REM Fields for verification 
+
+        REM Fields for verification
         field protected BBjString verificationBranch!="refs/heads/mod1500bt"
         field protected BBjString verificationObjectId!="AnyObjectId[d6ccfe9fe78bfe9fad7496f0cefcae154dcc3092]"
-        
+
         field protected FixedIssuesReader fixedIssuesReader!
-        
+
         field public BBjString ReorderedTagName!
         field public BBjString FullReorderedTagName!
-        
+
         rem /**
         rem  * Constructor.
         rem  * Instantiates authentication in order to query a remote Addon archive
@@ -107,8 +107,26 @@ rem  */
         method public AO_GitRepoInterface(BBjString gitAuthID$)
             #GitAuthID$=gitAuthID$
             #obtainURLAndCredentials(gitAuthID$)
-        methodend 
-        
+        methodend
+
+        rem /**
+        rem  * Constructor.
+        rem  * Instantiates authentication in order to query a remote Addon
+        rem  * archive that is not necessarily in the ADX_GIT_AUTH table.
+        rem  *
+        rem  * @param BBjString gitAuthID$
+        rem  * @param BBjString url$
+        rem  * @param BBjString username$
+        rem  * @param BBjString password$
+        rem  * @param BBjString sshKeyFile$
+        rem  * @param BBjString sshPassword$
+        rem  * @param BBjString authToken$
+        rem  */
+        method public AO_GitRepoInterface(BBjString gitAuthID$, BBjString url$, BBjString username$, BBjString password$, BBjString sshKeyFile$, BBjString sshPassword$, BBjString authToken$)
+            #GitAuthID$=gitAuthID$
+            #obtainURLAndCredentials(gitAuthID$,url$,username$,password$,sshKeyFile$,sshPassword$,authToken$)
+        methodend
+
         rem /**
         rem  * Constructor.
         rem  * Clones Git repository to specified location if one does not already exist there.
@@ -119,38 +137,38 @@ rem  */
         method public AO_GitRepoInterface(BBjString gitAuthID$, BBjString aonDir$)
 
             #this!(gitAuthID$)
-            
+
             seterr GitRepoInterface_error
             #AonDir$=aonDir$
             #LocalRepo$=#AonDir$+"/.git"
-     
+
             rem --- Get Git repository
             gitDir! = new File(#LocalRepo$)
             if !gitDir!.exists() then
                 rem --- Clone Git repository to specified location
                 cloneCmd!=Git.cloneRepository()
-                
+
                 rem -- build the clone command
                 cloneCmd!=cloneCmd!.setURI(#RepoURL!)
-                if (#credentials!<>null()) then 
+                if (#credentials!<>null()) then
                     cloneCmd!=cloneCmd!.setCredentialsProvider(#credentials!)
                 else
                     if (#transportConfigCallback!<>null()) then
-                        cloneCmd!=cloneCmd!.setTransportConfigCallback(#transportConfigCallback!) 
-                    endif 
-                endif 
+                        cloneCmd!=cloneCmd!.setTransportConfigCallback(#transportConfigCallback!)
+                    endif
+                endif
                 cloneCmd!=cloneCmd!.setDirectory(new File(aonDir$))
                 cloneCmd!=cloneCmd!.setCloneAllBranches(1)
                 cloneCmd!.call()
 
                 declare OwnerSetter setter!
                 setter!=new OwnerSetter()
-                if (! setter!.getOSIsWindows()) then 
+                if (! setter!.getOSIsWindows()) then
                     setter!.setOwnerRecursively(aonDir$)
-                endif 
+                endif
             endif
             #git!=Git.open(new File(#LocalRepo$))
-            
+
             rem --- Initializations
             #repository!=#git!.getRepository()
             #Branch$=#repository!.getBranch()
@@ -160,9 +178,9 @@ rem  */
             #ReleaseTag$="refs/tags/"+branchName$+"_Release"
             #ReorderedTagName!=branchName$+"_Reordered"
             #FullReorderedTagName!="refs/tags/"+#ReorderedTagName!
-            
+
             methodret
-            
+
 GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -174,24 +192,23 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
-        
+
         rem /**
-        rem  * 
+        rem  *
         rem  */
         method public void obtainURLAndCredentials(BBjString gitAuthID$)
-            declare BBjNumber sqlchan 
+            declare BBjNumber sqlchan
             declare BBjString template$
             declare BBjString result$
-            declare Encryptor encryptor! 
             declare BBjString userName$
             declare BBjString password$
             declare BBjString token$
             declare BBjString sshKeyFile$
             declare BBjString sshKeyPassword$
-            
+
             REM read the record from the ADX_GIT_AUTH table
             sqlchan=sqlunt
             sqlopen(sqlchan) STBL("+DBNAME")
@@ -199,56 +216,61 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             sqlexec(sqlchan) gitAuthID$
             template$=sqltmpl(sqlchan)
             dim result$:template$
-            
+
             result$=sqlfetch(sqlchan)
             sqlclose(sqlchan)
-                        
-            REM get the URL
-            #RepoURL!=cvs(result.URL$,3)
-            
-            REM Read in our Encryptor configuration and create our decryptor.  
+
+            #obtainURLAndCredentials(result.GIT_AUTH_ID$, result.URL$, result.USERNAME$, result.PASSWORD$, result.SSH_KEY_FILE$, result.SSH_PASSWORD$, result.TOKEN$)
+
+        methodend
+
+        method public void obtainURLAndCredentials(BBjString gitAuthID$, BBjString url$, BBjString username$, BBjString password$, BBjString sshKeyFile$, BBjString sshKeyPassword$, BBjString authToken$)
+            declare Encryptor encryptor!
+
+            REM Read in our Encryptor configuration and create our decryptor.
             encryptor!=new Encryptor()
             encryptor!.setConfiguration(#encryptionConfiguration!)
-            
-            userName$=cvs(result.USERNAME$,3)
-            password$=encryptor!.decryptData(cvs(result.PASSWORD$,3))
-            token$=encryptor!.decryptData(cvs(result.TOKEN$,3))
-            sshKeyFile$=cvs(result.SSH_KEY_FILE$,3)
-            sshKeyPassword$=encryptor!.decryptData(cvs(result.SSH_PASSWORD$,3))
-            
+
+            #RepoURL!=cvs(url$,3)
+
+            password$=encryptor!.decryptData(cvs(password$,3))
+            token$=encryptor!.decryptData(cvs(authToken$,3))
+            sshKeyFile$=cvs(sshKeyFile$,3)
+            sshKeyPassword$=encryptor!.decryptData(cvs(sshKeyPassword$,3))
+
             REM Check to see if this is a public repo and if so, return null
             isPublic=(userName$="") and (password$="") and (token$="") and (sshKeyFile$="")
             if (isPublic) then
                 #credentials!=null()
-                methodret 
-            endif 
-            
+                methodret
+            endif
+
             REM determine the type of credentials in the table: none, user/password, OAuth token, public key
             REM username/password
-            if (userName$<>"") then 
+            if (userName$<>"") then
                 declare UsernamePasswordCredentialsProvider upProvider!
                 upProvider!=new UsernamePasswordCredentialsProvider(userName$,password$)
                 #credentials!=upProvider!
-                methodret 
-            endif 
-            
-            if (token$<>"") then 
+                methodret
+            endif
+
+            if (token$<>"") then
                 declare UsernamePasswordCredentialsProvider tokenProvider!
                 tokenProvider!=new UsernamePasswordCredentialsProvider(token$,"")
                 #credentials!=tokenProvider!
-                methodret 
-            endif 
-            
+                methodret
+            endif
+
             if (sshKeyFile$<>"") then
                 if (sshKeyPassword$<>"") then
                     #transportConfigCallback!=new SSH(sshKeyFile$,sshKeyPassword$)
-                else 
+                else
                     #transportConfigCallback!=new SSH(sshKeyFile$)
-                endif 
-                methodret 
-            endif 
+                endif
+                methodret
+            endif
         methodend
-        
+
         rem /**
         rem  *  isDescedantOfOfficialRepo()
         rem  */
@@ -256,36 +278,36 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             declare LsRemoteCommand lsRemoteCmd!
             declare java.util.Collection lsResult!
             declare Iterator resultIterator!
-            declare Ref currentResult! 
-            
+            declare Ref currentResult!
+
             lsRemoteCmd!=Git.lsRemoteRepository()
             lsRemoteCmd!=lsRemoteCmd!.setRemote(#RepoURL!)
-            
-            if (#credentials!<>null()) then 
+
+            if (#credentials!<>null()) then
                 lsRemoteCmd!=cast(LsRemoteCommand,lsRemoteCmd!.setCredentialsProvider(#credentials!))
             else
                 if (#transportConfigCallback!<>null()) then
-                    lsRemoteCmd!=cast(LsRemoteCommand,lsRemoteCmd!.setTransportConfigCallback(#transportConfigCallback!)) 
-                endif 
-            endif 
+                    lsRemoteCmd!=cast(LsRemoteCommand,lsRemoteCmd!.setTransportConfigCallback(#transportConfigCallback!))
+                endif
+            endif
             lsResult!=lsRemoteCmd!.call()
-            
-            REM see if this repo has the verification branch and if the commit id for that branch matches 
+
+            REM see if this repo has the verification branch and if the commit id for that branch matches
             resultIterator!=lsResult!.iterator()
-            while (resultIterator!.hasNext()) 
+            while (resultIterator!.hasNext())
                 currentResult!=cast(Ref,resultIterator!.next())
                 print currentResult!.getName(), #verificationBranch!
                 if (currentResult!.getName()=#verificationBranch!) then break
             wend
-            
+
             REM return whether we got a match and if the commit id is correct.
             methodret (currentResult!.getName()=#verificationBranch!) and (currentResult!.getObjectId().toString()=#verificationObjectId!)
-        methodend 
-        
+        methodend
+
 
         rem /**
-        rem  * Checkout (i.e. switch to) specified branch in repository. 
-        rem  * 
+        rem  * Checkout (i.e. switch to) specified branch in repository.
+        rem  *
         rem  * @param BBjString branchName$ -- branch name
         rem  *
         rem  * @return BBjString status$ -- OK - Checkout completely normal
@@ -311,13 +333,13 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
                 checkoutCmd!.call()
                 results!=checkoutCmd!.getResult()
                 status$=results!.getStatus().toString()
-                
+
                 declare OwnerSetter setter!
                 setter!=new OwnerSetter()
-                if (! setter!.getOSIsWindows()) then 
+                if (! setter!.getOSIsWindows()) then
                     setter!.setOwnerRecursively(#AonDir$)
-                endif 
-    
+                endif
+
                 rem --- Re-initialize
                 #Branch$=#repository!.getBranch()
                 #LocalBranch$="heads/"+branchName$
@@ -326,7 +348,7 @@ GitRepoInterface_error:rem --- Method error trap/handler (11Oct2017)
             endif
 
             methodret status$
-           
+
 checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -338,52 +360,52 @@ checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
-        
+
         rem /**
-        rem  * resets the head of the branch to a particular commit.  Calling reset without the type parameter 
+        rem  * resets the head of the branch to a particular commit.  Calling reset without the type parameter
         rem  * assumes a hard reset, which is what is used most of the time in an Addon upgrade. This clears any changes
         rem  * out of the working directory. We don't follow the industry default of "mixed".
         rem  */
         method public BBjNumber reset(RevCommit commit!)
             methodret #reset(commit!,"HARD")
-        methodend 
- 
+        methodend
+
         rem /**
-        rem  * resets the head of the branch to a particular commit.   
-        rem  * 
-        rem  */       
+        rem  * resets the head of the branch to a particular commit.
+        rem  *
+        rem  */
         method public BBjNumber reset(RevCommit commit!, BBjString type!)
             declare ResetCommand.ResetType mode!
             declare Ref resultingCommit!
-            
+
             REM Obtain the mode, validating against valid values
             type!=type!.toUpperCase().trim()
             resetHappened=0
             mode!=ResetCommand.ResetType.valueOf(type!,err=*next);resetHappened=1
-            if (! resetHappened) then 
+            if (! resetHappened) then
                 message!="Invalid type for reset: "+$22$+type!+$22$+". Valid values are: "
                 message!=message!+Arrays.asList(ResetCommand.ResetType.values()).toString()
                 throw message!,17
-            endif 
-        
+            endif
+
             resultingCommit!=#git!.reset().setRef(commit!.getName()).setMode(mode!).call()
-            
+
             declare OwnerSetter setter!
             setter!=new OwnerSetter()
-            if (! setter!.getOSIsWindows()) then 
+            if (! setter!.getOSIsWindows()) then
                 setter!.setOwnerRecursively(#AonDir$)
-            endif 
-            
+            endif
+
             methodret resultingCommit!.getObjectId().equals(commit!.getId())
-            
-        methodend 
+
+        methodend
 
         rem /**
-        rem  * Cherry picks Git repository commit given as a RevCommit object. 
-        rem  * 
+        rem  * Cherry picks Git repository commit given as a RevCommit object.
+        rem  *
         rem  * @param RevCommit commit! -- Git repository commits
         rem  *
         rem  * @return HashMap failures! --  key: path
@@ -398,7 +420,7 @@ checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
             result!=cherryPickCmd!.call()
 
             rem --- Check for conflicts that we might be able to resolve
-            switch (result!.getStatus()) 
+            switch (result!.getStatus())
                 case CherryPickStatus.OK
                     break
                 case CherryPickStatus.CONFLICTING
@@ -408,31 +430,31 @@ checkoutBranch_error:rem --- Method error trap/handler (11Oct2017)
                     while (fileIter!.hasNext())
                         REM --- Accept BAR XMLs as "OURS".  Handle these later on in the upgrade
                         fileName!=cast(BBjString,fileIter!.next())
-                        if (fileName!.matches("data/bar/.*\.xml")) then  
+                        if (fileName!.matches("data/bar/.*\.xml")) then
                             #resolveByChoosingSide(fileName!,"OURS")
                             continue
                         endif
-                        REM --- Accept adm_modules~*.xml as "OURS". We don't need THEIRS any longer. 
+                        REM --- Accept adm_modules~*.xml as "OURS". We don't need THEIRS any longer.
                         rem if (fileName!.matches("data/sync/adm_modules~.*\.xml")) then
                         rem     #resolveByChoosingSide(fileName!,"OURS")
                         rem     continue
                         rem endif
-                        rem --- Note: At least in the meantime, don't automatically accept addon.syn since it's 
-                        rem --- it's possible for the user to change a STBL that we change as well.  
+                        rem --- Note: At least in the meantime, don't automatically accept addon.syn since it's
+                        rem --- it's possible for the user to change a STBL that we change as well.
                         REM --- Accept addon.syn as ours.  User's changes should already be in new addon.syn
                         rem if (fileName!.matches("config/addon.syn")) then
                         rem     #resolveByChoosingSide(fileName!,"OURS")
                         rem     continue
-                        rem endif 
+                        rem endif
                     wend
                     break
                 case CherryPickStatus.FAILED
                     failures!=result!.getFailingPaths()
                     break
-            swend 
-            
+            swend
+
             methodret failures!
-           
+
 cherryPick_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -444,52 +466,52 @@ cherryPick_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
-        methodend 
-        
-        rem /** 
-        rem  * If the repository is in a conflicted state, resolves a particular conflicted 
+        methodend
+
+        rem /**
+        rem  * If the repository is in a conflicted state, resolves a particular conflicted
         rem  * file by choosing the specified side.  The names for the sides are "THEIRS" and "OURS".
-        rem  * @param path$ The file path, relative the root of the repository to reolve the 
+        rem  * @param path$ The file path, relative the root of the repository to reolve the
         rem  * conflict in.
         rem  * @param side$ The name of the side to choose. Valid values are "THEIRS" and "OURS".
         rem  */
         method public void resolveByChoosingSide(BBjString path!, BBjString side$)
             declare CheckoutCommand checkoutCmd!
             declare Stage stage!
-            
+
             rem --- "stage!" is the enumerative constant for which side we want to choose
             stage!=Stage.valueOf(side$)
-            
-            rem ---  To resolve a single file conflict in Git, 
+
+            rem ---  To resolve a single file conflict in Git,
             rem ---  checkout the file from the side we're interested in
             checkoutCmd!=#git!.checkout()
             checkoutCmd!.setStage(stage!)
             checkoutCmd!.addPath(path!)
             checkoutCmd!.call()
-            
+
             declare OwnerSetter setter!
             setter!=new OwnerSetter()
-            if (! setter!.getOSIsWindows()) then 
+            if (! setter!.getOSIsWindows()) then
                 setter!.setOwnerRecursively(#AonDir$)
-            endif 
-            
+            endif
+
             rem ---  then add the file in preparation for it to be committed
             #git!.add().addFilepattern(path!).call()
-        methodend 
-        
+        methodend
+
         rem /**
-        rem  * Free resources associated with this instance. 
+        rem  * Free resources associated with this instance.
         rem  */
         method public void closeInterface()
             seterr closeInterface_error
 
             #repository!.close()
             #git!.close()
-            
+
             methodret
-           
+
 closeInterface_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -501,13 +523,13 @@ closeInterface_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
-        rem  * Returns the commit Object ID for a given branch or tag name. 
-        rem  * 
+        rem  * Returns the commit Object ID for a given branch or tag name.
+        rem  *
         rem  * @param BBjString branch_tag$ -- branch or tag name
         rem  *
         rem  * @return ObjectId commitId!
@@ -522,9 +544,9 @@ closeInterface_error:rem --- Method error trap/handler (11Oct2017)
                 revObject!=revWalk!.peel(revWalk!.parseAny(commit!))
                 commitId!=revObject!.getId()
             endif
-            
+
             methodret commitId!
-           
+
 getCommitID_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -536,13 +558,13 @@ getCommitID_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
-        rem  * Builds list of commits made from since$ through until$. 
-        rem  * 
+        rem  * Builds list of commits made from since$ through until$.
+        rem  *
         rem  * @param BBjString since$ -- branch or tag name since
         rem  * @param BBjString until$ -- branch or tag name until
         rem  *
@@ -559,9 +581,9 @@ getCommitID_error:rem --- Method error trap/handler (11Oct2017)
                 revCommits!=logCmd!.call()
                 commits!=cast(java.util.List,java.util.stream.StreamSupport.stream(revCommits!.spliterator(),0).collect(java.util.stream.Collectors.toList()))
             endif
-            
+
             methodret commits!
-           
+
 getCommits_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -573,12 +595,12 @@ getCommits_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
         methodend
 
         rem /**
-        rem  * Builds Vector of file names for conflicts in local Git repository. 
+        rem  * Builds Vector of file names for conflicts in local Git repository.
         rem  *
         rem  * @return BBjVector conflicts!
         rem  */
@@ -589,9 +611,9 @@ getCommits_error:rem --- Method error trap/handler (11Oct2017)
             status!=#git!.status().call()
             conflictingFiles!=status!.getConflicting()
             conflicts!.addAll(conflictingFiles!)
-            
+
             methodret conflicts!
-           
+
 getConflicts_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -603,14 +625,14 @@ getConflicts_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
-        methodend 
-    
+        methodend
+
         rem /**
-        rem  * Builds Vector of local commits made from since$ through until$ that 
-        rem  * were NOT pushed to the remote repository. 
-        rem  * 
+        rem  * Builds Vector of local commits made from since$ through until$ that
+        rem  * were NOT pushed to the remote repository.
+        rem  *
         rem  * @param BBjString since$ -- branch or tag name since
         rem  * @param BBjString until$ -- branch or tag name until
         rem  *
@@ -623,22 +645,22 @@ getConflicts_error:rem --- Method error trap/handler (11Oct2017)
 
             remoteCommits!=#getCommits(#RemoteBranch$,until$)
             localCommits!=#getCommits(since$,until$)
-            
+
             if remoteCommits!<>null() and localCommits!<>null()
                 localCommits!.removeAll(remoteCommits!)
-                
+
                 commitIter!=localCommits!.iterator()
                 while (commitIter!.hasNext())
                     commit!=commitIter!.next()
                     filteredLocalCommits!.addItem(commit!)
-                    rem --- Once we encounter a commit that has more than one parent, we have a merge result, 
-                    rem --- so grab the merge result, which has all our previous changes and stop here. 
-                    if (commit!.getParentCount()>=2) then 
+                    rem --- Once we encounter a commit that has more than one parent, we have a merge result,
+                    rem --- so grab the merge result, which has all our previous changes and stop here.
+                    if (commit!.getParentCount()>=2) then
                         break
-                    endif   
+                    endif
                 wend
             endif
-            
+
             rem -- Sort commits so they are from the first/earliest to the last/latest.
             if filteredLocalCommits!.size()>0 then
                 for i=filteredLocalCommits!.size()-1 to 0 step -1
@@ -646,9 +668,9 @@ getConflicts_error:rem --- Method error trap/handler (11Oct2017)
                 next i
                 filteredLocalCommits!=tmpVect!
             endif
-            
+
             methodret filteredLocalCommits!
-           
+
 getLocalCommits_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -660,13 +682,13 @@ getLocalCommits_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
-        methodend 
-    
+        methodend
+
         rem /**
-        rem  * Builds Tree of bar/*.xml files in a Vector of filtered local commits. 
-        rem  * 
+        rem  * Builds Tree of bar/*.xml files in a Vector of filtered local commits.
+        rem  *
         rem  * @param BBjVector localCommits! -- filtered local commits
         rem  *
         rem  * @return TreeSet localCommittedXmls!
@@ -679,7 +701,7 @@ getLocalCommits_error:rem --- Method error trap/handler (11Oct2017)
             while commitIter!.hasNext()
                 commit!=commitIter!.next()
                 prevCommit!=commit!.getParent(commit!.getParentCount()-1)
-    
+
                 treeParser!=new CanonicalTreeParser(null(), #repository!.newObjectReader(), commit!.getTree().getId())
                 prevTreeParser!=new CanonicalTreeParser(null(), #repository!.newObjectReader(), prevCommit!.getTree().getId())
 
@@ -691,14 +713,14 @@ getLocalCommits_error:rem --- Method error trap/handler (11Oct2017)
                 diffIter!=diffs!.iterator()
                 while diffIter!.hasNext()
                     diff!=diffIter!.next()
-                    if diff!.getNewPath().matches("^data/bar/.*\.xml$") then 
+                    if diff!.getNewPath().matches("^data/bar/.*\.xml$") then
                         localCommittedXmls!.add(diff!.getNewPath())
                     endif
                 wend
             wend
-            
+
             methodret localCommittedXmls!
-           
+
 getLocalCommittedXmls_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -710,14 +732,14 @@ getLocalCommittedXmls_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
-        methodend 
-    
+        methodend
+
         rem /**
-        rem  * Builds Tree of bar/*.xml files committed from since$ through until$ that 
-        rem  * were NOT pushed to the remote repository. 
-        rem  * 
+        rem  * Builds Tree of bar/*.xml files committed from since$ through until$ that
+        rem  * were NOT pushed to the remote repository.
+        rem  *
         rem  * @param BBjString since$ -- branch or tag name since
         rem  * @param BBjString until$ -- branch or tag name until
         rem  *
@@ -728,9 +750,9 @@ getLocalCommittedXmls_error:rem --- Method error trap/handler (11Oct2017)
 
             localCommits!=#getLocalCommits(since$, until$)
             localCommittedXmls!=#getLocalCommittedXmls(localCommits!)
-            
+
             methodret localCommittedXmls!
-           
+
 getLocalCommittedXmls2_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -742,13 +764,13 @@ getLocalCommittedXmls2_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
-        methodend 
+        methodend
 
         rem /**
-        rem  * Returns the contents of the specified file from the remote repository. 
-        rem  * 
+        rem  * Returns the contents of the specified file from the remote repository.
+        rem  *
         rem  * @param BBjString filePath$ -- file name, including path within the repository
         rem  *
         rem  * @return BBjString fileContent$
@@ -771,7 +793,7 @@ getLocalCommittedXmls2_error:rem --- Method error trap/handler (11Oct2017)
                 treeWalk!.close()
             endif
             methodret fileContent$
-           
+
 getRemoteFileContent_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -783,14 +805,14 @@ getRemoteFileContent_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
-        methodend 
-		
-		
+        methodend
+
+
 		rem /**
-        rem  * Returns the contents of the specified file from specified commit. 
-        rem  * 
+        rem  * Returns the contents of the specified file from specified commit.
+        rem  *
         rem  * @param BBjString filePath$ -- file name, including path within the repository
 		rem  * @param BBjString commitId$ -- the commit id to retreive a file from
         rem  *
@@ -814,7 +836,7 @@ getRemoteFileContent_error:rem --- Method error trap/handler (11Oct2017)
                 treeWalk!.close()
             endif
             methodret fileContent$
-           
+
 getRemoteFileContent_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -826,13 +848,13 @@ getRemoteFileContent_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
-        methodend 
+        methodend
 
         rem /**
-        rem  * Get Git RevCommit object from given BBjString. 
-        rem  * 
+        rem  * Get Git RevCommit object from given BBjString.
+        rem  *
         rem  * @param BBjString commit$! -- example:
         rem  *                              commit 1ce0c5f8e453278e12f10795164613693d09d218 1590167270 ----sp
         rem  *
@@ -841,7 +863,7 @@ getRemoteFileContent_error:rem --- Method error trap/handler (11Oct2017)
         method public RevCommit getRevCommit(BBjString commit$)
             seterr getRevCommit_error
             revCommit!=null()
-            
+
             rem --- Reduce commit string down to just the hex characters
             hexChars$=commit$
             if pos("commit "=hexChars$) then hexChars$=hexChars$(pos("commit "=hexChars$)+len("commit "))
@@ -853,15 +875,15 @@ getRemoteFileContent_error:rem --- Method error trap/handler (11Oct2017)
                 logCmd!=#git!.log().add(objectId!).setMaxCount(1)
                 revCommits!=logCmd!.call()
                 commits!=cast(java.util.List,java.util.stream.StreamSupport.stream(revCommits!.spliterator(),0).collect(java.util.stream.Collectors.toList()))
-                
+
                 commitsIter!=commits!.iterator()
                 while commitsIter!.hasNext()
                     revCommit!=commitsIter!.next()
                 wend
             endif
-                        
+
             methodret revCommit!
-           
+
 getRevCommit_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -873,12 +895,12 @@ getRevCommit_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
-        methodend 
+        methodend
 
         rem /**
-        rem  * Get Vector of uncommitted staged changes in the local repository has . 
+        rem  * Get Vector of uncommitted staged changes in the local repository has .
         rem  *
         rem  * @return BBjVector stagedChanges!
         rem  */
@@ -894,9 +916,9 @@ getRevCommit_error:rem --- Method error trap/handler (11Oct2017)
                     stagedChanges!.addItem(diffEntry!.getNewPath())
                 wend
             endif
-            
+
             methodret stagedChanges!
-           
+
 getStagedChanges_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -908,12 +930,12 @@ getStagedChanges_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
-        methodend 
+        methodend
 
         rem /**
-        rem  * Get Vector of uncommitted unstaged changes in the local repository. 
+        rem  * Get Vector of uncommitted unstaged changes in the local repository.
         rem  *
         rem  * @return BBjVector unstagedChanges!
         rem  */
@@ -929,9 +951,9 @@ getStagedChanges_error:rem --- Method error trap/handler (11Oct2017)
                     unstagedChanges!.addItem(diffEntry!.getNewPath())
                 wend
             endif
-            
+
             methodret unstagedChanges!
-           
+
 getUnstagedChanges_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -943,12 +965,12 @@ getUnstagedChanges_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
-        methodend 
+        methodend
 
         rem /**
-        rem  * Refresh (pull) the local repository. 
+        rem  * Refresh (pull) the local repository.
         rem  */
         method public void pullRepository()
             seterr pullRepository_error
@@ -956,15 +978,15 @@ getUnstagedChanges_error:rem --- Method error trap/handler (11Oct2017)
             pullCmd!=#git!.pull()
             pullCmd!.setCredentialsProvider(#credentials!)
             pullCmd!.call()
-            
+
             declare OwnerSetter setter!
             setter!=new OwnerSetter()
-            if (! setter!.getOSIsWindows()) then 
+            if (! setter!.getOSIsWindows()) then
                 setter!.setOwnerRecursively(#AonDir$)
-            endif 
-            
+            endif
+
             methodret
-           
+
 pullRepository_error:rem --- Method error trap/handler (11Oct2017)
             rd_err_text$="", err_num=err
             if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
@@ -976,12 +998,12 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
             call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$
             if pos("ESCAPE"=rd_err_act$)<>0 seterr 0;setesc 0
             if pos("RETRY"=rd_err_act$)<>0 retry
-            x$=stbl("+THROWN_ERR","TRUE")   
+            x$=stbl("+THROWN_ERR","TRUE")
             throw "["+pgm(-2)+"] "+str(tcb(5))+": "+rd_err_text$,err_num
-        methodend 
-        
+        methodend
+
         rem /**
-        rem  * Method for testing. 
+        rem  * Method for testing.
         rem  */
         method public void testPrint()
 
@@ -995,24 +1017,24 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
 
             localCommittedXmls!=#getLocalCommittedXmls(localCommits!)
             print "localCommittedXmls!=",localCommittedXmls!
-      
+
             methodret
         methodend
-		
-		REM Commits all the changes in the working directory. 
-		REM automaticallyStage!:  If set to 1 or nonzero, stages all changes before checking in. Does not add files. 
+
+		REM Commits all the changes in the working directory.
+		REM automaticallyStage!:  If set to 1 or nonzero, stages all changes before checking in. Does not add files.
 		REM message!: Commit message for repository log
 		method public RevCommit commitAll(BBjNumber automaticallyStage!, BBjString message!)
-			methodret #git!.commit().setAll(automaticallyStage!).setMessage(message!).call()	
-		methodend 
-		
-        REM Method and companion methods for identifying files that are only different due to line endings. 
-        REM Assumptions made here are: 
-        REM     There's one huge difference and it's the entire file. 
+			methodret #git!.commit().setAll(automaticallyStage!).setMessage(message!).call()
+		methodend
+
+        REM Method and companion methods for identifying files that are only different due to line endings.
+        REM Assumptions made here are:
+        REM     There's one huge difference and it's the entire file.
         REM     The differences are between $0A$ and $0D0A$
-        REM 
-        REM If files are found to only differ by different line endings, we revert the working copy. 
-        method public void checkoutFilesWithDifferentLineEndings() 
+        REM
+        REM If files are found to only differ by different line endings, we revert the working copy.
+        method public void checkoutFilesWithDifferentLineEndings()
             declare Repository repository!
             declare ByteArrayOutputStream outputStream!
             declare DiffFormatter formatter!
@@ -1022,77 +1044,77 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
             declare DiffEntry entry!
             declare RevWalk revWalk!
             declare CheckoutCommand checkoutCmd!
-            
+
             repository!=#git!.getRepository()
             outputStream!=new ByteArrayOutputStream()
-            
+
             REM Get a revcommit for the head of the repository
             declare ObjectId headObjectId!
             declare RevCommit headRevCommit!
             headObjectId!=repository!.resolve(Constants.HEAD)
             revWalk!=new RevWalk(repository!)
             headRevCommit!=revWalk!.parseCommit(headObjectId!)
-            
+
             REM Get a list of diffs between the working tree and head commit
             formatter! = new DiffFormatter(outputStream!)
             formatter!.setRepository(repository!)
             commitTreeIterator! = #prepareTreeParser(headRevCommit!)
             workTreeIterator! = new FileTreeIterator(repository!)
             diffEntries! = formatter!.scan(commitTreeIterator!, workTreeIterator!)
-    
-            REM Process the diffs 
+
+            REM Process the diffs
             diffIter!=diffEntries!.iterator()
-            
+
             declare BBjVector filesToCheckOut!
-            filesToCheckOut!=BBjAPI().makeVector() 
-            
-            while (diffIter!.hasNext())  
+            filesToCheckOut!=BBjAPI().makeVector()
+
+            while (diffIter!.hasNext())
                 entry!=cast(DiffEntry,diffIter!.next())
                 formatter!.format(entry!)
                 x$=outputStream!.toString()
                 outputStream!.reset()
-            
+
                 declare BBjString fileName!
                 fileName!=entry!.getNewPath()
                 diffOnlyShowsLineEndings=#diffOnlyShowsLineEndings(x$)
-                if (diffOnlyShowsLineEndings) then 
-                    REM Add the file to the list of files to check out. 
+                if (diffOnlyShowsLineEndings) then
+                    REM Add the file to the list of files to check out.
                     filesToCheckOut!.add(entry!.getNewPath())
-                endif 
-            wend 
-            
-            if (filesToCheckOut!.size()>0) then 
+                endif
+            wend
+
+            if (filesToCheckOut!.size()>0) then
                 checkOutCmd!=#git!.checkout()
                 checkOutCmd!.addPaths(filesToCheckOut!)
                 checkOutCmd!.call()
-                
+
                 declare OwnerSetter setter!
                 setter!=new OwnerSetter()
                 if (! setter!.getOSIsWindows()) then
                     setter!.setOwnerRecursively(#AonDir$)
                 endif
-            endif  
-                
+            endif
+
         methodend
-        
-        REM Prepare Tree Parser 
+
+        REM Prepare Tree Parser
         method protected CanonicalTreeParser prepareTreeParser(RevCommit commit!)
             declare RevWalk walk!
             declare Repository repository!
             declare ObjectId treeId!
             declare ObjectReader reader!
-            
+
             repository!=#git!.getRepository()
             walk! = new RevWalk(repository!)
             treeId! = commit!.getTree().getId()
             reader! = repository!.newObjectReader()
             methodret new CanonicalTreeParser(null(), reader!, treeId!)
-        methodend 
-        
+        methodend
+
         REM Called by filesWithDifferentLineEndings
         method public BBjNumber diffOnlyShowsLineEndings(BBjString diff!)
-        
-            REM The file should just have one big difference 
+
+            REM The file should just have one big difference
             declare BBjString search!
             declare BBjString left!
             declare BBjString right!
@@ -1105,50 +1127,50 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
             declare BBjNumber nextLineEnds!
             declare BBjString leftSide!
             declare BBjString rightSide!
-            
+
             search!=$0A$+"@@"
             first!=diff!.indexOf(search!)
             last!=diff!.lastIndexOf(search!)
-            
+
             if last!<>first! then methodret 0
-            
+
             diffBegins!=last!
             leftDelimiter!=$0A$+"-"
             rightDelimiter!=$0A$+"+"
-            
+
             leftSide!=#getSide(diff!,leftDelimiter!,diffBegins!)
             rightSide!=#getSide(diff!,rightDelimiter!,diffBegins!)
-            
+
             methodret leftSide!=rightSide!
-        methodend 
-        
+        methodend
+
         REM Called by diffOnlyShowsLineEndings
         method protected BBjString getSide(BBjString diff!, BBjString delimiter!, BBjNumber diffBegins!)
             declare BBjNumber begins!
             declare BBjNumber nextLineBegins!
             declare BBjString side!
-            
+
             begins!=diff!.indexOf(delimiter!,diffBegins!)
             nextLineBegins!=begins!
-            
+
             side!=""
             while (nextLineBegins!>0)
                 nextLineEnds!=diff!.indexOf($0A$,nextLineBegins!+1)
-                if (nextLineEnds!<0) then 
+                if (nextLineEnds!<0) then
                     nextLineEnds!=diff!.length()
-                endif 
-                if (diff!.substring(nextLineEnds!-1,nextLineEnds!)=$0D$) then 
+                endif
+                if (diff!.substring(nextLineEnds!-1,nextLineEnds!)=$0D$) then
                     nextLineEnds!=nextLineEnds!-1
-                endif 
-                
+                endif
+
                 side!=side!+diff!.substring(nextLineBegins!+2,nextLineEnds!)
-                
+
                 nextLineBegins!=diff!.indexOf(delimiter!,nextLineBegins!+1)
-           wend 
+           wend
            methodret side!
-        methodend 
-               
-        REM Method to look at a non-Git Addon install and figure out to what version it is closest. 
+        methodend
+
+        REM Method to look at a non-Git Addon install and figure out to what version it is closest.
         method public BBjNumber determineAndSwitchToVersion(BBjString ungitifiedAonDirName$)
             declare BBjString fixedIssuesFileName$
             declare BBjString version!
@@ -1160,221 +1182,219 @@ pullRepository_error:rem --- Method error trap/handler (11Oct2017)
             declare BBjString tagSearchString!
             declare RevCommit currentCommit!
             declare RevWalk walk!
-            
+
 
             REM If we have FixedIssues.txt, use it to determine what version of Addon we should be using
             fixedIssuesFileName$=ungitifiedAonDirName$+"/documentation/FixedIssues.txt"
-            
-            #fixedIssuesReader!=new FixedIssuesReader() 
-            if (#fixedIssuesReader!.parse(fixedIssuesFileName$)) then 
+
+            #fixedIssuesReader!=new FixedIssuesReader()
+            if (#fixedIssuesReader!.parse(fixedIssuesFileName$)) then
                 version!=#fixedIssuesReader!.getVersion()
                 fixedIssuesDate!=#fixedIssuesReader!.getDate()
-            else 
+            else
                 throw "Could not find FixedIssues.txt file at "+fixedIssuesFileName$,12
-            endif 
-            
+            endif
+
             REM At this point, we need to check out the branch to create the "heads/<branch name> ref."
             branchName$="BBJ"+version!+"GA"
             branchString!="heads/"+branchName$
             #checkoutBranch(branchName$)
-            
+
             REM Find the commit closest to the date
             tagList!=#git!.tagList().call()
-            
-            REM Get the tags that start with our release. Unfortunately, the stream() interface does 
-            REM not translate to BBj. 
+
+            REM Get the tags that start with our release. Unfortunately, the stream() interface does
+            REM not translate to BBj.
             tagIter!=tagList!.iterator()
             tagSearchString!="refs/tags/"+branchName$+"_"
             relevantTags!=BBjAPI().makeVector()
-            
-            REM Put the top of the branch on relevant tags list 
+
+            REM Put the top of the branch on relevant tags list
             topOfBranch!=#git!.getRepository().findRef(branchString!)
             relevantTags!.add(topOfBranch!)
-            
+
             REM Gather the relevant tags and put them in the relevant tags list
             chosenTag!=null()
             chosenTimeDifference!=Integer.MAX_VALUE
-            while (tagIter!.hasNext()) 
+            while (tagIter!.hasNext())
                 currentTag!=cast(Ref,tagIter!.next())
-                
+
                 if (currentTag!.getName().startsWith(tagSearchString!)) then
                     relevantTags!.add(currentTag!)
-                endif 
-            wend 
-           
-            REM Find the tag with the closest date to the release 
-            tagIter!=relevantTags!.iterator() 
+                endif
+            wend
+
+            REM Find the tag with the closest date to the release
+            tagIter!=relevantTags!.iterator()
             walk!=new RevWalk(#git!.getRepository())
             while (tagIter!.hasNext())
                 currentTag!=cast(Ref,tagIter!.next())
                 currentCommit!=walk!.parseCommit(currentTag!.getObjectId())
-                    
+
                 currentCommitTime!=currentCommit!.getCommitTime()
                 fixedIssuesTime!=fixedIssuesDate!.getTime()/1000
                 timeDifference!=currentCommitTime!-fixedIssuesTime!
-                    
-                if (timeDifference!>-1) and (timeDifference!<chosenTimeDifference!) then 
+
+                if (timeDifference!>-1) and (timeDifference!<chosenTimeDifference!) then
                       chosenTag!=currentCommit!
                       chosenTimeDifference!=timeDifference!
-                endif  
-            wend 
-            
-            REM If we found a closely matching tag, return it. Otherwise, return null. 
-            if (chosenTag!<>null()) then 
+                endif
+            wend
+
+            REM If we found a closely matching tag, return it. Otherwise, return null.
+            if (chosenTag!<>null()) then
                 methodret #reset(chosenTag!)
-            else 
+            else
                 methodret 0
-            endif 
-            
-        methodend 
-        
+            endif
+
+        methodend
+
         method public void tagCurrentCommit(BBjString tagName!)
             if tagName!=null() then throw "tagName! can not be null!",17
             tagName!=tagName!.trim()
             if tagName!=$$ then throw "tagName! can not be blank!",17
-            
+
             #git!.tag().setAnnotated(0).setName(tagName!).call()
-        methodend 
-        
+        methodend
+
 classend
 
 REM Parses the FixedIssues file and extracts the version and date from the file if successful
-class public AO_FixedIssuesReader 
+class public AO_FixedIssuesReader
     field public BBjString Version!=null()
     field public java.util.Date Date!=null()
-    
-    REM Constants 
+
+    REM Constants
     field protected BBjString DATE_TOKEN!="Report Date:"
     field protected BBjString VERSION_TOKEN!="Report Branch: AddonSoftware "
     field protected BBjString DATE_FORMAT_STRING!="yyyy-MM-dd"
-    
+
     method public BBjNumber parse(BBjString fixedIssuesFileName$)
         declare BBjNumber chan
         declare BBjNumber dateLineFound
-        declare BBjNumber versionLineFound 
+        declare BBjNumber versionLineFound
         declare BBjNumber eof
         declare BBjString line$
         declare BBjString line!
-        
+
         chan=unt
         open (chan) fixedIssuesFileName$
-            
+
         dateLineFound=0
         versionLineFound=0
-        while (!dateLineFound or !versionLineFound) 
+        while (!dateLineFound or !versionLineFound)
             read (chan,end=eof) line$
             line!=line$
-            
+
             REM if the line has a date, assign it to dateLine
-            if (line!.contains(#DATE_TOKEN!) and !dateLineFound) then 
+            if (line!.contains(#DATE_TOKEN!) and !dateLineFound) then
                 dateLineFound=1
                 dateLine!=line!
-            endif 
-            
+            endif
+
             REM if the line has a version assign it to versionLine
-            if (line!.contains(#VERSION_TOKEN!) and !versionLineFound) then 
+            if (line!.contains(#VERSION_TOKEN!) and !versionLineFound) then
                 versionLineFound=1
                 versionLine!=line!
-            endif 
-            
-            continue 
+            endif
+
+            continue
         eof:
             REM --- when we've reached the end of the file, stop looping
             break
-        wend 
+        wend
         close (chan)
-        
-        REM If we did not find our version and date, then return false here. 
+
+        REM If we did not find our version and date, then return false here.
         if (!dateLineFound or !versionLineFound) then
             methodret 0
-        endif 
-        
+        endif
+
         REM Extract the date from the date line we read in
         dateLine!=dateLine!.substring(dateLine!.indexOf(#DATE_TOKEN!)+#DATE_TOKEN!.length())
         dateFormat!=new SimpleDateFormat(#DATE_FORMAT_STRING!)
         #Date!=cast(java.util.Date,dateFormat!.parse(dateLine!))
-        
+
         REM Extract version from the version line we read in
         versionLine!=versionLine!.substring(versionLine!.indexOf(#VERSION_TOKEN!)+#VERSION_TOKEN!.length())
         version!=versionLine!.trim()
         periodNdx=version!.indexOf(".")
         #Version!=version!.substring(0,periodNdx)+version!.substring(periodNdx+1)
-        
-        methodret 1 
-        
-    methodend     
-classend 
+
+        methodret 1
+
+    methodend
+classend
 
 
 class public SSH extends JschConfigSessionFactory implements TransportConfigCallback
     field private BBjString sshKey!
-    field private BBjString password!=null() 
-    
+    field private BBjString password!=null()
+
     method public SSH(BBjString sshKey!)
         #sshKey!=sshKey!
-    methodend 
-    
+    methodend
+
     method public SSH(BBjString sshKey!,BBjString password!)
-        #this!(sshKey!) 
-        #password!=password! 
-    methodend 
+        #this!(sshKey!)
+        #password!=password!
+    methodend
 
     method protected JSch createDefaultJSch( FS fs! )
         declare JSch defaultJSch!
-        
+
         defaultJSch! = #super!.createDefaultJSch( fs! )
-        if (#password!=null()) then 
+        if (#password!=null()) then
             defaultJSch!.addIdentity( #sshKey!)
-        else 
+        else
             defaultJsch!.addIdentity(#sshKey!,#password!)
         methodret defaultJSch!
-    methodend 
-    
-    method public void configure(Transport transport! ) 
+    methodend
+
+    method public void configure(Transport transport! )
         declare SshTransport sshTransport!
         sshTransport!= cast(SshTransport,transport!)
         sshTransport!.setSshSessionFactory(#this!)
-    methodend 
-    
-    method protected void configure(OpenSshConfig.Host host!,Session session!)
-    methodend 
-    
-classend 
+    methodend
 
-REM Visits all files and directories under a given topLevel directory and sets them as 
-REM owned by the specified user account. 
+    method protected void configure(OpenSshConfig.Host host!,Session session!)
+    methodend
+
+classend
+
+REM Visits all files and directories under a given topLevel directory and sets them as
+REM owned by the specified user account.
 class public OwnerSetter extends SimpleFileVisitor
 
     field public static BBjNumber OSIsWindows!=(new String(info(0,0)).indexOf("Win"))>=0
     field public BBjString UserName!
     field protected UserPrincipal userPrincipal!
 
-    method public OwnerSetter() 
+    method public OwnerSetter()
         #this!(info(3,2))
-    methodend 
-    
+    methodend
+
     method public OwnerSetter(BBjString userName!)
         #UserName!=userName!
         #userPrincipal!=FileSystems.getDefault().getUserPrincipalLookupService().lookupPrincipalByName(#UserName!)
-    methodend 
-    
+    methodend
+
     method public void setOwnerRecursively(BBjString topLevelDirectory!)
         Files.walkFileTree(Paths.get(topLevelDirectory!),#this!)
-    methodend 
-    
+    methodend
+
     method public FileVisitResult preVisitDirectory(Object directory!, BasicFileAttributes attrs!)
         #setUser(directory!)
         methodret FileVisitResult.CONTINUE
-    methodend 
-    
+    methodend
+
     method public FileVisitResult visitFile(Object path!,BasicFileAttributes attr!)
         #setUser(path!)
         methodret FileVisitResult.CONTINUE
-    methodend 
-    
+    methodend
+
     method public void setUser(Object path!)
         Files.setOwner(cast(Path,path!),#userPrincipal!)
-    methodend 
-classend 
-
-
+    methodend
+classend
