@@ -42,6 +42,23 @@ rem --- Git repositories via JGit.
             methodret
 
         methodend
+        
+        rem /**
+        rem  * Constructor.
+        rem  * Instantiates authentication in order to query a remote Addon
+        rem  * archive that is not necessarily in the ADX_GIT_AUTH table.
+        rem  *
+        rem  * @param BBjString gitAuthID$
+        rem  * @param BBjString url$
+        rem  * @param BBjString username$
+        rem  * @param BBjString password$
+        rem  * @param BBjString sshKeyFile$
+        rem  * @param BBjString sshPassword$
+        rem  * @param BBjString authToken$
+        rem  */
+        method public GitRepoInterface(BBjString gitAuthID$, BBjString url$, BBjString username$, BBjString password$, BBjString sshKeyFile$, BBjString sshPassword$, BBjString authToken$)
+            #super!(gitAuthID$,url$,username$,password$,sshKeyFile$,sshPassword$,authToken$)
+        methodend
 
     classend
     
