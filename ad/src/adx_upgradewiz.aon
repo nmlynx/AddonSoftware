@@ -325,6 +325,9 @@ rem --- Update new sync XML files (and copy old barista/settings dir)
     start_version$=""
     gosub updateSyncXml
 
+rem --- Remove adm_module_tbls*.xml from admin_backup dir, if it exists
+    gosub deleteAdmModuleTbls
+
 rem --- Build addonprop.jar and put it in the aon/prop directory
     gosub buildAddonJar
 
@@ -1391,6 +1394,17 @@ updateSyncXml: rem --- Update new sync XML files (and copy old barista/settings 
             start_version$=oldVers!.get("AD")
         endif
     endif
+    return
+
+deleteAdmModuleTbls: rem --- Remove adm_module_tbls*.xml from new admin_backup directory (not used with git-based mods)
+
+    adminBackupDir!=new File(newAonDir$+"/data/admin_backup")
+    adminBackupVector! = new Vector(java.util.Arrays.asList(adminBackupDir!.listFiles()))
+    adminBackupIter!=adminBackupVector!.iterator()
+    while adminBackupIter!.hasNext()
+        adminBackupFile!=adminBackupIter!.next()
+        if adminBackupFile!.getName().startsWith("adm_module_tbls~[") and adminBackupFile!.getName().endsWith("].xml") then adminBackupFile!.delete()
+    wend
     return
 
 buildAddonJar: rem --- Build addonprop.jar and put it in the aon/prop directory
