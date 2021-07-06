@@ -242,10 +242,11 @@ rem --- Disable by line type (Needed because Barista is skipping Line Code)
 
 	if callpoint!.getGridRowNewStatus(num(callpoint!.getValidationRow())) <> "Y"
 		line_code$ = callpoint!.getColumnData("OPE_ORDDET.LINE_CODE")
+		callpoint!.setColumnData("OPE_ORDDET.LINE_CODE",line_code$,1); rem --- Make sure current correct line code is displayed re Bug 10052
 		gosub disable_by_linetype
-    else
-        gosub able_backorder
-        gosub able_qtyshipped
+	else
+		gosub able_backorder
+		gosub able_qtyshipped
 	endif
 
 rem --- Disable cost if necessary
