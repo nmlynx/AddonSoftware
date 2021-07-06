@@ -234,6 +234,9 @@ rem --- Using a sales tax service?
 	tax_code$=callpoint!.getColumnData("OPE_ORDHDR.TAX_CODE")
 	gosub usingTaxService
 
+rem --- Capture order records used for the Acknowledgement
+	gosub getOrdAckRecs
+
 [[OPE_ORDHDR.AFMC]]
 rem --- Inits
 
@@ -395,6 +398,64 @@ rem --- Duplicate Historical Invoice
 
 	line_sign=1
 	gosub copy_order
+
+[[OPE_ORDHDR.AOPT-OACK]]
+rem --- Has the Order changed since Acknowledgement was printed?
+	gosub ordChangedForAck
+
+rem --- If Acknowledgement is currently printed and the order has changed, ask if they want it reprinted.
+	if callpoint!.getColumnData("OPE_ORDHDR.ORD_CONF_PRINTED")="Y" and !orderChanged then
+		msg_id$="OP_REPRINT_ACK"
+		gosub disp_message
+		if msg_opt$<>"Y" then break
+	endif
+
+rem --- Create Order Acknowledgement/Confirmation (for doc queue, or manually email)
+	customer_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	ar_inv_no$=callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")
+
+rem --- Make sure modified records are saved before printing
+	if pos("M"=callpoint!.getRecordStatus())
+		rem --- Add Barista soft lock for this record if not already in edit mode
+		if !callpoint!.isEditMode() then
+			rem --- Is there an existing soft lock?
+			lock_table$="OPT_INVHDR"
+			lock_record$=firm_id$+"E"+"  "+customer_id$+order_no$+ar_inv_no$
+			lock_type$="C"
+			lock_status$=""
+			lock_disp$=""
+			call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+			if lock_status$="" then
+				rem --- Add temporary soft lock used just for this print task
+				lock_type$="L"
+				call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+			else
+				rem --- Record locked by someone else
+				msg_id$="ENTRY_REC_LOCKED"
+				gosub disp_message
+				break
+			endif
+		endif
+
+		rem --- Get current form data and write it to disk
+		gosub get_disk_rec
+		write record (ordhdr_dev) ordhdr_rec$
+	endif
+
+	gosub do_order_conf
+
+rem --- Refresh form with current data on disk that might have been updated elsewhere
+	callpoint!.setStatus("RECORD:["+firm_id$+"E"+"  "+customer_id$+order_no$+ar_inv_no$+"]")
+
+rem --- Remove temporary soft lock used just for this print task 
+	if !callpoint!.isEditMode() and lock_type$="L" then
+		lock_type$="U"
+		call stbl("+DIR_SYP")+"bac_lock_record.bbj",lock_table$,lock_record$,lock_type$,lock_disp$,rd_table_chan,table_chans$[all],lock_status$
+	endif
+
+rem --- Capture order records used for the Acknowledgement
+	gosub getOrdAckRecs
 
 [[OPE_ORDHDR.AOPT-PRNT]]
 rem --- Print Now
@@ -874,6 +935,12 @@ rem --- Make sure sales tax gets calculated, and hide possible leftover TAX_AMOU
 	taxAmount_warn!=callpoint!.getDevObject("taxAmount_warn")
 	taxAmount_fnote!.setVisible(0)
 	taxAmount_warn!.setVisible(0)
+
+rem --- Acknowledgement not printed yet for new order, so save empty HashMap if doing them on demand
+	if callpoint!.getDevObject("auto_ord_conf")="Y" then
+		ackRecsMap!=new java.util.HashMap()
+		callpoint!.setDevObject("ackRecsMap",ackRecsMap!)
+	endif
 
 [[OPE_ORDHDR.ASHO]]
 rem --- Get default dates, POS station
@@ -1482,6 +1549,41 @@ rem --- Launch ope_createwos form to create selected work orders
 	endif
 	callpoint!.setDevObject("force_wolink_grid",0)
 
+rem --- Has the Order changed since Acknowledgement was printed?
+	gosub ordChangedForAck
+
+rem --- Ask to print Acknowledgement again if Order has changed
+	if orderChanged then
+		if callpoint!.getDevObject("auto_ord_conf")="Y" then
+			rem --- Do Acknowledgement without launching the form
+			cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+			order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+			call stbl("+DIR_PGM")+"opc_ordconf.aon::auto_on_demand", cust_id$, order_no$, rd_table_chans$[all], status
+
+			callpoint!.setColumnData("OPE_ORDHDR.ORD_CONF_PRINTED","Y")
+			callpoint!.setColumnData("OPE_ORDHDR.MOD_USER",sysinfo.user_id$)
+			callpoint!.setColumnData("OPE_ORDHDR.MOD_DATE",date(0:"%Yd%Mz%Dz"))
+			callpoint!.setColumnData("OPE_ORDHDR.MOD_TIME",date(0:"%Hz%mz"))
+			callpoint!.setStatus("SAVE")
+		else
+			msg_id$="OP_CREATE_CONF"
+			gosub disp_message
+			if msg_opt$="Y" then
+				rem --- Mark acknowledgement as unprinted so can be printed in next batch
+				callpoint!.setColumnData("OPE_ORDHDR.ORD_CONF_PRINTED","N")
+				callpoint!.setStatus("SAVE")
+			endif
+		endif
+	endif
+
+rem --- Automatically print Order Acknowledgement as needed
+	if callpoint!.getDevObject("auto_ord_conf")="Y" and callpoint!.getColumnData("OPE_ORDHDR.ORD_CONF_PRINTED")<>"Y" then
+		rem --- Do Acknowledgement without launching the form
+		cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+		order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+		call stbl("+DIR_PGM")+"opc_ordconf.aon::auto_on_demand", cust_id$, order_no$, rd_table_chans$[all], status
+	endif
+
 [[OPE_ORDHDR.BSHO]]
 rem --- Documentation
 rem     Old s$(7,1) = 0 -> user_tpl.hist_ord$ = "Y" - order came from history
@@ -1573,6 +1675,7 @@ rem --- get AR Params
 	callpoint!.setDevObject("op_create_wo",ars01a.op_create_wo$)
 	callpoint!.setDevObject("sls_tax_intrface", cvs(ars01a.sls_tax_intrface$,2))
 	callpoint!.setDevObject("warn_not_avail",ars01a.warn_not_avail$)
+	callpoint!.setDevObject("auto_ord_conf",ars01a.auto_ord_conf$)
 	if ars01a.on_demand_aging$="Y"
 		callpoint!.setDevObject("on_demand_aging",ars01a.on_demand_aging$)
 		callpoint!.setDevObject("dflt_age_by",ars01a.dflt_age_by$)
@@ -4033,6 +4136,156 @@ rem ==========================================================================
 		if opc_taxcode.use_tax_service then use_tax_service$="Y"
 	endif
 	callpoint!.setDevObject("use_tax_service",use_tax_service$)
+
+	return
+
+rem ==========================================================================
+do_order_conf: rem --- Generate order confirmation
+rem IN: customer_id$
+rem IN: order_no$
+rem ==========================================================================
+
+rem --- launch option entry form to generate confirmation
+
+	user_id$=stbl("+USER_ID")
+ 
+	dim dflt_data$[3,1]
+	dflt_data$[1,0]="CUSTOMER_ID"
+	dflt_data$[1,1]=customer_id$
+	dflt_data$[2,0]="ORDER_NO"
+	dflt_data$[2,1]=order_no$
+
+	call stbl("+DIR_SYP")+"bam_run_prog.bbj",
+:	                       "OPR_ORDCONF_DMD",
+:	                       user_id$,
+:	                       "",
+:	                       "",
+:	                       table_chans$[all],
+:	                       "",
+:	                       dflt_data$[all]	
+
+	return
+
+rem ==========================================================================
+getOrdAckRecs: rem --- Capture order records used for the Acknowledgement
+rem IN: - none -
+rem OUT: ackRecsMap! (set in DevObject "ackRecsMap")
+rem ==========================================================================
+	ackRecsMap!=new java.util.HashMap()
+
+	rem --- Capture order header record
+	ope01_dev = fnget_dev("OPE_ORDHDR")
+	dim ope01a$:fnget_tpl$("OPE_ORDHDR")
+	trans_status$=callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")
+	ar_type$ = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
+	cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+	order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+	invoice_no$=callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")
+	ope01_key$=firm_id$+trans_status$+ar_type$+cust_id$+order_no$+invoice_no$
+	readrecord(ope01_dev, key=ope01_key$, dom=*next)ope01a$
+	ackRecsMap!.put(ope01_key$,ope01a$)
+
+	rem --- Capture order detail  and lot/serial records
+	ope11_dev = fnget_dev("OPE_ORDDET")
+	dim ope11a$:fnget_tpl$("OPE_ORDDET")
+	ope21_dev = fnget_dev("OPE_ORDLSDET")
+	dim ope21a$:fnget_tpl$("OPE_ORDLSDET")
+	read(ope11_dev,key=ope01_key$,dom=*next)
+	while 1
+		ope11_key$=key(ope11_dev,end=*break)
+		if pos(ope01_key$=ope11_key$)<>1 then break
+		readrecord(ope11_dev)ope11a$
+		ackRecsMap!.put(ope11_key$,ope11a$)
+
+		rem --- Capture lot/serial records
+		ope21_trip$=firm_id$+ar_type$+cust_id$+order_no$+invoice_no$+ope11a.internal_seq_no$
+		read(ope21_dev,key=ope21_trip$,dom=*next)
+		while 1
+			ope21_key$=key(ope21_dev,end=*break)
+			if pos(ope21_trip$=ope21_key$)<>1 then break
+			readrecord(ope21_dev)ope21a$
+			ackRecsMap!.put(ope21_key$,ope21a$)
+		wend
+	wend
+
+	callpoint!.setDevObject("ackRecsMap",ackRecsMap!)
+
+	return
+
+rem ==========================================================================
+ordChangedForAck: rem --- Has the Order changed since Acknowledgement was printed?
+rem IN: - none -
+rem OUT: orderChanged
+rem ==========================================================================
+	if  pos("M"=callpoint!.getRecordStatus()) then
+		orderChanged=1
+	else
+		orderChanged=0
+		if callpoint!.getColumnData("OPE_ORDHDR.ORD_CONF_PRINTED")="Y" then
+			ackRecsMap!=callpoint!.getDevObject("ackRecsMap")
+
+			rem --- Check order header record
+			ope01_dev = fnget_dev("OPE_ORDHDR")
+			dim ope01a$:fnget_tpl$("OPE_ORDHDR")
+			trans_status$=callpoint!.getColumnData("OPE_ORDHDR.TRANS_STATUS")
+			ar_type$ = callpoint!.getColumnData("OPE_ORDHDR.AR_TYPE")
+			cust_id$ = callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+			order_no$ = callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+			invoice_no$=callpoint!.getColumnData("OPE_ORDHDR.AR_INV_NO")
+			ope01_key$=firm_id$+trans_status$+ar_type$+cust_id$+order_no$+invoice_no$
+			if !ackRecsMap!.containsKey(ope01_key$) then
+				orderChanged=1
+			else
+				ackRec!=ackRecsMap!.get(ope01_key$)
+				readrecord(ope01_dev,key=ope01_key$)ope01a$
+				if ope01a$<>ackRec! then
+					orderChanged=1
+				else
+					rem --- Check order detail  and lot/serial records
+					ope11_dev = fnget_dev("OPE_ORDDET")
+					dim ope11a$:fnget_tpl$("OPE_ORDDET")
+					ope21_dev = fnget_dev("OPE_ORDLSDET")
+					dim ope21a$:fnget_tpl$("OPE_ORDLSDET")
+					read(ope11_dev,key=ope01_key$,dom=*next)
+					while 1
+						ope11_key$=key(ope11_dev,end=*break)
+						if pos(ope01_key$=ope11_key$)<>1 then break
+						if !ackRecsMap!.containsKey(ope11_key$) then
+							orderChanged=1
+							break
+						else
+							ackRec!=ackRecsMap!.get(ope11_key$)
+							readrecord(ope11_dev)ope11a$
+							if ope11a$<>ackRec! then
+								orderChanged=1
+								break
+							else
+								rem --- Check lot/serial records
+								ope21_trip$=firm_id$+ar_type$+cust_id$+order_no$+invoice_no$+ope11a.internal_seq_no$
+								read(ope21_dev,key=ope21_trip$,dom=*next)
+								while 1
+									ope21_key$=key(ope21_dev,end=*break)
+									if pos(ope21_trip$=ope21_key$)<>1 then break
+									if !ackRecsMap!.containsKey(ope21_key$) then
+										orderChanged=1
+										break
+									else
+										ackRec!=ackRecsMap!.get(ope21_key$)
+										readrecord(ope21_dev)ope21a$
+										if ope21a$<>ackRec! then
+											orderChanged=1
+											break
+										endif
+									endif
+								wend
+								if orderChanged then break
+							endif
+						endif
+					wend
+				endif
+			endif
+		endif
+	endif
 
 	return
 
