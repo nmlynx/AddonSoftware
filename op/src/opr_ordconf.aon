@@ -1,0 +1,220 @@
+rem --- Batch Order Acknowledgement Print
+rem --- Program opr_ordconf.aon
+
+rem --- Copyright BASIS International Ltd.  All Rights Reserved.
+rem --- All Rights Reserved
+
+rem --- opc_ordconf.aon is used to print (1) On-Demand (from Order Entry--
+rem --- ope_ordhdr.cdf), and (2) Batch (from menu: OP Print Order Acknowledgements
+rem --- via opr_ordconf.aon).
+
+rem --- opc_ordconf.aon uses three sprocs and three .jaspers to generate acknowledgements:
+rem ---    - OPORDCONF_HDR.prc / OPOrderConfHdr.jasper
+rem ---    - OPORDCONF_DET.prc / OPOrderConfDet.jasper
+rem ---    - OPORDCONF_DET_LOTSER.prc / OPOrderConfDet-LotSer.jasper
+rem ----------------------------------------------------------------------------
+
+    setesc std_error
+    seterr std_error
+
+rem --- Retrieve the program path
+
+    pgmdir$=""
+    pgmdir$=stbl("+DIR_PGM",err=*next)
+    sypdir$=""
+    sypdir$=stbl("+DIR_SYP",err=*next)
+
+rem --- For type checking
+
+    use java.util.TreeMap
+    use ::sys/prog/bao_option.bbj::Option
+    
+    declare Option option!
+
+rem --- Retrieve sysinfo data
+
+    dim sysinfo$:stbl("+SYSINFO_TPL")
+    sysinfo$=stbl("+SYSINFO")
+    firm_id$=sysinfo.firm_id$
+
+rem --- Open File(s)
+
+	num_files=1
+	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
+
+    open_tables$[1] = "OPE_ORDHDR",   open_opts$[1] = "OTA[1]"
+    
+    gosub open_tables
+    
+    ope01_dev = num(open_chans$[1])
+    dim ope01a$:open_tpls$[1]
+
+rem --- Assign form input values to local variables
+
+    rem *** what does this do? restart$ = option!.getOptionData("pick_check"); rem p6$
+    cust_id$ = option!.getOptionData("customer_id"); rem p5$
+    report_sequence$ = option!.getOptionData("report_sequence"); rem p5$
+
+rem --- Initialize Data
+
+    declare BBjVector custIds!
+    declare BBjVector orderNos!
+
+    custIds!  = BBjAPI().makeVector()
+    orderNos! = BBjAPI().makeVector()
+    orderTree! = new TreeMap()
+    
+    start_block = 1
+
+rem --- Initial Read
+
+    read (ope01_dev, key=firm_id$+"E",knum="AO_STATUS",dom=*next)
+
+rem --- Main Read, create customer and order vectors
+
+    while 1
+
+        read record (ope01_dev, end=*break) ope01a$
+        if ope01a.firm_id$<>firm_id$ or ope01a.trans_status$<>"E" then break
+        
+        rem --- Skip invoices and already printed acknowledgements
+        if ope01a.ordinv_flag$<>"O" or ope01a.ord_conf_printed$="Y" then continue
+
+rem --- Check to see if record is in use in Order Entry
+		call stbl("+DIR_SYP")+"bac_lock_record.bbj","OPE_ORDHDR",firm_id$+"  "+ope01a.customer_id$+ope01a.order_no$,"C","",0,table_chans$[all],lock_stat$
+		if lock_stat$="ERR_LOCKED"
+			continue
+		endif
+
+        custIds!.addItem( ope01a.customer_id$ )
+        orderNos!.addItem( ope01a.order_no$ )
+        orderTree!.put(ope01a.order_no$,ope01a.customer_id$+"::"+ope01a.order_no$)
+    wend
+    
+rem --- Did we find any invoices to print?    
+    
+    if custIds!.size() = 0 or orderNos!.size() = 0 then
+        msg_id$="DOC_OUTPUT_NODATA"
+        gosub disp_message
+        goto std_exit
+    endif
+
+rem --- Re-sort custIds! and orderNos! in Order Number order
+    if report_sequence$="O" then
+        custIds!.clear()
+        orderNos!.clear()
+    
+        orderTreeIter!=orderTree!.keySet().iterator()
+        while orderTreeIter!.hasNext()
+            customer_order$=orderTree!.get(orderTreeIter!.next())
+            xpos=pos("::"=customer_order$)
+            custIds!.addItem(customer_order$(1,xpos-1))
+            orderNos!.addItem(customer_order$(xpos+2))
+        wend
+    endif
+    
+rem --- Call the acknowledgement printing program with the vectors
+    
+    call pgmdir$+"opc_ordconf.aon::batch_ack", custIds!, orderNos!, option!, table_chans$[all], status
+    goto std_exit
+    
+open_tables: rem --- Open Tables
+
+	call sypdir$+"bac_open_tables.bbj",
+:		open_beg,
+:		open_end,
+:		open_tables$[all],
+:		open_opts$[all],
+:		open_chans$[all],
+:		open_tpls$[all],
+:		table_chans$[all],
+:		open_batch,
+:		open_status$
+
+	if open_status$<>""
+		msg_id$="ENTRY_OPEN_ERROR"
+		dim msg_tokens$[1]
+        msg_tokens$[1]=open_status$
+		gosub disp_message
+		goto std_exit
+	endif
+
+	return
+
+disp_message: rem --- Display Message Dialog
+
+	call sypdir$+"bac_message.bbj",
+:		msg_id$,
+:		msg_tokens$[all],
+:		msg_opt$,
+:		table_chans$[all]
+
+	return
+
+rem #include std_error.src
+
+std_error: rem --- Standard error handler (11Oct2017)
+
+    if tcb(19)>0
+        rem --- Escape handler
+        if and(chr(tcb(19)),$08$)=$08$
+            release
+        else
+            setesc std_error
+            return
+        endif
+    endif
+
+    if err=0   
+        rem --- Get tcb(12) and tcb(10) to send into bac_error
+        lock_byte=tcb(10)
+        lock_chan=tcb(12)  
+    endif
+
+    rd_err_text$="",err_num=err
+    if tcb(2)=0 and tcb(5) then rd_err_text$=pgm(tcb(5),tcb(13),err=*next)
+    if err_num=252 then
+        E!=BBjAPI().getLastBBjException()
+        rd_err_text$=rd_err_text$+$0A$+E!.getClass().getName()
+        if E!.getMessage()<>null() then rd_err_text$=rd_err_text$+": "+E!.getMessage()
+    endif
+    call stbl("+DIR_SYP")+"bac_error.bbj",pgm(-2),str(tcb(5)),str(err_num),rd_err_text$,rd_err_act$,lock_byte,lock_chan
+    if pos("ESCAPE"=rd_err_act$) seterr 0; setesc 0
+    if pos("RETRY"=rd_err_act$) retry
+    if pgm(-1)<>pgm(-2) status=999; exit 
+    release
+
+rem #endinclude std_error.src
+
+rem #include std_missing_params.src
+
+std_missing_params: rem --- Standard missing parameter handler (15Apr2006)
+
+    rd_err_text$=""
+    if tcb(5)<>0 and pgm(-1)=pgm(-2) rd_err_text$=pgm(tcb(5))
+    pgmdir$=stbl("+DIR_PGM",err=std_missing_params_exit)
+    call pgmdir$+"adc_noparams.aon",err=std_missing_params_exit,pgm(-2),str(tcb(5)),
+:       str(err),rd_err_text$,rd_err_act$
+std_missing_params_exit: 
+    master_user$=cvs(stbl("+MASTER_USER",err=std_missing_params_release),2)
+    sysinfo_template$=stbl("+SYSINFO_TPL",err=std_missing_params_release)
+    dim sysinfo$:sysinfo_template$
+    sysinfo$=stbl("+SYSINFO",err=std_missing_params_release)
+    if cvs(sysinfo.user_id$,2)=master_user$ escape
+std_missing_params_release: 
+    status=999
+    if pgm(-1)<>pgm(-2) exit
+    release
+
+rem #endinclude std_missing_params.src
+
+rem #include std_end.src
+
+std_exit: rem --- Standard program end (01Mar2006)
+
+    run stbl("+DIR_SYP")+"bas_process_end.bbj",err=*next
+    release
+
+rem #endinclude std_end.src
+
+    end
