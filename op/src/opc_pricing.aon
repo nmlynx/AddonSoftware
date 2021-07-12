@@ -10,7 +10,7 @@ rem --- Enter variables
 rem channels[n] : [1] = ivm-01
 rem             : [2] = ivm-02
 rem             : [3] = ivm-06
-rem             : [4] = ivm-10
+rem             : [4] = ivc_priccode
 rem             : [5] = ars_params
 rem             : [6] = ivs_params
 rem firm_id$    : Firm ID
@@ -129,14 +129,22 @@ rem --- Get Item Class
         if ordqty=0 then break
         find record (ivm10_dev, key=firm_id$+"E"+ivm01a.item_class$+priccd$, dom=*break) ivm10e$
 
-        if (ivm10e.break_qty_01=0 and ivm10e.break_disc_01=0) or abs(ordqty)<ivm10e.break_qty_01 then 
-            price=ivm02a.cur_price
-            break
+        if ivm10e.pricing_basis$="P" then
+            if (ivm10e.break_qty_01=0 and ivm10e.break_disc_01=0) or abs(ordqty)<ivm10e.break_qty_01 then 
+                price=ivm02a.cur_price
+                break
+            endif
+        else
+            if (ivm10e.break_qty_01=0 and ivm10e.break_amt_01=0) or abs(ordqty)<ivm10e.break_qty_01 then 
+                price=ivm02a.cur_price
+                break
+            endif
         endif
 
         for x=1 to 10
             if nfield(ivm10e$,"break_qty_"+str(x:"00"))>0 and abs(ordqty)>=nfield(ivm10e$,"break_qty_"+str(x:"00")) then 
                 perc=nfield(ivm10e$,"break_disc_"+str(x:"00"))
+                amt=nfield(ivm10e$,"break_amt_"+str(x:"00"))
             endif
         next x
 
@@ -150,24 +158,45 @@ rem --- Get Item Class
 
     mark_up_cost: rem --- Mark-Up From Cost
 
-        price = round(ivm02a.unit_cost + ivm02a.unit_cost * (perc / 100), 2)
-        if ivm02a.cur_price = 0 then break
-        disc = round(100 - 100 * (price / ivm02a.cur_price), 2)
-        break
+        if ivm10e.pricing_basis$="P" then
+            price = round(ivm02a.unit_cost + ivm02a.unit_cost * (perc / 100), 2)
+            if ivm02a.cur_price = 0 then break
+            disc = round(100 - 100 * (price / ivm02a.cur_price), 2)
+            break
+        else
+            price = round(ivm02a.unit_cost + amt, 2)
+            if ivm02a.cur_price = 0 then break
+            disc = round(100 - 100 * (price / ivm02a.cur_price), 2)
+            break
+        endif
 
     margin_over_cost: rem --- Margin Over Cost
 
-        if perc >= 100 then break; rem --- No such thing as 100% margin unless cost=0
-        price = round(ivm02a.unit_cost * 100 / (100 - perc), 2)
-        if ivm02a.cur_price = 0 then break
-        disc = round(100 - 100 * (price / ivm02a.cur_price), 2)
-        break
+        if ivm10e.pricing_basis$="P" then
+            if perc >= 100 then break; rem --- No such thing as 100% margin unless cost=0
+            price = round(ivm02a.unit_cost * 100 / (100 - perc), 2)
+            if ivm02a.cur_price = 0 then break
+            disc = round(100 - 100 * (price / ivm02a.cur_price), 2)
+            break
+        else
+            price = round(ivm02a.unit_cost + amt, 2)
+            if ivm02a.cur_price = 0 then break
+            disc = round(100 - 100 * (price / ivm02a.cur_price), 2)
+            break
+        endif
 
     mark_down_list_price: rem --- Mark-Down List Price
 
-        price = round(ivm02a.cur_price - ivm02a.cur_price * (perc / 100), 2)
-        disc = perc
-        break
+        if ivm10e.pricing_basis$="P" then
+            price = round(ivm02a.cur_price - ivm02a.cur_price * (perc / 100), 2)
+            disc = perc
+            break
+        else
+            price = round(ivm02a.cur_price - amt, 2)
+            if ivm02a.cur_price = 0 then break
+            disc = round(100 - 100 * (price / ivm02a.cur_price), 2)
+            break
+        endif
     wend
 
 rem --- All Done
