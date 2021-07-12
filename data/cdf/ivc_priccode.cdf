@@ -1,71 +1,21 @@
-[[IVC_PRICCODE.BWRI]]
-rem --- compress zeroes
-for y=1 to 9
-	for x=1 to 9
-		qty_var$="BREAK_QTY_"+str(x:"00")
-		qty_var1$="BREAK_QTY_"+str(x+1:"00")
-		disc_var$="BREAK_DISC_"+str(x:"00")
-		disc_var1$="BREAK_DISC_"+str(x+1:"00")
-		if num(field(rec_data$,qty_var$))=0
-			field rec_data$,qty_var$=field(rec_data$,qty_var1$)
-			field rec_data$,qty_var1$="0"
-			field rec_data$,disc_var$=field(rec_data$,disc_var1$)
-			field rec_data$,disc_var1$="0"
+[[IVC_PRICCODE.ADIS]]
+rem --- Enable/disable break_disc_nn and break_amt_nn fields base on pricing_basis
+	for x=0 to 10
+		if callpoint!.getColumnData("IVC_PRICCODE.PRICING_BASIS")="P" then
+			callpoint!.setColumnEnabled("IVC_PRICCODE.BREAK_DISC_"+str(x,"00"),1)
+			callpoint!.setColumnEnabled("IVC_PRICCODE.BREAK_AMT_"+str(x,"00"),0)
+		else
+			callpoint!.setColumnEnabled("IVC_PRICCODE.BREAK_DISC_"+str(x,"00"),0)
+			callpoint!.setColumnEnabled("IVC_PRICCODE.BREAK_AMT_"+str(x,"00"),1)
 		endif
 	next x
-next y
-callpoint!.setStatus("REFRESH")
 
-rem --- make sure each qty > previous one
-ok$="Y"
-for x=2 to 10
-	wkvar$="BREAK_QTY_"+str(x:"00")
-	wkvar1$="BREAK_QTY_"+str(x-1:"00")
+[[IVC_PRICCODE.AREC]]
+rem --- Default pricing_basis is P, so disable break_amt_nn fields
+	for x=0 to 10
+		callpoint!.setColumnEnabled("IVC_PRICCODE.BREAK_AMT_"+str(x,"00"),0)
+	next x
 
-	if num(field(rec_data$,wkvar$))<=num(field(rec_data$,wkvar1$)) and
-:		num(field(rec_data$,wkvar$))<>0 and
-:		num(field(rec_data$,wkvar1$))<>0
-		ok$="N"
-	endif
-next x
-
-if ok$="N"
-	msg_id$="IV_QTYERR"
-	gosub disp_message
-	callpoint!.setStatus("ABORT-REFRESH")
-endif
-
-rem --- make sure Margin over Cost margins don't exceed 100
-	if callpoint!.getColumnData("IVC_PRICCODE.IV_PRICE_MTH")="M"
-		gosub validate_margin
-	endif
-
-if ok$="N"
-	callpoint!.setStatus("ABORT-REFRESH")
-endif
-	
-[[IVC_PRICCODE.<CUSTOM>]]
-validate_margin:
-	ok$="Y"
-	if callpoint!.getColumnData("IVC_PRICCODE.IV_PRICE_MTH")="M"
-		for x=1 to 10
-			disc_var$="BREAK_DISC_"+str(x:"00")
-			if num(field(rec_data$,disc_var$))>=100
-				msg_id$="IV_BADMARGIN"
-				gosub disp_message
-				ok$="N"
-			endif
-		next x
-	endif
-return
-
-remove_process_bar: rem -- remove process bar
-	bbjAPI!=bbjAPI()
-	rdFuncSpace!=bbjAPI!.getGroupNamespace()
-	rdFuncSpace!.setValue("+build_task","OFF")
-return
-
-#include [+ADDON_LIB]std_missing_params.aon
 [[IVC_PRICCODE.BSHO]]
 num_files=2
 dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
@@ -101,3 +51,90 @@ rem --- check to see if main IV param rec (firm/IV/00) exists; if not, tell user
 		release
 	endif
 	precision num(ivs01a.precision$)
+
+[[IVC_PRICCODE.BWRI]]
+rem --- compress zeroes
+for x=1 to 9
+	qty_var$="BREAK_QTY_"+str(x:"00")
+	qty_var1$="BREAK_QTY_"+str(x+1:"00")
+	disc_var$="BREAK_DISC_"+str(x:"00")
+	disc_var1$="BREAK_DISC_"+str(x+1:"00")
+	amt_var$="BREAK_AMT_"+str(x:"00")
+	amt_var1$="BREAK_AMT_"+str(x+1:"00")
+	if num(field(rec_data$,qty_var$))=0
+		field rec_data$,qty_var$=field(rec_data$,qty_var1$)
+		field rec_data$,qty_var1$="0"
+		field rec_data$,disc_var$=field(rec_data$,disc_var1$)
+		field rec_data$,disc_var1$="0"
+		field rec_data$,amt_var$=field(rec_data$,amt_var1$)
+		field rec_data$,amt_var1$="0"
+	endif
+next x
+callpoint!.setStatus("REFRESH")
+
+rem --- make sure each qty > previous one
+ok$="Y"
+for x=2 to 10
+	wkvar$="BREAK_QTY_"+str(x:"00")
+	wkvar1$="BREAK_QTY_"+str(x-1:"00")
+
+	if num(field(rec_data$,wkvar$))<=num(field(rec_data$,wkvar1$)) and
+:		num(field(rec_data$,wkvar$))<>0 and
+:		num(field(rec_data$,wkvar1$))<>0
+		ok$="N"
+	endif
+next x
+
+if ok$="N"
+	msg_id$="IV_QTYERR"
+	gosub disp_message
+	callpoint!.setStatus("ABORT-REFRESH")
+endif
+
+rem --- make sure Margin over Cost margins don't exceed 100
+	if callpoint!.getColumnData("IVC_PRICCODE.IV_PRICE_MTH")="M"
+		gosub validate_margin
+	endif
+
+if ok$="N"
+	callpoint!.setStatus("ABORT-REFRESH")
+endif
+	
+
+[[IVC_PRICCODE.PRICING_BASIS.AVAL]]
+rem --- Enable/disable break_disc_nn and break_amt_nn fields base on pricing_basis
+	for x=0 to 10
+		if callpoint!.getColumnData("IVC_PRICCODE.PRICING_BASIS")="P" then
+			callpoint!.setColumnEnabled("IVC_PRICCODE.BREAK_DISC_"+str(x,"00"),1)
+			callpoint!.setColumnEnabled("IVC_PRICCODE.BREAK_AMT_"+str(x,"00"),0)
+		else
+			callpoint!.setColumnEnabled("IVC_PRICCODE.BREAK_DISC_"+str(x,"00"),0)
+			callpoint!.setColumnEnabled("IVC_PRICCODE.BREAK_AMT_"+str(x,"00"),1)
+		endif
+	next x
+
+[[IVC_PRICCODE.<CUSTOM>]]
+validate_margin:
+	ok$="Y"
+	if callpoint!.getColumnData("IVC_PRICCODE.IV_PRICE_MTH")="M"
+		for x=1 to 10
+			disc_var$="BREAK_DISC_"+str(x:"00")
+			if num(field(rec_data$,disc_var$))>=100
+				msg_id$="IV_BADMARGIN"
+				gosub disp_message
+				ok$="N"
+			endif
+		next x
+	endif
+return
+
+remove_process_bar: rem -- remove process bar
+	bbjAPI!=bbjAPI()
+	rdFuncSpace!=bbjAPI!.getGroupNamespace()
+	rdFuncSpace!.setValue("+build_task","OFF")
+return
+
+#include [+ADDON_LIB]std_missing_params.aon
+
+
+
