@@ -216,6 +216,8 @@ rem --- Assign form input values to local variables
     restart$=option!.getOptionData("PICK_CHECK")
     ap_type$=option!.getOptionData("AP_TYPE")
     vendor_id$=option!.getOptionData("VENDOR_ID")
+    prnt_signature$=option!.getOptionData("PRNT_SIGNATURE")
+    signature_file$=option!.getOptionData("SIGNATURE_FILE")
 	
 	form_order$=option!.getOptionData("FORM_ORDER")
 	top_part$=form_order$(1,1)
@@ -977,6 +979,13 @@ check_face: rem --- Print Check
             signerSet!.remove(signer$)
             signature2$=cast(BBjString, signerSignatureMap!.get(signerSet!.first()))
         endif
+    endif
+    
+    prnt_signature$=option!.getOptionData("PRNT_SIGNATURE")
+    signature_file$=option!.getOptionData("SIGNATURE_FILE")
+    rem --- If printing check signature without Payment Authorization, and it's NOT an ACH payment, put entered signature on the check.
+    if prnt_signature$="Y" and !payauth.use_pay_auth and ach_payment$="N" then
+        signature1$=signature_file$
     endif
 
 	rem --- Write CHECK record to jasper print file
