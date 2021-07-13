@@ -2,8 +2,6 @@
 rem --- Clear Check Number when using previously saved selections.
 	callpoint!.setColumnData("APR_CHECKS.CHECK_NO","",1)
 
-[[APR_CHECKS.AREC]]
-
 [[APR_CHECKS.ARER]]
 rem --- Use default check form order if available
 	default_form_order$=callpoint!.getDevObject("default_form_order")
@@ -17,6 +15,29 @@ rem --- Use default check form order if available
 				break
 			endif
 		next i
+	endif
+
+rem --- Initialize and enable/disable prnt_signature and signature_file
+	if callpoint!.getDevObject("use_pay_auth") then
+		rem --- Use Payment Authorization signature file(s)
+		callpoint!.setColumnData("APR_CHECKS.PRNT_SIGNATURE","Y",1)
+		callpoint!.setColumnEnabled("APR_CHECKS.PRNT_SIGNATURE",0)
+		callpoint!.setColumnData("APR_CHECKS.SIGNATURE_FILE","",1)
+		callpoint!.setColumnEnabled("APR_CHECKS.SIGNATURE_FILE",0)
+	else
+		if callpoint!.getDevObject("aps01_prnt_signature")="Y" then
+			rem --- Use AP Parameters signature file
+			callpoint!.setColumnData("APR_CHECKS.PRNT_SIGNATURE","Y",1)
+			callpoint!.setColumnEnabled("APR_CHECKS.PRNT_SIGNATURE",1)
+			callpoint!.setColumnData("APR_CHECKS.SIGNATURE_FILE",str(callpoint!.getDevObject("aps01_signature_file")),1)
+			callpoint!.setColumnEnabled("APR_CHECKS.SIGNATURE_FILE",1)
+		else
+			rem --- Not using signature file(s)
+			callpoint!.setColumnData("APR_CHECKS.PRNT_SIGNATURE","N",1)
+			callpoint!.setColumnEnabled("APR_CHECKS.PRNT_SIGNATURE",0)
+			callpoint!.setColumnData("APR_CHECKS.SIGNATURE_FILE","",1)
+			callpoint!.setColumnEnabled("APR_CHECKS.SIGNATURE_FILE",0)
+		endif
 	endif
 
 [[APR_CHECKS.ASVA]]
@@ -120,9 +141,12 @@ rem --- Make sure softlock is cleared when exiting/aborting
 	remove (adxlocks_dev,key=firm_id$+menu_option_id$,dom=*next)
 
 [[APR_CHECKS.BSHO]]
+rem --- Inits
+	use java.io.File
+
 rem --- See if we need to disable AP Type
 rem --- and see if a print run in currently running
-	num_files=6
+	num_files=7
 	dim open_tables$[1:num_files],open_opts$[1:num_files],open_chans$[1:num_files],open_tpls$[1:num_files]
 	open_tables$[1]="APS_PARAMS",open_opts$[1]="OTA"
 	open_tables$[2]="ADX_LOCKS",   open_opts$[2]="OTA"
@@ -130,21 +154,26 @@ rem --- and see if a print run in currently running
 	open_tables$[4]="APS_ACH",open_opts$[4]="OTA"
 	open_tables$[5]="APM_VENDMAST",open_opts$[5]="OTA"
 	open_tables$[6]="APE_CHECKS",open_opts$[6]="OTA"
+	open_tables$[7]="APS_PAYAUTH",open_opts$[7]="OTA"
 	gosub open_tables
 
 	aps01_dev=fnget_dev("APS_PARAMS")
 	adxlocks_dev=fnget_dev("ADX_LOCKS")
 	apsACH_dev=fnget_dev("APS_ACH")
+	apsPayAuth_dev=fnget_dev("APS_PAYAUTH")
 
 	dim aps01a$:fnget_tpl$("APS_PARAMS")
 	dim adxlocks$:fnget_tpl$("ADX_LOCKS")
 	dim apsACH$:fnget_tpl$("APS_ACH")
+	dim apsPayAuth$:fnget_tpl$("APS_PAYAUTH")
 
 rem --- Get parameters
 	aps01_key$=firm_id$+"AP00"
 	readrecord(aps01_dev,key=aps01_key$,dom=std_missing_params)aps01a$
 	callpoint!.setDevObject("multi_types",aps01a.multi_types$)
 	callpoint!.setDevObject("default_form_order",aps01a.form_order$)
+	callpoint!.setDevObject("aps01_prnt_signature",aps01a.prnt_signature$)
+	callpoint!.setDevObject("aps01_signature_file",aps01a.signature_file$)
 	if aps01a.multi_types$ <> "Y" then
 		ctl_name$="APR_CHECKS.AP_TYPE"
 		ctl_stat$="I"
@@ -153,6 +182,9 @@ rem --- Get parameters
 
 	readrecord(apsACH_dev,key=firm_id$+"AP00",dom=*next)apsACH$
 	callpoint!.setDevObject("ach_allowed",iff(cvs(apsACH.bnk_acct_cd$,2)="",0,1))
+
+	readrecord(apsPayAuth_dev,key=firm_id$+"AP00",dom=*next)apsPayAuth$
+	callpoint!.setDevObject("use_pay_auth",apsPayAuth.use_pay_auth)
 
 rem --- Abort if a check run is actively running
 	pgm_name_fattr$=fattr(adxlocks$,"MENU_OPTION_ID")
@@ -232,6 +264,38 @@ if callpoint!.getUserInput()="Y"
 		ctl_stat$=" "
 		gosub disable_fields
 endif
+
+[[APR_CHECKS.PRNT_SIGNATURE.AVAL]]
+rem --- Enable/disable signature_file
+	prnt_signature$=callpoint!.getUserInput()
+	if callpoint!.getDevObject("use_pay_auth") then
+		rem --- Use Payment Authorization signature file(s)
+		callpoint!.setColumnData("APR_CHECKS.SIGNATURE_FILE","",1)
+		callpoint!.setColumnEnabled("APR_CHECKS.SIGNATURE_FILE",0)
+	else
+		if callpoint!.getDevObject("aps01_prnt_signature")="Y" then
+			rem --- Use AP Parameters signature file
+			callpoint!.setColumnData("APR_CHECKS.SIGNATURE_FILE",str(callpoint!.getDevObject("aps01_signature_file")),1)
+			callpoint!.setColumnEnabled("APR_CHECKS.SIGNATURE_FILE",1)
+		else
+			rem --- Not using signature file(s)
+			callpoint!.setColumnData("APR_CHECKS.SIGNATURE_FILE","",1)
+			callpoint!.setColumnEnabled("APR_CHECKS.SIGNATURE_FILE",0)
+		endif
+	endif
+
+[[APR_CHECKS.SIGNATURE_FILE.AVAL]]
+rem --- Verify signature file exists
+	signature_file$=callpoint!.getUserInput()
+	sigFile!=new File(signature_file$)
+	if ! sigFile!.exists() or sigFile!.isDirectory() then
+		msg_id$="AD_FILE_NOT_FOUND"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=signature_file$
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
 
 [[APR_CHECKS.VENDOR_ID.AVAL]]
 rem "VENDOR INACTIVE - FEATURE"

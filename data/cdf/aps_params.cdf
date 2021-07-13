@@ -356,8 +356,8 @@ rem --- Initialize ACH Payment fields
 	endif
 
 [[APS_PARAMS.BSHO]]
-rem --- Encryptor for bank acct #
-
+rem --- Inits
+	use java.io.File
 	use ::sys/prog/bao_encryptor.bbj::Encryptor
 
 rem --- Open files
@@ -483,6 +483,14 @@ rem --- Display selected color
 	one_color_ctl!=callpoint!.getDevObject("one_color_ctl")
 	one_color_ctl!.setBackColor(valRGB!)
 
+[[APS_PARAMS.PRNT_SIGNATURE.AVAL]]
+rem --- Disable signature_file when not using prnt_signature
+	if callpoint!.getColumnData("APS_PARAMS.PRNT_SIGNATURE")="Y" then
+		callpoint!.setColumnEnabled("APS_PARAMS.SIGNATURE_FILE", 1)
+	else
+		callpoint!.setColumnEnabled("APS_PARAMS.SIGNATURE_FILE",0)
+	endif
+
 [[APS_PAYAUTH.SCAN_DOCS_TO.AVAL]]
 rem --- Restrict selection to currently available options
 	scan_docs_to$=callpoint!.getUserInput()
@@ -494,6 +502,19 @@ rem --- Restrict selection to currently available options
 
 rem --- Enable/Disable WARN_IN_REGISTER and OK_TO_UPDATE
 	gosub able_scan_docs
+
+[[APS_PARAMS.SIGNATURE_FILE.AVAL]]
+rem --- Verify signature file exists
+	signature_file$=callpoint!.getUserInput()
+	sigFile!=new File(signature_file$)
+	if ! sigFile!.exists() or sigFile!.isDirectory() then
+		msg_id$="AD_FILE_NOT_FOUND"
+		dim msg_tokens$[1]
+		msg_tokens$[1]=signature_file$
+		gosub disp_message
+		callpoint!.setStatus("ABORT")
+		break
+	endif
 
 [[APS_PAYAUTH.TWO_AUTH_COLOR.AMOD]]
 rem --- Display selected color
