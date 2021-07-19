@@ -79,6 +79,9 @@ rem --- Main Read, create customer and order vectors
         
         rem --- Skip invoices and already printed acknowledgements
         if ope01a.ordinv_flag$<>"O" or ope01a.ord_conf_printed$="Y" then continue
+        
+        rem --- Skip quotes
+        if ope01a.invoice_type$="P" then continue
 
 rem --- Check to see if record is in use in Order Entry
 		call stbl("+DIR_SYP")+"bac_lock_record.bbj","OPE_ORDHDR",firm_id$+"  "+ope01a.customer_id$+ope01a.order_no$,"C","",0,table_chans$[all],lock_stat$
