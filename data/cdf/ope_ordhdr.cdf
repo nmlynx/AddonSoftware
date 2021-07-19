@@ -127,7 +127,7 @@ rem --- Enable buttons
 	callpoint!.setOptionEnabled("TTLS",1)
 	callpoint!.setOptionEnabled("SHPT",1)
 	callpoint!.setOptionEnabled("AGNG",iff(callpoint!.getDevObject("on_demand_aging")="Y",1,0))
-
+	if callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" then callpoint!.setOptionEnabled("OACK",1)
 
 rem --- Set all previous values
 
@@ -684,6 +684,7 @@ rem --- Enable buttons as appropriate
 			rem callpoint!.setOptionEnabled("CRAT",1); rem --- handled via opc_creditmsg.aon call below
 			callpoint!.setOptionEnabled("SHPT",1)
 			callpoint!.setOptionEnabled("RTAX",1)
+			if callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P" then callpoint!.setOptionEnabled("OACK",1)
 
 			op_create_wo$=callpoint!.getDevObject("op_create_wo")
 			if op_create_wo$="A" then
@@ -708,6 +709,7 @@ rem --- Enable buttons as appropriate
 		callpoint!.setOptionEnabled("PRNT",0)
 		callpoint!.setOptionEnabled("RPRT",0)
 		callpoint!.setOptionEnabled("RTAX",0)
+		callpoint!.setOptionEnabled("OACK",0)
 	endif
 
 rem --- Set Backordered text field
@@ -833,6 +835,7 @@ rem --- Set flags
 	callpoint!.setOptionEnabled("SHPT",0)
 	callpoint!.setOptionEnabled("RTAX",0)
 	callpoint!.setOptionEnabled("AGNG",0)
+	callpoint!.setOptionEnabled("OACK",0)
 
 rem --- Clear order helper object
 
@@ -1363,6 +1366,7 @@ rem --- Disable header buttons
 	callpoint!.setOptionEnabled("SHPT",0)
 	callpoint!.setOptionEnabled("RTAX",0)
 	callpoint!.setOptionEnabled("AGNG",0)
+	callpoint!.setOptionEnabled("OACK",0)
 
 rem --- Capture current totals so we can tell later if they were changed in the grid
 
@@ -1549,39 +1553,42 @@ rem --- Launch ope_createwos form to create selected work orders
 	endif
 	callpoint!.setDevObject("force_wolink_grid",0)
 
-rem --- Has the Order changed since Acknowledgement was printed?
-	gosub ordChangedForAck
+rem --- Skip Acknowledgements for quotes
+	if callpoint!.getColumnData("OPE_ORDHDR.INVOICE_TYPE")<>"P"
+		rem --- Has the Order changed since Acknowledgement was printed?
+		gosub ordChangedForAck
 
-rem --- Ask to print Acknowledgement again if Order has changed
-	if orderChanged then
-		if callpoint!.getDevObject("auto_ord_conf")="Y" then
+		rem --- Ask to print Acknowledgement again if Order has changed
+		if orderChanged then
+			if callpoint!.getDevObject("auto_ord_conf")="Y" then
+				rem --- Do Acknowledgement without launching the form
+				cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
+				order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
+				call stbl("+DIR_PGM")+"opc_ordconf.aon::auto_on_demand", cust_id$, order_no$, rd_table_chans$[all], status
+
+				callpoint!.setColumnData("OPE_ORDHDR.ORD_CONF_PRINTED","Y")
+				callpoint!.setColumnData("OPE_ORDHDR.MOD_USER",sysinfo.user_id$)
+				callpoint!.setColumnData("OPE_ORDHDR.MOD_DATE",date(0:"%Yd%Mz%Dz"))
+				callpoint!.setColumnData("OPE_ORDHDR.MOD_TIME",date(0:"%Hz%mz"))
+				callpoint!.setStatus("SAVE")
+			else
+				msg_id$="OP_CREATE_CONF"
+				gosub disp_message
+				if msg_opt$="Y" then
+					rem --- Mark acknowledgement as unprinted so can be printed in next batch
+					callpoint!.setColumnData("OPE_ORDHDR.ORD_CONF_PRINTED","N")
+					callpoint!.setStatus("SAVE")
+				endif
+			endif
+		endif
+
+		rem --- Automatically print Order Acknowledgement as needed
+		if callpoint!.getDevObject("auto_ord_conf")="Y" and callpoint!.getColumnData("OPE_ORDHDR.ORD_CONF_PRINTED")<>"Y" then
 			rem --- Do Acknowledgement without launching the form
 			cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
 			order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
 			call stbl("+DIR_PGM")+"opc_ordconf.aon::auto_on_demand", cust_id$, order_no$, rd_table_chans$[all], status
-
-			callpoint!.setColumnData("OPE_ORDHDR.ORD_CONF_PRINTED","Y")
-			callpoint!.setColumnData("OPE_ORDHDR.MOD_USER",sysinfo.user_id$)
-			callpoint!.setColumnData("OPE_ORDHDR.MOD_DATE",date(0:"%Yd%Mz%Dz"))
-			callpoint!.setColumnData("OPE_ORDHDR.MOD_TIME",date(0:"%Hz%mz"))
-			callpoint!.setStatus("SAVE")
-		else
-			msg_id$="OP_CREATE_CONF"
-			gosub disp_message
-			if msg_opt$="Y" then
-				rem --- Mark acknowledgement as unprinted so can be printed in next batch
-				callpoint!.setColumnData("OPE_ORDHDR.ORD_CONF_PRINTED","N")
-				callpoint!.setStatus("SAVE")
-			endif
 		endif
-	endif
-
-rem --- Automatically print Order Acknowledgement as needed
-	if callpoint!.getDevObject("auto_ord_conf")="Y" and callpoint!.getColumnData("OPE_ORDHDR.ORD_CONF_PRINTED")<>"Y" then
-		rem --- Do Acknowledgement without launching the form
-		cust_id$=callpoint!.getColumnData("OPE_ORDHDR.CUSTOMER_ID")
-		order_no$=callpoint!.getColumnData("OPE_ORDHDR.ORDER_NO")
-		call stbl("+DIR_PGM")+"opc_ordconf.aon::auto_on_demand", cust_id$, order_no$, rd_table_chans$[all], status
 	endif
 
 [[OPE_ORDHDR.BSHO]]
@@ -1939,6 +1946,7 @@ rem --- Set up Lot/Serial button (and others) properly
 	callpoint!.setOptionEnabled("CRAT",0)
 	callpoint!.setOptionEnabled("WOLN",0)
 	callpoint!.setOptionEnabled("AGNG",0)
+	callpoint!.setOptionEnabled("OACK",0)
 
 rem --- Parse table_chans$[all] into an object
 
@@ -2439,12 +2447,14 @@ rem --- Convert Quote?
 		endif
 	endif
 
-rem --- Enable/disable expire date based on value
+rem --- Enable/disable expire date based on value, and order acknowledgements
 
 	if inv_type$ = "S" then
 		callpoint!.setColumnEnabled("OPE_ORDHDR.EXPIRE_DATE", 0)
+		callpoint!.setOptionEnabled("OACK",1)
 	else
 		callpoint!.setColumnEnabled("OPE_ORDHDR.EXPIRE_DATE", 1)
+		callpoint!.setOptionEnabled("OACK",0)
 	endif
 
 rem --- Set type in OrderHelper object
