@@ -1,5 +1,5 @@
 =======================================================================================================================================
- Report Date:   2021-07-06
+ Report Date:   2021-07-21
  Report Branch: AddonSoftware 21.03
  Last Release:  AddonSoftware 21.02
 =======================================================================================================================================
@@ -42,4 +42,23 @@ Bug 10052: Made sure current correct line code is displayed in AGRN.
 ----
 Modified: data/bar/ope_orddet.xml
 Modified: data/cdf/ope_orddet.cdf
+
+=======================================================================================================================================
+Revision: 3d3f30ec3089deee11c0108b42048fe09d878ca8
+Author: Shaun Haney <shaney@basis.com>
+Date: 7/21/2021 10:24:32 AM
+Message:
+10235:  Check permissions on base directory when installing
+10236:  Addon Upgrade Wizard: After conflict resolution, don't proceed with install if addon.syn or adm_* files still have embedded conflicts
+10246: AD - Upgrade wizard needs to handle possibility of adx_git_auth already existing when upgrading from a git instance
+10247: Install Wizard does not check in modified files at end of processing.
+10248: adc_copyaon.aon:  if the source file being copied is executable, the destination file needs to be executable as well.
+----
+Modified: ad/src/adc_copyaon.aon
+Modified: ad/src/ado_AO_GitRepoInterface.aon
+Modified: ad/src/adx_installwiz.aon
+Modified: ad/src/adx_upgradewiz.aon
+Modified: data/sync/ads_messages~[01007514AD].xml
+
+
 
