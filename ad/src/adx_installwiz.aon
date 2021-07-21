@@ -8,6 +8,10 @@ rem --- All Rights Reserved
 rem ==========================================================================
 
     use java.io.File
+    use java.nio.file.Files
+    use java.nio.file.Paths
+    use java.nio.file.FileSystems
+    use java.nio.file.attribute.PosixFilePermissions 
     use java.util.Arrays
     use java.util.HashSet
     use java.util.Vector
@@ -22,6 +26,7 @@ rem ==========================================================================
 
 rem --- Initializations
 
+    osIsWindows!=(new String(info(0,0)).indexOf("Win"))>=0
     pgmdir$=stbl("+DIR_PGM",err=*next)
     dir_syp$=stbl("+DIR_SYP")
     sysGUI! = BBjAPI().getSysGui()
@@ -126,10 +131,25 @@ rem --- Clone and pull branch(s) from Git repository to newAonLoc
         print(log_dev)"    For "+mountedSys!.getItem(syscnt)   
            
         rem --- Clone and pull branch from Git repository
-		branchName$="BBJ"+minor_ver$(2)+"GA"
+	branchName$="BBJ"+minor_ver$(2)+"GA"
         cloneDir$=mountedSys!.getItem(syscnt)
 
         rem --- Clone Git repository and get a JGit interface to it
+	base_dir!=Paths.get(base_dir$)
+	addon_dir!=Paths.get(cloneDir$)
+	if (addon_dir!.startsWith(base_dir!)) then 
+		Files.createDirectories(addon_dir!)
+		if (! osIsWindows!) then  
+			current_dir!=addon_dir!
+			permissions!=PosixFilePermissions.fromString("rwxrwxrwx")
+			while (current_dir!<>base_dir!.getParent()) 
+				Files.setPosixFilePermissions(current_dir!,permissions!)
+				userPrincipal!=FileSystems.getDefault().getUserPrincipalLookupService().lookupPrincipalByName(info(3,2))
+				Files.setOwner(current_dir!,userPrincipal!)
+				current_dir!=current_dir!.getParent()
+			wend
+		endif
+	endif 
         repoInterface!=new GitRepoInterface(git_auth_id$,cloneDir$)
         print(log_dev) "    Git Repo URL="+repoInterface!.getRepoURL()
 		if (repoInterface!=null()) then 
@@ -224,7 +244,7 @@ rem --- Run BIM bai_install_manager.bbj program via synchronous system call beca
 :       +" -c"+$22$+bar_dir$+"/sys/config/enu/barista.cfg"+$22$
 :       +" "+$22$+bar_dir$+"/sys/prog/bai_install_manager.bbj"+$22$
 	    user_arg$=" - "
-:       +" -u"+rdAdmin!.getUser()
+:       +" -u"+info(3,2)
 :       +" -id"+dbName$
 :       +" -desc"+$22$+appDesc$+$22$
 :       +" -loc"+$22$+newAonLoc$+$22$
@@ -415,7 +435,7 @@ rem --- Run auto-sync bax_dd_synch_auto.bbj program via bax_launch_task.bbj to b
 :       +" -y"+"A"
 :       +" -a" +"bax_dd_synch_auto.bbj"+$22$+" - "+" -f"+synFile!.getItem(syscnt)+" -b"+$22$
 :       +" -w"
-	    scall_result=scall(run_arg$+user_arg$,err=*next)
+    scall_result=scall(run_arg$+user_arg$,err=*next)
     next syscnt
 
 rem --- Setup new firm AFTER auto-sync so new firm's masks and sequences can be copied from firm ZZ
@@ -442,6 +462,9 @@ rem --- NOTE: newFirm$="" for Quick Copy installs
             endif
         next syscnt
     endif
+
+rem --- After the install, do a final commit to start with a clean repo that has all installation changes
+    repoInterface!.commitAll(1,"Post install commit")
 
 done: rem --- All done
     
